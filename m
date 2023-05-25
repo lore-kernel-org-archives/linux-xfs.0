@@ -2,131 +2,184 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7EF19C77B7A
-	for <linux-xfs@archiver.kernel.org>; Thu, 25 May 2023 14:18:04 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1B248C7EE2D
+	for <linux-xfs@archiver.kernel.org>; Thu, 25 May 2023 16:03:36 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S241351AbjEYOSD (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 25 May 2023 10:18:03 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52188 "EHLO
+        id S241648AbjEYQDf (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 25 May 2023 12:03:35 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49104 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232848AbjEYOSD (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 25 May 2023 10:18:03 -0400
-Received: from sandeen.net (sandeen.net [63.231.237.45])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 0D334189;
-        Thu, 25 May 2023 07:17:59 -0700 (PDT)
-Received: from [10.0.0.71] (liberator.sandeen.net [10.0.0.71])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
-        (No client certificate requested)
-        by sandeen.net (Postfix) with ESMTPS id 0F5225CC312;
-        Thu, 25 May 2023 09:17:58 -0500 (CDT)
-Message-ID: <2099f62e-460b-cc49-d0d0-a288d33619f0@sandeen.net>
-Date:   Thu, 25 May 2023 09:17:57 -0500
+        with ESMTP id S240972AbjEYQDe (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 25 May 2023 12:03:34 -0400
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id BF3D9A9
+        for <linux-xfs@vger.kernel.org>; Thu, 25 May 2023 09:02:53 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1685030572;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=WiRt50oXKhasmrzR2kh6FHaULiNwoG0spSQORGoTHTA=;
+        b=WNYhwdjTeOYsSg1WqmAqLbtvBkqyA1fjxWwNqF1oMMDUvPNQ/OybetPHAO+MNiC4fw5blv
+        JvdY1QWhnVKgzpLAXeeI37HK0m6aJQ5nri2uyg2704j3GvwyPNhNlSu7ehb+raz6RK6nir
+        MKQ9Ne6XGE3vq4Nz8zUiqFPRKnXz5zI=
+Received: from mail-pl1-f197.google.com (mail-pl1-f197.google.com
+ [209.85.214.197]) by relay.mimecast.com with ESMTP with STARTTLS
+ (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
+ us-mta-272-mjlZJuX3PXuhD8VotJmEGQ-1; Thu, 25 May 2023 12:02:51 -0400
+X-MC-Unique: mjlZJuX3PXuhD8VotJmEGQ-1
+Received: by mail-pl1-f197.google.com with SMTP id d9443c01a7336-1ae6b280bacso9998935ad.0
+        for <linux-xfs@vger.kernel.org>; Thu, 25 May 2023 09:02:50 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20221208; t=1685030570; x=1687622570;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=WiRt50oXKhasmrzR2kh6FHaULiNwoG0spSQORGoTHTA=;
+        b=DigL4buQFb9bbrV/mXd9eb38Okqk8L27pONwuZFcmyrdH7op3A59pfZuvUWd2a8Ete
+         Cve4q+Ygp8b58KfA1UYuyl5+O0qh6G9BdmIoIkqRiNAyfQTtkh6b2oYGKuHPLR76CgBQ
+         YoKy0eWnEbRaEp3sJsavZaAUmvwngQJKG1DPGwGHmWhlQfpMaparZX+0aEEBWL0JGRqp
+         SBBf9v/2FjcbUgSIlSu7QNB8TFAyZ4wpW3okNtHAM21u8caNHe7bef1xLQzuIucEpeHc
+         YX5TMqRPyg6gk/zCkUIUpg4BBPlb/ARiah/Pg8wOPPuJXpHaIezdd2UxbMNgNBJayzsW
+         DbFA==
+X-Gm-Message-State: AC+VfDyl05xqlL2AoNQIGHiOXtfaWvod/yEm8wYCGfpeVK6AMO5afv/L
+        p4ENOxLpoAWbnDZ6GUIz0BOnhyunAdHtdcvAKCSl2DBmH4DMAUI1/quU9zX14wuv6kiQjeSt81x
+        7K8B0e11Vu7ydd0/Cv3wqxeknkkEtCNKi5e6m
+X-Received: by 2002:a17:902:f54c:b0:1af:f64c:f363 with SMTP id h12-20020a170902f54c00b001aff64cf363mr3052068plf.15.1685030569934;
+        Thu, 25 May 2023 09:02:49 -0700 (PDT)
+X-Google-Smtp-Source: ACHHUZ6IxaSUVZPKltFK7HOITIsIRGnmd5NzIdTwh6dJNU2vgkdbKhe1zl+1aodXLLyyl7kcWSFpgVAL2XCU4JAoynY=
+X-Received: by 2002:a17:902:f54c:b0:1af:f64c:f363 with SMTP id
+ h12-20020a170902f54c00b001aff64cf363mr3052030plf.15.1685030569588; Thu, 25
+ May 2023 09:02:49 -0700 (PDT)
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:102.0)
- Gecko/20100101 Thunderbird/102.11.0
-Subject: Re: [Syzkaller & bisect] There is "soft lockup in __cleanup_mnt" in
- v6.4-rc3 kernel
-Content-Language: en-US
-To:     Pengfei Xu <pengfei.xu@intel.com>
-Cc:     dchinner@redhat.com, djwong@kernel.org, heng.su@intel.com,
-        linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
-        lkp@intel.com
-References: <ZG7PGdRED5A68Jyh@xpf.sh.intel.com>
- <f723cb17-ca68-4db9-c296-cf33b16c529c@sandeen.net>
- <ZG71v9dlDm0h4idA@xpf.sh.intel.com>
-From:   Eric Sandeen <sandeen@sandeen.net>
-In-Reply-To: <ZG71v9dlDm0h4idA@xpf.sh.intel.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+References: <20230524063810.1595778-1-hch@lst.de> <20230524063810.1595778-8-hch@lst.de>
+In-Reply-To: <20230524063810.1595778-8-hch@lst.de>
+From:   Andreas Gruenbacher <agruenba@redhat.com>
+Date:   Thu, 25 May 2023 18:02:37 +0200
+Message-ID: <CAHc6FU6akk6yg1YGpgq-XqMv7soOLA4_Jg17T1M+NKn1PRmJkg@mail.gmail.com>
+Subject: Re: [PATCH 07/11] iomap: update ki_pos in iomap_file_buffered_write
+To:     Christoph Hellwig <hch@lst.de>
+Cc:     Matthew Wilcox <willy@infradead.org>, Jens Axboe <axboe@kernel.dk>,
+        Xiubo Li <xiubli@redhat.com>,
+        Ilya Dryomov <idryomov@gmail.com>,
+        Alexander Viro <viro@zeniv.linux.org.uk>,
+        Christian Brauner <brauner@kernel.org>,
+        "Theodore Ts'o" <tytso@mit.edu>, Jaegeuk Kim <jaegeuk@kernel.org>,
+        Chao Yu <chao@kernel.org>, Miklos Szeredi <miklos@szeredi.hu>,
+        "Darrick J. Wong" <djwong@kernel.org>,
+        Trond Myklebust <trond.myklebust@hammerspace.com>,
+        Anna Schumaker <anna@kernel.org>,
+        Damien Le Moal <dlemoal@kernel.org>,
+        Andrew Morton <akpm@linux-foundation.org>,
+        linux-block@vger.kernel.org, ceph-devel@vger.kernel.org,
+        linux-fsdevel@vger.kernel.org, linux-ext4@vger.kernel.org,
+        linux-f2fs-devel@lists.sourceforge.net, cluster-devel@redhat.com,
+        linux-xfs@vger.kernel.org, linux-nfs@vger.kernel.org,
+        linux-mm@kvack.org
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On 5/25/23 12:44 AM, Pengfei Xu wrote:
-> On 2023-05-24 at 22:51:27 -0500, Eric Sandeen wrote:
->> On 5/24/23 9:59 PM, Pengfei Xu wrote:
->>> Hi Dave,
->>>
->>> Greeting!
->>>
->>> Platform: Alder lake
->>> There is "soft lockup in __cleanup_mnt" in v6.4-rc3 kernel.
->>>
->>> Syzkaller analysis repro.report and bisect detailed info: https://github.com/xupengfe/syzkaller_logs/tree/main/230524_140757___cleanup_mnt
->>> Guest machine info: https://github.com/xupengfe/syzkaller_logs/blob/main/230524_140757___cleanup_mnt/machineInfo0
->>> Reproduced code: https://github.com/xupengfe/syzkaller_logs/blob/main/230524_140757___cleanup_mnt/repro.c
->>> Reproduced syscall: https://github.com/xupengfe/syzkaller_logs/blob/main/230524_140757___cleanup_mnt/repro.prog
->>> Bisect info: https://github.com/xupengfe/syzkaller_logs/blob/main/230524_140757___cleanup_mnt/bisect_info.log
->>> Kconfig origin: https://github.com/xupengfe/syzkaller_logs/blob/main/230524_140757___cleanup_mnt/kconfig_origin
->>
->> There was a lot of discussion yesterday about how turning the crank on
->> syzkaller and throwing un-triaged bug reports over the wall at stressed-out
->> xfs developers isn't particularly helpful.
->>
->> There was also a very specific concern raised in that discussion:
->>
->>> IOWs, the bug report is deficient and not complete, and so I'm
->>> forced to spend unnecessary time trying to work out how to extract
->>> the filesystem image from a weird syzkaller report that is basically
->>> just a bunch of undocumented blobs in a github tree.
->>
->> but here we are again, with another undocumented blob in a github tree, and
->> no meaningful attempt at triage.
->>
->> Syzbot at least is now providing filesystem images[1], which relieves some
->> of the burden on the filesystem developers you're expecting to fix these
->> bugs.
->>
->> Perhaps before you send the /next/ filesystem-related syzkaller report, you
->> can at least work out how to provide a standard filesystem image as part of
->> the reproducer, one that can be examined with normal filesystem development
->> and debugging tools?
->>
->    There is a standard filesystem image after
-> 
-> git clone https://gitlab.com/xupengfe/repro_vm_env.git
-> cd repro_vm_env
-> tar -xvf repro_vm_env.tar.gz
-> image is named as centos8_3.img, and will boot by start3.sh.
+On Wed, May 24, 2023 at 8:54=E2=80=AFAM Christoph Hellwig <hch@lst.de> wrot=
+e:
+> All callers of iomap_file_buffered_write need to updated ki_pos, move it
+> into common code.
 
-Honestly, this suggests to me that you don't really have much 
-understanding at all about the bugs you're reporting.
+Thanks for this set of cleanups, especially for the patch killing
+current->backing_dev_info.
 
-> There is bzImage v6.4-rc3 in link: https://github.com/xupengfe/syzkaller_logs/blob/main/230524_140757___cleanup_mnt/bzImage_v64rc3
-> You could use it to boot v6.4-rc3 kernel.
-> 
-> ./start3.sh  // it needs qemu-system-x86_64 and I used v7.1.0
->    // start3.sh will load bzImage_2241ab53cbb5cdb08a6b2d4688feb13971058f65 v6.2-rc5 kernel
->    // You could change the bzImage_xxx as you want
-> You could use below command to log in, there is no password for root.
-> ssh -p 10023 root@localhost
-> 
-> After login vm(virtual machine) successfully, you could transfer reproduced
-> binary to the vm by below way, and reproduce the problem in vm:
-> gcc -pthread -o repro repro.c
-> scp -P 10023 repro root@localhost:/root/
-> 
-> Then you could reproduce this issue easily in above environment.
+Reviewed-by: Andreas Gruenbacher <agruenba@redhat.com>
 
-You seem to be suggesting that the xfs developers should go do /more 
-work/ to get to the bare minimum of a decent fuzzed filesystem bug 
-report, instead of you doing a little bit of prep work yourself by 
-providing the fuzzed filesystem image itself?
-
-Your github account says you are "looking to collaborate on Linux kernel 
-learning" - tossing auto-generated and difficult-to-triage bug reports 
-at other developers is not collaboration. Wouldn't it be more 
-interesting to take the time to understand the reports you're 
-generating, find ways to make them more accessible/debuggable, and/or 
-take some time to look into the problems yourself, in order to learn 
-about the code you're turning the crank on?
-
-> Thanks!
-> BR.
-> 
->> [1]
->> https://lore.kernel.org/lkml/0000000000001f239205fb969174@google.com/T/
->>
->>
-> 
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
+> Acked-by: Damien Le Moal <dlemoal@kernel.org>
+> Reviewed-by: Darrick J. Wong <djwong@kernel.org>
+> ---
+>  fs/gfs2/file.c         | 4 +---
+>  fs/iomap/buffered-io.c | 9 ++++++---
+>  fs/xfs/xfs_file.c      | 2 --
+>  fs/zonefs/file.c       | 4 +---
+>  4 files changed, 8 insertions(+), 11 deletions(-)
+>
+> diff --git a/fs/gfs2/file.c b/fs/gfs2/file.c
+> index 904a0d6ac1a1a9..c6a7555d5ad8bb 100644
+> --- a/fs/gfs2/file.c
+> +++ b/fs/gfs2/file.c
+> @@ -1044,10 +1044,8 @@ static ssize_t gfs2_file_buffered_write(struct kio=
+cb *iocb,
+>         pagefault_disable();
+>         ret =3D iomap_file_buffered_write(iocb, from, &gfs2_iomap_ops);
+>         pagefault_enable();
+> -       if (ret > 0) {
+> -               iocb->ki_pos +=3D ret;
+> +       if (ret > 0)
+>                 written +=3D ret;
+> -       }
+>
+>         if (inode =3D=3D sdp->sd_rindex)
+>                 gfs2_glock_dq_uninit(statfs_gh);
+> diff --git a/fs/iomap/buffered-io.c b/fs/iomap/buffered-io.c
+> index 063133ec77f49e..550525a525c45c 100644
+> --- a/fs/iomap/buffered-io.c
+> +++ b/fs/iomap/buffered-io.c
+> @@ -864,16 +864,19 @@ iomap_file_buffered_write(struct kiocb *iocb, struc=
+t iov_iter *i,
+>                 .len            =3D iov_iter_count(i),
+>                 .flags          =3D IOMAP_WRITE,
+>         };
+> -       int ret;
+> +       ssize_t ret;
+>
+>         if (iocb->ki_flags & IOCB_NOWAIT)
+>                 iter.flags |=3D IOMAP_NOWAIT;
+>
+>         while ((ret =3D iomap_iter(&iter, ops)) > 0)
+>                 iter.processed =3D iomap_write_iter(&iter, i);
+> -       if (iter.pos =3D=3D iocb->ki_pos)
+> +
+> +       if (unlikely(ret < 0))
+>                 return ret;
+> -       return iter.pos - iocb->ki_pos;
+> +       ret =3D iter.pos - iocb->ki_pos;
+> +       iocb->ki_pos +=3D ret;
+> +       return ret;
+>  }
+>  EXPORT_SYMBOL_GPL(iomap_file_buffered_write);
+>
+> diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
+> index 431c3fd0e2b598..d57443db633637 100644
+> --- a/fs/xfs/xfs_file.c
+> +++ b/fs/xfs/xfs_file.c
+> @@ -720,8 +720,6 @@ xfs_file_buffered_write(
+>         trace_xfs_file_buffered_write(iocb, from);
+>         ret =3D iomap_file_buffered_write(iocb, from,
+>                         &xfs_buffered_write_iomap_ops);
+> -       if (likely(ret >=3D 0))
+> -               iocb->ki_pos +=3D ret;
+>
+>         /*
+>          * If we hit a space limit, try to free up some lingering preallo=
+cated
+> diff --git a/fs/zonefs/file.c b/fs/zonefs/file.c
+> index 132f01d3461f14..e212d0636f848e 100644
+> --- a/fs/zonefs/file.c
+> +++ b/fs/zonefs/file.c
+> @@ -643,9 +643,7 @@ static ssize_t zonefs_file_buffered_write(struct kioc=
+b *iocb,
+>                 goto inode_unlock;
+>
+>         ret =3D iomap_file_buffered_write(iocb, from, &zonefs_write_iomap=
+_ops);
+> -       if (ret > 0)
+> -               iocb->ki_pos +=3D ret;
+> -       else if (ret =3D=3D -EIO)
+> +       if (ret =3D=3D -EIO)
+>                 zonefs_io_error(inode, true);
+>
+>  inode_unlock:
+> --
+> 2.39.2
+>
 
