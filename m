@@ -2,87 +2,131 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E2EFEC77B7E
-	for <linux-xfs@archiver.kernel.org>; Thu, 25 May 2023 12:45:46 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7EF19C77B7A
+	for <linux-xfs@archiver.kernel.org>; Thu, 25 May 2023 14:18:04 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S240960AbjEYMpp (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 25 May 2023 08:45:45 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34656 "EHLO
+        id S241351AbjEYOSD (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 25 May 2023 10:18:03 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52188 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S239813AbjEYMpb (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 25 May 2023 08:45:31 -0400
-Received: from mail-yb1-xb32.google.com (mail-yb1-xb32.google.com [IPv6:2607:f8b0:4864:20::b32])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 649E49B;
-        Thu, 25 May 2023 05:45:30 -0700 (PDT)
-Received: by mail-yb1-xb32.google.com with SMTP id 3f1490d57ef6-b9daef8681fso421114276.1;
-        Thu, 25 May 2023 05:45:30 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20221208; t=1685018729; x=1687610729;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=n2EgvRCmk8HZRlkVe8tT7FrQyjXG54U7wK2DUs1qcNc=;
-        b=b23Z3Orjg0Q3D4S0JZ9BrlYAhLoBpRnvT6ryr0cpcHviF9l3HreHLzfDNqRkM5RAe9
-         +ObZge3mEjxjUXGOdGLuHLDhRlN1HntNmWZFEUaUGCG3lY7qsif3d52s0T0DUOB/knk/
-         oMQ87f1+uypP5JgksMGV7HbkLankLBrsS3Dk52r9VBwCMwgeeF198gvTIK6GMGuEIOEf
-         rIXQkeEbiwuR4/g1ATr22+X2W10YGbV2TMOVLC9XHNT8syg1JhjrFbT3QWfHHzriRMW/
-         cxF+dUyuG4rDIS+EQTrFTtT8MqqVKuGhq/DP4QkxWwf7zFMltlpDmEHSpdMIdOJXSGqb
-         YNVA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20221208; t=1685018729; x=1687610729;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=n2EgvRCmk8HZRlkVe8tT7FrQyjXG54U7wK2DUs1qcNc=;
-        b=IQ8G9FVufwviavsRaFdKqNpKeNT0LsIRiUTmfdNkF4e/N2MKTP0GZe1g93lVT5Tjh0
-         hOG4q+7eD/mV02ZmGLCdM4X3p//8gVOx13MsIhLNTHjVG7w82MN5oT7+jn+XqVsqLPWv
-         7+ieZ0SfG+/mnh43B2DqrYAIdF1V1RMhNoR5bPpAxEGHT7SKusl05jQH4SuhWvSbLldI
-         MgczbFRWomQAwzZvnYQkv5tjZbW5LG90Rckat8kpjMYtn3t9mEt7ad/GxGvxId959oh5
-         pFrgnzgnkqJ8EFVRjvDWW2ITfKUOzymBymcKQ2fkYOCLDg3xD/Dr2hl2vfbXMYAlyA8Y
-         Uy3Q==
-X-Gm-Message-State: AC+VfDxqEbs8RLfff9sf9ZxPZ4W8o5wj7oUcKKO4Ltgocxfi3EaXtwUC
-        chxbrNZOmhLGsTgVKuNrr19BdY7/j8XZTcL7321NIqiXYSc=
-X-Google-Smtp-Source: ACHHUZ6q+zm+eX5tov55de23ywRnl2eTWPeT6sRnqICONAy/ywfn/3+IVWHMnoT5yYdrmtVEFkmAyyfdZd9LLFjS5T4=
-X-Received: by 2002:a0d:cc81:0:b0:561:b783:fb76 with SMTP id
- o123-20020a0dcc81000000b00561b783fb76mr20669529ywd.51.1685018729593; Thu, 25
- May 2023 05:45:29 -0700 (PDT)
+        with ESMTP id S232848AbjEYOSD (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 25 May 2023 10:18:03 -0400
+Received: from sandeen.net (sandeen.net [63.231.237.45])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 0D334189;
+        Thu, 25 May 2023 07:17:59 -0700 (PDT)
+Received: from [10.0.0.71] (liberator.sandeen.net [10.0.0.71])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+        (No client certificate requested)
+        by sandeen.net (Postfix) with ESMTPS id 0F5225CC312;
+        Thu, 25 May 2023 09:17:58 -0500 (CDT)
+Message-ID: <2099f62e-460b-cc49-d0d0-a288d33619f0@sandeen.net>
+Date:   Thu, 25 May 2023 09:17:57 -0500
 MIME-Version: 1.0
-References: <CADJHv_ujo+QUE7f420t4XACGw4RvVpckKSJcJ_9_Z0b2gdmr+g@mail.gmail.com>
- <20230525120402.GA6281@lst.de>
-In-Reply-To: <20230525120402.GA6281@lst.de>
-From:   Murphy Zhou <jencce.kernel@gmail.com>
-Date:   Thu, 25 May 2023 20:45:18 +0800
-Message-ID: <CADJHv_u7pV_g5DeNBjQKPXv4tfSg6Rc9FXjKD5F+ioHX6jrVdg@mail.gmail.com>
-Subject: Re: your mail
-To:     Christoph Hellwig <hch@lst.de>
-Cc:     Linux-Next <linux-next@vger.kernel.org>,
-        linux-xfs <linux-xfs@vger.kernel.org>, akpm@linux-foundation.org
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:102.0)
+ Gecko/20100101 Thunderbird/102.11.0
+Subject: Re: [Syzkaller & bisect] There is "soft lockup in __cleanup_mnt" in
+ v6.4-rc3 kernel
+Content-Language: en-US
+To:     Pengfei Xu <pengfei.xu@intel.com>
+Cc:     dchinner@redhat.com, djwong@kernel.org, heng.su@intel.com,
+        linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
+        lkp@intel.com
+References: <ZG7PGdRED5A68Jyh@xpf.sh.intel.com>
+ <f723cb17-ca68-4db9-c296-cf33b16c529c@sandeen.net>
+ <ZG71v9dlDm0h4idA@xpf.sh.intel.com>
+From:   Eric Sandeen <sandeen@sandeen.net>
+In-Reply-To: <ZG71v9dlDm0h4idA@xpf.sh.intel.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Thu, May 25, 2023 at 8:04=E2=80=AFPM Christoph Hellwig <hch@lst.de> wrot=
-e:
->
-> On Thu, May 25, 2023 at 08:01:22PM +0800, Murphy Zhou wrote:
-> > Hi Christoph,
-> >
-> > The linux-next tree, since the next-20230522 tag, LTP/writev07[1]
-> > starts to fail on xfs, not on other fs. It was pass on the previous
-> > tag next-20230519.
-> >
-> > After those 2 commits reverted on the top of 0522 tree, it passed.
-> >
-> >     iomap: update ki_pos in iomap_file_buffered_write
-> >     iomap: assign current->backing_dev_info in iomap_file_buffered_writ=
-e
-> >
-> > (the second one was reverted because the first one depends on it)
->
-> Yes, they are known broken.  There has been a v2 on the list already,
-> which still has issues for fuse, so there will be a v3.
+On 5/25/23 12:44 AM, Pengfei Xu wrote:
+> On 2023-05-24 at 22:51:27 -0500, Eric Sandeen wrote:
+>> On 5/24/23 9:59 PM, Pengfei Xu wrote:
+>>> Hi Dave,
+>>>
+>>> Greeting!
+>>>
+>>> Platform: Alder lake
+>>> There is "soft lockup in __cleanup_mnt" in v6.4-rc3 kernel.
+>>>
+>>> Syzkaller analysis repro.report and bisect detailed info: https://github.com/xupengfe/syzkaller_logs/tree/main/230524_140757___cleanup_mnt
+>>> Guest machine info: https://github.com/xupengfe/syzkaller_logs/blob/main/230524_140757___cleanup_mnt/machineInfo0
+>>> Reproduced code: https://github.com/xupengfe/syzkaller_logs/blob/main/230524_140757___cleanup_mnt/repro.c
+>>> Reproduced syscall: https://github.com/xupengfe/syzkaller_logs/blob/main/230524_140757___cleanup_mnt/repro.prog
+>>> Bisect info: https://github.com/xupengfe/syzkaller_logs/blob/main/230524_140757___cleanup_mnt/bisect_info.log
+>>> Kconfig origin: https://github.com/xupengfe/syzkaller_logs/blob/main/230524_140757___cleanup_mnt/kconfig_origin
+>>
+>> There was a lot of discussion yesterday about how turning the crank on
+>> syzkaller and throwing un-triaged bug reports over the wall at stressed-out
+>> xfs developers isn't particularly helpful.
+>>
+>> There was also a very specific concern raised in that discussion:
+>>
+>>> IOWs, the bug report is deficient and not complete, and so I'm
+>>> forced to spend unnecessary time trying to work out how to extract
+>>> the filesystem image from a weird syzkaller report that is basically
+>>> just a bunch of undocumented blobs in a github tree.
+>>
+>> but here we are again, with another undocumented blob in a github tree, and
+>> no meaningful attempt at triage.
+>>
+>> Syzbot at least is now providing filesystem images[1], which relieves some
+>> of the burden on the filesystem developers you're expecting to fix these
+>> bugs.
+>>
+>> Perhaps before you send the /next/ filesystem-related syzkaller report, you
+>> can at least work out how to provide a standard filesystem image as part of
+>> the reproducer, one that can be examined with normal filesystem development
+>> and debugging tools?
+>>
+>    There is a standard filesystem image after
+> 
+> git clone https://gitlab.com/xupengfe/repro_vm_env.git
+> cd repro_vm_env
+> tar -xvf repro_vm_env.tar.gz
+> image is named as centos8_3.img, and will boot by start3.sh.
 
-Great! Thank you.
->
+Honestly, this suggests to me that you don't really have much 
+understanding at all about the bugs you're reporting.
+
+> There is bzImage v6.4-rc3 in link: https://github.com/xupengfe/syzkaller_logs/blob/main/230524_140757___cleanup_mnt/bzImage_v64rc3
+> You could use it to boot v6.4-rc3 kernel.
+> 
+> ./start3.sh  // it needs qemu-system-x86_64 and I used v7.1.0
+>    // start3.sh will load bzImage_2241ab53cbb5cdb08a6b2d4688feb13971058f65 v6.2-rc5 kernel
+>    // You could change the bzImage_xxx as you want
+> You could use below command to log in, there is no password for root.
+> ssh -p 10023 root@localhost
+> 
+> After login vm(virtual machine) successfully, you could transfer reproduced
+> binary to the vm by below way, and reproduce the problem in vm:
+> gcc -pthread -o repro repro.c
+> scp -P 10023 repro root@localhost:/root/
+> 
+> Then you could reproduce this issue easily in above environment.
+
+You seem to be suggesting that the xfs developers should go do /more 
+work/ to get to the bare minimum of a decent fuzzed filesystem bug 
+report, instead of you doing a little bit of prep work yourself by 
+providing the fuzzed filesystem image itself?
+
+Your github account says you are "looking to collaborate on Linux kernel 
+learning" - tossing auto-generated and difficult-to-triage bug reports 
+at other developers is not collaboration. Wouldn't it be more 
+interesting to take the time to understand the reports you're 
+generating, find ways to make them more accessible/debuggable, and/or 
+take some time to look into the problems yourself, in order to learn 
+about the code you're turning the crank on?
+
+> Thanks!
+> BR.
+> 
+>> [1]
+>> https://lore.kernel.org/lkml/0000000000001f239205fb969174@google.com/T/
+>>
+>>
+> 
+
