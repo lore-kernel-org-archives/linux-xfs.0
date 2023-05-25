@@ -2,90 +2,158 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 32332C7EE2C
-	for <linux-xfs@archiver.kernel.org>; Thu, 25 May 2023 07:59:47 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 886F8C77B7A
+	for <linux-xfs@archiver.kernel.org>; Thu, 25 May 2023 09:44:58 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229543AbjEYH7q (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 25 May 2023 03:59:46 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41714 "EHLO
+        id S240712AbjEYJo5 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 25 May 2023 05:44:57 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37100 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230381AbjEYH7p (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 25 May 2023 03:59:45 -0400
-Received: from bombadil.infradead.org (bombadil.infradead.org [IPv6:2607:7c80:54:3::133])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B15FE122;
-        Thu, 25 May 2023 00:59:43 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Type:MIME-Version
-        :References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
-        Content-Transfer-Encoding:Content-ID:Content-Description;
-        bh=1SbotI5SOBhG7bXBLx5uW2S/thCuqPvVS6nzOwu9CA8=; b=V58wO3BzmmE0SuFDyj/dG3wtLK
-        lAzsAvB3ZVtK85AeH07/CJcxdL6YrVPVNDBjp1gDEQPt3y4PFxy1zANuqX7eVYeIgd3P7ogmbXOTU
-        da9+kR0/TlSsh1y3pAg8cJlsO45ZGPvvuTYFq/fNI4L86nVhMdF9l0CdKYvln7GJza2VN0yD6cUMZ
-        9AGBExT5R92fPahMcA7LeZjMrK7dkBLryYUAAfcvK7uRiSTSxKle8hlE9ag/8t3Jjq9Yn1IOJUZuo
-        uX3hxlvo7360UC0O1DFIK/1Wbl7Y+nHItalF92A3t01qoCyYcTe7+nOpiFXaZa42gRD6g3h1sC3BR
-        Yy6h2YmA==;
-Received: from hch by bombadil.infradead.org with local (Exim 4.96 #2 (Red Hat Linux))
-        id 1q25sp-00Fu4N-2E;
-        Thu, 25 May 2023 07:59:39 +0000
-Date:   Thu, 25 May 2023 00:59:39 -0700
-From:   Christoph Hellwig <hch@infradead.org>
-To:     Dave Chinner <david@fromorbit.com>
-Cc:     Uladzislau Rezki <urezki@gmail.com>,
-        Hyeonggon Yoo <42.hyeyoo@gmail.com>, linux-mm@kvack.org,
-        Andrew Morton <akpm@linux-foundation.org>,
-        LKML <linux-kernel@vger.kernel.org>, Baoquan He <bhe@redhat.com>,
-        Lorenzo Stoakes <lstoakes@gmail.com>,
-        Christoph Hellwig <hch@infradead.org>,
-        Matthew Wilcox <willy@infradead.org>,
-        "Liam R . Howlett" <Liam.Howlett@oracle.com>,
-        "Paul E . McKenney" <paulmck@kernel.org>,
-        Joel Fernandes <joel@joelfernandes.org>,
-        Oleksiy Avramchenko <oleksiy.avramchenko@sony.com>,
-        linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 0/9] Mitigate a vmap lock contention
-Message-ID: <ZG8Va0hc67IC6Cuf@infradead.org>
-References: <20230522110849.2921-1-urezki@gmail.com>
- <ZGyqiaRnMJPFhxR6@debian-BULLSEYE-live-builder-AMD64>
- <ZGzX3vRMlGHIcYCe@pc636>
- <ZG0AE9mjHkRZIGmr@debian-BULLSEYE-live-builder-AMD64>
- <ZG3d1FUXiCk3QL3D@pc636>
- <ZG6IKE7yNEkJhge+@dread.disaster.area>
+        with ESMTP id S233558AbjEYJoq (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 25 May 2023 05:44:46 -0400
+Received: from smtp-out2.suse.de (smtp-out2.suse.de [195.135.220.29])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 07145A9;
+        Thu, 25 May 2023 02:44:43 -0700 (PDT)
+Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
+        (No client certificate requested)
+        by smtp-out2.suse.de (Postfix) with ESMTPS id 718451FDC2;
+        Thu, 25 May 2023 09:44:42 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.cz; s=susede2_rsa;
+        t=1685007882; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+         mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=p5KDT5n7B93Vi9xs1xIjnqiETEkQKRSr647A/1d/+S4=;
+        b=qiJeZaxCmaCdG74Skn1lpuA6uFRaLGsNJHxg0eldi3Y2EpQNfYmllo9h9HCULHAETWghYX
+        357bUematuJ7lIKzFL/69ANbP87eT3gX9rxFOtQZQhWJJYAv0cZjPVNX1ntpD8yX3OGeY+
+        jXKtvH5nCV4ZxyTwyjlGtkQk8mUFAbw=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.cz;
+        s=susede2_ed25519; t=1685007882;
+        h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+         mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=p5KDT5n7B93Vi9xs1xIjnqiETEkQKRSr647A/1d/+S4=;
+        b=zNCa3NEXa5yV+ot1qtkCNy+wRqMbXs+HPIuoqh3YrRzBfoVpGcdCVwdB5n7tnulR+XxqLa
+        eztLvHoz8/AuJNCQ==
+Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
+        (No client certificate requested)
+        by imap2.suse-dmz.suse.de (Postfix) with ESMTPS id 6013C134B2;
+        Thu, 25 May 2023 09:44:42 +0000 (UTC)
+Received: from dovecot-director2.suse.de ([192.168.254.65])
+        by imap2.suse-dmz.suse.de with ESMTPSA
+        id KrBtFwoub2QYZAAAMHmgww
+        (envelope-from <jack@suse.cz>); Thu, 25 May 2023 09:44:42 +0000
+Received: by quack3.suse.cz (Postfix, from userid 1000)
+        id EEDE2A075C; Thu, 25 May 2023 11:44:41 +0200 (CEST)
+Date:   Thu, 25 May 2023 11:44:41 +0200
+From:   Jan Kara <jack@suse.cz>
+To:     Miklos Szeredi <miklos@szeredi.hu>
+Cc:     Jan Kara <jack@suse.cz>, linux-fsdevel@vger.kernel.org,
+        "Darrick J. Wong" <djwong@kernel.org>, Ted Tso <tytso@mit.edu>,
+        Amir Goldstein <amir73il@gmail.com>,
+        'David Laight <David.Laight@aculab.com>,
+        Al Viro <viro@zeniv.linux.org.uk>,
+        Christian Brauner <brauner@kernel.org>,
+        linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org
+Subject: Re: Locking for RENAME_EXCHANGE
+Message-ID: <20230525094441.wozlaigewzqemdm2@quack3>
+References: <20230524163504.lugqgz2ibe5vdom2@quack3>
+ <CAJfpegu8W9R9G8n+4n3U5Ba_bKpM1o_5_2dfTOoeGDAOFcyF1g@mail.gmail.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <ZG6IKE7yNEkJhge+@dread.disaster.area>
-X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
+In-Reply-To: <CAJfpegu8W9R9G8n+4n3U5Ba_bKpM1o_5_2dfTOoeGDAOFcyF1g@mail.gmail.com>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Thu, May 25, 2023 at 07:56:56AM +1000, Dave Chinner wrote:
-> > It is up to community to decide. As i see XFS needs it also. Maybe in
-> > the future it can be removed(who knows). If the vmalloc code itself can
-> > deliver such performance as vm_map* APIs.
+On Wed 24-05-23 21:33:07, Miklos Szeredi wrote:
+> On Wed, 24 May 2023 at 18:35, Jan Kara <jack@suse.cz> wrote:
+> >
+> > Hello!
+> >
+> > This is again about the problem with directory renames I've already
+> > reported in [1]. To quickly sum it up some filesystems (so far we know at
+> > least about xfs, ext4, udf, reiserfs) need to lock the directory when it is
+> > being renamed into another directory. This is because we need to update the
+> > parent pointer in the directory in that case and if that races with other
+> > operation on the directory, bad things can happen.
+> >
+> > So far we've done the locking in the filesystem code but recently Darrick
+> > pointed out [2] that we've missed the RENAME_EXCHANGE case in our ext4 fix.
+> > That one is particularly nasty because RENAME_EXCHANGE can arbitrarily mix
+> > regular files and directories. Couple nasty arising cases:
+> >
+> > 1) We need to additionally lock two exchanged directories. Suppose a
+> > situation like:
+> >
+> > mkdir P; mkdir P/A; mkdir P/B; touch P/B/F
+> >
+> > CPU1                                            CPU2
+> > renameat2("P/A", "P/B", RENAME_EXCHANGE);       renameat2("P/B/F", "P/A", 0);
 > 
-> vm_map* APIs cannot be replaced with vmalloc, they cover a very
-> different use case.  i.e.  vmalloc allocates mapped memory,
-> vm_map_ram() maps allocated memory....
+> Not sure I get it.
 > 
-> > vm_map_ram() and friends interface was added because of vmalloc drawbacks.
+> CPU1 locks P then A then B
+> CPU2 locks P then B then A
 > 
-> No. vm_map*() were scalability improvements added in 2009 to replace
-> on vmap() and vunmap() to avoid global lock contention in the vmap
-> allocator that XFS had been working around for years with it's own
-> internal vmap cache....
+> Both start with P and after that ordering between A and B doesn't
+> matter as long as the topology stays the same, which is guaranteed.
+> 
+> Or did you mean renameat2("P/B/F", "P/A/F", 0);?
+> 
+> This indeed looks deadlocky.
 
-All of that is true.  At the same time XFS could very much switch to
-vmalloc for !XBF_UNMAPPED && size > PAGE_SIZE buffers IFF that provided
-an advantage.  The need for vmap and then vm_map_* initially came from
-the fact that we were using the page cache to back the xfs_buf (or
-page_buf back then).  With your work on getting rid of the pagecache
-usage we could just use vmalloc now if we wanted to and it improves
-performance.  Or at some point we could even look into just using large
-folios for that with the infrastructure for that improving a lot (but
-I suspect we're not quite there yet).
+Right, that is what I meant. Sorry for confusion.
 
-But ther are other uses of vm_map_* that can't do that, and they will
-benefit from the additional scalability as well even IFF just using
-vmalloc was fine for XFS now (I don't know, I haven't actually looked
-into it).
+> > Both operations need to lock A and B directories which are unrelated in the
+> > tree. This means we must establish stable lock ordering on directory locks
+> > even for the case when they are not in ancestor relationship.
+> >
+> > 2) We may need to lock a directory and a non-directory and they can be in
+> > parent-child relationship when hardlinks are involved:
+> >
+> > mkdir A; mkdir B; touch A/F; ln A/F B/F
+> > renameat2("A/F", "B");
+> >
+> > And this is really nasty because we don't have a way to find out whether
+> > "A/F" and "B" are in any relationship - in particular whether B happens to
+> > be another parent of A/F or not.
+> >
+> > What I've decided to do is to make sure we always lock directory first in
+> > this mixed case and that *should* avoid all the deadlocks but I'm spelling
+> > this out here just in case people can think of some even more wicked case
+> > before I'll send patches.
+> 
+> Locking directories first has always been the case, described in
+> detail in Documentation/filesystems/directory-locking.rst
+> 
+> > Also I wanted to ask (Miklos in particular as RENAME_EXCHANGE author): Why
+> > do we lock non-directories in RENAME_EXCHANGE case? If we didn't have to do
+> > that things would be somewhat simpler...
+> 
+> I can't say I remember anything, but digging into
+> lock_two_nondirectories() this comes up quickly:
+> 
+>   6cedba8962f4 ("vfs: take i_mutex on renamed file")
+> 
+> So apparently NFS is relying on i_mutex to prevent delegations from
+> being broken without its knowledge.  Might be that is't NFS only, and
+> then the RENAME_EXCHANGE case doesn't need it (NFS doesn't support
+> RENAME_EXCHANGE), but I can't say for sure.
+> 
+> Also Al seems to have had some thoughts on this in d42b386834ee
+> ("update D/f/directory-locking")
+
+Thanks for the references. I've now updated the document
+Documentation/filesystems/directory-locking.rst and I'm now more convinced
+the scheme is correct. It is also kind of neat there are less special cases
+:).
+
+								Honza
+-- 
+Jan Kara <jack@suse.com>
+SUSE Labs, CR
