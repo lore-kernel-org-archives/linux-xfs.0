@@ -2,43 +2,44 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C6479C77B7E
-	for <linux-xfs@archiver.kernel.org>; Fri, 26 May 2023 00:53:45 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 90D77C77B7A
+	for <linux-xfs@archiver.kernel.org>; Fri, 26 May 2023 00:54:00 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S236413AbjEZAxo (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 25 May 2023 20:53:44 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49910 "EHLO
+        id S236327AbjEZAx7 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 25 May 2023 20:53:59 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49954 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S236055AbjEZAxn (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 25 May 2023 20:53:43 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3FB9C12E
-        for <linux-xfs@vger.kernel.org>; Thu, 25 May 2023 17:53:41 -0700 (PDT)
+        with ESMTP id S236055AbjEZAx6 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 25 May 2023 20:53:58 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id F0D6F194
+        for <linux-xfs@vger.kernel.org>; Thu, 25 May 2023 17:53:56 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id CFEE5614A2
-        for <linux-xfs@vger.kernel.org>; Fri, 26 May 2023 00:53:40 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 4095AC433D2;
-        Fri, 26 May 2023 00:53:40 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 7847264BF6
+        for <linux-xfs@vger.kernel.org>; Fri, 26 May 2023 00:53:56 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id D9143C433EF;
+        Fri, 26 May 2023 00:53:55 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1685062420;
-        bh=cZVXwbdJWdkhG97lZRcbMVfJ8WF5GFbcgPRmiInYaNI=;
+        s=k20201202; t=1685062435;
+        bh=rCNQPMLx4VYbA9y+rHzs5TN0y+ThFYbdc3jpCPOGfR0=;
         h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-        b=k6b2pRk9r/WbdfeL3BVo173t5T7OgYLGRsmyW77CWN3OMGvuE0Gr/UVenE0VyDDTz
-         sPbNxM7OjH4s6A7P9jzZZOgyUEVR6B+fB3MIdXRMMffL7Dx/+OzV0pOqTHTgw88kRv
-         GywrPm1s1VDPnmRAb4y4IkHeojTzv90qPXZjoyfMgdUFhhJDv7yzQTEG2V8Chx0pH/
-         PitYSV9Kc5FO25JGd+TDGnXdvS+Enb4ED4DSm/2ypTyow3qWmrz3ga3UeiJwig3CMk
-         6B0RnJ2dtaGhkyKOZGwDCNKIjJ8B023RVO0Vq/MXjzA+rU7OucouuJKNazWCpVyq0q
-         wnZDzjKfP4RTQ==
-Date:   Thu, 25 May 2023 17:53:39 -0700
-Subject: [PATCH 6/6] xfs: repair obviously broken inode modes
+        b=HJgpY2xIEuJ8sZFjoRzD0g5+9KjT6crQZRs6sZCBMi2XU008EhplM8WEtF1XDnza9
+         0/9h9Byw+lcTjsX3rLUdFBLCBGldlZphO8HZNU8zz1cDssxPdrfAIq8bhTvYdv62Qq
+         itkDn5KOnp2llquwcqSTPmd350zMb+VH7hEUsaFveq41GmCAjKGM5QnVd9sYsd6j/M
+         nVzArA6NZtjpW6gR3JwoYyGx4G1SamVbyWWmoxsmfAdlL2XFk0PoMCQdza5ztM16E9
+         dhZfF4lVWeJkYS2idTrv7CpExDU3ELEIGChmzmVA2Z1RFNby0E+BfFrQHkyFV5iZua
+         Yf9g502eDHDHQ==
+Date:   Thu, 25 May 2023 17:53:55 -0700
+Subject: [PATCH 1/5] xfs: reintroduce reaping of file metadata blocks to
+ xrep_reap_extents
 From:   "Darrick J. Wong" <djwong@kernel.org>
 To:     djwong@kernel.org
 Cc:     linux-xfs@vger.kernel.org
-Message-ID: <168506058397.3730405.15745668137639852004.stgit@frogsfrogsfrogs>
-In-Reply-To: <168506058301.3730405.12262241466147528228.stgit@frogsfrogsfrogs>
-References: <168506058301.3730405.12262241466147528228.stgit@frogsfrogsfrogs>
+Message-ID: <168506058725.3730621.415377851180040299.stgit@frogsfrogsfrogs>
+In-Reply-To: <168506058705.3730621.6175016885493289346.stgit@frogsfrogsfrogs>
+References: <168506058705.3730621.6175016885493289346.stgit@frogsfrogsfrogs>
 User-Agent: StGit/0.19
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
@@ -49,290 +50,215 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-Building off the rmap scanner that we added in the previous patch, we
-can now find block 0 and try to use the information contained inside of
-it to guess the mode of an inode if it's totally improper.
+Reintroduce to xrep_reap_extents the ability to reap extents from any
+AG.  We dropped this before because it was buggy, but in the next patch
+we will gain the ability to reap old bmap btrees, which can have blocks
+in any AG.  To do this, we require that sc->sa is uninitialized, so that
+we can use it to hold all the per-AG context for a given extent.
 
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 ---
- fs/xfs/scrub/inode_repair.c |  170 ++++++++++++++++++++++++++++++++++++++++++-
- fs/xfs/scrub/trace.h        |   11 ++-
- 2 files changed, 172 insertions(+), 9 deletions(-)
+ fs/xfs/scrub/bitmap.h |   28 +++++++++++
+ fs/xfs/scrub/reap.c   |  120 +++++++++++++++++++++++++++++++++++++++++++++++--
+ fs/xfs/scrub/reap.h   |    2 +
+ fs/xfs/scrub/repair.h |    1 
+ 4 files changed, 147 insertions(+), 4 deletions(-)
 
 
-diff --git a/fs/xfs/scrub/inode_repair.c b/fs/xfs/scrub/inode_repair.c
-index fbe4eeff82f0..42ec3b38c826 100644
---- a/fs/xfs/scrub/inode_repair.c
-+++ b/fs/xfs/scrub/inode_repair.c
-@@ -74,6 +74,9 @@ struct xrep_inode {
- 	/* Blocks in use by the attr fork. */
- 	xfs_rfsblock_t		attr_blocks;
+diff --git a/fs/xfs/scrub/bitmap.h b/fs/xfs/scrub/bitmap.h
+index 4fe58bad6734..2518e642f4d3 100644
+--- a/fs/xfs/scrub/bitmap.h
++++ b/fs/xfs/scrub/bitmap.h
+@@ -105,4 +105,32 @@ int xagb_bitmap_set_btblocks(struct xagb_bitmap *bitmap,
+ int xagb_bitmap_set_btcur_path(struct xagb_bitmap *bitmap,
+ 		struct xfs_btree_cur *cur);
  
-+	/* Physical block containing data block 0. */
-+	xfs_fsblock_t		block0;
++/* Bitmaps, but for type-checked for xfs_fsblock_t */
 +
- 	/* Number of data device extents for the data fork. */
- 	xfs_extnum_t		data_extents;
- 
-@@ -113,6 +116,7 @@ xrep_setup_inode(
- 	ri = sc->buf;
- 	memcpy(&ri->imap, imap, sizeof(struct xfs_imap));
- 	ri->sc = sc;
-+	ri->block0 = NULLFSBLOCK;
- 	return 0;
- }
- 
-@@ -188,12 +192,159 @@ xrep_dinode_header(
- 	dip->di_gen = cpu_to_be32(sc->sm->sm_gen);
- }
- 
-+/* Parse enough of the directory block header to guess if this is a dir. */
-+static inline bool
-+xrep_dinode_is_dir(
-+	xfs_ino_t			ino,
-+	xfs_daddr_t			daddr,
-+	struct xfs_buf			*bp)
++struct xfsb_bitmap {
++	struct xbitmap	fsbitmap;
++};
++
++static inline void xfsb_bitmap_init(struct xfsb_bitmap *bitmap)
 +{
-+	struct xfs_dir3_blk_hdr		*hdr3 = bp->b_addr;
-+	struct xfs_dir2_data_free	*bf;
-+	struct xfs_mount		*mp = bp->b_mount;
-+	xfs_lsn_t			lsn = be64_to_cpu(hdr3->lsn);
-+
-+	/* Does the dir3 header match the filesystem? */
-+	if (hdr3->magic != cpu_to_be32(XFS_DIR3_BLOCK_MAGIC) &&
-+	    hdr3->magic != cpu_to_be32(XFS_DIR3_DATA_MAGIC))
-+		return false;
-+
-+	if (be64_to_cpu(hdr3->owner) != ino)
-+		return false;
-+
-+	if (!uuid_equal(&hdr3->uuid, &mp->m_sb.sb_meta_uuid))
-+		return false;
-+
-+	if (be64_to_cpu(hdr3->blkno) != daddr)
-+		return false;
-+
-+	/* Directory blocks are always logged and must have a valid LSN. */
-+	if (lsn == NULLCOMMITLSN)
-+		return false;
-+	if (!xlog_valid_lsn(mp->m_log, lsn))
-+		return false;
-+
-+	/*
-+	 * bestfree information lives immediately after the end of the header,
-+	 * so we won't run off the end of the buffer.
-+	 */
-+	bf = xfs_dir2_data_bestfree_p(mp, bp->b_addr);
-+	if (!bf[0].length && bf[0].offset)
-+		return false;
-+	if (!bf[1].length && bf[1].offset)
-+		return false;
-+	if (!bf[2].length && bf[2].offset)
-+		return false;
-+
-+	if (be16_to_cpu(bf[0].length) < be16_to_cpu(bf[1].length))
-+		return false;
-+	if (be16_to_cpu(bf[1].length) < be16_to_cpu(bf[2].length))
-+		return false;
-+
-+	return true;
++	xbitmap_init(&bitmap->fsbitmap);
 +}
 +
-+/* Guess the mode of this file from the contents. */
-+STATIC uint16_t
-+xrep_dinode_guess_mode(
-+	struct xrep_inode	*ri,
-+	struct xfs_dinode	*dip)
++static inline void xfsb_bitmap_destroy(struct xfsb_bitmap *bitmap)
 +{
-+	struct xfs_buf		*bp;
-+	struct xfs_mount	*mp = ri->sc->mp;
-+	xfs_daddr_t		daddr;
-+	uint64_t		fsize = be64_to_cpu(dip->di_size);
-+	unsigned int		dfork_sz = XFS_DFORK_DSIZE(dip, mp);
-+	uint16_t		mode = S_IFREG;
-+	int			error;
++	xbitmap_destroy(&bitmap->fsbitmap);
++}
 +
-+	switch (dip->di_format) {
-+	case XFS_DINODE_FMT_LOCAL:
-+		/*
-+		 * If the data fork is local format, the size of the data area
-+		 * is reasonable and is big enough to contain the entire file,
-+		 * we can guess the file type from the local data.
-+		 *
-+		 * If there are no nulls, guess this is a symbolic link.
-+		 * Otherwise, this is probably a shortform directory.
-+		 */
-+		if (dfork_sz <= XFS_LITINO(mp) && dfork_sz >= fsize) {
-+			if (!memchr(XFS_DFORK_DPTR(dip), 0, fsize))
-+				return S_IFLNK;
-+			return S_IFDIR;
-+		}
++static inline int xfsb_bitmap_set(struct xfsb_bitmap *bitmap,
++		xfs_fsblock_t start, xfs_filblks_t len)
++{
++	return xbitmap_set(&bitmap->fsbitmap, start, len);
++}
 +
-+		/* By default, we guess regular file. */
-+		return S_IFREG;
-+	case XFS_DINODE_FMT_DEV:
-+		/*
-+		 * If the data fork is dev format, the size of the data area is
-+		 * reasonable and large enough to store a dev_t, and the file
-+		 * size is zero, this could be a blockdev, a chardev, a fifo,
-+		 * or a socket.  There is no solid way to distinguish between
-+		 * those choices, so we guess blockdev if the device number is
-+		 * nonzero and chardev if it's zero (aka whiteout).
-+		 */
-+		if (dfork_sz <= XFS_LITINO(mp) &&
-+		    dfork_sz >= sizeof(__be32) && fsize == 0) {
-+			xfs_dev_t	dev = xfs_dinode_get_rdev(dip);
++static inline int xfsb_bitmap_walk(struct xfsb_bitmap *bitmap,
++		xbitmap_walk_fn fn, void *priv)
++{
++	return xbitmap_walk(&bitmap->fsbitmap, fn, priv);
++}
 +
-+			return dev != 0 ? S_IFBLK : S_IFCHR;
-+		}
+ #endif	/* __XFS_SCRUB_BITMAP_H__ */
+diff --git a/fs/xfs/scrub/reap.c b/fs/xfs/scrub/reap.c
+index f0419ffca42b..f904cad5a3c4 100644
+--- a/fs/xfs/scrub/reap.c
++++ b/fs/xfs/scrub/reap.c
+@@ -73,10 +73,10 @@
+  * with only the same rmap owner but the block is not owned by something with
+  * the same rmap owner, the block will be freed.
+  *
+- * The caller is responsible for locking the AG headers for the entire rebuild
+- * operation so that nothing else can sneak in and change the AG state while
+- * we're not looking.  We must also invalidate any buffers associated with
+- * @bitmap.
++ * The caller is responsible for locking the AG headers/inode for the entire
++ * rebuild operation so that nothing else can sneak in and change the incore
++ * state while we're not looking.  We must also invalidate any buffers
++ * associated with @bitmap.
+  */
+ 
+ /* Information about reaping extents after a repair. */
+@@ -500,3 +500,115 @@ xrep_reap_agblocks(
+ 
+ 	return 0;
+ }
 +
-+		/* By default, we guess regular file. */
-+		return S_IFREG;
-+	case XFS_DINODE_FMT_EXTENTS:
-+	case XFS_DINODE_FMT_BTREE:
-+		/* There are data blocks to examine below. */
-+		break;
-+	default:
-+		/* Everything else is considered a regular file. */
-+		return S_IFREG;
-+	}
++/*
++ * Break a file metadata extent into sub-extents by fate (crosslinked, not
++ * crosslinked), and dispose of each sub-extent separately.  The extent must
++ * not cross an AG boundary.
++ */
++STATIC int
++xreap_fsmeta_extent(
++	uint64_t		fsbno,
++	uint64_t		len,
++	void			*priv)
++{
++	struct xreap_state	*rs = priv;
++	struct xfs_scrub	*sc = rs->sc;
++	xfs_agnumber_t		agno = XFS_FSB_TO_AGNO(sc->mp, fsbno);
++	xfs_agblock_t		agbno = XFS_FSB_TO_AGBNO(sc->mp, fsbno);
++	xfs_agblock_t		agbno_next = agbno + len;
++	int			error = 0;
 +
-+	/* There are no zero-length directories. */
-+	if (fsize == 0)
-+		return S_IFREG;
-+
-+	/*
-+	 * If we didn't find a written mapping for file block zero, we'll guess
-+	 * that it's a sparse regular file.
-+	 */
-+	if (ri->block0 == NULLFSBLOCK)
-+		return S_IFREG;
-+
-+	/* Directories can't have rt extents. */
-+	if (ri->rt_extents > 0)
-+		return S_IFREG;
++	ASSERT(len <= XFS_MAX_BMBT_EXTLEN);
++	ASSERT(sc->ip != NULL);
++	ASSERT(!sc->sa.pag);
 +
 +	/*
-+	 * Read the first block of the file.  Since we have no idea what kind
-+	 * of file geometry (e.g. dirblock size) we might be reading into, use
-+	 * an uncached buffer so that we don't pollute the buffer cache.  We
-+	 * can't do uncached mapped buffers, so the best we can do is guess
-+	 * from the directory header.
++	 * We're reaping blocks after repairing file metadata, which means that
++	 * we have to init the xchk_ag structure ourselves.
 +	 */
-+	daddr = XFS_FSB_TO_DADDR(mp, ri->block0);
-+	error = xfs_buf_read_uncached(mp->m_ddev_targp, daddr,
-+			XFS_FSS_TO_BB(mp, 1), 0, &bp, NULL);
++	sc->sa.pag = xfs_perag_get(sc->mp, agno);
++	if (!sc->sa.pag)
++		return -EFSCORRUPTED;
++
++	error = xfs_alloc_read_agf(sc->sa.pag, sc->tp, 0, &sc->sa.agf_bp);
 +	if (error)
-+		return S_IFREG;
++		goto out_pag;
 +
-+	if (xrep_dinode_is_dir(ri->sc->sm->sm_ino, daddr, bp))
-+		mode = S_IFDIR;
++	while (agbno < agbno_next) {
++		xfs_extlen_t	aglen;
++		bool		crosslinked;
 +
-+	xfs_buf_relse(bp);
-+	return mode;
-+}
++		error = xreap_agextent_select(rs, agbno, agbno_next,
++				&crosslinked, &aglen);
++		if (error)
++			goto out_agf;
 +
- /* Turn di_mode into /something/ recognizable. */
- STATIC void
- xrep_dinode_mode(
--	struct xfs_scrub	*sc,
-+	struct xrep_inode	*ri,
- 	struct xfs_dinode	*dip)
- {
-+	struct xfs_scrub	*sc = ri->sc;
- 	uint16_t		mode;
- 
- 	trace_xrep_dinode_mode(sc, dip);
-@@ -203,7 +354,7 @@ xrep_dinode_mode(
- 		return;
- 
- 	/* bad mode, so we set it to a file that only root can read */
--	mode = S_IFREG;
-+	mode = xrep_dinode_guess_mode(ri, dip);
- 	dip->di_mode = cpu_to_be16(mode);
- 	dip->di_uid = 0;
- 	dip->di_gid = 0;
-@@ -412,9 +563,17 @@ xrep_dinode_walk_rmap(
- 	}
- 
- 	ri->data_blocks += rec->rm_blockcount;
--	if (!(rec->rm_flags & XFS_RMAP_BMBT_BLOCK))
-+	if (!(rec->rm_flags & XFS_RMAP_BMBT_BLOCK)) {
- 		ri->data_extents++;
- 
-+		if (rec->rm_offset == 0 &&
-+		    !(rec->rm_flags & XFS_RMAP_UNWRITTEN)) {
-+			if (ri->block0 != NULLFSBLOCK)
-+				return -EFSCORRUPTED;
-+			ri->block0 = rec->rm_startblock;
++		error = xreap_agextent(rs, agbno, &aglen, crosslinked);
++		if (error)
++			goto out_agf;
++
++		if (xreap_want_defer_finish(rs)) {
++			/*
++			 * Holds the AGF buffer across the deferred chain
++			 * processing.
++			 */
++			error = xrep_defer_finish(sc);
++			if (error)
++				goto out_agf;
++			xreap_defer_finish_reset(rs);
++		} else if (xreap_want_roll(rs)) {
++			/*
++			 * Hold the AGF buffer across the transaction roll so
++			 * that we don't have to reattach it to the scrub
++			 * context.
++			 */
++			xfs_trans_bhold(sc->tp, sc->sa.agf_bp);
++			error = xfs_trans_roll_inode(&sc->tp, sc->ip);
++			xfs_trans_bjoin(sc->tp, sc->sa.agf_bp);
++			if (error)
++				goto out_agf;
++			xreap_reset(rs);
 +		}
++
++		agbno += aglen;
 +	}
 +
- 	return 0;
- }
++out_agf:
++	xfs_trans_brelse(sc->tp, sc->sa.agf_bp);
++	sc->sa.agf_bp = NULL;
++out_pag:
++	xfs_perag_put(sc->sa.pag);
++	sc->sa.pag = NULL;
++	return error;
++}
++
++/*
++ * Dispose of every block of every fs metadata extent in the bitmap.
++ * Do not use this to dispose of the mappings in an ondisk inode fork.
++ */
++int
++xrep_reap_fsblocks(
++	struct xfs_scrub		*sc,
++	struct xfsb_bitmap		*bitmap,
++	const struct xfs_owner_info	*oinfo)
++{
++	struct xreap_state		rs = {
++		.sc			= sc,
++		.oinfo			= oinfo,
++		.resv			= XFS_AG_RESV_NONE,
++	};
++	int				error;
++
++	ASSERT(xfs_has_rmapbt(sc->mp));
++	ASSERT(sc->ip != NULL);
++
++	error = xfsb_bitmap_walk(bitmap, xreap_fsmeta_extent, &rs);
++	if (error)
++		return error;
++
++	if (xreap_dirty(&rs))
++		return xrep_defer_finish(sc);
++
++	return 0;
++}
+diff --git a/fs/xfs/scrub/reap.h b/fs/xfs/scrub/reap.h
+index fe24626af164..5e710be44b4b 100644
+--- a/fs/xfs/scrub/reap.h
++++ b/fs/xfs/scrub/reap.h
+@@ -8,5 +8,7 @@
  
-@@ -465,7 +624,8 @@ xrep_dinode_count_rmaps(
+ int xrep_reap_agblocks(struct xfs_scrub *sc, struct xagb_bitmap *bitmap,
+ 		const struct xfs_owner_info *oinfo, enum xfs_ag_resv_type type);
++int xrep_reap_fsblocks(struct xfs_scrub *sc, struct xfsb_bitmap *bitmap,
++		const struct xfs_owner_info *oinfo);
  
- 	trace_xrep_dinode_count_rmaps(ri->sc,
- 			ri->data_blocks, ri->rt_blocks, ri->attr_blocks,
--			ri->data_extents, ri->rt_extents, ri->attr_extents);
-+			ri->data_extents, ri->rt_extents, ri->attr_extents,
-+			ri->block0);
- 	return 0;
- }
+ #endif /* __XFS_SCRUB_REAP_H__ */
+diff --git a/fs/xfs/scrub/repair.h b/fs/xfs/scrub/repair.h
+index 9f98b70e630c..d13beb1fc4c3 100644
+--- a/fs/xfs/scrub/repair.h
++++ b/fs/xfs/scrub/repair.h
+@@ -38,6 +38,7 @@ xrep_trans_commit(
  
-@@ -1072,7 +1232,7 @@ xrep_dinode_core(
- 	/* Fix everything the verifier will complain about. */
- 	dip = xfs_buf_offset(bp, ri->imap.im_boffset);
- 	xrep_dinode_header(sc, dip);
--	xrep_dinode_mode(sc, dip);
-+	xrep_dinode_mode(ri, dip);
- 	xrep_dinode_flags(sc, dip, ri->rt_extents > 0);
- 	xrep_dinode_size(sc, dip);
- 	xrep_dinode_extsize_hints(sc, dip);
-diff --git a/fs/xfs/scrub/trace.h b/fs/xfs/scrub/trace.h
-index cc939bf726e3..b288b3db9e4b 100644
---- a/fs/xfs/scrub/trace.h
-+++ b/fs/xfs/scrub/trace.h
-@@ -1483,9 +1483,9 @@ TRACE_EVENT(xrep_dinode_count_rmaps,
- 	TP_PROTO(struct xfs_scrub *sc, xfs_rfsblock_t data_blocks,
- 		xfs_rfsblock_t rt_blocks, xfs_rfsblock_t attr_blocks,
- 		xfs_extnum_t data_extents, xfs_extnum_t rt_extents,
--		xfs_aextnum_t attr_extents),
-+		xfs_aextnum_t attr_extents, xfs_fsblock_t block0),
- 	TP_ARGS(sc, data_blocks, rt_blocks, attr_blocks, data_extents,
--		rt_extents, attr_extents),
-+		rt_extents, attr_extents, block0),
- 	TP_STRUCT__entry(
- 		__field(dev_t, dev)
- 		__field(xfs_ino_t, ino)
-@@ -1495,6 +1495,7 @@ TRACE_EVENT(xrep_dinode_count_rmaps,
- 		__field(xfs_extnum_t, data_extents)
- 		__field(xfs_extnum_t, rt_extents)
- 		__field(xfs_aextnum_t, attr_extents)
-+		__field(xfs_fsblock_t, block0)
- 	),
- 	TP_fast_assign(
- 		__entry->dev = sc->mp->m_super->s_dev;
-@@ -1505,8 +1506,9 @@ TRACE_EVENT(xrep_dinode_count_rmaps,
- 		__entry->data_extents = data_extents;
- 		__entry->rt_extents = rt_extents;
- 		__entry->attr_extents = attr_extents;
-+		__entry->block0 = block0;
- 	),
--	TP_printk("dev %d:%d ino 0x%llx dblocks 0x%llx rtblocks 0x%llx ablocks 0x%llx dextents %llu rtextents %llu aextents %u",
-+	TP_printk("dev %d:%d ino 0x%llx dblocks 0x%llx rtblocks 0x%llx ablocks 0x%llx dextents %llu rtextents %llu aextents %u startblock0 0x%llx",
- 		  MAJOR(__entry->dev), MINOR(__entry->dev),
- 		  __entry->ino,
- 		  __entry->data_blocks,
-@@ -1514,7 +1516,8 @@ TRACE_EVENT(xrep_dinode_count_rmaps,
- 		  __entry->attr_blocks,
- 		  __entry->data_extents,
- 		  __entry->rt_extents,
--		  __entry->attr_extents)
-+		  __entry->attr_extents,
-+		  __entry->block0)
- );
+ struct xbitmap;
+ struct xagb_bitmap;
++struct xfsb_bitmap;
  
- #endif /* IS_ENABLED(CONFIG_XFS_ONLINE_REPAIR) */
+ int xrep_fix_freelist(struct xfs_scrub *sc, bool can_shrink);
+ 
 
