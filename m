@@ -2,38 +2,38 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5FD0BC77B7C
-	for <linux-xfs@archiver.kernel.org>; Fri, 26 May 2023 08:14:07 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 95AA0C77B7A
+	for <linux-xfs@archiver.kernel.org>; Fri, 26 May 2023 08:20:37 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S242461AbjEZIOF (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 26 May 2023 04:14:05 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55560 "EHLO
+        id S242297AbjEZIUf (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 26 May 2023 04:20:35 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58936 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S236852AbjEZIOD (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 26 May 2023 04:14:03 -0400
+        with ESMTP id S242651AbjEZIU1 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 26 May 2023 04:20:27 -0400
 Received: from bombadil.infradead.org (bombadil.infradead.org [IPv6:2607:7c80:54:3::133])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C8422128;
-        Fri, 26 May 2023 01:13:54 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C5BA619A;
+        Fri, 26 May 2023 01:20:20 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Type:MIME-Version
-        :References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
+        d=infradead.org; s=bombadil.20210309; h=Sender:In-Reply-To:Content-Type:
+        MIME-Version:References:Message-ID:Subject:Cc:To:From:Date:Reply-To:
         Content-Transfer-Encoding:Content-ID:Content-Description;
-        bh=M7NmYC/Iylm9myghHwqILim55SAUt9QrM+UZYk0eJlw=; b=LD/oWd/+mUj05u7ro37NQInoFL
-        QzOw/tkYA8cVHDX+8VYtqDDKsM8OF05TnEUZx6NkzwaoN6OKUQAZJV8bkH41SMqO8dkQiogL53on9
-        oGdLGmmKwtwfXwxOgpUBRjTOSi7VN2TtkHQI5QOFNgLJsKY70Td+PpxZPdYun+JdJPmInaFuVTou+
-        cxx2GDaEkVUCw6GgAS+3fCiOb4NrG7orVCeA4t1x7IE24+c2eoYcddQeqDJmjo0iQjOcgFWaQCbqq
-        6qSd+rSBRbQ8QJPvXdLtfoQC1oVaNYbInTaTaPEVhKwja5Gzbn10nhYW9T1C1gWHoZn5YHKTC+iiv
-        bWNDgIlg==;
-Received: from hch by bombadil.infradead.org with local (Exim 4.96 #2 (Red Hat Linux))
-        id 1q2Sa5-001ZC5-2F;
-        Fri, 26 May 2023 08:13:49 +0000
-Date:   Fri, 26 May 2023 01:13:49 -0700
-From:   Christoph Hellwig <hch@infradead.org>
-To:     Luis Chamberlain <mcgrof@kernel.org>
+        bh=0KbVHtLWzypQwk+AwZxRS0QdYzT+F7q/5Piz32xg/x8=; b=oRl19PBV9T5B9yEeGSQqipatMr
+        PRxWWS4jGFgwZvrv2rWRlSzwLJe6REI6Iw0aokgq/vH/EAL6v9jQygHGuYq7IAnF5QH08o4NT968K
+        2WA9NTHPmS0lkiCxEhYUlBxjFUW27zaMXt3/ooiriD0jmANXQzCRL/BsOujZeq4aKiOSQaOy+7lxa
+        jfR8o0+4WFcujnWQe2iUrlHP5sbYbKQBGwHU7QU5YboV9aepiIdevTotLwapoePOafMrs17+7eYGn
+        w7Sf9No/xGOC0HbZ6NCPNE4vV9O70l1asn9Tfmev+S2rMJKGCyyyyVAIKnLeQELhIup8qahAdq2Xn
+        VMm3c4UQ==;
+Received: from mcgrof by bombadil.infradead.org with local (Exim 4.96 #2 (Red Hat Linux))
+        id 1q2SgK-001aII-1S;
+        Fri, 26 May 2023 08:20:16 +0000
+Date:   Fri, 26 May 2023 01:20:16 -0700
+From:   Luis Chamberlain <mcgrof@kernel.org>
+To:     Christoph Hellwig <hch@infradead.org>
 Cc:     axboe@kernel.dk, agk@redhat.com, snitzer@kernel.org,
         philipp.reisner@linbit.com, lars.ellenberg@linbit.com,
-        christoph.boehmwalder@linbit.com, hch@infradead.org,
-        djwong@kernel.org, minchan@kernel.org, senozhatsky@chromium.org,
+        christoph.boehmwalder@linbit.com, djwong@kernel.org,
+        minchan@kernel.org, senozhatsky@chromium.org,
         patches@lists.linux.dev, linux-block@vger.kernel.org,
         linux-mm@kvack.org, linux-xfs@vger.kernel.org,
         linux-fsdevel@vger.kernel.org, dm-devel@redhat.com,
@@ -41,19 +41,34 @@ Cc:     axboe@kernel.dk, agk@redhat.com, snitzer@kernel.org,
         willy@infradead.org, hare@suse.de, p.raghav@samsung.com,
         da.gomez@samsung.com, rohan.puri@samsung.com,
         rpuri.linux@gmail.com, kbusch@kernel.org
-Subject: Re: [PATCH v2 3/5] iomap: simplify iomap_init() with PAGE_SECTORS
-Message-ID: <ZHBqPbMCsNHVRvkt@infradead.org>
+Subject: Re: [PATCH v2 1/5] block: annotate bdev_disk_changed() deprecation
+ with a symbol namespace
+Message-ID: <ZHBrwFk0d80IiOfV@bombadil.infradead.org>
 References: <20230526073336.344543-1-mcgrof@kernel.org>
- <20230526073336.344543-4-mcgrof@kernel.org>
+ <20230526073336.344543-2-mcgrof@kernel.org>
+ <ZHBqGosY0tWkNdIR@infradead.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20230526073336.344543-4-mcgrof@kernel.org>
-X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
+In-Reply-To: <ZHBqGosY0tWkNdIR@infradead.org>
+Sender: Luis Chamberlain <mcgrof@infradead.org>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Looks good:
+On Fri, May 26, 2023 at 01:13:14AM -0700, Christoph Hellwig wrote:
+> On Fri, May 26, 2023 at 12:33:32AM -0700, Luis Chamberlain wrote:
+> > This ensures no other users pop up by mistake easily and provides
+> > us a with an easy vehicle to do the same with other routines should
+> > we need it later.
+> 
+> I don't see how this is related to the rest of the seris.
 
-Reviewed-by: Christoph Hellwig <hch@lst.de>
+Jessh, sorry it is too late here and that was a typo that the commit
+went into the series. I'll go sleep now. This I just had queued
+as a reminder for the new annotation for deprecated symbols to be
+used in some situations.
+
+Please ignore this patch.
+
+  Luis
