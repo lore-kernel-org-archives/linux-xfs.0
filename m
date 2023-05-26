@@ -2,41 +2,41 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CC010C77B7E
-	for <linux-xfs@archiver.kernel.org>; Fri, 26 May 2023 01:41:20 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id BE073C77B7E
+	for <linux-xfs@archiver.kernel.org>; Fri, 26 May 2023 01:41:37 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234071AbjEZBlU (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 25 May 2023 21:41:20 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36238 "EHLO
+        id S234139AbjEZBlh (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 25 May 2023 21:41:37 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36278 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229727AbjEZBlT (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 25 May 2023 21:41:19 -0400
+        with ESMTP id S229727AbjEZBlf (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 25 May 2023 21:41:35 -0400
 Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 06839E2
-        for <linux-xfs@vger.kernel.org>; Thu, 25 May 2023 18:41:18 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A14B0189
+        for <linux-xfs@vger.kernel.org>; Thu, 25 May 2023 18:41:33 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 8BCF764C02
-        for <linux-xfs@vger.kernel.org>; Fri, 26 May 2023 01:41:17 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id EAF72C433D2;
-        Fri, 26 May 2023 01:41:16 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 2C4A864C02
+        for <linux-xfs@vger.kernel.org>; Fri, 26 May 2023 01:41:33 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 8B75DC433D2;
+        Fri, 26 May 2023 01:41:32 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1685065277;
-        bh=urZ+o1Z4y3K6MT9HDacyH6T6E9kAsh9P45+eTQf8OOw=;
+        s=k20201202; t=1685065292;
+        bh=s1aTR+uuRg9B1keRVjy8ZTD99KrGdahtWrS9xKkWIyY=;
         h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-        b=FnE/gnFOqv5Vr1x1bp+XkX9xOCHhwx14s3FgWtkWfkxyjwbEnvi7fG8bvWHtfCOvA
-         3xDeLAPh/HaFRvfcuqwtrfIzKrg/U+U9T1P57kBjertyI/I6YSknOZeUgpwfuHQvFo
-         HFut0v3QWECQ++GFqoEBdDgKEqNqi5WzxO8beEBOTy+riZVY3B727uZr4zXkg6mFNj
-         WNZqSp2ks+lcynAbBeLjgGqTJ2frVcp+TbNKskjIogFEHXG9oRceGm+rEDe1QMCZgD
-         GOmQoKashndjNt+S7eWUmAGXPbu/dY3Lc1Oi9NZ7jpiiKLKWD1SfZNvMWz01O8TFYs
-         i0NwMdVh1Jfjg==
-Date:   Thu, 25 May 2023 18:41:16 -0700
-Subject: [PATCH 3/7] xfs_scrub: remove ALP_* flags namespace
+        b=coMOYzB41vnY9BkAIg801gwwhng/Sa/oW/uR06N9ckQVMW52o62SeeuTwtqTDuuh0
+         BM3Vm6wdndUOzcoBtP5+Zkg+zxoZvGcs4sD3Ub95CCPLSTN9+bEZi1r/kUk9ASoPBT
+         GoTQ9PqrveTEawmO5tqtJg3MmaQ4l/nDjJx1OFnrPxEbxypv/ddXCgr8zhWk+HC7z2
+         z1jolFkjbRFPx9Brt7KMJdpao0uGfOkY5Lj1UR2c9gTEEnRbqzipVieXaUo8kSZ4w6
+         IozTarrS34Iknxlnh123Suw0bWi2lRoPAUxTpIkeU1ASFb1ZIqsxdF9JOMHkB3tESn
+         0I4jsiSl40cOQ==
+Date:   Thu, 25 May 2023 18:41:32 -0700
+Subject: [PATCH 4/7] xfs_scrub: move repair functions to repair.c
 From:   "Darrick J. Wong" <djwong@kernel.org>
 To:     djwong@kernel.org, cem@kernel.org
 Cc:     linux-xfs@vger.kernel.org
-Message-ID: <168506071352.3742205.4711533611795358018.stgit@frogsfrogsfrogs>
+Message-ID: <168506071364.3742205.4869800041467957097.stgit@frogsfrogsfrogs>
 In-Reply-To: <168506071314.3742205.8114181660121831202.stgit@frogsfrogsfrogs>
 References: <168506071314.3742205.8114181660121831202.stgit@frogsfrogsfrogs>
 User-Agent: StGit/0.19
@@ -49,191 +49,536 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-In preparation to move all the repair code to repair.[ch], remove the
-ALP_* flags namespace since it mostly overlaps with XRM_*.  Rename the
-clunky "COMPLAIN_IF_UNFIXED" flag to "FINAL_WARNING", because that's
-what it really means.
+Move all the repair functions to repair.c.
 
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 ---
- scrub/phase3.c |    2 +-
- scrub/phase4.c |    2 +-
- scrub/phase5.c |    2 +-
- scrub/phase7.c |    2 +-
- scrub/repair.c |    4 ++--
- scrub/repair.h |   16 ++++++++++++----
- scrub/scrub.c  |   10 +++++-----
- scrub/scrub.h  |   10 ----------
- 8 files changed, 23 insertions(+), 25 deletions(-)
+ scrub/phase1.c        |    2 
+ scrub/repair.c        |  169 +++++++++++++++++++++++++++++++++++++++++
+ scrub/scrub.c         |  204 +------------------------------------------------
+ scrub/scrub.h         |    6 -
+ scrub/scrub_private.h |   55 +++++++++++++
+ 5 files changed, 230 insertions(+), 206 deletions(-)
+ create mode 100644 scrub/scrub_private.h
 
 
-diff --git a/scrub/phase3.c b/scrub/phase3.c
-index 76393c5192a..97a1935c89f 100644
---- a/scrub/phase3.c
-+++ b/scrub/phase3.c
-@@ -88,7 +88,7 @@ try_inode_repair(
- 		return 0;
- 
- 	ret = action_list_process(ictx->ctx, fd, alist,
--			ALP_REPAIR_ONLY | ALP_NOPROGRESS);
-+			XRM_REPAIR_ONLY | XRM_NOPROGRESS);
- 	if (ret)
- 		return ret;
- 
-diff --git a/scrub/phase4.c b/scrub/phase4.c
-index c5a793d73c5..789208398b4 100644
---- a/scrub/phase4.c
-+++ b/scrub/phase4.c
-@@ -54,7 +54,7 @@ repair_ag(
- 	} while (unfixed > 0);
- 
- 	/* Try once more, but this time complain if we can't fix things. */
--	flags |= ALP_COMPLAIN_IF_UNFIXED;
-+	flags |= XRM_FINAL_WARNING;
- 	ret = action_list_process(ctx, -1, alist, flags);
- 	if (ret)
- 		*aborted = true;
-diff --git a/scrub/phase5.c b/scrub/phase5.c
-index 358fe00d00d..3af17e8305c 100644
---- a/scrub/phase5.c
-+++ b/scrub/phase5.c
-@@ -421,7 +421,7 @@ iscan_worker(
+diff --git a/scrub/phase1.c b/scrub/phase1.c
+index 37290946ef1..3c1341a6da7 100644
+--- a/scrub/phase1.c
++++ b/scrub/phase1.c
+@@ -210,7 +210,7 @@ _("Kernel metadata scrubbing facility is not available."));
  	}
  
- 	ret = action_list_process(ctx, ctx->mnt.fd, &item->alist,
--			ALP_COMPLAIN_IF_UNFIXED | ALP_NOPROGRESS);
-+			XRM_FINAL_WARNING | XRM_NOPROGRESS);
- 	if (ret) {
- 		str_liberror(ctx, ret, _("repairing iscan metadata"));
- 		*item->abortedp = true;
-diff --git a/scrub/phase7.c b/scrub/phase7.c
-index 592af69110b..0f9c30b7922 100644
---- a/scrub/phase7.c
-+++ b/scrub/phase7.c
-@@ -122,7 +122,7 @@ phase7_func(
- 	if (error)
- 		return error;
- 	error = action_list_process(ctx, -1, &alist,
--			ALP_COMPLAIN_IF_UNFIXED | ALP_NOPROGRESS);
-+			XRM_FINAL_WARNING | XRM_NOPROGRESS);
- 	if (error)
- 		return error;
- 
+ 	/* Do we need kernel-assisted metadata repair? */
+-	if (ctx->mode != SCRUB_MODE_DRY_RUN && !xfs_can_repair(ctx)) {
++	if (ctx->mode != SCRUB_MODE_DRY_RUN && !can_repair(ctx)) {
+ 		str_error(ctx, ctx->mntpoint,
+ _("Kernel metadata repair facility is not available.  Use -n to scrub."));
+ 		return ECANCELED;
 diff --git a/scrub/repair.c b/scrub/repair.c
-index 3afb9487382..cddb834af1d 100644
+index cddb834af1d..b6f1f4be0fb 100644
 --- a/scrub/repair.c
 +++ b/scrub/repair.c
-@@ -274,7 +274,7 @@ action_list_process(
- 		fix = xfs_repair_metadata(ctx, xfdp, aitem, repair_flags);
- 		switch (fix) {
- 		case CHECK_DONE:
--			if (!(repair_flags & ALP_NOPROGRESS))
-+			if (!(repair_flags & XRM_NOPROGRESS))
- 				progress_add(1);
- 			alist->nr--;
- 			list_del(&aitem->list);
-@@ -316,7 +316,7 @@ action_list_process_or_defer(
- 	int				ret;
- 
- 	ret = action_list_process(ctx, -1, alist,
--			ALP_REPAIR_ONLY | ALP_NOPROGRESS);
-+			XRM_REPAIR_ONLY | XRM_NOPROGRESS);
- 	if (ret)
- 		return ret;
- 
-diff --git a/scrub/repair.h b/scrub/repair.h
-index c545ab2c00b..cb843a463e0 100644
---- a/scrub/repair.h
-+++ b/scrub/repair.h
-@@ -32,10 +32,18 @@ void action_list_find_mustfix(struct action_list *actions,
- 		unsigned long long *broken_primaries,
- 		unsigned long long *broken_secondaries);
- 
--/* Passed through to xfs_repair_metadata() */
--#define ALP_REPAIR_ONLY		(XRM_REPAIR_ONLY)
--#define ALP_COMPLAIN_IF_UNFIXED	(XRM_COMPLAIN_IF_UNFIXED)
--#define ALP_NOPROGRESS		(1U << 31)
-+/*
-+ * Only ask the kernel to repair this object if the kernel directly told us it
-+ * was corrupt.  Objects that are only flagged as having cross-referencing
-+ * errors or flagged as eligible for optimization are left for later.
-+ */
-+#define XRM_REPAIR_ONLY		(1U << 0)
+@@ -10,11 +10,180 @@
+ #include <sys/statvfs.h>
+ #include "list.h"
+ #include "libfrog/paths.h"
++#include "libfrog/fsgeom.h"
++#include "libfrog/scrub.h"
+ #include "xfs_scrub.h"
+ #include "common.h"
+ #include "scrub.h"
+ #include "progress.h"
+ #include "repair.h"
++#include "descr.h"
++#include "scrub_private.h"
 +
-+/* This is the last repair attempt; complain if still broken even after fix. */
-+#define XRM_FINAL_WARNING	(1U << 1)
++/* General repair routines. */
 +
-+/* Don't call progress_add after repairing an item. */
-+#define XRM_NOPROGRESS		(1U << 2)
++/* Repair some metadata. */
++static enum check_outcome
++xfs_repair_metadata(
++	struct scrub_ctx		*ctx,
++	struct xfs_fd			*xfdp,
++	struct action_item		*aitem,
++	unsigned int			repair_flags)
++{
++	struct xfs_scrub_metadata	meta = { 0 };
++	struct xfs_scrub_metadata	oldm;
++	DEFINE_DESCR(dsc, ctx, format_scrub_descr);
++	int				error;
++
++	assert(aitem->type < XFS_SCRUB_TYPE_NR);
++	assert(!debug_tweak_on("XFS_SCRUB_NO_KERNEL"));
++	meta.sm_type = aitem->type;
++	meta.sm_flags = aitem->flags | XFS_SCRUB_IFLAG_REPAIR;
++	if (use_force_rebuild)
++		meta.sm_flags |= XFS_SCRUB_IFLAG_FORCE_REBUILD;
++	switch (xfrog_scrubbers[aitem->type].group) {
++	case XFROG_SCRUB_GROUP_AGHEADER:
++	case XFROG_SCRUB_GROUP_PERAG:
++		meta.sm_agno = aitem->agno;
++		break;
++	case XFROG_SCRUB_GROUP_INODE:
++		meta.sm_ino = aitem->ino;
++		meta.sm_gen = aitem->gen;
++		break;
++	default:
++		break;
++	}
++
++	if (!is_corrupt(&meta) && (repair_flags & XRM_REPAIR_ONLY))
++		return CHECK_RETRY;
++
++	memcpy(&oldm, &meta, sizeof(oldm));
++	descr_set(&dsc, &oldm);
++
++	if (needs_repair(&meta))
++		str_info(ctx, descr_render(&dsc), _("Attempting repair."));
++	else if (debug || verbose)
++		str_info(ctx, descr_render(&dsc),
++				_("Attempting optimization."));
++
++	error = -xfrog_scrub_metadata(xfdp, &meta);
++	switch (error) {
++	case 0:
++		/* No operational errors encountered. */
++		break;
++	case EDEADLOCK:
++	case EBUSY:
++		/* Filesystem is busy, try again later. */
++		if (debug || verbose)
++			str_info(ctx, descr_render(&dsc),
++_("Filesystem is busy, deferring repair."));
++		return CHECK_RETRY;
++	case ESHUTDOWN:
++		/* Filesystem is already shut down, abort. */
++		str_error(ctx, descr_render(&dsc),
++_("Filesystem is shut down, aborting."));
++		return CHECK_ABORT;
++	case ENOTTY:
++	case EOPNOTSUPP:
++		/*
++		 * If the kernel cannot perform the optimization that we
++		 * requested; or we forced a repair but the kernel doesn't know
++		 * how to perform the repair, don't requeue the request.  Mark
++		 * it done and move on.
++		 */
++		if (is_unoptimized(&oldm) ||
++		    debug_tweak_on("XFS_SCRUB_FORCE_REPAIR"))
++			return CHECK_DONE;
++		/*
++		 * If we're in no-complain mode, requeue the check for
++		 * later.  It's possible that an error in another
++		 * component caused us to flag an error in this
++		 * component.  Even if the kernel didn't think it
++		 * could fix this, it's at least worth trying the scan
++		 * again to see if another repair fixed it.
++		 */
++		if (!(repair_flags & XRM_FINAL_WARNING))
++			return CHECK_RETRY;
++		fallthrough;
++	case EINVAL:
++		/* Kernel doesn't know how to repair this? */
++		str_corrupt(ctx, descr_render(&dsc),
++_("Don't know how to fix; offline repair required."));
++		return CHECK_DONE;
++	case EROFS:
++		/* Read-only filesystem, can't fix. */
++		if (verbose || debug || needs_repair(&oldm))
++			str_error(ctx, descr_render(&dsc),
++_("Read-only filesystem; cannot make changes."));
++		return CHECK_ABORT;
++	case ENOENT:
++		/* Metadata not present, just skip it. */
++		return CHECK_DONE;
++	case ENOMEM:
++	case ENOSPC:
++		/* Don't care if preen fails due to low resources. */
++		if (is_unoptimized(&oldm) && !needs_repair(&oldm))
++			return CHECK_DONE;
++		fallthrough;
++	default:
++		/*
++		 * Operational error.  If the caller doesn't want us
++		 * to complain about repair failures, tell the caller
++		 * to requeue the repair for later and don't say a
++		 * thing.  Otherwise, print error and bail out.
++		 */
++		if (!(repair_flags & XRM_FINAL_WARNING))
++			return CHECK_RETRY;
++		str_liberror(ctx, error, descr_render(&dsc));
++		return CHECK_DONE;
++	}
++
++	if (repair_flags & XRM_FINAL_WARNING)
++		scrub_warn_incomplete_scrub(ctx, &dsc, &meta);
++	if (needs_repair(&meta)) {
++		/*
++		 * Still broken; if we've been told not to complain then we
++		 * just requeue this and try again later.  Otherwise we
++		 * log the error loudly and don't try again.
++		 */
++		if (!(repair_flags & XRM_FINAL_WARNING))
++			return CHECK_RETRY;
++		str_corrupt(ctx, descr_render(&dsc),
++_("Repair unsuccessful; offline repair required."));
++	} else if (xref_failed(&meta)) {
++		/*
++		 * This metadata object itself looks ok, but we still noticed
++		 * inconsistencies when comparing it with the other filesystem
++		 * metadata.  If we're in "final warning" mode, advise the
++		 * caller to run xfs_repair; otherwise, we'll keep trying to
++		 * reverify the cross-referencing as repairs progress.
++		 */
++		if (repair_flags & XRM_FINAL_WARNING) {
++			str_info(ctx, descr_render(&dsc),
++ _("Seems correct but cross-referencing failed; offline repair recommended."));
++		} else {
++			if (verbose)
++				str_info(ctx, descr_render(&dsc),
++ _("Seems correct but cross-referencing failed; will keep checking."));
++			return CHECK_RETRY;
++		}
++	} else {
++		/* Clean operation, no corruption detected. */
++		if (is_corrupt(&oldm))
++			record_repair(ctx, descr_render(&dsc),
++ _("Repairs successful."));
++		else if (xref_disagrees(&oldm))
++			record_repair(ctx, descr_render(&dsc),
++ _("Repairs successful after disrepancy in cross-referencing."));
++		else if (xref_failed(&oldm))
++			record_repair(ctx, descr_render(&dsc),
++ _("Repairs successful after cross-referencing failure."));
++		else
++			record_preen(ctx, descr_render(&dsc),
++ _("Optimization successful."));
++	}
++	return CHECK_DONE;
++}
  
- int action_list_process(struct scrub_ctx *ctx, int fd,
- 		struct action_list *alist, unsigned int repair_flags);
+ /*
+  * Prioritize action items in order of how long we can wait.
 diff --git a/scrub/scrub.c b/scrub/scrub.c
-index 63229c44746..4f30949ca0e 100644
+index 4f30949ca0e..93a49ddebb6 100644
 --- a/scrub/scrub.c
 +++ b/scrub/scrub.c
-@@ -743,7 +743,7 @@ _("Filesystem is shut down, aborting."));
- 		 * could fix this, it's at least worth trying the scan
- 		 * again to see if another repair fixed it.
- 		 */
--		if (!(repair_flags & XRM_COMPLAIN_IF_UNFIXED))
-+		if (!(repair_flags & XRM_FINAL_WARNING))
- 			return CHECK_RETRY;
- 		fallthrough;
- 	case EINVAL:
-@@ -773,13 +773,13 @@ _("Read-only filesystem; cannot make changes."));
- 		 * to requeue the repair for later and don't say a
- 		 * thing.  Otherwise, print error and bail out.
- 		 */
--		if (!(repair_flags & XRM_COMPLAIN_IF_UNFIXED))
-+		if (!(repair_flags & XRM_FINAL_WARNING))
- 			return CHECK_RETRY;
- 		str_liberror(ctx, error, descr_render(&dsc));
- 		return CHECK_DONE;
- 	}
+@@ -20,11 +20,12 @@
+ #include "scrub.h"
+ #include "repair.h"
+ #include "descr.h"
++#include "scrub_private.h"
  
--	if (repair_flags & XRM_COMPLAIN_IF_UNFIXED)
-+	if (repair_flags & XRM_FINAL_WARNING)
- 		scrub_warn_incomplete_scrub(ctx, &dsc, &meta);
- 	if (needs_repair(&meta)) {
- 		/*
-@@ -787,7 +787,7 @@ _("Read-only filesystem; cannot make changes."));
- 		 * just requeue this and try again later.  Otherwise we
- 		 * log the error loudly and don't try again.
- 		 */
--		if (!(repair_flags & XRM_COMPLAIN_IF_UNFIXED))
-+		if (!(repair_flags & XRM_FINAL_WARNING))
- 			return CHECK_RETRY;
- 		str_corrupt(ctx, descr_render(&dsc),
- _("Repair unsuccessful; offline repair required."));
-@@ -799,7 +799,7 @@ _("Repair unsuccessful; offline repair required."));
- 		 * caller to run xfs_repair; otherwise, we'll keep trying to
- 		 * reverify the cross-referencing as repairs progress.
- 		 */
--		if (repair_flags & XRM_COMPLAIN_IF_UNFIXED) {
-+		if (repair_flags & XRM_FINAL_WARNING) {
- 			str_info(ctx, descr_render(&dsc),
-  _("Seems correct but cross-referencing failed; offline repair recommended."));
- 		} else {
+ /* Online scrub and repair wrappers. */
+ 
+ /* Format a scrub description. */
+-static int
++int
+ format_scrub_descr(
+ 	struct scrub_ctx		*ctx,
+ 	char				*buf,
+@@ -52,46 +53,8 @@ format_scrub_descr(
+ 	return -1;
+ }
+ 
+-/* Predicates for scrub flag state. */
+-
+-static inline bool is_corrupt(struct xfs_scrub_metadata *sm)
+-{
+-	return sm->sm_flags & XFS_SCRUB_OFLAG_CORRUPT;
+-}
+-
+-static inline bool is_unoptimized(struct xfs_scrub_metadata *sm)
+-{
+-	return sm->sm_flags & XFS_SCRUB_OFLAG_PREEN;
+-}
+-
+-static inline bool xref_failed(struct xfs_scrub_metadata *sm)
+-{
+-	return sm->sm_flags & XFS_SCRUB_OFLAG_XFAIL;
+-}
+-
+-static inline bool xref_disagrees(struct xfs_scrub_metadata *sm)
+-{
+-	return sm->sm_flags & XFS_SCRUB_OFLAG_XCORRUPT;
+-}
+-
+-static inline bool is_incomplete(struct xfs_scrub_metadata *sm)
+-{
+-	return sm->sm_flags & XFS_SCRUB_OFLAG_INCOMPLETE;
+-}
+-
+-static inline bool is_suspicious(struct xfs_scrub_metadata *sm)
+-{
+-	return sm->sm_flags & XFS_SCRUB_OFLAG_WARNING;
+-}
+-
+-/* Should we fix it? */
+-static inline bool needs_repair(struct xfs_scrub_metadata *sm)
+-{
+-	return is_corrupt(sm) || xref_disagrees(sm);
+-}
+-
+ /* Warn about strange circumstances after scrub. */
+-static inline void
++void
+ scrub_warn_incomplete_scrub(
+ 	struct scrub_ctx		*ctx,
+ 	struct descr			*dsc,
+@@ -647,7 +610,7 @@ can_scrub_parent(
+ }
+ 
+ bool
+-xfs_can_repair(
++can_repair(
+ 	struct scrub_ctx	*ctx)
+ {
+ 	return __scrub_test(ctx, XFS_SCRUB_TYPE_PROBE, XFS_SCRUB_IFLAG_REPAIR);
+@@ -660,162 +623,3 @@ can_force_rebuild(
+ 	return __scrub_test(ctx, XFS_SCRUB_TYPE_PROBE,
+ 			XFS_SCRUB_IFLAG_REPAIR | XFS_SCRUB_IFLAG_FORCE_REBUILD);
+ }
+-
+-/* General repair routines. */
+-
+-/* Repair some metadata. */
+-enum check_outcome
+-xfs_repair_metadata(
+-	struct scrub_ctx		*ctx,
+-	struct xfs_fd			*xfdp,
+-	struct action_item		*aitem,
+-	unsigned int			repair_flags)
+-{
+-	struct xfs_scrub_metadata	meta = { 0 };
+-	struct xfs_scrub_metadata	oldm;
+-	DEFINE_DESCR(dsc, ctx, format_scrub_descr);
+-	int				error;
+-
+-	assert(aitem->type < XFS_SCRUB_TYPE_NR);
+-	assert(!debug_tweak_on("XFS_SCRUB_NO_KERNEL"));
+-	meta.sm_type = aitem->type;
+-	meta.sm_flags = aitem->flags | XFS_SCRUB_IFLAG_REPAIR;
+-	if (use_force_rebuild)
+-		meta.sm_flags |= XFS_SCRUB_IFLAG_FORCE_REBUILD;
+-	switch (xfrog_scrubbers[aitem->type].group) {
+-	case XFROG_SCRUB_GROUP_AGHEADER:
+-	case XFROG_SCRUB_GROUP_PERAG:
+-		meta.sm_agno = aitem->agno;
+-		break;
+-	case XFROG_SCRUB_GROUP_INODE:
+-		meta.sm_ino = aitem->ino;
+-		meta.sm_gen = aitem->gen;
+-		break;
+-	default:
+-		break;
+-	}
+-
+-	if (!is_corrupt(&meta) && (repair_flags & XRM_REPAIR_ONLY))
+-		return CHECK_RETRY;
+-
+-	memcpy(&oldm, &meta, sizeof(oldm));
+-	descr_set(&dsc, &oldm);
+-
+-	if (needs_repair(&meta))
+-		str_info(ctx, descr_render(&dsc), _("Attempting repair."));
+-	else if (debug || verbose)
+-		str_info(ctx, descr_render(&dsc),
+-				_("Attempting optimization."));
+-
+-	error = -xfrog_scrub_metadata(xfdp, &meta);
+-	switch (error) {
+-	case 0:
+-		/* No operational errors encountered. */
+-		break;
+-	case EDEADLOCK:
+-	case EBUSY:
+-		/* Filesystem is busy, try again later. */
+-		if (debug || verbose)
+-			str_info(ctx, descr_render(&dsc),
+-_("Filesystem is busy, deferring repair."));
+-		return CHECK_RETRY;
+-	case ESHUTDOWN:
+-		/* Filesystem is already shut down, abort. */
+-		str_error(ctx, descr_render(&dsc),
+-_("Filesystem is shut down, aborting."));
+-		return CHECK_ABORT;
+-	case ENOTTY:
+-	case EOPNOTSUPP:
+-		/*
+-		 * If the kernel cannot perform the optimization that we
+-		 * requested; or we forced a repair but the kernel doesn't know
+-		 * how to perform the repair, don't requeue the request.  Mark
+-		 * it done and move on.
+-		 */
+-		if (is_unoptimized(&oldm) ||
+-		    debug_tweak_on("XFS_SCRUB_FORCE_REPAIR"))
+-			return CHECK_DONE;
+-		/*
+-		 * If we're in no-complain mode, requeue the check for
+-		 * later.  It's possible that an error in another
+-		 * component caused us to flag an error in this
+-		 * component.  Even if the kernel didn't think it
+-		 * could fix this, it's at least worth trying the scan
+-		 * again to see if another repair fixed it.
+-		 */
+-		if (!(repair_flags & XRM_FINAL_WARNING))
+-			return CHECK_RETRY;
+-		fallthrough;
+-	case EINVAL:
+-		/* Kernel doesn't know how to repair this? */
+-		str_corrupt(ctx, descr_render(&dsc),
+-_("Don't know how to fix; offline repair required."));
+-		return CHECK_DONE;
+-	case EROFS:
+-		/* Read-only filesystem, can't fix. */
+-		if (verbose || debug || needs_repair(&oldm))
+-			str_error(ctx, descr_render(&dsc),
+-_("Read-only filesystem; cannot make changes."));
+-		return CHECK_ABORT;
+-	case ENOENT:
+-		/* Metadata not present, just skip it. */
+-		return CHECK_DONE;
+-	case ENOMEM:
+-	case ENOSPC:
+-		/* Don't care if preen fails due to low resources. */
+-		if (is_unoptimized(&oldm) && !needs_repair(&oldm))
+-			return CHECK_DONE;
+-		fallthrough;
+-	default:
+-		/*
+-		 * Operational error.  If the caller doesn't want us
+-		 * to complain about repair failures, tell the caller
+-		 * to requeue the repair for later and don't say a
+-		 * thing.  Otherwise, print error and bail out.
+-		 */
+-		if (!(repair_flags & XRM_FINAL_WARNING))
+-			return CHECK_RETRY;
+-		str_liberror(ctx, error, descr_render(&dsc));
+-		return CHECK_DONE;
+-	}
+-
+-	if (repair_flags & XRM_FINAL_WARNING)
+-		scrub_warn_incomplete_scrub(ctx, &dsc, &meta);
+-	if (needs_repair(&meta)) {
+-		/*
+-		 * Still broken; if we've been told not to complain then we
+-		 * just requeue this and try again later.  Otherwise we
+-		 * log the error loudly and don't try again.
+-		 */
+-		if (!(repair_flags & XRM_FINAL_WARNING))
+-			return CHECK_RETRY;
+-		str_corrupt(ctx, descr_render(&dsc),
+-_("Repair unsuccessful; offline repair required."));
+-	} else if (xref_failed(&meta)) {
+-		/*
+-		 * This metadata object itself looks ok, but we still noticed
+-		 * inconsistencies when comparing it with the other filesystem
+-		 * metadata.  If we're in "final warning" mode, advise the
+-		 * caller to run xfs_repair; otherwise, we'll keep trying to
+-		 * reverify the cross-referencing as repairs progress.
+-		 */
+-		if (repair_flags & XRM_FINAL_WARNING) {
+-			str_info(ctx, descr_render(&dsc),
+- _("Seems correct but cross-referencing failed; offline repair recommended."));
+-		} else {
+-			if (verbose)
+-				str_info(ctx, descr_render(&dsc),
+- _("Seems correct but cross-referencing failed; will keep checking."));
+-			return CHECK_RETRY;
+-		}
+-	} else {
+-		/* Clean operation, no corruption detected. */
+-		if (needs_repair(&oldm))
+-			record_repair(ctx, descr_render(&dsc),
+-					_("Repairs successful."));
+-		else
+-			record_preen(ctx, descr_render(&dsc),
+-					_("Optimization successful."));
+-	}
+-	return CHECK_DONE;
+-}
 diff --git a/scrub/scrub.h b/scrub/scrub.h
-index 66b021be460..b2b174be1a9 100644
+index b2b174be1a9..39e8439cb8b 100644
 --- a/scrub/scrub.h
 +++ b/scrub/scrub.h
-@@ -54,16 +54,6 @@ struct action_item {
+@@ -38,7 +38,7 @@ bool can_scrub_dir(struct scrub_ctx *ctx);
+ bool can_scrub_attr(struct scrub_ctx *ctx);
+ bool can_scrub_symlink(struct scrub_ctx *ctx);
+ bool can_scrub_parent(struct scrub_ctx *ctx);
+-bool xfs_can_repair(struct scrub_ctx *ctx);
++bool can_repair(struct scrub_ctx *ctx);
+ bool can_force_rebuild(struct scrub_ctx *ctx);
+ 
+ int scrub_file(struct scrub_ctx *ctx, int fd, const struct xfs_bulkstat *bstat,
+@@ -54,8 +54,4 @@ struct action_item {
  	__u32			agno;
  };
  
--/*
-- * Only ask the kernel to repair this object if the kernel directly told us it
-- * was corrupt.  Objects that are only flagged as having cross-referencing
-- * errors or flagged as eligible for optimization are left for later.
-- */
--#define XRM_REPAIR_ONLY		(1U << 0)
+-enum check_outcome xfs_repair_metadata(struct scrub_ctx *ctx,
+-		struct xfs_fd *xfdp, struct action_item *aitem,
+-		unsigned int repair_flags);
 -
--/* Complain if still broken even after fix. */
--#define XRM_COMPLAIN_IF_UNFIXED	(1U << 1)
--
- enum check_outcome xfs_repair_metadata(struct scrub_ctx *ctx,
- 		struct xfs_fd *xfdp, struct action_item *aitem,
- 		unsigned int repair_flags);
+ #endif /* XFS_SCRUB_SCRUB_H_ */
+diff --git a/scrub/scrub_private.h b/scrub/scrub_private.h
+new file mode 100644
+index 00000000000..2c1cd1a84d4
+--- /dev/null
++++ b/scrub/scrub_private.h
+@@ -0,0 +1,55 @@
++// SPDX-License-Identifier: GPL-2.0-or-later
++/*
++ * Copyright (C) 2021-2023 Oracle.  All Rights Reserved.
++ * Author: Darrick J. Wong <darrick.wong@oracle.com>
++ */
++#ifndef XFS_SCRUB_SCRUB_PRIVATE_H_
++#define XFS_SCRUB_SCRUB_PRIVATE_H_
++
++/* Shared code between scrub.c and repair.c. */
++
++int format_scrub_descr(struct scrub_ctx *ctx, char *buf, size_t buflen,
++		void *where);
++
++/* Predicates for scrub flag state. */
++
++static inline bool is_corrupt(struct xfs_scrub_metadata *sm)
++{
++	return sm->sm_flags & XFS_SCRUB_OFLAG_CORRUPT;
++}
++
++static inline bool is_unoptimized(struct xfs_scrub_metadata *sm)
++{
++	return sm->sm_flags & XFS_SCRUB_OFLAG_PREEN;
++}
++
++static inline bool xref_failed(struct xfs_scrub_metadata *sm)
++{
++	return sm->sm_flags & XFS_SCRUB_OFLAG_XFAIL;
++}
++
++static inline bool xref_disagrees(struct xfs_scrub_metadata *sm)
++{
++	return sm->sm_flags & XFS_SCRUB_OFLAG_XCORRUPT;
++}
++
++static inline bool is_incomplete(struct xfs_scrub_metadata *sm)
++{
++	return sm->sm_flags & XFS_SCRUB_OFLAG_INCOMPLETE;
++}
++
++static inline bool is_suspicious(struct xfs_scrub_metadata *sm)
++{
++	return sm->sm_flags & XFS_SCRUB_OFLAG_WARNING;
++}
++
++/* Should we fix it? */
++static inline bool needs_repair(struct xfs_scrub_metadata *sm)
++{
++	return is_corrupt(sm) || xref_disagrees(sm);
++}
++
++void scrub_warn_incomplete_scrub(struct scrub_ctx *ctx, struct descr *dsc,
++		struct xfs_scrub_metadata *meta);
++
++#endif /* XFS_SCRUB_SCRUB_PRIVATE_H_ */
 
