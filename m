@@ -2,119 +2,97 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6F36DC77B7E
-	for <linux-xfs@archiver.kernel.org>; Thu, 25 May 2023 17:56:06 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3F8AAC7EE29
+	for <linux-xfs@archiver.kernel.org>; Fri, 26 May 2023 00:00:28 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230290AbjEYR4E (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 25 May 2023 13:56:04 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58346 "EHLO
+        id S239876AbjEZAAZ (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 25 May 2023 20:00:25 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34760 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232904AbjEYR4D (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 25 May 2023 13:56:03 -0400
-Received: from outgoing.mit.edu (outgoing-auth-1.mit.edu [18.9.28.11])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 86FF0186
-        for <linux-xfs@vger.kernel.org>; Thu, 25 May 2023 10:56:02 -0700 (PDT)
-Received: from cwcc.thunk.org (pool-173-48-120-46.bstnma.fios.verizon.net [173.48.120.46])
-        (authenticated bits=0)
-        (User authenticated as tytso@ATHENA.MIT.EDU)
-        by outgoing.mit.edu (8.14.7/8.12.4) with ESMTP id 34PHtgrh030878
-        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Thu, 25 May 2023 13:55:43 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=mit.edu; s=outgoing;
-        t=1685037345; bh=xiWCRO+UU+jaBwoKUVDyePVmv4vtmFED5UhSQvBOlJw=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To;
-        b=j+rOH9Ry/dKEMXDLWlftMUW2T+fBMFl8Q2xULoLYbWnuSATJk0rDxlndlB7d0OQcq
-         KgRsIc5nM7dq7BjLjHNuHy6DO5SuYCNnMTq4uNIsPk78u4lAQpvII1n8M7XjJtIdQl
-         XwTc66BjvzusK9yE6l5XZXsIxFW16cKcPe5GAPZvy3RqQgcmkdeK79XksyxE2u8zop
-         lsQvkz0n0u9tERvEAnT83eL5txQmKcXnd2meo0PiHv544atdUaMx1TxryXkNA2A6wU
-         7VLkYjc8QZActGoTSdP7nTMFZTvf5WCeysl6jG18fWZJFcJh3M8ykeZYbmE80mTVLP
-         opUcMDr++KVJg==
-Received: by cwcc.thunk.org (Postfix, from userid 15806)
-        id 0D09615C02DC; Thu, 25 May 2023 13:55:42 -0400 (EDT)
-Date:   Thu, 25 May 2023 13:55:42 -0400
-From:   "Theodore Ts'o" <tytso@mit.edu>
+        with ESMTP id S234918AbjEZAAX (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 25 May 2023 20:00:23 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 22E969C;
+        Thu, 25 May 2023 17:00:22 -0700 (PDT)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id ACCA564B53;
+        Fri, 26 May 2023 00:00:21 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 1857EC433EF;
+        Fri, 26 May 2023 00:00:21 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1685059221;
+        bh=Rv/9AaaPRgSQNsKPeSqBSjfB5dbXn+qZlod3vzY8KXk=;
+        h=Date:From:To:Cc:Subject:From;
+        b=bV1/JRerXd8uZxRqC+jRCHQ5NGH+jb0rTykBKEgKtXkYiMaprwXA/9qq1EZzD16oJ
+         I6OX67bgc3xZ99R8Mf8RBhpIpOrwoT8YuD9v1kQhdY9f1HPPg73dMrefcejMYTDuDZ
+         rVKQp8U6SGjBfpUUsVRRE+RB7mEiLzLPIDOWm8qrVy+rgKiPErVzof9A9+Z1TytLB2
+         OEKXAZyjZUis8OR12VFbUjYjI1teUaLmeM+HPfFeI8znFxpB7wD9+toCR6qbCfR7mh
+         09cirkh1BNzKNw5EYdlAYsHVg5uff9x67TmuDRaV6wPG8WWHhf/o+9VztIAAQlCgXo
+         XwC5npTMHhL1g==
+Date:   Thu, 25 May 2023 17:00:20 -0700
+From:   "Darrick J. Wong" <djwong@kernel.org>
 To:     Dave Chinner <david@fromorbit.com>
-Cc:     Pengfei Xu <pengfei.xu@intel.com>,
-        Eric Sandeen <sandeen@sandeen.net>, dchinner@redhat.com,
-        djwong@kernel.org, heng.su@intel.com, linux-xfs@vger.kernel.org,
-        linux-fsdevel@vger.kernel.org, lkp@intel.com,
-        Aleksandr Nogikh <nogikh@google.com>,
-        Dmitry Vyukov <dvyukov@google.com>
-Subject: Re: [Syzkaller & bisect] There is "soft lockup in __cleanup_mnt" in
- v6.4-rc3 kernel
-Message-ID: <20230525175542.GB821358@mit.edu>
-References: <ZG7PGdRED5A68Jyh@xpf.sh.intel.com>
- <f723cb17-ca68-4db9-c296-cf33b16c529c@sandeen.net>
- <ZG71v9dlDm0h4idA@xpf.sh.intel.com>
- <ZG785SwJtvR4pO/6@dread.disaster.area>
+Cc:     xfs <linux-xfs@vger.kernel.org>,
+        linux-fsdevel <linux-fsdevel@vger.kernel.org>,
+        Carlos Maiolino <cmaiolino@redhat.com>,
+        Chandan Babu R <chandanrlinux@gmail.com>,
+        Catherine Hoang <catherine.hoang@oracle.com>
+Subject: [MEGAPATCHSET v25 1/2] xfs: online repair, part 1
+Message-ID: <20230526000020.GJ11620@frogsfrogsfrogs>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <ZG785SwJtvR4pO/6@dread.disaster.area>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Thu, May 25, 2023 at 04:15:01PM +1000, Dave Chinner wrote:
-> Google's syzbot does this now, so your syzkaller bot should also be
-> able to do it....
->
-> Please go and talk to the syzkaller authors to find out how they
-> extract filesystem images from the reproducer, and any other
-> information they've also been asked to provide for triage
-> purposes.
+Hi everyone,
 
-Pengfei,
+I've finished merging parent pointers into what is now part 2 of online
+repair.  Part 1 hasn't changed much since the last posting at the end of
+2022, aside from various reorganizations of the directory repair, dotdot
+repair, and the tempfile/orphanage infrastructure to support the bits
+that part 2 will want.  Zorro merged all the pending fstests changes to
+support and test everything in part 1, so that part is done.
 
-What is it that your syzkaller instance doing that Google's upstream
-syzkaller instance is not doing?  Google's syzkaller's team is been
-very responsive at improving syzkaller's Web UI, including making it
-easy to get artifacts from the syzkaller instance, requesting that
-their bot to test a particular git tree or patch (since sometimes
-reproducer doesn't easily reproduce on KVM, but easily reproduces in
-their Google Cloud VM environment).
+In other words, I'm formally submitting part 1 for inclusion in 6.5.
 
-So if there is some unique feature which you've added to your syzbot
-instances, maybe you can contribute that change upstream, so that
-everyone can benefit?  From an upstream developer's perspective, it
-also means that I can very easily take a look at the currently active
-syzbot reports for a particular subsystem --- for example:
+For this review, I would like people to focus the following:
 
-       https://syzkaller.appspot.com/upstream/s/ext4
+- Are the major subsystems sufficiently documented that you could figure
+  out what the code does?
 
-... and I can see how often a particular syzbot issue reproduces, and
-it makes it easier for me to prioritize which syzbot report I should
-work on next.  If there is a discussion on a particular report, I can
-get a link to that discussion on lore.kernel.org; and once a patch has
-been submitted, there is an indication on the dashboard that there is
-a PATCH associated with that particular report.
+- Do you see any problems that are severe enough to cause long term
+  support hassles? (e.g. bad API design, writing weird metadata to disk)
 
-For example, take a look at this report:
+- Can you spot mis-interactions between the subsystems?
 
-	https://syzkaller.appspot.com/bug?extid=e44749b6ba4d0434cd47
+- What were my blind spots in devising this feature?
 
-... and look at the contents under the Discussion section; and then
-open up the "Last patch testing requests" collapsible section.
+- Are there missing pieces that you'd like to help build?
 
-These are some of the reasons why using Google's instance of syzkaller
-is a huge value add --- and quite frankly, it means that I will
-prioritize looking at syzkaller reports on the syzkaller.appspot.com
-dashboard, where I can easily prioritize which reports are most useful
-for me to look at next, over those that you and others might forward
-from some company's private syzkaller instance.  It's just far more
-productive for me as an upstream maintainer.
+- Can I just merge all of this?
 
-Bottom line, having various companies run their own private instances
-of syzkaller is much less useful for the upstream community.  If Intel
-feels that it's useful to run their own instance, maybe there's some
-way you can work with Google syzkaller team so you don't have to do
-that?
+The one thing that is /not/ in scope for this review are requests for
+more refactoring of existing subsystems.
 
-Are there some improvements to the syzkaller code base Intel would be
-willing to contribute to the upstream syzkaller code base at
-https://github.com/google/syzkaller?  Or is there some other reason
-why Intel is running its own syzkaller instance?
+I've been running daily online **repairs** of every computer I own for
+the last 14 months.  So far, no damage has resulted from these
+operations.
 
-Cheers,
+Fuzz and stress testing of online repairs have been running well for a
+year now.  As of this writing, online repair can fix slightly more
+things than offline repair, and the fsstress+repair long soak test has
+passed 200 million repairs with zero problems observed.  All issues
+observed in that time have been corrected in this submission.
 
-						- Ted
+(For comparison, the long soak fsx test recently passed 99 billion file
+operations, so online fsck has a ways to go...)
+
+This is actually an excerpt of the xfsprogs patches -- I'm only mailing
+the changes to xfs_scrub; there are substantially more bug fixes and
+improvements to xfs_{db,repair,spaceman} that I've made along the way.
+
+--D
