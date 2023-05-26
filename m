@@ -2,43 +2,41 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 64087C7EE2F
-	for <linux-xfs@archiver.kernel.org>; Fri, 26 May 2023 00:29:49 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 722CAC77B7A
+	for <linux-xfs@archiver.kernel.org>; Fri, 26 May 2023 00:29:55 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233071AbjEZA3p (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 25 May 2023 20:29:45 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40994 "EHLO
+        id S240535AbjEZA3x (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 25 May 2023 20:29:53 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41022 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S234435AbjEZA3o (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 25 May 2023 20:29:44 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5A2D61A4;
-        Thu, 25 May 2023 17:28:57 -0700 (PDT)
+        with ESMTP id S236574AbjEZA3s (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 25 May 2023 20:29:48 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 088B41BF
+        for <linux-xfs@vger.kernel.org>; Thu, 25 May 2023 17:29:13 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id E8C8264C01;
-        Fri, 26 May 2023 00:28:56 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 560E0C433EF;
-        Fri, 26 May 2023 00:28:56 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 923B4608CC
+        for <linux-xfs@vger.kernel.org>; Fri, 26 May 2023 00:29:12 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 01C23C433D2;
+        Fri, 26 May 2023 00:29:11 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1685060936;
-        bh=XckDz2ezIs9e94oVQv9VFKzPQuH3IhBaFejOs5zHT+k=;
+        s=k20201202; t=1685060952;
+        bh=SjIVGmrNzEInVdBf/pPvvGbi90BmfM00MSNdVlqeW28=;
         h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-        b=GsxMmX332o+xAHvfZXoYyo/SILZFW8T7S3y8Hws/TCbHPfs6/mHpVFKi0Na+pxzMd
-         QRDqSV13O8M3VNF3vNtxpMMRv8JNqCGs11g/FN6IBfGxU3yX0BCDu03Vykbnz8WeRs
-         omrwrC7Hki2ppF2y/D+VekNZzU4s+9QwDACnYB8aEw3KH/QMLLH2zpsC83tmDYbkQn
-         Mt3gDs6oYV3vUnhCqwt5SrRfA5NNMPl57RjX1dJ5S2noZoooDqHmKjMgJZOsXpsH4j
-         73BJwi3eqBfGP7WwuL+mamXlZ43xSQeyWX9go8Iu4TcOHkUFT72Sk8Rki74PJYfqng
-         etKURHEa3U6/A==
-Date:   Thu, 25 May 2023 17:28:55 -0700
-Subject: [PATCHSET v25.0 0/7] xfs: stage repair information in pageable memory
+        b=cro862eyGRqnLse/emxoAKwR5CcN0VV0YvOmtvxAHNAT9cg1JyiJR+g6FA4StWRL3
+         cApcDmNiWqB+aLmUQa9OMtgKLJ27g2mbznDpSAhlI2mnwnob4I++Zq2PHW3yn6MRpO
+         bJ67VjRXfBzNv7jBw/h/exCalE1NTET7llZQULsmqfj/1f+syAcb1QcKz2X9FvvfHm
+         Isfb2Uf1pKJI4X1FDePUzLOiUCTFrwCpMu5fOhZ38Cio+qnnqPE938peZ0+2QOQ+yF
+         jVpMl3g6NbIuHjt81iCDfN7BHUMTFD0I5GSkQyOv3MiairF6Yoiff/Vto4CBPcbIum
+         tSsk0jbIe7T3Q==
+Date:   Thu, 25 May 2023 17:29:11 -0700
+Subject: [PATCHSET v25.0 0/4] xfs: online scrubbing of realtime summary files
 From:   "Darrick J. Wong" <djwong@kernel.org>
 To:     djwong@kernel.org
-Cc:     Kent Overstreet <kent.overstreet@linux.dev>,
-        linux-xfs@vger.kernel.org, willy@infradead.org,
-        linux-fsdevel@vger.kernel.org
-Message-ID: <168506056447.3729324.13624212283929857624.stgit@frogsfrogsfrogs>
+Cc:     linux-xfs@vger.kernel.org
+Message-ID: <168506056859.3729869.14765688109434520098.stgit@frogsfrogsfrogs>
 In-Reply-To: <20230526000020.GJ11620@frogsfrogsfrogs>
 References: <20230526000020.GJ11620@frogsfrogsfrogs>
 User-Agent: StGit/0.19
@@ -51,22 +49,15 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 
 Hi all,
 
-In general, online repair of an indexed record set walks the filesystem
-looking for records.  These records are sorted and bulk-loaded into a
-new btree.  To make this happen without pinning gigabytes of metadata in
-memory, first create an abstraction ('xfile') of memfd files so that
-kernel code can access paged memory, and then an array abstraction
-('xfarray') based on xfiles so that online repair can create an array of
-new records without pinning memory.
+This patchset implements an online checker for the realtime summary
+file.  The first few changes are some general cleanups -- scrub should
+get its own references to all inodes, and we also wrap the inode lock
+functions so that we can standardize unlocking and releasing inodes that
+are the focus of a scrub.
 
-These two data storage abstractions are critical for repair of space
-metadata -- the memory used is pageable, which helps us avoid pinning
-kernel memory and driving OOM problems; and they are byte-accessible
-enough that we can use them like (very slow and programmatic) memory
-buffers.
-
-Later patchsets will build on this functionality to provide blob storage
-and btrees.
+With that out of the way, we move on to constructing a shadow copy of
+the rtsummary information from the rtbitmap, and compare the new copy
+against the ondisk copy.
 
 If you're going to start using this mess, you probably ought to just
 pull from my git trees, which are linked below.
@@ -77,19 +68,24 @@ Comments and questions are, as always, welcome.
 --D
 
 kernel git tree:
-https://git.kernel.org/cgit/linux/kernel/git/djwong/xfs-linux.git/log/?h=big-array
+https://git.kernel.org/cgit/linux/kernel/git/djwong/xfs-linux.git/log/?h=scrub-rtsummary
+
+fstests git tree:
+https://git.kernel.org/cgit/linux/kernel/git/djwong/xfstests-dev.git/log/?h=scrub-rtsummary
 ---
- fs/xfs/Kconfig         |    1 
- fs/xfs/Makefile        |    2 
- fs/xfs/scrub/trace.c   |    4 
- fs/xfs/scrub/trace.h   |  262 ++++++++++++
- fs/xfs/scrub/xfarray.c | 1084 ++++++++++++++++++++++++++++++++++++++++++++++++
- fs/xfs/scrub/xfarray.h |  142 ++++++
- fs/xfs/scrub/xfile.c   |  433 +++++++++++++++++++
- fs/xfs/scrub/xfile.h   |   78 +++
- 8 files changed, 2005 insertions(+), 1 deletion(-)
- create mode 100644 fs/xfs/scrub/xfarray.c
- create mode 100644 fs/xfs/scrub/xfarray.h
- create mode 100644 fs/xfs/scrub/xfile.c
- create mode 100644 fs/xfs/scrub/xfile.h
+ fs/xfs/Makefile          |    6 +
+ fs/xfs/scrub/bmap.c      |    9 +-
+ fs/xfs/scrub/common.c    |   63 +++++++++--
+ fs/xfs/scrub/common.h    |   16 ++-
+ fs/xfs/scrub/inode.c     |   11 +-
+ fs/xfs/scrub/parent.c    |    4 -
+ fs/xfs/scrub/quota.c     |   15 +--
+ fs/xfs/scrub/rtbitmap.c  |   48 +-------
+ fs/xfs/scrub/rtsummary.c |  262 ++++++++++++++++++++++++++++++++++++++++++++++
+ fs/xfs/scrub/scrub.c     |   17 ++-
+ fs/xfs/scrub/scrub.h     |    4 +
+ fs/xfs/scrub/trace.h     |   34 ++++++
+ fs/xfs/xfs_trace.h       |    3 +
+ 13 files changed, 410 insertions(+), 82 deletions(-)
+ create mode 100644 fs/xfs/scrub/rtsummary.c
 
