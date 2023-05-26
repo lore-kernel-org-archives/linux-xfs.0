@@ -2,42 +2,41 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 49B93C77B7A
-	for <linux-xfs@archiver.kernel.org>; Fri, 26 May 2023 00:50:36 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E6481C77B7A
+	for <linux-xfs@archiver.kernel.org>; Fri, 26 May 2023 00:50:55 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232645AbjEZAuf (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 25 May 2023 20:50:35 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48550 "EHLO
+        id S235895AbjEZAux (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 25 May 2023 20:50:53 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48724 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S234276AbjEZAue (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 25 May 2023 20:50:34 -0400
+        with ESMTP id S235953AbjEZAuv (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 25 May 2023 20:50:51 -0400
 Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 66224194
-        for <linux-xfs@vger.kernel.org>; Thu, 25 May 2023 17:50:33 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 411C91B5
+        for <linux-xfs@vger.kernel.org>; Thu, 25 May 2023 17:50:49 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 01C41619B3
-        for <linux-xfs@vger.kernel.org>; Fri, 26 May 2023 00:50:33 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 652C9C433D2;
-        Fri, 26 May 2023 00:50:32 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 9552464C20
+        for <linux-xfs@vger.kernel.org>; Fri, 26 May 2023 00:50:48 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 06EA6C433EF;
+        Fri, 26 May 2023 00:50:47 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1685062232;
-        bh=Sk+ejEFgsDvaJNjTMFzfFxnbsE4V49eDI+gvIIuuSuw=;
+        s=k20201202; t=1685062248;
+        bh=q1r9w2PPq6E0OjcaA1wkA8dE0dGvdOGJGCatDJGTnoc=;
         h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-        b=jwyZKk111ot67MeecRvaEyogzKLod+VDbyi8W9gbdFT3HWJ7IAIPL34KWJxImYon7
-         YSO44TxonHKsfGfyGwW0bIIiZEf3UVEhexXU6uTfY8n8AZFImGCL5icUN/nrvz+zcV
-         P0gPN/Fv31ICK3rJRQT3aiGEbJ9upQZWIrvhkjCSCgeC8h690uyi5vedIddixYwua8
-         Uw1KiZr7q/4a5pXg7whb85/DkN03yuuSWW3z03HmP9ALzp4XFXUj7SqCGXC5Zb821y
-         44MDYKjfA7BMo2COIkpldKY4yYGLxDnJgl2tC2JaaEGNgA/6Js0MRZNZlcsmXSnuN8
-         JjWMkAT8VNJzw==
-Date:   Thu, 25 May 2023 17:50:32 -0700
-Subject: [PATCH 1/2] xfs: don't complain about unfixed metadata when repairs
- were injected
+        b=YhRhocclwfbm+tzLBE63DjzDPpBBcRRdifhpZOuIcS1HXaOMAMI8ahvPqTEFjSu66
+         c/ppOGCzf0797xLCdBlZQbTRUPz+lg3H2AiWl0k3RnYqQdleGJXIFbJ82TQeTfDUY9
+         YXmg+2rcXSx6D2iQkN0hLHm7vL6M09rhD/4rd2RybmkrVoXAr47AkXUCuLSjjYSf91
+         Lr+n2NsOYOH3SoRfGSdMFcgzgojoBIi9os594K+rbYTw2XdjGHibgPpuZi6HwecGng
+         Lde3ammXAnhQpoNn5BM3yragQWcP9ru6i9KTGP1L4n0X4CIaql54B+xViKtdIgNWCj
+         /IVy1SLAd3Kuw==
+Date:   Thu, 25 May 2023 17:50:47 -0700
+Subject: [PATCH 2/2] xfs: allow userspace to rebuild metadata structures
 From:   "Darrick J. Wong" <djwong@kernel.org>
 To:     djwong@kernel.org
 Cc:     linux-xfs@vger.kernel.org
-Message-ID: <168506057586.3730125.4038312178702711237.stgit@frogsfrogsfrogs>
+Message-ID: <168506057600.3730125.4561906767586624097.stgit@frogsfrogsfrogs>
 In-Reply-To: <168506057570.3730125.9735079571472245559.stgit@frogsfrogsfrogs>
 References: <168506057570.3730125.9735079571472245559.stgit@frogsfrogsfrogs>
 User-Agent: StGit/0.19
@@ -50,73 +49,78 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-While debugging other parts of online repair, I noticed that if someone
-injects FORCE_SCRUB_REPAIR, starts an IFLAG_REPAIR scrub on a piece of
-metadata, and the metadata repair fails, we'll log a message about
-uncorrected errors in the filesystem.
-
-This isn't strictly true if the scrub function didn't set OFLAG_CORRUPT
-and we're only doing the repair because the error injection knob is set.
-Repair functions are allowed to abort the entire operation at any point
-before committing new metadata, in which case the piece of metadata is
-in the same state as it was before.  Therefore, the log message should
-be gated on the results of the scrub.  Refactor the predicate and
-rearrange the code flow to make this happen.
-
-Note: If the repair function errors out after it commits the new
-metadata, the transaction cancellation will shut down the filesystem,
-which is an obvious sign of corrupt metadata.
+Add a new (superuser-only) flag to the online metadata repair ioctl to
+force it to rebuild structures, even if they're not broken.  We will use
+this to move metadata structures out of the way during a free space
+defragmentation operation.
 
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 ---
- fs/xfs/scrub/common.h |   12 ++++++++++++
- fs/xfs/scrub/scrub.c  |    7 ++-----
- 2 files changed, 14 insertions(+), 5 deletions(-)
+ fs/xfs/libxfs/xfs_fs.h |    6 +++++-
+ fs/xfs/scrub/scrub.c   |   11 ++++++++++-
+ fs/xfs/scrub/trace.h   |    3 ++-
+ 3 files changed, 17 insertions(+), 3 deletions(-)
 
 
-diff --git a/fs/xfs/scrub/common.h b/fs/xfs/scrub/common.h
-index d553871752e4..fdd286607f62 100644
---- a/fs/xfs/scrub/common.h
-+++ b/fs/xfs/scrub/common.h
-@@ -167,6 +167,18 @@ static inline bool xchk_skip_xref(struct xfs_scrub_metadata *sm)
- 			       XFS_SCRUB_OFLAG_XCORRUPT);
- }
+diff --git a/fs/xfs/libxfs/xfs_fs.h b/fs/xfs/libxfs/xfs_fs.h
+index 1cfd5bc6520a..920fd4513fcb 100644
+--- a/fs/xfs/libxfs/xfs_fs.h
++++ b/fs/xfs/libxfs/xfs_fs.h
+@@ -741,7 +741,11 @@ struct xfs_scrub_metadata {
+  */
+ #define XFS_SCRUB_OFLAG_NO_REPAIR_NEEDED (1u << 7)
  
-+#ifdef CONFIG_XFS_ONLINE_REPAIR
-+/* Decide if a repair is required. */
-+static inline bool xchk_needs_repair(const struct xfs_scrub_metadata *sm)
-+{
-+	return sm->sm_flags & (XFS_SCRUB_OFLAG_CORRUPT |
-+			       XFS_SCRUB_OFLAG_XCORRUPT |
-+			       XFS_SCRUB_OFLAG_PREEN);
-+}
-+#else
-+# define xchk_needs_repair(sc)		(false)
-+#endif /* CONFIG_XFS_ONLINE_REPAIR */
+-#define XFS_SCRUB_FLAGS_IN	(XFS_SCRUB_IFLAG_REPAIR)
++/* i: Rebuild the data structure. */
++#define XFS_SCRUB_IFLAG_FORCE_REBUILD	(1 << 31)
 +
- int xchk_metadata_inode_forks(struct xfs_scrub *sc);
- 
- /*
++#define XFS_SCRUB_FLAGS_IN	(XFS_SCRUB_IFLAG_REPAIR | \
++				 XFS_SCRUB_IFLAG_FORCE_REBUILD)
+ #define XFS_SCRUB_FLAGS_OUT	(XFS_SCRUB_OFLAG_CORRUPT | \
+ 				 XFS_SCRUB_OFLAG_PREEN | \
+ 				 XFS_SCRUB_OFLAG_XFAIL | \
 diff --git a/fs/xfs/scrub/scrub.c b/fs/xfs/scrub/scrub.c
-index 1b2692d8061f..8960053b6ae5 100644
+index 8960053b6ae5..a5b9bbbbdfaa 100644
 --- a/fs/xfs/scrub/scrub.c
 +++ b/fs/xfs/scrub/scrub.c
-@@ -532,15 +532,12 @@ xfs_scrub_metadata(
+@@ -410,6 +410,11 @@ xchk_validate_inputs(
+ 		goto out;
+ 	}
  
- 	if ((sc->sm->sm_flags & XFS_SCRUB_IFLAG_REPAIR) &&
++	/* No rebuild without repair. */
++	if ((sm->sm_flags & XFS_SCRUB_IFLAG_FORCE_REBUILD) &&
++	    !(sm->sm_flags & XFS_SCRUB_IFLAG_REPAIR))
++		return -EINVAL;
++
+ 	/*
+ 	 * We only want to repair read-write v5+ filesystems.  Defer the check
+ 	 * for ops->repair until after our scrub confirms that we need to
+@@ -534,8 +539,12 @@ xfs_scrub_metadata(
  	    !(sc->flags & XREP_ALREADY_FIXED)) {
--		bool needs_fix;
-+		bool needs_fix = xchk_needs_repair(sc->sm);
+ 		bool needs_fix = xchk_needs_repair(sc->sm);
  
- 		/* Let debug users force us into the repair routines. */
- 		if (XFS_TEST_ERROR(false, mp, XFS_ERRTAG_FORCE_SCRUB_REPAIR))
--			sc->sm->sm_flags |= XFS_SCRUB_OFLAG_CORRUPT;
++		/* Userspace asked us to rebuild the structure regardless. */
++		if (sc->sm->sm_flags & XFS_SCRUB_IFLAG_FORCE_REBUILD)
 +			needs_fix = true;
++
+ 		/* Let debug users force us into the repair routines. */
+-		if (XFS_TEST_ERROR(false, mp, XFS_ERRTAG_FORCE_SCRUB_REPAIR))
++		if (XFS_TEST_ERROR(needs_fix, mp, XFS_ERRTAG_FORCE_SCRUB_REPAIR))
+ 			needs_fix = true;
  
--		needs_fix = (sc->sm->sm_flags & (XFS_SCRUB_OFLAG_CORRUPT |
--						 XFS_SCRUB_OFLAG_XCORRUPT |
--						 XFS_SCRUB_OFLAG_PREEN));
  		/*
- 		 * If userspace asked for a repair but it wasn't necessary,
- 		 * report that back to userspace.
+diff --git a/fs/xfs/scrub/trace.h b/fs/xfs/scrub/trace.h
+index f5498f628c17..6b47f1b5e07c 100644
+--- a/fs/xfs/scrub/trace.h
++++ b/fs/xfs/scrub/trace.h
+@@ -98,7 +98,8 @@ TRACE_DEFINE_ENUM(XFS_SCRUB_TYPE_FSCOUNTERS);
+ 	{ XFS_SCRUB_OFLAG_XCORRUPT,		"xcorrupt" }, \
+ 	{ XFS_SCRUB_OFLAG_INCOMPLETE,		"incomplete" }, \
+ 	{ XFS_SCRUB_OFLAG_WARNING,		"warning" }, \
+-	{ XFS_SCRUB_OFLAG_NO_REPAIR_NEEDED,	"norepair" }
++	{ XFS_SCRUB_OFLAG_NO_REPAIR_NEEDED,	"norepair" }, \
++	{ XFS_SCRUB_IFLAG_FORCE_REBUILD,	"rebuild" }
+ 
+ #define XFS_SCRUB_STATE_STRINGS \
+ 	{ XCHK_TRY_HARDER,			"try_harder" }, \
 
