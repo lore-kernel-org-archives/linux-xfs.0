@@ -2,126 +2,173 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1058AC77B7E
-	for <linux-xfs@archiver.kernel.org>; Fri, 26 May 2023 00:56:50 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7C809C7EE2E
+	for <linux-xfs@archiver.kernel.org>; Fri, 26 May 2023 00:56:52 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231451AbjEZA4l (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 25 May 2023 20:56:41 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51012 "EHLO
+        id S229842AbjEZA4v (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 25 May 2023 20:56:51 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51056 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230091AbjEZA4f (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 25 May 2023 20:56:35 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D5772195
-        for <linux-xfs@vger.kernel.org>; Thu, 25 May 2023 17:56:32 -0700 (PDT)
+        with ESMTP id S229689AbjEZA4u (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 25 May 2023 20:56:50 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 69A7E12E
+        for <linux-xfs@vger.kernel.org>; Thu, 25 May 2023 17:56:48 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 583B661B75
-        for <linux-xfs@vger.kernel.org>; Fri, 26 May 2023 00:56:32 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id B8C52C4339B;
-        Fri, 26 May 2023 00:56:31 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id F298364B7B
+        for <linux-xfs@vger.kernel.org>; Fri, 26 May 2023 00:56:47 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 5CB87C4339B;
+        Fri, 26 May 2023 00:56:47 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1685062591;
-        bh=S+qJWIsxqvtYeYj9OR8nAMtEAnZqiuSZQzQdYThU6H0=;
+        s=k20201202; t=1685062607;
+        bh=PhGmgnbSyKM/efmZKvq4uuM6079d2bHisQTg2yDSDPc=;
         h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-        b=M6E/8xH3mYLyyyA89xYuD4loZCDPl1R88objM53qz4T+4/DJU4kgoHZxT6VQFdgUw
-         LJCuXmwyko4eH9aBL5ucWBHQFrafHZrhqPeURWyWdCTaV3ZGecXuGwYNgj/8PbgdJB
-         f2QWFKZKKK2lfkIEDMguYFfYP4HIq54hoqGNOZwMG3HJj+YeUX4mJfjR5b4jVercGF
-         kTSvpmE8S3PU0LRsCF1FpEjnFavVGJ2PjsFv7/TjDIMkkYZrkPnvm8aOBpVLIiVMDO
-         BH31ad6r+HtUPGqo4qJ3MsYWeUioujg86KcfD5amgbr4/iUnBPw8gyr2hXAv1mLA3B
-         /mgcc5Gc8ajjQ==
-Date:   Thu, 25 May 2023 17:56:31 -0700
-Subject: [PATCH 2/4] xfs: implement live inode scan for scrub
+        b=CPBb4vkFBmHeGEz6316Mlow1Ky6gaZydqbf+BzpQo9f7lK4fQFwj/zwIeILCjwZAr
+         kfRP64R0+1T9XomfPoKaCOjArgeOWt35l3gZ2jcjC30ceQYIfXjhTN5zVCwmx9nAsA
+         VfyiSyevmaY4mSdurJ5sJ8ZgD75Y4TRRo9q4qJU7uIea/X3H0sOlA363z32+9IHhub
+         F4hw68Wbe9o9yzKZuE50wW8KNfSOf/xzzrVT2O3UtipER9AsT5tGrAcF64JIK5psrJ
+         KLiegKwq9zl4N7EHd6bAMlgot53Y9alDb7iuMgr/E5n2pRWTCPyp9GKsSWU8ywqynn
+         yB1iqPBhj60UA==
+Date:   Thu, 25 May 2023 17:56:46 -0700
+Subject: [PATCH 3/4] xfs: allow scrub to hook metadata updates in other
+ writers
 From:   "Darrick J. Wong" <djwong@kernel.org>
 To:     djwong@kernel.org
 Cc:     linux-xfs@vger.kernel.org
-Message-ID: <168506059483.3730949.1680653343391567717.stgit@frogsfrogsfrogs>
+Message-ID: <168506059498.3730949.4983305920193144507.stgit@frogsfrogsfrogs>
 In-Reply-To: <168506059451.3730949.8525428478120924050.stgit@frogsfrogsfrogs>
 References: <168506059451.3730949.8525428478120924050.stgit@frogsfrogsfrogs>
 User-Agent: StGit/0.19
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 8bit
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-This patch implements a live file scanner for online fsck functions that
-require the ability to walk a filesystem to gather metadata records and
-stay informed about metadata changes to files that have already been
-visited.
+Certain types of filesystem metadata can only be checked by scanning
+every file in the entire filesystem.  Specific examples of this include
+quota counts, file link counts, and reverse mappings of file extents.
+Directory and parent pointer reconstruction may also fall into this
+category.  File scanning is much trickier than scanning AG metadata
+because we have to take inode locks in the same order as the rest of
+[VX]FS, we can't be holding buffer locks when we do that, and scanning
+the whole filesystem takes time.
 
-The iscan structure consists of two inode number cursors: one to track
-which inode we want to visit next, and a second one to track which
-inodes have already been visited.  This second cursor is key to
-capturing live updates to files previously scanned while the main thread
-continues scanning -- any inode greater than this value hasn't been
-scanned and can go on its way; any other update must be incorporated
-into the collected data.  It is critical for the scanning thraad to hold
-exclusive access on the inode until after marking the inode visited.
+Earlier versions of the online repair patchset relied heavily on
+fsfreeze as a means to quiesce the filesystem so that we could take
+locks in the proper order without worrying about concurrent updates from
+other writers.  Reviewers of those patches opined that freezing the
+entire fs to check and repair something was not sufficiently better than
+unmounting to run fsck offline.  I don't agree with that 100%, but the
+message was clear: find a way to repair things that minimizes the
+quiet period where nobody can write to the filesystem.
 
-This new code is a separate patch from the patchsets adding callers for
-the sake of enabling the author to move patches around his tree with
-ease.  The intended usage model for this code is roughly:
+Generally, building btree indexes online can be split into two phases: a
+collection phase where we compute the records that will be put into the
+new btree; and a construction phase, where we construct the physical
+btree blocks and persist them.  While it's simple to hold resource locks
+for the entirety of the two phases to ensure that the new index is
+consistent with the rest of the system, we don't need to hold resource
+locks during the collection phase if we have a means to receive live
+updates of other work going on elsewhere in the system.
 
-	xchk_iscan_start(iscan, 0, 0);
-	while ((error = xchk_iscan_iter(sc, iscan, &ip)) == 1) {
-		xfs_ilock(ip, ...);
-		/* capture inode metadata */
-		xchk_iscan_mark_visited(iscan, ip);
-		xfs_iunlock(ip, ...);
+The goal of this patch, then, is to enable online fsck to learn about
+metadata updates going on in other threads while it constructs a shadow
+copy of the metadata records to verify or correct the real metadata.  To
+minimize the overhead when online fsck isn't running, we use srcu
+notifiers because they prioritize fast access to the notifier call chain
+(particularly when the chain is empty) at a cost to configuring
+notifiers.  Online fsck should be relatively infrequent, so this is
+acceptable.
 
-		xfs_irele(ip);
-	}
-	xchk_iscan_stop(iscan);
-	if (error)
-		return error;
+The intended usage model is fairly simple.  Code that modifies a
+metadata structure of interest should declare a xfs_hook_chain structure
+in some well defined place, and call xfs_hook_call whenever an update
+happens.  Online fsck code should define a struct notifier_block and use
+xfs_hook_add to attach the block to the chain, along with a function to
+be called.  This function should synchronize with the fsck scanner to
+update whatever in-memory data the scanner is collecting.  When
+finished, xfs_hook_del removes the notifier from the list and waits for
+them all to complete.
 
-Hook functions for live updates can then do:
+On the author's computer, calling an empty srcu notifier chain was
+observed to have an overhead averaging ~40ns with a maximum of 60ns.
+Adding a no-op notifier function increased the average to ~58ns and
+66ns.  When the quotacheck live update notifier is attached, the average
+increases to ~322ns with a max of 372ns to update scrub's in-memory
+observation data, assuming no lock contention.
 
-	if (xchk_iscan_want_live_update(...))
-		/* update the captured inode metadata */
+With jump labels enabled, calls to empty srcu notifier chains are elided
+from the call sites when there are no hooks registered, which means that
+the overhead is 0.36ns when fsck is not running.  For compilers that do
+not support jump labels (all major architectures do), the overhead of a
+no-op notifier call is less bad (on a many-cpu system) than the atomic
+counter ops, so we make the hook switch itself a nop.
+
+Note: This new code is also split out as a separate patch from its
+initial user so that the author can move patches around his tree with
+ease.
 
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 ---
- fs/xfs/Makefile      |    5 -
- fs/xfs/scrub/iscan.c |  498 ++++++++++++++++++++++++++++++++++++++++++++++++++
- fs/xfs/scrub/iscan.h |   63 ++++++
- fs/xfs/scrub/trace.c |    1 
- fs/xfs/scrub/trace.h |  106 +++++++++++
- 5 files changed, 672 insertions(+), 1 deletion(-)
- create mode 100644 fs/xfs/scrub/iscan.c
- create mode 100644 fs/xfs/scrub/iscan.h
+ fs/xfs/Kconfig     |    6 +++++
+ fs/xfs/Makefile    |    1 +
+ fs/xfs/xfs_hooks.c |   53 +++++++++++++++++++++++++++++++++++++++++
+ fs/xfs/xfs_hooks.h |   68 ++++++++++++++++++++++++++++++++++++++++++++++++++++
+ fs/xfs/xfs_linux.h |    1 +
+ 5 files changed, 129 insertions(+)
+ create mode 100644 fs/xfs/xfs_hooks.c
+ create mode 100644 fs/xfs/xfs_hooks.h
 
 
+diff --git a/fs/xfs/Kconfig b/fs/xfs/Kconfig
+index 152348b4dece..41f0ca3b6469 100644
+--- a/fs/xfs/Kconfig
++++ b/fs/xfs/Kconfig
+@@ -124,11 +124,17 @@ config XFS_DRAIN_INTENTS
+ 	bool
+ 	select JUMP_LABEL if HAVE_ARCH_JUMP_LABEL
+ 
++config XFS_LIVE_HOOKS
++	bool
++	select JUMP_LABEL if HAVE_ARCH_JUMP_LABEL
++
+ config XFS_ONLINE_SCRUB
+ 	bool "XFS online metadata check support"
+ 	default n
+ 	depends on XFS_FS
+ 	depends on TMPFS && SHMEM
++	depends on SRCU
++	select XFS_LIVE_HOOKS
+ 	select XFS_DRAIN_INTENTS
+ 	help
+ 	  If you say Y here you will be able to check metadata on a
 diff --git a/fs/xfs/Makefile b/fs/xfs/Makefile
-index d3d1f768660e..2be09925ea23 100644
+index 2be09925ea23..3a97c5199a68 100644
 --- a/fs/xfs/Makefile
 +++ b/fs/xfs/Makefile
-@@ -173,7 +173,10 @@ xfs-$(CONFIG_XFS_RT)		+= $(addprefix scrub/, \
- 				   rtsummary.o \
- 				   )
+@@ -137,6 +137,7 @@ xfs-$(CONFIG_FS_DAX)		+= xfs_notify_failure.o
+ endif
  
--xfs-$(CONFIG_XFS_QUOTA)		+= scrub/quota.o
-+xfs-$(CONFIG_XFS_QUOTA)		+= $(addprefix scrub/, \
-+				   iscan.o \
-+				   quota.o \
-+				   )
+ xfs-$(CONFIG_XFS_DRAIN_INTENTS)	+= xfs_drain.o
++xfs-$(CONFIG_XFS_LIVE_HOOKS)	+= xfs_hooks.o
  
- # online repair
- ifeq ($(CONFIG_XFS_ONLINE_REPAIR),y)
-diff --git a/fs/xfs/scrub/iscan.c b/fs/xfs/scrub/iscan.c
+ # online scrub/repair
+ ifeq ($(CONFIG_XFS_ONLINE_SCRUB),y)
+diff --git a/fs/xfs/xfs_hooks.c b/fs/xfs/xfs_hooks.c
 new file mode 100644
-index 000000000000..29feee70f69a
+index 000000000000..fd0b4ee01309
 --- /dev/null
-+++ b/fs/xfs/scrub/iscan.c
-@@ -0,0 +1,498 @@
++++ b/fs/xfs/xfs_hooks.c
+@@ -0,0 +1,53 @@
 +// SPDX-License-Identifier: GPL-2.0-or-later
 +/*
-+ * Copyright (C) 2021-2023 Oracle.  All Rights Reserved.
++ * Copyright (C) 2022-2023 Oracle.  All Rights Reserved.
 + * Author: Darrick J. Wong <djwong@kernel.org>
 + */
 +#include "xfs.h"
@@ -130,699 +177,132 @@ index 000000000000..29feee70f69a
 +#include "xfs_format.h"
 +#include "xfs_trans_resv.h"
 +#include "xfs_mount.h"
-+#include "xfs_log_format.h"
-+#include "xfs_trans.h"
-+#include "xfs_inode.h"
-+#include "xfs_btree.h"
-+#include "xfs_ialloc.h"
-+#include "xfs_ialloc_btree.h"
 +#include "xfs_ag.h"
-+#include "xfs_error.h"
-+#include "xfs_bit.h"
-+#include "xfs_icache.h"
-+#include "scrub/scrub.h"
-+#include "scrub/iscan.h"
-+#include "scrub/common.h"
-+#include "scrub/trace.h"
++#include "xfs_trace.h"
 +
-+/*
-+ * Live File Scan
-+ * ==============
-+ *
-+ * Live file scans walk every inode in a live filesystem.  This is more or
-+ * less like a regular iwalk, except that when we're advancing the scan cursor,
-+ * we must ensure that inodes cannot be added or deleted anywhere between the
-+ * old cursor value and the new cursor value.  If we're advancing the cursor
-+ * by one inode, the caller must hold that inode; if we're finding the next
-+ * inode to scan, we must grab the AGI and hold it until we've updated the
-+ * scan cursor.
-+ *
-+ * Callers are expected to use this code to scan all files in the filesystem to
-+ * construct a new metadata index of some kind.  The scan races against other
-+ * live updates, which means there must be a provision to update the new index
-+ * when updates are made to inodes that already been scanned.  The iscan lock
-+ * can be used in live update hook code to stop the scan and protect this data
-+ * structure.
-+ *
-+ * To keep the new index up to date with other metadata updates being made to
-+ * the live filesystem, it is assumed that the caller will add hooks as needed
-+ * to be notified when a metadata update occurs.  The inode scanner must tell
-+ * the hook code when an inode has been visited with xchk_iscan_mark_visit.
-+ * Hook functions can use xchk_iscan_want_live_update to decide if the
-+ * scanner's observations must be updated.
-+ */
-+
-+/*
-+ * Set the bits in @irec's free mask that correspond to the inodes before
-+ * @agino so that we skip them.  This is how we restart an inode walk that was
-+ * interrupted in the middle of an inode record.
-+ */
-+STATIC void
-+xchk_iscan_adjust_start(
-+	xfs_agino_t			agino,	/* starting inode of chunk */
-+	struct xfs_inobt_rec_incore	*irec)	/* btree record */
++/* Initialize a notifier chain. */
++void
++xfs_hooks_init(
++	struct xfs_hooks	*chain)
 +{
-+	int				idx;	/* index into inode chunk */
-+
-+	idx = agino - irec->ir_startino;
-+
-+	irec->ir_free |= xfs_inobt_maskn(0, idx);
-+	irec->ir_freecount = hweight64(irec->ir_free);
++	srcu_init_notifier_head(&chain->head);
 +}
 +
-+/*
-+ * Set *cursor to the next allocated inode after whatever it's set to now.
-+ * If there are no more inodes in this AG, cursor is set to NULLAGINO.
-+ */
-+STATIC int
-+xchk_iscan_find_next(
-+	struct xchk_iscan	*iscan,
-+	struct xfs_buf		*agi_bp,
-+	struct xfs_perag	*pag,
-+	xfs_agino_t		*cursor)
-+{
-+	struct xfs_scrub	*sc = iscan->sc;
-+	struct xfs_inobt_rec_incore	rec;
-+	struct xfs_btree_cur	*cur;
-+	struct xfs_mount	*mp = sc->mp;
-+	struct xfs_trans	*tp = sc->tp;
-+	xfs_agnumber_t		agno = pag->pag_agno;
-+	xfs_agino_t		lastino = NULLAGINO;
-+	xfs_agino_t		first, last;
-+	xfs_agino_t		agino = *cursor;
-+	int			has_rec;
-+	int			error;
-+
-+	/* If the cursor is beyond the end of this AG, move to the next one. */
-+	xfs_agino_range(mp, agno, &first, &last);
-+	if (agino > last) {
-+		*cursor = NULLAGINO;
-+		return 0;
-+	}
-+
-+	/*
-+	 * Look up the inode chunk for the current cursor position.  If there
-+	 * is no chunk here, we want the next one.
-+	 */
-+	cur = xfs_inobt_init_cursor(pag, tp, agi_bp, XFS_BTNUM_INO);
-+	error = xfs_inobt_lookup(cur, agino, XFS_LOOKUP_LE, &has_rec);
-+	if (!error && !has_rec)
-+		error = xfs_btree_increment(cur, 0, &has_rec);
-+	for (; !error; error = xfs_btree_increment(cur, 0, &has_rec)) {
-+		/*
-+		 * If we've run out of inobt records in this AG, move the
-+		 * cursor on to the next AG and exit.  The caller can try
-+		 * again with the next AG.
-+		 */
-+		if (!has_rec) {
-+			*cursor = NULLAGINO;
-+			break;
-+		}
-+
-+		error = xfs_inobt_get_rec(cur, &rec, &has_rec);
-+		if (error)
-+			break;
-+		if (!has_rec) {
-+			error = -EFSCORRUPTED;
-+			break;
-+		}
-+
-+		/* Make sure that we always move forward. */
-+		if (lastino != NULLAGINO &&
-+		    XFS_IS_CORRUPT(mp, lastino >= rec.ir_startino)) {
-+			error = -EFSCORRUPTED;
-+			break;
-+		}
-+		lastino = rec.ir_startino + XFS_INODES_PER_CHUNK - 1;
-+
-+		/*
-+		 * If this record only covers inodes that come before the
-+		 * cursor, advance to the next record.
-+		 */
-+		if (rec.ir_startino + XFS_INODES_PER_CHUNK <= agino)
-+			continue;
-+
-+		/*
-+		 * If the incoming lookup put us in the middle of an inobt
-+		 * record, mark it and the previous inodes "free" so that the
-+		 * search for allocated inodes will start at the cursor.  Use
-+		 * funny math to avoid overflowing the bit shift.
-+		 */
-+		if (agino >= rec.ir_startino)
-+			xchk_iscan_adjust_start(agino + 1, &rec);
-+
-+		/*
-+		 * If there are allocated inodes in this chunk, find them,
-+		 * and update the cursor.
-+		 */
-+		if (rec.ir_freecount < XFS_INODES_PER_CHUNK) {
-+			int	next = xfs_lowbit64(~rec.ir_free);
-+
-+			*cursor = rec.ir_startino + next;
-+			break;
-+		}
-+	}
-+
-+	xfs_btree_del_cursor(cur, error);
-+	return error;
-+}
-+
-+/*
-+ * Advance both the scan and the visited cursors.
-+ *
-+ * The inumber address space for a given filesystem is sparse, which means that
-+ * the scan cursor can jump a long ways in a single iter() call.  There are no
-+ * inodes in these sparse areas, so we must move the visited cursor forward at
-+ * the same time so that the scan user can receive live updates for inodes that
-+ * may get created once we release the AGI buffer.
-+ */
-+static inline void
-+xchk_iscan_move_cursor(
-+	struct xchk_iscan	*iscan,
-+	xfs_agnumber_t		agno,
-+	xfs_agino_t		agino)
-+{
-+	struct xfs_scrub	*sc = iscan->sc;
-+	struct xfs_mount	*mp = sc->mp;
-+
-+	mutex_lock(&iscan->lock);
-+	iscan->cursor_ino = XFS_AGINO_TO_INO(mp, agno, agino);
-+	iscan->__visited_ino = iscan->cursor_ino - 1;
-+	trace_xchk_iscan_move_cursor(iscan);
-+	mutex_unlock(&iscan->lock);
-+}
-+
-+/*
-+ * Prepare to return agno/agino to the iscan caller by moving the lastino
-+ * cursor to the previous inode.  Do this while we still hold the AGI so that
-+ * no other threads can create or delete inodes in this AG.
-+ */
-+static inline void
-+xchk_iscan_finish(
-+	struct xchk_iscan	*iscan)
-+{
-+	mutex_lock(&iscan->lock);
-+	iscan->cursor_ino = NULLFSINO;
-+
-+	/* All live updates will be applied from now on */
-+	iscan->__visited_ino = NULLFSINO;
-+
-+	mutex_unlock(&iscan->lock);
-+}
-+
-+/*
-+ * Advance ino to the next inode that the inobt thinks is allocated, being
-+ * careful to jump to the next AG if we've reached the right end of this AG's
-+ * inode btree.  Advancing ino effectively means that we've pushed the inode
-+ * scan forward, so set the iscan cursor to (ino - 1) so that our live update
-+ * predicates will track inode allocations in that part of the inode number
-+ * key space once we release the AGI buffer.
-+ *
-+ * Returns 1 if there's a new inode to examine, 0 if we've run out of inodes,
-+ * -ECANCELED if the live scan aborted, or the usual negative errno.
-+ */
-+STATIC int
-+xchk_iscan_advance(
-+	struct xchk_iscan	*iscan,
-+	struct xfs_perag	**pagp,
-+	struct xfs_buf		**agi_bpp)
-+{
-+	struct xfs_scrub	*sc = iscan->sc;
-+	struct xfs_mount	*mp = sc->mp;
-+	struct xfs_buf		*agi_bp;
-+	struct xfs_perag	*pag;
-+	xfs_agnumber_t		agno;
-+	xfs_agino_t		agino;
-+	int			ret;
-+
-+	ASSERT(iscan->cursor_ino >= iscan->__visited_ino);
-+
-+	do {
-+		if (xchk_iscan_aborted(iscan))
-+			return -ECANCELED;
-+
-+		agno = XFS_INO_TO_AGNO(mp, iscan->cursor_ino);
-+		pag = xfs_perag_get(mp, agno);
-+		if (!pag)
-+			return -ECANCELED;
-+
-+		ret = xfs_ialloc_read_agi(pag, sc->tp, &agi_bp);
-+		if (ret)
-+			goto out_pag;
-+
-+		agino = XFS_INO_TO_AGINO(mp, iscan->cursor_ino);
-+		ret = xchk_iscan_find_next(iscan, agi_bp, pag, &agino);
-+		if (ret)
-+			goto out_buf;
-+
-+		if (agino != NULLAGINO) {
-+			/*
-+			 * Found the next inode in this AG, so return it along
-+			 * with the AGI buffer and the perag structure to
-+			 * ensure it cannot go away.
-+			 */
-+			xchk_iscan_move_cursor(iscan, agno, agino);
-+			*agi_bpp = agi_bp;
-+			*pagp = pag;
-+			return 1;
-+		}
-+
-+		/*
-+		 * Did not find any more inodes in this AG, move on to the next
-+		 * AG.
-+		 */
-+		xchk_iscan_move_cursor(iscan, ++agno, 0);
-+		xfs_trans_brelse(sc->tp, agi_bp);
-+		xfs_perag_put(pag);
-+
-+		trace_xchk_iscan_advance_ag(iscan);
-+	} while (agno < mp->m_sb.sb_agcount);
-+
-+	xchk_iscan_finish(iscan);
-+	return 0;
-+
-+out_buf:
-+	xfs_trans_brelse(sc->tp, agi_bp);
-+out_pag:
-+	xfs_perag_put(pag);
-+	return ret;
-+}
-+
-+/*
-+ * Grabbing the inode failed, so we need to back up the scan and ask the caller
-+ * to try to _advance the scan again.  Returns -EBUSY if we've run out of retry
-+ * opportunities, -ECANCELED if the process has a fatal signal pending, or
-+ * -EAGAIN if we should try again.
-+ */
-+STATIC int
-+xchk_iscan_iget_retry(
-+	struct xchk_iscan	*iscan,
-+	bool			wait)
-+{
-+	ASSERT(iscan->cursor_ino == iscan->__visited_ino + 1);
-+
-+	if (!iscan->iget_timeout ||
-+	    time_is_before_jiffies(iscan->__iget_deadline))
-+		return -EBUSY;
-+
-+	if (wait) {
-+		unsigned long	relax;
-+
-+		/*
-+		 * Sleep for a period of time to let the rest of the system
-+		 * catch up.  If we return early, someone sent a kill signal to
-+		 * the calling process.
-+		 */
-+		relax = msecs_to_jiffies(iscan->iget_retry_delay);
-+		trace_xchk_iscan_iget_retry_wait(iscan);
-+
-+		if (schedule_timeout_killable(relax) ||
-+		    xchk_iscan_aborted(iscan))
-+			return -ECANCELED;
-+	}
-+
-+	iscan->cursor_ino--;
-+	return -EAGAIN;
-+}
-+
-+/*
-+ * Grab an inode as part of an inode scan.  While scanning this inode, the
-+ * caller must ensure that no other threads can modify the inode until a call
-+ * to xchk_iscan_visit succeeds.
-+ *
-+ * Returns 0 and an incore inode; -EAGAIN if the caller should call again
-+ * xchk_iscan_advance; -EBUSY if we couldn't grab an inode; -ECANCELED if
-+ * there's a fatal signal pending; or some other negative errno.
-+ */
-+STATIC int
-+xchk_iscan_iget(
-+	struct xchk_iscan	*iscan,
-+	struct xfs_perag	*pag,
-+	struct xfs_buf		*agi_bp,
-+	struct xfs_inode	**ipp)
-+{
-+	struct xfs_scrub	*sc = iscan->sc;
-+	struct xfs_mount	*mp = sc->mp;
-+	int			error;
-+
-+	error = xfs_iget(sc->mp, sc->tp, iscan->cursor_ino, XFS_IGET_NORETRY,
-+			0, ipp);
-+	xfs_trans_brelse(sc->tp, agi_bp);
-+	xfs_perag_put(pag);
-+
-+	trace_xchk_iscan_iget(iscan, error);
-+
-+	if (error == -ENOENT || error == -EAGAIN) {
-+		/*¬
-+		 * It's possible that this inode has lost all of its links but
-+		 * hasn't yet been inactivated.  If we don't have a transaction
-+		 * or it's not writable, flush the inodegc workers and wait.
-+		 */
-+		xfs_inodegc_flush(mp);
-+		return xchk_iscan_iget_retry(iscan, true);
-+	}
-+
-+	if (error == -EINVAL) {
-+		/*
-+		 * We thought the inode was allocated, but the inode btree
-+		 * lookup failed, which means that it was freed since the last
-+		 * time we advanced the cursor.  Back up and try again.  This
-+		 * should never happen since still hold the AGI buffer from the
-+		 * inobt check, but we need to be careful about infinite loops.
-+		 */
-+		return xchk_iscan_iget_retry(iscan, false);
-+	}
-+
-+	return error;
-+}
-+
-+/*
-+ * Advance the inode scan cursor to the next allocated inode and return the
-+ * incore inode structure associated with it.
-+ *
-+ * Returns 1 if there's a new inode to examine, 0 if we've run out of inodes,
-+ * -ECANCELED if the live scan aborted, -EBUSY if the incore inode could not be
-+ * grabbed, or the usual negative errno.
-+ *
-+ * If the function returns -EBUSY and the caller can handle skipping an inode,
-+ * it may call this function again to continue the scan with the next allocated
-+ * inode.
-+ */
++/* Make it so a function gets called whenever we hit a certain hook point. */
 +int
-+xchk_iscan_iter(
-+	struct xchk_iscan	*iscan,
-+	struct xfs_inode	**ipp)
++xfs_hooks_add(
++	struct xfs_hooks	*chain,
++	struct xfs_hook		*hook)
 +{
-+	struct xfs_scrub	*sc = iscan->sc;
-+	int			ret;
++	ASSERT(hook->nb.notifier_call != NULL);
++	BUILD_BUG_ON(offsetof(struct xfs_hook, nb) != 0);
 +
-+	if (iscan->iget_timeout)
-+		iscan->__iget_deadline = jiffies +
-+					 msecs_to_jiffies(iscan->iget_timeout);
-+
-+	do {
-+		struct xfs_buf	*agi_bp = NULL;
-+		struct xfs_perag *pag = NULL;
-+
-+		ret = xchk_iscan_advance(iscan, &pag, &agi_bp);
-+		if (ret != 1)
-+			return ret;
-+
-+		if (xchk_iscan_aborted(iscan)) {
-+			xfs_trans_brelse(sc->tp, agi_bp);
-+			xfs_perag_put(pag);
-+			ret = -ECANCELED;
-+			break;
-+		}
-+
-+		ret = xchk_iscan_iget(iscan, pag, agi_bp, ipp);
-+	} while (ret == -EAGAIN);
-+
-+	if (!ret)
-+		return 1;
-+
-+	return ret;
++	return srcu_notifier_chain_register(&chain->head, &hook->nb);
 +}
 +
-+
-+/* Mark this inode scan finished and release resources. */
++/* Remove a previously installed hook. */
 +void
-+xchk_iscan_teardown(
-+	struct xchk_iscan	*iscan)
++xfs_hooks_del(
++	struct xfs_hooks	*chain,
++	struct xfs_hook		*hook)
 +{
-+	xchk_iscan_finish(iscan);
-+	mutex_destroy(&iscan->lock);
++	srcu_notifier_chain_unregister(&chain->head, &hook->nb);
++	rcu_barrier();
 +}
 +
-+/*
-+ * Set ourselves up to start an inode scan.  If the @iget_timeout and
-+ * @iget_retry_delay parameters are set, the scan will try to iget each inode
-+ * for @iget_timeout milliseconds.  If an iget call indicates that the inode is
-+ * waiting to be inactivated, the CPU will relax for @iget_retry_delay
-+ * milliseconds after pushing the inactivation workers.
-+ */
-+void
-+xchk_iscan_start(
-+	struct xfs_scrub	*sc,
-+	unsigned int		iget_timeout,
-+	unsigned int		iget_retry_delay,
-+	struct xchk_iscan	*iscan)
++/* Call a hook.  Returns the NOTIFY_* value returned by the last hook. */
++int
++xfs_hooks_call(
++	struct xfs_hooks	*chain,
++	unsigned long		val,
++	void			*priv)
 +{
-+	iscan->sc = sc;
-+	clear_bit(XCHK_ISCAN_OPSTATE_ABORTED, &iscan->__opstate);
-+	iscan->iget_timeout = iget_timeout;
-+	iscan->iget_retry_delay = iget_retry_delay;
-+	iscan->__visited_ino = 0;
-+	iscan->cursor_ino = 0;
-+	mutex_init(&iscan->lock);
-+
-+	trace_xchk_iscan_start(iscan);
++	return srcu_notifier_call_chain(&chain->head, val, priv);
 +}
-+
-+/*
-+ * Mark this inode as having been visited.  Callers must hold a sufficiently
-+ * exclusive lock on the inode to prevent concurrent modifications.
-+ */
-+void
-+xchk_iscan_mark_visited(
-+	struct xchk_iscan	*iscan,
-+	struct xfs_inode	*ip)
-+{
-+	mutex_lock(&iscan->lock);
-+	iscan->__visited_ino = ip->i_ino;
-+	trace_xchk_iscan_visit(iscan);
-+	mutex_unlock(&iscan->lock);
-+}
-+
-+/*
-+ * Do we need a live update for this inode?  This is true if the scanner thread
-+ * has visited this inode and the scan hasn't been aborted due to errors.
-+ * Callers must hold a sufficiently exclusive lock on the inode to prevent
-+ * scanners from reading any inode metadata.
-+ */
-+bool
-+xchk_iscan_want_live_update(
-+	struct xchk_iscan	*iscan,
-+	xfs_ino_t		ino)
-+{
-+        bool			ret;
-+
-+	if (xchk_iscan_aborted(iscan))
-+		return false;
-+
-+	mutex_lock(&iscan->lock);
-+	trace_xchk_iscan_want_live_update(iscan, ino);
-+	ret = iscan->__visited_ino >= ino;
-+	mutex_unlock(&iscan->lock);
-+
-+	return ret;
-+}
-diff --git a/fs/xfs/scrub/iscan.h b/fs/xfs/scrub/iscan.h
+diff --git a/fs/xfs/xfs_hooks.h b/fs/xfs/xfs_hooks.h
 new file mode 100644
-index 000000000000..5285ec43533e
+index 000000000000..a67ae36525b5
 --- /dev/null
-+++ b/fs/xfs/scrub/iscan.h
-@@ -0,0 +1,63 @@
-+/* SPDX-License-Identifier: GPL-2.0-or-later */
++++ b/fs/xfs/xfs_hooks.h
+@@ -0,0 +1,68 @@
++// SPDX-License-Identifier: GPL-2.0-or-later
 +/*
-+ * Copyright (C) 2021-2023 Oracle.  All Rights Reserved.
++ * Copyright (C) 2022-2023 Oracle.  All Rights Reserved.
 + * Author: Darrick J. Wong <djwong@kernel.org>
 + */
-+#ifndef __XFS_SCRUB_ISCAN_H__
-+#define __XFS_SCRUB_ISCAN_H__
++#ifndef XFS_HOOKS_H_
++#define XFS_HOOKS_H_
 +
-+struct xchk_iscan {
-+	struct xfs_scrub	*sc;
++#ifdef CONFIG_XFS_LIVE_HOOKS
++struct xfs_hooks {
++	struct srcu_notifier_head	head;
++};
++#else
++struct xfs_hooks { /* empty */ };
++#endif
 +
-+	/* Lock to protect the scan cursor. */
-+	struct mutex		lock;
++/*
++ * If hooks and jump labels are enabled, we use jump labels (aka patching of
++ * the code segment) to avoid the minute overhead of calling an empty notifier
++ * chain when we know there are no callers.  If hooks are enabled without jump
++ * labels, hardwire the predicate to true because calling an empty srcu
++ * notifier chain isn't so expensive.
++ */
++#if defined(CONFIG_JUMP_LABEL) && defined(CONFIG_XFS_LIVE_HOOKS)
++# define DEFINE_STATIC_XFS_HOOK_SWITCH(name) \
++	static DEFINE_STATIC_KEY_FALSE(name)
++# define xfs_hooks_switch_on(name)	static_branch_inc(name)
++# define xfs_hooks_switch_off(name)	static_branch_dec(name)
++# define xfs_hooks_switched_on(name)	static_branch_unlikely(name)
++#elif defined(CONFIG_XFS_LIVE_HOOKS)
++# define DEFINE_STATIC_XFS_HOOK_SWITCH(name)
++# define xfs_hooks_switch_on(name)	((void)0)
++# define xfs_hooks_switch_off(name)	((void)0)
++# define xfs_hooks_switched_on(name)	(true)
++#else
++# define DEFINE_STATIC_XFS_HOOK_SWITCH(name)
++# define xfs_hooks_switch_on(name)	((void)0)
++# define xfs_hooks_switch_off(name)	((void)0)
++# define xfs_hooks_switched_on(name)	(false)
++#endif /* JUMP_LABEL && XFS_LIVE_HOOKS */
 +
-+	/* This is the inode that will be examined next. */
-+	xfs_ino_t		cursor_ino;
-+
-+	/*
-+	 * This is the last inode that we've successfully scanned, either
-+	 * because the caller scanned it, or we moved the cursor past an empty
-+	 * part of the inode address space.  Scan callers should only use the
-+	 * xchk_iscan_visit function to modify this.
-+	 */
-+	xfs_ino_t		__visited_ino;
-+
-+	/* Operational state of the livescan. */
-+	unsigned long		__opstate;
-+
-+	/* Give up on iterating @cursor_ino if we can't iget it by this time. */
-+	unsigned long		__iget_deadline;
-+
-+	/* Amount of time (in ms) that we will try to iget an inode. */
-+	unsigned int		iget_timeout;
-+
-+	/* Wait this many ms to retry an iget. */
-+	unsigned int		iget_retry_delay;
++#ifdef CONFIG_XFS_LIVE_HOOKS
++struct xfs_hook {
++	/* This must come at the start of the structure. */
++	struct notifier_block		nb;
 +};
 +
-+/* Set if the scan has been aborted due to some event in the fs. */
-+#define XCHK_ISCAN_OPSTATE_ABORTED	(1)
++typedef	int (*xfs_hook_fn_t)(struct xfs_hook *hook, unsigned long action,
++		void *data);
 +
-+static inline bool
-+xchk_iscan_aborted(const struct xchk_iscan *iscan)
++void xfs_hooks_init(struct xfs_hooks *chain);
++int xfs_hooks_add(struct xfs_hooks *chain, struct xfs_hook *hook);
++void xfs_hooks_del(struct xfs_hooks *chain, struct xfs_hook *hook);
++int xfs_hooks_call(struct xfs_hooks *chain, unsigned long action,
++		void *priv);
++
++static inline void xfs_hook_setup(struct xfs_hook *hook, notifier_fn_t fn)
 +{
-+	return test_bit(XCHK_ISCAN_OPSTATE_ABORTED, &iscan->__opstate);
++	hook->nb.notifier_call = fn;
++	hook->nb.priority = 0;
 +}
 +
-+static inline void
-+xchk_iscan_abort(struct xchk_iscan *iscan)
-+{
-+	set_bit(XCHK_ISCAN_OPSTATE_ABORTED, &iscan->__opstate);
-+}
++#else
++# define xfs_hooks_init(chain)			((void)0)
++# define xfs_hooks_call(chain, val, priv)	(NOTIFY_DONE)
++#endif
 +
-+void xchk_iscan_start(struct xfs_scrub *sc, unsigned int iget_timeout,
-+		unsigned int iget_retry_delay, struct xchk_iscan *iscan);
-+void xchk_iscan_teardown(struct xchk_iscan *iscan);
-+
-+int xchk_iscan_iter(struct xchk_iscan *iscan, struct xfs_inode **ipp);
-+
-+void xchk_iscan_mark_visited(struct xchk_iscan *iscan, struct xfs_inode *ip);
-+bool xchk_iscan_want_live_update(struct xchk_iscan *iscan, xfs_ino_t ino);
-+
-+#endif /* __XFS_SCRUB_ISCAN_H__ */
-diff --git a/fs/xfs/scrub/trace.c b/fs/xfs/scrub/trace.c
-index a6e5471b7e80..e2ff23cf7830 100644
---- a/fs/xfs/scrub/trace.c
-+++ b/fs/xfs/scrub/trace.c
-@@ -17,6 +17,7 @@
- #include "scrub/scrub.h"
- #include "scrub/xfile.h"
- #include "scrub/xfarray.h"
-+#include "scrub/iscan.h"
++#endif /* XFS_HOOKS_H_ */
+diff --git a/fs/xfs/xfs_linux.h b/fs/xfs/xfs_linux.h
+index 74dcb05069e8..b97bc12fa8b2 100644
+--- a/fs/xfs/xfs_linux.h
++++ b/fs/xfs/xfs_linux.h
+@@ -81,6 +81,7 @@ typedef __u32			xfs_nlink_t;
+ #include "xfs_buf.h"
+ #include "xfs_message.h"
+ #include "xfs_drain.h"
++#include "xfs_hooks.h"
  
- /* Figure out which block the btree cursor was pointing to. */
- static inline xfs_fsblock_t
-diff --git a/fs/xfs/scrub/trace.h b/fs/xfs/scrub/trace.h
-index 7a5d10723c9a..7f3f9b7be458 100644
---- a/fs/xfs/scrub/trace.h
-+++ b/fs/xfs/scrub/trace.h
-@@ -16,9 +16,11 @@
- #include <linux/tracepoint.h>
- #include "xfs_bit.h"
- 
-+struct xfs_scrub;
- struct xfile;
- struct xfarray;
- struct xfarray_sortinfo;
-+struct xchk_iscan;
- 
- /*
-  * ftrace's __print_symbolic requires that all enum values be wrapped in the
-@@ -1023,6 +1025,110 @@ TRACE_EVENT(xchk_rtsum_record_free,
- );
- #endif /* CONFIG_XFS_RT */
- 
-+DECLARE_EVENT_CLASS(xchk_iscan_class,
-+	TP_PROTO(struct xchk_iscan *iscan),
-+	TP_ARGS(iscan),
-+	TP_STRUCT__entry(
-+		__field(dev_t, dev)
-+		__field(xfs_ino_t, cursor)
-+		__field(xfs_ino_t, visited)
-+	),
-+	TP_fast_assign(
-+		__entry->dev = iscan->sc->mp->m_super->s_dev;
-+		__entry->cursor = iscan->cursor_ino;
-+		__entry->visited = iscan->__visited_ino;
-+	),
-+	TP_printk("dev %d:%d iscan cursor 0x%llx visited 0x%llx",
-+		  MAJOR(__entry->dev), MINOR(__entry->dev),
-+		  __entry->cursor,
-+		  __entry->visited)
-+)
-+#define DEFINE_ISCAN_EVENT(name) \
-+DEFINE_EVENT(xchk_iscan_class, name, \
-+	TP_PROTO(struct xchk_iscan *iscan), \
-+	TP_ARGS(iscan))
-+DEFINE_ISCAN_EVENT(xchk_iscan_move_cursor);
-+DEFINE_ISCAN_EVENT(xchk_iscan_visit);
-+DEFINE_ISCAN_EVENT(xchk_iscan_advance_ag);
-+DEFINE_ISCAN_EVENT(xchk_iscan_start);
-+
-+DECLARE_EVENT_CLASS(xchk_iscan_ino_class,
-+	TP_PROTO(struct xchk_iscan *iscan, xfs_ino_t ino),
-+	TP_ARGS(iscan, ino),
-+	TP_STRUCT__entry(
-+		__field(dev_t, dev)
-+		__field(xfs_ino_t, cursor)
-+		__field(xfs_ino_t, visited)
-+		__field(xfs_ino_t, ino)
-+	),
-+	TP_fast_assign(
-+		__entry->dev = iscan->sc->mp->m_super->s_dev;
-+		__entry->cursor = iscan->cursor_ino;
-+		__entry->visited = iscan->__visited_ino;
-+		__entry->ino = ino;
-+	),
-+	TP_printk("dev %d:%d iscan cursor 0x%llx visited 0x%llx ino 0x%llx",
-+		  MAJOR(__entry->dev), MINOR(__entry->dev),
-+		  __entry->cursor,
-+		  __entry->visited,
-+		  __entry->ino)
-+)
-+#define DEFINE_ISCAN_INO_EVENT(name) \
-+DEFINE_EVENT(xchk_iscan_ino_class, name, \
-+	TP_PROTO(struct xchk_iscan *iscan, xfs_ino_t ino), \
-+	TP_ARGS(iscan, ino))
-+DEFINE_ISCAN_INO_EVENT(xchk_iscan_want_live_update);
-+
-+TRACE_EVENT(xchk_iscan_iget,
-+	TP_PROTO(struct xchk_iscan *iscan, int error),
-+	TP_ARGS(iscan, error),
-+	TP_STRUCT__entry(
-+		__field(dev_t, dev)
-+		__field(xfs_ino_t, cursor)
-+		__field(xfs_ino_t, visited)
-+		__field(int, error)
-+	),
-+	TP_fast_assign(
-+		__entry->dev = iscan->sc->mp->m_super->s_dev;
-+		__entry->cursor = iscan->cursor_ino;
-+		__entry->visited = iscan->__visited_ino;
-+		__entry->error = error;
-+	),
-+	TP_printk("dev %d:%d iscan cursor 0x%llx visited 0x%llx error %d",
-+		  MAJOR(__entry->dev), MINOR(__entry->dev),
-+		  __entry->cursor,
-+		  __entry->visited,
-+		  __entry->error)
-+);
-+
-+TRACE_EVENT(xchk_iscan_iget_retry_wait,
-+	TP_PROTO(struct xchk_iscan *iscan),
-+	TP_ARGS(iscan),
-+	TP_STRUCT__entry(
-+		__field(dev_t, dev)
-+		__field(xfs_ino_t, cursor)
-+		__field(xfs_ino_t, visited)
-+		__field(unsigned int, retry_delay)
-+		__field(unsigned long, remaining)
-+		__field(unsigned int, iget_timeout)
-+	),
-+	TP_fast_assign(
-+		__entry->dev = iscan->sc->mp->m_super->s_dev;
-+		__entry->cursor = iscan->cursor_ino;
-+		__entry->visited = iscan->__visited_ino;
-+		__entry->retry_delay = iscan->iget_retry_delay;
-+		__entry->remaining = jiffies_to_msecs(iscan->__iget_deadline - jiffies);
-+		__entry->iget_timeout = iscan->iget_timeout;
-+	),
-+	TP_printk("dev %d:%d iscan cursor 0x%llx visited 0x%llx remaining %lu timeout %u delay %u",
-+		  MAJOR(__entry->dev), MINOR(__entry->dev),
-+		  __entry->cursor,
-+		  __entry->visited,
-+		  __entry->remaining,
-+		  __entry->iget_timeout,
-+		  __entry->retry_delay)
-+);
-+
- /* repair tracepoints */
- #if IS_ENABLED(CONFIG_XFS_ONLINE_REPAIR)
- 
+ #ifdef __BIG_ENDIAN
+ #define XFS_NATIVE_HOST 1
 
