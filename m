@@ -2,46 +2,44 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 41D07C77B7A
-	for <linux-xfs@archiver.kernel.org>; Fri, 26 May 2023 02:19:20 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 860C6C77B7A
+	for <linux-xfs@archiver.kernel.org>; Fri, 26 May 2023 02:19:35 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229827AbjEZCTT (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 25 May 2023 22:19:19 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50228 "EHLO
+        id S233393AbjEZCTd (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 25 May 2023 22:19:33 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50282 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229568AbjEZCTR (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 25 May 2023 22:19:17 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9ADD1B2
-        for <linux-xfs@vger.kernel.org>; Thu, 25 May 2023 19:19:16 -0700 (PDT)
+        with ESMTP id S229568AbjEZCTd (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 25 May 2023 22:19:33 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5237F187
+        for <linux-xfs@vger.kernel.org>; Thu, 25 May 2023 19:19:32 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 384D76157B
-        for <linux-xfs@vger.kernel.org>; Fri, 26 May 2023 02:19:16 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 9E4DAC433D2;
-        Fri, 26 May 2023 02:19:15 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id BFBBA614A2
+        for <linux-xfs@vger.kernel.org>; Fri, 26 May 2023 02:19:31 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 29BB6C43443;
+        Fri, 26 May 2023 02:19:31 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1685067555;
-        bh=vXfcwgfMvVOzYRoaoy/EBOVGOiCU7iLW01jPw9dxY1E=;
+        s=k20201202; t=1685067571;
+        bh=Jjpvek0G5ErPa/acMyLJCrWIyd5Telcq1FfI2l1PAMg=;
         h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-        b=jdKRU4IY1+7nEj/kns5WkCH1Qzs+vWk3+Ut06rU9A8BKRix+Dceu1RKhPRs5XwxeS
-         g5AIdTj6iFbiRm4jm6BGP0V095rWm+YqLFbekxosBjOmIld2gn2iq2tz/uEksrZVDp
-         ctHu7E5SGBjwMRrFdBGw4vGffFrlr+5lYRjGobkL03nCo4nJEt40qG+gCEiZUWGh+M
-         R790aGYM1HK0fpHr4ajFzAacgPI7lsS7qDK51lUv2R5V9cI5adawdSX/oiE988aUFn
-         vg1M7zy5oHCFDmpGsdVWBti0o+4QqZ5B2FPNL4tuBJIMbjHeWmQkFvkxTlb8Oy8J+f
-         neV+0y3BO3W+g==
-Date:   Thu, 25 May 2023 19:19:15 -0700
-Subject: [PATCH 1/1] xfs: Increase XFS_DEFER_OPS_NR_INODES to 5
+        b=Zda4WFa12I3jZceqVxNMHBzihq1IW19ifwb9arLRPPY5dKp/gUAtJaEsl4b+uD1wc
+         3UM4tYzXYakqlhpFe63DeO8L5qzhc1MwGRgaM5R+OUZxCHTBdsQjuifx0S9xBxmys6
+         LRt2yLkC7Olz2OU1zx0q2i/68+4UZeGE1pYVvKXHixFGgQilU3mzsdfmTP3oph88Z4
+         TZTe9DFhqKvlh0bgPUyOaJ3BIAcvXBY8WwCn0PMtovW6kvDYoEV13BpAz5ctuS+Gdz
+         32dshDJzogL35BqClajA6IbkF8opWtiPXKeyO8soNQ7otDMKOdbbf+TitHbVDuk/IS
+         9BgAQA3ygPLxQ==
+Date:   Thu, 25 May 2023 19:19:30 -0700
+Subject: [PATCH 01/10] xfs: make xfs_attr_set require XFS_DA_OP_REMOVE
 From:   "Darrick J. Wong" <djwong@kernel.org>
 To:     djwong@kernel.org, cem@kernel.org
-Cc:     Allison Henderson <allison.henderson@oracle.com>,
-        Catherine Hoang <catherine.hoang@oracle.com>,
-        linux-xfs@vger.kernel.org, allison.henderson@oracle.com,
+Cc:     linux-xfs@vger.kernel.org, allison.henderson@oracle.com,
         catherine.hoang@oracle.com
-Message-ID: <168506077134.3749047.1825192150739462971.stgit@frogsfrogsfrogs>
-In-Reply-To: <168506077122.3749047.6539176730750408418.stgit@frogsfrogsfrogs>
-References: <168506077122.3749047.6539176730750408418.stgit@frogsfrogsfrogs>
+Message-ID: <168506077448.3749126.4421797460119228908.stgit@frogsfrogsfrogs>
+In-Reply-To: <168506077431.3749126.3177791326683307311.stgit@frogsfrogsfrogs>
+References: <168506077431.3749126.3177791326683307311.stgit@frogsfrogsfrogs>
 User-Agent: StGit/0.19
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
@@ -50,71 +48,93 @@ Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-From: Allison Henderson <allison.henderson@oracle.com>
+From: Darrick J. Wong <djwong@kernel.org>
 
-Renames that generate parent pointer updates can join up to 5
-inodes locked in sorted order.  So we need to increase the
-number of defer ops inodes and relock them in the same way.
+Quite a few patches from now, we're going to change the parent pointer
+xattr format to encode as much of the dirent name in the xattr name as
+fits, and spill the rest of it to the xattr value.  To make this work
+correctly, we'll be adding the ability to look up xattrs based on name
+/and/ value.
 
-Signed-off-by: Allison Henderson <allison.henderson@oracle.com>
-Reviewed-by: Darrick J. Wong <djwong@kernel.org>
-Reviewed-by: Catherine Hoang <catherine.hoang@oracle.com>
-[djwong: have one sorting function]
+Internally, the xattr data structure supports attributes with a zero
+length value, which is how we're going to store parent pointers for
+short dirent names.  The parent pointer repair code uses xfs_attr_set to
+add missing and remove dangling parent pointers, so that interface must
+be capable of setting an xattr with args->value == NULL.
+
+The userspace API doesn't support this, so xfs_attr_set currently treats
+a NULL args->value as a request to remove an attr.  However, that's a
+quirk of the existing callers and the interface.  Make the callers of
+xfs_attr_set to declare explicitly that they want to remove an xattr.
+
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 ---
- libxfs/libxfs_priv.h |    2 ++
- libxfs/xfs_defer.c   |    6 +++++-
- libxfs/xfs_defer.h   |    8 +++++++-
- 3 files changed, 14 insertions(+), 2 deletions(-)
+ db/attrset.c      |    4 +++-
+ libxfs/xfs_attr.c |    9 +++++----
+ 2 files changed, 8 insertions(+), 5 deletions(-)
 
 
-diff --git a/libxfs/libxfs_priv.h b/libxfs/libxfs_priv.h
-index a8170732ffe..1d5621fc2ee 100644
---- a/libxfs/libxfs_priv.h
-+++ b/libxfs/libxfs_priv.h
-@@ -498,6 +498,8 @@ void __xfs_buf_mark_corrupt(struct xfs_buf *bp, xfs_failaddr_t fa);
- 	__mode = __mode; /* no set-but-unused warning */	\
- })
- #define xfs_lock_two_inodes(ip0,mode0,ip1,mode1)	((void) 0)
-+#define xfs_lock_inodes(i_tab, nr, mode)		((void) 0)
-+#define xfs_sort_inodes(i_tab, nr)			((void) 0)
+diff --git a/db/attrset.c b/db/attrset.c
+index 2b6cdb5f5c3..123bdff1b62 100644
+--- a/db/attrset.c
++++ b/db/attrset.c
+@@ -185,7 +185,9 @@ attr_remove_f(
+ 	int			argc,
+ 	char			**argv)
+ {
+-	struct xfs_da_args	args = { };
++	struct xfs_da_args	args = {
++		.op_flags	= XFS_DA_OP_REMOVE,
++	};
+ 	int			c;
  
- /* space allocation */
- #define XFS_EXTENT_BUSY_DISCARDED	0x01	/* undergoing a discard op. */
-diff --git a/libxfs/xfs_defer.c b/libxfs/xfs_defer.c
-index 47a7c5ed1f5..ea274ebd8f5 100644
---- a/libxfs/xfs_defer.c
-+++ b/libxfs/xfs_defer.c
-@@ -825,7 +825,11 @@ xfs_defer_ops_continue(
- 	ASSERT(!(tp->t_flags & XFS_TRANS_DIRTY));
+ 	if (cur_typ == NULL) {
+diff --git a/libxfs/xfs_attr.c b/libxfs/xfs_attr.c
+index c8382190e22..b131a8f2662 100644
+--- a/libxfs/xfs_attr.c
++++ b/libxfs/xfs_attr.c
+@@ -965,6 +965,7 @@ xfs_attr_set(
+ 	struct xfs_mount	*mp = dp->i_mount;
+ 	struct xfs_trans_res	tres;
+ 	bool			rsvd = (args->attr_filter & XFS_ATTR_ROOT);
++	bool			is_remove = args->op_flags & XFS_DA_OP_REMOVE;
+ 	int			error, local;
+ 	int			rmt_blks = 0;
+ 	unsigned int		total;
+@@ -989,7 +990,7 @@ xfs_attr_set(
+ 	args->op_flags = XFS_DA_OP_OKNOENT |
+ 					(args->op_flags & XFS_DA_OP_LOGGED);
  
- 	/* Lock the captured resources to the new transaction. */
--	if (dfc->dfc_held.dr_inos == 2)
-+	if (dfc->dfc_held.dr_inos > 2) {
-+		xfs_sort_inodes(dfc->dfc_held.dr_ip, dfc->dfc_held.dr_inos);
-+		xfs_lock_inodes(dfc->dfc_held.dr_ip, dfc->dfc_held.dr_inos,
-+				XFS_ILOCK_EXCL);
-+	} else if (dfc->dfc_held.dr_inos == 2)
- 		xfs_lock_two_inodes(dfc->dfc_held.dr_ip[0], XFS_ILOCK_EXCL,
- 				    dfc->dfc_held.dr_ip[1], XFS_ILOCK_EXCL);
- 	else if (dfc->dfc_held.dr_inos == 1)
-diff --git a/libxfs/xfs_defer.h b/libxfs/xfs_defer.h
-index bcc48b0c75c..91c9568575d 100644
---- a/libxfs/xfs_defer.h
-+++ b/libxfs/xfs_defer.h
-@@ -71,7 +71,13 @@ extern const struct xfs_defer_op_type xfs_swapext_defer_type;
- /*
-  * Deferred operation item relogging limits.
-  */
--#define XFS_DEFER_OPS_NR_INODES	2	/* join up to two inodes */
-+
-+/*
-+ * Rename w/ parent pointers can require up to 5 inodes with deferred ops to
-+ * be joined to the transaction: src_dp, target_dp, src_ip, target_ip, and wip.
-+ * These inodes are locked in sorted order by their inode numbers
-+ */
-+#define XFS_DEFER_OPS_NR_INODES	5
- #define XFS_DEFER_OPS_NR_BUFS	2	/* join up to two buffers */
+-	if (args->value) {
++	if (!is_remove) {
+ 		XFS_STATS_INC(mp, xs_attr_set);
+ 		args->total = xfs_attr_calc_size(args, &local);
  
- /* Resources that must be held across a transaction roll. */
+@@ -1023,7 +1024,7 @@ xfs_attr_set(
+ 	if (error)
+ 		return error;
+ 
+-	if (args->value || xfs_inode_hasattr(dp)) {
++	if (!is_remove || xfs_inode_hasattr(dp)) {
+ 		error = xfs_iext_count_may_overflow(dp, XFS_ATTR_FORK,
+ 				XFS_IEXT_ATTR_MANIP_CNT(rmt_blks));
+ 		if (error == -EFBIG)
+@@ -1037,7 +1038,7 @@ xfs_attr_set(
+ 	switch (error) {
+ 	case -EEXIST:
+ 		/* if no value, we are performing a remove operation */
+-		if (!args->value) {
++		if (is_remove) {
+ 			error = xfs_attr_defer_remove(args);
+ 			break;
+ 		}
+@@ -1049,7 +1050,7 @@ xfs_attr_set(
+ 		break;
+ 	case -ENOATTR:
+ 		/* Can't remove what isn't there. */
+-		if (!args->value)
++		if (is_remove)
+ 			goto out_trans_cancel;
+ 
+ 		/* Pure replace fails if no existing attr to replace. */
 
