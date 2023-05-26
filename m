@@ -2,180 +2,81 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1AB0CC77B7E
-	for <linux-xfs@archiver.kernel.org>; Fri, 26 May 2023 01:40:38 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A4331C7EE29
+	for <linux-xfs@archiver.kernel.org>; Fri, 26 May 2023 01:40:50 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233344AbjEZBkg (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 25 May 2023 21:40:36 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35808 "EHLO
+        id S229827AbjEZBkt (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 25 May 2023 21:40:49 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35940 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233300AbjEZBkf (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 25 May 2023 21:40:35 -0400
-X-Greylist: delayed 360 seconds by postgrey-1.37 at lindbergh.monkeyblade.net; Thu, 25 May 2023 18:40:33 PDT
-Received: from out-14.mta1.migadu.com (out-14.mta1.migadu.com [95.215.58.14])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D12251A4
-        for <linux-xfs@vger.kernel.org>; Thu, 25 May 2023 18:40:33 -0700 (PDT)
-Date:   Thu, 25 May 2023 21:34:29 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.dev; s=key1;
-        t=1685064871;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=6NBltaxcvPexbX2OhvX6CBqCLsP7PXDw7sii/NG22oc=;
-        b=QlfagXEr72rtl8UdEI4zy61ZOm6SIFoBNyo79sTjBGYcDohPQbsJx2jpE7cs1wEcQuR+by
-        K4e11fZLK/v3oDpJWABih8Baq/1c034L3JHCwalRSBEqhXf5UfhXBk9OPCQfd012k2/upT
-        8J1ks4zi3xwwiTaABETHKisC7T/kEEE=
-X-Report-Abuse: Please report any abuse attempt to abuse@migadu.com and include these headers.
-From:   Kent Overstreet <kent.overstreet@linux.dev>
-To:     "Darrick J. Wong" <djwong@kernel.org>
-Cc:     linux-xfs@vger.kernel.org, willy@infradead.org,
-        linux-fsdevel@vger.kernel.org
-Subject: Re: [PATCH 1/7] xfs: create a big array data structure
-Message-ID: <ZHAMpeyu/KmXtRw8@moria.home.lan>
-References: <168506056447.3729324.13624212283929857624.stgit@frogsfrogsfrogs>
- <168506056469.3729324.10116553858401440150.stgit@frogsfrogsfrogs>
+        with ESMTP id S234071AbjEZBkr (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 25 May 2023 21:40:47 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id EF1721A6
+        for <linux-xfs@vger.kernel.org>; Thu, 25 May 2023 18:40:46 -0700 (PDT)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 57F88646CD
+        for <linux-xfs@vger.kernel.org>; Fri, 26 May 2023 01:40:46 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id BDE52C433EF;
+        Fri, 26 May 2023 01:40:45 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1685065245;
+        bh=HUnWsZNV3KWVr6RHfR4PExfmzGQO0dCj+j9bl/tJTAQ=;
+        h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
+        b=EB8SDQNpGwCf8zVfo69eyqozgpagdS7EJOeN4McsBWiYz+TgV2G+ltaqw645J4f9H
+         oQejTd3ROe5eXL4pbyxhR8ZbWtc4C1q9H6A8+jdpKLvhxJs3nEDh07gJvXznenEfRL
+         9JdC4YG2rLNBm+ebM4hN+xgTdTVE0DDZ9pnNIIx8mPNAKLX7RLwt0YcAWRo+eFZr5T
+         JBI1nqKDsj1vimA3En0au6OiCiVEjgcXuFfFxucLR7R+fptgp4or01mVcPBmZSMUk4
+         VYzKXMXtzplkLo4SkRZyzbZqTmeeU1cbvSSVKD1VWq4JEIIlPCOcQ5GLswaqV1gaon
+         YZOvAeabGRM7A==
+Date:   Thu, 25 May 2023 18:40:45 -0700
+Subject: [PATCH 1/7] xfs_scrub: flush stdout after printing to it
+From:   "Darrick J. Wong" <djwong@kernel.org>
+To:     djwong@kernel.org, cem@kernel.org
+Cc:     linux-xfs@vger.kernel.org
+Message-ID: <168506071329.3742205.349121998840471158.stgit@frogsfrogsfrogs>
+In-Reply-To: <168506071314.3742205.8114181660121831202.stgit@frogsfrogsfrogs>
+References: <168506071314.3742205.8114181660121831202.stgit@frogsfrogsfrogs>
+User-Agent: StGit/0.19
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <168506056469.3729324.10116553858401440150.stgit@frogsfrogsfrogs>
-X-Migadu-Flow: FLOW_OUT
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Thu, May 25, 2023 at 05:47:08PM -0700, Darrick J. Wong wrote:
-> +struct xfarray {
-> +	/* Underlying file that backs the array. */
-> +	struct xfile	*xfile;
-> +
-> +	/* Number of array elements. */
-> +	xfarray_idx_t	nr;
-> +
-> +	/* Maximum possible array size. */
-> +	xfarray_idx_t	max_nr;
-> +
-> +	/* Number of unset slots in the array below @nr. */
-> +	uint64_t	unset_slots;
-> +
-> +	/* Size of an array element. */
-> +	size_t		obj_size;
-> +
-> +	/* log2 of array element size, if possible. */
-> +	int		obj_size_log;
-> +};
-> +
-> +int xfarray_create(struct xfs_mount *mp, const char *descr,
-> +		unsigned long long required_capacity, size_t obj_size,
-> +		struct xfarray **arrayp);
-> +void xfarray_destroy(struct xfarray *array);
-> +int xfarray_load(struct xfarray *array, xfarray_idx_t idx, void *ptr);
-> +int xfarray_unset(struct xfarray *array, xfarray_idx_t idx);
-> +int xfarray_store(struct xfarray *array, xfarray_idx_t idx, const void *ptr);
-> +int xfarray_store_anywhere(struct xfarray *array, const void *ptr);
-> +bool xfarray_element_is_null(struct xfarray *array, const void *ptr);
+From: Darrick J. Wong <djwong@kernel.org>
 
-Nice simple external interface... +1
+Make sure we flush stdout after printf'ing to it, especially before we
+start any operation that could take a while to complete.  Most of scrub
+already does this, but we missed a couple of spots.
 
-Since you're storing fixed size elements, if you wanted to make it
-slicker you could steal the generic-radix tree approach of using a
-wrapper type to make the object size known at compile time, which lets
-you constant propagate through the index -> offset calculations.
+Signed-off-by: Darrick J. Wong <djwong@kernel.org>
+---
+ scrub/xfs_scrub.c |    2 ++
+ 1 file changed, 2 insertions(+)
 
-But not worth it from a performance POV with the current implementation,
-because...
 
-> +/*
-> + * Read a memory object directly from the xfile's page cache.  Unlike regular
-> + * pread, we return -E2BIG and -EFBIG for reads that are too large or at too
-> + * high an offset, instead of truncating the read.  Otherwise, we return
-> + * bytes read or an error code, like regular pread.
-> + */
-> +ssize_t
-> +xfile_pread(
-> +	struct xfile		*xf,
-> +	void			*buf,
-> +	size_t			count,
-> +	loff_t			pos)
-> +{
-> +	struct inode		*inode = file_inode(xf->file);
-> +	struct address_space	*mapping = inode->i_mapping;
-> +	struct page		*page = NULL;
-> +	ssize_t			read = 0;
-> +	unsigned int		pflags;
-> +	int			error = 0;
-> +
-> +	if (count > MAX_RW_COUNT)
-> +		return -E2BIG;
-> +	if (inode->i_sb->s_maxbytes - pos < count)
-> +		return -EFBIG;
-> +
-> +	trace_xfile_pread(xf, pos, count);
-> +
-> +	pflags = memalloc_nofs_save();
-> +	while (count > 0) {
-> +		void		*p, *kaddr;
-> +		unsigned int	len;
-> +
-> +		len = min_t(ssize_t, count, PAGE_SIZE - offset_in_page(pos));
-> +
-> +		/*
-> +		 * In-kernel reads of a shmem file cause it to allocate a page
-> +		 * if the mapping shows a hole.  Therefore, if we hit ENOMEM
-> +		 * we can continue by zeroing the caller's buffer.
-> +		 */
-> +		page = shmem_read_mapping_page_gfp(mapping, pos >> PAGE_SHIFT,
-> +				__GFP_NOWARN);
-> +		if (IS_ERR(page)) {
-> +			error = PTR_ERR(page);
-> +			if (error != -ENOMEM)
-> +				break;
-> +
-> +			memset(buf, 0, len);
-> +			goto advance;
-> +		}
-> +
-> +		if (PageUptodate(page)) {
-> +			/*
-> +			 * xfile pages must never be mapped into userspace, so
-> +			 * we skip the dcache flush.
-> +			 */
-> +			kaddr = kmap_local_page(page);
-> +			p = kaddr + offset_in_page(pos);
-> +			memcpy(buf, p, len);
-> +			kunmap_local(kaddr);
-> +		} else {
-> +			memset(buf, 0, len);
-> +		}
-> +		put_page(page);
-> +
-> +advance:
-> +		count -= len;
-> +		pos += len;
-> +		buf += len;
-> +		read += len;
-> +	}
-> +	memalloc_nofs_restore(pflags);
-> +
-> +	if (read > 0)
-> +		return read;
-> +	return error;
-> +}
+diff --git a/scrub/xfs_scrub.c b/scrub/xfs_scrub.c
+index 4b96723f9ba..6c090a6dd88 100644
+--- a/scrub/xfs_scrub.c
++++ b/scrub/xfs_scrub.c
+@@ -535,6 +535,7 @@ _("%s: repairs made: %llu.\n"),
+ 		fprintf(stdout,
+ _("%s: optimizations made: %llu.\n"),
+ 				ctx->mntpoint, ctx->preens);
++	fflush(stdout);
+ }
+ 
+ static void
+@@ -620,6 +621,7 @@ main(
+ 	int			error;
+ 
+ 	fprintf(stdout, "EXPERIMENTAL xfs_scrub program in use! Use at your own risk!\n");
++	fflush(stdout);
+ 
+ 	progname = basename(argv[0]);
+ 	setlocale(LC_ALL, "");
 
-this all, and the write path, looks a bit heavy - you're calling through
-shmem_read_mapping_page_gfp() on every lookup. Does it matter?
-
-If we care about performance, we want to get it as much as possible down
-to just the page cache radix tree lookup - and possibly cache the last
-page returned if we care about sequential performance.
-
-OTOH, maybe shmem_get_folio_gfp() and __filemap_get_folio() could
-benefit from some early returns -
-	if (likely(got_the_thing_we_want)) return folio;
-
-Another thought... if obj_size <= PAGE_SIZE, maybe you could do what
-genradix does and not have objects span pages? That would let you get
-rid of the loop in read/write - but then you'd want to be doing an
-interface that works in terms of pages/folios, which wouldn't be as
-clean as what you've got.
-
-Just spitballing random ideas, looks good :)
