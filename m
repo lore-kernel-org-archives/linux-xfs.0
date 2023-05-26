@@ -2,122 +2,136 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2BCF5C7EE23
-	for <linux-xfs@archiver.kernel.org>; Fri, 26 May 2023 12:13:23 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9852EC7EE23
+	for <linux-xfs@archiver.kernel.org>; Fri, 26 May 2023 13:13:49 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S242917AbjEZMNV (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 26 May 2023 08:13:21 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51794 "EHLO
+        id S242955AbjEZNNs (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 26 May 2023 09:13:48 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53608 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231270AbjEZMNV (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 26 May 2023 08:13:21 -0400
-Received: from mail-ua1-x935.google.com (mail-ua1-x935.google.com [IPv6:2607:f8b0:4864:20::935])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B7C2B128;
-        Fri, 26 May 2023 05:13:18 -0700 (PDT)
-Received: by mail-ua1-x935.google.com with SMTP id a1e0cc1a2514c-783fc329e72so184746241.3;
-        Fri, 26 May 2023 05:13:18 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20221208; t=1685103198; x=1687695198;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=tcRKotHm11Cr8qUj3/GWYcYV61NEa/MLisov9OVu4ms=;
-        b=qNJVBcO0pgHk1FtxZZZInxG5XdghYq7HW2ekZSNyUQKTTieVyOCgSQa5g6QfgxAXWF
-         iIs7lRqeZCDwFbkve3kKHr9GsFUj+d35A5TRs7wO415HxBqGDGT95xEufzLk/Sa1RXGk
-         lB7Wrb+zVHQ10S32Geo1slxl2hH6pKR3lJ4CD5uFKCeVSnzlcY3bWA+tnKor4r/5U5g3
-         BE93yg4DE21BXoVnRKhW/JbF37e3FVKkdGs/LhFb6lx2FqFEPKXvR6IAYjCQn8XcEpVV
-         uyUeEcnXATJBcn5bk4BW/Mrr6TxBU05movLQG5wkaep6Un+LO0pXOwrLpOCvqf7Tgynv
-         Ihsg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20221208; t=1685103198; x=1687695198;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=tcRKotHm11Cr8qUj3/GWYcYV61NEa/MLisov9OVu4ms=;
-        b=Y8/MgVUgZnXAOj5ApFIYN5x29kEGHJg7mbcUNlRqkUlRxV2Es13Ki8ZUr+6Za5bDGn
-         xkMn1qBVGhZwdxmAELFUQ8L9kzDium2wUl1fS2HNOxmiH0iAjVPZYeplkM/3UvyLKRMr
-         HUBjDHe6t9diTSEyEfum1aVmXrCu8P9x6gxhzZgoDd8Mv5xZ+SyZpg2bTGU9xqsL3Fbt
-         VIWCjuR2cXQ1sCCGvVUV7+h1N/j5J6ZVBUiED+HeY52uvu1/1gZ+6HSAMXt5XHZ5CpE6
-         ZuYvRzGdslfKR75lFwlzjJ2xQSQJvUbRc/LI7dK3uHS4db8f5IFMCjBSJKogrNA/3cJ3
-         XVhg==
-X-Gm-Message-State: AC+VfDyb6LPwu2s9DGuxBNDii8A9KP9iXHDcL6ry2ZSCy8RpOdao5pAj
-        ElOFXEjca6mKtzhtWtzFhWepa3ZM9n/PXZOad6c=
-X-Google-Smtp-Source: ACHHUZ65ecGR6Dzg9pcCYcUOIL+cztRir6Po2LaPk6wm4K318CXvLnjQsqidAmmm+l52h3OiA8iZpjdjHa+3MI8cCXs=
-X-Received: by 2002:a67:f554:0:b0:439:40d7:c66f with SMTP id
- z20-20020a67f554000000b0043940d7c66fmr346571vsn.14.1685103197744; Fri, 26 May
- 2023 05:13:17 -0700 (PDT)
+        with ESMTP id S230094AbjEZNNr (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 26 May 2023 09:13:47 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D37DB12C
+        for <linux-xfs@vger.kernel.org>; Fri, 26 May 2023 06:13:46 -0700 (PDT)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 5D65363963
+        for <linux-xfs@vger.kernel.org>; Fri, 26 May 2023 13:13:46 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 07296C433EF
+        for <linux-xfs@vger.kernel.org>; Fri, 26 May 2023 13:13:44 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1685106825;
+        bh=SSrzlg0Iv0drphf7vXiHmy+fbbAqaz7qKdX31ITMc2c=;
+        h=From:To:Subject:Date:From;
+        b=Is5BFPQqqxvE4M+ijSBIYoFME1APBxgbJtXXuqoKLITB2hPC6h0Kt+5ExHZAQMA6x
+         Ws/5YipkWYV4Hh10CufM+3BPb3bsjg2HO6Jss+Qvy1gdVD9Skbk2MzGVBMfiuIk4dx
+         pWq/fGnqQzZT8+ag7hVpTmEjkg4+mrUb7P35h8gYARJiJEXiOD2P7dMP+h+F6+H+VJ
+         OAxz1h8fEwS/3AM1WM8vqkkHi9ed8rI8hSI4UVMSIEMGVKZgLUGFPzgi1YCnqV7fYp
+         6LZDx7N54egowZrvfseDPgCK/uJhoAhUeod9xqrIsCVeBw4p0b/eI9uz73YSiPMM7o
+         cquYkrCW0csUA==
+From:   cem@kernel.org
+To:     linux-xfs@vger.kernel.org
+Subject: [PATCH] libxfs: Finish renaming xfs_extent_item variables
+Date:   Fri, 26 May 2023 15:13:38 +0200
+Message-Id: <20230526131338.114548-1-cem@kernel.org>
+X-Mailer: git-send-email 2.30.2
 MIME-Version: 1.0
-References: <20230525100654.15069-1-jack@suse.cz> <20230525101624.15814-6-jack@suse.cz>
-In-Reply-To: <20230525101624.15814-6-jack@suse.cz>
-From:   Amir Goldstein <amir73il@gmail.com>
-Date:   Fri, 26 May 2023 15:13:06 +0300
-Message-ID: <CAOQ4uxhL0w+yqg2u_xW6r4J_gJX=_zoZjo3vh0ONqAbgxm2VTA@mail.gmail.com>
-Subject: Re: [PATCH 6/6] fs: Restrict lock_two_nondirectories() to
- non-directory inodes
-To:     Jan Kara <jack@suse.cz>
-Cc:     Al Viro <viro@zeniv.linux.org.uk>, linux-fsdevel@vger.kernel.org,
-        Christian Brauner <brauner@kernel.org>,
-        Miklos Szeredi <miklos@szeredi.hu>,
-        "Darrick J. Wong" <djwong@kernel.org>, Ted Tso <tytso@mit.edu>,
-        Jaegeuk Kim <jaegeuk@kernel.org>, linux-ext4@vger.kernel.org,
-        linux-f2fs-devel@lists.sourceforge.net, linux-xfs@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Thu, May 25, 2023 at 1:17=E2=80=AFPM Jan Kara <jack@suse.cz> wrote:
->
-> Currently lock_two_nondirectories() is skipping any passed directories.
-> After vfs_rename() uses lock_two_inodes(), all the remaining four users
-> of this function pass only regular files to it. So drop the somewhat
-> unusual "skip directory" logic and instead warn if anybody passes
-> directory to it. This also allows us to use lock_two_inodes() in
-> lock_two_nondirectories() to concentrate the lock ordering logic in less
-> places.
->
-> Signed-off-by: Jan Kara <jack@suse.cz>
-> ---
->  fs/inode.c | 12 ++++--------
->  1 file changed, 4 insertions(+), 8 deletions(-)
->
-> diff --git a/fs/inode.c b/fs/inode.c
-> index 2015fa50d34a..accf5125a049 100644
-> --- a/fs/inode.c
-> +++ b/fs/inode.c
-> @@ -1140,7 +1140,7 @@ void lock_two_inodes(struct inode *inode1, struct i=
-node *inode2,
->  /**
->   * lock_two_nondirectories - take two i_mutexes on non-directory objects
->   *
-> - * Lock any non-NULL argument that is not a directory.
-> + * Lock any non-NULL argument. Passed objects must not be directories.
->   * Zero, one or two objects may be locked by this function.
->   *
->   * @inode1: first inode to lock
-> @@ -1148,13 +1148,9 @@ void lock_two_inodes(struct inode *inode1, struct =
-inode *inode2,
->   */
->  void lock_two_nondirectories(struct inode *inode1, struct inode *inode2)
->  {
-> -       if (inode1 > inode2)
-> -               swap(inode1, inode2);
-> -
-> -       if (inode1 && !S_ISDIR(inode1->i_mode))
-> -               inode_lock(inode1);
-> -       if (inode2 && !S_ISDIR(inode2->i_mode) && inode2 !=3D inode1)
-> -               inode_lock_nested(inode2, I_MUTEX_NONDIR2);
-> +       WARN_ON_ONCE(S_ISDIR(inode1->i_mode));
-> +       WARN_ON_ONCE(S_ISDIR(inode2->i_mode));
-> +       lock_two_inodes(inode1, inode2, I_MUTEX_NORMAL, I_MUTEX_NONDIR2);
->  }
->  EXPORT_SYMBOL(lock_two_nondirectories);
->
+From: Carlos Maiolino <cem@kernel.org>
 
-Need the same treatment to unlock_two_nondirectories() because now if
-someone does pass a directory they will get a warning but also a leaked loc=
-k.
+Finish renaming xfs_extent_free_item variables to xefi on file
+libxfs/defer_item.c, because the maintainer overlooked this file while
+pulling changes from kernel commit 578c714b215d474c52949e65a914dae67924f0fe.
 
-Thanks,
-Amir.
+Signed-off-by: Carlos Maiolino <cem@kernel.org>
+---
+ libxfs/defer_item.c | 36 ++++++++++++++++++------------------
+ 1 file changed, 18 insertions(+), 18 deletions(-)
+
+diff --git a/libxfs/defer_item.c b/libxfs/defer_item.c
+index b95b54e52..285dc9a35 100644
+--- a/libxfs/defer_item.c
++++ b/libxfs/defer_item.c
+@@ -80,18 +80,18 @@ xfs_extent_free_finish_item(
+ 	struct xfs_btree_cur		**state)
+ {
+ 	struct xfs_owner_info		oinfo = { };
+-	struct xfs_extent_free_item	*free;
++	struct xfs_extent_free_item	*xefi;
+ 	int				error;
+ 
+-	free = container_of(item, struct xfs_extent_free_item, xefi_list);
+-	oinfo.oi_owner = free->xefi_owner;
+-	if (free->xefi_flags & XFS_EFI_ATTR_FORK)
++	xefi = container_of(item, struct xfs_extent_free_item, xefi_list);
++	oinfo.oi_owner = xefi->xefi_owner;
++	if (xefi->xefi_flags & XFS_EFI_ATTR_FORK)
+ 		oinfo.oi_flags |= XFS_OWNER_INFO_ATTR_FORK;
+-	if (free->xefi_flags & XFS_EFI_BMBT_BLOCK)
++	if (xefi->xefi_flags & XFS_EFI_BMBT_BLOCK)
+ 		oinfo.oi_flags |= XFS_OWNER_INFO_BMBT_BLOCK;
+-	error = xfs_free_extent(tp, free->xefi_startblock,
+-		free->xefi_blockcount, &oinfo, XFS_AG_RESV_NONE);
+-	kmem_cache_free(xfs_extfree_item_cache, free);
++	error = xfs_free_extent(tp, xefi->xefi_startblock,
++		xefi->xefi_blockcount, &oinfo, XFS_AG_RESV_NONE);
++	kmem_cache_free(xfs_extfree_item_cache, xefi);
+ 	return error;
+ }
+ 
+@@ -107,10 +107,10 @@ STATIC void
+ xfs_extent_free_cancel_item(
+ 	struct list_head		*item)
+ {
+-	struct xfs_extent_free_item	*free;
++	struct xfs_extent_free_item	*xefi;
+ 
+-	free = container_of(item, struct xfs_extent_free_item, xefi_list);
+-	kmem_cache_free(xfs_extfree_item_cache, free);
++	xefi = container_of(item, struct xfs_extent_free_item, xefi_list);
++	kmem_cache_free(xfs_extfree_item_cache, xefi);
+ }
+ 
+ const struct xfs_defer_op_type xfs_extent_free_defer_type = {
+@@ -134,25 +134,25 @@ xfs_agfl_free_finish_item(
+ {
+ 	struct xfs_owner_info		oinfo = { };
+ 	struct xfs_mount		*mp = tp->t_mountp;
+-	struct xfs_extent_free_item	*free;
++	struct xfs_extent_free_item	*xefi;
+ 	struct xfs_buf			*agbp;
+ 	struct xfs_perag		*pag;
+ 	int				error;
+ 	xfs_agnumber_t			agno;
+ 	xfs_agblock_t			agbno;
+ 
+-	free = container_of(item, struct xfs_extent_free_item, xefi_list);
+-	ASSERT(free->xefi_blockcount == 1);
+-	agno = XFS_FSB_TO_AGNO(mp, free->xefi_startblock);
+-	agbno = XFS_FSB_TO_AGBNO(mp, free->xefi_startblock);
+-	oinfo.oi_owner = free->xefi_owner;
++	xefi = container_of(item, struct xfs_extent_free_item, xefi_list);
++	ASSERT(xefi->xefi_blockcount == 1);
++	agno = XFS_FSB_TO_AGNO(mp, xefi->xefi_startblock);
++	agbno = XFS_FSB_TO_AGBNO(mp, xefi->xefi_startblock);
++	oinfo.oi_owner = xefi->xefi_owner;
+ 
+ 	pag = libxfs_perag_get(mp, agno);
+ 	error = xfs_alloc_read_agf(pag, tp, 0, &agbp);
+ 	if (!error)
+ 		error = xfs_free_agfl_block(tp, agno, agbno, agbp, &oinfo);
+ 	libxfs_perag_put(pag);
+-	kmem_cache_free(xfs_extfree_item_cache, free);
++	kmem_cache_free(xfs_extfree_item_cache, xefi);
+ 	return error;
+ }
+ 
+-- 
+2.30.2
+
