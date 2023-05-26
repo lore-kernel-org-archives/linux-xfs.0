@@ -2,41 +2,41 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A40E1C77B7A
-	for <linux-xfs@archiver.kernel.org>; Fri, 26 May 2023 01:37:42 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0C6C7C77B7A
+	for <linux-xfs@archiver.kernel.org>; Fri, 26 May 2023 01:38:00 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229981AbjEZBhl (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 25 May 2023 21:37:41 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34914 "EHLO
+        id S229999AbjEZBh7 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 25 May 2023 21:37:59 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34970 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229711AbjEZBhl (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 25 May 2023 21:37:41 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id CA283E2
-        for <linux-xfs@vger.kernel.org>; Thu, 25 May 2023 18:37:39 -0700 (PDT)
+        with ESMTP id S231495AbjEZBh6 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 25 May 2023 21:37:58 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 73E31E2
+        for <linux-xfs@vger.kernel.org>; Thu, 25 May 2023 18:37:55 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 5FFFC60F7B
-        for <linux-xfs@vger.kernel.org>; Fri, 26 May 2023 01:37:39 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id C6662C433EF;
-        Fri, 26 May 2023 01:37:38 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id F059361248
+        for <linux-xfs@vger.kernel.org>; Fri, 26 May 2023 01:37:54 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 599E2C433EF;
+        Fri, 26 May 2023 01:37:54 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1685065058;
-        bh=EFNfeQaBh6fwg1074PCFU+rMe7KJ+S0oy8bU7zRAhNE=;
+        s=k20201202; t=1685065074;
+        bh=PAUGvte3+DdbgbJarRIk4WYG8CZK/50MPd9kaQLLVdM=;
         h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-        b=CAwNShQ4Yl9pBVt32FaHT8WlbGLhrV6K/XFpfbz2qEj6e6UFSU93m5SIsGV1Y9ast
-         PxGJKPhFO8K1WcJDSOXobDLyE+zOt8ffhjXmxt9lozW5HuYs/31oOpQrk04tIpVxW+
-         SNfyNFLTXu70uzIxq8pBtMbYF8C8NQhi9FzOlwFpOFiN7SxKMdnYWKWUWANsinJfhN
-         QGTahSnGcG1lIG7/Si+bSrMqdOOK+qtOG/merTYPIzo/Ocl7+1QtKOHiGflOWm196r
-         Sy0LOuGW+eeeKYc0v2Xj7V84pN5MsVglo1BVD7NYss4yRDsDVV4qV+bLINBJ1DvYCJ
-         I6RUIkidPdcdw==
-Date:   Thu, 25 May 2023 18:37:38 -0700
-Subject: [PATCH 2/3] xfs: hoist AGI repair context to a heap object
+        b=S6o4toIDiPtpXC75fkqH7r4d5eQkpxxTMLdnjG5xmREqmRKWVRy7GY2Yu1GINpwWM
+         ZXMZ7lkx4DV7mDw7gODznboJN9RifZwp6qs81Xqv6rEpopwxTzG+PxwilhUPmDV2sn
+         Ce8durfELGZGOG1bjZiFS/h91tLiJ7U/zVeY/5jpW1mZUPEXlgFHen8A9vVwcaxYtm
+         ZwA1qlyfAYOe9C66z/gUT6gr46mPUwtVaZI4AgXnYr7+QpOBmCEHDamcwuzCdhmoSf
+         oFdmO7kGH8Sd84T8k0A+9Onb6EaOmgzLDGGnIQYFbKiYagPGfYj4c6M5ak50dEAsfD
+         4zJjB7kyEHy6g==
+Date:   Thu, 25 May 2023 18:37:53 -0700
+Subject: [PATCH 3/3] xfs: repair AGI unlinked inode bucket lists
 From:   "Darrick J. Wong" <djwong@kernel.org>
 To:     djwong@kernel.org
 Cc:     linux-xfs@vger.kernel.org
-Message-ID: <168506068675.3738067.2899963471160126715.stgit@frogsfrogsfrogs>
+Message-ID: <168506068689.3738067.16844877476338232054.stgit@frogsfrogsfrogs>
 In-Reply-To: <168506068642.3738067.3524976114588613479.stgit@frogsfrogsfrogs>
 References: <168506068642.3738067.3524976114588613479.stgit@frogsfrogsfrogs>
 User-Agent: StGit/0.19
@@ -49,207 +49,925 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-Save ~460 bytes of stack space by moving all the repair context to a
-heap object.  We're going to add even more context data in the next
-patch, which is why we really need to do this now.
+Teach the AGI repair code to rebuild the unlinked buckets and lists.
 
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 ---
- fs/xfs/scrub/agheader_repair.c |  105 ++++++++++++++++++++++++----------------
- 1 file changed, 63 insertions(+), 42 deletions(-)
+ fs/xfs/scrub/agheader_repair.c |  641 ++++++++++++++++++++++++++++++++++++++++
+ fs/xfs/scrub/trace.h           |  185 ++++++++++++
+ 2 files changed, 822 insertions(+), 4 deletions(-)
 
 
 diff --git a/fs/xfs/scrub/agheader_repair.c b/fs/xfs/scrub/agheader_repair.c
-index 4e99e19b2490..ea2fc321860e 100644
+index ea2fc321860e..dc25d72b423f 100644
 --- a/fs/xfs/scrub/agheader_repair.c
 +++ b/fs/xfs/scrub/agheader_repair.c
-@@ -805,15 +805,29 @@ enum {
+@@ -22,12 +22,16 @@
+ #include "xfs_rmap_btree.h"
+ #include "xfs_refcount_btree.h"
+ #include "xfs_ag.h"
++#include "xfs_inode.h"
++#include "xfs_iunlink_item.h"
+ #include "scrub/scrub.h"
+ #include "scrub/common.h"
+ #include "scrub/trace.h"
+ #include "scrub/repair.h"
+ #include "scrub/bitmap.h"
+ #include "scrub/reap.h"
++#include "scrub/xfile.h"
++#include "scrub/xfarray.h"
+ 
+ /* Superblock */
+ 
+@@ -805,6 +809,8 @@ enum {
  	XREP_AGI_MAX
  };
  
-+struct xrep_agi {
-+	struct xfs_scrub		*sc;
++#define XREP_AGI_LOOKUP_BATCH		32
 +
-+	/* AGI buffer, tracked separately */
-+	struct xfs_buf			*agi_bp;
+ struct xrep_agi {
+ 	struct xfs_scrub		*sc;
+ 
+@@ -816,8 +822,34 @@ struct xrep_agi {
+ 
+ 	/* old AGI contents in case we have to revert */
+ 	struct xfs_agi			old_agi;
 +
-+	/* context for finding btree roots */
-+	struct xrep_find_ag_btree	fab[XREP_AGI_MAX];
++	/* bitmap of which inodes are unlinked */
++	struct xbitmap			iunlink_bmp;
 +
-+	/* old AGI contents in case we have to revert */
-+	struct xfs_agi			old_agi;
-+};
++	/* heads of the unlinked inode bucket lists */
++	xfs_agino_t			iunlink_heads[XFS_AGI_UNLINKED_BUCKETS];
++
++	/* scratchpad for batched lookups of the radix tree */
++	struct xfs_inode		*lookup_batch[XREP_AGI_LOOKUP_BATCH];
++
++	/* Map of ino -> next_ino for unlinked inode processing. */
++	struct xfarray			*iunlink_next;
++
++	/* Map of ino -> prev_ino for unlinked inode processing. */
++	struct xfarray			*iunlink_prev;
+ };
+ 
++static void
++xrep_agi_buf_cleanup(
++	void		*buf)
++{
++	struct xrep_agi	*ragi = buf;
++
++	xfarray_destroy(ragi->iunlink_prev);
++	xfarray_destroy(ragi->iunlink_next);
++	xbitmap_destroy(&ragi->iunlink_bmp);
++}
 +
  /*
   * Given the inode btree roots described by *fab, find the roots, check them
   * for sanity, and pass the root data back out via *fab.
-  */
- STATIC int
- xrep_agi_find_btrees(
--	struct xfs_scrub		*sc,
--	struct xrep_find_ag_btree	*fab)
-+	struct xrep_agi			*ragi)
- {
-+	struct xfs_scrub		*sc = ragi->sc;
-+	struct xrep_find_ag_btree	*fab = ragi->fab;
- 	struct xfs_buf			*agf_bp;
- 	struct xfs_mount		*mp = sc->mp;
- 	int				error;
-@@ -846,10 +860,11 @@ xrep_agi_find_btrees(
-  */
- STATIC void
- xrep_agi_init_header(
--	struct xfs_scrub	*sc,
--	struct xfs_buf		*agi_bp,
--	struct xfs_agi		*old_agi)
-+	struct xrep_agi		*ragi)
- {
-+	struct xfs_scrub	*sc = ragi->sc;
-+	struct xfs_buf		*agi_bp = ragi->agi_bp;
-+	struct xfs_agi		*old_agi = &ragi->old_agi;
- 	struct xfs_agi		*agi = agi_bp->b_addr;
- 	struct xfs_perag	*pag = sc->sa.pag;
- 	struct xfs_mount	*mp = sc->mp;
-@@ -877,10 +892,12 @@ xrep_agi_init_header(
- /* Set btree root information in an AGI. */
- STATIC void
- xrep_agi_set_roots(
--	struct xfs_scrub		*sc,
--	struct xfs_agi			*agi,
--	struct xrep_find_ag_btree	*fab)
-+	struct xrep_agi			*ragi)
- {
-+	struct xfs_scrub		*sc = ragi->sc;
-+	struct xfs_agi			*agi = ragi->agi_bp->b_addr;
-+	struct xrep_find_ag_btree	*fab = ragi->fab;
-+
- 	agi->agi_root = cpu_to_be32(fab[XREP_AGI_INOBT].root);
- 	agi->agi_level = cpu_to_be32(fab[XREP_AGI_INOBT].height);
+@@ -880,10 +912,6 @@ xrep_agi_init_header(
+ 	if (xfs_has_crc(mp))
+ 		uuid_copy(&agi->agi_uuid, &mp->m_sb.sb_meta_uuid);
  
-@@ -893,9 +910,10 @@ xrep_agi_set_roots(
- /* Update the AGI counters. */
- STATIC int
- xrep_agi_calc_from_btrees(
--	struct xfs_scrub	*sc,
--	struct xfs_buf		*agi_bp)
-+	struct xrep_agi		*ragi)
- {
+-	/* We don't know how to fix the unlinked list yet. */
+-	memcpy(&agi->agi_unlinked, &old_agi->agi_unlinked,
+-			sizeof(agi->agi_unlinked));
+-
+ 	/* Mark the incore AGF data stale until we're done fixing things. */
+ 	ASSERT(xfs_perag_initialised_agi(pag));
+ 	clear_bit(XFS_AGSTATE_AGI_INIT, &pag->pag_opstate);
+@@ -956,6 +984,587 @@ xrep_agi_calc_from_btrees(
+ 	return error;
+ }
+ 
++/*
++ * Record a forwards unlinked chain pointer from agino -> next_agino in our
++ * staging information.
++ */
++static inline int
++xrep_iunlink_store_next(
++	struct xrep_agi		*ragi,
++	xfs_agino_t		agino,
++	xfs_agino_t		next_agino)
++{
++	ASSERT(next_agino != 0);
++
++	return xfarray_store(ragi->iunlink_next, agino, &next_agino);
++}
++
++/*
++ * Record a backwards unlinked chain pointer from prev_ino <- agino in our
++ * staging information.
++ */
++static inline int
++xrep_iunlink_store_prev(
++	struct xrep_agi		*ragi,
++	xfs_agino_t		agino,
++	xfs_agino_t		prev_agino)
++{
++	ASSERT(prev_agino != 0);
++
++	return xfarray_store(ragi->iunlink_prev, agino, &prev_agino);
++}
++
++/* Load this inode into memory and add it to the incore unlinked list. */
++STATIC int
++xrep_iunlink_reload_inode(
++	struct xrep_agi		*ragi,
++	xfs_agino_t		prev_agino,
++	xfs_agino_t		agino,
++	struct xfs_inode	**ipp)
++{
 +	struct xfs_scrub	*sc = ragi->sc;
-+	struct xfs_buf		*agi_bp = ragi->agi_bp;
- 	struct xfs_btree_cur	*cur;
- 	struct xfs_agi		*agi = agi_bp->b_addr;
- 	struct xfs_mount	*mp = sc->mp;
-@@ -941,9 +959,10 @@ xrep_agi_calc_from_btrees(
++	xfs_ino_t		ino;
++	int			error;
++
++	ino = XFS_AGINO_TO_INO(sc->mp, sc->sa.pag->pag_agno, agino);
++	error = xchk_iget(ragi->sc, ino, ipp);
++	if (error)
++		return error;
++
++	trace_xrep_iunlink_reload(*ipp, prev_agino);
++
++	/* If this is a linked inode, stop processing the chain. */
++	if (VFS_I(*ipp)->i_nlink != 0) {
++		error = -EFSCORRUPTED;
++		goto rele;
++	}
++
++	(*ipp)->i_prev_unlinked = prev_agino;
++
++	/*
++	 * Drop the inode reference that we just took.  We hold the AGI, so
++	 * this inode cannot move off the unlinked list and hence cannot be
++	 * reclaimed.
++	 */
++rele:
++	xchk_irele(sc, *ipp);
++	return 0;
++}
++
++/*
++ * Walk an AGI unlinked bucket's list to load incore any unlinked inodes that
++ * still existed at mount time.  This can happen if iunlink processing fails
++ * during log recovery.
++ */
++STATIC int
++xrep_iunlink_walk_ondisk_bucket(
++	struct xrep_agi		*ragi,
++	unsigned int		bucket)
++{
++	struct xfs_scrub	*sc = ragi->sc;
++	struct xfs_inode	*ip;
++	struct xfs_agi		*agi = sc->sa.agi_bp->b_addr;
++	xfs_agino_t		prev_agino = NULLAGINO;
++	xfs_agino_t		next_agino;
++	int			error = 0;
++
++	next_agino = be32_to_cpu(agi->agi_unlinked[bucket]);
++	while (next_agino != NULLAGINO) {
++		if (xchk_should_terminate(ragi->sc, &error))
++			return error;
++
++		trace_xrep_iunlink_walk_ondisk_bucket(sc->sa.pag, bucket,
++				prev_agino, next_agino);
++
++		ip = xfs_iunlink_lookup(sc->sa.pag, next_agino);
++		if (!ip) {
++			/*
++			 * This unlinked inode wasn't incore.  Try to load it
++			 * and link it into the incore list.
++			 */
++			error = xrep_iunlink_reload_inode(ragi, prev_agino,
++					next_agino, &ip);
++			if (error) {
++				/*
++				 * Inode cannot be resuscitated?  Terminate the
++				 * chain.  We have other ways to find the rest
++				 * of the inode(s) that might have been in this
++				 * chain.
++				 */
++				break;
++			}
++		}
++
++		next_agino = ip->i_next_unlinked;
++	}
++
++	return 0;
++}
++
++/* Decide if this is an unlinked inode in this AG. */
++STATIC bool
++xrep_iunlink_igrab(
++	struct xfs_perag	*pag,
++	struct xfs_inode	*ip)
++{
++	struct xfs_mount	*mp = pag->pag_mount;
++
++	if (XFS_INO_TO_AGNO(mp, ip->i_ino) != pag->pag_agno)
++		return false;
++
++	if (!xfs_inode_on_unlinked_list(ip))
++		return false;
++
++	return true;
++}
++
++/*
++ * Mark the given inode in the lookup batch in our unlinked inode bitmap, and
++ * remember if this inode is the start of the unlinked chain.
++ */
++STATIC int
++xrep_iunlink_visit(
++	struct xrep_agi		*ragi,
++	unsigned int		batch_idx)
++{
++	struct xfs_mount	*mp = ragi->sc->mp;
++	struct xfs_inode	*ip = ragi->lookup_batch[batch_idx];
++	xfs_agino_t		agino;
++	unsigned int		bucket;
++	int			error;
++
++	ASSERT(XFS_INO_TO_AGNO(mp, ip->i_ino) == ragi->sc->sa.pag->pag_agno);
++	ASSERT(xfs_inode_on_unlinked_list(ip));
++
++	agino = XFS_INO_TO_AGINO(mp, ip->i_ino);
++	bucket = agino % XFS_AGI_UNLINKED_BUCKETS;
++
++	trace_xrep_iunlink_visit(ragi->sc->sa.pag, ragi->iunlink_heads[bucket],
++			ip);
++
++	error = xbitmap_set(&ragi->iunlink_bmp, agino, 1);
++	if (error)
++		return error;
++
++	if (ip->i_prev_unlinked == NULLAGINO) {
++		if (ragi->iunlink_heads[bucket] == NULLAGINO)
++			ragi->iunlink_heads[bucket] = agino;
++	}
++
++	return 0;
++}
++
++/*
++ * Find all incore unlinked inodes so that we can rebuild the unlinked buckets.
++ * We hold the AGI so there should not be any modifications to the unlinked
++ * list.
++ */
++STATIC int
++xrep_iunlink_mark_inodes(
++	struct xrep_agi		*ragi)
++{
++	struct xfs_perag	*pag = ragi->sc->sa.pag;
++	struct xfs_mount	*mp = pag->pag_mount;
++	uint32_t		first_index = 0;
++	bool			done = false;
++	unsigned int		nr_found = 0;
++
++	do {
++		unsigned int	i;
++		int		error = 0;
++
++		if (xchk_should_terminate(ragi->sc, &error))
++			return error;
++
++		rcu_read_lock();
++
++		nr_found = radix_tree_gang_lookup(&pag->pag_ici_root,
++				(void **)&ragi->lookup_batch, first_index,
++				XREP_AGI_LOOKUP_BATCH);
++		if (!nr_found) {
++			rcu_read_unlock();
++			return 0;
++		}
++
++		for (i = 0; i < nr_found; i++) {
++			struct xfs_inode *ip = ragi->lookup_batch[i];
++
++			if (done || !xrep_iunlink_igrab(pag, ip))
++				ragi->lookup_batch[i] = NULL;
++
++			/*
++			 * Update the index for the next lookup. Catch
++			 * overflows into the next AG range which can occur if
++			 * we have inodes in the last block of the AG and we
++			 * are currently pointing to the last inode.
++			 *
++			 * Because we may see inodes that are from the wrong AG
++			 * due to RCU freeing and reallocation, only update the
++			 * index if it lies in this AG. It was a race that lead
++			 * us to see this inode, so another lookup from the
++			 * same index will not find it again.
++			 */
++			if (XFS_INO_TO_AGNO(mp, ip->i_ino) != pag->pag_agno)
++				continue;
++			first_index = XFS_INO_TO_AGINO(mp, ip->i_ino + 1);
++			if (first_index < XFS_INO_TO_AGINO(mp, ip->i_ino))
++				done = true;
++		}
++
++		/* unlock now we've grabbed the inodes. */
++		rcu_read_unlock();
++
++		for (i = 0; i < nr_found; i++) {
++			if (!ragi->lookup_batch[i])
++				continue;
++			error = xrep_iunlink_visit(ragi, i);
++			if (error)
++				return error;
++		}
++	} while (!done);
++
++	return 0;
++}
++
++/*
++ * Walk an iunlink bucket's inode list.  For each inode that should be on this
++ * chain, clear its entry in in iunlink_bmp because it's ok and we don't need
++ * to touch it further.
++ */
++STATIC int
++xrep_iunlink_clear_bucket_chain(
++	struct xrep_agi		*ragi,
++	unsigned int		bucket)
++{
++	struct xfs_scrub	*sc = ragi->sc;
++	struct xfs_inode	*ip;
++	xfs_agino_t		prev_agino = NULLAGINO;
++	xfs_agino_t		next_agino = ragi->iunlink_heads[bucket];
++	int			error = 0;
++
++	while (next_agino != NULLAGINO) {
++		if (xchk_should_terminate(ragi->sc, &error))
++			return error;
++
++		trace_xrep_iunlink_clear_bucket_chain(sc->sa.pag, bucket,
++				prev_agino, next_agino);
++
++		/* Find the next inode in the chain. */
++		ip = xfs_iunlink_lookup(sc->sa.pag, next_agino);
++		if (!ip) {
++			/* Inode not incore?  Terminate the chain. */
++			next_agino = NULLAGINO;
++			break;
++		}
++
++		if (next_agino % XFS_AGI_UNLINKED_BUCKETS != bucket ||
++		    !xfs_inode_on_unlinked_list(ip)) {
++			/*
++			 * Inode is in the wrong bucket or isn't unlinked.
++			 * Advance the list, but pretend we didn't see this
++			 * inode.
++			 */
++			next_agino = ip->i_next_unlinked;
++			continue;
++		}
++
++		/*
++		 * Otherwise, this inode's unlinked pointers are ok.  Clear it
++		 * from the unlinked bitmap since we're done with it, and make
++		 * sure the chain is still correct.
++		 */
++		error = xbitmap_clear(&ragi->iunlink_bmp, next_agino, 1);
++		if (error)
++			return error;
++
++		/* Remember the previous inode's next pointer. */
++		if (prev_agino != NULLAGINO) {
++			error = xrep_iunlink_store_next(ragi, prev_agino,
++					next_agino);
++			if (error)
++				return error;
++		}
++
++		/* Remember this inode's previous pointer. */
++		error = xrep_iunlink_store_prev(ragi, next_agino, prev_agino);
++		if (error)
++			return error;
++
++		/* Advance the list and remember this inode. */
++		prev_agino = next_agino;
++		next_agino = ip->i_next_unlinked;
++	}
++
++	/* Update the previous inode's next pointer. */
++	if (prev_agino != NULLAGINO) {
++		error = xrep_iunlink_store_next(ragi, prev_agino, next_agino);
++		if (error)
++			return error;
++	}
++
++	return 0;
++}
++
++/* Reinsert this unlinked inode into the head of the staged bucket list. */
++STATIC int
++xrep_iunlink_add_to_bucket(
++	struct xrep_agi		*ragi,
++	xfs_agino_t		agino)
++{
++	xfs_agino_t		current_head;
++	unsigned int		bucket;
++	int			error;
++
++	bucket = agino % XFS_AGI_UNLINKED_BUCKETS;
++
++	/* Point this inode at the current head of the bucket list. */
++	current_head = ragi->iunlink_heads[bucket];
++	error = xrep_iunlink_store_next(ragi, agino, current_head);
++	if (error)
++		return error;
++
++	/* Remember the head inode's previous pointer. */
++	if (current_head != NULLAGINO) {
++		error = xrep_iunlink_store_prev(ragi, current_head, agino);
++		if (error)
++			return error;
++	}
++
++	ragi->iunlink_heads[bucket] = agino;
++	return 0;
++}
++
++/* Reinsert unlinked inodes into the staged iunlink buckets. */
++STATIC int
++xrep_iunlink_add_lost_inodes(
++	uint64_t		start,
++	uint64_t		len,
++	void			*priv)
++{
++	struct xrep_agi		*ragi = priv;
++	int			error;
++
++	while (len > 0) {
++		error = xrep_iunlink_add_to_bucket(ragi, start);
++		if (error)
++			return error;
++
++		start++;
++		len--;
++	}
++
++	return 0;
++}
++
++/*
++ * Figure out the iunlink bucket values and find inodes that need to be
++ * reinserted into the list.
++ */
++STATIC int
++xrep_iunlink_rebuild_buckets(
++	struct xrep_agi		*ragi)
++{
++	unsigned int		i;
++	int			error;
++
++	/*
++	 * Walk the ondisk AGI unlinked list to find inodes that are on the
++	 * list but aren't in memory.  This can happen if a past log recovery
++	 * tried to clear the iunlinked list but failed.  Our scan rebuilds the
++	 * unlinked list using incore inodes, so we must load and link them
++	 * properly.
++	 */
++	for (i = 0; i < XFS_AGI_UNLINKED_BUCKETS; i++) {
++		error = xrep_iunlink_walk_ondisk_bucket(ragi, i);
++		if (error)
++			return error;
++	}
++
++	/* Record all the incore unlinked inodes in iunlink_bmp. */
++	error = xrep_iunlink_mark_inodes(ragi);
++	if (error)
++		return error;
++
++	/*
++	 * Clear from iunlink_bmp all the unlinked inodes that are correctly
++	 * linked into their incore inode bucket lists.  After this call,
++	 * iunlink_bmp will contain unlinked inodes that are not in the correct
++	 * list.
++	 */
++	for (i = 0; i < XFS_AGI_UNLINKED_BUCKETS; i++) {
++		error = xrep_iunlink_clear_bucket_chain(ragi, i);
++		if (error)
++			return error;
++	}
++
++	/*
++	 * Any unlinked inodes that we didn't find through the bucket list
++	 * walk (or was ignored by the walk) must be inserted into the bucket
++	 * list.  Stage this in memory for now.
++	 */
++	return xbitmap_walk(&ragi->iunlink_bmp,
++			xrep_iunlink_add_lost_inodes, ragi);
++}
++
++/* Update i_next_iunlinked for the inode @agino. */
++STATIC int
++xrep_iunlink_relink_next(
++	struct xrep_agi		*ragi,
++	xfarray_idx_t		idx,
++	xfs_agino_t		next_agino)
++{
++	struct xfs_scrub	*sc = ragi->sc;
++	struct xfs_perag	*pag = sc->sa.pag;
++	struct xfs_inode	*ip;
++	xfarray_idx_t		agino = idx - 1;
++	bool			want_rele = false;
++	int			error = 0;
++
++	ip = xfs_iunlink_lookup(pag, agino);
++	if (!ip) {
++		xfs_ino_t	ino;
++		xfs_agino_t	prev_agino;
++
++		/*
++		 * No inode exists in cache.  Load it off the disk so that we
++		 * can reinsert it into the incore unlinked list.
++		 */
++		ino = XFS_AGINO_TO_INO(sc->mp, pag->pag_agno, agino);
++		error = xchk_iget(sc, ino, &ip);
++		if (error)
++			return -EFSCORRUPTED;
++
++		want_rele = true;
++
++		/* Set the backward pointer since this just came off disk. */
++		error = xfarray_load(ragi->iunlink_prev, agino, &prev_agino);
++		if (error)
++			goto out_rele;
++
++		trace_xrep_iunlink_relink_prev(ip, prev_agino);
++		ip->i_prev_unlinked = prev_agino;
++	}
++
++	/* Update the forward pointer. */
++	if (ip->i_next_unlinked != next_agino) {
++		error = xfs_iunlink_log_inode(sc->tp, ip, pag, next_agino);
++		if (error)
++			goto out_rele;
++
++		trace_xrep_iunlink_relink_next(ip, next_agino);
++		ip->i_next_unlinked = next_agino;
++	}
++
++out_rele:
++	/*
++	 * The iunlink lookup doesn't igrab because we hold the AGI buffer lock
++	 * and the inode cannot be reclaimed.  However, if we used iget to load
++	 * a missing inode, we must irele it here.
++	 */
++	if (want_rele)
++		xchk_irele(sc, ip);
++	return error;
++}
++
++/* Update i_prev_iunlinked for the inode @agino. */
++STATIC int
++xrep_iunlink_relink_prev(
++	struct xrep_agi		*ragi,
++	xfarray_idx_t		idx,
++	xfs_agino_t		prev_agino)
++{
++	struct xfs_scrub	*sc = ragi->sc;
++	struct xfs_perag	*pag = sc->sa.pag;
++	struct xfs_inode	*ip;
++	xfarray_idx_t		agino = idx - 1;
++	bool			want_rele = false;
++	int			error = 0;
++
++	ASSERT(prev_agino != 0);
++
++	ip = xfs_iunlink_lookup(pag, agino);
++	if (!ip) {
++		xfs_ino_t	ino;
++		xfs_agino_t	next_agino;
++
++		/*
++		 * No inode exists in cache.  Load it off the disk so that we
++		 * can reinsert it into the incore unlinked list.
++		 */
++		ino = XFS_AGINO_TO_INO(sc->mp, pag->pag_agno, agino);
++		error = xchk_iget(sc, ino, &ip);
++		if (error)
++			return -EFSCORRUPTED;
++
++		want_rele = true;
++
++		/* Set the forward pointer since this just came off disk. */
++		error = xfarray_load(ragi->iunlink_prev, agino, &next_agino);
++		if (error)
++			goto out_rele;
++
++		error = xfs_iunlink_log_inode(sc->tp, ip, pag, next_agino);
++		if (error)
++			goto out_rele;
++
++		trace_xrep_iunlink_relink_next(ip, next_agino);
++		ip->i_next_unlinked = next_agino;
++	}
++
++	/* Update the backward pointer. */
++	if (ip->i_prev_unlinked != prev_agino) {
++		trace_xrep_iunlink_relink_prev(ip, prev_agino);
++		ip->i_prev_unlinked = prev_agino;
++	}
++
++out_rele:
++	/*
++	 * The iunlink lookup doesn't igrab because we hold the AGI buffer lock
++	 * and the inode cannot be reclaimed.  However, if we used iget to load
++	 * a missing inode, we must irele it here.
++	 */
++	if (want_rele)
++		xchk_irele(sc, ip);
++	return error;
++}
++
++/* Log all the iunlink updates we need to finish regenerating the AGI. */
++STATIC int
++xrep_iunlink_commit(
++	struct xrep_agi		*ragi)
++{
++	struct xfs_agi		*agi = ragi->agi_bp->b_addr;
++	xfarray_idx_t		idx = XFARRAY_CURSOR_INIT;
++	xfs_agino_t		agino;
++	unsigned int		i;
++	int			error;
++
++	/* Fix all the forward links */
++	while ((error = xfarray_iter(ragi->iunlink_next, &idx, &agino)) == 1) {
++		error = xrep_iunlink_relink_next(ragi, idx, agino);
++		if (error)
++			return error;
++	}
++
++	/* Fix all the back links */
++	idx = XFARRAY_CURSOR_INIT;
++	while ((error = xfarray_iter(ragi->iunlink_prev, &idx, &agino)) == 1) {
++		error = xrep_iunlink_relink_prev(ragi, idx, agino);
++		if (error)
++			return error;
++	}
++
++	/* Copy the staged iunlink buckets to the new AGI. */
++	for (i = 0; i < XFS_AGI_UNLINKED_BUCKETS; i++) {
++		trace_xrep_iunlink_commit_bucket(ragi->sc->sa.pag, i,
++				ragi->iunlink_heads[i]);
++
++		agi->agi_unlinked[i] = cpu_to_be32(ragi->iunlink_heads[i]);
++	}
++
++	return 0;
++}
++
  /* Trigger reinitialization of the in-core data. */
  STATIC int
  xrep_agi_commit_new(
--	struct xfs_scrub	*sc,
--	struct xfs_buf		*agi_bp)
-+	struct xrep_agi		*ragi)
+@@ -989,6 +1598,7 @@ xrep_agi(
  {
-+	struct xfs_scrub	*sc = ragi->sc;
-+	struct xfs_buf		*agi_bp = ragi->agi_bp;
- 	struct xfs_perag	*pag;
- 	struct xfs_agi		*agi = agi_bp->b_addr;
- 
-@@ -966,33 +985,36 @@ xrep_agi_commit_new(
- /* Repair the AGI. */
- int
- xrep_agi(
--	struct xfs_scrub		*sc)
-+	struct xfs_scrub	*sc)
- {
--	struct xrep_find_ag_btree	fab[XREP_AGI_MAX] = {
--		[XREP_AGI_INOBT] = {
--			.rmap_owner = XFS_RMAP_OWN_INOBT,
--			.buf_ops = &xfs_inobt_buf_ops,
--			.maxlevels = M_IGEO(sc->mp)->inobt_maxlevels,
--		},
--		[XREP_AGI_FINOBT] = {
--			.rmap_owner = XFS_RMAP_OWN_INOBT,
--			.buf_ops = &xfs_finobt_buf_ops,
--			.maxlevels = M_IGEO(sc->mp)->inobt_maxlevels,
--		},
--		[XREP_AGI_END] = {
--			.buf_ops = NULL
--		},
--	};
--	struct xfs_agi			old_agi;
--	struct xfs_mount		*mp = sc->mp;
--	struct xfs_buf			*agi_bp;
--	struct xfs_agi			*agi;
--	int				error;
-+	struct xrep_agi		*ragi;
-+	struct xfs_mount	*mp = sc->mp;
-+	int			error;
+ 	struct xrep_agi		*ragi;
+ 	struct xfs_mount	*mp = sc->mp;
++	unsigned int		i;
+ 	int			error;
  
  	/* We require the rmapbt to rebuild anything. */
- 	if (!xfs_has_rmapbt(mp))
- 		return -EOPNOTSUPP;
+@@ -1015,6 +1625,22 @@ xrep_agi(
+ 		.buf_ops	= NULL,
+ 	};
  
-+	sc->buf = kzalloc(sizeof(struct xrep_agi), XCHK_GFP_FLAGS);
-+	if (!sc->buf)
-+		return -ENOMEM;
-+	ragi = sc->buf;
-+	ragi->sc = sc;
++	for (i = 0; i < XFS_AGI_UNLINKED_BUCKETS; i++)
++		ragi->iunlink_heads[i] = NULLAGINO;
 +
-+	ragi->fab[XREP_AGI_INOBT] = (struct xrep_find_ag_btree){
-+		.rmap_owner	= XFS_RMAP_OWN_INOBT,
-+		.buf_ops	= &xfs_inobt_buf_ops,
-+		.maxlevels	= M_IGEO(sc->mp)->inobt_maxlevels,
-+	};
-+	ragi->fab[XREP_AGI_FINOBT] = (struct xrep_find_ag_btree){
-+		.rmap_owner	= XFS_RMAP_OWN_INOBT,
-+		.buf_ops	= &xfs_finobt_buf_ops,
-+		.maxlevels	= M_IGEO(sc->mp)->inobt_maxlevels,
-+	};
-+	ragi->fab[XREP_AGI_END] = (struct xrep_find_ag_btree){
-+		.buf_ops	= NULL,
-+	};
++	xbitmap_init(&ragi->iunlink_bmp);
++	sc->buf_cleanup = xrep_agi_buf_cleanup;
++
++	error = xfarray_create(sc->mp, "iunlinked next", 0,
++			sizeof(xfs_agino_t), &ragi->iunlink_next);
++	if (error)
++		return error;
++
++	error = xfarray_create(sc->mp, "iunlinked prev", 0,
++			sizeof(xfs_agino_t), &ragi->iunlink_prev);
++	if (error)
++		return error;
 +
  	/*
  	 * Make sure we have the AGI buffer, as scrub might have decided it
  	 * was corrupt after xfs_ialloc_read_agi failed with -EFSCORRUPTED.
-@@ -1000,14 +1022,13 @@ xrep_agi(
- 	error = xfs_trans_read_buf(mp, sc->tp, mp->m_ddev_targp,
- 			XFS_AG_DADDR(mp, sc->sa.pag->pag_agno,
- 						XFS_AGI_DADDR(mp)),
--			XFS_FSS_TO_BB(mp, 1), 0, &agi_bp, NULL);
-+			XFS_FSS_TO_BB(mp, 1), 0, &ragi->agi_bp, NULL);
- 	if (error)
- 		return error;
--	agi_bp->b_ops = &xfs_agi_buf_ops;
--	agi = agi_bp->b_addr;
-+	ragi->agi_bp->b_ops = &xfs_agi_buf_ops;
- 
- 	/* Find the AGI btree roots. */
--	error = xrep_agi_find_btrees(sc, fab);
-+	error = xrep_agi_find_btrees(ragi);
+@@ -1032,6 +1658,10 @@ xrep_agi(
  	if (error)
  		return error;
  
-@@ -1016,18 +1037,18 @@ xrep_agi(
++	error = xrep_iunlink_rebuild_buckets(ragi);
++	if (error)
++		return error;
++
+ 	/* Last chance to abort before we start committing fixes. */
+ 	if (xchk_should_terminate(sc, &error))
  		return error;
- 
- 	/* Start rewriting the header and implant the btrees we found. */
--	xrep_agi_init_header(sc, agi_bp, &old_agi);
--	xrep_agi_set_roots(sc, agi, fab);
--	error = xrep_agi_calc_from_btrees(sc, agi_bp);
-+	xrep_agi_init_header(ragi);
-+	xrep_agi_set_roots(ragi);
-+	error = xrep_agi_calc_from_btrees(ragi);
+@@ -1040,6 +1670,9 @@ xrep_agi(
+ 	xrep_agi_init_header(ragi);
+ 	xrep_agi_set_roots(ragi);
+ 	error = xrep_agi_calc_from_btrees(ragi);
++	if (error)
++		goto out_revert;
++	error = xrep_iunlink_commit(ragi);
  	if (error)
  		goto out_revert;
  
- 	/* Reinitialize in-core state. */
--	return xrep_agi_commit_new(sc, agi_bp);
-+	return xrep_agi_commit_new(ragi);
+diff --git a/fs/xfs/scrub/trace.h b/fs/xfs/scrub/trace.h
+index 30cac2e0b478..34e134f6d986 100644
+--- a/fs/xfs/scrub/trace.h
++++ b/fs/xfs/scrub/trace.h
+@@ -2671,6 +2671,191 @@ DEFINE_EVENT(xrep_symlink_class, name, \
+ DEFINE_XREP_SYMLINK_EVENT(xrep_symlink_rebuild);
+ DEFINE_XREP_SYMLINK_EVENT(xrep_symlink_reset_fork);
  
- out_revert:
- 	/* Mark the incore AGI state stale and revert the AGI. */
- 	clear_bit(XFS_AGSTATE_AGI_INIT, &sc->sa.pag->pag_opstate);
--	memcpy(agi, &old_agi, sizeof(old_agi));
-+	memcpy(ragi->agi_bp->b_addr, &ragi->old_agi, sizeof(struct xfs_agi));
- 	return error;
- }
++TRACE_EVENT(xrep_iunlink_visit,
++	TP_PROTO(struct xfs_perag *pag, xfs_agino_t bucket_agino,
++		 struct xfs_inode *ip),
++	TP_ARGS(pag, bucket_agino, ip),
++	TP_STRUCT__entry(
++		__field(dev_t, dev)
++		__field(xfs_agnumber_t, agno)
++		__field(xfs_agino_t, agino)
++		__field(xfs_agino_t, bucket_agino)
++		__field(xfs_agino_t, prev_agino)
++		__field(xfs_agino_t, next_agino)
++	),
++	TP_fast_assign(
++		__entry->dev = pag->pag_mount->m_super->s_dev;
++		__entry->agno = pag->pag_agno;
++		__entry->agino = XFS_INO_TO_AGINO(pag->pag_mount, ip->i_ino);
++		__entry->bucket_agino = bucket_agino;
++		__entry->prev_agino = ip->i_prev_unlinked;
++		__entry->next_agino = ip->i_next_unlinked;
++	),
++	TP_printk("dev %d:%d agno 0x%x agino 0x%x bucket_agino %u prev_agino 0x%x next_agino 0x%x",
++		  MAJOR(__entry->dev), MINOR(__entry->dev),
++		  __entry->agno,
++		  __entry->agino,
++		  __entry->bucket_agino,
++		  __entry->prev_agino,
++		  __entry->next_agino)
++);
++
++TRACE_EVENT(xrep_iunlink_reload,
++	TP_PROTO(struct xfs_inode *ip, xfs_agino_t prev_agino),
++	TP_ARGS(ip, prev_agino),
++	TP_STRUCT__entry(
++		__field(dev_t, dev)
++		__field(xfs_agnumber_t, agno)
++		__field(xfs_agino_t, agino)
++		__field(xfs_agino_t, old_prev_agino)
++		__field(xfs_agino_t, prev_agino)
++		__field(xfs_agino_t, next_agino)
++		__field(unsigned int, nlink)
++	),
++	TP_fast_assign(
++		__entry->dev = ip->i_mount->m_super->s_dev;
++		__entry->agno = XFS_INO_TO_AGNO(ip->i_mount, ip->i_ino);
++		__entry->agino = XFS_INO_TO_AGINO(ip->i_mount, ip->i_ino);
++		__entry->old_prev_agino = ip->i_prev_unlinked;
++		__entry->prev_agino = prev_agino;
++		__entry->next_agino = ip->i_next_unlinked;
++		__entry->nlink = VFS_I(ip)->i_nlink;
++	),
++	TP_printk("dev %d:%d agno 0x%x agino 0x%x nlink %u old_prev_agino %u prev_agino 0x%x next_agino 0x%x",
++		  MAJOR(__entry->dev), MINOR(__entry->dev),
++		  __entry->agno,
++		  __entry->agino,
++		  __entry->nlink,
++		  __entry->old_prev_agino,
++		  __entry->prev_agino,
++		  __entry->next_agino)
++);
++
++TRACE_EVENT(xrep_iunlink_walk_ondisk_bucket,
++	TP_PROTO(struct xfs_perag *pag, unsigned int bucket,
++		 xfs_agino_t prev_agino, xfs_agino_t next_agino),
++	TP_ARGS(pag, bucket, prev_agino, next_agino),
++	TP_STRUCT__entry(
++		__field(dev_t, dev)
++		__field(xfs_agnumber_t, agno)
++		__field(unsigned int, bucket)
++		__field(xfs_agino_t, prev_agino)
++		__field(xfs_agino_t, next_agino)
++	),
++	TP_fast_assign(
++		__entry->dev = pag->pag_mount->m_super->s_dev;
++		__entry->agno = pag->pag_agno;
++		__entry->bucket = bucket;
++		__entry->prev_agino = prev_agino;
++		__entry->next_agino = next_agino;
++	),
++	TP_printk("dev %d:%d agno 0x%x bucket %u prev_agino 0x%x next_agino 0x%x",
++		  MAJOR(__entry->dev), MINOR(__entry->dev),
++		  __entry->agno,
++		  __entry->bucket,
++		  __entry->prev_agino,
++		  __entry->next_agino)
++);
++
++TRACE_EVENT(xrep_iunlink_clear_bucket_chain,
++	TP_PROTO(struct xfs_perag *pag, unsigned int bucket,
++		 xfs_agino_t prev_agino, xfs_agino_t next_agino),
++	TP_ARGS(pag, bucket, prev_agino, next_agino),
++	TP_STRUCT__entry(
++		__field(dev_t, dev)
++		__field(xfs_agnumber_t, agno)
++		__field(unsigned int, bucket)
++		__field(xfs_agino_t, prev_agino)
++		__field(xfs_agino_t, next_agino)
++	),
++	TP_fast_assign(
++		__entry->dev = pag->pag_mount->m_super->s_dev;
++		__entry->agno = pag->pag_agno;
++		__entry->bucket = bucket;
++		__entry->prev_agino = prev_agino;
++		__entry->next_agino = next_agino;
++	),
++	TP_printk("dev %d:%d agno 0x%x bucket %u prev_agino 0x%x next_agino 0x%x",
++		  MAJOR(__entry->dev), MINOR(__entry->dev),
++		  __entry->agno,
++		  __entry->bucket,
++		  __entry->prev_agino,
++		  __entry->next_agino)
++);
++
++TRACE_EVENT(xrep_iunlink_relink_next,
++	TP_PROTO(struct xfs_inode *ip, xfs_agino_t next_agino),
++	TP_ARGS(ip, next_agino),
++	TP_STRUCT__entry(
++		__field(dev_t, dev)
++		__field(xfs_agnumber_t, agno)
++		__field(xfs_agino_t, agino)
++		__field(xfs_agino_t, next_agino)
++		__field(xfs_agino_t, new_next_agino)
++	),
++	TP_fast_assign(
++		__entry->dev = ip->i_mount->m_super->s_dev;
++		__entry->agno = XFS_INO_TO_AGNO(ip->i_mount, ip->i_ino);
++		__entry->agino = XFS_INO_TO_AGNO(ip->i_mount, ip->i_ino);
++		__entry->next_agino = ip->i_next_unlinked;
++		__entry->new_next_agino = next_agino;
++	),
++	TP_printk("dev %d:%d agno 0x%x agino 0x%x next_agino 0x%x -> 0x%x",
++		  MAJOR(__entry->dev), MINOR(__entry->dev),
++		  __entry->agno,
++		  __entry->agino,
++		  __entry->next_agino,
++		  __entry->new_next_agino)
++);
++
++TRACE_EVENT(xrep_iunlink_relink_prev,
++	TP_PROTO(struct xfs_inode *ip, xfs_agino_t prev_agino),
++	TP_ARGS(ip, prev_agino),
++	TP_STRUCT__entry(
++		__field(dev_t, dev)
++		__field(xfs_agnumber_t, agno)
++		__field(xfs_agino_t, agino)
++		__field(xfs_agino_t, prev_agino)
++		__field(xfs_agino_t, new_prev_agino)
++	),
++	TP_fast_assign(
++		__entry->dev = ip->i_mount->m_super->s_dev;
++		__entry->agno = XFS_INO_TO_AGNO(ip->i_mount, ip->i_ino);
++		__entry->agino = XFS_INO_TO_AGNO(ip->i_mount, ip->i_ino);
++		__entry->prev_agino = ip->i_prev_unlinked;
++		__entry->new_prev_agino = prev_agino;
++	),
++	TP_printk("dev %d:%d agno 0x%x agino 0x%x prev_agino 0x%x -> 0x%x",
++		  MAJOR(__entry->dev), MINOR(__entry->dev),
++		  __entry->agno,
++		  __entry->agino,
++		  __entry->prev_agino,
++		  __entry->new_prev_agino)
++);
++
++TRACE_EVENT(xrep_iunlink_commit_bucket,
++	TP_PROTO(struct xfs_perag *pag, unsigned int bucket,
++		 xfs_agino_t agino),
++	TP_ARGS(pag, bucket, agino),
++	TP_STRUCT__entry(
++		__field(dev_t, dev)
++		__field(xfs_agnumber_t, agno)
++		__field(unsigned int, bucket)
++		__field(xfs_agino_t, agino)
++	),
++	TP_fast_assign(
++		__entry->dev = pag->pag_mount->m_super->s_dev;
++		__entry->agno = pag->pag_agno;
++		__entry->bucket = bucket;
++		__entry->agino = agino;
++	),
++	TP_printk("dev %d:%d agno 0x%x bucket %u agino 0x%x",
++		  MAJOR(__entry->dev), MINOR(__entry->dev),
++		  __entry->agno,
++		  __entry->bucket,
++		  __entry->agino)
++);
++
+ #endif /* IS_ENABLED(CONFIG_XFS_ONLINE_REPAIR) */
+ 
+ 
 
