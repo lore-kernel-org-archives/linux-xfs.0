@@ -2,42 +2,42 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E8508C77B7E
-	for <linux-xfs@archiver.kernel.org>; Fri, 26 May 2023 02:02:35 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 66666C77B7E
+	for <linux-xfs@archiver.kernel.org>; Fri, 26 May 2023 02:02:42 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232388AbjEZCCe (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 25 May 2023 22:02:34 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44596 "EHLO
+        id S234501AbjEZCCl (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 25 May 2023 22:02:41 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44668 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S236327AbjEZCCY (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 25 May 2023 22:02:24 -0400
+        with ESMTP id S229944AbjEZCCj (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 25 May 2023 22:02:39 -0400
 Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5B2A31A4;
-        Thu, 25 May 2023 19:02:23 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E0E89A3;
+        Thu, 25 May 2023 19:02:38 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id D5A096179C;
-        Fri, 26 May 2023 02:02:22 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 3CDC0C433EF;
-        Fri, 26 May 2023 02:02:22 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 71B8E64C4C;
+        Fri, 26 May 2023 02:02:38 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id CE471C433EF;
+        Fri, 26 May 2023 02:02:37 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1685066542;
-        bh=LH5q+aSG98FcQV9OMtAWhsX747vXiHbVLa2jpTrhpWc=;
+        s=k20201202; t=1685066557;
+        bh=M/6Dya24VqVWqWcNd/upkKp9opJZ4q0M0/xVZ8L7TwQ=;
         h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-        b=raJxYajexebn25381gGqCY12HxqjilR0SlzUiYyrwZN8VJKl3v+c4bRK6GlXY/S+V
-         PBJD9333v7/QRM/J9U6yFZZLr0RVJ1bA3Qk4eWS2pvVYikcKXw6s5GOjIyWTFhilJb
-         WqUiaFNVBX35UV+mrKOQ+Su+WOUezlRL5+J4d70EN1+pkEMj1SzPrGhyhOXc5fSIyq
-         olAAsrzNfveeMnI/a2XkMTvS6+wGv8Q4uAsFyL4nxY9+BHDHEWUz/DLXR3Ivmm+Jlq
-         k++d4AtFsD4M7i6pZI56i0MyI3j5LYc828SyfcCyZQz1sJasq0b2PvtoMSigZ/Qh0u
-         ki1iGuU74gVyA==
-Date:   Thu, 25 May 2023 19:02:21 -0700
-Subject: [PATCH 01/11] xfs/206: filter out the parent= status from mkfs
+        b=Fmmux+iBN2sKcTcDEYzHOxaGaWFAsO9cXFFiREL92mhVXpP/O2bxkMBmiT/lJdeDv
+         1U/sIgBanROVJXrdlaX8XsKJd9LSKs4+BGKxntxLXSuCZezJ2hBEKQCbek93WukLdj
+         oSa8odFOQe3GJSa48E/nSUzIgN9BtvW1e0nlGXPeSZmoNhCy0e3987S316Rn614FpG
+         KyUuP4+BjDBUiVW68vqfci95dF47Munel4dVHU/CjcbUbzJWLB4MdTaSfSdZW74Qig
+         HvoRiTFvjhhUyc/ZDeiIPtUp+URrDem2XL82GQHouK1qMagUB6Lk+v1JE4e5wj6MkG
+         8NAJq4jT+4c4g==
+Date:   Thu, 25 May 2023 19:02:37 -0700
+Subject: [PATCH 02/11] xfs/122: update for parent pointers
 From:   "Darrick J. Wong" <djwong@kernel.org>
 To:     zlang@redhat.com, djwong@kernel.org
 Cc:     linux-xfs@vger.kernel.org, fstests@vger.kernel.org, guan@eryu.me,
         allison.henderson@oracle.com, catherine.hoang@oracle.com
-Message-ID: <168506060861.3732476.3517693645871830366.stgit@frogsfrogsfrogs>
+Message-ID: <168506060875.3732476.5529675243629156281.stgit@frogsfrogsfrogs>
 In-Reply-To: <168506060845.3732476.15364197106064737675.stgit@frogsfrogsfrogs>
 References: <168506060845.3732476.15364197106064737675.stgit@frogsfrogsfrogs>
 User-Agent: StGit/0.19
@@ -50,27 +50,33 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-Filter out the parent pointer bits from the mkfs output so that we don't
-cause a regression in this test.
+Update test for parent pointers.
 
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 ---
- tests/xfs/206 |    3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
+ tests/xfs/122.out |    3 +++
+ 1 file changed, 3 insertions(+)
 
 
-diff --git a/tests/xfs/206 b/tests/xfs/206
-index cb346b6dc9..af86570a81 100755
---- a/tests/xfs/206
-+++ b/tests/xfs/206
-@@ -64,7 +64,8 @@ mkfs_filter()
- 	    -e "s/\(sunit=\)\([0-9]* blks,\)/\10 blks,/" \
- 	    -e "s/, lazy-count=[0-9]//" \
- 	    -e "/.*crc=/d" \
--	    -e "/^Default configuration/d"
-+	    -e "/^Default configuration/d" \
-+	    -e '/parent=/d'
- }
- 
- # mkfs slightly smaller than that, small log for speed.
+diff --git a/tests/xfs/122.out b/tests/xfs/122.out
+index 89f7b735b0..55138218dd 100644
+--- a/tests/xfs/122.out
++++ b/tests/xfs/122.out
+@@ -98,6 +98,8 @@ sizeof(struct xfs_fsop_ag_resblks) = 64
+ sizeof(struct xfs_fsop_geom) = 256
+ sizeof(struct xfs_fsop_geom_v1) = 112
+ sizeof(struct xfs_fsop_geom_v4) = 112
++sizeof(struct xfs_getparents) = 96
++sizeof(struct xfs_getparents_rec) = 24
+ sizeof(struct xfs_icreate_log) = 28
+ sizeof(struct xfs_inode_log_format) = 56
+ sizeof(struct xfs_inode_log_format_32) = 52
+@@ -107,6 +109,7 @@ sizeof(struct xfs_legacy_timestamp) = 8
+ sizeof(struct xfs_log_dinode) = 176
+ sizeof(struct xfs_log_legacy_timestamp) = 8
+ sizeof(struct xfs_map_extent) = 32
++sizeof(struct xfs_parent_name_rec) = 16
+ sizeof(struct xfs_phys_extent) = 16
+ sizeof(struct xfs_refcount_key) = 4
+ sizeof(struct xfs_refcount_rec) = 12
 
