@@ -2,42 +2,42 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id BBAD9C77B7A
-	for <linux-xfs@archiver.kernel.org>; Fri, 26 May 2023 01:34:19 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9F87BC77B7A
+	for <linux-xfs@archiver.kernel.org>; Fri, 26 May 2023 01:34:35 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S241716AbjEZBeS (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 25 May 2023 21:34:18 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33624 "EHLO
+        id S229827AbjEZBef (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 25 May 2023 21:34:35 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33654 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233648AbjEZBeS (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 25 May 2023 21:34:18 -0400
+        with ESMTP id S232288AbjEZBee (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 25 May 2023 21:34:34 -0400
 Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 17979189
-        for <linux-xfs@vger.kernel.org>; Thu, 25 May 2023 18:34:17 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id ADD5D125
+        for <linux-xfs@vger.kernel.org>; Thu, 25 May 2023 18:34:32 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id A126260ADA
-        for <linux-xfs@vger.kernel.org>; Fri, 26 May 2023 01:34:16 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 0C1B1C433D2;
-        Fri, 26 May 2023 01:34:16 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 388FB61A8E
+        for <linux-xfs@vger.kernel.org>; Fri, 26 May 2023 01:34:32 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 9C62CC433EF;
+        Fri, 26 May 2023 01:34:31 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1685064856;
-        bh=O0J1XpI8qOzvuLi04lpi0/njYas6bR5c/4iIi1k/Uek=;
+        s=k20201202; t=1685064871;
+        bh=JoJiP8Y9FPbhOU7aYoBCgNic4//m4sA158gp7oY+nK0=;
         h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-        b=huP3PFCq0PE+WBdf2Rl4vIbpzPPBqFWwjKL+llaBZd6eyedh8K2wwM3jBeNtMZgZU
-         VkLxJggxwIvATWGOb6DIVfErvdCSP79IyoKu3YLWW1Xv/VcJpTKNza0obD5WLcDwel
-         9ZwpmR+p2dsMCiXOAyR21onjKSPAG8sWF9b3vs8QcIfst9yEGLDgdWuS+rTiX9qSHN
-         M/RZ8NkyRL0VpfReT1V05uvDZ2lUISIOauX7zYk+GjoBHzJOlmec+ay1mclNzEw/iC
-         TFVocER0czUwQXpc6/DL3lKSnQY2148McVETjTgZNVPPAGJLdWuKrAUk0ODspXjGvb
-         wCaaZ5cR07nSA==
-Date:   Thu, 25 May 2023 18:34:15 -0700
-Subject: [PATCH 1/7] xfs: use i_prev_unlinked to distinguish inodes that are
- not on the unlinked list
+        b=Duq3+RXZfeCiuLMHksXSoYuVHNkiHeaY4OJtr/kaotwalRjcVF0xw4VQ8AgIx97If
+         kJE9x31LDH6RpNiZM9iUK2AGbi+YZfvdlC7rt1hsBfo4Fbd+jv1uW8afjSoePvvleT
+         qwfAC/JA1twpGhzMXjV+XpjgT0lBQTfKf+ZabsWvIH8hPhi7h/b938gVlGZRUD62mu
+         +kjj0yaLihwgFMC6y+UlTt1KPLhOYHShsmlW3W8PqVBWuHhGFeSeh+iIwmsl06mcqn
+         t0raoE83wlFI1PrNUk1DzIzYgCeqgcncN+H5uw7vFfoqTxhKNINb5l47oqrQch5M30
+         rQvRRdD7XO95w==
+Date:   Thu, 25 May 2023 18:34:31 -0700
+Subject: [PATCH 2/7] xfs: ensure unlinked list state is consistent with nlink
+ during scrub
 From:   "Darrick J. Wong" <djwong@kernel.org>
 To:     djwong@kernel.org
 Cc:     linux-xfs@vger.kernel.org
-Message-ID: <168506067244.3737555.3197415134115363631.stgit@frogsfrogsfrogs>
+Message-ID: <168506067259.3737555.11982182097894235550.stgit@frogsfrogsfrogs>
 In-Reply-To: <168506067222.3737555.8668637245740627164.stgit@frogsfrogsfrogs>
 References: <168506067222.3737555.8668637245740627164.stgit@frogsfrogsfrogs>
 User-Agent: StGit/0.19
@@ -50,99 +50,149 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-Alter the definition of i_prev_unlinked slightly to make it more obvious
-when an inode with 0 link count is not part of the iunlink bucket lists
-rooted in the AGI.  The upcoming directory repair code needs to be able
-to make this distinction to decide if a zero link count directory should
-be moved to the orphanage or allowed to inactivate.  An upcoming
-enhancement to the online AGI fsck code will need this distinction to
-check and rebuild the AGI unlinked buckets.
-
-This distinction is necessary because it is not sufficient to check
-inode.i_nlink to decide if an inode is on the unlinked list.  Updates to
-i_nlink can happen while holding only ILOCK_EXCL, but updates to an
-inode's position in the AGI unlinked list (which happen after the nlink
-update) requires both ILOCK_EXCL and the AGI buffer lock.
+Now that we have the means to tell if an inode is on an unlinked inode
+list or not, we can check that an inode with zero link count is on the
+unlinked list; and an inode that has nonzero link count is not on that
+list.  Make repair clean things up too.
 
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 ---
- fs/xfs/xfs_icache.c |    2 +-
- fs/xfs/xfs_inode.c  |    3 ++-
- fs/xfs/xfs_inode.h  |   20 +++++++++++++++++++-
- 3 files changed, 22 insertions(+), 3 deletions(-)
+ fs/xfs/scrub/inode.c        |   19 +++++++++++++++++++
+ fs/xfs/scrub/inode_repair.c |   42 +++++++++++++++++++++++++++++++++++++++++-
+ fs/xfs/xfs_inode.c          |    5 +----
+ fs/xfs/xfs_inode.h          |    2 ++
+ 4 files changed, 63 insertions(+), 5 deletions(-)
 
 
-diff --git a/fs/xfs/xfs_icache.c b/fs/xfs/xfs_icache.c
-index 402f4b22de56..149e4c62b0c3 100644
---- a/fs/xfs/xfs_icache.c
-+++ b/fs/xfs/xfs_icache.c
-@@ -114,7 +114,7 @@ xfs_inode_alloc(
- 	INIT_LIST_HEAD(&ip->i_ioend_list);
- 	spin_lock_init(&ip->i_ioend_lock);
- 	ip->i_next_unlinked = NULLAGINO;
--	ip->i_prev_unlinked = NULLAGINO;
-+	ip->i_prev_unlinked = 0;
- 
- 	return ip;
- }
-diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
-index 3af180a917b5..04c4cd6c4cda 100644
---- a/fs/xfs/xfs_inode.c
-+++ b/fs/xfs/xfs_inode.c
-@@ -2050,6 +2050,7 @@ xfs_iunlink_insert_inode(
- 	}
- 
- 	/* Point the head of the list to point to this inode. */
-+	ip->i_prev_unlinked = NULLAGINO;
- 	return xfs_iunlink_update_bucket(tp, pag, agibp, bucket_index, agino);
+diff --git a/fs/xfs/scrub/inode.c b/fs/xfs/scrub/inode.c
+index fcd6e9df618f..df5b4f22f049 100644
+--- a/fs/xfs/scrub/inode.c
++++ b/fs/xfs/scrub/inode.c
+@@ -738,6 +738,23 @@ xchk_inode_check_reflink_iflag(
+ 		xchk_ino_set_corrupt(sc, ino);
  }
  
-@@ -2152,7 +2153,7 @@ xfs_iunlink_remove_inode(
- 	}
- 
- 	ip->i_next_unlinked = NULLAGINO;
--	ip->i_prev_unlinked = NULLAGINO;
-+	ip->i_prev_unlinked = 0;
- 	return error;
- }
- 
-diff --git a/fs/xfs/xfs_inode.h b/fs/xfs/xfs_inode.h
-index 56955f642288..3b8470c2db7b 100644
---- a/fs/xfs/xfs_inode.h
-+++ b/fs/xfs/xfs_inode.h
-@@ -68,8 +68,21 @@ typedef struct xfs_inode {
- 	uint64_t		i_diflags2;	/* XFS_DIFLAG2_... */
- 	struct timespec64	i_crtime;	/* time created */
- 
--	/* unlinked list pointers */
-+	/*
-+	 * Unlinked list pointers.  These point to the next and previous inodes
-+	 * in the AGI unlinked bucket list, respectively.  These fields can
-+	 * only be updated with the AGI locked.
-+	 *
-+	 * i_next_unlinked caches di_next_unlinked.
-+	 */
- 	xfs_agino_t		i_next_unlinked;
-+
-+	/*
-+	 * If the inode is not on an unlinked list, this field is zero.  If the
-+	 * inode is the first element in an unlinked list, this field is
-+	 * NULLAGINO.  Otherwise, i_prev_unlinked points to the previous inode
-+	 * in the unlinked list.
-+	 */
- 	xfs_agino_t		i_prev_unlinked;
- 
- 	/* VFS inode */
-@@ -81,6 +94,11 @@ typedef struct xfs_inode {
- 	struct list_head	i_ioend_list;
- } xfs_inode_t;
- 
-+static inline bool xfs_inode_on_unlinked_list(const struct xfs_inode *ip)
++/*
++ * If this inode has zero link count, it must be on the unlinked list.  If
++ * it has nonzero link count, it must not be on the unlinked list.
++ */
++STATIC void
++xchk_inode_check_unlinked(
++	struct xfs_scrub	*sc)
 +{
-+	return ip->i_prev_unlinked != 0;
++	if (VFS_I(sc->ip)->i_nlink == 0) {
++		if (!xfs_inode_on_unlinked_list(sc->ip))
++			xchk_ino_set_corrupt(sc, sc->ip->i_ino);
++	} else {
++		if (xfs_inode_on_unlinked_list(sc->ip))
++			xchk_ino_set_corrupt(sc, sc->ip->i_ino);
++	}
 +}
 +
- static inline bool xfs_inode_has_attr_fork(struct xfs_inode *ip)
- {
- 	return ip->i_forkoff > 0;
+ /* Scrub an inode. */
+ int
+ xchk_inode(
+@@ -770,6 +787,8 @@ xchk_inode(
+ 	if (S_ISREG(VFS_I(sc->ip)->i_mode))
+ 		xchk_inode_check_reflink_iflag(sc, sc->ip->i_ino);
+ 
++	xchk_inode_check_unlinked(sc);
++
+ 	xchk_inode_xref(sc, sc->ip->i_ino, &di);
+ out:
+ 	return error;
+diff --git a/fs/xfs/scrub/inode_repair.c b/fs/xfs/scrub/inode_repair.c
+index 6d301c84270f..37b228a4b5ae 100644
+--- a/fs/xfs/scrub/inode_repair.c
++++ b/fs/xfs/scrub/inode_repair.c
+@@ -1576,6 +1576,46 @@ xrep_inode_problems(
+ 	return xrep_roll_trans(sc);
+ }
+ 
++/*
++ * Make sure this inode's unlinked list pointers are consistent with its
++ * link count.
++ */
++STATIC int
++xrep_inode_unlinked(
++	struct xfs_scrub	*sc)
++{
++	unsigned int		nlink = VFS_I(sc->ip)->i_nlink;
++	int			error;
++
++	/*
++	 * If this inode is linked from the directory tree and on the unlinked
++	 * list, remove it from the unlinked list.
++	 */
++	if (nlink > 0 && xfs_inode_on_unlinked_list(sc->ip)) {
++		struct xfs_perag	*pag;
++		int			error;
++
++		pag = xfs_perag_get(sc->mp,
++				XFS_INO_TO_AGNO(sc->mp, sc->ip->i_ino));
++		error = xfs_iunlink_remove(sc->tp, pag, sc->ip);
++		xfs_perag_put(pag);
++		if (error)
++			return error;
++	}
++
++	/*
++	 * If this inode is not linked from the directory tree yet not on the
++	 * unlinked list, put it on the unlinked list.
++	 */
++	if (nlink == 0 && !xfs_inode_on_unlinked_list(sc->ip)) {
++		error = xfs_iunlink(sc->tp, sc->ip);
++		if (error)
++			return error;
++	}
++
++	return 0;
++}
++
+ /* Repair an inode's fields. */
+ int
+ xrep_inode(
+@@ -1615,5 +1655,5 @@ xrep_inode(
+ 	if (xfs_is_reflink_inode(sc->ip))
+ 		return xfs_reflink_clear_inode_flag(sc->ip, &sc->tp);
+ 
+-	return 0;
++	return xrep_inode_unlinked(sc);
+ }
+diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
+index 04c4cd6c4cda..1fb58de0b8ec 100644
+--- a/fs/xfs/xfs_inode.c
++++ b/fs/xfs/xfs_inode.c
+@@ -42,9 +42,6 @@
+ 
+ struct kmem_cache *xfs_inode_cache;
+ 
+-STATIC int xfs_iunlink_remove(struct xfs_trans *tp, struct xfs_perag *pag,
+-	struct xfs_inode *);
+-
+ /*
+  * helper function to extract extent size hint from inode
+  */
+@@ -2160,7 +2157,7 @@ xfs_iunlink_remove_inode(
+ /*
+  * Pull the on-disk inode from the AGI unlinked list.
+  */
+-STATIC int
++int
+ xfs_iunlink_remove(
+ 	struct xfs_trans	*tp,
+ 	struct xfs_perag	*pag,
+diff --git a/fs/xfs/xfs_inode.h b/fs/xfs/xfs_inode.h
+index 3b8470c2db7b..2fe629eede76 100644
+--- a/fs/xfs/xfs_inode.h
++++ b/fs/xfs/xfs_inode.h
+@@ -594,6 +594,8 @@ extern struct kmem_cache	*xfs_inode_cache;
+ bool xfs_inode_needs_inactive(struct xfs_inode *ip);
+ 
+ int xfs_iunlink(struct xfs_trans *tp, struct xfs_inode *ip);
++int xfs_iunlink_remove(struct xfs_trans *tp, struct xfs_perag *pag,
++		struct xfs_inode *ip);
+ 
+ void xfs_end_io(struct work_struct *work);
+ 
 
