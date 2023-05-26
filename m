@@ -2,41 +2,42 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 42120C77B7E
-	for <linux-xfs@archiver.kernel.org>; Fri, 26 May 2023 00:39:27 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0972BC77B7E
+	for <linux-xfs@archiver.kernel.org>; Fri, 26 May 2023 00:39:40 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232154AbjEZAj0 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 25 May 2023 20:39:26 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45380 "EHLO
+        id S234215AbjEZAjj (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 25 May 2023 20:39:39 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45432 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S234071AbjEZAjX (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 25 May 2023 20:39:23 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4CC71194
-        for <linux-xfs@vger.kernel.org>; Thu, 25 May 2023 17:39:22 -0700 (PDT)
+        with ESMTP id S233274AbjEZAji (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 25 May 2023 20:39:38 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 755FDEE
+        for <linux-xfs@vger.kernel.org>; Thu, 25 May 2023 17:39:37 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 7D1E5616EF
-        for <linux-xfs@vger.kernel.org>; Fri, 26 May 2023 00:39:21 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id DCAB7C433EF;
-        Fri, 26 May 2023 00:39:20 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 1225261705
+        for <linux-xfs@vger.kernel.org>; Fri, 26 May 2023 00:39:37 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 73967C433D2;
+        Fri, 26 May 2023 00:39:36 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1685061560;
-        bh=ZECieDECYUGcsGH1tVvwz94a8vARPx1Xuie5pwz06QI=;
+        s=k20201202; t=1685061576;
+        bh=TPbHOS3a1xbVb2NOebhTatRoBfIzvl9Wh0z3sP6VZkk=;
         h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-        b=T5R5Guvm0v8ON/xp1vtfwLhQkNV60Bp6Wq44LkblG8cQn38y7X8Mu7foyIYmcSjNF
-         qtO+bLWcRDu8S4d3CKxO7npK0gkDNorgy5TzSQ/u9oOl1jyfe23x199eyG4/9NtbQg
-         mC7sQrDVl3vwnZo+ykc8dKH5FRp5evWrcoF/5OTVIKGQ/ipcJtNrJ1I8SVEnNJruz+
-         dHAxkx8Dh9M14Vp5d6PInnoRvIshVdaIzRHFvXOBhsHezubXCycKXREJYnlQa4NqRK
-         CMZNONjJk/lvtYvEckWMzVUlVnIbtw2VuyyUBJ7u2toeAxcBX3Nml3DJXy2qwQ2hED
-         02kO1ZQyFAovQ==
-Date:   Thu, 25 May 2023 17:39:20 -0700
-Subject: [PATCHSET v25.0 0/8] xfs_scrub: move fstrim to a separate phase
+        b=hc+qiXoL9goW04KnB07RsY71wds1ZTWoOYeA98ov2T9PV4DyBhumTLmQpmAXmY7zD
+         6eHC/vrCSBPURYDvYlGu/SOR9+BiIQxJkqbkOtF2lLkc4FgHHk5du3JJq6C/E8u1YW
+         UE0ccpcS4kRhk5OpMekVZINJO16iPaKFKPKTmu3AbVMvxs1Tpr8+i+Pr78ouOyE2SD
+         r/mLyCeBZ4WaXk888QJGCR0/Ea8+E454T5UvM8vhbZqQ77T+aSpf/oL69uI6iXo9vX
+         OJCEebn5gTyAiQa3/cDnW2iGsIBJUbGGu7vwaB9b4+YtBDI/pI/yiAZT1+Wcc/5gYN
+         7+SSRo2UBtE1A==
+Date:   Thu, 25 May 2023 17:39:36 -0700
+Subject: [PATCHSET v25.0 0/7] xfs_scrub: use free space histograms to reduce
+ fstrim runtime
 From:   "Darrick J. Wong" <djwong@kernel.org>
 To:     djwong@kernel.org, cem@kernel.org
 Cc:     linux-xfs@vger.kernel.org
-Message-ID: <168506073077.3744829.468307851541842353.stgit@frogsfrogsfrogs>
+Message-ID: <168506073466.3745433.1072164718437572976.stgit@frogsfrogsfrogs>
 In-Reply-To: <20230526000020.GJ11620@frogsfrogsfrogs>
 References: <20230526000020.GJ11620@frogsfrogsfrogs>
 User-Agent: StGit/0.19
@@ -49,24 +50,25 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 
 Hi all,
 
-Back when I originally designed xfs_scrub, all filesystem metadata
-checks were complete by the end of phase 3, and phase 4 was where all
-the metadata repairs occurred.  On the grounds that the filesystem
-should be fully consistent by then, I made a call to FITRIM at the end
-of phase 4 to discard empty space in the filesystem.
+This patchset dramatically reduces the runtime of the FITRIM calls made
+during phase 8 of xfs_scrub.  It turns out that phase 8 can really get
+bogged down if the free space contains a large number of very small
+extents.  In these cases, the runtime can increase by an order of
+magnitude to free less than 1% of the free space.  This is not worth the
+time, since we're spending a lot of time to do very little work.  The
+FITRIM ioctl allows us to specify a minimum extent length, so we can use
+statistical methods to compute a minlen parameter.
 
-Unfortunately, that's no longer the case -- summary counters, link
-counts, and quota counters are not checked until phase 7.  It's not safe
-to instruct the storage to unmap "empty" areas if we don't know where
-those empty areas are, so we need to create a phase 8 to trim the fs.
-While we're at it, make it more obvious that fstrim only gets to run if
-there are no unfixed corruptions and no other runtime errors have
-occurred.
+It turns out xfs_db/spaceman already have the code needed to create
+histograms of free space extent lengths.  We add the ability to compute
+a CDF of the extent lengths, which make it easy to pick a minimum length
+corresponding to 99% of the free space.  In most cases, this results in
+dramatic reductions in phase 8 runtime.  Hence, move the histogram code
+to libfrog, and wire up xfs_scrub, since phase 7 already walks the
+fsmap.
 
-Finally, reduce the latency impacts on the rest of the system by
-breaking up the fstrim work into a loop that targets only 16GB per call.
-This enables better progress reporting for interactive runs and cgroup
-based resource constraints for background runs.
+We also add a new -o suboption to xfs_scrub so that people who /do/ want
+to examine every free extent can do so.
 
 If you're going to start using this mess, you probably ought to just
 pull from my git trees, which are linked below.
@@ -77,15 +79,25 @@ Comments and questions are, as always, welcome.
 --D
 
 xfsprogs git tree:
-https://git.kernel.org/cgit/linux/kernel/git/djwong/xfsprogs-dev.git/log/?h=scrub-fstrim-phase
+https://git.kernel.org/cgit/linux/kernel/git/djwong/xfsprogs-dev.git/log/?h=scrub-fstrim-minlen-freesp-histogram
+
+fstests git tree:
+https://git.kernel.org/cgit/linux/kernel/git/djwong/xfstests-dev.git/log/?h=scrub-fstrim-minlen-freesp-histogram
 ---
- scrub/Makefile    |    1 
- scrub/phase4.c    |   30 +----------
- scrub/phase8.c    |  151 +++++++++++++++++++++++++++++++++++++++++++++++++++++
- scrub/vfs.c       |   22 +++++---
- scrub/vfs.h       |    2 -
- scrub/xfs_scrub.c |   11 ++++
- scrub/xfs_scrub.h |    3 +
- 7 files changed, 183 insertions(+), 37 deletions(-)
- create mode 100644 scrub/phase8.c
+ db/freesp.c          |   83 +++-------------
+ libfrog/Makefile     |    2 
+ libfrog/histogram.c  |  252 ++++++++++++++++++++++++++++++++++++++++++++++++++
+ libfrog/histogram.h  |   54 +++++++++++
+ man/man8/xfs_scrub.8 |   31 ++++++
+ scrub/phase7.c       |   47 +++++++++
+ scrub/phase8.c       |   75 ++++++++++++++-
+ scrub/spacemap.c     |   11 +-
+ scrub/vfs.c          |    4 +
+ scrub/vfs.h          |    2 
+ scrub/xfs_scrub.c    |   77 +++++++++++++++
+ scrub/xfs_scrub.h    |   16 +++
+ spaceman/freesp.c    |   93 +++++-------------
+ 13 files changed, 590 insertions(+), 157 deletions(-)
+ create mode 100644 libfrog/histogram.c
+ create mode 100644 libfrog/histogram.h
 
