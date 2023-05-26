@@ -2,41 +2,42 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 383ACC77B7A
-	for <linux-xfs@archiver.kernel.org>; Fri, 26 May 2023 00:32:23 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E171CC77B7A
+	for <linux-xfs@archiver.kernel.org>; Fri, 26 May 2023 00:32:38 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233159AbjEZAcW (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 25 May 2023 20:32:22 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41948 "EHLO
+        id S229981AbjEZAch (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 25 May 2023 20:32:37 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41990 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231451AbjEZAcV (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 25 May 2023 20:32:21 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 63B7EEE
-        for <linux-xfs@vger.kernel.org>; Thu, 25 May 2023 17:32:20 -0700 (PDT)
+        with ESMTP id S230465AbjEZAch (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 25 May 2023 20:32:37 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 25AF3194;
+        Thu, 25 May 2023 17:32:36 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 00EF964AFD
-        for <linux-xfs@vger.kernel.org>; Fri, 26 May 2023 00:32:20 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 61305C433D2;
-        Fri, 26 May 2023 00:32:19 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id A061764B87;
+        Fri, 26 May 2023 00:32:35 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 0FDAFC433EF;
+        Fri, 26 May 2023 00:32:34 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1685061139;
-        bh=KIvqt49YqJP7m0GgBO4z104zqwozlSskB04jBk3vL7o=;
+        s=k20201202; t=1685061155;
+        bh=OX97w2dF/1Cs+uzEbAUNcCiVBlPZIn1rAPDSr77h9E0=;
         h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-        b=qMMBAKBlPoksmeH1cUvQIZBhUuqEoSGlkz434j9eV/zSBXYCt5pbZJfo+yOo0Al8j
-         yqe7jvdKXBqVlp+43guyuQAt/mU5X8IVgQh8byReS3z6wXaSFiqIcNNc5BNkK5FW5z
-         UeZ71IZck5X054JAGAxaEq2M/LMVyx+/ei/NnKj31TXGhKFmKoHdvNYS+5r/QBEd14
-         wDViTfiGSamnWXX7cNEcXIu8Ysih6OcmiCuu+5CRC3cgruV87qfQUdBlSpoAmJX0RW
-         +usi4F4fUyB4wvcp13KJKBHNl56+ELdo0zWEzrIp0nB8aRTwxIFZ99qrQATB3zEpEL
-         m/qMILTqsvIrw==
-Date:   Thu, 25 May 2023 17:32:18 -0700
-Subject: [PATCHSET v25.0 0/3] xfs: online repair for fs summary counters
+        b=ddwFdw2qswG+r+bLpB4kD0XWZD4OhKyrPRy61OnJPR4haRBSOLnIaQh4y6AGR9eTV
+         czfFvbQjbQZ7To6Zq2a3aOTrwSRpKX3X0Jpx/ODc0vNztQQSB22nmyOSJ0MxylwiJr
+         2X6FaC4FtkpHwl94fX0One2kgsWBlxWH+eBqwlafTL3b3CRgyClVJyTxQt3/5g7/bY
+         BmfmIxF5LxwWKscOZ/v7/zjasp+5esRbExu8UUtfc7wmXpE5hSZw8LW9P3Sx88l+z7
+         ZVz+pl/xod8Th+eTvqpmoxihmcFzGeu1anle9cjkE8Cb3qy0g0YetUS7pf3kY8T3kF
+         mMHoEZi2ZTHNw==
+Date:   Thu, 25 May 2023 17:32:34 -0700
+Subject: [PATCHSET v25.0 0/9] xfs: support in-memory btrees
 From:   "Darrick J. Wong" <djwong@kernel.org>
 To:     djwong@kernel.org
-Cc:     linux-xfs@vger.kernel.org
-Message-ID: <168506061483.3732954.5178462816967376906.stgit@frogsfrogsfrogs>
+Cc:     linux-xfs@vger.kernel.org, willy@infradead.org,
+        linux-fsdevel@vger.kernel.org
+Message-ID: <168506061839.3733082.9818919714772025609.stgit@frogsfrogsfrogs>
 In-Reply-To: <20230526000020.GJ11620@frogsfrogsfrogs>
 References: <20230526000020.GJ11620@frogsfrogsfrogs>
 User-Agent: StGit/0.19
@@ -49,20 +50,36 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 
 Hi all,
 
-A longstanding deficiency in the online fs summary counter scrubbing
-code is that it hasn't any means to quiesce the incore percpu counters
-while it's running.  There is no way to coordinate with other threads
-are reserving or freeing free space simultaneously, which leads to false
-error reports.  Right now, if the discrepancy is large, we just sort of
-shrug and bail out with an incomplete flag, but this is lame.
+Online repair of the reverse-mapping btrees presens some unique
+challenges.  To construct a new reverse mapping btree, we must scan the
+entire filesystem, but we cannot afford to quiesce the entire filesystem
+for the potentially lengthy scan.
 
-For repair activity, we actually /do/ need to stabilize the counters to
-get an accurate reading and install it in the percpu counter.  To
-improve the former and enable the latter, allow the fscounters online
-fsck code to perform an exclusive mini-freeze on the filesystem.  The
-exclusivity prevents userspace from thawing while we're running, and the
-mini-freeze means that we don't wait for the log to quiesce, which will
-make both speedier.
+For rmap btrees, therefore, we relax our requirements of totally atomic
+repairs.  Instead, repairs will scan all inodes, construct a new reverse
+mapping dataset, format a new btree, and commit it before anyone trips
+over the corruption.  This is exactly the same strategy as was used in
+the quotacheck and nlink scanners.
+
+Unfortunately, the xfarray cannot perform key-based lookups and is
+therefore unsuitable for supporting live updates.  Luckily, we already a
+data structure that maintains an indexed rmap recordset -- the existing
+rmap btree code!  Hence we port the existing btree and buffer target
+code to be able to create a btree using the xfile we developed earlier.
+Live hooks keep the in-memory btree up to date for any resources that
+have already been scanned.
+
+This approach is not maximally memory efficient, but we can use the same
+rmap code that we do everywhere else, which provides improved stability
+without growing the code base even more.  Note that in-memory btree
+blocks are always page sized.
+
+This patchset modifies the kernel xfs buffer cache to be capable of
+using a xfile (aka a shmem file) as a backing device.  It then augments
+the btree code to support creating btree cursors with buffers that come
+from a buftarg other than the data device (namely an xfile-backed
+buftarg).  For the userspace xfs buffer cache, we instead use a memfd or
+an O_TMPFILE file as a backing device.
 
 If you're going to start using this mess, you probably ought to just
 pull from my git trees, which are linked below.
@@ -73,23 +90,54 @@ Comments and questions are, as always, welcome.
 --D
 
 kernel git tree:
-https://git.kernel.org/cgit/linux/kernel/git/djwong/xfs-linux.git/log/?h=repair-fscounters
+https://git.kernel.org/cgit/linux/kernel/git/djwong/xfs-linux.git/log/?h=in-memory-btrees
 
-fstests git tree:
-https://git.kernel.org/cgit/linux/kernel/git/djwong/xfstests-dev.git/log/?h=repair-fscounters
+xfsprogs git tree:
+https://git.kernel.org/cgit/linux/kernel/git/djwong/xfsprogs-dev.git/log/?h=in-memory-btrees
 ---
- fs/super.c                       |  172 +++++++++++++++++++++++++++++++++--
- fs/xfs/Makefile                  |    1 
- fs/xfs/scrub/fscounters.c        |  185 ++++++++++++++++++++++++++++----------
- fs/xfs/scrub/fscounters.h        |   20 ++++
- fs/xfs/scrub/fscounters_repair.c |   72 +++++++++++++++
- fs/xfs/scrub/repair.h            |    2 
- fs/xfs/scrub/scrub.c             |    8 +-
- fs/xfs/scrub/scrub.h             |    1 
- fs/xfs/scrub/trace.c             |    1 
- fs/xfs/scrub/trace.h             |   22 ++++-
- include/linux/fs.h               |    8 +-
- 11 files changed, 428 insertions(+), 64 deletions(-)
- create mode 100644 fs/xfs/scrub/fscounters.h
- create mode 100644 fs/xfs/scrub/fscounters_repair.c
+ fs/xfs/Kconfig                     |    8 
+ fs/xfs/Makefile                    |    2 
+ fs/xfs/libxfs/xfs_ag.c             |    6 
+ fs/xfs/libxfs/xfs_ag.h             |    4 
+ fs/xfs/libxfs/xfs_btree.c          |  173 ++++++--
+ fs/xfs/libxfs/xfs_btree.h          |   17 +
+ fs/xfs/libxfs/xfs_btree_mem.h      |  128 ++++++
+ fs/xfs/libxfs/xfs_refcount_btree.c |    4 
+ fs/xfs/libxfs/xfs_rmap_btree.c     |    4 
+ fs/xfs/scrub/bitmap.c              |   28 +
+ fs/xfs/scrub/bitmap.h              |    3 
+ fs/xfs/scrub/scrub.c               |    5 
+ fs/xfs/scrub/scrub.h               |    3 
+ fs/xfs/scrub/trace.c               |   12 +
+ fs/xfs/scrub/trace.h               |  110 +++++
+ fs/xfs/scrub/xfbtree.c             |  816 ++++++++++++++++++++++++++++++++++++
+ fs/xfs/scrub/xfbtree.h             |   57 +++
+ fs/xfs/scrub/xfile.c               |  181 ++++++++
+ fs/xfs/scrub/xfile.h               |   66 +++
+ fs/xfs/xfs_aops.c                  |    5 
+ fs/xfs/xfs_bmap_util.c             |    8 
+ fs/xfs/xfs_buf.c                   |  198 +++++++--
+ fs/xfs/xfs_buf.h                   |   83 ++++
+ fs/xfs/xfs_buf_xfile.c             |   97 ++++
+ fs/xfs/xfs_buf_xfile.h             |   20 +
+ fs/xfs/xfs_discard.c               |    8 
+ fs/xfs/xfs_file.c                  |    6 
+ fs/xfs/xfs_health.c                |    3 
+ fs/xfs/xfs_ioctl.c                 |    3 
+ fs/xfs/xfs_iomap.c                 |    4 
+ fs/xfs/xfs_log.c                   |    4 
+ fs/xfs/xfs_log_cil.c               |    3 
+ fs/xfs/xfs_log_recover.c           |    3 
+ fs/xfs/xfs_mount.h                 |    3 
+ fs/xfs/xfs_super.c                 |    4 
+ fs/xfs/xfs_trace.c                 |    3 
+ fs/xfs/xfs_trace.h                 |   85 ++++
+ fs/xfs/xfs_trans.h                 |    1 
+ fs/xfs/xfs_trans_buf.c             |   42 ++
+ 39 files changed, 2084 insertions(+), 126 deletions(-)
+ create mode 100644 fs/xfs/libxfs/xfs_btree_mem.h
+ create mode 100644 fs/xfs/scrub/xfbtree.c
+ create mode 100644 fs/xfs/scrub/xfbtree.h
+ create mode 100644 fs/xfs/xfs_buf_xfile.c
+ create mode 100644 fs/xfs/xfs_buf_xfile.h
 
