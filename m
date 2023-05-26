@@ -2,43 +2,44 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 59F27C7EE29
-	for <linux-xfs@archiver.kernel.org>; Fri, 26 May 2023 01:12:12 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 29D79C7EE29
+	for <linux-xfs@archiver.kernel.org>; Fri, 26 May 2023 01:12:27 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233734AbjEZBML (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 25 May 2023 21:12:11 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56086 "EHLO
+        id S233448AbjEZBM0 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 25 May 2023 21:12:26 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56110 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233448AbjEZBMK (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 25 May 2023 21:12:10 -0400
+        with ESMTP id S231712AbjEZBMZ (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 25 May 2023 21:12:25 -0400
 Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 62899125
-        for <linux-xfs@vger.kernel.org>; Thu, 25 May 2023 18:12:09 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0D485D8
+        for <linux-xfs@vger.kernel.org>; Thu, 25 May 2023 18:12:25 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id F37DC64C1F
-        for <linux-xfs@vger.kernel.org>; Fri, 26 May 2023 01:12:08 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 5830FC433EF;
-        Fri, 26 May 2023 01:12:08 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 9EE5764C1F
+        for <linux-xfs@vger.kernel.org>; Fri, 26 May 2023 01:12:24 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 0A4C3C433D2;
+        Fri, 26 May 2023 01:12:23 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1685063528;
-        bh=yAO/YuUjyWvvhqNKKQDjsdNreMmg7VMzwRHz+zu3ms4=;
+        s=k20201202; t=1685063544;
+        bh=ilg+Q/ZN915zLmifYngafKtlk8r77EVchEPzJQKub+E=;
         h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-        b=kz9GDxi5roEToEijp2MyGQ4sor7FBoSt8ZmGKkKNYk4/wfHP7vbJSZxdvhf3RtFRK
-         yuRj/EWy0l56qyUquuehQ2uXa4spWriu5RXbIjRM5tEDW3WFzChgLcPfVZNxEzehjb
-         ago7uoOEky50S+0RDwBWrOvFuGZ4QnoTGEsyQO96Npv4kZJPgVz1I0NB/T7HM9KSI2
-         BCBh2p+z7s5UdzV+6SaL6zqqu1q+AnWoDMoYFdn2uC4yuEuY+TzOw6MSSGiJ544rYL
-         JptQ1xLiEfZ/4L3xYlrGMHYm4IWKOARE0VhGJJR6aYqdWz5Hrw+xPRmgsRg2mn3ua1
-         fbXyZGLfGJ18w==
-Date:   Thu, 25 May 2023 18:12:07 -0700
-Subject: [PATCH 3/3] xfs: remove xfs_trans_set_bmap_flags
+        b=By+br4lvlEYtcmoriHRe6plj1FjvH36fglHyPmOisDofxnmJYZU1An0p2XkfCl1+q
+         UQP2E2vK7IU+7U6ND7YRXhKlrXLV4nQDfy+bsFd29TCnUAIVP6zom7vWH3h9lAEwMP
+         61YR1FLQKzaad1OJJKvFXo6cEzs2uINYU99aO9gUVb0Upopv+aDOiNC9qzaoT19XZK
+         yno53bNvfR6lxR81r2qO4B01gqJqbGCbMlkWsKZJ4hhRkI1WCDIrdhKKWNrpxmXVv3
+         O2ZBPUkpYGYJjQnRjRAmtbmogQBD4UC22eojKQUGi8vwfH9nNgovpeNMuHjvxt08cH
+         g+PBKNztJcgSw==
+Date:   Thu, 25 May 2023 18:12:23 -0700
+Subject: [PATCH 1/4] xfs: fix xfs_bunmapi to allow unmapping of partial rt
+ extents
 From:   "Darrick J. Wong" <djwong@kernel.org>
 To:     djwong@kernel.org
 Cc:     linux-xfs@vger.kernel.org
-Message-ID: <168506063533.3733930.12257382591923869936.stgit@frogsfrogsfrogs>
-In-Reply-To: <168506063487.3733930.3765429104183077810.stgit@frogsfrogsfrogs>
-References: <168506063487.3733930.3765429104183077810.stgit@frogsfrogsfrogs>
+Message-ID: <168506063865.3734058.2235046441109264397.stgit@frogsfrogsfrogs>
+In-Reply-To: <168506063846.3734058.6853885983674617900.stgit@frogsfrogsfrogs>
+References: <168506063846.3734058.6853885983674617900.stgit@frogsfrogsfrogs>
 User-Agent: StGit/0.19
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
@@ -49,68 +50,78 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-Remove this single-use helper.
+When XFS_BMAPI_REMAP is passed to bunmapi, that means that we want to
+remove part of a block mapping without touching the allocator.  For
+realtime files with rtextsize > 1, that also means that we should skip
+all the code that changes a partial remove request into an unwritten
+extent conversion.  IOWs, bunmapi in this mode should handle removing
+the mapping from the rt file and nothing else.
+
+Note that XFS_BMAPI_REMAP callers are required to decrement the
+reference count and/or free the space manually.
 
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 ---
- fs/xfs/xfs_bmap_item.c |   38 +++++++++++++-------------------------
- 1 file changed, 13 insertions(+), 25 deletions(-)
+ fs/xfs/libxfs/xfs_bmap.c |   21 +++++++++++----------
+ 1 file changed, 11 insertions(+), 10 deletions(-)
 
 
-diff --git a/fs/xfs/xfs_bmap_item.c b/fs/xfs/xfs_bmap_item.c
-index 7551c3ec4ea5..803127a16904 100644
---- a/fs/xfs/xfs_bmap_item.c
-+++ b/fs/xfs/xfs_bmap_item.c
-@@ -281,29 +281,6 @@ xfs_bmap_update_diff_items(
- 	return ba->bi_owner->i_ino - bb->bi_owner->i_ino;
- }
+diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
+index 1479168cccc3..2beff0cfdf38 100644
+--- a/fs/xfs/libxfs/xfs_bmap.c
++++ b/fs/xfs/libxfs/xfs_bmap.c
+@@ -5120,15 +5120,14 @@ xfs_bmap_del_extent_real(
  
--/* Set the map extent flags for this mapping. */
--static void
--xfs_trans_set_bmap_flags(
--	struct xfs_map_extent		*map,
--	enum xfs_bmap_intent_type	type,
--	int				whichfork,
--	xfs_exntst_t			state)
--{
--	map->me_flags = 0;
--	switch (type) {
--	case XFS_BMAP_MAP:
--	case XFS_BMAP_UNMAP:
--		map->me_flags = type;
--		break;
--	default:
--		ASSERT(0);
--	}
--	if (state == XFS_EXT_UNWRITTEN)
--		map->me_flags |= XFS_BMAP_EXTENT_UNWRITTEN;
--	if (whichfork == XFS_ATTR_FORK)
--		map->me_flags |= XFS_BMAP_EXTENT_ATTR_FORK;
--}
+ 	flags = XFS_ILOG_CORE;
+ 	if (xfs_ifork_is_realtime(ip, whichfork)) {
+-		xfs_filblks_t	len;
+-		xfs_extlen_t	mod;
 -
- /* Log bmap updates in the intent item. */
- STATIC void
- xfs_bmap_update_log_item(
-@@ -329,8 +306,19 @@ xfs_bmap_update_log_item(
- 	map->me_startblock = bi->bi_bmap.br_startblock;
- 	map->me_startoff = bi->bi_bmap.br_startoff;
- 	map->me_len = bi->bi_bmap.br_blockcount;
--	xfs_trans_set_bmap_flags(map, bi->bi_type, bi->bi_whichfork,
--			bi->bi_bmap.br_state);
+-		len = div_u64_rem(del->br_blockcount, mp->m_sb.sb_rextsize,
+-				  &mod);
+-		ASSERT(mod == 0);
+-
+ 		if (!(bflags & XFS_BMAPI_REMAP)) {
+ 			xfs_fsblock_t	bno;
++			xfs_filblks_t	len;
++			xfs_extlen_t	mod;
 +
-+	switch (bi->bi_type) {
-+	case XFS_BMAP_MAP:
-+	case XFS_BMAP_UNMAP:
-+		map->me_flags = bi->bi_type;
-+		break;
-+	default:
-+		ASSERT(0);
-+	}
-+	if (bi->bi_bmap.br_state == XFS_EXT_UNWRITTEN)
-+		map->me_flags |= XFS_BMAP_EXTENT_UNWRITTEN;
-+	if (bi->bi_whichfork == XFS_ATTR_FORK)
-+		map->me_flags |= XFS_BMAP_EXTENT_ATTR_FORK;
- }
++			len = div_u64_rem(del->br_blockcount,
++					mp->m_sb.sb_rextsize, &mod);
++			ASSERT(mod == 0);
  
- static struct xfs_log_item *
+ 			bno = div_u64_rem(del->br_startblock,
+ 					mp->m_sb.sb_rextsize, &mod);
+@@ -5137,10 +5136,12 @@ xfs_bmap_del_extent_real(
+ 			error = xfs_rtfree_extent(tp, bno, (xfs_extlen_t)len);
+ 			if (error)
+ 				goto done;
++			nblks = len * mp->m_sb.sb_rextsize;
++		} else {
++			nblks = del->br_blockcount;
+ 		}
+ 
+ 		do_fx = 0;
+-		nblks = len * mp->m_sb.sb_rextsize;
+ 		qfield = XFS_TRANS_DQ_RTBCOUNT;
+ 	} else {
+ 		do_fx = 1;
+@@ -5447,7 +5448,7 @@ __xfs_bunmapi(
+ 		if (del.br_startoff + del.br_blockcount > end + 1)
+ 			del.br_blockcount = end + 1 - del.br_startoff;
+ 
+-		if (!isrt)
++		if (!isrt || (flags & XFS_BMAPI_REMAP))
+ 			goto delete;
+ 
+ 		sum = del.br_startblock + del.br_blockcount;
+@@ -5465,7 +5466,7 @@ __xfs_bunmapi(
+ 				 * This piece is unwritten, or we're not
+ 				 * using unwritten extents.  Skip over it.
+ 				 */
+-				ASSERT(end >= mod);
++				ASSERT((flags & XFS_BMAPI_REMAP) || end >= mod);
+ 				end -= mod > del.br_blockcount ?
+ 					del.br_blockcount : mod;
+ 				if (end < got.br_startoff &&
 
