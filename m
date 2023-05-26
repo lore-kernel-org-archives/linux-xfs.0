@@ -2,43 +2,42 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 55E47C77B7A
-	for <linux-xfs@archiver.kernel.org>; Fri, 26 May 2023 02:21:27 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id AEC82C7EE2E
+	for <linux-xfs@archiver.kernel.org>; Fri, 26 May 2023 02:21:40 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229567AbjEZCV0 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 25 May 2023 22:21:26 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51486 "EHLO
+        id S229530AbjEZCVj (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 25 May 2023 22:21:39 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51544 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233928AbjEZCVZ (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 25 May 2023 22:21:25 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 58F9F19D
-        for <linux-xfs@vger.kernel.org>; Thu, 25 May 2023 19:21:21 -0700 (PDT)
+        with ESMTP id S229981AbjEZCVi (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 25 May 2023 22:21:38 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D16E0B2
+        for <linux-xfs@vger.kernel.org>; Thu, 25 May 2023 19:21:36 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id E94D164C49
-        for <linux-xfs@vger.kernel.org>; Fri, 26 May 2023 02:21:20 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 589DEC433EF;
-        Fri, 26 May 2023 02:21:20 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 72DEA64C49
+        for <linux-xfs@vger.kernel.org>; Fri, 26 May 2023 02:21:36 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id D28AFC433EF;
+        Fri, 26 May 2023 02:21:35 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1685067680;
-        bh=aH8aS7Z92kOkeEzjo7GWtvOuIXCkLZmz1cidHB4Cylw=;
+        s=k20201202; t=1685067695;
+        bh=wFL97SFPOMPzyf6NDCVCHFJpOJGzV1YH7/b6K1Banqs=;
         h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-        b=nrNtX8B0nQ7jrcBrWN4UsLPC8uAvzC5TNLzB9FKBZDPc4TrTehuiucCfWa12/wFQj
-         m51lhm7s+vzAba5GOj5e8G8p6cl6utzEjJLCbJxJnf4kbAH9rP4K5zwSU7OCbbh5tq
-         9PXI6UbkyJQ/Jtxy8xE1lwke7F+/y90NItSd1Bm/XPY/1NO94WS2osg4eNAxy06tjR
-         vxgHR7Dle0Lr68praOgHU/G1XsHEyWMHt77v2BwqIFASoWFBynL1GKRXTa0I0/CJ8c
-         hed0+I5PZfzG/ZaU1SukPihHYJJC4a+Qr0YKOhscKOkPLboYNnJ7pb21HgTdcxsANH
-         sCnIu4N4LJYgQ==
-Date:   Thu, 25 May 2023 19:21:19 -0700
-Subject: [PATCH 08/10] xfs: log NVLOOKUP xattr nvreplace operations
+        b=MaNcq/RWYV7jA3GL6KKP4gAl8BNbQNHFw+cwfni+4dlOf0qDNy7fqZqvvZ4H5Koaw
+         s0jNJffpr5JRkqak29gJmEfxXlc/Xl6uVzxp7YmAXWh35Zuy8Bu1aBLxIJHTisGaAg
+         4oGHGnmX5mlTS/07H4vsfLRiv2aV+RhvhyZa1cvBAGoSR3bQ1x543Kz2gutSQCLVkh
+         R2ZXOlpaLXxGs0jSJYNjnFBeUAbyXhHQoUZNFw01jYdYkNN3fTzXBmlNOcVr4iCzqQ
+         +tBPAtO3dppcyri1TnbAb4mxYGEOJ2xDDwo7gEvnOQ5vwdhn/wo5PjIsn5tTngFPuC
+         jmUu+E01p7JAw==
+Date:   Thu, 25 May 2023 19:21:35 -0700
+Subject: [PATCH 09/10] xfs_logprint: dump new attr log item fields
 From:   "Darrick J. Wong" <djwong@kernel.org>
 To:     djwong@kernel.org, cem@kernel.org
-Cc:     Allison Henderson <allison.henderson@oracle.com>,
-        linux-xfs@vger.kernel.org, allison.henderson@oracle.com,
+Cc:     linux-xfs@vger.kernel.org, allison.henderson@oracle.com,
         catherine.hoang@oracle.com
-Message-ID: <168506077543.3749126.15762548958386388902.stgit@frogsfrogsfrogs>
+Message-ID: <168506077557.3749126.13546809186832151071.stgit@frogsfrogsfrogs>
 In-Reply-To: <168506077431.3749126.3177791326683307311.stgit@frogsfrogsfrogs>
 References: <168506077431.3749126.3177791326683307311.stgit@frogsfrogsfrogs>
 User-Agent: StGit/0.19
@@ -49,167 +48,253 @@ Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-From: Allison Henderson <allison.henderson@oracle.com>
+From: Darrick J. Wong <djwong@kernel.org>
 
-(Formerly titled "xfs: Add new name to attri/d" and described as
-follows:
+Dump the new extended attribute log item fields.  This was split out
+from the previous patch to make libxfs resyncing easier.  This code
+needs more cleaning, which we'll do in the next few patches before
+moving on to the parent pointer code.
 
-This patch adds two new fields to the atti/d.  They are nname and
-nnamelen.  This will be used for parent pointer updates since a
-rename operation may cause the parent pointer to update both the
-name and value.  So we need to carry both the new name as well as
-the target name in the attri/d.)
-
-If high level code wants to do a deferred xattr nvreplace operation with
-the NVLOOKUP flag set, we need to push this through the log.  This log
-item records the old name/value pair and the new name/value pair, and
-completely replaces one with the other.  Parent pointers will need this
-ability to handle rename moving a child file between parents.
-
-Signed-off-by: Allison Henderson <allison.henderson@oracle.com>
-Reviewed-by: Darrick J. Wong <djwong@kernel.org>
-[djwong: reworked to handle new disk format]
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 ---
- libxfs/xfs_attr.c       |   20 +++++++++++++++++++-
- libxfs/xfs_attr.h       |    4 ++--
- libxfs/xfs_da_btree.h   |    6 +++++-
- libxfs/xfs_log_format.h |   27 +++++++++++++++++++++++----
- 4 files changed, 49 insertions(+), 8 deletions(-)
+ logprint/log_redo.c |  132 +++++++++++++++++++++++++++++++++++++++++----------
+ logprint/logprint.h |    6 ++
+ 2 files changed, 111 insertions(+), 27 deletions(-)
 
 
-diff --git a/libxfs/xfs_attr.c b/libxfs/xfs_attr.c
-index 8fa5b4f2819..2e6b6d6576e 100644
---- a/libxfs/xfs_attr.c
-+++ b/libxfs/xfs_attr.c
-@@ -423,6 +423,20 @@ xfs_attr_complete_op(
- 		return XFS_DAS_DONE;
- 
- 	args->attr_filter &= ~XFS_ATTR_INCOMPLETE;
-+	if (xfs_attr_intent_op(attr) != XFS_ATTRI_OP_FLAGS_NVREPLACE)
-+		return replace_state;
-+
-+	/*
-+	 * NVREPLACE operations require the caller to set the old and new names
-+	 * and values explicitly.
-+	 */
-+	ASSERT(args->new_namelen > 0);
-+
-+	args->name = args->new_name;
-+	args->namelen = args->new_namelen;
-+	args->hashval = xfs_da_hashname(args->name, args->namelen);
-+	args->value = args->new_value;
-+	args->valuelen = args->new_valuelen;
- 	return replace_state;
+diff --git a/logprint/log_redo.c b/logprint/log_redo.c
+index 770485df75d..7531c6117bd 100644
+--- a/logprint/log_redo.c
++++ b/logprint/log_redo.c
+@@ -674,6 +674,12 @@ xfs_attri_copy_log_format(
+ 	return 1;
  }
  
-@@ -924,9 +938,13 @@ xfs_attr_defer_replace(
- 	struct xfs_da_args	*args)
++static inline unsigned int
++xfs_attr_log_item_op(const struct xfs_attri_log_format *attrp)
++{
++	return attrp->alfi_op_flags & XFS_ATTRI_OP_FLAGS_TYPE_MASK;
++}
++
+ int
+ xlog_print_trans_attri(
+ 	char				**ptr,
+@@ -683,6 +689,10 @@ xlog_print_trans_attri(
+ 	struct xfs_attri_log_format	*src_f = NULL;
+ 	xlog_op_header_t		*head = NULL;
+ 	uint				dst_len;
++	unsigned int			name_len = 0;
++	unsigned int			new_name_len = 0;
++	unsigned int			value_len = 0;
++	unsigned int			new_value_len = 0;
+ 	int				error = 0;
+ 
+ 	dst_len = sizeof(struct xfs_attri_log_format);
+@@ -705,27 +715,67 @@ xlog_print_trans_attri(
+ 	memmove((char*)src_f, *ptr, src_len);
+ 	*ptr += src_len;
+ 
+-	printf(_("ATTRI:  #regs: %d	name_len: %d, value_len: %d  id: 0x%llx\n"),
+-		src_f->alfi_size, src_f->alfi_name_len, src_f->alfi_value_len,
+-				(unsigned long long)src_f->alfi_id);
++	if (xfs_attr_log_item_op(src_f) == XFS_ATTRI_OP_FLAGS_NVREPLACE) {
++		name_len      = src_f->alfi_old_name_len;
++		new_name_len  = src_f->alfi_new_name_len;
++		value_len     = src_f->alfi_value_len;
++		new_value_len = src_f->alfi_new_value_len;
++	} else {
++		name_len      = src_f->alfi_name_len;
++		value_len     = src_f->alfi_value_len;
++	}
++
++	printf(_("ATTRI:  #regs: %d	name_len: %u, new_name_len: %u, value_len: %u, new_value_len: %u  id: 0x%llx\n"),
++			src_f->alfi_size,
++			name_len,
++			new_name_len,
++			value_len,
++			new_value_len,
++			(unsigned long long)src_f->alfi_id);
++
++	if (name_len > 0) {
++		printf(_("\n"));
++		(*i)++;
++		head = (xlog_op_header_t *)*ptr;
++		xlog_print_op_header(head, *i, ptr);
++		error = xlog_print_trans_attri_name(ptr,
++				be32_to_cpu(head->oh_len), "name");
++		if (error)
++			goto error;
++	}
+ 
+-	if (src_f->alfi_name_len > 0) {
++	if (new_name_len > 0) {
+ 		printf(_("\n"));
+ 		(*i)++;
+ 		head = (xlog_op_header_t *)*ptr;
+ 		xlog_print_op_header(head, *i, ptr);
+-		error = xlog_print_trans_attri_name(ptr, be32_to_cpu(head->oh_len));
++		error = xlog_print_trans_attri_name(ptr,
++				be32_to_cpu(head->oh_len), "newname");
+ 		if (error)
+ 			goto error;
+ 	}
+ 
+-	if (src_f->alfi_value_len > 0) {
++	if (value_len > 0) {
+ 		printf(_("\n"));
+ 		(*i)++;
+ 		head = (xlog_op_header_t *)*ptr;
+ 		xlog_print_op_header(head, *i, ptr);
+-		error = xlog_print_trans_attri_value(ptr, be32_to_cpu(head->oh_len),
+-				src_f->alfi_value_len);
++		error = xlog_print_trans_attri_value(ptr,
++				be32_to_cpu(head->oh_len), value_len, "value");
++		if (error)
++			goto error;
++	}
++
++	if (new_value_len > 0) {
++		printf(_("\n"));
++		(*i)++;
++		head = (xlog_op_header_t *)*ptr;
++		xlog_print_op_header(head, *i, ptr);
++		error = xlog_print_trans_attri_value(ptr,
++				be32_to_cpu(head->oh_len), new_value_len,
++				"newvalue");
++		if (error)
++			goto error;
+ 	}
+ error:
+ 	free(src_f);
+@@ -736,31 +786,33 @@ xlog_print_trans_attri(
+ int
+ xlog_print_trans_attri_name(
+ 	char				**ptr,
+-	uint				src_len)
++	uint				src_len,
++	const char			*tag)
  {
- 	struct xfs_attr_intent	*new;
-+	int			op_flag = XFS_ATTRI_OP_FLAGS_REPLACE;
- 	int			error = 0;
+-	printf(_("ATTRI:  name len:%u\n"), src_len);
++	printf(_("ATTRI:  %s len:%u\n"), tag, src_len);
+ 	print_or_dump(*ptr, src_len);
  
--	error = xfs_attr_intent_init(args, XFS_ATTRI_OP_FLAGS_REPLACE, &new);
-+	if (args->op_flags & XFS_DA_OP_NVLOOKUP)
-+		op_flag = XFS_ATTRI_OP_FLAGS_NVREPLACE;
+ 	*ptr += src_len;
+ 
+ 	return 0;
+-}	/* xlog_print_trans_attri */
++}
+ 
+ int
+ xlog_print_trans_attri_value(
+ 	char				**ptr,
+ 	uint				src_len,
+-	int				value_len)
++	int				value_len,
++	const char			*tag)
+ {
+ 	int len = min(value_len, src_len);
+ 
+-	printf(_("ATTRI:  value len:%u\n"), value_len);
++	printf(_("ATTRI:  %s len:%u\n"), tag, value_len);
+ 	print_or_dump(*ptr, len);
+ 
+ 	*ptr += src_len;
+ 
+ 	return 0;
+-}	/* xlog_print_trans_attri_value */
++}
+ 
+ void
+ xlog_recover_print_attri(
+@@ -768,7 +820,10 @@ xlog_recover_print_attri(
+ {
+ 	struct xfs_attri_log_format	*f, *src_f = NULL;
+ 	uint				src_len, dst_len;
+-
++	unsigned int			name_len = 0;
++	unsigned int			new_name_len = 0;
++	unsigned int			value_len = 0;
++	unsigned int			new_value_len = 0;
+ 	int				region = 0;
+ 
+ 	src_f = (struct xfs_attri_log_format *)item->ri_buf[0].i_addr;
+@@ -788,24 +843,51 @@ xlog_recover_print_attri(
+ 	if (xfs_attri_copy_log_format((char*)src_f, src_len, f))
+ 		goto out;
+ 
+-	printf(_("ATTRI:  #regs: %d	name_len: %d, value_len: %d  id: 0x%llx\n"),
+-		f->alfi_size, f->alfi_name_len, f->alfi_value_len, (unsigned long long)f->alfi_id);
++	if (xfs_attr_log_item_op(f) == XFS_ATTRI_OP_FLAGS_NVREPLACE) {
++		name_len      = f->alfi_old_name_len;
++		new_name_len  = f->alfi_new_name_len;
++		value_len     = f->alfi_value_len;
++		new_value_len = f->alfi_new_value_len;
++	} else {
++		name_len      = f->alfi_name_len;
++		value_len     = f->alfi_value_len;
++	}
 +
-+	error = xfs_attr_intent_init(args, op_flag, &new);
- 	if (error)
- 		return error;
++	printf(_("ATTRI:  #regs: %d	name_len: %u, new_name_len: %u, value_len: %d, new_value_len: %u  id: 0x%llx\n"),
++			f->alfi_size,
++			name_len,
++			new_name_len,
++			value_len,
++			new_value_len,
++			(unsigned long long)f->alfi_id);
  
-diff --git a/libxfs/xfs_attr.h b/libxfs/xfs_attr.h
-index 4bacafa59a4..bb1776b8a6c 100644
---- a/libxfs/xfs_attr.h
-+++ b/libxfs/xfs_attr.h
-@@ -510,8 +510,8 @@ struct xfs_attr_intent {
- 	struct xfs_da_args		*xattri_da_args;
+-	if (f->alfi_name_len > 0) {
++	if (name_len > 0) {
+ 		region++;
+-		printf(_("ATTRI:  name len:%u\n"), f->alfi_name_len);
++		printf(_("ATTRI:  name len:%u\n"), name_len);
+ 		print_or_dump((char *)item->ri_buf[region].i_addr,
+-			       f->alfi_name_len);
++			       name_len);
+ 	}
  
- 	/*
--	 * Shared buffer containing the attr name and value so that the logging
--	 * code can share large memory buffers between log items.
-+	 * Shared buffer containing the attr name, new name, and value so that
-+	 * the logging code can share large memory buffers between log items.
- 	 */
- 	struct xfs_attri_log_nameval	*xattri_nameval;
- 
-diff --git a/libxfs/xfs_da_btree.h b/libxfs/xfs_da_btree.h
-index 091750b2d42..c2255250c58 100644
---- a/libxfs/xfs_da_btree.h
-+++ b/libxfs/xfs_da_btree.h
-@@ -54,11 +54,15 @@ enum xfs_dacmp {
-  */
- typedef struct xfs_da_args {
- 	struct xfs_da_geometry *geo;	/* da block geometry */
--	const uint8_t		*name;		/* string (maybe not NULL terminated) */
-+	const uint8_t	*name;		/* string (maybe not NULL terminated) */
-+	const uint8_t	*new_name;	/* new attr name */
- 	int		namelen;	/* length of string (maybe no NULL) */
-+	int		new_namelen;	/* new attr name len */
- 	uint8_t		filetype;	/* filetype of inode for directories */
- 	void		*value;		/* set of bytes (maybe contain NULLs) */
-+	void		*new_value;	/* new xattr value (may contain NULLs) */
- 	int		valuelen;	/* length of value */
-+	int		new_valuelen;	/* length of new attr value */
- 	unsigned int	attr_filter;	/* XFS_ATTR_{ROOT,SECURE,INCOMPLETE} */
- 	unsigned int	attr_flags;	/* XATTR_{CREATE,REPLACE} */
- 	xfs_dahash_t	hashval;	/* hash value of name */
-diff --git a/libxfs/xfs_log_format.h b/libxfs/xfs_log_format.h
-index 7b848b1d8aa..21fbe1f49b6 100644
---- a/libxfs/xfs_log_format.h
-+++ b/libxfs/xfs_log_format.h
-@@ -115,11 +115,13 @@ struct xfs_unmount_log_format {
- #define XLOG_REG_TYPE_BUD_FORMAT	26
- #define XLOG_REG_TYPE_ATTRI_FORMAT	27
- #define XLOG_REG_TYPE_ATTRD_FORMAT	28
--#define XLOG_REG_TYPE_ATTR_NAME	29
-+#define XLOG_REG_TYPE_ATTR_NAME		29
- #define XLOG_REG_TYPE_ATTR_VALUE	30
- #define XLOG_REG_TYPE_SXI_FORMAT	31
- #define XLOG_REG_TYPE_SXD_FORMAT	32
--#define XLOG_REG_TYPE_MAX		32
-+#define XLOG_REG_TYPE_ATTR_NEWNAME	33
-+#define XLOG_REG_TYPE_ATTR_NEWVALUE	34
-+#define XLOG_REG_TYPE_MAX		34
- 
- /*
-  * Flags to log operation header
-@@ -1038,6 +1040,7 @@ struct xfs_icreate_log {
- #define XFS_ATTRI_OP_FLAGS_REPLACE	3	/* Replace the attribute */
- #define XFS_ATTRI_OP_FLAGS_NVREMOVE	4	/* Remove attr w/ vlookup */
- #define XFS_ATTRI_OP_FLAGS_NVSET	5	/* Set attr with w/ vlookup */
-+#define XFS_ATTRI_OP_FLAGS_NVREPLACE	6	/* Replace attr name and val */
- #define XFS_ATTRI_OP_FLAGS_TYPE_MASK	0xFF	/* Flags type mask */
- 
- /*
-@@ -1055,11 +1058,27 @@ struct xfs_icreate_log {
- struct xfs_attri_log_format {
- 	uint16_t	alfi_type;	/* attri log item type */
- 	uint16_t	alfi_size;	/* size of this item */
--	uint32_t	__pad;		/* pad to 64 bit aligned */
+-	if (f->alfi_value_len > 0) {
+-		int len = f->alfi_value_len;
++	if (new_name_len > 0) {
++		region++;
++		printf(_("ATTRI:  newname len:%u\n"), new_name_len);
++		print_or_dump((char *)item->ri_buf[region].i_addr,
++			       new_name_len);
++	}
 +
-+	/*
-+	 * For NVREPLACE, this is the length of the new xattr value.
-+	 * alfi_value_len contains the length of the old xattr value.
-+	 */
-+	uint32_t	alfi_new_value_len;
++	if (value_len > 0) {
++		int	len = min(MAX_ATTR_VAL_PRINT, value_len);
 +
- 	uint64_t	alfi_id;	/* attri identifier */
- 	uint64_t	alfi_ino;	/* the inode for this attr operation */
- 	uint32_t	alfi_op_flags;	/* marks the op as a set or remove */
--	uint32_t	alfi_name_len;	/* attr name length */
-+	union {
-+		uint32_t	alfi_name_len;	/* attr name length */
-+		struct {
-+			/*
-+			 * For NVREPLACE, these are the lengths of the old and
-+			 * new attr name.
-+			 */
-+			uint16_t	alfi_old_name_len;
-+			uint16_t	alfi_new_name_len;
-+		};
-+	};
- 	uint32_t	alfi_value_len;	/* attr value length */
- 	uint32_t	alfi_attr_filter;/* attr filter flags */
- };
++		region++;
++		printf(_("ATTRI:  value len:%u\n"), value_len);
++		print_or_dump((char *)item->ri_buf[region].i_addr, len);
++	}
+ 
+-		if (len > MAX_ATTR_VAL_PRINT)
+-			len = MAX_ATTR_VAL_PRINT;
++	if (new_value_len > 0) {
++		int	len = min(MAX_ATTR_VAL_PRINT, new_value_len);
+ 
+ 		region++;
+-		printf(_("ATTRI:  value len:%u\n"), f->alfi_value_len);
++		printf(_("ATTRI:  newvalue len:%u\n"), new_value_len);
+ 		print_or_dump((char *)item->ri_buf[region].i_addr, len);
+ 	}
+ 
+diff --git a/logprint/logprint.h b/logprint/logprint.h
+index 892b280b548..8742b98a9d1 100644
+--- a/logprint/logprint.h
++++ b/logprint/logprint.h
+@@ -59,8 +59,10 @@ extern void xlog_recover_print_bud(struct xlog_recover_item *item);
+ #define MAX_ATTR_VAL_PRINT	128
+ 
+ extern int xlog_print_trans_attri(char **ptr, uint src_len, int *i);
+-extern int xlog_print_trans_attri_name(char **ptr, uint src_len);
+-extern int xlog_print_trans_attri_value(char **ptr, uint src_len, int value_len);
++extern int xlog_print_trans_attri_name(char **ptr, uint src_len,
++		const char *tag);
++extern int xlog_print_trans_attri_value(char **ptr, uint src_len, int value_len,
++		const char *tag);
+ extern void xlog_recover_print_attri(struct xlog_recover_item *item);
+ extern int xlog_print_trans_attrd(char **ptr, uint len);
+ extern void xlog_recover_print_attrd(struct xlog_recover_item *item);
 
