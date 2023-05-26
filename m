@@ -2,43 +2,43 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7002EC77B7A
-	for <linux-xfs@archiver.kernel.org>; Fri, 26 May 2023 02:16:12 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9873AC77B7E
+	for <linux-xfs@archiver.kernel.org>; Fri, 26 May 2023 02:16:32 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229981AbjEZCQL (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 25 May 2023 22:16:11 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49316 "EHLO
+        id S229727AbjEZCQb (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 25 May 2023 22:16:31 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49372 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229727AbjEZCQK (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 25 May 2023 22:16:10 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 92C3E195
-        for <linux-xfs@vger.kernel.org>; Thu, 25 May 2023 19:16:09 -0700 (PDT)
+        with ESMTP id S230049AbjEZCQ2 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 25 May 2023 22:16:28 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2718F13D
+        for <linux-xfs@vger.kernel.org>; Thu, 25 May 2023 19:16:25 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 2805B6157B
-        for <linux-xfs@vger.kernel.org>; Fri, 26 May 2023 02:16:09 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 882C8C433D2;
-        Fri, 26 May 2023 02:16:08 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id B87EC60DCE
+        for <linux-xfs@vger.kernel.org>; Fri, 26 May 2023 02:16:24 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 29C61C433D2;
+        Fri, 26 May 2023 02:16:24 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1685067368;
-        bh=PgyuZhG8o3dNS1nBirEv76fsv/MvrMYXRvCV8ZutY0o=;
+        s=k20201202; t=1685067384;
+        bh=aQM0ydoJSP1MBH02CwqhzzRiYaHIwtF6egC6KDcEWL8=;
         h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-        b=tKJEcU82cPmgPIBHE3ksOb2MZdiPYCBw5V7nQXRhmjiAD3W6mRb4KQUnSE2c9BiUW
-         fOOl2LfwX/iD9eviDNeYKQAPhMRmHDiYkJYROYQn15we/ZhkOEg6iLPWjsoMBYNt49
-         1EvjqvG09XoNuAjs4iaU+R3u+exsK1l8UU5dnIWmjHU08sgDnVmLVyI6vqejqZl8js
-         FcbV2FjwR0Jeb0w8nANnLH+vw/siMvF1bn4qH5amfcmrPemsH+HogMuv5evoEcqlkx
-         EfubSsFyn0DvJeeTWoE//esz3sVAO55cswU1aDmxmpLv9138hwQ8VGizhyW76rgoym
-         5Im/7EYL4jUtw==
-Date:   Thu, 25 May 2023 19:16:08 -0700
-Subject: [PATCH 06/17] xfs: set child file owner in xfs_da_args when changing
- parent pointers
+        b=JX0D6J3BiPGQn+J7V8wMNBfIHp+XKM7P+stJn1sJRg3Ab3QBbleRGqlzvNJw321Fi
+         BAaRFFxmy0fIIKwDCR/17qLRybn561Sg1GH8SytW/cj/llpVjO+6vfUlu+HdvBR/OQ
+         PEebom+RNRCZFXaIpHsRpVVW9My8zj3FJguyN6uNpeOq1SyliOQMsF+yNdGm9s+qOl
+         FExz7lM/tE25O9Qd5tpCnU55hOawcCT7HDQvP92NFBORJKbVxvPvRvM0FWL0IyLpLz
+         Wi/+ih5mm+vvjL32fIrFGzhCrzRDsBn1yLyNLJ7Hl7W2nOjnqoXElQqqCevjSStBVv
+         cqbsz+QJJ1mZw==
+Date:   Thu, 25 May 2023 19:16:23 -0700
+Subject: [PATCH 07/17] xfs: salvage parent pointers when rebuilding xattr
+ structures
 From:   "Darrick J. Wong" <djwong@kernel.org>
 To:     djwong@kernel.org
 Cc:     linux-xfs@vger.kernel.org, allison.henderson@oracle.com,
         catherine.hoang@oracle.com
-Message-ID: <168506073382.3745075.7085494043402000854.stgit@frogsfrogsfrogs>
+Message-ID: <168506073396.3745075.1972680528979448636.stgit@frogsfrogsfrogs>
 In-Reply-To: <168506073275.3745075.7865645835865818396.stgit@frogsfrogsfrogs>
 References: <168506073275.3745075.7865645835865818396.stgit@frogsfrogsfrogs>
 User-Agent: StGit/0.19
@@ -51,113 +51,159 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-Now that struct xfs_da_args has an explicit file owner field, we must
-set it when modifying parent pointers.
+When we're salvaging extended attributes, make sure we validate the ones
+that claim to be parent pointers before adding them to the salvage pile.
 
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 ---
- fs/xfs/libxfs/xfs_parent.c |   13 ++++++++++---
- fs/xfs/libxfs/xfs_parent.h |    4 ++--
- 2 files changed, 12 insertions(+), 5 deletions(-)
+ fs/xfs/scrub/attr_repair.c |   41 ++++++++++++++++++++++++++++++++---------
+ fs/xfs/scrub/trace.c       |    1 +
+ fs/xfs/scrub/trace.h       |   40 ++++++++++++++++++++++++++++++++++++++++
+ 3 files changed, 73 insertions(+), 9 deletions(-)
 
 
-diff --git a/fs/xfs/libxfs/xfs_parent.c b/fs/xfs/libxfs/xfs_parent.c
-index 27685ce65a16..cc05d1de9eb0 100644
---- a/fs/xfs/libxfs/xfs_parent.c
-+++ b/fs/xfs/libxfs/xfs_parent.c
-@@ -195,6 +195,7 @@ xfs_parent_add(
- 
- 	args->trans = tp;
- 	args->dp = child;
-+	args->owner = child->i_ino;
- 
- 	xfs_init_parent_davalue(&parent->args, parent_name);
- 
-@@ -227,6 +228,7 @@ xfs_parent_remove(
- 
- 	args->trans = tp;
- 	args->dp = child;
-+	args->owner = child->i_ino;
- 
- 	xfs_init_parent_davalue(&parent->args, parent_name);
- 
-@@ -265,6 +267,7 @@ xfs_parent_replace(
- 
- 	args->trans = tp;
- 	args->dp = child;
-+	args->owner = child->i_ino;
- 
- 	xfs_init_parent_davalue(&parent->args, old_name);
- 	xfs_init_parent_danewvalue(&parent->args, new_name);
-@@ -327,6 +330,7 @@ static inline void
- xfs_parent_scratch_init(
- 	struct xfs_trans		*tp,
- 	struct xfs_inode		*ip,
-+	xfs_ino_t			owner,
- 	const struct xfs_parent_name_irec *pptr,
- 	struct xfs_parent_scratch	*scr)
- {
-@@ -343,6 +347,7 @@ xfs_parent_scratch_init(
- 	scr->args.whichfork	= XFS_ATTR_FORK;
- 	scr->args.hashval	= xfs_da_hashname((const void *)&scr->rec,
- 					sizeof(struct xfs_parent_name_rec));
-+	scr->args.owner		= owner;
+diff --git a/fs/xfs/scrub/attr_repair.c b/fs/xfs/scrub/attr_repair.c
+index 1d5bacbe1b81..489abe1f028a 100644
+--- a/fs/xfs/scrub/attr_repair.c
++++ b/fs/xfs/scrub/attr_repair.c
+@@ -28,6 +28,7 @@
+ #include "xfs_swapext.h"
+ #include "xfs_xchgrange.h"
+ #include "xfs_acl.h"
++#include "xfs_parent.h"
+ #include "scrub/xfs_scrub.h"
+ #include "scrub/scrub.h"
+ #include "scrub/common.h"
+@@ -124,6 +125,13 @@ xrep_xattr_want_salvage(
+ 		return false;
+ 	if (valuelen > XATTR_SIZE_MAX || valuelen < 0)
+ 		return false;
++	if (attr_flags & XFS_ATTR_PARENT) {
++		if (!xfs_parent_namecheck(rx->sc->mp, name, namelen,
++				attr_flags))
++			return false;
++		if (!xfs_parent_valuecheck(rx->sc->mp, value, valuelen))
++			return false;
++	}
+ 	return true;
  }
  
- /*
-@@ -359,7 +364,7 @@ xfs_parent_lookup(
- 	struct xfs_parent_scratch	*scr)
- {
- 	xfs_parent_irec_to_disk(&scr->rec, pptr);
--	xfs_parent_scratch_init(tp, ip, pptr, scr);
-+	xfs_parent_scratch_init(tp, ip, ip->i_ino, pptr, scr);
- 	scr->args.op_flags |= XFS_DA_OP_OKNOENT;
+@@ -151,14 +159,21 @@ xrep_xattr_salvage_key(
+ 	 * Truncate the name to the first character that would trip namecheck.
+ 	 * If we no longer have a name after that, ignore this attribute.
+ 	 */
+-	while (i < namelen && name[i] != 0)
+-		i++;
+-	if (i == 0)
+-		return 0;
+-	key.namelen = i;
++	if (flags & XFS_ATTR_PARENT) {
++		key.namelen = namelen;
  
- 	return xfs_attr_get_ilocked(&scr->args);
-@@ -374,11 +379,12 @@ xfs_parent_lookup(
- int
- xfs_parent_set(
- 	struct xfs_inode		*ip,
-+	xfs_ino_t			owner,
- 	const struct xfs_parent_name_irec *pptr,
- 	struct xfs_parent_scratch	*scr)
- {
- 	xfs_parent_irec_to_disk(&scr->rec, pptr);
--	xfs_parent_scratch_init(NULL, ip, pptr, scr);
-+	xfs_parent_scratch_init(NULL, ip, owner, pptr, scr);
+-	trace_xrep_xattr_salvage_rec(rx->sc->ip, flags, name, key.namelen,
+-			valuelen);
++		trace_xrep_xattr_salvage_pptr(rx->sc->ip, flags, name,
++				key.namelen, value, valuelen);
++	} else {
++		while (i < namelen && name[i] != 0)
++			i++;
++		if (i == 0)
++			return 0;
++		key.namelen = i;
++
++		trace_xrep_xattr_salvage_rec(rx->sc->ip, flags, name,
++				key.namelen, valuelen);
++	}
  
- 	return xfs_attr_set(&scr->args);
- }
-@@ -392,11 +398,12 @@ xfs_parent_set(
- int
- xfs_parent_unset(
- 	struct xfs_inode		*ip,
-+	xfs_ino_t			owner,
- 	const struct xfs_parent_name_irec *pptr,
- 	struct xfs_parent_scratch	*scr)
- {
- 	xfs_parent_irec_to_disk(&scr->rec, pptr);
--	xfs_parent_scratch_init(NULL, ip, pptr, scr);
-+	xfs_parent_scratch_init(NULL, ip, owner, pptr, scr);
- 	scr->args.op_flags |= XFS_DA_OP_REMOVE;
+ 	error = xfblob_store(rx->xattr_blobs, &key.name_cookie, name,
+ 			key.namelen);
+@@ -562,6 +577,9 @@ xrep_xattr_insert_rec(
+ 	struct xchk_xattr_buf		*ab = rx->sc->buf;
+ 	int				error;
  
- 	return xfs_attr_set(&scr->args);
-diff --git a/fs/xfs/libxfs/xfs_parent.h b/fs/xfs/libxfs/xfs_parent.h
-index f1ec9cce859e..5dbaceb97653 100644
---- a/fs/xfs/libxfs/xfs_parent.h
-+++ b/fs/xfs/libxfs/xfs_parent.h
-@@ -108,11 +108,11 @@ int xfs_parent_lookup(struct xfs_trans *tp, struct xfs_inode *ip,
- 		const struct xfs_parent_name_irec *pptr,
- 		struct xfs_parent_scratch *scratch);
++	if (key->flags & XFS_ATTR_PARENT)
++		args.op_flags |= XFS_DA_OP_NVLOOKUP;
++
+ 	/*
+ 	 * Grab pointers to the scrub buffer so that we can use them to insert
+ 	 * attrs into the temp file.
+@@ -595,8 +613,13 @@ xrep_xattr_insert_rec(
  
--int xfs_parent_set(struct xfs_inode *ip,
-+int xfs_parent_set(struct xfs_inode *ip, xfs_ino_t owner,
- 		const struct xfs_parent_name_irec *pptr,
- 		struct xfs_parent_scratch *scratch);
+ 	ab->name[key->namelen] = 0;
  
--int xfs_parent_unset(struct xfs_inode *ip,
-+int xfs_parent_unset(struct xfs_inode *ip, xfs_ino_t owner,
- 		const struct xfs_parent_name_irec *rec,
- 		struct xfs_parent_scratch *scratch);
+-	trace_xrep_xattr_insert_rec(rx->sc->tempip, key->flags, ab->name,
+-			key->namelen, key->valuelen);
++	if (key->flags & XFS_ATTR_PARENT)
++		trace_xrep_xattr_insert_pptr(rx->sc->tempip, key->flags,
++				ab->name, key->namelen, ab->value,
++				key->valuelen);
++	else
++		trace_xrep_xattr_insert_rec(rx->sc->tempip, key->flags,
++				ab->name, key->namelen, key->valuelen);
  
+ 	/*
+ 	 * xfs_attr_set creates and commits its own transaction.  If the attr
+diff --git a/fs/xfs/scrub/trace.c b/fs/xfs/scrub/trace.c
+index 18a1a3d1cbef..913f886380c0 100644
+--- a/fs/xfs/scrub/trace.c
++++ b/fs/xfs/scrub/trace.c
+@@ -18,6 +18,7 @@
+ #include "xfs_dir2.h"
+ #include "xfs_da_format.h"
+ #include "xfs_rmap.h"
++#include "xfs_parent.h"
+ #include "scrub/scrub.h"
+ #include "scrub/xfile.h"
+ #include "scrub/xfarray.h"
+diff --git a/fs/xfs/scrub/trace.h b/fs/xfs/scrub/trace.h
+index 28232e4611d7..c64594f20f73 100644
+--- a/fs/xfs/scrub/trace.h
++++ b/fs/xfs/scrub/trace.h
+@@ -2481,6 +2481,46 @@ DEFINE_EVENT(xrep_xattr_salvage_class, name, \
+ DEFINE_XREP_XATTR_SALVAGE_EVENT(xrep_xattr_salvage_rec);
+ DEFINE_XREP_XATTR_SALVAGE_EVENT(xrep_xattr_insert_rec);
+ 
++DECLARE_EVENT_CLASS(xrep_pptr_salvage_class,
++	TP_PROTO(struct xfs_inode *ip, unsigned int flags, const void *name,
++		 unsigned int namelen, const void *value, unsigned int valuelen),
++	TP_ARGS(ip, flags, name, namelen, value, valuelen),
++	TP_STRUCT__entry(
++		__field(dev_t, dev)
++		__field(xfs_ino_t, ino)
++		__field(xfs_ino_t, parent_ino)
++		__field(unsigned int, parent_gen)
++		__field(unsigned int, namelen)
++		__dynamic_array(char, name, valuelen)
++	),
++	TP_fast_assign(
++		struct xfs_parent_name_irec	pptr;
++
++		xfs_parent_irec_from_disk(&pptr, name, value, valuelen);
++
++		__entry->dev = ip->i_mount->m_super->s_dev;
++		__entry->ino = ip->i_ino;
++		__entry->parent_ino = pptr.p_ino;
++		__entry->parent_gen = pptr.p_gen;
++		__entry->namelen = pptr.p_namelen;
++		memcpy(__get_str(name), pptr.p_name, pptr.p_namelen);
++	),
++	TP_printk("dev %d:%d ino 0x%llx parent_ino 0x%llx parent_gen 0x%x name '%.*s'",
++		  MAJOR(__entry->dev), MINOR(__entry->dev),
++		  __entry->ino,
++		  __entry->parent_ino,
++		  __entry->parent_gen,
++		  __entry->namelen,
++		  __get_str(name))
++)
++#define DEFINE_XREP_PPTR_SALVAGE_CLASS(name) \
++DEFINE_EVENT(xrep_pptr_salvage_class, name, \
++	TP_PROTO(struct xfs_inode *ip, unsigned int flags, const void *name, \
++		 unsigned int namelen, const void *value, unsigned int valuelen), \
++	TP_ARGS(ip, flags, name, namelen, value, valuelen))
++DEFINE_XREP_PPTR_SALVAGE_CLASS(xrep_xattr_salvage_pptr);
++DEFINE_XREP_PPTR_SALVAGE_CLASS(xrep_xattr_insert_pptr);
++
+ TRACE_EVENT(xrep_xattr_class,
+ 	TP_PROTO(struct xfs_inode *ip, struct xfs_inode *arg_ip),
+ 	TP_ARGS(ip, arg_ip),
 
