@@ -2,43 +2,43 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id AC025C7EE29
-	for <linux-xfs@archiver.kernel.org>; Fri, 26 May 2023 01:55:04 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5492DC7EE29
+	for <linux-xfs@archiver.kernel.org>; Fri, 26 May 2023 01:55:08 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S241937AbjEZBzD (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 25 May 2023 21:55:03 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41952 "EHLO
+        id S234071AbjEZBzH (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 25 May 2023 21:55:07 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42008 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S234071AbjEZByt (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 25 May 2023 21:54:49 -0400
+        with ESMTP id S233496AbjEZBzF (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 25 May 2023 21:55:05 -0400
 Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id AAEF6E7
-        for <linux-xfs@vger.kernel.org>; Thu, 25 May 2023 18:54:48 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 57C8AE7
+        for <linux-xfs@vger.kernel.org>; Thu, 25 May 2023 18:55:04 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 40E3464C47
-        for <linux-xfs@vger.kernel.org>; Fri, 26 May 2023 01:54:48 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 9DD6CC433D2;
-        Fri, 26 May 2023 01:54:47 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id E12C964C1F
+        for <linux-xfs@vger.kernel.org>; Fri, 26 May 2023 01:55:03 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 509F6C433EF;
+        Fri, 26 May 2023 01:55:03 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1685066087;
-        bh=ditBuLlVzwd6tHJIxbtQFiSYprK5aupkmnK9OTONOZ4=;
+        s=k20201202; t=1685066103;
+        bh=Qi02TB3eL2BySndvxvUPOtFGDSuSBWd8blCodgnaKiA=;
         h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-        b=pDeqLxt8LLuT5Kj4GuejZetZCsklQuOqcmXjj+eSCo8xd7Um5AufFaakPU4wg3Heb
-         +3h297rqAZ2d4M59tS37naUIbDu5n/puQgJ8xAtPn1iCvU00EWA695o6bcCgfd5pdw
-         84YEkk5e/mgy9KR/XWkXi+pDWLNzI9qm+uoI3oj8isk0osjAxlaR2q9JZTLK3+g4Ah
-         FIdRokgP1nrLGXVU5lJZjZgZ0r6iEZNzzvyfgI0TSACf7mfrcb1AQ8WBWh/T3DS9FM
-         bpGXz6af0NtqN/TN5z2cxvye4HbEdvdaHZQFujeYw0cmf33IoTC0r6i+nRNkK+Eqxw
-         4IqvhSQ0Uclxg==
-Date:   Thu, 25 May 2023 18:54:47 -0700
-Subject: [PATCH 4/4] xfs_scrub_all: fix termination signal handling
+        b=W6jjN0JI7vqt5RhSBOUA2F6Ux69NUeiJZT99VLzHbeK0hQ6yBa4Q7JToj7dEYX5V6
+         KA+7B5+1REs9uronthYwpopz/w0gZwmEKOT4F/SwDvOTWnC3fpSiN1tURdsyTuoQlk
+         QOs9O2LSjivvR+ESEb4eQKJG72q0J2YZmad831rCfzc7UI9JCPRFwVRcq1bnwi4uLi
+         Ph7DNXJSuXXhMUP2SXGIrRQfn7Uv2L3Q67pKXYEuljgQyZUqVykkoq+mkehKyvjIaS
+         4YWBKxefpuzF1pcq0s6MEiAIcZ1NlFummDYNZgyaJGTWjvy6AIXWveIgou6K/SVTef
+         xXV1TiLGXnhsQ==
+Date:   Thu, 25 May 2023 18:55:02 -0700
+Subject: [PATCH 1/5] xfs_scrub: allow auxiliary pathnames for sandboxing
 From:   "Darrick J. Wong" <djwong@kernel.org>
 To:     djwong@kernel.org, cem@kernel.org
 Cc:     linux-xfs@vger.kernel.org
-Message-ID: <168506074230.3745941.8641878326182644758.stgit@frogsfrogsfrogs>
-In-Reply-To: <168506074176.3745941.5054006111815853213.stgit@frogsfrogsfrogs>
-References: <168506074176.3745941.5054006111815853213.stgit@frogsfrogsfrogs>
+Message-ID: <168506074522.3746099.11941443473290571582.stgit@frogsfrogsfrogs>
+In-Reply-To: <168506074508.3746099.18021671464566915249.stgit@frogsfrogsfrogs>
+References: <168506074508.3746099.18021671464566915249.stgit@frogsfrogsfrogs>
 User-Agent: StGit/0.19
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
@@ -49,136 +49,125 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-Currently, xfs_scrub_all does not handle termination signals well.
-SIGTERM and SIGINT are left to their default handlers, which are
-immediate termination of the process group in the case of SIGTERM and
-raising KeyboardInterrupt in the case of SIGINT.
-
-Terminating the process group is fine when the xfs_scrub processes are
-direct children, but this completely doesn't work if we're farming the
-work out to systemd services since we don't terminate the child service.
-Instead, they keep going.
-
-Raising KeyboardInterrupt doesn't work because once the main thread
-calls sys.exit at the bottom of main(), it blocks in the python runtime
-waiting for child threads to terminate.  There's no longer any context
-to handle an exception, so the signal is ignored and no child processes
-are killed.
-
-In other words, if you try to kill a running xfs_scrub_all, chances are
-good it won't kill the child xfs_scrub processes.  This is undesirable
-and egregious since we actually have the ability to track and kill all
-the subprocesses that we create.
-
-Solve the subproblem of getting stuck in the python runtime by calling
-it repeatedly until we no longer have subprocesses.  This means that the
-main thread loops until all threads have exited.
-
-Solve the subproblem of the signals doing the wrong thing by setting up
-our own signal handler that can wake up the main thread and initiate
-subprocess shutdown, no matter whether the subprocesses are systemd
-services or directly fork/exec'd.
+In the next patch, we'll tighten up the security on the xfs_scrub
+service so that it can't escape.  However, sanboxing the service
+involves making the host filesystem as inaccessible as possible, with
+the filesystem to scrub bind mounted onto a known location within the
+sandbox.  Hence we need one path for reporting and a new -A argument to
+tell scrub what it should actually be trying to open.
 
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 ---
- scrub/xfs_scrub_all.in |   64 +++++++++++++++++++++++++++++++++++++++---------
- 1 file changed, 52 insertions(+), 12 deletions(-)
+ doc/README-env-vars.txt |    2 ++
+ scrub/phase1.c          |    4 ++--
+ scrub/vfs.c             |    2 +-
+ scrub/xfs_scrub.c       |    9 +++++++--
+ scrub/xfs_scrub.h       |    5 ++++-
+ 5 files changed, 16 insertions(+), 6 deletions(-)
 
 
-diff --git a/scrub/xfs_scrub_all.in b/scrub/xfs_scrub_all.in
-index 0cf67b80d68..11189c3ee10 100644
---- a/scrub/xfs_scrub_all.in
-+++ b/scrub/xfs_scrub_all.in
-@@ -14,6 +14,7 @@ import time
- import sys
- import os
- import argparse
-+import signal
- from io import TextIOWrapper
+diff --git a/doc/README-env-vars.txt b/doc/README-env-vars.txt
+index eec59a82513..d7984df8202 100644
+--- a/doc/README-env-vars.txt
++++ b/doc/README-env-vars.txt
+@@ -24,3 +24,5 @@ XFS_SCRUB_THREADS            -- start exactly this number of threads
+ Available even in non-debug mode:
+ SERVICE_MODE                 -- compress all error codes to 1 for LSB
+                                 service action compliance
++SERVICE_MOUNTPOINT           -- actual path to open for issuing kernel
++                                scrub calls
+diff --git a/scrub/phase1.c b/scrub/phase1.c
+index 99c7a7a5d28..2a63563cc3d 100644
+--- a/scrub/phase1.c
++++ b/scrub/phase1.c
+@@ -146,7 +146,7 @@ phase1_func(
+ 	 * CAP_SYS_ADMIN, which we probably need to do anything fancy
+ 	 * with the (XFS driver) kernel.
+ 	 */
+-	error = -xfd_open(&ctx->mnt, ctx->mntpoint,
++	error = -xfd_open(&ctx->mnt, ctx->actual_mntpoint,
+ 			O_RDONLY | O_NOATIME | O_DIRECTORY);
+ 	if (error) {
+ 		if (error == EPERM)
+@@ -199,7 +199,7 @@ _("Not an XFS filesystem."));
+ 		return error;
+ 	}
  
- retcode = 0
-@@ -196,6 +197,45 @@ def run_scrub(mnt, cond, running_devs, mntdevs, killfuncs):
- 		cond.notify()
- 		cond.release()
+-	error = path_to_fshandle(ctx->mntpoint, &ctx->fshandle,
++	error = path_to_fshandle(ctx->actual_mntpoint, &ctx->fshandle,
+ 			&ctx->fshandle_len);
+ 	if (error) {
+ 		str_errno(ctx, _("getting fshandle"));
+diff --git a/scrub/vfs.c b/scrub/vfs.c
+index 69b4a22d211..e0b2d3e0ef9 100644
+--- a/scrub/vfs.c
++++ b/scrub/vfs.c
+@@ -249,7 +249,7 @@ scan_fs_tree(
+ 		goto out_cond;
+ 	}
  
-+def signal_scrubs(signum, cond):
-+	'''Handle termination signals by killing xfs_scrub children.'''
-+	global debug, terminate
-+
-+	if debug:
-+		print('Signal handler called with signal', signum)
-+		sys.stdout.flush()
-+
-+	terminate = True
-+	cond.acquire()
-+	cond.notify()
-+	cond.release()
-+
-+def wait_for_termination(cond, killfuncs):
-+	'''Wait for a child thread to terminate.  Returns True if we should
-+	abort the program, False otherwise.'''
-+	global debug, terminate
-+
-+	if debug:
-+		print('waiting for threads to terminate')
-+		sys.stdout.flush()
-+
-+	cond.acquire()
-+	try:
-+		cond.wait()
-+	except KeyboardInterrupt:
-+		terminate = True
-+	cond.release()
-+
-+	if not terminate:
-+		return False
-+
-+	print("Terminating...")
-+	sys.stdout.flush()
-+	while len(killfuncs) > 0:
-+		fn = killfuncs.pop()
-+		fn()
-+	return True
-+
- def main():
- 	'''Find mounts, schedule scrub runs.'''
- 	def thr(mnt, devs):
-@@ -231,6 +271,10 @@ def main():
- 	running_devs = set()
- 	killfuncs = set()
- 	cond = threading.Condition()
-+
-+	signal.signal(signal.SIGINT, lambda s, f: signal_scrubs(s, cond))
-+	signal.signal(signal.SIGTERM, lambda s, f: signal_scrubs(s, cond))
-+
- 	while len(fs) > 0:
- 		if len(running_devs) == 0:
- 			mnt, devs = fs.popitem()
-@@ -250,18 +294,14 @@ def main():
- 				thr(mnt, devs)
- 		for p in poppers:
- 			fs.pop(p)
--		cond.acquire()
--		try:
--			cond.wait()
--		except KeyboardInterrupt:
--			terminate = True
--			print("Terminating...")
--			sys.stdout.flush()
--			while len(killfuncs) > 0:
--				fn = killfuncs.pop()
--				fn()
--			fs = []
--		cond.release()
-+
-+		# Wait for one thread to finish
-+		if wait_for_termination(cond, killfuncs):
-+			break
-+
-+	# Wait for the rest of the threads to finish
-+	while len(killfuncs) > 0:
-+		wait_for_termination(cond, killfuncs)
+-	ret = queue_subdir(ctx, &sft, &wq, ctx->mntpoint, true);
++	ret = queue_subdir(ctx, &sft, &wq, ctx->actual_mntpoint, true);
+ 	if (ret) {
+ 		str_liberror(ctx, ret, _("queueing directory scan"));
+ 		goto out_wq;
+diff --git a/scrub/xfs_scrub.c b/scrub/xfs_scrub.c
+index 04b423c7211..ee29148a2f1 100644
+--- a/scrub/xfs_scrub.c
++++ b/scrub/xfs_scrub.c
+@@ -119,6 +119,8 @@
+  * Available even in non-debug mode:
+  * SERVICE_MODE			-- compress all error codes to 1 for LSB
+  *				   service action compliance
++ * SERVICE_MOUNTPOINT		-- actual path to open for issuing kernel
++ *				   scrub calls
+  */
  
- 	if journalthread is not None:
- 		journalthread.terminate()
+ /* Program name; needed for libfrog error reports. */
+@@ -810,6 +812,9 @@ main(
+ 		usage();
+ 
+ 	ctx.mntpoint = argv[optind];
++	ctx.actual_mntpoint = getenv("SERVICE_MOUNTPOINT");
++	if (!ctx.actual_mntpoint)
++		ctx.actual_mntpoint = ctx.mntpoint;
+ 
+ 	stdout_isatty = isatty(STDOUT_FILENO);
+ 	stderr_isatty = isatty(STDERR_FILENO);
+@@ -827,7 +832,7 @@ main(
+ 		return SCRUB_RET_OPERROR;
+ 
+ 	/* Find the mount record for the passed-in argument. */
+-	if (stat(argv[optind], &ctx.mnt_sb) < 0) {
++	if (stat(ctx.actual_mntpoint, &ctx.mnt_sb) < 0) {
+ 		fprintf(stderr,
+ 			_("%s: could not stat: %s: %s\n"),
+ 			progname, argv[optind], strerror(errno));
+@@ -850,7 +855,7 @@ main(
+ 	}
+ 
+ 	fs_table_initialise(0, NULL, 0, NULL);
+-	fsp = fs_table_lookup_mount(ctx.mntpoint);
++	fsp = fs_table_lookup_mount(ctx.actual_mntpoint);
+ 	if (!fsp) {
+ 		fprintf(stderr, _("%s: Not a XFS mount point.\n"),
+ 				ctx.mntpoint);
+diff --git a/scrub/xfs_scrub.h b/scrub/xfs_scrub.h
+index dc45e486719..d1f0a1289b9 100644
+--- a/scrub/xfs_scrub.h
++++ b/scrub/xfs_scrub.h
+@@ -37,9 +37,12 @@ enum error_action {
+ struct scrub_ctx {
+ 	/* Immutable scrub state. */
+ 
+-	/* Strings we need for presentation */
++	/* Mountpoint we use for presentation */
+ 	char			*mntpoint;
+ 
++	/* Actual VFS path to the filesystem */
++	char			*actual_mntpoint;
++
+ 	/* Mountpoint info */
+ 	struct stat		mnt_sb;
+ 	struct statvfs		mnt_sv;
 
