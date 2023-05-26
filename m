@@ -2,41 +2,42 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 02EE3C7EE29
-	for <linux-xfs@archiver.kernel.org>; Fri, 26 May 2023 01:45:31 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D6403C77B7E
+	for <linux-xfs@archiver.kernel.org>; Fri, 26 May 2023 01:45:50 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229865AbjEZBp3 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 25 May 2023 21:45:29 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38070 "EHLO
+        id S241046AbjEZBpt (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 25 May 2023 21:45:49 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38352 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229530AbjEZBp2 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 25 May 2023 21:45:28 -0400
+        with ESMTP id S240830AbjEZBpq (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 25 May 2023 21:45:46 -0400
 Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 56021189
-        for <linux-xfs@vger.kernel.org>; Thu, 25 May 2023 18:45:27 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D99591A7
+        for <linux-xfs@vger.kernel.org>; Thu, 25 May 2023 18:45:42 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id E61F564C3A
-        for <linux-xfs@vger.kernel.org>; Fri, 26 May 2023 01:45:26 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 5028CC433EF;
-        Fri, 26 May 2023 01:45:26 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 754D364868
+        for <linux-xfs@vger.kernel.org>; Fri, 26 May 2023 01:45:42 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id D9AD4C4339B;
+        Fri, 26 May 2023 01:45:41 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1685065526;
-        bh=fYnePKyaAbKyqDlPzatUVuDomu10MyTs43Y5+Xp29Uk=;
+        s=k20201202; t=1685065541;
+        bh=ACWUbAJPvwy6v8VSuyozjniiUh2MxvCPIm2rfDLUR9I=;
         h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-        b=HtblTxxzUlr/YimdPUcIhP3j5PdM2yytJlF8jvpvnDrlo5+sPpvZDtnqpBlpmUyMF
-         DihlmUiIzDs1MXyesV0Pi57J3pKVw7/R4DIEzMVAu361s0EwjdevYfMU51Ekp0Cdz2
-         WNNJHn0BOAi+hy73f5OQXsXw7uV+3wdW+3M79tAZnb9kakoeoLlL+KsnVUCDIndDw9
-         jsy997NeWw/gGVTedNRQk9IIFfoIxBaC5Sog6kyjuA7wj86/rBJ24LwBwAFCC7nCXL
-         /6R6jMmFwcYs05n7i47Q5OXA8CRgSANFWuX5neprQ9AsR9htOaH0MYw86FKqisD6Ts
-         AAx+7EvuJD69Q==
-Date:   Thu, 25 May 2023 18:45:25 -0700
-Subject: [PATCH 6/9] xfs_scrub: clean up repair_item_difficulty a little
+        b=uPdhzFV6JfMSA08/6YKUB+D3Wwau3b4S7pK0fOM9opU4WLtWL6b6TzyjLHdbTYhOb
+         DQ9HYp2/Y8JCdem5fchvxit4ATsa4eV0ss/byhmNCoh6Sl0zvxI+Lt/UNJ2cCO/s+X
+         kDEPJUE8qmtFgqw5AYLFXoMyPrpoyAqzm6w1xxs6S+peU4/9EILyBqP/NYenFB3OCP
+         dfT8TMW2zXKrFWTXwi4u7HxTpolD89gMwZCwaaJ9BMMEai3xZjhp6+hos/QBS8D2xI
+         JUIjvvifLF7Evv+oyMlLnbxQ+GQ2e7sWn0SM1BGCF/otOqLpqtFruig2aiXkQInXLZ
+         SjUrPI6auHpTg==
+Date:   Thu, 25 May 2023 18:45:41 -0700
+Subject: [PATCH 7/9] xfs_scrub: check dependencies of a scrub type before
+ repairing
 From:   "Darrick J. Wong" <djwong@kernel.org>
 To:     djwong@kernel.org, cem@kernel.org
 Cc:     linux-xfs@vger.kernel.org
-Message-ID: <168506072101.3743400.5028071114532405072.stgit@frogsfrogsfrogs>
+Message-ID: <168506072115.3743400.3644762672989077433.stgit@frogsfrogsfrogs>
 In-Reply-To: <168506072015.3743400.5119599474014297677.stgit@frogsfrogsfrogs>
 References: <168506072015.3743400.5119599474014297677.stgit@frogsfrogsfrogs>
 User-Agent: StGit/0.19
@@ -49,46 +50,81 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-Document the flags handling in repair_item_difficulty.
+Now that we have a map of a scrub type to its dependent scrub types, use
+this information to avoid trying to fix higher level metadata before the
+lower levels have passed.
 
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 ---
- scrub/repair.c |   16 +++++++++++++---
- 1 file changed, 13 insertions(+), 3 deletions(-)
+ scrub/repair.c |   32 ++++++++++++++++++++++++++++++++
+ scrub/scrub.h  |    5 +++++
+ 2 files changed, 37 insertions(+)
 
 
 diff --git a/scrub/repair.c b/scrub/repair.c
-index 804596195cb..9de34eada04 100644
+index 9de34eada04..44e74306ba8 100644
 --- a/scrub/repair.c
 +++ b/scrub/repair.c
-@@ -340,6 +340,15 @@ repair_item_mustfix(
- 	}
+@@ -497,6 +497,29 @@ action_list_process(
+ 	return ret;
  }
  
-+/*
-+ * These scrub item states correspond to metadata that is inconsistent in some
-+ * way and must be repaired.  If too many metadata objects share these states,
-+ * this can make repairs difficult.
-+ */
-+#define HARDREPAIR_STATES	(SCRUB_ITEM_CORRUPT | \
-+				 SCRUB_ITEM_XCORRUPT | \
-+				 SCRUB_ITEM_XFAIL)
++/* Decide if the dependent scrub types of the given scrub type are ok. */
++static bool
++repair_item_dependencies_ok(
++	const struct scrub_item	*sri,
++	unsigned int		scrub_type)
++{
++	unsigned int		dep_mask = repair_deps[scrub_type];
++	unsigned int		b;
 +
- /* Determine if primary or secondary metadata are inconsistent. */
- unsigned int
- repair_item_difficulty(
-@@ -349,9 +358,10 @@ repair_item_difficulty(
- 	unsigned int		ret = 0;
- 
- 	foreach_scrub_type(scrub_type) {
--		if (!(sri->sri_state[scrub_type] & (XFS_SCRUB_OFLAG_CORRUPT |
--						    XFS_SCRUB_OFLAG_XCORRUPT |
--						    XFS_SCRUB_OFLAG_XFAIL)))
-+		unsigned int	state;
++	for (b = 0; dep_mask && b < XFS_SCRUB_TYPE_NR; b++, dep_mask >>= 1) {
++		if (!(dep_mask & 1))
++			continue;
++		/*
++		 * If this lower level object also needs repair, we can't fix
++		 * the higher level item.
++		 */
++		if (sri->sri_state[b] & SCRUB_ITEM_NEEDSREPAIR)
++			return false;
++	}
 +
-+		state = sri->sri_state[scrub_type] & HARDREPAIR_STATES;
-+		if (!state)
++	return true;
++}
++
+ /*
+  * For a given filesystem object, perform all repairs of a given class
+  * (corrupt, xcorrupt, xfail, preen) if the repair item says it's needed.
+@@ -536,6 +559,15 @@ repair_item_class(
+ 		if (!(sri->sri_state[scrub_type] & repair_mask))
  			continue;
  
- 		switch (scrub_type) {
++		/*
++		 * Don't try to repair higher level items if their lower-level
++		 * dependencies haven't been verified, unless this is our last
++		 * chance to fix things without complaint.
++		 */
++		if (!(flags & XRM_FINAL_WARNING) &&
++		    !repair_item_dependencies_ok(sri, scrub_type))
++			continue;
++
+ 		fix = xfs_repair_metadata(ctx, xfdp, scrub_type, sri, flags);
+ 		switch (fix) {
+ 		case CHECK_DONE:
+diff --git a/scrub/scrub.h b/scrub/scrub.h
+index 1cc638e88d7..a6f1f4c8573 100644
+--- a/scrub/scrub.h
++++ b/scrub/scrub.h
+@@ -43,6 +43,11 @@ enum check_outcome {
+ #define SCRUB_ITEM_REPAIR_XREF	(SCRUB_ITEM_XFAIL | \
+ 				 SCRUB_ITEM_XCORRUPT)
+ 
++/* Mask of bits signalling that a piece of metadata requires attention. */
++#define SCRUB_ITEM_NEEDSREPAIR	(SCRUB_ITEM_CORRUPT | \
++				 SCRUB_ITEM_XFAIL | \
++				 SCRUB_ITEM_XCORRUPT)
++
+ struct scrub_item {
+ 	/*
+ 	 * Information we need to call the scrub and repair ioctls.  Per-AG
 
