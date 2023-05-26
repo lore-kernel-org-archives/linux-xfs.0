@@ -2,41 +2,42 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6ABDAC77B7A
-	for <linux-xfs@archiver.kernel.org>; Fri, 26 May 2023 01:33:08 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2B29BC7EE29
+	for <linux-xfs@archiver.kernel.org>; Fri, 26 May 2023 01:33:27 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S240825AbjEZBdG (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 25 May 2023 21:33:06 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33088 "EHLO
+        id S241885AbjEZBdZ (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 25 May 2023 21:33:25 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33330 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S239784AbjEZBdC (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 25 May 2023 21:33:02 -0400
+        with ESMTP id S241891AbjEZBdX (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 25 May 2023 21:33:23 -0400
 Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0BED3125
-        for <linux-xfs@vger.kernel.org>; Thu, 25 May 2023 18:32:59 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id BBA771AC
+        for <linux-xfs@vger.kernel.org>; Thu, 25 May 2023 18:33:14 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 9BFFD60C2B
-        for <linux-xfs@vger.kernel.org>; Fri, 26 May 2023 01:32:58 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 0C524C433D2;
-        Fri, 26 May 2023 01:32:58 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 368FF64C35
+        for <linux-xfs@vger.kernel.org>; Fri, 26 May 2023 01:33:14 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 91033C433EF;
+        Fri, 26 May 2023 01:33:13 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1685064778;
-        bh=/R1vBsAdwHKv7TiO8MZ0fgdqeZyTZE0sGgQl8TI4wo0=;
+        s=k20201202; t=1685064793;
+        bh=idgc7wBpkpo+qbSvFP76+s1mao/x19xb3YKX/Gi6OYc=;
         h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-        b=suibbqHYl8T1wj6zjMgbE34xS1OoP+6DjscM+a/FWmugeP8lBQ7Yw/CSHcWqPtxf2
-         kc3WEe4KuDM0ejHiUz7y31uE8JXqozWx2eNN6U2SthrVkwuCs6hX92I5wPdkUwjDgg
-         4cKJLwt5wVaTr/oC7qd79LG1O0Z8tsvDs2xerdEWWPe9jdNBhKgj3YwuLjzz71p8w1
-         Z3txcEBeHS1CXUAxWNk3EHJyYs9gXG009me0r87UwiEOvPFgr2xg2PTBKdJK9dzTBY
-         r8KaJOKrlVI4sUhonX0p2e3XKNbehQWu6PeoGfVAiStJsDngjoWgqixsxXvgE9ExRn
-         YrKkIG5gOdmfA==
-Date:   Thu, 25 May 2023 18:32:57 -0700
-Subject: [PATCH 1/5] xfs: create a blob array data structure
+        b=sAy2swqxQQR3PbTkrGarVDWaNh5dOxZZAE+b/MUM0w5kJySi5d2h8wYPxtY09FYsF
+         IIJEhWhs+ABCTU6eK1DA74AIn4nG0KT9KV4pMbyt3GWcDzvrGTDnwKjt4LHy0xnUVz
+         OuaS2W5WAGAXuhPqlrLwJ+DbIbAY0ldBK/1Qbhb+XFWrAOh4ExhIGHrsoKisdPNmNG
+         KhTMd88MfXQ7gGzTOUVV+Ms+ZpIDxAWW5Y0b5I5/NwFBPQgCIH5m7hRLy1EwH9VjT0
+         Z1djXJZQV482TAkoycxzyZYedBBfmP9KYil7/Aes/mQkTk56phZ8VXbVFGePEiIPd3
+         AeW0hnYusgiGg==
+Date:   Thu, 25 May 2023 18:33:13 -0700
+Subject: [PATCH 2/5] xfs: use atomic extent swapping to fix user file fork
+ data
 From:   "Darrick J. Wong" <djwong@kernel.org>
 To:     djwong@kernel.org
 Cc:     linux-xfs@vger.kernel.org
-Message-ID: <168506066839.3737146.1136039020779048979.stgit@frogsfrogsfrogs>
+Message-ID: <168506066853.3737146.12565480320538538864.stgit@frogsfrogsfrogs>
 In-Reply-To: <168506066818.3737146.14391441616329630322.stgit@frogsfrogsfrogs>
 References: <168506066818.3737146.14391441616329630322.stgit@frogsfrogsfrogs>
 User-Agent: StGit/0.19
@@ -49,222 +50,309 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-Create a simple 'blob array' data structure for storage of arbitrarily
-sized metadata objects that will be used to reconstruct metadata.  For
-the intended usage (temporarily storing extended attribute names and
-values) we only have to support storing objects and retrieving them.
-Use the xfile abstraction to store the attribute information in memory
-that can be swapped out.
+Build on the code that was recently added to the temporary repair file
+code so that we can atomically switch the contents of any file fork,
+even if the fork is in local format.  The upcoming functions to repair
+xattrs, directories, and symlinks will need that capability.
+
+Repair can lock out access to these user files by holding IOLOCK_EXCL on
+these user files.  Therefore, it is safe to drop the ILOCK of both the
+file being repaired and the tempfile being used for staging, and cancel
+the scrub transaction.  We do this so that we can reuse the resource
+estimation and transaction allocation functions used by a regular file
+exchange operation.
 
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 ---
- fs/xfs/Makefile       |    1 
- fs/xfs/scrub/xfblob.c |  152 +++++++++++++++++++++++++++++++++++++++++++++++++
- fs/xfs/scrub/xfblob.h |   25 ++++++++
- 3 files changed, 178 insertions(+)
- create mode 100644 fs/xfs/scrub/xfblob.c
- create mode 100644 fs/xfs/scrub/xfblob.h
+ fs/xfs/libxfs/xfs_swapext.c |    2 
+ fs/xfs/libxfs/xfs_swapext.h |    1 
+ fs/xfs/scrub/tempfile.c     |  195 +++++++++++++++++++++++++++++++++++++++++++
+ fs/xfs/scrub/tempfile.h     |    3 +
+ fs/xfs/scrub/tempswap.h     |    2 
+ 5 files changed, 202 insertions(+), 1 deletion(-)
 
 
-diff --git a/fs/xfs/Makefile b/fs/xfs/Makefile
-index 9e3d2fdfb9d7..589e18e7886c 100644
---- a/fs/xfs/Makefile
-+++ b/fs/xfs/Makefile
-@@ -204,6 +204,7 @@ xfs-y				+= $(addprefix scrub/, \
- 				   repair.o \
- 				   rmap_repair.o \
- 				   tempfile.o \
-+				   xfblob.o \
- 				   xfbtree.o \
- 				   )
+diff --git a/fs/xfs/libxfs/xfs_swapext.c b/fs/xfs/libxfs/xfs_swapext.c
+index b00d021b7d93..3057d23ed75d 100644
+--- a/fs/xfs/libxfs/xfs_swapext.c
++++ b/fs/xfs/libxfs/xfs_swapext.c
+@@ -782,7 +782,7 @@ xfs_swapext_rmapbt_blocks(
+ }
  
-diff --git a/fs/xfs/scrub/xfblob.c b/fs/xfs/scrub/xfblob.c
-new file mode 100644
-index 000000000000..b0d253bbbaa6
---- /dev/null
-+++ b/fs/xfs/scrub/xfblob.c
-@@ -0,0 +1,152 @@
-+// SPDX-License-Identifier: GPL-2.0-or-later
-+/*
-+ * Copyright (C) 2021-2023 Oracle.  All Rights Reserved.
-+ * Author: Darrick J. Wong <djwong@kernel.org>
-+ */
-+#include "xfs.h"
-+#include "xfs_fs.h"
-+#include "xfs_shared.h"
-+#include "xfs_format.h"
-+#include "scrub/scrub.h"
-+#include "scrub/xfile.h"
-+#include "scrub/xfarray.h"
-+#include "scrub/xfblob.h"
-+
-+/*
-+ * XFS Blob Storage
-+ * ================
-+ * Stores and retrieves blobs using an xfile.  Objects are appended to the file
-+ * and the offset is returned as a magic cookie for retrieval.
-+ */
-+
-+#define XB_KEY_MAGIC	0xABAADDAD
-+struct xb_key {
-+	uint32_t		xb_magic;  /* XB_KEY_MAGIC */
-+	uint32_t		xb_size;   /* size of the blob, in bytes */
-+	loff_t			xb_offset; /* byte offset of this key */
-+	/* blob comes after here */
-+} __packed;
-+
-+/* Initialize a blob storage object. */
+ /* Estimate the bmbt and rmapbt overhead required to exchange extents. */
+-static int
 +int
-+xfblob_create(
-+	struct xfs_mount	*mp,
-+	const char		*description,
-+	struct xfblob		**blobp)
+ xfs_swapext_estimate_overhead(
+ 	struct xfs_swapext_req	*req)
+ {
+diff --git a/fs/xfs/libxfs/xfs_swapext.h b/fs/xfs/libxfs/xfs_swapext.h
+index ac13b0e4a74e..0d258a8d8b5e 100644
+--- a/fs/xfs/libxfs/xfs_swapext.h
++++ b/fs/xfs/libxfs/xfs_swapext.h
+@@ -148,6 +148,7 @@ unsigned int xfs_swapext_reflink_prep(const struct xfs_swapext_req *req);
+ void xfs_swapext_reflink_finish(struct xfs_trans *tp,
+ 		const struct xfs_swapext_req *req, unsigned int reflink_state);
+ 
++int xfs_swapext_estimate_overhead(struct xfs_swapext_req *req);
+ int xfs_swapext_estimate(struct xfs_swapext_req *req);
+ 
+ extern struct kmem_cache	*xfs_swapext_intent_cache;
+diff --git a/fs/xfs/scrub/tempfile.c b/fs/xfs/scrub/tempfile.c
+index dbc8a1ef37a4..ae5f9f574b06 100644
+--- a/fs/xfs/scrub/tempfile.c
++++ b/fs/xfs/scrub/tempfile.c
+@@ -239,6 +239,28 @@ xrep_tempfile_iunlock(
+ 	sc->temp_ilock_flags &= ~XFS_ILOCK_EXCL;
+ }
+ 
++/*
++ * Begin the process of making changes to both the file being scrubbed and
++ * the temporary file by taking ILOCK_EXCL on both.
++ */
++void
++xrep_tempfile_ilock_both(
++	struct xfs_scrub	*sc)
 +{
-+	struct xfblob		*blob;
-+	struct xfile		*xfile;
++	xfs_lock_two_inodes(sc->ip, XFS_ILOCK_EXCL, sc->tempip, XFS_ILOCK_EXCL);
++	sc->ilock_flags |= XFS_ILOCK_EXCL;
++	sc->temp_ilock_flags |= XFS_ILOCK_EXCL;
++}
++
++/* Unlock ILOCK_EXCL on both files. */
++void
++xrep_tempfile_iunlock_both(
++	struct xfs_scrub	*sc)
++{
++	xrep_tempfile_iunlock(sc);
++	xchk_iunlock(sc, XFS_ILOCK_EXCL);
++}
++
+ /* Release the temporary file. */
+ void
+ xrep_tempfile_rele(
+@@ -524,6 +546,88 @@ xrep_tempswap_prep_request(
+ 	return 0;
+ }
+ 
++/*
++ * Fill out the swapext resource estimation structures in preparation for
++ * swapping the contents of a metadata file that we've rebuilt in the temp
++ * file.  Caller must hold IOLOCK_EXCL but not ILOCK_EXCL on both files.
++ */
++STATIC int
++xrep_tempswap_estimate(
++	struct xfs_scrub	*sc,
++	struct xrep_tempswap	*tx)
++{
++	struct xfs_swapext_req	*req = &tx->req;
++	struct xfs_ifork	*ifp;
++	struct xfs_ifork	*tifp;
++	int			state = 0;
++
++	/*
++	 * Deal with either fork being in local format.  The swapext code only
++	 * knows how to exchange block mappings for regular files, so we only
++	 * have to know about local format for xattrs and directories.
++	 */
++	ifp = xfs_ifork_ptr(sc->ip, req->whichfork);
++	if (ifp->if_format == XFS_DINODE_FMT_LOCAL)
++		state |= 1;
++
++	tifp = xfs_ifork_ptr(sc->tempip, req->whichfork);
++	if (tifp->if_format == XFS_DINODE_FMT_LOCAL)
++		state |= 2;
++
++	switch (state) {
++	case 0:
++		/* Both files have mapped extents; use the regular estimate. */
++		return xfs_xchg_range_estimate(req);
++	case 1:
++		/*
++		 * The file being repaired is in local format, but the temp
++		 * file has mapped extents.  To perform the swap, the file
++		 * being repaired must have its shorform data converted to a
++		 * fsblock, and the fork changed to extents format.  We need
++		 * one resblk for the conversion; the number of exchanges is
++		 * (worst case) the temporary file's extent count plus the
++		 * block we converted.
++		 */
++		req->ip1_bcount = sc->tempip->i_nblocks;
++		req->ip2_bcount = 1;
++		req->nr_exchanges = 1 + tifp->if_nextents;
++		req->resblks = 1;
++		break;
++	case 2:
++		/*
++		 * The temporary file is in local format, but the file being
++		 * repaired has mapped extents.  To perform the swap, the temp
++		 * file must have its shortform data converted to an fsblock,
++		 * and the fork changed to extents format.  We need one resblk
++		 * for the conversion; the number of exchanges is (worst case)
++		 * the extent count of the file being repaired plus the block
++		 * we converted.
++		 */
++		req->ip1_bcount = 1;
++		req->ip2_bcount = sc->ip->i_nblocks;
++		req->nr_exchanges = 1 + ifp->if_nextents;
++		req->resblks = 1;
++		break;
++	case 3:
++		/*
++		 * Both forks are in local format.  To perform the swap, both
++		 * files must have their shortform data converted to fsblocks,
++		 * and both forks must be converted to extents format.  We
++		 * need two resblks for the two conversions, and the number of
++		 * exchanges is 1 since there's only one block at fileoff 0.
++		 * Presumably, the caller could not exchange the two inode fork
++		 * areas directly.
++		 */
++		req->ip1_bcount = 1;
++		req->ip2_bcount = 1;
++		req->nr_exchanges = 1;
++		req->resblks = 2;
++		break;
++	}
++
++	return xfs_swapext_estimate_overhead(req);
++}
++
+ /*
+  * Obtain a quota reservation to make sure we don't hit EDQUOT.  We can skip
+  * this if quota enforcement is disabled or if both inodes' dquots are the
+@@ -610,6 +714,49 @@ xrep_tempswap_trans_reserve(
+ 	return xrep_tempswap_reserve_quota(sc, tx);
+ }
+ 
++/*
++ * Allocate a transaction, ILOCK the temporary file and the file being
++ * repaired, and join them to the transaction in preparation to swap fork
++ * contents as part of a repair operation.
++ */
++int
++xrep_tempswap_trans_alloc(
++	struct xfs_scrub	*sc,
++	int			whichfork,
++	struct xrep_tempswap	*tx)
++{
++	unsigned int		flags = 0;
 +	int			error;
 +
-+	error = xfile_create(mp, description, 0, &xfile);
++	ASSERT(sc->tp == NULL);
++
++	error = xrep_tempswap_prep_request(sc, whichfork, tx);
 +	if (error)
 +		return error;
 +
-+	blob = kmalloc(sizeof(struct xfblob), XCHK_GFP_FLAGS);
-+	if (!blob) {
-+		error = -ENOMEM;
-+		goto out_xfile;
-+	}
-+
-+	blob->xfile = xfile;
-+	blob->last_offset = PAGE_SIZE;
-+
-+	*blobp = blob;
-+	return 0;
-+
-+out_xfile:
-+	xfile_destroy(xfile);
-+	return error;
-+}
-+
-+/* Destroy a blob storage object. */
-+void
-+xfblob_destroy(
-+	struct xfblob	*blob)
-+{
-+	xfile_destroy(blob->xfile);
-+	kfree(blob);
-+}
-+
-+/* Retrieve a blob. */
-+int
-+xfblob_load(
-+	struct xfblob	*blob,
-+	xfblob_cookie	cookie,
-+	void		*ptr,
-+	uint32_t	size)
-+{
-+	struct xb_key	key;
-+	int		error;
-+
-+	error = xfile_obj_load(blob->xfile, &key, sizeof(key), cookie);
++	error = xrep_tempswap_estimate(sc, tx);
 +	if (error)
 +		return error;
 +
-+	if (key.xb_magic != XB_KEY_MAGIC || key.xb_offset != cookie) {
-+		ASSERT(0);
-+		return -ENODATA;
-+	}
-+	if (size < key.xb_size) {
-+		ASSERT(0);
-+		return -EFBIG;
-+	}
++	if (xfs_has_lazysbcount(sc->mp))
++		flags |= XFS_TRANS_RES_FDBLKS;
 +
-+	return xfile_obj_load(blob->xfile, ptr, key.xb_size,
-+			cookie + sizeof(key));
-+}
-+
-+/* Store a blob. */
-+int
-+xfblob_store(
-+	struct xfblob	*blob,
-+	xfblob_cookie	*cookie,
-+	const void	*ptr,
-+	uint32_t	size)
-+{
-+	struct xb_key	key = {
-+		.xb_offset = blob->last_offset,
-+		.xb_magic = XB_KEY_MAGIC,
-+		.xb_size = size,
-+	};
-+	loff_t		pos = blob->last_offset;
-+	int		error;
-+
-+	error = xfile_obj_store(blob->xfile, &key, sizeof(key), pos);
++	error = xrep_tempswap_grab_log_assist(sc);
 +	if (error)
 +		return error;
 +
-+	pos += sizeof(key);
-+	error = xfile_obj_store(blob->xfile, ptr, size, pos);
-+	if (error)
-+		goto out_err;
-+
-+	*cookie = blob->last_offset;
-+	blob->last_offset += sizeof(key) + size;
-+	return 0;
-+out_err:
-+	xfile_discard(blob->xfile, blob->last_offset, sizeof(key));
-+	return error;
-+}
-+
-+/* Free a blob. */
-+int
-+xfblob_free(
-+	struct xfblob	*blob,
-+	xfblob_cookie	cookie)
-+{
-+	struct xb_key	key;
-+	int		error;
-+
-+	error = xfile_obj_load(blob->xfile, &key, sizeof(key), cookie);
++	error = xfs_trans_alloc(sc->mp, &M_RES(sc->mp)->tr_itruncate,
++			tx->req.resblks, 0, flags, &sc->tp);
 +	if (error)
 +		return error;
 +
-+	if (key.xb_magic != XB_KEY_MAGIC || key.xb_offset != cookie) {
-+		ASSERT(0);
-+		return -ENODATA;
-+	}
++	sc->temp_ilock_flags |= XFS_ILOCK_EXCL;
++	sc->ilock_flags |= XFS_ILOCK_EXCL;
++	xfs_xchg_range_ilock(sc->tp, sc->ip, sc->tempip);
 +
-+	xfile_discard(blob->xfile, cookie, sizeof(key) + key.xb_size);
-+	return 0;
++	return xrep_tempswap_reserve_quota(sc, tx);
 +}
-diff --git a/fs/xfs/scrub/xfblob.h b/fs/xfs/scrub/xfblob.h
-new file mode 100644
-index 000000000000..874ce350b38c
---- /dev/null
-+++ b/fs/xfs/scrub/xfblob.h
-@@ -0,0 +1,25 @@
-+/* SPDX-License-Identifier: GPL-2.0-or-later */
++
+ /* Swap forks between the file being repaired and the temporary file. */
+ int
+ xrep_tempswap_contents(
+@@ -641,3 +788,51 @@ xrep_tempswap_contents(
+ 
+ 	return 0;
+ }
++
 +/*
-+ * Copyright (C) 2021-2023 Oracle.  All Rights Reserved.
-+ * Author: Darrick J. Wong <djwong@kernel.org>
++ * Write local format data from one of the temporary file's forks into the same
++ * fork of file being repaired, and swap the file sizes, if appropriate.
++ * Caller must ensure that the file being repaired has enough fork space to
++ * hold all the bytes.
 + */
-+#ifndef __XFS_SCRUB_XFBLOB_H__
-+#define __XFS_SCRUB_XFBLOB_H__
++void
++xrep_tempfile_copyout_local(
++	struct xfs_scrub	*sc,
++	int			whichfork)
++{
++	struct xfs_ifork	*temp_ifp;
++	struct xfs_ifork	*ifp;
++	unsigned int		ilog_flags = XFS_ILOG_CORE;
 +
-+struct xfblob {
-+	struct xfile	*xfile;
-+	loff_t		last_offset;
-+};
++	temp_ifp = xfs_ifork_ptr(sc->tempip, whichfork);
++	ifp = xfs_ifork_ptr(sc->ip, whichfork);
 +
-+typedef loff_t		xfblob_cookie;
++	ASSERT(temp_ifp != NULL);
++	ASSERT(ifp != NULL);
++	ASSERT(temp_ifp->if_format == XFS_DINODE_FMT_LOCAL);
++	ASSERT(ifp->if_format == XFS_DINODE_FMT_LOCAL);
 +
-+int xfblob_create(struct xfs_mount *mp, const char *descr,
-+		struct xfblob **blobp);
-+void xfblob_destroy(struct xfblob *blob);
-+int xfblob_load(struct xfblob *blob, xfblob_cookie cookie, void *ptr,
-+		uint32_t size);
-+int xfblob_store(struct xfblob *blob, xfblob_cookie *cookie, const void *ptr,
-+		uint32_t size);
-+int xfblob_free(struct xfblob *blob, xfblob_cookie cookie);
++	switch (whichfork) {
++	case XFS_DATA_FORK:
++		ASSERT(sc->tempip->i_disk_size <= xfs_inode_data_fork_size(sc->ip));
++		break;
++	case XFS_ATTR_FORK:
++		ASSERT(sc->tempip->i_forkoff >= sc->ip->i_forkoff);
++		break;
++	default:
++		ASSERT(0);
++		return;
++	}
 +
-+#endif /* __XFS_SCRUB_XFBLOB_H__ */
++	xfs_idestroy_fork(ifp);
++	xfs_init_local_fork(sc->ip, whichfork, temp_ifp->if_u1.if_data,
++			temp_ifp->if_bytes);
++
++	if (whichfork == XFS_DATA_FORK) {
++		i_size_write(VFS_I(sc->ip), i_size_read(VFS_I(sc->tempip)));
++		sc->ip->i_disk_size = sc->tempip->i_disk_size;
++	}
++
++	ilog_flags |= xfs_ilog_fdata(whichfork);
++	xfs_trans_log_inode(sc->tp, sc->ip, ilog_flags);
++}
+diff --git a/fs/xfs/scrub/tempfile.h b/fs/xfs/scrub/tempfile.h
+index e7be1d5f1f54..c8ce198daf3a 100644
+--- a/fs/xfs/scrub/tempfile.h
++++ b/fs/xfs/scrub/tempfile.h
+@@ -17,6 +17,8 @@ void xrep_tempfile_iounlock(struct xfs_scrub *sc);
+ void xrep_tempfile_ilock(struct xfs_scrub *sc);
+ bool xrep_tempfile_ilock_nowait(struct xfs_scrub *sc);
+ void xrep_tempfile_iunlock(struct xfs_scrub *sc);
++void xrep_tempfile_iunlock_both(struct xfs_scrub *sc);
++void xrep_tempfile_ilock_both(struct xfs_scrub *sc);
+ 
+ int xrep_tempfile_prealloc(struct xfs_scrub *sc, xfs_fileoff_t off,
+ 		xfs_filblks_t len);
+@@ -32,6 +34,7 @@ int xrep_tempfile_copyin(struct xfs_scrub *sc, xfs_fileoff_t off,
+ int xrep_tempfile_set_isize(struct xfs_scrub *sc, unsigned long long isize);
+ 
+ int xrep_tempfile_roll_trans(struct xfs_scrub *sc);
++void xrep_tempfile_copyout_local(struct xfs_scrub *sc, int whichfork);
+ #else
+ static inline void xrep_tempfile_iolock_both(struct xfs_scrub *sc)
+ {
+diff --git a/fs/xfs/scrub/tempswap.h b/fs/xfs/scrub/tempswap.h
+index 4d7d7e1575f8..ca4b29700d32 100644
+--- a/fs/xfs/scrub/tempswap.h
++++ b/fs/xfs/scrub/tempswap.h
+@@ -14,6 +14,8 @@ struct xrep_tempswap {
+ int xrep_tempswap_grab_log_assist(struct xfs_scrub *sc);
+ int xrep_tempswap_trans_reserve(struct xfs_scrub *sc, int whichfork,
+ 		struct xrep_tempswap *ti);
++int xrep_tempswap_trans_alloc(struct xfs_scrub *sc, int whichfork,
++		struct xrep_tempswap *ti);
+ 
+ int xrep_tempswap_contents(struct xfs_scrub *sc, struct xrep_tempswap *ti);
+ #endif /* CONFIG_XFS_ONLINE_REPAIR */
 
