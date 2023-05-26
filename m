@@ -2,30 +2,30 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 84FDBC77B7A
-	for <linux-xfs@archiver.kernel.org>; Fri, 26 May 2023 07:33:47 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id EC065C7EE37
+	for <linux-xfs@archiver.kernel.org>; Fri, 26 May 2023 07:33:48 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S242424AbjEZHdo (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 26 May 2023 03:33:44 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60498 "EHLO
+        id S242442AbjEZHdr (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 26 May 2023 03:33:47 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60514 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S242409AbjEZHdn (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 26 May 2023 03:33:43 -0400
+        with ESMTP id S242427AbjEZHdo (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 26 May 2023 03:33:44 -0400
 Received: from bombadil.infradead.org (bombadil.infradead.org [IPv6:2607:7c80:54:3::133])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9EDE3116;
-        Fri, 26 May 2023 00:33:42 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C4BDD114;
+        Fri, 26 May 2023 00:33:43 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
         d=infradead.org; s=bombadil.20210309; h=Sender:Content-Transfer-Encoding:
         MIME-Version:References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:
         Reply-To:Content-Type:Content-ID:Content-Description;
-        bh=E+NZJmg2wGtl9UTyedalDySM8eWxNnKVjwcpkkZSi1c=; b=k7xswGivErozFTM0k3Rp4cWzQN
-        Dude5lKSUZQHlx044tzpe9pekiIonmIyRsCOSAE/ne2v3XWULeyuNagveDJKhCzwzIwpSet/GGPTJ
-        8L/umLYOEmo939tVe8b1LzFSz79yTjVEuVIgi+ODI0gNHPJzRXAzmGEU0uy4w/FXD8FDw1HodRkaX
-        btZ7Pstk2ZQrBoYKCxDF4cnrUuEu7/zPG5VMnZ4MmRE8wjWzPVYHyD4I14U/h9QOMlW+outkkAGYH
-        SVGlcZvTv6O1xgbkdMhgnkGWCImDJG2q5kh2QMmZXxgVfAIEwdNjbjI5gtlCTmuU6FJUWDjjt1SoK
-        m8YH8JIg==;
+        bh=mp0R5kJjV9ATA7f3wCKoUGxZA6HQSlfyegxBHwX5Bjk=; b=JFyweRH3uI2LUIKa6CevDLZKGx
+        TKIgB0Y1EjmjhgQtYqrSPkMNG5keYraDpb6BQnGzIKLhMTVo0oblR4jwgMIB6HIdUXSpGXq28Xvyh
+        mtYzmXcLkLNuZP2TpCA4lzDp1RA2SxN0/ENDC+tnH0vBOiJFjpSdfkBUaUztNotfiYNvg1cz1G7/1
+        zF7NHp330UXzfhSxJuQ3/eJkFTHFymVoG8RVBzcYY3SMWY45Ut2V3AZToDDkiy4FZEh+w6+Ma+nuF
+        OtmnMOJt2rZqs5q6W/LuP6PHm5KmPG18Oz3Qh8+WAau3MwsT+44Wt7PDwRVd38S7pB26tTKLzCQ3m
+        oxCy1d7A==;
 Received: from mcgrof by bombadil.infradead.org with local (Exim 4.96 #2 (Red Hat Linux))
-        id 1q2RxB-001RdY-0Z;
+        id 1q2RxA-001RdR-3D;
         Fri, 26 May 2023 07:33:37 +0000
 From:   Luis Chamberlain <mcgrof@kernel.org>
 To:     axboe@kernel.dk, agk@redhat.com, snitzer@kernel.org,
@@ -39,9 +39,9 @@ Cc:     patches@lists.linux.dev, linux-block@vger.kernel.org,
         willy@infradead.org, hare@suse.de, p.raghav@samsung.com,
         da.gomez@samsung.com, rohan.puri@samsung.com,
         rpuri.linux@gmail.com, kbusch@kernel.org, mcgrof@kernel.org
-Subject: [PATCH v2 4/5] dm bufio: simplify by using PAGE_SECTORS_SHIFT
-Date:   Fri, 26 May 2023 00:33:35 -0700
-Message-Id: <20230526073336.344543-5-mcgrof@kernel.org>
+Subject: [PATCH v2 1/5] block: annotate bdev_disk_changed() deprecation with a symbol namespace
+Date:   Fri, 26 May 2023 00:33:32 -0700
+Message-Id: <20230526073336.344543-2-mcgrof@kernel.org>
 X-Mailer: git-send-email 2.38.1
 In-Reply-To: <20230526073336.344543-1-mcgrof@kernel.org>
 References: <20230526073336.344543-1-mcgrof@kernel.org>
@@ -52,38 +52,60 @@ Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-The PAGE_SHIFT - SECTOR_SHIFT constant be replaced with PAGE_SECTORS_SHIFT
-defined in linux/blt_types.h, which is included by linux/blkdev.h.
-
-This produces no functional changes.
+This ensures no other users pop up by mistake easily and provides
+us a with an easy vehicle to do the same with other routines should
+we need it later.
 
 Signed-off-by: Luis Chamberlain <mcgrof@kernel.org>
 ---
- drivers/md/dm-bufio.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+ block/partitions/core.c         | 6 +-----
+ drivers/block/loop.c            | 2 ++
+ drivers/s390/block/dasd_genhd.c | 2 ++
+ 3 files changed, 5 insertions(+), 5 deletions(-)
 
-diff --git a/drivers/md/dm-bufio.c b/drivers/md/dm-bufio.c
-index eea977662e81..08c4730e1819 100644
---- a/drivers/md/dm-bufio.c
-+++ b/drivers/md/dm-bufio.c
-@@ -1152,7 +1152,7 @@ static void *alloc_buffer_data(struct dm_bufio_client *c, gfp_t gfp_mask,
- 	    gfp_mask & __GFP_NORETRY) {
- 		*data_mode = DATA_MODE_GET_FREE_PAGES;
- 		return (void *)__get_free_pages(gfp_mask,
--						c->sectors_per_block_bits - (PAGE_SHIFT - SECTOR_SHIFT));
-+						c->sectors_per_block_bits - (PAGE_SECTORS_SHIFT));
- 	}
+diff --git a/block/partitions/core.c b/block/partitions/core.c
+index 49e0496ff23c..6f18444be4fe 100644
+--- a/block/partitions/core.c
++++ b/block/partitions/core.c
+@@ -690,11 +690,7 @@ int bdev_disk_changed(struct gendisk *disk, bool invalidate)
  
- 	*data_mode = DATA_MODE_VMALLOC;
-@@ -1190,7 +1190,7 @@ static void free_buffer_data(struct dm_bufio_client *c,
+ 	return ret;
+ }
+-/*
+- * Only exported for loop and dasd for historic reasons.  Don't use in new
+- * code!
+- */
+-EXPORT_SYMBOL_GPL(bdev_disk_changed);
++EXPORT_SYMBOL_NS_GPL(bdev_disk_changed, BLOCK_DEPRECATED);
  
- 	case DATA_MODE_GET_FREE_PAGES:
- 		free_pages((unsigned long)data,
--			   c->sectors_per_block_bits - (PAGE_SHIFT - SECTOR_SHIFT));
-+			   c->sectors_per_block_bits - (PAGE_SECTORS_SHIFT));
- 		break;
+ void *read_part_sector(struct parsed_partitions *state, sector_t n, Sector *p)
+ {
+diff --git a/drivers/block/loop.c b/drivers/block/loop.c
+index bc31bb7072a2..50aa5b4c0c56 100644
+--- a/drivers/block/loop.c
++++ b/drivers/block/loop.c
+@@ -37,6 +37,8 @@
+ #include <linux/spinlock.h>
+ #include <uapi/linux/loop.h>
  
- 	case DATA_MODE_VMALLOC:
++MODULE_IMPORT_NS(BLOCK_DEPRECATED);
++
+ /* Possible states of device */
+ enum {
+ 	Lo_unbound,
+diff --git a/drivers/s390/block/dasd_genhd.c b/drivers/s390/block/dasd_genhd.c
+index 998a961e1704..5ea244aec534 100644
+--- a/drivers/s390/block/dasd_genhd.c
++++ b/drivers/s390/block/dasd_genhd.c
+@@ -25,6 +25,8 @@
+ 
+ #include "dasd_int.h"
+ 
++MODULE_IMPORT_NS(BLOCK_DEPRECATED);
++
+ static unsigned int queue_depth = 32;
+ static unsigned int nr_hw_queues = 4;
+ 
 -- 
 2.39.2
 
