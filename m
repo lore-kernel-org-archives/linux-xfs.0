@@ -2,41 +2,41 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1ABC4C77B7A
-	for <linux-xfs@archiver.kernel.org>; Fri, 26 May 2023 00:55:34 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0E05CC77B7A
+	for <linux-xfs@archiver.kernel.org>; Fri, 26 May 2023 00:55:49 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230465AbjEZAzc (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 25 May 2023 20:55:32 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50246 "EHLO
+        id S230126AbjEZAzs (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 25 May 2023 20:55:48 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50476 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S234388AbjEZAzb (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 25 May 2023 20:55:31 -0400
+        with ESMTP id S229567AbjEZAzr (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 25 May 2023 20:55:47 -0400
 Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8043D1A4
-        for <linux-xfs@vger.kernel.org>; Thu, 25 May 2023 17:55:30 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1C87012E
+        for <linux-xfs@vger.kernel.org>; Thu, 25 May 2023 17:55:46 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 14C00617B3
-        for <linux-xfs@vger.kernel.org>; Fri, 26 May 2023 00:55:30 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 76707C433D2;
-        Fri, 26 May 2023 00:55:29 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id A87BB61B75
+        for <linux-xfs@vger.kernel.org>; Fri, 26 May 2023 00:55:45 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 1497CC433D2;
+        Fri, 26 May 2023 00:55:45 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1685062529;
-        bh=TWjZ6fVplkgZS9UykjnHITsSA7XwYwh8ggR8iFxoQIo=;
+        s=k20201202; t=1685062545;
+        bh=VRP1zBFoWBI3997pIeRxBdf6s0rKkbk+kZ1gwX37bBI=;
         h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-        b=UVbJa3okK8t5fIYzC1ZpebIoAdnjOfiAGs9LGET8F3CJVgbWioHLVn0wtVEaudBPV
-         TLWMcNpsoyt1sr6PZFIUPx2XfRKXYKOtV3W2BYY0V0JgOPE60LY5nLGlkcZAt7Hr0g
-         /sSnHONFwxswbd0nJS4yOJZhSZfZsbnzjqUEfyKVcu6xaqFo1wy4Fzwzb3+navSUCD
-         kCgPqm8rOvYqEmDUJ89MAw55iqN/d94HOCq1S9y68o3obulMM0itnnE+cwJWodNqaQ
-         po1LVhDXf5y26mZeYF/gTMlHjMKVrmSqPHVcINaB89+116bGxRt76fcWtTTgfH+Qrs
-         4OPx8dmK1Qr+g==
-Date:   Thu, 25 May 2023 17:55:29 -0700
-Subject: [PATCH 2/4] xfs: create a new inode fork block unmap helper
+        b=c22AFxKVXBvhqh10MxDv7/Devjj5uCIrdOiXEMEfppqOQyiZKO9BR8LjZNtTc5l4X
+         Ml6D9PExdKFHPX5UxZy5HNvS8hqOhPVM/d7aKWSegqfRsr7Y/iuvuFuf6zPtHlsBnY
+         KGRs2ALYYwvaskZNoJL4XjSV7KtvUg0mFRT4T7rbyCr0AMuc5YQwM3gYU2AkTiSFzp
+         c+pyVzSlZkhy7s3wFvh9APSDpbbZHcYQq2Oy6u3OoH4Y9f15OGvWf6HHZY85cSM2be
+         N2OMohWVi2/8bV+lOahwqhKTnhLaonhO6V2ctoIo9DKX24tz8bipwGTq5u8unzapyA
+         G5BbZwiCFXz8g==
+Date:   Thu, 25 May 2023 17:55:44 -0700
+Subject: [PATCH 3/4] xfs: online repair of realtime bitmaps
 From:   "Darrick J. Wong" <djwong@kernel.org>
 To:     djwong@kernel.org
 Cc:     linux-xfs@vger.kernel.org
-Message-ID: <168506059129.3730797.3163867418022885866.stgit@frogsfrogsfrogs>
+Message-ID: <168506059143.3730797.15513613095209946178.stgit@frogsfrogsfrogs>
 In-Reply-To: <168506059095.3730797.12158750493561425588.stgit@frogsfrogsfrogs>
 References: <168506059095.3730797.12158750493561425588.stgit@frogsfrogsfrogs>
 User-Agent: StGit/0.19
@@ -49,123 +49,180 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-Create a new helper to unmap blocks from an inode's fork.
+Rebuild the realtime bitmap from the realtime rmap btree.
 
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 ---
- fs/xfs/libxfs/xfs_bmap.c |   39 +++++++++++++++++++++++++++++++++++++++
- fs/xfs/libxfs/xfs_bmap.h |    2 ++
- fs/xfs/xfs_inode.c       |   24 ++++--------------------
- 3 files changed, 45 insertions(+), 20 deletions(-)
+ fs/xfs/Makefile                |    4 +++
+ fs/xfs/scrub/repair.h          |   13 +++++++++
+ fs/xfs/scrub/rtbitmap.c        |   10 ++++++-
+ fs/xfs/scrub/rtbitmap_repair.c |   56 ++++++++++++++++++++++++++++++++++++++++
+ fs/xfs/scrub/scrub.c           |    2 +
+ 5 files changed, 83 insertions(+), 2 deletions(-)
+ create mode 100644 fs/xfs/scrub/rtbitmap_repair.c
 
 
-diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
-index 3cbc4d0db47f..18bfa70a90b3 100644
---- a/fs/xfs/libxfs/xfs_bmap.c
-+++ b/fs/xfs/libxfs/xfs_bmap.c
-@@ -6240,3 +6240,42 @@ xfs_bmap_validate_extent(
- 	return xfs_bmap_validate_extent_raw(ip->i_mount,
- 			XFS_IS_REALTIME_INODE(ip), whichfork, irec);
- }
+diff --git a/fs/xfs/Makefile b/fs/xfs/Makefile
+index d3da47be96d4..d0d6d52c7ff7 100644
+--- a/fs/xfs/Makefile
++++ b/fs/xfs/Makefile
+@@ -189,5 +189,9 @@ xfs-y				+= $(addprefix scrub/, \
+ 				   refcount_repair.o \
+ 				   repair.o \
+ 				   )
 +
-+/*
-+ * Used in xfs_itruncate_extents().  This is the maximum number of extents
-+ * freed from a file in a single transaction.
-+ */
-+#define	XFS_ITRUNC_MAX_EXTENTS	2
++xfs-$(CONFIG_XFS_RT)		+= $(addprefix scrub/, \
++				   rtbitmap_repair.o \
++				   )
+ endif
+ endif
+diff --git a/fs/xfs/scrub/repair.h b/fs/xfs/scrub/repair.h
+index 6a1b6cefbfec..1775d396b5fc 100644
+--- a/fs/xfs/scrub/repair.h
++++ b/fs/xfs/scrub/repair.h
+@@ -80,6 +80,7 @@ int xrep_setup_ag_allocbt(struct xfs_scrub *sc);
+ 
+ struct xfs_imap;
+ int xrep_setup_inode(struct xfs_scrub *sc, struct xfs_imap *imap);
++int xrep_setup_rtbitmap(struct xfs_scrub *sc, unsigned int *resblks);
+ 
+ void xrep_ag_btcur_init(struct xfs_scrub *sc, struct xchk_ag *sa);
+ int xrep_ag_init(struct xfs_scrub *sc, struct xfs_perag *pag,
+@@ -105,6 +106,12 @@ int xrep_bmap_data(struct xfs_scrub *sc);
+ int xrep_bmap_attr(struct xfs_scrub *sc);
+ int xrep_bmap_cow(struct xfs_scrub *sc);
+ 
++#ifdef CONFIG_XFS_RT
++int xrep_rtbitmap(struct xfs_scrub *sc);
++#else
++# define xrep_rtbitmap			xrep_notsupported
++#endif /* CONFIG_XFS_RT */
 +
-+/*
-+ * Unmap every extent in part of an inode's fork.  We don't do any higher level
-+ * invalidation work at all.
-+ */
-+int
-+xfs_bunmapi_range(
-+	struct xfs_trans	**tpp,
-+	struct xfs_inode	*ip,
-+	uint32_t		flags,
-+	xfs_fileoff_t		startoff,
-+	xfs_fileoff_t		endoff)
+ int xrep_reinit_pagf(struct xfs_scrub *sc);
+ int xrep_reinit_pagi(struct xfs_scrub *sc);
+ 
+@@ -151,6 +158,11 @@ xrep_setup_nothing(
+ 
+ #define xrep_setup_inode(sc, imap)	((void)0)
+ 
++static inline int xrep_setup_rtbitmap(struct xfs_scrub *sc, unsigned int *x)
 +{
-+	xfs_filblks_t		unmap_len = endoff - startoff + 1;
-+	int			error = 0;
-+
-+	ASSERT(xfs_isilocked(ip, XFS_ILOCK_EXCL));
-+
-+	while (unmap_len > 0) {
-+		ASSERT((*tpp)->t_highest_agno == NULLAGNUMBER);
-+		error = __xfs_bunmapi(*tpp, ip, startoff, &unmap_len, flags,
-+				XFS_ITRUNC_MAX_EXTENTS);
-+		if (error)
-+			goto out;
-+
-+		/* free the just unmapped extents */
-+		error = xfs_defer_finish(tpp);
-+		if (error)
-+			goto out;
-+	}
-+out:
-+	return error;
++	return 0;
 +}
-diff --git a/fs/xfs/libxfs/xfs_bmap.h b/fs/xfs/libxfs/xfs_bmap.h
-index 8518324db285..9bc78c717ecf 100644
---- a/fs/xfs/libxfs/xfs_bmap.h
-+++ b/fs/xfs/libxfs/xfs_bmap.h
-@@ -273,6 +273,8 @@ int xfs_bmap_complain_bad_rec(struct xfs_inode *ip, int whichfork,
- int	xfs_bmapi_remap(struct xfs_trans *tp, struct xfs_inode *ip,
- 		xfs_fileoff_t bno, xfs_filblks_t len, xfs_fsblock_t startblock,
- 		uint32_t flags);
-+int	xfs_bunmapi_range(struct xfs_trans **tpp, struct xfs_inode *ip,
-+		uint32_t flags, xfs_fileoff_t startoff, xfs_fileoff_t endoff);
++
+ #define xrep_revalidate_allocbt		(NULL)
+ #define xrep_revalidate_iallocbt	(NULL)
  
- extern struct kmem_cache	*xfs_bmap_intent_cache;
+@@ -166,6 +178,7 @@ xrep_setup_nothing(
+ #define xrep_bmap_data			xrep_notsupported
+ #define xrep_bmap_attr			xrep_notsupported
+ #define xrep_bmap_cow			xrep_notsupported
++#define xrep_rtbitmap			xrep_notsupported
  
-diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
-index 5808abab786c..296ebc3cf82e 100644
---- a/fs/xfs/xfs_inode.c
-+++ b/fs/xfs/xfs_inode.c
-@@ -40,12 +40,6 @@
+ #endif /* CONFIG_XFS_ONLINE_REPAIR */
  
- struct kmem_cache *xfs_inode_cache;
+diff --git a/fs/xfs/scrub/rtbitmap.c b/fs/xfs/scrub/rtbitmap.c
+index 7a64489fe9c5..19808f1f5872 100644
+--- a/fs/xfs/scrub/rtbitmap.c
++++ b/fs/xfs/scrub/rtbitmap.c
+@@ -16,15 +16,23 @@
+ #include "xfs_bmap.h"
+ #include "scrub/scrub.h"
+ #include "scrub/common.h"
++#include "scrub/repair.h"
  
--/*
-- * Used in xfs_itruncate_extents().  This is the maximum number of extents
-- * freed from a file in a single transaction.
-- */
--#define	XFS_ITRUNC_MAX_EXTENTS	2
--
- STATIC int xfs_iunlink(struct xfs_trans *, struct xfs_inode *);
- STATIC int xfs_iunlink_remove(struct xfs_trans *tp, struct xfs_perag *pag,
- 	struct xfs_inode *);
-@@ -1333,7 +1327,6 @@ xfs_itruncate_extents_flags(
- 	struct xfs_mount	*mp = ip->i_mount;
- 	struct xfs_trans	*tp = *tpp;
- 	xfs_fileoff_t		first_unmap_block;
--	xfs_filblks_t		unmap_len;
- 	int			error = 0;
+ /* Set us up with the realtime metadata locked. */
+ int
+ xchk_setup_rtbitmap(
+ 	struct xfs_scrub	*sc)
+ {
++	unsigned int		resblks = 0;
+ 	int			error;
  
- 	ASSERT(xfs_isilocked(ip, XFS_ILOCK_EXCL));
-@@ -1365,19 +1358,10 @@ xfs_itruncate_extents_flags(
- 		return 0;
- 	}
+-	error = xchk_trans_alloc(sc, 0);
++	if (xchk_could_repair(sc)) {
++		error = xrep_setup_rtbitmap(sc, &resblks);
++		if (error)
++			return error;
++	}
++
++	error = xchk_trans_alloc(sc, resblks);
+ 	if (error)
+ 		return error;
  
--	unmap_len = XFS_MAX_FILEOFF - first_unmap_block + 1;
--	while (unmap_len > 0) {
--		ASSERT(tp->t_highest_agno == NULLAGNUMBER);
--		error = __xfs_bunmapi(tp, ip, first_unmap_block, &unmap_len,
--				flags, XFS_ITRUNC_MAX_EXTENTS);
--		if (error)
--			goto out;
--
--		/* free the just unmapped extents */
--		error = xfs_defer_finish(&tp);
--		if (error)
--			goto out;
--	}
-+	error = xfs_bunmapi_range(&tp, ip, flags, first_unmap_block,
-+			XFS_MAX_FILEOFF);
-+	if (error)
-+		goto out;
- 
- 	if (whichfork == XFS_DATA_FORK) {
- 		/* Remove all pending CoW reservations. */
+diff --git a/fs/xfs/scrub/rtbitmap_repair.c b/fs/xfs/scrub/rtbitmap_repair.c
+new file mode 100644
+index 000000000000..24cd4d058629
+--- /dev/null
++++ b/fs/xfs/scrub/rtbitmap_repair.c
+@@ -0,0 +1,56 @@
++// SPDX-License-Identifier: GPL-2.0-or-later
++/*
++ * Copyright (C) 2020-2023 Oracle.  All Rights Reserved.
++ * Author: Darrick J. Wong <djwong@kernel.org>
++ */
++#include "xfs.h"
++#include "xfs_fs.h"
++#include "xfs_shared.h"
++#include "xfs_format.h"
++#include "xfs_trans_resv.h"
++#include "xfs_mount.h"
++#include "xfs_btree.h"
++#include "xfs_log_format.h"
++#include "xfs_trans.h"
++#include "xfs_inode.h"
++#include "xfs_bit.h"
++#include "xfs_bmap.h"
++#include "xfs_bmap_btree.h"
++#include "scrub/scrub.h"
++#include "scrub/common.h"
++#include "scrub/trace.h"
++#include "scrub/repair.h"
++#include "scrub/xfile.h"
++
++/* Set up to repair the realtime bitmap file metadata. */
++int
++xrep_setup_rtbitmap(
++	struct xfs_scrub	*sc,
++	unsigned int		*resblks)
++{
++	struct xfs_mount	*mp = sc->mp;
++	unsigned long long	blocks = 0;
++
++	/*
++	 * Reserve enough blocks to write out a completely new bmbt for the
++	 * bitmap file.
++	 */
++	blocks = xfs_bmbt_calc_size(mp, mp->m_sb.sb_rbmblocks);
++	if (blocks > UINT_MAX)
++		return -EOPNOTSUPP;
++
++	*resblks += blocks;
++	return 0;
++}
++
++/* Repair the realtime bitmap file metadata. */
++int
++xrep_rtbitmap(
++	struct xfs_scrub	*sc)
++{
++	/*
++	 * The only thing we know how to fix right now is problems with the
++	 * inode or its fork data.
++	 */
++	return xrep_metadata_inode_forks(sc);
++}
+diff --git a/fs/xfs/scrub/scrub.c b/fs/xfs/scrub/scrub.c
+index 00bf8d2dfa43..5cd028dfbc29 100644
+--- a/fs/xfs/scrub/scrub.c
++++ b/fs/xfs/scrub/scrub.c
+@@ -328,7 +328,7 @@ static const struct xchk_meta_ops meta_scrub_ops[] = {
+ 		.setup	= xchk_setup_rtbitmap,
+ 		.scrub	= xchk_rtbitmap,
+ 		.has	= xfs_has_realtime,
+-		.repair	= xrep_notsupported,
++		.repair	= xrep_rtbitmap,
+ 	},
+ 	[XFS_SCRUB_TYPE_RTSUM] = {	/* realtime summary */
+ 		.type	= ST_FS,
 
