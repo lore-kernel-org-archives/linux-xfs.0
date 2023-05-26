@@ -2,42 +2,41 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 02CB0C77B7E
-	for <linux-xfs@archiver.kernel.org>; Fri, 26 May 2023 01:58:16 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id DEEF4C7EE29
+	for <linux-xfs@archiver.kernel.org>; Fri, 26 May 2023 01:58:31 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235953AbjEZB6P (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 25 May 2023 21:58:15 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43092 "EHLO
+        id S231990AbjEZB6a (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 25 May 2023 21:58:30 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43152 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232880AbjEZB6O (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 25 May 2023 21:58:14 -0400
+        with ESMTP id S229981AbjEZB6a (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 25 May 2023 21:58:30 -0400
 Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8E6FEE7
-        for <linux-xfs@vger.kernel.org>; Thu, 25 May 2023 18:58:13 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2D7AD18D
+        for <linux-xfs@vger.kernel.org>; Thu, 25 May 2023 18:58:29 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 2379364C45
-        for <linux-xfs@vger.kernel.org>; Fri, 26 May 2023 01:58:13 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 82E83C433EF;
-        Fri, 26 May 2023 01:58:12 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id AFA9264C47
+        for <linux-xfs@vger.kernel.org>; Fri, 26 May 2023 01:58:28 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 17330C433D2;
+        Fri, 26 May 2023 01:58:28 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1685066292;
-        bh=8jYfsDnGXzB3HlSyqjB/rifVYtxamFjwZiggKDqlTHY=;
+        s=k20201202; t=1685066308;
+        bh=2Dod8nIEg0CXA6Kvjaq8A0iq5lxveGHRdRLBlKxOVQ8=;
         h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-        b=FNFYEmqgQDZ8RZIJdyuty5I5xsP2Tf3mSjL824BQYiOLLJqFXcqCYVotHFVz7LVek
-         s37dPXoUivgKnTTWqahiQ6jkUEXnB3WvFxkyufaSea5Sz8nkPOazDgOa4zGuP4dgj7
-         XsVg/LZtFyBeXv21j8qbTWjahLmLuKA/YNGI/AxankLQgP1box0b8H0ZFuEybumJ8C
-         W4bEnnXYpF+n+HsmrKe4/D20ih2kE4LTYTN1qzYvqW6cwJMR4j0eZgiDq7+Wt78ES+
-         SYnIH+qaLqpZNyg2SQ0q/4S6Kd25YOZbYgG2BAGwhNkxfjp6qf5f67CVSZLpru4dTU
-         tKe9KF9sKjkFQ==
-Date:   Thu, 25 May 2023 18:58:12 -0700
-Subject: [PATCH 2/5] xfs_scrub_all: encapsulate all the systemctl code in an
- object
+        b=hvs15pF8rnpY34c6BNxoK11R5udzZ1uwKzK0mwRC+0Yo7bX0dWCfcNYS84lZksrYp
+         afVX3WVLik3WYOiPm+IVcopS2pykFmTkWAaHkTTgA9oovwiFLgwJF3vIgkE40BpnKN
+         z5OG7sXgxOBmTk6RRkd0ty2o1rI5sDI80KTELUoAdIQUhAGMekCtb0SkdVnHK1bBmA
+         v1zWSt5oEoW6NWnhPT/CjCP+y8H2RAdlHnmGwfihZ8VuNmBJxQWGor91xeKEKg5Woe
+         NSQIqZDGuy9PC9es5ltXDsXGV4dZm0GEa8vSPJEQco2AkTPCQPl+yS+JQ7uxBXl7Wr
+         wz38hmgPLz5og==
+Date:   Thu, 25 May 2023 18:58:27 -0700
+Subject: [PATCH 3/5] xfs_scrub_all: add CLI option for easier debugging
 From:   "Darrick J. Wong" <djwong@kernel.org>
 To:     djwong@kernel.org, cem@kernel.org
 Cc:     linux-xfs@vger.kernel.org
-Message-ID: <168506075234.3746473.4940860665627249144.stgit@frogsfrogsfrogs>
+Message-ID: <168506075248.3746473.8652547339120157123.stgit@frogsfrogsfrogs>
 In-Reply-To: <168506075207.3746473.18041622129638673219.stgit@frogsfrogsfrogs>
 References: <168506075207.3746473.18041622129638673219.stgit@frogsfrogsfrogs>
 User-Agent: StGit/0.19
@@ -50,153 +49,97 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-Move all the systemd service handling code to an object so that we can
-contain all the insanity^Wdetails in a single place.  This also makes
-the killfuncs handling similar to starting background processes.
+Add a new CLI argument to make it easier to figure out what exactly the
+program is doing.
 
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 ---
- scrub/xfs_scrub_all.in |  113 ++++++++++++++++++++++++++----------------------
- 1 file changed, 61 insertions(+), 52 deletions(-)
+ scrub/xfs_scrub_all.in |   25 ++++++++++++++++++++++++-
+ 1 file changed, 24 insertions(+), 1 deletion(-)
 
 
 diff --git a/scrub/xfs_scrub_all.in b/scrub/xfs_scrub_all.in
-index 0e71cb9ae17..7c8c0baed34 100644
+index 7c8c0baed34..a2b3350fe87 100644
 --- a/scrub/xfs_scrub_all.in
 +++ b/scrub/xfs_scrub_all.in
-@@ -149,63 +149,73 @@ def path_to_serviceunit(path, scrub_media):
- 		svcname = '@scrub_svcname@'
- 	cmd = ['systemd-escape', '--template', svcname, '--path', path]
+@@ -24,6 +24,7 @@ from datetime import timezone
+ retcode = 0
+ terminate = False
+ scrub_media = False
++debug = False
  
--	try:
--		proc = subprocess.Popen(cmd, stdout = subprocess.PIPE)
--		proc.wait()
--		for line in proc.stdout:
--			return line.decode(sys.stdout.encoding).strip()
--	except:
--		return None
-+	proc = subprocess.Popen(cmd, stdout = subprocess.PIPE)
-+	proc.wait()
-+	for line in proc.stdout:
-+		return line.decode(sys.stdout.encoding).strip()
- 
--def systemctl_stop(unitname):
--	'''Stop a systemd unit.'''
--	cmd = ['systemctl', 'stop', unitname]
--	x = subprocess.Popen(cmd)
--	x.wait()
-+class scrub_service(scrub_control):
-+	'''Control object for xfs_scrub systemd service.'''
-+	def __init__(self, mnt, scrub_media):
-+		self.unitname = path_to_serviceunit(mnt, scrub_media)
- 
--def systemctl_start(unitname, killfuncs):
--	'''Start a systemd unit and wait for it to complete.'''
--	stop_fn = None
--	cmd = ['systemctl', 'start', unitname]
--	try:
--		proc = subprocess.Popen(cmd, stdout = DEVNULL())
--		stop_fn = lambda: systemctl_stop(unitname)
--		killfuncs.add(stop_fn)
--		proc.wait()
--		ret = proc.returncode
--	except:
--		if stop_fn is not None:
--			remove_killfunc(killfuncs, stop_fn)
--		return -1
-+	def wait(self, interval = 1):
-+		'''Wait until the service finishes.'''
- 
--	if ret != 1:
--		remove_killfunc(killfuncs, stop_fn)
--		return ret
-+		# As of systemd 249, the is-active command returns any of the
-+		# following states: active, reloading, inactive, failed,
-+		# activating, deactivating, or maintenance.  Apparently these
-+		# strings are not localized.
-+		while True:
-+			try:
-+				for l in backtick(['systemctl', 'is-active', self.unitname]):
-+					if l == 'failed':
-+						return 1
-+					if l == 'inactive':
-+						return 0
-+			except:
-+				return -1
- 
--	# If systemctl-start returns 1, it's possible that the service failed
--	# or that dbus/systemd restarted and the client program lost its
--	# connection -- according to the systemctl man page, 1 means "unit not
--	# failed".
--	#
--	# Either way, we switch to polling the service status to try to wait
--	# for the service to end.  As of systemd 249, the is-active command
--	# returns any of the following states: active, reloading, inactive,
--	# failed, activating, deactivating, or maintenance.  Apparently these
--	# strings are not localized.
--	while True:
-+			time.sleep(interval)
+ def DEVNULL():
+ 	'''Return /dev/null in subprocess writable format.'''
+@@ -110,6 +111,11 @@ class scrub_subprocess(scrub_control):
+ 		'''Start xfs_scrub and wait for it to complete.  Returns -1 if
+ 		the service was not started, 0 if it succeeded, or 1 if it
+ 		failed.'''
++		global debug
 +
-+	def start(self):
-+		'''Start the service and wait for it to complete.  Returns -1
-+		if the service was not started, 0 if it succeeded, or 1 if it
-+		failed.'''
-+		cmd = ['systemctl', 'start', self.unitname]
++		if debug:
++			print('run ', ' '.join(self.cmdline))
++
  		try:
--			for l in backtick(['systemctl', 'is-active', unitname]):
--				if l == 'failed':
--					remove_killfunc(killfuncs, stop_fn)
--					return 1
--				if l == 'inactive':
--					remove_killfunc(killfuncs, stop_fn)
--					return 0
-+			proc = subprocess.Popen(cmd, stdout = DEVNULL())
-+			proc.wait()
-+			ret = proc.returncode
- 		except:
--			remove_killfunc(killfuncs, stop_fn)
- 			return -1
+ 			self.proc = subprocess.Popen(self.cmdline)
+ 			self.proc.wait()
+@@ -122,6 +128,10 @@ class scrub_subprocess(scrub_control):
  
--		time.sleep(1)
-+		if ret != 1:
-+			return ret
+ 	def stop(self):
+ 		'''Stop xfs_scrub.'''
++		global debug
 +
-+		# If systemctl-start returns 1, it's possible that the service
-+		# failed or that dbus/systemd restarted and the client program
-+		# lost its connection -- according to the systemctl man page, 1
-+		# means "unit not failed".
-+		return self.wait()
-+
-+	def stop(self):
-+		'''Stop the service.'''
-+		cmd = ['systemctl', 'stop', self.unitname]
-+		x = subprocess.Popen(cmd)
-+		x.wait()
-+
-+def run_service(mnt, scrub_media, killfuncs):
-+	'''Run scrub as a service.'''
-+	try:
-+		svc = scrub_service(mnt, scrub_media)
-+	except:
-+		return -1
-+
-+	killfuncs.add(svc.stop)
-+	retcode = svc.start()
-+	remove_killfunc(killfuncs, svc.stop)
-+	return retcode
++		if debug:
++			print('kill ', ' '.join(self.cmdline))
+ 		if self.proc is not None:
+ 			self.proc.terminate()
  
- def run_scrub(mnt, cond, running_devs, mntdevs, killfuncs):
- 	'''Run a scrub process.'''
-@@ -220,9 +230,8 @@ def run_scrub(mnt, cond, running_devs, mntdevs, killfuncs):
+@@ -182,8 +192,12 @@ class scrub_service(scrub_control):
+ 		'''Start the service and wait for it to complete.  Returns -1
+ 		if the service was not started, 0 if it succeeded, or 1 if it
+ 		failed.'''
++		global debug
++
+ 		cmd = ['systemctl', 'start', self.unitname]
+ 		try:
++			if debug:
++				print(' '.join(cmd))
+ 			proc = subprocess.Popen(cmd, stdout = DEVNULL())
+ 			proc.wait()
+ 			ret = proc.returncode
+@@ -201,7 +215,11 @@ class scrub_service(scrub_control):
  
- 		# Run per-mount systemd xfs_scrub service only if we ourselves
- 		# are running as a systemd service.
--		unitname = path_to_serviceunit(path, scrub_media)
--		if unitname is not None and 'SERVICE_MODE' in os.environ:
--			ret = systemctl_start(unitname, killfuncs)
-+		if 'SERVICE_MODE' in os.environ:
-+			ret = run_service(mnt, scrub_media, killfuncs)
- 			if ret == 0 or ret == 1:
- 				print("Scrubbing %s done, (err=%d)" % (mnt, ret))
- 				sys.stdout.flush()
+ 	def stop(self):
+ 		'''Stop the service.'''
++		global debug
++
+ 		cmd = ['systemctl', 'stop', self.unitname]
++		if debug:
++			print(' '.join(cmd))
+ 		x = subprocess.Popen(cmd)
+ 		x.wait()
+ 
+@@ -366,10 +384,12 @@ def main():
+ 		a = (mnt, cond, running_devs, devs, killfuncs)
+ 		thr = threading.Thread(target = run_scrub, args = a)
+ 		thr.start()
+-	global retcode, terminate, scrub_media
++	global retcode, terminate, scrub_media, debug
+ 
+ 	parser = argparse.ArgumentParser( \
+ 			description = "Scrub all mounted XFS filesystems.")
++	parser.add_argument("--debug", help = "Enabling debugging messages.", \
++			action = "store_true")
+ 	parser.add_argument("-V", help = "Report version and exit.", \
+ 			action = "store_true")
+ 	parser.add_argument("-x", help = "Scrub file data after filesystem metadata.", \
+@@ -384,6 +404,9 @@ def main():
+ 		print("xfs_scrub_all version @pkg_version@")
+ 		sys.exit(0)
+ 
++	if args.debug:
++		debug = True
++
+ 	if args.auto_media_scan_interval is not None:
+ 		try:
+ 			scrub_media = enable_automatic_media_scan(args)
 
