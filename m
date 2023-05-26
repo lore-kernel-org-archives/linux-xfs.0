@@ -2,43 +2,42 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9873AC77B7E
-	for <linux-xfs@archiver.kernel.org>; Fri, 26 May 2023 02:16:32 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0BF3EC77B7A
+	for <linux-xfs@archiver.kernel.org>; Fri, 26 May 2023 02:16:45 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229727AbjEZCQb (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 25 May 2023 22:16:31 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49372 "EHLO
+        id S230077AbjEZCQn (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 25 May 2023 22:16:43 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49406 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230049AbjEZCQ2 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 25 May 2023 22:16:28 -0400
+        with ESMTP id S229999AbjEZCQm (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 25 May 2023 22:16:42 -0400
 Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2718F13D
-        for <linux-xfs@vger.kernel.org>; Thu, 25 May 2023 19:16:25 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id BDDE213A
+        for <linux-xfs@vger.kernel.org>; Thu, 25 May 2023 19:16:40 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id B87EC60DCE
-        for <linux-xfs@vger.kernel.org>; Fri, 26 May 2023 02:16:24 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 29C61C433D2;
-        Fri, 26 May 2023 02:16:24 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 5A500614A2
+        for <linux-xfs@vger.kernel.org>; Fri, 26 May 2023 02:16:40 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id BF8EDC433D2;
+        Fri, 26 May 2023 02:16:39 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1685067384;
-        bh=aQM0ydoJSP1MBH02CwqhzzRiYaHIwtF6egC6KDcEWL8=;
+        s=k20201202; t=1685067399;
+        bh=14Ey3VVaOWUuMVFe9oJWmCEOsFjCn+d/2dkDrH03/gE=;
         h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-        b=JX0D6J3BiPGQn+J7V8wMNBfIHp+XKM7P+stJn1sJRg3Ab3QBbleRGqlzvNJw321Fi
-         BAaRFFxmy0fIIKwDCR/17qLRybn561Sg1GH8SytW/cj/llpVjO+6vfUlu+HdvBR/OQ
-         PEebom+RNRCZFXaIpHsRpVVW9My8zj3FJguyN6uNpeOq1SyliOQMsF+yNdGm9s+qOl
-         FExz7lM/tE25O9Qd5tpCnU55hOawcCT7HDQvP92NFBORJKbVxvPvRvM0FWL0IyLpLz
-         Wi/+ih5mm+vvjL32fIrFGzhCrzRDsBn1yLyNLJ7Hl7W2nOjnqoXElQqqCevjSStBVv
-         cqbsz+QJJ1mZw==
-Date:   Thu, 25 May 2023 19:16:23 -0700
-Subject: [PATCH 07/17] xfs: salvage parent pointers when rebuilding xattr
- structures
+        b=WFAW+3ZsUx8z5/p/H6UuoBYXHstnPdcVYIB1O7QjcNjMoyQi5UhuLyGffFmPnAvLw
+         1JLN/weK3lCqcz5VcRWpFypngF3poHO5Hs6D+uITnigejazl6QwoyKktVs7n1ujS7T
+         Q2V/suR1pODOPDg9Ec3aBCUlwmrUb9FIjsz5DVG6uQ5EzEqoc1kDHaH1Jsy3/RgCFn
+         vMMI3R8xUI4ruL7JLl5P0FRo0fj+be1rDMeWWusjjpOOC08pY51PvgqvlOmqgSpqfi
+         dMXk6DAXIVtrt9TQmso0sZnuiSluB9OyzxTLL70Iket+QDyt4uVE1LMjcxSLNjEy+p
+         Nkgu0N+8ubPfw==
+Date:   Thu, 25 May 2023 19:16:39 -0700
+Subject: [PATCH 08/17] xfs: teach the adoption code about parent pointers
 From:   "Darrick J. Wong" <djwong@kernel.org>
 To:     djwong@kernel.org
 Cc:     linux-xfs@vger.kernel.org, allison.henderson@oracle.com,
         catherine.hoang@oracle.com
-Message-ID: <168506073396.3745075.1972680528979448636.stgit@frogsfrogsfrogs>
+Message-ID: <168506073410.3745075.12787706795487900676.stgit@frogsfrogsfrogs>
 In-Reply-To: <168506073275.3745075.7865645835865818396.stgit@frogsfrogsfrogs>
 References: <168506073275.3745075.7865645835865818396.stgit@frogsfrogsfrogs>
 User-Agent: StGit/0.19
@@ -51,159 +50,231 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-When we're salvaging extended attributes, make sure we validate the ones
-that claim to be parent pointers before adding them to the salvage pile.
+Teach the online fsck file adoption code how to create parent pointers
+for files that are moved to /lost+found.  In addition to the parent
+pointer creation itself, we must also turn on logged xattrs during scrub
+setup.
 
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 ---
- fs/xfs/scrub/attr_repair.c |   41 ++++++++++++++++++++++++++++++++---------
- fs/xfs/scrub/trace.c       |    1 +
- fs/xfs/scrub/trace.h       |   40 ++++++++++++++++++++++++++++++++++++++++
- 3 files changed, 73 insertions(+), 9 deletions(-)
+ fs/xfs/scrub/orphanage.c |   66 +++++++++++++++++++++++++++++++++++++++++++---
+ fs/xfs/scrub/orphanage.h |    2 +
+ fs/xfs/scrub/scrub.c     |    6 ++++
+ fs/xfs/scrub/scrub.h     |    8 +++---
+ fs/xfs/scrub/trace.h     |    1 +
+ 5 files changed, 75 insertions(+), 8 deletions(-)
 
 
-diff --git a/fs/xfs/scrub/attr_repair.c b/fs/xfs/scrub/attr_repair.c
-index 1d5bacbe1b81..489abe1f028a 100644
---- a/fs/xfs/scrub/attr_repair.c
-+++ b/fs/xfs/scrub/attr_repair.c
-@@ -28,6 +28,7 @@
- #include "xfs_swapext.h"
- #include "xfs_xchgrange.h"
- #include "xfs_acl.h"
+diff --git a/fs/xfs/scrub/orphanage.c b/fs/xfs/scrub/orphanage.c
+index 8285d129db9e..c574ae5a23ec 100644
+--- a/fs/xfs/scrub/orphanage.c
++++ b/fs/xfs/scrub/orphanage.c
+@@ -19,6 +19,10 @@
+ #include "xfs_icache.h"
+ #include "xfs_bmap.h"
+ #include "xfs_bmap_btree.h"
 +#include "xfs_parent.h"
- #include "scrub/xfs_scrub.h"
++#include "xfs_da_format.h"
++#include "xfs_da_btree.h"
++#include "xfs_xattr.h"
  #include "scrub/scrub.h"
  #include "scrub/common.h"
-@@ -124,6 +125,13 @@ xrep_xattr_want_salvage(
- 		return false;
- 	if (valuelen > XATTR_SIZE_MAX || valuelen < 0)
- 		return false;
-+	if (attr_flags & XFS_ATTR_PARENT) {
-+		if (!xfs_parent_namecheck(rx->sc->mp, name, namelen,
-+				attr_flags))
-+			return false;
-+		if (!xfs_parent_valuecheck(rx->sc->mp, value, valuelen))
-+			return false;
-+	}
- 	return true;
+ #include "scrub/repair.h"
+@@ -97,6 +101,31 @@ xrep_chown_orphanage(
+ 	return error;
  }
  
-@@ -151,14 +159,21 @@ xrep_xattr_salvage_key(
- 	 * Truncate the name to the first character that would trip namecheck.
- 	 * If we no longer have a name after that, ignore this attribute.
- 	 */
--	while (i < namelen && name[i] != 0)
--		i++;
--	if (i == 0)
--		return 0;
--	key.namelen = i;
-+	if (flags & XFS_ATTR_PARENT) {
-+		key.namelen = namelen;
++/*
++ * Enable logged extended attributes for parent pointers.  This must get done
++ * before we create transactions and start making changes.
++ */
++STATIC int
++xrep_adoption_grab_log_assist(
++	struct xfs_scrub	*sc)
++{
++	int			error;
++
++	if (!xfs_has_parent(sc->mp))
++		return 0;
++
++	ASSERT(!(sc->flags & XREP_FSGATES_LARP));
++
++	error = xfs_attr_grab_log_assist(sc->mp);
++	if (error)
++		return error;
++
++	trace_xchk_fsgates_enable(sc, XREP_FSGATES_LARP);
++
++	sc->flags |= XREP_FSGATES_LARP;
++	return 0;
++}
++
+ #define ORPHANAGE	"lost+found"
  
--	trace_xrep_xattr_salvage_rec(rx->sc->ip, flags, name, key.namelen,
--			valuelen);
-+		trace_xrep_xattr_salvage_pptr(rx->sc->ip, flags, name,
-+				key.namelen, value, valuelen);
+ /* Create the orphanage directory, and set sc->orphanage to it. */
+@@ -188,6 +217,12 @@ xrep_orphanage_create(
+ out_dput_root:
+ 	dput(root_dentry);
+ out:
++	/*
++	 * Turn on whatever log features are required for an adoption to be
++	 * committed correctly.
++	 */
++	if (!error)
++		error = xrep_adoption_grab_log_assist(sc);
+ 	return error;
+ }
+ 
+@@ -267,6 +302,14 @@ xrep_adoption_init(
+ 		child_blkres = xfs_rename_space_res(mp, 0, false,
+ 						xfs_name_dotdot.len, false);
+ 	adopt->child_blkres = child_blkres;
++
++	if (xfs_has_parent(mp)) {
++		ASSERT(sc->flags & XREP_FSGATES_LARP);
++		return xfs_parent_start_locked(mp, &adopt->parent);
 +	} else {
-+		while (i < namelen && name[i] != 0)
-+			i++;
-+		if (i == 0)
-+			return 0;
-+		key.namelen = i;
-+
-+		trace_xrep_xattr_salvage_rec(rx->sc->ip, flags, name,
-+				key.namelen, valuelen);
++		adopt->parent = NULL;
 +	}
- 
- 	error = xfblob_store(rx->xattr_blobs, &key.name_cookie, name,
- 			key.namelen);
-@@ -562,6 +577,9 @@ xrep_xattr_insert_rec(
- 	struct xchk_xattr_buf		*ab = rx->sc->buf;
- 	int				error;
- 
-+	if (key->flags & XFS_ATTR_PARENT)
-+		args.op_flags |= XFS_DA_OP_NVLOOKUP;
 +
- 	/*
- 	 * Grab pointers to the scrub buffer so that we can use them to insert
- 	 * attrs into the temp file.
-@@ -595,8 +613,13 @@ xrep_xattr_insert_rec(
+ 	return 0;
+ }
  
- 	ab->name[key->namelen] = 0;
+@@ -466,7 +509,7 @@ xrep_adoption_commit(
  
--	trace_xrep_xattr_insert_rec(rx->sc->tempip, key->flags, ab->name,
--			key->namelen, key->valuelen);
-+	if (key->flags & XFS_ATTR_PARENT)
-+		trace_xrep_xattr_insert_pptr(rx->sc->tempip, key->flags,
-+				ab->name, key->namelen, ab->value,
-+				key->valuelen);
-+	else
-+		trace_xrep_xattr_insert_rec(rx->sc->tempip, key->flags,
-+				ab->name, key->namelen, key->valuelen);
+ 	error = xrep_orphanage_check_dcache(adopt);
+ 	if (error)
+-		return error;
++		goto out_parent;
  
  	/*
- 	 * xfs_attr_set creates and commits its own transaction.  If the attr
-diff --git a/fs/xfs/scrub/trace.c b/fs/xfs/scrub/trace.c
-index 18a1a3d1cbef..913f886380c0 100644
---- a/fs/xfs/scrub/trace.c
-+++ b/fs/xfs/scrub/trace.c
-@@ -18,6 +18,7 @@
- #include "xfs_dir2.h"
- #include "xfs_da_format.h"
+ 	 * Create the new name in the orphanage, and bump the link count of
+@@ -475,7 +518,7 @@ xrep_adoption_commit(
+ 	error = xfs_dir_createname(sc->tp, sc->orphanage, xname, sc->ip->i_ino,
+ 			adopt->orphanage_blkres);
+ 	if (error)
+-		return error;
++		goto out_parent;
+ 
+ 	xfs_trans_ichgtime(sc->tp, sc->orphanage,
+ 			XFS_ICHGTIME_MOD | XFS_ICHGTIME_CHG);
+@@ -488,7 +531,15 @@ xrep_adoption_commit(
+ 		error = xfs_dir_replace(sc->tp, sc->ip, &xfs_name_dotdot,
+ 				sc->orphanage->i_ino, adopt->child_blkres);
+ 		if (error)
+-			return error;
++			goto out_parent;
++	}
++
++	/* Add a parent pointer from the file back to the lost+found. */
++	if (adopt->parent) {
++		error = xfs_parent_add(sc->tp, adopt->parent, sc->orphanage,
++				xname, sc->ip);
++		if (error)
++			goto out_parent;
+ 	}
+ 
+ 	/*
+@@ -499,11 +550,14 @@ xrep_adoption_commit(
+ 	xfs_dir_update_hook(sc->orphanage, sc->ip, 1, xname);
+ 	error = xrep_defer_finish(sc);
+ 	if (error)
+-		return error;
++		goto out_parent;
+ 
+ 	/* Remove negative dentries from the lost+found's dcache */
+ 	xrep_orphanage_zap_dcache(adopt);
+-	return 0;
++out_parent:
++	xfs_parent_finish(sc->mp, adopt->parent);
++	adopt->parent = NULL;
++	return error;
+ }
+ 
+ /* Cancel a proposed relocation of a file to the orphanage. */
+@@ -521,6 +575,8 @@ xrep_adoption_cancel(
+ 	 * state to manage, we'll need to give that back.
+ 	 */
+ 	trace_xrep_adoption_cancel(sc->orphanage, sc->ip, error);
++	xfs_parent_finish(sc->mp, adopt->parent);
++	adopt->parent = NULL;
+ }
+ 
+ /* Release the orphanage. */
+diff --git a/fs/xfs/scrub/orphanage.h b/fs/xfs/scrub/orphanage.h
+index 31f068198c8a..382c061e2fb6 100644
+--- a/fs/xfs/scrub/orphanage.h
++++ b/fs/xfs/scrub/orphanage.h
+@@ -47,6 +47,8 @@ struct xrep_adoption {
+ 
+ 	struct xfs_scrub	*sc;
+ 
++	struct xfs_parent_defer	*parent;
++
+ 	/* Block reservations for orphanage and child (if directory). */
+ 	unsigned int		orphanage_blkres;
+ 	unsigned int		child_blkres;
+diff --git a/fs/xfs/scrub/scrub.c b/fs/xfs/scrub/scrub.c
+index b5bd7125ca34..70010b111d9a 100644
+--- a/fs/xfs/scrub/scrub.c
++++ b/fs/xfs/scrub/scrub.c
+@@ -21,6 +21,9 @@
  #include "xfs_rmap.h"
-+#include "xfs_parent.h"
+ #include "xfs_xchgrange.h"
+ #include "xfs_swapext.h"
++#include "xfs_da_format.h"
++#include "xfs_da_btree.h"
++#include "xfs_xattr.h"
  #include "scrub/scrub.h"
- #include "scrub/xfile.h"
- #include "scrub/xfarray.h"
+ #include "scrub/common.h"
+ #include "scrub/trace.h"
+@@ -177,6 +180,9 @@ xchk_fsgates_disable(
+ 	if (sc->flags & XREP_FSGATES_ATOMIC_XCHG)
+ 		xfs_xchg_range_rele_log_assist(sc->mp);
+ 
++	if (sc->flags & XREP_FSGATES_LARP)
++		xfs_attr_rele_log_assist(sc->mp);
++
+ 	sc->flags &= ~FSGATES_MASK;
+ }
+ #undef FSGATES_MASK
+diff --git a/fs/xfs/scrub/scrub.h b/fs/xfs/scrub/scrub.h
+index 6f23edcac5cd..638c69e1fed9 100644
+--- a/fs/xfs/scrub/scrub.h
++++ b/fs/xfs/scrub/scrub.h
+@@ -135,6 +135,7 @@ struct xfs_scrub {
+ #define XCHK_FSGATES_QUOTA	(1 << 4)  /* quota live update enabled */
+ #define XCHK_FSGATES_DIRENTS	(1 << 5)  /* directory live update enabled */
+ #define XCHK_FSGATES_RMAP	(1 << 6)  /* rmapbt live update enabled */
++#define XREP_FSGATES_LARP	(1 << 28) /* logged xattr updates */
+ #define XREP_FSGATES_ATOMIC_XCHG (1 << 29) /* uses atomic file content exchange */
+ #define XREP_RESET_PERAG_RESV	(1 << 30) /* must reset AG space reservation */
+ #define XREP_ALREADY_FIXED	(1 << 31) /* checking our repair work */
+@@ -151,10 +152,11 @@ struct xfs_scrub {
+ 				 XCHK_FSGATES_RMAP)
+ 
+ /*
+- * The sole XREP_FSGATES* flag reflects a log intent item that is protected
+- * by a log-incompat feature flag.  No code patching in use here.
++ * The sole XREP_FSGATES* flag reflects log intent items protected by
++ * log-incompat feature flags.  No code patching in use here.
+  */
+-#define XREP_FSGATES_ALL	(XREP_FSGATES_ATOMIC_XCHG)
++#define XREP_FSGATES_ALL	(XREP_FSGATES_ATOMIC_XCHG | \
++				 XREP_FSGATES_LARP)
+ 
+ /* Metadata scrubbers */
+ int xchk_tester(struct xfs_scrub *sc);
 diff --git a/fs/xfs/scrub/trace.h b/fs/xfs/scrub/trace.h
-index 28232e4611d7..c64594f20f73 100644
+index c64594f20f73..96c88f4419d7 100644
 --- a/fs/xfs/scrub/trace.h
 +++ b/fs/xfs/scrub/trace.h
-@@ -2481,6 +2481,46 @@ DEFINE_EVENT(xrep_xattr_salvage_class, name, \
- DEFINE_XREP_XATTR_SALVAGE_EVENT(xrep_xattr_salvage_rec);
- DEFINE_XREP_XATTR_SALVAGE_EVENT(xrep_xattr_insert_rec);
- 
-+DECLARE_EVENT_CLASS(xrep_pptr_salvage_class,
-+	TP_PROTO(struct xfs_inode *ip, unsigned int flags, const void *name,
-+		 unsigned int namelen, const void *value, unsigned int valuelen),
-+	TP_ARGS(ip, flags, name, namelen, value, valuelen),
-+	TP_STRUCT__entry(
-+		__field(dev_t, dev)
-+		__field(xfs_ino_t, ino)
-+		__field(xfs_ino_t, parent_ino)
-+		__field(unsigned int, parent_gen)
-+		__field(unsigned int, namelen)
-+		__dynamic_array(char, name, valuelen)
-+	),
-+	TP_fast_assign(
-+		struct xfs_parent_name_irec	pptr;
-+
-+		xfs_parent_irec_from_disk(&pptr, name, value, valuelen);
-+
-+		__entry->dev = ip->i_mount->m_super->s_dev;
-+		__entry->ino = ip->i_ino;
-+		__entry->parent_ino = pptr.p_ino;
-+		__entry->parent_gen = pptr.p_gen;
-+		__entry->namelen = pptr.p_namelen;
-+		memcpy(__get_str(name), pptr.p_name, pptr.p_namelen);
-+	),
-+	TP_printk("dev %d:%d ino 0x%llx parent_ino 0x%llx parent_gen 0x%x name '%.*s'",
-+		  MAJOR(__entry->dev), MINOR(__entry->dev),
-+		  __entry->ino,
-+		  __entry->parent_ino,
-+		  __entry->parent_gen,
-+		  __entry->namelen,
-+		  __get_str(name))
-+)
-+#define DEFINE_XREP_PPTR_SALVAGE_CLASS(name) \
-+DEFINE_EVENT(xrep_pptr_salvage_class, name, \
-+	TP_PROTO(struct xfs_inode *ip, unsigned int flags, const void *name, \
-+		 unsigned int namelen, const void *value, unsigned int valuelen), \
-+	TP_ARGS(ip, flags, name, namelen, value, valuelen))
-+DEFINE_XREP_PPTR_SALVAGE_CLASS(xrep_xattr_salvage_pptr);
-+DEFINE_XREP_PPTR_SALVAGE_CLASS(xrep_xattr_insert_pptr);
-+
- TRACE_EVENT(xrep_xattr_class,
- 	TP_PROTO(struct xfs_inode *ip, struct xfs_inode *arg_ip),
- 	TP_ARGS(ip, arg_ip),
+@@ -124,6 +124,7 @@ TRACE_DEFINE_ENUM(XFS_SCRUB_TYPE_HEALTHY);
+ 	{ XCHK_FSGATES_QUOTA,			"fsgates_quota" }, \
+ 	{ XCHK_FSGATES_DIRENTS,			"fsgates_dirents" }, \
+ 	{ XCHK_FSGATES_RMAP,			"fsgates_rmap" }, \
++	{ XREP_FSGATES_LARP,			"fsgates_larp" }, \
+ 	{ XREP_FSGATES_ATOMIC_XCHG,		"fsgates_atomic_swapext" }, \
+ 	{ XREP_RESET_PERAG_RESV,		"reset_perag_resv" }, \
+ 	{ XREP_ALREADY_FIXED,			"already_fixed" }
 
