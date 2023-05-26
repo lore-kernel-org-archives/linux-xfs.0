@@ -2,44 +2,44 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0859BC77B7A
-	for <linux-xfs@archiver.kernel.org>; Fri, 26 May 2023 01:03:53 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7503BC77B7E
+	for <linux-xfs@archiver.kernel.org>; Fri, 26 May 2023 01:04:09 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232420AbjEZBDw (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 25 May 2023 21:03:52 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52334 "EHLO
+        id S232547AbjEZBEI (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 25 May 2023 21:04:08 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52364 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232125AbjEZBDv (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 25 May 2023 21:03:51 -0400
+        with ESMTP id S232125AbjEZBEH (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 25 May 2023 21:04:07 -0400
 Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E74DF125
-        for <linux-xfs@vger.kernel.org>; Thu, 25 May 2023 18:03:49 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 70F37194
+        for <linux-xfs@vger.kernel.org>; Thu, 25 May 2023 18:04:05 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 7FCEB610A2
-        for <linux-xfs@vger.kernel.org>; Fri, 26 May 2023 01:03:49 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id E213CC433EF;
-        Fri, 26 May 2023 01:03:48 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 0719F60B88
+        for <linux-xfs@vger.kernel.org>; Fri, 26 May 2023 01:04:05 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 6AE16C433EF;
+        Fri, 26 May 2023 01:04:04 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1685063028;
-        bh=CSxPrIffrTBst74BZjTF/frGck8+pfrM5b/Nxi4PSNw=;
+        s=k20201202; t=1685063044;
+        bh=bF/XW8lc7hh30uixXddTj9EAR2cv9lRHEtrO5dgJDxw=;
         h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-        b=GTrmfATdk4h+7qB+lHTXiao6r66uZn05di1uxtt4DU/ygzvn0Li2hcBEuKya5eXdY
-         tR8HaoLiZhOB+DPckFdf3SRUMjLLOZ2ouH/Zq6S+mAGgNhc9KMy0VFJdqOpUuaANfD
-         nZD+PBBcW0Uguu43CnfrLeNlYUFOkFoEiFiADOXLm3mIyIOaM27qP0EMYJulwENLfp
-         29HechQlQ97ucv99FhUbIMkZd9EEVjG/za3sYpkDpDlYLVyhC9ZOkbaRisl7SqXsbZ
-         dgyZtIuK/BdwUUZ01mQN/XAKg2myLXI+2llMfshlLkMWslJwRlnUzx260aUiU2gDK1
-         ZsWntWOKW7fOg==
-Date:   Thu, 25 May 2023 18:03:48 -0700
-Subject: [PATCH 3/3] xfs: update health status if we get a clean bill of
- health
+        b=jLAP7Niq5yVIec3AwzaYWzbydtji6C4g6rlDqIvzqMn5ni26lyU5YVKhsxXvxu/HO
+         hFNivJ3wMrB29xYo2tz7lh8YN+jO6jVknISZN8AAfsRn8h241fQZHsQjRQTsP8ob0P
+         K8ONkUVwbZz4GUZoeeDBIwUmiw1CAzaksO2VdxKFtVzgs5Z8v7CIQ0PXOFSoWSkroz
+         BiLe1XzHpTbGcHpfoTZFBaP/BBxCZNyb2BR0FlkAsKMvQywJbtWCxYszZ6KJKuS2Zp
+         AxRtQukqVp+1qh4BFLuaz6+ZipsYCDq4uWFkv8QVD2L+EW7kLWt2JdpRXp23ONRXof
+         QtPXAkx++KH8Q==
+Date:   Thu, 25 May 2023 18:04:04 -0700
+Subject: [PATCH 1/3] fs: distinguish between user initiated freeze and kernel
+ initiated freeze
 From:   "Darrick J. Wong" <djwong@kernel.org>
 To:     djwong@kernel.org
 Cc:     linux-xfs@vger.kernel.org
-Message-ID: <168506061188.3732817.16665532866654060095.stgit@frogsfrogsfrogs>
-In-Reply-To: <168506061141.3732817.12069555992432067658.stgit@frogsfrogsfrogs>
-References: <168506061141.3732817.12069555992432067658.stgit@frogsfrogsfrogs>
+Message-ID: <168506061501.3732954.2218041921054581532.stgit@frogsfrogsfrogs>
+In-Reply-To: <168506061483.3732954.5178462816967376906.stgit@frogsfrogsfrogs>
+References: <168506061483.3732954.5178462816967376906.stgit@frogsfrogsfrogs>
 User-Agent: StGit/0.19
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
@@ -50,191 +50,326 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-If scrub finds that everything is ok with the filesystem, we need a way
-to tell the health tracking that it can let go of indirect health flags,
-since indirect flags only mean that at some point in the past we lost
-some context.
+Userspace can freeze a filesystem using the FIFREEZE ioctl or by
+suspending the block device; this state persists until userspace thaws
+the filesystem with the FITHAW ioctl or resuming the block device.
+Since commit 18e9e5104fcd ("Introduce freeze_super and thaw_super for
+the fsfreeze ioctl") we only allow the first freeze command to succeed.
 
+The kernel may decide that it is necessary to freeze a filesystem for
+its own internal purposes, such as suspends in progress, filesystem fsck
+activities, or quiescing a device prior to removal.  Userspace thaw
+commands must never break a kernel freeze, and kernel thaw commands
+shouldn't undo userspace's freeze command.
+
+Introduce a couple of freeze holder flags and wire it into the
+sb_writers state.  One kernel and one userspace freeze are allowed to
+coexist at the same time; the filesystem will not thaw until both are
+lifted.
+
+Inspired-by: Luis Chamberlain <mcgrof@kernel.org>
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 ---
- fs/xfs/libxfs/xfs_fs.h |    3 ++
- fs/xfs/scrub/health.c  |   64 ++++++++++++++++++++++++++++++++++++++++++++++++
- fs/xfs/scrub/health.h  |    1 +
- fs/xfs/scrub/repair.c  |    1 +
- fs/xfs/scrub/scrub.c   |    6 +++++
- fs/xfs/scrub/trace.h   |    4 ++-
- 6 files changed, 77 insertions(+), 2 deletions(-)
+ fs/super.c         |  172 +++++++++++++++++++++++++++++++++++++++++++++++++---
+ include/linux/fs.h |    8 ++
+ 2 files changed, 170 insertions(+), 10 deletions(-)
 
 
-diff --git a/fs/xfs/libxfs/xfs_fs.h b/fs/xfs/libxfs/xfs_fs.h
-index 417cf85c0f70..400cf68e551e 100644
---- a/fs/xfs/libxfs/xfs_fs.h
-+++ b/fs/xfs/libxfs/xfs_fs.h
-@@ -712,9 +712,10 @@ struct xfs_scrub_metadata {
- #define XFS_SCRUB_TYPE_FSCOUNTERS 24	/* fs summary counters */
- #define XFS_SCRUB_TYPE_QUOTACHECK 25	/* quota counters */
- #define XFS_SCRUB_TYPE_NLINKS	26	/* inode link counts */
-+#define XFS_SCRUB_TYPE_HEALTHY	27	/* everything checked out ok */
+diff --git a/fs/super.c b/fs/super.c
+index 34afe411cf2b..7496d51affb9 100644
+--- a/fs/super.c
++++ b/fs/super.c
+@@ -39,7 +39,7 @@
+ #include <uapi/linux/mount.h>
+ #include "internal.h"
  
- /* Number of scrub subcommands. */
--#define XFS_SCRUB_TYPE_NR	27
-+#define XFS_SCRUB_TYPE_NR	28
+-static int thaw_super_locked(struct super_block *sb);
++static int thaw_super_locked(struct super_block *sb, unsigned short who);
  
- /* i: Repair this metadata. */
- #define XFS_SCRUB_IFLAG_REPAIR		(1u << 0)
-diff --git a/fs/xfs/scrub/health.c b/fs/xfs/scrub/health.c
-index 09569b8289d5..f1407f617395 100644
---- a/fs/xfs/scrub/health.c
-+++ b/fs/xfs/scrub/health.c
-@@ -16,6 +16,7 @@
- #include "xfs_health.h"
- #include "scrub/scrub.h"
- #include "scrub/health.h"
-+#include "scrub/common.h"
- 
- /*
-  * Scrub and In-Core Filesystem Health Assessments
-@@ -119,6 +120,24 @@ xchk_health_mask_for_scrub_type(
- 	return type_to_health_flag[scrub_type].sick_mask;
+ static LIST_HEAD(super_blocks);
+ static DEFINE_SPINLOCK(sb_lock);
+@@ -1027,7 +1027,7 @@ static void do_thaw_all_callback(struct super_block *sb)
+ 	down_write(&sb->s_umount);
+ 	if (sb->s_root && sb->s_flags & SB_BORN) {
+ 		emergency_thaw_bdev(sb);
+-		thaw_super_locked(sb);
++		thaw_super_locked(sb, FREEZE_HOLDER_USERSPACE);
+ 	} else {
+ 		up_write(&sb->s_umount);
+ 	}
+@@ -1636,13 +1636,21 @@ static void sb_freeze_unlock(struct super_block *sb, int level)
  }
  
-+/*
-+ * Scrub gave the filesystem a clean bill of health, so clear all the indirect
-+ * markers of past problems (at least for the fs and ags) so that we can be
-+ * healthy again.
-+ */
-+STATIC void
-+xchk_mark_all_healthy(
-+	struct xfs_mount	*mp)
-+{
-+	struct xfs_perag	*pag;
-+	xfs_agnumber_t		agno;
-+
-+	xfs_fs_mark_healthy(mp, XFS_SICK_FS_INDIRECT);
-+	xfs_rt_mark_healthy(mp, XFS_SICK_RT_INDIRECT);
-+	for_each_perag(mp, agno, pag)
-+		xfs_ag_mark_healthy(pag, XFS_SICK_AG_INDIRECT);
-+}
-+
- /*
-  * Update filesystem health assessments based on what we found and did.
+ /**
+- * freeze_super - lock the filesystem and force it into a consistent state
++ * __freeze_super - lock the filesystem and force it into a consistent state
+  * @sb: the super to lock
++ * @who: FREEZE_HOLDER_USERSPACE if userspace wants to freeze the fs;
++ * FREEZE_HOLDER_KERNEL if the kernel wants to freeze it
   *
-@@ -136,6 +155,18 @@ xchk_update_health(
- 	struct xfs_perag	*pag;
- 	bool			bad;
+  * Syncs the super to make sure the filesystem is consistent and calls the fs's
+- * freeze_fs.  Subsequent calls to this without first thawing the fs will return
++ * freeze_fs.  Subsequent calls to this without first thawing the fs may return
+  * -EBUSY.
+  *
++ * The @who argument distinguishes between the kernel and userspace trying to
++ * freeze the filesystem.  Although there cannot be multiple kernel freezes or
++ * multiple userspace freezes in effect at any given time, the kernel and
++ * userspace can both hold a filesystem frozen.  The filesystem remains frozen
++ * until there are no kernel or userspace freezes in effect.
++ *
+  * During this function, sb->s_writers.frozen goes through these values:
+  *
+  * SB_UNFROZEN: File system is normal, all writes progress as usual.
+@@ -1668,12 +1676,61 @@ static void sb_freeze_unlock(struct super_block *sb, int level)
+  *
+  * sb->s_writers.frozen is protected by sb->s_umount.
+  */
+-int freeze_super(struct super_block *sb)
++static int __freeze_super(struct super_block *sb, unsigned short who)
+ {
++	struct sb_writers *sbw = &sb->s_writers;
+ 	int ret;
  
-+	/*
-+	 * The HEALTHY scrub type is a request from userspace to clear all the
-+	 * indirect flags after a clean scan of the entire filesystem.  As such
-+	 * there's no sick flag defined for it, so we branch here ahead of the
-+	 * mask check.
-+	 */
-+	if (sc->sm->sm_type == XFS_SCRUB_TYPE_HEALTHY &&
-+	    !(sc->sm->sm_flags & XFS_SCRUB_OFLAG_CORRUPT)) {
-+		xchk_mark_all_healthy(sc->mp);
-+		return;
+ 	atomic_inc(&sb->s_active);
+ 	down_write(&sb->s_umount);
++
++	if (sbw->frozen == SB_FREEZE_COMPLETE) {
++		switch (who) {
++		case FREEZE_HOLDER_KERNEL:
++			if (sbw->freeze_holders & FREEZE_HOLDER_KERNEL) {
++				/*
++				 * Kernel freeze already in effect; caller can
++				 * try again.
++				 */
++				deactivate_locked_super(sb);
++				return -EBUSY;
++			}
++			if (sbw->freeze_holders & FREEZE_HOLDER_USERSPACE) {
++				/*
++				 * Share the freeze state with the userspace
++				 * freeze already in effect.
++				 */
++				sbw->freeze_holders |= who;
++				deactivate_locked_super(sb);
++				return 0;
++			}
++			break;
++		case FREEZE_HOLDER_USERSPACE:
++			if (sbw->freeze_holders & FREEZE_HOLDER_USERSPACE) {
++				/*
++				 * Userspace freeze already in effect; tell
++				 * the caller we're busy.
++				 */
++				deactivate_locked_super(sb);
++				return -EBUSY;
++			}
++			if (sbw->freeze_holders & FREEZE_HOLDER_KERNEL) {
++				/*
++				 * Share the freeze state with the kernel
++				 * freeze already in effect.
++				 */
++				sbw->freeze_holders |= who;
++				deactivate_locked_super(sb);
++				return 0;
++			}
++			break;
++		default:
++			BUG();
++			deactivate_locked_super(sb);
++			return -EINVAL;
++		}
 +	}
 +
- 	if (!sc->sick_mask)
- 		return;
+ 	if (sb->s_writers.frozen != SB_UNFROZEN) {
+ 		deactivate_locked_super(sb);
+ 		return -EBUSY;
+@@ -1686,6 +1743,7 @@ int freeze_super(struct super_block *sb)
  
-@@ -259,3 +290,36 @@ xchk_ag_btree_healthy_enough(
- 
- 	return true;
+ 	if (sb_rdonly(sb)) {
+ 		/* Nothing to do really... */
++		sb->s_writers.freeze_holders |= who;
+ 		sb->s_writers.frozen = SB_FREEZE_COMPLETE;
+ 		up_write(&sb->s_umount);
+ 		return 0;
+@@ -1731,23 +1789,103 @@ int freeze_super(struct super_block *sb)
+ 	 * For debugging purposes so that fs can warn if it sees write activity
+ 	 * when frozen is set to SB_FREEZE_COMPLETE, and for thaw_super().
+ 	 */
++	sb->s_writers.freeze_holders |= who;
+ 	sb->s_writers.frozen = SB_FREEZE_COMPLETE;
+ 	lockdep_sb_freeze_release(sb);
+ 	up_write(&sb->s_umount);
+ 	return 0;
  }
 +
 +/*
-+ * Quick scan to double-check that there isn't any evidence of lingering
-+ * primary health problems.  If we're still clear, then the health update will
-+ * take care of clearing the indirect evidence.
++ * freeze_super - lock the filesystem and force it into a consistent state
++ * @sb: the super to lock
++ *
++ * Syncs the super to make sure the filesystem is consistent and calls the fs's
++ * freeze_fs.  Subsequent calls to this without first calling thaw_super will
++ * return -EBUSY.  See the comment for __freeze_super for more information.
 + */
-+int
-+xchk_health_record(
-+	struct xfs_scrub	*sc)
++int freeze_super(struct super_block *sb)
 +{
-+	struct xfs_mount	*mp = sc->mp;
-+	struct xfs_perag	*pag;
-+	xfs_agnumber_t		agno;
++	return __freeze_super(sb, FREEZE_HOLDER_USERSPACE);
++}
+ EXPORT_SYMBOL(freeze_super);
+ 
+-static int thaw_super_locked(struct super_block *sb)
++/**
++ * freeze_super_kernel - lock the filesystem for an internal kernel operation
++ * and force it into a consistent state.
++ * @sb: the super to lock
++ *
++ * Syncs the super to make sure the filesystem is consistent and calls the fs's
++ * freeze_fs.  Subsequent calls to this without first calling thaw_super_excl
++ * will return -EBUSY.
++ */
++int freeze_super_kernel(struct super_block *sb)
+ {
++	return __freeze_super(sb, FREEZE_HOLDER_KERNEL);
++}
++EXPORT_SYMBOL_GPL(freeze_super_kernel);
 +
-+	unsigned int		sick;
-+	unsigned int		checked;
-+
-+	xfs_fs_measure_sickness(mp, &sick, &checked);
-+	if (sick & XFS_SICK_FS_PRIMARY)
-+		xchk_set_corrupt(sc);
-+
-+	xfs_rt_measure_sickness(mp, &sick, &checked);
-+	if (sick & XFS_SICK_RT_PRIMARY)
-+		xchk_set_corrupt(sc);
-+
-+	for_each_perag(mp, agno, pag) {
-+		xfs_ag_measure_sickness(pag, &sick, &checked);
-+		if (sick & XFS_SICK_AG_PRIMARY)
-+			xchk_set_corrupt(sc);
++/*
++ * Undoes the effect of a freeze_super_locked call.  If the filesystem is
++ * frozen both by userspace and the kernel, a thaw call from either source
++ * removes that state without releasing the other state or unlocking the
++ * filesystem.
++ */
++static int thaw_super_locked(struct super_block *sb, unsigned short who)
++{
++	struct sb_writers *sbw = &sb->s_writers;
+ 	int error;
+ 
++	if (sbw->frozen == SB_FREEZE_COMPLETE) {
++		switch (who) {
++		case FREEZE_HOLDER_KERNEL:
++			if (!(sbw->freeze_holders & FREEZE_HOLDER_KERNEL)) {
++				/* Caller doesn't hold a kernel freeze. */
++				up_write(&sb->s_umount);
++				return -EINVAL;
++			}
++			if (sbw->freeze_holders & FREEZE_HOLDER_USERSPACE) {
++				/*
++				 * We were sharing the freeze with userspace,
++				 * so drop the userspace freeze but exit
++				 * without unfreezing.
++				 */
++				sbw->freeze_holders &= ~who;
++				up_write(&sb->s_umount);
++				return 0;
++			}
++			break;
++		case FREEZE_HOLDER_USERSPACE:
++			if (!(sbw->freeze_holders & FREEZE_HOLDER_USERSPACE)) {
++				/* Caller doesn't hold a userspace freeze. */
++				up_write(&sb->s_umount);
++				return -EINVAL;
++			}
++			if (sbw->freeze_holders & FREEZE_HOLDER_KERNEL) {
++				/*
++				 * We were sharing the freeze with the kernel,
++				 * so drop the kernel freeze but exit without
++				 * unfreezing.
++				 */
++				sbw->freeze_holders &= ~who;
++				up_write(&sb->s_umount);
++				return 0;
++			}
++			break;
++		default:
++			BUG();
++			up_write(&sb->s_umount);
++			return -EINVAL;
++		}
 +	}
 +
-+	return 0;
-+}
-diff --git a/fs/xfs/scrub/health.h b/fs/xfs/scrub/health.h
-index 66a273f8585b..1a3ce4ea6213 100644
---- a/fs/xfs/scrub/health.h
-+++ b/fs/xfs/scrub/health.h
-@@ -10,5 +10,6 @@ unsigned int xchk_health_mask_for_scrub_type(__u32 scrub_type);
- void xchk_update_health(struct xfs_scrub *sc);
- bool xchk_ag_btree_healthy_enough(struct xfs_scrub *sc, struct xfs_perag *pag,
- 		xfs_btnum_t btnum);
-+int xchk_health_record(struct xfs_scrub *sc);
+ 	if (sb->s_writers.frozen != SB_FREEZE_COMPLETE) {
+ 		up_write(&sb->s_umount);
+ 		return -EINVAL;
+ 	}
  
- #endif /* __XFS_SCRUB_HEALTH_H__ */
-diff --git a/fs/xfs/scrub/repair.c b/fs/xfs/scrub/repair.c
-index 7b3d88230b5b..787d3a706dfd 100644
---- a/fs/xfs/scrub/repair.c
-+++ b/fs/xfs/scrub/repair.c
-@@ -30,6 +30,7 @@
- #include "xfs_errortag.h"
- #include "xfs_error.h"
- #include "xfs_reflink.h"
-+#include "xfs_health.h"
- #include "scrub/scrub.h"
- #include "scrub/common.h"
- #include "scrub/trace.h"
-diff --git a/fs/xfs/scrub/scrub.c b/fs/xfs/scrub/scrub.c
-index cfae97e3db04..d4396c351373 100644
---- a/fs/xfs/scrub/scrub.c
-+++ b/fs/xfs/scrub/scrub.c
-@@ -379,6 +379,12 @@ static const struct xchk_meta_ops meta_scrub_ops[] = {
- 		.scrub	= xchk_nlinks,
- 		.repair	= xrep_nlinks,
- 	},
-+	[XFS_SCRUB_TYPE_HEALTHY] = {	/* fs healthy; clean all reminders */
-+		.type	= ST_FS,
-+		.setup	= xchk_setup_fs,
-+		.scrub	= xchk_health_record,
-+		.repair = xrep_notsupported,
-+	},
+ 	if (sb_rdonly(sb)) {
++		sb->s_writers.freeze_holders &= ~who;
+ 		sb->s_writers.frozen = SB_UNFROZEN;
+ 		goto out;
+ 	}
+@@ -1765,6 +1903,7 @@ static int thaw_super_locked(struct super_block *sb)
+ 		}
+ 	}
+ 
++	sb->s_writers.freeze_holders &= ~who;
+ 	sb->s_writers.frozen = SB_UNFROZEN;
+ 	sb_freeze_unlock(sb, SB_FREEZE_FS);
+ out:
+@@ -1774,18 +1913,33 @@ static int thaw_super_locked(struct super_block *sb)
+ }
+ 
+ /**
+- * thaw_super -- unlock filesystem
++ * thaw_super -- unlock filesystem frozen with freeze_super
+  * @sb: the super to thaw
+  *
+- * Unlocks the filesystem and marks it writeable again after freeze_super().
++ * Unlocks the filesystem after freeze_super, and make it writeable again if
++ * there is not a freeze_super_kernel still in effect.
+  */
+ int thaw_super(struct super_block *sb)
+ {
+ 	down_write(&sb->s_umount);
+-	return thaw_super_locked(sb);
++	return thaw_super_locked(sb, FREEZE_HOLDER_USERSPACE);
+ }
+ EXPORT_SYMBOL(thaw_super);
+ 
++/**
++ * thaw_super_kernel -- unlock filesystem frozen with freeze_super_kernel
++ * @sb: the super to thaw
++ *
++ * Unlocks the filesystem after freeze_super_kernel, and make it writeable
++ * again if there is not a freeze_super still in effect.
++ */
++int thaw_super_kernel(struct super_block *sb)
++{
++	down_write(&sb->s_umount);
++	return thaw_super_locked(sb, FREEZE_HOLDER_KERNEL);
++}
++EXPORT_SYMBOL_GPL(thaw_super_kernel);
++
+ /*
+  * Create workqueue for deferred direct IO completions. We allocate the
+  * workqueue when it's first needed. This avoids creating workqueue for
+diff --git a/include/linux/fs.h b/include/linux/fs.h
+index 21a981680856..147644b5d648 100644
+--- a/include/linux/fs.h
++++ b/include/linux/fs.h
+@@ -1145,11 +1145,15 @@ enum {
+ #define SB_FREEZE_LEVELS (SB_FREEZE_COMPLETE - 1)
+ 
+ struct sb_writers {
+-	int				frozen;		/* Is sb frozen? */
++	unsigned short			frozen;		/* Is sb frozen? */
++	unsigned short			freeze_holders;	/* Who froze fs? */
+ 	wait_queue_head_t		wait_unfrozen;	/* wait for thaw */
+ 	struct percpu_rw_semaphore	rw_sem[SB_FREEZE_LEVELS];
  };
  
- static int
-diff --git a/fs/xfs/scrub/trace.h b/fs/xfs/scrub/trace.h
-index 9df95fb67e78..d4f142929518 100644
---- a/fs/xfs/scrub/trace.h
-+++ b/fs/xfs/scrub/trace.h
-@@ -68,6 +68,7 @@ TRACE_DEFINE_ENUM(XFS_SCRUB_TYPE_PQUOTA);
- TRACE_DEFINE_ENUM(XFS_SCRUB_TYPE_FSCOUNTERS);
- TRACE_DEFINE_ENUM(XFS_SCRUB_TYPE_QUOTACHECK);
- TRACE_DEFINE_ENUM(XFS_SCRUB_TYPE_NLINKS);
-+TRACE_DEFINE_ENUM(XFS_SCRUB_TYPE_HEALTHY);
- 
- #define XFS_SCRUB_TYPE_STRINGS \
- 	{ XFS_SCRUB_TYPE_PROBE,		"probe" }, \
-@@ -96,7 +97,8 @@ TRACE_DEFINE_ENUM(XFS_SCRUB_TYPE_NLINKS);
- 	{ XFS_SCRUB_TYPE_PQUOTA,	"prjquota" }, \
- 	{ XFS_SCRUB_TYPE_FSCOUNTERS,	"fscounters" }, \
- 	{ XFS_SCRUB_TYPE_QUOTACHECK,	"quotacheck" }, \
--	{ XFS_SCRUB_TYPE_NLINKS,	"nlinks" }
-+	{ XFS_SCRUB_TYPE_NLINKS,	"nlinks" }, \
-+	{ XFS_SCRUB_TYPE_HEALTHY,	"healthy" }
- 
- #define XFS_SCRUB_FLAG_STRINGS \
- 	{ XFS_SCRUB_IFLAG_REPAIR,		"repair" }, \
++#define FREEZE_HOLDER_USERSPACE	(1U << 1)	/* userspace froze fs */
++#define FREEZE_HOLDER_KERNEL	(1U << 2)	/* kernel froze fs */
++
+ struct super_block {
+ 	struct list_head	s_list;		/* Keep this first */
+ 	dev_t			s_dev;		/* search index; _not_ kdev_t */
+@@ -2288,6 +2292,8 @@ extern int user_statfs(const char __user *, struct kstatfs *);
+ extern int fd_statfs(int, struct kstatfs *);
+ extern int freeze_super(struct super_block *super);
+ extern int thaw_super(struct super_block *super);
++extern int freeze_super_kernel(struct super_block *super);
++extern int thaw_super_kernel(struct super_block *super);
+ extern __printf(2, 3)
+ int super_setup_bdi_name(struct super_block *sb, char *fmt, ...);
+ extern int super_setup_bdi(struct super_block *sb);
 
