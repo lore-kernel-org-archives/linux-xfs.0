@@ -2,42 +2,42 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C4352C77B7E
-	for <linux-xfs@archiver.kernel.org>; Fri, 26 May 2023 02:29:59 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id EA6FEC77B7E
+	for <linux-xfs@archiver.kernel.org>; Fri, 26 May 2023 02:30:15 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232645AbjEZC36 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 25 May 2023 22:29:58 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55008 "EHLO
+        id S229999AbjEZCaO (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 25 May 2023 22:30:14 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55294 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229646AbjEZC35 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 25 May 2023 22:29:57 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B9AB913D
-        for <linux-xfs@vger.kernel.org>; Thu, 25 May 2023 19:29:55 -0700 (PDT)
+        with ESMTP id S229631AbjEZCaN (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 25 May 2023 22:30:13 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7E65A19C
+        for <linux-xfs@vger.kernel.org>; Thu, 25 May 2023 19:30:11 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 2287B64C4C
-        for <linux-xfs@vger.kernel.org>; Fri, 26 May 2023 02:29:55 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 851D7C433D2;
-        Fri, 26 May 2023 02:29:54 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id C026564C4C
+        for <linux-xfs@vger.kernel.org>; Fri, 26 May 2023 02:30:10 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 2837EC433D2;
+        Fri, 26 May 2023 02:30:10 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1685068194;
-        bh=E89Bk11wjPZzx86OWStcPQeU07pNbUfjnm5LVtL93J4=;
+        s=k20201202; t=1685068210;
+        bh=7TebJoaZKcLxKGGOmv0OsRF7e9qL4ew+Wlfaz5qISHY=;
         h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-        b=KFFgjxSJVUT0nvWCAbcAh8aMbGiCEvovs0DpXk8hPd+8CblUfr5LiT3prXHbeQYeW
-         cSVuxlPqLxylJpfQq8Ifl/s6AJJ1Fq91ptWmUgAMK3uVxTjGVFKd7V5ZdSFmVcDz0d
-         Pvl0UXFofgZKYpkL2Kb2JJLuxhLbrlaqJC7CpwYFm3KsAk6QPeA2HbvtJRD38dr30T
-         U7DwhZX0JcnNaJLU+uSDNLxOd/DrzchQs1TE71XcQ4BWlC0Ba5QUvmINbuugKJNs4o
-         d4eDILL92+Se3S4NjSrTG06fAyz2iQTnVUAJainq2Z8KquMkY+Wnytv9CSXcahWAH6
-         n49DbEhR5AYWQ==
-Date:   Thu, 25 May 2023 19:29:54 -0700
-Subject: [PATCH 01/14] xfs: create a blob array data structure
+        b=oedQILQh40PUmd00dkA8N2JQnX6nGmPjNx+F1LXhGmc3TUTPc8RSqYYz8CxWNXnmL
+         2y1V6XRvjrK2JSEQndD/FG+uifbzTtt9tB+UT5x+PZVaGc6V0R2OQEHXcP/xwIVEdD
+         kbkiXDLwZHXEcLaKebb+a+fZc3KV4Tm7jWQHNg+/aM8kvJrMwXhKsnAmLdamrJh3nB
+         FZooLOUZyrPpviDikufM/GS+5Rj58IYv8dDpmKfm6i0SKYS9s79tPi/IR8TOXii1i0
+         YFXUfYAU4fNOP3HxAIj9dsUAmhLbhMoIzkHvgI1E09dVqYGGS28U/1PKkLrcX05QJZ
+         goTj7P29CP3hQ==
+Date:   Thu, 25 May 2023 19:30:09 -0700
+Subject: [PATCH 02/14] xfs: check dirents have parent pointers
 From:   "Darrick J. Wong" <djwong@kernel.org>
 To:     djwong@kernel.org, cem@kernel.org
 Cc:     linux-xfs@vger.kernel.org, allison.henderson@oracle.com,
         catherine.hoang@oracle.com
-Message-ID: <168506078609.3750196.9659112305237495186.stgit@frogsfrogsfrogs>
+Message-ID: <168506078623.3750196.17274476698965658069.stgit@frogsfrogsfrogs>
 In-Reply-To: <168506078591.3750196.1821601831633863822.stgit@frogsfrogsfrogs>
 References: <168506078591.3750196.1821601831633863822.stgit@frogsfrogsfrogs>
 User-Agent: StGit/0.19
@@ -50,259 +50,83 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-Create a simple 'blob array' data structure for storage of arbitrarily
-sized metadata objects that will be used to reconstruct metadata.  For
-the intended usage (temporarily storing extended attribute names and
-values) we only have to support storing objects and retrieving them.
-Use the xfile abstraction to store the attribute information in memory
-that can be swapped out.
+If the fs has parent pointers, we need to check that each child dirent
+points to a file that has a parent pointer pointing back at us.
 
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 ---
- libxfs/Makefile |    2 +
- libxfs/xfblob.c |  148 +++++++++++++++++++++++++++++++++++++++++++++++++++++++
- libxfs/xfblob.h |   25 +++++++++
- libxfs/xfile.c  |   11 ++++
- libxfs/xfile.h  |    1 
- 5 files changed, 187 insertions(+)
- create mode 100644 libxfs/xfblob.c
- create mode 100644 libxfs/xfblob.h
+ libxfs/xfs_parent.c |   42 ++++++++++++++++++++++++++++++++++++++++++
+ libxfs/xfs_parent.h |   10 ++++++++++
+ 2 files changed, 52 insertions(+)
 
 
-diff --git a/libxfs/Makefile b/libxfs/Makefile
-index f6c7c5c010e..80bd666d356 100644
---- a/libxfs/Makefile
-+++ b/libxfs/Makefile
-@@ -27,6 +27,7 @@ HFILES = \
- 	libxfs_priv.h \
- 	linux-err.h \
- 	topology.h \
-+	xfblob.h \
- 	xfbtree.h \
- 	xfile.h \
- 	xfs_ag_resv.h \
-@@ -71,6 +72,7 @@ CFILES = cache.c \
- 	topology.c \
- 	trans.c \
- 	util.c \
-+	xfblob.c \
- 	xfbtree.c \
- 	xfile.c \
- 	xfs_ag.c \
-diff --git a/libxfs/xfblob.c b/libxfs/xfblob.c
-new file mode 100644
-index 00000000000..9da97fb3a23
---- /dev/null
-+++ b/libxfs/xfblob.c
-@@ -0,0 +1,148 @@
-+// SPDX-License-Identifier: GPL-2.0-or-later
-+/*
-+ * Copyright (C) 2022 Oracle.  All Rights Reserved.
-+ * Author: Darrick J. Wong <djwong@kernel.org>
-+ */
-+#include "libxfs_priv.h"
-+#include "libxfs.h"
-+#include "libxfs/xfile.h"
-+#include "libxfs/xfblob.h"
-+
-+/*
-+ * XFS Blob Storage
-+ * ================
-+ * Stores and retrieves blobs using an xfile.  Objects are appended to the file
-+ * and the offset is returned as a magic cookie for retrieval.
-+ */
-+
-+#define XB_KEY_MAGIC	0xABAADDAD
-+struct xb_key {
-+	uint32_t		xb_magic;  /* XB_KEY_MAGIC */
-+	uint32_t		xb_size;   /* size of the blob, in bytes */
-+	loff_t			xb_offset; /* byte offset of this key */
-+	/* blob comes after here */
-+} __packed;
-+
-+/* Initialize a blob storage object. */
-+int
-+xfblob_create(
-+	struct xfs_mount	*mp,
-+	const char		*description,
-+	struct xfblob		**blobp)
-+{
-+	struct xfblob		*blob;
-+	struct xfile		*xfile;
-+	int			error;
-+
-+	error = xfile_create(mp, 0, description, &xfile);
-+	if (error)
-+		return error;
-+
-+	blob = malloc(sizeof(struct xfblob));
-+	if (!blob) {
-+		error = -ENOMEM;
-+		goto out_xfile;
-+	}
-+
-+	blob->xfile = xfile;
-+	blob->last_offset = PAGE_SIZE;
-+
-+	*blobp = blob;
-+	return 0;
-+
-+out_xfile:
-+	xfile_destroy(xfile);
-+	return error;
-+}
-+
-+/* Destroy a blob storage object. */
-+void
-+xfblob_destroy(
-+	struct xfblob	*blob)
-+{
-+	xfile_destroy(blob->xfile);
-+	kfree(blob);
-+}
-+
-+/* Retrieve a blob. */
-+int
-+xfblob_load(
-+	struct xfblob	*blob,
-+	xfblob_cookie	cookie,
-+	void		*ptr,
-+	uint32_t	size)
-+{
-+	struct xb_key	key;
-+	int		error;
-+
-+	error = xfile_obj_load(blob->xfile, &key, sizeof(key), cookie);
-+	if (error)
-+		return error;
-+
-+	if (key.xb_magic != XB_KEY_MAGIC || key.xb_offset != cookie) {
-+		ASSERT(0);
-+		return -ENODATA;
-+	}
-+	if (size < key.xb_size) {
-+		ASSERT(0);
-+		return -EFBIG;
-+	}
-+
-+	return xfile_obj_load(blob->xfile, ptr, key.xb_size,
-+			cookie + sizeof(key));
-+}
-+
-+/* Store a blob. */
-+int
-+xfblob_store(
-+	struct xfblob	*blob,
-+	xfblob_cookie	*cookie,
-+	const void	*ptr,
-+	uint32_t	size)
-+{
-+	struct xb_key	key = {
-+		.xb_offset = blob->last_offset,
-+		.xb_magic = XB_KEY_MAGIC,
-+		.xb_size = size,
-+	};
-+	loff_t		pos = blob->last_offset;
-+	int		error;
-+
-+	error = xfile_obj_store(blob->xfile, &key, sizeof(key), pos);
-+	if (error)
-+		return error;
-+
-+	pos += sizeof(key);
-+	error = xfile_obj_store(blob->xfile, ptr, size, pos);
-+	if (error)
-+		goto out_err;
-+
-+	*cookie = blob->last_offset;
-+	blob->last_offset += sizeof(key) + size;
-+	return 0;
-+out_err:
-+	xfile_discard(blob->xfile, blob->last_offset, sizeof(key));
-+	return error;
-+}
-+
-+/* Free a blob. */
-+int
-+xfblob_free(
-+	struct xfblob	*blob,
-+	xfblob_cookie	cookie)
-+{
-+	struct xb_key	key;
-+	int		error;
-+
-+	error = xfile_obj_load(blob->xfile, &key, sizeof(key), cookie);
-+	if (error)
-+		return error;
-+
-+	if (key.xb_magic != XB_KEY_MAGIC || key.xb_offset != cookie) {
-+		ASSERT(0);
-+		return -ENODATA;
-+	}
-+
-+	xfile_discard(blob->xfile, cookie, sizeof(key) + key.xb_size);
-+	return 0;
-+}
-diff --git a/libxfs/xfblob.h b/libxfs/xfblob.h
-new file mode 100644
-index 00000000000..d1282810bb1
---- /dev/null
-+++ b/libxfs/xfblob.h
-@@ -0,0 +1,25 @@
-+/* SPDX-License-Identifier: GPL-2.0-or-later */
-+/*
-+ * Copyright (C) 2022 Oracle.  All Rights Reserved.
-+ * Author: Darrick J. Wong <djwong@kernel.org>
-+ */
-+#ifndef __XFS_SCRUB_XFBLOB_H__
-+#define __XFS_SCRUB_XFBLOB_H__
-+
-+struct xfblob {
-+	struct xfile	*xfile;
-+	loff_t		last_offset;
-+};
-+
-+typedef loff_t		xfblob_cookie;
-+
-+int xfblob_create(struct xfs_mount *mp, const char *descr,
-+		struct xfblob **blobp);
-+void xfblob_destroy(struct xfblob *blob);
-+int xfblob_load(struct xfblob *blob, xfblob_cookie cookie, void *ptr,
-+		uint32_t size);
-+int xfblob_store(struct xfblob *blob, xfblob_cookie *cookie, const void *ptr,
-+		uint32_t size);
-+int xfblob_free(struct xfblob *blob, xfblob_cookie cookie);
-+
-+#endif /* __XFS_SCRUB_XFBLOB_H__ */
-diff --git a/libxfs/xfile.c b/libxfs/xfile.c
-index af556b9a965..3ae1a0c2ec3 100644
---- a/libxfs/xfile.c
-+++ b/libxfs/xfile.c
-@@ -482,3 +482,14 @@ xfile_prealloc(
- 		return -errno;
- 	return 0;
+diff --git a/libxfs/xfs_parent.c b/libxfs/xfs_parent.c
+index b1890f48722..fcf05dc5ed4 100644
+--- a/libxfs/xfs_parent.c
++++ b/libxfs/xfs_parent.c
+@@ -323,3 +323,45 @@ xfs_parent_irec_hashname(
+ 
+ 	irec->p_namehash = xfs_dir2_hashname(mp, &dname);
  }
 +
-+/* Discard pages backing a range of the xfile. */
-+void
-+xfile_discard(
-+	struct xfile		*xf,
-+	loff_t			pos,
-+	unsigned long long	count)
++static inline void
++xfs_parent_scratch_init(
++	struct xfs_trans		*tp,
++	struct xfs_inode		*ip,
++	const struct xfs_parent_name_irec *pptr,
++	struct xfs_parent_scratch	*scr)
 +{
-+	fallocate(xf->fcb->fd, FALLOC_FL_PUNCH_HOLE | FALLOC_FL_KEEP_SIZE,
-+			pos, count);
++	memset(&scr->args, 0, sizeof(struct xfs_da_args));
++	scr->args.attr_filter	= XFS_ATTR_PARENT;
++	scr->args.dp		= ip;
++	scr->args.geo		= ip->i_mount->m_attr_geo;
++	scr->args.name		= (const unsigned char *)&scr->rec;
++	scr->args.namelen	= sizeof(struct xfs_parent_name_rec);
++	scr->args.op_flags	= XFS_DA_OP_NVLOOKUP;
++	scr->args.trans		= tp;
++	scr->args.value		= (void *)pptr->p_name;
++	scr->args.valuelen	= pptr->p_namelen;
++	scr->args.whichfork	= XFS_ATTR_FORK;
++	scr->args.hashval	= xfs_da_hashname((const void *)&scr->rec,
++					sizeof(struct xfs_parent_name_rec));
 +}
-diff --git a/libxfs/xfile.h b/libxfs/xfile.h
-index 8bd679e7478..9294595e05f 100644
---- a/libxfs/xfile.h
-+++ b/libxfs/xfile.h
-@@ -61,6 +61,7 @@ struct xfile_stat {
- int xfile_stat(struct xfile *xf, struct xfile_stat *statbuf);
- unsigned long long xfile_bytes(struct xfile *xf);
- int xfile_dump(struct xfile *xf);
-+void xfile_discard(struct xfile *xf, loff_t pos, unsigned long long count);
++
++/*
++ * Look up the @name associated with the parent pointer (@pptr) of @ip.
++ * Caller must hold at least ILOCK_SHARED.  Returns 0 if the pointer is found,
++ * -ENOATTR if there is no match, or a negative errno.  The scratchpad need not
++ *  be initialized.
++ */
++int
++xfs_parent_lookup(
++	struct xfs_trans		*tp,
++	struct xfs_inode		*ip,
++	const struct xfs_parent_name_irec *pptr,
++	struct xfs_parent_scratch	*scr)
++{
++	xfs_parent_irec_to_disk(&scr->rec, pptr);
++	xfs_parent_scratch_init(tp, ip, pptr, scr);
++	scr->args.op_flags |= XFS_DA_OP_OKNOENT;
++
++	return xfs_attr_get_ilocked(&scr->args);
++}
+diff --git a/libxfs/xfs_parent.h b/libxfs/xfs_parent.h
+index 0f4808990ce..25bbb62fce5 100644
+--- a/libxfs/xfs_parent.h
++++ b/libxfs/xfs_parent.h
+@@ -98,4 +98,14 @@ void xfs_parent_irec_to_disk(struct xfs_parent_name_rec *rec,
+ void xfs_parent_irec_hashname(struct xfs_mount *mp,
+ 		struct xfs_parent_name_irec *irec);
  
- static inline loff_t xfile_size(struct xfile *xf)
- {
++/* Scratchpad memory so that raw parent operations don't burn stack space. */
++struct xfs_parent_scratch {
++	struct xfs_parent_name_rec	rec;
++	struct xfs_da_args		args;
++};
++
++int xfs_parent_lookup(struct xfs_trans *tp, struct xfs_inode *ip,
++		const struct xfs_parent_name_irec *pptr,
++		struct xfs_parent_scratch *scratch);
++
+ #endif	/* __XFS_PARENT_H__ */
 
