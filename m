@@ -2,43 +2,44 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3A2DCC77B7A
-	for <linux-xfs@archiver.kernel.org>; Fri, 26 May 2023 00:49:50 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5ED9DC77B7A
+	for <linux-xfs@archiver.kernel.org>; Fri, 26 May 2023 00:50:05 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235229AbjEZAtt (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 25 May 2023 20:49:49 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48428 "EHLO
+        id S229567AbjEZAuE (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 25 May 2023 20:50:04 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48478 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229567AbjEZAts (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 25 May 2023 20:49:48 -0400
+        with ESMTP id S235394AbjEZAuD (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 25 May 2023 20:50:03 -0400
 Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 97A6E194
-        for <linux-xfs@vger.kernel.org>; Thu, 25 May 2023 17:49:46 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 42469199
+        for <linux-xfs@vger.kernel.org>; Thu, 25 May 2023 17:50:02 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 335C5619B3
-        for <linux-xfs@vger.kernel.org>; Fri, 26 May 2023 00:49:46 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 8EC9BC433D2;
-        Fri, 26 May 2023 00:49:45 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id D3AD8615B4
+        for <linux-xfs@vger.kernel.org>; Fri, 26 May 2023 00:50:01 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 3E252C433D2;
+        Fri, 26 May 2023 00:50:01 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1685062185;
-        bh=WYzgCaPW8HoZYJDqDZaRcitilBirqH5hfcSMVzU+Cl4=;
+        s=k20201202; t=1685062201;
+        bh=qbhcu6uaHXs7rNX+rkew4Ot0Q/QepaN+xA986eTUEZQ=;
         h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-        b=I3MMbdW2fEnfTNpdOEPWWJZfDEYP3Ynknd72Ui5A83KWIg/6Nw7NYvnPigEuRz55o
-         /lblsee5+PPNRvL0Y/QCUO4/FVonBoqwRYPU8GxVgUDBU3WYJOI4GCC1EwYr5R2P/k
-         ewNZBVGhknEwktR+T0+rJ1yamuVV7y9wgx4USdE3RNYaTuKspQD7Xt8QPssnHjkPky
-         X7OnsPrpOERlcuKMS2FTIPe2RzmXHFokyqTpPD7FSbkiVFNzmL3sYVg6gYAfO9h6RB
-         U95gNm7CYFazLu1PwBeHhQLH0zVrJivgRR3iFOctgZRIkdOwwnycZJ7PhLB34qFEXp
-         KKqReRA7EFRJA==
-Date:   Thu, 25 May 2023 17:49:45 -0700
-Subject: [PATCH 4/4] xfs: implement online scrubbing of rtsummary info
+        b=CZ0I8fosZixFicAhl/+rdNiFoBIh22LC5UmbU5l+VLNzxLvHt4B8Gvv2geRiUVO/S
+         dPpFwaABgBAQ4XipI/JyUtSUGOXHdyU0ua31Z5JzTl/SbX3sAguge53oiqZFwCIGhS
+         86Zk+cs2L5KjGAg0iw/6d6FmMhNNcnSZS0yOxEWZ7935Iq3qnnwjQfPUUC8gZ9QMrJ
+         l6Bf0QjW6jP915PRdBnGcn6sGdDQOq9yqApkFeQJjzwA5xM9udhHCDaXqrXNdKjD+l
+         Gfd1ca2bBQX1tR+zrB95DusKaFDoOm0B6AaLVKGN4w6cJnYfAuEsbb7cEtXF2s6T4u
+         MovoMkKOVnbFw==
+Date:   Thu, 25 May 2023 17:50:00 -0700
+Subject: [PATCH 1/2] xfs: always rescan allegedly healthy per-ag metadata
+ after repair
 From:   "Darrick J. Wong" <djwong@kernel.org>
 To:     djwong@kernel.org
 Cc:     linux-xfs@vger.kernel.org
-Message-ID: <168506056921.3729869.14872547646015077006.stgit@frogsfrogsfrogs>
-In-Reply-To: <168506056859.3729869.14765688109434520098.stgit@frogsfrogsfrogs>
-References: <168506056859.3729869.14765688109434520098.stgit@frogsfrogsfrogs>
+Message-ID: <168506057238.3730021.5815780398185212485.stgit@frogsfrogsfrogs>
+In-Reply-To: <168506057223.3730021.15237048674614006148.stgit@frogsfrogsfrogs>
+References: <168506057223.3730021.15237048674614006148.stgit@frogsfrogsfrogs>
 User-Agent: StGit/0.19
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
@@ -49,452 +50,38 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-Finish the realtime summary scrubber by adding the functions we need to
-compute a fresh copy of the rtsummary info and comparing it to the copy
-on disk.
+After an online repair function runs for a per-AG metadata structure,
+sc->sick_mask is supposed to reflect the per-AG metadata that the repair
+function fixed.  Our next move is to re-check the metadata to assess
+the completeness of our repair, so we don't want the rebuilt structure
+to be excluded from the rescan just because the health system previously
+logged a problem with the data structure.
 
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 ---
- fs/xfs/scrub/common.h    |   10 +-
- fs/xfs/scrub/rtbitmap.c  |    4 -
- fs/xfs/scrub/rtsummary.c |  252 ++++++++++++++++++++++++++++++++++++++++++----
- fs/xfs/scrub/scrub.c     |    9 +-
- fs/xfs/scrub/scrub.h     |    4 +
- fs/xfs/scrub/trace.h     |   34 ++++++
- fs/xfs/xfs_trace.h       |    3 +
- 7 files changed, 288 insertions(+), 28 deletions(-)
+ fs/xfs/scrub/health.c |   10 ++++++++++
+ 1 file changed, 10 insertions(+)
 
 
-diff --git a/fs/xfs/scrub/common.h b/fs/xfs/scrub/common.h
-index 6495a39e9123..d553871752e4 100644
---- a/fs/xfs/scrub/common.h
-+++ b/fs/xfs/scrub/common.h
-@@ -88,10 +88,16 @@ int xchk_setup_xattr(struct xfs_scrub *sc);
- int xchk_setup_symlink(struct xfs_scrub *sc);
- int xchk_setup_parent(struct xfs_scrub *sc);
- #ifdef CONFIG_XFS_RT
--int xchk_setup_rt(struct xfs_scrub *sc);
-+int xchk_setup_rtbitmap(struct xfs_scrub *sc);
-+int xchk_setup_rtsummary(struct xfs_scrub *sc);
- #else
- static inline int
--xchk_setup_rt(struct xfs_scrub *sc)
-+xchk_setup_rtbitmap(struct xfs_scrub *sc)
-+{
-+	return -ENOENT;
-+}
-+static inline int
-+xchk_setup_rtsummary(struct xfs_scrub *sc)
- {
- 	return -ENOENT;
- }
-diff --git a/fs/xfs/scrub/rtbitmap.c b/fs/xfs/scrub/rtbitmap.c
-index 0bf56d92d70a..008ddb599e13 100644
---- a/fs/xfs/scrub/rtbitmap.c
-+++ b/fs/xfs/scrub/rtbitmap.c
-@@ -19,12 +19,12 @@
- 
- /* Set us up with the realtime metadata locked. */
- int
--xchk_setup_rt(
-+xchk_setup_rtbitmap(
- 	struct xfs_scrub	*sc)
- {
- 	int			error;
- 
--	error = xchk_setup_fs(sc);
-+	error = xchk_trans_alloc(sc, 0);
- 	if (error)
- 		return error;
- 
-diff --git a/fs/xfs/scrub/rtsummary.c b/fs/xfs/scrub/rtsummary.c
-index f96d0c7c5fe0..1095ac4a72ec 100644
---- a/fs/xfs/scrub/rtsummary.c
-+++ b/fs/xfs/scrub/rtsummary.c
-@@ -14,41 +14,249 @@
- #include "xfs_log_format.h"
- #include "xfs_trans.h"
- #include "xfs_rtalloc.h"
-+#include "xfs_bit.h"
-+#include "xfs_bmap.h"
- #include "scrub/scrub.h"
- #include "scrub/common.h"
-+#include "scrub/trace.h"
-+#include "scrub/xfile.h"
-+
-+/*
-+ * Realtime Summary
-+ * ================
-+ *
-+ * We check the realtime summary by scanning the realtime bitmap file to create
-+ * a new summary file incore, and then we compare the computed version against
-+ * the ondisk version.  We use the 'xfile' functionality to store this
-+ * (potentially large) amount of data in pageable memory.
-+ */
-+
-+/* Set us up to check the rtsummary file. */
-+int
-+xchk_setup_rtsummary(
-+	struct xfs_scrub	*sc)
-+{
-+	struct xfs_mount	*mp = sc->mp;
-+	int			error;
-+
-+	/*
-+	 * Create an xfile to construct a new rtsummary file.  The xfile allows
-+	 * us to avoid pinning kernel memory for this purpose.
-+	 */
-+	error = xfile_create(mp, "realtime summary file", mp->m_rsumsize,
-+			&sc->xfile);
-+	if (error)
-+		return error;
-+
-+	error = xchk_trans_alloc(sc, 0);
-+	if (error)
-+		return error;
-+
-+	/* Allocate a memory buffer for the summary comparison. */
-+	sc->buf = kvmalloc(mp->m_sb.sb_blocksize, XCHK_GFP_FLAGS);
-+	if (!sc->buf)
-+		return -ENOMEM;
-+
-+	error = xchk_install_live_inode(sc, mp->m_rsumip);
-+	if (error)
-+		return error;
-+
-+	/*
-+	 * Locking order requires us to take the rtbitmap first.  We must be
-+	 * careful to unlock it ourselves when we are done with the rtbitmap
-+	 * file since the scrub infrastructure won't do that for us.  Only
-+	 * then we can lock the rtsummary inode.
-+	 */
-+	xfs_ilock(mp->m_rbmip, XFS_ILOCK_SHARED | XFS_ILOCK_RTBITMAP);
-+	xchk_ilock(sc, XFS_ILOCK_EXCL | XFS_ILOCK_RTSUM);
-+	return 0;
-+}
-+
-+/* Helper functions to record suminfo words in an xfile. */
-+
-+typedef unsigned int xchk_rtsumoff_t;
-+
-+static inline int
-+xfsum_load(
-+	struct xfs_scrub	*sc,
-+	xchk_rtsumoff_t		sumoff,
-+	xfs_suminfo_t		*info)
-+{
-+	return xfile_obj_load(sc->xfile, info, sizeof(xfs_suminfo_t),
-+			sumoff << XFS_WORDLOG);
-+}
-+
-+static inline int
-+xfsum_store(
-+	struct xfs_scrub	*sc,
-+	xchk_rtsumoff_t		sumoff,
-+	const xfs_suminfo_t	info)
-+{
-+	return xfile_obj_store(sc->xfile, &info, sizeof(xfs_suminfo_t),
-+			sumoff << XFS_WORDLOG);
-+}
-+
-+static inline int
-+xfsum_copyout(
-+	struct xfs_scrub	*sc,
-+	xchk_rtsumoff_t		sumoff,
-+	xfs_suminfo_t		*info,
-+	unsigned int		nr_words)
-+{
-+	return xfile_obj_load(sc->xfile, info, nr_words << XFS_WORDLOG,
-+			sumoff << XFS_WORDLOG);
-+}
-+
-+/* Update the summary file to reflect the free extent that we've accumulated. */
-+STATIC int
-+xchk_rtsum_record_free(
-+	struct xfs_mount		*mp,
-+	struct xfs_trans		*tp,
-+	const struct xfs_rtalloc_rec	*rec,
-+	void				*priv)
-+{
-+	struct xfs_scrub		*sc = priv;
-+	xfs_fileoff_t			rbmoff;
-+	xfs_rtblock_t			rtbno;
-+	xfs_filblks_t			rtlen;
-+	xchk_rtsumoff_t			offs;
-+	unsigned int			lenlog;
-+	xfs_suminfo_t			v = 0;
-+	int				error = 0;
-+
-+	if (xchk_should_terminate(sc, &error))
-+		return error;
-+
-+	/* Compute the relevant location in the rtsum file. */
-+	rbmoff = XFS_BITTOBLOCK(mp, rec->ar_startext);
-+	lenlog = XFS_RTBLOCKLOG(rec->ar_extcount);
-+	offs = XFS_SUMOFFS(mp, lenlog, rbmoff);
-+
-+	rtbno = rec->ar_startext * mp->m_sb.sb_rextsize;
-+	rtlen = rec->ar_extcount * mp->m_sb.sb_rextsize;
-+
-+	if (!xfs_verify_rtext(mp, rtbno, rtlen)) {
-+		xchk_ino_xref_set_corrupt(sc, mp->m_rbmip->i_ino);
-+		return -EFSCORRUPTED;
-+	}
-+
-+	/* Bump the summary count. */
-+	error = xfsum_load(sc, offs, &v);
-+	if (error)
-+		return error;
-+
-+	v++;
-+	trace_xchk_rtsum_record_free(mp, rec->ar_startext, rec->ar_extcount,
-+			lenlog, offs, v);
-+
-+	return xfsum_store(sc, offs, v);
-+}
-+
-+/* Compute the realtime summary from the realtime bitmap. */
-+STATIC int
-+xchk_rtsum_compute(
-+	struct xfs_scrub	*sc)
-+{
-+	struct xfs_mount	*mp = sc->mp;
-+	unsigned long long	rtbmp_bytes;
-+
-+	/* If the bitmap size doesn't match the computed size, bail. */
-+	rtbmp_bytes = howmany_64(mp->m_sb.sb_rextents, NBBY);
-+	if (roundup_64(rtbmp_bytes, mp->m_sb.sb_blocksize) !=
-+			mp->m_rbmip->i_disk_size)
-+		return -EFSCORRUPTED;
-+
-+	return xfs_rtalloc_query_all(sc->mp, sc->tp, xchk_rtsum_record_free,
-+			sc);
-+}
-+
-+/* Compare the rtsummary file against the one we computed. */
-+STATIC int
-+xchk_rtsum_compare(
-+	struct xfs_scrub	*sc)
-+{
-+	struct xfs_mount	*mp = sc->mp;
-+	struct xfs_buf		*bp;
-+	struct xfs_bmbt_irec	map;
-+	xfs_fileoff_t		off;
-+	xchk_rtsumoff_t		sumoff = 0;
-+	int			nmap;
-+
-+	for (off = 0; off < XFS_B_TO_FSB(mp, mp->m_rsumsize); off++) {
-+		int		error = 0;
-+
-+		if (xchk_should_terminate(sc, &error))
-+			return error;
-+		if (sc->sm->sm_flags & XFS_SCRUB_OFLAG_CORRUPT)
-+			return 0;
-+
-+		/* Make sure we have a written extent. */
-+		nmap = 1;
-+		error = xfs_bmapi_read(mp->m_rsumip, off, 1, &map, &nmap,
-+				XFS_DATA_FORK);
-+		if (!xchk_fblock_process_error(sc, XFS_DATA_FORK, off, &error))
-+			return error;
-+
-+		if (nmap != 1 || !xfs_bmap_is_written_extent(&map)) {
-+			xchk_fblock_set_corrupt(sc, XFS_DATA_FORK, off);
-+			return 0;
-+		}
-+
-+		/* Read a block's worth of ondisk rtsummary file. */
-+		error = xfs_rtbuf_get(mp, sc->tp, off, 1, &bp);
-+		if (!xchk_fblock_process_error(sc, XFS_DATA_FORK, off, &error))
-+			return error;
-+
-+		/* Read a block's worth of computed rtsummary file. */
-+		error = xfsum_copyout(sc, sumoff, sc->buf, mp->m_blockwsize);
-+		if (error) {
-+			xfs_trans_brelse(sc->tp, bp);
-+			return error;
-+		}
-+
-+		if (memcmp(bp->b_addr, sc->buf,
-+					mp->m_blockwsize << XFS_WORDLOG) != 0)
-+			xchk_fblock_set_corrupt(sc, XFS_DATA_FORK, off);
-+
-+		xfs_trans_brelse(sc->tp, bp);
-+		sumoff += mp->m_blockwsize;
-+	}
-+
-+	return 0;
-+}
- 
- /* Scrub the realtime summary. */
- int
- xchk_rtsummary(
- 	struct xfs_scrub	*sc)
- {
--	struct xfs_inode	*rsumip = sc->mp->m_rsumip;
--	struct xfs_inode	*old_ip = sc->ip;
--	uint			old_ilock_flags = sc->ilock_flags;
-+	struct xfs_mount	*mp = sc->mp;
- 	int			error = 0;
- 
--	/*
--	 * We ILOCK'd the rt bitmap ip in the setup routine, now lock the
--	 * rt summary ip in compliance with the rt inode locking rules.
--	 *
--	 * Since we switch sc->ip to rsumip we have to save the old ilock
--	 * flags so that we don't mix up the inode state that @sc tracks.
--	 */
--	sc->ip = rsumip;
--	sc->ilock_flags = 0;
--	xchk_ilock(sc, XFS_ILOCK_EXCL | XFS_ILOCK_RTSUM);
--
- 	/* Invoke the fork scrubber. */
- 	error = xchk_metadata_inode_forks(sc);
- 	if (error || (sc->sm->sm_flags & XFS_SCRUB_OFLAG_CORRUPT))
--		goto out;
-+		goto out_rbm;
- 
--	/* XXX: implement this some day */
--	xchk_set_incomplete(sc);
--out:
--	/* Switch back to the rtbitmap inode and lock flags. */
--	xchk_iunlock(sc, XFS_ILOCK_EXCL | XFS_ILOCK_RTSUM);
--	sc->ilock_flags = old_ilock_flags;
--	sc->ip = old_ip;
-+	/* Construct the new summary file from the rtbitmap. */
-+	error = xchk_rtsum_compute(sc);
-+	if (error == -EFSCORRUPTED) {
-+		/*
-+		 * EFSCORRUPTED means the rtbitmap is corrupt, which is an xref
-+		 * error since we're checking the summary file.
-+		 */
-+		xchk_ino_xref_set_corrupt(sc, mp->m_rbmip->i_ino);
-+		error = 0;
-+		goto out_rbm;
-+	}
-+	if (error)
-+		goto out_rbm;
-+
-+	/* Does the computed summary file match the actual rtsummary file? */
-+	error = xchk_rtsum_compare(sc);
-+
-+out_rbm:
-+	/* Unlock the rtbitmap since we're done with it. */
-+	xfs_iunlock(mp->m_rbmip, XFS_ILOCK_SHARED | XFS_ILOCK_RTBITMAP);
- 	return error;
- }
-diff --git a/fs/xfs/scrub/scrub.c b/fs/xfs/scrub/scrub.c
-index da3a3c1c0ed3..1b2692d8061f 100644
---- a/fs/xfs/scrub/scrub.c
-+++ b/fs/xfs/scrub/scrub.c
-@@ -24,6 +24,7 @@
- #include "scrub/trace.h"
- #include "scrub/repair.h"
- #include "scrub/health.h"
-+#include "scrub/xfile.h"
- 
- /*
-  * Online Scrub and Repair
-@@ -184,6 +185,10 @@ xchk_teardown(
+diff --git a/fs/xfs/scrub/health.c b/fs/xfs/scrub/health.c
+index d2b2a1cb6533..5e2b09ed6e29 100644
+--- a/fs/xfs/scrub/health.c
++++ b/fs/xfs/scrub/health.c
+@@ -226,6 +226,16 @@ xchk_ag_btree_healthy_enough(
+ 		return true;
  	}
- 	if (sc->sm->sm_flags & XFS_SCRUB_IFLAG_REPAIR)
- 		mnt_drop_write_file(sc->file);
-+	if (sc->xfile) {
-+		xfile_destroy(sc->xfile);
-+		sc->xfile = NULL;
-+	}
- 	if (sc->buf) {
- 		if (sc->buf_cleanup)
- 			sc->buf_cleanup(sc->buf);
-@@ -318,14 +323,14 @@ static const struct xchk_meta_ops meta_scrub_ops[] = {
- 	},
- 	[XFS_SCRUB_TYPE_RTBITMAP] = {	/* realtime bitmap */
- 		.type	= ST_FS,
--		.setup	= xchk_setup_rt,
-+		.setup	= xchk_setup_rtbitmap,
- 		.scrub	= xchk_rtbitmap,
- 		.has	= xfs_has_realtime,
- 		.repair	= xrep_notsupported,
- 	},
- 	[XFS_SCRUB_TYPE_RTSUM] = {	/* realtime summary */
- 		.type	= ST_FS,
--		.setup	= xchk_setup_rt,
-+		.setup	= xchk_setup_rtsummary,
- 		.scrub	= xchk_rtsummary,
- 		.has	= xfs_has_realtime,
- 		.repair	= xrep_notsupported,
-diff --git a/fs/xfs/scrub/scrub.h b/fs/xfs/scrub/scrub.h
-index b38e93830dde..5acfb8933e01 100644
---- a/fs/xfs/scrub/scrub.h
-+++ b/fs/xfs/scrub/scrub.h
-@@ -88,6 +88,10 @@ struct xfs_scrub {
- 	 */
- 	void				(*buf_cleanup)(void *buf);
  
-+	/* xfile used by the scrubbers; freed at teardown. */
-+	struct xfile			*xfile;
++	/*
++	 * If we just repaired some AG metadata, sc->sick_mask will reflect all
++	 * the per-AG metadata types that were repaired.  Exclude these from
++	 * the filesystem health query because we have not yet updated the
++	 * health status and we want everything to be scanned.
++	 */
++	if ((sc->flags & XREP_ALREADY_FIXED) &&
++	    type_to_health_flag[sc->sm->sm_type].group == XHG_AG)
++		mask &= ~sc->sick_mask;
 +
-+	/* Lock flags for @ip. */
- 	uint				ilock_flags;
- 
- 	/* See the XCHK/XREP state flags below. */
-diff --git a/fs/xfs/scrub/trace.h b/fs/xfs/scrub/trace.h
-index faefcc37fff4..f5498f628c17 100644
---- a/fs/xfs/scrub/trace.h
-+++ b/fs/xfs/scrub/trace.h
-@@ -987,6 +987,40 @@ TRACE_EVENT(xfarray_sort_stats,
- 		  __entry->error)
- );
- 
-+#ifdef CONFIG_XFS_RT
-+TRACE_EVENT(xchk_rtsum_record_free,
-+	TP_PROTO(struct xfs_mount *mp, xfs_rtblock_t start,
-+		 uint64_t len, unsigned int log, loff_t pos, xfs_suminfo_t v),
-+	TP_ARGS(mp, start, len, log, pos, v),
-+	TP_STRUCT__entry(
-+		__field(dev_t, dev)
-+		__field(dev_t, rtdev)
-+		__field(xfs_rtblock_t, start)
-+		__field(unsigned long long, len)
-+		__field(unsigned int, log)
-+		__field(loff_t, pos)
-+		__field(xfs_suminfo_t, v)
-+	),
-+	TP_fast_assign(
-+		__entry->dev = mp->m_super->s_dev;
-+		__entry->rtdev = mp->m_rtdev_targp->bt_dev;
-+		__entry->start = start;
-+		__entry->len = len;
-+		__entry->log = log;
-+		__entry->pos = pos;
-+		__entry->v = v;
-+	),
-+	TP_printk("dev %d:%d rtdev %d:%d rtx 0x%llx rtxcount 0x%llx log %u rsumpos 0x%llx sumcount %u",
-+		  MAJOR(__entry->dev), MINOR(__entry->dev),
-+		  MAJOR(__entry->rtdev), MINOR(__entry->rtdev),
-+		  __entry->start,
-+		  __entry->len,
-+		  __entry->log,
-+		  __entry->pos,
-+		  __entry->v)
-+);
-+#endif /* CONFIG_XFS_RT */
-+
- /* repair tracepoints */
- #if IS_ENABLED(CONFIG_XFS_ONLINE_REPAIR)
- 
-diff --git a/fs/xfs/xfs_trace.h b/fs/xfs/xfs_trace.h
-index 5a906bed6f56..b2e85f0081bc 100644
---- a/fs/xfs/xfs_trace.h
-+++ b/fs/xfs/xfs_trace.h
-@@ -22,6 +22,9 @@
-  * daddr: physical block number in 512b blocks
-  * bbcount: number of blocks in a physical extent, in 512b blocks
-  *
-+ * rtx: physical rt extent number for extent mappings
-+ * rtxcount: number of rt extents in an extent mapping
-+ *
-  * owner: reverse-mapping owner, usually inodes
-  *
-  * fileoff: file offset, in fs blocks
+ 	if (xfs_ag_has_sickness(pag, mask)) {
+ 		sc->sm->sm_flags |= XFS_SCRUB_OFLAG_XFAIL;
+ 		return false;
 
