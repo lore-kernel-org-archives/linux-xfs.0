@@ -2,42 +2,41 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7503BC77B7E
-	for <linux-xfs@archiver.kernel.org>; Fri, 26 May 2023 01:04:09 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B7B5BC77B7A
+	for <linux-xfs@archiver.kernel.org>; Fri, 26 May 2023 01:04:24 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232547AbjEZBEI (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 25 May 2023 21:04:08 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52364 "EHLO
+        id S229631AbjEZBEY (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 25 May 2023 21:04:24 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52398 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232125AbjEZBEH (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 25 May 2023 21:04:07 -0400
+        with ESMTP id S229523AbjEZBEX (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 25 May 2023 21:04:23 -0400
 Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 70F37194
-        for <linux-xfs@vger.kernel.org>; Thu, 25 May 2023 18:04:05 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 19D46198
+        for <linux-xfs@vger.kernel.org>; Thu, 25 May 2023 18:04:21 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 0719F60B88
-        for <linux-xfs@vger.kernel.org>; Fri, 26 May 2023 01:04:05 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 6AE16C433EF;
-        Fri, 26 May 2023 01:04:04 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 93D52647D0
+        for <linux-xfs@vger.kernel.org>; Fri, 26 May 2023 01:04:20 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id F2A86C433EF;
+        Fri, 26 May 2023 01:04:19 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1685063044;
-        bh=bF/XW8lc7hh30uixXddTj9EAR2cv9lRHEtrO5dgJDxw=;
+        s=k20201202; t=1685063060;
+        bh=PEravxgEVibCoBl0ea3dTIDWON7Sb7el+N5RqyX2YzM=;
         h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-        b=jLAP7Niq5yVIec3AwzaYWzbydtji6C4g6rlDqIvzqMn5ni26lyU5YVKhsxXvxu/HO
-         hFNivJ3wMrB29xYo2tz7lh8YN+jO6jVknISZN8AAfsRn8h241fQZHsQjRQTsP8ob0P
-         K8ONkUVwbZz4GUZoeeDBIwUmiw1CAzaksO2VdxKFtVzgs5Z8v7CIQ0PXOFSoWSkroz
-         BiLe1XzHpTbGcHpfoTZFBaP/BBxCZNyb2BR0FlkAsKMvQywJbtWCxYszZ6KJKuS2Zp
-         AxRtQukqVp+1qh4BFLuaz6+ZipsYCDq4uWFkv8QVD2L+EW7kLWt2JdpRXp23ONRXof
-         QtPXAkx++KH8Q==
-Date:   Thu, 25 May 2023 18:04:04 -0700
-Subject: [PATCH 1/3] fs: distinguish between user initiated freeze and kernel
- initiated freeze
+        b=CU1XwW2IAxzv3agCSzdIUZbYdK4JsrHcmrUd19YrM3cqlOMyEPFzWsTo58+BbsImi
+         LPOEJv3hCcZPVqq/AFyHvYbaCbV+uJj1Xa949WvBozWH9/kqAlyJPoEfKGwcTXZMDF
+         L/PvavcLaRbnDh2TeQgUWrQlAkB2+tmNCCZyJis+IEIwl3pRnb9+z1jvR/9t9uUYLZ
+         DUY/LHTE5Q0uqgvdjZuLxWV68QqidCIYBZah4bNVr/pHyJdAdsdLhrENbgk9Ci3klb
+         QtDtYvD+9tyf7UamXAdpWPc6EBBcW8r7nK2EdBevXMsC/TOfBHYhiOctcaZ2fAYSli
+         n7rGx55PVSROw==
+Date:   Thu, 25 May 2023 18:04:19 -0700
+Subject: [PATCH 2/3] xfs: stabilize fs summary counters for online fsck
 From:   "Darrick J. Wong" <djwong@kernel.org>
 To:     djwong@kernel.org
 Cc:     linux-xfs@vger.kernel.org
-Message-ID: <168506061501.3732954.2218041921054581532.stgit@frogsfrogsfrogs>
+Message-ID: <168506061516.3732954.7337809739895421067.stgit@frogsfrogsfrogs>
 In-Reply-To: <168506061483.3732954.5178462816967376906.stgit@frogsfrogsfrogs>
 References: <168506061483.3732954.5178462816967376906.stgit@frogsfrogsfrogs>
 User-Agent: StGit/0.19
@@ -50,326 +49,398 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-Userspace can freeze a filesystem using the FIFREEZE ioctl or by
-suspending the block device; this state persists until userspace thaws
-the filesystem with the FITHAW ioctl or resuming the block device.
-Since commit 18e9e5104fcd ("Introduce freeze_super and thaw_super for
-the fsfreeze ioctl") we only allow the first freeze command to succeed.
+If the fscounters scrubber notices incorrect summary counters, it's
+entirely possible that scrub is simply racing with other threads that
+are updating the incore counters.  There isn't a good way to stabilize
+percpu counters or set ourselves up to observe live updates with hooks
+like we do for the quotacheck or nlinks scanners, so we instead choose
+to freeze the filesystem long enough to walk the incore per-AG
+structures.
 
-The kernel may decide that it is necessary to freeze a filesystem for
-its own internal purposes, such as suspends in progress, filesystem fsck
-activities, or quiescing a device prior to removal.  Userspace thaw
-commands must never break a kernel freeze, and kernel thaw commands
-shouldn't undo userspace's freeze command.
+Past me thought that it was going to be commonplace to have to freeze
+the filesystem to perform some kind of repair and set up a whole
+separate infrastructure to freeze the filesystem in such a way that
+userspace could not unfreeze while we were running.  This involved
+adding a mutex and freeze_super/thaw_super functions and dealing with
+the fact that the VFS freeze/thaw functions can free the VFS superblock
+references on return.
 
-Introduce a couple of freeze holder flags and wire it into the
-sb_writers state.  One kernel and one userspace freeze are allowed to
-coexist at the same time; the filesystem will not thaw until both are
-lifted.
+This was all very overwrought, since fscounters turned out to be the
+only user of scrub freezes, and it doesn't require the log to quiesce,
+only the incore superblock counters.  We prevent other threads from
+changing the freeze level by calling freeze_super_excl with a custom
+freeze cookie to keep everyone else out of the filesystem.
 
-Inspired-by: Luis Chamberlain <mcgrof@kernel.org>
+The end result is that fscounters should be much more efficient.  When
+we're checking a busy system and we can't stabilize the counters, the
+custom freeze will do less work, which should result in less downtime.
+Repair should be similarly speedy, but that's in the next patch.
+
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 ---
- fs/super.c         |  172 +++++++++++++++++++++++++++++++++++++++++++++++++---
- include/linux/fs.h |    8 ++
- 2 files changed, 170 insertions(+), 10 deletions(-)
+ fs/xfs/scrub/fscounters.c |  172 +++++++++++++++++++++++++++++++++------------
+ fs/xfs/scrub/fscounters.h |   20 +++++
+ fs/xfs/scrub/scrub.c      |    6 +-
+ fs/xfs/scrub/scrub.h      |    1 
+ fs/xfs/scrub/trace.h      |    1 
+ 5 files changed, 152 insertions(+), 48 deletions(-)
+ create mode 100644 fs/xfs/scrub/fscounters.h
 
 
-diff --git a/fs/super.c b/fs/super.c
-index 34afe411cf2b..7496d51affb9 100644
---- a/fs/super.c
-+++ b/fs/super.c
-@@ -39,7 +39,7 @@
- #include <uapi/linux/mount.h>
- #include "internal.h"
+diff --git a/fs/xfs/scrub/fscounters.c b/fs/xfs/scrub/fscounters.c
+index e382a35e98d8..d9f51fa66a0e 100644
+--- a/fs/xfs/scrub/fscounters.c
++++ b/fs/xfs/scrub/fscounters.c
+@@ -1,4 +1,4 @@
+-// SPDX-License-Identifier: GPL-2.0+
++// SPDX-License-Identifier: GPL-2.0-or-later
+ /*
+  * Copyright (C) 2019-2023 Oracle.  All Rights Reserved.
+  * Author: Darrick J. Wong <djwong@kernel.org>
+@@ -16,9 +16,11 @@
+ #include "xfs_ag.h"
+ #include "xfs_rtalloc.h"
+ #include "xfs_inode.h"
++#include "xfs_icache.h"
+ #include "scrub/scrub.h"
+ #include "scrub/common.h"
+ #include "scrub/trace.h"
++#include "scrub/fscounters.h"
  
--static int thaw_super_locked(struct super_block *sb);
-+static int thaw_super_locked(struct super_block *sb, unsigned short who);
+ /*
+  * FS Summary Counters
+@@ -45,16 +47,6 @@
+  * our tolerance for mismatch between expected and actual counter values.
+  */
  
- static LIST_HEAD(super_blocks);
- static DEFINE_SPINLOCK(sb_lock);
-@@ -1027,7 +1027,7 @@ static void do_thaw_all_callback(struct super_block *sb)
- 	down_write(&sb->s_umount);
- 	if (sb->s_root && sb->s_flags & SB_BORN) {
- 		emergency_thaw_bdev(sb);
--		thaw_super_locked(sb);
-+		thaw_super_locked(sb, FREEZE_HOLDER_USERSPACE);
- 	} else {
- 		up_write(&sb->s_umount);
- 	}
-@@ -1636,13 +1636,21 @@ static void sb_freeze_unlock(struct super_block *sb, int level)
+-struct xchk_fscounters {
+-	struct xfs_scrub	*sc;
+-	uint64_t		icount;
+-	uint64_t		ifree;
+-	uint64_t		fdblocks;
+-	uint64_t		frextents;
+-	unsigned long long	icount_min;
+-	unsigned long long	icount_max;
+-};
+-
+ /*
+  * Since the expected value computation is lockless but only browses incore
+  * values, the percpu counters should be fairly close to each other.  However,
+@@ -123,6 +115,58 @@ xchk_fscount_warmup(
+ 	return error;
  }
  
- /**
-- * freeze_super - lock the filesystem and force it into a consistent state
-+ * __freeze_super - lock the filesystem and force it into a consistent state
-  * @sb: the super to lock
-+ * @who: FREEZE_HOLDER_USERSPACE if userspace wants to freeze the fs;
-+ * FREEZE_HOLDER_KERNEL if the kernel wants to freeze it
-  *
-  * Syncs the super to make sure the filesystem is consistent and calls the fs's
-- * freeze_fs.  Subsequent calls to this without first thawing the fs will return
-+ * freeze_fs.  Subsequent calls to this without first thawing the fs may return
-  * -EBUSY.
-  *
-+ * The @who argument distinguishes between the kernel and userspace trying to
-+ * freeze the filesystem.  Although there cannot be multiple kernel freezes or
-+ * multiple userspace freezes in effect at any given time, the kernel and
-+ * userspace can both hold a filesystem frozen.  The filesystem remains frozen
-+ * until there are no kernel or userspace freezes in effect.
-+ *
-  * During this function, sb->s_writers.frozen goes through these values:
-  *
-  * SB_UNFROZEN: File system is normal, all writes progress as usual.
-@@ -1668,12 +1676,61 @@ static void sb_freeze_unlock(struct super_block *sb, int level)
-  *
-  * sb->s_writers.frozen is protected by sb->s_umount.
-  */
--int freeze_super(struct super_block *sb)
-+static int __freeze_super(struct super_block *sb, unsigned short who)
- {
-+	struct sb_writers *sbw = &sb->s_writers;
- 	int ret;
- 
- 	atomic_inc(&sb->s_active);
- 	down_write(&sb->s_umount);
++/*
++ * We couldn't stabilize the filesystem long enough to sample all the variables
++ * that comprise the summary counters and compare them to the percpu counters.
++ * We need to disable all writer threads, which means taking the first two
++ * freeze levels to put userspace to sleep, and the third freeze level to
++ * prevent background threads from starting new transactions.  Take one level
++ * more to prevent other callers from unfreezing the filesystem while we run.
++ */
++STATIC int
++xchk_fscounters_freeze(
++	struct xfs_scrub	*sc)
++{
++	struct xchk_fscounters	*fsc = sc->buf;
++	struct xfs_mount	*mp = sc->mp;
++	int			error = 0;
 +
-+	if (sbw->frozen == SB_FREEZE_COMPLETE) {
-+		switch (who) {
-+		case FREEZE_HOLDER_KERNEL:
-+			if (sbw->freeze_holders & FREEZE_HOLDER_KERNEL) {
-+				/*
-+				 * Kernel freeze already in effect; caller can
-+				 * try again.
-+				 */
-+				deactivate_locked_super(sb);
-+				return -EBUSY;
-+			}
-+			if (sbw->freeze_holders & FREEZE_HOLDER_USERSPACE) {
-+				/*
-+				 * Share the freeze state with the userspace
-+				 * freeze already in effect.
-+				 */
-+				sbw->freeze_holders |= who;
-+				deactivate_locked_super(sb);
-+				return 0;
-+			}
-+			break;
-+		case FREEZE_HOLDER_USERSPACE:
-+			if (sbw->freeze_holders & FREEZE_HOLDER_USERSPACE) {
-+				/*
-+				 * Userspace freeze already in effect; tell
-+				 * the caller we're busy.
-+				 */
-+				deactivate_locked_super(sb);
-+				return -EBUSY;
-+			}
-+			if (sbw->freeze_holders & FREEZE_HOLDER_KERNEL) {
-+				/*
-+				 * Share the freeze state with the kernel
-+				 * freeze already in effect.
-+				 */
-+				sbw->freeze_holders |= who;
-+				deactivate_locked_super(sb);
-+				return 0;
-+			}
-+			break;
-+		default:
-+			BUG();
-+			deactivate_locked_super(sb);
-+			return -EINVAL;
-+		}
++	if (sc->flags & XCHK_HAVE_FREEZE_PROT) {
++		sc->flags &= ~XCHK_HAVE_FREEZE_PROT;
++		mnt_drop_write_file(sc->file);
 +	}
 +
- 	if (sb->s_writers.frozen != SB_UNFROZEN) {
- 		deactivate_locked_super(sb);
- 		return -EBUSY;
-@@ -1686,6 +1743,7 @@ int freeze_super(struct super_block *sb)
++	/* Wait until we're ready to freeze or give up. */
++	while (freeze_super_kernel(mp->m_super) != 0) {
++		if (xchk_should_terminate(sc, &error))
++			return error;
++
++		delay(HZ / 10);
++	}
++
++	fsc->frozen = true;
++	return 0;
++}
++
++/* Thaw the filesystem after checking or repairing fscounters. */
++STATIC void
++xchk_fscounters_cleanup(
++	void			*buf)
++{
++	struct xchk_fscounters	*fsc = buf;
++	struct xfs_scrub	*sc = fsc->sc;
++	struct xfs_mount	*mp = sc->mp;
++	int			error;
++
++	if (!fsc->frozen)
++		return;
++
++	/* This should always succeed, we froze the fs exclusively. */
++	error = thaw_super_kernel(mp->m_super);
++	if (error)
++		xfs_emerg(mp, "still frozen after scrub, err=%d", error);
++}
++
+ int
+ xchk_setup_fscounters(
+ 	struct xfs_scrub	*sc)
+@@ -140,6 +184,7 @@ xchk_setup_fscounters(
+ 	sc->buf = kzalloc(sizeof(struct xchk_fscounters), XCHK_GFP_FLAGS);
+ 	if (!sc->buf)
+ 		return -ENOMEM;
++	sc->buf_cleanup = xchk_fscounters_cleanup;
+ 	fsc = sc->buf;
+ 	fsc->sc = sc;
  
- 	if (sb_rdonly(sb)) {
- 		/* Nothing to do really... */
-+		sb->s_writers.freeze_holders |= who;
- 		sb->s_writers.frozen = SB_FREEZE_COMPLETE;
- 		up_write(&sb->s_umount);
+@@ -150,7 +195,18 @@ xchk_setup_fscounters(
+ 	if (error)
+ 		return error;
+ 
+-	return xchk_trans_alloc(sc, 0);
++	/*
++	 * Pause all writer activity in the filesystem while we're scrubbing to
++	 * reduce the likelihood of background perturbations to the counters
++	 * throwing off our calculations.
++	 */
++	if (sc->flags & XCHK_TRY_HARDER) {
++		error = xchk_fscounters_freeze(sc);
++		if (error)
++			return error;
++	}
++
++	return xchk_trans_alloc_empty(sc);
+ }
+ 
+ /*
+@@ -290,8 +346,7 @@ xchk_fscount_aggregate_agcounts(
+ 	if (fsc->ifree > fsc->icount) {
+ 		if (tries--)
+ 			goto retry;
+-		xchk_set_incomplete(sc);
+-		return 0;
++		return -EDEADLOCK;
+ 	}
+ 
+ 	return 0;
+@@ -367,6 +422,8 @@ xchk_fscount_count_frextents(
+  * Otherwise, we /might/ have a problem.  If the change in the summations is
+  * more than we want to tolerate, the filesystem is probably busy and we should
+  * just send back INCOMPLETE and see if userspace will try again.
++ *
++ * If we're repairing then we require an exact match.
+  */
+ static inline bool
+ xchk_fscount_within_range(
+@@ -396,21 +453,7 @@ xchk_fscount_within_range(
+ 	if (expected >= min_value && expected <= max_value)
+ 		return true;
+ 
+-	/*
+-	 * If the difference between the two summations is too large, the fs
+-	 * might just be busy and so we'll mark the scrub incomplete.  Return
+-	 * true here so that we don't mark the counter corrupt.
+-	 *
+-	 * XXX: In the future when userspace can grant scrub permission to
+-	 * quiesce the filesystem to solve the outsized variance problem, this
+-	 * check should be moved up and the return code changed to signal to
+-	 * userspace that we need quiesce permission.
+-	 */
+-	if (max_value - min_value >= XCHK_FSCOUNT_MIN_VARIANCE) {
+-		xchk_set_incomplete(sc);
+-		return true;
+-	}
+-
++	/* Everything else is bad. */
+ 	return false;
+ }
+ 
+@@ -422,6 +465,7 @@ xchk_fscounters(
+ 	struct xfs_mount	*mp = sc->mp;
+ 	struct xchk_fscounters	*fsc = sc->buf;
+ 	int64_t			icount, ifree, fdblocks, frextents;
++	bool			try_again = false;
+ 	int			error;
+ 
+ 	/* Snapshot the percpu counters. */
+@@ -431,9 +475,26 @@ xchk_fscounters(
+ 	frextents = percpu_counter_sum(&mp->m_frextents);
+ 
+ 	/* No negative values, please! */
+-	if (icount < 0 || ifree < 0 || fdblocks < 0 || frextents < 0)
++	if (icount < 0 || ifree < 0)
+ 		xchk_set_corrupt(sc);
+ 
++	/*
++	 * If the filesystem is not frozen, the counter summation calls above
++	 * can race with xfs_mod_freecounter, which subtracts a requested space
++	 * reservation from the counter and undoes the subtraction if that made
++	 * the counter go negative.  Therefore, it's possible to see negative
++	 * values here, and we should only flag that as a corruption if we
++	 * froze the fs.  This is much more likely to happen with frextents
++	 * since there are no reserved pools.
++	 */
++	if (fdblocks < 0 || frextents < 0) {
++		if (!fsc->frozen)
++			return -EDEADLOCK;
++
++		xchk_set_corrupt(sc);
++		return 0;
++	}
++
+ 	/* See if icount is obviously wrong. */
+ 	if (icount < fsc->icount_min || icount > fsc->icount_max)
+ 		xchk_set_corrupt(sc);
+@@ -446,12 +507,6 @@ xchk_fscounters(
+ 	if (frextents > mp->m_sb.sb_rextents)
+ 		xchk_set_corrupt(sc);
+ 
+-	/*
+-	 * XXX: We can't quiesce percpu counter updates, so exit early.
+-	 * This can be re-enabled when we gain exclusive freeze functionality.
+-	 */
+-	return 0;
+-
+ 	/*
+ 	 * If ifree exceeds icount by more than the minimum variance then
+ 	 * something's probably wrong with the counters.
+@@ -463,8 +518,6 @@ xchk_fscounters(
+ 	error = xchk_fscount_aggregate_agcounts(sc, fsc);
+ 	if (!xchk_process_error(sc, 0, XFS_SB_BLOCK(mp), &error))
+ 		return error;
+-	if (sc->sm->sm_flags & XFS_SCRUB_OFLAG_INCOMPLETE)
+-		return 0;
+ 
+ 	/* Count the free extents counter for rt volumes. */
+ 	error = xchk_fscount_count_frextents(sc, fsc);
+@@ -473,20 +526,45 @@ xchk_fscounters(
+ 	if (sc->sm->sm_flags & XFS_SCRUB_OFLAG_INCOMPLETE)
  		return 0;
-@@ -1731,23 +1789,103 @@ int freeze_super(struct super_block *sb)
- 	 * For debugging purposes so that fs can warn if it sees write activity
- 	 * when frozen is set to SB_FREEZE_COMPLETE, and for thaw_super().
- 	 */
-+	sb->s_writers.freeze_holders |= who;
- 	sb->s_writers.frozen = SB_FREEZE_COMPLETE;
- 	lockdep_sb_freeze_release(sb);
- 	up_write(&sb->s_umount);
+ 
+-	/* Compare the in-core counters with whatever we counted. */
+-	if (!xchk_fscount_within_range(sc, icount, &mp->m_icount, fsc->icount))
+-		xchk_set_corrupt(sc);
++	/*
++	 * Compare the in-core counters with whatever we counted.  If the fs is
++	 * frozen, we treat the discrepancy as a corruption because the freeze
++	 * should have stabilized the counter values.  Otherwise, we need
++	 * userspace to call us back having granted us freeze permission.
++	 */
++	if (!xchk_fscount_within_range(sc, icount, &mp->m_icount,
++				fsc->icount)) {
++		if (fsc->frozen)
++			xchk_set_corrupt(sc);
++		else
++			try_again = true;
++	}
+ 
+-	if (!xchk_fscount_within_range(sc, ifree, &mp->m_ifree, fsc->ifree))
+-		xchk_set_corrupt(sc);
++	if (!xchk_fscount_within_range(sc, ifree, &mp->m_ifree, fsc->ifree)) {
++		if (fsc->frozen)
++			xchk_set_corrupt(sc);
++		else
++			try_again = true;
++	}
+ 
+ 	if (!xchk_fscount_within_range(sc, fdblocks, &mp->m_fdblocks,
+-			fsc->fdblocks))
+-		xchk_set_corrupt(sc);
++			fsc->fdblocks)) {
++		if (fsc->frozen)
++			xchk_set_corrupt(sc);
++		else
++			try_again = true;
++	}
+ 
+ 	if (!xchk_fscount_within_range(sc, frextents, &mp->m_frextents,
+-			fsc->frextents))
+-		xchk_set_corrupt(sc);
++			fsc->frextents)) {
++		if (fsc->frozen)
++			xchk_set_corrupt(sc);
++		else
++			try_again = true;
++	}
++
++	if (try_again)
++		return -EDEADLOCK;
+ 
  	return 0;
  }
-+
+diff --git a/fs/xfs/scrub/fscounters.h b/fs/xfs/scrub/fscounters.h
+new file mode 100644
+index 000000000000..b36f7157986f
+--- /dev/null
++++ b/fs/xfs/scrub/fscounters.h
+@@ -0,0 +1,20 @@
++/* SPDX-License-Identifier: GPL-2.0-or-later */
 +/*
-+ * freeze_super - lock the filesystem and force it into a consistent state
-+ * @sb: the super to lock
-+ *
-+ * Syncs the super to make sure the filesystem is consistent and calls the fs's
-+ * freeze_fs.  Subsequent calls to this without first calling thaw_super will
-+ * return -EBUSY.  See the comment for __freeze_super for more information.
++ * Copyright (C) 2021-2023 Oracle.  All Rights Reserved.
++ * Author: Darrick J. Wong <djwong@kernel.org>
 + */
-+int freeze_super(struct super_block *sb)
-+{
-+	return __freeze_super(sb, FREEZE_HOLDER_USERSPACE);
-+}
- EXPORT_SYMBOL(freeze_super);
- 
--static int thaw_super_locked(struct super_block *sb)
-+/**
-+ * freeze_super_kernel - lock the filesystem for an internal kernel operation
-+ * and force it into a consistent state.
-+ * @sb: the super to lock
-+ *
-+ * Syncs the super to make sure the filesystem is consistent and calls the fs's
-+ * freeze_fs.  Subsequent calls to this without first calling thaw_super_excl
-+ * will return -EBUSY.
-+ */
-+int freeze_super_kernel(struct super_block *sb)
- {
-+	return __freeze_super(sb, FREEZE_HOLDER_KERNEL);
-+}
-+EXPORT_SYMBOL_GPL(freeze_super_kernel);
++#ifndef __XFS_SCRUB_FSCOUNTERS_H__
++#define __XFS_SCRUB_FSCOUNTERS_H__
 +
-+/*
-+ * Undoes the effect of a freeze_super_locked call.  If the filesystem is
-+ * frozen both by userspace and the kernel, a thaw call from either source
-+ * removes that state without releasing the other state or unlocking the
-+ * filesystem.
-+ */
-+static int thaw_super_locked(struct super_block *sb, unsigned short who)
-+{
-+	struct sb_writers *sbw = &sb->s_writers;
- 	int error;
- 
-+	if (sbw->frozen == SB_FREEZE_COMPLETE) {
-+		switch (who) {
-+		case FREEZE_HOLDER_KERNEL:
-+			if (!(sbw->freeze_holders & FREEZE_HOLDER_KERNEL)) {
-+				/* Caller doesn't hold a kernel freeze. */
-+				up_write(&sb->s_umount);
-+				return -EINVAL;
-+			}
-+			if (sbw->freeze_holders & FREEZE_HOLDER_USERSPACE) {
-+				/*
-+				 * We were sharing the freeze with userspace,
-+				 * so drop the userspace freeze but exit
-+				 * without unfreezing.
-+				 */
-+				sbw->freeze_holders &= ~who;
-+				up_write(&sb->s_umount);
-+				return 0;
-+			}
-+			break;
-+		case FREEZE_HOLDER_USERSPACE:
-+			if (!(sbw->freeze_holders & FREEZE_HOLDER_USERSPACE)) {
-+				/* Caller doesn't hold a userspace freeze. */
-+				up_write(&sb->s_umount);
-+				return -EINVAL;
-+			}
-+			if (sbw->freeze_holders & FREEZE_HOLDER_KERNEL) {
-+				/*
-+				 * We were sharing the freeze with the kernel,
-+				 * so drop the kernel freeze but exit without
-+				 * unfreezing.
-+				 */
-+				sbw->freeze_holders &= ~who;
-+				up_write(&sb->s_umount);
-+				return 0;
-+			}
-+			break;
-+		default:
-+			BUG();
-+			up_write(&sb->s_umount);
-+			return -EINVAL;
-+		}
++struct xchk_fscounters {
++	struct xfs_scrub	*sc;
++	uint64_t		icount;
++	uint64_t		ifree;
++	uint64_t		fdblocks;
++	uint64_t		frextents;
++	unsigned long long	icount_min;
++	unsigned long long	icount_max;
++	bool			frozen;
++};
++
++#endif /* __XFS_SCRUB_FSCOUNTERS_H__ */
+diff --git a/fs/xfs/scrub/scrub.c b/fs/xfs/scrub/scrub.c
+index d4396c351373..e487b424b12b 100644
+--- a/fs/xfs/scrub/scrub.c
++++ b/fs/xfs/scrub/scrub.c
+@@ -187,8 +187,10 @@ xchk_teardown(
+ 		xchk_irele(sc, sc->ip);
+ 		sc->ip = NULL;
+ 	}
+-	if (sc->sm->sm_flags & XFS_SCRUB_IFLAG_REPAIR)
++	if (sc->flags & XCHK_HAVE_FREEZE_PROT) {
++		sc->flags &= ~XCHK_HAVE_FREEZE_PROT;
+ 		mnt_drop_write_file(sc->file);
 +	}
+ 	if (sc->xfile) {
+ 		xfile_destroy(sc->xfile);
+ 		sc->xfile = NULL;
+@@ -539,6 +541,8 @@ xfs_scrub_metadata(
+ 		error = mnt_want_write_file(sc->file);
+ 		if (error)
+ 			goto out_sc;
 +
- 	if (sb->s_writers.frozen != SB_FREEZE_COMPLETE) {
- 		up_write(&sb->s_umount);
- 		return -EINVAL;
++		sc->flags |= XCHK_HAVE_FREEZE_PROT;
  	}
  
- 	if (sb_rdonly(sb)) {
-+		sb->s_writers.freeze_holders &= ~who;
- 		sb->s_writers.frozen = SB_UNFROZEN;
- 		goto out;
- 	}
-@@ -1765,6 +1903,7 @@ static int thaw_super_locked(struct super_block *sb)
- 		}
- 	}
+ 	/* Set up for the operation. */
+diff --git a/fs/xfs/scrub/scrub.h b/fs/xfs/scrub/scrub.h
+index 99b48e996d51..a41ba8d319b6 100644
+--- a/fs/xfs/scrub/scrub.h
++++ b/fs/xfs/scrub/scrub.h
+@@ -118,6 +118,7 @@ struct xfs_scrub {
  
-+	sb->s_writers.freeze_holders &= ~who;
- 	sb->s_writers.frozen = SB_UNFROZEN;
- 	sb_freeze_unlock(sb, SB_FREEZE_FS);
- out:
-@@ -1774,18 +1913,33 @@ static int thaw_super_locked(struct super_block *sb)
- }
+ /* XCHK state flags grow up from zero, XREP state flags grown down from 2^31 */
+ #define XCHK_TRY_HARDER		(1 << 0)  /* can't get resources, try again */
++#define XCHK_HAVE_FREEZE_PROT	(1 << 1)  /* do we have freeze protection? */
+ #define XCHK_FSGATES_DRAIN	(1 << 2)  /* defer ops draining enabled */
+ #define XCHK_NEED_DRAIN		(1 << 3)  /* scrub needs to drain defer ops */
+ #define XCHK_FSGATES_QUOTA	(1 << 4)  /* quota live update enabled */
+diff --git a/fs/xfs/scrub/trace.h b/fs/xfs/scrub/trace.h
+index d4f142929518..6a50e6c89195 100644
+--- a/fs/xfs/scrub/trace.h
++++ b/fs/xfs/scrub/trace.h
+@@ -113,6 +113,7 @@ TRACE_DEFINE_ENUM(XFS_SCRUB_TYPE_HEALTHY);
  
- /**
-- * thaw_super -- unlock filesystem
-+ * thaw_super -- unlock filesystem frozen with freeze_super
-  * @sb: the super to thaw
-  *
-- * Unlocks the filesystem and marks it writeable again after freeze_super().
-+ * Unlocks the filesystem after freeze_super, and make it writeable again if
-+ * there is not a freeze_super_kernel still in effect.
-  */
- int thaw_super(struct super_block *sb)
- {
- 	down_write(&sb->s_umount);
--	return thaw_super_locked(sb);
-+	return thaw_super_locked(sb, FREEZE_HOLDER_USERSPACE);
- }
- EXPORT_SYMBOL(thaw_super);
- 
-+/**
-+ * thaw_super_kernel -- unlock filesystem frozen with freeze_super_kernel
-+ * @sb: the super to thaw
-+ *
-+ * Unlocks the filesystem after freeze_super_kernel, and make it writeable
-+ * again if there is not a freeze_super still in effect.
-+ */
-+int thaw_super_kernel(struct super_block *sb)
-+{
-+	down_write(&sb->s_umount);
-+	return thaw_super_locked(sb, FREEZE_HOLDER_KERNEL);
-+}
-+EXPORT_SYMBOL_GPL(thaw_super_kernel);
-+
- /*
-  * Create workqueue for deferred direct IO completions. We allocate the
-  * workqueue when it's first needed. This avoids creating workqueue for
-diff --git a/include/linux/fs.h b/include/linux/fs.h
-index 21a981680856..147644b5d648 100644
---- a/include/linux/fs.h
-+++ b/include/linux/fs.h
-@@ -1145,11 +1145,15 @@ enum {
- #define SB_FREEZE_LEVELS (SB_FREEZE_COMPLETE - 1)
- 
- struct sb_writers {
--	int				frozen;		/* Is sb frozen? */
-+	unsigned short			frozen;		/* Is sb frozen? */
-+	unsigned short			freeze_holders;	/* Who froze fs? */
- 	wait_queue_head_t		wait_unfrozen;	/* wait for thaw */
- 	struct percpu_rw_semaphore	rw_sem[SB_FREEZE_LEVELS];
- };
- 
-+#define FREEZE_HOLDER_USERSPACE	(1U << 1)	/* userspace froze fs */
-+#define FREEZE_HOLDER_KERNEL	(1U << 2)	/* kernel froze fs */
-+
- struct super_block {
- 	struct list_head	s_list;		/* Keep this first */
- 	dev_t			s_dev;		/* search index; _not_ kdev_t */
-@@ -2288,6 +2292,8 @@ extern int user_statfs(const char __user *, struct kstatfs *);
- extern int fd_statfs(int, struct kstatfs *);
- extern int freeze_super(struct super_block *super);
- extern int thaw_super(struct super_block *super);
-+extern int freeze_super_kernel(struct super_block *super);
-+extern int thaw_super_kernel(struct super_block *super);
- extern __printf(2, 3)
- int super_setup_bdi_name(struct super_block *sb, char *fmt, ...);
- extern int super_setup_bdi(struct super_block *sb);
+ #define XFS_SCRUB_STATE_STRINGS \
+ 	{ XCHK_TRY_HARDER,			"try_harder" }, \
++	{ XCHK_HAVE_FREEZE_PROT,		"nofreeze" }, \
+ 	{ XCHK_FSGATES_DRAIN,			"fsgates_drain" }, \
+ 	{ XCHK_NEED_DRAIN,			"need_drain" }, \
+ 	{ XCHK_FSGATES_QUOTA,			"fsgates_quota" }, \
 
