@@ -2,122 +2,71 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3664DC77B7A
-	for <linux-xfs@archiver.kernel.org>; Fri, 26 May 2023 07:33:59 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 01427C77B7A
+	for <linux-xfs@archiver.kernel.org>; Fri, 26 May 2023 08:13:29 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S242469AbjEZHd5 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 26 May 2023 03:33:57 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60516 "EHLO
+        id S242452AbjEZIN2 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 26 May 2023 04:13:28 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54968 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S242431AbjEZHdp (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 26 May 2023 03:33:45 -0400
+        with ESMTP id S236852AbjEZINZ (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 26 May 2023 04:13:25 -0400
 Received: from bombadil.infradead.org (bombadil.infradead.org [IPv6:2607:7c80:54:3::133])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id F065412A;
-        Fri, 26 May 2023 00:33:43 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9F90C125;
+        Fri, 26 May 2023 01:13:24 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=infradead.org; s=bombadil.20210309; h=Sender:Content-Transfer-Encoding:
-        MIME-Version:References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:
-        Reply-To:Content-Type:Content-ID:Content-Description;
-        bh=l8SXSO/lmiFeJihMCTRRFm0o8Ak15fMAUhw4BXdB6WA=; b=A0xPKQUoDsDrFgURMQlgZXIoK4
-        lF0smhhvDr9DIwh3hI5+Foy4jSB44qqYKTW9k2PV/7PuWcBUSeOo6jWJLU2DNhMOCi1CTP1Vr1qXN
-        cB1zrc2ldkTJb0i1ydOhaeGCJSHRsdi8p9dUGm95225TqZGlE84F6Y3mfrRFtVU8AAk/LeILUvTzj
-        DCxobQiHgxGi8mvk1uiSyIKFvEMqMniMXjlXlxhbRRhvWQ3LnJ21MPhaTWeTq5Fi6r/fGfhBlXjzW
-        o+5/0Ft/FRALeNM171FNjOPX7gizDDJyiLwYYmSgprAWBoMr6t5XCcMourkOlUq8zpJCEwA9TAgAY
-        J55czzyw==;
-Received: from mcgrof by bombadil.infradead.org with local (Exim 4.96 #2 (Red Hat Linux))
-        id 1q2RxB-001Rda-0i;
-        Fri, 26 May 2023 07:33:37 +0000
-From:   Luis Chamberlain <mcgrof@kernel.org>
-To:     axboe@kernel.dk, agk@redhat.com, snitzer@kernel.org,
+        d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Type:MIME-Version
+        :References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
+        Content-Transfer-Encoding:Content-ID:Content-Description;
+        bh=DgTgBMZWINXOuoCZBI2L8FK+k2n3IGa7ukNMwg/DhYc=; b=L1M/wOjEJS+hbGb0Ek6blzw3yA
+        nabgFkkkKy+DTSss8/1GulWyfdXqHHVYNAzFWT5mbVwZAjUGHZXHuEQfl0e+6/OtF12MpNy4YLP80
+        VEIFzvlb4aVe0P7pRCuYc3yIdqxzO6y1Zsavs8rcRkdM9/4mz4siRmfuqn+sIDoKXdA46+bkVCwm5
+        aiixFMuyKgI/5ocaWt6B9ZqX+HUkoXOZlXs8Z6gefmi2wlMxbafMZW818soeWjD1oBROq9uXous9u
+        y1HEaBkTCpK3nsAM9uz9T5N1fw3+CMx5JirbVy1uboijoXvhGmyTqNkB3f7GvUjESGORDZCBAgPdX
+        NkZvUbmg==;
+Received: from hch by bombadil.infradead.org with local (Exim 4.96 #2 (Red Hat Linux))
+        id 1q2SZW-001Z7f-3C;
+        Fri, 26 May 2023 08:13:14 +0000
+Date:   Fri, 26 May 2023 01:13:14 -0700
+From:   Christoph Hellwig <hch@infradead.org>
+To:     Luis Chamberlain <mcgrof@kernel.org>
+Cc:     axboe@kernel.dk, agk@redhat.com, snitzer@kernel.org,
         philipp.reisner@linbit.com, lars.ellenberg@linbit.com,
         christoph.boehmwalder@linbit.com, hch@infradead.org,
-        djwong@kernel.org, minchan@kernel.org, senozhatsky@chromium.org
-Cc:     patches@lists.linux.dev, linux-block@vger.kernel.org,
+        djwong@kernel.org, minchan@kernel.org, senozhatsky@chromium.org,
+        patches@lists.linux.dev, linux-block@vger.kernel.org,
         linux-mm@kvack.org, linux-xfs@vger.kernel.org,
         linux-fsdevel@vger.kernel.org, dm-devel@redhat.com,
         drbd-dev@lists.linbit.com, linux-kernel@vger.kernel.org,
         willy@infradead.org, hare@suse.de, p.raghav@samsung.com,
         da.gomez@samsung.com, rohan.puri@samsung.com,
-        rpuri.linux@gmail.com, kbusch@kernel.org, mcgrof@kernel.org
-Subject: [PATCH v2 5/5] zram: use generic PAGE_SECTORS and PAGE_SECTORS_SHIFT
-Date:   Fri, 26 May 2023 00:33:36 -0700
-Message-Id: <20230526073336.344543-6-mcgrof@kernel.org>
-X-Mailer: git-send-email 2.38.1
-In-Reply-To: <20230526073336.344543-1-mcgrof@kernel.org>
+        rpuri.linux@gmail.com, kbusch@kernel.org
+Subject: Re: [PATCH v2 1/5] block: annotate bdev_disk_changed() deprecation
+ with a symbol namespace
+Message-ID: <ZHBqGosY0tWkNdIR@infradead.org>
 References: <20230526073336.344543-1-mcgrof@kernel.org>
+ <20230526073336.344543-2-mcgrof@kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-Sender: Luis Chamberlain <mcgrof@infradead.org>
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20230526073336.344543-2-mcgrof@kernel.org>
+X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Instead of re-defining the already existing constants use the provided ones:
+On Fri, May 26, 2023 at 12:33:32AM -0700, Luis Chamberlain wrote:
+> This ensures no other users pop up by mistake easily and provides
+> us a with an easy vehicle to do the same with other routines should
+> we need it later.
 
-So replace:
+I don't see how this is related to the rest of the seris.  I also don't
+think it's a good idea.  The APIs isn't deprecated per se.  It just
+should not be called by drivers.  The right thing would be an interface
+like
 
- o SECTORS_PER_PAGE_SHIFT with PAGE_SECTORS_SHIFT
- o SECTORS_PER_PAGE       with PAGE_SECTORS
+EXPORT_SYMBOL_GPL_FOR(bdev_disk_changed, loop.ko, CONFIG_BLK_DEV_LOOP);
+EXPORT_SYMBOL_GPL_FOR(bdev_disk_changed, dasd_mod.ko, CONFIG_DASD);
 
-This produces no functional changes.
-
-Reviewed-by: Sergey Senozhatsky <senozhatsky@chromium.org>
-Signed-off-by: Luis Chamberlain <mcgrof@kernel.org>
----
- drivers/block/zram/zram_drv.c | 12 ++++++------
- drivers/block/zram/zram_drv.h |  2 --
- 2 files changed, 6 insertions(+), 8 deletions(-)
-
-diff --git a/drivers/block/zram/zram_drv.c b/drivers/block/zram/zram_drv.c
-index f6d90f1ba5cf..5fdeb78ace9a 100644
---- a/drivers/block/zram/zram_drv.c
-+++ b/drivers/block/zram/zram_drv.c
-@@ -1834,8 +1834,8 @@ static ssize_t recompress_store(struct device *dev,
- static void zram_bio_discard(struct zram *zram, struct bio *bio)
- {
- 	size_t n = bio->bi_iter.bi_size;
--	u32 index = bio->bi_iter.bi_sector >> SECTORS_PER_PAGE_SHIFT;
--	u32 offset = (bio->bi_iter.bi_sector & (SECTORS_PER_PAGE - 1)) <<
-+	u32 index = bio->bi_iter.bi_sector >> PAGE_SECTORS_SHIFT;
-+	u32 offset = (bio->bi_iter.bi_sector & (PAGE_SECTORS - 1)) <<
- 			SECTOR_SHIFT;
- 
- 	/*
-@@ -1876,8 +1876,8 @@ static void zram_bio_read(struct zram *zram, struct bio *bio)
- 
- 	start_time = bio_start_io_acct(bio);
- 	bio_for_each_segment(bv, bio, iter) {
--		u32 index = iter.bi_sector >> SECTORS_PER_PAGE_SHIFT;
--		u32 offset = (iter.bi_sector & (SECTORS_PER_PAGE - 1)) <<
-+		u32 index = iter.bi_sector >> PAGE_SECTORS_SHIFT;
-+		u32 offset = (iter.bi_sector & (PAGE_SECTORS - 1)) <<
- 				SECTOR_SHIFT;
- 
- 		if (zram_bvec_read(zram, &bv, index, offset, bio) < 0) {
-@@ -1903,8 +1903,8 @@ static void zram_bio_write(struct zram *zram, struct bio *bio)
- 
- 	start_time = bio_start_io_acct(bio);
- 	bio_for_each_segment(bv, bio, iter) {
--		u32 index = iter.bi_sector >> SECTORS_PER_PAGE_SHIFT;
--		u32 offset = (iter.bi_sector & (SECTORS_PER_PAGE - 1)) <<
-+		u32 index = iter.bi_sector >> PAGE_SECTORS_SHIFT;
-+		u32 offset = (iter.bi_sector & (PAGE_SECTORS - 1)) <<
- 				SECTOR_SHIFT;
- 
- 		if (zram_bvec_write(zram, &bv, index, offset, bio) < 0) {
-diff --git a/drivers/block/zram/zram_drv.h b/drivers/block/zram/zram_drv.h
-index ca7a15bd4845..9f2543af5c76 100644
---- a/drivers/block/zram/zram_drv.h
-+++ b/drivers/block/zram/zram_drv.h
-@@ -21,8 +21,6 @@
- 
- #include "zcomp.h"
- 
--#define SECTORS_PER_PAGE_SHIFT	(PAGE_SHIFT - SECTOR_SHIFT)
--#define SECTORS_PER_PAGE	(1 << SECTORS_PER_PAGE_SHIFT)
- #define ZRAM_LOGICAL_BLOCK_SHIFT 12
- #define ZRAM_LOGICAL_BLOCK_SIZE	(1 << ZRAM_LOGICAL_BLOCK_SHIFT)
- #define ZRAM_SECTOR_PER_LOGICAL_BLOCK	\
--- 
-2.39.2
-
+with the modulo code enforcing that no one but the module this is
+explicitly exorted for can use the symbol.
