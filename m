@@ -2,45 +2,45 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3F8AAC7EE29
-	for <linux-xfs@archiver.kernel.org>; Fri, 26 May 2023 00:00:28 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B6223C77B7E
+	for <linux-xfs@archiver.kernel.org>; Fri, 26 May 2023 00:07:37 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S239876AbjEZAAZ (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 25 May 2023 20:00:25 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34760 "EHLO
+        id S240643AbjEZAHg (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 25 May 2023 20:07:36 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37682 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S234918AbjEZAAX (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 25 May 2023 20:00:23 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 22E969C;
-        Thu, 25 May 2023 17:00:22 -0700 (PDT)
+        with ESMTP id S235290AbjEZAHf (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 25 May 2023 20:07:35 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4A8F3E65
+        for <linux-xfs@vger.kernel.org>; Thu, 25 May 2023 17:07:12 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id ACCA564B53;
-        Fri, 26 May 2023 00:00:21 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 1857EC433EF;
-        Fri, 26 May 2023 00:00:21 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id D0B6564B6C
+        for <linux-xfs@vger.kernel.org>; Fri, 26 May 2023 00:07:11 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 33C4CC433A0;
+        Fri, 26 May 2023 00:07:11 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1685059221;
-        bh=Rv/9AaaPRgSQNsKPeSqBSjfB5dbXn+qZlod3vzY8KXk=;
+        s=k20201202; t=1685059631;
+        bh=RFJOqit5S9I9vAP0hYEchl/taP6hXZt1U901r7JxCUM=;
         h=Date:From:To:Cc:Subject:From;
-        b=bV1/JRerXd8uZxRqC+jRCHQ5NGH+jb0rTykBKEgKtXkYiMaprwXA/9qq1EZzD16oJ
-         I6OX67bgc3xZ99R8Mf8RBhpIpOrwoT8YuD9v1kQhdY9f1HPPg73dMrefcejMYTDuDZ
-         rVKQp8U6SGjBfpUUsVRRE+RB7mEiLzLPIDOWm8qrVy+rgKiPErVzof9A9+Z1TytLB2
-         OEKXAZyjZUis8OR12VFbUjYjI1teUaLmeM+HPfFeI8znFxpB7wD9+toCR6qbCfR7mh
-         09cirkh1BNzKNw5EYdlAYsHVg5uff9x67TmuDRaV6wPG8WWHhf/o+9VztIAAQlCgXo
-         XwC5npTMHhL1g==
-Date:   Thu, 25 May 2023 17:00:20 -0700
+        b=iFuy7r5iNmuvamP96GVICREdT7xQyyLWyNssOxcUd9de+o2rL10TI6ZByN42rQbwv
+         FGBwTnJ2L0Xs6/RUOl7dAEpuBhnyIWdGu75AWZMW+n/cpe45EnBaS5eL4p8kI1H9dT
+         jwGJ9yfadRSpZ7nRdOT5Qit9nBTMGvWN6ypv13ex9DEFlJe39mdQEfVHUYeIqczeeT
+         epYTNfntSfxjfLR4SjyXuigpnovWyvPjq6IKN3Igx3eV+TF/T8oEM+wXMD9kderoso
+         Xh+hXPX2/jq+LTdYgRtNHTHMPimpqsBHGBudp39sgHDSnOfmnQUdl62aAM1KuRf5VX
+         AfY2R2GBNaa6w==
+Date:   Thu, 25 May 2023 17:07:10 -0700
 From:   "Darrick J. Wong" <djwong@kernel.org>
-To:     Dave Chinner <david@fromorbit.com>
-Cc:     xfs <linux-xfs@vger.kernel.org>,
-        linux-fsdevel <linux-fsdevel@vger.kernel.org>,
-        Carlos Maiolino <cmaiolino@redhat.com>,
+To:     xfs <linux-xfs@vger.kernel.org>
+Cc:     Allison Henderson <allison.henderson@oracle.com>,
         Chandan Babu R <chandanrlinux@gmail.com>,
-        Catherine Hoang <catherine.hoang@oracle.com>
-Subject: [MEGAPATCHSET v25 1/2] xfs: online repair, part 1
-Message-ID: <20230526000020.GJ11620@frogsfrogsfrogs>
+        Catherine Hoang <catherine.hoang@oracle.com>,
+        Carlos Maiolino <cmaiolino@redhat.com>
+Subject: [RFC MEGAPATCHSET v12 1/2] xfs: parent pointers and online repair
+ part 2
+Message-ID: <20230526000710.GG11642@frogsfrogsfrogs>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
@@ -50,49 +50,19 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 
 Hi everyone,
 
-I've finished merging parent pointers into what is now part 2 of online
-repair.  Part 1 hasn't changed much since the last posting at the end of
-2022, aside from various reorganizations of the directory repair, dotdot
-repair, and the tempfile/orphanage infrastructure to support the bits
-that part 2 will want.  Zorro merged all the pending fstests changes to
-support and test everything in part 1, so that part is done.
+I am also sending out an RFC for part 2 of online repair.  I've merged
+Allison's parent pointers work into djwong-dev and ported the prototype
+reconstruction algorithms that I showed off in v11 on top of part 1 of
+online repair.  In short, XFS can now rebuild its own directory tree.
 
-In other words, I'm formally submitting part 1 for inclusion in 6.5.
+Parent pointers now look like this:
 
-For this review, I would like people to focus the following:
+	(parent_ino, parent_gen, namehash) -> (name[])
 
-- Are the major subsystems sufficiently documented that you could figure
-  out what the code does?
-
-- Do you see any problems that are severe enough to cause long term
-  support hassles? (e.g. bad API design, writing weird metadata to disk)
-
-- Can you spot mis-interactions between the subsystems?
-
-- What were my blind spots in devising this feature?
-
-- Are there missing pieces that you'd like to help build?
-
-- Can I just merge all of this?
-
-The one thing that is /not/ in scope for this review are requests for
-more refactoring of existing subsystems.
-
-I've been running daily online **repairs** of every computer I own for
-the last 14 months.  So far, no damage has resulted from these
-operations.
-
-Fuzz and stress testing of online repairs have been running well for a
-year now.  As of this writing, online repair can fix slightly more
-things than offline repair, and the fsstress+repair long soak test has
-passed 200 million repairs with zero problems observed.  All issues
-observed in that time have been corrected in this submission.
-
-(For comparison, the long soak fsx test recently passed 99 billion file
-operations, so online fsck has a ways to go...)
-
-This is actually an excerpt of the xfsprogs patches -- I'm only mailing
-the changes to xfs_scrub; there are substantially more bug fixes and
-improvements to xfs_{db,repair,spaceman} that I've made along the way.
+I think this feature is ready to go once we've merged part 1 of the
+online repair code.  A full run of the online/offline fsck fuzz testing
+show that this code is ready to go, though I have not yet looked deeply
+into whether or not things like cycle detection are now easy to
+construct.
 
 --D
