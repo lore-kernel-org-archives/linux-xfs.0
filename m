@@ -2,31 +2,31 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 64389C77B7A
-	for <linux-xfs@archiver.kernel.org>; Fri, 26 May 2023 07:33:52 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3664DC77B7A
+	for <linux-xfs@archiver.kernel.org>; Fri, 26 May 2023 07:33:59 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S242418AbjEZHdo (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 26 May 2023 03:33:44 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60490 "EHLO
+        id S242469AbjEZHd5 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 26 May 2023 03:33:57 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60516 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229681AbjEZHdn (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 26 May 2023 03:33:43 -0400
+        with ESMTP id S242431AbjEZHdp (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 26 May 2023 03:33:45 -0400
 Received: from bombadil.infradead.org (bombadil.infradead.org [IPv6:2607:7c80:54:3::133])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 12D84B6;
-        Fri, 26 May 2023 00:33:42 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id F065412A;
+        Fri, 26 May 2023 00:33:43 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
         d=infradead.org; s=bombadil.20210309; h=Sender:Content-Transfer-Encoding:
-        Content-Type:MIME-Version:Message-Id:Date:Subject:Cc:To:From:Reply-To:
-        Content-ID:Content-Description:In-Reply-To:References;
-        bh=23YpyXCnG95trpP/pZ5n4GhJ2jHSbd6X9bDByt1pjCI=; b=1pmptwQdQfDrJXHTJIIak+p56N
-        nZDFIQCxxcIxw0zUKarHhboTE6oY7rvTOgGfiswmsjC5CWW8lOGwJ9B5AeQkCpBGux3R65tB+k27i
-        P0vmdsjYL3A3dM9V9slp2BqgHODGy/QH4BFYSeTt8omfsUwrWvOq2scl47MGO3EOySrYqMO7TXK3f
-        mcggnMJmh8lWXyude7lxcrYzLdmf6LD5lAWFgWWQ97kY0Fr+9zfUTGxbeAVryzFYAmYle936W9M7+
-        lbtmgWmxGlHTbwW0x4N0xCtJcJMISx+JewfMyrmz0ftBPLkT8DvX5h3pcFpy/B1olU2EFewhzzf1c
-        At6yXbow==;
+        MIME-Version:References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:
+        Reply-To:Content-Type:Content-ID:Content-Description;
+        bh=l8SXSO/lmiFeJihMCTRRFm0o8Ak15fMAUhw4BXdB6WA=; b=A0xPKQUoDsDrFgURMQlgZXIoK4
+        lF0smhhvDr9DIwh3hI5+Foy4jSB44qqYKTW9k2PV/7PuWcBUSeOo6jWJLU2DNhMOCi1CTP1Vr1qXN
+        cB1zrc2ldkTJb0i1ydOhaeGCJSHRsdi8p9dUGm95225TqZGlE84F6Y3mfrRFtVU8AAk/LeILUvTzj
+        DCxobQiHgxGi8mvk1uiSyIKFvEMqMniMXjlXlxhbRRhvWQ3LnJ21MPhaTWeTq5Fi6r/fGfhBlXjzW
+        o+5/0Ft/FRALeNM171FNjOPX7gizDDJyiLwYYmSgprAWBoMr6t5XCcMourkOlUq8zpJCEwA9TAgAY
+        J55czzyw==;
 Received: from mcgrof by bombadil.infradead.org with local (Exim 4.96 #2 (Red Hat Linux))
-        id 1q2RxA-001RdO-2w;
-        Fri, 26 May 2023 07:33:36 +0000
+        id 1q2RxB-001Rda-0i;
+        Fri, 26 May 2023 07:33:37 +0000
 From:   Luis Chamberlain <mcgrof@kernel.org>
 To:     axboe@kernel.dk, agk@redhat.com, snitzer@kernel.org,
         philipp.reisner@linbit.com, lars.ellenberg@linbit.com,
@@ -39,48 +39,85 @@ Cc:     patches@lists.linux.dev, linux-block@vger.kernel.org,
         willy@infradead.org, hare@suse.de, p.raghav@samsung.com,
         da.gomez@samsung.com, rohan.puri@samsung.com,
         rpuri.linux@gmail.com, kbusch@kernel.org, mcgrof@kernel.org
-Subject: [PATCH v2 0/5] block: simplify with PAGE_SECTORS_SHIFT
-Date:   Fri, 26 May 2023 00:33:31 -0700
-Message-Id: <20230526073336.344543-1-mcgrof@kernel.org>
+Subject: [PATCH v2 5/5] zram: use generic PAGE_SECTORS and PAGE_SECTORS_SHIFT
+Date:   Fri, 26 May 2023 00:33:36 -0700
+Message-Id: <20230526073336.344543-6-mcgrof@kernel.org>
 X-Mailer: git-send-email 2.38.1
+In-Reply-To: <20230526073336.344543-1-mcgrof@kernel.org>
+References: <20230526073336.344543-1-mcgrof@kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
 Sender: Luis Chamberlain <mcgrof@infradead.org>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-A bit of block drivers have their own incantations with
-PAGE_SHIFT - SECTOR_SHIFT. Just simplfy and use PAGE_SECTORS_SHIFT
-all over.
-                                                                                                                                                                                              
-Based on linux-next next-20230525.
+Instead of re-defining the already existing constants use the provided ones:
 
-Changes since v1:
+So replace:
 
- o keep iomap math visibly simple
- o Add tags for Reviews/acks
- o rebase onto next-20230525
+ o SECTORS_PER_PAGE_SHIFT with PAGE_SECTORS_SHIFT
+ o SECTORS_PER_PAGE       with PAGE_SECTORS
 
-Luis Chamberlain (5):
-  block: annotate bdev_disk_changed() deprecation with a symbol
-    namespace
-  drbd: use PAGE_SECTORS_SHIFT and PAGE_SECTORS
-  iomap: simplify iomap_init() with PAGE_SECTORS
-  dm bufio: simplify by using PAGE_SECTORS_SHIFT
-  zram: use generic PAGE_SECTORS and PAGE_SECTORS_SHIFT
+This produces no functional changes.
 
- block/partitions/core.c          |  6 +-----
- drivers/block/drbd/drbd_bitmap.c |  4 ++--
- drivers/block/loop.c             |  2 ++
- drivers/block/zram/zram_drv.c    | 12 ++++++------
- drivers/block/zram/zram_drv.h    |  2 --
- drivers/md/dm-bufio.c            |  4 ++--
- drivers/s390/block/dasd_genhd.c  |  2 ++
- fs/iomap/buffered-io.c           |  2 +-
- 8 files changed, 16 insertions(+), 18 deletions(-)
+Reviewed-by: Sergey Senozhatsky <senozhatsky@chromium.org>
+Signed-off-by: Luis Chamberlain <mcgrof@kernel.org>
+---
+ drivers/block/zram/zram_drv.c | 12 ++++++------
+ drivers/block/zram/zram_drv.h |  2 --
+ 2 files changed, 6 insertions(+), 8 deletions(-)
 
+diff --git a/drivers/block/zram/zram_drv.c b/drivers/block/zram/zram_drv.c
+index f6d90f1ba5cf..5fdeb78ace9a 100644
+--- a/drivers/block/zram/zram_drv.c
++++ b/drivers/block/zram/zram_drv.c
+@@ -1834,8 +1834,8 @@ static ssize_t recompress_store(struct device *dev,
+ static void zram_bio_discard(struct zram *zram, struct bio *bio)
+ {
+ 	size_t n = bio->bi_iter.bi_size;
+-	u32 index = bio->bi_iter.bi_sector >> SECTORS_PER_PAGE_SHIFT;
+-	u32 offset = (bio->bi_iter.bi_sector & (SECTORS_PER_PAGE - 1)) <<
++	u32 index = bio->bi_iter.bi_sector >> PAGE_SECTORS_SHIFT;
++	u32 offset = (bio->bi_iter.bi_sector & (PAGE_SECTORS - 1)) <<
+ 			SECTOR_SHIFT;
+ 
+ 	/*
+@@ -1876,8 +1876,8 @@ static void zram_bio_read(struct zram *zram, struct bio *bio)
+ 
+ 	start_time = bio_start_io_acct(bio);
+ 	bio_for_each_segment(bv, bio, iter) {
+-		u32 index = iter.bi_sector >> SECTORS_PER_PAGE_SHIFT;
+-		u32 offset = (iter.bi_sector & (SECTORS_PER_PAGE - 1)) <<
++		u32 index = iter.bi_sector >> PAGE_SECTORS_SHIFT;
++		u32 offset = (iter.bi_sector & (PAGE_SECTORS - 1)) <<
+ 				SECTOR_SHIFT;
+ 
+ 		if (zram_bvec_read(zram, &bv, index, offset, bio) < 0) {
+@@ -1903,8 +1903,8 @@ static void zram_bio_write(struct zram *zram, struct bio *bio)
+ 
+ 	start_time = bio_start_io_acct(bio);
+ 	bio_for_each_segment(bv, bio, iter) {
+-		u32 index = iter.bi_sector >> SECTORS_PER_PAGE_SHIFT;
+-		u32 offset = (iter.bi_sector & (SECTORS_PER_PAGE - 1)) <<
++		u32 index = iter.bi_sector >> PAGE_SECTORS_SHIFT;
++		u32 offset = (iter.bi_sector & (PAGE_SECTORS - 1)) <<
+ 				SECTOR_SHIFT;
+ 
+ 		if (zram_bvec_write(zram, &bv, index, offset, bio) < 0) {
+diff --git a/drivers/block/zram/zram_drv.h b/drivers/block/zram/zram_drv.h
+index ca7a15bd4845..9f2543af5c76 100644
+--- a/drivers/block/zram/zram_drv.h
++++ b/drivers/block/zram/zram_drv.h
+@@ -21,8 +21,6 @@
+ 
+ #include "zcomp.h"
+ 
+-#define SECTORS_PER_PAGE_SHIFT	(PAGE_SHIFT - SECTOR_SHIFT)
+-#define SECTORS_PER_PAGE	(1 << SECTORS_PER_PAGE_SHIFT)
+ #define ZRAM_LOGICAL_BLOCK_SHIFT 12
+ #define ZRAM_LOGICAL_BLOCK_SIZE	(1 << ZRAM_LOGICAL_BLOCK_SHIFT)
+ #define ZRAM_SECTOR_PER_LOGICAL_BLOCK	\
 -- 
 2.39.2
 
