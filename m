@@ -2,133 +2,96 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4B003C7EE23
-	for <linux-xfs@archiver.kernel.org>; Mon, 29 May 2023 15:38:05 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 242B5C77B7E
+	for <linux-xfs@archiver.kernel.org>; Mon, 29 May 2023 19:59:33 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229966AbjE2PiC (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 29 May 2023 11:38:02 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36884 "EHLO
+        id S229547AbjE2T7c (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 29 May 2023 15:59:32 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38484 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229691AbjE2PiB (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 29 May 2023 11:38:01 -0400
-Received: from smtp-out2.suse.de (smtp-out2.suse.de [195.135.220.29])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4F59DF3;
-        Mon, 29 May 2023 08:37:56 -0700 (PDT)
-Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
-        (No client certificate requested)
-        by smtp-out2.suse.de (Postfix) with ESMTPS id A8E621F8B5;
-        Mon, 29 May 2023 15:37:54 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.cz; s=susede2_rsa;
-        t=1685374674; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=VfC2IdpO+7uEiBHhtf+jBby1eH6FWQ5ChsH/O7pLur0=;
-        b=gSf0t+vZ0B4myh9SviD61zCj1EH1uc1YlVGhNUgb/MCZXxzHgA8J3XifwVyza2KRq20hWr
-        pZGc6AXCETQnP8jb+U91N20w7vIA7f5VobiHfL+/HbuvYR4sGOy/Qvb7o1ZnPBWqac7LBg
-        kZfgvCRZqV9R20JgWvdDd1kIZir+lK0=
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.cz;
-        s=susede2_ed25519; t=1685374674;
-        h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=VfC2IdpO+7uEiBHhtf+jBby1eH6FWQ5ChsH/O7pLur0=;
-        b=2+2tMQkyipmhcoqtqPAlHCSakWLZKRrkGMRW/G1J4HZuo+ZsFqLS2sYv/igpPh23T0GX71
-        4QMmBZeR6OW2F3DA==
-Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
-        (No client certificate requested)
-        by imap2.suse-dmz.suse.de (Postfix) with ESMTPS id 87AAC13A36;
-        Mon, 29 May 2023 15:37:54 +0000 (UTC)
-Received: from dovecot-director2.suse.de ([192.168.254.65])
-        by imap2.suse-dmz.suse.de with ESMTPSA
-        id BKs+INLGdGQrSAAAMHmgww
-        (envelope-from <jack@suse.cz>); Mon, 29 May 2023 15:37:54 +0000
-Received: by quack3.suse.cz (Postfix, from userid 1000)
-        id 0BA32A06F2; Mon, 29 May 2023 14:41:31 +0200 (CEST)
-Date:   Mon, 29 May 2023 14:41:31 +0200
-From:   Jan Kara <jack@suse.cz>
-To:     Christian Brauner <brauner@kernel.org>
-Cc:     Jan Kara <jack@suse.cz>, Al Viro <viro@ZenIV.linux.org.uk>,
-        linux-fsdevel@vger.kernel.org, Miklos Szeredi <miklos@szeredi.hu>,
-        "Darrick J. Wong" <djwong@kernel.org>, Ted Tso <tytso@mit.edu>,
-        Jaegeuk Kim <jaegeuk@kernel.org>, linux-ext4@vger.kernel.org,
-        linux-f2fs-devel@lists.sourceforge.net, linux-xfs@vger.kernel.org,
-        stable@vger.kernel.org
-Subject: Re: [PATCH 4/6] fs: Establish locking order for unrelated directories
-Message-ID: <20230529124131.gbb3fmhrspl332i6@quack3>
-References: <20230525100654.15069-1-jack@suse.cz>
- <20230525101624.15814-4-jack@suse.cz>
- <20230526-polarstern-herrichten-32fc46c63bfc@brauner>
+        with ESMTP id S229457AbjE2T7b (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 29 May 2023 15:59:31 -0400
+Received: from casper.infradead.org (casper.infradead.org [IPv6:2001:8b0:10b:1236::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8F770B7;
+        Mon, 29 May 2023 12:59:30 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=infradead.org; s=casper.20170209; h=Content-Type:MIME-Version:Message-ID:
+        Subject:To:From:Date:Sender:Reply-To:Cc:Content-Transfer-Encoding:Content-ID:
+        Content-Description:In-Reply-To:References;
+        bh=ig/CoxYXOH5AerUAGPj4vxhU49vpr7Ly8vfvJTkUBPY=; b=A6EyJNexFZu7hfFH516ye7zTW7
+        wLWN5KXhlAxMD1xGtYJSVqQryjiyjm5rY3FFjIStQ93+KFvyxgZh9+02tUsRm1tlV+9LOutprbtbU
+        7gjGRbVCeMZLYOBubQ2GoPXl4edJzLkOlMriRiD3BqU2GOON5mCOSTHEv/IDuN6S3xE3u+BD1Td7j
+        /06UVh9M/EB0aCSQV+f3M4JlnEu5t5JvaAnJuHXb1x/ICNuAxWYXEfYuDKQ/87y0MDqyatB+DrsuQ
+        aHziY+6sQIjSFgWkvJJoYxzAV9Ajt5EDVh9+rIokb5z1xWa3WccfxNXXrVAJSi2RD/lmc229li9N2
+        gXHaJxhA==;
+Received: from willy by casper.infradead.org with local (Exim 4.94.2 #2 (Red Hat Linux))
+        id 1q3j1b-005fXY-Sx; Mon, 29 May 2023 19:59:28 +0000
+Date:   Mon, 29 May 2023 20:59:27 +0100
+From:   Matthew Wilcox <willy@infradead.org>
+To:     linux-mm@kvack.org, linux-fsdevel@vger.kernel.org,
+        linux-xfs@vger.kernel.org
+Subject: Splitting dirty fs folios
+Message-ID: <ZHUEH849ff09pVpf@casper.infradead.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20230526-polarstern-herrichten-32fc46c63bfc@brauner>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Fri 26-05-23 11:45:15, Christian Brauner wrote:
-> On Thu, May 25, 2023 at 12:16:10PM +0200, Jan Kara wrote:
-> > Currently the locking order of inode locks for directories that are not
-> > in ancestor relationship is not defined because all operations that
-> > needed to lock two directories like this were serialized by
-> > sb->s_vfs_rename_mutex. However some filesystems need to lock two
-> > subdirectories for RENAME_EXCHANGE operations and for this we need the
-> > locking order established even for two tree-unrelated directories.
-> > Provide a helper function lock_two_inodes() that establishes lock
-> > ordering for any two inodes and use it in lock_two_directories().
-> > 
-> > CC: stable@vger.kernel.org
-> > Signed-off-by: Jan Kara <jack@suse.cz>
-> > ---
-> >  fs/inode.c    | 34 ++++++++++++++++++++++++++++++++++
-> >  fs/internal.h |  2 ++
-> >  fs/namei.c    |  4 ++--
-> >  3 files changed, 38 insertions(+), 2 deletions(-)
-> > 
-> > diff --git a/fs/inode.c b/fs/inode.c
-> > index 577799b7855f..2015fa50d34a 100644
-> > --- a/fs/inode.c
-> > +++ b/fs/inode.c
-> > @@ -1103,6 +1103,40 @@ void discard_new_inode(struct inode *inode)
-> >  }
-> >  EXPORT_SYMBOL(discard_new_inode);
-> >  
-> > +/**
-> > + * lock_two_inodes - lock two inodes (may be regular files but also dirs)
-> > + *
-> > + * Lock any non-NULL argument. The caller must make sure that if he is passing
-> > + * in two directories, one is not ancestor of the other.  Zero, one or two
-> > + * objects may be locked by this function.
-> > + *
-> > + * @inode1: first inode to lock
-> > + * @inode2: second inode to lock
-> > + * @subclass1: inode lock subclass for the first lock obtained
-> > + * @subclass2: inode lock subclass for the second lock obtained
-> > + */
-> > +void lock_two_inodes(struct inode *inode1, struct inode *inode2,
-> > +		     unsigned subclass1, unsigned subclass2)
-> > +{
-> > +	if (!inode1 || !inode2)
-> > +		goto lock;
-> 
-> Before this change in
-> 
-> lock_two_nondirectories(struct inode *inode1, struct inode *inode2)
-> 
-> the swap() would cause the non-NULL inode to always be locked with
-> I_MUTEX_NONDIR2. Now it can be either I_MUTEX_NORMAL or I_MUTEX_NONDIR2.
-> Is that change intentional?
+At the moment, when we truncate (also holepunch, etc) a file,
+the VFS attempts to split any large folios which overlap the newly
+created boundary in the file.  See mm/truncate.c for the callers of
+->invalidate_folio.
 
-Kind of. I don't think we really care so I didn't bother to complicate the
-code for this. If you think keeping the lockdep class consistent is worth
-it, I can modify the patch...
+We need the filesystem and the MM to cooperate on splitting a folio
+because there's FS metadata attached to folio->private.  We have per-folio
+state (uptodate, dirty) which the filesystem keeps per-block state for
+and uses the folio state as a summary (if every block is uptodate,
+the folio is uptodate.  if any block is dirty, the folio is dirty).
+If we just throw away that per-folio extra state we risk not writing
+back blocks which are dirty, or losing buffered writes as we re-read
+blocks which were more uptodate in memory than on disk.  There's no
+safe state to set the folio to.
 
-								Honza
+This is fine if the entire folio is uptodate, and it generally is today
+because large folios are only created through readahead, which will
+bring the entire folio uptodate unless there is a read error.  But when
+creating a large folio in the write path, we can end up with large folios
+which are not uptodate under various circumstances.  For example, I've
+captured one where we write to pos:0x2a0e5f len:0xf1a1.  Because this is
+on a 1kB block size filesystem, we leave the first three blocks in the folio
+unread, and the uptodate bits are fffffffffffffff8.  That means that
+the folio as a whole is not uptodate.
 
--- 
-Jan Kara <jack@suse.com>
-SUSE Labs, CR
+Option 1: Read the start of the folio so we can set the whole folio
+uptodate.  In this case, we're already submitting a read for bytes
+0x2a0c00-0x2a0fff (so we can overwrite the end of that block).  We could
+expand that to read 0x2a0000-0x2a0fff instead.  This could get tricky;
+at the moment we're guaranteed to have the iomap that covers the start
+of the block, but we might have to do a lookup to find the iomap(s)
+that covers the start of the folio.
+
+Option 2: In the invalidate_folio implementation, writeback the folio
+so it is no longer dirty.  I'm not sure we have all the information we
+need to start writeback, and it'll annoy the filesystem as it has to
+allocate space if it wasn't already allocated.
+
+Option 3: Figure out a more complicated dance between the FS and the MM
+that allows the FS to attach state to the newly created folios before
+finally freeing the original folio.
+
+Option 4: Stop splitting folios on holepunch / truncate.  Folio splits
+can fail, so we all have to cope with folios that substantially overhang
+a hole/data/EOF boundary.  We don't attempt to split folios on readahead
+when we discover we're trying to read from a hole, we just zero the
+appropriate chuks of the folio.  We do attempt to not allocate folios
+which extend more than one page past EOF, but that's subject to change
+anyway.
+
+Option 5: If the folio is both dirty and !uptodate, just refuse to split
+it, like if somebody else had a reference on it.  A less extreme version
+of #4.
+
+I may have missed some other option.  Option 5 seems like the least
+amount of work.
