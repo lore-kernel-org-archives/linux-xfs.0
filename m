@@ -2,151 +2,105 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 15738C77B7C
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 98C9DC7EE23
 	for <linux-xfs@archiver.kernel.org>; Mon, 29 May 2023 00:08:35 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229613AbjE2AIe (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        id S230347AbjE2AIe (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
         Sun, 28 May 2023 20:08:34 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59936 "EHLO
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59946 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229505AbjE2AId (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sun, 28 May 2023 20:08:33 -0400
-Received: from mail-pg1-x52f.google.com (mail-pg1-x52f.google.com [IPv6:2607:f8b0:4864:20::52f])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6814ABB
+        with ESMTP id S229634AbjE2AIe (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sun, 28 May 2023 20:08:34 -0400
+Received: from mail-pf1-x42d.google.com (mail-pf1-x42d.google.com [IPv6:2607:f8b0:4864:20::42d])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id CD7B1BD
         for <linux-xfs@vger.kernel.org>; Sun, 28 May 2023 17:08:32 -0700 (PDT)
-Received: by mail-pg1-x52f.google.com with SMTP id 41be03b00d2f7-517bdc9e81dso1228480a12.1
+Received: by mail-pf1-x42d.google.com with SMTP id d2e1a72fcca58-64d44b198baso1872068b3a.0
         for <linux-xfs@vger.kernel.org>; Sun, 28 May 2023 17:08:32 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=fromorbit-com.20221208.gappssmtp.com; s=20221208; t=1685318912; x=1687910912;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:to
-         :from:from:to:cc:subject:date:message-id:reply-to;
-        bh=WcL9SwWbtJyhwYRHeP3A0GXCde/irn0th2cy2sQKnWk=;
-        b=0JtSTTMystmf4Deea2phXnp+LFUBDnk4Lm9XLR2UYxz6U67BRpJEH4o0UaaFe4aWr9
-         lBNiDghuuZf3gk6Q7V16gKdxUoO+Bk2UKNeQl882tUA8b3pu6QSWnhAEMKMxbqys9/Jg
-         O35HgZoWuSJr0jk6Jj6ZdwnKeouQ7ly1kBr7KUdO93cImVRVlrLIjOwiGAB0MFn0ySko
-         pzw7uQwnbDUGVmyPlb1XZSTsdBRrsd75igkJ/Qc9lffw5vRzMvCbiDHQcq1cCtiaK2j0
-         N0TOPmQjfTsD7GBr4hH/3I33VC+smjLGHSCrXgayxvRkJVqO4oXhTnQvUGMMnkeqzzZY
-         epRA==
+        h=content-transfer-encoding:mime-version:references:in-reply-to
+         :message-id:date:subject:to:from:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=G0n5f1L7Dbesh/QRK2OEoeqbxhiaRwsKTNbGaPGSSKo=;
+        b=FgVNSuwQcEVFSJidEYNuY/LYWPftDvBryXtDA984L867UlqmigAm13BxPipJ6gxq/v
+         G+clkYplV4NsN/g8lkddiX4w9Yd0Pq6hcNvSW65xQZX1c3BBnGwIyuXaCFMPV7x2+Mdf
+         iKs3OftZn1VsW2fkrld0AzPh2ILTjkAvh8IJmuj2LjMJQ9iWXF0ylydFluQ+lV+3Cr7H
+         SwXQjlC7yjCY5mFSUkl+iTqcMrfvwbeKjGqZoIklCdg9IgTQTTkDOrA0LZtKpJsFdiSW
+         9Mv6cF9WXkgMLV1VMvj4CpDPQChaKst2KEPeXwTOIHORRl7R/Y2dz0YRAvlZLcpcEIv8
+         GN+g==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20221208; t=1685318912; x=1687910912;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:to
-         :from:x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=WcL9SwWbtJyhwYRHeP3A0GXCde/irn0th2cy2sQKnWk=;
-        b=hjEfqQhISPR7uxttu2Rrv5y8YH2ClOLNDd4fQmshsWq+SSrbjQ5iOQPTEhT3pFshkd
-         Onq66JG0yo03pJYKdZ6kgVnCG8hjkeu8uVtLUfY1E/vLMyMMJaCoe2Qa4vkHKaNTsN1q
-         n2zJMiftDVIfOSarlTczLVeenrUxQw/YWyeA4vfdE/rDFGRnn6oawcJ6v3S58Jm1s8Mg
-         SsJi+QOANG2hSz9/k2gzeNii88JvcGCyfuc/W82OuStEiuqExo/CHXGWkAW8yh2nZ22V
-         HdTtqqs85lN0/ho4mNA8uNCzyfqnV0tXiW8TJpAsQ8NpNUHvQmnyoUr1YKfAu2IcC5Yx
-         Kc1w==
-X-Gm-Message-State: AC+VfDz0vWFgeVfjduCr1V0yFFYEGaqym6hTeo1jFnfxo11V79LDudUU
-        SIEQgxiBr2lXRxLOCehQxoVSozn6CchXwGlDO8E=
-X-Google-Smtp-Source: ACHHUZ6xBcXtQ1J4VPWKza9VzZBkU9IrQ0iHIx6cEm1OdRVeoE6Q2X8yay10X+WY09jwkFVHVrAXVw==
-X-Received: by 2002:a17:903:1209:b0:1af:e2e2:2bd9 with SMTP id l9-20020a170903120900b001afe2e22bd9mr10576433plh.17.1685318911816;
-        Sun, 28 May 2023 17:08:31 -0700 (PDT)
+        h=content-transfer-encoding:mime-version:references:in-reply-to
+         :message-id:date:subject:to:from:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=G0n5f1L7Dbesh/QRK2OEoeqbxhiaRwsKTNbGaPGSSKo=;
+        b=drZdwl9j18eUbAmV919OfXVu0IWJFOYMBlR2gdh0oQEkO9p1RDtTrsJKcvK5zoHgvX
+         i3elDU7VC68rf7sQBno28W1n5j+/B8KU98gjl35mjMjAsDNd2x7Kihet2lIZGXsItGO3
+         ZQV307XM7yUjtqgS9QdHOkA4gge/VCpuaN2BAJGwP55t7hB6YNTeTMclvqBJ5PJkwhUj
+         hK5BA86s/4xpNJqYormty559a3+pDC7tEQadF82XnvraZ02qXYqk4zRcgPAxdD9rw1NW
+         qCM/2HDosOyQSnW2AHX6Y+Zd6q6Qe7Md/SY/pL0bmpjjwyWIypUAjcynh+SY7sMfqGpE
+         Elow==
+X-Gm-Message-State: AC+VfDxfTrJ6V2AOgQFK+mTANmZLtEagkzMNzflPpPFlfD1FS2uBUGSs
+        hFoTbcdYZ67ZbP/kccetKXd8hsF01vHiGDUzm5E=
+X-Google-Smtp-Source: ACHHUZ5mjxqbeR/Q9Q0Pcc9uLyinQQzIRBdFoFG1bmiCnI3iR5w2a5B7Du4hDaEhe42j5CTGGTs4zw==
+X-Received: by 2002:a05:6a00:1586:b0:648:a518:4ac6 with SMTP id u6-20020a056a00158600b00648a5184ac6mr6764946pfk.14.1685318912268;
+        Sun, 28 May 2023 17:08:32 -0700 (PDT)
 Received: from dread.disaster.area (pa49-179-0-188.pa.nsw.optusnet.com.au. [49.179.0.188])
-        by smtp.gmail.com with ESMTPSA id s16-20020a170902989000b001a96a6877fdsm6795907plp.3.2023.05.28.17.08.30
+        by smtp.gmail.com with ESMTPSA id b189-20020a6367c6000000b00530704f3a53sm5915721pgc.30.2023.05.28.17.08.30
         for <linux-xfs@vger.kernel.org>
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
         Sun, 28 May 2023 17:08:31 -0700 (PDT)
 Received: from [192.168.253.23] (helo=devoid.disaster.area)
         by dread.disaster.area with esmtp (Exim 4.96)
         (envelope-from <dave@fromorbit.com>)
-        id 1q3QR2-00575v-2R
+        id 1q3QR2-005761-2l
         for linux-xfs@vger.kernel.org;
         Mon, 29 May 2023 10:08:28 +1000
 Received: from dave by devoid.disaster.area with local (Exim 4.96)
         (envelope-from <dave@devoid.disaster.area>)
-        id 1q3QR2-00A6VP-1A
+        id 1q3QR2-00A6VW-1e
         for linux-xfs@vger.kernel.org;
         Mon, 29 May 2023 10:08:28 +1000
 From:   Dave Chinner <david@fromorbit.com>
 To:     linux-xfs@vger.kernel.org
-Subject: [PATCH 0/3] xfs: improve AGF/AGFL verification
-Date:   Mon, 29 May 2023 10:08:22 +1000
-Message-Id: <20230529000825.2325477-1-david@fromorbit.com>
+Subject: [PATCH 2/3] xfs: validity check agbnos on the AGFL
+Date:   Mon, 29 May 2023 10:08:24 +1000
+Message-Id: <20230529000825.2325477-3-david@fromorbit.com>
 X-Mailer: git-send-email 2.40.1
+In-Reply-To: <20230529000825.2325477-1-david@fromorbit.com>
+References: <20230529000825.2325477-1-david@fromorbit.com>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Hi Folks,
+From: Dave Chinner <dchinner@redhat.com>
 
-This set of patches is a result of a recent syzkaller bug report on
-v4 filesystems. It tripped over a corrupt AGFL count field in the
-AGF, but the failure didn't manifest until a crash processing extent
-free operations.
+If the agfl or the indexing in the AGF has been corrupted, getting a
+block form the AGFL could return an invalid block number. If this
+happens, bad things happen. Check the agbno we pull off the AGFL
+and return -EFSCORRUPTED if we find somethign bad.
 
-It turns out the crash was due to deferred AGFL freeing being passed
-a NULLAGBNO as the block to free - this resulted in an invalid
-filesystem block value which translated to an invalid AGNO which
-then failed a perag lookup in the defered extent freeing code.
+Signed-off-by: Dave Chinner <dchinner@redhat.com>
+---
+ fs/xfs/libxfs/xfs_alloc.c | 3 +++
+ 1 file changed, 3 insertions(+)
 
-While the oops was a result of a change in the 6.4-rc1 merge window,
-this is not the cause of the problem - the problem has always been
-there for V4 filesystems. However, V5 filesystems would have
-detected this specific corruption and would not have failed at all.
-There are other failures to detect bad extent ranges being
-freed so the v5 code needs improvement, too.
-
-The V5 verification is not done in the AGF/AGFL verifiers.
-It is deferred to initialising the perag from the AGF after it has
-been read from disk and the verifiers have been run. It is not
-documented in the code that the verifiers intentionally don't check
-free list indexes, even though they could in most situations.
-
-The verification for v5 filesystems was introduced back when we
-discovered that there was an issue with the on-disk sizing of the v5
-AGFL header. Code was added to detect the mismatch at runtime
-instead of in the verifier so that it could be corrected without
-shutting down the filesystem. It does so by resetting the AGFL
-indexes and the AGFL in the first transaction that needs to fix the
-free list. The old contents of the AGFL are leaked, but the system
-continues to function without any further issues.
-
-For some reason, this verification was not extented to v4
-filesystems, even though it is still necessary to catch the same
-corruptions on V4 filesystems. The first patch in the series simply
-runs the existing v5 AGFL index verification on v4 filesystems and
-triggers the AGFL reset code in the same way. This is all that is
-necessary to "fix" the syzkaller reproducer.
-
-However, one of the things the verification does not do is determine
-if the agbno we pull from the AGFL in xfs_alloc_get_freelist() is
-valid. The AGFL read verifier for V5 filesystems checks that each
-entry is either in range or NULLAGBNO, but that isn't sufficient. V4
-filesystems can't even do this, because for a long time mkfs didn't
-initialise AGFLs to NULLAGBNO so can contain anything at all.
-
-Hence we have to check the AGBNO we pull from the AGFL as being in a
-valid range. NULLAGBNO is not valid - that's what triggered the oops
-later on.  If we caught invalid AGBNOs in xfs_alloc_get_freelist()
-and returned -EFSCORRUPTED, the system would not have crashed. The
-second patch addresses this.
-
-Finally, nothing checked that the fsbno we are adding to xefi for
-deferred freeing is actually valid. This fsbno can come from any
-other structure in the filesystem, and we magically trust that it is
-valid despite many paths into this code not directly verifying the
-extent we are asking to be freed is valid. Freeing a bogus extent
-will, at best, result in a free space btree with a corrupt record in
-it that we trip over later and shut down the filesystem. Worst
-case, it will crash the system (as per the syzkaller report).
-
-The third patch in the series hardens the extent freeing code to
-reject bogus extent ranges at the time the code attempts to queue
-them for freeing. It also adds error handling to all the code that
-defers extent free operations so that the filesystem can be shut
-down immediately from the context that holds the bad extent, rather
-than having it get passes silently to later operations that end up
-tripping over it.
-
-IOWs, all three patches are needed to close the holes that lead to
-the system crashing rather than detecting AGF/AGFL corruption and
-handling it cleanly.
-
-Cheers,
-
-Dave.
+diff --git a/fs/xfs/libxfs/xfs_alloc.c b/fs/xfs/libxfs/xfs_alloc.c
+index fd3293a8c659..643d17877832 100644
+--- a/fs/xfs/libxfs/xfs_alloc.c
++++ b/fs/xfs/libxfs/xfs_alloc.c
+@@ -2780,6 +2780,9 @@ xfs_alloc_get_freelist(
+ 	 */
+ 	agfl_bno = xfs_buf_to_agfl_bno(agflbp);
+ 	bno = be32_to_cpu(agfl_bno[be32_to_cpu(agf->agf_flfirst)]);
++	if (XFS_IS_CORRUPT(tp->t_mountp, !xfs_verify_agbno(pag, bno)))
++		return -EFSCORRUPTED;
++
+ 	be32_add_cpu(&agf->agf_flfirst, 1);
+ 	xfs_trans_brelse(tp, agflbp);
+ 	if (be32_to_cpu(agf->agf_flfirst) == xfs_agfl_size(mp))
+-- 
+2.40.1
 
