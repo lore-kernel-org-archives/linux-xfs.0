@@ -2,109 +2,115 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B2C8EC77B73
-	for <linux-xfs@archiver.kernel.org>; Tue, 30 May 2023 09:58:34 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 39FBAC7EE23
+	for <linux-xfs@archiver.kernel.org>; Tue, 30 May 2023 11:42:43 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230254AbjE3J6e (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 30 May 2023 05:58:34 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38292 "EHLO
+        id S231214AbjE3LmM (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 30 May 2023 07:42:12 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44968 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230100AbjE3J6c (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 30 May 2023 05:58:32 -0400
-Received: from mail-il1-x129.google.com (mail-il1-x129.google.com [IPv6:2607:f8b0:4864:20::129])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A1F5B9C
-        for <linux-xfs@vger.kernel.org>; Tue, 30 May 2023 02:58:29 -0700 (PDT)
-Received: by mail-il1-x129.google.com with SMTP id e9e14a558f8ab-33b7f217dd0so202115ab.0
-        for <linux-xfs@vger.kernel.org>; Tue, 30 May 2023 02:58:29 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20221208; t=1685440709; x=1688032709;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=e75vb+3hqOpm7JcGwESgwqcoPR1HC2HqMQ0wDSBbOIc=;
-        b=AA6pQ6WyJXxKP9RHJB2dEoaddEeajkb2olokQhAks514pvBBeH/F0v38GBGBJcYfZL
-         jPrOeQof44QZ2OXRk/IRaqj1morc9DawOXB8f3knOGfKSCwLyewUzCcs0dCsooL82ROd
-         Dg4+h/yTyUUwdKB0EZ1wG5/PmyJr5tjAO9FmRCIUr7gCni5YMEKKq/dCLJYDHQ+ZKoVA
-         H4LU8Dn0NV7iaa7SFsHYpnJHbjHcUOYB3T0+PWVE8mjjh3+EdFB5c82EdfI9/qpuDXFL
-         49oMkf+tn1IOroKtv7QDhzXRtJ+W78OWMow65DBn8kGVGqSEJd9OR5dq2y8eCLuPu71c
-         q7hQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20221208; t=1685440709; x=1688032709;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=e75vb+3hqOpm7JcGwESgwqcoPR1HC2HqMQ0wDSBbOIc=;
-        b=FV1yYkcq5HwwvhTZpZ55NwR/ipx9S6Q2l5RzZXigzqxGGFBtLuv1wkGabd9QCVCk2s
-         ZTuPizr4sZPcqGiC7gN3kbp8jOr2WFktZJ6HHzCA7fK82g13pldWoNtW79LoN02ctSyL
-         2dIVQe4Y8gwjycsz6L9Y5wt20z9ffpVh5DG0hUDTyf87vQExbeDcuKkwedDZAeQ5spu0
-         lD4RHPm3YMnnmFm85VyhJ3HWvrVrJSCyxG/DjHfNVNztnVcGuSjWCcs5/gjWJIwwShVR
-         DdTeuDgg/U61aRatNFBtnQTHr324sDUuEj+IrX8ddLZmkWuq+WAAySdawSZ3SgIn/pbL
-         KpFg==
-X-Gm-Message-State: AC+VfDz3P4oDinJCNux/wG1dpjMyPX62b7oaLeAR5WUW0Vu8q4pAwYgO
-        +q2scs6G+4s9iB/H03LOgKRrJ7+EHpdZtMYcGKMY0A==
-X-Google-Smtp-Source: ACHHUZ6rjhZm1OQzYP16rgvILMdIMf1hOb5s4mThPWXqNfPyd48lNVKtLfvMI/MHYOP2wH5YMzSzw3AG0wB5HeqRaBw=
-X-Received: by 2002:a92:c24e:0:b0:338:3b6a:4719 with SMTP id
- k14-20020a92c24e000000b003383b6a4719mr87280ilo.17.1685440708956; Tue, 30 May
- 2023 02:58:28 -0700 (PDT)
+        with ESMTP id S232026AbjE3Llz (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 30 May 2023 07:41:55 -0400
+Received: from smtp-out2.suse.de (smtp-out2.suse.de [195.135.220.29])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id BEDF7180;
+        Tue, 30 May 2023 04:41:50 -0700 (PDT)
+Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
+        (No client certificate requested)
+        by smtp-out2.suse.de (Postfix) with ESMTPS id 7A14E1F8B9;
+        Tue, 30 May 2023 11:41:49 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.cz; s=susede2_rsa;
+        t=1685446909; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+         mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=oNkvyNSd6Gfbh+iwH/YENF6xAIahzjc7Hs/dYYi9deo=;
+        b=xpd3sC6RR6kU3o+umSclYiwAFJjQx7Xjq15U4MxefiLS1Djr47vdhCFNVBdDm681EvHLV2
+        9LHRp321nEfc0At1HI7+MfdBtgXNmsm/1moxpg+fKNJ5d611MketQZUDh7REJa5w0gqQ4w
+        dKZZC7r2yorXr78gYtl3LX5pyJEdQYQ=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.cz;
+        s=susede2_ed25519; t=1685446909;
+        h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+         mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=oNkvyNSd6Gfbh+iwH/YENF6xAIahzjc7Hs/dYYi9deo=;
+        b=PKIa1ZJciElQ0VLmcrPRG1c8/ltJcnLgwms06I1FJaHnSa8HnALE5RyxTd9A7RfB6gxikd
+        Fk8Tdw/m+mlQD9AA==
+Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
+        (No client certificate requested)
+        by imap2.suse-dmz.suse.de (Postfix) with ESMTPS id 58A9213597;
+        Tue, 30 May 2023 11:41:49 +0000 (UTC)
+Received: from dovecot-director2.suse.de ([192.168.254.65])
+        by imap2.suse-dmz.suse.de with ESMTPSA
+        id JMMsFf3gdWT+AgAAMHmgww
+        (envelope-from <jack@suse.cz>); Tue, 30 May 2023 11:41:49 +0000
+Received: by quack3.suse.cz (Postfix, from userid 1000)
+        id DA200A0754; Tue, 30 May 2023 13:41:48 +0200 (CEST)
+Date:   Tue, 30 May 2023 13:41:48 +0200
+From:   Jan Kara <jack@suse.cz>
+To:     Christoph Hellwig <hch@lst.de>
+Cc:     Jens Axboe <axboe@kernel.dk>, Al Viro <viro@zeniv.linux.org.uk>,
+        Christian Brauner <brauner@kernel.org>,
+        "Darrick J. Wong" <djwong@kernel.org>, Jan Kara <jack@suse.cz>,
+        linux-block@vger.kernel.org, linux-fsdevel@vger.kernel.org,
+        linux-xfs@vger.kernel.org
+Subject: Re: [PATCH 02/13] block: refactor bd_may_claim
+Message-ID: <20230530114148.zobtxdurit24pqev@quack3>
+References: <20230518042323.663189-1-hch@lst.de>
+ <20230518042323.663189-3-hch@lst.de>
 MIME-Version: 1.0
-References: <000000000000540fc405f01401bf@google.com> <0000000000003ccc9b05fcbfdb68@google.com>
-In-Reply-To: <0000000000003ccc9b05fcbfdb68@google.com>
-From:   Aleksandr Nogikh <nogikh@google.com>
-Date:   Tue, 30 May 2023 11:58:17 +0200
-Message-ID: <CANp29Y6vkDOAbL4T7hBdd-3fjfkM1vAJfhJF2Xw_UHNPEjawLQ@mail.gmail.com>
-Subject: Re: [syzbot] [xfs?] general protection fault in __xfs_free_extent
-To:     syzbot <syzbot+bfbc1eecdfb9b10e5792@syzkaller.appspotmail.com>
-Cc:     dchinner@redhat.com, djwong@kernel.org,
-        linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-xfs@vger.kernel.org, syzkaller-bugs@googlegroups.com
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20230518042323.663189-3-hch@lst.de>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Sun, May 28, 2023 at 2:10=E2=80=AFPM syzbot
-<syzbot+bfbc1eecdfb9b10e5792@syzkaller.appspotmail.com> wrote:
->
-> syzbot suspects this issue was fixed by commit:
->
-> commit b2ccab3199aa7cea9154d80ea2585312c5f6eba0
-> Author: Darrick J. Wong <djwong@kernel.org>
-> Date:   Wed Apr 12 01:59:53 2023 +0000
->
->     xfs: pass per-ag references to xfs_free_extent
->
-> bisection log:  https://syzkaller.appspot.com/x/bisect.txt?x=3D1007e5c128=
-0000
-> start commit:   02bf43c7b7f7 Merge tag 'fs.xattr.simple.rework.rbtree.rwl=
-o..
-> git tree:       upstream
-> kernel config:  https://syzkaller.appspot.com/x/.config?x=3D8c59170b68d26=
-a55
-> dashboard link: https://syzkaller.appspot.com/bug?extid=3Dbfbc1eecdfb9b10=
-e5792
-> syz repro:      https://syzkaller.appspot.com/x/repro.syz?x=3D1798429d880=
-000
-> C reproducer:   https://syzkaller.appspot.com/x/repro.c?x=3D161b948f88000=
-0
->
-> If the result looks correct, please mark the issue as fixed by replying w=
-ith:
->
-> #syz fix: xfs: pass per-ag references to xfs_free_extent
+On Thu 18-05-23 06:23:11, Christoph Hellwig wrote:
+> The long if/else chain obsfucates the actual logic.  Tidy it up to be
+> more structured.  Also drop the whole argument, as it can be trivially
+> derived from bdev using bdev_whole, and having the bdev_whole in the
+> function makes it easier to follow.
+> 
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
 
-Seems reasonable.
+Looks good to me. Just one nit below but regardless of how you decided feel
+free to add:
 
-#syz fix: xfs: pass per-ag references to xfs_free_extent
+Reviewed-by: Jan Kara <jack@suse.cz>
 
->
-> For information about bisection process see: https://goo.gl/tpsmEJ#bisect=
-ion
->
-> --
-> You received this message because you are subscribed to the Google Groups=
- "syzkaller-bugs" group.
-> To unsubscribe from this group and stop receiving emails from it, send an=
- email to syzkaller-bugs+unsubscribe@googlegroups.com.
-> To view this discussion on the web visit https://groups.google.com/d/msgi=
-d/syzkaller-bugs/0000000000003ccc9b05fcbfdb68%40google.com.
+> +static bool bd_may_claim(struct block_device *bdev, void *holder)
+>  {
+> -	if (bdev->bd_holder == holder)
+> -		return true;	 /* already a holder */
+> -	else if (bdev->bd_holder != NULL)
+> -		return false; 	 /* held by someone else */
+> -	else if (whole == bdev)
+> -		return true;  	 /* is a whole device which isn't held */
+> -
+> -	else if (whole->bd_holder == bd_may_claim)
+> -		return true; 	 /* is a partition of a device that is being partitioned */
+> -	else if (whole->bd_holder != NULL)
+> -		return false;	 /* is a partition of a held device */
+> -	else
+> -		return true;	 /* is a partition of an un-held device */
+> +	struct block_device *whole = bdev_whole(bdev);
+> +
+> +	if (bdev->bd_holder) {
+> +		/*
+> +		 * The same holder can always re-claim.
+> +		 */
+> +		if (bdev->bd_holder == holder)
+> +			return true;
+> +		return false;
+
+With this simple condition I'd just do:
+		/* The same holder can always re-claim. */
+		return bdev->bd_holder == holder;
+
+								Honza
+-- 
+Jan Kara <jack@suse.com>
+SUSE Labs, CR
