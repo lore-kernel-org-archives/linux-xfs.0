@@ -2,124 +2,116 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 24F9BC77B7A
-	for <linux-xfs@archiver.kernel.org>; Tue, 30 May 2023 12:09:51 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 93FA4C7EE2C
+	for <linux-xfs@archiver.kernel.org>; Tue, 30 May 2023 12:42:53 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231663AbjE3MJu (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 30 May 2023 08:09:50 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42568 "EHLO
+        id S232005AbjE3Mmw (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 30 May 2023 08:42:52 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40844 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231559AbjE3MJs (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 30 May 2023 08:09:48 -0400
-Received: from smtp-out2.suse.de (smtp-out2.suse.de [195.135.220.29])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2F6B9C7;
-        Tue, 30 May 2023 05:09:45 -0700 (PDT)
-Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
+        with ESMTP id S229821AbjE3Mmu (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 30 May 2023 08:42:50 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 645E8A1;
+        Tue, 30 May 2023 05:42:22 -0700 (PDT)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by smtp-out2.suse.de (Postfix) with ESMTPS id D0AC31F889;
-        Tue, 30 May 2023 12:09:43 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.cz; s=susede2_rsa;
-        t=1685448583; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=za7ozJts1z+R5+jhnlp2wo4ir7fwRpchFa2w7Hd2K7g=;
-        b=CE3vEcbEMxnFkAuOpT/GH8olrYjShkUfs4yTcjNuAVkDbYkiaK8jmrvNvDZASQis8QgfhG
-        vbyAfw5FOXxNy2y/rWfHHYczldrT3r/1oTT5qquytDvTI+MzzOec9puRb4YhkYDRyboKja
-        YgdegPyOWbV5k2RQ47Ck/QwRcEB0aw0=
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.cz;
-        s=susede2_ed25519; t=1685448583;
-        h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=za7ozJts1z+R5+jhnlp2wo4ir7fwRpchFa2w7Hd2K7g=;
-        b=hjmjW4telcNBYP+ba49FUhMfsShtAvsmTLZ4yNnwzQhP75AJBOTOtNT9a0wic4DQ9V4mWr
-        jS5KhLGqrRRrIPBg==
-Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
-        (No client certificate requested)
-        by imap2.suse-dmz.suse.de (Postfix) with ESMTPS id BC2DC13597;
-        Tue, 30 May 2023 12:09:43 +0000 (UTC)
-Received: from dovecot-director2.suse.de ([192.168.254.65])
-        by imap2.suse-dmz.suse.de with ESMTPSA
-        id D5k8LYfndWR0EwAAMHmgww
-        (envelope-from <jack@suse.cz>); Tue, 30 May 2023 12:09:43 +0000
-Received: by quack3.suse.cz (Postfix, from userid 1000)
-        id 45E4FA0754; Tue, 30 May 2023 14:09:43 +0200 (CEST)
-Date:   Tue, 30 May 2023 14:09:43 +0200
-From:   Jan Kara <jack@suse.cz>
-To:     Christoph Hellwig <hch@lst.de>
-Cc:     Jens Axboe <axboe@kernel.dk>, Al Viro <viro@zeniv.linux.org.uk>,
-        Christian Brauner <brauner@kernel.org>,
-        "Darrick J. Wong" <djwong@kernel.org>, Jan Kara <jack@suse.cz>,
-        linux-block@vger.kernel.org, linux-fsdevel@vger.kernel.org,
-        linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 06/13] block: unhash the inode earlier in delete_partition
-Message-ID: <20230530120943.hgqody3chstk4sri@quack3>
-References: <20230518042323.663189-1-hch@lst.de>
- <20230518042323.663189-7-hch@lst.de>
+        by dfw.source.kernel.org (Postfix) with ESMTPS id BB3FC62F82;
+        Tue, 30 May 2023 12:42:18 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 78B3CC433D2;
+        Tue, 30 May 2023 12:42:15 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1685450538;
+        bh=AjbhKWnLkbzSGImSCtxRr31JpRn/bFy4QpGd/SOJtsQ=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=U+6p+TL98fxRHUAbLkCHzfVMO5xsp5WqmINUupyMMLssUcIgc7Kmxv+V5Kds/fS0N
+         yzdgl57dIZFTnAnMYhyai0TY9oiFNDAeL90OBvAgWMy8D7OVhPQfEttMLr8iPJCiJa
+         PdOkheBNknMRnIRgb67UOyGSZX4jrtc6jAD6hFbXNk9vZfqEQi6Jkd/SIVZf0VVWcY
+         TDax/ezF+3aGAVkJzc+V/S2laopkDQr19jiOqZOAfD6tWfhr9herMBemtwqsN43Oyk
+         fqM1pNJGwLAhDlCQ0WyBCzAlWxBBawRN6NTDWgG2e5AfzdYsZQ/b1Bkm6gyqiAMOp9
+         Gg6KXHzh3jOkQ==
+Date:   Tue, 30 May 2023 14:42:07 +0200
+From:   Christian Brauner <brauner@kernel.org>
+To:     Jan Kara <jack@suse.cz>
+Cc:     Al Viro <viro@ZenIV.linux.org.uk>, linux-fsdevel@vger.kernel.org,
+        Miklos Szeredi <miklos@szeredi.hu>,
+        "Darrick J. Wong" <djwong@kernel.org>, Ted Tso <tytso@mit.edu>,
+        Jaegeuk Kim <jaegeuk@kernel.org>, linux-ext4@vger.kernel.org,
+        linux-f2fs-devel@lists.sourceforge.net, linux-xfs@vger.kernel.org,
+        stable@vger.kernel.org
+Subject: Re: [PATCH 4/6] fs: Establish locking order for unrelated directories
+Message-ID: <20230530-darauf-nordost-4e631cd8f1d0@brauner>
+References: <20230525100654.15069-1-jack@suse.cz>
+ <20230525101624.15814-4-jack@suse.cz>
+ <20230526-polarstern-herrichten-32fc46c63bfc@brauner>
+ <20230529124131.gbb3fmhrspl332i6@quack3>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=utf-8
 Content-Disposition: inline
-In-Reply-To: <20230518042323.663189-7-hch@lst.de>
+In-Reply-To: <20230529124131.gbb3fmhrspl332i6@quack3>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Thu 18-05-23 06:23:15, Christoph Hellwig wrote:
-> Move the call to remove_inode_hash to the beginning of delete_partition,
-> as we want to prevent opening a block_device that is about to be removed
-> ASAP.
+On Mon, May 29, 2023 at 02:41:31PM +0200, Jan Kara wrote:
+> On Fri 26-05-23 11:45:15, Christian Brauner wrote:
+> > On Thu, May 25, 2023 at 12:16:10PM +0200, Jan Kara wrote:
+> > > Currently the locking order of inode locks for directories that are not
+> > > in ancestor relationship is not defined because all operations that
+> > > needed to lock two directories like this were serialized by
+> > > sb->s_vfs_rename_mutex. However some filesystems need to lock two
+> > > subdirectories for RENAME_EXCHANGE operations and for this we need the
+> > > locking order established even for two tree-unrelated directories.
+> > > Provide a helper function lock_two_inodes() that establishes lock
+> > > ordering for any two inodes and use it in lock_two_directories().
+> > > 
+> > > CC: stable@vger.kernel.org
+> > > Signed-off-by: Jan Kara <jack@suse.cz>
+> > > ---
+> > >  fs/inode.c    | 34 ++++++++++++++++++++++++++++++++++
+> > >  fs/internal.h |  2 ++
+> > >  fs/namei.c    |  4 ++--
+> > >  3 files changed, 38 insertions(+), 2 deletions(-)
+> > > 
+> > > diff --git a/fs/inode.c b/fs/inode.c
+> > > index 577799b7855f..2015fa50d34a 100644
+> > > --- a/fs/inode.c
+> > > +++ b/fs/inode.c
+> > > @@ -1103,6 +1103,40 @@ void discard_new_inode(struct inode *inode)
+> > >  }
+> > >  EXPORT_SYMBOL(discard_new_inode);
+> > >  
+> > > +/**
+> > > + * lock_two_inodes - lock two inodes (may be regular files but also dirs)
+> > > + *
+> > > + * Lock any non-NULL argument. The caller must make sure that if he is passing
+> > > + * in two directories, one is not ancestor of the other.  Zero, one or two
+> > > + * objects may be locked by this function.
+> > > + *
+> > > + * @inode1: first inode to lock
+> > > + * @inode2: second inode to lock
+> > > + * @subclass1: inode lock subclass for the first lock obtained
+> > > + * @subclass2: inode lock subclass for the second lock obtained
+> > > + */
+> > > +void lock_two_inodes(struct inode *inode1, struct inode *inode2,
+> > > +		     unsigned subclass1, unsigned subclass2)
+> > > +{
+> > > +	if (!inode1 || !inode2)
+> > > +		goto lock;
+> > 
+> > Before this change in
+> > 
+> > lock_two_nondirectories(struct inode *inode1, struct inode *inode2)
+> > 
+> > the swap() would cause the non-NULL inode to always be locked with
+> > I_MUTEX_NONDIR2. Now it can be either I_MUTEX_NORMAL or I_MUTEX_NONDIR2.
+> > Is that change intentional?
 > 
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
+> Kind of. I don't think we really care so I didn't bother to complicate the
+> code for this. If you think keeping the lockdep class consistent is worth
+> it, I can modify the patch...
 
-The justification looks a bit bogus because we hold disk->open_mutex in
-delete_partition() which serializes with any opens anyway. But it's a
-harmless code move so if it helps later then sure... Feel free to add:
-
-Reviewed-by: Jan Kara <jack@suse.cz>
-
-								Honza
-
-> ---
->  block/partitions/core.c | 12 ++++++------
->  1 file changed, 6 insertions(+), 6 deletions(-)
-> 
-> diff --git a/block/partitions/core.c b/block/partitions/core.c
-> index 49e0496ff23c1e..fa5c707fe0ad2f 100644
-> --- a/block/partitions/core.c
-> +++ b/block/partitions/core.c
-> @@ -267,6 +267,12 @@ static void delete_partition(struct block_device *part)
->  {
->  	lockdep_assert_held(&part->bd_disk->open_mutex);
->  
-> +	/*
-> +	 * Remove the block device from the inode hash, so that it cannot be
-> +	 * looked up any more even when openers still hold references.
-> +	 */
-> +	remove_inode_hash(part->bd_inode);
-> +
->  	fsync_bdev(part);
->  	__invalidate_device(part, true);
->  
-> @@ -274,12 +280,6 @@ static void delete_partition(struct block_device *part)
->  	kobject_put(part->bd_holder_dir);
->  	device_del(&part->bd_device);
->  
-> -	/*
-> -	 * Remove the block device from the inode hash, so that it cannot be
-> -	 * looked up any more even when openers still hold references.
-> -	 */
-> -	remove_inode_hash(part->bd_inode);
-> -
->  	put_device(&part->bd_device);
->  }
->  
-> -- 
-> 2.39.2
-> 
--- 
-Jan Kara <jack@suse.com>
-SUSE Labs, CR
+Either a short comment or consistent lockdep class would be nice. I know
+it probably doesn't matter much but otherwise someone may end up
+wondering whether that's ok or not.
