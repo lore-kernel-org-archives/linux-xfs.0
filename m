@@ -2,148 +2,84 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DE141C7EE23
-	for <linux-xfs@archiver.kernel.org>; Tue, 30 May 2023 13:05:33 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1FADEC77B7A
+	for <linux-xfs@archiver.kernel.org>; Tue, 30 May 2023 17:02:36 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232402AbjE3NFb (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 30 May 2023 09:05:31 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35370 "EHLO
+        id S232555AbjE3RCf (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 30 May 2023 13:02:35 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39702 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232487AbjE3NFa (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 30 May 2023 09:05:30 -0400
-Received: from smtp-out1.suse.de (smtp-out1.suse.de [IPv6:2001:67c:2178:6::1c])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4C786C7;
-        Tue, 30 May 2023 06:05:25 -0700 (PDT)
-Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
+        with ESMTP id S230291AbjE3RCe (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 30 May 2023 13:02:34 -0400
+Received: from sandeen.net (sandeen.net [63.231.237.45])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id E6C44115
+        for <linux-xfs@vger.kernel.org>; Tue, 30 May 2023 10:02:11 -0700 (PDT)
+Received: from [10.0.0.71] (liberator.sandeen.net [10.0.0.71])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by smtp-out1.suse.de (Postfix) with ESMTPS id EFF0121AC5;
-        Tue, 30 May 2023 13:05:23 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.cz; s=susede2_rsa;
-        t=1685451923; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=DcEAgA2JZ0KR1tmWedLbxw3Dp0QbOIFwZ3jOl5YXKUo=;
-        b=NfNSBWZQOY4KtoSbpIVpCTMZU42CC4m/TZgNyIl6kFfWgBI3y7wMOevplKAirJVgoXQ8di
-        h0LBKiTAr8syzdP/65WlTipk4gntlVUoRP6rkwnc6c/dr57yZ1XanODjyZ5jToGqxM3Qjz
-        rD1oP2H+wxqZMCTHkFzph02hOYW94sA=
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.cz;
-        s=susede2_ed25519; t=1685451923;
-        h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=DcEAgA2JZ0KR1tmWedLbxw3Dp0QbOIFwZ3jOl5YXKUo=;
-        b=G6xoq38JZvxOJjrWTzcfa8QvJB5oF1lQJ7A3mgc2YAkQZoG1IsgQUG9e+Qbhp8CsfFtHTe
-        uet/JQcl/ANu2ECQ==
-Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
-        (No client certificate requested)
-        by imap2.suse-dmz.suse.de (Postfix) with ESMTPS id DC7FA13478;
-        Tue, 30 May 2023 13:05:23 +0000 (UTC)
-Received: from dovecot-director2.suse.de ([192.168.254.65])
-        by imap2.suse-dmz.suse.de with ESMTPSA
-        id AJfQNZP0dWSgMwAAMHmgww
-        (envelope-from <jack@suse.cz>); Tue, 30 May 2023 13:05:23 +0000
-Received: by quack3.suse.cz (Postfix, from userid 1000)
-        id 52E41A0754; Tue, 30 May 2023 15:05:23 +0200 (CEST)
-Date:   Tue, 30 May 2023 15:05:23 +0200
-From:   Jan Kara <jack@suse.cz>
-To:     Christoph Hellwig <hch@lst.de>
-Cc:     Jens Axboe <axboe@kernel.dk>, Al Viro <viro@zeniv.linux.org.uk>,
-        Christian Brauner <brauner@kernel.org>,
-        "Darrick J. Wong" <djwong@kernel.org>, Jan Kara <jack@suse.cz>,
-        linux-block@vger.kernel.org, linux-fsdevel@vger.kernel.org,
-        linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 10/13] block: add a mark_dead holder operation
-Message-ID: <20230530130523.5bl3cg3rfzia4vqm@quack3>
-References: <20230518042323.663189-1-hch@lst.de>
- <20230518042323.663189-11-hch@lst.de>
+        by sandeen.net (Postfix) with ESMTPS id 15F6A5CC102
+        for <linux-xfs@vger.kernel.org>; Tue, 30 May 2023 12:02:05 -0500 (CDT)
+Message-ID: <2777daf5-42e0-4350-9e0e-96a1fe68a039@sandeen.net>
+Date:   Tue, 30 May 2023 12:02:04 -0500
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20230518042323.663189-11-hch@lst.de>
+User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:102.0)
+ Gecko/20100101 Thunderbird/102.11.2
+Content-Language: en-US
+To:     linux-xfs@vger.kernel.org
+From:   Eric Sandeen <sandeen@sandeen.net>
+Subject: XFS_AG_MIN_BLOCKS vs XFS_MIN_AG_BLOCKS
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Thu 18-05-23 06:23:19, Christoph Hellwig wrote:
-> Add a mark_dead method to blk_holder_ops that is called from blk_mark_disk_dead
-> to notify the holder that the block device it is using has been marked dead.
-> 
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
-> Acked-by: Christian Brauner <brauner@kernel.org>
+I got a bug report that REAR was trying to recreate an xfs filesystem 
+geometry by looking at the xfs_info from the original filesystem.
 
-Looks good. Feel free to add:
+In this case, the original fs was:
 
-Reviewed-by: Jan Kara <jack@suse.cz>
+meta-data=/dev/mapper/vg-lv_srv  isize=512    agcount=400, agsize=6144 blks
+          =                       sectsz=512   attr=2, projid32bit=1
+          =                       crc=1        finobt=1, sparse=1, rmapbt=0
+          =                       reflink=1    bigtime=1 inobtcount=1
+data     =                       bsize=4096   blocks=2453504, imaxpct=25
+          =                       sunit=16     swidth=16 blks
+naming   =version 2              bsize=4096   ascii-ci=0, ftype=1
+log      =internal log           bsize=4096   blocks=1872, version=2
+          =                       sectsz=512   sunit=16 blks, lazy-count=1
+realtime =none                   extsz=4096   blocks=0, rtextents=0
 
-								Honza
+(horribly pessimal, almost certainly the result of xfs_growfs)
 
+But the point is, the last AG is only 8MB. However, mkfs.xfs refuses to 
+make an AG less than 16MB. So, this fails, because agcount was specified 
+and mkfs won't reduce it to fix the too-small AG:
 
-> ---
->  block/genhd.c          | 24 ++++++++++++++++++++++++
->  include/linux/blkdev.h |  1 +
->  2 files changed, 25 insertions(+)
-> 
-> diff --git a/block/genhd.c b/block/genhd.c
-> index 226ddb8329f751..42aebf0e1e2628 100644
-> --- a/block/genhd.c
-> +++ b/block/genhd.c
-> @@ -565,6 +565,28 @@ int __must_check device_add_disk(struct device *parent, struct gendisk *disk,
->  }
->  EXPORT_SYMBOL(device_add_disk);
->  
-> +static void blk_report_disk_dead(struct gendisk *disk)
-> +{
-> +	struct block_device *bdev;
-> +	unsigned long idx;
-> +
-> +	rcu_read_lock();
-> +	xa_for_each(&disk->part_tbl, idx, bdev) {
-> +		if (!kobject_get_unless_zero(&bdev->bd_device.kobj))
-> +			continue;
-> +		rcu_read_unlock();
-> +
-> +		mutex_lock(&bdev->bd_holder_lock);
-> +		if (bdev->bd_holder_ops && bdev->bd_holder_ops->mark_dead)
-> +			bdev->bd_holder_ops->mark_dead(bdev);
-> +		mutex_unlock(&bdev->bd_holder_lock);
-> +
-> +		put_device(&bdev->bd_device);
-> +		rcu_read_lock();
-> +	}
-> +	rcu_read_unlock();
-> +}
-> +
->  /**
->   * blk_mark_disk_dead - mark a disk as dead
->   * @disk: disk to mark as dead
-> @@ -592,6 +614,8 @@ void blk_mark_disk_dead(struct gendisk *disk)
->  	 * Prevent new I/O from crossing bio_queue_enter().
->  	 */
->  	blk_queue_start_drain(disk->queue);
-> +
-> +	blk_report_disk_dead(disk);
->  }
->  EXPORT_SYMBOL_GPL(blk_mark_disk_dead);
->  
-> diff --git a/include/linux/blkdev.h b/include/linux/blkdev.h
-> index c94f3b63c86422..41f894f6355f96 100644
-> --- a/include/linux/blkdev.h
-> +++ b/include/linux/blkdev.h
-> @@ -1466,6 +1466,7 @@ void blkdev_show(struct seq_file *seqf, off_t offset);
->  #endif
->  
->  struct blk_holder_ops {
-> +	void (*mark_dead)(struct block_device *bdev);
->  };
->  
->  struct block_device *blkdev_get_by_dev(dev_t dev, fmode_t mode, void *holder,
-> -- 
-> 2.39.2
-> 
--- 
-Jan Kara <jack@suse.com>
-SUSE Labs, CR
+# truncate --size=10049552384 fsfile
+# mkfs.xfs -f -m uuid=23ce7347-fce3-48b4-9854-60a6db155b16 -i size=512 
+-d agcount=400 -s size=512 -i attr=2 -i projid32bit=1 -m crc=1 -m 
+finobt=1 -b size=4096 -i maxpct=25 -d sunit=128 -d swidth=128 -l 
+version=2 -l sunit=128 -l lazy-count=1 -n size=4096 -n version=2 -r 
+extsize=4096 fsfile
+mkfs.xfs: xfs_mkfs.c:3016: align_ag_geometry: Assertion 
+`!cli_opt_set(&dopts, D_AGCOUNT)' failed.
+
+I think this is the result of mkfs.xfs using 16MB as a limit on last AG 
+size:
+
+#define XFS_AG_MIN_BYTES                ((XFS_AG_BYTES(15)))    /* 16 MB */
+#define XFS_AG_MIN_BLOCKS(blog)         (XFS_AG_MIN_BYTES >> (blog))
+
+But growfs uses this:
+
+#define XFS_MIN_AG_BLOCKS       64
+
+(which is much smaller than 16MB).
+
+This should almost certainly be consistent between mkfs and growfs, and 
+my guess is that growfs should start using the larger XFS_AG_MIN_BLOCKS 
+requirement that mkfs.xfs uses?
+
+Thanks,
+-Eric
