@@ -2,29 +2,29 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 76A25C7EE31
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D095EC77B7C
 	for <linux-xfs@archiver.kernel.org>; Wed, 31 May 2023 10:04:30 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235789AbjEaKE3 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        id S235798AbjEaKE3 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
         Wed, 31 May 2023 06:04:29 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58948 "EHLO
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58950 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S235798AbjEaKEX (ORCPT
+        with ESMTP id S235792AbjEaKEX (ORCPT
         <rfc822;linux-xfs@vger.kernel.org>); Wed, 31 May 2023 06:04:23 -0400
-Received: from out-24.mta0.migadu.com (out-24.mta0.migadu.com [IPv6:2001:41d0:1004:224b::18])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2176B133
-        for <linux-xfs@vger.kernel.org>; Wed, 31 May 2023 03:04:20 -0700 (PDT)
+Received: from out-22.mta0.migadu.com (out-22.mta0.migadu.com [IPv6:2001:41d0:1004:224b::16])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 21CF0134
+        for <linux-xfs@vger.kernel.org>; Wed, 31 May 2023 03:04:19 -0700 (PDT)
 X-Report-Abuse: Please report any abuse attempt to abuse@migadu.com and include these headers.
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.dev; s=key1;
-        t=1685527112;
+        t=1685527121;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:cc:mime-version:mime-version:
          content-transfer-encoding:content-transfer-encoding:
          in-reply-to:in-reply-to:references:references;
-        bh=+ES1OZTmJM6HPZiOufnJqkIPYyFHG+uxk+XMAxdW/H0=;
-        b=pME7V5sghWDhiBYKlYhlIGGcd+I8ZIhtp+E9A11aBMxPx6kduDLdGh2+5uOlz/UhrC8USH
-        AInETjEYhvnYApFG/QCWzh1ONDgIapx8Zsu0DP7P6tbY+y9jVOZnflKJtLkCkwkXmah55p
-        +X/uwLrssbh7WgAqh01669o0MFk+pHM=
+        bh=E1v6Nmr+iDUp1so91WjqnHTNpH9v5OnKQ0PJi2AfGq4=;
+        b=rS4mRe4LmeoSOb/mL2JDcthPretqgBkrv8Kq1Nka9fPmRIXJQ4mg/9Wg8Bj9SViBUA7yr6
+        PoZXbDH9wstFXz3FQzUyM1geHY3OxQh815EPwbi4X/Zntio/xy3pCNOacpjQfTALY9gKYI
+        zTMcUPF8nNFvCOF+ZtfaP9t9mQ6pBAk=
 From:   Qi Zheng <qi.zheng@linux.dev>
 To:     akpm@linux-foundation.org, tkhai@ya.ru, roman.gushchin@linux.dev,
         vbabka@suse.cz, viro@zeniv.linux.org.uk, brauner@kernel.org,
@@ -33,9 +33,9 @@ To:     akpm@linux-foundation.org, tkhai@ya.ru, roman.gushchin@linux.dev,
 Cc:     linux-mm@kvack.org, linux-fsdevel@vger.kernel.org,
         linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org,
         Qi Zheng <zhengqi.arch@bytedance.com>
-Subject: [PATCH 4/8] fs: shrink only (SB_ACTIVE|SB_BORN) superblocks in super_cache_scan()
-Date:   Wed, 31 May 2023 09:57:38 +0000
-Message-Id: <20230531095742.2480623-5-qi.zheng@linux.dev>
+Subject: [PATCH 6/8] xfs: introduce xfs_fs_destroy_super()
+Date:   Wed, 31 May 2023 09:57:40 +0000
+Message-Id: <20230531095742.2480623-7-qi.zheng@linux.dev>
 In-Reply-To: <20230531095742.2480623-1-qi.zheng@linux.dev>
 References: <20230531095742.2480623-1-qi.zheng@linux.dev>
 MIME-Version: 1.0
@@ -47,62 +47,75 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: Kirill Tkhai <tkhai@ya.ru>
 
-This patch prepares superblock shrinker for delayed unregistering.
-It makes super_cache_scan() avoid shrinking of not active superblocks.
-SB_ACTIVE is used as such the indicator. In case of superblock is not
-active, super_cache_scan() just exits with SHRINK_STOP as result.
+xfs_fs_nr_cached_objects() touches sb->s_fs_info,
+and this patch makes it to be destructed later.
 
-Note, that SB_ACTIVE is cleared in generic_shutdown_super() and this
-is made under the write lock of s_umount. Function super_cache_scan()
-also takes the read lock of s_umount, so it can't skip this flag cleared.
-
-SB_BORN check is added to super_cache_scan() just for uniformity
-with super_cache_count(), while super_cache_count() received SB_ACTIVE
-check just for uniformity with super_cache_scan().
-
-After this patch super_cache_scan() becomes to ignore unregistering
-superblocks, so this function is OK with splitting unregister_shrinker().
-Next patches prepare super_cache_count() to follow this way.
+After this patch xfs_fs_nr_cached_objects() is safe
+for splitting unregister_shrinker(): mp->m_perag_tree
+is stable till destroy_super_work(), while iteration
+over it is already RCU-protected by internal XFS
+business.
 
 Signed-off-by: Kirill Tkhai <tkhai@ya.ru>
 Signed-off-by: Qi Zheng <zhengqi.arch@bytedance.com>
 ---
- fs/super.c | 8 +++++++-
- 1 file changed, 7 insertions(+), 1 deletion(-)
+ fs/xfs/xfs_super.c | 25 ++++++++++++++++++++++---
+ 1 file changed, 22 insertions(+), 3 deletions(-)
 
-diff --git a/fs/super.c b/fs/super.c
-index 2ce4c72720f3..2ce54561e82e 100644
---- a/fs/super.c
-+++ b/fs/super.c
-@@ -79,6 +79,11 @@ static unsigned long super_cache_scan(struct shrinker *shrink,
- 	if (!trylock_super(sb))
- 		return SHRINK_STOP;
- 
-+	if ((sb->s_flags & (SB_BORN|SB_ACTIVE)) != (SB_BORN|SB_ACTIVE)) {
-+		freed = SHRINK_STOP;
-+		goto unlock;
-+	}
-+
- 	if (sb->s_op->nr_cached_objects)
- 		fs_objects = sb->s_op->nr_cached_objects(sb, sc);
- 
-@@ -110,6 +115,7 @@ static unsigned long super_cache_scan(struct shrinker *shrink,
- 		freed += sb->s_op->free_cached_objects(sb, sc);
- 	}
- 
-+unlock:
- 	up_read(&sb->s_umount);
- 	return freed;
+diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
+index 7e706255f165..694616524c76 100644
+--- a/fs/xfs/xfs_super.c
++++ b/fs/xfs/xfs_super.c
+@@ -743,11 +743,18 @@ xfs_fs_drop_inode(
  }
-@@ -136,7 +142,7 @@ static unsigned long super_cache_count(struct shrinker *shrink,
- 	 * avoid this situation, so do the same here. The memory barrier is
- 	 * matched with the one in mount_fs() as we don't hold locks here.
- 	 */
--	if (!(sb->s_flags & SB_BORN))
-+	if ((sb->s_flags & (SB_BORN|SB_ACTIVE)) != (SB_BORN|SB_ACTIVE))
- 		return 0;
- 	smp_rmb();
  
+ static void
+-xfs_mount_free(
++xfs_free_names(
+ 	struct xfs_mount	*mp)
+ {
+ 	kfree(mp->m_rtname);
+ 	kfree(mp->m_logname);
++}
++
++static void
++xfs_mount_free(
++	struct xfs_mount	*mp)
++{
++	xfs_free_names(mp);
+ 	kmem_free(mp);
+ }
+ 
+@@ -1136,8 +1143,19 @@ xfs_fs_put_super(
+ 	xfs_destroy_mount_workqueues(mp);
+ 	xfs_close_devices(mp);
+ 
+-	sb->s_fs_info = NULL;
+-	xfs_mount_free(mp);
++	xfs_free_names(mp);
++}
++
++static void
++xfs_fs_destroy_super(
++	struct super_block	*sb)
++{
++	if (sb->s_fs_info) {
++		struct xfs_mount	*mp = XFS_M(sb);
++
++		kmem_free(mp);
++		sb->s_fs_info = NULL;
++	}
+ }
+ 
+ static long
+@@ -1165,6 +1183,7 @@ static const struct super_operations xfs_super_operations = {
+ 	.dirty_inode		= xfs_fs_dirty_inode,
+ 	.drop_inode		= xfs_fs_drop_inode,
+ 	.put_super		= xfs_fs_put_super,
++	.destroy_super		= xfs_fs_destroy_super,
+ 	.sync_fs		= xfs_fs_sync_fs,
+ 	.freeze_fs		= xfs_fs_freeze,
+ 	.unfreeze_fs		= xfs_fs_unfreeze,
 -- 
 2.30.2
 
