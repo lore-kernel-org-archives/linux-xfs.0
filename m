@@ -2,73 +2,77 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id BC1CCC77B7A
-	for <linux-xfs@archiver.kernel.org>; Wed, 31 May 2023 13:02:34 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 989EBC77B73
+	for <linux-xfs@archiver.kernel.org>; Wed, 31 May 2023 14:15:22 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S236094AbjEaNCd (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 31 May 2023 09:02:33 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57842 "EHLO
+        id S236362AbjEaOPU (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 31 May 2023 10:15:20 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56810 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S235864AbjEaNCb (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 31 May 2023 09:02:31 -0400
-Received: from out-2.mta1.migadu.com (out-2.mta1.migadu.com [IPv6:2001:41d0:203:375::2])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 15A3BE60
-        for <linux-xfs@vger.kernel.org>; Wed, 31 May 2023 06:01:59 -0700 (PDT)
-Message-ID: <a6449457-2dc6-e6db-2fe9-2a12edf934b3@linux.dev>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.dev; s=key1;
-        t=1685537575;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=2ShbrEgfZy4By4UohTrcklSg54xQgs+3EWdpTAp00z8=;
-        b=dw0p9yEqwoJ68IFZtmHffnZ4wp5USwQvnVqn94n4syCGENhdaRtT6IT3dXPhuhB7GeFZby
-        EAm7yyWAoZ/WouPfjlyTwCg8ijHHlTofAXILbmW8dr+3eq6i1kiBqjx+Bf12QjXhBPbBb7
-        iUpHJKOu/PagvVxpglm0N+Kntq3mIHM=
-Date:   Wed, 31 May 2023 20:52:46 +0800
+        with ESMTP id S237671AbjEaOPB (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 31 May 2023 10:15:01 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E20592717;
+        Wed, 31 May 2023 07:12:39 -0700 (PDT)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 545E463C99;
+        Wed, 31 May 2023 14:11:18 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id F15DDC4339B;
+        Wed, 31 May 2023 14:11:11 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1685542277;
+        bh=CGLL01Wm70Z32tapHLX9z2kfk8hHrHa2+CbAAqxp8sU=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=j90kb5FfsprOPsl/05r4it2PURvWGBJ+EOjep2awpbg3jtHdlNM6GV2Z0Zwq3heiL
+         HNkiomrYm3kiXvMdyEm5j15UhlWjd515dmOZ9sek/CyGBJCWhNwnW8BMDzUbjWsjOC
+         5kT8PxmKPDqm2yZZIRLSP89PtnJFpdIGeMFTWEGnCzYTobP8d7lOBbXYvlC1ui/qzb
+         TVnq+RkCvAa9SwER+euHKv5NWjz8E7RER4tAe64pZb64vGFI7YiU6fP9a3r7fIjDDg
+         rnnsR83JSLepj2yHG2y0VevVaeBOW6SaW9ASGH+knv60NJsyOY+SYjyfygNwbTDZ34
+         329M6cHexyEfw==
+Date:   Wed, 31 May 2023 16:11:08 +0200
+From:   Christian Brauner <brauner@kernel.org>
+To:     Christoph Hellwig <hch@lst.de>
+Cc:     Matthew Wilcox <willy@infradead.org>, Jens Axboe <axboe@kernel.dk>,
+        Xiubo Li <xiubli@redhat.com>,
+        Ilya Dryomov <idryomov@gmail.com>,
+        Alexander Viro <viro@zeniv.linux.org.uk>,
+        Theodore Ts'o <tytso@mit.edu>,
+        Jaegeuk Kim <jaegeuk@kernel.org>, Chao Yu <chao@kernel.org>,
+        Miklos Szeredi <miklos@szeredi.hu>,
+        Andreas Gruenbacher <agruenba@redhat.com>,
+        "Darrick J. Wong" <djwong@kernel.org>,
+        Trond Myklebust <trond.myklebust@hammerspace.com>,
+        Anna Schumaker <anna@kernel.org>,
+        Damien Le Moal <dlemoal@kernel.org>,
+        Andrew Morton <akpm@linux-foundation.org>,
+        linux-block@vger.kernel.org, ceph-devel@vger.kernel.org,
+        linux-fsdevel@vger.kernel.org, linux-ext4@vger.kernel.org,
+        linux-f2fs-devel@lists.sourceforge.net, cluster-devel@redhat.com,
+        linux-xfs@vger.kernel.org, linux-nfs@vger.kernel.org,
+        linux-mm@kvack.org, Hannes Reinecke <hare@suse.de>
+Subject: Re: [PATCH 01/12] backing_dev: remove current->backing_dev_info
+Message-ID: <20230531-wirkt-attraktion-d97bdcbc3aee@brauner>
+References: <20230531075026.480237-1-hch@lst.de>
+ <20230531075026.480237-2-hch@lst.de>
 MIME-Version: 1.0
-Subject: Re: [PATCH 1/8] mm: vmscan: move shrinker_debugfs_remove() before
- synchronize_srcu()
-Content-Language: en-US
-To:     Christian Brauner <brauner@kernel.org>
-Cc:     akpm@linux-foundation.org, tkhai@ya.ru, roman.gushchin@linux.dev,
-        vbabka@suse.cz, viro@zeniv.linux.org.uk, djwong@kernel.org,
-        hughd@google.com, paulmck@kernel.org, muchun.song@linux.dev,
-        linux-mm@kvack.org, linux-fsdevel@vger.kernel.org,
-        linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org,
-        Qi Zheng <zhengqi.arch@bytedance.com>
-References: <20230531095742.2480623-1-qi.zheng@linux.dev>
- <20230531095742.2480623-2-qi.zheng@linux.dev>
- <20230531-notlage-ankommen-93022623b74b@brauner>
-X-Report-Abuse: Please report any abuse attempt to abuse@migadu.com and include these headers.
-From:   Qi Zheng <qi.zheng@linux.dev>
-In-Reply-To: <20230531-notlage-ankommen-93022623b74b@brauner>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
-X-Migadu-Flow: FLOW_OUT
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+In-Reply-To: <20230531075026.480237-2-hch@lst.de>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-
-
-On 2023/5/31 18:49, Christian Brauner wrote:
-> On Wed, May 31, 2023 at 09:57:35AM +0000, Qi Zheng wrote:
->> From: Qi Zheng <zhengqi.arch@bytedance.com>
->>
->> The debugfs_remove_recursive() will wait for debugfs_file_put()
->> to return, so there is no need to put it after synchronize_srcu()
->> to wait for the rcu read-side critical section to exit.
->>
->> Just move it before synchronize_srcu(), which is also convenient
->> to put the heavy synchronize_srcu() in the delayed work later.
->>
->> Signed-off-by: Qi Zheng <zhengqi.arch@bytedance.com>
->> ---
+On Wed, May 31, 2023 at 09:50:15AM +0200, Christoph Hellwig wrote:
+> The last user of current->backing_dev_info disappeared in commit
+> b9b1335e6403 ("remove bdi_congested() and wb_congested() and related
+> functions").  Remove the field and all assignments to it.
 > 
-> Afaict, should be a patch independent of this series.
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
+> Reviewed-by: Hannes Reinecke <hare@suse.de>
+> Reviewed-by: Darrick J. Wong <djwong@kernel.org>
+> ---
 
-OK, will resend as an independent patch.
-
-Thanks,
-Qi
+I somehow thought I'd already acked this... Anyway,
+Reviewed-by: Christian Brauner <brauner@kernel.org>
