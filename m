@@ -2,57 +2,57 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id EF3BDC7EE29
-	for <linux-xfs@archiver.kernel.org>; Wed, 31 May 2023 23:12:41 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4495CC7EE2D
+	for <linux-xfs@archiver.kernel.org>; Wed, 31 May 2023 23:48:58 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230423AbjEaXMl (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 31 May 2023 19:12:41 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35858 "EHLO
+        id S229880AbjEaXs4 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 31 May 2023 19:48:56 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43574 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230422AbjEaXMk (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 31 May 2023 19:12:40 -0400
-Received: from mail-pg1-x532.google.com (mail-pg1-x532.google.com [IPv6:2607:f8b0:4864:20::532])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0F941123
-        for <linux-xfs@vger.kernel.org>; Wed, 31 May 2023 16:12:37 -0700 (PDT)
-Received: by mail-pg1-x532.google.com with SMTP id 41be03b00d2f7-51b33c72686so117433a12.1
-        for <linux-xfs@vger.kernel.org>; Wed, 31 May 2023 16:12:36 -0700 (PDT)
+        with ESMTP id S229849AbjEaXsz (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 31 May 2023 19:48:55 -0400
+Received: from mail-pl1-x633.google.com (mail-pl1-x633.google.com [IPv6:2607:f8b0:4864:20::633])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 92AE7192
+        for <linux-xfs@vger.kernel.org>; Wed, 31 May 2023 16:48:49 -0700 (PDT)
+Received: by mail-pl1-x633.google.com with SMTP id d9443c01a7336-1b0236ee816so2437505ad.1
+        for <linux-xfs@vger.kernel.org>; Wed, 31 May 2023 16:48:49 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=fromorbit-com.20221208.gappssmtp.com; s=20221208; t=1685574756; x=1688166756;
+        d=fromorbit-com.20221208.gappssmtp.com; s=20221208; t=1685576929; x=1688168929;
         h=in-reply-to:content-disposition:mime-version:references:message-id
          :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
-        bh=NdrJ9MIJBRF6SJ1238zAPHjVfaouK03YhdkmBFLWYHU=;
-        b=ID8921t0pn2fvFZSPX1ZCn10WYK0inJi+Xd18q6u9I2qj9Ua8QL/IeltWfVKU1549H
-         6t+FxjDrPHAhQhSB9JUjWETqcJHxAf+v7YLxwCZGsAuIUxonZkkFq7XdK1EhZEmH5lAp
-         qYAaH4CiK8x4svKHXlCp+v2jNkN4mWFjTzogGYkohIubyyxVVOxf3JLsLl9kzOJPg/7J
-         xxINvt2pxEnRtAX/ARJyUgMTJORyZOEFcNCRW7fuDHrc0oUvVcU2wtsStCp4UpkvLpMr
-         DSNeoqv+/XYJerWdG5jeUU5678yDxAHf9x68P+rXEC/Q/fIjVLu3koKY+XmRzyE7za4f
-         4q6w==
+        bh=bapLcT1rfgF5eXP0K5sMoe265ENn9lfWlaeN3allmSs=;
+        b=YV/VGUCm3cO8v9Pt3ZyWyo4W+JosjwST1qxgNAOzMZYt+nWwG+aISOYjKzh9jyWIaW
+         BcD/xwqOPxKHiNkxFU1lS3wknEP4nUn44Ok1VifFX+OGo/QpS7ATmW6Mi4SFAKzYkifd
+         uzSxA8QMG7kzAar91JCJgqCBJCW/+Lk1Q9c1qbOVISGbwLCrhtks4izUCzoxFACqk2VF
+         0fyMJMoxCq3i1grLOBC8Ly7IfHEoGJeZQDGmi8iJVE0tnv7hLPZbktXIOlYStIElrYtY
+         PQosmB1fQCIy/6BgntmRoakEzbTtpDaAXItwzVyqcjt28hFIFmhwznbAWuGGn7IPzAs6
+         JpuQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20221208; t=1685574756; x=1688166756;
+        d=1e100.net; s=20221208; t=1685576929; x=1688168929;
         h=in-reply-to:content-disposition:mime-version:references:message-id
          :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
          :message-id:reply-to;
-        bh=NdrJ9MIJBRF6SJ1238zAPHjVfaouK03YhdkmBFLWYHU=;
-        b=OZ2uzXQFF45XMMn9cGnX8jKl7UMJd9mWQ7MZD1C7rC3sSs63IwovJbnBoeyq4rTdaI
-         tGAJLVgzRhDEnOWiQZk9xsrBpuQDZUoZd3OFMDszdEMckhR9yLnA/7tKWu0Djx/Y5gHh
-         n4PcCOqxOmLOSjXTW4AWV0icKpdvwELcTmDVhYR81BOx3oORLUvfxbiaMHXxruauITxe
-         XXjPMpTmdwYioETb7v3lkiA9YiLhWr9xC7DrTRi7aT7HZouK6eLWj2LHT5pY/Du3enAb
-         oP5V5jN43m6NhCPoiiUTCU6o/oXZHs2gPv5DO/gKlH+C/whMaVQljBqHfcqK5X3FGXsj
-         azzw==
-X-Gm-Message-State: AC+VfDyfE2WmNDzR3l4aUIgIhfwgoVVw6VmWX1fQQDOAr5KY2TqlLYcB
-        ewDpDBo7DP8IL8a6bpg95oxThg==
-X-Google-Smtp-Source: ACHHUZ6t82xplazJPqCDO0qJl0sdq89xmVCN5MjD9hEMlaWGG60n1KteElROnWc1nPytTu2S5dCmtw==
-X-Received: by 2002:a05:6a20:914e:b0:10f:500b:18a2 with SMTP id x14-20020a056a20914e00b0010f500b18a2mr5804009pzc.48.1685574756329;
-        Wed, 31 May 2023 16:12:36 -0700 (PDT)
+        bh=bapLcT1rfgF5eXP0K5sMoe265ENn9lfWlaeN3allmSs=;
+        b=ebKLiSHdM5sNAf7RfLNDyPo90n9TVOqO7CnQt2UPsvGSjyy8mm7ds7WfBUmc8tAWFY
+         RtbB8Xu0FO/OgclCFnp+yT8BPkZvLdISykKExHFKjlCi84DluMnGScdec76Z7NAF5YdK
+         AuPfJnehsdl85hkyrkJWJkB6zc+yb00PkiMMZfGS5ZCPpHTSZRLHxhrfMgxQOHp/plXQ
+         PbxxjklEa2KCZoJ5gPGXXAqDlprgimQCRE3vrilDT5qPhCeCuAb8Cc65GX7fwZaQdGOU
+         84tWfHIfQEiMR6UgRbAn1/k5Wj0qyPhBs46kTfeStUVpprvUqAAiOAt+FzBGE75VBvEe
+         jEZA==
+X-Gm-Message-State: AC+VfDzpfnFDU3dWA0njJIfokKhOUgcrwaDKQIQDP/sq9HqTpSg82vzq
+        Mzhgc/iN2I/VaYhZlisbG3/vDQ==
+X-Google-Smtp-Source: ACHHUZ75YAULNe67vWw2+IHca2+HfoohrGo37Wkj1DLaLuSiBLHhhOk9FEPeleT3/wn6oUQe7zel5g==
+X-Received: by 2002:a17:902:aa07:b0:1a0:76e8:a4d with SMTP id be7-20020a170902aa0700b001a076e80a4dmr142755plb.14.1685576929033;
+        Wed, 31 May 2023 16:48:49 -0700 (PDT)
 Received: from dread.disaster.area (pa49-179-0-188.pa.nsw.optusnet.com.au. [49.179.0.188])
-        by smtp.gmail.com with ESMTPSA id s17-20020a170902ea1100b001b077301a58sm1965299plg.79.2023.05.31.16.12.35
+        by smtp.gmail.com with ESMTPSA id q4-20020a63e944000000b0053fb1fbd3f2sm1788299pgj.91.2023.05.31.16.48.48
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 31 May 2023 16:12:35 -0700 (PDT)
+        Wed, 31 May 2023 16:48:48 -0700 (PDT)
 Received: from dave by dread.disaster.area with local (Exim 4.96)
         (envelope-from <david@fromorbit.com>)
-        id 1q4UzZ-006HqL-0r;
-        Thu, 01 Jun 2023 09:12:33 +1000
-Date:   Thu, 1 Jun 2023 09:12:33 +1000
+        id 1q4VYb-006IPu-0W;
+        Thu, 01 Jun 2023 09:48:45 +1000
+Date:   Thu, 1 Jun 2023 09:48:45 +1000
 From:   Dave Chinner <david@fromorbit.com>
 To:     Qi Zheng <qi.zheng@linux.dev>
 Cc:     akpm@linux-foundation.org, tkhai@ya.ru, roman.gushchin@linux.dev,
@@ -61,103 +61,129 @@ Cc:     akpm@linux-foundation.org, tkhai@ya.ru, roman.gushchin@linux.dev,
         muchun.song@linux.dev, linux-mm@kvack.org,
         linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org,
         linux-kernel@vger.kernel.org, Qi Zheng <zhengqi.arch@bytedance.com>
-Subject: Re: [PATCH 4/8] fs: shrink only (SB_ACTIVE|SB_BORN) superblocks in
- super_cache_scan()
-Message-ID: <ZHfUYVgjihp/Hxfz@dread.disaster.area>
+Subject: Re: [PATCH 6/8] xfs: introduce xfs_fs_destroy_super()
+Message-ID: <ZHfc3V4KKmW8QTR2@dread.disaster.area>
 References: <20230531095742.2480623-1-qi.zheng@linux.dev>
- <20230531095742.2480623-5-qi.zheng@linux.dev>
+ <20230531095742.2480623-7-qi.zheng@linux.dev>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20230531095742.2480623-5-qi.zheng@linux.dev>
+In-Reply-To: <20230531095742.2480623-7-qi.zheng@linux.dev>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Wed, May 31, 2023 at 09:57:38AM +0000, Qi Zheng wrote:
+On Wed, May 31, 2023 at 09:57:40AM +0000, Qi Zheng wrote:
 > From: Kirill Tkhai <tkhai@ya.ru>
 > 
-> This patch prepares superblock shrinker for delayed unregistering.
-> It makes super_cache_scan() avoid shrinking of not active superblocks.
-> SB_ACTIVE is used as such the indicator. In case of superblock is not
-> active, super_cache_scan() just exits with SHRINK_STOP as result.
+> xfs_fs_nr_cached_objects() touches sb->s_fs_info,
+> and this patch makes it to be destructed later.
 > 
-> Note, that SB_ACTIVE is cleared in generic_shutdown_super() and this
-> is made under the write lock of s_umount. Function super_cache_scan()
-> also takes the read lock of s_umount, so it can't skip this flag cleared.
-> 
-> SB_BORN check is added to super_cache_scan() just for uniformity
-> with super_cache_count(), while super_cache_count() received SB_ACTIVE
-> check just for uniformity with super_cache_scan().
-> 
-> After this patch super_cache_scan() becomes to ignore unregistering
-> superblocks, so this function is OK with splitting unregister_shrinker().
-> Next patches prepare super_cache_count() to follow this way.
+> After this patch xfs_fs_nr_cached_objects() is safe
+> for splitting unregister_shrinker(): mp->m_perag_tree
+> is stable till destroy_super_work(), while iteration
+> over it is already RCU-protected by internal XFS
+> business.
 > 
 > Signed-off-by: Kirill Tkhai <tkhai@ya.ru>
 > Signed-off-by: Qi Zheng <zhengqi.arch@bytedance.com>
 > ---
->  fs/super.c | 8 +++++++-
->  1 file changed, 7 insertions(+), 1 deletion(-)
+>  fs/xfs/xfs_super.c | 25 ++++++++++++++++++++++---
+>  1 file changed, 22 insertions(+), 3 deletions(-)
 > 
-> diff --git a/fs/super.c b/fs/super.c
-> index 2ce4c72720f3..2ce54561e82e 100644
-> --- a/fs/super.c
-> +++ b/fs/super.c
-> @@ -79,6 +79,11 @@ static unsigned long super_cache_scan(struct shrinker *shrink,
->  	if (!trylock_super(sb))
->  		return SHRINK_STOP;
->  
-> +	if ((sb->s_flags & (SB_BORN|SB_ACTIVE)) != (SB_BORN|SB_ACTIVE)) {
-> +		freed = SHRINK_STOP;
-> +		goto unlock;
-> +	}
-
-This should not be here - the check to determine if the shrinker
-should run is done in the ->count method. If we removed the SB_ACTIVE
-flag between ->count and ->scan, then the superblock should be
-locked and the trylock_super() call above should fail....
-
-Indeed, the unregister_shrinker() call in deactivate_locked_super()
-is done with the sb->s_umount held exclusively, and this happens
-before we clear SB_ACTIVE in the ->kill_sb() -> kill_block_super()
--> generic_shutdown_super() path after the shrinker is unregistered.
-
-Hence we can't get to this check without SB_ACTIVE being set - the
-trylock will fail and then the shrinker_unregister() call will do
-it's thing to ensure the shrinker is never called again.
-
-If the change to the shrinker code allows the shrinker to still be
-actively running when we call ->kill_sb(), then that needs to be
-fixed. THe superblock shrinker must be stopped completely and never
-run again before we call ->kill_sb().
-
->  	if (sb->s_op->nr_cached_objects)
->  		fs_objects = sb->s_op->nr_cached_objects(sb, sc);
->  
-> @@ -110,6 +115,7 @@ static unsigned long super_cache_scan(struct shrinker *shrink,
->  		freed += sb->s_op->free_cached_objects(sb, sc);
->  	}
->  
-> +unlock:
->  	up_read(&sb->s_umount);
->  	return freed;
+> diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
+> index 7e706255f165..694616524c76 100644
+> --- a/fs/xfs/xfs_super.c
+> +++ b/fs/xfs/xfs_super.c
+> @@ -743,11 +743,18 @@ xfs_fs_drop_inode(
 >  }
-> @@ -136,7 +142,7 @@ static unsigned long super_cache_count(struct shrinker *shrink,
->  	 * avoid this situation, so do the same here. The memory barrier is
->  	 * matched with the one in mount_fs() as we don't hold locks here.
->  	 */
-> -	if (!(sb->s_flags & SB_BORN))
-> +	if ((sb->s_flags & (SB_BORN|SB_ACTIVE)) != (SB_BORN|SB_ACTIVE))
->  		return 0;
+>  
+>  static void
+> -xfs_mount_free(
+> +xfs_free_names(
+>  	struct xfs_mount	*mp)
+>  {
+>  	kfree(mp->m_rtname);
+>  	kfree(mp->m_logname);
+> +}
+> +
+> +static void
+> +xfs_mount_free(
+> +	struct xfs_mount	*mp)
+> +{
+> +	xfs_free_names(mp);
+>  	kmem_free(mp);
+>  }
+>  
+> @@ -1136,8 +1143,19 @@ xfs_fs_put_super(
+>  	xfs_destroy_mount_workqueues(mp);
+>  	xfs_close_devices(mp);
+>  
+> -	sb->s_fs_info = NULL;
+> -	xfs_mount_free(mp);
+> +	xfs_free_names(mp);
+> +}
+> +
+> +static void
+> +xfs_fs_destroy_super(
+> +	struct super_block	*sb)
+> +{
+> +	if (sb->s_fs_info) {
+> +		struct xfs_mount	*mp = XFS_M(sb);
+> +
+> +		kmem_free(mp);
+> +		sb->s_fs_info = NULL;
+> +	}
+>  }
+>  
+>  static long
+> @@ -1165,6 +1183,7 @@ static const struct super_operations xfs_super_operations = {
+>  	.dirty_inode		= xfs_fs_dirty_inode,
+>  	.drop_inode		= xfs_fs_drop_inode,
+>  	.put_super		= xfs_fs_put_super,
+> +	.destroy_super		= xfs_fs_destroy_super,
+>  	.sync_fs		= xfs_fs_sync_fs,
+>  	.freeze_fs		= xfs_fs_freeze,
+>  	.unfreeze_fs		= xfs_fs_unfreeze,
 
-This is fine because it's an unlocked check, but I don't think it's
-actually necessary given the above. Indeed, if you are adding this,
-you need to expand the comment above on why SB_ACTIVE needs
-checking, and why the memory barrier doesn't actually apply to that
-part of the check....
+I don't really like this ->destroy_super() callback, especially as
+it's completely undocumented as to why it exists. This is purely a
+work-around for handling extended filesystem superblock shrinker
+functionality, yet there's nothing that tells the reader this.
 
--Dave.
+It also seems to imply that the superblock shrinker can continue to
+run after the existing unregister_shrinker() call before ->kill_sb()
+is called. This violates the assumption made in filesystems that the
+superblock shrinkers have been stopped and will never run again
+before ->kill_sb() is called. Hence ->kill_sb() implementations
+assume there is nothing else accessing filesystem owned structures
+and it can tear down internal structures safely.
+
+Realistically, the days of XFS using this superblock shrinker
+extension are numbered. We've got a lot of the infrastructure we
+need in place to get rid of the background inode reclaim
+infrastructure that requires this shrinker extension, and it's on my
+list of things that need to be addressed in the near future. 
+
+In fact, now that I look at it, I think the shmem usage of this
+superblock shrinker interface is broken - it returns SHRINK_STOP to
+->free_cached_objects(), but the only valid return value is the
+number of objects freed (i.e. 0 is nothing freed). These special
+superblock extension interfaces do not work like a normal
+shrinker....
+
+Hence I think the shmem usage should be replaced with an separate
+internal shmem shrinker that is managed by the filesystem itself
+(similar to how XFS has multiple internal shrinkers).
+
+At this point, then the only user of this interface is (again) XFS.
+Given this, adding new VFS methods for a single filesystem
+for functionality that is planned to be removed is probably not the
+best approach to solving the problem.
+
+Cheers,
+
+Dave.
 -- 
 Dave Chinner
 david@fromorbit.com
