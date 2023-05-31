@@ -2,32 +2,32 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id BD31FC7EE3A
-	for <linux-xfs@archiver.kernel.org>; Wed, 31 May 2023 07:21:00 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 250D6C7EE24
+	for <linux-xfs@archiver.kernel.org>; Wed, 31 May 2023 07:21:07 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234624AbjEaHU6 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 31 May 2023 03:20:58 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33320 "EHLO
+        id S234617AbjEaHVE (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 31 May 2023 03:21:04 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33730 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S234594AbjEaHUd (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 31 May 2023 03:20:33 -0400
+        with ESMTP id S234619AbjEaHUz (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 31 May 2023 03:20:55 -0400
 Received: from bombadil.infradead.org (bombadil.infradead.org [IPv6:2607:7c80:54:3::133])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 664B4125;
-        Wed, 31 May 2023 00:20:32 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9DB41185;
+        Wed, 31 May 2023 00:20:36 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
         d=infradead.org; s=bombadil.20210309; h=Content-Transfer-Encoding:
         MIME-Version:References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:Sender
         :Reply-To:Content-Type:Content-ID:Content-Description;
-        bh=oeUDNAIuBGOOZ56XkyqMnjDXKnQawdRHpRl2i305rtg=; b=ncreG/QhyaELQ2k8D8sdUXciwt
-        gOfrMClk0xHmq6y5/Blma4l71TEq2fD6Lp+5u5zNS2rJGAbP27wqZyUwUgR6lANp8/zka/so3nRuX
-        /fLhumNBrJ/CcYaaR6iisG+ECwkwOhnKIo0dR71ulzPLy2vURp1/XGDQhY6+mMUo4zS+oqnpfLfAi
-        pwexPwws3xiWx9JiWDwRitL7J4US4DAjIajF/QRqgYJ9Df6Tap6WkV3jyxiTkhoNsltUay9LhYGuy
-        J/V+hmhM4e/nPbg8iDcjx6APJR+mNcUe4ny+f4cwPKEl3SY5D0ymMPR4r/5+Zrqoi9qLmqLIrwtYd
-        pGMn73zg==;
+        bh=a5Lvr5nZsxWnI6T+V3CK7XOpJ+ONTwidG7DsWkZk2X0=; b=juedmjHFrERjVgI+I6F168RFU1
+        8pH8XOy3sucLV1v0mN1uWgXZCJ/dLQBD7d3VBl/n8a2N/x7DxsnF356O5Ue6J+a0dsBF+fjJTzd3l
+        aOGNVfiVsTfKiUKyyIX4T1XXnubzaLIRwJv8n8CPQOCI+Vg53c09fBs8+EIxQr3RJ9F+A3wRPkVWA
+        rtQiT8SCwODXG3Kl5EfHPmokqaMRG+7Ss0IgI2ZnYZV9neu8xowjG+6QkLMMCeSKyxsCLF/tXUCiR
+        qmIjbcbIAfCWj0L6Pccxh5vJeTEW/6QWeuF8ClfTQzy8NiMHp1n9IFioL7Jm14IwGVM3KU2JFJ35V
+        iDgZl8Hg==;
 Received: from [2001:4bb8:182:6d06:f5c3:53d7:b5aa:b6a7] (helo=localhost)
         by bombadil.infradead.org with esmtpsa (Exim 4.96 #2 (Red Hat Linux))
-        id 1q4G86-00GPis-28;
-        Wed, 31 May 2023 07:20:23 +0000
+        id 1q4G8C-00GPk2-0F;
+        Wed, 31 May 2023 07:20:28 +0000
 From:   Christoph Hellwig <hch@lst.de>
 To:     Matthew Wilcox <willy@infradead.org>
 Cc:     Jens Axboe <axboe@kernel.dk>, Xiubo Li <xiubli@redhat.com>,
@@ -47,9 +47,9 @@ Cc:     Jens Axboe <axboe@kernel.dk>, Xiubo Li <xiubli@redhat.com>,
         linux-f2fs-devel@lists.sourceforge.net, cluster-devel@redhat.com,
         linux-xfs@vger.kernel.org, linux-nfs@vger.kernel.org,
         linux-mm@kvack.org, Hannes Reinecke <hare@suse.de>
-Subject: [PATCH 5/8] filemap: add a kiocb_invalidate_pages helper
-Date:   Wed, 31 May 2023 09:20:03 +0200
-Message-Id: <20230531072006.476386-6-hch@lst.de>
+Subject: [PATCH 7/8] iomap: update ki_pos in iomap_file_buffered_write
+Date:   Wed, 31 May 2023 09:20:05 +0200
+Message-Id: <20230531072006.476386-8-hch@lst.de>
 X-Mailer: git-send-email 2.39.2
 In-Reply-To: <20230531072006.476386-1-hch@lst.de>
 References: <20230531072006.476386-1-hch@lst.de>
@@ -60,102 +60,92 @@ Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Factor out a helper that calls filemap_write_and_wait_range and
-invalidate_inode_pages2_range for the range covered by a write kiocb or
-returns -EAGAIN if the kiocb is marked as nowait and there would be pages
-to write or invalidate.
+All callers of iomap_file_buffered_write need to updated ki_pos, move it
+into common code.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
-Reviewed-by: Damien Le Moal <dlemoal@kernel.org>
+Reviewed-by: Andreas Gruenbacher <agruenba@redhat.com>
 Reviewed-by: Hannes Reinecke <hare@suse.de>
-Acked-by: Darrick J. Wong <djwong@kernel.org>
+Reviewed-by: Darrick J. Wong <djwong@kernel.org>
+Acked-by: Damien Le Moal <dlemoal@kernel.org>
 ---
- include/linux/pagemap.h |  1 +
- mm/filemap.c            | 48 ++++++++++++++++++++++++-----------------
- 2 files changed, 29 insertions(+), 20 deletions(-)
+ fs/gfs2/file.c         | 4 +---
+ fs/iomap/buffered-io.c | 9 ++++++---
+ fs/xfs/xfs_file.c      | 2 --
+ fs/zonefs/file.c       | 4 +---
+ 4 files changed, 8 insertions(+), 11 deletions(-)
 
-diff --git a/include/linux/pagemap.h b/include/linux/pagemap.h
-index 36fc2cea13ce20..6e4c9ee40baa99 100644
---- a/include/linux/pagemap.h
-+++ b/include/linux/pagemap.h
-@@ -30,6 +30,7 @@ static inline void invalidate_remote_inode(struct inode *inode)
- int invalidate_inode_pages2(struct address_space *mapping);
- int invalidate_inode_pages2_range(struct address_space *mapping,
- 		pgoff_t start, pgoff_t end);
-+int kiocb_invalidate_pages(struct kiocb *iocb, size_t count);
- 
- int write_inode_now(struct inode *, int sync);
- int filemap_fdatawrite(struct address_space *);
-diff --git a/mm/filemap.c b/mm/filemap.c
-index 5fcd5227f9cae2..a1cb01a4b8046a 100644
---- a/mm/filemap.c
-+++ b/mm/filemap.c
-@@ -2777,6 +2777,33 @@ int kiocb_write_and_wait(struct kiocb *iocb, size_t count)
- 	return filemap_write_and_wait_range(mapping, pos, end);
- }
- 
-+int kiocb_invalidate_pages(struct kiocb *iocb, size_t count)
-+{
-+	struct address_space *mapping = iocb->ki_filp->f_mapping;
-+	loff_t pos = iocb->ki_pos;
-+	loff_t end = pos + count - 1;
-+	int ret;
-+
-+	if (iocb->ki_flags & IOCB_NOWAIT) {
-+		/* we could block if there are any pages in the range */
-+		if (filemap_range_has_page(mapping, pos, end))
-+			return -EAGAIN;
-+	} else {
-+		ret = filemap_write_and_wait_range(mapping, pos, end);
-+		if (ret)
-+			return ret;
-+	}
-+
-+	/*
-+	 * After a write we want buffered reads to be sure to go to disk to get
-+	 * the new data.  We invalidate clean cached page from the region we're
-+	 * about to write.  We do this *before* the write so that we can return
-+	 * without clobbering -EIOCBQUEUED from ->direct_IO().
-+	 */
-+	return invalidate_inode_pages2_range(mapping, pos >> PAGE_SHIFT,
-+					     end >> PAGE_SHIFT);
-+}
-+
- /**
-  * generic_file_read_iter - generic filesystem read routine
-  * @iocb:	kernel I/O control block
-@@ -3820,30 +3847,11 @@ generic_file_direct_write(struct kiocb *iocb, struct iov_iter *from)
- 	write_len = iov_iter_count(from);
- 	end = (pos + write_len - 1) >> PAGE_SHIFT;
- 
--	if (iocb->ki_flags & IOCB_NOWAIT) {
--		/* If there are pages to writeback, return */
--		if (filemap_range_has_page(file->f_mapping, pos,
--					   pos + write_len - 1))
--			return -EAGAIN;
--	} else {
--		written = filemap_write_and_wait_range(mapping, pos,
--							pos + write_len - 1);
--		if (written)
--			goto out;
+diff --git a/fs/gfs2/file.c b/fs/gfs2/file.c
+index 904a0d6ac1a1a9..c6a7555d5ad8bb 100644
+--- a/fs/gfs2/file.c
++++ b/fs/gfs2/file.c
+@@ -1044,10 +1044,8 @@ static ssize_t gfs2_file_buffered_write(struct kiocb *iocb,
+ 	pagefault_disable();
+ 	ret = iomap_file_buffered_write(iocb, from, &gfs2_iomap_ops);
+ 	pagefault_enable();
+-	if (ret > 0) {
+-		iocb->ki_pos += ret;
++	if (ret > 0)
+ 		written += ret;
 -	}
--
--	/*
--	 * After a write we want buffered reads to be sure to go to disk to get
--	 * the new data.  We invalidate clean cached page from the region we're
--	 * about to write.  We do this *before* the write so that we can return
--	 * without clobbering -EIOCBQUEUED from ->direct_IO().
--	 */
--	written = invalidate_inode_pages2_range(mapping,
--					pos >> PAGE_SHIFT, end);
+ 
+ 	if (inode == sdp->sd_rindex)
+ 		gfs2_glock_dq_uninit(statfs_gh);
+diff --git a/fs/iomap/buffered-io.c b/fs/iomap/buffered-io.c
+index 063133ec77f49e..550525a525c45c 100644
+--- a/fs/iomap/buffered-io.c
++++ b/fs/iomap/buffered-io.c
+@@ -864,16 +864,19 @@ iomap_file_buffered_write(struct kiocb *iocb, struct iov_iter *i,
+ 		.len		= iov_iter_count(i),
+ 		.flags		= IOMAP_WRITE,
+ 	};
+-	int ret;
++	ssize_t ret;
+ 
+ 	if (iocb->ki_flags & IOCB_NOWAIT)
+ 		iter.flags |= IOMAP_NOWAIT;
+ 
+ 	while ((ret = iomap_iter(&iter, ops)) > 0)
+ 		iter.processed = iomap_write_iter(&iter, i);
+-	if (iter.pos == iocb->ki_pos)
++
++	if (unlikely(ret < 0))
+ 		return ret;
+-	return iter.pos - iocb->ki_pos;
++	ret = iter.pos - iocb->ki_pos;
++	iocb->ki_pos += ret;
++	return ret;
+ }
+ EXPORT_SYMBOL_GPL(iomap_file_buffered_write);
+ 
+diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
+index 431c3fd0e2b598..d57443db633637 100644
+--- a/fs/xfs/xfs_file.c
++++ b/fs/xfs/xfs_file.c
+@@ -720,8 +720,6 @@ xfs_file_buffered_write(
+ 	trace_xfs_file_buffered_write(iocb, from);
+ 	ret = iomap_file_buffered_write(iocb, from,
+ 			&xfs_buffered_write_iomap_ops);
+-	if (likely(ret >= 0))
+-		iocb->ki_pos += ret;
+ 
  	/*
- 	 * If a page can not be invalidated, return 0 to fall back
- 	 * to buffered write.
- 	 */
-+	written = kiocb_invalidate_pages(iocb, write_len);
- 	if (written) {
- 		if (written == -EBUSY)
- 			return 0;
+ 	 * If we hit a space limit, try to free up some lingering preallocated
+diff --git a/fs/zonefs/file.c b/fs/zonefs/file.c
+index 132f01d3461f14..e212d0636f848e 100644
+--- a/fs/zonefs/file.c
++++ b/fs/zonefs/file.c
+@@ -643,9 +643,7 @@ static ssize_t zonefs_file_buffered_write(struct kiocb *iocb,
+ 		goto inode_unlock;
+ 
+ 	ret = iomap_file_buffered_write(iocb, from, &zonefs_write_iomap_ops);
+-	if (ret > 0)
+-		iocb->ki_pos += ret;
+-	else if (ret == -EIO)
++	if (ret == -EIO)
+ 		zonefs_io_error(inode, true);
+ 
+ inode_unlock:
 -- 
 2.39.2
 
