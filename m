@@ -2,243 +2,281 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D1D16C77B73
-	for <linux-xfs@archiver.kernel.org>; Tue, 30 May 2023 19:01:52 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 99BA8C77B73
+	for <linux-xfs@archiver.kernel.org>; Wed, 31 May 2023 04:35:15 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233370AbjE3TBv (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 30 May 2023 15:01:51 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44890 "EHLO
+        id S231629AbjEaEfO (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 31 May 2023 00:35:14 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39476 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229877AbjE3TBl (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 30 May 2023 15:01:41 -0400
-Received: from mga05.intel.com (mga05.intel.com [192.55.52.43])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7302A191
-        for <linux-xfs@vger.kernel.org>; Tue, 30 May 2023 12:01:38 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1685473298; x=1717009298;
-  h=date:from:to:cc:subject:message-id:references:
-   mime-version:in-reply-to;
-  bh=POzTKU+7WP9UKWn3opZP82dFzD22KHW10ylGICWIYxs=;
-  b=n8aSU7EbI6Lq9J9u3bG8/Tr4MBbWSBTct+E9FHc6xut0CzBzO4tixPza
-   8XEcPx0atNvoMO6sVSYyWccCwxFVziCZc0XjaH+TgLKt1rJLpwfUjU8J1
-   UJ5XeGC491ZcRl3icBcwnFPGjWrMas9aQEAT7qslaoyAkxk1y7MMy12Sl
-   52HQIsZsvmNhFvj+XBlAxOMsRLS7XhFaTmRQD2cIXxkgrlaLGvQJhksM0
-   CfzKrPTwDeCecOrSPIw0FA2us63NCKaVgTR97FqYUvf8mQmk5G4MVfFaQ
-   iyb4Le4UWO/toOU0IGtMaORngqTzhrYBeS/G72nBy/HxEzYD4YQn7Jjlj
-   A==;
-X-IronPort-AV: E=McAfee;i="6600,9927,10726"; a="441373758"
-X-IronPort-AV: E=Sophos;i="6.00,205,1681196400"; 
-   d="scan'208";a="441373758"
-Received: from fmsmga001.fm.intel.com ([10.253.24.23])
-  by fmsmga105.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 30 May 2023 12:01:38 -0700
-X-ExtLoop1: 1
-X-IronPort-AV: E=McAfee;i="6600,9927,10726"; a="850914882"
-X-IronPort-AV: E=Sophos;i="6.00,205,1681196400"; 
-   d="scan'208";a="850914882"
-Received: from lkp-server01.sh.intel.com (HELO fb1ced2c09fb) ([10.239.97.150])
-  by fmsmga001.fm.intel.com with ESMTP; 30 May 2023 12:01:36 -0700
-Received: from kbuild by fb1ced2c09fb with local (Exim 4.96)
-        (envelope-from <lkp@intel.com>)
-        id 1q44b9-0000kF-31;
-        Tue, 30 May 2023 19:01:35 +0000
-Date:   Wed, 31 May 2023 03:00:41 +0800
-From:   kernel test robot <lkp@intel.com>
-To:     Dave Chinner <david@fromorbit.com>, linux-xfs@vger.kernel.org
-Cc:     llvm@lists.linux.dev, oe-kbuild-all@lists.linux.dev
-Subject: Re: [PATCH] xfs: collect errors from inodegc for unlinked inode
- recovery
-Message-ID: <202305310236.wMEgOWKO-lkp@intel.com>
-References: <20230530001928.2967218-1-david@fromorbit.com>
+        with ESMTP id S234208AbjEaEe4 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 31 May 2023 00:34:56 -0400
+Received: from out28-79.mail.aliyun.com (out28-79.mail.aliyun.com [115.124.28.79])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7B6258F;
+        Tue, 30 May 2023 21:34:54 -0700 (PDT)
+X-Alimail-AntiSpam: AC=CONTINUE;BC=0.0532835|-1;CH=green;DM=|CONTINUE|false|;DS=CONTINUE|ham_regular_dialog|0.0543143-0.00141287-0.944273;FP=0|0|0|0|0|0|0|0;HT=ay29a033018047209;MF=wangyugui@e16-tech.com;NM=1;PH=DS;RN=6;RT=6;SR=0;TI=SMTPD_---.THDY3Xc_1685507689;
+Received: from 192.168.2.112(mailfrom:wangyugui@e16-tech.com fp:SMTPD_---.THDY3Xc_1685507689)
+          by smtp.aliyun-inc.com;
+          Wed, 31 May 2023 12:34:50 +0800
+Date:   Wed, 31 May 2023 12:34:51 +0800
+From:   Wang Yugui <wangyugui@e16-tech.com>
+To:     "Matthew Wilcox (Oracle)" <willy@infradead.org>,
+        linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org,
+        Dave Chinner <david@fromorbit.com>,
+        Christoph Hellwig <hch@infradead.org>,
+        "Darrick J . Wong" <djwong@kernel.org>
+Subject: Re: [PATCH 0/3] Create large folios in iomap buffered write path
+In-Reply-To: <20230521194053.8CD1.409509F4@e16-tech.com>
+References: <20230520163603.1794256-1-willy@infradead.org> <20230521194053.8CD1.409509F4@e16-tech.com>
+Message-Id: <20230531123450.7DC8.409509F4@e16-tech.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20230530001928.2967218-1-david@fromorbit.com>
+Content-Type: multipart/mixed; boundary="------_6476CD94000000007DC3_MULTIPART_MIXED_"
+Content-Transfer-Encoding: 7bit
+X-Mailer: Becky! ver. 2.81.04 [en]
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Hi Dave,
+--------_6476CD94000000007DC3_MULTIPART_MIXED_
+Content-Type: text/plain; charset="US-ASCII"
+Content-Transfer-Encoding: 7bit
 
-kernel test robot noticed the following build warnings:
+Hi,
 
-[auto build test WARNING on xfs-linux/for-next]
-[also build test WARNING on linus/master v6.4-rc4 next-20230530]
-[If your patch is applied to the wrong git tree, kindly drop us a note.
-And when submitting patch, we suggest to use '--base' as documented in
-https://git-scm.com/docs/git-format-patch#_base_tree_information]
+> Hi,
+> 
+> > Wang Yugui has a workload which would be improved by using large folios.
+> > Until now, we've only created large folios in the readahead path,
+> > but this workload writes without reading.  The decision of what size
+> > folio to create is based purely on the size of the write() call (unlike
+> > readahead where we keep history and can choose to create larger folios
+> > based on that history even if individual reads are small).
+> > 
+> > The third patch looks like it's an optional extra but is actually needed
+> > for the first two patches to work in the write path, otherwise it limits
+> > the length that iomap_get_folio() sees to PAGE_SIZE.
+> > 
+> > Matthew Wilcox (Oracle) (3):
+> >   filemap: Allow __filemap_get_folio to allocate large folios
+> >   iomap: Create large folios in the buffered write path
+> >   iomap: Copy larger chunks from userspace
+> 
+> The [PATCH 2/3] is a little difficult to backport to 6.1.y(LTS),
+> it need some patches as depency.
+> 
+> so please provide those patches based on 6.1.y(LTS)  and depency list?
+> then we can do more test on 6.1.y(LTS) too.
 
-url:    https://github.com/intel-lab-lkp/linux/commits/Dave-Chinner/xfs-collect-errors-from-inodegc-for-unlinked-inode-recovery/20230530-082000
-base:   https://git.kernel.org/pub/scm/fs/xfs/xfs-linux.git for-next
-patch link:    https://lore.kernel.org/r/20230530001928.2967218-1-david%40fromorbit.com
-patch subject: [PATCH] xfs: collect errors from inodegc for unlinked inode recovery
-config: i386-randconfig-i051-20230530 (https://download.01.org/0day-ci/archive/20230531/202305310236.wMEgOWKO-lkp@intel.com/config)
-compiler: clang version 14.0.6 (https://github.com/llvm/llvm-project f28c006a5895fc0e329fe15fead81e37457cb1d1)
-reproduce (this is a W=1 build):
-        mkdir -p ~/bin
-        wget https://raw.githubusercontent.com/intel/lkp-tests/master/sbin/make.cross -O ~/bin/make.cross
-        chmod +x ~/bin/make.cross
-        # https://github.com/intel-lab-lkp/linux/commit/7e4e87bdccf0e418d6083d636f4aca7aa145f2b9
-        git remote add linux-review https://github.com/intel-lab-lkp/linux
-        git fetch --no-tags linux-review Dave-Chinner/xfs-collect-errors-from-inodegc-for-unlinked-inode-recovery/20230530-082000
-        git checkout 7e4e87bdccf0e418d6083d636f4aca7aa145f2b9
-        # save the config file
-        mkdir build_dir && cp config build_dir/.config
-        COMPILER_INSTALL_PATH=$HOME/0day COMPILER=clang ~/bin/make.cross W=1 O=build_dir ARCH=i386 olddefconfig
-        COMPILER_INSTALL_PATH=$HOME/0day COMPILER=clang ~/bin/make.cross W=1 O=build_dir ARCH=i386 SHELL=/bin/bash fs/xfs/
+I selected 8 patches as depency
+    d7b64041164c :Dave Chinner: iomap: write iomap validity checks
 
-If you fix the issue, kindly add following tag where applicable
-| Reported-by: kernel test robot <lkp@intel.com>
-| Closes: https://lore.kernel.org/oe-kbuild-all/202305310236.wMEgOWKO-lkp@intel.com/
+    7a70a5085ed0 :Andreas Gruenbacher: iomap: Add __iomap_put_folio helper
+    80baab88bb93 :Andreas Gruenbacher: iomap/gfs2: Unlock and put folio in page_done handler
+    40405dddd98a :Andreas Gruenbacher: iomap: Rename page_done handler to put_folio
 
-All warnings (new ones prefixed by >>):
+    98321b5139f9 :Andreas Gruenbacher: iomap: Add iomap_get_folio helper
 
->> fs/xfs/xfs_inode.c:1729:7: warning: variable 'error' is used uninitialized whenever 'if' condition is false [-Wsometimes-uninitialized]
-                   if (xfs_can_free_eofblocks(ip, true))
-                       ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-   fs/xfs/xfs_inode.c:1775:9: note: uninitialized use occurs here
-           return error;
-                  ^~~~~
-   fs/xfs/xfs_inode.c:1729:3: note: remove the 'if' if its condition is always true
-                   if (xfs_can_free_eofblocks(ip, true))
-                   ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
->> fs/xfs/xfs_inode.c:1712:6: warning: variable 'error' is used uninitialized whenever 'if' condition is true [-Wsometimes-uninitialized]
-           if (xfs_is_metadata_inode(ip))
-               ^~~~~~~~~~~~~~~~~~~~~~~~~
-   fs/xfs/xfs_inode.c:1775:9: note: uninitialized use occurs here
-           return error;
-                  ^~~~~
-   fs/xfs/xfs_inode.c:1712:2: note: remove the 'if' if its condition is always false
-           if (xfs_is_metadata_inode(ip))
-           ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-   fs/xfs/xfs_inode.c:1708:6: warning: variable 'error' is used uninitialized whenever 'if' condition is true [-Wsometimes-uninitialized]
-           if (xfs_is_readonly(mp))
-               ^~~~~~~~~~~~~~~~~~~
-   fs/xfs/xfs_inode.c:1775:9: note: uninitialized use occurs here
-           return error;
-                  ^~~~~
-   fs/xfs/xfs_inode.c:1708:2: note: remove the 'if' if its condition is always false
-           if (xfs_is_readonly(mp))
-           ^~~~~~~~~~~~~~~~~~~~~~~~
-   fs/xfs/xfs_inode.c:1699:6: warning: variable 'error' is used uninitialized whenever 'if' condition is true [-Wsometimes-uninitialized]
-           if (VFS_I(ip)->i_mode == 0) {
-               ^~~~~~~~~~~~~~~~~~~~~~
-   fs/xfs/xfs_inode.c:1775:9: note: uninitialized use occurs here
-           return error;
-                  ^~~~~
-   fs/xfs/xfs_inode.c:1699:2: note: remove the 'if' if its condition is always false
-           if (VFS_I(ip)->i_mode == 0) {
-           ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-   fs/xfs/xfs_inode.c:1692:13: note: initialize the variable 'error' to silence this warning
-           int                     error;
-                                        ^
-                                         = 0
-   4 warnings generated.
+    9060bc4d3aca :Andreas Gruenbacher: iomap/gfs2: Get page in page_prepare handler
+    07c22b56685d :Andreas Gruenbacher: iomap: Add __iomap_get_folio helper
+    c82abc239464 :Andreas Gruenbacher: iomap: Rename page_prepare handler to get_folio
+
+then rebased path 1, 2 ( see attachment files).
+
+Now we can test patch 1,2,3 on 5.1.31.
+
+Best Regards
+Wang Yugui (wangyugui@e16-tech.com)
+2023/05/31
 
 
-vim +1729 fs/xfs/xfs_inode.c
+--------_6476CD94000000007DC3_MULTIPART_MIXED_
+Content-Type: application/octet-stream;
+ name="0001-filemap-Allow-__filemap_get_folio-to-allocate-large-.patch"
+Content-Disposition: attachment;
+ filename="0001-filemap-Allow-__filemap_get_folio-to-allocate-large-.patch"
+Content-Transfer-Encoding: base64
 
-62af7d54a0ec0b Darrick J. Wong   2021-08-06  1678  
-c24b5dfadc4a4f Dave Chinner      2013-08-12  1679  /*
-c24b5dfadc4a4f Dave Chinner      2013-08-12  1680   * xfs_inactive
-c24b5dfadc4a4f Dave Chinner      2013-08-12  1681   *
-c24b5dfadc4a4f Dave Chinner      2013-08-12  1682   * This is called when the vnode reference count for the vnode
-c24b5dfadc4a4f Dave Chinner      2013-08-12  1683   * goes to zero.  If the file has been unlinked, then it must
-c24b5dfadc4a4f Dave Chinner      2013-08-12  1684   * now be truncated.  Also, we clear all of the read-ahead state
-c24b5dfadc4a4f Dave Chinner      2013-08-12  1685   * kept for the inode here since the file is now closed.
-c24b5dfadc4a4f Dave Chinner      2013-08-12  1686   */
-7e4e87bdccf0e4 Dave Chinner      2023-05-30  1687  int
-c24b5dfadc4a4f Dave Chinner      2013-08-12  1688  xfs_inactive(
-c24b5dfadc4a4f Dave Chinner      2013-08-12  1689  	xfs_inode_t	*ip)
-c24b5dfadc4a4f Dave Chinner      2013-08-12  1690  {
-3d3c8b5222b924 Jie Liu           2013-08-12  1691  	struct xfs_mount	*mp;
-c24b5dfadc4a4f Dave Chinner      2013-08-12  1692  	int			error;
-c24b5dfadc4a4f Dave Chinner      2013-08-12  1693  	int			truncate = 0;
-c24b5dfadc4a4f Dave Chinner      2013-08-12  1694  
-c24b5dfadc4a4f Dave Chinner      2013-08-12  1695  	/*
-c24b5dfadc4a4f Dave Chinner      2013-08-12  1696  	 * If the inode is already free, then there can be nothing
-c24b5dfadc4a4f Dave Chinner      2013-08-12  1697  	 * to clean up here.
-c24b5dfadc4a4f Dave Chinner      2013-08-12  1698  	 */
-c19b3b05ae440d Dave Chinner      2016-02-09  1699  	if (VFS_I(ip)->i_mode == 0) {
-c24b5dfadc4a4f Dave Chinner      2013-08-12  1700  		ASSERT(ip->i_df.if_broot_bytes == 0);
-3ea06d73e3c02e Darrick J. Wong   2021-05-31  1701  		goto out;
-c24b5dfadc4a4f Dave Chinner      2013-08-12  1702  	}
-c24b5dfadc4a4f Dave Chinner      2013-08-12  1703  
-c24b5dfadc4a4f Dave Chinner      2013-08-12  1704  	mp = ip->i_mount;
-17c12bcd3030e4 Darrick J. Wong   2016-10-03  1705  	ASSERT(!xfs_iflags_test(ip, XFS_IRECOVERY));
-c24b5dfadc4a4f Dave Chinner      2013-08-12  1706  
-c24b5dfadc4a4f Dave Chinner      2013-08-12  1707  	/* If this is a read-only mount, don't do this (would generate I/O) */
-2e973b2cd4cdb9 Dave Chinner      2021-08-18  1708  	if (xfs_is_readonly(mp))
-3ea06d73e3c02e Darrick J. Wong   2021-05-31  1709  		goto out;
-c24b5dfadc4a4f Dave Chinner      2013-08-12  1710  
-383e32b0d0db46 Darrick J. Wong   2021-03-22  1711  	/* Metadata inodes require explicit resource cleanup. */
-383e32b0d0db46 Darrick J. Wong   2021-03-22 @1712  	if (xfs_is_metadata_inode(ip))
-3ea06d73e3c02e Darrick J. Wong   2021-05-31  1713  		goto out;
-383e32b0d0db46 Darrick J. Wong   2021-03-22  1714  
-6231848c3aa5c7 Darrick J. Wong   2018-03-06  1715  	/* Try to clean out the cow blocks if there are any. */
-51d626903083f7 Christoph Hellwig 2018-07-17  1716  	if (xfs_inode_has_cow_data(ip))
-6231848c3aa5c7 Darrick J. Wong   2018-03-06  1717  		xfs_reflink_cancel_cow_range(ip, 0, NULLFILEOFF, true);
-6231848c3aa5c7 Darrick J. Wong   2018-03-06  1718  
-54d7b5c1d03e97 Dave Chinner      2016-02-09  1719  	if (VFS_I(ip)->i_nlink != 0) {
-c24b5dfadc4a4f Dave Chinner      2013-08-12  1720  		/*
-c24b5dfadc4a4f Dave Chinner      2013-08-12  1721  		 * force is true because we are evicting an inode from the
-c24b5dfadc4a4f Dave Chinner      2013-08-12  1722  		 * cache. Post-eof blocks must be freed, lest we end up with
-c24b5dfadc4a4f Dave Chinner      2013-08-12  1723  		 * broken free space accounting.
-3b4683c294095b Brian Foster      2017-04-11  1724  		 *
-3b4683c294095b Brian Foster      2017-04-11  1725  		 * Note: don't bother with iolock here since lockdep complains
-3b4683c294095b Brian Foster      2017-04-11  1726  		 * about acquiring it in reclaim context. We have the only
-3b4683c294095b Brian Foster      2017-04-11  1727  		 * reference to the inode at this point anyways.
-c24b5dfadc4a4f Dave Chinner      2013-08-12  1728  		 */
-3b4683c294095b Brian Foster      2017-04-11 @1729  		if (xfs_can_free_eofblocks(ip, true))
-7e4e87bdccf0e4 Dave Chinner      2023-05-30  1730  			error = xfs_free_eofblocks(ip);
-74564fb48cbfcb Brian Foster      2013-09-20  1731  
-3ea06d73e3c02e Darrick J. Wong   2021-05-31  1732  		goto out;
-c24b5dfadc4a4f Dave Chinner      2013-08-12  1733  	}
-c24b5dfadc4a4f Dave Chinner      2013-08-12  1734  
-c19b3b05ae440d Dave Chinner      2016-02-09  1735  	if (S_ISREG(VFS_I(ip)->i_mode) &&
-13d2c10b05d8e6 Christoph Hellwig 2021-03-29  1736  	    (ip->i_disk_size != 0 || XFS_ISIZE(ip) != 0 ||
-daf83964a3681c Christoph Hellwig 2020-05-18  1737  	     ip->i_df.if_nextents > 0 || ip->i_delayed_blks > 0))
-c24b5dfadc4a4f Dave Chinner      2013-08-12  1738  		truncate = 1;
-c24b5dfadc4a4f Dave Chinner      2013-08-12  1739  
-c14cfccabe2af2 Darrick J. Wong   2018-05-04  1740  	error = xfs_qm_dqattach(ip);
-c24b5dfadc4a4f Dave Chinner      2013-08-12  1741  	if (error)
-3ea06d73e3c02e Darrick J. Wong   2021-05-31  1742  		goto out;
-c24b5dfadc4a4f Dave Chinner      2013-08-12  1743  
-c19b3b05ae440d Dave Chinner      2016-02-09  1744  	if (S_ISLNK(VFS_I(ip)->i_mode))
-36b21dde6e899d Brian Foster      2013-09-20  1745  		error = xfs_inactive_symlink(ip);
-f7be2d7f594cbc Brian Foster      2013-09-20  1746  	else if (truncate)
-f7be2d7f594cbc Brian Foster      2013-09-20  1747  		error = xfs_inactive_truncate(ip);
-36b21dde6e899d Brian Foster      2013-09-20  1748  	if (error)
-3ea06d73e3c02e Darrick J. Wong   2021-05-31  1749  		goto out;
-c24b5dfadc4a4f Dave Chinner      2013-08-12  1750  
-c24b5dfadc4a4f Dave Chinner      2013-08-12  1751  	/*
-c24b5dfadc4a4f Dave Chinner      2013-08-12  1752  	 * If there are attributes associated with the file then blow them away
-c24b5dfadc4a4f Dave Chinner      2013-08-12  1753  	 * now.  The code calls a routine that recursively deconstructs the
-6dfe5a049f2d48 Dave Chinner      2015-05-29  1754  	 * attribute fork. If also blows away the in-core attribute fork.
-c24b5dfadc4a4f Dave Chinner      2013-08-12  1755  	 */
-932b42c66cb5d0 Darrick J. Wong   2022-07-09  1756  	if (xfs_inode_has_attr_fork(ip)) {
-c24b5dfadc4a4f Dave Chinner      2013-08-12  1757  		error = xfs_attr_inactive(ip);
-c24b5dfadc4a4f Dave Chinner      2013-08-12  1758  		if (error)
-3ea06d73e3c02e Darrick J. Wong   2021-05-31  1759  			goto out;
-f7be2d7f594cbc Brian Foster      2013-09-20  1760  	}
-f7be2d7f594cbc Brian Foster      2013-09-20  1761  
-7821ea302dca72 Christoph Hellwig 2021-03-29  1762  	ASSERT(ip->i_forkoff == 0);
-c24b5dfadc4a4f Dave Chinner      2013-08-12  1763  
-c24b5dfadc4a4f Dave Chinner      2013-08-12  1764  	/*
-c24b5dfadc4a4f Dave Chinner      2013-08-12  1765  	 * Free the inode.
-c24b5dfadc4a4f Dave Chinner      2013-08-12  1766  	 */
-7e4e87bdccf0e4 Dave Chinner      2023-05-30  1767  	error = xfs_inactive_ifree(ip);
-c24b5dfadc4a4f Dave Chinner      2013-08-12  1768  
-3ea06d73e3c02e Darrick J. Wong   2021-05-31  1769  out:
-c24b5dfadc4a4f Dave Chinner      2013-08-12  1770  	/*
-3ea06d73e3c02e Darrick J. Wong   2021-05-31  1771  	 * We're done making metadata updates for this inode, so we can release
-3ea06d73e3c02e Darrick J. Wong   2021-05-31  1772  	 * the attached dquots.
-c24b5dfadc4a4f Dave Chinner      2013-08-12  1773  	 */
-c24b5dfadc4a4f Dave Chinner      2013-08-12  1774  	xfs_qm_dqdetach(ip);
-7e4e87bdccf0e4 Dave Chinner      2023-05-30  1775  	return error;
-c24b5dfadc4a4f Dave Chinner      2013-08-12  1776  }
-c24b5dfadc4a4f Dave Chinner      2013-08-12  1777  
+RnJvbSA3Y2QwOGVkOTdlNzNkMmMyOTQ2ZmIyZmMzNTNiOGU2ZGExMmE3ZTk1IE1vbiBTZXAgMTcg
+MDA6MDA6MDAgMjAwMQpGcm9tOiAiTWF0dGhldyBXaWxjb3ggKE9yYWNsZSkiIDx3aWxseUBpbmZy
+YWRlYWQub3JnPgpEYXRlOiBTYXQsIDIwIE1heSAyMDIzIDE3OjM2OjAxICswMTAwClN1YmplY3Q6
+IFtQQVRDSF0gZmlsZW1hcDogQWxsb3cgX19maWxlbWFwX2dldF9mb2xpbyB0byBhbGxvY2F0ZSBs
+YXJnZSBmb2xpb3MKCkFsbG93IGNhbGxlcnMgb2YgX19maWxlbWFwX2dldF9mb2xpbygpIHRvIHNw
+ZWNpZnkgYSBwcmVmZXJyZWQgZm9saW8Kb3JkZXIgaW4gdGhlIEZHUCBmbGFncy4gIFRoaXMgaXMg
+b25seSBob25vdXJlZCBpbiB0aGUgRkdQX0NSRUFURSBwYXRoOwppZiB0aGVyZSBpcyBhbHJlYWR5
+IGEgZm9saW8gaW4gdGhlIHBhZ2UgY2FjaGUgdGhhdCBjb3ZlcnMgdGhlIGluZGV4LAp3ZSB3aWxs
+IHJldHVybiBpdCwgbm8gbWF0dGVyIHdoYXQgaXRzIG9yZGVyIGlzLiAgTm8gY3JlYXRlLWFyb3Vu
+ZCBpcwphdHRlbXB0ZWQ7IHdlIHdpbGwgb25seSBjcmVhdGUgZm9saW9zIHdoaWNoIHN0YXJ0IGF0
+IHRoZSBzcGVjaWZpZWQgaW5kZXguClVubW9kaWZpZWQgY2FsbGVycyB3aWxsIGNvbnRpbnVlIHRv
+IGFsbG9jYXRlIG9yZGVyIDAgZm9saW9zLgoKU2lnbmVkLW9mZi1ieTogTWF0dGhldyBXaWxjb3gg
+KE9yYWNsZSkgPHdpbGx5QGluZnJhZGVhZC5vcmc+Ci0tLQogaW5jbHVkZS9saW51eC9wYWdlbWFw
+LmggfCAyOSArKysrKysrKysrKysrKysrKysrKysrKystLS0KIG1tL2ZpbGVtYXAuYyAgICAgICAg
+ICAgIHwgNDQgKysrKysrKysrKysrKysrKysrKysrKysrKysrKy0tLS0tLS0tLS0tLS0KIG1tL2Zv
+bGlvLWNvbXBhdC5jICAgICAgIHwgIDIgKy0KIG1tL3JlYWRhaGVhZC5jICAgICAgICAgIHwgMTMg
+LS0tLS0tLS0tLS0tCiA0IGZpbGVzIGNoYW5nZWQsIDU3IGluc2VydGlvbnMoKyksIDMxIGRlbGV0
+aW9ucygtKQoKZGlmZiAtLWdpdCBhL2luY2x1ZGUvbGludXgvcGFnZW1hcC5oIGIvaW5jbHVkZS9s
+aW51eC9wYWdlbWFwLmgKaW5kZXggYTU2MzA4YTlkMWE0Li5mNGQwNWJlYjY0ZWIgMTAwNjQ0Ci0t
+LSBhL2luY2x1ZGUvbGludXgvcGFnZW1hcC5oCisrKyBiL2luY2x1ZGUvbGludXgvcGFnZW1hcC5o
+CkBAIC00NjYsNiArNDY2LDE5IEBAIHN0YXRpYyBpbmxpbmUgdm9pZCAqZGV0YWNoX3BhZ2VfcHJp
+dmF0ZShzdHJ1Y3QgcGFnZSAqcGFnZSkKIAlyZXR1cm4gZm9saW9fZGV0YWNoX3ByaXZhdGUocGFn
+ZV9mb2xpbyhwYWdlKSk7CiB9CiAKKy8qCisgKiBUaGVyZSBhcmUgc29tZSBwYXJ0cyBvZiB0aGUg
+a2VybmVsIHdoaWNoIGFzc3VtZSB0aGF0IFBNRCBlbnRyaWVzCisgKiBhcmUgZXhhY3RseSBIUEFH
+RV9QTURfT1JERVIuICBUaG9zZSBzaG91bGQgYmUgZml4ZWQsIGJ1dCB1bnRpbCB0aGVuLAorICog
+bGltaXQgdGhlIG1heGltdW0gYWxsb2NhdGlvbiBvcmRlciB0byBQTUQgc2l6ZS4gIEknbSBub3Qg
+YXdhcmUgb2YgYW55CisgKiBhc3N1bXB0aW9ucyBhYm91dCBtYXhpbXVtIG9yZGVyIGlmIFRIUCBh
+cmUgZGlzYWJsZWQsIGJ1dCA4IHNlZW1zIGxpa2UKKyAqIGEgZ29vZCBvcmRlciAodGhhdCdzIDFN
+QiBpZiB5b3UncmUgdXNpbmcgNGtCIHBhZ2VzKQorICovCisjaWZkZWYgQ09ORklHX1RSQU5TUEFS
+RU5UX0hVR0VQQUdFCisjZGVmaW5lIE1BWF9QQUdFQ0FDSEVfT1JERVIJSFBBR0VfUE1EX09SREVS
+CisjZWxzZQorI2RlZmluZSBNQVhfUEFHRUNBQ0hFX09SREVSCTgKKyNlbmRpZgorCiAjaWZkZWYg
+Q09ORklHX05VTUEKIHN0cnVjdCBmb2xpbyAqZmlsZW1hcF9hbGxvY19mb2xpbyhnZnBfdCBnZnAs
+IHVuc2lnbmVkIGludCBvcmRlcik7CiAjZWxzZQpAQCAtNTA3LDExICs1MjAsMjEgQEAgcGdvZmZf
+dCBwYWdlX2NhY2hlX3ByZXZfbWlzcyhzdHJ1Y3QgYWRkcmVzc19zcGFjZSAqbWFwcGluZywKICNk
+ZWZpbmUgRkdQX0hFQUQJCTB4MDAwMDAwODAKICNkZWZpbmUgRkdQX0VOVFJZCQkweDAwMDAwMTAw
+CiAjZGVmaW5lIEZHUF9TVEFCTEUJCTB4MDAwMDAyMDAKKyNkZWZpbmUgRkdQX09SREVSKGZncCkJ
+CSgoZmdwKSA+PiAyNikJLyogdG9wIDYgYml0cyAqLworCitzdGF0aWMgaW5saW5lIHVuc2lnbmVk
+IGZncF9vcmRlcihzaXplX3Qgc2l6ZSkKK3sKKwl1bnNpZ25lZCBpbnQgc2hpZnQgPSBpbG9nMihz
+aXplKTsKKworCWlmIChzaGlmdCA8PSBQQUdFX1NISUZUKQorCQlyZXR1cm4gMDsKKwlyZXR1cm4g
+KHNoaWZ0IC0gUEFHRV9TSElGVCkgPDwgMjY7Cit9CiAKIHN0cnVjdCBmb2xpbyAqX19maWxlbWFw
+X2dldF9mb2xpbyhzdHJ1Y3QgYWRkcmVzc19zcGFjZSAqbWFwcGluZywgcGdvZmZfdCBpbmRleCwK
+LQkJaW50IGZncF9mbGFncywgZ2ZwX3QgZ2ZwKTsKKwkJdW5zaWduZWQgZmdwX2ZsYWdzLCBnZnBf
+dCBnZnApOwogc3RydWN0IHBhZ2UgKnBhZ2VjYWNoZV9nZXRfcGFnZShzdHJ1Y3QgYWRkcmVzc19z
+cGFjZSAqbWFwcGluZywgcGdvZmZfdCBpbmRleCwKLQkJaW50IGZncF9mbGFncywgZ2ZwX3QgZ2Zw
+KTsKKwkJdW5zaWduZWQgZmdwX2ZsYWdzLCBnZnBfdCBnZnApOwogCiAvKioKICAqIGZpbGVtYXBf
+Z2V0X2ZvbGlvIC0gRmluZCBhbmQgZ2V0IGEgZm9saW8uCkBAIC01ODYsNyArNjA5LDcgQEAgc3Rh
+dGljIGlubGluZSBzdHJ1Y3QgcGFnZSAqZmluZF9nZXRfcGFnZShzdHJ1Y3QgYWRkcmVzc19zcGFj
+ZSAqbWFwcGluZywKIH0KIAogc3RhdGljIGlubGluZSBzdHJ1Y3QgcGFnZSAqZmluZF9nZXRfcGFn
+ZV9mbGFncyhzdHJ1Y3QgYWRkcmVzc19zcGFjZSAqbWFwcGluZywKLQkJCQkJcGdvZmZfdCBvZmZz
+ZXQsIGludCBmZ3BfZmxhZ3MpCisJCQkJCXBnb2ZmX3Qgb2Zmc2V0LCB1bnNpZ25lZCBmZ3BfZmxh
+Z3MpCiB7CiAJcmV0dXJuIHBhZ2VjYWNoZV9nZXRfcGFnZShtYXBwaW5nLCBvZmZzZXQsIGZncF9m
+bGFncywgMCk7CiB9CmRpZmYgLS1naXQgYS9tbS9maWxlbWFwLmMgYi9tbS9maWxlbWFwLmMKaW5k
+ZXggYjRjOWJkMzY4YjdlLi41OTM1YzdhYWMzODggMTAwNjQ0Ci0tLSBhL21tL2ZpbGVtYXAuYwor
+KysgYi9tbS9maWxlbWFwLmMKQEAgLTE5MTAsNyArMTkxMCw3IEBAIHZvaWQgKmZpbGVtYXBfZ2V0
+X2VudHJ5KHN0cnVjdCBhZGRyZXNzX3NwYWNlICptYXBwaW5nLCBwZ29mZl90IGluZGV4KQogICog
+UmV0dXJuOiBUaGUgZm91bmQgZm9saW8gb3IgJU5VTEwgb3RoZXJ3aXNlLgogICovCiBzdHJ1Y3Qg
+Zm9saW8gKl9fZmlsZW1hcF9nZXRfZm9saW8oc3RydWN0IGFkZHJlc3Nfc3BhY2UgKm1hcHBpbmcs
+IHBnb2ZmX3QgaW5kZXgsCi0JCWludCBmZ3BfZmxhZ3MsIGdmcF90IGdmcCkKKwkJdW5zaWduZWQg
+ZmdwX2ZsYWdzLCBnZnBfdCBnZnApCiB7CiAJc3RydWN0IGZvbGlvICpmb2xpbzsKIApAQCAtMTk1
+Miw3ICsxOTUyLDkgQEAgc3RydWN0IGZvbGlvICpfX2ZpbGVtYXBfZ2V0X2ZvbGlvKHN0cnVjdCBh
+ZGRyZXNzX3NwYWNlICptYXBwaW5nLCBwZ29mZl90IGluZGV4LAogCQlmb2xpb193YWl0X3N0YWJs
+ZShmb2xpbyk7CiBub19wYWdlOgogCWlmICghZm9saW8gJiYgKGZncF9mbGFncyAmIEZHUF9DUkVB
+VCkpIHsKKwkJdW5zaWduZWQgb3JkZXIgPSBGR1BfT1JERVIoZmdwX2ZsYWdzKTsKIAkJaW50IGVy
+cjsKKwogCQlpZiAoKGZncF9mbGFncyAmIEZHUF9XUklURSkgJiYgbWFwcGluZ19jYW5fd3JpdGVi
+YWNrKG1hcHBpbmcpKQogCQkJZ2ZwIHw9IF9fR0ZQX1dSSVRFOwogCQlpZiAoZmdwX2ZsYWdzICYg
+RkdQX05PRlMpCkBAIC0xOTYxLDI2ICsxOTYzLDQwIEBAIHN0cnVjdCBmb2xpbyAqX19maWxlbWFw
+X2dldF9mb2xpbyhzdHJ1Y3QgYWRkcmVzc19zcGFjZSAqbWFwcGluZywgcGdvZmZfdCBpbmRleCwK
+IAkJCWdmcCAmPSB+R0ZQX0tFUk5FTDsKIAkJCWdmcCB8PSBHRlBfTk9XQUlUIHwgX19HRlBfTk9X
+QVJOOwogCQl9Ci0KLQkJZm9saW8gPSBmaWxlbWFwX2FsbG9jX2ZvbGlvKGdmcCwgMCk7Ci0JCWlm
+ICghZm9saW8pCi0JCQlyZXR1cm4gTlVMTDsKLQogCQlpZiAoV0FSTl9PTl9PTkNFKCEoZmdwX2Zs
+YWdzICYgKEZHUF9MT0NLIHwgRkdQX0ZPUl9NTUFQKSkpKQogCQkJZmdwX2ZsYWdzIHw9IEZHUF9M
+T0NLOwogCi0JCS8qIEluaXQgYWNjZXNzZWQgc28gYXZvaWQgYXRvbWljIG1hcmtfcGFnZV9hY2Nl
+c3NlZCBsYXRlciAqLwotCQlpZiAoZmdwX2ZsYWdzICYgRkdQX0FDQ0VTU0VEKQotCQkJX19mb2xp
+b19zZXRfcmVmZXJlbmNlZChmb2xpbyk7CisJCWlmICghbWFwcGluZ19sYXJnZV9mb2xpb19zdXBw
+b3J0KG1hcHBpbmcpKQorCQkJb3JkZXIgPSAwOworCQlpZiAob3JkZXIgPiBNQVhfUEFHRUNBQ0hF
+X09SREVSKQorCQkJb3JkZXIgPSBNQVhfUEFHRUNBQ0hFX09SREVSOworCQkvKiBJZiB3ZSdyZSBu
+b3QgYWxpZ25lZCwgYWxsb2NhdGUgYSBzbWFsbGVyIGZvbGlvICovCisJCWlmIChpbmRleCAmICgo
+MVVMIDw8IG9yZGVyKSAtIDEpKQorCQkJb3JkZXIgPSBfX2ZmcyhpbmRleCk7CiAKLQkJZXJyID0g
+ZmlsZW1hcF9hZGRfZm9saW8obWFwcGluZywgZm9saW8sIGluZGV4LCBnZnApOwotCQlpZiAodW5s
+aWtlbHkoZXJyKSkgeworCQlkbyB7CisJCQllcnIgPSAtRU5PTUVNOworCQkJaWYgKG9yZGVyID09
+IDEpCisJCQkJb3JkZXIgPSAwOworCQkJZm9saW8gPSBmaWxlbWFwX2FsbG9jX2ZvbGlvKGdmcCwg
+b3JkZXIpOworCQkJaWYgKCFmb2xpbykKKwkJCQljb250aW51ZTsKKworCQkJLyogSW5pdCBhY2Nl
+c3NlZCBzbyBhdm9pZCBhdG9taWMgbWFya19wYWdlX2FjY2Vzc2VkIGxhdGVyICovCisJCQlpZiAo
+ZmdwX2ZsYWdzICYgRkdQX0FDQ0VTU0VEKQorCQkJCV9fZm9saW9fc2V0X3JlZmVyZW5jZWQoZm9s
+aW8pOworCisJCQllcnIgPSBmaWxlbWFwX2FkZF9mb2xpbyhtYXBwaW5nLCBmb2xpbywgaW5kZXgs
+IGdmcCk7CisJCQlpZiAoIWVycikKKwkJCQlicmVhazsKIAkJCWZvbGlvX3B1dChmb2xpbyk7CiAJ
+CQlmb2xpbyA9IE5VTEw7Ci0JCQlpZiAoZXJyID09IC1FRVhJU1QpCi0JCQkJZ290byByZXBlYXQ7
+Ci0JCX0KKwkJfSB3aGlsZSAob3JkZXItLSA+IDApOwogCisJCWlmIChlcnIgPT0gLUVFWElTVCkK
+KwkJCWdvdG8gcmVwZWF0OworCQlpZiAoZXJyKQorCQkJcmV0dXJuIEVSUl9QVFIoZXJyKTsKIAkJ
+LyoKIAkJICogZmlsZW1hcF9hZGRfZm9saW8gbG9ja3MgdGhlIHBhZ2UsIGFuZCBmb3IgbW1hcAog
+CQkgKiB3ZSBleHBlY3QgYW4gdW5sb2NrZWQgcGFnZS4KZGlmZiAtLWdpdCBhL21tL2ZvbGlvLWNv
+bXBhdC5jIGIvbW0vZm9saW8tY29tcGF0LmMKaW5kZXggYzZmMDU2YzIwNTAzLi5jOTZlODhkOWEy
+NjIgMTAwNjQ0Ci0tLSBhL21tL2ZvbGlvLWNvbXBhdC5jCisrKyBiL21tL2ZvbGlvLWNvbXBhdC5j
+CkBAIC05Miw3ICs5Miw3IEBAIEVYUE9SVF9TWU1CT0woYWRkX3RvX3BhZ2VfY2FjaGVfbHJ1KTsK
+IAogbm9pbmxpbmUKIHN0cnVjdCBwYWdlICpwYWdlY2FjaGVfZ2V0X3BhZ2Uoc3RydWN0IGFkZHJl
+c3Nfc3BhY2UgKm1hcHBpbmcsIHBnb2ZmX3QgaW5kZXgsCi0JCWludCBmZ3BfZmxhZ3MsIGdmcF90
+IGdmcCkKKwkJdW5zaWduZWQgZmdwX2ZsYWdzLCBnZnBfdCBnZnApCiB7CiAJc3RydWN0IGZvbGlv
+ICpmb2xpbzsKIApkaWZmIC0tZ2l0IGEvbW0vcmVhZGFoZWFkLmMgYi9tbS9yZWFkYWhlYWQuYwpp
+bmRleCA0N2FmYmNhMWQxMjIuLjU5YTA3MWJhZGI5MCAxMDA2NDQKLS0tIGEvbW0vcmVhZGFoZWFk
+LmMKKysrIGIvbW0vcmVhZGFoZWFkLmMKQEAgLTQ2MiwxOSArNDYyLDYgQEAgc3RhdGljIGludCB0
+cnlfY29udGV4dF9yZWFkYWhlYWQoc3RydWN0IGFkZHJlc3Nfc3BhY2UgKm1hcHBpbmcsCiAJcmV0
+dXJuIDE7CiB9CiAKLS8qCi0gKiBUaGVyZSBhcmUgc29tZSBwYXJ0cyBvZiB0aGUga2VybmVsIHdo
+aWNoIGFzc3VtZSB0aGF0IFBNRCBlbnRyaWVzCi0gKiBhcmUgZXhhY3RseSBIUEFHRV9QTURfT1JE
+RVIuICBUaG9zZSBzaG91bGQgYmUgZml4ZWQsIGJ1dCB1bnRpbCB0aGVuLAotICogbGltaXQgdGhl
+IG1heGltdW0gYWxsb2NhdGlvbiBvcmRlciB0byBQTUQgc2l6ZS4gIEknbSBub3QgYXdhcmUgb2Yg
+YW55Ci0gKiBhc3N1bXB0aW9ucyBhYm91dCBtYXhpbXVtIG9yZGVyIGlmIFRIUCBhcmUgZGlzYWJs
+ZWQsIGJ1dCA4IHNlZW1zIGxpa2UKLSAqIGEgZ29vZCBvcmRlciAodGhhdCdzIDFNQiBpZiB5b3Un
+cmUgdXNpbmcgNGtCIHBhZ2VzKQotICovCi0jaWZkZWYgQ09ORklHX1RSQU5TUEFSRU5UX0hVR0VQ
+QUdFCi0jZGVmaW5lIE1BWF9QQUdFQ0FDSEVfT1JERVIJSFBBR0VfUE1EX09SREVSCi0jZWxzZQot
+I2RlZmluZSBNQVhfUEFHRUNBQ0hFX09SREVSCTgKLSNlbmRpZgotCiBzdGF0aWMgaW5saW5lIGlu
+dCByYV9hbGxvY19mb2xpbyhzdHJ1Y3QgcmVhZGFoZWFkX2NvbnRyb2wgKnJhY3RsLCBwZ29mZl90
+IGluZGV4LAogCQlwZ29mZl90IG1hcmssIHVuc2lnbmVkIGludCBvcmRlciwgZ2ZwX3QgZ2ZwKQog
+ewotLSAKMi4zNi4yCgo=
+--------_6476CD94000000007DC3_MULTIPART_MIXED_
+Content-Type: application/octet-stream;
+ name="0002-iomap-Create-large-folios-in-the-buffered-write-path.patch"
+Content-Disposition: attachment;
+ filename="0002-iomap-Create-large-folios-in-the-buffered-write-path.patch"
+Content-Transfer-Encoding: base64
 
--- 
-0-DAY CI Kernel Test Service
-https://github.com/intel/lkp-tests/wiki
+RnJvbSAzNTI4ZjQzZjI5MzZlYTc4NzAwZTU2NTBlOGUwZmNmNTcyMzU4YTFjIE1vbiBTZXAgMTcg
+MDA6MDA6MDAgMjAwMQpGcm9tOiAiTWF0dGhldyBXaWxjb3ggKE9yYWNsZSkiIDx3aWxseUBpbmZy
+YWRlYWQub3JnPgpEYXRlOiBTYXQsIDIwIE1heSAyMDIzIDE3OjM2OjAyICswMTAwClN1YmplY3Q6
+IFtQQVRDSF0gaW9tYXA6IENyZWF0ZSBsYXJnZSBmb2xpb3MgaW4gdGhlIGJ1ZmZlcmVkIHdyaXRl
+IHBhdGgKClVzZSB0aGUgc2l6ZSBvZiB0aGUgd3JpdGUgYXMgYSBoaW50IGZvciB0aGUgc2l6ZSBv
+ZiB0aGUgZm9saW8gdG8gY3JlYXRlLgoKU2lnbmVkLW9mZi1ieTogTWF0dGhldyBXaWxjb3ggKE9y
+YWNsZSkgPHdpbGx5QGluZnJhZGVhZC5vcmc+Ci0tLQogZnMvZ2ZzMi9ibWFwLmMgICAgICAgICB8
+ICAyICstCiBmcy9pb21hcC9idWZmZXJlZC1pby5jIHwgMTAgKysrKysrLS0tLQogaW5jbHVkZS9s
+aW51eC9pb21hcC5oICB8ICAyICstCiAzIGZpbGVzIGNoYW5nZWQsIDggaW5zZXJ0aW9ucygrKSwg
+NiBkZWxldGlvbnMoLSkKCmRpZmYgLS1naXQgYS9mcy9nZnMyL2JtYXAuYyBiL2ZzL2dmczIvYm1h
+cC5jCmluZGV4IGM3MzliMjU4YTJkOS4uMzcwMmU1ZTQ3YjBmIDEwMDY0NAotLS0gYS9mcy9nZnMy
+L2JtYXAuYworKysgYi9mcy9nZnMyL2JtYXAuYwpAQCAtOTcxLDcgKzk3MSw3IEBAIGdmczJfaW9t
+YXBfZ2V0X2ZvbGlvKHN0cnVjdCBpb21hcF9pdGVyICppdGVyLCBsb2ZmX3QgcG9zLCB1bnNpZ25l
+ZCBsZW4pCiAJaWYgKHN0YXR1cykKIAkJcmV0dXJuIEVSUl9QVFIoc3RhdHVzKTsKIAotCWZvbGlv
+ID0gaW9tYXBfZ2V0X2ZvbGlvKGl0ZXIsIHBvcyk7CisJZm9saW8gPSBpb21hcF9nZXRfZm9saW8o
+aXRlciwgcG9zLCBsZW4pOwogCWlmIChJU19FUlIoZm9saW8pKQogCQlnZnMyX3RyYW5zX2VuZChz
+ZHApOwogCXJldHVybiBmb2xpbzsKZGlmZiAtLWdpdCBhL2ZzL2lvbWFwL2J1ZmZlcmVkLWlvLmMg
+Yi9mcy9pb21hcC9idWZmZXJlZC1pby5jCmluZGV4IDA2MzEzM2VjNzdmNC4uNjUxYWYyZDQyNGFj
+IDEwMDY0NAotLS0gYS9mcy9pb21hcC9idWZmZXJlZC1pby5jCisrKyBiL2ZzL2lvbWFwL2J1ZmZl
+cmVkLWlvLmMKQEAgLTQ2MSwxNyArNDYxLDE5IEBAIEVYUE9SVF9TWU1CT0xfR1BMKGlvbWFwX2lz
+X3BhcnRpYWxseV91cHRvZGF0ZSk7CiAgKiBpb21hcF9nZXRfZm9saW8gLSBnZXQgYSBmb2xpbyBy
+ZWZlcmVuY2UgZm9yIHdyaXRpbmcKICAqIEBpdGVyOiBpdGVyYXRpb24gc3RydWN0dXJlCiAgKiBA
+cG9zOiBzdGFydCBvZmZzZXQgb2Ygd3JpdGUKKyAqIEBsZW46IGxlbmd0aCBvZiB3cml0ZQogICoK
+ICAqIFJldHVybnMgYSBsb2NrZWQgcmVmZXJlbmNlIHRvIHRoZSBmb2xpbyBhdCBAcG9zLCBvciBh
+biBlcnJvciBwb2ludGVyIGlmIHRoZQogICogZm9saW8gY291bGQgbm90IGJlIG9idGFpbmVkLgog
+ICovCi1zdHJ1Y3QgZm9saW8gKmlvbWFwX2dldF9mb2xpbyhzdHJ1Y3QgaW9tYXBfaXRlciAqaXRl
+ciwgbG9mZl90IHBvcykKK3N0cnVjdCBmb2xpbyAqaW9tYXBfZ2V0X2ZvbGlvKHN0cnVjdCBpb21h
+cF9pdGVyICppdGVyLCBsb2ZmX3QgcG9zLCBzaXplX3QgbGVuKQogewogCXVuc2lnbmVkIGZncCA9
+IEZHUF9MT0NLIHwgRkdQX1dSSVRFIHwgRkdQX0NSRUFUIHwgRkdQX1NUQUJMRSB8IEZHUF9OT0ZT
+OwogCXN0cnVjdCBmb2xpbyAqZm9saW87CiAKIAlpZiAoaXRlci0+ZmxhZ3MgJiBJT01BUF9OT1dB
+SVQpCiAJCWZncCB8PSBGR1BfTk9XQUlUOworCWZncCB8PSBmZ3Bfb3JkZXIobGVuKTsKIAogCWZv
+bGlvID0gX19maWxlbWFwX2dldF9mb2xpbyhpdGVyLT5pbm9kZS0+aV9tYXBwaW5nLCBwb3MgPj4g
+UEFHRV9TSElGVCwKIAkJCWZncCwgbWFwcGluZ19nZnBfbWFzayhpdGVyLT5pbm9kZS0+aV9tYXBw
+aW5nKSk7CkBAIC01MTAsOCArNTEyLDggQEAgdm9pZCBpb21hcF9pbnZhbGlkYXRlX2ZvbGlvKHN0
+cnVjdCBmb2xpbyAqZm9saW8sIHNpemVfdCBvZmZzZXQsIHNpemVfdCBsZW4pCiAJCWlvbWFwX3Bh
+Z2VfcmVsZWFzZShmb2xpbyk7CiAJfSBlbHNlIGlmIChmb2xpb190ZXN0X2xhcmdlKGZvbGlvKSkg
+ewogCQkvKiBNdXN0IHJlbGVhc2UgdGhlIGlvcCBzbyB0aGUgcGFnZSBjYW4gYmUgc3BsaXQgKi8K
+LQkJV0FSTl9PTl9PTkNFKCFmb2xpb190ZXN0X3VwdG9kYXRlKGZvbGlvKSAmJgotCQkJICAgICBm
+b2xpb190ZXN0X2RpcnR5KGZvbGlvKSk7CisJCVZNX1dBUk5fT05fT05DRV9GT0xJTyghZm9saW9f
+dGVzdF91cHRvZGF0ZShmb2xpbykgJiYKKwkJCQlmb2xpb190ZXN0X2RpcnR5KGZvbGlvKSwgZm9s
+aW8pOwogCQlpb21hcF9wYWdlX3JlbGVhc2UoZm9saW8pOwogCX0KIH0KQEAgLTYwMyw3ICs2MDUs
+NyBAQCBzdGF0aWMgc3RydWN0IGZvbGlvICpfX2lvbWFwX2dldF9mb2xpbyhzdHJ1Y3QgaW9tYXBf
+aXRlciAqaXRlciwgbG9mZl90IHBvcywKIAlpZiAocGFnZV9vcHMgJiYgcGFnZV9vcHMtPmdldF9m
+b2xpbykKIAkJcmV0dXJuIHBhZ2Vfb3BzLT5nZXRfZm9saW8oaXRlciwgcG9zLCBsZW4pOwogCWVs
+c2UKLQkJcmV0dXJuIGlvbWFwX2dldF9mb2xpbyhpdGVyLCBwb3MpOworCQlyZXR1cm4gaW9tYXBf
+Z2V0X2ZvbGlvKGl0ZXIsIHBvcywgbGVuKTsKIH0KIAogc3RhdGljIHZvaWQgX19pb21hcF9wdXRf
+Zm9saW8oc3RydWN0IGlvbWFwX2l0ZXIgKml0ZXIsIGxvZmZfdCBwb3MsIHNpemVfdCByZXQsCmRp
+ZmYgLS1naXQgYS9pbmNsdWRlL2xpbnV4L2lvbWFwLmggYi9pbmNsdWRlL2xpbnV4L2lvbWFwLmgK
+aW5kZXggZTJiODM2YzJlMTE5Li44MGZhY2I5YzllNWIgMTAwNjQ0Ci0tLSBhL2luY2x1ZGUvbGlu
+dXgvaW9tYXAuaAorKysgYi9pbmNsdWRlL2xpbnV4L2lvbWFwLmgKQEAgLTI2MSw3ICsyNjEsNyBA
+QCBpbnQgaW9tYXBfZmlsZV9idWZmZXJlZF93cml0ZV9wdW5jaF9kZWxhbGxvYyhzdHJ1Y3QgaW5v
+ZGUgKmlub2RlLAogaW50IGlvbWFwX3JlYWRfZm9saW8oc3RydWN0IGZvbGlvICpmb2xpbywgY29u
+c3Qgc3RydWN0IGlvbWFwX29wcyAqb3BzKTsKIHZvaWQgaW9tYXBfcmVhZGFoZWFkKHN0cnVjdCBy
+ZWFkYWhlYWRfY29udHJvbCAqLCBjb25zdCBzdHJ1Y3QgaW9tYXBfb3BzICpvcHMpOwogYm9vbCBp
+b21hcF9pc19wYXJ0aWFsbHlfdXB0b2RhdGUoc3RydWN0IGZvbGlvICosIHNpemVfdCBmcm9tLCBz
+aXplX3QgY291bnQpOwotc3RydWN0IGZvbGlvICppb21hcF9nZXRfZm9saW8oc3RydWN0IGlvbWFw
+X2l0ZXIgKml0ZXIsIGxvZmZfdCBwb3MpOworc3RydWN0IGZvbGlvICppb21hcF9nZXRfZm9saW8o
+c3RydWN0IGlvbWFwX2l0ZXIgKml0ZXIsIGxvZmZfdCBwb3MsIHNpemVfdCBsZW4pOwogYm9vbCBp
+b21hcF9yZWxlYXNlX2ZvbGlvKHN0cnVjdCBmb2xpbyAqZm9saW8sIGdmcF90IGdmcF9mbGFncyk7
+CiB2b2lkIGlvbWFwX2ludmFsaWRhdGVfZm9saW8oc3RydWN0IGZvbGlvICpmb2xpbywgc2l6ZV90
+IG9mZnNldCwgc2l6ZV90IGxlbik7CiBpbnQgaW9tYXBfZmlsZV91bnNoYXJlKHN0cnVjdCBpbm9k
+ZSAqaW5vZGUsIGxvZmZfdCBwb3MsIGxvZmZfdCBsZW4sCi0tIAoyLjM2LjIKCg==
+--------_6476CD94000000007DC3_MULTIPART_MIXED_--
+
