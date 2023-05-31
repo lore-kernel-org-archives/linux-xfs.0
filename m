@@ -2,120 +2,68 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D095EC77B7C
-	for <linux-xfs@archiver.kernel.org>; Wed, 31 May 2023 10:04:30 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1445FC77B7A
+	for <linux-xfs@archiver.kernel.org>; Wed, 31 May 2023 10:50:01 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235798AbjEaKE3 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 31 May 2023 06:04:29 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58950 "EHLO
+        id S231927AbjEaKt7 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 31 May 2023 06:49:59 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47586 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S235792AbjEaKEX (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 31 May 2023 06:04:23 -0400
-Received: from out-22.mta0.migadu.com (out-22.mta0.migadu.com [IPv6:2001:41d0:1004:224b::16])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 21CF0134
-        for <linux-xfs@vger.kernel.org>; Wed, 31 May 2023 03:04:19 -0700 (PDT)
-X-Report-Abuse: Please report any abuse attempt to abuse@migadu.com and include these headers.
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.dev; s=key1;
-        t=1685527121;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=E1v6Nmr+iDUp1so91WjqnHTNpH9v5OnKQ0PJi2AfGq4=;
-        b=rS4mRe4LmeoSOb/mL2JDcthPretqgBkrv8Kq1Nka9fPmRIXJQ4mg/9Wg8Bj9SViBUA7yr6
-        PoZXbDH9wstFXz3FQzUyM1geHY3OxQh815EPwbi4X/Zntio/xy3pCNOacpjQfTALY9gKYI
-        zTMcUPF8nNFvCOF+ZtfaP9t9mQ6pBAk=
-From:   Qi Zheng <qi.zheng@linux.dev>
-To:     akpm@linux-foundation.org, tkhai@ya.ru, roman.gushchin@linux.dev,
-        vbabka@suse.cz, viro@zeniv.linux.org.uk, brauner@kernel.org,
-        djwong@kernel.org, hughd@google.com, paulmck@kernel.org,
-        muchun.song@linux.dev
-Cc:     linux-mm@kvack.org, linux-fsdevel@vger.kernel.org,
+        with ESMTP id S232198AbjEaKtm (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 31 May 2023 06:49:42 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C76B9125;
+        Wed, 31 May 2023 03:49:41 -0700 (PDT)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 5924E62F5E;
+        Wed, 31 May 2023 10:49:41 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id F38BEC433D2;
+        Wed, 31 May 2023 10:49:36 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1685530180;
+        bh=lVRDlljIusYtHqx2sPZQ+2Cw41zWVjXdIT83etnx7V4=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=Cxz04lOcwCUr1fIb2WDXimONDnalvdJfFvEUNZQ0QLv/7KiptWI2SoE64QrOUXdkz
+         6g450Y9qpiBwGPiR5+1SxfwkMLAYSuAcSKk8YUKTfXW8NHtvepLSWP0XCJz6iTeXy/
+         lUepRzRCzFXkZx7o6z725cqbf4I06nCaevZnRiTCobnxR3I7JoRvGxmsxHCXFt2DHY
+         2nf5jJDLT7tTXLPHxtrH7RZdQ5Zak3nkxwG2siwodjinZAsrdYvYHjgBYnpQF6fxAE
+         +uBDNRBrZB1r7wCKbE9lBQLIJ6qFe112oHymffplbpVSnzB7KGI2CJO1Ro8azcEBzz
+         rI3ASxrMLbn0Q==
+Date:   Wed, 31 May 2023 12:49:33 +0200
+From:   Christian Brauner <brauner@kernel.org>
+To:     Qi Zheng <qi.zheng@linux.dev>
+Cc:     akpm@linux-foundation.org, tkhai@ya.ru, roman.gushchin@linux.dev,
+        vbabka@suse.cz, viro@zeniv.linux.org.uk, djwong@kernel.org,
+        hughd@google.com, paulmck@kernel.org, muchun.song@linux.dev,
+        linux-mm@kvack.org, linux-fsdevel@vger.kernel.org,
         linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org,
         Qi Zheng <zhengqi.arch@bytedance.com>
-Subject: [PATCH 6/8] xfs: introduce xfs_fs_destroy_super()
-Date:   Wed, 31 May 2023 09:57:40 +0000
-Message-Id: <20230531095742.2480623-7-qi.zheng@linux.dev>
-In-Reply-To: <20230531095742.2480623-1-qi.zheng@linux.dev>
+Subject: Re: [PATCH 1/8] mm: vmscan: move shrinker_debugfs_remove() before
+ synchronize_srcu()
+Message-ID: <20230531-notlage-ankommen-93022623b74b@brauner>
 References: <20230531095742.2480623-1-qi.zheng@linux.dev>
+ <20230531095742.2480623-2-qi.zheng@linux.dev>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-Migadu-Flow: FLOW_OUT
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+In-Reply-To: <20230531095742.2480623-2-qi.zheng@linux.dev>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-From: Kirill Tkhai <tkhai@ya.ru>
+On Wed, May 31, 2023 at 09:57:35AM +0000, Qi Zheng wrote:
+> From: Qi Zheng <zhengqi.arch@bytedance.com>
+> 
+> The debugfs_remove_recursive() will wait for debugfs_file_put()
+> to return, so there is no need to put it after synchronize_srcu()
+> to wait for the rcu read-side critical section to exit.
+> 
+> Just move it before synchronize_srcu(), which is also convenient
+> to put the heavy synchronize_srcu() in the delayed work later.
+> 
+> Signed-off-by: Qi Zheng <zhengqi.arch@bytedance.com>
+> ---
 
-xfs_fs_nr_cached_objects() touches sb->s_fs_info,
-and this patch makes it to be destructed later.
-
-After this patch xfs_fs_nr_cached_objects() is safe
-for splitting unregister_shrinker(): mp->m_perag_tree
-is stable till destroy_super_work(), while iteration
-over it is already RCU-protected by internal XFS
-business.
-
-Signed-off-by: Kirill Tkhai <tkhai@ya.ru>
-Signed-off-by: Qi Zheng <zhengqi.arch@bytedance.com>
----
- fs/xfs/xfs_super.c | 25 ++++++++++++++++++++++---
- 1 file changed, 22 insertions(+), 3 deletions(-)
-
-diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
-index 7e706255f165..694616524c76 100644
---- a/fs/xfs/xfs_super.c
-+++ b/fs/xfs/xfs_super.c
-@@ -743,11 +743,18 @@ xfs_fs_drop_inode(
- }
- 
- static void
--xfs_mount_free(
-+xfs_free_names(
- 	struct xfs_mount	*mp)
- {
- 	kfree(mp->m_rtname);
- 	kfree(mp->m_logname);
-+}
-+
-+static void
-+xfs_mount_free(
-+	struct xfs_mount	*mp)
-+{
-+	xfs_free_names(mp);
- 	kmem_free(mp);
- }
- 
-@@ -1136,8 +1143,19 @@ xfs_fs_put_super(
- 	xfs_destroy_mount_workqueues(mp);
- 	xfs_close_devices(mp);
- 
--	sb->s_fs_info = NULL;
--	xfs_mount_free(mp);
-+	xfs_free_names(mp);
-+}
-+
-+static void
-+xfs_fs_destroy_super(
-+	struct super_block	*sb)
-+{
-+	if (sb->s_fs_info) {
-+		struct xfs_mount	*mp = XFS_M(sb);
-+
-+		kmem_free(mp);
-+		sb->s_fs_info = NULL;
-+	}
- }
- 
- static long
-@@ -1165,6 +1183,7 @@ static const struct super_operations xfs_super_operations = {
- 	.dirty_inode		= xfs_fs_dirty_inode,
- 	.drop_inode		= xfs_fs_drop_inode,
- 	.put_super		= xfs_fs_put_super,
-+	.destroy_super		= xfs_fs_destroy_super,
- 	.sync_fs		= xfs_fs_sync_fs,
- 	.freeze_fs		= xfs_fs_freeze,
- 	.unfreeze_fs		= xfs_fs_unfreeze,
--- 
-2.30.2
-
+Afaict, should be a patch independent of this series.
