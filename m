@@ -2,82 +2,131 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C9092C7EE2F
-	for <linux-xfs@archiver.kernel.org>; Wed, 31 May 2023 09:15:47 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 48677C77B73
+	for <linux-xfs@archiver.kernel.org>; Wed, 31 May 2023 10:04:24 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232546AbjEaJPp (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 31 May 2023 05:15:45 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56108 "EHLO
+        id S235783AbjEaKEX (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 31 May 2023 06:04:23 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58868 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S235309AbjEaJPl (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 31 May 2023 05:15:41 -0400
-Received: from mail-ej1-x629.google.com (mail-ej1-x629.google.com [IPv6:2a00:1450:4864:20::629])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id F337F124
-        for <linux-xfs@vger.kernel.org>; Wed, 31 May 2023 02:15:39 -0700 (PDT)
-Received: by mail-ej1-x629.google.com with SMTP id a640c23a62f3a-969f90d71d4so787555166b.3
-        for <linux-xfs@vger.kernel.org>; Wed, 31 May 2023 02:15:39 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=szeredi.hu; s=google; t=1685524538; x=1688116538;
-        h=cc:to:subject:message-id:date:from:in-reply-to:references
-         :mime-version:from:to:cc:subject:date:message-id:reply-to;
-        bh=T/bYqGFJ4VOGoB5+32Mcq8JR70Vd1T1ITCSeV7/3ifk=;
-        b=UZJgvu6uIJY01EjK7iQN8XWB6pp1lB8CKfw+N0J9F6PgtqlKRqH1SLE+0gJUsS//CY
-         frv0e589K6FPUxK3WlywVEVU5EIXgi5CrlyDlCnTpxW2lWKTjmwY/duejSbBA4/xINGF
-         cl9p3WvJMPfMA2wH+RIqqUtbNfejKb30vQfU0=
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20221208; t=1685524538; x=1688116538;
-        h=cc:to:subject:message-id:date:from:in-reply-to:references
-         :mime-version:x-gm-message-state:from:to:cc:subject:date:message-id
-         :reply-to;
-        bh=T/bYqGFJ4VOGoB5+32Mcq8JR70Vd1T1ITCSeV7/3ifk=;
-        b=Fw94DogXsKr8ATnLT1n/QDshQYpK/XPIoJx1omyr1TXTn12QEQz8kMnPktC9m4ZmY9
-         dSyCEJT2s/dJ5rvfIhPpXhvZynVOD4aoXCb6sIhRSwcJHBPP0tK1Ainaq0rD8ey6kz0t
-         X6bWAtDcn8WKSE+49QTxgzPj1WcQAYqzqxGH3ANSeH/LhrWIp9bRzjCQxofdoJnm8V6E
-         2XZJP5R3qQ+SgnBLV8xfKQaL6u5wgMvx5N7IjJaai/JAwBCwfzwGNNxw5rQi3DjCat72
-         +/A3Yw81WHJn2gBRFIAZwfk/PPezdtA9B2KhsyvSKm4Msuow6MhkSVkmwnLpzI95aPcu
-         IpRQ==
-X-Gm-Message-State: AC+VfDwpA9ZIBjzvhJ665nQ2XxWLQr+6Ns3gkLoojZMAdVN6JtT1vNYi
-        JpBxaHNKqm5S7l960zxPUU0MoXRG87TFIxAsm1ygCg==
-X-Google-Smtp-Source: ACHHUZ4+FWciM8qyJY0wuGopESAGDBSeuypok3sj/I3YbiV8yhFjyVDeVyjcnaAR9QRVCUk4jCbe3rFAcVDPPt68Cvo=
-X-Received: by 2002:a17:906:9756:b0:967:21:5887 with SMTP id
- o22-20020a170906975600b0096700215887mr4163471ejy.40.1685524538465; Wed, 31
- May 2023 02:15:38 -0700 (PDT)
+        with ESMTP id S235767AbjEaKEU (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 31 May 2023 06:04:20 -0400
+X-Greylist: delayed 359 seconds by postgrey-1.37 at lindbergh.monkeyblade.net; Wed, 31 May 2023 03:04:18 PDT
+Received: from out-50.mta0.migadu.com (out-50.mta0.migadu.com [IPv6:2001:41d0:1004:224b::32])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C3A8B9F
+        for <linux-xfs@vger.kernel.org>; Wed, 31 May 2023 03:04:18 -0700 (PDT)
+X-Report-Abuse: Please report any abuse attempt to abuse@migadu.com and include these headers.
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.dev; s=key1;
+        t=1685527104;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=ZzyzkXd70pYEdWJhGutN+U1hmZmD/p5d/wpcM6Ajy+8=;
+        b=ZihWgnR2scrQOnB2k5nDPiR/oFSAGcE5oxTl8DJZlC6c35SkDHP860/TT0nEoqYq/lrcq1
+        d6CKRaCpb2dkgODgBX/qkpML3eCN0n5h1kziLNHv4ErGYZOVxBG6L8XG40g2Y8QxSO+u0s
+        Pr9f8hmxkoCyCfWi4RAZ5pmhxQ/yWCA=
+From:   Qi Zheng <qi.zheng@linux.dev>
+To:     akpm@linux-foundation.org, tkhai@ya.ru, roman.gushchin@linux.dev,
+        vbabka@suse.cz, viro@zeniv.linux.org.uk, brauner@kernel.org,
+        djwong@kernel.org, hughd@google.com, paulmck@kernel.org,
+        muchun.song@linux.dev
+Cc:     linux-mm@kvack.org, linux-fsdevel@vger.kernel.org,
+        linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org,
+        Qi Zheng <zhengqi.arch@bytedance.com>
+Subject: [PATCH 2/8] mm: vmscan: split unregister_shrinker()
+Date:   Wed, 31 May 2023 09:57:36 +0000
+Message-Id: <20230531095742.2480623-3-qi.zheng@linux.dev>
+In-Reply-To: <20230531095742.2480623-1-qi.zheng@linux.dev>
+References: <20230531095742.2480623-1-qi.zheng@linux.dev>
 MIME-Version: 1.0
-References: <20230531075026.480237-1-hch@lst.de> <20230531075026.480237-10-hch@lst.de>
-In-Reply-To: <20230531075026.480237-10-hch@lst.de>
-From:   Miklos Szeredi <miklos@szeredi.hu>
-Date:   Wed, 31 May 2023 11:15:27 +0200
-Message-ID: <CAJfpegtPM_=3uGdxxkb9xP8LVg5P0Lm-w4TNLYhw+MqcNi8c1g@mail.gmail.com>
-Subject: Re: [PATCH 09/12] fs: factor out a direct_write_fallback helper
-To:     Christoph Hellwig <hch@lst.de>
-Cc:     Matthew Wilcox <willy@infradead.org>, Jens Axboe <axboe@kernel.dk>,
-        Xiubo Li <xiubli@redhat.com>,
-        Ilya Dryomov <idryomov@gmail.com>,
-        Alexander Viro <viro@zeniv.linux.org.uk>,
-        Christian Brauner <brauner@kernel.org>,
-        "Theodore Ts'o" <tytso@mit.edu>, Jaegeuk Kim <jaegeuk@kernel.org>,
-        Chao Yu <chao@kernel.org>,
-        Andreas Gruenbacher <agruenba@redhat.com>,
-        "Darrick J. Wong" <djwong@kernel.org>,
-        Trond Myklebust <trond.myklebust@hammerspace.com>,
-        Anna Schumaker <anna@kernel.org>,
-        Damien Le Moal <dlemoal@kernel.org>,
-        Andrew Morton <akpm@linux-foundation.org>,
-        linux-block@vger.kernel.org, ceph-devel@vger.kernel.org,
-        linux-fsdevel@vger.kernel.org, linux-ext4@vger.kernel.org,
-        linux-f2fs-devel@lists.sourceforge.net, cluster-devel@redhat.com,
-        linux-xfs@vger.kernel.org, linux-nfs@vger.kernel.org,
-        linux-mm@kvack.org
-Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 8bit
+X-Migadu-Flow: FLOW_OUT
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Wed, 31 May 2023 at 09:50, Christoph Hellwig <hch@lst.de> wrote:
->
-> Add a helper dealing with handling the syncing of a buffered write fallback
-> for direct I/O.
->
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
+From: Kirill Tkhai <tkhai@ya.ru>
 
-Reviewed-by: Miklos Szeredi <mszeredi@redhat.com>
+This and the next patches in this series aim to make
+time effect of synchronize_srcu() invisible for user.
+The patch splits unregister_shrinker() in two functions:
+
+	unregister_shrinker_delayed_initiate()
+	unregister_shrinker_delayed_finalize()
+
+and shrinker users may make the second of them to be called
+asynchronous (e.g., from workqueue). Next patches make
+superblock shrinker to follow this way, so user-visible
+umount() time won't contain delays from synchronize_srcu().
+
+Signed-off-by: Kirill Tkhai <tkhai@ya.ru>
+Signed-off-by: Qi Zheng <zhengqi.arch@bytedance.com>
+---
+ include/linux/shrinker.h |  2 ++
+ mm/vmscan.c              | 22 ++++++++++++++++++----
+ 2 files changed, 20 insertions(+), 4 deletions(-)
+
+diff --git a/include/linux/shrinker.h b/include/linux/shrinker.h
+index 224293b2dd06..e9d5a19d83fe 100644
+--- a/include/linux/shrinker.h
++++ b/include/linux/shrinker.h
+@@ -102,6 +102,8 @@ extern void register_shrinker_prepared(struct shrinker *shrinker);
+ extern int __printf(2, 3) register_shrinker(struct shrinker *shrinker,
+ 					    const char *fmt, ...);
+ extern void unregister_shrinker(struct shrinker *shrinker);
++extern void unregister_shrinker_delayed_initiate(struct shrinker *shrinker);
++extern void unregister_shrinker_delayed_finalize(struct shrinker *shrinker);
+ extern void free_prealloced_shrinker(struct shrinker *shrinker);
+ extern void synchronize_shrinkers(void);
+ 
+diff --git a/mm/vmscan.c b/mm/vmscan.c
+index a773e97e152e..baf8d2327d70 100644
+--- a/mm/vmscan.c
++++ b/mm/vmscan.c
+@@ -799,10 +799,7 @@ int register_shrinker(struct shrinker *shrinker, const char *fmt, ...)
+ #endif
+ EXPORT_SYMBOL(register_shrinker);
+ 
+-/*
+- * Remove one
+- */
+-void unregister_shrinker(struct shrinker *shrinker)
++void unregister_shrinker_delayed_initiate(struct shrinker *shrinker)
+ {
+ 	struct dentry *debugfs_entry;
+ 	int debugfs_id;
+@@ -819,6 +816,13 @@ void unregister_shrinker(struct shrinker *shrinker)
+ 	mutex_unlock(&shrinker_mutex);
+ 
+ 	shrinker_debugfs_remove(debugfs_entry, debugfs_id);
++}
++EXPORT_SYMBOL(unregister_shrinker_delayed_initiate);
++
++void unregister_shrinker_delayed_finalize(struct shrinker *shrinker)
++{
++	if (!shrinker->nr_deferred)
++		return;
+ 
+ 	atomic_inc(&shrinker_srcu_generation);
+ 	synchronize_srcu(&shrinker_srcu);
+@@ -826,6 +830,16 @@ void unregister_shrinker(struct shrinker *shrinker)
+ 	kfree(shrinker->nr_deferred);
+ 	shrinker->nr_deferred = NULL;
+ }
++EXPORT_SYMBOL(unregister_shrinker_delayed_finalize);
++
++/*
++ * Remove one
++ */
++void unregister_shrinker(struct shrinker *shrinker)
++{
++	unregister_shrinker_delayed_initiate(shrinker);
++	unregister_shrinker_delayed_finalize(shrinker);
++}
+ EXPORT_SYMBOL(unregister_shrinker);
+ 
+ /**
+-- 
+2.30.2
+
