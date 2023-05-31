@@ -2,61 +2,118 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 10688C77B7C
-	for <linux-xfs@archiver.kernel.org>; Wed, 31 May 2023 07:50:40 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2327BC87FDD
+	for <linux-xfs@archiver.kernel.org>; Wed, 31 May 2023 07:50:52 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234777AbjEaHuI (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 31 May 2023 03:50:08 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53660 "EHLO
+        id S234809AbjEaHut (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 31 May 2023 03:50:49 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54272 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S234853AbjEaHt5 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 31 May 2023 03:49:57 -0400
-X-Greylist: delayed 397 seconds by postgrey-1.37 at lindbergh.monkeyblade.net; Wed, 31 May 2023 00:49:56 PDT
-Received: from mail.durme.pl (mail.durme.pl [217.182.69.186])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1373293
-        for <linux-xfs@vger.kernel.org>; Wed, 31 May 2023 00:49:56 -0700 (PDT)
-Received: by mail.durme.pl (Postfix, from userid 1002)
-        id C51194A407; Wed, 31 May 2023 07:41:56 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=durme.pl; s=mail;
-        t=1685518997; bh=hFxZwVw4rIL+JwfEOGI47p+fdoVOAeqVswP6NWoHSHQ=;
-        h=Date:From:To:Subject:From;
-        b=olLQEgPen1bISI64jAO12ifnyxF9WHlff2KKuqL8Fzijna0e7jMIHJyko67tjxq6H
-         BcpPM8VlN+VW7qxEszJxjWTpigKncozSNZRaqon0mUguEFOyXvA4BAGmA763XieUDk
-         9xCrv41uZ5XL+aLEBRF+kZTMMAHGy4w6V7f7gee0uv4rGLG7MPBlKVzmHSGN2yFpBR
-         lXFoIiy83YlGOIwQxF7S0C1H4YF+0CbKXGwa+bBhCwKvtcEO/780tMt2FwMbwdhscF
-         gTi3He4O1TxoFkUhr4Yu+yDTgB5/PIcC0g0bbzN/irqMfBEThSlVwwXCXh0sz0i2vj
-         XzbRS3OGis0pQ==
-Received: by mail.durme.pl for <linux-xfs@vger.kernel.org>; Wed, 31 May 2023 07:41:00 GMT
-Message-ID: <20230531064500-0.1.28.9jir.0.hm1nbo975e@durme.pl>
-Date:   Wed, 31 May 2023 07:41:00 GMT
-From:   "Krystian Wieczorek" <krystian.wieczorek@durme.pl>
-To:     <linux-xfs@vger.kernel.org>
-Subject: W sprawie samochodu
-X-Mailer: mail.durme.pl
+        with ESMTP id S234790AbjEaHur (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 31 May 2023 03:50:47 -0400
+Received: from bombadil.infradead.org (bombadil.infradead.org [IPv6:2607:7c80:54:3::133])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 64CF4A0;
+        Wed, 31 May 2023 00:50:42 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=infradead.org; s=bombadil.20210309; h=Content-Transfer-Encoding:
+        MIME-Version:References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:Sender
+        :Reply-To:Content-Type:Content-ID:Content-Description;
+        bh=1AhsMC0b8Le+Qj8+/F9cJR6e5GLVWYekas+17NCVqqI=; b=uBZ06PKZz56TQZNDL5Rj3l6Ywk
+        8hDrBqiUGVvcnLZ96e4rBnJsLigvjBlDrb+OYi7cBk6/wm2sE/xqKs9swjM2jJO8KETrxs76khtQn
+        d4fOq3XMAndT05YkXMtMyms1Rsmq2g6bjt9chnJpDEJD189AC84uz33pb6ILpz/E0Uu5VJpMDXTn8
+        011Ez/C8z4tcneQxI80elWP3wXIRS7ELykiDvQUu4E0BsYMRyDtEDdmmAoHwPe65nRDwYtKcQRJ5P
+        /46jPJjoSfx7uXd345WSwgi6WauS6l+vXHFNg0/2Uh4xvlWFw/Q0ltbf1G6Q7gUX0QwJ4yFOYjWg8
+        hmquvfyA==;
+Received: from [2001:4bb8:182:6d06:f5c3:53d7:b5aa:b6a7] (helo=localhost)
+        by bombadil.infradead.org with esmtpsa (Exim 4.96 #2 (Red Hat Linux))
+        id 1q4GbK-00GVnQ-2g;
+        Wed, 31 May 2023 07:50:35 +0000
+From:   Christoph Hellwig <hch@lst.de>
+To:     Matthew Wilcox <willy@infradead.org>
+Cc:     Jens Axboe <axboe@kernel.dk>, Xiubo Li <xiubli@redhat.com>,
+        Ilya Dryomov <idryomov@gmail.com>,
+        Alexander Viro <viro@zeniv.linux.org.uk>,
+        Christian Brauner <brauner@kernel.org>,
+        "Theodore Ts'o" <tytso@mit.edu>, Jaegeuk Kim <jaegeuk@kernel.org>,
+        Chao Yu <chao@kernel.org>, Miklos Szeredi <miklos@szeredi.hu>,
+        Andreas Gruenbacher <agruenba@redhat.com>,
+        "Darrick J. Wong" <djwong@kernel.org>,
+        Trond Myklebust <trond.myklebust@hammerspace.com>,
+        Anna Schumaker <anna@kernel.org>,
+        Damien Le Moal <dlemoal@kernel.org>,
+        Andrew Morton <akpm@linux-foundation.org>,
+        linux-block@vger.kernel.org, ceph-devel@vger.kernel.org,
+        linux-fsdevel@vger.kernel.org, linux-ext4@vger.kernel.org,
+        linux-f2fs-devel@lists.sourceforge.net, cluster-devel@redhat.com,
+        linux-xfs@vger.kernel.org, linux-nfs@vger.kernel.org,
+        linux-mm@kvack.org, Hannes Reinecke <hare@suse.de>
+Subject: [PATCH 02/12] iomap: update ki_pos a little later in iomap_dio_complete
+Date:   Wed, 31 May 2023 09:50:16 +0200
+Message-Id: <20230531075026.480237-3-hch@lst.de>
+X-Mailer: git-send-email 2.39.2
+In-Reply-To: <20230531075026.480237-1-hch@lst.de>
+References: <20230531075026.480237-1-hch@lst.de>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Content-Transfer-Encoding: 8bit
+X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Dzie=C5=84 dobry,
+Move the ki_pos update down a bit to prepare for a better common
+helper that invalidates pages based of an iocb.
 
-chcieliby=C5=9Bmy zapewni=C4=87 Pa=C5=84stwu kompleksowe rozwi=C4=85zania=
-, je=C5=9Bli chodzi o system monitoringu GPS.
+Signed-off-by: Christoph Hellwig <hch@lst.de>
+Reviewed-by: Damien Le Moal <dlemoal@kernel.org>
+Reviewed-by: Hannes Reinecke <hare@suse.de>
+Reviewed-by: Darrick J. Wong <djwong@kernel.org>
+---
+ fs/iomap/direct-io.c | 21 +++++++++++----------
+ 1 file changed, 11 insertions(+), 10 deletions(-)
 
-Precyzyjne monitorowanie pojazd=C3=B3w na mapach cyfrowych, =C5=9Bledzeni=
-e ich parametr=C3=B3w eksploatacyjnych w czasie rzeczywistym oraz kontrol=
-a paliwa to kluczowe funkcjonalno=C5=9Bci naszego systemu.=20
+diff --git a/fs/iomap/direct-io.c b/fs/iomap/direct-io.c
+index 019cc87d0fb339..6207a59d2162e1 100644
+--- a/fs/iomap/direct-io.c
++++ b/fs/iomap/direct-io.c
+@@ -94,7 +94,6 @@ ssize_t iomap_dio_complete(struct iomap_dio *dio)
+ 		if (offset + ret > dio->i_size &&
+ 		    !(dio->flags & IOMAP_DIO_WRITE))
+ 			ret = dio->i_size - offset;
+-		iocb->ki_pos += ret;
+ 	}
+ 
+ 	/*
+@@ -120,19 +119,21 @@ ssize_t iomap_dio_complete(struct iomap_dio *dio)
+ 	}
+ 
+ 	inode_dio_end(file_inode(iocb->ki_filp));
+-	/*
+-	 * If this is a DSYNC write, make sure we push it to stable storage now
+-	 * that we've written data.
+-	 */
+-	if (ret > 0 && (dio->flags & IOMAP_DIO_NEED_SYNC))
+-		ret = generic_write_sync(iocb, ret);
+ 
+-	if (ret > 0)
+-		ret += dio->done_before;
++	if (ret > 0) {
++		iocb->ki_pos += ret;
+ 
++		/*
++		 * If this is a DSYNC write, make sure we push it to stable
++		 * storage now that we've written data.
++		 */
++		if (dio->flags & IOMAP_DIO_NEED_SYNC)
++			ret = generic_write_sync(iocb, ret);
++		if (ret > 0)
++			ret += dio->done_before;
++	}
+ 	trace_iomap_dio_complete(iocb, dio->error, ret);
+ 	kfree(dio);
+-
+ 	return ret;
+ }
+ EXPORT_SYMBOL_GPL(iomap_dio_complete);
+-- 
+2.39.2
 
-Organizowanie pracy pracownik=C3=B3w jest dzi=C4=99ki temu prostsze i bar=
-dziej efektywne, a oszcz=C4=99dno=C5=9Bci i optymalizacja w zakresie pono=
-szonych koszt=C3=B3w, maj=C4=85 dla ka=C5=BCdego przedsi=C4=99biorcy ogro=
-mne znaczenie.
-
-Dopasujemy nasz=C4=85 ofert=C4=99 do Pa=C5=84stwa oczekiwa=C5=84 i potrze=
-b organizacji. Czy mogliby=C5=9Bmy porozmawia=C4=87 o naszej propozycji?
-
-
-Pozdrawiam
-Krystian Wieczorek
