@@ -2,184 +2,61 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E524BC7EE2F
-	for <linux-xfs@archiver.kernel.org>; Wed, 31 May 2023 07:21:28 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 10688C77B7C
+	for <linux-xfs@archiver.kernel.org>; Wed, 31 May 2023 07:50:40 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234602AbjEaHV1 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 31 May 2023 03:21:27 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33766 "EHLO
+        id S234777AbjEaHuI (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 31 May 2023 03:50:08 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53660 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S234143AbjEaHU5 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 31 May 2023 03:20:57 -0400
-Received: from bombadil.infradead.org (bombadil.infradead.org [IPv6:2607:7c80:54:3::133])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7E74B19C;
-        Wed, 31 May 2023 00:20:39 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=infradead.org; s=bombadil.20210309; h=Content-Transfer-Encoding:
-        MIME-Version:References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:Sender
-        :Reply-To:Content-Type:Content-ID:Content-Description;
-        bh=+TlwHQVmCcfSC9sL9si103D1qv7dfudCnmtDuQc976U=; b=GArYrnZpd4OZAs3xbif7+d7vqx
-        1Epxi2mxm3ip8SMuY4TSJYoZrVYNpe2qUyfEyPBIbs7ZP+YugOxkFqIeToOTmGhfq0A6McJ6nGNIL
-        ZvBgXgzRvw4K16aeaqXagkmXbjzhbc3gjcxGYVTl3zCXHVmLMCG4u3ssO6xd/AyVAAc/T/Px6RA5K
-        v9jqxkE2QuGNdw9Xm14krIBUUx6tDjepzsbzBGhTd/VsKffWs+ifjGCyax3OvF+8V3llDWnx2+M/a
-        3NggQtSHRBgxloKcjNBUvLBOJTXPLVWsAHcgCcYkZTj75LY/GK1DdVBVnTid2lzQJrmUUzl215JmJ
-        DBaU6RCg==;
-Received: from [2001:4bb8:182:6d06:f5c3:53d7:b5aa:b6a7] (helo=localhost)
-        by bombadil.infradead.org with esmtpsa (Exim 4.96 #2 (Red Hat Linux))
-        id 1q4G8E-00GPmA-2F;
-        Wed, 31 May 2023 07:20:31 +0000
-From:   Christoph Hellwig <hch@lst.de>
-To:     Matthew Wilcox <willy@infradead.org>
-Cc:     Jens Axboe <axboe@kernel.dk>, Xiubo Li <xiubli@redhat.com>,
-        Ilya Dryomov <idryomov@gmail.com>,
-        Alexander Viro <viro@zeniv.linux.org.uk>,
-        Christian Brauner <brauner@kernel.org>,
-        "Theodore Ts'o" <tytso@mit.edu>, Jaegeuk Kim <jaegeuk@kernel.org>,
-        Chao Yu <chao@kernel.org>, Miklos Szeredi <miklos@szeredi.hu>,
-        Andreas Gruenbacher <agruenba@redhat.com>,
-        "Darrick J. Wong" <djwong@kernel.org>,
-        Trond Myklebust <trond.myklebust@hammerspace.com>,
-        Anna Schumaker <anna@kernel.org>,
-        Damien Le Moal <dlemoal@kernel.org>,
-        Andrew Morton <akpm@linux-foundation.org>,
-        linux-block@vger.kernel.org, ceph-devel@vger.kernel.org,
-        linux-fsdevel@vger.kernel.org, linux-ext4@vger.kernel.org,
-        linux-f2fs-devel@lists.sourceforge.net, cluster-devel@redhat.com,
-        linux-xfs@vger.kernel.org, linux-nfs@vger.kernel.org,
-        linux-mm@kvack.org, Hannes Reinecke <hare@suse.de>
-Subject: [PATCH 8/8] iomap: use kiocb_write_and_wait and kiocb_invalidate_pages
-Date:   Wed, 31 May 2023 09:20:06 +0200
-Message-Id: <20230531072006.476386-9-hch@lst.de>
-X-Mailer: git-send-email 2.39.2
-In-Reply-To: <20230531072006.476386-1-hch@lst.de>
-References: <20230531072006.476386-1-hch@lst.de>
+        with ESMTP id S234853AbjEaHt5 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 31 May 2023 03:49:57 -0400
+X-Greylist: delayed 397 seconds by postgrey-1.37 at lindbergh.monkeyblade.net; Wed, 31 May 2023 00:49:56 PDT
+Received: from mail.durme.pl (mail.durme.pl [217.182.69.186])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1373293
+        for <linux-xfs@vger.kernel.org>; Wed, 31 May 2023 00:49:56 -0700 (PDT)
+Received: by mail.durme.pl (Postfix, from userid 1002)
+        id C51194A407; Wed, 31 May 2023 07:41:56 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=durme.pl; s=mail;
+        t=1685518997; bh=hFxZwVw4rIL+JwfEOGI47p+fdoVOAeqVswP6NWoHSHQ=;
+        h=Date:From:To:Subject:From;
+        b=olLQEgPen1bISI64jAO12ifnyxF9WHlff2KKuqL8Fzijna0e7jMIHJyko67tjxq6H
+         BcpPM8VlN+VW7qxEszJxjWTpigKncozSNZRaqon0mUguEFOyXvA4BAGmA763XieUDk
+         9xCrv41uZ5XL+aLEBRF+kZTMMAHGy4w6V7f7gee0uv4rGLG7MPBlKVzmHSGN2yFpBR
+         lXFoIiy83YlGOIwQxF7S0C1H4YF+0CbKXGwa+bBhCwKvtcEO/780tMt2FwMbwdhscF
+         gTi3He4O1TxoFkUhr4Yu+yDTgB5/PIcC0g0bbzN/irqMfBEThSlVwwXCXh0sz0i2vj
+         XzbRS3OGis0pQ==
+Received: by mail.durme.pl for <linux-xfs@vger.kernel.org>; Wed, 31 May 2023 07:41:00 GMT
+Message-ID: <20230531064500-0.1.28.9jir.0.hm1nbo975e@durme.pl>
+Date:   Wed, 31 May 2023 07:41:00 GMT
+From:   "Krystian Wieczorek" <krystian.wieczorek@durme.pl>
+To:     <linux-xfs@vger.kernel.org>
+Subject: W sprawie samochodu
+X-Mailer: mail.durme.pl
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Use the common helpers for direct I/O page invalidation instead of
-open coding the logic.  This leads to a slight reordering of checks
-in __iomap_dio_rw to keep the logic straight.
+Dzie=C5=84 dobry,
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
-Reviewed-by: Damien Le Moal <dlemoal@kernel.org>
-Reviewed-by: Hannes Reinecke <hare@suse.de>
-Reviewed-by: Darrick J. Wong <djwong@kernel.org>
----
- fs/iomap/direct-io.c | 55 ++++++++++++++++----------------------------
- 1 file changed, 20 insertions(+), 35 deletions(-)
+chcieliby=C5=9Bmy zapewni=C4=87 Pa=C5=84stwu kompleksowe rozwi=C4=85zania=
+, je=C5=9Bli chodzi o system monitoringu GPS.
 
-diff --git a/fs/iomap/direct-io.c b/fs/iomap/direct-io.c
-index 0795c54a745bca..6bd14691f96e07 100644
---- a/fs/iomap/direct-io.c
-+++ b/fs/iomap/direct-io.c
-@@ -472,7 +472,6 @@ __iomap_dio_rw(struct kiocb *iocb, struct iov_iter *iter,
- 		const struct iomap_ops *ops, const struct iomap_dio_ops *dops,
- 		unsigned int dio_flags, void *private, size_t done_before)
- {
--	struct address_space *mapping = iocb->ki_filp->f_mapping;
- 	struct inode *inode = file_inode(iocb->ki_filp);
- 	struct iomap_iter iomi = {
- 		.inode		= inode,
-@@ -481,11 +480,11 @@ __iomap_dio_rw(struct kiocb *iocb, struct iov_iter *iter,
- 		.flags		= IOMAP_DIRECT,
- 		.private	= private,
- 	};
--	loff_t end = iomi.pos + iomi.len - 1, ret = 0;
- 	bool wait_for_completion =
- 		is_sync_kiocb(iocb) || (dio_flags & IOMAP_DIO_FORCE_WAIT);
- 	struct blk_plug plug;
- 	struct iomap_dio *dio;
-+	loff_t ret = 0;
- 
- 	trace_iomap_dio_rw_begin(iocb, iter, dio_flags, done_before);
- 
-@@ -509,31 +508,29 @@ __iomap_dio_rw(struct kiocb *iocb, struct iov_iter *iter,
- 	dio->submit.waiter = current;
- 	dio->submit.poll_bio = NULL;
- 
-+	if (iocb->ki_flags & IOCB_NOWAIT)
-+		iomi.flags |= IOMAP_NOWAIT;
-+
- 	if (iov_iter_rw(iter) == READ) {
- 		if (iomi.pos >= dio->i_size)
- 			goto out_free_dio;
- 
--		if (iocb->ki_flags & IOCB_NOWAIT) {
--			if (filemap_range_needs_writeback(mapping, iomi.pos,
--					end)) {
--				ret = -EAGAIN;
--				goto out_free_dio;
--			}
--			iomi.flags |= IOMAP_NOWAIT;
--		}
--
- 		if (user_backed_iter(iter))
- 			dio->flags |= IOMAP_DIO_DIRTY;
-+
-+		ret = kiocb_write_and_wait(iocb, iomi.len);
-+		if (ret)
-+			goto out_free_dio;
- 	} else {
- 		iomi.flags |= IOMAP_WRITE;
- 		dio->flags |= IOMAP_DIO_WRITE;
- 
--		if (iocb->ki_flags & IOCB_NOWAIT) {
--			if (filemap_range_has_page(mapping, iomi.pos, end)) {
--				ret = -EAGAIN;
-+		if (dio_flags & IOMAP_DIO_OVERWRITE_ONLY) {
-+			ret = -EAGAIN;
-+			if (iomi.pos >= dio->i_size ||
-+			    iomi.pos + iomi.len > dio->i_size)
- 				goto out_free_dio;
--			}
--			iomi.flags |= IOMAP_NOWAIT;
-+			iomi.flags |= IOMAP_OVERWRITE_ONLY;
- 		}
- 
- 		/* for data sync or sync, we need sync completion processing */
-@@ -549,31 +546,19 @@ __iomap_dio_rw(struct kiocb *iocb, struct iov_iter *iter,
- 			if (!(iocb->ki_flags & IOCB_SYNC))
- 				dio->flags |= IOMAP_DIO_WRITE_FUA;
- 		}
--	}
--
--	if (dio_flags & IOMAP_DIO_OVERWRITE_ONLY) {
--		ret = -EAGAIN;
--		if (iomi.pos >= dio->i_size ||
--		    iomi.pos + iomi.len > dio->i_size)
--			goto out_free_dio;
--		iomi.flags |= IOMAP_OVERWRITE_ONLY;
--	}
- 
--	ret = filemap_write_and_wait_range(mapping, iomi.pos, end);
--	if (ret)
--		goto out_free_dio;
--
--	if (iov_iter_rw(iter) == WRITE) {
- 		/*
- 		 * Try to invalidate cache pages for the range we are writing.
- 		 * If this invalidation fails, let the caller fall back to
- 		 * buffered I/O.
- 		 */
--		if (invalidate_inode_pages2_range(mapping,
--				iomi.pos >> PAGE_SHIFT, end >> PAGE_SHIFT)) {
--			trace_iomap_dio_invalidate_fail(inode, iomi.pos,
--							iomi.len);
--			ret = -ENOTBLK;
-+		ret = kiocb_invalidate_pages(iocb, iomi.len);
-+		if (ret) {
-+			if (ret != -EAGAIN) {
-+				trace_iomap_dio_invalidate_fail(inode, iomi.pos,
-+								iomi.len);
-+				ret = -ENOTBLK;
-+			}
- 			goto out_free_dio;
- 		}
- 
--- 
-2.39.2
+Precyzyjne monitorowanie pojazd=C3=B3w na mapach cyfrowych, =C5=9Bledzeni=
+e ich parametr=C3=B3w eksploatacyjnych w czasie rzeczywistym oraz kontrol=
+a paliwa to kluczowe funkcjonalno=C5=9Bci naszego systemu.=20
 
+Organizowanie pracy pracownik=C3=B3w jest dzi=C4=99ki temu prostsze i bar=
+dziej efektywne, a oszcz=C4=99dno=C5=9Bci i optymalizacja w zakresie pono=
+szonych koszt=C3=B3w, maj=C4=85 dla ka=C5=BCdego przedsi=C4=99biorcy ogro=
+mne znaczenie.
+
+Dopasujemy nasz=C4=85 ofert=C4=99 do Pa=C5=84stwa oczekiwa=C5=84 i potrze=
+b organizacji. Czy mogliby=C5=9Bmy porozmawia=C4=87 o naszej propozycji?
+
+
+Pozdrawiam
+Krystian Wieczorek
