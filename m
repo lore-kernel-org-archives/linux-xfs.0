@@ -2,128 +2,145 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2CAF6C7EE23
-	for <linux-xfs@archiver.kernel.org>; Wed, 31 May 2023 21:30:36 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C1B52C7EE23
+	for <linux-xfs@archiver.kernel.org>; Wed, 31 May 2023 22:57:41 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229521AbjEaVaf (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 31 May 2023 17:30:35 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38186 "EHLO
+        id S230177AbjEaW5k (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 31 May 2023 18:57:40 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60260 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229484AbjEaVae (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 31 May 2023 17:30:34 -0400
-Received: from mail-yb1-xb33.google.com (mail-yb1-xb33.google.com [IPv6:2607:f8b0:4864:20::b33])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id BFD501A5
-        for <linux-xfs@vger.kernel.org>; Wed, 31 May 2023 14:30:07 -0700 (PDT)
-Received: by mail-yb1-xb33.google.com with SMTP id 3f1490d57ef6-ba1815e12efso77115276.3
-        for <linux-xfs@vger.kernel.org>; Wed, 31 May 2023 14:30:07 -0700 (PDT)
+        with ESMTP id S229672AbjEaW5k (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 31 May 2023 18:57:40 -0400
+Received: from mail-oa1-x29.google.com (mail-oa1-x29.google.com [IPv6:2001:4860:4864:20::29])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E4C5F95
+        for <linux-xfs@vger.kernel.org>; Wed, 31 May 2023 15:57:38 -0700 (PDT)
+Received: by mail-oa1-x29.google.com with SMTP id 586e51a60fabf-1a208e249e3so345374fac.2
+        for <linux-xfs@vger.kernel.org>; Wed, 31 May 2023 15:57:38 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20221208; t=1685568603; x=1688160603;
-        h=to:subject:message-id:date:from:mime-version:from:to:cc:subject
-         :date:message-id:reply-to;
-        bh=97KPdziRgY2DYFT+BtnYBVgMhbdu7cgPl6xNPpa2Mtc=;
-        b=ZMlIR6r29VRr9aPfahQu8lYD82h2FIiOGPzrFUa09mcWC2K+mXkMQ1z/e5nz+eb0Nb
-         EupGWHH0yxZCAqjxPOhCaZ1lvnUCg6lUKaGlcqHVCd6vSOFwfcLmn7DvOr+ckWUDDVbg
-         k6gay445tXjauyST+6RAdM2qGExFJYUXHOHAnFaOmfT378MkDeSehx9XhWpu3GRf5d6R
-         gyfd8hgBVxRmfu8bhGUMxh5ay2XPfPs2fARNgJiKZricXd2yrWhyReqItXqfYQa93RfR
-         v6d7D0ydVN/f/0dRJfFlWfC2HJ15Kif0VYzsuisdlFWKNTsNRfX5twhUlPIynbJZvN2p
-         VT7w==
+        d=fromorbit-com.20221208.gappssmtp.com; s=20221208; t=1685573858; x=1688165858;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
+        bh=Hu0DKnynpdBIeYnyWz2HVJfbhb3koTdW7dRzhdCwkpE=;
+        b=C+vo8MF6j6b26zd/kzN7FloSBAwgpYOfsZzLbtMx0PS/lge+w0N9lHeWtQY7X36TYm
+         cF1mChKOnlQYeDMXZhoZVhC9hMmlz8Q26FJzvKc0cxBqc8YIVIziVwzJTHdEJoIKO7rm
+         1MIELHU0YEvn0Dz26LPsqCWVIBn9kif+HqJ8iEzx9/Xg0kNl3HBBoheSivZ5R0+rIoq4
+         TYsoDTwG3PsPYiwkS3pDVby4KnLVifMBamUTJQkOjcVerkyaElp8UdqIvs0M9b3mdtYH
+         h7BIkdD70b8bmxMd+aqnnDTW4VG9sj4r6ckkbI5SWgZBdY0rKk4aumSdAahQfoVXqntH
+         pG8Q==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20221208; t=1685568603; x=1688160603;
-        h=to:subject:message-id:date:from:mime-version:x-gm-message-state
-         :from:to:cc:subject:date:message-id:reply-to;
-        bh=97KPdziRgY2DYFT+BtnYBVgMhbdu7cgPl6xNPpa2Mtc=;
-        b=M4/EoJlBC/e/h3t2CfvEBBnEHfF8S1D0QT3BJczplTPeaoqkctVgDj+7JAMiiIQ4Sa
-         MFusOq4CLeS6/J0H/6lmvHZqghJr+CQ67RbmtUivYqL0NF9XbYGUECOb0FGWts8MTCq8
-         bPTUHTinXCYrndwOfT9x2DdkEULeLvQbHnOBjHdHfd/xkoLMPVb/YvVO45IcRSwtbQdv
-         Mdnr+xiCnTzZth95HIlBEnhBJPycdx6tJQpRkjC9GOhJmWe2tdPZEt3lXG/ST8xkofOt
-         sQ3kwEhKBCoeE2q87CTQHtMx/R0mdCtHqNDGn3Qqdo3wkmcybw6w2Hi9cX3mY8+jHlID
-         5n6w==
-X-Gm-Message-State: AC+VfDyUZtXbcMssAudUc6VjZnhznYoi0/WQGxbUBGZRnDGeCNQEpaq7
-        N9eDBbjFl7Vhdz/PRsrwXEyay8evgODyjm0lBmC9jDQfX2Q=
-X-Google-Smtp-Source: ACHHUZ4XxD+GSH67zRFn5T3Hv/33KFE7h6jt5m3P8YZYCJTrF2FjEa+6ttycdtJbUhxibE7YzS5tbZbRK3Gohm9yXCc=
-X-Received: by 2002:a25:6e0a:0:b0:bb1:76ca:d1ff with SMTP id
- j10-20020a256e0a000000b00bb176cad1ffmr2042198ybc.20.1685568603480; Wed, 31
- May 2023 14:30:03 -0700 (PDT)
+        d=1e100.net; s=20221208; t=1685573858; x=1688165858;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=Hu0DKnynpdBIeYnyWz2HVJfbhb3koTdW7dRzhdCwkpE=;
+        b=izE3VEzOiu+OPyLr6NPpvqAwdHyG1Rrk+I1IRgSkzyErGe5FS5nPIAbN38J7NBt7Fb
+         02ZdkBJXRn52sYiBhAJcRjpKmQcYpxBvwGMhqIjyF55qNuQo0XrYzSbi6jq/aSfqRnEo
+         ElMYbkESGujKNtX60GHtD8JpvUD0XqFRNOqAuGQZoPUqoz9ZqVpR2LdTEAHmj2y32SHB
+         2N1oif13MG9sZD462XhEV+AfbLBzOGEJloHulPrvOLsvJhjsm/9rMi29GdRnPlgx+INp
+         od2k+0Tg0mBytOSZ3IN3D+tb5WEBB3P/Lysyi60J9otPBpG11MdXmEltNMPtpAD+katv
+         RYNQ==
+X-Gm-Message-State: AC+VfDy1ZdQ6fNHDjEH0VldWWZw5DNvOKSLSK5UkP09by6bG5LaoEaSj
+        upQ7KmiqMNr0ZyfmQUYJeDtDMQ==
+X-Google-Smtp-Source: ACHHUZ7+S8SpNNc9Gy8ZY/8ExdkaNqqUpWjOsfKLh/C3mvnAwfubkjJMA4xthDeXFgyOoB8qNU5WXA==
+X-Received: by 2002:a05:6870:3747:b0:19f:16fc:3c51 with SMTP id a7-20020a056870374700b0019f16fc3c51mr4522675oak.9.1685573858247;
+        Wed, 31 May 2023 15:57:38 -0700 (PDT)
+Received: from dread.disaster.area (pa49-179-0-188.pa.nsw.optusnet.com.au. [49.179.0.188])
+        by smtp.gmail.com with ESMTPSA id x38-20020a634866000000b0053fc6df5895sm1812332pgk.39.2023.05.31.15.57.37
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Wed, 31 May 2023 15:57:37 -0700 (PDT)
+Received: from dave by dread.disaster.area with local (Exim 4.96)
+        (envelope-from <david@fromorbit.com>)
+        id 1q4Ul4-006Hcf-0h;
+        Thu, 01 Jun 2023 08:57:34 +1000
+Date:   Thu, 1 Jun 2023 08:57:34 +1000
+From:   Dave Chinner <david@fromorbit.com>
+To:     Qi Zheng <qi.zheng@linux.dev>
+Cc:     akpm@linux-foundation.org, tkhai@ya.ru, roman.gushchin@linux.dev,
+        vbabka@suse.cz, viro@zeniv.linux.org.uk, brauner@kernel.org,
+        djwong@kernel.org, hughd@google.com, paulmck@kernel.org,
+        muchun.song@linux.dev, linux-mm@kvack.org,
+        linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org,
+        linux-kernel@vger.kernel.org, Qi Zheng <zhengqi.arch@bytedance.com>
+Subject: Re: [PATCH 2/8] mm: vmscan: split unregister_shrinker()
+Message-ID: <ZHfQ3gzFToAfee/d@dread.disaster.area>
+References: <20230531095742.2480623-1-qi.zheng@linux.dev>
+ <20230531095742.2480623-3-qi.zheng@linux.dev>
 MIME-Version: 1.0
-From:   Jianan Wang <wangjianan.zju@gmail.com>
-Date:   Wed, 31 May 2023 14:29:52 -0700
-Message-ID: <CAMj1M42L6hH9weqroQNaWu_SG+Yg8NrAuzgNO1b8jiWPJ2M-5A@mail.gmail.com>
-Subject: Question on the xfs inode slab memory
-To:     linux-xfs@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20230531095742.2480623-3-qi.zheng@linux.dev>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Hi all,
+On Wed, May 31, 2023 at 09:57:36AM +0000, Qi Zheng wrote:
+> From: Kirill Tkhai <tkhai@ya.ru>
+> 
+> This and the next patches in this series aim to make
+> time effect of synchronize_srcu() invisible for user.
+> The patch splits unregister_shrinker() in two functions:
+> 
+> 	unregister_shrinker_delayed_initiate()
+> 	unregister_shrinker_delayed_finalize()
+> 
+> and shrinker users may make the second of them to be called
+> asynchronous (e.g., from workqueue). Next patches make
+> superblock shrinker to follow this way, so user-visible
+> umount() time won't contain delays from synchronize_srcu().
+> 
+> Signed-off-by: Kirill Tkhai <tkhai@ya.ru>
+> Signed-off-by: Qi Zheng <zhengqi.arch@bytedance.com>
+> ---
+>  include/linux/shrinker.h |  2 ++
+>  mm/vmscan.c              | 22 ++++++++++++++++++----
+>  2 files changed, 20 insertions(+), 4 deletions(-)
+> 
+> diff --git a/include/linux/shrinker.h b/include/linux/shrinker.h
+> index 224293b2dd06..e9d5a19d83fe 100644
+> --- a/include/linux/shrinker.h
+> +++ b/include/linux/shrinker.h
+> @@ -102,6 +102,8 @@ extern void register_shrinker_prepared(struct shrinker *shrinker);
+>  extern int __printf(2, 3) register_shrinker(struct shrinker *shrinker,
+>  					    const char *fmt, ...);
+>  extern void unregister_shrinker(struct shrinker *shrinker);
+> +extern void unregister_shrinker_delayed_initiate(struct shrinker *shrinker);
+> +extern void unregister_shrinker_delayed_finalize(struct shrinker *shrinker);
+>  extern void free_prealloced_shrinker(struct shrinker *shrinker);
+>  extern void synchronize_shrinkers(void);
+>  
+> diff --git a/mm/vmscan.c b/mm/vmscan.c
+> index a773e97e152e..baf8d2327d70 100644
+> --- a/mm/vmscan.c
+> +++ b/mm/vmscan.c
+> @@ -799,10 +799,7 @@ int register_shrinker(struct shrinker *shrinker, const char *fmt, ...)
+>  #endif
+>  EXPORT_SYMBOL(register_shrinker);
+>  
+> -/*
+> - * Remove one
+> - */
+> -void unregister_shrinker(struct shrinker *shrinker)
+> +void unregister_shrinker_delayed_initiate(struct shrinker *shrinker)
+>  {
+>  	struct dentry *debugfs_entry;
+>  	int debugfs_id;
+> @@ -819,6 +816,13 @@ void unregister_shrinker(struct shrinker *shrinker)
+>  	mutex_unlock(&shrinker_mutex);
+>  
+>  	shrinker_debugfs_remove(debugfs_entry, debugfs_id);
+> +}
+> +EXPORT_SYMBOL(unregister_shrinker_delayed_initiate);
+> +
+> +void unregister_shrinker_delayed_finalize(struct shrinker *shrinker)
+> +{
+> +	if (!shrinker->nr_deferred)
+> +		return;
 
-I have a question regarding the xfs slab memory usage when operating a
-filesystem with 1-2 billion inodes (raid 0 with 6 disks, totally
-18TB). On this partition, whenever there is a high disk io operation,
-like removing millions of small files, the slab kernel memory usage
-will increase a lot, leading to many OOM issues happening for the
-services running on this node. You could check some of the stats as
-the following (only includes the xfs related):
+This is new logic and isn't explained anywhere: why do we want to
+avoid RCU cleanup if (shrinker->nr_deferred == 0)? Regardless,
+whatever this is avoiding, it needs a comment to explain it.
 
-#########################################################################
-Active / Total Objects (% used):  281803052 / 317485764 (88.8%)
-Active / Total Slabs (% used): 13033144 / 13033144 (100.0%)
-Active / Total Caches (% used): 126 / 180 (70.0%)
-Active / Total Size (% used): 114671057.99K / 127265108.19K (90.1%)
-Minium / Average / Maximum Object : 0.01K / 0.40K / 16.75K
-
-OBJS               ACTIVE      USE     OBJ SIZE     SLABS
-OBJ/SLAB    CACHE SIZE    NAME
-78207920      70947541      0%       1.00K           7731010
- 32            247392320K     xfs_inode
-59945928      46548798      0%       0.19K           1433102
- 42              11464816K     dentry
-25051296      25051282      0%       0.38K           599680
-  42            9594880K         xfs_buf
-#########################################################################
-
-The peak slab memory usage could spike all the way to 100GB+.
-
-We are using Ubuntu 18.04 and the xfs version is 4.9, kernel version is 5.4
-
-#########################################################################
-Linux# cat /etc/*-release
-DISTRIB_ID=Ubuntu
-DISTRIB_RELEASE=18.04
-DISTRIB_CODENAME=bionic
-DISTRIB_DESCRIPTION="Ubuntu 18.04.5 LTS"
-NAME="Ubuntu"
-VERSION="18.04.5 LTS (Bionic Beaver)"
-ID=ubuntu
-ID_LIKE=debian
-PRETTY_NAME="Ubuntu 18.04.5 LTS"
-VERSION_ID="18.04"
-HOME_URL="https://www.ubuntu.com/"
-SUPPORT_URL="https://help.ubuntu.com/"
-BUG_REPORT_URL="https://bugs.launchpad.net/ubuntu/"
-PRIVACY_POLICY_URL="https://www.ubuntu.com/legal/terms-and-policies/privacy-policy"
-VERSION_CODENAME=bionic
-UBUNTU_CODENAME=bionic
-
-Linux# sudo apt list | grep xfs
-libguestfs-xfs/bionic-updates 1:1.36.13-1ubuntu3.3 amd64
-nfs-ganesha-xfs/bionic 2.6.0-2 amd64
-obexfs/bionic 0.11-2build1 amd64
-x11-xfs-utils/bionic 7.7+2build1 amd64
-xfsdump/bionic 3.1.6+nmu2 amd64
-xfslibs-dev/bionic 4.9.0+nmu1ubuntu2 amd64
-xfsprogs/bionic,now 4.9.0+nmu1ubuntu2 amd64 [installed]
-xfstt/bionic 1.9.3-3 amd64
-xfswitch-plugin/bionic 0.0.1-5ubuntu5 amd64
-
-Linux# uname -a
-Linux linux-host 5.4.0-45-generic #49~18.04.2-Ubuntu SMP Wed Aug 26
-16:29:02 UTC 2020 x86_64 x86_64 x86_64 GNU/Linux
-#########################################################################
-
-Is there any potential way to limit the slab memory increase for a
-node as a whole, or the only thing we could do is to reduce the
-filesystem inode or iops usage?
-
-Thanks in advance!
-Jianan Wang
+-Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
