@@ -2,29 +2,29 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0A2DDC7EE2F
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C7687C77B7C
 	for <linux-xfs@archiver.kernel.org>; Wed, 31 May 2023 10:04:28 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235788AbjEaKE0 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 31 May 2023 06:04:26 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58920 "EHLO
+        id S235666AbjEaKE1 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 31 May 2023 06:04:27 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58922 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S235767AbjEaKEX (ORCPT
+        with ESMTP id S235786AbjEaKEX (ORCPT
         <rfc822;linux-xfs@vger.kernel.org>); Wed, 31 May 2023 06:04:23 -0400
-Received: from out-57.mta0.migadu.com (out-57.mta0.migadu.com [IPv6:2001:41d0:1004:224b::39])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0DC59132
+Received: from out-34.mta0.migadu.com (out-34.mta0.migadu.com [IPv6:2001:41d0:1004:224b::22])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 057E712B
         for <linux-xfs@vger.kernel.org>; Wed, 31 May 2023 03:04:19 -0700 (PDT)
 X-Report-Abuse: Please report any abuse attempt to abuse@migadu.com and include these headers.
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.dev; s=key1;
-        t=1685527108;
+        t=1685527129;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:cc:mime-version:mime-version:
          content-transfer-encoding:content-transfer-encoding:
          in-reply-to:in-reply-to:references:references;
-        bh=E+T6MU8ntbBOvHLVHWyWd2NDGkscltn2p+HVjRapVkY=;
-        b=aqACCvCWYJ0Y4210xFVIKOz1nuLZMkNqtH4dgIpFYFS1UqcYGGT2q8rSFyFjyZK7Pydu3w
-        AuV1qecNPdxf4ytiJQpoRe0LH1oNWMkq+SrmRCO9rTKGu8v6q1BZVpGwerN8shJucy3Wif
-        OiE0gEWmKmuhpBJRVVQpYf7vzkydq24=
+        bh=mjcsinqX7KwTJ40/JcL+JgGM2W0swatrtd18npIFtVk=;
+        b=baMB2GLVbbUmgLTp+CUXyhhVv/9x56bQV3iqZ8MjrGpSa7p5jatJsXPULpCV9EV8+jBrYl
+        PchelLFH6ZF8vYpgvhoNebbx99TRM79XB4NftLwSZ90r/JoVrRMdf+o3xlQ1brouvtCBtm
+        EjXCENjNIePsNVRgiPye7pdqlsEyPGs=
 From:   Qi Zheng <qi.zheng@linux.dev>
 To:     akpm@linux-foundation.org, tkhai@ya.ru, roman.gushchin@linux.dev,
         vbabka@suse.cz, viro@zeniv.linux.org.uk, brauner@kernel.org,
@@ -33,9 +33,9 @@ To:     akpm@linux-foundation.org, tkhai@ya.ru, roman.gushchin@linux.dev,
 Cc:     linux-mm@kvack.org, linux-fsdevel@vger.kernel.org,
         linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org,
         Qi Zheng <zhengqi.arch@bytedance.com>
-Subject: [PATCH 3/8] fs: move list_lru_destroy() to destroy_super_work()
-Date:   Wed, 31 May 2023 09:57:37 +0000
-Message-Id: <20230531095742.2480623-4-qi.zheng@linux.dev>
+Subject: [PATCH 8/8] fs: use unregister_shrinker_delayed_{initiate, finalize} for super_block shrinker
+Date:   Wed, 31 May 2023 09:57:42 +0000
+Message-Id: <20230531095742.2480623-9-qi.zheng@linux.dev>
 In-Reply-To: <20230531095742.2480623-1-qi.zheng@linux.dev>
 References: <20230531095742.2480623-1-qi.zheng@linux.dev>
 MIME-Version: 1.0
@@ -47,80 +47,69 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: Kirill Tkhai <tkhai@ya.ru>
 
-The patch makes s_dentry_lru and s_inode_lru be destroyed
-later from the workqueue. This is preparation to split
-unregister_shrinker(super_block::s_shrink) in two stages,
-and to call finalize stage from destroy_super_work().
+Previous patches made all the data, which is touched from
+super_cache_count(), destroyed from destroy_super_work():
+s_dentry_lru, s_inode_lru and super_block::s_fs_info.
 
-Note, that generic filesystem shrinker unregistration
-is safe to be split in two stages right after this
-patch, since super_cache_count() and super_cache_scan()
-have a deal with s_dentry_lru and s_inode_lru only.
+super_cache_scan() can't be called after SB_ACTIVE is cleared
+in generic_shutdown_super().
 
-But there are two exceptions: XFS and SHMEM, which
-define .nr_cached_objects() and .free_cached_objects()
-callbacks. These two do not allow us to do the splitting
-right after this patch. They touch fs-specific data,
-which is destroyed earlier, than destroy_super_work().
-So, we can't call unregister_shrinker_delayed_finalize()
-from destroy_super_work() because of them, and next
-patches make preparations to make this possible.
+So, it safe to move heavy unregister_shrinker_delayed_finalize()
+part to delayed work, i.e. it's safe for parallel do_shrink_slab()
+to be executed between unregister_shrinker_delayed_initiate() and
+destroy_super_work()->unregister_shrinker_delayed_finalize().
+
+This makes the heavy synchronize_srcu() to do not affect on user-visible
+unregistration speed (since now it's executed from workqueue).
+
+All further time-critical for unregistration places may be written
+in the same conception.
 
 Signed-off-by: Kirill Tkhai <tkhai@ya.ru>
 Signed-off-by: Qi Zheng <zhengqi.arch@bytedance.com>
 ---
- fs/super.c | 17 +++++------------
- 1 file changed, 5 insertions(+), 12 deletions(-)
+ fs/super.c         | 4 +++-
+ include/linux/fs.h | 5 +++++
+ 2 files changed, 8 insertions(+), 1 deletion(-)
 
 diff --git a/fs/super.c b/fs/super.c
-index 8d8d68799b34..2ce4c72720f3 100644
+index 4e9d08224f86..c61efb74fa7f 100644
 --- a/fs/super.c
 +++ b/fs/super.c
-@@ -159,6 +159,11 @@ static void destroy_super_work(struct work_struct *work)
+@@ -165,6 +165,8 @@ static void destroy_super_work(struct work_struct *work)
  							destroy_work);
  	int i;
  
-+	WARN_ON(list_lru_count(&s->s_dentry_lru));
-+	WARN_ON(list_lru_count(&s->s_inode_lru));
-+	list_lru_destroy(&s->s_dentry_lru);
-+	list_lru_destroy(&s->s_inode_lru);
++	unregister_shrinker_delayed_finalize(&s->s_shrink);
 +
- 	for (i = 0; i < SB_FREEZE_LEVELS; i++)
- 		percpu_free_rwsem(&s->s_writers.rw_sem[i]);
- 	kfree(s);
-@@ -177,8 +182,6 @@ static void destroy_unused_super(struct super_block *s)
- 	if (!s)
- 		return;
- 	up_write(&s->s_umount);
--	list_lru_destroy(&s->s_dentry_lru);
--	list_lru_destroy(&s->s_inode_lru);
- 	security_sb_free(s);
- 	put_user_ns(s->s_user_ns);
- 	kfree(s->s_subtype);
-@@ -287,8 +290,6 @@ static void __put_super(struct super_block *s)
+ 	WARN_ON(list_lru_count(&s->s_dentry_lru));
+ 	WARN_ON(list_lru_count(&s->s_inode_lru));
+ 	list_lru_destroy(&s->s_dentry_lru);
+@@ -337,7 +339,7 @@ void deactivate_locked_super(struct super_block *s)
  {
- 	if (!--s->s_count) {
- 		list_del_init(&s->s_list);
--		WARN_ON(s->s_dentry_lru.node);
--		WARN_ON(s->s_inode_lru.node);
- 		WARN_ON(!list_empty(&s->s_mounts));
- 		security_sb_free(s);
- 		put_user_ns(s->s_user_ns);
-@@ -330,14 +331,6 @@ void deactivate_locked_super(struct super_block *s)
- 		unregister_shrinker(&s->s_shrink);
+ 	struct file_system_type *fs = s->s_type;
+ 	if (atomic_dec_and_test(&s->s_active)) {
+-		unregister_shrinker(&s->s_shrink);
++		unregister_shrinker_delayed_initiate(&s->s_shrink);
  		fs->kill_sb(s);
  
--		/*
--		 * Since list_lru_destroy() may sleep, we cannot call it from
--		 * put_super(), where we hold the sb_lock. Therefore we destroy
--		 * the lru lists right now.
--		 */
--		list_lru_destroy(&s->s_dentry_lru);
--		list_lru_destroy(&s->s_inode_lru);
--
  		put_filesystem(fs);
- 		put_super(s);
- 	} else {
+diff --git a/include/linux/fs.h b/include/linux/fs.h
+index 30b46d0facfc..869dd8de91a5 100644
+--- a/include/linux/fs.h
++++ b/include/linux/fs.h
+@@ -1929,6 +1929,11 @@ struct super_operations {
+ 	ssize_t (*quota_write)(struct super_block *, int, const char *, size_t, loff_t);
+ 	struct dquot **(*get_dquots)(struct inode *);
+ #endif
++	/*
++	 * Shrinker may call these two function on destructing super_block
++	 * till unregister_shrinker_delayed_finalize() has completed
++	 * in destroy_super_work(), and they must care about that.
++	 */
+ 	long (*nr_cached_objects)(struct super_block *,
+ 				  struct shrink_control *);
+ 	long (*free_cached_objects)(struct super_block *,
 -- 
 2.30.2
 
