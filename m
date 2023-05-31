@@ -2,82 +2,128 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5D23CC7EE2D
-	for <linux-xfs@archiver.kernel.org>; Thu, 25 May 2023 12:01:37 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2CAF6C7EE23
+	for <linux-xfs@archiver.kernel.org>; Wed, 31 May 2023 21:30:36 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S240300AbjEYMBf (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 25 May 2023 08:01:35 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43408 "EHLO
+        id S229521AbjEaVaf (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 31 May 2023 17:30:35 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38186 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S239928AbjEYMBf (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 25 May 2023 08:01:35 -0400
-Received: from mail-yw1-x1136.google.com (mail-yw1-x1136.google.com [IPv6:2607:f8b0:4864:20::1136])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5232E99;
-        Thu, 25 May 2023 05:01:34 -0700 (PDT)
-Received: by mail-yw1-x1136.google.com with SMTP id 00721157ae682-561d5a16be0so6508877b3.2;
-        Thu, 25 May 2023 05:01:34 -0700 (PDT)
+        with ESMTP id S229484AbjEaVae (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 31 May 2023 17:30:34 -0400
+Received: from mail-yb1-xb33.google.com (mail-yb1-xb33.google.com [IPv6:2607:f8b0:4864:20::b33])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id BFD501A5
+        for <linux-xfs@vger.kernel.org>; Wed, 31 May 2023 14:30:07 -0700 (PDT)
+Received: by mail-yb1-xb33.google.com with SMTP id 3f1490d57ef6-ba1815e12efso77115276.3
+        for <linux-xfs@vger.kernel.org>; Wed, 31 May 2023 14:30:07 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20221208; t=1685016093; x=1687608093;
+        d=gmail.com; s=20221208; t=1685568603; x=1688160603;
         h=to:subject:message-id:date:from:mime-version:from:to:cc:subject
          :date:message-id:reply-to;
-        bh=wzjXUs7hQMg4YnTSQBBTOV9Px0ea6Z5OIL5Ul9L3HtM=;
-        b=qslfBorePk4sEMwlJxSs+2CvZubmE9HsGmyLKXanyypE0uNCxG5B2+OTuE/wjHKRsN
-         7+ywINy+o4uA+3/q4CeE+4ajhm9HIOj2YlTWoZ+SgLRj/DPTcO/EYbPA6judbz7G19Fn
-         Y6leI7H/7coiJMdlvU5zSp0O1kWVlktcqJCpGVtWmSWmOQmXzldqUjRKChhwF0xT89r5
-         unxjblF1d5bs3hDGqRCZREH7rrCDv6bD8wYR70UQt998crosqq1ykC8xR+XaJvQ78a8r
-         lidF9SCOpwbwU5FTUYU3L+DXhU/MYyO85/IaJ9zoWWA39okGp4gWABqYtjq9ZTL2k/yf
-         kwTw==
+        bh=97KPdziRgY2DYFT+BtnYBVgMhbdu7cgPl6xNPpa2Mtc=;
+        b=ZMlIR6r29VRr9aPfahQu8lYD82h2FIiOGPzrFUa09mcWC2K+mXkMQ1z/e5nz+eb0Nb
+         EupGWHH0yxZCAqjxPOhCaZ1lvnUCg6lUKaGlcqHVCd6vSOFwfcLmn7DvOr+ckWUDDVbg
+         k6gay445tXjauyST+6RAdM2qGExFJYUXHOHAnFaOmfT378MkDeSehx9XhWpu3GRf5d6R
+         gyfd8hgBVxRmfu8bhGUMxh5ay2XPfPs2fARNgJiKZricXd2yrWhyReqItXqfYQa93RfR
+         v6d7D0ydVN/f/0dRJfFlWfC2HJ15Kif0VYzsuisdlFWKNTsNRfX5twhUlPIynbJZvN2p
+         VT7w==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20221208; t=1685016093; x=1687608093;
+        d=1e100.net; s=20221208; t=1685568603; x=1688160603;
         h=to:subject:message-id:date:from:mime-version:x-gm-message-state
          :from:to:cc:subject:date:message-id:reply-to;
-        bh=wzjXUs7hQMg4YnTSQBBTOV9Px0ea6Z5OIL5Ul9L3HtM=;
-        b=M0x3pDGV6OdsGWpekkPWMiQ4IVnscxJW9DBI8erEYO4atoxQ9ii1HtXWSrcKBTVmns
-         8RrVIBZIbcT7eiP8lFML6V+JFEgq7qYoQOkAH38dFtGhxAmmvBAnyoTlwDfK52rfAas4
-         oUo4aprxbVyPeMckw1WABCdVEGt/laccooljTKmaUTSfJJwEWcu3erZcgt2gm/9oIg5R
-         9B1PKjVKYNCDYLkC/Ag1d+OexxzYMK0/9uwe1FTize8y1ZZJhF/aDzMOuzs8SWCBr2QJ
-         6Jwu0yhE5bTahLe08mLuKHHw0ikzaMi2CgC3b4NXz5/ZVd4/G2mE8zTahtRtSAFbHz9c
-         qbGw==
-X-Gm-Message-State: AC+VfDwKTb61GVpUdf8t4schsnqvk+bM/Ust2linR+FJtEdGKdkmKb6b
-        NAbwIDzTw2DwE2izJrJs1zarCmY8GkAWMOslsd2Z3L0gxsoqtw==
-X-Google-Smtp-Source: ACHHUZ7PSqNM4uSLtY7h6h9M4+h+zxTzZ7WFMg9s5g8zeJjjwEjf2VrsenLJX6tgVIWpw53Kys5LruHllqLTviPNyeg=
-X-Received: by 2002:a81:7105:0:b0:561:a41d:61cd with SMTP id
- m5-20020a817105000000b00561a41d61cdmr22435505ywc.46.1685016093347; Thu, 25
- May 2023 05:01:33 -0700 (PDT)
+        bh=97KPdziRgY2DYFT+BtnYBVgMhbdu7cgPl6xNPpa2Mtc=;
+        b=M4/EoJlBC/e/h3t2CfvEBBnEHfF8S1D0QT3BJczplTPeaoqkctVgDj+7JAMiiIQ4Sa
+         MFusOq4CLeS6/J0H/6lmvHZqghJr+CQ67RbmtUivYqL0NF9XbYGUECOb0FGWts8MTCq8
+         bPTUHTinXCYrndwOfT9x2DdkEULeLvQbHnOBjHdHfd/xkoLMPVb/YvVO45IcRSwtbQdv
+         Mdnr+xiCnTzZth95HIlBEnhBJPycdx6tJQpRkjC9GOhJmWe2tdPZEt3lXG/ST8xkofOt
+         sQ3kwEhKBCoeE2q87CTQHtMx/R0mdCtHqNDGn3Qqdo3wkmcybw6w2Hi9cX3mY8+jHlID
+         5n6w==
+X-Gm-Message-State: AC+VfDyUZtXbcMssAudUc6VjZnhznYoi0/WQGxbUBGZRnDGeCNQEpaq7
+        N9eDBbjFl7Vhdz/PRsrwXEyay8evgODyjm0lBmC9jDQfX2Q=
+X-Google-Smtp-Source: ACHHUZ4XxD+GSH67zRFn5T3Hv/33KFE7h6jt5m3P8YZYCJTrF2FjEa+6ttycdtJbUhxibE7YzS5tbZbRK3Gohm9yXCc=
+X-Received: by 2002:a25:6e0a:0:b0:bb1:76ca:d1ff with SMTP id
+ j10-20020a256e0a000000b00bb176cad1ffmr2042198ybc.20.1685568603480; Wed, 31
+ May 2023 14:30:03 -0700 (PDT)
 MIME-Version: 1.0
-From:   Murphy Zhou <jencce.kernel@gmail.com>
-Date:   Thu, 25 May 2023 20:01:22 +0800
-Message-ID: <CADJHv_ujo+QUE7f420t4XACGw4RvVpckKSJcJ_9_Z0b2gdmr+g@mail.gmail.com>
-Subject: 
-To:     Linux-Next <linux-next@vger.kernel.org>,
-        linux-xfs <linux-xfs@vger.kernel.org>,
-        Christoph Hellwig <hch@lst.de>
+From:   Jianan Wang <wangjianan.zju@gmail.com>
+Date:   Wed, 31 May 2023 14:29:52 -0700
+Message-ID: <CAMj1M42L6hH9weqroQNaWu_SG+Yg8NrAuzgNO1b8jiWPJ2M-5A@mail.gmail.com>
+Subject: Question on the xfs inode slab memory
+To:     linux-xfs@vger.kernel.org
 Content-Type: text/plain; charset="UTF-8"
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Hi Christoph,
+Hi all,
 
-The linux-next tree, since the next-20230522 tag, LTP/writev07[1]
-starts to fail on xfs, not on other fs. It was pass on the previous
-tag next-20230519.
+I have a question regarding the xfs slab memory usage when operating a
+filesystem with 1-2 billion inodes (raid 0 with 6 disks, totally
+18TB). On this partition, whenever there is a high disk io operation,
+like removing millions of small files, the slab kernel memory usage
+will increase a lot, leading to many OOM issues happening for the
+services running on this node. You could check some of the stats as
+the following (only includes the xfs related):
 
-After those 2 commits reverted on the top of 0522 tree, it passed.
+#########################################################################
+Active / Total Objects (% used):  281803052 / 317485764 (88.8%)
+Active / Total Slabs (% used): 13033144 / 13033144 (100.0%)
+Active / Total Caches (% used): 126 / 180 (70.0%)
+Active / Total Size (% used): 114671057.99K / 127265108.19K (90.1%)
+Minium / Average / Maximum Object : 0.01K / 0.40K / 16.75K
 
-    iomap: update ki_pos in iomap_file_buffered_write
-    iomap: assign current->backing_dev_info in iomap_file_buffered_write
+OBJS               ACTIVE      USE     OBJ SIZE     SLABS
+OBJ/SLAB    CACHE SIZE    NAME
+78207920      70947541      0%       1.00K           7731010
+ 32            247392320K     xfs_inode
+59945928      46548798      0%       0.19K           1433102
+ 42              11464816K     dentry
+25051296      25051282      0%       0.38K           599680
+  42            9594880K         xfs_buf
+#########################################################################
 
-(the second one was reverted because the first one depends on it)
+The peak slab memory usage could spike all the way to 100GB+.
 
-The test case writev07 forms an iovec with a bad address in the middle,
-then writes to the file, expecting a fault return and file not being written.
-Now it fails with a fault return but the file has been written.
+We are using Ubuntu 18.04 and the xfs version is 4.9, kernel version is 5.4
 
-Looks like it is related to the pos update, could you help to take a look ?
+#########################################################################
+Linux# cat /etc/*-release
+DISTRIB_ID=Ubuntu
+DISTRIB_RELEASE=18.04
+DISTRIB_CODENAME=bionic
+DISTRIB_DESCRIPTION="Ubuntu 18.04.5 LTS"
+NAME="Ubuntu"
+VERSION="18.04.5 LTS (Bionic Beaver)"
+ID=ubuntu
+ID_LIKE=debian
+PRETTY_NAME="Ubuntu 18.04.5 LTS"
+VERSION_ID="18.04"
+HOME_URL="https://www.ubuntu.com/"
+SUPPORT_URL="https://help.ubuntu.com/"
+BUG_REPORT_URL="https://bugs.launchpad.net/ubuntu/"
+PRIVACY_POLICY_URL="https://www.ubuntu.com/legal/terms-and-policies/privacy-policy"
+VERSION_CODENAME=bionic
+UBUNTU_CODENAME=bionic
 
-Thanks,
-Murphy
+Linux# sudo apt list | grep xfs
+libguestfs-xfs/bionic-updates 1:1.36.13-1ubuntu3.3 amd64
+nfs-ganesha-xfs/bionic 2.6.0-2 amd64
+obexfs/bionic 0.11-2build1 amd64
+x11-xfs-utils/bionic 7.7+2build1 amd64
+xfsdump/bionic 3.1.6+nmu2 amd64
+xfslibs-dev/bionic 4.9.0+nmu1ubuntu2 amd64
+xfsprogs/bionic,now 4.9.0+nmu1ubuntu2 amd64 [installed]
+xfstt/bionic 1.9.3-3 amd64
+xfswitch-plugin/bionic 0.0.1-5ubuntu5 amd64
 
+Linux# uname -a
+Linux linux-host 5.4.0-45-generic #49~18.04.2-Ubuntu SMP Wed Aug 26
+16:29:02 UTC 2020 x86_64 x86_64 x86_64 GNU/Linux
+#########################################################################
 
-[1] https://github.com/linux-test-project/ltp/blob/master/testcases/kernel/syscalls/writev/writev07.c
+Is there any potential way to limit the slab memory increase for a
+node as a whole, or the only thing we could do is to reduce the
+filesystem inode or iops usage?
+
+Thanks in advance!
+Jianan Wang
