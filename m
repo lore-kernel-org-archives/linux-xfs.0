@@ -2,196 +2,163 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5C4A6C7EE29
-	for <linux-xfs@archiver.kernel.org>; Thu,  1 Jun 2023 10:58:45 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id CC61EC7EE2C
+	for <linux-xfs@archiver.kernel.org>; Thu,  1 Jun 2023 13:03:59 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233179AbjFAK6n (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 1 Jun 2023 06:58:43 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52988 "EHLO
+        id S229880AbjFAND6 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 1 Jun 2023 09:03:58 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50266 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233128AbjFAK6f (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 1 Jun 2023 06:58:35 -0400
-Received: from smtp-out1.suse.de (smtp-out1.suse.de [IPv6:2001:67c:2178:6::1c])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 73FE2129;
-        Thu,  1 Jun 2023 03:58:32 -0700 (PDT)
-Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
+        with ESMTP id S233330AbjFAND5 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 1 Jun 2023 09:03:57 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4855397
+        for <linux-xfs@vger.kernel.org>; Thu,  1 Jun 2023 06:03:56 -0700 (PDT)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by smtp-out1.suse.de (Postfix) with ESMTPS id 180AF2197E;
-        Thu,  1 Jun 2023 10:58:31 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.cz; s=susede2_rsa;
-        t=1685617111; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=WVCS2NXBW5ZH4HJiDG94f7/my/nZc/t1gaXommKhNSs=;
-        b=sk8CUrc5W8W+ATmUeBoPtRVc2tLcmAeBXR1SKEKOL49RIImPQ2l8GCKekmntDiWQ1S01Ol
-        x54+S6D7tJs6K+3+W/W78Wk95ZdRxqQncjP7g1bn9yzeOCmRmxmlDEh757NsaZ7VdX9tVa
-        +5BBgseIuW58hljimTAc28c8g2lt1nc=
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.cz;
-        s=susede2_ed25519; t=1685617111;
-        h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=WVCS2NXBW5ZH4HJiDG94f7/my/nZc/t1gaXommKhNSs=;
-        b=s2Ncj+jC+LWCSSYtcD2/hbX1MZeKwUEnf5kIdxKy9neWgXvER8vXh4BvHoC7nLPnGfbPsT
-        G09K2PkXlnZg9vDg==
-Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
-        (No client certificate requested)
-        by imap2.suse-dmz.suse.de (Postfix) with ESMTPS id 0A35613441;
-        Thu,  1 Jun 2023 10:58:31 +0000 (UTC)
-Received: from dovecot-director2.suse.de ([192.168.254.65])
-        by imap2.suse-dmz.suse.de with ESMTPSA
-        id BpuIAtd5eGSAWAAAMHmgww
-        (envelope-from <jack@suse.cz>); Thu, 01 Jun 2023 10:58:31 +0000
-Received: by quack3.suse.cz (Postfix, from userid 1000)
-        id 27813A0763; Thu,  1 Jun 2023 12:58:30 +0200 (CEST)
-From:   Jan Kara <jack@suse.cz>
-To:     Al Viro <viro@ZenIV.linux.org.uk>
-Cc:     <linux-fsdevel@vger.kernel.org>,
-        Christian Brauner <brauner@kernel.org>,
-        Miklos Szeredi <miklos@szeredi.hu>,
-        "Darrick J. Wong" <djwong@kernel.org>, Ted Tso <tytso@mit.edu>,
-        Jaegeuk Kim <jaegeuk@kernel.org>, <linux-ext4@vger.kernel.org>,
-        <linux-xfs@vger.kernel.org>,
-        linux-f2fs-devel@lists.sourceforge.net, Jan Kara <jack@suse.cz>,
-        stable@vger.kernel.org
-Subject: [PATCH v2 5/6] fs: Lock moved directories
-Date:   Thu,  1 Jun 2023 12:58:25 +0200
-Message-Id: <20230601105830.13168-5-jack@suse.cz>
-X-Mailer: git-send-email 2.35.3
-In-Reply-To: <20230601104525.27897-1-jack@suse.cz>
-References: <20230601104525.27897-1-jack@suse.cz>
+        by dfw.source.kernel.org (Postfix) with ESMTPS id D99D56411F
+        for <linux-xfs@vger.kernel.org>; Thu,  1 Jun 2023 13:03:55 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 7677FC433EF;
+        Thu,  1 Jun 2023 13:03:54 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1685624635;
+        bh=rbqZmBeCpR6Lmn+S+1jKxSzciVAm4dkdfY4iJG1614A=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=ownh3PEWrG3WlIyy+RGGcdoYQ6AfVQs2Dxj40ObZrbMGW87Trfn9nl3AL3iDs2LkJ
+         RB/VFsYc0s8q5c7Fmc/jkt2sKzSXxdXTARfvIG6nNHGOM9gs3EQKMe6Y7DSgIeTE1d
+         /saNd00kRtDwcfXyS/bcfBJ8gpVZwgYnNEJN/N065TwwFOuw6UbpxAkfLPDSMSRF5S
+         Zu5k4jsZIV5F+g6RfJIFOMbEfgNpcLhnctF5GmCARN4Tf+e8LJYWNuXZHVO1ANjHB5
+         CLE/ZdFNb4LbGmVhFeRDquqg0g45kPvRH6BjEz4waE2ITCQ1JFcMtbI8XIo5yT9y2B
+         KKTx9q+oUDtZA==
+Date:   Thu, 1 Jun 2023 14:03:51 +0100
+From:   Lee Jones <lee@kernel.org>
+To:     "Darrick J. Wong" <djwong@kernel.org>
+Cc:     linux-xfs@vger.kernel.org, Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH] xfs: verify buffer contents when we skip log replay
+Message-ID: <20230601130351.GA1787684@google.com>
+References: <20230411233159.GH360895@frogsfrogsfrogs>
 MIME-Version: 1.0
-X-Developer-Signature: v=1; a=openpgp-sha256; l=5467; i=jack@suse.cz; h=from:subject; bh=x4FZJj19EKHfl9vXc7blu9EGaRK3J4g/IYXgMMiRgsg=; b=owEBbQGS/pANAwAIAZydqgc/ZEDZAcsmYgBkeHnQOagY8JFtxmxrH4yOG15iOHj85ARzmW1mO6z6 m4CoTtqJATMEAAEIAB0WIQSrWdEr1p4yirVVKBycnaoHP2RA2QUCZHh50AAKCRCcnaoHP2RA2fOmCA CGZ/60qBrc6mq5kJuPlRk9zqrA938OweaDejgjB5rj/+wPTCG423XQxEjq785RwCe9imbIcJywyI89 A0pan5qcfnH3LTQfSvu8g6Jnn/hUJIc/ZMpljEw2EQVWXfo3gjmfNtu2Nv80yeCWEt+RhRaifk2PpA FLUIaavbPKYMxQ68HJ0IAdihcEEjPMCnTBQNJYwjkR9+2RDhPtxB05Dxbx7SoLrQG4CyCnR0UNvBFu VouTBcwwyqv4irtxgwlnroN7k242fLUWgmWkRIlxkPK3MjdN2wTxLC4YYJ1BQ6HnnVZewXTrQEWlUP Sx2kjy7KuoAPi36BlrAAF2PUdusf8G
-X-Developer-Key: i=jack@suse.cz; a=openpgp; fpr=93C6099A142276A28BBE35D815BC833443038D8C
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
 Content-Transfer-Encoding: 8bit
+In-Reply-To: <20230411233159.GH360895@frogsfrogsfrogs>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-When a directory is moved to a different directory, some filesystems
-(udf, ext4, ocfs2, f2fs, and likely gfs2, reiserfs, and others) need to
-update their pointer to the parent and this must not race with other
-operations on the directory. Lock the directories when they are moved.
-Although not all filesystems need this locking, we perform it in
-vfs_rename() because getting the lock ordering right is really difficult
-and we don't want to expose these locking details to filesystems.
+Hi Darrick,
 
-CC: stable@vger.kernel.org
-Signed-off-by: Jan Kara <jack@suse.cz>
----
- .../filesystems/directory-locking.rst         | 26 ++++++++++---------
- fs/namei.c                                    | 22 ++++++++++------
- 2 files changed, 28 insertions(+), 20 deletions(-)
+On Tue, 11 Apr 2023, Darrick J. Wong wrote:
 
-diff --git a/Documentation/filesystems/directory-locking.rst b/Documentation/filesystems/directory-locking.rst
-index 504ba940c36c..dccd61c7c5c3 100644
---- a/Documentation/filesystems/directory-locking.rst
-+++ b/Documentation/filesystems/directory-locking.rst
-@@ -22,12 +22,11 @@ exclusive.
- 3) object removal.  Locking rules: caller locks parent, finds victim,
- locks victim and calls the method.  Locks are exclusive.
- 
--4) rename() that is _not_ cross-directory.  Locking rules: caller locks
--the parent and finds source and target.  In case of exchange (with
--RENAME_EXCHANGE in flags argument) lock both.  In any case,
--if the target already exists, lock it.  If the source is a non-directory,
--lock it.  If we need to lock both, lock them in inode pointer order.
--Then call the method.  All locks are exclusive.
-+4) rename() that is _not_ cross-directory.  Locking rules: caller locks the
-+parent and finds source and target.  We lock both (provided they exist).  If we
-+need to lock two inodes of different type (dir vs non-dir), we lock directory
-+first.  If we need to lock two inodes of the same type, lock them in inode
-+pointer order.  Then call the method.  All locks are exclusive.
- NB: we might get away with locking the source (and target in exchange
- case) shared.
- 
-@@ -44,15 +43,17 @@ All locks are exclusive.
- rules:
- 
- 	* lock the filesystem
--	* lock parents in "ancestors first" order.
-+	* lock parents in "ancestors first" order. If one is not ancestor of
-+	  the other, lock them in inode pointer order.
- 	* find source and target.
- 	* if old parent is equal to or is a descendent of target
- 	  fail with -ENOTEMPTY
- 	* if new parent is equal to or is a descendent of source
- 	  fail with -ELOOP
--	* If it's an exchange, lock both the source and the target.
--	* If the target exists, lock it.  If the source is a non-directory,
--	  lock it.  If we need to lock both, do so in inode pointer order.
-+	* Lock both the source and the target provided they exist. If we
-+	  need to lock two inodes of different type (dir vs non-dir), we lock
-+	  the directory first. If we need to lock two inodes of the same type,
-+	  lock them in inode pointer order.
- 	* call the method.
- 
- All ->i_rwsem are taken exclusive.  Again, we might get away with locking
-@@ -66,8 +67,9 @@ If no directory is its own ancestor, the scheme above is deadlock-free.
- 
- Proof:
- 
--	First of all, at any moment we have a partial ordering of the
--	objects - A < B iff A is an ancestor of B.
-+	First of all, at any moment we have a linear ordering of the
-+	objects - A < B iff (A is an ancestor of B) or (B is not an ancestor
-+        of A and ptr(A) < ptr(B)).
- 
- 	That ordering can change.  However, the following is true:
- 
-diff --git a/fs/namei.c b/fs/namei.c
-index 148570aabe74..6a5e26a529e1 100644
---- a/fs/namei.c
-+++ b/fs/namei.c
-@@ -4731,7 +4731,7 @@ SYSCALL_DEFINE2(link, const char __user *, oldname, const char __user *, newname
-  *	   sb->s_vfs_rename_mutex. We might be more accurate, but that's another
-  *	   story.
-  *	c) we have to lock _four_ objects - parents and victim (if it exists),
-- *	   and source (if it is not a directory).
-+ *	   and source.
-  *	   And that - after we got ->i_mutex on parents (until then we don't know
-  *	   whether the target exists).  Solution: try to be smart with locking
-  *	   order for inodes.  We rely on the fact that tree topology may change
-@@ -4815,10 +4815,16 @@ int vfs_rename(struct renamedata *rd)
- 
- 	take_dentry_name_snapshot(&old_name, old_dentry);
- 	dget(new_dentry);
--	if (!is_dir || (flags & RENAME_EXCHANGE))
--		lock_two_nondirectories(source, target);
--	else if (target)
--		inode_lock(target);
-+	/*
-+	 * Lock all moved children. Moved directories may need to change parent
-+	 * pointer so they need the lock to prevent against concurrent
-+	 * directory changes moving parent pointer. For regular files we've
-+	 * historically always done this. The lockdep locking subclasses are
-+	 * somewhat arbitrary but RENAME_EXCHANGE in particular can swap
-+	 * regular files and directories so it's difficult to tell which
-+	 * subclasses to use.
-+	 */
-+	lock_two_inodes(source, target, I_MUTEX_NORMAL, I_MUTEX_NONDIR2);
- 
- 	error = -EPERM;
- 	if (IS_SWAPFILE(source) || (target && IS_SWAPFILE(target)))
-@@ -4866,9 +4872,9 @@ int vfs_rename(struct renamedata *rd)
- 			d_exchange(old_dentry, new_dentry);
- 	}
- out:
--	if (!is_dir || (flags & RENAME_EXCHANGE))
--		unlock_two_nondirectories(source, target);
--	else if (target)
-+	if (source)
-+		inode_unlock(source);
-+	if (target)
- 		inode_unlock(target);
- 	dput(new_dentry);
- 	if (!error) {
+> From: Darrick J. Wong <djwong@kernel.org>
+> 
+> syzbot detected a crash during log recovery:
+> 
+> XFS (loop0): Mounting V5 Filesystem bfdc47fc-10d8-4eed-a562-11a831b3f791
+> XFS (loop0): Torn write (CRC failure) detected at log block 0x180. Truncating head block from 0x200.
+> XFS (loop0): Starting recovery (logdev: internal)
+> ==================================================================
+> BUG: KASAN: slab-out-of-bounds in xfs_btree_lookup_get_block+0x15c/0x6d0 fs/xfs/libxfs/xfs_btree.c:1813
+> Read of size 8 at addr ffff88807e89f258 by task syz-executor132/5074
+> 
+> CPU: 0 PID: 5074 Comm: syz-executor132 Not tainted 6.2.0-rc1-syzkaller #0
+> Hardware name: Google Google Compute Engine/Google Compute Engine, BIOS Google 10/26/2022
+> Call Trace:
+>  <TASK>
+>  __dump_stack lib/dump_stack.c:88 [inline]
+>  dump_stack_lvl+0x1b1/0x290 lib/dump_stack.c:106
+>  print_address_description+0x74/0x340 mm/kasan/report.c:306
+>  print_report+0x107/0x1f0 mm/kasan/report.c:417
+>  kasan_report+0xcd/0x100 mm/kasan/report.c:517
+>  xfs_btree_lookup_get_block+0x15c/0x6d0 fs/xfs/libxfs/xfs_btree.c:1813
+>  xfs_btree_lookup+0x346/0x12c0 fs/xfs/libxfs/xfs_btree.c:1913
+>  xfs_btree_simple_query_range+0xde/0x6a0 fs/xfs/libxfs/xfs_btree.c:4713
+>  xfs_btree_query_range+0x2db/0x380 fs/xfs/libxfs/xfs_btree.c:4953
+>  xfs_refcount_recover_cow_leftovers+0x2d1/0xa60 fs/xfs/libxfs/xfs_refcount.c:1946
+>  xfs_reflink_recover_cow+0xab/0x1b0 fs/xfs/xfs_reflink.c:930
+>  xlog_recover_finish+0x824/0x920 fs/xfs/xfs_log_recover.c:3493
+>  xfs_log_mount_finish+0x1ec/0x3d0 fs/xfs/xfs_log.c:829
+>  xfs_mountfs+0x146a/0x1ef0 fs/xfs/xfs_mount.c:933
+>  xfs_fs_fill_super+0xf95/0x11f0 fs/xfs/xfs_super.c:1666
+>  get_tree_bdev+0x400/0x620 fs/super.c:1282
+>  vfs_get_tree+0x88/0x270 fs/super.c:1489
+>  do_new_mount+0x289/0xad0 fs/namespace.c:3145
+>  do_mount fs/namespace.c:3488 [inline]
+>  __do_sys_mount fs/namespace.c:3697 [inline]
+>  __se_sys_mount+0x2d3/0x3c0 fs/namespace.c:3674
+>  do_syscall_x64 arch/x86/entry/common.c:50 [inline]
+>  do_syscall_64+0x3d/0xb0 arch/x86/entry/common.c:80
+>  entry_SYSCALL_64_after_hwframe+0x63/0xcd
+> RIP: 0033:0x7f89fa3f4aca
+> Code: 83 c4 08 5b 5d c3 66 2e 0f 1f 84 00 00 00 00 00 c3 66 2e 0f 1f 84 00 00 00 00 00 0f 1f 44 00 00 49 89 ca b8 a5 00 00 00 0f 05 <48> 3d 01 f0 ff ff 73 01 c3 48 c7 c1 c0 ff ff ff f7 d8 64 89 01 48
+> RSP: 002b:00007fffd5fb5ef8 EFLAGS: 00000206 ORIG_RAX: 00000000000000a5
+> RAX: ffffffffffffffda RBX: 00646975756f6e2c RCX: 00007f89fa3f4aca
+> RDX: 0000000020000100 RSI: 0000000020009640 RDI: 00007fffd5fb5f10
+> RBP: 00007fffd5fb5f10 R08: 00007fffd5fb5f50 R09: 000000000000970d
+> R10: 0000000000200800 R11: 0000000000000206 R12: 0000000000000004
+> R13: 0000555556c6b2c0 R14: 0000000000200800 R15: 00007fffd5fb5f50
+>  </TASK>
+> 
+> The fuzzed image contains an AGF with an obviously garbage
+> agf_refcount_level value of 32, and a dirty log with a buffer log item
+> for that AGF.  The ondisk AGF has a higher LSN than the recovered log
+> item.  xlog_recover_buf_commit_pass2 reads the buffer, compares the
+> LSNs, and decides to skip replay because the ondisk buffer appears to be
+> newer.
+> 
+> Unfortunately, the ondisk buffer is corrupt, but recovery just read the
+> buffer with no buffer ops specified:
+> 
+> 	error = xfs_buf_read(mp->m_ddev_targp, buf_f->blf_blkno,
+> 			buf_f->blf_len, buf_flags, &bp, NULL);
+> 
+> Skipping the buffer leaves its contents in memory unverified.  This sets
+> us up for a kernel crash because xfs_refcount_recover_cow_leftovers
+> reads the buffer (which is still around in XBF_DONE state, so no read
+> verification) and creates a refcountbt cursor of height 32.  This is
+> impossible so we run off the end of the cursor object and crash.
+> 
+> Fix this by invoking the verifier on all skipped buffers and aborting
+> log recovery if the ondisk buffer is corrupt.  It might be smarter to
+> force replay the log item atop the buffer and then see if it'll pass the
+> write verifier (like ext4 does) but for now let's go with the
+> conservative option where we stop immediately.
+> 
+> Link: https://syzkaller.appspot.com/bug?extid=7e9494b8b399902e994e
+> Fixes: 67dc288c2106 ("xfs: ensure verifiers are attached to recovered buffers")
+> Signed-off-by: Darrick J. Wong <djwong@kernel.org>
+> ---
+>  fs/xfs/xfs_buf_item_recover.c |   10 ++++++++++
+>  1 file changed, 10 insertions(+)
+
+Rightly or wrongly, CVE-2023-212 has been raised against this issue.
+
+It looks as though the Fixes: tag above was stripped when applied.
+
+Should this still be submitted to Stable?
+
+> diff --git a/fs/xfs/xfs_buf_item_recover.c b/fs/xfs/xfs_buf_item_recover.c
+> index 5368a0d34452..ebe7f2c3cf63 100644
+> --- a/fs/xfs/xfs_buf_item_recover.c
+> +++ b/fs/xfs/xfs_buf_item_recover.c
+> @@ -971,6 +971,16 @@ xlog_recover_buf_commit_pass2(
+>  	if (lsn && lsn != -1 && XFS_LSN_CMP(lsn, current_lsn) >= 0) {
+>  		trace_xfs_log_recover_buf_skip(log, buf_f);
+>  		xlog_recover_validate_buf_type(mp, bp, buf_f, NULLCOMMITLSN);
+> +
+> +		/*
+> +		 * We're skipping replay of this buffer log item due to the log
+> +		 * item LSN being behind the ondisk buffer.  Verify the buffer
+> +		 * contents since we aren't going to run the write verifier.
+> +		 */
+> +		if (bp->b_ops) {
+> +			bp->b_ops->verify_read(bp);
+> +			error = bp->b_error;
+> +		}
+>  		goto out_release;
+>  	}
+>  
+
 -- 
-2.35.3
-
+Lee Jones [李琼斯]
