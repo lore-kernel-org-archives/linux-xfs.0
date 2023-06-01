@@ -2,62 +2,113 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DFD62C7EE2A
-	for <linux-xfs@archiver.kernel.org>; Thu,  1 Jun 2023 17:53:46 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 373A1C7EE23
+	for <linux-xfs@archiver.kernel.org>; Thu,  1 Jun 2023 21:44:03 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229648AbjFARxp (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 1 Jun 2023 13:53:45 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43168 "EHLO
+        id S230166AbjFAVoC (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 1 Jun 2023 17:44:02 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59318 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229992AbjFARxm (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 1 Jun 2023 13:53:42 -0400
-X-Greylist: delayed 4033 seconds by postgrey-1.37 at lindbergh.monkeyblade.net; Thu, 01 Jun 2023 10:53:40 PDT
-Received: from fallback25.i.mail.ru (fallback25.i.mail.ru [79.137.243.79])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id EF2D819F;
-        Thu,  1 Jun 2023 10:53:39 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=mail.ru; s=mail4;
-        h=Content-Transfer-Encoding:MIME-Version:Message-Id:Date:Subject:Cc:To:From:From:Subject:Content-Type:Content-Transfer-Encoding:To:Cc; bh=QC8kKFJR/m9AQyibARQiuD0wUjEmKDnjvmmz3whDd9Y=;
-        t=1685642020;x=1685732020; 
-        b=AwxD/4zimcLgXjhxeccICtxpBpRJSqxJN7FUHhiM2uEsMRZLQXDV+SGnjjyAUnBo7ooqyYDT6m/IVKjhSYx4beFdD+yp+StITkyAun33IR7Vxnkaectx4ATYJZmTZNMkw8L0+0n9W5RUzCDUabkPH0hzKdo9XBCt6htSbioT2THMDW8mEAjbWwfRsuWpBRcvuvH+cUtpeQEGq8MLJ26/YLxi3T1HN9Oh2D9VDgFNQPQ7WmyLUYVT0+FhkZ+TM2icdetPYziV+SiOIcbufrWCopGyKkel04nJUOOm10iaqBzuRtgS3H1wUdpPt7eEBBqBkYt35a5b9FyZrjtpzzgsTg==;
-Received: from [10.12.4.19] (port=44594 helo=smtp43.i.mail.ru)
-        by fallback25.i.mail.ru with esmtp (envelope-from <listdansp@mail.ru>)
-        id 1q4lRP-007BJj-UN; Thu, 01 Jun 2023 19:46:24 +0300
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=mail.ru; s=mail4;
-        h=Content-Transfer-Encoding:MIME-Version:Message-Id:Date:Subject:Cc:To:From:From:Subject:Content-Type:Content-Transfer-Encoding:To:Cc; bh=QC8kKFJR/m9AQyibARQiuD0wUjEmKDnjvmmz3whDd9Y=;
-        t=1685637983;x=1685727983; 
-        b=vqAC7dzzfDPiptCRecvzo1vGSIt4i5p7V2bWEIh2alwItcVzrOtG9KXLs4WmL//NUZ8Qa+HeD+Jvi3vjO1Ntbi2lmdgugLTGB2G1sVUBfG18wjgLrw538IHTOwMgTzuiATKbYN1z+ZBvsCmVLjvf01gJR30LxwND4OFxXZqrWwbXADbanIpvASXGdtXERxVhk++NxhabwbqHD3143ww8pUrVLAgcuUMTufElyLhL77rGdRi/CMFFZnOlYRf6NQsI9Jj2XcCCGFMESlaIsHHUO48iElwjGBAPAXjYiGvkJ/eBCbZ+kTVzpiNqBJWtfr0oWxT/vF32yuXaUUQUxN6fdg==;
-Received: by smtp43.i.mail.ru with esmtpa (envelope-from <listdansp@mail.ru>)
-        id 1q4lRC-00HDXO-Jf; Thu, 01 Jun 2023 19:46:10 +0300
-From:   Danila Chernetsov <listdansp@mail.ru>
-To:     stable@vger.kernel.org,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Cc:     Danila Chernetsov <listdansp@mail.ru>,
-        Amir Goldstein <amir73il@gmail.com>,
-        "Darrick J. Wong" <djwong@kernel.org>, linux-xfs@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Subject: [PATCH 5.10 0/1] xfs: verify buffer contents when we skip log replay
-Date:   Thu,  1 Jun 2023 16:44:38 +0000
-Message-Id: <20230601164439.15404-1-listdansp@mail.ru>
-X-Mailer: git-send-email 2.25.1
+        with ESMTP id S231398AbjFAVoB (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 1 Jun 2023 17:44:01 -0400
+Received: from mail-pl1-x629.google.com (mail-pl1-x629.google.com [IPv6:2607:f8b0:4864:20::629])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 74A09D1
+        for <linux-xfs@vger.kernel.org>; Thu,  1 Jun 2023 14:44:00 -0700 (PDT)
+Received: by mail-pl1-x629.google.com with SMTP id d9443c01a7336-1b039168ba0so11949485ad.3
+        for <linux-xfs@vger.kernel.org>; Thu, 01 Jun 2023 14:44:00 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=fromorbit-com.20221208.gappssmtp.com; s=20221208; t=1685655840; x=1688247840;
+        h=in-reply-to:content-transfer-encoding:content-disposition
+         :mime-version:references:message-id:subject:cc:to:from:date:from:to
+         :cc:subject:date:message-id:reply-to;
+        bh=rWE7fUtKddKIOSlE+ELrznceRtgHPDSIPev1IKzGaBw=;
+        b=LbWybZTdw30aR9X91q+XrjraUiEcjfvjSftDilWu/k1cz8dDro7CCFgyL0IbWPdae7
+         HawlqXiMjESR1LkUqdPU/4D9XPnPrBHbGzNpLS+mf0wXXO16ZNV6grszBn7cSDaKfoez
+         fwtZRyQSRaKwiWwwTdn+QBO0LPg/UpQ2GB8f1fkGgaKnLA5+I/HiKSJn4tl2OJVKS5l0
+         duefUGa2aF7yISBi0+TaXRxps29/BUwZqch/HVvVFxJ502oRCTTYRpveirHgdWCXU2Fs
+         PgNOyA7RywLwtSXGVap/baNCUGgV+/3gMNYJxHxijl9KSdOzvGPh2XjvjwRruSBL7KZr
+         jOBA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20221208; t=1685655840; x=1688247840;
+        h=in-reply-to:content-transfer-encoding:content-disposition
+         :mime-version:references:message-id:subject:cc:to:from:date
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=rWE7fUtKddKIOSlE+ELrznceRtgHPDSIPev1IKzGaBw=;
+        b=HfKiGM/IPvzRKhtYN6hBT6+LipzyseKyvEPOps3DXfqugGI3xbUMVpyoOJITzZ4BKk
+         Vbazu16EctkFFEpUY4ve0nLJQrkwoAVhB6NpjXZNHsLIE3K3AOeSUFw/TGITJcuzezGP
+         G2Hi73kn5nuDjqDw0pcVebZWSVdkgCKvbvn0nVZlUlAhQ9W3/5TVb17pQjzz/yO3EyWO
+         5Pl5qQ8rsJJvI1wVpF7wvpURahuy2YtSjdzYNq85YI1XSePskz5nuLIPDFAxi5WcpQBJ
+         k0QkWyX1Xu4oUXfVwaGu3HFFq77/5yKA1eyQYjzRLsJw1/ABO7QU06qc98Rz+dqTThpT
+         wpAw==
+X-Gm-Message-State: AC+VfDyPSfSephcNgIgD8DVUwW3VzM/csl7eWB+faZVeIzqV5Ht+mTra
+        o6XOSikNVeTEZnTzTC9z+9PgBpT3vXgmAv0tKqI=
+X-Google-Smtp-Source: ACHHUZ7NmGQeuJzb0lbjhvgqFi5enz75rgoLDPpSU3w2ti/kO09jRF2EwzRV3INcieNLAe07fwmn/Q==
+X-Received: by 2002:a17:902:f7d4:b0:1b0:2f15:e0b3 with SMTP id h20-20020a170902f7d400b001b02f15e0b3mr525686plw.50.1685655839943;
+        Thu, 01 Jun 2023 14:43:59 -0700 (PDT)
+Received: from dread.disaster.area (pa49-179-0-188.pa.nsw.optusnet.com.au. [49.179.0.188])
+        by smtp.gmail.com with ESMTPSA id b13-20020a170902d50d00b001b02bd00c61sm3969131plg.237.2023.06.01.14.43.59
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Thu, 01 Jun 2023 14:43:59 -0700 (PDT)
+Received: from dave by dread.disaster.area with local (Exim 4.96)
+        (envelope-from <david@fromorbit.com>)
+        id 1q4q5N-006eze-0B;
+        Fri, 02 Jun 2023 07:43:57 +1000
+Date:   Fri, 2 Jun 2023 07:43:57 +1000
+From:   Dave Chinner <david@fromorbit.com>
+To:     Jianan Wang <wangjianan.zju@gmail.com>
+Cc:     linux-xfs@vger.kernel.org
+Subject: Re: Question on the xfs inode slab memory
+Message-ID: <ZHkRHW9Fd19du0Zv@dread.disaster.area>
+References: <CAMj1M42L6hH9weqroQNaWu_SG+Yg8NrAuzgNO1b8jiWPJ2M-5A@mail.gmail.com>
+ <ZHfhYsqln68N1HyO@dread.disaster.area>
+ <7572072d-8132-d918-285c-3391cb041cff@gmail.com>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=iso-8859-1
+Content-Disposition: inline
 Content-Transfer-Encoding: 8bit
-X-Mailru-Src: smtp
-X-7564579A: B8F34718100C35BD
-X-77F55803: 4F1203BC0FB41BD988F25420CCA9469A2BB1E2660ECA1581064044AB7613D518182A05F53808504088B01F9919C9967A328D8412528A2B181377013899F85E7B248D376E6EAE18D2
-X-7FA49CB5: FF5795518A3D127A4AD6D5ED66289B5278DA827A17800CE7811C3E343B302E2EEA1F7E6F0F101C67BD4B6F7A4D31EC0BCC500DACC3FED6E28638F802B75D45FF8AA50765F7900637FA81DCE0280C9CC68F08D7030A58E5AD1A62830130A00468AEEEE3FBA3A834EE7353EFBB55337566E73BB9F70E9C8FACA03128D410FCB164D28D34A51C0A89D01DF9E95F17B0083B26EA987F6312C9EC9ECD01F8117BC8BEA471835C12D1D977725E5C173C3A84C3B5963347A33BF957117882F4460429728AD0CFFFB425014E868A13BD56FB6657D81D268191BDAD3DC09775C1D3CA48CFF82EDF9CA04B820DBA3038C0950A5D36C8A9BA7A39EFB766EC990983EF5C0329BA3038C0950A5D36D5E8D9A59859A8B6D8523C45A811685676E601842F6C81A1F004C906525384303E02D724532EE2C3F43C7A68FF6260569E8FC8737B5C2249D082881546D93491E827F84554CEF50127C277FBC8AE2E8BA83251EDC214901ED5E8D9A59859A8B6F6B3B5B76D0D00FF089D37D7C0E48F6C5571747095F342E88FB05168BE4CE3AF
-X-C1DE0DAB: 0D63561A33F958A5261F2145C60440E14571F9C29A6D89D6690F1823D3D25F9AF87CCE6106E1FC07E67D4AC08A07B9B06A1CB4668A9CA5FA9C5DF10A05D560A950611B66E3DA6D700B0A020F03D25A09B861051D4BA689FCCB5012B2E24CD356
-X-C8649E89: 1C3962B70DF3F0ADBF74143AD284FC7177DD89D51EBB7742DC8270968E61249B1004E42C50DC4CA955A7F0CF078B5EC49A30900B95165D34ECB3E21D3CD9CB4F001A01FCD74F83025413CDBF077FE4D2A39624195389AC264D4C18295C8998F61D7E09C32AA3244CE8610B4F36DC6CD7D10FC6B0217BCB481DD47778AE04E04D175B47BDB6F167205DA084F8E80FEBD3D42CA810AD4FA7D0A8069D772E6E5B8583DB18EBE73F7D69
-X-D57D3AED: 3ZO7eAau8CL7WIMRKs4sN3D3tLDjz0dLbV79QFUyzQ2Ujvy7cMT6pYYqY16iZVKkSc3dCLJ7zSJH7+u4VD18S7Vl4ZUrpaVfd2+vE6kuoey4m4VkSEu530nj6fImhcD4MUrOEAnl0W826KZ9Q+tr5ycPtXkTV4k65bRjmOUUP8cvGozZ33TWg5HZplvhhXbhDGzqmQDTd6OAevLeAnq3Ra9uf7zvY2zzsIhlcp/Y7m53TZgf2aB4JOg4gkr2biojItsbmePJJf1bTvbEmsb/6g==
-X-Mailru-Sender: 4CE1109FD677D2770147F6A9E21DCA7B5F0536A82FBE00723316D0EE98F40EFEC8282E0A62FD83227E3C9C7AF06D9E7B78274A4A9E9E44FD3C3897ABF9FF211DE8284E426C7B2D9A5FEEDEB644C299C0ED14614B50AE0675
-X-Mras: Ok
-X-7564579A: 646B95376F6C166E
-X-77F55803: 6242723A09DB00B4FA5F4CC6668110EA225A1FBE07D3D9FE4346EDDC6699553B049FFFDB7839CE9EE83D3DC30F0B9ED019F24E9A657C10225F28490FC053D1E2151065E8FD824313
-X-7FA49CB5: 0D63561A33F958A5959B4A74319D22C0E3579B1C885432E396CE3074ABAB2777CACD7DF95DA8FC8BD5E8D9A59859A8B66B00444BA4711156
-X-D57D3AED: 3ZO7eAau8CL7WIMRKs4sN3D3tLDjz0dLbV79QFUyzQ2Ujvy7cMT6pYYqY16iZVKkSc3dCLJ7zSJH7+u4VD18S7Vl4ZUrpaVfd2+vE6kuoey4m4VkSEu530nj6fImhcD4MUrOEAnl0W826KZ9Q+tr5xhPKz0ZEsZ5k6NOOPWz5QAiZSCXKGQRq3/7KxbCLSB2ESzQkaOXqCBFZPLWFrEGlV1shfWe2EVcxl5toh0c/aCGOghz/frdRhzMe95NxDFdZdU6KX1s6V6NU7Kc7AL+oQ==
-X-Mailru-MI: C000000000000800
-X-Mras: Ok
+In-Reply-To: <7572072d-8132-d918-285c-3391cb041cff@gmail.com>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-This patch is needed to fix CVE-2023-2124
+On Wed, May 31, 2023 at 11:21:41PM -0700, Jianan Wang wrote:
+> Seems the auto-wraping issue is on my gmail.... using thunderbird should be better...
+
+Thanks!
+
+> Resend the slabinfo and meminfo output here:
+> 
+> Linux # cat /proc/slabinfo
+> slabinfo - version: 2.1
+> # name            <active_objs> <num_objs> <objsize> <objperslab> <pagesperslab> : tunables <limit> <batchcount> <sharedfactor> : slabdata <active_slabs> <num_slabs> <sharedavail>
+.....
+> xfs_dqtrx              0      0    528   31    4 : tunables    0    0    0 : slabdata      0      0      0
+> xfs_dquot              0      0    496   33    4 : tunables    0    0    0 : slabdata      0      0      0
+> xfs_buf           2545661 3291582    384   42    4 : tunables    0    0    0 : slabdata  78371  78371      0
+> xfs_rui_item           0      0    696   47    8 : tunables    0    0    0 : slabdata      0      0      0
+> xfs_rud_item           0      0    176   46    2 : tunables    0    0    0 : slabdata      0      0      0
+> xfs_inode         23063278 77479540   1024   32    8 : tunables    0    0    0 : slabdata 2425069 2425069      0
+> xfs_efd_item        4662   4847    440   37    4 : tunables    0    0    0 : slabdata    131    131      0
+> xfs_buf_item        8610   8760    272   30    2 : tunables    0    0    0 : slabdata    292    292      0
+> xfs_trans           1925   1925    232   35    2 : tunables    0    0    0 : slabdata     55     55      0
+> xfs_da_state        1632   1632    480   34    4 : tunables    0    0    0 : slabdata     48     48      0
+> xfs_btree_cur       1728   1728    224   36    2 : tunables    0    0    0 : slabdata     48     48      0
+
+There's no xfs_ili slab cache - this kernel must be using merged
+slabs, so I'm going to have to infer how many inodes are dirty from
+other slabs. The inode log item is ~190 bytes in size, so....
+
+> skbuff_ext_cache  16454495 32746392    192   42    2 : tunables    0    0    0 : slabdata 779676 779676      0
+
+Yup, there were - 192 byte slab, 16 million active objects. Not all
+of those inodes will be dirty right now, but ~65% of the inodes
+cached in memory have been dirty at some point. 
+
+So, yes, it is highly likely that your memory reclaim/OOM problems
+are caused by blocking on dirty inodes in memory reclaim, which you
+can only fix by upgrading to a newer kernel.
+
+-Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
