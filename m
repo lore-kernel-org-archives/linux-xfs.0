@@ -2,95 +2,152 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A6B55C77B7A
-	for <linux-xfs@archiver.kernel.org>; Thu,  1 Jun 2023 21:49:38 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2F445C77B7A
+	for <linux-xfs@archiver.kernel.org>; Thu,  1 Jun 2023 23:06:15 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233283AbjFAVtg (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 1 Jun 2023 17:49:36 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33014 "EHLO
+        id S231605AbjFAXGO (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 1 Jun 2023 19:06:14 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57628 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232986AbjFAVtM (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 1 Jun 2023 17:49:12 -0400
-Received: from mail-ot1-x32b.google.com (mail-ot1-x32b.google.com [IPv6:2607:f8b0:4864:20::32b])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 18B43E69
-        for <linux-xfs@vger.kernel.org>; Thu,  1 Jun 2023 14:48:51 -0700 (PDT)
-Received: by mail-ot1-x32b.google.com with SMTP id 46e09a7af769-6af713338ccso1201764a34.0
-        for <linux-xfs@vger.kernel.org>; Thu, 01 Jun 2023 14:48:51 -0700 (PDT)
+        with ESMTP id S231346AbjFAXGM (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 1 Jun 2023 19:06:12 -0400
+Received: from mail-pg1-x535.google.com (mail-pg1-x535.google.com [IPv6:2607:f8b0:4864:20::535])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1E87F199
+        for <linux-xfs@vger.kernel.org>; Thu,  1 Jun 2023 16:06:07 -0700 (PDT)
+Received: by mail-pg1-x535.google.com with SMTP id 41be03b00d2f7-5304d0d1eddso710542a12.2
+        for <linux-xfs@vger.kernel.org>; Thu, 01 Jun 2023 16:06:07 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=fromorbit-com.20221208.gappssmtp.com; s=20221208; t=1685656130; x=1688248130;
+        d=fromorbit-com.20221208.gappssmtp.com; s=20221208; t=1685660766; x=1688252766;
         h=in-reply-to:content-disposition:mime-version:references:message-id
          :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
-        bh=5OcnCx/pmbtKXZ7Da/cfbjcjL+zu9BSzJDqrWeCJgqM=;
-        b=iJ+8KgBdIdC0fmpV+4X5AKELAx0FWqlDQWhfpsM+A7pnnV/3/dVBEBpGetyDVC4ugR
-         K/OZ5yTSh2/Hk3/Ch55PUxSbD/VlFdQbMoibi19k4RKFT5WhvtOqoEUyc0wbsCeBZPLn
-         Z0F/FCkSFr5gt7mnVJP7Xfej7iMQCk1AOqFuxHsYLceDp2DJbAT6BHetM17aJ+MLxOYJ
-         UgBs+hheP7eKDjZ8LgeVTIRLxYXUP01QDIeck0U2kF5B40/7hUOKs3H5MIG5ilO2BK9W
-         NAlDPf8Y9tnkQDg4ogyDVoFGO9CALjAVW0iifu8WadfLVGgLiIOl0VO1iuluLRKySMYv
-         5x+g==
+        bh=0RkGG0H7mjY3a+9QsLOolV5JIX0+0TtB9RXUw2XTjJg=;
+        b=cwmqt0Q4DfwCMZq9zejM8lH6nVcDOZkqawU3r3zUHN7ix0+BjClFIA2IFCionbvtFN
+         RQaE7LP4WTBW9uaCMupU9D8aE8PMHLgn5qk9/eSmcZ157SLZ76JHA0tV9vCIKCMSflAY
+         fjWnUVkMsQp+3BpV4aJzM7UKvo/Fb+ihTjxro+0+1QlFzbv8Ms9QcRRgBr5mp82nlpwy
+         Bn6fhLKR+1Caez6W7RHGxoYwyMRyxD7GKoHQQH7MzGNljPANT0HbEDyWIe9rzBp99Nqn
+         RUjtnGjiWo6t8q0rJIQ50RWp2AaqtHs2f+dS9T1t6S+2q/bUMhUmg9s8g1O6uycgMx3M
+         ZTCA==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20221208; t=1685656130; x=1688248130;
+        d=1e100.net; s=20221208; t=1685660766; x=1688252766;
         h=in-reply-to:content-disposition:mime-version:references:message-id
          :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
          :message-id:reply-to;
-        bh=5OcnCx/pmbtKXZ7Da/cfbjcjL+zu9BSzJDqrWeCJgqM=;
-        b=ZWGJ9bL1CJ+4w2qmnIgK2pnblaZpRdAAjkuR6377kqoMVRa5GSRs1xnsYE8nX0W/4F
-         DIb3hDYBzRCokfH+r19XnNjJxW3E5K7EnibPbLEgF2MYAMOIrWQJdbKd62F5pVtrGBZH
-         E+ux1aRkzkMvd5RpW3NYghHtL4bQeXyrjKfRqz+qnEXoENpL590Tkku2IdgV+2Hk72cs
-         fuOP3oyXlJy3Blw/jGYgt216oDtxntDMQ9GuJnNmPISsOnuFU2iWXFC+SIb+mHIjs6Qg
-         WF19s4DBztjgjI69R60lC+uJFxqaznatydHb5UZ+ZqirFcIJuOgsoKbizNpJWewEDFj0
-         wDkw==
-X-Gm-Message-State: AC+VfDwJTPn1qGCOAolLdGAEH5sg9Dk231rfWnGDsJkvx6YaToqNtz17
-        0BYGReev/0pr03Wyn41TOiUuug==
-X-Google-Smtp-Source: ACHHUZ415WnubrhQMrYWFgLqY3RXllLba3VYlMrHqu2QPousFmk1Hej1ZnqOsZGP095dGQGVDiGwOA==
-X-Received: by 2002:a05:6358:7242:b0:123:3f75:f56a with SMTP id i2-20020a056358724200b001233f75f56amr6105303rwa.0.1685656130299;
-        Thu, 01 Jun 2023 14:48:50 -0700 (PDT)
+        bh=0RkGG0H7mjY3a+9QsLOolV5JIX0+0TtB9RXUw2XTjJg=;
+        b=D8rhflqLV23blGi7c+0nmdYlQpqU0KYd3Ybr+OV6ExB4/5OC/Ihm6Yd3+dNWgFtroy
+         jy2FwZhcJt/nQG+hUEcIhD+3Xr92kJxw6PiJIhRFlxa/uyIRJ9ncnZ6qLdmrmXAgBZDu
+         5dikPDBnWPS8Td14o62yPr+LErfTWsX88oZP1oLdNj8n3LKHeGrI/hEGC0EVzNn5dczd
+         0Y11pxy2h1uvbLW502lmgmot6wkdDZ+IXjtRyhzUBap+6kolw0jzFIL0fSfBLOPIMB6S
+         3CnqX5vc9CJNH9Y2kJyvP3DDypDGuxP8Ipjl4hwm8n3VrRw0Ctq99f89hURqvbXTfjdi
+         WnSg==
+X-Gm-Message-State: AC+VfDyOmaa0XVFln1GP0LNO0DpknqM0O5uMfkgq5Jd/Kl2hhyx1fk4C
+        ai1+LFWPVSn/TGUKTclXBw5bq6aoIuG1xlZkaOc=
+X-Google-Smtp-Source: ACHHUZ46oEBAmDM8AMw+nRtb7ooMsOtJ7vtkx6vl+zBvCBDmYdzFjqdUhiNmLHNa7XPQrt1IElMQzg==
+X-Received: by 2002:a17:902:c3cc:b0:1b1:b50c:e313 with SMTP id j12-20020a170902c3cc00b001b1b50ce313mr572141plj.66.1685660766564;
+        Thu, 01 Jun 2023 16:06:06 -0700 (PDT)
 Received: from dread.disaster.area (pa49-179-0-188.pa.nsw.optusnet.com.au. [49.179.0.188])
-        by smtp.gmail.com with ESMTPSA id u10-20020aa7848a000000b00627fafe49f9sm5485376pfn.106.2023.06.01.14.48.49
+        by smtp.gmail.com with ESMTPSA id n6-20020a170902d2c600b001b02162c866sm4062096plc.44.2023.06.01.16.06.05
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 01 Jun 2023 14:48:49 -0700 (PDT)
+        Thu, 01 Jun 2023 16:06:05 -0700 (PDT)
 Received: from dave by dread.disaster.area with local (Exim 4.96)
         (envelope-from <david@fromorbit.com>)
-        id 1q4qA3-006f3I-0v;
-        Fri, 02 Jun 2023 07:48:47 +1000
-Date:   Fri, 2 Jun 2023 07:48:47 +1000
+        id 1q4rMo-006gS5-35;
+        Fri, 02 Jun 2023 09:06:03 +1000
+Date:   Fri, 2 Jun 2023 09:06:02 +1000
 From:   Dave Chinner <david@fromorbit.com>
-To:     Christoph Hellwig <hch@lst.de>
-Cc:     Jens Axboe <axboe@kernel.dk>, Al Viro <viro@zeniv.linux.org.uk>,
-        Christian Brauner <brauner@kernel.org>,
-        "Darrick J. Wong" <djwong@kernel.org>, Jan Kara <jack@suse.cz>,
-        linux-block@vger.kernel.org, linux-fsdevel@vger.kernel.org,
-        linux-xfs@vger.kernel.org
-Subject: Re: introduce bdev holder ops and a file system shutdown method v3
-Message-ID: <ZHkSP0qlKQWDcStr@dread.disaster.area>
-References: <20230601094459.1350643-1-hch@lst.de>
+To:     Qi Zheng <qi.zheng@linux.dev>
+Cc:     akpm@linux-foundation.org, tkhai@ya.ru, roman.gushchin@linux.dev,
+        vbabka@suse.cz, viro@zeniv.linux.org.uk, brauner@kernel.org,
+        djwong@kernel.org, hughd@google.com, paulmck@kernel.org,
+        muchun.song@linux.dev, linux-mm@kvack.org,
+        linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org,
+        linux-kernel@vger.kernel.org, Qi Zheng <zhengqi.arch@bytedance.com>
+Subject: Re: [PATCH 6/8] xfs: introduce xfs_fs_destroy_super()
+Message-ID: <ZHkkWjt0R1ptV7RZ@dread.disaster.area>
+References: <20230531095742.2480623-1-qi.zheng@linux.dev>
+ <20230531095742.2480623-7-qi.zheng@linux.dev>
+ <ZHfc3V4KKmW8QTR2@dread.disaster.area>
+ <b85c0d63-f6a5-73c4-e574-163b0b07d80a@linux.dev>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20230601094459.1350643-1-hch@lst.de>
+In-Reply-To: <b85c0d63-f6a5-73c4-e574-163b0b07d80a@linux.dev>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Thu, Jun 01, 2023 at 11:44:43AM +0200, Christoph Hellwig wrote:
-> Hi all,
+On Thu, Jun 01, 2023 at 04:43:32PM +0800, Qi Zheng wrote:
+> Hi Dave,
+> On 2023/6/1 07:48, Dave Chinner wrote:
+> > On Wed, May 31, 2023 at 09:57:40AM +0000, Qi Zheng wrote:
+> > > From: Kirill Tkhai <tkhai@ya.ru>
+> > I don't really like this ->destroy_super() callback, especially as
+> > it's completely undocumented as to why it exists. This is purely a
+> > work-around for handling extended filesystem superblock shrinker
+> > functionality, yet there's nothing that tells the reader this.
+> > 
+> > It also seems to imply that the superblock shrinker can continue to
+> > run after the existing unregister_shrinker() call before ->kill_sb()
+> > is called. This violates the assumption made in filesystems that the
+> > superblock shrinkers have been stopped and will never run again
+> > before ->kill_sb() is called. Hence ->kill_sb() implementations
+> > assume there is nothing else accessing filesystem owned structures
+> > and it can tear down internal structures safely.
+> > 
+> > Realistically, the days of XFS using this superblock shrinker
+> > extension are numbered. We've got a lot of the infrastructure we
+> > need in place to get rid of the background inode reclaim
+> > infrastructure that requires this shrinker extension, and it's on my
+> > list of things that need to be addressed in the near future.
+> > 
+> > In fact, now that I look at it, I think the shmem usage of this
+> > superblock shrinker interface is broken - it returns SHRINK_STOP to
+> > ->free_cached_objects(), but the only valid return value is the
+> > number of objects freed (i.e. 0 is nothing freed). These special
+> > superblock extension interfaces do not work like a normal
+> > shrinker....
+> > 
+> > Hence I think the shmem usage should be replaced with an separate
+> > internal shmem shrinker that is managed by the filesystem itself
+> > (similar to how XFS has multiple internal shrinkers).
+> > 
+> > At this point, then the only user of this interface is (again) XFS.
+> > Given this, adding new VFS methods for a single filesystem
+> > for functionality that is planned to be removed is probably not the
+> > best approach to solving the problem.
 > 
-> this series fixes the long standing problem that we never had a good way
-> to communicate block device events to the user of the block device.
-> 
-> It fixes this by introducing a new set of holder ops registered at
-> blkdev_get_by_* time for the exclusive holder, and then wire that up
-> to a shutdown super operation to report the block device remove to the
-> file systems.
+> Thanks for such a detailed analysis. Kirill Tkhai just proposeed a
+> new method[1], I cc'd you on the email.
 
-Thanks for doing this, Christoph.
+I;ve just read through that thread, and I've looked at the original
+patch that caused the regression.
 
-For the series:
+I'm a bit annoyed right now. Nobody cc'd me on the original patches
+nor were any of the subsystems that use shrinkers were cc'd on the
+patches that changed shrinker behaviour. I only find out about this
+because someone tries to fix something they broke by *breaking more
+stuff* and not even realising how broken what they are proposing is.
 
-Acked-by: Dave Chinner <dchinner@redhat.com>
+The previous code was not broken and it provided specific guarantees
+to subsystems via unregister_shrinker(). From the above discussion,
+it appears that the original authors of these changes either did not
+know about or did not understand them, so that casts doubt in my
+mind about the attempted solution and all the proposed fixes for it.
 
-For the XFS patches in the series:
+I don't have the time right now unravel this mess and fully
+understand the original problem, changes or the band-aids that are
+being thrown around. We are also getting quite late in the cycle to
+be doing major surgery to critical infrastructure, especially as it
+gives so little time to review regression test whatever new solution
+is proposed.
 
-Reviewed-by: Dave Chinner <dchinner@redhat.com>
+Given this appears to be a change introduced in 6.4-rc1, I think the
+right thing to do is to revert the change rather than make things
+worse by trying to shove some "quick fix" into the kernel to address
+it.
+
+Andrew, could you please sort out a series to revert this shrinker
+infrastructure change and all the dependent hacks that have been
+added to try to fix it so far?
 
 -Dave.
 -- 
