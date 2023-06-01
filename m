@@ -2,89 +2,97 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E5565C7EE2F
-	for <linux-xfs@archiver.kernel.org>; Thu,  1 Jun 2023 09:46:46 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 99633C7EE29
+	for <linux-xfs@archiver.kernel.org>; Thu,  1 Jun 2023 09:58:53 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232907AbjFAJqp (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 1 Jun 2023 05:46:45 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60470 "EHLO
+        id S231607AbjFAJ6v (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 1 Jun 2023 05:58:51 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40576 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232994AbjFAJqa (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 1 Jun 2023 05:46:30 -0400
-Received: from bombadil.infradead.org (bombadil.infradead.org [IPv6:2607:7c80:54:3::133])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id CDE72198;
-        Thu,  1 Jun 2023 02:46:29 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=infradead.org; s=bombadil.20210309; h=Content-Transfer-Encoding:
-        MIME-Version:References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:Sender
-        :Reply-To:Content-Type:Content-ID:Content-Description;
-        bh=U4TjS8hJ35XHd5owLFnLOorlk910Gs34ZQ7m5GZkWrQ=; b=AW37rgIICwNhWS4cQhU/rOeDtl
-        Fc+pKGDwxbMkx0yfrdUfBJETxBAGp2L+FpFX21n05hR40fvZFcvzDwgR4mGclRFIE0HiYAjcr84Mo
-        2LguJIqCn1sSXXNeRICc/NGz2FRZLPnp/I0ODyqo7Oe3SMAk+CHWSOO9s6xFUWX/RFJRVNFST7RZz
-        WHd/zUQlxakpP9Hs7BFtLb2QUJfHzuBZKfb3uvWFLfFd0glBqTLYSvVh9VN/6S3U3R/flIWQrusGK
-        GzQjiph+NDLg5nzUpREgxdrrLcFZ0C+H657sG2nQdU+xdso6RQIUhbYoqnqINKLbB91BaIeD7V0wP
-        h513/YCA==;
-Received: from [2001:4bb8:182:6d06:35f3:1da0:1cc3:d86d] (helo=localhost)
-        by bombadil.infradead.org with esmtpsa (Exim 4.96 #2 (Red Hat Linux))
-        id 1q4et1-002mEa-0r;
-        Thu, 01 Jun 2023 09:46:27 +0000
-From:   Christoph Hellwig <hch@lst.de>
-To:     Jens Axboe <axboe@kernel.dk>
-Cc:     Al Viro <viro@zeniv.linux.org.uk>,
+        with ESMTP id S232548AbjFAJ6i (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 1 Jun 2023 05:58:38 -0400
+Received: from smtp-out1.suse.de (smtp-out1.suse.de [IPv6:2001:67c:2178:6::1c])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A8C88FC;
+        Thu,  1 Jun 2023 02:58:35 -0700 (PDT)
+Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
+        (No client certificate requested)
+        by smtp-out1.suse.de (Postfix) with ESMTPS id 50ECD2195F;
+        Thu,  1 Jun 2023 09:58:34 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.cz; s=susede2_rsa;
+        t=1685613514; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+         mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=oDsyFBeXQbC/1D222Hf6R8KVGa7uZdAOGxoAw0743Nc=;
+        b=1qJz0f0jfps3GDUrMZXnpklVnuUt1kk9y32Imzhc93nObTo5JrDGyENX+0eUuJJvJtlNy6
+        6is+zhz3I7pZYPt/0gGYxck7diLCMW8OkoGqHE9mPRTZOZ8sLKM4N+DqprE77A0o2/dpux
+        NZoKGBrhWc0yEmmtgkqFy6r1h1Vbv6Y=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.cz;
+        s=susede2_ed25519; t=1685613514;
+        h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+         mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=oDsyFBeXQbC/1D222Hf6R8KVGa7uZdAOGxoAw0743Nc=;
+        b=FawsNXR1x8fq6cFZ0sd9ja08hccc5PB/xO4OtRBX2nmVJCjFS6DeLj+Vvx933NircztxPP
+        YRNxEE/v/ZDNYvBg==
+Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
+        (No client certificate requested)
+        by imap2.suse-dmz.suse.de (Postfix) with ESMTPS id 4121E139B7;
+        Thu,  1 Jun 2023 09:58:34 +0000 (UTC)
+Received: from dovecot-director2.suse.de ([192.168.254.65])
+        by imap2.suse-dmz.suse.de with ESMTPSA
+        id v4DLD8preGT0NgAAMHmgww
+        (envelope-from <jack@suse.cz>); Thu, 01 Jun 2023 09:58:34 +0000
+Received: by quack3.suse.cz (Postfix, from userid 1000)
+        id CA6D2A0754; Thu,  1 Jun 2023 11:58:33 +0200 (CEST)
+Date:   Thu, 1 Jun 2023 11:58:33 +0200
+From:   Jan Kara <jack@suse.cz>
+To:     Christoph Hellwig <hch@lst.de>
+Cc:     Jan Kara <jack@suse.cz>, Jens Axboe <axboe@kernel.dk>,
+        Al Viro <viro@zeniv.linux.org.uk>,
         Christian Brauner <brauner@kernel.org>,
-        "Darrick J. Wong" <djwong@kernel.org>, Jan Kara <jack@suse.cz>,
-        linux-block@vger.kernel.org, linux-fsdevel@vger.kernel.org,
-        linux-xfs@vger.kernel.org
-Subject: [PATCH 16/16] ext4: wire up the ->mark_dead holder operation for log devices
-Date:   Thu,  1 Jun 2023 11:44:59 +0200
-Message-Id: <20230601094459.1350643-17-hch@lst.de>
-X-Mailer: git-send-email 2.39.2
-In-Reply-To: <20230601094459.1350643-1-hch@lst.de>
-References: <20230601094459.1350643-1-hch@lst.de>
+        "Darrick J. Wong" <djwong@kernel.org>, linux-block@vger.kernel.org,
+        linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org
+Subject: Re: [PATCH 02/13] block: refactor bd_may_claim
+Message-ID: <20230601095833.xd65rrzfkhkxuf6s@quack3>
+References: <20230518042323.663189-1-hch@lst.de>
+ <20230518042323.663189-3-hch@lst.de>
+ <20230530114148.zobtxdurit24pqev@quack3>
+ <20230601081105.GA31903@lst.de>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20230601081105.GA31903@lst.de>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Implement a set of holder_ops that shut down the file system when the
-block device used as log device is removed undeneath the file system.
+On Thu 01-06-23 10:11:05, Christoph Hellwig wrote:
+> On Tue, May 30, 2023 at 01:41:48PM +0200, Jan Kara wrote:
+> > > +	if (bdev->bd_holder) {
+> > > +		/*
+> > > +		 * The same holder can always re-claim.
+> > > +		 */
+> > > +		if (bdev->bd_holder == holder)
+> > > +			return true;
+> > > +		return false;
+> > 
+> > With this simple condition I'd just do:
+> > 		/* The same holder can always re-claim. */
+> > 		return bdev->bd_holder == holder;
+> 
+> As of this patch this makes sense, and I did in fact did it that
+> way first.  But once we start checking the holder ops we need
+> the eplcicit conditional, so I decided to start out with this more
+> verbose option to avoid churn later.
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
----
- fs/ext4/super.c | 11 ++++++++++-
- 1 file changed, 10 insertions(+), 1 deletion(-)
+Ah, OK.
 
-diff --git a/fs/ext4/super.c b/fs/ext4/super.c
-index a177a16c4d2fe5..9070ea9154d727 100644
---- a/fs/ext4/super.c
-+++ b/fs/ext4/super.c
-@@ -1096,6 +1096,15 @@ void ext4_update_dynamic_rev(struct super_block *sb)
- 	 */
- }
- 
-+static void ext4_bdev_mark_dead(struct block_device *bdev)
-+{
-+	ext4_force_shutdown(bdev->bd_holder, EXT4_GOING_FLAGS_NOLOGFLUSH);
-+}
-+
-+static const struct blk_holder_ops ext4_holder_ops = {
-+	.mark_dead		= ext4_bdev_mark_dead,
-+};
-+
- /*
-  * Open the external journal device
-  */
-@@ -1104,7 +1113,7 @@ static struct block_device *ext4_blkdev_get(dev_t dev, struct super_block *sb)
- 	struct block_device *bdev;
- 
- 	bdev = blkdev_get_by_dev(dev, FMODE_READ|FMODE_WRITE|FMODE_EXCL, sb,
--				 NULL);
-+				 &ext4_holder_ops);
- 	if (IS_ERR(bdev))
- 		goto fail;
- 	return bdev;
+								Honza
+
 -- 
-2.39.2
-
+Jan Kara <jack@suse.com>
+SUSE Labs, CR
