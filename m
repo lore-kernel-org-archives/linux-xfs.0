@@ -2,149 +2,148 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D5B55C77B73
-	for <linux-xfs@archiver.kernel.org>; Thu,  1 Jun 2023 00:08:13 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 287D5C77B73
+	for <linux-xfs@archiver.kernel.org>; Thu,  1 Jun 2023 01:47:32 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229542AbjFAAIM (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 31 May 2023 20:08:12 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49314 "EHLO
+        id S230177AbjFABrb (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 31 May 2023 21:47:31 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43862 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229469AbjFAAIL (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 31 May 2023 20:08:11 -0400
-Received: from mail-pf1-x436.google.com (mail-pf1-x436.google.com [IPv6:2607:f8b0:4864:20::436])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E7C27124
-        for <linux-xfs@vger.kernel.org>; Wed, 31 May 2023 17:08:06 -0700 (PDT)
-Received: by mail-pf1-x436.google.com with SMTP id d2e1a72fcca58-64d4e4598f0so372171b3a.2
-        for <linux-xfs@vger.kernel.org>; Wed, 31 May 2023 17:08:06 -0700 (PDT)
+        with ESMTP id S229459AbjFABra (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 31 May 2023 21:47:30 -0400
+Received: from mail-ot1-x330.google.com (mail-ot1-x330.google.com [IPv6:2607:f8b0:4864:20::330])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1AB84121
+        for <linux-xfs@vger.kernel.org>; Wed, 31 May 2023 18:47:29 -0700 (PDT)
+Received: by mail-ot1-x330.google.com with SMTP id 46e09a7af769-6af8127031cso281162a34.2
+        for <linux-xfs@vger.kernel.org>; Wed, 31 May 2023 18:47:29 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=fromorbit-com.20221208.gappssmtp.com; s=20221208; t=1685578086; x=1688170086;
+        d=fromorbit-com.20221208.gappssmtp.com; s=20221208; t=1685584048; x=1688176048;
         h=in-reply-to:content-disposition:mime-version:references:message-id
          :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
-        bh=4NfftCMHJ2mk2OAzr3g365CO6p8zdsBKQyeSDPsEjLk=;
-        b=1cS8E7NNFagubSxA6dYeteaqccqiSFCqJEZEIdfqw7uDJrPInABblpuqtGet8rWGyK
-         UJe1SRVfnm0baJCLNj22nRBXT4D1+yShn3N6ESslolhGf2M+DNZELa5ecmVraylz1/0k
-         hHQ65S0r+QWouIQC7VuN1V2eS1/2tHqgaW0Z34kU/hr2ERDyakRRGznPoYCNw+Odxeko
-         FLc6DxZQ42mDsYZZ0BZIRr3bvHiUjbVo5Stijn2QXVqHQ8yw4UyQg2wa6K5UOF66nWYA
-         GY5Jo516m+bPpg9F0ynMxjR59+Ofx/hkreHnV0nOVFFANZMXR2dXVDL/Q4pV8lP/3xpj
-         lNCw==
+        bh=pqKX5wCIEjMJxSbcbMQ4WHF24GK6QiJJCQrXsTAw+zE=;
+        b=4jNq9ImQ1gvUzFNTC13ceN7PCgHtiFyEt8N8Vcezwj+72L6DEWiZubI+VSuyBIvquL
+         eZ+Gb36vzWOl59Cg+puqYb7Zs2+0IhrxKt6ASxGbSBNfiKSmXtQjXd4b5NAFDUlv26hM
+         ET7ipscDqYf4I7zMeGAC+b0Nj3FqDEhCyqjQfTZyk8zbkAQiYl4l3bczUmxddX2+oq27
+         XQpYEKsMAJ7Vv4ZvHdT1WawTxgtIrr+LJ8/FzBb7Pwf4CjtZSRYNJp8bhHDmHEbIIC/Q
+         DtS6v71HF6Qr7peH9EmtumYj2oEK7cvJ85oPr/qfZqKTeC4U8l2LYTOdTGdTQ7CNQYIC
+         sDHg==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20221208; t=1685578086; x=1688170086;
+        d=1e100.net; s=20221208; t=1685584048; x=1688176048;
         h=in-reply-to:content-disposition:mime-version:references:message-id
          :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
          :message-id:reply-to;
-        bh=4NfftCMHJ2mk2OAzr3g365CO6p8zdsBKQyeSDPsEjLk=;
-        b=H+lX0YcbUT0h9Z8qK8FUytS3vKgYFO5l7gXHx241W2HfO43uYzn1QgMY5Y20DXCT3r
-         EWmnmIdjVOixPo8xrKlWn2gEb6Y6LXBbogwKk4rxuSmmF38EULzeOXCLMJUcbRGrrI6Z
-         YVlPy75pUJCJzsj5MSsDvAQujUXFsCF3y+nrou5coIl5IWOwUJwM3FfW+us3XHnuWfAd
-         QhGu5a/FjUwobU6oAYJOkwRPuFRPtgtjF2x4ILw3tpA4KtPkV8CYxLy0wOQBondkE0Du
-         k20igiJVsLV+Ow2WWlkXyjdlOPl9xx3QMI8oFmExG+WMWviFAZPho30v7UO2L4gZm/PM
-         oBnQ==
-X-Gm-Message-State: AC+VfDwoa7ynmElhhFu1TodNwNx69TgjmQ1hTcBr/duWGh2YDzWucG+G
-        LfmsYU1LF6UBY7Hz0aE+WTb64LxblLpit52qkzg=
-X-Google-Smtp-Source: ACHHUZ6WiVURACzwkvMsWWWblYL8OvI6oSMTR9rPt04stDvq3hb4DE0EaACPojDVZhadUv2oI3jtoA==
-X-Received: by 2002:a05:6a00:2e05:b0:64f:4197:8d93 with SMTP id fc5-20020a056a002e0500b0064f41978d93mr10270159pfb.24.1685578086385;
-        Wed, 31 May 2023 17:08:06 -0700 (PDT)
+        bh=pqKX5wCIEjMJxSbcbMQ4WHF24GK6QiJJCQrXsTAw+zE=;
+        b=SZMF6Zv6A8xHybTclhHgWkNFxY/cozpQzTzmbPu2rN6jNLJxWQQ7pQu9Fs0993M9Xk
+         H3ADUBOO/l3XasTtv8pF9PT/8HQkLsIOTnkr8fyH//O9HZGjvsSaYoJ1eiMJEhiCnmOC
+         z5YOWxqGczN5dEIfrdNn3pkdQMGXw6GzizMf5l/ARbd78XQTxjIiHTPLXsznAgbHYE/p
+         CJ41wRAAgjEZ6DNfKPDT30QeWtw2blZmfsDI7vnvFkWNjeORU01dKTgZWFq9VomRHSWo
+         mOYPZy11kfjKrI5enorHOFuHw8mXGGY+CjQRriO8qHNcBRHFPFA1j/y0fb69jrHhozOX
+         FVog==
+X-Gm-Message-State: AC+VfDw4BZLYuGTczp8E8UKszebq8h7deIJzC9O8PrksGulKKGRc0WLe
+        KBoiYFxmTcKyuRnDAMHSfbY1RA==
+X-Google-Smtp-Source: ACHHUZ5l/WsyT48oxUwlQsR8DUt/dq1XW5lKe5VMfcvjJKfeXOOWEoHwC6rSSRaI8DfYvJr3hxr4/w==
+X-Received: by 2002:a05:6830:14d5:b0:697:ef66:e7f4 with SMTP id t21-20020a05683014d500b00697ef66e7f4mr3163542otq.24.1685584048325;
+        Wed, 31 May 2023 18:47:28 -0700 (PDT)
 Received: from dread.disaster.area (pa49-179-0-188.pa.nsw.optusnet.com.au. [49.179.0.188])
-        by smtp.gmail.com with ESMTPSA id k184-20020a6324c1000000b0052cbd854927sm1862772pgk.18.2023.05.31.17.08.05
+        by smtp.gmail.com with ESMTPSA id t16-20020a62ea10000000b0065014c15a57sm1430983pfh.35.2023.05.31.18.47.27
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 31 May 2023 17:08:05 -0700 (PDT)
+        Wed, 31 May 2023 18:47:27 -0700 (PDT)
 Received: from dave by dread.disaster.area with local (Exim 4.96)
         (envelope-from <david@fromorbit.com>)
-        id 1q4VrG-006IoG-2c;
-        Thu, 01 Jun 2023 10:08:02 +1000
-Date:   Thu, 1 Jun 2023 10:08:02 +1000
+        id 1q4XPR-006KR7-0o;
+        Thu, 01 Jun 2023 11:47:25 +1000
+Date:   Thu, 1 Jun 2023 11:47:25 +1000
 From:   Dave Chinner <david@fromorbit.com>
-To:     Jianan Wang <wangjianan.zju@gmail.com>
+To:     Eric Sandeen <sandeen@sandeen.net>
 Cc:     linux-xfs@vger.kernel.org
-Subject: Re: Question on the xfs inode slab memory
-Message-ID: <ZHfhYsqln68N1HyO@dread.disaster.area>
-References: <CAMj1M42L6hH9weqroQNaWu_SG+Yg8NrAuzgNO1b8jiWPJ2M-5A@mail.gmail.com>
+Subject: Re: XFS_AG_MIN_BLOCKS vs XFS_MIN_AG_BLOCKS
+Message-ID: <ZHf4rTFe3uAcr5jF@dread.disaster.area>
+References: <2777daf5-42e0-4350-9e0e-96a1fe68a039@sandeen.net>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <CAMj1M42L6hH9weqroQNaWu_SG+Yg8NrAuzgNO1b8jiWPJ2M-5A@mail.gmail.com>
+In-Reply-To: <2777daf5-42e0-4350-9e0e-96a1fe68a039@sandeen.net>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Wed, May 31, 2023 at 02:29:52PM -0700, Jianan Wang wrote:
-> Hi all,
+On Tue, May 30, 2023 at 12:02:04PM -0500, Eric Sandeen wrote:
+> I got a bug report that REAR was trying to recreate an xfs filesystem
+> geometry by looking at the xfs_info from the original filesystem.
 > 
-> I have a question regarding the xfs slab memory usage when operating a
-> filesystem with 1-2 billion inodes (raid 0 with 6 disks, totally
-> 18TB). On this partition, whenever there is a high disk io operation,
-> like removing millions of small files, the slab kernel memory usage
-> will increase a lot, leading to many OOM issues happening for the
-> services running on this node. You could check some of the stats as
-> the following (only includes the xfs related):
-
-You didn't include all the XFS related slabs. At minimum, the inode
-log item slab needs to be shown (xfs_ili) because that tells us how
-many of the inodes in the cache have been dirtied.
-
-As it is, I'm betting the problem is the disk subsystem can't write
-back dirty inodes fast enough to keep up with memory demand and so
-reclaim is declaring OOM faster than your disks can clean inodes to
-enable them to be reclaimed.
-
-> #########################################################################
-> Active / Total Objects (% used):  281803052 / 317485764 (88.8%)
-> Active / Total Slabs (% used): 13033144 / 13033144 (100.0%)
-> Active / Total Caches (% used): 126 / 180 (70.0%)
-> Active / Total Size (% used): 114671057.99K / 127265108.19K (90.1%)
-> Minium / Average / Maximum Object : 0.01K / 0.40K / 16.75K
+> In this case, the original fs was:
 > 
-> OBJS               ACTIVE      USE     OBJ SIZE     SLABS
-> OBJ/SLAB    CACHE SIZE    NAME
-> 78207920      70947541      0%       1.00K           7731010
->  32            247392320K     xfs_inode
-> 59945928      46548798      0%       0.19K           1433102
->  42              11464816K     dentry
-> 25051296      25051282      0%       0.38K           599680
->   42            9594880K         xfs_buf
-
-Ok, that's from slabtop. Please don't autowrap stuff you've pasted
-in - it makes it really hard to read. (reformatted so I can read
-it).
-
-OBJS           ACTIVE      USE     OBJ SIZE     SLABS OBJ/SLAB    CACHE SIZE    NAME
-78207920      70947541      0%       1.00K     7731010   32       247392320K     xfs_inode
-59945928      46548798      0%       0.19K     1433102   42        11464816K     dentry
-25051296      25051282      0%       0.38K      599680   42         9594880K         xfs_buf
-
-So, 70 million cached inodes, with a cache size of 240GB. There are
-7.7 million slabs, 32 objects per slab, and that's roughly 240GB.
-
-But why does the slab report only 78 million objects in the slab
-when at 240GB there should be 240 million objects in the slab?
-
-It looks like theres some kind of accounting problem here, likely in
-the slabtop program. I have always found slabtop to be unreliable
-like this....
-
-Can you attach the output of 'cat /proc/slabinfo' and 'cat
-/proc/meminfo' when you have a large slab cache in memory?
-
-> #########################################################################
+> meta-data=/dev/mapper/vg-lv_srv  isize=512    agcount=400, agsize=6144 blks
+>          =                       sectsz=512   attr=2, projid32bit=1
+>          =                       crc=1        finobt=1, sparse=1, rmapbt=0
+>          =                       reflink=1    bigtime=1 inobtcount=1
+> data     =                       bsize=4096   blocks=2453504, imaxpct=25
+>          =                       sunit=16     swidth=16 blks
+> naming   =version 2              bsize=4096   ascii-ci=0, ftype=1
+> log      =internal log           bsize=4096   blocks=1872, version=2
+>          =                       sectsz=512   sunit=16 blks, lazy-count=1
+> realtime =none                   extsz=4096   blocks=0, rtextents=0
 > 
-> The peak slab memory usage could spike all the way to 100GB+.
+> (horribly pessimal, almost certainly the result of xfs_growfs)
+> 
+> But the point is, the last AG is only 8MB. However, mkfs.xfs refuses to make
+> an AG less than 16MB. So, this fails, because agcount was specified and mkfs
+> won't reduce it to fix the too-small AG:
+> 
+> # truncate --size=10049552384 fsfile
+> # mkfs.xfs -f -m uuid=23ce7347-fce3-48b4-9854-60a6db155b16 -i size=512 -d
+> agcount=400 -s size=512 -i attr=2 -i projid32bit=1 -m crc=1 -m finobt=1 -b
+> size=4096 -i maxpct=25 -d sunit=128 -d swidth=128 -l version=2 -l sunit=128
+> -l lazy-count=1 -n size=4096 -n version=2 -r extsize=4096 fsfile
+> mkfs.xfs: xfs_mkfs.c:3016: align_ag_geometry: Assertion
+> `!cli_opt_set(&dopts, D_AGCOUNT)' failed.
 
-Is that all? :)
+/me finally catches up and reads bug report and Oh My What In The
+World.... :)
 
-> We are using Ubuntu 18.04 and the xfs version is 4.9, kernel version is 5.4
+> I think this is the result of mkfs.xfs using 16MB as a limit on last AG
+> size:
+> 
+> #define XFS_AG_MIN_BYTES                ((XFS_AG_BYTES(15)))    /* 16 MB */
+> #define XFS_AG_MIN_BLOCKS(blog)         (XFS_AG_MIN_BYTES >> (blog))
+> 
+> But growfs uses this:
+> 
+> #define XFS_MIN_AG_BLOCKS       64
+> 
+> (which is much smaller than 16MB).
+> 
+> This should almost certainly be consistent between mkfs and growfs, and my
+> guess is that growfs should start using the larger XFS_AG_MIN_BLOCKS
+> requirement that mkfs.xfs uses?
 
-Ah, I don't think there's anything upstream can do for you. We
-rewrote large portions of the XFS inode reclaim in 5.9 (3 years ago)
-to address the issues with memory reclaim getting stuck on dirty XFS
-inodes, so inode reclaim behaviour in modern kernels is completely
-different to old kernels.
+Yeah, that seems reasonable, but we can't get rid of
+XFS_MIN_AG_BLOCKS unfortunately. There are clearly filesystems out
+there that depend on AGs this small existing, so we can't just
+replace one with the other. e.g. XFS_MIN_DBLOCKS() uses it and
+that's part of the superblock size verification checks....
 
-I'd suggest that you need to upgrade your systems to run a more
-modern kernel and see if that fixes the issues you are seeing...
+That said, the same superblock verifier asserts this is a failure:
 
-Cheers,
+	XFS_FSB_TO_B(mp, sbp->sb_agblocks) < XFS_MIN_AG_BYTES
 
-Dave.
+So now I'm guessing that the AGF verifier doesn't have the same
+agf->agf_length verification against either XFS_MIN_AG_BYTES or
+sbp->sb_agblocks.
+
+Yup, the agf verifier does not check miniumum AGF length, it does
+not even check that the agf length is the same as (or smaller than
+for the last ag) sbp->sb_agblocks, either.
+
+Worse is that we use agf->agf_length as if it was fully validated
+and correct for other runtime block and extent range corruption
+checks. Ugh.
+
+I guess that's what the rest of my day is going to be spent
+unravelling, starting with trying to work out why I never validated
+this AGF field in the first place more than a decade ago....
+
+-Dave.
 -- 
 Dave Chinner
 david@fromorbit.com
