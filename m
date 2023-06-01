@@ -2,54 +2,50 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 623A8C77B7A
+	by smtp.lore.kernel.org (Postfix) with ESMTP id CB78AC7EE2F
 	for <linux-xfs@archiver.kernel.org>; Thu,  1 Jun 2023 10:58:42 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233240AbjFAK6j (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 1 Jun 2023 06:58:39 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52980 "EHLO
+        id S232288AbjFAK6k (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 1 Jun 2023 06:58:40 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52968 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233126AbjFAK6f (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 1 Jun 2023 06:58:35 -0400
-Received: from smtp-out2.suse.de (smtp-out2.suse.de [IPv6:2001:67c:2178:6::1d])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8AF9412C;
+        with ESMTP id S233005AbjFAK6d (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 1 Jun 2023 06:58:33 -0400
+Received: from smtp-out2.suse.de (smtp-out2.suse.de [195.135.220.29])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2C20E124;
         Thu,  1 Jun 2023 03:58:32 -0700 (PDT)
 Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
         (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
          key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
         (No client certificate requested)
-        by smtp-out2.suse.de (Postfix) with ESMTPS id 1FFBE1FD99;
-        Thu,  1 Jun 2023 10:58:31 +0000 (UTC)
+        by smtp-out2.suse.de (Postfix) with ESMTPS id AEAEA1FDA5;
+        Thu,  1 Jun 2023 10:58:30 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.cz; s=susede2_rsa;
-        t=1685617111; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=MzXOzo95g617qUk7Z949h4EoD3WLK3t1qcqqyGoLxTU=;
-        b=JnxZsTeRlkpGAeNVzMjBvMt7Um93iLPpsI45FFwBn30paVGGbNnEWH9M38MdENSm/kGngr
-        DioDvnCcG1CcHf7FQaY8W0HEFG7aKNjvivi3Ap/HmVOb0RlNIIEAtXneeUIB3XUbbBvMbk
-        zXCS+ZxYtK5OM8dZmOv8TRYohjVDer8=
+        t=1685617110; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+         mime-version:mime-version:  content-transfer-encoding:content-transfer-encoding;
+        bh=0DzWy5kExCz1dSPChCQvEKrJzhHmLyM85G+sXWlLMTs=;
+        b=O8fbyQ3Qfgilzk4ztIxRWXNswx8WxStxJH7Ro86uTmTrniGGwYpyAtacV4AvbfMtchEnFK
+        7C2xejbwsT+PBZ5P/2MoBAv/Ola39ZDfmsLATy8NeEBSBOCiNGCMX1aLx1s3ZCRWv4jopL
+        N1htniSMG77/DaC1/kH67u4cr6gMfMU=
 DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.cz;
-        s=susede2_ed25519; t=1685617111;
+        s=susede2_ed25519; t=1685617110;
         h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=MzXOzo95g617qUk7Z949h4EoD3WLK3t1qcqqyGoLxTU=;
-        b=12MljAV3Jn4lWXoFOIkKiAO7uA5l6sXWVPVfp8DSkd5pTHVzE2MnGWF2CEZjuth948cp5s
-        BtU9qfzM+5cVWrBw==
+         mime-version:mime-version:  content-transfer-encoding:content-transfer-encoding;
+        bh=0DzWy5kExCz1dSPChCQvEKrJzhHmLyM85G+sXWlLMTs=;
+        b=S3Cqa74WhoF+oaTGeRolNYwpAq9Rx53NMUnTdMaZIRewUzrBJgDeIA2gTYcgh51peH0HaG
+        40WThMrSNLK/sbBA==
 Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
         (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
          key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
         (No client certificate requested)
-        by imap2.suse-dmz.suse.de (Postfix) with ESMTPS id 122FA13A34;
-        Thu,  1 Jun 2023 10:58:31 +0000 (UTC)
+        by imap2.suse-dmz.suse.de (Postfix) with ESMTPS id 9E13D13A39;
+        Thu,  1 Jun 2023 10:58:30 +0000 (UTC)
 Received: from dovecot-director2.suse.de ([192.168.254.65])
         by imap2.suse-dmz.suse.de with ESMTPSA
-        id mmNoBNd5eGSCWAAAMHmgww
-        (envelope-from <jack@suse.cz>); Thu, 01 Jun 2023 10:58:31 +0000
+        id BZiUJtZ5eGRxWAAAMHmgww
+        (envelope-from <jack@suse.cz>); Thu, 01 Jun 2023 10:58:30 +0000
 Received: by quack3.suse.cz (Postfix, from userid 1000)
-        id 2CDDBA0764; Thu,  1 Jun 2023 12:58:30 +0200 (CEST)
+        id 0DEBBA0754; Thu,  1 Jun 2023 12:58:30 +0200 (CEST)
 From:   Jan Kara <jack@suse.cz>
 To:     Al Viro <viro@ZenIV.linux.org.uk>
 Cc:     <linux-fsdevel@vger.kernel.org>,
@@ -59,77 +55,48 @@ Cc:     <linux-fsdevel@vger.kernel.org>,
         Jaegeuk Kim <jaegeuk@kernel.org>, <linux-ext4@vger.kernel.org>,
         <linux-xfs@vger.kernel.org>,
         linux-f2fs-devel@lists.sourceforge.net, Jan Kara <jack@suse.cz>
-Subject: [PATCH v2 6/6] fs: Restrict lock_two_nondirectories() to non-directory inodes
-Date:   Thu,  1 Jun 2023 12:58:26 +0200
-Message-Id: <20230601105830.13168-6-jack@suse.cz>
+Subject: [PATCH v2 0/6] fs: Fix directory corruption when moving directories
+Date:   Thu,  1 Jun 2023 12:58:20 +0200
+Message-Id: <20230601104525.27897-1-jack@suse.cz>
 X-Mailer: git-send-email 2.35.3
-In-Reply-To: <20230601104525.27897-1-jack@suse.cz>
-References: <20230601104525.27897-1-jack@suse.cz>
 MIME-Version: 1.0
-X-Developer-Signature: v=1; a=openpgp-sha256; l=2200; i=jack@suse.cz; h=from:subject; bh=yzjONH0NaYO0JExUsRNFVNqF61b/6Z8qTkqJfHdGKlg=; b=owEBbQGS/pANAwAIAZydqgc/ZEDZAcsmYgBkeHnRAOKwOpYmoYaDVDZoAJJC7iZvp0hWjbPFBMUr e9B2zauJATMEAAEIAB0WIQSrWdEr1p4yirVVKBycnaoHP2RA2QUCZHh50QAKCRCcnaoHP2RA2ZLRB/ 9A5mErZNr1GSw4bvqyRiHpBJmYLCWR4lihVK9MrTDZk08vVOCpc8BAsxg5oODQk0iMm3VyWYYLKWrR tZpGfLNVVN9J+mp08tZRHTqzVmO2Vg1q/2eiHEQkWYSPHnJHAmAPXsS2XuUUkxDmK5B+rPgf+hKsFQ 5qg5tUZAuaUsZGy1zMAqXObFZSzjefBZrc251g++8ukB03T/LNLAVwtjvKgGmesBoq8BJdO93TYFlB INP8z2ollQ8Oqi7hSsJH2uhrQleqLb+y1+OfV/Ocf+LM4vBCuWoJGtGua+7Rg5bpG/kpJEXZmghiEY 6HGqXDo1+FmRvBPkx7nJT/lFffiE8I
+X-Developer-Signature: v=1; a=openpgp-sha256; l=1583; i=jack@suse.cz; h=from:subject:message-id; bh=A4NuJIA5fRnO81BQCFQ+qouMN01g1n5f8YwBgH7IRjw=; b=owEBbQGS/pANAwAIAZydqgc/ZEDZAcsmYgBkeHnEqJRcmewHp/J45UlUgDFD/bRSALsTL4CM7NWS Eh9nkW2JATMEAAEIAB0WIQSrWdEr1p4yirVVKBycnaoHP2RA2QUCZHh5xAAKCRCcnaoHP2RA2ZmLB/ 9x4VWtvxhWmDLhsrxitQaHFrtDSoj/0K7wjjyc4b4KJ13VG8n+u2jMsfjFDkVPFhCukC4iWnvbAGvZ KsCP9RARf4MI54Qcp5Rnn0UjxjqndVS8ykU4hryIqsuW/gUEw90SSLkVLSwqvdHJSkUvIgupPMjDfy jN+hRrVpZhEl4kqu6PEnbHPMNUVWZ2HP3BVViT3MZYqJeiV9Fb2+o5twQ7wTibwcsLjTGiLIbrJuzH wpLohc909nVMtxB3h7pBGdTwVQKu8UUPQqEdwszBOnXs/PaCi/d21gfKNr5TneJMd677HOz8cZwlkM LfbExF6oneWJCISfoAZ815x3/NufMs
 X-Developer-Key: i=jack@suse.cz; a=openpgp; fpr=93C6099A142276A28BBE35D815BC833443038D8C
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Currently lock_two_nondirectories() is skipping any passed directories.
-After vfs_rename() uses lock_two_inodes(), all the remaining four users
-of this function pass only regular files to it. So drop the somewhat
-unusual "skip directory" logic and instead warn if anybody passes
-directory to it. This also allows us to use lock_two_inodes() in
-lock_two_nondirectories() to concentrate the lock ordering logic in less
-places.
+Hello,
 
-Signed-off-by: Jan Kara <jack@suse.cz>
----
- fs/inode.c | 18 ++++++++----------
- 1 file changed, 8 insertions(+), 10 deletions(-)
+this patch set fixes a problem with cross directory renames originally reported
+in [1]. To quickly sum it up some filesystems (so far we know at least about
+ext4, udf, f2fs, ocfs2, likely also reiserfs, gfs2 and others) need to lock the
+directory when it is being renamed into another directory. This is because we
+need to update the parent pointer in the directory in that case and if that
+races with other operation on the directory (in particular a conversion from
+one directory format into another), bad things can happen.
 
-diff --git a/fs/inode.c b/fs/inode.c
-index 4000ab08bbc0..e8d10fd18378 100644
---- a/fs/inode.c
-+++ b/fs/inode.c
-@@ -1148,7 +1148,7 @@ void lock_two_inodes(struct inode *inode1, struct inode *inode2,
- /**
-  * lock_two_nondirectories - take two i_mutexes on non-directory objects
-  *
-- * Lock any non-NULL argument that is not a directory.
-+ * Lock any non-NULL argument. Passed objects must not be directories.
-  * Zero, one or two objects may be locked by this function.
-  *
-  * @inode1: first inode to lock
-@@ -1156,13 +1156,9 @@ void lock_two_inodes(struct inode *inode1, struct inode *inode2,
-  */
- void lock_two_nondirectories(struct inode *inode1, struct inode *inode2)
- {
--	if (inode1 > inode2)
--		swap(inode1, inode2);
--
--	if (inode1 && !S_ISDIR(inode1->i_mode))
--		inode_lock(inode1);
--	if (inode2 && !S_ISDIR(inode2->i_mode) && inode2 != inode1)
--		inode_lock_nested(inode2, I_MUTEX_NONDIR2);
-+	WARN_ON_ONCE(S_ISDIR(inode1->i_mode));
-+	WARN_ON_ONCE(S_ISDIR(inode2->i_mode));
-+	lock_two_inodes(inode1, inode2, I_MUTEX_NORMAL, I_MUTEX_NONDIR2);
- }
- EXPORT_SYMBOL(lock_two_nondirectories);
- 
-@@ -1173,9 +1169,11 @@ EXPORT_SYMBOL(lock_two_nondirectories);
-  */
- void unlock_two_nondirectories(struct inode *inode1, struct inode *inode2)
- {
--	if (inode1 && !S_ISDIR(inode1->i_mode))
-+	WARN_ON_ONCE(S_ISDIR(inode1->i_mode));
-+	WARN_ON_ONCE(S_ISDIR(inode2->i_mode));
-+	if (inode1)
- 		inode_unlock(inode1);
--	if (inode2 && !S_ISDIR(inode2->i_mode) && inode2 != inode1)
-+	if (inode2 && inode2 != inode1)
- 		inode_unlock(inode2);
- }
- EXPORT_SYMBOL(unlock_two_nondirectories);
--- 
-2.35.3
+So far we've done the locking in the filesystem code but recently Darrick
+pointed out [2] that we've missed the RENAME_EXCHANGE case in our ext4 fix.
+That one is particularly nasty because RENAME_EXCHANGE can arbitrarily mix
+regular files and directories and proper lock ordering is not achievable in the
+filesystems alone.
 
+This patch set adds locking into vfs_rename() so that not only parent
+directories but also moved inodes (regardless whether they are directories or
+not) are locked when calling into the filesystem.
+
+Changes since v1:
+* Made sure lock_two_inodes() uses subclass1 for the obtained lock in case
+  there is only one inode locked
+* Fixes unlocked_two_nondirectories() to properly unlock inodes even if
+  directories are accidentally passed in.
+
+								Honza
+
+[1] https://lore.kernel.org/all/20230117123735.un7wbamlbdihninm@quack3
+[2] https://lore.kernel.org/all/20230517045836.GA11594@frogsfrogsfrogs
+
+Previous versions:
+Link: http://lore.kernel.org/r/20230525100654.15069-1-jack@suse.cz # v1
