@@ -2,32 +2,32 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DC357C7EE2F
-	for <linux-xfs@archiver.kernel.org>; Thu,  1 Jun 2023 15:00:24 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6A4D3C87FE1
+	for <linux-xfs@archiver.kernel.org>; Thu,  1 Jun 2023 15:00:23 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234323AbjFAPAV (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        id S234812AbjFAPAV (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
         Thu, 1 Jun 2023 11:00:21 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41794 "EHLO
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41832 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S234771AbjFAO7u (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 1 Jun 2023 10:59:50 -0400
+        with ESMTP id S234787AbjFAO7v (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 1 Jun 2023 10:59:51 -0400
 Received: from bombadil.infradead.org (bombadil.infradead.org [IPv6:2607:7c80:54:3::133])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4B40010E3;
-        Thu,  1 Jun 2023 07:59:29 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8EB3F10EA;
+        Thu,  1 Jun 2023 07:59:30 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
         d=infradead.org; s=bombadil.20210309; h=Content-Transfer-Encoding:
-        MIME-Version:Message-Id:Date:Subject:Cc:To:From:Sender:Reply-To:Content-Type:
-        Content-ID:Content-Description:In-Reply-To:References;
-        bh=XbbWN9vPp1Xk6I5ta8jq/xbBcX0bF+DntmFOOCcIAP8=; b=TPdEsrmYwQDcbibO2u6xuPEn+F
-        cVqnIFAGztBdzvqIg4dgzXeaGWODyzx/nMQJGSLcpbm/FYzckDj7ONjDiFbguAGwm1Edz1ErTv5Xq
-        dmUfwy6z9Mm278yt2cBQIO3TEjO41LezfuQ+hI0Uoq85CDA65HTJ8oUZMRDVOGbhUFQaPasrNKcZ9
-        Eu32hX3WLCij9TzhijOx9RcgOZEJx4LRtJG3IzRBzVMPWMTYkmpqf58tHPY2g6rZs7Ffjk2zLEgkE
-        xFLBvv0gVJvkzvSmP7yzapeyAfNI1nHgBrDGo52sGrhFJUoFO1j2LLleoHnmhrG4pQCdtQgXyXQuu
-        kGAxXLCQ==;
+        MIME-Version:References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:Sender
+        :Reply-To:Content-Type:Content-ID:Content-Description;
+        bh=ZRItUXupBovRcfIWu1PXzjUpMlDPoKckJxwBPLvHxXM=; b=Z6B8hLcNPVcsBtiLOfzTdbtOYY
+        4XVDWAeP1eEjxL4gUbMlPNbmgOx92mWMGqts7P/pveyWOoXvbc6AhLZL7g6hTImUtvN6wOWF2JPwH
+        p3/Vr1oVZkfmk4tfvN1f8on8FQpO+NmczbptGOiOjqs+k1VmC1JD2xYrkcf2KX2AWIbuuXf8fYdAy
+        ErX/ByalZ+bAyNhpXOUVN20nKHHVTBC5Z9h1cfSEj0rdMuEKRiRX/bSaIG/BDEGGwLhdlJ3hcR09H
+        byveVHiEIxaWh+ys4GrgIYic/xGf5lARNyPFzud2LxJGQfIjCmbBAy52q0lk5Mci8WQS+G+8sxOZe
+        Ndb2yNKw==;
 Received: from [2001:4bb8:182:6d06:eacb:c751:971:73eb] (helo=localhost)
         by bombadil.infradead.org with esmtpsa (Exim 4.96 #2 (Red Hat Linux))
-        id 1q4jla-003w1Z-1c;
-        Thu, 01 Jun 2023 14:59:06 +0000
+        id 1q4jli-003w4C-0i;
+        Thu, 01 Jun 2023 14:59:14 +0000
 From:   Christoph Hellwig <hch@lst.de>
 To:     Matthew Wilcox <willy@infradead.org>
 Cc:     Jens Axboe <axboe@kernel.dk>, Xiubo Li <xiubli@redhat.com>,
@@ -46,11 +46,13 @@ Cc:     Jens Axboe <axboe@kernel.dk>, Xiubo Li <xiubli@redhat.com>,
         linux-fsdevel@vger.kernel.org, linux-ext4@vger.kernel.org,
         linux-f2fs-devel@lists.sourceforge.net, cluster-devel@redhat.com,
         linux-xfs@vger.kernel.org, linux-nfs@vger.kernel.org,
-        linux-mm@kvack.org
-Subject: cleanup the filemap / direct I/O interaction v4
-Date:   Thu,  1 Jun 2023 16:58:52 +0200
-Message-Id: <20230601145904.1385409-1-hch@lst.de>
+        linux-mm@kvack.org, Hannes Reinecke <hare@suse.de>
+Subject: [PATCH 03/12] filemap: update ki_pos in generic_perform_write
+Date:   Thu,  1 Jun 2023 16:58:55 +0200
+Message-Id: <20230601145904.1385409-4-hch@lst.de>
 X-Mailer: git-send-email 2.39.2
+In-Reply-To: <20230601145904.1385409-1-hch@lst.de>
+References: <20230601145904.1385409-1-hch@lst.de>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
@@ -58,50 +60,113 @@ Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Hi all,
+All callers of generic_perform_write need to updated ki_pos, move it into
+common code.
 
-this series cleans up some of the generic write helper calling
-conventions and the page cache writeback / invalidation for
-direct I/O.  This is a spinoff from the no-bufferhead kernel
-project, for which we'll want to an use iomap based buffered
-write path in the block layer.
+Signed-off-by: Christoph Hellwig <hch@lst.de>
+Reviewed-by: Xiubo Li <xiubli@redhat.com>
+Reviewed-by: Damien Le Moal <dlemoal@kernel.org>
+Reviewed-by: Hannes Reinecke <hare@suse.de>
+Acked-by: Theodore Ts'o <tytso@mit.edu>
+Acked-by: Darrick J. Wong <djwong@kernel.org>
+---
+ fs/ceph/file.c | 2 --
+ fs/ext4/file.c | 9 +++------
+ fs/f2fs/file.c | 1 -
+ fs/nfs/file.c  | 1 -
+ mm/filemap.c   | 8 ++++----
+ 5 files changed, 7 insertions(+), 14 deletions(-)
 
-Changes since v3:
- - fix a generic_sync_file that got lost in fuse
- - fix fuse to call fuse_perform_write and not generic_perform_write
+diff --git a/fs/ceph/file.c b/fs/ceph/file.c
+index c8ef72f723badd..767f4dfe7def64 100644
+--- a/fs/ceph/file.c
++++ b/fs/ceph/file.c
+@@ -1891,8 +1891,6 @@ static ssize_t ceph_write_iter(struct kiocb *iocb, struct iov_iter *from)
+ 		 * can not run at the same time
+ 		 */
+ 		written = generic_perform_write(iocb, from);
+-		if (likely(written >= 0))
+-			iocb->ki_pos = pos + written;
+ 		ceph_end_io_write(inode);
+ 	}
+ 
+diff --git a/fs/ext4/file.c b/fs/ext4/file.c
+index bc430270c23c19..ea0ada3985cba2 100644
+--- a/fs/ext4/file.c
++++ b/fs/ext4/file.c
+@@ -289,12 +289,9 @@ static ssize_t ext4_buffered_write_iter(struct kiocb *iocb,
+ 
+ out:
+ 	inode_unlock(inode);
+-	if (likely(ret > 0)) {
+-		iocb->ki_pos += ret;
+-		ret = generic_write_sync(iocb, ret);
+-	}
+-
+-	return ret;
++	if (unlikely(ret <= 0))
++		return ret;
++	return generic_write_sync(iocb, ret);
+ }
+ 
+ static ssize_t ext4_handle_inode_extension(struct inode *inode, loff_t offset,
+diff --git a/fs/f2fs/file.c b/fs/f2fs/file.c
+index 4f423d367a44b9..7134fe8bd008cb 100644
+--- a/fs/f2fs/file.c
++++ b/fs/f2fs/file.c
+@@ -4520,7 +4520,6 @@ static ssize_t f2fs_buffered_write_iter(struct kiocb *iocb,
+ 	ret = generic_perform_write(iocb, from);
+ 
+ 	if (ret > 0) {
+-		iocb->ki_pos += ret;
+ 		f2fs_update_iostat(F2FS_I_SB(inode), inode,
+ 						APP_BUFFERED_IO, ret);
+ 	}
+diff --git a/fs/nfs/file.c b/fs/nfs/file.c
+index 665ce3fc62eaf4..e8bb4c48a3210a 100644
+--- a/fs/nfs/file.c
++++ b/fs/nfs/file.c
+@@ -655,7 +655,6 @@ ssize_t nfs_file_write(struct kiocb *iocb, struct iov_iter *from)
+ 		goto out;
+ 
+ 	written = result;
+-	iocb->ki_pos += written;
+ 	nfs_add_stats(inode, NFSIOS_NORMALWRITTENBYTES, written);
+ 
+ 	if (mntflags & NFS_MOUNT_WRITE_EAGER) {
+diff --git a/mm/filemap.c b/mm/filemap.c
+index 33b54660ad2b39..15907af4a57ff5 100644
+--- a/mm/filemap.c
++++ b/mm/filemap.c
+@@ -3957,7 +3957,10 @@ ssize_t generic_perform_write(struct kiocb *iocb, struct iov_iter *i)
+ 		balance_dirty_pages_ratelimited(mapping);
+ 	} while (iov_iter_count(i));
+ 
+-	return written ? written : status;
++	if (!written)
++		return status;
++	iocb->ki_pos += written;
++	return written;
+ }
+ EXPORT_SYMBOL(generic_perform_write);
+ 
+@@ -4034,7 +4037,6 @@ ssize_t __generic_file_write_iter(struct kiocb *iocb, struct iov_iter *from)
+ 		endbyte = pos + status - 1;
+ 		err = filemap_write_and_wait_range(mapping, pos, endbyte);
+ 		if (err == 0) {
+-			iocb->ki_pos = endbyte + 1;
+ 			written += status;
+ 			invalidate_mapping_pages(mapping,
+ 						 pos >> PAGE_SHIFT,
+@@ -4047,8 +4049,6 @@ ssize_t __generic_file_write_iter(struct kiocb *iocb, struct iov_iter *from)
+ 		}
+ 	} else {
+ 		written = generic_perform_write(iocb, from);
+-		if (likely(written > 0))
+-			iocb->ki_pos += written;
+ 	}
+ out:
+ 	return written ? written : err;
+-- 
+2.39.2
 
-Changes since v2:
- - stick to the existing behavior of returning a short write
-   if the buffer fallback write or sync fails
- - bring back "fuse: use direct_write_fallback" which accidentally
-   got lost in v2
-
-Changes since v1:
- - remove current->backing_dev_info entirely
- - fix the pos/end calculation in direct_write_fallback
- - rename kiocb_invalidate_post_write to
-   kiocb_invalidate_post_direct_write
- - typo fixes
-
-diffstat:
- block/fops.c            |   18 ----
- fs/btrfs/file.c         |    6 -
- fs/ceph/file.c          |    6 -
- fs/direct-io.c          |   10 --
- fs/ext4/file.c          |   11 --
- fs/f2fs/file.c          |    3 
- fs/fuse/file.c          |   45 ++---------
- fs/gfs2/file.c          |    6 -
- fs/iomap/buffered-io.c  |    9 +-
- fs/iomap/direct-io.c    |   88 ++++++++-------------
- fs/libfs.c              |   41 ++++++++++
- fs/nfs/file.c           |    6 -
- fs/ntfs/file.c          |    2 
- fs/ntfs3/file.c         |    3 
- fs/xfs/xfs_file.c       |    6 -
- fs/zonefs/file.c        |    4 
- include/linux/fs.h      |    7 -
- include/linux/pagemap.h |    4 
- include/linux/sched.h   |    3 
- mm/filemap.c            |  194 +++++++++++++++++++++---------------------------
- 20 files changed, 194 insertions(+), 278 deletions(-)
