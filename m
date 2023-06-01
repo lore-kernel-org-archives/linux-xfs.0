@@ -2,163 +2,109 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CC61EC7EE2C
-	for <linux-xfs@archiver.kernel.org>; Thu,  1 Jun 2023 13:03:59 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 938ACC7EE23
+	for <linux-xfs@archiver.kernel.org>; Thu,  1 Jun 2023 13:59:08 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229880AbjFAND6 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 1 Jun 2023 09:03:58 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50266 "EHLO
+        id S233077AbjFAN7H (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 1 Jun 2023 09:59:07 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53176 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233330AbjFAND5 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 1 Jun 2023 09:03:57 -0400
+        with ESMTP id S229880AbjFAN7G (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 1 Jun 2023 09:59:06 -0400
 Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4855397
-        for <linux-xfs@vger.kernel.org>; Thu,  1 Jun 2023 06:03:56 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7F523FC;
+        Thu,  1 Jun 2023 06:59:05 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id D99D56411F
-        for <linux-xfs@vger.kernel.org>; Thu,  1 Jun 2023 13:03:55 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 7677FC433EF;
-        Thu,  1 Jun 2023 13:03:54 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 1B53A617EA;
+        Thu,  1 Jun 2023 13:59:05 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id BA843C433D2;
+        Thu,  1 Jun 2023 13:59:01 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1685624635;
-        bh=rbqZmBeCpR6Lmn+S+1jKxSzciVAm4dkdfY4iJG1614A=;
+        s=k20201202; t=1685627944;
+        bh=hrvO0WffTuYX0l8xl6Ve6qY34By3qmMdYk7DH/2LqV4=;
         h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=ownh3PEWrG3WlIyy+RGGcdoYQ6AfVQs2Dxj40ObZrbMGW87Trfn9nl3AL3iDs2LkJ
-         RB/VFsYc0s8q5c7Fmc/jkt2sKzSXxdXTARfvIG6nNHGOM9gs3EQKMe6Y7DSgIeTE1d
-         /saNd00kRtDwcfXyS/bcfBJ8gpVZwgYnNEJN/N065TwwFOuw6UbpxAkfLPDSMSRF5S
-         Zu5k4jsZIV5F+g6RfJIFOMbEfgNpcLhnctF5GmCARN4Tf+e8LJYWNuXZHVO1ANjHB5
-         CLE/ZdFNb4LbGmVhFeRDquqg0g45kPvRH6BjEz4waE2ITCQ1JFcMtbI8XIo5yT9y2B
-         KKTx9q+oUDtZA==
-Date:   Thu, 1 Jun 2023 14:03:51 +0100
-From:   Lee Jones <lee@kernel.org>
-To:     "Darrick J. Wong" <djwong@kernel.org>
-Cc:     linux-xfs@vger.kernel.org, Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH] xfs: verify buffer contents when we skip log replay
-Message-ID: <20230601130351.GA1787684@google.com>
-References: <20230411233159.GH360895@frogsfrogsfrogs>
+        b=RSKNSdL1EwbgZ3EVAsPXSCUcGmPXrtGiZ7K/mcXuispwQXsqu4hHi1HU0/cfChTLi
+         FQHMIEttwLeBHGVThYBwKqodAMzYKLybFe/dsKnlmr8pUS8XikF8TzqxZ4WLw/4vd2
+         Bu7Ra/G6Fr0QhIZ+J7sOiFYzuSObtGZ+4gKtaCoW1oyIaUGmHuR7vvQeb3pqdyxNuL
+         WOG2hgBVDtBfNi2JCBHf8fNlyZmgqz4zF1H/e+Dw9ghxjjnWNs7roFT4qRlFRoQXGy
+         SC+pdwA/NUF6kJm0TcyB2A6vZJnbbT+waoLD1pNjxbIIIkcg7KXeRvZguOFip43Qhq
+         Usx4NRM/X1d6Q==
+Date:   Thu, 1 Jun 2023 15:58:58 +0200
+From:   Christian Brauner <brauner@kernel.org>
+To:     Jan Kara <jack@suse.cz>
+Cc:     Al Viro <viro@ZenIV.linux.org.uk>, linux-fsdevel@vger.kernel.org,
+        Miklos Szeredi <miklos@szeredi.hu>,
+        "Darrick J. Wong" <djwong@kernel.org>, Ted Tso <tytso@mit.edu>,
+        Jaegeuk Kim <jaegeuk@kernel.org>, linux-ext4@vger.kernel.org,
+        linux-xfs@vger.kernel.org, linux-f2fs-devel@lists.sourceforge.net,
+        stable@vger.kernel.org
+Subject: Re: [PATCH v2 4/6] fs: Establish locking order for unrelated
+ directories
+Message-ID: <20230601-gebracht-gesehen-c779a56b3bf3@brauner>
+References: <20230601104525.27897-1-jack@suse.cz>
+ <20230601105830.13168-4-jack@suse.cz>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=utf-8
 Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <20230411233159.GH360895@frogsfrogsfrogs>
+In-Reply-To: <20230601105830.13168-4-jack@suse.cz>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Hi Darrick,
-
-On Tue, 11 Apr 2023, Darrick J. Wong wrote:
-
-> From: Darrick J. Wong <djwong@kernel.org>
+On Thu, Jun 01, 2023 at 12:58:24PM +0200, Jan Kara wrote:
+> Currently the locking order of inode locks for directories that are not
+> in ancestor relationship is not defined because all operations that
+> needed to lock two directories like this were serialized by
+> sb->s_vfs_rename_mutex. However some filesystems need to lock two
+> subdirectories for RENAME_EXCHANGE operations and for this we need the
+> locking order established even for two tree-unrelated directories.
+> Provide a helper function lock_two_inodes() that establishes lock
+> ordering for any two inodes and use it in lock_two_directories().
 > 
-> syzbot detected a crash during log recovery:
-> 
-> XFS (loop0): Mounting V5 Filesystem bfdc47fc-10d8-4eed-a562-11a831b3f791
-> XFS (loop0): Torn write (CRC failure) detected at log block 0x180. Truncating head block from 0x200.
-> XFS (loop0): Starting recovery (logdev: internal)
-> ==================================================================
-> BUG: KASAN: slab-out-of-bounds in xfs_btree_lookup_get_block+0x15c/0x6d0 fs/xfs/libxfs/xfs_btree.c:1813
-> Read of size 8 at addr ffff88807e89f258 by task syz-executor132/5074
-> 
-> CPU: 0 PID: 5074 Comm: syz-executor132 Not tainted 6.2.0-rc1-syzkaller #0
-> Hardware name: Google Google Compute Engine/Google Compute Engine, BIOS Google 10/26/2022
-> Call Trace:
->  <TASK>
->  __dump_stack lib/dump_stack.c:88 [inline]
->  dump_stack_lvl+0x1b1/0x290 lib/dump_stack.c:106
->  print_address_description+0x74/0x340 mm/kasan/report.c:306
->  print_report+0x107/0x1f0 mm/kasan/report.c:417
->  kasan_report+0xcd/0x100 mm/kasan/report.c:517
->  xfs_btree_lookup_get_block+0x15c/0x6d0 fs/xfs/libxfs/xfs_btree.c:1813
->  xfs_btree_lookup+0x346/0x12c0 fs/xfs/libxfs/xfs_btree.c:1913
->  xfs_btree_simple_query_range+0xde/0x6a0 fs/xfs/libxfs/xfs_btree.c:4713
->  xfs_btree_query_range+0x2db/0x380 fs/xfs/libxfs/xfs_btree.c:4953
->  xfs_refcount_recover_cow_leftovers+0x2d1/0xa60 fs/xfs/libxfs/xfs_refcount.c:1946
->  xfs_reflink_recover_cow+0xab/0x1b0 fs/xfs/xfs_reflink.c:930
->  xlog_recover_finish+0x824/0x920 fs/xfs/xfs_log_recover.c:3493
->  xfs_log_mount_finish+0x1ec/0x3d0 fs/xfs/xfs_log.c:829
->  xfs_mountfs+0x146a/0x1ef0 fs/xfs/xfs_mount.c:933
->  xfs_fs_fill_super+0xf95/0x11f0 fs/xfs/xfs_super.c:1666
->  get_tree_bdev+0x400/0x620 fs/super.c:1282
->  vfs_get_tree+0x88/0x270 fs/super.c:1489
->  do_new_mount+0x289/0xad0 fs/namespace.c:3145
->  do_mount fs/namespace.c:3488 [inline]
->  __do_sys_mount fs/namespace.c:3697 [inline]
->  __se_sys_mount+0x2d3/0x3c0 fs/namespace.c:3674
->  do_syscall_x64 arch/x86/entry/common.c:50 [inline]
->  do_syscall_64+0x3d/0xb0 arch/x86/entry/common.c:80
->  entry_SYSCALL_64_after_hwframe+0x63/0xcd
-> RIP: 0033:0x7f89fa3f4aca
-> Code: 83 c4 08 5b 5d c3 66 2e 0f 1f 84 00 00 00 00 00 c3 66 2e 0f 1f 84 00 00 00 00 00 0f 1f 44 00 00 49 89 ca b8 a5 00 00 00 0f 05 <48> 3d 01 f0 ff ff 73 01 c3 48 c7 c1 c0 ff ff ff f7 d8 64 89 01 48
-> RSP: 002b:00007fffd5fb5ef8 EFLAGS: 00000206 ORIG_RAX: 00000000000000a5
-> RAX: ffffffffffffffda RBX: 00646975756f6e2c RCX: 00007f89fa3f4aca
-> RDX: 0000000020000100 RSI: 0000000020009640 RDI: 00007fffd5fb5f10
-> RBP: 00007fffd5fb5f10 R08: 00007fffd5fb5f50 R09: 000000000000970d
-> R10: 0000000000200800 R11: 0000000000000206 R12: 0000000000000004
-> R13: 0000555556c6b2c0 R14: 0000000000200800 R15: 00007fffd5fb5f50
->  </TASK>
-> 
-> The fuzzed image contains an AGF with an obviously garbage
-> agf_refcount_level value of 32, and a dirty log with a buffer log item
-> for that AGF.  The ondisk AGF has a higher LSN than the recovered log
-> item.  xlog_recover_buf_commit_pass2 reads the buffer, compares the
-> LSNs, and decides to skip replay because the ondisk buffer appears to be
-> newer.
-> 
-> Unfortunately, the ondisk buffer is corrupt, but recovery just read the
-> buffer with no buffer ops specified:
-> 
-> 	error = xfs_buf_read(mp->m_ddev_targp, buf_f->blf_blkno,
-> 			buf_f->blf_len, buf_flags, &bp, NULL);
-> 
-> Skipping the buffer leaves its contents in memory unverified.  This sets
-> us up for a kernel crash because xfs_refcount_recover_cow_leftovers
-> reads the buffer (which is still around in XBF_DONE state, so no read
-> verification) and creates a refcountbt cursor of height 32.  This is
-> impossible so we run off the end of the cursor object and crash.
-> 
-> Fix this by invoking the verifier on all skipped buffers and aborting
-> log recovery if the ondisk buffer is corrupt.  It might be smarter to
-> force replay the log item atop the buffer and then see if it'll pass the
-> write verifier (like ext4 does) but for now let's go with the
-> conservative option where we stop immediately.
-> 
-> Link: https://syzkaller.appspot.com/bug?extid=7e9494b8b399902e994e
-> Fixes: 67dc288c2106 ("xfs: ensure verifiers are attached to recovered buffers")
-> Signed-off-by: Darrick J. Wong <djwong@kernel.org>
+> CC: stable@vger.kernel.org
+> Signed-off-by: Jan Kara <jack@suse.cz>
 > ---
->  fs/xfs/xfs_buf_item_recover.c |   10 ++++++++++
->  1 file changed, 10 insertions(+)
-
-Rightly or wrongly, CVE-2023-212 has been raised against this issue.
-
-It looks as though the Fixes: tag above was stripped when applied.
-
-Should this still be submitted to Stable?
-
-> diff --git a/fs/xfs/xfs_buf_item_recover.c b/fs/xfs/xfs_buf_item_recover.c
-> index 5368a0d34452..ebe7f2c3cf63 100644
-> --- a/fs/xfs/xfs_buf_item_recover.c
-> +++ b/fs/xfs/xfs_buf_item_recover.c
-> @@ -971,6 +971,16 @@ xlog_recover_buf_commit_pass2(
->  	if (lsn && lsn != -1 && XFS_LSN_CMP(lsn, current_lsn) >= 0) {
->  		trace_xfs_log_recover_buf_skip(log, buf_f);
->  		xlog_recover_validate_buf_type(mp, bp, buf_f, NULLCOMMITLSN);
-> +
-> +		/*
-> +		 * We're skipping replay of this buffer log item due to the log
-> +		 * item LSN being behind the ondisk buffer.  Verify the buffer
-> +		 * contents since we aren't going to run the write verifier.
-> +		 */
-> +		if (bp->b_ops) {
-> +			bp->b_ops->verify_read(bp);
-> +			error = bp->b_error;
-> +		}
->  		goto out_release;
->  	}
+>  fs/inode.c    | 42 ++++++++++++++++++++++++++++++++++++++++++
+>  fs/internal.h |  2 ++
+>  fs/namei.c    |  4 ++--
+>  3 files changed, 46 insertions(+), 2 deletions(-)
+> 
+> diff --git a/fs/inode.c b/fs/inode.c
+> index 577799b7855f..4000ab08bbc0 100644
+> --- a/fs/inode.c
+> +++ b/fs/inode.c
+> @@ -1103,6 +1103,48 @@ void discard_new_inode(struct inode *inode)
+>  }
+>  EXPORT_SYMBOL(discard_new_inode);
 >  
+> +/**
+> + * lock_two_inodes - lock two inodes (may be regular files but also dirs)
+> + *
+> + * Lock any non-NULL argument. The caller must make sure that if he is passing
+> + * in two directories, one is not ancestor of the other.  Zero, one or two
+> + * objects may be locked by this function.
+> + *
+> + * @inode1: first inode to lock
+> + * @inode2: second inode to lock
+> + * @subclass1: inode lock subclass for the first lock obtained
+> + * @subclass2: inode lock subclass for the second lock obtained
+> + */
+> +void lock_two_inodes(struct inode *inode1, struct inode *inode2,
+> +		     unsigned subclass1, unsigned subclass2)
+> +{
+> +	if (!inode1 || !inode2)
 
--- 
-Lee Jones [李琼斯]
+I think you forgot the opening bracket...
+I can just fix this up for you though.
+
+> +		/*
+> +		 * Make sure @subclass1 will be used for the acquired lock.
+> +		 * This is not strictly necessary (no current caller cares) but
+> +		 * let's keep things consistent.
+> +		 */
+> +		if (!inode1)
+> +			swap(inode1, inode2);
+> +		goto lock;
+> +	}
