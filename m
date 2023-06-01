@@ -2,502 +2,194 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8892DC7EE23
-	for <linux-xfs@archiver.kernel.org>; Thu,  1 Jun 2023 14:39:03 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6103EC77B7E
+	for <linux-xfs@archiver.kernel.org>; Thu,  1 Jun 2023 14:47:17 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232873AbjFAOjB (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 1 Jun 2023 10:39:01 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53680 "EHLO
+        id S234410AbjFAOrQ (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 1 Jun 2023 10:47:16 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:32802 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232754AbjFAOjB (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 1 Jun 2023 10:39:01 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 02EC9E62
-        for <linux-xfs@vger.kernel.org>; Thu,  1 Jun 2023 07:38:27 -0700 (PDT)
+        with ESMTP id S234189AbjFAOrP (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 1 Jun 2023 10:47:15 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id BF069128
+        for <linux-xfs@vger.kernel.org>; Thu,  1 Jun 2023 07:47:13 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 7E7A3645E1
-        for <linux-xfs@vger.kernel.org>; Thu,  1 Jun 2023 14:38:27 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id D34BCC4339B;
-        Thu,  1 Jun 2023 14:38:26 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 3F5C26461A
+        for <linux-xfs@vger.kernel.org>; Thu,  1 Jun 2023 14:47:13 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 92D83C433EF;
+        Thu,  1 Jun 2023 14:47:12 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1685630306;
-        bh=NCHyolcMkVbi4wVfGKCy8OCCPK+2Qnv2nT4HYV0Qwl8=;
+        s=k20201202; t=1685630832;
+        bh=zvqAFE2fctsobX76Xd3YzFFfWG+odFa1obT1N6IYzy4=;
         h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=n+lKQNZl+JETzrCuHIzHg9j+9qA3PpOEOugO0dVkCUy1TdzrjDTxzWkisd69adwgz
-         xuWXRPA3KwDnXQyM74z9CURYCl7S2q4d6A3HjzpV9pjojj7SpdReFajfCvqD2iKLu1
-         ECOnjhPIznboV4/nvfh3aGpyNOksF1Ofz44PaUNhO2ttJI36pNr+Un9b1t1hb/x+HM
-         IjpoHyYlymf/p0ktd3s4X4qPdzfE665hGxTZPpk46qG56NT1JPNAmCm3j7xHgdpgZ+
-         Qb6iFXsJFF6ZkWM/aQjB7hviQvdj5aiQmivRPdYnCQoAf7D2qb0HBODmfZbAA83OTJ
-         KN/q5eCH2JLvg==
-Date:   Thu, 1 Jun 2023 07:38:26 -0700
+        b=tEdmfz+N9zSUtxFzQVG33sfQwT6fB7SbR2UdlqqFzgeCq2cSxPBkJdenUwhBsWoWR
+         zTryrKYP7Ayb3nCPm5JW56CBxTGiqQ+j8Q4sPjptiyHsbaStmmavNuUbVFXdXtF5OJ
+         T9w5uQYghX4jO1dHkyNDyDKoQvD8wgxqXyvXYzhMGMYzk9+BEtp3XPZ253s2fR7uzt
+         /nTshYmnYKxeb/+tCJ42lEa9ONsbfdbuJpqgmuU8dgsxOvPTS5zoqi8uImB3hxyJ7y
+         y7pkvfYBaWqcuV1bBHLj3o//ZNVHs/YvyRZY1+kYxKewB8lqB6+zEWSXAyYH5+ea+D
+         x3re7vRjoBzNA==
+Date:   Thu, 1 Jun 2023 07:47:12 -0700
 From:   "Darrick J. Wong" <djwong@kernel.org>
-To:     Dave Chinner <david@fromorbit.com>
-Cc:     linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 4/4] xfs: fix AGF vs inode cluster buffer deadlock
-Message-ID: <20230601143826.GA16865@frogsfrogsfrogs>
-References: <20230517000449.3997582-1-david@fromorbit.com>
- <20230517000449.3997582-5-david@fromorbit.com>
- <20230517012629.GP858799@frogsfrogsfrogs>
- <ZHf5tYs4qeHa5edk@dread.disaster.area>
+To:     Long Li <leo.lilong@huaweicloud.com>
+Cc:     Long Li <leo.lilong@huawei.com>, david@fromorbit.com,
+        linux-xfs@vger.kernel.org, houtao1@huawei.com, yi.zhang@huawei.com,
+        guoxuenan@huawei.com
+Subject: Re: [PATCH v3] xfs: fix ag count overflow during growfs
+Message-ID: <20230601144712.GB16865@frogsfrogsfrogs>
+References: <20230524121041.GA4128075@ceph-admin>
+ <20230524144800.GG11620@frogsfrogsfrogs>
+ <20230601075553.GB3861632@ceph-admin>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <ZHf5tYs4qeHa5edk@dread.disaster.area>
+In-Reply-To: <20230601075553.GB3861632@ceph-admin>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Thu, Jun 01, 2023 at 11:51:49AM +1000, Dave Chinner wrote:
-> Friendly Ping.
+On Thu, Jun 01, 2023 at 03:55:53PM +0800, Long Li wrote:
+> Hi, Darrick
 > 
-> Apart from the stray trace_printk()s I forgot to remove, are
-> there any other problems with this patch I need to fix?
+> I realized there may be a problem with my email so you may not receive my
+> previous reply. So I'm replying to you with another email address, and if
+> you received my previous reply, you can ignore this email. Thank you very much!
 
-Nothing obvious that I could see.
+Oh, I saw it, but I've been on vacation for a week and hadn't responded
+to it (or much anything else) ...
 
-Reviewed-by: Darrick J. Wong <djwong@kernel.org>
+> On Wed, May 24, 2023 at 07:48:00AM -0700, Darrick J. Wong wrote:
+> > On Wed, May 24, 2023 at 08:10:41PM +0800, Long Li wrote:
+> > > I found a corruption during growfs:
+> > > 
+> > >  XFS (loop0): Internal error agbno >= mp->m_sb.sb_agblocks at line 3661 of
+> > >    file fs/xfs/libxfs/xfs_alloc.c.  Caller __xfs_free_extent+0x28e/0x3c0
+> > >  CPU: 0 PID: 573 Comm: xfs_growfs Not tainted 6.3.0-rc7-next-20230420-00001-gda8c95746257
+> > >  Call Trace:
+> > >   <TASK>
+> > >   dump_stack_lvl+0x50/0x70
+> > >   xfs_corruption_error+0x134/0x150
+> > >   __xfs_free_extent+0x2c1/0x3c0
+> > >   xfs_ag_extend_space+0x291/0x3e0
+> > >   xfs_growfs_data+0xd72/0xe90
+> > >   xfs_file_ioctl+0x5f9/0x14a0
+> > >   __x64_sys_ioctl+0x13e/0x1c0
+> > >   do_syscall_64+0x39/0x80
+> > >   entry_SYSCALL_64_after_hwframe+0x63/0xcd
+> > >  XFS (loop0): Corruption detected. Unmount and run xfs_repair
+> > >  XFS (loop0): Internal error xfs_trans_cancel at line 1097 of file
+> > >    fs/xfs/xfs_trans.c.  Caller xfs_growfs_data+0x691/0xe90
+> > >  CPU: 0 PID: 573 Comm: xfs_growfs Not tainted 6.3.0-rc7-next-20230420-00001-gda8c95746257
+> > >  Call Trace:
+> > >   <TASK>
+> > >   dump_stack_lvl+0x50/0x70
+> > >   xfs_error_report+0x93/0xc0
+> > >   xfs_trans_cancel+0x2c0/0x350
+> > >   xfs_growfs_data+0x691/0xe90
+> > >   xfs_file_ioctl+0x5f9/0x14a0
+> > >   __x64_sys_ioctl+0x13e/0x1c0
+> > >   do_syscall_64+0x39/0x80
+> > >   entry_SYSCALL_64_after_hwframe+0x63/0xcd
+> > >  RIP: 0033:0x7f2d86706577
+> > > 
+> > > The bug can be reproduced with the following sequence:
+> > > 
+> > >  # truncate -s  1073741824 xfs_test.img
+> > >  # mkfs.xfs -f -b size=1024 -d agcount=4 xfs_test.img
+> > >  # truncate -s 2305843009213693952  xfs_test.img
+> > >  # mount -o loop xfs_test.img /mnt/test
+> > >  # xfs_growfs -D  1125899907891200  /mnt/test
+> > > 
+> > > The root cause is that during growfs, user space passed in a large value
+> > > of newblcoks to xfs_growfs_data_private(), due to current sb_agblocks is
+> > > too small, new AG count will exceed UINT_MAX. Because of AG number type
+> > > is unsigned int and it would overflow, that caused nagcount much smaller
+> > > than the actual value. During AG extent space, delta blocks in
+> > > xfs_resizefs_init_new_ags() will much larger than the actual value due to
+> > > incorrect nagcount, even exceed UINT_MAX. This will cause corruption and
+> > > be detected in __xfs_free_extent. Fix it by growing the filesystem to up
+> > > to the maximally allowed AGs when new AG count overflow.
+> > > 
+> > > Signed-off-by: Long Li <leo.lilong@huawei.com>
+> > > ---
+> > > v3:
+> > > - Ensure that the performance is consisent before and after the modification
+> > >   when nagcount just overflows and 0 < nb_mod < XFS_MIN_AG_BLOCKS. 
+> > > - Based on Darrick's advice, growing the filesystem to up to the maximally
+> > >   allowed AGs when new AG count overflow.
+> > > 
+> > >  fs/xfs/libxfs/xfs_fs.h |  3 +++
+> > >  fs/xfs/xfs_fsops.c     | 13 +++++++++----
+> > >  2 files changed, 12 insertions(+), 4 deletions(-)
+> > > 
+> > > diff --git a/fs/xfs/libxfs/xfs_fs.h b/fs/xfs/libxfs/xfs_fs.h
+> > > index 1cfd5bc6520a..36ec2b1f7e68 100644
+> > > --- a/fs/xfs/libxfs/xfs_fs.h
+> > > +++ b/fs/xfs/libxfs/xfs_fs.h
+> > > @@ -248,6 +248,9 @@ typedef struct xfs_fsop_resblks {
+> > >  #define XFS_MAX_LOG_BLOCKS	(1024 * 1024ULL)
+> > >  #define XFS_MIN_LOG_BYTES	(10 * 1024 * 1024ULL)
+> > >  
+> > > +/* Maximum number of AGs */
+> > > +#define XFS_AGNUMBER_MAX	((xfs_agnumber_t)(-1U))
+> > 
+> > My apologies, I led you astray.  This should be:
+> > 
+> > #define XFS_MAX_AGNUMBER	((xfs_agnumber_t)(NULLAGNUMBER - 1))
+> 
+> OK, it is undoubtedly better to follow the definition in xfsprogs, which will
+> be modified in the next version.
+> 
+> > 
+> > since it already exists in multidisk.h from xfsprogs.
+> > xfs_validate_sb_common probably ought to validate that
+> > sb_agcount <= XFS_MAX_AGNUMBER as well.
+> 
+> In my understanding the range of sb_agcount should be [1, 0xFFFFFFFF], it
+> should validate that sb_agcount <= (XFS_MAX_AGNUMBER + 1) , so it's not necessary
+> to check the upper limit of the sb_agcount.
+
+Yes, you're correct, no new validation is needed.
 
 --D
 
-
-> -Dave.
 > 
-> On Tue, May 16, 2023 at 06:26:29PM -0700, Darrick J. Wong wrote:
-> > On Wed, May 17, 2023 at 10:04:49AM +1000, Dave Chinner wrote:
-> > > From: Dave Chinner <dchinner@redhat.com>
-> > > 
-> > > Lock order in XFS is AGI -> AGF, hence for operations involving
-> > > inode unlinked list operations we always lock the AGI first. Inode
-> > > unlinked list operations operate on the inode cluster buffer,
-> > > so the lock order there is AGI -> inode cluster buffer.
-> > > 
-> > > For O_TMPFILE operations, this now means the lock order set down in
-> > > xfs_rename and xfs_link is AGI -> inode cluster buffer -> AGF as the
-> > > unlinked ops are done before the directory modifications that may
-> > > allocate space and lock the AGF.
-> > > 
-> > > Unfortunately, we also now lock the inode cluster buffer when
-> > > logging an inode so that we can attach the inode to the cluster
-> > > buffer and pin it in memory. This creates a lock order of AGF ->
-> > > inode cluster buffer in directory operations as we have to log the
-> > > inode after we've allocated new space for it.
-> > > 
-> > > This creates a lock inversion between the AGF and the inode cluster
-> > > buffer. Because the inode cluster buffer is shared across multiple
-> > > inodes, the inversion is not specific to individual inodes but can
-> > > occur when inodes in the same cluster buffer are accessed in
-> > > different orders.
-> > > 
-> > > To fix this we need move all the inode log item cluster buffer
-> > > interactions to the end of the current transaction. Unfortunately,
-> > > xfs_trans_log_inode() calls are littered throughout the transactions
-> > > with no thought to ordering against other items or locking. This
-> > > makes it difficult to do anything that involves changing the call
-> > > sites of xfs_trans_log_inode() to change locking orders.
-> > > 
-> > > However, we do now have a mechanism that allows is to postpone dirty
-> > > item processing to just before we commit the transaction: the
-> > > ->iop_precommit method. This will be called after all the
-> > > modifications are done and high level objects like AGI and AGF
-> > > buffers have been locked and modified, thereby providing a mechanism
-> > > that guarantees we don't lock the inode cluster buffer before those
-> > > high level objects are locked.
-> > > 
-> > > This change is largely moving the guts of xfs_trans_log_inode() to
-> > > xfs_inode_item_precommit() and providing an extra flag context in
-> > > the inode log item to track the dirty state of the inode in the
-> > > current transaction. This also means we do a lot less repeated work
-> > > in xfs_trans_log_inode() by only doing it once per transaction when
-> > > all the work is done.
+> Thanks,
+> Long Li
+> 
 > > 
-> > Aha, and that's why you moved all the "opportunistically tweak inode
-> > metadata while we're already logging it" bits to the precommit hook.
-> > 
-> > > Fixes: 298f7bec503f ("xfs: pin inode backing buffer to the inode log item")
-> > > Signed-off-by: Dave Chinner <dchinner@redhat.com>
-> > > ---
-> > >  fs/xfs/libxfs/xfs_log_format.h  |   9 +-
-> > >  fs/xfs/libxfs/xfs_trans_inode.c | 115 +++---------------------
-> > >  fs/xfs/xfs_inode_item.c         | 152 ++++++++++++++++++++++++++++++++
-> > >  fs/xfs/xfs_inode_item.h         |   1 +
-> > >  4 files changed, 171 insertions(+), 106 deletions(-)
-> > > 
-> > > diff --git a/fs/xfs/libxfs/xfs_log_format.h b/fs/xfs/libxfs/xfs_log_format.h
-> > > index f13e0809dc63..269573c82808 100644
-> > > --- a/fs/xfs/libxfs/xfs_log_format.h
-> > > +++ b/fs/xfs/libxfs/xfs_log_format.h
-> > > @@ -324,7 +324,6 @@ struct xfs_inode_log_format_32 {
-> > >  #define XFS_ILOG_DOWNER	0x200	/* change the data fork owner on replay */
-> > >  #define XFS_ILOG_AOWNER	0x400	/* change the attr fork owner on replay */
-> > >  
-> > > -
-> > >  /*
-> > >   * The timestamps are dirty, but not necessarily anything else in the inode
-> > >   * core.  Unlike the other fields above this one must never make it to disk
-> > > @@ -333,6 +332,14 @@ struct xfs_inode_log_format_32 {
-> > >   */
-> > >  #define XFS_ILOG_TIMESTAMP	0x4000
-> > >  
-> > > +/*
-> > > + * The version field has been changed, but not necessarily anything else of
-> > > + * interest. This must never make it to disk - it is used purely to ensure that
-> > > + * the inode item ->precommit operation can update the fsync flag triggers
-> > > + * in the inode item correctly.
-> > > + */
-> > > +#define XFS_ILOG_IVERSION	0x8000
 > > > +
-> > >  #define	XFS_ILOG_NONCORE	(XFS_ILOG_DDATA | XFS_ILOG_DEXT | \
-> > >  				 XFS_ILOG_DBROOT | XFS_ILOG_DEV | \
-> > >  				 XFS_ILOG_ADATA | XFS_ILOG_AEXT | \
-> > > diff --git a/fs/xfs/libxfs/xfs_trans_inode.c b/fs/xfs/libxfs/xfs_trans_inode.c
-> > > index 8b5547073379..2d164d0588b1 100644
-> > > --- a/fs/xfs/libxfs/xfs_trans_inode.c
-> > > +++ b/fs/xfs/libxfs/xfs_trans_inode.c
-> > > @@ -40,9 +40,8 @@ xfs_trans_ijoin(
-> > >  	iip->ili_lock_flags = lock_flags;
-> > >  	ASSERT(!xfs_iflags_test(ip, XFS_ISTALE));
-> > >  
-> > > -	/*
-> > > -	 * Get a log_item_desc to point at the new item.
-> > > -	 */
-> > > +	/* Reset the per-tx dirty context and add the item to the tx. */
-> > > +	iip->ili_dirty_flags = 0;
-> > >  	xfs_trans_add_item(tp, &iip->ili_item);
-> > >  }
-> > >  
-> > > @@ -76,17 +75,10 @@ xfs_trans_ichgtime(
 > > >  /*
-> > >   * This is called to mark the fields indicated in fieldmask as needing to be
-> > >   * logged when the transaction is committed.  The inode must already be
-> > > - * associated with the given transaction.
-> > > - *
-> > > - * The values for fieldmask are defined in xfs_inode_item.h.  We always log all
-> > > - * of the core inode if any of it has changed, and we always log all of the
-> > > - * inline data/extents/b-tree root if any of them has changed.
-> > > - *
-> > > - * Grab and pin the cluster buffer associated with this inode to avoid RMW
-> > > - * cycles at inode writeback time. Avoid the need to add error handling to every
-> > > - * xfs_trans_log_inode() call by shutting down on read error.  This will cause
-> > > - * transactions to fail and everything to error out, just like if we return a
-> > > - * read error in a dirty transaction and cancel it.
-> > > + * associated with the given transaction. All we do here is record where the
-> > > + * inode was dirtied and mark the transaction and inode log item dirty;
-> > > + * everything else is done in the ->precommit log item operation after the
-> > > + * changes in the transaction have been completed.
-> > >   */
-> > >  void
-> > >  xfs_trans_log_inode(
-> > > @@ -96,7 +88,6 @@ xfs_trans_log_inode(
-> > >  {
-> > >  	struct xfs_inode_log_item *iip = ip->i_itemp;
-> > >  	struct inode		*inode = VFS_I(ip);
-> > > -	uint			iversion_flags = 0;
+> > >   * Limits on sb_agblocks/sb_agblklog -- mkfs won't format AGs smaller than
+> > >   * 16MB or larger than 1TB.
+> > > diff --git a/fs/xfs/xfs_fsops.c b/fs/xfs/xfs_fsops.c
+> > > index 13851c0d640b..2b37d3e61bdf 100644
+> > > --- a/fs/xfs/xfs_fsops.c
+> > > +++ b/fs/xfs/xfs_fsops.c
+> > > @@ -115,11 +115,16 @@ xfs_growfs_data_private(
 > > >  
-> > >  	ASSERT(iip);
-> > >  	ASSERT(xfs_isilocked(ip, XFS_ILOCK_EXCL));
-> > > @@ -104,18 +95,6 @@ xfs_trans_log_inode(
-> > >  
-> > >  	tp->t_flags |= XFS_TRANS_DIRTY;
-> > >  
-> > > -	/*
-> > > -	 * Don't bother with i_lock for the I_DIRTY_TIME check here, as races
-> > > -	 * don't matter - we either will need an extra transaction in 24 hours
-> > > -	 * to log the timestamps, or will clear already cleared fields in the
-> > > -	 * worst case.
-> > > -	 */
-> > > -	if (inode->i_state & I_DIRTY_TIME) {
-> > > -		spin_lock(&inode->i_lock);
-> > > -		inode->i_state &= ~I_DIRTY_TIME;
-> > > -		spin_unlock(&inode->i_lock);
-> > > -	}
-> > > -
-> > >  	/*
-> > >  	 * First time we log the inode in a transaction, bump the inode change
-> > >  	 * counter if it is configured for this to occur. While we have the
-> > > @@ -128,86 +107,12 @@ xfs_trans_log_inode(
-> > >  	if (!test_and_set_bit(XFS_LI_DIRTY, &iip->ili_item.li_flags)) {
-> > >  		if (IS_I_VERSION(inode) &&
-> > >  		    inode_maybe_inc_iversion(inode, flags & XFS_ILOG_CORE))
-> > > -			iversion_flags = XFS_ILOG_CORE;
-> > > +			flags |= XFS_ILOG_IVERSION;
+> > >  	nb_div = nb;
+> > >  	nb_mod = do_div(nb_div, mp->m_sb.sb_agblocks);
+> > > -	nagcount = nb_div + (nb_mod != 0);
+> > > -	if (nb_mod && nb_mod < XFS_MIN_AG_BLOCKS) {
+> > > -		nagcount--;
+> > > -		nb = (xfs_rfsblock_t)nagcount * mp->m_sb.sb_agblocks;
+> > > +	if (nb_mod && nb_mod >= XFS_MIN_AG_BLOCKS)
+> > > +		nb_div++;
+> > > +	else if (nb_mod)
+> > > +		nb = nb_div * mp->m_sb.sb_agblocks;
+> > > +
+> > > +	if (nb_div > XFS_AGNUMBER_MAX) {
+> > > +		nb_div = XFS_AGNUMBER_MAX;
+> > > +		nb = nb_div * mp->m_sb.sb_agblocks;
 > > >  	}
-> > >  
-> > > -	/*
-> > > -	 * If we're updating the inode core or the timestamps and it's possible
-> > > -	 * to upgrade this inode to bigtime format, do so now.
-> > > -	 */
-> > > -	if ((flags & (XFS_ILOG_CORE | XFS_ILOG_TIMESTAMP)) &&
-> > > -	    xfs_has_bigtime(ip->i_mount) &&
-> > > -	    !xfs_inode_has_bigtime(ip)) {
-> > > -		ip->i_diflags2 |= XFS_DIFLAG2_BIGTIME;
-> > > -		flags |= XFS_ILOG_CORE;
-> > > -	}
-> > > -
-> > > -	/*
-> > > -	 * Inode verifiers do not check that the extent size hint is an integer
-> > > -	 * multiple of the rt extent size on a directory with both rtinherit
-> > > -	 * and extszinherit flags set.  If we're logging a directory that is
-> > > -	 * misconfigured in this way, clear the hint.
-> > > -	 */
-> > > -	if ((ip->i_diflags & XFS_DIFLAG_RTINHERIT) &&
-> > > -	    (ip->i_diflags & XFS_DIFLAG_EXTSZINHERIT) &&
-> > > -	    (ip->i_extsize % ip->i_mount->m_sb.sb_rextsize) > 0) {
-> > > -		ip->i_diflags &= ~(XFS_DIFLAG_EXTSIZE |
-> > > -				   XFS_DIFLAG_EXTSZINHERIT);
-> > > -		ip->i_extsize = 0;
-> > > -		flags |= XFS_ILOG_CORE;
-> > > -	}
-> > > -
-> > > -	/*
-> > > -	 * Record the specific change for fdatasync optimisation. This allows
-> > > -	 * fdatasync to skip log forces for inodes that are only timestamp
-> > > -	 * dirty.
-> > > -	 */
-> > > -	spin_lock(&iip->ili_lock);
-> > > -	iip->ili_fsync_fields |= flags;
-> > > -
-> > > -	if (!iip->ili_item.li_buf) {
-> > > -		struct xfs_buf	*bp;
-> > > -		int		error;
-> > > -
-> > > -		/*
-> > > -		 * We hold the ILOCK here, so this inode is not going to be
-> > > -		 * flushed while we are here. Further, because there is no
-> > > -		 * buffer attached to the item, we know that there is no IO in
-> > > -		 * progress, so nothing will clear the ili_fields while we read
-> > > -		 * in the buffer. Hence we can safely drop the spin lock and
-> > > -		 * read the buffer knowing that the state will not change from
-> > > -		 * here.
-> > > -		 */
-> > > -		spin_unlock(&iip->ili_lock);
-> > > -		error = xfs_imap_to_bp(ip->i_mount, tp, &ip->i_imap, &bp);
-> > > -		if (error) {
-> > > -			xfs_force_shutdown(ip->i_mount, SHUTDOWN_META_IO_ERROR);
-> > > -			return;
-> > > -		}
-> > > -
-> > > -		/*
-> > > -		 * We need an explicit buffer reference for the log item but
-> > > -		 * don't want the buffer to remain attached to the transaction.
-> > > -		 * Hold the buffer but release the transaction reference once
-> > > -		 * we've attached the inode log item to the buffer log item
-> > > -		 * list.
-> > > -		 */
-> > > -		xfs_buf_hold(bp);
-> > > -		spin_lock(&iip->ili_lock);
-> > > -		iip->ili_item.li_buf = bp;
-> > > -		bp->b_flags |= _XBF_INODES;
-> > > -		list_add_tail(&iip->ili_item.li_bio_list, &bp->b_li_list);
-> > > -		xfs_trans_brelse(tp, bp);
-> > > -	}
-> > > -
-> > > -	/*
-> > > -	 * Always OR in the bits from the ili_last_fields field.  This is to
-> > > -	 * coordinate with the xfs_iflush() and xfs_buf_inode_iodone() routines
-> > > -	 * in the eventual clearing of the ili_fields bits.  See the big comment
-> > > -	 * in xfs_iflush() for an explanation of this coordination mechanism.
-> > > -	 */
-> > > -	iip->ili_fields |= (flags | iip->ili_last_fields | iversion_flags);
-> > > -	spin_unlock(&iip->ili_lock);
-> > > +	iip->ili_dirty_flags |= flags;
-> > > +	trace_printk("ino 0x%llx, flags 0x%x, dflags 0x%x",
-> > > +		ip->i_ino, flags, iip->ili_dirty_flags);
-> > 
-> > Urk, leftover debugging info?
-> > 
-> > --D
-> > >  }
-> > >  
-> > >  int
-> > > diff --git a/fs/xfs/xfs_inode_item.c b/fs/xfs/xfs_inode_item.c
-> > > index ca2941ab6cbc..586af11b7cd1 100644
-> > > --- a/fs/xfs/xfs_inode_item.c
-> > > +++ b/fs/xfs/xfs_inode_item.c
-> > > @@ -29,6 +29,156 @@ static inline struct xfs_inode_log_item *INODE_ITEM(struct xfs_log_item *lip)
-> > >  	return container_of(lip, struct xfs_inode_log_item, ili_item);
-> > >  }
-> > >  
-> > > +static uint64_t
-> > > +xfs_inode_item_sort(
-> > > +	struct xfs_log_item	*lip)
-> > > +{
-> > > +	return INODE_ITEM(lip)->ili_inode->i_ino;
-> > > +}
-> > > +
-> > > +/*
-> > > + * Prior to finally logging the inode, we have to ensure that all the
-> > > + * per-modification inode state changes are applied. This includes VFS inode
-> > > + * state updates, format conversions, verifier state synchronisation and
-> > > + * ensuring the inode buffer remains in memory whilst the inode is dirty.
-> > > + *
-> > > + * We have to be careful when we grab the inode cluster buffer due to lock
-> > > + * ordering constraints. The unlinked inode modifications (xfs_iunlink_item)
-> > > + * require AGI -> inode cluster buffer lock order. The inode cluster buffer is
-> > > + * not locked until ->precommit, so it happens after everything else has been
-> > > + * modified.
-> > > + *
-> > > + * Further, we have AGI -> AGF lock ordering, and with O_TMPFILE handling we
-> > > + * have AGI -> AGF -> iunlink item -> inode cluster buffer lock order. Hence we
-> > > + * cannot safely lock the inode cluster buffer in xfs_trans_log_inode() because
-> > > + * it can be called on a inode (e.g. via bumplink/droplink) before we take the
-> > > + * AGF lock modifying directory blocks.
-> > > + *
-> > > + * Rather than force a complete rework of all the transactions to call
-> > > + * xfs_trans_log_inode() once and once only at the end of every transaction, we
-> > > + * move the pinning of the inode cluster buffer to a ->precommit operation. This
-> > > + * matches how the xfs_iunlink_item locks the inode cluster buffer, and it
-> > > + * ensures that the inode cluster buffer locking is always done last in a
-> > > + * transaction. i.e. we ensure the lock order is always AGI -> AGF -> inode
-> > > + * cluster buffer.
-> > > + *
-> > > + * If we return the inode number as the precommit sort key then we'll also
-> > > + * guarantee that the order all inode cluster buffer locking is the same all the
-> > > + * inodes and unlink items in the transaction.
-> > > + */
-> > > +static int
-> > > +xfs_inode_item_precommit(
-> > > +	struct xfs_trans	*tp,
-> > > +	struct xfs_log_item	*lip)
-> > > +{
-> > > +	struct xfs_inode_log_item *iip = INODE_ITEM(lip);
-> > > +	struct xfs_inode	*ip = iip->ili_inode;
-> > > +	struct inode		*inode = VFS_I(ip);
-> > > +	unsigned int		flags = iip->ili_dirty_flags;
-> > > +
-> > > +	trace_printk("ino 0x%llx, dflags 0x%x, fields 0x%x lastf 0x%x",
-> > > +		ip->i_ino, flags, iip->ili_fields, iip->ili_last_fields);
-> > > +	/*
-> > > +	 * Don't bother with i_lock for the I_DIRTY_TIME check here, as races
-> > > +	 * don't matter - we either will need an extra transaction in 24 hours
-> > > +	 * to log the timestamps, or will clear already cleared fields in the
-> > > +	 * worst case.
-> > > +	 */
-> > > +	if (inode->i_state & I_DIRTY_TIME) {
-> > > +		spin_lock(&inode->i_lock);
-> > > +		inode->i_state &= ~I_DIRTY_TIME;
-> > > +		spin_unlock(&inode->i_lock);
-> > > +	}
-> > > +
-> > > +
-> > > +	/*
-> > > +	 * If we're updating the inode core or the timestamps and it's possible
-> > > +	 * to upgrade this inode to bigtime format, do so now.
-> > > +	 */
-> > > +	if ((flags & (XFS_ILOG_CORE | XFS_ILOG_TIMESTAMP)) &&
-> > > +	    xfs_has_bigtime(ip->i_mount) &&
-> > > +	    !xfs_inode_has_bigtime(ip)) {
-> > > +		ip->i_diflags2 |= XFS_DIFLAG2_BIGTIME;
-> > > +		flags |= XFS_ILOG_CORE;
-> > > +	}
-> > > +
-> > > +	/*
-> > > +	 * Inode verifiers do not check that the extent size hint is an integer
-> > > +	 * multiple of the rt extent size on a directory with both rtinherit
-> > > +	 * and extszinherit flags set.  If we're logging a directory that is
-> > > +	 * misconfigured in this way, clear the hint.
-> > > +	 */
-> > > +	if ((ip->i_diflags & XFS_DIFLAG_RTINHERIT) &&
-> > > +	    (ip->i_diflags & XFS_DIFLAG_EXTSZINHERIT) &&
-> > > +	    (ip->i_extsize % ip->i_mount->m_sb.sb_rextsize) > 0) {
-> > > +		ip->i_diflags &= ~(XFS_DIFLAG_EXTSIZE |
-> > > +				   XFS_DIFLAG_EXTSZINHERIT);
-> > > +		ip->i_extsize = 0;
-> > > +		flags |= XFS_ILOG_CORE;
-> > > +	}
-> > > +
-> > > +	/*
-> > > +	 * Record the specific change for fdatasync optimisation. This allows
-> > > +	 * fdatasync to skip log forces for inodes that are only timestamp
-> > > +	 * dirty. Once we've processed the XFS_ILOG_IVERSION flag, convert it
-> > > +	 * to XFS_ILOG_CORE so that the actual on-disk dirty tracking
-> > > +	 * (ili_fields) correctly tracks that the version has changed.
-> > > +	 */
-> > > +	spin_lock(&iip->ili_lock);
-> > > +	iip->ili_fsync_fields |= (flags & ~XFS_ILOG_IVERSION);
-> > > +	if (flags & XFS_ILOG_IVERSION)
-> > > +		flags = ((flags & ~XFS_ILOG_IVERSION) | XFS_ILOG_CORE);
-> > > +
-> > > +	if (!iip->ili_item.li_buf) {
-> > > +		struct xfs_buf	*bp;
-> > > +		int		error;
-> > > +
-> > > +		/*
-> > > +		 * We hold the ILOCK here, so this inode is not going to be
-> > > +		 * flushed while we are here. Further, because there is no
-> > > +		 * buffer attached to the item, we know that there is no IO in
-> > > +		 * progress, so nothing will clear the ili_fields while we read
-> > > +		 * in the buffer. Hence we can safely drop the spin lock and
-> > > +		 * read the buffer knowing that the state will not change from
-> > > +		 * here.
-> > > +		 */
-> > > +		spin_unlock(&iip->ili_lock);
-> > > +		error = xfs_imap_to_bp(ip->i_mount, tp, &ip->i_imap, &bp);
-> > > +		if (error)
-> > > +			return error;
-> > > +
-> > > +		/*
-> > > +		 * We need an explicit buffer reference for the log item but
-> > > +		 * don't want the buffer to remain attached to the transaction.
-> > > +		 * Hold the buffer but release the transaction reference once
-> > > +		 * we've attached the inode log item to the buffer log item
-> > > +		 * list.
-> > > +		 */
-> > > +		xfs_buf_hold(bp);
-> > > +		spin_lock(&iip->ili_lock);
-> > > +		iip->ili_item.li_buf = bp;
-> > > +		bp->b_flags |= _XBF_INODES;
-> > > +		list_add_tail(&iip->ili_item.li_bio_list, &bp->b_li_list);
-> > > +		xfs_trans_brelse(tp, bp);
-> > > +	}
-> > > +
-> > > +	/*
-> > > +	 * Always OR in the bits from the ili_last_fields field.  This is to
-> > > +	 * coordinate with the xfs_iflush() and xfs_buf_inode_iodone() routines
-> > > +	 * in the eventual clearing of the ili_fields bits.  See the big comment
-> > > +	 * in xfs_iflush() for an explanation of this coordination mechanism.
-> > > +	 */
-> > > +	iip->ili_fields |= (flags | iip->ili_last_fields);
-> > > +	spin_unlock(&iip->ili_lock);
-> > > +
-> > > +	/*
-> > > +	 * We are done with the log item transaction dirty state, so clear it so
-> > > +	 * that it doesn't pollute future transactions.
-> > > +	 */
-> > > +	iip->ili_dirty_flags = 0;
-> > > +	return 0;
-> > > +}
-> > > +
-> > >  /*
-> > >   * The logged size of an inode fork is always the current size of the inode
-> > >   * fork. This means that when an inode fork is relogged, the size of the logged
-> > > @@ -662,6 +812,8 @@ xfs_inode_item_committing(
-> > >  }
-> > >  
-> > >  static const struct xfs_item_ops xfs_inode_item_ops = {
-> > > +	.iop_sort	= xfs_inode_item_sort,
-> > > +	.iop_precommit	= xfs_inode_item_precommit,
-> > >  	.iop_size	= xfs_inode_item_size,
-> > >  	.iop_format	= xfs_inode_item_format,
-> > >  	.iop_pin	= xfs_inode_item_pin,
-> > > diff --git a/fs/xfs/xfs_inode_item.h b/fs/xfs/xfs_inode_item.h
-> > > index bbd836a44ff0..377e06007804 100644
-> > > --- a/fs/xfs/xfs_inode_item.h
-> > > +++ b/fs/xfs/xfs_inode_item.h
-> > > @@ -17,6 +17,7 @@ struct xfs_inode_log_item {
-> > >  	struct xfs_log_item	ili_item;	   /* common portion */
-> > >  	struct xfs_inode	*ili_inode;	   /* inode ptr */
-> > >  	unsigned short		ili_lock_flags;	   /* inode lock flags */
-> > > +	unsigned int		ili_dirty_flags;   /* dirty in current tx */
+> > > +	nagcount = nb_div;
+> > >  	delta = nb - mp->m_sb.sb_dblocks;
 > > >  	/*
-> > >  	 * The ili_lock protects the interactions between the dirty state and
-> > >  	 * the flush state of the inode log item. This allows us to do atomic
+> > >  	 * Reject filesystems with a single AG because they are not
 > > > -- 
-> > > 2.40.1
+> > > 2.31.1
 > > > 
-> > 
 > 
-> -- 
-> Dave Chinner
-> david@fromorbit.com
