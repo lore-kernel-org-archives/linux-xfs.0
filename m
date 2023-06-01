@@ -2,32 +2,32 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 92FCBC7EE33
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A305EC7EE2F
 	for <linux-xfs@archiver.kernel.org>; Thu,  1 Jun 2023 09:45:28 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232941AbjFAJp0 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 1 Jun 2023 05:45:26 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59776 "EHLO
+        id S232910AbjFAJpZ (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 1 Jun 2023 05:45:25 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59718 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233040AbjFAJpU (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 1 Jun 2023 05:45:20 -0400
+        with ESMTP id S233011AbjFAJpL (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 1 Jun 2023 05:45:11 -0400
 Received: from bombadil.infradead.org (bombadil.infradead.org [IPv6:2607:7c80:54:3::133])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 923A995;
-        Thu,  1 Jun 2023 02:45:19 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5BA5E95;
+        Thu,  1 Jun 2023 02:45:10 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
         d=infradead.org; s=bombadil.20210309; h=Content-Transfer-Encoding:
         MIME-Version:References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:Sender
         :Reply-To:Content-Type:Content-ID:Content-Description;
-        bh=0gTLAUlFe0DX2eUG/rV5llfv74gR91AkuRTXQ7aAQuQ=; b=j9+I37km1dVFzK0pMRVFUutkyM
-        fx91ge5Dkms4bXI2cS2pZNdEUcx41bgMRQ7q4fhg4tItO5gByIT/0UG0hoVoNn3UP8Rlgv7zy9ILR
-        68zCoxcEg5Aa5WXbZMF+rsOOYvno1nLE1UWDOuzKWG+RRdj3RG5s/HiOGXvtoB4iK+PQ3vPtYxwSc
-        q9O7YaE+SQ3nq5rVKtgogIliYnJqKjxNO+W5wfn+9j4dwhhKhJDWAdrzYRXOTv8HUG24zGgOYLIzG
-        OeJ3+54kBKVlFVbWUQl+lKIYUtyOTU9vrqdfqn42PnR1vgvoJxytsTUU+nedf7IIjj1VnqvHLCHLD
-        VNuzbKsQ==;
+        bh=HIEuDOPmFIS+iShTM0mpdBmHQefNMWjqF+6tGPSU4L4=; b=Oiw/hTyUqPPXTx0Bf3107EcQ6q
+        zK8Myc3BfuoouZ6FP2FcFCE2UPjnsFwe77gwuBx5g0J6+dnEzJbln7Rf1t10Jhu0noyEy47TlKzWm
+        QPhsZvqJ2FVQtLzsxm4KvlaGknvgPaF+Qzw/795gSuGPK7BxYqta+lPJ6I0vcceTX9KZ04FKKAiYu
+        JqfQGqR3ldzckXRE6x5K+4mxnFjzrZO/Xj44J/OXxiQLR1NrbHjI/n7QPDAeLI1H5jXBLGBl+wW7J
+        TYLLkW+2TRQ8905Rn8g/jYLmHmqNwLlx6yKTryVpG48OSCVKF6GHdy4csAC4hagX2rDGiXmDyEcld
+        pUWrfNow==;
 Received: from [2001:4bb8:182:6d06:35f3:1da0:1cc3:d86d] (helo=localhost)
         by bombadil.infradead.org with esmtpsa (Exim 4.96 #2 (Red Hat Linux))
-        id 1q4ers-002lzB-2y;
-        Thu, 01 Jun 2023 09:45:17 +0000
+        id 1q4eri-002lxV-2C;
+        Thu, 01 Jun 2023 09:45:07 +0000
 From:   Christoph Hellwig <hch@lst.de>
 To:     Jens Axboe <axboe@kernel.dk>
 Cc:     Al Viro <viro@zeniv.linux.org.uk>,
@@ -35,9 +35,9 @@ Cc:     Al Viro <viro@zeniv.linux.org.uk>,
         "Darrick J. Wong" <djwong@kernel.org>, Jan Kara <jack@suse.cz>,
         linux-block@vger.kernel.org, linux-fsdevel@vger.kernel.org,
         linux-xfs@vger.kernel.org
-Subject: [PATCH 03/16] block: turn bdev_lock into a mutex
-Date:   Thu,  1 Jun 2023 11:44:46 +0200
-Message-Id: <20230601094459.1350643-4-hch@lst.de>
+Subject: [PATCH 01/16] block: factor out a bd_end_claim helper from blkdev_put
+Date:   Thu,  1 Jun 2023 11:44:44 +0200
+Message-Id: <20230601094459.1350643-2-hch@lst.de>
 X-Mailer: git-send-email 2.39.2
 In-Reply-To: <20230601094459.1350643-1-hch@lst.de>
 References: <20230601094459.1350643-1-hch@lst.de>
@@ -48,127 +48,96 @@ Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-There is no reason for this lock to spin, and being able to sleep under
-it will come in handy soon.
+Move all the logic to release an exclusive claim into a helper.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 Reviewed-by: Jan Kara <jack@suse.cz>
 Acked-by: Christian Brauner <brauner@kernel.org>
 ---
- block/bdev.c | 27 +++++++++++++--------------
- 1 file changed, 13 insertions(+), 14 deletions(-)
+ block/bdev.c | 63 +++++++++++++++++++++++++++-------------------------
+ 1 file changed, 33 insertions(+), 30 deletions(-)
 
 diff --git a/block/bdev.c b/block/bdev.c
-index 080b5c83bfbc72..f5ffcac762e0cd 100644
+index 21c63bfef3237a..317bfd9cba40fa 100644
 --- a/block/bdev.c
 +++ b/block/bdev.c
-@@ -308,7 +308,7 @@ EXPORT_SYMBOL(thaw_bdev);
-  * pseudo-fs
-  */
- 
--static  __cacheline_aligned_in_smp DEFINE_SPINLOCK(bdev_lock);
-+static  __cacheline_aligned_in_smp DEFINE_MUTEX(bdev_lock);
- static struct kmem_cache * bdev_cachep __read_mostly;
- 
- static struct inode *bdev_alloc_inode(struct super_block *sb)
-@@ -467,9 +467,6 @@ long nr_blockdev_pages(void)
-  *
-  * Test whether @bdev can be claimed by @holder.
-  *
-- * CONTEXT:
-- * spin_lock(&bdev_lock).
-- *
-  * RETURNS:
-  * %true if @bdev can be claimed, %false otherwise.
-  */
-@@ -477,6 +474,8 @@ static bool bd_may_claim(struct block_device *bdev, void *holder)
- {
- 	struct block_device *whole = bdev_whole(bdev);
- 
-+	lockdep_assert_held(&bdev_lock);
-+
- 	if (bdev->bd_holder) {
- 		/*
- 		 * The same holder can always re-claim.
-@@ -515,10 +514,10 @@ int bd_prepare_to_claim(struct block_device *bdev, void *holder)
- 	if (WARN_ON_ONCE(!holder))
- 		return -EINVAL;
- retry:
--	spin_lock(&bdev_lock);
-+	mutex_lock(&bdev_lock);
- 	/* if someone else claimed, fail */
- 	if (!bd_may_claim(bdev, holder)) {
--		spin_unlock(&bdev_lock);
-+		mutex_unlock(&bdev_lock);
- 		return -EBUSY;
- 	}
- 
-@@ -528,7 +527,7 @@ int bd_prepare_to_claim(struct block_device *bdev, void *holder)
- 		DEFINE_WAIT(wait);
- 
- 		prepare_to_wait(wq, &wait, TASK_UNINTERRUPTIBLE);
--		spin_unlock(&bdev_lock);
-+		mutex_unlock(&bdev_lock);
- 		schedule();
- 		finish_wait(wq, &wait);
- 		goto retry;
-@@ -536,7 +535,7 @@ int bd_prepare_to_claim(struct block_device *bdev, void *holder)
- 
- 	/* yay, all mine */
- 	whole->bd_claiming = holder;
--	spin_unlock(&bdev_lock);
-+	mutex_unlock(&bdev_lock);
- 	return 0;
- }
- EXPORT_SYMBOL_GPL(bd_prepare_to_claim); /* only for the loop driver */
-@@ -562,7 +561,7 @@ static void bd_finish_claiming(struct block_device *bdev, void *holder)
- {
- 	struct block_device *whole = bdev_whole(bdev);
- 
--	spin_lock(&bdev_lock);
-+	mutex_lock(&bdev_lock);
- 	BUG_ON(!bd_may_claim(bdev, holder));
- 	/*
- 	 * Note that for a whole device bd_holders will be incremented twice,
-@@ -573,7 +572,7 @@ static void bd_finish_claiming(struct block_device *bdev, void *holder)
- 	bdev->bd_holders++;
- 	bdev->bd_holder = holder;
- 	bd_clear_claiming(whole, holder);
--	spin_unlock(&bdev_lock);
-+	mutex_unlock(&bdev_lock);
- }
- 
- /**
-@@ -587,9 +586,9 @@ static void bd_finish_claiming(struct block_device *bdev, void *holder)
-  */
- void bd_abort_claiming(struct block_device *bdev, void *holder)
- {
--	spin_lock(&bdev_lock);
-+	mutex_lock(&bdev_lock);
- 	bd_clear_claiming(bdev_whole(bdev), holder);
--	spin_unlock(&bdev_lock);
-+	mutex_unlock(&bdev_lock);
+@@ -589,6 +589,37 @@ void bd_abort_claiming(struct block_device *bdev, void *holder)
  }
  EXPORT_SYMBOL(bd_abort_claiming);
  
-@@ -602,7 +601,7 @@ static void bd_end_claim(struct block_device *bdev)
- 	 * Release a claim on the device.  The holder fields are protected with
- 	 * bdev_lock.  open_mutex is used to synchronize disk_holder unlinking.
- 	 */
--	spin_lock(&bdev_lock);
-+	mutex_lock(&bdev_lock);
- 	WARN_ON_ONCE(--bdev->bd_holders < 0);
- 	WARN_ON_ONCE(--whole->bd_holders < 0);
- 	if (!bdev->bd_holders) {
-@@ -612,7 +611,7 @@ static void bd_end_claim(struct block_device *bdev)
- 	}
- 	if (!whole->bd_holders)
- 		whole->bd_holder = NULL;
--	spin_unlock(&bdev_lock);
-+	mutex_unlock(&bdev_lock);
++static void bd_end_claim(struct block_device *bdev)
++{
++	struct block_device *whole = bdev_whole(bdev);
++	bool unblock = false;
++
++	/*
++	 * Release a claim on the device.  The holder fields are protected with
++	 * bdev_lock.  open_mutex is used to synchronize disk_holder unlinking.
++	 */
++	spin_lock(&bdev_lock);
++	WARN_ON_ONCE(--bdev->bd_holders < 0);
++	WARN_ON_ONCE(--whole->bd_holders < 0);
++	if (!bdev->bd_holders) {
++		bdev->bd_holder = NULL;
++		if (bdev->bd_write_holder)
++			unblock = true;
++	}
++	if (!whole->bd_holders)
++		whole->bd_holder = NULL;
++	spin_unlock(&bdev_lock);
++
++	/*
++	 * If this was the last claim, remove holder link and unblock evpoll if
++	 * it was a write holder.
++	 */
++	if (unblock) {
++		disk_unblock_events(bdev->bd_disk);
++		bdev->bd_write_holder = false;
++	}
++}
++
+ static void blkdev_flush_mapping(struct block_device *bdev)
+ {
+ 	WARN_ON_ONCE(bdev->bd_holders);
+@@ -843,36 +874,8 @@ void blkdev_put(struct block_device *bdev, fmode_t mode)
+ 		sync_blockdev(bdev);
+ 
+ 	mutex_lock(&disk->open_mutex);
+-	if (mode & FMODE_EXCL) {
+-		struct block_device *whole = bdev_whole(bdev);
+-		bool bdev_free;
+-
+-		/*
+-		 * Release a claim on the device.  The holder fields
+-		 * are protected with bdev_lock.  open_mutex is to
+-		 * synchronize disk_holder unlinking.
+-		 */
+-		spin_lock(&bdev_lock);
+-
+-		WARN_ON_ONCE(--bdev->bd_holders < 0);
+-		WARN_ON_ONCE(--whole->bd_holders < 0);
+-
+-		if ((bdev_free = !bdev->bd_holders))
+-			bdev->bd_holder = NULL;
+-		if (!whole->bd_holders)
+-			whole->bd_holder = NULL;
+-
+-		spin_unlock(&bdev_lock);
+-
+-		/*
+-		 * If this was the last claim, remove holder link and
+-		 * unblock evpoll if it was a write holder.
+-		 */
+-		if (bdev_free && bdev->bd_write_holder) {
+-			disk_unblock_events(disk);
+-			bdev->bd_write_holder = false;
+-		}
+-	}
++	if (mode & FMODE_EXCL)
++		bd_end_claim(bdev);
  
  	/*
- 	 * If this was the last claim, remove holder link and unblock evpoll if
+ 	 * Trigger event checking and tell drivers to flush MEDIA_CHANGE
 -- 
 2.39.2
 
