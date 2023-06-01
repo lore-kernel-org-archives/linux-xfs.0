@@ -2,51 +2,127 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8D299C77B7A
-	for <linux-xfs@archiver.kernel.org>; Thu,  1 Jun 2023 15:12:56 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 79C44C7EE2A
+	for <linux-xfs@archiver.kernel.org>; Thu,  1 Jun 2023 15:25:15 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233597AbjFAPMz (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 1 Jun 2023 11:12:55 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53818 "EHLO
+        id S233650AbjFAPZN (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 1 Jun 2023 11:25:13 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35542 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233520AbjFAPMy (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 1 Jun 2023 11:12:54 -0400
-Received: from bombadil.infradead.org (bombadil.infradead.org [IPv6:2607:7c80:54:3::133])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5F51D123
-        for <linux-xfs@vger.kernel.org>; Thu,  1 Jun 2023 08:12:53 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Type:MIME-Version
-        :References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
-        Content-Transfer-Encoding:Content-ID:Content-Description;
-        bh=SW2oE0BZvruBgLWTU0qaGDlwsMnfMLCyLbCwzdAXOB8=; b=1CVtoXVlCWDzqbXryMireRk2lr
-        4Z7w7aRcCqulnh2fCGiqp1Zk57bVTFD6zolzZIbYNEMSRjXkW4fvOljh8Qgx1m2KM+qpSnUAY6HE6
-        dnHRMY2L9yENg7inZkgnB5FVXRd0ZgZTE3CW/GZgxR9uy15e2XsethtHFEv533Hh3r0NML/QbQjay
-        rkGswfA4Hqc6vtBtV3oFmww3VG/+SCUoT04BKSrUZ6D1ao15XbLBhgqCNLCc4F5gs4KJ8bNi83TuQ
-        nceGcscVQVP1ESBZg37nAmyv7e8ovi/KHMSWdNPw4amKGx7ZdrlJzSxfo/IO8xx44PK9FhJXCE95b
-        SsesIsGA==;
-Received: from hch by bombadil.infradead.org with local (Exim 4.96 #2 (Red Hat Linux))
-        id 1q4jyv-003z2K-0V;
-        Thu, 01 Jun 2023 15:12:53 +0000
-Date:   Thu, 1 Jun 2023 08:12:53 -0700
-From:   Christoph Hellwig <hch@infradead.org>
-To:     Dave Chinner <david@fromorbit.com>
-Cc:     linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 4/4] xfs: fix AGF vs inode cluster buffer deadlock
-Message-ID: <ZHi1da1WjTirLQT/@infradead.org>
-References: <20230517000449.3997582-1-david@fromorbit.com>
- <20230517000449.3997582-5-david@fromorbit.com>
+        with ESMTP id S234227AbjFAPYx (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 1 Jun 2023 11:24:53 -0400
+Received: from smtp-out2.suse.de (smtp-out2.suse.de [195.135.220.29])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id ADE8F136;
+        Thu,  1 Jun 2023 08:24:51 -0700 (PDT)
+Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
+        (No client certificate requested)
+        by smtp-out2.suse.de (Postfix) with ESMTPS id 439421FDAF;
+        Thu,  1 Jun 2023 15:24:50 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.cz; s=susede2_rsa;
+        t=1685633090; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+         mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=NMMC3ehgaWslWeASfjcmQ+SuyyB+zQPCwx9GtXbqe3Y=;
+        b=WjHviSuQYqQL5ww/WGZrxQ9IaSK+faKZeFG2YF8j1TneF9hscLLx1tqg0Bx8EgldewEIHi
+        PBEV92dYJc9WiX/PL/Fl3kvtNUHQ7iVPTlmwqgOKI3ucMytqhW2aWsSuZSvUhP7hf/zFKn
+        KNnBc370aTHSrj3tbsurPTnkkfqoXmA=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.cz;
+        s=susede2_ed25519; t=1685633090;
+        h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+         mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=NMMC3ehgaWslWeASfjcmQ+SuyyB+zQPCwx9GtXbqe3Y=;
+        b=9kcmzqr/0hZ1iA49qNNzf1cUeGB4/rjsaKBaQ3EqCfnWgDiqMRyj80AFflpKW9e0YgPeZl
+        nKRmR487X7h99zBQ==
+Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
+        (No client certificate requested)
+        by imap2.suse-dmz.suse.de (Postfix) with ESMTPS id 3109D139B7;
+        Thu,  1 Jun 2023 15:24:50 +0000 (UTC)
+Received: from dovecot-director2.suse.de ([192.168.254.65])
+        by imap2.suse-dmz.suse.de with ESMTPSA
+        id 7FLvC0K4eGQuawAAMHmgww
+        (envelope-from <jack@suse.cz>); Thu, 01 Jun 2023 15:24:50 +0000
+Received: by quack3.suse.cz (Postfix, from userid 1000)
+        id 91EB1A0754; Thu,  1 Jun 2023 17:24:49 +0200 (CEST)
+Date:   Thu, 1 Jun 2023 17:24:49 +0200
+From:   Jan Kara <jack@suse.cz>
+To:     Christian Brauner <brauner@kernel.org>
+Cc:     Jan Kara <jack@suse.cz>, Al Viro <viro@ZenIV.linux.org.uk>,
+        linux-fsdevel@vger.kernel.org, Miklos Szeredi <miklos@szeredi.hu>,
+        "Darrick J. Wong" <djwong@kernel.org>, Ted Tso <tytso@mit.edu>,
+        Jaegeuk Kim <jaegeuk@kernel.org>, linux-ext4@vger.kernel.org,
+        linux-xfs@vger.kernel.org, linux-f2fs-devel@lists.sourceforge.net,
+        stable@vger.kernel.org
+Subject: Re: [PATCH v2 4/6] fs: Establish locking order for unrelated
+ directories
+Message-ID: <20230601152449.h4ur5zrfqjqygujd@quack3>
+References: <20230601104525.27897-1-jack@suse.cz>
+ <20230601105830.13168-4-jack@suse.cz>
+ <20230601-gebracht-gesehen-c779a56b3bf3@brauner>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20230517000449.3997582-5-david@fromorbit.com>
-X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
+In-Reply-To: <20230601-gebracht-gesehen-c779a56b3bf3@brauner>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-[apparently your gmail server decided my previous reply was spam, so
- I'm not sure this reaches you]
+On Thu 01-06-23 15:58:58, Christian Brauner wrote:
+> On Thu, Jun 01, 2023 at 12:58:24PM +0200, Jan Kara wrote:
+> > Currently the locking order of inode locks for directories that are not
+> > in ancestor relationship is not defined because all operations that
+> > needed to lock two directories like this were serialized by
+> > sb->s_vfs_rename_mutex. However some filesystems need to lock two
+> > subdirectories for RENAME_EXCHANGE operations and for this we need the
+> > locking order established even for two tree-unrelated directories.
+> > Provide a helper function lock_two_inodes() that establishes lock
+> > ordering for any two inodes and use it in lock_two_directories().
+> > 
+> > CC: stable@vger.kernel.org
+> > Signed-off-by: Jan Kara <jack@suse.cz>
+> > ---
+> >  fs/inode.c    | 42 ++++++++++++++++++++++++++++++++++++++++++
+> >  fs/internal.h |  2 ++
+> >  fs/namei.c    |  4 ++--
+> >  3 files changed, 46 insertions(+), 2 deletions(-)
+> > 
+> > diff --git a/fs/inode.c b/fs/inode.c
+> > index 577799b7855f..4000ab08bbc0 100644
+> > --- a/fs/inode.c
+> > +++ b/fs/inode.c
+> > @@ -1103,6 +1103,48 @@ void discard_new_inode(struct inode *inode)
+> >  }
+> >  EXPORT_SYMBOL(discard_new_inode);
+> >  
+> > +/**
+> > + * lock_two_inodes - lock two inodes (may be regular files but also dirs)
+> > + *
+> > + * Lock any non-NULL argument. The caller must make sure that if he is passing
+> > + * in two directories, one is not ancestor of the other.  Zero, one or two
+> > + * objects may be locked by this function.
+> > + *
+> > + * @inode1: first inode to lock
+> > + * @inode2: second inode to lock
+> > + * @subclass1: inode lock subclass for the first lock obtained
+> > + * @subclass2: inode lock subclass for the second lock obtained
+> > + */
+> > +void lock_two_inodes(struct inode *inode1, struct inode *inode2,
+> > +		     unsigned subclass1, unsigned subclass2)
+> > +{
+> > +	if (!inode1 || !inode2)
+> 
+> I think you forgot the opening bracket...
+> I can just fix this up for you though.
 
-This looks good minus the left over trace_printk statements.
+Oh, yes. Apparently I forgot to rerun git-format-patch after fixing up this
+bit. I'm sorry for that. The patch series has survived full ext4 fstests
+run on my end.
 
-Reviewed-by: Christoph Hellwig <hch@lst.de>
+								Honza
+-- 
+Jan Kara <jack@suse.com>
+SUSE Labs, CR
