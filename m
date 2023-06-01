@@ -2,111 +2,95 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 373A1C7EE23
-	for <linux-xfs@archiver.kernel.org>; Thu,  1 Jun 2023 21:44:03 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A6B55C77B7A
+	for <linux-xfs@archiver.kernel.org>; Thu,  1 Jun 2023 21:49:38 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230166AbjFAVoC (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 1 Jun 2023 17:44:02 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59318 "EHLO
+        id S233283AbjFAVtg (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 1 Jun 2023 17:49:36 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33014 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231398AbjFAVoB (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 1 Jun 2023 17:44:01 -0400
-Received: from mail-pl1-x629.google.com (mail-pl1-x629.google.com [IPv6:2607:f8b0:4864:20::629])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 74A09D1
-        for <linux-xfs@vger.kernel.org>; Thu,  1 Jun 2023 14:44:00 -0700 (PDT)
-Received: by mail-pl1-x629.google.com with SMTP id d9443c01a7336-1b039168ba0so11949485ad.3
-        for <linux-xfs@vger.kernel.org>; Thu, 01 Jun 2023 14:44:00 -0700 (PDT)
+        with ESMTP id S232986AbjFAVtM (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 1 Jun 2023 17:49:12 -0400
+Received: from mail-ot1-x32b.google.com (mail-ot1-x32b.google.com [IPv6:2607:f8b0:4864:20::32b])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 18B43E69
+        for <linux-xfs@vger.kernel.org>; Thu,  1 Jun 2023 14:48:51 -0700 (PDT)
+Received: by mail-ot1-x32b.google.com with SMTP id 46e09a7af769-6af713338ccso1201764a34.0
+        for <linux-xfs@vger.kernel.org>; Thu, 01 Jun 2023 14:48:51 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=fromorbit-com.20221208.gappssmtp.com; s=20221208; t=1685655840; x=1688247840;
-        h=in-reply-to:content-transfer-encoding:content-disposition
-         :mime-version:references:message-id:subject:cc:to:from:date:from:to
-         :cc:subject:date:message-id:reply-to;
-        bh=rWE7fUtKddKIOSlE+ELrznceRtgHPDSIPev1IKzGaBw=;
-        b=LbWybZTdw30aR9X91q+XrjraUiEcjfvjSftDilWu/k1cz8dDro7CCFgyL0IbWPdae7
-         HawlqXiMjESR1LkUqdPU/4D9XPnPrBHbGzNpLS+mf0wXXO16ZNV6grszBn7cSDaKfoez
-         fwtZRyQSRaKwiWwwTdn+QBO0LPg/UpQ2GB8f1fkGgaKnLA5+I/HiKSJn4tl2OJVKS5l0
-         duefUGa2aF7yISBi0+TaXRxps29/BUwZqch/HVvVFxJ502oRCTTYRpveirHgdWCXU2Fs
-         PgNOyA7RywLwtSXGVap/baNCUGgV+/3gMNYJxHxijl9KSdOzvGPh2XjvjwRruSBL7KZr
-         jOBA==
+        d=fromorbit-com.20221208.gappssmtp.com; s=20221208; t=1685656130; x=1688248130;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
+        bh=5OcnCx/pmbtKXZ7Da/cfbjcjL+zu9BSzJDqrWeCJgqM=;
+        b=iJ+8KgBdIdC0fmpV+4X5AKELAx0FWqlDQWhfpsM+A7pnnV/3/dVBEBpGetyDVC4ugR
+         K/OZ5yTSh2/Hk3/Ch55PUxSbD/VlFdQbMoibi19k4RKFT5WhvtOqoEUyc0wbsCeBZPLn
+         Z0F/FCkSFr5gt7mnVJP7Xfej7iMQCk1AOqFuxHsYLceDp2DJbAT6BHetM17aJ+MLxOYJ
+         UgBs+hheP7eKDjZ8LgeVTIRLxYXUP01QDIeck0U2kF5B40/7hUOKs3H5MIG5ilO2BK9W
+         NAlDPf8Y9tnkQDg4ogyDVoFGO9CALjAVW0iifu8WadfLVGgLiIOl0VO1iuluLRKySMYv
+         5x+g==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20221208; t=1685655840; x=1688247840;
-        h=in-reply-to:content-transfer-encoding:content-disposition
-         :mime-version:references:message-id:subject:cc:to:from:date
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=rWE7fUtKddKIOSlE+ELrznceRtgHPDSIPev1IKzGaBw=;
-        b=HfKiGM/IPvzRKhtYN6hBT6+LipzyseKyvEPOps3DXfqugGI3xbUMVpyoOJITzZ4BKk
-         Vbazu16EctkFFEpUY4ve0nLJQrkwoAVhB6NpjXZNHsLIE3K3AOeSUFw/TGITJcuzezGP
-         G2Hi73kn5nuDjqDw0pcVebZWSVdkgCKvbvn0nVZlUlAhQ9W3/5TVb17pQjzz/yO3EyWO
-         5Pl5qQ8rsJJvI1wVpF7wvpURahuy2YtSjdzYNq85YI1XSePskz5nuLIPDFAxi5WcpQBJ
-         k0QkWyX1Xu4oUXfVwaGu3HFFq77/5yKA1eyQYjzRLsJw1/ABO7QU06qc98Rz+dqTThpT
-         wpAw==
-X-Gm-Message-State: AC+VfDyPSfSephcNgIgD8DVUwW3VzM/csl7eWB+faZVeIzqV5Ht+mTra
-        o6XOSikNVeTEZnTzTC9z+9PgBpT3vXgmAv0tKqI=
-X-Google-Smtp-Source: ACHHUZ7NmGQeuJzb0lbjhvgqFi5enz75rgoLDPpSU3w2ti/kO09jRF2EwzRV3INcieNLAe07fwmn/Q==
-X-Received: by 2002:a17:902:f7d4:b0:1b0:2f15:e0b3 with SMTP id h20-20020a170902f7d400b001b02f15e0b3mr525686plw.50.1685655839943;
-        Thu, 01 Jun 2023 14:43:59 -0700 (PDT)
+        d=1e100.net; s=20221208; t=1685656130; x=1688248130;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=5OcnCx/pmbtKXZ7Da/cfbjcjL+zu9BSzJDqrWeCJgqM=;
+        b=ZWGJ9bL1CJ+4w2qmnIgK2pnblaZpRdAAjkuR6377kqoMVRa5GSRs1xnsYE8nX0W/4F
+         DIb3hDYBzRCokfH+r19XnNjJxW3E5K7EnibPbLEgF2MYAMOIrWQJdbKd62F5pVtrGBZH
+         E+ux1aRkzkMvd5RpW3NYghHtL4bQeXyrjKfRqz+qnEXoENpL590Tkku2IdgV+2Hk72cs
+         fuOP3oyXlJy3Blw/jGYgt216oDtxntDMQ9GuJnNmPISsOnuFU2iWXFC+SIb+mHIjs6Qg
+         WF19s4DBztjgjI69R60lC+uJFxqaznatydHb5UZ+ZqirFcIJuOgsoKbizNpJWewEDFj0
+         wDkw==
+X-Gm-Message-State: AC+VfDwJTPn1qGCOAolLdGAEH5sg9Dk231rfWnGDsJkvx6YaToqNtz17
+        0BYGReev/0pr03Wyn41TOiUuug==
+X-Google-Smtp-Source: ACHHUZ415WnubrhQMrYWFgLqY3RXllLba3VYlMrHqu2QPousFmk1Hej1ZnqOsZGP095dGQGVDiGwOA==
+X-Received: by 2002:a05:6358:7242:b0:123:3f75:f56a with SMTP id i2-20020a056358724200b001233f75f56amr6105303rwa.0.1685656130299;
+        Thu, 01 Jun 2023 14:48:50 -0700 (PDT)
 Received: from dread.disaster.area (pa49-179-0-188.pa.nsw.optusnet.com.au. [49.179.0.188])
-        by smtp.gmail.com with ESMTPSA id b13-20020a170902d50d00b001b02bd00c61sm3969131plg.237.2023.06.01.14.43.59
+        by smtp.gmail.com with ESMTPSA id u10-20020aa7848a000000b00627fafe49f9sm5485376pfn.106.2023.06.01.14.48.49
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 01 Jun 2023 14:43:59 -0700 (PDT)
+        Thu, 01 Jun 2023 14:48:49 -0700 (PDT)
 Received: from dave by dread.disaster.area with local (Exim 4.96)
         (envelope-from <david@fromorbit.com>)
-        id 1q4q5N-006eze-0B;
-        Fri, 02 Jun 2023 07:43:57 +1000
-Date:   Fri, 2 Jun 2023 07:43:57 +1000
+        id 1q4qA3-006f3I-0v;
+        Fri, 02 Jun 2023 07:48:47 +1000
+Date:   Fri, 2 Jun 2023 07:48:47 +1000
 From:   Dave Chinner <david@fromorbit.com>
-To:     Jianan Wang <wangjianan.zju@gmail.com>
-Cc:     linux-xfs@vger.kernel.org
-Subject: Re: Question on the xfs inode slab memory
-Message-ID: <ZHkRHW9Fd19du0Zv@dread.disaster.area>
-References: <CAMj1M42L6hH9weqroQNaWu_SG+Yg8NrAuzgNO1b8jiWPJ2M-5A@mail.gmail.com>
- <ZHfhYsqln68N1HyO@dread.disaster.area>
- <7572072d-8132-d918-285c-3391cb041cff@gmail.com>
+To:     Christoph Hellwig <hch@lst.de>
+Cc:     Jens Axboe <axboe@kernel.dk>, Al Viro <viro@zeniv.linux.org.uk>,
+        Christian Brauner <brauner@kernel.org>,
+        "Darrick J. Wong" <djwong@kernel.org>, Jan Kara <jack@suse.cz>,
+        linux-block@vger.kernel.org, linux-fsdevel@vger.kernel.org,
+        linux-xfs@vger.kernel.org
+Subject: Re: introduce bdev holder ops and a file system shutdown method v3
+Message-ID: <ZHkSP0qlKQWDcStr@dread.disaster.area>
+References: <20230601094459.1350643-1-hch@lst.de>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
+Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <7572072d-8132-d918-285c-3391cb041cff@gmail.com>
+In-Reply-To: <20230601094459.1350643-1-hch@lst.de>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Wed, May 31, 2023 at 11:21:41PM -0700, Jianan Wang wrote:
-> Seems the auto-wraping issue is on my gmail.... using thunderbird should be better...
-
-Thanks!
-
-> Resend the slabinfo and meminfo output here:
+On Thu, Jun 01, 2023 at 11:44:43AM +0200, Christoph Hellwig wrote:
+> Hi all,
 > 
-> Linux # cat /proc/slabinfo
-> slabinfo - version: 2.1
-> # name            <active_objs> <num_objs> <objsize> <objperslab> <pagesperslab> : tunables <limit> <batchcount> <sharedfactor> : slabdata <active_slabs> <num_slabs> <sharedavail>
-.....
-> xfs_dqtrx              0      0    528   31    4 : tunables    0    0    0 : slabdata      0      0      0
-> xfs_dquot              0      0    496   33    4 : tunables    0    0    0 : slabdata      0      0      0
-> xfs_buf           2545661 3291582    384   42    4 : tunables    0    0    0 : slabdata  78371  78371      0
-> xfs_rui_item           0      0    696   47    8 : tunables    0    0    0 : slabdata      0      0      0
-> xfs_rud_item           0      0    176   46    2 : tunables    0    0    0 : slabdata      0      0      0
-> xfs_inode         23063278 77479540   1024   32    8 : tunables    0    0    0 : slabdata 2425069 2425069      0
-> xfs_efd_item        4662   4847    440   37    4 : tunables    0    0    0 : slabdata    131    131      0
-> xfs_buf_item        8610   8760    272   30    2 : tunables    0    0    0 : slabdata    292    292      0
-> xfs_trans           1925   1925    232   35    2 : tunables    0    0    0 : slabdata     55     55      0
-> xfs_da_state        1632   1632    480   34    4 : tunables    0    0    0 : slabdata     48     48      0
-> xfs_btree_cur       1728   1728    224   36    2 : tunables    0    0    0 : slabdata     48     48      0
+> this series fixes the long standing problem that we never had a good way
+> to communicate block device events to the user of the block device.
+> 
+> It fixes this by introducing a new set of holder ops registered at
+> blkdev_get_by_* time for the exclusive holder, and then wire that up
+> to a shutdown super operation to report the block device remove to the
+> file systems.
 
-There's no xfs_ili slab cache - this kernel must be using merged
-slabs, so I'm going to have to infer how many inodes are dirty from
-other slabs. The inode log item is ~190 bytes in size, so....
+Thanks for doing this, Christoph.
 
-> skbuff_ext_cache  16454495 32746392    192   42    2 : tunables    0    0    0 : slabdata 779676 779676      0
+For the series:
 
-Yup, there were - 192 byte slab, 16 million active objects. Not all
-of those inodes will be dirty right now, but ~65% of the inodes
-cached in memory have been dirty at some point. 
+Acked-by: Dave Chinner <dchinner@redhat.com>
 
-So, yes, it is highly likely that your memory reclaim/OOM problems
-are caused by blocking on dirty inodes in memory reclaim, which you
-can only fix by upgrading to a newer kernel.
+For the XFS patches in the series:
+
+Reviewed-by: Dave Chinner <dchinner@redhat.com>
 
 -Dave.
 -- 
