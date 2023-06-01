@@ -2,184 +2,145 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4495CC7EE2D
-	for <linux-xfs@archiver.kernel.org>; Wed, 31 May 2023 23:48:58 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D5B55C77B73
+	for <linux-xfs@archiver.kernel.org>; Thu,  1 Jun 2023 00:08:13 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229880AbjEaXs4 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 31 May 2023 19:48:56 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43574 "EHLO
+        id S229542AbjFAAIM (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 31 May 2023 20:08:12 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49314 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229849AbjEaXsz (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 31 May 2023 19:48:55 -0400
-Received: from mail-pl1-x633.google.com (mail-pl1-x633.google.com [IPv6:2607:f8b0:4864:20::633])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 92AE7192
-        for <linux-xfs@vger.kernel.org>; Wed, 31 May 2023 16:48:49 -0700 (PDT)
-Received: by mail-pl1-x633.google.com with SMTP id d9443c01a7336-1b0236ee816so2437505ad.1
-        for <linux-xfs@vger.kernel.org>; Wed, 31 May 2023 16:48:49 -0700 (PDT)
+        with ESMTP id S229469AbjFAAIL (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 31 May 2023 20:08:11 -0400
+Received: from mail-pf1-x436.google.com (mail-pf1-x436.google.com [IPv6:2607:f8b0:4864:20::436])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E7C27124
+        for <linux-xfs@vger.kernel.org>; Wed, 31 May 2023 17:08:06 -0700 (PDT)
+Received: by mail-pf1-x436.google.com with SMTP id d2e1a72fcca58-64d4e4598f0so372171b3a.2
+        for <linux-xfs@vger.kernel.org>; Wed, 31 May 2023 17:08:06 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=fromorbit-com.20221208.gappssmtp.com; s=20221208; t=1685576929; x=1688168929;
+        d=fromorbit-com.20221208.gappssmtp.com; s=20221208; t=1685578086; x=1688170086;
         h=in-reply-to:content-disposition:mime-version:references:message-id
          :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
-        bh=bapLcT1rfgF5eXP0K5sMoe265ENn9lfWlaeN3allmSs=;
-        b=YV/VGUCm3cO8v9Pt3ZyWyo4W+JosjwST1qxgNAOzMZYt+nWwG+aISOYjKzh9jyWIaW
-         BcD/xwqOPxKHiNkxFU1lS3wknEP4nUn44Ok1VifFX+OGo/QpS7ATmW6Mi4SFAKzYkifd
-         uzSxA8QMG7kzAar91JCJgqCBJCW/+Lk1Q9c1qbOVISGbwLCrhtks4izUCzoxFACqk2VF
-         0fyMJMoxCq3i1grLOBC8Ly7IfHEoGJeZQDGmi8iJVE0tnv7hLPZbktXIOlYStIElrYtY
-         PQosmB1fQCIy/6BgntmRoakEzbTtpDaAXItwzVyqcjt28hFIFmhwznbAWuGGn7IPzAs6
-         JpuQ==
+        bh=4NfftCMHJ2mk2OAzr3g365CO6p8zdsBKQyeSDPsEjLk=;
+        b=1cS8E7NNFagubSxA6dYeteaqccqiSFCqJEZEIdfqw7uDJrPInABblpuqtGet8rWGyK
+         UJe1SRVfnm0baJCLNj22nRBXT4D1+yShn3N6ESslolhGf2M+DNZELa5ecmVraylz1/0k
+         hHQ65S0r+QWouIQC7VuN1V2eS1/2tHqgaW0Z34kU/hr2ERDyakRRGznPoYCNw+Odxeko
+         FLc6DxZQ42mDsYZZ0BZIRr3bvHiUjbVo5Stijn2QXVqHQ8yw4UyQg2wa6K5UOF66nWYA
+         GY5Jo516m+bPpg9F0ynMxjR59+Ofx/hkreHnV0nOVFFANZMXR2dXVDL/Q4pV8lP/3xpj
+         lNCw==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20221208; t=1685576929; x=1688168929;
+        d=1e100.net; s=20221208; t=1685578086; x=1688170086;
         h=in-reply-to:content-disposition:mime-version:references:message-id
          :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
          :message-id:reply-to;
-        bh=bapLcT1rfgF5eXP0K5sMoe265ENn9lfWlaeN3allmSs=;
-        b=ebKLiSHdM5sNAf7RfLNDyPo90n9TVOqO7CnQt2UPsvGSjyy8mm7ds7WfBUmc8tAWFY
-         RtbB8Xu0FO/OgclCFnp+yT8BPkZvLdISykKExHFKjlCi84DluMnGScdec76Z7NAF5YdK
-         AuPfJnehsdl85hkyrkJWJkB6zc+yb00PkiMMZfGS5ZCPpHTSZRLHxhrfMgxQOHp/plXQ
-         PbxxjklEa2KCZoJ5gPGXXAqDlprgimQCRE3vrilDT5qPhCeCuAb8Cc65GX7fwZaQdGOU
-         84tWfHIfQEiMR6UgRbAn1/k5Wj0qyPhBs46kTfeStUVpprvUqAAiOAt+FzBGE75VBvEe
-         jEZA==
-X-Gm-Message-State: AC+VfDzpfnFDU3dWA0njJIfokKhOUgcrwaDKQIQDP/sq9HqTpSg82vzq
-        Mzhgc/iN2I/VaYhZlisbG3/vDQ==
-X-Google-Smtp-Source: ACHHUZ75YAULNe67vWw2+IHca2+HfoohrGo37Wkj1DLaLuSiBLHhhOk9FEPeleT3/wn6oUQe7zel5g==
-X-Received: by 2002:a17:902:aa07:b0:1a0:76e8:a4d with SMTP id be7-20020a170902aa0700b001a076e80a4dmr142755plb.14.1685576929033;
-        Wed, 31 May 2023 16:48:49 -0700 (PDT)
+        bh=4NfftCMHJ2mk2OAzr3g365CO6p8zdsBKQyeSDPsEjLk=;
+        b=H+lX0YcbUT0h9Z8qK8FUytS3vKgYFO5l7gXHx241W2HfO43uYzn1QgMY5Y20DXCT3r
+         EWmnmIdjVOixPo8xrKlWn2gEb6Y6LXBbogwKk4rxuSmmF38EULzeOXCLMJUcbRGrrI6Z
+         YVlPy75pUJCJzsj5MSsDvAQujUXFsCF3y+nrou5coIl5IWOwUJwM3FfW+us3XHnuWfAd
+         QhGu5a/FjUwobU6oAYJOkwRPuFRPtgtjF2x4ILw3tpA4KtPkV8CYxLy0wOQBondkE0Du
+         k20igiJVsLV+Ow2WWlkXyjdlOPl9xx3QMI8oFmExG+WMWviFAZPho30v7UO2L4gZm/PM
+         oBnQ==
+X-Gm-Message-State: AC+VfDwoa7ynmElhhFu1TodNwNx69TgjmQ1hTcBr/duWGh2YDzWucG+G
+        LfmsYU1LF6UBY7Hz0aE+WTb64LxblLpit52qkzg=
+X-Google-Smtp-Source: ACHHUZ6WiVURACzwkvMsWWWblYL8OvI6oSMTR9rPt04stDvq3hb4DE0EaACPojDVZhadUv2oI3jtoA==
+X-Received: by 2002:a05:6a00:2e05:b0:64f:4197:8d93 with SMTP id fc5-20020a056a002e0500b0064f41978d93mr10270159pfb.24.1685578086385;
+        Wed, 31 May 2023 17:08:06 -0700 (PDT)
 Received: from dread.disaster.area (pa49-179-0-188.pa.nsw.optusnet.com.au. [49.179.0.188])
-        by smtp.gmail.com with ESMTPSA id q4-20020a63e944000000b0053fb1fbd3f2sm1788299pgj.91.2023.05.31.16.48.48
+        by smtp.gmail.com with ESMTPSA id k184-20020a6324c1000000b0052cbd854927sm1862772pgk.18.2023.05.31.17.08.05
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 31 May 2023 16:48:48 -0700 (PDT)
+        Wed, 31 May 2023 17:08:05 -0700 (PDT)
 Received: from dave by dread.disaster.area with local (Exim 4.96)
         (envelope-from <david@fromorbit.com>)
-        id 1q4VYb-006IPu-0W;
-        Thu, 01 Jun 2023 09:48:45 +1000
-Date:   Thu, 1 Jun 2023 09:48:45 +1000
+        id 1q4VrG-006IoG-2c;
+        Thu, 01 Jun 2023 10:08:02 +1000
+Date:   Thu, 1 Jun 2023 10:08:02 +1000
 From:   Dave Chinner <david@fromorbit.com>
-To:     Qi Zheng <qi.zheng@linux.dev>
-Cc:     akpm@linux-foundation.org, tkhai@ya.ru, roman.gushchin@linux.dev,
-        vbabka@suse.cz, viro@zeniv.linux.org.uk, brauner@kernel.org,
-        djwong@kernel.org, hughd@google.com, paulmck@kernel.org,
-        muchun.song@linux.dev, linux-mm@kvack.org,
-        linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org,
-        linux-kernel@vger.kernel.org, Qi Zheng <zhengqi.arch@bytedance.com>
-Subject: Re: [PATCH 6/8] xfs: introduce xfs_fs_destroy_super()
-Message-ID: <ZHfc3V4KKmW8QTR2@dread.disaster.area>
-References: <20230531095742.2480623-1-qi.zheng@linux.dev>
- <20230531095742.2480623-7-qi.zheng@linux.dev>
+To:     Jianan Wang <wangjianan.zju@gmail.com>
+Cc:     linux-xfs@vger.kernel.org
+Subject: Re: Question on the xfs inode slab memory
+Message-ID: <ZHfhYsqln68N1HyO@dread.disaster.area>
+References: <CAMj1M42L6hH9weqroQNaWu_SG+Yg8NrAuzgNO1b8jiWPJ2M-5A@mail.gmail.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20230531095742.2480623-7-qi.zheng@linux.dev>
+In-Reply-To: <CAMj1M42L6hH9weqroQNaWu_SG+Yg8NrAuzgNO1b8jiWPJ2M-5A@mail.gmail.com>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Wed, May 31, 2023 at 09:57:40AM +0000, Qi Zheng wrote:
-> From: Kirill Tkhai <tkhai@ya.ru>
+On Wed, May 31, 2023 at 02:29:52PM -0700, Jianan Wang wrote:
+> Hi all,
 > 
-> xfs_fs_nr_cached_objects() touches sb->s_fs_info,
-> and this patch makes it to be destructed later.
+> I have a question regarding the xfs slab memory usage when operating a
+> filesystem with 1-2 billion inodes (raid 0 with 6 disks, totally
+> 18TB). On this partition, whenever there is a high disk io operation,
+> like removing millions of small files, the slab kernel memory usage
+> will increase a lot, leading to many OOM issues happening for the
+> services running on this node. You could check some of the stats as
+> the following (only includes the xfs related):
+
+You didn't include all the XFS related slabs. At minimum, the inode
+log item slab needs to be shown (xfs_ili) because that tells us how
+many of the inodes in the cache have been dirtied.
+
+As it is, I'm betting the problem is the disk subsystem can't write
+back dirty inodes fast enough to keep up with memory demand and so
+reclaim is declaring OOM faster than your disks can clean inodes to
+enable them to be reclaimed.
+
+> #########################################################################
+> Active / Total Objects (% used):  281803052 / 317485764 (88.8%)
+> Active / Total Slabs (% used): 13033144 / 13033144 (100.0%)
+> Active / Total Caches (% used): 126 / 180 (70.0%)
+> Active / Total Size (% used): 114671057.99K / 127265108.19K (90.1%)
+> Minium / Average / Maximum Object : 0.01K / 0.40K / 16.75K
 > 
-> After this patch xfs_fs_nr_cached_objects() is safe
-> for splitting unregister_shrinker(): mp->m_perag_tree
-> is stable till destroy_super_work(), while iteration
-> over it is already RCU-protected by internal XFS
-> business.
+> OBJS               ACTIVE      USE     OBJ SIZE     SLABS
+> OBJ/SLAB    CACHE SIZE    NAME
+> 78207920      70947541      0%       1.00K           7731010
+>  32            247392320K     xfs_inode
+> 59945928      46548798      0%       0.19K           1433102
+>  42              11464816K     dentry
+> 25051296      25051282      0%       0.38K           599680
+>   42            9594880K         xfs_buf
+
+Ok, that's from slabtop. Please don't autowrap stuff you've pasted
+in - it makes it really hard to read. (reformatted so I can read
+it).
+
+OBJS           ACTIVE      USE     OBJ SIZE     SLABS OBJ/SLAB    CACHE SIZE    NAME
+78207920      70947541      0%       1.00K     7731010   32       247392320K     xfs_inode
+59945928      46548798      0%       0.19K     1433102   42        11464816K     dentry
+25051296      25051282      0%       0.38K      599680   42         9594880K         xfs_buf
+
+So, 70 million cached inodes, with a cache size of 240GB. There are
+7.7 million slabs, 32 objects per slab, and that's roughly 240GB.
+
+But why does the slab report only 78 million objects in the slab
+when at 240GB there should be 240 million objects in the slab?
+
+It looks like theres some kind of accounting problem here, likely in
+the slabtop program. I have always found slabtop to be unreliable
+like this....
+
+Can you attach the output of 'cat /proc/slabinfo' and 'cat
+/proc/meminfo' when you have a large slab cache in memory?
+
+> #########################################################################
 > 
-> Signed-off-by: Kirill Tkhai <tkhai@ya.ru>
-> Signed-off-by: Qi Zheng <zhengqi.arch@bytedance.com>
-> ---
->  fs/xfs/xfs_super.c | 25 ++++++++++++++++++++++---
->  1 file changed, 22 insertions(+), 3 deletions(-)
-> 
-> diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
-> index 7e706255f165..694616524c76 100644
-> --- a/fs/xfs/xfs_super.c
-> +++ b/fs/xfs/xfs_super.c
-> @@ -743,11 +743,18 @@ xfs_fs_drop_inode(
->  }
->  
->  static void
-> -xfs_mount_free(
-> +xfs_free_names(
->  	struct xfs_mount	*mp)
->  {
->  	kfree(mp->m_rtname);
->  	kfree(mp->m_logname);
-> +}
-> +
-> +static void
-> +xfs_mount_free(
-> +	struct xfs_mount	*mp)
-> +{
-> +	xfs_free_names(mp);
->  	kmem_free(mp);
->  }
->  
-> @@ -1136,8 +1143,19 @@ xfs_fs_put_super(
->  	xfs_destroy_mount_workqueues(mp);
->  	xfs_close_devices(mp);
->  
-> -	sb->s_fs_info = NULL;
-> -	xfs_mount_free(mp);
-> +	xfs_free_names(mp);
-> +}
-> +
-> +static void
-> +xfs_fs_destroy_super(
-> +	struct super_block	*sb)
-> +{
-> +	if (sb->s_fs_info) {
-> +		struct xfs_mount	*mp = XFS_M(sb);
-> +
-> +		kmem_free(mp);
-> +		sb->s_fs_info = NULL;
-> +	}
->  }
->  
->  static long
-> @@ -1165,6 +1183,7 @@ static const struct super_operations xfs_super_operations = {
->  	.dirty_inode		= xfs_fs_dirty_inode,
->  	.drop_inode		= xfs_fs_drop_inode,
->  	.put_super		= xfs_fs_put_super,
-> +	.destroy_super		= xfs_fs_destroy_super,
->  	.sync_fs		= xfs_fs_sync_fs,
->  	.freeze_fs		= xfs_fs_freeze,
->  	.unfreeze_fs		= xfs_fs_unfreeze,
+> The peak slab memory usage could spike all the way to 100GB+.
 
-I don't really like this ->destroy_super() callback, especially as
-it's completely undocumented as to why it exists. This is purely a
-work-around for handling extended filesystem superblock shrinker
-functionality, yet there's nothing that tells the reader this.
+Is that all? :)
 
-It also seems to imply that the superblock shrinker can continue to
-run after the existing unregister_shrinker() call before ->kill_sb()
-is called. This violates the assumption made in filesystems that the
-superblock shrinkers have been stopped and will never run again
-before ->kill_sb() is called. Hence ->kill_sb() implementations
-assume there is nothing else accessing filesystem owned structures
-and it can tear down internal structures safely.
+> We are using Ubuntu 18.04 and the xfs version is 4.9, kernel version is 5.4
 
-Realistically, the days of XFS using this superblock shrinker
-extension are numbered. We've got a lot of the infrastructure we
-need in place to get rid of the background inode reclaim
-infrastructure that requires this shrinker extension, and it's on my
-list of things that need to be addressed in the near future. 
+Ah, I don't think there's anything upstream can do for you. We
+rewrote large portions of the XFS inode reclaim in 5.9 (3 years ago)
+to address the issues with memory reclaim getting stuck on dirty XFS
+inodes, so inode reclaim behaviour in modern kernels is completely
+different to old kernels.
 
-In fact, now that I look at it, I think the shmem usage of this
-superblock shrinker interface is broken - it returns SHRINK_STOP to
-->free_cached_objects(), but the only valid return value is the
-number of objects freed (i.e. 0 is nothing freed). These special
-superblock extension interfaces do not work like a normal
-shrinker....
-
-Hence I think the shmem usage should be replaced with an separate
-internal shmem shrinker that is managed by the filesystem itself
-(similar to how XFS has multiple internal shrinkers).
-
-At this point, then the only user of this interface is (again) XFS.
-Given this, adding new VFS methods for a single filesystem
-for functionality that is planned to be removed is probably not the
-best approach to solving the problem.
+I'd suggest that you need to upgrade your systems to run a more
+modern kernel and see if that fixes the issues you are seeing...
 
 Cheers,
 
