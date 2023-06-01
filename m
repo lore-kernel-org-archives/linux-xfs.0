@@ -2,50 +2,54 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CB78AC7EE2F
-	for <linux-xfs@archiver.kernel.org>; Thu,  1 Jun 2023 10:58:42 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 95360C7EE33
+	for <linux-xfs@archiver.kernel.org>; Thu,  1 Jun 2023 10:58:43 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232288AbjFAK6k (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 1 Jun 2023 06:58:40 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52968 "EHLO
+        id S233126AbjFAK6m (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 1 Jun 2023 06:58:42 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52966 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233005AbjFAK6d (ORCPT
+        with ESMTP id S232996AbjFAK6d (ORCPT
         <rfc822;linux-xfs@vger.kernel.org>); Thu, 1 Jun 2023 06:58:33 -0400
-Received: from smtp-out2.suse.de (smtp-out2.suse.de [195.135.220.29])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2C20E124;
+Received: from smtp-out1.suse.de (smtp-out1.suse.de [195.135.220.28])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2C19A123;
         Thu,  1 Jun 2023 03:58:32 -0700 (PDT)
 Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
         (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
          key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
         (No client certificate requested)
-        by smtp-out2.suse.de (Postfix) with ESMTPS id AEAEA1FDA5;
+        by smtp-out1.suse.de (Postfix) with ESMTPS id BEF0121977;
         Thu,  1 Jun 2023 10:58:30 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.cz; s=susede2_rsa;
         t=1685617110; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:  content-transfer-encoding:content-transfer-encoding;
-        bh=0DzWy5kExCz1dSPChCQvEKrJzhHmLyM85G+sXWlLMTs=;
-        b=O8fbyQ3Qfgilzk4ztIxRWXNswx8WxStxJH7Ro86uTmTrniGGwYpyAtacV4AvbfMtchEnFK
-        7C2xejbwsT+PBZ5P/2MoBAv/Ola39ZDfmsLATy8NeEBSBOCiNGCMX1aLx1s3ZCRWv4jopL
-        N1htniSMG77/DaC1/kH67u4cr6gMfMU=
+         mime-version:mime-version:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=l8ThI8pc0gEYM+rQf003qTc2rYTYbf8AIQ/C2gqIwQo=;
+        b=EiohVwjHYg+avXFTB0p46tIJfiBDAIKalcBVnJ7R6JTKBIwUnGkED60gUDPBoLVh76tQo4
+        hoPiQoQ/fS8dtK48aHLRWL1e+lrFAsFsm9S9nsLO9eMz4E6BpH6nF05OFsMDjXP+TuR1MR
+        hnat0IaHtTkoeWnEowuat2rCVrFDTZs=
 DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.cz;
         s=susede2_ed25519; t=1685617110;
         h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:  content-transfer-encoding:content-transfer-encoding;
-        bh=0DzWy5kExCz1dSPChCQvEKrJzhHmLyM85G+sXWlLMTs=;
-        b=S3Cqa74WhoF+oaTGeRolNYwpAq9Rx53NMUnTdMaZIRewUzrBJgDeIA2gTYcgh51peH0HaG
-        40WThMrSNLK/sbBA==
+         mime-version:mime-version:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=l8ThI8pc0gEYM+rQf003qTc2rYTYbf8AIQ/C2gqIwQo=;
+        b=/C7wvZduKPLMMtbUqsD3Kcm8Vd1e5qZQ6XBbi2KRVmpBs+C15GrF220wTLYX+6vdd5Q/Z2
+        e4oAKyhNozClbuBg==
 Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
         (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
          key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
         (No client certificate requested)
-        by imap2.suse-dmz.suse.de (Postfix) with ESMTPS id 9E13D13A39;
+        by imap2.suse-dmz.suse.de (Postfix) with ESMTPS id AD74913441;
         Thu,  1 Jun 2023 10:58:30 +0000 (UTC)
 Received: from dovecot-director2.suse.de ([192.168.254.65])
         by imap2.suse-dmz.suse.de with ESMTPSA
-        id BZiUJtZ5eGRxWAAAMHmgww
+        id RoBQKtZ5eGRyWAAAMHmgww
         (envelope-from <jack@suse.cz>); Thu, 01 Jun 2023 10:58:30 +0000
 Received: by quack3.suse.cz (Postfix, from userid 1000)
-        id 0DEBBA0754; Thu,  1 Jun 2023 12:58:30 +0200 (CEST)
+        id 1D5A3A075D; Thu,  1 Jun 2023 12:58:30 +0200 (CEST)
 From:   Jan Kara <jack@suse.cz>
 To:     Al Viro <viro@ZenIV.linux.org.uk>
 Cc:     <linux-fsdevel@vger.kernel.org>,
@@ -54,49 +58,78 @@ Cc:     <linux-fsdevel@vger.kernel.org>,
         "Darrick J. Wong" <djwong@kernel.org>, Ted Tso <tytso@mit.edu>,
         Jaegeuk Kim <jaegeuk@kernel.org>, <linux-ext4@vger.kernel.org>,
         <linux-xfs@vger.kernel.org>,
-        linux-f2fs-devel@lists.sourceforge.net, Jan Kara <jack@suse.cz>
-Subject: [PATCH v2 0/6] fs: Fix directory corruption when moving directories
-Date:   Thu,  1 Jun 2023 12:58:20 +0200
-Message-Id: <20230601104525.27897-1-jack@suse.cz>
+        linux-f2fs-devel@lists.sourceforge.net, Jan Kara <jack@suse.cz>,
+        stable@vger.kernel.org
+Subject: [PATCH v2 3/6] Revert "f2fs: fix potential corruption when moving a directory"
+Date:   Thu,  1 Jun 2023 12:58:23 +0200
+Message-Id: <20230601105830.13168-3-jack@suse.cz>
 X-Mailer: git-send-email 2.35.3
+In-Reply-To: <20230601104525.27897-1-jack@suse.cz>
+References: <20230601104525.27897-1-jack@suse.cz>
 MIME-Version: 1.0
-X-Developer-Signature: v=1; a=openpgp-sha256; l=1583; i=jack@suse.cz; h=from:subject:message-id; bh=A4NuJIA5fRnO81BQCFQ+qouMN01g1n5f8YwBgH7IRjw=; b=owEBbQGS/pANAwAIAZydqgc/ZEDZAcsmYgBkeHnEqJRcmewHp/J45UlUgDFD/bRSALsTL4CM7NWS Eh9nkW2JATMEAAEIAB0WIQSrWdEr1p4yirVVKBycnaoHP2RA2QUCZHh5xAAKCRCcnaoHP2RA2ZmLB/ 9x4VWtvxhWmDLhsrxitQaHFrtDSoj/0K7wjjyc4b4KJ13VG8n+u2jMsfjFDkVPFhCukC4iWnvbAGvZ KsCP9RARf4MI54Qcp5Rnn0UjxjqndVS8ykU4hryIqsuW/gUEw90SSLkVLSwqvdHJSkUvIgupPMjDfy jN+hRrVpZhEl4kqu6PEnbHPMNUVWZ2HP3BVViT3MZYqJeiV9Fb2+o5twQ7wTibwcsLjTGiLIbrJuzH wpLohc909nVMtxB3h7pBGdTwVQKu8UUPQqEdwszBOnXs/PaCi/d21gfKNr5TneJMd677HOz8cZwlkM LfbExF6oneWJCISfoAZ815x3/NufMs
+X-Developer-Signature: v=1; a=openpgp-sha256; l=1658; i=jack@suse.cz; h=from:subject; bh=vkItO1SrB+pdJMx2hexFFd1udgUclLpxYk9h2ck+yss=; b=owEBbQGS/pANAwAIAZydqgc/ZEDZAcsmYgBkeHnOpRE2Fjl98U8Lrl0R5i/BOQo9DAUy4HoMvjC0 F+Fj1NGJATMEAAEIAB0WIQSrWdEr1p4yirVVKBycnaoHP2RA2QUCZHh5zgAKCRCcnaoHP2RA2ag2B/ 9/ecubF4aHWpimomirmPI1uO5BYJ4rTDO4cIHeeJvzuI0XkpnxbsKeQoDvrbDpx+4ceSwQ6OzlXbKa srEmL1KOmEEDAodTu3j420L30CjK9kZ00DvmcSIYqxIqKvgvzj09UZ3a0F8G3HaCVjxuyFGpfi/0JU E5Umxq6pl+APJZrwjLWWVTegIS3Kcgv09Pju8qs19P7sG5PtzVsNQ85onQITfYsBRE00ScVbaoNV8W 4SA1O+MZczgnZbeeeaizvd+snn3wJc6Bn4pyRtInlBuc1B/xc3C4SxRNsnz2O+It87CImxxK4NSt/r zg5Rm5D/z3jPaSw2MWdPsXZ7oiUD+h
 X-Developer-Key: i=jack@suse.cz; a=openpgp; fpr=93C6099A142276A28BBE35D815BC833443038D8C
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Hello,
+This reverts commit d94772154e524b329a168678836745d2773a6e02. The
+locking is going to be provided by VFS.
 
-this patch set fixes a problem with cross directory renames originally reported
-in [1]. To quickly sum it up some filesystems (so far we know at least about
-ext4, udf, f2fs, ocfs2, likely also reiserfs, gfs2 and others) need to lock the
-directory when it is being renamed into another directory. This is because we
-need to update the parent pointer in the directory in that case and if that
-races with other operation on the directory (in particular a conversion from
-one directory format into another), bad things can happen.
+CC: Jaegeuk Kim <jaegeuk@kernel.org>
+CC: stable@vger.kernel.org
+Signed-off-by: Jan Kara <jack@suse.cz>
+---
+ fs/f2fs/namei.c | 16 +---------------
+ 1 file changed, 1 insertion(+), 15 deletions(-)
 
-So far we've done the locking in the filesystem code but recently Darrick
-pointed out [2] that we've missed the RENAME_EXCHANGE case in our ext4 fix.
-That one is particularly nasty because RENAME_EXCHANGE can arbitrarily mix
-regular files and directories and proper lock ordering is not achievable in the
-filesystems alone.
+diff --git a/fs/f2fs/namei.c b/fs/f2fs/namei.c
+index 77a71276ecb1..ad597b417fea 100644
+--- a/fs/f2fs/namei.c
++++ b/fs/f2fs/namei.c
+@@ -995,20 +995,12 @@ static int f2fs_rename(struct mnt_idmap *idmap, struct inode *old_dir,
+ 			goto out;
+ 	}
+ 
+-	/*
+-	 * Copied from ext4_rename: we need to protect against old.inode
+-	 * directory getting converted from inline directory format into
+-	 * a normal one.
+-	 */
+-	if (S_ISDIR(old_inode->i_mode))
+-		inode_lock_nested(old_inode, I_MUTEX_NONDIR2);
+-
+ 	err = -ENOENT;
+ 	old_entry = f2fs_find_entry(old_dir, &old_dentry->d_name, &old_page);
+ 	if (!old_entry) {
+ 		if (IS_ERR(old_page))
+ 			err = PTR_ERR(old_page);
+-		goto out_unlock_old;
++		goto out;
+ 	}
+ 
+ 	if (S_ISDIR(old_inode->i_mode)) {
+@@ -1116,9 +1108,6 @@ static int f2fs_rename(struct mnt_idmap *idmap, struct inode *old_dir,
+ 
+ 	f2fs_unlock_op(sbi);
+ 
+-	if (S_ISDIR(old_inode->i_mode))
+-		inode_unlock(old_inode);
+-
+ 	if (IS_DIRSYNC(old_dir) || IS_DIRSYNC(new_dir))
+ 		f2fs_sync_fs(sbi->sb, 1);
+ 
+@@ -1133,9 +1122,6 @@ static int f2fs_rename(struct mnt_idmap *idmap, struct inode *old_dir,
+ 		f2fs_put_page(old_dir_page, 0);
+ out_old:
+ 	f2fs_put_page(old_page, 0);
+-out_unlock_old:
+-	if (S_ISDIR(old_inode->i_mode))
+-		inode_unlock(old_inode);
+ out:
+ 	iput(whiteout);
+ 	return err;
+-- 
+2.35.3
 
-This patch set adds locking into vfs_rename() so that not only parent
-directories but also moved inodes (regardless whether they are directories or
-not) are locked when calling into the filesystem.
-
-Changes since v1:
-* Made sure lock_two_inodes() uses subclass1 for the obtained lock in case
-  there is only one inode locked
-* Fixes unlocked_two_nondirectories() to properly unlock inodes even if
-  directories are accidentally passed in.
-
-								Honza
-
-[1] https://lore.kernel.org/all/20230117123735.un7wbamlbdihninm@quack3
-[2] https://lore.kernel.org/all/20230517045836.GA11594@frogsfrogsfrogs
-
-Previous versions:
-Link: http://lore.kernel.org/r/20230525100654.15069-1-jack@suse.cz # v1
