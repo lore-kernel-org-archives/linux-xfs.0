@@ -2,265 +2,249 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id F271FC77B7A
-	for <linux-xfs@archiver.kernel.org>; Fri,  2 Jun 2023 15:34:26 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4D96EC7EE29
+	for <linux-xfs@archiver.kernel.org>; Fri,  2 Jun 2023 17:30:58 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235298AbjFBPeZ (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 2 Jun 2023 11:34:25 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47368 "EHLO
+        id S235908AbjFBRa5 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 2 Jun 2023 13:30:57 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48644 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S235809AbjFBPeZ (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 2 Jun 2023 11:34:25 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5E08818D;
-        Fri,  2 Jun 2023 08:34:23 -0700 (PDT)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id CC9F46176B;
-        Fri,  2 Jun 2023 15:34:22 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 31F94C433EF;
-        Fri,  2 Jun 2023 15:34:19 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1685720062;
-        bh=GMAXWhUtWZYqSwvxZZhgRN+BhNtQO7FUSE/tbmymCbo=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=o6geL/fTEH8z9TyfMjGmhcf0RwxRmchaTHsURljpqSObVsOkV3ShNO7YsvWsAHVZP
-         RissC8tRgym/IpG3qfBUB4AjbWmWUqYBtZvG2W45qxH+QFvKrhzNY6KCx9VzradVwW
-         LKEMV6CxiRXiQ4PrhONYygzyVoyX8vUC6Y9ekNZbyxVM8miLzzjnfvAc8OgSclwA6W
-         bplEFKFk9NHNldReJ/l004PXXDquMaDo/hSyau9YAv57Xe9hFxT0OZ72b+90SCwR3Q
-         TVKu8VH1Tn4QHYBopyimIQqtYtrKKOJYpejqSFKG+LLD2iNkjUKPuF3mqCwYUmOWx6
-         kFHtigDU3chCQ==
-Date:   Fri, 2 Jun 2023 17:34:16 +0200
-From:   Christian Brauner <brauner@kernel.org>
-To:     "Darrick J. Wong" <djwong@kernel.org>
-Cc:     Dave Chinner <david@fromorbit.com>, Theodore Ts'o <tytso@mit.edu>,
-        Amir Goldstein <amir73il@gmail.com>,
-        Jeff Layton <jlayton@kernel.org>, miklos@szeredi.hu,
-        linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org
-Subject: Re: uuid ioctl - was: Re: [PATCH] overlayfs: Trigger file
- re-evaluation by IMA / EVM after writes
-Message-ID: <20230602-freischaffend-sorgenfrei-adb9fae43a84@brauner>
-References: <20230407-trasse-umgearbeitet-d580452b7a9b@brauner>
- <078d8c1fd6b6de59cde8aa85f8e59a056cb78614.camel@linux.ibm.com>
- <20230520-angenehm-orangen-80fdce6f9012@brauner>
- <ZGqgDjJqFSlpIkz/@dread.disaster.area>
- <20230522-unsensibel-backblech-7be4e920ba87@brauner>
- <20230602012335.GB16848@frogsfrogsfrogs>
- <20230602042714.GE1128744@mit.edu>
- <ZHmNksPcA9tudSVQ@dread.disaster.area>
- <20230602-dividende-model-62b2bdc073cf@brauner>
- <20230602142329.GC16848@frogsfrogsfrogs>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-In-Reply-To: <20230602142329.GC16848@frogsfrogsfrogs>
+        with ESMTP id S234562AbjFBRa4 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 2 Jun 2023 13:30:56 -0400
+Received: from mga07.intel.com (mga07.intel.com [134.134.136.100])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0F9991B5;
+        Fri,  2 Jun 2023 10:30:55 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1685727055; x=1717263055;
+  h=date:from:to:cc:subject:message-id;
+  bh=95NNPKeCDWvKs2XdDPj6/a0IDRIxJ5J5Rri6CmgQVSQ=;
+  b=aX34bsmzLfefQxEbh+/0lxACfnsqiN5k3VMA0SJA917cUvvpiGUE1Yxp
+   oKIAMQ/LhmKrx2j3Ur78A6mML2jovHR8/0AhZ8hLZ9qjtEalVbWi8pIr+
+   PQ2m8DrfMpM1opLQbbUMQX/Wu8V/N+ckh0N6YdqPGqFOV3kkUlUZzbUam
+   nHj17AOqaHnmQAaZDDeO6zO92uDkH9LlacqQ3UhxThYFEmrhC91tKFmIg
+   SDbZFV4Yac8hIYR2EboRPe3G3DV1RhgGceuiQW+Qfcw4NmDboJ9ZBtuqj
+   jrsek8AjmHMfboXU+8J8kd+IH/HWCI1jo//zBBdrAoNvYkDg4arDcZQBp
+   g==;
+X-IronPort-AV: E=McAfee;i="6600,9927,10729"; a="421738289"
+X-IronPort-AV: E=Sophos;i="6.00,213,1681196400"; 
+   d="scan'208";a="421738289"
+Received: from fmsmga006.fm.intel.com ([10.253.24.20])
+  by orsmga105.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 02 Jun 2023 10:30:54 -0700
+X-ExtLoop1: 1
+X-IronPort-AV: E=McAfee;i="6600,9927,10729"; a="954575143"
+X-IronPort-AV: E=Sophos;i="6.00,213,1681196400"; 
+   d="scan'208";a="954575143"
+Received: from lkp-server01.sh.intel.com (HELO 15ab08e44a81) ([10.239.97.150])
+  by fmsmga006.fm.intel.com with ESMTP; 02 Jun 2023 10:30:51 -0700
+Received: from kbuild by 15ab08e44a81 with local (Exim 4.96)
+        (envelope-from <lkp@intel.com>)
+        id 1q58by-0000mD-35;
+        Fri, 02 Jun 2023 17:30:50 +0000
+Date:   Sat, 03 Jun 2023 01:30:29 +0800
+From:   kernel test robot <lkp@intel.com>
+To:     Andrew Morton <akpm@linux-foundation.org>
+Cc:     Linux Memory Management List <linux-mm@kvack.org>,
+        dri-devel@lists.freedesktop.org, linux-btrfs@vger.kernel.org,
+        linux-cifs@vger.kernel.org, linux-perf-users@vger.kernel.org,
+        linux-xfs@vger.kernel.org, samba-technical@lists.samba.org
+Subject: [linux-next:master] BUILD REGRESSION
+ bc708bbd8260ee4eb3428b0109f5f3be661fae46
+Message-ID: <20230602173029.dm5Hs%lkp@intel.com>
+User-Agent: s-nail v14.9.24
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Fri, Jun 02, 2023 at 07:23:29AM -0700, Darrick J. Wong wrote:
-> On Fri, Jun 02, 2023 at 03:52:16PM +0200, Christian Brauner wrote:
-> > On Fri, Jun 02, 2023 at 04:34:58PM +1000, Dave Chinner wrote:
-> > > On Fri, Jun 02, 2023 at 12:27:14AM -0400, Theodore Ts'o wrote:
-> > > > On Thu, Jun 01, 2023 at 06:23:35PM -0700, Darrick J. Wong wrote:
-> > > > > Someone ought to cc Ted since I asked him about this topic this morning
-> > > > > and he said he hadn't noticed it going by...
-> > > > > 
-> > > > > > > > In addition the uuid should be set when the filesystem is mounted.
-> > > > > > > > Unless the filesystem implements a dedicated ioctl() - like ext4 - to
-> > > > > > > > change the uuid.
-> > > > > > > 
-> > > > > > > IMO, that ext4 functionality is a landmine waiting to be stepped on.
-> > > > > > > 
-> > > > > > > We should not be changing the sb->s_uuid of filesysetms dynamically.
-> > > > > > 
-> > > > > > Yeah, I kinda agree. If it works for ext4 and it's an ext4 specific
-> > > > > > ioctl then this is fine though.
-> > > > > 
-> > > > > Now that Dave's brought up all kinds of questions about other parts of
-> > > > > the kernel using s_uuid for things, I'm starting to think that even ext4
-> > > > > shouldn't be changing its own uuid on the fly.
-> > > > 
-> > > > So let's set some context here.  The tune2fs program in e2fsprogs has
-> > > > supported changing the UUID for a *very* long time.  Specifically,
-> > > > since September 7, 1996 (e2fsprogs version 1.05, when we first added
-> > > > the UUID field in the ext2 superblock).
-> > > 
-> > > Yup, and XFS has supported offline changing of the UUID a couple of
-> > > years before that.
-> > > 
-> > > > This feature was added from
-> > > > the very beginning since in Large Installation System Administration
-> > > > (LISA) systems, a very common thing to do is to image boot disks from
-> > > > a "golden master", and then afterwards, you want to make sure the file
-> > > > systems on each boot disk have a unique UUID; and this is done via
-> > > > "tune2fs -U random /dev/sdXX".  Since I was working at MIT Project
-> > > > Athena at the time, we regularly did this when installing Athena
-> > > > client workstations, and when I added UUID support to ext2, I made
-> > > > sure this feature was well-supported.
-> > > 
-> > > See xfs_copy(8). This was a tool originally written, IIRC, in early
-> > > 1995 for physically cloning sparse golden images in the SGI factory
-> > > production line. It was multi-threaded and could write up to 16 scsi
-> > > disks at once with a single ascending LBA order pass. The last thing
-> > > it does is change the UUID of each clone to make them unique.
-> > > 
-> > > There's nothing new here - this is all 30 years ago, and we've had
-> > > tools changing filesystems UUIDs for all this time.
-> > > 
-> > > > The tune2fs program allows the UUID to be changed via the file system
-> > > > is mounted (with some caveats), which it did by directly modifying the
-> > > > on-disk superblock.  Obviously, when it did that, it wouldn't change
-> > > > sb->s_uuid "dynamically", although the next time the file system was
-> > > > mounted, sb->s_uuid would get the new UUID.
-> > > 
-> > > Yes, which means for userspace and most of the kernel it's no
-> > > different to "unmount, change UUID, mount". It's effectively an
-> > > offline change, even if the on-disk superblock is changed while the
-> > > filesystem is mounted.
-> > > 
-> > > > If overlayfs and IMA are
-> > > > expecting that a file system's UUID would stay consant and persistent
-> > > > --- well, that's not true, and it has always been that way, since
-> > > > there are tools that make it trivially easy for a system administrator
-> > > > to adjust the UUID.
-> > > 
-> > > Yes, but that's not the point I've been making. My point is that the
-> > > *online change of sb->s_uuid* that was being proposed for the
-> > > XFS/generic variant of the ext4 online UUID change ioctl is
-> > > completely new, and that's where all the problems start....
-> > > 
-> > > > In addition to the LISA context, this feature is also commonly used in
-> > > > various cloud deployments, since when you create a new VM, it
-> > > > typically gets a new root file system, which is copied from a fixed,
-> > > > read-only image.  So on a particular hyperscale cloud system, if we
-> > > > didn't do anything special, there could be hundreds of thousands VM's
-> > > > whose root file system would all have the same UUID, which would mean
-> > > > that the UUID... isn't terribly unique.
-> > > 
-> > > Again, nothing new here - we've been using snapshots/clones/reflinks
-> > > for efficient VM storage provisioning for well over 15 years now.
-> > > 
-> > > .....
-> > > 
-> > > > This is the reason why we added the ext4 ioctl; it was intended for
-> > > > the express use of "tune2fs -U", and like tune2fs -U, it doesn't
-> > > > actually change sb->s_uuid; it only changes the on-disk superblock's
-> > > > UUID.  This was mostly because we forgot about sb->s_uuid, to be
-> > > > honest, but it means that regardless of whether "tune2fs -U" directly
-> > > > modifies the block device, or uses the ext4 ioctl, the behaviour with
-> > > > respect to sb->s_uuid is the same; it's not modified when the on-disk
-> > > > uuid is changed.
-> 
-> ...which means that anyone writing out non-ext4 ondisk metadata will now
-> be doing it with a stale fsuuid.  Er... that might just be an ext*
-> quirk that everyone will have to live with.
-> 
-> > > IOWs, not only was the ext4 functionality was poorly thought out, it
-> > > was *poorly implemented*.
-> > > 
-> > > So, let's take a step back here - we've done the use case thing to
-> > > death now - and consider what is it we actually need here?
-> > > 
-> > > All we need for the hyperscale/VM provisioning use case is for the
-> > > the UUID to be changed at first boot/mount time before anything else
-> > > happens.
-> > > 
-> > > So why do we need userspace to be involved in that? Indeed,
-> > > all the problems stem from needing to have userspace change the
-> > > UUID.
-> > > 
-> > > There's an obvious solution: a newly provisioned filesystem needs to
-> > > change the uuid at first mount. The only issue is the
-> > > kernel/filesystem doesn't know when the first mount is.
-> > > 
-> > > Darrick suggested "mount -o setuuid=xxxx" on #xfs earlier, but that
-> > > requires changing userspace init stuff and, well, I hate single use
-> > > case mount options like this.
-> > > 
-> > > However, we have a golden image that every client image is cloned
-> > > from. Say we set a special feature bit in that golden image that
-> > > means "need UUID regeneration". Then on the first mount of the
-> > > cloned image after provisioning, the filesystem sees the bit and
-> > > automatically regenerates the UUID with needing any help from
-> > > userspace at all.
-> > > 
-> > > Problem solved, yes? We don't need userspace to change the uuid on
-> > > first boot of the newly provisioned VM - the filesystem just makes
-> > > it happen.
-> > 
-> > systemd-repart implements the following logic currently: If the GPT
-> > *partition* and *disk* UUIDs are 0 then it will generate new UUIDs
-> > before the first mount.
-> > 
-> > So for the *filesystem* UUID I think the golden image should either have
-> > the UUID set to zero as well or to a special UUID. Either way, it would
-> > mean the filesystem needs to generate a new UUID when it is mounted the
-> > first time.
-> > 
-> > If we do this then all filesystems that support this should use the same
-> > value to indicate "generate new UUID".
-> 
-> Curiously, I noticed that blkid doesn't report the xfs uuid if it's all
-> zeroes:
-> 
-> # mkfs.xfs -f /dev/loop0 -m uuid=00000000-0000-0000-0000-000000000000
-> 
-> # blkid /dev/loop0
-> /dev/loop0: BLOCK_SIZE="512" TYPE="xfs"
+tree/branch: https://git.kernel.org/pub/scm/linux/kernel/git/next/linux-next.git master
+branch HEAD: bc708bbd8260ee4eb3428b0109f5f3be661fae46  Add linux-next specific files for 20230602
 
-You should use blkid -p btw because without -p blkid checks a cache
-which is problematic.
+Error/Warning reports:
 
-> 
-> Nor does udev create symlinks:
-> 
-> # ls /dev/disk/by-uuid/0*
-> ls: cannot access '/dev/disk/by-uuid/0*': No such file or directory
+https://lore.kernel.org/oe-kbuild-all/202306011435.2BxsHFUE-lkp@intel.com
+https://lore.kernel.org/oe-kbuild-all/202306021936.OktTcMAT-lkp@intel.com
 
-Yeah, it can't because there's no uuid and zero is treated as "not set".
+Error/Warning: (recently discovered and may have been fixed)
 
-> 
-> Nor does mounting by uuid work:
-> 
-> # mount UUID=00000000-0000-0000-0000-000000000000 /tmp/x
-> mount: /tmp/x: can't find UUID=00000000-0000-0000-0000-000000000000.
-> 
-> So I wonder if xfs even really needs a new superblock bit at all --
-> mounting via uuid doesn't work in the zeroed-uuid case, and the kernel
-> could indeed generate a new one at mount time before it populates
-> s_uuid, etc.  Then the initscripts can re-run blkid (or xfs_info) to
-> extract the new uuid and update config files as needed.
+drivers/bus/fsl-mc/fsl-mc-allocator.c:108:12: warning: variable 'mc_bus_dev' is uninitialized when used here [-Wuninitialized]
+include/drm/drm_print.h:456:39: error: format '%ld' expects argument of type 'long int', but argument 4 has type 'size_t' {aka 'unsigned int'} [-Werror=format=]
+mm/zswap.c:1210:6: warning: variable 'ret' is used uninitialized whenever 'if' condition is true [-Wsometimes-uninitialized]
 
-Yeah, that's my proposal and it's closely mirrored on what we did for
-systemd-repart:
+Unverified Error/Warning (likely false positive, please contact us if interested):
 
-6. Similarly, all existing partitions for which configuration files
-   exist and which currently have an all-zero identifying UUID will be
-   assigned a new UUID. This UUID is cryptographically hashed from a
-   common seed value together with the partition type UUID (and a
-   counter in case multiple partitions of the same type are defined),
-   see below. The same is done for all partitions that are created anew.
-   These assignments are done in memory only, too, the disk is not
-   updated yet.
+fs/btrfs/volumes.c:6412 btrfs_map_block() error: we previously assumed 'mirror_num_ret' could be null (see line 6250)
+fs/smb/client/cifsfs.c:982 cifs_smb3_do_mount() warn: possible memory leak of 'cifs_sb'
+fs/smb/client/cifssmb.c:4089 CIFSFindFirst() warn: missing error code? 'rc'
+fs/smb/client/cifssmb.c:4216 CIFSFindNext() warn: missing error code? 'rc'
+fs/smb/client/connect.c:2725 cifs_match_super() error: 'tlink' dereferencing possible ERR_PTR()
+fs/smb/client/connect.c:2924 generic_ip_connect() error: we previously assumed 'socket' could be null (see line 2912)
+fs/xfs/scrub/fscounters.c:459 xchk_fscounters() warn: ignoring unreachable code.
+kernel/events/uprobes.c:478 uprobe_write_opcode() warn: passing zero to 'PTR_ERR'
+{standard input}:1078: Error: pcrel too far
 
-7. Similarly, if the disk's volume UUID is all zeroes it is also
-   initialized, also cryptographically hashed from the same common seed
-   value. This is done in memory only too.
+Error/Warning ids grouped by kconfigs:
 
-[...]
+gcc_recent_errors
+|-- i386-allyesconfig
+|   `-- include-drm-drm_print.h:error:format-ld-expects-argument-of-type-long-int-but-argument-has-type-size_t-aka-unsigned-int
+|-- i386-randconfig-m021-20230531
+|   |-- fs-smb-client-cifsfs.c-cifs_smb3_do_mount()-warn:possible-memory-leak-of-cifs_sb
+|   |-- fs-smb-client-cifssmb.c-CIFSFindFirst()-warn:missing-error-code-rc
+|   |-- fs-smb-client-cifssmb.c-CIFSFindNext()-warn:missing-error-code-rc
+|   |-- fs-smb-client-connect.c-cifs_match_super()-error:tlink-dereferencing-possible-ERR_PTR()
+|   |-- fs-smb-client-connect.c-generic_ip_connect()-error:we-previously-assumed-socket-could-be-null-(see-line-)
+|   |-- fs-xfs-scrub-fscounters.c-xchk_fscounters()-warn:ignoring-unreachable-code.
+|   `-- kernel-events-uprobes.c-uprobe_write_opcode()-warn:passing-zero-to-PTR_ERR
+|-- sh-allmodconfig
+|   `-- standard-input:Error:pcrel-too-far
+`-- x86_64-randconfig-m001-20230531
+    |-- fs-btrfs-volumes.c-btrfs_map_block()-error:we-previously-assumed-mirror_num_ret-could-be-null-(see-line-)
+    |-- fs-smb-client-cifsfs.c-cifs_smb3_do_mount()-warn:possible-memory-leak-of-cifs_sb
+    |-- fs-smb-client-cifssmb.c-CIFSFindFirst()-warn:missing-error-code-rc
+    |-- fs-smb-client-cifssmb.c-CIFSFindNext()-warn:missing-error-code-rc
+    |-- fs-smb-client-connect.c-cifs_match_super()-error:tlink-dereferencing-possible-ERR_PTR()
+    |-- fs-smb-client-connect.c-generic_ip_connect()-error:we-previously-assumed-socket-could-be-null-(see-line-)
+    |-- fs-xfs-scrub-fscounters.c-xchk_fscounters()-warn:ignoring-unreachable-code.
+    `-- kernel-events-uprobes.c-uprobe_write_opcode()-warn:passing-zero-to-PTR_ERR
+clang_recent_errors
+|-- arm64-randconfig-r012-20230602
+|   `-- drivers-bus-fsl-mc-fsl-mc-allocator.c:warning:variable-mc_bus_dev-is-uninitialized-when-used-here
+|-- hexagon-allmodconfig
+|   `-- mm-zswap.c:warning:variable-ret-is-used-uninitialized-whenever-if-condition-is-true
+|-- hexagon-randconfig-r045-20230531
+|   `-- mm-zswap.c:warning:variable-ret-is-used-uninitialized-whenever-if-condition-is-true
+`-- s390-randconfig-r044-20230531
+    `-- mm-zswap.c:warning:variable-ret-is-used-uninitialized-whenever-if-condition-is-true
 
-9. The new partition table is finally written to disk. The kernel is
-   asked to reread the partition table.
+elapsed time: 726m
 
-https://www.freedesktop.org/software/systemd/man/systemd-repart.service.html
+configs tested: 122
+configs skipped: 5
 
-> 
-> Though, the first-mount uuid would still break anything recorded in the
-> non-xfs metadata by the image creating system (such as evm attributes).
-> But at least that's on the image creator people to know that.
+tested configs:
+alpha                            allyesconfig   gcc  
+alpha                               defconfig   gcc  
+alpha                randconfig-r004-20230531   gcc  
+arc                              allyesconfig   gcc  
+arc                          axs103_defconfig   gcc  
+arc                      axs103_smp_defconfig   gcc  
+arc          buildonly-randconfig-r005-20230602   gcc  
+arc                                 defconfig   gcc  
+arc                  randconfig-r043-20230531   gcc  
+arm                              allmodconfig   gcc  
+arm                              allyesconfig   gcc  
+arm                                 defconfig   gcc  
+arm                          gemini_defconfig   gcc  
+arm                            hisi_defconfig   gcc  
+arm                             mxs_defconfig   clang
+arm                           omap1_defconfig   clang
+arm                  randconfig-r046-20230531   gcc  
+arm                         s5pv210_defconfig   clang
+arm                           sunxi_defconfig   gcc  
+arm64                            allyesconfig   gcc  
+arm64        buildonly-randconfig-r001-20230602   gcc  
+arm64                               defconfig   gcc  
+arm64                randconfig-r024-20230531   clang
+csky                             alldefconfig   gcc  
+csky         buildonly-randconfig-r004-20230602   gcc  
+csky                                defconfig   gcc  
+csky                 randconfig-r005-20230531   gcc  
+hexagon              randconfig-r016-20230601   clang
+hexagon              randconfig-r041-20230531   clang
+hexagon              randconfig-r045-20230531   clang
+i386                             allyesconfig   gcc  
+i386                              debian-10.3   gcc  
+i386                                defconfig   gcc  
+i386                 randconfig-i001-20230602   gcc  
+i386                 randconfig-i002-20230602   gcc  
+i386                 randconfig-i003-20230602   gcc  
+i386                 randconfig-i004-20230602   gcc  
+i386                 randconfig-i005-20230602   gcc  
+i386                 randconfig-i006-20230602   gcc  
+i386                 randconfig-i051-20230602   gcc  
+i386                 randconfig-i052-20230602   gcc  
+i386                 randconfig-i053-20230602   gcc  
+i386                 randconfig-i054-20230602   gcc  
+i386                 randconfig-i055-20230602   gcc  
+i386                 randconfig-i056-20230602   gcc  
+i386                 randconfig-i061-20230531   gcc  
+i386                 randconfig-i062-20230531   gcc  
+i386                 randconfig-i063-20230531   gcc  
+i386                 randconfig-i064-20230531   gcc  
+i386                 randconfig-i065-20230531   gcc  
+i386                 randconfig-i066-20230531   gcc  
+ia64                            zx1_defconfig   gcc  
+loongarch                        allmodconfig   gcc  
+loongarch                         allnoconfig   gcc  
+loongarch                           defconfig   gcc  
+m68k                             allmodconfig   gcc  
+m68k                         apollo_defconfig   gcc  
+m68k                                defconfig   gcc  
+m68k                 randconfig-r013-20230601   gcc  
+m68k                 randconfig-r014-20230601   gcc  
+m68k                           sun3_defconfig   gcc  
+mips                             allmodconfig   gcc  
+mips                             allyesconfig   gcc  
+mips                           ci20_defconfig   gcc  
+mips                      fuloong2e_defconfig   gcc  
+mips                           ip28_defconfig   clang
+mips                           xway_defconfig   gcc  
+nios2                               defconfig   gcc  
+nios2                randconfig-r001-20230531   gcc  
+parisc       buildonly-randconfig-r006-20230602   gcc  
+parisc                              defconfig   gcc  
+parisc               randconfig-r011-20230601   gcc  
+parisc               randconfig-r036-20230531   gcc  
+parisc64                            defconfig   gcc  
+powerpc                          allmodconfig   gcc  
+powerpc                           allnoconfig   gcc  
+powerpc                      arches_defconfig   gcc  
+powerpc                        cell_defconfig   gcc  
+powerpc                      chrp32_defconfig   gcc  
+powerpc                       holly_defconfig   gcc  
+powerpc                  iss476-smp_defconfig   gcc  
+powerpc                       maple_defconfig   gcc  
+powerpc                     mpc83xx_defconfig   gcc  
+powerpc              randconfig-r006-20230531   gcc  
+powerpc              randconfig-r012-20230601   gcc  
+powerpc                     skiroot_defconfig   clang
+powerpc                     tqm8548_defconfig   gcc  
+powerpc                     tqm8560_defconfig   clang
+riscv                            allmodconfig   gcc  
+riscv                             allnoconfig   gcc  
+riscv                               defconfig   gcc  
+riscv                    nommu_virt_defconfig   clang
+riscv                randconfig-r023-20230531   clang
+riscv                randconfig-r034-20230531   gcc  
+riscv                randconfig-r042-20230531   clang
+riscv                          rv32_defconfig   gcc  
+s390                             allmodconfig   gcc  
+s390                             allyesconfig   gcc  
+s390                                defconfig   gcc  
+s390                 randconfig-r044-20230531   clang
+sh                               allmodconfig   gcc  
+sh                         apsh4a3a_defconfig   gcc  
+sh           buildonly-randconfig-r002-20230602   gcc  
+sh                   randconfig-r003-20230531   gcc  
+sh                   randconfig-r015-20230601   gcc  
+sh                   randconfig-r033-20230531   gcc  
+sh                           se7712_defconfig   gcc  
+sh                           se7751_defconfig   gcc  
+sh                              ul2_defconfig   gcc  
+sparc                               defconfig   gcc  
+sparc                randconfig-r022-20230531   gcc  
+sparc64              randconfig-r002-20230531   gcc  
+sparc64              randconfig-r032-20230531   gcc  
+um                             i386_defconfig   gcc  
+um                           x86_64_defconfig   gcc  
+x86_64                           allyesconfig   gcc  
+x86_64                              defconfig   gcc  
+x86_64                                  kexec   gcc  
+x86_64                               rhel-8.3   gcc  
+xtensa       buildonly-randconfig-r003-20230602   gcc  
+xtensa               randconfig-r031-20230531   gcc  
+xtensa               randconfig-r035-20230531   gcc  
 
-Sure, but that's a generic userspace problem for any identifier relying
-on or derived from the filesystem uuid. IOW, that's not really our
-concern imho.
+-- 
+0-DAY CI Kernel Test Service
+https://github.com/intel/lkp-tests/wiki
