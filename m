@@ -2,249 +2,202 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 222E0C77B7A
-	for <linux-xfs@archiver.kernel.org>; Fri,  2 Jun 2023 06:35:33 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0940FC7EE2C
+	for <linux-xfs@archiver.kernel.org>; Fri,  2 Jun 2023 10:16:30 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233276AbjFBGfb (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 2 Jun 2023 02:35:31 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44424 "EHLO
+        id S234758AbjFBKQ3 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 2 Jun 2023 06:16:29 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41340 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233835AbjFBGfH (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 2 Jun 2023 02:35:07 -0400
-Received: from mail-oi1-x229.google.com (mail-oi1-x229.google.com [IPv6:2607:f8b0:4864:20::229])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id CB99F1A1
-        for <linux-xfs@vger.kernel.org>; Thu,  1 Jun 2023 23:35:03 -0700 (PDT)
-Received: by mail-oi1-x229.google.com with SMTP id 5614622812f47-3980c92d8d6so1482600b6e.0
-        for <linux-xfs@vger.kernel.org>; Thu, 01 Jun 2023 23:35:03 -0700 (PDT)
+        with ESMTP id S234416AbjFBKQ2 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 2 Jun 2023 06:16:28 -0400
+Received: from mail-vs1-xe2c.google.com (mail-vs1-xe2c.google.com [IPv6:2607:f8b0:4864:20::e2c])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5AF5418D
+        for <linux-xfs@vger.kernel.org>; Fri,  2 Jun 2023 03:16:26 -0700 (PDT)
+Received: by mail-vs1-xe2c.google.com with SMTP id ada2fe7eead31-437e2e0a5c7so532812137.0
+        for <linux-xfs@vger.kernel.org>; Fri, 02 Jun 2023 03:16:26 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=fromorbit-com.20221208.gappssmtp.com; s=20221208; t=1685687703; x=1688279703;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
-        bh=evv0p0jC9oWWE82j0Pi+vATS1PKj6ZNQklO5GUBE0bQ=;
-        b=iiXnWri5a9H6k8MusPs25woba4yt8acCAmjG9gGDd1Z3PrhPJrwf6og8R4hYRBH0eI
-         iPSrij4qdB7ZsrR0j0IhR+e6jN3cwua0IdTW3r/8iURI66DvUridbPfN0hRGDYTHaToG
-         VXiw+uaNDNVWlbI8p0pFqljCi/YxNVlNehXUhP4yiJnPT8de6uV1tnl1M5dEEgOJeMM+
-         g5pkiUbPbeYdaDyESPPTFrDCbxaldGtsemtIowXd0ydVsVQve14YrTk9+mw4Twr5TAfz
-         IU1/B2BkvqS4pnWIRfp+l3/rMvxsb4e8pC+GtE/bbuHy6pghbtDIpMauWpV59kMzunhB
-         YR5g==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20221208; t=1685687703; x=1688279703;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
+        d=gmail.com; s=20221208; t=1685700985; x=1688292985;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:from:to:cc:subject:date
          :message-id:reply-to;
-        bh=evv0p0jC9oWWE82j0Pi+vATS1PKj6ZNQklO5GUBE0bQ=;
-        b=V80cdPhGUjKr+BYlt7yJb8HVhZ9pVXUvJqyqZqxTNeAus+CyjqPUKYgFCeYVIC3sp0
-         jNSZJEnJwHGfb/FcMALYuSXOS42cuweTZ/1MsQtJggLHH+VqO/ni1swWTHWzMMM6TFhQ
-         GjhaqWh4SgMFBwGrbTnwaH+35eAZrxJkorE4s0+2aNOVIDLK7g4Ksk0qK66CHW6SV/+/
-         n2ruz8qR32v0+5PY8qskl/Q1L+wgYxL+2PfgavZakb6Q4k0far5/itf5O50Q+Io//sFT
-         iXwGdW6vMeKFe4sbjPnBu8eI3CKp8IGhpuufgQkysfQrcgNYGP2RiIzxCbVI4W95I60h
-         /OVQ==
-X-Gm-Message-State: AC+VfDwAC4T0ktAKcIKj0nd8Qb4lscrTPDd0IIYZW5TO442T3I/hGBr6
-        yQpefkt67WOOgTfoQMy+21qdYNh11psnRS3xS/o=
-X-Google-Smtp-Source: ACHHUZ7dZEAxZ89U7y2em5IvNF7j4SacnZfso27jZ1sEutC0UYXa0vN78sezwFFYW1aWz022UzE0eA==
-X-Received: by 2002:a05:6808:c4:b0:399:de83:96f2 with SMTP id t4-20020a05680800c400b00399de8396f2mr1674539oic.8.1685687702894;
-        Thu, 01 Jun 2023 23:35:02 -0700 (PDT)
-Received: from dread.disaster.area (pa49-179-0-188.pa.nsw.optusnet.com.au. [49.179.0.188])
-        by smtp.gmail.com with ESMTPSA id bc2-20020a170902930200b001a95c7742bbsm514138plb.9.2023.06.01.23.35.01
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 01 Jun 2023 23:35:01 -0700 (PDT)
-Received: from dave by dread.disaster.area with local (Exim 4.96)
-        (envelope-from <david@fromorbit.com>)
-        id 1q4yNG-006o3F-2y;
-        Fri, 02 Jun 2023 16:34:58 +1000
-Date:   Fri, 2 Jun 2023 16:34:58 +1000
-From:   Dave Chinner <david@fromorbit.com>
-To:     Theodore Ts'o <tytso@mit.edu>
-Cc:     "Darrick J. Wong" <djwong@kernel.org>,
-        Christian Brauner <brauner@kernel.org>,
-        Amir Goldstein <amir73il@gmail.com>,
-        Jeff Layton <jlayton@kernel.org>, miklos@szeredi.hu,
-        linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org
-Subject: Re: uuid ioctl - was: Re: [PATCH] overlayfs: Trigger file
- re-evaluation by IMA / EVM after writes
-Message-ID: <ZHmNksPcA9tudSVQ@dread.disaster.area>
-References: <20230407-trasse-umgearbeitet-d580452b7a9b@brauner>
- <078d8c1fd6b6de59cde8aa85f8e59a056cb78614.camel@linux.ibm.com>
- <20230520-angenehm-orangen-80fdce6f9012@brauner>
- <ZGqgDjJqFSlpIkz/@dread.disaster.area>
- <20230522-unsensibel-backblech-7be4e920ba87@brauner>
- <20230602012335.GB16848@frogsfrogsfrogs>
- <20230602042714.GE1128744@mit.edu>
+        bh=sNQwbfwa2ljTIbuntiwWlYIAjybuLedTewwv2ZHLZ50=;
+        b=qgtHLsNQlU/21wX3zFtNkWbvAM9ftDJYoZdLqrd8bbIB7YVY1hCArtEv0JveAtvLV8
+         MEq2Ly2ygV2XAGJM0o2DdaIcAzu7MY6lrZ8MitOq1Y77ng0uHjGGugMhy50TAyh6bJO4
+         6Zb9MTjDQigRvgtSJtFjvjn4hHQT15MpuvlX1JhHA0OQrF4VTSZ9ZikeRdx8XkrMC/Sj
+         sXC45lnQfmTGuwEwF0EY0pleeeDulWd1OMqeJeWzKj9q/13yJCdXJgh4XzLAKq0EDYtF
+         QFwuvLTcLFuCiFfItuuTwiSuRT5XIey4vj0L9qQgXf1YeczALJZ/Z0z+ywhcJLfvm+Pz
+         RL3Q==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20221208; t=1685700985; x=1688292985;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=sNQwbfwa2ljTIbuntiwWlYIAjybuLedTewwv2ZHLZ50=;
+        b=FQPrWPB6xRKApCd80ryf6YjRnA+PnGyFRoSJ/7w+A7vZ2nQSyX0hPn91fOMD6hP2/p
+         irhmYyUeWWfifGj3VJ9swDzJQH1XXTNRIRVmKjjHMExPZgwS1XivYzvVga/eDCGyYK9V
+         bgIWzKRAqwoUrjR4VWDCLEnOI2qvYQxzTLdDBVS9fJ1ci5ZtBD9Umz9k6QsFvd5aZxRc
+         5lvsVfRlpaRZs7xM+FDNwSw7jYUiBDAfC29ayK/z7wZplF0Dq8YlCXbrsVbvf208gsce
+         4xIqe9xTqPJ6il4TfadYRrRx7Fm1zzZ99ddZeJCzOkeitbXGGFMsBLrmHNUTVpC4MXRS
+         Mr1A==
+X-Gm-Message-State: AC+VfDz5YT2pyojov+0y6rP7aNxwSv1UVzhDdlhFzVyWhvm9Oc373Toq
+        Sb0dZm22/GRMGpRjdz/7/kaDR8Nkzxu4E2QSWlI=
+X-Google-Smtp-Source: ACHHUZ7f5T7Qj0K2fqQXEVgE5vRYjoQ6Y1zwsc1YiuOYcXVKbIrSKuqUhfkamrfuURnV7PiApZKNqz38Zjrqf2MenFI=
+X-Received: by 2002:a67:fb19:0:b0:432:8d2b:893 with SMTP id
+ d25-20020a67fb19000000b004328d2b0893mr4872457vsr.28.1685700985043; Fri, 02
+ Jun 2023 03:16:25 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20230602042714.GE1128744@mit.edu>
+References: <20230411233159.GH360895@frogsfrogsfrogs> <20230601130351.GA1787684@google.com>
+ <20230601151146.GH16865@frogsfrogsfrogs>
+In-Reply-To: <20230601151146.GH16865@frogsfrogsfrogs>
+From:   Amir Goldstein <amir73il@gmail.com>
+Date:   Fri, 2 Jun 2023 13:16:13 +0300
+Message-ID: <CAOQ4uxh5m9VHnq0JG9BeAjAXyRdYy0fi9NwJVgWvH2tD7f9mLA@mail.gmail.com>
+Subject: Re: [PATCH] xfs: verify buffer contents when we skip log replay
+To:     "Darrick J. Wong" <djwong@kernel.org>
+Cc:     Lee Jones <lee@kernel.org>, linux-xfs@vger.kernel.org,
+        Dave Chinner <david@fromorbit.com>,
+        Leah Rumancik <lrumancik@google.com>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Fri, Jun 02, 2023 at 12:27:14AM -0400, Theodore Ts'o wrote:
-> On Thu, Jun 01, 2023 at 06:23:35PM -0700, Darrick J. Wong wrote:
-> > Someone ought to cc Ted since I asked him about this topic this morning
-> > and he said he hadn't noticed it going by...
-> > 
-> > > > > In addition the uuid should be set when the filesystem is mounted.
-> > > > > Unless the filesystem implements a dedicated ioctl() - like ext4 - to
-> > > > > change the uuid.
-> > > > 
-> > > > IMO, that ext4 functionality is a landmine waiting to be stepped on.
-> > > > 
-> > > > We should not be changing the sb->s_uuid of filesysetms dynamically.
-> > > 
-> > > Yeah, I kinda agree. If it works for ext4 and it's an ext4 specific
-> > > ioctl then this is fine though.
-> > 
-> > Now that Dave's brought up all kinds of questions about other parts of
-> > the kernel using s_uuid for things, I'm starting to think that even ext4
-> > shouldn't be changing its own uuid on the fly.
-> 
-> So let's set some context here.  The tune2fs program in e2fsprogs has
-> supported changing the UUID for a *very* long time.  Specifically,
-> since September 7, 1996 (e2fsprogs version 1.05, when we first added
-> the UUID field in the ext2 superblock).
-
-Yup, and XFS has supported offline changing of the UUID a couple of
-years before that.
-
-> This feature was added from
-> the very beginning since in Large Installation System Administration
-> (LISA) systems, a very common thing to do is to image boot disks from
-> a "golden master", and then afterwards, you want to make sure the file
-> systems on each boot disk have a unique UUID; and this is done via
-> "tune2fs -U random /dev/sdXX".  Since I was working at MIT Project
-> Athena at the time, we regularly did this when installing Athena
-> client workstations, and when I added UUID support to ext2, I made
-> sure this feature was well-supported.
-
-See xfs_copy(8). This was a tool originally written, IIRC, in early
-1995 for physically cloning sparse golden images in the SGI factory
-production line. It was multi-threaded and could write up to 16 scsi
-disks at once with a single ascending LBA order pass. The last thing
-it does is change the UUID of each clone to make them unique.
-
-There's nothing new here - this is all 30 years ago, and we've had
-tools changing filesystems UUIDs for all this time.
-
-> The tune2fs program allows the UUID to be changed via the file system
-> is mounted (with some caveats), which it did by directly modifying the
-> on-disk superblock.  Obviously, when it did that, it wouldn't change
-> sb->s_uuid "dynamically", although the next time the file system was
-> mounted, sb->s_uuid would get the new UUID.
-
-Yes, which means for userspace and most of the kernel it's no
-different to "unmount, change UUID, mount". It's effectively an
-offline change, even if the on-disk superblock is changed while the
-filesystem is mounted.
-
-> If overlayfs and IMA are
-> expecting that a file system's UUID would stay consant and persistent
-> --- well, that's not true, and it has always been that way, since
-> there are tools that make it trivially easy for a system administrator
-> to adjust the UUID.
-
-Yes, but that's not the point I've been making. My point is that the
-*online change of sb->s_uuid* that was being proposed for the
-XFS/generic variant of the ext4 online UUID change ioctl is
-completely new, and that's where all the problems start....
-
-> In addition to the LISA context, this feature is also commonly used in
-> various cloud deployments, since when you create a new VM, it
-> typically gets a new root file system, which is copied from a fixed,
-> read-only image.  So on a particular hyperscale cloud system, if we
-> didn't do anything special, there could be hundreds of thousands VM's
-> whose root file system would all have the same UUID, which would mean
-> that the UUID... isn't terribly unique.
-
-Again, nothing new here - we've been using snapshots/clones/reflinks
-for efficient VM storage provisioning for well over 15 years now.
-
-.....
-
-> This is the reason why we added the ext4 ioctl; it was intended for
-> the express use of "tune2fs -U", and like tune2fs -U, it doesn't
-> actually change sb->s_uuid; it only changes the on-disk superblock's
-> UUID.  This was mostly because we forgot about sb->s_uuid, to be
-> honest, but it means that regardless of whether "tune2fs -U" directly
-> modifies the block device, or uses the ext4 ioctl, the behaviour with
-> respect to sb->s_uuid is the same; it's not modified when the on-disk
-> uuid is changed.
-
-IOWs, not only was the ext4 functionality was poorly thought out, it
-was *poorly implemented*.
-
-So, let's take a step back here - we've done the use case thing to
-death now - and consider what is it we actually need here?
-
-All we need for the hyperscale/VM provisioning use case is for the
-the UUID to be changed at first boot/mount time before anything else
-happens.
-
-So why do we need userspace to be involved in that? Indeed,
-all the problems stem from needing to have userspace change the
-UUID.
-
-There's an obvious solution: a newly provisioned filesystem needs to
-change the uuid at first mount. The only issue is the
-kernel/filesystem doesn't know when the first mount is.
-
-Darrick suggested "mount -o setuuid=xxxx" on #xfs earlier, but that
-requires changing userspace init stuff and, well, I hate single use
-case mount options like this.
-
-However, we have a golden image that every client image is cloned
-from. Say we set a special feature bit in that golden image that
-means "need UUID regeneration". Then on the first mount of the
-cloned image after provisioning, the filesystem sees the bit and
-automatically regenerates the UUID with needing any help from
-userspace at all.
-
-Problem solved, yes? We don't need userspace to change the uuid on
-first boot of the newly provisioned VM - the filesystem just makes
-it happen.
-
-If the "first run" init scripts are set up to run blkid to grab the
-new uuid after mount and update whatever needs to be updated with
-the new root filesystem UUID, then we've moved the entire problem
-out of the VM boot path and back into the provisioning system where
-it should be.
-
-And then we don't need an ioctl to change UUIDs online, nor do we
-require the VFS, kernel subsystems, userspace infrastructure and
-applications to be capable of handling the UUID of a mounted
-filesystem changing without warning....
-
-> > > > The VFS does not guarantee in any way that it is safe to change the
-> > > > sb->s_uuid (i.e. no locking, no change notifications, no udev
-> > > > events, etc). Various subsystems - both in the kernel and in
-> > > > userspace - use the sb->s_uuid as a canonical and/or persistent
-> > > > filesystem/device identifier and are unprepared to have it change
-> > > > while the filesystem is mounted and active.
-> 
-> Note that the last sentence is a bit ambiguous.
-
-Well, yes, because while the UUID is normally persistent, if the
-administrator chooses to modify the UUID while the filesystem is
-unmounted, it will change between mounts.  In that case.....
-
-> There is the question
-> of whether sb->s_uuid won't change while the file system is mounted,
-> and then there is the question of whether s_uuid is **persistent**
-> ---- which is to say, that it won't change across mounts or reboots.
+On Thu, Jun 1, 2023 at 6:18=E2=80=AFPM Darrick J. Wong <djwong@kernel.org> =
+wrote:
 >
-> If there are subsystems like IMA, overlayfs, pnfs, et.al, which expect
-> that, I'm sorry, but sysadmin tools to make it trivially easy to
-> change the file system UUID long-predate these other subsystems, and
-> there *are* system adminsitrators --- particularly in the LISA or
-> Cloud context --- which have used "tune2fs -U" for good and proper
-> reasons.
+> On Thu, Jun 01, 2023 at 02:03:51PM +0100, Lee Jones wrote:
+> > Hi Darrick,
+> >
+> > On Tue, 11 Apr 2023, Darrick J. Wong wrote:
+> >
+> > > From: Darrick J. Wong <djwong@kernel.org>
+> > >
+> > > syzbot detected a crash during log recovery:
+> > >
+> > > XFS (loop0): Mounting V5 Filesystem bfdc47fc-10d8-4eed-a562-11a831b3f=
+791
+> > > XFS (loop0): Torn write (CRC failure) detected at log block 0x180. Tr=
+uncating head block from 0x200.
+> > > XFS (loop0): Starting recovery (logdev: internal)
+> > > =3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D
+> > > BUG: KASAN: slab-out-of-bounds in xfs_btree_lookup_get_block+0x15c/0x=
+6d0 fs/xfs/libxfs/xfs_btree.c:1813
+> > > Read of size 8 at addr ffff88807e89f258 by task syz-executor132/5074
+> > >
+> > > CPU: 0 PID: 5074 Comm: syz-executor132 Not tainted 6.2.0-rc1-syzkalle=
+r #0
+> > > Hardware name: Google Google Compute Engine/Google Compute Engine, BI=
+OS Google 10/26/2022
+> > > Call Trace:
+> > >  <TASK>
+> > >  __dump_stack lib/dump_stack.c:88 [inline]
+> > >  dump_stack_lvl+0x1b1/0x290 lib/dump_stack.c:106
+> > >  print_address_description+0x74/0x340 mm/kasan/report.c:306
+> > >  print_report+0x107/0x1f0 mm/kasan/report.c:417
+> > >  kasan_report+0xcd/0x100 mm/kasan/report.c:517
+> > >  xfs_btree_lookup_get_block+0x15c/0x6d0 fs/xfs/libxfs/xfs_btree.c:181=
+3
+> > >  xfs_btree_lookup+0x346/0x12c0 fs/xfs/libxfs/xfs_btree.c:1913
+> > >  xfs_btree_simple_query_range+0xde/0x6a0 fs/xfs/libxfs/xfs_btree.c:47=
+13
+> > >  xfs_btree_query_range+0x2db/0x380 fs/xfs/libxfs/xfs_btree.c:4953
+> > >  xfs_refcount_recover_cow_leftovers+0x2d1/0xa60 fs/xfs/libxfs/xfs_ref=
+count.c:1946
+> > >  xfs_reflink_recover_cow+0xab/0x1b0 fs/xfs/xfs_reflink.c:930
+> > >  xlog_recover_finish+0x824/0x920 fs/xfs/xfs_log_recover.c:3493
+> > >  xfs_log_mount_finish+0x1ec/0x3d0 fs/xfs/xfs_log.c:829
+> > >  xfs_mountfs+0x146a/0x1ef0 fs/xfs/xfs_mount.c:933
+> > >  xfs_fs_fill_super+0xf95/0x11f0 fs/xfs/xfs_super.c:1666
+> > >  get_tree_bdev+0x400/0x620 fs/super.c:1282
+> > >  vfs_get_tree+0x88/0x270 fs/super.c:1489
+> > >  do_new_mount+0x289/0xad0 fs/namespace.c:3145
+> > >  do_mount fs/namespace.c:3488 [inline]
+> > >  __do_sys_mount fs/namespace.c:3697 [inline]
+> > >  __se_sys_mount+0x2d3/0x3c0 fs/namespace.c:3674
+> > >  do_syscall_x64 arch/x86/entry/common.c:50 [inline]
+> > >  do_syscall_64+0x3d/0xb0 arch/x86/entry/common.c:80
+> > >  entry_SYSCALL_64_after_hwframe+0x63/0xcd
+> > > RIP: 0033:0x7f89fa3f4aca
+> > > Code: 83 c4 08 5b 5d c3 66 2e 0f 1f 84 00 00 00 00 00 c3 66 2e 0f 1f =
+84 00 00 00 00 00 0f 1f 44 00 00 49 89 ca b8 a5 00 00 00 0f 05 <48> 3d 01 f=
+0 ff ff 73 01 c3 48 c7 c1 c0 ff ff ff f7 d8 64 89 01 48
+> > > RSP: 002b:00007fffd5fb5ef8 EFLAGS: 00000206 ORIG_RAX: 00000000000000a=
+5
+> > > RAX: ffffffffffffffda RBX: 00646975756f6e2c RCX: 00007f89fa3f4aca
+> > > RDX: 0000000020000100 RSI: 0000000020009640 RDI: 00007fffd5fb5f10
+> > > RBP: 00007fffd5fb5f10 R08: 00007fffd5fb5f50 R09: 000000000000970d
+> > > R10: 0000000000200800 R11: 0000000000000206 R12: 0000000000000004
+> > > R13: 0000555556c6b2c0 R14: 0000000000200800 R15: 00007fffd5fb5f50
+> > >  </TASK>
+> > >
+> > > The fuzzed image contains an AGF with an obviously garbage
+> > > agf_refcount_level value of 32, and a dirty log with a buffer log ite=
+m
+> > > for that AGF.  The ondisk AGF has a higher LSN than the recovered log
+> > > item.  xlog_recover_buf_commit_pass2 reads the buffer, compares the
+> > > LSNs, and decides to skip replay because the ondisk buffer appears to=
+ be
+> > > newer.
+> > >
+> > > Unfortunately, the ondisk buffer is corrupt, but recovery just read t=
+he
+> > > buffer with no buffer ops specified:
+> > >
+> > >     error =3D xfs_buf_read(mp->m_ddev_targp, buf_f->blf_blkno,
+> > >                     buf_f->blf_len, buf_flags, &bp, NULL);
+> > >
+> > > Skipping the buffer leaves its contents in memory unverified.  This s=
+ets
+> > > us up for a kernel crash because xfs_refcount_recover_cow_leftovers
+> > > reads the buffer (which is still around in XBF_DONE state, so no read
+> > > verification) and creates a refcountbt cursor of height 32.  This is
+> > > impossible so we run off the end of the cursor object and crash.
+> > >
+> > > Fix this by invoking the verifier on all skipped buffers and aborting
+> > > log recovery if the ondisk buffer is corrupt.  It might be smarter to
+> > > force replay the log item atop the buffer and then see if it'll pass =
+the
+> > > write verifier (like ext4 does) but for now let's go with the
+> > > conservative option where we stop immediately.
+> > >
+> > > Link: https://syzkaller.appspot.com/bug?extid=3D7e9494b8b399902e994e
+> > > Fixes: 67dc288c2106 ("xfs: ensure verifiers are attached to recovered=
+ buffers")
+> > > Signed-off-by: Darrick J. Wong <djwong@kernel.org>
+> > > ---
+> > >  fs/xfs/xfs_buf_item_recover.c |   10 ++++++++++
+> > >  1 file changed, 10 insertions(+)
+> >
+> > Rightly or wrongly, CVE-2023-212 has been raised against this issue.
+> >
+> > It looks as though the Fixes: tag above was stripped when applied.
+> >
+> > Should this still be submitted to Stable?
+>
+> Yes, but we have not been successful in persuading any company to pick
+> up stable backporting and QA for any kernel newer than 5.15.
+>
 
-.... it's on the sysadmins to understand they need to regenerate
-anything that is reliant on the old filesystem UUIDs before mounting
-the filesystem again to avoid these issues...
+I already have a kdevops baseline that I established for xfs-6.1.y when
+I backported the SGID vfs fixes, so it is not a problem for me to test
+this patch (or any other if you have hints).
 
-Cheers,
+I have not yet invested in selecting patches for backport, partly
+because Leah wrote that she intends to take this up.
 
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+Leah, if your priorities have changed, I can try to start collecting
+candidates for backport in my spare time, whenever that will be.
+
+In any case, testing the occasional patch for 6.1.y is something that
+I can do until a company/distro becomes the owner of xfs-6.1.y.
+
+Darrick et al.,
+
+If you want me to test any other patches for 6.1.y, please let me know.
+
+Thanks,
+Amir.
