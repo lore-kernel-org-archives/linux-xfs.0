@@ -2,129 +2,167 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 05B5CC7EE2A
-	for <linux-xfs@archiver.kernel.org>; Fri,  2 Jun 2023 04:01:12 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 59EF9C77B7A
+	for <linux-xfs@archiver.kernel.org>; Fri,  2 Jun 2023 04:27:57 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229524AbjFBEBK (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 2 Jun 2023 00:01:10 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38774 "EHLO
+        id S233564AbjFBE1y (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 2 Jun 2023 00:27:54 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45104 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231259AbjFBEBJ (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 2 Jun 2023 00:01:09 -0400
-Received: from mail-qv1-xf30.google.com (mail-qv1-xf30.google.com [IPv6:2607:f8b0:4864:20::f30])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C3B84199
-        for <linux-xfs@vger.kernel.org>; Thu,  1 Jun 2023 21:01:07 -0700 (PDT)
-Received: by mail-qv1-xf30.google.com with SMTP id 6a1803df08f44-6259c242c96so15128716d6.3
-        for <linux-xfs@vger.kernel.org>; Thu, 01 Jun 2023 21:01:07 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=fromorbit-com.20221208.gappssmtp.com; s=20221208; t=1685678467; x=1688270467;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
-        bh=i/AZuKGanlEr/ivvqo0884Pc/FmittyLF3Imw6inGrI=;
-        b=BcLd94bXbpq4G/8mGSdrC4Rr3R+btIrfFTLDo8k8pYJQq6OKoa1oRd7I05xK3ijDZ8
-         SuWuQJ5leG1Sq9sV88p6X+jWLBa10RpoW/LWm62w7qyn5C8rLrT5kgeWzXysGyOQ95aY
-         NuzPN6B1VZDUfcVH/l0ciVW9QwRWkpUqtVGNEBH4rArTh1XjHCzzQ2fim2bM7AzZ00B/
-         J6GacvibR7CSeJyRvAGC3WMRgaFzxKCUwiw1kBdKtAhMmLYgYvBFJK9+PMVBCCfFBBAM
-         d5yLf8dz4MZBqY111HEvGTQ7RlyQapYTuWrXEhmZUygah4cHMlN1y2REgNtiCKYxCc0h
-         pcnA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20221208; t=1685678467; x=1688270467;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=i/AZuKGanlEr/ivvqo0884Pc/FmittyLF3Imw6inGrI=;
-        b=fpcCsVpzvZVj40O5XEfJYvfyNqzaIMhoBSqu60bx4lfJiEEV0PMJO81oUdVER0gF2o
-         6aH9A+od0K1yDaoOFZreC82MMBtG28zfW3wjtnYtgoTPENtqgbwIkxh7t9n1gQLUQJ12
-         1O9Hw6aXfLhIBdWLU12WhfbuGKkj1IFHf1IngtQQUVSlzqvd1LPeX8E35oKsZeXbP6BR
-         I6sie4F8IxMkrr6N9Qw61lmqiPWHIFlA9PmGlY6tc6qskfSEYoJpswyKabKzjGs1X/qI
-         CdU+r7eKfc0a8McdmY4gLWKTf41E175vtr6/VHi5l3Od8LIryuWKJlbuBHP25lZ62yzA
-         +4ag==
-X-Gm-Message-State: AC+VfDwr7wKpGvbbfZg64Wx13E5dMnq+NdhvmMWjF8Yf5aBYgdjDGnGd
-        kcnBtMg9Szrk2ZPVv+TDDjpkkde39TBW4Zcsn6o=
-X-Google-Smtp-Source: ACHHUZ7MgOE5vSn4vUPJwLHbvTOgsPrVrV7zXaqXFK2aKwxMdbaU4qT7t4lSi1RQ1f4yKxdHtRKtEQ==
-X-Received: by 2002:a05:6214:e48:b0:625:aa1a:b6db with SMTP id o8-20020a0562140e4800b00625aa1ab6dbmr12633626qvc.61.1685678466891;
-        Thu, 01 Jun 2023 21:01:06 -0700 (PDT)
-Received: from dread.disaster.area (pa49-179-0-188.pa.nsw.optusnet.com.au. [49.179.0.188])
-        by smtp.gmail.com with ESMTPSA id t5-20020a1709027fc500b001a183ade911sm203346plb.56.2023.06.01.21.01.05
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 01 Jun 2023 21:01:06 -0700 (PDT)
-Received: from dave by dread.disaster.area with local (Exim 4.96)
-        (envelope-from <david@fromorbit.com>)
-        id 1q4vyJ-006lUA-0A;
-        Fri, 02 Jun 2023 14:01:03 +1000
-Date:   Fri, 2 Jun 2023 14:01:03 +1000
-From:   Dave Chinner <david@fromorbit.com>
+        with ESMTP id S233541AbjFBE1q (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 2 Jun 2023 00:27:46 -0400
+Received: from outgoing.mit.edu (outgoing-auth-1.mit.edu [18.9.28.11])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 11C35198
+        for <linux-xfs@vger.kernel.org>; Thu,  1 Jun 2023 21:27:43 -0700 (PDT)
+Received: from cwcc.thunk.org (pool-173-48-119-27.bstnma.fios.verizon.net [173.48.119.27])
+        (authenticated bits=0)
+        (User authenticated as tytso@ATHENA.MIT.EDU)
+        by outgoing.mit.edu (8.14.7/8.12.4) with ESMTP id 3524RFOi005028
+        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+        Fri, 2 Jun 2023 00:27:16 -0400
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=mit.edu; s=outgoing;
+        t=1685680037; bh=RByivo28/wDS1hbfVNssrhoQJ9lRgUXU3X/ToX9MAnc=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To;
+        b=MUVQVwlzNKMzmChuhJwbvMhYGPUanRXvQ0C4Gml8kg1RzeXSNuWVekg44nscuRY2U
+         EbMIk2jf6SDQxzLZRmw0+aC6b/3NZhOl5Fs7uDBBRKDPhMFHsT31qEi5Vmm9gU0R3c
+         bfXpyvzXrr9rEyHdwwSsUCUyE2Q9/9yqniZlvMSeftf8WUdUHEE6MvyuW3UGGR03Uc
+         FO1bGIUAjFUU1aT7loB3hMbx9r4MKqkfOicI6N2B3PA1/6714jbzKC3NkHa4wep7+B
+         MYHC1KlVJuJ+HK/j5fdKI1uX15C6HE1wHHdZ+4cviMQe/IfiQElVZIHcUlcnrNTTtR
+         KXZmy6CJM7AEQ==
+Received: by cwcc.thunk.org (Postfix, from userid 15806)
+        id DC80A15C02EE; Fri,  2 Jun 2023 00:27:14 -0400 (EDT)
+Date:   Fri, 2 Jun 2023 00:27:14 -0400
+From:   "Theodore Ts'o" <tytso@mit.edu>
 To:     "Darrick J. Wong" <djwong@kernel.org>
-Cc:     linux-xfs@vger.kernel.org
-Subject: Re: [PATCH] xfs: collect errors from inodegc for unlinked inode
- recovery
-Message-ID: <ZHlpf5BFFfQEELlx@dread.disaster.area>
-References: <20230530001928.2967218-1-david@fromorbit.com>
- <20230602002500.GI16865@frogsfrogsfrogs>
+Cc:     Christian Brauner <brauner@kernel.org>,
+        Dave Chinner <david@fromorbit.com>,
+        Amir Goldstein <amir73il@gmail.com>,
+        Jeff Layton <jlayton@kernel.org>, miklos@szeredi.hu,
+        linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org
+Subject: Re: uuid ioctl - was: Re: [PATCH] overlayfs: Trigger file
+ re-evaluation by IMA / EVM after writes
+Message-ID: <20230602042714.GE1128744@mit.edu>
+References: <20230407-trasse-umgearbeitet-d580452b7a9b@brauner>
+ <078d8c1fd6b6de59cde8aa85f8e59a056cb78614.camel@linux.ibm.com>
+ <20230520-angenehm-orangen-80fdce6f9012@brauner>
+ <ZGqgDjJqFSlpIkz/@dread.disaster.area>
+ <20230522-unsensibel-backblech-7be4e920ba87@brauner>
+ <20230602012335.GB16848@frogsfrogsfrogs>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20230602002500.GI16865@frogsfrogsfrogs>
+In-Reply-To: <20230602012335.GB16848@frogsfrogsfrogs>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Thu, Jun 01, 2023 at 05:25:00PM -0700, Darrick J. Wong wrote:
-> On Tue, May 30, 2023 at 10:19:28AM +1000, Dave Chinner wrote:
-> > From: Dave Chinner <dchinner@redhat.com>
-> > 
-> > Unlinked list recovery requires errors removing the inode the from
-> > the unlinked list get fed back to the main recovery loop. Now that
-> > we offload the unlinking to the inodegc work, we don't get errors
-> > being fed back when we trip over a corruption that prevents the
-> > inode from being removed from the unlinked list.
-> > 
-> > This means we never clear the corrupt unlinked list bucket,
-> > resulting in runtime operations eventually tripping over it and
-> > shutting down.
-> > 
-> > Fix this by collecting inodegc worker errors and feed them
-> > back to the flush caller. This is largely best effort - the only
-> > context that really cares is log recovery, and it only flushes a
-> > single inode at a time so we don't need complex synchronised
-> > handling. Essentially the inodegc workers will capture the first
-> > error that occurs and the next flush will gather them and clear
-> > them. The flush itself will only report the first gathered error.
-> > 
-> > In the cases where callers can return errors, propagate the
-> > collected inodegc flush error up the error handling chain.
-> > 
-> > In the case of inode unlinked list recovery, there are several
-> > superfluous calls to flush queued unlinked inodes -
-> > xlog_recover_iunlink_bucket() guarantees that it has flushed the
-> > inodegc and collected errors before it returns. Hence nothing in the
-> > calling path needs to run a flush, even when an error is returned.
+On Thu, Jun 01, 2023 at 06:23:35PM -0700, Darrick J. Wong wrote:
+> Someone ought to cc Ted since I asked him about this topic this morning
+> and he said he hadn't noticed it going by...
 > 
-> Hmm.  So I guess what you're saying is that xfs_inactive now returns
-> negative errnos, and everything that calls down to that function will
-> pass the error upwards through the stack?
+> > > > In addition the uuid should be set when the filesystem is mounted.
+> > > > Unless the filesystem implements a dedicated ioctl() - like ext4 - to
+> > > > change the uuid.
+> > > 
+> > > IMO, that ext4 functionality is a landmine waiting to be stepped on.
+> > > 
+> > > We should not be changing the sb->s_uuid of filesysetms dynamically.
+> > 
+> > Yeah, I kinda agree. If it works for ext4 and it's an ext4 specific
+> > ioctl then this is fine though.
+> 
+> Now that Dave's brought up all kinds of questions about other parts of
+> the kernel using s_uuid for things, I'm starting to think that even ext4
+> shouldn't be changing its own uuid on the fly.
 
-Yes. Effectively inodegc workers capture the errors from
-xfs_inactive(), and the next xfs_inode_flush() call will gather the
-errors, clear them and report them to the caller. It's then up to
-the caller to decide what to do with an error from
-xfs_inode_flush()...
+So let's set some context here.  The tune2fs program in e2fsprogs has
+supported changing the UUID for a *very* long time.  Specifically,
+since September 7, 1996 (e2fsprogs version 1.05, when we first added
+the UUID field in the ext2 superblock).  This feature was added from
+the very beginning since in Large Installation System Administration
+(LISA) systems, a very common thing to do is to image boot disks from
+a "golden master", and then afterwards, you want to make sure the file
+systems on each boot disk have a unique UUID; and this is done via
+"tune2fs -U random /dev/sdXX".  Since I was working at MIT Project
+Athena at the time, we regularly did this when installing Athena
+client workstations, and when I added UUID support to ext2, I made
+sure this feature was well-supported.
 
-> Any of those call paths that already could handle a negative errno will
-> now fail on a corrupt inactive inode; and the only place that will
-> silently "drop" the negative errno is unmount?
+The tune2fs program allows the UUID to be changed via the file system
+is mounted (with some caveats), which it did by directly modifying the
+on-disk superblock.  Obviously, when it did that, it wouldn't change
+sb->s_uuid "dynamically", although the next time the file system was
+mounted, sb->s_uuid would get the new UUID.  If overlayfs and IMA are
+expecting that a file system's UUID would stay consant and persistent
+--- well, that's not true, and it has always been that way, since
+there are tools that make it trivially easy for a system administrator
+to adjust the UUID.
 
-Yes. That is the largely the what I've tried to do. The main thing
-was to make the unlinked inode error reporting work, and having
-other paths (like remount,ro) also be able to fail and propagate
-errors is a bonus.
+In addition to the LISA context, this feature is also commonly used in
+various cloud deployments, since when you create a new VM, it
+typically gets a new root file system, which is copied from a fixed,
+read-only image.  So on a particular hyperscale cloud system, if we
+didn't do anything special, there could be hundreds of thousands VM's
+whose root file system would all have the same UUID, which would mean
+that the UUID... isn't terribly unique.
 
-> If 'yes' and 'yes' and the kbuild robot warnings get fixed,
-> Reviewed-by: Darrick J. Wong <djwong@kernel.org>
+There are many problems that can result, but for example, if the user
+or SRE were to take a cloud-level block device snapshot of a
+malfunctioning VM, and then attach that snapshot on another VM, it is
+quite possible that there might be two file systems mounted on a
+particular VM that both have the same UUID ---- one for the "real"
+root file system, and the other for the "bad" root file system that is
+being examined.  Attempts to do mounts or umounts by UUID will then
+result in hilarity.  (Not to mention potentially confusing support
+personnel who might be looking at a metadata-only dump of the file
+system.)
 
-Thanks!
+And so a common practice is for some cloud agents or init scripts to
+change the root file system's UUID to a new random value when the VM
+is first initially booted.  Yes, this can potentially cause problems
+if the UUID is in /etc/fstab, but these scripts will typically update
+/etc/fstab and make other userspace adjustments while they are at it.
 
--Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+In the case of Cloud Optimized OS, the change of the UUID via "tune2fs
+-U random /dev/sdaX" was done in one systemd unit file, while systemd
+unit file would try to to resize the partition to fill the size of the
+root file system (since the VM can be created with the root disk
+larger than the minimum size required by the cloud image).  These two
+unit files can run at the same time, and so there was a very small
+probability that userspace directly changing the superblock could race
+with file system resize operation, such that one or the other
+operation failing due to a bad superblock checksum error.
+
+This is the reason why we added the ext4 ioctl; it was intended for
+the express use of "tune2fs -U", and like tune2fs -U, it doesn't
+actually change sb->s_uuid; it only changes the on-disk superblock's
+UUID.  This was mostly because we forgot about sb->s_uuid, to be
+honest, but it means that regardless of whether "tune2fs -U" directly
+modifies the block device, or uses the ext4 ioctl, the behaviour with
+respect to sb->s_uuid is the same; it's not modified when the on-disk
+uuid is changed.
+
+> > > The VFS does not guarantee in any way that it is safe to change the
+> > > sb->s_uuid (i.e. no locking, no change notifications, no udev
+> > > events, etc). Various subsystems - both in the kernel and in
+> > > userspace - use the sb->s_uuid as a canonical and/or persistent
+> > > filesystem/device identifier and are unprepared to have it change
+> > > while the filesystem is mounted and active.
+
+Note that the last sentence is a bit ambiguous.  There is the question
+of whether sb->s_uuid won't change while the file system is mounted,
+and then there is the question of whether s_uuid is **persistent**
+---- which is to say, that it won't change across mounts or reboots.
+
+If there are subsystems like IMA, overlayfs, pnfs, et.al, which expect
+that, I'm sorry, but sysadmin tools to make it trivially easy to
+change the file system UUID long-predate these other subsystems, and
+there *are* system adminsitrators --- particularly in the LISA or
+Cloud context --- which have used "tune2fs -U" for good and proper
+reasons.
+
+> ...just like Dave just said.  Heh. :(
+
+Heh, indeed.  :-/
+
+					- Ted
