@@ -2,188 +2,159 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E547DC7EE23
-	for <linux-xfs@archiver.kernel.org>; Fri,  2 Jun 2023 01:38:57 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5F2C7C7EE2A
+	for <linux-xfs@archiver.kernel.org>; Fri,  2 Jun 2023 02:20:36 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233750AbjFBBi4 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 1 Jun 2023 21:38:56 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33042 "EHLO
+        id S233319AbjFBCUe (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 1 Jun 2023 22:20:34 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44946 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233727AbjFBBiz (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 1 Jun 2023 21:38:55 -0400
-Received: from mga17.intel.com (mga17.intel.com [192.55.52.151])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E8AD6E6F;
-        Thu,  1 Jun 2023 18:38:32 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1685669913; x=1717205913;
-  h=date:from:to:cc:subject:message-id:references:
-   mime-version:in-reply-to;
-  bh=01GCcuu0HghGwWeCZNHmm9Tq8ORhR7z4ILt07iIC0l8=;
-  b=BC/plNyzbbVKycKY7bnJX70W/j4iJ4Rnya6ncF8PBVYBV5KuWgFDfVF2
-   fZlALNJ6VVKJnUUzVy8KPY5E4z0Lfajmjm5J0BZovc25OhBk860nTpz7C
-   wnyTgIEthCQh0zxDk8GwXjMXCApxfXuaLTnf9DYaqGZM/g8RjYqz2D4jb
-   D2RFd0tBJ7WIfHHcBUx4cMKaM2OLWpMTvq2wQktBHkZSCHa0kmf76d1gL
-   uw+qcH/ejplQ06WCeXX4fu3NYxX9bj3Brz7M3xF2JXYrEonn6o/0ig6CM
-   he+P9nfi81awxLp/EEfrVuIfO3il+6mHjrGl9Ut8P02SEjnKYAd3SaGT1
-   Q==;
-X-IronPort-AV: E=McAfee;i="6600,9927,10728"; a="336103236"
-X-IronPort-AV: E=Sophos;i="6.00,211,1681196400"; 
-   d="scan'208";a="336103236"
-Received: from fmsmga008.fm.intel.com ([10.253.24.58])
-  by fmsmga107.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 01 Jun 2023 18:36:57 -0700
-X-ExtLoop1: 1
-X-IronPort-AV: E=McAfee;i="6600,9927,10728"; a="772677288"
-X-IronPort-AV: E=Sophos;i="6.00,211,1681196400"; 
-   d="scan'208";a="772677288"
-Received: from lkp-server01.sh.intel.com (HELO fb1ced2c09fb) ([10.239.97.150])
-  by fmsmga008.fm.intel.com with ESMTP; 01 Jun 2023 18:36:54 -0700
-Received: from kbuild by fb1ced2c09fb with local (Exim 4.96)
-        (envelope-from <lkp@intel.com>)
-        id 1q4tin-0002t2-1u;
-        Fri, 02 Jun 2023 01:36:53 +0000
-Date:   Fri, 2 Jun 2023 09:36:30 +0800
-From:   kernel test robot <lkp@intel.com>
-To:     Jan Kara <jack@suse.cz>, Al Viro <viro@zeniv.linux.org.uk>
-Cc:     oe-kbuild-all@lists.linux.dev, linux-fsdevel@vger.kernel.org,
-        Christian Brauner <brauner@kernel.org>,
-        Miklos Szeredi <miklos@szeredi.hu>,
-        "Darrick J. Wong" <djwong@kernel.org>, Ted Tso <tytso@mit.edu>,
-        Jaegeuk Kim <jaegeuk@kernel.org>, linux-ext4@vger.kernel.org,
-        linux-xfs@vger.kernel.org, linux-f2fs-devel@lists.sourceforge.net,
-        Jan Kara <jack@suse.cz>, stable@vger.kernel.org
-Subject: Re: [PATCH v2 4/6] fs: Establish locking order for unrelated
- directories
-Message-ID: <202306020948.TBmCxtVw-lkp@intel.com>
-References: <20230601105830.13168-4-jack@suse.cz>
+        with ESMTP id S229454AbjFBCUe (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 1 Jun 2023 22:20:34 -0400
+Received: from dggsgout11.his.huawei.com (unknown [45.249.212.51])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7C66413E
+        for <linux-xfs@vger.kernel.org>; Thu,  1 Jun 2023 19:20:32 -0700 (PDT)
+Received: from mail02.huawei.com (unknown [172.30.67.153])
+        by dggsgout11.his.huawei.com (SkyGuard) with ESMTP id 4QXRYR6FjTz4f3mVw
+        for <linux-xfs@vger.kernel.org>; Fri,  2 Jun 2023 10:20:27 +0800 (CST)
+Received: from localhost (unknown [10.175.127.227])
+        by APP4 (Coremail) with SMTP id gCh0CgCX_7LsUXlkkzT0Kg--.22928S3;
+        Fri, 02 Jun 2023 10:20:28 +0800 (CST)
+Date:   Fri, 2 Jun 2023 10:18:44 +0800
+From:   Long Li <leo.lilong@huaweicloud.com>
+To:     djwong@kernel.org
+Cc:     david@fromorbit.com, linux-xfs@vger.kernel.org, houtao1@huawei.com,
+        yi.zhang@huawei.com, guoxuenan@huawei.com
+Subject: [PATCH v4] xfs: fix ag count overflow during growfs
+Message-ID: <20230602021844.GA3150998@ceph-admin>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=utf-8
 Content-Disposition: inline
-In-Reply-To: <20230601105830.13168-4-jack@suse.cz>
+X-CM-TRANSID: gCh0CgCX_7LsUXlkkzT0Kg--.22928S3
+X-Coremail-Antispam: 1UD129KBjvJXoWxAryxCFyfKry8GF45ZFyDGFg_yoWrWF4DpF
+        n3K3WUCr1kKw1ayFsavF1UtFsxAwsay3WIkrykJrn7A3WUt347XF1qyr109a4xurWrZryF
+        93Z8uryDZanYy3DanT9S1TB71UUUUUUqnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+        9KBjDU0xBIdaVrnRJUUUglb4IE77IF4wAFF20E14v26r4j6ryUM7CY07I20VC2zVCF04k2
+        6cxKx2IYs7xG6r1j6r18M7CIcVAFz4kK6r1j6r18M28lY4IEw2IIxxk0rwA2F7IY1VAKz4
+        vEj48ve4kI8wA2z4x0Y4vE2Ix0cI8IcVAFwI0_tr0E3s1l84ACjcxK6xIIjxv20xvEc7Cj
+        xVAFwI0_Gr1j6F4UJwA2z4x0Y4vEx4A2jsIE14v26rxl6s0DM28EF7xvwVC2z280aVCY1x
+        0267AKxVW0oVCq3wAS0I0E0xvYzxvE52x082IY62kv0487Mc02F40EFcxC0VAKzVAqx4xG
+        6I80ewAv7VC0I7IYx2IY67AKxVWUGVWUXwAv7VC2z280aVAFwI0_Jr0_Gr1lOx8S6xCaFV
+        Cjc4AY6r1j6r4UM4x0Y48IcVAKI48JMxAIw28IcxkI7VAKI48JMxC20s026xCaFVCjc4AY
+        6r1j6r4UMI8I3I0E5I8CrVAFwI0_Jr0_Jr4lx2IqxVCjr7xvwVAFwI0_JrI_JrWlx4CE17
+        CEb7AF67AKxVWUAVWUtwCIc40Y0x0EwIxGrwCI42IY6xIIjxv20xvE14v26r1j6r1xMIIF
+        0xvE2Ix0cI8IcVCY1x0267AKxVWUJVW8JwCI42IY6xAIw20EY4v20xvaj40_WFyUJVCq3w
+        CI42IY6I8E87Iv67AKxVWUJVW8JwCI42IY6I8E87Iv6xkF7I0E14v26r1j6r4UYxBIdaVF
+        xhVjvjDU0xZFpf9x07UQzVbUUUUU=
+X-CM-SenderInfo: hohrhzxlor0w46kxt4xhlfz01xgou0bp/
+X-CFilter-Loop: Reflected
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Hi Jan,
+I found a corruption during growfs:
 
-kernel test robot noticed the following build errors:
+ XFS (loop0): Internal error agbno >= mp->m_sb.sb_agblocks at line 3661 of
+   file fs/xfs/libxfs/xfs_alloc.c.  Caller __xfs_free_extent+0x28e/0x3c0
+ CPU: 0 PID: 573 Comm: xfs_growfs Not tainted 6.3.0-rc7-next-20230420-00001-gda8c95746257
+ Call Trace:
+  <TASK>
+  dump_stack_lvl+0x50/0x70
+  xfs_corruption_error+0x134/0x150
+  __xfs_free_extent+0x2c1/0x3c0
+  xfs_ag_extend_space+0x291/0x3e0
+  xfs_growfs_data+0xd72/0xe90
+  xfs_file_ioctl+0x5f9/0x14a0
+  __x64_sys_ioctl+0x13e/0x1c0
+  do_syscall_64+0x39/0x80
+  entry_SYSCALL_64_after_hwframe+0x63/0xcd
+ XFS (loop0): Corruption detected. Unmount and run xfs_repair
+ XFS (loop0): Internal error xfs_trans_cancel at line 1097 of file
+   fs/xfs/xfs_trans.c.  Caller xfs_growfs_data+0x691/0xe90
+ CPU: 0 PID: 573 Comm: xfs_growfs Not tainted 6.3.0-rc7-next-20230420-00001-gda8c95746257
+ Call Trace:
+  <TASK>
+  dump_stack_lvl+0x50/0x70
+  xfs_error_report+0x93/0xc0
+  xfs_trans_cancel+0x2c0/0x350
+  xfs_growfs_data+0x691/0xe90
+  xfs_file_ioctl+0x5f9/0x14a0
+  __x64_sys_ioctl+0x13e/0x1c0
+  do_syscall_64+0x39/0x80
+  entry_SYSCALL_64_after_hwframe+0x63/0xcd
+ RIP: 0033:0x7f2d86706577
 
-[auto build test ERROR on tytso-ext4/dev]
-[also build test ERROR on jaegeuk-f2fs/dev-test jaegeuk-f2fs/dev linus/master v6.4-rc4 next-20230601]
-[cannot apply to vfs-idmapping/for-next]
-[If your patch is applied to the wrong git tree, kindly drop us a note.
-And when submitting patch, we suggest to use '--base' as documented in
-https://git-scm.com/docs/git-format-patch#_base_tree_information]
+The bug can be reproduced with the following sequence:
 
-url:    https://github.com/intel-lab-lkp/linux/commits/Jan-Kara/ext4-Remove-ext4-locking-of-moved-directory/20230601-225100
-base:   https://git.kernel.org/pub/scm/linux/kernel/git/tytso/ext4.git dev
-patch link:    https://lore.kernel.org/r/20230601105830.13168-4-jack%40suse.cz
-patch subject: [PATCH v2 4/6] fs: Establish locking order for unrelated directories
-config: um-i386_defconfig (https://download.01.org/0day-ci/archive/20230602/202306020948.TBmCxtVw-lkp@intel.com/config)
-compiler: gcc-12 (Debian 12.2.0-14) 12.2.0
-reproduce (this is a W=1 build):
-        # https://github.com/intel-lab-lkp/linux/commit/234d970a1de0d79e372cc04d6a8112d2aec56c44
-        git remote add linux-review https://github.com/intel-lab-lkp/linux
-        git fetch --no-tags linux-review Jan-Kara/ext4-Remove-ext4-locking-of-moved-directory/20230601-225100
-        git checkout 234d970a1de0d79e372cc04d6a8112d2aec56c44
-        # save the config file
-        mkdir build_dir && cp config build_dir/.config
-        make W=1 O=build_dir ARCH=um SUBARCH=i386 olddefconfig
-        make W=1 O=build_dir ARCH=um SUBARCH=i386 SHELL=/bin/bash
+ # truncate -s  1073741824 xfs_test.img
+ # mkfs.xfs -f -b size=1024 -d agcount=4 xfs_test.img
+ # truncate -s 2305843009213693952  xfs_test.img
+ # mount -o loop xfs_test.img /mnt/test
+ # xfs_growfs -D  1125899907891200  /mnt/test
 
-If you fix the issue, kindly add following tag where applicable
-| Reported-by: kernel test robot <lkp@intel.com>
-| Closes: https://lore.kernel.org/oe-kbuild-all/202306020948.TBmCxtVw-lkp@intel.com/
+The root cause is that during growfs, user space passed in a large value
+of newblcoks to xfs_growfs_data_private(), due to current sb_agblocks is
+too small, new AG count will exceed UINT_MAX. Because of AG number type
+is unsigned int and it would overflow, that caused nagcount much smaller
+than the actual value. During AG extent space, delta blocks in
+xfs_resizefs_init_new_ags() will much larger than the actual value due to
+incorrect nagcount, even exceed UINT_MAX. This will cause corruption and
+be detected in __xfs_free_extent. Fix it by growing the filesystem to up
+to the maximally allowed AGs and not return EINVAL when new AG count
+overflow.
 
-All error/warnings (new ones prefixed by >>):
+Signed-off-by: Long Li <leo.lilong@huawei.com>
+---
+v3:
+- Ensure that the performance is consisent before and after the modification
+  when nagcount just overflows and 0 < nb_mod < XFS_MIN_AG_BLOCKS. 
+- Based on Darrick's advice, growing the filesystem to up to the maximally
+  allowed AGs when new AG count overflow.
+v4:
+- Define max ag number follow the definition in xfsprogs. 
 
-   fs/inode.c: In function 'lock_two_inodes':
->> fs/inode.c:1121:9: warning: this 'if' clause does not guard... [-Wmisleading-indentation]
-    1121 |         if (!inode1 || !inode2)
-         |         ^~
-   fs/inode.c:1129:17: note: ...this statement, but the latter is misleadingly indented as if it were guarded by the 'if'
-    1129 |                 goto lock;
-         |                 ^~~~
->> fs/inode.c:1129:17: error: label 'lock' used but not defined
-   fs/inode.c: At top level:
->> fs/inode.c:1136:9: error: expected identifier or '(' before 'if'
-    1136 |         if (S_ISDIR(inode2->i_mode) == S_ISDIR(inode1->i_mode)) {
-         |         ^~
->> fs/inode.c:1139:11: error: expected identifier or '(' before 'else'
-    1139 |         } else if (!S_ISDIR(inode1->i_mode))
-         |           ^~~~
-   In file included from include/linux/kernel.h:27,
-                    from include/linux/cpumask.h:10,
-                    from include/linux/smp.h:13,
-                    from include/linux/lockdep.h:14,
-                    from include/linux/spinlock.h:63,
-                    from include/linux/wait.h:9,
-                    from include/linux/wait_bit.h:8,
-                    from include/linux/fs.h:6,
-                    from fs/inode.c:7:
->> include/linux/minmax.h:167:63: error: expected identifier or '(' before 'while'
-     167 |         do { typeof(a) __tmp = (a); (a) = (b); (b) = __tmp; } while (0)
-         |                                                               ^~~~~
-   fs/inode.c:1140:17: note: in expansion of macro 'swap'
-    1140 |                 swap(inode1, inode2);
-         |                 ^~~~
->> fs/inode.c:1141:5: error: expected '=', ',', ';', 'asm' or '__attribute__' before ':' token
-    1141 | lock:
-         |     ^
-   fs/inode.c:1144:9: error: expected identifier or '(' before 'if'
-    1144 |         if (inode2 && inode2 != inode1)
-         |         ^~
->> fs/inode.c:1146:1: error: expected identifier or '(' before '}' token
-    1146 | }
-         | ^
+ fs/xfs/libxfs/xfs_fs.h |  2 ++
+ fs/xfs/xfs_fsops.c     | 13 +++++++++----
+ 2 files changed, 11 insertions(+), 4 deletions(-)
 
-
-vim +/lock +1129 fs/inode.c
-
-  1105	
-  1106	/**
-  1107	 * lock_two_inodes - lock two inodes (may be regular files but also dirs)
-  1108	 *
-  1109	 * Lock any non-NULL argument. The caller must make sure that if he is passing
-  1110	 * in two directories, one is not ancestor of the other.  Zero, one or two
-  1111	 * objects may be locked by this function.
-  1112	 *
-  1113	 * @inode1: first inode to lock
-  1114	 * @inode2: second inode to lock
-  1115	 * @subclass1: inode lock subclass for the first lock obtained
-  1116	 * @subclass2: inode lock subclass for the second lock obtained
-  1117	 */
-  1118	void lock_two_inodes(struct inode *inode1, struct inode *inode2,
-  1119			     unsigned subclass1, unsigned subclass2)
-  1120	{
-> 1121		if (!inode1 || !inode2)
-  1122			/*
-  1123			 * Make sure @subclass1 will be used for the acquired lock.
-  1124			 * This is not strictly necessary (no current caller cares) but
-  1125			 * let's keep things consistent.
-  1126			 */
-  1127			if (!inode1)
-  1128				swap(inode1, inode2);
-> 1129			goto lock;
-  1130		}
-  1131	
-  1132		/*
-  1133		 * If one object is directory and the other is not, we must make sure
-  1134		 * to lock directory first as the other object may be its child.
-  1135		 */
-> 1136		if (S_ISDIR(inode2->i_mode) == S_ISDIR(inode1->i_mode)) {
-  1137			if (inode1 > inode2)
-  1138				swap(inode1, inode2);
-> 1139		} else if (!S_ISDIR(inode1->i_mode))
-  1140			swap(inode1, inode2);
-> 1141	lock:
-  1142		if (inode1)
-  1143			inode_lock_nested(inode1, subclass1);
-  1144		if (inode2 && inode2 != inode1)
-  1145			inode_lock_nested(inode2, subclass2);
-> 1146	}
-  1147	
-
+diff --git a/fs/xfs/libxfs/xfs_fs.h b/fs/xfs/libxfs/xfs_fs.h
+index 1cfd5bc6520a..9c60ebb328b4 100644
+--- a/fs/xfs/libxfs/xfs_fs.h
++++ b/fs/xfs/libxfs/xfs_fs.h
+@@ -257,6 +257,8 @@ typedef struct xfs_fsop_resblks {
+ #define XFS_MAX_AG_BLOCKS	(XFS_MAX_AG_BYTES / XFS_MIN_BLOCKSIZE)
+ #define XFS_MAX_CRC_AG_BLOCKS	(XFS_MAX_AG_BYTES / XFS_MIN_CRC_BLOCKSIZE)
+ 
++#define XFS_MAX_AGNUMBER	((xfs_agnumber_t)(NULLAGNUMBER - 1))
++
+ /* keep the maximum size under 2^31 by a small amount */
+ #define XFS_MAX_LOG_BYTES \
+ 	((2 * 1024 * 1024 * 1024ULL) - XFS_MIN_LOG_BYTES)
+diff --git a/fs/xfs/xfs_fsops.c b/fs/xfs/xfs_fsops.c
+index 13851c0d640b..f03b6cd317a6 100644
+--- a/fs/xfs/xfs_fsops.c
++++ b/fs/xfs/xfs_fsops.c
+@@ -115,11 +115,16 @@ xfs_growfs_data_private(
+ 
+ 	nb_div = nb;
+ 	nb_mod = do_div(nb_div, mp->m_sb.sb_agblocks);
+-	nagcount = nb_div + (nb_mod != 0);
+-	if (nb_mod && nb_mod < XFS_MIN_AG_BLOCKS) {
+-		nagcount--;
+-		nb = (xfs_rfsblock_t)nagcount * mp->m_sb.sb_agblocks;
++	if (nb_mod && nb_mod >= XFS_MIN_AG_BLOCKS)
++		nb_div++;
++	else if (nb_mod)
++		nb = nb_div * mp->m_sb.sb_agblocks;
++
++	if (nb_div > XFS_MAX_AGNUMBER + 1) {
++		nb_div = XFS_MAX_AGNUMBER + 1;
++		nb = nb_div * mp->m_sb.sb_agblocks;
+ 	}
++	nagcount = nb_div;
+ 	delta = nb - mp->m_sb.sb_dblocks;
+ 	/*
+ 	 * Reject filesystems with a single AG because they are not
 -- 
-0-DAY CI Kernel Test Service
-https://github.com/intel/lkp-tests/wiki
+2.31.1
+
