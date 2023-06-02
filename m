@@ -2,111 +2,400 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 76C44C7EE23
-	for <linux-xfs@archiver.kernel.org>; Fri,  2 Jun 2023 00:00:02 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B108DC77B7A
+	for <linux-xfs@archiver.kernel.org>; Fri,  2 Jun 2023 00:25:08 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229490AbjFBAAB (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 1 Jun 2023 20:00:01 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48946 "EHLO
+        id S229724AbjFBAZG (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 1 Jun 2023 20:25:06 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54676 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233077AbjFBAAA (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 1 Jun 2023 20:00:00 -0400
-Received: from mail-oi1-x233.google.com (mail-oi1-x233.google.com [IPv6:2607:f8b0:4864:20::233])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0D53F136
-        for <linux-xfs@vger.kernel.org>; Thu,  1 Jun 2023 16:59:59 -0700 (PDT)
-Received: by mail-oi1-x233.google.com with SMTP id 5614622812f47-39810ce3e13so1229134b6e.2
-        for <linux-xfs@vger.kernel.org>; Thu, 01 Jun 2023 16:59:59 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20221208; t=1685663998; x=1688255998;
-        h=content-transfer-encoding:in-reply-to:from:references:cc:to
-         :content-language:subject:user-agent:mime-version:date:message-id
-         :from:to:cc:subject:date:message-id:reply-to;
-        bh=rGdFBJnRBzB9KI0yFtTkzqJxzKGRYEMJxGWBQmnwssA=;
-        b=l2aciU1S/EpIwmRBZeg0Lsa2euQ6u+X6GPzT8kW2wJCn0bgMvdPAwbkArdAvsFbszM
-         6tQiIL/ORR6wyJab4xSOep7epDAYuhe/ofKuMWnG7tB1yyR+TlgPC9Hc901sFLxBzmZB
-         u8xyCoDtpROtih6Dvpkwam20ExCaW9SKY4KmbfR04HGbuaT1W/HUq3yWIJo/f4T9QfSA
-         LQLrHrRPH1As/wjdrF+g2s0wprlKgE2R3LMUgvMKnmNVUBKlmJ/bfjfYwRZphRfLyNvc
-         Vwvu3jF6TV3sUV6Q3DskEDDImjlq08s9h/sRt3ekcFjHRcQcx3XmdTDFMoDh/ltqtZVm
-         NbUQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20221208; t=1685663998; x=1688255998;
-        h=content-transfer-encoding:in-reply-to:from:references:cc:to
-         :content-language:subject:user-agent:mime-version:date:message-id
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=rGdFBJnRBzB9KI0yFtTkzqJxzKGRYEMJxGWBQmnwssA=;
-        b=LeahDhm8wIvVqVp0mk4Ez+t0VcgpOokZZwOZUsRwSYZ64k9qPzTzxE0hykJugZrVF/
-         5hudjOT5ptw6dzwZ3InX6Jk+w7a4Sy4tKfHHBjOCdklfnI7zoo2f/v+wT5F4VbHZzg4O
-         hHsG6S5/Z9EjnSTz4lBEHXFIktcyoxhbL+2J/IO+lDPrT4RpcXgkQLdBmXaeFVjfdnGc
-         EhDP7lpHU/qgyDBv2s5fx7iy08F+Apnm8bxEvbzdZq2CwZX+EqXj83HyvaV1YukUNY0E
-         KQsJiJ6ShLellDRibCh3eNyPNBD31F0nxHPdx7787BTQp7n/QgUX1wg5OAhI4EmDcHfs
-         +/2g==
-X-Gm-Message-State: AC+VfDzJ04WGqDLEY/ljsnxILn3iXpP+i0kkn2aljXJA1w6w9W7zTyHR
-        KkNNH5UDAcwdlWFu22zWwyeBuwoxY6C9oA==
-X-Google-Smtp-Source: ACHHUZ4JlxwAIqhu5NdJfbv1vKojXjsdZqdN0wG7bdYOsNeTvWhINVsCWSRE2sCGSw/APDyhVlvTOA==
-X-Received: by 2002:a54:4514:0:b0:398:139f:fed7 with SMTP id l20-20020a544514000000b00398139ffed7mr851725oil.8.1685663998222;
-        Thu, 01 Jun 2023 16:59:58 -0700 (PDT)
-Received: from ?IPV6:2606:4700:110:8939:3cc4:589f:70ed:f5b0? ([2a09:bac0:1000:a2::4:263])
-        by smtp.gmail.com with ESMTPSA id k18-20020aa792d2000000b0064fe9862ec2sm5618442pfa.116.2023.06.01.16.59.57
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Thu, 01 Jun 2023 16:59:57 -0700 (PDT)
-Message-ID: <38595e0a-e9eb-0659-df6c-f11a72db8abd@gmail.com>
-Date:   Thu, 1 Jun 2023 16:59:56 -0700
-MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
- Thunderbird/102.10.0
-Subject: Re: Question on the xfs inode slab memory
-Content-Language: en-US
+        with ESMTP id S230001AbjFBAZE (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 1 Jun 2023 20:25:04 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 31A5E138
+        for <linux-xfs@vger.kernel.org>; Thu,  1 Jun 2023 17:25:02 -0700 (PDT)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 9E25D648EE
+        for <linux-xfs@vger.kernel.org>; Fri,  2 Jun 2023 00:25:01 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id E8BE6C433D2;
+        Fri,  2 Jun 2023 00:25:00 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1685665501;
+        bh=iLjPYiqgUti/SFGsPLe8ivaZmQ7oYhrHdlt6Rp8Bt+A=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=gUnMKS+DnEUPo1A0BEucJdB8qvWqg80EmcEgCX7MK7yBiXHNshvh2NlcGfpuZoXpr
+         DxXQTNe13OifoQySYNgPWaowZ9AyZqSr5UITbnuEdwhTB8Inki8g4DzC/dR9qLeEYj
+         9PtosGgBnRjwrihJAYE7efj0teK0z66aTqW+zrNQal/X43WKSokyAKh3FklrDF/C+/
+         9X4JTqlas+Mz/Et6tC+3fISN/AJVstMnl/cWm5KzColYqnK+L6yqcl0PtgmWGls/00
+         2ft0vbvmE8Y4/yCjOzWw+6xHssb1dpbipQlIYZGKftDK0w3DHLmdVHT777pc+cEvmr
+         jBUh/BynlwUww==
+Date:   Thu, 1 Jun 2023 17:25:00 -0700
+From:   "Darrick J. Wong" <djwong@kernel.org>
 To:     Dave Chinner <david@fromorbit.com>
 Cc:     linux-xfs@vger.kernel.org
-References: <CAMj1M42L6hH9weqroQNaWu_SG+Yg8NrAuzgNO1b8jiWPJ2M-5A@mail.gmail.com>
- <ZHfhYsqln68N1HyO@dread.disaster.area>
- <7572072d-8132-d918-285c-3391cb041cff@gmail.com>
- <ZHkRHW9Fd19du0Zv@dread.disaster.area>
-From:   Jianan Wang <wangjianan.zju@gmail.com>
-In-Reply-To: <ZHkRHW9Fd19du0Zv@dread.disaster.area>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 8bit
+Subject: Re: [PATCH] xfs: collect errors from inodegc for unlinked inode
+ recovery
+Message-ID: <20230602002500.GI16865@frogsfrogsfrogs>
+References: <20230530001928.2967218-1-david@fromorbit.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20230530001928.2967218-1-david@fromorbit.com>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Hi Dave,
+On Tue, May 30, 2023 at 10:19:28AM +1000, Dave Chinner wrote:
+> From: Dave Chinner <dchinner@redhat.com>
+> 
+> Unlinked list recovery requires errors removing the inode the from
+> the unlinked list get fed back to the main recovery loop. Now that
+> we offload the unlinking to the inodegc work, we don't get errors
+> being fed back when we trip over a corruption that prevents the
+> inode from being removed from the unlinked list.
+> 
+> This means we never clear the corrupt unlinked list bucket,
+> resulting in runtime operations eventually tripping over it and
+> shutting down.
+> 
+> Fix this by collecting inodegc worker errors and feed them
+> back to the flush caller. This is largely best effort - the only
+> context that really cares is log recovery, and it only flushes a
+> single inode at a time so we don't need complex synchronised
+> handling. Essentially the inodegc workers will capture the first
+> error that occurs and the next flush will gather them and clear
+> them. The flush itself will only report the first gathered error.
+> 
+> In the cases where callers can return errors, propagate the
+> collected inodegc flush error up the error handling chain.
+> 
+> In the case of inode unlinked list recovery, there are several
+> superfluous calls to flush queued unlinked inodes -
+> xlog_recover_iunlink_bucket() guarantees that it has flushed the
+> inodegc and collected errors before it returns. Hence nothing in the
+> calling path needs to run a flush, even when an error is returned.
 
-On 6/1/23 14:43, Dave Chinner wrote:
-> On Wed, May 31, 2023 at 11:21:41PM -0700, Jianan Wang wrote:
->> Seems the auto-wraping issue is on my gmail.... using thunderbird should be better...
-> Thanks!
->
->> Resend the slabinfo and meminfo output here:
->>
->> Linux # cat /proc/slabinfo
->> slabinfo - version: 2.1
->> # name            <active_objs> <num_objs> <objsize> <objperslab> <pagesperslab> : tunables <limit> <batchcount> <sharedfactor> : slabdata <active_slabs> <num_slabs> <sharedavail>
-> .....
->> xfs_dqtrx              0      0    528   31    4 : tunables    0    0    0 : slabdata      0      0      0
->> xfs_dquot              0      0    496   33    4 : tunables    0    0    0 : slabdata      0      0      0
->> xfs_buf           2545661 3291582    384   42    4 : tunables    0    0    0 : slabdata  78371  78371      0
->> xfs_rui_item           0      0    696   47    8 : tunables    0    0    0 : slabdata      0      0      0
->> xfs_rud_item           0      0    176   46    2 : tunables    0    0    0 : slabdata      0      0      0
->> xfs_inode         23063278 77479540   1024   32    8 : tunables    0    0    0 : slabdata 2425069 2425069      0
->> xfs_efd_item        4662   4847    440   37    4 : tunables    0    0    0 : slabdata    131    131      0
->> xfs_buf_item        8610   8760    272   30    2 : tunables    0    0    0 : slabdata    292    292      0
->> xfs_trans           1925   1925    232   35    2 : tunables    0    0    0 : slabdata     55     55      0
->> xfs_da_state        1632   1632    480   34    4 : tunables    0    0    0 : slabdata     48     48      0
->> xfs_btree_cur       1728   1728    224   36    2 : tunables    0    0    0 : slabdata     48     48      0
-> There's no xfs_ili slab cache - this kernel must be using merged
-> slabs, so I'm going to have to infer how many inodes are dirty from
-> other slabs. The inode log item is ~190 bytes in size, so....
->
->> skbuff_ext_cache  16454495 32746392    192   42    2 : tunables    0    0    0 : slabdata 779676 779676      0
-> Yup, there were - 192 byte slab, 16 million active objects. Not all
-> of those inodes will be dirty right now, but ~65% of the inodes
-> cached in memory have been dirty at some point. 
->
-> So, yes, it is highly likely that your memory reclaim/OOM problems
-> are caused by blocking on dirty inodes in memory reclaim, which you
-> can only fix by upgrading to a newer kernel.
+Hmm.  So I guess what you're saying is that xfs_inactive now returns
+negative errnos, and everything that calls down to that function will
+pass the error upwards through the stack?
 
-Thanks for the suggestion! Do you have any kernel version recommendation in this case? We plan to use ubuntu 20.04 with 5.15 kernel for this, and probably rebuild the xfs and install by ourselves to bypass the default ones to test xfs 5.9. Is this a good plan from your perspective?
+Any of those call paths that already could handle a negative errno will
+now fail on a corrupt inactive inode; and the only place that will
+silently "drop" the negative errno is unmount?
 
-> -Dave.
+If 'yes' and 'yes' and the kbuild robot warnings get fixed,
+Reviewed-by: Darrick J. Wong <djwong@kernel.org>
+
+--D
+
+> Signed-off-by: Dave Chinner <dchinner@redhat.com>
+> ---
+>  fs/xfs/xfs_icache.c      | 46 ++++++++++++++++++++++++++++++++--------
+>  fs/xfs/xfs_icache.h      |  4 ++--
+>  fs/xfs/xfs_inode.c       | 18 +++++-----------
+>  fs/xfs/xfs_inode.h       |  2 +-
+>  fs/xfs/xfs_log_recover.c | 19 ++++++++---------
+>  fs/xfs/xfs_mount.h       |  1 +
+>  fs/xfs/xfs_super.c       |  1 +
+>  fs/xfs/xfs_trans.c       |  4 +++-
+>  8 files changed, 59 insertions(+), 36 deletions(-)
+> 
+> diff --git a/fs/xfs/xfs_icache.c b/fs/xfs/xfs_icache.c
+> index 0f60e301eb1f..453890942d9f 100644
+> --- a/fs/xfs/xfs_icache.c
+> +++ b/fs/xfs/xfs_icache.c
+> @@ -454,6 +454,27 @@ xfs_inodegc_queue_all(
+>  	return ret;
+>  }
+>  
+> +/* Wait for all queued work and collect errors */
+> +static int
+> +xfs_inodegc_wait_all(
+> +	struct xfs_mount	*mp)
+> +{
+> +	int			cpu;
+> +	int			error = 0;
+> +
+> +	flush_workqueue(mp->m_inodegc_wq);
+> +	for_each_online_cpu(cpu) {
+> +		struct xfs_inodegc	*gc;
+> +
+> +		gc = per_cpu_ptr(mp->m_inodegc, cpu);
+> +		if (gc->error && !error)
+> +			error = gc->error;
+> +		gc->error = 0;
+> +	}
+> +
+> +	return error;
+> +}
+> +
+>  /*
+>   * Check the validity of the inode we just found it the cache
+>   */
+> @@ -1491,15 +1512,14 @@ xfs_blockgc_free_space(
+>  	if (error)
+>  		return error;
+>  
+> -	xfs_inodegc_flush(mp);
+> -	return 0;
+> +	return xfs_inodegc_flush(mp);
+>  }
+>  
+>  /*
+>   * Reclaim all the free space that we can by scheduling the background blockgc
+>   * and inodegc workers immediately and waiting for them all to clear.
+>   */
+> -void
+> +int
+>  xfs_blockgc_flush_all(
+>  	struct xfs_mount	*mp)
+>  {
+> @@ -1520,7 +1540,7 @@ xfs_blockgc_flush_all(
+>  	for_each_perag_tag(mp, agno, pag, XFS_ICI_BLOCKGC_TAG)
+>  		flush_delayed_work(&pag->pag_blockgc_work);
+>  
+> -	xfs_inodegc_flush(mp);
+> +	return xfs_inodegc_flush(mp);
+>  }
+>  
+>  /*
+> @@ -1842,13 +1862,17 @@ xfs_inodegc_set_reclaimable(
+>   * This is the last chance to make changes to an otherwise unreferenced file
+>   * before incore reclamation happens.
+>   */
+> -static void
+> +static int
+>  xfs_inodegc_inactivate(
+>  	struct xfs_inode	*ip)
+>  {
+> +	int			error;
+> +
+>  	trace_xfs_inode_inactivating(ip);
+> -	xfs_inactive(ip);
+> +	error = xfs_inactive(ip);
+>  	xfs_inodegc_set_reclaimable(ip);
+> +	return error;
+> +
+>  }
+>  
+>  void
+> @@ -1880,8 +1904,12 @@ xfs_inodegc_worker(
+>  
+>  	WRITE_ONCE(gc->shrinker_hits, 0);
+>  	llist_for_each_entry_safe(ip, n, node, i_gclist) {
+> +		int	error;
+> +
+>  		xfs_iflags_set(ip, XFS_INACTIVATING);
+> -		xfs_inodegc_inactivate(ip);
+> +		error = xfs_inodegc_inactivate(ip);
+> +		if (error && !gc->error)
+> +			gc->error = error;
+>  	}
+>  
+>  	memalloc_nofs_restore(nofs_flag);
+> @@ -1905,13 +1933,13 @@ xfs_inodegc_push(
+>   * Force all currently queued inode inactivation work to run immediately and
+>   * wait for the work to finish.
+>   */
+> -void
+> +int
+>  xfs_inodegc_flush(
+>  	struct xfs_mount	*mp)
+>  {
+>  	xfs_inodegc_push(mp);
+>  	trace_xfs_inodegc_flush(mp, __return_address);
+> -	flush_workqueue(mp->m_inodegc_wq);
+> +	return xfs_inodegc_wait_all(mp);
+>  }
+>  
+>  /*
+> diff --git a/fs/xfs/xfs_icache.h b/fs/xfs/xfs_icache.h
+> index 87910191a9dd..1dcdcb23796e 100644
+> --- a/fs/xfs/xfs_icache.h
+> +++ b/fs/xfs/xfs_icache.h
+> @@ -62,7 +62,7 @@ int xfs_blockgc_free_dquots(struct xfs_mount *mp, struct xfs_dquot *udqp,
+>  		unsigned int iwalk_flags);
+>  int xfs_blockgc_free_quota(struct xfs_inode *ip, unsigned int iwalk_flags);
+>  int xfs_blockgc_free_space(struct xfs_mount *mp, struct xfs_icwalk *icm);
+> -void xfs_blockgc_flush_all(struct xfs_mount *mp);
+> +int xfs_blockgc_flush_all(struct xfs_mount *mp);
+>  
+>  void xfs_inode_set_eofblocks_tag(struct xfs_inode *ip);
+>  void xfs_inode_clear_eofblocks_tag(struct xfs_inode *ip);
+> @@ -80,7 +80,7 @@ void xfs_blockgc_start(struct xfs_mount *mp);
+>  
+>  void xfs_inodegc_worker(struct work_struct *work);
+>  void xfs_inodegc_push(struct xfs_mount *mp);
+> -void xfs_inodegc_flush(struct xfs_mount *mp);
+> +int xfs_inodegc_flush(struct xfs_mount *mp);
+>  void xfs_inodegc_stop(struct xfs_mount *mp);
+>  void xfs_inodegc_start(struct xfs_mount *mp);
+>  void xfs_inodegc_cpu_dead(struct xfs_mount *mp, unsigned int cpu);
+> diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
+> index 5808abab786c..c0d0466f3270 100644
+> --- a/fs/xfs/xfs_inode.c
+> +++ b/fs/xfs/xfs_inode.c
+> @@ -1620,16 +1620,7 @@ xfs_inactive_ifree(
+>  	 */
+>  	xfs_trans_mod_dquot_byino(tp, ip, XFS_TRANS_DQ_ICOUNT, -1);
+>  
+> -	/*
+> -	 * Just ignore errors at this point.  There is nothing we can do except
+> -	 * to try to keep going. Make sure it's not a silent error.
+> -	 */
+> -	error = xfs_trans_commit(tp);
+> -	if (error)
+> -		xfs_notice(mp, "%s: xfs_trans_commit returned error %d",
+> -			__func__, error);
+> -
+> -	return 0;
+> +	return xfs_trans_commit(tp);
+>  }
+>  
+>  /*
+> @@ -1693,7 +1684,7 @@ xfs_inode_needs_inactive(
+>   * now be truncated.  Also, we clear all of the read-ahead state
+>   * kept for the inode here since the file is now closed.
+>   */
+> -void
+> +int
+>  xfs_inactive(
+>  	xfs_inode_t	*ip)
+>  {
+> @@ -1736,7 +1727,7 @@ xfs_inactive(
+>  		 * reference to the inode at this point anyways.
+>  		 */
+>  		if (xfs_can_free_eofblocks(ip, true))
+> -			xfs_free_eofblocks(ip);
+> +			error = xfs_free_eofblocks(ip);
+>  
+>  		goto out;
+>  	}
+> @@ -1773,7 +1764,7 @@ xfs_inactive(
+>  	/*
+>  	 * Free the inode.
+>  	 */
+> -	xfs_inactive_ifree(ip);
+> +	error = xfs_inactive_ifree(ip);
+>  
+>  out:
+>  	/*
+> @@ -1781,6 +1772,7 @@ xfs_inactive(
+>  	 * the attached dquots.
+>  	 */
+>  	xfs_qm_dqdetach(ip);
+> +	return error;
+>  }
+>  
+>  /*
+> diff --git a/fs/xfs/xfs_inode.h b/fs/xfs/xfs_inode.h
+> index 69d21e42c10a..7547caf2f2ab 100644
+> --- a/fs/xfs/xfs_inode.h
+> +++ b/fs/xfs/xfs_inode.h
+> @@ -470,7 +470,7 @@ enum layout_break_reason {
+>  	(xfs_has_grpid((pip)->i_mount) || (VFS_I(pip)->i_mode & S_ISGID))
+>  
+>  int		xfs_release(struct xfs_inode *ip);
+> -void		xfs_inactive(struct xfs_inode *ip);
+> +int		xfs_inactive(struct xfs_inode *ip);
+>  int		xfs_lookup(struct xfs_inode *dp, const struct xfs_name *name,
+>  			   struct xfs_inode **ipp, struct xfs_name *ci_name);
+>  int		xfs_create(struct mnt_idmap *idmap,
+> diff --git a/fs/xfs/xfs_log_recover.c b/fs/xfs/xfs_log_recover.c
+> index 322eb2ee6c55..82c81d20459d 100644
+> --- a/fs/xfs/xfs_log_recover.c
+> +++ b/fs/xfs/xfs_log_recover.c
+> @@ -2711,7 +2711,9 @@ xlog_recover_iunlink_bucket(
+>  			 * just to flush the inodegc queue and wait for it to
+>  			 * complete.
+>  			 */
+> -			xfs_inodegc_flush(mp);
+> +			error = xfs_inodegc_flush(mp);
+> +			if (error)
+> +				break;
+>  		}
+>  
+>  		prev_agino = agino;
+> @@ -2719,10 +2721,15 @@ xlog_recover_iunlink_bucket(
+>  	}
+>  
+>  	if (prev_ip) {
+> +		int	error2;
+> +
+>  		ip->i_prev_unlinked = prev_agino;
+>  		xfs_irele(prev_ip);
+> +
+> +		error2 = xfs_inodegc_flush(mp);
+> +		if (error2 && !error)
+> +			return error2;
+>  	}
+> -	xfs_inodegc_flush(mp);
+>  	return error;
+>  }
+>  
+> @@ -2789,7 +2796,6 @@ xlog_recover_iunlink_ag(
+>  			 * bucket and remaining inodes on it unreferenced and
+>  			 * unfreeable.
+>  			 */
+> -			xfs_inodegc_flush(pag->pag_mount);
+>  			xlog_recover_clear_agi_bucket(pag, bucket);
+>  		}
+>  	}
+> @@ -2806,13 +2812,6 @@ xlog_recover_process_iunlinks(
+>  
+>  	for_each_perag(log->l_mp, agno, pag)
+>  		xlog_recover_iunlink_ag(pag);
+> -
+> -	/*
+> -	 * Flush the pending unlinked inodes to ensure that the inactivations
+> -	 * are fully completed on disk and the incore inodes can be reclaimed
+> -	 * before we signal that recovery is complete.
+> -	 */
+> -	xfs_inodegc_flush(log->l_mp);
+>  }
+>  
+>  STATIC void
+> diff --git a/fs/xfs/xfs_mount.h b/fs/xfs/xfs_mount.h
+> index aaaf5ec13492..6c09f89534d3 100644
+> --- a/fs/xfs/xfs_mount.h
+> +++ b/fs/xfs/xfs_mount.h
+> @@ -62,6 +62,7 @@ struct xfs_error_cfg {
+>  struct xfs_inodegc {
+>  	struct llist_head	list;
+>  	struct delayed_work	work;
+> +	int			error;
+>  
+>  	/* approximate count of inodes in the list */
+>  	unsigned int		items;
+> diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
+> index 7e706255f165..4120bd1cba90 100644
+> --- a/fs/xfs/xfs_super.c
+> +++ b/fs/xfs/xfs_super.c
+> @@ -1100,6 +1100,7 @@ xfs_inodegc_init_percpu(
+>  #endif
+>  		init_llist_head(&gc->list);
+>  		gc->items = 0;
+> +		gc->error = 0;
+>  		INIT_DELAYED_WORK(&gc->work, xfs_inodegc_worker);
+>  	}
+>  	return 0;
+> diff --git a/fs/xfs/xfs_trans.c b/fs/xfs/xfs_trans.c
+> index f81fbf081b01..8c0bfc9a33b1 100644
+> --- a/fs/xfs/xfs_trans.c
+> +++ b/fs/xfs/xfs_trans.c
+> @@ -290,7 +290,9 @@ xfs_trans_alloc(
+>  		 * Do not perform a synchronous scan because callers can hold
+>  		 * other locks.
+>  		 */
+> -		xfs_blockgc_flush_all(mp);
+> +		error = xfs_blockgc_flush_all(mp);
+> +		if (error)
+> +			return error;
+>  		want_retry = false;
+>  		goto retry;
+>  	}
+> -- 
+> 2.40.1
+> 
