@@ -2,274 +2,253 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 05A9EC77B7A
-	for <linux-xfs@archiver.kernel.org>; Fri,  2 Jun 2023 10:54:15 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4270DC7EE29
+	for <linux-xfs@archiver.kernel.org>; Fri,  2 Jun 2023 12:35:01 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235113AbjFBKyN (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 2 Jun 2023 06:54:13 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42080 "EHLO
+        id S235087AbjFBMfA (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 2 Jun 2023 08:35:00 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39290 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S235397AbjFBKyL (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 2 Jun 2023 06:54:11 -0400
-Received: from mail-qk1-x72a.google.com (mail-qk1-x72a.google.com [IPv6:2607:f8b0:4864:20::72a])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8118A194;
-        Fri,  2 Jun 2023 03:54:07 -0700 (PDT)
-Received: by mail-qk1-x72a.google.com with SMTP id af79cd13be357-75b17298108so178733485a.0;
-        Fri, 02 Jun 2023 03:54:07 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20221208; t=1685703246; x=1688295246;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=/cQHr2UxcneX5TfpH9CtPoVeT5+NBUBjbfAeN3ef6Ys=;
-        b=YuriXQztLXBVe7ezyi4GRHRULkEfct8sSFdVIh+PzJUJiIBA08INXPICAc6nTFfOW+
-         t4YNUOCbjvSCuXIVbWjXcU+uLWbDgcMFA4Bwa9U9XPpdT77+0CJUTA4rqVR4VRaoUkNr
-         KOcYv7DorpErPtuspGPy6gK1C6vnTj5f6J6Ux+6LBpMvDpdb6d7/xQaQDA+cK/tbwIZ9
-         VTCxGqTzOhV0yvHq5iXcs/uU5ZT8ZykXIdPyD1o9irgXw4/JQaHeNSrCdqrqT8vxfJtl
-         4H6gtLrPiLEp9/cvA/xX9oXCfAZaOwLrb93i9mN7JBHUMZhx997VdpiL3YDZXICoTgdV
-         +FnA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20221208; t=1685703246; x=1688295246;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=/cQHr2UxcneX5TfpH9CtPoVeT5+NBUBjbfAeN3ef6Ys=;
-        b=AdtPh0G9vgk8Zk30jPKTQbpk0M5J6v1Kz2nPtQJuhhzyivokI05FKgtmsVYh83hK9b
-         qoz9zlmvmCPsJHCuO/SsJapTYupa0gMYipgEHKj2+eLaPXLrwO0jgNVHYn8JIHkkAY8O
-         +h+OmzNCtSOAEPQOCO+YFpoHVe6j99X+2F9YAbxL2N5dEW1Qi5Z3b/Cxy5r2fmMNA77+
-         W7b1Nmpky5sIm/lG3l+YzqZ+c+688Gu8IV3iVkGSv1UhvmRupZMdlfBg2SNHyawlOrfV
-         9lRRntP1k8bbHL3Y3PKy0Og7IJySCRh7QLGM0fLLyINMr+BlUDp15+ztdsTOaHA2qxl1
-         JVEQ==
-X-Gm-Message-State: AC+VfDzfp4S/p6W2Nc+Bwu8FJyWG9oqAw+Ni22wiEMYRFfl5FwU19OLc
-        LXr8MA/5KzaOkYH0+Mvyr0a4h8DpWHdLgSMwydc=
-X-Google-Smtp-Source: ACHHUZ5oRn8r9eekCZTt9vx2AoqlDMy7tebjruG+B7sHLhOC6dUeT8pqe7DDyk1cJREGXHYf/RpFELFetIhEL1HPtPM=
-X-Received: by 2002:a05:620a:28d2:b0:75b:23a1:3f7 with SMTP id
- l18-20020a05620a28d200b0075b23a103f7mr14163961qkp.13.1685703246470; Fri, 02
- Jun 2023 03:54:06 -0700 (PDT)
+        with ESMTP id S235200AbjFBMe7 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 2 Jun 2023 08:34:59 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7105D1AE;
+        Fri,  2 Jun 2023 05:34:56 -0700 (PDT)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 0BAF860E97;
+        Fri,  2 Jun 2023 12:34:56 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 84448C433D2;
+        Fri,  2 Jun 2023 12:34:52 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1685709295;
+        bh=TpTi9BQSdSI8XASCAJYAYnldBBJTG5a0+zUcrCHLmDo=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=ryWMrlC55RZ0gbGe6k+u8jXH4cA1h14CLH5aPnKArXj+YbS2TKfba8ctKuZbuMYW9
+         J2z9ElfQ9AMFAwaKg1qMI8Ar+ks9ujk8v5lJbeDQhltdnmn17nzY+I6JpQBDEZLUhF
+         fSAglIdOhdyTzsTQ9qXb7QSeYXdkVQTLm4SLCbSHi2CcOxAcF6yxT/2Zl3cw/RgTFL
+         Qr6hqrv00VeI0L583Yat3DPFvDGZhomOlsPCRWm/MIVyI/xgqOzHMegDdzUYepVAw6
+         cldniFP30G7F/dnBqueAtFuWbgIr1dbBdHRd+2Uqc1y8+u69ysdP0YQzBwZ9xXVfJ0
+         6I0vDcWuDXrSQ==
+Date:   Fri, 2 Jun 2023 14:34:48 +0200
+From:   Christian Brauner <brauner@kernel.org>
+To:     David Laight <David.Laight@ACULAB.COM>
+Cc:     'Jan Kara' <jack@suse.cz>, Al Viro <viro@ZenIV.linux.org.uk>,
+        "linux-fsdevel@vger.kernel.org" <linux-fsdevel@vger.kernel.org>,
+        Miklos Szeredi <miklos@szeredi.hu>,
+        "Darrick J. Wong" <djwong@kernel.org>, Ted Tso <tytso@mit.edu>,
+        Jaegeuk Kim <jaegeuk@kernel.org>,
+        "linux-ext4@vger.kernel.org" <linux-ext4@vger.kernel.org>,
+        "linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>,
+        "linux-f2fs-devel@lists.sourceforge.net" 
+        <linux-f2fs-devel@lists.sourceforge.net>,
+        "stable@vger.kernel.org" <stable@vger.kernel.org>
+Subject: Re: [PATCH v2 4/6] fs: Establish locking order for unrelated
+ directories
+Message-ID: <20230602-drehung-frappierend-fd5aabba4a52@brauner>
+References: <20230601104525.27897-1-jack@suse.cz>
+ <20230601105830.13168-4-jack@suse.cz>
+ <20230601-gebracht-gesehen-c779a56b3bf3@brauner>
+ <20230601152449.h4ur5zrfqjqygujd@quack3>
+ <c5f209a6263b4f039c5eafcafddf90ca@AcuMS.aculab.com>
+ <20230601161353.4o6but7hb7i7qfki@quack3>
+ <eb70760399ae4222904c62c64dc529b6@AcuMS.aculab.com>
 MIME-Version: 1.0
-References: <20230407-trasse-umgearbeitet-d580452b7a9b@brauner>
- <078d8c1fd6b6de59cde8aa85f8e59a056cb78614.camel@linux.ibm.com>
- <20230520-angenehm-orangen-80fdce6f9012@brauner> <ZGqgDjJqFSlpIkz/@dread.disaster.area>
- <20230522-unsensibel-backblech-7be4e920ba87@brauner> <20230602012335.GB16848@frogsfrogsfrogs>
- <20230602042714.GE1128744@mit.edu> <ZHmNksPcA9tudSVQ@dread.disaster.area>
-In-Reply-To: <ZHmNksPcA9tudSVQ@dread.disaster.area>
-From:   Amir Goldstein <amir73il@gmail.com>
-Date:   Fri, 2 Jun 2023 13:53:55 +0300
-Message-ID: <CAOQ4uxjN=ew1mzk+g31S99uLq10ab1i1wTz2Lt9H5rtzuBH6mg@mail.gmail.com>
-Subject: Re: uuid ioctl - was: Re: [PATCH] overlayfs: Trigger file
- re-evaluation by IMA / EVM after writes
-To:     Dave Chinner <david@fromorbit.com>
-Cc:     "Theodore Ts'o" <tytso@mit.edu>,
-        "Darrick J. Wong" <djwong@kernel.org>,
-        Christian Brauner <brauner@kernel.org>,
-        Jeff Layton <jlayton@kernel.org>, miklos@szeredi.hu,
-        linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+In-Reply-To: <eb70760399ae4222904c62c64dc529b6@AcuMS.aculab.com>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Fri, Jun 2, 2023 at 9:35=E2=80=AFAM Dave Chinner <david@fromorbit.com> w=
-rote:
->
-> On Fri, Jun 02, 2023 at 12:27:14AM -0400, Theodore Ts'o wrote:
-> > On Thu, Jun 01, 2023 at 06:23:35PM -0700, Darrick J. Wong wrote:
-> > > Someone ought to cc Ted since I asked him about this topic this morni=
-ng
-> > > and he said he hadn't noticed it going by...
+On Thu, Jun 01, 2023 at 04:33:58PM +0000, David Laight wrote:
+> From: Jan Kara <jack@suse.cz>
+> > Sent: 01 June 2023 17:14
+> > 
+> > On Thu 01-06-23 15:37:32, David Laight wrote:
+> > > ...
+> > > > > > + * Lock any non-NULL argument. The caller must make sure that if he is passing
+> > > > > > + * in two directories, one is not ancestor of the other
 > > >
-> > > > > > In addition the uuid should be set when the filesystem is mount=
-ed.
-> > > > > > Unless the filesystem implements a dedicated ioctl() - like ext=
-4 - to
-> > > > > > change the uuid.
-> > > > >
-> > > > > IMO, that ext4 functionality is a landmine waiting to be stepped =
-on.
-> > > > >
-> > > > > We should not be changing the sb->s_uuid of filesysetms dynamical=
-ly.
-> > > >
-> > > > Yeah, I kinda agree. If it works for ext4 and it's an ext4 specific
-> > > > ioctl then this is fine though.
+> > > Not directly relevant to this change but is the 'not an ancestor'
+> > > check actually robust?
 > > >
-> > > Now that Dave's brought up all kinds of questions about other parts o=
-f
-> > > the kernel using s_uuid for things, I'm starting to think that even e=
-xt4
-> > > shouldn't be changing its own uuid on the fly.
-> >
-> > So let's set some context here.  The tune2fs program in e2fsprogs has
-> > supported changing the UUID for a *very* long time.  Specifically,
-> > since September 7, 1996 (e2fsprogs version 1.05, when we first added
-> > the UUID field in the ext2 superblock).
->
-> Yup, and XFS has supported offline changing of the UUID a couple of
-> years before that.
->
-> > This feature was added from
-> > the very beginning since in Large Installation System Administration
-> > (LISA) systems, a very common thing to do is to image boot disks from
-> > a "golden master", and then afterwards, you want to make sure the file
-> > systems on each boot disk have a unique UUID; and this is done via
-> > "tune2fs -U random /dev/sdXX".  Since I was working at MIT Project
-> > Athena at the time, we regularly did this when installing Athena
-> > client workstations, and when I added UUID support to ext2, I made
-> > sure this feature was well-supported.
->
-> See xfs_copy(8). This was a tool originally written, IIRC, in early
-> 1995 for physically cloning sparse golden images in the SGI factory
-> production line. It was multi-threaded and could write up to 16 scsi
-> disks at once with a single ascending LBA order pass. The last thing
-> it does is change the UUID of each clone to make them unique.
->
-> There's nothing new here - this is all 30 years ago, and we've had
-> tools changing filesystems UUIDs for all this time.
->
-> > The tune2fs program allows the UUID to be changed via the file system
-> > is mounted (with some caveats), which it did by directly modifying the
-> > on-disk superblock.  Obviously, when it did that, it wouldn't change
-> > sb->s_uuid "dynamically", although the next time the file system was
-> > mounted, sb->s_uuid would get the new UUID.
->
-> Yes, which means for userspace and most of the kernel it's no
-> different to "unmount, change UUID, mount". It's effectively an
-> offline change, even if the on-disk superblock is changed while the
-> filesystem is mounted.
->
-> > If overlayfs and IMA are
-> > expecting that a file system's UUID would stay consant and persistent
-> > --- well, that's not true, and it has always been that way, since
-> > there are tools that make it trivially easy for a system administrator
-> > to adjust the UUID.
->
-> Yes, but that's not the point I've been making. My point is that the
-> *online change of sb->s_uuid* that was being proposed for the
-> XFS/generic variant of the ext4 online UUID change ioctl is
-> completely new, and that's where all the problems start....
->
-> > In addition to the LISA context, this feature is also commonly used in
-> > various cloud deployments, since when you create a new VM, it
-> > typically gets a new root file system, which is copied from a fixed,
-> > read-only image.  So on a particular hyperscale cloud system, if we
-> > didn't do anything special, there could be hundreds of thousands VM's
-> > whose root file system would all have the same UUID, which would mean
-> > that the UUID... isn't terribly unique.
->
-> Again, nothing new here - we've been using snapshots/clones/reflinks
-> for efficient VM storage provisioning for well over 15 years now.
->
-> .....
->
-> > This is the reason why we added the ext4 ioctl; it was intended for
-> > the express use of "tune2fs -U", and like tune2fs -U, it doesn't
-> > actually change sb->s_uuid; it only changes the on-disk superblock's
-> > UUID.  This was mostly because we forgot about sb->s_uuid, to be
-> > honest, but it means that regardless of whether "tune2fs -U" directly
-> > modifies the block device, or uses the ext4 ioctl, the behaviour with
-> > respect to sb->s_uuid is the same; it's not modified when the on-disk
-> > uuid is changed.
->
-> IOWs, not only was the ext4 functionality was poorly thought out, it
-> was *poorly implemented*.
->
-> So, let's take a step back here - we've done the use case thing to
-> death now - and consider what is it we actually need here?
->
-> All we need for the hyperscale/VM provisioning use case is for the
-> the UUID to be changed at first boot/mount time before anything else
-> happens.
->
-> So why do we need userspace to be involved in that? Indeed,
-> all the problems stem from needing to have userspace change the
-> UUID.
->
-> There's an obvious solution: a newly provisioned filesystem needs to
-> change the uuid at first mount. The only issue is the
-> kernel/filesystem doesn't know when the first mount is.
->
-> Darrick suggested "mount -o setuuid=3Dxxxx" on #xfs earlier, but that
-> requires changing userspace init stuff and, well, I hate single use
-> case mount options like this.
->
-> However, we have a golden image that every client image is cloned
-> from. Say we set a special feature bit in that golden image that
-> means "need UUID regeneration". Then on the first mount of the
-> cloned image after provisioning, the filesystem sees the bit and
-> automatically regenerates the UUID with needing any help from
-> userspace at all.
->
-> Problem solved, yes? We don't need userspace to change the uuid on
-> first boot of the newly provisioned VM - the filesystem just makes
-> it happen.
->
+> > > I found a condition in which the kernel 'pwd' code (which follows
+> > > the inode chain) failed to stop at the base of a chroot.
+> > >
+> > > I suspect that the ancestor check would fail the same way.
+> > 
+> > Honestly, I'm not sure how this could be the case but I'm not a dcache
+> > expert. d_ancestor() works on dentries and the whole dcache code pretty
+> > much relies on the fact that there always is at most one dentry for any
+> > directory. Also in case we call d_ancestor() from this code, we have the
+> > whole filesystem locked from any other directory moves so the ancestor
+> > relationship of two dirs cannot change (which is different from pwd code
+> > AFAIK). So IMHO no failure is possible in our case.
+> 
+> I've found the test program.
+> This uses readlinkat() to get the full path /proc/self/fd/0.
+> It should be inside the chroot, but the comparison done
+> to detect the 'root' fails.
 
-I like this idea.
+That's intentional and relied-upon behavior. In glibc alone for tty
+validation it wants the full link path returned. So any change in this
+is an immediate widespread userspace regression.
 
-> If the "first run" init scripts are set up to run blkid to grab the
-> new uuid after mount and update whatever needs to be updated with
-> the new root filesystem UUID, then we've moved the entire problem
-> out of the VM boot path and back into the provisioning system where
-> it should be.
->
+> 
+> Now maybe any rename that would hit this is invalid
+> for other reasons.
+> But something is awry somewhere.
 
-Seems to me like libblkid does not check for unknown feature bits:
-https://github.com/util-linux/util-linux/blob/01a0a556018694bfaf6b01a5a40f8=
-d0d10641a1f/libblkid/src/superblocks/xfs.c#L173
-I wonder how systems will behave when libblkid examines this image
-and finds a null UUID, without regarding the feature flag.
-This is something that can be fixed in userspace, but may cause complicatio=
-ns.
+It really isn't.
 
-> And then we don't need an ioctl to change UUIDs online, nor do we
-> require the VFS, kernel subsystems, userspace infrastructure and
-> applications to be capable of handling the UUID of a mounted
-> filesystem changing without warning....
->
-> > > > > The VFS does not guarantee in any way that it is safe to change t=
-he
-> > > > > sb->s_uuid (i.e. no locking, no change notifications, no udev
-> > > > > events, etc). Various subsystems - both in the kernel and in
-> > > > > userspace - use the sb->s_uuid as a canonical and/or persistent
-> > > > > filesystem/device identifier and are unprepared to have it change
-> > > > > while the filesystem is mounted and active.
-> >
-> > Note that the last sentence is a bit ambiguous.
->
-> Well, yes, because while the UUID is normally persistent, if the
-> administrator chooses to modify the UUID while the filesystem is
-> unmounted, it will change between mounts.  In that case.....
->
-> > There is the question
-> > of whether sb->s_uuid won't change while the file system is mounted,
-> > and then there is the question of whether s_uuid is **persistent**
-> > ---- which is to say, that it won't change across mounts or reboots.
-> >
-> > If there are subsystems like IMA, overlayfs, pnfs, et.al, which expect
-> > that, I'm sorry, but sysadmin tools to make it trivially easy to
-> > change the file system UUID long-predate these other subsystems, and
-> > there *are* system adminsitrators --- particularly in the LISA or
-> > Cloud context --- which have used "tune2fs -U" for good and proper
-> > reasons.
->
-> .... it's on the sysadmins to understand they need to regenerate
-> anything that is reliant on the old filesystem UUIDs before mounting
-> the filesystem again to avoid these issues...
->
+> 
+> 	David
+> 
+> The program below reproduces this when run with stdin
+> redirected to a file in the current directory.
+> 
+> This sequence is used by 'ip netns exec' so isn't actually
 
-For the records, overlayfs looks at s_uuid to try and determine if the
-underlying fs was swapped underneath it while overlayfs was offline.
-It is sometimes allowed to swap the underlying fs, but overlayfs needs
-to know about it.
-s_uuid is used as part of a "persistent file handle" in a very similar way
-that NFS clients use "fsid" for a unique file handle.
+Fwiw, it doesn't use chroot() at all. 
 
-For the very basic overlayfs configuration, changing the lower fs uuid
-will result in some overlayfs objects changing their inode numbers.
-For overlayfs with opt-in index/nfs_export features, after changing the
-underlying fs uuid, overlayfs could no longer be mounted with the same
-layer configuration and those opt-in features enabled.
+> that unusual.
+> 
+> 	David
+> 
+> #define _GNU_SOURCE
+> #include <unistd.h>
+> #include <stdio.h>
+> #include <fcntl.h>
+> #include <sched.h>
+> 
+> static void print_link(const char *where, int fd)
+> {
+>         char buf[256];
+> 
+>         printf("%s: %.*s\n", where, (int)readlinkat(fd, "", buf, sizeof buf), buf);
+> }
+> 
+> int main(int argc, char **argv)
+> {
+>         int link_fd = open("/proc/self/fd/0", O_PATH | O_NOFOLLOW);
+> 
+>         print_link("initial", link_fd);
+>         if (chroot("."))
 
-Thanks,
-Amir.
+chroot(2):
+
+"This call changes an ingredient in the pathname resolution process and
+does nothing else. In particular, it is not intended [...] to restrict
+filesystem system calls.
+
+[...]
+
+This call does not close open file descriptors, and such file
+descriptors may allow access to files outside the chroot tree."
+
+>                 return 1;
+>         print_link("after chroot", link_fd);
+>         if (unshare(CLONE_NEWNS))
+>                 return 2;
+>         print_link("after unshare", link_fd);
+>         return 0;
+> }
+
+But anyway, the code sample you provided is using O_PATH | O_NOFOLLOW to
+open magic link, i.e., /proc/<pid>/fd/<nr>. That means whatever the
+magic link refers to isn't really reopened. You can create these magic
+link references trivially for every path:
+
+        int fd = open("/tmp", 0);
+
+        // create fd referencing magic link
+        sprintf(buf, "/proc/self/fd/%d", fd);
+        int link_fd = open(buf, O_PATH | O_NOFOLLOW);
+
+In fact, you don't even need magic links for that. You can get the same
+behavior with any symlink:
+
+        ln -sf /usr /BLUB
+        linkt_fd = open("/BLUB", O_PATH | O_NOFOLLOW);
+
+If you pass such a fd to readlinkat() then d_path() will give you the
+full path whether it's accessible in your namespace/chroot/pivot_root()
+or not.
+
+Look at __prepend_path() current->fs->root is only used to terminate the
+walk for fds that are scopable _beneath_ your chroot:
+
+        mkdir -p /A/B/C
+        touch /A/B/C/D
+
+        chroot("/A/B/C");
+        int fd = open("/A/B/C/D", 0);
+        sprintf(buf, "/proc/self/fd/%d", fd);
+        int link_fd = open(buf, O_PATH | O_NOFOLLOW);
+
+In this case, you'll see that after chroot("/A/B/C") it'll print:
+
+        /D
+
+And this actually makes a lot of sense. The fd for /A/B/C/D is scoped
+beneath your chroot(). But an fd pointing outside of your chroot is not
+scoped by the chroot because you can also very well do:
+
+        fchdir(fd-outside-chroot)
+
+And btw, orderings such as:
+
+        chroot()
+        unshare(CLONE_NEWNS)
+
+aren't intuitive. It seems that you're under the impression that the
+unshare(CLONE_NEWNS) doesn't have any effect on the chroot() but it
+does. Going back to the previous example:
+
+        mkdir -p /A/B/C
+        touch /A/B/C/D
+
+        chroot("/A/B/C");
+        int fd = open("/A/B/C/D", 0);
+        sprintf(buf, "/proc/self/fd/%d", fd);
+        int link_fd = open(buf, O_PATH | O_NOFOLLOW);
+
+Compare what gets printed after the chroot() and after
+unshare(CLONE_NEWNS). You'll see /D after the chroot() but again the
+full path /A/B/C/D after the unshare(). Why?
+
+The reason is that if the mount that you're currently chroot()ed into is
+copied as part of the unshare(CLONE_NEWNS) then current->fs->root will
+be updated to refer to the copy.
+
+But since this is a copy it means that __prepend_path() doesn't
+terminate the walk at /D. That's seemingly counterintuitive but makes
+sense if you consider that you were moved into a new mount namespace.
+The mount the fd refers to is now inaccessible from your mount namespace
+and so the full path is returned again.
+
+Yes, that's not straightforward but heavily relied upon so even if we
+could change it to be less surprising it would break the hell out of
+everyone.
+
+And most of this doesn't have anything to do with ancestor relationships
+per se since this code is able to detect concurrent tree modifications
+through rename_lock seqlock iirc. That's a related but different
+problem. The effects you're seeing are caused by mount semantics more
+than anything else.
+
+And btw about /proc/self/fd/0 specifically... Not verifying an fd
+pointing to a pty device in any type of sandbox in the age of containers
+is ripe for confusion. Quoting from work I did on glibc years ago:
+
+"It's a common practice among container managers to allocate
+ a PTY master/slave pair in the host's mount namespace (the slave having
+ a path like "/dev/pty/$X"), bind mount the slave to "/dev/console" in
+ the container's mount namespace, and send the slave FD to a process in
+ the container. Inside of the container, the slave-end isn't available
+ at its original path ("/dev/pts/$X"), since the container mount
+ namespace has a separate devpts instance from the host (that path may
+ or may not exist in the container; if it does exist, it's not the same
+ PTY slave device)."
