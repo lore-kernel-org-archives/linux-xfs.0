@@ -2,53 +2,74 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A2F02C7EE24
-	for <linux-xfs@archiver.kernel.org>; Sat,  3 Jun 2023 14:50:28 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id EF7D3C77B73
+	for <linux-xfs@archiver.kernel.org>; Sat,  3 Jun 2023 14:50:29 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229709AbjFCOu1 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Sat, 3 Jun 2023 10:50:27 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59826 "EHLO
+        id S229460AbjFCOu2 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Sat, 3 Jun 2023 10:50:28 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59828 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229460AbjFCOu1 (ORCPT
+        with ESMTP id S229991AbjFCOu1 (ORCPT
         <rfc822;linux-xfs@vger.kernel.org>); Sat, 3 Jun 2023 10:50:27 -0400
 Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7AD76CE
-        for <linux-xfs@vger.kernel.org>; Sat,  3 Jun 2023 07:50:24 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3FDE018C
+        for <linux-xfs@vger.kernel.org>; Sat,  3 Jun 2023 07:50:26 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 0098C60C36
-        for <linux-xfs@vger.kernel.org>; Sat,  3 Jun 2023 14:50:24 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 579C9C433D2;
-        Sat,  3 Jun 2023 14:50:23 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id C6E02614F3
+        for <linux-xfs@vger.kernel.org>; Sat,  3 Jun 2023 14:50:25 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPS id 3526FC433A7
+        for <linux-xfs@vger.kernel.org>; Sat,  3 Jun 2023 14:50:25 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1685803823;
-        bh=CbrkGbIbz8FrhFv82YZMoRFXi6+pcRHqN3ZFRlPu/3s=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=Brc36lqWM0oZocUKoZmC14p2NaKAfiop+Og9LYwj55uwlm3dFVzGifb6V5jz9fPNL
-         /XujVkf4kI/3UoRqRvFGFCCJwE2xGWGFbk7n05A0VSdfskMN+8MPnlzVP/l3Zzw6EL
-         V8JlYSaYuhKjvZaXkaOrKO11qKo7FC4c4VFO8z/POh6rRAI3HV0HSLxwrk6lC/zP7Y
-         Ziwc+iUqTet7mi/gEdfRh1kut8gHS1oHgVd3RHzk78BwrhFKd99nVVbuvUj/VWLD6d
-         VG1eLU79/PHNBUFbA9ZWKzrr/tlAYWZd7p2QYhvh15jlYgRadQswsn3k+DwJLrvixz
-         x6bhLsKwSuERw==
-Date:   Sat, 3 Jun 2023 07:50:22 -0700
-From:   "Darrick J. Wong" <djwong@kernel.org>
-To:     bugzilla-daemon@kernel.org
-Cc:     linux-xfs@vger.kernel.org
-Subject: Re: [Bug 217522] New: xfs_attr3_leaf_add_work produces a warning
-Message-ID: <20230603145022.GQ16865@frogsfrogsfrogs>
-References: <bug-217522-201763@https.bugzilla.kernel.org/>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
+        s=k20201202; t=1685803825;
+        bh=dfaNCfut2OD3xONWJ9FtDxBsq4dD5IcU/dLH8cimSBU=;
+        h=From:To:Subject:Date:In-Reply-To:References:From;
+        b=ZB8DnFCQ7uIEB6tQyGrJzXPNyqvISEHHcI29EjOa7J3isF82VNYV/acPGXyuVXJgf
+         U+xCLj5EsBIM3z1j7uBIjMv+oCwYZUu60GnTtnBPXwF0obsArKvFeet2zUnOfAZNU0
+         F23lFWcCyDf3sYvMEe4LW/cEYMcKYKrP4oqSI4sk1NR/3qMwF3cs0OgL3Y6ug2x345
+         UEO2eRct5XeeMfZLyhqeBYZ/RVBDxliTcxcsUCVzZ/kZHDf45S2FpG1YpniFghIz3R
+         aU6tXkNeqbaDCU+RWeDePIL4MjTLwQ4pm6P61/rPAquDtqQXVaCEXTc5N+Wc3tXKaR
+         YojjsqBWy2gcg==
+Received: by aws-us-west-2-korg-bugzilla-1.web.codeaurora.org (Postfix, from userid 48)
+        id 25755C43145; Sat,  3 Jun 2023 14:50:25 +0000 (UTC)
+From:   bugzilla-daemon@kernel.org
+To:     linux-xfs@vger.kernel.org
+Subject: [Bug 217522] xfs_attr3_leaf_add_work produces a warning
+Date:   Sat, 03 Jun 2023 14:50:24 +0000
+X-Bugzilla-Reason: None
+X-Bugzilla-Type: changed
+X-Bugzilla-Watch-Reason: AssignedTo filesystem_xfs@kernel-bugs.kernel.org
+X-Bugzilla-Product: File System
+X-Bugzilla-Component: XFS
+X-Bugzilla-Version: 2.5
+X-Bugzilla-Keywords: 
+X-Bugzilla-Severity: normal
+X-Bugzilla-Who: djwong@kernel.org
+X-Bugzilla-Status: NEW
+X-Bugzilla-Resolution: 
+X-Bugzilla-Priority: P3
+X-Bugzilla-Assigned-To: filesystem_xfs@kernel-bugs.kernel.org
+X-Bugzilla-Flags: 
+X-Bugzilla-Changed-Fields: 
+Message-ID: <bug-217522-201763-D34HpuP9xe@https.bugzilla.kernel.org/>
 In-Reply-To: <bug-217522-201763@https.bugzilla.kernel.org/>
+References: <bug-217522-201763@https.bugzilla.kernel.org/>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
+X-Bugzilla-URL: https://bugzilla.kernel.org/
+Auto-Submitted: auto-generated
+MIME-Version: 1.0
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
+https://bugzilla.kernel.org/show_bug.cgi?id=3D217522
+
+--- Comment #1 from Darrick J. Wong (djwong@kernel.org) ---
 On Sat, Jun 03, 2023 at 03:58:25AM +0000, bugzilla-daemon@kernel.org wrote:
-> https://bugzilla.kernel.org/show_bug.cgi?id=217522
-> 
+> https://bugzilla.kernel.org/show_bug.cgi?id=3D217522
+>=20
 >             Bug ID: 217522
 >            Summary: xfs_attr3_leaf_add_work produces a warning
 >            Product: File System
@@ -62,24 +83,28 @@ On Sat, Jun 03, 2023 at 03:58:25AM +0000, bugzilla-daemon@kernel.org wrote:
 >           Assignee: filesystem_xfs@kernel-bugs.kernel.org
 >           Reporter: lomov.vl@bkoty.ru
 >         Regression: No
-> 
+>=20
 > Hi.
-> 
+>=20
 > While running linux-next
-> (6.4.0-rc4-next-20230602-1-next-git-06849-gbc708bbd8260) on one of my hosts, I
+> (6.4.0-rc4-next-20230602-1-next-git-06849-gbc708bbd8260) on one of my hos=
+ts,
+> I
 > see the following message in the kernel log (`dmesg`):
 > ```
-> Jun 02 20:01:19 smoon.bkoty.ru kernel: ------------[ cut here ]------------
-> Jun 02 20:01:19 smoon.bkoty.ru kernel: memcpy: detected field-spanning write
+> Jun 02 20:01:19 smoon.bkoty.ru kernel: ------------[ cut here ]----------=
+--
+> Jun 02 20:01:19 smoon.bkoty.ru kernel: memcpy: detected field-spanning wr=
+ite
 > (size 12) of single field "(char *)name_loc->nameval" at
 
 Yes, this bug is a collision between the bad old ways of doing flex
 arrays:
 
 typedef struct xfs_attr_leaf_name_local {
-	__be16	valuelen;		/* number of bytes in value */
-	__u8	namelen;		/* length of name bytes */
-	__u8	nameval[1];		/* name/value bytes */
+        __be16  valuelen;               /* number of bytes in value */
+        __u8    namelen;                /* length of name bytes */
+        __u8    nameval[1];             /* name/value bytes */
 } xfs_attr_leaf_name_local_t;
 
 And the static checking that gcc/llvm purport to be able to do properly.
@@ -99,8 +124,10 @@ with no problems.
 
 > fs/xfs/libxfs/xfs_attr_leaf.c:1559 (size 1)
 > Jun 02 20:01:19 smoon.bkoty.ru kernel: WARNING: CPU: 2 PID: 1161 at
-> fs/xfs/libxfs/xfs_attr_leaf.c:1559 xfs_attr3_leaf_add_work+0x4f5/0x540 [xfs]
-> Jun 02 20:01:19 smoon.bkoty.ru kernel: Modules linked in: nft_fib_ipv6 nft_nat
+> fs/xfs/libxfs/xfs_attr_leaf.c:1559 xfs_attr3_leaf_add_work+0x4f5/0x540 [x=
+fs]
+> Jun 02 20:01:19 smoon.bkoty.ru kernel: Modules linked in: nft_fib_ipv6
+> nft_nat
 > overlay rpcrdma rdma_cm iw_cm ib_cm ib_core wireguard curve25519_x86_64
 > libchacha20poly1305 chacha_x86_64 poly1305_x86_64 libcurve25519_generic
 > libchacha ip6_udp_tunnel udp_tunnel nft_fib_ipv4 n>
@@ -108,17 +135,23 @@ with no problems.
 > crc32_pclmul snd_hda_intel polyval_clmulni polyval_generic gf128mul
 > snd_intel_dspcfg ghash_clmulni_intel snd_intel_sdw_acpi sha512_ssse3
 > snd_hda_codec aesni_intel ppdev snd_hda_core crypto_simd cryp>
-> Jun 02 20:01:19 smoon.bkoty.ru kernel: CPU: 2 PID: 1161 Comm: systemd-coredum
-> Tainted: G     U            
+> Jun 02 20:01:19 smoon.bkoty.ru kernel: CPU: 2 PID: 1161 Comm: systemd-cor=
+edum
+> Tainted: G     U=20=20=20=20=20=20=20=20=20=20=20=20
 > 6.4.0-rc4-next-20230602-1-next-git-06849-gbc708bbd8260 #1
 > e2bc2c7c17ec9449d00023ecb23f332188dc6bfc
-> Jun 02 20:01:19 smoon.bkoty.ru kernel: Hardware name: Gigabyte Technology Co.,
+> Jun 02 20:01:19 smoon.bkoty.ru kernel: Hardware name: Gigabyte Technology
+> Co.,
 > Ltd. B460HD3/B460 HD3, BIOS F1 04/15/2020
 > Jun 02 20:01:19 smoon.bkoty.ru kernel: RIP:
 > 0010:xfs_attr3_leaf_add_work+0x4f5/0x540 [xfs]
-> Jun 02 20:01:19 smoon.bkoty.ru kernel: Code: fe ff ff b9 01 00 00 00 4c 89 fe
-> 48 c7 c2 f8 95 87 c0 48 c7 c7 40 96 87 c0 48 89 44 24 08 c6 05 e5 35 11 00 01
-> e8 5b cf 91 c7 <0f> 0b 48 8b 44 24 08 e9 88 fe ff ff 80 3d cc 35 11 00 00 0f 85
+> Jun 02 20:01:19 smoon.bkoty.ru kernel: Code: fe ff ff b9 01 00 00 00 4c 8=
+9 fe
+> 48 c7 c2 f8 95 87 c0 48 c7 c7 40 96 87 c0 48 89 44 24 08 c6 05 e5 35 11 0=
+0 01
+> e8 5b cf 91 c7 <0f> 0b 48 8b 44 24 08 e9 88 fe ff ff 80 3d cc 35 11 00 00=
+ 0f
+> 85
 > bd
 > Jun 02 20:01:19 smoon.bkoty.ru kernel: RSP: 0018:ffffb6050254b7f8 EFLAGS:
 > 00010282
@@ -140,33 +173,43 @@ with no problems.
 > 0000000155a3a002 CR4: 00000000003706e0
 > Jun 02 20:01:19 smoon.bkoty.ru kernel: Call Trace:
 > Jun 02 20:01:19 smoon.bkoty.ru kernel:  <TASK>
-> Jun 02 20:01:19 smoon.bkoty.ru kernel:  ? xfs_attr3_leaf_add_work+0x4f5/0x540
+> Jun 02 20:01:19 smoon.bkoty.ru kernel:  ? xfs_attr3_leaf_add_work+0x4f5/0=
+x540
 > [xfs ecac3a792ff4924c3e2601105ba002d1f7178133]
 > Jun 02 20:01:19 smoon.bkoty.ru kernel:  ? __warn+0x81/0x130
-> Jun 02 20:01:19 smoon.bkoty.ru kernel:  ? xfs_attr3_leaf_add_work+0x4f5/0x540
+> Jun 02 20:01:19 smoon.bkoty.ru kernel:  ? xfs_attr3_leaf_add_work+0x4f5/0=
+x540
 > [xfs ecac3a792ff4924c3e2601105ba002d1f7178133]
 > Jun 02 20:01:19 smoon.bkoty.ru kernel:  ? report_bug+0x171/0x1a0
 > Jun 02 20:01:19 smoon.bkoty.ru kernel:  ? prb_read_valid+0x1b/0x30
 > Jun 02 20:01:19 smoon.bkoty.ru kernel:  ? handle_bug+0x3c/0x80
 > Jun 02 20:01:19 smoon.bkoty.ru kernel:  ? exc_invalid_op+0x17/0x70
 > Jun 02 20:01:19 smoon.bkoty.ru kernel:  ? asm_exc_invalid_op+0x1a/0x20
-> Jun 02 20:01:19 smoon.bkoty.ru kernel:  ? xfs_attr3_leaf_add_work+0x4f5/0x540
+> Jun 02 20:01:19 smoon.bkoty.ru kernel:  ? xfs_attr3_leaf_add_work+0x4f5/0=
+x540
 > [xfs ecac3a792ff4924c3e2601105ba002d1f7178133]
-> Jun 02 20:01:19 smoon.bkoty.ru kernel:  ? xfs_attr3_leaf_add_work+0x4f5/0x540
+> Jun 02 20:01:19 smoon.bkoty.ru kernel:  ? xfs_attr3_leaf_add_work+0x4f5/0=
+x540
 > [xfs ecac3a792ff4924c3e2601105ba002d1f7178133]
-> Jun 02 20:01:19 smoon.bkoty.ru kernel:  xfs_attr3_leaf_add+0x1a3/0x210 [xfs
+> Jun 02 20:01:19 smoon.bkoty.ru kernel:  xfs_attr3_leaf_add+0x1a3/0x210 [x=
+fs
 > ecac3a792ff4924c3e2601105ba002d1f7178133]
-> Jun 02 20:01:19 smoon.bkoty.ru kernel:  xfs_attr_shortform_to_leaf+0x23f/0x250
+> Jun 02 20:01:19 smoon.bkoty.ru kernel:=20
+> xfs_attr_shortform_to_leaf+0x23f/0x250
 > [xfs ecac3a792ff4924c3e2601105ba002d1f7178133]
 > Jun 02 20:01:19 smoon.bkoty.ru kernel:  xfs_attr_set_iter+0x772/0x910 [xfs
 > ecac3a792ff4924c3e2601105ba002d1f7178133]
-> Jun 02 20:01:19 smoon.bkoty.ru kernel:  xfs_xattri_finish_update+0x18/0x50 [xfs
+> Jun 02 20:01:19 smoon.bkoty.ru kernel:  xfs_xattri_finish_update+0x18/0x50
+> [xfs
 > ecac3a792ff4924c3e2601105ba002d1f7178133]
-> Jun 02 20:01:19 smoon.bkoty.ru kernel:  xfs_attr_finish_item+0x1e/0xb0 [xfs
+> Jun 02 20:01:19 smoon.bkoty.ru kernel:  xfs_attr_finish_item+0x1e/0xb0 [x=
+fs
 > ecac3a792ff4924c3e2601105ba002d1f7178133]
-> Jun 02 20:01:19 smoon.bkoty.ru kernel:  xfs_defer_finish_noroll+0x193/0x6e0
+> Jun 02 20:01:19 smoon.bkoty.ru kernel:  xfs_defer_finish_noroll+0x193/0x6=
+e0
 > [xfs ecac3a792ff4924c3e2601105ba002d1f7178133]
-> Jun 02 20:01:19 smoon.bkoty.ru kernel:  __xfs_trans_commit+0x2d8/0x3e0 [xfs
+> Jun 02 20:01:19 smoon.bkoty.ru kernel:  __xfs_trans_commit+0x2d8/0x3e0 [x=
+fs
 > ecac3a792ff4924c3e2601105ba002d1f7178133]
 > Jun 02 20:01:19 smoon.bkoty.ru kernel:  xfs_attr_set+0x48a/0x6a0 [xfs
 > ecac3a792ff4924c3e2601105ba002d1f7178133]
@@ -178,19 +221,26 @@ with no problems.
 > Jun 02 20:01:19 smoon.bkoty.ru kernel:  setxattr+0x9e/0xc0
 > Jun 02 20:01:19 smoon.bkoty.ru kernel:  __x64_sys_fsetxattr+0xbf/0xf0
 > Jun 02 20:01:19 smoon.bkoty.ru kernel:  do_syscall_64+0x5d/0x90
-> Jun 02 20:01:19 smoon.bkoty.ru kernel:  ? syscall_exit_to_user_mode+0x1b/0x40
+> Jun 02 20:01:19 smoon.bkoty.ru kernel:  ? syscall_exit_to_user_mode+0x1b/=
+0x40
 > Jun 02 20:01:19 smoon.bkoty.ru kernel:  ? do_syscall_64+0x6c/0x90
-> Jun 02 20:01:19 smoon.bkoty.ru kernel:  ? syscall_exit_to_user_mode+0x1b/0x40
+> Jun 02 20:01:19 smoon.bkoty.ru kernel:  ? syscall_exit_to_user_mode+0x1b/=
+0x40
 > Jun 02 20:01:19 smoon.bkoty.ru kernel:  ? do_syscall_64+0x6c/0x90
-> Jun 02 20:01:19 smoon.bkoty.ru kernel:  ? syscall_exit_to_user_mode+0x1b/0x40
+> Jun 02 20:01:19 smoon.bkoty.ru kernel:  ? syscall_exit_to_user_mode+0x1b/=
+0x40
 > Jun 02 20:01:19 smoon.bkoty.ru kernel:  ? do_syscall_64+0x6c/0x90
 > Jun 02 20:01:19 smoon.bkoty.ru kernel:  ? exc_page_fault+0x7f/0x180
-> Jun 02 20:01:19 smoon.bkoty.ru kernel: 
+> Jun 02 20:01:19 smoon.bkoty.ru kernel:=20
 > entry_SYSCALL_64_after_hwframe+0x6e/0xd8
 > Jun 02 20:01:19 smoon.bkoty.ru kernel: RIP: 0033:0x7f75cb2023be
-> Jun 02 20:01:19 smoon.bkoty.ru kernel: Code: 48 8b 0d 9d 49 0d 00 f7 d8 64 89
-> 01 48 83 c8 ff c3 66 2e 0f 1f 84 00 00 00 00 00 90 f3 0f 1e fa 49 89 ca b8 be
-> 00 00 00 0f 05 <48> 3d 01 f0 ff ff 73 01 c3 48 8b 0d 6a 49 0d 00 f7 d8 64 89 01
+> Jun 02 20:01:19 smoon.bkoty.ru kernel: Code: 48 8b 0d 9d 49 0d 00 f7 d8 6=
+4 89
+> 01 48 83 c8 ff c3 66 2e 0f 1f 84 00 00 00 00 00 90 f3 0f 1e fa 49 89 ca b=
+8 be
+> 00 00 00 0f 05 <48> 3d 01 f0 ff ff 73 01 c3 48 8b 0d 6a 49 0d 00 f7 d8 64=
+ 89
+> 01
 > 48
 > Jun 02 20:01:19 smoon.bkoty.ru kernel: RSP: 002b:00007ffd172d1a68 EFLAGS:
 > 00000202 ORIG_RAX: 00000000000000be
@@ -205,39 +255,57 @@ with no problems.
 > Jun 02 20:01:19 smoon.bkoty.ru kernel: R13: 0000000000000007 R14:
 > 000055d571d48a5f R15: 000055d571d4b638
 > Jun 02 20:01:19 smoon.bkoty.ru kernel:  </TASK>
-> Jun 02 20:01:19 smoon.bkoty.ru kernel: ---[ end trace 0000000000000000 ]---
+> Jun 02 20:01:19 smoon.bkoty.ru kernel: ---[ end trace 0000000000000000 ]-=
+--
 > ```
-> 
-> On another host running the same kernel with almost identical environment (CPU
+>=20
+> On another host running the same kernel with almost identical environment
+> (CPU
 > and FS on hard disks), I don't see this message.
-> 
+>=20
 > The flags used to mount the FS:
 > ```
 > $ grep 'xfs' /etc/fstab
-> PARTUUID=7c9a5053-216d-2b4e-8c73-22d16a87ae6b   /                        xfs  
+> PARTUUID=3D7c9a5053-216d-2b4e-8c73-22d16a87ae6b   /                      =
+  xfs=20=20
 > rw,relatime,attr2,inode64,noquota  0 1
-> PARTUUID=88b4e2db-862b-8b41-a331-66c483237a23   /var                     xfs  
+> PARTUUID=3D88b4e2db-862b-8b41-a331-66c483237a23   /var                   =
+  xfs=20=20
 > rw,relatime,attr2,inode64,noquota  0 2
-> PARTUUID=d0099f96-70d9-3846-835c-e7d7da363048   /usr/local               xfs  
+> PARTUUID=3Dd0099f96-70d9-3846-835c-e7d7da363048   /usr/local             =
+  xfs=20=20
 > rw,relatime,attr2,inode64,noquota  0 2
-> PARTUUID=ffde9d45-2275-c446-b54c-fcf96bd93a5f   /home                    xfs  
+> PARTUUID=3Dffde9d45-2275-c446-b54c-fcf96bd93a5f   /home                  =
+  xfs=20=20
 > rw,relatime,attr2,inode64,noquota  0 2
-> PARTUUID=8cec7c90-441a-1d49-94af-a5176a9fd973   /srv/nfs/cache           xfs  
+> PARTUUID=3D8cec7c90-441a-1d49-94af-a5176a9fd973   /srv/nfs/cache         =
+  xfs=20=20
 > rw,relatime,attr2,inode64,noquota  0 2
-> PARTUUID=39dd3664-0a48-d144-8e65-414d5d549c2f   /mnt/aux                 xfs  
+> PARTUUID=3D39dd3664-0a48-d144-8e65-414d5d549c2f   /mnt/aux               =
+  xfs=20=20
 > rw,relatime,attr2,inode64,noquota  0 2
-> PARTUUID=a5480aca-273b-4d4c-8520-f782293ed878   /mnt/storage             xfs  
+> PARTUUID=3Da5480aca-273b-4d4c-8520-f782293ed878   /mnt/storage           =
+  xfs=20=20
 > rw,relatime,attr2,inode64,noquota  0 2
-> PARTUUID=231b1235-c9a1-e249-8332-fd9141c89ae7   /mnt/data                xfs  
+> PARTUUID=3D231b1235-c9a1-e249-8332-fd9141c89ae7   /mnt/data              =
+  xfs=20=20
 > rw,relatime,attr2,inode64,noquota  0 2
-> PARTUUID=bab3d4b7-2b1e-492d-9298-de6170d2098f   /mnt/archive             xfs  
+> PARTUUID=3Dbab3d4b7-2b1e-492d-9298-de6170d2098f   /mnt/archive           =
+  xfs=20=20
 > rw,relatime,attr2,inode64,noquota  0 2
-> PARTUUID=55fd9e2f-605e-4a01-b0c2-f6a9df302301   /media/storage           xfs  
-> auto,x-systemd.automount,x-systemd.device-timeout=20,nofail  0 2
+> PARTUUID=3D55fd9e2f-605e-4a01-b0c2-f6a9df302301   /media/storage         =
+  xfs=20=20
+> auto,x-systemd.automount,x-systemd.device-timeout=3D20,nofail  0 2
 > ```
-> 
-> -- 
+>=20
+> --=20
 > You may reply to this email to add a comment.
-> 
+>=20
 > You are receiving this mail because:
 > You are watching the assignee of the bug.
+
+--=20
+You may reply to this email to add a comment.
+
+You are receiving this mail because:
+You are watching the assignee of the bug.=
