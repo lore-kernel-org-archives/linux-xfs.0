@@ -2,152 +2,95 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DE95EC7EE24
-	for <linux-xfs@archiver.kernel.org>; Sun,  4 Jun 2023 03:31:25 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 942ACC77B73
+	for <linux-xfs@archiver.kernel.org>; Sun,  4 Jun 2023 05:38:37 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229510AbjFDDbY (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Sat, 3 Jun 2023 23:31:24 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49624 "EHLO
+        id S229903AbjFDFig (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Sun, 4 Jun 2023 01:38:36 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33118 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229485AbjFDDbY (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sat, 3 Jun 2023 23:31:24 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 92399D3
-        for <linux-xfs@vger.kernel.org>; Sat,  3 Jun 2023 20:31:22 -0700 (PDT)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 12F5661B50
-        for <linux-xfs@vger.kernel.org>; Sun,  4 Jun 2023 03:31:22 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPS id 6FCA1C433A1
-        for <linux-xfs@vger.kernel.org>; Sun,  4 Jun 2023 03:31:21 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1685849481;
-        bh=lmQ9PD10V5FK+YiSwpXbn3aXkrrIilCBpRBEWEnwErA=;
-        h=From:To:Subject:Date:In-Reply-To:References:From;
-        b=U0UfiBsqjk8vLGeBy84GJlHkWpzg7rgnnJkGhNUXtHyY2uL9RCaa0MPYbFwr72Qy0
-         +Hoagy0UYEqVFWACFOJ6GyLDfyFFvJh6DuRPw5rZwnZ0kCo9o+wlLUMfCEg24/SN6e
-         RfMWkhIolu94alzKzeCfKZVCkgT2+WCF/9lZVHzTWaK9iPkRR9IhbUtxkY2taWABzY
-         fSqGZs8TU69OsTqBwmuN1zQsQLStMEUbtRebsVb3JxaE5VKDnMW/C53gTI44L7Cv0f
-         1wofevF0hGJu74uMhEHWhS0n8C0notxbf7cIMxJ8QVmtLMkcahqmWd7ZMf88byzJYH
-         pfl9EjZyCb80Q==
-Received: by aws-us-west-2-korg-bugzilla-1.web.codeaurora.org (Postfix, from userid 48)
-        id 59E3CC43145; Sun,  4 Jun 2023 03:31:21 +0000 (UTC)
-From:   bugzilla-daemon@kernel.org
-To:     linux-xfs@vger.kernel.org
-Subject: [Bug 217522] xfs_attr3_leaf_add_work produces a warning
-Date:   Sun, 04 Jun 2023 03:31:20 +0000
-X-Bugzilla-Reason: None
-X-Bugzilla-Type: changed
-X-Bugzilla-Watch-Reason: AssignedTo filesystem_xfs@kernel-bugs.kernel.org
-X-Bugzilla-Product: File System
-X-Bugzilla-Component: XFS
-X-Bugzilla-Version: 2.5
-X-Bugzilla-Keywords: 
-X-Bugzilla-Severity: normal
-X-Bugzilla-Who: lomov.vl@bkoty.ru
-X-Bugzilla-Status: NEW
-X-Bugzilla-Resolution: 
-X-Bugzilla-Priority: P3
-X-Bugzilla-Assigned-To: filesystem_xfs@kernel-bugs.kernel.org
-X-Bugzilla-Flags: 
-X-Bugzilla-Changed-Fields: 
-Message-ID: <bug-217522-201763-NVge3HI5rt@https.bugzilla.kernel.org/>
-In-Reply-To: <bug-217522-201763@https.bugzilla.kernel.org/>
-References: <bug-217522-201763@https.bugzilla.kernel.org/>
+        with ESMTP id S229462AbjFDFif (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sun, 4 Jun 2023 01:38:35 -0400
+Received: from mail-vs1-xe2b.google.com (mail-vs1-xe2b.google.com [IPv6:2607:f8b0:4864:20::e2b])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B3142D2;
+        Sat,  3 Jun 2023 22:38:34 -0700 (PDT)
+Received: by mail-vs1-xe2b.google.com with SMTP id ada2fe7eead31-43b2fb0afa6so533444137.1;
+        Sat, 03 Jun 2023 22:38:34 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20221208; t=1685857114; x=1688449114;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=8PHXdu5IuMrhkPlZ7jqUlnArsh/HLu2zKdX3eKzfIWU=;
+        b=gLP5T0OQMp3gO9YWCKM6+qd9BnIxh2hbeYrY03B8nb784BwZACjvw+UXid8jx3Yhxl
+         E6HuTYoe8mpvT6UCR0bX+eV1P/xteBXFk584hnZ5XQyP1bD8RTGw58d2Yy6ovymfYoFr
+         KpZ7o2wn+vp+d1x4n8URjw3XX5pWuzUtZNbmyX3jnMFTRgFQPHPSu7qe9OVXWtU9cIWr
+         tVtBWYx08d4/dz5CBNpJzsWG6bo4E7xFsFUowooLsCgWnUQIRJT/q0cq1Xe3GWwt5Nbr
+         L3/QVv0NhHjsmbSJjGmji1ApiDqYx9fYZiVgxOVjy7peas5zpAdNA5z6UIvDG2fwTJ+3
+         Ugvw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20221208; t=1685857114; x=1688449114;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=8PHXdu5IuMrhkPlZ7jqUlnArsh/HLu2zKdX3eKzfIWU=;
+        b=HkWr0WumT0XuhfNBi3dYN7frnPKvSaize+QcuxHP+m/xrhVkMSrwttUa+oV0nF6JvS
+         GtrRq1rpKmcO7EerZF0T4qxMOSLdwUbVn7fLAXTg0/9Z1EB9JzAI2rqz0FYso131ysyU
+         PcRDlflWjG3JBg3FMEUkA02C0lcSIZPJhZ4Zu/OIVu2nu0qtOHjyUsbYQxjL98cHpBQH
+         MWpdSUb6q2zYwJPWKXbkK5/nRk5/c9QRZcbIjJhcsdkVTrPGG5rQVhosAEsdAWg4w8j9
+         3FaDHU7U2t4OaXSGnlLb+KBqzAQ3NugvvnqaOpylB9iLAPiSyDc8ko1/1akn80lHM/ne
+         PP1g==
+X-Gm-Message-State: AC+VfDyQP0uWPmqw5xBCEpvq6brMcaCEnQfw+3zkZPIlw9fB4wifvTKw
+        hgW5aJEc/4Ls+6XdYm3iWjE8F94EkaDONAxLGFs=
+X-Google-Smtp-Source: ACHHUZ7fz05Hg2Epz6uS6kQXNmnGIP8uJfN9ah6Sr67+nSTy5NfAXYjQQF5/447KPRKXfpRbmOsLU3S8MVotWdgKV70=
+X-Received: by 2002:a05:6102:40e:b0:43b:4542:2262 with SMTP id
+ d14-20020a056102040e00b0043b45422262mr205508vsq.13.1685857113791; Sat, 03 Jun
+ 2023 22:38:33 -0700 (PDT)
+MIME-Version: 1.0
+References: <20230601164439.15404-1-listdansp@mail.ru> <20230601164439.15404-2-listdansp@mail.ru>
+ <2023060127-flick-velcro-ca45@gregkh>
+In-Reply-To: <2023060127-flick-velcro-ca45@gregkh>
+From:   Amir Goldstein <amir73il@gmail.com>
+Date:   Sun, 4 Jun 2023 08:38:22 +0300
+Message-ID: <CAOQ4uxh_Q7o_Ln1YAJdNyoXuid+p+SBAkmXVUfDbd-sZHX-qOA@mail.gmail.com>
+Subject: Re: [PATCH 5.10 1/1] xfs: verify buffer contents when we skip log replay
+To:     Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        "Darrick J. Wong" <djwong@kernel.org>
+Cc:     Danila Chernetsov <listdansp@mail.ru>, stable@vger.kernel.org,
+        linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org,
+        Dave Chinner <dchinner@redhat.com>,
+        Dave Chinner <david@fromorbit.com>,
+        Leah Rumancik <lrumancik@google.com>,
+        Chandan Babu R <chandan.babu@oracle.com>
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: quoted-printable
-X-Bugzilla-URL: https://bugzilla.kernel.org/
-Auto-Submitted: auto-generated
-MIME-Version: 1.0
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-https://bugzilla.kernel.org/show_bug.cgi?id=3D217522
-
---- Comment #2 from Vladimir Lomov (lomov.vl@bkoty.ru) ---
-Hello
-** bugzilla-daemon@kernel.org <bugzilla-daemon@kernel.org> [2023-06-03 14:5=
-0:24
-+0000]:
-
->https://bugzilla.kernel.org/show_bug.cgi?id=3D217522
+On Thu, Jun 1, 2023 at 8:20=E2=80=AFPM Greg Kroah-Hartman
+<gregkh@linuxfoundation.org> wrote:
 >
->--- Comment #1 from Darrick J. Wong (djwong@kernel.org) ---
->On Sat, Jun 03, 2023 at 03:58:25AM +0000, bugzilla-daemon@kernel.org wrote:
->> https://bugzilla.kernel.org/show_bug.cgi?id=3D217522
->>
->>             Bug ID: 217522
->>            Summary: xfs_attr3_leaf_add_work produces a warning
->>            Product: File System
->>            Version: 2.5
->>           Hardware: All
->>                 OS: Linux
->>             Status: NEW
->>           Severity: normal
->>           Priority: P3
->>          Component: XFS
->>           Assignee: filesystem_xfs@kernel-bugs.kernel.org
->>           Reporter: lomov.vl@bkoty.ru
->>         Regression: No
->>
->> Hi.
->>
->> While running linux-next
->> (6.4.0-rc4-next-20230602-1-next-git-06849-gbc708bbd8260) on one of my ho=
-sts,
->> I
->> see the following message in the kernel log (`dmesg`):
->> ```
->> Jun 02 20:01:19 smoon.bkoty.ru kernel: ------------[ cut here ]---------=
----
->> Jun 02 20:01:19 smoon.bkoty.ru kernel: memcpy: detected field-spanning w=
-rite
->> (size 12) of single field "(char *)name_loc->nameval" at
+> On Thu, Jun 01, 2023 at 04:44:39PM +0000, Danila Chernetsov wrote:
+> > From: "Darrick J. Wong" <djwong@kernel.org>
+> >
+> > commit 22ed903eee23a5b174e240f1cdfa9acf393a5210 upstream.
+> >
+> > syzbot detected a crash during log recovery:
 >
-> Yes, this bug is a collision between the bad old ways of doing flex
-> arrays:
+> XFS patches for stable come from the XFS maintainers, so please work
+> with them if you feel any specific patch is missing from a stable tree.
 >
-> typedef struct xfs_attr_leaf_name_local {
->         __be16  valuelen;               /* number of bytes in value */
->         __u8    namelen;                /* length of name bytes */
->         __u8    nameval[1];             /* name/value bytes */
-> } xfs_attr_leaf_name_local_t;
 
-> And the static checking that gcc/llvm purport to be able to do properly.
+Danila,
 
-Something similar has caused problems with kernel compilation before:
-https://lkml.org/lkml/2023/5/24/576 (I'm not 100% sure if the origin is the
-same though).
+Thanks for bringing this to our attention.
+I've tested this fix for 6.1.y and Leah will test it for 5.15.y
+thereafter I will test and post it for 5.10.y.
 
-> This is encoded into the ondisk structures, which means that someone
-> needs to do perform a deep audit to change each array[1] into an
-> array[] and then ensure that every sizeof() performed on those structure
-> definitions has been adjusted.  Then they would need to run the full QA
-> test suite to ensure that no regressions have been introduced.  Then
-> someone will need to track down any code using
-> /usr/include/xfs/xfs_da_format.h to let them know about the silent
-> compiler bomb heading their way.
+FYI, the MAINTAINERS file in each LTS kernel has an extra
+xfs maintainer listed for backporting fixes for that LTS, however
+6.1.y is still waiting for an assigned backporting maintainer.
 
-> I prefer we leave it as-is since this code has been running for years
-> with no problems.
-
-Should I assume that this problem is not significant and won't have any eff=
-ect
-to the FS and won't cause the FS to misbehave or become corrupted? If so, w=
-hy
-does the problem only show up on one host but not on the other? Or is this a
-runtime check, and it somehow happens on the first system (even rebooted
-twice), but not on the second one.
-
-[...]
-
----
-Vladimir Lomov
-
---=20
-You may reply to this email to add a comment.
-
-You are receiving this mail because:
-You are watching the assignee of the bug.=
+Thanks,
+Amir.
