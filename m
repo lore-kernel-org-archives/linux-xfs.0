@@ -2,168 +2,73 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2B9F9C7EE29
-	for <linux-xfs@archiver.kernel.org>; Sun,  4 Jun 2023 18:32:25 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1CE1BC7EE23
+	for <linux-xfs@archiver.kernel.org>; Sun,  4 Jun 2023 20:11:08 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229904AbjFDScY (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Sun, 4 Jun 2023 14:32:24 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39526 "EHLO
+        id S229657AbjFDULG (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Sun, 4 Jun 2023 16:11:06 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52636 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229578AbjFDScX (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sun, 4 Jun 2023 14:32:23 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 343B9AB
-        for <linux-xfs@vger.kernel.org>; Sun,  4 Jun 2023 11:32:22 -0700 (PDT)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id A4E3460C34
-        for <linux-xfs@vger.kernel.org>; Sun,  4 Jun 2023 18:32:21 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 0D322C433EF;
-        Sun,  4 Jun 2023 18:32:21 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1685903541;
-        bh=yd8N7docz46jhXslvXDNZ+9apbHEajgXNVaQ0Ep6v5I=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=rNkvZSNFkDB6vZd90Ooj6Jq15xrd3y7G9KpGDgJgsDVwjGPKPJlGnnW82q1dvFbFY
-         Lh+WhAo4fKaj2u4WokNm8zPEnp93IGRJLox/GeeT0CpK8QJRHNovfuln6fnTVSjfIN
-         wNozvkKdiEXmi1qtKskjEj5+LSG8/7VK+T28BNO65hha/T19l7I62dd0lTRGhRCQAw
-         Q+bHhM5X0ZIgW18c4erzcIFG+kI3YOQuF/AyYYcf2VQGcBdf6Cvh4BjCK31WFWlTqj
-         2XoLdoN6PNlYynEBs4xGMF066Ta2oiCgzjUnCHnNZ1O7t2B36rMCBZehk8s+ek3GCg
-         MDMY244/AGMtw==
-Date:   Sun, 4 Jun 2023 11:32:20 -0700
-From:   "Darrick J. Wong" <djwong@kernel.org>
-To:     Amir Goldstein <amir73il@gmail.com>
-Cc:     Lee Jones <lee@kernel.org>, linux-xfs@vger.kernel.org,
+        with ESMTP id S229449AbjFDULF (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sun, 4 Jun 2023 16:11:05 -0400
+Received: from casper.infradead.org (casper.infradead.org [IPv6:2001:8b0:10b:1236::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A4C19BD;
+        Sun,  4 Jun 2023 13:11:02 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=infradead.org; s=casper.20170209; h=In-Reply-To:Content-Type:MIME-Version:
+        References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
+        Content-Transfer-Encoding:Content-ID:Content-Description;
+        bh=cHvwEbHpV0ENbEmj7nDYZdUf2MVBQt9jV3D26Rj+Kvg=; b=NlVQuo06VvWJjIp+shYMwyFfUw
+        QD6UgGjM/3lY/ha1r4S/tBUiw/gPn+rcbQjpPN0M+Xbz/wwOmvCi6kw3hy26EdKvGb+LKBFJmmCRq
+        v75g95FQ5jgli4ue7NOTDFl2ryjPtEsH+0ip/P7y6dQz6vBBGzsj8k2d4GerAMB8A8jWC7L/r7CNg
+        7XuhWX1vgQMnMwYDuijJ+s6vDbw7tNjJeQFVjdb6OnPkBog66IIkjxhPOASa/i1N0LFDiYLONhGnx
+        iyzL3f7dcL9X/lortEqkHRtv1IDanuj0QhaH/Qwc9ky6CxyWrS+FZGs/kKoeFM3rHfWvxrgpJn+Gp
+        Ar1ilprA==;
+Received: from willy by casper.infradead.org with local (Exim 4.94.2 #2 (Red Hat Linux))
+        id 1q5u3z-00BJI4-GM; Sun, 04 Jun 2023 20:10:55 +0000
+Date:   Sun, 4 Jun 2023 21:10:55 +0100
+From:   Matthew Wilcox <willy@infradead.org>
+To:     "Darrick J. Wong" <djwong@kernel.org>
+Cc:     linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org,
+        Wang Yugui <wangyugui@e16-tech.com>,
         Dave Chinner <david@fromorbit.com>,
-        Leah Rumancik <lrumancik@google.com>,
-        Chandan Babu R <chandan.babu@oracle.com>
-Subject: Re: [PATCH] xfs: verify buffer contents when we skip log replay
-Message-ID: <20230604183220.GA72267@frogsfrogsfrogs>
-References: <20230411233159.GH360895@frogsfrogsfrogs>
- <20230601130351.GA1787684@google.com>
- <20230601151146.GH16865@frogsfrogsfrogs>
- <CAOQ4uxg3=azXC+b=c1mzQgbM2HWfsAzD+82M1j+5=b-Em+3qug@mail.gmail.com>
+        Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH v2 2/7] doc: Correct the description of ->release_folio
+Message-ID: <ZHzvzzvoQGmIaO6n@casper.infradead.org>
+References: <20230602222445.2284892-1-willy@infradead.org>
+ <20230602222445.2284892-3-willy@infradead.org>
+ <20230604175548.GA72241@frogsfrogsfrogs>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <CAOQ4uxg3=azXC+b=c1mzQgbM2HWfsAzD+82M1j+5=b-Em+3qug@mail.gmail.com>
+In-Reply-To: <20230604175548.GA72241@frogsfrogsfrogs>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Sun, Jun 04, 2023 at 08:51:16AM +0300, Amir Goldstein wrote:
-> On Thu, Jun 1, 2023 at 6:18 PM Darrick J. Wong <djwong@kernel.org> wrote:
-> >
-> > On Thu, Jun 01, 2023 at 02:03:51PM +0100, Lee Jones wrote:
-> > > Hi Darrick,
-> > >
-> > > On Tue, 11 Apr 2023, Darrick J. Wong wrote:
-> > >
-> > > > From: Darrick J. Wong <djwong@kernel.org>
-> > > >
-> > > > syzbot detected a crash during log recovery:
-> > > >
-> > > > XFS (loop0): Mounting V5 Filesystem bfdc47fc-10d8-4eed-a562-11a831b3f791
-> > > > XFS (loop0): Torn write (CRC failure) detected at log block 0x180. Truncating head block from 0x200.
-> > > > XFS (loop0): Starting recovery (logdev: internal)
-> > > > ==================================================================
-> > > > BUG: KASAN: slab-out-of-bounds in xfs_btree_lookup_get_block+0x15c/0x6d0 fs/xfs/libxfs/xfs_btree.c:1813
-> > > > Read of size 8 at addr ffff88807e89f258 by task syz-executor132/5074
-> > > >
-> > > > CPU: 0 PID: 5074 Comm: syz-executor132 Not tainted 6.2.0-rc1-syzkaller #0
-> > > > Hardware name: Google Google Compute Engine/Google Compute Engine, BIOS Google 10/26/2022
-> > > > Call Trace:
-> > > >  <TASK>
-> > > >  __dump_stack lib/dump_stack.c:88 [inline]
-> > > >  dump_stack_lvl+0x1b1/0x290 lib/dump_stack.c:106
-> > > >  print_address_description+0x74/0x340 mm/kasan/report.c:306
-> > > >  print_report+0x107/0x1f0 mm/kasan/report.c:417
-> > > >  kasan_report+0xcd/0x100 mm/kasan/report.c:517
-> > > >  xfs_btree_lookup_get_block+0x15c/0x6d0 fs/xfs/libxfs/xfs_btree.c:1813
-> > > >  xfs_btree_lookup+0x346/0x12c0 fs/xfs/libxfs/xfs_btree.c:1913
-> > > >  xfs_btree_simple_query_range+0xde/0x6a0 fs/xfs/libxfs/xfs_btree.c:4713
-> > > >  xfs_btree_query_range+0x2db/0x380 fs/xfs/libxfs/xfs_btree.c:4953
-> > > >  xfs_refcount_recover_cow_leftovers+0x2d1/0xa60 fs/xfs/libxfs/xfs_refcount.c:1946
-> > > >  xfs_reflink_recover_cow+0xab/0x1b0 fs/xfs/xfs_reflink.c:930
-> > > >  xlog_recover_finish+0x824/0x920 fs/xfs/xfs_log_recover.c:3493
-> > > >  xfs_log_mount_finish+0x1ec/0x3d0 fs/xfs/xfs_log.c:829
-> > > >  xfs_mountfs+0x146a/0x1ef0 fs/xfs/xfs_mount.c:933
-> > > >  xfs_fs_fill_super+0xf95/0x11f0 fs/xfs/xfs_super.c:1666
-> > > >  get_tree_bdev+0x400/0x620 fs/super.c:1282
-> > > >  vfs_get_tree+0x88/0x270 fs/super.c:1489
-> > > >  do_new_mount+0x289/0xad0 fs/namespace.c:3145
-> > > >  do_mount fs/namespace.c:3488 [inline]
-> > > >  __do_sys_mount fs/namespace.c:3697 [inline]
-> > > >  __se_sys_mount+0x2d3/0x3c0 fs/namespace.c:3674
-> > > >  do_syscall_x64 arch/x86/entry/common.c:50 [inline]
-> > > >  do_syscall_64+0x3d/0xb0 arch/x86/entry/common.c:80
-> > > >  entry_SYSCALL_64_after_hwframe+0x63/0xcd
-> > > > RIP: 0033:0x7f89fa3f4aca
-> > > > Code: 83 c4 08 5b 5d c3 66 2e 0f 1f 84 00 00 00 00 00 c3 66 2e 0f 1f 84 00 00 00 00 00 0f 1f 44 00 00 49 89 ca b8 a5 00 00 00 0f 05 <48> 3d 01 f0 ff ff 73 01 c3 48 c7 c1 c0 ff ff ff f7 d8 64 89 01 48
-> > > > RSP: 002b:00007fffd5fb5ef8 EFLAGS: 00000206 ORIG_RAX: 00000000000000a5
-> > > > RAX: ffffffffffffffda RBX: 00646975756f6e2c RCX: 00007f89fa3f4aca
-> > > > RDX: 0000000020000100 RSI: 0000000020009640 RDI: 00007fffd5fb5f10
-> > > > RBP: 00007fffd5fb5f10 R08: 00007fffd5fb5f50 R09: 000000000000970d
-> > > > R10: 0000000000200800 R11: 0000000000000206 R12: 0000000000000004
-> > > > R13: 0000555556c6b2c0 R14: 0000000000200800 R15: 00007fffd5fb5f50
-> > > >  </TASK>
-> > > >
-> > > > The fuzzed image contains an AGF with an obviously garbage
-> > > > agf_refcount_level value of 32, and a dirty log with a buffer log item
-> > > > for that AGF.  The ondisk AGF has a higher LSN than the recovered log
-> > > > item.  xlog_recover_buf_commit_pass2 reads the buffer, compares the
-> > > > LSNs, and decides to skip replay because the ondisk buffer appears to be
-> > > > newer.
-> > > >
-> > > > Unfortunately, the ondisk buffer is corrupt, but recovery just read the
-> > > > buffer with no buffer ops specified:
-> > > >
-> > > >     error = xfs_buf_read(mp->m_ddev_targp, buf_f->blf_blkno,
-> > > >                     buf_f->blf_len, buf_flags, &bp, NULL);
-> > > >
-> > > > Skipping the buffer leaves its contents in memory unverified.  This sets
-> > > > us up for a kernel crash because xfs_refcount_recover_cow_leftovers
-> > > > reads the buffer (which is still around in XBF_DONE state, so no read
-> > > > verification) and creates a refcountbt cursor of height 32.  This is
-> > > > impossible so we run off the end of the cursor object and crash.
-> > > >
-> > > > Fix this by invoking the verifier on all skipped buffers and aborting
-> > > > log recovery if the ondisk buffer is corrupt.  It might be smarter to
-> > > > force replay the log item atop the buffer and then see if it'll pass the
-> > > > write verifier (like ext4 does) but for now let's go with the
-> > > > conservative option where we stop immediately.
-> > > >
-> > > > Link: https://syzkaller.appspot.com/bug?extid=7e9494b8b399902e994e
-> > > > Fixes: 67dc288c2106 ("xfs: ensure verifiers are attached to recovered buffers")
-> > > > Signed-off-by: Darrick J. Wong <djwong@kernel.org>
-> > > > ---
-> > > >  fs/xfs/xfs_buf_item_recover.c |   10 ++++++++++
-> > > >  1 file changed, 10 insertions(+)
-> > >
-> > > Rightly or wrongly, CVE-2023-212 has been raised against this issue.
-> > >
-> > > It looks as though the Fixes: tag above was stripped when applied.
-> > >
-> > > Should this still be submitted to Stable?
-> >
-> > Yes, but we have not been successful in persuading any company to pick
-> > up stable backporting and QA for any kernel newer than 5.15.
-> >
+On Sun, Jun 04, 2023 at 10:55:48AM -0700, Darrick J. Wong wrote:
+> On Fri, Jun 02, 2023 at 11:24:39PM +0100, Matthew Wilcox (Oracle) wrote:
+> > -->release_folio() is called when the kernel is about to try to drop the
+> > -buffers from the folio in preparation for freeing it.  It returns false to
+> > -indicate that the buffers are (or may be) freeable.  If ->release_folio is
+> > -NULL, the kernel assumes that the fs has no private interest in the buffers.
+> > +->release_folio() is called when the MM wants to make a change to the
+> > +folio that would invalidate the filesystem's private data.  For example,
+> > +it may be about to be removed from the address_space or split.  The folio
+> > +is locked and not under writeback.  It may be dirty.  The gfp parameter is
+> > +not usually used for allocation, but rather to indicate what the filesystem
+> > +may do to attempt to free the private data.  The filesystem may
+> > +return false to indicate that the folio's private data cannot be freed.
+> > +If it returns true, it should have already removed the private data from
+> > +the folio.  If a filesystem does not provide a ->release_folio method,
+> > +the kernel will call try_to_free_buffers().
 > 
-> All right. I tested this one on 6.1.31. No regressions observed.
+> the MM?  Since you changed that above... :)
 > 
-> Darrick,
-> 
-> I know you literally said Yes to stable above,
-> but please state your official ACK and I will send it to stable 6.1.y
-> so that we can follow up with the rest of the LTS
+> With that nit fixed,
+> Reviewed-by: Darrick J. Wong <djwong@kernel.org>
 
-Acked-by: Darrick J. Wong <djwong@kernel.org>
+Well, is it the MM?  At this point, the decision is made by
+filemap_release_folio(), which is the VFS, in my opinion ;-)
 
---D
-
-> 
-> Thanks,
-> Amir.
+But I'm happy to use "the MM".  Or "the pagecache".
