@@ -2,42 +2,42 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1BAC0C7EE24
-	for <linux-xfs@archiver.kernel.org>; Mon,  5 Jun 2023 15:36:52 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4A641C7EE2C
+	for <linux-xfs@archiver.kernel.org>; Mon,  5 Jun 2023 15:36:54 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229511AbjFEPgu (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 5 Jun 2023 11:36:50 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40960 "EHLO
+        id S234583AbjFEPgx (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 5 Jun 2023 11:36:53 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41138 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S234799AbjFEPgr (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 5 Jun 2023 11:36:47 -0400
+        with ESMTP id S234322AbjFEPgw (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 5 Jun 2023 11:36:52 -0400
 Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A9FF4FF
-        for <linux-xfs@vger.kernel.org>; Mon,  5 Jun 2023 08:36:45 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4C0E394
+        for <linux-xfs@vger.kernel.org>; Mon,  5 Jun 2023 08:36:51 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 3006062733
-        for <linux-xfs@vger.kernel.org>; Mon,  5 Jun 2023 15:36:45 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 8B458C433EF;
-        Mon,  5 Jun 2023 15:36:44 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id CBB6062733
+        for <linux-xfs@vger.kernel.org>; Mon,  5 Jun 2023 15:36:50 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 32B22C433D2;
+        Mon,  5 Jun 2023 15:36:50 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1685979404;
-        bh=O4g0J3vYoHNN9IxtQ8rUQBAT/ClT3NalPfehAuaZC6E=;
+        s=k20201202; t=1685979410;
+        bh=78tnRIjlRHUUhsVd0Oiz/MKv3PNe0MgaQHhcT6IzcCg=;
         h=Subject:From:To:Cc:Date:In-Reply-To:References:From;
-        b=RJkGuEFn598S6/HmLe+qTmk+Q6bSIK8QfrJwFDfuDZy/k7bqvNTqs/Sf8+ttmgcQz
-         ZIrUSTo+XNYsVmHfagV3LqkQt8lSY99/ylPf5uQLzPWtPoBYntDHUcOJ4ibewIoWz6
-         0iVmH9rCAXOEze0VYTlb15D7Dit2zb6O3xoiKjI4MsEKZVfqfWSNyJfDMs6emb9u52
-         7wcwQZWmC7Iq+Flz5v8JfklIOBYsAPDu8hjFenkbQCA2aHmzqyAGZghBc3Kuv4F+va
-         SkkUiI1MtarrRUNiTHpKWxgVS/l/fPyq61WpTWIvRN69Lpypt6Vv/s6B2ETJ/ULWa0
-         Fu1pboDWhdRWA==
-Subject: [PATCH 3/5] xfs_db: fix metadump name obfuscation for ascii-ci
- filesystems
+        b=oqJ7Pj5vO7SPYuSzdQyh2W/2nQ11hKiWvkiijdq1mPLTS58/0yaHzitTJPsRo7k7r
+         wBMQTBocyLs0+fu/Ash60nNa7vGYa5XPf3GsmamRGxARBt+xBCZ6phUhndj785ss2k
+         OOJzn/uNHoyd1009OmCOkF5qBFPly5DkpAPLUWlsBu4rt+WZUFfzftGTN7Kup2758U
+         mfcuy1hmvy4MNBxDAxUdlNPAiu2Wd0fVu+D1jW4h6ZbpfadWg5N3ixBV0tTEBD6M9o
+         fZKJww/LiUX4z8Sv/i5tgLJUlPCn42Jh1i3tC4Z/GpTPr7K2a96yclYMJod+P5e4N7
+         2+73WRoFJVyhA==
+Subject: [PATCH 4/5] mkfs.xfs.8: warn about the version=ci feature
 From:   "Darrick J. Wong" <djwong@kernel.org>
 To:     djwong@kernel.org, cem@kernel.org
-Cc:     linux-xfs@vger.kernel.org, david@fromorbit.com, hch@infradead.org
-Date:   Mon, 05 Jun 2023 08:36:44 -0700
-Message-ID: <168597940416.1226098.14610650380180437820.stgit@frogsfrogsfrogs>
+Cc:     Christoph Hellwig <hch@lst.de>, linux-xfs@vger.kernel.org,
+        david@fromorbit.com, hch@infradead.org
+Date:   Mon, 05 Jun 2023 08:36:49 -0700
+Message-ID: <168597940973.1226098.13275031442279709007.stgit@frogsfrogsfrogs>
 In-Reply-To: <168597938725.1226098.18077307069307502725.stgit@frogsfrogsfrogs>
 References: <168597938725.1226098.18077307069307502725.stgit@frogsfrogsfrogs>
 User-Agent: StGit/0.19
@@ -50,163 +50,49 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-Now that we've stabilized the dirent hash function for ascii-ci
-filesystems, adapt the metadump name obfuscation code to detect when
-it's obfuscating a directory entry name on an ascii-ci filesystem and
-spit out names that actually have the same hash.
+Document the exact byte transformations that happen during directory
+name lookup when the version=ci feature is enabled.  Warn that this is
+not generally compatible, and that people should not use this feature.
 
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
+Reviewed-by: Christoph Hellwig <hch@lst.de>
 ---
- db/metadump.c |   77 ++++++++++++++++++++++++++++++++++++++++++++++++++-------
- 1 file changed, 68 insertions(+), 9 deletions(-)
+ man/man8/mkfs.xfs.8.in |   22 ++++++++++++++++++----
+ 1 file changed, 18 insertions(+), 4 deletions(-)
 
 
-diff --git a/db/metadump.c b/db/metadump.c
-index 317ff72802d..4f8b3adb163 100644
---- a/db/metadump.c
-+++ b/db/metadump.c
-@@ -817,13 +817,17 @@ static void
- obfuscate_name(
- 	xfs_dahash_t	hash,
- 	size_t		name_len,
--	unsigned char	*name)
-+	unsigned char	*name,
-+	bool		is_dirent)
- {
--	unsigned char	*newp = name;
-+	unsigned char	*oldname = NULL;
-+	unsigned char	*newp;
- 	int		i;
--	xfs_dahash_t	new_hash = 0;
-+	xfs_dahash_t	new_hash;
- 	unsigned char	*first;
- 	unsigned char	high_bit;
-+	int		tries = 0;
-+	bool		is_ci_name = is_dirent && xfs_has_asciici(mp);
- 	int		shift;
- 
- 	/*
-@@ -836,6 +840,24 @@ obfuscate_name(
- 	if (name_len < 5)
- 		return;
- 
-+	if (is_ci_name) {
-+		oldname = alloca(name_len);
-+		memcpy(oldname, name, name_len);
-+	}
+diff --git a/man/man8/mkfs.xfs.8.in b/man/man8/mkfs.xfs.8.in
+index 49e64d47ae4..6fc7708bc94 100644
+--- a/man/man8/mkfs.xfs.8.in
++++ b/man/man8/mkfs.xfs.8.in
+@@ -809,11 +809,25 @@ can be either 2 or 'ci', defaulting to 2 if unspecified.
+ With version 2 directories, the directory block size can be
+ any power of 2 size from the filesystem block size up to 65536.
+ .IP
+-The
++If the
+ .B version=ci
+-option enables ASCII only case-insensitive filename lookup and version
+-2 directories. Filenames are case-preserving, that is, the names
+-are stored in directories using the case they were created with.
++option is specified, the kernel will transform certain bytes in filenames
++before performing lookup-related operations.
++The byte sequence given to create a directory entry is persisted without
++alterations.
++The lookup transformations are defined as follows:
 +
-+again:
-+	newp = name;
-+	new_hash = 0;
++    0x41-0x5a -> 0x61-0x7a
 +
-+	/*
-+	 * If we cannot generate a ci-compatible obfuscated name after 1000
-+	 * tries, don't bother obfuscating the name.
-+	 */
-+	if (tries++ > 1000) {
-+		memcpy(name, oldname, name_len);
-+		return;
-+	}
++    0xc0-0xd6 -> 0xe0-0xf6
 +
- 	/*
- 	 * The beginning of the obfuscated name can be pretty much
- 	 * anything, so fill it in with random characters.
-@@ -843,7 +865,11 @@ obfuscate_name(
- 	 */
- 	for (i = 0; i < name_len - 5; i++) {
- 		*newp = random_filename_char();
--		new_hash = *newp ^ rol32(new_hash, 7);
-+		if (is_ci_name)
-+			new_hash = xfs_ascii_ci_xfrm(*newp) ^
-+							rol32(new_hash, 7);
-+		else
-+			new_hash = *newp ^ rol32(new_hash, 7);
- 		newp++;
- 	}
- 
-@@ -867,6 +893,17 @@ obfuscate_name(
- 			high_bit = 0x80;
- 		} else
- 			high_bit = 0;
++    0xd8-0xde -> 0xf8-0xfe
 +
-+		/*
-+		 * If ascii-ci is enabled, uppercase characters are converted
-+		 * to lowercase characters while computing the name hash.  If
-+		 * any of the necessary correction bytes are uppercase, the
-+		 * hash of the new name will not match.  Try again with a
-+		 * different prefix.
-+		 */
-+		if (is_ci_name && xfs_ascii_ci_need_xfrm(*newp))
-+			goto again;
-+
- 		ASSERT(!is_invalid_char(*newp));
- 		newp++;
- 	}
-@@ -880,6 +917,10 @@ obfuscate_name(
- 	 */
- 	if (high_bit) {
- 		*first ^= 0x10;
-+
-+		if (is_ci_name && xfs_ascii_ci_need_xfrm(*first))
-+			goto again;
-+
- 		ASSERT(!is_invalid_char(*first));
- 	}
- }
-@@ -1177,6 +1218,24 @@ handle_duplicate_name(xfs_dahash_t hash, size_t name_len, unsigned char *name)
- 	return 1;
- }
- 
-+static inline xfs_dahash_t
-+dirattr_hashname(
-+	bool		is_dirent,
-+	const uint8_t	*name,
-+	int		namelen)
-+{
-+	if (is_dirent) {
-+		struct xfs_name	xname = {
-+			.name	= name,
-+			.len	= namelen,
-+		};
-+
-+		return libxfs_dir2_hashname(mp, &xname);
-+	}
-+
-+	return libxfs_da_hashname(name, namelen);
-+}
-+
- static void
- generate_obfuscated_name(
- 	xfs_ino_t		ino,
-@@ -1205,9 +1264,9 @@ generate_obfuscated_name(
- 
- 	/* Obfuscate the name (if possible) */
- 
--	hash = libxfs_da_hashname(name, namelen);
--	obfuscate_name(hash, namelen, name);
--	ASSERT(hash == libxfs_da_hashname(name, namelen));
-+	hash = dirattr_hashname(ino != 0, name, namelen);
-+	obfuscate_name(hash, namelen, name, ino != 0);
-+	ASSERT(hash == dirattr_hashname(ino != 0, name, namelen));
- 
- 	/*
- 	 * Make sure the name is not something already seen.  If we
-@@ -1320,7 +1379,7 @@ obfuscate_path_components(
- 			/* last (or single) component */
- 			namelen = strnlen((char *)comp, len);
- 			hash = libxfs_da_hashname(comp, namelen);
--			obfuscate_name(hash, namelen, comp);
-+			obfuscate_name(hash, namelen, comp, false);
- 			ASSERT(hash == libxfs_da_hashname(comp, namelen));
- 			break;
- 		}
-@@ -1332,7 +1391,7 @@ obfuscate_path_components(
- 			continue;
- 		}
- 		hash = libxfs_da_hashname(comp, namelen);
--		obfuscate_name(hash, namelen, comp);
-+		obfuscate_name(hash, namelen, comp, false);
- 		ASSERT(hash == libxfs_da_hashname(comp, namelen));
- 		comp += namelen + 1;
- 		len -= namelen + 1;
++This transformation roughly corresponds to case insensitivity in ISO
++8859-1.
++The transformations are not compatible with other encodings (e.g. UTF8).
++Do not enable this feature unless your entire environment has been coerced
++to ISO 8859-1.
+ .IP
+ Note: Version 1 directories are not supported.
+ .TP
 
