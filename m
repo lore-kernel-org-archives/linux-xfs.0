@@ -2,131 +2,108 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 93E6CC77B73
-	for <linux-xfs@archiver.kernel.org>; Mon,  5 Jun 2023 05:07:29 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 84011C77B73
+	for <linux-xfs@archiver.kernel.org>; Mon,  5 Jun 2023 05:16:49 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231280AbjFEFH1 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 5 Jun 2023 01:07:27 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59242 "EHLO
+        id S229791AbjFEFQr (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 5 Jun 2023 01:16:47 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60240 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229905AbjFEFH0 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 5 Jun 2023 01:07:26 -0400
-Received: from mail-qk1-x729.google.com (mail-qk1-x729.google.com [IPv6:2607:f8b0:4864:20::729])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2E5D3B1
-        for <linux-xfs@vger.kernel.org>; Sun,  4 Jun 2023 22:07:25 -0700 (PDT)
-Received: by mail-qk1-x729.google.com with SMTP id af79cd13be357-75eb918116aso47493785a.3
-        for <linux-xfs@vger.kernel.org>; Sun, 04 Jun 2023 22:07:25 -0700 (PDT)
+        with ESMTP id S229449AbjFEFQq (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 5 Jun 2023 01:16:46 -0400
+Received: from mail-ed1-x535.google.com (mail-ed1-x535.google.com [IPv6:2a00:1450:4864:20::535])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id DC818B1;
+        Sun,  4 Jun 2023 22:16:45 -0700 (PDT)
+Received: by mail-ed1-x535.google.com with SMTP id 4fb4d7f45d1cf-51456392cbbso11556680a12.0;
+        Sun, 04 Jun 2023 22:16:45 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=fromorbit-com.20221208.gappssmtp.com; s=20221208; t=1685941644; x=1688533644;
-        h=content-disposition:mime-version:message-id:subject:to:from:date
-         :from:to:cc:subject:date:message-id:reply-to;
-        bh=Y9kFoyjGYEZXSuPhYUVJHBFRMN3PMQZBxF2c6rHuWeI=;
-        b=neTpWkAsq6dCVO1Mn+KejpP6LaouoPkAjVjcXLLCBsAUp+UT4Llngux8fkOnNGfc8T
-         u3iRP5CWpdv5neWv1NTfs/Lr4GMqdjT6+DQr8W576EEIAoDdQdvZ5KKAlVsPh+KfOgug
-         0SDzNkckHX78aeJyvy2Bn+ipKR0EkFuHv7I5CCu7i408syoYm+p2DrHIyBsyhYEWJJ4E
-         qiOgHBUeA1oPQgnO4v46nAJjLVMkw4VpZq+iM2XMPCKFNIh4Scl7ee/f4A6EUcBuSiQx
-         ly29hIAAWPQBsVU3bjAwAEUFUprndEMMLRwIqUkRCrCPSPsdpf/RQzfUrT+uH9jTo2xp
-         ORVA==
+        d=gmail.com; s=20221208; t=1685942204; x=1688534204;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=QZ7AliJOD75Tb5S11OerW1AM3XqRaEbsDLm/xR/jW5k=;
+        b=XKSPVvRaTb3R9jfeXaQoGfspYSKgmB/g2SrEW9E8dcqarUXximSqXM86XzETFPmmuL
+         z8kB+lky28mtl8+H22MNC6CpW72rpEQ7Awkem7suP1uHlL0ic2FH7CKh0POSJV3Bvoib
+         PXND2ZxUrh8h4vot5QbujY621x2Aj1fNS9zecsbOlBkAl0/lBjp0nChYvGHYOmgzQf0M
+         kzp1scqS/g7MmVTIau3YsSDVn6kUh+wuK+sVTSP9WCtDnwtj1vYsbU9UztdUnYZD6iVB
+         NwSlERxsUzYFaiQ1cQYPdNG+gHn0obBxzCh/BVNRqaAOm0ShvuI/fI/Td7MrJd6zQhi6
+         TcVg==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20221208; t=1685941644; x=1688533644;
-        h=content-disposition:mime-version:message-id:subject:to:from:date
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=Y9kFoyjGYEZXSuPhYUVJHBFRMN3PMQZBxF2c6rHuWeI=;
-        b=hFJPmQ76k/2Kp1lPulIYqhmrV5S7rVco4xLL/TYrQen0awJmvjdiPnVS3WlK0+BASz
-         pWN9xsM6RLH2lp6MXpuwHGSleFB95nzqsaU8sjcD9Ujjz6j7QesHbXE0BOQXmFl6ct31
-         N19CnzxHHEd1rUGXcixaKu1D6U4yN4wfAI9XWBMjYmXq6Mi4GNbUmtdzeMMliXIkY+lO
-         kmIa+2CQeXvC8MdFi6oYJMhUxo0soFg/CzqZWHcBvgV1oJIT8LvDoIgMbATfrL1XIe9g
-         9lIz5Wi2JOcYIYgy/0rXpBq36UL4jQW1J8lJAx3jLeXKIqYRedKpCnFVF1ZWZmaPsBL3
-         L08A==
-X-Gm-Message-State: AC+VfDxB/oY8yk7oawVVSwDL5JN/kPbLedMMfCfY0hLc3FHuEt43VJtq
-        drp9T268mZosCRRQuNclk+QLbvKhcdyjsFU7omM=
-X-Google-Smtp-Source: ACHHUZ7IxYgcTHIlj8c0ZsHJdoqQM2OGslEiR6WT2SPlFb1pc6vPRI08EP1TLXx3M6b+8hiZSdn01Q==
-X-Received: by 2002:a05:620a:219b:b0:75b:23a0:e7ac with SMTP id g27-20020a05620a219b00b0075b23a0e7acmr19843504qka.13.1685941644245;
-        Sun, 04 Jun 2023 22:07:24 -0700 (PDT)
-Received: from dread.disaster.area (pa49-179-79-151.pa.nsw.optusnet.com.au. [49.179.79.151])
-        by smtp.gmail.com with ESMTPSA id t8-20020a17090a3b4800b00246cc751c6bsm7225749pjf.46.2023.06.04.22.07.23
-        for <linux-xfs@vger.kernel.org>
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Sun, 04 Jun 2023 22:07:23 -0700 (PDT)
-Received: from dave by dread.disaster.area with local (Exim 4.96)
-        (envelope-from <david@fromorbit.com>)
-        id 1q62R6-007y8d-1g
-        for linux-xfs@vger.kernel.org;
-        Mon, 05 Jun 2023 15:07:20 +1000
-Date:   Mon, 5 Jun 2023 15:07:20 +1000
-From:   Dave Chinner <david@fromorbit.com>
-To:     linux-xfs@vger.kernel.org
-Subject: [ANNOUNCE] xfs: for-next rebased to d4d12c02bf5f
-Message-ID: <ZH1tiD4z4/revqp3@dread.disaster.area>
+        d=1e100.net; s=20221208; t=1685942204; x=1688534204;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=QZ7AliJOD75Tb5S11OerW1AM3XqRaEbsDLm/xR/jW5k=;
+        b=HFaRD6sSKE5ITJG3Io51kEwTD7MeRJv0Wy4pDCA0/VN+JTiVnE6iskOvC4NLdMAKaP
+         dROvYR2rVAxweXww/tUIW72Cmu6SRXyKq9HWzilsXVEZpVkBRm0RGohG3xptHauGvWDY
+         f6hHO8MBNlpTKRyCn0MaAIjoaSFxf1svrQPd6mTIruWWqQpI8W8l/VwgkVwRX+gKqp4Y
+         W4WpSsdmE1WFHRuOvMhaCl8es5+AXroFIAhIVZV8ZBjFuEFd5yi4DYAMnRlJCYucgcx+
+         a9q9I26p8Vd63njDzbDyUtojs2r9axhU+4GzwPv81ptRH2cxg+BlEF29vo4m5yN/4j1/
+         gidQ==
+X-Gm-Message-State: AC+VfDwf8NxhQ3WdWR3JX+dANcrDpeTNjAsJElLQsBILWlU4EE+JdTE5
+        ryvzsDnlE9pHyMd7YzHZ+wj74VkEvQ3wtK/OE9M=
+X-Google-Smtp-Source: ACHHUZ5RaDZh5JN75AMSEnARed2B1/PcWtmFub1j7gFr9acGCZAAdpjvZlGqCQITocyN4HmYVed8jqOmBgoK0q6OcOw=
+X-Received: by 2002:a05:6402:1485:b0:50d:8d42:a454 with SMTP id
+ e5-20020a056402148500b0050d8d42a454mr7905401edv.21.1685942204056; Sun, 04 Jun
+ 2023 22:16:44 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
+References: <cover.1685900733.git.ritesh.list@gmail.com> <0d52baa3865f4c8fe49b8389f8e8070ed01144f8.1685900733.git.ritesh.list@gmail.com>
+ <ZH1XcNIe+qIt/H6Z@casper.infradead.org>
+In-Reply-To: <ZH1XcNIe+qIt/H6Z@casper.infradead.org>
+From:   Ritesh Harjani <ritesh.list@gmail.com>
+Date:   Mon, 5 Jun 2023 10:46:33 +0530
+Message-ID: <CALk7dXqpQ4yU+XKGmk0N8KuMXCzZ+sd0YMHvTwWbHM6SwvnyZQ@mail.gmail.com>
+Subject: Re: [PATCHv6 3/5] iomap: Refactor some iop related accessor functions
+To:     Matthew Wilcox <willy@infradead.org>
+Cc:     linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
+        Dave Chinner <david@fromorbit.com>,
+        Brian Foster <bfoster@redhat.com>,
+        Christoph Hellwig <hch@infradead.org>,
+        Andreas Gruenbacher <agruenba@redhat.com>,
+        Ojaswin Mujoo <ojaswin@linux.ibm.com>,
+        Disha Goel <disgoel@linux.ibm.com>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Hi folks,
+On Mon, Jun 5, 2023 at 9:03=E2=80=AFAM Matthew Wilcox <willy@infradead.org>=
+ wrote:
+>
+> On Mon, Jun 05, 2023 at 07:01:50AM +0530, Ritesh Harjani (IBM) wrote:
+> > @@ -214,7 +231,7 @@ struct iomap_readpage_ctx {
+> >  static int iomap_read_inline_data(const struct iomap_iter *iter,
+> >               struct folio *folio)
+> >  {
+> > -     struct iomap_page *iop;
+> > +     struct iomap_page __maybe_unused *iop;
+>
+> Ummm ... definitely unused, right?
+>
 
-I just rebased the for-next tree to correct a bad fixes tag in
-the tree that was flags by a linux-next sanity check. The code is
-the same, just a commit message needed rewriting, but that means all
-the commit change and you'll need to do forced update if you pulled
-the branch I pushed a few hours ago.
+Yes, I will fix it in the next rev. Will send it out soon.
 
--Dave.
+> >       const struct iomap *iomap =3D iomap_iter_srcmap(iter);
+> >       size_t size =3D i_size_read(iter->inode) - iomap->offset;
+> >       size_t poff =3D offset_in_page(iomap->offset);
+> > @@ -240,7 +257,8 @@ static int iomap_read_inline_data(const struct ioma=
+p_iter *iter,
+> >       memcpy(addr, iomap->inline_data, size);
+> >       memset(addr + size, 0, PAGE_SIZE - poff - size);
+> >       kunmap_local(addr);
+> > -     iomap_set_range_uptodate(folio, iop, offset, PAGE_SIZE - poff);
+> > +     iomap_iop_set_range_uptodate(iter->inode, folio, offset,
+> > +                                  PAGE_SIZE - poff);
+>
+> Once you make this change, iop is set in this function, but never used.
+> So you still want to call iomap_page_create() if offset > 0, but you
+> can ignore the return value.  And you don't need to call to_iomap_page().
+>
+> Or did I miss something elsewhere in this patch series?
 
-----------------------------------------------------------------
+No, I added __maybe_unused earlier to avoid W=3D1 warnings and then
+forgot to fix it, before sending forgot to
+fix that part of code.
 
-  git://git.kernel.org/pub/scm/fs/xfs/xfs-linux.git for-next
-
-  Head Commit: d4d12c02bf5f768f1b423c7ae2909c5afdfe0d5f
-
-  xfs: collect errors from inodegc for unlinked inode recovery (2023-06-05 14:48:15 +1000)
-
-----------------------------------------------------------------
-Darrick J. Wong (1):
-      xfs: fix broken logic when detecting mergeable bmap records
-
-Dave Chinner (9):
-      xfs: buffer pins need to hold a buffer reference
-      xfs: restore allocation trylock iteration
-      xfs: defered work could create precommits
-      xfs: fix AGF vs inode cluster buffer deadlock
-      xfs: fix double xfs_perag_rele() in xfs_filestream_pick_ag()
-      xfs: fix agf/agfl verification on v4 filesystems
-      xfs: validity check agbnos on the AGFL
-      xfs: validate block number being freed before adding to xefi
-      xfs: collect errors from inodegc for unlinked inode recovery
-
-Geert Uytterhoeven (1):
-      xfs: Fix undefined behavior of shift into sign bit
-
- fs/xfs/libxfs/xfs_ag.c          |   5 +++-
- fs/xfs/libxfs/xfs_alloc.c       |  91 ++++++++++++++++++++++++++++++++++++++++++++++++++---------------------
- fs/xfs/libxfs/xfs_alloc.h       |   6 ++---
- fs/xfs/libxfs/xfs_bmap.c        |  10 ++++++--
- fs/xfs/libxfs/xfs_bmap_btree.c  |   7 ++++--
- fs/xfs/libxfs/xfs_ialloc.c      |  24 ++++++++++++-------
- fs/xfs/libxfs/xfs_log_format.h  |   9 ++++++-
- fs/xfs/libxfs/xfs_refcount.c    |  13 ++++++++---
- fs/xfs/libxfs/xfs_trans_inode.c | 113 +++++++---------------------------------------------------------------------------------
- fs/xfs/scrub/bmap.c             |  25 ++++++++++----------
- fs/xfs/scrub/scrub.h            |   8 +++----
- fs/xfs/xfs_buf_item.c           |  88 ++++++++++++++++++++++++++++++++++++++++++++++++++------------------
- fs/xfs/xfs_filestream.c         |   1 -
- fs/xfs/xfs_icache.c             |  46 +++++++++++++++++++++++++++++-------
- fs/xfs/xfs_icache.h             |   4 ++--
- fs/xfs/xfs_inode.c              |  20 +++++-----------
- fs/xfs/xfs_inode.h              |   2 +-
- fs/xfs/xfs_inode_item.c         | 149 ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
- fs/xfs/xfs_inode_item.h         |   1 +
- fs/xfs/xfs_log_recover.c        |  19 +++++++--------
- fs/xfs/xfs_mount.h              |   1 +
- fs/xfs/xfs_reflink.c            |   4 +++-
- fs/xfs/xfs_super.c              |   1 +
- fs/xfs/xfs_trans.c              |   9 ++++++-
- 24 files changed, 427 insertions(+), 229 deletions(-)
-
--- 
-Dave Chinner
-david@fromorbit.com
+-ritesh
