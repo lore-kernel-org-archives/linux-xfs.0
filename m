@@ -2,99 +2,94 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 92459C77B73
-	for <linux-xfs@archiver.kernel.org>; Mon,  5 Jun 2023 14:31:28 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 303E8C77B73
+	for <linux-xfs@archiver.kernel.org>; Mon,  5 Jun 2023 14:37:05 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229660AbjFEOb0 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 5 Jun 2023 10:31:26 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53614 "EHLO
+        id S232255AbjFEOhE (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 5 Jun 2023 10:37:04 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57762 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233076AbjFEObZ (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 5 Jun 2023 10:31:25 -0400
-Received: from casper.infradead.org (casper.infradead.org [IPv6:2001:8b0:10b:1236::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 73A27E8;
-        Mon,  5 Jun 2023 07:31:24 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=infradead.org; s=casper.20170209; h=In-Reply-To:Content-Type:MIME-Version:
-        References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
-        Content-Transfer-Encoding:Content-ID:Content-Description;
-        bh=6izMVQ9m9HEYT6yx5F2UmGBTPWgGa26OUk67j+agszA=; b=NoBJSmHH9oHu83+wHfrXfLoSWy
-        P/IhwCMWavyo6edAdqB0Gx34lmUEFqSbKXoQ863oNFdz14OiC+1Wwy4onkAWYCkHb3U+/W63uJNWs
-        Z922V1pr1wdCDeJTqbFcVtDzQoq3ZwJpadTDJDHUzHrdG52UtK9krO4PerOpBa+6CHGyyJVL8VDrr
-        UI4a5BhX6PSPUUTAxdL/xVUSHCx/R3Cf6AYxR1rkVrsq6aqUHm2wabWxRm2e0bTdX8kNu+jpNnnC7
-        yHPl/AAPMdsqfI9IKK/iUIm0HpcgR9beJmmic9mSzppk4M3SUfqRZ2k85mXKoLlEC6sBk36VNguPI
-        F6xbLKPQ==;
-Received: from willy by casper.infradead.org with local (Exim 4.94.2 #2 (Red Hat Linux))
-        id 1q6BEt-00C6SO-8g; Mon, 05 Jun 2023 14:31:19 +0000
-Date:   Mon, 5 Jun 2023 15:31:19 +0100
-From:   Matthew Wilcox <willy@infradead.org>
-To:     Andreas Gruenbacher <agruenba@redhat.com>
-Cc:     "Ritesh Harjani (IBM)" <ritesh.list@gmail.com>,
-        linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
-        Dave Chinner <david@fromorbit.com>,
-        Brian Foster <bfoster@redhat.com>,
-        Christoph Hellwig <hch@infradead.org>,
-        Ojaswin Mujoo <ojaswin@linux.ibm.com>,
-        Disha Goel <disgoel@linux.ibm.com>
-Subject: Re: [PATCHv7 3/6] iomap: Refactor some iop related accessor functions
-Message-ID: <ZH3xt3npT9jeBFMG@casper.infradead.org>
-References: <cover.1685962158.git.ritesh.list@gmail.com>
- <4fe4937718d44c89e0c279175c65921717d9f591.1685962158.git.ritesh.list@gmail.com>
- <CAHc6FU7xZaDAnmQ5UhO=MCnW_nGV2WNs93=PTAoVWCYuSCnrAQ@mail.gmail.com>
+        with ESMTP id S234127AbjFEOhD (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 5 Jun 2023 10:37:03 -0400
+Received: from outgoing.mit.edu (outgoing-auth-1.mit.edu [18.9.28.11])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 00EA8ED
+        for <linux-xfs@vger.kernel.org>; Mon,  5 Jun 2023 07:37:01 -0700 (PDT)
+Received: from cwcc.thunk.org (pool-173-48-119-27.bstnma.fios.verizon.net [173.48.119.27])
+        (authenticated bits=0)
+        (User authenticated as tytso@ATHENA.MIT.EDU)
+        by outgoing.mit.edu (8.14.7/8.12.4) with ESMTP id 355EacRo022190
+        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+        Mon, 5 Jun 2023 10:36:39 -0400
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=mit.edu; s=outgoing;
+        t=1685975802; bh=Gf0lmbvGbinyQFXlk1n8DOtloRliNEg8wNbWAkf1Cn8=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To;
+        b=SkA7AZmFJArAGOqu+xDl560hqDN5mkZhJ3f0GSbLHx7CptVTwK93YNspsCQwOUzLj
+         Dw/OOQ6ajFeXDkb7KMSRxjsxDERHNcFWyGnydL7mIPuE22BllXq4KAjqelwaC1Ka2x
+         omW8SP7nGKnt/BXgl7gRa9+aazdY13aFXB3GFq9qlei4A9cr7LhAI0xIRorBUy0AfY
+         +26JiHgOXnJGPeKRbdP7vx38pCupVzpruLwyCEkCI7W0Gn4pr8x9pKNh7rKCzn/N6g
+         Z9XrsTSlk/Twl4cCGZmdrxmCUUv196L86U7RNIlic+WVDGYBziJhuOjXOWel5CiIqr
+         zir9KteZEmWJg==
+Received: by cwcc.thunk.org (Postfix, from userid 15806)
+        id CCD6815C02EE; Mon,  5 Jun 2023 10:36:38 -0400 (EDT)
+Date:   Mon, 5 Jun 2023 10:36:38 -0400
+From:   "Theodore Ts'o" <tytso@mit.edu>
+To:     Christian Brauner <brauner@kernel.org>
+Cc:     Dave Chinner <david@fromorbit.com>,
+        "Darrick J. Wong" <djwong@kernel.org>,
+        Amir Goldstein <amir73il@gmail.com>,
+        Jeff Layton <jlayton@kernel.org>, miklos@szeredi.hu,
+        linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org
+Subject: Re: uuid ioctl - was: Re: [PATCH] overlayfs: Trigger file
+ re-evaluation by IMA / EVM after writes
+Message-ID: <20230605143638.GA1151212@mit.edu>
+References: <078d8c1fd6b6de59cde8aa85f8e59a056cb78614.camel@linux.ibm.com>
+ <20230520-angenehm-orangen-80fdce6f9012@brauner>
+ <ZGqgDjJqFSlpIkz/@dread.disaster.area>
+ <20230522-unsensibel-backblech-7be4e920ba87@brauner>
+ <20230602012335.GB16848@frogsfrogsfrogs>
+ <20230602042714.GE1128744@mit.edu>
+ <ZHmNksPcA9tudSVQ@dread.disaster.area>
+ <20230602-dividende-model-62b2bdc073cf@brauner>
+ <ZH0XVWBqs9zJF69X@dread.disaster.area>
+ <20230605-allgegenwart-bellt-e05884aab89a@brauner>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <CAHc6FU7xZaDAnmQ5UhO=MCnW_nGV2WNs93=PTAoVWCYuSCnrAQ@mail.gmail.com>
+In-Reply-To: <20230605-allgegenwart-bellt-e05884aab89a@brauner>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Mon, Jun 05, 2023 at 04:15:31PM +0200, Andreas Gruenbacher wrote:
-> Note that to_iomap_page() does folio_test_private() followed by
-> folio_get_private(), which doesn't really make sense in places where
-> we know that iop is defined. Maybe we want to split that up.
+On Mon, Jun 05, 2023 at 01:37:40PM +0200, Christian Brauner wrote:
+> Using a zero/special UUID would have made this usable for most
+> filesystems which allows userspace to more easily detect this. Using a
+> filesystem feature bit makes this a lot more fragmented between
+> filesystems.
 
-The plan is to retire the folio private flag entirely.  I just haven't
-got round to cleaning up iomap yet.  For folios which we know to be
-file-backed, we can just test whether folio->private is NULL or not.
+Not all file systems have feature bits.  So I'd suggest that how this
+should be a file system specific implementation detail.  If with a
+newer kernel, a file systems sets the UUID to a random value if it is
+all zeros when it is mounted should be relatively simple.
 
-So I'd do this as:
+However, there are some questions this brings up.  What should the
+semantics be if a file system creates a file system-level snapshot ---
+should the UUID be refreshed?  What if it is a block-level file system
+snapshot using LVM --- should the UUID be refreshed in that case?
 
--	struct iomap_page *iop = to_iomap_page(folio);
-+	struct iomap_page *iop = folio->private;
+As I've been trying to point out, exactly what the semantics of a file
+system level UUID has never been well defined, and it's not clear what
+various subsystems are trying to *do* with the UUID.  And given that
+what can happen with mount name spaces, bind mounts, etc., we should
+ask whether the assumptions they are making with respect to UUID is in
+fact something we should be encouraging.
 
-and not even use folio_get_private() or to_iomap_page() any more.
+> But allowing to refuse being mounted on older kernels when the feature
+> bit is set and unknown can be quite useful. So this is also fine by me.
 
-> > +       unsigned int first_blk = off >> inode->i_blkbits;
-> > +       unsigned int last_blk = (off + len - 1) >> inode->i_blkbits;
-> > +       unsigned int nr_blks = last_blk - first_blk + 1;
-> > +       unsigned long flags;
-> > +
-> > +       spin_lock_irqsave(&iop->state_lock, flags);
-> > +       bitmap_set(iop->state, first_blk, nr_blks);
-> > +       if (iop_test_full_uptodate(folio))
-> > +               folio_mark_uptodate(folio);
-> > +       spin_unlock_irqrestore(&iop->state_lock, flags);
-> > +}
-> > +
-> > +static void iomap_iop_set_range_uptodate(struct inode *inode,
-> > +               struct folio *folio, size_t off, size_t len)
-> > +{
-> > +       struct iomap_page *iop = to_iomap_page(folio);
-> > +
-> > +       if (iop)
-> > +               iop_set_range_uptodate(inode, folio, off, len);
-> > +       else
-> > +               folio_mark_uptodate(folio);
-> > +}
-> 
-> This patch passes the inode into iomap_iop_set_range_uptodate() and
-> removes the iop argument. Can this be done in a separate patch,
-> please?
-> 
-> We have a few places like the above, where we look up the iop without
-> using it. Would a function like folio_has_iop() make more sense?
+This pretty much guarantees people won't use the feature for a while.
+People complain when a file system cann't be mounted.  Using a feature
+bit is also very likely to mean that you won't be able to run an older
+fsck on that file system --- for what users would complain would be no
+good reason.  And arguably, they would be right to complain.
 
-I think this is all a symptom of the unnecessary splitting of
-iomap_iop_set_range_uptodate and iop_set_range_uptodate.
-
+						- Ted
