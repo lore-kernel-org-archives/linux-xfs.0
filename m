@@ -2,227 +2,93 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 66D73C7EE24
-	for <linux-xfs@archiver.kernel.org>; Mon,  5 Jun 2023 04:03:45 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id AD04DC77B73
+	for <linux-xfs@archiver.kernel.org>; Mon,  5 Jun 2023 04:22:41 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230052AbjFEEDm (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 5 Jun 2023 00:03:42 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42942 "EHLO
+        id S229449AbjFEEWj (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 5 Jun 2023 00:22:39 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50408 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229743AbjFEEDl (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 5 Jun 2023 00:03:41 -0400
-Received: from casper.infradead.org (casper.infradead.org [IPv6:2001:8b0:10b:1236::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1E419BC;
-        Sun,  4 Jun 2023 21:03:40 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=infradead.org; s=casper.20170209; h=In-Reply-To:Content-Type:MIME-Version:
-        References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
-        Content-Transfer-Encoding:Content-ID:Content-Description;
-        bh=U4HI1ekIHHcIIOIBiStobq1kk+Nbt33a7tClgownB0s=; b=nJAkyAWxCuxG1DVp4MayHaMofv
-        s5vduXIgeaFDpx3gR5Kkkbcssd9cNOBD9HFkbPp03U+PteoG+Qz1L90a0faIdzIo3sXRH7Y120zQ5
-        vf8OZcgZ/lOAgw3q76NkLl3jQCoO7/MaO1M+h2i0mOv5Z+6uqy1fuU3BW2HZJnY7g3hEfawmKaujP
-        jJ8nHqe8X2aKHa7OcYQDxO5BTOf9opMxsvb1Nf72dwV7RWoi7DOGc+h/Z8fjjMQWhfB+tXuEX560y
-        2xpWc7KgE0nvFYtd+Gv0/kxZhjIV5HGsEwcaIOZdFmx9AKo3j5Hp2a2xwsXEpRHblT8xiOrwijez9
-        JO9tTvfw==;
-Received: from willy by casper.infradead.org with local (Exim 4.94.2 #2 (Red Hat Linux))
-        id 1q61RP-00BdVd-QG; Mon, 05 Jun 2023 04:03:35 +0000
-Date:   Mon, 5 Jun 2023 05:03:35 +0100
-From:   Matthew Wilcox <willy@infradead.org>
-To:     "Ritesh Harjani (IBM)" <ritesh.list@gmail.com>
-Cc:     linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
-        Dave Chinner <david@fromorbit.com>,
-        Brian Foster <bfoster@redhat.com>,
-        Christoph Hellwig <hch@infradead.org>,
-        Andreas Gruenbacher <agruenba@redhat.com>,
-        Ojaswin Mujoo <ojaswin@linux.ibm.com>,
-        Disha Goel <disgoel@linux.ibm.com>,
-        Aravinda Herle <araherle@in.ibm.com>
-Subject: Re: [PATCHv6 5/5] iomap: Add per-block dirty state tracking to
- improve performance
-Message-ID: <ZH1elxw5ddP+bjEa@casper.infradead.org>
-References: <cover.1685900733.git.ritesh.list@gmail.com>
- <c38a4081e762e38b8fc4c0a54d848741d28d7455.1685900733.git.ritesh.list@gmail.com>
+        with ESMTP id S232527AbjFEEWi (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 5 Jun 2023 00:22:38 -0400
+Received: from gandalf.ozlabs.org (mail.ozlabs.org [IPv6:2404:9400:2221:ea00::3])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A65DF9F;
+        Sun,  4 Jun 2023 21:22:36 -0700 (PDT)
+Received: from authenticated.ozlabs.org (localhost [127.0.0.1])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange ECDHE (P-256) server-signature RSA-PSS (4096 bits) server-digest SHA256)
+        (No client certificate requested)
+        by mail.ozlabs.org (Postfix) with ESMTPSA id 4QZL6w4Lpcz4x3g;
+        Mon,  5 Jun 2023 14:22:32 +1000 (AEST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=canb.auug.org.au;
+        s=201702; t=1685938953;
+        bh=+ZuFdlS6x5KF2QIO7Gf0zcMmK4BRUsPR8BuCCtKSwH0=;
+        h=Date:From:To:Cc:Subject:From;
+        b=Pz6Iqnv0YSksAKBy3Bdnmiku8pCM2xw6vS7YIDKhGgxD08McfoE1tQ5vsUuXMN0f+
+         zSQMaI2akg5wbe6Is+L5C1mKeubF63ZHYgjWCz7QqKTp98vKCj9uF2uFujhWv/RBUz
+         +uj5q2IL2vfVKKi1zSnagjEJFS4zqnSuHcwk9evWpYOoeyMfgsFY/E64uDWQvgyuK0
+         eBZMN9EYAtwGjo2zHjR6VlFmdzBq0DKkr9Ppxaxi/BVwr5hUvYdsIw82WOPQUvBIui
+         Ip7K+f2DlRo7mHm/BWpiysjQmqKo0p6Dc/Quha0A4Z8P3imy4nehdj74jneRvY6XOX
+         9O0ovEbHdGmKw==
+Date:   Mon, 5 Jun 2023 14:22:30 +1000
+From:   Stephen Rothwell <sfr@canb.auug.org.au>
+To:     "Darrick J. Wong" <djwong@kernel.org>,
+        David Chinner <david@fromorbit.com>,
+        <linux-xfs@vger.kernel.org>
+Cc:     Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+        Linux Next Mailing List <linux-next@vger.kernel.org>
+Subject: linux-next: Fixes tag needs some work in the xfs tree
+Message-ID: <20230605142230.2ee1f616@canb.auug.org.au>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <c38a4081e762e38b8fc4c0a54d848741d28d7455.1685900733.git.ritesh.list@gmail.com>
+Content-Type: multipart/signed; boundary="Sig_/alEh9dSHJcc3IA+UnGThjlK";
+ protocol="application/pgp-signature"; micalg=pgp-sha256
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Mon, Jun 05, 2023 at 07:01:52AM +0530, Ritesh Harjani (IBM) wrote:
-> +static void iop_set_range_dirty(struct inode *inode, struct folio *folio,
-> +				size_t off, size_t len)
-> +{
-> +	struct iomap_page *iop = to_iomap_page(folio);
-> +	unsigned int blks_per_folio = i_blocks_per_folio(inode, folio);
-> +	unsigned int first_blk = off >> inode->i_blkbits;
-> +	unsigned int last_blk = (off + len - 1) >> inode->i_blkbits;
-> +	unsigned int nr_blks = last_blk - first_blk + 1;
-> +	unsigned long flags;
-> +
-> +	spin_lock_irqsave(&iop->state_lock, flags);
-> +	bitmap_set(iop->state, first_blk + blks_per_folio, nr_blks);
-> +	spin_unlock_irqrestore(&iop->state_lock, flags);
-> +}
-> +
-> +static void iomap_iop_set_range_dirty(struct inode *inode, struct folio *folio,
-> +				size_t off, size_t len)
-> +{
-> +	struct iomap_page *iop = to_iomap_page(folio);
-> +
-> +	if (iop)
-> +		iop_set_range_dirty(inode, folio, off, len);
-> +}
+--Sig_/alEh9dSHJcc3IA+UnGThjlK
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: quoted-printable
 
-Why are these separate functions?  It'd be much better written as:
+Hi all,
 
-static void iomap_iop_set_range_dirty(struct inode *inode, struct folio *folio,
-		size_t off, size_t len)
-{
-	struct iomap_page *iop = to_iomap_page(folio);
-	unsigned int start, first, last;
-	unsigned long flags;
+In commit
 
-	if (!iop)
-		return;
+  6a458bebafe7 ("xfs: fix broken logic when detecting mergeable bmap record=
+s")
 
-	start = i_blocks_per_folio(inode, folio);
-	first = off >> inode->i_blkbits;
-	last = (off + len - 1) >> inode->i_blkbits;
+Fixes tag
 
-	spin_lock_irqsave(&iop->state_lock, flags);
-	bitmap_set(iop->state, start + first, last - first + 1);
-	spin_unlock_irqrestore(&iop->state_lock, flags);
-}
+  Fixes: 6bc6c99a944c ("xfs: alert the user about data/attr fork mappings t=
+hat could be merged")
 
-> +static void iop_clear_range_dirty(struct inode *inode, struct folio *folio,
-> +				  size_t off, size_t len)
-> +{
-> +	struct iomap_page *iop = to_iomap_page(folio);
-> +	unsigned int blks_per_folio = i_blocks_per_folio(inode, folio);
-> +	unsigned int first_blk = off >> inode->i_blkbits;
-> +	unsigned int last_blk = (off + len - 1) >> inode->i_blkbits;
-> +	unsigned int nr_blks = last_blk - first_blk + 1;
-> +	unsigned long flags;
-> +
-> +	spin_lock_irqsave(&iop->state_lock, flags);
-> +	bitmap_clear(iop->state, first_blk + blks_per_folio, nr_blks);
-> +	spin_unlock_irqrestore(&iop->state_lock, flags);
-> +}
-> +
-> +static void iomap_iop_clear_range_dirty(struct inode *inode,
-> +				struct folio *folio, size_t off, size_t len)
-> +{
-> +	struct iomap_page *iop = to_iomap_page(folio);
-> +
-> +	if (iop)
-> +		iop_clear_range_dirty(inode, folio, off, len);
-> +}
+has these problem(s):
 
-Similarly
+  - Target SHA1 does not exist
 
-> +bool iomap_dirty_folio(struct address_space *mapping, struct folio *folio)
-> +{
-> +	struct iomap_page __maybe_unused *iop;
-> +	struct inode *inode = mapping->host;
-> +	size_t len = folio_size(folio);
-> +
-> +	iop = iomap_iop_alloc(inode, folio, 0);
+Maybe you meant
 
-Why do you keep doing this?  Just throw away the return value from
-iomap_iop_alloc().  Don't clutter the source with the unnecessary
-variable declaration and annotation that it's not used!
+Fixes: 336642f79283 ("xfs: alert the user about data/attr fork mappings tha=
+t could be merged")
 
-> +static int iomap_write_delalloc_punch(struct inode *inode, struct folio *folio,
-> +		loff_t *punch_start_byte, loff_t start_byte, loff_t end_byte,
-> +		int (*punch)(struct inode *inode, loff_t offset, loff_t length))
-> +{
-> +	struct iomap_page *iop;
-> +	unsigned int first_blk, last_blk, i;
-> +	loff_t last_byte;
-> +	u8 blkbits = inode->i_blkbits;
-> +	int ret = 0;
-> +
-> +	if (start_byte > *punch_start_byte) {
-> +		ret = punch(inode, *punch_start_byte,
-> +				start_byte - *punch_start_byte);
-> +		if (ret)
-> +			goto out_err;
-> +	}
-> +	/*
-> +	 * When we have per-block dirty tracking, there can be
-> +	 * blocks within a folio which are marked uptodate
-> +	 * but not dirty. In that case it is necessary to punch
-> +	 * out such blocks to avoid leaking any delalloc blocks.
-> +	 */
-> +	iop = to_iomap_page(folio);
-> +	if (!iop)
-> +		goto skip_iop_punch;
-> +
-> +	last_byte = min_t(loff_t, end_byte - 1,
-> +		(folio_next_index(folio) << PAGE_SHIFT) - 1);
-> +	first_blk = offset_in_folio(folio, start_byte) >> blkbits;
-> +	last_blk = offset_in_folio(folio, last_byte) >> blkbits;
-> +	for (i = first_blk; i <= last_blk; i++) {
-> +		if (!iop_test_block_dirty(folio, i)) {
-> +			ret = punch(inode, i << blkbits, 1 << blkbits);
-> +			if (ret)
-> +				goto out_err;
-> +		}
-> +	}
-> +
-> +skip_iop_punch:
-> +	/*
-> +	 * Make sure the next punch start is correctly bound to
-> +	 * the end of this data range, not the end of the folio.
-> +	 */
-> +	*punch_start_byte = min_t(loff_t, end_byte,
-> +			folio_next_index(folio) << PAGE_SHIFT);
-> +
-> +	return ret;
-> +
-> +out_err:
-> +	folio_unlock(folio);
-> +	folio_put(folio);
-> +	return ret;
-> +
-> +}
-> +
->  /*
->   * Scan the data range passed to us for dirty page cache folios. If we find a
->   * dirty folio, punch out the preceeding range and update the offset from which
-> @@ -940,26 +1074,9 @@ static int iomap_write_delalloc_scan(struct inode *inode,
->  		}
->  
->  		/* if dirty, punch up to offset */
-> -		if (folio_test_dirty(folio)) {
-> -			if (start_byte > *punch_start_byte) {
-> -				int	error;
-> -
-> -				error = punch(inode, *punch_start_byte,
-> -						start_byte - *punch_start_byte);
-> -				if (error) {
-> -					folio_unlock(folio);
-> -					folio_put(folio);
-> -					return error;
-> -				}
-> -			}
-> -
-> -			/*
-> -			 * Make sure the next punch start is correctly bound to
-> -			 * the end of this data range, not the end of the folio.
-> -			 */
-> -			*punch_start_byte = min_t(loff_t, end_byte,
-> -					folio_next_index(folio) << PAGE_SHIFT);
-> -		}
-> +		if (folio_test_dirty(folio))
-> +			iomap_write_delalloc_punch(inode, folio, punch_start_byte,
-> +					   start_byte, end_byte, punch);
->  
->  		/* move offset to start of next folio in range */
->  		start_byte = folio_next_index(folio) << PAGE_SHIFT;
+--=20
+Cheers,
+Stephen Rothwell
 
-I'm having trouble following this refactoring + modification.  Perhaps
-I'm just tired.
+--Sig_/alEh9dSHJcc3IA+UnGThjlK
+Content-Type: application/pgp-signature
+Content-Description: OpenPGP digital signature
 
+-----BEGIN PGP SIGNATURE-----
+
+iQEzBAEBCAAdFiEENIC96giZ81tWdLgKAVBC80lX0GwFAmR9YwYACgkQAVBC80lX
+0Gz9Bgf8DmgUwPYnYI3w+pSuGv0eZvElYQPSDgapQ9NSk+hujQ/2lrAFG+ZgPI5U
+D4L5Wq66a0HM+j/7+8Ub58+nDrpvikEYulc36AVsm+R9vYBpJ13hZ6fskXahtA1a
+e+sFKLgN0V308fDc7/+nNOSHT9nvdl/ztG0VzjYB/qGVBZbbinKE1qv6LRXzGRtp
+HHCUuSmje29DDEvNz98MHH9N0a/U1tLRt9CG/Fs8X8nVvHJNjbwCas4LS74Pn1bH
+BwKzeCx1poD11zgAAHLZX7cWYLIpTvhkTaOLyN8F1C8gWe3SkBwmEAUCB/R/upQa
+c9dpNrwx/r0n0vUWkXfv5nIs2uLAYw==
+=q3b+
+-----END PGP SIGNATURE-----
+
+--Sig_/alEh9dSHJcc3IA+UnGThjlK--
