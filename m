@@ -2,393 +2,378 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 46DD0C7EE23
-	for <linux-xfs@archiver.kernel.org>; Mon,  5 Jun 2023 13:28:11 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E49C6C7EE23
+	for <linux-xfs@archiver.kernel.org>; Mon,  5 Jun 2023 14:17:08 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233866AbjFEN2J (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 5 Jun 2023 09:28:09 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41218 "EHLO
+        id S232530AbjFEORH (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 5 Jun 2023 10:17:07 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44570 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233886AbjFEN2E (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 5 Jun 2023 09:28:04 -0400
-Received: from wp530.webpack.hosteurope.de (wp530.webpack.hosteurope.de [80.237.130.52])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2D8FF10A
-        for <linux-xfs@vger.kernel.org>; Mon,  5 Jun 2023 06:27:59 -0700 (PDT)
-Received: from [2a02:8108:8980:2478:8cde:aa2c:f324:937e]; authenticated
-        by wp530.webpack.hosteurope.de running ExIM with esmtpsa (TLS1.3:ECDHE_RSA_AES_128_GCM_SHA256:128)
-        id 1q6AFM-0005EE-3W; Mon, 05 Jun 2023 15:27:44 +0200
-Message-ID: <57eeb4d5-01de-b443-be8e-50b08c132e95@leemhuis.info>
-Date:   Mon, 5 Jun 2023 15:27:43 +0200
+        with ESMTP id S234345AbjFEOQx (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 5 Jun 2023 10:16:53 -0400
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C9551E4C
+        for <linux-xfs@vger.kernel.org>; Mon,  5 Jun 2023 07:15:47 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1685974546;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=+DkdjkZWlqpOSQQRzq31kjhMhTMi6RVAa/rU1qaw3gM=;
+        b=WyyFj8zAEJpE21J4VTsodkmeGPoRaCn1bZp6ymEmVakd9w9xUfJmGGMQSroEiNu9DP7tHP
+        jtOvDejv/lMOZa4wzxAnHJM9f5P5aZ/EU2O8f0d0xZIsAslzS07yleiEr2ACF6JOuFoyZe
+        6W5MYkAe8hMAqpPNjg2uIpmFEUgrb+g=
+Received: from mail-pl1-f197.google.com (mail-pl1-f197.google.com
+ [209.85.214.197]) by relay.mimecast.com with ESMTP with STARTTLS
+ (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
+ us-mta-58-G5QV9Fx_MN21UmRyBuTvnQ-1; Mon, 05 Jun 2023 10:15:45 -0400
+X-MC-Unique: G5QV9Fx_MN21UmRyBuTvnQ-1
+Received: by mail-pl1-f197.google.com with SMTP id d9443c01a7336-1b0116fef51so18844735ad.0
+        for <linux-xfs@vger.kernel.org>; Mon, 05 Jun 2023 07:15:45 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20221208; t=1685974544; x=1688566544;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=+DkdjkZWlqpOSQQRzq31kjhMhTMi6RVAa/rU1qaw3gM=;
+        b=kOSTR0vhBXT76D70uflL4lawVxU4AyX6F5jRgjRxgmDSMBgIQZhC7WuMp5kweCX/kT
+         c29hyaIm9Jbrl1dzGiO4pOmuNX4tZS3MNv32D26SkA7JEBvMiO8XTaPnGqhiJIwt3mq5
+         dYg0eCiZz91cpSKd5kGfI8N/pgo1lC9Jd6Pa1QgCLXyOUTHH8mn11qPJSmN3XoqRCSwF
+         m4uuFoMtVtw6mUuaxvK4QxJhUA7dcJ6iZKqqKTgQGOOSEpG+7lK4jCiJX9jbTC4eFAJg
+         2KMO051w3jSXe7s7HgQqH2gHyqlgaofgAzGHH9WOe3i+sbr8hpPcuEv4XfY3tAQiC1Sr
+         qn9Q==
+X-Gm-Message-State: AC+VfDxY7FV3wAbOX17JouSki3FG/ULcGgoSE8r7V2XuTNKowB4bQqNw
+        9Yiiuy+tbKC8+ci/AAxhu+qvd++Ff6wOoY9AmmPzhlGvMEPFjCa1s7sXafefalD36v/JJ48ulPZ
+        5x94onhlG5hFJ+wkeRCjA7Ces37+rOTmRTuXi
+X-Received: by 2002:a17:902:c14d:b0:1b0:577c:2d1 with SMTP id 13-20020a170902c14d00b001b0577c02d1mr3041953plj.31.1685974544222;
+        Mon, 05 Jun 2023 07:15:44 -0700 (PDT)
+X-Google-Smtp-Source: ACHHUZ7BkD2vqkMcyt1frJRl0gFOs7X+OAtaIDMgW+d5VUhWYocpMLMyJfzDnGxaLQ0F+DHH3hJvGA6m2DNYP0H4ujY=
+X-Received: by 2002:a17:902:c14d:b0:1b0:577c:2d1 with SMTP id
+ 13-20020a170902c14d00b001b0577c02d1mr3041925plj.31.1685974543831; Mon, 05 Jun
+ 2023 07:15:43 -0700 (PDT)
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
- Thunderbird/102.10.0
-Content-Language: en-US, de-DE
-To:     "Darrick J. Wong" <djwong@kernel.org>,
-        Linux regressions mailing list <regressions@lists.linux.dev>
-Cc:     "Ritesh Harjani (IBM)" <ritesh.list@gmail.com>,
-        shrikanth hegde <sshegde@linux.vnet.ibm.com>,
-        dchinner@redhat.com, linux-xfs@vger.kernel.org,
-        Srikar Dronamraju <srikar@linux.vnet.ibm.com>,
-        ojaswin@linux.ibm.com
-References: <87zg88atiw.fsf@doe.com>
- <33c9674c-8493-1b23-0efb-5c511892b68a@leemhuis.info>
- <20230418045615.GC360889@frogsfrogsfrogs>
-From:   Thorsten Leemhuis <regressions@leemhuis.info>
-Subject: Re: xfs: system fails to boot up due to Internal error
- xfs_trans_cancel
-In-Reply-To: <20230418045615.GC360889@frogsfrogsfrogs>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
-X-bounce-key: webpack.hosteurope.de;regressions@leemhuis.info;1685971680;8e09b710;
-X-HE-SMSGID: 1q6AFM-0005EE-3W
+References: <cover.1685962158.git.ritesh.list@gmail.com> <4fe4937718d44c89e0c279175c65921717d9f591.1685962158.git.ritesh.list@gmail.com>
+In-Reply-To: <4fe4937718d44c89e0c279175c65921717d9f591.1685962158.git.ritesh.list@gmail.com>
+From:   Andreas Gruenbacher <agruenba@redhat.com>
+Date:   Mon, 5 Jun 2023 16:15:31 +0200
+Message-ID: <CAHc6FU7xZaDAnmQ5UhO=MCnW_nGV2WNs93=PTAoVWCYuSCnrAQ@mail.gmail.com>
+Subject: Re: [PATCHv7 3/6] iomap: Refactor some iop related accessor functions
+To:     "Ritesh Harjani (IBM)" <ritesh.list@gmail.com>
+Cc:     linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
+        Matthew Wilcox <willy@infradead.org>,
+        Dave Chinner <david@fromorbit.com>,
+        Brian Foster <bfoster@redhat.com>,
+        Christoph Hellwig <hch@infradead.org>,
+        Ojaswin Mujoo <ojaswin@linux.ibm.com>,
+        Disha Goel <disgoel@linux.ibm.com>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-/me waves friendly
+On Mon, Jun 5, 2023 at 12:55=E2=80=AFPM Ritesh Harjani (IBM)
+<ritesh.list@gmail.com> wrote:
+> We would eventually use iomap_iop_** function naming by the rest of the
+> buffered-io iomap code. This patch update function arguments and naming
+> from iomap_set_range_uptodate() -> iomap_iop_set_range_uptodate().
+> iop_set_range_uptodate() then becomes an accessor function used by
+> iomap_iop_** functions.
+>
+> Signed-off-by: Ritesh Harjani (IBM) <ritesh.list@gmail.com>
+> ---
+>  fs/iomap/buffered-io.c | 111 +++++++++++++++++++++++------------------
+>  1 file changed, 63 insertions(+), 48 deletions(-)
+>
+> diff --git a/fs/iomap/buffered-io.c b/fs/iomap/buffered-io.c
+> index 6fffda355c45..136f57ccd0be 100644
+> --- a/fs/iomap/buffered-io.c
+> +++ b/fs/iomap/buffered-io.c
+> @@ -24,14 +24,14 @@
+>  #define IOEND_BATCH_SIZE       4096
+>
+>  /*
+> - * Structure allocated for each folio when block size < folio size
+> - * to track sub-folio uptodate status and I/O completions.
+> + * Structure allocated for each folio to track per-block uptodate state
+> + * and I/O completions.
+>   */
+>  struct iomap_page {
+>         atomic_t                read_bytes_pending;
+>         atomic_t                write_bytes_pending;
+> -       spinlock_t              uptodate_lock;
+> -       unsigned long           uptodate[];
+> +       spinlock_t              state_lock;
+> +       unsigned long           state[];
+>  };
+>
+>  static inline struct iomap_page *to_iomap_page(struct folio *folio)
+> @@ -43,6 +43,48 @@ static inline struct iomap_page *to_iomap_page(struct =
+folio *folio)
+>
+>  static struct bio_set iomap_ioend_bioset;
+>
+> +static bool iop_test_full_uptodate(struct folio *folio)
+> +{
+> +       struct iomap_page *iop =3D to_iomap_page(folio);
+> +       struct inode *inode =3D folio->mapping->host;
+> +
+> +       return bitmap_full(iop->state, i_blocks_per_folio(inode, folio));
+> +}
 
-On 18.04.23 06:56, Darrick J. Wong wrote:
-> On Mon, Apr 17, 2023 at 01:16:53PM +0200, Linux regression tracking (Thorsten Leemhuis) wrote:
->> Hi, Thorsten here, the Linux kernel's regression tracker. Top-posting
->> for once, to make this easily accessible to everyone.
->>
->> Has any progress been made to fix below regression? It doesn't look like
->> it from here, hence I wondered if it fall through the cracks. Or is
->> there some good reason why this is safe to ignore?
-> 
-> Still working on thinking up a reasonable strategy to reload the incore
-> iunlink list if we trip over this.  Online repair now knows how to do
-> this[1], but I haven't had time to figure out if this will work
-> generally.  [...]
+Can this be called iop_test_fully_uptodate(), please?
 
-I still have this issue on my list of tracked regressions, hence please
-allow me to ask: was there any progress to resolve this? Doesn't look
-like it, but from my point it's easy to miss something.
+> +
+> +static bool iop_test_block_uptodate(struct folio *folio, unsigned int bl=
+ock)
+> +{
+> +       struct iomap_page *iop =3D to_iomap_page(folio);
+> +
+> +       return test_bit(block, iop->state);
+> +}
+> +
+> +static void iop_set_range_uptodate(struct inode *inode, struct folio *fo=
+lio,
+> +                                  size_t off, size_t len)
+> +{
+> +       struct iomap_page *iop =3D to_iomap_page(folio);
 
-BTW, in case this was not yet addressed: if you have a few seconds,
-could you please (just briefly!) explain why it seems to take quite a
-while to resolve this? A "not booting" regressions sounds like something
-that I'm pretty sure Linus normally wants to see addressed rather sooner
-than later. But that apparently is not the case here. I know that XFS
-devs normally take regressions seriously, hence I assume there are good
-reasons for it. But I'd like to roughly understand them (is this a
-extremely corner case issue others are unlike to run into or something
-like that?), as I don't want Linus on my back with questions like "why
-didn't you put more pressure on the XFS maintainers" or "you should have
-told me about this".
+Note that to_iomap_page() does folio_test_private() followed by
+folio_get_private(), which doesn't really make sense in places where
+we know that iop is defined. Maybe we want to split that up.
 
-Ciao, Thorsten (wearing his 'the Linux kernel's regression tracker' hat)
---
-Everything you wanna know about Linux kernel regression tracking:
-https://linux-regtracking.leemhuis.info/about/#tldr
-If I did something stupid, please tell me, as explained on that page.
+> +       unsigned int first_blk =3D off >> inode->i_blkbits;
+> +       unsigned int last_blk =3D (off + len - 1) >> inode->i_blkbits;
+> +       unsigned int nr_blks =3D last_blk - first_blk + 1;
+> +       unsigned long flags;
+> +
+> +       spin_lock_irqsave(&iop->state_lock, flags);
+> +       bitmap_set(iop->state, first_blk, nr_blks);
+> +       if (iop_test_full_uptodate(folio))
+> +               folio_mark_uptodate(folio);
+> +       spin_unlock_irqrestore(&iop->state_lock, flags);
+> +}
+> +
+> +static void iomap_iop_set_range_uptodate(struct inode *inode,
+> +               struct folio *folio, size_t off, size_t len)
+> +{
+> +       struct iomap_page *iop =3D to_iomap_page(folio);
+> +
+> +       if (iop)
+> +               iop_set_range_uptodate(inode, folio, off, len);
+> +       else
+> +               folio_mark_uptodate(folio);
+> +}
 
-#regzbot poke
+This patch passes the inode into iomap_iop_set_range_uptodate() and
+removes the iop argument. Can this be done in a separate patch,
+please?
 
->> On 20.03.23 06:20, Ritesh Harjani (IBM) wrote:
->>> "Darrick J. Wong" <djwong@kernel.org> writes:
->>>
->>>> On Sat, Mar 18, 2023 at 10:20:28PM +0530, Ritesh Harjani wrote:
->>>>> "Darrick J. Wong" <djwong@kernel.org> writes:
->>>>>
->>>>>> On Wed, Mar 15, 2023 at 10:20:37PM -0700, Darrick J. Wong wrote:
->>>>>>> On Thu, Mar 16, 2023 at 10:16:02AM +0530, Ritesh Harjani wrote:
->>>>>>>> "Darrick J. Wong" <djwong@kernel.org> writes:
->>>>>>>>
->>>>>>>> Hi Darrick,
->>>>>>>>
->>>>>>>> Thanks for your analysis and quick help on this.
->>>>>>>>
->>>>>>>>>>
->>>>>>>>>> Hi Darrick,
->>>>>>>>>>
->>>>>>>>>> Please find the information collected from the system. We added some
->>>>>>>>>> debug logs and looks like it is exactly what is happening which you
->>>>>>>>>> pointed out.
->>>>>>>>>>
->>>>>>>>>> We added a debug kernel patch to get more info from the system which
->>>>>>>>>> you had requested [1]
->>>>>>>>>>
->>>>>>>>>> 1. We first breaked into emergency shell where root fs is first getting
->>>>>>>>>> mounted on /sysroot as "ro" filesystem. Here are the logs.
->>>>>>>>>>
->>>>>>>>>> [  OK  ] Started File System Check on /dev/mapper/rhel_ltcden3--lp1-root.
->>>>>>>>>>          Mounting /sysroot...
->>>>>>>>>> [    7.203990] SGI XFS with ACLs, security attributes, quota, no debug enabled
->>>>>>>>>> [    7.205835] XFS (dm-0): Mounting V5 Filesystem 7b801289-75a7-4d39-8cd3-24526e9e9da7
->>>>>>>>>> [   ***] A start job is running for /sysroot (15s / 1min 35s)[   17.439377] XFS (dm-0): Starting recovery (logdev: internal)
->>>>>>>>>> [  *** ] A start job is running for /sysroot (16s / 1min 35s)[   17.771158] xfs_log_mount_finish: Recovery needed is set
->>>>>>>>>> [   17.771172] xlog_recover_iunlink_ag: ran xlog_recover_iunlink_bucket for agi:0, bucket:0
->>>>>>>>>> [   17.771179] xlog_recover_iunlink_ag: ran xlog_recover_iunlink_bucket for agi:0, bucket:1
->>>>>>>>>> [   17.771184] xlog_recover_iunlink_ag: ran xlog_recover_iunlink_bucket for agi:0, bucket:2
->>>>>>>>>> [   17.771190] xlog_recover_iunlink_ag: ran xlog_recover_iunlink_bucket for agi:0, bucket:3
->>>>>>>>>> [   17.771196] xlog_recover_iunlink_ag: ran xlog_recover_iunlink_bucket for agi:0, bucket:4
->>>>>>>>>> [   17.771201] xlog_recover_iunlink_ag: ran xlog_recover_iunlink_bucket for agi:0, bucket:5
->>>>>>>>>> [   17.801033] xlog_recover_iunlink_ag: ran xlog_recover_iunlink_bucket for agi:0, bucket:6
->>>>>>>>>> [   17.801041] xlog_recover_iunlink_ag: ran xlog_recover_iunlink_bucket for agi:0, bucket:7
->>>>>>>>>> [   17.801046] xlog_recover_iunlink_ag: ran xlog_recover_iunlink_bucket for agi:0, bucket:8
->>>>>>>>>> [   17.801052] xlog_recover_iunlink_ag: ran xlog_recover_iunlink_bucket for agi:0, bucket:9
->>>>>>>>>> [   17.801057] xlog_recover_iunlink_ag: ran xlog_recover_iunlink_bucket for agi:0, bucket:10
->>>>>>>>>> [   17.801063] xlog_recover_iunlink_ag: ran xlog_recover_iunlink_bucket for agi:0, bucket:11
->>>>>>>>>> [   17.801068] xlog_recover_iunlink_ag: ran xlog_recover_iunlink_bucket for agi:0, bucket:12
->>>>>>>>>> [   17.801272] xlog_recover_iunlink_bucket: bucket: 13, agino: 3064909, ino: 3064909, iget ret: 0, previno:18446744073709551615, prev_agino:4294967295
->>>>>>>>>>
->>>>>>>>>> <previno, prev_agino> is just <-1 %ull and -1 %u> in above. That's why
->>>>>>>>>> the huge value.
->>>>>>>>>
->>>>>>>>> Ok, so log recovery finds 3064909 and clears it...
->>>>>>>>>
->>>>>>>>>> [   17.801281] xlog_recover_iunlink_ag: ran xlog_recover_iunlink_bucket for agi:0, bucket:13
->>>>>>>>>> [   17.801287] xlog_recover_iunlink_ag: ran xlog_recover_iunlink_bucket for agi:0, bucket:14
->>>>>>>>>
->>>>>>>>> <snip the rest of these...>
->>>>>>>>>
->>>>>>>>>> [   17.844910] xlog_recover_iunlink_ag: ran xlog_recover_iunlink_bucket for agi:3, bucket:62
->>>>>>>>>> [   17.844916] xlog_recover_iunlink_ag: ran xlog_recover_iunlink_bucket for agi:3, bucket:63
->>>>>>>>>> [   17.886079] XFS (dm-0): Ending recovery (logdev: internal)
->>>>>>>>>> [  OK  ] Mounted /sysroot.
->>>>>>>>>> [  OK  ] Reached target Initrd Root File System.
->>>>>>>>>>
->>>>>>>>>>
->>>>>>>>>> 2. Then these are the logs from xfs_repair -n /dev/dm-0
->>>>>>>>>> Here you will notice the same agi 3064909 in bucket 13 (from phase-2) which got also
->>>>>>>>>> printed in above xlog_recover_iunlink_ag() function.
->>>>>>>>>>
->>>>>>>>>> switch_root:/# xfs_repair -n /dev/dm-0
->>>>>>>>>> Phase 1 - find and verify superblock...
->>>>>>>>>> Phase 2 - using internal log
->>>>>>>>>>         - zero log...
->>>>>>>>>>         - scan filesystem freespace and inode maps...
->>>>>>>>>> agi unlinked bucket 13 is 3064909 in ag 0 (inode=3064909)
->>>>>>>>>
->>>>>>>>> ...yet here we find that 3064909 is still on the unlinked list?
->>>>>>>>>
->>>>>>>>> Just to confirm -- you ran xfs_repair -n after the successful recovery
->>>>>>>>> above, right?
->>>>>>>>>
->>>>>>>> Yes, that's right.
->>>>>>>>
->>>>>>>>>>         - found root inode chunk
->>>>>>>>>> Phase 3 - for each AG...
->>>>>>>>>>         - scan (but don't clear) agi unlinked lists...
->>>>>>>>>>         - process known inodes and perform inode discovery...
->>>>>>>>>>         - agno = 0
->>>>>>>>>>         - agno = 1
->>>>>>>>>>         - agno = 2
->>>>>>>>>>         - agno = 3
->>>>>>>>>>         - process newly discovered inodes...
->>>>>>>>>> Phase 4 - check for duplicate blocks...
->>>>>>>>>>         - setting up duplicate extent list...
->>>>>>>>>>         - check for inodes claiming duplicate blocks...
->>>>>>>>>>         - agno = 0
->>>>>>>>>>         - agno = 2
->>>>>>>>>>         - agno = 1
->>>>>>>>>>         - agno = 3
->>>>>>>>>> No modify flag set, skipping phase 5
->>>>>>>>>> Phase 6 - check inode connectivity...
->>>>>>>>>>         - traversing filesystem ...
->>>>>>>>>>         - traversal finished ...
->>>>>>>>>>         - moving disconnected inodes to lost+found ...
->>>>>>>>>> Phase 7 - verify link counts...
->>>>>>>>>> would have reset inode 3064909 nlinks from 4294967291 to 2
->>>>>>>>>
->>>>>>>>> Oh now that's interesting.  Inode on unlinked list with grossly nonzero
->>>>>>>>> (but probably underflowed) link count.  That might explain why iunlink
->>>>>>>>> recovery ignores the inode.  Is inode 3064909 reachable via the
->>>>>>>>> directory tree?
->>>>>>>>>
->>>>>>>>> Would you mind sending me a metadump to play with?  metadump -ago would
->>>>>>>>> be best, if filenames/xattrnames aren't sensitive customer data.
->>>>>>>>
->>>>>>>> Sorry about the delay.
->>>>>>>> I am checking for any permissions part internally.
->>>>>>>> Meanwhile - I can help out if you would like me to try anything.
->>>>>>>
->>>>>>> Ok.  I'll try creating a filesystem with a weirdly high refcount
->>>>>>> unlinked inode and I guess you can try it to see if you get the same
->>>>>>> symptoms.  I've finished with my parent pointers work for the time
->>>>>>> being, so I might have some time tomorrow (after I kick the tires on
->>>>>>> SETFSUUID) to simulate this and see if I can adapt the AGI repair code
->>>>>>> to deal with this.
->>>>>>
->>>>>> If you uncompress and mdrestore the attached file to a blockdev, mount
->>>>>> it, and run some creat() exerciser, do you get the same symptoms?  I've
->>>>>> figured out how to make online fsck deal with it. :)
->>>>>>
->>>>>> A possible solution for runtime would be to make it so that
->>>>>> xfs_iunlink_lookup could iget the inode if it's not in cache at all.
->>>>>>
->>>>>
->>>>> Hello Darrick,
->>>>>
->>>>> I did xfs_mdrestore the metadump you provided on a loop mounted
->>>>> blockdev. I ran fsstress on the root dir of the mounted filesystem,
->>>>> but I was unable to hit the issue.
->>>>>
->>>>> I tried the same with the original FS metadump as well and I am unable
->>>>> to hit the issue while running fsstress on the filesystem.
->>>>>
->>>>> I am thinking of identifying which file unlink operation was in progress
->>>>> when we see the issue during mounting. Maybe that will help in
->>>>> recreating the issue.
->>>>
->>>> Yeah, creating a bunch of O_TMPFILE files will exercise the unlinked
->>>> lists, possibly enough to trip over the affected agi bucket.  See
->>>> t_open_tmpfiles.c in the fstests repo.
->>>
->>>
->>> Hello Darrick,
->>>
->>> Yes, I am tripping over the issue very easily when I run t_open_tmpfiles
->>> testcase for the metadump you shared. (Not hitting with the original dump
->>> though. Will try to fetch more information on whay is that).
->>>
->>> Here is the call stack with your metadump when we try to run
->>> t_open_tmpfiles test case.
->>> Its the same warning message which we were hitting too in the original
->>> case too.
->>>
->>> xfs_iunlink_lookup()
->>> <...>
->>>     /*
->>> 	 * Inode not in memory or in RCU freeing limbo should not happen.
->>> 	 * Warn about this and let the caller handle the failure.
->>> 	 */
->>> 	if (WARN_ON_ONCE(!ip || !ip->i_ino)) {
->>> 		rcu_read_unlock();
->>> 		return NULL;
->>> 	}
->>> <...>
->>>
->>> [43873.070585] xfs filesystem being mounted at /mnt1/scratch supports timestamps until 2038 (0x7fffffff)
->>> root@ubuntu:~# [43905.483065] ------------[ cut here ]------------
->>> [43905.485250] WARNING: CPU: 0 PID: 2379 at fs/xfs/xfs_inode.c:1839 xfs_iunlink_lookup+0x14c/0x1e0
->>> [43905.488325] Modules linked in:
->>> [43905.489594] CPU: 0 PID: 2379 Comm: t_open_tmpfiles Not tainted 6.3.0-rc2-xfstests-00051-gc1940a43e595 #57
->>> [43905.492828] Hardware name: QEMU Standard PC (i440FX + PIIX, 1996), BIOS rel-1.15.0-0-g2dd4b9b3f840-prebuilt.qemu.org 04/01/2014
->>> [43905.496604] RIP: 0010:xfs_iunlink_lookup+0x14c/0x1e0
->>> [43905.498341] Code: 0f 85 6e ff ff ff 48 c7 c2 a8 95 be 82 be 22 03 00 00 48 c7 c7 30 23 b7 82 c6 05 c8 71 84 01 01 e8 e9 d3 91 ff e9 6
->>> [43905.504324] RSP: 0018:ffffc9000405fb98 EFLAGS: 00010246
->>> [43905.506224] RAX: 0000000000000000 RBX: 0000000000001b43 RCX: 0000000000000000
->>> [43905.508624] RDX: ffff8891f1edf488 RSI: ffff8891f1edf4c8 RDI: 0000000000001b43
->>> [43905.511087] RBP: 0000000000001b43 R08: 0000000000000000 R09: ffff88931446ba80
->>> [43905.514465] R10: 0000000000000000 R11: 0000000000000000 R12: 0000000000000000
->>> [43905.517947] R13: ffff889313f67840 R14: ffff8892c0155b00 R15: ffff8889dc9b2900
->>> [43905.521519] FS:  00007ffff7fb2740(0000) GS:ffff889dc7600000(0000) knlGS:0000000000000000
->>> [43905.525570] CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
->>> [43905.528402] CR2: 0000555555556060 CR3: 00000011b4790006 CR4: 0000000000170ef0
->>> [43905.532008] Call Trace:
->>> [43905.533399]  <TASK>
->>> [43905.534473]  xfs_iunlink_insert_inode+0x7a/0x100
->>> [43905.536663]  xfs_iunlink+0xa4/0x190
->>> [43905.537962]  xfs_create_tmpfile+0x277/0x2e0
->>> [43905.539654]  xfs_generic_create+0x100/0x350
->>> [43905.541303]  xfs_vn_tmpfile+0x1f/0x40
->>> [43905.542920]  vfs_tmpfile+0x10e/0x1b0
->>> [43905.544307]  path_openat+0x157/0x200
->>> [43905.545813]  do_filp_open+0xad/0x150
->>> [43905.547213]  ? alloc_fd+0x12d/0x220
->>> [43905.548646]  ? alloc_fd+0x12d/0x220
->>> [43905.550014]  ? lock_release+0x7f/0x130
->>> [43905.551435]  ? do_raw_spin_unlock+0x4f/0xa0
->>> [43905.553045]  ? _raw_spin_unlock+0x2d/0x50
->>> [43905.554554]  ? alloc_fd+0x12d/0x220
->>> [43905.556264]  do_sys_openat2+0x9b/0x160
->>> [43905.557680]  __x64_sys_openat+0x58/0xa0
->>> [43905.559065]  do_syscall_64+0x3f/0x90
->>> [43905.560589]  entry_SYSCALL_64_after_hwframe+0x72/0xdc
->>> [43905.562377] RIP: 0033:0x7ffff7d0ca45
->>> [43905.563970] Code: 75 53 89 f0 25 00 00 41 00 3d 00 00 41 00 74 45 80 3d a6 1b 0f 00 00 74 69 89 da 48 89 ee bf 9c ff ff ff b8 01 01 5
->>> [43905.570038] RSP: 002b:00007fffffffe2c0 EFLAGS: 00000202 ORIG_RAX: 0000000000000101
->>> [43905.572747] RAX: ffffffffffffffda RBX: 0000000000410002 RCX: 00007ffff7d0ca45
->>> [43905.575246] RDX: 0000000000410002 RSI: 0000555555556057 RDI: 00000000ffffff9c
->>> [43905.577782] RBP: 0000555555556057 R08: 000000000000ab7f R09: 00007ffff7fc1080
->>> [43905.580315] R10: 00000000000001a4 R11: 0000000000000202 R12: 0000000000000000
->>> [43905.582850] R13: 00007fffffffe4a0 R14: 0000555555557d68 R15: 00007ffff7ffd020
->>> [43905.585438]  </TASK>
->>> [43905.586528] irq event stamp: 14045
->>> [43905.587828] hardirqs last  enabled at (14055): [<ffffffff8121bc02>] __up_console_sem+0x52/0x60
->>> [43905.590861] hardirqs last disabled at (14066): [<ffffffff8121bbe7>] __up_console_sem+0x37/0x60
->>> [43905.593856] softirqs last  enabled at (13920): [<ffffffff82231b5a>] __do_softirq+0x2ea/0x3e1
->>> [43905.596813] softirqs last disabled at (13909): [<ffffffff8119573f>] irq_exit_rcu+0xdf/0x140
->>> [43905.599766] ---[ end trace 0000000000000000 ]---
->>> [43905.601450] XFS (loop7): Internal error xfs_trans_cancel at line 1097 of file fs/xfs/xfs_trans.c.  Caller xfs_create_tmpfile+0x1c6/00
->>> [43905.606100] CPU: 0 PID: 2379 Comm: t_open_tmpfiles Tainted: G        W          6.3.0-rc2-xfstests-00051-gc1940a43e595 #57
->>> [43905.609797] Hardware name: QEMU Standard PC (i440FX + PIIX, 1996), BIOS rel-1.15.0-0-g2dd4b9b3f840-prebuilt.qemu.org 04/01/2014
->>> [43905.614562] Call Trace:
->>> [43905.616112]  <TASK>
->>> [43905.617245]  dump_stack_lvl+0x66/0x80
->>> [43905.619054]  xfs_trans_cancel+0x138/0x1f0
->>> [43905.620898]  xfs_create_tmpfile+0x1c6/0x2e0
->>> [43905.623140]  xfs_generic_create+0x100/0x350
->>> [43905.625483]  xfs_vn_tmpfile+0x1f/0x40
->>> [43905.627372]  vfs_tmpfile+0x10e/0x1b0
->>> [43905.629413]  path_openat+0x157/0x200
->>> [43905.631204]  do_filp_open+0xad/0x150
->>> [43905.633050]  ? alloc_fd+0x12d/0x220
->>> [43905.634844]  ? alloc_fd+0x12d/0x220
->>> [43905.636602]  ? lock_release+0x7f/0x130
->>> [43905.638479]  ? do_raw_spin_unlock+0x4f/0xa0
->>> [43905.640726]  ? _raw_spin_unlock+0x2d/0x50
->>> [43905.642916]  ? alloc_fd+0x12d/0x220
->>> [43905.644375]  do_sys_openat2+0x9b/0x160
->>> [43905.645763]  __x64_sys_openat+0x58/0xa0
->>> [43905.647145]  do_syscall_64+0x3f/0x90
->>> [43905.648685]  entry_SYSCALL_64_after_hwframe+0x72/0xdc
->>> [43905.650430] RIP: 0033:0x7ffff7d0ca45
->>> [43905.651731] Code: 75 53 89 f0 25 00 00 41 00 3d 00 00 41 00 74 45 80 3d a6 1b 0f 00 00 74 69 89 da 48 89 ee bf 9c ff ff ff b8 01 01 5
->>> [43905.657637] RSP: 002b:00007fffffffe2c0 EFLAGS: 00000202 ORIG_RAX: 0000000000000101
->>> [43905.660141] RAX: ffffffffffffffda RBX: 0000000000410002 RCX: 00007ffff7d0ca45
->>> [43905.662525] RDX: 0000000000410002 RSI: 0000555555556057 RDI: 00000000ffffff9c
->>> [43905.665086] RBP: 0000555555556057 R08: 000000000000ab7f R09: 00007ffff7fc1080
->>> [43905.667455] R10: 00000000000001a4 R11: 0000000000000202 R12: 0000000000000000
->>> [43905.669830] R13: 00007fffffffe4a0 R14: 0000555555557d68 R15: 00007ffff7ffd020
->>> [43905.672193]  </TASK>
->>> [43905.689666] XFS (loop7): Corruption of in-memory data (0x8) detected at xfs_trans_cancel+0x151/0x1f0 (fs/xfs/xfs_trans.c:1098).  Shu.
->>> [43905.694215] XFS (loop7): Please unmount the filesystem and rectify the problem(s)
->>>
->>>
->>> -ritesh
->>>
->>>
->>>>
->>>> --D
->>>>
->>>>> Although the xfs_repair -n does show a similar log of unlinked inode
->>>>> with the metadump you provided.
->>>>>
->>>>> root@ubuntu:~# xfs_repair -n -o force_geometry /dev/loop7
->>>>> Phase 1 - find and verify superblock...
->>>>> Phase 2 - using internal log
->>>>>         - zero log...
->>>>>         - scan filesystem freespace and inode maps...
->>>>> agi unlinked bucket 3 is 6979 in ag 0 (inode=6979)
->>>>> agi unlinked bucket 4 is 6980 in ag 0 (inode=6980)
->>>>>         - found root inode chunk
->>>>> Phase 3 - for each AG...
->>>>>         - scan (but don't clear) agi unlinked lists...
->>>>>         - process known inodes and perform inode discovery...
->>>>>         - agno = 0
->>>>>         - process newly discovered inodes...
->>>>> Phase 4 - check for duplicate blocks...
->>>>>         - setting up duplicate extent list...
->>>>>         - check for inodes claiming duplicate blocks...
->>>>>         - agno = 0
->>>>> No modify flag set, skipping phase 5
->>>>> Phase 6 - check inode connectivity...
->>>>>         - traversing filesystem ...
->>>>>         - traversal finished ...
->>>>>         - moving disconnected inodes to lost+found ...
->>>>> disconnected inode 6979, would move to lost+found
->>>>> disconnected inode 6980, would move to lost+found
->>>>> Phase 7 - verify link counts...
->>>>> would have reset inode 6979 nlinks from 5555 to 1
->>>>> would have reset inode 6980 nlinks from 0 to 1
->>>>> No modify flag set, skipping filesystem flush and exiting.
->>>>>
->>>>> Thanks again for the help. Once I have more info I will update the
->>>>> thread!
->>>>>
->>>>> -ritesh
-> 
-> 
+We have a few places like the above, where we look up the iop without
+using it. Would a function like folio_has_iop() make more sense?
+
+> +
+>  static struct iomap_page *iomap_iop_alloc(struct inode *inode,
+>                                 struct folio *folio, unsigned int flags)
+>  {
+> @@ -58,12 +100,12 @@ static struct iomap_page *iomap_iop_alloc(struct ino=
+de *inode,
+>         else
+>                 gfp =3D GFP_NOFS | __GFP_NOFAIL;
+>
+> -       iop =3D kzalloc(struct_size(iop, uptodate, BITS_TO_LONGS(nr_block=
+s)),
+> +       iop =3D kzalloc(struct_size(iop, state, BITS_TO_LONGS(nr_blocks))=
+,
+>                       gfp);
+>         if (iop) {
+> -               spin_lock_init(&iop->uptodate_lock);
+> +               spin_lock_init(&iop->state_lock);
+>                 if (folio_test_uptodate(folio))
+> -                       bitmap_fill(iop->uptodate, nr_blocks);
+> +                       bitmap_fill(iop->state, nr_blocks);
+>                 folio_attach_private(folio, iop);
+>         }
+>         return iop;
+> @@ -72,14 +114,12 @@ static struct iomap_page *iomap_iop_alloc(struct ino=
+de *inode,
+>  static void iomap_iop_free(struct folio *folio)
+>  {
+>         struct iomap_page *iop =3D to_iomap_page(folio);
+> -       struct inode *inode =3D folio->mapping->host;
+> -       unsigned int nr_blocks =3D i_blocks_per_folio(inode, folio);
+>
+>         if (!iop)
+>                 return;
+>         WARN_ON_ONCE(atomic_read(&iop->read_bytes_pending));
+>         WARN_ON_ONCE(atomic_read(&iop->write_bytes_pending));
+> -       WARN_ON_ONCE(bitmap_full(iop->uptodate, nr_blocks) !=3D
+> +       WARN_ON_ONCE(iop_test_full_uptodate(folio) !=3D
+>                         folio_test_uptodate(folio));
+>         folio_detach_private(folio);
+>         kfree(iop);
+> @@ -111,7 +151,7 @@ static void iomap_adjust_read_range(struct inode *ino=
+de, struct folio *folio,
+>
+>                 /* move forward for each leading block marked uptodate */
+>                 for (i =3D first; i <=3D last; i++) {
+> -                       if (!test_bit(i, iop->uptodate))
+> +                       if (!iop_test_block_uptodate(folio, i))
+>                                 break;
+>                         *pos +=3D block_size;
+>                         poff +=3D block_size;
+> @@ -121,7 +161,7 @@ static void iomap_adjust_read_range(struct inode *ino=
+de, struct folio *folio,
+>
+>                 /* truncate len if we find any trailing uptodate block(s)=
+ */
+>                 for ( ; i <=3D last; i++) {
+> -                       if (test_bit(i, iop->uptodate)) {
+> +                       if (iop_test_block_uptodate(folio, i)) {
+>                                 plen -=3D (last - i + 1) * block_size;
+>                                 last =3D i - 1;
+>                                 break;
+> @@ -145,30 +185,6 @@ static void iomap_adjust_read_range(struct inode *in=
+ode, struct folio *folio,
+>         *lenp =3D plen;
+>  }
+>
+> -static void iomap_iop_set_range_uptodate(struct folio *folio,
+> -               struct iomap_page *iop, size_t off, size_t len)
+> -{
+> -       struct inode *inode =3D folio->mapping->host;
+> -       unsigned first =3D off >> inode->i_blkbits;
+> -       unsigned last =3D (off + len - 1) >> inode->i_blkbits;
+> -       unsigned long flags;
+> -
+> -       spin_lock_irqsave(&iop->uptodate_lock, flags);
+> -       bitmap_set(iop->uptodate, first, last - first + 1);
+> -       if (bitmap_full(iop->uptodate, i_blocks_per_folio(inode, folio)))
+> -               folio_mark_uptodate(folio);
+> -       spin_unlock_irqrestore(&iop->uptodate_lock, flags);
+> -}
+> -
+> -static void iomap_set_range_uptodate(struct folio *folio,
+> -               struct iomap_page *iop, size_t off, size_t len)
+> -{
+> -       if (iop)
+> -               iomap_iop_set_range_uptodate(folio, iop, off, len);
+> -       else
+> -               folio_mark_uptodate(folio);
+> -}
+> -
+>  static void iomap_finish_folio_read(struct folio *folio, size_t offset,
+>                 size_t len, int error)
+>  {
+> @@ -178,7 +194,8 @@ static void iomap_finish_folio_read(struct folio *fol=
+io, size_t offset,
+>                 folio_clear_uptodate(folio);
+>                 folio_set_error(folio);
+>         } else {
+> -               iomap_set_range_uptodate(folio, iop, offset, len);
+> +               iomap_iop_set_range_uptodate(folio->mapping->host, folio,
+> +                                            offset, len);
+>         }
+>
+>         if (!iop || atomic_sub_and_test(len, &iop->read_bytes_pending))
+> @@ -214,7 +231,6 @@ struct iomap_readpage_ctx {
+>  static int iomap_read_inline_data(const struct iomap_iter *iter,
+>                 struct folio *folio)
+>  {
+> -       struct iomap_page *iop;
+>         const struct iomap *iomap =3D iomap_iter_srcmap(iter);
+>         size_t size =3D i_size_read(iter->inode) - iomap->offset;
+>         size_t poff =3D offset_in_page(iomap->offset);
+> @@ -232,15 +248,14 @@ static int iomap_read_inline_data(const struct ioma=
+p_iter *iter,
+>         if (WARN_ON_ONCE(size > iomap->length))
+>                 return -EIO;
+>         if (offset > 0)
+> -               iop =3D iomap_iop_alloc(iter->inode, folio, iter->flags);
+> -       else
+> -               iop =3D to_iomap_page(folio);
+> +               iomap_iop_alloc(iter->inode, folio, iter->flags);
+>
+>         addr =3D kmap_local_folio(folio, offset);
+>         memcpy(addr, iomap->inline_data, size);
+>         memset(addr + size, 0, PAGE_SIZE - poff - size);
+>         kunmap_local(addr);
+> -       iomap_set_range_uptodate(folio, iop, offset, PAGE_SIZE - poff);
+> +       iomap_iop_set_range_uptodate(iter->inode, folio, offset,
+> +                                    PAGE_SIZE - poff);
+>         return 0;
+>  }
+>
+> @@ -277,7 +292,7 @@ static loff_t iomap_readpage_iter(const struct iomap_=
+iter *iter,
+>
+>         if (iomap_block_needs_zeroing(iter, pos)) {
+>                 folio_zero_range(folio, poff, plen);
+> -               iomap_set_range_uptodate(folio, iop, poff, plen);
+> +               iomap_iop_set_range_uptodate(iter->inode, folio, poff, pl=
+en);
+>                 goto done;
+>         }
+>
+> @@ -452,7 +467,7 @@ bool iomap_is_partially_uptodate(struct folio *folio,=
+ size_t from, size_t count)
+>         last =3D (from + count - 1) >> inode->i_blkbits;
+>
+>         for (i =3D first; i <=3D last; i++)
+> -               if (!test_bit(i, iop->uptodate))
+> +               if (!iop_test_block_uptodate(folio, i))
+>                         return false;
+>         return true;
+>  }
+> @@ -591,7 +606,7 @@ static int __iomap_write_begin(const struct iomap_ite=
+r *iter, loff_t pos,
+>                         if (status)
+>                                 return status;
+>                 }
+> -               iomap_set_range_uptodate(folio, iop, poff, plen);
+> +               iomap_iop_set_range_uptodate(iter->inode, folio, poff, pl=
+en);
+>         } while ((block_start +=3D plen) < block_end);
+>
+>         return 0;
+> @@ -698,7 +713,6 @@ static int iomap_write_begin(struct iomap_iter *iter,=
+ loff_t pos,
+>  static size_t __iomap_write_end(struct inode *inode, loff_t pos, size_t =
+len,
+>                 size_t copied, struct folio *folio)
+>  {
+> -       struct iomap_page *iop =3D to_iomap_page(folio);
+>         flush_dcache_folio(folio);
+>
+>         /*
+> @@ -714,7 +728,8 @@ static size_t __iomap_write_end(struct inode *inode, =
+loff_t pos, size_t len,
+>          */
+>         if (unlikely(copied < len && !folio_test_uptodate(folio)))
+>                 return 0;
+> -       iomap_set_range_uptodate(folio, iop, offset_in_folio(folio, pos),=
+ len);
+> +       iomap_iop_set_range_uptodate(inode, folio, offset_in_folio(folio,=
+ pos),
+> +                                    len);
+>         filemap_dirty_folio(inode->i_mapping, folio);
+>         return copied;
+>  }
+> @@ -1630,7 +1645,7 @@ iomap_writepage_map(struct iomap_writepage_ctx *wpc=
+,
+>          * invalid, grab a new one.
+>          */
+>         for (i =3D 0; i < nblocks && pos < end_pos; i++, pos +=3D len) {
+> -               if (iop && !test_bit(i, iop->uptodate))
+> +               if (iop && !iop_test_block_uptodate(folio, i))
+>                         continue;
+>
+>                 error =3D wpc->ops->map_blocks(wpc, inode, pos);
+> --
+> 2.40.1
+>
+
+Thanks,
+Andreas
+
