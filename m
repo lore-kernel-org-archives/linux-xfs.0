@@ -2,83 +2,123 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1BEB6C7EE23
-	for <linux-xfs@archiver.kernel.org>; Mon,  5 Jun 2023 17:19:23 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5BF8DC7EE23
+	for <linux-xfs@archiver.kernel.org>; Mon,  5 Jun 2023 17:22:11 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235357AbjFERTW (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 5 Jun 2023 13:19:22 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43238 "EHLO
+        id S234236AbjFERWK (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 5 Jun 2023 13:22:10 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44690 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S235367AbjFERTT (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 5 Jun 2023 13:19:19 -0400
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2B99299
-        for <linux-xfs@vger.kernel.org>; Mon,  5 Jun 2023 10:18:32 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1685985511;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=OCmu3c9nvPihhl79Cibc1wBqka7ysS8foFrhO0nbbrw=;
-        b=IKnFsDUcLk0LFfnlxlmmJdVQojCNumVEqGRIDR0NSZxJRf9EzJYr/Ej/R/NYkqZh5Fzaca
-        qgOADk6+GGWDYeUUg7b4hQSaF5qlPHxwNg7oQsUebBDVUihEXzBiVv0pNykgq2OFGAlHlA
-        i2u989Ts0nlME34K0kZd1xzc/A/rsCI=
-Received: from mail-qv1-f71.google.com (mail-qv1-f71.google.com
- [209.85.219.71]) by relay.mimecast.com with ESMTP with STARTTLS
- (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
- us-mta-629-9KvASUpvM0eGOeKOYztKcQ-1; Mon, 05 Jun 2023 13:18:30 -0400
-X-MC-Unique: 9KvASUpvM0eGOeKOYztKcQ-1
-Received: by mail-qv1-f71.google.com with SMTP id 6a1803df08f44-626253ba086so48637596d6.2
-        for <linux-xfs@vger.kernel.org>; Mon, 05 Jun 2023 10:18:30 -0700 (PDT)
+        with ESMTP id S231472AbjFERWH (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 5 Jun 2023 13:22:07 -0400
+Received: from mail-oi1-x22a.google.com (mail-oi1-x22a.google.com [IPv6:2607:f8b0:4864:20::22a])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 86CAF10A
+        for <linux-xfs@vger.kernel.org>; Mon,  5 Jun 2023 10:22:03 -0700 (PDT)
+Received: by mail-oi1-x22a.google.com with SMTP id 5614622812f47-3985d75c9b0so194549b6e.1
+        for <linux-xfs@vger.kernel.org>; Mon, 05 Jun 2023 10:22:03 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=kernel-dk.20221208.gappssmtp.com; s=20221208; t=1685985722; x=1688577722;
+        h=content-transfer-encoding:mime-version:date:message-id:subject
+         :references:in-reply-to:cc:to:from:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=9HBzAKQ8EWkIuzHq6aIJ4mqwm9+DaKYAj6ps+F/vuTI=;
+        b=jh2UmAQ3NsKFC/MrynS5s4VOiwEkVYskRKYwmk2+r9IhdcNLaWSoRFhCITHNAwpw2w
+         bTVPEyYGpdrWg/AfDmiWW5LMgBNHD7iPyGbjQ38kps2Kwq4XW1CMRIkFXj2etTskPemV
+         GWWUMdq0FhYa5jHjFZZOn2STiHFEJMPEx6Vh9Lx2pkmbyH/bPw3UTOzEkwq9oVe+6Gvu
+         mVeRryP8psvMA5OaaANvxrFw3MTbHBXsJI31FRRwpBUQKSd9aSH095es87US3bTcGYpF
+         dZxTINVrQN/BTouOpqCAhoEMlsXUP3gbmYISyXWbPAshVYhvfYFI+BDRDMPBLMWzG2QA
+         N1Bw==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20221208; t=1685985209; x=1688577209;
-        h=content-transfer-encoding:in-reply-to:from:content-language
-         :references:cc:to:subject:user-agent:mime-version:date:message-id
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=OCmu3c9nvPihhl79Cibc1wBqka7ysS8foFrhO0nbbrw=;
-        b=XY1PR/xqfqBW6siSG3Z60ScIvXHqB7Lr0MnQ1crgql/fYhvLG3ocWcNenBnfFcsS+V
-         JMugNbE4NfojLugEsYyTH4+vvwyIMQyZ2yKY47ra2N4wBMszmZVrEbcpd0KYl6SFojbG
-         UlZYEWVD70YjOuZy6dXGca8+LGzL7UpWIhCbj6ZxGUtFlc/r7sqcATN4wZjROLASZp3s
-         JtztZmKu2fGkx7xZCjyfONMQdWuVem4tlEz5FGgLJ6Tj1tem06w6XvlLEBxK5RitMJz3
-         3HGpfGlVzDZTOu4WP3AdWRgCvPeErmQ2n0g8Sevvl33hGnNwP4pKVhkIgKMd76qnbBr5
-         KYig==
-X-Gm-Message-State: AC+VfDxmy1Rwa6DhddcLWvxy1lAlxFIsxPiDCOet9F80No4wuG6o4366
-        34LAuOH2TpO/SFNsiS00nfVXgI1r2v1B4UuaaEe4zihjrT7fsAjJkkvINUhK8ZPH68I3e+p9OPh
-        l/F0oroROm7DM0BsFCh+8
-X-Received: by 2002:ad4:5cae:0:b0:623:9ac1:a4be with SMTP id q14-20020ad45cae000000b006239ac1a4bemr9423756qvh.12.1685985208822;
-        Mon, 05 Jun 2023 10:13:28 -0700 (PDT)
-X-Google-Smtp-Source: ACHHUZ5XhMMHfXUecB4aGCXCYVVT8Thijrh41hVTM98wt4U+K1L2A+DS96jjlSp4QU3qYIU1U43F+g==
-X-Received: by 2002:ad4:5cae:0:b0:623:9ac1:a4be with SMTP id q14-20020ad45cae000000b006239ac1a4bemr9423743qvh.12.1685985208590;
-        Mon, 05 Jun 2023 10:13:28 -0700 (PDT)
-Received: from [192.168.1.103] (gw19-pha-stl-mmo-2.avonet.cz. [131.117.213.218])
-        by smtp.gmail.com with ESMTPSA id d7-20020a0cf6c7000000b0062884fd5fbfsm4675243qvo.21.2023.06.05.10.13.27
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Mon, 05 Jun 2023 10:13:28 -0700 (PDT)
-Message-ID: <6a91031c-8dd1-7479-679a-98897ebfd54c@redhat.com>
-Date:   Mon, 5 Jun 2023 19:13:25 +0200
+        d=1e100.net; s=20221208; t=1685985722; x=1688577722;
+        h=content-transfer-encoding:mime-version:date:message-id:subject
+         :references:in-reply-to:cc:to:from:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=9HBzAKQ8EWkIuzHq6aIJ4mqwm9+DaKYAj6ps+F/vuTI=;
+        b=JRs3DzZLD8jWmUwk8jAaVCbuknNS32wzd/Xl5OUsioAS1Kvoc+/LmbPmC5xrynkKRq
+         5LrLJcJEiyolmR5WfPn2gJOovDG4gOb9+mATT6iOd0a4e7XBI4avWaXTWTjLHGXZkPOo
+         c/UeJhZMLeQT1a/dE/IvU/7VdLqw71/k1/FJ7H6WqN3nxBSCOUQoLLpCRfaehs8qGinw
+         0PKfpXnoOtNPCkc2ZsbWKM64jHAdcIeODLQFO8Rhsa/3DjvcThssyZOpk7dSiEaTKVGE
+         MS9YGacJThbsUwtn/keBazftunRiNPU6nDO8sfHIdBlUWEWtcM7B0M7EXHuIuj1Z3ti3
+         EACg==
+X-Gm-Message-State: AC+VfDzCDyOOc6LjwMxm52gBLr2Ji8I6xbvm2wZliO6PK0uTFXOvt8ZA
+        PWxB2iRtBJbQn6MH30ePmR0c0Q==
+X-Google-Smtp-Source: ACHHUZ6PL62Ib5H4QB3rPGiaQRZcV0rInc/UOc81HCQF8mpjnx0vviMbWu8Zk38mJqV6Qj9LKxCzMg==
+X-Received: by 2002:a05:6358:cc27:b0:127:fa1b:fb0e with SMTP id gx39-20020a056358cc2700b00127fa1bfb0emr1263873rwb.1.1685985722606;
+        Mon, 05 Jun 2023 10:22:02 -0700 (PDT)
+Received: from [127.0.0.1] ([2600:380:c01c:32f0:eff8:7692:bf8a:abc6])
+        by smtp.gmail.com with ESMTPSA id cl9-20020a17090af68900b0025643e5da99sm7993666pjb.37.2023.06.05.10.22.01
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Mon, 05 Jun 2023 10:22:01 -0700 (PDT)
+From:   Jens Axboe <axboe@kernel.dk>
+To:     Christoph Hellwig <hch@lst.de>
+Cc:     Al Viro <viro@zeniv.linux.org.uk>,
+        Christian Brauner <brauner@kernel.org>,
+        "Darrick J. Wong" <djwong@kernel.org>, Jan Kara <jack@suse.cz>,
+        linux-block@vger.kernel.org, linux-fsdevel@vger.kernel.org,
+        linux-xfs@vger.kernel.org
+In-Reply-To: <20230601094459.1350643-1-hch@lst.de>
+References: <20230601094459.1350643-1-hch@lst.de>
+Subject: Re: introduce bdev holder ops and a file system shutdown method v3
+Message-Id: <168598572109.2504.8975232011754082233.b4-ty@kernel.dk>
+Date:   Mon, 05 Jun 2023 11:22:01 -0600
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
- Thunderbird/102.10.0
-Subject: Re: [PATCH 1/2] xfs_repair: don't add junked entries to the rebuilt
- directory
-To:     "Darrick J. Wong" <djwong@kernel.org>, cem@kernel.org
-Cc:     linux-xfs@vger.kernel.org
-References: <168597943893.1226372.1356501443716713637.stgit@frogsfrogsfrogs>
- <168597944454.1226372.3979295005270810427.stgit@frogsfrogsfrogs>
-Content-Language: en-US
-From:   Pavel Reichl <preichl@redhat.com>
-In-Reply-To: <168597944454.1226372.3979295005270810427.stgit@frogsfrogsfrogs>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
+X-Mailer: b4 0.13-dev-c6835
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-LGTM & Builds
 
-Reviewed-by: Pavel Reichl <preichl@redhat.com>
+On Thu, 01 Jun 2023 11:44:43 +0200, Christoph Hellwig wrote:
+> this series fixes the long standing problem that we never had a good way
+> to communicate block device events to the user of the block device.
+> 
+> It fixes this by introducing a new set of holder ops registered at
+> blkdev_get_by_* time for the exclusive holder, and then wire that up
+> to a shutdown super operation to report the block device remove to the
+> file systems.
+> 
+> [...]
+
+Applied, thanks!
+
+[01/16] block: factor out a bd_end_claim helper from blkdev_put
+        commit: 0783b1a7cbd9a02ddc35fe531b5966b674b304f0
+[02/16] block: refactor bd_may_claim
+        commit: ae5f855ead6b41422ca0c971ebda509c0414f8ec
+[03/16] block: turn bdev_lock into a mutex
+        commit: 74e6464a987b2572771ac19163e961777fd0252e
+[04/16] block: consolidate the shutdown logic in blk_mark_disk_dead and del_gendisk
+        commit: 66fddc25fe182fd7d28b35f4173113f3eefc7fb5
+[05/16] block: avoid repeated work in blk_mark_disk_dead
+        commit: a4f75764d16bed317276b05a9fe2c179ef61680d
+[06/16] block: unhash the inode earlier in delete_partition
+        commit: 69f90b70bdb62e1a930239d33579e04884cd0b9a
+[07/16] block: delete partitions later in del_gendisk
+        commit: eec1be4c30df73238b936fa9f3653773a6f8b15c
+[08/16] block: remove blk_drop_partitions
+        commit: 00080f7fb7a599c26523037b202fb945f3141811
+[09/16] block: introduce holder ops
+        commit: 0718afd47f70cf46877c39c25d06b786e1a3f36c
+[10/16] block: add a mark_dead holder operation
+        commit: f55e017c642051ddc01d77a89ab18f5ee71d6276
+[11/16] fs: add a method to shut down the file system
+        commit: 87efb39075be6a288cd7f23858f15bd01c83028a
+[12/16] xfs: wire up sops->shutdown
+        commit: e7caa877e5ddac63886f4a8376cb3ffbd4dfe569
+[13/16] xfs: wire up the ->mark_dead holder operation for log and RT devices
+        commit: 8067ca1dcdfcc2a5e0a51bff3730ad3eef0623d6
+[14/16] ext4: split ext4_shutdown
+        commit: 97524b454bc562f4052751f0e635a61dad78f1b2
+[15/16] ext4: wire up sops->shutdown
+        commit: f5db130d4443ddf63b49e195782038ebaab0bec9
+[16/16] ext4: wire up the ->mark_dead holder operation for log devices
+        commit: dd2e31afba9e3a3107aa202726b6199c55075f59
+
+Best regards,
+-- 
+Jens Axboe
 
 
-I'm just wondering why junkit is defined as a short and not a boolean?
 
