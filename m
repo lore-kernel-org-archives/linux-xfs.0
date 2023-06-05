@@ -2,134 +2,154 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8E42FC7EE23
-	for <linux-xfs@archiver.kernel.org>; Mon,  5 Jun 2023 00:49:43 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 63B73C7EE2C
+	for <linux-xfs@archiver.kernel.org>; Mon,  5 Jun 2023 01:32:13 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229799AbjFEAtm (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Sun, 4 Jun 2023 20:49:42 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34546 "EHLO
+        id S230495AbjFEBcK (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Sun, 4 Jun 2023 21:32:10 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42518 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229449AbjFEAtl (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sun, 4 Jun 2023 20:49:41 -0400
-Received: from mail-pf1-x436.google.com (mail-pf1-x436.google.com [IPv6:2607:f8b0:4864:20::436])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 56978AB
-        for <linux-xfs@vger.kernel.org>; Sun,  4 Jun 2023 17:49:40 -0700 (PDT)
-Received: by mail-pf1-x436.google.com with SMTP id d2e1a72fcca58-6513e7e5d44so2369482b3a.0
-        for <linux-xfs@vger.kernel.org>; Sun, 04 Jun 2023 17:49:40 -0700 (PDT)
+        with ESMTP id S230193AbjFEBcJ (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sun, 4 Jun 2023 21:32:09 -0400
+Received: from mail-pl1-x629.google.com (mail-pl1-x629.google.com [IPv6:2607:f8b0:4864:20::629])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id AEC91A1;
+        Sun,  4 Jun 2023 18:32:08 -0700 (PDT)
+Received: by mail-pl1-x629.google.com with SMTP id d9443c01a7336-1b026657a6fso37545555ad.0;
+        Sun, 04 Jun 2023 18:32:08 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=fromorbit-com.20221208.gappssmtp.com; s=20221208; t=1685926179; x=1688518179;
-        h=content-disposition:mime-version:message-id:subject:to:from:date
-         :from:to:cc:subject:date:message-id:reply-to;
-        bh=lTbyaE+a1ou4Ce2D09mEdWFdtKJzO22LtWJ0Il2/wq0=;
-        b=ivXw3tKkp/NxYAPaF6hjqHHe6oHzpoNsKcmSEUXvDXFfTZvemVYg9dqZsuFO5/gG7A
-         Hz4VpIKLS6eqPK+++3gNJqFY7AyVFZ4gkbeje80Oft7+xE+E2ONRtxiRrywPCYaiv8iL
-         vXvfWcFhpEdvSszzid6H1aBuClKwrP4F4m+kfDxN6foB3ThIJLX9ubWjtc906MifrRaY
-         QeT2Tp8xVu5HlAH44sb2fU1pVO21grcBmEjtR82rmTDA50r7UftE1tH7PUjZmd+Y8PAC
-         RaJ00XpZPGvcXHYMi1jXfnDcmTI65/vzc+LmMwEuLTri/lPsXkyQr9fiZeIdlvph5lql
-         tdgg==
+        d=gmail.com; s=20221208; t=1685928728; x=1688520728;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to;
+        bh=rSZA2eRliE46TAZCl7u2/d8ZP2MbH7jghdES6MZCDJk=;
+        b=owYheJdm0N0ShI3KbX42PVAZWaaG3OtOloENj3Zl+SZnkp7lKNSH5ULcy8v/erBDbP
+         x9tkvtHm7kDA4sCHCxZhvfBFqYlQvtNUOikCuIupYu3MMr2JqCaNd4eZm+9CCG2xusd+
+         LZIR+y4npWz/60l77Xw/WXqOuzcQWmw16FAAICT4o1M/K0ighwKrCRzwEF4wqmo8BaZY
+         Vf6/KVQIE2cNVhbxg8SNtz198dC8/cC2OBiml2YwGQU9AmoS/UcPhXpPrL8bn5ADKWUU
+         z1vQF7SuRbT5w0HkLTdqoVP+tzfj6LVW/ogATK3nmkF1WZehuZ6NuHxYpJGZ1LLp6In5
+         o70Q==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20221208; t=1685926179; x=1688518179;
-        h=content-disposition:mime-version:message-id:subject:to:from:date
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=lTbyaE+a1ou4Ce2D09mEdWFdtKJzO22LtWJ0Il2/wq0=;
-        b=AXTbYugsCfGHJAEyOwuhw77gC4Z0vxAN4Lx/waQH8QdUn2GbPilZJGJvYsx0eH9qAK
-         TnBxtSbsxdufR/kgaaUj3x6lWZ1F9I4fOAFHzPs3q9C3FweW8Aurhh0ODS8YZ5nBoYzn
-         6f0x9JYT+blCrC3Gx4k4hCqNluoqhmADJOIjycuvECq8SnCio9RF4b+hU/bfXT7EAL8j
-         AvyKtO3shkxEi46SJn5xIb4PfXwZwY66/9bnD3HunP6Ki6LfGTD/qagMMhUrWjI/o1lK
-         PiV7t6CUmADiP04yq6KRIb4Gzg87m5Eq0RfBJmk2YCkyXPFQS1wdOGZdwr1xS/JYMD71
-         YOFg==
-X-Gm-Message-State: AC+VfDyRu8xcxScI4tqYrTalO5vzyCH+L0NjwRudLPvCLo7dr5+6CVro
-        8TSKud+6l6w9iNoLjn65XuywR6KIztNpb74KL3g=
-X-Google-Smtp-Source: ACHHUZ5bsP5r0vFqG8HelqlITmLL/aDT191hNwFtzTBM/dX6gPEPn7ImmG24W6lQj8uP/gKojoi7Wg==
-X-Received: by 2002:aa7:88c3:0:b0:64c:aa98:a69f with SMTP id k3-20020aa788c3000000b0064caa98a69fmr15789317pff.1.1685926179245;
-        Sun, 04 Jun 2023 17:49:39 -0700 (PDT)
-Received: from dread.disaster.area (pa49-179-79-151.pa.nsw.optusnet.com.au. [49.179.79.151])
-        by smtp.gmail.com with ESMTPSA id f18-20020aa78b12000000b0064d32771fa8sm4083435pfd.134.2023.06.04.17.49.38
-        for <linux-xfs@vger.kernel.org>
+        d=1e100.net; s=20221208; t=1685928728; x=1688520728;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-message-state:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=rSZA2eRliE46TAZCl7u2/d8ZP2MbH7jghdES6MZCDJk=;
+        b=H5NYS+v699IBv5dqOYNKUissFKSCfOP3cVLDNodvxoqVMm3ngvEBszY/SBjXDYlpR4
+         J2IANu5/ZFOutF90GbczgSU25hbzZP5o4VIpvqrGOSkodpdHLv4bAU++10CQtmuz4aQ+
+         +2pWWl4E1HBPFScQryUTHpu7Q63uB/UfkldkwXPcInQlnNuh2ilsNzXR3rT5MaaujIyb
+         vFncltqXt8ExGYe69YBrO6wDNM0nyzkhxooNal+SkjGyPZGEwvw0eJFVBm/KEluhGkbs
+         nU07kIj2I1R6edZ1y10HauOW4X94ti+/m/HLchOt+8LBOGxF80K27s89ylwISCrsVCL6
+         hcbA==
+X-Gm-Message-State: AC+VfDyLC8k61r0ge06IOySlHuQ+ATxUg6foNf2DgEmQnN4PKl+KoLwM
+        bgBhgMAs0xsSM8xXB/V2LSD4G87EwzQ=
+X-Google-Smtp-Source: ACHHUZ7/CFsaKk0X1nejmQYx3fwRpPBxSxAJqU57MDMZXUEZVPEv/kQHsKutJWqPHntPvBuDnhE42g==
+X-Received: by 2002:a17:902:f68b:b0:1ab:7fb:aac1 with SMTP id l11-20020a170902f68b00b001ab07fbaac1mr8063463plg.24.1685928727738;
+        Sun, 04 Jun 2023 18:32:07 -0700 (PDT)
+Received: from dw-tp.ihost.com ([49.207.220.159])
+        by smtp.gmail.com with ESMTPSA id 13-20020a170902c14d00b001aaec7a2a62sm5209287plj.188.2023.06.04.18.32.04
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Sun, 04 Jun 2023 17:49:38 -0700 (PDT)
-Received: from dave by dread.disaster.area with local (Exim 4.96)
-        (envelope-from <david@fromorbit.com>)
-        id 1q5yPf-007tgV-0Y
-        for linux-xfs@vger.kernel.org;
-        Mon, 05 Jun 2023 10:49:35 +1000
-Date:   Mon, 5 Jun 2023 10:49:35 +1000
-From:   Dave Chinner <david@fromorbit.com>
+        Sun, 04 Jun 2023 18:32:07 -0700 (PDT)
+From:   "Ritesh Harjani (IBM)" <ritesh.list@gmail.com>
 To:     linux-xfs@vger.kernel.org
-Subject: [ANNOUNCE] xfs: for-next updated to 5c004b2fa9894
-Message-ID: <ZH0xH8PC1xm+s9pA@dread.disaster.area>
+Cc:     linux-fsdevel@vger.kernel.org,
+        Matthew Wilcox <willy@infradead.org>,
+        Dave Chinner <david@fromorbit.com>,
+        Brian Foster <bfoster@redhat.com>,
+        Christoph Hellwig <hch@infradead.org>,
+        Andreas Gruenbacher <agruenba@redhat.com>,
+        Ojaswin Mujoo <ojaswin@linux.ibm.com>,
+        Disha Goel <disgoel@linux.ibm.com>,
+        "Ritesh Harjani (IBM)" <ritesh.list@gmail.com>
+Subject: [PATCHv6 0/5] iomap: Add support for per-block dirty state to improve write performance
+Date:   Mon,  5 Jun 2023 07:01:47 +0530
+Message-Id: <cover.1685900733.git.ritesh.list@gmail.com>
+X-Mailer: git-send-email 2.40.1
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Hi folks,
+Hello All,
 
-I've just updated the for-next tree with a bunch of bug fixes that
-I'm hoping to get to Linus later in the week. I was hoping that I'd
-have got this done early last week, but that did not happen because
-of more bugs/regressions being reported. Updating you test trees to
-this branch would be appreciated.
+Please find PATCHv6 which adds per-block dirty tracking to iomap.
+As discussed earlier this is required to improve write performance and reduce
+write amplification for cases where either blocksize is less than pagesize (such
+as Power platform with 64k pagesize) or when we have a large folio (such as xfs
+which currently supports large folio).
 
-Note that I also updated the master branch to v6.4-rc5 at the same
-time.
+RFCv5 -> PATCHv6:
+=================
+1. Addresses review comments from Brian, Christoph and Matthew.
+   @Christoph:
+     - I have renamed the higher level functions such as iop_alloc/iop_free() to
+       iomap_iop_alloc/free() in v6.
+     - As for the low level bitmap accessor functions I couldn't find any better
+       naming then iop_test_/set/clear_**. I could have gone for
+       iomap_iop__test/set/clear/_** or iomap__iop_test/set/clear_**, but
+       I wasn't convinced with either of above as it also increases function
+       name.
+       Besides iop_test/set_clear_ accessors functions for uptodate and dirty
+       status tracking make sense as we are sure we have a valid iop in such
+       cases. Please do let me know if this looks ok to you.
+2. I tried testing gfs2 (initially with no patches) with xfstests. But I always ended up
+   in some or the other deadlock (I couldn't spend any time debugging that).
+   I also ran it with -x log, but still it was always failing for me.
+   @Andreas:
+   - could you please suggest how can I test gfs2 with these patches. I see gfs2
+     can have a smaller blocksize and it uses iomap buffered io path. It will be
+     good if we can get these patches tested on it too.
 
--Dave.
+3. I can now say I have run some good amount of fstests on these patches on
+   these platforms and I haven't found any new failure in my testing so far.
+   arm64 (64k pagesize): with 4k -g quick
+   Power: with 4k -g auto
+   x86: 1k, 4k with -g auto and adv_auto
 
-----------------------------------------------------------------
+From my testing so far these patches looks stable to me and if this looks good
+to reviewers as well, do you think this can be queued to linux-next for wider
+testing?
 
-  git://git.kernel.org/pub/scm/fs/xfs/xfs-linux.git for-next
+Performance numbers copied from last patch commit message
+==================================================
+Performance testing of below fio workload reveals ~16x performance
+improvement using nvme with XFS (4k blocksize) on Power (64K pagesize)
+FIO reported write bw scores improved from around ~28 MBps to ~452 MBps.
 
-  Head Commit: 5c004b2fa98945f0d2418bbfedd5d2b000807717
+1. <test_randwrite.fio>
+[global]
+	ioengine=psync
+	rw=randwrite
+	overwrite=1
+	pre_read=1
+	direct=0
+	bs=4k
+	size=1G
+	dir=./
+	numjobs=8
+	fdatasync=1
+	runtime=60
+	iodepth=64
+	group_reporting=1
 
-  xfs: collect errors from inodegc for unlinked inode recovery (2023-06-05 04:15:27 +1000)
+[fio-run]
 
-----------------------------------------------------------------
-Darrick J. Wong (1):
-      xfs: fix broken logic when detecting mergeable bmap records
+2. Also our internal performance team reported that this patch improves
+   their database workload performance by around ~83% (with XFS on Power)
 
-Dave Chinner (9):
-      xfs: buffer pins need to hold a buffer reference
-      xfs: restore allocation trylock iteration
-      xfs: defered work could create precommits
-      xfs: fix AGF vs inode cluster buffer deadlock
-      xfs: fix double xfs_perag_rele() in xfs_filestream_pick_ag()
-      xfs: fix agf/agfl verification on v4 filesystems
-      xfs: validity check agbnos on the AGFL
-      xfs: validate block number being freed before adding to xefi
-      xfs: collect errors from inodegc for unlinked inode recovery
+Ritesh Harjani (IBM) (5):
+  iomap: Rename iomap_page_create/release() to iomap_iop_alloc/free()
+  iomap: Move folio_detach_private() in iomap_iop_free() to the end
+  iomap: Refactor some iop related accessor functions
+  iomap: Allocate iop in ->write_begin() early
+  iomap: Add per-block dirty state tracking to improve performance
 
-Geert Uytterhoeven (1):
-      xfs: Fix undefined behavior of shift into sign bit
+ fs/gfs2/aops.c         |   2 +-
+ fs/iomap/buffered-io.c | 309 ++++++++++++++++++++++++++++++-----------
+ fs/xfs/xfs_aops.c      |   2 +-
+ fs/zonefs/file.c       |   2 +-
+ include/linux/iomap.h  |   1 +
+ 5 files changed, 235 insertions(+), 81 deletions(-)
 
- fs/xfs/libxfs/xfs_ag.c          |   5 +++-
- fs/xfs/libxfs/xfs_alloc.c       |  91 ++++++++++++++++++++++++++++++++++++++++++++++++++---------------------
- fs/xfs/libxfs/xfs_alloc.h       |   6 ++---
- fs/xfs/libxfs/xfs_bmap.c        |  10 ++++++--
- fs/xfs/libxfs/xfs_bmap_btree.c  |   7 ++++--
- fs/xfs/libxfs/xfs_ialloc.c      |  24 ++++++++++++-------
- fs/xfs/libxfs/xfs_log_format.h  |   9 ++++++-
- fs/xfs/libxfs/xfs_refcount.c    |  13 ++++++++---
- fs/xfs/libxfs/xfs_trans_inode.c | 113 +++++++---------------------------------------------------------------------------------
- fs/xfs/scrub/bmap.c             |  25 ++++++++++----------
- fs/xfs/scrub/scrub.h            |   8 +++----
- fs/xfs/xfs_buf_item.c           |  88 ++++++++++++++++++++++++++++++++++++++++++++++++++------------------
- fs/xfs/xfs_filestream.c         |   1 -
- fs/xfs/xfs_icache.c             |  46 +++++++++++++++++++++++++++++-------
- fs/xfs/xfs_icache.h             |   4 ++--
- fs/xfs/xfs_inode.c              |  20 +++++-----------
- fs/xfs/xfs_inode.h              |   2 +-
- fs/xfs/xfs_inode_item.c         | 149 ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
- fs/xfs/xfs_inode_item.h         |   1 +
- fs/xfs/xfs_log_recover.c        |  19 +++++++--------
- fs/xfs/xfs_mount.h              |   1 +
- fs/xfs/xfs_reflink.c            |   4 +++-
- fs/xfs/xfs_super.c              |   1 +
- fs/xfs/xfs_trans.c              |   9 ++++++-
- 24 files changed, 427 insertions(+), 229 deletions(-)
+--
+2.40.1
 
--- 
-Dave Chinner
-david@fromorbit.com
