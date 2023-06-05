@@ -2,53 +2,53 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3D1AAC7EE23
-	for <linux-xfs@archiver.kernel.org>; Mon,  5 Jun 2023 10:55:47 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 09391C7EE23
+	for <linux-xfs@archiver.kernel.org>; Mon,  5 Jun 2023 10:55:54 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231264AbjFEKzp (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 5 Jun 2023 06:55:45 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60216 "EHLO
+        id S230515AbjFEKzv (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 5 Jun 2023 06:55:51 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60470 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231624AbjFEKza (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 5 Jun 2023 06:55:30 -0400
-Received: from mail-pg1-x534.google.com (mail-pg1-x534.google.com [IPv6:2607:f8b0:4864:20::534])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7A14E18E;
-        Mon,  5 Jun 2023 03:55:23 -0700 (PDT)
-Received: by mail-pg1-x534.google.com with SMTP id 41be03b00d2f7-53202149ae2so2543185a12.3;
-        Mon, 05 Jun 2023 03:55:23 -0700 (PDT)
+        with ESMTP id S231751AbjFEKzh (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 5 Jun 2023 06:55:37 -0400
+Received: from mail-pg1-x52a.google.com (mail-pg1-x52a.google.com [IPv6:2607:f8b0:4864:20::52a])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4DA3510C;
+        Mon,  5 Jun 2023 03:55:30 -0700 (PDT)
+Received: by mail-pg1-x52a.google.com with SMTP id 41be03b00d2f7-53fa455cd94so2116897a12.2;
+        Mon, 05 Jun 2023 03:55:30 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20221208; t=1685962522; x=1688554522;
+        d=gmail.com; s=20221208; t=1685962529; x=1688554529;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:from:to:cc:subject:date
          :message-id:reply-to;
-        bh=ATOgTCD4yzJoITjwwVO7z1jeNiclQOzGdaaC13HT7dU=;
-        b=U3XJZon/zyBw9Xr0o///D7ldH+DK7KtmJJ745H0oL3skfDSbj1nR2l36OpxK+evEAB
-         0I5vxqJziM7OD4g32unebKfgBVSOG5EwBjnrRJhA68QSR4OFajWdnnbh8H9YRb8HbVj7
-         xr6jw5K1hlsnSovZiz1Rspmd/ipqlUOTZUHAetqi53d2Gy4oXIQIke4CbrK/LivD16mC
-         yAK6yk4ADioj+Y72Od4KPyd5vrSu9FIXwJvLuOep8D9FM89H1AqhKQ2P2tm0kbLcTfFt
-         l1pa+F7C40nUbYXOegMsnaCxEZAB804cjB6fG1yZIwZT01hZI7pXSGErxDLbHuIRA/hB
-         VM+w==
+        bh=WupwSFXXwQFHWk6jv9cWFxx36Vr+X7GVSjDECiCjfRE=;
+        b=Kg5jNqx8MyZ+zzEUQ2iY7BALh0gh6CTVSKXxAtS4uerxTHBTFVFyztr8N6z3xnqUNu
+         tvyUDcs34Eck3wkiK+6ch8qt4tetTpaAHKMmud+SVBmVysNyQQoaXDDrp+zQfBxUS6m/
+         zWjbf3r56f7dQvtxa+/tuWvQSy2Xm+jqZWTgCQSnA9IUURCdSdalGse6zf3CdXORWMxG
+         KYrbMpSfhP1wMpmKuVCDHauzO8lufXLLfe+E/3YueuDfeulDti1ZnzEONcDC6S+sD1LK
+         CmUYCff8KuKD2TOvolPVgQfB/Fy+35hlDvjURdeZXu4a5/l/AiPPkz1lksDUEm8nDbn7
+         4d1Q==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20221208; t=1685962522; x=1688554522;
+        d=1e100.net; s=20221208; t=1685962529; x=1688554529;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:x-gm-message-state:from:to:cc
          :subject:date:message-id:reply-to;
-        bh=ATOgTCD4yzJoITjwwVO7z1jeNiclQOzGdaaC13HT7dU=;
-        b=PqT1Ptjn1naoRCki42Rs9P8K7x9qS+d/JIEU6XApL+MHicXCm/YQ3aZ7LWfhhG+TUN
-         trRlWaUtCXGRSoFlYhsLT7s0RslcDDrPzO1IzQUlQ2IXPeq4Kk+CEJOiJIkLKGpJY9m9
-         H6FOcnz3cReKI0WRDe6JL2kp3NYrUAH7OcYXkL5mE9pYEj62i4Hslg87G5Qz0Q0FRR/A
-         EeUw9CfDr3i+a/iTepj+2KCCOy2KUF3QtyrCrwr4hsYPa6RCt5u1A3ExlRsX4nwEB2IJ
-         fmBs43PjQNl/ubi+RP0MDqiZ+BWDxLGIvv0G9AtZbmJdhWKZclMR5ylc1Lb7bL6ElHVy
-         rWWw==
-X-Gm-Message-State: AC+VfDx33WvV15tIxSszmxu0eg7QGDn3o9iJc5G/FMf5Bf3eg0uHfbWd
-        Wa4j2nEjpQJ1q7iRkik6SERHVLAnR4o=
-X-Google-Smtp-Source: ACHHUZ5ICNcF4CADAq0qIJmjOJH1ij3Pd+z6r9TrBRYClaEF9aFwSEeRpRLPIvl4RTC1Ty1o4uLTPA==
-X-Received: by 2002:a05:6a20:7d87:b0:10c:c5df:8bb7 with SMTP id v7-20020a056a207d8700b0010cc5df8bb7mr4001097pzj.30.1685962522459;
-        Mon, 05 Jun 2023 03:55:22 -0700 (PDT)
+        bh=WupwSFXXwQFHWk6jv9cWFxx36Vr+X7GVSjDECiCjfRE=;
+        b=DMt+lEK5iuhZv08OELtI+sNBqgYas+LE2qoWMI7N4usQyQtE+bJkHecPGcExQRpHH1
+         Gf1nJz/tV2OsQrehHKzeHIyqp4f1I2aYOk9y3KMc0qJGXLofWBmbJ2M7AKOxjAnUIvwU
+         oaTotJmwDwL+8xbSGc4ftVryYquVLZpdkaxL/d8F4Cl60Tkm8cSmIXMgc6z+N3XKig1M
+         OlXoxQoobGqAPK94+9fQrMOcW4UWClKDtiCQp1IFiY7IxkdMUYGTY0u1iEGns7NLc+oO
+         vgNWy2sYqtpnJmAoQRrFmA96S6XTyYeby3tq5a784HCXTHxrfa1J02ffsPsIN6wH4pSb
+         q/qw==
+X-Gm-Message-State: AC+VfDw/XVmKWh2NUeI6rq2EjCqUZ84LFW7diqgNMfau8tqidkyF64zB
+        bhRcC/VbdmiCgvParY7f5xfUwf8a5MA=
+X-Google-Smtp-Source: ACHHUZ6EH7acXwk36tvkKicdhUuZu6jJpp4NbCtfjiLlqHBx+/Rmnz5nzobzokopySgRWDVDW/4fFw==
+X-Received: by 2002:a05:6a20:3ca1:b0:115:5910:c82d with SMTP id b33-20020a056a203ca100b001155910c82dmr1230613pzj.43.1685962529421;
+        Mon, 05 Jun 2023 03:55:29 -0700 (PDT)
 Received: from dw-tp.c4p-in.ibmmobiledemo.com ([129.41.58.19])
-        by smtp.gmail.com with ESMTPSA id q3-20020a17090311c300b001b0f727bc44sm6266883plh.16.2023.06.05.03.55.18
+        by smtp.gmail.com with ESMTPSA id q3-20020a17090311c300b001b0f727bc44sm6266883plh.16.2023.06.05.03.55.26
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 05 Jun 2023 03:55:22 -0700 (PDT)
+        Mon, 05 Jun 2023 03:55:29 -0700 (PDT)
 From:   "Ritesh Harjani (IBM)" <ritesh.list@gmail.com>
 To:     linux-xfs@vger.kernel.org
 Cc:     linux-fsdevel@vger.kernel.org,
@@ -60,9 +60,9 @@ Cc:     linux-fsdevel@vger.kernel.org,
         Ojaswin Mujoo <ojaswin@linux.ibm.com>,
         Disha Goel <disgoel@linux.ibm.com>,
         "Ritesh Harjani (IBM)" <ritesh.list@gmail.com>
-Subject: [PATCHv7 2/6] iomap: Move folio_detach_private() in iomap_iop_free() to the end
-Date:   Mon,  5 Jun 2023 16:25:02 +0530
-Message-Id: <c3a91a81cf449d357e8a0255d720c5760283ee43.1685962158.git.ritesh.list@gmail.com>
+Subject: [PATCHv7 4/6] iomap: Refactor iomap_write_delalloc_punch() function out
+Date:   Mon,  5 Jun 2023 16:25:04 +0530
+Message-Id: <27c39cdf2150f19d91b7118b7399177d6889a358.1685962158.git.ritesh.list@gmail.com>
 X-Mailer: git-send-email 2.40.1
 In-Reply-To: <cover.1685962158.git.ritesh.list@gmail.com>
 References: <cover.1685962158.git.ritesh.list@gmail.com>
@@ -72,37 +72,93 @@ Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-In later patches we will add other accessor APIs which will take inode
-and folio to operate over struct iomap_page. Since we need folio's
-private (iomap_page) in those functions, hence this function moves
-detaching of folio's private at the end just before calling kfree(iop).
+This patch moves iomap_write_delalloc_punch() out of
+iomap_write_delalloc_scan(). No functionality change in this patch.
 
 Signed-off-by: Ritesh Harjani (IBM) <ritesh.list@gmail.com>
 ---
- fs/iomap/buffered-io.c | 3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
+ fs/iomap/buffered-io.c | 54 ++++++++++++++++++++++++++----------------
+ 1 file changed, 34 insertions(+), 20 deletions(-)
 
 diff --git a/fs/iomap/buffered-io.c b/fs/iomap/buffered-io.c
-index 4567bdd4fff9..6fffda355c45 100644
+index 136f57ccd0be..f55a339f99ec 100644
 --- a/fs/iomap/buffered-io.c
 +++ b/fs/iomap/buffered-io.c
-@@ -71,7 +71,7 @@ static struct iomap_page *iomap_iop_alloc(struct inode *inode,
- 
- static void iomap_iop_free(struct folio *folio)
- {
--	struct iomap_page *iop = folio_detach_private(folio);
-+	struct iomap_page *iop = to_iomap_page(folio);
- 	struct inode *inode = folio->mapping->host;
- 	unsigned int nr_blocks = i_blocks_per_folio(inode, folio);
- 
-@@ -81,6 +81,7 @@ static void iomap_iop_free(struct folio *folio)
- 	WARN_ON_ONCE(atomic_read(&iop->write_bytes_pending));
- 	WARN_ON_ONCE(bitmap_full(iop->uptodate, nr_blocks) !=
- 			folio_test_uptodate(folio));
-+	folio_detach_private(folio);
- 	kfree(iop);
+@@ -894,6 +894,33 @@ iomap_file_buffered_write(struct kiocb *iocb, struct iov_iter *i,
  }
+ EXPORT_SYMBOL_GPL(iomap_file_buffered_write);
  
++static int iomap_write_delalloc_punch(struct inode *inode, struct folio *folio,
++		loff_t *punch_start_byte, loff_t start_byte, loff_t end_byte,
++		int (*punch)(struct inode *inode, loff_t offset, loff_t length))
++{
++	int ret = 0;
++
++	if (!folio_test_dirty(folio))
++		return ret;
++
++	/* if dirty, punch up to offset */
++	if (start_byte > *punch_start_byte) {
++		ret = punch(inode, *punch_start_byte,
++				start_byte - *punch_start_byte);
++		if (ret)
++			goto out;
++	}
++	/*
++	 * Make sure the next punch start is correctly bound to
++	 * the end of this data range, not the end of the folio.
++	 */
++	*punch_start_byte = min_t(loff_t, end_byte,
++				  folio_next_index(folio) << PAGE_SHIFT);
++
++out:
++	return ret;
++}
++
+ /*
+  * Scan the data range passed to us for dirty page cache folios. If we find a
+  * dirty folio, punch out the preceeding range and update the offset from which
+@@ -917,6 +944,7 @@ static int iomap_write_delalloc_scan(struct inode *inode,
+ {
+ 	while (start_byte < end_byte) {
+ 		struct folio	*folio;
++		int ret;
+ 
+ 		/* grab locked page */
+ 		folio = filemap_lock_folio(inode->i_mapping,
+@@ -927,26 +955,12 @@ static int iomap_write_delalloc_scan(struct inode *inode,
+ 			continue;
+ 		}
+ 
+-		/* if dirty, punch up to offset */
+-		if (folio_test_dirty(folio)) {
+-			if (start_byte > *punch_start_byte) {
+-				int	error;
+-
+-				error = punch(inode, *punch_start_byte,
+-						start_byte - *punch_start_byte);
+-				if (error) {
+-					folio_unlock(folio);
+-					folio_put(folio);
+-					return error;
+-				}
+-			}
+-
+-			/*
+-			 * Make sure the next punch start is correctly bound to
+-			 * the end of this data range, not the end of the folio.
+-			 */
+-			*punch_start_byte = min_t(loff_t, end_byte,
+-					folio_next_index(folio) << PAGE_SHIFT);
++		ret = iomap_write_delalloc_punch(inode, folio, punch_start_byte,
++						 start_byte, end_byte, punch);
++		if (ret) {
++			folio_unlock(folio);
++			folio_put(folio);
++			return ret;
+ 		}
+ 
+ 		/* move offset to start of next folio in range */
 -- 
 2.40.1
 
