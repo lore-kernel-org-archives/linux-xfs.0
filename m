@@ -2,35 +2,34 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A9D74C7EE25
-	for <linux-xfs@archiver.kernel.org>; Mon,  5 Jun 2023 19:10:08 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 17E70C77B73
+	for <linux-xfs@archiver.kernel.org>; Mon,  5 Jun 2023 19:10:15 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234915AbjFETKG (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 5 Jun 2023 15:10:06 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36700 "EHLO
+        id S235005AbjFETKN (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 5 Jun 2023 15:10:13 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36872 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S235416AbjFETJs (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 5 Jun 2023 15:09:48 -0400
-X-Greylist: delayed 406 seconds by postgrey-1.37 at lindbergh.monkeyblade.net; Mon, 05 Jun 2023 12:09:46 PDT
-Received: from forward202a.mail.yandex.net (forward202a.mail.yandex.net [178.154.239.91])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E0BAB1A8;
-        Mon,  5 Jun 2023 12:09:46 -0700 (PDT)
-Received: from forward103a.mail.yandex.net (forward103a.mail.yandex.net [IPv6:2a02:6b8:c0e:500:1:45:d181:d103])
-        by forward202a.mail.yandex.net (Yandex) with ESMTP id 443814A48F;
-        Mon,  5 Jun 2023 22:03:03 +0300 (MSK)
-Received: from mail-nwsmtp-smtp-production-main-68.vla.yp-c.yandex.net (mail-nwsmtp-smtp-production-main-68.vla.yp-c.yandex.net [IPv6:2a02:6b8:c0f:4c8e:0:640:3460:0])
-        by forward103a.mail.yandex.net (Yandex) with ESMTP id E5B1F42B17;
-        Mon,  5 Jun 2023 22:02:56 +0300 (MSK)
-Received: by mail-nwsmtp-smtp-production-main-68.vla.yp-c.yandex.net (smtp/Yandex) with ESMTPSA id k2Y4EiCDXOs0-wyUCMDug;
-        Mon, 05 Jun 2023 22:02:56 +0300
+        with ESMTP id S234973AbjFETKI (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 5 Jun 2023 15:10:08 -0400
+Received: from forward204c.mail.yandex.net (forward204c.mail.yandex.net [IPv6:2a02:6b8:c03:500:1:45:d181:d204])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3172FED;
+        Mon,  5 Jun 2023 12:10:07 -0700 (PDT)
+Received: from forward102b.mail.yandex.net (forward102b.mail.yandex.net [IPv6:2a02:6b8:c02:900:1:45:d181:d102])
+        by forward204c.mail.yandex.net (Yandex) with ESMTP id 9081567F5C;
+        Mon,  5 Jun 2023 22:03:37 +0300 (MSK)
+Received: from mail-nwsmtp-smtp-production-main-33.iva.yp-c.yandex.net (mail-nwsmtp-smtp-production-main-33.iva.yp-c.yandex.net [IPv6:2a02:6b8:c0c:7c8d:0:640:daf4:0])
+        by forward102b.mail.yandex.net (Yandex) with ESMTP id 7088560037;
+        Mon,  5 Jun 2023 22:03:31 +0300 (MSK)
+Received: by mail-nwsmtp-smtp-production-main-33.iva.yp-c.yandex.net (smtp/Yandex) with ESMTPSA id P3Y5PY6DbSw0-D03FsbaO;
+        Mon, 05 Jun 2023 22:03:30 +0300
 X-Yandex-Fwd: 1
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ya.ru; s=mail; t=1685991776;
-        bh=d2A7a/fXdJ0HjFXvaIDBfJccZIVLybmyhd3Ml8uMPl8=;
-        h=Message-Id:Date:Subject:To:From;
-        b=vlX7aUUym6OiLqJo1vzOwZQebF2A87eqINyFK8QRZ2kFXHDYWuV1dkXFc3WzsroCg
-         HL3EIidYcs4s4reIg/mcheFHbs1fXQrFz/6qLbTCL2+oBlaMRK7C6+oeCsNG3i18jD
-         5a6FRObcYyOLT6GWimAnCJPy7GkKAKe9hiDPECMU=
-Authentication-Results: mail-nwsmtp-smtp-production-main-68.vla.yp-c.yandex.net; dkim=pass header.i=@ya.ru
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ya.ru; s=mail; t=1685991810;
+        bh=MEigQzDY74Nvn1JaDAKnEZHd5i4CDwKJ3Ad6AHXfzeY=;
+        h=In-Reply-To:Message-Id:References:Date:Subject:To:From;
+        b=nku73zf1DQChaO49JXDE6MZ6i2mQGvLbi+bBUqJu+M4OnrmerRoH+8GLIIlD2BtYk
+         Lf0Cl3rp5rYLS6m/8g/rhZOY/fpBJI5utQRJhIvdaUPH+qQyix5BtbHC8GP3T/LS+r
+         K4Gj7k0LH642cC+bqZ6rQWO6ULwPjnkJd/QHfnAw=
+Authentication-Results: mail-nwsmtp-smtp-production-main-33.iva.yp-c.yandex.net; dkim=pass header.i=@ya.ru
 From:   Kirill Tkhai <tkhai@ya.ru>
 To:     akpm@linux-foundation.org, tkhai@ya.ru, roman.gushchin@linux.dev,
         vbabka@suse.cz, viro@zeniv.linux.org.uk, brauner@kernel.org,
@@ -39,10 +38,12 @@ To:     akpm@linux-foundation.org, tkhai@ya.ru, roman.gushchin@linux.dev,
         linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org,
         linux-kernel@vger.kernel.org, zhengqi.arch@bytedance.com,
         david@fromorbit.com
-Subject: [PATCH v2 0/3] mm: Make unregistration of super_block shrinker more faster
-Date:   Mon,  5 Jun 2023 22:02:46 +0300
-Message-Id: <168599103578.70911.9402374667983518835.stgit@pro.pro>
+Subject: [PATCH v2 3/3] fs: Use delayed shrinker unregistration
+Date:   Mon,  5 Jun 2023 22:03:25 +0300
+Message-Id: <168599180526.70911.14606767590861123431.stgit@pro.pro>
 X-Mailer: git-send-email 2.40.1
+In-Reply-To: <168599103578.70911.9402374667983518835.stgit@pro.pro>
+References: <168599103578.70911.9402374667983518835.stgit@pro.pro>
 User-Agent: StGit/0.19
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
@@ -51,29 +52,44 @@ Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-This patch set introduces a new scheme of shrinker unregistration. It allows to split
-the unregistration in two parts: fast and slow. This allows to hide slow part from
-a user, so user-visible unregistration becomes fast.
+Kernel test robot reports -88.8% regression in stress-ng.ramfs.ops_per_sec
+test case caused by commit: f95bdb700bc6 ("mm: vmscan: make global slab
+shrink lockless"). Qi Zheng investigated that the reason is in long SRCU's
+synchronize_srcu() occuring in unregister_shrinker().
 
-This fixes the -88.8% regression of stress-ng.ramfs.ops_per_sec noticed
-by kernel test robot:
+This patch fixes the problem by using new unregistration interfaces,
+which split unregister_shrinker() in two parts. First part actually only
+notifies shrinker subsystem about the fact of unregistration and it prevents
+future shrinker methods calls. The second part completes the unregistration
+and it insures, that struct shrinker is not used during shrinker chain
+iteration anymore, so shrinker memory may be freed. Since the long second
+part is called from delayed work asynchronously, it hides synchronize_srcu()
+delay from a user.
 
-https://lore.kernel.org/lkml/202305230837.db2c233f-yujie.liu@intel.com/
-
----
-
-Kirill Tkhai (2):
-      mm: Split unregister_shrinker() in fast and slow part
-      fs: Use delayed shrinker unregistration
-
-Qi Zheng (1):
-      mm: vmscan: move shrinker_debugfs_remove() before synchronize_srcu()
-
-
- fs/super.c               |    3 ++-
- include/linux/shrinker.h |    4 ++++
- mm/vmscan.c              |   39 +++++++++++++++++++++++++++++++--------
- 3 files changed, 37 insertions(+), 9 deletions(-)
-
---
 Signed-off-by: Kirill Tkhai <tkhai@ya.ru>
+---
+ fs/super.c |    3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
+
+diff --git a/fs/super.c b/fs/super.c
+index 8d8d68799b34..f3e4f205ec79 100644
+--- a/fs/super.c
++++ b/fs/super.c
+@@ -159,6 +159,7 @@ static void destroy_super_work(struct work_struct *work)
+ 							destroy_work);
+ 	int i;
+ 
++	unregister_shrinker_delayed_finalize(&s->s_shrink);
+ 	for (i = 0; i < SB_FREEZE_LEVELS; i++)
+ 		percpu_free_rwsem(&s->s_writers.rw_sem[i]);
+ 	kfree(s);
+@@ -327,7 +328,7 @@ void deactivate_locked_super(struct super_block *s)
+ {
+ 	struct file_system_type *fs = s->s_type;
+ 	if (atomic_dec_and_test(&s->s_active)) {
+-		unregister_shrinker(&s->s_shrink);
++		unregister_shrinker_delayed_initiate(&s->s_shrink);
+ 		fs->kill_sb(s);
+ 
+ 		/*
+
