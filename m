@@ -2,71 +2,50 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4EAEAC77B73
-	for <linux-xfs@archiver.kernel.org>; Mon,  5 Jun 2023 16:16:47 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 24D53C77B73
+	for <linux-xfs@archiver.kernel.org>; Mon,  5 Jun 2023 16:32:25 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234375AbjFEQQq (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 5 Jun 2023 12:16:46 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38368 "EHLO
+        id S234606AbjFEQcW (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 5 Jun 2023 12:32:22 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44050 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229878AbjFEQQn (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 5 Jun 2023 12:16:43 -0400
-Received: from casper.infradead.org (casper.infradead.org [IPv6:2001:8b0:10b:1236::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6C8B4E6;
-        Mon,  5 Jun 2023 09:16:42 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=infradead.org; s=casper.20170209; h=In-Reply-To:Content-Type:MIME-Version:
-        References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
-        Content-Transfer-Encoding:Content-ID:Content-Description;
-        bh=iB0H24zQ9afWpiMzWIwA6kDQKADXkA7aEQwZd0XdpsA=; b=m1O3EZaCKVFyHwnXGLY+agmDGy
-        uLRg+gJBkoUMCaBPEWqnkoI8H0gdXoBfkXZRKoyMpiQS67KtZwDowayW/o7j1aNb77kgw2JW1IjdN
-        kAwqOAbTNOdxFB5dNwXUNQG/iG+M3bPEDkDDom38C+jCReOe29+2GeQpBkMuZOKZBWCDUqrqXb+F3
-        55o4w4UTsNbGMvuVdJLE4EDi1BFYfnDlMLyxIu6oFzhkff6keZwHy//GUxRJryauhBnw4Y+pBMwnD
-        X356IEnJizGQOa7E11kKIo4aeYHwsjyy3whFG0xEqt3cK9OnJJMFfWd1aNOAyNZBqoXF5+JK1pUop
-        UaZ4spnA==;
-Received: from willy by casper.infradead.org with local (Exim 4.94.2 #2 (Red Hat Linux))
-        id 1q6Csq-00CBDa-6x; Mon, 05 Jun 2023 16:16:40 +0000
-Date:   Mon, 5 Jun 2023 17:16:40 +0100
-From:   Matthew Wilcox <willy@infradead.org>
-To:     Dave Chinner <david@fromorbit.com>
-Cc:     linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org
-Subject: Re: DIO hangs in 6.4.0-rc2
-Message-ID: <ZH4KaEtLS1bdSl1c@casper.infradead.org>
-References: <ZGN20Hp1ho/u4uPY@casper.infradead.org>
- <ZGP/H1UQgMYemYP1@dread.disaster.area>
+        with ESMTP id S229991AbjFEQcF (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 5 Jun 2023 12:32:05 -0400
+Received: from sandeen.net (sandeen.net [63.231.237.45])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id D34A710DB
+        for <linux-xfs@vger.kernel.org>; Mon,  5 Jun 2023 09:31:29 -0700 (PDT)
+Received: from [10.0.0.71] (liberator.sandeen.net [10.0.0.71])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+        (No client certificate requested)
+        by sandeen.net (Postfix) with ESMTPS id ADDFA48C71A;
+        Mon,  5 Jun 2023 11:30:59 -0500 (CDT)
+Message-ID: <bd675e5c-20ac-c23f-8106-5181032e72d7@sandeen.net>
+Date:   Mon, 5 Jun 2023 11:30:59 -0500
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <ZGP/H1UQgMYemYP1@dread.disaster.area>
+User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:102.0)
+ Gecko/20100101 Thunderbird/102.11.2
+Subject: Re: [PATCH 1/5] libxfs: test the ascii case-insensitive hash
+To:     "Darrick J. Wong" <djwong@kernel.org>, cem@kernel.org
+Cc:     linux-xfs@vger.kernel.org, david@fromorbit.com, hch@infradead.org
+References: <168597938725.1226098.18077307069307502725.stgit@frogsfrogsfrogs>
+ <168597939284.1226098.4252229601603573827.stgit@frogsfrogsfrogs>
+Content-Language: en-US
+From:   Eric Sandeen <sandeen@sandeen.net>
+In-Reply-To: <168597939284.1226098.4252229601603573827.stgit@frogsfrogsfrogs>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Wed, May 17, 2023 at 08:09:35AM +1000, Dave Chinner wrote:
-> On Tue, May 16, 2023 at 01:28:00PM +0100, Matthew Wilcox wrote:
-> > Plain 6.4.0-rc2 with a relatively minor change to the futex code that
-> > I cannot believe was in any way responsible for this.
-> > 
-> > kworkers blocked all over the place.  Some on XFS_ILOCK_EXCL.  Some on
-> > xfs_buf_lock.  One in xfs_btree_split() calling wait_for_completion.
-> > 
-> > This was an overnight test run that is now dead, so I can't get any
-> > more info from the locked up kernel.  I have the vmlinux if some
-> > decoding of offsets is useful.
+On 6/5/23 10:36 AM, Darrick J. Wong wrote:
+> From: Darrick J. Wong <djwong@kernel.org>
 > 
-> This is likely the same AGF try-lock bug that was discovered in this
-> thread:
+> Now that we've made kernel and userspace use the same tolower code for
+> computing directory index hashes, add that to the selftest code.
 > 
-> https://lore.kernel.org/linux-xfs/202305090905.aff4e0e6-oliver.sang@intel.com/
-> 
-> The fact that the try-lock was ignored means that out of order AGF
-> locking can be attempted, and the try-lock prevents deadlocks from
-> occurring.
-> 
-> Can you try the patch below - I was going to send it for review
-> anyway this morning so it can't hurt to see if it also fixes this
-> issue.
+> Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 
-I still have this patch in my tree and it's not in rc5.  Was this
-problem fixed some other way, or does it still need to land upstream?
-I don't see any changes to XFS since May 11th's pull request.
+This looks fine to me.
+
+Reviewed-by: Eric Sandeen <sandeen@redhat.com>
