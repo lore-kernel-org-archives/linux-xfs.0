@@ -2,80 +2,85 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 77B86C77B73
-	for <linux-xfs@archiver.kernel.org>; Mon,  5 Jun 2023 17:18:54 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 35565C7EE2D
+	for <linux-xfs@archiver.kernel.org>; Mon,  5 Jun 2023 17:18:56 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234805AbjFERSu (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 5 Jun 2023 13:18:50 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43098 "EHLO
+        id S234860AbjFERSv (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 5 Jun 2023 13:18:51 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43256 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231952AbjFERSs (ORCPT
+        with ESMTP id S234541AbjFERSs (ORCPT
         <rfc822;linux-xfs@vger.kernel.org>); Mon, 5 Jun 2023 13:18:48 -0400
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6131FDC
-        for <linux-xfs@vger.kernel.org>; Mon,  5 Jun 2023 10:18:02 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1685985481;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=s2ntfZB6Bcjr7tb+bvJXpvJIfDXnT62QcpLJNvqX35M=;
-        b=Kti3GsgeI/O9FMqldI5ILKhzfvv2ROGwUSHzmWLGLW3Qdjk5/nUfIReZVeOCjMx4P5MXQp
-        JZNFMUWn0D6g+efCV9l4eRFaHURzUvpbzgBbTp/WR/0BsX7959YURNM4aNBMUzxqRPDCyU
-        0hfXOmNm3Bk3KdVgqWJyyrVjuKZ4T1I=
-Received: from mail-vk1-f199.google.com (mail-vk1-f199.google.com
- [209.85.221.199]) by relay.mimecast.com with ESMTP with STARTTLS
- (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
- us-mta-137-uav53hl3N9y20HPjp31S0w-1; Mon, 05 Jun 2023 13:18:00 -0400
-X-MC-Unique: uav53hl3N9y20HPjp31S0w-1
-Received: by mail-vk1-f199.google.com with SMTP id 71dfb90a1353d-460a63d4923so763018e0c.0
-        for <linux-xfs@vger.kernel.org>; Mon, 05 Jun 2023 10:18:00 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20221208; t=1685985479; x=1688577479;
-        h=content-transfer-encoding:in-reply-to:from:references:cc:to
-         :content-language:subject:user-agent:mime-version:date:message-id
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=s2ntfZB6Bcjr7tb+bvJXpvJIfDXnT62QcpLJNvqX35M=;
-        b=l/fB9e/Ipk8hDopxANwD84upaJRzrw7SogKlZk3beXOHSInfk2NNzAMaMdW8OudYuG
-         ibHMHHrx1iMgVL6kicm249PQOjoZ5SZx0tgbx7mYIBCq7EaF2TIceOW9I8PP17dF+NtA
-         K4nW7XuIOiEI1AGYqtnEGX2L2mm+5/gR9LScJdWTZLBEANwjCVUQPHQ3801ldwrqtgI1
-         WMTlrZIPnzLzADgvsrNKZMap7m3tVA/xON6gsJ9wBb1Zw8RPzxbNL8PiSsjNuWsOyc1A
-         W5Hmi9HvmdHejtXmLH5jDssNhaxHXOoWhxzfsFLtXvzlICt0LpVU6PxAM/RdlYlGwdZp
-         t6jg==
-X-Gm-Message-State: AC+VfDwKVuAviK/a1W2Ay29M6czGelf/JWLngN/IWtizZLaAMMuszZG0
-        cvcGTTolHYLXihwaYahQOa7bV5T5H5tEOEYkdNRvElotyDICKBTbDNiTcvyHcV5JRJ+AaKu5geN
-        12wVJPRxSqjZMOTv7jgNH
-X-Received: by 2002:a67:ee56:0:b0:43b:2f7d:f1f3 with SMTP id g22-20020a67ee56000000b0043b2f7df1f3mr401538vsp.26.1685985479652;
-        Mon, 05 Jun 2023 10:17:59 -0700 (PDT)
-X-Google-Smtp-Source: ACHHUZ5gQ6ps+baUxETM0bA8dFWAKpns5pFTrJnZ6uTbKNL9fjtjxzl9RPZUIima2bv0CUPURj8ung==
-X-Received: by 2002:a67:ee56:0:b0:43b:2f7d:f1f3 with SMTP id g22-20020a67ee56000000b0043b2f7df1f3mr401526vsp.26.1685985479411;
-        Mon, 05 Jun 2023 10:17:59 -0700 (PDT)
-Received: from [192.168.1.103] (gw19-pha-stl-mmo-2.avonet.cz. [131.117.213.218])
-        by smtp.gmail.com with ESMTPSA id s17-20020a05620a031100b00754b7ee6922sm4347859qkm.9.2023.06.05.10.17.58
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Mon, 05 Jun 2023 10:17:58 -0700 (PDT)
-Message-ID: <098a2385-a012-bada-1cbf-db9401def3da@redhat.com>
-Date:   Mon, 5 Jun 2023 19:17:56 +0200
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 152119E;
+        Mon,  5 Jun 2023 10:18:48 -0700 (PDT)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id A406D622C3;
+        Mon,  5 Jun 2023 17:18:47 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 013D0C433D2;
+        Mon,  5 Jun 2023 17:18:46 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1685985527;
+        bh=zy4OYg5iAjuFpxS6eDlvpz+l89Wg9QaBuKy175VsrDQ=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=ttLD82w1O2tP4dTvksawB8IZOT/0vUz9IMYY0uq7p8wELeSxnFWBoTvu3Yn6qsyPw
+         mnzAac5g1Il2wEst59f7KdsbQb4AILKVJpq6WFCc4G9cAXX5hqMx+HKLffPrcGwHtK
+         xmeUTREm/G2RAD5GVXNLFJHJTqlZXlFIzP9cDQyA/yIzHXI6ezOXuFv1phqFVF/pVj
+         rwr/fL3Xlk/2N3nI2eiUu+wHsV9WWeNAZdbpBm2X5wVlzMwRhk45wIq1USlWSRTAhy
+         182sIn7eAxs3Dp5IetfEIHQ/1uZn9O9f7TN/9c6USOW0fMnLT02Xq3zcKDqAl0FjxP
+         VNbCf4U/A4Nvw==
+Date:   Mon, 5 Jun 2023 10:18:46 -0700
+From:   "Darrick J. Wong" <djwong@kernel.org>
+To:     Matthew Wilcox <willy@infradead.org>
+Cc:     Dave Chinner <david@fromorbit.com>, linux-xfs@vger.kernel.org,
+        linux-fsdevel@vger.kernel.org
+Subject: Re: DIO hangs in 6.4.0-rc2
+Message-ID: <20230605171846.GM72241@frogsfrogsfrogs>
+References: <ZGN20Hp1ho/u4uPY@casper.infradead.org>
+ <ZGP/H1UQgMYemYP1@dread.disaster.area>
+ <ZH4KaEtLS1bdSl1c@casper.infradead.org>
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
- Thunderbird/102.10.0
-Subject: Re: [PATCH 2/2] xfs_repair: always perform extended xattr checks on
- uncertain inodes
-Content-Language: en-US
-To:     "Darrick J. Wong" <djwong@kernel.org>, cem@kernel.org
-Cc:     linux-xfs@vger.kernel.org
-References: <168597943893.1226372.1356501443716713637.stgit@frogsfrogsfrogs>
- <168597945009.1226372.4924137788610504146.stgit@frogsfrogsfrogs>
-From:   Pavel Reichl <preichl@redhat.com>
-In-Reply-To: <168597945009.1226372.4924137788610504146.stgit@frogsfrogsfrogs>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <ZH4KaEtLS1bdSl1c@casper.infradead.org>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-LGTM & Builds
+On Mon, Jun 05, 2023 at 05:16:40PM +0100, Matthew Wilcox wrote:
+> On Wed, May 17, 2023 at 08:09:35AM +1000, Dave Chinner wrote:
+> > On Tue, May 16, 2023 at 01:28:00PM +0100, Matthew Wilcox wrote:
+> > > Plain 6.4.0-rc2 with a relatively minor change to the futex code that
+> > > I cannot believe was in any way responsible for this.
+> > > 
+> > > kworkers blocked all over the place.  Some on XFS_ILOCK_EXCL.  Some on
+> > > xfs_buf_lock.  One in xfs_btree_split() calling wait_for_completion.
+> > > 
+> > > This was an overnight test run that is now dead, so I can't get any
+> > > more info from the locked up kernel.  I have the vmlinux if some
+> > > decoding of offsets is useful.
+> > 
+> > This is likely the same AGF try-lock bug that was discovered in this
+> > thread:
+> > 
+> > https://lore.kernel.org/linux-xfs/202305090905.aff4e0e6-oliver.sang@intel.com/
+> > 
+> > The fact that the try-lock was ignored means that out of order AGF
+> > locking can be attempted, and the try-lock prevents deadlocks from
+> > occurring.
+> > 
+> > Can you try the patch below - I was going to send it for review
+> > anyway this morning so it can't hurt to see if it also fixes this
+> > issue.
+> 
+> I still have this patch in my tree and it's not in rc5.  Was this
+> problem fixed some other way, or does it still need to land upstream?
+> I don't see any changes to XFS since May 11th's pull request.
 
-Reviewed-by: Pavel Reichl <preichl@redhat.com>
+Seems to have landed in for-next last night?
 
+https://git.kernel.org/pub/scm/fs/xfs/xfs-linux.git/commit/?h=for-next&id=00dcd17cfa7f103f7d640ffd34645a2ddab96330
+
+--D
