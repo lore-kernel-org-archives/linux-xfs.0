@@ -2,41 +2,43 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 64AA6C77B73
-	for <linux-xfs@archiver.kernel.org>; Mon,  5 Jun 2023 15:37:39 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 207B0C7EE24
+	for <linux-xfs@archiver.kernel.org>; Mon,  5 Jun 2023 15:37:44 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231881AbjFEPhi (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 5 Jun 2023 11:37:38 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41762 "EHLO
+        id S234400AbjFEPhn (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 5 Jun 2023 11:37:43 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41862 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S234726AbjFEPhg (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 5 Jun 2023 11:37:36 -0400
+        with ESMTP id S234754AbjFEPhm (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 5 Jun 2023 11:37:42 -0400
 Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0F379EA
-        for <linux-xfs@vger.kernel.org>; Mon,  5 Jun 2023 08:37:35 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A6C49D2
+        for <linux-xfs@vger.kernel.org>; Mon,  5 Jun 2023 08:37:41 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id A014461539
-        for <linux-xfs@vger.kernel.org>; Mon,  5 Jun 2023 15:37:34 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 09C9EC433D2;
-        Mon,  5 Jun 2023 15:37:34 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 4340862282
+        for <linux-xfs@vger.kernel.org>; Mon,  5 Jun 2023 15:37:40 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 97BA3C4339C;
+        Mon,  5 Jun 2023 15:37:39 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1685979454;
-        bh=8ZvmVa3riron01S1N/B0sAFXpJkza74pidEkO0CVZm4=;
-        h=Subject:From:To:Cc:Date:From;
-        b=mwcQ46+Wn8ob98ewfiK+X220TXSFPVkF34HlR0Njvxzw8XMFb9/iTSM0EwuVbtgya
-         n31p2aiVX6IFv3u7rQIrDDpWkyJyTT/+zKGb8lEnJj9Z66CXIg4mTmOayFSphPWT0i
-         V/ltMCe/hCe+9GfW2bBh9TnKmvfEs/wP0ObmyzyHTKz3abwqaVM6ApH7Ep/1VSGN9q
-         3nr3n4DEHr/bRcVPmMqUoXAikj/ZBQ/xwtNbh+SAPEbLjAp3LEV0UgxMsYt7TshIkw
-         twjrFxPtT3aTzUsA2va2ILZpW5YZHqre4BsxUlwxA17EXqQW5p0/uM+pRAmDOE6ryD
-         zIy7/d2fVg7aQ==
-Subject: [PATCHSET 0/5] xfs_repair: fix corruption messaging with verbose mode
+        s=k20201202; t=1685979459;
+        bh=Lxe5TVdlmqRhRLVrAiHrIcgjgeNRZaj1MV6eNfxqRTQ=;
+        h=Subject:From:To:Cc:Date:In-Reply-To:References:From;
+        b=slU66fZoOhLNRWLTmo7hVd9z5MpAMhw+Zlo+N7AjW6ELjjJWP5e1myi0JhfDAvGVS
+         lhBoj1w9l3B4czhBp0qNeA/jetKUJ0Vhv9qGscvwiSSI0R9VVaQGBX6hTYZSrlIV/e
+         8TcPmeNyGPp8hv4t1Y54u3FFL/l8wJaut52BLxjOaYogWBjbxBPbYI9CWLQR8kVBgi
+         8x3AqhrTNm0cuXQ3BDMkJyxVgZsB9Ft/pcl6rh9Onx8b3jjP5fo2e8pyJaVR3Wd4Bg
+         JZofbZLyYLkmJQ+0kcraMyLnXKU73m1+r3JAnGI1R2rtoHk75lli1pc4M910O/loD6
+         hzlMN/Ko4bkYg==
+Subject: [PATCH 1/5] xfs_repair: don't spray correcting imap all by itself
 From:   "Darrick J. Wong" <djwong@kernel.org>
 To:     djwong@kernel.org, cem@kernel.org
 Cc:     linux-xfs@vger.kernel.org
-Date:   Mon, 05 Jun 2023 08:37:33 -0700
-Message-ID: <168597945354.1226461.5438962607608083851.stgit@frogsfrogsfrogs>
+Date:   Mon, 05 Jun 2023 08:37:39 -0700
+Message-ID: <168597945921.1226461.946607316221373794.stgit@frogsfrogsfrogs>
+In-Reply-To: <168597945354.1226461.5438962607608083851.stgit@frogsfrogsfrogs>
+References: <168597945354.1226461.5438962607608083851.stgit@frogsfrogsfrogs>
 User-Agent: StGit/0.19
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
@@ -45,26 +47,53 @@ Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Hi all,
+From: Darrick J. Wong <djwong@kernel.org>
 
-While I was running xfs/155 and fuzz testing of the parent pointers
-patchset, I noticed that there were quite a few places in xfs_repair
-where adding the -v flag caused repair either not to say that it was
-correcting something, or that it would spit out the wrong action message
-entirely.  This series resolves all of those problems.
+In xfs/155, I occasionally see this in the xfs_repair output:
 
-If you're going to start using this mess, you probably ought to just
-pull from my git trees, which are linked below.
+correcting imap
+correcting imap
+correcting imap
+...
 
-This is an extraordinary way to destroy everything.  Enjoy!
-Comments and questions are, as always, welcome.
+This is completely useless, since we don't actually log which inode
+prompted this message.  This logic has been here for a really long time,
+but ... I can't make heads nor tails of it.  If we're running in verbose
+or dry-run mode, then print the inode number, but not if we're running
+in fixit mode?
 
---D
+A few lines later, if we're running in verbose dry-run mode, we print
+"correcting imap" even though we're not going to write anything.
 
-xfsprogs git tree:
-https://git.kernel.org/cgit/linux/kernel/git/djwong/xfsprogs-dev.git/log/?h=repair-fix-corruption-messaging
+If we get here, the inode looks like it's in use, but the inode index
+says it isn't.  This is a corruption, so either we fix it or we say that
+we would fix it.
+
+Fixes: 6c39a3cbda3 ("Don't trash lost+found in phase 4 Merge of master-melb:xfs-cmds:29144a by kenmcd.")
+Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 ---
- repair/dino_chunks.c |    8 +++-----
- repair/phase6.c      |   43 ++++++++++++++++++-------------------------
- 2 files changed, 21 insertions(+), 30 deletions(-)
+ repair/dino_chunks.c |    6 ++----
+ 1 file changed, 2 insertions(+), 4 deletions(-)
+
+
+diff --git a/repair/dino_chunks.c b/repair/dino_chunks.c
+index cf6a5e399d4..33008853789 100644
+--- a/repair/dino_chunks.c
++++ b/repair/dino_chunks.c
+@@ -871,13 +871,11 @@ process_inode_chunk(
+ 		 */
+ 		if (is_used)  {
+ 			if (is_inode_free(ino_rec, irec_offset))  {
+-				if (verbose || no_modify)  {
+-					do_warn(
++				do_warn(
+ 	_("imap claims in-use inode %" PRIu64 " is free, "),
+ 						ino);
+-				}
+ 
+-				if (verbose || !no_modify)
++				if (!no_modify)
+ 					do_warn(_("correcting imap\n"));
+ 				else
+ 					do_warn(_("would correct imap\n"));
 
