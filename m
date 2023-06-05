@@ -2,79 +2,200 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 165E6C77B73
-	for <linux-xfs@archiver.kernel.org>; Mon,  5 Jun 2023 19:00:11 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 189E8C77B73
+	for <linux-xfs@archiver.kernel.org>; Mon,  5 Jun 2023 19:09:31 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232280AbjFETAJ (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 5 Jun 2023 15:00:09 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58196 "EHLO
+        id S234917AbjFETJ3 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 5 Jun 2023 15:09:29 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35932 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232195AbjFES75 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 5 Jun 2023 14:59:57 -0400
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7D833EC
-        for <linux-xfs@vger.kernel.org>; Mon,  5 Jun 2023 11:59:12 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1685991551;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=EEyYVTiGw3OlrG8jSICt8MG1vJ0jvDwR1X9zlI6s70I=;
-        b=B4tfSEOI8pbXyfXSPy1SC0pxnFPsscVl4L+iRPhScBFTKX2Z+Z3tPoohgwqFaIl+FqZg3i
-        Mhl+gGKcV51drtXDvXsy/dxD9yXD9OPBZfvX2uGXBg1PUTjrSS1DbQuZelk9GWuigQ2iSQ
-        aBfgAIt+BhtyCylE7NOX3nUUdpfq0C0=
-Received: from mail-qt1-f199.google.com (mail-qt1-f199.google.com
- [209.85.160.199]) by relay.mimecast.com with ESMTP with STARTTLS
- (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
- us-mta-526-afy-KAcPNheIT5TJN-OwSQ-1; Mon, 05 Jun 2023 14:59:10 -0400
-X-MC-Unique: afy-KAcPNheIT5TJN-OwSQ-1
-Received: by mail-qt1-f199.google.com with SMTP id d75a77b69052e-3f6bb50f250so64396311cf.3
-        for <linux-xfs@vger.kernel.org>; Mon, 05 Jun 2023 11:59:10 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20221208; t=1685991549; x=1688583549;
-        h=content-transfer-encoding:in-reply-to:from:references:cc:to
-         :content-language:subject:user-agent:mime-version:date:message-id
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=EEyYVTiGw3OlrG8jSICt8MG1vJ0jvDwR1X9zlI6s70I=;
-        b=blZXaK44uOmByQ9t0f1FXpmcZHi/ktpl/6rjYoavlyT3ouHQ8APVE28GeRifgXf+OR
-         GmTFv/IyaQ+IX2RlR6rWgUg0cpLrij8f9jf8MkQSL+Tdfe+GjB5CRicGUiw/+nCWYJZj
-         8NDt4nDQamQIONtEyRBaRQp+Mh7YSNY+g2SlDbunHZxD63qm5V+yRexlQullND8iUIdl
-         cNZJV9/6Qkyz5udE6ruroNRC33Jdf1o8MlUZWzbvrLKceAsuyGB9k7A2WiXWpjysj3HX
-         R5EzI+KAyM3s4ePoAl61qjWaFSKRpBvKF1Qv5/zhEfc6Hz5qfqgFoMW2wBR1zvjcwfpW
-         wblg==
-X-Gm-Message-State: AC+VfDxUU7TAHGsXauKuSQmSM4EnLVYpAOjNZUn9fYTyobKWemGvAo3v
-        S24aTLFKfhFwQYuuYxL/Q4hsr809B9YqbbvwgakHnka4wYqMNNmvWyhuKTecmZsxVw37YmQDXfB
-        eT6NlImxKInpKiTgK62aV
-X-Received: by 2002:a05:6214:2687:b0:626:3bb1:b9b3 with SMTP id gm7-20020a056214268700b006263bb1b9b3mr9693199qvb.4.1685991549734;
-        Mon, 05 Jun 2023 11:59:09 -0700 (PDT)
-X-Google-Smtp-Source: ACHHUZ5OUyXN7w3MaZS5peUuKUSLCo/YuBwBr2BrhjK2kpP/42Suo64iI7uuXUq5uFMsqkqV8ypCww==
-X-Received: by 2002:a05:6214:2687:b0:626:3bb1:b9b3 with SMTP id gm7-20020a056214268700b006263bb1b9b3mr9693187qvb.4.1685991549510;
-        Mon, 05 Jun 2023 11:59:09 -0700 (PDT)
-Received: from [192.168.1.103] (gw19-pha-stl-mmo-2.avonet.cz. [131.117.213.218])
-        by smtp.gmail.com with ESMTPSA id lw4-20020a05621457c400b006238b37fb05sm4797722qvb.119.2023.06.05.11.59.08
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Mon, 05 Jun 2023 11:59:08 -0700 (PDT)
-Message-ID: <40c48265-52da-6015-475a-f396cebc1fa3@redhat.com>
-Date:   Mon, 5 Jun 2023 20:59:06 +0200
+        with ESMTP id S235305AbjFETJR (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 5 Jun 2023 15:09:17 -0400
+X-Greylist: delayed 350 seconds by postgrey-1.37 at lindbergh.monkeyblade.net; Mon, 05 Jun 2023 12:09:09 PDT
+Received: from forward206c.mail.yandex.net (forward206c.mail.yandex.net [IPv6:2a02:6b8:c03:500:1:45:d181:d206])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9D555E5D;
+        Mon,  5 Jun 2023 12:09:09 -0700 (PDT)
+Received: from forward102b.mail.yandex.net (forward102b.mail.yandex.net [IPv6:2a02:6b8:c02:900:1:45:d181:d102])
+        by forward206c.mail.yandex.net (Yandex) with ESMTP id 47156628AA;
+        Mon,  5 Jun 2023 22:03:27 +0300 (MSK)
+Received: from mail-nwsmtp-smtp-production-main-73.iva.yp-c.yandex.net (mail-nwsmtp-smtp-production-main-73.iva.yp-c.yandex.net [IPv6:2a02:6b8:c0c:160b:0:640:acd0:0])
+        by forward102b.mail.yandex.net (Yandex) with ESMTP id 37B946003D;
+        Mon,  5 Jun 2023 22:03:20 +0300 (MSK)
+Received: by mail-nwsmtp-smtp-production-main-73.iva.yp-c.yandex.net (smtp/Yandex) with ESMTPSA id D3YHdS6DcOs0-TqtIfVrH;
+        Mon, 05 Jun 2023 22:03:19 +0300
+X-Yandex-Fwd: 1
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ya.ru; s=mail; t=1685991799;
+        bh=+IzLiAr4hGoU+Pviuk7ygHtq+6fMQv9f3smgHpwNKuw=;
+        h=In-Reply-To:Message-Id:References:Date:Subject:To:From;
+        b=OGrv/TbDGlW78nIq/v3X13MdFHBKPT4rbxik+/dLXWSsNg3JAt1QziJRND95B7QWd
+         t2F1dPFG+s24W3tEx7lNJP1KDrTIoNVWl9dB7AZmq2ZA4ZCtBlOaz2CDlUmD7vcZYK
+         NpKTRl0e23MTd0mT9DvzVIrgrnTx7Xf/nVp+2aAg=
+Authentication-Results: mail-nwsmtp-smtp-production-main-73.iva.yp-c.yandex.net; dkim=pass header.i=@ya.ru
+From:   Kirill Tkhai <tkhai@ya.ru>
+To:     akpm@linux-foundation.org, tkhai@ya.ru, roman.gushchin@linux.dev,
+        vbabka@suse.cz, viro@zeniv.linux.org.uk, brauner@kernel.org,
+        djwong@kernel.org, hughd@google.com, paulmck@kernel.org,
+        muchun.song@linux.dev, linux-mm@kvack.org,
+        linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org,
+        linux-kernel@vger.kernel.org, zhengqi.arch@bytedance.com,
+        david@fromorbit.com
+Subject: [PATCH v2 2/3] mm: Split unregister_shrinker() in fast and slow part
+Date:   Mon,  5 Jun 2023 22:03:13 +0300
+Message-Id: <168599179360.70911.4102140966715923751.stgit@pro.pro>
+X-Mailer: git-send-email 2.40.1
+In-Reply-To: <168599103578.70911.9402374667983518835.stgit@pro.pro>
+References: <168599103578.70911.9402374667983518835.stgit@pro.pro>
+User-Agent: StGit/0.19
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
- Thunderbird/102.10.0
-Subject: Re: [PATCHSET 0/5] xfs_repair: fix corruption messaging with verbose
- mode
-Content-Language: en-US
-To:     "Darrick J. Wong" <djwong@kernel.org>, cem@kernel.org
-Cc:     linux-xfs@vger.kernel.org
-References: <168597945354.1226461.5438962607608083851.stgit@frogsfrogsfrogs>
-From:   Pavel Reichl <preichl@redhat.com>
-In-Reply-To: <168597945354.1226461.5438962607608083851.stgit@frogsfrogsfrogs>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Whole patchset LGTM & Builds
+This splits unregister_shrinker() in two parts, and this allows
+to make the unregistration faster by moving the slow part
+in delayed asynchronous work. Note, that the guarantees remain
+the same: no do_shrink_slab() calls are possible after the first
+part. This will be used in next patch.
 
-Reviewed-by: Pavel Reichl <preichl@redhat.com>
+Signed-off-by: Kirill Tkhai <tkhai@ya.ru>
+---
+ include/linux/shrinker.h |    4 ++++
+ mm/vmscan.c              |   35 +++++++++++++++++++++++++++++------
+ 2 files changed, 33 insertions(+), 6 deletions(-)
+
+diff --git a/include/linux/shrinker.h b/include/linux/shrinker.h
+index 224293b2dd06..1cc572fa6070 100644
+--- a/include/linux/shrinker.h
++++ b/include/linux/shrinker.h
+@@ -4,6 +4,7 @@
+ 
+ #include <linux/atomic.h>
+ #include <linux/types.h>
++#include <linux/rwsem.h>
+ 
+ /*
+  * This struct is used to pass information from page reclaim to the shrinkers.
+@@ -83,6 +84,7 @@ struct shrinker {
+ #endif
+ 	/* objs pending delete, per node */
+ 	atomic_long_t *nr_deferred;
++	struct rw_semaphore rwsem;
+ };
+ #define DEFAULT_SEEKS 2 /* A good number if you don't know better. */
+ 
+@@ -102,6 +104,8 @@ extern void register_shrinker_prepared(struct shrinker *shrinker);
+ extern int __printf(2, 3) register_shrinker(struct shrinker *shrinker,
+ 					    const char *fmt, ...);
+ extern void unregister_shrinker(struct shrinker *shrinker);
++extern void unregister_shrinker_delayed_initiate(struct shrinker *shrinker);
++extern void unregister_shrinker_delayed_finalize(struct shrinker *shrinker);
+ extern void free_prealloced_shrinker(struct shrinker *shrinker);
+ extern void synchronize_shrinkers(void);
+ 
+diff --git a/mm/vmscan.c b/mm/vmscan.c
+index a773e97e152e..f24fd58dcc2a 100644
+--- a/mm/vmscan.c
++++ b/mm/vmscan.c
+@@ -706,6 +706,7 @@ static int __prealloc_shrinker(struct shrinker *shrinker)
+ 	if (!shrinker->nr_deferred)
+ 		return -ENOMEM;
+ 
++	init_rwsem(&shrinker->rwsem);
+ 	return 0;
+ }
+ 
+@@ -757,7 +758,9 @@ void register_shrinker_prepared(struct shrinker *shrinker)
+ {
+ 	mutex_lock(&shrinker_mutex);
+ 	list_add_tail_rcu(&shrinker->list, &shrinker_list);
++	down_write(&shrinker->rwsem);
+ 	shrinker->flags |= SHRINKER_REGISTERED;
++	up_write(&shrinker->rwsem);
+ 	shrinker_debugfs_add(shrinker);
+ 	mutex_unlock(&shrinker_mutex);
+ }
+@@ -802,7 +805,7 @@ EXPORT_SYMBOL(register_shrinker);
+ /*
+  * Remove one
+  */
+-void unregister_shrinker(struct shrinker *shrinker)
++void unregister_shrinker_delayed_initiate(struct shrinker *shrinker)
+ {
+ 	struct dentry *debugfs_entry;
+ 	int debugfs_id;
+@@ -812,20 +815,33 @@ void unregister_shrinker(struct shrinker *shrinker)
+ 
+ 	mutex_lock(&shrinker_mutex);
+ 	list_del_rcu(&shrinker->list);
++	down_write(&shrinker->rwsem);
+ 	shrinker->flags &= ~SHRINKER_REGISTERED;
++	up_write(&shrinker->rwsem);
+ 	if (shrinker->flags & SHRINKER_MEMCG_AWARE)
+ 		unregister_memcg_shrinker(shrinker);
+ 	debugfs_entry = shrinker_debugfs_detach(shrinker, &debugfs_id);
+ 	mutex_unlock(&shrinker_mutex);
+ 
+ 	shrinker_debugfs_remove(debugfs_entry, debugfs_id);
++}
++EXPORT_SYMBOL(unregister_shrinker_delayed_initiate);
+ 
++void unregister_shrinker_delayed_finalize(struct shrinker *shrinker)
++{
+ 	atomic_inc(&shrinker_srcu_generation);
+ 	synchronize_srcu(&shrinker_srcu);
+ 
+ 	kfree(shrinker->nr_deferred);
+ 	shrinker->nr_deferred = NULL;
+ }
++EXPORT_SYMBOL(unregister_shrinker_delayed_finalize);
++
++void unregister_shrinker(struct shrinker *shrinker)
++{
++	unregister_shrinker_delayed_initiate(shrinker);
++	unregister_shrinker_delayed_finalize(shrinker);
++}
+ EXPORT_SYMBOL(unregister_shrinker);
+ 
+ /**
+@@ -856,9 +872,15 @@ static unsigned long do_shrink_slab(struct shrink_control *shrinkctl,
+ 					  : SHRINK_BATCH;
+ 	long scanned = 0, next_deferred;
+ 
++	if (!down_read_trylock(&shrinker->rwsem))
++		return 0;
++	if (!(shrinker->flags & SHRINKER_REGISTERED))
++		goto unlock;
+ 	freeable = shrinker->count_objects(shrinker, shrinkctl);
+-	if (freeable == 0 || freeable == SHRINK_EMPTY)
+-		return freeable;
++	if (freeable == 0 || freeable == SHRINK_EMPTY) {
++		freed = freeable;
++		goto unlock;
++	}
+ 
+ 	/*
+ 	 * copy the current shrinker scan count into a local variable
+@@ -937,6 +959,8 @@ static unsigned long do_shrink_slab(struct shrink_control *shrinkctl,
+ 	new_nr = add_nr_deferred(next_deferred, shrinker, shrinkctl);
+ 
+ 	trace_mm_shrink_slab_end(shrinker, shrinkctl->nid, freed, nr, new_nr, total_scan);
++unlock:
++	up_read(&shrinker->rwsem);
+ 	return freed;
+ }
+ 
+@@ -968,9 +992,8 @@ static unsigned long shrink_slab_memcg(gfp_t gfp_mask, int nid,
+ 		struct shrinker *shrinker;
+ 
+ 		shrinker = idr_find(&shrinker_idr, i);
+-		if (unlikely(!shrinker || !(shrinker->flags & SHRINKER_REGISTERED))) {
+-			if (!shrinker)
+-				clear_bit(i, info->map);
++		if (unlikely(!shrinker)) {
++			clear_bit(i, info->map);
+ 			continue;
+ 		}
+ 
 
