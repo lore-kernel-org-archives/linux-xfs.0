@@ -2,190 +2,194 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 24836C7EE24
-	for <linux-xfs@archiver.kernel.org>; Mon,  5 Jun 2023 07:54:11 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D5AEBC77B73
+	for <linux-xfs@archiver.kernel.org>; Mon,  5 Jun 2023 08:25:40 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231825AbjFEHyJ (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 5 Jun 2023 03:54:09 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44110 "EHLO
+        id S229455AbjFEIZh (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 5 Jun 2023 04:25:37 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57508 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231454AbjFEHxt (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 5 Jun 2023 03:53:49 -0400
-Received: from mail-wm1-x32b.google.com (mail-wm1-x32b.google.com [IPv6:2a00:1450:4864:20::32b])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id BD35310D3;
-        Mon,  5 Jun 2023 00:53:09 -0700 (PDT)
-Received: by mail-wm1-x32b.google.com with SMTP id 5b1f17b1804b1-3f603d4bc5bso44731255e9.3;
-        Mon, 05 Jun 2023 00:53:09 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20221208; t=1685951588; x=1688543588;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:from:to:cc:subject:date:message-id:reply-to;
-        bh=NMqs9fVxlAA2xfIhTlEnAarhwN2EZOVrUAsaYNMFxHE=;
-        b=h4vGWi7UaZhtBW6w3Qc3q8E/DRSKLo1ykt8xmEE/nNcQ1WrK5yn9zIxk8nU/8CiMbH
-         lAkuMjBjvt2RTmvcpkGcboCXzeROCOhAAAXQ83l/YeDDJDDM+Xtw7ghTLxpmPQBIbX/c
-         Gn8gB4kSuOcxfgPDJfvh3z0oZtekAiV1t12CiX1bVDte8o71AUlNt1CQW7e8phvOZ+iH
-         KfM7RvM5DhzN/+Y11nHz7UxhJoMWXRlbrulwv1nQIn0NMH1VV+GwVmL6J9TGBS7ZfPKj
-         JTA2uwtvUSBPppEENHFrA0yEIC6mMlt7MG6Epkx8gLpS+wMNAa4gbC9rB9Il8hKoN0rh
-         fgxw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20221208; t=1685951588; x=1688543588;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:x-gm-message-state:from:to:cc:subject:date:message-id
-         :reply-to;
-        bh=NMqs9fVxlAA2xfIhTlEnAarhwN2EZOVrUAsaYNMFxHE=;
-        b=G/M1Iqo1YnrDeieJtSNTnocopboxsnyKMibdEVOjpFZgP6v0MTA+gL8OyAI//mKn8b
-         to7g63AW+DgbJpnG/YDZnefCs2cWEhiwxjV1ZR+cw3Qmm1f7yy6TwfhkYlxVZX5nDEha
-         RxGkuIio15DKppDFJ14kNxinhtBY4fz5WRiD+USQBFH0gRMdKmvNo0xOjnYt///7IbEz
-         BgZEMQQbwumkvwyvV0yWREeZJ+v9Da7s5x5MyUQOGr9ZPKv4QGOU6Q/e6yLh1WRAyL0X
-         QEFJf5tlAVerKDm/5gh9U2JrjFfY/HwJUelNRF1mtka0cb3Nh+4FAmLLpVSF7EKhHqvn
-         VH8A==
-X-Gm-Message-State: AC+VfDy0/e6YZXowmr1Onhkv69rPtpXKW7PwICoRVo5mkAFAOMz5LbwO
-        NFJpPhjJinTZ3S+8/uK+gIhDljUL2vQ=
-X-Google-Smtp-Source: ACHHUZ7U/h7APWURDw4fHDGEHwBihv4Kq7fU3G46Kvh9Q1tksJxvYvGbGVwxkXcbTJfFyh/bfhQPfA==
-X-Received: by 2002:a05:600c:228e:b0:3f6:496:e240 with SMTP id 14-20020a05600c228e00b003f60496e240mr7323352wmf.27.1685951587887;
-        Mon, 05 Jun 2023 00:53:07 -0700 (PDT)
-Received: from amir-ThinkPad-T480.ctera.local (bzq-166-168-31-246.red.bezeqint.net. [31.168.166.246])
-        by smtp.gmail.com with ESMTPSA id n24-20020a1c7218000000b003f4fffccd73sm9945417wmc.9.2023.06.05.00.53.06
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 05 Jun 2023 00:53:07 -0700 (PDT)
-From:   Amir Goldstein <amir73il@gmail.com>
-To:     Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Cc:     Sasha Levin <sashal@kernel.org>,
-        Leah Rumancik <leah.rumancik@gmail.com>,
-        Chandan Babu R <chandan.babu@oracle.com>,
-        "Darrick J . Wong" <djwong@kernel.org>, linux-xfs@vger.kernel.org,
-        stable@vger.kernel.org, Dave Chinner <dchinner@redhat.com>,
+        with ESMTP id S229489AbjFEIZg (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 5 Jun 2023 04:25:36 -0400
+Received: from mga17.intel.com (mga17.intel.com [192.55.52.151])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 44C4DAD;
+        Mon,  5 Jun 2023 01:25:35 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1685953535; x=1717489535;
+  h=message-id:date:subject:to:cc:references:from:
+   in-reply-to:content-transfer-encoding:mime-version;
+  bh=yxuewILc8U+FnIEbSDGFKalRmMpM1qUOIgGGfStou3A=;
+  b=iiYJfjk0uywUrgoL+mEasSHoE3a8R+xkHvnGMpzeeEUNjPdqBvPSAiZU
+   OCC/bz1e47xp/7YiDNBfEy8A1XLbBAyW0PyiEy8oPMw3FRfZKZR1vQtsv
+   MuL+FIwIkvP2QoobiuazbiI/qD4CvztDo5Mc7oF2eMnJFbweMLz90qaYD
+   hwpAqGvkS+RIHm1kTfQ2fVRJOHhz0TQW25O6e+MgvKp0DqXHhyVkWxUXo
+   1YXVb0U6505fK/zhyUB2/8njrNDi3eMzqV8sx5FgOY7KtD4Sm4AnL8tA3
+   t2RHuWAzUM6+0LKsveyava3tOKW0yBRrF7CovfzqywpdOjJmMn0M/GrlT
+   w==;
+X-IronPort-AV: E=McAfee;i="6600,9927,10731"; a="336667386"
+X-IronPort-AV: E=Sophos;i="6.00,217,1681196400"; 
+   d="scan'208";a="336667386"
+Received: from orsmga002.jf.intel.com ([10.7.209.21])
+  by fmsmga107.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 05 Jun 2023 01:25:34 -0700
+X-ExtLoop1: 1
+X-IronPort-AV: E=McAfee;i="6600,9927,10731"; a="708578692"
+X-IronPort-AV: E=Sophos;i="6.00,217,1681196400"; 
+   d="scan'208";a="708578692"
+Received: from fmsmsx602.amr.corp.intel.com ([10.18.126.82])
+  by orsmga002.jf.intel.com with ESMTP; 05 Jun 2023 01:25:34 -0700
+Received: from fmsmsx611.amr.corp.intel.com (10.18.126.91) by
+ fmsmsx602.amr.corp.intel.com (10.18.126.82) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
+ 15.1.2507.23; Mon, 5 Jun 2023 01:25:33 -0700
+Received: from FMSEDG603.ED.cps.intel.com (10.1.192.133) by
+ fmsmsx611.amr.corp.intel.com (10.18.126.91) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
+ 15.1.2507.23 via Frontend Transport; Mon, 5 Jun 2023 01:25:33 -0700
+Received: from NAM04-BN8-obe.outbound.protection.outlook.com (104.47.74.45) by
+ edgegateway.intel.com (192.55.55.68) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.1.2507.23; Mon, 5 Jun 2023 01:25:32 -0700
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
+ b=j1mOje9qu3uLHqlPhqpkj9zJkTBPQZInqIXAr6ez1c3FsgyIgyKjnn31Y926zki0fR8yI1SGuVSPe4IWEsgLmafRiN2JVdJ4g5JxKThxZMzYSm184ARUomrjH6UUX3jo0jghkIbdKCP7sKg+6FNJfPEbJl/BSaWVeXQ1SDp0aFxdik1Mx+0103FXXTZ2Y5hq7H1ASWIGYZV8xWZ5e/ox9cFaDMAHFxm6Fvkpj5jInh79K3IjIyMm0IZY+oxQG16q6AInbDzYgu2U/hei02h/e4L6EQ0MwxSZOn/1a2UMI5W76r/yDqyfdYXt5T06EFKcck6gArKyW19gKQ408KhNJg==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector9901;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=RGbqZs/5klQxisM/aXpJQf87QBxEkcS7Tq/bvqAOc9Q=;
+ b=PLQ8ne2DwWQ7z9TYHLDqNx2pEbgAI8/ulg2fAjhHNjW1oMiPb+aKw37N1XEKRy0pi/XippP0/xYrX3Mg/tbmQ2/ruHFL4wTPZ4SZlTK+arCsH9swA8cUqj69KTGrOBzu/phWdSSDrs8n3bNTuvfJzV59rY/EJCyeheFRWVc/5ei66Afv3FAzCLXQacw03u85LhFnV/6HwW7THMH3lgE4oQgjZzGlpyUlyvmgKq5md7eN95mxW0SELQPjAkCtAfbFw2RVRHfCVtQXI2hqjQgF013FJDaAUANUzbhyzKuVGqtToCA+KZ7VsVkkhIKwTrzXHLnOubIq3YPj3fxpEVrYtg==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=intel.com; dmarc=pass action=none header.from=intel.com;
+ dkim=pass header.d=intel.com; arc=none
+Authentication-Results: dkim=none (message not signed)
+ header.d=none;dmarc=none action=none header.from=intel.com;
+Received: from CO1PR11MB4820.namprd11.prod.outlook.com (2603:10b6:303:6f::8)
+ by PH7PR11MB7515.namprd11.prod.outlook.com (2603:10b6:510:278::5) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.6455.27; Mon, 5 Jun
+ 2023 08:25:30 +0000
+Received: from CO1PR11MB4820.namprd11.prod.outlook.com
+ ([fe80::e6c7:a86d:68d6:f2f3]) by CO1PR11MB4820.namprd11.prod.outlook.com
+ ([fe80::e6c7:a86d:68d6:f2f3%5]) with mapi id 15.20.6455.030; Mon, 5 Jun 2023
+ 08:25:29 +0000
+Message-ID: <d47f280e-9e98-ffd2-1386-097fc8dc11b5@intel.com>
+Date:   Mon, 5 Jun 2023 16:25:22 +0800
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:102.0) Gecko/20100101
+ Firefox/102.0 Thunderbird/102.11.2
+Subject: Re: [PATCH v2 7/7] iomap: Copy larger chunks from userspace
+Content-Language: en-US
+To:     Matthew Wilcox <willy@infradead.org>,
+        "Darrick J. Wong" <djwong@kernel.org>
+CC:     <linux-fsdevel@vger.kernel.org>, <linux-xfs@vger.kernel.org>,
+        Wang Yugui <wangyugui@e16-tech.com>,
         Dave Chinner <david@fromorbit.com>,
-        Danila Chernetsov <listdansp@mail.ru>
-Subject: [PATCH 6.1] xfs: verify buffer contents when we skip log replay
-Date:   Mon,  5 Jun 2023 10:52:58 +0300
-Message-Id: <20230605075258.308475-1-amir73il@gmail.com>
-X-Mailer: git-send-email 2.34.1
+        "Christoph Hellwig" <hch@infradead.org>
+References: <20230602222445.2284892-1-willy@infradead.org>
+ <20230602222445.2284892-8-willy@infradead.org>
+ <20230604182952.GH72241@frogsfrogsfrogs>
+ <ZH0MDtoTyUMQ7eok@casper.infradead.org>
+From:   "Yin, Fengwei" <fengwei.yin@intel.com>
+In-Reply-To: <ZH0MDtoTyUMQ7eok@casper.infradead.org>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
+X-ClientProxiedBy: SG2PR06CA0231.apcprd06.prod.outlook.com
+ (2603:1096:4:ac::15) To CO1PR11MB4820.namprd11.prod.outlook.com
+ (2603:10b6:303:6f::8)
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+X-MS-PublicTrafficType: Email
+X-MS-TrafficTypeDiagnostic: CO1PR11MB4820:EE_|PH7PR11MB7515:EE_
+X-MS-Office365-Filtering-Correlation-Id: 388b6388-8831-4b31-8271-08db659e6c03
+X-MS-Exchange-SenderADCheck: 1
+X-MS-Exchange-AntiSpam-Relay: 0
+X-Microsoft-Antispam: BCL:0;
+X-Microsoft-Antispam-Message-Info: hs8Ax4UmtWF+5lFeGTnViK0iKQNZ4pYe3039Zf4F0j3Qboid+F1XBCfM6nSoPE56LnsOUgRvZCxsbZFhw1obi/oZ2gHI/f9oqNB3brGpYAZlPVktmv2Awd94391gGey6nOkKc1c+RoNTHt62+AjMeF/wXqfy0V1GHcJHimW361RNxSauzJbdFP0EzIWqpEFf9pKvdBHOzNwglyvL5lGiXyUUME48ildA85/l65npoxdMHyJ7breF19r9iEepjnGrZho+ekg4OHetnSl7223abbAZN4/TU7RfnWPMf9f+bCGIzB+eA0OBuzatMUrNiEVTJgrrJNNm3ScNNubPO409NPfnEmpSdKy/atm3NgNL0lxkQOnYtrJilDZUcY+99BpqeqLoz6oSPbolH6fRQ8hSvlsgyiQ47SF+CX8Rw5ZbF1o6p96zUJkz/khJnSwZUbdWgg4QZ5yKuc0DT09Rs3/y3zR4kbdv8Q5WClqqoqx/VEFMsGlskK+dfzXJsrCwXf0Mt/Dbf6DW8AR5DyxXN9R2XUgwknQPKKhfUsh0tPnwkIzAV1AhooZgsbZajP7me2f2aC0sYacn7uG5oPsqDG0bAFOzjAnT+WXHVlcM7o5+oL6s8QHpl15WYoMzl3oZ0tlm3cR6a638U4Jm95u2bmrH9A==
+X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:CO1PR11MB4820.namprd11.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230028)(346002)(136003)(366004)(376002)(39860400002)(396003)(451199021)(8936002)(8676002)(31686004)(5660300002)(54906003)(110136005)(6666004)(36756003)(2906002)(41300700001)(66899021)(66946007)(4326008)(66476007)(316002)(66556008)(478600001)(6486002)(86362001)(31696002)(82960400001)(2616005)(186003)(38100700002)(53546011)(83380400001)(26005)(6512007)(6506007)(45980500001)(43740500002);DIR:OUT;SFP:1102;
+X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-MessageData-0: =?utf-8?B?STl0L0lENHdLV1YwWXB3bWltVkd3Nkx1Z25Ba0hxcXZkNDl1TjVBVG5kWWZW?=
+ =?utf-8?B?bFp6Q25qUVdJVW1QVDM4ZHJnTCtjaHNqNGNCV21GM3NCM0tWcXdnYUR5bzN3?=
+ =?utf-8?B?QXh1Ri9DT2ZGclRFQmk2UDdUZnpkMHZHdG9lT0VIT0pPOTVmNEJaU2N5dU45?=
+ =?utf-8?B?MGQ5anVkZ2pVNnlBOUQyUkIvc0RTQ2l6bHFMblVwSWRFaEkzQmRpVUo3Zmls?=
+ =?utf-8?B?bzhnT0NqSGxEMXVKMXp1L0ZpbXNrNW5lMkNNODJ3LzVSSVVVcEpMMWlBdGp3?=
+ =?utf-8?B?Rk83aHRWclpCamJ3UFpCQ09PcWtaaWVlMU1iMDlMUUd5UkRBZG5xZmtsVGky?=
+ =?utf-8?B?WENVMzIvblB6R0t1SEtUNGc2eEtRUTZOOVphdjd3R2QwcmZuSmQrZjQ3aisr?=
+ =?utf-8?B?TnMyZ0cvdkp4MUMvMFF5Yk04eWRMWHMxNk10cnhMRk1mM1hXOG9aQmFLNmlz?=
+ =?utf-8?B?bTFPVzVVM0h2Y1pSTWxUczA3NFVlc0JaWkdmQ2tWRkFSSnZEQzdRZGtUczcw?=
+ =?utf-8?B?eHg0bXhJTWR1T1JydkNobDlYdEJoMWdUSWpOZkZEV28vRVViS3FmVWFUUCt6?=
+ =?utf-8?B?eTFORWIyNWs0d3NHaHN6ZVFOcllzc0U1NS90YXNWR0toZW4wbTVrMEdqUnA4?=
+ =?utf-8?B?Q3NRR1J1K0Evby9mWVJDQ1Y0MkprV3B4YU1TYUdHeGRyamdtZ3NtWDJjclhI?=
+ =?utf-8?B?L0w5ZkVSV0dSVWRsK0ZSR2xJeGlmZURLUnlSdGJwekFUd1V3aXJhcGxxZWkx?=
+ =?utf-8?B?aTlveEdwaGpOaGEyZE9xcEJOM1ljZEFDRlhvRit1UVJRYlk4YkJJUW5ZQ1do?=
+ =?utf-8?B?Z3R2WXBBRnoreC9DS0g0Q1dnRmdtUWhid2VVQlh5eUpoUWxvelRNZTRZSEdN?=
+ =?utf-8?B?U2VvQ3M3MUlra2srWXJEbHJJeStLSnJtcXYwKytrTlg2WUhrL2lFc1M3RnpX?=
+ =?utf-8?B?N3RZRnh0QktOcUhwMEFRYTluTU11VWhaeUd4NXBxVm16NHl1c3h3THlyYXVj?=
+ =?utf-8?B?UFJPbUxCU3EzUExFS0ZPNWRtSzNEdnNsZ2VFdGRRa3Z3dVo0eXJCaXRZOVAy?=
+ =?utf-8?B?L2JxMmxHakVmbkFBSGhXTThxRG42OFRoVjdvb09FOUgxLzE0NnI3S2JZWnRz?=
+ =?utf-8?B?UWJsSndOU0d0NFBjeHBBNUJKMlRXblowVzFRem9FMGxCTkVqSUZBTWt1NUhH?=
+ =?utf-8?B?VGlJZGw2VGsvdGZJTCtWTDFtY1RLdm1odWJuKy9nbk5ERCtZYmhXUlVMNlAr?=
+ =?utf-8?B?M0xKTE85c3lmOS96dlhzVnZSaFVEWTVnS3lKL0pCR0tqZTZ0N1VzUzdOcEhX?=
+ =?utf-8?B?ZXFhU0Z0WWZLRnBRZFBxTG1tY1REYnJjS1Y3Nlk5WVhKUm5tQ3N1VEpMRWI3?=
+ =?utf-8?B?SWVxN3kxYzIzV3lmT3pTbmF0SUtoZmx6UWRjV3h0RDIvNEFHOFRWamdMZ010?=
+ =?utf-8?B?TE45UXN4SlB4cmhSQ1lDS090YjA1R0NBNG9RVlVLVU0zQXo4c2o4Yk1yREh1?=
+ =?utf-8?B?Y0pWSmFPWkJEOHlxZEpKTTdySk5sUG5OcXE2akhJRXFXR251TFN0Q24waHRi?=
+ =?utf-8?B?QWMwdjQ1bWVJYS9WWjE0VHByL3ZSdCtFc3Y2M2RkQW1vZndjSlIzbnpyMGpG?=
+ =?utf-8?B?d2h6UFZRMmkrbWZiMk5xUGNrVjdJSU5HRlpaUzlCcHU3L1RQUktJL01xdzZL?=
+ =?utf-8?B?aXF4TFZYR3liSlQxV0U0bUxuQnllakZtdzRxWlphN1VBM1g1WnhUL1J2SlVF?=
+ =?utf-8?B?TFA0VWR6dlVOYmU3c2M2YXI4V0ZKeGl2LzdWVzIyNnFKWVh5Y3QyanlXbG9t?=
+ =?utf-8?B?czRyempMdE5EdVlwWi8ySmNkd205WmVtMGppUWVtcnJpUytiOTY2SURma2Vw?=
+ =?utf-8?B?LzE4QldiWDRmWXlNbm1JWVNjdTZNOCsyK2VGbE9wYjhTR0hBNC9HaWNSSDFj?=
+ =?utf-8?B?bW4vaHlnKzd4aytCU0wvVVRZYXo1eXlhOWM4WSt4cmUrMldLTE5vVTgrTUpL?=
+ =?utf-8?B?Nk9yMi9JM0RjNkZQd045WlQxTDQ0U0cydVVqV1pnbldkNmdGSGhLK1FGb2t3?=
+ =?utf-8?B?a0xCQ0tWNXVSZ2xXeTZqbG1TS0dkVTIzR0VYZVJTWGdMTEErRFVrOXpOb2Ew?=
+ =?utf-8?Q?IRqC2qlOsaBDVnCmv1QwrX+JA?=
+X-MS-Exchange-CrossTenant-Network-Message-Id: 388b6388-8831-4b31-8271-08db659e6c03
+X-MS-Exchange-CrossTenant-AuthSource: CO1PR11MB4820.namprd11.prod.outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 05 Jun 2023 08:25:29.6815
+ (UTC)
+X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
+X-MS-Exchange-CrossTenant-Id: 46c98d88-e344-4ed4-8496-4ed7712e255d
+X-MS-Exchange-CrossTenant-MailboxType: HOSTED
+X-MS-Exchange-CrossTenant-UserPrincipalName: n8gQ/KckVQQ/WIu7ZAP+JfQyTdGvKVMF+GryyzNCwN0O/aZWxjkt7LjwPe+gwWTgUTbkLXVMAhpRlx4t6wgWug==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: PH7PR11MB7515
+X-OriginatorOrg: intel.com
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-From: "Darrick J. Wong" <djwong@kernel.org>
 
-commit 22ed903eee23a5b174e240f1cdfa9acf393a5210 upstream.
 
-syzbot detected a crash during log recovery:
+On 6/5/2023 6:11 AM, Matthew Wilcox wrote:
+> On Sun, Jun 04, 2023 at 11:29:52AM -0700, Darrick J. Wong wrote:
+>> On Fri, Jun 02, 2023 at 11:24:44PM +0100, Matthew Wilcox (Oracle) wrote:
+>>> -		copied = copy_page_from_iter_atomic(page, offset, bytes, i);
+>>> +		copied = copy_page_from_iter_atomic(&folio->page, offset, bytes, i);
+>>
+>> I think I've gotten lost in the weeds.  Does copy_page_from_iter_atomic
+>> actually know how to deal with a multipage folio?  AFAICT it takes a
+>> page, kmaps it, and copies @bytes starting at @offset in the page.  If
+>> a caller feeds it a multipage folio, does that all work correctly?  Or
+>> will the pagecache split multipage folios as needed to make it work
+>> right?
+> 
+> It's a smidgen inefficient, but it does work.  First, it calls
+> page_copy_sane() to check that offset & n fit within the compound page
+> (ie this all predates folios).
+> 
+> ... Oh.  copy_page_from_iter() handles this correctly.
+> copy_page_from_iter_atomic() doesn't.  I'll have to fix this
+> first.  Looks like Al fixed copy_page_from_iter() in c03f05f183cd
+> and didn't fix copy_page_from_iter_atomic().
+> 
+>> If we create a 64k folio at pos 0 and then want to write a byte at pos
+>> 40k, does __filemap_get_folio break up the 64k folio so that the folio
+>> returned by iomap_get_folio starts at 40k?  Or can the iter code handle
+>> jumping ten pages into a 16-page folio and I just can't see it?
+> 
+> Well ... it handles it fine unless it's highmem.  p is kaddr + offset,
+> so if offset is 40k, it works correctly on !highmem.
+So is it better to have implementations for !highmem and highmem? And for
+!highmem, we don't need the kmap_local_page()/kunmap_local() and chunk
+size per copy is not limited to PAGE_SIZE. Thanks.
 
-XFS (loop0): Mounting V5 Filesystem bfdc47fc-10d8-4eed-a562-11a831b3f791
-XFS (loop0): Torn write (CRC failure) detected at log block 0x180. Truncating head block from 0x200.
-XFS (loop0): Starting recovery (logdev: internal)
-==================================================================
-BUG: KASAN: slab-out-of-bounds in xfs_btree_lookup_get_block+0x15c/0x6d0 fs/xfs/libxfs/xfs_btree.c:1813
-Read of size 8 at addr ffff88807e89f258 by task syz-executor132/5074
 
-CPU: 0 PID: 5074 Comm: syz-executor132 Not tainted 6.2.0-rc1-syzkaller #0
-Hardware name: Google Google Compute Engine/Google Compute Engine, BIOS Google 10/26/2022
-Call Trace:
- <TASK>
- __dump_stack lib/dump_stack.c:88 [inline]
- dump_stack_lvl+0x1b1/0x290 lib/dump_stack.c:106
- print_address_description+0x74/0x340 mm/kasan/report.c:306
- print_report+0x107/0x1f0 mm/kasan/report.c:417
- kasan_report+0xcd/0x100 mm/kasan/report.c:517
- xfs_btree_lookup_get_block+0x15c/0x6d0 fs/xfs/libxfs/xfs_btree.c:1813
- xfs_btree_lookup+0x346/0x12c0 fs/xfs/libxfs/xfs_btree.c:1913
- xfs_btree_simple_query_range+0xde/0x6a0 fs/xfs/libxfs/xfs_btree.c:4713
- xfs_btree_query_range+0x2db/0x380 fs/xfs/libxfs/xfs_btree.c:4953
- xfs_refcount_recover_cow_leftovers+0x2d1/0xa60 fs/xfs/libxfs/xfs_refcount.c:1946
- xfs_reflink_recover_cow+0xab/0x1b0 fs/xfs/xfs_reflink.c:930
- xlog_recover_finish+0x824/0x920 fs/xfs/xfs_log_recover.c:3493
- xfs_log_mount_finish+0x1ec/0x3d0 fs/xfs/xfs_log.c:829
- xfs_mountfs+0x146a/0x1ef0 fs/xfs/xfs_mount.c:933
- xfs_fs_fill_super+0xf95/0x11f0 fs/xfs/xfs_super.c:1666
- get_tree_bdev+0x400/0x620 fs/super.c:1282
- vfs_get_tree+0x88/0x270 fs/super.c:1489
- do_new_mount+0x289/0xad0 fs/namespace.c:3145
- do_mount fs/namespace.c:3488 [inline]
- __do_sys_mount fs/namespace.c:3697 [inline]
- __se_sys_mount+0x2d3/0x3c0 fs/namespace.c:3674
- do_syscall_x64 arch/x86/entry/common.c:50 [inline]
- do_syscall_64+0x3d/0xb0 arch/x86/entry/common.c:80
- entry_SYSCALL_64_after_hwframe+0x63/0xcd
-RIP: 0033:0x7f89fa3f4aca
-Code: 83 c4 08 5b 5d c3 66 2e 0f 1f 84 00 00 00 00 00 c3 66 2e 0f 1f 84 00 00 00 00 00 0f 1f 44 00 00 49 89 ca b8 a5 00 00 00 0f 05 <48> 3d 01 f0 ff ff 73 01 c3 48 c7 c1 c0 ff ff ff f7 d8 64 89 01 48
-RSP: 002b:00007fffd5fb5ef8 EFLAGS: 00000206 ORIG_RAX: 00000000000000a5
-RAX: ffffffffffffffda RBX: 00646975756f6e2c RCX: 00007f89fa3f4aca
-RDX: 0000000020000100 RSI: 0000000020009640 RDI: 00007fffd5fb5f10
-RBP: 00007fffd5fb5f10 R08: 00007fffd5fb5f50 R09: 000000000000970d
-R10: 0000000000200800 R11: 0000000000000206 R12: 0000000000000004
-R13: 0000555556c6b2c0 R14: 0000000000200800 R15: 00007fffd5fb5f50
- </TASK>
-
-The fuzzed image contains an AGF with an obviously garbage
-agf_refcount_level value of 32, and a dirty log with a buffer log item
-for that AGF.  The ondisk AGF has a higher LSN than the recovered log
-item.  xlog_recover_buf_commit_pass2 reads the buffer, compares the
-LSNs, and decides to skip replay because the ondisk buffer appears to be
-newer.
-
-Unfortunately, the ondisk buffer is corrupt, but recovery just read the
-buffer with no buffer ops specified:
-
-	error = xfs_buf_read(mp->m_ddev_targp, buf_f->blf_blkno,
-			buf_f->blf_len, buf_flags, &bp, NULL);
-
-Skipping the buffer leaves its contents in memory unverified.  This sets
-us up for a kernel crash because xfs_refcount_recover_cow_leftovers
-reads the buffer (which is still around in XBF_DONE state, so no read
-verification) and creates a refcountbt cursor of height 32.  This is
-impossible so we run off the end of the cursor object and crash.
-
-Fix this by invoking the verifier on all skipped buffers and aborting
-log recovery if the ondisk buffer is corrupt.  It might be smarter to
-force replay the log item atop the buffer and then see if it'll pass the
-write verifier (like ext4 does) but for now let's go with the
-conservative option where we stop immediately.
-
-Link: https://syzkaller.appspot.com/bug?extid=7e9494b8b399902e994e
-Signed-off-by: Darrick J. Wong <djwong@kernel.org>
-Reviewed-by: Dave Chinner <dchinner@redhat.com>
-Signed-off-by: Dave Chinner <david@fromorbit.com>
-Reported-by: Danila Chernetsov <listdansp@mail.ru>
-Link: https://lore.kernel.org/linux-xfs/20230601164439.15404-1-listdansp@mail.ru
-Signed-off-by: Amir Goldstein <amir73il@gmail.com>
-Acked-by: Darrick J. Wong <djwong@kernel.org>
----
-
-Greg,
-
-This is the backport proposed by Danila for 5.10.y.
-I've already tested it on 6.1.y as well as 5.10.y, but waiting for Leah to
-test 5.15.y before requesting apply to 5.10.y.
-
-Thanks,
-Amir.
-
- fs/xfs/xfs_buf_item_recover.c | 10 ++++++++++
- 1 file changed, 10 insertions(+)
-
-diff --git a/fs/xfs/xfs_buf_item_recover.c b/fs/xfs/xfs_buf_item_recover.c
-index ffa94102094d..43167f543afc 100644
---- a/fs/xfs/xfs_buf_item_recover.c
-+++ b/fs/xfs/xfs_buf_item_recover.c
-@@ -943,6 +943,16 @@ xlog_recover_buf_commit_pass2(
- 	if (lsn && lsn != -1 && XFS_LSN_CMP(lsn, current_lsn) >= 0) {
- 		trace_xfs_log_recover_buf_skip(log, buf_f);
- 		xlog_recover_validate_buf_type(mp, bp, buf_f, NULLCOMMITLSN);
-+
-+		/*
-+		 * We're skipping replay of this buffer log item due to the log
-+		 * item LSN being behind the ondisk buffer.  Verify the buffer
-+		 * contents since we aren't going to run the write verifier.
-+		 */
-+		if (bp->b_ops) {
-+			bp->b_ops->verify_read(bp);
-+			error = bp->b_error;
-+		}
- 		goto out_release;
- 	}
- 
--- 
-2.34.1
-
+Regards
+Yin, Fengwei
