@@ -2,119 +2,110 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DB853C7EE24
-	for <linux-xfs@archiver.kernel.org>; Tue,  6 Jun 2023 03:58:52 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6C48EC7EE24
+	for <linux-xfs@archiver.kernel.org>; Tue,  6 Jun 2023 04:21:17 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231139AbjFFD6u (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 5 Jun 2023 23:58:50 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51096 "EHLO
+        id S229544AbjFFEUq (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 6 Jun 2023 00:20:46 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57418 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229544AbjFFD6t (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 5 Jun 2023 23:58:49 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id CF995187
-        for <linux-xfs@vger.kernel.org>; Mon,  5 Jun 2023 20:58:47 -0700 (PDT)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 64436624EE
-        for <linux-xfs@vger.kernel.org>; Tue,  6 Jun 2023 03:58:47 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id C5922C433EF;
-        Tue,  6 Jun 2023 03:58:46 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1686023926;
-        bh=K8CZUF4lVHS4LtF1Bdpaw+aA6eAdE1I6wVltcAMFjOE=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=nlBvTJSTRoOJBZPyGjdPnJFPHVaPkFwkfJFsz5N07KmKZ6lqhElu9FrSZh98GjZ3u
-         VVi2Mufszl9Ya4xPDd6Hg5eniYWMMyCmWYhxGQyS6EwEawVfq/X9t6P+ii7Yi0r24I
-         l4of9iyPrfT3+/DmiqoSQaWzRS9F65sXw/OSjb+c7umxHnRysbQcwRa5mS40haXnnl
-         HPW2o7S6Ga0GXYVFQ7ONERCTx5dz59GsqwdvIJYiKfyRDAhZgdklHUUI2Tqno3NmSN
-         5xY+UvW3zZUxuiRhVNGmth/oyd6+tBnlRDwRQ2Hpv9p/G7Q6JqYj5iY+0R+lKFZB29
-         MvzwgKm9mbWTw==
-Date:   Mon, 5 Jun 2023 20:58:46 -0700
-From:   "Darrick J. Wong" <djwong@kernel.org>
-To:     Dave Chinner <david@fromorbit.com>
-Cc:     linux-xfs@vger.kernel.org
-Subject: Re: [ANNOUNCE] xfs: for-next rebased to d4d12c02bf5f
-Message-ID: <20230606035846.GF72267@frogsfrogsfrogs>
-References: <ZH1tiD4z4/revqp3@dread.disaster.area>
- <20230606000951.GK1325469@frogsfrogsfrogs>
- <ZH6E9+5uZNbnc4G3@dread.disaster.area>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <ZH6E9+5uZNbnc4G3@dread.disaster.area>
+        with ESMTP id S234187AbjFFEUe (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 6 Jun 2023 00:20:34 -0400
+Received: from mail-oo1-xc35.google.com (mail-oo1-xc35.google.com [IPv6:2607:f8b0:4864:20::c35])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8C36019C;
+        Mon,  5 Jun 2023 21:20:32 -0700 (PDT)
+Received: by mail-oo1-xc35.google.com with SMTP id 006d021491bc7-55afbc16183so695657eaf.3;
+        Mon, 05 Jun 2023 21:20:32 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20221208; t=1686025232; x=1688617232;
+        h=in-reply-to:subject:cc:to:from:message-id:date:from:to:cc:subject
+         :date:message-id:reply-to;
+        bh=yBE00vNjv3KvZcwNZWdO8NFmsUxg0Kj1Osiz1CksZZ8=;
+        b=i8cIbZpWYFqiwt/toSfdPHsNErFVpNGgfXeLMKG0VULr1A84oAM4M6R/HjeoKY2Gb0
+         dWRy3O6MUQWNEijW1g+BWwpa9rg1G5REjJ/GFFdhGxxr1J7c3EaWc5SjGBM4iQ30uqt8
+         UQhtx3u+gclwpbPCjVswipdXypxVds/FoO5FGwzChmrEasLXpYLsrBoDjiIDzLm2l3+I
+         FYE2a3Nic4nqrtStNh+dqa9yhjKJRVDEy96q51pNJ2Rq6ZbyaHV56U2pFy1tG2F6L2Zc
+         YW/BGeuUCXVzpRNxtSIHXDCQCCMNPTLAHZKiqTlraaKNY23scXBKWZlJ6zOgm+a610KQ
+         8mjg==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20221208; t=1686025232; x=1688617232;
+        h=in-reply-to:subject:cc:to:from:message-id:date:x-gm-message-state
+         :from:to:cc:subject:date:message-id:reply-to;
+        bh=yBE00vNjv3KvZcwNZWdO8NFmsUxg0Kj1Osiz1CksZZ8=;
+        b=B2g9lGh1xPxJqAOV6hWbghkumIRgSh51PV2MjBoqDgMjIdJ1kaGlL6a1zYzbycyNzF
+         KH12QT11RDnlDXD9bE0MsN2Nm/OFIFkZyrAi3Ob8jN9dt4FKk3EU2JFuU58wiP/5NH1D
+         7hYOaPr0I9RiA+rsYaM6K09bSobN9TxFIFmUqBUIdT7o2G9okjkqH89kTzf0KqUrAd57
+         JCg5o/DA47CjaD/XhgOsksZlH3MwtJDOo5P9RsQIqUzwD6Z7qMqF3fizjUbgDv8ummI0
+         htGw9neQCwONZZebeo5ZNA+gZpQOx5mtoZYYBCRSon4XQBSZsEMxvTSwVxdIuSM91oou
+         Ihxw==
+X-Gm-Message-State: AC+VfDzRhiZAUO16Z/mESt5z8fqr5bKDeBBUW4Oh/wuK3fmotnn4cjE/
+        KwelttsIvw7zlgD4uy3b8hZzky43f8Q=
+X-Google-Smtp-Source: ACHHUZ791XguVFC2T8L9zeVmq0jp8ErtlwbMgdSGj8+IB8uR2CgrjX2pKEoQmA22JYWTIXT1+R8Ifw==
+X-Received: by 2002:aca:1204:0:b0:38e:8e21:d044 with SMTP id 4-20020aca1204000000b0038e8e21d044mr1086649ois.6.1686025231570;
+        Mon, 05 Jun 2023 21:20:31 -0700 (PDT)
+Received: from dw-tp ([49.207.220.159])
+        by smtp.gmail.com with ESMTPSA id bc3-20020a170902930300b001a505f04a06sm7388428plb.190.2023.06.05.21.20.28
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Mon, 05 Jun 2023 21:20:31 -0700 (PDT)
+Date:   Tue, 06 Jun 2023 09:50:26 +0530
+Message-Id: <87edmpjk6t.fsf@doe.com>
+From:   Ritesh Harjani (IBM) <ritesh.list@gmail.com>
+To:     "Darrick J. Wong" <djwong@kernel.org>
+Cc:     linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
+        Matthew Wilcox <willy@infradead.org>,
+        Dave Chinner <david@fromorbit.com>,
+        Brian Foster <bfoster@redhat.com>,
+        Christoph Hellwig <hch@infradead.org>,
+        Andreas Gruenbacher <agruenba@redhat.com>,
+        Ojaswin Mujoo <ojaswin@linux.ibm.com>,
+        Disha Goel <disgoel@linux.ibm.com>
+Subject: Re: [PATCHv7 1/6] iomap: Rename iomap_page_create/release() to iomap_iop_alloc/free()
+In-Reply-To: <20230605223611.GE1325469@frogsfrogsfrogs>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Tue, Jun 06, 2023 at 10:59:35AM +1000, Dave Chinner wrote:
-> On Mon, Jun 05, 2023 at 05:09:51PM -0700, Darrick J. Wong wrote:
-> > On Mon, Jun 05, 2023 at 03:07:20PM +1000, Dave Chinner wrote:
-> > > Hi folks,
-> > > 
-> > > I just rebased the for-next tree to correct a bad fixes tag in
-> > > the tree that was flags by a linux-next sanity check. The code is
-> > > the same, just a commit message needed rewriting, but that means all
-> > > the commit change and you'll need to do forced update if you pulled
-> > > the branch I pushed a few hours ago.
-> > > 
-> > > -Dave.
-> > > 
-> > > ----------------------------------------------------------------
-> > > 
-> > >   git://git.kernel.org/pub/scm/fs/xfs/xfs-linux.git for-next
-> > > 
-> > >   Head Commit: d4d12c02bf5f768f1b423c7ae2909c5afdfe0d5f
-> > > 
-> > >   xfs: collect errors from inodegc for unlinked inode recovery (2023-06-05 14:48:15 +1000)
-> > > 
-> > > ----------------------------------------------------------------
-> > > Darrick J. Wong (1):
-> > >       xfs: fix broken logic when detecting mergeable bmap records
-> > > 
-> > > Dave Chinner (9):
-> > >       xfs: buffer pins need to hold a buffer reference
-> > >       xfs: restore allocation trylock iteration
-> > >       xfs: defered work could create precommits
-> > >       xfs: fix AGF vs inode cluster buffer deadlock
-> > >       xfs: fix double xfs_perag_rele() in xfs_filestream_pick_ag()
-> > >       xfs: fix agf/agfl verification on v4 filesystems
-> > >       xfs: validity check agbnos on the AGFL
-> > >       xfs: validate block number being freed before adding to xefi
-> > >       xfs: collect errors from inodegc for unlinked inode recovery
-> > > 
-> > > Geert Uytterhoeven (1):
-> > >       xfs: Fix undefined behavior of shift into sign bit
-> > 
-> > Hmm, I don't see "xfs: fix ag count overflow during growfs" in here.
-> 
-> No, I didn't pick it up because it conflicted with other bug fix
-> stuff I am currently working on and I needed to look at it in more
-> detail before doing anything with it. I hadn't followed the
-> development of the patch at all, and it was up to v4 so I was going
-> to need to spend a little bit of time on it to see what the history
-> of it was first....
+"Darrick J. Wong" <djwong@kernel.org> writes:
 
-Ah, ok.  Most of the history was the author and I going 'round and
-'round about how to validate the incoming fsblocks to prevent agcount
-overflow without stomping on any other weird uses.
+> On Mon, Jun 05, 2023 at 04:25:01PM +0530, Ritesh Harjani (IBM) wrote:
+>> This patch renames the iomap_page_create/release() functions to
+>> iomap_iop_alloc/free() calls. Later patches adds more functions for
+>> handling iop structure with iomap_iop_** naming conventions.
+>> Hence iomap_iop_alloc/free() makes more sense to be consistent with all
+>> APIs.
+>>
+>> Signed-off-by: Ritesh Harjani (IBM) <ritesh.list@gmail.com>
+>> ---
+>>  fs/iomap/buffered-io.c | 21 +++++++++++----------
+>>  1 file changed, 11 insertions(+), 10 deletions(-)
+>>
+>> diff --git a/fs/iomap/buffered-io.c b/fs/iomap/buffered-io.c
+>> index 063133ec77f4..4567bdd4fff9 100644
+>> --- a/fs/iomap/buffered-io.c
+>> +++ b/fs/iomap/buffered-io.c
+>> @@ -43,8 +43,8 @@ static inline struct iomap_page *to_iomap_page(struct folio *folio)
+>>
+>>  static struct bio_set iomap_ioend_bioset;
+>>
+>> -static struct iomap_page *
+>> -iomap_page_create(struct inode *inode, struct folio *folio, unsigned int flags)
+>> +static struct iomap_page *iomap_iop_alloc(struct inode *inode,
+>
+> Personally I preferred iop_alloc, but as I wasn't around to make to that
+> point during the v6 review I'll let this slide.  iomap_iop_* it is.
+>
+> (I invoke maintainer privilege and will rename the structure to
+> iomap_folio and iop->iof since the objects no longer track /only/ a
+> single page state.)
 
-> > Dave, do you want to do another 6.4 bug release, or throw things back
-> > over the wall so I can merge all the rest of the pending fixes for 6.5?
-> 
-> If you want, you can pick it up once I've sent a pull request for
-> the current set of fixes in for-next. That will be later this week;
-> it needs to spend a couple of days in linux-next before that
-> happens, though.
+Darrick,
+Do you want me to rename iomap_page -> iomap_folio in this patch itself
+or would you rather prefer the renaming of iomap_page -> iomap_folio and
+iop -> iof as a separate last patch in the series?
 
-Yeah, sounds good to me.
+>
+> Reviewed-by: Darrick J. Wong <djwong@kernel.org>
+>
 
---D
-
-> Cheers,
-> 
-> Dave.
-> -- 
-> Dave Chinner
-> david@fromorbit.com
+Thanks!
+-ritesh
