@@ -2,144 +2,109 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E03D8C7EE24
-	for <linux-xfs@archiver.kernel.org>; Tue,  6 Jun 2023 18:08:15 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 55C2DC7EE37
+	for <linux-xfs@archiver.kernel.org>; Tue,  6 Jun 2023 21:06:15 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S237744AbjFFSIP (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 6 Jun 2023 14:08:15 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56940 "EHLO
+        id S232045AbjFFVGO (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 6 Jun 2023 17:06:14 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33020 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S238897AbjFFSIM (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 6 Jun 2023 14:08:12 -0400
-Received: from casper.infradead.org (casper.infradead.org [IPv6:2001:8b0:10b:1236::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3886A1730;
-        Tue,  6 Jun 2023 11:08:02 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=infradead.org; s=casper.20170209; h=In-Reply-To:Content-Type:MIME-Version:
-        References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
-        Content-Transfer-Encoding:Content-ID:Content-Description;
-        bh=4ie1db8N9V0M6Yogyw2EjaVMj665tiZSmITTGtrkMxk=; b=wAj6PBdSP2jrRyeQ8YhpKNLd2d
-        XuwB8qrpTortcDiX11wO+JKvFQAzrqzdq1njdeQodEcraQFqjx0CoaaZgwtEgXm18u1eT9Z5QpqYN
-        SVjM7zPxQRLycMSifGq4dXJp6bDjX/I6Mb8oaFFyEUs+CCwFiozqG2L8JSzmHBlCLhFfUNm/VKWiD
-        lL025uQae5hZiTpR2SnryhLuSYFjhgLnQ7ERCBitnSUbvLCUmqNgFXbv6PGvi/rAHJ0rh+Odv8dYQ
-        HSOq65CxN5RV5p6DzqE5/xa3yTkmfFYjMbhwVkIr0OY4mioay6tt6x0+VTV7VBDThWQrFynPtrGct
-        O/C3fWlA==;
-Received: from willy by casper.infradead.org with local (Exim 4.94.2 #2 (Red Hat Linux))
-        id 1q6b61-00DOWU-IF; Tue, 06 Jun 2023 18:07:53 +0000
-Date:   Tue, 6 Jun 2023 19:07:53 +0100
-From:   Matthew Wilcox <willy@infradead.org>
-To:     "Yin, Fengwei" <fengwei.yin@intel.com>
-Cc:     "Darrick J. Wong" <djwong@kernel.org>,
-        linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org,
-        Wang Yugui <wangyugui@e16-tech.com>,
-        Dave Chinner <david@fromorbit.com>,
-        Christoph Hellwig <hch@infradead.org>,
-        Al Viro <viro@zeniv.linux.org.uk>
-Subject: Re: [PATCH v2 7/7] iomap: Copy larger chunks from userspace
-Message-ID: <ZH91+QWd3k8a2x/Z@casper.infradead.org>
-References: <20230602222445.2284892-1-willy@infradead.org>
- <20230602222445.2284892-8-willy@infradead.org>
- <20230604182952.GH72241@frogsfrogsfrogs>
- <ZH0MDtoTyUMQ7eok@casper.infradead.org>
- <d47f280e-9e98-ffd2-1386-097fc8dc11b5@intel.com>
+        with ESMTP id S230504AbjFFVGN (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 6 Jun 2023 17:06:13 -0400
+Received: from forward501a.mail.yandex.net (forward501a.mail.yandex.net [178.154.239.81])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 347C71707;
+        Tue,  6 Jun 2023 14:06:08 -0700 (PDT)
+Received: from mail-nwsmtp-smtp-production-main-18.vla.yp-c.yandex.net (mail-nwsmtp-smtp-production-main-18.vla.yp-c.yandex.net [IPv6:2a02:6b8:c1f:5f1d:0:640:49bf:0])
+        by forward501a.mail.yandex.net (Yandex) with ESMTP id 9705F5EB94;
+        Wed,  7 Jun 2023 00:06:05 +0300 (MSK)
+Received: by mail-nwsmtp-smtp-production-main-18.vla.yp-c.yandex.net (smtp/Yandex) with ESMTPSA id 36bUBP1DdeA0-FdoUgi57;
+        Wed, 07 Jun 2023 00:06:04 +0300
+X-Yandex-Fwd: 1
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ya.ru; s=mail; t=1686085564;
+        bh=g+p57RqFmxJ4tzpz/26eK8nSIEQ3A6k2DYL8R5TP9Jo=;
+        h=From:In-Reply-To:Cc:Date:References:To:Subject:Message-ID;
+        b=hs+DfPcJaUkA0cTRNlzqm0BdIgJqOxd5hZo8lrJTuB3j7JLEo5ZEWDeX0KuY1wIqy
+         Sc8GkCdA/Cg5Dlv0wqDIaqhj8MqZ0x7pMCh2fVG1DW6TZRRMw6d5kfkBd1mXF4o3MZ
+         WUC27bTIOC+uFu4eZrMlOK2rQ4uxMbS+lhjz8Y7g=
+Authentication-Results: mail-nwsmtp-smtp-production-main-18.vla.yp-c.yandex.net; dkim=pass header.i=@ya.ru
+Message-ID: <ef1b0ecd-5a03-4256-2a7a-3e22b755aa53@ya.ru>
+Date:   Wed, 7 Jun 2023 00:06:03 +0300
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <d47f280e-9e98-ffd2-1386-097fc8dc11b5@intel.com>
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
+ Thunderbird/102.10.0
+Subject: Re: [PATCH v2 0/3] mm: Make unregistration of super_block shrinker
+ more faster
+To:     Dave Chinner <david@fromorbit.com>
+Cc:     akpm@linux-foundation.org, roman.gushchin@linux.dev,
+        vbabka@suse.cz, viro@zeniv.linux.org.uk, brauner@kernel.org,
+        djwong@kernel.org, hughd@google.com, paulmck@kernel.org,
+        muchun.song@linux.dev, linux-mm@kvack.org,
+        linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org,
+        linux-kernel@vger.kernel.org, zhengqi.arch@bytedance.com
+References: <168599103578.70911.9402374667983518835.stgit@pro.pro>
+ <ZH5ig590WleaH1Ed@dread.disaster.area>
+Content-Language: en-US
+From:   Kirill Tkhai <tkhai@ya.ru>
+In-Reply-To: <ZH5ig590WleaH1Ed@dread.disaster.area>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Mon, Jun 05, 2023 at 04:25:22PM +0800, Yin, Fengwei wrote:
-> On 6/5/2023 6:11 AM, Matthew Wilcox wrote:
-> > On Sun, Jun 04, 2023 at 11:29:52AM -0700, Darrick J. Wong wrote:
-> >> On Fri, Jun 02, 2023 at 11:24:44PM +0100, Matthew Wilcox (Oracle) wrote:
-> >>> -		copied = copy_page_from_iter_atomic(page, offset, bytes, i);
-> >>> +		copied = copy_page_from_iter_atomic(&folio->page, offset, bytes, i);
-> >>
-> >> I think I've gotten lost in the weeds.  Does copy_page_from_iter_atomic
-> >> actually know how to deal with a multipage folio?  AFAICT it takes a
-> >> page, kmaps it, and copies @bytes starting at @offset in the page.  If
-> >> a caller feeds it a multipage folio, does that all work correctly?  Or
-> >> will the pagecache split multipage folios as needed to make it work
-> >> right?
-> > 
-> > It's a smidgen inefficient, but it does work.  First, it calls
-> > page_copy_sane() to check that offset & n fit within the compound page
-> > (ie this all predates folios).
-> > 
-> > ... Oh.  copy_page_from_iter() handles this correctly.
-> > copy_page_from_iter_atomic() doesn't.  I'll have to fix this
-> > first.  Looks like Al fixed copy_page_from_iter() in c03f05f183cd
-> > and didn't fix copy_page_from_iter_atomic().
-> > 
-> >> If we create a 64k folio at pos 0 and then want to write a byte at pos
-> >> 40k, does __filemap_get_folio break up the 64k folio so that the folio
-> >> returned by iomap_get_folio starts at 40k?  Or can the iter code handle
-> >> jumping ten pages into a 16-page folio and I just can't see it?
-> > 
-> > Well ... it handles it fine unless it's highmem.  p is kaddr + offset,
-> > so if offset is 40k, it works correctly on !highmem.
-> So is it better to have implementations for !highmem and highmem? And for
-> !highmem, we don't need the kmap_local_page()/kunmap_local() and chunk
-> size per copy is not limited to PAGE_SIZE. Thanks.
+On 06.06.2023 01:32, Dave Chinner wrote:
+> On Mon, Jun 05, 2023 at 10:02:46PM +0300, Kirill Tkhai wrote:
+>> This patch set introduces a new scheme of shrinker unregistration. It allows to split
+>> the unregistration in two parts: fast and slow. This allows to hide slow part from
+>> a user, so user-visible unregistration becomes fast.
+>>
+>> This fixes the -88.8% regression of stress-ng.ramfs.ops_per_sec noticed
+>> by kernel test robot:
+>>
+>> https://lore.kernel.org/lkml/202305230837.db2c233f-yujie.liu@intel.com/
+>>
+>> ---
+>>
+>> Kirill Tkhai (2):
+>>       mm: Split unregister_shrinker() in fast and slow part
+>>       fs: Use delayed shrinker unregistration
+> 
+> Did you test any filesystem other than ramfs?
+> 
+> Filesystems more complex than ramfs have internal shrinkers, and so
+> they will still be running the slow synchronize_srcu() - potentially
+> multiple times! - in every unmount. Both XFS and ext4 have 3
+> internal shrinker instances per mount, so they will still call
+> synchronize_srcu() at least 3 times per unmount after this change.
+> 
+> What about any other subsystem that runs a shrinker - do they have
+> context depedent shrinker instances that get frequently created and
+> destroyed? They'll need the same treatment.
 
-No, that's not needed; we can handle that just fine.  Maybe this can
-use kmap_local_page() instead of kmap_atomic().  Al, what do you think?
-I haven't tested this yet; need to figure out a qemu config with highmem ...
+Of course, all of shrinkers should be fixed. This patch set just aims to describe
+the idea more wider, because I'm not sure most people read replys to kernel robot reports.
 
-diff --git a/lib/iov_iter.c b/lib/iov_iter.c
-index 960223ed9199..d3d6a0789625 100644
---- a/lib/iov_iter.c
-+++ b/lib/iov_iter.c
-@@ -857,24 +857,36 @@ size_t iov_iter_zero(size_t bytes, struct iov_iter *i)
- }
- EXPORT_SYMBOL(iov_iter_zero);
- 
--size_t copy_page_from_iter_atomic(struct page *page, unsigned offset, size_t bytes,
--				  struct iov_iter *i)
-+size_t copy_page_from_iter_atomic(struct page *page, unsigned offset,
-+		size_t bytes, struct iov_iter *i)
- {
--	char *kaddr = kmap_atomic(page), *p = kaddr + offset;
--	if (!page_copy_sane(page, offset, bytes)) {
--		kunmap_atomic(kaddr);
-+	size_t n = bytes, copied = 0;
-+
-+	if (!page_copy_sane(page, offset, bytes))
- 		return 0;
--	}
--	if (WARN_ON_ONCE(!i->data_source)) {
--		kunmap_atomic(kaddr);
-+	if (WARN_ON_ONCE(!i->data_source))
- 		return 0;
-+
-+	page += offset / PAGE_SIZE;
-+	offset %= PAGE_SIZE;
-+	if (PageHighMem(page))
-+		n = min_t(size_t, bytes, PAGE_SIZE);
-+	while (1) {
-+		char *kaddr = kmap_atomic(page) + offset;
-+		iterate_and_advance(i, n, base, len, off,
-+			copyin(kaddr + off, base, len),
-+			memcpy_from_iter(i, kaddr + off, base, len)
-+		)
-+		kunmap_atomic(kaddr);
-+		copied += n;
-+		if (!PageHighMem(page) || copied == bytes || n == 0)
-+			break;
-+		offset += n;
-+		page += offset / PAGE_SIZE;
-+		offset %= PAGE_SIZE;
-+		n = min_t(size_t, bytes - copied, PAGE_SIZE);
- 	}
--	iterate_and_advance(i, bytes, base, len, off,
--		copyin(p + off, base, len),
--		memcpy_from_iter(i, p + off, base, len)
--	)
--	kunmap_atomic(kaddr);
--	return bytes;
-+	return copied;
- }
- EXPORT_SYMBOL(copy_page_from_iter_atomic);
- 
+This is my suggestion of way to go. Probably, Qi is right person to ask whether
+we're going to extend this and to maintain f95bdb700bc6 in tree.
+
+There is not much time. Unfortunately, kernel test robot reported this significantly late.
+
+> Seriously, part of changing shrinker infrastructure is doing an
+> audit of all the shrinker instances to determine how the change will
+> impact those shrinkers, and if the same structural changes are
+> needed to those implementations.
+> 
+> I don't see any of this being done - this looks like a "slap a bandaid
+> over the visible symptom" patch set without any deeper investigation
+> of the scope of the issue having been gained.
+> 
+> Along with all shrinkers now running under a SRCU critical region
+> and requiring a machine wide synchronisation point for every
+> unregister_shrinker() call made, the ability to repeated abort
+> global shrinker passes via external SRCU expediting, and now an
+> intricate locking and state dance in do_shrink_slab() vs
+> unregister_shrinker, I can't say I'm particularly liking any of
+> this, regardles of the benefits it supposedly provides.
+> 
+> -Dave.
+
