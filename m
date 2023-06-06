@@ -2,110 +2,63 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6C48EC7EE24
-	for <linux-xfs@archiver.kernel.org>; Tue,  6 Jun 2023 04:21:17 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 836F0C7EE33
+	for <linux-xfs@archiver.kernel.org>; Tue,  6 Jun 2023 06:43:52 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229544AbjFFEUq (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 6 Jun 2023 00:20:46 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57418 "EHLO
+        id S235063AbjFFGnu (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 6 Jun 2023 02:43:50 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47564 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S234187AbjFFEUe (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 6 Jun 2023 00:20:34 -0400
-Received: from mail-oo1-xc35.google.com (mail-oo1-xc35.google.com [IPv6:2607:f8b0:4864:20::c35])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8C36019C;
-        Mon,  5 Jun 2023 21:20:32 -0700 (PDT)
-Received: by mail-oo1-xc35.google.com with SMTP id 006d021491bc7-55afbc16183so695657eaf.3;
-        Mon, 05 Jun 2023 21:20:32 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20221208; t=1686025232; x=1688617232;
-        h=in-reply-to:subject:cc:to:from:message-id:date:from:to:cc:subject
-         :date:message-id:reply-to;
-        bh=yBE00vNjv3KvZcwNZWdO8NFmsUxg0Kj1Osiz1CksZZ8=;
-        b=i8cIbZpWYFqiwt/toSfdPHsNErFVpNGgfXeLMKG0VULr1A84oAM4M6R/HjeoKY2Gb0
-         dWRy3O6MUQWNEijW1g+BWwpa9rg1G5REjJ/GFFdhGxxr1J7c3EaWc5SjGBM4iQ30uqt8
-         UQhtx3u+gclwpbPCjVswipdXypxVds/FoO5FGwzChmrEasLXpYLsrBoDjiIDzLm2l3+I
-         FYE2a3Nic4nqrtStNh+dqa9yhjKJRVDEy96q51pNJ2Rq6ZbyaHV56U2pFy1tG2F6L2Zc
-         YW/BGeuUCXVzpRNxtSIHXDCQCCMNPTLAHZKiqTlraaKNY23scXBKWZlJ6zOgm+a610KQ
-         8mjg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20221208; t=1686025232; x=1688617232;
-        h=in-reply-to:subject:cc:to:from:message-id:date:x-gm-message-state
-         :from:to:cc:subject:date:message-id:reply-to;
-        bh=yBE00vNjv3KvZcwNZWdO8NFmsUxg0Kj1Osiz1CksZZ8=;
-        b=B2g9lGh1xPxJqAOV6hWbghkumIRgSh51PV2MjBoqDgMjIdJ1kaGlL6a1zYzbycyNzF
-         KH12QT11RDnlDXD9bE0MsN2Nm/OFIFkZyrAi3Ob8jN9dt4FKk3EU2JFuU58wiP/5NH1D
-         7hYOaPr0I9RiA+rsYaM6K09bSobN9TxFIFmUqBUIdT7o2G9okjkqH89kTzf0KqUrAd57
-         JCg5o/DA47CjaD/XhgOsksZlH3MwtJDOo5P9RsQIqUzwD6Z7qMqF3fizjUbgDv8ummI0
-         htGw9neQCwONZZebeo5ZNA+gZpQOx5mtoZYYBCRSon4XQBSZsEMxvTSwVxdIuSM91oou
-         Ihxw==
-X-Gm-Message-State: AC+VfDzRhiZAUO16Z/mESt5z8fqr5bKDeBBUW4Oh/wuK3fmotnn4cjE/
-        KwelttsIvw7zlgD4uy3b8hZzky43f8Q=
-X-Google-Smtp-Source: ACHHUZ791XguVFC2T8L9zeVmq0jp8ErtlwbMgdSGj8+IB8uR2CgrjX2pKEoQmA22JYWTIXT1+R8Ifw==
-X-Received: by 2002:aca:1204:0:b0:38e:8e21:d044 with SMTP id 4-20020aca1204000000b0038e8e21d044mr1086649ois.6.1686025231570;
-        Mon, 05 Jun 2023 21:20:31 -0700 (PDT)
-Received: from dw-tp ([49.207.220.159])
-        by smtp.gmail.com with ESMTPSA id bc3-20020a170902930300b001a505f04a06sm7388428plb.190.2023.06.05.21.20.28
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 05 Jun 2023 21:20:31 -0700 (PDT)
-Date:   Tue, 06 Jun 2023 09:50:26 +0530
-Message-Id: <87edmpjk6t.fsf@doe.com>
-From:   Ritesh Harjani (IBM) <ritesh.list@gmail.com>
+        with ESMTP id S230499AbjFFGnt (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 6 Jun 2023 02:43:49 -0400
+Received: from verein.lst.de (verein.lst.de [213.95.11.211])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 864B191;
+        Mon,  5 Jun 2023 23:43:48 -0700 (PDT)
+Received: by verein.lst.de (Postfix, from userid 2407)
+        id 294C46732D; Tue,  6 Jun 2023 08:43:44 +0200 (CEST)
+Date:   Tue, 6 Jun 2023 08:43:43 +0200
+From:   Christoph Hellwig <hch@lst.de>
 To:     "Darrick J. Wong" <djwong@kernel.org>
-Cc:     linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
+Cc:     Christoph Hellwig <hch@lst.de>,
         Matthew Wilcox <willy@infradead.org>,
-        Dave Chinner <david@fromorbit.com>,
-        Brian Foster <bfoster@redhat.com>,
-        Christoph Hellwig <hch@infradead.org>,
+        Jens Axboe <axboe@kernel.dk>, Xiubo Li <xiubli@redhat.com>,
+        Ilya Dryomov <idryomov@gmail.com>,
+        Alexander Viro <viro@zeniv.linux.org.uk>,
+        Christian Brauner <brauner@kernel.org>,
+        Theodore Ts'o <tytso@mit.edu>,
+        Jaegeuk Kim <jaegeuk@kernel.org>, Chao Yu <chao@kernel.org>,
+        Miklos Szeredi <miklos@szeredi.hu>,
         Andreas Gruenbacher <agruenba@redhat.com>,
-        Ojaswin Mujoo <ojaswin@linux.ibm.com>,
-        Disha Goel <disgoel@linux.ibm.com>
-Subject: Re: [PATCHv7 1/6] iomap: Rename iomap_page_create/release() to iomap_iop_alloc/free()
-In-Reply-To: <20230605223611.GE1325469@frogsfrogsfrogs>
+        Trond Myklebust <trond.myklebust@hammerspace.com>,
+        Anna Schumaker <anna@kernel.org>,
+        Damien Le Moal <dlemoal@kernel.org>,
+        Andrew Morton <akpm@linux-foundation.org>,
+        linux-block@vger.kernel.org, ceph-devel@vger.kernel.org,
+        linux-fsdevel@vger.kernel.org, linux-ext4@vger.kernel.org,
+        linux-f2fs-devel@lists.sourceforge.net, cluster-devel@redhat.com,
+        linux-xfs@vger.kernel.org, linux-nfs@vger.kernel.org,
+        linux-mm@kvack.org, Miklos Szeredi <mszeredi@redhat.com>
+Subject: Re: [PATCH 09/12] fs: factor out a direct_write_fallback helper
+Message-ID: <20230606064343.GA27497@lst.de>
+References: <20230601145904.1385409-1-hch@lst.de> <20230601145904.1385409-10-hch@lst.de> <20230606000414.GJ1325469@frogsfrogsfrogs>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20230606000414.GJ1325469@frogsfrogsfrogs>
+User-Agent: Mutt/1.5.17 (2007-11-01)
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-"Darrick J. Wong" <djwong@kernel.org> writes:
+On Mon, Jun 05, 2023 at 05:04:14PM -0700, Darrick J. Wong wrote:
+> On Thu, Jun 01, 2023 at 04:59:01PM +0200, Christoph Hellwig wrote:
+> > Add a helper dealing with handling the syncing of a buffered write fallback
+> > for direct I/O.
+> > 
+> > Signed-off-by: Christoph Hellwig <hch@lst.de>
+> > Reviewed-by: Damien Le Moal <dlemoal@kernel.org>
+> > Reviewed-by: Miklos Szeredi <mszeredi@redhat.com>
+> 
+> Looks good to me; whose tree do you want this to go through?
 
-> On Mon, Jun 05, 2023 at 04:25:01PM +0530, Ritesh Harjani (IBM) wrote:
->> This patch renames the iomap_page_create/release() functions to
->> iomap_iop_alloc/free() calls. Later patches adds more functions for
->> handling iop structure with iomap_iop_** naming conventions.
->> Hence iomap_iop_alloc/free() makes more sense to be consistent with all
->> APIs.
->>
->> Signed-off-by: Ritesh Harjani (IBM) <ritesh.list@gmail.com>
->> ---
->>  fs/iomap/buffered-io.c | 21 +++++++++++----------
->>  1 file changed, 11 insertions(+), 10 deletions(-)
->>
->> diff --git a/fs/iomap/buffered-io.c b/fs/iomap/buffered-io.c
->> index 063133ec77f4..4567bdd4fff9 100644
->> --- a/fs/iomap/buffered-io.c
->> +++ b/fs/iomap/buffered-io.c
->> @@ -43,8 +43,8 @@ static inline struct iomap_page *to_iomap_page(struct folio *folio)
->>
->>  static struct bio_set iomap_ioend_bioset;
->>
->> -static struct iomap_page *
->> -iomap_page_create(struct inode *inode, struct folio *folio, unsigned int flags)
->> +static struct iomap_page *iomap_iop_alloc(struct inode *inode,
->
-> Personally I preferred iop_alloc, but as I wasn't around to make to that
-> point during the v6 review I'll let this slide.  iomap_iop_* it is.
->
-> (I invoke maintainer privilege and will rename the structure to
-> iomap_folio and iop->iof since the objects no longer track /only/ a
-> single page state.)
-
-Darrick,
-Do you want me to rename iomap_page -> iomap_folio in this patch itself
-or would you rather prefer the renaming of iomap_page -> iomap_folio and
-iop -> iof as a separate last patch in the series?
-
->
-> Reviewed-by: Darrick J. Wong <djwong@kernel.org>
->
-
-Thanks!
--ritesh
+Andrew has already picked them up.
