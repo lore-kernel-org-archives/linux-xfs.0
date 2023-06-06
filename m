@@ -2,142 +2,168 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4A289C7EE24
-	for <linux-xfs@archiver.kernel.org>; Tue,  6 Jun 2023 12:10:52 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id AC752C77B7A
+	for <linux-xfs@archiver.kernel.org>; Tue,  6 Jun 2023 12:17:33 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S237452AbjFFMKv (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 6 Jun 2023 08:10:51 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47466 "EHLO
+        id S230252AbjFFMRc (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 6 Jun 2023 08:17:32 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53268 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S237398AbjFFMKr (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 6 Jun 2023 08:10:47 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id AFD83198A
-        for <linux-xfs@vger.kernel.org>; Tue,  6 Jun 2023 05:10:23 -0700 (PDT)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 2C35663175
-        for <linux-xfs@vger.kernel.org>; Tue,  6 Jun 2023 12:10:23 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 316DBC433EF;
-        Tue,  6 Jun 2023 12:10:21 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1686053422;
-        bh=1sjs1V7b6i8xgoZf8nB1Dp4ABIWmamVhPXzfHb9V52E=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=N6f0dqOM7ggxpvKFvf0xXyZ8nVY10c/I2btP+RttxnDoG8eQzLc2kWSFk4l/HO3B+
-         6m3TNJK64WhzgyTKpB69FS27aTNbdHDExzCoeiweNpQeMbMldCkyx2hdigMqtrLtuW
-         C22vLWtkZAqKy0V9dZHQbQdw/4NfuUzvsTypDfEh431VONwQcfGxfmief4d3iH/Si+
-         5fgemOctGrzqnHKWUU/gcWYJ8qGyVNBlz8uYzaNq9ofqg8vPC3xezCl3WoVrAPmwUn
-         o7gqoHMpDczLK267xH9dMzGrkkScO3YTCgxci3mp1EukdRCMr4h8ZQC1w8+gzibv1U
-         VJ5iYNh/ZNl8w==
-Date:   Tue, 6 Jun 2023 14:10:17 +0200
-From:   Carlos Maiolino <cem@kernel.org>
-To:     Chandan Babu R <chandan.babu@oracle.com>
-Cc:     linux-xfs@vger.kernel.org, djwong@kernel.org
-Subject: Re: [PATCH V2 00/23] Metadump v2
-Message-ID: <20230606121017.zvq6d2f4vdroh66q@andromeda>
-References: <2ExBvYxYPnyiGvOJzODNvNXx_bfn5RWAck_7UcV7OvxkF6fgAy6UZtI6d2-FdmxoIeBLPPX0vwW9uaJxBa5Rmg==@protonmail.internalid>
- <20230606092806.1604491-1-chandan.babu@oracle.com>
+        with ESMTP id S232007AbjFFMRb (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 6 Jun 2023 08:17:31 -0400
+Received: from mail-lf1-x132.google.com (mail-lf1-x132.google.com [IPv6:2a00:1450:4864:20::132])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id AA9B110C3;
+        Tue,  6 Jun 2023 05:17:29 -0700 (PDT)
+Received: by mail-lf1-x132.google.com with SMTP id 2adb3069b0e04-4f63006b4e3so1622070e87.1;
+        Tue, 06 Jun 2023 05:17:29 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20221208; t=1686053848; x=1688645848;
+        h=cc:to:subject:message-id:date:from:in-reply-to:references
+         :mime-version:from:to:cc:subject:date:message-id:reply-to;
+        bh=fYdG+l24N7nOPPkYzvC1dMPw8hRed5xRsohavReXDVA=;
+        b=ifo4a8IwMqTUyoJn9aC/S0EWxW8hyiaPUl/x4fVjRobnkH9VQWXlqGCKd0B7rFdPh/
+         v8GTkSr7uCgYV0C0FK0LiJM95+2ieVUfv8NL5CWYVur+XMHguEjKJnjVOX/N4BsPoisu
+         EQrCT7jxo9FDnbh9f5YCy9HWDCx4/h48YdrALffbDrZyAsbmrpsM27+raeHl4BfuPlxr
+         UO7XVO/Rn6G5Ckj20eQ3iNDwYaRlSmU2ePkeOI2s/efSq10v65gLIx5+10hovJiTgL9b
+         2M6ZHenUAvmSYz79fqo5IVDi3yG3GOIYNEBKJ65hZ5Cg24nOGQeJyM3o0NcCxCDfIoRK
+         Dx3g==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20221208; t=1686053848; x=1688645848;
+        h=cc:to:subject:message-id:date:from:in-reply-to:references
+         :mime-version:x-gm-message-state:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=fYdG+l24N7nOPPkYzvC1dMPw8hRed5xRsohavReXDVA=;
+        b=OM363g5wmxGCA6L5zhr6jLjj5CEikJQ1UUOqIATOkeHUmDIDnwIh1cPW+mLomu+1w+
+         /NeEND4SnMsx0APsbHN9YlhDuNXoW5yFTNtGMcARH1WWsAd6EalcjK9M3yYAyHC/hI7u
+         /4nVI4Rlttt4fLpl340UHp/LBRIr99erPxA4xkUVh/KTiUlMOo+cg2MBoPxsxI5HJnIV
+         nKrHrscuYFITPxuz2Eh/JB+TyxEDPOOsH7BIdZ4x/Qw+ITxilFQ3QlAezvxM79K6fyg4
+         yXnBuw6+jOV2IFijFFlIFUxByCEBO3i1EiXzxMAItdHDdQWAbg91NJT+xmXMfSkjTjmY
+         mTJQ==
+X-Gm-Message-State: AC+VfDweIZiFHmeznfb+08knAa2tHJFotd4BTfAkxYeoyCKs3/ZoWOHW
+        5aN9q9xZF/7VTslsuqUxc45YL2iFf+F39s1yQEQ=
+X-Google-Smtp-Source: ACHHUZ4AAeFf0lhDH/3FNs4BrtjrfNhgGfmAvgwNdLdhY8vNRg6fELk9qIjAiYCEVH1w9WWN+zFveWKbTZjJVN+x6yg=
+X-Received: by 2002:a2e:8514:0:b0:2b1:c501:5124 with SMTP id
+ j20-20020a2e8514000000b002b1c5015124mr1383698lji.51.1686053847591; Tue, 06
+ Jun 2023 05:17:27 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20230606092806.1604491-1-chandan.babu@oracle.com>
+References: <cover.1685900733.git.ritesh.list@gmail.com>
+In-Reply-To: <cover.1685900733.git.ritesh.list@gmail.com>
+From:   =?UTF-8?Q?Andreas_Gr=C3=BCnbacher?= <andreas.gruenbacher@gmail.com>
+Date:   Tue, 6 Jun 2023 14:17:13 +0200
+Message-ID: <CAHpGcM+xTevu0LaJvaPrF-M3bEDvicUqqY5MPD6z2VuMO9vRWw@mail.gmail.com>
+Subject: Re: [PATCHv6 0/5] iomap: Add support for per-block dirty state to
+ improve write performance
+To:     "Ritesh Harjani (IBM)" <ritesh.list@gmail.com>
+Cc:     linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
+        Matthew Wilcox <willy@infradead.org>,
+        Dave Chinner <david@fromorbit.com>,
+        Brian Foster <bfoster@redhat.com>,
+        Christoph Hellwig <hch@infradead.org>,
+        Andreas Gruenbacher <agruenba@redhat.com>,
+        Ojaswin Mujoo <ojaswin@linux.ibm.com>,
+        Disha Goel <disgoel@linux.ibm.com>
+Content-Type: text/plain; charset="UTF-8"
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Tue, Jun 06, 2023 at 02:57:43PM +0530, Chandan Babu R wrote:
-> Hi all,
-> 
-> This patch series extends metadump/mdrestore tools to be able to dump
-> and restore contents of an external log device. It also adds the
-> ability to copy larger blocks (e.g. 4096 bytes instead of 512 bytes)
-> into the metadump file. These objectives are accomplished by
-> introducing a new metadump file format.
-> 
-> I have tested the patchset by extending metadump/mdrestore tests in
-> fstests to cover the newly introduced metadump v2 format. The tests
-> can be found at
-> https://github.com/chandanr/xfstests/commits/metadump-v2.
-> 
-> The patch series can also be obtained from
-> https://github.com/chandanr/xfsprogs-dev/commits/metadump-v2.
+Ritesh,
 
-There is already a V2 on the list, why is this also tagged as V2?
+Am Mo., 5. Juni 2023 um 03:33 Uhr schrieb Ritesh Harjani (IBM)
+<ritesh.list@gmail.com>:
+> Hello All,
+>
+> Please find PATCHv6 which adds per-block dirty tracking to iomap.
+> As discussed earlier this is required to improve write performance and reduce
+> write amplification for cases where either blocksize is less than pagesize (such
+> as Power platform with 64k pagesize) or when we have a large folio (such as xfs
+> which currently supports large folio).
+>
+> RFCv5 -> PATCHv6:
+> =================
+> 1. Addresses review comments from Brian, Christoph and Matthew.
+>    @Christoph:
+>      - I have renamed the higher level functions such as iop_alloc/iop_free() to
+>        iomap_iop_alloc/free() in v6.
+>      - As for the low level bitmap accessor functions I couldn't find any better
+>        naming then iop_test_/set/clear_**. I could have gone for
+>        iomap_iop__test/set/clear/_** or iomap__iop_test/set/clear_**, but
+>        I wasn't convinced with either of above as it also increases function
+>        name.
+>        Besides iop_test/set_clear_ accessors functions for uptodate and dirty
+>        status tracking make sense as we are sure we have a valid iop in such
+>        cases. Please do let me know if this looks ok to you.
+> 2. I tried testing gfs2 (initially with no patches) with xfstests. But I always ended up
+>    in some or the other deadlock (I couldn't spend any time debugging that).
+>    I also ran it with -x log, but still it was always failing for me.
+>    @Andreas:
+>    - could you please suggest how can I test gfs2 with these patches. I see gfs2
+>      can have a smaller blocksize and it uses iomap buffered io path. It will be
+>      good if we can get these patches tested on it too.
 
--- 
-Carlos
+here's a minimal list of tests we're running automatically on a daily basis:
 
-> 
-> Changelog:
-> V1 -> V2:
->   1. Introduce the new incompat flag XFS_MD2_INCOMPAT_EXTERNALLOG to
->      indicate that the metadump file contains data obtained from an
->      external log.
->   2. Interpret bits 54 and 55 of xfs_meta_extent.xme_addr as a counter
->      such that 00 maps to the data device and 01 maps to the log
->      device.
->   3. Define the new function set_log_cur() to read from
->      internal/external log device. This allows us to continue using
->      TYP_LOG to read from both internal and external log.
->   4. In order to support reading metadump from a pipe, mdrestore now
->      reads the first four bytes of the header to determine the
->      metadump version rather than reading the entire header in a
->      single call to fread().
->   5. Add an ASCII diagram to describe metadump v2's ondisk layout in
->      xfs_metadump.h.
->   6. Update metadump's man page to indicate that metadump in v2 format
->      is generated by default if the filesystem has an external log and
->      the metadump version to use is not explicitly mentioned on the
->      command line.
->   7. Remove '_metadump' suffix from function pointer names in "struct
->      metadump_ops".
->   8. Use xfs_daddr_t type for declaring variables containing disk
->      offset value.
->   9. Use bool type rather than int for variables holding a boolean
->      value.
->   11. Remove unnecessary whitespace.
-> 
-> 
-> 
-> 
-> Chandan Babu R (23):
->   metadump: Use boolean values true/false instead of 1/0
->   mdrestore: Fix logic used to check if target device is large enough
->   metadump: Declare boolean variables with bool type
->   metadump: Define and use struct metadump
->   metadump: Add initialization and release functions
->   metadump: Postpone invocation of init_metadump()
->   metadump: Introduce struct metadump_ops
->   metadump: Introduce metadump v1 operations
->   metadump: Rename XFS_MD_MAGIC to XFS_MD_MAGIC_V1
->   metadump: Define metadump v2 ondisk format structures and macros
->   metadump: Define metadump ops for v2 format
->   xfs_db: Add support to read from external log device
->   metadump: Add support for passing version option
->   mdrestore: Declare boolean variables with bool type
->   mdrestore: Define and use struct mdrestore
->   mdrestore: Detect metadump v1 magic before reading the header
->   mdrestore: Add open_device(), read_header() and show_info() functions
->   mdrestore: Introduce struct mdrestore_ops
->   mdrestore: Replace metadump header pointer argument with generic
->     pointer type
->   mdrestore: Introduce mdrestore v1 operations
->   mdrestore: Extract target device size verification into a function
->   mdrestore: Define mdrestore ops for v2 format
->   mdrestore: Add support for passing log device as an argument
-> 
->  db/io.c                   |  57 ++-
->  db/io.h                   |   2 +
->  db/metadump.c             | 749 +++++++++++++++++++++++---------------
->  db/xfs_metadump.sh        |   3 +-
->  include/xfs_metadump.h    |  60 ++-
->  man/man8/xfs_mdrestore.8  |   8 +
->  man/man8/xfs_metadump.8   |  14 +
->  mdrestore/xfs_mdrestore.c | 497 +++++++++++++++++++------
->  8 files changed, 985 insertions(+), 405 deletions(-)
-> 
+https://gitlab.com/redhat/centos-stream/tests/kernel/kernel-tests/-/blob/main/filesystems/xfs/xfstests/RUNTESTS.gfs2
+
+Please note that function inode_to_wb() in <linux/backing-dev.h>
+includes some asserts that are active when CONFIG_LOCKDEP is enabled.
+Those asserts will cause every single fstest to fail. So either
+disable CONFIG_LOCKDEP or remove the asserts in inode_to_wb() for now.
+
+Thanks,
+Andreas
+
+> 3. I can now say I have run some good amount of fstests on these patches on
+>    these platforms and I haven't found any new failure in my testing so far.
+>    arm64 (64k pagesize): with 4k -g quick
+>    Power: with 4k -g auto
+>    x86: 1k, 4k with -g auto and adv_auto
+>
+> From my testing so far these patches looks stable to me and if this looks good
+> to reviewers as well, do you think this can be queued to linux-next for wider
+> testing?
+>
+> Performance numbers copied from last patch commit message
+> ==================================================
+> Performance testing of below fio workload reveals ~16x performance
+> improvement using nvme with XFS (4k blocksize) on Power (64K pagesize)
+> FIO reported write bw scores improved from around ~28 MBps to ~452 MBps.
+>
+> 1. <test_randwrite.fio>
+> [global]
+>         ioengine=psync
+>         rw=randwrite
+>         overwrite=1
+>         pre_read=1
+>         direct=0
+>         bs=4k
+>         size=1G
+>         dir=./
+>         numjobs=8
+>         fdatasync=1
+>         runtime=60
+>         iodepth=64
+>         group_reporting=1
+>
+> [fio-run]
+>
+> 2. Also our internal performance team reported that this patch improves
+>    their database workload performance by around ~83% (with XFS on Power)
+>
+> Ritesh Harjani (IBM) (5):
+>   iomap: Rename iomap_page_create/release() to iomap_iop_alloc/free()
+>   iomap: Move folio_detach_private() in iomap_iop_free() to the end
+>   iomap: Refactor some iop related accessor functions
+>   iomap: Allocate iop in ->write_begin() early
+>   iomap: Add per-block dirty state tracking to improve performance
+>
+>  fs/gfs2/aops.c         |   2 +-
+>  fs/iomap/buffered-io.c | 309 ++++++++++++++++++++++++++++++-----------
+>  fs/xfs/xfs_aops.c      |   2 +-
+>  fs/zonefs/file.c       |   2 +-
+>  include/linux/iomap.h  |   1 +
+>  5 files changed, 235 insertions(+), 81 deletions(-)
+>
 > --
-> 2.39.1
-> 
+> 2.40.1
+>
