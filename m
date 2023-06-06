@@ -2,184 +2,513 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 05EA8C77B7A
-	for <linux-xfs@archiver.kernel.org>; Tue,  6 Jun 2023 11:23:44 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A230BC77B73
+	for <linux-xfs@archiver.kernel.org>; Tue,  6 Jun 2023 11:33:46 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232616AbjFFLXn (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 6 Jun 2023 07:23:43 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51558 "EHLO
+        id S236266AbjFFLdp (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 6 Jun 2023 07:33:45 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55992 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231766AbjFFLXm (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 6 Jun 2023 07:23:42 -0400
-Received: from wp530.webpack.hosteurope.de (wp530.webpack.hosteurope.de [80.237.130.52])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C55CDE55
-        for <linux-xfs@vger.kernel.org>; Tue,  6 Jun 2023 04:23:40 -0700 (PDT)
-Received: from [2a02:8108:8980:2478:8cde:aa2c:f324:937e]; authenticated
-        by wp530.webpack.hosteurope.de running ExIM with esmtpsa (TLS1.3:ECDHE_RSA_AES_128_GCM_SHA256:128)
-        id 1q6Uml-0001ej-VO; Tue, 06 Jun 2023 13:23:36 +0200
-Message-ID: <0e702e19-cc93-77ac-bd1d-401b8883fc0b@leemhuis.info>
-Date:   Tue, 6 Jun 2023 13:23:35 +0200
+        with ESMTP id S236236AbjFFLdo (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 6 Jun 2023 07:33:44 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id DA9C2E5B
+        for <linux-xfs@vger.kernel.org>; Tue,  6 Jun 2023 04:33:41 -0700 (PDT)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 5C12162853
+        for <linux-xfs@vger.kernel.org>; Tue,  6 Jun 2023 11:33:41 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id D3AE8C433EF;
+        Tue,  6 Jun 2023 11:33:39 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1686051220;
+        bh=oUhf+Wd8YeN0msfA2lNqkB59OqVuguN+rbkJsAl9mB0=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=R/MKKWTItz2r2yKvFquhpy3bzAYAvu3V6u2rBXvoy8VlV/rgFXvtGk+DnbGhke+jM
+         dPODJvLBOj39f9aVupm7sttgJtpIRCG7mGRN7XXJLUcyalb3Yoq5gqFOHiT+EMKxbL
+         QED7FtJ0s1nyV854NIC2HiphHoSxWT/vPOaZ6oaZfZmOFNZy++jWq1MQoNOSw5EciO
+         7XvcjLFtWiZaMeumJAZZxYt9aIO5+ILymhoMxiAku77lNQ258C/swu9c3f16Gw4XWx
+         JtJ4ZOK3aYg8HLV+yVB1PC66+89gOXXMUaWInDJz/71szFpUQ91rka+Eg3AxixbunT
+         0hOmU0poNPjNQ==
+Date:   Tue, 6 Jun 2023 13:33:36 +0200
+From:   Carlos Maiolino <cem@kernel.org>
+To:     "Darrick J. Wong" <djwong@kernel.org>
+Cc:     linux-xfs@vger.kernel.org
+Subject: Re: [PATCH 2/3] xfs_db: create dirents and xattrs with colliding
+ names
+Message-ID: <20230606113336.2wt44w4mx5khqk7e@andromeda>
+References: <168597941869.1226265.3314805710581551617.stgit@frogsfrogsfrogs>
+ <kLYmWsQKNR_apZ0Yx8S3syddXm4nd4p7G5nI70z-T_kTGS9rutWN0Ps1Tpl7xCvk-0jehmy5ZHmoSQQCugcMXA==@protonmail.internalid>
+ <168597942996.1226265.4909168279377490281.stgit@frogsfrogsfrogs>
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
- Thunderbird/102.10.0
-Subject: Re: xfs: system fails to boot up due to Internal error
- xfs_trans_cancel
-Content-Language: en-US, de-DE
-To:     Dave Chinner <david@fromorbit.com>,
-        "Darrick J. Wong" <djwong@kernel.org>
-Cc:     Linux regressions mailing list <regressions@lists.linux.dev>,
-        "Ritesh Harjani (IBM)" <ritesh.list@gmail.com>,
-        shrikanth hegde <sshegde@linux.vnet.ibm.com>,
-        dchinner@redhat.com, linux-xfs@vger.kernel.org,
-        Srikar Dronamraju <srikar@linux.vnet.ibm.com>,
-        ojaswin@linux.ibm.com
-References: <87zg88atiw.fsf@doe.com>
- <33c9674c-8493-1b23-0efb-5c511892b68a@leemhuis.info>
- <20230418045615.GC360889@frogsfrogsfrogs>
- <57eeb4d5-01de-b443-be8e-50b08c132e95@leemhuis.info>
- <20230605215745.GC1325469@frogsfrogsfrogs>
- <ZH6d938Hw/msm95A@dread.disaster.area>
-From:   Thorsten Leemhuis <regressions@leemhuis.info>
-In-Reply-To: <ZH6d938Hw/msm95A@dread.disaster.area>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
-X-bounce-key: webpack.hosteurope.de;regressions@leemhuis.info;1686050620;7911ab33;
-X-HE-SMSGID: 1q6Uml-0001ej-VO
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <168597942996.1226265.4909168279377490281.stgit@frogsfrogsfrogs>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On 06.06.23 04:46, Dave Chinner wrote:
-> On Mon, Jun 05, 2023 at 02:57:45PM -0700, Darrick J. Wong wrote:
->> On Mon, Jun 05, 2023 at 03:27:43PM +0200, Thorsten Leemhuis wrote:
->>> /me waves friendly
->>>
->>> On 18.04.23 06:56, Darrick J. Wong wrote:
->>>> On Mon, Apr 17, 2023 at 01:16:53PM +0200, Linux regression tracking (Thorsten Leemhuis) wrote:
->>>>> Hi, Thorsten here, the Linux kernel's regression tracker. Top-posting
->>>>> for once, to make this easily accessible to everyone.
->>>>>
->>>>> Has any progress been made to fix below regression? It doesn't look like
->>>>> it from here, hence I wondered if it fall through the cracks. Or is
->>>>> there some good reason why this is safe to ignore?
->>>>
->>>> Still working on thinking up a reasonable strategy to reload the incore
->>>> iunlink list if we trip over this.  Online repair now knows how to do
->>>> this[1], but I haven't had time to figure out if this will work
->>>> generally.  [...]
->>>
->>> I still have this issue on my list of tracked regressions, hence please
->>> allow me to ask: was there any progress to resolve this? Doesn't look
->>> like it, but from my point it's easy to miss something.
->>
->> Yeah
-
-BTW, many thx for your detailed answer.
-
->> -- Dave put "xfs: collect errors from inodegc for unlinked inode
->> recovery" in for-next yesterday, and I posted a draft of online repair
->> for the unlinked lists that corrects most of the other problems that we
->> found in the process of digging into this problem:
->> https://lore.kernel.org/linux-xfs/168506068642.3738067.3524976114588613479.stgit@frogsfrogsfrogs/T/#m861e4b1259d9b16b9970e46dfcfdae004a5dd634
->>
->> But that's looking at things from the ground up, which isn't terribly
->> insightful as to what's going on, as you've noted. :)
-
-Let me just mark this regression as resolved in the tracking then; this
-is, well, clearly not your typical every day regression and at the same
-time something your clearly work on resolving, hence not really worth
-tracking, as there are bigger fish to fry.
-
-#regzbot inconclusive: pretty special regression; fix for part of it now
-in -next, work ongoing to solve other parts (see discussion)
-
->>> BTW, in case this was not yet addressed: if you have a few seconds,
->>> could you please (just briefly!) explain why it seems to take quite a
->>> while to resolve this? A "not booting" regressions sounds like something
->>> that I'm pretty sure Linus normally wants to see addressed rather sooner
->>> than later. But that apparently is not the case here. I know that XFS
->>> devs normally take regressions seriously, hence I assume there are good
->>> reasons for it. But I'd like to roughly understand them (is this a
->>> extremely corner case issue others are unlike to run into or something
->>> like that?), as I don't want Linus on my back with questions like "why
->>> didn't you put more pressure on the XFS maintainers" or "you should have
->>> told me about this".
->>
->> First things first -- Ritesh reported problems wherein a freshly mounted
->> filesystem would fail soon after because of some issue or other with the
->> unlinked inode list.  He could reproduce this problem, but (AFAIK) he's
->> the only user who's actually reported this.  It's not like *everyone*
->> with XFS cannot boot anymore, it's just this system.  Given the sparsity
->> of any other reports with similar symptoms, I do not judge this to be
->> a hair-on-fire situation.
-
-Definitely; don't worry, I noticed that, otherwise I'd have made more
-noise early. :-D
-
->> (Contrast this to the extent busy deadlock problem that Wengang Wang is
->> trying to solve, which (a) is hitting many customer systems and (b)
->> regularly.  Criteria like (a) make things like that a higher severity
->> problem IMHO.)
+On Mon, Jun 05, 2023 at 08:37:09AM -0700, Darrick J. Wong wrote:
+> From: Darrick J. Wong <djwong@kernel.org>
 > 
-> Contrast this to the regression from 6.3-rc1 that caused actual user
-> data loss and filesystem corruption after 6.3 was released.
+> Create a new debugger command that will create dirent and xattr names
+> that induce dahash collisions.
 > 
-> https://bugzilla.redhat.com/show_bug.cgi?id=2208553
+> Signed-off-by: Darrick J. Wong <djwong@kernel.org>
+> ---
+>  db/hash.c         |  376 +++++++++++++++++++++++++++++++++++++++++++++++++++++
+>  man/man8/xfs_db.8 |   31 ++++
+>  2 files changed, 407 insertions(+)
+
+Looks good, will test.
+
+Reviewed-by: Carlos Maiolino <cmaiolino@redhat.com>
+
 > 
-> That's so much more important than any problem seen in a test
-> environment it's not funny.
 > 
-> We'd already fixed this regression that caused it in 6.4-rc1 - the
-> original bug report (a livelock in data writeback) happened 2 days
-> before 6.3 released. It took me 3 days from report to having a fix
-> out for review (remember that timeframe).
+> diff --git a/db/hash.c b/db/hash.c
+> index 68c53e7f9bc..79a250526e9 100644
+> --- a/db/hash.c
+> +++ b/db/hash.c
+> @@ -5,12 +5,15 @@
+>   */
 > 
-> At the time we didn't recognise the wider corruption risk the
-> failure we found exposed us to, so we didn't push it to stable
-> immediately. Hence when users started tripping over corruption and I
-> triaged it down to misdirected data write from -somewhere-. Eric
-> then found a reproducer and bisected to a range of XFS changes, and
-> I then realised what the problem was....
+>  #include "libxfs.h"
+> +#include "init.h"
+>  #include "addr.h"
+>  #include "command.h"
+>  #include "type.h"
+>  #include "io.h"
+>  #include "output.h"
+>  #include "hash.h"
+> +#include "obfuscate.h"
+> +#include <sys/xattr.h>
 > 
-> Stuff like this takes days of effort and multiple people to get to
-> the bottom of, and -everything else- gets ignored while we work
-> through the corruption problem.
-
-Yeah, and many other developers are good as this as well; that's why I
-don't even add some regressions to the tracking I notice. And I'm also
-well aware that I only notice some regressions once Linus mainlines a fix.
-
-But nevertheless my tracking helps in quite a few cases, as developers
-sometimes are humans and let things fall through the cracks. And there
-always have and still are developers and subsystems are not as good as
-XFS and don't handle regressions like Linus wants them to be handled. I
-also help reporters to reach the right developers and improve their bug
-reports (e.g. by telling them to bisect and things like that). Guess all
-that is why Linus and Greg apparently seem happy about my work.
-
-That being said: there still a lot of room for improvements, but it's a
-start.
-
-> Thorsten, I'm betting that you didn't even know about this
-> regression - 
-
-Then you lost your bet. ;) I can even prove that I saw the "[PATCH,
-STABLE 6.3.x] xfs: fix livelock in delayed allocation at ENOSPC" mail
-https://fosstodon.org/@kernellogger/110446215848501171
-
-But I'm pretty sure I was aware of it earlier already and decided to not
-interfere, as you clearly were working on it with the required priority
-(thx for that, btw).
-
-> it's been reported, tracked, triaged and fixed
-> completely outside the scope and visibility of the "kernel
-> regression tracker". Which clearly shows that we don't actually need
-> some special kernel regression tracker infrastructure to do our jobs
-> properly, nor do we need a nanny to make sure we actually are
-> prioritising things correctly....
-> ....
-
-I'm not getting into that discussion. Convince Linus and Greg that my
-work is not worth it at all; if it hear it from them I'll stop.
-
-Ciao, Thorsten
+>  static int hash_f(int argc, char **argv);
+>  static void hash_help(void);
+> @@ -46,8 +49,381 @@ hash_f(
+>  	return 0;
+>  }
+> 
+> +static void
+> +hashcoll_help(void)
+> +{
+> +	printf(_(
+> +"\n"
+> +" Generate obfuscated variants of the provided name.  Each variant will have\n"
+> +" the same dahash value.  Names are written to stdout with a NULL separating\n"
+> +" each name.\n"
+> +"\n"
+> +" -a -- create extended attributes.\n"
+> +" -i -- read standard input for the name, up to %d bytes.\n"
+> +" -n -- create this many names.\n"
+> +" -p -- create directory entries or extended attributes in this file.\n"
+> +" -s -- seed the rng with this value.\n"
+> +"\n"),
+> +			MAXNAMELEN - 1);
+> +}
+> +
+> +struct name_dup {
+> +	struct name_dup	*next;
+> +	uint32_t	crc;
+> +	uint8_t		namelen;
+> +	uint8_t		name[];
+> +};
+> +
+> +static inline size_t
+> +name_dup_sizeof(
+> +	unsigned int	namelen)
+> +{
+> +	return sizeof(struct name_dup) + namelen;
+> +}
+> +
+> +#define MAX_DUP_TABLE_BUCKETS	(1048575)
+> +
+> +struct dup_table {
+> +	unsigned int	nr_buckets;
+> +	struct name_dup	*buckets[];
+> +};
+> +
+> +static inline size_t
+> +dup_table_sizeof(
+> +	unsigned int	nr_buckets)
+> +{
+> +	return sizeof(struct dup_table) +
+> +				(nr_buckets * sizeof(struct name_dup *));
+> +}
+> +
+> +static int
+> +dup_table_alloc(
+> +	unsigned long		nr_names,
+> +	struct dup_table	**tabp)
+> +{
+> +	struct dup_table	*t;
+> +
+> +	*tabp = NULL;
+> +
+> +	if (nr_names == 1)
+> +		return 0;
+> +
+> +	nr_names = min(MAX_DUP_TABLE_BUCKETS, nr_names);
+> +	t = calloc(1, dup_table_sizeof(nr_names));
+> +	if (!t)
+> +		return ENOMEM;
+> +
+> +	t->nr_buckets = nr_names;
+> +	*tabp = t;
+> +	return 0;
+> +}
+> +
+> +static void
+> +dup_table_free(
+> +	struct dup_table	*tab)
+> +{
+> +	struct name_dup		*ent, *next;
+> +	unsigned int		i;
+> +
+> +	if (!tab)
+> +		return;
+> +
+> +	for (i = 0; i < tab->nr_buckets; i++) {
+> +		ent = tab->buckets[i];
+> +
+> +		while (ent) {
+> +			next = ent->next;
+> +			free(ent);
+> +			ent = next;
+> +		}
+> +	}
+> +	free(tab);
+> +}
+> +
+> +static struct name_dup *
+> +dup_table_find(
+> +	struct dup_table	*tab,
+> +	unsigned char		*name,
+> +	size_t			namelen)
+> +{
+> +	struct name_dup		*ent;
+> +	uint32_t		crc = crc32c(~0, name, namelen);
+> +
+> +	ent = tab->buckets[crc % tab->nr_buckets];
+> +	while (ent) {
+> +		if (ent->crc == crc &&
+> +		    ent->namelen == namelen &&
+> +		    !memcmp(ent->name, name, namelen))
+> +			return ent;
+> +
+> +		ent = ent->next;
+> +	}
+> +
+> +	return NULL;
+> +}
+> +
+> +static int
+> +dup_table_store(
+> +	struct dup_table	*tab,
+> +	unsigned char		*name,
+> +	size_t			namelen)
+> +{
+> +	struct name_dup		*dup;
+> +	uint32_t		seq = 1;
+> +
+> +	ASSERT(namelen < MAXNAMELEN);
+> +
+> +	while ((dup = dup_table_find(tab, name, namelen)) != NULL) {
+> +		int		ret;
+> +
+> +		do {
+> +			ret = find_alternate(namelen, name, seq++);
+> +		} while (ret == 0);
+> +		if (ret < 0)
+> +			return EEXIST;
+> +	}
+> +
+> +	dup = malloc(name_dup_sizeof(namelen));
+> +	if (!dup)
+> +		return ENOMEM;
+> +
+> +	dup->crc = crc32c(~0, name, namelen);
+> +	dup->namelen = namelen;
+> +	memcpy(dup->name, name, namelen);
+> +	dup->next = tab->buckets[dup->crc % tab->nr_buckets];
+> +
+> +	tab->buckets[dup->crc % tab->nr_buckets] = dup;
+> +	return 0;
+> +}
+> +
+> +static int
+> +collide_dirents(
+> +	unsigned long		nr,
+> +	const unsigned char	*name,
+> +	size_t			namelen,
+> +	int			fd)
+> +{
+> +	struct xfs_name		dname = {
+> +		.name		= name,
+> +		.len		= namelen,
+> +	};
+> +	unsigned char		direntname[MAXNAMELEN + 1];
+> +	struct dup_table	*tab = NULL;
+> +	xfs_dahash_t		old_hash;
+> +	unsigned long		i;
+> +	int			error = 0;
+> +
+> +	old_hash = libxfs_dir2_hashname(mp, &dname);
+> +
+> +	if (fd >= 0) {
+> +		int		newfd;
+> +
+> +		/*
+> +		 * User passed in a fd, so we'll use the directory to detect
+> +		 * duplicate names.  First create the name that we are passed
+> +		 * in; the new names will be hardlinks to the first file.
+> +		 */
+> +		newfd = openat(fd, name, O_CREAT, 0600);
+> +		if (newfd < 0)
+> +			return errno;
+> +		close(newfd);
+> +	} else if (nr > 1) {
+> +		/*
+> +		 * Track every name we create so that we don't emit duplicates.
+> +		 */
+> +		error = dup_table_alloc(nr, &tab);
+> +		if (error)
+> +			return error;
+> +	}
+> +
+> +	dname.name = direntname;
+> +	for (i = 0; i < nr; i++) {
+> +		strncpy(direntname, name, MAXNAMELEN);
+> +		obfuscate_name(old_hash, namelen, direntname, true);
+> +		ASSERT(old_hash == libxfs_dir2_hashname(mp, &dname));
+> +
+> +		if (fd >= 0) {
+> +			error = linkat(fd, name, fd, direntname, 0);
+> +			if (error && errno != EEXIST)
+> +				return errno;
+> +
+> +			/* don't print names to stdout */
+> +			continue;
+> +		} else if (tab) {
+> +			error = dup_table_store(tab, direntname, namelen);
+> +			if (error)
+> +				break;
+> +		}
+> +
+> +		printf("%s%c", direntname, 0);
+> +	}
+> +
+> +	dup_table_free(tab);
+> +	return error;
+> +}
+> +
+> +static int
+> +collide_xattrs(
+> +	unsigned long		nr,
+> +	const unsigned char	*name,
+> +	size_t			namelen,
+> +	int			fd)
+> +{
+> +	unsigned char		xattrname[MAXNAMELEN + 5];
+> +	struct dup_table	*tab = NULL;
+> +	xfs_dahash_t		old_hash;
+> +	unsigned long		i;
+> +	int			error;
+> +
+> +	old_hash = libxfs_da_hashname(name, namelen);
+> +
+> +	if (fd >= 0) {
+> +		/*
+> +		 * User passed in a fd, so we'll use the xattr structure to
+> +		 * detect duplicate names.  First create the attribute that we
+> +		 * are passed in.
+> +		 */
+> +		snprintf(xattrname, MAXNAMELEN + 5, "user.%s", name);
+> +		error = fsetxattr(fd, xattrname, "1", 1, 0);
+> +		if (error)
+> +			return errno;
+> +	} else if (nr > 1) {
+> +		/*
+> +		 * Track every name we create so that we don't emit duplicates.
+> +		 */
+> +		error = dup_table_alloc(nr, &tab);
+> +		if (error)
+> +			return error;
+> +	}
+> +
+> +	for (i = 0; i < nr; i++) {
+> +		snprintf(xattrname, MAXNAMELEN + 5, "user.%s", name);
+> +		obfuscate_name(old_hash, namelen, xattrname + 5, false);
+> +		ASSERT(old_hash == libxfs_da_hashname(xattrname + 5, namelen));
+> +
+> +		if (fd >= 0) {
+> +			error = fsetxattr(fd, xattrname, "1", 1, 0);
+> +			if (error)
+> +				return errno;
+> +
+> +			/* don't print names to stdout */
+> +			continue;
+> +		} else if (tab) {
+> +			error = dup_table_store(tab, xattrname, namelen + 5);
+> +			if (error)
+> +				break;
+> +		}
+> +
+> +		printf("%s%c", xattrname, 0);
+> +	}
+> +
+> +	dup_table_free(tab);
+> +	return error;
+> +}
+> +
+> +static int
+> +hashcoll_f(
+> +	int		argc,
+> +	char		**argv)
+> +{
+> +	const char	*path = NULL;
+> +	bool		read_stdin = false;
+> +	bool		create_xattr = false;
+> +	unsigned long	nr = 1, seed = 0;
+> +	int		fd = -1;
+> +	int		c;
+> +	int		error;
+> +
+> +	while ((c = getopt(argc, argv, "ain:p:s:")) != EOF) {
+> +		switch (c) {
+> +		case 'a':
+> +			create_xattr = true;
+> +			break;
+> +		case 'i':
+> +			read_stdin = true;
+> +			break;
+> +		case 'n':
+> +			nr = strtoul(optarg, NULL, 10);
+> +			break;
+> +		case 'p':
+> +			path = optarg;
+> +			break;
+> +		case 's':
+> +			seed = strtoul(optarg, NULL, 10);
+> +			break;
+> +		default:
+> +			exitcode = 1;
+> +			hashcoll_help();
+> +			return 0;
+> +		}
+> +	}
+> +
+> +	if (path) {
+> +		int	oflags = O_RDWR;
+> +
+> +		if (!create_xattr)
+> +			oflags = O_RDONLY | O_DIRECTORY;
+> +
+> +		fd = open(path, oflags);
+> +		if (fd < 0) {
+> +			perror(path);
+> +			exitcode = 1;
+> +			return 0;
+> +		}
+> +	}
+> +
+> +	if (seed)
+> +		srandom(seed);
+> +
+> +	if (read_stdin) {
+> +		char	buf[MAXNAMELEN];
+> +		size_t	len;
+> +
+> +		len = fread(buf, 1, MAXNAMELEN - 1, stdin);
+> +
+> +		if (create_xattr)
+> +			error = collide_xattrs(nr, buf, len, fd);
+> +		else
+> +			error = collide_dirents(nr, buf, len, fd);
+> +		if (error) {
+> +			printf(_("hashcoll: %s\n"), strerror(error));
+> +			exitcode = 1;
+> +		}
+> +		goto done;
+> +	}
+> +
+> +	for (c = optind; c < argc; c++) {
+> +		size_t	len = strlen(argv[c]);
+> +
+> +		if (create_xattr)
+> +			error = collide_xattrs(nr, argv[c], len, fd);
+> +		else
+> +			error = collide_dirents(nr, argv[c], len, fd);
+> +		if (error) {
+> +			printf(_("hashcoll: %s\n"), strerror(error));
+> +			exitcode = 1;
+> +		}
+> +	}
+> +
+> +done:
+> +	if (fd >= 0)
+> +		close(fd);
+> +	return 0;
+> +}
+> +
+> +static cmdinfo_t	hashcoll_cmd = {
+> +	.name		= "hashcoll",
+> +	.cfunc		= hashcoll_f,
+> +	.argmin		= 0,
+> +	.argmax		= -1,
+> +	.args		= N_("[-a] [-s seed] [-n nr] [-p path] -i|names..."),
+> +	.oneline	= N_("create names that produce dahash collisions"),
+> +	.help		= hashcoll_help,
+> +};
+> +
+>  void
+>  hash_init(void)
+>  {
+>  	add_command(&hash_cmd);
+> +	add_command(&hashcoll_cmd);
+>  }
+> diff --git a/man/man8/xfs_db.8 b/man/man8/xfs_db.8
+> index 1a2bb7e98fb..fde1c5c6c69 100644
+> --- a/man/man8/xfs_db.8
+> +++ b/man/man8/xfs_db.8
+> @@ -768,6 +768,37 @@ Prints the hash value of
+>  .I string
+>  using the hash function of the XFS directory and attribute implementation.
+>  .TP
+> +.BI "hashcoll [-a] [-s seed] [-n " nr "] [-p " path "] -i | " names...
+> +Create directory entries or extended attributes names that all have the same
+> +hash value.
+> +The metadump name obfuscation algorithm is used here.
+> +Names are written to standard output, with a NULL between each name for use
+> +with xargs -0.
+> +.RS 1.0i
+> +.PD 0
+> +.TP 0.4i
+> +.TP 0.4i
+> +.B \-a
+> +Create extended attribute names.
+> +.TP 0.4i
+> +.B \-i
+> +Read the first name to create from standard input.
+> +Up to 255 bytes are read.
+> +If this option is not specified, first names are taken from the command line.
+> +.TP 0.4i
+> +.BI \-n " nr"
+> +Create this many duplicated names.
+> +The default is to create one name.
+> +.TP 0.4i
+> +.BI \-p " path"
+> +Create directory entries or extended attributes in this file instead of
+> +writing the names to standard output.
+> +.TP 0.4i
+> +.BI \-s " seed"
+> +Seed the random number generator with this value.
+> +.PD
+> +.RE
+> +.TP
+>  .BI "help [" command ]
+>  Print help for one or all commands.
+>  .TP
+> 
