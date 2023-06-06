@@ -2,106 +2,113 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7DEF3C77B73
-	for <linux-xfs@archiver.kernel.org>; Tue,  6 Jun 2023 15:16:51 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 079ACC77B73
+	for <linux-xfs@archiver.kernel.org>; Tue,  6 Jun 2023 15:17:14 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233548AbjFFPQu (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 6 Jun 2023 11:16:50 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44326 "EHLO
+        id S236351AbjFFPRM (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 6 Jun 2023 11:17:12 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44664 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231178AbjFFPQt (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 6 Jun 2023 11:16:49 -0400
+        with ESMTP id S231178AbjFFPRL (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 6 Jun 2023 11:17:11 -0400
 Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7E94C12D;
-        Tue,  6 Jun 2023 08:16:48 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 233B18F
+        for <linux-xfs@vger.kernel.org>; Tue,  6 Jun 2023 08:17:11 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 1BF5663080;
-        Tue,  6 Jun 2023 15:16:48 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 71061C433D2;
-        Tue,  6 Jun 2023 15:16:47 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id B305162AC1
+        for <linux-xfs@vger.kernel.org>; Tue,  6 Jun 2023 15:17:10 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 1D09BC433EF;
+        Tue,  6 Jun 2023 15:17:10 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1686064607;
-        bh=DX7PUnqthe10zmITomytmvAUBJ0OtwMWhA+TOmWDBxM=;
+        s=k20201202; t=1686064630;
+        bh=TTrQjPq7z12yZYiyAOUpDNoHomMLQT+8b+1FmXHIn+k=;
         h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=vQBbRbOj3VHAiMaOBB74GYpbgFpss+QEHmgJ5GHX0+Delk0Wo0snRjWLkZoFZ3qQU
-         es1JKnGnQInMjk8LPr+lknLalfrrthFjROb17ep03IkHDue3rrRLTAp5PjM2mbz6Cj
-         9b90hSuYqYCIfCy3UBhVe79YioKBqokVX+aRJFvzQS8hX+YFxaqPnu4zKIoOpgyqsL
-         XEcE8/njuptLrson7LCQWJ0qzUHbr45453m1PQ0j79C/9+bvNlp0kLQcqLUXrIz8qA
-         gLYuZ0Rr+aUIM8BEhO9xhQZyULBlhyShHZjbpb15j8yf552RRWKrS7H5nnbMbEFVIz
-         EzPrlBtRFdgrA==
-Date:   Tue, 6 Jun 2023 08:16:46 -0700
+        b=OMs6fQWl4biiRBkGfLn1tQ2XMqFKI4Blu5qZPhKVDMJbCwcrNG4Jkian66d1GgttS
+         lK8+hszwBBejOcUZeiqju+FRAenKXYdJ1+UxbBElHu0ZETW6fhJ8WPptUPkZmi1KD9
+         k+1YQrnJReauewzBpRS/42fQnI2tDJ2sl8AOXjz72IjEbgw9HrIIyNwi8FBTfd8Ie0
+         pr13XA8E1GdVjZlxDtX+Xri9BZLLu2mHJdjXrmEaTL9ZBOJS5VKo81uUSB5Tt3Ytkt
+         ZZeuPmbKhmaN+tLONMBZWnjwt55j3gXvULbV0uZcxxuIrghFxujlOa//aMJS0vy/7u
+         p82YdoTQszG8g==
+Date:   Tue, 6 Jun 2023 08:17:09 -0700
 From:   "Darrick J. Wong" <djwong@kernel.org>
-To:     Ritesh Harjani <ritesh.list@gmail.com>
-Cc:     Matthew Wilcox <willy@infradead.org>, linux-xfs@vger.kernel.org,
-        linux-fsdevel@vger.kernel.org, Dave Chinner <david@fromorbit.com>,
-        Brian Foster <bfoster@redhat.com>,
-        Christoph Hellwig <hch@infradead.org>,
-        Andreas Gruenbacher <agruenba@redhat.com>,
-        Ojaswin Mujoo <ojaswin@linux.ibm.com>,
-        Disha Goel <disgoel@linux.ibm.com>
-Subject: Re: [PATCHv8 0/5] iomap: Add support for per-block dirty state to
- improve write performance
-Message-ID: <20230606151646.GN1325469@frogsfrogsfrogs>
-References: <ZH8onIAH8xcrWKE+@casper.infradead.org>
- <87bkhskaoc.fsf@doe.com>
+To:     cem@kernel.org
+Cc:     linux-xfs@vger.kernel.org
+Subject: Re: [PATCH V2] xfs: Comment out unreachable code within
+ xchk_fscounters()
+Message-ID: <20230606151709.GO1325469@frogsfrogsfrogs>
+References: <20230606151122.853315-1-cem@kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <87bkhskaoc.fsf@doe.com>
+In-Reply-To: <20230606151122.853315-1-cem@kernel.org>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Tue, Jun 06, 2023 at 06:30:35PM +0530, Ritesh Harjani wrote:
-> Matthew Wilcox <willy@infradead.org> writes:
+On Tue, Jun 06, 2023 at 05:11:22PM +0200, cem@kernel.org wrote:
+> From: Carlos Maiolino <cem@kernel.org>
 > 
-> > On Tue, Jun 06, 2023 at 05:13:47PM +0530, Ritesh Harjani (IBM) wrote:
-> >> Hello All,
-> >> 
-> >> Please find PATCHv8 which adds per-block dirty tracking to iomap.
-> >> As discussed earlier this is required to improve write performance and reduce
-> >> write amplification for cases where either blocksize is less than pagesize (such
-> >> as Power platform with 64k pagesize) or when we have a large folio (such as xfs
-> >> which currently supports large folio).
-> >
-> > You're moving too fast.  Please, allow at least a few hours between
-> > getting review comments and sending a new version.
-> >
+> Comment the code out so kernel test robot stop complaining about it
+> every single test build.
 > 
-> Sorry about that. I felt those were mainly only mechanical conversion
-> changes. Will keep in mind.
-> 
-> >> v7 -> v8
-> >> ==========
-> >> 1. Renamed iomap_page -> iomap_folio & iop -> iof in Patch-1 itself.
-> >
-> > I don't think iomap_folio is the right name.  Indeed, I did not believe
-> > that iomap_page was the right name.  As I said on #xfs recently ...
-> >
-> > <willy> i'm still not crazy about iomap_page as the name of that
-> >    data structure.  and calling the variable 'iop' just seems doomed
-> >    to be trouble.  how do people feel about either iomap_block_state or
-> >    folio_block_state ... or even just calling it block_state since it's
-> >    local to iomap/buffered-io.c
-> > <willy> we'd then call the variable either ibs or fbs, both of which
-> >    have some collisions in the kernel, but none in filesystems
-> > <dchinner> willy - sounds reasonable
-> 
-> Both seems equally reasonable to me. If others are equally ok with both,
-> then shall we go with iomap_block_state and ibs? 
+> Signed-off-by: Carlos Maiolino <cmaiolino@redhat.com>
 
-I've a slight preference for struct folio_block_state/folio_bs/fbs.
-
-Or even struct iomap_folio_state/iofs/ifs.
-
-IBS is an acronym for a rather uncomfortable medical condition... ;)
+Thank you,
+Reviewed-by: Darrick J. Wong <djwong@kernel.org>
 
 --D
 
-> I see that as "iomap_block_state" which is local to iomap buffered-io
-> layer to track per-block state within a folio and gets attached to
-> folio->private.
+> ---
+>  fs/xfs/scrub/fscounters.c | 7 +++++++
+>  1 file changed, 7 insertions(+)
 > 
-> -ritesh
+> diff --git a/fs/xfs/scrub/fscounters.c b/fs/xfs/scrub/fscounters.c
+> index e382a35e98d88..228efe0c99be8 100644
+> --- a/fs/xfs/scrub/fscounters.c
+> +++ b/fs/xfs/scrub/fscounters.c
+> @@ -153,6 +153,7 @@ xchk_setup_fscounters(
+>  	return xchk_trans_alloc(sc, 0);
+>  }
+>  
+> +#if 0
+>  /*
+>   * Part 1: Collecting filesystem summary counts.  For each AG, we add its
+>   * summary counts (total inodes, free inodes, free data blocks) to an incore
+> @@ -349,6 +350,7 @@ xchk_fscount_count_frextents(
+>  	return 0;
+>  }
+>  #endif /* CONFIG_XFS_RT */
+> +#endif
+>  
+>  /*
+>   * Part 2: Comparing filesystem summary counters.  All we have to do here is
+> @@ -422,7 +424,10 @@ xchk_fscounters(
+>  	struct xfs_mount	*mp = sc->mp;
+>  	struct xchk_fscounters	*fsc = sc->buf;
+>  	int64_t			icount, ifree, fdblocks, frextents;
+> +
+> +#if 0
+>  	int			error;
+> +#endif
+>  
+>  	/* Snapshot the percpu counters. */
+>  	icount = percpu_counter_sum(&mp->m_icount);
+> @@ -452,6 +457,7 @@ xchk_fscounters(
+>  	 */
+>  	return 0;
+>  
+> +#if 0
+>  	/*
+>  	 * If ifree exceeds icount by more than the minimum variance then
+>  	 * something's probably wrong with the counters.
+> @@ -489,4 +495,5 @@ xchk_fscounters(
+>  		xchk_set_corrupt(sc);
+>  
+>  	return 0;
+> +#endif
+>  }
+> -- 
+> 2.30.2
+> 
