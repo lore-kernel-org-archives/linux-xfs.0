@@ -2,43 +2,41 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 45D0BC7EE2F
-	for <linux-xfs@archiver.kernel.org>; Tue,  6 Jun 2023 22:29:25 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7C555C7EE2F
+	for <linux-xfs@archiver.kernel.org>; Tue,  6 Jun 2023 22:29:27 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S239861AbjFFW3Y (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 6 Jun 2023 18:29:24 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57670 "EHLO
+        id S239867AbjFFW30 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 6 Jun 2023 18:29:26 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57712 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S239860AbjFFW3X (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 6 Jun 2023 18:29:23 -0400
+        with ESMTP id S239864AbjFFW3Z (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 6 Jun 2023 18:29:25 -0400
 Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 43D2D171B;
-        Tue,  6 Jun 2023 15:29:21 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 60DEE1726;
+        Tue,  6 Jun 2023 15:29:24 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id BD9646387C;
-        Tue,  6 Jun 2023 22:29:20 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 203A2C433D2;
-        Tue,  6 Jun 2023 22:29:20 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id E993A62CD2;
+        Tue,  6 Jun 2023 22:29:23 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 4C5CEC433EF;
+        Tue,  6 Jun 2023 22:29:23 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1686090560;
-        bh=Jsolamm28sojxmyIeUZQC6tRUT28viNE5ruHj9LDtdk=;
-        h=Subject:From:To:Cc:Date:In-Reply-To:References:From;
-        b=M4Ip5zomZpANn0Z4LrFBeIpyoyHzQ91rJ64Epv9Fh5owTqw94PmCgN3tQ9ah9t9Zc
-         aaOaZA7wvkOZe1tGlPpjcfhOmSfI6x/zlzkWZmoM8U8DobLB2FQM+/24ROe71Yi1K1
-         4uHESFioTfBPqyRQDNM4lNuQgXZg0LrtRPmiuoE5Ny9n3lMJwPoWTFB8LvJUU5gw8S
-         RTcaG6vOiHyCK7NlVWRAm2artx6F6/en8Mg9nssROT2UWbAxDJw9ZY9bgdoSyFh+ho
-         xN8mZFP3RFOWrluhJu2SyWEBX6/Qh9zJf66KhlJ5hjS4ngX1OtilrXdvcqlOsgRBpV
-         SYAv/xE1cXliQ==
-Subject: [PATCH 3/3] xfs/155: improve logging in this test
+        s=k20201202; t=1686090563;
+        bh=T1YCPP30Do6ni3yxMsNs+eZ4kHHbIoJQGPWWHjcTVkM=;
+        h=Subject:From:To:Cc:Date:From;
+        b=C0SdDjpFQ1BkqDV/soXReb6nNnOEml8VdUQfedHpS8NHE8ca7uGRpj4hUF8Lv4O5I
+         fD7Yj8hEurMA4qgYcjHE6XWul4K4cU/tF/i4Y5P1GX/EqAjFZ0xl/6vqUB0zinQVq9
+         gaTKAvuzbPnnBS4OvXJ5Aj657vyHrGLMaO5+d/Ze3GnRN6d1tXw/3DIg1iq6Swsqpj
+         G/OZY5G392GmuSxnsxXd/x/HWL8yUcs/DKu8W2Ax5ZWuvt7aBGTb4AwRLB3F0q6+2g
+         LwrhY0lnbyljHjiJ45Piaw0xcDqLuGG1c0Qyrc+DqF4W/6o/J3ND+1E4FPbGhd9OpQ
+         XYWEL3w+cQf6w==
+Subject: [PATCHSET 0/3] fstests: reduce scrub time in testing
 From:   "Darrick J. Wong" <djwong@kernel.org>
 To:     zlang@redhat.com, djwong@kernel.org
 Cc:     linux-xfs@vger.kernel.org, fstests@vger.kernel.org, guan@eryu.me
-Date:   Tue, 06 Jun 2023 15:29:19 -0700
-Message-ID: <168609055958.2590724.15653702877825285667.stgit@frogsfrogsfrogs>
-In-Reply-To: <168609054262.2590724.13871035450315143622.stgit@frogsfrogsfrogs>
-References: <168609054262.2590724.13871035450315143622.stgit@frogsfrogsfrogs>
+Date:   Tue, 06 Jun 2023 15:29:22 -0700
+Message-ID: <168609056295.2592490.1272515528324889317.stgit@frogsfrogsfrogs>
 User-Agent: StGit/0.19
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
@@ -47,35 +45,30 @@ Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-From: Darrick J. Wong <djwong@kernel.org>
+Hi all,
 
-If this test fails after a certain number of writes, we should state
-the exact number of writes so that we can coordinate with 155.full.
-Instead, we state the pre-randomization number, which isn't all that
-helpful.
+For fuzz testing of the filesystem repair tools, there's no point in
+having _check_xfs_filesystem rebuild the filesystem metadata with
+xfs_repair or xfs_scrub after it's already been testing both.  This can
+reduce the runtime of those tests considerably.
 
-Signed-off-by: Darrick J. Wong <djwong@kernel.org>
+Do the same for xfs/503 since we're only concerned with testing that
+metadump and mdrestore work properly.
+
+If you're going to start using this mess, you probably ought to just
+pull from my git trees, which are linked below.
+
+This is an extraordinary way to destroy everything.  Enjoy!
+Comments and questions are, as always, welcome.
+
+--D
+
+fstests git tree:
+https://git.kernel.org/cgit/linux/kernel/git/djwong/xfstests-dev.git/log/?h=scrub-test-speedups
 ---
- tests/xfs/155 |    3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
-
-
-diff --git a/tests/xfs/155 b/tests/xfs/155
-index 25cc84069c..302607b510 100755
---- a/tests/xfs/155
-+++ b/tests/xfs/155
-@@ -63,11 +63,12 @@ done
- 
- # If NEEDSREPAIR is still set on the filesystem, ensure that a full run
- # cleans everything up.
-+echo "Checking filesystem one last time after $allowed_writes writes." >> $seqres.full
- if _check_scratch_xfs_features NEEDSREPAIR &> /dev/null; then
- 	echo "Clearing NEEDSREPAIR" >> $seqres.full
- 	_scratch_xfs_repair 2>> $seqres.full
- 	_check_scratch_xfs_features NEEDSREPAIR > /dev/null && \
--		echo "Repair failed to clear NEEDSREPAIR on the $nr_writes writes test"
-+		echo "Repair failed to clear NEEDSREPAIR on the $allowed_writes writes test"
- fi
- 
- # success, all done
+ common/fuzzy  |    7 ++++++-
+ common/rc     |    2 +-
+ common/xfs    |   31 ++++++++++++++++++++++---------
+ tests/xfs/503 |    2 ++
+ 4 files changed, 31 insertions(+), 11 deletions(-)
 
