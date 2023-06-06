@@ -2,109 +2,158 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 55C2DC7EE37
-	for <linux-xfs@archiver.kernel.org>; Tue,  6 Jun 2023 21:06:15 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id F2B20C77B7A
+	for <linux-xfs@archiver.kernel.org>; Tue,  6 Jun 2023 21:21:49 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232045AbjFFVGO (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 6 Jun 2023 17:06:14 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33020 "EHLO
+        id S233738AbjFFVVt (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 6 Jun 2023 17:21:49 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40198 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230504AbjFFVGN (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 6 Jun 2023 17:06:13 -0400
-Received: from forward501a.mail.yandex.net (forward501a.mail.yandex.net [178.154.239.81])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 347C71707;
-        Tue,  6 Jun 2023 14:06:08 -0700 (PDT)
-Received: from mail-nwsmtp-smtp-production-main-18.vla.yp-c.yandex.net (mail-nwsmtp-smtp-production-main-18.vla.yp-c.yandex.net [IPv6:2a02:6b8:c1f:5f1d:0:640:49bf:0])
-        by forward501a.mail.yandex.net (Yandex) with ESMTP id 9705F5EB94;
-        Wed,  7 Jun 2023 00:06:05 +0300 (MSK)
-Received: by mail-nwsmtp-smtp-production-main-18.vla.yp-c.yandex.net (smtp/Yandex) with ESMTPSA id 36bUBP1DdeA0-FdoUgi57;
-        Wed, 07 Jun 2023 00:06:04 +0300
+        with ESMTP id S232511AbjFFVVs (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 6 Jun 2023 17:21:48 -0400
+Received: from forward500a.mail.yandex.net (forward500a.mail.yandex.net [178.154.239.80])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 78E6410EC;
+        Tue,  6 Jun 2023 14:21:46 -0700 (PDT)
+Received: from mail-nwsmtp-smtp-production-main-49.vla.yp-c.yandex.net (mail-nwsmtp-smtp-production-main-49.vla.yp-c.yandex.net [IPv6:2a02:6b8:c18:3487:0:640:5432:0])
+        by forward500a.mail.yandex.net (Yandex) with ESMTP id 782E95E88D;
+        Wed,  7 Jun 2023 00:21:44 +0300 (MSK)
+Received: by mail-nwsmtp-smtp-production-main-49.vla.yp-c.yandex.net (smtp/Yandex) with ESMTPSA id gLb9nX1DXW20-iN3RTibD;
+        Wed, 07 Jun 2023 00:21:43 +0300
 X-Yandex-Fwd: 1
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ya.ru; s=mail; t=1686085564;
-        bh=g+p57RqFmxJ4tzpz/26eK8nSIEQ3A6k2DYL8R5TP9Jo=;
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ya.ru; s=mail; t=1686086503;
+        bh=RMot/4BQsuRfbRLhJgaV6MPyHz0uyQeRv16SmPWU6H8=;
         h=From:In-Reply-To:Cc:Date:References:To:Subject:Message-ID;
-        b=hs+DfPcJaUkA0cTRNlzqm0BdIgJqOxd5hZo8lrJTuB3j7JLEo5ZEWDeX0KuY1wIqy
-         Sc8GkCdA/Cg5Dlv0wqDIaqhj8MqZ0x7pMCh2fVG1DW6TZRRMw6d5kfkBd1mXF4o3MZ
-         WUC27bTIOC+uFu4eZrMlOK2rQ4uxMbS+lhjz8Y7g=
-Authentication-Results: mail-nwsmtp-smtp-production-main-18.vla.yp-c.yandex.net; dkim=pass header.i=@ya.ru
-Message-ID: <ef1b0ecd-5a03-4256-2a7a-3e22b755aa53@ya.ru>
-Date:   Wed, 7 Jun 2023 00:06:03 +0300
+        b=IPPmyYR+daX6HIFKKvQk6V4E1dR0yVfYKzRLugVmFGTmJ6tHUSuBnWefkrvFEilZN
+         Ik6Jh6P98aaPYwLo5Q2mSu5QD9N5OzRJpZxN31caVNkBytQtbyEwlte9duWxBSqqgU
+         XViYQ2v1kXWC35+Dlg2CF12F1Gea5BnZ81wiOhrY=
+Authentication-Results: mail-nwsmtp-smtp-production-main-49.vla.yp-c.yandex.net; dkim=pass header.i=@ya.ru
+Message-ID: <65785745-1fd3-e0d7-26e8-dd74b1074d37@ya.ru>
+Date:   Wed, 7 Jun 2023 00:21:42 +0300
 MIME-Version: 1.0
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
  Thunderbird/102.10.0
-Subject: Re: [PATCH v2 0/3] mm: Make unregistration of super_block shrinker
- more faster
-To:     Dave Chinner <david@fromorbit.com>
-Cc:     akpm@linux-foundation.org, roman.gushchin@linux.dev,
-        vbabka@suse.cz, viro@zeniv.linux.org.uk, brauner@kernel.org,
-        djwong@kernel.org, hughd@google.com, paulmck@kernel.org,
-        muchun.song@linux.dev, linux-mm@kvack.org,
+Subject: Re: [PATCH v2 3/3] fs: Use delayed shrinker unregistration
+Content-Language: en-US
+To:     Dave Chinner <david@fromorbit.com>,
+        Roman Gushchin <roman.gushchin@linux.dev>
+Cc:     akpm@linux-foundation.org, vbabka@suse.cz, viro@zeniv.linux.org.uk,
+        brauner@kernel.org, djwong@kernel.org, hughd@google.com,
+        paulmck@kernel.org, muchun.song@linux.dev, linux-mm@kvack.org,
         linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org,
         linux-kernel@vger.kernel.org, zhengqi.arch@bytedance.com
 References: <168599103578.70911.9402374667983518835.stgit@pro.pro>
- <ZH5ig590WleaH1Ed@dread.disaster.area>
-Content-Language: en-US
+ <168599180526.70911.14606767590861123431.stgit@pro.pro>
+ <ZH6AA72wOd4HKTKE@P9FQF9L96D> <ZH6K0McWBeCjaf16@dread.disaster.area>
 From:   Kirill Tkhai <tkhai@ya.ru>
-In-Reply-To: <ZH5ig590WleaH1Ed@dread.disaster.area>
+In-Reply-To: <ZH6K0McWBeCjaf16@dread.disaster.area>
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On 06.06.2023 01:32, Dave Chinner wrote:
-> On Mon, Jun 05, 2023 at 10:02:46PM +0300, Kirill Tkhai wrote:
->> This patch set introduces a new scheme of shrinker unregistration. It allows to split
->> the unregistration in two parts: fast and slow. This allows to hide slow part from
->> a user, so user-visible unregistration becomes fast.
+On 06.06.2023 04:24, Dave Chinner wrote:
+> On Mon, Jun 05, 2023 at 05:38:27PM -0700, Roman Gushchin wrote:
+>> On Mon, Jun 05, 2023 at 10:03:25PM +0300, Kirill Tkhai wrote:
+>>> Kernel test robot reports -88.8% regression in stress-ng.ramfs.ops_per_sec
+>>> test case caused by commit: f95bdb700bc6 ("mm: vmscan: make global slab
+>>> shrink lockless"). Qi Zheng investigated that the reason is in long SRCU's
+>>> synchronize_srcu() occuring in unregister_shrinker().
+>>>
+>>> This patch fixes the problem by using new unregistration interfaces,
+>>> which split unregister_shrinker() in two parts. First part actually only
+>>> notifies shrinker subsystem about the fact of unregistration and it prevents
+>>> future shrinker methods calls. The second part completes the unregistration
+>>> and it insures, that struct shrinker is not used during shrinker chain
+>>> iteration anymore, so shrinker memory may be freed. Since the long second
+>>> part is called from delayed work asynchronously, it hides synchronize_srcu()
+>>> delay from a user.
+>>>
+>>> Signed-off-by: Kirill Tkhai <tkhai@ya.ru>
+>>> ---
+>>>  fs/super.c |    3 ++-
+>>>  1 file changed, 2 insertions(+), 1 deletion(-)
+>>>
+>>> diff --git a/fs/super.c b/fs/super.c
+>>> index 8d8d68799b34..f3e4f205ec79 100644
+>>> --- a/fs/super.c
+>>> +++ b/fs/super.c
+>>> @@ -159,6 +159,7 @@ static void destroy_super_work(struct work_struct *work)
+>>>  							destroy_work);
+>>>  	int i;
+>>>  
+>>> +	unregister_shrinker_delayed_finalize(&s->s_shrink);
+>>>  	for (i = 0; i < SB_FREEZE_LEVELS; i++)
+>>>  		percpu_free_rwsem(&s->s_writers.rw_sem[i]);
+>>>  	kfree(s);
+>>> @@ -327,7 +328,7 @@ void deactivate_locked_super(struct super_block *s)
+>>>  {
+>>>  	struct file_system_type *fs = s->s_type;
+>>>  	if (atomic_dec_and_test(&s->s_active)) {
+>>> -		unregister_shrinker(&s->s_shrink);
+>>> +		unregister_shrinker_delayed_initiate(&s->s_shrink);
 >>
->> This fixes the -88.8% regression of stress-ng.ramfs.ops_per_sec noticed
->> by kernel test robot:
->>
->> https://lore.kernel.org/lkml/202305230837.db2c233f-yujie.liu@intel.com/
->>
->> ---
->>
->> Kirill Tkhai (2):
->>       mm: Split unregister_shrinker() in fast and slow part
->>       fs: Use delayed shrinker unregistration
+>> Hm, it makes the API more complex and easier to mess with. Like what will happen
+>> if the second part is never called? Or it's called without the first part being
+>> called first?
 > 
-> Did you test any filesystem other than ramfs?
+> Bad things.
 > 
-> Filesystems more complex than ramfs have internal shrinkers, and so
-> they will still be running the slow synchronize_srcu() - potentially
-> multiple times! - in every unmount. Both XFS and ext4 have 3
-> internal shrinker instances per mount, so they will still call
-> synchronize_srcu() at least 3 times per unmount after this change.
+> Also, it doesn't fix the three other unregister_shrinker() calls in
+> the XFS unmount path, nor the three in the ext4/mbcache/jbd2 unmount
+> path.
 > 
-> What about any other subsystem that runs a shrinker - do they have
-> context depedent shrinker instances that get frequently created and
-> destroyed? They'll need the same treatment.
+> Those are just some of the unregister_shrinker() calls that have
+> dynamic contexts that would also need this same fix; I haven't
+> audited the 3 dozen other unregister_shrinker() calls around the
+> kernel to determine if any of them need similar treatment, too.
+> 
+> IOWs, this patchset is purely a band-aid to fix the reported
+> regression, not an actual fix for the underlying problems caused by
+> moving the shrinker infrastructure to SRCU protection.  This is why
+> I really want the SRCU changeover reverted.
+> 
+> Not only are the significant changes the API being necessary, it's
+> put the entire shrinker paths under a SRCU critical section. AIUI,
+> this means while the shrinkers are running the RCU grace period
+> cannot expire and no RCU freed memory will actually get freed until
+> the srcu read lock is dropped by the shrinker.
 
-Of course, all of shrinkers should be fixed. This patch set just aims to describe
-the idea more wider, because I'm not sure most people read replys to kernel robot reports.
+Why so? Doesn't SRCU and RCU have different grace period and they does not prolong
+each other?
 
-This is my suggestion of way to go. Probably, Qi is right person to ask whether
-we're going to extend this and to maintain f95bdb700bc6 in tree.
-
-There is not much time. Unfortunately, kernel test robot reported this significantly late.
-
-> Seriously, part of changing shrinker infrastructure is doing an
-> audit of all the shrinker instances to determine how the change will
-> impact those shrinkers, and if the same structural changes are
-> needed to those implementations.
+Also, it looks like every SRCU has it's own namespace like shrinker_srcu for shrinker.
+Don't different SRCU namespaces never prolong each other?!
+ 
+> Given the superblock shrinkers are freeing dentry and inode objects
+> by RCU freeing, this is also a fairly significant change of
+> behaviour. i.e.  cond_resched() in the shrinker processing loops no
+> longer allows RCU grace periods to expire and have memory freed with
+> the shrinkers are running.
 > 
-> I don't see any of this being done - this looks like a "slap a bandaid
-> over the visible symptom" patch set without any deeper investigation
-> of the scope of the issue having been gained.
+> Are there problems this will cause? I don't know, but I'm pretty
+> sure they haven't even been considered until now....
 > 
-> Along with all shrinkers now running under a SRCU critical region
-> and requiring a machine wide synchronisation point for every
-> unregister_shrinker() call made, the ability to repeated abort
-> global shrinker passes via external SRCU expediting, and now an
-> intricate locking and state dance in do_shrink_slab() vs
-> unregister_shrinker, I can't say I'm particularly liking any of
-> this, regardles of the benefits it supposedly provides.
+>> Isn't it possible to hide it from a user and call the second part from a work
+>> context automatically?
+> 
+> Nope, because it has to be done before the struct shrinker is freed.
+> Those are embedded into other structures rather than being
+> dynamically allocated objects. Hence the synchronise_srcu() has to
+> complete before the structure the shrinker is embedded in is freed.
+> 
+> Now, this can be dealt with by having register_shrinker() return an
+> allocated struct shrinker and the callers only keep a pointer, but
+> that's an even bigger API change. But, IMO, it is an API change that
+> should have been done before SRCU was introduced precisely because
+> it allows decoupling of shrinker execution and completion from
+> the owning structure.
+> 
+> Then we can stop shrinker execution, wait for it to complete and
+> prevent future execution in unregister_shrinker(), then punt the
+> expensive shrinker list removal to background work where processing
+> delays just don't matter for dead shrinker instances. It doesn't
+> need SRCU at all...
 > 
 > -Dave.
 
