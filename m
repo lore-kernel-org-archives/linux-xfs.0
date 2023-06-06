@@ -2,29 +2,29 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 041AAC7EE23
-	for <linux-xfs@archiver.kernel.org>; Tue,  6 Jun 2023 00:38:38 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 154CAC7EE23
+	for <linux-xfs@archiver.kernel.org>; Tue,  6 Jun 2023 00:38:53 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229667AbjFFAig (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 5 Jun 2023 20:38:36 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41648 "EHLO
+        id S231873AbjFFAiw (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 5 Jun 2023 20:38:52 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41862 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231378AbjFFAif (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 5 Jun 2023 20:38:35 -0400
-X-Greylist: delayed 389 seconds by postgrey-1.37 at lindbergh.monkeyblade.net; Mon, 05 Jun 2023 17:38:33 PDT
-Received: from out-11.mta0.migadu.com (out-11.mta0.migadu.com [91.218.175.11])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id DE76D100
-        for <linux-xfs@vger.kernel.org>; Mon,  5 Jun 2023 17:38:33 -0700 (PDT)
-Date:   Mon, 5 Jun 2023 17:38:27 -0700
+        with ESMTP id S232823AbjFFAiv (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 5 Jun 2023 20:38:51 -0400
+X-Greylist: delayed 402 seconds by postgrey-1.37 at lindbergh.monkeyblade.net; Mon, 05 Jun 2023 17:38:48 PDT
+Received: from out-30.mta0.migadu.com (out-30.mta0.migadu.com [IPv6:2001:41d0:1004:224b::1e])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C461310E
+        for <linux-xfs@vger.kernel.org>; Mon,  5 Jun 2023 17:38:48 -0700 (PDT)
+Date:   Mon, 5 Jun 2023 17:31:56 -0700
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.dev; s=key1;
-        t=1686011912;
+        t=1686011522;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:cc:mime-version:mime-version:content-type:content-type:
          in-reply-to:in-reply-to:references:references;
-        bh=1Xi6jsYM9ZciceNFvAe5rQ/vkIA6YXglfKKPWJ53Rcs=;
-        b=VPOYBWQpwtuyh3+GVgcQm9QECvPCcs07jSDc2pPEuISsH2r70ERXuO5x53OEK/80nVzsSN
-        FSmDit1vPnaSLvzCVTcm+5vS7WBxkVdMIW1l0j7Sa8DI/kJoYLGoEfmZLk93rPaGcuKAD7
-        mGYJufXyPbDEfJ8uVPhbXAqenfdGVMQ=
+        bh=xFxQoxys/4W09oOn79IrUnlR3rRwAPSSelAzub4DB3w=;
+        b=GYrJ2HdSX3TJoTTxPDFkm2BYLmg+7hl/gvwOi01e4oASj1BbnqDK7qwyHcvL6fJ/DORzXc
+        eFEH9oIjheaYl2N4nSF6/5HcGLZd1A0fCZQFeeh3w+9qe2j/ZdHFiq8CiAqMdCrXPTFYV6
+        wr5AogFPjClIdSqmxJBsaSWiXGHZKRo=
 X-Report-Abuse: Please report any abuse attempt to abuse@migadu.com and include these headers.
 From:   Roman Gushchin <roman.gushchin@linux.dev>
 To:     Kirill Tkhai <tkhai@ya.ru>
@@ -34,63 +34,30 @@ Cc:     akpm@linux-foundation.org, vbabka@suse.cz, viro@zeniv.linux.org.uk,
         linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org,
         linux-kernel@vger.kernel.org, zhengqi.arch@bytedance.com,
         david@fromorbit.com
-Subject: Re: [PATCH v2 3/3] fs: Use delayed shrinker unregistration
-Message-ID: <ZH6AA72wOd4HKTKE@P9FQF9L96D>
+Subject: Re: [PATCH v2 1/3] mm: vmscan: move shrinker_debugfs_remove() before
+ synchronize_srcu()
+Message-ID: <ZH5+fHJj8UypQfIt@P9FQF9L96D>
 References: <168599103578.70911.9402374667983518835.stgit@pro.pro>
- <168599180526.70911.14606767590861123431.stgit@pro.pro>
+ <168599178203.70911.18350742045278218790.stgit@pro.pro>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <168599180526.70911.14606767590861123431.stgit@pro.pro>
+In-Reply-To: <168599178203.70911.18350742045278218790.stgit@pro.pro>
 X-Migadu-Flow: FLOW_OUT
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Mon, Jun 05, 2023 at 10:03:25PM +0300, Kirill Tkhai wrote:
-> Kernel test robot reports -88.8% regression in stress-ng.ramfs.ops_per_sec
-> test case caused by commit: f95bdb700bc6 ("mm: vmscan: make global slab
-> shrink lockless"). Qi Zheng investigated that the reason is in long SRCU's
-> synchronize_srcu() occuring in unregister_shrinker().
+On Mon, Jun 05, 2023 at 10:03:02PM +0300, Kirill Tkhai wrote:
+> From: Qi Zheng <zhengqi.arch@bytedance.com>
 > 
-> This patch fixes the problem by using new unregistration interfaces,
-> which split unregister_shrinker() in two parts. First part actually only
-> notifies shrinker subsystem about the fact of unregistration and it prevents
-> future shrinker methods calls. The second part completes the unregistration
-> and it insures, that struct shrinker is not used during shrinker chain
-> iteration anymore, so shrinker memory may be freed. Since the long second
-> part is called from delayed work asynchronously, it hides synchronize_srcu()
-> delay from a user.
+> The debugfs_remove_recursive() will wait for debugfs_file_put()
+> to return, so there is no need to put it after synchronize_srcu()
+> to wait for the rcu read-side critical section to exit.
 > 
-> Signed-off-by: Kirill Tkhai <tkhai@ya.ru>
-> ---
->  fs/super.c |    3 ++-
->  1 file changed, 2 insertions(+), 1 deletion(-)
+> Just move it before synchronize_srcu(), which is also convenient
+> to put the heavy synchronize_srcu() in the delayed work later.
 > 
-> diff --git a/fs/super.c b/fs/super.c
-> index 8d8d68799b34..f3e4f205ec79 100644
-> --- a/fs/super.c
-> +++ b/fs/super.c
-> @@ -159,6 +159,7 @@ static void destroy_super_work(struct work_struct *work)
->  							destroy_work);
->  	int i;
->  
-> +	unregister_shrinker_delayed_finalize(&s->s_shrink);
->  	for (i = 0; i < SB_FREEZE_LEVELS; i++)
->  		percpu_free_rwsem(&s->s_writers.rw_sem[i]);
->  	kfree(s);
-> @@ -327,7 +328,7 @@ void deactivate_locked_super(struct super_block *s)
->  {
->  	struct file_system_type *fs = s->s_type;
->  	if (atomic_dec_and_test(&s->s_active)) {
-> -		unregister_shrinker(&s->s_shrink);
-> +		unregister_shrinker_delayed_initiate(&s->s_shrink);
+> Signed-off-by: Qi Zheng <zhengqi.arch@bytedance.com>
 
-Hm, it makes the API more complex and easier to mess with. Like what will happen
-if the second part is never called? Or it's called without the first part being
-called first?
-
-Isn't it possible to hide it from a user and call the second part from a work
-context automatically?
-
-Thanks!
+Acked-by: Roman Gushchin <roman.gushchin@linux.dev>
