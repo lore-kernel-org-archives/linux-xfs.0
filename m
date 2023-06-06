@@ -2,148 +2,101 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A6523C77B73
-	for <linux-xfs@archiver.kernel.org>; Tue,  6 Jun 2023 15:17:44 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5A4CCC7EE29
+	for <linux-xfs@archiver.kernel.org>; Tue,  6 Jun 2023 16:02:30 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S236774AbjFFPRn (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 6 Jun 2023 11:17:43 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44744 "EHLO
+        id S232986AbjFFQC3 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 6 Jun 2023 12:02:29 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42244 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231178AbjFFPRn (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 6 Jun 2023 11:17:43 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4C035196
-        for <linux-xfs@vger.kernel.org>; Tue,  6 Jun 2023 08:17:42 -0700 (PDT)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id DBE5C62E46
-        for <linux-xfs@vger.kernel.org>; Tue,  6 Jun 2023 15:17:41 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 376A9C433D2;
-        Tue,  6 Jun 2023 15:17:41 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1686064661;
-        bh=Ospp+zOoZBARzxwl9m6ji5TQHOO5OQPgLYTl5H4QLK4=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=Cav0JmoMGKqWEteE8VvsTKwAqz0EsgtLiC1LzgFt7W1WnkXTqKvmC8At6SjUs3H85
-         PU9Kq3FCPpplkv9cbjzqU79J2ME3v5Cb1lS2AvdNzG1Ro/jF2Rj5kePjL9OW8Q4GOq
-         Ipc79gMbZK4Qukxzk0eBGzHm3ZnjhCQlDQnYLob9+dE23hHLYy5kUIvmRM45EYvYFb
-         xzWbwGZQP7QWIO5hRNlCqwd7xQ6NvPz/ON0b6s4FQOmoi0bda4c6gbEShmlx2akx9E
-         zUme0Q/WqFXTabVRfL0cTC+xS20hn6fGw+URGPbnKBnYJ53PjWDy9eDWoG6AobKlO6
-         eb3Io+/09gAfQ==
-Date:   Tue, 6 Jun 2023 08:17:40 -0700
-From:   "Darrick J. Wong" <djwong@kernel.org>
-To:     Chandan Babu R <chandan.babu@oracle.com>
-Cc:     linux-xfs@vger.kernel.org, cem@kernel.org
-Subject: Re: [PATCH V2 03/23] metadump: Declare boolean variables with bool
- type
-Message-ID: <20230606151740.GP1325469@frogsfrogsfrogs>
-References: <20230606092806.1604491-1-chandan.babu@oracle.com>
- <20230606092806.1604491-4-chandan.babu@oracle.com>
+        with ESMTP id S237627AbjFFQC2 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 6 Jun 2023 12:02:28 -0400
+X-Greylist: delayed 328 seconds by postgrey-1.37 at lindbergh.monkeyblade.net; Tue, 06 Jun 2023 09:02:25 PDT
+Received: from out-48.mta1.migadu.com (out-48.mta1.migadu.com [95.215.58.48])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 363EA10DB
+        for <linux-xfs@vger.kernel.org>; Tue,  6 Jun 2023 09:02:24 -0700 (PDT)
+Date:   Tue, 6 Jun 2023 08:56:37 -0700
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.dev; s=key1;
+        t=1686067014;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=t9OZf8j81I9AZgH2DCCUhuThQp0x0TuPvmq+4JGIqS0=;
+        b=IpfG83BysHXCa6f1d0xw5bdcAdkTXutwLnsAT+Tv0BHSJZEPTe2OpuJlgrkt2Tx72u4XxA
+        qti49tINLUjZrog754JQvlLuSjDvsD3eJT0FVRRS+8/3G1l1yV7N4F/elu4yPRTEStIEGp
+        z82nmqfVbJ0KZnjEJvzPYbE9g59Sr9Y=
+X-Report-Abuse: Please report any abuse attempt to abuse@migadu.com and include these headers.
+From:   Roman Gushchin <roman.gushchin@linux.dev>
+To:     Dave Chinner <david@fromorbit.com>
+Cc:     Kirill Tkhai <tkhai@ya.ru>, akpm@linux-foundation.org,
+        vbabka@suse.cz, viro@zeniv.linux.org.uk, brauner@kernel.org,
+        djwong@kernel.org, hughd@google.com, paulmck@kernel.org,
+        muchun.song@linux.dev, linux-mm@kvack.org,
+        linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org,
+        linux-kernel@vger.kernel.org, zhengqi.arch@bytedance.com
+Subject: Re: [PATCH v2 3/3] fs: Use delayed shrinker unregistration
+Message-ID: <ZH9XNUGTW3+sEANc@P9FQF9L96D.corp.robot.car>
+References: <168599103578.70911.9402374667983518835.stgit@pro.pro>
+ <168599180526.70911.14606767590861123431.stgit@pro.pro>
+ <ZH6AA72wOd4HKTKE@P9FQF9L96D>
+ <ZH6K0McWBeCjaf16@dread.disaster.area>
+ <ZH6ge3yiGAotYRR9@P9FQF9L96D>
+ <ZH7XfD/pBcWzhHcc@dread.disaster.area>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20230606092806.1604491-4-chandan.babu@oracle.com>
+In-Reply-To: <ZH7XfD/pBcWzhHcc@dread.disaster.area>
+X-Migadu-Flow: FLOW_OUT
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Tue, Jun 06, 2023 at 02:57:46PM +0530, Chandan Babu R wrote:
-> Signed-off-by: Chandan Babu R <chandan.babu@oracle.com>
-
-Reviewed-by: Darrick J. Wong <djwong@kernel.org>
-
---D
-
-> ---
->  db/metadump.c | 32 ++++++++++++++++----------------
->  1 file changed, 16 insertions(+), 16 deletions(-)
+On Tue, Jun 06, 2023 at 04:51:40PM +1000, Dave Chinner wrote:
+> On Mon, Jun 05, 2023 at 07:56:59PM -0700, Roman Gushchin wrote:
+> > On Tue, Jun 06, 2023 at 11:24:32AM +1000, Dave Chinner wrote:
+> > > On Mon, Jun 05, 2023 at 05:38:27PM -0700, Roman Gushchin wrote:
+> > > > Isn't it possible to hide it from a user and call the second part from a work
+> > > > context automatically?
+> > > 
+> > > Nope, because it has to be done before the struct shrinker is freed.
+> > > Those are embedded into other structures rather than being
+> > > dynamically allocated objects.
+> > 
+> > This part we might consider to revisit, if it helps to solve other problems.
+> > Having an extra memory allocation (or two) per mount-point doesn't look
+> > that expensive. Again, iff it helps with more important problems.
 > 
-> diff --git a/db/metadump.c b/db/metadump.c
-> index 6bcfd5bb..8b33fbfb 100644
-> --- a/db/metadump.c
-> +++ b/db/metadump.c
-> @@ -51,13 +51,13 @@ static int		cur_index;
->  
->  static xfs_ino_t	cur_ino;
->  
-> -static int		show_progress = 0;
-> -static int		stop_on_read_error = 0;
-> +static bool		show_progress = false;
-> +static bool		stop_on_read_error = false;
->  static int		max_extent_size = DEFAULT_MAX_EXT_SIZE;
-> -static int		obfuscate = 1;
-> -static int		zero_stale_data = 1;
-> -static int		show_warnings = 0;
-> -static int		progress_since_warning = 0;
-> +static bool		obfuscate = true;
-> +static bool		zero_stale_data = true;
-> +static bool		show_warnings = false;
-> +static bool		progress_since_warning = false;
->  static bool		stdout_metadump;
->  
->  void
-> @@ -100,7 +100,7 @@ print_warning(const char *fmt, ...)
->  
->  	fprintf(stderr, "%s%s: %s\n", progress_since_warning ? "\n" : "",
->  			progname, buf);
-> -	progress_since_warning = 0;
-> +	progress_since_warning = false;
->  }
->  
->  static void
-> @@ -121,7 +121,7 @@ print_progress(const char *fmt, ...)
->  	f = stdout_metadump ? stderr : stdout;
->  	fprintf(f, "\r%-59s", buf);
->  	fflush(f);
-> -	progress_since_warning = 1;
-> +	progress_since_warning = true;
->  }
->  
->  /*
-> @@ -2979,9 +2979,9 @@ metadump_f(
->  	char		*p;
->  
->  	exitcode = 1;
-> -	show_progress = 0;
-> -	show_warnings = 0;
-> -	stop_on_read_error = 0;
-> +	show_progress = false;
-> +	show_warnings = false;
-> +	stop_on_read_error = false;
->  
->  	if (mp->m_sb.sb_magicnum != XFS_SB_MAGIC) {
->  		print_warning("bad superblock magic number %x, giving up",
-> @@ -3002,13 +3002,13 @@ metadump_f(
->  	while ((c = getopt(argc, argv, "aegm:ow")) != EOF) {
->  		switch (c) {
->  			case 'a':
-> -				zero_stale_data = 0;
-> +				zero_stale_data = false;
->  				break;
->  			case 'e':
-> -				stop_on_read_error = 1;
-> +				stop_on_read_error = true;
->  				break;
->  			case 'g':
-> -				show_progress = 1;
-> +				show_progress = true;
->  				break;
->  			case 'm':
->  				max_extent_size = (int)strtol(optarg, &p, 0);
-> @@ -3019,10 +3019,10 @@ metadump_f(
->  				}
->  				break;
->  			case 'o':
-> -				obfuscate = 0;
-> +				obfuscate = false;
->  				break;
->  			case 'w':
-> -				show_warnings = 1;
-> +				show_warnings = true;
->  				break;
->  			default:
->  				print_warning("bad option for metadump command");
-> -- 
-> 2.39.1
+> Ah, I guess if you're concerned about memory allocation overhead
+> during register_shrinker() calls then you really aren't familiar
+> with what register_shrinker() does on memcg and numa aware
+> shrinkers?
+
+What a nice way to agree with an idea :)
+
 > 
+> Let's ignore the fact that we could roll the shrinker structure
+> allocation into the existing shrinker->nr_deferred array allocation
+> (so it's effectively a zero cost modification), and just look at
+> what a memcg enabled shrinker must initialise if it expands the
+> shrinker info array because the index returned from idr_alloc()
+> is larger than the current array:
+> 
+> 	for each memcg {
+> 		for_each_node {
+> 			info = kvmalloc_node();
+> 			rcu_assign_pointer(memcg->nodeinfo[nid]->shrinker_info, info);
+> 		}
+> 	}
+> 
+> Hmmmm?
+> 
+> So, there really isn't any additional cost, it completely decouples
+> the shrinker infrastructure from the subsystem shrinker
+> implementations, it enables the shrinker to control infrastructure
+> teardown independently of the subsystem that registered the
+> shrinker, and it still gives guarantees that the shrinker is never
+> run after unregister_shrinker() completes. What's not to like?
+
+Yep, this sounds like a good idea.
+
+Thanks.
