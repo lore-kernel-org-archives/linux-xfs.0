@@ -2,191 +2,342 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 300F2C77B7A
-	for <linux-xfs@archiver.kernel.org>; Tue,  6 Jun 2023 09:29:37 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id AFC68C77B7A
+	for <linux-xfs@archiver.kernel.org>; Tue,  6 Jun 2023 09:29:40 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235764AbjFFJ3f (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 6 Jun 2023 05:29:35 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40536 "EHLO
+        id S235996AbjFFJ3j (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 6 Jun 2023 05:29:39 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40550 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S235503AbjFFJ3f (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 6 Jun 2023 05:29:35 -0400
+        with ESMTP id S235503AbjFFJ3h (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 6 Jun 2023 05:29:37 -0400
 Received: from mx0a-00069f02.pphosted.com (mx0a-00069f02.pphosted.com [205.220.165.32])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id AA9AA126
-        for <linux-xfs@vger.kernel.org>; Tue,  6 Jun 2023 02:29:32 -0700 (PDT)
-Received: from pps.filterd (m0246627.ppops.net [127.0.0.1])
-        by mx0b-00069f02.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 3566E0tD009966;
-        Tue, 6 Jun 2023 09:29:30 GMT
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C8974126
+        for <linux-xfs@vger.kernel.org>; Tue,  6 Jun 2023 02:29:36 -0700 (PDT)
+Received: from pps.filterd (m0333521.ppops.net [127.0.0.1])
+        by mx0b-00069f02.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 3566K3WJ028671;
+        Tue, 6 Jun 2023 09:29:34 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=from : to : cc :
  subject : date : message-id : in-reply-to : references :
  content-transfer-encoding : content-type : mime-version;
- s=corp-2023-03-30; bh=Qc5bK7CI9ehwaMRVDUn5JLVZgOF3y8Kt/sSCkHYgUSc=;
- b=LS3wGY/plRAF232uJIajogoaDSWW2FweChIbbi/NU8fhUHmJ4YKcbA326HFzy/uV87n/
- rU7fNAlk5ubOVP1DTFGpnzA+BktsPvlA6Kh4xoh/xxEQKoxjS54Ryg200ezS6Q2eupJa
- kGwD35+PckIu4+Fuz2qZ2ug6SDhrmUC6SX14pVVlOu/hoHzcYaqun9OorNNQFv9AZZWD
- lboJBsj2ubaKVhqcatIo5/0a0Tp1WqMd2yBGn1iIR17Mi21omi8L/gwf+vP+s0TuCw/e
- A/oBg18zKlHuM/+YiuBPRU5lj5OgYueocOKinS8FHsN3EyNZHaWw7tuAsiwluFFfVUNy LA== 
-Received: from phxpaimrmta03.imrmtpd1.prodappphxaev1.oraclevcn.com (phxpaimrmta03.appoci.oracle.com [138.1.37.129])
-        by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 3qyx43vvn7-1
+ s=corp-2023-03-30; bh=IjnpYrE8Mt3s4OrTm6TWK+ndOWR0ylQnjuwgZK9oDz8=;
+ b=c0aXi7MP41qYmKCUAbqort4LfUkVvMiI/IwYP8Ad3cD+ZFQgkAEApT6mAM+VP/wmlr5F
+ PB0FOTya7byXWGBoYz9jXVRxV4ew2qfL//XzpKNn/ZA5vU3J98GjnAZQWKgxK1zwshvT
+ O4r4GWHo4jKLMIqHpiXtO1IkJnvNKVzRMEXHJOax2iua8U0JneEMM5cLONQIUJJIU/w/
+ +X6uGly8O5PQ8rDA7FGDtDRCINP3CNyF8tUzRfMVBOLZ4y1odrLEQYsQkykMU5siC4hN
+ Wj0nP9YHvpTcfQrIYaMgNR/NAmoUsK4NW7ve/g5OhR/zZ57y2tGcgJqa2PdQI44F9Vkz 5A== 
+Received: from phxpaimrmta01.imrmtpd1.prodappphxaev1.oraclevcn.com (phxpaimrmta01.appoci.oracle.com [138.1.114.2])
+        by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 3qyx8s4wsf-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Tue, 06 Jun 2023 09:29:30 +0000
-Received: from pps.filterd (phxpaimrmta03.imrmtpd1.prodappphxaev1.oraclevcn.com [127.0.0.1])
-        by phxpaimrmta03.imrmtpd1.prodappphxaev1.oraclevcn.com (8.17.1.19/8.17.1.19) with ESMTP id 3569DOt6001871;
-        Tue, 6 Jun 2023 09:29:30 GMT
-Received: from nam10-dm6-obe.outbound.protection.outlook.com (mail-dm6nam10lp2103.outbound.protection.outlook.com [104.47.58.103])
-        by phxpaimrmta03.imrmtpd1.prodappphxaev1.oraclevcn.com (PPS) with ESMTPS id 3r0tr0c79t-1
+        Tue, 06 Jun 2023 09:29:34 +0000
+Received: from pps.filterd (phxpaimrmta01.imrmtpd1.prodappphxaev1.oraclevcn.com [127.0.0.1])
+        by phxpaimrmta01.imrmtpd1.prodappphxaev1.oraclevcn.com (8.17.1.19/8.17.1.19) with ESMTP id 3567kvNb011175;
+        Tue, 6 Jun 2023 09:29:20 GMT
+Received: from nam10-dm6-obe.outbound.protection.outlook.com (mail-dm6nam10lp2104.outbound.protection.outlook.com [104.47.58.104])
+        by phxpaimrmta01.imrmtpd1.prodappphxaev1.oraclevcn.com (PPS) with ESMTPS id 3r0tk04r7k-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Tue, 06 Jun 2023 09:29:29 +0000
+        Tue, 06 Jun 2023 09:29:20 +0000
 ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=lOIN9MWQS6T/FV4pEiRFP/qNrMBgeHuuShGuTwEBf1JlbZE+i/xZ6PScdlLCQpXcDsKl49uIrj0gmMe5rDXJDzNoCBduRQSueMmZip3S3ELbmuUFjkiVJCVRfgGo5SZuy/KPWJQpwPdcfYviVdZptfpZ29KpJn04hZJsxjuoNmEXQktsw1vVz5//zHniGbadShNUo6QeVs7wEL6dRwUKSg8+HS5NV0CE35B/T0+TlBwwC8amCy8NHYrZ5t8W+j3JSNh2VJSjs+81ipn53aGtweC2Eezg15Is3R2Gbqer4SdyE9YLN5Y/hh4dgoupPO2h1ZLl7UBrDPceyRlccJg+Ig==
+ b=Rp44VOdikmYgRirpHH9dpAKWWMQBueSNEFI44sU3gno9cmbIHvMVBJjmWSfgnu4SD6kKsDlfUdxVKMqhV/a6p4ulgBvcWMHwf9ZWvodP8CBSMU0OFig08YOvm1AWGGYtWZzDYJ87vd/3xkvMJPRy7puOhM7tkgI9/aYyy4iYVlU1jZucSySU1vWdsQVz92kl4lLIq7EZPGtEHcCj1koZVaC97iZoukHsY2pAq9A4A2B28fmhLzNk0p5ojLolNx1GPtqFKzK+6gotQ2ja5A5lyhzeTx1PSp9XNP+wXMc80vfEy28/+t+S7gb5W+Wio+nbWvFM6YU2+FKQq4GXGjszhw==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
  s=arcselector9901;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=Qc5bK7CI9ehwaMRVDUn5JLVZgOF3y8Kt/sSCkHYgUSc=;
- b=VJfWdJQOoyWAXXHnUydx1qQvr7T5zwVfhPAK2k/SJTqk3U/Vd9ZsAskRSnENr1XTnJvF2yN7iRT8JVrLTYGqFwscMXzVWN53fybzUrhR174paW0W+kDW2PFnDq19ZVsv04bpAit+CZF9jR5PHDPkkPM59LiDZZ8VVfjosm/dkpqpte5FZifMugB8WN/ph8cyaXeHwsDuMgYTPcHjJz7piUEJJm3IYeMtxU8pr+Xj/UczkxR1FS2VWB1hnLqMwFh/vNoorM+tM/nLZIGN464Af9l2LeBrNDn/588V5PE7ncqow/HkVZPZwOl1tbL37Zo3X3y14s7g3PxSkmNG67LQFw==
+ bh=IjnpYrE8Mt3s4OrTm6TWK+ndOWR0ylQnjuwgZK9oDz8=;
+ b=PFR4247VITkd4luelFd4XxrDl4RVghQm306VQwsCb2fEjCg8bjH7Tl69ClnsmLZBi7J1Fuw/pNpFISwHN4cFCxMLPNAtyzuals/wggSm4TY6teWHGO7qZCA2BSJZwUUYb9K/rIFqLovBuNZqI1LJP9syDPXJ0T6oz+LxzbVKzcVV1q3JNR2E6f+Y4ttKKjl+prgELo38RxzcI7utZDf4grgrKM13X3qwan3wUS8FUvJlaW/qPi4TdJ2TxR+0VUll/l+FiIfHDo5w6cUm88sw/tsD3qQrZzpBW39CaOjZIZBzD5x4Mki8tDriKeijC+eYbVdrvHuyz9mf6pWGMyH3mA==
 ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
  smtp.mailfrom=oracle.com; dmarc=pass action=none header.from=oracle.com;
  dkim=pass header.d=oracle.com; arc=none
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
  d=oracle.onmicrosoft.com; s=selector2-oracle-onmicrosoft-com;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=Qc5bK7CI9ehwaMRVDUn5JLVZgOF3y8Kt/sSCkHYgUSc=;
- b=ZOGWw3CEG1JWsoze8GGfXTrhN+Hq5u8MvKX8BcumHk59nNDT97WRMTL/GIg4MPgKoli2cGB4XTORp/VWfEQCsxA06mvS9SNSf6WLf6OG7fIglE5wial6gTpJdIRfBfzstLFE2mWiXxXNEHo2xCiU5zDgpR7+UiqMWVZVwYzFICc=
+ bh=IjnpYrE8Mt3s4OrTm6TWK+ndOWR0ylQnjuwgZK9oDz8=;
+ b=iJPW5f9WMaAHtN2SbOFGso8WTJNhiox+nfbtr3fN/odEzv4yA6908ymBwuKY9uUYIj/dI1fAStnzm4Wu+HeewX836kn+/tIJIpsk61QGmiSvkz0f9ZfI1bq1QP/A+uX0XPNFBgnfDE869v374pjIEwzctTncXlU4LHEpwXvPpTA=
 Received: from SA1PR10MB5867.namprd10.prod.outlook.com (2603:10b6:806:22b::9)
  by CO1PR10MB4562.namprd10.prod.outlook.com (2603:10b6:303:93::22) with
  Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.6455.32; Tue, 6 Jun
- 2023 09:29:27 +0000
+ 2023 09:29:18 +0000
 Received: from SA1PR10MB5867.namprd10.prod.outlook.com
  ([fe80::1827:534d:7d96:20f1]) by SA1PR10MB5867.namprd10.prod.outlook.com
  ([fe80::1827:534d:7d96:20f1%7]) with mapi id 15.20.6455.030; Tue, 6 Jun 2023
- 09:29:27 +0000
+ 09:29:18 +0000
 From:   Chandan Babu R <chandan.babu@oracle.com>
 To:     linux-xfs@vger.kernel.org
 Cc:     Chandan Babu R <chandan.babu@oracle.com>, djwong@kernel.org,
         cem@kernel.org
-Subject: [PATCH V2 09/23] metadump: Rename XFS_MD_MAGIC to XFS_MD_MAGIC_V1
-Date:   Tue,  6 Jun 2023 14:57:52 +0530
-Message-Id: <20230606092806.1604491-10-chandan.babu@oracle.com>
+Subject: [PATCH V2 08/23] metadump: Introduce metadump v1 operations
+Date:   Tue,  6 Jun 2023 14:57:51 +0530
+Message-Id: <20230606092806.1604491-9-chandan.babu@oracle.com>
 X-Mailer: git-send-email 2.39.1
 In-Reply-To: <20230606092806.1604491-1-chandan.babu@oracle.com>
 References: <20230606092806.1604491-1-chandan.babu@oracle.com>
 Content-Transfer-Encoding: 8bit
 Content-Type: text/plain
-X-ClientProxiedBy: SG2PR01CA0153.apcprd01.prod.exchangelabs.com
- (2603:1096:4:8f::33) To SA1PR10MB5867.namprd10.prod.outlook.com
+X-ClientProxiedBy: TYCP286CA0289.JPNP286.PROD.OUTLOOK.COM
+ (2603:1096:400:3c8::14) To SA1PR10MB5867.namprd10.prod.outlook.com
  (2603:10b6:806:22b::9)
 MIME-Version: 1.0
 X-MS-PublicTrafficType: Email
 X-MS-TrafficTypeDiagnostic: SA1PR10MB5867:EE_|CO1PR10MB4562:EE_
-X-MS-Office365-Filtering-Correlation-Id: fd72f571-dd95-44aa-a96e-08db66708620
+X-MS-Office365-Filtering-Correlation-Id: e8ca01c7-16d2-4afe-7889-08db6670809d
 X-MS-Exchange-SenderADCheck: 1
 X-MS-Exchange-AntiSpam-Relay: 0
 X-Microsoft-Antispam: BCL:0;
-X-Microsoft-Antispam-Message-Info: aejqaJX3L6Rd4+Z6KzlzM6lo3jzaF2i9z9gVwRgcterkA3iunPhcLHMDFHNFe9yYa+y7eGV3qxp3EMz5TX6+zqDjKmwgPlc67Acy3Pq3TjQ3wQel5YC9FvIdVdD66X+4pMZQ/OaJVQCqVcFXD+iid3EESV3xnbor6ttdEkI+4+D4Nh1MyYjgguRrJGcYMGK6OjOfnxf/P+rVhf+0yB00kbdWWee5QiIZNMlO/+D9xUtxCPWAqyxoD8ia5wn0VY5RjXGR9ekU2JTbx9p6vYPA++99NIzXOSoBoEqLXMZXOSjaLZGdZsgQeBsTo5exfabOvfozTEDMu7/xDMQXvEPhm/pHl1/D0+wXhR4gLKKTxPpgPloZdgxZWP2HtaQwId46O1h3d0U7ovroc0Tp7t8wVjvnOt+QlxsDnrlC0EuRo6kJRmnbCxrQseZ4ZgUIWtdqoK5VaCvxoq11RIqMo1DrmpCvFZa50ERJsMRGX8KREcJCWxRYrvjlQWtefd4QYkNNBEIP8TS6QbQFdQA5YmMIUXpwLSCPLmlxTJ3I6euLnGzjZAVaC3q7v1rOg+iHzg3l
+X-Microsoft-Antispam-Message-Info: nNR7AzvUMX3Wx6bLG+6yJQKNdzOVVo0HnS0kdes2YNoWitEjchKdaSwgZYqvD7fNiV/INX4+JS8+abrjVl8WGA/0wBsIJ5KK0NSkOFmHl9oScjk8p1IEGOUHvEXfrS0NRxr4QFpdZLR0R8tga9odzfBi+NDIBEGyqj6uy+aa2HXy/hejTW2yZv3aG258FCNcrmj+qJLyJVhBGVxG0mSN1U6WPi0urxIOVkgQRnXYXNY27uqrzdBThu7dQhjTDkrs9S23aVcizA+rlaghxZ7mX3tiZK4+KIrZHcivjT4NEcOEYfuXejm6rF4uWN4S6FqVQ7kNqReSbY3ZpzGkWzEOAcTRaYLqvZbA/VvQZv/cIrWCY29D8k6hJlc5+HESamBAA9NBSEHeMLzC0jEjFaqMaA+BoKe0Sx2DkVw5w82aC0qyvBHpfzDn4mEBpAa2Y+NYTVmlhookOiQRANN1+2yUwrF+ktaEyZzF0x3s3SbCzd1I2Yue6ARy5zz/pOq2utaAkc3t3sa3aeawrn1HEe5npn9k/FdFJ+9UoEF0lnaKA+rPDQnJDyNlJPC16cWXTsIb
 X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:SA1PR10MB5867.namprd10.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230028)(39860400002)(346002)(396003)(136003)(366004)(376002)(451199021)(8676002)(4326008)(66556008)(6916009)(66476007)(66946007)(8936002)(5660300002)(316002)(41300700001)(2906002)(478600001)(38100700002)(6512007)(1076003)(6506007)(26005)(86362001)(186003)(36756003)(6486002)(2616005)(83380400001)(6666004);DIR:OUT;SFP:1101;
 X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0: =?us-ascii?Q?gItYBD8HLR+BH9/l7tOEaqYSCkMLC77yu6vkXdO+5BEP/Dfi2LQOPucK3dRi?=
- =?us-ascii?Q?n46qLQpOMKGesmytLs3NiWL0XNurAG6ElBTvCEVyDX6ObXb1bGui2bVRjhxs?=
- =?us-ascii?Q?EiItK0CRMHzibTfTm8DJTIAUPcxKL7lUCfdoLKEo52/jy7uXtcDqzITW/5rq?=
- =?us-ascii?Q?rqFHtd6L/Qq5mKfe1TTlYGLMtjXIMfblUEij1H2woaTHfZ3oQSddCeC3pZzx?=
- =?us-ascii?Q?EShREIjh/GUGBQjQKGMHoiT79YiR2CiQtN3AEunUiFgT2+yZkDgkKTNhqMg8?=
- =?us-ascii?Q?1x4doz7USPA4FZxtlshd23hzDbZRB+M8OmJ2Xfu8wK51YbP6okPc0ksTtKRj?=
- =?us-ascii?Q?rLK8dKjrnmxW98QFILQIzBwTQ/hgJbt7p1IyC0kUHOFc72T4SONt9WTDE+ot?=
- =?us-ascii?Q?/Sp6pTFXRMfTG3mG7InF/8yQpP470tAgoUlsSCl4M3mj2OnI4sobxKx0rIdC?=
- =?us-ascii?Q?UF86vW/CaVXUg71R1R5iMUZ9NNFsv9l8vStLU2LAIuzeAKS2O2D8AA54DrMn?=
- =?us-ascii?Q?wTZs2aFh9oSxm+dlibCzcSDAxQ2mdWtKFBREkYyJ0je7HrSY2b3qqKWUq0m+?=
- =?us-ascii?Q?8NjcB9jg88zAGzoXLAlyvhVbXaCgSJpWzl+wT5MpujuhHxuwxJuyjEjiBW33?=
- =?us-ascii?Q?syZMO7HY+JLPeJ2Rb9BvEHZ4XPjVtVnk7K3r85kV+XY+BvOW7w93nSOcfx0c?=
- =?us-ascii?Q?qArcjfOeOhqQo+H/icv0xF6Hy0r+GAeuNits5Ly9gHYAVCqtu+GT+uuoj2VX?=
- =?us-ascii?Q?c5isdX9YNaiL7n+URSOozkOJdnhY64glLndqjHfIiQbzGg5jKQP0R1P5x+mG?=
- =?us-ascii?Q?VCAjen9ch96o62U/VzWDD4hh4ehugvJFylZhj3SRUXAoVqu8efW3/oBmdsNR?=
- =?us-ascii?Q?XGWByJNGfP58G2zffBjuxLxaBRa2JI685HTgMQZ/G4d+J/PLpurVktBRgD6X?=
- =?us-ascii?Q?jQ3UPH343hr1LrXT/lgw5BMeZqHw7NYLHRj1pxtWgoW4lfvF2QqMTNt0kQtF?=
- =?us-ascii?Q?+H9Dmoo4DpqkkX1+Ikrw2m+DE5E59ua+AMMku+eRQPbfqQEZUgcKH0KRfbgE?=
- =?us-ascii?Q?N2Wdqwx6GzBM3NPhVZBiMfTfCj1fa6oj+Kwuh2sISWZPpiBLCUdfbJq4KKNn?=
- =?us-ascii?Q?H+C2LarwiNSIKZziJDuM3JXdj6ChGrgCtgHhXk6upV26FzAQQ+EYlKhnYkWS?=
- =?us-ascii?Q?zDZJ9ygEtpWVwdfo7VqkW90x/zGH1UIiwMBgPfWGpgp/JZ6FSZfiBZUrAYnZ?=
- =?us-ascii?Q?Fscx+LpDfXmKD8wghKTTtE9KZYgzkGfer+PlgCd3nhygCPSfwEasVgPW3+bj?=
- =?us-ascii?Q?LHJm4V0kfjicF4uAypDcYGSs/dnnDiKdC3DfCXF0Huq/R0xCW1N5g8W2q5bO?=
- =?us-ascii?Q?FSAKWNQVPLPIujorv4HMH30Hkk3jfNuI0bMHX6zwEIWQO2gj8qL/YXHzCH3Y?=
- =?us-ascii?Q?7dxjQ8LeICyyRPaZgXiMA4N25vFNL4cfCMPhFBQVVLvsZjans6DKTJJlbHyx?=
- =?us-ascii?Q?O/6HOGEkWFeMM3XmmNLYXMXRoW3x+/JijQOKagVOlliDC2tAS3ptna/VSBZO?=
- =?us-ascii?Q?0bvayhRTlDPzsQIeA0sroQf5d6F6rhn1s7nM1oNvOvJt5/TiQ86aE7zmxmHW?=
- =?us-ascii?Q?RA=3D=3D?=
+X-MS-Exchange-AntiSpam-MessageData-0: =?us-ascii?Q?Te4/h0M+2qnWNyuw+OnB2/yra1XRkbq7qfXZJ9s/HYDlGushvhfhvaCbrpJ7?=
+ =?us-ascii?Q?g2DvdsMiP60WY9D65ZSbtCH8l+sVa8qRQzccv6YhPZvj41s/TDaAeMpIMSjO?=
+ =?us-ascii?Q?xcqoZ5gUrTJEFfTGMCDXJMEcnHQZcaKj8f+WUM80S3JpMrbuLHCTZ+gk8dhH?=
+ =?us-ascii?Q?nao0PTKyepJ820YQnsOaJwVro9HH5t2zXeoY2dndJ56xSr95vgxBZHRGj6Hb?=
+ =?us-ascii?Q?mKWCbd9Zm6PJ76MLmBlZoCT/lmP1+AHIMqtAB9U/g13SdG5jAubfI2rH5bwu?=
+ =?us-ascii?Q?bzPXngKb+mCwB01eMkt72yXBx29ZzZhTtiIjAmetSroAoZfOCyIyQ7td1OtL?=
+ =?us-ascii?Q?OdoLdnsyp1Z5lS67AlKX61rYMfPFNWFsLkTiLHdqCgUY3HdAYby3f/DMHREa?=
+ =?us-ascii?Q?EnZ9NHQeo8NKs/iysK1nCztabsDHzJkz5B6iiEuaVJY+EGcH/Y159E7qNJqe?=
+ =?us-ascii?Q?ssxc2J33IPiNWRfSMoc7U+26S5yfR+bobIIDessYB/SdbThT4r+3razgl+OI?=
+ =?us-ascii?Q?VS6evWDwWmNKQuv2A/w6AYecbh7HgVCxSY+frNHvJSv/dqU8poiqYX50rBOR?=
+ =?us-ascii?Q?J4QY3XXN2jKXlu/hMOS3Deg87fAEvjhnmtfZSzf5E7oTCJMrPUAGlC1BRFWz?=
+ =?us-ascii?Q?uK2uzvy5IOvlWZ/rNVwEBstL5BmnkPSmyLTys6bPW2j89esIJBh8G08BT3s2?=
+ =?us-ascii?Q?1XzE20IkhsP2nN93crJxal2zr8U1PRrf0CjMQ/kza6VwLgVv38Ctq2C5tsr0?=
+ =?us-ascii?Q?h/H330J8GvX8zxrVCUvxFoXiuKQyzRn/Q/IrN7J2vBqaBROOuYFAXG21wLTS?=
+ =?us-ascii?Q?yhwP60vvoBb+/Ujat1+oQg0f8OZQWwSratPpZ4nrSmBT8TKgapmWKXOlCu0O?=
+ =?us-ascii?Q?BIipopw2gm0JV0x5Ga9ceYHJthmiKFzUuY7bWkcL9K/kQvMuaUVmY3gQixso?=
+ =?us-ascii?Q?boiTpKFJeNczoy0wKhLIhiUiJ1RPR6SLkYuFRvidP/DlzuAySCjSmEsVCXCW?=
+ =?us-ascii?Q?DjBRMIV2D1mQzW/tpTvneJVriJtU3nZ2AXankaOr7kWMpxPrNPivDIXw/REr?=
+ =?us-ascii?Q?GkhnAPSlkfb4RvJjnd7zk8E6OnIc14vLdLncwBbSw8oE7gYtGLhwsRVE8AaD?=
+ =?us-ascii?Q?k9sJnUXJC/uOb3yw/4tOwE00nvZt+ULjt2eXtlwNUc9AMTVrTrD4JhFkrkSO?=
+ =?us-ascii?Q?d4T8QC33EyTCX86a2C/ptfwHcg76Vjj0fph85YOiXTB8NxuqRzqOrGO/GWPT?=
+ =?us-ascii?Q?vXWi5xxQCwsCHy/mg0A0SWdRwCBcwQ94RnYQDpl3F5A86oXJri/5wh3QyaQ/?=
+ =?us-ascii?Q?kqW7/Y4umCUSlh1OHdJqHgNiVm1SNUXcslerc9RzEQjx253quuS3Tao7KPvy?=
+ =?us-ascii?Q?6q2CeH18hlAhnHDSIDs/7kFXLy5hkTFcoFgH5sPrNy6kQqGaOdYuvxhWuaDL?=
+ =?us-ascii?Q?8kmK/zCXonEH2QyCJJPaD+WWXyGVVRHrQmsYRQhlKJXKsNpX58drm2sm2Aax?=
+ =?us-ascii?Q?r/3zHbISCawfQPzx8Ip7uyyST3BD3XCv0MHZNNLkrXlqWxQIGjFyccjTnpgq?=
+ =?us-ascii?Q?Jx7oB4uS+NpXh6KT1CQPk3YjVlbOu9OfxcVNpS0E?=
 X-MS-Exchange-AntiSpam-ExternalHop-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-ExternalHop-MessageData-0: y5vyPp/8enK6u1IryhFpR6S97ro3pxdmKHv/LWYFP1ArfFtQHRlRmgRM7LeiPhsTYczK77I2FVD5KCrZPfHAwSDapT3UEt7r2vGTRfQgR4BLHFRNW4CDL7vOTxn3odBU7FyC3PP2VrTQOoNQ6280dwqbrSY3MqKJ+xPRkOPz51fqRuO2KXmFYtzxpWyj/Di8t9SXu4FrCDd7Pu/T66MLhMlUIuhdm/qu1JTtxUPr1+Mi8/ejlxmEr6xi5GFD7Z8oRV1ZrvuHxVsJ/BAYTBfRikiG2YKVyIrXUw/e4JNbGQeAU3x63SzGmPdpL+Td34QFK3EMCiptFeZl/mhmdsfY8urHcv2CyxYnaqyfAR+8p+fG3sgFi4OHWHd2zCsVj/O2StJzESN7pfCc0XsqbNFdHBAkcF++Hzy3KcLu0izs0Y3tmzqfVUlHLxrMTm5YAMNpRGumZA4Iu5GuDFDg9QjlSHYXDG1OrGPvIJBsV4M5Bo2rYHVhKLYp89IkPJKPEsdjBfJImueP0LFnvAhFqIYMvDN+0o+ZToHo9T+AlIzCo79j6i3FAiHYq5xUnfImUxf2YpS/BO7VIaqtDU/v9nphZe9IxQL77VXepJncUF/dnECDMUC6fvhZPdsKCoAfRB6TJVnS5Ihec334oXGptmb+ZahH1QofwKdKMj5VjKivkzBDjQhMpJjzLGYr1STaQ1LZpjkc8sTzE1VwITKQVjg9ot9lUewdrd6TXdZxjxQJnncpokadi2MuRzP72ToW8ohD9OD2iNNFqqbk+yDjEMWiHQbUJyjHrF+aEsodvSc1CBM=
+X-MS-Exchange-AntiSpam-ExternalHop-MessageData-0: zQjM23euDGLubzW9voQctQgax9kKcaPxhTvZJtSEjIN5RJV1McQX3T/q0J10WCIzUeV3IApgxiESggAcHMkK/CQ6QaUWIT8gWVO8xW4YwvUDqaecHfGB/nGfoEP9/mIslYwux9/x2b+iJxBeBElN74IsikP1WbR8rDC8a/b+9tZ5h+cl2PhW5r2ob+Ui4k+HmSzCh937ibhSqlrYiFTdqg/s6PmEfIAd9E7JDrtHGjtflxW177ltoeiYSjHNcPQduVYH0fxRYLcA8qblADgG/8h9g1knA0oJZeH6IQnA9/qJKJSTu+8+oOQLL6aktr/FD4ToOte8RJ01e/ydCr5PIc8cFVBnvzPbZnR/9VWHFMg/8Q/eKEeDoxG0i9OG3vlTsyZVCfvuRR+rgXSfILmcHUDCoqSM2FxDuswmqqnMKyEvawDMmrVKzaipzAa9cLLEs/yFhhPmhJzXZvYNrQbwiOzrJ5lhTSiQ+VONK4ixaEadbNXxJAE1QY47aVX112J1S2Z6zMvZXD+We2yg+vYXogFVqEzYTzusBN7aAYRlg6qKrLVVM3hp+7fuYd04ylQ6PQBnl/jcb2EUzXpTj/SHvFc2wk6Xhn4Van8JMWOQYXg88hDoi1QE2RTF6/XoR9JiaMlv2SCEzpAnOqNODhNSxBKfArzSdAvCcKFc3Jd+0uEQeuLS0rp0mhVoE8xdd5jTQTS+yPTWzXjPTug0nOBi98rWrtIu5/6qoisROu899mCrLO2ZWFefbD0xe5Nvzuq4s6cu1WcFJkBlCPUhotyGm9MZBhiRb5hqzyv7I0+5XWY=
 X-OriginatorOrg: oracle.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: fd72f571-dd95-44aa-a96e-08db66708620
+X-MS-Exchange-CrossTenant-Network-Message-Id: e8ca01c7-16d2-4afe-7889-08db6670809d
 X-MS-Exchange-CrossTenant-AuthSource: SA1PR10MB5867.namprd10.prod.outlook.com
 X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 06 Jun 2023 09:29:27.8477
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 06 Jun 2023 09:29:18.5184
  (UTC)
 X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
 X-MS-Exchange-CrossTenant-Id: 4e2c6054-71cb-48f1-bd6c-3a9705aca71b
 X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: 8GXWPxAyUOm9SEyKsixcPQPfS7miOIzCOybJ6ApvyeAqQsdP2AUVUUrvE1FW7zLEBKtu8H0udj1kIMMrPK+rmA==
+X-MS-Exchange-CrossTenant-UserPrincipalName: euTlgURxJT4TEQoy850PjUZ3ioGqADjdCgmQzGwjqF1zDljaDn8tABByG5gLjR9Zj78Yh5lghdvo+9AH7cK3EA==
 X-MS-Exchange-Transport-CrossTenantHeadersStamped: CO1PR10MB4562
 X-Proofpoint-Virus-Version: vendor=baseguard
  engine=ICAP:2.0.254,Aquarius:18.0.957,Hydra:6.0.573,FMLib:17.11.176.26
  definitions=2023-06-06_06,2023-06-05_01,2023-05-22_02
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 malwarescore=0 bulkscore=0
- suspectscore=0 spamscore=0 mlxscore=0 adultscore=0 phishscore=0
- mlxlogscore=999 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2304280000 definitions=main-2306060080
-X-Proofpoint-ORIG-GUID: CSTd4kr-1Kinw-HUbQerhJRE7IrcJOKL
-X-Proofpoint-GUID: CSTd4kr-1Kinw-HUbQerhJRE7IrcJOKL
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 phishscore=0 mlxscore=0 malwarescore=0
+ spamscore=0 mlxlogscore=999 suspectscore=0 bulkscore=0 adultscore=0
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2304280000
+ definitions=main-2306060080
+X-Proofpoint-ORIG-GUID: K14nPbGbiUwZzT6Slw4e5PFHVnsYQmUH
+X-Proofpoint-GUID: K14nPbGbiUwZzT6Slw4e5PFHVnsYQmUH
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Reviewed-by: Darrick J. Wong <djwong@kernel.org>
+This commit moves functionality associated with writing metadump to disk into
+a new function. It also renames metadump initialization, write and release
+functions to reflect the fact that they work with v1 metadump files.
+
+The metadump initialization, write and release functions are now invoked via
+metadump_ops->init(), metadump_ops->write() and metadump_ops->release()
+respectively.
+
 Signed-off-by: Chandan Babu R <chandan.babu@oracle.com>
 ---
- db/metadump.c             | 2 +-
- include/xfs_metadump.h    | 2 +-
- mdrestore/xfs_mdrestore.c | 2 +-
- 3 files changed, 3 insertions(+), 3 deletions(-)
+ db/metadump.c | 123 +++++++++++++++++++++++++-------------------------
+ 1 file changed, 61 insertions(+), 62 deletions(-)
 
 diff --git a/db/metadump.c b/db/metadump.c
-index 287e8f91..b74993c0 100644
+index 266d3413..287e8f91 100644
 --- a/db/metadump.c
 +++ b/db/metadump.c
-@@ -2966,7 +2966,7 @@ init_metadump_v1(void)
- 		return -1;
+@@ -151,59 +151,6 @@ print_progress(const char *fmt, ...)
+ 	metadump.progress_since_warning = true;
+ }
+ 
+-/*
+- * A complete dump file will have a "zero" entry in the last index block,
+- * even if the dump is exactly aligned, the last index will be full of
+- * zeros. If the last index entry is non-zero, the dump is incomplete.
+- * Correspondingly, the last chunk will have a count < num_indices.
+- *
+- * Return 0 for success, -1 for failure.
+- */
+-
+-static int
+-write_index(void)
+-{
+-	struct xfs_metablock *metablock = metadump.metablock;
+-	/*
+-	 * write index block and following data blocks (streaming)
+-	 */
+-	metablock->mb_count = cpu_to_be16(metadump.cur_index);
+-	if (fwrite(metablock, (metadump.cur_index + 1) << BBSHIFT, 1,
+-			metadump.outf) != 1) {
+-		print_warning("error writing to target file");
+-		return -1;
+-	}
+-
+-	memset(metadump.block_index, 0, metadump.num_indices * sizeof(__be64));
+-	metadump.cur_index = 0;
+-	return 0;
+-}
+-
+-/*
+- * Return 0 for success, -errno for failure.
+- */
+-static int
+-write_buf_segment(
+-	char		*data,
+-	int64_t		off,
+-	int		len)
+-{
+-	int		i;
+-	int		ret;
+-
+-	for (i = 0; i < len; i++, off++, data += BBSIZE) {
+-		metadump.block_index[metadump.cur_index] = cpu_to_be64(off);
+-		memcpy(&metadump.block_buffer[metadump.cur_index << BBSHIFT],
+-			data, BBSIZE);
+-		if (++metadump.cur_index == metadump.num_indices) {
+-			ret = write_index();
+-			if (ret)
+-				return -EIO;
+-		}
+-	}
+-	return 0;
+-}
+-
+ /*
+  * we want to preserve the state of the metadata in the dump - whether it is
+  * intact or corrupt, so even if the buffer has a verifier attached to it we
+@@ -240,15 +187,16 @@ write_buf(
+ 
+ 	/* handle discontiguous buffers */
+ 	if (!buf->bbmap) {
+-		ret = write_buf_segment(buf->data, buf->bb, buf->blen);
++		ret = metadump.mdops->write(buf->typ->typnm, buf->data, buf->bb,
++				buf->blen);
+ 		if (ret)
+ 			return ret;
+ 	} else {
+ 		int	len = 0;
+ 		for (i = 0; i < buf->bbmap->nmaps; i++) {
+-			ret = write_buf_segment(buf->data + BBTOB(len),
+-						buf->bbmap->b[i].bm_bn,
+-						buf->bbmap->b[i].bm_len);
++			ret = metadump.mdops->write(buf->typ->typnm,
++				buf->data + BBTOB(len), buf->bbmap->b[i].bm_bn,
++				buf->bbmap->b[i].bm_len);
+ 			if (ret)
+ 				return ret;
+ 			len += buf->bbmap->b[i].bm_len;
+@@ -3010,7 +2958,7 @@ done:
+ }
+ 
+ static int
+-init_metadump(void)
++init_metadump_v1(void)
+ {
+ 	metadump.metablock = (xfs_metablock_t *)calloc(BBSIZE + 1, BBSIZE);
+ 	if (metadump.metablock == NULL) {
+@@ -3051,12 +2999,61 @@ init_metadump(void)
+ 	return 0;
+ }
+ 
++static int
++end_write_metadump_v1(void)
++{
++	/*
++	 * write index block and following data blocks (streaming)
++	 */
++	metadump.metablock->mb_count = cpu_to_be16(metadump.cur_index);
++	if (fwrite(metadump.metablock, (metadump.cur_index + 1) << BBSHIFT, 1,
++			metadump.outf) != 1) {
++		print_warning("error writing to target file");
++		return -1;
++	}
++
++	memset(metadump.block_index, 0, metadump.num_indices * sizeof(__be64));
++	metadump.cur_index = 0;
++	return 0;
++}
++
++static int
++write_metadump_v1(
++	enum typnm	type,
++	char		*data,
++	xfs_daddr_t	off,
++	int		len)
++{
++	int		i;
++	int		ret;
++
++	for (i = 0; i < len; i++, off++, data += BBSIZE) {
++		metadump.block_index[metadump.cur_index] = cpu_to_be64(off);
++		memcpy(&metadump.block_buffer[metadump.cur_index << BBSHIFT],
++			data, BBSIZE);
++		if (++metadump.cur_index == metadump.num_indices) {
++			ret = end_write_metadump_v1();
++			if (ret)
++				return -EIO;
++		}
++	}
++
++	return 0;
++}
++
+ static void
+-release_metadump(void)
++release_metadump_v1(void)
+ {
+ 	free(metadump.metablock);
+ }
+ 
++static struct metadump_ops metadump1_ops = {
++	.init		= init_metadump_v1,
++	.write		= write_metadump_v1,
++	.end_write	= end_write_metadump_v1,
++	.release	= release_metadump_v1,
++};
++
+ static int
+ metadump_f(
+ 	int 		argc,
+@@ -3193,7 +3190,9 @@ metadump_f(
+ 		}
  	}
- 	metadump.metablock->mb_blocklog = BBSHIFT;
--	metadump.metablock->mb_magic = cpu_to_be32(XFS_MD_MAGIC);
-+	metadump.metablock->mb_magic = cpu_to_be32(XFS_MD_MAGIC_V1);
  
- 	/* Set flags about state of metadump */
- 	metadump.metablock->mb_info = XFS_METADUMP_INFO_FLAGS;
-diff --git a/include/xfs_metadump.h b/include/xfs_metadump.h
-index fbd99023..a4dca25c 100644
---- a/include/xfs_metadump.h
-+++ b/include/xfs_metadump.h
-@@ -7,7 +7,7 @@
- #ifndef _XFS_METADUMP_H_
- #define _XFS_METADUMP_H_
+-	ret = init_metadump();
++	metadump.mdops = &metadump1_ops;
++
++	ret = metadump.mdops->init();
+ 	if (ret)
+ 		goto out;
  
--#define	XFS_MD_MAGIC		0x5846534d	/* 'XFSM' */
-+#define	XFS_MD_MAGIC_V1		0x5846534d	/* 'XFSM' */
+@@ -3216,7 +3215,7 @@ metadump_f(
  
- typedef struct xfs_metablock {
- 	__be32		mb_magic;
-diff --git a/mdrestore/xfs_mdrestore.c b/mdrestore/xfs_mdrestore.c
-index 333282ed..481dd00c 100644
---- a/mdrestore/xfs_mdrestore.c
-+++ b/mdrestore/xfs_mdrestore.c
-@@ -240,7 +240,7 @@ main(
+ 	/* write the remaining index */
+ 	if (!exitcode)
+-		exitcode = write_index() < 0;
++		exitcode = metadump.mdops->end_write() < 0;
  
- 	if (fread(&mb, sizeof(mb), 1, src_f) != 1)
- 		fatal("error reading from metadump file\n");
--	if (mb.mb_magic != cpu_to_be32(XFS_MD_MAGIC))
-+	if (mb.mb_magic != cpu_to_be32(XFS_MD_MAGIC_V1))
- 		fatal("specified file is not a metadata dump\n");
+ 	if (metadump.progress_since_warning)
+ 		fputc('\n', metadump.stdout_metadump ? stderr : stdout);
+@@ -3235,7 +3234,7 @@ metadump_f(
+ 	while (iocur_sp > start_iocur_sp)
+ 		pop_cur();
  
- 	if (show_info) {
+-	release_metadump();
++	metadump.mdops->release();
+ 
+ out:
+ 	return 0;
 -- 
 2.39.1
 
