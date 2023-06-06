@@ -2,225 +2,166 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6A29BC7EE2C
+	by smtp.lore.kernel.org (Postfix) with ESMTP id F366BC7EE2F
 	for <linux-xfs@archiver.kernel.org>; Tue,  6 Jun 2023 09:28:47 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234154AbjFFJ2q (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        id S237465AbjFFJ2q (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
         Tue, 6 Jun 2023 05:28:46 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40010 "EHLO
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40012 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S237470AbjFFJ2n (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 6 Jun 2023 05:28:43 -0400
+        with ESMTP id S237464AbjFFJ2p (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 6 Jun 2023 05:28:45 -0400
 Received: from mx0b-00069f02.pphosted.com (mx0b-00069f02.pphosted.com [205.220.177.32])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 91A0AE6A
-        for <linux-xfs@vger.kernel.org>; Tue,  6 Jun 2023 02:28:38 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id ECD76E7C
+        for <linux-xfs@vger.kernel.org>; Tue,  6 Jun 2023 02:28:42 -0700 (PDT)
 Received: from pps.filterd (m0333520.ppops.net [127.0.0.1])
-        by mx0b-00069f02.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 3565YZes017868;
-        Tue, 6 Jun 2023 09:28:35 GMT
+        by mx0b-00069f02.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 3565YZeu017868;
+        Tue, 6 Jun 2023 09:28:39 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=from : to : cc :
- subject : date : message-id : content-transfer-encoding : content-type :
- mime-version; s=corp-2023-03-30;
- bh=TngIA29w4KnykqU5LYjYKBd1S39EnsBxVDX383DIKjY=;
- b=WpTZSKB89sJZ7WWos7rbJGAQRDuRegV4j+cUouL6IYt8xpWxBikoWHx+U2jIUyp2rChh
- RXFl1A2mOpHEjRHT7d3GLpBzqBqCKt3DwP6O45BwbQ762lr+9hPfZJ0mauIuVWi9fcp1
- 5DfcgICtCZtDgeJfREnVkkr1FWPLRJvFbkVFOgaN1j7A92CcEQrDarBwLdXCLIiXGPky
- GGNkIkdzlYCSVKBmviAaMIUaoXGH6r8GCCtw233FPf6aw7p3aLbA1eP1Cd1pqvVK+kMl
- q0gGCUDmJ3qhx1ZCE0lzvNdITgZ7tnZIPRkm/v4svcMGVGRiGZwPYiu/KcM2Pamny/d+ NA== 
+ subject : date : message-id : in-reply-to : references :
+ content-transfer-encoding : content-type : mime-version;
+ s=corp-2023-03-30; bh=Qx1R60DXnIB3N5o6yMynJzdO/XXQYFPlNasasf4Q6TQ=;
+ b=e4WnsrtlsRM5AMCK2Mc8MpMpEHFxxIpzRyS8vo+6ZXUAzFifgGNnFHmfOBKfsNwwKoRI
+ F0RrZqwhm74URqVfgj9uZUN67hxjUDp0B4DVQU4CHop7G2Ex+721ALOU2ZrtFLEuyu8f
+ kl6lwlldW8w9WfwP+oEpkPHusE3hPBNO9qusMRn2QKssBDdIl5JBZZCXhel/5O4xLWaB
+ DhB7q1HdKDHtHVQVG6mjDMDtJgoeCYNWvIJ/EAUW34N9f/ST2mvnojLy6rfYqlIgFpk+
+ G9PsoxhMoOeW0TStv3ogy34VVonaDIVcRqEe/iDDFOtNTzkHI9/UShuZ+l9IhazRdkWY 8g== 
 Received: from phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com (phxpaimrmta02.appoci.oracle.com [147.154.114.232])
-        by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 3qyx2c511k-1
+        by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 3qyx2c5125-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Tue, 06 Jun 2023 09:28:34 +0000
+        Tue, 06 Jun 2023 09:28:39 +0000
 Received: from pps.filterd (phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com [127.0.0.1])
-        by phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com (8.17.1.19/8.17.1.19) with ESMTP id 3569DBXN024065;
-        Tue, 6 Jun 2023 09:28:33 GMT
-Received: from nam04-mw2-obe.outbound.protection.outlook.com (mail-mw2nam04lp2173.outbound.protection.outlook.com [104.47.73.173])
-        by phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com (PPS) with ESMTPS id 3r0tkgvbu2-1
+        by phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com (8.17.1.19/8.17.1.19) with ESMTP id 3568FDGh024285;
+        Tue, 6 Jun 2023 09:28:38 GMT
+Received: from nam04-mw2-obe.outbound.protection.outlook.com (mail-mw2nam04lp2177.outbound.protection.outlook.com [104.47.73.177])
+        by phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com (PPS) with ESMTPS id 3r0tkgvc20-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Tue, 06 Jun 2023 09:28:33 +0000
+        Tue, 06 Jun 2023 09:28:38 +0000
 ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=cX8VFMuOOy510u7rZfb5PS3KM8GR7hmyfangjY5lFG98/1Uj7YLLc+1NG+1J4TyXl5kRBLDCdmVPFk4DyrWXB7evASHsKCZ1xbEy5cRKwf+paDH0zptR2+GBW7dBx4HNKCAsH5pIiATMk64keYJQgzoKZ5FR+beLyQE/xy5ZN0CL6UCz2f7l2o4nCDf6ls/YTYesMYKEx7kBQc4FKxYvv7XR3maTIbYsTgosomF6E8V+XSWCuhCXrsOK0+ZbXmsnlfySDSAKNyQsDZ+EKQmse4mQY3zjMQ0q3tgTUVOWimr14QRyDA0gSDGQdGN/eSl4bclHM6/nAB+eUozCN5ByGg==
+ b=LZhmaJHVqrtXhICAKZPmDpxbCkcjIIisr6Wjv0BJev3vD1FnDD1bpJXLh99fB0+idFKiV5gS6VTw4G2hSmF/UZvCcxF7kJNjxK7dCZqc0aK9tYfYWoZ1/LcVH/yUn5EzFt/NaP9AdUs4AzUHw7rcMol6PQPvUejYSMFcTB7crYINWLXEgNiZqC2Db6gV3RpaD/rdHIIZeC2rhyvBkeoazWmRIV/P+ZWTSaMFZhNioGlpiseWmnfAnCduJFGUBw712E4AKLAG+ehLC79f6DibTg2Aga/PoOrB3kdcecT1r+njQh0di/BPd3FjBypK7UzZnMBy5OZrRXnEn37Wyzf8uQ==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
  s=arcselector9901;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=TngIA29w4KnykqU5LYjYKBd1S39EnsBxVDX383DIKjY=;
- b=ah1KQPwUFdwYdlsj5MJdR9DkBSb2MujDXzReXVU4WDz760FCuFWyDwSkCLyYiyp7+0V6ufd9NKzD9lEJFtYyA0Szk2y8v4RfHR+XCO0baz9LBcYXc9hczNIoXV9l9lVVkY1q7dDoKmqXuGODXIK0FzoNqcMASqvLOsVw9UiJy0PjBBjsCmOxAvGKrv6T1Q7MX1wMMGIXMlaS8VCvaccPhWH0C1AnOxxzHVSfrlQH91xe8QfOQy0ZrZfobeYmM7ywpJVcvKNOEfNcyutYDp9wRv0oB8AAZysUrs1lp4zqJzqnH8p1Rdbb1zInzmEMSvaBzjYL8gc5DzNrZiA62KitLQ==
+ bh=Qx1R60DXnIB3N5o6yMynJzdO/XXQYFPlNasasf4Q6TQ=;
+ b=G8fO0Y1fOckZv80QHCwupZ/JWVeNPtPelgJu6Uv6v+T29YCDs4X9mxRo6b8dL4FTOnkCaFK4+jgmvYmsxhV/jzbl/MMDhfnLFYZicxAKFd+jPAuHjbs12+XHJx85sm6EmRGSBjMHy0G7faFDBA6jerOBqXBAhQqvn6TR4CYCaYYJXav5t2oNFwZulvAsVx+BYoE0DqTN2K/w+3mVj0995JRfluRZgj4hbY1PBDw7miyt5foWq1Q4jB9KOd7qiF7+Mu+miv8XwMeqjg63ZOaMdii73nBrmR3roY9pfIO8WSbeUzVt7rrl/JYn72GrBP+zr9LrDp/mnFD12Qgm3BKQAA==
 ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
  smtp.mailfrom=oracle.com; dmarc=pass action=none header.from=oracle.com;
  dkim=pass header.d=oracle.com; arc=none
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
  d=oracle.onmicrosoft.com; s=selector2-oracle-onmicrosoft-com;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=TngIA29w4KnykqU5LYjYKBd1S39EnsBxVDX383DIKjY=;
- b=rVuTGqGIWTGaCIyGyuCEbY0QVygwc6gUjZGom32Md1QDZk7m8Ctub0UALa4jijoLqrtQhpOUfoNDBJTHAifqEX2QIjxlD7fPsAI83xJbuQ1cCTSiMq9h1dx4+/XW6qrKezh4jt/6Nscsvo236RmynbgiCtcl+Xs7Hir08BvBoSY=
+ bh=Qx1R60DXnIB3N5o6yMynJzdO/XXQYFPlNasasf4Q6TQ=;
+ b=Huau3sc4Dw1IXxXf5phP2tbdHpOe0RAw0B55rSsowrl3u9DdebcUQ/+EpRAV0r1Rg+ravqfguz0T2L53lSW7UO7tC7s5wlRqQMpr69b2H62CYS4y1X4OaTJ+fFX+qvD2uJIroUj5kGKnFClUfSLqsfCP/IhlQ2C8lw7CIhojrkA=
 Received: from SA1PR10MB5867.namprd10.prod.outlook.com (2603:10b6:806:22b::9)
  by SJ0PR10MB4781.namprd10.prod.outlook.com (2603:10b6:a03:2d0::11) with
  Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.6455.33; Tue, 6 Jun
- 2023 09:28:21 +0000
+ 2023 09:28:36 +0000
 Received: from SA1PR10MB5867.namprd10.prod.outlook.com
  ([fe80::1827:534d:7d96:20f1]) by SA1PR10MB5867.namprd10.prod.outlook.com
  ([fe80::1827:534d:7d96:20f1%7]) with mapi id 15.20.6455.030; Tue, 6 Jun 2023
- 09:28:21 +0000
+ 09:28:36 +0000
 From:   Chandan Babu R <chandan.babu@oracle.com>
 To:     linux-xfs@vger.kernel.org
 Cc:     Chandan Babu R <chandan.babu@oracle.com>, djwong@kernel.org,
         cem@kernel.org
-Subject: [PATCH V2 00/23] Metadump v2
-Date:   Tue,  6 Jun 2023 14:57:43 +0530
-Message-Id: <20230606092806.1604491-1-chandan.babu@oracle.com>
+Subject: [PATCH V2 02/23] mdrestore: Fix logic used to check if target device is large enough
+Date:   Tue,  6 Jun 2023 14:57:45 +0530
+Message-Id: <20230606092806.1604491-3-chandan.babu@oracle.com>
 X-Mailer: git-send-email 2.39.1
+In-Reply-To: <20230606092806.1604491-1-chandan.babu@oracle.com>
+References: <20230606092806.1604491-1-chandan.babu@oracle.com>
 Content-Transfer-Encoding: 8bit
 Content-Type: text/plain
-X-ClientProxiedBy: SI2PR06CA0012.apcprd06.prod.outlook.com
- (2603:1096:4:186::13) To SA1PR10MB5867.namprd10.prod.outlook.com
+X-ClientProxiedBy: SI1PR02CA0017.apcprd02.prod.outlook.com
+ (2603:1096:4:1f4::10) To SA1PR10MB5867.namprd10.prod.outlook.com
  (2603:10b6:806:22b::9)
 MIME-Version: 1.0
 X-MS-PublicTrafficType: Email
 X-MS-TrafficTypeDiagnostic: SA1PR10MB5867:EE_|SJ0PR10MB4781:EE_
-X-MS-Office365-Filtering-Correlation-Id: efdf575a-e812-41b5-a9cf-08db66705eac
+X-MS-Office365-Filtering-Correlation-Id: 6b50efc4-1a5d-489b-9dc9-08db667067c5
 X-MS-Exchange-SenderADCheck: 1
 X-MS-Exchange-AntiSpam-Relay: 0
 X-Microsoft-Antispam: BCL:0;
-X-Microsoft-Antispam-Message-Info: q3GvBCWztwAv/GC7YpV46/2nM+1ngGVIqcS2oNKjtHyGFPSOUrlVFRLc+aFa1PE0H1Z6GSFVm46cWcP/bHIpvEancPRZAYqlYxhlWThRDc3AIRIh5JCBJ/fD7UuRZNm+CKOIMPQ5gVm8H4ckoKXRr2Ris/a0GEvZrNZlwPFrYfJAeU6yK6Q1znUJysuVUB5RmC187lVodyiIjqvZ8U50G381o2DBvBpre2U98UNz0e10DN+4PCkm9ew8LxVlSYfCRTa+AqAOrTeaI47jMTb2hFieG3zn1zm3KKJxZjmhyqlA9OtfB8ZlzERrWeyhDcMLlOV5t2z+TlBhEs1nH8eoHM9U7XD/BFg50pFeKYTpPA0p14EUZBGIdp5TWIJbNlAh+CvxyrtQPGJ2nEUJmqZ8yzvm6Mqj3tC6oyhj8SdnBJOOrFfbMFCxxM28flpSyJCC80UJj42bGOPBVVDxDzzEn2VSPktOgABvvgHVEsHxZqD1WNLa9ia3dMTiS1olY3WXKfHbS0Hqg/QgPE3IMdvf5anWI4T6UhUIx9E+GmmWuFlccoyAqpo5COhRZwMrIH0UMUADNeU2yn9MoH2CNgh+ZQ==
-X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:SA1PR10MB5867.namprd10.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230028)(346002)(136003)(396003)(39860400002)(376002)(366004)(451199021)(5660300002)(8676002)(8936002)(66556008)(66476007)(66946007)(4326008)(6916009)(316002)(41300700001)(2906002)(478600001)(38100700002)(6506007)(1076003)(26005)(6512007)(86362001)(36756003)(6486002)(966005)(2616005)(186003)(83380400001)(6666004);DIR:OUT;SFP:1101;
+X-Microsoft-Antispam-Message-Info: 3Ub//wEQwqcwpPzsAjM4rFCUMYjD293YkKEWjvODZ2oJ/Ob7NJEYGYV5vxUKCu9tSCYRyIrbpxRAO/uRyJ1Px3xs/5VlcLQa45FvK3NHFP5fNeNKCIKFcLL6C7lHV9p9ozZXeGiTdUNIaOW61vfNsc87MfkkMzJ39AudOF00QPYOb/ZAHBubUjbL/YzGASaC1DmgQF1EduaZD9BSBLpa/nVyEGc5bU2T7wBsB9yEZTaUnQ6u+XwGkbeEyWlizCPLY+iYMXVc1XK/7/gv2jTjTx4Cv4ye561tfFWhGXW+Qu+0jg3XB+BB7cz2Xamt87vyyrnyORcDbCwa9WXW1JUwDvjzwVmc6l0aZor6vOaNnDBc272F4iCgXW/f7VWxS5g7PVhWJAyjO4qjzPuAMXmtwtZK6+sq43xokmDiW14uBTS7VWjhSr9wvnT5XJQp0xaItic7q+7dgleatCgr8UKZQjXxXAndpx17Xh9uOuJAim1fxUyb+nOb9/gSiRaTTehCwHykkIUSvTjMWrbHXiZCWWwYOH7MLyG71GfsvMDOFdxBDzZM3Z/inzFsQMXULrRt
+X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:SA1PR10MB5867.namprd10.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230028)(346002)(136003)(396003)(39860400002)(376002)(366004)(451199021)(5660300002)(8676002)(8936002)(66556008)(66476007)(66946007)(4326008)(6916009)(316002)(41300700001)(4744005)(2906002)(478600001)(38100700002)(6506007)(1076003)(26005)(6512007)(86362001)(36756003)(6486002)(2616005)(186003)(83380400001)(6666004);DIR:OUT;SFP:1101;
 X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0: =?us-ascii?Q?a/u++97O50fkOb8kgYxeo1j52oxU16CE2TbEH6yhbp8JS/5RYH7+46sFB7ON?=
- =?us-ascii?Q?ceYd9jbAlY99zl5omM3TOOZYJ0z6itroD9/FvqugdpcmPC+bIDiM0T2mYFEL?=
- =?us-ascii?Q?0I9XUh8DSmhrA4EwZ+DQESWJJMN2TqkBt5+XNl739pvWgOqeerkRxLZPKpPR?=
- =?us-ascii?Q?bN0C7PjyvOzt9H8rNKnlDPfknfJPTLKSxylBQ+VHLNpLTjmP0Famz/0yi4MH?=
- =?us-ascii?Q?Ma61Sj/L66Rm3nnWMzByqoVIKgD+vNh4OkSBQwEzs1X/HGTlMUq8iDiQKgdC?=
- =?us-ascii?Q?KVMY1MCyTXqVYj/ZM+25PU6RdIohD7Kmxms3lCmpHQwnG6tuYKdFiVcebYx7?=
- =?us-ascii?Q?Bk/8+iknE+erbSRBHluwRx9pks/Sk5E4E2Sn/DAkd5GzAL3sKfwrGvFsCOdM?=
- =?us-ascii?Q?TXKESdtergfLXkPtuv6kJ27+DcPKJskIOWGHWmeTGFoPdN+U7BNLrosGThcq?=
- =?us-ascii?Q?O5bIZxgCcfR2v2uUXBlQDHQRO428K2RKECTG/1u6kKDxbbj2GkvlNMLK/3xJ?=
- =?us-ascii?Q?/f2HRaBVsGpWcCeHaJV2OtGQAlMO6SF7cJs7DvJ1Scwlxd99Pqd/uGHvcTUc?=
- =?us-ascii?Q?MVIeO9VRdU0wujWNBN/JDNixY6XAUC+uJ8Kfmrfq49PzIn2Q/AmlS7LA86uY?=
- =?us-ascii?Q?QBtPcylByV8ztbUgYnh2IotjTxmeWyiHuIC0N0ALzPvhtKI7UDwjMhdfgFZE?=
- =?us-ascii?Q?2QS25D+KKiFocmQa2sMCZWJfUI/Tcx2cWaO8Km0gG1PGW7JBP1aeNawbwW3Q?=
- =?us-ascii?Q?vsUVSP8P2javSF1zZqm3zadkIDeWOPZXLTlyErbdwpXS9gg9lXZd8wkOY0Yy?=
- =?us-ascii?Q?sVdbu+26VBPb6ttbTAshqxRx/3+7i1/jNvC4OS5gRFrU6u4644qFKIESqx2U?=
- =?us-ascii?Q?dpVsj9qhwSCSWCzJ/bX96G5C4a/zQHNscD1yGtzl7tsJTQAJXvHAvTaAIosP?=
- =?us-ascii?Q?DwsHlnQh+o5FxzDT/SZzgSxE17BbXAfkBlPs+XAKZHe8vMG1s3AKVNSEFLyk?=
- =?us-ascii?Q?sLcz+5eMjG1+EZelSYuDN7qdNo7DAGKfByGGYuDir8gNwmFyCd68oDoz3yWU?=
- =?us-ascii?Q?cDi9MjkzJmbJ98CbsgKmYMWorhnejRHePW6qItQ3nh4X9x0XxGezgLr7caWM?=
- =?us-ascii?Q?yB1whXyq4GaHV6W585ZnghUevp0KdnpkWVswEMfbJTVZl84nJlkhrAuuOThD?=
- =?us-ascii?Q?xW12AvmXFSPbM2IM5aDkZ2hAYeJHNcrChg8347lg/nzrJ1eEh5csJ8emsrGX?=
- =?us-ascii?Q?+ww1v6ymh+8xBm45OKGRu4NDFEA4dTzLQdmxgfGehZ4YtTTEBwy6leALjvvJ?=
- =?us-ascii?Q?Yhy86RsJeDpbO9oe+ECBpj64qNbFS/WV9K8AgF8oKipk4w74N1DLO7OqXoyx?=
- =?us-ascii?Q?uYCwltiDNf8Ta/oX3Ts7kSnzJPhvy3KV1PiLD/jKRd5PEiVPlguY7HX1RlQK?=
- =?us-ascii?Q?TR4L3jDmP7HlhBGNeHyGt+CQt3F7v3jh5DHR7N9mwAi7R3HNW690dF+bliJF?=
- =?us-ascii?Q?OhZJaPhRWFIOLolXJxIiw6BxeQFSnxW0Vd1miIa8q43ZN/tzDvGQ5gIEZieb?=
- =?us-ascii?Q?2kyjd1xr+TQdc4rV1BvlGvHoQQJe9f7nSvcs08RF?=
+X-MS-Exchange-AntiSpam-MessageData-0: =?us-ascii?Q?FMVKK+ShkA4hxYbexQfbIZpfXMW7Mvfz0Z4bY8c7vh46HbyVEyXCiPjpwQKf?=
+ =?us-ascii?Q?yezVPRn2QVq2+M7jcK46a8GnJ2/K7/6KiAlruzHYoKnRBMe2fBDE1b0Dx2dw?=
+ =?us-ascii?Q?jMDYoxHoNuTCXdtQgoVIXnorPkILIFXfZZdEveimckfOqlEtXHPuCsXqwGMC?=
+ =?us-ascii?Q?8/SgotfoeQtm8EOvOspKLypS3jlpyzPUw8J92FHkFBGcXBqPBYq+OQf+gfMR?=
+ =?us-ascii?Q?X26vk1+tyFllVTVtwx8y5HosHZ/VcsgBhdqUoZxwKLf2XTAZTJ2lLthxUBdu?=
+ =?us-ascii?Q?e0yHmqKfckU+DTc0kh/37bg38zV5gx08/2kRJ6sszYiGrxq1mQISOCtZMhgi?=
+ =?us-ascii?Q?6VR18DpUE7Gd0X2+CvybAaz2W8FbITN8A4xWE8zjXVhXq1R8ew+3S9u3TtQv?=
+ =?us-ascii?Q?tV6+z/7nxV6HUjuwhEBJ8SmqOFYSDZ3muOqZu/Aeux7TDHmXRJNbK/g2A9wf?=
+ =?us-ascii?Q?b8xCYGU7+mnAEeA/ObrX1+MwhfjVCq4Vq5hPouBM3KDzsSB+y4zOw2QtNGrB?=
+ =?us-ascii?Q?D4rwTnNZii5e5dGvLxDl08quqVvWTnqzNLXDtQfsQs8EfS3OINMKDL51M8CQ?=
+ =?us-ascii?Q?sGu4uCZf3KUGk+h5bNROHW+eOkxZkd5EXdnco14wEIJzJ7M2NHuhh2sIqoZY?=
+ =?us-ascii?Q?BkqZPPrc7SIquXlkN1mGoaimqrteEII/Zqs9WkkhCCnbQLrH6cCW29hDbEfR?=
+ =?us-ascii?Q?UtUNwHdtaSKrcBVsNU40W26iCy/Mix+0HJPNNTUJyRlnNXBimj37SlpPRy64?=
+ =?us-ascii?Q?iiulHUWPSmhNLXWWls9ft1JFNAkpoXP7sXTzGCKNzc+8GO/TxfapGXpTLGGZ?=
+ =?us-ascii?Q?oFqMXyy0Rm2jT+33sUMa5AsjghCGrdGaTWRX+Lf3CPp2a5a8JfZeYWEpOQ4P?=
+ =?us-ascii?Q?jKmQmp+uI6Pd1/39JraajUDttG1o8VibuCuiF4Inn/7x8E5Qir9KrmAhY7o7?=
+ =?us-ascii?Q?KeAEUgOy2dy5Avsgz6UXDDiRwfLpYqWN9ATUD0UikCLAwWQOLpgr0NVzjiT4?=
+ =?us-ascii?Q?/yzCGkMycLuAMC9TF9cWZ0zR04sf4a6pf5q5CM82+W1072uWtlGWE1Pqx3uc?=
+ =?us-ascii?Q?qJK5s5WTKjEmJaE3VSWJfB88c/4jN5ecTWo94DIThIp2Rk0hK+arvriRBE6w?=
+ =?us-ascii?Q?jIPijQqDcXsILswi/3XSZgD++dFIHdVVxjHnjgKjcUoabwRV3uVvhxUQAhzG?=
+ =?us-ascii?Q?Vqx7KDEZZ6gnB9HrXOZSj2BhiFnq/rjYe6qhzQ7VyBrmBwNEZJaQVwd59IEl?=
+ =?us-ascii?Q?6J2TzC7a56c+2pOFnf9ffhgp30aVFT/mV3KJHGVZB6ksRFeTFDnERkfDRMvI?=
+ =?us-ascii?Q?POSfv+dK0sfFigkMrUK9C16XD4oX0rRhZCLAx/kxj2T3ne01ggMOjRdicvqq?=
+ =?us-ascii?Q?Qqr4FAY0c7rPvbjTUQqtLjDWBD3I263YVRbwHOH2zoaWJOHWClRbZZDMdsxa?=
+ =?us-ascii?Q?5VF+YIwJOt+K0eEcJV0ZiHDJ7D93nNepWk7S2HJ4ohzdjjv95cnxVvKTzWdE?=
+ =?us-ascii?Q?cIsq0gGqce9F+EXmwdhNB7+JZ80QU92IHeadT0usz2ecxxAD3QUy0l1jdN8H?=
+ =?us-ascii?Q?ETbaeyTJjSZ9/IALqv/ZTTL9SFf71oCoH8XqjeM3?=
 X-MS-Exchange-AntiSpam-ExternalHop-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-ExternalHop-MessageData-0: VTClQcNW+sJ5ZguvxfTehqJVLUA2i/98l/DiZBRPuKcwgsN100mcf0f7i9+Q7VLX3+ucFoWqQJaKqnVJPcKLRIspU7YwXxbWOuBliWqM+MhZ43/W6GcXID53+0CoT9UUlCYPEmX5fVbNbGHBoMWD7HsWkO5c9+suXlN1xrGjJ2JtGb/wS7uJ8uG1YnMggqQvJcRwj6tx8ed/p0R1esG4qLs9PPm2qq++2/9GIQI3udNQBnhoQb523xU1J0BZaBsOCFIndLWT0QqbItRjEjmFKhFwVZW4MPx7Nk5C1mtvitSIdkPNbGmz28+L1ENfdNELVDx62K8+H/WcU5AYgOD67NUb0V/c7qy8YI6LUFQxtTmYH1qazsEmsqCvvlqkLrYXFZ5oSyCtW/E4dZv8rq2PDKVI0lxci2YdL1Z1bSfxL4+li1hEeQ0icBiNPzQNZ8wDnIJQ9wwyX7KwJtdXj0L3Fufx/NPqZLwy/R4ivQqNtOx7suXvKzbIOimZgfXFF7HGMOK1YT3hrIH8iFc+o6H8BnbXUoB75g0ZKkoK4vbyvcgWZ811xAsCl5iLOsIXBkhR37ccgXTx93HAdPV3l/sUfz2BIyXaH2hUZH7XyxoxoTPrBfsDFrrHhT4BF2A3GFjwPWbpIVyaJ6i8QuXoPZBoW7PUgp/2GWNvbaAA9wGIKhVxCGk1/arVqmDEaKBDw7cfQMCoi6E/idpWUWqQtlZAQbTCwxgT+AaQ7hU0QpZwElc7NWn5/OPKllgXjyg2Jontfv5jPqOXxkSaCvStc85iOPdRnwBk3r5e5welPgHFrmA=
+X-MS-Exchange-AntiSpam-ExternalHop-MessageData-0: XkgJRQb5GXsyXb+2K3lI7xs6KAU4vpbXKPsBdd19QNlGWp9xMDbbv2pVkw7MYm8vbc80Bw4iIZbIj4yQgeoWs/xrJcX2lWI+Jd7KqptQ2dDH2KfUWIyuV20BGoECJDbZnyFdzunanUQ0KQo2d+6syvXqACEm6MZQnG1S9qNHTWXojL2G8PepT1guMNlmlQIXsYJYJqT+KS10MULtSf7ZIrywbwWL3RlwAbAeY4l8KiqgcKuoHSfXrjJwBMrhMd1zTgwkhqmFq/eQVvqPAkB0IroNlbyD5yMwq9SYyB59K7KBae57z6fy10rGK98OSypKi4PIrqipLTbe5+SYWUUVDUyqr2IMM560qW8jG/ZBggFtFXI7RsA/cUHPp/ZyujFVL3ftaKmmUgCDq7q4X/yH4iMqSJNcD6CMN12hRDSCXowvVLshnVC30XbJ/n81JjXeY0d70uUeRjV9xZbkhkHePZv8VCMSgX46eBBG8V7txc/Ikpz2ltZ2O8D+nyfHUEq64innGfVZk5lmzaZh2Tv3G6nuveqK0x5eLdoS1aytCPRAEtztn0pONoosn1iMFGruVL6jwcDrcZ+ppbR9iFWVcftCRQe9meaG5ywm1Tf/oED1dc6NmNRfWPT9N0h1vp1d/uwzA0VCNigBL4yWi0o/9lTUx4yFHaU/KJhwnauVhQYciipn2Vq49HZWDzZ1Y+aWivfjWhOj7eEw3O8VNWtd+c/LfvXxfArRVDo8N/iZ290Avnqn/XZsX57xRyv3Q1kF5fxYJRnjCl69uZtz+n489FKyjNllErl9ZQwEIJbSE2s=
 X-OriginatorOrg: oracle.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: efdf575a-e812-41b5-a9cf-08db66705eac
+X-MS-Exchange-CrossTenant-Network-Message-Id: 6b50efc4-1a5d-489b-9dc9-08db667067c5
 X-MS-Exchange-CrossTenant-AuthSource: SA1PR10MB5867.namprd10.prod.outlook.com
 X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 06 Jun 2023 09:28:21.4727
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 06 Jun 2023 09:28:36.7131
  (UTC)
 X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
 X-MS-Exchange-CrossTenant-Id: 4e2c6054-71cb-48f1-bd6c-3a9705aca71b
 X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: v/HVPhZ4SGBzh11zhOiwCoR34GC7P+NUOR/28xAvQSf2YFufuPXfSJrG394bTbCVkBYTpfkXduQ+tOLVlLZ9+w==
+X-MS-Exchange-CrossTenant-UserPrincipalName: TVfgM4yVddY0b0X5wj+bkdTwhs9mifkFQ3AKTx1dXAC6y0ImHgXetH27TrC+ryOJZQxhDsAOFkXYGfP6MUYwxQ==
 X-MS-Exchange-Transport-CrossTenantHeadersStamped: SJ0PR10MB4781
 X-Proofpoint-Virus-Version: vendor=baseguard
  engine=ICAP:2.0.254,Aquarius:18.0.957,Hydra:6.0.573,FMLib:17.11.176.26
  definitions=2023-06-06_06,2023-06-05_01,2023-05-22_02
 X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 malwarescore=0 bulkscore=0
- suspectscore=0 spamscore=0 mlxlogscore=999 phishscore=0 mlxscore=0
+ suspectscore=0 spamscore=0 mlxlogscore=991 phishscore=0 mlxscore=0
  adultscore=0 classifier=spam adjust=0 reason=mlx scancount=1
  engine=8.12.0-2304280000 definitions=main-2306060080
-X-Proofpoint-ORIG-GUID: 1J5TV6a8E-ION-WFh7jljMKJPK9pRSKL
-X-Proofpoint-GUID: 1J5TV6a8E-ION-WFh7jljMKJPK9pRSKL
+X-Proofpoint-ORIG-GUID: cY4HfcDKqAHKFDXqhO4VLCNcCmLlatxg
+X-Proofpoint-GUID: cY4HfcDKqAHKFDXqhO4VLCNcCmLlatxg
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Hi all,
+The device size verification code should be writing XFS_MAX_SECTORSIZE bytes
+to the end of the device rather than "sizeof(char *) * XFS_MAX_SECTORSIZE"
+bytes.
 
-This patch series extends metadump/mdrestore tools to be able to dump
-and restore contents of an external log device. It also adds the
-ability to copy larger blocks (e.g. 4096 bytes instead of 512 bytes)
-into the metadump file. These objectives are accomplished by
-introducing a new metadump file format.
+Reviewed-by: Darrick J. Wong <djwong@kernel.org>
+Signed-off-by: Chandan Babu R <chandan.babu@oracle.com>
+---
+ mdrestore/xfs_mdrestore.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-I have tested the patchset by extending metadump/mdrestore tests in
-fstests to cover the newly introduced metadump v2 format. The tests
-can be found at
-https://github.com/chandanr/xfstests/commits/metadump-v2.
-
-The patch series can also be obtained from
-https://github.com/chandanr/xfsprogs-dev/commits/metadump-v2.
-
-Changelog:
-V1 -> V2:
-  1. Introduce the new incompat flag XFS_MD2_INCOMPAT_EXTERNALLOG to
-     indicate that the metadump file contains data obtained from an
-     external log.
-  2. Interpret bits 54 and 55 of xfs_meta_extent.xme_addr as a counter
-     such that 00 maps to the data device and 01 maps to the log
-     device.
-  3. Define the new function set_log_cur() to read from
-     internal/external log device. This allows us to continue using
-     TYP_LOG to read from both internal and external log.
-  4. In order to support reading metadump from a pipe, mdrestore now
-     reads the first four bytes of the header to determine the
-     metadump version rather than reading the entire header in a
-     single call to fread().
-  5. Add an ASCII diagram to describe metadump v2's ondisk layout in
-     xfs_metadump.h.
-  6. Update metadump's man page to indicate that metadump in v2 format
-     is generated by default if the filesystem has an external log and
-     the metadump version to use is not explicitly mentioned on the
-     command line.
-  7. Remove '_metadump' suffix from function pointer names in "struct
-     metadump_ops".
-  8. Use xfs_daddr_t type for declaring variables containing disk
-     offset value.
-  9. Use bool type rather than int for variables holding a boolean
-     value.
-  11. Remove unnecessary whitespace.
-
-
-
-
-Chandan Babu R (23):
-  metadump: Use boolean values true/false instead of 1/0
-  mdrestore: Fix logic used to check if target device is large enough
-  metadump: Declare boolean variables with bool type
-  metadump: Define and use struct metadump
-  metadump: Add initialization and release functions
-  metadump: Postpone invocation of init_metadump()
-  metadump: Introduce struct metadump_ops
-  metadump: Introduce metadump v1 operations
-  metadump: Rename XFS_MD_MAGIC to XFS_MD_MAGIC_V1
-  metadump: Define metadump v2 ondisk format structures and macros
-  metadump: Define metadump ops for v2 format
-  xfs_db: Add support to read from external log device
-  metadump: Add support for passing version option
-  mdrestore: Declare boolean variables with bool type
-  mdrestore: Define and use struct mdrestore
-  mdrestore: Detect metadump v1 magic before reading the header
-  mdrestore: Add open_device(), read_header() and show_info() functions
-  mdrestore: Introduce struct mdrestore_ops
-  mdrestore: Replace metadump header pointer argument with generic
-    pointer type
-  mdrestore: Introduce mdrestore v1 operations
-  mdrestore: Extract target device size verification into a function
-  mdrestore: Define mdrestore ops for v2 format
-  mdrestore: Add support for passing log device as an argument
-
- db/io.c                   |  57 ++-
- db/io.h                   |   2 +
- db/metadump.c             | 749 +++++++++++++++++++++++---------------
- db/xfs_metadump.sh        |   3 +-
- include/xfs_metadump.h    |  60 ++-
- man/man8/xfs_mdrestore.8  |   8 +
- man/man8/xfs_metadump.8   |  14 +
- mdrestore/xfs_mdrestore.c | 497 +++++++++++++++++++------
- 8 files changed, 985 insertions(+), 405 deletions(-)
-
+diff --git a/mdrestore/xfs_mdrestore.c b/mdrestore/xfs_mdrestore.c
+index 7c1a66c4..333282ed 100644
+--- a/mdrestore/xfs_mdrestore.c
++++ b/mdrestore/xfs_mdrestore.c
+@@ -115,7 +115,7 @@ perform_restore(
+ 	} else  {
+ 		/* ensure device is sufficiently large enough */
+ 
+-		char		*lb[XFS_MAX_SECTORSIZE] = { NULL };
++		char		lb[XFS_MAX_SECTORSIZE] = { 0 };
+ 		off64_t		off;
+ 
+ 		off = sb.sb_dblocks * sb.sb_blocksize - sizeof(lb);
 -- 
 2.39.1
 
