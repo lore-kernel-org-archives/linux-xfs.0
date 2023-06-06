@@ -2,41 +2,41 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 03860C7EE43
-	for <linux-xfs@archiver.kernel.org>; Tue,  6 Jun 2023 22:29:14 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 669CEC7EE43
+	for <linux-xfs@archiver.kernel.org>; Tue,  6 Jun 2023 22:29:20 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S239866AbjFFW3N (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 6 Jun 2023 18:29:13 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57432 "EHLO
+        id S239859AbjFFW3S (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 6 Jun 2023 18:29:18 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57564 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S234064AbjFFW3K (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 6 Jun 2023 18:29:10 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id DF934171B;
-        Tue,  6 Jun 2023 15:29:09 -0700 (PDT)
+        with ESMTP id S239869AbjFFW3Q (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 6 Jun 2023 18:29:16 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 85A52171D;
+        Tue,  6 Jun 2023 15:29:15 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 72A4163890;
-        Tue,  6 Jun 2023 22:29:09 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id CC2F5C433D2;
-        Tue,  6 Jun 2023 22:29:08 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 0FBA96381A;
+        Tue,  6 Jun 2023 22:29:15 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 66AECC433D2;
+        Tue,  6 Jun 2023 22:29:14 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1686090548;
-        bh=E9ACg0jNW06CfVyM44N7k5FKeCubdMgJO1J/qDNgsa4=;
+        s=k20201202; t=1686090554;
+        bh=J54//45oxDA0G5I1o9ZC6LxEaaIFi1xBRoJ4ZcAlF9U=;
         h=Subject:From:To:Cc:Date:In-Reply-To:References:From;
-        b=qrlD1zqLEeVYfXjwH/i8CmlOL0q4zEOkLZ8de24H2XZ86mbZP5f1mBpgLcRjbGQWi
-         zRFR6M8YOspaUfKbaJ4mb4Oyos+d70KcaXzDnh4j3gP2rAO1b7YYYUfHdo6G0KU6Qn
-         lAmCXsJprI0laG5mnUleMIty1L1JmxHPT4UVN4wKcGgaSMUjWQl4LYAoWb85zWGLf0
-         sgm19Rdl/XyqIzqtENI/t6Kocryyjsd3Nu+eivAKlnS2i8TBSNNK+TKVfGcPqO3j3C
-         dxJfnnpdufee+rN1XwMAZQYKQGocU73Wk0416Mi9ELZYqD0OB1SaXhZ/iiPmjBTVbZ
-         2gxCC4iO1QgZQ==
-Subject: [PATCH 1/3] xfs/108: allow slightly higher block usage
+        b=jrpvABJff7j5PAYTOPcLkR1dneiFQEOoiz5Vht1SWNhuu+IuQtfDIxtfKFkRhNY1Z
+         3AoPc8fjXEPbPYKwf3v6hVOdI3a6KbhoJMh3fa1KSpC2AU3mEwYEKvTEWN6TFeqwsw
+         +KFbB2u6YijqGZz3YyID2EAYHA7nF/BlhvIvA9Cue/MR8zlFLkKP0JBLFJaTByUZo8
+         3vIezK2lEhKkzSolYjOJP6Su4O5zYg33VcCRYWS0VqAR2Pohej1goZNupuW+EMHZuM
+         f9OKvkMLeHI95YaNSAasGd1kKX8y6OykbfOXa3vxPMGllhL1Q0v+llEBJSUW5PiJ3r
+         OnCAAMfw8B1rQ==
+Subject: [PATCH 2/3] xfs/155: discard stderr when checking for NEEDSREPAIR
 From:   "Darrick J. Wong" <djwong@kernel.org>
 To:     zlang@redhat.com, djwong@kernel.org
 Cc:     linux-xfs@vger.kernel.org, fstests@vger.kernel.org, guan@eryu.me
-Date:   Tue, 06 Jun 2023 15:29:08 -0700
-Message-ID: <168609054837.2590724.6227482661383718314.stgit@frogsfrogsfrogs>
+Date:   Tue, 06 Jun 2023 15:29:14 -0700
+Message-ID: <168609055400.2590724.12890017891103418739.stgit@frogsfrogsfrogs>
 In-Reply-To: <168609054262.2590724.13871035450315143622.stgit@frogsfrogsfrogs>
 References: <168609054262.2590724.13871035450315143622.stgit@frogsfrogsfrogs>
 User-Agent: StGit/0.19
@@ -49,59 +49,49 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-With pmem and fsdax enabled, I occasionally see this test fail on XFS:
+This test deliberate crashes xfs_repair midway through writing metadata
+to check that NEEDSREPAIR is always triggered by filesystem writes.
+However, the subsequent scan for the NEEDSREPAIR feature bit prints
+verifier errors to stderr.
 
-   Mode: (0600/-rw-------)         Uid: (1)  Gid: (2)
- Disk quotas for User #1 (1)
- Filesystem Blocks Quota Limit Warn/Time Mounted on
--SCRATCH_DEV 48M 0 0 00 [------] SCRATCH_MNT
-+SCRATCH_DEV 48.0M 0 0 00 [------] SCRATCH_MNT
- Disk quotas for User #1 (1)
- Filesystem Files Quota Limit Warn/Time Mounted on
- SCRATCH_DEV 3 0 0 00 [------] SCRATCH_MNT
+On a filesystem with metadata directories, this leads to the test
+failing with this recorded in the golden output:
 
-The cause of this failure is fragmentation in the file mappings that
-results in a block mapping structure that no longer fits in the inode.
-Hence the block usage is 49160K instead of the 49152K that was written.
-Use some fugly sed duct tape to make this test accomodate this
-possiblity.
++Metadata CRC error detected at 0x55c0a2dd0d38, xfs_dir3_block block 0xc0/0x1000
++dir block owner 0x82 doesnt match block 0xbb8cd37e44eb3623
+
+This isn't specific to metadata directories -- any repair crash could
+leave a metadata structure in a weird state such that starting xfs_db
+will spray verifier errors.  For _check_scratch_xfs_features here, we
+don't care if the filesystem is corrupt; we /only/ care that the
+superblock feature bit is set.  Route all that noise to devnull.
 
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 ---
- tests/xfs/108 |   14 +++++++++++---
- 1 file changed, 11 insertions(+), 3 deletions(-)
+ tests/xfs/155 |    4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
 
-diff --git a/tests/xfs/108 b/tests/xfs/108
-index 4607000544..8593edbdd2 100755
---- a/tests/xfs/108
-+++ b/tests/xfs/108
-@@ -32,6 +32,14 @@ test_files()
- 	done
- }
+diff --git a/tests/xfs/155 b/tests/xfs/155
+index c4ee8e20ef..25cc84069c 100755
+--- a/tests/xfs/155
++++ b/tests/xfs/155
+@@ -55,7 +55,7 @@ for ((nr_writes = 1; nr_writes < max_writes; nr_writes += nr_incr)); do
+ 	# but repair -n says the fs is clean, then it's possible that the
+ 	# injected error caused it to abort immediately after the write that
+ 	# cleared NEEDSREPAIR.
+-	if ! _check_scratch_xfs_features NEEDSREPAIR > /dev/null &&
++	if ! _check_scratch_xfs_features NEEDSREPAIR &> /dev/null &&
+ 	   ! _scratch_xfs_repair -n &>> $seqres.full; then
+ 		echo "NEEDSREPAIR should be set on corrupt fs"
+ 	fi
+@@ -63,7 +63,7 @@ done
  
-+# Some filesystem configurations fragment the file mapping more than others,
-+# which leads to the quota block counts being slightly higher than the 48MB
-+# written.
-+filter_quota()
-+{
-+	sed -e 's/48\.[01]M/48M/g' | _filter_quota
-+}
-+
- test_accounting()
- {
- 	echo "### some controlled buffered, direct and mmapd IO (type=$type)"
-@@ -49,9 +57,9 @@ test_accounting()
- 		$here/src/lstat64 $file | head -3 | _filter_scratch
- 	done
- 	$XFS_IO_PROG -c syncfs $SCRATCH_MNT
--	$XFS_QUOTA_PROG -c "quota -hnb -$type $id" $QARGS | _filter_quota
--	$XFS_QUOTA_PROG -c "quota -hni -$type $id" $QARGS | _filter_quota
--	$XFS_QUOTA_PROG -c "quota -hnr -$type $id" $QARGS | _filter_quota
-+	$XFS_QUOTA_PROG -c "quota -hnb -$type $id" $QARGS | filter_quota
-+	$XFS_QUOTA_PROG -c "quota -hni -$type $id" $QARGS | filter_quota
-+	$XFS_QUOTA_PROG -c "quota -hnr -$type $id" $QARGS | filter_quota
- }
- 
- export MOUNT_OPTIONS="-opquota"
+ # If NEEDSREPAIR is still set on the filesystem, ensure that a full run
+ # cleans everything up.
+-if _check_scratch_xfs_features NEEDSREPAIR > /dev/null; then
++if _check_scratch_xfs_features NEEDSREPAIR &> /dev/null; then
+ 	echo "Clearing NEEDSREPAIR" >> $seqres.full
+ 	_scratch_xfs_repair 2>> $seqres.full
+ 	_check_scratch_xfs_features NEEDSREPAIR > /dev/null && \
 
