@@ -2,104 +2,170 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7C21DC7EE43
-	for <linux-xfs@archiver.kernel.org>; Tue,  6 Jun 2023 22:29:45 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8FBA0C77B7A
+	for <linux-xfs@archiver.kernel.org>; Tue,  6 Jun 2023 22:30:20 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S239871AbjFFW3o (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 6 Jun 2023 18:29:44 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57758 "EHLO
+        id S239875AbjFFWaT (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 6 Jun 2023 18:30:19 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57836 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S239862AbjFFW3m (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 6 Jun 2023 18:29:42 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 257361717;
-        Tue,  6 Jun 2023 15:29:41 -0700 (PDT)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id AEA936387C;
-        Tue,  6 Jun 2023 22:29:40 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 13EC6C433EF;
-        Tue,  6 Jun 2023 22:29:40 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1686090580;
-        bh=fEm/Idf75DCZarblOvbO8t1Xx4/xc9Xee6F/imxJwIU=;
-        h=Subject:From:To:Cc:Date:In-Reply-To:References:From;
-        b=FvfvPJ7YH80Sq7U4BAKjVI6gXViI/fAtswokgFdbuRrv9NLFMtTFrtMhxzmqfb2xH
-         /442zC8wKGoAV5PHx+wIQvAH1Uk97H3uhvm3h8hcYz64xWNYNgVHJKXEQQGzjQ+O5q
-         596Y5CGzQP9duViqvW7e4D4KqzC5G0JNnWPzyeUaq4HaCdk+8fGn8IU50glB/E2dKH
-         KORS4rldytRUDIhs0RDYF32dMYngUiiGMQbHdLG8ZLHPTq3mrQZUzAHca/VyBQA8XA
-         kahyT8R/XSHl3SrVeXQaArkRe13RwWDwGNYXhitosoMp9F5M2qiircby0JKG7Wna3j
-         G6rtz6+4YC95w==
-Subject: [PATCH 3/3] common/xfs: compress online repair rebuild output by
- default
-From:   "Darrick J. Wong" <djwong@kernel.org>
-To:     zlang@redhat.com, djwong@kernel.org
-Cc:     linux-xfs@vger.kernel.org, fstests@vger.kernel.org, guan@eryu.me
-Date:   Tue, 06 Jun 2023 15:29:39 -0700
-Message-ID: <168609057963.2592490.3833577466322610879.stgit@frogsfrogsfrogs>
-In-Reply-To: <168609056295.2592490.1272515528324889317.stgit@frogsfrogsfrogs>
-References: <168609056295.2592490.1272515528324889317.stgit@frogsfrogsfrogs>
-User-Agent: StGit/0.19
+        with ESMTP id S239862AbjFFWaS (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 6 Jun 2023 18:30:18 -0400
+Received: from mail-pj1-x102e.google.com (mail-pj1-x102e.google.com [IPv6:2607:f8b0:4864:20::102e])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id ECB13171D
+        for <linux-xfs@vger.kernel.org>; Tue,  6 Jun 2023 15:30:16 -0700 (PDT)
+Received: by mail-pj1-x102e.google.com with SMTP id 98e67ed59e1d1-256cda5c1c1so3186812a91.1
+        for <linux-xfs@vger.kernel.org>; Tue, 06 Jun 2023 15:30:16 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=fromorbit-com.20221208.gappssmtp.com; s=20221208; t=1686090616; x=1688682616;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
+        bh=iSnLlqw5JsJTFwRAjaS9oa9cX/ConG9itjHh20/fwu8=;
+        b=tRbk3F0e2NEfHzwsFKlsj7+W8XnJxSTq0qUj/yTV4f0BBC+EQul40bTO1JmyH5XOpO
+         2MwHPZmHnAV3TEvoSSrLkpYy/Br7CIQ9IrmMtQgr64AfUtdAM+NV5BW98YDb2EnPwFVy
+         +YRPfrCjeEJIJMyCOOgtFUVbkY+Fp+2eyLH2Ee2WZoL5fqy6xuy6hwdW9gGV0j8RTNiJ
+         M0qvAwyg0FP5CZyxhVS/hwJDCN8FYTyjFJfEl6eGPQopEG/Cdz0TtoJYJmrM91ncyloD
+         hvIemNkR84xMOQB6BVUx3MWfvoCUqBByNNcr47OaIlR+a4sufD3Vw1u98Y99egFiBVG7
+         rgiA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20221208; t=1686090616; x=1688682616;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=iSnLlqw5JsJTFwRAjaS9oa9cX/ConG9itjHh20/fwu8=;
+        b=a7j7PoOAA6oi4susmdlRzXILLStezyYCREqMg2VJDVZCfj5TJIYY6B/G5VYIQM9ItE
+         HkusuMnLljiA3reyaNvXlFwL/XV6oc6IpBMwSScqEBGwQrDF7dnuEKcG3bujFn7OoXo9
+         Oc+RdImsjnJScBvNiWA1uyP4quY2aNMQeH9J0BNg2tT18OgKMLFmwedGaJLQFqbewbnp
+         nPy1wZUqJnorFkUsq2togVJLg6qgzBQMc3WWvTBurTQk0PzKSFWghXQL+ch9atXXbhKq
+         ThAxNGfvpIJ11YOYNbnIk+2zMRcQweYompyHR2fuNCsLZwtg4b9q3BObDiQa0wTLqZ9J
+         Hm0g==
+X-Gm-Message-State: AC+VfDzmmyyTeOoU2sCm41wLWTJRTeGVMbwVTD+2PMu+IhOSuhJ063vj
+        kjtryB9qiaQslQaqxVah2cmgKCS/98eZotbPB6Q=
+X-Google-Smtp-Source: ACHHUZ4rURXFwCxvuvdkNt2OeJTIkA+TKnI42M3OuN0Lh/vTVsVNzkPvYww20WmLoUsPE1K/XOiANQ==
+X-Received: by 2002:a17:90b:68c:b0:259:3cc4:f978 with SMTP id m12-20020a17090b068c00b002593cc4f978mr2167413pjz.19.1686090616399;
+        Tue, 06 Jun 2023 15:30:16 -0700 (PDT)
+Received: from dread.disaster.area (pa49-179-79-151.pa.nsw.optusnet.com.au. [49.179.79.151])
+        by smtp.gmail.com with ESMTPSA id p11-20020a17090a284b00b0025621aa4c6bsm48148pjf.25.2023.06.06.15.30.15
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Tue, 06 Jun 2023 15:30:15 -0700 (PDT)
+Received: from dave by dread.disaster.area with local (Exim 4.96)
+        (envelope-from <david@fromorbit.com>)
+        id 1q6fBt-008eth-0l;
+        Wed, 07 Jun 2023 08:30:13 +1000
+Date:   Wed, 7 Jun 2023 08:30:13 +1000
+From:   Dave Chinner <david@fromorbit.com>
+To:     Kirill Tkhai <tkhai@ya.ru>
+Cc:     Roman Gushchin <roman.gushchin@linux.dev>,
+        akpm@linux-foundation.org, vbabka@suse.cz, viro@zeniv.linux.org.uk,
+        brauner@kernel.org, djwong@kernel.org, hughd@google.com,
+        paulmck@kernel.org, muchun.song@linux.dev, linux-mm@kvack.org,
+        linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org,
+        linux-kernel@vger.kernel.org, zhengqi.arch@bytedance.com
+Subject: Re: [PATCH v2 3/3] fs: Use delayed shrinker unregistration
+Message-ID: <ZH+zdUZS5T9T/Z+K@dread.disaster.area>
+References: <168599103578.70911.9402374667983518835.stgit@pro.pro>
+ <168599180526.70911.14606767590861123431.stgit@pro.pro>
+ <ZH6AA72wOd4HKTKE@P9FQF9L96D>
+ <ZH6K0McWBeCjaf16@dread.disaster.area>
+ <65785745-1fd3-e0d7-26e8-dd74b1074d37@ya.ru>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <65785745-1fd3-e0d7-26e8-dd74b1074d37@ya.ru>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-From: Darrick J. Wong <djwong@kernel.org>
+On Wed, Jun 07, 2023 at 12:21:42AM +0300, Kirill Tkhai wrote:
+> On 06.06.2023 04:24, Dave Chinner wrote:
+> > On Mon, Jun 05, 2023 at 05:38:27PM -0700, Roman Gushchin wrote:
+> >> On Mon, Jun 05, 2023 at 10:03:25PM +0300, Kirill Tkhai wrote:
+> >>> Kernel test robot reports -88.8% regression in stress-ng.ramfs.ops_per_sec
+> >>> test case caused by commit: f95bdb700bc6 ("mm: vmscan: make global slab
+> >>> shrink lockless"). Qi Zheng investigated that the reason is in long SRCU's
+> >>> synchronize_srcu() occuring in unregister_shrinker().
+> >>>
+> >>> This patch fixes the problem by using new unregistration interfaces,
+> >>> which split unregister_shrinker() in two parts. First part actually only
+> >>> notifies shrinker subsystem about the fact of unregistration and it prevents
+> >>> future shrinker methods calls. The second part completes the unregistration
+> >>> and it insures, that struct shrinker is not used during shrinker chain
+> >>> iteration anymore, so shrinker memory may be freed. Since the long second
+> >>> part is called from delayed work asynchronously, it hides synchronize_srcu()
+> >>> delay from a user.
+> >>>
+> >>> Signed-off-by: Kirill Tkhai <tkhai@ya.ru>
+> >>> ---
+> >>>  fs/super.c |    3 ++-
+> >>>  1 file changed, 2 insertions(+), 1 deletion(-)
+> >>>
+> >>> diff --git a/fs/super.c b/fs/super.c
+> >>> index 8d8d68799b34..f3e4f205ec79 100644
+> >>> --- a/fs/super.c
+> >>> +++ b/fs/super.c
+> >>> @@ -159,6 +159,7 @@ static void destroy_super_work(struct work_struct *work)
+> >>>  							destroy_work);
+> >>>  	int i;
+> >>>  
+> >>> +	unregister_shrinker_delayed_finalize(&s->s_shrink);
+> >>>  	for (i = 0; i < SB_FREEZE_LEVELS; i++)
+> >>>  		percpu_free_rwsem(&s->s_writers.rw_sem[i]);
+> >>>  	kfree(s);
+> >>> @@ -327,7 +328,7 @@ void deactivate_locked_super(struct super_block *s)
+> >>>  {
+> >>>  	struct file_system_type *fs = s->s_type;
+> >>>  	if (atomic_dec_and_test(&s->s_active)) {
+> >>> -		unregister_shrinker(&s->s_shrink);
+> >>> +		unregister_shrinker_delayed_initiate(&s->s_shrink);
+> >>
+> >> Hm, it makes the API more complex and easier to mess with. Like what will happen
+> >> if the second part is never called? Or it's called without the first part being
+> >> called first?
+> > 
+> > Bad things.
+> > 
+> > Also, it doesn't fix the three other unregister_shrinker() calls in
+> > the XFS unmount path, nor the three in the ext4/mbcache/jbd2 unmount
+> > path.
+> > 
+> > Those are just some of the unregister_shrinker() calls that have
+> > dynamic contexts that would also need this same fix; I haven't
+> > audited the 3 dozen other unregister_shrinker() calls around the
+> > kernel to determine if any of them need similar treatment, too.
+> > 
+> > IOWs, this patchset is purely a band-aid to fix the reported
+> > regression, not an actual fix for the underlying problems caused by
+> > moving the shrinker infrastructure to SRCU protection.  This is why
+> > I really want the SRCU changeover reverted.
+> > 
+> > Not only are the significant changes the API being necessary, it's
+> > put the entire shrinker paths under a SRCU critical section. AIUI,
+> > this means while the shrinkers are running the RCU grace period
+> > cannot expire and no RCU freed memory will actually get freed until
+> > the srcu read lock is dropped by the shrinker.
+> 
+> Why so? Doesn't SRCU and RCU have different grace period and they does not prolong
+> each other?
 
-Force-repairing the filesystem after a test can fill up /tmp with quite
-a lot of logging message.  We don't have a better place to stash that
-output in case the scrub fails and we need to analyze it later, so
-compress it with gzip and only decompress it later.
+No idea - Documentation/RCU/whatisRCU.rst doesn't describe any
+differences between SRCU and RCU except for "use SRCU if you need to
+sleep in the read side" and there's no discussion of how they
+interact, either. maybe there's some discussion in other RCU
+documentation, but there's nothing in the "how to use RCU"
+documentation that tells me they use different grace period
+definitions...
 
-Signed-off-by: Darrick J. Wong <djwong@kernel.org>
----
- common/xfs |   19 +++++++++++--------
- 1 file changed, 11 insertions(+), 8 deletions(-)
+> Also, it looks like every SRCU has it's own namespace like shrinker_srcu for shrinker.
+> Don't different SRCU namespaces never prolong each other?!
 
+RIght, SRCU vs SRCU is well defined. What is not clear from anything
+I've read is SRCU vs RCU interactions, so I can only assuming from
+the shared "RCU" in the name there are shared implementation
+details and interactions...
 
-diff --git a/common/xfs b/common/xfs
-index d85acd9572..c7671f8f9d 100644
---- a/common/xfs
-+++ b/common/xfs
-@@ -910,25 +910,28 @@ _check_xfs_filesystem()
- 		# repairs considerably when the directory tree is very large.
- 		find $mntpt &>/dev/null &
- 
--		XFS_SCRUB_FORCE_REPAIR=1 "$XFS_SCRUB_PROG" -v -d $mntpt > $tmp.scrub 2>&1
--		if [ $? -ne 0 ]; then
--			if grep -q 'No space left on device' $tmp.scrub; then
-+		XFS_SCRUB_FORCE_REPAIR=1 "$XFS_SCRUB_PROG" -v -d $mntpt 2>&1 | gzip > $tmp.scrub.gz
-+		ret=$?
-+		if [ $ret -ne 0 ]; then
-+			if zgrep -q 'No space left on device' $tmp.scrub.gz; then
- 				# It's not an error if the fs does not have
- 				# enough space to complete a repair.  We will
- 				# check everything, though.
--				echo "*** XFS_SCRUB_FORCE_REPAIR=1 xfs_scrub -v -d ran out of space ***" >> $seqres.full
--				cat $tmp.scrub >> $seqres.full
-+				echo "*** XFS_SCRUB_FORCE_REPAIR=1 xfs_scrub -v -d ran out of space ret=$ret ***" >> $seqres.full
-+				echo "See $seqres.scrubout.gz for details." >> $seqres.full
-+				mv $tmp.scrub.gz $seqres.scrubout.gz
- 				echo "*** end xfs_scrub output" >> $seqres.full
- 			else
- 				_log_err "_check_xfs_filesystem: filesystem on $device failed scrub orebuild"
--				echo "*** XFS_SCRUB_FORCE_REPAIR=1 xfs_scrub -v -d output ***" >> $seqres.full
--				cat $tmp.scrub >> $seqres.full
-+				echo "*** XFS_SCRUB_FORCE_REPAIR=1 xfs_scrub -v -d output ret=$ret ***" >> $seqres.full
-+				echo "See $seqres.scrubout.gz for details." >> $seqres.full
-+				mv $tmp.scrub.gz $seqres.scrubout.gz
- 				echo "*** end xfs_scrub output" >> $seqres.full
- 				ok=0
- 				orebuild_ok=0
- 			fi
- 		fi
--		rm -f $tmp.scrub
-+		rm -f $tmp.scrub.gz
- 
- 		# Clear force_repair because xfs_scrub could have set it
- 		$XFS_IO_PROG -x -c 'inject noerror' "$mntpt" >> $seqres.full
+Cheers,
 
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
