@@ -2,113 +2,148 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 079ACC77B73
-	for <linux-xfs@archiver.kernel.org>; Tue,  6 Jun 2023 15:17:14 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A6523C77B73
+	for <linux-xfs@archiver.kernel.org>; Tue,  6 Jun 2023 15:17:44 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S236351AbjFFPRM (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 6 Jun 2023 11:17:12 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44664 "EHLO
+        id S236774AbjFFPRn (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 6 Jun 2023 11:17:43 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44744 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231178AbjFFPRL (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 6 Jun 2023 11:17:11 -0400
+        with ESMTP id S231178AbjFFPRn (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 6 Jun 2023 11:17:43 -0400
 Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 233B18F
-        for <linux-xfs@vger.kernel.org>; Tue,  6 Jun 2023 08:17:11 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4C035196
+        for <linux-xfs@vger.kernel.org>; Tue,  6 Jun 2023 08:17:42 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id B305162AC1
-        for <linux-xfs@vger.kernel.org>; Tue,  6 Jun 2023 15:17:10 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 1D09BC433EF;
-        Tue,  6 Jun 2023 15:17:10 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id DBE5C62E46
+        for <linux-xfs@vger.kernel.org>; Tue,  6 Jun 2023 15:17:41 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 376A9C433D2;
+        Tue,  6 Jun 2023 15:17:41 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1686064630;
-        bh=TTrQjPq7z12yZYiyAOUpDNoHomMLQT+8b+1FmXHIn+k=;
+        s=k20201202; t=1686064661;
+        bh=Ospp+zOoZBARzxwl9m6ji5TQHOO5OQPgLYTl5H4QLK4=;
         h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=OMs6fQWl4biiRBkGfLn1tQ2XMqFKI4Blu5qZPhKVDMJbCwcrNG4Jkian66d1GgttS
-         lK8+hszwBBejOcUZeiqju+FRAenKXYdJ1+UxbBElHu0ZETW6fhJ8WPptUPkZmi1KD9
-         k+1YQrnJReauewzBpRS/42fQnI2tDJ2sl8AOXjz72IjEbgw9HrIIyNwi8FBTfd8Ie0
-         pr13XA8E1GdVjZlxDtX+Xri9BZLLu2mHJdjXrmEaTL9ZBOJS5VKo81uUSB5Tt3Ytkt
-         ZZeuPmbKhmaN+tLONMBZWnjwt55j3gXvULbV0uZcxxuIrghFxujlOa//aMJS0vy/7u
-         p82YdoTQszG8g==
-Date:   Tue, 6 Jun 2023 08:17:09 -0700
+        b=Cav0JmoMGKqWEteE8VvsTKwAqz0EsgtLiC1LzgFt7W1WnkXTqKvmC8At6SjUs3H85
+         PU9Kq3FCPpplkv9cbjzqU79J2ME3v5Cb1lS2AvdNzG1Ro/jF2Rj5kePjL9OW8Q4GOq
+         Ipc79gMbZK4Qukxzk0eBGzHm3ZnjhCQlDQnYLob9+dE23hHLYy5kUIvmRM45EYvYFb
+         xzWbwGZQP7QWIO5hRNlCqwd7xQ6NvPz/ON0b6s4FQOmoi0bda4c6gbEShmlx2akx9E
+         zUme0Q/WqFXTabVRfL0cTC+xS20hn6fGw+URGPbnKBnYJ53PjWDy9eDWoG6AobKlO6
+         eb3Io+/09gAfQ==
+Date:   Tue, 6 Jun 2023 08:17:40 -0700
 From:   "Darrick J. Wong" <djwong@kernel.org>
-To:     cem@kernel.org
-Cc:     linux-xfs@vger.kernel.org
-Subject: Re: [PATCH V2] xfs: Comment out unreachable code within
- xchk_fscounters()
-Message-ID: <20230606151709.GO1325469@frogsfrogsfrogs>
-References: <20230606151122.853315-1-cem@kernel.org>
+To:     Chandan Babu R <chandan.babu@oracle.com>
+Cc:     linux-xfs@vger.kernel.org, cem@kernel.org
+Subject: Re: [PATCH V2 03/23] metadump: Declare boolean variables with bool
+ type
+Message-ID: <20230606151740.GP1325469@frogsfrogsfrogs>
+References: <20230606092806.1604491-1-chandan.babu@oracle.com>
+ <20230606092806.1604491-4-chandan.babu@oracle.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20230606151122.853315-1-cem@kernel.org>
+In-Reply-To: <20230606092806.1604491-4-chandan.babu@oracle.com>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Tue, Jun 06, 2023 at 05:11:22PM +0200, cem@kernel.org wrote:
-> From: Carlos Maiolino <cem@kernel.org>
-> 
-> Comment the code out so kernel test robot stop complaining about it
-> every single test build.
-> 
-> Signed-off-by: Carlos Maiolino <cmaiolino@redhat.com>
+On Tue, Jun 06, 2023 at 02:57:46PM +0530, Chandan Babu R wrote:
+> Signed-off-by: Chandan Babu R <chandan.babu@oracle.com>
 
-Thank you,
 Reviewed-by: Darrick J. Wong <djwong@kernel.org>
 
 --D
 
 > ---
->  fs/xfs/scrub/fscounters.c | 7 +++++++
->  1 file changed, 7 insertions(+)
+>  db/metadump.c | 32 ++++++++++++++++----------------
+>  1 file changed, 16 insertions(+), 16 deletions(-)
 > 
-> diff --git a/fs/xfs/scrub/fscounters.c b/fs/xfs/scrub/fscounters.c
-> index e382a35e98d88..228efe0c99be8 100644
-> --- a/fs/xfs/scrub/fscounters.c
-> +++ b/fs/xfs/scrub/fscounters.c
-> @@ -153,6 +153,7 @@ xchk_setup_fscounters(
->  	return xchk_trans_alloc(sc, 0);
+> diff --git a/db/metadump.c b/db/metadump.c
+> index 6bcfd5bb..8b33fbfb 100644
+> --- a/db/metadump.c
+> +++ b/db/metadump.c
+> @@ -51,13 +51,13 @@ static int		cur_index;
+>  
+>  static xfs_ino_t	cur_ino;
+>  
+> -static int		show_progress = 0;
+> -static int		stop_on_read_error = 0;
+> +static bool		show_progress = false;
+> +static bool		stop_on_read_error = false;
+>  static int		max_extent_size = DEFAULT_MAX_EXT_SIZE;
+> -static int		obfuscate = 1;
+> -static int		zero_stale_data = 1;
+> -static int		show_warnings = 0;
+> -static int		progress_since_warning = 0;
+> +static bool		obfuscate = true;
+> +static bool		zero_stale_data = true;
+> +static bool		show_warnings = false;
+> +static bool		progress_since_warning = false;
+>  static bool		stdout_metadump;
+>  
+>  void
+> @@ -100,7 +100,7 @@ print_warning(const char *fmt, ...)
+>  
+>  	fprintf(stderr, "%s%s: %s\n", progress_since_warning ? "\n" : "",
+>  			progname, buf);
+> -	progress_since_warning = 0;
+> +	progress_since_warning = false;
 >  }
 >  
-> +#if 0
+>  static void
+> @@ -121,7 +121,7 @@ print_progress(const char *fmt, ...)
+>  	f = stdout_metadump ? stderr : stdout;
+>  	fprintf(f, "\r%-59s", buf);
+>  	fflush(f);
+> -	progress_since_warning = 1;
+> +	progress_since_warning = true;
+>  }
+>  
 >  /*
->   * Part 1: Collecting filesystem summary counts.  For each AG, we add its
->   * summary counts (total inodes, free inodes, free data blocks) to an incore
-> @@ -349,6 +350,7 @@ xchk_fscount_count_frextents(
->  	return 0;
->  }
->  #endif /* CONFIG_XFS_RT */
-> +#endif
+> @@ -2979,9 +2979,9 @@ metadump_f(
+>  	char		*p;
 >  
->  /*
->   * Part 2: Comparing filesystem summary counters.  All we have to do here is
-> @@ -422,7 +424,10 @@ xchk_fscounters(
->  	struct xfs_mount	*mp = sc->mp;
->  	struct xchk_fscounters	*fsc = sc->buf;
->  	int64_t			icount, ifree, fdblocks, frextents;
-> +
-> +#if 0
->  	int			error;
-> +#endif
+>  	exitcode = 1;
+> -	show_progress = 0;
+> -	show_warnings = 0;
+> -	stop_on_read_error = 0;
+> +	show_progress = false;
+> +	show_warnings = false;
+> +	stop_on_read_error = false;
 >  
->  	/* Snapshot the percpu counters. */
->  	icount = percpu_counter_sum(&mp->m_icount);
-> @@ -452,6 +457,7 @@ xchk_fscounters(
->  	 */
->  	return 0;
->  
-> +#if 0
->  	/*
->  	 * If ifree exceeds icount by more than the minimum variance then
->  	 * something's probably wrong with the counters.
-> @@ -489,4 +495,5 @@ xchk_fscounters(
->  		xchk_set_corrupt(sc);
->  
->  	return 0;
-> +#endif
->  }
+>  	if (mp->m_sb.sb_magicnum != XFS_SB_MAGIC) {
+>  		print_warning("bad superblock magic number %x, giving up",
+> @@ -3002,13 +3002,13 @@ metadump_f(
+>  	while ((c = getopt(argc, argv, "aegm:ow")) != EOF) {
+>  		switch (c) {
+>  			case 'a':
+> -				zero_stale_data = 0;
+> +				zero_stale_data = false;
+>  				break;
+>  			case 'e':
+> -				stop_on_read_error = 1;
+> +				stop_on_read_error = true;
+>  				break;
+>  			case 'g':
+> -				show_progress = 1;
+> +				show_progress = true;
+>  				break;
+>  			case 'm':
+>  				max_extent_size = (int)strtol(optarg, &p, 0);
+> @@ -3019,10 +3019,10 @@ metadump_f(
+>  				}
+>  				break;
+>  			case 'o':
+> -				obfuscate = 0;
+> +				obfuscate = false;
+>  				break;
+>  			case 'w':
+> -				show_warnings = 1;
+> +				show_warnings = true;
+>  				break;
+>  			default:
+>  				print_warning("bad option for metadump command");
 > -- 
-> 2.30.2
+> 2.39.1
 > 
