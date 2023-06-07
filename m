@@ -2,72 +2,115 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1006FC7EE29
-	for <linux-xfs@archiver.kernel.org>; Wed,  7 Jun 2023 06:54:27 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0E838C7EE43
+	for <linux-xfs@archiver.kernel.org>; Wed,  7 Jun 2023 07:05:06 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S237728AbjFGGy0 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 7 Jun 2023 02:54:26 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38634 "EHLO
+        id S234210AbjFGHFE (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 7 Jun 2023 03:05:04 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43972 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S238393AbjFGGyT (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 7 Jun 2023 02:54:19 -0400
+        with ESMTP id S238627AbjFGHEw (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 7 Jun 2023 03:04:52 -0400
 Received: from bombadil.infradead.org (bombadil.infradead.org [IPv6:2607:7c80:54:3::133])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7CAC01BF1;
-        Tue,  6 Jun 2023 23:54:17 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3CCF9124;
+        Wed,  7 Jun 2023 00:04:51 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Type:MIME-Version
-        :References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
-        Content-Transfer-Encoding:Content-ID:Content-Description;
-        bh=zb4XsuYrDK3rGsxvTHJ+p/fFFNShynQWN+DaAQYkHlg=; b=DblJwRPKNX62gpoUi1KHr3e5Np
-        UWBn02Xy7ekBvWQyzbXjA0uS4rUxWXbSP1AWXTnaG2rMm6hSzukeVf+w9/f5ZkuJWKpCjb/ux2O6L
-        AmNmTCC1CujlZQ0seALcU1ftceyUr1kVeCsqz9ihrJq9XKK41c8VHBRm8d10K/D6Oou6W/7zisONr
-        uXqTxuBCoDi5659XeeRe/s1K9O1FjGuyX2TwGRqlbEyKqxu5tz7TAkPWPilz5I5yxE/GER88kiuCZ
-        1QwyFJGGbB2K4NZ9G7tANS9TegfzLD9lIZQ5Bna1fETjyfjdL//TrTytnQnMcy2UVyR+C4LEJWued
-        KhNZKZsQ==;
+        d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Transfer-Encoding
+        :Content-Type:MIME-Version:References:Message-ID:Subject:Cc:To:From:Date:
+        Sender:Reply-To:Content-ID:Content-Description;
+        bh=6sLx5GXIQruwuuE83LbdGvHtNL8jzPNpzchN0Pwhp4Y=; b=Dwh+ExT9bsZ7ye0449+Bqd8/Se
+        Eg5T7nOYqntSCOaQelqSCyEEtAgzJn2cuQvaWEvsOzi0TqsVC4IcN4Eie6APkwPULsWTSJfLOI0bv
+        3I/72kPRFZGidcvqyiKV0QYzpGwy/DDMvWFZ44Fg63rSUzPwN9roorcBdUHOWALLRtRWsSdxeds+N
+        7EkRIsXowFAT86RFf4BCNJT8i2T6tF1releglytX2Ez3XMs3SUOZkOE65xS7aNGjBWEZSrKWQKsIH
+        lbgBamczSx2jRsBzk2GMO3fQYV6UgssV0hIo/o0nZoKGbBOvql3Ks3QpdKKfiRtBKpl7JtYTTg9RG
+        u/3la6Cg==;
 Received: from hch by bombadil.infradead.org with local (Exim 4.96 #2 (Red Hat Linux))
-        id 1q6n3g-004dEw-0Y;
-        Wed, 07 Jun 2023 06:54:16 +0000
-Date:   Tue, 6 Jun 2023 23:54:16 -0700
+        id 1q6nDu-004euM-0t;
+        Wed, 07 Jun 2023 07:04:50 +0000
+Date:   Wed, 7 Jun 2023 00:04:50 -0700
 From:   Christoph Hellwig <hch@infradead.org>
-To:     Matthew Wilcox <willy@infradead.org>
-Cc:     "Ritesh Harjani (IBM)" <ritesh.list@gmail.com>,
-        linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
+To:     "Ritesh Harjani (IBM)" <ritesh.list@gmail.com>
+Cc:     linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
         "Darrick J. Wong" <djwong@kernel.org>,
+        Matthew Wilcox <willy@infradead.org>,
         Dave Chinner <david@fromorbit.com>,
         Brian Foster <bfoster@redhat.com>,
         Christoph Hellwig <hch@infradead.org>,
         Andreas Gruenbacher <agruenba@redhat.com>,
         Ojaswin Mujoo <ojaswin@linux.ibm.com>,
-        Disha Goel <disgoel@linux.ibm.com>
-Subject: Re: [PATCHv8 0/5] iomap: Add support for per-block dirty state to
- improve write performance
-Message-ID: <ZIApmPnosZuiJzc4@infradead.org>
+        Disha Goel <disgoel@linux.ibm.com>,
+        Aravinda Herle <araherle@in.ibm.com>
+Subject: Re: [PATCHv8 5/5] iomap: Add per-block dirty state tracking to
+ improve performance
+Message-ID: <ZIAsEkURZHRAcxtP@infradead.org>
 References: <cover.1686050333.git.ritesh.list@gmail.com>
- <ZH8onIAH8xcrWKE+@casper.infradead.org>
+ <0c3108f6ea45e18c7aae87c2fb3d8fa3311c13a4.1686050333.git.ritesh.list@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=utf-8
 Content-Disposition: inline
-In-Reply-To: <ZH8onIAH8xcrWKE+@casper.infradead.org>
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <0c3108f6ea45e18c7aae87c2fb3d8fa3311c13a4.1686050333.git.ritesh.list@gmail.com>
 X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Tue, Jun 06, 2023 at 01:37:48PM +0100, Matthew Wilcox wrote:
-> > 1. Renamed iomap_page -> iomap_folio & iop -> iof in Patch-1 itself.
-> 
-> I don't think iomap_folio is the right name.  Indeed, I did not believe
-> that iomap_page was the right name.  As I said on #xfs recently ...
-> 
-> <willy> i'm still not crazy about iomap_page as the name of that
->    data structure.  and calling the variable 'iop' just seems doomed
->    to be trouble.  how do people feel about either iomap_block_state or
->    folio_block_state ... or even just calling it block_state since it's
->    local to iomap/buffered-io.c
-> <willy> we'd then call the variable either ibs or fbs, both of which
->    have some collisions in the kernel, but none in filesystems
-> <dchinner> willy - sounds reasonable
+> +static inline bool iomap_iof_is_block_dirty(struct folio *folio,
+> +			struct iomap_folio *iof, int block)
 
-I'd keep an iomap prefix, but block_state looks fine to me.  So
-iomap_block_state would be my preference.
+Two tabs indents here please and for various other functions.
 
+> +{
+> +	struct inode *inode = folio->mapping->host;
+> +	unsigned int blks_per_folio = i_blocks_per_folio(inode, folio);
+> +	unsigned int first_blk = off >> inode->i_blkbits;
+> +	unsigned int last_blk = (off + len - 1) >> inode->i_blkbits;
+> +	unsigned int nr_blks = last_blk - first_blk + 1;
+
+Given how many places we we opencode this logic I wonder if a helper
+would be usefuļ, even if the calling conventions are a bit odd.
+
+To make this nicer it would also be good an take a neat trick from
+the btrfs subpage support and use an enum for the bits, e.g.:
+
+enum iomap_block_state {
+	IOMAP_ST_UPTODATE,
+	IOMAP_ST_DIRTY,
+
+	IOMAP_ST_MAX,
+};
+
+
+static void iomap_ibs_calc_range(struct folio *folio, size_t off, size_t len,
+		enum iomap_block_state state, unsigned int *first_blk,
+		unsigned int *nr_blks)
+{
+	struct inode *inode = folio->mapping->host;
+	unsigned int blks_per_folio = i_blocks_per_folio(inode, folio);
+	unsigned int last_blk = (off + len - 1) >> inode->i_blkbits;
+
+	*first_blk = state * blks_per_folio + (off >> inode->i_blkbits);
+	*nr_blks = last_blk - first_blk + 1;
+}
+
+> +	/*
+> +	 * iof->state tracks two sets of state flags when the
+> +	 * filesystem block size is smaller than the folio size.
+> +	 * The first state tracks per-block uptodate and the
+> +	 * second tracks per-block dirty state.
+> +	 */
+> +	iof = kzalloc(struct_size(iof, state, BITS_TO_LONGS(2 * nr_blocks)),
+>  		      gfp);
+
+with the above this can use IOMAP_ST_MAX and make the whole thing a
+little more robus.
+
+>
+>  	if (iof) {
+
+No that this adds a lot more initialization I'd do a
+
+	if (!iof)
+		return NULL;
+
+here and unindent the rest.
