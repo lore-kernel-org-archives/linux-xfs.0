@@ -2,73 +2,76 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4416CC77B7A
-	for <linux-xfs@archiver.kernel.org>; Wed,  7 Jun 2023 09:31:08 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0579FC7EE29
+	for <linux-xfs@archiver.kernel.org>; Wed,  7 Jun 2023 10:23:03 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235807AbjFGJbG (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 7 Jun 2023 05:31:06 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49650 "EHLO
+        id S234391AbjFGKXB (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 7 Jun 2023 06:23:01 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46208 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S240140AbjFGJaz (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 7 Jun 2023 05:30:55 -0400
-Received: from szxga02-in.huawei.com (szxga02-in.huawei.com [45.249.212.188])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B223919BC
-        for <linux-xfs@vger.kernel.org>; Wed,  7 Jun 2023 02:30:48 -0700 (PDT)
-Received: from canpemm500005.china.huawei.com (unknown [172.30.72.53])
-        by szxga02-in.huawei.com (SkyGuard) with ESMTP id 4QbhsG0nt8zTkrY;
-        Wed,  7 Jun 2023 17:30:26 +0800 (CST)
-Received: from Y00251687ALE274.china.huawei.com (10.174.178.198) by
- canpemm500005.china.huawei.com (7.192.104.229) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2507.23; Wed, 7 Jun 2023 17:30:46 +0800
-From:   Weifeng Su <suweifeng1@huawei.com>
-To:     <linux-xfs@vger.kernel.org>, <djwong@kernel.org>, <hch@lst.de>,
-        <sandeen@sandeen.net>
-CC:     <linfeilong@huawei.com>, <liuzhiqiang26@huawei.com>,
-        Weifeng Su <suweifeng1@huawei.com>
-Subject: [PATCH] libxcmd: add return value check for dynamic memory function
-Date:   Wed, 7 Jun 2023 17:30:18 +0800
-Message-ID: <20230607093018.61752-1-suweifeng1@huawei.com>
-X-Mailer: git-send-email 2.18.0.windows.1
-MIME-Version: 1.0
-Content-Type: text/plain
-X-Originating-IP: [10.174.178.198]
-X-ClientProxiedBy: dggems703-chm.china.huawei.com (10.3.19.180) To
- canpemm500005.china.huawei.com (7.192.104.229)
-X-CFilter-Loop: Reflected
+        with ESMTP id S233639AbjFGKXA (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 7 Jun 2023 06:23:00 -0400
+Received: from mail-yb1-xb2c.google.com (mail-yb1-xb2c.google.com [IPv6:2607:f8b0:4864:20::b2c])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id F14391BD6;
+        Wed,  7 Jun 2023 03:22:59 -0700 (PDT)
+Received: by mail-yb1-xb2c.google.com with SMTP id 3f1490d57ef6-bb15165ba06so6267248276.2;
+        Wed, 07 Jun 2023 03:22:59 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20221208; t=1686133379; x=1688725379;
+        h=in-reply-to:subject:cc:to:from:message-id:date:from:to:cc:subject
+         :date:message-id:reply-to;
+        bh=11Qj+9mJ+vIJcJp0to9dR/s2fBZqmU6HPJipmH3PI1A=;
+        b=OaKGhAk+7pdFO/Zzi1uPt/RpW3Ia2xTlJvG0uTK8e6V+rIFUYNzSuD6cK9ym3BskWD
+         TBVTfZ+CVGIkXhhFgiG2FXOqBo4leVqFIGgVHvgJt3byKJt6WiJMLBt1aYzT40uzSp2l
+         uvU9T8YnjTAsRk7mgcruWWZGkbjsg6cUiVNwkHOE/UmR/NXWgIVbi1ns2qO3bDTLb/lj
+         bUyzi+uPGcfr0C4ptu/rUS2hDhwmdHdJpOOosqILcE2eac6AxAlhGUtZE4RQkYuVdchw
+         LMqhGwJoh4HtoEVeIg0BARAmE0aU73JSieDiHLRYbQm1FI+1IG55M0Tu5Jr910/zVV14
+         AMpg==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20221208; t=1686133379; x=1688725379;
+        h=in-reply-to:subject:cc:to:from:message-id:date:x-gm-message-state
+         :from:to:cc:subject:date:message-id:reply-to;
+        bh=11Qj+9mJ+vIJcJp0to9dR/s2fBZqmU6HPJipmH3PI1A=;
+        b=C9uuzfT+FqpLF/aTp668+pKLsJj9ObMJMnj2reTBzKrngTnGnbixyIa7zynglGGyMY
+         n/6YpGqVxY9fKVkr1eGK0Bg7m/T0GFHk7gA/d11TfthSdZDMZANoYRqqWZ8tWbcrdoVB
+         m5SR/+XJqezTrAxoPeK9SrjMOXGjwSOnb1IQRm9jIvP6hVoE1tpEaytyK/yk/p7oEfJ2
+         l8bMQCDvIW53KZSiTiC4PF/T3XE8/qXgam3ZeyLcKndVRQOI0na42DpWQSjXTyzRHdNS
+         uqWPDjYJj9gXnnx85QGfFgcICwvierzCiFY6BILFs90QEG9qI5xLSuollsuaNGiYiMyv
+         mDvQ==
+X-Gm-Message-State: AC+VfDzL2MAWippU85tkNx5DQz0LimBU3t59jNV48Jfzu/gHAQtunZ0U
+        NmlIGak+6yw05J3vfQc13jI=
+X-Google-Smtp-Source: ACHHUZ7jj1DSchPRIjbzuMy/0paqNMYo7rzFuj3sJYdLxmD2xzeglgwXOl4t+dbVhRrwvZmbQF1nLg==
+X-Received: by 2002:a25:2f54:0:b0:ba6:c383:4885 with SMTP id v81-20020a252f54000000b00ba6c3834885mr4415595ybv.12.1686133379072;
+        Wed, 07 Jun 2023 03:22:59 -0700 (PDT)
+Received: from dw-tp ([49.207.220.159])
+        by smtp.gmail.com with ESMTPSA id k14-20020a170902760e00b001b03a1a3173sm887833pll.145.2023.06.07.03.22.55
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Wed, 07 Jun 2023 03:22:58 -0700 (PDT)
+Date:   Wed, 07 Jun 2023 15:52:54 +0530
+Message-Id: <875y7zk1vl.fsf@doe.com>
+From:   Ritesh Harjani (IBM) <ritesh.list@gmail.com>
+To:     Christoph Hellwig <hch@infradead.org>
+Cc:     linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
+        "Darrick J. Wong" <djwong@kernel.org>,
+        Matthew Wilcox <willy@infradead.org>,
+        Dave Chinner <david@fromorbit.com>,
+        Brian Foster <bfoster@redhat.com>,
+        Christoph Hellwig <hch@infradead.org>,
+        Andreas Gruenbacher <agruenba@redhat.com>,
+        Ojaswin Mujoo <ojaswin@linux.ibm.com>,
+        Disha Goel <disgoel@linux.ibm.com>
+Subject: Re: [PATCHv8 0/5] iomap: Add support for per-block dirty state to improve write performance
+In-Reply-To: <ZIAoM+XL8bj1usM3@infradead.org>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-The result check was missed and It cause the coredump like:
-0x00005589f3e358dd in add_command (ci=0x5589f3e3f020 <health_cmd>) at command.c:37
-0x00005589f3e337d8 in init_commands () at init.c:37
-init (argc=<optimized out>, argv=0x7ffecfb0cd28) at init.c:102
-0x00005589f3e33399 in main (argc=<optimized out>, argv=<optimized out>) at init.c:112
+Christoph Hellwig <hch@infradead.org> writes:
 
-Add check for realloc function to ignore this coredump and exit with
-error output
+> FYI, daily reposts while there is still heavy discussion ongoing
+> makes it really hard to chime into the discussion if you get preempted..
 
-Signed-off-by: Weifeng Su <suweifeng1@huawei.com>
----
- libxcmd/command.c | 4 ++++
- 1 file changed, 4 insertions(+)
+Sure, noted. 
+Thanks again for the help and review!
 
-diff --git a/libxcmd/command.c b/libxcmd/command.c
-index a76d1515..47d050c3 100644
---- a/libxcmd/command.c
-+++ b/libxcmd/command.c
-@@ -34,6 +34,10 @@ add_command(
- 	const cmdinfo_t	*ci)
- {
- 	cmdtab = realloc((void *)cmdtab, ++ncmds * sizeof(*cmdtab));
-+	if (!cmdtab) {
-+		perror("realloc");
-+		exit(1);
-+	}
- 	cmdtab[ncmds - 1] = *ci;
- 	qsort(cmdtab, ncmds, sizeof(*cmdtab), compare);
- }
--- 
-2.18.0.windows.1
-
+-ritesh
