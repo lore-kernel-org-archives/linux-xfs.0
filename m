@@ -2,53 +2,53 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D54BBC7EE29
-	for <linux-xfs@archiver.kernel.org>; Wed,  7 Jun 2023 10:28:59 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 42338C7EE23
+	for <linux-xfs@archiver.kernel.org>; Wed,  7 Jun 2023 10:44:54 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235635AbjFGK26 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 7 Jun 2023 06:28:58 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48854 "EHLO
+        id S235470AbjFGKon (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 7 Jun 2023 06:44:43 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55584 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233580AbjFGK25 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 7 Jun 2023 06:28:57 -0400
-Received: from mail-ot1-x335.google.com (mail-ot1-x335.google.com [IPv6:2607:f8b0:4864:20::335])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1F1A219AE;
-        Wed,  7 Jun 2023 03:28:56 -0700 (PDT)
-Received: by mail-ot1-x335.google.com with SMTP id 46e09a7af769-6b29b9f5c40so1296468a34.2;
-        Wed, 07 Jun 2023 03:28:56 -0700 (PDT)
+        with ESMTP id S233982AbjFGKo2 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 7 Jun 2023 06:44:28 -0400
+Received: from mail-pl1-x62c.google.com (mail-pl1-x62c.google.com [IPv6:2607:f8b0:4864:20::62c])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 367B7124;
+        Wed,  7 Jun 2023 03:44:27 -0700 (PDT)
+Received: by mail-pl1-x62c.google.com with SMTP id d9443c01a7336-1b075e13a5eso62914765ad.3;
+        Wed, 07 Jun 2023 03:44:27 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20221208; t=1686133735; x=1688725735;
+        d=gmail.com; s=20221208; t=1686134666; x=1688726666;
         h=in-reply-to:subject:cc:to:from:message-id:date:from:to:cc:subject
          :date:message-id:reply-to;
-        bh=MXI2Gtsei1k0G6deJ67EAfkNJaS9CBOu3IprceQovzY=;
-        b=a7wx2uiptoDsHzFspdGUqfWT6VIvTFL9OM9b4K/sptmB1x4B0A9ExCWBHPzDmaWCrv
-         QsofcsNn0gfZEmK6zpJh0s7MtP1pOYDjBzmUgCtM47FLBLYii5NlWR8k9fm1N6C8F5cm
-         tC9lvCyIdNWwBTrrsUZNtzp0Mytgc9e6gOmPgBErBv+hzODWRbEavcsoWyH8zuz9kqtU
-         qcHV3egOy4Ux3qaI8GBJDS+txS81r7QLWPESAYM5t2BfLm7rCM/Kzxs8S5Gpro8/F2GC
-         2xNukE53+Kygce/Jvz4WcvU9DNZUjHqkE0y6sI6zVzBCAZpofHVapxRGMyIrhUueUIPy
-         M8mQ==
+        bh=jUmmndzzfjBksj76GBgKS0Ti0TYytinvVXM6hqmaeD8=;
+        b=Bqf0uhuAbb2Xzpuiv8aU0PizjNYjJr+uhKrlSVfmlJRjUqorHUGrISTLP+xZg6gBEO
+         41wKbGeH67P5jnRsru0pMZN7DanF0DspJUtpifDViVMOUG659hZvAV3G0jF5CxF3mrLR
+         mAwT5KyfHVCuvOsCBzPEWknvMoYU7uyVA1a+rqOzpMl2h8TyLH2X2NAF0Smoku5OWYHW
+         jQdKbsWqfSKzVSpe3FeTX4Wqj/ZYQ32HK8Tb3JmfOFW/FltACL3SfgHur83IZNUGiccJ
+         1MBZL/EkPHmvrs1lXn7g6x1da/1Fe0XflNYR/qkoRlm20w5XPDQUoqtr7kUQaQwsBJm8
+         0IhA==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20221208; t=1686133735; x=1688725735;
+        d=1e100.net; s=20221208; t=1686134666; x=1688726666;
         h=in-reply-to:subject:cc:to:from:message-id:date:x-gm-message-state
          :from:to:cc:subject:date:message-id:reply-to;
-        bh=MXI2Gtsei1k0G6deJ67EAfkNJaS9CBOu3IprceQovzY=;
-        b=UI5AOjMNIkG7sfr+qQT3NRnZK5bv5iJ1BGnhzFAJAOj80G3rSJxX0yi8Nng5iwQhhL
-         X2z8If0y/6pkPe8F7rUHlUDi1aVXz/ZwxzcdoyZ8ewCN9s6vDmSh0o1s14yYaRBAL0nS
-         6eW8/QxbKulCTDN05tcdtyZtDmH4lCRG06GdTmNxj3sRnxL+xLO8vY2VCNpbj6S/9R33
-         koS2zllKFhERKsAqThxZY3eGrUfGtROXGspcHnxI5XxZw3P08zHfZBggtibcRw1A5v4T
-         X4Gw22zjYC1ae3gO1s/JrarxK8HeaQ589JcEBFC42eCmOadjWPNglqILaQYtteYHF7nk
-         xu/Q==
-X-Gm-Message-State: AC+VfDxQL5ZrX6leRoH0GOSuiJ7erC1G8Gs4VZvO3PhalbTbrbockR7+
-        0Ideh39D6hqw5O7qtHi7IZt6z7wWdfk=
-X-Google-Smtp-Source: ACHHUZ4rwlnWnl+AIriPUB3Ymbt08F/WtrdGklACsPApeaIjJsK6QtaBYtHilXWmDZ3WEdiqvRZE4A==
-X-Received: by 2002:a9d:69d9:0:b0:6b0:c531:ce3d with SMTP id v25-20020a9d69d9000000b006b0c531ce3dmr5076510oto.24.1686133735337;
-        Wed, 07 Jun 2023 03:28:55 -0700 (PDT)
+        bh=jUmmndzzfjBksj76GBgKS0Ti0TYytinvVXM6hqmaeD8=;
+        b=ikZQhp+rp+IpYZvflVoDnumra9U+2sO08IsE+t46frt5khQW/R6gsOvSLbJhEOBVwb
+         QPTTsDNDvRw6aqHfDqvNavmAgvxM1/81C12ye1Mg9EEwH2EJW6SNhmENE4gJhIEbVfaz
+         Q56wxSFOazTdXSmbCasSlhJX2A3B2d/gVHS+275PvsxKoCMIRuEDgAck9GZlsZsvtj0E
+         nph0EeiXXakHCgyIAzpTqYz2n8aRnb5IbQhzIBYtxSSIsSUipUDz2eWnTozl3/G2mo+1
+         6jsbOLMPPHaUc2Hd8msk9iORgqnwNk3E9BHP3WcOR6fX/kqg0IVg8zXNmaT8ivpBXdBt
+         JzTA==
+X-Gm-Message-State: AC+VfDzJ8GeEi0SWMn/v8MiMcsT7plsHILgfDUtxV1e6F2ii0EVEk29u
+        WA0LZ0sO+GSdEHkLmhK/WgOHkIGdPJs=
+X-Google-Smtp-Source: ACHHUZ7DwmRF+wW3koA2mnP63Y8N2+MgSw/WC4aXWFzds5+AtXMzkjuua0NWJ+2vII0Pdw04YbLtOQ==
+X-Received: by 2002:a17:902:d2c3:b0:1ab:253e:6906 with SMTP id n3-20020a170902d2c300b001ab253e6906mr4983073plc.67.1686134666462;
+        Wed, 07 Jun 2023 03:44:26 -0700 (PDT)
 Received: from dw-tp ([49.207.220.159])
-        by smtp.gmail.com with ESMTPSA id w14-20020aa7858e000000b0064ca1fa8442sm8442507pfn.178.2023.06.07.03.28.52
+        by smtp.gmail.com with ESMTPSA id z19-20020a1709028f9300b001b02713a301sm10123893plo.181.2023.06.07.03.44.23
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 07 Jun 2023 03:28:54 -0700 (PDT)
-Date:   Wed, 07 Jun 2023 15:58:50 +0530
-Message-Id: <87zg5bin19.fsf@doe.com>
+        Wed, 07 Jun 2023 03:44:26 -0700 (PDT)
+Date:   Wed, 07 Jun 2023 16:14:21 +0530
+Message-Id: <87wn0fimbe.fsf@doe.com>
 From:   Ritesh Harjani (IBM) <ritesh.list@gmail.com>
 To:     Christoph Hellwig <hch@infradead.org>
 Cc:     linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
@@ -60,22 +60,54 @@ Cc:     linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
         Andreas Gruenbacher <agruenba@redhat.com>,
         Ojaswin Mujoo <ojaswin@linux.ibm.com>,
         Disha Goel <disgoel@linux.ibm.com>
-Subject: Re: [PATCHv8 1/5] iomap: Rename iomap_page to iomap_folio and others
-In-Reply-To: <ZIAojzrF5sEKDYmI@infradead.org>
+Subject: Re: [PATCHv8 2/5] iomap: Renames and refactor iomap_folio state bitmap handling
+In-Reply-To: <ZIAouOHobxGXUk5j@infradead.org>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
 Christoph Hellwig <hch@infradead.org> writes:
 
->> -static struct iomap_page *
->> -iomap_page_create(struct inode *inode, struct folio *folio, unsigned int flags)
->> +static struct iomap_folio *iomap_iof_alloc(struct inode *inode,
->> +				struct folio *folio, unsigned int flags)
+> On Tue, Jun 06, 2023 at 05:13:49PM +0530, Ritesh Harjani (IBM) wrote:
+>> Also refactors and adds iof->state handling functions for uptodate
+>> state.
 >
-> This is really weird indenttion.  Please just use two tabs like the
-> rest of the code.
+> What does this mean?
 
-Ok, sure. Will fix this indentation in the next rev.
+It is this part.
+
++static inline bool iomap_iof_is_fully_uptodate(struct folio *folio,
++					       struct iomap_folio *iof)
+
++static inline bool iomap_iof_is_block_uptodate(struct iomap_folio *iof,
++					       unsigned int block)
+
++static void iomap_iof_set_range_uptodate(struct folio *folio,
++			struct iomap_folio *iof, size_t off, size_t len)
+
++static void iomap_set_range_uptodate(struct folio *folio, size_t off,
++				     size_t len)
+
+
+> And please don't mix renames and other changes in
+> a single patch.
+
+All of this is related to uptodate bitmap handling code.
+i.e.
+- Renaming "uptodate" bitmap to "state" bitmap in struct iomap_page.
+- Renaming "uptodate_lock" to "state_lock" in struct iomap_page
+- Adding helper routines for uptodate bitmap handling
+- A small refactoring of iomap_set_range_uptodate() function to drop
+"iop" as a function argument. And move it's function definition above iomap_iof_alloc()
+
+
+Ok, so would you prefer if this has been split into 3 seperate patches?
+
+1. Renaming of uptodate and uptodate_lock to state and state_Lock.
+2. Refactor iomap_set_range_uptodate() function to drop struct
+iomap_page from it's argument and move it above iomap_iof_alloc() (or
+iomap_ibs_alloc or iomap_fbs_alloc whichever name we settle with)
+3. Add uptodate bitmap helper routines e.g.
+iomap_iof_is_block_uptodate(), iomap_iof_is_fully_uptodate().
 
 -ritesh
