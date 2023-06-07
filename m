@@ -2,68 +2,86 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D17C7C83005
-	for <linux-xfs@archiver.kernel.org>; Wed,  7 Jun 2023 09:11:40 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 86BEDC7EE29
+	for <linux-xfs@archiver.kernel.org>; Wed,  7 Jun 2023 09:25:30 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S239871AbjFGJLi (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 7 Jun 2023 05:11:38 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36564 "EHLO
+        id S238431AbjFGJZ2 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 7 Jun 2023 05:25:28 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46338 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S239859AbjFGJLD (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 7 Jun 2023 05:11:03 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 18949211B
-        for <linux-xfs@vger.kernel.org>; Wed,  7 Jun 2023 02:10:04 -0700 (PDT)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id A1AFA63CC2
-        for <linux-xfs@vger.kernel.org>; Wed,  7 Jun 2023 09:10:03 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id A8916C433EF;
-        Wed,  7 Jun 2023 09:10:01 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1686129003;
-        bh=/iTecrZoV/sy7TW9+QMtRsOdJ8GqtHregRPLzIz4jos=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=kTkxPBJLJ4mrdDxSwB/7z7FVhNlXvCw1WGpkVT9Ak9Axi6SYAVs5ixvZO+/obhaaj
-         g2jMUrpv8A8HHxROT145VUO2UPANeQlWSioYwY2LR5URvFKkotkWDQKgLta9lryGvD
-         SbDKgCHN622qi4Q5pr9JFoSZok153BmrZO9Gm1PqM/pvuxMJXjXVFFvGidcUuMiwT5
-         lVQ1U0SQP8VEtzk6bN62RyxYO1XlXq6KpnJSj3uU6lmkkS/jE4GZMOJpPzai2sxlA6
-         SVjWq74uuLWID+OhT/2NzsoollIVWzKJ3n6uIuJHVAyRNFhS5ncHFQJONzcLKXVTQF
-         i6SjUZvG1/vUw==
-Date:   Wed, 7 Jun 2023 10:09:58 +0100
-From:   Lee Jones <lee@kernel.org>
-To:     Leah Rumancik <lrumancik@google.com>
-Cc:     Amir Goldstein <amir73il@gmail.com>,
-        "Darrick J. Wong" <djwong@kernel.org>, linux-xfs@vger.kernel.org,
-        Dave Chinner <david@fromorbit.com>, chandan.babu@oracle.com
-Subject: Re: [PATCH] xfs: verify buffer contents when we skip log replay
-Message-ID: <20230607090958.GC1930705@google.com>
-References: <20230411233159.GH360895@frogsfrogsfrogs>
- <20230601130351.GA1787684@google.com>
- <20230601151146.GH16865@frogsfrogsfrogs>
- <CAOQ4uxh5m9VHnq0JG9BeAjAXyRdYy0fi9NwJVgWvH2tD7f9mLA@mail.gmail.com>
- <CAMxqPXVrsy0MMzt0e6cKZmBmLox3xJcjXu8yd-THzEUdDD=HGw@mail.gmail.com>
- <20230606165651.GB1930705@google.com>
- <CAMxqPXWLnJvJXRV5_dAq6huWdFdvLCw9qJs8ZHeb8mdL1WLCTA@mail.gmail.com>
+        with ESMTP id S239963AbjFGJY7 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 7 Jun 2023 05:24:59 -0400
+Received: from mail-il1-f198.google.com (mail-il1-f198.google.com [209.85.166.198])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E8A851982
+        for <linux-xfs@vger.kernel.org>; Wed,  7 Jun 2023 02:24:48 -0700 (PDT)
+Received: by mail-il1-f198.google.com with SMTP id e9e14a558f8ab-33e5ad802b4so425765ab.0
+        for <linux-xfs@vger.kernel.org>; Wed, 07 Jun 2023 02:24:48 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20221208; t=1686129888; x=1688721888;
+        h=to:from:subject:message-id:date:mime-version:x-gm-message-state
+         :from:to:cc:subject:date:message-id:reply-to;
+        bh=mcggyTbJQ4YNKwj8Ogeixygfc+iphiJKgvf+Reoaotc=;
+        b=Mad/wvZP89Zg651m30JZ1IOu+AD45Oa/yD2ayZnGOmmDYRu0KtBX5fp0YjSR+/WB87
+         IU83jaUcLNt4429+gxQkJ4If7+7/s6Gzx+ZhBHjaD/rV/dpQ9pz3dWCzU7qziRW2kKcK
+         nkFC8Sg2P+gmbg4UtT0+fTZCmfZY8GHm3odbm+oiadoK3nECzSqda4biThtU6TDw6IEN
+         16adr2phhg/pGAeDOFCiGzgmNEvEsNCzZDBJnJkx4Tn/nDpuMTJiUgYMBdL8ZvWnZZmf
+         wooU9x4ZD8KXHAjqJu0yRudXuB7vFeMRBRDvBqFGRnneCX3d7vo3UpPkRcVwMaJW0836
+         N5aw==
+X-Gm-Message-State: AC+VfDxPMlRPFQZZimqiJ7eKZFcpzfMHJU3Las7jAVwQGlBKgvDsbiA7
+        mi0hlspuoe5n/N/JpEoCzVETM45vafQiVUKtL72SLrclr5AS
+X-Google-Smtp-Source: ACHHUZ5RZcxOpmqKxbGUxbzJ2zCn2ZEBzjJLkXQdew2w2kmDjRGnl73yEOy7ne/oRP/Ck6TOSj5yWkfzX5h/JE7dTBwRKER14GOQ
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <CAMxqPXWLnJvJXRV5_dAq6huWdFdvLCw9qJs8ZHeb8mdL1WLCTA@mail.gmail.com>
+X-Received: by 2002:a92:c709:0:b0:33a:e860:f9dd with SMTP id
+ a9-20020a92c709000000b0033ae860f9ddmr2095374ilp.0.1686129888235; Wed, 07 Jun
+ 2023 02:24:48 -0700 (PDT)
+Date:   Wed, 07 Jun 2023 02:24:48 -0700
+X-Google-Appengine-App-Id: s~syzkaller
+X-Google-Appengine-App-Id-Alias: syzkaller
+Message-ID: <0000000000000897b205fd86b576@google.com>
+Subject: [syzbot] Monthly xfs report (Jun 2023)
+From:   syzbot <syzbot+list020cf39d4baa3eb9d54e@syzkaller.appspotmail.com>
+To:     djwong@kernel.org, linux-fsdevel@vger.kernel.org,
+        linux-kernel@vger.kernel.org, linux-xfs@vger.kernel.org,
+        syzkaller-bugs@googlegroups.com
+Content-Type: text/plain; charset="UTF-8"
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Tue, 06 Jun 2023, Leah Rumancik wrote:
+Hello xfs maintainers/developers,
 
-> Hi Lee,
-> 
-> I've started testing on this patch, hoping to have it out in a few
-> days. Currently, we try to get things into 5.10 (Amir) and 5.4
-> (Chandan) as well.
+This is a 31-day syzbot report for the xfs subsystem.
+All related reports/information can be found at:
+https://syzkaller.appspot.com/upstream/s/xfs
 
-Super, thank you Leah.
+During the period, 2 new issues were detected and 0 were fixed.
+In total, 22 issues are still open and 21 have been fixed so far.
 
--- 
-Lee Jones [李琼斯]
+Some of the still happening issues:
+
+Ref Crashes Repro Title
+<1> 1885    No    KMSAN: uninit-value in __crc32c_le_base (3)
+                  https://syzkaller.appspot.com/bug?extid=a6d6b8fffa294705dbd8
+<2> 188     Yes   KASAN: stack-out-of-bounds Read in xfs_buf_lock
+                  https://syzkaller.appspot.com/bug?extid=0bc698a422b5e4ac988c
+<3> 127     Yes   INFO: task hung in xfs_buf_item_unpin
+                  https://syzkaller.appspot.com/bug?extid=3f083e9e08b726fcfba2
+<4> 48      No    KCSAN: data-race in __filemap_remove_folio / folio_mapping (2)
+                  https://syzkaller.appspot.com/bug?extid=606f94dfeaaa45124c90
+<5> 13      No    KASAN: use-after-free Read in xfs_inode_item_push
+                  https://syzkaller.appspot.com/bug?extid=f0da51f81ea0b040c803
+<6> 7       Yes   KASAN: stack-out-of-bounds Read in xfs_buf_delwri_submit_buffers
+                  https://syzkaller.appspot.com/bug?extid=d2cdeba65d32ed1d2c4d
+
+---
+This report is generated by a bot. It may contain errors.
+See https://goo.gl/tpsmEJ for more information about syzbot.
+syzbot engineers can be reached at syzkaller@googlegroups.com.
+
+To disable reminders for individual bugs, reply with the following command:
+#syz set <Ref> no-reminders
+
+To change bug's subsystems, reply with:
+#syz set <Ref> subsystems: new-subsystem
+
+You may send multiple commands in a single email message.
