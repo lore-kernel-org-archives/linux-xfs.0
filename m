@@ -2,119 +2,92 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1F750C7EE2F
-	for <linux-xfs@archiver.kernel.org>; Wed,  7 Jun 2023 01:53:04 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 97C04C7EE29
+	for <linux-xfs@archiver.kernel.org>; Wed,  7 Jun 2023 02:21:22 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234714AbjFGBxC (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 6 Jun 2023 21:53:02 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39988 "EHLO
+        id S240748AbjFGCVU (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 6 Jun 2023 22:21:20 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47450 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S240587AbjFGBwi (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 6 Jun 2023 21:52:38 -0400
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 893CEA6
-        for <linux-xfs@vger.kernel.org>; Tue,  6 Jun 2023 18:51:56 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1686102715;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=BzbbJwBaLJR3atwlN7NB+kwVeQhF2PphFZr0MsHGIwU=;
-        b=aBbqFyh3evebWVZEhItoCH6Tq7uCUxl76or/6SOYUD35aLk8RxWFbRb+p3mKC7LfqYjlL4
-        7g7AzP5lHvkJ9fu0W+YLGYB/rhuVX2bEIFshr+WxaP1NUW+NE/DGm8k6uVc4eURpK8fGq0
-        D+jes/a8FZ287JZVRCcCOAic6Yilsrw=
-Received: from mimecast-mx02.redhat.com (mimecast-mx02.redhat.com
- [66.187.233.88]) by relay.mimecast.com with ESMTP with STARTTLS
- (version=TLSv1.2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- us-mta-635-QqD69_GEPg-WSrThU3amqQ-1; Tue, 06 Jun 2023 21:51:52 -0400
-X-MC-Unique: QqD69_GEPg-WSrThU3amqQ-1
-Received: from smtp.corp.redhat.com (int-mx09.intmail.prod.int.rdu2.redhat.com [10.11.54.9])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mimecast-mx02.redhat.com (Postfix) with ESMTPS id 03BB5811E78;
-        Wed,  7 Jun 2023 01:51:52 +0000 (UTC)
-Received: from redhat.com (unknown [10.22.34.195])
-        by smtp.corp.redhat.com (Postfix) with ESMTPS id A5214492B00;
-        Wed,  7 Jun 2023 01:51:51 +0000 (UTC)
-Date:   Tue, 6 Jun 2023 20:51:50 -0500
-From:   Bill O'Donnell <billodo@redhat.com>
-To:     "Darrick J. Wong" <djwong@kernel.org>
-Cc:     zlang@redhat.com, linux-xfs@vger.kernel.org,
-        fstests@vger.kernel.org, guan@eryu.me
-Subject: Re: [PATCH 1/3] xfs/108: allow slightly higher block usage
-Message-ID: <ZH/itoJAt/5SEbvi@redhat.com>
-References: <168609054262.2590724.13871035450315143622.stgit@frogsfrogsfrogs>
- <168609054837.2590724.6227482661383718314.stgit@frogsfrogsfrogs>
+        with ESMTP id S240739AbjFGCVO (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 6 Jun 2023 22:21:14 -0400
+Received: from mail-ot1-x32c.google.com (mail-ot1-x32c.google.com [IPv6:2607:f8b0:4864:20::32c])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B6FF61732
+        for <linux-xfs@vger.kernel.org>; Tue,  6 Jun 2023 19:21:13 -0700 (PDT)
+Received: by mail-ot1-x32c.google.com with SMTP id 46e09a7af769-6af93a6166fso6316205a34.3
+        for <linux-xfs@vger.kernel.org>; Tue, 06 Jun 2023 19:21:13 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=fromorbit-com.20221208.gappssmtp.com; s=20221208; t=1686104470; x=1688696470;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
+        bh=C4iBVR0i8Bu4cQNfPBIFelVQWQVCZcr/7TcZoBGNzkQ=;
+        b=4HPRV6kTLFDjL7jvT1mxv6rgzPNMbQmfgaY+cAOizYisKPmnYs+kgfGkGhZEYmdxQ6
+         Q3o4iYTE8B00LBTYT/rw6cq1yDsD/xzit0TccrkcsWF0U3cwFD58r9L31vcijNHKU1p8
+         +zvE8xwpw/KRk7nh7vvtA5HkN5AySzAQlJNCedgreMfxmD8UOAICI0N1F6gpSJjokdRu
+         mlRGMIVke2Z3IK0w0L04jwNqLGaiuXRUcf6bulSgbIeKVii25ZFQkMKC/z91xqaqRoup
+         xJt+HjiogWs4ZCqFUIitnfUWEN984F9q/AyUqwo4MWb7w22JaZqnDIKYi7Rzr7nX/OKX
+         /aUw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20221208; t=1686104470; x=1688696470;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=C4iBVR0i8Bu4cQNfPBIFelVQWQVCZcr/7TcZoBGNzkQ=;
+        b=Py+TO/cSVsZu/RB5z9LrTMclPCe8Ixzzf+pUVgxVp0tqLjDB9mCoRh+FTtSx+yqEZh
+         i1e11EkY7H3KO6bY5IqSnaD9nw+0IGcRdOZWj8DOlIdjFrwuN3bOF3lRUiY1dVzdDCCY
+         aAZpTyegioBWaIYiyXBeFDq0ppc4+fvfGgWfZc6K8Bsl5OWToq+gWuWFYzUJ/BYbBxRv
+         r6hy6Gmt5ZLzbArRfmohOseo4dG2aJh0QeISmDoh3PRsFyTENfYY78lthgplRY1q6FTr
+         842dmL+Kj2BMFATgcQxn8eezIBmwN4MKjY5n2NqLQreTBXEd8DVGBg5wKjBVEKi8rrB9
+         NsgA==
+X-Gm-Message-State: AC+VfDzixsOnyLgBUvM7LxYl/q0EEwEp3dwaAUXys++mV4Wl9BlUpg4C
+        s1j7HTHmdbMnG5N1d0kAVEMBblTEVlbOvQcO3wA=
+X-Google-Smtp-Source: ACHHUZ5FvwhUet8VVDuvZ4e8ssLawHzROUAW/m0eK57RByNweCdQzJ7p1c9rbSzJ5uGfNqZnN2Imcw==
+X-Received: by 2002:a9d:7312:0:b0:6b1:6583:dfd9 with SMTP id e18-20020a9d7312000000b006b16583dfd9mr4318808otk.29.1686104470550;
+        Tue, 06 Jun 2023 19:21:10 -0700 (PDT)
+Received: from dread.disaster.area (pa49-179-79-151.pa.nsw.optusnet.com.au. [49.179.79.151])
+        by smtp.gmail.com with ESMTPSA id s19-20020aa78293000000b0063f0068cf6csm7290601pfm.198.2023.06.06.19.21.09
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Tue, 06 Jun 2023 19:21:09 -0700 (PDT)
+Received: from dave by dread.disaster.area with local (Exim 4.96)
+        (envelope-from <david@fromorbit.com>)
+        id 1q6inL-008iic-14;
+        Wed, 07 Jun 2023 12:21:07 +1000
+Date:   Wed, 7 Jun 2023 12:21:07 +1000
+From:   Dave Chinner <david@fromorbit.com>
+To:     Jianan Wang <wangjianan.zju@gmail.com>
+Cc:     linux-xfs@vger.kernel.org
+Subject: Re: Question on the xfs inode slab memory
+Message-ID: <ZH/pk1UYR7BrT78b@dread.disaster.area>
+References: <CAMj1M42L6hH9weqroQNaWu_SG+Yg8NrAuzgNO1b8jiWPJ2M-5A@mail.gmail.com>
+ <ZHfhYsqln68N1HyO@dread.disaster.area>
+ <7572072d-8132-d918-285c-3391cb041cff@gmail.com>
+ <ZHkRHW9Fd19du0Zv@dread.disaster.area>
+ <b9c528fd-9556-12c5-4628-4163c070e45d@gmail.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <168609054837.2590724.6227482661383718314.stgit@frogsfrogsfrogs>
-X-Scanned-By: MIMEDefang 3.1 on 10.11.54.9
+In-Reply-To: <b9c528fd-9556-12c5-4628-4163c070e45d@gmail.com>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Tue, Jun 06, 2023 at 03:29:08PM -0700, Darrick J. Wong wrote:
-> From: Darrick J. Wong <djwong@kernel.org>
+On Tue, Jun 06, 2023 at 04:00:56PM -0700, Jianan Wang wrote:
+> Hi Dave,
 > 
-> With pmem and fsdax enabled, I occasionally see this test fail on XFS:
-> 
->    Mode: (0600/-rw-------)         Uid: (1)  Gid: (2)
->  Disk quotas for User #1 (1)
->  Filesystem Blocks Quota Limit Warn/Time Mounted on
-> -SCRATCH_DEV 48M 0 0 00 [------] SCRATCH_MNT
-> +SCRATCH_DEV 48.0M 0 0 00 [------] SCRATCH_MNT
->  Disk quotas for User #1 (1)
->  Filesystem Files Quota Limit Warn/Time Mounted on
->  SCRATCH_DEV 3 0 0 00 [------] SCRATCH_MNT
-> 
-> The cause of this failure is fragmentation in the file mappings that
-> results in a block mapping structure that no longer fits in the inode.
-> Hence the block usage is 49160K instead of the 49152K that was written.
-> Use some fugly sed duct tape to make this test accomodate this
-> possiblity.
-> 
-> Signed-off-by: Darrick J. Wong <djwong@kernel.org>
+> Just to follow up on this. We have performed the testing using the
+> Ubuntu 20.04 with 5.15 kernel as well as our custom built xfs 5.9,
+> but we still see significant slab memory build-up during the
+> process.
 
-LGTM.
-Reviewed-by: Bill O'Donnell <bodonnel@redhat.com>
+That's to be expected. Nothing has changed with respect to inode
+cache size management. All the changes were to how the XFS inode
+cache gets reclaimed.  Are you getting OOM killer reports when under
+memory pressure on 5.15 like you originally reported for the 5.4
+kernel you were running?
 
-> ---
->  tests/xfs/108 |   14 +++++++++++---
->  1 file changed, 11 insertions(+), 3 deletions(-)
-> 
-> 
-> diff --git a/tests/xfs/108 b/tests/xfs/108
-> index 4607000544..8593edbdd2 100755
-> --- a/tests/xfs/108
-> +++ b/tests/xfs/108
-> @@ -32,6 +32,14 @@ test_files()
->  	done
->  }
->  
-> +# Some filesystem configurations fragment the file mapping more than others,
-> +# which leads to the quota block counts being slightly higher than the 48MB
-> +# written.
-> +filter_quota()
-> +{
-> +	sed -e 's/48\.[01]M/48M/g' | _filter_quota
-> +}
-> +
->  test_accounting()
->  {
->  	echo "### some controlled buffered, direct and mmapd IO (type=$type)"
-> @@ -49,9 +57,9 @@ test_accounting()
->  		$here/src/lstat64 $file | head -3 | _filter_scratch
->  	done
->  	$XFS_IO_PROG -c syncfs $SCRATCH_MNT
-> -	$XFS_QUOTA_PROG -c "quota -hnb -$type $id" $QARGS | _filter_quota
-> -	$XFS_QUOTA_PROG -c "quota -hni -$type $id" $QARGS | _filter_quota
-> -	$XFS_QUOTA_PROG -c "quota -hnr -$type $id" $QARGS | _filter_quota
-> +	$XFS_QUOTA_PROG -c "quota -hnb -$type $id" $QARGS | filter_quota
-> +	$XFS_QUOTA_PROG -c "quota -hni -$type $id" $QARGS | filter_quota
-> +	$XFS_QUOTA_PROG -c "quota -hnr -$type $id" $QARGS | filter_quota
->  }
->  
->  export MOUNT_OPTIONS="-opquota"
-> 
+Cheers,
 
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
