@@ -2,86 +2,73 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 86BEDC7EE29
-	for <linux-xfs@archiver.kernel.org>; Wed,  7 Jun 2023 09:25:30 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4416CC77B7A
+	for <linux-xfs@archiver.kernel.org>; Wed,  7 Jun 2023 09:31:08 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S238431AbjFGJZ2 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 7 Jun 2023 05:25:28 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46338 "EHLO
+        id S235807AbjFGJbG (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 7 Jun 2023 05:31:06 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49650 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S239963AbjFGJY7 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 7 Jun 2023 05:24:59 -0400
-Received: from mail-il1-f198.google.com (mail-il1-f198.google.com [209.85.166.198])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E8A851982
-        for <linux-xfs@vger.kernel.org>; Wed,  7 Jun 2023 02:24:48 -0700 (PDT)
-Received: by mail-il1-f198.google.com with SMTP id e9e14a558f8ab-33e5ad802b4so425765ab.0
-        for <linux-xfs@vger.kernel.org>; Wed, 07 Jun 2023 02:24:48 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20221208; t=1686129888; x=1688721888;
-        h=to:from:subject:message-id:date:mime-version:x-gm-message-state
-         :from:to:cc:subject:date:message-id:reply-to;
-        bh=mcggyTbJQ4YNKwj8Ogeixygfc+iphiJKgvf+Reoaotc=;
-        b=Mad/wvZP89Zg651m30JZ1IOu+AD45Oa/yD2ayZnGOmmDYRu0KtBX5fp0YjSR+/WB87
-         IU83jaUcLNt4429+gxQkJ4If7+7/s6Gzx+ZhBHjaD/rV/dpQ9pz3dWCzU7qziRW2kKcK
-         nkFC8Sg2P+gmbg4UtT0+fTZCmfZY8GHm3odbm+oiadoK3nECzSqda4biThtU6TDw6IEN
-         16adr2phhg/pGAeDOFCiGzgmNEvEsNCzZDBJnJkx4Tn/nDpuMTJiUgYMBdL8ZvWnZZmf
-         wooU9x4ZD8KXHAjqJu0yRudXuB7vFeMRBRDvBqFGRnneCX3d7vo3UpPkRcVwMaJW0836
-         N5aw==
-X-Gm-Message-State: AC+VfDxPMlRPFQZZimqiJ7eKZFcpzfMHJU3Las7jAVwQGlBKgvDsbiA7
-        mi0hlspuoe5n/N/JpEoCzVETM45vafQiVUKtL72SLrclr5AS
-X-Google-Smtp-Source: ACHHUZ5RZcxOpmqKxbGUxbzJ2zCn2ZEBzjJLkXQdew2w2kmDjRGnl73yEOy7ne/oRP/Ck6TOSj5yWkfzX5h/JE7dTBwRKER14GOQ
+        with ESMTP id S240140AbjFGJaz (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 7 Jun 2023 05:30:55 -0400
+Received: from szxga02-in.huawei.com (szxga02-in.huawei.com [45.249.212.188])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B223919BC
+        for <linux-xfs@vger.kernel.org>; Wed,  7 Jun 2023 02:30:48 -0700 (PDT)
+Received: from canpemm500005.china.huawei.com (unknown [172.30.72.53])
+        by szxga02-in.huawei.com (SkyGuard) with ESMTP id 4QbhsG0nt8zTkrY;
+        Wed,  7 Jun 2023 17:30:26 +0800 (CST)
+Received: from Y00251687ALE274.china.huawei.com (10.174.178.198) by
+ canpemm500005.china.huawei.com (7.192.104.229) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
+ 15.1.2507.23; Wed, 7 Jun 2023 17:30:46 +0800
+From:   Weifeng Su <suweifeng1@huawei.com>
+To:     <linux-xfs@vger.kernel.org>, <djwong@kernel.org>, <hch@lst.de>,
+        <sandeen@sandeen.net>
+CC:     <linfeilong@huawei.com>, <liuzhiqiang26@huawei.com>,
+        Weifeng Su <suweifeng1@huawei.com>
+Subject: [PATCH] libxcmd: add return value check for dynamic memory function
+Date:   Wed, 7 Jun 2023 17:30:18 +0800
+Message-ID: <20230607093018.61752-1-suweifeng1@huawei.com>
+X-Mailer: git-send-email 2.18.0.windows.1
 MIME-Version: 1.0
-X-Received: by 2002:a92:c709:0:b0:33a:e860:f9dd with SMTP id
- a9-20020a92c709000000b0033ae860f9ddmr2095374ilp.0.1686129888235; Wed, 07 Jun
- 2023 02:24:48 -0700 (PDT)
-Date:   Wed, 07 Jun 2023 02:24:48 -0700
-X-Google-Appengine-App-Id: s~syzkaller
-X-Google-Appengine-App-Id-Alias: syzkaller
-Message-ID: <0000000000000897b205fd86b576@google.com>
-Subject: [syzbot] Monthly xfs report (Jun 2023)
-From:   syzbot <syzbot+list020cf39d4baa3eb9d54e@syzkaller.appspotmail.com>
-To:     djwong@kernel.org, linux-fsdevel@vger.kernel.org,
-        linux-kernel@vger.kernel.org, linux-xfs@vger.kernel.org,
-        syzkaller-bugs@googlegroups.com
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain
+X-Originating-IP: [10.174.178.198]
+X-ClientProxiedBy: dggems703-chm.china.huawei.com (10.3.19.180) To
+ canpemm500005.china.huawei.com (7.192.104.229)
+X-CFilter-Loop: Reflected
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Hello xfs maintainers/developers,
+The result check was missed and It cause the coredump like:
+0x00005589f3e358dd in add_command (ci=0x5589f3e3f020 <health_cmd>) at command.c:37
+0x00005589f3e337d8 in init_commands () at init.c:37
+init (argc=<optimized out>, argv=0x7ffecfb0cd28) at init.c:102
+0x00005589f3e33399 in main (argc=<optimized out>, argv=<optimized out>) at init.c:112
 
-This is a 31-day syzbot report for the xfs subsystem.
-All related reports/information can be found at:
-https://syzkaller.appspot.com/upstream/s/xfs
+Add check for realloc function to ignore this coredump and exit with
+error output
 
-During the period, 2 new issues were detected and 0 were fixed.
-In total, 22 issues are still open and 21 have been fixed so far.
-
-Some of the still happening issues:
-
-Ref Crashes Repro Title
-<1> 1885    No    KMSAN: uninit-value in __crc32c_le_base (3)
-                  https://syzkaller.appspot.com/bug?extid=a6d6b8fffa294705dbd8
-<2> 188     Yes   KASAN: stack-out-of-bounds Read in xfs_buf_lock
-                  https://syzkaller.appspot.com/bug?extid=0bc698a422b5e4ac988c
-<3> 127     Yes   INFO: task hung in xfs_buf_item_unpin
-                  https://syzkaller.appspot.com/bug?extid=3f083e9e08b726fcfba2
-<4> 48      No    KCSAN: data-race in __filemap_remove_folio / folio_mapping (2)
-                  https://syzkaller.appspot.com/bug?extid=606f94dfeaaa45124c90
-<5> 13      No    KASAN: use-after-free Read in xfs_inode_item_push
-                  https://syzkaller.appspot.com/bug?extid=f0da51f81ea0b040c803
-<6> 7       Yes   KASAN: stack-out-of-bounds Read in xfs_buf_delwri_submit_buffers
-                  https://syzkaller.appspot.com/bug?extid=d2cdeba65d32ed1d2c4d
-
+Signed-off-by: Weifeng Su <suweifeng1@huawei.com>
 ---
-This report is generated by a bot. It may contain errors.
-See https://goo.gl/tpsmEJ for more information about syzbot.
-syzbot engineers can be reached at syzkaller@googlegroups.com.
+ libxcmd/command.c | 4 ++++
+ 1 file changed, 4 insertions(+)
 
-To disable reminders for individual bugs, reply with the following command:
-#syz set <Ref> no-reminders
+diff --git a/libxcmd/command.c b/libxcmd/command.c
+index a76d1515..47d050c3 100644
+--- a/libxcmd/command.c
++++ b/libxcmd/command.c
+@@ -34,6 +34,10 @@ add_command(
+ 	const cmdinfo_t	*ci)
+ {
+ 	cmdtab = realloc((void *)cmdtab, ++ncmds * sizeof(*cmdtab));
++	if (!cmdtab) {
++		perror("realloc");
++		exit(1);
++	}
+ 	cmdtab[ncmds - 1] = *ci;
+ 	qsort(cmdtab, ncmds, sizeof(*cmdtab), compare);
+ }
+-- 
+2.18.0.windows.1
 
-To change bug's subsystems, reply with:
-#syz set <Ref> subsystems: new-subsystem
-
-You may send multiple commands in a single email message.
