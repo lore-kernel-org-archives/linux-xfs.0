@@ -2,63 +2,39 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0765CC7EE29
-	for <linux-xfs@archiver.kernel.org>; Wed,  7 Jun 2023 13:30:04 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id DDDCBC7EE25
+	for <linux-xfs@archiver.kernel.org>; Wed,  7 Jun 2023 13:31:09 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235032AbjFGNaC (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 7 Jun 2023 09:30:02 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52266 "EHLO
+        id S240595AbjFGNbI (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 7 Jun 2023 09:31:08 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52484 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S235568AbjFGNaB (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 7 Jun 2023 09:30:01 -0400
-Received: from bombadil.infradead.org (bombadil.infradead.org [IPv6:2607:7c80:54:3::133])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7B7521AC;
-        Wed,  7 Jun 2023 06:29:57 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Type:MIME-Version
-        :References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
-        Content-Transfer-Encoding:Content-ID:Content-Description;
-        bh=GDHR4aFrrReoV3V4aWQhlwhUHLkt4QMHTM2AiWMpQTA=; b=hS5hyGka78IPTsstz3d4plca2h
-        rXcUZizyaST84XeKLqIxLkWJOUlhxhPuwAAWpc8LmjX0KURwheWVtdeAr4wqji9FQ8Z2sDde4npAJ
-        gR/lENesNeVXmFdhxtvgjOacmDwczPdCPlaI5ZGh5Fj5rank3fU5FqtwjBXXhnNFUWuwahm2ze1jL
-        X+tr9GdQ2FTb6x/B+yi3tUM9GZFcXWyrX4Oii7JeCRvKPF8ljdrjouh2wDvBILTZNLFFCkeijLJ9z
-        Ux0oBp+7jnhxheRHbykR6oI8su3NRmbsFBJEV0PQjuHU1FXVAUZs+wXjSPgMa+bcyU1NubMxyGYdV
-        wbEx7z5Q==;
-Received: from hch by bombadil.infradead.org with local (Exim 4.96 #2 (Red Hat Linux))
-        id 1q6tEa-0066VG-1x;
-        Wed, 07 Jun 2023 13:29:56 +0000
-Date:   Wed, 7 Jun 2023 06:29:56 -0700
-From:   Christoph Hellwig <hch@infradead.org>
-To:     Ritesh Harjani <ritesh.list@gmail.com>
-Cc:     Christoph Hellwig <hch@infradead.org>, linux-xfs@vger.kernel.org,
-        linux-fsdevel@vger.kernel.org,
-        "Darrick J. Wong" <djwong@kernel.org>,
-        Matthew Wilcox <willy@infradead.org>,
-        Dave Chinner <david@fromorbit.com>,
-        Brian Foster <bfoster@redhat.com>,
-        Andreas Gruenbacher <agruenba@redhat.com>,
-        Ojaswin Mujoo <ojaswin@linux.ibm.com>,
-        Disha Goel <disgoel@linux.ibm.com>
-Subject: Re: [PATCHv8 2/5] iomap: Renames and refactor iomap_folio state
- bitmap handling
-Message-ID: <ZICGVCWx3PKaBnF+@infradead.org>
-References: <ZIAouOHobxGXUk5j@infradead.org>
- <87wn0fimbe.fsf@doe.com>
+        with ESMTP id S240221AbjFGNbI (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 7 Jun 2023 09:31:08 -0400
+Received: from verein.lst.de (verein.lst.de [213.95.11.211])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 94B291732
+        for <linux-xfs@vger.kernel.org>; Wed,  7 Jun 2023 06:31:03 -0700 (PDT)
+Received: by verein.lst.de (Postfix, from userid 2407)
+        id 56C0F6732D; Wed,  7 Jun 2023 15:30:59 +0200 (CEST)
+Date:   Wed, 7 Jun 2023 15:30:59 +0200
+From:   Christoph Hellwig <hch@lst.de>
+To:     Weifeng Su <suweifeng1@huawei.com>
+Cc:     linux-xfs@vger.kernel.org, djwong@kernel.org, hch@lst.de,
+        sandeen@sandeen.net, linfeilong@huawei.com,
+        liuzhiqiang26@huawei.com
+Subject: Re: [PATCH] libxcmd: add return value check for dynamic memory
+ function
+Message-ID: <20230607133059.GA20840@lst.de>
+References: <20230607093018.61752-1-suweifeng1@huawei.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <87wn0fimbe.fsf@doe.com>
-X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
+In-Reply-To: <20230607093018.61752-1-suweifeng1@huawei.com>
+User-Agent: Mutt/1.5.17 (2007-11-01)
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Wed, Jun 07, 2023 at 04:14:21PM +0530, Ritesh Harjani wrote:
-> 1. Renaming of uptodate and uptodate_lock to state and state_Lock.
-> 2. Refactor iomap_set_range_uptodate() function to drop struct
-> iomap_page from it's argument and move it above iomap_iof_alloc() (or
-> iomap_ibs_alloc or iomap_fbs_alloc whichever name we settle with)
-> 3. Add uptodate bitmap helper routines e.g.
-> iomap_iof_is_block_uptodate(), iomap_iof_is_fully_uptodate().
+Looks good:
 
-Yes, please.
+Reviewed-by: Christoph Hellwig <hch@lst.de>
