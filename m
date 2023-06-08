@@ -2,147 +2,93 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 80CFFC7EE23
-	for <linux-xfs@archiver.kernel.org>; Thu,  8 Jun 2023 14:56:08 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 91630C7EE23
+	for <linux-xfs@archiver.kernel.org>; Thu,  8 Jun 2023 16:39:04 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S236178AbjFHO4H (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 8 Jun 2023 10:56:07 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42106 "EHLO
+        id S234051AbjFHQjD (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 8 Jun 2023 12:39:03 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47396 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S235886AbjFHO4H (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 8 Jun 2023 10:56:07 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0DE66273A
-        for <linux-xfs@vger.kernel.org>; Thu,  8 Jun 2023 07:56:03 -0700 (PDT)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 8481760F3A
-        for <linux-xfs@vger.kernel.org>; Thu,  8 Jun 2023 14:56:02 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id D75B7C433EF;
-        Thu,  8 Jun 2023 14:56:01 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1686236161;
-        bh=QCdEzl7oMl1eVC4a2Wvlm86FD9Civ1jaNYijNbU0c9w=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=YYPKVGO9J5dhUJljonTd3vXaCM/zq3OqFjI1EaIt+jQOpbizBIPTtVRjf6DrTgIag
-         GWsZlxrLzQCJVrK8X1tdr9AJFy/hTwqVxixhqDIYqmQRBjpUqKx9QcXx7W6DCTdito
-         Et3LWpk7mTqQqTx6fn3IxEZB+YMPbHtXcr7tW7KDUh6grGIPKfKXtsxMdFiqAJNYGX
-         9Zq+WtFAFGM3OkjJeLl0ZmeVVvnneI4F1VybPOSfkE5dDa0dnelinBWDVrhB+bopwU
-         yW3M15usi0ffK1ree4HKLaKlXsYxF0w9/e8ZZw+is9Z5koz5n9yTvu4KbC+f+4CqeR
-         P2roC+jxDamDA==
-Date:   Thu, 8 Jun 2023 07:56:01 -0700
-From:   "Darrick J. Wong" <djwong@kernel.org>
-To:     Shiyang Ruan <ruansy.fnst@fujitsu.com>
-Cc:     linux-xfs@vger.kernel.org, cem@kernel.org
-Subject: Re: [PATCHSET v25.0 0/7] xfs_scrub: fixes to the repair code
-Message-ID: <20230608145601.GW1325469@frogsfrogsfrogs>
-References: <20230526000020.GJ11620@frogsfrogsfrogs>
- <168506071314.3742205.8114181660121831202.stgit@frogsfrogsfrogs>
- <4af2621e-bd59-f1be-8e07-7800a68c59fa@fujitsu.com>
+        with ESMTP id S235756AbjFHQi6 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 8 Jun 2023 12:38:58 -0400
+Received: from outgoing.mit.edu (outgoing-auth-1.mit.edu [18.9.28.11])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E283230CF
+        for <linux-xfs@vger.kernel.org>; Thu,  8 Jun 2023 09:38:31 -0700 (PDT)
+Received: from cwcc.thunk.org (pool-173-48-82-39.bstnma.fios.verizon.net [173.48.82.39])
+        (authenticated bits=0)
+        (User authenticated as tytso@ATHENA.MIT.EDU)
+        by outgoing.mit.edu (8.14.7/8.12.4) with ESMTP id 358GaM2E029198
+        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+        Thu, 8 Jun 2023 12:36:23 -0400
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=mit.edu; s=outgoing;
+        t=1686242186; bh=shiW3MxbgeJoRhHHYMf+Lg7J4ykrzks2P+y1IqsB/aY=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To;
+        b=RqfXkYoZ5EfyswFT/IoHwD28IyGaSArs6cGCB/H0TD4xHGHzpBVP2vwPhrxaz6S4M
+         /3rwqaPRGQ8aSiECtd052yWKcpmZGeSVS6MBJPjCE7//VdQu9n6EkMBmkPIExzyvk/
+         7ne4YcOKUq6w3GNtlSuqCHJfkyScdvJ8Oo8F2i2igkP8q1ngkCaJAU+UbCJG6S5dUK
+         jI26E84MM/d1eGpejXwsiRKo7MGZP5McibXcPH5PfXdh6aeiLWRpZSpKGSNWhfq0Fl
+         kdsMH9OBXqpvCo1DiXaIgO6ZGpfxA6cjLQnaHU+Jd4GblQ5c06R1VbK2SqM18K2atM
+         PUynhlqNqAPwQ==
+Received: by cwcc.thunk.org (Postfix, from userid 15806)
+        id 6B6CD15C04C3; Thu,  8 Jun 2023 12:36:22 -0400 (EDT)
+Date:   Thu, 8 Jun 2023 12:36:22 -0400
+From:   "Theodore Ts'o" <tytso@mit.edu>
+To:     Dave Chinner <david@fromorbit.com>
+Cc:     Roman Gushchin <roman.gushchin@linux.dev>,
+        Kirill Tkhai <tkhai@ya.ru>, akpm@linux-foundation.org,
+        vbabka@suse.cz, viro@zeniv.linux.org.uk, brauner@kernel.org,
+        djwong@kernel.org, hughd@google.com, paulmck@kernel.org,
+        muchun.song@linux.dev, linux-mm@kvack.org,
+        linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org,
+        linux-kernel@vger.kernel.org, zhengqi.arch@bytedance.com
+Subject: Re: [PATCH v2 3/3] fs: Use delayed shrinker unregistration
+Message-ID: <20230608163622.GA1435580@mit.edu>
+References: <168599103578.70911.9402374667983518835.stgit@pro.pro>
+ <168599180526.70911.14606767590861123431.stgit@pro.pro>
+ <ZH6AA72wOd4HKTKE@P9FQF9L96D>
+ <ZH6K0McWBeCjaf16@dread.disaster.area>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <4af2621e-bd59-f1be-8e07-7800a68c59fa@fujitsu.com>
+In-Reply-To: <ZH6K0McWBeCjaf16@dread.disaster.area>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Thu, Jun 08, 2023 at 09:22:02PM +0800, Shiyang Ruan wrote:
-> Hi Darrick,
+On Tue, Jun 06, 2023 at 11:24:32AM +1000, Dave Chinner wrote:
+> On Mon, Jun 05, 2023 at 05:38:27PM -0700, Roman Gushchin wrote:
+> > Hm, it makes the API more complex and easier to mess with. Like what will happen
+> > if the second part is never called? Or it's called without the first part being
+> > called first?
 > 
-> I'm running test on this patchset (patched kernel and xfsprogs, latest
-> xfstests:v2023.05.28).  Now I found xfs/730 failed with message "online
-> scrub didn't fail".  The detail is:
+> Bad things.
 > 
-> FSTYP         -- xfs (debug)
-> PLATFORM      -- Linux/x86_64 f36 6.4.0-rc3-pmem+ #309 SMP PREEMPT_DYNAMIC
-> Wed Jun  7 15:44:15 CST 2023
-> MKFS_OPTIONS  -- -f /dev/pmem1
-> MOUNT_OPTIONS -- -o context=system_u:object_r:root_t:s0 /dev/pmem1
-> /mnt/scratch
+> Also, it doesn't fix the three other unregister_shrinker() calls in
+> the XFS unmount path, nor the three in the ext4/mbcache/jbd2 unmount
+> path.
 > 
-> xfs/730       - output mismatch (see
-> /root/xts/results//default/xfs/730.out.bad)
-> mv: failed to preserve ownership for
-> '/root/xts/results//default/xfs/730.out.bad': Operation not permitted
->     --- tests/xfs/730.out	2023-03-16 09:42:15.256141472 +0800
->     +++ /root/xts/results//default/xfs/730.out.bad	2023-06-08
-
-Whoah, someone besides me actually runs the repair fuzzers??
-
-Yay!
-
-> 20:43:27.436083265 +0800
->     @@ -1,4 +1,14 @@
->      QA output created by 730
->      Format and populate
->      Fuzz fscounters
->     +icount = zeroes: online scrub didn't fail.
->     +icount = ones: online scrub didn't fail.
->     +icount = firstbit: online scrub didn't fail.
->     +icount = middlebit: online scrub didn't fail.
->     ...
->     (Run 'diff -u /root/xts/tests/xfs/730.out
-> /root/xts/results//default/xfs/730.out.bad'  to see the entire diff)
+> Those are just some of the unregister_shrinker() calls that have
+> dynamic contexts that would also need this same fix; I haven't
+> audited the 3 dozen other unregister_shrinker() calls around the
+> kernel to determine if any of them need similar treatment, too.
 > 
-> 
-> This test case is to fuzz metadata and make sure xfs_scrub can repair the
-> fs. After a little investigation, I think the fuzz actually done to the
-> metadata area but the xfs_scrub seems didn't notice that.  I haven't found
-> the root cause of the problem yet.  Do you have the same message which
-> causes fail on this case?
+> IOWs, this patchset is purely a band-aid to fix the reported
+> regression, not an actual fix for the underlying problems caused by
+> moving the shrinker infrastructure to SRCU protection.  This is why
+> I really want the SRCU changeover reverted.
 
-Yeah, we recently disabled some code in fscounters.c to fix some other
-correctness problems in the inodegc code.  My goal was to get this
-series:
+There's been so much traffic on linux-fsdevel so I missed this thread
+until Darrick pointed it out to me today.  (Thanks, Darrick!)
 
-https://lore.kernel.org/linux-xfs/168506061483.3732954.5178462816967376906.stgit@frogsfrogsfrogs/
+From his description, and my quick read-through of this thread....
+I'm worried.
 
-merged for 6.5 and then the whole thing would work *completely*
-correctly, but it might be too late now.
+Given that we're at -rc5 now, and the file system folks didn't get
+consulted until fairly late in the progress, and the fact that this
+may cause use-after-free problems that could lead to security issues,
+perhaps we shoould consider reverting the SRCU changeover now, and try
+again for the next merge window?
 
---D
+Thanks!!
 
-> 
-> --
-> Thanks,
-> Ruan.
-> 
-> 在 2023/5/26 8:38, Darrick J. Wong 写道:
-> > Hi all,
-> > 
-> > Now that we've landed the new kernel code, it's time to reorganize the
-> > xfs_scrub code that handles repairs.  Clean up various naming warts and
-> > misleading error messages.  Move the repair code to scrub/repair.c as
-> > the first step.  Then, fix various issues in the repair code before we
-> > start reorganizing things.
-> > 
-> > If you're going to start using this mess, you probably ought to just
-> > pull from my git trees, which are linked below.
-> > 
-> > This is an extraordinary way to destroy everything.  Enjoy!
-> > Comments and questions are, as always, welcome.
-> > 
-> > --D
-> > 
-> > xfsprogs git tree:
-> > https://git.kernel.org/cgit/linux/kernel/git/djwong/xfsprogs-dev.git/log/?h=scrub-repair-fixes
-> > ---
-> >   scrub/phase1.c        |    2
-> >   scrub/phase2.c        |    3 -
-> >   scrub/phase3.c        |    2
-> >   scrub/phase4.c        |   22 ++++-
-> >   scrub/phase5.c        |    2
-> >   scrub/phase6.c        |   13 +++
-> >   scrub/phase7.c        |    2
-> >   scrub/repair.c        |  177 ++++++++++++++++++++++++++++++++++++++++++-
-> >   scrub/repair.h        |   16 +++-
-> >   scrub/scrub.c         |  204 +------------------------------------------------
-> >   scrub/scrub.h         |   16 ----
-> >   scrub/scrub_private.h |   55 +++++++++++++
-> >   scrub/xfs_scrub.c     |    2
-> >   13 files changed, 283 insertions(+), 233 deletions(-)
-> >   create mode 100644 scrub/scrub_private.h
-> > 
+						- Ted
