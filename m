@@ -2,77 +2,147 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C29ECC7EE25
-	for <linux-xfs@archiver.kernel.org>; Thu,  8 Jun 2023 14:47:16 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 80CFFC7EE23
+	for <linux-xfs@archiver.kernel.org>; Thu,  8 Jun 2023 14:56:08 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235721AbjFHOrQ (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 8 Jun 2023 10:47:16 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40340 "EHLO
+        id S236178AbjFHO4H (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 8 Jun 2023 10:56:07 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42106 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233645AbjFHOrP (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 8 Jun 2023 10:47:15 -0400
+        with ESMTP id S235886AbjFHO4H (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 8 Jun 2023 10:56:07 -0400
 Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id CFF482D4A
-        for <linux-xfs@vger.kernel.org>; Thu,  8 Jun 2023 07:47:14 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0DE66273A
+        for <linux-xfs@vger.kernel.org>; Thu,  8 Jun 2023 07:56:03 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 64B8E60AFF
-        for <linux-xfs@vger.kernel.org>; Thu,  8 Jun 2023 14:47:14 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id C0F3CC433D2;
-        Thu,  8 Jun 2023 14:47:13 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 8481760F3A
+        for <linux-xfs@vger.kernel.org>; Thu,  8 Jun 2023 14:56:02 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id D75B7C433EF;
+        Thu,  8 Jun 2023 14:56:01 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1686235633;
-        bh=JnnLSzIAFhwxUVyt+/hEC0txc6HHwswv8plBCzMIdIU=;
+        s=k20201202; t=1686236161;
+        bh=QCdEzl7oMl1eVC4a2Wvlm86FD9Civ1jaNYijNbU0c9w=;
         h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=bp4qoGwmOOdOLi/JnPwQ82LgK1LPMcHz8c/ZIp/s04c1FuhduucE0U8Oc4L5WcojI
-         aaVoUCBByF49dZ1UbgPfqVRg2O+qrTodRwRT+ov9XRsc3m9xJudJntVGGaMqmo1z4H
-         6UGBz8uq5cnI0zCjpOb5yPQpvdYtwQ+y8S8B1OoohBytV4u2Hx7fE6x6CwwubaAdBV
-         3e7Vk7YNEsHexnay9mrCnqwHjKl7ND21YvR8N+gwnY9UuP34L217efQlmd+AwwrXIF
-         xysgFpTvMHqPU4JHL4SzrZj5qrdMqaL78+SuocEaciU/DunJh2TJKIhev4NkaEJOCO
-         Q+vqcK71URmiQ==
-Date:   Thu, 8 Jun 2023 07:47:13 -0700
+        b=YYPKVGO9J5dhUJljonTd3vXaCM/zq3OqFjI1EaIt+jQOpbizBIPTtVRjf6DrTgIag
+         GWsZlxrLzQCJVrK8X1tdr9AJFy/hTwqVxixhqDIYqmQRBjpUqKx9QcXx7W6DCTdito
+         Et3LWpk7mTqQqTx6fn3IxEZB+YMPbHtXcr7tW7KDUh6grGIPKfKXtsxMdFiqAJNYGX
+         9Zq+WtFAFGM3OkjJeLl0ZmeVVvnneI4F1VybPOSfkE5dDa0dnelinBWDVrhB+bopwU
+         yW3M15usi0ffK1ree4HKLaKlXsYxF0w9/e8ZZw+is9Z5koz5n9yTvu4KbC+f+4CqeR
+         P2roC+jxDamDA==
+Date:   Thu, 8 Jun 2023 07:56:01 -0700
 From:   "Darrick J. Wong" <djwong@kernel.org>
-To:     Pavel Reichl <preichl@redhat.com>
-Cc:     linux-xfs@vger.kernel.org
-Subject: Re: [PATCH] mkfs: fix man's default value for sparse option
-Message-ID: <20230608144713.GV1325469@frogsfrogsfrogs>
-References: <20230608091320.113513-1-preichl@redhat.com>
+To:     Shiyang Ruan <ruansy.fnst@fujitsu.com>
+Cc:     linux-xfs@vger.kernel.org, cem@kernel.org
+Subject: Re: [PATCHSET v25.0 0/7] xfs_scrub: fixes to the repair code
+Message-ID: <20230608145601.GW1325469@frogsfrogsfrogs>
+References: <20230526000020.GJ11620@frogsfrogsfrogs>
+ <168506071314.3742205.8114181660121831202.stgit@frogsfrogsfrogs>
+ <4af2621e-bd59-f1be-8e07-7800a68c59fa@fujitsu.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=utf-8
 Content-Disposition: inline
-In-Reply-To: <20230608091320.113513-1-preichl@redhat.com>
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <4af2621e-bd59-f1be-8e07-7800a68c59fa@fujitsu.com>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Thu, Jun 08, 2023 at 11:13:20AM +0200, Pavel Reichl wrote:
-> Fixes: 9cf846b51 ("mkfs: enable sparse inodes by default")
-> Suggested-by: Lukas Herbolt <lukas@herbolt.com>
-> Signed-off-by: Pavel Reichl <preichl@redhat.com>
+On Thu, Jun 08, 2023 at 09:22:02PM +0800, Shiyang Ruan wrote:
+> Hi Darrick,
+> 
+> I'm running test on this patchset (patched kernel and xfsprogs, latest
+> xfstests:v2023.05.28).  Now I found xfs/730 failed with message "online
+> scrub didn't fail".  The detail is:
+> 
+> FSTYP         -- xfs (debug)
+> PLATFORM      -- Linux/x86_64 f36 6.4.0-rc3-pmem+ #309 SMP PREEMPT_DYNAMIC
+> Wed Jun  7 15:44:15 CST 2023
+> MKFS_OPTIONS  -- -f /dev/pmem1
+> MOUNT_OPTIONS -- -o context=system_u:object_r:root_t:s0 /dev/pmem1
+> /mnt/scratch
+> 
+> xfs/730       - output mismatch (see
+> /root/xts/results//default/xfs/730.out.bad)
+> mv: failed to preserve ownership for
+> '/root/xts/results//default/xfs/730.out.bad': Operation not permitted
+>     --- tests/xfs/730.out	2023-03-16 09:42:15.256141472 +0800
+>     +++ /root/xts/results//default/xfs/730.out.bad	2023-06-08
 
-Heh, whoops.
-Reviewed-by: Darrick J. Wong <djwong@kernel.org>
+Whoah, someone besides me actually runs the repair fuzzers??
+
+Yay!
+
+> 20:43:27.436083265 +0800
+>     @@ -1,4 +1,14 @@
+>      QA output created by 730
+>      Format and populate
+>      Fuzz fscounters
+>     +icount = zeroes: online scrub didn't fail.
+>     +icount = ones: online scrub didn't fail.
+>     +icount = firstbit: online scrub didn't fail.
+>     +icount = middlebit: online scrub didn't fail.
+>     ...
+>     (Run 'diff -u /root/xts/tests/xfs/730.out
+> /root/xts/results//default/xfs/730.out.bad'  to see the entire diff)
+> 
+> 
+> This test case is to fuzz metadata and make sure xfs_scrub can repair the
+> fs. After a little investigation, I think the fuzz actually done to the
+> metadata area but the xfs_scrub seems didn't notice that.  I haven't found
+> the root cause of the problem yet.  Do you have the same message which
+> causes fail on this case?
+
+Yeah, we recently disabled some code in fscounters.c to fix some other
+correctness problems in the inodegc code.  My goal was to get this
+series:
+
+https://lore.kernel.org/linux-xfs/168506061483.3732954.5178462816967376906.stgit@frogsfrogsfrogs/
+
+merged for 6.5 and then the whole thing would work *completely*
+correctly, but it might be too late now.
 
 --D
 
-> ---
->  man/man8/mkfs.xfs.8.in | 2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
 > 
-> diff --git a/man/man8/mkfs.xfs.8.in b/man/man8/mkfs.xfs.8.in
-> index 49e64d47a..48e26ece7 100644
-> --- a/man/man8/mkfs.xfs.8.in
-> +++ b/man/man8/mkfs.xfs.8.in
-> @@ -631,7 +631,7 @@ Enable sparse inode chunk allocation. The
->  .I value
->  is either 0 or 1, with 1 signifying that sparse allocation is enabled.
->  If the value is omitted, 1 is assumed. Sparse inode allocation is
-> -disabled by default. This feature is only available for filesystems
-> +enabled by default. This feature is only available for filesystems
->  formatted with
->  .B \-m crc=1.
->  .IP
-> -- 
-> 2.40.1
+> --
+> Thanks,
+> Ruan.
 > 
+> 在 2023/5/26 8:38, Darrick J. Wong 写道:
+> > Hi all,
+> > 
+> > Now that we've landed the new kernel code, it's time to reorganize the
+> > xfs_scrub code that handles repairs.  Clean up various naming warts and
+> > misleading error messages.  Move the repair code to scrub/repair.c as
+> > the first step.  Then, fix various issues in the repair code before we
+> > start reorganizing things.
+> > 
+> > If you're going to start using this mess, you probably ought to just
+> > pull from my git trees, which are linked below.
+> > 
+> > This is an extraordinary way to destroy everything.  Enjoy!
+> > Comments and questions are, as always, welcome.
+> > 
+> > --D
+> > 
+> > xfsprogs git tree:
+> > https://git.kernel.org/cgit/linux/kernel/git/djwong/xfsprogs-dev.git/log/?h=scrub-repair-fixes
+> > ---
+> >   scrub/phase1.c        |    2
+> >   scrub/phase2.c        |    3 -
+> >   scrub/phase3.c        |    2
+> >   scrub/phase4.c        |   22 ++++-
+> >   scrub/phase5.c        |    2
+> >   scrub/phase6.c        |   13 +++
+> >   scrub/phase7.c        |    2
+> >   scrub/repair.c        |  177 ++++++++++++++++++++++++++++++++++++++++++-
+> >   scrub/repair.h        |   16 +++-
+> >   scrub/scrub.c         |  204 +------------------------------------------------
+> >   scrub/scrub.h         |   16 ----
+> >   scrub/scrub_private.h |   55 +++++++++++++
+> >   scrub/xfs_scrub.c     |    2
+> >   13 files changed, 283 insertions(+), 233 deletions(-)
+> >   create mode 100644 scrub/scrub_private.h
+> > 
