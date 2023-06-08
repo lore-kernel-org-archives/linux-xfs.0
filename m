@@ -2,66 +2,88 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5B26AC7EE25
-	for <linux-xfs@archiver.kernel.org>; Thu,  8 Jun 2023 13:53:57 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A4157C7EE25
+	for <linux-xfs@archiver.kernel.org>; Thu,  8 Jun 2023 14:45:48 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235708AbjFHNx4 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 8 Jun 2023 09:53:56 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37092 "EHLO
+        id S236527AbjFHOpr (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 8 Jun 2023 10:45:47 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39744 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231626AbjFHNxz (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 8 Jun 2023 09:53:55 -0400
-Received: from bombadil.infradead.org (bombadil.infradead.org [IPv6:2607:7c80:54:3::133])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9BEDF1BD;
-        Thu,  8 Jun 2023 06:53:54 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Type:MIME-Version
-        :References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
-        Content-Transfer-Encoding:Content-ID:Content-Description;
-        bh=xOPYSXMA8FBLUr/kv5jx92kSAsnGM8wPCIzb12nVRAE=; b=trZXP2L/CRzLAzLlukIAZK+ZVo
-        b0WD+QldBAq8BmccB4sqpjbEjxXsNpL9t9YcWRrTY0EiBUkyjQTfirKUJlDBtgGYUnpSmXzG4iKYQ
-        DVu/M6LbvR2MFk4X5XTYDh0pXKj6Iyvr77AjrpfvsdD6YlA3KGc69HQrCXRaSaEQpxTcVak/5gzRm
-        y0EOCoExHbY8F0HWZZXZxUOGaXrsOIdbIRkaeapUzeyZ5YuHKn8/IQ5BIZ96ZSX+eLX/zaYzcWt96
-        EWPec8d8F8byohHzbJRz/9BgDu1SyYxfN+0p3+aL8WuUuPhZkkvGeK64G1GcCDsE5ubTfTjt+FoXW
-        FbJQjilg==;
-Received: from hch by bombadil.infradead.org with local (Exim 4.96 #2 (Red Hat Linux))
-        id 1q7G5C-009X2C-2I;
-        Thu, 08 Jun 2023 13:53:46 +0000
-Date:   Thu, 8 Jun 2023 06:53:46 -0700
-From:   Christoph Hellwig <hch@infradead.org>
-To:     Luis Chamberlain <mcgrof@kernel.org>
-Cc:     hch@infradead.org, djwong@kernel.org, dchinner@redhat.com,
-        kbusch@kernel.org, willy@infradead.org, hare@suse.de,
-        ritesh.list@gmail.com, rgoldwyn@suse.com, jack@suse.cz,
-        patches@lists.linux.dev, linux-xfs@vger.kernel.org,
-        linux-fsdevel@vger.kernel.org, linux-block@vger.kernel.org,
-        p.raghav@samsung.com, da.gomez@samsung.com, rohan.puri@samsung.com,
-        rpuri.linux@gmail.com, corbet@lwn.net, jake@lwn.net
-Subject: Re: [RFC 1/4] bdev: replace export of blockdev_superblock with
- BDEVFS_MAGIC
-Message-ID: <ZIHdavOjpLpUC4cy@infradead.org>
-References: <20230608032404.1887046-1-mcgrof@kernel.org>
- <20230608032404.1887046-2-mcgrof@kernel.org>
+        with ESMTP id S233645AbjFHOpp (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 8 Jun 2023 10:45:45 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3D55A2D74;
+        Thu,  8 Jun 2023 07:45:45 -0700 (PDT)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id BB94664E2A;
+        Thu,  8 Jun 2023 14:45:44 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 231E1C433D2;
+        Thu,  8 Jun 2023 14:45:44 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1686235544;
+        bh=vr+S7p4BemUuKVL8ipqKq9LlC8dveRd0cQrLqDtQqOo=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=FExw4wExNGC8Hyu65x5rYR5g/msc6MOkMpIjU6Efn1u43clgrSCuDs6YEnmQoq9x7
+         A/T/6jwr1wjeZiBiLbXLzy24BRGhL8agfqxaQnMJRYHmQNtoiH3CSqga4Gb50hxYkY
+         dX3fQOqvRqQf0gvEwwTEnDcvEwSUdoSpsCGfVZU7CzZsdI3CQTNLjqCONC+QDJRS9F
+         nMkVahvMA9nIlgssbzIfk915/barWbb8tyvkHHThKg8FVLdWXF6vtZ0BwzGBafrcRV
+         aohPU1RX1dDafzOz7ipvs5KI4xedZzXAM6dTE+TXOkoZu3jmU5Z4+FAA0XWw4oXCN4
+         qcmlhhwPMMaGA==
+Date:   Thu, 8 Jun 2023 07:45:43 -0700
+From:   "Darrick J. Wong" <djwong@kernel.org>
+To:     Christoph Hellwig <hch@infradead.org>
+Cc:     Ritesh Harjani <ritesh.list@gmail.com>, linux-xfs@vger.kernel.org,
+        linux-fsdevel@vger.kernel.org,
+        Matthew Wilcox <willy@infradead.org>,
+        Dave Chinner <david@fromorbit.com>,
+        Brian Foster <bfoster@redhat.com>,
+        Andreas Gruenbacher <agruenba@redhat.com>,
+        Ojaswin Mujoo <ojaswin@linux.ibm.com>,
+        Disha Goel <disgoel@linux.ibm.com>,
+        Aravinda Herle <araherle@in.ibm.com>
+Subject: Re: [PATCHv8 5/5] iomap: Add per-block dirty state tracking to
+ improve performance
+Message-ID: <20230608144543.GT1325469@frogsfrogsfrogs>
+References: <ZIAsEkURZHRAcxtP@infradead.org>
+ <87o7lri8r4.fsf@doe.com>
+ <ZIFoQIugyQLbQnfj@infradead.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20230608032404.1887046-2-mcgrof@kernel.org>
-X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
+In-Reply-To: <ZIFoQIugyQLbQnfj@infradead.org>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Wed, Jun 07, 2023 at 08:24:01PM -0700, Luis Chamberlain wrote:
-> -extern struct super_block *blockdev_superblock;
->  static inline bool sb_is_blkdev_sb(struct super_block *sb)
->  {
-> -	return IS_ENABLED(CONFIG_BLOCK) && sb == blockdev_superblock;
-> +	return IS_ENABLED(CONFIG_BLOCK) && sb->s_magic == BDEVFS_MAGIC;
->  }
+On Wed, Jun 07, 2023 at 10:33:52PM -0700, Christoph Hellwig wrote:
+> On Wed, Jun 07, 2023 at 09:07:19PM +0530, Ritesh Harjani wrote:
+> > I think the only remaining piece is the naming of this enum and struct
+> > iomap_page.
+> > 
+> > Ok, so here is what I think my preference would be -
+> > 
+> > This enum perfectly qualifies for "iomap_block_state" as it holds the
+> > state of per-block.
+> > Then the struct iomap_page (iop) should be renamed to struct
+> > "iomap_folio_state" (ifs), because that holds the state information of all the
+> > blocks within a folio.
+> 
+> Fine with me.
 
-So while I'd love to be able to make blockdev_superblock, I think
-the existing code is the better idea here.  BDEVFS_MAGIC can easily
-end up in any other s_magic as it's a free-form field.
-blockdev_superblock can't accidentally have the same address as a
-random non-bdev sb.
+Yeah, fine with me too.
 
+> > > 	if (!iof)
+> > > 		return NULL;
+> > >
+> > > here and unindent the rest.
+> > 
+> > Sure. Is it ok to fold this change in the same patch, right?
+> > Or does it qualify for a seperate patch?
+> 
+> Either way is fine with me.
+
+Same patch is ok.
+
+--D
