@@ -2,78 +2,38 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0CA1EC7EE23
-	for <linux-xfs@archiver.kernel.org>; Thu,  8 Jun 2023 05:33:57 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8BDD9C7EE2E
+	for <linux-xfs@archiver.kernel.org>; Thu,  8 Jun 2023 05:40:17 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233688AbjFHFdz (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 8 Jun 2023 01:33:55 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39688 "EHLO
+        id S234194AbjFHFkQ (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 8 Jun 2023 01:40:16 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41218 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233779AbjFHFdy (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 8 Jun 2023 01:33:54 -0400
-Received: from bombadil.infradead.org (bombadil.infradead.org [IPv6:2607:7c80:54:3::133])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id F08F926B8;
-        Wed,  7 Jun 2023 22:33:53 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Type:MIME-Version
-        :References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
-        Content-Transfer-Encoding:Content-ID:Content-Description;
-        bh=grZMU2vXur0rOn+uMoQQBAunZFp7Hu66pq0e1HfBFT4=; b=Fwwv8hvFc8HxJHocWW/u6PHhNA
-        7bEec/Ojg6PSYVrMS+eSbJF6Ni6xksNTCncf9x/+T0XuMqKeQ8yFEiE9K1lq5BNY9kphDmU0uvnLg
-        5uhhQyDFXl56CbZdMdGdX5308T35ftzijUQW1mVoAjYWfYRUdpVXu1LcYsjRb+fcKlrBovKhhfqFM
-        pIm5tUGgZByBgt31bSnaVqUzH0WQMrByQttPpGqyhU7FSe8KY5VwyKvOVfI5Wspv8mE6L2FFYp6DC
-        ellSPw7/wNzO/QTZ5KhjjDJUzN2kta7BKaQvVaHXYOhG3UJ1zZC69rUrK5fCRTCf31xrCvsAzzkts
-        l/5ocKOA==;
-Received: from hch by bombadil.infradead.org with local (Exim 4.96 #2 (Red Hat Linux))
-        id 1q78HQ-0089hC-2i;
-        Thu, 08 Jun 2023 05:33:52 +0000
-Date:   Wed, 7 Jun 2023 22:33:52 -0700
-From:   Christoph Hellwig <hch@infradead.org>
-To:     Ritesh Harjani <ritesh.list@gmail.com>
-Cc:     Christoph Hellwig <hch@infradead.org>, linux-xfs@vger.kernel.org,
-        linux-fsdevel@vger.kernel.org,
-        "Darrick J. Wong" <djwong@kernel.org>,
-        Matthew Wilcox <willy@infradead.org>,
-        Dave Chinner <david@fromorbit.com>,
-        Brian Foster <bfoster@redhat.com>,
-        Andreas Gruenbacher <agruenba@redhat.com>,
-        Ojaswin Mujoo <ojaswin@linux.ibm.com>,
-        Disha Goel <disgoel@linux.ibm.com>,
-        Aravinda Herle <araherle@in.ibm.com>
-Subject: Re: [PATCHv8 5/5] iomap: Add per-block dirty state tracking to
- improve performance
-Message-ID: <ZIFoQIugyQLbQnfj@infradead.org>
-References: <ZIAsEkURZHRAcxtP@infradead.org>
- <87o7lri8r4.fsf@doe.com>
+        with ESMTP id S232715AbjFHFkP (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 8 Jun 2023 01:40:15 -0400
+Received: from verein.lst.de (verein.lst.de [213.95.11.211])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 91DC4268E
+        for <linux-xfs@vger.kernel.org>; Wed,  7 Jun 2023 22:40:13 -0700 (PDT)
+Received: by verein.lst.de (Postfix, from userid 2407)
+        id 49D626732D; Thu,  8 Jun 2023 07:40:10 +0200 (CEST)
+Date:   Thu, 8 Jun 2023 07:40:10 +0200
+From:   Christoph Hellwig <hch@lst.de>
+To:     Weifeng Su <suweifeng1@huawei.com>
+Cc:     linux-xfs@vger.kernel.org, djwong@kernel.org, hch@lst.de,
+        sandeen@sandeen.net, linfeilong@huawei.com,
+        liuzhiqiang26@huawei.com
+Subject: Re: [PATCH v2] libxcmd: add return value check for dynamic memory
+ function
+Message-ID: <20230608054010.GA11513@lst.de>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <87o7lri8r4.fsf@doe.com>
-X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
+User-Agent: Mutt/1.5.17 (2007-11-01)
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Wed, Jun 07, 2023 at 09:07:19PM +0530, Ritesh Harjani wrote:
-> I think the only remaining piece is the naming of this enum and struct
-> iomap_page.
-> 
-> Ok, so here is what I think my preference would be -
-> 
-> This enum perfectly qualifies for "iomap_block_state" as it holds the
-> state of per-block.
-> Then the struct iomap_page (iop) should be renamed to struct
-> "iomap_folio_state" (ifs), because that holds the state information of all the
-> blocks within a folio.
 
-Fine with me.
+Still looks good:
 
-> > 	if (!iof)
-> > 		return NULL;
-> >
-> > here and unindent the rest.
-> 
-> Sure. Is it ok to fold this change in the same patch, right?
-> Or does it qualify for a seperate patch?
-
-Either way is fine with me.
+Reviewed-by: Christoph Hellwig <hch@lst.de>
