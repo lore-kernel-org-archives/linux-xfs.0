@@ -2,91 +2,105 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3DF38C7EE25
-	for <linux-xfs@archiver.kernel.org>; Thu,  8 Jun 2023 09:14:13 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5E76CC7EE25
+	for <linux-xfs@archiver.kernel.org>; Thu,  8 Jun 2023 10:22:16 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232243AbjFHJOM (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 8 Jun 2023 05:14:12 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57784 "EHLO
+        id S235554AbjFHKWP (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 8 Jun 2023 06:22:15 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42918 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S235231AbjFHJOJ (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 8 Jun 2023 05:14:09 -0400
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0AEDB1BF0
-        for <linux-xfs@vger.kernel.org>; Thu,  8 Jun 2023 02:13:26 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1686215606;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:mime-version:mime-version:
-         content-transfer-encoding:content-transfer-encoding;
-        bh=6aN0GmGnT+fMX15infTJY8ax5IsUI++ED9xZdCbNSnw=;
-        b=ISz6+qPGT20QrgrBk3vEqjYLMA2T1m+BGJKZz+Tg61IVNxs62cLUnzxVulNE0TD88H2Lnt
-        kY+JIAOuVQAHw6zSt4N2IglCBVk/PANrXa5gJ+d566+gQKKD1fHsRKpJlm/+3l9mYNIv3h
-        foCvKPxP4Ys6b6pKVIjK6V5cmZpi3uw=
-Received: from mail-qk1-f200.google.com (mail-qk1-f200.google.com
- [209.85.222.200]) by relay.mimecast.com with ESMTP with STARTTLS
- (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
- us-mta-637-KhUludUMOxiU5mitw42yew-1; Thu, 08 Jun 2023 05:13:24 -0400
-X-MC-Unique: KhUludUMOxiU5mitw42yew-1
-Received: by mail-qk1-f200.google.com with SMTP id af79cd13be357-75d42a5097bso43897285a.3
-        for <linux-xfs@vger.kernel.org>; Thu, 08 Jun 2023 02:13:24 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20221208; t=1686215603; x=1688807603;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:to
-         :from:x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=6aN0GmGnT+fMX15infTJY8ax5IsUI++ED9xZdCbNSnw=;
-        b=TOnLehcf9Gcf9e5MkvyHjAqfRqBGG5XX4vxN/fVd2ifj1VxRctxMeS9gUl7twoFPVx
-         Bb6cjBwQgmFqmeL8Ob+CM/D9AjecliY5cP07xOgb6z1aQgQaoypMmfGJeb+Y/PD7guDv
-         Q7iNHagkRv2YSUs+Iy4RbMgpMX2VzL/021b4mCnlmn44Yk1T9AMkMtv6RTGgYvO0JF7f
-         2P+qcEXynbnWZYlZoTvCHI7Vq58AT7iQRwrJzxQcYHsnPmaiD/T2NylkHi24iD6vs1nu
-         yIheHH/jAOPTWKgN2qVq9jl+jmuziiJnZ1x8FEdS4kcidc24qzKOonBJUXCsWpPrQ2Vg
-         W73w==
-X-Gm-Message-State: AC+VfDyUxmaj8b6vQGptvzQ361mcPbfIbbT8RvVhYoOSmN4Cxfj+BPIt
-        LfIqb2cmDUk5yfVoHAx9Upkf3iRMu9TxMH/4NPJX1M0TIvDsHeQfCYUN/mMHZRUXWtuDGqxNpTt
-        5392AEQyWNpQ2Tcy3bDJIsndbpAuwCRsBIL66DngQlyTK9ABH6F9TyQinNipU9+x0UNoV9FdwGZ
-        rQ400=
-X-Received: by 2002:a05:620a:3e81:b0:75b:23a1:830d with SMTP id tv1-20020a05620a3e8100b0075b23a1830dmr4226954qkn.8.1686215603387;
-        Thu, 08 Jun 2023 02:13:23 -0700 (PDT)
-X-Google-Smtp-Source: ACHHUZ4BsWY2UYZ/jUbaTnhjncjkb+jbwOYrYBQ+MBSnqzFHNRF7mrsoi0x8JUPQn4E4wdJUInl95w==
-X-Received: by 2002:a05:620a:3e81:b0:75b:23a1:830d with SMTP id tv1-20020a05620a3e8100b0075b23a1830dmr4226940qkn.8.1686215603071;
-        Thu, 08 Jun 2023 02:13:23 -0700 (PDT)
-Received: from fedora.redhat.com (gw19-pha-stl-mmo-2.avonet.cz. [131.117.213.218])
-        by smtp.gmail.com with ESMTPSA id p21-20020a05620a15f500b0075bcc5ab975sm193440qkm.92.2023.06.08.02.13.21
-        for <linux-xfs@vger.kernel.org>
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 08 Jun 2023 02:13:22 -0700 (PDT)
-From:   Pavel Reichl <preichl@redhat.com>
-To:     linux-xfs@vger.kernel.org
-Subject: [PATCH] mkfs: fix man's default value for sparse option
-Date:   Thu,  8 Jun 2023 11:13:20 +0200
-Message-Id: <20230608091320.113513-1-preichl@redhat.com>
-X-Mailer: git-send-email 2.40.1
+        with ESMTP id S234889AbjFHKWO (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 8 Jun 2023 06:22:14 -0400
+Received: from smtp-out2.suse.de (smtp-out2.suse.de [195.135.220.29])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id BDCB3E2;
+        Thu,  8 Jun 2023 03:22:13 -0700 (PDT)
+Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
+        (No client certificate requested)
+        by smtp-out2.suse.de (Postfix) with ESMTPS id 79F181FDE9;
+        Thu,  8 Jun 2023 10:22:12 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.cz; s=susede2_rsa;
+        t=1686219732; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+         mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=ayRJTvrnmOfJwDrSeWFMGSYC6CQeMiIa/RwpAE213X8=;
+        b=CZ/kBlQRdUsNuLKR6xrT3ogbLODNzef0icCizic2BE71TjRGqwyw3I/uep2qNnyotF3Z2N
+        ZG83jZWcct1Drm+nzZ86GBoFRcKSODX3hzwdFUIEWjr3JeqPhbI0NCVgPUhLKrsVM7+YzZ
+        7U0BYK5OqY/2ElizoD8LTGOJ1O4vdbY=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.cz;
+        s=susede2_ed25519; t=1686219732;
+        h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+         mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=ayRJTvrnmOfJwDrSeWFMGSYC6CQeMiIa/RwpAE213X8=;
+        b=HjC/Se3o9kNNB/CGAXgmZz1CIvIRtF9/JP6ONlLZeHtr+ACKHaUEEEqT3Suz9ADNaMsOD2
+        3w00FxTLpGBBRyCQ==
+Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
+        (No client certificate requested)
+        by imap2.suse-dmz.suse.de (Postfix) with ESMTPS id 65E7F138E6;
+        Thu,  8 Jun 2023 10:22:12 +0000 (UTC)
+Received: from dovecot-director2.suse.de ([192.168.254.65])
+        by imap2.suse-dmz.suse.de with ESMTPSA
+        id jPDTGNSrgWQOCAAAMHmgww
+        (envelope-from <jack@suse.cz>); Thu, 08 Jun 2023 10:22:12 +0000
+Received: by quack3.suse.cz (Postfix, from userid 1000)
+        id F0D82A0749; Thu,  8 Jun 2023 12:22:11 +0200 (CEST)
+Date:   Thu, 8 Jun 2023 12:22:11 +0200
+From:   Jan Kara <jack@suse.cz>
+To:     Luis Chamberlain <mcgrof@kernel.org>
+Cc:     hch@infradead.org, djwong@kernel.org, dchinner@redhat.com,
+        kbusch@kernel.org, willy@infradead.org, hare@suse.de,
+        ritesh.list@gmail.com, rgoldwyn@suse.com, jack@suse.cz,
+        patches@lists.linux.dev, linux-xfs@vger.kernel.org,
+        linux-fsdevel@vger.kernel.org, linux-block@vger.kernel.org,
+        p.raghav@samsung.com, da.gomez@samsung.com, rohan.puri@samsung.com,
+        rpuri.linux@gmail.com, corbet@lwn.net, jake@lwn.net
+Subject: Re: [RFC 1/4] bdev: replace export of blockdev_superblock with
+ BDEVFS_MAGIC
+Message-ID: <20230608102211.wg5kptxmt4ixygfd@quack3>
+References: <20230608032404.1887046-1-mcgrof@kernel.org>
+ <20230608032404.1887046-2-mcgrof@kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20230608032404.1887046-2-mcgrof@kernel.org>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Fixes: 9cf846b51 ("mkfs: enable sparse inodes by default")
-Suggested-by: Lukas Herbolt <lukas@herbolt.com>
-Signed-off-by: Pavel Reichl <preichl@redhat.com>
----
- man/man8/mkfs.xfs.8.in | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+On Wed 07-06-23 20:24:01, Luis Chamberlain wrote:
+> There is no need to export blockdev_superblock because we can just
+> use the magic value of the block device cache super block, which is
+> already in place, BDEVFS_MAGIC. So just check for that.
+> 
+> This let's us remove the export of blockdev_superblock and also
+> let's this block dev cache scale as it wishes internally. For
+> instance in the future we may have different super block for each
+> block device. Right now it is all shared on one super block.
+> 
+> Signed-off-by: Luis Chamberlain <mcgrof@kernel.org>
+> ---
+>  block/bdev.c       | 1 -
+>  include/linux/fs.h | 4 ++--
+>  2 files changed, 2 insertions(+), 3 deletions(-)
+> 
+> diff --git a/block/bdev.c b/block/bdev.c
+> index 21c63bfef323..91477c3849d2 100644
+> --- a/block/bdev.c
+> +++ b/block/bdev.c
+> @@ -379,7 +379,6 @@ static struct file_system_type bd_type = {
+>  };
+>  
+>  struct super_block *blockdev_superblock __read_mostly;
+> -EXPORT_SYMBOL_GPL(blockdev_superblock);
 
-diff --git a/man/man8/mkfs.xfs.8.in b/man/man8/mkfs.xfs.8.in
-index 49e64d47a..48e26ece7 100644
---- a/man/man8/mkfs.xfs.8.in
-+++ b/man/man8/mkfs.xfs.8.in
-@@ -631,7 +631,7 @@ Enable sparse inode chunk allocation. The
- .I value
- is either 0 or 1, with 1 signifying that sparse allocation is enabled.
- If the value is omitted, 1 is assumed. Sparse inode allocation is
--disabled by default. This feature is only available for filesystems
-+enabled by default. This feature is only available for filesystems
- formatted with
- .B \-m crc=1.
- .IP
+You can even make blockdev_superblock static. I like this! Otherwise the
+patch looks good.
+
+								Honza
 -- 
-2.40.1
-
+Jan Kara <jack@suse.com>
+SUSE Labs, CR
