@@ -2,123 +2,76 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A6C52C7EE45
-	for <linux-xfs@archiver.kernel.org>; Thu,  8 Jun 2023 13:39:20 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3AB31C7EE23
+	for <linux-xfs@archiver.kernel.org>; Thu,  8 Jun 2023 13:50:37 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235462AbjFHNiq (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 8 Jun 2023 09:38:46 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57918 "EHLO
+        id S236702AbjFHNue (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 8 Jun 2023 09:50:34 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34916 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S236599AbjFHNii (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 8 Jun 2023 09:38:38 -0400
-Received: from szxga01-in.huawei.com (szxga01-in.huawei.com [45.249.212.187])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 68D78268E
-        for <linux-xfs@vger.kernel.org>; Thu,  8 Jun 2023 06:38:37 -0700 (PDT)
-Received: from dggpemm500014.china.huawei.com (unknown [172.30.72.54])
-        by szxga01-in.huawei.com (SkyGuard) with ESMTP id 4QcQGL6Ql9zkXHy;
-        Thu,  8 Jun 2023 21:36:10 +0800 (CST)
-Received: from [10.174.177.211] (10.174.177.211) by
- dggpemm500014.china.huawei.com (7.185.36.153) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2507.23; Thu, 8 Jun 2023 21:38:33 +0800
-Message-ID: <0bdbc18a-e062-9d39-2d01-75a0480c692e@huawei.com>
-Date:   Thu, 8 Jun 2023 21:38:33 +0800
+        with ESMTP id S236252AbjFHNu0 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 8 Jun 2023 09:50:26 -0400
+Received: from bombadil.infradead.org (bombadil.infradead.org [IPv6:2607:7c80:54:3::133])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id F420F26AD;
+        Thu,  8 Jun 2023 06:50:24 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Type:MIME-Version
+        :References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
+        Content-Transfer-Encoding:Content-ID:Content-Description;
+        bh=26X3eXQKS7NeIHOPgSnnyuKz8M8nhouJgb1HCFlt9gU=; b=oxnl+ytCH/AYLiO8lGsaGTSgAL
+        YKAhmz3KWLG52xTtZ3vVlzOoXhqLAE+TSDLYtiUMLgMfWgpBomxV6NcPL6FCI9kZwk5bogGjZOPLI
+        8QnbaKMgK9r0pLr5cxZR/iblydbJMDtaB1NxFguDycK5q8EbVJhgUczSAh/3xz4/50h2hd6QRO2Vb
+        AJKily0ob+IT+C7Jr0UjGjkAuljbZavKlpTolZdO19kaSy3qPAuDfQRNQkFvlbYQt17NVlmUv2c/e
+        feloqZah/8iJ6KrYviLmgJmxmK61OEwauO0fphZdNmbYWghbE9QuD17HBUBrSKATOW5r70soVneqm
+        A6ckZIHA==;
+Received: from hch by bombadil.infradead.org with local (Exim 4.96 #2 (Red Hat Linux))
+        id 1q7G1n-009W7J-1c;
+        Thu, 08 Jun 2023 13:50:15 +0000
+Date:   Thu, 8 Jun 2023 06:50:15 -0700
+From:   Christoph Hellwig <hch@infradead.org>
+To:     Matthew Wilcox <willy@infradead.org>
+Cc:     Luis Chamberlain <mcgrof@kernel.org>, hch@infradead.org,
+        djwong@kernel.org, dchinner@redhat.com, kbusch@kernel.org,
+        hare@suse.de, ritesh.list@gmail.com, rgoldwyn@suse.com,
+        jack@suse.cz, patches@lists.linux.dev, linux-xfs@vger.kernel.org,
+        linux-fsdevel@vger.kernel.org, linux-block@vger.kernel.org,
+        p.raghav@samsung.com, da.gomez@samsung.com, rohan.puri@samsung.com,
+        rpuri.linux@gmail.com, corbet@lwn.net, jake@lwn.net
+Subject: Re: [RFC 4/4] bdev: extend bdev inode with it's own super_block
+Message-ID: <ZIHcl8epO0h3z1TO@infradead.org>
+References: <20230608032404.1887046-1-mcgrof@kernel.org>
+ <20230608032404.1887046-5-mcgrof@kernel.org>
+ <ZIHZngefNAtYtg7L@casper.infradead.org>
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:91.0) Gecko/20100101
- Thunderbird/91.0.3
-To:     <cem@kernel.org>, "Darrick J. Wong" <djwong@kernel.org>,
-        <linux-xfs@vger.kernel.org>
-From:   Wu Guanghao <wuguanghao3@huawei.com>
-Subject: [PATCH]xfs: fix mounting failed caused by sequencing problem ,in the
- log records
-CC:     <louhongxiang@huawei.com>,
-        "liuzhiqiang (I)" <liuzhiqiang26@huawei.com>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
-X-Originating-IP: [10.174.177.211]
-X-ClientProxiedBy: dggems705-chm.china.huawei.com (10.3.19.182) To
- dggpemm500014.china.huawei.com (7.185.36.153)
-X-CFilter-Loop: Reflected
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <ZIHZngefNAtYtg7L@casper.infradead.org>
+X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-We found an issue where repair failed in the fault injection.
+On Thu, Jun 08, 2023 at 02:37:34PM +0100, Matthew Wilcox wrote:
+> On Wed, Jun 07, 2023 at 08:24:04PM -0700, Luis Chamberlain wrote:
+> > We currently share a single super_block for the block device cache,
+> > each block device corresponds to one inode on that super_block. This
+> > implicates sharing one aops operation though, and in the near future
+> > we want to be able to instead support using iomap on the super_block
+> > for different block devices.
+> 
+> > -struct super_block *blockdev_superblock __read_mostly;
+> 
+> Did we consider adding
+> 
+> +struct super_block *blockdev_sb_iomap __read_mostly;
+> 
+> and then considering only two superblocks instead of having a list of
+> all bdevs?
 
-$ xfs_repair test.img
-...
-Phase 3 - for each AG...
-        - scan and clear agi unlinked lists...
-        - process known inodes and perform inode discovery...
-        - agno = 0
-        - agno = 1
-        - agno = 2
-Metadata CRC error detected at 0x55a30e420c7d, xfs_bmbt block 0x51d68/0x1000
-        - agno = 3
-Metadata CRC error detected at 0x55a30e420c7d, xfs_bmbt block 0x51d68/0x1000
-btree block 0/41901 is suspect, error -74
-bad magic # 0x58534c4d in inode 3306572 (data fork) bmbt block 41901
-bad data fork in inode 3306572
-cleared inode 3306572
-...
-Phase 7 - verify and correct link counts...
-Metadata corruption detected at 0x55a30e420b58, xfs_bmbt block 0x51d68/0x1000
-libxfs_bwrite: write verifier failed on xfs_bmbt bno 0x51d68/0x8
-xfs_repair: Releasing dirty buffer to free list!
-xfs_repair: Refusing to write a corrupt buffer to the data device!
-xfs_repair: Lost a write to the data device!
+Or why the heck we would even do this to start with?  iomap has
+absolutely nothing to do with superblocks.
 
-fatal error -- File system metadata writeout failed, err=117.  Re-run xfs_repair.
-
-
-$ xfs_db test.img
-xfs_db> inode 3306572
-xfs_db> p
-core.magic = 0x494e
-core.mode = 0100666		  // regular file
-core.version = 3
-core.format = 3 (btree)	
-...
-u3.bmbt.keys[1] = [startoff]
-1:[6]
-u3.bmbt.ptrs[1] = 41901	 // btree root
-...
-
-$ hexdump -C -n 4096 41901.img
-00000000  58 53 4c 4d 00 00 00 00  00 00 01 e8 d6 f4 03 14  |XSLM............|
-00000010  09 f3 a6 1b 0a 3c 45 5a  96 39 41 ac 09 2f 66 99  |.....<EZ.9A../f.|
-00000020  00 00 00 00 00 05 1f fb  00 00 00 00 00 05 1d 68  |...............h|
-...
-
-The block data associated with inode 3306572 is abnormal, but check the CRC first
-when reading. If the CRC check fails, badcrc will be set. Then the dirty flag
-will be set on bp when badcrc is set. In the final stage of repair, the dirty bp
-will be refreshed in batches. When refresh to the disk, the data in bp will be
-verified. At this time, if the data verification fails, resulting in a repair
-error.
-
-After scan_bmapbt returns an error, the inode will be cleaned up. Then bp
-doesn't need to set dirty flag, so that it won't trigger writeback verification
-failure.
-
-Signed-off-by: Wu Guanghao <wuguanghao3@huawei.com>
----
- repair/scan.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
-
-diff --git a/repair/scan.c b/repair/scan.c
-index 7b720131..b5458eb8 100644
---- a/repair/scan.c
-+++ b/repair/scan.c
-@@ -185,7 +185,7 @@ scan_lbtree(
-
- 	ASSERT(dirty == 0 || (dirty && !no_modify));
-
--	if ((dirty || badcrc) && !no_modify) {
-+	if (!err && (dirty || badcrc) && !no_modify) {
- 		libxfs_buf_mark_dirty(bp);
- 		libxfs_buf_relse(bp);
- 	}
--- 
-2.27.0
-.
+Now maybe it might make sense to have a superblock per gendisk just
+to remove all the weird special casing for the bdev inode in the
+writeback code.  But that's something entirely different than this
+patch.
