@@ -2,67 +2,91 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3B609C7EE2E
-	for <linux-xfs@archiver.kernel.org>; Thu,  8 Jun 2023 17:27:21 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B8707C7EE23
+	for <linux-xfs@archiver.kernel.org>; Thu,  8 Jun 2023 17:45:21 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S236392AbjFHR1U (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 8 Jun 2023 13:27:20 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49724 "EHLO
+        id S234623AbjFHRpU (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 8 Jun 2023 13:45:20 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57276 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S237262AbjFHR1Q (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 8 Jun 2023 13:27:16 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1E1731FDE
-        for <linux-xfs@vger.kernel.org>; Thu,  8 Jun 2023 10:27:12 -0700 (PDT)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id F160064FCC
-        for <linux-xfs@vger.kernel.org>; Thu,  8 Jun 2023 17:27:11 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPS id 61B54C433D2;
-        Thu,  8 Jun 2023 17:27:11 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1686245231;
-        bh=V7zsbWNSUv9JSIAUq60HiK4d2sfzsUKsBn8Bq5XFfv4=;
-        h=Subject:From:In-Reply-To:References:Date:To:Cc:From;
-        b=l/YS7Khs6nyDSjW5ZXJYAPXOVB1J7hwDHo+YUEg0gNe/V1UR4rDs10AtvaGW6uKrk
-         v0LURncuBy7ah3TwSXBgvyGS+ZjPYXMvSm1FZ0o4FDfXz0+Aqe/pm2uxRh+PA5P223
-         W6Bi8SeHBLc4nfh3PrJds5N2u4n14hWvgM8MUzZ7bJKhPYd0n7bEReRdNP3xnPwL/2
-         fikbsEjTczz4Q1YoqkanTc5VJQ1lBxJ70+bUjIgn9L5sm2FKPV/Z4OKg3/twywFqmv
-         OoMMLFF1/ymAuSRpGuIxCdCvRci8LrRskR36cUP2bzsF1eC3QAa8uuvTFaJomnL/Vk
-         /4WvjSwM2Mo5w==
-Received: from aws-us-west-2-korg-oddjob-1.ci.codeaurora.org (localhost.localdomain [127.0.0.1])
-        by aws-us-west-2-korg-oddjob-1.ci.codeaurora.org (Postfix) with ESMTP id 4E198E87232;
-        Thu,  8 Jun 2023 17:27:11 +0000 (UTC)
-Subject: Re: [GIT PULL] xfs: fixes for 6.4-rc5
-From:   pr-tracker-bot@kernel.org
-In-Reply-To: <ZIF0vl9b+x8gejIf@dread.disaster.area>
-References: <ZIF0vl9b+x8gejIf@dread.disaster.area>
-X-PR-Tracked-List-Id: <linux-xfs.vger.kernel.org>
-X-PR-Tracked-Message-Id: <ZIF0vl9b+x8gejIf@dread.disaster.area>
-X-PR-Tracked-Remote: git://git.kernel.org/pub/scm/fs/xfs/xfs-linux.git tags/xfs-6.4-rc5-fixes
-X-PR-Tracked-Commit-Id: d4d12c02bf5f768f1b423c7ae2909c5afdfe0d5f
-X-PR-Merge-Tree: torvalds/linux.git
-X-PR-Merge-Refname: refs/heads/master
-X-PR-Merge-Commit-Id: 79b6fad54683c28cc7e40d806e409abd65ed241a
-Message-Id: <168624523130.6402.10823393446647556835.pr-tracker-bot@kernel.org>
-Date:   Thu, 08 Jun 2023 17:27:11 +0000
-To:     Dave Chinner <david@fromorbit.com>
-Cc:     Linus Torvalds <torvalds@linux-foundation.org>, djwong@kernel.org,
-        linux-xfs@vger.kernel.org
+        with ESMTP id S231477AbjFHRpT (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 8 Jun 2023 13:45:19 -0400
+Received: from bombadil.infradead.org (bombadil.infradead.org [IPv6:2607:7c80:54:3::133])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 761852D42;
+        Thu,  8 Jun 2023 10:45:18 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=infradead.org; s=bombadil.20210309; h=Sender:In-Reply-To:Content-Type:
+        MIME-Version:References:Message-ID:Subject:Cc:To:From:Date:Reply-To:
+        Content-Transfer-Encoding:Content-ID:Content-Description;
+        bh=uOw9nsuIMZAQbvG+gbUFnhoqu4Ev0+E/KCh6w/lkQ7I=; b=etOQcvEQDEvuze42GukPA1J9A9
+        rwsj/PLos8V+QhVz5PjC0nnthLA7akuroDg3cj1QqCOZ6Z8M+KSieTjpIXe6i803tFqFQnuVseyDp
+        0+5ezAsmAh+nbDffqzyioYt7UStuRuvPI385zwJZcoAQY/VGQjV1nMfGmAJAAWNyl2mGJQRiQ+i5Y
+        FehkG3GqhYRb4FsRFByG7rNLTX4E0/kZHUmriAMDSW3rKpTT+3DfZxEt9IrjdPQmsTmuwUoUtDLnB
+        F2NH+o/jLEb69nL7vzKne7WKcWpf45TeDjmurxCl59osSLZDht3OksMCelGH7dwRwdJzUSLd6YZhI
+        meFi0kUw==;
+Received: from mcgrof by bombadil.infradead.org with local (Exim 4.96 #2 (Red Hat Linux))
+        id 1q7Jh8-00A4le-2l;
+        Thu, 08 Jun 2023 17:45:10 +0000
+Date:   Thu, 8 Jun 2023 10:45:10 -0700
+From:   Luis Chamberlain <mcgrof@kernel.org>
+To:     Christoph Hellwig <hch@infradead.org>
+Cc:     Matthew Wilcox <willy@infradead.org>, djwong@kernel.org,
+        dchinner@redhat.com, kbusch@kernel.org, hare@suse.de,
+        ritesh.list@gmail.com, rgoldwyn@suse.com, jack@suse.cz,
+        patches@lists.linux.dev, linux-xfs@vger.kernel.org,
+        linux-fsdevel@vger.kernel.org, linux-block@vger.kernel.org,
+        p.raghav@samsung.com, da.gomez@samsung.com, rohan.puri@samsung.com,
+        rpuri.linux@gmail.com, corbet@lwn.net, jake@lwn.net
+Subject: Re: [RFC 4/4] bdev: extend bdev inode with it's own super_block
+Message-ID: <ZIITpjDXyupKom+N@bombadil.infradead.org>
+References: <20230608032404.1887046-1-mcgrof@kernel.org>
+ <20230608032404.1887046-5-mcgrof@kernel.org>
+ <ZIHZngefNAtYtg7L@casper.infradead.org>
+ <ZIHcl8epO0h3z1TO@infradead.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <ZIHcl8epO0h3z1TO@infradead.org>
+Sender: Luis Chamberlain <mcgrof@infradead.org>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-The pull request you sent on Thu, 8 Jun 2023 16:27:10 +1000:
+On Thu, Jun 08, 2023 at 06:50:15AM -0700, Christoph Hellwig wrote:
+> On Thu, Jun 08, 2023 at 02:37:34PM +0100, Matthew Wilcox wrote:
+> > On Wed, Jun 07, 2023 at 08:24:04PM -0700, Luis Chamberlain wrote:
+> > > We currently share a single super_block for the block device cache,
+> > > each block device corresponds to one inode on that super_block. This
+> > > implicates sharing one aops operation though, and in the near future
+> > > we want to be able to instead support using iomap on the super_block
+> > > for different block devices.
+> > 
+> > > -struct super_block *blockdev_superblock __read_mostly;
+> > 
+> > Did we consider adding
+> > 
+> > +struct super_block *blockdev_sb_iomap __read_mostly;
+> > 
+> > and then considering only two superblocks instead of having a list of
+> > all bdevs?
+> 
+> Or why the heck we would even do this to start with?
 
-> git://git.kernel.org/pub/scm/fs/xfs/xfs-linux.git tags/xfs-6.4-rc5-fixes
+That's what I gathered you suggested at LSFMM on hallway talk.
 
-has been merged into torvalds/linux.git:
-https://git.kernel.org/torvalds/c/79b6fad54683c28cc7e40d806e409abd65ed241a
+> iomap has absolutely nothing to do with superblocks.
+> 
+> Now maybe it might make sense to have a superblock per gendisk just
+> to remove all the weird special casing for the bdev inode in the
+> writeback code.  But that's something entirely different than this
+> patch.
 
-Thank you!
+The goal behind this is to allow block devices to have its bdev cache
+use iomap, right now now we show-horn in the buffer-head aops if we
+have to build buffer-heads.
 
--- 
-Deet-doot-dot, I am a bot.
-https://korg.docs.kernel.org/prtracker.html
+If this sort of approach is not desirable, let me know what alternative
+you would prefer to see, because clearly, I must not have understood
+your suggestion.
+
+  Luis
