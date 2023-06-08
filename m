@@ -2,183 +2,244 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7EAA9C7EE37
-	for <linux-xfs@archiver.kernel.org>; Thu,  8 Jun 2023 22:17:09 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A4C0BC7EE23
+	for <linux-xfs@archiver.kernel.org>; Thu,  8 Jun 2023 23:18:02 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232448AbjFHWRI (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 8 Jun 2023 18:17:08 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52476 "EHLO
+        id S230011AbjFHXSA (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 8 Jun 2023 19:18:00 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41824 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229539AbjFHWRH (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 8 Jun 2023 18:17:07 -0400
-Received: from mail-pl1-x630.google.com (mail-pl1-x630.google.com [IPv6:2607:f8b0:4864:20::630])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1E4BE1FEC;
-        Thu,  8 Jun 2023 15:17:06 -0700 (PDT)
-Received: by mail-pl1-x630.google.com with SMTP id d9443c01a7336-1b2439e9004so1713805ad.3;
-        Thu, 08 Jun 2023 15:17:06 -0700 (PDT)
+        with ESMTP id S229460AbjFHXSA (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 8 Jun 2023 19:18:00 -0400
+Received: from mail-pg1-x530.google.com (mail-pg1-x530.google.com [IPv6:2607:f8b0:4864:20::530])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 79AC230C3
+        for <linux-xfs@vger.kernel.org>; Thu,  8 Jun 2023 16:17:58 -0700 (PDT)
+Received: by mail-pg1-x530.google.com with SMTP id 41be03b00d2f7-53f70f7c2d2so193128a12.3
+        for <linux-xfs@vger.kernel.org>; Thu, 08 Jun 2023 16:17:58 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20221208; t=1686262625; x=1688854625;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:from:to:cc:subject:date:message-id:reply-to;
-        bh=HX1IQ1/HEFBoXGJYXsygQh2evXU1wFhphVslFZWBOwU=;
-        b=Gl0OM6PtgAIwYEGOPoR24i0pngrNH+OuDeMEk/teeSzN7dlL2Co868qf5xS02hpOZ0
-         O23P64tyqOTkqjYUyeZbFgAIoyNZdcR60EzxP6Y7HeHh74+d0mgU+Ctd7OEapFFcqU57
-         KUBO28haBvwQwVJq0jjQ/lImhbLiTK0ILgDdnipbbfgpyWx8KDFLTmD2V2DTg3UkQGsR
-         vbtGvS+fzn0QtKnFoXY2AVNm8jpOWVqfmxEhlbw6Qr72FoqoTgZKv1RRrYjffBAuEN68
-         scnvFTJRp1XvGVeaInotG0irEJD6JDvrbt2t0J6t8pIZPbTsyJqGdDU5eMLOJWCvkBFQ
-         2uuw==
+        d=fromorbit-com.20221208.gappssmtp.com; s=20221208; t=1686266278; x=1688858278;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
+        bh=k1cBU8CvnLRhFfPk7oGDbturpNUeqfy4EAK1i9I4mZY=;
+        b=HeNLRTif69FEJZsrAxRthdhHPA2H8RoQIKQMj7Ba3IQpRy05P7Vm05z6w6fb1Pu2L+
+         mL5w9Iw8NjaexLH+zhRhPa7/iES4KAOEJVBHhQX7NlfIVKaKgmYej52dsXEoP//Yh5hq
+         NIJoKf7GX+aDqdg3UMAfra2+uc4Rjf5hhHKq7IjfJ9cEb4sevkU+B+sMo8OPYwudQdzB
+         96Nz3dcmwxwgoV5Kdbaagxhc3D5CPTeh9sA43AgUFns2iwxGs+lkEP9kBv6GTT3FWt7s
+         RRhMqLcqxY4/k6hqJH5ANzOST7+QD7U3BnHGi1d1F6ungTQmWIUSfoXX9JLKBqWhkKvR
+         l6bQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20221208; t=1686262625; x=1688854625;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:x-gm-message-state:from:to:cc:subject:date:message-id
-         :reply-to;
-        bh=HX1IQ1/HEFBoXGJYXsygQh2evXU1wFhphVslFZWBOwU=;
-        b=L/mg44jZAFBeXrWeNYK51IOqQDLh6f5/1+k0Si+Kr7ZbEDjVOlH7XyrAasg65ZBP1n
-         aeeq0oqRVOTqhnh6yEo3RdL/kh/PSZKMvogLFD0H6m2z1SdlPf6f08b9lZIT/boUVk7J
-         gWFM+BEe+qwO1Oc5yFsRB/EJKxXabX035FofDTncH6ydD/H//ABAW8yqfglXX2EjLBaM
-         NMB6l1szUZ8Zil+DPn4jlzLp0x3F/mtizjuTK0Bql6UypMHYjUcm/wl9CKp4XJNLoWbF
-         JMD03ggp9Y/cO03X/9Df2eisdBnPGSNJ0w4fAYwTnJ2ZLoseGlJx7q8ulzs18s6rtskG
-         nopQ==
-X-Gm-Message-State: AC+VfDwYgGLnw9tsGTL8CATJgVtuOy4hohH1IxxnPK2UuKhWlGmV92WS
-        6M36Yyv4VLMzbfNRTUEj2DghVO3uZomREavo
-X-Google-Smtp-Source: ACHHUZ5O/E+ELH6LZSjnlRFmmYM1etVENDWKdiQfkk4cz9RVHgrJI+VnIx1hT5moTWVHJ5kTlXmo1A==
-X-Received: by 2002:a17:903:32ce:b0:1b0:4883:2e03 with SMTP id i14-20020a17090332ce00b001b048832e03mr6333143plr.40.1686262625214;
-        Thu, 08 Jun 2023 15:17:05 -0700 (PDT)
-Received: from lrumancik.svl.corp.google.com ([2620:15c:2a3:200:b463:9de:46ef:7f35])
-        by smtp.gmail.com with ESMTPSA id jf22-20020a170903269600b001b00a44e557sm1892052plb.94.2023.06.08.15.17.04
+        d=1e100.net; s=20221208; t=1686266278; x=1688858278;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=k1cBU8CvnLRhFfPk7oGDbturpNUeqfy4EAK1i9I4mZY=;
+        b=k6X06Nj5eEKxiEzGgADB2/jz0wqqF4Jm1F5C7ZJIj5aFuxPrC1nF72Sa1ygcHvrgkM
+         4hWVoao5/Jb6MteA8KNSkpgCRhU4Dsiw6FzegoxpjI0CMRfIM0/GQ9GEFIpjZQGRSi+C
+         UWftVMsV2fhmCiexWyysejhNo5chO+7wYsLzp30eBT+bO23xCBPyTrz3qqOjdftX/2wO
+         7+Yefqw4KD+KQQ54ZodzALb0NbSE+swKq54PucNSWY6YaORP/e8difTL+7bh6kORtXpj
+         dfrNQ/zLhoLIWHuxbr2BgSNas3rz5D0TqgdxEH3nFzXz/bPgN9cFL/rdjF7+S8qlWVjo
+         R0SA==
+X-Gm-Message-State: AC+VfDx3vjiS3NRFgORSQZTAFzm6r/tDQddQF1Z04oAJKC9BVrUYq56R
+        zUNpkY3uQnUraA3QsESvlQxFdg==
+X-Google-Smtp-Source: ACHHUZ5Dw0QrQ8tgaZzHeyvYZfD1gsaQnW0ALhslQjfpgFVcXSPbguCIKDSdF8GAohY1XxhkEcjQTw==
+X-Received: by 2002:a17:90a:2ce5:b0:258:817a:814e with SMTP id n92-20020a17090a2ce500b00258817a814emr4896491pjd.28.1686266277912;
+        Thu, 08 Jun 2023 16:17:57 -0700 (PDT)
+Received: from dread.disaster.area (pa49-179-79-151.pa.nsw.optusnet.com.au. [49.179.79.151])
+        by smtp.gmail.com with ESMTPSA id oe1-20020a17090b394100b0023d386e4806sm1724156pjb.57.2023.06.08.16.17.57
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 08 Jun 2023 15:17:04 -0700 (PDT)
-From:   Leah Rumancik <leah.rumancik@gmail.com>
-To:     stable@vger.kernel.org
-Cc:     amir73il@gmail.com, chandan.babu@oracle.com,
-        linux-xfs@vger.kernel.org, "Darrick J. Wong" <djwong@kernel.org>,
-        Dave Chinner <dchinner@redhat.com>,
-        Dave Chinner <david@fromorbit.com>,
-        Leah Rumancik <leah.rumancik@gmail.com>
-Subject: [PATCH 5.15] xfs: verify buffer contents when we skip log replay
-Date:   Thu,  8 Jun 2023 15:16:59 -0700
-Message-ID: <20230608221659.3708315-1-leah.rumancik@gmail.com>
-X-Mailer: git-send-email 2.41.0.162.gfafddb0af9-goog
+        Thu, 08 Jun 2023 16:17:57 -0700 (PDT)
+Received: from dave by dread.disaster.area with local (Exim 4.96)
+        (envelope-from <david@fromorbit.com>)
+        id 1q7Ot8-009T5r-1z;
+        Fri, 09 Jun 2023 09:17:54 +1000
+Date:   Fri, 9 Jun 2023 09:17:54 +1000
+From:   Dave Chinner <david@fromorbit.com>
+To:     Theodore Ts'o <tytso@mit.edu>
+Cc:     Roman Gushchin <roman.gushchin@linux.dev>,
+        Kirill Tkhai <tkhai@ya.ru>, akpm@linux-foundation.org,
+        vbabka@suse.cz, viro@zeniv.linux.org.uk, brauner@kernel.org,
+        djwong@kernel.org, hughd@google.com, paulmck@kernel.org,
+        muchun.song@linux.dev, linux-mm@kvack.org,
+        linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org,
+        linux-kernel@vger.kernel.org, zhengqi.arch@bytedance.com
+Subject: Re: [PATCH v2 3/3] fs: Use delayed shrinker unregistration
+Message-ID: <ZIJhou1d55d4H1s0@dread.disaster.area>
+References: <168599103578.70911.9402374667983518835.stgit@pro.pro>
+ <168599180526.70911.14606767590861123431.stgit@pro.pro>
+ <ZH6AA72wOd4HKTKE@P9FQF9L96D>
+ <ZH6K0McWBeCjaf16@dread.disaster.area>
+ <20230608163622.GA1435580@mit.edu>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20230608163622.GA1435580@mit.edu>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-From: "Darrick J. Wong" <djwong@kernel.org>
+On Thu, Jun 08, 2023 at 12:36:22PM -0400, Theodore Ts'o wrote:
+> On Tue, Jun 06, 2023 at 11:24:32AM +1000, Dave Chinner wrote:
+> > On Mon, Jun 05, 2023 at 05:38:27PM -0700, Roman Gushchin wrote:
+> > > Hm, it makes the API more complex and easier to mess with. Like what will happen
+> > > if the second part is never called? Or it's called without the first part being
+> > > called first?
+> > 
+> > Bad things.
+> > 
+> > Also, it doesn't fix the three other unregister_shrinker() calls in
+> > the XFS unmount path, nor the three in the ext4/mbcache/jbd2 unmount
+> > path.
+> > 
+> > Those are just some of the unregister_shrinker() calls that have
+> > dynamic contexts that would also need this same fix; I haven't
+> > audited the 3 dozen other unregister_shrinker() calls around the
+> > kernel to determine if any of them need similar treatment, too.
+> > 
+> > IOWs, this patchset is purely a band-aid to fix the reported
+> > regression, not an actual fix for the underlying problems caused by
+> > moving the shrinker infrastructure to SRCU protection.  This is why
+> > I really want the SRCU changeover reverted.
+> 
+> There's been so much traffic on linux-fsdevel so I missed this thread
+> until Darrick pointed it out to me today.  (Thanks, Darrick!)
+> 
+> From his description, and my quick read-through of this thread....
+> I'm worried.
+> 
+> Given that we're at -rc5 now, and the file system folks didn't get
+> consulted until fairly late in the progress, and the fact that this
+> may cause use-after-free problems that could lead to security issues,
+> perhaps we shoould consider reverting the SRCU changeover now, and try
+> again for the next merge window?
 
-[ Upstream commit 22ed903eee23a5b174e240f1cdfa9acf393a5210 ]
+Yes, please, because I think we can fix this in a much better way
+and make things a whole lot simpler at the same time.
 
-syzbot detected a crash during log recovery:
+The root cause of the SRCU usage is that mm/memcg developers still
+haven't unified the non-memcg and the memcg based shrinker
+implementations. shrink_slab_memcg() doesn't require SRCU
+protection as it does not iterate the shrinker list at all; it
+requires *shrinker instance* lifetime protection. The problem is
+shrink_slab() doing the root memcg/global shrinker work - it
+iterates the shrinker list directly, and this is the list walk that
+SRCU is necessary for to "make shrinkers lockless"
 
-XFS (loop0): Mounting V5 Filesystem bfdc47fc-10d8-4eed-a562-11a831b3f791
-XFS (loop0): Torn write (CRC failure) detected at log block 0x180. Truncating head block from 0x200.
-XFS (loop0): Starting recovery (logdev: internal)
-==================================================================
-BUG: KASAN: slab-out-of-bounds in xfs_btree_lookup_get_block+0x15c/0x6d0 fs/xfs/libxfs/xfs_btree.c:1813
-Read of size 8 at addr ffff88807e89f258 by task syz-executor132/5074
+Going back to shrink_slab_memcg(), it does a lookup of the shrinker
+instance by idr_find(); idr_find() is a wrapper around
+radix_tree_lookup(), which means we can use RCU protection and
+reference counting to both validate the shrinker instance *and*
+guarantee that it isn't free from under us as we execute the
+shrinker.
 
-CPU: 0 PID: 5074 Comm: syz-executor132 Not tainted 6.2.0-rc1-syzkaller #0
-Hardware name: Google Google Compute Engine/Google Compute Engine, BIOS Google 10/26/2022
-Call Trace:
- <TASK>
- __dump_stack lib/dump_stack.c:88 [inline]
- dump_stack_lvl+0x1b1/0x290 lib/dump_stack.c:106
- print_address_description+0x74/0x340 mm/kasan/report.c:306
- print_report+0x107/0x1f0 mm/kasan/report.c:417
- kasan_report+0xcd/0x100 mm/kasan/report.c:517
- xfs_btree_lookup_get_block+0x15c/0x6d0 fs/xfs/libxfs/xfs_btree.c:1813
- xfs_btree_lookup+0x346/0x12c0 fs/xfs/libxfs/xfs_btree.c:1913
- xfs_btree_simple_query_range+0xde/0x6a0 fs/xfs/libxfs/xfs_btree.c:4713
- xfs_btree_query_range+0x2db/0x380 fs/xfs/libxfs/xfs_btree.c:4953
- xfs_refcount_recover_cow_leftovers+0x2d1/0xa60 fs/xfs/libxfs/xfs_refcount.c:1946
- xfs_reflink_recover_cow+0xab/0x1b0 fs/xfs/xfs_reflink.c:930
- xlog_recover_finish+0x824/0x920 fs/xfs/xfs_log_recover.c:3493
- xfs_log_mount_finish+0x1ec/0x3d0 fs/xfs/xfs_log.c:829
- xfs_mountfs+0x146a/0x1ef0 fs/xfs/xfs_mount.c:933
- xfs_fs_fill_super+0xf95/0x11f0 fs/xfs/xfs_super.c:1666
- get_tree_bdev+0x400/0x620 fs/super.c:1282
- vfs_get_tree+0x88/0x270 fs/super.c:1489
- do_new_mount+0x289/0xad0 fs/namespace.c:3145
- do_mount fs/namespace.c:3488 [inline]
- __do_sys_mount fs/namespace.c:3697 [inline]
- __se_sys_mount+0x2d3/0x3c0 fs/namespace.c:3674
- do_syscall_x64 arch/x86/entry/common.c:50 [inline]
- do_syscall_64+0x3d/0xb0 arch/x86/entry/common.c:80
- entry_SYSCALL_64_after_hwframe+0x63/0xcd
-RIP: 0033:0x7f89fa3f4aca
-Code: 83 c4 08 5b 5d c3 66 2e 0f 1f 84 00 00 00 00 00 c3 66 2e 0f 1f 84 00 00 00 00 00 0f 1f 44 00 00 49 89 ca b8 a5 00 00 00 0f 05 <48> 3d 01 f0 ff ff 73 01 c3 48 c7 c1 c0 ff ff ff f7 d8 64 89 01 48
-RSP: 002b:00007fffd5fb5ef8 EFLAGS: 00000206 ORIG_RAX: 00000000000000a5
-RAX: ffffffffffffffda RBX: 00646975756f6e2c RCX: 00007f89fa3f4aca
-RDX: 0000000020000100 RSI: 0000000020009640 RDI: 00007fffd5fb5f10
-RBP: 00007fffd5fb5f10 R08: 00007fffd5fb5f50 R09: 000000000000970d
-R10: 0000000000200800 R11: 0000000000000206 R12: 0000000000000004
-R13: 0000555556c6b2c0 R14: 0000000000200800 R15: 00007fffd5fb5f50
- </TASK>
+This requires, as I mentioned elsewhere in this thread, that the
+shrinker instance to be dynamically allocated, not embedded in other
+structures. Dynamically allocated shrinker instances and reference
+counting them means we can do this in shrink_slab_memcg() to ensure
+shrinker instance validity and lifetime rules are followed:
 
-The fuzzed image contains an AGF with an obviously garbage
-agf_refcount_level value of 32, and a dirty log with a buffer log item
-for that AGF.  The ondisk AGF has a higher LSN than the recovered log
-item.  xlog_recover_buf_commit_pass2 reads the buffer, compares the
-LSNs, and decides to skip replay because the ondisk buffer appears to be
-newer.
 
-Unfortunately, the ondisk buffer is corrupt, but recovery just read the
-buffer with no buffer ops specified:
+	rcu_read_lock()
+	shrinker = idr_find(&shrinker_idr, i);
+	if (!shrinker ||
+	    !refcount_inc_not_zero(&shrinker->refcount)) {
+		/* shrinker is being torn down */
+		clear_bit(i, info->map);
+		rcu_read_unlock();
+		continue;
+	}
+	rcu_read_unlock();
 
-	error = xfs_buf_read(mp->m_ddev_targp, buf_f->blf_blkno,
-			buf_f->blf_len, buf_flags, &bp, NULL);
+	/* do shrinker stuff */
 
-Skipping the buffer leaves its contents in memory unverified.  This sets
-us up for a kernel crash because xfs_refcount_recover_cow_leftovers
-reads the buffer (which is still around in XBF_DONE state, so no read
-verification) and creates a refcountbt cursor of height 32.  This is
-impossible so we run off the end of the cursor object and crash.
+	if (refcount_dec_and_test(&shrinker->refcount)) {
+		/* shrinker is being torn down, waiting for us */
+		wakeup(&shrinker->completion_wait);
+	}
+	/* unsafe to reference shrinker now */
 
-Fix this by invoking the verifier on all skipped buffers and aborting
-log recovery if the ondisk buffer is corrupt.  It might be smarter to
-force replay the log item atop the buffer and then see if it'll pass the
-write verifier (like ext4 does) but for now let's go with the
-conservative option where we stop immediately.
+And we enable the shrinker to run simply by:
 
-Link: https://syzkaller.appspot.com/bug?extid=7e9494b8b399902e994e
-Signed-off-by: Darrick J. Wong <djwong@kernel.org>
-Reviewed-by: Dave Chinner <dchinner@redhat.com>
-Signed-off-by: Dave Chinner <david@fromorbit.com>
-Signed-off-by: Leah Rumancik <leah.rumancik@gmail.com>
----
+shrinker_register()
+{
+	.....
+	/* allow the shrinker to run now */
+	refcount_set(shrinker->refcount, 1);
+	return 0;
+}
 
-Hi,
+We then shut down the shrinker so we can tear it down like so:
 
-Tested and good to go for 5.15.y.
+shrinker_unregister()
+{
+	DECLARE_WAITQUEUE(wait, current);
 
-Thanks,
-Leah
+	add_wait_queue_exclusive(shrinker->completion_wait, &wait);
+	if (!refcount_dec_and_test(&shrinker->refcount))) {
+		/* Wait for running instances to exit */
+		__set_current_state(TASK_UNINTERRUPTIBLE);
+		schedule();
+	}
+	remove_wait_queue(wq, &wait);
 
- fs/xfs/xfs_buf_item_recover.c | 10 ++++++++++
- 1 file changed, 10 insertions(+)
+	/* We own the entire shrinker instance now, start tearing it down */
 
-diff --git a/fs/xfs/xfs_buf_item_recover.c b/fs/xfs/xfs_buf_item_recover.c
-index 991fbf1eb564..e04e44ef14c6 100644
---- a/fs/xfs/xfs_buf_item_recover.c
-+++ b/fs/xfs/xfs_buf_item_recover.c
-@@ -934,6 +934,16 @@ xlog_recover_buf_commit_pass2(
- 	if (lsn && lsn != -1 && XFS_LSN_CMP(lsn, current_lsn) >= 0) {
- 		trace_xfs_log_recover_buf_skip(log, buf_f);
- 		xlog_recover_validate_buf_type(mp, bp, buf_f, NULLCOMMITLSN);
-+
-+		/*
-+		 * We're skipping replay of this buffer log item due to the log
-+		 * item LSN being behind the ondisk buffer.  Verify the buffer
-+		 * contents since we aren't going to run the write verifier.
-+		 */
-+		if (bp->b_ops) {
-+			bp->b_ops->verify_read(bp);
-+			error = bp->b_error;
-+		}
- 		goto out_release;
- 	}
- 
+	.....
+
+	/* Free the shrinker itself after a RCU grace period expires */
+	kfree_rcu(shrinker, shrinker->rcu_head);
+}
+
+So, essentially we don't need SCRU at all to do lockless shrinker
+lookup for the memcg shrinker side of the fence, nor do we need
+synchronise_srcu() to wait for shrinker instances to finish running
+before we can tear stuff down. There is no global state in this at
+all; everything is per-shrinker instance.
+
+But SRCU is needed to protect the global shrinker list walk because
+it hasn't been converted to always use the root memcg and be
+iterated as if it is just another memcg.  IOWs, using SRCU to
+protect the global shrinker list walk is effectively slapping a
+bandaid over a more fundamental problem that we've known about for
+a long time.
+
+So the first thing that has to be done here is unify the shrinker
+infrastructure under the memcg implementation. The global shrinker
+state should be tracked in the root memcg, just like any other memcg
+shrinker is tracked. If memcg's are not enabled, then we should be
+creating a dummy global memcg that a get_root_memcg() helper returns
+when memcgs are disabled to tracks all the global shrinker state.
+then shrink_slab just doesn't care about what memcg is passed to it,
+it just does the same thing.
+
+IOWs, shrink_slab gets entirely replaced by shrink_slab_memcg(), and
+the need for SRCU goes away entirely because shrinker instance
+lookups are all RCU+refcount protected.
+
+Yes, this requires we change how shrinker instances are instantiated
+by subsystems, but this is mostly simple transformation of existing
+code. But it doesn't require changing shrinker implementations, it
+doesn't require a new teardown API, and it doesn't change the
+context under which shrinkers might run.
+
+All the existing RCU protected stuff in the shrinker maps and memcgs
+can remain that way.  We can also keep the shrinker rwsem/mutex for
+all the little internal bits of setup/teardown/non-rcu coordination
+that are needed; once the list iteration is lockless, there will be
+almost no contention on that lock at all...
+
+This isn't all that hard - it's just replicating a well known design
+pattern (i.e. refcount+RCU) we use all over the kernel combined with
+taking advantage of IDR being backed by RCU-safe infrastructure.
+
+If I had been cc'd on the original SRCU patches, this is exactly
+what I would have suggested as a better solution to the problem. We
+end up with cleaner, more robust and better performing
+infrastructure. This is far better than layering more complexity on
+top of what is really a poor foundation....
+
+Cheers,
+
+Dave.
 -- 
-2.41.0.162.gfafddb0af9-goog
-
+Dave Chinner
+david@fromorbit.com
