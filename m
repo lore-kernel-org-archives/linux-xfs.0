@@ -2,93 +2,67 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 91630C7EE23
-	for <linux-xfs@archiver.kernel.org>; Thu,  8 Jun 2023 16:39:04 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3B609C7EE2E
+	for <linux-xfs@archiver.kernel.org>; Thu,  8 Jun 2023 17:27:21 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234051AbjFHQjD (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 8 Jun 2023 12:39:03 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47396 "EHLO
+        id S236392AbjFHR1U (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 8 Jun 2023 13:27:20 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49724 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S235756AbjFHQi6 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 8 Jun 2023 12:38:58 -0400
-Received: from outgoing.mit.edu (outgoing-auth-1.mit.edu [18.9.28.11])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E283230CF
-        for <linux-xfs@vger.kernel.org>; Thu,  8 Jun 2023 09:38:31 -0700 (PDT)
-Received: from cwcc.thunk.org (pool-173-48-82-39.bstnma.fios.verizon.net [173.48.82.39])
-        (authenticated bits=0)
-        (User authenticated as tytso@ATHENA.MIT.EDU)
-        by outgoing.mit.edu (8.14.7/8.12.4) with ESMTP id 358GaM2E029198
-        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Thu, 8 Jun 2023 12:36:23 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=mit.edu; s=outgoing;
-        t=1686242186; bh=shiW3MxbgeJoRhHHYMf+Lg7J4ykrzks2P+y1IqsB/aY=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To;
-        b=RqfXkYoZ5EfyswFT/IoHwD28IyGaSArs6cGCB/H0TD4xHGHzpBVP2vwPhrxaz6S4M
-         /3rwqaPRGQ8aSiECtd052yWKcpmZGeSVS6MBJPjCE7//VdQu9n6EkMBmkPIExzyvk/
-         7ne4YcOKUq6w3GNtlSuqCHJfkyScdvJ8Oo8F2i2igkP8q1ngkCaJAU+UbCJG6S5dUK
-         jI26E84MM/d1eGpejXwsiRKo7MGZP5McibXcPH5PfXdh6aeiLWRpZSpKGSNWhfq0Fl
-         kdsMH9OBXqpvCo1DiXaIgO6ZGpfxA6cjLQnaHU+Jd4GblQ5c06R1VbK2SqM18K2atM
-         PUynhlqNqAPwQ==
-Received: by cwcc.thunk.org (Postfix, from userid 15806)
-        id 6B6CD15C04C3; Thu,  8 Jun 2023 12:36:22 -0400 (EDT)
-Date:   Thu, 8 Jun 2023 12:36:22 -0400
-From:   "Theodore Ts'o" <tytso@mit.edu>
+        with ESMTP id S237262AbjFHR1Q (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 8 Jun 2023 13:27:16 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1E1731FDE
+        for <linux-xfs@vger.kernel.org>; Thu,  8 Jun 2023 10:27:12 -0700 (PDT)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id F160064FCC
+        for <linux-xfs@vger.kernel.org>; Thu,  8 Jun 2023 17:27:11 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPS id 61B54C433D2;
+        Thu,  8 Jun 2023 17:27:11 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1686245231;
+        bh=V7zsbWNSUv9JSIAUq60HiK4d2sfzsUKsBn8Bq5XFfv4=;
+        h=Subject:From:In-Reply-To:References:Date:To:Cc:From;
+        b=l/YS7Khs6nyDSjW5ZXJYAPXOVB1J7hwDHo+YUEg0gNe/V1UR4rDs10AtvaGW6uKrk
+         v0LURncuBy7ah3TwSXBgvyGS+ZjPYXMvSm1FZ0o4FDfXz0+Aqe/pm2uxRh+PA5P223
+         W6Bi8SeHBLc4nfh3PrJds5N2u4n14hWvgM8MUzZ7bJKhPYd0n7bEReRdNP3xnPwL/2
+         fikbsEjTczz4Q1YoqkanTc5VJQ1lBxJ70+bUjIgn9L5sm2FKPV/Z4OKg3/twywFqmv
+         OoMMLFF1/ymAuSRpGuIxCdCvRci8LrRskR36cUP2bzsF1eC3QAa8uuvTFaJomnL/Vk
+         /4WvjSwM2Mo5w==
+Received: from aws-us-west-2-korg-oddjob-1.ci.codeaurora.org (localhost.localdomain [127.0.0.1])
+        by aws-us-west-2-korg-oddjob-1.ci.codeaurora.org (Postfix) with ESMTP id 4E198E87232;
+        Thu,  8 Jun 2023 17:27:11 +0000 (UTC)
+Subject: Re: [GIT PULL] xfs: fixes for 6.4-rc5
+From:   pr-tracker-bot@kernel.org
+In-Reply-To: <ZIF0vl9b+x8gejIf@dread.disaster.area>
+References: <ZIF0vl9b+x8gejIf@dread.disaster.area>
+X-PR-Tracked-List-Id: <linux-xfs.vger.kernel.org>
+X-PR-Tracked-Message-Id: <ZIF0vl9b+x8gejIf@dread.disaster.area>
+X-PR-Tracked-Remote: git://git.kernel.org/pub/scm/fs/xfs/xfs-linux.git tags/xfs-6.4-rc5-fixes
+X-PR-Tracked-Commit-Id: d4d12c02bf5f768f1b423c7ae2909c5afdfe0d5f
+X-PR-Merge-Tree: torvalds/linux.git
+X-PR-Merge-Refname: refs/heads/master
+X-PR-Merge-Commit-Id: 79b6fad54683c28cc7e40d806e409abd65ed241a
+Message-Id: <168624523130.6402.10823393446647556835.pr-tracker-bot@kernel.org>
+Date:   Thu, 08 Jun 2023 17:27:11 +0000
 To:     Dave Chinner <david@fromorbit.com>
-Cc:     Roman Gushchin <roman.gushchin@linux.dev>,
-        Kirill Tkhai <tkhai@ya.ru>, akpm@linux-foundation.org,
-        vbabka@suse.cz, viro@zeniv.linux.org.uk, brauner@kernel.org,
-        djwong@kernel.org, hughd@google.com, paulmck@kernel.org,
-        muchun.song@linux.dev, linux-mm@kvack.org,
-        linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org,
-        linux-kernel@vger.kernel.org, zhengqi.arch@bytedance.com
-Subject: Re: [PATCH v2 3/3] fs: Use delayed shrinker unregistration
-Message-ID: <20230608163622.GA1435580@mit.edu>
-References: <168599103578.70911.9402374667983518835.stgit@pro.pro>
- <168599180526.70911.14606767590861123431.stgit@pro.pro>
- <ZH6AA72wOd4HKTKE@P9FQF9L96D>
- <ZH6K0McWBeCjaf16@dread.disaster.area>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <ZH6K0McWBeCjaf16@dread.disaster.area>
+Cc:     Linus Torvalds <torvalds@linux-foundation.org>, djwong@kernel.org,
+        linux-xfs@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Tue, Jun 06, 2023 at 11:24:32AM +1000, Dave Chinner wrote:
-> On Mon, Jun 05, 2023 at 05:38:27PM -0700, Roman Gushchin wrote:
-> > Hm, it makes the API more complex and easier to mess with. Like what will happen
-> > if the second part is never called? Or it's called without the first part being
-> > called first?
-> 
-> Bad things.
-> 
-> Also, it doesn't fix the three other unregister_shrinker() calls in
-> the XFS unmount path, nor the three in the ext4/mbcache/jbd2 unmount
-> path.
-> 
-> Those are just some of the unregister_shrinker() calls that have
-> dynamic contexts that would also need this same fix; I haven't
-> audited the 3 dozen other unregister_shrinker() calls around the
-> kernel to determine if any of them need similar treatment, too.
-> 
-> IOWs, this patchset is purely a band-aid to fix the reported
-> regression, not an actual fix for the underlying problems caused by
-> moving the shrinker infrastructure to SRCU protection.  This is why
-> I really want the SRCU changeover reverted.
+The pull request you sent on Thu, 8 Jun 2023 16:27:10 +1000:
 
-There's been so much traffic on linux-fsdevel so I missed this thread
-until Darrick pointed it out to me today.  (Thanks, Darrick!)
+> git://git.kernel.org/pub/scm/fs/xfs/xfs-linux.git tags/xfs-6.4-rc5-fixes
 
-From his description, and my quick read-through of this thread....
-I'm worried.
+has been merged into torvalds/linux.git:
+https://git.kernel.org/torvalds/c/79b6fad54683c28cc7e40d806e409abd65ed241a
 
-Given that we're at -rc5 now, and the file system folks didn't get
-consulted until fairly late in the progress, and the fact that this
-may cause use-after-free problems that could lead to security issues,
-perhaps we shoould consider reverting the SRCU changeover now, and try
-again for the next merge window?
+Thank you!
 
-Thanks!!
-
-						- Ted
+-- 
+Deet-doot-dot, I am a bot.
+https://korg.docs.kernel.org/prtracker.html
