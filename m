@@ -2,30 +2,30 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C68E7C77B7A
-	for <linux-xfs@archiver.kernel.org>; Thu,  8 Jun 2023 03:24:25 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6FEC3C7EE2F
+	for <linux-xfs@archiver.kernel.org>; Thu,  8 Jun 2023 03:24:27 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234021AbjFHDYW (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 7 Jun 2023 23:24:22 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34278 "EHLO
+        id S234024AbjFHDYY (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 7 Jun 2023 23:24:24 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34284 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233829AbjFHDYR (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 7 Jun 2023 23:24:17 -0400
+        with ESMTP id S234019AbjFHDYV (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 7 Jun 2023 23:24:21 -0400
 Received: from bombadil.infradead.org (bombadil.infradead.org [IPv6:2607:7c80:54:3::133])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id DE7D32137;
-        Wed,  7 Jun 2023 20:24:15 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C4DDB1BF7;
+        Wed,  7 Jun 2023 20:24:20 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
         d=infradead.org; s=bombadil.20210309; h=Sender:Content-Transfer-Encoding:
         MIME-Version:References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:
         Reply-To:Content-Type:Content-ID:Content-Description;
-        bh=i8udE4lZ9zFqOy/CU8rsbiperqptCexBzEc3SlSva0A=; b=FqszdcQsYtn+7QaEoWq67nnDPF
-        5Eg7Zs3vYghbDl9L/ZdzusDwSf7l2rNkyQmNh7Z53nlKNwoVBTRJsa6kodwBwycgq4dXbWyFASKdm
-        M82I9wh0LfRFzH792mSlPkUC187ToVFJVlM+Jw65mgJuRDVAI6fFFTuS28HZo33fhGVOgWDGHgpWW
-        Ybf/GOJ8BSBsBXY6FvO3Ue13e4nOlMiKX7/7KznLwPcYEhIOr/HGyqRYaqonj1CK0AGSA+qL80nWK
-        0Vu1+8vslH34F+tJJEFbeoACTr6y36JHZ9ldkj1KopEuA57cYV7tCJR79s+FTt6+oiY2zYm6MFT/6
-        hrzrNh9Q==;
+        bh=sMjmb+Wm54NnkkgYgz+La9q4lHjnPp58T0sIUFLYLug=; b=PYnv5Nlik3D3xkttqofPCLeerz
+        6toPkObfXRJV+vaqW+1uGWp5TU5vbR7LxWr1TeadroX29KvxG31CxZq2RiOSmGmBW3Hmdd3KgCEEP
+        KCU+6sPf8Z+IMDADGYBL7cI07DaTFCrvQFsF6o42U8wlZeDWOSixdpoTM3gYsTyOK7/6fGQQDxpSY
+        Vu/mdZNpxoS0qV8gGbotX8ZTuxij7qvgC562L3iAsGqqamU2bvRgRV0C4iCdx/PBxWOszFWhrbEdW
+        NkIudd5ueFlTXBAHHfL+NalrmDvnmD65A8GuAQkbOdi0COUy2RLofqPjiY/NY7fLa/u0n+sI8J4gc
+        xuBCCOFg==;
 Received: from mcgrof by bombadil.infradead.org with local (Exim 4.96 #2 (Red Hat Linux))
-        id 1q76Fr-007uuo-37;
+        id 1q76Fr-007uui-2h;
         Thu, 08 Jun 2023 03:24:07 +0000
 From:   Luis Chamberlain <mcgrof@kernel.org>
 To:     hch@infradead.org, djwong@kernel.org, dchinner@redhat.com,
@@ -36,9 +36,9 @@ Cc:     hare@suse.de, ritesh.list@gmail.com, rgoldwyn@suse.com,
         p.raghav@samsung.com, da.gomez@samsung.com, rohan.puri@samsung.com,
         rpuri.linux@gmail.com, mcgrof@kernel.org, corbet@lwn.net,
         jake@lwn.net
-Subject: [RFC 4/4] bdev: extend bdev inode with it's own super_block
-Date:   Wed,  7 Jun 2023 20:24:04 -0700
-Message-Id: <20230608032404.1887046-5-mcgrof@kernel.org>
+Subject: [RFC 1/4] bdev: replace export of blockdev_superblock with BDEVFS_MAGIC
+Date:   Wed,  7 Jun 2023 20:24:01 -0700
+Message-Id: <20230608032404.1887046-2-mcgrof@kernel.org>
 X-Mailer: git-send-email 2.38.1
 In-Reply-To: <20230608032404.1887046-1-mcgrof@kernel.org>
 References: <20230608032404.1887046-1-mcgrof@kernel.org>
@@ -49,215 +49,57 @@ Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-We currently share a single super_block for the block device cache,
-each block device corresponds to one inode on that super_block. This
-implicates sharing one aops operation though, and in the near future
-we want to be able to instead support using iomap on the super_block
-for different block devices.
+There is no need to export blockdev_superblock because we can just
+use the magic value of the block device cache super block, which is
+already in place, BDEVFS_MAGIC. So just check for that.
 
-To allow more flexibility use a super_block per block device, so
-that we can eventually allow co-existence with pure-iomap requirements
-and block devices which require buffer-heads.
+This let's us remove the export of blockdev_superblock and also
+let's this block dev cache scale as it wishes internally. For
+instance in the future we may have different super block for each
+block device. Right now it is all shared on one super block.
 
 Signed-off-by: Luis Chamberlain <mcgrof@kernel.org>
 ---
- block/bdev.c | 94 +++++++++++++++++++++++++++++++++++++++++++---------
- 1 file changed, 78 insertions(+), 16 deletions(-)
+ block/bdev.c       | 1 -
+ include/linux/fs.h | 4 ++--
+ 2 files changed, 2 insertions(+), 3 deletions(-)
 
 diff --git a/block/bdev.c b/block/bdev.c
-index 2b16afc2bd2a..3ab952a77a11 100644
+index 21c63bfef323..91477c3849d2 100644
 --- a/block/bdev.c
 +++ b/block/bdev.c
-@@ -30,9 +30,14 @@
- #include "../fs/internal.h"
- #include "blk.h"
- 
-+static LIST_HEAD(bdev_inode_list);
-+static DEFINE_MUTEX(bdev_inode_mutex);
-+
- struct bdev_inode {
- 	struct block_device bdev;
- 	struct inode vfs_inode;
-+	struct vfsmount *bd_mnt;
-+	struct list_head list;
+@@ -379,7 +379,6 @@ static struct file_system_type bd_type = {
  };
  
- static inline struct bdev_inode *BDEV_I(struct inode *inode)
-@@ -321,10 +326,28 @@ static struct inode *bdev_alloc_inode(struct super_block *sb)
- 	return &ei->vfs_inode;
- }
+ struct super_block *blockdev_superblock __read_mostly;
+-EXPORT_SYMBOL_GPL(blockdev_superblock);
  
-+static void bdev_remove_inode(struct bdev_inode *binode)
-+{
-+	struct bdev_inode *bdev_inode, *tmp;
-+
-+	kern_unmount(binode->bd_mnt);
-+
-+	mutex_lock(&bdev_inode_mutex);
-+	list_for_each_entry_safe(bdev_inode, tmp, &bdev_inode_list, list) {
-+		if (bdev_inode == binode) {
-+			list_del_init(&bdev_inode->list);
-+			break;
-+		}
-+	}
-+	mutex_unlock(&bdev_inode_mutex);
-+}
-+
- static void bdev_free_inode(struct inode *inode)
- {
- 	struct block_device *bdev = I_BDEV(inode);
- 
-+	bdev_remove_inode(BDEV_I(inode));
-+
- 	free_percpu(bdev->bd_stats);
- 	kfree(bdev->bd_meta_info);
- 
-@@ -378,12 +401,9 @@ static struct file_system_type bd_type = {
- 	.kill_sb	= kill_anon_super,
- };
- 
--struct super_block *blockdev_superblock __read_mostly;
--
  void __init bdev_cache_init(void)
  {
- 	int err;
--	static struct vfsmount *bd_mnt;
+diff --git a/include/linux/fs.h b/include/linux/fs.h
+index 0b54ac1d331b..948a384af8a3 100644
+--- a/include/linux/fs.h
++++ b/include/linux/fs.h
+@@ -43,6 +43,7 @@
+ #include <linux/cred.h>
+ #include <linux/mnt_idmapping.h>
+ #include <linux/slab.h>
++#include <uapi/linux/magic.h>
  
- 	bdev_cachep = kmem_cache_create("bdev_cache", sizeof(struct bdev_inode),
- 			0, (SLAB_HWCACHE_ALIGN|SLAB_RECLAIM_ACCOUNT|
-@@ -392,20 +412,23 @@ void __init bdev_cache_init(void)
- 	err = register_filesystem(&bd_type);
- 	if (err)
- 		panic("Cannot register bdev pseudo-fs");
--	bd_mnt = kern_mount(&bd_type);
--	if (IS_ERR(bd_mnt))
--		panic("Cannot create bdev pseudo-fs");
--	blockdev_superblock = bd_mnt->mnt_sb;   /* For writeback */
- }
+ #include <asm/byteorder.h>
+ #include <uapi/linux/fs.h>
+@@ -2388,10 +2389,9 @@ extern struct kmem_cache *names_cachep;
+ #define __getname()		kmem_cache_alloc(names_cachep, GFP_KERNEL)
+ #define __putname(name)		kmem_cache_free(names_cachep, (void *)(name))
  
- struct block_device *bdev_alloc(struct gendisk *disk, u8 partno)
+-extern struct super_block *blockdev_superblock;
+ static inline bool sb_is_blkdev_sb(struct super_block *sb)
  {
-+	struct vfsmount *bd_mnt;
- 	struct block_device *bdev;
- 	struct inode *inode;
- 
--	inode = new_inode(blockdev_superblock);
--	if (!inode)
-+	bd_mnt = vfs_kern_mount(&bd_type, SB_KERNMOUNT, bd_type.name, NULL);
-+	if (IS_ERR(bd_mnt))
- 		return NULL;
-+
-+	inode = new_inode(bd_mnt->mnt_sb);
-+	if (!inode) {
-+		kern_unmount(bd_mnt);
-+		goto err_out;
-+	}
- 	inode->i_mode = S_IFBLK;
- 	inode->i_rdev = 0;
- #ifdef CONFIG_BUFFER_HEAD
-@@ -426,12 +449,14 @@ struct block_device *bdev_alloc(struct gendisk *disk, u8 partno)
- 	else
- 		bdev->bd_has_submit_bio = false;
- 	bdev->bd_stats = alloc_percpu(struct disk_stats);
--	if (!bdev->bd_stats) {
--		iput(inode);
--		return NULL;
--	}
-+	if (!bdev->bd_stats)
-+		goto err_out;
- 	bdev->bd_disk = disk;
-+	BDEV_I(inode)->bd_mnt = bd_mnt; /* For writeback */
- 	return bdev;
-+err_out:
-+	iput(inode);
-+	return NULL;
+-	return IS_ENABLED(CONFIG_BLOCK) && sb == blockdev_superblock;
++	return IS_ENABLED(CONFIG_BLOCK) && sb->s_magic == BDEVFS_MAGIC;
  }
  
- void bdev_set_nr_sectors(struct block_device *bdev, sector_t sectors)
-@@ -444,13 +469,16 @@ void bdev_set_nr_sectors(struct block_device *bdev, sector_t sectors)
- 
- void bdev_add(struct block_device *bdev, dev_t dev)
- {
-+	struct inode *inode = bdev->bd_inode;
-+
- 	bdev->bd_dev = dev;
- 	bdev->bd_inode->i_rdev = dev;
- 	bdev->bd_inode->i_ino = dev;
- 	insert_inode_hash(bdev->bd_inode);
-+	list_add_tail(&BDEV_I(inode)->list, &bdev_inode_list);
- }
- 
--long nr_blockdev_pages(void)
-+static long nr_blockdev_pages_sb(struct super_block *blockdev_superblock)
- {
- 	struct inode *inode;
- 	long ret = 0;
-@@ -463,6 +491,19 @@ long nr_blockdev_pages(void)
- 	return ret;
- }
- 
-+long nr_blockdev_pages(void)
-+{
-+	struct bdev_inode *bdev_inode;
-+	long ret = 0;
-+
-+	mutex_lock(&bdev_inode_mutex);
-+	list_for_each_entry(bdev_inode, &bdev_inode_list, list)
-+		ret += nr_blockdev_pages_sb(bdev_inode->bd_mnt->mnt_sb);
-+	mutex_unlock(&bdev_inode_mutex);
-+
-+	return ret;
-+}
-+
- /**
-  * bd_may_claim - test whether a block device can be claimed
-  * @bdev: block device of interest
-@@ -672,7 +713,18 @@ static void blkdev_put_part(struct block_device *part, fmode_t mode)
- 
- static struct inode *blkdev_inode_lookup(dev_t dev)
- {
--	return ilookup(blockdev_superblock, dev);
-+	struct bdev_inode *bdev_inode;
-+	struct inode *inode = NULL;
-+
-+	mutex_lock(&bdev_inode_mutex);
-+	list_for_each_entry(bdev_inode, &bdev_inode_list, list) {
-+		inode = ilookup(bdev_inode->bd_mnt->mnt_sb, dev);
-+		if (inode)
-+			break;
-+	}
-+	mutex_unlock(&bdev_inode_mutex);
-+
-+	return inode;
- }
- 
- struct block_device *blkdev_get_no_open(dev_t dev)
-@@ -961,7 +1013,7 @@ int __invalidate_device(struct block_device *bdev, bool kill_dirty)
- }
- EXPORT_SYMBOL(__invalidate_device);
- 
--void sync_bdevs(bool wait)
-+static void sync_bdev_sb(struct super_block *blockdev_superblock, bool wait)
- {
- 	struct inode *inode, *old_inode = NULL;
- 
-@@ -1013,6 +1065,16 @@ void sync_bdevs(bool wait)
- 	iput(old_inode);
- }
- 
-+void sync_bdevs(bool wait)
-+{
-+	struct bdev_inode *bdev_inode;
-+
-+	mutex_lock(&bdev_inode_mutex);
-+	list_for_each_entry(bdev_inode, &bdev_inode_list, list)
-+		sync_bdev_sb(bdev_inode->bd_mnt->mnt_sb, wait);
-+	mutex_unlock(&bdev_inode_mutex);
-+}
-+
- /*
-  * Handle STATX_DIOALIGN for block devices.
-  *
+ void emergency_thaw_all(void);
 -- 
 2.39.2
 
