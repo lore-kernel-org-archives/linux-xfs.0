@@ -2,143 +2,181 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5B295C7EE29
-	for <linux-xfs@archiver.kernel.org>; Fri,  9 Jun 2023 11:56:05 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 415EEC7EE2E
+	for <linux-xfs@archiver.kernel.org>; Fri,  9 Jun 2023 12:50:05 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S237763AbjFIL4D (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 9 Jun 2023 07:56:03 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46448 "EHLO
+        id S229776AbjFIMtd (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 9 Jun 2023 08:49:33 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51994 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S239082AbjFIL4C (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 9 Jun 2023 07:56:02 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id EBEAB3C15
-        for <linux-xfs@vger.kernel.org>; Fri,  9 Jun 2023 04:55:34 -0700 (PDT)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 068D960B85
-        for <linux-xfs@vger.kernel.org>; Fri,  9 Jun 2023 11:54:32 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id CA646C433EF
-        for <linux-xfs@vger.kernel.org>; Fri,  9 Jun 2023 11:54:30 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1686311671;
-        bh=iAkgEk7QTcK2TwJOkuHj9NRlMGN5XZOFJAEG9/aZj68=;
-        h=Date:From:To:Subject:From;
-        b=haoYvNDFxlhkJnsAbUA5S3JYgoghCdnpZrTWfeVB8sYq2hRcb1USA8Skx6zXPDVWS
-         ZKuE1h9HJWGjS/quxSTMeRUPap0lUbwTgZdVQrI1k/1WF2TE2YE/wSWFk2tMo4QKCJ
-         eTAn456teeQrzF0+Ut9HQvINsJp7oXQjeHGdOgKB7rjPza3OASMUTpByJHYnkuoJf6
-         dtzKjviockhElGXAfsV9ELH13REFGxLx+vfCz716tT+vJ5zz15eWEVSMr357q3oIK1
-         FGtjOuSocW1bEiRhkX2z6c4t8n6TPY/mjur6WQU8VukOHZwfeTtzve2wvsADkHp3Ee
-         WWChxPIywQObA==
-Date:   Fri, 9 Jun 2023 13:54:27 +0200
-From:   Carlos Maiolino <cem@kernel.org>
-To:     linux-xfs@vger.kernel.org
-Subject: [ANNOUNCE] xfsprogs: for-next updated to 7901c8c1a
-Message-ID: <20230609115427.kj7ifiglf6lf5u6z@andromeda>
+        with ESMTP id S240759AbjFIMt0 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 9 Jun 2023 08:49:26 -0400
+Received: from mail-ua1-x92d.google.com (mail-ua1-x92d.google.com [IPv6:2607:f8b0:4864:20::92d])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A24ACDD;
+        Fri,  9 Jun 2023 05:49:25 -0700 (PDT)
+Received: by mail-ua1-x92d.google.com with SMTP id a1e0cc1a2514c-78ca4500467so136990241.3;
+        Fri, 09 Jun 2023 05:49:25 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20221208; t=1686314964; x=1688906964;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=LTPAv/QmjcDW9itePSk8p0/Lv0ERnxt+H+GsshWp374=;
+        b=pL8nRL6Ys7H3ld011/8hTdheGeuaBsPhbmQDZ4Z1ySwVW2a8floEfkOymaAdfFIqDE
+         XvaFds6FQQ/D77PCczDUMDzrlD2y0PUEmVGyK+Za2Vg2p/ACPWPZgI8q2jTUxkaNAjGG
+         oYC/OrtdafOpHy0NJlxPFEfXrwkb8KkH0BaK74qGHpzN9z+6khIqAWrReVClLzBGZG8x
+         10fH0Um5TL1iFJ7PSTlqFbORupwBvrz2WBEmMUFsOsv6KeieEnAuRSZuK0OMBk9kfFJ6
+         XMWQiHU88IYd0NSaOCWL26GCixanuAmO4w202lR59m6xkxrg+diQ1rnJ/ZxhilDrdt+s
+         rKtA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20221208; t=1686314964; x=1688906964;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=LTPAv/QmjcDW9itePSk8p0/Lv0ERnxt+H+GsshWp374=;
+        b=BI8VyNxg+9/0WuzpsQ4eu3maXfgyIISafjFkx1ACTcJ8KbZvXBsvUwxGouJ04jGqmO
+         3fvXByjWYyKlInwFlmR4INmgYupBpgYp85uIa0Z5xtmec+AUT34M5R5uknAQt8eZDeIB
+         qjF79Qg6dSCI797QrmIOscX4v77bq9dcepxoQRWBM/mv5DrLzmFyzLi7YKauHloUhFSh
+         8sJvz7bXIVR2la84HO0EPdPa/xzj6u5LdEbeIyc6g6cjuFfxmunw1qqZ5D3IFqUUaoIc
+         /mpbIdBW7Qb0GGpZV/q63fvOELr7NJPLz/mRXjc5nBecIFh8TRpzdTfky+/jEN7LlRsL
+         PjDw==
+X-Gm-Message-State: AC+VfDwktCmdjin7/bWh5/ZEqx4E2BIdAIWYdfs+W7SAN6rnafrjc0gq
+        EPI6/WUDePX8bigv/DzLwR6IBAq08/+behyL4PU=
+X-Google-Smtp-Source: ACHHUZ76jiqSSjSIyfsl93o0Co07GwwFWZdtwinJbc3NVvchMlzGphKlV2aYfRJYZR2LdsQ47eBbLDhxGRGQtUo7UXY=
+X-Received: by 2002:a67:f705:0:b0:439:31ec:8602 with SMTP id
+ m5-20020a67f705000000b0043931ec8602mr516954vso.27.1686314964367; Fri, 09 Jun
+ 2023 05:49:24 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
+References: <20230605075258.308475-1-amir73il@gmail.com>
+In-Reply-To: <20230605075258.308475-1-amir73il@gmail.com>
+From:   Amir Goldstein <amir73il@gmail.com>
+Date:   Fri, 9 Jun 2023 15:49:13 +0300
+Message-ID: <CAOQ4uxgkS2Ma36o2c6FBtnXnxr=KEF02646UL11hT1k489-wYA@mail.gmail.com>
+Subject: Re: [PATCH 6.1] xfs: verify buffer contents when we skip log replay
+To:     Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Cc:     Sasha Levin <sashal@kernel.org>,
+        Leah Rumancik <leah.rumancik@gmail.com>,
+        Chandan Babu R <chandan.babu@oracle.com>,
+        "Darrick J . Wong" <djwong@kernel.org>, linux-xfs@vger.kernel.org,
+        stable@vger.kernel.org, Dave Chinner <dchinner@redhat.com>,
+        Dave Chinner <david@fromorbit.com>,
+        Danila Chernetsov <listdansp@mail.ru>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Hello.
+On Mon, Jun 5, 2023 at 10:53=E2=80=AFAM Amir Goldstein <amir73il@gmail.com>=
+ wrote:
+>
+> From: "Darrick J. Wong" <djwong@kernel.org>
+>
+> commit 22ed903eee23a5b174e240f1cdfa9acf393a5210 upstream.
+>
+> syzbot detected a crash during log recovery:
+>
+> XFS (loop0): Mounting V5 Filesystem bfdc47fc-10d8-4eed-a562-11a831b3f791
+> XFS (loop0): Torn write (CRC failure) detected at log block 0x180. Trunca=
+ting head block from 0x200.
+> XFS (loop0): Starting recovery (logdev: internal)
+> =3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D
+> BUG: KASAN: slab-out-of-bounds in xfs_btree_lookup_get_block+0x15c/0x6d0 =
+fs/xfs/libxfs/xfs_btree.c:1813
+> Read of size 8 at addr ffff88807e89f258 by task syz-executor132/5074
+>
+> CPU: 0 PID: 5074 Comm: syz-executor132 Not tainted 6.2.0-rc1-syzkaller #0
+> Hardware name: Google Google Compute Engine/Google Compute Engine, BIOS G=
+oogle 10/26/2022
+> Call Trace:
+>  <TASK>
+>  __dump_stack lib/dump_stack.c:88 [inline]
+>  dump_stack_lvl+0x1b1/0x290 lib/dump_stack.c:106
+>  print_address_description+0x74/0x340 mm/kasan/report.c:306
+>  print_report+0x107/0x1f0 mm/kasan/report.c:417
+>  kasan_report+0xcd/0x100 mm/kasan/report.c:517
+>  xfs_btree_lookup_get_block+0x15c/0x6d0 fs/xfs/libxfs/xfs_btree.c:1813
+>  xfs_btree_lookup+0x346/0x12c0 fs/xfs/libxfs/xfs_btree.c:1913
+>  xfs_btree_simple_query_range+0xde/0x6a0 fs/xfs/libxfs/xfs_btree.c:4713
+>  xfs_btree_query_range+0x2db/0x380 fs/xfs/libxfs/xfs_btree.c:4953
+>  xfs_refcount_recover_cow_leftovers+0x2d1/0xa60 fs/xfs/libxfs/xfs_refcoun=
+t.c:1946
+>  xfs_reflink_recover_cow+0xab/0x1b0 fs/xfs/xfs_reflink.c:930
+>  xlog_recover_finish+0x824/0x920 fs/xfs/xfs_log_recover.c:3493
+>  xfs_log_mount_finish+0x1ec/0x3d0 fs/xfs/xfs_log.c:829
+>  xfs_mountfs+0x146a/0x1ef0 fs/xfs/xfs_mount.c:933
+>  xfs_fs_fill_super+0xf95/0x11f0 fs/xfs/xfs_super.c:1666
+>  get_tree_bdev+0x400/0x620 fs/super.c:1282
+>  vfs_get_tree+0x88/0x270 fs/super.c:1489
+>  do_new_mount+0x289/0xad0 fs/namespace.c:3145
+>  do_mount fs/namespace.c:3488 [inline]
+>  __do_sys_mount fs/namespace.c:3697 [inline]
+>  __se_sys_mount+0x2d3/0x3c0 fs/namespace.c:3674
+>  do_syscall_x64 arch/x86/entry/common.c:50 [inline]
+>  do_syscall_64+0x3d/0xb0 arch/x86/entry/common.c:80
+>  entry_SYSCALL_64_after_hwframe+0x63/0xcd
+> RIP: 0033:0x7f89fa3f4aca
+> Code: 83 c4 08 5b 5d c3 66 2e 0f 1f 84 00 00 00 00 00 c3 66 2e 0f 1f 84 0=
+0 00 00 00 00 0f 1f 44 00 00 49 89 ca b8 a5 00 00 00 0f 05 <48> 3d 01 f0 ff=
+ ff 73 01 c3 48 c7 c1 c0 ff ff ff f7 d8 64 89 01 48
+> RSP: 002b:00007fffd5fb5ef8 EFLAGS: 00000206 ORIG_RAX: 00000000000000a5
+> RAX: ffffffffffffffda RBX: 00646975756f6e2c RCX: 00007f89fa3f4aca
+> RDX: 0000000020000100 RSI: 0000000020009640 RDI: 00007fffd5fb5f10
+> RBP: 00007fffd5fb5f10 R08: 00007fffd5fb5f50 R09: 000000000000970d
+> R10: 0000000000200800 R11: 0000000000000206 R12: 0000000000000004
+> R13: 0000555556c6b2c0 R14: 0000000000200800 R15: 00007fffd5fb5f50
+>  </TASK>
+>
+> The fuzzed image contains an AGF with an obviously garbage
+> agf_refcount_level value of 32, and a dirty log with a buffer log item
+> for that AGF.  The ondisk AGF has a higher LSN than the recovered log
+> item.  xlog_recover_buf_commit_pass2 reads the buffer, compares the
+> LSNs, and decides to skip replay because the ondisk buffer appears to be
+> newer.
+>
+> Unfortunately, the ondisk buffer is corrupt, but recovery just read the
+> buffer with no buffer ops specified:
+>
+>         error =3D xfs_buf_read(mp->m_ddev_targp, buf_f->blf_blkno,
+>                         buf_f->blf_len, buf_flags, &bp, NULL);
+>
+> Skipping the buffer leaves its contents in memory unverified.  This sets
+> us up for a kernel crash because xfs_refcount_recover_cow_leftovers
+> reads the buffer (which is still around in XBF_DONE state, so no read
+> verification) and creates a refcountbt cursor of height 32.  This is
+> impossible so we run off the end of the cursor object and crash.
+>
+> Fix this by invoking the verifier on all skipped buffers and aborting
+> log recovery if the ondisk buffer is corrupt.  It might be smarter to
+> force replay the log item atop the buffer and then see if it'll pass the
+> write verifier (like ext4 does) but for now let's go with the
+> conservative option where we stop immediately.
+>
+> Link: https://syzkaller.appspot.com/bug?extid=3D7e9494b8b399902e994e
+> Signed-off-by: Darrick J. Wong <djwong@kernel.org>
+> Reviewed-by: Dave Chinner <dchinner@redhat.com>
+> Signed-off-by: Dave Chinner <david@fromorbit.com>
+> Reported-by: Danila Chernetsov <listdansp@mail.ru>
+> Link: https://lore.kernel.org/linux-xfs/20230601164439.15404-1-listdansp@=
+mail.ru
+> Signed-off-by: Amir Goldstein <amir73il@gmail.com>
+> Acked-by: Darrick J. Wong <djwong@kernel.org>
+> ---
+>
+> Greg,
+>
+> This is the backport proposed by Danila for 5.10.y.
+> I've already tested it on 6.1.y as well as 5.10.y, but waiting for Leah t=
+o
+> test 5.15.y before requesting apply to 5.10.y.
+>
 
-The xfsprogs for-next branch, located at:
+Greg,
 
-https://git.kernel.org/pub/scm/fs/xfs/xfsprogs-dev.git/refs/?h=for-next
+Leah has tested and posted for 5.15.
+So please apply to 5.10 as well.
 
-Has just been updated.
-
-Patches often get missed, so if your outstanding patches are properly reviewed on
-the list and not included in this update, please let me know.
-
-This update is focused only on a libxfs-sync for 6-4.
-
-
-The new head of the for-next branch is commit:
-
-7901c8c1a501de87c42bb1ed83456f99462538c6
-
-33 new commits:
-
-Carlos Maiolino (1):
-      [361001978] libxfs: Finish renaming xfs_extent_item variables
-
-Darrick J. Wong (30):
-      [32debad7c] xfs: give xfs_bmap_intent its own perag reference
-      [42c1e5c18] xfs: pass per-ag references to xfs_free_extent
-      [7fef0c111] xfs: give xfs_extfree_intent its own perag reference
-      [818f0c29d] xfs: give xfs_rmap_intent its own perag reference
-      [b2c5c83de] xfs: give xfs_refcount_intent its own perag reference
-      [11e716f40] xfs: create traced helper to get extra perag references
-      [7cb26322f] xfs: allow queued AG intents to drain before scrubbing
-      [c7005aef1] xfs: standardize ondisk to incore conversion for free space btrees
-      [349aa6876] xfs: standardize ondisk to incore conversion for inode btrees
-      [03d1a8719] xfs: standardize ondisk to incore conversion for refcount btrees
-      [8d444a7a7] xfs: return a failure address from xfs_rmap_irec_offset_unpack
-      [fd1d74cd6] xfs: standardize ondisk to incore conversion for rmap btrees
-      [e70bf9ba9] xfs: complain about bad records in query_range helpers
-      [7e7856cee] xfs: hoist rmap record flag checks from scrub
-      [830c99b18] xfs: complain about bad file mapping records in the ondisk bmbt
-      [b3c8146ec] xfs: hoist rmap record flag checks from scrub
-      [71ba9fcca] xfs: hoist inode record alignment checks from scrub
-      [c2d269677] xfs: fix rm_offset flag handling in rmap keys
-      [98226d914] xfs: refactor converting btree irec to btree key
-      [e3b15d883] xfs: refactor ->diff_two_keys callsites
-      [9ba4dc828] xfs: replace xfs_btree_has_record with a general keyspace scanner
-      [d99b89009] xfs: implement masked btree key comparisons for _has_records scans
-      [725589ab4] xfs: remove pointless shadow variable from xfs_difree_inobt
-      [54644f251] xfs: teach scrub to check for sole ownership of metadata objects
-      [fc78c405d] xfs: convert xfs_ialloc_has_inodes_at_extent to return keyfill scan results
-      [898c05518] xfs: accumulate iextent records when checking bmap
-      [bd970a739] xfs: stabilize the dirent name transformation function used for ascii-ci dir hash computation
-      [0bf7f8c31] xfs: _{attr,data}_map_shared should take ILOCK_EXCL until iread_extents is completely done
-      [2897a1c2f] xfs: don't unconditionally null args->pag in xfs_bmap_btalloc_at_eof
-      [7901c8c1a] xfs: set bnobt/cntbt numrecs correctly when formatting new AGs
-
-Dave Chinner (2):
-      [44b2e0dea] xfs: don't consider future format versions valid
-      [87ab47e1f] xfs: fix livelock in delayed allocation at ENOSPC
-
-Code Diffstat:
-
- include/atomic.h            | 100 +++++++++++++
- include/platform_defs.h.in  |  20 +++
- include/xfs_mount.h         |  11 ++
- include/xfs_trace.h         |   4 +
- libxfs/defer_item.c         | 161 ++++++++++++++++----
- libxfs/libxfs_priv.h        |  23 ---
- libxfs/xfs_ag.c             |  42 ++++--
- libxfs/xfs_ag.h             |   9 ++
- libxfs/xfs_alloc.c          | 115 +++++++++-----
- libxfs/xfs_alloc.h          |  22 ++-
- libxfs/xfs_alloc_btree.c    |  32 +++-
- libxfs/xfs_bmap.c           |  44 +++++-
- libxfs/xfs_bmap.h           |   8 +-
- libxfs/xfs_bmap_btree.c     |  19 ++-
- libxfs/xfs_btree.c          | 204 ++++++++++++++++++-------
- libxfs/xfs_btree.h          | 141 ++++++++++++++++-
- libxfs/xfs_defer.c          |   6 +-
- libxfs/xfs_dir2.c           |   5 +-
- libxfs/xfs_dir2.h           |  31 ++++
- libxfs/xfs_ialloc.c         | 165 ++++++++++++--------
- libxfs/xfs_ialloc.h         |   7 +-
- libxfs/xfs_ialloc_btree.c   |  35 ++++-
- libxfs/xfs_ialloc_btree.h   |   2 +-
- libxfs/xfs_inode_fork.c     |  19 ++-
- libxfs/xfs_inode_fork.h     |   6 +-
- libxfs/xfs_refcount.c       | 117 +++++++++------
- libxfs/xfs_refcount.h       |  10 +-
- libxfs/xfs_refcount_btree.c |  31 +++-
- libxfs/xfs_rmap.c           | 358 ++++++++++++++++++++++++++++++--------------
- libxfs/xfs_rmap.h           |  38 +++--
- libxfs/xfs_rmap_btree.c     | 102 +++++++++----
- libxfs/xfs_sb.c             |  11 +-
- libxfs/xfs_types.h          |  12 ++
- repair/phase5.c             |  10 +-
- 34 files changed, 1443 insertions(+), 477 deletions(-)
-
--- 
-Carlos
+Thanks,
+Amir.
