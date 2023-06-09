@@ -2,73 +2,125 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6F832C7EE25
-	for <linux-xfs@archiver.kernel.org>; Fri,  9 Jun 2023 00:27:28 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2E05EC7EE29
+	for <linux-xfs@archiver.kernel.org>; Fri,  9 Jun 2023 01:08:09 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S237269AbjFIA10 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 8 Jun 2023 20:27:26 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43574 "EHLO
+        id S231298AbjFIBII (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 8 Jun 2023 21:08:08 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59900 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S234568AbjFIA10 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 8 Jun 2023 20:27:26 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 284DD2134;
-        Thu,  8 Jun 2023 17:27:25 -0700 (PDT)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id ABCE565253;
-        Fri,  9 Jun 2023 00:27:24 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 7D51DC433D2;
-        Fri,  9 Jun 2023 00:27:23 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=linux-foundation.org;
-        s=korg; t=1686270444;
-        bh=SIg2qSZ9l+pY1OkA6HENpenV0b7K5waTnRvy/sKwjlM=;
-        h=Date:From:To:Cc:Subject:In-Reply-To:References:From;
-        b=qovGY+0h9kLFkv8QAsPqRiqvTog85N6Irziw8/5DXTE+XQCqe2huwuR906/zl7a/x
-         Ho4FNOd10FP9DQauKymXsDz+ZhYXwSlGn5zAh+4ePggbfsi6GAzK1/KNUuA5lu+mB5
-         pWOAXh7/CxArWsHYtqr/+ee3eOzQjML/D1WpI3fQ=
-Date:   Thu, 8 Jun 2023 17:27:22 -0700
-From:   Andrew Morton <akpm@linux-foundation.org>
-To:     Dave Chinner <david@fromorbit.com>
-Cc:     Theodore Ts'o <tytso@mit.edu>,
-        Roman Gushchin <roman.gushchin@linux.dev>,
-        Kirill Tkhai <tkhai@ya.ru>, vbabka@suse.cz,
-        viro@zeniv.linux.org.uk, brauner@kernel.org, djwong@kernel.org,
-        hughd@google.com, paulmck@kernel.org, muchun.song@linux.dev,
-        linux-mm@kvack.org, linux-fsdevel@vger.kernel.org,
-        linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org,
-        zhengqi.arch@bytedance.com
-Subject: Re: [PATCH v2 3/3] fs: Use delayed shrinker unregistration
-Message-Id: <20230608172722.d32733db433d385daa6c11a0@linux-foundation.org>
-In-Reply-To: <ZIJhou1d55d4H1s0@dread.disaster.area>
-References: <168599103578.70911.9402374667983518835.stgit@pro.pro>
-        <168599180526.70911.14606767590861123431.stgit@pro.pro>
-        <ZH6AA72wOd4HKTKE@P9FQF9L96D>
-        <ZH6K0McWBeCjaf16@dread.disaster.area>
-        <20230608163622.GA1435580@mit.edu>
-        <ZIJhou1d55d4H1s0@dread.disaster.area>
-X-Mailer: Sylpheed 3.8.0beta1 (GTK+ 2.24.33; x86_64-pc-linux-gnu)
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+        with ESMTP id S229520AbjFIBIG (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 8 Jun 2023 21:08:06 -0400
+Received: from szxga02-in.huawei.com (szxga02-in.huawei.com [45.249.212.188])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2282A125
+        for <linux-xfs@vger.kernel.org>; Thu,  8 Jun 2023 18:08:05 -0700 (PDT)
+Received: from dggpemm500014.china.huawei.com (unknown [172.30.72.56])
+        by szxga02-in.huawei.com (SkyGuard) with ESMTP id 4QcjY65d9yzLqWy;
+        Fri,  9 Jun 2023 09:04:58 +0800 (CST)
+Received: from [10.174.177.211] (10.174.177.211) by
+ dggpemm500014.china.huawei.com (7.185.36.153) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
+ 15.1.2507.23; Fri, 9 Jun 2023 09:08:01 +0800
+Message-ID: <eb138689-d7c9-5d1c-d7bf-acdf2859a879@huawei.com>
+Date:   Fri, 9 Jun 2023 09:08:01 +0800
+MIME-Version: 1.0
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:91.0) Gecko/20100101
+ Thunderbird/91.0.3
+Subject: [PATCH]xfs_repair: fix the problem of repair failure caused by dirty
+ flag being abnormally set on buffer
+From:   Wu Guanghao <wuguanghao3@huawei.com>
+To:     <cem@kernel.org>, "Darrick J. Wong" <djwong@kernel.org>,
+        <linux-xfs@vger.kernel.org>
+CC:     <louhongxiang@huawei.com>,
+        "liuzhiqiang (I)" <liuzhiqiang26@huawei.com>
+References: <0bdbc18a-e062-9d39-2d01-75a0480c692e@huawei.com>
+In-Reply-To: <0bdbc18a-e062-9d39-2d01-75a0480c692e@huawei.com>
+Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
+X-Originating-IP: [10.174.177.211]
+X-ClientProxiedBy: dggems704-chm.china.huawei.com (10.3.19.181) To
+ dggpemm500014.china.huawei.com (7.185.36.153)
+X-CFilter-Loop: Reflected
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Fri, 9 Jun 2023 09:17:54 +1000 Dave Chinner <david@fromorbit.com> wrote:
+We found an issue where repair failed in the fault injection.
 
-> > Given that we're at -rc5 now, and the file system folks didn't get
-> > consulted until fairly late in the progress, and the fact that this
-> > may cause use-after-free problems that could lead to security issues,
-> > perhaps we shoould consider reverting the SRCU changeover now, and try
-> > again for the next merge window?
-> 
-> Yes, please, because I think we can fix this in a much better way
-> and make things a whole lot simpler at the same time.
+$ xfs_repair test.img
+...
+Phase 3 - for each AG...
+        - scan and clear agi unlinked lists...
+        - process known inodes and perform inode discovery...
+        - agno = 0
+        - agno = 1
+        - agno = 2
+Metadata CRC error detected at 0x55a30e420c7d, xfs_bmbt block 0x51d68/0x1000
+        - agno = 3
+Metadata CRC error detected at 0x55a30e420c7d, xfs_bmbt block 0x51d68/0x1000
+btree block 0/41901 is suspect, error -74
+bad magic # 0x58534c4d in inode 3306572 (data fork) bmbt block 41901
+bad data fork in inode 3306572
+cleared inode 3306572
+...
+Phase 7 - verify and correct link counts...
+Metadata corruption detected at 0x55a30e420b58, xfs_bmbt block 0x51d68/0x1000
+libxfs_bwrite: write verifier failed on xfs_bmbt bno 0x51d68/0x8
+xfs_repair: Releasing dirty buffer to free list!
+xfs_repair: Refusing to write a corrupt buffer to the data device!
+xfs_repair: Lost a write to the data device!
 
-Qi Zheng, if agreeable could you please prepare and send reverts of
-475733dda5a ("mm: vmscan: add shrinker_srcu_generation") and of
-f95bdb700bc6bb74 ("mm: vmscan: make global slab shrink lockless")?
+fatal error -- File system metadata writeout failed, err=117.  Re-run xfs_repair.
 
-Thanks.
+
+$ xfs_db test.img
+xfs_db> inode 3306572
+xfs_db> p
+core.magic = 0x494e
+core.mode = 0100666		  // regular file
+core.version = 3
+core.format = 3 (btree)	
+...
+u3.bmbt.keys[1] = [startoff]
+1:[6]
+u3.bmbt.ptrs[1] = 41901	 // btree root
+...
+
+$ hexdump -C -n 4096 41901.img
+00000000  58 53 4c 4d 00 00 00 00  00 00 01 e8 d6 f4 03 14  |XSLM............|
+00000010  09 f3 a6 1b 0a 3c 45 5a  96 39 41 ac 09 2f 66 99  |.....<EZ.9A../f.|
+00000020  00 00 00 00 00 05 1f fb  00 00 00 00 00 05 1d 68  |...............h|
+...
+
+The block data associated with inode 3306572 is abnormal, but check the CRC first
+when reading. If the CRC check fails, badcrc will be set. Then the dirty flag
+will be set on bp when badcrc is set. In the final stage of repair, the dirty bp
+will be refreshed in batches. When refresh to the disk, the data in bp will be
+verified. At this time, if the data verification fails, resulting in a repair
+error.
+
+After scan_bmapbt returns an error, the inode will be cleaned up. Then bp
+doesn't need to set dirty flag, so that it won't trigger writeback verification
+failure.
+
+Signed-off-by: Wu Guanghao <wuguanghao3@huawei.com>
+---
+ repair/scan.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/repair/scan.c b/repair/scan.c
+index 7b720131..b5458eb8 100644
+--- a/repair/scan.c
++++ b/repair/scan.c
+@@ -185,7 +185,7 @@ scan_lbtree(
+
+ 	ASSERT(dirty == 0 || (dirty && !no_modify));
+
+-	if ((dirty || badcrc) && !no_modify) {
++	if (!err && (dirty || badcrc) && !no_modify) {
+ 		libxfs_buf_mark_dirty(bp);
+ 		libxfs_buf_relse(bp);
+ 	}
+-- 
+2.27.0
+
