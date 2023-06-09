@@ -2,85 +2,74 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D07ABC8300C
-	for <linux-xfs@archiver.kernel.org>; Fri,  9 Jun 2023 04:20:33 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3EF55C7EE37
+	for <linux-xfs@archiver.kernel.org>; Fri,  9 Jun 2023 09:25:42 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229637AbjFIEUc (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 9 Jun 2023 00:20:32 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41800 "EHLO
+        id S239512AbjFIJZk (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 9 Jun 2023 05:25:40 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49020 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229629AbjFIEUb (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 9 Jun 2023 00:20:31 -0400
-Received: from bombadil.infradead.org (bombadil.infradead.org [IPv6:2607:7c80:54:3::133])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 889E11A1;
-        Thu,  8 Jun 2023 21:20:29 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Type:MIME-Version
-        :References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
-        Content-Transfer-Encoding:Content-ID:Content-Description;
-        bh=Bf0Imcmrff8IiflvMMZwKHn+EPzovpKROa1e5HANUoM=; b=nue2TtmTamk9kJkszgPEGMpwte
-        lhHnwHuuxogMyeD0BQGtvyzl9mYliO0ISA7i4oG4Eg26b4hQtdcmoQUUCz1Am7UpYm5S66D9LPRcN
-        5/Uy48E/9SEM/MtyvLfTqnHleWvImTBEULArcgIPOro0eI0uH/g8x7xGkNc5T8q6fWD0qd8OLdc97
-        ElapA2f8xr6rBQxc1qCGSsaN+zI29pxUboyrxPIpW2N4x9lZz6fqH1w//lOov0U+KiyyY8W/8QHLC
-        OQ3XqldDQHaU2nU4fWrkx05LA8/dDA0VYONM/hMe7D6Vat+V5OW3FTF5aiXDBdyIfisWlNbvL2C/X
-        YUBAuQVw==;
-Received: from hch by bombadil.infradead.org with local (Exim 4.96 #2 (Red Hat Linux))
-        id 1q7Tbj-00Ba1H-02;
-        Fri, 09 Jun 2023 04:20:15 +0000
-Date:   Thu, 8 Jun 2023 21:20:14 -0700
-From:   Christoph Hellwig <hch@infradead.org>
-To:     Luis Chamberlain <mcgrof@kernel.org>
-Cc:     Christoph Hellwig <hch@infradead.org>,
-        Matthew Wilcox <willy@infradead.org>, djwong@kernel.org,
+        with ESMTP id S230474AbjFIJY0 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 9 Jun 2023 05:24:26 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A50746EA2;
+        Fri,  9 Jun 2023 02:18:37 -0700 (PDT)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 852ED618EA;
+        Fri,  9 Jun 2023 09:17:53 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id E4493C4339C;
+        Fri,  9 Jun 2023 09:17:52 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1686302272;
+        bh=RQisGjj9KL7kg1igwwGHNm1IZaL2rbAG8kSrlm0JzKg=;
+        h=References:In-Reply-To:From:Date:Subject:To:Cc:From;
+        b=b8qzhMu/qygDwv+U5QLA/usX5K3ECwj+MWUgaKKeHU1A6jDPzwgU3fjQTHoJIcRQ2
+         vpNZP+VrZ90ThxS166jMfUrT+QZKtm1KBvowVFfbmzSS0ZpEBL4QomvUjcGt0b52Tl
+         Vt/rs9HHyHQ8dLhU3gGj0OEBMcgAa+y35a7SmaLQgtKrg33rNDWaZIuKcmpotThwN1
+         fu5DkvO1vw/WNMbn33yxhtRaPCasPjOvUKIM3fRdHCT2l22iUWVnMcE5Y8vhK9LjcW
+         H16WBbKojs/cJ4E/ye6mdTIzDmYUTtUdX5j7GNSY8Zb/7OM7u+VmMpIdu95ff+AI7s
+         ZYsiksFxpfitw==
+Received: by mail-wm1-f43.google.com with SMTP id 5b1f17b1804b1-3f738f579ceso11218805e9.3;
+        Fri, 09 Jun 2023 02:17:52 -0700 (PDT)
+X-Gm-Message-State: AC+VfDwq/ZcmRaLstf5k5+DGAm73+mrYqlxspWg7ufDrlMRKjd2j+4ub
+        MDFeMhDN/92vaVJV4STVSg2VkUrdk3Oyt4z0aQM=
+X-Google-Smtp-Source: ACHHUZ70M63/s5OAb5SuDf8GVqAjthMUYLs718VlOe6y2HvimEHtOeklfwr9dXNjNX4PdOTUT/IHiblpHj8LQ8LvlE4=
+X-Received: by 2002:a7b:c8d7:0:b0:3f4:2cb2:a6cf with SMTP id
+ f23-20020a7bc8d7000000b003f42cb2a6cfmr423308wml.10.1686302271124; Fri, 09 Jun
+ 2023 02:17:51 -0700 (PDT)
+MIME-Version: 1.0
+References: <20230608032404.1887046-1-mcgrof@kernel.org> <20230608032404.1887046-5-mcgrof@kernel.org>
+ <ZIHZngefNAtYtg7L@casper.infradead.org> <ZIHcl8epO0h3z1TO@infradead.org>
+ <ZIITpjDXyupKom+N@bombadil.infradead.org> <ZIKofhpTXREOR3ec@infradead.org>
+In-Reply-To: <ZIKofhpTXREOR3ec@infradead.org>
+From:   Luis Chamberlain <mcgrof@kernel.org>
+Date:   Fri, 9 Jun 2023 02:17:39 -0700
+X-Gmail-Original-Message-ID: <CAB=NE6V-w+NWTZ0tZaUNhOH2uW7T3EEYKt-+YhkDX6tZZ8BccA@mail.gmail.com>
+Message-ID: <CAB=NE6V-w+NWTZ0tZaUNhOH2uW7T3EEYKt-+YhkDX6tZZ8BccA@mail.gmail.com>
+Subject: Re: [RFC 4/4] bdev: extend bdev inode with it's own super_block
+To:     Christoph Hellwig <hch@infradead.org>
+Cc:     Matthew Wilcox <willy@infradead.org>, djwong@kernel.org,
         dchinner@redhat.com, kbusch@kernel.org, hare@suse.de,
         ritesh.list@gmail.com, rgoldwyn@suse.com, jack@suse.cz,
         patches@lists.linux.dev, linux-xfs@vger.kernel.org,
         linux-fsdevel@vger.kernel.org, linux-block@vger.kernel.org,
         p.raghav@samsung.com, da.gomez@samsung.com, rohan.puri@samsung.com,
         rpuri.linux@gmail.com, corbet@lwn.net, jake@lwn.net
-Subject: Re: [RFC 4/4] bdev: extend bdev inode with it's own super_block
-Message-ID: <ZIKofhpTXREOR3ec@infradead.org>
-References: <20230608032404.1887046-1-mcgrof@kernel.org>
- <20230608032404.1887046-5-mcgrof@kernel.org>
- <ZIHZngefNAtYtg7L@casper.infradead.org>
- <ZIHcl8epO0h3z1TO@infradead.org>
- <ZIITpjDXyupKom+N@bombadil.infradead.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <ZIITpjDXyupKom+N@bombadil.infradead.org>
-X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Thu, Jun 08, 2023 at 10:45:10AM -0700, Luis Chamberlain wrote:
-> > > and then considering only two superblocks instead of having a list of
-> > > all bdevs?
-> > 
-> > Or why the heck we would even do this to start with?
-> 
-> That's what I gathered you suggested at LSFMM on hallway talk.
+On Thu, Jun 8, 2023 at 9:20=E2=80=AFPM Christoph Hellwig <hch@infradead.org=
+> wrote:
+> Again, every non-trivial file system right now has more than one set
+> of aops per superblock.  I'm not sure what problem you are trying to
+> solve here.
 
-No.  I explained you that sharing the superblock or has absolutely no
-effct on the aops after you wanted to it.  I said it might be nice for
-other reasons to have a sb per gendisk.
+Alright, a 2 liner does indeed let it co-exist and replace this mess, thank=
+s.
 
-> > iomap has absolutely nothing to do with superblocks.
-> > 
-> > Now maybe it might make sense to have a superblock per gendisk just
-> > to remove all the weird special casing for the bdev inode in the
-> > writeback code.  But that's something entirely different than this
-> > patch.
-> 
-> The goal behind this is to allow block devices to have its bdev cache
-> use iomap, right now now we show-horn in the buffer-head aops if we
-> have to build buffer-heads.
-> 
-> If this sort of approach is not desirable, let me know what alternative
-> you would prefer to see, because clearly, I must not have understood
-> your suggestion.
-
-Again, every non-trivial file system right now has more than one set
-of aops per superblock.  I'm not sure what problem you are trying to
-solve here.
+  Luis
