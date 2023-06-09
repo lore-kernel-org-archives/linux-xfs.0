@@ -2,204 +2,215 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id AE56EC7EE25
-	for <linux-xfs@archiver.kernel.org>; Fri,  9 Jun 2023 03:22:45 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6C107C7EE25
+	for <linux-xfs@archiver.kernel.org>; Fri,  9 Jun 2023 03:37:14 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229963AbjFIDWo (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 8 Jun 2023 23:22:44 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58908 "EHLO
+        id S238177AbjFIDhN (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 8 Jun 2023 23:37:13 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33742 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229445AbjFIDWn (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 8 Jun 2023 23:22:43 -0400
-Received: from mail1.bemta34.messagelabs.com (mail1.bemta34.messagelabs.com [195.245.231.1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 252F430E6
-        for <linux-xfs@vger.kernel.org>; Thu,  8 Jun 2023 20:22:42 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=fujitsu.com;
-        s=170520fj; t=1686280960; i=@fujitsu.com;
-        bh=E+f615vRtZgTQSiZQz++j3GwE5OerT/Nw8UHfLYyxrw=;
-        h=Message-ID:Date:MIME-Version:Subject:To:CC:References:From:
-         In-Reply-To:Content-Type:Content-Transfer-Encoding;
-        b=ngRrf5RmrSkSSN7XEQrvaIkz3pbw3EdQ3fB83sjKwdx8TTjJ5poKYyK2UaP2Zr3Wg
-         aOh8X4NHAQasXT+V9yntjyokLQ5loHP0bfHezmnpFhIkOhpotAiAH+619cJSI9NJ0W
-         lYEuyHBPnkkwjWyJLImtTVdG0UcrojGKCDyiT61PkBfe+l3fbjncw0S+6bcYJ87Cng
-         oZ+7fTd3faauxSQMaEe+zIn3cMeWeBgyhXiXexOSSmop3l9ZFitCpr1GkituVcWPfb
-         9uBT9uyOmr2dQjf9zjNBEeAFjQK90cn+fJisXkwyXjh6gd33aa8eu79mR/27bsPtVc
-         yH7i71hsvxpxw==
-X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFvrLIsWRWlGSWpSXmKPExsViZ8ORpPt/VlO
-  Kwbm5ehb7Lk1ltLj8hM9i158d7A7MHptWdbJ5fN4kF8AUxZqZl5RfkcCasX3fO8aCj/IVu9c9
-  Ym5gXCbZxcjFISSwkVFi/46jrF2MnEDOUiaJ5gPKEIltjBJ/d7SCJXgF7CQOzvjDAmKzCKhI9
-  F/4wQ4RF5Q4OfMJWFxUIEVixsbFzCC2sICrxMcpd8F6RQQ0JY58u8YEYjMLGEp0tE1kglhwjV
-  Hi4a35YAk2AR2JCwv+gjVwCphL9F76xwzRYCGx+M1BdghbXqJ562ywuISAksTFr3dYIewqiYv
-  vZ7JB2GoSV89tYp7AKDQLyX2zkIyahWTUAkbmVYymxalFZalFuqZ6SUWZ6RkluYmZOXqJVbqJ
-  eqmluuWpxSW6RnqJ5cV6qcXFesWVuck5KXp5qSWbGIFxkFKsaLSD8cnOv3qHGCU5mJREeUsvN
-  KYI8SXlp1RmJBZnxBeV5qQWH2KU4eBQkuCNmtmUIiRYlJqeWpGWmQOMSZi0BAePkgjv9clAad
-  7igsTc4sx0iNQpRmOO9ob9e5k51jYc2MssxJKXn5cqJc67bwZQqQBIaUZpHtwgWKq4xCgrJcz
-  LyMDAIMRTkFqUm1mCKv+KUZyDUUmYV7UVaApPZl4J3L5XQKcwAZ1yOKke5JSSRISUVAOTP9P+
-  J/f/xU3zmr8249uH1b853c+oZrWUOuxvnB4jPY/PUHnJ6can/ZuPLqrvlcjlTsnrNTEwKJlzM
-  yZ7YrbB5B+NCVov0iNPLlj7rmzly/WyzvOLN73tmBj64lH5z6722yFvcvcuEDhiu3beWZuz66
-  uFr6nevmtbOfP6paUZBbpcRVYMLydHfVd4kTR36arMp3/4nJs0V3+Zc6fj+5+0ibs9+dmLe+P
-  epTV4Lp07vaP/zOEzbEvVvzGbXDTdVl1/b+kHIe5gF6XV+tfW2F/MX6ql+Fn5xulbZ6vaW+xb
-  vlh/rPE3LL9y99DradyJqw/Xr/KU7px8a/f8JQGfV6mE5u9cUJwZX/Rzy5/qqJ/r9JRYijMSD
-  bWYi4oTAXD2sQ6QAwAA
-X-Env-Sender: ruansy.fnst@fujitsu.com
-X-Msg-Ref: server-5.tower-565.messagelabs.com!1686280959!86345!1
-X-Originating-IP: [62.60.8.98]
-X-SYMC-ESS-Client-Auth: outbound-route-from=pass
-X-StarScan-Received: 
-X-StarScan-Version: 9.105.4; banners=-,-,-
-X-VirusChecked: Checked
-Received: (qmail 4797 invoked from network); 9 Jun 2023 03:22:39 -0000
-Received: from unknown (HELO n03ukasimr03.n03.fujitsu.local) (62.60.8.98)
-  by server-5.tower-565.messagelabs.com with ECDHE-RSA-AES256-GCM-SHA384 encrypted SMTP; 9 Jun 2023 03:22:39 -0000
-Received: from n03ukasimr03.n03.fujitsu.local (localhost [127.0.0.1])
-        by n03ukasimr03.n03.fujitsu.local (Postfix) with ESMTP id 7355F1B4;
-        Fri,  9 Jun 2023 04:22:39 +0100 (BST)
-Received: from R01UKEXCASM223.r01.fujitsu.local (R01UKEXCASM223 [10.182.185.121])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by n03ukasimr03.n03.fujitsu.local (Postfix) with ESMTPS id 66F411AE;
-        Fri,  9 Jun 2023 04:22:39 +0100 (BST)
-Received: from [192.168.50.5] (10.167.234.230) by
- R01UKEXCASM223.r01.fujitsu.local (10.182.185.121) with Microsoft SMTP Server
- (TLS) id 15.0.1497.42; Fri, 9 Jun 2023 04:22:37 +0100
-Message-ID: <e7c43625-73a5-9de5-f3a0-b8e1d67a46f8@fujitsu.com>
-Date:   Fri, 9 Jun 2023 11:22:30 +0800
+        with ESMTP id S238146AbjFIDhL (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 8 Jun 2023 23:37:11 -0400
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E4A4630EE
+        for <linux-xfs@vger.kernel.org>; Thu,  8 Jun 2023 20:36:25 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1686281784;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=b6PHbXjldBnxpaBDp1b6uHJLMKUgeGdgfPjnTV5JD1g=;
+        b=XOnxcWuIHwNxYwEYIHIFtZWQnDk2ZFBOrGDwNsl53Ng3PKn8f1vrMnpzK9ig8V2DIBlMOE
+        JYIKQ91YVUV/SoxsQsrUsH4r2dvE3jkGaOyKnNlv74+l5dY2uLQwfe8/KhQPFpDetqELHG
+        OutSzNQjQvyeyNe3nJ6++pwEPyz4myk=
+Received: from mail-oo1-f69.google.com (mail-oo1-f69.google.com
+ [209.85.161.69]) by relay.mimecast.com with ESMTP with STARTTLS
+ (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
+ us-mta-414-Pmlo5RdqPMCYhvM8fhOWFQ-1; Thu, 08 Jun 2023 23:36:23 -0400
+X-MC-Unique: Pmlo5RdqPMCYhvM8fhOWFQ-1
+Received: by mail-oo1-f69.google.com with SMTP id 006d021491bc7-55551dfd39fso836899eaf.3
+        for <linux-xfs@vger.kernel.org>; Thu, 08 Jun 2023 20:36:23 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20221208; t=1686281783; x=1688873783;
+        h=in-reply-to:content-transfer-encoding:content-disposition
+         :mime-version:references:message-id:subject:cc:to:from:date
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=b6PHbXjldBnxpaBDp1b6uHJLMKUgeGdgfPjnTV5JD1g=;
+        b=Wh0lMc0t3szbpQ5enIt2DMykn81I2SFzP96mMOS/HRDYM0NM9LftV9mtfr54wOO2ZK
+         mWtDPzFiod7SD3amiS/ZBLEGbxUBUgoe21KLYniMrLIYpOp96ZrnfEzUWb+HKGBpSXcF
+         mI8WmbJRA7F/Jn4T9El/niqRTBo7uxV0qec1Re9d+l7DrujYxaLEHl/vHAb4fTCHPTiM
+         3JZ9s5iII/mJN+Hnx3PiydfNCsNLTy3QRhjCBe0VBfZOAvZi1l+tpZgYbo1oGhQGr1Ag
+         eS01s/1FRH4LE8rNRgnLCjU9VLStmd5JLTQ3YSmNgtiwECmNBz7ASkyznBjP35elfiaz
+         pvYw==
+X-Gm-Message-State: AC+VfDy25fzwFUCyIFP8O/coq731reW6KrjTEocvZkAvvJdYHGZjuKMy
+        qhWpXd4IjJkeVG83iH/3QP1CuvlQBqdWoB1xqnUav0zV+9BrujbFM6vKZFzGhCJGVfnitkxR2jQ
+        x0ru5cs9P++gVnRCFSbF8
+X-Received: by 2002:a05:6808:2c6:b0:398:1045:17ed with SMTP id a6-20020a05680802c600b00398104517edmr244697oid.54.1686281782845;
+        Thu, 08 Jun 2023 20:36:22 -0700 (PDT)
+X-Google-Smtp-Source: ACHHUZ5BYLMbQEGYVEBzy6Vueuu9nmnNgJaZscYFWA+ckNpNWgKRp99kcTS6YVOL3UxH4m6xIYrtUw==
+X-Received: by 2002:a05:6808:2c6:b0:398:1045:17ed with SMTP id a6-20020a05680802c600b00398104517edmr244691oid.54.1686281782556;
+        Thu, 08 Jun 2023 20:36:22 -0700 (PDT)
+Received: from zlang-mailbox ([209.132.188.80])
+        by smtp.gmail.com with ESMTPSA id a192-20020a6390c9000000b0051b4a163ccdsm1920861pge.11.2023.06.08.20.36.20
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Thu, 08 Jun 2023 20:36:22 -0700 (PDT)
+Date:   Fri, 9 Jun 2023 11:36:17 +0800
+From:   Zorro Lang <zlang@redhat.com>
+To:     Donald Douwsma <ddouwsma@redhat.com>
+Cc:     linux-xfs@vger.kernel.org, fstests <fstests@vger.kernel.org>,
+        Murphy Zhou <jencce.kernel@gmail.com>
+Subject: Re: [PATCH v4] xfstests: add test for xfs_repair progress reporting
+Message-ID: <20230609033617.oglgtpy2syx4rraq@zlang-mailbox>
+References: <20230531064024.1737213-1-ddouwsma@redhat.com>
+ <20230531064024.1737213-2-ddouwsma@redhat.com>
+ <CADJHv_v-YUrpT3MA8+2HcWb3B03V87ZQ2b0_pKR+LcAE4-9WUg@mail.gmail.com>
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:102.0) Gecko/20100101
- Thunderbird/102.10.0
-Subject: Re: [PATCHSET v25.0 0/7] xfs_scrub: fixes to the repair code
-To:     "Darrick J. Wong" <djwong@kernel.org>
-CC:     <linux-xfs@vger.kernel.org>, <cem@kernel.org>
-References: <20230526000020.GJ11620@frogsfrogsfrogs>
- <168506071314.3742205.8114181660121831202.stgit@frogsfrogsfrogs>
- <4af2621e-bd59-f1be-8e07-7800a68c59fa@fujitsu.com>
- <20230608145601.GW1325469@frogsfrogsfrogs>
-From:   Shiyang Ruan <ruansy.fnst@fujitsu.com>
-In-Reply-To: <20230608145601.GW1325469@frogsfrogsfrogs>
-Content-Type: text/plain; charset="UTF-8"; format=flowed
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
 Content-Transfer-Encoding: 8bit
-X-Originating-IP: [10.167.234.230]
-X-ClientProxiedBy: G08CNEXHBPEKD10.g08.fujitsu.local (10.167.33.114) To
- R01UKEXCASM223.r01.fujitsu.local (10.182.185.121)
-X-Virus-Scanned: ClamAV using ClamSMTP
+In-Reply-To: <CADJHv_v-YUrpT3MA8+2HcWb3B03V87ZQ2b0_pKR+LcAE4-9WUg@mail.gmail.com>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-
-
-在 2023/6/8 22:56, Darrick J. Wong 写道:
-> On Thu, Jun 08, 2023 at 09:22:02PM +0800, Shiyang Ruan wrote:
->> Hi Darrick,
->>
->> I'm running test on this patchset (patched kernel and xfsprogs, latest
->> xfstests:v2023.05.28).  Now I found xfs/730 failed with message "online
->> scrub didn't fail".  The detail is:
->>
->> FSTYP         -- xfs (debug)
->> PLATFORM      -- Linux/x86_64 f36 6.4.0-rc3-pmem+ #309 SMP PREEMPT_DYNAMIC
->> Wed Jun  7 15:44:15 CST 2023
->> MKFS_OPTIONS  -- -f /dev/pmem1
->> MOUNT_OPTIONS -- -o context=system_u:object_r:root_t:s0 /dev/pmem1
->> /mnt/scratch
->>
->> xfs/730       - output mismatch (see
->> /root/xts/results//default/xfs/730.out.bad)
->> mv: failed to preserve ownership for
->> '/root/xts/results//default/xfs/730.out.bad': Operation not permitted
->>      --- tests/xfs/730.out	2023-03-16 09:42:15.256141472 +0800
->>      +++ /root/xts/results//default/xfs/730.out.bad	2023-06-08
+On Fri, Jun 09, 2023 at 09:50:26AM +0800, Murphy Zhou wrote:
+> Adding fstests
 > 
-> Whoah, someone besides me actually runs the repair fuzzers??
+> On Wed, May 31, 2023 at 2:50 PM Donald Douwsma <ddouwsma@redhat.com> wrote:
+> >
+> > Confirm that xfs_repair reports on its progress if -o ag_stride is
+> > enabled.
+> >
+> > Signed-off-by: Donald Douwsma <ddouwsma@redhat.com>
 > 
-> Yay!
-> 
->> 20:43:27.436083265 +0800
->>      @@ -1,4 +1,14 @@
->>       QA output created by 730
->>       Format and populate
->>       Fuzz fscounters
->>      +icount = zeroes: online scrub didn't fail.
->>      +icount = ones: online scrub didn't fail.
->>      +icount = firstbit: online scrub didn't fail.
->>      +icount = middlebit: online scrub didn't fail.
->>      ...
->>      (Run 'diff -u /root/xts/tests/xfs/730.out
->> /root/xts/results//default/xfs/730.out.bad'  to see the entire diff)
->>
->>
->> This test case is to fuzz metadata and make sure xfs_scrub can repair the
->> fs. After a little investigation, I think the fuzz actually done to the
->> metadata area but the xfs_scrub seems didn't notice that.  I haven't found
->> the root cause of the problem yet.  Do you have the same message which
->> causes fail on this case?
-> 
-> Yeah, we recently disabled some code in fscounters.c to fix some other
-> correctness problems in the inodegc code.
+> Ack.
 
-Do you mean this failure is what you expected?
+Hi Donald,
 
-> My goal was to get this
-> series:
-> 
-> https://lore.kernel.org/linux-xfs/168506061483.3732954.5178462816967376906.stgit@frogsfrogsfrogs/
-> 
-> merged for 6.5 and then the whole thing would work *completely*
-> correctly, but it might be too late now.
+That's weird, I never saw the original patch email, did I miss something?
+Please send the original patch to fstests@ if you hope to get reviewing
+and merging (if acked:)
 
-But actually I'm running test on your repair-fscounters branch[1], which 
-seems to be the same thing as the patchsets you just show to me.  And 
-the failure of xfs/730 happened.
-
-[1] 
-https://git.kernel.org/pub/scm/linux/kernel/git/djwong/xfs-linux.git/log/?h=repair-fscounters
-
-
---
 Thanks,
-Ruan.
+Zorro
 
 > 
-> --D
+> Thanks,
+> > ---
+> > Changes since v3
+> > - Rebase after tests/xfs/groups removal (tools/convert-group), drop _supported_os
+> > - Shorten the delay, remove superfluous dm-delay parameters
+> > Changes since v2:
+> > - Fix cleanup handling and function naming
+> > - Added to auto group
+> > Changes since v1:
+> > - Use _scratch_xfs_repair
+> > - Filter only repair output
+> > - Make the filter more tolerant of whitespace and plurals
+> > - Take golden output from 'xfs_repair: fix progress reporting'
+> >
+> >  tests/xfs/999     | 66 +++++++++++++++++++++++++++++++++++++++++++++++
+> >  tests/xfs/999.out | 15 +++++++++++
+> >  2 files changed, 81 insertions(+)
+> >  create mode 100755 tests/xfs/999
+> >  create mode 100644 tests/xfs/999.out
+> >
+> > diff --git a/tests/xfs/999 b/tests/xfs/999
+> > new file mode 100755
+> > index 00000000..9e799f66
+> > --- /dev/null
+> > +++ b/tests/xfs/999
+> > @@ -0,0 +1,66 @@
+> > +#! /bin/bash
+> > +# SPDX-License-Identifier: GPL-2.0
+> > +# Copyright (c) 2020 Red Hat, Inc.  All Rights Reserved.
+> > +#
+> > +# FS QA Test 521
+> > +#
+> > +# Test xfs_repair's progress reporting
+> > +#
+> > +. ./common/preamble
+> > +_begin_fstest auto repair
+> > +
+> > +# Override the default cleanup function.
+> > +_cleanup()
+> > +{
+> > +       cd /
+> > +       rm -f $tmp.*
+> > +       _cleanup_delay > /dev/null 2>&1
+> > +}
+> > +
+> > +# Import common functions.
+> > +. ./common/filter
+> > +. ./common/dmdelay
+> > +. ./common/populate
+> > +
+> > +# real QA test starts here
+> > +
+> > +# Modify as appropriate.
+> > +_supported_fs xfs
+> > +_require_scratch
+> > +_require_dm_target delay
+> > +
+> > +# Filter output specific to the formatters in xfs_repair/progress.c
+> > +# Ideally we'd like to see hits on anything that matches
+> > +# awk '/{FMT/' xfsprogs-dev/repair/progress.c
+> > +filter_repair()
+> > +{
+> > +       sed -nre '
+> > +       s/[0-9]+/#/g;
+> > +       s/^\s+/ /g;
+> > +       s/(# (week|day|hour|minute|second)s?(, )?)+/{progres}/g;
+> > +       /#:#:#:/p
+> > +       '
+> > +}
+> > +
+> > +echo "Format and populate"
+> > +_scratch_populate_cached nofill > $seqres.full 2>&1
+> > +
+> > +echo "Introduce a dmdelay"
+> > +_init_delay
+> > +DELAY_MS=38
+> > +
+> > +# Introduce a read I/O delay
+> > +# The default in common/dmdelay is a bit too agressive
+> > +BLK_DEV_SIZE=`blockdev --getsz $SCRATCH_DEV`
+> > +DELAY_TABLE_RDELAY="0 $BLK_DEV_SIZE delay $SCRATCH_DEV 0 $DELAY_MS"
+> > +_load_delay_table $DELAY_READ
+> > +
+> > +echo "Run repair"
+> > +SCRATCH_DEV=$DELAY_DEV _scratch_xfs_repair -o ag_stride=4 -t 1 2>&1 |
+> > +        tee -a $seqres.full > $tmp.repair
+> > +
+> > +cat $tmp.repair | filter_repair | sort -u
+> > +
+> > +# success, all done
+> > +status=0
+> > +exit
+> > diff --git a/tests/xfs/999.out b/tests/xfs/999.out
+> > new file mode 100644
+> > index 00000000..e27534d8
+> > --- /dev/null
+> > +++ b/tests/xfs/999.out
+> > @@ -0,0 +1,15 @@
+> > +QA output created by 999
+> > +Format and populate
+> > +Introduce a dmdelay
+> > +Run repair
+> > + - #:#:#: Phase #: #% done - estimated remaining time {progres}
+> > + - #:#:#: Phase #: elapsed time {progres} - processed # inodes per minute
+> > + - #:#:#: check for inodes claiming duplicate blocks - # of # inodes done
+> > + - #:#:#: process known inodes and inode discovery - # of # inodes done
+> > + - #:#:#: process newly discovered inodes - # of # allocation groups done
+> > + - #:#:#: rebuild AG headers and trees - # of # allocation groups done
+> > + - #:#:#: scanning agi unlinked lists - # of # allocation groups done
+> > + - #:#:#: scanning filesystem freespace - # of # allocation groups done
+> > + - #:#:#: setting up duplicate extent list - # of # allocation groups done
+> > + - #:#:#: verify and correct link counts - # of # allocation groups done
+> > + - #:#:#: zeroing log - # of # blocks done
+> > --
+> > 2.39.3
+> >
 > 
->>
->> --
->> Thanks,
->> Ruan.
->>
->> 在 2023/5/26 8:38, Darrick J. Wong 写道:
->>> Hi all,
->>>
->>> Now that we've landed the new kernel code, it's time to reorganize the
->>> xfs_scrub code that handles repairs.  Clean up various naming warts and
->>> misleading error messages.  Move the repair code to scrub/repair.c as
->>> the first step.  Then, fix various issues in the repair code before we
->>> start reorganizing things.
->>>
->>> If you're going to start using this mess, you probably ought to just
->>> pull from my git trees, which are linked below.
->>>
->>> This is an extraordinary way to destroy everything.  Enjoy!
->>> Comments and questions are, as always, welcome.
->>>
->>> --D
->>>
->>> xfsprogs git tree:
->>> https://git.kernel.org/cgit/linux/kernel/git/djwong/xfsprogs-dev.git/log/?h=scrub-repair-fixes
->>> ---
->>>    scrub/phase1.c        |    2
->>>    scrub/phase2.c        |    3 -
->>>    scrub/phase3.c        |    2
->>>    scrub/phase4.c        |   22 ++++-
->>>    scrub/phase5.c        |    2
->>>    scrub/phase6.c        |   13 +++
->>>    scrub/phase7.c        |    2
->>>    scrub/repair.c        |  177 ++++++++++++++++++++++++++++++++++++++++++-
->>>    scrub/repair.h        |   16 +++-
->>>    scrub/scrub.c         |  204 +------------------------------------------------
->>>    scrub/scrub.h         |   16 ----
->>>    scrub/scrub_private.h |   55 +++++++++++++
->>>    scrub/xfs_scrub.c     |    2
->>>    13 files changed, 283 insertions(+), 233 deletions(-)
->>>    create mode 100644 scrub/scrub_private.h
->>>
+
