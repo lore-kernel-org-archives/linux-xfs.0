@@ -2,198 +2,165 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DDEF7C7EE29
-	for <linux-xfs@archiver.kernel.org>; Fri,  9 Jun 2023 15:14:30 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1075CC7EE25
+	for <linux-xfs@archiver.kernel.org>; Sat, 10 Jun 2023 02:44:17 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S240230AbjFIPO3 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 9 Jun 2023 11:14:29 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51418 "EHLO
+        id S229911AbjFJCoP (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 9 Jun 2023 22:44:15 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52730 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S241269AbjFIPOZ (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 9 Jun 2023 11:14:25 -0400
+        with ESMTP id S229606AbjFJCoP (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 9 Jun 2023 22:44:15 -0400
 Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id AA9DA2D48
-        for <linux-xfs@vger.kernel.org>; Fri,  9 Jun 2023 08:14:21 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0D40130F4
+        for <linux-xfs@vger.kernel.org>; Fri,  9 Jun 2023 19:44:14 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 38EA7658F5
-        for <linux-xfs@vger.kernel.org>; Fri,  9 Jun 2023 15:14:21 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 9C1FFC4339B;
-        Fri,  9 Jun 2023 15:14:20 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 9DCB6601B6
+        for <linux-xfs@vger.kernel.org>; Sat, 10 Jun 2023 02:44:13 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 04B49C433EF;
+        Sat, 10 Jun 2023 02:44:12 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1686323660;
-        bh=PCOQGsF+CewGsTxDpdiDeXGrQahLehyVb24NgbRShO4=;
-        h=Date:From:To:Cc:Subject:From;
-        b=mhinQBF7BEZ9FdBhOlGpNYlQqDUZZPb425MIITF7Xmk0hEhK3JYfKow9PB1FMHJUF
-         QhE385Gp4VjZHqw1h6esuE5br9x7b8qI20UXxqvFM6qYNjM8SnPv07VEsCdJVNWnUk
-         WXmdNjYEE02fisSaKp/zHNCQhdzeUrSC/9R65+GoRm+AHppQ4gXe6kwsNk3k0IpZrW
-         cjr5RIeKkHPE2VLiJVklIMCdOcyhHaKMXjtRcX3U9EgIM9i3Ep0e5KhiWt46CBwt/a
-         lIBe7DE+wScltrp5O7jtil/3CyHBl97wWgvEtTaLoXLC5Ru4uzcCUltx3cuPF+XxMl
-         HBednW38YpFmQ==
-Date:   Fri, 9 Jun 2023 08:14:20 -0700
+        s=k20201202; t=1686365053;
+        bh=MZPvJV/vySo3GBzvGwUOCKCnpDsSHlDswCA55TugBDY=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=Mje6pEah7re230x7KZQ7XMpwWLKlR02MqYMsGIe43UriUbUkj12NRzI2By5GHHRka
+         4KmMlDFgoD8qzbQW0kQJ2z991efRBmxVN2rbE123ovaMMalQfFZHUWw7/GcyVZ964L
+         jPqX+mOnEhsyOOeXHTWQy6tlCF83arGV4aWIQIYH+CoMGvoiQa+isYdJ+SOg7XsPxx
+         X+9pZyrwLBVG0f6SpmwDcVjzpIaKq8w4ED9CG/IDrge49UQDJvvOgWz8uUA53UpQqZ
+         qW9SYwuoQgUUABwjC8RbkuomZeM+FPsrG0bwhFtgl0CsqLGGHtpMEby5Tb0cdZWCM9
+         uhsZUqBuEeiMg==
+Date:   Fri, 9 Jun 2023 19:44:12 -0700
 From:   "Darrick J. Wong" <djwong@kernel.org>
-To:     Carlos Maiolino <cem@kernel.org>
-Cc:     linux-xfs@vger.kernel.org
-Subject: [PATCH] libxfs: deferred items should call xfs_perag_intent_{get,put}
-Message-ID: <20230609151420.GZ1325469@frogsfrogsfrogs>
+To:     Wu Guanghao <wuguanghao3@huawei.com>
+Cc:     cem@kernel.org, linux-xfs@vger.kernel.org, louhongxiang@huawei.com,
+        "liuzhiqiang (I)" <liuzhiqiang26@huawei.com>
+Subject: Re: [PATCH]xfs_repair: fix the problem of repair failure caused by
+ dirty flag being abnormally set on buffer
+Message-ID: <20230610024412.GT72267@frogsfrogsfrogs>
+References: <0bdbc18a-e062-9d39-2d01-75a0480c692e@huawei.com>
+ <eb138689-d7c9-5d1c-d7bf-acdf2859a879@huawei.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
+In-Reply-To: <eb138689-d7c9-5d1c-d7bf-acdf2859a879@huawei.com>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-From: Darrick J. Wong <djwong@kernel.org>
+On Fri, Jun 09, 2023 at 09:08:01AM +0800, Wu Guanghao wrote:
+> We found an issue where repair failed in the fault injection.
+> 
+> $ xfs_repair test.img
+> ...
+> Phase 3 - for each AG...
+>         - scan and clear agi unlinked lists...
+>         - process known inodes and perform inode discovery...
+>         - agno = 0
+>         - agno = 1
+>         - agno = 2
+> Metadata CRC error detected at 0x55a30e420c7d, xfs_bmbt block 0x51d68/0x1000
+>         - agno = 3
+> Metadata CRC error detected at 0x55a30e420c7d, xfs_bmbt block 0x51d68/0x1000
+> btree block 0/41901 is suspect, error -74
+> bad magic # 0x58534c4d in inode 3306572 (data fork) bmbt block 41901
+> bad data fork in inode 3306572
+> cleared inode 3306572
+> ...
+> Phase 7 - verify and correct link counts...
+> Metadata corruption detected at 0x55a30e420b58, xfs_bmbt block 0x51d68/0x1000
+> libxfs_bwrite: write verifier failed on xfs_bmbt bno 0x51d68/0x8
+> xfs_repair: Releasing dirty buffer to free list!
+> xfs_repair: Refusing to write a corrupt buffer to the data device!
+> xfs_repair: Lost a write to the data device!
+> 
+> fatal error -- File system metadata writeout failed, err=117.  Re-run xfs_repair.
+> 
+> 
+> $ xfs_db test.img
+> xfs_db> inode 3306572
+> xfs_db> p
+> core.magic = 0x494e
+> core.mode = 0100666		  // regular file
+> core.version = 3
+> core.format = 3 (btree)	
+> ...
+> u3.bmbt.keys[1] = [startoff]
+> 1:[6]
+> u3.bmbt.ptrs[1] = 41901	 // btree root
+> ...
+> 
+> $ hexdump -C -n 4096 41901.img
+> 00000000  58 53 4c 4d 00 00 00 00  00 00 01 e8 d6 f4 03 14  |XSLM............|
+> 00000010  09 f3 a6 1b 0a 3c 45 5a  96 39 41 ac 09 2f 66 99  |.....<EZ.9A../f.|
+> 00000020  00 00 00 00 00 05 1f fb  00 00 00 00 00 05 1d 68  |...............h|
+> ...
+> 
+> The block data associated with inode 3306572 is abnormal, but check the CRC first
+> when reading. If the CRC check fails, badcrc will be set. Then the dirty flag
+> will be set on bp when badcrc is set. In the final stage of repair, the dirty bp
+> will be refreshed in batches. When refresh to the disk, the data in bp will be
+> verified. At this time, if the data verification fails, resulting in a repair
+> error.
+> 
+> After scan_bmapbt returns an error, the inode will be cleaned up. Then bp
+> doesn't need to set dirty flag, so that it won't trigger writeback verification
+> failure.
+> 
+> Signed-off-by: Wu Guanghao <wuguanghao3@huawei.com>
+> ---
+>  repair/scan.c | 2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
+> 
+> diff --git a/repair/scan.c b/repair/scan.c
+> index 7b720131..b5458eb8 100644
+> --- a/repair/scan.c
+> +++ b/repair/scan.c
+> @@ -185,7 +185,7 @@ scan_lbtree(
+> 
+>  	ASSERT(dirty == 0 || (dirty && !no_modify));
+> 
+> -	if ((dirty || badcrc) && !no_modify) {
+> +	if (!err && (dirty || badcrc) && !no_modify) {
+>  		libxfs_buf_mark_dirty(bp);
+>  		libxfs_buf_relse(bp);
 
-Make the intent item _get_group and _put_group functions call
-xfs_perag_intent_{get,put} to match the kernel.  In userspace they're
-the same thing so this makes no difference.  However, let's not leave
-unnecessary discrepancies with the kernel code.
+Hm.  So if scan_lbtree returns 1, that means that we clear the inode.
+Hence there's no point in dirtying this buffer since we're going to zap
+the whole inode anyway.
 
-Fixes: 7cb26322f74 ("xfs: allow queued AG intents to drain before scrubbing")
-Signed-off-by: Darrick J. Wong <djwong@kernel.org>
----
- libxfs/defer_item.c |   42 ++++++++++++++++++++++++++----------------
- 1 file changed, 26 insertions(+), 16 deletions(-)
+This looks correct to me, so
+Reviewed-by: Darrick J. Wong <djwong@kernel.org>
 
-diff --git a/libxfs/defer_item.c b/libxfs/defer_item.c
-index dc00d6d671d..6c5c7dd5677 100644
---- a/libxfs/defer_item.c
-+++ b/libxfs/defer_item.c
-@@ -70,7 +70,7 @@ xfs_extent_free_create_done(
- 	return NULL;
- }
- 
--/* Take a passive ref to the AG containing the space we're freeing. */
-+/* Take an active ref to the AG containing the space we're freeing. */
- void
- xfs_extent_free_get_group(
- 	struct xfs_mount		*mp,
-@@ -79,15 +79,15 @@ xfs_extent_free_get_group(
- 	xfs_agnumber_t			agno;
- 
- 	agno = XFS_FSB_TO_AGNO(mp, xefi->xefi_startblock);
--	xefi->xefi_pag = xfs_perag_get(mp, agno);
-+	xefi->xefi_pag = xfs_perag_intent_get(mp, agno);
- }
- 
--/* Release a passive AG ref after some freeing work. */
-+/* Release an active AG ref after some freeing work. */
- static inline void
- xfs_extent_free_put_group(
- 	struct xfs_extent_free_item	*xefi)
- {
--	xfs_perag_put(xefi->xefi_pag);
-+	xfs_perag_intent_put(xefi->xefi_pag);
- }
- 
- /* Process a free extent. */
-@@ -104,6 +104,7 @@ xfs_extent_free_finish_item(
- 	int				error;
- 
- 	xefi = container_of(item, struct xfs_extent_free_item, xefi_list);
-+
- 	oinfo.oi_owner = xefi->xefi_owner;
- 	if (xefi->xefi_flags & XFS_EFI_ATTR_FORK)
- 		oinfo.oi_flags |= XFS_OWNER_INFO_ATTR_FORK;
-@@ -166,6 +167,7 @@ xfs_agfl_free_finish_item(
- 	xfs_agblock_t			agbno;
- 
- 	xefi = container_of(item, struct xfs_extent_free_item, xefi_list);
-+
- 	ASSERT(xefi->xefi_blockcount == 1);
- 	agbno = XFS_FSB_TO_AGBNO(mp, xefi->xefi_startblock);
- 	oinfo.oi_owner = xefi->xefi_owner;
-@@ -232,7 +234,7 @@ xfs_rmap_update_create_done(
- 	return NULL;
- }
- 
--/* Take a passive ref to the AG containing the space we're rmapping. */
-+/* Take an active ref to the AG containing the space we're rmapping. */
- void
- xfs_rmap_update_get_group(
- 	struct xfs_mount	*mp,
-@@ -241,15 +243,15 @@ xfs_rmap_update_get_group(
- 	xfs_agnumber_t	agno;
- 
- 	agno = XFS_FSB_TO_AGNO(mp, ri->ri_bmap.br_startblock);
--	ri->ri_pag = xfs_perag_get(mp, agno);
-+	ri->ri_pag = xfs_perag_intent_get(mp, agno);
- }
- 
--/* Release a passive AG ref after finishing rmapping work. */
-+/* Release an active AG ref after finishing rmapping work. */
- static inline void
- xfs_rmap_update_put_group(
- 	struct xfs_rmap_intent	*ri)
- {
--	xfs_perag_put(ri->ri_pag);
-+	xfs_perag_intent_put(ri->ri_pag);
- }
- 
- /* Process a deferred rmap update. */
-@@ -344,7 +346,7 @@ xfs_refcount_update_create_done(
- 	return NULL;
- }
- 
--/* Take a passive ref to the AG containing the space we're refcounting. */
-+/* Take an active ref to the AG containing the space we're refcounting. */
- void
- xfs_refcount_update_get_group(
- 	struct xfs_mount		*mp,
-@@ -353,15 +355,15 @@ xfs_refcount_update_get_group(
- 	xfs_agnumber_t			agno;
- 
- 	agno = XFS_FSB_TO_AGNO(mp, ri->ri_startblock);
--	ri->ri_pag = xfs_perag_get(mp, agno);
-+	ri->ri_pag = xfs_perag_intent_get(mp, agno);
- }
- 
--/* Release a passive AG ref after finishing refcounting work. */
-+/* Release an active AG ref after finishing refcounting work. */
- static inline void
- xfs_refcount_update_put_group(
- 	struct xfs_refcount_intent	*ri)
- {
--	xfs_perag_put(ri->ri_pag);
-+	xfs_perag_intent_put(ri->ri_pag);
- }
- 
- /* Process a deferred refcount update. */
-@@ -461,7 +463,7 @@ xfs_bmap_update_create_done(
- 	return NULL;
- }
- 
--/* Take a passive ref to the AG containing the space we're mapping. */
-+/* Take an active ref to the AG containing the space we're mapping. */
- void
- xfs_bmap_update_get_group(
- 	struct xfs_mount	*mp,
-@@ -470,15 +472,23 @@ xfs_bmap_update_get_group(
- 	xfs_agnumber_t		agno;
- 
- 	agno = XFS_FSB_TO_AGNO(mp, bi->bi_bmap.br_startblock);
--	bi->bi_pag = xfs_perag_get(mp, agno);
-+
-+	/*
-+	 * Bump the intent count on behalf of the deferred rmap and refcount
-+	 * intent items that that we can queue when we finish this bmap work.
-+	 * This new intent item will bump the intent count before the bmap
-+	 * intent drops the intent count, ensuring that the intent count
-+	 * remains nonzero across the transaction roll.
-+	 */
-+	bi->bi_pag = xfs_perag_intent_get(mp, agno);
- }
- 
--/* Release a passive AG ref after finishing mapping work. */
-+/* Release an active AG ref after finishing mapping work. */
- static inline void
- xfs_bmap_update_put_group(
- 	struct xfs_bmap_intent	*bi)
- {
--	xfs_perag_put(bi->bi_pag);
-+	xfs_perag_intent_put(bi->bi_pag);
- }
- 
- /* Process a deferred rmap update. */
+But that said, you could refactor this part:
+
+	if (!err && (dirty || badcrc) && !no_modify)
+		libxfs_buf_mark_dirty(bp);
+	libxfs_buf_relse(bp);
+
+More questions: Let's say that the btree-format fork has this btree:
+
+        fork
+       / | \
+      A  B  C
+
+Are there any cases where A is corrupt enough that the write verifier
+will trip but scan_lbtree/scan_bmapbt return 0?
+
+Or, let's say that we dirty A, then scan_bmapbt decides that B is total
+garbage and returns 1.  Should we then mark A stale so that it doesn't
+get written out unnecessarily?
+
+Or, let's say that A is corrupt enough to trip the write verifier but
+scan_lbtree/scan_bmapbt return 0; and B is corrupt enough that
+scan_bmapbt returns 1.  In that case, we'd need to mark A stale so that
+we clear the inode and repair can complete without tripping over A or B.
+Does that actually happen?
+
+--D
+
+>  	}
+> -- 
+> 2.27.0
+> 
