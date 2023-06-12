@@ -2,63 +2,99 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3EAD7C88CB2
-	for <linux-xfs@archiver.kernel.org>; Mon, 12 Jun 2023 14:22:45 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7944FC7EE2E
+	for <linux-xfs@archiver.kernel.org>; Mon, 12 Jun 2023 14:55:35 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S237880AbjFLOWn (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 12 Jun 2023 10:22:43 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60952 "EHLO
+        id S229555AbjFLOzc (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 12 Jun 2023 10:55:32 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60128 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S237897AbjFLOWc (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 12 Jun 2023 10:22:32 -0400
-Received: from casper.infradead.org (casper.infradead.org [IPv6:2001:8b0:10b:1236::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id CDBB019A7;
-        Mon, 12 Jun 2023 07:20:17 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=infradead.org; s=casper.20170209; h=In-Reply-To:Content-Type:MIME-Version:
-        References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
-        Content-Transfer-Encoding:Content-ID:Content-Description;
-        bh=RYm8TX9AS1ht1L64nn/kspYUes5TLCETxAZ1YmLK/YU=; b=I5TZRN3+QYfOoBrbYOM2Q/eLZR
-        c05FYuWf9pdjpv8dAMBe0JmnbOfFUlxd2Z4iDPi482SQa0c11EFX+4OhLBpMmhpjPc36j6eMFgQQ/
-        wlTvNJkghvhhzhXhw6zqO0Pvya5Mb1KMx2Zn7ZHg6UqExw1CjYk5M6gbwwvEMOYvI+9DqnhBujnJj
-        xlV1jbsyhDAo9VFwf0AySL5Q4j1OPT7zXHRK/w67X4L8iXkica5LwFTcGBHzWe9MMJ8BxelBu1K83
-        oFccMNQOzeytYk0Xp/SbzddXn5VOF4xYByBQADjj66OoKWmhdFgh0wIp2V0dyo45D67OQ3RQnkV0C
-        6/nP5cPw==;
-Received: from willy by casper.infradead.org with local (Exim 4.94.2 #2 (Red Hat Linux))
-        id 1q8iOT-002iKQ-5e; Mon, 12 Jun 2023 14:19:41 +0000
-Date:   Mon, 12 Jun 2023 15:19:41 +0100
-From:   Matthew Wilcox <willy@infradead.org>
-To:     Ritesh Harjani <ritesh.list@gmail.com>
+        with ESMTP id S238153AbjFLOz3 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 12 Jun 2023 10:55:29 -0400
+Received: from mail-pf1-x42f.google.com (mail-pf1-x42f.google.com [IPv6:2607:f8b0:4864:20::42f])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 259EACC;
+        Mon, 12 Jun 2023 07:55:28 -0700 (PDT)
+Received: by mail-pf1-x42f.google.com with SMTP id d2e1a72fcca58-652d1d3e040so3319277b3a.1;
+        Mon, 12 Jun 2023 07:55:28 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20221208; t=1686581727; x=1689173727;
+        h=in-reply-to:subject:cc:to:from:message-id:date:from:to:cc:subject
+         :date:message-id:reply-to;
+        bh=V9CIwjjScqul8Uzbw9CyqmytrTVPPn5617deb266FA8=;
+        b=OJpUAmGYTTUJTSomOYm9cJLlpudVb2hVCetG0OSjNFuptnM0GK8HBiDug7+VMfj0z1
+         bst3xNkN3KHT2xdv6qVNQ588+YaKF60IOznkQyMCnjFrMDQT2rC969UhhRL6I9hVLv8q
+         TnW9vioUXKNnJXQA+KEOsLuVYjbKREDoz4WmPXeLCwaQB/lqXhibLDhQtOngG6fdqIuO
+         JOUZR6YZ/JxCiPpc7y/iLEj1wKrClWWBTGhR+l7hIMUeOfXAA3FLnQAvfYwszwPn5Fhv
+         B2/5h7wpbCTEvrp11rEyRR1lrWRLspdFV7NKLceKWfcIsPpuMJEEoroth3IG/t5ekPCq
+         QuSw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20221208; t=1686581727; x=1689173727;
+        h=in-reply-to:subject:cc:to:from:message-id:date:x-gm-message-state
+         :from:to:cc:subject:date:message-id:reply-to;
+        bh=V9CIwjjScqul8Uzbw9CyqmytrTVPPn5617deb266FA8=;
+        b=YQT154be0XJ/RdDdYa+EhpIxR7inKHZMPCRgaZ1fNWCZlQGhtmb+osMqXmMMztRtrP
+         YHicjwiDhkOpdENAWRzWE/cvUDH/dWH50AwOdhLxXnuK8vJVveSWEl64ubBZmO5tvLUM
+         mCWQGg1t2Mr5og7E5j0BAXnGv4XFKNFfFkDgakVZZj/4p+xNMdd/ujoP/ccJviEMOK0B
+         sYgx04w/ke55O7VD14VxL+Ntx5QloDlrG0dADeuYI0XMeEgNkDFx+rZOX1EHbb/gXs2Q
+         P2EPXfwNDENXfjHfi0vjTd+ucXzkXDhrDZRHV0I3dy8gP1VBqjdNDBa+AWCj67gNu8Is
+         jnlw==
+X-Gm-Message-State: AC+VfDxJUj+3aNMgrN3m2Gz65U0BjfIM3a9weqyiLf6ZiGmayeUNifgQ
+        uDzwoQOfez5xCTTx08PzDgE=
+X-Google-Smtp-Source: ACHHUZ6lUfZ+F8MKzU8TDnfNssoHZhb2mmnc4xLiLrA2Wfw5/9OCiMuVPj3YeIN5OzTwkj+zJqYacQ==
+X-Received: by 2002:a05:6a20:104f:b0:10f:b53d:8641 with SMTP id gt15-20020a056a20104f00b0010fb53d8641mr8094377pzc.46.1686581727584;
+        Mon, 12 Jun 2023 07:55:27 -0700 (PDT)
+Received: from dw-tp ([49.207.220.159])
+        by smtp.gmail.com with ESMTPSA id i22-20020aa787d6000000b0064d3e4c7658sm7219034pfo.96.2023.06.12.07.55.24
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Mon, 12 Jun 2023 07:55:27 -0700 (PDT)
+Date:   Mon, 12 Jun 2023 20:25:22 +0530
+Message-Id: <87r0qghgrp.fsf@doe.com>
+From:   Ritesh Harjani (IBM) <ritesh.list@gmail.com>
+To:     Pankaj Raghav <p.raghav@samsung.com>
 Cc:     linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
         Christoph Hellwig <hch@infradead.org>,
         "Darrick J. Wong" <djwong@kernel.org>,
+        Matthew Wilcox <willy@infradead.org>,
         Dave Chinner <david@fromorbit.com>,
         Brian Foster <bfoster@redhat.com>,
         Andreas Gruenbacher <agruenba@redhat.com>,
         Ojaswin Mujoo <ojaswin@linux.ibm.com>,
         Disha Goel <disgoel@linux.ibm.com>
-Subject: Re: [PATCHv9 4/6] iomap: Refactor iomap_write_delalloc_punch()
- function out
-Message-ID: <ZIcpfaqlWskQccAX@casper.infradead.org>
-References: <ZIccDjZQdAMXcnJQ@casper.infradead.org>
- <87ttvchj66.fsf@doe.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <87ttvchj66.fsf@doe.com>
+Subject: Re: [PATCHv9 4/6] iomap: Refactor iomap_write_delalloc_punch() function out
+In-Reply-To: <20230612135658.gvukpx7567avszph@localhost>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Mon, Jun 12, 2023 at 07:33:29PM +0530, Ritesh Harjani wrote:
-> >> +	*punch_start_byte = min_t(loff_t, end_byte,
-> >> +				  folio_next_index(folio) << PAGE_SHIFT);
-> >
-> > 	*punch_start_byte = min(end_byte, folio_pos(folio) + folio_size(folio));
-> 
-> Current code was also correct only. But I guess this just avoids
-> min_t/loff_t thing. No other reason right?
+Pankaj Raghav <p.raghav@samsung.com> writes:
 
-Actually, it's buggy on 32-bit platforms.  folio_next_index returns
-an unsigned long (32 bit), which is shifted by PAGE_SHIFT, losing the
-top bits, then cast to an loff_t.  folio_pos() does this correctly.
+> Minor nit:
+>
+>> +static int iomap_write_delalloc_punch(struct inode *inode, struct folio *folio,
+>> +		loff_t *punch_start_byte, loff_t start_byte, loff_t end_byte,
+>> +		int (*punch)(struct inode *inode, loff_t offset, loff_t length))
+>> +{
+>> +	int ret = 0;
+>> +
+>> +	if (!folio_test_dirty(folio))
+>> +		return ret;
+> Either this could be changed to `goto out`
+>
+> OR
+>
+>> +
+>> +	/* if dirty, punch up to offset */
+>> +	if (start_byte > *punch_start_byte) {
+>> +		ret = punch(inode, *punch_start_byte,
+>> +				start_byte - *punch_start_byte);
+>> +		if (ret)
+>> +			goto out;
+>
+> This could be changed to `return ret` and we could get rid of the `out`
+> label.
+
+Sure, thanks Pankaj. I noted that too.
+Since there is nothing in the out label. So mostly will simply return
+ret. Will fix it in the next rev.
+
+-ritesh
