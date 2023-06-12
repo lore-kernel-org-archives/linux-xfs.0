@@ -2,170 +2,98 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 37202C7EE23
-	for <linux-xfs@archiver.kernel.org>; Mon, 12 Jun 2023 03:58:52 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 853F7C7EE23
+	for <linux-xfs@archiver.kernel.org>; Mon, 12 Jun 2023 04:01:52 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229531AbjFLD6s (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Sun, 11 Jun 2023 23:58:48 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33210 "EHLO
+        id S231603AbjFLEBu (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 12 Jun 2023 00:01:50 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33756 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229477AbjFLD6r (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sun, 11 Jun 2023 23:58:47 -0400
+        with ESMTP id S230436AbjFLEBt (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 12 Jun 2023 00:01:49 -0400
 Received: from bombadil.infradead.org (bombadil.infradead.org [IPv6:2607:7c80:54:3::133])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id CC0D9F3;
-        Sun, 11 Jun 2023 20:58:46 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id CDC41F3;
+        Sun, 11 Jun 2023 21:01:48 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
         d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Type:MIME-Version
         :References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
         Content-Transfer-Encoding:Content-ID:Content-Description;
-        bh=idzk5f8L+mo03LSLGhixoDvn6O6qzx0XZQC69bewJo0=; b=v872uRO2dAVX7zY8l6Ivttwie3
-        V2C0S5eNa1iAG2CUp/HE/SHDQw7Uz1AbBnkeSxRqcOXErD3MNpIRCeXM77KCrIrNyfoKjCGy4CBMQ
-        TiFMppNFKiyVLbG0PBVPrRVV54DTAfHHn8JI6pU8IGE6WpDdUJyoCNPpY6NMMwmWiVJ5+Vh1Hmf6t
-        TUzqcW8V63flou6YsPULsZfBhIgqgYyl7w4kvJ4o5U0earScB3u/m3crjokMK6rXmLd3gMlPFI4tt
-        pji5PnsqgZVAX7pIrYy4/g9J2UY3RyJI6me6npu5saphrMHp6BFOROSeG8gQMCOdJ1qRSaxKZGe3k
-        4cSLgJ/Q==;
+        bh=xaenqfQWcrt8tWNB36muhsuAFWAiB1Cw0mrXd/6ozhs=; b=hFyETY+oYsUZtG11PLJnEw7ZYu
+        p2JXob13WXM2yyU16oeU+XARj2lFszgYIBN8pVhz6dH2pyByljza22w7Xire2GdD1NSA0FB4stkCn
+        0zSOyTDM5/dWagM/lFnfPqsgnB9hpFyYOs7saC5DopED9EsJuev8E2rTRENzQlWN5PotjAc4sf7gW
+        OxJM5tSTNFF8c1l255fVz/u6kKkwGGnEcIma+4T56iQJWCw+qyA5isB1Ksctriej6oWoGeRA7sgL2
+        HOx+c3HGz6YXQZ/6p72gl9JYAjeg1SHWinRmJkER/2dfzYJeV44mcJLgJcVSe0FWHl5B+ATcE/+m9
+        0FInOqMg==;
 Received: from hch by bombadil.infradead.org with local (Exim 4.96 #2 (Red Hat Linux))
-        id 1q8YhU-002UA0-0f;
-        Mon, 12 Jun 2023 03:58:40 +0000
-Date:   Sun, 11 Jun 2023 20:58:40 -0700
+        id 1q8YkW-002UPs-1y;
+        Mon, 12 Jun 2023 04:01:48 +0000
+Date:   Sun, 11 Jun 2023 21:01:48 -0700
 From:   Christoph Hellwig <hch@infradead.org>
 To:     "Darrick J. Wong" <djwong@kernel.org>
-Cc:     mcgrof@kernel.org, jack@suse.cz, hch@infradead.org,
-        ruansy.fnst@fujitsu.com, linux-xfs@vger.kernel.org,
-        linux-fsdevel@vger.kernel.org
-Subject: Re: [PATCH 1/3] fs: distinguish between user initiated freeze and
- kernel initiated freeze
-Message-ID: <ZIaX8Lz2cnyD+s5R@infradead.org>
+Cc:     linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
+        mcgrof@kernel.org, jack@suse.cz, hch@infradead.org,
+        ruansy.fnst@fujitsu.com
+Subject: Re: [PATCH 2/3] fs: wait for partially frozen filesystems
+Message-ID: <ZIaYrA3Jz5Q75X1P@infradead.org>
 References: <168653971691.755178.4003354804404850534.stgit@frogsfrogsfrogs>
- <168653972267.755178.18328538743442432037.stgit@frogsfrogsfrogs>
+ <168653972832.755178.18389114450766371923.stgit@frogsfrogsfrogs>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <168653972267.755178.18328538743442432037.stgit@frogsfrogsfrogs>
+In-Reply-To: <168653972832.755178.18389114450766371923.stgit@frogsfrogsfrogs>
 X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Sun, Jun 11, 2023 at 08:15:22PM -0700, Darrick J. Wong wrote:
+On Sun, Jun 11, 2023 at 08:15:28PM -0700, Darrick J. Wong wrote:
 > From: Darrick J. Wong <djwong@kernel.org>
 > 
-> Userspace can freeze a filesystem using the FIFREEZE ioctl or by
-> suspending the block device; this state persists until userspace thaws
-> the filesystem with the FITHAW ioctl or resuming the block device.
-> Since commit 18e9e5104fcd ("Introduce freeze_super and thaw_super for
-> the fsfreeze ioctl") we only allow the first freeze command to succeed.
+> Jan Kara suggested that when one thread is in the middle of freezing a
+> filesystem, another thread trying to freeze the same fs but with a
+> different freeze_holder should wait until the freezer reaches either end
+> state (UNFROZEN or COMPLETE) instead of returning EBUSY immediately.
 > 
-> The kernel may decide that it is necessary to freeze a filesystem for
-> its own internal purposes, such as suspends in progress, filesystem fsck
-> activities, or quiescing a device prior to removal.  Userspace thaw
-> commands must never break a kernel freeze, and kernel thaw commands
-> shouldn't undo userspace's freeze command.
+> Plumb in the extra coded needed to wait for the fs freezer to reach an
+> end state and try the freeze again.
 > 
-> Introduce a couple of freeze holder flags and wire it into the
-> sb_writers state.  One kernel and one userspace freeze are allowed to
-> coexist at the same time; the filesystem will not thaw until both are
-> lifted.
-> 
-> I wonder if the f2fs/gfs2 code should be using a kernel freeze here, but
-> for now we'll use FREEZE_HOLDER_USERSPACE to preserve existing
-> behaviors.
-> 
-> Cc: mcgrof@kernel.org
-> Cc: jack@suse.cz
-> Cc: hch@infradead.org
-> Cc: ruansy.fnst@fujitsu.com
 > Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 > ---
->  Documentation/filesystems/vfs.rst |    4 +-
->  block/bdev.c                      |    8 ++--
->  fs/f2fs/gc.c                      |    4 +-
->  fs/gfs2/glops.c                   |    2 -
->  fs/gfs2/super.c                   |    6 +--
->  fs/gfs2/sys.c                     |    4 +-
->  fs/gfs2/util.c                    |    2 -
->  fs/ioctl.c                        |    8 ++--
->  fs/super.c                        |   79 +++++++++++++++++++++++++++++++++----
->  include/linux/fs.h                |   15 +++++--
->  10 files changed, 100 insertions(+), 32 deletions(-)
+>  fs/super.c |   27 +++++++++++++++++++++++++--
+>  1 file changed, 25 insertions(+), 2 deletions(-)
 > 
 > 
-> diff --git a/Documentation/filesystems/vfs.rst b/Documentation/filesystems/vfs.rst
-> index 769be5230210..41cf2a56cbca 100644
-> --- a/Documentation/filesystems/vfs.rst
-> +++ b/Documentation/filesystems/vfs.rst
-> @@ -260,9 +260,9 @@ filesystem.  The following members are defined:
->  		void (*evict_inode) (struct inode *);
->  		void (*put_super) (struct super_block *);
->  		int (*sync_fs)(struct super_block *sb, int wait);
-> -		int (*freeze_super) (struct super_block *);
-> +		int (*freeze_super) (struct super_block *, enum freeze_holder who);
->  		int (*freeze_fs) (struct super_block *);
-> -		int (*thaw_super) (struct super_block *);
-> +		int (*thaw_super) (struct super_block *, enum freeze_wholder who);
-
-Nit: Can you spell out the sb paramter as well and avoid the overly long
-lines here?
-
-> +static int freeze_frozen_super(struct super_block *sb, enum freeze_holder who)
-> +{
-> +	/* Someone else already holds this type of freeze */
-> +	if (sb->s_writers.freeze_holders & who)
-> +		return -EBUSY;
-> +
-> +	WARN_ON(sb->s_writers.freeze_holders == 0);
-> +
-> +	sb->s_writers.freeze_holders |= who;
-> +	return 0;
-> +}
-
-So with the simplification I'm not even sure we need this helper
-anymore.  But I could live with it either way.
-
->  /**
->   * freeze_super - lock the filesystem and force it into a consistent state
->   * @sb: the super to lock
-> + * @who: FREEZE_HOLDER_USERSPACE if userspace wants to freeze the fs;
-> + * FREEZE_HOLDER_KERNEL if the kernel wants to freeze it
-
-I think the cnonstants should use a % prefix for kerneldoc to notice
-them.  Also I suspect something like:
-
- * @who: context that wants to free
-
- and then in the body:
-
- * @who should be:
- *  * %FREEZE_HOLDER_USERSPACE if userspace wants to freeze the fs
- *  * %FREEZE_HOLDER_KERNEL if the kernel wants to freeze it
-
-for better rendering of the comments.  Same applies for the thaw side.
-
-> +static int thaw_super_locked(struct super_block *sb, enum freeze_holder who)
->  {
->  	int error;
+> diff --git a/fs/super.c b/fs/super.c
+> index 36adccecc828..151e0eeff2c2 100644
+> --- a/fs/super.c
+> +++ b/fs/super.c
+> @@ -1647,6 +1647,15 @@ static int freeze_frozen_super(struct super_block *sb, enum freeze_holder who)
+>  	return 0;
+>  }
 >  
-> +	if (sb->s_writers.frozen == SB_FREEZE_COMPLETE) {
-> +		error = try_thaw_shared_super(sb, who);
-> +		if (error != 1) {
-> +			up_write(&sb->s_umount);
-> +			return error;
+> +static void wait_for_partially_frozen(struct super_block *sb)
+> +{
+> +	up_write(&sb->s_umount);
+> +	wait_var_event(&sb->s_writers.frozen,
+> +			sb->s_writers.frozen == SB_UNFROZEN ||
+> +			sb->s_writers.frozen == SB_FREEZE_COMPLETE);
+> +	down_write(&sb->s_umount);
+
+Does sb->s_writers.frozen need WRITE_ONCE/READ_ONCE treatment if we want
+to check it outside of s_umount?  Or should we maybe just open code
+wait_var_event and only drop the lock after checking the variable?
+
+>  	if (sb->s_writers.frozen != SB_UNFROZEN) {
+> -		deactivate_locked_super(sb);
+> -		return -EBUSY;
+> +		if (!try_again) {
+> +			deactivate_locked_super(sb);
+> +			return -EBUSY;
 > +		}
-> +	}
 > +
->  	if (sb->s_writers.frozen != SB_FREEZE_COMPLETE) {
+> +		wait_for_partially_frozen(sb);
+> +		try_again = false;
+> +		goto retry;
 
-Make this and
-
-	} else {
-
-instead of checking the same condition twice?
-
-> +extern int freeze_super(struct super_block *super, enum freeze_holder who);
-> +extern int thaw_super(struct super_block *super, enum freeze_holder who);
-
-.. and drop the pointless externs here.
-
-Except for these various nitpicks this looks good:
-
-Reviewed-by: Christoph Hellwig <hch@lst.de>
+Can you throw in a comment on wait we're only waiting for a partial
+freeze one here?
