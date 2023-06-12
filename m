@@ -2,120 +2,98 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 764CAC7EE23
-	for <linux-xfs@archiver.kernel.org>; Mon, 12 Jun 2023 09:25:27 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 42675C7EE23
+	for <linux-xfs@archiver.kernel.org>; Mon, 12 Jun 2023 09:27:04 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230248AbjFLJZ0 convert rfc822-to-8bit (ORCPT
-        <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 12 Jun 2023 05:25:26 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44368 "EHLO
+        id S232894AbjFLJ1D (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 12 Jun 2023 05:27:03 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44012 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S234552AbjFLJYu (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 12 Jun 2023 05:24:50 -0400
-X-Greylist: delayed 2008 seconds by postgrey-1.37 at lindbergh.monkeyblade.net; Mon, 12 Jun 2023 02:18:50 PDT
-Received: from out03.mta.xmission.com (out03.mta.xmission.com [166.70.13.233])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0E693525B;
-        Mon, 12 Jun 2023 02:18:49 -0700 (PDT)
-Received: from in02.mta.xmission.com ([166.70.13.52]:58520)
-        by out03.mta.xmission.com with esmtps  (TLS1.3) tls TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384
-        (Exim 4.93)
-        (envelope-from <ebiederm@xmission.com>)
-        id 1q8dAu-00GXSG-LO; Mon, 12 Jun 2023 02:45:20 -0600
-Received: from ip68-110-29-46.om.om.cox.net ([68.110.29.46]:39804 helo=email.froward.int.ebiederm.org.xmission.com)
-        by in02.mta.xmission.com with esmtpsa  (TLS1.3) tls TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384
-        (Exim 4.93)
-        (envelope-from <ebiederm@xmission.com>)
-        id 1q8dAt-00FC9s-H1; Mon, 12 Jun 2023 02:45:20 -0600
-From:   "Eric W. Biederman" <ebiederm@xmission.com>
-To:     Linus Torvalds <torvalds@linux-foundation.org>
-Cc:     Dave Chinner <david@fromorbit.com>,
+        with ESMTP id S234584AbjFLJZ7 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 12 Jun 2023 05:25:59 -0400
+Received: from mail-oa1-x2d.google.com (mail-oa1-x2d.google.com [IPv6:2001:4860:4864:20::2d])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B1B714490;
+        Mon, 12 Jun 2023 02:19:56 -0700 (PDT)
+Received: by mail-oa1-x2d.google.com with SMTP id 586e51a60fabf-1a2c85ef3c2so2638649fac.0;
+        Mon, 12 Jun 2023 02:19:56 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20221208; t=1686561596; x=1689153596;
+        h=in-reply-to:subject:cc:to:from:message-id:date:from:to:cc:subject
+         :date:message-id:reply-to;
+        bh=/kdfCBirwzAruhooshUag2P/P8fZiXPMaXUlCsTPwkQ=;
+        b=QS3knZ7sYVbF4CcbzGl5hAkiewnEtKlzddRTIv6zuks4JXSjBUgtNsUFSmxX04Kd+d
+         DEdrXdx3LoIAJH9LmUXaHrEY90Y6WxQLvSOw+CJScL8rXiny+AO7b5MOFrBHkSysMGL1
+         2qpO7KpG9c5XLpRz50bzgcEgpUhcT0w1N3LfVb34+ocgLabxRMn6LSKD58e5mA5QjICb
+         4rrjR1EHev7MMq+hch6l2F37TA5wp9pOgGRtGQ1WZc907nYnnENs5ok2+LzBBYMyYCpW
+         3uOmZVr3wQF7d/EuVPAcCsqvnxkTmmq9Saj8b8vbzlJ0iOgg/mBMGVL8ihslaaroxq4x
+         VmyQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20221208; t=1686561596; x=1689153596;
+        h=in-reply-to:subject:cc:to:from:message-id:date:x-gm-message-state
+         :from:to:cc:subject:date:message-id:reply-to;
+        bh=/kdfCBirwzAruhooshUag2P/P8fZiXPMaXUlCsTPwkQ=;
+        b=AipaT9ft5G6ax0w2tsFOkGLet94kFlQkn96Vckg2medDeOPod7rooFN52cyUuTQZKW
+         OHhRDRJHstBzfqRKqlK/cBpF7edk4qiotAl2HJV3JjX6k/vxLHYqnw1BiHkWyTyQU2bV
+         9msOKAqzxw6KxQcmqnqTGl3yJcYGq1NBtunGtwYYHDobHTB8xTO6AQunUUBTaRXU/I1n
+         WLoXGt3MNjOJdyE8ZNDjj+J/IhGpvwaCisuTOlTUVckyU0aBpcKqmmpSUudP9nA9n6PG
+         YzMutJ2ji0aQXbYZrBhS4vNDvgiudd0j60UXGULDSxO3TyhugyblOKESai8kOl0vrsgO
+         kAyA==
+X-Gm-Message-State: AC+VfDwA3JZ6/wjHYccZyS5Mk0QM2BHEuYmaMOFwffWvX5X6sajUIle0
+        1F1BsLn8PFWyswlEpS/9KovQMdYX2Xo=
+X-Google-Smtp-Source: ACHHUZ6NsRU/w+5hUARYX7lYbC7y3dG9HiDgO/MaQvQxUDkjm3UpxpHV9/qJlM5qy/FCcwcuwprt8g==
+X-Received: by 2002:a05:6808:284:b0:397:f82f:90a4 with SMTP id z4-20020a056808028400b00397f82f90a4mr3359956oic.3.1686561595919;
+        Mon, 12 Jun 2023 02:19:55 -0700 (PDT)
+Received: from dw-tp ([129.41.58.23])
+        by smtp.gmail.com with ESMTPSA id s12-20020a17090a5d0c00b0025930e50e28sm8769372pji.41.2023.06.12.02.19.52
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Mon, 12 Jun 2023 02:19:55 -0700 (PDT)
+Date:   Mon, 12 Jun 2023 14:49:50 +0530
+Message-Id: <87wn09ghqh.fsf@doe.com>
+From:   Ritesh Harjani (IBM) <ritesh.list@gmail.com>
+To:     Christoph Hellwig <hch@infradead.org>
+Cc:     linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
+        Christoph Hellwig <hch@infradead.org>,
         "Darrick J. Wong" <djwong@kernel.org>,
-        Zorro Lang <zlang@redhat.com>, linux-xfs@vger.kernel.org,
-        Mike Christie <michael.christie@oracle.com>,
-        "Michael S. Tsirkin" <mst@redhat.com>, linux-kernel@vger.kernel.org
-References: <20230611124836.whfktwaumnefm5z5@zlang-mailbox>
-        <ZIZSPyzReZkGBEFy@dread.disaster.area>
-        <20230612015145.GA11441@frogsfrogsfrogs>
-        <ZIaBQnCKJ6NsqGhd@dread.disaster.area>
-        <CAHk-=whJqZLKPR-cpX-V4wJTXVX-_tG5Vjuj2q9knvKGCPdfkg@mail.gmail.com>
-        <ZIaqMpGISWKgHLK6@dread.disaster.area>
-        <CAHk-=wgwJptCbaHwt+TpGgh04fTVAHd60AY3Jj1rX+Spf0fVyg@mail.gmail.com>
-        <ZIax1FLfNajWk25A@dread.disaster.area>
-        <CAHk-=wj0NuJaRNC4o6FVAJgKAFJ5HWcBV5VJw6RGV0ZahqOOZA@mail.gmail.com>
-Date:   Mon, 12 Jun 2023 03:45:12 -0500
-In-Reply-To: <CAHk-=wj0NuJaRNC4o6FVAJgKAFJ5HWcBV5VJw6RGV0ZahqOOZA@mail.gmail.com>
-        (Linus Torvalds's message of "Sun, 11 Jun 2023 23:11:28 -0700")
-Message-ID: <87r0qhrrvr.fsf@email.froward.int.ebiederm.org>
-User-Agent: Gnus/5.13 (Gnus v5.13) Emacs/27.1 (gnu/linux)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 8BIT
-X-XM-SPF: eid=1q8dAt-00FC9s-H1;;;mid=<87r0qhrrvr.fsf@email.froward.int.ebiederm.org>;;;hst=in02.mta.xmission.com;;;ip=68.110.29.46;;;frm=ebiederm@xmission.com;;;spf=pass
-X-XM-AID: U2FsdGVkX19zDZ9UDOy2LwKxs184+u4u0p0/xsgHgcs=
-X-SA-Exim-Connect-IP: 68.110.29.46
-X-SA-Exim-Mail-From: ebiederm@xmission.com
-Subject: Re: [6.5-rc5 regression] core dump hangs (was Re: [Bug report]
- fstests generic/051 (on xfs) hang on latest linux v6.5-rc5+)
-X-SA-Exim-Version: 4.2.1 (built Sat, 08 Feb 2020 21:53:50 +0000)
-X-SA-Exim-Scanned: Yes (on in02.mta.xmission.com)
+        Matthew Wilcox <willy@infradead.org>,
+        Dave Chinner <david@fromorbit.com>,
+        Brian Foster <bfoster@redhat.com>,
+        Andreas Gruenbacher <agruenba@redhat.com>,
+        Ojaswin Mujoo <ojaswin@linux.ibm.com>,
+        Disha Goel <disgoel@linux.ibm.com>
+Subject: Re: [PATCHv9 1/6] iomap: Rename iomap_page to iomap_folio_state and others
+In-Reply-To: <ZIa51URaIVjjG35D@infradead.org>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Linus Torvalds <torvalds@linux-foundation.org> writes:
+Christoph Hellwig <hch@infradead.org> writes:
 
-> On Sun, Jun 11, 2023 at 10:49 PM Dave Chinner <david@fromorbit.com> wrote:
+> On Sun, Jun 11, 2023 at 11:21:48PM -0700, Christoph Hellwig wrote:
+>> Looks good:
 >>
->> On Sun, Jun 11, 2023 at 10:34:29PM -0700, Linus Torvalds wrote:
->> >
->> > So that "!=" should obviously have been a "==".
->>
->> Same as without the condition - all the fsstress tasks hang in
->> do_coredump().
->
-> Ok, that at least makes sense. Your "it made things worse" made me go
-> "What?" until I noticed the stupid backwards test.
->
-> I'm not seeing anything else that looks odd in that commit
-> f9010dbdce91 ("fork, vhost: Use CLONE_THREAD to fix freezer/ps
-> regression").
->
-> Let's see if somebody else goes "Ahh" when they wake up tomorrow...
+>> Reviewed-by: Christoph Hellwig <hch@lst.de>
 
-It feels like there have been about half a dozen bugs pointed out in
-that version of the patch.  I am going to have to sleep before I can get
-as far as "Ahh"
+Thanks!
 
-One thing that really stands out for me is.
+>
+> Actually, coming back to this:
+>
+> -to_iomap_page(struct folio *folio)
+> +static inline struct iomap_folio_state *iomap_get_ifs
+>
+> I find the to_* naming much more descriptive for derving the
+> private data.  get tends to imply grabbing a refcount.
 
-if (test_if_loop_should_continue) {
-	set_current_state(TASK_INTERRUPTIBLE);
-        schedule();
+Not always. That would be iomap_ifs_get(ifs)/iomap_ifs_put(ifs).
+
+See this -
+
+static inline void *folio_get_private(struct folio *folio)
+{
+	return folio->private;
 }
 
-/* elsewhere */
-llist_add(...);
-wake_up_process()
+So, is it ok if we hear from others too on iomap_get_ifs() function
+name?
 
-So it is possible that the code can sleep indefinitely waiting for a
-wake-up that has already come, because the order of set_current_state
-and the test are in the wrong order.
-
-Unfortunately I don't see what would effect a coredump on a process that
-does not trigger the vhost_worker code.
-
-
-
-About the only thing I can image is if io_uring is involved.  Some of
-the PF_IO_WORKER code was changed, and the test
-"((t->flags & (PF_USER_WORKER | PF_IO_WORKER)) != PF_USER_WORKER)"
-was sprinkled around.
-
-That is the only code outside of vhost specific code that was changed.
-
-
-Is io_uring involved in the cases that hang?
-
-
-Eric
-
+-ritesh
