@@ -2,121 +2,98 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E1FB6C7EE25
-	for <linux-xfs@archiver.kernel.org>; Mon, 12 Jun 2023 05:58:20 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2B1D1C7EE2E
+	for <linux-xfs@archiver.kernel.org>; Mon, 12 Jun 2023 06:11:53 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232070AbjFLF6T (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 12 Jun 2023 01:58:19 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46786 "EHLO
+        id S231636AbjFLGLv (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 12 Jun 2023 02:11:51 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50920 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231485AbjFLF6Q (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 12 Jun 2023 01:58:16 -0400
-Received: from mail-pl1-x62d.google.com (mail-pl1-x62d.google.com [IPv6:2607:f8b0:4864:20::62d])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9D67BE6E
-        for <linux-xfs@vger.kernel.org>; Sun, 11 Jun 2023 22:58:15 -0700 (PDT)
-Received: by mail-pl1-x62d.google.com with SMTP id d9443c01a7336-1b3c0c47675so8763035ad.1
-        for <linux-xfs@vger.kernel.org>; Sun, 11 Jun 2023 22:58:15 -0700 (PDT)
+        with ESMTP id S229477AbjFLGLu (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 12 Jun 2023 02:11:50 -0400
+Received: from mail-ed1-x535.google.com (mail-ed1-x535.google.com [IPv6:2a00:1450:4864:20::535])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6CB40BE
+        for <linux-xfs@vger.kernel.org>; Sun, 11 Jun 2023 23:11:49 -0700 (PDT)
+Received: by mail-ed1-x535.google.com with SMTP id 4fb4d7f45d1cf-5151934a4e3so5868097a12.1
+        for <linux-xfs@vger.kernel.org>; Sun, 11 Jun 2023 23:11:49 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=fromorbit-com.20221208.gappssmtp.com; s=20221208; t=1686549495; x=1689141495;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
-        bh=YTZupZ5fuhwe5oWEGLyxLiTDe0qwZiw6zObdUvKMWxA=;
-        b=unTk3gf+RHm0marizDCUsFWxc7BV5ePJiIWZkm3+JXVdt9MIB1H1m3qgHBz68buLKD
-         vK2S7D3sz0maBl3WDwoC1AoUrwtPYxcbk5Pm30TCF4XQl0VUiV6C2KOSLVN7YlANDrwQ
-         AsdhA9A95bfPs5H10MeR2FQx1UxGt8ZcBCmmJ8pH+8psaYXA2nmN0f+rOnuxy901iadd
-         vvRjU0AZA1zCuRYMGHePL8V57/OpyjFSUGZi5ZMjMNy8pkJfubxnpN+g9v6+vcMrDFSr
-         vZK+Mh7gkBhMPKf6uN2jjORpnhCuf5dDA7BiMYSZ5S6WOKEd3HhsN97VQya9XkJ6V7cj
-         a0DQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20221208; t=1686549495; x=1689141495;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
+        d=linux-foundation.org; s=google; t=1686550307; x=1689142307;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:from:to:cc:subject:date
          :message-id:reply-to;
-        bh=YTZupZ5fuhwe5oWEGLyxLiTDe0qwZiw6zObdUvKMWxA=;
-        b=Px7h0hKX6X2BbYwfHYopPy19Bd1tiM7mqJzJDhB9Hjyj9FN5uqc49kmPCu6yvRCF5o
-         4PiYK10mAHabfqGAQwlNOPGbANnktYoM1YogPOpEiK0HZsaZ0N8MePHcspeR71obE7kB
-         ASPI8eqi6rQqPeIDeB9uth53YT/IVlDEVZGuOMSXFioY8tZMg81rNtec0j2vhfgx9u/v
-         4b3Pw5PywZwmqj11BV9VsSebLxwiJSK4MGMZNZ3OuyvFhaZkRq67Azt52MjgUUDTdXS2
-         ofcl0tt1eYtXcYraiysUiigVZtnHL+DqE8381yusS1RMENghdNo65frl9Hv5+Fa20T5s
-         FiQw==
-X-Gm-Message-State: AC+VfDyxFFKj8HM9kkx9N52kqCEvWZPC1E0IixconcfP/GeXfNH4flQv
-        Ih1vaZ9qJ/qWkAfBdOt4cZU0nA==
-X-Google-Smtp-Source: ACHHUZ6K5wqzkjb5ehUQp7Le/opC0wosRy+ULL4l1alQB16ZRvzjHidwNNsHwx9C9dKJgzQKK4kwWw==
-X-Received: by 2002:a17:902:c40a:b0:1a9:b8c3:c2c2 with SMTP id k10-20020a170902c40a00b001a9b8c3c2c2mr7074994plk.37.1686549495123;
-        Sun, 11 Jun 2023 22:58:15 -0700 (PDT)
-Received: from dread.disaster.area (pa49-179-79-151.pa.nsw.optusnet.com.au. [49.179.79.151])
-        by smtp.gmail.com with ESMTPSA id d13-20020a170902654d00b001b3c7e5ed8csm1598943pln.74.2023.06.11.22.58.14
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Sun, 11 Jun 2023 22:58:14 -0700 (PDT)
-Received: from dave by dread.disaster.area with local (Exim 4.96)
-        (envelope-from <david@fromorbit.com>)
-        id 1q8aZA-00Aldh-0o;
-        Mon, 12 Jun 2023 15:58:12 +1000
-Date:   Mon, 12 Jun 2023 15:58:12 +1000
-From:   Dave Chinner <david@fromorbit.com>
-To:     Christoph Hellwig <hch@lst.de>
-Cc:     djwong@kernel.org, linux-xfs@vger.kernel.org
-Subject: Re: [PATCH] xfs: set FMODE_CAN_ODIRECT instead of a dummy direct_IO
- method
-Message-ID: <ZIaz9Jhfn+dT+unD@dread.disaster.area>
-References: <20230612053446.585328-1-hch@lst.de>
+        bh=BipWuiASuB2niftXYaodHb7vCsVXt3eFLDs2b9I5S74=;
+        b=X8fJHCahRG+vHrfOzR5OlBSSAbC2reAF+V95M3oKLBwzJwHezO2lxxlo+kF5Z1sNeQ
+         sthOuJHsQATkSSz83e6aNybNt1HDmkZnuaq2Igb3xo41ZCHp6JYjPmGWZOcL5+hlZQW5
+         HVvuzfKZgTdqC5YUc6gpE9ufdWedBeNmdf7zc=
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20221208; t=1686550307; x=1689142307;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=BipWuiASuB2niftXYaodHb7vCsVXt3eFLDs2b9I5S74=;
+        b=Rpgm4uFGWDXAdUnK/6Jv2ARfWHxE4+JTECz16lkmnyc5fVT4S5KmdgnF43RWwoXA7c
+         H49tfCwRw4to6NwRy5SQZl0y6529aCg9OTF7O23TCaRg+OByazrpg0/QI9yHtVwJGRM/
+         mKscRb2+CQ4zS90TsKuvtJbYTHrZ/DU3dvMtm5iezXx82u2K5wW3qc7J8rtliaWmQd0x
+         jRTu0y+OxpdaEtP+NcHlSzv/kkUVqcJqRmUXsq+v4B0eyUtkTHQwtZGsapimizhF47D2
+         7c8ojDdDJys1HkrdiNWuG8ZOfZqelHwpdzMg3OEaHVgxZ6kiFCi7YgvBq19wspHHNA4v
+         d+EA==
+X-Gm-Message-State: AC+VfDzSE7QcZ/yZgMGbYjS7BBBt1i5Ble6KgeY3i2Hnqw22CaNQd9t1
+        qhaypMV9j2ybqevy1mSsawa5t2GLGWfvyV96uKAKFg==
+X-Google-Smtp-Source: ACHHUZ7zizl/kq88SOHinTSykjwi5xIPhNnokZlF4Y1+FXYGIXim5wK7e4CFZjhsmaSSFRp41GidXg==
+X-Received: by 2002:a17:906:db03:b0:974:1f0e:ec2d with SMTP id xj3-20020a170906db0300b009741f0eec2dmr8951833ejb.15.1686550307471;
+        Sun, 11 Jun 2023 23:11:47 -0700 (PDT)
+Received: from mail-ed1-f42.google.com (mail-ed1-f42.google.com. [209.85.208.42])
+        by smtp.gmail.com with ESMTPSA id bi9-20020a170906a24900b009745417ca38sm4699763ejb.21.2023.06.11.23.11.46
+        for <linux-xfs@vger.kernel.org>
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Sun, 11 Jun 2023 23:11:46 -0700 (PDT)
+Received: by mail-ed1-f42.google.com with SMTP id 4fb4d7f45d1cf-51480d3e161so5864385a12.3
+        for <linux-xfs@vger.kernel.org>; Sun, 11 Jun 2023 23:11:46 -0700 (PDT)
+X-Received: by 2002:aa7:cd95:0:b0:514:95d5:3994 with SMTP id
+ x21-20020aa7cd95000000b0051495d53994mr3761992edv.32.1686550305937; Sun, 11
+ Jun 2023 23:11:45 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20230612053446.585328-1-hch@lst.de>
+References: <20230611124836.whfktwaumnefm5z5@zlang-mailbox>
+ <ZIZSPyzReZkGBEFy@dread.disaster.area> <20230612015145.GA11441@frogsfrogsfrogs>
+ <ZIaBQnCKJ6NsqGhd@dread.disaster.area> <CAHk-=whJqZLKPR-cpX-V4wJTXVX-_tG5Vjuj2q9knvKGCPdfkg@mail.gmail.com>
+ <ZIaqMpGISWKgHLK6@dread.disaster.area> <CAHk-=wgwJptCbaHwt+TpGgh04fTVAHd60AY3Jj1rX+Spf0fVyg@mail.gmail.com>
+ <ZIax1FLfNajWk25A@dread.disaster.area>
+In-Reply-To: <ZIax1FLfNajWk25A@dread.disaster.area>
+From:   Linus Torvalds <torvalds@linux-foundation.org>
+Date:   Sun, 11 Jun 2023 23:11:28 -0700
+X-Gmail-Original-Message-ID: <CAHk-=wj0NuJaRNC4o6FVAJgKAFJ5HWcBV5VJw6RGV0ZahqOOZA@mail.gmail.com>
+Message-ID: <CAHk-=wj0NuJaRNC4o6FVAJgKAFJ5HWcBV5VJw6RGV0ZahqOOZA@mail.gmail.com>
+Subject: Re: [6.5-rc5 regression] core dump hangs (was Re: [Bug report]
+ fstests generic/051 (on xfs) hang on latest linux v6.5-rc5+)
+To:     Dave Chinner <david@fromorbit.com>
+Cc:     "Darrick J. Wong" <djwong@kernel.org>,
+        Zorro Lang <zlang@redhat.com>, linux-xfs@vger.kernel.org,
+        "Eric W. Biederman" <ebiederm@xmission.com>,
+        Mike Christie <michael.christie@oracle.com>,
+        "Michael S. Tsirkin" <mst@redhat.com>, linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Mon, Jun 12, 2023 at 07:34:46AM +0200, Christoph Hellwig wrote:
-> Since commit a2ad63daa88b ("VFS: add FMODE_CAN_ODIRECT file flag") file
-> systems can just set the FMODE_CAN_ODIRECT flag at open time instead of
-> wiring up a dummy direct_IO method to indicate support for direct I/O.
-> Do that for xfs so that noop_direct_IO can eventually be removed.
-> 
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
-> ---
->  fs/xfs/xfs_aops.c | 2 --
->  fs/xfs/xfs_file.c | 2 +-
->  2 files changed, 1 insertion(+), 3 deletions(-)
-> 
-> diff --git a/fs/xfs/xfs_aops.c b/fs/xfs/xfs_aops.c
-> index 2ef78aa1d3f608..451942fb38ec21 100644
-> --- a/fs/xfs/xfs_aops.c
-> +++ b/fs/xfs/xfs_aops.c
-> @@ -582,7 +582,6 @@ const struct address_space_operations xfs_address_space_operations = {
->  	.release_folio		= iomap_release_folio,
->  	.invalidate_folio	= iomap_invalidate_folio,
->  	.bmap			= xfs_vm_bmap,
-> -	.direct_IO		= noop_direct_IO,
->  	.migrate_folio		= filemap_migrate_folio,
->  	.is_partially_uptodate  = iomap_is_partially_uptodate,
->  	.error_remove_page	= generic_error_remove_page,
-> @@ -591,7 +590,6 @@ const struct address_space_operations xfs_address_space_operations = {
->  
->  const struct address_space_operations xfs_dax_aops = {
->  	.writepages		= xfs_dax_writepages,
-> -	.direct_IO		= noop_direct_IO,
->  	.dirty_folio		= noop_dirty_folio,
->  	.swap_activate		= xfs_iomap_swapfile_activate,
->  };
-> diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
-> index aede746541f8ae..605587fefbd3c5 100644
-> --- a/fs/xfs/xfs_file.c
-> +++ b/fs/xfs/xfs_file.c
-> @@ -1172,7 +1172,7 @@ xfs_file_open(
->  	if (xfs_is_shutdown(XFS_M(inode->i_sb)))
->  		return -EIO;
->  	file->f_mode |= FMODE_NOWAIT | FMODE_BUF_RASYNC | FMODE_BUF_WASYNC |
-> -			FMODE_DIO_PARALLEL_WRITE;
-> +			FMODE_DIO_PARALLEL_WRITE | FMODE_CAN_ODIRECT;
->  	return generic_file_open(inode, file);
->  }
+On Sun, Jun 11, 2023 at 10:49=E2=80=AFPM Dave Chinner <david@fromorbit.com>=
+ wrote:
+>
+> On Sun, Jun 11, 2023 at 10:34:29PM -0700, Linus Torvalds wrote:
+> >
+> > So that "!=3D" should obviously have been a "=3D=3D".
+>
+> Same as without the condition - all the fsstress tasks hang in
+> do_coredump().
 
-Looks OK.
+Ok, that at least makes sense. Your "it made things worse" made me go
+"What?" until I noticed the stupid backwards test.
 
-Reviewed-by: Dave Chinner <dchinner@redhat.com>
+I'm not seeing anything else that looks odd in that commit
+f9010dbdce91 ("fork, vhost: Use CLONE_THREAD to fix freezer/ps
+regression").
 
--- 
-Dave Chinner
-david@fromorbit.com
+Let's see if somebody else goes "Ahh" when they wake up tomorrow...
+
+              Linus
