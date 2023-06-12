@@ -2,244 +2,90 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 10636C7EE2E
-	for <linux-xfs@archiver.kernel.org>; Mon, 12 Jun 2023 05:16:43 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E3CFEC7EE37
+	for <linux-xfs@archiver.kernel.org>; Mon, 12 Jun 2023 05:35:13 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233821AbjFLFQl (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 12 Jun 2023 01:16:41 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33982 "EHLO
+        id S232270AbjFLFfM (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 12 Jun 2023 01:35:12 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38596 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229455AbjFLFQk (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 12 Jun 2023 01:16:40 -0400
-Received: from mail-pf1-x435.google.com (mail-pf1-x435.google.com [IPv6:2607:f8b0:4864:20::435])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 76EEEFB
-        for <linux-xfs@vger.kernel.org>; Sun, 11 Jun 2023 22:16:39 -0700 (PDT)
-Received: by mail-pf1-x435.google.com with SMTP id d2e1a72fcca58-65292f79456so2967341b3a.2
-        for <linux-xfs@vger.kernel.org>; Sun, 11 Jun 2023 22:16:39 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=fromorbit-com.20221208.gappssmtp.com; s=20221208; t=1686546999; x=1689138999;
-        h=in-reply-to:content-transfer-encoding:content-disposition
-         :mime-version:references:message-id:subject:cc:to:from:date:from:to
-         :cc:subject:date:message-id:reply-to;
-        bh=4+PE8Ae399X3HYXbtTvK/AUs8qH8Yfu5G/e5XpXLgGk=;
-        b=GBHx3EF9UEksNtV/kFP/1k9oy+sTjGtgHcNUkGpAHHFVPpBP5CIlhx5Vc07QKt8u0C
-         ztzvimJ4ucVBLDdl/1AcgLi5i7u68mlS7m/pU1G//CIGRxe3ODQ6mNNEO3ZUCxbadet4
-         0MPIx18WrqB89UBV8iDddBnK7/LB5Uy0rzXZ+ObKWPijuPASS+7+/MdlFjDLDXYX9mGw
-         PDuxUv850r7c5PCf8b82ClM9HKKKIG20jfI5W6CfZNcRo+yWuDjeLvAPk3JQF6fKXYKB
-         ao6GxUa8xYymk0oO0H2M6htQKw2e+Q+VynEb9ik5Bu6V9f76raRsTU7g5nTYWKCsieRi
-         yMjQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20221208; t=1686546999; x=1689138999;
-        h=in-reply-to:content-transfer-encoding:content-disposition
-         :mime-version:references:message-id:subject:cc:to:from:date
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=4+PE8Ae399X3HYXbtTvK/AUs8qH8Yfu5G/e5XpXLgGk=;
-        b=dcEWj35SWb5SGIC3RxR0feqsCdmH2uVgBrykjY+oZ7lCgM1iIEGpquN7Q0cSNi5ddJ
-         iNtpwY365bNQl0GwBxCBF+khmIexhZCJgvhjdyY5t7wH5nsIX43/yrSxNw1eujtMhLws
-         5aHHNC0gZVkWANLIT7JAoxwyeXBaJmO5xqByTue7tqLPBVI7rElfjMB7+y1XjPNVMV20
-         sbIsnpg3GqlSrwmJRrwD/4iyVGpm6gGDk8vfJ5KldsqyF4DTqL5qYHqJLp1FyIxZIOdR
-         d5i2Fc8SMTgyReCsm22DPK07A5OLz8P4JHrpHCpUBDP0/fvZvyHTQCrcYnO/2NsOHBy3
-         lUCQ==
-X-Gm-Message-State: AC+VfDw2uCC5Y1fg9fKYC/xgX21wdPC9qlRhwc3Z+YyfR5MRxvGZFVgK
-        Vhllwg5Hcgv0aS/WP3xkPwMnXw==
-X-Google-Smtp-Source: ACHHUZ63PvqLQJcBz2BrqB4Epylw6lIn2gm/lww8XNZKWdne28k4pzK5cKdUAezhWHDuMs3zqni6Sg==
-X-Received: by 2002:a05:6a21:3414:b0:10b:97c8:2e15 with SMTP id yn20-20020a056a21341400b0010b97c82e15mr7816191pzb.45.1686546998871;
-        Sun, 11 Jun 2023 22:16:38 -0700 (PDT)
-Received: from dread.disaster.area (pa49-179-79-151.pa.nsw.optusnet.com.au. [49.179.79.151])
-        by smtp.gmail.com with ESMTPSA id jo5-20020a170903054500b001addf547a6esm7203419plb.17.2023.06.11.22.16.38
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Sun, 11 Jun 2023 22:16:38 -0700 (PDT)
-Received: from dave by dread.disaster.area with local (Exim 4.96)
-        (envelope-from <david@fromorbit.com>)
-        id 1q8Zus-00AkpZ-1v;
-        Mon, 12 Jun 2023 15:16:34 +1000
-Date:   Mon, 12 Jun 2023 15:16:34 +1000
-From:   Dave Chinner <david@fromorbit.com>
-To:     Linus Torvalds <torvalds@linux-foundation.org>
-Cc:     "Darrick J. Wong" <djwong@kernel.org>,
-        Zorro Lang <zlang@redhat.com>, linux-xfs@vger.kernel.org,
-        "Eric W. Biederman" <ebiederm@xmission.com>,
-        Mike Christie <michael.christie@oracle.com>,
-        "Michael S. Tsirkin" <mst@redhat.com>, linux-kernel@vger.kernel.org
-Subject: Re: [6.5-rc5 regression] core dump hangs (was Re: [Bug report]
- fstests generic/051 (on xfs) hang on latest linux v6.5-rc5+)
-Message-ID: <ZIaqMpGISWKgHLK6@dread.disaster.area>
-References: <20230611124836.whfktwaumnefm5z5@zlang-mailbox>
- <ZIZSPyzReZkGBEFy@dread.disaster.area>
- <20230612015145.GA11441@frogsfrogsfrogs>
- <ZIaBQnCKJ6NsqGhd@dread.disaster.area>
- <CAHk-=whJqZLKPR-cpX-V4wJTXVX-_tG5Vjuj2q9knvKGCPdfkg@mail.gmail.com>
+        with ESMTP id S234508AbjFLFew (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 12 Jun 2023 01:34:52 -0400
+Received: from bombadil.infradead.org (bombadil.infradead.org [IPv6:2607:7c80:54:3::133])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B11DA129
+        for <linux-xfs@vger.kernel.org>; Sun, 11 Jun 2023 22:34:50 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=infradead.org; s=bombadil.20210309; h=Content-Transfer-Encoding:
+        MIME-Version:Message-Id:Date:Subject:Cc:To:From:Sender:Reply-To:Content-Type:
+        Content-ID:Content-Description:In-Reply-To:References;
+        bh=sly3dfLyf49sJ7FPZL2AfEw01N76v2paWtUjCRTSk6s=; b=XASb8Fuv67QBD1JVDBDifpJeDb
+        u5aM4SP1uf1bHtss2aY8xQmolYXk++UsqEa55P+bqfa9Jp3vhn7bGIn4EYS6rKPDxUQjT+nBHidsy
+        I/H9GtieCeRwzre4I5Oad3UUA00y6gLHkePfi8DU0CFtCl3p9VxtH5WnQtGSWLQR8Lq7OWXIg9TZ2
+        9XqYRmEAfjueY2olGOi9NNq6/FUfQYeWAlmq83YStN6qhFow2AfzAoDHtfiBlXq5diZQYf4fxyLDq
+        R549gj5SZ9V8nhBve8SQHcv77QDi50LPppNtMDY0de2u9H+EY3DVqPE+y9HjQ/h6yD/D//OoALUCe
+        UhqfT8SA==;
+Received: from 2a02-8389-2341-5b80-8c8c-28f8-1274-e038.cable.dynamic.v6.surfer.at ([2a02:8389:2341:5b80:8c8c:28f8:1274:e038] helo=localhost)
+        by bombadil.infradead.org with esmtpsa (Exim 4.96 #2 (Red Hat Linux))
+        id 1q8aCY-002ezI-0U;
+        Mon, 12 Jun 2023 05:34:50 +0000
+From:   Christoph Hellwig <hch@lst.de>
+To:     djwong@kernel.org
+Cc:     linux-xfs@vger.kernel.org
+Subject: [PATCH] xfs: set FMODE_CAN_ODIRECT instead of a dummy direct_IO method
+Date:   Mon, 12 Jun 2023 07:34:46 +0200
+Message-Id: <20230612053446.585328-1-hch@lst.de>
+X-Mailer: git-send-email 2.39.2
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
 Content-Transfer-Encoding: 8bit
-In-Reply-To: <CAHk-=whJqZLKPR-cpX-V4wJTXVX-_tG5Vjuj2q9knvKGCPdfkg@mail.gmail.com>
+X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Sun, Jun 11, 2023 at 08:14:25PM -0700, Linus Torvalds wrote:
-> On Sun, Jun 11, 2023 at 7:22 PM Dave Chinner <david@fromorbit.com> wrote:
-> >
-> > I guess the regression fix needs a regression fix....
-> 
-> Yup.
-> 
-> From the description of the problem, it sounds like this happens on
-> real hardware, no vhost anywhere?
->
-> Or maybe Darrick (who doesn't see the issue) is running on raw
-> hardware, and you and Zorro are running in a virtual environment?
+Since commit a2ad63daa88b ("VFS: add FMODE_CAN_ODIRECT file flag") file
+systems can just set the FMODE_CAN_ODIRECT flag at open time instead of
+wiring up a dummy direct_IO method to indicate support for direct I/O.
+Do that for xfs so that noop_direct_IO can eventually be removed.
 
-I'm testing inside VMs and seeing it, I can't speak for anyone else.
+Signed-off-by: Christoph Hellwig <hch@lst.de>
+---
+ fs/xfs/xfs_aops.c | 2 --
+ fs/xfs/xfs_file.c | 2 +-
+ 2 files changed, 1 insertion(+), 3 deletions(-)
 
-....
-
-> So *maybe* this attached patch might fix it? I haven't thought very
-> deeply about this, but vhost workers most definitely shouldn't call
-> do_coredump(), since they are then not counted.
-> 
-> (And again, I think we should just check that PF_IO_WORKER bit, not
-> use this more complex test, but that's a separate and bigger change).
-> 
->               Linus
-
->  kernel/signal.c | 4 ++++
->  1 file changed, 4 insertions(+)
-> 
-> diff --git a/kernel/signal.c b/kernel/signal.c
-> index 2547fa73bde5..a1e11ee8537c 100644
-> --- a/kernel/signal.c
-> +++ b/kernel/signal.c
-> @@ -2847,6 +2847,10 @@ bool get_signal(struct ksignal *ksig)
->  		 */
->  		current->flags |= PF_SIGNALED;
->  
-> +		/* vhost workers don't participate in core dups */
-> +		if ((current->flags & (PF_IO_WORKER | PF_USER_WORKER)) != PF_USER_WORKER)
-> +			goto out;
-> +
->  		if (sig_kernel_coredump(signr)) {
->  			if (print_fatal_signals)
->  				print_fatal_signal(ksig->info.si_signo);
-
-
-That would appear to make things worse. mkfs.xfs hung in Z state on
-exit and never returned to the shell. Also, multiple processes are
-livelocked like this:
-
- Sending NMI from CPU 0 to CPUs 1-3:
- NMI backtrace for cpu 2
- CPU: 2 PID: 3409 Comm: pmlogger_farm Not tainted 6.4.0-rc5-dgc+ #1822
- Hardware name: QEMU Standard PC (i440FX + PIIX, 1996), BIOS 1.16.2-debian-1.16.2-1 04/01/2014
- RIP: 0010:uprobe_deny_signal+0x5/0x90
- Code: 48 c7 c1 c4 64 62 82 48 c7 c7 d1 64 62 82 e8 b2 39 ec ff e9 70 ff ff ff 66 66 2e 0f 1f 84 00 00 00 00 00 66 90 0f 1f 44 00 00 <55> 31 4
- RSP: 0018:ffffc900023abdf0 EFLAGS: 00000202
- RAX: 0000000000000004 RBX: ffff888103b127c0 RCX: 0000000000000000
- RDX: 0000000000000000 RSI: 0000000000000296 RDI: ffffc900023abe70
- RBP: ffffc900023abe60 R08: 0000000000000001 R09: 0000000000000001
- R10: 0000000000000000 R11: ffff88813bd2ccf0 R12: ffff888103b127c0
- R13: ffffc900023abe70 R14: ffff888110413700 R15: ffff888103d26e80
- FS:  00007f35497a4740(0000) GS:ffff88813bd00000(0000) knlGS:0000000000000000
- CS:  0010 DS: 002b ES: 002b CR0: 0000000080050033
- CR2: 00007ffd4ca0ce80 CR3: 000000010f7d1000 CR4: 00000000000006e0
- Call Trace:
-  <NMI>
-  ? show_regs+0x61/0x70
-  ? nmi_cpu_backtrace+0x88/0xf0
-  ? nmi_cpu_backtrace_handler+0x11/0x20
-  ? nmi_handle+0x57/0x150
-  ? default_do_nmi+0x49/0x240
-  ? exc_nmi+0xf4/0x110
-  ? end_repeat_nmi+0x16/0x31
-  ? uprobe_deny_signal+0x5/0x90
-  ? uprobe_deny_signal+0x5/0x90
-  ? uprobe_deny_signal+0x5/0x90
-  </NMI>
-  <TASK>
-  ? get_signal+0x94/0x9b0
-  ? signal_setup_done+0x66/0x190
-  arch_do_signal_or_restart+0x2f/0x260
-  exit_to_user_mode_prepare+0x181/0x1c0
-  syscall_exit_to_user_mode+0x16/0x40
-  do_syscall_64+0x40/0x80
-  entry_SYSCALL_64_after_hwframe+0x63/0xcd
- RIP: 0023:0xffff888103b127c0
- Code: Unable to access opcode bytes at 0xffff888103b12796.
- RSP: 002b:00007ffd4ca0d0ac EFLAGS: 00000202 ORIG_RAX: 000000000000003d
- RAX: 0000000000000009 RBX: 0000000000000000 RCX: 0000000000000000
- RDX: 0000000000000000 RSI: 00007ffd4d20bb9c RDI: 00000000ffffffff
- RBP: 00007ffd4d20bb9c R08: 0000000000000002 R09: 0000000000000000
- R10: 0000000000000000 R11: 0000000000000202 R12: 0000000000000000
- R13: 00007ffd4d20bba0 R14: 00005604571fc380 R15: 0000000000000001
-  </TASK>
- NMI backtrace for cpu 3
- CPU: 3 PID: 3526 Comm: pmlogger_check Not tainted 6.4.0-rc5-dgc+ #1822
- Hardware name: QEMU Standard PC (i440FX + PIIX, 1996), BIOS 1.16.2-debian-1.16.2-1 04/01/2014
- RIP: 0010:fixup_exception+0x72/0x260
- Code: 14 0f 87 03 02 00 00 ff 24 d5 98 67 22 82 31 c0 5b 41 5c 41 5d 41 5e 41 5f 5d c3 41 81 cd 00 00 00 40 4d 63 ed 4d 89 6c 24 50 <31> c0 9
- RSP: 0018:ffffc9000275bb58 EFLAGS: 00000083
- RAX: 000000000000000f RBX: ffffffff827d0a4c RCX: ffffffff810c5f95
- RDX: 000000000000000f RSI: ffffffff827d0a4c RDI: ffffc9000275bb28
- RBP: ffffc9000275bb80 R08: 0000000000000000 R09: 0000000000000000
- R10: 0000000000000000 R11: 0000000000000000 R12: ffffc9000275bc78
- R13: 000000000000000e R14: 000000008f5ded3f R15: 0000000000000000
- FS:  00007f56a36de740(0000) GS:ffff88813bd80000(0000) knlGS:0000000000000000
- CS:  0010 DS: 002b ES: 002b CR0: 0000000080050033
- CR2: 000000008f5ded3f CR3: 000000010dcde000 CR4: 00000000000006e0
- Call Trace:
-  <NMI>
-  ? show_regs+0x61/0x70
-  ? nmi_cpu_backtrace+0x88/0xf0
-  ? nmi_cpu_backtrace_handler+0x11/0x20
-  ? nmi_handle+0x57/0x150
-  ? default_do_nmi+0x49/0x240
-  ? exc_nmi+0xf4/0x110
-  ? end_repeat_nmi+0x16/0x31
-  ? copy_fpstate_to_sigframe+0x1c5/0x3a0
-  ? fixup_exception+0x72/0x260
-  ? fixup_exception+0x72/0x260
-  ? fixup_exception+0x72/0x260
-  </NMI>
-  <TASK>
-  kernelmode_fixup_or_oops+0x49/0x120
-  __bad_area_nosemaphore+0x15a/0x230
-  ? __bad_area+0x57/0x80
-  bad_area_nosemaphore+0x16/0x20
-  exc_page_fault+0x323/0x880
-  asm_exc_page_fault+0x27/0x30
- RIP: 0010:copy_fpstate_to_sigframe+0x1c5/0x3a0
- Code: 45 89 bc 24 40 25 00 00 f0 41 80 64 24 01 bf e9 f5 fe ff ff be 3c 00 00 00 48 c7 c7 77 9c 5f 82 e8 00 2a 23 00 31 c0 0f 1f 00 <49> 0f 1
- RSP: 0018:ffffc9000275bd28 EFLAGS: 00010246
- RAX: 000000000000000e RBX: 000000008f5de7ec RCX: ffffc9000275bda8
- RDX: 000000008f5ded40 RSI: 000000000000003c RDI: ffffffff825f9c77
- RBP: ffffc9000275bd98 R08: ffffc9000275be30 R09: 0000000000000001
- R10: 0000000000000000 R11: ffffc90000138ff8 R12: ffff8881106527c0
- R13: 000000008f5deb40 R14: ffff888110654d40 R15: ffff88810a653f40
-  ? copy_fpstate_to_sigframe+0x1c0/0x3a0
-  ? __might_sleep+0x42/0x70
-  get_sigframe+0xcd/0x2b0
-  ia32_setup_frame+0x61/0x230
-  arch_do_signal_or_restart+0x1d1/0x260
-  exit_to_user_mode_prepare+0x181/0x1c0
-  irqentry_exit_to_user_mode+0x9/0x30
-  irqentry_exit+0x33/0x40
-  exc_page_fault+0x1b6/0x880
-  asm_exc_page_fault+0x27/0x30
- RIP: 0023:0x106527c0
- Code: Unable to access opcode bytes at 0x10652796.
- RSP: 002b:000000008f5ded6c EFLAGS: 00010202
- RAX: 000000000000000b RBX: 0000000000000000 RCX: 0000000000000000
- RDX: 0000000000000000 RSI: 00007ffd8f5df2ec RDI: 00000000ffffffff
- RBP: 00007ffd8f5df2ec R08: 0000000000000000 R09: 00005558962eb526
- R10: 0000000000000000 R11: 0000000000000202 R12: 0000000000000000
- R13: 00007ffd8f5df2f0 R14: 00005558962b5e60 R15: 0000000000000001
-  </TASK>
-
-
-Cheers,
-
-Dave.
+diff --git a/fs/xfs/xfs_aops.c b/fs/xfs/xfs_aops.c
+index 2ef78aa1d3f608..451942fb38ec21 100644
+--- a/fs/xfs/xfs_aops.c
++++ b/fs/xfs/xfs_aops.c
+@@ -582,7 +582,6 @@ const struct address_space_operations xfs_address_space_operations = {
+ 	.release_folio		= iomap_release_folio,
+ 	.invalidate_folio	= iomap_invalidate_folio,
+ 	.bmap			= xfs_vm_bmap,
+-	.direct_IO		= noop_direct_IO,
+ 	.migrate_folio		= filemap_migrate_folio,
+ 	.is_partially_uptodate  = iomap_is_partially_uptodate,
+ 	.error_remove_page	= generic_error_remove_page,
+@@ -591,7 +590,6 @@ const struct address_space_operations xfs_address_space_operations = {
+ 
+ const struct address_space_operations xfs_dax_aops = {
+ 	.writepages		= xfs_dax_writepages,
+-	.direct_IO		= noop_direct_IO,
+ 	.dirty_folio		= noop_dirty_folio,
+ 	.swap_activate		= xfs_iomap_swapfile_activate,
+ };
+diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
+index aede746541f8ae..605587fefbd3c5 100644
+--- a/fs/xfs/xfs_file.c
++++ b/fs/xfs/xfs_file.c
+@@ -1172,7 +1172,7 @@ xfs_file_open(
+ 	if (xfs_is_shutdown(XFS_M(inode->i_sb)))
+ 		return -EIO;
+ 	file->f_mode |= FMODE_NOWAIT | FMODE_BUF_RASYNC | FMODE_BUF_WASYNC |
+-			FMODE_DIO_PARALLEL_WRITE;
++			FMODE_DIO_PARALLEL_WRITE | FMODE_CAN_ODIRECT;
+ 	return generic_file_open(inode, file);
+ }
+ 
 -- 
-Dave Chinner
-david@fromorbit.com
+2.39.2
+
