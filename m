@@ -2,163 +2,148 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D5FE4C88CB4
-	for <linux-xfs@archiver.kernel.org>; Mon, 12 Jun 2023 18:37:01 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7150DC88CB2
+	for <linux-xfs@archiver.kernel.org>; Mon, 12 Jun 2023 18:47:53 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230335AbjFLShA (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 12 Jun 2023 14:37:00 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56436 "EHLO
+        id S235972AbjFLSrw (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 12 Jun 2023 14:47:52 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60948 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231132AbjFLShA (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 12 Jun 2023 14:37:00 -0400
+        with ESMTP id S233399AbjFLSrv (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 12 Jun 2023 14:47:51 -0400
 Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 11504102;
-        Mon, 12 Jun 2023 11:36:59 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E05C3184;
+        Mon, 12 Jun 2023 11:47:50 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id AB4CE62D25;
-        Mon, 12 Jun 2023 18:36:58 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 0BF05C433EF;
-        Mon, 12 Jun 2023 18:36:58 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 7CB39621E5;
+        Mon, 12 Jun 2023 18:47:50 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id CC0ECC4339B;
+        Mon, 12 Jun 2023 18:47:49 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1686595018;
-        bh=ipow/V0PjhrSSq2tJdI44+0zoGqli10Qq6k5fAD2mXg=;
+        s=k20201202; t=1686595669;
+        bh=z4Jlgn6lx/ba8O675cSjkKpBGRWNnb1/lHHVzYwJ9R0=;
         h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=jjvCfg+nFEYKJTSxyu2Q5FZfYz/YKd1ec3p3FhpjnteoSa3bhyuRa/5BQIBPv2bjM
-         d4X4MgAPthzIM8NVVZ0OuZkiw/cTJajkO85oSmpPoo7ZRZFG1xozI8WhkwNNEa5mML
-         tt9mH2meYSQiw0IcS9WyLI93AxTIHoBv3ieyXtAbD2q1coIhXsZrpIwF9kimenVexE
-         1+94himrPE6d2zTFjUqpFr0N5ExhQ7+oU41le1UygAAv19m8GQ44PHq52RMlWRBFE+
-         IYG6Z1wRDoyCPzZAYLf2AJ+DuG996CoIUbyZuuC3uYThQf/1Q4zGB2hgOLYaCUDgaY
-         HxITmB+yKVAbA==
-Date:   Mon, 12 Jun 2023 11:36:57 -0700
+        b=KkyAYPrxehJxT4qVkgvI+QWJqaoe4ob4EaRk4S8oWGWT8KoWnmmkIaFcws3bYaZ6l
+         mwSDh9Vr1A4Ni6QJ1PQMiIlkYJTCln06tEKaJtq9Uq9Vd+0VPlgCA9kHwmzPNE9Mjw
+         arKj3lNOVcKnw44rI0fHvnfdTVuPFKyi5zYiBRVle9GnpCzHcgVDbRw3ZSYIuYNOW6
+         qPaOHol5Jh0FesrtdomGdwMCXf9WHox318tPuZWbQmjkQKsGHQ5NbrnBBqJ+hB1kpd
+         iha/l1Fb01pNV+/Lv3BCn2zNDtPNPfRbOyS0ySpz2zvxqMCGwN+XNVR45rA6KGHGMu
+         R3LN+vNw88Kyw==
+Date:   Mon, 12 Jun 2023 11:47:49 -0700
 From:   "Darrick J. Wong" <djwong@kernel.org>
-To:     Jan Kara <jack@suse.cz>
+To:     Christoph Hellwig <hch@infradead.org>
 Cc:     linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
-        mcgrof@kernel.org, hch@infradead.org, ruansy.fnst@fujitsu.com
+        mcgrof@kernel.org, jack@suse.cz, ruansy.fnst@fujitsu.com
 Subject: Re: [PATCH 2/3] fs: wait for partially frozen filesystems
-Message-ID: <20230612183657.GI11441@frogsfrogsfrogs>
+Message-ID: <20230612184749.GJ11441@frogsfrogsfrogs>
 References: <168653971691.755178.4003354804404850534.stgit@frogsfrogsfrogs>
  <168653972832.755178.18389114450766371923.stgit@frogsfrogsfrogs>
- <20230612113526.xfhpaohiqusq5ixt@quack3>
+ <ZIaYrA3Jz5Q75X1P@infradead.org>
+ <20230612183302.GH11441@frogsfrogsfrogs>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20230612113526.xfhpaohiqusq5ixt@quack3>
+In-Reply-To: <20230612183302.GH11441@frogsfrogsfrogs>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Mon, Jun 12, 2023 at 01:35:26PM +0200, Jan Kara wrote:
-> On Sun 11-06-23 20:15:28, Darrick J. Wong wrote:
-> > From: Darrick J. Wong <djwong@kernel.org>
+On Mon, Jun 12, 2023 at 11:33:02AM -0700, Darrick J. Wong wrote:
+> On Sun, Jun 11, 2023 at 09:01:48PM -0700, Christoph Hellwig wrote:
+> > On Sun, Jun 11, 2023 at 08:15:28PM -0700, Darrick J. Wong wrote:
+> > > From: Darrick J. Wong <djwong@kernel.org>
+> > > 
+> > > Jan Kara suggested that when one thread is in the middle of freezing a
+> > > filesystem, another thread trying to freeze the same fs but with a
+> > > different freeze_holder should wait until the freezer reaches either end
+> > > state (UNFROZEN or COMPLETE) instead of returning EBUSY immediately.
+> > > 
+> > > Plumb in the extra coded needed to wait for the fs freezer to reach an
+> > > end state and try the freeze again.
+> > > 
+> > > Signed-off-by: Darrick J. Wong <djwong@kernel.org>
+> > > ---
+> > >  fs/super.c |   27 +++++++++++++++++++++++++--
+> > >  1 file changed, 25 insertions(+), 2 deletions(-)
+> > > 
+> > > 
+> > > diff --git a/fs/super.c b/fs/super.c
+> > > index 36adccecc828..151e0eeff2c2 100644
+> > > --- a/fs/super.c
+> > > +++ b/fs/super.c
+> > > @@ -1647,6 +1647,15 @@ static int freeze_frozen_super(struct super_block *sb, enum freeze_holder who)
+> > >  	return 0;
+> > >  }
+> > >  
+> > > +static void wait_for_partially_frozen(struct super_block *sb)
+> > > +{
+> > > +	up_write(&sb->s_umount);
+> > > +	wait_var_event(&sb->s_writers.frozen,
+> > > +			sb->s_writers.frozen == SB_UNFROZEN ||
+> > > +			sb->s_writers.frozen == SB_FREEZE_COMPLETE);
+> > > +	down_write(&sb->s_umount);
 > > 
-> > Jan Kara suggested that when one thread is in the middle of freezing a
-> > filesystem, another thread trying to freeze the same fs but with a
-> > different freeze_holder should wait until the freezer reaches either end
-> > state (UNFROZEN or COMPLETE) instead of returning EBUSY immediately.
-> > 
-> > Plumb in the extra coded needed to wait for the fs freezer to reach an
-> > end state and try the freeze again.
-> > 
-> > Signed-off-by: Darrick J. Wong <djwong@kernel.org>
+> > Does sb->s_writers.frozen need WRITE_ONCE/READ_ONCE treatment if we want
+> > to check it outside of s_umount?  Or should we maybe just open code
+> > wait_var_event and only drop the lock after checking the variable?
 > 
-> You can maybe copy my reasoning from my reply to your patch 1/3 to the
-> changelog to explain why waiting is more desirable.
-
-Done.
-
-"Neither caller can do anything sensible with this race other than retry
-but they cannot really distinguish EBUSY as in "someone other holder of
-the same type has the sb already frozen" from "freezing raced with
-holder of a different type"
-
-is now added to the commit message.
-
-> > @@ -1690,11 +1699,13 @@ static int freeze_frozen_super(struct super_block *sb, enum freeze_holder who)
-> >   */
-> >  int freeze_super(struct super_block *sb, enum freeze_holder who)
-> >  {
-> > +	bool try_again = true;
-> >  	int ret;
-> >  
-> >  	atomic_inc(&sb->s_active);
-> >  	down_write(&sb->s_umount);
-> >  
-> > +retry:
-> >  	if (sb->s_writers.frozen == SB_FREEZE_COMPLETE) {
-> >  		ret = freeze_frozen_super(sb, who);
-> >  		deactivate_locked_super(sb);
-> > @@ -1702,8 +1713,14 @@ int freeze_super(struct super_block *sb, enum freeze_holder who)
-> >  	}
-> >  
-> >  	if (sb->s_writers.frozen != SB_UNFROZEN) {
-> > -		deactivate_locked_super(sb);
-> > -		return -EBUSY;
-> > +		if (!try_again) {
-> > +			deactivate_locked_super(sb);
-> > +			return -EBUSY;
-> > +		}
+> How about something like:
 > 
-> Why only one retry? Do you envision someone will be freezing & thawing
-> filesystem so intensively that livelocks are possible?
-
-I was worried about that, but the more I think about it, the more I can
-convince myself that we can take the simpler approach of cycling
-s_umount until we get the state we want.
-
-> In that case I'd
-> think the system has other problems than freeze taking long... Honestly,
-> I'd be looping as long as we either succeed or return error for other
-> reasons.
-
-Ok.
-
-> What we could be doing to limit unnecessary waiting is that we'd update
-> freeze_holders already when we enter freeze_super() and lock s_umount
-> (bailing if our holder type is already set). That way we'd have at most one
-> process for each holder type freezing the fs / waiting for freezing to
-> complete.
-
-<shrug> I don't know how often we even really have threads contending
-for s_umount and elevated freeze state.  How about we go with the
-simpler wait_for_partially_frozen and see if complaints crop up?
-
-> > +
-> > +		wait_for_partially_frozen(sb);
-> > +		try_again = false;
-> > +		goto retry;
-> >  	}
-> >  
-> ...
-> > @@ -1810,6 +1831,7 @@ static int thaw_super_locked(struct super_block *sb, enum freeze_holder who)
-> >  	if (sb_rdonly(sb)) {
-> >  		sb->s_writers.freeze_holders &= ~who;
-> >  		sb->s_writers.frozen = SB_UNFROZEN;
-> > +		wake_up_var(&sb->s_writers.frozen);
-> >  		goto out;
-> >  	}
-> >  
-> > @@ -1828,6 +1850,7 @@ static int thaw_super_locked(struct super_block *sb, enum freeze_holder who)
-> >  
-> >  	sb->s_writers.freeze_holders &= ~who;
-> >  	sb->s_writers.frozen = SB_UNFROZEN;
-> > +	wake_up_var(&sb->s_writers.frozen);
-> >  	sb_freeze_unlock(sb, SB_FREEZE_FS);
-> >  out:
-> >  	wake_up(&sb->s_writers.wait_unfrozen);
+> 	do {
+> 		up_write(&sb->s_umount);
+> 		down_write(&sb->s_umount);
+> 	} while (sb->s_writers.frozen != SB_UNFROZEN &&
+> 		 sb->s_writers.frozen != SB_FREEZE_COMPLETE);
 > 
-> I don't think wakeups on thaw are really needed because the waiter should
-> be woken already once the freezing task exits from freeze_super(). I guess
-> you've sprinkled them here just for good measure?
+> so that we always return in either end state of a freezer transition?
 
-I've changed wait_for_partially_frozen to cycle s_umount until we find
-the locked state we want, so the wake_up_var calls aren't needed
-anymore.
+Of course as soon as I hit send I realize that no, we don't want to be
+cycling s_umount repeatedly even sb->s_writers.frozen hasn't changed.
+And maybe we want the wait to be killable too?
+
+static int wait_for_partially_frozen(struct super_block *sb)
+{
+	int ret = 0;
+
+	do {
+		unsigned short old = sb->s_writers.frozen;
+
+		up_write(&sb->s_umount);
+		ret = wait_var_event_killable(&sb->s_writers.frozen,
+					       sb->s_writers.frozen != old);
+		down_write(&sb->s_umount);
+	} while (ret == 0 &&
+		 sb->s_writers.frozen != SB_UNFROZEN &&
+		 sb->s_writers.frozen != SB_FREEZE_COMPLETE);
+
+	return ret;
+}
+
+I'll try this out and report back.
 
 --D
 
-> 								Honza
-> -- 
-> Jan Kara <jack@suse.com>
-> SUSE Labs, CR
+> > >  	if (sb->s_writers.frozen != SB_UNFROZEN) {
+> > > -		deactivate_locked_super(sb);
+> > > -		return -EBUSY;
+> > > +		if (!try_again) {
+> > > +			deactivate_locked_super(sb);
+> > > +			return -EBUSY;
+> > > +		}
+> > > +
+> > > +		wait_for_partially_frozen(sb);
+> > > +		try_again = false;
+> > > +		goto retry;
+> > 
+> > Can you throw in a comment on wait we're only waiting for a partial
+> > freeze one here?
+> 
+> I didn't want a thread to get stuck in the retry forever if it always
+> loses the race.  However, I think any other threads running freeze_super
+> will always end at UNFROZEN or COMPLETE; and thaw_super always goes
+> straight froM COMPLETE to UNFROZEN, so I think I'll get rid of the retry
+> flag logic entirely.
+> 
+> --D
