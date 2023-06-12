@@ -2,99 +2,113 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7944FC7EE2E
-	for <linux-xfs@archiver.kernel.org>; Mon, 12 Jun 2023 14:55:35 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9A67AC7EE2E
+	for <linux-xfs@archiver.kernel.org>; Mon, 12 Jun 2023 15:05:27 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229555AbjFLOzc (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 12 Jun 2023 10:55:32 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60128 "EHLO
+        id S239183AbjFLPF0 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 12 Jun 2023 11:05:26 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38462 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S238153AbjFLOz3 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 12 Jun 2023 10:55:29 -0400
-Received: from mail-pf1-x42f.google.com (mail-pf1-x42f.google.com [IPv6:2607:f8b0:4864:20::42f])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 259EACC;
-        Mon, 12 Jun 2023 07:55:28 -0700 (PDT)
-Received: by mail-pf1-x42f.google.com with SMTP id d2e1a72fcca58-652d1d3e040so3319277b3a.1;
-        Mon, 12 Jun 2023 07:55:28 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20221208; t=1686581727; x=1689173727;
-        h=in-reply-to:subject:cc:to:from:message-id:date:from:to:cc:subject
-         :date:message-id:reply-to;
-        bh=V9CIwjjScqul8Uzbw9CyqmytrTVPPn5617deb266FA8=;
-        b=OJpUAmGYTTUJTSomOYm9cJLlpudVb2hVCetG0OSjNFuptnM0GK8HBiDug7+VMfj0z1
-         bst3xNkN3KHT2xdv6qVNQ588+YaKF60IOznkQyMCnjFrMDQT2rC969UhhRL6I9hVLv8q
-         TnW9vioUXKNnJXQA+KEOsLuVYjbKREDoz4WmPXeLCwaQB/lqXhibLDhQtOngG6fdqIuO
-         JOUZR6YZ/JxCiPpc7y/iLEj1wKrClWWBTGhR+l7hIMUeOfXAA3FLnQAvfYwszwPn5Fhv
-         B2/5h7wpbCTEvrp11rEyRR1lrWRLspdFV7NKLceKWfcIsPpuMJEEoroth3IG/t5ekPCq
-         QuSw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20221208; t=1686581727; x=1689173727;
-        h=in-reply-to:subject:cc:to:from:message-id:date:x-gm-message-state
-         :from:to:cc:subject:date:message-id:reply-to;
-        bh=V9CIwjjScqul8Uzbw9CyqmytrTVPPn5617deb266FA8=;
-        b=YQT154be0XJ/RdDdYa+EhpIxR7inKHZMPCRgaZ1fNWCZlQGhtmb+osMqXmMMztRtrP
-         YHicjwiDhkOpdENAWRzWE/cvUDH/dWH50AwOdhLxXnuK8vJVveSWEl64ubBZmO5tvLUM
-         mCWQGg1t2Mr5og7E5j0BAXnGv4XFKNFfFkDgakVZZj/4p+xNMdd/ujoP/ccJviEMOK0B
-         sYgx04w/ke55O7VD14VxL+Ntx5QloDlrG0dADeuYI0XMeEgNkDFx+rZOX1EHbb/gXs2Q
-         P2EPXfwNDENXfjHfi0vjTd+ucXzkXDhrDZRHV0I3dy8gP1VBqjdNDBa+AWCj67gNu8Is
-         jnlw==
-X-Gm-Message-State: AC+VfDxJUj+3aNMgrN3m2Gz65U0BjfIM3a9weqyiLf6ZiGmayeUNifgQ
-        uDzwoQOfez5xCTTx08PzDgE=
-X-Google-Smtp-Source: ACHHUZ6lUfZ+F8MKzU8TDnfNssoHZhb2mmnc4xLiLrA2Wfw5/9OCiMuVPj3YeIN5OzTwkj+zJqYacQ==
-X-Received: by 2002:a05:6a20:104f:b0:10f:b53d:8641 with SMTP id gt15-20020a056a20104f00b0010fb53d8641mr8094377pzc.46.1686581727584;
-        Mon, 12 Jun 2023 07:55:27 -0700 (PDT)
-Received: from dw-tp ([49.207.220.159])
-        by smtp.gmail.com with ESMTPSA id i22-20020aa787d6000000b0064d3e4c7658sm7219034pfo.96.2023.06.12.07.55.24
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 12 Jun 2023 07:55:27 -0700 (PDT)
-Date:   Mon, 12 Jun 2023 20:25:22 +0530
-Message-Id: <87r0qghgrp.fsf@doe.com>
-From:   Ritesh Harjani (IBM) <ritesh.list@gmail.com>
-To:     Pankaj Raghav <p.raghav@samsung.com>
-Cc:     linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
-        Christoph Hellwig <hch@infradead.org>,
-        "Darrick J. Wong" <djwong@kernel.org>,
+        with ESMTP id S239144AbjFLPFZ (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 12 Jun 2023 11:05:25 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5891112A;
+        Mon, 12 Jun 2023 08:05:22 -0700 (PDT)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id E7175620BD;
+        Mon, 12 Jun 2023 15:05:21 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 4AF1CC433EF;
+        Mon, 12 Jun 2023 15:05:21 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1686582321;
+        bh=893yqsGcbaFfrryMUIMGGssEE09mFNs/uqWMAlQ3g1I=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=F7OxZ+/XFzGfJ2xJE8eb57mZ+LtpyiQMYxj7yV5OYGiBB/elSTwCRr8MgkBD2G6W9
+         HaSsNETYblGCE+XASpY+odL8AceXmL61zKBOCXon5ucsFE5do4AQi+IJJTrAEkz+u2
+         UyJp5qPXw6sn1pApWkBWgjMvmQGH3ApIR5tsWScHLuqPEknSS/YZqsiBz4xWxHc86j
+         IW+A9plfzL5nTUUEAd4JNtsVFZAcrZP5G4Z/uEQWs9F8xkA3OzbLt9SKJGiIjFOfCi
+         9w8fbvYM4cDPKuDDm0yzeQo9807+y7AJTqNVB9LS261bfSAlgFCb44GOWm5Oql5RL3
+         9XHV1DxNO3r/w==
+Date:   Mon, 12 Jun 2023 08:05:20 -0700
+From:   "Darrick J. Wong" <djwong@kernel.org>
+To:     Ritesh Harjani <ritesh.list@gmail.com>
+Cc:     Christoph Hellwig <hch@infradead.org>, linux-xfs@vger.kernel.org,
+        linux-fsdevel@vger.kernel.org,
         Matthew Wilcox <willy@infradead.org>,
         Dave Chinner <david@fromorbit.com>,
         Brian Foster <bfoster@redhat.com>,
         Andreas Gruenbacher <agruenba@redhat.com>,
         Ojaswin Mujoo <ojaswin@linux.ibm.com>,
         Disha Goel <disgoel@linux.ibm.com>
-Subject: Re: [PATCHv9 4/6] iomap: Refactor iomap_write_delalloc_punch() function out
-In-Reply-To: <20230612135658.gvukpx7567avszph@localhost>
+Subject: Re: [PATCHv9 1/6] iomap: Rename iomap_page to iomap_folio_state and
+ others
+Message-ID: <20230612150520.GA11467@frogsfrogsfrogs>
+References: <ZIa51URaIVjjG35D@infradead.org>
+ <87wn09ghqh.fsf@doe.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <87wn09ghqh.fsf@doe.com>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Pankaj Raghav <p.raghav@samsung.com> writes:
+On Mon, Jun 12, 2023 at 02:49:50PM +0530, Ritesh Harjani wrote:
+> Christoph Hellwig <hch@infradead.org> writes:
+> 
+> > On Sun, Jun 11, 2023 at 11:21:48PM -0700, Christoph Hellwig wrote:
+> >> Looks good:
+> >>
+> >> Reviewed-by: Christoph Hellwig <hch@lst.de>
+> 
+> Thanks!
+> 
+> >
+> > Actually, coming back to this:
+> >
+> > -to_iomap_page(struct folio *folio)
+> > +static inline struct iomap_folio_state *iomap_get_ifs
+> >
+> > I find the to_* naming much more descriptive for derving the
+> > private data.  get tends to imply grabbing a refcount.
+> 
+> Not always. That would be iomap_ifs_get(ifs)/iomap_ifs_put(ifs).
+> 
+> See this -
+> 
+> static inline void *folio_get_private(struct folio *folio)
+> {
+> 	return folio->private;
+> }
+> 
+> So, is it ok if we hear from others too on iomap_get_ifs() function
+> name?
 
-> Minor nit:
->
->> +static int iomap_write_delalloc_punch(struct inode *inode, struct folio *folio,
->> +		loff_t *punch_start_byte, loff_t start_byte, loff_t end_byte,
->> +		int (*punch)(struct inode *inode, loff_t offset, loff_t length))
->> +{
->> +	int ret = 0;
->> +
->> +	if (!folio_test_dirty(folio))
->> +		return ret;
-> Either this could be changed to `goto out`
->
-> OR
->
->> +
->> +	/* if dirty, punch up to offset */
->> +	if (start_byte > *punch_start_byte) {
->> +		ret = punch(inode, *punch_start_byte,
->> +				start_byte - *punch_start_byte);
->> +		if (ret)
->> +			goto out;
->
-> This could be changed to `return ret` and we could get rid of the `out`
-> label.
+It's a static inline, no need for namespacing in the name.  And hch is
+right, _get/_put often imply receiving and returning some active
+refcount.  That (IMO) makes folio_get_private the odd one out, since
+pages don't refcount the private pointer.
 
-Sure, thanks Pankaj. I noted that too.
-Since there is nothing in the out label. So mostly will simply return
-ret. Will fix it in the next rev.
+I think of this more as a C(rap)-style type conversion function for a
+generic object that can get touched by many subsystems (and hence we
+cannot do the embed-parent-in-child-object thing).
 
--ritesh
+So.
+
+static inline struct iomap_folio_state *
+to_folio_state(struct folio *folio)
+{
+	return folio->private;
+}
+
+is fine with me.  Can we go with this, and not make Ritesh run around
+renaming and rebasing beyond v10?
+
+[08:02] <willy> honestly, I think even having the abstraction was a
+mistake.  just use folio->private
+
+--D
+
+> -ritesh
