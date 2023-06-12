@@ -2,89 +2,71 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9E78AC7EE2F
-	for <linux-xfs@archiver.kernel.org>; Mon, 12 Jun 2023 16:15:16 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 15DF5C7EE2E
+	for <linux-xfs@archiver.kernel.org>; Mon, 12 Jun 2023 16:16:22 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235852AbjFLQPO (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 12 Jun 2023 12:15:14 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54124 "EHLO
+        id S229639AbjFLQQV (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 12 Jun 2023 12:16:21 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55352 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S237222AbjFLQPA (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 12 Jun 2023 12:15:00 -0400
-Received: from mail-lj1-x22e.google.com (mail-lj1-x22e.google.com [IPv6:2a00:1450:4864:20::22e])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E2AEA1BCA;
-        Mon, 12 Jun 2023 09:14:48 -0700 (PDT)
-Received: by mail-lj1-x22e.google.com with SMTP id 38308e7fff4ca-2b1bb2fc9c6so53017581fa.0;
-        Mon, 12 Jun 2023 09:14:48 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20221208; t=1686586487; x=1689178487;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=OKPFSSH+caxQHaov+Wv+3EHEkLI7Kcu9oYB4YOFV98c=;
-        b=nA2kSdpXP2aia/RhBgkUf2KODbJBICe97+67Y2LVx1SjZg+SHpRQkHOqP2hMOvdnO8
-         FcysiW3xuywRNWp8vhCHePMVuZYrhNuhLVvnAFAFAqpw+eLfYMrlMfu7bS5tgdWzAy3S
-         mi/kZ54fxizGcQtwjCf4Jh3ZtieeTyF5bhcj4ujw+KcV/TMIRzKVfso4ZUnX/oYIdqyG
-         /A7SnUEmOCN0QLgAC+iSLrfcyhQJmhwO/TtsqaohxoHlOjLFUxLJPuwLD4BJKGuplhZs
-         11qbFmDqL8dcbAR3YxmBjYhnvUG7oRcBlRQwggE5fJcZoPYnKymcmqP3q7BfGAW1C8uf
-         aang==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20221208; t=1686586487; x=1689178487;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=OKPFSSH+caxQHaov+Wv+3EHEkLI7Kcu9oYB4YOFV98c=;
-        b=bD2MeNkHyGWAR7YBuvlNzEiK6MxiWWL+H4y1lYj7Lhg8hSpBwQh08L0ZsAgegm4O3c
-         SL8T20mayVntjzc6e5xN/5iSqhzWyTGjvyi7xPnUWl2xH/ZjK5mr59A/1fK2tP5Xgqz1
-         fywNeTKmk6s30vgQXF9ZGOPDMRzxZxDVHQCPibMdrtx3cEro7sWGybTIA4JzbIkVEM93
-         9HaZ4osODKRTao5Ke0iv0v/Nx4oFx4ijwR6IWv9U9VMWDoeUOTTqWHRp1OYXNAzkAYV0
-         5u8wW7CCooLZ/W0x9qfu4H5pihW/JDkWur5sOzHCUDk8lFdGC43e7JhpHtw+gKufD/1M
-         fhYg==
-X-Gm-Message-State: AC+VfDyeKtRWIqra/8xlbt10wrrb63pkbExhz+cdxgjqxhuzbr7oceCU
-        S/QFQ4X7W7sFqqFLNx7toOtwpwzaOyURhjojPXw=
-X-Google-Smtp-Source: ACHHUZ4bACLCVxl9cBUvtK3ZXrgKi3PuHQRL9j1bC7LRMjUBRu/yMZHmGFK8gjZ6HnznjkbRC+YxRBBXDVbFnmRNAwU=
-X-Received: by 2002:a2e:8606:0:b0:2b1:e74b:2452 with SMTP id
- a6-20020a2e8606000000b002b1e74b2452mr2969829lji.49.1686586486637; Mon, 12 Jun
- 2023 09:14:46 -0700 (PDT)
-MIME-Version: 1.0
-References: <CAHc6FU7Hv71ujeb9oEVOD+bpddMMT0KY+KKUp881Am15u-OVvg@mail.gmail.com>
- <87ilbshf56.fsf@doe.com>
-In-Reply-To: <87ilbshf56.fsf@doe.com>
-From:   =?UTF-8?Q?Andreas_Gr=C3=BCnbacher?= <andreas.gruenbacher@gmail.com>
-Date:   Mon, 12 Jun 2023 18:14:35 +0200
-Message-ID: <CAHpGcMKV2KGMnBZsjk9NGFRiORZAdOLwpSjW1spGiZCOdNGCzg@mail.gmail.com>
-Subject: Re: [PATCHv9 3/6] iomap: Add some uptodate state handling helpers for
- ifs state bitmap
+        with ESMTP id S229454AbjFLQQU (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 12 Jun 2023 12:16:20 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 23B95122;
+        Mon, 12 Jun 2023 09:16:19 -0700 (PDT)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id B254260F29;
+        Mon, 12 Jun 2023 16:16:18 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 0A999C433EF;
+        Mon, 12 Jun 2023 16:16:18 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1686586578;
+        bh=Y9iBs2y4Wmod+DqdmH2uAhJF9aIx0VwtBTisiBbrDRg=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=ChM84pQDHcmKpDTsYBubNLOHLzbVZER9UgCi/SeBPQWSX/rF6kvqu6JuEwZKuj6p6
+         ABXb0rU0JAfwSMMeyFdO6zH2tLJkgSyAyAfZdhLK8yiUc+qVgS1OQMG38DFIPzcTT+
+         i8Qt5RAHe0z5lAichcW6Dk6B5QTEMsUsxW0cHTo3GPSSUasgAXcSc9XYuTkwGpj4k8
+         gfKqRDd06twca1GrZ2BUVgt0G27nV2cFDmhVBEt8aXafL+quRju47m2yr1kbprGLF0
+         RX39uxbtoAiscEeXRXei5cqLu00hQm6gdl8fTaPVg3F0jSJsCthtK+GruyTD4Ia8A3
+         xlRu6b2MhEp8w==
+Date:   Mon, 12 Jun 2023 09:16:17 -0700
+From:   "Darrick J. Wong" <djwong@kernel.org>
 To:     Ritesh Harjani <ritesh.list@gmail.com>
 Cc:     Andreas Gruenbacher <agruenba@redhat.com>,
         linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
         Christoph Hellwig <hch@infradead.org>,
-        "Darrick J. Wong" <djwong@kernel.org>,
         Matthew Wilcox <willy@infradead.org>,
         Dave Chinner <david@fromorbit.com>,
         Brian Foster <bfoster@redhat.com>,
         Ojaswin Mujoo <ojaswin@linux.ibm.com>,
         Disha Goel <disgoel@linux.ibm.com>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Subject: Re: [PATCHv9 3/6] iomap: Add some uptodate state handling helpers
+ for ifs state bitmap
+Message-ID: <20230612161617.GE11441@frogsfrogsfrogs>
+References: <CAHc6FU7Hv71ujeb9oEVOD+bpddMMT0KY+KKUp881Am15u-OVvg@mail.gmail.com>
+ <87ilbshf56.fsf@doe.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <87ilbshf56.fsf@doe.com>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Am Mo., 12. Juni 2023 um 17:43 Uhr schrieb Ritesh Harjani
-<ritesh.list@gmail.com>:
+On Mon, Jun 12, 2023 at 09:00:29PM +0530, Ritesh Harjani wrote:
 > Andreas Gruenbacher <agruenba@redhat.com> writes:
-> > On Sat, Jun 10, 2023 at 1:39=E2=80=AFPM Ritesh Harjani (IBM)
+> 
+> > On Sat, Jun 10, 2023 at 1:39 PM Ritesh Harjani (IBM)
 > > <ritesh.list@gmail.com> wrote:
-> >> This patch adds two of the helper routines iomap_ifs_is_fully_uptodate=
-()
+> >> This patch adds two of the helper routines iomap_ifs_is_fully_uptodate()
 > >> and iomap_ifs_is_block_uptodate() for managing uptodate state of
 > >> ifs state bitmap.
 > >>
-> >> In later patches ifs state bitmap array will also handle dirty state o=
-f all
-> >> blocks of a folio. Hence this patch adds some helper routines for hand=
-ling
+> >> In later patches ifs state bitmap array will also handle dirty state of all
+> >> blocks of a folio. Hence this patch adds some helper routines for handling
 > >> uptodate state of the ifs state bitmap.
 > >>
 > >> Signed-off-by: Ritesh Harjani (IBM) <ritesh.list@gmail.com>
@@ -96,42 +78,42 @@ ling
 > >> index e237f2b786bc..206808f6e818 100644
 > >> --- a/fs/iomap/buffered-io.c
 > >> +++ b/fs/iomap/buffered-io.c
-> >> @@ -43,6 +43,20 @@ static inline struct iomap_folio_state *iomap_get_i=
-fs(struct folio *folio)
+> >> @@ -43,6 +43,20 @@ static inline struct iomap_folio_state *iomap_get_ifs(struct folio *folio)
 > >>
 > >>  static struct bio_set iomap_ioend_bioset;
 > >>
 > >> +static inline bool iomap_ifs_is_fully_uptodate(struct folio *folio,
-> >> +                                              struct iomap_folio_stat=
-e *ifs)
+> >> +                                              struct iomap_folio_state *ifs)
 > >> +{
-> >> +       struct inode *inode =3D folio->mapping->host;
+> >> +       struct inode *inode = folio->mapping->host;
 > >> +
-> >> +       return bitmap_full(ifs->state, i_blocks_per_folio(inode, folio=
-));
+> >> +       return bitmap_full(ifs->state, i_blocks_per_folio(inode, folio));
 > >
 > > This should be written as something like:
 > >
-> > unsigned int blks_per_folio =3D i_blocks_per_folio(inode, folio);
+> > unsigned int blks_per_folio = i_blocks_per_folio(inode, folio);
 > > return bitmap_full(ifs->state + IOMAP_ST_UPTODATE * blks_per_folio,
 > > blks_per_folio);
 > >
->
+> 
 > Nah, I feel it is not required... It make sense when we have the same
 > function getting use for both "uptodate" and "dirty" state.
 > Here the function anyways operates on uptodate state.
 > Hence I feel it is not required.
 
-So we have this iomap_block_state enum now, but IOMAP_ST_UPTODATE must
-be 0 or else the code will break. That's worse than not having this
-abstraction in the first place because.
+Honestly I thought that enum-for-bits thing was excessive considering
+that ifs has only two state bits.  But, since you included it, it
+doesn't make much sense /not/ to use it here.
 
-Andreas
+OTOH, if you disassemble the object code and discover that the compiler
+*isn't* using constant propagation to simplify the object code, then
+yes, that would be a good reason to get rid of it.
+
+--D
 
 > >> +}
 > >> +
-> >> +static inline bool iomap_ifs_is_block_uptodate(struct iomap_folio_sta=
-te *ifs,
+> >> +static inline bool iomap_ifs_is_block_uptodate(struct iomap_folio_state *ifs,
 > >> +                                              unsigned int block)
 > >> +{
 > >> +       return test_bit(block, ifs->state);
@@ -140,12 +122,11 @@ te *ifs,
 > > probably be written as follows, passing in the folio as well (this
 > > will optimize out, anyway):
 > >
-> > struct inode *inode =3D folio->mapping->host;
-> > unsigned int blks_per_folio =3D i_blocks_per_folio(inode, folio);
-> > return test_bit(block, ifs->state + IOMAP_ST_UPTODATE * blks_per_folio)=
-;
+> > struct inode *inode = folio->mapping->host;
+> > unsigned int blks_per_folio = i_blocks_per_folio(inode, folio);
+> > return test_bit(block, ifs->state + IOMAP_ST_UPTODATE * blks_per_folio);
 > >
->
+> 
 > Same here.
->
+> 
 > -ritesh
