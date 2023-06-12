@@ -2,41 +2,40 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B3983C88CB7
-	for <linux-xfs@archiver.kernel.org>; Mon, 12 Jun 2023 20:39:37 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C693BC7EE43
+	for <linux-xfs@archiver.kernel.org>; Mon, 12 Jun 2023 20:39:52 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230197AbjFLUjg (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 12 Jun 2023 16:39:36 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58928 "EHLO
+        id S229576AbjFLUjv (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 12 Jun 2023 16:39:51 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58814 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S236056AbjFLUjd (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 12 Jun 2023 16:39:33 -0400
+        with ESMTP id S236989AbjFLUje (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 12 Jun 2023 16:39:34 -0400
 Received: from casper.infradead.org (casper.infradead.org [IPv6:2001:8b0:10b:1236::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7469910F9;
-        Mon, 12 Jun 2023 13:39:26 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 83A491739;
+        Mon, 12 Jun 2023 13:39:29 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
         d=infradead.org; s=casper.20170209; h=Content-Transfer-Encoding:MIME-Version:
         References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:Sender:Reply-To:
         Content-Type:Content-ID:Content-Description;
-        bh=TeUsmxkBd0c7/DlT0OTqD1unAL6e90bynyipv5XpnOQ=; b=Eb21bhxqv+1pOvIN1xPtnUGgrc
-        PPOJryxpY1p/iYNFKlw1RZ11rOaT9lNjAxkh9r3SNkIYZpvUfD3eK+Ab0cAhWN5ItU0FdOJlQuEF/
-        hy552Xmt4waB2YUjfKak9qJ0yosfzPmw88pGFKmGwFTQVM3Bc6mK7EGUGvVGE9mB7bnDtKJmXKzyW
-        xLdDzXY+4enE/0lYs9+8nUse+xBb3qgSLMT29+gUdF6LsLIeyDJ71wAlFvNw4s9arg/Jg6zkl+INK
-        L6a25bzO2gZ03WOdMZePSNE0b9qz+l61GMsGM5EDB4VZfmv+9Skvxs8faWUDbcfP23xhBTMjPb2hT
-        eGD/Yz7g==;
+        bh=EkLmyaB6DA8CYGOh1SGUaX5l8dYnTWVJEORmgXgZcN8=; b=R4++hr39ESEVaBhBKwvgXoki8+
+        XyhvyjhtQPZvlNvPojo9/BakFsoohm4U/VqtxhH+l6rJDjrin+mZtWzSsQokP8EsdChfXLjmhBHRp
+        W/yQviM47ooc72QH5qvQv1YlgRxs6LBSvg+44G4KK1LCpgIVTOa0IdCOARbFlga8qqN10jjk0tk6h
+        pYeWlKT28FEytcUzoOmdkKw0knvIW3y3z23uZ1P1AsxVtMp1GGualEk0jCc6jVzeCt/V6/hINkOO5
+        1ma2qPNvsq8Erv8MwWt/YWxDjlI8EHmk/B82dkR4p2RLtJPk3nZNarGjUwDnL/5zvT9QZrO5pB06L
+        eXzATyjg==;
 Received: from willy by casper.infradead.org with local (Exim 4.94.2 #2 (Red Hat Linux))
-        id 1q8oJl-0032SX-GG; Mon, 12 Jun 2023 20:39:13 +0000
+        id 1q8oJm-0032Sn-3S; Mon, 12 Jun 2023 20:39:14 +0000
 From:   "Matthew Wilcox (Oracle)" <willy@infradead.org>
 To:     linux-fsdevel@vger.kernel.org
 Cc:     "Matthew Wilcox (Oracle)" <willy@infradead.org>,
         linux-xfs@vger.kernel.org, Wang Yugui <wangyugui@e16-tech.com>,
         Dave Chinner <david@fromorbit.com>,
         Christoph Hellwig <hch@infradead.org>,
-        "Darrick J . Wong" <djwong@kernel.org>,
-        Christoph Hellwig <hch@lst.de>
-Subject: [PATCH v3 2/8] iomap: Remove large folio handling in iomap_invalidate_folio()
-Date:   Mon, 12 Jun 2023 21:39:04 +0100
-Message-Id: <20230612203910.724378-3-willy@infradead.org>
+        "Darrick J . Wong" <djwong@kernel.org>
+Subject: [PATCH v3 8/8] iomap: Copy larger chunks from userspace
+Date:   Mon, 12 Jun 2023 21:39:10 +0100
+Message-Id: <20230612203910.724378-9-willy@infradead.org>
 X-Mailer: git-send-email 2.37.1
 In-Reply-To: <20230612203910.724378-1-willy@infradead.org>
 References: <20230612203910.724378-1-willy@infradead.org>
@@ -46,39 +45,74 @@ Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-We do not need to release the iomap_page in iomap_invalidate_folio()
-to allow the folio to be split.  The splitting code will call
-->release_folio() if there is still per-fs private data attached to
-the folio.  At that point, we will check if the folio is still dirty
-and decline to release the iomap_page.  It is possible to trigger the
-warning in perfectly legitimate circumstances (eg if a disk read fails,
-we do a partial write to the folio, then we truncate the folio), which
-will cause those writes to be lost.
+If we have a large folio, we can copy in larger chunks than PAGE_SIZE.
+Start at the maximum page cache size and shrink by half every time we
+hit the "we are short on memory" problem.
 
-Fixes: 60d8231089f0 ("iomap: Support large folios in invalidatepage")
 Signed-off-by: Matthew Wilcox (Oracle) <willy@infradead.org>
-Reviewed-by: Darrick J. Wong <djwong@kernel.org>
-Reviewed-by: Christoph Hellwig <hch@lst.de>
 ---
- fs/iomap/buffered-io.c | 5 -----
- 1 file changed, 5 deletions(-)
+ fs/iomap/buffered-io.c | 22 +++++++++++++---------
+ 1 file changed, 13 insertions(+), 9 deletions(-)
 
 diff --git a/fs/iomap/buffered-io.c b/fs/iomap/buffered-io.c
-index 063133ec77f4..08ee293c4117 100644
+index a5d62c9640cf..818dc350ffc5 100644
 --- a/fs/iomap/buffered-io.c
 +++ b/fs/iomap/buffered-io.c
-@@ -508,11 +508,6 @@ void iomap_invalidate_folio(struct folio *folio, size_t offset, size_t len)
- 		WARN_ON_ONCE(folio_test_writeback(folio));
- 		folio_cancel_dirty(folio);
- 		iomap_page_release(folio);
--	} else if (folio_test_large(folio)) {
--		/* Must release the iop so the page can be split */
--		WARN_ON_ONCE(!folio_test_uptodate(folio) &&
--			     folio_test_dirty(folio));
--		iomap_page_release(folio);
- 	}
- }
- EXPORT_SYMBOL_GPL(iomap_invalidate_folio);
+@@ -768,6 +768,7 @@ static size_t iomap_write_end(struct iomap_iter *iter, loff_t pos, size_t len,
+ static loff_t iomap_write_iter(struct iomap_iter *iter, struct iov_iter *i)
+ {
+ 	loff_t length = iomap_length(iter);
++	size_t chunk = PAGE_SIZE << MAX_PAGECACHE_ORDER;
+ 	loff_t pos = iter->pos;
+ 	ssize_t written = 0;
+ 	long status = 0;
+@@ -776,15 +777,13 @@ static loff_t iomap_write_iter(struct iomap_iter *iter, struct iov_iter *i)
+ 
+ 	do {
+ 		struct folio *folio;
+-		struct page *page;
+-		unsigned long offset;	/* Offset into pagecache page */
+-		unsigned long bytes;	/* Bytes to write to page */
++		size_t offset;		/* Offset into folio */
++		unsigned long bytes;	/* Bytes to write to folio */
+ 		size_t copied;		/* Bytes copied from user */
+ 
+-		offset = offset_in_page(pos);
+-		bytes = min_t(unsigned long, PAGE_SIZE - offset,
+-						iov_iter_count(i));
+ again:
++		offset = pos & (chunk - 1);
++		bytes = min(chunk - offset, iov_iter_count(i));
+ 		status = balance_dirty_pages_ratelimited_flags(mapping,
+ 							       bdp_flags);
+ 		if (unlikely(status))
+@@ -814,11 +813,14 @@ static loff_t iomap_write_iter(struct iomap_iter *iter, struct iov_iter *i)
+ 		if (iter->iomap.flags & IOMAP_F_STALE)
+ 			break;
+ 
+-		page = folio_file_page(folio, pos >> PAGE_SHIFT);
++		offset = offset_in_folio(folio, pos);
++		if (bytes > folio_size(folio) - offset)
++			bytes = folio_size(folio) - offset;
++
+ 		if (mapping_writably_mapped(mapping))
+-			flush_dcache_page(page);
++			flush_dcache_folio(folio);
+ 
+-		copied = copy_page_from_iter_atomic(page, offset, bytes, i);
++		copied = copy_page_from_iter_atomic(&folio->page, offset, bytes, i);
+ 
+ 		status = iomap_write_end(iter, pos, bytes, copied, folio);
+ 
+@@ -835,6 +837,8 @@ static loff_t iomap_write_iter(struct iomap_iter *iter, struct iov_iter *i)
+ 			 */
+ 			if (copied)
+ 				bytes = copied;
++			if (chunk > PAGE_SIZE)
++				chunk /= 2;
+ 			goto again;
+ 		}
+ 		pos += status;
 -- 
 2.39.2
 
