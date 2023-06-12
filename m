@@ -2,98 +2,57 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2B1D1C7EE2E
-	for <linux-xfs@archiver.kernel.org>; Mon, 12 Jun 2023 06:11:53 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0EE4DC7EE2E
+	for <linux-xfs@archiver.kernel.org>; Mon, 12 Jun 2023 06:28:08 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231636AbjFLGLv (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 12 Jun 2023 02:11:51 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50920 "EHLO
+        id S232540AbjFLG2E (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 12 Jun 2023 02:28:04 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53742 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229477AbjFLGLu (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 12 Jun 2023 02:11:50 -0400
-Received: from mail-ed1-x535.google.com (mail-ed1-x535.google.com [IPv6:2a00:1450:4864:20::535])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6CB40BE
-        for <linux-xfs@vger.kernel.org>; Sun, 11 Jun 2023 23:11:49 -0700 (PDT)
-Received: by mail-ed1-x535.google.com with SMTP id 4fb4d7f45d1cf-5151934a4e3so5868097a12.1
-        for <linux-xfs@vger.kernel.org>; Sun, 11 Jun 2023 23:11:49 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=linux-foundation.org; s=google; t=1686550307; x=1689142307;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=BipWuiASuB2niftXYaodHb7vCsVXt3eFLDs2b9I5S74=;
-        b=X8fJHCahRG+vHrfOzR5OlBSSAbC2reAF+V95M3oKLBwzJwHezO2lxxlo+kF5Z1sNeQ
-         sthOuJHsQATkSSz83e6aNybNt1HDmkZnuaq2Igb3xo41ZCHp6JYjPmGWZOcL5+hlZQW5
-         HVvuzfKZgTdqC5YUc6gpE9ufdWedBeNmdf7zc=
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20221208; t=1686550307; x=1689142307;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=BipWuiASuB2niftXYaodHb7vCsVXt3eFLDs2b9I5S74=;
-        b=Rpgm4uFGWDXAdUnK/6Jv2ARfWHxE4+JTECz16lkmnyc5fVT4S5KmdgnF43RWwoXA7c
-         H49tfCwRw4to6NwRy5SQZl0y6529aCg9OTF7O23TCaRg+OByazrpg0/QI9yHtVwJGRM/
-         mKscRb2+CQ4zS90TsKuvtJbYTHrZ/DU3dvMtm5iezXx82u2K5wW3qc7J8rtliaWmQd0x
-         jRTu0y+OxpdaEtP+NcHlSzv/kkUVqcJqRmUXsq+v4B0eyUtkTHQwtZGsapimizhF47D2
-         7c8ojDdDJys1HkrdiNWuG8ZOfZqelHwpdzMg3OEaHVgxZ6kiFCi7YgvBq19wspHHNA4v
-         d+EA==
-X-Gm-Message-State: AC+VfDzSE7QcZ/yZgMGbYjS7BBBt1i5Ble6KgeY3i2Hnqw22CaNQd9t1
-        qhaypMV9j2ybqevy1mSsawa5t2GLGWfvyV96uKAKFg==
-X-Google-Smtp-Source: ACHHUZ7zizl/kq88SOHinTSykjwi5xIPhNnokZlF4Y1+FXYGIXim5wK7e4CFZjhsmaSSFRp41GidXg==
-X-Received: by 2002:a17:906:db03:b0:974:1f0e:ec2d with SMTP id xj3-20020a170906db0300b009741f0eec2dmr8951833ejb.15.1686550307471;
-        Sun, 11 Jun 2023 23:11:47 -0700 (PDT)
-Received: from mail-ed1-f42.google.com (mail-ed1-f42.google.com. [209.85.208.42])
-        by smtp.gmail.com with ESMTPSA id bi9-20020a170906a24900b009745417ca38sm4699763ejb.21.2023.06.11.23.11.46
-        for <linux-xfs@vger.kernel.org>
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Sun, 11 Jun 2023 23:11:46 -0700 (PDT)
-Received: by mail-ed1-f42.google.com with SMTP id 4fb4d7f45d1cf-51480d3e161so5864385a12.3
-        for <linux-xfs@vger.kernel.org>; Sun, 11 Jun 2023 23:11:46 -0700 (PDT)
-X-Received: by 2002:aa7:cd95:0:b0:514:95d5:3994 with SMTP id
- x21-20020aa7cd95000000b0051495d53994mr3761992edv.32.1686550305937; Sun, 11
- Jun 2023 23:11:45 -0700 (PDT)
+        with ESMTP id S234226AbjFLG2C (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 12 Jun 2023 02:28:02 -0400
+Received: from bombadil.infradead.org (bombadil.infradead.org [IPv6:2607:7c80:54:3::133])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 620D11995;
+        Sun, 11 Jun 2023 23:23:02 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Type:MIME-Version
+        :References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
+        Content-Transfer-Encoding:Content-ID:Content-Description;
+        bh=M7NmYC/Iylm9myghHwqILim55SAUt9QrM+UZYk0eJlw=; b=lysXVnW3VNj2fBVe5u6WOM7WQG
+        h1ZfWylCFS4rYQ3T36dsol0jMjLgotzcCc5qWgSmAKKKZwm9Bt+MAWmjUidSOSieZlK/j2UHAFSTD
+        e4+eIcG6iB/tcRbeBat3rsTuJ2RWZr2/hQzHjhLzHFr9tZiw16SUp7j4/UXH5Qscric8a1iYmYrGF
+        DKsIX7FFy+4OJTyDBTsUeQf/WkAP/wpG9u/e0vX5fjAiWqY0sG/e5kVQrMZZp52p16dn5jlA+J/4d
+        pgwqyKvBykVciDl4CW/T+MKBwAevTX8zBMxBrLPKLyT4CBL8+jUlAkgbRStRjlYUbVaOYlr3dPYgm
+        H0mnAysw==;
+Received: from hch by bombadil.infradead.org with local (Exim 4.96 #2 (Red Hat Linux))
+        id 1q8aw0-002kiL-23;
+        Mon, 12 Jun 2023 06:21:48 +0000
+Date:   Sun, 11 Jun 2023 23:21:48 -0700
+From:   Christoph Hellwig <hch@infradead.org>
+To:     "Ritesh Harjani (IBM)" <ritesh.list@gmail.com>
+Cc:     linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
+        Christoph Hellwig <hch@infradead.org>,
+        "Darrick J. Wong" <djwong@kernel.org>,
+        Matthew Wilcox <willy@infradead.org>,
+        Dave Chinner <david@fromorbit.com>,
+        Brian Foster <bfoster@redhat.com>,
+        Andreas Gruenbacher <agruenba@redhat.com>,
+        Ojaswin Mujoo <ojaswin@linux.ibm.com>,
+        Disha Goel <disgoel@linux.ibm.com>
+Subject: Re: [PATCHv9 1/6] iomap: Rename iomap_page to iomap_folio_state and
+ others
+Message-ID: <ZIa5fOD6Kaz2cLUp@infradead.org>
+References: <cover.1686395560.git.ritesh.list@gmail.com>
+ <12b297f38307ed980fe505d03111db3fd887f5f0.1686395560.git.ritesh.list@gmail.com>
 MIME-Version: 1.0
-References: <20230611124836.whfktwaumnefm5z5@zlang-mailbox>
- <ZIZSPyzReZkGBEFy@dread.disaster.area> <20230612015145.GA11441@frogsfrogsfrogs>
- <ZIaBQnCKJ6NsqGhd@dread.disaster.area> <CAHk-=whJqZLKPR-cpX-V4wJTXVX-_tG5Vjuj2q9knvKGCPdfkg@mail.gmail.com>
- <ZIaqMpGISWKgHLK6@dread.disaster.area> <CAHk-=wgwJptCbaHwt+TpGgh04fTVAHd60AY3Jj1rX+Spf0fVyg@mail.gmail.com>
- <ZIax1FLfNajWk25A@dread.disaster.area>
-In-Reply-To: <ZIax1FLfNajWk25A@dread.disaster.area>
-From:   Linus Torvalds <torvalds@linux-foundation.org>
-Date:   Sun, 11 Jun 2023 23:11:28 -0700
-X-Gmail-Original-Message-ID: <CAHk-=wj0NuJaRNC4o6FVAJgKAFJ5HWcBV5VJw6RGV0ZahqOOZA@mail.gmail.com>
-Message-ID: <CAHk-=wj0NuJaRNC4o6FVAJgKAFJ5HWcBV5VJw6RGV0ZahqOOZA@mail.gmail.com>
-Subject: Re: [6.5-rc5 regression] core dump hangs (was Re: [Bug report]
- fstests generic/051 (on xfs) hang on latest linux v6.5-rc5+)
-To:     Dave Chinner <david@fromorbit.com>
-Cc:     "Darrick J. Wong" <djwong@kernel.org>,
-        Zorro Lang <zlang@redhat.com>, linux-xfs@vger.kernel.org,
-        "Eric W. Biederman" <ebiederm@xmission.com>,
-        Mike Christie <michael.christie@oracle.com>,
-        "Michael S. Tsirkin" <mst@redhat.com>, linux-kernel@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <12b297f38307ed980fe505d03111db3fd887f5f0.1686395560.git.ritesh.list@gmail.com>
+X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Sun, Jun 11, 2023 at 10:49=E2=80=AFPM Dave Chinner <david@fromorbit.com>=
- wrote:
->
-> On Sun, Jun 11, 2023 at 10:34:29PM -0700, Linus Torvalds wrote:
-> >
-> > So that "!=3D" should obviously have been a "=3D=3D".
->
-> Same as without the condition - all the fsstress tasks hang in
-> do_coredump().
+Looks good:
 
-Ok, that at least makes sense. Your "it made things worse" made me go
-"What?" until I noticed the stupid backwards test.
-
-I'm not seeing anything else that looks odd in that commit
-f9010dbdce91 ("fork, vhost: Use CLONE_THREAD to fix freezer/ps
-regression").
-
-Let's see if somebody else goes "Ahh" when they wake up tomorrow...
-
-              Linus
+Reviewed-by: Christoph Hellwig <hch@lst.de>
