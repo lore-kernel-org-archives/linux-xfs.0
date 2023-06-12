@@ -2,123 +2,152 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9F51DC7EE2E
-	for <linux-xfs@archiver.kernel.org>; Mon, 12 Jun 2023 11:39:04 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 070D7C7EE25
+	for <linux-xfs@archiver.kernel.org>; Mon, 12 Jun 2023 11:42:51 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232632AbjFLLjC (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 12 Jun 2023 07:39:02 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55124 "EHLO
+        id S235791AbjFLLmp (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 12 Jun 2023 07:42:45 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54960 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231273AbjFLLiM (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 12 Jun 2023 07:38:12 -0400
-Received: from mail-pj1-x102c.google.com (mail-pj1-x102c.google.com [IPv6:2607:f8b0:4864:20::102c])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7EA107EE2
-        for <linux-xfs@vger.kernel.org>; Mon, 12 Jun 2023 04:27:28 -0700 (PDT)
-Received: by mail-pj1-x102c.google.com with SMTP id 98e67ed59e1d1-25baf2120d7so1594842a91.0
-        for <linux-xfs@vger.kernel.org>; Mon, 12 Jun 2023 04:27:28 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=fromorbit-com.20221208.gappssmtp.com; s=20221208; t=1686569248; x=1689161248;
-        h=in-reply-to:content-transfer-encoding:content-disposition
-         :mime-version:references:message-id:subject:cc:to:from:date:from:to
-         :cc:subject:date:message-id:reply-to;
-        bh=HOWI21B75ASkWGO+WORn/+w003EKs+yAHQxQRLz4/zA=;
-        b=h2SWT9IgOYJwvSX7kRGbSjVvLXchJCdbCghd+9UWoHqN5kDlF3Z+vH8G8uD7qxx2nr
-         wLQO+cWxgM5Fu1SC6jqElX/ca+4rWDILjJBU63cW/B68yCQwicZWS6UqjsyT7mZlvXLg
-         5Ce9TkMAYb2xUvVvMKru/CC04TtTDu4jxoroFtYJQgOqOfuuytZOtow1oGT6L+dtn4Qe
-         D/zb5Uwdr2AOYiyy68HgKEpAICDETjN1rU04PYW8ghEVa30T3TIOdPyD1rmAvsi/TPwr
-         c2DDRJxihHhe0fDH+xf5+aLRKMhhYGmNxWK7RnJWLeCJNV6m9Hgi5v6YQTFS9dO8L++P
-         D34g==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20221208; t=1686569248; x=1689161248;
-        h=in-reply-to:content-transfer-encoding:content-disposition
-         :mime-version:references:message-id:subject:cc:to:from:date
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=HOWI21B75ASkWGO+WORn/+w003EKs+yAHQxQRLz4/zA=;
-        b=C84UmB/z3v7jkQJWj7z3cXjkMQ278PQzIzJPYw25iCF1R1DzajQDmhqdC35JcgH/p/
-         4BhW5X2+1qpFg/zPKSljP5dsaEUUbhX4styDjPHh0rD0MrYfNTbAFo6Lm2iLDiw6xoe8
-         F9DAT10VVualHyN2kG7P6W9y8lkRIoqvHwxjJJgwyCcQCr07JJAaMfiTMdxRRm1dKXcV
-         EH/mqAnaschWk+BAHa/G1PmBCXwxASuzwm3E/mVuInMW0eflcpbgqFK4o+/I5VNSE/+8
-         lqnTtgELqy/k2d96ocH9g3uKrYgrTAjiAU9mmVeeP+vJjh+nMz6HKl5PYWiRcPv0t+VK
-         VIpQ==
-X-Gm-Message-State: AC+VfDwhoa67cYK5wt0EEn8cHRsD3JNw6rdqdkBThwcUVMP7MEkrkoDS
-        PqE5TMM/47DuF3Hh9Tbgqz8TRgkgjnwsHWkcbGQ=
-X-Google-Smtp-Source: ACHHUZ5RVvZVxaTBU4dEGCYOtfmPsR3k6Ij3e1NSvGy23zMOAWhLHFiKqksmr3WxtOS0bQJ6AVem1w==
-X-Received: by 2002:a17:90a:f312:b0:250:9e7b:2798 with SMTP id ca18-20020a17090af31200b002509e7b2798mr7962839pjb.18.1686569247771;
-        Mon, 12 Jun 2023 04:27:27 -0700 (PDT)
-Received: from dread.disaster.area (pa49-179-79-151.pa.nsw.optusnet.com.au. [49.179.79.151])
-        by smtp.gmail.com with ESMTPSA id ij14-20020a17090af80e00b002502161b063sm9011135pjb.54.2023.06.12.04.27.26
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 12 Jun 2023 04:27:27 -0700 (PDT)
-Received: from dave by dread.disaster.area with local (Exim 4.96)
-        (envelope-from <david@fromorbit.com>)
-        id 1q8fhk-00ArMQ-0U;
-        Mon, 12 Jun 2023 21:27:24 +1000
-Date:   Mon, 12 Jun 2023 21:27:24 +1000
-From:   Dave Chinner <david@fromorbit.com>
-To:     "Eric W. Biederman" <ebiederm@xmission.com>
-Cc:     Linus Torvalds <torvalds@linux-foundation.org>,
-        "Darrick J. Wong" <djwong@kernel.org>,
-        Zorro Lang <zlang@redhat.com>, linux-xfs@vger.kernel.org,
-        Mike Christie <michael.christie@oracle.com>,
-        "Michael S. Tsirkin" <mst@redhat.com>, linux-kernel@vger.kernel.org
-Subject: Re: [6.5-rc5 regression] core dump hangs (was Re: [Bug report]
- fstests generic/051 (on xfs) hang on latest linux v6.5-rc5+)
-Message-ID: <ZIcBHH4ITLiQNCqK@dread.disaster.area>
-References: <20230611124836.whfktwaumnefm5z5@zlang-mailbox>
- <ZIZSPyzReZkGBEFy@dread.disaster.area>
- <20230612015145.GA11441@frogsfrogsfrogs>
- <ZIaBQnCKJ6NsqGhd@dread.disaster.area>
- <CAHk-=whJqZLKPR-cpX-V4wJTXVX-_tG5Vjuj2q9knvKGCPdfkg@mail.gmail.com>
- <ZIaqMpGISWKgHLK6@dread.disaster.area>
- <CAHk-=wgwJptCbaHwt+TpGgh04fTVAHd60AY3Jj1rX+Spf0fVyg@mail.gmail.com>
- <ZIax1FLfNajWk25A@dread.disaster.area>
- <CAHk-=wj0NuJaRNC4o6FVAJgKAFJ5HWcBV5VJw6RGV0ZahqOOZA@mail.gmail.com>
- <87r0qhrrvr.fsf@email.froward.int.ebiederm.org>
+        with ESMTP id S239175AbjFLLkg (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 12 Jun 2023 07:40:36 -0400
+Received: from smtp-out1.suse.de (smtp-out1.suse.de [195.135.220.28])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4AED818C;
+        Mon, 12 Jun 2023 04:35:28 -0700 (PDT)
+Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
+        (No client certificate requested)
+        by smtp-out1.suse.de (Postfix) with ESMTPS id E150B2281F;
+        Mon, 12 Jun 2023 11:35:26 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.cz; s=susede2_rsa;
+        t=1686569726; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+         mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=c1onI1JNbCsu0x7eMgFnoMSWuE6d/qfVBdd3qHMjSvM=;
+        b=W94uoe9jhEQK33oRNomuEJ1P0ArMRjrK17VU0XAcvNmChEB3G1EiLn8qgccrs1fVkJe1WR
+        YwnFYmsb6lDv49L4AAViQ9SfguHIiSdS7/eng8wcVIM+8ibTJOqzj8JXQMjb/ZGQr6g1sC
+        rXnNfvjwHffjV7l6H2xwdedve4EOMmQ=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.cz;
+        s=susede2_ed25519; t=1686569726;
+        h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+         mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=c1onI1JNbCsu0x7eMgFnoMSWuE6d/qfVBdd3qHMjSvM=;
+        b=RI9p567oHQ/Db//el3LPuq0tlWX6WcAag4asOCMBMOb4BSHlQH6N5KLAPOnAxqxYUCTj7N
+        2SZXiOsqmiyitCCg==
+Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
+        (No client certificate requested)
+        by imap2.suse-dmz.suse.de (Postfix) with ESMTPS id D4A1D1357F;
+        Mon, 12 Jun 2023 11:35:26 +0000 (UTC)
+Received: from dovecot-director2.suse.de ([192.168.254.65])
+        by imap2.suse-dmz.suse.de with ESMTPSA
+        id FFDjM/4Ch2QjSwAAMHmgww
+        (envelope-from <jack@suse.cz>); Mon, 12 Jun 2023 11:35:26 +0000
+Received: by quack3.suse.cz (Postfix, from userid 1000)
+        id 6A282A0717; Mon, 12 Jun 2023 13:35:26 +0200 (CEST)
+Date:   Mon, 12 Jun 2023 13:35:26 +0200
+From:   Jan Kara <jack@suse.cz>
+To:     "Darrick J. Wong" <djwong@kernel.org>
+Cc:     linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
+        mcgrof@kernel.org, jack@suse.cz, hch@infradead.org,
+        ruansy.fnst@fujitsu.com
+Subject: Re: [PATCH 2/3] fs: wait for partially frozen filesystems
+Message-ID: <20230612113526.xfhpaohiqusq5ixt@quack3>
+References: <168653971691.755178.4003354804404850534.stgit@frogsfrogsfrogs>
+ <168653972832.755178.18389114450766371923.stgit@frogsfrogsfrogs>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <87r0qhrrvr.fsf@email.froward.int.ebiederm.org>
+In-Reply-To: <168653972832.755178.18389114450766371923.stgit@frogsfrogsfrogs>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Mon, Jun 12, 2023 at 03:45:12AM -0500, Eric W. Biederman wrote:
-> Linus Torvalds <torvalds@linux-foundation.org> writes:
+On Sun 11-06-23 20:15:28, Darrick J. Wong wrote:
+> From: Darrick J. Wong <djwong@kernel.org>
 > 
-> > On Sun, Jun 11, 2023 at 10:49 PM Dave Chinner <david@fromorbit.com> wrote:
-> >>
-> >> On Sun, Jun 11, 2023 at 10:34:29PM -0700, Linus Torvalds wrote:
-> >> >
-> >> > So that "!=" should obviously have been a "==".
-> >>
-> >> Same as without the condition - all the fsstress tasks hang in
-> >> do_coredump().
-> >
-> > Ok, that at least makes sense. Your "it made things worse" made me go
-> > "What?" until I noticed the stupid backwards test.
-> >
-> > I'm not seeing anything else that looks odd in that commit
-> > f9010dbdce91 ("fork, vhost: Use CLONE_THREAD to fix freezer/ps
-> > regression").
-> >
-> > Let's see if somebody else goes "Ahh" when they wake up tomorrow...
-
-....
-
-> About the only thing I can image is if io_uring is involved.  Some of
-> the PF_IO_WORKER code was changed, and the test
-> "((t->flags & (PF_USER_WORKER | PF_IO_WORKER)) != PF_USER_WORKER)"
-> was sprinkled around.
+> Jan Kara suggested that when one thread is in the middle of freezing a
+> filesystem, another thread trying to freeze the same fs but with a
+> different freeze_holder should wait until the freezer reaches either end
+> state (UNFROZEN or COMPLETE) instead of returning EBUSY immediately.
 > 
-> That is the only code outside of vhost specific code that was changed.
+> Plumb in the extra coded needed to wait for the fs freezer to reach an
+> end state and try the freeze again.
 > 
-> 
-> Is io_uring involved in the cases that hang?
+> Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 
-Yes. fsstress randomly uses io_uring for the ops that it runs.
+You can maybe copy my reasoning from my reply to your patch 1/3 to the
+changelog to explain why waiting is more desirable.
 
--Dave.
+> @@ -1690,11 +1699,13 @@ static int freeze_frozen_super(struct super_block *sb, enum freeze_holder who)
+>   */
+>  int freeze_super(struct super_block *sb, enum freeze_holder who)
+>  {
+> +	bool try_again = true;
+>  	int ret;
+>  
+>  	atomic_inc(&sb->s_active);
+>  	down_write(&sb->s_umount);
+>  
+> +retry:
+>  	if (sb->s_writers.frozen == SB_FREEZE_COMPLETE) {
+>  		ret = freeze_frozen_super(sb, who);
+>  		deactivate_locked_super(sb);
+> @@ -1702,8 +1713,14 @@ int freeze_super(struct super_block *sb, enum freeze_holder who)
+>  	}
+>  
+>  	if (sb->s_writers.frozen != SB_UNFROZEN) {
+> -		deactivate_locked_super(sb);
+> -		return -EBUSY;
+> +		if (!try_again) {
+> +			deactivate_locked_super(sb);
+> +			return -EBUSY;
+> +		}
+
+Why only one retry? Do you envision someone will be freezing & thawing
+filesystem so intensively that livelocks are possible? In that case I'd
+think the system has other problems than freeze taking long... Honestly,
+I'd be looping as long as we either succeed or return error for other
+reasons.
+
+What we could be doing to limit unnecessary waiting is that we'd update
+freeze_holders already when we enter freeze_super() and lock s_umount
+(bailing if our holder type is already set). That way we'd have at most one
+process for each holder type freezing the fs / waiting for freezing to
+complete.
+
+> +
+> +		wait_for_partially_frozen(sb);
+> +		try_again = false;
+> +		goto retry;
+>  	}
+>  
+...
+> @@ -1810,6 +1831,7 @@ static int thaw_super_locked(struct super_block *sb, enum freeze_holder who)
+>  	if (sb_rdonly(sb)) {
+>  		sb->s_writers.freeze_holders &= ~who;
+>  		sb->s_writers.frozen = SB_UNFROZEN;
+> +		wake_up_var(&sb->s_writers.frozen);
+>  		goto out;
+>  	}
+>  
+> @@ -1828,6 +1850,7 @@ static int thaw_super_locked(struct super_block *sb, enum freeze_holder who)
+>  
+>  	sb->s_writers.freeze_holders &= ~who;
+>  	sb->s_writers.frozen = SB_UNFROZEN;
+> +	wake_up_var(&sb->s_writers.frozen);
+>  	sb_freeze_unlock(sb, SB_FREEZE_FS);
+>  out:
+>  	wake_up(&sb->s_writers.wait_unfrozen);
+
+I don't think wakeups on thaw are really needed because the waiter should
+be woken already once the freezing task exits from freeze_super(). I guess
+you've sprinkled them here just for good measure?
+
+								Honza
 -- 
-Dave Chinner
-david@fromorbit.com
+Jan Kara <jack@suse.com>
+SUSE Labs, CR
