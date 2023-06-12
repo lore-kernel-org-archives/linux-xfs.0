@@ -2,94 +2,114 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A04C0C88CB2
-	for <linux-xfs@archiver.kernel.org>; Mon, 12 Jun 2023 17:11:32 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3A880ECAA3C
+	for <linux-xfs@archiver.kernel.org>; Mon, 12 Jun 2023 17:30:16 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230302AbjFLRLb convert rfc822-to-8bit (ORCPT
-        <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 12 Jun 2023 13:11:31 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54934 "EHLO
+        id S233445AbjFLRaL (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 12 Jun 2023 13:30:11 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39958 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231252AbjFLRLb (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 12 Jun 2023 13:11:31 -0400
-Received: from out02.mta.xmission.com (out02.mta.xmission.com [166.70.13.232])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 99B06113;
-        Mon, 12 Jun 2023 10:11:30 -0700 (PDT)
-Received: from in02.mta.xmission.com ([166.70.13.52]:56964)
-        by out02.mta.xmission.com with esmtps  (TLS1.3) tls TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384
-        (Exim 4.93)
-        (envelope-from <ebiederm@xmission.com>)
-        id 1q8l4i-008G1Y-7Y; Mon, 12 Jun 2023 11:11:28 -0600
-Received: from ip68-110-29-46.om.om.cox.net ([68.110.29.46]:35692 helo=email.froward.int.ebiederm.org.xmission.com)
-        by in02.mta.xmission.com with esmtpsa  (TLS1.3) tls TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384
-        (Exim 4.93)
-        (envelope-from <ebiederm@xmission.com>)
-        id 1q8l4h-00GGD8-4b; Mon, 12 Jun 2023 11:11:27 -0600
-From:   "Eric W. Biederman" <ebiederm@xmission.com>
+        with ESMTP id S237157AbjFLR33 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 12 Jun 2023 13:29:29 -0400
+Received: from mail-io1-xd2d.google.com (mail-io1-xd2d.google.com [IPv6:2607:f8b0:4864:20::d2d])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id ED1D8129
+        for <linux-xfs@vger.kernel.org>; Mon, 12 Jun 2023 10:29:27 -0700 (PDT)
+Received: by mail-io1-xd2d.google.com with SMTP id ca18e2360f4ac-777a9ca9112so45574739f.1
+        for <linux-xfs@vger.kernel.org>; Mon, 12 Jun 2023 10:29:27 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=kernel-dk.20221208.gappssmtp.com; s=20221208; t=1686590967; x=1689182967;
+        h=content-transfer-encoding:in-reply-to:from:references:cc:to
+         :content-language:subject:user-agent:mime-version:date:message-id
+         :from:to:cc:subject:date:message-id:reply-to;
+        bh=TFWZn0n6OGSV4kVBbYftRZo2ty8H3Bci18vHV3tC0Uw=;
+        b=G8JD84g8f9Aeee5HTb3j/7SgOJh5Qn/aixcR5+GacNDkyxtuggQHLsYFnC6bEXjPzX
+         CFDBvYGcEzc1Ttl+IUa85nXJaOctQM+3Wy8xIs72fL9U/EZpbxXE0eJqLOsg7VKrMIC5
+         weokx/JiqIENqjn+LXa6+yAoNSa4c/vJ0Jsnyuao7rqrJ9O5YfZGoHB+GpSAFFK7rf5t
+         e3cgg3kcuwmy9bn41z6Fh0yOgs9hNIUGeYIWRQdX3YWh0zxo6BeyQp86i/LzYL50hqt3
+         RK/B1dfYGtQYx6zG0W9kb866p34EKPfBVuRjPGLhqy6GqZBIlr+JvIP15dv+x4wcQyQ9
+         QDCA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20221208; t=1686590967; x=1689182967;
+        h=content-transfer-encoding:in-reply-to:from:references:cc:to
+         :content-language:subject:user-agent:mime-version:date:message-id
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=TFWZn0n6OGSV4kVBbYftRZo2ty8H3Bci18vHV3tC0Uw=;
+        b=Hj5a8GQl74qWWc2pgQVeqQ4xgFTtc9bfeT3P5p6pIR9Sdx+/OeDDc7kJHpiJ9OnoHF
+         3wzwkp30xkeB10lKj2N5nDcJD0+AWHbUtAQcquB2nvQzY0gFk9BDFmOUr4CUd7/L0zy9
+         kGNRhmbxdF89z7jfnbOCqquxQqDDrYiB9jS/kuopC7vfzjmXhWkk81kTPv4+jl2gwAuz
+         PL+yIouptnLiu0z+lr2Uwp7hT12ZcrA/gfXRTQbZA2xNlx1rAPqMXAJH4JYvP+rS6EoK
+         a+OERBrGnEX60Ur/FVmrZ7Is91bgz+v9Se6pbFSwgt7jiFSBehkHyb7pR+FH2nTKwI3o
+         1NBg==
+X-Gm-Message-State: AC+VfDwMwVtKeCBxPvQsZU8UmtXNg5wgLOFChrKyd55sZBepCcXlCIuB
+        OjxX1UHev8L34RW8ANUKWHhgtQ==
+X-Google-Smtp-Source: ACHHUZ5bDIcReS9+YhyEZIK2CCIqFlbV7Kvzlpd9NEY+7ScY3yUVxP60SWtqVvazxqpp+hgdcN0Nww==
+X-Received: by 2002:a92:440e:0:b0:33b:e24b:ca46 with SMTP id r14-20020a92440e000000b0033be24bca46mr5234504ila.3.1686590967286;
+        Mon, 12 Jun 2023 10:29:27 -0700 (PDT)
+Received: from [192.168.1.94] ([96.43.243.2])
+        by smtp.gmail.com with ESMTPSA id t11-20020a92d14b000000b0033d2d6620b0sm3295648ilg.2.2023.06.12.10.29.25
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Mon, 12 Jun 2023 10:29:26 -0700 (PDT)
+Message-ID: <ff34a007-fdd0-8575-8482-919ead39fc88@kernel.dk>
+Date:   Mon, 12 Jun 2023 11:29:25 -0600
+MIME-Version: 1.0
+User-Agent: Mozilla/5.0 (X11; Linux aarch64; rv:102.0) Gecko/20100101
+ Thunderbird/102.11.0
+Subject: Re: [6.5-rc5 regression] core dump hangs (was Re: [Bug report]
+ fstests generic/051 (on xfs) hang on latest linux v6.5-rc5+)
+Content-Language: en-US
 To:     Linus Torvalds <torvalds@linux-foundation.org>
-Cc:     Jens Axboe <axboe@kernel.dk>,
-        "Darrick J. Wong" <djwong@kernel.org>,
+Cc:     "Darrick J. Wong" <djwong@kernel.org>,
         Dave Chinner <david@fromorbit.com>,
         Zorro Lang <zlang@redhat.com>, linux-xfs@vger.kernel.org,
+        "Eric W. Biederman" <ebiederm@xmission.com>,
         Mike Christie <michael.christie@oracle.com>,
         "Michael S. Tsirkin" <mst@redhat.com>, linux-kernel@vger.kernel.org
 References: <20230611124836.whfktwaumnefm5z5@zlang-mailbox>
-        <ZIZSPyzReZkGBEFy@dread.disaster.area>
-        <20230612015145.GA11441@frogsfrogsfrogs>
-        <ZIaBQnCKJ6NsqGhd@dread.disaster.area>
-        <CAHk-=whJqZLKPR-cpX-V4wJTXVX-_tG5Vjuj2q9knvKGCPdfkg@mail.gmail.com>
-        <20230612153629.GA11427@frogsfrogsfrogs>
-        <CAHk-=wiN-JcUh4uhDNmA4hp26Mg+c2DTuzgWY2fZ6hytDtOMCg@mail.gmail.com>
-        <af31cadf-8c15-8d88-79fb-066dc87f0324@kernel.dk>
-        <13d9e4f2-17c5-0709-0cc0-6f92bfe9f30d@kernel.dk>
-        <CAHk-=wgdBfqyNHk0iNyYpEuBUdVgq1KMzHMuEqn=ADtfyK_pkQ@mail.gmail.com>
-        <212a190c-f81e-2876-cf14-6d1e37d47192@kernel.dk>
-        <CAHk-=wh0hrFjcU5C8uHvLBThrT5vQsFHb7Jk6HRP3LAJqdNx1A@mail.gmail.com>
-Date:   Mon, 12 Jun 2023 12:11:19 -0500
+ <ZIZSPyzReZkGBEFy@dread.disaster.area>
+ <20230612015145.GA11441@frogsfrogsfrogs>
+ <ZIaBQnCKJ6NsqGhd@dread.disaster.area>
+ <CAHk-=whJqZLKPR-cpX-V4wJTXVX-_tG5Vjuj2q9knvKGCPdfkg@mail.gmail.com>
+ <20230612153629.GA11427@frogsfrogsfrogs>
+ <CAHk-=wiN-JcUh4uhDNmA4hp26Mg+c2DTuzgWY2fZ6hytDtOMCg@mail.gmail.com>
+ <af31cadf-8c15-8d88-79fb-066dc87f0324@kernel.dk>
+ <13d9e4f2-17c5-0709-0cc0-6f92bfe9f30d@kernel.dk>
+ <CAHk-=wgdBfqyNHk0iNyYpEuBUdVgq1KMzHMuEqn=ADtfyK_pkQ@mail.gmail.com>
+ <212a190c-f81e-2876-cf14-6d1e37d47192@kernel.dk>
+ <CAHk-=wh0hrFjcU5C8uHvLBThrT5vQsFHb7Jk6HRP3LAJqdNx1A@mail.gmail.com>
+From:   Jens Axboe <axboe@kernel.dk>
 In-Reply-To: <CAHk-=wh0hrFjcU5C8uHvLBThrT5vQsFHb7Jk6HRP3LAJqdNx1A@mail.gmail.com>
-        (Linus Torvalds's message of "Mon, 12 Jun 2023 09:57:51 -0700")
-Message-ID: <87wn08ppvs.fsf@email.froward.int.ebiederm.org>
-User-Agent: Gnus/5.13 (Gnus v5.13) Emacs/27.1 (gnu/linux)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 8BIT
-X-XM-SPF: eid=1q8l4h-00GGD8-4b;;;mid=<87wn08ppvs.fsf@email.froward.int.ebiederm.org>;;;hst=in02.mta.xmission.com;;;ip=68.110.29.46;;;frm=ebiederm@xmission.com;;;spf=pass
-X-XM-AID: U2FsdGVkX19EY7Ho9kfWEUAJ7nVOKAACcXVbaQOg1IQ=
-X-SA-Exim-Connect-IP: 68.110.29.46
-X-SA-Exim-Mail-From: ebiederm@xmission.com
-Subject: Re: [6.5-rc5 regression] core dump hangs (was Re: [Bug report]
- fstests generic/051 (on xfs) hang on latest linux v6.5-rc5+)
-X-SA-Exim-Version: 4.2.1 (built Sat, 08 Feb 2020 21:53:50 +0000)
-X-SA-Exim-Scanned: Yes (on in02.mta.xmission.com)
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Linus Torvalds <torvalds@linux-foundation.org> writes:
-
+On 6/12/23 10:57 AM, Linus Torvalds wrote:
 > On Mon, Jun 12, 2023 at 9:45 AM Jens Axboe <axboe@kernel.dk> wrote:
 >>
 >> You snipped the suspicion in my reply on why that exists, to avoid
 >> io_wq_worker_sleeping() triggering.
->
+> 
 > I'm not seeing why triggering io_wq_worker_sleeping() should even be a
 > problem in the first place.
->
+> 
 > I suspect that is entirely historical too, and has to do with how it
 > used to do that
->
+> 
 >         struct io_worker *worker = kthread_data(tsk);
 >         struct io_wqe *wqe = worker->wqe;
->
+> 
 > back in the bad old days of kthreads.
->
+> 
 > But yeah, I don't know that code.
 
-If it is a problem it looks like the thread shutdown can clear
-"worker->flags & IO_WORKER_F_UP" rather than
-"current->flags & PF_IO_WORKER".
+Looks fine to me to just kill it indeed, whatever we did need this
+for is definitely no longer the case. I _think_ we used to have
+something in the worker exit that would potentially sleep which
+is why we killed it before doing that, now it just looks like dead
+code.
 
-I don't see how it makes sense for the load balancing logic for
-a per-process thread pool to be running at that point.
+-- 
+Jens Axboe
 
-Eric
+
