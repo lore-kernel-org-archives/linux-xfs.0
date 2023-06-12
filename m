@@ -2,99 +2,148 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 89EA1C88CB2
-	for <linux-xfs@archiver.kernel.org>; Mon, 12 Jun 2023 15:33:19 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 446A2C7EE2F
+	for <linux-xfs@archiver.kernel.org>; Mon, 12 Jun 2023 15:36:33 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S236666AbjFLPdP (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 12 Jun 2023 11:33:15 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58226 "EHLO
+        id S237978AbjFLPgc (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 12 Jun 2023 11:36:32 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60544 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S234742AbjFLPdJ (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 12 Jun 2023 11:33:09 -0400
-Received: from mail-pl1-x62a.google.com (mail-pl1-x62a.google.com [IPv6:2607:f8b0:4864:20::62a])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 80D6610C2;
-        Mon, 12 Jun 2023 08:33:08 -0700 (PDT)
-Received: by mail-pl1-x62a.google.com with SMTP id d9443c01a7336-1b3b3f67ad6so17459735ad.3;
-        Mon, 12 Jun 2023 08:33:08 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20221208; t=1686583988; x=1689175988;
-        h=in-reply-to:subject:cc:to:from:message-id:date:from:to:cc:subject
-         :date:message-id:reply-to;
-        bh=nhrxGfhiU8mnI+Qui4ZsDfQuxzfLN1KbJ8U40slvmi4=;
-        b=IY5/++DvYAINuv/PlmPo+XYtXjoLcD3Yf6OBHV52sziyCr/f1bljpB73JIsif+cOoa
-         5Sw8AZM+tRDOwDJAJR3+GmlJAnnmN9o3wmf4Fjz3p330kqiIqY2mPioV5PehoGpyDENV
-         VnIFgK6S6w47QvHc5OXNVqi/M7x8x+jxtT7eBTSgwvGv1bMazVGT1FfitmKnk078/xX7
-         lo3RIa73378LnqEeQ9gpdoD1/tDElpPSqhijSy/kR7ckdb8ZkzYv2IkIPOchhRulb8WV
-         uTLoCev9VB2BYFL5jPSjtnGCZehkHfwv+BskZkAjuIczRBEmRyUMphwi/YQ+IXPFnu4U
-         2r8A==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20221208; t=1686583988; x=1689175988;
-        h=in-reply-to:subject:cc:to:from:message-id:date:x-gm-message-state
-         :from:to:cc:subject:date:message-id:reply-to;
-        bh=nhrxGfhiU8mnI+Qui4ZsDfQuxzfLN1KbJ8U40slvmi4=;
-        b=FYjUtMDOeV3dgVbh0PDhSrYKISCUC82piZO9ghEjUKHXOurIz+GUVm73QYg8BdvZYX
-         JodaMH+8YYdtji6JDySKhlZg9XmogNILxj5lL040SSIIaW1cga01HgAOC56QK7N+BzGa
-         cR0aRS4vMbb45P5/NWCy4qm+5hbSpqUhHEdzhBKnnIGe+BxpO4W3WfLIUa0Ek6Dvz1SD
-         yonUIQru9vUj67jz6F2jcaKqZjCLPdL5E1tN0N4LkVpN7xnfMX4ADlGD7I6/8WsDRdkY
-         0sKZ2yJszRjNW1kMLK9dChCK7AvfPh6yM/AZr0BT00hXX88Fp12z2dQEgQkqiYT6AHu8
-         dRpg==
-X-Gm-Message-State: AC+VfDxMxMYsFgGs5CjBQf4A14E4jxVLnFs2Apkc8mtGLn7mqf8Vgd6c
-        0krShVe6apqAy3mXTKS9C8c=
-X-Google-Smtp-Source: ACHHUZ7IemVkBcYi3KBXxBvUr8jSD36KFfmmTM63ExphjBf7uwFtoMfREdDgqpMfy0ej5i0Q6fAr2A==
-X-Received: by 2002:a17:902:ce8a:b0:1aa:d545:462e with SMTP id f10-20020a170902ce8a00b001aad545462emr8159783plg.13.1686583987927;
-        Mon, 12 Jun 2023 08:33:07 -0700 (PDT)
-Received: from dw-tp ([49.207.220.159])
-        by smtp.gmail.com with ESMTPSA id t20-20020a1709028c9400b001b176d96da0sm8444430plo.78.2023.06.12.08.33.05
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 12 Jun 2023 08:33:07 -0700 (PDT)
-Date:   Mon, 12 Jun 2023 21:03:03 +0530
-Message-Id: <87fs6whf0w.fsf@doe.com>
-From:   Ritesh Harjani (IBM) <ritesh.list@gmail.com>
-To:     Matthew Wilcox <willy@infradead.org>
-Cc:     Andreas Gruenbacher <agruenba@redhat.com>,
-        Christoph Hellwig <hch@infradead.org>,
-        linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
-        "Darrick J. Wong" <djwong@kernel.org>,
-        Dave Chinner <david@fromorbit.com>,
-        Brian Foster <bfoster@redhat.com>,
-        Ojaswin Mujoo <ojaswin@linux.ibm.com>,
-        Disha Goel <disgoel@linux.ibm.com>
-Subject: Re: [PATCHv9 3/6] iomap: Add some uptodate state handling helpers for ifs state bitmap
-In-Reply-To: <ZIc4ujLJixghk6Zp@casper.infradead.org>
+        with ESMTP id S233617AbjFLPgb (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 12 Jun 2023 11:36:31 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id ABAF210CB;
+        Mon, 12 Jun 2023 08:36:30 -0700 (PDT)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 4938D62AE3;
+        Mon, 12 Jun 2023 15:36:30 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id A28E4C433D2;
+        Mon, 12 Jun 2023 15:36:29 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1686584189;
+        bh=Q1uFqQC1LApj4DW1PzaabMa/eO+1KDEQYaeqlQnBAUQ=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=Zaw2dmLk2sIEWs1tdAzS+nK65mRh2kTQ8vXiyCWcv8v2lYwxuhmHUorrYCQORDzC/
+         NhjSkO6Emh9xOtLHBoY5w/EClpBciNfCPzsh/D+J5/DRcSugI4nO9RsfidNg2ENR/l
+         jluK3RjF10Sx3iav95GSe8PIFyhiJPu8bIXLZlegNqg9EN+5DeLZ8rK91eLS9vP7Cq
+         DvrhGZ4B52If4qoJzZTHF7eAgnIGWwi//UucCHPuqrSW+I5RpR61oO1TAD59sLoCoK
+         p3ZlfbvK2/QcCYap98nY5mX0LyCZlzcJPbXqd++izu9mPr9be6eXf/tcBCDU5hdX8v
+         iUrNyH0hLLNZw==
+Date:   Mon, 12 Jun 2023 08:36:29 -0700
+From:   "Darrick J. Wong" <djwong@kernel.org>
+To:     Linus Torvalds <torvalds@linux-foundation.org>
+Cc:     Dave Chinner <david@fromorbit.com>, Zorro Lang <zlang@redhat.com>,
+        linux-xfs@vger.kernel.org,
+        "Eric W. Biederman" <ebiederm@xmission.com>,
+        Mike Christie <michael.christie@oracle.com>,
+        "Michael S. Tsirkin" <mst@redhat.com>, linux-kernel@vger.kernel.org
+Subject: Re: [6.5-rc5 regression] core dump hangs (was Re: [Bug report]
+ fstests generic/051 (on xfs) hang on latest linux v6.5-rc5+)
+Message-ID: <20230612153629.GA11427@frogsfrogsfrogs>
+References: <20230611124836.whfktwaumnefm5z5@zlang-mailbox>
+ <ZIZSPyzReZkGBEFy@dread.disaster.area>
+ <20230612015145.GA11441@frogsfrogsfrogs>
+ <ZIaBQnCKJ6NsqGhd@dread.disaster.area>
+ <CAHk-=whJqZLKPR-cpX-V4wJTXVX-_tG5Vjuj2q9knvKGCPdfkg@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <CAHk-=whJqZLKPR-cpX-V4wJTXVX-_tG5Vjuj2q9knvKGCPdfkg@mail.gmail.com>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Matthew Wilcox <willy@infradead.org> writes:
+On Sun, Jun 11, 2023 at 08:14:25PM -0700, Linus Torvalds wrote:
+> On Sun, Jun 11, 2023 at 7:22 PM Dave Chinner <david@fromorbit.com> wrote:
+> >
+> > I guess the regression fix needs a regression fix....
+> 
+> Yup.
+> 
+> From the description of the problem, it sounds like this happens on
+> real hardware, no vhost anywhere?
+> 
+> Or maybe Darrick (who doesn't see the issue) is running on raw
+> hardware, and you and Zorro are running in a virtual environment?
 
-> On Mon, Jun 12, 2023 at 08:48:16PM +0530, Ritesh Harjani wrote:
->> > Since we're at the nitpicking, I don't find those names very useful,
->> > either. How about the following instead?
->> >
->> > iomap_ifs_alloc -> iomap_folio_state_alloc
->> > iomap_ifs_free -> iomap_folio_state_free
->> > iomap_ifs_calc_range -> iomap_folio_state_calc_range
->>
->> First of all I think we need to get used to the name "ifs" like how we
->> were using "iop" earlier. ifs == iomap_folio_state...
->>
->> >
->> > iomap_ifs_is_fully_uptodate -> iomap_folio_is_fully_uptodate
->> > iomap_ifs_is_block_uptodate -> iomap_block_is_uptodate
->> > iomap_ifs_is_block_dirty -> iomap_block_is_dirty
->> >
->>
->> ...if you then look above functions with _ifs_ == _iomap_folio_state_
->> naming. It will make more sense.
->
-> Well, it doesn't because it's iomap_iomap_folio_state_is_fully_uptodate.
+Ahah, it turns out that liburing-dev isn't installed on the test fleet,
+so fstests didn't get built with io_uring support.  That probably
+explains why I don't see any of these hangs.
 
-:P 
+Oh.  I can't *install* the debian liburing-dev package because it has
+a versioned dependency on linux-libc-dev >= 5.1, which isn't compatible
+with me having a linux-libc-dev-djwong package that contains the uapi
+headers for the latest upstream kernel and Replaces: linux-libc-dev.
+So either I have to create a dummy linux-libc-dev with adequate version
+number that pulls in my own libc header package, or rename that package.
 
-> I don't think there's any need to namespace this so fully.
-> ifs_is_fully_uptodate() is just fine for a static function, IMO.
+<sigh> It's going to take me a while to research how best to split this
+stupid knot.
 
-Ohh, we went that road but were shot down. That time the naming was
-iop_is_fully_uptodate(). :(
+--D
 
--ritesh
+> It sounds like zap_other_threads() and coredump_task_exit() do not
+> agree about the core_state->nr_threads counting, which is part of what
+> changed there.
+> 
+> [ Goes off to look ]
+> 
+> Hmm. Both seem to be using the same test for
+> 
+>     (t->flags & (PF_IO_WORKER | PF_USER_WORKER)) != PF_USER_WORKER
+> 
+> which I don't love - I don't think io_uring threads should participate
+> in core dumping either, so I think the test could just be
+> 
+>     (t->flags & PF_IO_WORKER)
+> 
+> but that shouldn't be the issue here.
+> 
+> But according to
+> 
+>   https://lore.kernel.org/all/20230611124836.whfktwaumnefm5z5@zlang-mailbox/
+> 
+> it's clearly hanging in wait_for_completion_state() in
+> coredump_wait(), so it really looks like some confusion about that
+> core_waiters (aka core_state->nr_threads) count.
+> 
+> Oh. Humm. Mike changed that initial rough patch of mine, and I had
+> moved the "if you don't participate in c ore dumps" test up also past
+> the "do_coredump()" logic.
+> 
+> And I think it's horribly *wrong* for a thread that doesn't get
+> counted for core-dumping to go into do_coredump(), because then it
+> will set the "core_state" to possibly be the core-state of the vhost
+> thread that isn't even counted.
+> 
+> So *maybe* this attached patch might fix it? I haven't thought very
+> deeply about this, but vhost workers most definitely shouldn't call
+> do_coredump(), since they are then not counted.
+> 
+> (And again, I think we should just check that PF_IO_WORKER bit, not
+> use this more complex test, but that's a separate and bigger change).
+> 
+>               Linus
+
+>  kernel/signal.c | 4 ++++
+>  1 file changed, 4 insertions(+)
+> 
+> diff --git a/kernel/signal.c b/kernel/signal.c
+> index 2547fa73bde5..a1e11ee8537c 100644
+> --- a/kernel/signal.c
+> +++ b/kernel/signal.c
+> @@ -2847,6 +2847,10 @@ bool get_signal(struct ksignal *ksig)
+>  		 */
+>  		current->flags |= PF_SIGNALED;
+>  
+> +		/* vhost workers don't participate in core dups */
+> +		if ((current->flags & (PF_IO_WORKER | PF_USER_WORKER)) != PF_USER_WORKER)
+> +			goto out;
+> +
+>  		if (sig_kernel_coredump(signr)) {
+>  			if (print_fatal_signals)
+>  				print_fatal_signal(ksig->info.si_signo);
+
