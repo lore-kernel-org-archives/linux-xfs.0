@@ -2,168 +2,173 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id BA08BC7EE2E
-	for <linux-xfs@archiver.kernel.org>; Mon, 12 Jun 2023 16:20:45 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4A1FFC7EE2E
+	for <linux-xfs@archiver.kernel.org>; Mon, 12 Jun 2023 16:27:38 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235688AbjFLQUo (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 12 Jun 2023 12:20:44 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57338 "EHLO
+        id S236488AbjFLQ1h (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 12 Jun 2023 12:27:37 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60810 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S235724AbjFLQUn (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 12 Jun 2023 12:20:43 -0400
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7D624172B
-        for <linux-xfs@vger.kernel.org>; Mon, 12 Jun 2023 09:19:59 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1686586798;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=LDCO0K8HODdAFd92npjPxBs4RzuiWq9P8qLQjLYAYLU=;
-        b=DcLQv4z4dEK1lRPxy3i/BmTHRS5XdR23hYJwUVJhfHoK7s71qeXuGjreKzZQ6rPXNVD+NF
-        QR6n+ZwlsdFvCyT0Jy/Tm/Iif9OMHlG/fSnk5YhgsXvNQ8z5tUbpeiTWOaDr8rCY5zQVyj
-        2eNceo6B5PXDTUckaqrMtx4Yi2my6Lc=
-Received: from mail-pl1-f200.google.com (mail-pl1-f200.google.com
- [209.85.214.200]) by relay.mimecast.com with ESMTP with STARTTLS
- (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
- us-mta-628-4Yks1KDTMS2whqIvOoVeyw-1; Mon, 12 Jun 2023 12:19:57 -0400
-X-MC-Unique: 4Yks1KDTMS2whqIvOoVeyw-1
-Received: by mail-pl1-f200.google.com with SMTP id d9443c01a7336-1b3c575f0c8so7797295ad.3
-        for <linux-xfs@vger.kernel.org>; Mon, 12 Jun 2023 09:19:56 -0700 (PDT)
+        with ESMTP id S236297AbjFLQ1a (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 12 Jun 2023 12:27:30 -0400
+Received: from mail-il1-x129.google.com (mail-il1-x129.google.com [IPv6:2607:f8b0:4864:20::129])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 76E28E4E
+        for <linux-xfs@vger.kernel.org>; Mon, 12 Jun 2023 09:27:28 -0700 (PDT)
+Received: by mail-il1-x129.google.com with SMTP id e9e14a558f8ab-33fe6a30572so1222745ab.1
+        for <linux-xfs@vger.kernel.org>; Mon, 12 Jun 2023 09:27:28 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=kernel-dk.20221208.gappssmtp.com; s=20221208; t=1686587248; x=1689179248;
+        h=content-transfer-encoding:in-reply-to:from:references:cc:to
+         :content-language:subject:user-agent:mime-version:date:message-id
+         :from:to:cc:subject:date:message-id:reply-to;
+        bh=4DamFb9KrPkrodrikB75BJEmIeuFQkyiO8xBxyfEiGU=;
+        b=DDASE38qvGW9uZSRU7BmI0kF7I5ApbcdKkQiChxsAdBBITf0JPe9Pcn8BX9f2HGfLw
+         LL5G7u7/XXc/iZCFWtjC/rJImW9/y5/kQ1f72m4hINAi7206kUip0v5z3J8Yku3SoM2E
+         DQyzfGDGQInH8uECwWRnQUyVeg74kkcYe+IpOKNSdLkLXS7kGjblwkMRM6xJ6OwZJ6Th
+         X/oVwHoDTpHJ0ODhhb/dgganv0XHfpQNnJPQK9Z/ix9L73rlG3zM2jqGnR0qYhKBd1/q
+         P3q+v88sqReFCK6j8UyjI08PMcVaXSBgIkicA4RkZSp2UQCWccV5vR1Shv8dqvdtcByy
+         4btA==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20221208; t=1686586795; x=1689178795;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=LDCO0K8HODdAFd92npjPxBs4RzuiWq9P8qLQjLYAYLU=;
-        b=I0WfAnIN7kwF6XZnLDqGL7N2ocMWsKTqavFII28BZmlebkL0LztE0Rb6ClAuUvwH5S
-         wetuFXx97p5hemr7ikAE4YR7bM1Ag0pKuWhAbO4r/dsTTj87z1rB+4MklqPtgD1f+sqQ
-         NsmH3J3izzXHsQ4GvqxLe9UMV2Zj/zsMk1EwDdpDM/N9rkyde8OVHPaxHFi7/N1VViEI
-         t/tcbBgt2Sw2zVMdftVprWpZFV9873n+4hWo65CPrtTj+tTmCX2Th6zMWKXg4V23HbAY
-         c2ZkidGE+zlXnUiOHJ/zWrjjqt6/PQnCxEvOIHzG5GBnc3RaNXDBxWXl2aHzTHf5aruk
-         lHcA==
-X-Gm-Message-State: AC+VfDwLl8E/wCfUnOQAJBFLbHSMyzxboswbVaREVkGUdcCTI26091VJ
-        4yTGuP7Z9aSMtJPjbIJ4z/DmtpXB2wR7AaATAJ3lNWgA0uYoztfqANNwrpx9XgkSdPAvVLCriEk
-        d7e/rNJqF7awtT3am/jCz5dJbL6KPPvD46P/r
-X-Received: by 2002:a17:902:be0e:b0:1a6:46f2:4365 with SMTP id r14-20020a170902be0e00b001a646f24365mr6855072pls.30.1686586795656;
-        Mon, 12 Jun 2023 09:19:55 -0700 (PDT)
-X-Google-Smtp-Source: ACHHUZ6y3GyAfFuWmHoPDzo6wCeBPeyUbu73Mka1gidkNWiwrSmINPzjBoEiCM9cNiXFXICBmANrXR6Qu16tE7/lCRA=
-X-Received: by 2002:a17:902:be0e:b0:1a6:46f2:4365 with SMTP id
- r14-20020a170902be0e00b001a646f24365mr6855051pls.30.1686586795345; Mon, 12
- Jun 2023 09:19:55 -0700 (PDT)
+        d=1e100.net; s=20221208; t=1686587248; x=1689179248;
+        h=content-transfer-encoding:in-reply-to:from:references:cc:to
+         :content-language:subject:user-agent:mime-version:date:message-id
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=4DamFb9KrPkrodrikB75BJEmIeuFQkyiO8xBxyfEiGU=;
+        b=dATLlwmZj8hubQGnVdbFWZQIxc79bLdLa6P4WR55MBIu+gjHBdqxzIb5j+57T7/RFB
+         d08f1xqWDMF5XFS7uyTIJFEVr2YbLdIzgNb97BPNmMMoWcv5U5OU0S8fjosE4EQk9Kfg
+         1PYpTrs0+7s++KTYY6DJ+Av4N0UjWF9UWJ2Rx80WDdNVlTYPJ77Cr7dqX3RE2QmOy3Pv
+         28ou8mZVj6gJDp8hoK6kIEgOJV/8jKnsQGAUhsBk/JFAzlAM/aM4WuAzP553pHjHGvkU
+         18IZHx0iMr46IATcwl7KdC1V4VwhNolXBvYwB1STLRYlqGP/yZH4vZExuKQks1ee780Z
+         ETRA==
+X-Gm-Message-State: AC+VfDzPsBFrU4QUAnNqeh2ryCxGpDJNZW6+tZ3GhielhCCol6YGN2oS
+        oVMsEQVIP8P97ncI/+2d+5Rvkg==
+X-Google-Smtp-Source: ACHHUZ5l1BeOj6wOnr+OY1oi25lCVCteIJ6FxXg1uuXpv9FAMywsS7cXbeXg6hNTzyqMQ3RZnYA1Mw==
+X-Received: by 2002:a05:6e02:1c0a:b0:330:a1eb:c5a4 with SMTP id l10-20020a056e021c0a00b00330a1ebc5a4mr6231479ilh.1.1686587247763;
+        Mon, 12 Jun 2023 09:27:27 -0700 (PDT)
+Received: from [192.168.1.94] ([96.43.243.2])
+        by smtp.gmail.com with ESMTPSA id e18-20020a926912000000b0033ba7c76f4bsm1230106ilc.44.2023.06.12.09.27.26
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Mon, 12 Jun 2023 09:27:27 -0700 (PDT)
+Message-ID: <af31cadf-8c15-8d88-79fb-066dc87f0324@kernel.dk>
+Date:   Mon, 12 Jun 2023 10:27:25 -0600
 MIME-Version: 1.0
-References: <CAHc6FU7Hv71ujeb9oEVOD+bpddMMT0KY+KKUp881Am15u-OVvg@mail.gmail.com>
- <87ilbshf56.fsf@doe.com> <20230612161617.GE11441@frogsfrogsfrogs>
-In-Reply-To: <20230612161617.GE11441@frogsfrogsfrogs>
-From:   Andreas Gruenbacher <agruenba@redhat.com>
-Date:   Mon, 12 Jun 2023 18:19:43 +0200
-Message-ID: <CAHc6FU78K_jR3Fj6g8Eu78T8=L1xY4CirNiofs7y-n-uRcLXcg@mail.gmail.com>
-Subject: Re: [PATCHv9 3/6] iomap: Add some uptodate state handling helpers for
- ifs state bitmap
-To:     "Darrick J. Wong" <djwong@kernel.org>
-Cc:     Ritesh Harjani <ritesh.list@gmail.com>, linux-xfs@vger.kernel.org,
-        linux-fsdevel@vger.kernel.org,
-        Christoph Hellwig <hch@infradead.org>,
-        Matthew Wilcox <willy@infradead.org>,
-        Dave Chinner <david@fromorbit.com>,
-        Brian Foster <bfoster@redhat.com>,
-        Ojaswin Mujoo <ojaswin@linux.ibm.com>,
-        Disha Goel <disgoel@linux.ibm.com>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+User-Agent: Mozilla/5.0 (X11; Linux aarch64; rv:102.0) Gecko/20100101
+ Thunderbird/102.11.0
+Subject: Re: [6.5-rc5 regression] core dump hangs (was Re: [Bug report]
+ fstests generic/051 (on xfs) hang on latest linux v6.5-rc5+)
+Content-Language: en-US
+To:     Linus Torvalds <torvalds@linux-foundation.org>,
+        "Darrick J. Wong" <djwong@kernel.org>
+Cc:     Dave Chinner <david@fromorbit.com>, Zorro Lang <zlang@redhat.com>,
+        linux-xfs@vger.kernel.org,
+        "Eric W. Biederman" <ebiederm@xmission.com>,
+        Mike Christie <michael.christie@oracle.com>,
+        "Michael S. Tsirkin" <mst@redhat.com>, linux-kernel@vger.kernel.org
+References: <20230611124836.whfktwaumnefm5z5@zlang-mailbox>
+ <ZIZSPyzReZkGBEFy@dread.disaster.area>
+ <20230612015145.GA11441@frogsfrogsfrogs>
+ <ZIaBQnCKJ6NsqGhd@dread.disaster.area>
+ <CAHk-=whJqZLKPR-cpX-V4wJTXVX-_tG5Vjuj2q9knvKGCPdfkg@mail.gmail.com>
+ <20230612153629.GA11427@frogsfrogsfrogs>
+ <CAHk-=wiN-JcUh4uhDNmA4hp26Mg+c2DTuzgWY2fZ6hytDtOMCg@mail.gmail.com>
+From:   Jens Axboe <axboe@kernel.dk>
+In-Reply-To: <CAHk-=wiN-JcUh4uhDNmA4hp26Mg+c2DTuzgWY2fZ6hytDtOMCg@mail.gmail.com>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Mon, Jun 12, 2023 at 6:16=E2=80=AFPM Darrick J. Wong <djwong@kernel.org>=
- wrote:
-> On Mon, Jun 12, 2023 at 09:00:29PM +0530, Ritesh Harjani wrote:
-> > Andreas Gruenbacher <agruenba@redhat.com> writes:
-> >
-> > > On Sat, Jun 10, 2023 at 1:39=E2=80=AFPM Ritesh Harjani (IBM)
-> > > <ritesh.list@gmail.com> wrote:
-> > >> This patch adds two of the helper routines iomap_ifs_is_fully_uptoda=
-te()
-> > >> and iomap_ifs_is_block_uptodate() for managing uptodate state of
-> > >> ifs state bitmap.
-> > >>
-> > >> In later patches ifs state bitmap array will also handle dirty state=
- of all
-> > >> blocks of a folio. Hence this patch adds some helper routines for ha=
-ndling
-> > >> uptodate state of the ifs state bitmap.
-> > >>
-> > >> Signed-off-by: Ritesh Harjani (IBM) <ritesh.list@gmail.com>
-> > >> ---
-> > >>  fs/iomap/buffered-io.c | 28 ++++++++++++++++++++--------
-> > >>  1 file changed, 20 insertions(+), 8 deletions(-)
-> > >>
-> > >> diff --git a/fs/iomap/buffered-io.c b/fs/iomap/buffered-io.c
-> > >> index e237f2b786bc..206808f6e818 100644
-> > >> --- a/fs/iomap/buffered-io.c
-> > >> +++ b/fs/iomap/buffered-io.c
-> > >> @@ -43,6 +43,20 @@ static inline struct iomap_folio_state *iomap_get=
-_ifs(struct folio *folio)
-> > >>
-> > >>  static struct bio_set iomap_ioend_bioset;
-> > >>
-> > >> +static inline bool iomap_ifs_is_fully_uptodate(struct folio *folio,
-> > >> +                                              struct iomap_folio_st=
-ate *ifs)
-> > >> +{
-> > >> +       struct inode *inode =3D folio->mapping->host;
-> > >> +
-> > >> +       return bitmap_full(ifs->state, i_blocks_per_folio(inode, fol=
-io));
-> > >
-> > > This should be written as something like:
-> > >
-> > > unsigned int blks_per_folio =3D i_blocks_per_folio(inode, folio);
-> > > return bitmap_full(ifs->state + IOMAP_ST_UPTODATE * blks_per_folio,
-> > > blks_per_folio);
-> > >
-> >
-> > Nah, I feel it is not required... It make sense when we have the same
-> > function getting use for both "uptodate" and "dirty" state.
-> > Here the function anyways operates on uptodate state.
-> > Hence I feel it is not required.
->
-> Honestly I thought that enum-for-bits thing was excessive considering
-> that ifs has only two state bits.  But, since you included it, it
-> doesn't make much sense /not/ to use it here.
->
-> OTOH, if you disassemble the object code and discover that the compiler
-> *isn't* using constant propagation to simplify the object code, then
-> yes, that would be a good reason to get rid of it.
+On 6/12/23 9:56?AM, Linus Torvalds wrote:
+> On Mon, Jun 12, 2023 at 8:36?AM Darrick J. Wong <djwong@kernel.org> wrote:
+>>
+>>> Or maybe Darrick (who doesn't see the issue) is running on raw
+>>> hardware, and you and Zorro are running in a virtual environment?
+>>
+>> Ahah, it turns out that liburing-dev isn't installed on the test fleet,
+>> so fstests didn't get built with io_uring support.  That probably
+>> explains why I don't see any of these hangs.
+>>
+>> Oh.  I can't *install* the debian liburing-dev package because it has
+>> a versioned dependency on linux-libc-dev >= 5.1, which isn't compatible
+>> with me having a linux-libc-dev-djwong package that contains the uapi
+>> headers for the latest upstream kernel and Replaces: linux-libc-dev.
+>> So either I have to create a dummy linux-libc-dev with adequate version
+>> number that pulls in my own libc header package, or rename that package.
+>>
+>> <sigh> It's going to take me a while to research how best to split this
+>> stupid knot.
+> 
+> Oh, no, that's great. It explains why you don't see the problem, and
+> Dave and Zorro do. Perfect.
+> 
+> No need for you to install any liburing packages, at least for this
+> issue. You'll probably want it eventually just for test coverage, but
+> for now it's the smoking gun we wanted - I was looking at why vhost
+> would be impacted, because that commit so intentionally *tried* to not
+> do anything at all to io_uring.
+> 
+> But it obviously failed. Which then in turn explains the bug.
+> 
+> Not that I see exactly where it went wrong yet, but at least we're
+> looking at the right thing. Adding Jens to the participants, in case
+> he sees what goes wrong.
+> 
+> Jens, commit f9010dbdce91 ("fork, vhost: Use CLONE_THREAD to fix
+> freezer/ps regression") seems to have broken core dumping with
+> io_uring threads, even though it tried very hard not to. See
+> 
+>   https://lore.kernel.org/all/20230611124836.whfktwaumnefm5z5@zlang-mailbox/
+> 
+> for the beginning of this thread.
+> 
+> Honestly, that "try to not change io_uring" was my least favorite part
+> of that patch, because I really think we want to try to aim for these
+> user helper threads having as much infrastructure in common as
+> possible. And when it comes to core dumps, I do not believe that
+> waiting for the io_uring thread adds anything to the end result,
+> because the only reason we wait for it is to put in the thread
+> register state into the core dump, and for kernel helper threads, that
+> information just isn't useful. It's going to be the state that caused
+> the thread to be created, not anything that is worth saving in a core
+> dump for.
+> 
+> So I'd actually prefer to just simplify the logic entirely, and say
+> "PF_USER_WORKER tasks do not participate in core dumps, end of story".
+> io_uring didn't _care_, so including them wasn't a pain, but if the
+> vhost exit case can be delayed, I'd rather just say "let's do thig
+> thing for both io_uring and vhost, and not split those two cases up".
+> 
+> Anyway, I don't see exactly what goes wrong, but I feel better just
+> from this having been narrowed down to io_uring threads. I suspect
+> Jens actually might even have a core-dumping test-case somewhere,
+> since core dumping was a thing that io_uring ended up having some
+> issues with at one point.
 
-I've checked on x86_64 earlier and there at least, the enum didn't
-affect the produced code at all.
+I'll take a look - at the exact same time as your email, someone just
+reported this issue separately on the liburing GH page as well. Tried
+myself, and yup, anything that ends up spawning an io-wq worker and then
+core dumps will now get stuck:
 
-Andreas
+[  136.271250] "echo 0 > /proc/sys/kernel/hung_task_timeout_secs" disables this message.
+[  136.271711] task:ih              state:D stack:0     pid:736   ppid:727    flags:0x00000004
+[  136.272218] Call trace:
+[  136.272353]  __switch_to+0xb0/0xc8
+[  136.272555]  __schedule+0x528/0x584
+[  136.272757]  schedule+0x4c/0x90
+[  136.272936]  schedule_timeout+0x30/0xdc
+[  136.273179]  __wait_for_common+0x8c/0x118
+[  136.273407]  wait_for_completion_state+0x1c/0x30
+[  136.273686]  do_coredump+0x334/0x1000
+[  136.273898]  get_signal+0x19c/0x5d8
+[  136.274108]  do_notify_resume+0x10c/0xa0c
+[  136.274346]  el0_da+0x50/0x5c
+[  136.274555]  el0t_64_sync_handler+0xb8/0x134
+[  136.274812]  el0t_64_sync+0x168/0x16c
 
-> --D
->
-> > >> +}
-> > >> +
-> > >> +static inline bool iomap_ifs_is_block_uptodate(struct iomap_folio_s=
-tate *ifs,
-> > >> +                                              unsigned int block)
-> > >> +{
-> > >> +       return test_bit(block, ifs->state);
-> > >
-> > > This function should be called iomap_ifs_block_is_uptodate(), and
-> > > probably be written as follows, passing in the folio as well (this
-> > > will optimize out, anyway):
-> > >
-> > > struct inode *inode =3D folio->mapping->host;
-> > > unsigned int blks_per_folio =3D i_blocks_per_folio(inode, folio);
-> > > return test_bit(block, ifs->state + IOMAP_ST_UPTODATE * blks_per_foli=
-o);
-> > >
-> >
-> > Same here.
-> >
-> > -ritesh
->
+Not good... I don't immediately see what the issue is, but I'll poke
+shortly after a few meetings.
+
+-- 
+Jens Axboe
 
