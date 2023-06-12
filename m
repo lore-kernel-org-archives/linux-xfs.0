@@ -2,81 +2,96 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A7E1BC7EE2E
-	for <linux-xfs@archiver.kernel.org>; Mon, 12 Jun 2023 17:54:49 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 83EB0C88CB2
+	for <linux-xfs@archiver.kernel.org>; Mon, 12 Jun 2023 17:56:50 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S236791AbjFLRys (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 12 Jun 2023 13:54:48 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56416 "EHLO
+        id S233132AbjFLR4t (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 12 Jun 2023 13:56:49 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57856 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S236811AbjFLRyn (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 12 Jun 2023 13:54:43 -0400
-Received: from casper.infradead.org (casper.infradead.org [IPv6:2001:8b0:10b:1236::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C883810DC;
-        Mon, 12 Jun 2023 10:54:41 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=infradead.org; s=casper.20170209; h=In-Reply-To:Content-Type:MIME-Version:
-        References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
-        Content-Transfer-Encoding:Content-ID:Content-Description;
-        bh=S/s1ddqePgmoNMOZAfQC+8K1eX2Z30E6NVOtj66/zlo=; b=MHiF2ewOZEuR78oa4hF5HFGKCU
-        dcrCGvnZ1MrUq+buk8tANPC646jzSeC0xcitH5ILj6IfEbbCLkTAlUiiyRMSHuy0FaSSIyWjM7WBy
-        7kvyNpwzfA7+7hkrcbXrZU4DegCM1T8gDabuBRQrdAIaAm3iR8yym5zZWmZgjxQYhv75LROxOUSfK
-        71AV9I9f4oRNXSpDAHQcBdEF7RtYYUvHPQ4+J8L6rEt/rjFmQmQs71W+Og88LRLuGGU+GGFOYcKgT
-        mHOf4/fe4SC42naoTPXDFu2wawH7G8yBhygdRvFbVf/6wZGgUeuM3Y0p+QCY0P2DYtIOIJX0M+hPO
-        8XuOHMnQ==;
-Received: from willy by casper.infradead.org with local (Exim 4.94.2 #2 (Red Hat Linux))
-        id 1q8lkT-002tdI-AX; Mon, 12 Jun 2023 17:54:37 +0000
-Date:   Mon, 12 Jun 2023 18:54:37 +0100
-From:   Matthew Wilcox <willy@infradead.org>
-To:     Ritesh Harjani <ritesh.list@gmail.com>
-Cc:     "Darrick J. Wong" <djwong@kernel.org>,
-        Christoph Hellwig <hch@infradead.org>,
-        linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
-        Dave Chinner <david@fromorbit.com>,
-        Brian Foster <bfoster@redhat.com>,
-        Andreas Gruenbacher <agruenba@redhat.com>,
-        Ojaswin Mujoo <ojaswin@linux.ibm.com>,
-        Disha Goel <disgoel@linux.ibm.com>
-Subject: Re: [PATCHv9 1/6] iomap: Rename iomap_page to iomap_folio_state and
- others
-Message-ID: <ZIdb3TrwnhcQ3ULw@casper.infradead.org>
-References: <20230612155911.GC11441@frogsfrogsfrogs>
- <87ttvcpodt.fsf@doe.com>
+        with ESMTP id S231726AbjFLR4s (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 12 Jun 2023 13:56:48 -0400
+Received: from mail-lf1-x12d.google.com (mail-lf1-x12d.google.com [IPv6:2a00:1450:4864:20::12d])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 08C33DB
+        for <linux-xfs@vger.kernel.org>; Mon, 12 Jun 2023 10:56:47 -0700 (PDT)
+Received: by mail-lf1-x12d.google.com with SMTP id 2adb3069b0e04-4f644dffd71so5575708e87.1
+        for <linux-xfs@vger.kernel.org>; Mon, 12 Jun 2023 10:56:46 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=linux-foundation.org; s=google; t=1686592605; x=1689184605;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=C0Jw3FHM9EacxH/mZ/iMD9+z20+OQwgYNEZ4cddG8cQ=;
+        b=QhZpX/rju1hLcL9rV1UHZJRWDdHtqLHv5zuxlQIbNLeNhkiKC8y9MCV4BgfX0HJYwO
+         u6tgfU6QmDNpYvyB/tS3ktK96aoL9rMb0U7SX1XHb3kXhOMnEevghcUsFswZbarcfrkI
+         Jb2W/EbfMXh0Lw/++iprfdfwZR5M9QbI+/t10=
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20221208; t=1686592605; x=1689184605;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=C0Jw3FHM9EacxH/mZ/iMD9+z20+OQwgYNEZ4cddG8cQ=;
+        b=kjG9cE5jUeepi3qAnQkf0qNfkP8maXyd0viZrUS58SZsIU2pKjk9lJoCgAamil1KcL
+         tgEGsSTPyimLHcdyut9kbJRNghddVICs02/5JFPna+L+gLg8nMlhCVsrkb8I1yRj9zd0
+         MJ7QPO8QiUc4srJYHnFUduicLjwOGGtd/fCQSAzotZ9uahUdf1jj29OKpMkTsov4ZbUh
+         Hzvn6McTuudfYdoyOf721RYXfhLfuuqi7k7HuNyVUr4fhayW4VtikvsgDdxHgppOZtgy
+         5QXbt5AZ09QZAUxJsJy2C02AlwnzLdddkNzMExzEBIg3UQhAhT3qCwq61ZpE7F/mOATN
+         XJbQ==
+X-Gm-Message-State: AC+VfDxYcFeV7Oz7GpMLyx+j28iuF93+GfPXjB8qje4mh/kTs9vhBuP5
+        t3XnKE+ohfrQwoqSqQ2bnGaVMKtr6SefLAZXXdTBn7CT
+X-Google-Smtp-Source: ACHHUZ4hXRGMwniS/FTPhTn+TUG8X4CZyA0XNyby5VyvGC1UhgrC1mojLzKwJ9zqtz6LpiHCK2wb8w==
+X-Received: by 2002:a19:4409:0:b0:4f4:4533:8535 with SMTP id r9-20020a194409000000b004f445338535mr4112607lfa.67.1686592605191;
+        Mon, 12 Jun 2023 10:56:45 -0700 (PDT)
+Received: from mail-lf1-f44.google.com (mail-lf1-f44.google.com. [209.85.167.44])
+        by smtp.gmail.com with ESMTPSA id m29-20020a056512015d00b004f6366cbe72sm1486068lfo.228.2023.06.12.10.56.44
+        for <linux-xfs@vger.kernel.org>
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Mon, 12 Jun 2023 10:56:44 -0700 (PDT)
+Received: by mail-lf1-f44.google.com with SMTP id 2adb3069b0e04-4f644dffd71so5575658e87.1
+        for <linux-xfs@vger.kernel.org>; Mon, 12 Jun 2023 10:56:44 -0700 (PDT)
+X-Received: by 2002:ac2:5dc9:0:b0:4ec:8816:f4fc with SMTP id
+ x9-20020ac25dc9000000b004ec8816f4fcmr4979969lfq.6.1686592603732; Mon, 12 Jun
+ 2023 10:56:43 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <87ttvcpodt.fsf@doe.com>
+References: <20230611124836.whfktwaumnefm5z5@zlang-mailbox>
+ <ZIZSPyzReZkGBEFy@dread.disaster.area> <20230612015145.GA11441@frogsfrogsfrogs>
+ <ZIaBQnCKJ6NsqGhd@dread.disaster.area> <CAHk-=whJqZLKPR-cpX-V4wJTXVX-_tG5Vjuj2q9knvKGCPdfkg@mail.gmail.com>
+ <20230612153629.GA11427@frogsfrogsfrogs> <CAHk-=wiN-JcUh4uhDNmA4hp26Mg+c2DTuzgWY2fZ6hytDtOMCg@mail.gmail.com>
+ <af31cadf-8c15-8d88-79fb-066dc87f0324@kernel.dk> <13d9e4f2-17c5-0709-0cc0-6f92bfe9f30d@kernel.dk>
+ <CAHk-=wgdBfqyNHk0iNyYpEuBUdVgq1KMzHMuEqn=ADtfyK_pkQ@mail.gmail.com>
+ <212a190c-f81e-2876-cf14-6d1e37d47192@kernel.dk> <CAHk-=wh0hrFjcU5C8uHvLBThrT5vQsFHb7Jk6HRP3LAJqdNx1A@mail.gmail.com>
+ <ff34a007-fdd0-8575-8482-919ead39fc88@kernel.dk> <CAHk-=whXt9+-YfhgjBYxT9_ATjHbMDZ0yJdK7umrJGU8zBVZ9w@mail.gmail.com>
+ <8a97ca5d-69ef-d716-9f61-2b9b2a26dd14@kernel.dk>
+In-Reply-To: <8a97ca5d-69ef-d716-9f61-2b9b2a26dd14@kernel.dk>
+From:   Linus Torvalds <torvalds@linux-foundation.org>
+Date:   Mon, 12 Jun 2023 10:56:26 -0700
+X-Gmail-Original-Message-ID: <CAHk-=wjVQVkunhPL00iSzBnx8xrdW=94EYoOW24zT0ofGv3m2g@mail.gmail.com>
+Message-ID: <CAHk-=wjVQVkunhPL00iSzBnx8xrdW=94EYoOW24zT0ofGv3m2g@mail.gmail.com>
+Subject: Re: [6.5-rc5 regression] core dump hangs (was Re: [Bug report]
+ fstests generic/051 (on xfs) hang on latest linux v6.5-rc5+)
+To:     Jens Axboe <axboe@kernel.dk>
+Cc:     "Darrick J. Wong" <djwong@kernel.org>,
+        Dave Chinner <david@fromorbit.com>,
+        Zorro Lang <zlang@redhat.com>, linux-xfs@vger.kernel.org,
+        "Eric W. Biederman" <ebiederm@xmission.com>,
+        Mike Christie <michael.christie@oracle.com>,
+        "Michael S. Tsirkin" <mst@redhat.com>, linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Mon, Jun 12, 2023 at 11:13:42PM +0530, Ritesh Harjani wrote:
-> "Darrick J. Wong" <djwong@kernel.org> writes:
-> > Ritesh: Please pick whichever variant you like, and that's it, no more
-> > discussion.
-> 
-> static inline struct iomap_folio_state *to_folio_state(struct folio *folio)
-> {
->     return folio->private;
-> }
-> 
-> Sure this looks fine to me. So, I am hoping that there is no need to check
-> folio_test_private(folio) PG_private flag here before returning
-> folio->private (which was the case in original code to_iomap_page())
-> 
-> I did take a cursory look and didn't find any reason to test for doing
-> folio_test_private(folio) here. It should always remain set between
-> iomap_ifs_alloc() and iomap_ifs_free().
-> 
-> - IIUC, it is mostly for MM subsystem to see whether there is a
-> private FS data attached to a folio for which they think we might have
-> to call FS callback. for e.g. .is_dirty_writeback callback.
-> - Or like FS can use it within it's own subsystem to say whether a
-> folio is being associated with an in-progress read or write request. (e.g. NFS?)
+On Mon, Jun 12, 2023 at 10:54=E2=80=AFAM Jens Axboe <axboe@kernel.dk> wrote=
+:
+>
+> Something like that was/is my worry. Let me add some tracing to confirm
+> it's fine, don't fully trust just my inspection of it. I'll send out the
+> patch separately once done, and then would be great if you can just pick
+> it up so it won't have to wait until I need to send a pull later in the
+> week. Particularly as I have nothing planned for 6.4 unless something
+> else comes up of course.
 
-The PG_private flag is being obsoleted in favour of just testing
-folio->private for being NULL.  It's still in widespread use, but I'm
-removing it as I change code.  I think we'll probably get rid of PG_error
-first, but the more page flags we free up the better.  PG_hwpoison is
-also scheduled for removal, but that requires folios to be dynamically
-allocated first, so freeing that bit probably comes third.
+Ack, sounds good.
+
+                   Linus
