@@ -2,112 +2,100 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B2487C88CB2
-	for <linux-xfs@archiver.kernel.org>; Mon, 12 Jun 2023 16:45:11 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 868D4C88CB2
+	for <linux-xfs@archiver.kernel.org>; Mon, 12 Jun 2023 16:45:49 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230408AbjFLQpJ (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 12 Jun 2023 12:45:09 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42788 "EHLO
+        id S233262AbjFLQps (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 12 Jun 2023 12:45:48 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43162 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229576AbjFLQpI (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 12 Jun 2023 12:45:08 -0400
-Received: from mail-io1-xd33.google.com (mail-io1-xd33.google.com [IPv6:2607:f8b0:4864:20::d33])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2F425E63
-        for <linux-xfs@vger.kernel.org>; Mon, 12 Jun 2023 09:45:07 -0700 (PDT)
-Received: by mail-io1-xd33.google.com with SMTP id ca18e2360f4ac-7748ca56133so38517739f.0
-        for <linux-xfs@vger.kernel.org>; Mon, 12 Jun 2023 09:45:07 -0700 (PDT)
+        with ESMTP id S231797AbjFLQpo (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 12 Jun 2023 12:45:44 -0400
+Received: from mail-ed1-x529.google.com (mail-ed1-x529.google.com [IPv6:2a00:1450:4864:20::529])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id DBBFA1B8
+        for <linux-xfs@vger.kernel.org>; Mon, 12 Jun 2023 09:45:42 -0700 (PDT)
+Received: by mail-ed1-x529.google.com with SMTP id 4fb4d7f45d1cf-51458e3af68so7724902a12.2
+        for <linux-xfs@vger.kernel.org>; Mon, 12 Jun 2023 09:45:42 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=kernel-dk.20221208.gappssmtp.com; s=20221208; t=1686588306; x=1689180306;
-        h=content-transfer-encoding:in-reply-to:from:references:cc:to
-         :content-language:subject:user-agent:mime-version:date:message-id
-         :from:to:cc:subject:date:message-id:reply-to;
-        bh=1dwr8T1zkMzPdbUd2/C0KhHZJoiNvIRLyDbwZLM1weg=;
-        b=ixfU/+ld6JbLaxzASoLYN+vemV1T75PcyCMZA9mtOdzOlRIXtUk9iXaqOkXeYsiTEP
-         pJIW3QncVsHzGK3Gwq35rm8KCiQEQ3cbwV+EFhXZTH346ISnVWYyxUjDfZUD5G7dA3ne
-         /VIsQYPYvwcO9InKvG/zmZS65GHL7nIajl7sCEhqWecYXTdNDRcz1ulub+UvX9bqqz88
-         8mWNZvC1Za/lvUqqeL7WNr5fWX9rlcN7N8TwmYAOqoy5u9RxiR42FHjN8GTWijpV+VOY
-         OVGhnwkTzJvyOZuPgjAVQouNCYhQgbDL+tT47Rzuxg7fwi7gEuoRdZu8kbB57zpCFv0D
-         QzjQ==
+        d=linux-foundation.org; s=google; t=1686588341; x=1689180341;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=NAwyfHdqq2XpGv1HfLFhZYNBkK1lnw38Ar7GumbG5W8=;
+        b=DOV8V8WzRlbYSCaSWcJrxnzEoCDXraXQ3wJ5iUbYMP9Y/Y9VI7CzRqX1ssqq2zF0SK
+         Fnck9R1mnZkJ8MspuOCrJt5zK07w/aDqQAvoxwq3LpfNtpHPec46RJgP1Rhu4Cge/q9w
+         GVxNsVyax3Bso6SxBcJlniy+2rB8nRRcCkXfs=
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20221208; t=1686588306; x=1689180306;
-        h=content-transfer-encoding:in-reply-to:from:references:cc:to
-         :content-language:subject:user-agent:mime-version:date:message-id
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=1dwr8T1zkMzPdbUd2/C0KhHZJoiNvIRLyDbwZLM1weg=;
-        b=l00yOJ4saAR1I4EMAremGiQR4d6J3RGc9NhvOUgF82fYGVpMaNdnjBxTok/2tCY1Ab
-         OJzJmOoi4jKbY3yi0gWVY6ywG0YDi0azuI3fOB5ihpKkhGHBpkVy/ObTWhpAam9RQMPi
-         Au594Ord4D8sNK1C2ae/goQ0whM9SymAFB4kmk45KwT5iQV1UO/xeDR/pzHi0gLWQxBG
-         N5fCT3wVwfPAV3NpBAgortIWq//+u9ccC8H+fWMCCH29hPlzzIClfYVGRy990R/Co7jV
-         NKsMabsYSPJsf+FVdiXtCEpiNOM9F15kJon+ViJlGkWlEhTso/WL6OSno3iy8REdJqd2
-         05SA==
-X-Gm-Message-State: AC+VfDx3bhkY+1N9CqzzpT7y9IeCdfvsfelf9WU+xP4A2mNPUVQNMFcq
-        85VmsYcP/igemP9CH7lUXtQZWA==
-X-Google-Smtp-Source: ACHHUZ4MFEV97yKO9ZXG1inL46usfPlNG2FWIs0Wnbs4QZrmsGOvLnhRlzx7JrGRs82qQSyNrB6pMw==
-X-Received: by 2002:a6b:690a:0:b0:77a:ee79:652 with SMTP id e10-20020a6b690a000000b0077aee790652mr4620075ioc.1.1686588306591;
-        Mon, 12 Jun 2023 09:45:06 -0700 (PDT)
-Received: from [192.168.1.94] ([96.43.243.2])
-        by smtp.gmail.com with ESMTPSA id e10-20020a02a78a000000b0041a8df29ad7sm2783897jaj.38.2023.06.12.09.45.05
+        d=1e100.net; s=20221208; t=1686588341; x=1689180341;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=NAwyfHdqq2XpGv1HfLFhZYNBkK1lnw38Ar7GumbG5W8=;
+        b=PROrP0vdn+PT+DpNyZnxXajzAwyFzpmQlR4NxRsnwBhgimiH6881W1cxhIEi3Alcxs
+         EbDgcdd+taJdW/8XpJNWJzeKYGMTA3TvqfZ4R7I195A0c3RJFYLljDedp/M5KcJWD41d
+         5+ItzRq4x8OsloNmvJ5rqw7caxY23lHTsVAcLadp7w/h3Ii6UbUqUaVvRN2/b4gfUYlr
+         fzFeYrfdCLD8TIkU+IH9AxxspWC/2Ik2TDRK7Q5L20u/tzLWC7w/qzD2iJFl1b2TwJ75
+         OFVgrULclAycOkymTPB83/ZBdPUlqgpXDV/6e10rjy/U04r2sc7xDscLT0evKaPEUiqU
+         aSkQ==
+X-Gm-Message-State: AC+VfDxd+KZmIb3/QkX6+mKhJkVGx771QrLKXNw89T2DXj3JK7fpM0uj
+        9donxZxytq7nQHLzmZ7RsuUI2cc68A9SjRItcWOQCPnr
+X-Google-Smtp-Source: ACHHUZ4ec8rNTUCOBHGshbwEySK/LDEVe4Zkyvb1M3V7Ma3riD+0tJDWDm4RGTVwZSj+s64115X0bA==
+X-Received: by 2002:a17:907:1c91:b0:96a:43b9:95b1 with SMTP id nb17-20020a1709071c9100b0096a43b995b1mr12397819ejc.59.1686588340972;
+        Mon, 12 Jun 2023 09:45:40 -0700 (PDT)
+Received: from mail-ed1-f43.google.com (mail-ed1-f43.google.com. [209.85.208.43])
+        by smtp.gmail.com with ESMTPSA id b8-20020a170906194800b009750b9ff97asm5412832eje.55.2023.06.12.09.45.39
+        for <linux-xfs@vger.kernel.org>
         (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Mon, 12 Jun 2023 09:45:06 -0700 (PDT)
-Message-ID: <212a190c-f81e-2876-cf14-6d1e37d47192@kernel.dk>
-Date:   Mon, 12 Jun 2023 10:45:05 -0600
+        Mon, 12 Jun 2023 09:45:40 -0700 (PDT)
+Received: by mail-ed1-f43.google.com with SMTP id 4fb4d7f45d1cf-5149c51fd5bso7726939a12.0
+        for <linux-xfs@vger.kernel.org>; Mon, 12 Jun 2023 09:45:39 -0700 (PDT)
+X-Received: by 2002:a50:ef13:0:b0:514:80b9:793b with SMTP id
+ m19-20020a50ef13000000b0051480b9793bmr5781986eds.19.1686588339613; Mon, 12
+ Jun 2023 09:45:39 -0700 (PDT)
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux aarch64; rv:102.0) Gecko/20100101
- Thunderbird/102.11.0
+References: <20230611124836.whfktwaumnefm5z5@zlang-mailbox>
+ <ZIZSPyzReZkGBEFy@dread.disaster.area> <20230612015145.GA11441@frogsfrogsfrogs>
+ <ZIaBQnCKJ6NsqGhd@dread.disaster.area> <CAHk-=whJqZLKPR-cpX-V4wJTXVX-_tG5Vjuj2q9knvKGCPdfkg@mail.gmail.com>
+ <20230612153629.GA11427@frogsfrogsfrogs> <CAHk-=wiN-JcUh4uhDNmA4hp26Mg+c2DTuzgWY2fZ6hytDtOMCg@mail.gmail.com>
+ <af31cadf-8c15-8d88-79fb-066dc87f0324@kernel.dk> <13d9e4f2-17c5-0709-0cc0-6f92bfe9f30d@kernel.dk>
+ <CAHk-=wgdBfqyNHk0iNyYpEuBUdVgq1KMzHMuEqn=ADtfyK_pkQ@mail.gmail.com>
+In-Reply-To: <CAHk-=wgdBfqyNHk0iNyYpEuBUdVgq1KMzHMuEqn=ADtfyK_pkQ@mail.gmail.com>
+From:   Linus Torvalds <torvalds@linux-foundation.org>
+Date:   Mon, 12 Jun 2023 09:45:22 -0700
+X-Gmail-Original-Message-ID: <CAHk-=wi3ucaR0GXt6iaAX6tKO=iHcbe6jDzf2Mgz1petZMc=rw@mail.gmail.com>
+Message-ID: <CAHk-=wi3ucaR0GXt6iaAX6tKO=iHcbe6jDzf2Mgz1petZMc=rw@mail.gmail.com>
 Subject: Re: [6.5-rc5 regression] core dump hangs (was Re: [Bug report]
  fstests generic/051 (on xfs) hang on latest linux v6.5-rc5+)
-Content-Language: en-US
-To:     Linus Torvalds <torvalds@linux-foundation.org>
+To:     Jens Axboe <axboe@kernel.dk>
 Cc:     "Darrick J. Wong" <djwong@kernel.org>,
         Dave Chinner <david@fromorbit.com>,
         Zorro Lang <zlang@redhat.com>, linux-xfs@vger.kernel.org,
         "Eric W. Biederman" <ebiederm@xmission.com>,
         Mike Christie <michael.christie@oracle.com>,
         "Michael S. Tsirkin" <mst@redhat.com>, linux-kernel@vger.kernel.org
-References: <20230611124836.whfktwaumnefm5z5@zlang-mailbox>
- <ZIZSPyzReZkGBEFy@dread.disaster.area>
- <20230612015145.GA11441@frogsfrogsfrogs>
- <ZIaBQnCKJ6NsqGhd@dread.disaster.area>
- <CAHk-=whJqZLKPR-cpX-V4wJTXVX-_tG5Vjuj2q9knvKGCPdfkg@mail.gmail.com>
- <20230612153629.GA11427@frogsfrogsfrogs>
- <CAHk-=wiN-JcUh4uhDNmA4hp26Mg+c2DTuzgWY2fZ6hytDtOMCg@mail.gmail.com>
- <af31cadf-8c15-8d88-79fb-066dc87f0324@kernel.dk>
- <13d9e4f2-17c5-0709-0cc0-6f92bfe9f30d@kernel.dk>
- <CAHk-=wgdBfqyNHk0iNyYpEuBUdVgq1KMzHMuEqn=ADtfyK_pkQ@mail.gmail.com>
-From:   Jens Axboe <axboe@kernel.dk>
-In-Reply-To: <CAHk-=wgdBfqyNHk0iNyYpEuBUdVgq1KMzHMuEqn=ADtfyK_pkQ@mail.gmail.com>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On 6/12/23 10:42?AM, Linus Torvalds wrote:
-> On Mon, Jun 12, 2023 at 9:38?AM Jens Axboe <axboe@kernel.dk> wrote:
->>
->> Quick peek would suggest that it's because io-wq clears PF_IO_WORKER on
->> exit, and now we fail the check in coredump_task_exit() that was added.
-> 
-> Oh, that makes sense.
-> 
+On Mon, Jun 12, 2023 at 9:42=E2=80=AFAM Linus Torvalds
+<torvalds@linux-foundation.org> wrote:
+>
 > Well, it makes sense for the bug, but that whole
-> 
+>
 >         preempt_disable();
->         current->flags &= ~PF_IO_WORKER;
+>         current->flags &=3D ~PF_IO_WORKER;
 >         preempt_enable();
-> 
+>
 > thin in io_worker_exit() does *not* make sense to me.
-> 
-> Does removing those three lines make things "JustWork(tm)"?
 
-You snipped the suspicion in my reply on why that exists, to avoid
-io_wq_worker_sleeping() triggering. But arguably this should be covered
-by the RUNNING flag. I'll poke at it shortly, and yeah then we should
-just remove the PF_IO_WORKER clearing.
+Oh, it looks like that goes back to the original io_worker
+implementation, when io_worker_start() would set the PF_IO_WORKER bit,
+and  io_worker_exit() would clear it, and they were otherwise created
+like normal kthreads.
 
-Or maybe I'm just smoking crack and it's no longer needed at all. Will
-test and send a patch.
+It *looks* all entirely historical to me, and removing those three
+lines as left-over baggage smells like the right thing.
 
--- 
-Jens Axboe
-
+              Linus
