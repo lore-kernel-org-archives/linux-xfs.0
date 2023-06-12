@@ -2,148 +2,115 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7150DC88CB2
-	for <linux-xfs@archiver.kernel.org>; Mon, 12 Jun 2023 18:47:53 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 29472C7EE43
+	for <linux-xfs@archiver.kernel.org>; Mon, 12 Jun 2023 20:39:28 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235972AbjFLSrw (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 12 Jun 2023 14:47:52 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60948 "EHLO
+        id S232170AbjFLUj0 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 12 Jun 2023 16:39:26 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58580 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233399AbjFLSrv (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 12 Jun 2023 14:47:51 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E05C3184;
-        Mon, 12 Jun 2023 11:47:50 -0700 (PDT)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 7CB39621E5;
-        Mon, 12 Jun 2023 18:47:50 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id CC0ECC4339B;
-        Mon, 12 Jun 2023 18:47:49 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1686595669;
-        bh=z4Jlgn6lx/ba8O675cSjkKpBGRWNnb1/lHHVzYwJ9R0=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=KkyAYPrxehJxT4qVkgvI+QWJqaoe4ob4EaRk4S8oWGWT8KoWnmmkIaFcws3bYaZ6l
-         mwSDh9Vr1A4Ni6QJ1PQMiIlkYJTCln06tEKaJtq9Uq9Vd+0VPlgCA9kHwmzPNE9Mjw
-         arKj3lNOVcKnw44rI0fHvnfdTVuPFKyi5zYiBRVle9GnpCzHcgVDbRw3ZSYIuYNOW6
-         qPaOHol5Jh0FesrtdomGdwMCXf9WHox318tPuZWbQmjkQKsGHQ5NbrnBBqJ+hB1kpd
-         iha/l1Fb01pNV+/Lv3BCn2zNDtPNPfRbOyS0ySpz2zvxqMCGwN+XNVR45rA6KGHGMu
-         R3LN+vNw88Kyw==
-Date:   Mon, 12 Jun 2023 11:47:49 -0700
-From:   "Darrick J. Wong" <djwong@kernel.org>
-To:     Christoph Hellwig <hch@infradead.org>
-Cc:     linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
-        mcgrof@kernel.org, jack@suse.cz, ruansy.fnst@fujitsu.com
-Subject: Re: [PATCH 2/3] fs: wait for partially frozen filesystems
-Message-ID: <20230612184749.GJ11441@frogsfrogsfrogs>
-References: <168653971691.755178.4003354804404850534.stgit@frogsfrogsfrogs>
- <168653972832.755178.18389114450766371923.stgit@frogsfrogsfrogs>
- <ZIaYrA3Jz5Q75X1P@infradead.org>
- <20230612183302.GH11441@frogsfrogsfrogs>
+        with ESMTP id S229836AbjFLUjZ (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 12 Jun 2023 16:39:25 -0400
+Received: from casper.infradead.org (casper.infradead.org [IPv6:2001:8b0:10b:1236::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 646DC1728;
+        Mon, 12 Jun 2023 13:39:17 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=infradead.org; s=casper.20170209; h=Content-Transfer-Encoding:MIME-Version:
+        References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:Sender:Reply-To:
+        Content-Type:Content-ID:Content-Description;
+        bh=cORmRVIzdhIpaC4SU57rlnv0heDB6fvM/E8z8XJtSVA=; b=UIqS+phdYFKvaKsq8HitWQRCpa
+        zh1WzSIKtV0WnCRVRz/FUuL5VO4GsDGwxht+4qWB2toFATdxKgnPspmBRWH1Y5T0mo8G+OJ44x7Jk
+        pnSc75bSEzGvbCFWxJBtww6EZ4fOnSgmlN+4YCSlJfraI1VG0ow3H86R09bT/1oiJbabkColTA9Sk
+        LI6C5s7ZOeONWzcbrfPA57S8U3qbwpHA5OwY9Pti3tf489zATtu/r9k4Iq0Q3OMZFGr0PTfM/2WL8
+        unOC0KnPEynlOkmefgDhGKFUAI169ztXHl9clUNQZMQPjMKnwjdd0six0c9VWAC6atJim20jT+Wki
+        hpmOmDBg==;
+Received: from willy by casper.infradead.org with local (Exim 4.94.2 #2 (Red Hat Linux))
+        id 1q8oJl-0032SV-CZ; Mon, 12 Jun 2023 20:39:13 +0000
+From:   "Matthew Wilcox (Oracle)" <willy@infradead.org>
+To:     linux-fsdevel@vger.kernel.org
+Cc:     "Matthew Wilcox (Oracle)" <willy@infradead.org>,
+        linux-xfs@vger.kernel.org, Wang Yugui <wangyugui@e16-tech.com>,
+        Dave Chinner <david@fromorbit.com>,
+        Christoph Hellwig <hch@infradead.org>,
+        "Darrick J . Wong" <djwong@kernel.org>
+Subject: [PATCH v3 1/8] iov_iter: Handle compound highmem pages in copy_page_from_iter_atomic()
+Date:   Mon, 12 Jun 2023 21:39:03 +0100
+Message-Id: <20230612203910.724378-2-willy@infradead.org>
+X-Mailer: git-send-email 2.37.1
+In-Reply-To: <20230612203910.724378-1-willy@infradead.org>
+References: <20230612203910.724378-1-willy@infradead.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20230612183302.GH11441@frogsfrogsfrogs>
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Mon, Jun 12, 2023 at 11:33:02AM -0700, Darrick J. Wong wrote:
-> On Sun, Jun 11, 2023 at 09:01:48PM -0700, Christoph Hellwig wrote:
-> > On Sun, Jun 11, 2023 at 08:15:28PM -0700, Darrick J. Wong wrote:
-> > > From: Darrick J. Wong <djwong@kernel.org>
-> > > 
-> > > Jan Kara suggested that when one thread is in the middle of freezing a
-> > > filesystem, another thread trying to freeze the same fs but with a
-> > > different freeze_holder should wait until the freezer reaches either end
-> > > state (UNFROZEN or COMPLETE) instead of returning EBUSY immediately.
-> > > 
-> > > Plumb in the extra coded needed to wait for the fs freezer to reach an
-> > > end state and try the freeze again.
-> > > 
-> > > Signed-off-by: Darrick J. Wong <djwong@kernel.org>
-> > > ---
-> > >  fs/super.c |   27 +++++++++++++++++++++++++--
-> > >  1 file changed, 25 insertions(+), 2 deletions(-)
-> > > 
-> > > 
-> > > diff --git a/fs/super.c b/fs/super.c
-> > > index 36adccecc828..151e0eeff2c2 100644
-> > > --- a/fs/super.c
-> > > +++ b/fs/super.c
-> > > @@ -1647,6 +1647,15 @@ static int freeze_frozen_super(struct super_block *sb, enum freeze_holder who)
-> > >  	return 0;
-> > >  }
-> > >  
-> > > +static void wait_for_partially_frozen(struct super_block *sb)
-> > > +{
-> > > +	up_write(&sb->s_umount);
-> > > +	wait_var_event(&sb->s_writers.frozen,
-> > > +			sb->s_writers.frozen == SB_UNFROZEN ||
-> > > +			sb->s_writers.frozen == SB_FREEZE_COMPLETE);
-> > > +	down_write(&sb->s_umount);
-> > 
-> > Does sb->s_writers.frozen need WRITE_ONCE/READ_ONCE treatment if we want
-> > to check it outside of s_umount?  Or should we maybe just open code
-> > wait_var_event and only drop the lock after checking the variable?
-> 
-> How about something like:
-> 
-> 	do {
-> 		up_write(&sb->s_umount);
-> 		down_write(&sb->s_umount);
-> 	} while (sb->s_writers.frozen != SB_UNFROZEN &&
-> 		 sb->s_writers.frozen != SB_FREEZE_COMPLETE);
-> 
-> so that we always return in either end state of a freezer transition?
+copy_page_from_iter_atomic() already handles !highmem compound
+pages correctly, but if we are passed a highmem compound page,
+each base page needs to be mapped & unmapped individually.
 
-Of course as soon as I hit send I realize that no, we don't want to be
-cycling s_umount repeatedly even sb->s_writers.frozen hasn't changed.
-And maybe we want the wait to be killable too?
+Signed-off-by: Matthew Wilcox (Oracle) <willy@infradead.org>
+---
+ lib/iov_iter.c | 43 ++++++++++++++++++++++++++++---------------
+ 1 file changed, 28 insertions(+), 15 deletions(-)
 
-static int wait_for_partially_frozen(struct super_block *sb)
-{
-	int ret = 0;
+diff --git a/lib/iov_iter.c b/lib/iov_iter.c
+index 960223ed9199..1a3fbda0c508 100644
+--- a/lib/iov_iter.c
++++ b/lib/iov_iter.c
+@@ -857,24 +857,37 @@ size_t iov_iter_zero(size_t bytes, struct iov_iter *i)
+ }
+ EXPORT_SYMBOL(iov_iter_zero);
+ 
+-size_t copy_page_from_iter_atomic(struct page *page, unsigned offset, size_t bytes,
+-				  struct iov_iter *i)
++size_t copy_page_from_iter_atomic(struct page *page, unsigned offset,
++		size_t bytes, struct iov_iter *i)
+ {
+-	char *kaddr = kmap_atomic(page), *p = kaddr + offset;
+-	if (!page_copy_sane(page, offset, bytes)) {
+-		kunmap_atomic(kaddr);
++	size_t n, copied = 0;
++
++	if (!page_copy_sane(page, offset, bytes))
+ 		return 0;
+-	}
+-	if (WARN_ON_ONCE(!i->data_source)) {
+-		kunmap_atomic(kaddr);
++	if (WARN_ON_ONCE(!i->data_source))
+ 		return 0;
+-	}
+-	iterate_and_advance(i, bytes, base, len, off,
+-		copyin(p + off, base, len),
+-		memcpy_from_iter(i, p + off, base, len)
+-	)
+-	kunmap_atomic(kaddr);
+-	return bytes;
++
++	do {
++		char *kaddr;
++
++		n = bytes - copied;
++		if (PageHighMem(page)) {
++			page += offset / PAGE_SIZE;
++			offset %= PAGE_SIZE;
++			n = min_t(size_t, n, PAGE_SIZE - offset);
++		}
++
++		kaddr = kmap_atomic(page) + offset;
++		iterate_and_advance(i, n, base, len, off,
++			copyin(kaddr + off, base, len),
++			memcpy_from_iter(i, kaddr + off, base, len)
++		)
++		kunmap_atomic(kaddr);
++		copied += n;
++		offset += n;
++	} while (PageHighMem(page) && copied != bytes && n > 0);
++
++	return copied;
+ }
+ EXPORT_SYMBOL(copy_page_from_iter_atomic);
+ 
+-- 
+2.39.2
 
-	do {
-		unsigned short old = sb->s_writers.frozen;
-
-		up_write(&sb->s_umount);
-		ret = wait_var_event_killable(&sb->s_writers.frozen,
-					       sb->s_writers.frozen != old);
-		down_write(&sb->s_umount);
-	} while (ret == 0 &&
-		 sb->s_writers.frozen != SB_UNFROZEN &&
-		 sb->s_writers.frozen != SB_FREEZE_COMPLETE);
-
-	return ret;
-}
-
-I'll try this out and report back.
-
---D
-
-> > >  	if (sb->s_writers.frozen != SB_UNFROZEN) {
-> > > -		deactivate_locked_super(sb);
-> > > -		return -EBUSY;
-> > > +		if (!try_again) {
-> > > +			deactivate_locked_super(sb);
-> > > +			return -EBUSY;
-> > > +		}
-> > > +
-> > > +		wait_for_partially_frozen(sb);
-> > > +		try_again = false;
-> > > +		goto retry;
-> > 
-> > Can you throw in a comment on wait we're only waiting for a partial
-> > freeze one here?
-> 
-> I didn't want a thread to get stuck in the retry forever if it always
-> loses the race.  However, I think any other threads running freeze_super
-> will always end at UNFROZEN or COMPLETE; and thaw_super always goes
-> straight froM COMPLETE to UNFROZEN, so I think I'll get rid of the retry
-> flag logic entirely.
-> 
-> --D
