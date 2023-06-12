@@ -2,112 +2,145 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 64400C7EE2E
-	for <linux-xfs@archiver.kernel.org>; Mon, 12 Jun 2023 15:53:11 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6CDF7C88CB2
+	for <linux-xfs@archiver.kernel.org>; Mon, 12 Jun 2023 15:57:51 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232004AbjFLPxK (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 12 Jun 2023 11:53:10 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42372 "EHLO
+        id S237300AbjFLP5T (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 12 Jun 2023 11:57:19 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43620 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231319AbjFLPxJ (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 12 Jun 2023 11:53:09 -0400
-Received: from out02.mta.xmission.com (out02.mta.xmission.com [166.70.13.232])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3396710E2;
-        Mon, 12 Jun 2023 08:53:08 -0700 (PDT)
-Received: from in02.mta.xmission.com ([166.70.13.52]:40524)
-        by out02.mta.xmission.com with esmtps  (TLS1.3) tls TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384
-        (Exim 4.93)
-        (envelope-from <ebiederm@xmission.com>)
-        id 1q8jqs-0087ZJ-2N; Mon, 12 Jun 2023 09:53:06 -0600
-Received: from ip68-110-29-46.om.om.cox.net ([68.110.29.46]:35760 helo=email.froward.int.ebiederm.org.xmission.com)
-        by in02.mta.xmission.com with esmtpsa  (TLS1.3) tls TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384
-        (Exim 4.93)
-        (envelope-from <ebiederm@xmission.com>)
-        id 1q8jqr-00G1o3-4k; Mon, 12 Jun 2023 09:53:05 -0600
-From:   "Eric W. Biederman" <ebiederm@xmission.com>
-To:     "Darrick J. Wong" <djwong@kernel.org>
-Cc:     Linus Torvalds <torvalds@linux-foundation.org>,
-        Dave Chinner <david@fromorbit.com>,
-        Zorro Lang <zlang@redhat.com>, linux-xfs@vger.kernel.org,
-        Mike Christie <michael.christie@oracle.com>,
-        "Michael S. Tsirkin" <mst@redhat.com>, linux-kernel@vger.kernel.org
-References: <20230611124836.whfktwaumnefm5z5@zlang-mailbox>
-        <ZIZSPyzReZkGBEFy@dread.disaster.area>
-        <20230612015145.GA11441@frogsfrogsfrogs>
-        <ZIaBQnCKJ6NsqGhd@dread.disaster.area>
-        <CAHk-=whJqZLKPR-cpX-V4wJTXVX-_tG5Vjuj2q9knvKGCPdfkg@mail.gmail.com>
-        <20230612153629.GA11427@frogsfrogsfrogs>
-Date:   Mon, 12 Jun 2023 10:52:37 -0500
-In-Reply-To: <20230612153629.GA11427@frogsfrogsfrogs> (Darrick J. Wong's
-        message of "Mon, 12 Jun 2023 08:36:29 -0700")
-Message-ID: <87zg54r83e.fsf@email.froward.int.ebiederm.org>
-User-Agent: Gnus/5.13 (Gnus v5.13) Emacs/27.1 (gnu/linux)
+        with ESMTP id S238591AbjFLP4q (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 12 Jun 2023 11:56:46 -0400
+Received: from mail-lf1-x12e.google.com (mail-lf1-x12e.google.com [IPv6:2a00:1450:4864:20::12e])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 542BA1A7
+        for <linux-xfs@vger.kernel.org>; Mon, 12 Jun 2023 08:56:45 -0700 (PDT)
+Received: by mail-lf1-x12e.google.com with SMTP id 2adb3069b0e04-4f60a27c4a2so5058863e87.2
+        for <linux-xfs@vger.kernel.org>; Mon, 12 Jun 2023 08:56:45 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=linux-foundation.org; s=google; t=1686585403; x=1689177403;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=9ugCj9YhfDUqOrFu4vKJ/c5GJ+ui7RcmNnGjLCf8eEY=;
+        b=JJotxGl8KOTjITNCHaLDw6NzEzsWXz5Fu12VZ+4h7dmxgwhO19QcltY4zHOLQ/pLE0
+         i3/d7k/DwHOfxUTOD7uwU+KG85ZNvmO5Ceusqf+J2DHO3073HRlwNudGyLUg8xdS4dNW
+         lgulr6K9yCt9KRYkGKt4jEt5I/1megOVAuNjY=
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20221208; t=1686585403; x=1689177403;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=9ugCj9YhfDUqOrFu4vKJ/c5GJ+ui7RcmNnGjLCf8eEY=;
+        b=GL5dLH/nKBqg+NWP4qkyIr6j+Q7WCVuDNwg5ouGKEXGRKFU4P9mc6uqgY6IPqU6ftb
+         biPK79E+lde8qEe7shg8ZThoTYAJkZh+xA3l9CfyODOuxwY4dlTx2fZhWEfIiCG7LFSG
+         wxQTvYUw3c7Tqa1DAf+HBeOY38faQNFlVF4Ja9RpJtYFLnAKdhl778NsDiFmK2UdXs+7
+         bnf0BjGmLrEomNIg8AFD8PkYbS9sbFm/v53ckTxP6AAfzbeXBqhKW88AbWTnqjM2hQGM
+         uyOqn7kIgD/ssad8PELNZeyi9UQAuci4ojFFjCQxOEDD7lNQHNqFdnnPneFkhmyKjRjQ
+         Iosg==
+X-Gm-Message-State: AC+VfDyuz0PqIcwbVmqpKdQ5WqvcgkfV2bgKh3Dxl7e065d4KxZIs8AT
+        jk54qmQI/dfyJ2MzP+EVZVMjc1PBT4mSsRveLyO1ww==
+X-Google-Smtp-Source: ACHHUZ5TkqzFqhltWdLN7PHYzYnXzBOzs10iGw7YOV86nSNccTBFcYTzj5Jm11vyJreP9EzeYAr9ug==
+X-Received: by 2002:a19:6d1c:0:b0:4f6:520d:6b9b with SMTP id i28-20020a196d1c000000b004f6520d6b9bmr3847870lfc.60.1686585403318;
+        Mon, 12 Jun 2023 08:56:43 -0700 (PDT)
+Received: from mail-lf1-f41.google.com (mail-lf1-f41.google.com. [209.85.167.41])
+        by smtp.gmail.com with ESMTPSA id c14-20020ac2530e000000b004f63d223acfsm1472637lfh.139.2023.06.12.08.56.42
+        for <linux-xfs@vger.kernel.org>
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Mon, 12 Jun 2023 08:56:42 -0700 (PDT)
+Received: by mail-lf1-f41.google.com with SMTP id 2adb3069b0e04-4f624daccd1so5072889e87.0
+        for <linux-xfs@vger.kernel.org>; Mon, 12 Jun 2023 08:56:42 -0700 (PDT)
+X-Received: by 2002:a19:6445:0:b0:4f6:1e9c:cb11 with SMTP id
+ b5-20020a196445000000b004f61e9ccb11mr4517490lfj.14.1686585402149; Mon, 12 Jun
+ 2023 08:56:42 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain
-X-XM-SPF: eid=1q8jqr-00G1o3-4k;;;mid=<87zg54r83e.fsf@email.froward.int.ebiederm.org>;;;hst=in02.mta.xmission.com;;;ip=68.110.29.46;;;frm=ebiederm@xmission.com;;;spf=pass
-X-XM-AID: U2FsdGVkX19l2ouqJHn9zcO+QmRcaljj7Zv6Ie2q7/g=
-X-SA-Exim-Connect-IP: 68.110.29.46
-X-SA-Exim-Mail-From: ebiederm@xmission.com
+References: <20230611124836.whfktwaumnefm5z5@zlang-mailbox>
+ <ZIZSPyzReZkGBEFy@dread.disaster.area> <20230612015145.GA11441@frogsfrogsfrogs>
+ <ZIaBQnCKJ6NsqGhd@dread.disaster.area> <CAHk-=whJqZLKPR-cpX-V4wJTXVX-_tG5Vjuj2q9knvKGCPdfkg@mail.gmail.com>
+ <20230612153629.GA11427@frogsfrogsfrogs>
+In-Reply-To: <20230612153629.GA11427@frogsfrogsfrogs>
+From:   Linus Torvalds <torvalds@linux-foundation.org>
+Date:   Mon, 12 Jun 2023 08:56:25 -0700
+X-Gmail-Original-Message-ID: <CAHk-=wiN-JcUh4uhDNmA4hp26Mg+c2DTuzgWY2fZ6hytDtOMCg@mail.gmail.com>
+Message-ID: <CAHk-=wiN-JcUh4uhDNmA4hp26Mg+c2DTuzgWY2fZ6hytDtOMCg@mail.gmail.com>
 Subject: Re: [6.5-rc5 regression] core dump hangs (was Re: [Bug report]
  fstests generic/051 (on xfs) hang on latest linux v6.5-rc5+)
-X-SA-Exim-Version: 4.2.1 (built Sat, 08 Feb 2020 21:53:50 +0000)
-X-SA-Exim-Scanned: Yes (on in02.mta.xmission.com)
+To:     "Darrick J. Wong" <djwong@kernel.org>, Jens Axboe <axboe@kernel.dk>
+Cc:     Dave Chinner <david@fromorbit.com>, Zorro Lang <zlang@redhat.com>,
+        linux-xfs@vger.kernel.org,
+        "Eric W. Biederman" <ebiederm@xmission.com>,
+        Mike Christie <michael.christie@oracle.com>,
+        "Michael S. Tsirkin" <mst@redhat.com>, linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
+On Mon, Jun 12, 2023 at 8:36=E2=80=AFAM Darrick J. Wong <djwong@kernel.org>=
+ wrote:
+>
+> > Or maybe Darrick (who doesn't see the issue) is running on raw
+> > hardware, and you and Zorro are running in a virtual environment?
+>
+> Ahah, it turns out that liburing-dev isn't installed on the test fleet,
+> so fstests didn't get built with io_uring support.  That probably
+> explains why I don't see any of these hangs.
+>
+> Oh.  I can't *install* the debian liburing-dev package because it has
+> a versioned dependency on linux-libc-dev >=3D 5.1, which isn't compatible
+> with me having a linux-libc-dev-djwong package that contains the uapi
+> headers for the latest upstream kernel and Replaces: linux-libc-dev.
+> So either I have to create a dummy linux-libc-dev with adequate version
+> number that pulls in my own libc header package, or rename that package.
+>
+> <sigh> It's going to take me a while to research how best to split this
+> stupid knot.
 
-Can someone who can reproduce the hang run this test patch.
+Oh, no, that's great. It explains why you don't see the problem, and
+Dave and Zorro do. Perfect.
 
-I am currently drawing a blank looking at the changes, so I am
-proposing some debug code to help us narrow things down.
+No need for you to install any liburing packages, at least for this
+issue. You'll probably want it eventually just for test coverage, but
+for now it's the smoking gun we wanted - I was looking at why vhost
+would be impacted, because that commit so intentionally *tried* to not
+do anything at all to io_uring.
 
-Can someone who can reproduce this run the code below?
+But it obviously failed. Which then in turn explains the bug.
 
-The tests reproducing this don't appear to use use /dev/host-net or
-/dev/vhost-vsock.  So if the WARN_ON's trigger it is a good sign
-that code connected to the WARN_ON's are wrong.
+Not that I see exactly where it went wrong yet, but at least we're
+looking at the right thing. Adding Jens to the participants, in case
+he sees what goes wrong.
 
-If the WARN_ON's don't trigger I suspect the code in kernel/fork.c
+Jens, commit f9010dbdce91 ("fork, vhost: Use CLONE_THREAD to fix
+freezer/ps regression") seems to have broken core dumping with
+io_uring threads, even though it tried very hard not to. See
 
-But as I said staring at the code I don't see anything wrong.
+  https://lore.kernel.org/all/20230611124836.whfktwaumnefm5z5@zlang-mailbox=
+/
 
-Eric
+for the beginning of this thread.
 
+Honestly, that "try to not change io_uring" was my least favorite part
+of that patch, because I really think we want to try to aim for these
+user helper threads having as much infrastructure in common as
+possible. And when it comes to core dumps, I do not believe that
+waiting for the io_uring thread adds anything to the end result,
+because the only reason we wait for it is to put in the thread
+register state into the core dump, and for kernel helper threads, that
+information just isn't useful. It's going to be the state that caused
+the thread to be created, not anything that is worth saving in a core
+dump for.
 
-diff --git a/fs/coredump.c b/fs/coredump.c
-index 88740c51b942..e9acf0a2d2f0 100644
---- a/fs/coredump.c
-+++ b/fs/coredump.c
-@@ -374,6 +374,7 @@ static int zap_process(struct task_struct *start, int exit_code)
- 			/* The vhost_worker does not particpate in coredumps */
- 			if ((t->flags & (PF_USER_WORKER | PF_IO_WORKER)) != PF_USER_WORKER)
- 				nr++;
-+			else WARN_ON_ONCE(true);
- 		}
- 	}
- 
-diff --git a/kernel/exit.c b/kernel/exit.c
-index edb50b4c9972..56002a58ec33 100644
---- a/kernel/exit.c
-+++ b/kernel/exit.c
-@@ -437,6 +437,7 @@ static void coredump_task_exit(struct task_struct *tsk)
- 		}
- 		__set_current_state(TASK_RUNNING);
- 	}
-+	else if (core_state) WARN_ON_ONCE(true);
- }
- 
- #ifdef CONFIG_MEMCG
-diff --git a/kernel/signal.c b/kernel/signal.c
-index 2547fa73bde5..1be27dbbce62 100644
---- a/kernel/signal.c
-+++ b/kernel/signal.c
-@@ -1371,6 +1371,7 @@ int zap_other_threads(struct task_struct *p)
- 		/* Don't require de_thread to wait for the vhost_worker */
- 		if ((t->flags & (PF_IO_WORKER | PF_USER_WORKER)) != PF_USER_WORKER)
- 			count++;
-+		else WARN_ON_ONCE(true);
- 
- 		/* Don't bother with already dead threads */
- 		if (t->exit_state)
+So I'd actually prefer to just simplify the logic entirely, and say
+"PF_USER_WORKER tasks do not participate in core dumps, end of story".
+io_uring didn't _care_, so including them wasn't a pain, but if the
+vhost exit case can be delayed, I'd rather just say "let's do thig
+thing for both io_uring and vhost, and not split those two cases up".
+
+Anyway, I don't see exactly what goes wrong, but I feel better just
+from this having been narrowed down to io_uring threads. I suspect
+Jens actually might even have a core-dumping test-case somewhere,
+since core dumping was a thing that io_uring ended up having some
+issues with at one point.
+
+           Linus
