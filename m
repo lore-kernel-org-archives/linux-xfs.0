@@ -2,107 +2,100 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4C34AC7EE43
-	for <linux-xfs@archiver.kernel.org>; Mon, 12 Jun 2023 23:33:39 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 86242C7EE2E
+	for <linux-xfs@archiver.kernel.org>; Tue, 13 Jun 2023 00:42:59 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S236491AbjFLXdi (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 12 Jun 2023 19:33:38 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37760 "EHLO
+        id S236202AbjFMAm6 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 12 Jun 2023 20:42:58 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40114 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229513AbjFLXdh (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 12 Jun 2023 19:33:37 -0400
-Received: from mail-pl1-x62a.google.com (mail-pl1-x62a.google.com [IPv6:2607:f8b0:4864:20::62a])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8C85D131
-        for <linux-xfs@vger.kernel.org>; Mon, 12 Jun 2023 16:33:36 -0700 (PDT)
-Received: by mail-pl1-x62a.google.com with SMTP id d9443c01a7336-1b3db8f3d94so7473405ad.1
-        for <linux-xfs@vger.kernel.org>; Mon, 12 Jun 2023 16:33:36 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=fromorbit-com.20221208.gappssmtp.com; s=20221208; t=1686612816; x=1689204816;
-        h=in-reply-to:content-transfer-encoding:content-disposition
-         :mime-version:references:message-id:subject:cc:to:from:date:from:to
-         :cc:subject:date:message-id:reply-to;
-        bh=3oW2wvanLNDVLi8SQKCLeldD3thr4auHckpgpMT2vwY=;
-        b=iU1SiN80RF57itpqTfzAhf2LGYXkgNWcT0AxFOfSGbYj2FOFq4LeJc/zVfpYx2MvLR
-         p8r+NytEBorFeRos4V3Yp9Ba9Ugh4t7Se0JWyiC9AqMoa8HLdWcYP6sWzZQ4Abnw3U3y
-         PM5n/oatyapSXmSk6Ul2M2Lh2ZAyKR8IzyHVKPm0AJWLIZVbhAQubuqZtMDVtMNrI9ps
-         lz8k0jp0nAzUeWoi1IST6+189pI+K4EmNeQzEDjemCWXpb2O/V8ftlPf4v0cTvgmFVoW
-         yrQ8t0JM1kiEPmpHAS2HbCoCVMma+EhutmQwN1wYEPuaoDWaKkwnGccPrI5z9XCovVQR
-         EZ1A==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20221208; t=1686612816; x=1689204816;
-        h=in-reply-to:content-transfer-encoding:content-disposition
-         :mime-version:references:message-id:subject:cc:to:from:date
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=3oW2wvanLNDVLi8SQKCLeldD3thr4auHckpgpMT2vwY=;
-        b=Vmx96RfahxjX89o+K7M9PumjGiOmHXRtb6vJL4u/+YDLeN+pInH9BrMOGwvG0+ez+C
-         HwwSBK4UMcrPkCDUqO1m09WWu1dtUAnta9HjfbXZQD9MyklrUcfUT6UpLPu6X6sMOBkf
-         ESI+JCg50gdv7fvLDHluuZ8M+slXupbJ92GlAifGOwKv6cIKPLj17HYCMdI1zVyR8tKg
-         SNGB51VxvLjwrDzm34Tr7YgU11WJyo27PoPcPyz+8jPZFVwrLxxapaV18yNBCdrxraaH
-         ceh1/0MDaioXhiqKzfH2eOVWkXhAzrmUKU93GF+SnZCqbmRCjNLqQd4+LO0LM8eaxZrj
-         a0Yg==
-X-Gm-Message-State: AC+VfDxDdQhXrTl+ox+c8oo6Tj78r/iuNOyEaoMQKSyisyyOXTe8/j6F
-        +x70oqWO8brZS8NUkz/uOBD5JA==
-X-Google-Smtp-Source: ACHHUZ7IWhsllUiGaSXZTEgiYETMEZwPdTHQQgKWfq0KusizoUS3ojI+DXsx1M/Xb57G/h7YDc2dyw==
-X-Received: by 2002:a17:902:da8b:b0:1b0:3742:e718 with SMTP id j11-20020a170902da8b00b001b03742e718mr8441406plx.25.1686612816031;
-        Mon, 12 Jun 2023 16:33:36 -0700 (PDT)
-Received: from dread.disaster.area (pa49-179-79-151.pa.nsw.optusnet.com.au. [49.179.79.151])
-        by smtp.gmail.com with ESMTPSA id e12-20020a170902d38c00b001b0f727bc44sm1845758pld.16.2023.06.12.16.33.35
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 12 Jun 2023 16:33:35 -0700 (PDT)
-Received: from dave by dread.disaster.area with local (Exim 4.96)
-        (envelope-from <david@fromorbit.com>)
-        id 1q8r2S-00B436-01;
-        Tue, 13 Jun 2023 09:33:32 +1000
-Date:   Tue, 13 Jun 2023 09:33:31 +1000
-From:   Dave Chinner <david@fromorbit.com>
-To:     Linus Torvalds <torvalds@linux-foundation.org>
-Cc:     Jens Axboe <axboe@kernel.dk>,
-        "Darrick J. Wong" <djwong@kernel.org>,
-        Zorro Lang <zlang@redhat.com>, linux-xfs@vger.kernel.org,
-        "Eric W. Biederman" <ebiederm@xmission.com>,
-        Mike Christie <michael.christie@oracle.com>,
-        "Michael S. Tsirkin" <mst@redhat.com>, linux-kernel@vger.kernel.org
-Subject: Re: [6.5-rc5 regression] core dump hangs (was Re: [Bug report]
- fstests generic/051 (on xfs) hang on latest linux v6.5-rc5+)
-Message-ID: <ZIerS38zdUlU7zo3@dread.disaster.area>
-References: <20230612153629.GA11427@frogsfrogsfrogs>
- <CAHk-=wiN-JcUh4uhDNmA4hp26Mg+c2DTuzgWY2fZ6hytDtOMCg@mail.gmail.com>
- <af31cadf-8c15-8d88-79fb-066dc87f0324@kernel.dk>
- <13d9e4f2-17c5-0709-0cc0-6f92bfe9f30d@kernel.dk>
- <CAHk-=wgdBfqyNHk0iNyYpEuBUdVgq1KMzHMuEqn=ADtfyK_pkQ@mail.gmail.com>
- <212a190c-f81e-2876-cf14-6d1e37d47192@kernel.dk>
- <CAHk-=wh0hrFjcU5C8uHvLBThrT5vQsFHb7Jk6HRP3LAJqdNx1A@mail.gmail.com>
- <ff34a007-fdd0-8575-8482-919ead39fc88@kernel.dk>
- <CAHk-=whXt9+-YfhgjBYxT9_ATjHbMDZ0yJdK7umrJGU8zBVZ9w@mail.gmail.com>
- <CAHk-=wjqVEdigZWMoOUMr0J179vfA4G=MwafFh8UStsA-3mHBw@mail.gmail.com>
+        with ESMTP id S232584AbjFMAm5 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 12 Jun 2023 20:42:57 -0400
+Received: from casper.infradead.org (casper.infradead.org [IPv6:2001:8b0:10b:1236::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4355B197;
+        Mon, 12 Jun 2023 17:42:56 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=infradead.org; s=casper.20170209; h=In-Reply-To:Content-Type:MIME-Version:
+        References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
+        Content-Transfer-Encoding:Content-ID:Content-Description;
+        bh=p7aw0VIsZS7Nht2qNh9pInAE4cDjMXwvVzTJV++TJ18=; b=Oa7yGVO4QLU5iHwKdEBisWwj6g
+        Dfn3h0LAbAx9d1afS+ERlQklZ16sjepLfWcBT6B1hJ2aqQk5VWaPukWSVnnsBILqu+nqVVZI5+PS3
+        ndVA+tsFlG3jkyT3nlsLyVFgfxyZAIrEL3G18x4v//HlCGZ+EBh0ZuYi+bxEozLcyDLHS8hn0rctM
+        WnN60qur4j292dFhLFsdiEQ+/B+IZ0lpCbPLaMmG9cjlIgLtu5yV3XRHJ1M7EU9Ql+6cBmRHlmqiI
+        fvycyf26CBNVe9+7EARU5x4fYc9oDGEPxvYkk3A2g7rnCLafqpj4BopGF9EXorA9UeXsPxz5+BYAy
+        PQ2AbWTw==;
+Received: from willy by casper.infradead.org with local (Exim 4.94.2 #2 (Red Hat Linux))
+        id 1q8s7X-003L19-3f; Tue, 13 Jun 2023 00:42:51 +0000
+Date:   Tue, 13 Jun 2023 01:42:51 +0100
+From:   Matthew Wilcox <willy@infradead.org>
+To:     Dave Chinner <david@fromorbit.com>
+Cc:     linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org,
+        Wang Yugui <wangyugui@e16-tech.com>,
+        Christoph Hellwig <hch@infradead.org>,
+        "Darrick J . Wong" <djwong@kernel.org>
+Subject: Re: [PATCH v3 6/8] filemap: Allow __filemap_get_folio to allocate
+ large folios
+Message-ID: <ZIe7i4kklXphsfu0@casper.infradead.org>
+References: <20230612203910.724378-1-willy@infradead.org>
+ <20230612203910.724378-7-willy@infradead.org>
+ <ZIeg4Uak9meY1tZ7@dread.disaster.area>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <CAHk-=wjqVEdigZWMoOUMr0J179vfA4G=MwafFh8UStsA-3mHBw@mail.gmail.com>
+In-Reply-To: <ZIeg4Uak9meY1tZ7@dread.disaster.area>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Mon, Jun 12, 2023 at 11:34:28AM -0700, Linus Torvalds wrote:
-> On Mon, Jun 12, 2023 at 10:51 AM Linus Torvalds
-> <torvalds@linux-foundation.org> wrote:
-> >
-> > Ok, can you (and the fsstress people) confirm that this
-> > whitespace-damaged patch fixes the coredump issue:
+On Tue, Jun 13, 2023 at 08:49:05AM +1000, Dave Chinner wrote:
+> On Mon, Jun 12, 2023 at 09:39:08PM +0100, Matthew Wilcox (Oracle) wrote:
+> > Allow callers of __filemap_get_folio() to specify a preferred folio
+> > order in the FGP flags.  This is only honoured in the FGP_CREATE path;
+> > if there is already a folio in the page cache that covers the index,
+> > we will return it, no matter what its order is.  No create-around is
+> > attempted; we will only create folios which start at the specified index.
+> > Unmodified callers will continue to allocate order 0 folios.
+> .....
+> > -		/* Init accessed so avoid atomic mark_page_accessed later */
+> > -		if (fgp_flags & FGP_ACCESSED)
+> > -			__folio_set_referenced(folio);
+> > +		if (!mapping_large_folio_support(mapping))
+> > +			order = 0;
+> > +		if (order > MAX_PAGECACHE_ORDER)
+> > +			order = MAX_PAGECACHE_ORDER;
+> > +		/* If we're not aligned, allocate a smaller folio */
+> > +		if (index & ((1UL << order) - 1))
+> > +			order = __ffs(index);
 > 
-> The proper patch from Jens is now in my tree, and I'm archiving this
-> thread on the assumption that it's all good.
+> If I read this right, if we pass in an unaligned index, we won't get
+> the size of the folio we ask for?
+
+Right.  That's implied by (but perhaps not obvious from) the changelog.
+Folios are always naturally aligned in the file, so an order-4 folio
+has to start at a multiple of 16.  If the index you pass in is not
+a multiple of 16, we can't create an order-4 folio without starting
+at an earlier index.
+
+For a 4kB block size filesystem, that's what we want.  Applications
+_generally_ don't write backwards, so creating an order-4 folio is just
+wasting memory.
+
+> e.g. if we want an order-4 folio (64kB) because we have a 64kB block
+> size in the filesystem, then we have to pass in an index that
+> order-4 aligned, yes?
 > 
-> Dave/Zorro - if you still see any issues with that patch in place, holler.
+> I ask this, because the later iomap code that asks for large folios
+> only passes in "pos >> PAGE_SHIFT" so it looks to me like it won't
+> allocate large folios for anything other than large folio aligned
+> writes, even if we need them.
+> 
+> What am I missing?
 
-The fix seems to work. The reproducer just ran through 50 times
-without fail; it was previously always failing on the first or
-second cycle.
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+Perhaps what you're missing is that this isn't trying to solve the
+problem of supporting a bs > ps filesystem?  That's also a worthwhile
+project, but it's not this project.  In fact, I'd say that project is
+almost orthogonal to this one; for this usage we can always fall back to
+smaller folios on memory pressure or misalignment.  For a bs > ps block
+device, we have to allocate folios at least as large as the blocksize
+and cannot fall back to smaller folios.  For a bs > ps filesystem on a
+bdev with bs == ps, we can fall back (as your prototype showed).
