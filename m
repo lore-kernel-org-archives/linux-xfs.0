@@ -2,90 +2,83 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5F732EB64D0
-	for <linux-xfs@archiver.kernel.org>; Tue, 13 Jun 2023 15:50:57 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0EAB4EB64D7
+	for <linux-xfs@archiver.kernel.org>; Tue, 13 Jun 2023 16:19:27 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235668AbjFMPuz (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 13 Jun 2023 11:50:55 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:32964 "EHLO
+        id S241385AbjFMQT0 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 13 Jun 2023 12:19:26 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47608 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S235653AbjFMPuz (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 13 Jun 2023 11:50:55 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7348018C;
-        Tue, 13 Jun 2023 08:50:54 -0700 (PDT)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 8023762FB0;
-        Tue, 13 Jun 2023 15:50:53 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id DEF18C433F0;
-        Tue, 13 Jun 2023 15:50:52 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1686671452;
-        bh=eGtYzSC5vhQwDpz62uhZQHJIh1/WE3onYC23E6qI+Go=;
-        h=Date:From:To:Subject:References:In-Reply-To:From;
-        b=SnE2B+3uM0L84ENFnLRg/TRle5R2lfrPy/Xe5+XBqvR88/14Uq3UOMk7CIjuxQ4QY
-         09bDY3C9Fg4kQLSPvsKX3VKTNtsNbcGTawyv8evk9demreez3Og43aTu5Zpe3FT9j5
-         QWxTw+7VRKc6jVpSSZFwkUyBQUQYLy8/I5hlMxgs2dtMbLdZyiFs5nmPiGbggY7bXE
-         JIxRRPPP/Ava4qxup490uCv+WxposN8oWgK+Q0wTDByDaz/wwFxXTYgfdiOd542f+k
-         v4Kq1/AA4P9nUxAVgGiTwaX6SUU2nuZvYZwnseQM/GrTDL1hspsjJaxVW1XuHgOb5P
-         nyQJMvdfxcEJA==
-Date:   Tue, 13 Jun 2023 08:50:52 -0700
-From:   "Darrick J. Wong" <djwong@kernel.org>
-To:     dchinner@redhat.com, hch@lst.de, linux-fsdevel@vger.kernel.org,
-        linux-xfs@vger.kernel.org
-Subject: Re: [ANNOUNCE] xfs-linux: for-next updated to b29434999371
-Message-ID: <20230613155052.GK11441@frogsfrogsfrogs>
-References: <168667107461.2567180.7349244362741585948.stg-ugh@frogsfrogsfrogs>
+        with ESMTP id S242709AbjFMQTZ (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 13 Jun 2023 12:19:25 -0400
+Received: from casper.infradead.org (casper.infradead.org [IPv6:2001:8b0:10b:1236::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A54EFE6;
+        Tue, 13 Jun 2023 09:19:24 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=infradead.org; s=casper.20170209; h=In-Reply-To:Content-Type:MIME-Version:
+        References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
+        Content-Transfer-Encoding:Content-ID:Content-Description;
+        bh=nh0OpQpLOjjJ1EITsLsgEjmcZSmE2KMb+Z7mQm0QXtc=; b=WOHZDks9XNlrGnAohD1QUoToTr
+        ucak1RYheKHQwBD9sAufPz4xLgfdc28s9Qp6WpDvdkUDXd+TL1TgcJUiJzLW0JZC7TiA48W0ya5lv
+        Rp3WWfjLbfNu3QBtC8MX1AE5gTWFh6sS9Wgl9knmW6iEk+KoeytgDYR2q2aOZpmvaL8o7i+a7yhLg
+        xbmz7tH2ocMua9ENOk+ADczMcrONM4K5NP1i8tMoXtehvfG2cK4Qs/Rg4DAbHWC4lhSUcwc7W1zQ2
+        fQCYYI9AGZHUj0XR3J+e5Hgs4dDCR2ShTbwVBQH8HQtpRIPShmBNimkIu79z4DMHVvxpNMyn30GFa
+        YQm4pi4g==;
+Received: from willy by casper.infradead.org with local (Exim 4.94.2 #2 (Red Hat Linux))
+        id 1q96jo-0045dg-R8; Tue, 13 Jun 2023 16:19:20 +0000
+Date:   Tue, 13 Jun 2023 17:19:20 +0100
+From:   Matthew Wilcox <willy@infradead.org>
+To:     linux-fsdevel@vger.kernel.org
+Cc:     linux-xfs@vger.kernel.org, Wang Yugui <wangyugui@e16-tech.com>,
+        Dave Chinner <david@fromorbit.com>,
+        Christoph Hellwig <hch@infradead.org>,
+        "Darrick J . Wong" <djwong@kernel.org>
+Subject: Re: [PATCH v3 4/8] iomap: Remove unnecessary test from
+ iomap_release_folio()
+Message-ID: <ZIiXCPlmrDsOMVqp@casper.infradead.org>
+References: <20230612203910.724378-1-willy@infradead.org>
+ <20230612203910.724378-5-willy@infradead.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <168667107461.2567180.7349244362741585948.stg-ugh@frogsfrogsfrogs>
+In-Reply-To: <20230612203910.724378-5-willy@infradead.org>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Tue, Jun 13, 2023 at 08:46:39AM -0700, Darrick J. Wong wrote:
-> Hi folks,
+On Mon, Jun 12, 2023 at 09:39:06PM +0100, Matthew Wilcox (Oracle) wrote:
+> The check for the folio being under writeback is unnecessary; the caller
+> has checked this and the folio is locked, so the folio cannot be under
+> writeback at this point.
 > 
-> The for-next branch of the xfs-linux repository at:
-> 
-> git://git.kernel.org/pub/scm/fs/xfs/xfs-linux.git
-> 
-> has just been updated.  This is all that we're going to be able to
-> accomplish for 6.5 given the continuous trickle of bug reports within
-> and external to XFS has pushed all the way past rc6.  If I've missed
-> your patch, resend it **RIGHT NOW**.
+> The comment is somewhat misleading in that it talks about one specific
+> situation in which we can see a dirty folio.  There are others, so change
+> the comment to explain why we can't release the iomap_page.
 
-...unless your patch is "[PATCH v4] xfs: fix ag count overflow during
-growfs".  I missed that one, so I'll throw that into the branch and
-probably push it by the end of the week.
+> +	 * If the folio is dirty, we refuse to release our metadata because
+> +	 * it may be partially dirty (FIXME, add a test for that).
 
---D
+Argh, forgot to fix this.
 
-> Patches often get missed, so please check if your outstanding patches
-> were in this update. If they have not been in this update, please
-> resubmit them to linux-xfs@vger.kernel.org so they can be picked up in
-> the next update.
-> 
-> The new head of the for-next branch is commit:
-> 
-> b29434999371 xfs: set FMODE_CAN_ODIRECT instead of a dummy direct_IO method
-> 
-> 3 new commits:
-> 
-> Christoph Hellwig (1):
-> [b29434999371] xfs: set FMODE_CAN_ODIRECT instead of a dummy direct_IO method
-> 
-> Darrick J. Wong (2):
-> [06f3ef6e1705] xfs: don't deplete the reserve pool when trying to shrink the fs
-> [61d7e8274cd8] xfs: drop EXPERIMENTAL tag for large extent counts
-> 
-> Code Diffstat:
-> 
-> fs/xfs/xfs_aops.c  |  2 --
-> fs/xfs/xfs_file.c  |  2 +-
-> fs/xfs/xfs_fsops.c | 10 +++++++---
-> fs/xfs/xfs_super.c |  4 ----
-> 4 files changed, 8 insertions(+), 10 deletions(-)
+        /*
+         * If the folio is dirty, we refuse to release our metadata because
+-        * it may be partially dirty (FIXME, add a test for that).
++        * it may be partially dirty.  Once we track per-block dirty state,
++        * we can release the metadata if every block is dirty.
+         */
+
+> -	if (folio_test_dirty(folio) || folio_test_writeback(folio))
+> +	if (folio_test_dirty(folio))
+>  		return false;
+
+Now I'm wondering if we shouldn't also refuse to release the metadata if
+the folio is !uptodate.  It's not a correctness issue, it's a performance
+issue, and a question of whose priorities are more important.
+
+If we do release the metadata on a partially uptodate folio, we'll
+re-read the parts of the folio from storage which had previously been
+successfully read.  If we don't release the metadata, we prevent the
+MM from splitting the page (eg on truncate).
+
+No obviously right answer here, IMO.
+
