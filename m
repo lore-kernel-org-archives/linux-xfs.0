@@ -2,134 +2,59 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 77D5CC7EE29
-	for <linux-xfs@archiver.kernel.org>; Tue, 13 Jun 2023 07:54:45 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D8282C7EE29
+	for <linux-xfs@archiver.kernel.org>; Tue, 13 Jun 2023 08:59:33 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S237163AbjFMHym (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 13 Jun 2023 03:54:42 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49522 "EHLO
+        id S237163AbjFMI7c (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 13 Jun 2023 04:59:32 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33786 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S234570AbjFMHyl (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 13 Jun 2023 03:54:41 -0400
-Received: from mail-pf1-x42a.google.com (mail-pf1-x42a.google.com [IPv6:2607:f8b0:4864:20::42a])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0D3F7E7C
-        for <linux-xfs@vger.kernel.org>; Tue, 13 Jun 2023 00:54:40 -0700 (PDT)
-Received: by mail-pf1-x42a.google.com with SMTP id d2e1a72fcca58-662b85f4640so4361755b3a.0
-        for <linux-xfs@vger.kernel.org>; Tue, 13 Jun 2023 00:54:40 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=fromorbit-com.20221208.gappssmtp.com; s=20221208; t=1686642879; x=1689234879;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
-        bh=OCkgcZgojFrJD6ikZBBlWSOOkLn20nhRfhYeTzhO/KY=;
-        b=LnnHBbwURgWlIq2Kl2ZHAuPlRbR6UBkyXHR7hZf7WGab2MH69yCnA4xx1UzT/8Py/Z
-         6NeF+yxA0XPwaSjAVO/sXKIbB//IWNnRxWxYpiiW/Z230+h4hAhWj9NeHy7/keKIMVi8
-         X+ntbSLHwwd0FMn7O/qAakF8lCRLSo62AHeGJntNPPJnogM17VZ5Aovgxw7dVYjEMtZW
-         sNQXWoLFZ/ctNPn0iA4O6U8m2cetDo21MGJW+Rlc19D2A5q+XwX5xcYRRnfDU5B17Kw+
-         +pazru7N4I+LKqjfCUEkFSdjFtZFnpZzfQbfx4U3+0cywDIeD/IICFkFPZHeEgPv5WvE
-         7pSQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20221208; t=1686642879; x=1689234879;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=OCkgcZgojFrJD6ikZBBlWSOOkLn20nhRfhYeTzhO/KY=;
-        b=Iw65p+9xbWK1OPvrJj7zLroE+EVrGlg3CPrv6oGJX9lhukM4yv78t6MVEgnKe6Qpw7
-         R+JCHmuzi9OcmhrfOyzjH5s9EqSx/dx0aGIZF/fwVhRMGyIssIGwU8BUs+euvERFT811
-         AgQcLYMlBIiAkQA55ykXB+J9unUReesIJq5GeggjLhqCVdsgghzEZtqKu9cHJH6AQJCP
-         LqbZDs+t64TF2RSknyRmKhwDisoT4TUWnGpgxdcNmvFMbzeQr8DOZBAEiVN3Pq6EGKZZ
-         36X6mlSh2ROgXlMMKELDUmv4/gxQClaNibGuQnut1uq6FVpDfzP0M1HvFnKflz4HtPJT
-         xz2Q==
-X-Gm-Message-State: AC+VfDyx/BiRphMc+d8N4BaQV+S5qNI3vNI4Ay+VWSTEg/A4IYHTLHDF
-        lmFMjpjnrU40rbD2LMJpvylQKHN/fEiMtXUaOW4=
-X-Google-Smtp-Source: ACHHUZ6squwwYVgIArur+aSPNOVVl/9piWl50z7W2qAHgfJzQEG/YTMxGMtLs4NY3Vyb9oaY4UE/iw==
-X-Received: by 2002:a05:6a20:43a2:b0:104:7a4c:6ca6 with SMTP id i34-20020a056a2043a200b001047a4c6ca6mr12070509pzl.13.1686642879383;
-        Tue, 13 Jun 2023 00:54:39 -0700 (PDT)
-Received: from dread.disaster.area (pa49-179-79-151.pa.nsw.optusnet.com.au. [49.179.79.151])
-        by smtp.gmail.com with ESMTPSA id jl1-20020a170903134100b001a245b49731sm8118560plb.128.2023.06.13.00.54.38
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 13 Jun 2023 00:54:39 -0700 (PDT)
-Received: from dave by dread.disaster.area with local (Exim 4.96)
-        (envelope-from <david@fromorbit.com>)
-        id 1q8yrL-00BCQ9-1S;
-        Tue, 13 Jun 2023 17:54:35 +1000
-Date:   Tue, 13 Jun 2023 17:54:35 +1000
-From:   Dave Chinner <david@fromorbit.com>
-To:     Matthew Wilcox <willy@infradead.org>
-Cc:     linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org,
-        Wang Yugui <wangyugui@e16-tech.com>,
-        Christoph Hellwig <hch@infradead.org>,
-        "Darrick J . Wong" <djwong@kernel.org>
-Subject: Re: [PATCH v3 6/8] filemap: Allow __filemap_get_folio to allocate
- large folios
-Message-ID: <ZIggux3yxAudUSB1@dread.disaster.area>
-References: <20230612203910.724378-1-willy@infradead.org>
- <20230612203910.724378-7-willy@infradead.org>
- <ZIeg4Uak9meY1tZ7@dread.disaster.area>
- <ZIe7i4kklXphsfu0@casper.infradead.org>
- <ZIfGpWYNA1yd5K/l@dread.disaster.area>
- <ZIfNrnUsJbcWGSD8@casper.infradead.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <ZIfNrnUsJbcWGSD8@casper.infradead.org>
+        with ESMTP id S234253AbjFMI7b (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 13 Jun 2023 04:59:31 -0400
+Received: from mitropoulos.debian.org (mitropoulos.debian.org [IPv6:2001:648:2ffc:deb:216:61ff:fe9d:958d])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 81CB3AA
+        for <linux-xfs@vger.kernel.org>; Tue, 13 Jun 2023 01:59:30 -0700 (PDT)
+Received: from usper.debian.org ([2603:400a:ffff:bb8::801f:45]:58668)
+        from C=NA,ST=NA,L=Ankh Morpork,O=Debian SMTP,OU=Debian SMTP CA,CN=usper.debian.org,EMAIL=hostmaster@usper.debian.org (verified)
+        by mitropoulos.debian.org with esmtps (TLS1.3:ECDHE_SECP256R1__RSA_PSS_RSAE_SHA256__AES_256_GCM:256)
+        (Exim 4.94.2)
+        (envelope-from <ftpmaster@ftp-master.debian.org>)
+        id 1q8zs1-00DLqh-6b
+        for linux-xfs@vger.kernel.org; Tue, 13 Jun 2023 08:59:21 +0000
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=ftp-master.debian.org; s=smtpauto.usper; h=Message-Id:Date:Subject:From:To:
+        Reply-To:Cc:MIME-Version:Content-Type:Content-Transfer-Encoding:Content-ID:
+        Content-Description:In-Reply-To:References;
+        bh=IeCD2/nP16g4ryoixWPY3URn2AxToUZ1N5TG7LpTkE0=; b=rTY+0G97reBSISqcfb7SQSl86/
+        sSskZVfFI4LpXs1VNuF1tq2HWvCC5mia2/AGSJRFaX6KYDlxfZdiOGF1zxa9iyBV+LfauMuhSC3z0
+        YRWlGm43QUhMCctHxbUKXGzv4YN8t08mx0+PHQz+bqBda0Z99E/JcTfToVuzBWsk9WYDYZTedmk6A
+        nC8AsFQsbSHUMdKBP1LnCwxry/jThx7g0WiI1qcpF2TdZmYFFmCCYsYtkTXHAxN20HNOAvdyew0Ag
+        dNhF8jM7rJ3PVqR25udSX1+/KJ0VL8ddgzHKdTEWn0yk+s3OjjeE/8BAjMkYi3nLiwzzUXntvhBEv
+        GBtOQyTA==;
+Received: from dak-unpriv by usper.debian.org with local (Exim 4.94.2)
+        (envelope-from <ftpmaster@ftp-master.debian.org>)
+        id 1q8zrz-00BhwM-Jb
+        for linux-xfs@vger.kernel.org; Tue, 13 Jun 2023 08:59:19 +0000
+To:     linux-xfs@vger.kernel.org
+From:   Debian FTP Masters <ftpmaster@ftp-master.debian.org>
+Subject: Processing of xfsprogs_6.3.0-1_source.changes
+Date:   Tue, 13 Jun 2023 08:59:19 +0000
+X-Debian: DAK
+X-DAK:  DAK
+Auto-Submitted: auto-generated
+X-Debian-Package: xfsprogs
+Message-Id: <E1q8zrz-00BhwM-Jb@usper.debian.org>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Tue, Jun 13, 2023 at 03:00:14AM +0100, Matthew Wilcox wrote:
-> On Tue, Jun 13, 2023 at 11:30:13AM +1000, Dave Chinner wrote:
-> > Indeed, if we do a 1MB write at offset 4KB, we'll get 4kB at 4KB, 8KB
-> > and 12kB (because we can't do order-1 folios), then order-2 at 16KB,
-> > order-3 at 32kB, and so on until we hit offset 1MB where we will do
-> > an order-0 folio allocation again (because the remaining length is
-> > 4KB). The next 1MB write will then follow the same pattern, right?
-> 
-> Yes.  Assuming we get another write ...
-> 
-> > I think this ends up being sub-optimal and fairly non-obvious
-> > non-obvious behaviour from the iomap side of the fence which is
-> > clearly asking for high-order folios to be allocated. i.e. a small
-> > amount of allocate-around to naturally align large folios when the
-> > page cache is otherwise empty would make a big difference to the
-> > efficiency of non-large-folio-aligned sequential writes...
-> 
-> At this point we're arguing about what I/O pattern to optimise for.
-> I'm going for a "do no harm" approach where we only allocate exactly as
-> much memory as we did before.  You're advocating for a
-> higher-risk/higher-reward approach.
+xfsprogs_6.3.0-1_source.changes uploaded successfully to localhost
+along with the files:
+  xfsprogs_6.3.0-1.dsc
+  xfsprogs_6.3.0.orig.tar.xz
+  xfsprogs_6.3.0-1.debian.tar.xz
+  xfsprogs_6.3.0-1_source.buildinfo
 
-Not really - I'm just trying to understand the behaviour the change
-will result in, compared to what would be considered optimal as it's
-not clearly spelled out in either the code or the commit messages.
+Greetings,
 
-If I hadn't looked at the code closely and saw a trace with this
-sort of behaviour (i.e. I understood large folios were in use,
-but not exactly how they worked), I'd be very surprised to see a
-weird repeated pattern of varying folio sizes. I'd probably think
-it was a bug in the implementation....
-
-> I'd prefer the low-risk approach for now; we can change it later!
-
-That's fine by me - just document the limitations and expected
-behaviour in the code rather than expect people to have to discover
-this behaviour for themselves.
-
-> I'd like to see some amount of per-fd write history (as we have per-fd
-> readahead history) to decide whether to allocate large folios ahead of
-> the current write position.  As with readahead, I'd like to see that even
-> doing single-byte writes can result in the allocation of large folios,
-> as long as the app has done enough of them.
-
-*nod*
-
-We already have some hints in the iomaps that can tell you this sort
-of thing. e.g. if ->iomap_begin() returns a delalloc iomap that
-extends beyond the current write, we're performing a sequence of
-multiple sequential writes.....
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+	Your Debian queue daemon (running on host usper.debian.org)
