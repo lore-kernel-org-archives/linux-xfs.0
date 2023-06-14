@@ -2,237 +2,550 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 232B1EB64DA
-	for <linux-xfs@archiver.kernel.org>; Wed, 14 Jun 2023 11:10:15 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2B0EFEB64D9
+	for <linux-xfs@archiver.kernel.org>; Wed, 14 Jun 2023 11:32:43 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235926AbjFNLKM (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 14 Jun 2023 07:10:12 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34568 "EHLO
+        id S235089AbjFNLcm (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 14 Jun 2023 07:32:42 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48140 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S235751AbjFNLKK (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 14 Jun 2023 07:10:10 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A753ADF
-        for <linux-xfs@vger.kernel.org>; Wed, 14 Jun 2023 04:10:09 -0700 (PDT)
+        with ESMTP id S234041AbjFNLcl (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 14 Jun 2023 07:32:41 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id ADC8F199B
+        for <linux-xfs@vger.kernel.org>; Wed, 14 Jun 2023 04:32:39 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
          key-exchange X25519 server-signature RSA-PSS (2048 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 32B2C62820
-        for <linux-xfs@vger.kernel.org>; Wed, 14 Jun 2023 11:10:09 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 790BAC433CA;
-        Wed, 14 Jun 2023 11:10:07 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 4149B640F9
+        for <linux-xfs@vger.kernel.org>; Wed, 14 Jun 2023 11:32:39 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id D3D32C433C8;
+        Wed, 14 Jun 2023 11:32:37 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1686741008;
-        bh=LEULcDUB5PUStN8RXClGxXvwP+VaG1zhzwh51mYZ3ME=;
+        s=k20201202; t=1686742358;
+        bh=823fsoWJyl9v7izfH6YiopsW6jnRR5XdMZ0OWSfKNK0=;
         h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=OgcQmyc1squMuSPWtIZ+KoulVG52BbgAqAPluwrTZQM8nTAVTm2zw4JgRwrediMck
-         XL3sfjcZkRNBJvjSiZla9nYYqEJjJWQ09Wz2RbMvR7F2wGnIlZM2+ueRsJ06+5nEtL
-         qgasiJYdcitx1EIVAXjWMXpZsphIbK0rAXWnuXVhn/BMbZq/+F4cX5ZA5/9aewfyLc
-         guY74TrHKj3Bu1wzLou/9fBKNpHuf5Fr41yj1T6/1Vphl5HT7OCbsWj3DJeHQISI7q
-         FwRviJmpOBsX4jMq2ptka/hzke21lBBn0kKlK8iQpkT88OqOUO7gDgc1BewBlScjb+
-         z1hPIo3ceaLdw==
-Date:   Wed, 14 Jun 2023 13:10:04 +0200
+        b=sfBcOFjINvIJwVNmlfWmgbeQr238UyJKXH384lX4jOjDzWnSd4D0/J0tgpEjha5Bi
+         mborgkc5oWwovCL9kznS+kKCQC+srihPZyt8l1zVbFxds5aBwqNpuVKQypX/3iLIDr
+         Lb2dHSoBdrbJUYXrJ3kMN1b42vp4LIq1qk/LWS8YRCt90nEbw53oENJO/tXQDiNu8g
+         hjjBDxhBuXySuW0NW9kCAuhoFAQD5SftRXNOQmbdOMOSQXuUBPBc5EvlHIuyYlzZdY
+         aUweUhTE3r8i5/KCiouwHk2yZTed17DorBU4sMvKHinP+8bGgGxf0Bq7AT53it0esA
+         iNWwtyWh3M9aQ==
+Date:   Wed, 14 Jun 2023 13:32:34 +0200
 From:   Carlos Maiolino <cem@kernel.org>
 To:     "Darrick J. Wong" <djwong@kernel.org>
-Cc:     linux-xfs@vger.kernel.org, david@fromorbit.com, hch@infradead.org
-Subject: Re: [PATCH 3/5] xfs_db: fix metadump name obfuscation for ascii-ci
- filesystems
-Message-ID: <20230614111004.4g22b3niuwma6d4l@andromeda>
-References: <168597938725.1226098.18077307069307502725.stgit@frogsfrogsfrogs>
- <fxgEi89EJu9vB1-1hI3jTLfGoFixvgK3AezC99fR6jNL67jTEO-wHMnGYkaHKh-W2Z6VDiRUwx1pz5q_9shHNw==@protonmail.internalid>
- <168597940416.1226098.14610650380180437820.stgit@frogsfrogsfrogs>
+Cc:     linux-xfs@vger.kernel.org
+Subject: Re: [PATCH 2/3] xfs_db: create dirents and xattrs with colliding
+ names
+Message-ID: <20230614113234.7pumraglyop3xhrc@andromeda>
+References: <168597941869.1226265.3314805710581551617.stgit@frogsfrogsfrogs>
+ <kLYmWsQKNR_apZ0Yx8S3syddXm4nd4p7G5nI70z-T_kTGS9rutWN0Ps1Tpl7xCvk-0jehmy5ZHmoSQQCugcMXA==@protonmail.internalid>
+ <168597942996.1226265.4909168279377490281.stgit@frogsfrogsfrogs>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=utf-8
 Content-Disposition: inline
 Content-Transfer-Encoding: 8bit
-In-Reply-To: <168597940416.1226098.14610650380180437820.stgit@frogsfrogsfrogs>
+In-Reply-To: <168597942996.1226265.4909168279377490281.stgit@frogsfrogsfrogs>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Mon, Jun 05, 2023 at 08:36:44AM -0700, Darrick J. Wong wrote:
+Hi Darrick.
+
+On Mon, Jun 05, 2023 at 08:37:09AM -0700, Darrick J. Wong wrote:
 > From: Darrick J. Wong <djwong@kernel.org>
 > 
-> Now that we've stabilized the dirent hash function for ascii-ci
-> filesystems, adapt the metadump name obfuscation code to detect when
-> it's obfuscating a directory entry name on an ascii-ci filesystem and
-> spit out names that actually have the same hash.
+> Create a new debugger command that will create dirent and xattr names
+> that induce dahash collisions.
 > 
 > Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 > ---
->  db/metadump.c |   77 ++++++++++++++++++++++++++++++++++++++++++++++++++-------
->  1 file changed, 68 insertions(+), 9 deletions(-)
-> 
-> 
-> diff --git a/db/metadump.c b/db/metadump.c
-> index 317ff72802d..4f8b3adb163 100644
-> --- a/db/metadump.c
-> +++ b/db/metadump.c
-> @@ -817,13 +817,17 @@ static void
->  obfuscate_name(
->  	xfs_dahash_t	hash,
->  	size_t		name_len,
-> -	unsigned char	*name)
-> +	unsigned char	*name,
-> +	bool		is_dirent)
->  {
-> -	unsigned char	*newp = name;
-> +	unsigned char	*oldname = NULL;
-> +	unsigned char	*newp;
->  	int		i;
-> -	xfs_dahash_t	new_hash = 0;
-> +	xfs_dahash_t	new_hash;
->  	unsigned char	*first;
->  	unsigned char	high_bit;
-> +	int		tries = 0;
-> +	bool		is_ci_name = is_dirent && xfs_has_asciici(mp);
->  	int		shift;
-> 
->  	/*
-> @@ -836,6 +840,24 @@ obfuscate_name(
->  	if (name_len < 5)
->  		return;
-> 
-> +	if (is_ci_name) {
-> +		oldname = alloca(name_len);
+>  db/hash.c         |  376 +++++++++++++++++++++++++++++++++++++++++++++++++++++
+>  man/man8/xfs_db.8 |   31 ++++
+>  2 files changed, 407 insertions(+)
 
-			  ^^^ This is triggering a warning on build time because
-			      the alloca() call is unbounded:
+This patch is trigerring a bunch of warnings due differing type on db/hash.c, like:
 
-metadump.c: In function ‘obfuscate_name’:
-metadump.c:844:13: warning: argument to ‘alloca’ may be too large
-[-Walloca-larger-than=]
-  844 |   oldname = alloca(name_len);
-      |             ^~~~~~
 
-Maybe just use malloc() here, instead of using stack space? We probably can use
-MAXNAMELEN here to bound it, something like:
+=====
+hash.c: In function ‘collide_dirents’:
+hash.c:226:22: warning: pointer targets in passing argument 2 of ‘openat’ differ in signedness [-Wpointer-sign]
+  226 |   newfd = openat(fd, name, O_CREAT, 0600);
+      |                      ^~~~
+      |                      |
+      |                      const unsigned char *
+In file included from /usr/include/features.h:461,
+                 from /usr/include/x86_64-linux-gnu/bits/libc-header-start.h:33,
+                 from /usr/include/stdio.h:27,
+                 from ../include/platform_defs.h:10,
+                 from ../include/libxfs.h:11,
+                 from hash.c:7:
+/usr/include/fcntl.h:196:12: note: expected ‘const char *’ but argument is of type ‘const unsigned char *’
+  196 | extern int __REDIRECT (openat, (int __fd, const char *__file, int __oflag,
+      |            ^~~~~~~~~~
+hash.c:241:11: warning: pointer targets in passing argument 1 of ‘strncpy’ differ in signedness [-Wpointer-sign]
+  241 |   strncpy(direntname, name, MAXNAMELEN);
+      |           ^~~~~~~~~~
+      |           |
+      |           unsigned char *
+In file included from ../include/platform_defs.h:17,
+                 from ../include/libxfs.h:11,
+                 from hash.c:7:
 
-if (is_ci_name && name_len <= MAXNAMELEN) {
-	oldname = alloca(name_len);
-	memcpy(oldname, name, name_len);
-} else {
-	return;
-}
+=====
+
+Could you please take a look onto it?
+
+Thanks!
 
 -- 
 Carlos
-> +		memcpy(oldname, name, name_len);
-> +	}
-> +
-> +again:
-> +	newp = name;
-> +	new_hash = 0;
-> +
-> +	/*
-> +	 * If we cannot generate a ci-compatible obfuscated name after 1000
-> +	 * tries, don't bother obfuscating the name.
-> +	 */
-> +	if (tries++ > 1000) {
-> +		memcpy(name, oldname, name_len);
-> +		return;
-> +	}
-> +
->  	/*
->  	 * The beginning of the obfuscated name can be pretty much
->  	 * anything, so fill it in with random characters.
-> @@ -843,7 +865,11 @@ obfuscate_name(
->  	 */
->  	for (i = 0; i < name_len - 5; i++) {
->  		*newp = random_filename_char();
-> -		new_hash = *newp ^ rol32(new_hash, 7);
-> +		if (is_ci_name)
-> +			new_hash = xfs_ascii_ci_xfrm(*newp) ^
-> +							rol32(new_hash, 7);
-> +		else
-> +			new_hash = *newp ^ rol32(new_hash, 7);
->  		newp++;
->  	}
+
 > 
-> @@ -867,6 +893,17 @@ obfuscate_name(
->  			high_bit = 0x80;
->  		} else
->  			high_bit = 0;
-> +
-> +		/*
-> +		 * If ascii-ci is enabled, uppercase characters are converted
-> +		 * to lowercase characters while computing the name hash.  If
-> +		 * any of the necessary correction bytes are uppercase, the
-> +		 * hash of the new name will not match.  Try again with a
-> +		 * different prefix.
-> +		 */
-> +		if (is_ci_name && xfs_ascii_ci_need_xfrm(*newp))
-> +			goto again;
-> +
->  		ASSERT(!is_invalid_char(*newp));
->  		newp++;
->  	}
-> @@ -880,6 +917,10 @@ obfuscate_name(
->  	 */
->  	if (high_bit) {
->  		*first ^= 0x10;
-> +
-> +		if (is_ci_name && xfs_ascii_ci_need_xfrm(*first))
-> +			goto again;
-> +
->  		ASSERT(!is_invalid_char(*first));
->  	}
->  }
-> @@ -1177,6 +1218,24 @@ handle_duplicate_name(xfs_dahash_t hash, size_t name_len, unsigned char *name)
->  	return 1;
+> 
+> diff --git a/db/hash.c b/db/hash.c
+> index 68c53e7f9bc..79a250526e9 100644
+> --- a/db/hash.c
+> +++ b/db/hash.c
+> @@ -5,12 +5,15 @@
+>   */
+> 
+>  #include "libxfs.h"
+> +#include "init.h"
+>  #include "addr.h"
+>  #include "command.h"
+>  #include "type.h"
+>  #include "io.h"
+>  #include "output.h"
+>  #include "hash.h"
+> +#include "obfuscate.h"
+> +#include <sys/xattr.h>
+> 
+>  static int hash_f(int argc, char **argv);
+>  static void hash_help(void);
+> @@ -46,8 +49,381 @@ hash_f(
+>  	return 0;
 >  }
 > 
-> +static inline xfs_dahash_t
-> +dirattr_hashname(
-> +	bool		is_dirent,
-> +	const uint8_t	*name,
-> +	int		namelen)
+> +static void
+> +hashcoll_help(void)
 > +{
-> +	if (is_dirent) {
-> +		struct xfs_name	xname = {
-> +			.name	= name,
-> +			.len	= namelen,
-> +		};
-> +
-> +		return libxfs_dir2_hashname(mp, &xname);
-> +	}
-> +
-> +	return libxfs_da_hashname(name, namelen);
+> +	printf(_(
+> +"\n"
+> +" Generate obfuscated variants of the provided name.  Each variant will have\n"
+> +" the same dahash value.  Names are written to stdout with a NULL separating\n"
+> +" each name.\n"
+> +"\n"
+> +" -a -- create extended attributes.\n"
+> +" -i -- read standard input for the name, up to %d bytes.\n"
+> +" -n -- create this many names.\n"
+> +" -p -- create directory entries or extended attributes in this file.\n"
+> +" -s -- seed the rng with this value.\n"
+> +"\n"),
+> +			MAXNAMELEN - 1);
 > +}
 > +
->  static void
->  generate_obfuscated_name(
->  	xfs_ino_t		ino,
-> @@ -1205,9 +1264,9 @@ generate_obfuscated_name(
-> 
->  	/* Obfuscate the name (if possible) */
-> 
-> -	hash = libxfs_da_hashname(name, namelen);
-> -	obfuscate_name(hash, namelen, name);
-> -	ASSERT(hash == libxfs_da_hashname(name, namelen));
-> +	hash = dirattr_hashname(ino != 0, name, namelen);
-> +	obfuscate_name(hash, namelen, name, ino != 0);
-> +	ASSERT(hash == dirattr_hashname(ino != 0, name, namelen));
-> 
->  	/*
->  	 * Make sure the name is not something already seen.  If we
-> @@ -1320,7 +1379,7 @@ obfuscate_path_components(
->  			/* last (or single) component */
->  			namelen = strnlen((char *)comp, len);
->  			hash = libxfs_da_hashname(comp, namelen);
-> -			obfuscate_name(hash, namelen, comp);
-> +			obfuscate_name(hash, namelen, comp, false);
->  			ASSERT(hash == libxfs_da_hashname(comp, namelen));
->  			break;
->  		}
-> @@ -1332,7 +1391,7 @@ obfuscate_path_components(
->  			continue;
->  		}
->  		hash = libxfs_da_hashname(comp, namelen);
-> -		obfuscate_name(hash, namelen, comp);
-> +		obfuscate_name(hash, namelen, comp, false);
->  		ASSERT(hash == libxfs_da_hashname(comp, namelen));
->  		comp += namelen + 1;
->  		len -= namelen + 1;
+> +struct name_dup {
+> +	struct name_dup	*next;
+> +	uint32_t	crc;
+> +	uint8_t		namelen;
+> +	uint8_t		name[];
+> +};
+> +
+> +static inline size_t
+> +name_dup_sizeof(
+> +	unsigned int	namelen)
+> +{
+> +	return sizeof(struct name_dup) + namelen;
+> +}
+> +
+> +#define MAX_DUP_TABLE_BUCKETS	(1048575)
+> +
+> +struct dup_table {
+> +	unsigned int	nr_buckets;
+> +	struct name_dup	*buckets[];
+> +};
+> +
+> +static inline size_t
+> +dup_table_sizeof(
+> +	unsigned int	nr_buckets)
+> +{
+> +	return sizeof(struct dup_table) +
+> +				(nr_buckets * sizeof(struct name_dup *));
+> +}
+> +
+> +static int
+> +dup_table_alloc(
+> +	unsigned long		nr_names,
+> +	struct dup_table	**tabp)
+> +{
+> +	struct dup_table	*t;
+> +
+> +	*tabp = NULL;
+> +
+> +	if (nr_names == 1)
+> +		return 0;
+> +
+> +	nr_names = min(MAX_DUP_TABLE_BUCKETS, nr_names);
+> +	t = calloc(1, dup_table_sizeof(nr_names));
+> +	if (!t)
+> +		return ENOMEM;
+> +
+> +	t->nr_buckets = nr_names;
+> +	*tabp = t;
+> +	return 0;
+> +}
+> +
+> +static void
+> +dup_table_free(
+> +	struct dup_table	*tab)
+> +{
+> +	struct name_dup		*ent, *next;
+> +	unsigned int		i;
+> +
+> +	if (!tab)
+> +		return;
+> +
+> +	for (i = 0; i < tab->nr_buckets; i++) {
+> +		ent = tab->buckets[i];
+> +
+> +		while (ent) {
+> +			next = ent->next;
+> +			free(ent);
+> +			ent = next;
+> +		}
+> +	}
+> +	free(tab);
+> +}
+> +
+> +static struct name_dup *
+> +dup_table_find(
+> +	struct dup_table	*tab,
+> +	unsigned char		*name,
+> +	size_t			namelen)
+> +{
+> +	struct name_dup		*ent;
+> +	uint32_t		crc = crc32c(~0, name, namelen);
+> +
+> +	ent = tab->buckets[crc % tab->nr_buckets];
+> +	while (ent) {
+> +		if (ent->crc == crc &&
+> +		    ent->namelen == namelen &&
+> +		    !memcmp(ent->name, name, namelen))
+> +			return ent;
+> +
+> +		ent = ent->next;
+> +	}
+> +
+> +	return NULL;
+> +}
+> +
+> +static int
+> +dup_table_store(
+> +	struct dup_table	*tab,
+> +	unsigned char		*name,
+> +	size_t			namelen)
+> +{
+> +	struct name_dup		*dup;
+> +	uint32_t		seq = 1;
+> +
+> +	ASSERT(namelen < MAXNAMELEN);
+> +
+> +	while ((dup = dup_table_find(tab, name, namelen)) != NULL) {
+> +		int		ret;
+> +
+> +		do {
+> +			ret = find_alternate(namelen, name, seq++);
+> +		} while (ret == 0);
+> +		if (ret < 0)
+> +			return EEXIST;
+> +	}
+> +
+> +	dup = malloc(name_dup_sizeof(namelen));
+> +	if (!dup)
+> +		return ENOMEM;
+> +
+> +	dup->crc = crc32c(~0, name, namelen);
+> +	dup->namelen = namelen;
+> +	memcpy(dup->name, name, namelen);
+> +	dup->next = tab->buckets[dup->crc % tab->nr_buckets];
+> +
+> +	tab->buckets[dup->crc % tab->nr_buckets] = dup;
+> +	return 0;
+> +}
+> +
+> +static int
+> +collide_dirents(
+> +	unsigned long		nr,
+> +	const unsigned char	*name,
+> +	size_t			namelen,
+> +	int			fd)
+> +{
+> +	struct xfs_name		dname = {
+> +		.name		= name,
+> +		.len		= namelen,
+> +	};
+> +	unsigned char		direntname[MAXNAMELEN + 1];
+> +	struct dup_table	*tab = NULL;
+> +	xfs_dahash_t		old_hash;
+> +	unsigned long		i;
+> +	int			error = 0;
+> +
+> +	old_hash = libxfs_dir2_hashname(mp, &dname);
+> +
+> +	if (fd >= 0) {
+> +		int		newfd;
+> +
+> +		/*
+> +		 * User passed in a fd, so we'll use the directory to detect
+> +		 * duplicate names.  First create the name that we are passed
+> +		 * in; the new names will be hardlinks to the first file.
+> +		 */
+> +		newfd = openat(fd, name, O_CREAT, 0600);
+> +		if (newfd < 0)
+> +			return errno;
+> +		close(newfd);
+> +	} else if (nr > 1) {
+> +		/*
+> +		 * Track every name we create so that we don't emit duplicates.
+> +		 */
+> +		error = dup_table_alloc(nr, &tab);
+> +		if (error)
+> +			return error;
+> +	}
+> +
+> +	dname.name = direntname;
+> +	for (i = 0; i < nr; i++) {
+> +		strncpy(direntname, name, MAXNAMELEN);
+> +		obfuscate_name(old_hash, namelen, direntname, true);
+> +		ASSERT(old_hash == libxfs_dir2_hashname(mp, &dname));
+> +
+> +		if (fd >= 0) {
+> +			error = linkat(fd, name, fd, direntname, 0);
+> +			if (error && errno != EEXIST)
+> +				return errno;
+> +
+> +			/* don't print names to stdout */
+> +			continue;
+> +		} else if (tab) {
+> +			error = dup_table_store(tab, direntname, namelen);
+> +			if (error)
+> +				break;
+> +		}
+> +
+> +		printf("%s%c", direntname, 0);
+> +	}
+> +
+> +	dup_table_free(tab);
+> +	return error;
+> +}
+> +
+> +static int
+> +collide_xattrs(
+> +	unsigned long		nr,
+> +	const unsigned char	*name,
+> +	size_t			namelen,
+> +	int			fd)
+> +{
+> +	unsigned char		xattrname[MAXNAMELEN + 5];
+> +	struct dup_table	*tab = NULL;
+> +	xfs_dahash_t		old_hash;
+> +	unsigned long		i;
+> +	int			error;
+> +
+> +	old_hash = libxfs_da_hashname(name, namelen);
+> +
+> +	if (fd >= 0) {
+> +		/*
+> +		 * User passed in a fd, so we'll use the xattr structure to
+> +		 * detect duplicate names.  First create the attribute that we
+> +		 * are passed in.
+> +		 */
+> +		snprintf(xattrname, MAXNAMELEN + 5, "user.%s", name);
+> +		error = fsetxattr(fd, xattrname, "1", 1, 0);
+> +		if (error)
+> +			return errno;
+> +	} else if (nr > 1) {
+> +		/*
+> +		 * Track every name we create so that we don't emit duplicates.
+> +		 */
+> +		error = dup_table_alloc(nr, &tab);
+> +		if (error)
+> +			return error;
+> +	}
+> +
+> +	for (i = 0; i < nr; i++) {
+> +		snprintf(xattrname, MAXNAMELEN + 5, "user.%s", name);
+> +		obfuscate_name(old_hash, namelen, xattrname + 5, false);
+> +		ASSERT(old_hash == libxfs_da_hashname(xattrname + 5, namelen));
+> +
+> +		if (fd >= 0) {
+> +			error = fsetxattr(fd, xattrname, "1", 1, 0);
+> +			if (error)
+> +				return errno;
+> +
+> +			/* don't print names to stdout */
+> +			continue;
+> +		} else if (tab) {
+> +			error = dup_table_store(tab, xattrname, namelen + 5);
+> +			if (error)
+> +				break;
+> +		}
+> +
+> +		printf("%s%c", xattrname, 0);
+> +	}
+> +
+> +	dup_table_free(tab);
+> +	return error;
+> +}
+> +
+> +static int
+> +hashcoll_f(
+> +	int		argc,
+> +	char		**argv)
+> +{
+> +	const char	*path = NULL;
+> +	bool		read_stdin = false;
+> +	bool		create_xattr = false;
+> +	unsigned long	nr = 1, seed = 0;
+> +	int		fd = -1;
+> +	int		c;
+> +	int		error;
+> +
+> +	while ((c = getopt(argc, argv, "ain:p:s:")) != EOF) {
+> +		switch (c) {
+> +		case 'a':
+> +			create_xattr = true;
+> +			break;
+> +		case 'i':
+> +			read_stdin = true;
+> +			break;
+> +		case 'n':
+> +			nr = strtoul(optarg, NULL, 10);
+> +			break;
+> +		case 'p':
+> +			path = optarg;
+> +			break;
+> +		case 's':
+> +			seed = strtoul(optarg, NULL, 10);
+> +			break;
+> +		default:
+> +			exitcode = 1;
+> +			hashcoll_help();
+> +			return 0;
+> +		}
+> +	}
+> +
+> +	if (path) {
+> +		int	oflags = O_RDWR;
+> +
+> +		if (!create_xattr)
+> +			oflags = O_RDONLY | O_DIRECTORY;
+> +
+> +		fd = open(path, oflags);
+> +		if (fd < 0) {
+> +			perror(path);
+> +			exitcode = 1;
+> +			return 0;
+> +		}
+> +	}
+> +
+> +	if (seed)
+> +		srandom(seed);
+> +
+> +	if (read_stdin) {
+> +		char	buf[MAXNAMELEN];
+> +		size_t	len;
+> +
+> +		len = fread(buf, 1, MAXNAMELEN - 1, stdin);
+> +
+> +		if (create_xattr)
+> +			error = collide_xattrs(nr, buf, len, fd);
+> +		else
+> +			error = collide_dirents(nr, buf, len, fd);
+> +		if (error) {
+> +			printf(_("hashcoll: %s\n"), strerror(error));
+> +			exitcode = 1;
+> +		}
+> +		goto done;
+> +	}
+> +
+> +	for (c = optind; c < argc; c++) {
+> +		size_t	len = strlen(argv[c]);
+> +
+> +		if (create_xattr)
+> +			error = collide_xattrs(nr, argv[c], len, fd);
+> +		else
+> +			error = collide_dirents(nr, argv[c], len, fd);
+> +		if (error) {
+> +			printf(_("hashcoll: %s\n"), strerror(error));
+> +			exitcode = 1;
+> +		}
+> +	}
+> +
+> +done:
+> +	if (fd >= 0)
+> +		close(fd);
+> +	return 0;
+> +}
+> +
+> +static cmdinfo_t	hashcoll_cmd = {
+> +	.name		= "hashcoll",
+> +	.cfunc		= hashcoll_f,
+> +	.argmin		= 0,
+> +	.argmax		= -1,
+> +	.args		= N_("[-a] [-s seed] [-n nr] [-p path] -i|names..."),
+> +	.oneline	= N_("create names that produce dahash collisions"),
+> +	.help		= hashcoll_help,
+> +};
+> +
+>  void
+>  hash_init(void)
+>  {
+>  	add_command(&hash_cmd);
+> +	add_command(&hashcoll_cmd);
+>  }
+> diff --git a/man/man8/xfs_db.8 b/man/man8/xfs_db.8
+> index 1a2bb7e98fb..fde1c5c6c69 100644
+> --- a/man/man8/xfs_db.8
+> +++ b/man/man8/xfs_db.8
+> @@ -768,6 +768,37 @@ Prints the hash value of
+>  .I string
+>  using the hash function of the XFS directory and attribute implementation.
+>  .TP
+> +.BI "hashcoll [-a] [-s seed] [-n " nr "] [-p " path "] -i | " names...
+> +Create directory entries or extended attributes names that all have the same
+> +hash value.
+> +The metadump name obfuscation algorithm is used here.
+> +Names are written to standard output, with a NULL between each name for use
+> +with xargs -0.
+> +.RS 1.0i
+> +.PD 0
+> +.TP 0.4i
+> +.TP 0.4i
+> +.B \-a
+> +Create extended attribute names.
+> +.TP 0.4i
+> +.B \-i
+> +Read the first name to create from standard input.
+> +Up to 255 bytes are read.
+> +If this option is not specified, first names are taken from the command line.
+> +.TP 0.4i
+> +.BI \-n " nr"
+> +Create this many duplicated names.
+> +The default is to create one name.
+> +.TP 0.4i
+> +.BI \-p " path"
+> +Create directory entries or extended attributes in this file instead of
+> +writing the names to standard output.
+> +.TP 0.4i
+> +.BI \-s " seed"
+> +Seed the random number generator with this value.
+> +.PD
+> +.RE
+> +.TP
+>  .BI "help [" command ]
+>  Print help for one or all commands.
+>  .TP
 > 
