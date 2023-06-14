@@ -2,42 +2,40 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8949FC001B3
-	for <linux-xfs@archiver.kernel.org>; Tue, 13 Jun 2023 19:47:59 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 62A5DEB64DB
+	for <linux-xfs@archiver.kernel.org>; Wed, 14 Jun 2023 06:30:08 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S238628AbjFMTr5 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 13 Jun 2023 15:47:57 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44950 "EHLO
+        id S241271AbjFNGaG (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 14 Jun 2023 02:30:06 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43070 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232143AbjFMTr4 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 13 Jun 2023 15:47:56 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id EC85C171A;
-        Tue, 13 Jun 2023 12:47:54 -0700 (PDT)
+        with ESMTP id S243194AbjFNG3p (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 14 Jun 2023 02:29:45 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 442C31BF7;
+        Tue, 13 Jun 2023 23:29:43 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange X25519 server-signature RSA-PSS (2048 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 7F46F6350E;
-        Tue, 13 Jun 2023 19:47:54 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 689F9C433F0;
-        Tue, 13 Jun 2023 19:47:51 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id E979563DEF;
+        Wed, 14 Jun 2023 06:29:38 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 5D9C5C433C8;
+        Wed, 14 Jun 2023 06:29:32 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1686685673;
-        bh=Ih8TncHvHQnGjOpDZNZ3sjjTRueGP2vqBfz8GI8tuzM=;
-        h=Subject:From:To:Cc:Date:In-Reply-To:References:From;
-        b=Bzvqr3AB+cs7Dxe6cGNRzCtojYdBO9sWkNdcznkUfX9+ZDY25rOi+2u4X6VhgwrOx
-         ohzqtKu5z6NzVdBIiq9UuiKh5r3YxLFfD13lPgSWk+X/9CT1KOQlStbaUZ+aMTqeQm
-         Zv59qXw1fB68ELcdkT0vyiQlSiO88yVoQ6M8wAJ+VRka2OZ2ll9k/t/ptev5PqlA81
-         533DHLNEBBYgJL+ST2ZTHLORnjRBy6TL3jfL+P/Qpvg2wJc4/edGpmxXqJu805iPtw
-         VImFMLd7MrTXUg8CeNHTp5sXPunoh5QsHtCVWD0aPCws9jG5dOyHohBjwDOMrI69JF
-         8sSWsZEKHd6CQ==
-Message-ID: <3b7a224853e2e0557d55e98f171f8b24999c040b.camel@kernel.org>
-Subject: Re: [PATCH v4 2/9] fs: add infrastructure for multigrain inode
- i_m/ctime
-From:   Jeff Layton <jlayton@kernel.org>
-To:     Jan Kara <jack@suse.cz>
-Cc:     Alexander Viro <viro@zeniv.linux.org.uk>,
-        Christian Brauner <brauner@kernel.org>,
+        s=k20201202; t=1686724178;
+        bh=XjFkOsOx183EvSiM4yPrENjUW2d5opZ5TvQfHk7+D2E=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=XnX11RI911zmZAW2F67s3+Ymqh1WyrS9FAGLruYi0rzwQOXU1+S0hh65U7iPNXoq6
+         chqapxeFWuQPWe1xw5png9URTFBluyLfk4L59UjPan9xuJTRHK//t2Z5ie2yzGNTva
+         qtQi48csnlK0bKeNPyWNQ7KX8SMFwBcnhVywwMAmbDknwoN451G2FPeFgN+O75pBm3
+         WtTXZEDZE2FCRdCej0zaWKFjud0zNmD8JJuXe2p307imyZZdCdixaF6gKTcbWD0OOt
+         9+GJw+FhGue1elde/UvtQ6Neflo/LSA/woAWF7Btga+5DatyoY4t6prX187y6cupLw
+         qW86pY+AZP7aQ==
+Date:   Wed, 14 Jun 2023 08:29:29 +0200
+From:   Christian Brauner <brauner@kernel.org>
+To:     Jeff Layton <jlayton@kernel.org>
+Cc:     Jan Kara <jack@suse.cz>, Alexander Viro <viro@zeniv.linux.org.uk>,
         "Darrick J. Wong" <djwong@kernel.org>,
         Hugh Dickins <hughd@google.com>,
         Andrew Morton <akpm@linux-foundation.org>,
@@ -59,152 +57,61 @@ Cc:     Alexander Viro <viro@zeniv.linux.org.uk>,
         linux-btrfs@vger.kernel.org, linux-ext4@vger.kernel.org,
         linux-mm@kvack.org, linux-nfs@vger.kernel.org,
         linux-cifs@vger.kernel.org
-Date:   Tue, 13 Jun 2023 15:47:50 -0400
-In-Reply-To: <20230523101723.xmy7mylbczhki6aa@quack3>
+Subject: Re: [PATCH v4 2/9] fs: add infrastructure for multigrain inode
+ i_m/ctime
+Message-ID: <20230614-fanal-infamieren-b9c106e37b73@brauner>
 References: <20230518114742.128950-1-jlayton@kernel.org>
-         <20230518114742.128950-3-jlayton@kernel.org>
-         <20230523100240.mgeu4y46friv7hau@quack3>
-         <20230523101723.xmy7mylbczhki6aa@quack3>
-Content-Type: text/plain; charset="ISO-8859-15"
-Content-Transfer-Encoding: quoted-printable
-User-Agent: Evolution 3.48.3 (3.48.3-1.fc38) 
+ <20230518114742.128950-3-jlayton@kernel.org>
+ <20230523100240.mgeu4y46friv7hau@quack3>
+ <bf0065f2c9895edb66faeacc6cf77bd257088348.camel@kernel.org>
+ <20230523124606.bkkhwi6b67ieeygl@quack3>
+ <11dc42c327c243ea1def211f352cb4fc38094cc0.camel@kernel.org>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+In-Reply-To: <11dc42c327c243ea1def211f352cb4fc38094cc0.camel@kernel.org>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Tue, 2023-05-23 at 12:17 +0200, Jan Kara wrote:
-> On Tue 23-05-23 12:02:40, Jan Kara wrote:
-> > On Thu 18-05-23 07:47:35, Jeff Layton wrote:
-> > > The VFS always uses coarse-grained timestamp updates for filling out =
-the
-> > > ctime and mtime after a change. This has the benefit of allowing
-> > > filesystems to optimize away a lot metadata updates, down to around 1
-> > > per jiffy, even when a file is under heavy writes.
-> > >=20
-> > > Unfortunately, this has always been an issue when we're exporting via
-> > > NFSv3, which relies on timestamps to validate caches. Even with NFSv4=
-, a
-> > > lot of exported filesystems don't properly support a change attribute
-> > > and are subject to the same problems with timestamp granularity. Othe=
-r
-> > > applications have similar issues (e.g backup applications).
-> > >=20
-> > > Switching to always using fine-grained timestamps would improve the
-> > > situation, but that becomes rather expensive, as the underlying
-> > > filesystem will have to log a lot more metadata updates.
-> > >=20
-> > > What we need is a way to only use fine-grained timestamps when they a=
-re
-> > > being actively queried.
-> > >=20
-> > > The kernel always stores normalized ctime values, so only the first 3=
-0
-> > > bits of the tv_nsec field are ever used. Whenever the mtime changes, =
-the
-> > > ctime must also change.
-> > >=20
-> > > Use the 31st bit of the ctime tv_nsec field to indicate that somethin=
-g
-> > > has queried the inode for the i_mtime or i_ctime. When this flag is s=
-et,
-> > > on the next timestamp update, the kernel can fetch a fine-grained
-> > > timestamp instead of the usual coarse-grained one.
-> > >=20
-> > > This patch adds the infrastructure this scheme. Filesytems can opt
-> > > into it by setting the FS_MULTIGRAIN_TS flag in the fstype.
-> > >=20
-> > > Later patches will convert individual filesystems over to use it.
-> > >=20
-> > > Signed-off-by: Jeff Layton <jlayton@kernel.org>
-> >=20
-> > So there are two things I dislike about this series because I think the=
-y
-> > are fragile:
-> >=20
-> > 1) If we have a filesystem supporting multigrain ts and someone
-> > accidentally directly uses the value of inode->i_ctime, he can get bogu=
-s
-> > value (with QUERIED flag). This mistake is very easy to do. So I think =
-we
-> > should rename i_ctime to something like __i_ctime and always use access=
-or
-> > function for it.
-> >=20
-> > 2) As I already commented in a previous version of the series, the sche=
-me
-> > with just one flag for both ctime and mtime and flag getting cleared in
-> > current_time() relies on the fact that filesystems always do an equival=
-ent
-> > of:
-> >=20
-> > 	inode->i_mtime =3D inode->i_ctime =3D current_time();
-> >=20
-> > Otherwise we can do coarse grained update where we should have done a f=
-ine
-> > grained one. Filesystems often update timestamps like this but not
-> > universally. Grepping shows some instances where only inode->i_mtime is=
- set
-> > from current_time() e.g. in autofs or bfs. Again a mistake that is rath=
-er
-> > easy to make and results in subtle issues. I think this would be also
-> > nicely solved by renaming i_ctime to __i_ctime and using a function to =
-set
-> > ctime. Mtime could then be updated with inode->i_mtime =3D ctime_peek()=
-.
-> >=20
-> > I understand this is quite some churn but a very mechanical one that co=
-uld
-> > be just done with Coccinelle and a few manual fixups. So IMHO it is wor=
-th
-> > the more robust result.
->=20
-> Also as I'm thinking about it your current scheme is slightly racy. Suppo=
-se
-> the filesystem does:
->=20
-> CPU1					CPU2
->=20
-> 					statx()
-> inode->i_ctime =3D current_time()
->   current_mg_time()
->     nsec =3D atomic_long_fetch_andnot(QUERIED, &inode->i_ctime.tv_nsec)
-> 					  nsec =3D atomic_long_fetch_or(QUERIED, &inode->i_ctime.tv_nsec)
->     if (nsec & QUERIED) - not set
->       ktime_get_coarse_real_ts64(&now)
->     return timestamp_truncate(now, inode);
-> - QUERIED flag in the inode->i_ctime gets overwritten by the assignment
->   =3D> we need not update ctime due to granularity although it was querie=
-d
->=20
-> One more reason to use explicit function to update inode->i_ctime ;)
+On Tue, Jun 13, 2023 at 09:09:29AM -0400, Jeff Layton wrote:
+> On Tue, 2023-05-23 at 14:46 +0200, Jan Kara wrote:
+> > On Tue 23-05-23 06:40:08, Jeff Layton wrote:
+> > > On Tue, 2023-05-23 at 12:02 +0200, Jan Kara wrote:
+> > > > 
+> > > > So there are two things I dislike about this series because I think they
+> > > > are fragile:
+> > > > 
+> > > > 1) If we have a filesystem supporting multigrain ts and someone
+> > > > accidentally directly uses the value of inode->i_ctime, he can get bogus
+> > > > value (with QUERIED flag). This mistake is very easy to do. So I think we
+> > > > should rename i_ctime to something like __i_ctime and always use accessor
+> > > > function for it.
+> > > > 
+> > > 
+> > > We could do this, but it'll be quite invasive. We'd have to change any
+> > > place that touches i_ctime (and there are a lot of them), even on
+> > > filesystems that are not being converted.
+> > 
+> > Yes, that's why I suggested Coccinelle to deal with this.
+> 
+> 
+> I've done the work to convert all of the accesses of i_ctime into
+> accessor functions in the kernel. The current state of it is here:
+> 
+>    
+> https://git.kernel.org/pub/scm/linux/kernel/git/jlayton/linux.git/commit/?h=ctime
+> 
+> As expected, it touches a lot of code, all over the place. So far I have
+> most of the conversion in one giant patch, and I need to split it up
+> (probably per-subsystem).
 
-Thinking about this some more, I think we can fix the race you pointed
-out by just not clearing the queried flag when we fetch the
-i_ctime.tv_nsec field when we're updating.
+Yeah, you have time since it'll be v6.6 material.
 
-So, instead of atomic_long_fetch_andnot, we'd just want to use an
-atomic_long_fetch there, and just let the eventual assignment of
-inode->__i_ctime.tv_nsec be what clears the flag.
+> 
+> What's the best way to feed this change into mainline? Should I try to
+> get subsystem maintainers to pick these up, or are we better off feeding
+> this in via a separate branch?
 
-Any task that goes to update the time during the interim window will
-fetch a fine-grained time, but that's what we want anyway.
-
-Since you bring up races though, there are a couple of other things we
-should be aware of. Note that both problems exist today too:
-
-1) it's possible for two tasks to race in such a way that the ctime goes
-backward. There's no synchronization between tasks doing the updating,
-so an older time can overwrite a newer one. I think you'd need a pretty
-tight race to observe this though.
-
-2) it's possible to fetch a "torn" timestamp out of the inode.
-timespec64 is two words, and we don't order its loads or stores. We
-could consider adding a seqcount_t and some barriers and fixing it that
-way. I'm not sure it's worth it though, given that we haven't worried
-about this in the past.
-
-For now, I propose that we ignore both problems, unless and until we can
-prove that they are more than theoretical.
---=20
-Jeff Layton <jlayton@kernel.org>
+I would prefer if we send them all through the vfs tree since trickle
+down conversions are otherwise very painful and potentially very slow.
