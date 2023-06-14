@@ -2,223 +2,237 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5632BEB64D9
-	for <linux-xfs@archiver.kernel.org>; Wed, 14 Jun 2023 09:13:39 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 232B1EB64DA
+	for <linux-xfs@archiver.kernel.org>; Wed, 14 Jun 2023 11:10:15 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S243904AbjFNJNi (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 14 Jun 2023 05:13:38 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54706 "EHLO
+        id S235926AbjFNLKM (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 14 Jun 2023 07:10:12 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34568 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S234645AbjFNJNd (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 14 Jun 2023 05:13:33 -0400
-Received: from mail-qk1-x734.google.com (mail-qk1-x734.google.com [IPv6:2607:f8b0:4864:20::734])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B5ED41FE4
-        for <linux-xfs@vger.kernel.org>; Wed, 14 Jun 2023 02:13:29 -0700 (PDT)
-Received: by mail-qk1-x734.google.com with SMTP id af79cd13be357-75d4b85b3ccso183413485a.2
-        for <linux-xfs@vger.kernel.org>; Wed, 14 Jun 2023 02:13:29 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=fromorbit-com.20221208.gappssmtp.com; s=20221208; t=1686734008; x=1689326008;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
-        bh=/jwOdnEDU8ms2akjVGvT1Q0D87zIjzot5Y6GxcjnR4I=;
-        b=fF5lOmuju8olD8HuC9mplgc0Cpn4jOINck3s/q4YiQRCSFQTYl+s4SEwf4JxaDOghf
-         so1mOy5DKgo2+B4GYeLAHr/zTyQ9PFwmDsWwszLuL6u3znN9ylk0sk8WG6/yjdc95Yy3
-         lzzJn1a/Z01nJbWg1EyRKCEkJapthuhRbyBKGS7e4Y+NI4NW+gcrZFdxs6z02+0Jaf3I
-         VdPAkl190/0Izz3uZ2ePuFANLFQXv6C+6zAG9GqS9dOvl9S1Ml0/zl8Qrfx3Agn8GwXB
-         QQMnVikXyV/LggZBzhCWuG/NWd3ZgtVEgOUnKy90iy3NUhuoBgSg/3Zb42LqdbwFsSXM
-         s9EQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20221208; t=1686734008; x=1689326008;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=/jwOdnEDU8ms2akjVGvT1Q0D87zIjzot5Y6GxcjnR4I=;
-        b=D0kng3T2kTk8e1LJNgXniGa063BqBn7VrfUmXSwcfJ70obZ3itC5yhSD767l3ESpPr
-         9TFJpKweaCRvP7jscwS91hPlCHaNMMH3CPZWbNjIv71GQR4ilH2wfTj9O26Aom/5B4Us
-         xo6PNxmGdi3ZdS/HCBySoU01nJsBBNkc7bUofY1YU7vQ+eGZWLQ6haq8CsQSR+8No5Vr
-         xYpoAkI+4bqMLykSoV1AosM3v0zkErcKH+ZuuUF2w6e2n6E8JYJtIiYzFfMQViDroOWO
-         W/4w1pdjkxfDOAGgyjJ5pix0tjetWvoB5jmBfXCEjoaTSESZ/2nwmTM3xSig/RMd3FAj
-         wb/w==
-X-Gm-Message-State: AC+VfDwhEm9UxUBA3FnBl88u2086QPK/xPL2MbEOO/DpN1ZUXnCKx3O4
-        juXK6PNMvicEqWcEiugdxW+rpEMQ623yoy2X8NY=
-X-Google-Smtp-Source: ACHHUZ7nFJFTrgMg5cWuTSeRwiQOdNdKAeC9S5rwz5G6JuLfz9jtOdbgYDOSRaqhvRvU9PiOq2Hv4g==
-X-Received: by 2002:a05:620a:2852:b0:761:9445:affc with SMTP id h18-20020a05620a285200b007619445affcmr5562507qkp.38.1686734008671;
-        Wed, 14 Jun 2023 02:13:28 -0700 (PDT)
-Received: from dread.disaster.area (pa49-180-13-202.pa.nsw.optusnet.com.au. [49.180.13.202])
-        by smtp.gmail.com with ESMTPSA id h16-20020aa786d0000000b006413e6e7578sm9939707pfo.5.2023.06.14.02.13.28
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 14 Jun 2023 02:13:28 -0700 (PDT)
-Received: from dave by dread.disaster.area with local (Exim 4.96)
-        (envelope-from <david@fromorbit.com>)
-        id 1q9MZB-00BcST-0H;
-        Wed, 14 Jun 2023 19:13:25 +1000
-Date:   Wed, 14 Jun 2023 19:13:25 +1000
-From:   Dave Chinner <david@fromorbit.com>
-To:     Chandan Babu R <chandan.babu@oracle.com>
-Cc:     linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 08/11] xfs: logging the on disk inode LSN can make it go
- backwards
-Message-ID: <ZImEtbErW1SSCAqk@dread.disaster.area>
-References: <20210727071012.3358033-9-david@fromorbit.com>
- <87a5x3am7m.fsf@debian-BULLSEYE-live-builder-AMD64>
+        with ESMTP id S235751AbjFNLKK (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 14 Jun 2023 07:10:10 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A753ADF
+        for <linux-xfs@vger.kernel.org>; Wed, 14 Jun 2023 04:10:09 -0700 (PDT)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange X25519 server-signature RSA-PSS (2048 bits))
+        (No client certificate requested)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 32B2C62820
+        for <linux-xfs@vger.kernel.org>; Wed, 14 Jun 2023 11:10:09 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 790BAC433CA;
+        Wed, 14 Jun 2023 11:10:07 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1686741008;
+        bh=LEULcDUB5PUStN8RXClGxXvwP+VaG1zhzwh51mYZ3ME=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=OgcQmyc1squMuSPWtIZ+KoulVG52BbgAqAPluwrTZQM8nTAVTm2zw4JgRwrediMck
+         XL3sfjcZkRNBJvjSiZla9nYYqEJjJWQ09Wz2RbMvR7F2wGnIlZM2+ueRsJ06+5nEtL
+         qgasiJYdcitx1EIVAXjWMXpZsphIbK0rAXWnuXVhn/BMbZq/+F4cX5ZA5/9aewfyLc
+         guY74TrHKj3Bu1wzLou/9fBKNpHuf5Fr41yj1T6/1Vphl5HT7OCbsWj3DJeHQISI7q
+         FwRviJmpOBsX4jMq2ptka/hzke21lBBn0kKlK8iQpkT88OqOUO7gDgc1BewBlScjb+
+         z1hPIo3ceaLdw==
+Date:   Wed, 14 Jun 2023 13:10:04 +0200
+From:   Carlos Maiolino <cem@kernel.org>
+To:     "Darrick J. Wong" <djwong@kernel.org>
+Cc:     linux-xfs@vger.kernel.org, david@fromorbit.com, hch@infradead.org
+Subject: Re: [PATCH 3/5] xfs_db: fix metadump name obfuscation for ascii-ci
+ filesystems
+Message-ID: <20230614111004.4g22b3niuwma6d4l@andromeda>
+References: <168597938725.1226098.18077307069307502725.stgit@frogsfrogsfrogs>
+ <fxgEi89EJu9vB1-1hI3jTLfGoFixvgK3AezC99fR6jNL67jTEO-wHMnGYkaHKh-W2Z6VDiRUwx1pz5q_9shHNw==@protonmail.internalid>
+ <168597940416.1226098.14610650380180437820.stgit@frogsfrogsfrogs>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=utf-8
 Content-Disposition: inline
-In-Reply-To: <87a5x3am7m.fsf@debian-BULLSEYE-live-builder-AMD64>
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <168597940416.1226098.14610650380180437820.stgit@frogsfrogsfrogs>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Tue, Jun 13, 2023 at 11:50:03AM +0530, Chandan Babu R wrote:
-> On Tue, Jul 27, 2021 at 05:10:09PM +1000, Dave Chinner wrote:
+On Mon, Jun 05, 2023 at 08:36:44AM -0700, Darrick J. Wong wrote:
+> From: Darrick J. Wong <djwong@kernel.org>
 > 
-> Hi Dave,
+> Now that we've stabilized the dirent hash function for ascii-ci
+> filesystems, adapt the metadump name obfuscation code to detect when
+> it's obfuscating a directory entry name on an ascii-ci filesystem and
+> spit out names that actually have the same hash.
 > 
-> I am trying to backport this patch to Linux-v5.4 LTS kernel. I am unable to
-> understand as to how log recovery could overwrite a disk inode (holding newer
-> contents) with a Log inode (containing stale contents). Please refer to my
-> query below.
-
-I've paged most of this out of my brain.
-
+> Signed-off-by: Darrick J. Wong <djwong@kernel.org>
+> ---
+>  db/metadump.c |   77 ++++++++++++++++++++++++++++++++++++++++++++++++++-------
+>  1 file changed, 68 insertions(+), 9 deletions(-)
 > 
-> > From: Dave Chinner <dchinner@redhat.com>
 > 
-> > When we log an inode, we format the "log inode" core and set an LSN
-> > in that inode core. We do that via xfs_inode_item_format_core(),
-> > which calls:
-> >
-> > 	xfs_inode_to_log_dinode(ip, dic, ip->i_itemp->ili_item.li_lsn);
+> diff --git a/db/metadump.c b/db/metadump.c
+> index 317ff72802d..4f8b3adb163 100644
+> --- a/db/metadump.c
+> +++ b/db/metadump.c
+> @@ -817,13 +817,17 @@ static void
+>  obfuscate_name(
+>  	xfs_dahash_t	hash,
+>  	size_t		name_len,
+> -	unsigned char	*name)
+> +	unsigned char	*name,
+> +	bool		is_dirent)
+>  {
+> -	unsigned char	*newp = name;
+> +	unsigned char	*oldname = NULL;
+> +	unsigned char	*newp;
+>  	int		i;
+> -	xfs_dahash_t	new_hash = 0;
+> +	xfs_dahash_t	new_hash;
+>  	unsigned char	*first;
+>  	unsigned char	high_bit;
+> +	int		tries = 0;
+> +	bool		is_ci_name = is_dirent && xfs_has_asciici(mp);
+>  	int		shift;
 > 
-> > to format the log inode. It writes the LSN from the inode item into
-> > the log inode, and if recovery decides the inode item needs to be
-> > replayed, it recovers the log inode LSN field and writes it into the
-> > on disk inode LSN field.
+>  	/*
+> @@ -836,6 +840,24 @@ obfuscate_name(
+>  	if (name_len < 5)
+>  		return;
 > 
-> > Now this might seem like a reasonable thing to do, but it is wrong
-> > on multiple levels. Firstly, if the item is not yet in the AIL,
-> > item->li_lsn is zero. i.e. the first time the inode it is logged and
-> > formatted, the LSN we write into the log inode will be zero. If we
-> > only log it once, recovery will run and can write this zero LSN into
-> > the inode.
-> 
-> Assume that the following is the state before the inode is written back,
-> Disk inode LSN = x
-> Log inode LSN = 0
-> Transaction LSN = x + 1
-> 
-> At this point, if the filesystem shuts down abruptly, log recovery could
-> change the disk inode's LSN to zero.
+> +	if (is_ci_name) {
+> +		oldname = alloca(name_len);
 
-Yes, that happened when we first logged a clean inode, so it was
-dirty in memory but hadn't been placed in the AIL.
+			  ^^^ This is triggering a warning on build time because
+			      the alloca() call is unbounded:
 
-> > This means that the next time the inode is logged and log recovery
-> > runs, it will *always* replay changes to the inode regardless of
-> > whether the inode is newer on disk than the version in the log and
-> > that violates the entire purpose of recording the LSN in the inode
-> > at writeback time (i.e. to stop it going backwards in time on disk
-> > during recovery).
-> 
-> After the log recovery indicated by me above, if the filesystem modifies the
-> inode then the following is the state of metadata in memory and on disk,
-> 
-> Disk inode LSN = 0 (Due to changes made by log recovery during mount)
-> Log inode LSN = 0 (xfs_log_item->li_lsn is zero until the log item is moved to
->                    the AIL in the current mount cycle)
-> Transaction LSN = x + 2
->
-> Now, if the filesystem shuts down abruptly once again, log recovery replays
-> the contents of the Log dinode since Disk inode's LSN is less than
-> transaction's LSN. In this example, the Log inode's contents were newer than
-> the disk inode.
+metadump.c: In function ‘obfuscate_name’:
+metadump.c:844:13: warning: argument to ‘alloca’ may be too large
+[-Walloca-larger-than=]
+  844 |   oldname = alloca(name_len);
+      |             ^~~~~~
 
-I'm not sure about the log shutdown aspects you talk about - the
-test that exposed the issue wasn't doing shutdowns.  The test that
-exposed this problem was generic/482, which uses dm-logwrites to
-replay the filesystem up to each FUA operation, at which point it
-mounts it to perform recovery and then runs reapir to check it for
-consistency.
+Maybe just use malloc() here, instead of using stack space? We probably can use
+MAXNAMELEN here to bound it, something like:
 
-IOWs, it performs "recovery at every checkpoint in the log"
-independently to determine if log recovery is doing the write
-things. It tripped over recovery failing to replay inode changes
-due to log/on-disk inode lsn inconsistencies like the following:
+if (is_ci_name && name_len <= MAXNAMELEN) {
+	oldname = alloca(name_len);
+	memcpy(oldname, name, name_len);
+} else {
+	return;
+}
 
-Checkpoint	log inode lsn	disk inode lsn		recovery disk inode lsn
-1		0			0		0 (wrong!)
-2		1			0		1 (wrong!)
-3		2			0		2 (wrong!)
-		<inode writeback>
-					3		2 -should be 3-
-		<inode reclaimed>
-4		0 			3		-wont get replayed-
-							-wrong!-
-							-corruption!-
-
-5		4			3		4 (wrong!)
-6		5			3		5 (wrong!)
-.....
-25		6			3		6 (wrong!)
-		<inode writeback>
-					25		6 -should be 25-
-26		25			25		25 -wrong!-
-
-
-Do you see how the log inode LSN does not match up with the actual
-LSN that is written into the inode at writeback time?
-
-Do you see how the log inode LSN could magically go zero in the
-middle of the log (Ckpt 4)? That's going to cause the inode log item
-to be skipped, when it should have been replayed. That's a
-corruption event.
-
-Then if we look at checkpoint 26, where the on-disk inode LSN is 25,
-and the log inode LSN is 25 - that log inode should not get replayed
-because the LSNs are the same, but the old code did perform replay
-and so this bug largely masked the typical off-by-one checkpoint the
-log inode lsn contained.
-
-> Your description suggests that there could be a scenario where a Log inode
-> holding stale content can still overwrite the contents of the Disk inode
-> holding newer content. I am unable to come with an example of how that could
-> happen. Could please explain this to me.
-
-I can't really remember. There are lots of ways using the wrong LSN
-for recovery can go wrong; I was really just describing stuff I saw
-in the test failures.....
-
-> > Secondly, if we commit the CIL to the journal so the inode item
-> > moves to the AIL, and then relog the inode, the LSN that gets
-> > stamped into the log inode will be the LSN of the inode's current
-> > location in the AIL, not it's age on disk. And it's not the LSN that
-> > will be associated with the current change. That means when log
-> > recovery replays this inode item, the LSN that ends up on disk is
-> > the LSN for the previous changes in the log, not the current
-> > changes being replayed. IOWs, after recovery the LSN on disk is not
-> > in sync with the LSN of the modifications that were replayed into
-> > the inode. This, again, violates the recovery ordering semantics
-> > that on-disk writeback LSNs provide.
-
-... and this is clearly evident in the example I give above.
-
-> 
-> > Hence the inode LSN in the log dinode is -always- invalid.
-> 
-> > Thirdly, recovery actually has the LSN of the log transaction it is
-> > replaying right at hand - it uses it to determine if it should
-> > replay the inode by comparing it to the on-disk inode's LSN. But it
-> > doesn't use that LSN to stamp the LSN into the inode which will be
-> > written back when the transaction is fully replayed. It uses the one
-> > in the log dinode, which we know is always going to be incorrect.
-
-This is also demonstrated in the example I give above.
-
-Really, I don't remember any of the finer details of this fix now;
-it was a long time ago and I don't really have the time to go back
-an reconstruct it from first principles right now.
-
--Dave.
 -- 
-Dave Chinner
-david@fromorbit.com
+Carlos
+> +		memcpy(oldname, name, name_len);
+> +	}
+> +
+> +again:
+> +	newp = name;
+> +	new_hash = 0;
+> +
+> +	/*
+> +	 * If we cannot generate a ci-compatible obfuscated name after 1000
+> +	 * tries, don't bother obfuscating the name.
+> +	 */
+> +	if (tries++ > 1000) {
+> +		memcpy(name, oldname, name_len);
+> +		return;
+> +	}
+> +
+>  	/*
+>  	 * The beginning of the obfuscated name can be pretty much
+>  	 * anything, so fill it in with random characters.
+> @@ -843,7 +865,11 @@ obfuscate_name(
+>  	 */
+>  	for (i = 0; i < name_len - 5; i++) {
+>  		*newp = random_filename_char();
+> -		new_hash = *newp ^ rol32(new_hash, 7);
+> +		if (is_ci_name)
+> +			new_hash = xfs_ascii_ci_xfrm(*newp) ^
+> +							rol32(new_hash, 7);
+> +		else
+> +			new_hash = *newp ^ rol32(new_hash, 7);
+>  		newp++;
+>  	}
+> 
+> @@ -867,6 +893,17 @@ obfuscate_name(
+>  			high_bit = 0x80;
+>  		} else
+>  			high_bit = 0;
+> +
+> +		/*
+> +		 * If ascii-ci is enabled, uppercase characters are converted
+> +		 * to lowercase characters while computing the name hash.  If
+> +		 * any of the necessary correction bytes are uppercase, the
+> +		 * hash of the new name will not match.  Try again with a
+> +		 * different prefix.
+> +		 */
+> +		if (is_ci_name && xfs_ascii_ci_need_xfrm(*newp))
+> +			goto again;
+> +
+>  		ASSERT(!is_invalid_char(*newp));
+>  		newp++;
+>  	}
+> @@ -880,6 +917,10 @@ obfuscate_name(
+>  	 */
+>  	if (high_bit) {
+>  		*first ^= 0x10;
+> +
+> +		if (is_ci_name && xfs_ascii_ci_need_xfrm(*first))
+> +			goto again;
+> +
+>  		ASSERT(!is_invalid_char(*first));
+>  	}
+>  }
+> @@ -1177,6 +1218,24 @@ handle_duplicate_name(xfs_dahash_t hash, size_t name_len, unsigned char *name)
+>  	return 1;
+>  }
+> 
+> +static inline xfs_dahash_t
+> +dirattr_hashname(
+> +	bool		is_dirent,
+> +	const uint8_t	*name,
+> +	int		namelen)
+> +{
+> +	if (is_dirent) {
+> +		struct xfs_name	xname = {
+> +			.name	= name,
+> +			.len	= namelen,
+> +		};
+> +
+> +		return libxfs_dir2_hashname(mp, &xname);
+> +	}
+> +
+> +	return libxfs_da_hashname(name, namelen);
+> +}
+> +
+>  static void
+>  generate_obfuscated_name(
+>  	xfs_ino_t		ino,
+> @@ -1205,9 +1264,9 @@ generate_obfuscated_name(
+> 
+>  	/* Obfuscate the name (if possible) */
+> 
+> -	hash = libxfs_da_hashname(name, namelen);
+> -	obfuscate_name(hash, namelen, name);
+> -	ASSERT(hash == libxfs_da_hashname(name, namelen));
+> +	hash = dirattr_hashname(ino != 0, name, namelen);
+> +	obfuscate_name(hash, namelen, name, ino != 0);
+> +	ASSERT(hash == dirattr_hashname(ino != 0, name, namelen));
+> 
+>  	/*
+>  	 * Make sure the name is not something already seen.  If we
+> @@ -1320,7 +1379,7 @@ obfuscate_path_components(
+>  			/* last (or single) component */
+>  			namelen = strnlen((char *)comp, len);
+>  			hash = libxfs_da_hashname(comp, namelen);
+> -			obfuscate_name(hash, namelen, comp);
+> +			obfuscate_name(hash, namelen, comp, false);
+>  			ASSERT(hash == libxfs_da_hashname(comp, namelen));
+>  			break;
+>  		}
+> @@ -1332,7 +1391,7 @@ obfuscate_path_components(
+>  			continue;
+>  		}
+>  		hash = libxfs_da_hashname(comp, namelen);
+> -		obfuscate_name(hash, namelen, comp);
+> +		obfuscate_name(hash, namelen, comp, false);
+>  		ASSERT(hash == libxfs_da_hashname(comp, namelen));
+>  		comp += namelen + 1;
+>  		len -= namelen + 1;
+> 
