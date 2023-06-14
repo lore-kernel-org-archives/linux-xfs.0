@@ -2,315 +2,167 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0EE6FEB64D9
-	for <linux-xfs@archiver.kernel.org>; Wed, 14 Jun 2023 07:45:08 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0120FEB64D9
+	for <linux-xfs@archiver.kernel.org>; Wed, 14 Jun 2023 09:06:18 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234586AbjFNHpG (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 14 Jun 2023 03:45:06 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56400 "EHLO
+        id S243459AbjFNJGS (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 14 Jun 2023 05:06:18 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51236 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S243490AbjFNHo5 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 14 Jun 2023 03:44:57 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 065931BC9
-        for <linux-xfs@vger.kernel.org>; Wed, 14 Jun 2023 00:44:56 -0700 (PDT)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature RSA-PSS (2048 bits))
-        (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 8FBE861BAF
-        for <linux-xfs@vger.kernel.org>; Wed, 14 Jun 2023 07:44:55 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id CDB77C433C8;
-        Wed, 14 Jun 2023 07:44:53 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1686728695;
-        bh=SnG0zmBFZ7VReoY0UhliClOOxrW16GvziPF2MBj6p/I=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=M/yMdeNM698oap3TAuAUTEKxL1aRSi98X0JJ5XS+IUHZIl5JOA/ueKKZYgkbUG04o
-         Dbqzsm7097Bn6xr35aHMgVKP6KmrtRSmPN+ADJqM6JkPTHPAIJxAHVIwuTppn+QIqB
-         UZidtkOtIunpQMOMHNEIrB4WT8+2xqKS1qRdjiul2qVjZjpXs9G6AN5sNWdWdi0522
-         5ibHUPsJ48ott4AH695hffb2vhj34QYJ5g9iGx0Sko+7g4uLDDi+qreKbybBi0V2ZF
-         b9x6JH18q61D7oK0Ll1ZN9bbTRPRYXDPtQ9G8KUWh0Z8G2Zj++GHFsVpunhA+SM343
-         jvb1owxXKKVOA==
-Date:   Wed, 14 Jun 2023 09:44:50 +0200
-From:   Carlos Maiolino <cem@kernel.org>
-To:     "Darrick J. Wong" <djwong@kernel.org>
-Cc:     linux-xfs@vger.kernel.org, david@fromorbit.com, hch@infradead.org
-Subject: Re: [PATCH 1/5] libxfs: test the ascii case-insensitive hash
-Message-ID: <20230614074450.66kkx6ubg7tr5rlq@andromeda>
-References: <168597938725.1226098.18077307069307502725.stgit@frogsfrogsfrogs>
- <mYOwgZaIwMVJKtzBTM1BPFL0tyqQl-yYWmMaxjDyLfEbTfswle8gIaSciM5GRoC874psRXCx4SNh8UIdKQuASw==@protonmail.internalid>
- <168597939284.1226098.4252229601603573827.stgit@frogsfrogsfrogs>
+        with ESMTP id S235645AbjFNJGR (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 14 Jun 2023 05:06:17 -0400
+Received: from mail.208.org (unknown [183.242.55.162])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id EC86D135
+        for <linux-xfs@vger.kernel.org>; Wed, 14 Jun 2023 02:06:15 -0700 (PDT)
+Received: from mail.208.org (email.208.org [127.0.0.1])
+        by mail.208.org (Postfix) with ESMTP id 4Qh00528TyzBQgns
+        for <linux-xfs@vger.kernel.org>; Wed, 14 Jun 2023 17:06:13 +0800 (CST)
+Authentication-Results: mail.208.org (amavisd-new); dkim=pass
+        reason="pass (just generated, assumed good)" header.d=208.org
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=208.org; h=
+        content-transfer-encoding:content-type:message-id:user-agent
+        :references:in-reply-to:subject:to:from:date:mime-version; s=
+        dkim; t=1686733573; x=1689325574; bh=77WYnPP9SBJKj7/by1xRn/9zhdv
+        h9Iodss2P+zlBrJg=; b=lDCAmTV21kfYS8s/Yq9gQmK4WO6E+GC1UGoYa+H632g
+        yyedOSCEYUwpL8C0BGtTk3JGf6IifIPrtEXgcRgeU+TnLxqHjnd4Bmce6tjLgpxR
+        8L4+O1QiJTjl4ck4zQFD+NVhzHuC6N+2WDuLGO5UM5/4w+2gUCPNiQvgEnT+FSNr
+        hj5115urciGgorC/67Awj47kVT1IMUhWdOqFbf2pCIHtnx+tVwuKJcj+eLnjV21R
+        UdBohJLH9tzs4P8gcHBMfI2M0Y4SKNCFtb0bsWZiZzcbWLGtYoTXvSnk1+zTmaBP
+        WxiM8ElV4nFHaiK4xElX29tjLE8aDxbnrLGv0gWwGAQ==
+X-Virus-Scanned: amavisd-new at mail.208.org
+Received: from mail.208.org ([127.0.0.1])
+        by mail.208.org (mail.208.org [127.0.0.1]) (amavisd-new, port 10026)
+        with ESMTP id qx9I5neNtFCI for <linux-xfs@vger.kernel.org>;
+        Wed, 14 Jun 2023 17:06:13 +0800 (CST)
+Received: from localhost (email.208.org [127.0.0.1])
+        by mail.208.org (Postfix) with ESMTPSA id 4Qh0046lg0zBJJD0;
+        Wed, 14 Jun 2023 17:06:12 +0800 (CST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <168597939284.1226098.4252229601603573827.stgit@frogsfrogsfrogs>
+Date:   Wed, 14 Jun 2023 17:06:12 +0800
+From:   hexingwei001@208suo.com
+To:     djwong@kernel.org, dchinner@redhat.com,
+        allison.henderson@oracle.com
+Cc:     linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Fwd: [PATCH] fs/xfs/libxfs/xfs_bmap.c: space required after that ','
+ and spaces required around that '='
+In-Reply-To: <20230614090248.90219-1-panzhiai@cdjrlc.com>
+References: <20230614090248.90219-1-panzhiai@cdjrlc.com>
+User-Agent: Roundcube Webmail
+Message-ID: <3d224c797c33a98a3d2d1d888d00cb0d@208suo.com>
+X-Sender: hexingwei001@208suo.com
+Content-Type: text/plain; charset=US-ASCII;
+ format=flowed
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Mon, Jun 05, 2023 at 08:36:32AM -0700, Darrick J. Wong wrote:
-> From: Darrick J. Wong <djwong@kernel.org>
-> 
-> Now that we've made kernel and userspace use the same tolower code for
-> computing directory index hashes, add that to the selftest code.
-> 
-> Signed-off-by: Darrick J. Wong <djwong@kernel.org>
-> ---
->  libfrog/dahashselftest.h |  208 ++++++++++++++++++++++++----------------------
->  libxfs/libxfs_api_defs.h |    2
->  2 files changed, 110 insertions(+), 100 deletions(-)
+Add missing spaces to clear checkpatch errors:
 
-Reviewed-by: Carlos Maiolino <cmaiolino@redhat.com>
+fs/xfs/libxfs/xfs_bmap.c:519: ERROR: space required after that ',' 
+(ctx:VxV).
+fs/xfs/libxfs/xfs_bmap.c:519: ERROR: space required after that ',' 
+(ctx:VxV).
+fs/xfs/libxfs/xfs_bmap.c:519: ERROR: space required after that ',' 
+(ctx:VxV).
+fs/xfs/libxfs/xfs_bmap.c:519: ERROR: space required after that ',' 
+(ctx:VxV).
+fs/xfs/libxfs/xfs_bmap.c:519: ERROR: space required after that ',' 
+(ctx:VxV).
+fs/xfs/libxfs/xfs_bmap.c:1421: ERROR: spaces required around that '=' 
+(ctx:VxV).
+fs/xfs/libxfs/xfs_bmap.c:1425: ERROR: spaces required around that '='  
+(ctx:VxV).
+fs/xfs/libxfs/xfs_bmap.c:1972: ERROR: spaces required around that '=' 
+(ctx:VxV).
+fs/xfs/libxfs/xfs_bmap.c:2499: ERROR: spaces required around that '=' 
+(ctx:VxV).
+fs/xfs/libxfs/xfs_bmap.c:2500: ERROR: spaces required around that '=' 
+(ctx:VxV).
+fs/xfs/libxfs/xfs_bmap.c:2648: ERROR: spaces required around that '=' 
+(ctx:VxV).
+fs/xfs/libxfs/xfs_bmap.c:3054: ERROR: space required after that ',' 
+(ctx:VxV).
+fs/xfs/libxfs/xfs_bmap.c:3089: ERROR: spaces required around that '=' 
+(ctx:VxV).
+fs/xfs/libxfs/xfs_bmap.c:3091: ERROR: spaces required around that '=' 
+(ctx:VxV).
+fs/xfs/libxfs/xfs_bmap.c:5012: ERROR: spaces required around that '=' 
+(ctx:VxV).
 
-> 
-> 
-> diff --git a/libfrog/dahashselftest.h b/libfrog/dahashselftest.h
-> index 7dda53037b8..ea9d925bf2a 100644
-> --- a/libfrog/dahashselftest.h
-> +++ b/libfrog/dahashselftest.h
-> @@ -13,108 +13,109 @@ static struct dahash_test {
->  	uint16_t	start;	/* random 12 bit offset in buf */
->  	uint16_t	length;	/* random 8 bit length of test */
->  	xfs_dahash_t	dahash;	/* expected dahash result */
-> +	xfs_dahash_t	ascii_ci_dahash; /* expected ascii-ci dahash result */
->  } dahash_tests[] =
->  {
-> -	{0x0567, 0x0097, 0x96951389},
-> -	{0x0869, 0x0055, 0x6455ab4f},
-> -	{0x0c51, 0x00be, 0x8663afde},
-> -	{0x044a, 0x00fc, 0x98fbe432},
-> -	{0x0f29, 0x0079, 0x42371997},
-> -	{0x08ba, 0x0052, 0x942be4f7},
-> -	{0x01f2, 0x0013, 0x5262687e},
-> -	{0x09e3, 0x00e2, 0x8ffb0908},
-> -	{0x007c, 0x0051, 0xb3158491},
-> -	{0x0854, 0x001f, 0x83bb20d9},
-> -	{0x031b, 0x0008, 0x98970bdf},
-> -	{0x0de7, 0x0027, 0xbfbf6f6c},
-> -	{0x0f76, 0x0005, 0x906a7105},
-> -	{0x092e, 0x00d0, 0x86631850},
-> -	{0x0233, 0x0082, 0xdbdd914e},
-> -	{0x04c9, 0x0075, 0x5a400a9e},
-> -	{0x0b66, 0x0099, 0xae128b45},
-> -	{0x000d, 0x00ed, 0xe61c216a},
-> -	{0x0a31, 0x003d, 0xf69663b9},
-> -	{0x00a3, 0x0052, 0x643c39ae},
-> -	{0x0125, 0x00d5, 0x7c310b0d},
-> -	{0x0105, 0x004a, 0x06a77e74},
-> -	{0x0858, 0x008e, 0x265bc739},
-> -	{0x045e, 0x0095, 0x13d6b192},
-> -	{0x0dab, 0x003c, 0xc4498704},
-> -	{0x00cd, 0x00b5, 0x802a4e2d},
-> -	{0x069b, 0x008c, 0x5df60f71},
-> -	{0x0454, 0x006c, 0x5f03d8bb},
-> -	{0x040e, 0x0032, 0x0ce513b5},
-> -	{0x0874, 0x00e2, 0x6a811fb3},
-> -	{0x0521, 0x00b4, 0x93296833},
-> -	{0x0ddc, 0x00cf, 0xf9305338},
-> -	{0x0a70, 0x0023, 0x239549ea},
-> -	{0x083e, 0x0027, 0x2d88ba97},
-> -	{0x0241, 0x00a7, 0xfe0b32e1},
-> -	{0x0dfc, 0x0096, 0x1a11e815},
-> -	{0x023e, 0x001e, 0xebc9a1f3},
-> -	{0x067e, 0x0066, 0xb1067f81},
-> -	{0x09ea, 0x000e, 0x46fd7247},
-> -	{0x036b, 0x008c, 0x1a39acdf},
-> -	{0x078f, 0x0030, 0x964042ab},
-> -	{0x085c, 0x008f, 0x1829edab},
-> -	{0x02ec, 0x009f, 0x6aefa72d},
-> -	{0x043b, 0x00ce, 0x65642ff5},
-> -	{0x0a32, 0x00b8, 0xbd82759e},
-> -	{0x0d3c, 0x0087, 0xf4d66d54},
-> -	{0x09ec, 0x008a, 0x06bfa1ff},
-> -	{0x0902, 0x0015, 0x755025d2},
-> -	{0x08fe, 0x000e, 0xf690ce2d},
-> -	{0x00fb, 0x00dc, 0xe55f1528},
-> -	{0x0eaa, 0x003a, 0x0fe0a8d7},
-> -	{0x05fb, 0x0006, 0x86281cfb},
-> -	{0x0dd1, 0x00a7, 0x60ab51b4},
-> -	{0x0005, 0x001b, 0xf51d969b},
-> -	{0x077c, 0x00dd, 0xc2fed268},
-> -	{0x0575, 0x00f5, 0x432c0b1a},
-> -	{0x05be, 0x0088, 0x78baa04b},
-> -	{0x0c89, 0x0068, 0xeda9e428},
-> -	{0x0f5c, 0x0068, 0xec143c76},
-> -	{0x06a8, 0x0009, 0xd72651ce},
-> -	{0x060f, 0x008e, 0x765426cd},
-> -	{0x07b1, 0x0047, 0x2cfcfa0c},
-> -	{0x04f1, 0x0041, 0x55b172f9},
-> -	{0x0e05, 0x00ac, 0x61efde93},
-> -	{0x0bf7, 0x0097, 0x05b83eee},
-> -	{0x04e9, 0x00f3, 0x9928223a},
-> -	{0x023a, 0x0005, 0xdfada9bc},
-> -	{0x0acb, 0x000e, 0x2217cecd},
-> -	{0x0148, 0x0060, 0xbc3f7405},
-> -	{0x0764, 0x0059, 0xcbc201b1},
-> -	{0x021f, 0x0059, 0x5d6b2256},
-> -	{0x0f1e, 0x006c, 0xdefeeb45},
-> -	{0x071c, 0x00b9, 0xb9b59309},
-> -	{0x0564, 0x0063, 0xae064271},
-> -	{0x0b14, 0x0044, 0xdb867d9b},
-> -	{0x0e5a, 0x0055, 0xff06b685},
-> -	{0x015e, 0x00ba, 0x1115ccbc},
-> -	{0x0379, 0x00e6, 0x5f4e58dd},
-> -	{0x013b, 0x0067, 0x4897427e},
-> -	{0x0e64, 0x0071, 0x7af2b7a4},
-> -	{0x0a11, 0x0050, 0x92105726},
-> -	{0x0109, 0x0055, 0xd0d000f9},
-> -	{0x00aa, 0x0022, 0x815d229d},
-> -	{0x09ac, 0x004f, 0x02f9d985},
-> -	{0x0e1b, 0x00ce, 0x5cf92ab4},
-> -	{0x08af, 0x00d8, 0x17ca72d1},
-> -	{0x0e33, 0x000a, 0xda2dba6b},
-> -	{0x0ee3, 0x006a, 0xb00048e5},
-> -	{0x0648, 0x001a, 0x2364b8cb},
-> -	{0x0315, 0x0085, 0x0596fd0d},
-> -	{0x0fbb, 0x003e, 0x298230ca},
-> -	{0x0422, 0x006a, 0x78ada4ab},
-> -	{0x04ba, 0x0073, 0xced1fbc2},
-> -	{0x007d, 0x0061, 0x4b7ff236},
-> -	{0x070b, 0x00d0, 0x261cf0ae},
-> -	{0x0c1a, 0x0035, 0x8be92ee2},
-> -	{0x0af8, 0x0063, 0x824dcf03},
-> -	{0x08f8, 0x006d, 0xd289710c},
-> -	{0x021b, 0x00ee, 0x6ac1c41d},
-> -	{0x05b5, 0x00da, 0x8e52f0e2},
-> +	{0x0567, 0x0097, 0x96951389, 0xc153aa0d},
-> +	{0x0869, 0x0055, 0x6455ab4f, 0xd07f69bf},
-> +	{0x0c51, 0x00be, 0x8663afde, 0xf9add90c},
-> +	{0x044a, 0x00fc, 0x98fbe432, 0xbf2abb76},
-> +	{0x0f29, 0x0079, 0x42371997, 0x282588b3},
-> +	{0x08ba, 0x0052, 0x942be4f7, 0x2e023547},
-> +	{0x01f2, 0x0013, 0x5262687e, 0x5266287e},
-> +	{0x09e3, 0x00e2, 0x8ffb0908, 0x1da892f3},
-> +	{0x007c, 0x0051, 0xb3158491, 0xb67f9e63},
-> +	{0x0854, 0x001f, 0x83bb20d9, 0x22bb21db},
-> +	{0x031b, 0x0008, 0x98970bdf, 0x9cd70adf},
-> +	{0x0de7, 0x0027, 0xbfbf6f6c, 0xae3f296c},
-> +	{0x0f76, 0x0005, 0x906a7105, 0x906a7105},
-> +	{0x092e, 0x00d0, 0x86631850, 0xa3f6ac04},
-> +	{0x0233, 0x0082, 0xdbdd914e, 0x5d8c7aac},
-> +	{0x04c9, 0x0075, 0x5a400a9e, 0x12f60711},
-> +	{0x0b66, 0x0099, 0xae128b45, 0x7551310d},
-> +	{0x000d, 0x00ed, 0xe61c216a, 0xc22d3c4c},
-> +	{0x0a31, 0x003d, 0xf69663b9, 0x51960bf8},
-> +	{0x00a3, 0x0052, 0x643c39ae, 0xa93c73a8},
-> +	{0x0125, 0x00d5, 0x7c310b0d, 0xf221cbb3},
-> +	{0x0105, 0x004a, 0x06a77e74, 0xa4ef4561},
-> +	{0x0858, 0x008e, 0x265bc739, 0xd6c36d9b},
-> +	{0x045e, 0x0095, 0x13d6b192, 0x5f5c1d62},
-> +	{0x0dab, 0x003c, 0xc4498704, 0x10414654},
-> +	{0x00cd, 0x00b5, 0x802a4e2d, 0xfbd17c9d},
-> +	{0x069b, 0x008c, 0x5df60f71, 0x91ddca5f},
-> +	{0x0454, 0x006c, 0x5f03d8bb, 0x5c59fce0},
-> +	{0x040e, 0x0032, 0x0ce513b5, 0xa8cd99b1},
-> +	{0x0874, 0x00e2, 0x6a811fb3, 0xca028316},
-> +	{0x0521, 0x00b4, 0x93296833, 0x2c4d4880},
-> +	{0x0ddc, 0x00cf, 0xf9305338, 0x2c94210d},
-> +	{0x0a70, 0x0023, 0x239549ea, 0x22b561aa},
-> +	{0x083e, 0x0027, 0x2d88ba97, 0x5cd8bb9d},
-> +	{0x0241, 0x00a7, 0xfe0b32e1, 0x17b506b8},
-> +	{0x0dfc, 0x0096, 0x1a11e815, 0xee4141bd},
-> +	{0x023e, 0x001e, 0xebc9a1f3, 0x5689a1f3},
-> +	{0x067e, 0x0066, 0xb1067f81, 0xd9952571},
-> +	{0x09ea, 0x000e, 0x46fd7247, 0x42b57245},
-> +	{0x036b, 0x008c, 0x1a39acdf, 0x58bf1586},
-> +	{0x078f, 0x0030, 0x964042ab, 0xb04218b9},
-> +	{0x085c, 0x008f, 0x1829edab, 0x9ceca89c},
-> +	{0x02ec, 0x009f, 0x6aefa72d, 0x634cc2a7},
-> +	{0x043b, 0x00ce, 0x65642ff5, 0x6c8a584e},
-> +	{0x0a32, 0x00b8, 0xbd82759e, 0x0f96a34f},
-> +	{0x0d3c, 0x0087, 0xf4d66d54, 0xb71ba5f4},
-> +	{0x09ec, 0x008a, 0x06bfa1ff, 0x576ca80f},
-> +	{0x0902, 0x0015, 0x755025d2, 0x517225c2},
-> +	{0x08fe, 0x000e, 0xf690ce2d, 0xf690cf3d},
-> +	{0x00fb, 0x00dc, 0xe55f1528, 0x707d7d92},
-> +	{0x0eaa, 0x003a, 0x0fe0a8d7, 0x87638cc5},
-> +	{0x05fb, 0x0006, 0x86281cfb, 0x86281cf9},
-> +	{0x0dd1, 0x00a7, 0x60ab51b4, 0xe28ef00c},
-> +	{0x0005, 0x001b, 0xf51d969b, 0xe71dd6d3},
-> +	{0x077c, 0x00dd, 0xc2fed268, 0xdc30c555},
-> +	{0x0575, 0x00f5, 0x432c0b1a, 0x81dd7d16},
-> +	{0x05be, 0x0088, 0x78baa04b, 0xd69b433e},
-> +	{0x0c89, 0x0068, 0xeda9e428, 0xe9b4fa0a},
-> +	{0x0f5c, 0x0068, 0xec143c76, 0x9947067a},
-> +	{0x06a8, 0x0009, 0xd72651ce, 0xd72651ee},
-> +	{0x060f, 0x008e, 0x765426cd, 0x2099626f},
-> +	{0x07b1, 0x0047, 0x2cfcfa0c, 0x1a4baa07},
-> +	{0x04f1, 0x0041, 0x55b172f9, 0x15331a79},
-> +	{0x0e05, 0x00ac, 0x61efde93, 0x320568cc},
-> +	{0x0bf7, 0x0097, 0x05b83eee, 0xc72fb7a3},
-> +	{0x04e9, 0x00f3, 0x9928223a, 0xe8c77de2},
-> +	{0x023a, 0x0005, 0xdfada9bc, 0xdfadb9be},
-> +	{0x0acb, 0x000e, 0x2217cecd, 0x0017d6cd},
-> +	{0x0148, 0x0060, 0xbc3f7405, 0xf5fd6615},
-> +	{0x0764, 0x0059, 0xcbc201b1, 0xbb089bf4},
-> +	{0x021f, 0x0059, 0x5d6b2256, 0xa16a0a59},
-> +	{0x0f1e, 0x006c, 0xdefeeb45, 0xfc34f9d6},
-> +	{0x071c, 0x00b9, 0xb9b59309, 0xb645eae2},
-> +	{0x0564, 0x0063, 0xae064271, 0x954dc6d1},
-> +	{0x0b14, 0x0044, 0xdb867d9b, 0xdf432309},
-> +	{0x0e5a, 0x0055, 0xff06b685, 0xa65ff257},
-> +	{0x015e, 0x00ba, 0x1115ccbc, 0x11c365f4},
-> +	{0x0379, 0x00e6, 0x5f4e58dd, 0x2d176d31},
-> +	{0x013b, 0x0067, 0x4897427e, 0xc40532fe},
-> +	{0x0e64, 0x0071, 0x7af2b7a4, 0x1fb7bf43},
-> +	{0x0a11, 0x0050, 0x92105726, 0xb1185e51},
-> +	{0x0109, 0x0055, 0xd0d000f9, 0x60a60bfd},
-> +	{0x00aa, 0x0022, 0x815d229d, 0x215d379c},
-> +	{0x09ac, 0x004f, 0x02f9d985, 0x10b90b20},
-> +	{0x0e1b, 0x00ce, 0x5cf92ab4, 0x6a477573},
-> +	{0x08af, 0x00d8, 0x17ca72d1, 0x385af156},
-> +	{0x0e33, 0x000a, 0xda2dba6b, 0xda2dbb69},
-> +	{0x0ee3, 0x006a, 0xb00048e5, 0xa9a2decc},
-> +	{0x0648, 0x001a, 0x2364b8cb, 0x3364b1cb},
-> +	{0x0315, 0x0085, 0x0596fd0d, 0xa651740f},
-> +	{0x0fbb, 0x003e, 0x298230ca, 0x7fc617c7},
-> +	{0x0422, 0x006a, 0x78ada4ab, 0xc576ae2a},
-> +	{0x04ba, 0x0073, 0xced1fbc2, 0xaac8455b},
-> +	{0x007d, 0x0061, 0x4b7ff236, 0x347d5739},
-> +	{0x070b, 0x00d0, 0x261cf0ae, 0xc7fb1c10},
-> +	{0x0c1a, 0x0035, 0x8be92ee2, 0x8be9b4e1},
-> +	{0x0af8, 0x0063, 0x824dcf03, 0x53010388},
-> +	{0x08f8, 0x006d, 0xd289710c, 0x30418edd},
-> +	{0x021b, 0x00ee, 0x6ac1c41d, 0x2557e9a3},
-> +	{0x05b5, 0x00da, 0x8e52f0e2, 0x98531012},
->  };
-> 
->  /* Don't print anything to stdout. */
-> @@ -127,6 +128,7 @@ dahash_test(
->  	int		i;
->  	int		errors = 0;
->  	int		bytes = 0;
-> +	struct xfs_name	xname = { };
->  	struct timeval	start, stop;
->  	uint64_t	usec;
-> 
-> @@ -150,6 +152,12 @@ dahash_test(
->  				dahash_tests[i].length);
->  		if (hash != dahash_tests[i].dahash)
->  			errors++;
-> +
-> +		xname.name = randbytes_test_buf + dahash_tests[i].start;
-> +		xname.len = dahash_tests[i].length;
-> +		hash = libxfs_ascii_ci_hashname(&xname);
-> +		if (hash != dahash_tests[i].ascii_ci_dahash)
-> +			errors++;
->  	}
->  	gettimeofday(&stop, NULL);
-> 
-> diff --git a/libxfs/libxfs_api_defs.h b/libxfs/libxfs_api_defs.h
-> index d973e300939..026aa510ca1 100644
-> --- a/libxfs/libxfs_api_defs.h
-> +++ b/libxfs/libxfs_api_defs.h
-> @@ -34,6 +34,8 @@
->  #define xfs_alloc_read_agf		libxfs_alloc_read_agf
->  #define xfs_alloc_vextent		libxfs_alloc_vextent
-> 
-> +#define xfs_ascii_ci_hashname		libxfs_ascii_ci_hashname
-> +
->  #define xfs_attr_get			libxfs_attr_get
->  #define xfs_attr_leaf_newentsize	libxfs_attr_leaf_newentsize
->  #define xfs_attr_namecheck		libxfs_attr_namecheck
-> 
+Signed-off-by: Xingwei He <hexingwei001@208suo.com>
+---
+  fs/xfs/libxfs/xfs_bmap.c | 18 +++++++++---------
+  1 file changed, 9 insertions(+), 9 deletions(-)
+
+diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
+index 9cabcd3768e5..24fe1568c9d2 100644
+--- a/fs/xfs/libxfs/xfs_bmap.c
++++ b/fs/xfs/libxfs/xfs_bmap.c
+@@ -1418,11 +1418,11 @@ xfs_bmap_add_extent_delay_real(
+      xfs_fileoff_t        new_endoff;    /* end offset of new entry */
+      xfs_bmbt_irec_t        r[3];    /* neighbor extent entries */
+                      /* left is 0, right is 1, prev is 2 */
+-    int            rval= 0 ;    /* return value (logging flags) */
++    int            rval = 0 ;    /* return value (logging flags) */
+      uint32_t        state = xfs_bmap_fork_to_state(whichfork);
+      xfs_filblks_t        da_new; /* new count del alloc blocks used */
+      xfs_filblks_t        da_old; /* old count del alloc blocks used */
+-    xfs_filblks_t        temp= 0 ;    /* value for da_new calculations 
+*/
++    xfs_filblks_t        temp = 0 ;    /* value for da_new calculations 
+*/
+      int            tmp_rval;    /* partial logging flags */
+      struct xfs_bmbt_irec    old;
+
+@@ -1969,7 +1969,7 @@ xfs_bmap_add_extent_unwritten_real(
+      xfs_fileoff_t        new_endoff;    /* end offset of new entry */
+      xfs_bmbt_irec_t        r[3];    /* neighbor extent entries */
+                      /* left is 0, right is 1, prev is 2 */
+-    int            rval= 0 ;    /* return value (logging flags) */
++    int            rval = 0 ;    /* return value (logging flags) */
+      uint32_t        state = xfs_bmap_fork_to_state(whichfork);
+      struct xfs_mount    *mp = ip->i_mount;
+      struct xfs_bmbt_irec    old;
+@@ -2496,8 +2496,8 @@ xfs_bmap_add_extent_hole_delay(
+  {
+      struct xfs_ifork    *ifp;    /* inode fork pointer */
+      xfs_bmbt_irec_t        left;    /* left neighbor extent entry */
+-    xfs_filblks_t        newlen= 0 ;    /* new indirect size */
+-    xfs_filblks_t        oldlen= 0 ;    /* old indirect size */
++    xfs_filblks_t        newlen = 0 ;    /* new indirect size */
++    xfs_filblks_t        oldlen = 0 ;    /* old indirect size */
+      xfs_bmbt_irec_t        right;    /* right neighbor extent entry */
+      uint32_t        state = xfs_bmap_fork_to_state(whichfork);
+      xfs_filblks_t        temp;     /* temp for indirect calculations */
+@@ -2645,7 +2645,7 @@ xfs_bmap_add_extent_hole_real(
+      int            i;    /* temp state */
+      xfs_bmbt_irec_t        left;    /* left neighbor extent entry */
+      xfs_bmbt_irec_t        right;    /* right neighbor extent entry */
+-    int            rval= 0 ;    /* return value (logging flags) */
++    int            rval = 0 ;    /* return value (logging flags) */
+      uint32_t        state = xfs_bmap_fork_to_state(whichfork);
+      struct xfs_bmbt_irec    old;
+
+@@ -3086,9 +3086,9 @@ xfs_bmap_adjacent(
+       */
+      else if (!ap->eof) {
+          xfs_fsblock_t    gotbno;        /* right side block number */
+-        xfs_fsblock_t    gotdiff= 0 ;    /* right side difference */
++        xfs_fsblock_t    gotdiff = 0 ;    /* right side difference */
+          xfs_fsblock_t    prevbno;    /* left side block number */
+-        xfs_fsblock_t    prevdiff= 0 ;    /* left side difference */
++        xfs_fsblock_t    prevdiff = 0 ;    /* left side difference */
+
+          /*
+           * If there's a previous (left) block, select a requested
+@@ -5009,7 +5009,7 @@ xfs_bmap_del_extent_real(
+      int            whichfork, /* data or attr fork */
+      uint32_t        bflags)    /* bmapi flags */
+  {
+-    xfs_fsblock_t        del_endblock= 0;    /* first block past del */
++    xfs_fsblock_t        del_endblock = 0;    /* first block past del 
+*/
+      xfs_fileoff_t        del_endoff;    /* first offset past del */
+      int            do_fx;    /* free extent at end of routine */
+      int            error;    /* error return value */
