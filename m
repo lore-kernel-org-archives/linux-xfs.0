@@ -2,111 +2,219 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CC09FEB64D9
-	for <linux-xfs@archiver.kernel.org>; Thu, 15 Jun 2023 15:03:30 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 89DD0EB64DC
+	for <linux-xfs@archiver.kernel.org>; Thu, 15 Jun 2023 16:11:09 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S240942AbjFOPDW (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 15 Jun 2023 11:03:22 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43758 "EHLO
+        id S229511AbjFOQLI (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 15 Jun 2023 12:11:08 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54662 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230431AbjFOPDV (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 15 Jun 2023 11:03:21 -0400
-Received: from mail-pf1-x42e.google.com (mail-pf1-x42e.google.com [IPv6:2607:f8b0:4864:20::42e])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 18AC6273D;
-        Thu, 15 Jun 2023 08:03:20 -0700 (PDT)
-Received: by mail-pf1-x42e.google.com with SMTP id d2e1a72fcca58-6667e221f75so1147677b3a.1;
-        Thu, 15 Jun 2023 08:03:20 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20221208; t=1686841399; x=1689433399;
-        h=in-reply-to:subject:cc:to:from:message-id:date:from:to:cc:subject
-         :date:message-id:reply-to;
-        bh=YH9rMkNjJX8ZqFPdpCOC17vzzr2VHQgSu5WOxx2M3No=;
-        b=b/K88F8mocSsHk2afYYaiTeaMLSqxi3SxTIs59GKTdUMTxvmYo2rdzU+P1zytqPPzY
-         3EDu3uUN/fme0822vjIFV11Ra+TvwEBbOGTXMPlCxBoNQpiph/vwHs6QcnZT0UKdrJb6
-         4B0efjSNOfst1ulb4Y4T60o3RX7zAiLHz9zRwdaNwFFe5wY25kNqpsOqBq79j8ZPnADQ
-         wiZev7UNXXPOVpU5VnN42uI1dM2HoED5p4L2c8yMO69idoY8xf/TuwXOu+pTg22Y3g+u
-         9y7wvfVWZ+THLvGlGrDRN0W4JiD6aJnt/3Sc85XMCilJ189vWp22zhafM9wKtkKCC2OS
-         KYPQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20221208; t=1686841399; x=1689433399;
-        h=in-reply-to:subject:cc:to:from:message-id:date:x-gm-message-state
-         :from:to:cc:subject:date:message-id:reply-to;
-        bh=YH9rMkNjJX8ZqFPdpCOC17vzzr2VHQgSu5WOxx2M3No=;
-        b=KCHOf5SsfhCLapifL6eKTovGT5wS8jJPojyc4VoqE+/C3O2cH1//HIrWtK5RweMR3s
-         tagxcAZ25L3OOrx61ZM5yHYjPW/7aNWKMfZV9BgvfE9ykCttNerw6DSEw/D7mbeC63L8
-         PGBmexBxW/fAwfi55CrilUXOYTdQ0WwWuiJH6s4eAJnK7qmh2Gs/yztSB3E55WicDf8E
-         XlBIlqPXqs0p8+kgqHNip39B/A6q9D8QmjV7yzYNVUKUO3N6H8C52FOsBGLJJqHMkS2r
-         k8T4K+/Boc2QUzOljvxVFbQQ5QyEZscxkuLK5kL1hOSIS1L5Otz4qanv4wMYsAdsmUY7
-         oNGA==
-X-Gm-Message-State: AC+VfDzbtAKV57DsCodMYgMISeZHt6GJbvmMV0JTo+s5cxpNzXV2ixPC
-        DeZHx+yMBsyd/Cj3aK37Wyc=
-X-Google-Smtp-Source: ACHHUZ7f3fpuoGsWEzwukNwAZHy2JI3couKTgHmU6zRnm9iav+T42KG1iF+exFOn3fKrZW0d2ENB8Q==
-X-Received: by 2002:a17:903:2446:b0:1b3:f499:b318 with SMTP id l6-20020a170903244600b001b3f499b318mr6708038pls.61.1686841399343;
-        Thu, 15 Jun 2023 08:03:19 -0700 (PDT)
-Received: from dw-tp ([49.207.220.159])
-        by smtp.gmail.com with ESMTPSA id z24-20020a1709028f9800b001b016313b1esm14186793plo.82.2023.06.15.08.03.15
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 15 Jun 2023 08:03:18 -0700 (PDT)
-Date:   Thu, 15 Jun 2023 20:33:13 +0530
-Message-Id: <87h6r8wyxa.fsf@doe.com>
-From:   Ritesh Harjani (IBM) <ritesh.list@gmail.com>
-To:     linux-xfs@vger.kernel.org
-Cc:     linux-fsdevel@vger.kernel.org,
-        Christoph Hellwig <hch@infradead.org>,
-        "Darrick J. Wong" <djwong@kernel.org>,
-        Matthew Wilcox <willy@infradead.org>,
-        Dave Chinner <david@fromorbit.com>,
-        Brian Foster <bfoster@redhat.com>,
-        Andreas Gruenbacher <agruenba@redhat.com>,
-        Ojaswin Mujoo <ojaswin@linux.ibm.com>,
-        Disha Goel <disgoel@linux.ibm.com>
-Subject: Re: [PATCHv9 0/6] iomap: Add support for per-block dirty state to improve write performance
-In-Reply-To: <cover.1686395560.git.ritesh.list@gmail.com>
+        with ESMTP id S230011AbjFOQLI (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 15 Jun 2023 12:11:08 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 75A1AE4D
+        for <linux-xfs@vger.kernel.org>; Thu, 15 Jun 2023 09:11:06 -0700 (PDT)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange X25519 server-signature RSA-PSS (2048 bits))
+        (No client certificate requested)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 125CA62297
+        for <linux-xfs@vger.kernel.org>; Thu, 15 Jun 2023 16:11:06 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 66E04C433C9;
+        Thu, 15 Jun 2023 16:11:05 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1686845465;
+        bh=qPdiqwtJOFNvIBfKkXEYOyX1MK1bhnGAh2VggeO/B48=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=WFtazV95hqIwxhfz0x0UU3/C+px1cekl1qHJe3OWOMM9o0JRWQy5GhUg37Pjdup89
+         qHXsUaHa+ufaJjc1+tqXXt7+BdxlpS6XO/c2j3qdFOWJ/IZVM/AFqiNxK2tzVG2tY4
+         Vmapn1Ct9qQkG1XiUT8OJrYAytzXAJ9/6aGHdKbjPMXAUen28GbBopVNgqNTj7604Q
+         LC706z60742En0pwb+WsSQ3e7BoDdqNd+9XH48ucF11JRwPTnzpNARf3PHs1W2sTuR
+         +ZzgzIsC1uhGKVOf8uLnClykgstGpunncInonF99SAjgEfePeDcOPowRjMIb6JNRsD
+         AnesbXNULhQ0Q==
+Date:   Thu, 15 Jun 2023 09:11:04 -0700
+From:   "Darrick J. Wong" <djwong@kernel.org>
+To:     cem@kernel.org
+Cc:     linux-xfs@vger.kernel.org, david@fromorbit.com, hch@infradead.org
+Subject: [PATCH v2 3/5] xfs_db: fix metadump name obfuscation for ascii-ci
+ filesystems
+Message-ID: <20230615161104.GP11441@frogsfrogsfrogs>
+References: <168597938725.1226098.18077307069307502725.stgit@frogsfrogsfrogs>
+ <168597940416.1226098.14610650380180437820.stgit@frogsfrogsfrogs>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <168597940416.1226098.14610650380180437820.stgit@frogsfrogsfrogs>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-"Ritesh Harjani (IBM)" <ritesh.list@gmail.com> writes:
+From: Darrick J. Wong <djwong@kernel.org>
 
-Hello All,
+Now that we've stabilized the dirent hash function for ascii-ci
+filesystems, adapt the metadump name obfuscation code to detect when
+it's obfuscating a directory entry name on an ascii-ci filesystem and
+spit out names that actually have the same hash.
 
-So I gave some thoughts about function naming and I guess the reason we
-are ping ponging between the different namings is that I am not able to
-properly articulate the reasoning behind, why we chose iomap_ifs_**.
+Signed-off-by: Darrick J. Wong <djwong@kernel.org>
+---
+v2: s/alloca/malloc/
+---
+ db/metadump.c |   82 +++++++++++++++++++++++++++++++++++++++++++++++++++------
+ 1 file changed, 73 insertions(+), 9 deletions(-)
 
-Here is my attempt to convince everyone....
-
-In one of the previous versions of the patchsets, Christoph opposed the
-idea of naming these functions with iop_** because he wanted iomap_ as a
-prefix in all of these function names. Now that I gave more thought to it,
-I too agree that we should have iomap_ as prefix in these APIs. Because
-- fs/iomap/buffered-io.c follows that style for all other functions.
-- It then also becomes easy in finding function names using ctags and
-  in doing grep or fuzzy searches.
-
-Now why "ifs" in the naming because we are abbrevating iomap_folio_state
-as "ifs". And since we are passing ifs as an argument in these functions
-and operating upon it, hence the naming of all of these functions should
-go as iomap_ifs_**.
-
-Now if I am reading all of the emails correctly, none of the reviewers have
-any strong objections with iomap_ifs_** naming style. Some of us just
-started with nitpicking, but there are no strong objections, I feel.
-Also I do think iomap_ifs_** naming is completely apt for these
-functional changes.
-
-So if no one has any strong objections, could we please continue with
-iomap_ifs_** naming itself.
-
-In case if someone does oppose strongly, I would humbly request to please
-also convince the rest of the reviewers on why your function naming
-should be chosen by giving proper reasoning (like above).
-I can definitely help with making the required changes and testing them.
-
-Does this look good and sound fair for the function naming part?
-
-If everyone is convinced with iomap_ifs_** naming, then I will go ahead
-and work on the rest of the review comments.
-
-Thanks a lot for all the great review!
--ritesh
+diff --git a/db/metadump.c b/db/metadump.c
+index 317ff72802d..9ccee0b7ace 100644
+--- a/db/metadump.c
++++ b/db/metadump.c
+@@ -817,13 +817,17 @@ static void
+ obfuscate_name(
+ 	xfs_dahash_t	hash,
+ 	size_t		name_len,
+-	unsigned char	*name)
++	unsigned char	*name,
++	bool		is_dirent)
+ {
+-	unsigned char	*newp = name;
++	unsigned char	*oldname = NULL;
++	unsigned char	*newp;
+ 	int		i;
+-	xfs_dahash_t	new_hash = 0;
++	xfs_dahash_t	new_hash;
+ 	unsigned char	*first;
+ 	unsigned char	high_bit;
++	int		tries = 0;
++	bool		is_ci_name = is_dirent && xfs_has_asciici(mp);
+ 	int		shift;
+ 
+ 	/*
+@@ -836,6 +840,26 @@ obfuscate_name(
+ 	if (name_len < 5)
+ 		return;
+ 
++	if (is_ci_name) {
++		oldname = malloc(name_len);
++		if (!oldname)
++			return;
++		memcpy(oldname, name, name_len);
++	}
++
++again:
++	newp = name;
++	new_hash = 0;
++
++	/*
++	 * If we cannot generate a ci-compatible obfuscated name after 1000
++	 * tries, don't bother obfuscating the name.
++	 */
++	if (tries++ > 1000) {
++		memcpy(name, oldname, name_len);
++		goto out_free;
++	}
++
+ 	/*
+ 	 * The beginning of the obfuscated name can be pretty much
+ 	 * anything, so fill it in with random characters.
+@@ -843,7 +867,11 @@ obfuscate_name(
+ 	 */
+ 	for (i = 0; i < name_len - 5; i++) {
+ 		*newp = random_filename_char();
+-		new_hash = *newp ^ rol32(new_hash, 7);
++		if (is_ci_name)
++			new_hash = xfs_ascii_ci_xfrm(*newp) ^
++							rol32(new_hash, 7);
++		else
++			new_hash = *newp ^ rol32(new_hash, 7);
+ 		newp++;
+ 	}
+ 
+@@ -867,6 +895,17 @@ obfuscate_name(
+ 			high_bit = 0x80;
+ 		} else
+ 			high_bit = 0;
++
++		/*
++		 * If ascii-ci is enabled, uppercase characters are converted
++		 * to lowercase characters while computing the name hash.  If
++		 * any of the necessary correction bytes are uppercase, the
++		 * hash of the new name will not match.  Try again with a
++		 * different prefix.
++		 */
++		if (is_ci_name && xfs_ascii_ci_need_xfrm(*newp))
++			goto again;
++
+ 		ASSERT(!is_invalid_char(*newp));
+ 		newp++;
+ 	}
+@@ -880,8 +919,15 @@ obfuscate_name(
+ 	 */
+ 	if (high_bit) {
+ 		*first ^= 0x10;
++
++		if (is_ci_name && xfs_ascii_ci_need_xfrm(*first))
++			goto again;
++
+ 		ASSERT(!is_invalid_char(*first));
+ 	}
++
++out_free:
++	free(oldname);
+ }
+ 
+ /*
+@@ -1177,6 +1223,24 @@ handle_duplicate_name(xfs_dahash_t hash, size_t name_len, unsigned char *name)
+ 	return 1;
+ }
+ 
++static inline xfs_dahash_t
++dirattr_hashname(
++	bool		is_dirent,
++	const uint8_t	*name,
++	int		namelen)
++{
++	if (is_dirent) {
++		struct xfs_name	xname = {
++			.name	= name,
++			.len	= namelen,
++		};
++
++		return libxfs_dir2_hashname(mp, &xname);
++	}
++
++	return libxfs_da_hashname(name, namelen);
++}
++
+ static void
+ generate_obfuscated_name(
+ 	xfs_ino_t		ino,
+@@ -1205,9 +1269,9 @@ generate_obfuscated_name(
+ 
+ 	/* Obfuscate the name (if possible) */
+ 
+-	hash = libxfs_da_hashname(name, namelen);
+-	obfuscate_name(hash, namelen, name);
+-	ASSERT(hash == libxfs_da_hashname(name, namelen));
++	hash = dirattr_hashname(ino != 0, name, namelen);
++	obfuscate_name(hash, namelen, name, ino != 0);
++	ASSERT(hash == dirattr_hashname(ino != 0, name, namelen));
+ 
+ 	/*
+ 	 * Make sure the name is not something already seen.  If we
+@@ -1320,7 +1384,7 @@ obfuscate_path_components(
+ 			/* last (or single) component */
+ 			namelen = strnlen((char *)comp, len);
+ 			hash = libxfs_da_hashname(comp, namelen);
+-			obfuscate_name(hash, namelen, comp);
++			obfuscate_name(hash, namelen, comp, false);
+ 			ASSERT(hash == libxfs_da_hashname(comp, namelen));
+ 			break;
+ 		}
+@@ -1332,7 +1396,7 @@ obfuscate_path_components(
+ 			continue;
+ 		}
+ 		hash = libxfs_da_hashname(comp, namelen);
+-		obfuscate_name(hash, namelen, comp);
++		obfuscate_name(hash, namelen, comp, false);
+ 		ASSERT(hash == libxfs_da_hashname(comp, namelen));
+ 		comp += namelen + 1;
+ 		len -= namelen + 1;
