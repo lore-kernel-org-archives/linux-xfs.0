@@ -2,550 +2,208 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2B0EFEB64D9
-	for <linux-xfs@archiver.kernel.org>; Wed, 14 Jun 2023 11:32:43 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id ABFD5EB64D9
+	for <linux-xfs@archiver.kernel.org>; Thu, 15 Jun 2023 01:42:50 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235089AbjFNLcm (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 14 Jun 2023 07:32:42 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48140 "EHLO
+        id S235084AbjFOBmt (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 14 Jun 2023 21:42:49 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43802 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S234041AbjFNLcl (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 14 Jun 2023 07:32:41 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id ADC8F199B
-        for <linux-xfs@vger.kernel.org>; Wed, 14 Jun 2023 04:32:39 -0700 (PDT)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature RSA-PSS (2048 bits))
-        (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 4149B640F9
-        for <linux-xfs@vger.kernel.org>; Wed, 14 Jun 2023 11:32:39 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id D3D32C433C8;
-        Wed, 14 Jun 2023 11:32:37 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1686742358;
-        bh=823fsoWJyl9v7izfH6YiopsW6jnRR5XdMZ0OWSfKNK0=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=sfBcOFjINvIJwVNmlfWmgbeQr238UyJKXH384lX4jOjDzWnSd4D0/J0tgpEjha5Bi
-         mborgkc5oWwovCL9kznS+kKCQC+srihPZyt8l1zVbFxds5aBwqNpuVKQypX/3iLIDr
-         Lb2dHSoBdrbJUYXrJ3kMN1b42vp4LIq1qk/LWS8YRCt90nEbw53oENJO/tXQDiNu8g
-         hjjBDxhBuXySuW0NW9kCAuhoFAQD5SftRXNOQmbdOMOSQXuUBPBc5EvlHIuyYlzZdY
-         aUweUhTE3r8i5/KCiouwHk2yZTed17DorBU4sMvKHinP+8bGgGxf0Bq7AT53it0esA
-         iNWwtyWh3M9aQ==
-Date:   Wed, 14 Jun 2023 13:32:34 +0200
-From:   Carlos Maiolino <cem@kernel.org>
-To:     "Darrick J. Wong" <djwong@kernel.org>
-Cc:     linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 2/3] xfs_db: create dirents and xattrs with colliding
- names
-Message-ID: <20230614113234.7pumraglyop3xhrc@andromeda>
-References: <168597941869.1226265.3314805710581551617.stgit@frogsfrogsfrogs>
- <kLYmWsQKNR_apZ0Yx8S3syddXm4nd4p7G5nI70z-T_kTGS9rutWN0Ps1Tpl7xCvk-0jehmy5ZHmoSQQCugcMXA==@protonmail.internalid>
- <168597942996.1226265.4909168279377490281.stgit@frogsfrogsfrogs>
+        with ESMTP id S237527AbjFOBms (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 14 Jun 2023 21:42:48 -0400
+Received: from mail-pg1-x531.google.com (mail-pg1-x531.google.com [IPv6:2607:f8b0:4864:20::531])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 95A6E1AA
+        for <linux-xfs@vger.kernel.org>; Wed, 14 Jun 2023 18:42:14 -0700 (PDT)
+Received: by mail-pg1-x531.google.com with SMTP id 41be03b00d2f7-54f71fa7e41so2715238a12.3
+        for <linux-xfs@vger.kernel.org>; Wed, 14 Jun 2023 18:42:14 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=fromorbit-com.20221208.gappssmtp.com; s=20221208; t=1686793333; x=1689385333;
+        h=content-transfer-encoding:mime-version:references:in-reply-to
+         :message-id:date:subject:cc:to:from:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=ryFwOkx+XRLIZLmy0I+0F/aCxz4ugt0ZHp9G+vOyWVo=;
+        b=pqaWP+jcoKfabOZDC2KFePgAffa/5lNuF0VXfrG7MFuPBT/aYVB3NlGKsWi/0ZBFK8
+         q42A3dFghJJ5RSKctAAadCC0wihO3e4M24kJxn2nJVcO+UYFyormHnRKdJrby880ZidF
+         ecSXaoa51rpFA3tC2w9ca1SissKyDI4wxciPTKkQyu8fA/kiW3LRhwH08hoTRSz1jH0W
+         sWnM2YY+wz8sUE1nYIMWNXvNo6RxAwB780fclT7A9P3cFOyuSUgB6wSYGrgUR5S54AqZ
+         JwCHL/Sizb+LWovBhlbYTDT6oYVD0pch6cMkTLluMCVX6IA227KrYqemBDZD4nCqcRiM
+         HeNg==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20221208; t=1686793333; x=1689385333;
+        h=content-transfer-encoding:mime-version:references:in-reply-to
+         :message-id:date:subject:cc:to:from:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=ryFwOkx+XRLIZLmy0I+0F/aCxz4ugt0ZHp9G+vOyWVo=;
+        b=B6qmx8GQMb89o2r5nIjrTWx5l0RmY9qdPxM2aKz+xR2szrCQ7Iu9mVHRV3oH+S9y/3
+         3PY/f8lwYAnFujRTFoAwoqMMB7x2PvzhhL7o57jjEwTEYi4bQ3/rTzAZwBMvB/V9pgOW
+         tmUmYR/T/NIzZ13pM9NO3pElpHAlM0GYrFy6XGLI9JMbf3Q1E7oDa1CXbu7XJfzMSeC1
+         HtwTbfkHrWl2/v3cP9d167JYZGVjNILXS95JydF43JjM8GQa8o6yD0y9bZZLxnPBPES7
+         cl2ZQldllERw3DeMtJrwEsKjnQ8OemC5B/o6UtYIe1UbEvQeJYjPacFqmO2gsblyf/p1
+         NHuQ==
+X-Gm-Message-State: AC+VfDwuzBSmRXbMP0KhV/rna+D9o5QSYBUjWnKMfPa3VWYCcVqJDynb
+        Qn7L+SEP1m9+7WFrNtByuHTMo4sDXUlJIzgE+AA=
+X-Google-Smtp-Source: ACHHUZ5gmCjLw4GG9sEvVUcxE6jHEqn2kiuBqrU0FPKcTKH7X4+kXK/pXGEoy8YMps45M23buxvYKg==
+X-Received: by 2002:a05:6a20:748d:b0:10d:3ff2:452b with SMTP id p13-20020a056a20748d00b0010d3ff2452bmr3454096pzd.18.1686793333542;
+        Wed, 14 Jun 2023 18:42:13 -0700 (PDT)
+Received: from dread.disaster.area (pa49-180-13-202.pa.nsw.optusnet.com.au. [49.180.13.202])
+        by smtp.gmail.com with ESMTPSA id p5-20020a170902bd0500b00186a2274382sm12823677pls.76.2023.06.14.18.42.12
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Wed, 14 Jun 2023 18:42:12 -0700 (PDT)
+Received: from [192.168.253.23] (helo=devoid.disaster.area)
+        by dread.disaster.area with esmtp (Exim 4.96)
+        (envelope-from <dave@fromorbit.com>)
+        id 1q9c01-00BtRi-33;
+        Thu, 15 Jun 2023 11:42:09 +1000
+Received: from dave by devoid.disaster.area with local (Exim 4.96)
+        (envelope-from <dave@devoid.disaster.area>)
+        id 1q9c01-00Dklz-1x;
+        Thu, 15 Jun 2023 11:42:09 +1000
+From:   Dave Chinner <david@fromorbit.com>
+To:     linux-xfs@vger.kernel.org
+Cc:     chandanrlinux@gmail.com, wen.gang.wang@oracle.com
+Subject: [PATCH 2/3] xfs: allow extent free intents to be retried
+Date:   Thu, 15 Jun 2023 11:42:00 +1000
+Message-Id: <20230615014201.3171380-3-david@fromorbit.com>
+X-Mailer: git-send-email 2.40.1
+In-Reply-To: <20230615014201.3171380-1-david@fromorbit.com>
+References: <20230615014201.3171380-1-david@fromorbit.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
 Content-Transfer-Encoding: 8bit
-In-Reply-To: <168597942996.1226265.4909168279377490281.stgit@frogsfrogsfrogs>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Hi Darrick.
+From: Dave Chinner <dchinner@redhat.com>
 
-On Mon, Jun 05, 2023 at 08:37:09AM -0700, Darrick J. Wong wrote:
-> From: Darrick J. Wong <djwong@kernel.org>
-> 
-> Create a new debugger command that will create dirent and xattr names
-> that induce dahash collisions.
-> 
-> Signed-off-by: Darrick J. Wong <djwong@kernel.org>
-> ---
->  db/hash.c         |  376 +++++++++++++++++++++++++++++++++++++++++++++++++++++
->  man/man8/xfs_db.8 |   31 ++++
->  2 files changed, 407 insertions(+)
+Extent freeing neeeds to be able to avoid a busy extent deadlock
+when the transaction itself holds the only busy extents in the
+allocation group. This may occur if we have an EFI that contains
+multiple extents to be freed, and the freeing the second intent
+requires the space the first extent free released to expand the
+AGFL. If we block on the busy extent at this point, we deadlock.
 
-This patch is trigerring a bunch of warnings due differing type on db/hash.c, like:
+We hold a dirty transaction that contains a entire atomic extent
+free operations within it, so if we can abort the extent free
+operation and commit the progress that we've made, the busy extent
+can be resolved by a log force. Hence we can restart the aborted
+extent free with a new transaction and continue to make
+progress without risking deadlocks.
 
+To enable this, we need the EFI processing code to be able to handle
+an -EAGAIN error to tell it to commit the current transaction and
+retry again. This mechanism is already built into the defer ops
+processing (used bythe refcount btree modification intents), so
+there's relatively little handling we need to add to the EFI code to
+enable this.
 
-=====
-hash.c: In function ‘collide_dirents’:
-hash.c:226:22: warning: pointer targets in passing argument 2 of ‘openat’ differ in signedness [-Wpointer-sign]
-  226 |   newfd = openat(fd, name, O_CREAT, 0600);
-      |                      ^~~~
-      |                      |
-      |                      const unsigned char *
-In file included from /usr/include/features.h:461,
-                 from /usr/include/x86_64-linux-gnu/bits/libc-header-start.h:33,
-                 from /usr/include/stdio.h:27,
-                 from ../include/platform_defs.h:10,
-                 from ../include/libxfs.h:11,
-                 from hash.c:7:
-/usr/include/fcntl.h:196:12: note: expected ‘const char *’ but argument is of type ‘const unsigned char *’
-  196 | extern int __REDIRECT (openat, (int __fd, const char *__file, int __oflag,
-      |            ^~~~~~~~~~
-hash.c:241:11: warning: pointer targets in passing argument 1 of ‘strncpy’ differ in signedness [-Wpointer-sign]
-  241 |   strncpy(direntname, name, MAXNAMELEN);
-      |           ^~~~~~~~~~
-      |           |
-      |           unsigned char *
-In file included from ../include/platform_defs.h:17,
-                 from ../include/libxfs.h:11,
-                 from hash.c:7:
+Signed-off-by: Dave Chinner <dchinner@redhat.com>
+---
+ fs/xfs/xfs_extfree_item.c | 64 +++++++++++++++++++++++++++++++++++++--
+ 1 file changed, 61 insertions(+), 3 deletions(-)
 
-=====
-
-Could you please take a look onto it?
-
-Thanks!
-
+diff --git a/fs/xfs/xfs_extfree_item.c b/fs/xfs/xfs_extfree_item.c
+index f9e36b810663..3b33d27efdce 100644
+--- a/fs/xfs/xfs_extfree_item.c
++++ b/fs/xfs/xfs_extfree_item.c
+@@ -336,6 +336,29 @@ xfs_trans_get_efd(
+ 	return efdp;
+ }
+ 
++/*
++ * Fill the EFD with all extents from the EFI when we need to roll the
++ * transaction and continue with a new EFI.
++ */
++static void
++xfs_efd_from_efi(
++	struct xfs_efd_log_item	*efdp)
++{
++	struct xfs_efi_log_item *efip = efdp->efd_efip;
++	uint                    i;
++
++	ASSERT(efip->efi_format.efi_nextents > 0);
++
++	if (efdp->efd_next_extent == efip->efi_format.efi_nextents)
++		return;
++
++	for (i = 0; i < efip->efi_format.efi_nextents; i++) {
++	       efdp->efd_format.efd_extents[i] =
++		       efip->efi_format.efi_extents[i];
++	}
++	efdp->efd_next_extent = efip->efi_format.efi_nextents;
++}
++
+ /*
+  * Free an extent and log it to the EFD. Note that the transaction is marked
+  * dirty regardless of whether the extent free succeeds or fails to support the
+@@ -378,6 +401,17 @@ xfs_trans_free_extent(
+ 	tp->t_flags |= XFS_TRANS_DIRTY | XFS_TRANS_HAS_INTENT_DONE;
+ 	set_bit(XFS_LI_DIRTY, &efdp->efd_item.li_flags);
+ 
++	/*
++	 * If we need a new transaction to make progress, the caller will log a
++	 * new EFI with the current contents. It will also log an EFD to cancel
++	 * the existing EFI, and so we need to copy all the unprocessed extents
++	 * in this EFI to the EFD so this works correctly.
++	 */
++	if (error == -EAGAIN) {
++		xfs_efd_from_efi(efdp);
++		return error;
++	}
++
+ 	next_extent = efdp->efd_next_extent;
+ 	ASSERT(next_extent < efdp->efd_format.efd_nextents);
+ 	extp = &(efdp->efd_format.efd_extents[next_extent]);
+@@ -495,6 +529,13 @@ xfs_extent_free_finish_item(
+ 
+ 	error = xfs_trans_free_extent(tp, EFD_ITEM(done), xefi);
+ 
++	/*
++	 * Don't free the XEFI if we need a new transaction to complete
++	 * processing of it.
++	 */
++	if (error == -EAGAIN)
++		return error;
++
+ 	xfs_extent_free_put_group(xefi);
+ 	kmem_cache_free(xfs_extfree_item_cache, xefi);
+ 	return error;
+@@ -620,6 +661,7 @@ xfs_efi_item_recover(
+ 	struct xfs_trans		*tp;
+ 	int				i;
+ 	int				error = 0;
++	bool				requeue_only = false;
+ 
+ 	/*
+ 	 * First check the validity of the extents described by the
+@@ -652,9 +694,25 @@ xfs_efi_item_recover(
+ 		fake.xefi_startblock = extp->ext_start;
+ 		fake.xefi_blockcount = extp->ext_len;
+ 
+-		xfs_extent_free_get_group(mp, &fake);
+-		error = xfs_trans_free_extent(tp, efdp, &fake);
+-		xfs_extent_free_put_group(&fake);
++		if (!requeue_only) {
++			xfs_extent_free_get_group(mp, &fake);
++			error = xfs_trans_free_extent(tp, efdp, &fake);
++			xfs_extent_free_put_group(&fake);
++		}
++
++		/*
++		 * If we can't free the extent without potentially deadlocking,
++		 * requeue the rest of the extents to a new so that they get
++		 * run again later with a new transaction context.
++		 */
++		if (error == -EAGAIN || requeue_only) {
++			xfs_free_extent_later(tp, fake.xefi_startblock,
++				fake.xefi_blockcount, &XFS_RMAP_OINFO_ANY_OWNER);
++			requeue_only = true;
++			error = 0;
++			continue;
++		};
++
+ 		if (error == -EFSCORRUPTED)
+ 			XFS_CORRUPTION_ERROR(__func__, XFS_ERRLEVEL_LOW, mp,
+ 					extp, sizeof(*extp));
 -- 
-Carlos
+2.40.1
 
-> 
-> 
-> diff --git a/db/hash.c b/db/hash.c
-> index 68c53e7f9bc..79a250526e9 100644
-> --- a/db/hash.c
-> +++ b/db/hash.c
-> @@ -5,12 +5,15 @@
->   */
-> 
->  #include "libxfs.h"
-> +#include "init.h"
->  #include "addr.h"
->  #include "command.h"
->  #include "type.h"
->  #include "io.h"
->  #include "output.h"
->  #include "hash.h"
-> +#include "obfuscate.h"
-> +#include <sys/xattr.h>
-> 
->  static int hash_f(int argc, char **argv);
->  static void hash_help(void);
-> @@ -46,8 +49,381 @@ hash_f(
->  	return 0;
->  }
-> 
-> +static void
-> +hashcoll_help(void)
-> +{
-> +	printf(_(
-> +"\n"
-> +" Generate obfuscated variants of the provided name.  Each variant will have\n"
-> +" the same dahash value.  Names are written to stdout with a NULL separating\n"
-> +" each name.\n"
-> +"\n"
-> +" -a -- create extended attributes.\n"
-> +" -i -- read standard input for the name, up to %d bytes.\n"
-> +" -n -- create this many names.\n"
-> +" -p -- create directory entries or extended attributes in this file.\n"
-> +" -s -- seed the rng with this value.\n"
-> +"\n"),
-> +			MAXNAMELEN - 1);
-> +}
-> +
-> +struct name_dup {
-> +	struct name_dup	*next;
-> +	uint32_t	crc;
-> +	uint8_t		namelen;
-> +	uint8_t		name[];
-> +};
-> +
-> +static inline size_t
-> +name_dup_sizeof(
-> +	unsigned int	namelen)
-> +{
-> +	return sizeof(struct name_dup) + namelen;
-> +}
-> +
-> +#define MAX_DUP_TABLE_BUCKETS	(1048575)
-> +
-> +struct dup_table {
-> +	unsigned int	nr_buckets;
-> +	struct name_dup	*buckets[];
-> +};
-> +
-> +static inline size_t
-> +dup_table_sizeof(
-> +	unsigned int	nr_buckets)
-> +{
-> +	return sizeof(struct dup_table) +
-> +				(nr_buckets * sizeof(struct name_dup *));
-> +}
-> +
-> +static int
-> +dup_table_alloc(
-> +	unsigned long		nr_names,
-> +	struct dup_table	**tabp)
-> +{
-> +	struct dup_table	*t;
-> +
-> +	*tabp = NULL;
-> +
-> +	if (nr_names == 1)
-> +		return 0;
-> +
-> +	nr_names = min(MAX_DUP_TABLE_BUCKETS, nr_names);
-> +	t = calloc(1, dup_table_sizeof(nr_names));
-> +	if (!t)
-> +		return ENOMEM;
-> +
-> +	t->nr_buckets = nr_names;
-> +	*tabp = t;
-> +	return 0;
-> +}
-> +
-> +static void
-> +dup_table_free(
-> +	struct dup_table	*tab)
-> +{
-> +	struct name_dup		*ent, *next;
-> +	unsigned int		i;
-> +
-> +	if (!tab)
-> +		return;
-> +
-> +	for (i = 0; i < tab->nr_buckets; i++) {
-> +		ent = tab->buckets[i];
-> +
-> +		while (ent) {
-> +			next = ent->next;
-> +			free(ent);
-> +			ent = next;
-> +		}
-> +	}
-> +	free(tab);
-> +}
-> +
-> +static struct name_dup *
-> +dup_table_find(
-> +	struct dup_table	*tab,
-> +	unsigned char		*name,
-> +	size_t			namelen)
-> +{
-> +	struct name_dup		*ent;
-> +	uint32_t		crc = crc32c(~0, name, namelen);
-> +
-> +	ent = tab->buckets[crc % tab->nr_buckets];
-> +	while (ent) {
-> +		if (ent->crc == crc &&
-> +		    ent->namelen == namelen &&
-> +		    !memcmp(ent->name, name, namelen))
-> +			return ent;
-> +
-> +		ent = ent->next;
-> +	}
-> +
-> +	return NULL;
-> +}
-> +
-> +static int
-> +dup_table_store(
-> +	struct dup_table	*tab,
-> +	unsigned char		*name,
-> +	size_t			namelen)
-> +{
-> +	struct name_dup		*dup;
-> +	uint32_t		seq = 1;
-> +
-> +	ASSERT(namelen < MAXNAMELEN);
-> +
-> +	while ((dup = dup_table_find(tab, name, namelen)) != NULL) {
-> +		int		ret;
-> +
-> +		do {
-> +			ret = find_alternate(namelen, name, seq++);
-> +		} while (ret == 0);
-> +		if (ret < 0)
-> +			return EEXIST;
-> +	}
-> +
-> +	dup = malloc(name_dup_sizeof(namelen));
-> +	if (!dup)
-> +		return ENOMEM;
-> +
-> +	dup->crc = crc32c(~0, name, namelen);
-> +	dup->namelen = namelen;
-> +	memcpy(dup->name, name, namelen);
-> +	dup->next = tab->buckets[dup->crc % tab->nr_buckets];
-> +
-> +	tab->buckets[dup->crc % tab->nr_buckets] = dup;
-> +	return 0;
-> +}
-> +
-> +static int
-> +collide_dirents(
-> +	unsigned long		nr,
-> +	const unsigned char	*name,
-> +	size_t			namelen,
-> +	int			fd)
-> +{
-> +	struct xfs_name		dname = {
-> +		.name		= name,
-> +		.len		= namelen,
-> +	};
-> +	unsigned char		direntname[MAXNAMELEN + 1];
-> +	struct dup_table	*tab = NULL;
-> +	xfs_dahash_t		old_hash;
-> +	unsigned long		i;
-> +	int			error = 0;
-> +
-> +	old_hash = libxfs_dir2_hashname(mp, &dname);
-> +
-> +	if (fd >= 0) {
-> +		int		newfd;
-> +
-> +		/*
-> +		 * User passed in a fd, so we'll use the directory to detect
-> +		 * duplicate names.  First create the name that we are passed
-> +		 * in; the new names will be hardlinks to the first file.
-> +		 */
-> +		newfd = openat(fd, name, O_CREAT, 0600);
-> +		if (newfd < 0)
-> +			return errno;
-> +		close(newfd);
-> +	} else if (nr > 1) {
-> +		/*
-> +		 * Track every name we create so that we don't emit duplicates.
-> +		 */
-> +		error = dup_table_alloc(nr, &tab);
-> +		if (error)
-> +			return error;
-> +	}
-> +
-> +	dname.name = direntname;
-> +	for (i = 0; i < nr; i++) {
-> +		strncpy(direntname, name, MAXNAMELEN);
-> +		obfuscate_name(old_hash, namelen, direntname, true);
-> +		ASSERT(old_hash == libxfs_dir2_hashname(mp, &dname));
-> +
-> +		if (fd >= 0) {
-> +			error = linkat(fd, name, fd, direntname, 0);
-> +			if (error && errno != EEXIST)
-> +				return errno;
-> +
-> +			/* don't print names to stdout */
-> +			continue;
-> +		} else if (tab) {
-> +			error = dup_table_store(tab, direntname, namelen);
-> +			if (error)
-> +				break;
-> +		}
-> +
-> +		printf("%s%c", direntname, 0);
-> +	}
-> +
-> +	dup_table_free(tab);
-> +	return error;
-> +}
-> +
-> +static int
-> +collide_xattrs(
-> +	unsigned long		nr,
-> +	const unsigned char	*name,
-> +	size_t			namelen,
-> +	int			fd)
-> +{
-> +	unsigned char		xattrname[MAXNAMELEN + 5];
-> +	struct dup_table	*tab = NULL;
-> +	xfs_dahash_t		old_hash;
-> +	unsigned long		i;
-> +	int			error;
-> +
-> +	old_hash = libxfs_da_hashname(name, namelen);
-> +
-> +	if (fd >= 0) {
-> +		/*
-> +		 * User passed in a fd, so we'll use the xattr structure to
-> +		 * detect duplicate names.  First create the attribute that we
-> +		 * are passed in.
-> +		 */
-> +		snprintf(xattrname, MAXNAMELEN + 5, "user.%s", name);
-> +		error = fsetxattr(fd, xattrname, "1", 1, 0);
-> +		if (error)
-> +			return errno;
-> +	} else if (nr > 1) {
-> +		/*
-> +		 * Track every name we create so that we don't emit duplicates.
-> +		 */
-> +		error = dup_table_alloc(nr, &tab);
-> +		if (error)
-> +			return error;
-> +	}
-> +
-> +	for (i = 0; i < nr; i++) {
-> +		snprintf(xattrname, MAXNAMELEN + 5, "user.%s", name);
-> +		obfuscate_name(old_hash, namelen, xattrname + 5, false);
-> +		ASSERT(old_hash == libxfs_da_hashname(xattrname + 5, namelen));
-> +
-> +		if (fd >= 0) {
-> +			error = fsetxattr(fd, xattrname, "1", 1, 0);
-> +			if (error)
-> +				return errno;
-> +
-> +			/* don't print names to stdout */
-> +			continue;
-> +		} else if (tab) {
-> +			error = dup_table_store(tab, xattrname, namelen + 5);
-> +			if (error)
-> +				break;
-> +		}
-> +
-> +		printf("%s%c", xattrname, 0);
-> +	}
-> +
-> +	dup_table_free(tab);
-> +	return error;
-> +}
-> +
-> +static int
-> +hashcoll_f(
-> +	int		argc,
-> +	char		**argv)
-> +{
-> +	const char	*path = NULL;
-> +	bool		read_stdin = false;
-> +	bool		create_xattr = false;
-> +	unsigned long	nr = 1, seed = 0;
-> +	int		fd = -1;
-> +	int		c;
-> +	int		error;
-> +
-> +	while ((c = getopt(argc, argv, "ain:p:s:")) != EOF) {
-> +		switch (c) {
-> +		case 'a':
-> +			create_xattr = true;
-> +			break;
-> +		case 'i':
-> +			read_stdin = true;
-> +			break;
-> +		case 'n':
-> +			nr = strtoul(optarg, NULL, 10);
-> +			break;
-> +		case 'p':
-> +			path = optarg;
-> +			break;
-> +		case 's':
-> +			seed = strtoul(optarg, NULL, 10);
-> +			break;
-> +		default:
-> +			exitcode = 1;
-> +			hashcoll_help();
-> +			return 0;
-> +		}
-> +	}
-> +
-> +	if (path) {
-> +		int	oflags = O_RDWR;
-> +
-> +		if (!create_xattr)
-> +			oflags = O_RDONLY | O_DIRECTORY;
-> +
-> +		fd = open(path, oflags);
-> +		if (fd < 0) {
-> +			perror(path);
-> +			exitcode = 1;
-> +			return 0;
-> +		}
-> +	}
-> +
-> +	if (seed)
-> +		srandom(seed);
-> +
-> +	if (read_stdin) {
-> +		char	buf[MAXNAMELEN];
-> +		size_t	len;
-> +
-> +		len = fread(buf, 1, MAXNAMELEN - 1, stdin);
-> +
-> +		if (create_xattr)
-> +			error = collide_xattrs(nr, buf, len, fd);
-> +		else
-> +			error = collide_dirents(nr, buf, len, fd);
-> +		if (error) {
-> +			printf(_("hashcoll: %s\n"), strerror(error));
-> +			exitcode = 1;
-> +		}
-> +		goto done;
-> +	}
-> +
-> +	for (c = optind; c < argc; c++) {
-> +		size_t	len = strlen(argv[c]);
-> +
-> +		if (create_xattr)
-> +			error = collide_xattrs(nr, argv[c], len, fd);
-> +		else
-> +			error = collide_dirents(nr, argv[c], len, fd);
-> +		if (error) {
-> +			printf(_("hashcoll: %s\n"), strerror(error));
-> +			exitcode = 1;
-> +		}
-> +	}
-> +
-> +done:
-> +	if (fd >= 0)
-> +		close(fd);
-> +	return 0;
-> +}
-> +
-> +static cmdinfo_t	hashcoll_cmd = {
-> +	.name		= "hashcoll",
-> +	.cfunc		= hashcoll_f,
-> +	.argmin		= 0,
-> +	.argmax		= -1,
-> +	.args		= N_("[-a] [-s seed] [-n nr] [-p path] -i|names..."),
-> +	.oneline	= N_("create names that produce dahash collisions"),
-> +	.help		= hashcoll_help,
-> +};
-> +
->  void
->  hash_init(void)
->  {
->  	add_command(&hash_cmd);
-> +	add_command(&hashcoll_cmd);
->  }
-> diff --git a/man/man8/xfs_db.8 b/man/man8/xfs_db.8
-> index 1a2bb7e98fb..fde1c5c6c69 100644
-> --- a/man/man8/xfs_db.8
-> +++ b/man/man8/xfs_db.8
-> @@ -768,6 +768,37 @@ Prints the hash value of
->  .I string
->  using the hash function of the XFS directory and attribute implementation.
->  .TP
-> +.BI "hashcoll [-a] [-s seed] [-n " nr "] [-p " path "] -i | " names...
-> +Create directory entries or extended attributes names that all have the same
-> +hash value.
-> +The metadump name obfuscation algorithm is used here.
-> +Names are written to standard output, with a NULL between each name for use
-> +with xargs -0.
-> +.RS 1.0i
-> +.PD 0
-> +.TP 0.4i
-> +.TP 0.4i
-> +.B \-a
-> +Create extended attribute names.
-> +.TP 0.4i
-> +.B \-i
-> +Read the first name to create from standard input.
-> +Up to 255 bytes are read.
-> +If this option is not specified, first names are taken from the command line.
-> +.TP 0.4i
-> +.BI \-n " nr"
-> +Create this many duplicated names.
-> +The default is to create one name.
-> +.TP 0.4i
-> +.BI \-p " path"
-> +Create directory entries or extended attributes in this file instead of
-> +writing the names to standard output.
-> +.TP 0.4i
-> +.BI \-s " seed"
-> +Seed the random number generator with this value.
-> +.PD
-> +.RE
-> +.TP
->  .BI "help [" command ]
->  Print help for one or all commands.
->  .TP
-> 
