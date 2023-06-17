@@ -2,148 +2,147 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3D96BEB64DA
-	for <linux-xfs@archiver.kernel.org>; Sat, 17 Jun 2023 07:14:15 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 90FF7EB64D9
+	for <linux-xfs@archiver.kernel.org>; Sat, 17 Jun 2023 11:23:02 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233487AbjFQHOO (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Sat, 17 Jun 2023 03:14:14 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41520 "EHLO
+        id S233140AbjFQLXB (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Sat, 17 Jun 2023 07:23:01 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41764 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232806AbjFQHON (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sat, 17 Jun 2023 03:14:13 -0400
-Received: from mail-pf1-x42d.google.com (mail-pf1-x42d.google.com [IPv6:2607:f8b0:4864:20::42d])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 17DD4213B;
-        Sat, 17 Jun 2023 00:14:12 -0700 (PDT)
-Received: by mail-pf1-x42d.google.com with SMTP id d2e1a72fcca58-666eec46206so556976b3a.3;
-        Sat, 17 Jun 2023 00:14:12 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20221208; t=1686986051; x=1689578051;
-        h=in-reply-to:subject:cc:to:from:message-id:date:from:to:cc:subject
-         :date:message-id:reply-to;
-        bh=1i7He5Kbp1aVNgVcTn6mnSa9HnbTYwL5h+VE5kZxvRE=;
-        b=regMC1h2001emd30POLwhQx9x+BV/EMfI1+S5oUl5OeI9kgbSfm+VQvBooo31tgIt+
-         +SR/rpn4YXlHE7CGJQcrEPOUtDpvjvW4mwmx0mCST5qKb0Uy+Dj64oDcKbdP1Sgkc27k
-         oOl3SDDrd8IFYfdqRSxAQo6Uyg1hPf6/OpdG7nrxB8dzkmZCwOLETAvWKPUfn77kCSkT
-         dhC6TMgl1cnkvUQPpyY3ClXRBhYNzo+pJae017brd+fDiLFHHY60aQG9FHLusnlNg81K
-         IjV3sXhqSszdHRPxh9ycVttQAf6vXwiscZIhNsMtPnafmc3WBjHiLlPuqs61sdOD4sNJ
-         d4/A==
+        with ESMTP id S232533AbjFQLXB (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sat, 17 Jun 2023 07:23:01 -0400
+Received: from mail-il1-f207.google.com (mail-il1-f207.google.com [209.85.166.207])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 02E0C10FB
+        for <linux-xfs@vger.kernel.org>; Sat, 17 Jun 2023 04:23:00 -0700 (PDT)
+Received: by mail-il1-f207.google.com with SMTP id e9e14a558f8ab-340bdf36dcdso15748605ab.0
+        for <linux-xfs@vger.kernel.org>; Sat, 17 Jun 2023 04:22:59 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20221208; t=1686986051; x=1689578051;
-        h=in-reply-to:subject:cc:to:from:message-id:date:x-gm-message-state
+        d=1e100.net; s=20221208; t=1687000979; x=1689592979;
+        h=to:from:subject:message-id:date:mime-version:x-gm-message-state
          :from:to:cc:subject:date:message-id:reply-to;
-        bh=1i7He5Kbp1aVNgVcTn6mnSa9HnbTYwL5h+VE5kZxvRE=;
-        b=Js82Ay19dUsIBkIdrq4/+mETQHZBGxV2cbdD369YXUMM0BpCiDAshWt9YWL9Q4Wf67
-         xbRqeTZQbES2r6bw/YlS1Jcj2imM02C4O63GGz6CB3nYY8qJMqZRBc9SYCXGo49s+LIT
-         ocXv11CXy9FvlSsEgVCg/Wl31RD4ORer5PtX40wHz9zJ2H4nRyYs7GRC6wsE07ibHgrV
-         sQaB0n1O0vPipsMt1++WaeHa3pNprNI4zbBak8y/7GxKTioHOwBzb6HYejq1fxpvkc++
-         HDPsXgyhgWeJ2v6dSSkTysH5xVDYAA+U5pe0d35f9XVmyc5KcCwyw6GqmchzBjMFU79c
-         wPDQ==
-X-Gm-Message-State: AC+VfDx2lj9LsFUSlWZZ4BTL6tAxcRqw7qSlhqNrlbx+HptCKSNaBmK5
-        JyjZF4/E7YsWy9zTKk8DwTw=
-X-Google-Smtp-Source: ACHHUZ5jWdv4Pj3ilPEWX0sNeZN9HNkl7A3D9PORp4+UQzb+V1mG0HoUfOk5LisLKA1UtFOPIAyzqw==
-X-Received: by 2002:a17:902:e5d0:b0:1af:babd:7b84 with SMTP id u16-20020a170902e5d000b001afbabd7b84mr4771156plf.41.1686986051391;
-        Sat, 17 Jun 2023 00:14:11 -0700 (PDT)
-Received: from dw-tp ([49.207.220.159])
-        by smtp.gmail.com with ESMTPSA id d5-20020a170902b70500b001aad714400asm16814382pls.229.2023.06.17.00.14.08
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Sat, 17 Jun 2023 00:14:10 -0700 (PDT)
-Date:   Sat, 17 Jun 2023 12:43:59 +0530
-Message-Id: <877cs2o91k.fsf@doe.com>
-From:   Ritesh Harjani (IBM) <ritesh.list@gmail.com>
-To:     "Matthew Wilcox (Oracle)" <willy@infradead.org>,
-        linux-fsdevel@vger.kernel.org
-Cc:     "Matthew Wilcox (Oracle)" <willy@infradead.org>,
-        linux-xfs@vger.kernel.org, Wang Yugui <wangyugui@e16-tech.com>,
-        Dave Chinner <david@fromorbit.com>,
-        Christoph Hellwig <hch@infradead.org>,
-        "Darrick J . Wong" <djwong@kernel.org>
-Subject: Re: [PATCH v3 8/8] iomap: Copy larger chunks from userspace
-In-Reply-To: <20230612203910.724378-9-willy@infradead.org>
+        bh=976nUGLA1eLtjJZopusDJfTHe5lySN1BOdO4t8e0GJk=;
+        b=J3aFKWrkgPW8dxQA2DJWnfiYeiZWHHcFWy7xZXNBign5hfRnIWc/bYtGyHdkSIdso1
+         FYBMvwbqnvtHLquP8HPfGDOqWzKG2jqUwHucktRPQWP7+TML3RSXeG5ITkYaGbkmu4B0
+         Am83mzsp7SMg75MDTBcmqcdlunfK4lY0KtL4PmBMt7BS6S479FQBbbisea4cTNy+KcCM
+         1p7hOZJ2xbr144nItyT2qxNXixX18cFaHpUr8Fe15/K6siGKFzSaxEysMmhVu6RzPHcr
+         nUnoZXOUT61nX6g3+/Do1L2Vb+GT6DpoIldggrDNq5PFmLLT/WHURsOG7SjVjRAalTNM
+         6SUA==
+X-Gm-Message-State: AC+VfDxURb1qyYPqmyOaoeASaTPSl10RK/NX0VJE8LS0sWiDeMTiGgZ9
+        miwM2RgGix0wjyigezq9a9/Txx/IfSJuF+5z1ALNt1muwkEe
+X-Google-Smtp-Source: ACHHUZ6CLGw8oS/wZoEcJyQld9KGJx/uFDIU4+qOLKL7d4cyna0ONvOkvR4DYF/bnu31XqwEYGY5azAOr3HIlcxp+U956QpN2ujo
+MIME-Version: 1.0
+X-Received: by 2002:a92:d650:0:b0:340:7430:2317 with SMTP id
+ x16-20020a92d650000000b0034074302317mr1223035ilp.3.1687000979374; Sat, 17 Jun
+ 2023 04:22:59 -0700 (PDT)
+Date:   Sat, 17 Jun 2023 04:22:59 -0700
+X-Google-Appengine-App-Id: s~syzkaller
+X-Google-Appengine-App-Id-Alias: syzkaller
+Message-ID: <0000000000001c8edb05fe518644@google.com>
+Subject: [syzbot] [xfs?] UBSAN: array-index-out-of-bounds in xfs_attr3_leaf_add_work
+From:   syzbot <syzbot+510dcbdc6befa1e6b2f6@syzkaller.appspotmail.com>
+To:     djwong@kernel.org, linux-fsdevel@vger.kernel.org,
+        linux-kernel@vger.kernel.org, linux-xfs@vger.kernel.org,
+        syzkaller-bugs@googlegroups.com
+Content-Type: text/plain; charset="UTF-8"
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-"Matthew Wilcox (Oracle)" <willy@infradead.org> writes:
+Hello,
 
-> If we have a large folio, we can copy in larger chunks than PAGE_SIZE.
-> Start at the maximum page cache size and shrink by half every time we
-> hit the "we are short on memory" problem.
->
-> Signed-off-by: Matthew Wilcox (Oracle) <willy@infradead.org>
-> ---
->  fs/iomap/buffered-io.c | 22 +++++++++++++---------
->  1 file changed, 13 insertions(+), 9 deletions(-)
->
-> diff --git a/fs/iomap/buffered-io.c b/fs/iomap/buffered-io.c
-> index a5d62c9640cf..818dc350ffc5 100644
-> --- a/fs/iomap/buffered-io.c
-> +++ b/fs/iomap/buffered-io.c
-> @@ -768,6 +768,7 @@ static size_t iomap_write_end(struct iomap_iter *iter, loff_t pos, size_t len,
->  static loff_t iomap_write_iter(struct iomap_iter *iter, struct iov_iter *i)
->  {
->  	loff_t length = iomap_length(iter);
-> +	size_t chunk = PAGE_SIZE << MAX_PAGECACHE_ORDER;
->  	loff_t pos = iter->pos;
->  	ssize_t written = 0;
->  	long status = 0;
-> @@ -776,15 +777,13 @@ static loff_t iomap_write_iter(struct iomap_iter *iter, struct iov_iter *i)
->  
->  	do {
->  		struct folio *folio;
-> -		struct page *page;
-> -		unsigned long offset;	/* Offset into pagecache page */
-> -		unsigned long bytes;	/* Bytes to write to page */
-> +		size_t offset;		/* Offset into folio */
-> +		unsigned long bytes;	/* Bytes to write to folio */
+syzbot found the following issue on:
 
-why not keep typeof "bytes" as size_t same as of "copied".
+HEAD commit:    1f6ce8392d6f Add linux-next specific files for 20230613
+git tree:       linux-next
+console+strace: https://syzkaller.appspot.com/x/log.txt?x=14e629dd280000
+kernel config:  https://syzkaller.appspot.com/x/.config?x=d103d5f9125e9fe9
+dashboard link: https://syzkaller.appspot.com/bug?extid=510dcbdc6befa1e6b2f6
+compiler:       gcc (Debian 10.2.1-6) 10.2.1 20210110, GNU ld (GNU Binutils for Debian) 2.35.2
+syz repro:      https://syzkaller.appspot.com/x/repro.syz?x=139d8d2d280000
+C reproducer:   https://syzkaller.appspot.com/x/repro.c?x=11b371f1280000
 
->  		size_t copied;		/* Bytes copied from user */
->  
-> -		offset = offset_in_page(pos);
-> -		bytes = min_t(unsigned long, PAGE_SIZE - offset,
-> -						iov_iter_count(i));
->  again:
-> +		offset = pos & (chunk - 1);
-> +		bytes = min(chunk - offset, iov_iter_count(i));
->  		status = balance_dirty_pages_ratelimited_flags(mapping,
->  							       bdp_flags);
->  		if (unlikely(status))
-> @@ -814,11 +813,14 @@ static loff_t iomap_write_iter(struct iomap_iter *iter, struct iov_iter *i)
->  		if (iter->iomap.flags & IOMAP_F_STALE)
->  			break;
->  
-> -		page = folio_file_page(folio, pos >> PAGE_SHIFT);
-> +		offset = offset_in_folio(folio, pos);
-> +		if (bytes > folio_size(folio) - offset)
-> +			bytes = folio_size(folio) - offset;
-> +
->  		if (mapping_writably_mapped(mapping))
-> -			flush_dcache_page(page);
-> +			flush_dcache_folio(folio);
->  
-> -		copied = copy_page_from_iter_atomic(page, offset, bytes, i);
-> +		copied = copy_page_from_iter_atomic(&folio->page, offset, bytes, i);
->  
->  		status = iomap_write_end(iter, pos, bytes, copied, folio);
->  
-> @@ -835,6 +837,8 @@ static loff_t iomap_write_iter(struct iomap_iter *iter, struct iov_iter *i)
->  			 */
->  			if (copied)
->  				bytes = copied;
+Downloadable assets:
+disk image: https://storage.googleapis.com/syzbot-assets/2d9bf45aeae9/disk-1f6ce839.raw.xz
+vmlinux: https://storage.googleapis.com/syzbot-assets/e0b03ef83e17/vmlinux-1f6ce839.xz
+kernel image: https://storage.googleapis.com/syzbot-assets/b6c21a24174d/bzImage-1f6ce839.xz
+mounted in repro: https://storage.googleapis.com/syzbot-assets/65eca6891c21/mount_0.gz
 
-I think with your code change which changes the label position of
-"again", the above lines doing bytes = copied becomes dead code.
-We anyway recalculate bytes after "again" label. 
+IMPORTANT: if you fix the issue, please add the following tag to the commit:
+Reported-by: syzbot+510dcbdc6befa1e6b2f6@syzkaller.appspotmail.com
 
-
--ritesh
+XFS (loop0): Mounting V4 Filesystem 5e6273b8-2167-42bb-911b-418aa14a1261
+XFS (loop0): Ending clean mount
+xfs filesystem being mounted at /root/file0 supports timestamps until 2038-01-19 (0x7fffffff)
+================================================================================
+UBSAN: array-index-out-of-bounds in fs/xfs/libxfs/xfs_attr_leaf.c:1560:3
+index 14 is out of range for type '__u8 [1]'
+CPU: 1 PID: 5021 Comm: syz-executor198 Not tainted 6.4.0-rc6-next-20230613-syzkaller #0
+Hardware name: Google Google Compute Engine/Google Compute Engine, BIOS Google 05/25/2023
+Call Trace:
+ <TASK>
+ __dump_stack lib/dump_stack.c:88 [inline]
+ dump_stack_lvl+0x136/0x150 lib/dump_stack.c:106
+ ubsan_epilogue lib/ubsan.c:217 [inline]
+ __ubsan_handle_out_of_bounds+0xd5/0x140 lib/ubsan.c:348
+ xfs_attr3_leaf_add_work+0x1528/0x1730 fs/xfs/libxfs/xfs_attr_leaf.c:1560
+ xfs_attr3_leaf_add+0x750/0x880 fs/xfs/libxfs/xfs_attr_leaf.c:1438
+ xfs_attr_leaf_try_add+0x1b7/0x660 fs/xfs/libxfs/xfs_attr.c:1242
+ xfs_attr_leaf_addname fs/xfs/libxfs/xfs_attr.c:444 [inline]
+ xfs_attr_set_iter+0x16c4/0x2f90 fs/xfs/libxfs/xfs_attr.c:721
+ xfs_xattri_finish_update+0x3c/0x140 fs/xfs/xfs_attr_item.c:332
+ xfs_attr_finish_item+0x6d/0x280 fs/xfs/xfs_attr_item.c:463
+ xfs_defer_finish_one fs/xfs/libxfs/xfs_defer.c:481 [inline]
+ xfs_defer_finish_noroll+0x93b/0x1f20 fs/xfs/libxfs/xfs_defer.c:565
+ __xfs_trans_commit+0x566/0xe20 fs/xfs/xfs_trans.c:972
+ xfs_attr_set+0x12e5/0x2220 fs/xfs/libxfs/xfs_attr.c:1083
+ xfs_attr_change fs/xfs/xfs_xattr.c:106 [inline]
+ xfs_xattr_set+0xf2/0x1c0 fs/xfs/xfs_xattr.c:151
+ __vfs_setxattr+0x173/0x1e0 fs/xattr.c:201
+ __vfs_setxattr_noperm+0x129/0x5f0 fs/xattr.c:235
+ __vfs_setxattr_locked+0x1d3/0x260 fs/xattr.c:296
+ vfs_setxattr+0x143/0x340 fs/xattr.c:322
+ do_setxattr+0x147/0x190 fs/xattr.c:630
+ setxattr+0x146/0x160 fs/xattr.c:653
+ path_setxattr+0x197/0x1c0 fs/xattr.c:672
+ __do_sys_setxattr fs/xattr.c:688 [inline]
+ __se_sys_setxattr fs/xattr.c:684 [inline]
+ __x64_sys_setxattr+0xc4/0x160 fs/xattr.c:684
+ do_syscall_x64 arch/x86/entry/common.c:50 [inline]
+ do_syscall_64+0x39/0xb0 arch/x86/entry/common.c:80
+ entry_SYSCALL_64_after_hwframe+0x63/0xcd
+RIP: 0033:0x7f9effd537f9
+Code: 28 00 00 00 75 05 48 83 c4 28 c3 e8 51 14 00 00 90 48 89 f8 48 89 f7 48 89 d6 48 89 ca 4d 89 c2 4d 89 c8 4c 8b 4c 24 08 0f 05 <48> 3d 01 f0 ff ff 73 01 c3 48 c7 c1 c0 ff ff ff f7 d8 64 89 01 48
+RSP: 002b:00007ffc33918058 EFLAGS: 00000246 ORIG_RAX: 00000000000000bc
+RAX: ffffffffffffffda RBX: 0030656c69662f2e RCX: 00007f9effd537f9
+RDX: 0000000020000680 RSI: 0000000020000200 RDI: 0000000020000000
+RBP: 00007f9effd13090 R08: 0000000000000000 R09: 0000000000000000
+R10: 0000000000000058 R11: 0000000000000246 R12: 00007f9effd13120
+R13: 0000000000000000 R14: 0000000000000000 R15: 0000000000000000
+ </TASK>
+================================================================================
 
 
-> +			if (chunk > PAGE_SIZE)
-> +				chunk /= 2;
->  			goto again;
->  		}
->  		pos += status;
-> -- 
-> 2.39.2
+---
+This report is generated by a bot. It may contain errors.
+See https://goo.gl/tpsmEJ for more information about syzbot.
+syzbot engineers can be reached at syzkaller@googlegroups.com.
+
+syzbot will keep track of this issue. See:
+https://goo.gl/tpsmEJ#status for how to communicate with syzbot.
+
+If the bug is already fixed, let syzbot know by replying with:
+#syz fix: exact-commit-title
+
+If you want syzbot to run the reproducer, reply with:
+#syz test: git://repo/address.git branch-or-commit-hash
+If you attach or paste a git patch, syzbot will apply it before testing.
+
+If you want to change bug's subsystems, reply with:
+#syz set subsystems: new-subsystem
+(See the list of subsystem names on the web dashboard)
+
+If the bug is a duplicate of another bug, reply with:
+#syz dup: exact-subject-of-another-report
+
+If you want to undo deduplication, reply with:
+#syz undup
