@@ -2,44 +2,44 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 90FF7EB64D9
-	for <linux-xfs@archiver.kernel.org>; Sat, 17 Jun 2023 11:23:02 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 33DB0EB64DC
+	for <linux-xfs@archiver.kernel.org>; Sun, 18 Jun 2023 00:24:09 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233140AbjFQLXB (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Sat, 17 Jun 2023 07:23:01 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41764 "EHLO
+        id S229816AbjFRAYG (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Sat, 17 Jun 2023 20:24:06 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42104 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232533AbjFQLXB (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sat, 17 Jun 2023 07:23:01 -0400
-Received: from mail-il1-f207.google.com (mail-il1-f207.google.com [209.85.166.207])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 02E0C10FB
-        for <linux-xfs@vger.kernel.org>; Sat, 17 Jun 2023 04:23:00 -0700 (PDT)
-Received: by mail-il1-f207.google.com with SMTP id e9e14a558f8ab-340bdf36dcdso15748605ab.0
-        for <linux-xfs@vger.kernel.org>; Sat, 17 Jun 2023 04:22:59 -0700 (PDT)
+        with ESMTP id S231321AbjFRAYD (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sat, 17 Jun 2023 20:24:03 -0400
+Received: from mail-io1-f79.google.com (mail-io1-f79.google.com [209.85.166.79])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B2CDD172C
+        for <linux-xfs@vger.kernel.org>; Sat, 17 Jun 2023 17:23:59 -0700 (PDT)
+Received: by mail-io1-f79.google.com with SMTP id ca18e2360f4ac-77e23d23eccso103220239f.1
+        for <linux-xfs@vger.kernel.org>; Sat, 17 Jun 2023 17:23:59 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20221208; t=1687000979; x=1689592979;
+        d=1e100.net; s=20221208; t=1687047839; x=1689639839;
         h=to:from:subject:message-id:date:mime-version:x-gm-message-state
          :from:to:cc:subject:date:message-id:reply-to;
-        bh=976nUGLA1eLtjJZopusDJfTHe5lySN1BOdO4t8e0GJk=;
-        b=J3aFKWrkgPW8dxQA2DJWnfiYeiZWHHcFWy7xZXNBign5hfRnIWc/bYtGyHdkSIdso1
-         FYBMvwbqnvtHLquP8HPfGDOqWzKG2jqUwHucktRPQWP7+TML3RSXeG5ITkYaGbkmu4B0
-         Am83mzsp7SMg75MDTBcmqcdlunfK4lY0KtL4PmBMt7BS6S479FQBbbisea4cTNy+KcCM
-         1p7hOZJ2xbr144nItyT2qxNXixX18cFaHpUr8Fe15/K6siGKFzSaxEysMmhVu6RzPHcr
-         nUnoZXOUT61nX6g3+/Do1L2Vb+GT6DpoIldggrDNq5PFmLLT/WHURsOG7SjVjRAalTNM
-         6SUA==
-X-Gm-Message-State: AC+VfDxURb1qyYPqmyOaoeASaTPSl10RK/NX0VJE8LS0sWiDeMTiGgZ9
-        miwM2RgGix0wjyigezq9a9/Txx/IfSJuF+5z1ALNt1muwkEe
-X-Google-Smtp-Source: ACHHUZ6CLGw8oS/wZoEcJyQld9KGJx/uFDIU4+qOLKL7d4cyna0ONvOkvR4DYF/bnu31XqwEYGY5azAOr3HIlcxp+U956QpN2ujo
+        bh=BzhFHvEiw2Iy18UyD0iJdSi5zJ0xOqiPpgBwI0LaJoM=;
+        b=Vd417xUxJkky7UDEsixb6cy8eCnbtDqHmTyM9VMqaybsit/+mFnYUBPzS2XpOWNw6D
+         RiXv+Yyl5GC3L8lYOJJ4yWyyr2aZGuHOKodB19KI6lZkFIWIrslKl1suffipy8Xd5za1
+         tBchjceWawnsth4jMJFv7Vr0Dz7ICQ0fxhRDa1jikBPvaPNssoeM6qqGRM5KyHNieTZN
+         n4ua0pUVFAHwIMxMyGiI/mFhPTR53NBOp84x+jtqY0c1ZGP5Xj+OUcCq4WYKvWeab7ce
+         U7xReWzNzyoXubuaa+FDhDzOpNwT9ZkVJkGNxjBc9fbco36m9Sxu/ukIuKTpBGrUAz0c
+         3btQ==
+X-Gm-Message-State: AC+VfDxi9uc9DXr6KLskTVxemEY7ATMc2/D88bAnekz8MZW18FmMyEpD
+        H5js4Lo3sS4VcqOp1tNAQf/YbsdRP0atWikrIPvVTOONHyfd
+X-Google-Smtp-Source: ACHHUZ5BvB8OzrHboiOZaYtsxTJlm4QBE71x/rB/xcVYzaUkN0O20hU7Ha3UyzUpHj8lsDF5vdUgONn9Vpy7XNFt4qwuYnl7sogm
 MIME-Version: 1.0
-X-Received: by 2002:a92:d650:0:b0:340:7430:2317 with SMTP id
- x16-20020a92d650000000b0034074302317mr1223035ilp.3.1687000979374; Sat, 17 Jun
- 2023 04:22:59 -0700 (PDT)
-Date:   Sat, 17 Jun 2023 04:22:59 -0700
+X-Received: by 2002:a6b:3b8b:0:b0:777:b0ee:a512 with SMTP id
+ i133-20020a6b3b8b000000b00777b0eea512mr1802544ioa.2.1687047838984; Sat, 17
+ Jun 2023 17:23:58 -0700 (PDT)
+Date:   Sat, 17 Jun 2023 17:23:58 -0700
 X-Google-Appengine-App-Id: s~syzkaller
 X-Google-Appengine-App-Id-Alias: syzkaller
-Message-ID: <0000000000001c8edb05fe518644@google.com>
-Subject: [syzbot] [xfs?] UBSAN: array-index-out-of-bounds in xfs_attr3_leaf_add_work
-From:   syzbot <syzbot+510dcbdc6befa1e6b2f6@syzkaller.appspotmail.com>
+Message-ID: <00000000000029729c05fe5c6f5c@google.com>
+Subject: [syzbot] [xfs?] KASAN: slab-out-of-bounds Read in xlog_pack_data
+From:   syzbot <syzbot+b7854dc75e15ffc8c2ae@syzkaller.appspotmail.com>
 To:     djwong@kernel.org, linux-fsdevel@vger.kernel.org,
         linux-kernel@vger.kernel.org, linux-xfs@vger.kernel.org,
         syzkaller-bugs@googlegroups.com
@@ -52,74 +52,138 @@ Hello,
 
 syzbot found the following issue on:
 
-HEAD commit:    1f6ce8392d6f Add linux-next specific files for 20230613
-git tree:       linux-next
-console+strace: https://syzkaller.appspot.com/x/log.txt?x=14e629dd280000
-kernel config:  https://syzkaller.appspot.com/x/.config?x=d103d5f9125e9fe9
-dashboard link: https://syzkaller.appspot.com/bug?extid=510dcbdc6befa1e6b2f6
-compiler:       gcc (Debian 10.2.1-6) 10.2.1 20210110, GNU ld (GNU Binutils for Debian) 2.35.2
-syz repro:      https://syzkaller.appspot.com/x/repro.syz?x=139d8d2d280000
-C reproducer:   https://syzkaller.appspot.com/x/repro.c?x=11b371f1280000
+HEAD commit:    15adb51c04cc Merge tag 'devicetree-fixes-for-6.4-3' of git..
+git tree:       upstream
+console+strace: https://syzkaller.appspot.com/x/log.txt?x=17554263280000
+kernel config:  https://syzkaller.appspot.com/x/.config?x=3731e922b1097b2e
+dashboard link: https://syzkaller.appspot.com/bug?extid=b7854dc75e15ffc8c2ae
+compiler:       Debian clang version 15.0.7, GNU ld (GNU Binutils for Debian) 2.35.2
+syz repro:      https://syzkaller.appspot.com/x/repro.syz?x=1323469d280000
+C reproducer:   https://syzkaller.appspot.com/x/repro.c?x=12975795280000
 
 Downloadable assets:
-disk image: https://storage.googleapis.com/syzbot-assets/2d9bf45aeae9/disk-1f6ce839.raw.xz
-vmlinux: https://storage.googleapis.com/syzbot-assets/e0b03ef83e17/vmlinux-1f6ce839.xz
-kernel image: https://storage.googleapis.com/syzbot-assets/b6c21a24174d/bzImage-1f6ce839.xz
-mounted in repro: https://storage.googleapis.com/syzbot-assets/65eca6891c21/mount_0.gz
+disk image: https://storage.googleapis.com/syzbot-assets/733f46de69b0/disk-15adb51c.raw.xz
+vmlinux: https://storage.googleapis.com/syzbot-assets/f9a6a2c566b8/vmlinux-15adb51c.xz
+kernel image: https://storage.googleapis.com/syzbot-assets/55e80680ef0e/bzImage-15adb51c.xz
+mounted in repro: https://storage.googleapis.com/syzbot-assets/99d5407c555b/mount_0.gz
 
 IMPORTANT: if you fix the issue, please add the following tag to the commit:
-Reported-by: syzbot+510dcbdc6befa1e6b2f6@syzkaller.appspotmail.com
+Reported-by: syzbot+b7854dc75e15ffc8c2ae@syzkaller.appspotmail.com
 
-XFS (loop0): Mounting V4 Filesystem 5e6273b8-2167-42bb-911b-418aa14a1261
-XFS (loop0): Ending clean mount
 xfs filesystem being mounted at /root/file0 supports timestamps until 2038-01-19 (0x7fffffff)
-================================================================================
-UBSAN: array-index-out-of-bounds in fs/xfs/libxfs/xfs_attr_leaf.c:1560:3
-index 14 is out of range for type '__u8 [1]'
-CPU: 1 PID: 5021 Comm: syz-executor198 Not tainted 6.4.0-rc6-next-20230613-syzkaller #0
+XFS (loop0): Unmounting Filesystem acfebfcd-0806-4e27-9777-0ac4ff5ddf54
+==================================================================
+BUG: KASAN: slab-out-of-bounds in xlog_pack_data+0x370/0x540 fs/xfs/xfs_log.c:1822
+Read of size 4 at addr ffff888075c64e00 by task syz-executor205/4996
+
+CPU: 0 PID: 4996 Comm: syz-executor205 Not tainted 6.4.0-rc6-syzkaller-00035-g15adb51c04cc #0
 Hardware name: Google Google Compute Engine/Google Compute Engine, BIOS Google 05/25/2023
 Call Trace:
  <TASK>
  __dump_stack lib/dump_stack.c:88 [inline]
- dump_stack_lvl+0x136/0x150 lib/dump_stack.c:106
- ubsan_epilogue lib/ubsan.c:217 [inline]
- __ubsan_handle_out_of_bounds+0xd5/0x140 lib/ubsan.c:348
- xfs_attr3_leaf_add_work+0x1528/0x1730 fs/xfs/libxfs/xfs_attr_leaf.c:1560
- xfs_attr3_leaf_add+0x750/0x880 fs/xfs/libxfs/xfs_attr_leaf.c:1438
- xfs_attr_leaf_try_add+0x1b7/0x660 fs/xfs/libxfs/xfs_attr.c:1242
- xfs_attr_leaf_addname fs/xfs/libxfs/xfs_attr.c:444 [inline]
- xfs_attr_set_iter+0x16c4/0x2f90 fs/xfs/libxfs/xfs_attr.c:721
- xfs_xattri_finish_update+0x3c/0x140 fs/xfs/xfs_attr_item.c:332
- xfs_attr_finish_item+0x6d/0x280 fs/xfs/xfs_attr_item.c:463
- xfs_defer_finish_one fs/xfs/libxfs/xfs_defer.c:481 [inline]
- xfs_defer_finish_noroll+0x93b/0x1f20 fs/xfs/libxfs/xfs_defer.c:565
- __xfs_trans_commit+0x566/0xe20 fs/xfs/xfs_trans.c:972
- xfs_attr_set+0x12e5/0x2220 fs/xfs/libxfs/xfs_attr.c:1083
- xfs_attr_change fs/xfs/xfs_xattr.c:106 [inline]
- xfs_xattr_set+0xf2/0x1c0 fs/xfs/xfs_xattr.c:151
- __vfs_setxattr+0x173/0x1e0 fs/xattr.c:201
- __vfs_setxattr_noperm+0x129/0x5f0 fs/xattr.c:235
- __vfs_setxattr_locked+0x1d3/0x260 fs/xattr.c:296
- vfs_setxattr+0x143/0x340 fs/xattr.c:322
- do_setxattr+0x147/0x190 fs/xattr.c:630
- setxattr+0x146/0x160 fs/xattr.c:653
- path_setxattr+0x197/0x1c0 fs/xattr.c:672
- __do_sys_setxattr fs/xattr.c:688 [inline]
- __se_sys_setxattr fs/xattr.c:684 [inline]
- __x64_sys_setxattr+0xc4/0x160 fs/xattr.c:684
+ dump_stack_lvl+0x1e7/0x2d0 lib/dump_stack.c:106
+ print_address_description mm/kasan/report.c:351 [inline]
+ print_report+0x163/0x540 mm/kasan/report.c:462
+ kasan_report+0x176/0x1b0 mm/kasan/report.c:572
+ xlog_pack_data+0x370/0x540 fs/xfs/xfs_log.c:1822
+ xlog_sync+0x366/0xd50 fs/xfs/xfs_log.c:2093
+ xlog_state_release_iclog+0x46d/0x7f0 fs/xfs/xfs_log.c:619
+ xlog_force_iclog fs/xfs/xfs_log.c:888 [inline]
+ xlog_force_and_check_iclog fs/xfs/xfs_log.c:3172 [inline]
+ xlog_force_lsn+0x5e5/0x770 fs/xfs/xfs_log.c:3344
+ xfs_log_force_seq+0x1da/0x450 fs/xfs/xfs_log.c:3409
+ __xfs_trans_commit+0xb38/0x11d0 fs/xfs/xfs_trans.c:1021
+ xfs_sync_sb+0x140/0x190 fs/xfs/libxfs/xfs_sb.c:1015
+ xfs_log_cover fs/xfs/xfs_log.c:1300 [inline]
+ xfs_log_quiesce+0x38f/0x680 fs/xfs/xfs_log.c:1109
+ xfs_log_clean+0xa4/0xc10 fs/xfs/xfs_log.c:1116
+ xfs_log_unmount+0x2c/0x1c0 fs/xfs/xfs_log.c:1131
+ xfs_unmountfs+0x1d6/0x280 fs/xfs/xfs_mount.c:1096
+ xfs_fs_put_super+0x74/0x2d0 fs/xfs/xfs_super.c:1130
+ generic_shutdown_super+0x134/0x340 fs/super.c:500
+ kill_block_super+0x84/0xf0 fs/super.c:1407
+ deactivate_locked_super+0xa4/0x110 fs/super.c:331
+ cleanup_mnt+0x426/0x4c0 fs/namespace.c:1177
+ task_work_run+0x24a/0x300 kernel/task_work.c:179
+ exit_task_work include/linux/task_work.h:38 [inline]
+ do_exit+0x68f/0x2290 kernel/exit.c:874
+ do_group_exit+0x206/0x2c0 kernel/exit.c:1024
+ __do_sys_exit_group kernel/exit.c:1035 [inline]
+ __se_sys_exit_group kernel/exit.c:1033 [inline]
+ __x64_sys_exit_group+0x3f/0x40 kernel/exit.c:1033
  do_syscall_x64 arch/x86/entry/common.c:50 [inline]
- do_syscall_64+0x39/0xb0 arch/x86/entry/common.c:80
+ do_syscall_64+0x41/0xc0 arch/x86/entry/common.c:80
  entry_SYSCALL_64_after_hwframe+0x63/0xcd
-RIP: 0033:0x7f9effd537f9
-Code: 28 00 00 00 75 05 48 83 c4 28 c3 e8 51 14 00 00 90 48 89 f8 48 89 f7 48 89 d6 48 89 ca 4d 89 c2 4d 89 c8 4c 8b 4c 24 08 0f 05 <48> 3d 01 f0 ff ff 73 01 c3 48 c7 c1 c0 ff ff ff f7 d8 64 89 01 48
-RSP: 002b:00007ffc33918058 EFLAGS: 00000246 ORIG_RAX: 00000000000000bc
-RAX: ffffffffffffffda RBX: 0030656c69662f2e RCX: 00007f9effd537f9
-RDX: 0000000020000680 RSI: 0000000020000200 RDI: 0000000020000000
-RBP: 00007f9effd13090 R08: 0000000000000000 R09: 0000000000000000
-R10: 0000000000000058 R11: 0000000000000246 R12: 00007f9effd13120
-R13: 0000000000000000 R14: 0000000000000000 R15: 0000000000000000
+RIP: 0033:0x7f7ff46d4999
+Code: Unable to access opcode bytes at 0x7f7ff46d496f.
+RSP: 002b:00007ffde997c8a8 EFLAGS: 00000246 ORIG_RAX: 00000000000000e7
+RAX: ffffffffffffffda RBX: 00007f7ff4756330 RCX: 00007f7ff46d4999
+RDX: 000000000000003c RSI: 00000000000000e7 RDI: 0000000000000001
+RBP: 0000000000000001 R08: ffffffffffffffc0 R09: 000000000000c157
+R10: 0000000000000000 R11: 0000000000000246 R12: 00007f7ff4756330
+R13: 0000000000000001 R14: 0000000000000000 R15: 0000000000000001
  </TASK>
-================================================================================
+
+The buggy address belongs to the physical page:
+page:ffffea0001d71000 refcount:1 mapcount:0 mapping:0000000000000000 index:0x0 pfn:0x75c40
+head:ffffea0001d71000 order:6 entire_mapcount:0 nr_pages_mapped:0 pincount:0
+flags: 0xfff00000010000(head|node=0|zone=1|lastcpupid=0x7ff)
+page_type: 0xffffffff()
+raw: 00fff00000010000 0000000000000000 dead000000000122 0000000000000000
+raw: 0000000000000000 0000000000000000 00000001ffffffff 0000000000000000
+page dumped because: kasan: bad access detected
+page_owner tracks the page as allocated
+page last allocated via order 6, migratetype Unmovable, gfp_mask 0x46dc0(GFP_KERNEL|__GFP_NOWARN|__GFP_RETRY_MAYFAIL|__GFP_COMP|__GFP_ZERO), pid 4996, tgid 4996 (syz-executor205), ts 65296013335, free_ts 18373394447
+ set_page_owner include/linux/page_owner.h:31 [inline]
+ post_alloc_hook+0x1e6/0x210 mm/page_alloc.c:1731
+ prep_new_page mm/page_alloc.c:1738 [inline]
+ get_page_from_freelist+0x321c/0x33a0 mm/page_alloc.c:3502
+ __alloc_pages+0x255/0x670 mm/page_alloc.c:4768
+ __alloc_pages_node include/linux/gfp.h:237 [inline]
+ alloc_pages_node include/linux/gfp.h:260 [inline]
+ __kmalloc_large_node+0x91/0x1d0 mm/slab_common.c:1107
+ __do_kmalloc_node mm/slab_common.c:954 [inline]
+ __kmalloc_node+0x116/0x230 mm/slab_common.c:973
+ kmalloc_node include/linux/slab.h:579 [inline]
+ kvmalloc_node+0x72/0x180 mm/util.c:604
+ kvmalloc include/linux/slab.h:697 [inline]
+ kvzalloc include/linux/slab.h:705 [inline]
+ xlog_alloc_log+0x638/0x13a0 fs/xfs/xfs_log.c:1649
+ xfs_log_mount+0xe7/0x770 fs/xfs/xfs_log.c:658
+ xfs_mountfs+0xcbf/0x1f10 fs/xfs/xfs_mount.c:819
+ xfs_fs_fill_super+0xfd7/0x1230 fs/xfs/xfs_super.c:1694
+ get_tree_bdev+0x405/0x620 fs/super.c:1303
+ vfs_get_tree+0x8c/0x270 fs/super.c:1510
+ do_new_mount+0x28f/0xae0 fs/namespace.c:3039
+ do_mount fs/namespace.c:3382 [inline]
+ __do_sys_mount fs/namespace.c:3591 [inline]
+ __se_sys_mount+0x2d9/0x3c0 fs/namespace.c:3568
+ do_syscall_x64 arch/x86/entry/common.c:50 [inline]
+ do_syscall_64+0x41/0xc0 arch/x86/entry/common.c:80
+ entry_SYSCALL_64_after_hwframe+0x63/0xcd
+page last free stack trace:
+ reset_page_owner include/linux/page_owner.h:24 [inline]
+ free_pages_prepare mm/page_alloc.c:1302 [inline]
+ free_unref_page_prepare+0x903/0xa30 mm/page_alloc.c:2564
+ free_unref_page+0x37/0x3f0 mm/page_alloc.c:2659
+ free_contig_range+0x9e/0x150 mm/page_alloc.c:6994
+ destroy_args+0x102/0x9a0 mm/debug_vm_pgtable.c:1023
+ debug_vm_pgtable+0x405/0x490 mm/debug_vm_pgtable.c:1403
+ do_one_initcall+0x23d/0x7d0 init/main.c:1246
+ do_initcall_level+0x157/0x210 init/main.c:1319
+ do_initcalls+0x3f/0x80 init/main.c:1335
+ kernel_init_freeable+0x43b/0x5d0 init/main.c:1571
+ kernel_init+0x1d/0x2a0 init/main.c:1462
+ ret_from_fork+0x1f/0x30 arch/x86/entry/entry_64.S:308
+
+Memory state around the buggy address:
+ ffff888075c64d00: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+ ffff888075c64d80: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+>ffff888075c64e00: 01 fe fe fe fe fe fe fe fe fe fe fe fe fe fe fe
+                   ^
+ ffff888075c64e80: fe fe fe fe fe fe fe fe fe fe fe fe fe fe fe fe
+ ffff888075c64f00: fe fe fe fe fe fe fe fe fe fe fe fe fe fe fe fe
+==================================================================
 
 
 ---
