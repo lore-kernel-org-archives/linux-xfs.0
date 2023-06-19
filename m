@@ -2,491 +2,274 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 98A5AEB64D8
-	for <linux-xfs@archiver.kernel.org>; Mon, 19 Jun 2023 02:29:34 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2FF81EB64DB
+	for <linux-xfs@archiver.kernel.org>; Mon, 19 Jun 2023 07:00:42 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229769AbjFSC3d (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Sun, 18 Jun 2023 22:29:33 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51372 "EHLO
+        id S229959AbjFSHAk (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 19 Jun 2023 03:00:40 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53194 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229569AbjFSC3c (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sun, 18 Jun 2023 22:29:32 -0400
-Received: from mail-qt1-x835.google.com (mail-qt1-x835.google.com [IPv6:2607:f8b0:4864:20::835])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 92A58E4C;
-        Sun, 18 Jun 2023 19:29:30 -0700 (PDT)
-Received: by mail-qt1-x835.google.com with SMTP id d75a77b69052e-3f9e36e5ea8so25500941cf.3;
-        Sun, 18 Jun 2023 19:29:30 -0700 (PDT)
+        with ESMTP id S229647AbjFSHAj (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 19 Jun 2023 03:00:39 -0400
+Received: from mail-pf1-x429.google.com (mail-pf1-x429.google.com [IPv6:2607:f8b0:4864:20::429])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 414C5199
+        for <linux-xfs@vger.kernel.org>; Mon, 19 Jun 2023 00:00:38 -0700 (PDT)
+Received: by mail-pf1-x429.google.com with SMTP id d2e1a72fcca58-666e97fcc60so884067b3a.3
+        for <linux-xfs@vger.kernel.org>; Mon, 19 Jun 2023 00:00:38 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20221208; t=1687141769; x=1689733769;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=BO1To0LqRLNdbiQA/kflsw/IzgNitRtvfDgKhsX/Ado=;
-        b=Lj1r1m8YzA8T4RFDREbsLFQEDEKRHW6bzwm0ixipbg6d7v6N+5nnMYQ8BRCmrXo75j
-         u6qvzNyL931UiBaY4+9zQCssNmFBBGpSdb4u3bRGaf/UM/adOHyUbZy4eN07q3cvfPHD
-         HoJ/IHUzuio6wG3buFOzBujdv7l48AeqPmLEhVASGC8aOG1sg1gBgxH6EcZqTDEENehV
-         hyrXJVnHb+5wiimkUhsSWCvF39Fw6DPzH3g8mw1uv7ZX+F/BIWweGnq4MXx3prqFbfC/
-         MRfND04zBUa2r0RrvzF707P4JyjHNqXoXCIiOvQxS+QYHUgA4y4pg7k/zthv+ljw95X3
-         KKWg==
+        d=fromorbit-com.20221208.gappssmtp.com; s=20221208; t=1687158038; x=1689750038;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:to
+         :from:from:to:cc:subject:date:message-id:reply-to;
+        bh=OuxwWtTJ6nYPec3y1lXOZlxl2QsLAVvUoZUoyDlxdqk=;
+        b=aTF9Vx1lmOAqGAgX1sRgvjAAhBNOd7ohlsFMNUDbANZodKe82LzuqWyvXF0ulcQJPG
+         SAzbvaOhnswZ5r1iUpOfM6GOpyZcoP2mdo9MaOn9ndb4Oeq3NTXOozKO4xDtfz8ifOkh
+         geOiFcQfOdxXnzCoBRBwcgnz/29+KsHtFCHAdkByIAja93RZAKjYgNTk4TLG6nyiVj7O
+         VPguLxMvBPW0DE8XMXmCbJVADQ8TWg6F7UJ2er7DQ5IC25C4MMLEW0dd2MWHZV1Ctphb
+         0WwTGiz5rnypgGustZTjLfVqpnHLyX9qSRIkKiWId9VVh/JlUD1+JMJodg+7cAclz//d
+         L+MA==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20221208; t=1687141769; x=1689733769;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=BO1To0LqRLNdbiQA/kflsw/IzgNitRtvfDgKhsX/Ado=;
-        b=L9tHH70giFWWi3IYoiBO7IX3k/vuM/pLAM3ZDP4fnDkZEmuS3ny5Jm0bTRL4k8qBLn
-         T2NtHpzOZvnWCPbQ4moPjnsTWUuVAt97Xf4Hs5GxSlsjZuG1drUfnGJyQS17tDi1Sv+9
-         3g3JfngQSSPmFVTvzMCxF2plO6fTx+uaOnb8D7TqvuYGJVdjCGfLBtZeQbJ2+gv6Qqy0
-         +DW/0NdwL5Pe87mAxvvcyG/r0rNSJjLON78ReAvzEICc9w5BImF8Uznlh0mEsWNRAQym
-         nodu/bjI/nu2twszjrN5aodn/Flz8VOGaDHmmDp4NjqoJTOA2a57hNun/mPkKnY4hhaI
-         HwcQ==
-X-Gm-Message-State: AC+VfDy/5Xq2C55s7F5MHmifbIft+pFtSEZiDLLbBelWywo3GhhiA/gg
-        0EmnKOVdoCDzSFnYYykeuOGaZeCiAfQ=
-X-Google-Smtp-Source: ACHHUZ4wVlo84kyIQcD/m9j9kxlIPokw6x7CZRca2vlMW30WAgA1HDjv96WEzlVGqr+LM3893BHgvQ==
-X-Received: by 2002:a05:622a:15d4:b0:3fd:ec4a:2198 with SMTP id d20-20020a05622a15d400b003fdec4a2198mr3661066qty.18.1687141768981;
-        Sun, 18 Jun 2023 19:29:28 -0700 (PDT)
-Received: from dw-tp.ihost.com ([49.207.220.159])
-        by smtp.gmail.com with ESMTPSA id g18-20020aa78752000000b0064ff1f1df65sm399531pfo.61.2023.06.18.19.29.25
+        d=1e100.net; s=20221208; t=1687158038; x=1689750038;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:to
+         :from:x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=OuxwWtTJ6nYPec3y1lXOZlxl2QsLAVvUoZUoyDlxdqk=;
+        b=ZOnzdTRYtxnEJr40qMJBA5iJYK73BFxYVfkRxK4RaEmE3R8xIJYir67DupguytU4+o
+         vxE9lac6uwWtHQ42o8sO7WfFfKnPjlVrIuHD3pxrieis525SLYGv8EVAU1Wa+HOVONbF
+         PIvZ2fCdz8PJgBgOEnuiBQpPrG34WMQkaW/+kfNp5OcdtOy50YyKMQskv66HhP5CVdGf
+         1F7xGq80NaydIHP6HKi4l4mDJ2511hevpdV7vgnlMCV/PkmFaytTiRFExfFjXjf6xqbw
+         gJWmkDLArUXqnaKrNfEyWRXd1czX5iCoL6eMgvdwiE3BdkRKaB0ar0ImiH3pXKBQzftf
+         BZgg==
+X-Gm-Message-State: AC+VfDyddhjIn7hEnckD+9pYO5i0NKiCkw0qWBJnOAAAfwRzyyfAHiKH
+        5pctRUOlK86AyktTXTWRtdyX3w85THePl7EIexc=
+X-Google-Smtp-Source: ACHHUZ7/aLZl11U1Z5x6AhyXwqIbCgPpfJzFe+XD7q+88XpuOnLVlmR3BYMICYSBY7War8RkXgw7bg==
+X-Received: by 2002:a05:6a00:98d:b0:668:812d:a1e4 with SMTP id u13-20020a056a00098d00b00668812da1e4mr622414pfg.22.1687158037561;
+        Mon, 19 Jun 2023 00:00:37 -0700 (PDT)
+Received: from dread.disaster.area (pa49-180-13-202.pa.nsw.optusnet.com.au. [49.180.13.202])
+        by smtp.gmail.com with ESMTPSA id l25-20020a62be19000000b0065ebeb9bb23sm17421831pff.149.2023.06.19.00.00.36
+        for <linux-xfs@vger.kernel.org>
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Sun, 18 Jun 2023 19:29:28 -0700 (PDT)
-From:   "Ritesh Harjani (IBM)" <ritesh.list@gmail.com>
+        Mon, 19 Jun 2023 00:00:36 -0700 (PDT)
+Received: from [192.168.253.23] (helo=devoid.disaster.area)
+        by dread.disaster.area with esmtp (Exim 4.96)
+        (envelope-from <dave@fromorbit.com>)
+        id 1qB8sL-00DZ08-0B
+        for linux-xfs@vger.kernel.org;
+        Mon, 19 Jun 2023 17:00:32 +1000
+Received: from dave by devoid.disaster.area with local (Exim 4.96)
+        (envelope-from <dave@devoid.disaster.area>)
+        id 1qB8sK-0081bW-2A
+        for linux-xfs@vger.kernel.org;
+        Mon, 19 Jun 2023 17:00:32 +1000
+From:   Dave Chinner <david@fromorbit.com>
 To:     linux-xfs@vger.kernel.org
-Cc:     linux-fsdevel@vger.kernel.org,
-        "Darrick J . Wong" <djwong@kernel.org>,
-        Andreas Gruenbacher <agruenba@redhat.com>,
-        Matthew Wilcox <willy@infradead.org>,
-        Christoph Hellwig <hch@infradead.org>,
-        Brian Foster <bfoster@redhat.com>,
-        Ojaswin Mujoo <ojaswin@linux.ibm.com>,
-        Disha Goel <disgoel@linux.ibm.com>,
-        "Ritesh Harjani (IBM)" <ritesh.list@gmail.com>,
-        Aravinda Herle <araherle@in.ibm.com>
-Subject: [PATCHv10 8/8] iomap: Add per-block dirty state tracking to improve performance
-Date:   Mon, 19 Jun 2023 07:58:51 +0530
-Message-Id: <6db62a08dda3a348303e2262454837149c2afe2a.1687140389.git.ritesh.list@gmail.com>
+Subject: [PATCH] xfs: journal geometry is not properly bounds checked
+Date:   Mon, 19 Jun 2023 17:00:32 +1000
+Message-Id: <20230619070032.1912781-1-david@fromorbit.com>
 X-Mailer: git-send-email 2.40.1
-In-Reply-To: <cover.1687140389.git.ritesh.list@gmail.com>
-References: <cover.1687140389.git.ritesh.list@gmail.com>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-When filesystem blocksize is less than folio size (either with
-mapping_large_folio_support() or with blocksize < pagesize) and when the
-folio is uptodate in pagecache, then even a byte write can cause
-an entire folio to be written to disk during writeback. This happens
-because we currently don't have a mechanism to track per-block dirty
-state within struct iomap_folio_state. We currently only track uptodate
-state.
+From: Dave Chinner <dchinner@redhat.com>
 
-This patch implements support for tracking per-block dirty state in
-iomap_folio_state->state bitmap. This should help improve the filesystem
-write performance and help reduce write amplification.
+If the journal geometry results in a sector or log stripe unit
+validation problem, it indicates that we cannot set the log up to
+safely write to the the journal. In these cases, we must abort the
+mount because the corruption needs external intervention to resolve.
+Similarly, a journal that is too large cannot be written to safely,
+either, so we shouldn't allow those geometries to mount, either.
 
-Performance testing of below fio workload reveals ~16x performance
-improvement using nvme with XFS (4k blocksize) on Power (64K pagesize)
-FIO reported write bw scores improved from around ~28 MBps to ~452 MBps.
+If the log is too small, we risk having transaction reservations
+overruning the available log space and the system hanging waiting
+for space it can never provide. This is purely a runtime hang issue,
+not a corruption issue as per the first cases listed above. We abort
+mounts of the log is too small for V5 filesystems, but we must allow
+v4 filesystems to mount because, historically, there was no log size
+validity checking and so some systems may still be out there with
+undersized logs.
 
-1. <test_randwrite.fio>
-[global]
-	ioengine=psync
-	rw=randwrite
-	overwrite=1
-	pre_read=1
-	direct=0
-	bs=4k
-	size=1G
-	dir=./
-	numjobs=8
-	fdatasync=1
-	runtime=60
-	iodepth=64
-	group_reporting=1
+The problem is that on V4 filesystems, when we discover a log
+geometry problem, we skip all the remaining checks and then allow
+the log to continue mounting. This mean that if one of the log size
+checks fails, we skip the log stripe unit check. i.e. we allow the
+mount because a "non-fatal" geometry is violated, and then fail to
+check the hard fail geometries that should fail the mount.
 
-[fio-run]
+Move all these fatal checks to the superblock verifier, and add a
+new check for the two log sector size geometry variables having the
+same values. This will prevent any attempt to mount a log that has
+invalid or inconsistent geometries long before we attempt to mount
+the log.
 
-2. Also our internal performance team reported that this patch improves
-   their database workload performance by around ~83% (with XFS on Power)
+However, for the minimum log size checks, we can only do that once
+we've setup up the log and calculated all the iclog sizes and
+roundoffs. Hence this needs to remain in the log mount code after
+the log has been initialised. It is also the only case where we
+should allow a v4 filesystem to continue running, so leave that
+handling in place, too.
 
-Reported-by: Aravinda Herle <araherle@in.ibm.com>
-Reported-by: Brian Foster <bfoster@redhat.com>
-Signed-off-by: Ritesh Harjani (IBM) <ritesh.list@gmail.com>
+Signed-off-by: Dave Chinner <dchinner@redhat.com>
 ---
- fs/gfs2/aops.c         |   2 +-
- fs/iomap/buffered-io.c | 189 ++++++++++++++++++++++++++++++++++++-----
- fs/xfs/xfs_aops.c      |   2 +-
- fs/zonefs/file.c       |   2 +-
- include/linux/iomap.h  |   1 +
- 5 files changed, 171 insertions(+), 25 deletions(-)
+ fs/xfs/libxfs/xfs_sb.c | 59 +++++++++++++++++++++++++++++++++++++++++-
+ fs/xfs/xfs_log.c       | 45 ++++++++++----------------------
+ 2 files changed, 72 insertions(+), 32 deletions(-)
 
-diff --git a/fs/gfs2/aops.c b/fs/gfs2/aops.c
-index a5f4be6b9213..75efec3c3b71 100644
---- a/fs/gfs2/aops.c
-+++ b/fs/gfs2/aops.c
-@@ -746,7 +746,7 @@ static const struct address_space_operations gfs2_aops = {
- 	.writepages = gfs2_writepages,
- 	.read_folio = gfs2_read_folio,
- 	.readahead = gfs2_readahead,
--	.dirty_folio = filemap_dirty_folio,
-+	.dirty_folio = iomap_dirty_folio,
- 	.release_folio = iomap_release_folio,
- 	.invalidate_folio = iomap_invalidate_folio,
- 	.bmap = gfs2_bmap,
-diff --git a/fs/iomap/buffered-io.c b/fs/iomap/buffered-io.c
-index 391d918ddd22..50f5840bb5f9 100644
---- a/fs/iomap/buffered-io.c
-+++ b/fs/iomap/buffered-io.c
-@@ -25,7 +25,7 @@
+diff --git a/fs/xfs/libxfs/xfs_sb.c b/fs/xfs/libxfs/xfs_sb.c
+index ba0f17bc1dc0..0daf6bb37741 100644
+--- a/fs/xfs/libxfs/xfs_sb.c
++++ b/fs/xfs/libxfs/xfs_sb.c
+@@ -412,7 +412,6 @@ xfs_validate_sb_common(
+ 	    sbp->sb_inodelog < XFS_DINODE_MIN_LOG			||
+ 	    sbp->sb_inodelog > XFS_DINODE_MAX_LOG			||
+ 	    sbp->sb_inodesize != (1 << sbp->sb_inodelog)		||
+-	    sbp->sb_logsunit > XLOG_MAX_RECORD_BSIZE			||
+ 	    sbp->sb_inopblock != howmany(sbp->sb_blocksize,sbp->sb_inodesize) ||
+ 	    XFS_FSB_TO_B(mp, sbp->sb_agblocks) < XFS_MIN_AG_BYTES	||
+ 	    XFS_FSB_TO_B(mp, sbp->sb_agblocks) > XFS_MAX_AG_BYTES	||
+@@ -430,6 +429,64 @@ xfs_validate_sb_common(
+ 		return -EFSCORRUPTED;
+ 	}
  
- typedef int (*iomap_punch_t)(struct inode *inode, loff_t offset, loff_t length);
- /*
-- * Structure allocated for each folio to track per-block uptodate state
-+ * Structure allocated for each folio to track per-block uptodate, dirty state
-  * and I/O completions.
-  */
- struct iomap_folio_state {
-@@ -35,31 +35,55 @@ struct iomap_folio_state {
- 	unsigned long		state[];
- };
- 
-+enum iomap_block_state {
-+	IOMAP_ST_UPTODATE,
-+	IOMAP_ST_DIRTY,
-+
-+	IOMAP_ST_MAX,
-+};
-+
-+static void ifs_calc_range(struct folio *folio, size_t off, size_t len,
-+		enum iomap_block_state state, unsigned int *first_blkp,
-+		unsigned int *nr_blksp)
-+{
-+	struct inode *inode = folio->mapping->host;
-+	unsigned int blks_per_folio = i_blocks_per_folio(inode, folio);
-+	unsigned int first = off >> inode->i_blkbits;
-+	unsigned int last = (off + len - 1) >> inode->i_blkbits;
-+
-+	*first_blkp = first + (state * blks_per_folio);
-+	*nr_blksp = last - first + 1;
-+}
-+
- static struct bio_set iomap_ioend_bioset;
- 
- static inline bool ifs_is_fully_uptodate(struct folio *folio,
- 					       struct iomap_folio_state *ifs)
- {
- 	struct inode *inode = folio->mapping->host;
-+	unsigned int blks_per_folio = i_blocks_per_folio(inode, folio);
-+	unsigned int nr_blks = (IOMAP_ST_UPTODATE + 1) * blks_per_folio;
- 
--	return bitmap_full(ifs->state, i_blocks_per_folio(inode, folio));
-+	return bitmap_full(ifs->state, nr_blks);
- }
- 
--static inline bool ifs_block_is_uptodate(struct iomap_folio_state *ifs,
--					       unsigned int block)
-+static inline bool ifs_block_is_uptodate(struct folio *folio,
-+		struct iomap_folio_state *ifs, unsigned int block)
- {
--	return test_bit(block, ifs->state);
-+	struct inode *inode = folio->mapping->host;
-+	unsigned int blks_per_folio = i_blocks_per_folio(inode, folio);
-+
-+	return test_bit(block + IOMAP_ST_UPTODATE * blks_per_folio, ifs->state);
- }
- 
- static void ifs_set_range_uptodate(struct folio *folio,
- 		struct iomap_folio_state *ifs, size_t off, size_t len)
- {
--	struct inode *inode = folio->mapping->host;
--	unsigned int first_blk = off >> inode->i_blkbits;
--	unsigned int last_blk = (off + len - 1) >> inode->i_blkbits;
--	unsigned int nr_blks = last_blk - first_blk + 1;
-+	unsigned int first_blk, nr_blks;
- 	unsigned long flags;
- 
-+	ifs_calc_range(folio, off, len, IOMAP_ST_UPTODATE, &first_blk,
-+			     &nr_blks);
- 	spin_lock_irqsave(&ifs->state_lock, flags);
- 	bitmap_set(ifs->state, first_blk, nr_blks);
- 	if (ifs_is_fully_uptodate(folio, ifs))
-@@ -78,6 +102,55 @@ static void iomap_set_range_uptodate(struct folio *folio, size_t off,
- 		folio_mark_uptodate(folio);
- }
- 
-+static inline bool ifs_block_is_dirty(struct folio *folio,
-+		struct iomap_folio_state *ifs, int block)
-+{
-+	struct inode *inode = folio->mapping->host;
-+	unsigned int blks_per_folio = i_blocks_per_folio(inode, folio);
-+
-+	return test_bit(block + IOMAP_ST_DIRTY * blks_per_folio, ifs->state);
-+}
-+
-+static void ifs_clear_range_dirty(struct folio *folio,
-+		struct iomap_folio_state *ifs, size_t off, size_t len)
-+{
-+	unsigned int first_blk, nr_blks;
-+	unsigned long flags;
-+
-+	ifs_calc_range(folio, off, len, IOMAP_ST_DIRTY, &first_blk, &nr_blks);
-+	spin_lock_irqsave(&ifs->state_lock, flags);
-+	bitmap_clear(ifs->state, first_blk, nr_blks);
-+	spin_unlock_irqrestore(&ifs->state_lock, flags);
-+}
-+
-+static void iomap_clear_range_dirty(struct folio *folio, size_t off, size_t len)
-+{
-+	struct iomap_folio_state *ifs = folio->private;
-+
-+	if (ifs)
-+		ifs_clear_range_dirty(folio, ifs, off, len);
-+}
-+
-+static void ifs_set_range_dirty(struct folio *folio,
-+		struct iomap_folio_state *ifs, size_t off, size_t len)
-+{
-+	unsigned int first_blk, nr_blks;
-+	unsigned long flags;
-+
-+	ifs_calc_range(folio, off, len, IOMAP_ST_DIRTY, &first_blk, &nr_blks);
-+	spin_lock_irqsave(&ifs->state_lock, flags);
-+	bitmap_set(ifs->state, first_blk, nr_blks);
-+	spin_unlock_irqrestore(&ifs->state_lock, flags);
-+}
-+
-+static void iomap_set_range_dirty(struct folio *folio, size_t off, size_t len)
-+{
-+	struct iomap_folio_state *ifs = folio->private;
-+
-+	if (ifs)
-+		ifs_set_range_dirty(folio, ifs, off, len);
-+}
-+
- static struct iomap_folio_state *ifs_alloc(struct inode *inode,
- 		struct folio *folio, unsigned int flags)
- {
-@@ -93,14 +166,24 @@ static struct iomap_folio_state *ifs_alloc(struct inode *inode,
- 	else
- 		gfp = GFP_NOFS | __GFP_NOFAIL;
- 
--	ifs = kzalloc(struct_size(ifs, state, BITS_TO_LONGS(nr_blocks)),
--		      gfp);
--	if (ifs) {
--		spin_lock_init(&ifs->state_lock);
--		if (folio_test_uptodate(folio))
--			bitmap_fill(ifs->state, nr_blocks);
--		folio_attach_private(folio, ifs);
--	}
 +	/*
-+	 * ifs->state tracks two sets of state flags when the
-+	 * filesystem block size is smaller than the folio size.
-+	 * The first state tracks per-block uptodate and the
-+	 * second tracks per-block dirty state.
++	 * Logs that are too large are not supported at all. Reject them
++	 * outright. Logs that are too small are tolerated on v4 filesystems,
++	 * but we can only check that when mounting the log. Hence we skip
++	 * those checks here.
 +	 */
-+	ifs = kzalloc(struct_size(ifs, state,
-+		      BITS_TO_LONGS(IOMAP_ST_MAX * nr_blocks)), gfp);
-+	if (!ifs)
-+		return ifs;
++	if (sbp->sb_logblocks > XFS_MAX_LOG_BLOCKS) {
++		xfs_notice(mp,
++		"Log size 0x%x blocks too large, maximum size is 0x%llx blocks",
++			 sbp->sb_logblocks, XFS_MAX_LOG_BLOCKS);
++		return -EFSCORRUPTED;
++	}
 +
-+	spin_lock_init(&ifs->state_lock);
-+	if (folio_test_uptodate(folio))
-+		bitmap_set(ifs->state, 0, nr_blocks);
-+	if (folio_test_dirty(folio))
-+		bitmap_set(ifs->state, nr_blocks, nr_blocks);
-+	folio_attach_private(folio, ifs);
-+
- 	return ifs;
- }
- 
-@@ -143,7 +226,7 @@ static void iomap_adjust_read_range(struct inode *inode, struct folio *folio,
- 
- 		/* move forward for each leading block marked uptodate */
- 		for (i = first; i <= last; i++) {
--			if (!ifs_block_is_uptodate(ifs, i))
-+			if (!ifs_block_is_uptodate(folio, ifs, i))
- 				break;
- 			*pos += block_size;
- 			poff += block_size;
-@@ -153,7 +236,7 @@ static void iomap_adjust_read_range(struct inode *inode, struct folio *folio,
- 
- 		/* truncate len if we find any trailing uptodate block(s) */
- 		for ( ; i <= last; i++) {
--			if (ifs_block_is_uptodate(ifs, i)) {
-+			if (ifs_block_is_uptodate(folio, ifs, i)) {
- 				plen -= (last - i + 1) * block_size;
- 				last = i - 1;
- 				break;
-@@ -457,7 +540,7 @@ bool iomap_is_partially_uptodate(struct folio *folio, size_t from, size_t count)
- 	last = (from + count - 1) >> inode->i_blkbits;
- 
- 	for (i = first; i <= last; i++)
--		if (!ifs_block_is_uptodate(ifs, i))
-+		if (!ifs_block_is_uptodate(folio, ifs, i))
- 			return false;
- 	return true;
- }
-@@ -523,6 +606,17 @@ void iomap_invalidate_folio(struct folio *folio, size_t offset, size_t len)
- }
- EXPORT_SYMBOL_GPL(iomap_invalidate_folio);
- 
-+bool iomap_dirty_folio(struct address_space *mapping, struct folio *folio)
-+{
-+	struct inode *inode = mapping->host;
-+	size_t len = folio_size(folio);
-+
-+	ifs_alloc(inode, folio, 0);
-+	iomap_set_range_dirty(folio, 0, len);
-+	return filemap_dirty_folio(mapping, folio);
-+}
-+EXPORT_SYMBOL_GPL(iomap_dirty_folio);
-+
- static void
- iomap_write_failed(struct inode *inode, loff_t pos, unsigned len)
- {
-@@ -727,6 +821,7 @@ static size_t __iomap_write_end(struct inode *inode, loff_t pos, size_t len,
- 	if (unlikely(copied < len && !folio_test_uptodate(folio)))
- 		return 0;
- 	iomap_set_range_uptodate(folio, offset_in_folio(folio, pos), len);
-+	iomap_set_range_dirty(folio, offset_in_folio(folio, pos), copied);
- 	filemap_dirty_folio(inode->i_mapping, folio);
- 	return copied;
- }
-@@ -891,6 +986,43 @@ iomap_file_buffered_write(struct kiocb *iocb, struct iov_iter *i,
- }
- EXPORT_SYMBOL_GPL(iomap_file_buffered_write);
- 
-+static int iomap_write_delalloc_ifs_punch(struct inode *inode,
-+		struct folio *folio, loff_t start_byte, loff_t end_byte,
-+		iomap_punch_t punch)
-+{
-+	unsigned int first_blk, last_blk, i;
-+	loff_t last_byte;
-+	u8 blkbits = inode->i_blkbits;
-+	struct iomap_folio_state *ifs;
-+	int ret = 0;
++	if (XFS_FSB_TO_B(mp, sbp->sb_logblocks) > XFS_MAX_LOG_BYTES) {
++		xfs_warn(mp,
++		"log size 0x%llx bytes too large, maximum size is 0x%llx bytes",
++			 XFS_FSB_TO_B(mp, sbp->sb_logblocks),
++			 XFS_MAX_LOG_BYTES);
++		return -EFSCORRUPTED;
++	}
 +
 +	/*
-+	 * When we have per-block dirty tracking, there can be
-+	 * blocks within a folio which are marked uptodate
-+	 * but not dirty. In that case it is necessary to punch
-+	 * out such blocks to avoid leaking any delalloc blocks.
++	 * Do not allow filesystems with corrupted log sector or stripe units to
++	 * be mounted. We cannot safely size the iclogs or write to the log if
++	 * the log stripe unit is not valid.
 +	 */
-+	ifs = folio->private;
-+	if (!ifs)
-+		return ret;
++	if (sbp->sb_versionnum & XFS_SB_VERSION_SECTORBIT) {
++		if (sbp->sb_logsectsize != (1U << sbp->sb_logsectlog)) {
++			xfs_notice(mp,
++			"log sector size in bytes/log2 (0x%x/0x%x) must match",
++				sbp->sb_logsectsize, 1U << sbp->sb_logsectlog);
++			return -EFSCORRUPTED;
++		}
++	} else if (sbp->sb_logsectsize || sbp->sb_logsectlog) {
++		xfs_notice(mp,
++		"log sector size in bytes/log2 (0x%x/0x%x) are not zero",
++			sbp->sb_logsectsize, sbp->sb_logsectlog);
++		return -EFSCORRUPTED;
++	}
 +
-+	last_byte = min_t(loff_t, end_byte - 1,
-+			folio_pos(folio) + folio_size(folio) - 1);
-+	first_blk = offset_in_folio(folio, start_byte) >> blkbits;
-+	last_blk = offset_in_folio(folio, last_byte) >> blkbits;
-+	for (i = first_blk; i <= last_blk; i++) {
-+		if (!ifs_block_is_dirty(folio, ifs, i)) {
-+			ret = punch(inode, folio_pos(folio) + (i << blkbits),
-+				    1 << blkbits);
-+			if (ret)
-+				return ret;
++	if (sbp->sb_logsunit > 1) {
++		if (sbp->sb_logsunit % sbp->sb_blocksize) {
++			xfs_notice(mp,
++		"log stripe unit %u bytes must be a multiple of block size",
++				sbp->sb_logsunit);
++			return -EFSCORRUPTED;
++		}
++		if (sbp->sb_logsunit > XLOG_MAX_RECORD_BSIZE) {
++			xfs_notice(mp,
++		"log stripe unit %u bytes must be a multiple of block size",
++				sbp->sb_logsunit);
++			return -EFSCORRUPTED;
 +		}
 +	}
 +
-+	return ret;
-+}
 +
 +
- static int iomap_write_delalloc_punch(struct inode *inode, struct folio *folio,
- 		loff_t *punch_start_byte, loff_t start_byte, loff_t end_byte,
- 		iomap_punch_t punch)
-@@ -907,6 +1039,13 @@ static int iomap_write_delalloc_punch(struct inode *inode, struct folio *folio,
- 		if (ret)
- 			return ret;
- 	}
 +
-+	/* Punch non-dirty blocks within folio */
-+	ret = iomap_write_delalloc_ifs_punch(inode, folio, start_byte,
-+			end_byte, punch);
-+	if (ret)
-+		return ret;
-+
- 	/*
- 	 * Make sure the next punch start is correctly bound to
- 	 * the end of this data range, not the end of the folio.
-@@ -1637,7 +1776,7 @@ iomap_writepage_map(struct iomap_writepage_ctx *wpc,
- 		struct writeback_control *wbc, struct inode *inode,
- 		struct folio *folio, u64 end_pos)
+ 	/* Validate the realtime geometry; stolen from xfs_repair */
+ 	if (sbp->sb_rextsize * sbp->sb_blocksize > XFS_MAX_RTEXTSIZE ||
+ 	    sbp->sb_rextsize * sbp->sb_blocksize < XFS_MIN_RTEXTSIZE) {
+diff --git a/fs/xfs/xfs_log.c b/fs/xfs/xfs_log.c
+index fc61cc024023..397374d07f73 100644
+--- a/fs/xfs/xfs_log.c
++++ b/fs/xfs/xfs_log.c
+@@ -639,7 +639,6 @@ xfs_log_mount(
+ 	int		num_bblks)
  {
--	struct iomap_folio_state *ifs = ifs_alloc(inode, folio, 0);
-+	struct iomap_folio_state *ifs = folio->private;
- 	struct iomap_ioend *ioend, *next;
- 	unsigned len = i_blocksize(inode);
- 	unsigned nblocks = i_blocks_per_folio(inode, folio);
-@@ -1645,6 +1784,11 @@ iomap_writepage_map(struct iomap_writepage_ctx *wpc,
- 	int error = 0, count = 0, i;
- 	LIST_HEAD(submit_list);
+ 	struct xlog	*log;
+-	bool		fatal = xfs_has_crc(mp);
+ 	int		error = 0;
+ 	int		min_logfsbs;
  
-+	if (!ifs && nblocks > 1) {
-+		ifs = ifs_alloc(inode, folio, 0);
-+		iomap_set_range_dirty(folio, 0, folio_size(folio));
-+	}
-+
- 	WARN_ON_ONCE(ifs && atomic_read(&ifs->write_bytes_pending) != 0);
+@@ -663,51 +662,35 @@ xfs_log_mount(
+ 	mp->m_log = log;
  
  	/*
-@@ -1653,7 +1797,7 @@ iomap_writepage_map(struct iomap_writepage_ctx *wpc,
- 	 * invalid, grab a new one.
+-	 * Validate the given log space and drop a critical message via syslog
+-	 * if the log size is too small that would lead to some unexpected
+-	 * situations in transaction log space reservation stage.
++	 * Now that we have set up the log and it's internal geometry
++	 * parameters, we can validate the given log space and drop a critical
++	 * message via syslog if the log size is too small. A log that is too
++	 * small can lead to unexpected situations in transaction log space
++	 * reservation stage. The superblock verifier has already validated all
++	 * the other log geometry constraints, so we don't have to check those
++	 * here.
+ 	 *
+-	 * Note: we can't just reject the mount if the validation fails.  This
+-	 * would mean that people would have to downgrade their kernel just to
+-	 * remedy the situation as there is no way to grow the log (short of
+-	 * black magic surgery with xfs_db).
++	 * Note: For v4 filesystems, we can't just reject the mount if the
++	 * validation fails.  This would mean that people would have to
++	 * downgrade their kernel just to remedy the situation as there is no
++	 * way to grow the log (short of black magic surgery with xfs_db).
+ 	 *
+-	 * We can, however, reject mounts for CRC format filesystems, as the
++	 * We can, however, reject mounts for V5 format filesystems, as the
+ 	 * mkfs binary being used to make the filesystem should never create a
+ 	 * filesystem with a log that is too small.
  	 */
- 	for (i = 0; i < nblocks && pos < end_pos; i++, pos += len) {
--		if (ifs && !ifs_block_is_uptodate(ifs, i))
-+		if (ifs && !ifs_block_is_dirty(folio, ifs, i))
- 			continue;
- 
- 		error = wpc->ops->map_blocks(wpc, inode, pos);
-@@ -1697,6 +1841,7 @@ iomap_writepage_map(struct iomap_writepage_ctx *wpc,
- 		}
- 	}
- 
-+	iomap_clear_range_dirty(folio, 0, end_pos - folio_pos(folio));
- 	folio_start_writeback(folio);
- 	folio_unlock(folio);
- 
-diff --git a/fs/xfs/xfs_aops.c b/fs/xfs/xfs_aops.c
-index 451942fb38ec..2fca4b4e7fd8 100644
---- a/fs/xfs/xfs_aops.c
-+++ b/fs/xfs/xfs_aops.c
-@@ -578,7 +578,7 @@ const struct address_space_operations xfs_address_space_operations = {
- 	.read_folio		= xfs_vm_read_folio,
- 	.readahead		= xfs_vm_readahead,
- 	.writepages		= xfs_vm_writepages,
--	.dirty_folio		= filemap_dirty_folio,
-+	.dirty_folio		= iomap_dirty_folio,
- 	.release_folio		= iomap_release_folio,
- 	.invalidate_folio	= iomap_invalidate_folio,
- 	.bmap			= xfs_vm_bmap,
-diff --git a/fs/zonefs/file.c b/fs/zonefs/file.c
-index 132f01d3461f..e508c8e97372 100644
---- a/fs/zonefs/file.c
-+++ b/fs/zonefs/file.c
-@@ -175,7 +175,7 @@ const struct address_space_operations zonefs_file_aops = {
- 	.read_folio		= zonefs_read_folio,
- 	.readahead		= zonefs_readahead,
- 	.writepages		= zonefs_writepages,
--	.dirty_folio		= filemap_dirty_folio,
-+	.dirty_folio		= iomap_dirty_folio,
- 	.release_folio		= iomap_release_folio,
- 	.invalidate_folio	= iomap_invalidate_folio,
- 	.migrate_folio		= filemap_migrate_folio,
-diff --git a/include/linux/iomap.h b/include/linux/iomap.h
-index e2b836c2e119..eb9335c46bf3 100644
---- a/include/linux/iomap.h
-+++ b/include/linux/iomap.h
-@@ -264,6 +264,7 @@ bool iomap_is_partially_uptodate(struct folio *, size_t from, size_t count);
- struct folio *iomap_get_folio(struct iomap_iter *iter, loff_t pos);
- bool iomap_release_folio(struct folio *folio, gfp_t gfp_flags);
- void iomap_invalidate_folio(struct folio *folio, size_t offset, size_t len);
-+bool iomap_dirty_folio(struct address_space *mapping, struct folio *folio);
- int iomap_file_unshare(struct inode *inode, loff_t pos, loff_t len,
- 		const struct iomap_ops *ops);
- int iomap_zero_range(struct inode *inode, loff_t pos, loff_t len,
+ 	min_logfsbs = xfs_log_calc_minimum_size(mp);
+-
+ 	if (mp->m_sb.sb_logblocks < min_logfsbs) {
+ 		xfs_warn(mp,
+ 		"Log size %d blocks too small, minimum size is %d blocks",
+ 			 mp->m_sb.sb_logblocks, min_logfsbs);
+ 		error = -EINVAL;
+-	} else if (mp->m_sb.sb_logblocks > XFS_MAX_LOG_BLOCKS) {
+-		xfs_warn(mp,
+-		"Log size %d blocks too large, maximum size is %lld blocks",
+-			 mp->m_sb.sb_logblocks, XFS_MAX_LOG_BLOCKS);
+-		error = -EINVAL;
+-	} else if (XFS_FSB_TO_B(mp, mp->m_sb.sb_logblocks) > XFS_MAX_LOG_BYTES) {
+-		xfs_warn(mp,
+-		"log size %lld bytes too large, maximum size is %lld bytes",
+-			 XFS_FSB_TO_B(mp, mp->m_sb.sb_logblocks),
+-			 XFS_MAX_LOG_BYTES);
+-		error = -EINVAL;
+-	} else if (mp->m_sb.sb_logsunit > 1 &&
+-		   mp->m_sb.sb_logsunit % mp->m_sb.sb_blocksize) {
+-		xfs_warn(mp,
+-		"log stripe unit %u bytes must be a multiple of block size",
+-			 mp->m_sb.sb_logsunit);
+-		error = -EINVAL;
+-		fatal = true;
+-	}
+-	if (error) {
++
+ 		/*
+ 		 * Log check errors are always fatal on v5; or whenever bad
+ 		 * metadata leads to a crash.
+ 		 */
+-		if (fatal) {
++		if (xfs_has_crc(mp)) {
+ 			xfs_crit(mp, "AAIEEE! Log failed size checks. Abort!");
+ 			ASSERT(0);
+ 			goto out_free_log;
 -- 
 2.40.1
 
