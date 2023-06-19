@@ -2,33 +2,55 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CB6F2EB64D9
-	for <linux-xfs@archiver.kernel.org>; Mon, 19 Jun 2023 14:26:27 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id EB011EB64DB
+	for <linux-xfs@archiver.kernel.org>; Mon, 19 Jun 2023 16:26:02 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229700AbjFSO00 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 19 Jun 2023 10:26:26 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34824 "EHLO
+        id S232284AbjFSQ0C (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 19 Jun 2023 12:26:02 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39160 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229563AbjFSO00 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 19 Jun 2023 10:26:26 -0400
-Received: from casper.infradead.org (casper.infradead.org [IPv6:2001:8b0:10b:1236::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 12CD2E7;
-        Mon, 19 Jun 2023 07:26:23 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=infradead.org; s=casper.20170209; h=In-Reply-To:Content-Type:MIME-Version:
-        References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
-        Content-Transfer-Encoding:Content-ID:Content-Description;
-        bh=PGke1o7SJJYJg7mh7bo7HBv4qqYeX/5Bm/JlwCFjPtc=; b=f5wgmZgWdZ/eXaVG6JqXIh+iry
-        LGxYzMaV2TiTNGyo8A9eJrxxXCIh/7kYmUyDahGjW+fGPVpLe7SoDdJM19x0ECUlZ9N57ybIn789N
-        XJ3qAzCNaOMLl8HXcCr2FCP9q6mFTqoZ+0ekv1OmE/6VGnxiDvJZA3QBaeocqPk3J1evn/MdLoTII
-        d4BVBZolLcSqclZtMvmIsp6vUAxuooYQukmo26PjLhgaNnWiABAhaFh39nLPnT/lrzxMBhEvW1R5I
-        Vs/7J2dpP2x1vDPcxb8pT3ByONlQrUnQ/TpXS+Wn5v49MHs2imx4Obt10LaKWjCPmEBBzSAugxnh6
-        xSxq0fug==;
-Received: from willy by casper.infradead.org with local (Exim 4.94.2 #2 (Red Hat Linux))
-        id 1qBFpj-00Bx1S-DF; Mon, 19 Jun 2023 14:26:19 +0000
-Date:   Mon, 19 Jun 2023 15:26:19 +0100
-From:   Matthew Wilcox <willy@infradead.org>
-To:     "Ritesh Harjani (IBM)" <ritesh.list@gmail.com>
+        with ESMTP id S230474AbjFSQ0B (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 19 Jun 2023 12:26:01 -0400
+Received: from mail-pg1-x52b.google.com (mail-pg1-x52b.google.com [IPv6:2607:f8b0:4864:20::52b])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9BD8AE5C;
+        Mon, 19 Jun 2023 09:26:00 -0700 (PDT)
+Received: by mail-pg1-x52b.google.com with SMTP id 41be03b00d2f7-53fa455cd94so1678223a12.2;
+        Mon, 19 Jun 2023 09:26:00 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20221208; t=1687191960; x=1689783960;
+        h=in-reply-to:subject:cc:to:from:message-id:date:from:to:cc:subject
+         :date:message-id:reply-to;
+        bh=APXlTDLutIxBIyPIY9h/jzfqHyPKwoOlep4ipNwsgmw=;
+        b=jiPtjBf0VMktGHgI9mv/6WT6MJYHu/w1cpOeZ3t0Xnlq149COEPEANz3KoAqdymb+m
+         5PFSQDifKkcf5mZRCC8iypimI4wS66Lq2SddjSl9Vz9V1Z2A+J6DJ4WDJP/PhkCUIdR3
+         msNT9DdyyjZquFyEx+QZ6F382gWGpHgG44oXO94VSXF/nI5mhsSRYBHzmNUBXfXu0UZZ
+         b1sn/zE8Oiv8IbKmyT6v1sCC62uhlXijRZSTwLZ2qihKiJTabZckHfg8e59RsJ/Z7Z4y
+         UnGAPwgE+wKjHe7+M6ckAFtDNoNR3L1boAC9SB4YkiHu2dKZ5Ll6BdncxJ+VY18atwXe
+         ZbXg==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20221208; t=1687191960; x=1689783960;
+        h=in-reply-to:subject:cc:to:from:message-id:date:x-gm-message-state
+         :from:to:cc:subject:date:message-id:reply-to;
+        bh=APXlTDLutIxBIyPIY9h/jzfqHyPKwoOlep4ipNwsgmw=;
+        b=Yb52KSJEx8vNjSm15BZzgNdhgzIWKqu5ScF2iAPeeo4RzKiuIHk8LBL7Fujt94wpwr
+         tcvSBB8SolgF55JYG8v6CuLSYwwm9gDZ2fAyQqGVpdsMmVhzksi1KBy4EBqQ9iwS+MMK
+         XesxE33Xh8YcTtp83UIf/dqQWsWQ0VXlUOuwsdTyhcxDsuMFPEnJNqaxmRrdbTO0dExe
+         r6yZNR5qghOr8/cFhOGCQk8YYRgDT8ftGTFgHrViwl9Q7tRrq6DhkhefRP2sJS/zwq4p
+         ZEmtaErVIC2LJ5jqnfUC3Fxr5cdO7VH87MHkIXqJMZqpBVRntq6V0Ktp46EcbFoMrmYB
+         Kw9g==
+X-Gm-Message-State: AC+VfDyW5ixxhsArPk13hL7bZ5RFgTc8EXPPlxwu3BpiCvI3KzzCF9ml
+        ma3V633o+5UmtqoV4s9u029lXT6pQ3M=
+X-Google-Smtp-Source: ACHHUZ7+yHJ8xlT6qmC7u/ihoY6Iu9Gnxp5STpEKT7X3vOqdYYvyA+Een2U80LkCsOXMCQkiwjpz8w==
+X-Received: by 2002:a17:90a:6c63:b0:250:acb7:21da with SMTP id x90-20020a17090a6c6300b00250acb721damr1184092pjj.38.1687191959449;
+        Mon, 19 Jun 2023 09:25:59 -0700 (PDT)
+Received: from dw-tp ([49.207.220.159])
+        by smtp.gmail.com with ESMTPSA id g14-20020a17090a290e00b0025e9d16f95bsm62631pjd.28.2023.06.19.09.25.55
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Mon, 19 Jun 2023 09:25:58 -0700 (PDT)
+Date:   Mon, 19 Jun 2023 21:55:53 +0530
+Message-Id: <87o7lbmnam.fsf@doe.com>
+From:   Ritesh Harjani (IBM) <ritesh.list@gmail.com>
+To:     Matthew Wilcox <willy@infradead.org>
 Cc:     linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
         "Darrick J . Wong" <djwong@kernel.org>,
         Andreas Gruenbacher <agruenba@redhat.com>,
@@ -37,54 +59,85 @@ Cc:     linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
         Ojaswin Mujoo <ojaswin@linux.ibm.com>,
         Disha Goel <disgoel@linux.ibm.com>,
         Aravinda Herle <araherle@in.ibm.com>
-Subject: Re: [PATCHv10 8/8] iomap: Add per-block dirty state tracking to
- improve performance
-Message-ID: <ZJBli4JznbJkyF0U@casper.infradead.org>
-References: <cover.1687140389.git.ritesh.list@gmail.com>
- <6db62a08dda3a348303e2262454837149c2afe2a.1687140389.git.ritesh.list@gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <6db62a08dda3a348303e2262454837149c2afe2a.1687140389.git.ritesh.list@gmail.com>
+Subject: Re: [PATCHv10 8/8] iomap: Add per-block dirty state tracking to improve performance
+In-Reply-To: <ZJBli4JznbJkyF0U@casper.infradead.org>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Mon, Jun 19, 2023 at 07:58:51AM +0530, Ritesh Harjani (IBM) wrote:
-> +static void ifs_calc_range(struct folio *folio, size_t off, size_t len,
-> +		enum iomap_block_state state, unsigned int *first_blkp,
-> +		unsigned int *nr_blksp)
-> +{
-> +	struct inode *inode = folio->mapping->host;
-> +	unsigned int blks_per_folio = i_blocks_per_folio(inode, folio);
-> +	unsigned int first = off >> inode->i_blkbits;
-> +	unsigned int last = (off + len - 1) >> inode->i_blkbits;
-> +
-> +	*first_blkp = first + (state * blks_per_folio);
-> +	*nr_blksp = last - first + 1;
-> +}
+Matthew Wilcox <willy@infradead.org> writes:
 
-As I said, this is not 'first_blkp'.  It's first_bitp.  I think this
-misunderstanding is related to Andreas' complaint, but it's not quite
-the same.
+> On Mon, Jun 19, 2023 at 07:58:51AM +0530, Ritesh Harjani (IBM) wrote:
+>> +static void ifs_calc_range(struct folio *folio, size_t off, size_t len,
+>> +		enum iomap_block_state state, unsigned int *first_blkp,
+>> +		unsigned int *nr_blksp)
+>> +{
+>> +	struct inode *inode = folio->mapping->host;
+>> +	unsigned int blks_per_folio = i_blocks_per_folio(inode, folio);
+>> +	unsigned int first = off >> inode->i_blkbits;
+>> +	unsigned int last = (off + len - 1) >> inode->i_blkbits;
+>> +
+>> +	*first_blkp = first + (state * blks_per_folio);
+>> +	*nr_blksp = last - first + 1;
+>> +}
+>
+> As I said, this is not 'first_blkp'.  It's first_bitp.  I think this
+> misunderstanding is related to Andreas' complaint, but it's not quite
+> the same.
+>
 
->  static inline bool ifs_is_fully_uptodate(struct folio *folio,
->  					       struct iomap_folio_state *ifs)
->  {
->  	struct inode *inode = folio->mapping->host;
-> +	unsigned int blks_per_folio = i_blocks_per_folio(inode, folio);
-> +	unsigned int nr_blks = (IOMAP_ST_UPTODATE + 1) * blks_per_folio;
->  
-> -	return bitmap_full(ifs->state, i_blocks_per_folio(inode, folio));
-> +	return bitmap_full(ifs->state, nr_blks);
+We represent each FS block as a bit in the bitmap. So first_blkp or
+first_bitp or first_blkbitp essentially means the same. 
+I went with first_blk, first_blkp in the first place based on your
+suggestion itself [1].
 
-I think we have a gap in our bitmap APIs.  We don't have a
-'bitmap_range_full(src, pos, nbits)'.  We could use find_next_zero_bit(),
-but that's going to do more work than necessary.
+[1]: https://lore.kernel.org/linux-xfs/Y%2FvxlVUJ31PZYaRa@casper.infradead.org/
 
-Given this lack, perhaps it's time to say that you're making all of
-this too hard by using an enum, and pretending that we can switch the
-positions of 'uptodate' and 'dirty' in the bitmap just by changing
-the enum.  Define the uptodate bits to be the first ones in the bitmap,
-document it (and why), and leave it at that.
+>>  static inline bool ifs_is_fully_uptodate(struct folio *folio,
+>>  					       struct iomap_folio_state *ifs)
+>>  {
+>>  	struct inode *inode = folio->mapping->host;
+>> +	unsigned int blks_per_folio = i_blocks_per_folio(inode, folio);
+>> +	unsigned int nr_blks = (IOMAP_ST_UPTODATE + 1) * blks_per_folio;
+>>  
+>> -	return bitmap_full(ifs->state, i_blocks_per_folio(inode, folio));
+>> +	return bitmap_full(ifs->state, nr_blks);
+>
+> I think we have a gap in our bitmap APIs.  We don't have a
+> 'bitmap_range_full(src, pos, nbits)'.  We could use find_next_zero_bit(),
+> but that's going to do more work than necessary.
+>
+> Given this lack, perhaps it's time to say that you're making all of
+> this too hard by using an enum, and pretending that we can switch the
+> positions of 'uptodate' and 'dirty' in the bitmap just by changing
+> the enum.
 
+Actually I never wanted to use the the enum this way. That's why I was
+not fond of the idea behind using enum in all the bitmap state
+manipulation APIs (test/set/).
+
+It was only intended to be passed as a state argument to ifs_calc_range()
+function to keep all the first_blkp and nr_blksp calculation at one
+place. And just use it's IOMAP_ST_MAX value while allocating state bitmap.
+It was never intended to be used like this.
+
+We can even now go back to this original idea and keep the use of the
+enum limited to what I just mentioned above i.e. for ifs_calc_range().
+
+And maybe just use this in ifs_alloc()?
+BUILD_BUG_ON(IOMAP_ST_UPTODATE == 0);
+BUILD_BUG_ON(IOMAP_ST_DIRTY == 1);
+
+> Define the uptodate bits to be the first ones in the bitmap,
+> document it (and why), and leave it at that.
+
+Do you think we can go with above suggestion, or do you still think we
+need to drop it?
+
+In case if we drop it, then should we open code the calculations for
+first_blk, last_blk? These calculations are done in exact same fashion
+at 3 places ifs_set_range_uptodate(), ifs_clear_range_dirty() and
+ifs_set_range_dirty().
+Thoughts?
+
+-ritesh
