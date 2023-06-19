@@ -2,53 +2,53 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2140DEB64DB
-	for <linux-xfs@archiver.kernel.org>; Mon, 19 Jun 2023 02:29:27 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C7CA7EB64D7
+	for <linux-xfs@archiver.kernel.org>; Mon, 19 Jun 2023 02:29:29 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229752AbjFSC3Z (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Sun, 18 Jun 2023 22:29:25 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51326 "EHLO
+        id S229750AbjFSC32 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Sun, 18 Jun 2023 22:29:28 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51350 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229750AbjFSC3U (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sun, 18 Jun 2023 22:29:20 -0400
-Received: from mail-pg1-x52b.google.com (mail-pg1-x52b.google.com [IPv6:2607:f8b0:4864:20::52b])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7A8A4E49;
-        Sun, 18 Jun 2023 19:29:19 -0700 (PDT)
-Received: by mail-pg1-x52b.google.com with SMTP id 41be03b00d2f7-54fba092ef5so2457111a12.2;
-        Sun, 18 Jun 2023 19:29:19 -0700 (PDT)
+        with ESMTP id S229769AbjFSC31 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sun, 18 Jun 2023 22:29:27 -0400
+Received: from mail-pf1-x431.google.com (mail-pf1-x431.google.com [IPv6:2607:f8b0:4864:20::431])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7FD3AE49;
+        Sun, 18 Jun 2023 19:29:26 -0700 (PDT)
+Received: by mail-pf1-x431.google.com with SMTP id d2e1a72fcca58-666683eb028so1464079b3a.0;
+        Sun, 18 Jun 2023 19:29:26 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20221208; t=1687141758; x=1689733758;
+        d=gmail.com; s=20221208; t=1687141765; x=1689733765;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:from:to:cc:subject:date
          :message-id:reply-to;
-        bh=WWsRu9lf/AHg76xNxq1yUxMqefCmChrWsrWNBoCROHU=;
-        b=AlpPLfyiQA8L3Db4lUewZxgPeK1a9flv/KxPiDptyCFXgM2rN7ecTf8CDdlP+IGCk5
-         k6iY8Z+3F+/pY9iwBdPlOMmYYyI6TFkT6GPe3dQv1Wpq0I+Q1HEsUR2uP6lMF+PtqJYz
-         kK8Zn1IopgbiXdinY2a38N/H9JJo5hPExIbP1LVdzja1k2g8MTu/Hpw+gbGF7/x+Pldu
-         v4e8z+HaxVrwzG8HHJYjBYwnnH6LzU75ooSFLDVNYkwgQeV/vSbNe2iHWA9ZHoB+1mgQ
-         Bu8M1Dut9z4P098ZIRgREgrSi/hzD5+l9OSH+rV9hcGBbz/5gV5WMVGMoDj72fEdVy1p
-         49qQ==
+        bh=avYaHpRrNXBTBhOS3iew364J6rgNtP8dJzHXxbv0G/s=;
+        b=WirzkyTrrRuOs/txJ6VhSCPkRu1BBkPQS0WjnOYST30Bc8p21h+G/10hWQ0SxZtena
+         edLRLdEWROAW02bYQmk/oLwMiALkQcSegSzPIxtPQwucdupHSL7Cd9ZXWfU8sP+Vc9wQ
+         2w1oP3OfE7YlEFm3VXNV0UPz+NUwMFVgKEOd2MH+zukx2O8ociScjKHAiSt0q6l6rWYC
+         2BAEpFHHJjGYp2W2j//dkI+oBG5vqSfDBWwoBTb/kb/KOdVXw9RtomEAFKo8YbaxY/CT
+         wWYZXvVjEcFHz/wlLGSuICaxr4XuFBNTSH3swFao8Ppy7kiVWh8Yze6hMxjo9DA2+DV4
+         Jpkg==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20221208; t=1687141758; x=1689733758;
+        d=1e100.net; s=20221208; t=1687141765; x=1689733765;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:x-gm-message-state:from:to:cc
          :subject:date:message-id:reply-to;
-        bh=WWsRu9lf/AHg76xNxq1yUxMqefCmChrWsrWNBoCROHU=;
-        b=l9li8roXhqe0FHCSajrKYBEg2K/Sf3Wrcg/CYEbU38LdqgztLG/cp7dE3dj4q7XxVW
-         QnsavjRumhxTiMqAzo1L3YHSUN5UCQGqJy971thIA7ChzXEg6nhRcYk4bJXeWjqRA3pS
-         uOCgvF66NBRZW6cvNFDBWqlokYe9ltmyoK++k/6SQH9q6Cz85c6GEdAGRIeVV2EEOY/5
-         sfN6+xV75UcdR8i8ROhr6yy3WakQtzX5wP/KnaBbJe5YhYApje+sSG+iNqav+OWeQ9pS
-         RF3g73xPTloYWwnWzHd77O+BMvTy8k9LgQt/eAS7xKD4JhsBp2+lgO5qRP2Md83Jh3Ms
-         HH9g==
-X-Gm-Message-State: AC+VfDyer2zEvy5fly/mbQHdSHyIHpzg60t4IzBYk8Dusd6kNP8KBDrq
-        sO2nzHrCJuOTrKX9uYsdqhQuJqKQYTQ=
-X-Google-Smtp-Source: ACHHUZ4OwvcEHhaEgiYsZQE9FIG20K1YASUUck59wcJxjycWFq4kRnwKp7CfbMxIhdc4NOJXQClamA==
-X-Received: by 2002:a05:6a20:734f:b0:10c:3cf3:ef7e with SMTP id v15-20020a056a20734f00b0010c3cf3ef7emr12209630pzc.42.1687141758244;
-        Sun, 18 Jun 2023 19:29:18 -0700 (PDT)
+        bh=avYaHpRrNXBTBhOS3iew364J6rgNtP8dJzHXxbv0G/s=;
+        b=Jl7B/AwOfeLzSd8UcbjC8Bg1sQl+uaXaKtt5cWhqoPdRFJuHOMqv6ZlLSl0dCgGFNP
+         kvQ7J5MRXCZPFSQnvTdvm9HEJGClyyL8s+OZ9DHpI3HHOvA1EZjWDt8jc8uziLnNTL3d
+         CJ8kEy/YS7PWVK2ECFqp5D0SGHz1kG8Lv+2Nr72Jsy5T/sCX5kkL0v7HRniut3z+g5eq
+         RSrBz2AGR2QTlaFLUspzfkwwkyCuSFpBhGPRQqE3gSP/pzqFXjUiYHG+w9dSrphB87uS
+         V20Ysqqoz7kH7i6kPkDlun7o0P3GZLhEj3It2YpY5UFhA/YwXXmLQZAykhy7HHVvoDCC
+         xXDA==
+X-Gm-Message-State: AC+VfDzr/XfbYPkQNwtLvBGJ1mZo9HwFUdKqxEyqXorTyb1VcH3Nphd+
+        r1Ax0E+WUZnuoTCpWBM4nHb46OtSsw0=
+X-Google-Smtp-Source: ACHHUZ5GyfNaCMcyjkbFcM/T9XDWgBWjEdBVvPZj2gDiQkPZHAJPGTEfm0G2LYGzyJBkdwf1U0k5Kg==
+X-Received: by 2002:a05:6a00:2342:b0:668:71a1:2e68 with SMTP id j2-20020a056a00234200b0066871a12e68mr1451293pfj.11.1687141765332;
+        Sun, 18 Jun 2023 19:29:25 -0700 (PDT)
 Received: from dw-tp.ihost.com ([49.207.220.159])
-        by smtp.gmail.com with ESMTPSA id g18-20020aa78752000000b0064ff1f1df65sm399531pfo.61.2023.06.18.19.29.15
+        by smtp.gmail.com with ESMTPSA id g18-20020aa78752000000b0064ff1f1df65sm399531pfo.61.2023.06.18.19.29.22
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Sun, 18 Jun 2023 19:29:17 -0700 (PDT)
+        Sun, 18 Jun 2023 19:29:24 -0700 (PDT)
 From:   "Ritesh Harjani (IBM)" <ritesh.list@gmail.com>
 To:     linux-xfs@vger.kernel.org
 Cc:     linux-fsdevel@vger.kernel.org,
@@ -59,10 +59,11 @@ Cc:     linux-fsdevel@vger.kernel.org,
         Brian Foster <bfoster@redhat.com>,
         Ojaswin Mujoo <ojaswin@linux.ibm.com>,
         Disha Goel <disgoel@linux.ibm.com>,
-        "Ritesh Harjani (IBM)" <ritesh.list@gmail.com>
-Subject: [PATCHv10 5/8] iomap: Use iomap_punch_t typedef
-Date:   Mon, 19 Jun 2023 07:58:48 +0530
-Message-Id: <f639e1e646a35806b00fc2eff7e88ffa5075c1fd.1687140389.git.ritesh.list@gmail.com>
+        "Ritesh Harjani (IBM)" <ritesh.list@gmail.com>,
+        Christoph Hellwig <hch@lst.de>
+Subject: [PATCHv10 7/8] iomap: Allocate ifs in ->write_begin() early
+Date:   Mon, 19 Jun 2023 07:58:50 +0530
+Message-Id: <cf54798bfcc720c70b489ff859e9a1672f57c064.1687140389.git.ritesh.list@gmail.com>
 X-Mailer: git-send-email 2.40.1
 In-Reply-To: <cover.1687140389.git.ritesh.list@gmail.com>
 References: <cover.1687140389.git.ritesh.list@gmail.com>
@@ -72,58 +73,56 @@ Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-It makes it much easier if we have iomap_punch_t typedef for "punch"
-function pointer in all delalloc related punch, scan and release
-functions. It will be useful in later patches when we will factor out
-iomap_write_delalloc_punch() function.
+We dont need to allocate an ifs in ->write_begin() for writes where the
+position and length completely overlap with the given folio.
+Therefore, such cases are skipped.
 
-Suggested-by: Matthew Wilcox <willy@infradead.org>
+Currently when the folio is uptodate, we only allocate ifs at writeback
+time (in iomap_writepage_map()). This is ok until now, but when we are
+going to add support for per-block dirty state bitmap in ifs, this
+could cause some performance degradation. The reason is that if we don't
+allocate ifs during ->write_begin(), then we will never mark the
+necessary dirty bits in ->write_end() call. And we will have to mark all
+the bits as dirty at the writeback time, that could cause the same write
+amplification and performance problems as it is now.
+
+Reviewed-by: Darrick J. Wong <djwong@kernel.org>
+Reviewed-by: Christoph Hellwig <hch@lst.de>
 Signed-off-by: Ritesh Harjani (IBM) <ritesh.list@gmail.com>
 ---
- fs/iomap/buffered-io.c | 9 ++++-----
- 1 file changed, 4 insertions(+), 5 deletions(-)
+ fs/iomap/buffered-io.c | 13 +++++++++++--
+ 1 file changed, 11 insertions(+), 2 deletions(-)
 
 diff --git a/fs/iomap/buffered-io.c b/fs/iomap/buffered-io.c
-index 8206f3628586..e03ffdc259c4 100644
+index 2d79061022d8..391d918ddd22 100644
 --- a/fs/iomap/buffered-io.c
 +++ b/fs/iomap/buffered-io.c
-@@ -23,6 +23,7 @@
+@@ -561,14 +561,23 @@ static int __iomap_write_begin(const struct iomap_iter *iter, loff_t pos,
+ 	size_t from = offset_in_folio(folio, pos), to = from + len;
+ 	size_t poff, plen;
  
- #define IOEND_BATCH_SIZE	4096
+-	if (folio_test_uptodate(folio))
++	/*
++	 * If the write completely overlaps the current folio, then
++	 * entire folio will be dirtied so there is no need for
++	 * per-block state tracking structures to be attached to this folio.
++	 */
++	if (pos <= folio_pos(folio) &&
++	    pos + len >= folio_pos(folio) + folio_size(folio))
+ 		return 0;
+-	folio_clear_error(folio);
  
-+typedef int (*iomap_punch_t)(struct inode *inode, loff_t offset, loff_t length);
- /*
-  * Structure allocated for each folio to track per-block uptodate state
-  * and I/O completions.
-@@ -900,7 +901,7 @@ EXPORT_SYMBOL_GPL(iomap_file_buffered_write);
-  */
- static int iomap_write_delalloc_scan(struct inode *inode,
- 		loff_t *punch_start_byte, loff_t start_byte, loff_t end_byte,
--		int (*punch)(struct inode *inode, loff_t offset, loff_t length))
-+		iomap_punch_t punch)
- {
- 	while (start_byte < end_byte) {
- 		struct folio	*folio;
-@@ -978,8 +979,7 @@ static int iomap_write_delalloc_scan(struct inode *inode,
-  * the code to subtle off-by-one bugs....
-  */
- static int iomap_write_delalloc_release(struct inode *inode,
--		loff_t start_byte, loff_t end_byte,
--		int (*punch)(struct inode *inode, loff_t pos, loff_t length))
-+		loff_t start_byte, loff_t end_byte, iomap_punch_t punch)
- {
- 	loff_t punch_start_byte = start_byte;
- 	loff_t scan_end_byte = min(i_size_read(inode), end_byte);
-@@ -1072,8 +1072,7 @@ static int iomap_write_delalloc_release(struct inode *inode,
-  */
- int iomap_file_buffered_write_punch_delalloc(struct inode *inode,
- 		struct iomap *iomap, loff_t pos, loff_t length,
--		ssize_t written,
--		int (*punch)(struct inode *inode, loff_t pos, loff_t length))
-+		ssize_t written, iomap_punch_t punch)
- {
- 	loff_t			start_byte;
- 	loff_t			end_byte;
+ 	ifs = ifs_alloc(iter->inode, folio, iter->flags);
+ 	if ((iter->flags & IOMAP_NOWAIT) && !ifs && nr_blocks > 1)
+ 		return -EAGAIN;
+ 
++	if (folio_test_uptodate(folio))
++		return 0;
++	folio_clear_error(folio);
++
+ 	do {
+ 		iomap_adjust_read_range(iter->inode, folio, &block_start,
+ 				block_end - block_start, &poff, &plen);
 -- 
 2.40.1
 
