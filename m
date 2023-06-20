@@ -2,53 +2,82 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id EE940EB64D8
-	for <linux-xfs@archiver.kernel.org>; Tue, 20 Jun 2023 15:13:12 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B1AF6EB64D7
+	for <linux-xfs@archiver.kernel.org>; Tue, 20 Jun 2023 15:13:22 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231954AbjFTPNM (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 20 Jun 2023 11:13:12 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43882 "EHLO
+        id S233605AbjFTPNV (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 20 Jun 2023 11:13:21 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43916 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233603AbjFTPNL (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 20 Jun 2023 11:13:11 -0400
-X-Greylist: delayed 153 seconds by postgrey-1.37 at lindbergh.monkeyblade.net; Tue, 20 Jun 2023 08:13:07 PDT
-Received: from mail.flyingcircus.io (mail.flyingcircus.io [IPv6:2a02:238:f030:102::1064])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id DA80818C
-        for <linux-xfs@vger.kernel.org>; Tue, 20 Jun 2023 08:13:07 -0700 (PDT)
-Content-Type: text/plain;
-        charset=utf-8
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=flyingcircus.io;
-        s=mail; t=1687273986;
-        bh=PiT61N5B+AL8woNDy8QDyOTBbor5elDu0rP18Q26xrw=;
-        h=Subject:From:In-Reply-To:Date:Cc:References:To;
-        b=GF8DmDqIdJNZrGEVRmzChP2Gucg1usGiS0qB4PACXZ1iiti0ZCGUsXWwqvezFqvBz
-         6JXPxcMBcnnoKCEnFpPiKznyYKAvVaELimltGS0PyglPWTOh0tw2bmbDh68gG1h2Q2
-         0GvAXMCqwVM3J+rV1bOC5p+TW5xoldCuVfqxdTlc=
-Mime-Version: 1.0 (Mac OS X Mail 16.0 \(3731.600.7\))
-Subject: Re: [Bug 217572] New: Initial blocked tasks causing deterioration
- over hours until (nearly) complete system lockup and data loss with
- PostgreSQL 13
-From:   Christian Theune <ct@flyingcircus.io>
-In-Reply-To: <1F90643C-70B4-4734-96C7-AD6F7378FCD7@flyingcircus.io>
-Date:   Tue, 20 Jun 2023 17:11:43 +0200
-Cc:     linux-xfs@vger.kernel.org
-Content-Transfer-Encoding: quoted-printable
-Message-Id: <C17DB818-39B3-40F4-8EE4-396BE1CF5D98@flyingcircus.io>
+        with ESMTP id S233603AbjFTPNV (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 20 Jun 2023 11:13:21 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 91919C0
+        for <linux-xfs@vger.kernel.org>; Tue, 20 Jun 2023 08:13:18 -0700 (PDT)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange X25519 server-signature RSA-PSS (2048 bits))
+        (No client certificate requested)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 091A0612D0
+        for <linux-xfs@vger.kernel.org>; Tue, 20 Jun 2023 15:13:18 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPS id 65E83C433C9
+        for <linux-xfs@vger.kernel.org>; Tue, 20 Jun 2023 15:13:17 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1687273997;
+        bh=KzwMUc3oZHWW+ue1OvWzaAtQHKYNF+wjdLguquJcxi4=;
+        h=From:To:Subject:Date:In-Reply-To:References:From;
+        b=Yju/03KuJksbkpz4bCyxaUOyDeArdNxF+jaXPqbbj5it55RL1sjNgUujbvwW++7AB
+         0hTjIpdVdzEpZfDOQNa6eiK7Mx58GuqyoKm2omLpTAThX59IzJT6Eovl2485S3NKXp
+         zH6WYSoCAhXdY4wpgzcjVatiMc/KR2+nk4CIyxr+S1vbGMMiEORojdU1SUH45lC1Zc
+         l7yzAcs7nUDZFfHkCNtGUndDkrGduCP8UdQMPLM15mtekTt1BG2xXpkLnfWd5+o7TJ
+         KDmmkWu78SlBevuzR6LGYIEJ8ZkyvFnPHEdxnUNopUPv4n8heP/bGHsO2lWCtAyPGG
+         o/6wBelZpDxiA==
+Received: by aws-us-west-2-korg-bugzilla-1.web.codeaurora.org (Postfix, from userid 48)
+        id 56793C53BCD; Tue, 20 Jun 2023 15:13:17 +0000 (UTC)
+From:   bugzilla-daemon@kernel.org
+To:     linux-xfs@vger.kernel.org
+Subject: [Bug 217572] Initial blocked tasks causing deterioration over hours
+ until (nearly) complete system lockup and data loss with PostgreSQL 13
+Date:   Tue, 20 Jun 2023 15:13:16 +0000
+X-Bugzilla-Reason: None
+X-Bugzilla-Type: changed
+X-Bugzilla-Watch-Reason: AssignedTo filesystem_xfs@kernel-bugs.kernel.org
+X-Bugzilla-Product: File System
+X-Bugzilla-Component: XFS
+X-Bugzilla-Version: 2.5
+X-Bugzilla-Keywords: 
+X-Bugzilla-Severity: high
+X-Bugzilla-Who: ct@flyingcircus.io
+X-Bugzilla-Status: NEW
+X-Bugzilla-Resolution: 
+X-Bugzilla-Priority: P3
+X-Bugzilla-Assigned-To: filesystem_xfs@kernel-bugs.kernel.org
+X-Bugzilla-Flags: 
+X-Bugzilla-Changed-Fields: 
+Message-ID: <bug-217572-201763-3cS9mjxovW@https.bugzilla.kernel.org/>
+In-Reply-To: <bug-217572-201763@https.bugzilla.kernel.org/>
 References: <bug-217572-201763@https.bugzilla.kernel.org/>
- <1F90643C-70B4-4734-96C7-AD6F7378FCD7@flyingcircus.io>
-To:     bugzilla-daemon@kernel.org
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
+X-Bugzilla-URL: https://bugzilla.kernel.org/
+Auto-Submitted: auto-generated
+MIME-Version: 1.0
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Argh. Sorry. My brain is a bit fried today and I - for some reason - =
-thought I did the bug reports last week and not yesterday. I didn=E2=80=99=
-t want to appear pushy, so, sorry for the early follow-up.
+https://bugzilla.kernel.org/show_bug.cgi?id=3D217572
+
+--- Comment #2 from Christian Theune (ct@flyingcircus.io) ---
+Argh. Sorry. My brain is a bit fried today and I - for some reason - though=
+t I
+did the bug reports last week and not yesterday. I didn=E2=80=99t want to a=
+ppear pushy,
+so, sorry for the early follow-up.
 
 *ducks*
 
-> On 20. Jun 2023, at 17:10, Christian Theune <ct@flyingcircus.io> =
-wrote:
+> On 20. Jun 2023, at 17:10, Christian Theune <ct@flyingcircus.io> wrote:
 >=20
 > Hi,
 >=20
@@ -59,8 +88,7 @@ wrote:
 >> https://bugzilla.kernel.org/show_bug.cgi?id=3D217572
 >>=20
 >>           Bug ID: 217572
->>          Summary: Initial blocked tasks causing deterioration over =
-hours
+>>          Summary: Initial blocked tasks causing deterioration over hours
 >>                   until (nearly) complete system lockup and data loss
 >>                   with PostgreSQL 13
 >>          Product: File System
@@ -75,27 +103,26 @@ hours
 >>         Reporter: ct@flyingcircus.io
 >>       Regression: No
 >>=20
->> Last Friday we experienced the following hung task messages with =
-PostgreSQL
->> while performing our nightly backup using pg_dump. Normally this =
-takes at most
->> a few minutes with IO being stressed. This time it caused high SYS =
-CPU time,
->> went on for almost 20 minutes and caused the PostgreSQL dump to fail =
-with
+>> Last Friday we experienced the following hung task messages with Postgre=
+SQL
+>> while performing our nightly backup using pg_dump. Normally this takes at
+>> most
+>> a few minutes with IO being stressed. This time it caused high SYS CPU t=
+ime,
+>> went on for almost 20 minutes and caused the PostgreSQL dump to fail with
 >> inconsistent data.
 >>=20
 >> Around 3:50 AM we got this:
 >>=20
->> [330289.821046] INFO: task .postgres-wrapp:11884 blocked for more =
-than 122
+>> [330289.821046] INFO: task .postgres-wrapp:11884 blocked for more than 1=
+22
 >> seconds.
 >> [330289.821830]       Not tainted 6.1.31 #1-NixOS
->> [330289.822285] "echo 0 > /proc/sys/kernel/hung_task_timeout_secs" =
-disables
+>> [330289.822285] "echo 0 > /proc/sys/kernel/hung_task_timeout_secs" disab=
+les
 >> this message.
->> [330289.823098] task:.postgres-wrapp state:D stack:0     pid:11884 =
-ppid:11881=20
+>> [330289.823098] task:.postgres-wrapp state:D stack:0     pid:11884
+>> ppid:11881=20
 >> flags:0x00000002
 >> [330289.823911] Call Trace:
 >> [330289.824221]  <TASK>
@@ -124,15 +151,15 @@ ppid:11881=20
 >> [330289.833130] R13: 0000000004ed8000 R14: 00007ff8de8176c8 R15:
 >> 0000562bb434af75
 >> [330289.833803]  </TASK>
->> [330289.834064] INFO: task .postgres-wrapp:1245532 blocked for more =
-than 122
+>> [330289.834064] INFO: task .postgres-wrapp:1245532 blocked for more than=
+ 122
 >> seconds.
 >> [330289.834771]       Not tainted 6.1.31 #1-NixOS
->> [330289.835209] "echo 0 > /proc/sys/kernel/hung_task_timeout_secs" =
-disables
+>> [330289.835209] "echo 0 > /proc/sys/kernel/hung_task_timeout_secs" disab=
+les
 >> this message.
->> [330289.835926] task:.postgres-wrapp state:D stack:0     pid:1245532 =
-ppid:11881
+>> [330289.835926] task:.postgres-wrapp state:D stack:0     pid:1245532
+>> ppid:11881
 >> flags:0x00000002
 >> [330289.836752] Call Trace:
 >> [330289.837010]  <TASK>
@@ -171,21 +198,22 @@ ppid:11881
 >>=20
 >> [330584.618978] rcu: INFO: rcu_preempt self-detected stall on CPU
 >> [330584.619413] rcu:    1-....: (20999 ticks this GP)
->> idle=3D1204/1/0x4000000000000000 softirq=3D53073547/53073547 fqs=3D5231=
-
->> [330584.620052]         (t=3D21000 jiffies g=3D142859597 q=3D21168 =
-ncpus=3D3)
->> [330584.620409] CPU: 1 PID: 1246481 Comm: .postgres-wrapp Not tainted =
-6.1.31
+>> idle=3D1204/1/0x4000000000000000 softirq=3D53073547/53073547 fqs=3D5231
+>> [330584.620052]         (t=3D21000 jiffies g=3D142859597 q=3D21168 ncpus=
+=3D3)
+>> [330584.620409] CPU: 1 PID: 1246481 Comm: .postgres-wrapp Not tainted 6.=
+1.31
 >> #1-NixOS
->> [330584.620880] Hardware name: QEMU Standard PC (i440FX + PIIX, =
-1996), BIOS
+>> [330584.620880] Hardware name: QEMU Standard PC (i440FX + PIIX, 1996), B=
+IOS
 >> rel-1.12.1-0-ga5cab58e9a3f-prebuilt.qemu.org 04/01/2014
 >> [330584.621588] RIP: 0010:xas_load+0xb/0x40
->> [330584.621844] Code: 04 48 8b 44 c2 08 c3 cc cc cc cc 48 8b 07 48 8b =
-40 08 c3
->> cc cc cc cc 0f 1f 84 00 00 00 00 00 e8 3b ff ff ff 48 89 c2 83 e2 03 =
-<48> 83 fa
+>> [330584.621844] Code: 04 48 8b 44 c2 08 c3 cc cc cc cc 48 8b 07 48 8b 40=
+ 08
+>> c3
+>> cc cc cc cc 0f 1f 84 00 00 00 00 00 e8 3b ff ff ff 48 89 c2 83 e2 03 <48=
+> 83
+>> fa
 >> 02 75 08 48 3d 00 10 00 00 77 05 c3 cc cc cc cc 0f b6 4f
 >> [330584.622996] RSP: 0018:ffffb427c3387bf8 EFLAGS: 00000202
 >> [330584.623337] RAX: ffff988876d3c002 RBX: ffffb427c3387d70 RCX:
@@ -238,10 +266,12 @@ ncpus=3D3)
 >> [330584.635609]  do_syscall_64+0x3a/0x90
 >> [330584.635846]  entry_SYSCALL_64_after_hwframe+0x63/0xcd
 >> [330584.636174] RIP: 0033:0x7ff8de90e747
->> [330584.636437] Code: 48 e8 9d dc f2 ff 41 b8 02 00 00 00 e9 38 f6 ff =
-ff 66 90
->> f3 0f 1e fa 80 3d bd ac 0e 00 00 49 89 ca 74 10 b8 11 00 00 00 0f 05 =
-<48> 3d 00
+>> [330584.636437] Code: 48 e8 9d dc f2 ff 41 b8 02 00 00 00 e9 38 f6 ff ff=
+ 66
+>> 90
+>> f3 0f 1e fa 80 3d bd ac 0e 00 00 49 89 ca 74 10 b8 11 00 00 00 0f 05 <48=
+> 3d
+>> 00
 >> f0 ff ff 77 59 c3 48 83 ec 28 48 89 54 24 10 48 89 74 24
 >> [330584.637582] RSP: 002b:00007fff5206aaa8 EFLAGS: 00000202 ORIG_RAX:
 >> 0000000000000011
@@ -256,24 +286,25 @@ ff 66 90
 >> [330584.639862] R13: 0000562bb434af75 R14: 0000562bb434f510 R15:
 >> 0000562bb5fe04d0
 >> [330584.640313]  </TASK>
->> [330584.721995] rcu: INFO: rcu_preempt detected expedited stalls on =
-CPUs/tasks:
+>> [330584.721995] rcu: INFO: rcu_preempt detected expedited stalls on
+>> CPUs/tasks:
 >> { 1-.... } 21015 jiffies s: 7297 root: 0x2/.
->> [330584.722930] rcu: blocking rcu_node structures (internal RCU =
-debug):
+>> [330584.722930] rcu: blocking rcu_node structures (internal RCU debug):
 >> [330584.723428] Sending NMI from CPU 0 to CPUs 1:
 >> [330584.723763] NMI backtrace for cpu 1
->> [330584.723769] CPU: 1 PID: 1246481 Comm: .postgres-wrapp Not tainted =
-6.1.31
+>> [330584.723769] CPU: 1 PID: 1246481 Comm: .postgres-wrapp Not tainted 6.=
+1.31
 >> #1-NixOS
->> [330584.723772] Hardware name: QEMU Standard PC (i440FX + PIIX, =
-1996), BIOS
+>> [330584.723772] Hardware name: QEMU Standard PC (i440FX + PIIX, 1996), B=
+IOS
 >> rel-1.12.1-0-ga5cab58e9a3f-prebuilt.qemu.org 04/01/2014
 >> [330584.723775] RIP: 0010:xas_load+0x29/0x40
->> [330584.723783] Code: 00 e8 3b ff ff ff 48 89 c2 83 e2 03 48 83 fa 02 =
-75 08 48
->> 3d 00 10 00 00 77 05 c3 cc cc cc cc 0f b6 4f 10 48 8d 70 fe 38 48 fe =
-<72> ee e8
+>> [330584.723783] Code: 00 e8 3b ff ff ff 48 89 c2 83 e2 03 48 83 fa 02 75=
+ 08
+>> 48
+>> 3d 00 10 00 00 77 05 c3 cc cc cc cc 0f b6 4f 10 48 8d 70 fe 38 48 fe <72=
+> ee
+>> e8
 >> 20 fe ff ff 80 3e 00 75 d0 c3 cc cc cc cc 66 0f 1f 44 00
 >> [330584.723785] RSP: 0018:ffffb427c3387bf8 EFLAGS: 00000246
 >> [330584.723787] RAX: ffff98871f8dbdaa RBX: ffffb427c3387d70 RCX:
@@ -319,10 +350,12 @@ debug):
 >> [330584.723997]  do_syscall_64+0x3a/0x90
 >> [330584.724000]  entry_SYSCALL_64_after_hwframe+0x63/0xcd
 >> [330584.724003] RIP: 0033:0x7ff8de90e747
->> [330584.724019] Code: 48 e8 9d dc f2 ff 41 b8 02 00 00 00 e9 38 f6 ff =
-ff 66 90
->> f3 0f 1e fa 80 3d bd ac 0e 00 00 49 89 ca 74 10 b8 11 00 00 00 0f 05 =
-<48> 3d 00
+>> [330584.724019] Code: 48 e8 9d dc f2 ff 41 b8 02 00 00 00 e9 38 f6 ff ff=
+ 66
+>> 90
+>> f3 0f 1e fa 80 3d bd ac 0e 00 00 49 89 ca 74 10 b8 11 00 00 00 0f 05 <48=
+> 3d
+>> 00
 >> f0 ff ff 77 59 c3 48 83 ec 28 48 89 54 24 10 48 89 74 24
 >> [330584.724020] RSP: 002b:00007fff5206aaa8 EFLAGS: 00000202 ORIG_RAX:
 >> 0000000000000011
@@ -339,27 +372,28 @@ ff 66 90
 >> [330584.724026]  </TASK>
 >>=20
 >>=20
->> This keeps repeating until around 4:03 which ends in systemd-journal =
-getting
+>> This keeps repeating until around 4:03 which ends in systemd-journal get=
+ting
 >> coredumped:
 >>=20
 >> [331277.846966] rcu: INFO: rcu_preempt self-detected stall on CPU
 >> [331277.847413] rcu:    1-....: (713858 ticks this GP)
->> idle=3D1204/1/0x4000000000000000 softirq=3D53073547/53073547 =
-fqs=3D311996
->> [331277.848088]         (t=3D714253 jiffies g=3D142859597 q=3D1821602 =
-ncpus=3D3)
->> [331277.848462] CPU: 1 PID: 1246481 Comm: .postgres-wrapp Not tainted =
-6.1.31
+>> idle=3D1204/1/0x4000000000000000 softirq=3D53073547/53073547 fqs=3D311996
+>> [331277.848088]         (t=3D714253 jiffies g=3D142859597 q=3D1821602 nc=
+pus=3D3)
+>> [331277.848462] CPU: 1 PID: 1246481 Comm: .postgres-wrapp Not tainted 6.=
+1.31
 >> #1-NixOS
->> [331277.848941] Hardware name: QEMU Standard PC (i440FX + PIIX, =
-1996), BIOS
+>> [331277.848941] Hardware name: QEMU Standard PC (i440FX + PIIX, 1996), B=
+IOS
 >> rel-1.12.1-0-ga5cab58e9a3f-prebuilt.qemu.org 04/01/2014
 >> [331277.849667] RIP: 0010:xas_descend+0x22/0x70
->> [331277.849952] Code: cc cc cc cc cc cc cc cc 0f b6 0e 48 8b 57 08 48 =
-d3 ea 83
->> e2 3f 89 d0 48 83 c0 04 48 8b 44 c6 08 48 89 77 18 48 89 c1 83 e1 03 =
-<48> 83 f9
+>> [331277.849952] Code: cc cc cc cc cc cc cc cc 0f b6 0e 48 8b 57 08 48 d3=
+ ea
+>> 83
+>> e2 3f 89 d0 48 83 c0 04 48 8b 44 c6 08 48 89 77 18 48 89 c1 83 e1 03 <48=
+> 83
+>> f9
 >> 02 75 08 48 3d fd 00 00 00 76 08 88 57 12 c3 cc cc cc cc
 >> [331277.851120] RSP: 0018:ffffb427c3387bf0 EFLAGS: 00000202
 >> [331277.851468] RAX: ffff988876d3c002 RBX: ffffb427c3387d70 RCX:
@@ -412,10 +446,12 @@ d3 ea 83
 >> [331277.863917]  do_syscall_64+0x3a/0x90
 >> [331277.864159]  entry_SYSCALL_64_after_hwframe+0x63/0xcd
 >> [331277.864488] RIP: 0033:0x7ff8de90e747
->> [331277.864752] Code: 48 e8 9d dc f2 ff 41 b8 02 00 00 00 e9 38 f6 ff =
-ff 66 90
->> f3 0f 1e fa 80 3d bd ac 0e 00 00 49 89 ca 74 10 b8 11 00 00 00 0f 05 =
-<48> 3d 00
+>> [331277.864752] Code: 48 e8 9d dc f2 ff 41 b8 02 00 00 00 e9 38 f6 ff ff=
+ 66
+>> 90
+>> f3 0f 1e fa 80 3d bd ac 0e 00 00 49 89 ca 74 10 b8 11 00 00 00 0f 05 <48=
+> 3d
+>> 00
 >> f0 ff ff 77 59 c3 48 83 ec 28 48 89 54 24 10 48 89 74 24
 >> [331277.865917] RSP: 002b:00007fff5206aaa8 EFLAGS: 00000202 ORIG_RAX:
 >> 0000000000000011
@@ -431,80 +467,65 @@ ff 66 90
 >> 0000562bb5fe04d0
 >> [331277.868658]  </TASK>
 >> Fri Jun 16 04:03:23 AM CEST 2023 -- SERIAL CONSOLE IS LIVE --
->> [331289.987247] systemd[1]: Starting Serial console liveness =
-marker...
+>> [331289.987247] systemd[1]: Starting Serial console liveness marker...
 >> [331289.992645] systemd[1]: nscd.service: Deactivated successfully.
->> [331290.011838] systemd[1]: nscd.service: Consumed 3min 16.251s CPU =
-time,
+>> [331290.011838] systemd[1]: nscd.service: Consumed 3min 16.251s CPU time,
 >> received 12.0M IP traffic, sent 8.2M IP traffic.
->> [331290.020289] systemd[1]: serial-console-liveness.service: =
-Deactivated
+>> [331290.020289] systemd[1]: serial-console-liveness.service: Deactivated
 >> successfully.
 >> [331290.035818] systemd[1]: Finished Serial console liveness marker.
 >> [331290.068776] systemd[1]: Started Logrotate Service.
->> [331290.069700] systemd[1]: systemd-journald.service: Watchdog =
-timeout (limit
+>> [331290.069700] systemd[1]: systemd-journald.service: Watchdog timeout
+>> (limit
 >> 3min)!
->> [331290.070475] systemd[1]: systemd-journald.service: Killing process =
-528
+>> [331290.070475] systemd[1]: systemd-journald.service: Killing process 528
 >> (systemd-journal) with signal SIGABRT.
->> [331290.096246] systemd[1]: logrotate.service: Deactivated =
-successfully.
->> [331290.285285] systemd-coredump[1267441]: Process 528 =
-(systemd-journal) of
+>> [331290.096246] systemd[1]: logrotate.service: Deactivated successfully.
+>> [331290.285285] systemd-coredump[1267441]: Process 528 (systemd-journal)=
+ of
 >> user 0 dumped core.
 >> [331290.286002] systemd-coredump[1267441]: Coredump diverted to
->> =
-/var/lib/systemd/coredump/core.systemd-journal.0.39df468c96764e8c8fffc53a0=
-d0a47d1.528.1686881003000000.zst
->> [331290.287045] systemd-coredump[1267441]: Module libaudit.so.1 =
-without
+>>
+>> /var/lib/systemd/coredump/core.systemd-journal.0.39df468c96764e8c8fffc53=
+a0d0a47d1.528.1686881003000000.zst
+>> [331290.287045] systemd-coredump[1267441]: Module libaudit.so.1 without
 >> build-id.
->> [331290.287574] systemd-coredump[1267441]: Module libnftnl.so.11 =
-without
+>> [331290.287574] systemd-coredump[1267441]: Module libnftnl.so.11 without
 >> build-id.
->> [331290.288111] systemd-coredump[1267441]: Module libmnl.so.0 without =
-build-id.
->> [331290.288587] systemd-coredump[1267441]: Module libgpg-error.so.0 =
-without
+>> [331290.288111] systemd-coredump[1267441]: Module libmnl.so.0 without
 >> build-id.
->> [331290.289076] systemd-coredump[1267441]: Module libattr.so.1 =
-without
+>> [331290.288587] systemd-coredump[1267441]: Module libgpg-error.so.0 with=
+out
 >> build-id.
->> [331290.289541] systemd-coredump[1267441]: Module libzstd.so.1 =
-without
+>> [331290.289076] systemd-coredump[1267441]: Module libattr.so.1 without
 >> build-id.
->> [331290.289991] systemd-coredump[1267441]: Module liblzma.so.5 =
-without
+>> [331290.289541] systemd-coredump[1267441]: Module libzstd.so.1 without
 >> build-id.
->> [331290.290446] systemd-coredump[1267441]: Module libseccomp.so.2 =
-without
+>> [331290.289991] systemd-coredump[1267441]: Module liblzma.so.5 without
 >> build-id.
->> [331290.290940] systemd-coredump[1267441]: Module libpam.so.0 without =
-build-id.
->> [331290.291419] systemd-coredump[1267441]: Module liblz4.so.1 without =
-build-id.
->> [331290.291893] systemd-coredump[1267441]: Module libkmod.so.2 =
-without
+>> [331290.290446] systemd-coredump[1267441]: Module libseccomp.so.2 without
 >> build-id.
->> [331290.292370] systemd-coredump[1267441]: Module libip4tc.so.2 =
-without
+>> [331290.290940] systemd-coredump[1267441]: Module libpam.so.0 without
 >> build-id.
->> [331290.295165] systemd-coredump[1267441]: Module libgcrypt.so.20 =
-without
+>> [331290.291419] systemd-coredump[1267441]: Module liblz4.so.1 without
 >> build-id.
->> [331290.295678] systemd-coredump[1267441]: Module libcrypt.so.2 =
-without
+>> [331290.291893] systemd-coredump[1267441]: Module libkmod.so.2 without
 >> build-id.
->> [331290.296160] systemd-coredump[1267441]: Module libcap.so.2 without =
-build-id.
->> [331290.296708] systemd-coredump[1267441]: Module libacl.so.1 without =
-build-id.
->> [331290.297206] systemd-coredump[1267441]: Module =
-libsystemd-shared-253.so
+>> [331290.292370] systemd-coredump[1267441]: Module libip4tc.so.2 without
+>> build-id.
+>> [331290.295165] systemd-coredump[1267441]: Module libgcrypt.so.20 without
+>> build-id.
+>> [331290.295678] systemd-coredump[1267441]: Module libcrypt.so.2 without
+>> build-id.
+>> [331290.296160] systemd-coredump[1267441]: Module libcap.so.2 without
+>> build-id.
+>> [331290.296708] systemd-coredump[1267441]: Module libacl.so.1 without
+>> build-id.
+>> [331290.297206] systemd-coredump[1267441]: Module libsystemd-shared-253.=
+so
 >> without build-id.
->> [331290.297768] systemd-coredump[1267441]: Module systemd-journald =
-without
+>> [331290.297768] systemd-coredump[1267441]: Module systemd-journald witho=
+ut
 >> build-id.
 >> [331290.298273] systemd-coredump[1267441]: Stack trace of thread 528:
 >> [331290.298714] systemd-coredump[1267441]: #0  0x00007f3e96431de8
@@ -512,8 +533,8 @@ without
 >> [331290.299435] systemd-coredump[1267441]: #1  0x00007f3e964330d2
 >> journal_file_move_to_object (libsystemd-shared-253.so + 0x2330d2)
 >> [331290.300199] systemd-coredump[1267441]: #2  0x00007f3e96434a71
->> journal_file_find_data_object_with_hash (libsystemd-shared-253.so + =
-0x234a71)
+>> journal_file_find_data_object_with_hash (libsystemd-shared-253.so +
+>> 0x234a71)
 >> [331290.302207] systemd-coredump[1267441]: #3  0x00007f3e96434d3b
 >> journal_file_append_data (libsystemd-shared-253.so + 0x234d3b)
 >> [331290.302983] systemd-coredump[1267441]: #4  0x00007f3e96437243
@@ -528,21 +549,20 @@ without
 >> source_dispatch (libsystemd-shared-253.so + 0x25c140)
 >> [331290.306640] systemd-coredump[1267441]: #9  0x00007f3e9645c42d
 >> sd_event_dispatch (libsystemd-shared-253.so + 0x25c42d)
->> [331290.307350] systemd-coredump[1267441]: #10 0x00007f3e9645cb48 =
-sd_event_run
+>> [331290.307350] systemd-coredump[1267441]: #10 0x00007f3e9645cb48
+>> sd_event_run
 >> (libsystemd-shared-253.so + 0x25cb48)
->> [331290.308043] systemd-coredump[1267441]: #11 0x000056536a4a0568 =
-main
+>> [331290.308043] systemd-coredump[1267441]: #11 0x000056536a4a0568 main
 >> (systemd-journald + 0x9568)
 >> [331290.308652] systemd-coredump[1267441]: #12 0x00007f3e9603dace
 >> __libc_start_call_main (libc.so.6 + 0x23ace)
 >> [331290.309292] systemd-coredump[1267441]: #13 0x00007f3e9603db89
 >> __libc_start_main@@GLIBC_2.34 (libc.so.6 + 0x23b89)
->> [331290.310048] systemd-coredump[1267441]: #14 0x000056536a4a0835 =
-_start
+>> [331290.310048] systemd-coredump[1267441]: #14 0x000056536a4a0835 _start
 >> (systemd-journald + 0x9835)
->> [331290.310692] systemd-coredump[1267441]: ELF object binary =
-architecture: AMD
+>> [331290.310692] systemd-coredump[1267441]: ELF object binary architectur=
+e:
+>> AMD
 >> x86-64
 >>=20
 >>=20
@@ -550,21 +570,22 @@ architecture: AMD
 >>=20
 >> [389370.873026] rcu: INFO: rcu_preempt self-detected stall on CPU
 >> [389370.873481] rcu:    0-....: (21000 ticks this GP)
->> idle=3D91fc/1/0x4000000000000000 softirq=3D85252827/85252827 fqs=3D4704=
-
->> [389370.874126]         (t=3D21002 jiffies g=3D167843445 q=3D13889 =
-ncpus=3D3)
->> [389370.874500] CPU: 0 PID: 2202919 Comm: .postgres-wrapp Not tainted =
-6.1.31
+>> idle=3D91fc/1/0x4000000000000000 softirq=3D85252827/85252827 fqs=3D4704
+>> [389370.874126]         (t=3D21002 jiffies g=3D167843445 q=3D13889 ncpus=
+=3D3)
+>> [389370.874500] CPU: 0 PID: 2202919 Comm: .postgres-wrapp Not tainted 6.=
+1.31
 >> #1-NixOS
->> [389370.874979] Hardware name: QEMU Standard PC (i440FX + PIIX, =
-1996), BIOS
+>> [389370.874979] Hardware name: QEMU Standard PC (i440FX + PIIX, 1996), B=
+IOS
 >> rel-1.12.1-0-ga5cab58e9a3f-prebuilt.qemu.org 04/01/2014
 >> [389370.875710] RIP: 0010:xas_descend+0x26/0x70
->> [389370.875991] Code: cc cc cc cc 0f b6 0e 48 8b 57 08 48 d3 ea 83 e2 =
-3f 89 d0
->> 48 83 c0 04 48 8b 44 c6 08 48 89 77 18 48 89 c1 83 e1 03 48 83 f9 02 =
-<75> 08 48
+>> [389370.875991] Code: cc cc cc cc 0f b6 0e 48 8b 57 08 48 d3 ea 83 e2 3f=
+ 89
+>> d0
+>> 48 83 c0 04 48 8b 44 c6 08 48 89 77 18 48 89 c1 83 e1 03 48 83 f9 02 <75=
+> 08
+>> 48
 >> 3d fd 00 00 00 76 08 88 57 12 c3 cc cc cc cc 48 c1 e8 02
 >> [389370.877164] RSP: 0018:ffffb427c4917bf0 EFLAGS: 00000246
 >> [389370.877512] RAX: ffff98871f8dbdaa RBX: ffffb427c4917d70 RCX:
@@ -614,10 +635,12 @@ ncpus=3D3)
 >> [389370.889058]  do_syscall_64+0x3a/0x90
 >> [389370.889299]  entry_SYSCALL_64_after_hwframe+0x63/0xcd
 >> [389370.889634] RIP: 0033:0x7ff8de90e747
->> [389370.889900] Code: 48 e8 9d dc f2 ff 41 b8 02 00 00 00 e9 38 f6 ff =
-ff 66 90
->> f3 0f 1e fa 80 3d bd ac 0e 00 00 49 89 ca 74 10 b8 11 00 00 00 0f 05 =
-<48> 3d 00
+>> [389370.889900] Code: 48 e8 9d dc f2 ff 41 b8 02 00 00 00 e9 38 f6 ff ff=
+ 66
+>> 90
+>> f3 0f 1e fa 80 3d bd ac 0e 00 00 49 89 ca 74 10 b8 11 00 00 00 0f 05 <48=
+> 3d
+>> 00
 >> f0 ff ff 77 59 c3 48 83 ec 28 48 89 54 24 10 48 89 74 24
 >> [389370.891063] RSP: 002b:00007fff5206a848 EFLAGS: 00000202 ORIG_RAX:
 >> 0000000000000011
@@ -634,8 +657,8 @@ ff 66 90
 >> [389370.893843]  </TASK>
 >>=20
 >>=20
->> At this point we have to restart the VM externally because it didn't =
-respond
+>> At this point we have to restart the VM externally because it didn't res=
+pond
 >> properly any longer.
 >>=20
 >> --=20
@@ -652,17 +675,16 @@ respond
 > Christian Theune =C2=B7 ct@flyingcircus.io =C2=B7 +49 345 219401 0
 > Flying Circus Internet Operations GmbH =C2=B7 https://flyingcircus.io
 > Leipziger Str. 70/71 =C2=B7 06108 Halle (Saale) =C2=B7 Deutschland
-> HR Stendal HRB 21169 =C2=B7 Gesch=C3=A4ftsf=C3=BChrer: Christian =
-Theune, Christian Zagrodnick
+> HR Stendal HRB 21169 =C2=B7 Gesch=C3=A4ftsf=C3=BChrer: Christian Theune, =
+Christian
+> Zagrodnick
 >=20
 
 Liebe Gr=C3=BC=C3=9Fe,
 Christian Theune
 
 --=20
-Christian Theune =C2=B7 ct@flyingcircus.io =C2=B7 +49 345 219401 0
-Flying Circus Internet Operations GmbH =C2=B7 https://flyingcircus.io
-Leipziger Str. 70/71 =C2=B7 06108 Halle (Saale) =C2=B7 Deutschland
-HR Stendal HRB 21169 =C2=B7 Gesch=C3=A4ftsf=C3=BChrer: Christian Theune, =
-Christian Zagrodnick
+You may reply to this email to add a comment.
 
+You are receiving this mail because:
+You are watching the assignee of the bug.=
