@@ -2,689 +2,489 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B1AF6EB64D7
-	for <linux-xfs@archiver.kernel.org>; Tue, 20 Jun 2023 15:13:22 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8716CEB64D8
+	for <linux-xfs@archiver.kernel.org>; Tue, 20 Jun 2023 15:17:27 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233605AbjFTPNV (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 20 Jun 2023 11:13:21 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43916 "EHLO
+        id S232837AbjFTPR0 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 20 Jun 2023 11:17:26 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45960 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233603AbjFTPNV (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 20 Jun 2023 11:13:21 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 91919C0
-        for <linux-xfs@vger.kernel.org>; Tue, 20 Jun 2023 08:13:18 -0700 (PDT)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature RSA-PSS (2048 bits))
-        (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 091A0612D0
-        for <linux-xfs@vger.kernel.org>; Tue, 20 Jun 2023 15:13:18 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPS id 65E83C433C9
-        for <linux-xfs@vger.kernel.org>; Tue, 20 Jun 2023 15:13:17 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1687273997;
-        bh=KzwMUc3oZHWW+ue1OvWzaAtQHKYNF+wjdLguquJcxi4=;
-        h=From:To:Subject:Date:In-Reply-To:References:From;
-        b=Yju/03KuJksbkpz4bCyxaUOyDeArdNxF+jaXPqbbj5it55RL1sjNgUujbvwW++7AB
-         0hTjIpdVdzEpZfDOQNa6eiK7Mx58GuqyoKm2omLpTAThX59IzJT6Eovl2485S3NKXp
-         zH6WYSoCAhXdY4wpgzcjVatiMc/KR2+nk4CIyxr+S1vbGMMiEORojdU1SUH45lC1Zc
-         l7yzAcs7nUDZFfHkCNtGUndDkrGduCP8UdQMPLM15mtekTt1BG2xXpkLnfWd5+o7TJ
-         KDmmkWu78SlBevuzR6LGYIEJ8ZkyvFnPHEdxnUNopUPv4n8heP/bGHsO2lWCtAyPGG
-         o/6wBelZpDxiA==
-Received: by aws-us-west-2-korg-bugzilla-1.web.codeaurora.org (Postfix, from userid 48)
-        id 56793C53BCD; Tue, 20 Jun 2023 15:13:17 +0000 (UTC)
-From:   bugzilla-daemon@kernel.org
-To:     linux-xfs@vger.kernel.org
-Subject: [Bug 217572] Initial blocked tasks causing deterioration over hours
- until (nearly) complete system lockup and data loss with PostgreSQL 13
-Date:   Tue, 20 Jun 2023 15:13:16 +0000
-X-Bugzilla-Reason: None
-X-Bugzilla-Type: changed
-X-Bugzilla-Watch-Reason: AssignedTo filesystem_xfs@kernel-bugs.kernel.org
-X-Bugzilla-Product: File System
-X-Bugzilla-Component: XFS
-X-Bugzilla-Version: 2.5
-X-Bugzilla-Keywords: 
-X-Bugzilla-Severity: high
-X-Bugzilla-Who: ct@flyingcircus.io
-X-Bugzilla-Status: NEW
-X-Bugzilla-Resolution: 
-X-Bugzilla-Priority: P3
-X-Bugzilla-Assigned-To: filesystem_xfs@kernel-bugs.kernel.org
-X-Bugzilla-Flags: 
-X-Bugzilla-Changed-Fields: 
-Message-ID: <bug-217572-201763-3cS9mjxovW@https.bugzilla.kernel.org/>
-In-Reply-To: <bug-217572-201763@https.bugzilla.kernel.org/>
-References: <bug-217572-201763@https.bugzilla.kernel.org/>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
-X-Bugzilla-URL: https://bugzilla.kernel.org/
-Auto-Submitted: auto-generated
+        with ESMTP id S233739AbjFTPRL (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 20 Jun 2023 11:17:11 -0400
+Received: from mx0a-00069f02.pphosted.com (mx0a-00069f02.pphosted.com [205.220.165.32])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B63DE1FCD
+        for <linux-xfs@vger.kernel.org>; Tue, 20 Jun 2023 08:16:33 -0700 (PDT)
+Received: from pps.filterd (m0333521.ppops.net [127.0.0.1])
+        by mx0b-00069f02.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 35KBepEd013014;
+        Tue, 20 Jun 2023 15:16:08 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=references : from :
+ to : cc : subject : date : in-reply-to : message-id : content-type :
+ mime-version; s=corp-2023-03-30;
+ bh=oDNyOzAAeKdUG2ddmBAkwYSu3yKCifVJnyO0bnFqETo=;
+ b=t6liri6LD1xDVFWkTxYDuH4wwe+5hBvlFq0TKS4V9iFufrYd8bNh7+lVl67Cz0vtZ763
+ oEpDaiYcOEMzIf/14NYFLifQPT8EvXnJW5RWO6E8rL+NWc1EmLVYpzGx7DO2WXucUCS5
+ a5/KZix69cpPubJBFQ6ApJ51CEm7Y1tP+9uS8Fdiyzm3qM+Jk4UpCveQsOedQwFdlzPv
+ CfVRgBUsmzgoZ8hKieGSoBwzgaWBbpbbm60zyMdmuZtLof4FZYNhtEd47VRQRiFXYRYD
+ P8X37bsQu4ib0DxjInOhGOEBbF4s0lWZ3C0223oh8f5ulnYREaWYLxiRPGmqxISLfL3d SQ== 
+Received: from iadpaimrmta03.imrmtpd1.prodappiadaev1.oraclevcn.com (iadpaimrmta03.appoci.oracle.com [130.35.103.27])
+        by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 3r93rbn2yj-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Tue, 20 Jun 2023 15:16:08 +0000
+Received: from pps.filterd (iadpaimrmta03.imrmtpd1.prodappiadaev1.oraclevcn.com [127.0.0.1])
+        by iadpaimrmta03.imrmtpd1.prodappiadaev1.oraclevcn.com (8.17.1.19/8.17.1.19) with ESMTP id 35KEKpEn005799;
+        Tue, 20 Jun 2023 15:16:06 GMT
+Received: from nam04-bn8-obe.outbound.protection.outlook.com (mail-bn8nam04lp2046.outbound.protection.outlook.com [104.47.74.46])
+        by iadpaimrmta03.imrmtpd1.prodappiadaev1.oraclevcn.com (PPS) with ESMTPS id 3r9394gky3-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Tue, 20 Jun 2023 15:16:06 +0000
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
+ b=mcVizS4DKnHTUSdZ/TZnf67sS9dhbXHpLOjpOpBat5jEhlvIp1zLLShG1W7qkgI/PtZMlOVJbd4nAWCEMypLOKLxeGAxVzFIcKNiAdYOQnUr6qXRikW9PvdV6Jgm/ENp7jYJw9CaPJECxxE7r674QHIydUZYxlYTdnDlFTs33sMbdhdCbX91iXpjGL7frJJRyuWuYeAWzpRB5kB+xFGKSnjfahbI4KDHb6Qwj6e5zNGD6ICUb5hZ0LTmzpAlWPVbztxvNnXBHUW0jLeoNW3OxxEwWew0OPYPf5CUMvsmLPwqbgUss1PxqbpPsfqFM3evw+qHYKI1Yf+sA9o8TeI9Hg==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector9901;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=oDNyOzAAeKdUG2ddmBAkwYSu3yKCifVJnyO0bnFqETo=;
+ b=QW1EdrQBBEq4HgRLKz+0+nTCJS8HavnumJm851M2J6HJ3dVqSCpMhAr31mz9YoD1ESTvVpxLxCZ4/cT7mTLbODR30Lsa1l+uS6jsBrb2E2L5Ib5RwBsumtIVP7n9GeTm6lcT32LbevnDQq00b68e5AJbbxh2AZpY31bEmK4WaRX/tPa6XBEKCzJGUyg+m0uAUmzfg2rNKGyZFWZ69gKxAhyPvIlp/CBZN9/DnxyKHqoPRgtib2HMZV588a/PIHudxGKoI4WWAWT5bweBPMUBzhvhwq7R6hDEiuW0r98w5NeyoYOIYXniMlrikpX81wTIBE5XL9ySw4PTKw3qmdTzQw==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=oracle.com; dmarc=pass action=none header.from=oracle.com;
+ dkim=pass header.d=oracle.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+ d=oracle.onmicrosoft.com; s=selector2-oracle-onmicrosoft-com;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=oDNyOzAAeKdUG2ddmBAkwYSu3yKCifVJnyO0bnFqETo=;
+ b=bnyuiqFaVwAkCie+euMHLmDXueRq+F5S9RthdW5Km4bnLqxRJAVrtlPPzvjfZNGiK04qO7TDi4D8CAmv2yJHK26IuG43P6oDSnFW7CyqH/PMlpmdTNnh+GrgsGd2Ra5W2bLYP7Mme2mbnieC6PMe9LbAtXSnyG36jLY0ThcyZNA=
+Received: from SA1PR10MB5867.namprd10.prod.outlook.com (2603:10b6:806:233::19)
+ by MW4PR10MB5812.namprd10.prod.outlook.com (2603:10b6:303:18e::22) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.6521.21; Tue, 20 Jun
+ 2023 15:16:03 +0000
+Received: from SA1PR10MB5867.namprd10.prod.outlook.com
+ ([fe80::8fff:d710:92bc:cf17]) by SA1PR10MB5867.namprd10.prod.outlook.com
+ ([fe80::8fff:d710:92bc:cf17%6]) with mapi id 15.20.6500.036; Tue, 20 Jun 2023
+ 15:16:03 +0000
+References: <20230620002021.1038067-1-david@fromorbit.com>
+ <20230620002021.1038067-5-david@fromorbit.com>
+User-agent: mu4e 1.8.10; emacs 27.1
+From:   Chandan Babu R <chandan.babu@oracle.com>
+To:     Dave Chinner <david@fromorbit.com>
+Cc:     linux-xfs@vger.kernel.org
+Subject: Re: [PATCH 4/5] xfs: don't block in busy flushing when freeing extents
+Date:   Tue, 20 Jun 2023 20:23:33 +0530
+In-reply-to: <20230620002021.1038067-5-david@fromorbit.com>
+Message-ID: <87a5wumafo.fsf@debian-BULLSEYE-live-builder-AMD64>
+Content-Type: text/plain
+X-ClientProxiedBy: SI2PR02CA0001.apcprd02.prod.outlook.com
+ (2603:1096:4:194::10) To SA1PR10MB5867.namprd10.prod.outlook.com
+ (2603:10b6:806:233::19)
 MIME-Version: 1.0
+X-MS-PublicTrafficType: Email
+X-MS-TrafficTypeDiagnostic: SA1PR10MB5867:EE_|MW4PR10MB5812:EE_
+X-MS-Office365-Filtering-Correlation-Id: 0143cf52-bdbb-42d1-f2e0-08db71a142eb
+X-MS-Exchange-SenderADCheck: 1
+X-MS-Exchange-AntiSpam-Relay: 0
+X-Microsoft-Antispam: BCL:0;
+X-Microsoft-Antispam-Message-Info: 3xjn1H8LALILzSIjwM2h0mwftqajBBJxuIScjxvfcsP06K7BjaevuBvl3iiflNTuLfRl4Ri9VOAvNNEnXMxh9aNxeQTQQXs7BPeDSyox9MbpVZnwGImiqvBgo+iUh9kMR2GVYf88wWMP/PGJnkHnGv07dQlz3TFyMKO2lftv76DW+peuzfPxermMQWYFKdQOv5u1kWsp5cZ6LZQ7X/q9GzcqZK/a2MuHRV+e0OvlcevjMneZha8ZFUnEACbDp4iG/EHxrndpnpY+zuEoo96jeWO1FVTvGKvUqYwTCgCpgeHPk9Qa8mPDtPFYvLEyz4tPbx5/g7aYYwBvduXXbanTifNWxWQ976b2iZqPFTTssSQsJHjW1phFZxb7prtFL075Q+fz2BUolcOIxmnnd2mkyq7UvdqY2D/O3yyrxFV3t/Jz84wYJsUbh/8FsHQXgolrSFtJ5q+7ifp2yer/OE2iDRV4H2s4pTp50UjPCrocXYm0+ntuV5wKZBn5ehNfKhMtWCp5D4CBflbtnlr9YAR9Xn+fY9neMU7dVq6xn+M7je0JzaGANvOZpsszQ9Hr5aUe
+X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:SA1PR10MB5867.namprd10.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230028)(7916004)(366004)(376002)(346002)(396003)(39860400002)(136003)(451199021)(6666004)(6486002)(478600001)(83380400001)(186003)(53546011)(6512007)(6506007)(26005)(9686003)(86362001)(38100700002)(33716001)(6916009)(4326008)(66556008)(66946007)(66476007)(316002)(8936002)(8676002)(5660300002)(41300700001)(2906002)(30864003);DIR:OUT;SFP:1101;
+X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-MessageData-0: =?us-ascii?Q?3BFA8N5O/K0wsrBKhCvyJTZJpyLHy++2mP86elB3BBLgMqOTl6efVZ/fQX9J?=
+ =?us-ascii?Q?6OHPM/IpYXytjm448qcT+sY7I1BlCOAfRIGH6hhzKOgR1W6+2zKymhSwixEb?=
+ =?us-ascii?Q?3LyDdXHXuz8VT2/V34siinWLD2dHB00rYF6pCn5xvIFZAgoqVNlhcNoi+5cB?=
+ =?us-ascii?Q?GqBHahkSDj23mH+C2KB14Fb6IeJjTIPYtOMrrb9o/syKBWlmE8jyLCprkUOc?=
+ =?us-ascii?Q?yGpTbDRXtyV8yvEqPQykDrByClicPFdC8nNOOBR7mLZGkfbrbN5gPFmO4Vxn?=
+ =?us-ascii?Q?xQ5f5vgpF5eQzcU0jqzbXtrCPOU6+/FUSvdzKSlxxjAszKMPKlid1Q4L6btH?=
+ =?us-ascii?Q?nQDGq+qRMAdvdkEkP3orc41OmPwLfHh9XuF/QApyFTq97AlftgzUt2GGp8MX?=
+ =?us-ascii?Q?fZbr1UBU09S7sFnWjjP5dTPvGI0gHCZ6W6cHiVw4pe45MWn7ey0lZNlXgJo+?=
+ =?us-ascii?Q?k+IGA/Iyn4bYYoBj+qWA35QMyc+QD8qOtUeTcmptXwHc3NhKow+0L69o/fst?=
+ =?us-ascii?Q?76L9ynbrbCdNNHy3UU//DGOuE5cHg7l40kfQ3pmz9WK7YagXoEtczOwAE+0l?=
+ =?us-ascii?Q?lDxOZty8RDqLe3cm3l2UgA+5j1+aQowaADnkHNSKtwus4C4HJO+36tc4WxmD?=
+ =?us-ascii?Q?OrxoV6fg6XsBmzAsY4AvnOkxuEMJVjlIUjLA/RdQh+Et3BK8EAqa2Wo8y8mF?=
+ =?us-ascii?Q?KyvUwJfu7VuqhdX7ye26H09ZuHJVuh0aMsfLQ9R3DpC0Jb7sX1YiHfVyjsEi?=
+ =?us-ascii?Q?/qMCisLsJcYXgsihmLvtIhIK6RNWDyoQU3FMzcBJtfR7j+sQT7wR5ZzFNnzy?=
+ =?us-ascii?Q?WGB6+2EXUZ3k45Z0ez6snW4v+BYIHjcmYuIrw3KfFjR64/PuBRYB6EejyQUv?=
+ =?us-ascii?Q?vXtwNmfllfSzESRuQMcjymKsYvhBCqHuNSMgl6tQGpEzAOwoVDAs+9T9VWyZ?=
+ =?us-ascii?Q?GVWUNzEgD5sR3Cfh/wOSlY6rvPZMxtkjihvcgCxBIa+Jcy5+Zq59r+8w3ONr?=
+ =?us-ascii?Q?XiZKeZNQfK0LvHy/XjEs62BIzyCU/26wEGhNBQiGER3bAzIxCc7GfGBDLuDV?=
+ =?us-ascii?Q?HfSGeiBS69rRYoRjJ9MWk7mm2JiDmlTuruhDhB6lINtB393ECO+9S0Es9Vdo?=
+ =?us-ascii?Q?J5Ok91ZFmuWEdmvC9t0qsmqpA5c+ckyHxh+DfIswQwEqvTTW8+iuCWqGu8xi?=
+ =?us-ascii?Q?WNKw62PkvWMRdv6RbGJMMhGiKNhCGjBgX2X+SYMpSsgEwzUQjWFJLOMqJRV5?=
+ =?us-ascii?Q?8EUjCgr1YuGKJhg6gJNAuE5lOHCM17nC+yX9jndsZ/L20tcendEr1aC7dVrQ?=
+ =?us-ascii?Q?i49+WKh5JlowlYty5qYROrq5M9LGvH66wknKhyDLVeLSEosao8Cgv7I8qg4a?=
+ =?us-ascii?Q?ChhXSVmgSiVDXxccTNiPW/UoWd2ZlcXVc4lKWzjSaXeqqiCk/vT6+Wx2rRah?=
+ =?us-ascii?Q?i/ktZnMhntlM1mfKpkfWGIBzU8DbQMTHrTXHH7eQ+xhrX3Cc7KBrjN3iUpvV?=
+ =?us-ascii?Q?SXZlvq+ahEOHW70yg83paklIGQv/Tn/lAVEYHddV8w8IygpzmyHJvZ29qYOI?=
+ =?us-ascii?Q?llFwXsZgTwf/l5bkctpbsBu23SKUZx2cc7YBqj1f?=
+X-MS-Exchange-AntiSpam-ExternalHop-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-ExternalHop-MessageData-0: X+VcFeJdnZ/7L47fcDmcTIsPGuXALaecfECAjPEFkzG8nnePev72j6UWxmdGbph0NjIXr/T1MxgY/ndBG7xzTRydS4166Ig77CwMac84ZukiFvqnL/EsAe3DIyWn2GxE8hchcVGug+mNz3I1HbM1dA35NkXGoOjRNF64s8mjd/89NEv0E/ZYsaopCX0gZqWMQLFaj89U2T5OqrPkNV804L9lTzOMlOeMlYNffb9fMGzl+LgLZQU9VDYo5ZtOmV1Ua+O0CiBirOrvknbOm13m6kCHxgfBte2b4F7whLqDHTCJg/QL1YmwV+YDHVJ1ut3/OBizh2oOgxIbHaXDtlGSpoM7Hr4bF9+ajAZTJUVgrMjKfLNL7/6K26pEIDNv/+1ZFLsweTrQY4rhSHdaPQLtTKYi4hBYziU6wqUvxguixRja251KW4RgE2xumZbVvfS1WEb+/Ssoa1i+Ol8mO54zzH6W0M9ldYcu/4MqQNPh1SLjVdAKIlj9NKD7hFWAdljllwqUY0ruOnD2hak+rdJRtS4eR3tjx6dyNBgjiaeleub08/lnVoRya3CgqppfaXffdslr5/wZT4fv7HrM5/Xx4M6eLvhMx7b1YmCzA19ggcW0Ru65Kyo7+4pHB3IrTABl5pccdMh6AB3RZ4cZUX45Hzdfl/mTy0xVvL1TLIf9TofMcsby1kXNexJQdSjpliqiodDww3WexppaO5qLNnZ1i8hsmnvceygK9s7KxFbWsJfcpRLAbAmKg0v+DgUuFWQdqP1yRB4MFB1S1WktnhfUik7cET+y1u5p/D5pyxt8YRI=
+X-OriginatorOrg: oracle.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: 0143cf52-bdbb-42d1-f2e0-08db71a142eb
+X-MS-Exchange-CrossTenant-AuthSource: SA1PR10MB5867.namprd10.prod.outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 20 Jun 2023 15:16:03.2739
+ (UTC)
+X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
+X-MS-Exchange-CrossTenant-Id: 4e2c6054-71cb-48f1-bd6c-3a9705aca71b
+X-MS-Exchange-CrossTenant-MailboxType: HOSTED
+X-MS-Exchange-CrossTenant-UserPrincipalName: CkODYULWgqUfW2ecpyoC9wmTHyuaBwzty1oYIOx0TjGSxDiLVKTcpYAlSrN5xYL0SMBSuZPd9dN1c2XlslrTJA==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: MW4PR10MB5812
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.254,Aquarius:18.0.957,Hydra:6.0.591,FMLib:17.11.176.26
+ definitions=2023-06-20_10,2023-06-16_01,2023-05-22_02
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 mlxlogscore=999 adultscore=0
+ spamscore=0 bulkscore=0 malwarescore=0 phishscore=0 mlxscore=0
+ suspectscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2305260000 definitions=main-2306200137
+X-Proofpoint-ORIG-GUID: mx4-_ETupHwdqRqelRBdjst1RJzmnqPw
+X-Proofpoint-GUID: mx4-_ETupHwdqRqelRBdjst1RJzmnqPw
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-https://bugzilla.kernel.org/show_bug.cgi?id=3D217572
+On Tue, Jun 20, 2023 at 10:20:20 AM +1000, Dave Chinner wrote:
+> From: Dave Chinner <dchinner@redhat.com>
+>
+> If the current transaction holds a busy extent and we are trying to
+> allocate a new extent to fix up the free list, we can deadlock if
+> the AG is entirely empty except for the busy extent held by the
+> transaction.
+>
+> This can occur at runtime processing an XEFI with multiple extents
+> in this path:
+>
+> __schedule+0x22f at ffffffff81f75e8f
+> schedule+0x46 at ffffffff81f76366
+> xfs_extent_busy_flush+0x69 at ffffffff81477d99
+> xfs_alloc_ag_vextent_size+0x16a at ffffffff8141711a
+> xfs_alloc_ag_vextent+0x19b at ffffffff81417edb
+> xfs_alloc_fix_freelist+0x22f at ffffffff8141896f
+> xfs_free_extent_fix_freelist+0x6a at ffffffff8141939a
+> __xfs_free_extent+0x99 at ffffffff81419499
+> xfs_trans_free_extent+0x3e at ffffffff814a6fee
+> xfs_extent_free_finish_item+0x24 at ffffffff814a70d4
+> xfs_defer_finish_noroll+0x1f7 at ffffffff81441407
+> xfs_defer_finish+0x11 at ffffffff814417e1
+> xfs_itruncate_extents_flags+0x13d at ffffffff8148b7dd
+> xfs_inactive_truncate+0xb9 at ffffffff8148bb89
+> xfs_inactive+0x227 at ffffffff8148c4f7
+> xfs_fs_destroy_inode+0xb8 at ffffffff81496898
+> destroy_inode+0x3b at ffffffff8127d2ab
+> do_unlinkat+0x1d1 at ffffffff81270df1
+> do_syscall_64+0x40 at ffffffff81f6b5f0
+> entry_SYSCALL_64_after_hwframe+0x44 at ffffffff8200007c
+>
+> This can also happen in log recovery when processing an EFI
+> with multiple extents through this path:
+>
+> context_switch() kernel/sched/core.c:3881
+> __schedule() kernel/sched/core.c:5111
+> schedule() kernel/sched/core.c:5186
+> xfs_extent_busy_flush() fs/xfs/xfs_extent_busy.c:598
+> xfs_alloc_ag_vextent_size() fs/xfs/libxfs/xfs_alloc.c:1641
+> xfs_alloc_ag_vextent() fs/xfs/libxfs/xfs_alloc.c:828
+> xfs_alloc_fix_freelist() fs/xfs/libxfs/xfs_alloc.c:2362
+> xfs_free_extent_fix_freelist() fs/xfs/libxfs/xfs_alloc.c:3029
+> __xfs_free_extent() fs/xfs/libxfs/xfs_alloc.c:3067
+> xfs_trans_free_extent() fs/xfs/xfs_extfree_item.c:370
+> xfs_efi_recover() fs/xfs/xfs_extfree_item.c:626
+> xlog_recover_process_efi() fs/xfs/xfs_log_recover.c:4605
+> xlog_recover_process_intents() fs/xfs/xfs_log_recover.c:4893
+> xlog_recover_finish() fs/xfs/xfs_log_recover.c:5824
+> xfs_log_mount_finish() fs/xfs/xfs_log.c:764
+> xfs_mountfs() fs/xfs/xfs_mount.c:978
+> xfs_fs_fill_super() fs/xfs/xfs_super.c:1908
+> mount_bdev() fs/super.c:1417
+> xfs_fs_mount() fs/xfs/xfs_super.c:1985
+> legacy_get_tree() fs/fs_context.c:647
+> vfs_get_tree() fs/super.c:1547
+> do_new_mount() fs/namespace.c:2843
+> do_mount() fs/namespace.c:3163
+> ksys_mount() fs/namespace.c:3372
+> __do_sys_mount() fs/namespace.c:3386
+> __se_sys_mount() fs/namespace.c:3383
+> __x64_sys_mount() fs/namespace.c:3383
+> do_syscall_64() arch/x86/entry/common.c:296
+> entry_SYSCALL_64() arch/x86/entry/entry_64.S:180
+>
+> To avoid this deadlock, we should not block in
+> xfs_extent_busy_flush() if we hold a busy extent in the current
+> transaction.
+>
+> Now that the EFI processing code can handle requeuing a partially
+> completed EFI, we can detect this situation in
+> xfs_extent_busy_flush() and return -EAGAIN rather than going to
+> sleep forever. The -EAGAIN get propagated back out to the
+> xfs_trans_free_extent() context, where the EFD is populated and the
+> transaction is rolled, thereby moving the busy extents into the CIL.
+>
+> At this point, we can retry the extent free operation again with a
+> clean transaction. If we hit the same "all free extents are busy"
+> situation when trying to fix up the free list, we can safely call
+> xfs_extent_busy_flush() and wait for the busy extents to resolve
+> and wake us. At this point, the allocation search can make progress
+> again and we can fix up the free list.
+>
+> This deadlock was first reported by Chandan in mid-2021, but I
+> couldn't make myself understood during review, and didn't have time
+> to fix it myself.
+>
+> It was reported again in March 2023, and again I have found myself
+> unable to explain the complexities of the solution needed during
+> review.
+>
+> As such, I don't have hours more time to waste trying to get the
+> fix written the way it needs to be written, so I'm just doing it
+> myself. This patchset is largely based on Wengang Wang's last patch,
+> but with all the unnecessary stuff removed, split up into multiple
+> patches and cleaned up somewhat.
+>
+> Reported-by: Chandan Babu R <chandanrlinux@gmail.com>
+> Reported-by: Wengang Wang <wen.gang.wang@oracle.com>
+> Signed-off-by: Dave Chinner <dchinner@redhat.com>
+> Reviewed-by: Darrick J. Wong <djwong@kernel.org>
+> ---
+>  fs/xfs/libxfs/xfs_alloc.c | 68 ++++++++++++++++++++++++++++-----------
+>  fs/xfs/libxfs/xfs_alloc.h | 11 ++++---
+>  fs/xfs/xfs_extent_busy.c  | 33 ++++++++++++++++---
+>  fs/xfs/xfs_extent_busy.h  |  6 ++--
+>  4 files changed, 88 insertions(+), 30 deletions(-)
+>
+> diff --git a/fs/xfs/libxfs/xfs_alloc.c b/fs/xfs/libxfs/xfs_alloc.c
+> index 11bd0a1756a1..7c675aae0a0f 100644
+> --- a/fs/xfs/libxfs/xfs_alloc.c
+> +++ b/fs/xfs/libxfs/xfs_alloc.c
+> @@ -1556,6 +1556,8 @@ xfs_alloc_ag_vextent_near(
+>  	if (args->agbno > args->max_agbno)
+>  		args->agbno = args->max_agbno;
+>  
+> +	/* Retry once quickly if we find busy extents before blocking. */
+> +	alloc_flags |= XFS_ALLOC_FLAG_TRYFLUSH;
+>  restart:
+>  	len = 0;
+>  
+> @@ -1611,9 +1613,20 @@ xfs_alloc_ag_vextent_near(
+>  	 */
+>  	if (!acur.len) {
+>  		if (acur.busy) {
+> +			/*
+> +			 * Our only valid extents must have been busy. Flush and
+> +			 * retry the allocation again. If we get an -EAGAIN
+> +			 * error, we're being told that a deadlock was avoided
+> +			 * and the current transaction needs committing before
+> +			 * the allocation can be retried.
+> +			 */
+>  			trace_xfs_alloc_near_busy(args);
+> -			xfs_extent_busy_flush(args->mp, args->pag,
+> -					      acur.busy_gen, alloc_flags);
+> +			error = xfs_extent_busy_flush(args->tp, args->pag,
+> +					acur.busy_gen, alloc_flags);
+> +			if (error)
+> +				goto out;
+> +
+> +			alloc_flags &= ~XFS_ALLOC_FLAG_TRYFLUSH;
+>  			goto restart;
+>  		}
+>  		trace_xfs_alloc_size_neither(args);
+> @@ -1653,6 +1666,8 @@ xfs_alloc_ag_vextent_size(
+>  	int			error;
+>  	int			i;
+>  
+> +	/* Retry once quickly if we find busy extents before blocking. */
+> +	alloc_flags |= XFS_ALLOC_FLAG_TRYFLUSH;
+>  restart:
+>  	/*
+>  	 * Allocate and initialize a cursor for the by-size btree.
+> @@ -1710,19 +1725,25 @@ xfs_alloc_ag_vextent_size(
+>  			error = xfs_btree_increment(cnt_cur, 0, &i);
+>  			if (error)
+>  				goto error0;
+> -			if (i == 0) {
+> -				/*
+> -				 * Our only valid extents must have been busy.
+> -				 * Make it unbusy by forcing the log out and
+> -				 * retrying.
+> -				 */
+> -				xfs_btree_del_cursor(cnt_cur,
+> -						     XFS_BTREE_NOERROR);
+> -				trace_xfs_alloc_size_busy(args);
+> -				xfs_extent_busy_flush(args->mp, args->pag,
+> -						busy_gen, alloc_flags);
+> -				goto restart;
+> -			}
+> +			if (i)
+> +				continue;
+> +
+> +			/*
+> +			 * Our only valid extents must have been busy. Flush and
+> +			 * retry the allocation again. If we get an -EAGAIN
+> +			 * error, we're being told that a deadlock was avoided
+> +			 * and the current transaction needs committing before
+> +			 * the allocation can be retried.
+> +			 */
+> +			trace_xfs_alloc_size_busy(args);
+> +			error = xfs_extent_busy_flush(args->tp, args->pag,
+> +					busy_gen, alloc_flags);
+> +			if (error)
+> +				goto error0;
+> +
+> +			alloc_flags &= ~XFS_ALLOC_FLAG_TRYFLUSH;
+> +			xfs_btree_del_cursor(cnt_cur, XFS_BTREE_NOERROR);
+> +			goto restart;
+>  		}
+>  	}
+>  
+> @@ -1802,10 +1823,21 @@ xfs_alloc_ag_vextent_size(
+>  	args->len = rlen;
+>  	if (rlen < args->minlen) {
+>  		if (busy) {
+> -			xfs_btree_del_cursor(cnt_cur, XFS_BTREE_NOERROR);
+> +			/*
+> +			 * Our only valid extents must have been busy. Flush and
+> +			 * retry the allocation again. If we get an -EAGAIN
+> +			 * error, we're being told that a deadlock was avoided
+> +			 * and the current transaction needs committing before
+> +			 * the allocation can be retried.
+> +			 */
+>  			trace_xfs_alloc_size_busy(args);
+> -			xfs_extent_busy_flush(args->mp, args->pag, busy_gen,
+> -					alloc_flags);
+> +			error = xfs_extent_busy_flush(args->tp, args->pag,
+> +					busy_gen, alloc_flags);
+> +			if (error)
+> +				goto error0;
+> +
+> +			alloc_flags &= ~XFS_ALLOC_FLAG_TRYFLUSH;
+> +			xfs_btree_del_cursor(cnt_cur, XFS_BTREE_NOERROR);
+>  			goto restart;
+>  		}
+>  		goto out_nominleft;
+> diff --git a/fs/xfs/libxfs/xfs_alloc.h b/fs/xfs/libxfs/xfs_alloc.h
+> index d1aa7c63eafe..f267842e36ba 100644
+> --- a/fs/xfs/libxfs/xfs_alloc.h
+> +++ b/fs/xfs/libxfs/xfs_alloc.h
+> @@ -19,11 +19,12 @@ unsigned int xfs_agfl_size(struct xfs_mount *mp);
+>  /*
+>   * Flags for xfs_alloc_fix_freelist.
+>   */
+> -#define	XFS_ALLOC_FLAG_TRYLOCK	0x00000001  /* use trylock for buffer locking */
+> -#define	XFS_ALLOC_FLAG_FREEING	0x00000002  /* indicate caller is freeing extents*/
+> -#define	XFS_ALLOC_FLAG_NORMAP	0x00000004  /* don't modify the rmapbt */
+> -#define	XFS_ALLOC_FLAG_NOSHRINK	0x00000008  /* don't shrink the freelist */
+> -#define	XFS_ALLOC_FLAG_CHECK	0x00000010  /* test only, don't modify args */
+> +#define	XFS_ALLOC_FLAG_TRYLOCK	(1U << 0)  /* use trylock for buffer locking */
+> +#define	XFS_ALLOC_FLAG_FREEING	(1U << 1)  /* indicate caller is freeing extents*/
+> +#define	XFS_ALLOC_FLAG_NORMAP	(1U << 2)  /* don't modify the rmapbt */
+> +#define	XFS_ALLOC_FLAG_NOSHRINK	(1U << 3)  /* don't shrink the freelist */
+> +#define	XFS_ALLOC_FLAG_CHECK	(1U << 4)  /* test only, don't modify args */
+> +#define	XFS_ALLOC_FLAG_TRYFLUSH	(1U << 5)  /* don't wait in busy extent flush */
+>  
+>  /*
+>   * Argument structure for xfs_alloc routines.
+> diff --git a/fs/xfs/xfs_extent_busy.c b/fs/xfs/xfs_extent_busy.c
+> index 5f44936eae1c..7c2fdc71e42d 100644
+> --- a/fs/xfs/xfs_extent_busy.c
+> +++ b/fs/xfs/xfs_extent_busy.c
+> @@ -566,10 +566,21 @@ xfs_extent_busy_clear(
+>  
+>  /*
+>   * Flush out all busy extents for this AG.
+> + *
+> + * If the current transaction is holding busy extents, the caller may not want
+> + * to wait for committed busy extents to resolve. If we are being told just to
+> + * try a flush or progress has been made since we last skipped a busy extent,
+> + * return immediately to allow the caller to try again.
+> + *
+> + * If we are freeing extents, we might actually be holding the only free extents
+> + * in the transaction busy list and the log force won't resolve that situation.
+> + * In this case, we must return -EAGAIN to avoid a deadlock by informing the
+> + * caller it needs to commit the busy extents it holds before retrying the
+> + * extent free operation.
+>   */
+> -void
+> +int
+>  xfs_extent_busy_flush(
+> -	struct xfs_mount	*mp,
+> +	struct xfs_trans	*tp,
+>  	struct xfs_perag	*pag,
+>  	unsigned		busy_gen,
+>  	uint32_t		alloc_flags)
+> @@ -577,10 +588,23 @@ xfs_extent_busy_flush(
+>  	DEFINE_WAIT		(wait);
+>  	int			error;
+>  
+> -	error = xfs_log_force(mp, XFS_LOG_SYNC);
+> +	error = xfs_log_force(tp->t_mountp, XFS_LOG_SYNC);
+>  	if (error)
+> -		return;
+> +		return error;
+>  
+> +	/* Avoid deadlocks on uncommitted busy extents. */
+> +	if (!list_empty(&tp->t_busy)) {
+> +		if (alloc_flags & XFS_ALLOC_FLAG_TRYFLUSH)
+> +			return 0;
+> +
+> +		if (busy_gen != READ_ONCE(pag->pagb_gen))
+> +			return 0;
+> +
+> +		if (alloc_flags & XFS_ALLOC_FLAG_FREEING)
+> +			return -EAGAIN;
+> +	}
 
---- Comment #2 from Christian Theune (ct@flyingcircus.io) ---
-Argh. Sorry. My brain is a bit fried today and I - for some reason - though=
-t I
-did the bug reports last week and not yesterday. I didn=E2=80=99t want to a=
-ppear pushy,
-so, sorry for the early follow-up.
+In the case where a task is freeing an ondisk inode, an ifree transaction can
+invoke __xfs_inobt_free_block() twice; Once to free the inobt's leaf block and
+the next call to free its immediate parent block.
 
-*ducks*
+The first call to __xfs_inobt_free_block() adds the freed extent into the
+transaction's busy list and also into the per-ag rb tree tracking the busy
+extent. Freeing the second inobt block could lead to the following sequence of
+function calls,
 
-> On 20. Jun 2023, at 17:10, Christian Theune <ct@flyingcircus.io> wrote:
->=20
-> Hi,
->=20
-> is there anything I can do to raise interest on this one? :)
->=20
->> On 19. Jun 2023, at 10:29, bugzilla-daemon@kernel.org wrote:
->>=20
->> https://bugzilla.kernel.org/show_bug.cgi?id=3D217572
->>=20
->>           Bug ID: 217572
->>          Summary: Initial blocked tasks causing deterioration over hours
->>                   until (nearly) complete system lockup and data loss
->>                   with PostgreSQL 13
->>          Product: File System
->>          Version: 2.5
->>         Hardware: All
->>               OS: Linux
->>           Status: NEW
->>         Severity: high
->>         Priority: P3
->>        Component: XFS
->>         Assignee: filesystem_xfs@kernel-bugs.kernel.org
->>         Reporter: ct@flyingcircus.io
->>       Regression: No
->>=20
->> Last Friday we experienced the following hung task messages with Postgre=
-SQL
->> while performing our nightly backup using pg_dump. Normally this takes at
->> most
->> a few minutes with IO being stressed. This time it caused high SYS CPU t=
-ime,
->> went on for almost 20 minutes and caused the PostgreSQL dump to fail with
->> inconsistent data.
->>=20
->> Around 3:50 AM we got this:
->>=20
->> [330289.821046] INFO: task .postgres-wrapp:11884 blocked for more than 1=
-22
->> seconds.
->> [330289.821830]       Not tainted 6.1.31 #1-NixOS
->> [330289.822285] "echo 0 > /proc/sys/kernel/hung_task_timeout_secs" disab=
-les
->> this message.
->> [330289.823098] task:.postgres-wrapp state:D stack:0     pid:11884
->> ppid:11881=20
->> flags:0x00000002
->> [330289.823911] Call Trace:
->> [330289.824221]  <TASK>
->> [330289.824451]  __schedule+0x35d/0x1370
->> [330289.824858]  ? mntput_no_expire+0x4a/0x250
->> [330289.825307]  schedule+0x5d/0xe0
->> [330289.825630]  rwsem_down_write_slowpath+0x34e/0x730
->> [330289.826128]  xfs_ilock+0xeb/0xf0 [xfs]
->> [330289.826599]  xfs_file_buffered_write+0x119/0x300 [xfs]
->> [330289.827212]  ? selinux_file_permission+0x10b/0x150
->> [330289.827683]  vfs_write+0x244/0x400
->> [330289.828049]  __x64_sys_pwrite64+0x94/0xc0
->> [330289.828459]  do_syscall_64+0x3a/0x90
->> [330289.828801]  entry_SYSCALL_64_after_hwframe+0x63/0xcd
->> [330289.829302] RIP: 0033:0x7ff8de90e7f7
->> [330289.829681] RSP: 002b:00007fff52069b08 EFLAGS: 00000202 ORIG_RAX:
->> 0000000000000012
->> [330289.830408] RAX: ffffffffffffffda RBX: 0000562bb434f510 RCX:
->> 00007ff8de90e7f7
->> [330289.831073] RDX: 0000000000002000 RSI: 00007ff888b52e80 RDI:
->> 000000000000003b
->> [330289.831762] RBP: 00000000000021b0 R08: 000000000a000010 R09:
->> 0000000000000040
->> [330289.832440] R10: 0000000004ed8000 R11: 0000000000000202 R12:
->> 0000000000002000
->> [330289.833130] R13: 0000000004ed8000 R14: 00007ff8de8176c8 R15:
->> 0000562bb434af75
->> [330289.833803]  </TASK>
->> [330289.834064] INFO: task .postgres-wrapp:1245532 blocked for more than=
- 122
->> seconds.
->> [330289.834771]       Not tainted 6.1.31 #1-NixOS
->> [330289.835209] "echo 0 > /proc/sys/kernel/hung_task_timeout_secs" disab=
-les
->> this message.
->> [330289.835926] task:.postgres-wrapp state:D stack:0     pid:1245532
->> ppid:11881
->> flags:0x00000002
->> [330289.836752] Call Trace:
->> [330289.837010]  <TASK>
->> [330289.837258]  __schedule+0x35d/0x1370
->> [330289.837622]  ? page_add_file_rmap+0xba/0x2f0
->> [330289.838047]  ? do_set_pte+0x174/0x1c0
->> [330289.838420]  ? unix_stream_read_generic+0x223/0xa60
->> [330289.838887]  schedule+0x5d/0xe0
->> [330289.839265]  schedule_preempt_disabled+0x14/0x30
->> [330289.839758]  rwsem_down_read_slowpath+0x29e/0x4f0
->> [330289.840521]  down_read+0x47/0xb0
->> [330289.840853]  xfs_ilock+0x79/0xf0 [xfs]
->> [330289.841346]  xfs_file_buffered_read+0x44/0xd0 [xfs]
->> [330289.841945]  xfs_file_read_iter+0x6a/0xd0 [xfs]
->> [330289.842496]  vfs_read+0x23c/0x310
->> [330289.842845]  __x64_sys_pread64+0x94/0xc0
->> [330289.843303]  do_syscall_64+0x3a/0x90
->> [330289.843857]  entry_SYSCALL_64_after_hwframe+0x63/0xcd
->> [330289.844420] RIP: 0033:0x7ff8de90e747
->> [330289.844898] RSP: 002b:00007fff5206aae8 EFLAGS: 00000202 ORIG_RAX:
->> 0000000000000011
->> [330289.845705] RAX: ffffffffffffffda RBX: 0000000000000000 RCX:
->> 00007ff8de90e747
->> [330289.846488] RDX: 0000000000002000 RSI: 00007ff8896e0e80 RDI:
->> 0000000000000010
->> [330289.847133] RBP: 0000000000000001 R08: 000000000a00000d R09:
->> 0000000000000000
->> [330289.847627] R10: 0000000018fb8000 R11: 0000000000000202 R12:
->> 00007ff8cdd91278
->> [330289.848113] R13: 0000562bb434af75 R14: 0000562bb434f510 R15:
->> 0000562bb5e89e70
->> [330289.848631]  </TASK>
->>=20
->>=20
->> This keeps going on for a few minutes until:
->>=20
->> [330584.618978] rcu: INFO: rcu_preempt self-detected stall on CPU
->> [330584.619413] rcu:    1-....: (20999 ticks this GP)
->> idle=3D1204/1/0x4000000000000000 softirq=3D53073547/53073547 fqs=3D5231
->> [330584.620052]         (t=3D21000 jiffies g=3D142859597 q=3D21168 ncpus=
-=3D3)
->> [330584.620409] CPU: 1 PID: 1246481 Comm: .postgres-wrapp Not tainted 6.=
-1.31
->> #1-NixOS
->> [330584.620880] Hardware name: QEMU Standard PC (i440FX + PIIX, 1996), B=
-IOS
->> rel-1.12.1-0-ga5cab58e9a3f-prebuilt.qemu.org 04/01/2014
->> [330584.621588] RIP: 0010:xas_load+0xb/0x40
->> [330584.621844] Code: 04 48 8b 44 c2 08 c3 cc cc cc cc 48 8b 07 48 8b 40=
- 08
->> c3
->> cc cc cc cc 0f 1f 84 00 00 00 00 00 e8 3b ff ff ff 48 89 c2 83 e2 03 <48=
-> 83
->> fa
->> 02 75 08 48 3d 00 10 00 00 77 05 c3 cc cc cc cc 0f b6 4f
->> [330584.622996] RSP: 0018:ffffb427c3387bf8 EFLAGS: 00000202
->> [330584.623337] RAX: ffff988876d3c002 RBX: ffffb427c3387d70 RCX:
->> 0000000000000002
->> [330584.623787] RDX: 0000000000000002 RSI: ffff98871f9d2920 RDI:
->> ffffb427c3387c00
->> [330584.624239] RBP: 000000000000f161 R08: ffffb427c3387e68 R09:
->> ffffda1444482000
->> [330584.624686] R10: 0000000000000001 R11: 0000000000000001 R12:
->> 000000000000f161
->> [330584.625136] R13: ffff9887ad3c2700 R14: 000000000000f160 R15:
->> ffffb427c3387e90
->> [330584.625591] FS:  00007ff8de817800(0000) GS:ffff98887ac80000(0000)
->> knlGS:0000000000000000
->> [330584.626097] CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
->> [330584.626467] CR2: 0000562bb434e2d8 CR3: 0000000104bd6000 CR4:
->> 00000000000006e0
->> [330584.626954] Call Trace:
->> [330584.627125]  <IRQ>
->> [330584.627281]  ? rcu_dump_cpu_stacks+0xc8/0x100
->> [330584.627567]  ? rcu_sched_clock_irq.cold+0x15b/0x2fb
->> [330584.627882]  ? sched_slice+0x87/0x140
->> [330584.628126]  ? timekeeping_update+0xdd/0x130
->> [330584.628414]  ? __cgroup_account_cputime_field+0x5b/0xa0
->> [330584.628751]  ? update_process_times+0x77/0xb0
->> [330584.629036]  ? update_wall_time+0xc/0x20
->> [330584.629300]  ? tick_sched_handle+0x34/0x50
->> [330584.629564]  ? tick_sched_timer+0x6f/0x80
->> [330584.629823]  ? tick_sched_do_timer+0xa0/0xa0
->> [330584.630103]  ? __hrtimer_run_queues+0x112/0x2b0
->> [330584.630404]  ? hrtimer_interrupt+0xfe/0x220
->> [330584.630678]  ? __sysvec_apic_timer_interrupt+0x7f/0x170
->> [330584.631016]  ? sysvec_apic_timer_interrupt+0x99/0xc0
->> [330584.631339]  </IRQ>
->> [330584.631485]  <TASK>
->> [330584.631631]  ? asm_sysvec_apic_timer_interrupt+0x16/0x20
->> [330584.631974]  ? xas_load+0xb/0x40
->> [330584.632195]  ? xas_load+0x30/0x40
->> [330584.632415]  filemap_get_read_batch+0x16e/0x250
->> [330584.632710]  filemap_get_pages+0xa9/0x630
->> [330584.632972]  ? memcg_check_events+0xda/0x210
->> [330584.633259]  ? free_unref_page_commit+0x7c/0x170
->> [330584.633560]  ? _raw_spin_unlock_irqrestore+0x23/0x40
->> [330584.633880]  ? free_unref_page+0x1ac/0x220
->> [330584.634146]  filemap_read+0xd2/0x340
->> [330584.634389]  xfs_file_buffered_read+0x4f/0xd0 [xfs]
->> [330584.634778]  xfs_file_read_iter+0x6a/0xd0 [xfs]
->> [330584.635123]  vfs_read+0x23c/0x310
->> [330584.635354]  __x64_sys_pread64+0x94/0xc0
->> [330584.635609]  do_syscall_64+0x3a/0x90
->> [330584.635846]  entry_SYSCALL_64_after_hwframe+0x63/0xcd
->> [330584.636174] RIP: 0033:0x7ff8de90e747
->> [330584.636437] Code: 48 e8 9d dc f2 ff 41 b8 02 00 00 00 e9 38 f6 ff ff=
- 66
->> 90
->> f3 0f 1e fa 80 3d bd ac 0e 00 00 49 89 ca 74 10 b8 11 00 00 00 0f 05 <48=
-> 3d
->> 00
->> f0 ff ff 77 59 c3 48 83 ec 28 48 89 54 24 10 48 89 74 24
->> [330584.637582] RSP: 002b:00007fff5206aaa8 EFLAGS: 00000202 ORIG_RAX:
->> 0000000000000011
->> [330584.638056] RAX: ffffffffffffffda RBX: 0000000000000000 RCX:
->> 00007ff8de90e747
->> [330584.638506] RDX: 0000000000002000 RSI: 00007ff888b68e80 RDI:
->> 0000000000000230
->> [330584.638954] RBP: 0000000000000001 R08: 000000000a00000d R09:
->> 0000000000000000
->> [330584.639411] R10: 000000000f160000 R11: 0000000000000202 R12:
->> 00007ff8cdd92688
->> [330584.639862] R13: 0000562bb434af75 R14: 0000562bb434f510 R15:
->> 0000562bb5fe04d0
->> [330584.640313]  </TASK>
->> [330584.721995] rcu: INFO: rcu_preempt detected expedited stalls on
->> CPUs/tasks:
->> { 1-.... } 21015 jiffies s: 7297 root: 0x2/.
->> [330584.722930] rcu: blocking rcu_node structures (internal RCU debug):
->> [330584.723428] Sending NMI from CPU 0 to CPUs 1:
->> [330584.723763] NMI backtrace for cpu 1
->> [330584.723769] CPU: 1 PID: 1246481 Comm: .postgres-wrapp Not tainted 6.=
-1.31
->> #1-NixOS
->> [330584.723772] Hardware name: QEMU Standard PC (i440FX + PIIX, 1996), B=
-IOS
->> rel-1.12.1-0-ga5cab58e9a3f-prebuilt.qemu.org 04/01/2014
->> [330584.723775] RIP: 0010:xas_load+0x29/0x40
->> [330584.723783] Code: 00 e8 3b ff ff ff 48 89 c2 83 e2 03 48 83 fa 02 75=
- 08
->> 48
->> 3d 00 10 00 00 77 05 c3 cc cc cc cc 0f b6 4f 10 48 8d 70 fe 38 48 fe <72=
-> ee
->> e8
->> 20 fe ff ff 80 3e 00 75 d0 c3 cc cc cc cc 66 0f 1f 44 00
->> [330584.723785] RSP: 0018:ffffb427c3387bf8 EFLAGS: 00000246
->> [330584.723787] RAX: ffff98871f8dbdaa RBX: ffffb427c3387d70 RCX:
->> 0000000000000000
->> [330584.723788] RDX: 0000000000000002 RSI: ffff98871f8dbda8 RDI:
->> ffffb427c3387c00
->> [330584.723789] RBP: 000000000000f161 R08: ffffb427c3387e68 R09:
->> ffffda1444482000
->> [330584.723790] R10: 0000000000000001 R11: 0000000000000001 R12:
->> 000000000000f161
->> [330584.723791] R13: ffff9887ad3c2700 R14: 000000000000f160 R15:
->> ffffb427c3387e90
->> [330584.723793] FS:  00007ff8de817800(0000) GS:ffff98887ac80000(0000)
->> knlGS:0000000000000000
->> [330584.723794] CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
->> [330584.723795] CR2: 0000562bb434e2d8 CR3: 0000000104bd6000 CR4:
->> 00000000000006e0
->> [330584.723798] Call Trace:
->> [330584.723801]  <NMI>
->> [330584.723805]  ? nmi_cpu_backtrace.cold+0x1b/0x76
->> [330584.723810]  ? nmi_cpu_backtrace_handler+0xd/0x20
->> [330584.723814]  ? nmi_handle+0x5d/0x120
->> [330584.723817]  ? xas_load+0x29/0x40
->> [330584.723818]  ? default_do_nmi+0x69/0x170
->> [330584.723821]  ? exc_nmi+0x13c/0x170
->> [330584.723823]  ? end_repeat_nmi+0x16/0x67
->> [330584.723828]  ? xas_load+0x29/0x40
->> [330584.723830]  ? xas_load+0x29/0x40
->> [330584.723832]  ? xas_load+0x29/0x40
->> [330584.723834]  </NMI>
->> [330584.723834]  <TASK>
->> [330584.723835]  filemap_get_read_batch+0x16e/0x250
->> [330584.723840]  filemap_get_pages+0xa9/0x630
->> [330584.723842]  ? memcg_check_events+0xda/0x210
->> [330584.723845]  ? free_unref_page_commit+0x7c/0x170
->> [330584.723849]  ? _raw_spin_unlock_irqrestore+0x23/0x40
->> [330584.723851]  ? free_unref_page+0x1ac/0x220
->> [330584.723852]  filemap_read+0xd2/0x340
->> [330584.723857]  xfs_file_buffered_read+0x4f/0xd0 [xfs]
->> [330584.723935]  xfs_file_read_iter+0x6a/0xd0 [xfs]
->> [330584.723990]  vfs_read+0x23c/0x310
->> [330584.723995]  __x64_sys_pread64+0x94/0xc0
->> [330584.723997]  do_syscall_64+0x3a/0x90
->> [330584.724000]  entry_SYSCALL_64_after_hwframe+0x63/0xcd
->> [330584.724003] RIP: 0033:0x7ff8de90e747
->> [330584.724019] Code: 48 e8 9d dc f2 ff 41 b8 02 00 00 00 e9 38 f6 ff ff=
- 66
->> 90
->> f3 0f 1e fa 80 3d bd ac 0e 00 00 49 89 ca 74 10 b8 11 00 00 00 0f 05 <48=
-> 3d
->> 00
->> f0 ff ff 77 59 c3 48 83 ec 28 48 89 54 24 10 48 89 74 24
->> [330584.724020] RSP: 002b:00007fff5206aaa8 EFLAGS: 00000202 ORIG_RAX:
->> 0000000000000011
->> [330584.724021] RAX: ffffffffffffffda RBX: 0000000000000000 RCX:
->> 00007ff8de90e747
->> [330584.724022] RDX: 0000000000002000 RSI: 00007ff888b68e80 RDI:
->> 0000000000000230
->> [330584.724023] RBP: 0000000000000001 R08: 000000000a00000d R09:
->> 0000000000000000
->> [330584.724023] R10: 000000000f160000 R11: 0000000000000202 R12:
->> 00007ff8cdd92688
->> [330584.724024] R13: 0000562bb434af75 R14: 0000562bb434f510 R15:
->> 0000562bb5fe04d0
->> [330584.724026]  </TASK>
->>=20
->>=20
->> This keeps repeating until around 4:03 which ends in systemd-journal get=
-ting
->> coredumped:
->>=20
->> [331277.846966] rcu: INFO: rcu_preempt self-detected stall on CPU
->> [331277.847413] rcu:    1-....: (713858 ticks this GP)
->> idle=3D1204/1/0x4000000000000000 softirq=3D53073547/53073547 fqs=3D311996
->> [331277.848088]         (t=3D714253 jiffies g=3D142859597 q=3D1821602 nc=
-pus=3D3)
->> [331277.848462] CPU: 1 PID: 1246481 Comm: .postgres-wrapp Not tainted 6.=
-1.31
->> #1-NixOS
->> [331277.848941] Hardware name: QEMU Standard PC (i440FX + PIIX, 1996), B=
-IOS
->> rel-1.12.1-0-ga5cab58e9a3f-prebuilt.qemu.org 04/01/2014
->> [331277.849667] RIP: 0010:xas_descend+0x22/0x70
->> [331277.849952] Code: cc cc cc cc cc cc cc cc 0f b6 0e 48 8b 57 08 48 d3=
- ea
->> 83
->> e2 3f 89 d0 48 83 c0 04 48 8b 44 c6 08 48 89 77 18 48 89 c1 83 e1 03 <48=
-> 83
->> f9
->> 02 75 08 48 3d fd 00 00 00 76 08 88 57 12 c3 cc cc cc cc
->> [331277.851120] RSP: 0018:ffffb427c3387bf0 EFLAGS: 00000202
->> [331277.851468] RAX: ffff988876d3c002 RBX: ffffb427c3387d70 RCX:
->> 0000000000000002
->> [331277.851928] RDX: 000000000000000f RSI: ffff98871f9d2920 RDI:
->> ffffb427c3387c00
->> [331277.852386] RBP: 000000000000f161 R08: ffffb427c3387e68 R09:
->> ffffda1444482000
->> [331277.852847] R10: 0000000000000001 R11: 0000000000000001 R12:
->> 000000000000f161
->> [331277.853303] R13: ffff9887ad3c2700 R14: 000000000000f160 R15:
->> ffffb427c3387e90
->> [331277.853766] FS:  00007ff8de817800(0000) GS:ffff98887ac80000(0000)
->> knlGS:0000000000000000
->> [331277.854278] CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
->> [331277.854653] CR2: 0000562bb434e2d8 CR3: 0000000104bd6000 CR4:
->> 00000000000006e0
->> [331277.855111] Call Trace:
->> [331277.855284]  <IRQ>
->> [331277.855433]  ? rcu_dump_cpu_stacks+0xc8/0x100
->> [331277.855730]  ? rcu_sched_clock_irq.cold+0x15b/0x2fb
->> [331277.856049]  ? sched_slice+0x87/0x140
->> [331277.856294]  ? timekeeping_update+0xdd/0x130
->> [331277.856587]  ? __cgroup_account_cputime_field+0x5b/0xa0
->> [331277.856930]  ? update_process_times+0x77/0xb0
->> [331277.857222]  ? update_wall_time+0xc/0x20
->> [331277.857482]  ? tick_sched_handle+0x34/0x50
->> [331277.857758]  ? tick_sched_timer+0x6f/0x80
->> [331277.858024]  ? tick_sched_do_timer+0xa0/0xa0
->> [331277.858306]  ? __hrtimer_run_queues+0x112/0x2b0
->> [331277.858613]  ? hrtimer_interrupt+0xfe/0x220
->> [331277.858891]  ? __sysvec_apic_timer_interrupt+0x7f/0x170
->> [331277.859235]  ? sysvec_apic_timer_interrupt+0x99/0xc0
->> [331277.859558]  </IRQ>
->> [331277.859710]  <TASK>
->> [331277.859857]  ? asm_sysvec_apic_timer_interrupt+0x16/0x20
->> [331277.860206]  ? xas_descend+0x22/0x70
->> [331277.860446]  xas_load+0x30/0x40
->> [331277.860665]  filemap_get_read_batch+0x16e/0x250
->> [331277.860967]  filemap_get_pages+0xa9/0x630
->> [331277.861233]  ? memcg_check_events+0xda/0x210
->> [331277.861517]  ? free_unref_page_commit+0x7c/0x170
->> [331277.861834]  ? _raw_spin_unlock_irqrestore+0x23/0x40
->> [331277.862158]  ? free_unref_page+0x1ac/0x220
->> [331277.862427]  filemap_read+0xd2/0x340
->> [331277.862677]  xfs_file_buffered_read+0x4f/0xd0 [xfs]
->> [331277.863072]  xfs_file_read_iter+0x6a/0xd0 [xfs]
->> [331277.863424]  vfs_read+0x23c/0x310
->> [331277.863657]  __x64_sys_pread64+0x94/0xc0
->> [331277.863917]  do_syscall_64+0x3a/0x90
->> [331277.864159]  entry_SYSCALL_64_after_hwframe+0x63/0xcd
->> [331277.864488] RIP: 0033:0x7ff8de90e747
->> [331277.864752] Code: 48 e8 9d dc f2 ff 41 b8 02 00 00 00 e9 38 f6 ff ff=
- 66
->> 90
->> f3 0f 1e fa 80 3d bd ac 0e 00 00 49 89 ca 74 10 b8 11 00 00 00 0f 05 <48=
-> 3d
->> 00
->> f0 ff ff 77 59 c3 48 83 ec 28 48 89 54 24 10 48 89 74 24
->> [331277.865917] RSP: 002b:00007fff5206aaa8 EFLAGS: 00000202 ORIG_RAX:
->> 0000000000000011
->> [331277.866395] RAX: ffffffffffffffda RBX: 0000000000000000 RCX:
->> 00007ff8de90e747
->> [331277.866848] RDX: 0000000000002000 RSI: 00007ff888b68e80 RDI:
->> 0000000000000230
->> [331277.867298] RBP: 0000000000000001 R08: 000000000a00000d R09:
->> 0000000000000000
->> [331277.867750] R10: 000000000f160000 R11: 0000000000000202 R12:
->> 00007ff8cdd92688
->> [331277.868199] R13: 0000562bb434af75 R14: 0000562bb434f510 R15:
->> 0000562bb5fe04d0
->> [331277.868658]  </TASK>
->> Fri Jun 16 04:03:23 AM CEST 2023 -- SERIAL CONSOLE IS LIVE --
->> [331289.987247] systemd[1]: Starting Serial console liveness marker...
->> [331289.992645] systemd[1]: nscd.service: Deactivated successfully.
->> [331290.011838] systemd[1]: nscd.service: Consumed 3min 16.251s CPU time,
->> received 12.0M IP traffic, sent 8.2M IP traffic.
->> [331290.020289] systemd[1]: serial-console-liveness.service: Deactivated
->> successfully.
->> [331290.035818] systemd[1]: Finished Serial console liveness marker.
->> [331290.068776] systemd[1]: Started Logrotate Service.
->> [331290.069700] systemd[1]: systemd-journald.service: Watchdog timeout
->> (limit
->> 3min)!
->> [331290.070475] systemd[1]: systemd-journald.service: Killing process 528
->> (systemd-journal) with signal SIGABRT.
->> [331290.096246] systemd[1]: logrotate.service: Deactivated successfully.
->> [331290.285285] systemd-coredump[1267441]: Process 528 (systemd-journal)=
- of
->> user 0 dumped core.
->> [331290.286002] systemd-coredump[1267441]: Coredump diverted to
->>
->> /var/lib/systemd/coredump/core.systemd-journal.0.39df468c96764e8c8fffc53=
-a0d0a47d1.528.1686881003000000.zst
->> [331290.287045] systemd-coredump[1267441]: Module libaudit.so.1 without
->> build-id.
->> [331290.287574] systemd-coredump[1267441]: Module libnftnl.so.11 without
->> build-id.
->> [331290.288111] systemd-coredump[1267441]: Module libmnl.so.0 without
->> build-id.
->> [331290.288587] systemd-coredump[1267441]: Module libgpg-error.so.0 with=
-out
->> build-id.
->> [331290.289076] systemd-coredump[1267441]: Module libattr.so.1 without
->> build-id.
->> [331290.289541] systemd-coredump[1267441]: Module libzstd.so.1 without
->> build-id.
->> [331290.289991] systemd-coredump[1267441]: Module liblzma.so.5 without
->> build-id.
->> [331290.290446] systemd-coredump[1267441]: Module libseccomp.so.2 without
->> build-id.
->> [331290.290940] systemd-coredump[1267441]: Module libpam.so.0 without
->> build-id.
->> [331290.291419] systemd-coredump[1267441]: Module liblz4.so.1 without
->> build-id.
->> [331290.291893] systemd-coredump[1267441]: Module libkmod.so.2 without
->> build-id.
->> [331290.292370] systemd-coredump[1267441]: Module libip4tc.so.2 without
->> build-id.
->> [331290.295165] systemd-coredump[1267441]: Module libgcrypt.so.20 without
->> build-id.
->> [331290.295678] systemd-coredump[1267441]: Module libcrypt.so.2 without
->> build-id.
->> [331290.296160] systemd-coredump[1267441]: Module libcap.so.2 without
->> build-id.
->> [331290.296708] systemd-coredump[1267441]: Module libacl.so.1 without
->> build-id.
->> [331290.297206] systemd-coredump[1267441]: Module libsystemd-shared-253.=
-so
->> without build-id.
->> [331290.297768] systemd-coredump[1267441]: Module systemd-journald witho=
-ut
->> build-id.
->> [331290.298273] systemd-coredump[1267441]: Stack trace of thread 528:
->> [331290.298714] systemd-coredump[1267441]: #0  0x00007f3e96431de8
->> check_object_header (libsystemd-shared-253.so + 0x231de8)
->> [331290.299435] systemd-coredump[1267441]: #1  0x00007f3e964330d2
->> journal_file_move_to_object (libsystemd-shared-253.so + 0x2330d2)
->> [331290.300199] systemd-coredump[1267441]: #2  0x00007f3e96434a71
->> journal_file_find_data_object_with_hash (libsystemd-shared-253.so +
->> 0x234a71)
->> [331290.302207] systemd-coredump[1267441]: #3  0x00007f3e96434d3b
->> journal_file_append_data (libsystemd-shared-253.so + 0x234d3b)
->> [331290.302983] systemd-coredump[1267441]: #4  0x00007f3e96437243
->> journal_file_append_entry (libsystemd-shared-253.so + 0x237243)
->> [331290.303767] systemd-coredump[1267441]: #5  0x000056536a4a7cd5
->> server_dispatch_message_real (systemd-journald + 0x10cd5)
->> [331290.304504] systemd-coredump[1267441]: #6  0x000056536a4a134b
->> dev_kmsg_record (systemd-journald + 0xa34b)
->> [331290.305195] systemd-coredump[1267441]: #7  0x000056536a4a182b
->> server_read_dev_kmsg (systemd-journald + 0xa82b)
->> [331290.305922] systemd-coredump[1267441]: #8  0x00007f3e9645c140
->> source_dispatch (libsystemd-shared-253.so + 0x25c140)
->> [331290.306640] systemd-coredump[1267441]: #9  0x00007f3e9645c42d
->> sd_event_dispatch (libsystemd-shared-253.so + 0x25c42d)
->> [331290.307350] systemd-coredump[1267441]: #10 0x00007f3e9645cb48
->> sd_event_run
->> (libsystemd-shared-253.so + 0x25cb48)
->> [331290.308043] systemd-coredump[1267441]: #11 0x000056536a4a0568 main
->> (systemd-journald + 0x9568)
->> [331290.308652] systemd-coredump[1267441]: #12 0x00007f3e9603dace
->> __libc_start_call_main (libc.so.6 + 0x23ace)
->> [331290.309292] systemd-coredump[1267441]: #13 0x00007f3e9603db89
->> __libc_start_main@@GLIBC_2.34 (libc.so.6 + 0x23b89)
->> [331290.310048] systemd-coredump[1267441]: #14 0x000056536a4a0835 _start
->> (systemd-journald + 0x9835)
->> [331290.310692] systemd-coredump[1267441]: ELF object binary architectur=
-e:
->> AMD
->> x86-64
->>=20
->>=20
->> This go back to normal until around 20:03 (around 14 hours later):
->>=20
->> [389370.873026] rcu: INFO: rcu_preempt self-detected stall on CPU
->> [389370.873481] rcu:    0-....: (21000 ticks this GP)
->> idle=3D91fc/1/0x4000000000000000 softirq=3D85252827/85252827 fqs=3D4704
->> [389370.874126]         (t=3D21002 jiffies g=3D167843445 q=3D13889 ncpus=
-=3D3)
->> [389370.874500] CPU: 0 PID: 2202919 Comm: .postgres-wrapp Not tainted 6.=
-1.31
->> #1-NixOS
->> [389370.874979] Hardware name: QEMU Standard PC (i440FX + PIIX, 1996), B=
-IOS
->> rel-1.12.1-0-ga5cab58e9a3f-prebuilt.qemu.org 04/01/2014
->> [389370.875710] RIP: 0010:xas_descend+0x26/0x70
->> [389370.875991] Code: cc cc cc cc 0f b6 0e 48 8b 57 08 48 d3 ea 83 e2 3f=
- 89
->> d0
->> 48 83 c0 04 48 8b 44 c6 08 48 89 77 18 48 89 c1 83 e1 03 48 83 f9 02 <75=
-> 08
->> 48
->> 3d fd 00 00 00 76 08 88 57 12 c3 cc cc cc cc 48 c1 e8 02
->> [389370.877164] RSP: 0018:ffffb427c4917bf0 EFLAGS: 00000246
->> [389370.877512] RAX: ffff98871f8dbdaa RBX: ffffb427c4917d70 RCX:
->> 0000000000000002
->> [389370.877967] RDX: 0000000000000005 RSI: ffff988876d3c000 RDI:
->> ffffb427c4917c00
->> [389370.878426] RBP: 000000000000f177 R08: ffffb427c4917e68 R09:
->> ffff988846485d38
->> [389370.878880] R10: ffffb427c4917e60 R11: ffff988846485d38 R12:
->> 000000000000f177
->> [389370.879341] R13: ffff988827b4ae00 R14: 000000000000f176 R15:
->> ffffb427c4917e90
->> [389370.879798] FS:  00007ff8de817800(0000) GS:ffff98887ac00000(0000)
->> knlGS:0000000000000000
->> [389370.880308] CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
->> [389370.880683] CR2: 00007ff881c8c000 CR3: 000000010dfea000 CR4:
->> 00000000000006f0
->> [389370.881139] Call Trace:
->> [389370.881309]  <IRQ>
->> [389370.881463]  ? rcu_dump_cpu_stacks+0xc8/0x100
->> [389370.881755]  ? rcu_sched_clock_irq.cold+0x15b/0x2fb
->> [389370.882077]  ? sched_slice+0x87/0x140
->> [389370.882325]  ? perf_event_task_tick+0x64/0x370
->> [389370.882629]  ? __cgroup_account_cputime_field+0x5b/0xa0
->> [389370.882968]  ? update_process_times+0x77/0xb0
->> [389370.883258]  ? tick_sched_handle+0x34/0x50
->> [389370.883538]  ? tick_sched_timer+0x6f/0x80
->> [389370.883802]  ? tick_sched_do_timer+0xa0/0xa0
->> [389370.884084]  ? __hrtimer_run_queues+0x112/0x2b0
->> [389370.884388]  ? hrtimer_interrupt+0xfe/0x220
->> [389370.884666]  ? __sysvec_apic_timer_interrupt+0x7f/0x170
->> [389370.885006]  ? sysvec_apic_timer_interrupt+0x99/0xc0
->> [389370.885338]  </IRQ>
->> [389370.885488]  <TASK>
->> [389370.885636]  ? asm_sysvec_apic_timer_interrupt+0x16/0x20
->> [389370.885983]  ? xas_descend+0x26/0x70
->> [389370.886224]  xas_load+0x30/0x40
->> [389370.886456]  filemap_get_read_batch+0x16e/0x250
->> [389370.886758]  filemap_get_pages+0xa9/0x630
->> [389370.887026]  ? atime_needs_update+0x104/0x180
->> [389370.887317]  ? touch_atime+0x46/0x1f0
->> [389370.887573]  filemap_read+0xd2/0x340
->> [389370.887817]  xfs_file_buffered_read+0x4f/0xd0 [xfs]
->> [389370.888210]  xfs_file_read_iter+0x6a/0xd0 [xfs]
->> [389370.888571]  vfs_read+0x23c/0x310
->> [389370.888797]  __x64_sys_pread64+0x94/0xc0
->> [389370.889058]  do_syscall_64+0x3a/0x90
->> [389370.889299]  entry_SYSCALL_64_after_hwframe+0x63/0xcd
->> [389370.889634] RIP: 0033:0x7ff8de90e747
->> [389370.889900] Code: 48 e8 9d dc f2 ff 41 b8 02 00 00 00 e9 38 f6 ff ff=
- 66
->> 90
->> f3 0f 1e fa 80 3d bd ac 0e 00 00 49 89 ca 74 10 b8 11 00 00 00 0f 05 <48=
-> 3d
->> 00
->> f0 ff ff 77 59 c3 48 83 ec 28 48 89 54 24 10 48 89 74 24
->> [389370.891063] RSP: 002b:00007fff5206a848 EFLAGS: 00000202 ORIG_RAX:
->> 0000000000000011
->> [389370.891549] RAX: ffffffffffffffda RBX: 0000000000000000 RCX:
->> 00007ff8de90e747
->> [389370.892003] RDX: 0000000000002000 RSI: 00007ff881c8ce80 RDI:
->> 00000000000001c7
->> [389370.892466] RBP: 0000000000000001 R08: 000000000a00000d R09:
->> 0000000000000000
->> [389370.892923] R10: 000000000f176000 R11: 0000000000000202 R12:
->> 00007ff8cdd91278
->> [389370.893386] R13: 0000562bb434af75 R14: 0000562bb434f510 R15:
->> 0000562bb5e55828
->> [389370.893843]  </TASK>
->>=20
->>=20
->> At this point we have to restart the VM externally because it didn't res=
-pond
->> properly any longer.
->>=20
->> --=20
->> You may reply to this email to add a comment.
->>=20
->> You are receiving this mail because:
->> You are watching the assignee of the bug.
->=20
->=20
-> Liebe Gr=C3=BC=C3=9Fe,
-> Christian Theune
->=20
-> --=20
-> Christian Theune =C2=B7 ct@flyingcircus.io =C2=B7 +49 345 219401 0
-> Flying Circus Internet Operations GmbH =C2=B7 https://flyingcircus.io
-> Leipziger Str. 70/71 =C2=B7 06108 Halle (Saale) =C2=B7 Deutschland
-> HR Stendal HRB 21169 =C2=B7 Gesch=C3=A4ftsf=C3=BChrer: Christian Theune, =
-Christian
-> Zagrodnick
->=20
+__xfs_free_extent() => xfs_free_extent_fix_freelist() =>
+xfs_alloc_fix_freelist() => xfs_alloc_ag_vextent_size()
 
-Liebe Gr=C3=BC=C3=9Fe,
-Christian Theune
+Here, xfs_extent_busy_flush() is invoked with XFS_ALLOC_FLAG_TRYFLUSH flag
+set. xfs_extent_busy_flush() flushes the CIL and returns to
+xfs_alloc_ag_vextent_size() since XFS_ALLOC_FLAG_TRYFLUSH was
+set. xfs_alloc_ag_vextent_size() invokes xfs_extent_busy_flush() once again;
+albeit without XFS_ALLOC_FLAG_TRYFLUSH flag set. This time
+xfs_extent_busy_flush() returns -EAGAIN since XFS_ALLOC_FLAG_FREEING flag is
+set.
 
---=20
-You may reply to this email to add a comment.
+This will ultimate cause xfs_inactive_ifree() to shutdown the filesystem and
+cancel a dirty transaction.
 
-You are receiving this mail because:
-You are watching the assignee of the bug.=
+Please note that the above narrative could be incorrect. However, I have
+browsed the source code multiple times and am yet to find any evidence to the
+contrary.
+
+> +
+> +	/* Wait for committed busy extents to resolve. */
+>  	do {
+>  		prepare_to_wait(&pag->pagb_wait, &wait, TASK_KILLABLE);
+>  		if  (busy_gen != READ_ONCE(pag->pagb_gen))
+> @@ -589,6 +613,7 @@ xfs_extent_busy_flush(
+>  	} while (1);
+>  
+>  	finish_wait(&pag->pagb_wait, &wait);
+> +	return 0;
+>  }
+>  
+>  void
+> diff --git a/fs/xfs/xfs_extent_busy.h b/fs/xfs/xfs_extent_busy.h
+> index 7a82c689bfa4..c37bf87e6781 100644
+> --- a/fs/xfs/xfs_extent_busy.h
+> +++ b/fs/xfs/xfs_extent_busy.h
+> @@ -51,9 +51,9 @@ bool
+>  xfs_extent_busy_trim(struct xfs_alloc_arg *args, xfs_agblock_t *bno,
+>  		xfs_extlen_t *len, unsigned *busy_gen);
+>  
+> -void
+> -xfs_extent_busy_flush(struct xfs_mount *mp, struct xfs_perag *pag,
+> -	unsigned busy_gen, uint32_t alloc_flags);
+> +int
+> +xfs_extent_busy_flush(struct xfs_trans *tp, struct xfs_perag *pag,
+> +		unsigned busy_gen, uint32_t alloc_flags);
+>  
+>  void
+>  xfs_extent_busy_wait_all(struct xfs_mount *mp);
+
+
+-- 
+chandan
