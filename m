@@ -2,168 +2,190 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id F2C77EB64DB
-	for <linux-xfs@archiver.kernel.org>; Tue, 20 Jun 2023 05:01:10 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id CA911EB64D7
+	for <linux-xfs@archiver.kernel.org>; Tue, 20 Jun 2023 05:47:15 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229907AbjFTFBI (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 20 Jun 2023 01:01:08 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50362 "EHLO
+        id S230448AbjFTFrO (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 20 Jun 2023 01:47:14 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60750 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229478AbjFTFBE (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 20 Jun 2023 01:01:04 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D593AE2;
-        Mon, 19 Jun 2023 22:01:03 -0700 (PDT)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature RSA-PSS (2048 bits))
-        (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 6A0BC60F38;
-        Tue, 20 Jun 2023 05:01:03 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id C6576C433C0;
-        Tue, 20 Jun 2023 05:01:02 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1687237262;
-        bh=urd3HvefVd1J/0znLoAuYLfUncRuPzZZrK6PjZZeph8=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=JfjP4CviArg0KjbmoEw/GLjX/3DKDOuOSQbN8IS4ylMW+DrX540vayX19Nip2X//D
-         UJWsM8wmvkfYgGKdtQ3SQOkAnz2vXhLvF0mMg607ycWYNC9yfPrx6k2eT0vQ26QS+v
-         FS6FL3roJzx1DVsM6OFmwkT+CSMWOHegB8idNfG2kd9iRKfJ0o/bZnznAq9tdjHtlN
-         9LQ40h8lsFmpVr192fvUyjVGH5grWeRUqTEe5Lyy/dsqYfYfYknY4K4LaAhvqSOaMM
-         xdxeavDmWZmmHyBo/y1CbZK53w2ICyvkepNrpTQfLmKyOR5zW5tNDuDQdnEZ4zgquh
-         Jxyp1qWdrGQtQ==
-Date:   Mon, 19 Jun 2023 22:01:02 -0700
-From:   "Darrick J. Wong" <djwong@kernel.org>
-To:     Ritesh Harjani <ritesh.list@gmail.com>
-Cc:     Matthew Wilcox <willy@infradead.org>, linux-xfs@vger.kernel.org,
-        linux-fsdevel@vger.kernel.org,
-        Andreas Gruenbacher <agruenba@redhat.com>,
-        Christoph Hellwig <hch@infradead.org>,
-        Brian Foster <bfoster@redhat.com>,
-        Ojaswin Mujoo <ojaswin@linux.ibm.com>,
-        Disha Goel <disgoel@linux.ibm.com>,
-        Aravinda Herle <araherle@in.ibm.com>
-Subject: Re: [PATCHv10 8/8] iomap: Add per-block dirty state tracking to
- improve performance
-Message-ID: <20230620050102.GF11467@frogsfrogsfrogs>
-References: <ZJCINLpHGifRHewa@casper.infradead.org>
- <87ilbjmkd6.fsf@doe.com>
+        with ESMTP id S229522AbjFTFrN (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 20 Jun 2023 01:47:13 -0400
+Received: from mail-pj1-x1034.google.com (mail-pj1-x1034.google.com [IPv6:2607:f8b0:4864:20::1034])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 13E50120
+        for <linux-xfs@vger.kernel.org>; Mon, 19 Jun 2023 22:47:12 -0700 (PDT)
+Received: by mail-pj1-x1034.google.com with SMTP id 98e67ed59e1d1-25e836b733eso2163661a91.0
+        for <linux-xfs@vger.kernel.org>; Mon, 19 Jun 2023 22:47:12 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=fromorbit-com.20221208.gappssmtp.com; s=20221208; t=1687240031; x=1689832031;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
+        bh=Bs4HgfeqjgJt5nfZJr9dS3obRKN7AF2do59UTgm42Z4=;
+        b=GWlkwYlzXExP8E6L0UAF0jGJDgm9vEnntYbKZOr+a2b3ErGtoW0W0ysHI4XvsRFUGc
+         f5VhiobwLyeNgmqBd9t+o48UfB/djqczUPUK3hSX1wM5hCsMLQ4cdrZ5wYEmjVXmIIB3
+         WPISWkOSQUgUTwnKB83WHtXjGyOWGmVhPx0kOlxqhXFvVkTQyefYHrSKL4854i37qN4B
+         0SAR/b99QR5I20bMXf6eIAfTr8iZVrjyaosJKQmvP8MJjJCnV+JOW5s43F82PAdDWDEe
+         NygNqQzv68PAyDmQ8B/wzfDphGH/usX807zPoHseAcMK1RvVThB76pydeZJOJYEs/Zj0
+         muag==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20221208; t=1687240031; x=1689832031;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=Bs4HgfeqjgJt5nfZJr9dS3obRKN7AF2do59UTgm42Z4=;
+        b=XuhYFkah24wKALnHRo/+5ekGk6mXlrSMmTr3/Gg77ECprAVBpW+k6fS4BjOBgS4fea
+         zTiREOjO7WXYbnp+52vMp/N0IvR2hIcEAWHHlg/3jrBR9axgo65KRZFZgwoAYRyGpMLg
+         dED/FMODu4DPc7mxf4PI1gM19v71bRJ9ywIPmZ1j2dNPS4KPzlsQG/2PEyYnjsF1JGX8
+         AZYKlBuMLukO6gX32Aq1GGU7BqoZ8GE8R8kBOpc38IcNe//zkgPc/xHi9dFk3jZyzBlD
+         gv4psuoWC4K3DzCZ2oqnLC7OezWpH5V+78j6i6UikwddAeJcdtGvTRLvIeb+V4jryiOU
+         4dNA==
+X-Gm-Message-State: AC+VfDzAQf06Fln5s9oLYXIkMCVQkudBPf9EVdX1XxnpWc9+S1vju+4B
+        LOsCxSSNnZs/pGvdLq5gurfmKDHD/NKDw462up8=
+X-Google-Smtp-Source: ACHHUZ7cB2FcpYfViv5BTYL0g/30ZwbVk/EjxZH5ei3GJ97IbJelegcqHR5DuFlTFGyMIP0WfyeSwA==
+X-Received: by 2002:a17:90a:c087:b0:25e:91ef:8b24 with SMTP id o7-20020a17090ac08700b0025e91ef8b24mr7653880pjs.24.1687240031510;
+        Mon, 19 Jun 2023 22:47:11 -0700 (PDT)
+Received: from dread.disaster.area (pa49-180-13-202.pa.nsw.optusnet.com.au. [49.180.13.202])
+        by smtp.gmail.com with ESMTPSA id q21-20020a170902b11500b001b414fae374sm681613plr.291.2023.06.19.22.47.10
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Mon, 19 Jun 2023 22:47:10 -0700 (PDT)
+Received: from dave by dread.disaster.area with local (Exim 4.96)
+        (envelope-from <david@fromorbit.com>)
+        id 1qBUCq-00DwEa-0I;
+        Tue, 20 Jun 2023 15:47:08 +1000
+Date:   Tue, 20 Jun 2023 15:47:08 +1000
+From:   Dave Chinner <david@fromorbit.com>
+To:     "Darrick J. Wong" <djwong@kernel.org>
+Cc:     linux-xfs@vger.kernel.org
+Subject: Re: [PATCH 8/9] xfs: reap large AG metadata extents when possible
+Message-ID: <ZJE9XO9cFBDGbr/8@dread.disaster.area>
+References: <168506055606.3728180.16225214578338421625.stgit@frogsfrogsfrogs>
+ <168506055733.3728180.3134566782464969180.stgit@frogsfrogsfrogs>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <87ilbjmkd6.fsf@doe.com>
+In-Reply-To: <168506055733.3728180.3134566782464969180.stgit@frogsfrogsfrogs>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Mon, Jun 19, 2023 at 10:59:09PM +0530, Ritesh Harjani wrote:
-> Matthew Wilcox <willy@infradead.org> writes:
+On Thu, May 25, 2023 at 05:45:03PM -0700, Darrick J. Wong wrote:
+> From: Darrick J. Wong <djwong@kernel.org>
 > 
-> > On Mon, Jun 19, 2023 at 09:55:53PM +0530, Ritesh Harjani wrote:
-> >> Matthew Wilcox <willy@infradead.org> writes:
-> >> 
-> >> > On Mon, Jun 19, 2023 at 07:58:51AM +0530, Ritesh Harjani (IBM) wrote:
-> >> >> +static void ifs_calc_range(struct folio *folio, size_t off, size_t len,
-> >> >> +		enum iomap_block_state state, unsigned int *first_blkp,
-> >> >> +		unsigned int *nr_blksp)
-> >> >> +{
-> >> >> +	struct inode *inode = folio->mapping->host;
-> >> >> +	unsigned int blks_per_folio = i_blocks_per_folio(inode, folio);
-> >> >> +	unsigned int first = off >> inode->i_blkbits;
-> >> >> +	unsigned int last = (off + len - 1) >> inode->i_blkbits;
-> >> >> +
-> >> >> +	*first_blkp = first + (state * blks_per_folio);
-> >> >> +	*nr_blksp = last - first + 1;
-> >> >> +}
-> >> >
-> >> > As I said, this is not 'first_blkp'.  It's first_bitp.  I think this
-> >> > misunderstanding is related to Andreas' complaint, but it's not quite
-> >> > the same.
-> >> >
-> >> 
-> >> We represent each FS block as a bit in the bitmap. So first_blkp or
-> >> first_bitp or first_blkbitp essentially means the same. 
-> >> I went with first_blk, first_blkp in the first place based on your
-> >> suggestion itself [1].
-> >
-> > No, it's not the same!  If you have 1kB blocks in a 64kB page, they're
-> > numbered 0-63.  If you 'calc_range' for any of the dirty bits, you get
-> > back a number in the range 64-127.  That's not a block number!  It's
-> > the number of the bit you want to refer to.  Calling it blkp is going
-> > to lead to confusion -- as you yourself seem to be confused.
-> >
-> >> [1]: https://lore.kernel.org/linux-xfs/Y%2FvxlVUJ31PZYaRa@casper.infradead.org/
-> >
-> > Those _were_ block numbers!  off >> inode->i_blkbits calculates a block
-> > number.  (off >> inode->i_blkbits) + blocks_per_folio() does not calculate
-> > a block number, it calculates a bit number.
-> >
+> When we're freeing extents that have been set in a bitmap, break the
+> bitmap extent into multiple sub-extents organized by fate, and reap the
+> extents.  This enables us to dispose of old resources more efficiently
+> than doing them block by block.
 > 
-> Yes, I don't mind changing it to _bit. It is derived out of an FS block
-> representation only. But I agree with your above argument using _bit in
-> variable name makes it explicit and clear.
+> While we're at it, rename the reaping functions to make it clear that
+> they're reaping per-AG extents.
 > 
-> >> >> -	return bitmap_full(ifs->state, i_blocks_per_folio(inode, folio));
-> >> >> +	return bitmap_full(ifs->state, nr_blks);
-> >> >
-> >> > I think we have a gap in our bitmap APIs.  We don't have a
-> >> > 'bitmap_range_full(src, pos, nbits)'.  We could use find_next_zero_bit(),
-> >> > but that's going to do more work than necessary.
-> >> >
-> >> > Given this lack, perhaps it's time to say that you're making all of
-> >> > this too hard by using an enum, and pretending that we can switch the
-> >> > positions of 'uptodate' and 'dirty' in the bitmap just by changing
-> >> > the enum.
-> >> 
-> >> Actually I never wanted to use the the enum this way. That's why I was
-> >> not fond of the idea behind using enum in all the bitmap state
-> >> manipulation APIs (test/set/).
-> >> 
-> >> It was only intended to be passed as a state argument to ifs_calc_range()
-> >> function to keep all the first_blkp and nr_blksp calculation at one
-> >> place. And just use it's IOMAP_ST_MAX value while allocating state bitmap.
-> >> It was never intended to be used like this.
-> >> 
-> >> We can even now go back to this original idea and keep the use of the
-> >> enum limited to what I just mentioned above i.e. for ifs_calc_range().
-> >> 
-> >> And maybe just use this in ifs_alloc()?
-> >> BUILD_BUG_ON(IOMAP_ST_UPTODATE == 0);
-> >> BUILD_BUG_ON(IOMAP_ST_DIRTY == 1);
-> >> 
-> >> > Define the uptodate bits to be the first ones in the bitmap,
-> >> > document it (and why), and leave it at that.
-> >> 
-> >> Do you think we can go with above suggestion, or do you still think we
-> >> need to drop it?
-> >> 
-> >> In case if we drop it, then should we open code the calculations for
-> >> first_blk, last_blk? These calculations are done in exact same fashion
-> >> at 3 places ifs_set_range_uptodate(), ifs_clear_range_dirty() and
-> >> ifs_set_range_dirty().
-> >> Thoughts?
-> >
-> > I disliked the enum from the moment I saw it, but didn't care enough to
-> > say so.
-> >
-> > Look, an abstraction should have a _purpose_.  The enum doesn't.  I'd
-> > ditch this calc_range function entirely; it's just not worth it.
-> 
-> I guess enum is creating more confusion with almost everyone than adding value.
-> So I don't mind ditching it (unless anyone else opposes for keeping it).
-> 
-> Also it would be helpful if you could let me know of any other review
-> comments on the rest of the patch? Does the rest looks good to you?
+> Signed-off-by: Darrick J. Wong <djwong@kernel.org>
+> ---
 
-I deleted my entire angry rant about how this review has turned a
-fairly simple design change into a big mess that even the reviewers
-don't understand anymore.  I'm on vacation, I DGAF anymore.
+.....
+> +xreap_agextent_binval(
+> +	struct xreap_state	*rs,
+> +	xfs_agblock_t		agbno,
+> +	xfs_extlen_t		*aglenp)
+>  {
+> -	struct xfs_buf		*bp = NULL;
+> -	int			error;
+> +	struct xfs_scrub	*sc = rs->sc;
+> +	struct xfs_perag	*pag = sc->sa.pag;
+> +	struct xfs_mount	*mp = sc->mp;
+> +	xfs_agnumber_t		agno = sc->sa.pag->pag_agno;
+> +	xfs_agblock_t		agbno_next = agbno + *aglenp;
+> +	xfs_agblock_t		bno = agbno;
+>  
+>  	/*
+> -	 * If there's an incore buffer for exactly this block, invalidate it.
+>  	 * Avoid invalidating AG headers and post-EOFS blocks because we never
+>  	 * own those.
+>  	 */
+> -	if (!xfs_verify_fsbno(sc->mp, fsbno))
+> +	if (!xfs_verify_agbno(pag, agbno) ||
+> +	    !xfs_verify_agbno(pag, agbno_next - 1))
+>  		return;
+>  
+>  	/*
+> -	 * We assume that the lack of any other known owners means that the
+> -	 * buffer can be locked without risk of deadlocking.
+> +	 * If there are incore buffers for these blocks, invalidate them.  We
+> +	 * assume that the lack of any other known owners means that the buffer
+> +	 * can be locked without risk of deadlocking.  The buffer cache cannot
+> +	 * detect aliasing, so employ nested loops to scan for incore buffers
+> +	 * of any plausible size.
+>  	 */
+> -	error = xfs_buf_incore(sc->mp->m_ddev_targp,
+> -			XFS_FSB_TO_DADDR(sc->mp, fsbno),
+> -			XFS_FSB_TO_BB(sc->mp, 1), XBF_BCACHE_SCAN, &bp);
+> -	if (error)
+> -		return;
+> -
+> -	xfs_trans_bjoin(sc->tp, bp);
+> -	xfs_trans_binval(sc->tp, bp);
+> +	while (bno < agbno_next) {
+> +		xfs_agblock_t	fsbcount;
+> +		xfs_agblock_t	max_fsbs;
+> +
+> +		/*
+> +		 * Max buffer size is the max remote xattr buffer size, which
+> +		 * is one fs block larger than 64k.
+> +		 */
+> +		max_fsbs = min_t(xfs_agblock_t, agbno_next - bno,
+> +				xfs_attr3_rmt_blocks(mp, XFS_XATTR_SIZE_MAX));
+> +
+> +		for (fsbcount = 1; fsbcount < max_fsbs; fsbcount++) {
+> +			struct xfs_buf	*bp = NULL;
+> +			xfs_daddr_t	daddr;
+> +			int		error;
+> +
+> +			daddr = XFS_AGB_TO_DADDR(mp, agno, bno);
+> +			error = xfs_buf_incore(mp->m_ddev_targp, daddr,
+> +					XFS_FSB_TO_BB(mp, fsbcount),
+> +					XBF_BCACHE_SCAN, &bp);
+> +			if (error)
+> +				continue;
+> +
+> +			xfs_trans_bjoin(sc->tp, bp);
+> +			xfs_trans_binval(sc->tp, bp);
+> +			rs->invalidated++;
 
-Ritesh: Dump the enum; "because btrfs does it" is not sufficient
-justification.  The rest is good enough, I'll put it in iomap-for-next
-along with willy's thing as soon as 6.5-rc1 closes, and if you all have
-further complaints, send your own patches.
+Hmmm. O(N^2) brute force lookup walk to find any buffer at that
+specific daddr?  That's going to have an impact on running systems
+by hammering the perag hash lock.
 
---D
+I didn't know this was being done before I suggested XBF_ANY_MATCH,
+but now I'm wondering how can we even have multiple buffers in the
+cache at a given address? The whole point of the ASSERT() in the
+match function is to indicate this should not ever happen.
 
-> -ritesh
+i.e. xfs_buf_find_insert() uses rhashtable_lookup_get_insert_fast(),
+which will return an existing buffer only if it has a match length.
+The compare function used at insert time will throw an assert fail
+if any other buffer exists at that address that has a mismatched
+length that is not stale. There is no way to avoid that ASSERT check
+on insert.
+
+Hence, AFAICT, the only way we can get multiple buffers into the
+cache at the same daddr with different lengths is for all the
+existing buffers at that daddr to all be stale at insert time.  In
+which case, why do we need to invalidate buffers that are already
+stale (i.e. been invalidated)?
+
+What am I missing here? i.e. this appears to cater for behaviour
+that doesn't currently exist in the buffer cache, and I'm not sure
+we even want to allow to occur in the buffer cache given that it
+generally indicates in-memory metadata corruption.....
+
+Hmmmm. What if the buffer was already stale? The lookup will then
+clear all the stale state from it, leave it with no valid contents
+which we then invalidate again and log a new buffer cancel item for
+it. What are the implications of that? (My brain is too full of
+stuff trying to understand what this code is doing to be able to
+think this through right now.)
+
+-Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
