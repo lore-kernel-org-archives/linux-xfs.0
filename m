@@ -2,165 +2,133 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9608CEB64D9
-	for <linux-xfs@archiver.kernel.org>; Mon, 19 Jun 2023 17:29:18 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1C653EB64D9
+	for <linux-xfs@archiver.kernel.org>; Tue, 20 Jun 2023 00:20:30 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231269AbjFSR3R (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 19 Jun 2023 13:29:17 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35334 "EHLO
+        id S229454AbjFTAU2 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 19 Jun 2023 20:20:28 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34622 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231224AbjFSR3Q (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 19 Jun 2023 13:29:16 -0400
-Received: from mail-pl1-x631.google.com (mail-pl1-x631.google.com [IPv6:2607:f8b0:4864:20::631])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9C17A197;
-        Mon, 19 Jun 2023 10:29:15 -0700 (PDT)
-Received: by mail-pl1-x631.google.com with SMTP id d9443c01a7336-1b539d2f969so19874345ad.0;
-        Mon, 19 Jun 2023 10:29:15 -0700 (PDT)
+        with ESMTP id S229453AbjFTAU2 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 19 Jun 2023 20:20:28 -0400
+Received: from mail-pg1-x534.google.com (mail-pg1-x534.google.com [IPv6:2607:f8b0:4864:20::534])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id CAA48B4
+        for <linux-xfs@vger.kernel.org>; Mon, 19 Jun 2023 17:20:26 -0700 (PDT)
+Received: by mail-pg1-x534.google.com with SMTP id 41be03b00d2f7-54fdf8c79a3so1935256a12.3
+        for <linux-xfs@vger.kernel.org>; Mon, 19 Jun 2023 17:20:26 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20221208; t=1687195755; x=1689787755;
-        h=in-reply-to:subject:cc:to:from:message-id:date:from:to:cc:subject
-         :date:message-id:reply-to;
-        bh=tMnCy7i+HFpbqsqO/5BP7uvkP1/TZW9hG0+jOwlF2Kk=;
-        b=J3fV9v06jeBvyHjLkcXP0ZQWudSqeJBqPYKzwMxJTUjwtoYS+gSMH9B1XmYSYq1Azm
-         o8MuZTbRMQqGzQ5eDiAu22EIGLGTQsZWWPUKnmfI597aEaQP/INzM8A6QlMrL3eCLuPF
-         b+F5TEJZlLmAWlqBHe0dhDFoQ9ohbvEgp+oMIrouEwM9qnRzBH2yzfqR7chzkk1czQ8C
-         UFdLxM1XLo40xQxvuSbY21zVpd3gBx7q+0IidbxEK4UtTlQ5npLjoNFCYUVenvBQmUb2
-         ugTHeVJGGV8P7G7ouM5FtzeMbmfuXOifWJCl50XO2yqysY34wyYGSil0thLLnhrTdKYK
-         +JRA==
+        d=fromorbit-com.20221208.gappssmtp.com; s=20221208; t=1687220426; x=1689812426;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:to
+         :from:from:to:cc:subject:date:message-id:reply-to;
+        bh=ZtXvsDvnCqWOL6L895j1Fw5hBCHPlfk/C2F3bzGKDMc=;
+        b=eCCmIuJVocfwtyxLgv2J2CAfgCZhCBbsCcMLYKWoHWUpKVTygZ6qZIT9XwrGP8Il9p
+         87wg7d6BsOu4bofGJcwYhX0lMfMtODG7AdD1yc2JUgiOFY8a8uTFae5TefY5QRWwzn3K
+         S1StwD2onoyE31wWT/ujZ37SkAcZg731qs1eK30J70ZoMxxvtWiR+7e5iQRl6GqansPM
+         /7QBW9nIwJU6++NBnDK/9OyRsA7lRF5fjwh4tApl5xtUSz5gYO5rtXuo0VDpOLjLE4ee
+         8J78vwzpNGbbfCo5FHt5WOLRpjn1TcDN8ksLuQYuTLQhSD3ggAUS048RIBo07fI0A538
+         Goew==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20221208; t=1687195755; x=1689787755;
-        h=in-reply-to:subject:cc:to:from:message-id:date:x-gm-message-state
-         :from:to:cc:subject:date:message-id:reply-to;
-        bh=tMnCy7i+HFpbqsqO/5BP7uvkP1/TZW9hG0+jOwlF2Kk=;
-        b=YjtOlNNmT0wVtYljvuCdTEmU8+zo9A4CGNA8RIYFSyuGA19rdONunClU/fs6DcQwOF
-         x4iB+PbzTaWF1VBzSFqXFxy9txquBn38ucfz+SjAChT+ghpoxwTLeSJVNbLcbJBW2CWF
-         W4Q69rJ26MIjjOiuDc5Yd/hqRdSiQRIZP2bZHrp6D6Ctcf1jnUe38rr1eiI3YvJ3KEoC
-         biUTvN3sY4boTqvuf/59crU+gUKL0iIWlz/vwQ2xqD8j4Er21GaoqjF1N1j/YPcHenTi
-         Rt0LqvjIHniMBbEZAiyPFE32oWJgZi1l/EGweBLc3xkfVqlFt5OGbhS4qNLCxeNULo3Z
-         +n1g==
-X-Gm-Message-State: AC+VfDzqlgu6yJnTyRhpdzs/QBImYPV0as6o2l7Mx9xC6haYKhLRMXYE
-        9GuRkj+jsOB2YLiIdqxjZVg=
-X-Google-Smtp-Source: ACHHUZ6mNyqdlQXsc0O7xjSAmAMVAmcm+QChFQO5eo3ihtwVrHvuGGnUgzWhRVKAjGoDxl6N+vT4XQ==
-X-Received: by 2002:a17:902:e892:b0:1b2:3e9f:69d1 with SMTP id w18-20020a170902e89200b001b23e9f69d1mr22073012plg.18.1687195754851;
-        Mon, 19 Jun 2023 10:29:14 -0700 (PDT)
-Received: from dw-tp ([49.207.220.159])
-        by smtp.gmail.com with ESMTPSA id kg14-20020a170903060e00b001b67a2896bdsm83234plb.274.2023.06.19.10.29.11
+        d=1e100.net; s=20221208; t=1687220426; x=1689812426;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:to
+         :from:x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=ZtXvsDvnCqWOL6L895j1Fw5hBCHPlfk/C2F3bzGKDMc=;
+        b=YDws0lMbljVUGRVvA9g402uFfYMtNB3D5lTHqMfJkqMiPEbfZOeGtMxn4GRpbS4sfA
+         LO5b6jJzYbUxqNVehqTltyyXib4UpOJoLMPoc7c573tonGS3MZ2M3mTStgfvsGWKqc39
+         2xBI2PvqbR0rrOVsxSqKQhv9ico7XeeY1BzrawLqEVwpPoQOukWJoiaJR4HUHmDG/tLG
+         pOc+7dCJ870Gw3vhvEHe9bB5YyNDhpXLGbEFeB5sJySS0C0PTAAkFmvtu4IQcZ+nqW6t
+         VUX6DOFR2jwDkSdMXtC8twe5nIgZrXzyeHox+fK4UOVvUF3a7D2MHvnuKytAyFOPKZLP
+         pi5w==
+X-Gm-Message-State: AC+VfDz+L8ihfpz3dsK+qYu/y3mErNg3obdageuazxAm58YjPq0MOxO2
+        /RL6t+zB0zdpocU2SZ0IW9HVzTj7xeJvkO75GAk=
+X-Google-Smtp-Source: ACHHUZ4rF0UmQxOHGS4eJOLMvd/92S5nixgCR9y5lYKg2+hxKtHQgiwjP98Qv8bIu3g16W1DgVdogg==
+X-Received: by 2002:a17:90a:1ce:b0:25e:542d:acc with SMTP id 14-20020a17090a01ce00b0025e542d0accmr2028917pjd.8.1687220426255;
+        Mon, 19 Jun 2023 17:20:26 -0700 (PDT)
+Received: from dread.disaster.area (pa49-180-13-202.pa.nsw.optusnet.com.au. [49.180.13.202])
+        by smtp.gmail.com with ESMTPSA id 24-20020a17090a191800b002555689006esm6520936pjg.47.2023.06.19.17.20.25
+        for <linux-xfs@vger.kernel.org>
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 19 Jun 2023 10:29:14 -0700 (PDT)
-Date:   Mon, 19 Jun 2023 22:59:09 +0530
-Message-Id: <87ilbjmkd6.fsf@doe.com>
-From:   Ritesh Harjani (IBM) <ritesh.list@gmail.com>
-To:     Matthew Wilcox <willy@infradead.org>
-Cc:     linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
-        "Darrick J . Wong" <djwong@kernel.org>,
-        Andreas Gruenbacher <agruenba@redhat.com>,
-        Christoph Hellwig <hch@infradead.org>,
-        Brian Foster <bfoster@redhat.com>,
-        Ojaswin Mujoo <ojaswin@linux.ibm.com>,
-        Disha Goel <disgoel@linux.ibm.com>,
-        Aravinda Herle <araherle@in.ibm.com>
-Subject: Re: [PATCHv10 8/8] iomap: Add per-block dirty state tracking to improve performance
-In-Reply-To: <ZJCINLpHGifRHewa@casper.infradead.org>
+        Mon, 19 Jun 2023 17:20:25 -0700 (PDT)
+Received: from [192.168.253.23] (helo=devoid.disaster.area)
+        by dread.disaster.area with esmtp (Exim 4.96)
+        (envelope-from <dave@fromorbit.com>)
+        id 1qBP6d-00Dqg4-0u
+        for linux-xfs@vger.kernel.org;
+        Tue, 20 Jun 2023 10:20:23 +1000
+Received: from dave by devoid.disaster.area with local (Exim 4.96)
+        (envelope-from <dave@devoid.disaster.area>)
+        id 1qBP6c-004dlv-34
+        for linux-xfs@vger.kernel.org;
+        Tue, 20 Jun 2023 10:20:22 +1000
+From:   Dave Chinner <david@fromorbit.com>
+To:     linux-xfs@vger.kernel.org
+Subject: [PATCH 0/5 V2] xfs: various fixes
+Date:   Tue, 20 Jun 2023 10:20:16 +1000
+Message-Id: <20230620002021.1038067-1-david@fromorbit.com>
+X-Mailer: git-send-email 2.40.1
+MIME-Version: 1.0
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Matthew Wilcox <willy@infradead.org> writes:
+Hi folks,
 
-> On Mon, Jun 19, 2023 at 09:55:53PM +0530, Ritesh Harjani wrote:
->> Matthew Wilcox <willy@infradead.org> writes:
->> 
->> > On Mon, Jun 19, 2023 at 07:58:51AM +0530, Ritesh Harjani (IBM) wrote:
->> >> +static void ifs_calc_range(struct folio *folio, size_t off, size_t len,
->> >> +		enum iomap_block_state state, unsigned int *first_blkp,
->> >> +		unsigned int *nr_blksp)
->> >> +{
->> >> +	struct inode *inode = folio->mapping->host;
->> >> +	unsigned int blks_per_folio = i_blocks_per_folio(inode, folio);
->> >> +	unsigned int first = off >> inode->i_blkbits;
->> >> +	unsigned int last = (off + len - 1) >> inode->i_blkbits;
->> >> +
->> >> +	*first_blkp = first + (state * blks_per_folio);
->> >> +	*nr_blksp = last - first + 1;
->> >> +}
->> >
->> > As I said, this is not 'first_blkp'.  It's first_bitp.  I think this
->> > misunderstanding is related to Andreas' complaint, but it's not quite
->> > the same.
->> >
->> 
->> We represent each FS block as a bit in the bitmap. So first_blkp or
->> first_bitp or first_blkbitp essentially means the same. 
->> I went with first_blk, first_blkp in the first place based on your
->> suggestion itself [1].
->
-> No, it's not the same!  If you have 1kB blocks in a 64kB page, they're
-> numbered 0-63.  If you 'calc_range' for any of the dirty bits, you get
-> back a number in the range 64-127.  That's not a block number!  It's
-> the number of the bit you want to refer to.  Calling it blkp is going
-> to lead to confusion -- as you yourself seem to be confused.
->
->> [1]: https://lore.kernel.org/linux-xfs/Y%2FvxlVUJ31PZYaRa@casper.infradead.org/
->
-> Those _were_ block numbers!  off >> inode->i_blkbits calculates a block
-> number.  (off >> inode->i_blkbits) + blocks_per_folio() does not calculate
-> a block number, it calculates a bit number.
->
+This is a wrap up of version 2 of all the fixes I have recently
+pushed out for review.
 
-Yes, I don't mind changing it to _bit. It is derived out of an FS block
-representation only. But I agree with your above argument using _bit in
-variable name makes it explicit and clear.
+The first patch fixes a AIL ordering problem identified when testing
+patches 2-4 in this series. This patch only addresses the AIL ordering
+problem that was found, it does not address any other corner cases
+in intent recovery that may be exposed by patches 2-4.
 
->> >> -	return bitmap_full(ifs->state, i_blocks_per_folio(inode, folio));
->> >> +	return bitmap_full(ifs->state, nr_blks);
->> >
->> > I think we have a gap in our bitmap APIs.  We don't have a
->> > 'bitmap_range_full(src, pos, nbits)'.  We could use find_next_zero_bit(),
->> > but that's going to do more work than necessary.
->> >
->> > Given this lack, perhaps it's time to say that you're making all of
->> > this too hard by using an enum, and pretending that we can switch the
->> > positions of 'uptodate' and 'dirty' in the bitmap just by changing
->> > the enum.
->> 
->> Actually I never wanted to use the the enum this way. That's why I was
->> not fond of the idea behind using enum in all the bitmap state
->> manipulation APIs (test/set/).
->> 
->> It was only intended to be passed as a state argument to ifs_calc_range()
->> function to keep all the first_blkp and nr_blksp calculation at one
->> place. And just use it's IOMAP_ST_MAX value while allocating state bitmap.
->> It was never intended to be used like this.
->> 
->> We can even now go back to this original idea and keep the use of the
->> enum limited to what I just mentioned above i.e. for ifs_calc_range().
->> 
->> And maybe just use this in ifs_alloc()?
->> BUILD_BUG_ON(IOMAP_ST_UPTODATE == 0);
->> BUILD_BUG_ON(IOMAP_ST_DIRTY == 1);
->> 
->> > Define the uptodate bits to be the first ones in the bitmap,
->> > document it (and why), and leave it at that.
->> 
->> Do you think we can go with above suggestion, or do you still think we
->> need to drop it?
->> 
->> In case if we drop it, then should we open code the calculations for
->> first_blk, last_blk? These calculations are done in exact same fashion
->> at 3 places ifs_set_range_uptodate(), ifs_clear_range_dirty() and
->> ifs_set_range_dirty().
->> Thoughts?
->
-> I disliked the enum from the moment I saw it, but didn't care enough to
-> say so.
->
-> Look, an abstraction should have a _purpose_.  The enum doesn't.  I'd
-> ditch this calc_range function entirely; it's just not worth it.
+Patches 2-4 allow partial handling of multi-extent EFIs during
+runtime operation and during journal recovery. This is needed as
+we attempt to process all the extents in the EFI in a single
+transaction and we can deadlock during AGFL fixup if the transaction
+context holds the only free space in the AG in a busy extent.
 
-I guess enum is creating more confusion with almost everyone than adding value.
-So I don't mind ditching it (unless anyone else opposes for keeping it).
+This patchset uncovered a problem where log recovery would run off
+the end of the list of intents to recover and into intents that
+require deferred processing. This was caused by the ordering issue
+fixed in patch 1.
 
-Also it would be helpful if you could let me know of any other review
-comments on the rest of the patch? Does the rest looks good to you?
+This patchset does not attempt to address the end of intent recovery
+detection issues - this raises other issues with the intent recovery
+beyond loop termination. Solving those issues requires more thought,
+and the problem can largely be avoided by the first patch in the
+series. As it is, CUI recovery has been vulnerable to these intent
+recovery loop termination issues for several years but we don't have
+any evidence that systems have tripped over this so the urgency to
+fix the loop termination fully isn't as high as fixing the AIL bulk
+insertion ordering problem that exposed it.
 
--ritesh
+Finally, patch 5 addresses journal geometry validation issues. It
+makes all geometry mismatches hard failures for V4 and V5
+filesystems, except for the log size being too small on V4
+filesystems. This addresses the problem on V4 filesystems where we'd
+fail to perform ithe remaining validation on the geometry once we'd
+detected that the log was too small or too large.
+
+This all passed fstests on v4 and v5 filesystems without
+regressions.
+
+-Dave.
+
+---
+
+Version 2:
+- patch 1
+  - rewritten commit message
+- patch 2
+  - uint32_t alloc_flag conversion pushed all the way down into
+    xfs_extent_busy_flush
+- patch 3
+  - Updated comment for xfs_efd_from_efi()
+  - fixed whitespace damage
+  - check error return from xfs_free_extent_later()
+- patch 5
+  - update error message for max LSU size check
+  - fix whitespace damage
+  - clean up error handling in xfs_log_mount() changes
+
+
