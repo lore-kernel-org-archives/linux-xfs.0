@@ -2,72 +2,205 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E5CDDEB64D8
-	for <linux-xfs@archiver.kernel.org>; Wed, 21 Jun 2023 14:48:06 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E00C4EB64D8
+	for <linux-xfs@archiver.kernel.org>; Wed, 21 Jun 2023 14:54:00 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232173AbjFUOsE (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 21 Jun 2023 10:48:04 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56706 "EHLO
+        id S232359AbjFUOx6 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 21 Jun 2023 10:53:58 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58316 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232112AbjFUOr5 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 21 Jun 2023 10:47:57 -0400
-Received: from smtp-out1.suse.de (smtp-out1.suse.de [IPv6:2001:67c:2178:6::1c])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id DAC5A1BC8;
-        Wed, 21 Jun 2023 07:47:46 -0700 (PDT)
-Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
+        with ESMTP id S232966AbjFUOxP (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 21 Jun 2023 10:53:15 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 36C8530EA;
+        Wed, 21 Jun 2023 07:49:43 -0700 (PDT)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
+         key-exchange X25519 server-signature RSA-PSS (2048 bits))
         (No client certificate requested)
-        by smtp-out1.suse.de (Postfix) with ESMTPS id 6E5D121D31;
-        Wed, 21 Jun 2023 14:47:45 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.cz; s=susede2_rsa;
-        t=1687358865; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:  content-transfer-encoding:content-transfer-encoding;
-        bh=krazhDqkkI6wNXu0ll9SV+HdWkc5RkM6Hun6fu2TkJs=;
-        b=GtBjzesMY7ziWNesTZ+iw9f+LzMhYL5YcYwQIbPJ8wR1/W78AcYUTkpF4+eHPgMzValyLl
-        xY+SPXFHCXVv86DoE+LDJn+/e4+UCyuzjYgu4sobw7emZ8KJaH+Me1GcyCWOGDDzHKMXEd
-        qictKcYgLEBjeRKNRLzEswreR3xNGL0=
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.cz;
-        s=susede2_ed25519; t=1687358865;
-        h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:  content-transfer-encoding:content-transfer-encoding;
-        bh=krazhDqkkI6wNXu0ll9SV+HdWkc5RkM6Hun6fu2TkJs=;
-        b=J9o7reMXwwL11bX57ZoPvjej7A3xalVUdYSR6VHPyfIMuehFL+gtS7IjAysNcYRWpboIgA
-        L6a64E1ECnCqwWBQ==
-Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
-        (No client certificate requested)
-        by imap2.suse-dmz.suse.de (Postfix) with ESMTPS id 52A4C13A6D;
-        Wed, 21 Jun 2023 14:47:45 +0000 (UTC)
-Received: from dovecot-director2.suse.de ([192.168.254.65])
-        by imap2.suse-dmz.suse.de with ESMTPSA
-        id ZSAkFJENk2QAEQAAMHmgww
-        (envelope-from <jack@suse.cz>); Wed, 21 Jun 2023 14:47:45 +0000
-Received: by quack3.suse.cz (Postfix, from userid 1000)
-        id C53F3A075D; Wed, 21 Jun 2023 16:47:44 +0200 (CEST)
-From:   Jan Kara <jack@suse.cz>
-To:     Jens Axboe <axboe@kernel.dk>
-Cc:     <linux-block@vger.kernel.org>,
-        Christoph Hellwig <hch@infradead.org>,
-        <linux-ext4@vger.kernel.org>, <linux-xfs@vger.kernel.org>,
-        Jan Kara <jack@suse.cz>
-Subject: [PATCH 0/2] fs: Fixup bdev_mark_dead callbacks for ext4 and xfs
-Date:   Wed, 21 Jun 2023 16:47:41 +0200
-Message-Id: <20230621144354.10915-1-jack@suse.cz>
-X-Mailer: git-send-email 2.35.3
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 89CD6615A8;
+        Wed, 21 Jun 2023 14:49:38 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 5AC8DC433C0;
+        Wed, 21 Jun 2023 14:49:37 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1687358978;
+        bh=kW7QejN6cAdGFdYK6FmuoXUQCFABRtiU/bPOzqJ3sQA=;
+        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
+        b=Om1zaprHKqahWUV9/Gb4pL1uWao/LoM18XQ2soYV0p9NkjgIzsSq7CfX8a1ZMAqYv
+         xe7Vcu5fyXW8Y9LONV/Cv5fVd7ofyPQvktf428PNCF2a3qE/jn603o3s2EbDZlSwI8
+         LaDgkwQ+XQeT5mV3zebQF5XE/3ry5+qgLF603YIx5Mi1YyELbbRLUZ4i5zdyOm8OYH
+         wVkKKsC/4v85K2CJ1z6bWfdS02qTFkrUkB2EMfmS5mGiEke8ru92/xonjM3Vv+Xxn4
+         1sIwQiQfV22hJODRuL1stvtmeLBTlcdLn1XHGxsuB1SwyEcswXLMYWp5LQ7uhTW3pK
+         6+zalzUCFnwyQ==
+From:   Jeff Layton <jlayton@kernel.org>
+To:     Christian Brauner <brauner@kernel.org>,
+        "Darrick J. Wong" <djwong@kernel.org>
+Cc:     Al Viro <viro@zeniv.linux.org.uk>, Jan Kara <jack@suse.cz>,
+        linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: [PATCH 70/79] xfs: switch to new ctime accessors
+Date:   Wed, 21 Jun 2023 10:46:23 -0400
+Message-ID: <20230621144735.55953-69-jlayton@kernel.org>
+X-Mailer: git-send-email 2.41.0
+In-Reply-To: <20230621144735.55953-1-jlayton@kernel.org>
+References: <20230621144507.55591-1-jlayton@kernel.org>
+ <20230621144735.55953-1-jlayton@kernel.org>
 MIME-Version: 1.0
-X-Developer-Signature: v=1; a=openpgp-sha256; l=264; i=jack@suse.cz; h=from:subject:message-id; bh=BiSFepMSHltOxLj7FLxaUxptUJ6xX0ti4qvsnBTEaSY=; b=owGbwMvMwME4Z+4qdvsUh5uMp9WSGFIm87aLyjD/cjP8nznrWAhDzZ6GkzzMj7MX7b5d8LspIbuk ZcGzTkZjFgZGDgZZMUWW1ZEXta/NM+raGqohAzOIlQlkCgMXpwBMRD2E/Tfb8bAntXncWTG3BQJ/vv t4VWBnt4ykYMgX8eU9m6KPzmAJLjb2+xpcF7/ITXBdjOitIK1QuxXxNQu3iBo5KvW0vd8e5/o4ueaZ 1u07+8tvf5pU+iqxV0Jfr/XLz1argENGO6wv3Zyu+7E8z/nzT/Ug5oBH/G0/90srvVhqqZBVJRy2t7 uS+43oJgb/g0vTbNc/eawmcd6p5k12+Kbq41+3zZntzaXpa3gx7KBGb6Sc3e+OU8x2lnFvXltLx65/ tP18yYZ95x18Zme2v99jcfZpXuGTFoF0Dr6GsJKoQOPVSRtf7ZBqqNluoSBtpf+3pT1bd+ZvwZ2PG9 OrVR9eShdxCH+08l7hEbVNyXr5AA==
-X-Developer-Key: i=jack@suse.cz; a=openpgp; fpr=93C6099A142276A28BBE35D815BC833443038D8C
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Hello,
+In later patches, we're going to change how the ctime.tv_nsec field is
+utilized. Switch to using accessor functions instead of raw accesses of
+inode->i_ctime.
 
-Jens, I have found out the recently added handlers (sitting in your tree) of
-.bdev_mark_dead callbacks in xfs and ext4 were wrongly using bdev->bd_holder
-instead of bdev->bd_super and so they could never work. This series fixes them.
+Signed-off-by: Jeff Layton <jlayton@kernel.org>
+---
+ fs/xfs/libxfs/xfs_inode_buf.c   | 4 ++--
+ fs/xfs/libxfs/xfs_trans_inode.c | 2 +-
+ fs/xfs/xfs_acl.c                | 2 +-
+ fs/xfs/xfs_bmap_util.c          | 6 ++++--
+ fs/xfs/xfs_inode.c              | 2 +-
+ fs/xfs/xfs_inode_item.c         | 2 +-
+ fs/xfs/xfs_iops.c               | 4 ++--
+ fs/xfs/xfs_itable.c             | 4 ++--
+ 8 files changed, 14 insertions(+), 12 deletions(-)
 
-								Honza
+diff --git a/fs/xfs/libxfs/xfs_inode_buf.c b/fs/xfs/libxfs/xfs_inode_buf.c
+index 758aacd8166b..d5c1d3c86257 100644
+--- a/fs/xfs/libxfs/xfs_inode_buf.c
++++ b/fs/xfs/libxfs/xfs_inode_buf.c
+@@ -222,7 +222,7 @@ xfs_inode_from_disk(
+ 	 */
+ 	inode->i_atime = xfs_inode_from_disk_ts(from, from->di_atime);
+ 	inode->i_mtime = xfs_inode_from_disk_ts(from, from->di_mtime);
+-	inode->i_ctime = xfs_inode_from_disk_ts(from, from->di_ctime);
++	inode_ctime_set(inode, xfs_inode_from_disk_ts(from, from->di_ctime));
+ 
+ 	ip->i_disk_size = be64_to_cpu(from->di_size);
+ 	ip->i_nblocks = be64_to_cpu(from->di_nblocks);
+@@ -316,7 +316,7 @@ xfs_inode_to_disk(
+ 
+ 	to->di_atime = xfs_inode_to_disk_ts(ip, inode->i_atime);
+ 	to->di_mtime = xfs_inode_to_disk_ts(ip, inode->i_mtime);
+-	to->di_ctime = xfs_inode_to_disk_ts(ip, inode->i_ctime);
++	to->di_ctime = xfs_inode_to_disk_ts(ip, inode_ctime_peek(inode));
+ 	to->di_nlink = cpu_to_be32(inode->i_nlink);
+ 	to->di_gen = cpu_to_be32(inode->i_generation);
+ 	to->di_mode = cpu_to_be16(inode->i_mode);
+diff --git a/fs/xfs/libxfs/xfs_trans_inode.c b/fs/xfs/libxfs/xfs_trans_inode.c
+index cb4796b6e693..f924e81530be 100644
+--- a/fs/xfs/libxfs/xfs_trans_inode.c
++++ b/fs/xfs/libxfs/xfs_trans_inode.c
+@@ -67,7 +67,7 @@ xfs_trans_ichgtime(
+ 	if (flags & XFS_ICHGTIME_MOD)
+ 		inode->i_mtime = tv;
+ 	if (flags & XFS_ICHGTIME_CHG)
+-		inode->i_ctime = tv;
++		inode_ctime_set(inode, tv);
+ 	if (flags & XFS_ICHGTIME_CREATE)
+ 		ip->i_crtime = tv;
+ }
+diff --git a/fs/xfs/xfs_acl.c b/fs/xfs/xfs_acl.c
+index 791db7d9c849..75f17d2bb97c 100644
+--- a/fs/xfs/xfs_acl.c
++++ b/fs/xfs/xfs_acl.c
+@@ -233,7 +233,7 @@ xfs_acl_set_mode(
+ 	xfs_ilock(ip, XFS_ILOCK_EXCL);
+ 	xfs_trans_ijoin(tp, ip, XFS_ILOCK_EXCL);
+ 	inode->i_mode = mode;
+-	inode->i_ctime = current_time(inode);
++	inode_ctime_set_current(inode);
+ 	xfs_trans_log_inode(tp, ip, XFS_ILOG_CORE);
+ 
+ 	if (xfs_has_wsync(mp))
+diff --git a/fs/xfs/xfs_bmap_util.c b/fs/xfs/xfs_bmap_util.c
+index fbb675563208..0d4c141c4413 100644
+--- a/fs/xfs/xfs_bmap_util.c
++++ b/fs/xfs/xfs_bmap_util.c
+@@ -1644,6 +1644,7 @@ xfs_swap_extents(
+ 	uint64_t		f;
+ 	int			resblks = 0;
+ 	unsigned int		flags = 0;
++	struct timespec64	ctime;
+ 
+ 	/*
+ 	 * Lock the inodes against other IO, page faults and truncate to
+@@ -1756,8 +1757,9 @@ xfs_swap_extents(
+ 	 * process that the file was not changed out from
+ 	 * under it.
+ 	 */
+-	if ((sbp->bs_ctime.tv_sec != VFS_I(ip)->i_ctime.tv_sec) ||
+-	    (sbp->bs_ctime.tv_nsec != VFS_I(ip)->i_ctime.tv_nsec) ||
++	ctime = inode_ctime_peek(VFS_I(ip));
++	if ((sbp->bs_ctime.tv_sec != ctime.tv_sec) ||
++	    (sbp->bs_ctime.tv_nsec != ctime.tv_nsec) ||
+ 	    (sbp->bs_mtime.tv_sec != VFS_I(ip)->i_mtime.tv_sec) ||
+ 	    (sbp->bs_mtime.tv_nsec != VFS_I(ip)->i_mtime.tv_nsec)) {
+ 		error = -EBUSY;
+diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
+index 9e62cc500140..763d6c95c56d 100644
+--- a/fs/xfs/xfs_inode.c
++++ b/fs/xfs/xfs_inode.c
+@@ -846,7 +846,7 @@ xfs_init_new_inode(
+ 	tv = current_time(inode);
+ 	inode->i_mtime = tv;
+ 	inode->i_atime = tv;
+-	inode->i_ctime = tv;
++	inode_ctime_set(inode, tv);
+ 
+ 	ip->i_extsize = 0;
+ 	ip->i_diflags = 0;
+diff --git a/fs/xfs/xfs_inode_item.c b/fs/xfs/xfs_inode_item.c
+index 91c847a84e10..116038163098 100644
+--- a/fs/xfs/xfs_inode_item.c
++++ b/fs/xfs/xfs_inode_item.c
+@@ -528,7 +528,7 @@ xfs_inode_to_log_dinode(
+ 	memset(to->di_pad3, 0, sizeof(to->di_pad3));
+ 	to->di_atime = xfs_inode_to_log_dinode_ts(ip, inode->i_atime);
+ 	to->di_mtime = xfs_inode_to_log_dinode_ts(ip, inode->i_mtime);
+-	to->di_ctime = xfs_inode_to_log_dinode_ts(ip, inode->i_ctime);
++	to->di_ctime = xfs_inode_to_log_dinode_ts(ip, inode_ctime_peek(inode));
+ 	to->di_nlink = inode->i_nlink;
+ 	to->di_gen = inode->i_generation;
+ 	to->di_mode = inode->i_mode;
+diff --git a/fs/xfs/xfs_iops.c b/fs/xfs/xfs_iops.c
+index 24718adb3c16..4096c4f86ef7 100644
+--- a/fs/xfs/xfs_iops.c
++++ b/fs/xfs/xfs_iops.c
+@@ -574,7 +574,7 @@ xfs_vn_getattr(
+ 	stat->ino = ip->i_ino;
+ 	stat->atime = inode->i_atime;
+ 	stat->mtime = inode->i_mtime;
+-	stat->ctime = inode->i_ctime;
++	stat->ctime = inode_ctime_peek(inode);
+ 	stat->blocks = XFS_FSB_TO_BB(mp, ip->i_nblocks + ip->i_delayed_blks);
+ 
+ 	if (xfs_has_v3inodes(mp)) {
+@@ -1055,7 +1055,7 @@ xfs_vn_update_time(
+ 
+ 	xfs_ilock(ip, XFS_ILOCK_EXCL);
+ 	if (flags & S_CTIME)
+-		inode->i_ctime = *now;
++		inode_ctime_set(inode, *now);
+ 	if (flags & S_MTIME)
+ 		inode->i_mtime = *now;
+ 	if (flags & S_ATIME)
+diff --git a/fs/xfs/xfs_itable.c b/fs/xfs/xfs_itable.c
+index f225413a993c..75b07eed0602 100644
+--- a/fs/xfs/xfs_itable.c
++++ b/fs/xfs/xfs_itable.c
+@@ -100,8 +100,8 @@ xfs_bulkstat_one_int(
+ 	buf->bs_atime_nsec = inode->i_atime.tv_nsec;
+ 	buf->bs_mtime = inode->i_mtime.tv_sec;
+ 	buf->bs_mtime_nsec = inode->i_mtime.tv_nsec;
+-	buf->bs_ctime = inode->i_ctime.tv_sec;
+-	buf->bs_ctime_nsec = inode->i_ctime.tv_nsec;
++	buf->bs_ctime = inode_ctime_peek(inode).tv_sec;
++	buf->bs_ctime_nsec = inode_ctime_peek(inode).tv_nsec;
+ 	buf->bs_gen = inode->i_generation;
+ 	buf->bs_mode = inode->i_mode;
+ 
+-- 
+2.41.0
+
