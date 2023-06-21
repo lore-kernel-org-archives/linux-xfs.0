@@ -2,137 +2,119 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 47277EB64DC
-	for <linux-xfs@archiver.kernel.org>; Wed, 21 Jun 2023 21:54:46 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id AF63CEB64D7
+	for <linux-xfs@archiver.kernel.org>; Wed, 21 Jun 2023 21:59:01 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230454AbjFUVyj (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 21 Jun 2023 17:54:39 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56730 "EHLO
+        id S230062AbjFUV7A (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 21 Jun 2023 17:59:00 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58668 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229690AbjFUVyj (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 21 Jun 2023 17:54:39 -0400
-Received: from mail-oi1-x232.google.com (mail-oi1-x232.google.com [IPv6:2607:f8b0:4864:20::232])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A7ADF1989
-        for <linux-xfs@vger.kernel.org>; Wed, 21 Jun 2023 14:54:27 -0700 (PDT)
-Received: by mail-oi1-x232.google.com with SMTP id 5614622812f47-39eab4bcee8so3983269b6e.0
-        for <linux-xfs@vger.kernel.org>; Wed, 21 Jun 2023 14:54:27 -0700 (PDT)
+        with ESMTP id S229657AbjFUV7A (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 21 Jun 2023 17:59:00 -0400
+Received: from mail-pl1-x636.google.com (mail-pl1-x636.google.com [IPv6:2607:f8b0:4864:20::636])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7F56B1AC
+        for <linux-xfs@vger.kernel.org>; Wed, 21 Jun 2023 14:58:59 -0700 (PDT)
+Received: by mail-pl1-x636.google.com with SMTP id d9443c01a7336-1b505665e2fso89355ad.0
+        for <linux-xfs@vger.kernel.org>; Wed, 21 Jun 2023 14:58:59 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=fromorbit-com.20221208.gappssmtp.com; s=20221208; t=1687384467; x=1689976467;
+        d=fromorbit-com.20221208.gappssmtp.com; s=20221208; t=1687384739; x=1689976739;
         h=in-reply-to:content-transfer-encoding:content-disposition
          :mime-version:references:message-id:subject:cc:to:from:date:from:to
          :cc:subject:date:message-id:reply-to;
-        bh=L6bw2fpHizSpDCtxTF1r7lZnT7ZL6iFZaiRFqmMlFyw=;
-        b=zDh3tql2n7AGRtEWGetIbZ3wsi15YM02kay+5k0Rg0kz2xownNP/qkTpwnDGVW75pN
-         eQkNy+1UqBMrdSGZQDGBcWsMyDPiQVM5xVREpPVR7dVTwO+LaJjOQ9QAkhInMYcUdjIu
-         swfOrPCn7rQzaCDLQsQ0ft4Bcu7N867a/StwYVRarDNA40olvOwKSnFAJsgesPlY/QrE
-         A+QgHGRyLHI/Pbqyo0Fr39crPwBw1l0NBsR6P1QE1t7iM5iFE9YeElc6EAfaGLe3O+My
-         5le+G+FiZX7jaagkWic2nYQ2EdG/DjS3QjXJrgRv/U/t7N4nn3M906s0CQBwUoeBItXP
-         WLsg==
+        bh=yF+AevMsf0bJfIemNaAR6PbEIyeyrfMBFVJNdRfabZI=;
+        b=nmzJ3HAH0KX5EMFwxpHJ1mFosAb3TtOhgmdr1OhcSirKL3Z2pnnBK1LoAhaEoPHIqt
+         SHobq2L8K7R+mM5B+hbGay9XmnzSo14D4/TJoM1D/AAPfu8lqFZJL2s5U1oULFUZ4r90
+         /8sCAogYdacM/JT89wVgZtutw1mfSBJbuuE2lRONb8xhMr/IJTXJ5PvMmczpcre6QcaQ
+         bpVCxyHCBDAqv7Xw5zEeINF5mWhbN4sAfkeMRsM9UF7fgemR4mnacBtlXZV3C6PMvSvL
+         hLffTT3QfGO1vyGkM8/OdmlTXF9rppJF+QB+I0lpD7b4JmW/9r3XT9VcAtN4g7BoJEUw
+         E84g==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20221208; t=1687384467; x=1689976467;
+        d=1e100.net; s=20221208; t=1687384739; x=1689976739;
         h=in-reply-to:content-transfer-encoding:content-disposition
          :mime-version:references:message-id:subject:cc:to:from:date
          :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=L6bw2fpHizSpDCtxTF1r7lZnT7ZL6iFZaiRFqmMlFyw=;
-        b=J/SGPC1F63FWDVM5N4vO94pMJ4bZKpXMTu0bnK+4EH3yFgOpsK4JUHuaxlGM9OGxIJ
-         kWQ/jLhYrvs549BiSJzIFS8VNVgu2ylncwmzN9nxdbTj9yaJdAfTutnBRdxa9bCRam+F
-         SiPWPy46rfd8hel5vbuw5c8zmuMlUwVe5dq8mWU6AK2UT0T1ouKI6BIPRkoovBzO7JhH
-         2mdr1M1qSMbQVM8VzUxfdRB7HS/n+dhN+9jixTnoiFhqjwpBtTwMmqaL8VTRs2t+L/ay
-         jKL2cNnxY9SOOIzEkpxZILJI2VEobOuwob0AB6HcOpRzFt1oszENkIY1snhv0ugsEq1p
-         ijzw==
-X-Gm-Message-State: AC+VfDxEgW/azFCdFqSeK+fUK71PhLj5JxXaJwQBD/C+bWwcFun+uG6z
-        vJ6PgXB4OWy5DcwB8srZWHZrjQ==
-X-Google-Smtp-Source: ACHHUZ77I9N7UsBVLp8zsDNL4ASGtlJixyrE9gPYQW7w9Kr/+/6QXsZxT613zrsCc4q9ECgkjagcEw==
-X-Received: by 2002:a54:4585:0:b0:394:4642:7148 with SMTP id z5-20020a544585000000b0039446427148mr16557583oib.48.1687384466967;
-        Wed, 21 Jun 2023 14:54:26 -0700 (PDT)
+        bh=yF+AevMsf0bJfIemNaAR6PbEIyeyrfMBFVJNdRfabZI=;
+        b=UL8zu+zBEVu5JVuO8V19UaLug0fGM5O8a0znzHCaaWVFn4TKmO5PoNSeYCwHWkIG6L
+         06wzgHmqAHEWC38OgD1jRA2rQIYS993bRqLUGAFpcnuKmsprvElF352o7rq8FvpI4W8S
+         GH1b7rZzDSRniy5Qp8M9E3KBQc6rQFz5ZROVbEyC0iPiO1lOkA4DUFOlFZL4kmXpB8Px
+         Z6l/6Yr0dSGU099L0vPHQvKJ/qDVZFg9ftnMEYQ7O/ULKEOcKsajrJW32SY4qjQjRNsF
+         RySBzs6c8a9I1usXnoM/r2cxfj4xuW/waDIFdVrlwcdkczZoroBDiZJgNphEflE2X8vf
+         bZmg==
+X-Gm-Message-State: AC+VfDypPN7EuVGSr6I/rTDC2SNlr5NwY2FGU+DvqAF8ISHz0iMvZFi7
+        RaF2FvR6BoMvs/jggDFFlTp8ocsrEfkRiWC/geg=
+X-Google-Smtp-Source: ACHHUZ6kSrD0J83vnMEpwZMQdiFv2a/mRO7myWw65HYBsZU2rhIQt5FkB6HaiwBA4QQrvMHYJzvG3w==
+X-Received: by 2002:a17:902:d485:b0:1b2:22cd:9827 with SMTP id c5-20020a170902d48500b001b222cd9827mr30134832plg.1.1687384738921;
+        Wed, 21 Jun 2023 14:58:58 -0700 (PDT)
 Received: from dread.disaster.area (pa49-180-13-202.pa.nsw.optusnet.com.au. [49.180.13.202])
-        by smtp.gmail.com with ESMTPSA id x18-20020a17090abc9200b002533ce5b261sm9406432pjr.10.2023.06.21.14.54.26
+        by smtp.gmail.com with ESMTPSA id jn9-20020a170903050900b001b3d44788f4sm3994506plb.9.2023.06.21.14.58.58
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 21 Jun 2023 14:54:26 -0700 (PDT)
+        Wed, 21 Jun 2023 14:58:58 -0700 (PDT)
 Received: from dave by dread.disaster.area with local (Exim 4.96)
         (envelope-from <david@fromorbit.com>)
-        id 1qC5mR-00EbTg-0l;
-        Thu, 22 Jun 2023 07:54:23 +1000
-Date:   Thu, 22 Jun 2023 07:54:23 +1000
+        id 1qC5qp-00Ebh4-35;
+        Thu, 22 Jun 2023 07:58:55 +1000
+Date:   Thu, 22 Jun 2023 07:58:55 +1000
 From:   Dave Chinner <david@fromorbit.com>
-To:     Wu Guanghao <wuguanghao3@huawei.com>
-Cc:     cem@kernel.org, "Darrick J. Wong" <djwong@kernel.org>,
-        linux-xfs@vger.kernel.org, louhongxiang@huawei.com,
-        liuzhiqiang26@huawei.com
-Subject: Re: [PATCH] mkfs.xfs: fix segmentation fault caused by accessing a
- null pointer
-Message-ID: <ZJNxj+Tm0cIDKaAR@dread.disaster.area>
-References: <48402a8a-95db-f7b5-196e-32f3b4b2bf4e@huawei.com>
+To:     Lars Wendler <polynomial-c@gmx.de>
+Cc:     Holger =?iso-8859-1?Q?Hoffst=E4tte?= 
+        <holger@applied-asynchrony.com>, linux-xfs@vger.kernel.org
+Subject: Re: [PATCH] po/de.po: Fix possible typo which makes gettext-0.22
+ unhappy
+Message-ID: <ZJNyn817MpCB3nbr@dread.disaster.area>
+References: <20230621105520.17560-1-polynomial-c@gmx.de>
+ <a08995aa-2003-be8f-dab1-6d8ed6687e12@applied-asynchrony.com>
+ <20230621135608.25db01bb@chagall.paradoxon.rec>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=iso-8859-1
 Content-Disposition: inline
 Content-Transfer-Encoding: 8bit
-In-Reply-To: <48402a8a-95db-f7b5-196e-32f3b4b2bf4e@huawei.com>
+In-Reply-To: <20230621135608.25db01bb@chagall.paradoxon.rec>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Wed, Jun 21, 2023 at 05:25:27PM +0800, Wu Guanghao wrote:
-> We encountered a segfault while testing the mkfs.xfs + iscsi.
+On Wed, Jun 21, 2023 at 01:56:08PM +0200, Lars Wendler wrote:
+> Am Wed, 21 Jun 2023 13:29:03 +0200
+> schrieb Holger Hoffstätte <holger@applied-asynchrony.com>:
 > 
-> (gdb) bt
-> #0 libxfs_log_sb (tp=0xaaaafaea0630) at xfs_sb.c:810
-> #1 0x0000aaaaca991468 in __xfs_trans_commit (tp=<optimized out>, tp@entry=0xaaaafaea0630, regrant=regrant@entry=true) at trans.c:995
-> #2 0x0000aaaaca991790 in libxfs_trans_roll (tpp=tpp@entry=0xfffffe1f3018) at trans.c:103
-> #3 0x0000aaaaca9bcde8 in xfs_dialloc_roll (agibp=0xaaaafaea2fa0, tpp=0xfffffe1f31c8) at xfs_ialloc.c:1561
-> #4 xfs_dialloc_try_ag (ok_alloc=true, new_ino=<synthetic pointer>, parent=0, pag=0xaaaafaea0210, tpp=0xfffffe1f31c8) at xfs_ialloc.c:1698
-> #5 xfs_dialloc (tpp=tpp@entry=0xfffffe1f31c8, parent=0, mode=mode@entry=16877, new_ino=new_ino@entry=0xfffffe1f3128) at xfs_ialloc.c:1776
-> #6 0x0000aaaaca9925b0 in libxfs_dir_ialloc (tpp=tpp@entry=0xfffffe1f31c8, dp=dp@entry=0x0, mode=mode@entry=16877, nlink=nlink@entry=1, rdev=rdev@entry=0, cr=cr@entry=0xfffffe1f31d0,
->     fsx=fsx@entry=0xfffffe1f36a4, ipp=ipp@entry=0xfffffe1f31c0) at util.c:525
-> #7 0x0000aaaaca988fac in parseproto (mp=0xfffffe1f36c8, pip=0x0, fsxp=0xfffffe1f36a4, pp=0xfffffe1f3370, name=0x0) at proto.c:552
-> #8 0x0000aaaaca9867a4 in main (argc=<optimized out>, argv=<optimized out>) at xfs_mkfs.c:4217
+> > On 2023-06-21 12:55, Lars Wendler wrote:
+> > > diff --git a/po/de.po b/po/de.po
+> > > index 944b0e91..a6f8fde1 100644
+> > > --- a/po/de.po
+> > > +++ b/po/de.po
+> > > @@ -3084,7 +3084,7 @@ msgstr "%llu Spezialdateien\n"
+> > >   #: .././estimate/xfs_estimate.c:191
+> > >   #, c-format
+> > >   msgid "%s will take about %.1f megabytes\n"
+> > > -msgstr "%s wird etwa %.lf Megabytes einnehmen\n"
+> > > +msgstr "%s wird etwa %.1f Megabytes einnehmen\n"
+> > 
+> > I don't see the difference..?
+> > Both the added and removed line are the same.
+> > 
+> > -h
 > 
-> (gdb) p bp
-> $1 = 0x0
-> 
-> ```
-> void
-> xfs_log_sb(
->         struct xfs_trans        *tp)
-> {
->         // iscsi offline
->         ...
->         // failed to read sb, bp = NULL
->         struct xfs_buf          *bp = xfs_trans_getsb(tp);
->         ...
-> }
-> ```
-> 
-> When writing data to sb, if the device is abnormal at this time,
-> the bp may be empty. Using it without checking will result in
-> a segfault.
+> I suppose depending on the font, it's quite hard to distinguish the two
+> lines.
 
-xfs_trans_getsb() is not supposed to fail. In the kernel code (which
-this is a copy of) it can't fail because the superblock buffer is
-always pinned in memory at mount time and so is *never read from the
-storage* after mount.
+I didn't see it, and the commit message doesn't explain anything,
+either. Pointing to a bugzilla somewhere does not make a valid
+commit message....
 
-Hence something similar needs to be in userspace with libxfs_getsb()
-so that the superblock is only read when setting up the initial
-mount state in libxfs....
+> The removed line contains "%.lf" with a lowercase letter L.
+> The added line contains "%.1f" where the lowercase letter L was replaced
+> with the digit 1.
 
-> diff --git a/libxfs/xfs_attr_leaf.c b/libxfs/xfs_attr_leaf.c
-> index 6cac2531..73079df1 100644
-> --- a/libxfs/xfs_attr_leaf.c
-> +++ b/libxfs/xfs_attr_leaf.c
-> @@ -668,7 +668,7 @@ xfs_sbversion_add_attr2(
->         spin_lock(&mp->m_sb_lock);
->         xfs_add_attr2(mp);
->         spin_unlock(&mp->m_sb_lock);
-> -       xfs_log_sb(tp);
-> +       ASSERT(!xfs_log_sb(tp));
+... whereas this explains what the bug being fixed is, and allows the
+reviewer to see the subtle change being made. i.e. you just wrote
+the commit message that should have been in the patch in the first
+place. :)
 
-FWIW, that's never a valid conversion nor a valid way to handle
-something that can fail. That turns the code into code that is only
-executed on debug builds, and it will panic the debug build rather
-than handle the error.....
+Can you please resend the fix with the commit message updated?
 
--Dave.
+Cheers,
+
+Dave.
 -- 
 Dave Chinner
 david@fromorbit.com
