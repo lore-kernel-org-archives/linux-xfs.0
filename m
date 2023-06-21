@@ -2,92 +2,88 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9B4B3EB64D7
-	for <linux-xfs@archiver.kernel.org>; Wed, 21 Jun 2023 17:42:43 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E037FEB64D8
+	for <linux-xfs@archiver.kernel.org>; Wed, 21 Jun 2023 18:55:52 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231504AbjFURmm (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 21 Jun 2023 13:42:42 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44350 "EHLO
+        id S231550AbjFUSzw (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 21 Jun 2023 14:55:52 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41186 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231468AbjFURmW (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 21 Jun 2023 13:42:22 -0400
-Received: from mail-pf1-x430.google.com (mail-pf1-x430.google.com [IPv6:2607:f8b0:4864:20::430])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0DB712122;
-        Wed, 21 Jun 2023 10:41:58 -0700 (PDT)
-Received: by mail-pf1-x430.google.com with SMTP id d2e1a72fcca58-6686a1051beso3610832b3a.1;
-        Wed, 21 Jun 2023 10:41:58 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20221208; t=1687369305; x=1689961305;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=67RsiRkf7V/7CF4F5OqcQiUMN3aCyMIaXikCRwf0Jt0=;
-        b=R59LXc7dG49D6BDqvOLv8GFhZv2D6DZ82JAvRkDEgOvlZ6JClcVZVxGGybx4+Ffb5z
-         1+9lb3zlQdir/sdk0/Ajla4bsBmgEnNE2rxQcjTymuaoBcjgEYLAT+6sEqwgVDWy0hga
-         rGmsZu+VGZc3P9vvQbraSGntMZj62M8KEJX1srUAOtc6Yb5VejGySLtueyPPMpd8bV8/
-         oaQjrqidJSLUNQKory36TCvEnPg9/UuzoP6gjebAfwYXj6sO8vwix6dXyCjuw6723XXu
-         vyVewTMvpocOynazlUcFH3FeJ4Xl5ZRYrHETYNqDHwJcHc8sixWUmsCugHbLfhG0JANp
-         P70g==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20221208; t=1687369305; x=1689961305;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=67RsiRkf7V/7CF4F5OqcQiUMN3aCyMIaXikCRwf0Jt0=;
-        b=bB/JRWXBFBiKm57886GE0wpdi//2spzGpPdmi0UhKHZfHM5Dk8OZy3WmF3zdoHINfN
-         FuNcSFz4+SJkUjKKjTZSmePUYrvRkJ2ST7nNoORcb1Sl7JpEPXbgWI0m83/ow8hk1uzD
-         lbD69HDLVGEDGpTi3TFNbbaebYgidzArCx+fMpvAM77pxP2qWMcEO5OJvR6cMNW+zCSy
-         HDs9FCZVYYI60l2QZ9XZmC9u43OqckVVdwalNAoPQQyJWsecnLDXBawzjyPhZLsnypbt
-         lmSAp3gsLX4BEkxygMofmf7DwoZ+CjOMe/DKsoDkkCqxexsw97DFAmYVGjXakjwcQ30m
-         nmMQ==
-X-Gm-Message-State: AC+VfDyG2NjiOPxrtU4VVUURkULpeD78qEA7IZikn++MS//TsGXSggk+
-        yhUJSzSmD1GlQ0MF2UkOyyY=
-X-Google-Smtp-Source: ACHHUZ6JlmenchXri4RPSn4XqTCoyIaoew1oOdBlDm8S9UjvE4XrVvZvToU0uZ51tZrf+IixGqqUAw==
-X-Received: by 2002:a05:6a00:1a94:b0:653:91c1:1611 with SMTP id e20-20020a056a001a9400b0065391c11611mr19660672pfv.14.1687369304633;
-        Wed, 21 Jun 2023 10:41:44 -0700 (PDT)
-Received: from jbongio9100214.lan ([2606:6000:cfc0:25:4c92:9b61:6920:c02c])
-        by smtp.googlemail.com with ESMTPSA id j23-20020a62e917000000b0066a4636c777sm1246824pfh.192.2023.06.21.10.41.43
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 21 Jun 2023 10:41:44 -0700 (PDT)
-From:   Jeremy Bongio <bongiojp@gmail.com>
-To:     Ted Tso <tytso@mit.edu>, "Darrick J . Wong" <djwong@kernel.org>,
-        Allison Henderson <allison.henderson@oracle.com>
-Cc:     linux-ext4@vger.kernel.org, linux-fsdevel@vger.kernel.org,
-        linux-xfs@vger.kernel.org, Jeremy Bongio <bongiojp@gmail.com>
-Subject: [PATCH 1/1] For DIO writes with no mapped pages for inode, skip deferring completion.
-Date:   Wed, 21 Jun 2023 10:29:20 -0700
-Message-ID: <20230621174114.1320834-2-bongiojp@gmail.com>
-X-Mailer: git-send-email 2.41.0.185.g7c58973941-goog
-In-Reply-To: <20230621174114.1320834-1-bongiojp@gmail.com>
+        with ESMTP id S231415AbjFUSzk (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 21 Jun 2023 14:55:40 -0400
+Received: from casper.infradead.org (casper.infradead.org [IPv6:2001:8b0:10b:1236::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3C2EF1BF0;
+        Wed, 21 Jun 2023 11:55:39 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=infradead.org; s=casper.20170209; h=In-Reply-To:Content-Type:MIME-Version:
+        References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
+        Content-Transfer-Encoding:Content-ID:Content-Description;
+        bh=te1f4OlSd0by5DtHSxut7Jhlx4s9DNKePG9AsBNJq8M=; b=bZMeVWRMoDwIOxuEF6gFvQAIjU
+        PWhQToljFSQzlZ17LHqM++OXP3QJ6k28+C8zOmR+OZlvedtWjLxOv+GIufZuPteeby2Oakpb1yHLm
+        hKbUsI4Ez0W91olbGBpDUuB4UIQ7H22QDcO84jY1CAnkY9AjwA7o2CNCJkBkvs91ZWvGKClvgqHZe
+        ixW8cpJXjlyDV5w31OMECJEzrWgWnxHq01VL9sEE/d9snDoGQ3wM4K2dK6WDdb8Ufjx33q3uZJ2et
+        JWPjHcMxIN0dFPwA98Emd7ifjy9BBFNVONBMi0rO0FLKYK0wNv2TjnxDWCsgK9byBuUbVDcZKsqQx
+        yMNmjFGw==;
+Received: from willy by casper.infradead.org with local (Exim 4.94.2 #2 (Red Hat Linux))
+        id 1qC2zJ-00Eu2y-Su; Wed, 21 Jun 2023 18:55:29 +0000
+Date:   Wed, 21 Jun 2023 19:55:29 +0100
+From:   Matthew Wilcox <willy@infradead.org>
+To:     Jeremy Bongio <bongiojp@gmail.com>
+Cc:     Ted Tso <tytso@mit.edu>, "Darrick J . Wong" <djwong@kernel.org>,
+        Allison Henderson <allison.henderson@oracle.com>,
+        linux-ext4@vger.kernel.org, linux-fsdevel@vger.kernel.org,
+        linux-xfs@vger.kernel.org
+Subject: Re: [PATCH 1/1] For DIO writes with no mapped pages for inode, skip
+ deferring completion.
+Message-ID: <ZJNHoWGqkVEVStXz@casper.infradead.org>
 References: <20230621174114.1320834-1-bongiojp@gmail.com>
+ <20230621174114.1320834-2-bongiojp@gmail.com>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20230621174114.1320834-2-bongiojp@gmail.com>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-If there are no mapped pages for an DIO write then the page cache does not
-need to be updated. For very fast SSDs and direct async IO, deferring work
-completion can result in a significant performance loss.
----
- fs/iomap/direct-io.c | 4 +++-
- 1 file changed, 3 insertions(+), 1 deletion(-)
+On Wed, Jun 21, 2023 at 10:29:20AM -0700, Jeremy Bongio wrote:
+> +++ b/fs/iomap/direct-io.c
+> @@ -168,7 +168,9 @@ void iomap_dio_bio_end_io(struct bio *bio)
+>  			struct task_struct *waiter = dio->submit.waiter;
+>  			WRITE_ONCE(dio->submit.waiter, NULL);
+>  			blk_wake_io_task(waiter);
+> -		} else if (dio->flags & IOMAP_DIO_WRITE) {
+> +		} else if (dio->flags & IOMAP_DIO_WRITE &&
+> +			(!dio->iocb->ki_filp->f_inode ||
+> +			    dio->iocb->ki_filp->f_inode->i_mapping->nrpages))) {
 
-diff --git a/fs/iomap/direct-io.c b/fs/iomap/direct-io.c
-index 019cc87d0fb3..8f27d0dc4f6d 100644
---- a/fs/iomap/direct-io.c
+I don't think it's possible for file->f_inode to be NULL here, is it?
+At any rate, that amount of indirection is just nasty.  How about this?
+
 +++ b/fs/iomap/direct-io.c
-@@ -168,7 +168,9 @@ void iomap_dio_bio_end_io(struct bio *bio)
- 			struct task_struct *waiter = dio->submit.waiter;
- 			WRITE_ONCE(dio->submit.waiter, NULL);
- 			blk_wake_io_task(waiter);
--		} else if (dio->flags & IOMAP_DIO_WRITE) {
-+		} else if (dio->flags & IOMAP_DIO_WRITE &&
-+			(!dio->iocb->ki_filp->f_inode ||
-+			    dio->iocb->ki_filp->f_inode->i_mapping->nrpages))) {
- 			struct inode *inode = file_inode(dio->iocb->ki_filp);
- 
- 			WRITE_ONCE(dio->iocb->private, NULL);
--- 
-2.41.0.185.g7c58973941-goog
+@@ -161,15 +161,19 @@ void iomap_dio_bio_end_io(struct bio *bio)
+                        struct task_struct *waiter = dio->submit.waiter;
+                        WRITE_ONCE(dio->submit.waiter, NULL);
+                        blk_wake_io_task(waiter);
+-               } else if (dio->flags & IOMAP_DIO_WRITE) {
++               } else {
+                        struct inode *inode = file_inode(dio->iocb->ki_filp);
+
+                        WRITE_ONCE(dio->iocb->private, NULL);
+-                       INIT_WORK(&dio->aio.work, iomap_dio_complete_work);
+-                       queue_work(inode->i_sb->s_dio_done_wq, &dio->aio.work);
+-               } else {
+-                       WRITE_ONCE(dio->iocb->private, NULL);
+-                       iomap_dio_complete_work(&dio->aio.work);
++                       if (dio->flags & IOMAP_DIO_WRITE &&
++                           (inode->i_mapping->nrpages > 0) {
++                               INIT_WORK(&dio->aio.work,
++                                               iomap_dio_complete_work);
++                               queue_work(inode->i_sb->s_dio_done_wq,
++                                               &dio->aio.work);
++                       } else {
++                               iomap_dio_complete_work(&dio->aio.work);
++                       }
+                }
+        }
 
