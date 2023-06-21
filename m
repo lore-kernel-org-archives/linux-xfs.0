@@ -2,138 +2,148 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A26CCEB64D7
-	for <linux-xfs@archiver.kernel.org>; Wed, 21 Jun 2023 02:05:38 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 56D71EB64D7
+	for <linux-xfs@archiver.kernel.org>; Wed, 21 Jun 2023 02:10:26 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229652AbjFUCFh (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 20 Jun 2023 22:05:37 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39160 "EHLO
+        id S229802AbjFUCKZ (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 20 Jun 2023 22:10:25 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39914 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229470AbjFUCFh (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 20 Jun 2023 22:05:37 -0400
-Received: from mail-pl1-x62b.google.com (mail-pl1-x62b.google.com [IPv6:2607:f8b0:4864:20::62b])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3AEA31989
-        for <linux-xfs@vger.kernel.org>; Tue, 20 Jun 2023 19:05:36 -0700 (PDT)
-Received: by mail-pl1-x62b.google.com with SMTP id d9443c01a7336-1b4fef08cfdso27772135ad.1
-        for <linux-xfs@vger.kernel.org>; Tue, 20 Jun 2023 19:05:36 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=fromorbit-com.20221208.gappssmtp.com; s=20221208; t=1687313135; x=1689905135;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
-        bh=TgoIk25za5BwceVB2X11QLIMvCwIie0NeehHJJR3jGc=;
-        b=KjHS9GMRLslIaZEnmD+ZYQdwtQyP5NrcnSyyCxe1BfE2Yfqes1CMJd9O/Xsryfk6Ky
-         U28tJvhH9xHga7Mv2cTYz8pKXeLYAMrQL7UHFto9vVbCrsNqHSMG1MAZH+uqYLbY5RwO
-         Z67flX1oqmwHXHmFp5ne9M/GiJ7e0fOirknNRK4w7CFZQkWSyV+x7U62HXs8qAw+Y57y
-         /4pqsuYETMdmdj6oZXJK3U11/x8gGoSewEDMLgcDyFd49NHDH3WV7Tw0Qb73KrLy4gGe
-         4nGNCk5YAfFuUll5oQWsgChcbkiA5xBFcw40HOS2yNSpKLsUB87olzUjVm+Byljw779r
-         Vn7A==
+        with ESMTP id S229696AbjFUCKX (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 20 Jun 2023 22:10:23 -0400
+Received: from mail-io1-f79.google.com (mail-io1-f79.google.com [209.85.166.79])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3FD12198D
+        for <linux-xfs@vger.kernel.org>; Tue, 20 Jun 2023 19:10:20 -0700 (PDT)
+Received: by mail-io1-f79.google.com with SMTP id ca18e2360f4ac-77e41268d40so183158239f.3
+        for <linux-xfs@vger.kernel.org>; Tue, 20 Jun 2023 19:10:20 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20221208; t=1687313135; x=1689905135;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=TgoIk25za5BwceVB2X11QLIMvCwIie0NeehHJJR3jGc=;
-        b=Q9dO9eGsM8bJu0YEDcXarBGOQ1fqjLFRDvjGBG6Ngdlf8G0jRiG+u2k02BAR1le0Wh
-         RJ+qw1kAoiIS9rDreJNpBX3A76mD/2gJpjgsSj0DThhlWxt+ck3YP8yS4sFGhwPMw6IZ
-         NOxqfF7JF7IvsAxN7RR4O9b+AItBNTrlkCO6zyjHOgtAQ4euScNq4/ixWxGb4FEBPwWe
-         4CjWTvIUrr1MP8sDpTiqTKDaswdxTrGX7ybiQyZcTqmQaXYG1SbX7LEZfFqsI9FGhjWo
-         io9M2P4uEhYftCNncOlbi/QN0SEhcq1JGQ47rfsOwbS/J48X31Zzj2aM+UFTr2y0P6Ml
-         agyw==
-X-Gm-Message-State: AC+VfDz/AzjD1hcU1pq8WvSv3w+xTVwFyX0NNXAZxo9un044padMj8Ku
-        INIGrHZtdA6GasSLjZY8GuuVLA==
-X-Google-Smtp-Source: ACHHUZ64ho5wxy6ozpFHuXTcyLapzKDRmi+RcyN7N6kunVwX06AjcWLESr9nSt1roaPWa1zTNfO7+w==
-X-Received: by 2002:a17:903:280e:b0:1b0:48e9:cddd with SMTP id kp14-20020a170903280e00b001b048e9cdddmr7683822plb.69.1687313135614;
-        Tue, 20 Jun 2023 19:05:35 -0700 (PDT)
-Received: from dread.disaster.area (pa49-180-13-202.pa.nsw.optusnet.com.au. [49.180.13.202])
-        by smtp.gmail.com with ESMTPSA id je13-20020a170903264d00b001ae4d4d2676sm2184855plb.269.2023.06.20.19.05.34
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 20 Jun 2023 19:05:34 -0700 (PDT)
-Received: from dave by dread.disaster.area with local (Exim 4.96)
-        (envelope-from <david@fromorbit.com>)
-        id 1qBnDw-00EH9m-0R;
-        Wed, 21 Jun 2023 12:05:32 +1000
-Date:   Wed, 21 Jun 2023 12:05:32 +1000
-From:   Dave Chinner <david@fromorbit.com>
-To:     "Darrick J. Wong" <djwong@kernel.org>
-Cc:     linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 1/6] xfs: force all buffers to be written during btree
- bulk load
-Message-ID: <ZJJa7Cnni0mb/9sN@dread.disaster.area>
-References: <168506056054.3728458.14583795170430652277.stgit@frogsfrogsfrogs>
- <168506056076.3728458.7329874829310609452.stgit@frogsfrogsfrogs>
+        d=1e100.net; s=20221208; t=1687313419; x=1689905419;
+        h=to:from:subject:message-id:date:mime-version:x-gm-message-state
+         :from:to:cc:subject:date:message-id:reply-to;
+        bh=rGD1kCLK3UO9zPwdYoWf6HQp/ziO4UX3ezLXTcAFRPw=;
+        b=Pfo2AdK6JBxfHLSbCW3643sCRNGTtR1x+xP+2tWdKhBeDJzUqLYSAEfhm2QwSW94US
+         gh91Q/9YA7RM7hzMHQ3Xvu16XErCyXK/HNLcxaTWTCVDfeRWKLQ+eicVGtxpnBD6OKav
+         cmwNjNkaEHBu84W9xNEi4cA8OUHOFRdBJ/5JyAbW0N0n+QyWFcghZCoQB0B6IeWarLHl
+         2hsb8FK7EAuhqCSSKiCijpyzkNJ+DTxuG7xm9wJxrAVc1oVv30u8lJ+sVrDre43cMCjA
+         4I48WCE+ClZkV4A/MtypcJIWu/g+mnD8BR7JVG+kARdgFmTbl4P8YI22wksu4XSgMob0
+         dwzA==
+X-Gm-Message-State: AC+VfDz57j8YStfUXYIrxqt/2xlH3QTE86DIQ3NheTxNpVC0Il/CAZIP
+        T3tQnKCFU5G4//17nKwcjKuBl4r1IzTzVxFeRxKAv4xfprDo
+X-Google-Smtp-Source: ACHHUZ7Q/9EbX1kpttT8CvsDCX0XJLKMo+55xXxHBXcmfVI6lQYBaxLthKvMTKRqa3PyMHoowWPyxe5UFkwIZ4MgJ8dvBHl3C/h0
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <168506056076.3728458.7329874829310609452.stgit@frogsfrogsfrogs>
+X-Received: by 2002:a02:b041:0:b0:426:792a:ec72 with SMTP id
+ q1-20020a02b041000000b00426792aec72mr2412676jah.0.1687313419583; Tue, 20 Jun
+ 2023 19:10:19 -0700 (PDT)
+Date:   Tue, 20 Jun 2023 19:10:19 -0700
+X-Google-Appengine-App-Id: s~syzkaller
+X-Google-Appengine-App-Id-Alias: syzkaller
+Message-ID: <000000000000ffcb2e05fe9a445c@google.com>
+Subject: [syzbot] [xfs?] WARNING: Reset corrupted AGFL on AG NUM. NUM blocks
+ leaked. Please unmount and run xfs_repair.
+From:   syzbot <syzbot+9d0b0d54a8bd799f6ae4@syzkaller.appspotmail.com>
+To:     david@fromorbit.com, dchinner@redhat.com, djwong@kernel.org,
+        hch@lst.de, linux-fsdevel@vger.kernel.org,
+        linux-kernel@vger.kernel.org, linux-xfs@vger.kernel.org,
+        syzkaller-bugs@googlegroups.com
+Content-Type: text/plain; charset="UTF-8"
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Thu, May 25, 2023 at 05:45:35PM -0700, Darrick J. Wong wrote:
-> @@ -2112,6 +2112,37 @@ xfs_buf_delwri_queue(
->  	return true;
->  }
->  
-> +/*
-> + * Queue a buffer to this delwri list as part of a data integrity operation.
-> + * If the buffer is on any other delwri list, we'll wait for that to clear
-> + * so that the caller can submit the buffer for IO and wait for the result.
-> + * Callers must ensure the buffer is not already on the list.
-> + */
-> +void
-> +xfs_buf_delwri_queue_here(
+Hello,
 
-This is more of an "exclusive" queuing semantic. i.e. queue this
-buffer exclusively on the list provided, rather than just ensuring
-it is queued on some delwri list....
+syzbot found the following issue on:
 
-> +	struct xfs_buf		*bp,
-> +	struct list_head	*buffer_list)
-> +{
-> +	/*
-> +	 * We need this buffer to end up on the /caller's/ delwri list, not any
-> +	 * old list.  This can happen if the buffer is marked stale (which
-> +	 * clears DELWRI_Q) after the AIL queues the buffer to its list but
-> +	 * before the AIL has a chance to submit the list.
-> +	 */
-> +	while (!list_empty(&bp->b_list)) {
-> +		xfs_buf_unlock(bp);
-> +		delay(1);
-> +		xfs_buf_lock(bp);
-> +	}
+HEAD commit:    40f71e7cd3c6 Merge tag 'net-6.4-rc7' of git://git.kernel.o..
+git tree:       upstream
+console+strace: https://syzkaller.appspot.com/x/log.txt?x=158b99d3280000
+kernel config:  https://syzkaller.appspot.com/x/.config?x=7ff8f87c7ab0e04e
+dashboard link: https://syzkaller.appspot.com/bug?extid=9d0b0d54a8bd799f6ae4
+compiler:       Debian clang version 15.0.7, GNU ld (GNU Binutils for Debian) 2.35.2
+syz repro:      https://syzkaller.appspot.com/x/repro.syz?x=16ab4537280000
+C reproducer:   https://syzkaller.appspot.com/x/repro.c?x=148326ef280000
 
-Not a big fan of this as it the buffer can be on the AIL buffer list
-for some time (e.g. AIL might have a hundred thousand buffers to
-push).
+Downloadable assets:
+disk image: https://storage.googleapis.com/syzbot-assets/2dc89d5fee38/disk-40f71e7c.raw.xz
+vmlinux: https://storage.googleapis.com/syzbot-assets/0ced5a475218/vmlinux-40f71e7c.xz
+kernel image: https://storage.googleapis.com/syzbot-assets/d543a4f69684/bzImage-40f71e7c.xz
+mounted in repro: https://storage.googleapis.com/syzbot-assets/e2012b787a31/mount_0.gz
 
-This seems more like a case for:
+The issue was bisected to:
 
-	while (!list_empty(&bp->b_list)) {
-		xfs_buf_unlock(bp);
-		wait_event_var(bp->b_flags, !(bp->b_flags & _XBF_DELWRI_Q));
-		xfs_buf_lock(bp);
-	}
+commit e0a8de7da35e5b22b44fa1013ccc0716e17b0c14
+Author: Dave Chinner <dchinner@redhat.com>
+Date:   Mon Jun 5 04:48:15 2023 +0000
 
-And a wrapper:
+    xfs: fix agf/agfl verification on v4 filesystems
 
-void xfs_buf_remove_delwri(
-	struct xfs_buf	*bp)
-{
-	list_del(&bp->b_list);
-	bp->b_flags &= ~_XBF_DELWRI_Q;
-	wake_up_var(bp->b_flags);
-}
+bisection log:  https://syzkaller.appspot.com/x/bisect.txt?x=10bb665b280000
+final oops:     https://syzkaller.appspot.com/x/report.txt?x=12bb665b280000
+console output: https://syzkaller.appspot.com/x/log.txt?x=14bb665b280000
 
-And we replace all the places where the buffer is taken off the
-delwri list with calls to xfs_buf_remove_delwri()...
+IMPORTANT: if you fix the issue, please add the following tag to the commit:
+Reported-by: syzbot+9d0b0d54a8bd799f6ae4@syzkaller.appspotmail.com
+Fixes: e0a8de7da35e ("xfs: fix agf/agfl verification on v4 filesystems")
 
-This will greatly reduce the number of context switches during a
-wait cycle, and reduce the latency of waiting for buffers that are
-queued for delwri...
+XFS (loop0): WARNING: Reset corrupted AGFL on AG 0. 4 blocks leaked. Please unmount and run xfs_repair.
+XFS (loop0): Internal error !ino_ok at line 213 of file fs/xfs/libxfs/xfs_dir2.c.  Caller xfs_dir_ino_validate+0x2c/0x90 fs/xfs/libxfs/xfs_dir2.c:220
+CPU: 1 PID: 46 Comm: kworker/u4:3 Not tainted 6.4.0-rc6-syzkaller-00195-g40f71e7cd3c6 #0
+Hardware name: Google Google Compute Engine/Google Compute Engine, BIOS Google 05/27/2023
+Workqueue: xfs_iwalk-4998 xfs_pwork_work
+Call Trace:
+ <TASK>
+ __dump_stack lib/dump_stack.c:88 [inline]
+ dump_stack_lvl+0x1e7/0x2d0 lib/dump_stack.c:106
+ xfs_error_report fs/xfs/xfs_error.c:384 [inline]
+ xfs_corruption_error+0x11d/0x170 fs/xfs/xfs_error.c:401
+ xfs_dir_ino_validate+0x5f/0x90 fs/xfs/libxfs/xfs_dir2.c:213
+ xfs_dir2_sf_verify+0x487/0x990 fs/xfs/libxfs/xfs_dir2_sf.c:779
+ xfs_ifork_verify_local_data fs/xfs/libxfs/xfs_inode_fork.c:706 [inline]
+ xfs_iformat_data_fork+0x4bf/0x6d0 fs/xfs/libxfs/xfs_inode_fork.c:256
+ xfs_inode_from_disk+0xbbf/0x1070 fs/xfs/libxfs/xfs_inode_buf.c:245
+ xfs_iget_cache_miss fs/xfs/xfs_icache.c:639 [inline]
+ xfs_iget+0xf08/0x3050 fs/xfs/xfs_icache.c:777
+ xfs_qm_dqusage_adjust+0x228/0x670 fs/xfs/xfs_qm.c:1157
+ xfs_iwalk_ag_recs+0x486/0x7c0 fs/xfs/xfs_iwalk.c:220
+ xfs_iwalk_run_callbacks+0x25b/0x490 fs/xfs/xfs_iwalk.c:376
+ xfs_iwalk_ag+0xad6/0xbd0 fs/xfs/xfs_iwalk.c:482
+ xfs_iwalk_ag_work+0xfb/0x1b0 fs/xfs/xfs_iwalk.c:624
+ xfs_pwork_work+0x7c/0x190 fs/xfs/xfs_pwork.c:47
+ process_one_work+0x8a0/0x10e0 kernel/workqueue.c:2405
+ worker_thread+0xa63/0x1210 kernel/workqueue.c:2552
+ kthread+0x2b8/0x350 kernel/kthread.c:379
+ ret_from_fork+0x1f/0x30 arch/x86/entry/entry_64.S:308
+ </TASK>
+XFS (loop0): Corruption detected. Unmount and run xfs_repair
+XFS (loop0): Invalid inode number 0x24
+XFS (loop0): Metadata corruption detected at xfs_dir2_sf_verify+0x767/0x990 fs/xfs/libxfs/xfs_dir2_sf.c:774, inode 0x23 data fork
+XFS (loop0): Unmount and run xfs_repair
+XFS (loop0): First 32 bytes of corrupted metadata buffer:
+00000000: 02 00 00 00 00 20 05 00 30 66 69 6c 65 30 01 00  ..... ..0file0..
 
-Cheers,
 
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+---
+This report is generated by a bot. It may contain errors.
+See https://goo.gl/tpsmEJ for more information about syzbot.
+syzbot engineers can be reached at syzkaller@googlegroups.com.
+
+syzbot will keep track of this issue. See:
+https://goo.gl/tpsmEJ#status for how to communicate with syzbot.
+For information about bisection process see: https://goo.gl/tpsmEJ#bisection
+
+If the bug is already fixed, let syzbot know by replying with:
+#syz fix: exact-commit-title
+
+If you want syzbot to run the reproducer, reply with:
+#syz test: git://repo/address.git branch-or-commit-hash
+If you attach or paste a git patch, syzbot will apply it before testing.
+
+If you want to change bug's subsystems, reply with:
+#syz set subsystems: new-subsystem
+(See the list of subsystem names on the web dashboard)
+
+If the bug is a duplicate of another bug, reply with:
+#syz dup: exact-subject-of-another-report
+
+If you want to undo deduplication, reply with:
+#syz undup
