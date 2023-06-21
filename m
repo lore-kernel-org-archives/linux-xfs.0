@@ -2,115 +2,214 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id AF63CEB64D7
-	for <linux-xfs@archiver.kernel.org>; Wed, 21 Jun 2023 21:59:01 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9B239EB64D7
+	for <linux-xfs@archiver.kernel.org>; Thu, 22 Jun 2023 00:01:14 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230062AbjFUV7A (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 21 Jun 2023 17:59:00 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58668 "EHLO
+        id S229909AbjFVABN (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 21 Jun 2023 20:01:13 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42276 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229657AbjFUV7A (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 21 Jun 2023 17:59:00 -0400
-Received: from mail-pl1-x636.google.com (mail-pl1-x636.google.com [IPv6:2607:f8b0:4864:20::636])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7F56B1AC
-        for <linux-xfs@vger.kernel.org>; Wed, 21 Jun 2023 14:58:59 -0700 (PDT)
-Received: by mail-pl1-x636.google.com with SMTP id d9443c01a7336-1b505665e2fso89355ad.0
-        for <linux-xfs@vger.kernel.org>; Wed, 21 Jun 2023 14:58:59 -0700 (PDT)
+        with ESMTP id S229602AbjFVABM (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 21 Jun 2023 20:01:12 -0400
+Received: from mail-pf1-x42b.google.com (mail-pf1-x42b.google.com [IPv6:2607:f8b0:4864:20::42b])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E59022116
+        for <linux-xfs@vger.kernel.org>; Wed, 21 Jun 2023 17:00:35 -0700 (PDT)
+Received: by mail-pf1-x42b.google.com with SMTP id d2e1a72fcca58-666e6ecb52dso3189567b3a.2
+        for <linux-xfs@vger.kernel.org>; Wed, 21 Jun 2023 17:00:35 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=fromorbit-com.20221208.gappssmtp.com; s=20221208; t=1687384739; x=1689976739;
-        h=in-reply-to:content-transfer-encoding:content-disposition
-         :mime-version:references:message-id:subject:cc:to:from:date:from:to
-         :cc:subject:date:message-id:reply-to;
-        bh=yF+AevMsf0bJfIemNaAR6PbEIyeyrfMBFVJNdRfabZI=;
-        b=nmzJ3HAH0KX5EMFwxpHJ1mFosAb3TtOhgmdr1OhcSirKL3Z2pnnBK1LoAhaEoPHIqt
-         SHobq2L8K7R+mM5B+hbGay9XmnzSo14D4/TJoM1D/AAPfu8lqFZJL2s5U1oULFUZ4r90
-         /8sCAogYdacM/JT89wVgZtutw1mfSBJbuuE2lRONb8xhMr/IJTXJ5PvMmczpcre6QcaQ
-         bpVCxyHCBDAqv7Xw5zEeINF5mWhbN4sAfkeMRsM9UF7fgemR4mnacBtlXZV3C6PMvSvL
-         hLffTT3QfGO1vyGkM8/OdmlTXF9rppJF+QB+I0lpD7b4JmW/9r3XT9VcAtN4g7BoJEUw
-         E84g==
+        d=fromorbit-com.20221208.gappssmtp.com; s=20221208; t=1687391973; x=1689983973;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
+        bh=OU/179/iXGq9NmmW8hnIXVlD1VRa6pe1WCR6A4omy38=;
+        b=R2/kM7yBIoKcuCGTJ8iUWX+NGLJXYVfMBRd/TU4dFCAJOWayRZPh/qFpV3mc7tWw4J
+         DTrLf9lPUC/Cxyh1HEz+9bGzO57/tzWPkeAvYV9sRS3HUvoGUiBNZ1/da5qCMkKah3CT
+         Oqlxs9nqZx/JG9KxcX/Bz1ZHbTLHVMImadAqzLSWuidnqO0bSPk/xB/bIrNL6fORTB3r
+         eAL2+F2NU1UNYjVjyC+m1yhMUsR9dE8E6YSTMcMY5PbHbcfVE+CfbdLPftg4MwUSPcmD
+         KPl1uSJTj8RKtxQUI3ddVVBGhtkRrp3XUovNrCBdxZYYZ8d+I4IyDMcltlecMGXdfYda
+         Hggw==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20221208; t=1687384739; x=1689976739;
-        h=in-reply-to:content-transfer-encoding:content-disposition
-         :mime-version:references:message-id:subject:cc:to:from:date
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=yF+AevMsf0bJfIemNaAR6PbEIyeyrfMBFVJNdRfabZI=;
-        b=UL8zu+zBEVu5JVuO8V19UaLug0fGM5O8a0znzHCaaWVFn4TKmO5PoNSeYCwHWkIG6L
-         06wzgHmqAHEWC38OgD1jRA2rQIYS993bRqLUGAFpcnuKmsprvElF352o7rq8FvpI4W8S
-         GH1b7rZzDSRniy5Qp8M9E3KBQc6rQFz5ZROVbEyC0iPiO1lOkA4DUFOlFZL4kmXpB8Px
-         Z6l/6Yr0dSGU099L0vPHQvKJ/qDVZFg9ftnMEYQ7O/ULKEOcKsajrJW32SY4qjQjRNsF
-         RySBzs6c8a9I1usXnoM/r2cxfj4xuW/waDIFdVrlwcdkczZoroBDiZJgNphEflE2X8vf
-         bZmg==
-X-Gm-Message-State: AC+VfDypPN7EuVGSr6I/rTDC2SNlr5NwY2FGU+DvqAF8ISHz0iMvZFi7
-        RaF2FvR6BoMvs/jggDFFlTp8ocsrEfkRiWC/geg=
-X-Google-Smtp-Source: ACHHUZ6kSrD0J83vnMEpwZMQdiFv2a/mRO7myWw65HYBsZU2rhIQt5FkB6HaiwBA4QQrvMHYJzvG3w==
-X-Received: by 2002:a17:902:d485:b0:1b2:22cd:9827 with SMTP id c5-20020a170902d48500b001b222cd9827mr30134832plg.1.1687384738921;
-        Wed, 21 Jun 2023 14:58:58 -0700 (PDT)
+        d=1e100.net; s=20221208; t=1687391973; x=1689983973;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=OU/179/iXGq9NmmW8hnIXVlD1VRa6pe1WCR6A4omy38=;
+        b=XP+4zYMKhb+vN2LhewecPzclq3ino6oD2AlQDVEXXPbQE7IiMIMLIUTAdknYidYvHb
+         3nBwQ5aIfFBREiQBJCsk4tB9dC0lWfBpT2xZQNu+km/TT+h7b8tyBqslfhMR0A3XOfgi
+         s4HuWfVkzTvfVSdOpbpcSazR0Hup58+v/IB+aKwh8rY4yld3eXI2YveYo4rDvCNvGub6
+         in+OCBKymifXckJnJ7PMoPAFTPafTkJL3SAF7IEcg9eEPj2Xr4hKEPo6ecTXqAyBke+O
+         yyKjZaCD9tEdVbncgb+EvPKVA8Pkm8/JOpUcYXOogMoQHNrTul4gkMDJsvjPYMnRQQw/
+         kinQ==
+X-Gm-Message-State: AC+VfDy60O2zVRFLJ4JfUYmealzOcP2dc4FYorWYAlsZIOT7oKq+sGKk
+        lQEQ7MQhk6SozAibUG972uh0iw==
+X-Google-Smtp-Source: ACHHUZ62jwCnhAIzgBYgwNp4Kl10YuDezm18pLAiA5wud0LAdl60j7do6H51Q9xhv853330itotYYA==
+X-Received: by 2002:a05:6a20:54a6:b0:121:8b92:a20 with SMTP id i38-20020a056a2054a600b001218b920a20mr8871860pzk.46.1687391973065;
+        Wed, 21 Jun 2023 16:59:33 -0700 (PDT)
 Received: from dread.disaster.area (pa49-180-13-202.pa.nsw.optusnet.com.au. [49.180.13.202])
-        by smtp.gmail.com with ESMTPSA id jn9-20020a170903050900b001b3d44788f4sm3994506plb.9.2023.06.21.14.58.58
+        by smtp.gmail.com with ESMTPSA id ja7-20020a170902efc700b001b3c7e5ed8csm4019618plb.74.2023.06.21.16.59.32
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 21 Jun 2023 14:58:58 -0700 (PDT)
+        Wed, 21 Jun 2023 16:59:32 -0700 (PDT)
 Received: from dave by dread.disaster.area with local (Exim 4.96)
         (envelope-from <david@fromorbit.com>)
-        id 1qC5qp-00Ebh4-35;
-        Thu, 22 Jun 2023 07:58:55 +1000
-Date:   Thu, 22 Jun 2023 07:58:55 +1000
+        id 1qC7jV-00Edjp-3D;
+        Thu, 22 Jun 2023 09:59:30 +1000
+Date:   Thu, 22 Jun 2023 09:59:29 +1000
 From:   Dave Chinner <david@fromorbit.com>
-To:     Lars Wendler <polynomial-c@gmx.de>
-Cc:     Holger =?iso-8859-1?Q?Hoffst=E4tte?= 
-        <holger@applied-asynchrony.com>, linux-xfs@vger.kernel.org
-Subject: Re: [PATCH] po/de.po: Fix possible typo which makes gettext-0.22
- unhappy
-Message-ID: <ZJNyn817MpCB3nbr@dread.disaster.area>
-References: <20230621105520.17560-1-polynomial-c@gmx.de>
- <a08995aa-2003-be8f-dab1-6d8ed6687e12@applied-asynchrony.com>
- <20230621135608.25db01bb@chagall.paradoxon.rec>
+To:     Jeremy Bongio <bongiojp@gmail.com>
+Cc:     Ted Tso <tytso@mit.edu>, "Darrick J . Wong" <djwong@kernel.org>,
+        Allison Henderson <allison.henderson@oracle.com>,
+        linux-ext4@vger.kernel.org, linux-fsdevel@vger.kernel.org,
+        linux-xfs@vger.kernel.org
+Subject: Re: [PATCH 0/1] iomap regression for aio dio 4k writes
+Message-ID: <ZJOO4SobNFaQ+C5g@dread.disaster.area>
+References: <20230621174114.1320834-1-bongiojp@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
+Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <20230621135608.25db01bb@chagall.paradoxon.rec>
+In-Reply-To: <20230621174114.1320834-1-bongiojp@gmail.com>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Wed, Jun 21, 2023 at 01:56:08PM +0200, Lars Wendler wrote:
-> Am Wed, 21 Jun 2023 13:29:03 +0200
-> schrieb Holger Hoffstätte <holger@applied-asynchrony.com>:
+On Wed, Jun 21, 2023 at 10:29:19AM -0700, Jeremy Bongio wrote:
+> Hi Darrick and Allison,
 > 
-> > On 2023-06-21 12:55, Lars Wendler wrote:
-> > > diff --git a/po/de.po b/po/de.po
-> > > index 944b0e91..a6f8fde1 100644
-> > > --- a/po/de.po
-> > > +++ b/po/de.po
-> > > @@ -3084,7 +3084,7 @@ msgstr "%llu Spezialdateien\n"
-> > >   #: .././estimate/xfs_estimate.c:191
-> > >   #, c-format
-> > >   msgid "%s will take about %.1f megabytes\n"
-> > > -msgstr "%s wird etwa %.lf Megabytes einnehmen\n"
-> > > +msgstr "%s wird etwa %.1f Megabytes einnehmen\n"
-> > 
-> > I don't see the difference..?
-> > Both the added and removed line are the same.
-> > 
-> > -h
+> There has been a standing performance regression involving AIO DIO
+> 4k-aligned writes on ext4 backed by a fast local SSD since the switch
+> to iomap. I think it was originally reported and investigated in this
+> thread: https://lore.kernel.org/all/87lf7rkffv.fsf@collabora.com/
 > 
-> I suppose depending on the font, it's quite hard to distinguish the two
-> lines.
+> Short version:
+> Pre-iomap, for ext4 async direct writes, after the bio is written to disk
+> the completion function is called directly during the endio stage.
+> 
+> Post-iomap, for direct writes, after the bio is written to disk, the completion
+> function is deferred to a work queue. This adds latency that impacts
+> performance most noticeably in very fast SSDs.
+> 
+> Detailed version:
+> A possible explanation is below, followed by a few questions to figure
+> out the right way to fix it.
+> 
+> In 4.15, ext4 uses fs/direct-io.c. When an AIO DIO write has completed
+> in the nvme driver, the interrupt handler for the write request ends
+> in calling bio_endio() which ends up calling dio_bio_end_aio(). A
+> different end_io function is used for async and sync io. If there are
+> no pages mapped in memory for the write operation's inode, then the
+> completion function for ext4 is called directly. If there are pages
+> mapped, then they might be dirty and need to be updated and work
+> is deferred to a work queue.
+> 
+> Here is the relevant 4.15 code:
+> 
+> fs/direct-io.c: dio_bio_end_aio()
+> if (dio->result)
+>         defer_completion = dio->defer_completion ||
+>                            (dio_op == REQ_OP_WRITE &&
+>                            dio->inode->i_mapping->nrpages);
+> if (defer_completion) {
+>         INIT_WORK(&dio->complete_work, dio_aio_complete_work);
+>         queue_work(dio->inode->i_sb->s_dio_done_wq,
+>                    &dio->complete_work);
+> } else {
+>         dio_complete(dio, 0, DIO_COMPLETE_ASYNC);
+> }
+> 
+> After ext4 switched to using iomap, the endio function became
+> iomap_dio_bio_end_io() in fs/iomap/direct-io.c. In iomap the same end io
+> function is used for both async and sync io.
 
-I didn't see it, and the commit message doesn't explain anything,
-either. Pointing to a bugzilla somewhere does not make a valid
-commit message....
+Yes, because the IO completion processing is the same regardless of
+whether the IO is submitted for sync or async completion.
 
-> The removed line contains "%.lf" with a lowercase letter L.
-> The added line contains "%.1f" where the lowercase letter L was replaced
-> with the digit 1.
+> All write requests will
+> defer io completion to a work queue even if there are no mapped pages
+> for the inode.
 
-... whereas this explains what the bug being fixed is, and allows the
-reviewer to see the subtle change being made. i.e. you just wrote
-the commit message that should have been in the patch in the first
-place. :)
+Yup.
 
-Can you please resend the fix with the commit message updated?
+Consider O_DSYNC DIO writes: Where are the post-IO completion
+integrity operations done?
+
+Consider DIO write IO completion for different filesystems: how does
+iomap_dio_complete() know whether dio->dops->end_io() needs to run
+in task context or not.
+
+e.g. DIO writes into unwritten extents: where are the written
+conversion transactions run?
+
+> With the attached patch, I see significantly better performance in 5.10 than 4.15. 5.10 is the latest kernel where I have driver support for an SSD that is fast enough to reproduce the regression. I verified that upstream iomap works the same.
+> 
+> Test results using the reproduction script from the original report
+> and testing with 4k/8k/12k/16k blocksizes and write-only:
+> https://people.collabora.com/~krisman/dio/week21/bench.sh
+> 
+> fio benchmark command:
+> fio --ioengine libaio --size=2G --direct=1 --filename=${MNT}/file --iodepth=64 \
+> --time_based=1 --thread=1 --overwrite=1 --bs=${BS} --rw=$RW \
+
+Ah, you are testing pure overwrites, which means for ext4 the only
+thing it needs to care about is cached mappings. What happens when
+you add O_DSYNC here?
+
+> --name "`uname -r`-${TYPE}-${RW}-${BS}-${FS}" \
+> --runtime=100 --output-format=terse >> ${LOG}
+> 
+> For 4.15, with all write completions called in io handler:
+> 4k:  bw=1056MiB/s
+> 8k:  bw=2082MiB/s
+> 12k: bw=2332MiB/s
+> 16k: bw=2453MiB/s
+> 
+> For unmodified 5.10, with all write completions deferred:
+> 4k:  bw=1004MiB/s
+> 8k:  bw=2074MiB/s
+> 12k: bw=2309MiB/s
+> 16k: bw=2465MiB/s
+
+I don't see a regression here - the differences are in the noise of
+a typical fio overwrite test.
+
+> For modified 5.10, with all write completions called in io handler:
+> 4k:  bw=1193MiB/s
+> 8k:  bw=2258MiB/s
+> 12k: bw=2346MiB/s
+> 16k: bw=2446MiB/s
+>
+> Questions:
+> 
+> Why did iomap from the beginning not make the async/sync io and
+> mapped/unmapped distinction that fs/direct-io.c did?
+
+Because the iomap code was designed from the ground up as an
+extent-based concurrent async IO engine that supported concurrent
+reads and writes to the same sparse file with full data integrity
+handling guarantees.
+
+The old dio code started off as "sync" DIO only, and it was for a
+long time completely broken for async DIO. Correct support for that
+was eventually tacked on via DIO_COMPLETE_ASYNC, but it was still
+basically an awful, nasty, complex, "block at a time" synchronous
+IO engine.
+
+> Since no issues have been found for ext4 calling completion work
+> directly in the io handler pre-iomap, it is unlikely that this is
+> unsafe (sleeping within an io handler callback). However, this may not
+> be true for all filesystems. Does XFS potentially sleep in its
+> completion code?
+
+Yes, and ext4 does too. e.g. O_DSYNC overwrites always need to be
+deferred to task context to be able to take sleeping locks and
+potentially block on journal and or device cache flushes.
+
+i.e. Have you considered what context all of XFS, f2fs, btrfs,
+zonefs and gfs2 need for pure DIO overwrite completion in all it's
+different variants?
+
+AFAIC, it's far simpler conceptually to defer all writes to
+completion context than it is to try to work out what writes need to
+be deferred and what doesn't, especially as the filesystem ->end_io
+completion might need to sleep and the iomap code has no idea
+whether that is possible.
 
 Cheers,
 
