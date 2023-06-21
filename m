@@ -2,167 +2,138 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 964E8EB64D7
-	for <linux-xfs@archiver.kernel.org>; Tue, 20 Jun 2023 22:18:07 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A26CCEB64D7
+	for <linux-xfs@archiver.kernel.org>; Wed, 21 Jun 2023 02:05:38 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229618AbjFTWSG (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 20 Jun 2023 18:18:06 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38958 "EHLO
+        id S229652AbjFUCFh (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 20 Jun 2023 22:05:37 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39160 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229448AbjFTWSG (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 20 Jun 2023 18:18:06 -0400
-Received: from mail-pf1-x433.google.com (mail-pf1-x433.google.com [IPv6:2607:f8b0:4864:20::433])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 39B1710CE
-        for <linux-xfs@vger.kernel.org>; Tue, 20 Jun 2023 15:18:05 -0700 (PDT)
-Received: by mail-pf1-x433.google.com with SMTP id d2e1a72fcca58-6687446eaccso2543717b3a.3
-        for <linux-xfs@vger.kernel.org>; Tue, 20 Jun 2023 15:18:05 -0700 (PDT)
+        with ESMTP id S229470AbjFUCFh (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 20 Jun 2023 22:05:37 -0400
+Received: from mail-pl1-x62b.google.com (mail-pl1-x62b.google.com [IPv6:2607:f8b0:4864:20::62b])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3AEA31989
+        for <linux-xfs@vger.kernel.org>; Tue, 20 Jun 2023 19:05:36 -0700 (PDT)
+Received: by mail-pl1-x62b.google.com with SMTP id d9443c01a7336-1b4fef08cfdso27772135ad.1
+        for <linux-xfs@vger.kernel.org>; Tue, 20 Jun 2023 19:05:36 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=fromorbit-com.20221208.gappssmtp.com; s=20221208; t=1687299485; x=1689891485;
+        d=fromorbit-com.20221208.gappssmtp.com; s=20221208; t=1687313135; x=1689905135;
         h=in-reply-to:content-disposition:mime-version:references:message-id
          :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
-        bh=BkIl1UnQCwX0vIkJitry3Q7s1nMG6ac5106x/B7Gu6A=;
-        b=RxJpP2fDAxX4kHVHLsbj7KIxVfOLFe1TLmOC3TUkOy2OVvS+7S8YUPhcq5zSZFV3Oz
-         3UUa5VAKsbQR9DaCE523DZMQn0GAy5c4EATk5gGUQPs27DCuB2PJHSEV5ia+cdBV/ikj
-         OQLCgtoAUpQh82wu9aZuqKs5FV7hsICVBDULCFQj4gXEs4zNZXIimBGfan0Yb+ko2fOB
-         KFTTT22alKIub8qe9q2U6c8/d94NNnb0wrQcEMbgry6TdWrOMeVmTy2Lk0fEBN4sb2dX
-         h40zzyL/gAgw29nOAmVkLe0PAkfwTSjZhPoYgKFDYaXgGx5rY7BAIlOYrSmV3gMhpxOE
-         8vhw==
+        bh=TgoIk25za5BwceVB2X11QLIMvCwIie0NeehHJJR3jGc=;
+        b=KjHS9GMRLslIaZEnmD+ZYQdwtQyP5NrcnSyyCxe1BfE2Yfqes1CMJd9O/Xsryfk6Ky
+         U28tJvhH9xHga7Mv2cTYz8pKXeLYAMrQL7UHFto9vVbCrsNqHSMG1MAZH+uqYLbY5RwO
+         Z67flX1oqmwHXHmFp5ne9M/GiJ7e0fOirknNRK4w7CFZQkWSyV+x7U62HXs8qAw+Y57y
+         /4pqsuYETMdmdj6oZXJK3U11/x8gGoSewEDMLgcDyFd49NHDH3WV7Tw0Qb73KrLy4gGe
+         4nGNCk5YAfFuUll5oQWsgChcbkiA5xBFcw40HOS2yNSpKLsUB87olzUjVm+Byljw779r
+         Vn7A==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20221208; t=1687299485; x=1689891485;
+        d=1e100.net; s=20221208; t=1687313135; x=1689905135;
         h=in-reply-to:content-disposition:mime-version:references:message-id
          :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
          :message-id:reply-to;
-        bh=BkIl1UnQCwX0vIkJitry3Q7s1nMG6ac5106x/B7Gu6A=;
-        b=A1i8X2HVuCaNo36DCiygHfjkH1jZH2vw/Nglislf5oOBUASo18+8EAYVhh+fyFqVu3
-         Gpon5cxavXMlZK0z/jLCVoomYsjznxX68IlgylIZC8SxaWKzJ+GvaP7j0xQKQ/7M3Bqf
-         xRJYlDOfZ7j4wUPSdMcH9cEFVpJrbnzQ7R49feVXkJdCNe+dCl85KO9I8K65emjHky6E
-         GxE3Uf9qZpTQH4Pgh7+9IIvHIZHlQm1bfmuEg+GpjvK/fVUOaIezSGpJw7PcD2MTIOkL
-         kgbe/a7/VPXIyplpCFfwz4RCSEGeNfcirlfI0BiIOJDmkyHjr6DOOt3XJ/t5U62gDawX
-         Jrkw==
-X-Gm-Message-State: AC+VfDzhxHauKlJO8hLa0jwEMq2YTRXu6wzcDkog6oJELVYHTl50PUJz
-        /qmZZYgQt339+S14Y7WuZtLNYw==
-X-Google-Smtp-Source: ACHHUZ70QnI6gUt911sDkuNKrf5SZ09GBowxFGcdpjzSt1FJDZwUCYlkK56a/dN3jIHvtxLT3lf8HA==
-X-Received: by 2002:a05:6a00:1a56:b0:658:c1a9:becc with SMTP id h22-20020a056a001a5600b00658c1a9beccmr19560751pfv.12.1687299484711;
-        Tue, 20 Jun 2023 15:18:04 -0700 (PDT)
+        bh=TgoIk25za5BwceVB2X11QLIMvCwIie0NeehHJJR3jGc=;
+        b=Q9dO9eGsM8bJu0YEDcXarBGOQ1fqjLFRDvjGBG6Ngdlf8G0jRiG+u2k02BAR1le0Wh
+         RJ+qw1kAoiIS9rDreJNpBX3A76mD/2gJpjgsSj0DThhlWxt+ck3YP8yS4sFGhwPMw6IZ
+         NOxqfF7JF7IvsAxN7RR4O9b+AItBNTrlkCO6zyjHOgtAQ4euScNq4/ixWxGb4FEBPwWe
+         4CjWTvIUrr1MP8sDpTiqTKDaswdxTrGX7ybiQyZcTqmQaXYG1SbX7LEZfFqsI9FGhjWo
+         io9M2P4uEhYftCNncOlbi/QN0SEhcq1JGQ47rfsOwbS/J48X31Zzj2aM+UFTr2y0P6Ml
+         agyw==
+X-Gm-Message-State: AC+VfDz/AzjD1hcU1pq8WvSv3w+xTVwFyX0NNXAZxo9un044padMj8Ku
+        INIGrHZtdA6GasSLjZY8GuuVLA==
+X-Google-Smtp-Source: ACHHUZ64ho5wxy6ozpFHuXTcyLapzKDRmi+RcyN7N6kunVwX06AjcWLESr9nSt1roaPWa1zTNfO7+w==
+X-Received: by 2002:a17:903:280e:b0:1b0:48e9:cddd with SMTP id kp14-20020a170903280e00b001b048e9cdddmr7683822plb.69.1687313135614;
+        Tue, 20 Jun 2023 19:05:35 -0700 (PDT)
 Received: from dread.disaster.area (pa49-180-13-202.pa.nsw.optusnet.com.au. [49.180.13.202])
-        by smtp.gmail.com with ESMTPSA id s23-20020a634517000000b0053ba104c113sm1853368pga.72.2023.06.20.15.18.03
+        by smtp.gmail.com with ESMTPSA id je13-20020a170903264d00b001ae4d4d2676sm2184855plb.269.2023.06.20.19.05.34
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 20 Jun 2023 15:18:04 -0700 (PDT)
+        Tue, 20 Jun 2023 19:05:34 -0700 (PDT)
 Received: from dave by dread.disaster.area with local (Exim 4.96)
         (envelope-from <david@fromorbit.com>)
-        id 1qBjfl-00EDFG-10;
-        Wed, 21 Jun 2023 08:18:01 +1000
-Date:   Wed, 21 Jun 2023 08:18:01 +1000
+        id 1qBnDw-00EH9m-0R;
+        Wed, 21 Jun 2023 12:05:32 +1000
+Date:   Wed, 21 Jun 2023 12:05:32 +1000
 From:   Dave Chinner <david@fromorbit.com>
-To:     Chandan Babu R <chandan.babu@oracle.com>
+To:     "Darrick J. Wong" <djwong@kernel.org>
 Cc:     linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 4/5] xfs: don't block in busy flushing when freeing
- extents
-Message-ID: <ZJIlmbuHIhu5BMG+@dread.disaster.area>
-References: <20230620002021.1038067-1-david@fromorbit.com>
- <20230620002021.1038067-5-david@fromorbit.com>
- <87a5wumafo.fsf@debian-BULLSEYE-live-builder-AMD64>
+Subject: Re: [PATCH 1/6] xfs: force all buffers to be written during btree
+ bulk load
+Message-ID: <ZJJa7Cnni0mb/9sN@dread.disaster.area>
+References: <168506056054.3728458.14583795170430652277.stgit@frogsfrogsfrogs>
+ <168506056076.3728458.7329874829310609452.stgit@frogsfrogsfrogs>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <87a5wumafo.fsf@debian-BULLSEYE-live-builder-AMD64>
+In-Reply-To: <168506056076.3728458.7329874829310609452.stgit@frogsfrogsfrogs>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Tue, Jun 20, 2023 at 08:23:33PM +0530, Chandan Babu R wrote:
-> On Tue, Jun 20, 2023 at 10:20:20 AM +1000, Dave Chinner wrote:
-> > From: Dave Chinner <dchinner@redhat.com>
-> >
-> > If the current transaction holds a busy extent and we are trying to
-> > allocate a new extent to fix up the free list, we can deadlock if
-> > the AG is entirely empty except for the busy extent held by the
-> > transaction.
-....
-> > @@ -577,10 +588,23 @@ xfs_extent_busy_flush(
-> >  	DEFINE_WAIT		(wait);
-> >  	int			error;
-> >  
-> > -	error = xfs_log_force(mp, XFS_LOG_SYNC);
-> > +	error = xfs_log_force(tp->t_mountp, XFS_LOG_SYNC);
-> >  	if (error)
-> > -		return;
-> > +		return error;
-> >  
-> > +	/* Avoid deadlocks on uncommitted busy extents. */
-> > +	if (!list_empty(&tp->t_busy)) {
-> > +		if (alloc_flags & XFS_ALLOC_FLAG_TRYFLUSH)
-> > +			return 0;
-> > +
-> > +		if (busy_gen != READ_ONCE(pag->pagb_gen))
-> > +			return 0;
-> > +
-> > +		if (alloc_flags & XFS_ALLOC_FLAG_FREEING)
-> > +			return -EAGAIN;
-> > +	}
-> 
-> In the case where a task is freeing an ondisk inode, an ifree transaction can
-> invoke __xfs_inobt_free_block() twice; Once to free the inobt's leaf block and
-> the next call to free its immediate parent block.
-> 
-> The first call to __xfs_inobt_free_block() adds the freed extent into the
-> transaction's busy list and also into the per-ag rb tree tracking the busy
-> extent. Freeing the second inobt block could lead to the following sequence of
-> function calls,
-> 
-> __xfs_free_extent() => xfs_free_extent_fix_freelist() =>
-> xfs_alloc_fix_freelist() => xfs_alloc_ag_vextent_size()
+On Thu, May 25, 2023 at 05:45:35PM -0700, Darrick J. Wong wrote:
+> @@ -2112,6 +2112,37 @@ xfs_buf_delwri_queue(
+>  	return true;
+>  }
+>  
+> +/*
+> + * Queue a buffer to this delwri list as part of a data integrity operation.
+> + * If the buffer is on any other delwri list, we'll wait for that to clear
+> + * so that the caller can submit the buffer for IO and wait for the result.
+> + * Callers must ensure the buffer is not already on the list.
+> + */
+> +void
+> +xfs_buf_delwri_queue_here(
 
-Yes, I think you might be right. I checked inode chunks - they are
-freed from this path via:
+This is more of an "exclusive" queuing semantic. i.e. queue this
+buffer exclusively on the list provided, rather than just ensuring
+it is queued on some delwri list....
 
-xfs_ifree
-  xfs_difree
-    xfs_difree_inobt
-      xfs_difree_inobt_chunk
-        xfs_free_extent_later
-	  <queues an XEFI for deferred freeing>
+> +	struct xfs_buf		*bp,
+> +	struct list_head	*buffer_list)
+> +{
+> +	/*
+> +	 * We need this buffer to end up on the /caller's/ delwri list, not any
+> +	 * old list.  This can happen if the buffer is marked stale (which
+> +	 * clears DELWRI_Q) after the AIL queues the buffer to its list but
+> +	 * before the AIL has a chance to submit the list.
+> +	 */
+> +	while (!list_empty(&bp->b_list)) {
+> +		xfs_buf_unlock(bp);
+> +		delay(1);
+> +		xfs_buf_lock(bp);
+> +	}
 
-And I didn't think about the inobt blocks themselves because freeing
-an inode can require allocation of finobt blocks and hence there's a
-transaction reservation for block allocation on finobt enabled
-filesystems. i.e. freeing can't proceed unless there is some amount
-of free blocks available, and that's why the finobt has an amount of
-per-ag space reserved for it.
+Not a big fan of this as it the buffer can be on the AIL buffer list
+for some time (e.g. AIL might have a hundred thousand buffers to
+push).
 
-Hence, for finobt enabled filesystems, I don't think we can ever get
-down to a completely empty AG and an AGFL that needs refilling from
-the inode path - the metadata reserve doesn't allow the AG to be
-completely emptied in the way that is needed for this bug to
-manifest.
+This seems more like a case for:
 
-Yes, I think it is still possible for all the free space to be busy,
-and so when online discard is enabled we need to do the busy wait
-after the log force to avoid that. However, for non-discard
-filesystems the sync log force is all that is needed to resolve busy
-extents outside the current transaction, so this wouldn't be an
-issue for the current patchset.
+	while (!list_empty(&bp->b_list)) {
+		xfs_buf_unlock(bp);
+		wait_event_var(bp->b_flags, !(bp->b_flags & _XBF_DELWRI_Q));
+		xfs_buf_lock(bp);
+	}
 
-I suspect that is why I haven't seen issues on v5 filesystems,
-though I also haven't seen issues on v4 filesystems that don't have
-the finobt per-ag metadata reservation nor the space reservation at
-transaction reservation time. I know that the fstests enospc group
-is exercising the busy flush code, but I doubt that it was exercised
-through the inode btree block freeing path...
+And a wrapper:
 
-I note that the refcount btree block freeing path also call
-xfs_free_extent(). This might be OK, because refcount btree updates
-get called from deferred intent processing, and hence the EAGAIN
-will trigger a transaction roll and retry correctly.
+void xfs_buf_remove_delwri(
+	struct xfs_buf	*bp)
+{
+	list_del(&bp->b_list);
+	bp->b_flags &= ~_XBF_DELWRI_Q;
+	wake_up_var(bp->b_flags);
+}
 
-I suspect, however, that both of these paths should simply call
-xfs_free_extent_later() to queue an XEFI for deferred processing,
-and that takes the entire extent freeing path out from under the
-btree operations. 
+And we replace all the places where the buffer is taken off the
+delwri list with calls to xfs_buf_remove_delwri()...
 
-I'll look into that. Thanks!
+This will greatly reduce the number of context switches during a
+wait cycle, and reduce the latency of waiting for buffers that are
+queued for delwri...
 
--Dave.
+Cheers,
+
+Dave.
 -- 
 Dave Chinner
 david@fromorbit.com
