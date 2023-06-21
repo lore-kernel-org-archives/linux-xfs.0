@@ -2,114 +2,72 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id F34DDEB64D7
-	for <linux-xfs@archiver.kernel.org>; Wed, 21 Jun 2023 12:03:36 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5E648EB64D7
+	for <linux-xfs@archiver.kernel.org>; Wed, 21 Jun 2023 12:23:32 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231777AbjFUMDe (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 21 Jun 2023 08:03:34 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37360 "EHLO
+        id S230448AbjFUMXb (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 21 Jun 2023 08:23:31 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47606 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231807AbjFUMDY (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 21 Jun 2023 08:03:24 -0400
-Received: from out28-67.mail.aliyun.com (out28-67.mail.aliyun.com [115.124.28.67])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 880EA1731;
-        Wed, 21 Jun 2023 05:03:15 -0700 (PDT)
-X-Alimail-AntiSpam: AC=CONTINUE;BC=0.05035161|-1;CH=green;DM=|CONTINUE|false|;DS=CONTINUE|ham_system_inform|0.0594308-0.000475321-0.940094;FP=0|0|0|0|0|-1|-1|-1;HT=ay29a033018047198;MF=wangyugui@e16-tech.com;NM=1;PH=DS;RN=6;RT=6;SR=0;TI=SMTPD_---.TaOR52l_1687348985;
-Received: from 192.168.2.112(mailfrom:wangyugui@e16-tech.com fp:SMTPD_---.TaOR52l_1687348985)
-          by smtp.aliyun-inc.com;
-          Wed, 21 Jun 2023 20:03:11 +0800
-Date:   Wed, 21 Jun 2023 20:03:13 +0800
-From:   Wang Yugui <wangyugui@e16-tech.com>
-To:     "Matthew Wilcox (Oracle)" <willy@infradead.org>
-Subject: Re: [PATCH v3 0/8] Create large folios in iomap buffered write path
-Cc:     linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org,
-        Dave Chinner <david@fromorbit.com>,
-        Christoph Hellwig <hch@infradead.org>,
-        "Darrick J . Wong" <djwong@kernel.org>
-In-Reply-To: <20230612203910.724378-1-willy@infradead.org>
-References: <20230612203910.724378-1-willy@infradead.org>
-Message-Id: <20230621200305.23CB.409509F4@e16-tech.com>
+        with ESMTP id S229803AbjFUMXa (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 21 Jun 2023 08:23:30 -0400
+Received: from mail.itouring.de (mail.itouring.de [85.10.202.141])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 047D21BF9
+        for <linux-xfs@vger.kernel.org>; Wed, 21 Jun 2023 05:23:03 -0700 (PDT)
+Received: from tux.applied-asynchrony.com (p5ddd7b2c.dip0.t-ipconnect.de [93.221.123.44])
+        by mail.itouring.de (Postfix) with ESMTPSA id 4A173E0;
+        Wed, 21 Jun 2023 14:22:54 +0200 (CEST)
+Received: from [192.168.100.221] (hho.applied-asynchrony.com [192.168.100.221])
+        by tux.applied-asynchrony.com (Postfix) with ESMTP id 14591F01608;
+        Wed, 21 Jun 2023 14:22:54 +0200 (CEST)
+Subject: Re: [PATCH] po/de.po: Fix possible typo which makes gettext-0.22
+ unhappy
+To:     Lars Wendler <polynomial-c@gmx.de>
+Cc:     linux-xfs@vger.kernel.org
+References: <20230621105520.17560-1-polynomial-c@gmx.de>
+ <a08995aa-2003-be8f-dab1-6d8ed6687e12@applied-asynchrony.com>
+ <20230621135608.25db01bb@chagall.paradoxon.rec>
+From:   =?UTF-8?Q?Holger_Hoffst=c3=a4tte?= <holger@applied-asynchrony.com>
+Organization: Applied Asynchrony, Inc.
+Message-ID: <19e2d366-ecbf-1310-a02a-27884b9b5efe@applied-asynchrony.com>
+Date:   Wed, 21 Jun 2023 14:22:54 +0200
 MIME-Version: 1.0
-Content-Type: text/plain; charset="US-ASCII"
-Content-Transfer-Encoding: 7bit
-X-Mailer: Becky! ver. 2.81.04 [en]
+In-Reply-To: <20230621135608.25db01bb@chagall.paradoxon.rec>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Language: en-US
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Hi,
+On 2023-06-21 13:56, Lars Wendler wrote:
+> Am Wed, 21 Jun 2023 13:29:03 +0200
+> schrieb Holger Hoffstätte <holger@applied-asynchrony.com>:
+> 
+>> On 2023-06-21 12:55, Lars Wendler wrote:
+>>> diff --git a/po/de.po b/po/de.po
+>>> index 944b0e91..a6f8fde1 100644
+>>> --- a/po/de.po
+>>> +++ b/po/de.po
+>>> @@ -3084,7 +3084,7 @@ msgstr "%llu Spezialdateien\n"
+>>>    #: .././estimate/xfs_estimate.c:191
+>>>    #, c-format
+>>>    msgid "%s will take about %.1f megabytes\n"
+>>> -msgstr "%s wird etwa %.lf Megabytes einnehmen\n"
+>>> +msgstr "%s wird etwa %.1f Megabytes einnehmen\n"
+>>
+>> I don't see the difference..?
+>> Both the added and removed line are the same.
+>>
+>> -h
+> 
+> I suppose depending on the font, it's quite hard to distinguish the two
+> lines.
+> The removed line contains "%.lf" with a lowercase letter L.
+> The added line contains "%.1f" where the lowercase letter L was replaced
+> with the digit 1.
 
-> Commit ebb7fb1557b1 limited the length of ioend chains to 4096 entries
-> to improve worst-case latency.  Unfortunately, this had the effect of
-> limiting the performance of:
-> 
-> fio -name write-bandwidth -rw=write -bs=1024Ki -size=32Gi -runtime=30 \
->         -iodepth 1 -ioengine sync -zero_buffers=1 -direct=0 -end_fsync=1 \
->         -numjobs=4 -directory=/mnt/test
-> 
-> The problem ends up being lock contention on the i_pages spinlock as we
-> clear the writeback bit on each folio (and propagate that up through
-> the tree).  By using larger folios, we decrease the number of folios
-> to be processed by a factor of 256 for this benchmark, eliminating the
-> lock contention.
-> 
-> It's also the right thing to do.  This is a project that has been on
-> the back burner for years, it just hasn't been important enough to do
-> before now.
-> 
-> I think it's probably best if this goes through the iomap tree since
-> the changes outside iomap are either to the page cache or they're
-> trivial.
-> 
-> v3:
->  - Fix the handling of compound highmem pages in copy_page_from_iter_atomic()
->  - Rename fgp_t to fgf_t
->  - Clarify some wording in the documentation
+Ahh..of course! Zooming in did the trick, I see the difference now.
+Thanks!
 
-This v3 patches broken linux 6.4-rc7.
-
-fstests(btrfs/007 and more) will fail with the v3 patches .
-but it works well without the v3 patches.
-
-Best Regards
-Wang Yugui (wangyugui@e16-tech.com)
-2023/06/21
-
-> v2:
->  - Fix misplaced semicolon
->  - Rename fgp_order to fgp_set_order
->  - Rename FGP_ORDER to FGP_GET_ORDER
->  - Add fgp_t
->  - Update the documentation for ->release_folio
->  - Fix iomap_invalidate_folio()
->  - Update iomap_release_folio()
-> 
-> Matthew Wilcox (Oracle) (8):
->   iov_iter: Handle compound highmem pages in
->     copy_page_from_iter_atomic()
->   iomap: Remove large folio handling in iomap_invalidate_folio()
->   doc: Correct the description of ->release_folio
->   iomap: Remove unnecessary test from iomap_release_folio()
->   filemap: Add fgf_t typedef
->   filemap: Allow __filemap_get_folio to allocate large folios
->   iomap: Create large folios in the buffered write path
->   iomap: Copy larger chunks from userspace
-> 
->  Documentation/filesystems/locking.rst | 15 ++++--
->  fs/btrfs/file.c                       |  6 +--
->  fs/f2fs/compress.c                    |  2 +-
->  fs/f2fs/f2fs.h                        |  2 +-
->  fs/gfs2/bmap.c                        |  2 +-
->  fs/iomap/buffered-io.c                | 43 ++++++++--------
->  include/linux/iomap.h                 |  2 +-
->  include/linux/pagemap.h               | 71 ++++++++++++++++++++++-----
->  lib/iov_iter.c                        | 43 ++++++++++------
->  mm/filemap.c                          | 61 ++++++++++++-----------
->  mm/folio-compat.c                     |  2 +-
->  mm/readahead.c                        | 13 -----
->  12 files changed, 159 insertions(+), 103 deletions(-)
-> 
-> -- 
-> 2.39.2
-
-
+-h
