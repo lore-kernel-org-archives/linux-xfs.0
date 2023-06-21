@@ -2,95 +2,114 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D80BAEB64D8
-	for <linux-xfs@archiver.kernel.org>; Wed, 21 Jun 2023 11:56:16 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id F34DDEB64D7
+	for <linux-xfs@archiver.kernel.org>; Wed, 21 Jun 2023 12:03:36 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231176AbjFUL4P (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 21 Jun 2023 07:56:15 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60970 "EHLO
+        id S231777AbjFUMDe (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 21 Jun 2023 08:03:34 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37360 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231187AbjFUL4M (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 21 Jun 2023 07:56:12 -0400
-Received: from mout.gmx.net (mout.gmx.net [212.227.17.21])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 06F6A170C
-        for <linux-xfs@vger.kernel.org>; Wed, 21 Jun 2023 04:56:10 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=gmx.de;
- s=s31663417; t=1687348569; x=1687953369; i=polynomial-c@gmx.de;
- bh=PummN8OyP8iD2XUUIbg9MxKuvxl3NSL0QOZLnHSXc6g=;
- h=X-UI-Sender-Class:Date:From:To:Cc:Subject:In-Reply-To:References;
- b=qp0IEsbkL6JcHRV7R99RG0+h3/Uvmj7cMzgKRLf1YMKxPN4Yv0ra0nTdnZ4H3ZuEfdBf88a
- LFfIgoa3V3Vl5f+2vA3PWI75cX4ZramtLcFk1IGLLWf/9sFte00QWGXApQgUKT/PvmUT2hA3H
- 2YNiit9bYCZ7GQhxc81MGaK45WMg0+xtdqtB2G2iYOnpaKykLh+Br33/pfPeQOsAuY0Q38cXV
- bZ8pd8FNu0Pxrwo5gBEfLUE10YSUZZ1O0Qa/9k6jKpiyx0/IHY+azhrV5qHvB5DleP8+p3Vi9
- JiI+F/RwvBXX40KXsGhkkJJWMmjxKyNmevwMZqdrLW2wpIX29h4g==
-X-UI-Sender-Class: 724b4f7f-cbec-4199-ad4e-598c01a50d3a
-Received: from chagall.paradoxon.rec ([79.234.209.71]) by mail.gmx.net
- (mrgmx105 [212.227.17.168]) with ESMTPSA (Nemesis) id
- 1MNbkp-1qR1Vq0UWZ-00P8I3; Wed, 21 Jun 2023 13:56:09 +0200
-Date:   Wed, 21 Jun 2023 13:56:08 +0200
-From:   Lars Wendler <polynomial-c@gmx.de>
-To:     Holger =?UTF-8?B?SG9mZnN0w6R0dGU=?= 
-        <holger@applied-asynchrony.com>
-Cc:     linux-xfs@vger.kernel.org
-Subject: Re: [PATCH] po/de.po: Fix possible typo which makes gettext-0.22
- unhappy
-Message-ID: <20230621135608.25db01bb@chagall.paradoxon.rec>
-In-Reply-To: <a08995aa-2003-be8f-dab1-6d8ed6687e12@applied-asynchrony.com>
-References: <20230621105520.17560-1-polynomial-c@gmx.de>
-        <a08995aa-2003-be8f-dab1-6d8ed6687e12@applied-asynchrony.com>
-Organization: privat
-X-Mailer: Claws Mail 4.1.1 (GTK 3.24.38; x86_64-pc-linux-gnu)
+        with ESMTP id S231807AbjFUMDY (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 21 Jun 2023 08:03:24 -0400
+Received: from out28-67.mail.aliyun.com (out28-67.mail.aliyun.com [115.124.28.67])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 880EA1731;
+        Wed, 21 Jun 2023 05:03:15 -0700 (PDT)
+X-Alimail-AntiSpam: AC=CONTINUE;BC=0.05035161|-1;CH=green;DM=|CONTINUE|false|;DS=CONTINUE|ham_system_inform|0.0594308-0.000475321-0.940094;FP=0|0|0|0|0|-1|-1|-1;HT=ay29a033018047198;MF=wangyugui@e16-tech.com;NM=1;PH=DS;RN=6;RT=6;SR=0;TI=SMTPD_---.TaOR52l_1687348985;
+Received: from 192.168.2.112(mailfrom:wangyugui@e16-tech.com fp:SMTPD_---.TaOR52l_1687348985)
+          by smtp.aliyun-inc.com;
+          Wed, 21 Jun 2023 20:03:11 +0800
+Date:   Wed, 21 Jun 2023 20:03:13 +0800
+From:   Wang Yugui <wangyugui@e16-tech.com>
+To:     "Matthew Wilcox (Oracle)" <willy@infradead.org>
+Subject: Re: [PATCH v3 0/8] Create large folios in iomap buffered write path
+Cc:     linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org,
+        Dave Chinner <david@fromorbit.com>,
+        Christoph Hellwig <hch@infradead.org>,
+        "Darrick J . Wong" <djwong@kernel.org>
+In-Reply-To: <20230612203910.724378-1-willy@infradead.org>
+References: <20230612203910.724378-1-willy@infradead.org>
+Message-Id: <20230621200305.23CB.409509F4@e16-tech.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: quoted-printable
-X-Provags-ID: V03:K1:pBx4D7vmN4PNKxCB5mNrq93Awwi6VDDz23RNtt525FcOu2k58Ps
- wZ2dEb7DIyf6DtUJsBLHCgzVQAUHNk3avyUOso/oR8YcN8NBbHpHMLZRnVzhfQO+0HREcp1
- mW2JpjX14po4C7c23PlD1fWJLZaESPudJ0YZNnbWu4ebUmBbi4nD0i35fLRHJufHiRD4+j4
- UfKqF0riEERo8fikpKx3w==
-UI-OutboundReport: notjunk:1;M01:P0:TgL0EQ8+pE4=;drIHTmqX276Mi5oNzv9tKqblNji
- hZxqpzxzG2JfvHOFsqPc0dfFfbTsrS0Qu3yFVOmjdA/YyFkA9gwFg7NevVojjlA9+AIHXhUN3
- USl04fD4vJYCdv7xJ/13jHxj/9q3iELWtkEMoRi5i6suxRauoWizzVYdjaJTouzkAuDtDCCp8
- f5YLYaFeDhD4sSQrdy5Fjri0DkU88Y9Uvu1Z3Iwn23CHzH1aWrB3B8aU6f/MK8lHKtWFJrOKK
- WqOnTYElhS41ECpdzhfc5/Xl950T9H8Dgn9P6DVnlXYJCMdpheBzEyrEAVaT4IMUMb/Q9IFxh
- ktLxLRcm83xynPETfRce5oAVzSArqU0dbQOvA8SY3tXXM3gmnBvVKDKswC+BZi7y1us5g6mWM
- 8f3s6voowt7KL/iLqCg7o0nrxXSsLupemLH2k1x36tgYtVV4nYFnCtMIZQ7Wza+jOH911qiOk
- 9u4KtfrXVoLEHEaRTF0UHlSUvcmZPr5eQnLkm7/9TSF9TuQaatrENrNJao+aGdXl6Ne9XPbVC
- hKTQXcoSzbvGpKoPvc93oLPCaD0G4jqGVyaVGv282NzDlNAxieJOeYS/gwH2zI6qlA85LDmxy
- YeTVKzDCMWphTeAE0bGhd49hk7X0EJMuDQGUojFRjvfONw2mL4JYvOq5F4+fbzYPfwGGzJWGy
- K5Xcy+hj8i39voA5Q2lLUugUqV7iBd5YjuKjhU7cirvi4kMGfVHXczowPHinoyt8euSQcTR5G
- Aghz6bX5aOCEurJD98fYzDtG+zO1JGfY7gwzwQem5bYVJ1UobUd4cu/GAUM7WWGrmalvB8F1k
- 9FJFvq8AtM2L2fCAUlHEVGJbU00lI5BtNCelVOg6gX/kM2iNVxmC4krys42KOYWt7dFCDH5h4
- kZNBU4aYvDRhN/uqrNNOmJBaC83Rjzat+1TVaPO/RwQsAduOasCieySUVhkxlip6vbrMOMVZV
- hGjqExSqj05Z70itKb3TNwcZydc=
+Content-Type: text/plain; charset="US-ASCII"
+Content-Transfer-Encoding: 7bit
+X-Mailer: Becky! ver. 2.81.04 [en]
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Am Wed, 21 Jun 2023 13:29:03 +0200
-schrieb Holger Hoffst=C3=A4tte <holger@applied-asynchrony.com>:
+Hi,
 
-> On 2023-06-21 12:55, Lars Wendler wrote:
-> > diff --git a/po/de.po b/po/de.po
-> > index 944b0e91..a6f8fde1 100644
-> > --- a/po/de.po
-> > +++ b/po/de.po
-> > @@ -3084,7 +3084,7 @@ msgstr "%llu Spezialdateien\n"
-> >   #: .././estimate/xfs_estimate.c:191
-> >   #, c-format
-> >   msgid "%s will take about %.1f megabytes\n"
-> > -msgstr "%s wird etwa %.lf Megabytes einnehmen\n"
-> > +msgstr "%s wird etwa %.1f Megabytes einnehmen\n"
->=20
-> I don't see the difference..?
-> Both the added and removed line are the same.
->=20
-> -h
+> Commit ebb7fb1557b1 limited the length of ioend chains to 4096 entries
+> to improve worst-case latency.  Unfortunately, this had the effect of
+> limiting the performance of:
+> 
+> fio -name write-bandwidth -rw=write -bs=1024Ki -size=32Gi -runtime=30 \
+>         -iodepth 1 -ioengine sync -zero_buffers=1 -direct=0 -end_fsync=1 \
+>         -numjobs=4 -directory=/mnt/test
+> 
+> The problem ends up being lock contention on the i_pages spinlock as we
+> clear the writeback bit on each folio (and propagate that up through
+> the tree).  By using larger folios, we decrease the number of folios
+> to be processed by a factor of 256 for this benchmark, eliminating the
+> lock contention.
+> 
+> It's also the right thing to do.  This is a project that has been on
+> the back burner for years, it just hasn't been important enough to do
+> before now.
+> 
+> I think it's probably best if this goes through the iomap tree since
+> the changes outside iomap are either to the page cache or they're
+> trivial.
+> 
+> v3:
+>  - Fix the handling of compound highmem pages in copy_page_from_iter_atomic()
+>  - Rename fgp_t to fgf_t
+>  - Clarify some wording in the documentation
 
-I suppose depending on the font, it's quite hard to distinguish the two
-lines.
-The removed line contains "%.lf" with a lowercase letter L.
-The added line contains "%.1f" where the lowercase letter L was replaced
-with the digit 1.
+This v3 patches broken linux 6.4-rc7.
 
-Cheers
-Lars
+fstests(btrfs/007 and more) will fail with the v3 patches .
+but it works well without the v3 patches.
+
+Best Regards
+Wang Yugui (wangyugui@e16-tech.com)
+2023/06/21
+
+> v2:
+>  - Fix misplaced semicolon
+>  - Rename fgp_order to fgp_set_order
+>  - Rename FGP_ORDER to FGP_GET_ORDER
+>  - Add fgp_t
+>  - Update the documentation for ->release_folio
+>  - Fix iomap_invalidate_folio()
+>  - Update iomap_release_folio()
+> 
+> Matthew Wilcox (Oracle) (8):
+>   iov_iter: Handle compound highmem pages in
+>     copy_page_from_iter_atomic()
+>   iomap: Remove large folio handling in iomap_invalidate_folio()
+>   doc: Correct the description of ->release_folio
+>   iomap: Remove unnecessary test from iomap_release_folio()
+>   filemap: Add fgf_t typedef
+>   filemap: Allow __filemap_get_folio to allocate large folios
+>   iomap: Create large folios in the buffered write path
+>   iomap: Copy larger chunks from userspace
+> 
+>  Documentation/filesystems/locking.rst | 15 ++++--
+>  fs/btrfs/file.c                       |  6 +--
+>  fs/f2fs/compress.c                    |  2 +-
+>  fs/f2fs/f2fs.h                        |  2 +-
+>  fs/gfs2/bmap.c                        |  2 +-
+>  fs/iomap/buffered-io.c                | 43 ++++++++--------
+>  include/linux/iomap.h                 |  2 +-
+>  include/linux/pagemap.h               | 71 ++++++++++++++++++++++-----
+>  lib/iov_iter.c                        | 43 ++++++++++------
+>  mm/filemap.c                          | 61 ++++++++++++-----------
+>  mm/folio-compat.c                     |  2 +-
+>  mm/readahead.c                        | 13 -----
+>  12 files changed, 159 insertions(+), 103 deletions(-)
+> 
+> -- 
+> 2.39.2
+
+
