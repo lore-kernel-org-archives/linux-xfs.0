@@ -2,72 +2,96 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5E648EB64D7
-	for <linux-xfs@archiver.kernel.org>; Wed, 21 Jun 2023 12:23:32 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 34D39EB64D7
+	for <linux-xfs@archiver.kernel.org>; Wed, 21 Jun 2023 14:48:06 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230448AbjFUMXb (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 21 Jun 2023 08:23:31 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47606 "EHLO
+        id S231895AbjFUOsD (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 21 Jun 2023 10:48:03 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56762 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229803AbjFUMXa (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 21 Jun 2023 08:23:30 -0400
-Received: from mail.itouring.de (mail.itouring.de [85.10.202.141])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 047D21BF9
-        for <linux-xfs@vger.kernel.org>; Wed, 21 Jun 2023 05:23:03 -0700 (PDT)
-Received: from tux.applied-asynchrony.com (p5ddd7b2c.dip0.t-ipconnect.de [93.221.123.44])
-        by mail.itouring.de (Postfix) with ESMTPSA id 4A173E0;
-        Wed, 21 Jun 2023 14:22:54 +0200 (CEST)
-Received: from [192.168.100.221] (hho.applied-asynchrony.com [192.168.100.221])
-        by tux.applied-asynchrony.com (Postfix) with ESMTP id 14591F01608;
-        Wed, 21 Jun 2023 14:22:54 +0200 (CEST)
-Subject: Re: [PATCH] po/de.po: Fix possible typo which makes gettext-0.22
- unhappy
-To:     Lars Wendler <polynomial-c@gmx.de>
-Cc:     linux-xfs@vger.kernel.org
-References: <20230621105520.17560-1-polynomial-c@gmx.de>
- <a08995aa-2003-be8f-dab1-6d8ed6687e12@applied-asynchrony.com>
- <20230621135608.25db01bb@chagall.paradoxon.rec>
-From:   =?UTF-8?Q?Holger_Hoffst=c3=a4tte?= <holger@applied-asynchrony.com>
-Organization: Applied Asynchrony, Inc.
-Message-ID: <19e2d366-ecbf-1310-a02a-27884b9b5efe@applied-asynchrony.com>
-Date:   Wed, 21 Jun 2023 14:22:54 +0200
+        with ESMTP id S232017AbjFUOr4 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 21 Jun 2023 10:47:56 -0400
+Received: from smtp-out2.suse.de (smtp-out2.suse.de [195.135.220.29])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D81E31BC1;
+        Wed, 21 Jun 2023 07:47:46 -0700 (PDT)
+Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
+        (No client certificate requested)
+        by smtp-out2.suse.de (Postfix) with ESMTPS id 5E7C91FECC;
+        Wed, 21 Jun 2023 14:47:45 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.cz; s=susede2_rsa;
+        t=1687358865; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+         mime-version:mime-version:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=kv6ExZernbSJWI88DpmmcJXjCzsmSh4Zm3LClIhZLBs=;
+        b=uTLSKksY0r8UEg+1g8Guk7dqOeyat14cg0OjNpwTLUzr8cEyCNgHRveIDX2qfxuX9I5a8O
+        hLscMNKvZGF/uIL6xgU2cLqH1V5eM8liwOYtuT/q/o1ITefV0RUCSCkprNILo3KG1pYwKG
+        rM1DNpMVsmBPvigqeeqK8DazC1qf9ls=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.cz;
+        s=susede2_ed25519; t=1687358865;
+        h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+         mime-version:mime-version:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=kv6ExZernbSJWI88DpmmcJXjCzsmSh4Zm3LClIhZLBs=;
+        b=Mo3w+XS3XfnQSCTYCM6KqnWgFu06AKVmYTKTVxpl0bzwm37SQBq1vn6jyYs5ey/cxTif5R
+        FEKYjbEj/bGSOBDw==
+Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
+        (No client certificate requested)
+        by imap2.suse-dmz.suse.de (Postfix) with ESMTPS id 475C213A66;
+        Wed, 21 Jun 2023 14:47:45 +0000 (UTC)
+Received: from dovecot-director2.suse.de ([192.168.254.65])
+        by imap2.suse-dmz.suse.de with ESMTPSA
+        id 4lvSEJENk2T+EAAAMHmgww
+        (envelope-from <jack@suse.cz>); Wed, 21 Jun 2023 14:47:45 +0000
+Received: by quack3.suse.cz (Postfix, from userid 1000)
+        id CF439A0762; Wed, 21 Jun 2023 16:47:44 +0200 (CEST)
+From:   Jan Kara <jack@suse.cz>
+To:     Jens Axboe <axboe@kernel.dk>
+Cc:     <linux-block@vger.kernel.org>,
+        Christoph Hellwig <hch@infradead.org>,
+        <linux-ext4@vger.kernel.org>, <linux-xfs@vger.kernel.org>,
+        Jan Kara <jack@suse.cz>
+Subject: [PATCH 2/2] xfs: Fix crash in ext4_bdev_mark_dead()
+Date:   Wed, 21 Jun 2023 16:47:43 +0200
+Message-Id: <20230621144744.1580-2-jack@suse.cz>
+X-Mailer: git-send-email 2.35.3
+In-Reply-To: <20230621144354.10915-1-jack@suse.cz>
+References: <20230621144354.10915-1-jack@suse.cz>
 MIME-Version: 1.0
-In-Reply-To: <20230621135608.25db01bb@chagall.paradoxon.rec>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Language: en-US
+X-Developer-Signature: v=1; a=openpgp-sha256; l=792; i=jack@suse.cz; h=from:subject; bh=9mvZHv1nuxOrQ7jy+yO1dpp1vobf8ZfRCOPCzoekEhM=; b=owEBbQGS/pANAwAIAZydqgc/ZEDZAcsmYgBkkw2O58FKvXZCqoY+XMY4g6hDtZPOPFl/GfUiC1Bg KHkItYSJATMEAAEIAB0WIQSrWdEr1p4yirVVKBycnaoHP2RA2QUCZJMNjgAKCRCcnaoHP2RA2UbvCA C4w8+U/GaomQgaxClF8hYFoz8gIrFJ9yEcmsR4jiuyhD8T1JyS9wX7+KlS3HjsLO0yMpq6Tiu1TLIu rMuFXsEWoTFmzawnh9j8Ym6ryHLu2PnnguqcLul2M7IKrfJuakK7/LrwnKa9BMgIjQebAbI1oUfd97 JOKBnJj2uumSdcan5RnELbs9OPtD643xFk2Wkcq3y5ZMwDO2tRObLNOCAmifbaNcTYLE9PVHV2Szkr KPUtLZFf6f4u++NPZTNoMqwJBANNEQfNBM2rogqGpDPbLFoNsTlpluDjAbns/DW6mnVpVBVOLXrwve XDW/WoZFXW7i3uyCpEXCE3fmJXkuAY
+X-Developer-Key: i=jack@suse.cz; a=openpgp; fpr=93C6099A142276A28BBE35D815BC833443038D8C
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On 2023-06-21 13:56, Lars Wendler wrote:
-> Am Wed, 21 Jun 2023 13:29:03 +0200
-> schrieb Holger Hoffstätte <holger@applied-asynchrony.com>:
-> 
->> On 2023-06-21 12:55, Lars Wendler wrote:
->>> diff --git a/po/de.po b/po/de.po
->>> index 944b0e91..a6f8fde1 100644
->>> --- a/po/de.po
->>> +++ b/po/de.po
->>> @@ -3084,7 +3084,7 @@ msgstr "%llu Spezialdateien\n"
->>>    #: .././estimate/xfs_estimate.c:191
->>>    #, c-format
->>>    msgid "%s will take about %.1f megabytes\n"
->>> -msgstr "%s wird etwa %.lf Megabytes einnehmen\n"
->>> +msgstr "%s wird etwa %.1f Megabytes einnehmen\n"
->>
->> I don't see the difference..?
->> Both the added and removed line are the same.
->>
->> -h
-> 
-> I suppose depending on the font, it's quite hard to distinguish the two
-> lines.
-> The removed line contains "%.lf" with a lowercase letter L.
-> The added line contains "%.1f" where the lowercase letter L was replaced
-> with the digit 1.
+xfs_bdev_mark_dead() passes bdev->bd_holder to ext4_force_shutdown()
+instead of bdev->bd_super leading to crashes. Fix it.
 
-Ahh..of course! Zooming in did the trick, I see the difference now.
-Thanks!
+Fixes: 8067ca1dcdfc ("xfs: wire up the ->mark_dead holder operation for log and RT devices")
+Signed-off-by: Jan Kara <jack@suse.cz>
+---
+ fs/xfs/xfs_super.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
--h
+diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
+index d910b141d52e..3ab188a6fba1 100644
+--- a/fs/xfs/xfs_super.c
++++ b/fs/xfs/xfs_super.c
+@@ -381,7 +381,7 @@ static void
+ xfs_bdev_mark_dead(
+ 	struct block_device	*bdev)
+ {
+-	xfs_force_shutdown(bdev->bd_holder, SHUTDOWN_DEVICE_REMOVED);
++	xfs_force_shutdown(XFS_M(bdev->bd_super), SHUTDOWN_DEVICE_REMOVED);
+ }
+ 
+ static const struct blk_holder_ops xfs_holder_ops = {
+-- 
+2.35.3
+
