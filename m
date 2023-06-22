@@ -2,274 +2,241 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 36699EB64D8
-	for <linux-xfs@archiver.kernel.org>; Thu, 22 Jun 2023 04:06:27 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A1D1CEB64DA
+	for <linux-xfs@archiver.kernel.org>; Thu, 22 Jun 2023 04:06:29 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230352AbjFVEGZ (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 22 Jun 2023 00:06:25 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37006 "EHLO
+        id S230137AbjFVEG2 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 22 Jun 2023 00:06:28 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36438 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229608AbjFVEGF (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 22 Jun 2023 00:06:05 -0400
-Received: from mail-pl1-x62b.google.com (mail-pl1-x62b.google.com [IPv6:2607:f8b0:4864:20::62b])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3E8572128
-        for <linux-xfs@vger.kernel.org>; Wed, 21 Jun 2023 21:04:37 -0700 (PDT)
-Received: by mail-pl1-x62b.google.com with SMTP id d9443c01a7336-1b5018cb4dcso33411635ad.2
-        for <linux-xfs@vger.kernel.org>; Wed, 21 Jun 2023 21:04:37 -0700 (PDT)
+        with ESMTP id S229958AbjFVEGI (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 22 Jun 2023 00:06:08 -0400
+Received: from mx0b-00069f02.pphosted.com (mx0b-00069f02.pphosted.com [205.220.177.32])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id EE5F32710
+        for <linux-xfs@vger.kernel.org>; Wed, 21 Jun 2023 21:04:43 -0700 (PDT)
+Received: from pps.filterd (m0246630.ppops.net [127.0.0.1])
+        by mx0b-00069f02.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 35LKHJn5029291;
+        Thu, 22 Jun 2023 04:04:42 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=references : from :
+ to : cc : subject : date : in-reply-to : message-id : content-type :
+ mime-version; s=corp-2023-03-30;
+ bh=sXy97w1UW7QaeFaKEmdKHXR+vk2qsgJjIPP56tTbFMY=;
+ b=1SnyqwOKEE7ekilIGRgRab3eOzLLGSl5AbKISkZb+6cMUIv6T1Zn7Qccybn4sYvD8G1y
+ ieOo9fFCNhGru5bQXL056fx6qn83u5MLJ1eE0VIsQ4lVpLEJw+tJL9zWGscZxuYaBzw3
+ 5vaLvG6HrPQpmpTrhJTtm46S+kj9591C6DrEaS9H3p2yPw+Lp+zNdJw1B2Uh00YYCIFp
+ H8vdHBl/BZ8MXtHfwzTR5relRdMYKXe6L+U28s8ShrCTNZLPc+uctzpIz4BIZ1F5Y4ST
+ i3+0l1exzbQImp8YFRIl1Dq0Lqv+Kf0WZQGxLgohqfy9AuQ7jrNScItKb90zLvC6NcaN Lg== 
+Received: from iadpaimrmta03.imrmtpd1.prodappiadaev1.oraclevcn.com (iadpaimrmta03.appoci.oracle.com [130.35.103.27])
+        by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 3r938drxdx-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Thu, 22 Jun 2023 04:04:42 +0000
+Received: from pps.filterd (iadpaimrmta03.imrmtpd1.prodappiadaev1.oraclevcn.com [127.0.0.1])
+        by iadpaimrmta03.imrmtpd1.prodappiadaev1.oraclevcn.com (8.17.1.19/8.17.1.19) with ESMTP id 35M2uTkv005831;
+        Thu, 22 Jun 2023 04:04:41 GMT
+Received: from nam10-bn7-obe.outbound.protection.outlook.com (mail-bn7nam10lp2103.outbound.protection.outlook.com [104.47.70.103])
+        by iadpaimrmta03.imrmtpd1.prodappiadaev1.oraclevcn.com (PPS) with ESMTPS id 3r9396q90g-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Thu, 22 Jun 2023 04:04:41 +0000
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
+ b=XXuDxT7rsiRzHPwy/AZKmldCaj44g1+Zg8OLK5SDZiBOKobvu3sZGNRgLwXPsSxxiBSu60V0VVCPbBp6Dm6CXodcjjouo1TEbhnDxgu5qSiRlFe7VOU7NLc2hk4Sw3pvG1OGXADw0X8mNupgMoCE+4QHTnPV1+ArQtS33GqRnWPk61DiPI8vXHKeozgDK1NlQEfWHu/llYKH5g4dRRoJ9y8dbw0IW9Ir1094o5qQ5ldtO7+6GKeecYahSJN8pDGdn+BUYnCKZymFUWOhakdJbbImvbdA86JW7ShJp5AQIfCQfOsrOjkM2COr3l797Kw1j4PGczo47jOGc2G6maKePg==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector9901;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=sXy97w1UW7QaeFaKEmdKHXR+vk2qsgJjIPP56tTbFMY=;
+ b=a8oRSCdg6rzXwD8AxYMkvQFnhspvWXR7ke3+peyfo0q6EpVWbBHQ/eOXRnl4w4oqCvDNawHFG2IPyZ+l0RvSIcLsDWkAFjpg4uBY1A1j03gfZSvkAmCkOCz0nrDkxwiiJWycFLasQu65seaNBCW10kw24p0/MZOVKDsa0G42pjA5krZu1YoVOn9RqUVndN2/qC7bhg3v3r8DTJI0NityPIqPugdd+gzGmGTj7/OvYOjq/5S5Il4YmZA/Gsrj7lX8uURGyTJCdVRs3YVb68KNk+9zRfD3s1CwXqrV/+xsbyYVIIeyXz0QKFpUQ1FgZjWVHzWA41jOCZs2QLPc497DQw==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=oracle.com; dmarc=pass action=none header.from=oracle.com;
+ dkim=pass header.d=oracle.com; arc=none
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=fromorbit-com.20221208.gappssmtp.com; s=20221208; t=1687406676; x=1689998676;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
-        bh=ioniQ/Hu9aB8cdNuAwkTdfNOgY7/VS82KMPqd01oL9E=;
-        b=bO90JxiHlPgXo2QXFby1Y/r0VLsrhISp6sMA2s+M35Zyy2KZEivM84IK/fAxsl1Otd
-         ggJbl2/UScyho+r9gHjIZSMjQZhDsrFRgeku6rKIQ6iXbejsJrGGe7G0Hf1CeE2oL/GF
-         5tuGf+EJtfJ6+hjJw3FXwtEh/qNYpZFMYR+qRX4Xc71kpYgbs1losy4Q8uYdL8LbHCV5
-         bp2MqIIoeUwLUduY98CU6CTyNB0xY8EC2kU37e9r3x0lHpqeTcearhnDR741hBD9Da2j
-         uJc0CPHh/CrnU/NbBsJ83KegYMYXciQhFdROFdg+7/51PfucMje/KvE4KUwpqXZYUq2C
-         K2kQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20221208; t=1687406676; x=1689998676;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=ioniQ/Hu9aB8cdNuAwkTdfNOgY7/VS82KMPqd01oL9E=;
-        b=hQ8SPmYVAKT/7NekV2vZnqVvKHDR0mBiooVEq/MSVkQE1XQjz3c/Q93njQMB+/I+HL
-         CyUH1qoe9//pRX/XxZxibvhT8Gwk9/xHpwepP4/HRe4U+ISNifmHW5Cl2JgtM7xDBRP1
-         jMgL7fBc0tRwKqCo5dFxXhjy5WfxpR9TOqkM90h4dnMxSLsGMDj3nexyXVkLJ1aaa6pw
-         5zRrHzXiFlbTk8cIcLT8bgw9oRwGEnktb1qbQPDplts//jdeDXEOLnww4mCH83kVRJ5D
-         e5+KhseM4uOqAdsJOsWAA7TYbyn41RJMHCiXX/AzKE5ZZPVcsdr1VlkjX+ByFVxJpigC
-         nVGg==
-X-Gm-Message-State: AC+VfDx/3egqbeYdv3OfL1nLwN4mK8+39qxX1O0LIIRCNpSgmOZ8zk+T
-        b2NhnwlmDCPVQmLPsB6G6yxdiG3OMzPXTva9yX4=
-X-Google-Smtp-Source: ACHHUZ4NBA3l0k3gCNnYxndXQ/0QPiZc7y14i6QHpGHzcdonWnfNn1PPslb57C+VAOl0kadu3Hhn5w==
-X-Received: by 2002:a17:903:2487:b0:1b4:9dd5:b2af with SMTP id p7-20020a170903248700b001b49dd5b2afmr6122792plw.0.1687406676543;
-        Wed, 21 Jun 2023 21:04:36 -0700 (PDT)
-Received: from dread.disaster.area (pa49-180-13-202.pa.nsw.optusnet.com.au. [49.180.13.202])
-        by smtp.gmail.com with ESMTPSA id io20-20020a17090312d400b001b3be6c08adsm4217058plb.282.2023.06.21.21.04.34
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 21 Jun 2023 21:04:35 -0700 (PDT)
-Received: from dave by dread.disaster.area with local (Exim 4.96)
-        (envelope-from <david@fromorbit.com>)
-        id 1qCBYd-00Ehqv-2u;
-        Thu, 22 Jun 2023 14:04:31 +1000
-Date:   Thu, 22 Jun 2023 14:04:31 +1000
-From:   Dave Chinner <david@fromorbit.com>
-To:     "Darrick J. Wong" <djwong@kernel.org>
+ d=oracle.onmicrosoft.com; s=selector2-oracle-onmicrosoft-com;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=sXy97w1UW7QaeFaKEmdKHXR+vk2qsgJjIPP56tTbFMY=;
+ b=OdmEQ/Hmh4mEjwKe4EFT/Y69/46cuLgyc8Ne3yum45m6ok1inLMB+fdgX+9f7tuJHNruFjR7c9R+ndU9O9AqGLFZec06ztbZiDD92cJhUZ/WKRkwcSQYtkYm2bGgQqEGhPXjB/YIeHXgb/TXZ8O1rUK3ReyJWljn1yuC436CRzM=
+Received: from SA1PR10MB5867.namprd10.prod.outlook.com (2603:10b6:806:233::19)
+ by IA1PR10MB7447.namprd10.prod.outlook.com (2603:10b6:208:44c::10) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.6521.23; Thu, 22 Jun
+ 2023 04:04:40 +0000
+Received: from SA1PR10MB5867.namprd10.prod.outlook.com
+ ([fe80::8fff:d710:92bc:cf17]) by SA1PR10MB5867.namprd10.prod.outlook.com
+ ([fe80::8fff:d710:92bc:cf17%6]) with mapi id 15.20.6500.036; Thu, 22 Jun 2023
+ 04:04:40 +0000
+References: <20230620002021.1038067-1-david@fromorbit.com>
+ <20230620002021.1038067-5-david@fromorbit.com>
+ <87a5wumafo.fsf@debian-BULLSEYE-live-builder-AMD64>
+ <ZJIlmbuHIhu5BMG+@dread.disaster.area>
+User-agent: mu4e 1.8.10; emacs 27.1
+From:   Chandan Babu R <chandan.babu@oracle.com>
+To:     Dave Chinner <david@fromorbit.com>
 Cc:     linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 3/5] xfs: rewrite xfs_icache_inode_is_allocated
-Message-ID: <ZJPITz0lNOaAdIS5@dread.disaster.area>
-References: <168506057909.3730229.17579286342302688368.stgit@frogsfrogsfrogs>
- <168506057960.3730229.15857132833000582560.stgit@frogsfrogsfrogs>
+Subject: Re: [PATCH 4/5] xfs: don't block in busy flushing when freeing extents
+Date:   Thu, 22 Jun 2023 09:29:46 +0530
+In-reply-to: <ZJIlmbuHIhu5BMG+@dread.disaster.area>
+Message-ID: <87h6r0nnvy.fsf@debian-BULLSEYE-live-builder-AMD64>
+Content-Type: text/plain
+X-ClientProxiedBy: TY2PR04CA0015.apcprd04.prod.outlook.com
+ (2603:1096:404:f6::27) To SA1PR10MB5867.namprd10.prod.outlook.com
+ (2603:10b6:806:233::19)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <168506057960.3730229.15857132833000582560.stgit@frogsfrogsfrogs>
+X-MS-PublicTrafficType: Email
+X-MS-TrafficTypeDiagnostic: SA1PR10MB5867:EE_|IA1PR10MB7447:EE_
+X-MS-Office365-Filtering-Correlation-Id: 43b408d8-0a3c-408a-901f-08db72d5cd33
+X-MS-Exchange-SenderADCheck: 1
+X-MS-Exchange-AntiSpam-Relay: 0
+X-Microsoft-Antispam: BCL:0;
+X-Microsoft-Antispam-Message-Info: zcDHxZiIkoQNUhdCARxh4D9ESFX9Z1H08p5hJ3ZsVvNVOA9qlGwCqnvhdmgr4DZTQmpU92niv/goP9Xbwrc7jFsq2cZ+VkM8pEmGfMQCie3Wy51P3o+gax8lQhN4HAzfkvv+57sKXIuEoRL0k4OD65DMgFmY5NV8l2RLyXfadzJ8LIEN8xFWJ6HGLvCQ0c04KyKyUYUy9uOEg1qXe6oEwi5AKUgvFQQxv9EXNu6p+YGn7tSVwzWsn+6CRazkxFKIUqfvRSJ5Ljd2xDbeQ68Hb9Ix9cobbvnj5W8MbhcTNoreV3SYK8gqGwq8Ie3RTepIxFVuNYQOVWpAxTAooh5jO0UVFW41PutZTKm/cMYWoYA2+DBCrO/ed0ZorymsBNlDfUUDW1zNka9q9/a2UwAwzQlJGa0SeS/6NJCvdFmkPPcAZE/UMN6FzyT9V++18KsGyj+hrjubDAK6R+0qSIcP/M1WtkUAHmvwyLa7TRGtFDFTrfKsPJO2L8TKVBVPAqQidzbW1zguxzHo3rQwVKzyKlKdNG5B7TmTGD7VHfYqHcEnc2enlcj19MCdujt2W26P
+X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:SA1PR10MB5867.namprd10.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230028)(7916004)(39860400002)(136003)(346002)(366004)(376002)(396003)(451199021)(86362001)(38100700002)(83380400001)(6486002)(33716001)(66476007)(4326008)(316002)(66946007)(66556008)(6506007)(53546011)(6512007)(8676002)(8936002)(6916009)(26005)(186003)(9686003)(41300700001)(2906002)(478600001)(5660300002);DIR:OUT;SFP:1101;
+X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-MessageData-0: =?us-ascii?Q?vJIWd3PtwssOcnHKPLyZG7B7TimBJUor91e+2LRMO2Lvq4tLx3s/RMfMMpfl?=
+ =?us-ascii?Q?nmXGjslJVGuBm3axo4UAEuI8nCGfPhnOF4FzQW8LkcGOhjXKRaWVX1UOegOH?=
+ =?us-ascii?Q?JIkFjJ1Zg90/QItoy/1MycrtGzyBlkXqZxfI1OdXaJczQuPm/cuHfgZlq7mW?=
+ =?us-ascii?Q?XsVRFJpsWc2eqCUI6ZxN5HcmXoWMxaQ5YfkNbfSt1PWLWGmmbIDteIpGWnpe?=
+ =?us-ascii?Q?e2ZuhusIVhUPztz9ySU9B4E8Io+g/Da5zYHtURUCRtLMqOgv0pxA0pm6y+LX?=
+ =?us-ascii?Q?LGWEWnzZMAsn68gTjrt8/7lBXBNu0WUOLcNlOCalzR251e7fdVL+3uvEMLc5?=
+ =?us-ascii?Q?PK/CQNKMickc4supZMorYM/9Xob9i91TZ5qY0h1KTE24nEG5HyjLaOOdSXVY?=
+ =?us-ascii?Q?+tRQmwRLO3xihk3sy/XQE3xgy1JW89OmshjJ2MsCfshDlTrUS7F6gLR4L3eB?=
+ =?us-ascii?Q?L0+arIlDWu6aHzpcVMY27UVfeI0m3Cue9t1FHJRsIBdT2JGRI/fTEdNsHmwZ?=
+ =?us-ascii?Q?7s1iOt2jaoJr0O1UCf24WNn+XpRKrYhzFcKvgSkucLkm3i4G+VLTtNeBmyVD?=
+ =?us-ascii?Q?9Uc2cMzba/rdxflKS2m8Ik1fNQhZ4f7n0U9It+7jet5yDJsJDNOmNDwnVwuA?=
+ =?us-ascii?Q?r30uAn7junnt5IMlmwLLY1Rx04ZpsuEFwzUtgSqKo8/7rcB5brIv2I7l9isl?=
+ =?us-ascii?Q?h3JtI8KdMk2RAGLAgoueJEdjmCZDzkoGuikEMSJoYuIHXreYK2UEzZxFYruF?=
+ =?us-ascii?Q?UJZDQ2GZTdomxXnOiJzwUx+F0RI3nRggD6+0Qm10ERkG3KZ+okvgxj7YwEKO?=
+ =?us-ascii?Q?dM6vMHoS7URa23ky3WQuQXsRHpnmESGTf8fhw7UNIHEqvG88ROu9bdDUj+mw?=
+ =?us-ascii?Q?37K/UTDmErYLVYEvL5uxVPTPnx6BnGMlWb215hVq7ijT+jVKad7HdxZ2UhwQ?=
+ =?us-ascii?Q?Iiqq9uFYST5otd3/uEpK7DFmms9VwZ1UyYdUBYHoQoDRt3M4TpUcMlysJdXT?=
+ =?us-ascii?Q?UIweGBs4wzURMV/zWsQEYytKAW/5E2ELoBUGyYesVKgaIxf7PYWPxh6tiP5n?=
+ =?us-ascii?Q?ayE+parwTg65zln5SrYQSufv4eQ4PSY8WhlAt5DYT0KKoVJW/KswEurR3OCK?=
+ =?us-ascii?Q?kraGuLz6E9ZW6a0xo1i4iZT5xB6ldk00zrxMhpy9YADNCaqhaaB004EMg0fF?=
+ =?us-ascii?Q?H+en7pFnr9JOzelQzobGV3QwUgVhetcs6mxJLnkI3ZbK+J+Z4YAJjfeVVQiz?=
+ =?us-ascii?Q?adxnJBQjgny82NmtEZM3QHOR6kHVUOQmT07KN8/8eEhlPhVKmF3kZJdE12DO?=
+ =?us-ascii?Q?vLFrjJXwi4/Mu4sT4N042+qnMfOW4l/S+7WkAU27NQVjos8BjbF9szWGNu/m?=
+ =?us-ascii?Q?d0tbUBJVMPKjf8H5Mze3fcqPKZxh3so0ecNTONc5ZF+cpSzKN1qCCkPCXrcE?=
+ =?us-ascii?Q?RsoxHDMXhMg2tdVNbjMC0L/qjCKSoENmbeYOB2Vcxd2PcjDK+Q9Sos2jTxrr?=
+ =?us-ascii?Q?HkoGeMhNbKxfFmsL8j+kQnIbZpRlDKB81mvhBD0PsvjM6Rjiwz/UZTdLMqrR?=
+ =?us-ascii?Q?bLy4ql1dlxHua1kr54qhjmIw/8JjWSV+2LRA1bT0?=
+X-MS-Exchange-AntiSpam-ExternalHop-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-ExternalHop-MessageData-0: vZRZld0vqeytj0nfauJLrbjSjqeFFCzAMU6VuCFEN83WpxcxcB5qgzu7JIMiNgyhqtl79OBVuE0yQkKRgLnn2pf9jIEi4F2qRf8qhqBQ37X5j21Fa7339qjoC8BqKEL+A/bKWHpwOfiOZPg+l8lgOtNxs2HCFTsRgHr+wph570XhkdK01B+Im1c+WIvvunjrmUwzgjWNQimVGFo3ebAzbpmr02u8DLnmef4wPck9tzeet5PtZubF0/OnM7zqZ6BxzGs3zZMKkH1U1RmzWe2WT5s9ff3XpvxPHyGqcWFLKs4E1UAZgbqzvvoC90LB+caWWMvQmSZHskM47i6u+NBldcrVyxbcz/Q1OcgzjYSz92ROkVH72TiWXu1akAXtS2ChxQbgTSCo7V5AeFHExpVPcDj6c8P4Vfc4vXA3nrespllTIEfCnihryFNLtBDW+gCNjS5ryGvOOHKiG7E5uufSZaivgzgkA+UUDM3Pb+FXNYy4i76Wy2wXWrvQGVwSBg2U6V30XxnEoQN+PhIewZUbTLTvYYeD98pdhyCttzHGc7Xw4xVfqwiiL12G+FXeuI9YIZ62DudfwCwdKFM8sB2NSWDq5VQlWmbDFJubfBfu7XgLmmoSX4QvI180BWizXb4dV2DtFbmEdkgrKF+sX8wHEODjg30sStn3CFx7MqYGYx8OmKqtTga7d5aV2YKrvMi3t73trc21ZToONqxvYFokX9QnKfnWJajZtulGpBUioWuFcj9Q4Zcnajsnl7B9bOlr+2pzOwZDCnDH6xe/zIEK6giQng4ATf3wF8fzGaDJC0Y=
+X-OriginatorOrg: oracle.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: 43b408d8-0a3c-408a-901f-08db72d5cd33
+X-MS-Exchange-CrossTenant-AuthSource: SA1PR10MB5867.namprd10.prod.outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 22 Jun 2023 04:04:40.1802
+ (UTC)
+X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
+X-MS-Exchange-CrossTenant-Id: 4e2c6054-71cb-48f1-bd6c-3a9705aca71b
+X-MS-Exchange-CrossTenant-MailboxType: HOSTED
+X-MS-Exchange-CrossTenant-UserPrincipalName: XmKro0d3HQE6d3j8D/r/j7qCnYJmF9bIMCZyu8guWa0ZF1MBwJHbciM0R0sKrEr2St+yaDTGGM/F5E3lErEtXQ==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: IA1PR10MB7447
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.254,Aquarius:18.0.957,Hydra:6.0.591,FMLib:17.11.176.26
+ definitions=2023-06-22_01,2023-06-16_01,2023-05-22_02
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 mlxlogscore=999 adultscore=0
+ spamscore=0 bulkscore=0 malwarescore=0 phishscore=0 mlxscore=0
+ suspectscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2305260000 definitions=main-2306220032
+X-Proofpoint-GUID: O60BXPRuF8CeSe55bUqE217bpKJpsanZ
+X-Proofpoint-ORIG-GUID: O60BXPRuF8CeSe55bUqE217bpKJpsanZ
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Thu, May 25, 2023 at 05:51:34PM -0700, Darrick J. Wong wrote:
-> From: Darrick J. Wong <djwong@kernel.org>
-> 
-> Back in the mists of time[1], I proposed this function to assist the
-> inode btree scrubbers in checking the inode btree contents against the
-> allocation state of the inode records.  The original version performed a
-> direct lookup in the inode cache and returned the allocation status if
-> the cached inode hadn't been reused and wasn't in an intermediate state.
-> Brian thought it would be better to use the usual iget/irele mechanisms,
-> so that was changed for the final version.
-> 
-> Unfortunately, this hasn't aged well -- the IGET_INCORE flag only has
-> one user and clutters up the regular iget path, which makes it hard to
-> reason about how it actually works.  Worse yet, the inode inactivation
-> series silently broke it because iget won't return inodes that are
-> anywhere in the inactivation machinery, even though the caller is
-> already required to prevent inode allocation and freeing.  Inodes in the
-> inactivation machinery are still allocated, but the current code's
-> interactions with the iget code prevent us from being able to say that.
-> 
-> Now that I understand the inode lifecycle better than I did in early
-> 2017, I now realize that as long as the cached inode hasn't been reused
-> and isn't actively being reclaimed, it's safe to access the i_mode field
-> (with the AGI, rcu, and i_flags locks held), and we don't need to worry
-> about the inode being freed out from under us.
-> 
-> Therefore, port the original version to modern code structure, which
-> fixes the brokennes w.r.t. inactivation.  In the next patch we'll remove
-> IGET_INCORE since it's no longer necessary.
-> 
-> [1] https://lore.kernel.org/linux-xfs/149643868294.23065.8094890990886436794.stgit@birch.djwong.org/
-> 
-> Signed-off-by: Darrick J. Wong <djwong@kernel.org>
-> ---
->  fs/xfs/xfs_icache.c |  127 +++++++++++++++++++++++++++++++++++++++++++--------
->  fs/xfs/xfs_trace.h  |   22 +++++++++
->  2 files changed, 129 insertions(+), 20 deletions(-)
-> 
-> 
-> diff --git a/fs/xfs/xfs_icache.c b/fs/xfs/xfs_icache.c
-> index 0f60e301eb1f..0048a8b290bc 100644
-> --- a/fs/xfs/xfs_icache.c
-> +++ b/fs/xfs/xfs_icache.c
-> @@ -782,23 +782,23 @@ xfs_iget(
->  }
->  
->  /*
-> - * "Is this a cached inode that's also allocated?"
-> + * Decide if this is this a cached inode that's also allocated.  The caller
-> + * must hold the AGI buffer lock to prevent inodes from being allocated or
-> + * freed.
->   *
-> - * Look up an inode by number in the given file system.  If the inode is
-> - * in cache and isn't in purgatory, return 1 if the inode is allocated
-> - * and 0 if it is not.  For all other cases (not in cache, being torn
-> - * down, etc.), return a negative error code.
-> + * Look up an inode by number in the given file system.  If the inode number
-> + * is invalid, return -EINVAL.  If the inode is not in cache, return -ENODATA.
-> + * If the inode is in an intermediate state (new, being reclaimed, reused) then
-> + * return -EAGAIN.
->   *
-> - * The caller has to prevent inode allocation and freeing activity,
-> - * presumably by locking the AGI buffer.   This is to ensure that an
-> - * inode cannot transition from allocated to freed until the caller is
-> - * ready to allow that.  If the inode is in an intermediate state (new,
-> - * reclaimable, or being reclaimed), -EAGAIN will be returned; if the
-> - * inode is not in the cache, -ENOENT will be returned.  The caller must
-> - * deal with these scenarios appropriately.
-> + * Otherwise, the incore inode is the one we want, and it is either live,
-> + * somewhere in the inactivation machinery, or reclaimable.  The inode is
-> + * allocated if i_mode is nonzero.  In all three cases, the cached inode will
-> + * be more up to date than the ondisk inode buffer, so we must use the incore
-> + * i_mode.
->   *
-> - * This is a specialized use case for the online scrubber; if you're
-> - * reading this, you probably want xfs_iget.
-> + * This is a specialized use case for the online fsck; if you're reading this,
-> + * you probably want xfs_iget.
->   */
->  int
->  xfs_icache_inode_is_allocated(
-> @@ -808,15 +808,102 @@ xfs_icache_inode_is_allocated(
->  	bool			*inuse)
->  {
->  	struct xfs_inode	*ip;
-> +	struct xfs_perag	*pag;
-> +	xfs_agino_t		agino;
->  	int			error;
->  
-> -	error = xfs_iget(mp, tp, ino, XFS_IGET_INCORE, 0, &ip);
-> -	if (error)
-> -		return error;
-> +	/* reject inode numbers outside existing AGs */
-> +	if (!ino || XFS_INO_TO_AGNO(mp, ino) >= mp->m_sb.sb_agcount)
-> +		return -EINVAL;
+On Wed, Jun 21, 2023 at 08:18:01 AM +1000, Dave Chinner wrote:
+> On Tue, Jun 20, 2023 at 08:23:33PM +0530, Chandan Babu R wrote:
+>> On Tue, Jun 20, 2023 at 10:20:20 AM +1000, Dave Chinner wrote:
+>> > From: Dave Chinner <dchinner@redhat.com>
+>> >
+>> > If the current transaction holds a busy extent and we are trying to
+>> > allocate a new extent to fix up the free list, we can deadlock if
+>> > the AG is entirely empty except for the busy extent held by the
+>> > transaction.
+> ....
+>> > @@ -577,10 +588,23 @@ xfs_extent_busy_flush(
+>> >  	DEFINE_WAIT		(wait);
+>> >  	int			error;
+>> >  
+>> > -	error = xfs_log_force(mp, XFS_LOG_SYNC);
+>> > +	error = xfs_log_force(tp->t_mountp, XFS_LOG_SYNC);
+>> >  	if (error)
+>> > -		return;
+>> > +		return error;
+>> >  
+>> > +	/* Avoid deadlocks on uncommitted busy extents. */
+>> > +	if (!list_empty(&tp->t_busy)) {
+>> > +		if (alloc_flags & XFS_ALLOC_FLAG_TRYFLUSH)
+>> > +			return 0;
+>> > +
+>> > +		if (busy_gen != READ_ONCE(pag->pagb_gen))
+>> > +			return 0;
+>> > +
+>> > +		if (alloc_flags & XFS_ALLOC_FLAG_FREEING)
+>> > +			return -EAGAIN;
+>> > +	}
+>> 
+>> In the case where a task is freeing an ondisk inode, an ifree transaction can
+>> invoke __xfs_inobt_free_block() twice; Once to free the inobt's leaf block and
+>> the next call to free its immediate parent block.
+>> 
+>> The first call to __xfs_inobt_free_block() adds the freed extent into the
+>> transaction's busy list and also into the per-ag rb tree tracking the busy
+>> extent. Freeing the second inobt block could lead to the following sequence of
+>> function calls,
+>> 
+>> __xfs_free_extent() => xfs_free_extent_fix_freelist() =>
+>> xfs_alloc_fix_freelist() => xfs_alloc_ag_vextent_size()
+>
+> Yes, I think you might be right. I checked inode chunks - they are
+> freed from this path via:
+>
+> xfs_ifree
+>   xfs_difree
+>     xfs_difree_inobt
+>       xfs_difree_inobt_chunk
+>         xfs_free_extent_later
+> 	  <queues an XEFI for deferred freeing>
+>
+> And I didn't think about the inobt blocks themselves because freeing
+> an inode can require allocation of finobt blocks and hence there's a
+> transaction reservation for block allocation on finobt enabled
+> filesystems. i.e. freeing can't proceed unless there is some amount
+> of free blocks available, and that's why the finobt has an amount of
+> per-ag space reserved for it.
+>
+> Hence, for finobt enabled filesystems, I don't think we can ever get
+> down to a completely empty AG and an AGFL that needs refilling from
+> the inode path - the metadata reserve doesn't allow the AG to be
+> completely emptied in the way that is needed for this bug to
+> manifest.
+>
+> Yes, I think it is still possible for all the free space to be busy,
+> and so when online discard is enabled we need to do the busy wait
+> after the log force to avoid that. However, for non-discard
+> filesystems the sync log force is all that is needed to resolve busy
+> extents outside the current transaction, so this wouldn't be an
+> issue for the current patchset.
 
-xfs_verify_ino(mp, ino)
+Are you planning to post a new version of this patchset which would solve the
+possible cancellation of dirty transaction during freeing inobt blocks?  If
+not, I will spend some time to review the current version of the patchset.
 
->  
-> -	*inuse = !!(VFS_I(ip)->i_mode);
-> -	xfs_irele(ip);
-> -	return 0;
-> +	/* get the perag structure and ensure that it's inode capable */
-> +	pag = xfs_perag_get(mp, XFS_INO_TO_AGNO(mp, ino));
-> +	if (!pag) {
-> +		/* No perag means this inode can't possibly be allocated */
-> +		return -EINVAL;
-> +	}
+>
+> I suspect that is why I haven't seen issues on v5 filesystems,
+> though I also haven't seen issues on v4 filesystems that don't have
+> the finobt per-ag metadata reservation nor the space reservation at
+> transaction reservation time. I know that the fstests enospc group
+> is exercising the busy flush code, but I doubt that it was exercised
+> through the inode btree block freeing path...
+>
+> I note that the refcount btree block freeing path also call
+> xfs_free_extent(). This might be OK, because refcount btree updates
+> get called from deferred intent processing, and hence the EAGAIN
+> will trigger a transaction roll and retry correctly.
+>
+> I suspect, however, that both of these paths should simply call
+> xfs_free_extent_later() to queue an XEFI for deferred processing,
+> and that takes the entire extent freeing path out from under the
+> btree operations. 
+>
+> I'll look into that. Thanks!
 
-Probably should be xfs_perag_grab/rele in this function.
-
-> +	agino = XFS_INO_TO_AGINO(mp, ino);
-> +
-> +	rcu_read_lock();
-> +	ip = radix_tree_lookup(&pag->pag_ici_root, agino);
-> +	if (!ip) {
-> +		/* cache miss */
-> +		error = -ENODATA;
-> +		goto out_pag;
-> +	}
-> +
-> +	/*
-> +	 * If the inode number doesn't match, the incore inode got reused
-> +	 * during an RCU grace period and the radix tree hasn't been updated.
-> +	 * This isn't the inode we want.
-> +	 */
-> +	error = -ENODATA;
-
-move this up to before the rcu_read_lock(), and it can be removed
-from the !ip branch above, too.
-
-> +	spin_lock(&ip->i_flags_lock);
-> +	if (ip->i_ino != ino)
-> +		goto out_skip;
-> +
-> +	trace_xfs_icache_inode_is_allocated(ip);
-> +
-> +	/*
-> +	 * We have an incore inode that matches the inode we want, and the
-> +	 * caller holds the AGI buffer.
-> +	 *
-> +	 * If the incore inode is INEW, there are several possibilities:
-> +	 *
-> +	 * For a file that is being created, note that we allocate the ondisk
-> +	 * inode before allocating, initializing, and adding the incore inode
-> +	 * to the radix tree.
-> +	 *
-> +	 * If the incore inode is being recycled, the inode has to be allocated
-> +	 * because we don't allow freed inodes to be recycled.
-> +	 *
-> +	 * If the inode is queued for inactivation, it should still be
-> +	 * allocated.
-> +	 *
-> +	 * If the incore inode is undergoing inactivation, either it is before
-> +	 * the point where it would get freed ondisk (in which case i_mode is
-> +	 * still nonzero), or it has already been freed, in which case i_mode
-> +	 * is zero.  We don't take the ILOCK here, but difree and dialloc
-> +	 * require the AGI, which we do hold.
-> +	 *
-> +	 * If the inode is anywhere in the reclaim mechanism, we know that it's
-> +	 * still ok to query i_mode because we don't allow uncached inode
-> +	 * updates.
-
-Is it? We explicitly consider XFS_IRECLAIM inodes as in the process
-of being freed, so there is no guarantee that anything in them is
-valid anymore. Indeed, there's a transient state in recycling an
-inode where we set XFS_IRECLAIM, then re-initialise the inode (which
-trashes i_mode) and then restore i_mode to it's correct value before
-clearing XFS_IRECLAIM.
-
-Hence I think that if XFS_IRECLAIM is set, we can't make any safe
-judgement of the state of i_mode here with just a rcu_read_lock()
-being held.
-
-> +	 *
-> +	 * If the incore inode is live (i.e. referenced from the dcache), the
-> +	 * ondisk inode had better be allocated.  This is the most trivial
-> +	 * case.
-> +	 */
-> +#ifdef DEBUG
-> +	if (ip->i_flags & XFS_INEW) {
-> +		/* created on disk already or recycling */
-> +		ASSERT(VFS_I(ip)->i_mode != 0);
-> +	}
-
-I don't think this is correct. In xfs_iget_cache_miss() when
-allocating a new inode, we set XFS_INEW and we don't set i_mode
-until we call xfs_init_new_inode() after xfs_iget() on the newly
-allocated inode returns.  Hence there is a long period where
-XFS_INEW can be set and i_mode is zero and the i_flags_lock is not
-held.
-
-Remember, if this is a generic function (which by placing it in
-fs/xfs/xfs_icache.c is essentially asserting that it is) then the
-inode state is only being serialised by RCU. Hence the debug code
-here cannot assume that it has been called with the AGI locked to
-serialise it against create/free operations, nor that there aren't
-other operations being performed on the inode as the lookup is done.
-
-Cheers,
-
-Dave.
 -- 
-Dave Chinner
-david@fromorbit.com
+chandan
