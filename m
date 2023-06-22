@@ -2,42 +2,66 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 44BE1EB64D8
-	for <linux-xfs@archiver.kernel.org>; Thu, 22 Jun 2023 04:08:16 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A1AD9EB64DA
+	for <linux-xfs@archiver.kernel.org>; Thu, 22 Jun 2023 04:48:12 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229828AbjFVEIP (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 22 Jun 2023 00:08:15 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37722 "EHLO
+        id S229870AbjFVEsL (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 22 Jun 2023 00:48:11 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46808 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230186AbjFVEIN (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 22 Jun 2023 00:08:13 -0400
-Received: from bombadil.infradead.org (bombadil.infradead.org [IPv6:2607:7c80:54:3::133])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id CBBE71BDA;
-        Wed, 21 Jun 2023 21:08:09 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Type:MIME-Version
-        :References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
-        Content-Transfer-Encoding:Content-ID:Content-Description;
-        bh=VHct6KpsbWHWIj6IoNv83jCmcVA22kr6p9gJJdV1aoM=; b=bzJo6uYDrIqm90UIvjciQYasWq
-        CCx+ab9SRXCVk+MacTPF805gp2u4fLWkl1Z/wsreRi8N4KP81wA9koxdz7FqtjRT8Fupod/9yskDf
-        uiuhogPedh+4hWZBmcxW+iX+KSltn5zqUEBEuUULLW5AbQZihlTMddNezY7JlBSOtSE1jkOW7Hy0L
-        59Gt8NA470yYq6hUq8Ncu4Et3aXxvdmf62kQKpsCej1gjP9KOD8xlcqErrfhHCCGddn6GsUWOSPia
-        X7HEs3mtmL2fwNieAULkUEyDgjvNQ13mwSb6cMZt+H7ggO1RSLRhF79Fhj7M0nVucVQAiXTRN5bcE
-        cM3Ba9Rw==;
-Received: from hch by bombadil.infradead.org with local (Exim 4.96 #2 (Red Hat Linux))
-        id 1qCBc3-00Gkel-0O;
-        Thu, 22 Jun 2023 04:08:03 +0000
-Date:   Wed, 21 Jun 2023 21:08:03 -0700
-From:   Christoph Hellwig <hch@infradead.org>
+        with ESMTP id S230488AbjFVEsF (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 22 Jun 2023 00:48:05 -0400
+Received: from mail-qk1-x730.google.com (mail-qk1-x730.google.com [IPv6:2607:f8b0:4864:20::730])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1389E1BD1
+        for <linux-xfs@vger.kernel.org>; Wed, 21 Jun 2023 21:48:04 -0700 (PDT)
+Received: by mail-qk1-x730.google.com with SMTP id af79cd13be357-76245581814so441197685a.1
+        for <linux-xfs@vger.kernel.org>; Wed, 21 Jun 2023 21:48:04 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=fromorbit-com.20221208.gappssmtp.com; s=20221208; t=1687409283; x=1690001283;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
+        bh=6UCsy+QyUCZWP4W4J9LZYEzDKcZk8p92T6bjDRjYR2w=;
+        b=oHfwniBLfU5HGulzijE8rCOrITTPgYSHgaooGQjjBWcKJFnuX4h7FKKdx3euoGAiag
+         CNXrIlIW6VqzXj5t4QwmXirYnnI8yjgA0tWab8D5CWa7JGh5T2YLjLyE62Wb3r1XSep/
+         UkB5SOoL7QfpVuMjXErHR5GzS/3vV6jgOe7ATt5W50N37sMlHXXBiECxpmIFyEgrlkaA
+         eqkYtwh+PaO9xjpExzf7QOIrgyko8Ae6+vexQzTCtwB27FAlIP/D5s/RY27bakRdkIGc
+         H3bcV9rwCVJj6leoNif7r0OG+mrGE0daQXPoveDc3nZ8dve0t4D9vge6I+ABbIj0BqkK
+         7vrg==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20221208; t=1687409283; x=1690001283;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=6UCsy+QyUCZWP4W4J9LZYEzDKcZk8p92T6bjDRjYR2w=;
+        b=Pg7pk8y9qBKtCKJqLtwfysgCjya1VQRBo8jSVHiHA7IFJC+PpjNItKs7PqBZpXsKoe
+         XsYmoePdqywoqN7H1HZlpWWvU6guye4aEDihXvoDRpHOljiyEXrf9fvWyiY5a4e0XY/3
+         dNDVcziBG0AdfzG1EmblD+NUbO4cJAcjeAVxzV8TlVgU2KHSXnrUgt12PjIgyzfsZvUh
+         3d8uYL06GwNczuLrkv6se6FjhmA43qdX53pZlfNFB+xyybwS9UfrF0mpQ6/0Zwvrm7G1
+         Y4MX5cFUdcCGY6FX3KE3ESNWSOiu3uYw64k/F5yyuYJ7I6SwDDfE8fGEqaT7z1s3Ogb3
+         J1FQ==
+X-Gm-Message-State: AC+VfDyMOubFVT6o/rZBdEO0xRTGF1jPUoeW6qb1dYwIJmsgO3dCYmP5
+        BtWaLtDtYDfm+/QTMfOmJ05pnQ==
+X-Google-Smtp-Source: ACHHUZ72A1f9sdf2FYb00UtlkIKrC2QPw8XEMRY/JilXxNxyniq4rSm97aY9T6jpPwLgh+IxJerivQ==
+X-Received: by 2002:a05:6214:27e3:b0:62b:4590:78e8 with SMTP id jt3-20020a05621427e300b0062b459078e8mr21102017qvb.34.1687409283200;
+        Wed, 21 Jun 2023 21:48:03 -0700 (PDT)
+Received: from dread.disaster.area (pa49-180-13-202.pa.nsw.optusnet.com.au. [49.180.13.202])
+        by smtp.gmail.com with ESMTPSA id 17-20020aa79251000000b0063b6cccd5dfsm3649765pfp.195.2023.06.21.21.48.02
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Wed, 21 Jun 2023 21:48:02 -0700 (PDT)
+Received: from dave by dread.disaster.area with local (Exim 4.96)
+        (envelope-from <david@fromorbit.com>)
+        id 1qCCEh-00EiVj-2w;
+        Thu, 22 Jun 2023 14:47:59 +1000
+Date:   Thu, 22 Jun 2023 14:47:59 +1000
+From:   Dave Chinner <david@fromorbit.com>
 To:     Matthew Wilcox <willy@infradead.org>
-Cc:     Dave Chinner <david@fromorbit.com>,
-        Jeremy Bongio <bongiojp@gmail.com>, Ted Tso <tytso@mit.edu>,
+Cc:     Jeremy Bongio <bongiojp@gmail.com>, Ted Tso <tytso@mit.edu>,
         "Darrick J . Wong" <djwong@kernel.org>,
         Allison Henderson <allison.henderson@oracle.com>,
         linux-ext4@vger.kernel.org, linux-fsdevel@vger.kernel.org,
         linux-xfs@vger.kernel.org
 Subject: Re: [PATCH 0/1] iomap regression for aio dio 4k writes
-Message-ID: <ZJPJI1t/wdj/L1W2@infradead.org>
+Message-ID: <ZJPSf0nEYoH9Oq14@dread.disaster.area>
 References: <20230621174114.1320834-1-bongiojp@gmail.com>
  <ZJOO4SobNFaQ+C5g@dread.disaster.area>
  <ZJOqC7Cfjr5AoW7S@dread.disaster.area>
@@ -46,20 +70,68 @@ MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
 In-Reply-To: <ZJO4OAYhJlXOBXMf@casper.infradead.org>
-X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
 On Thu, Jun 22, 2023 at 03:55:52AM +0100, Matthew Wilcox wrote:
+> On Thu, Jun 22, 2023 at 11:55:23AM +1000, Dave Chinner wrote:
+> > Ok, so having spent a bit more thought on this away from the office
+> > this morning, I think there is a generic way we can avoid deferring
+> > completions for pure overwrites.
+> 
+> OK, this is how we can, but should we?  The same amount of work
+> needs to be done, no matter whether we do it in interrupt context or
+> workqueue context.  Doing it in interrupt context has lower latency,
+> but maybe allows us to batch up the work and so get better bandwidth.
+> And we can't handle other interrupts while we're handling this one,
+> so from a whole-system perspective, I think we'd rather do the work in
+> the workqueue.
+
+Yup, I agree with you there, but I can also be easily convinced that
+optimising the pure in-place DIO overwrite path is worth the effort.
+
 > Latency is important for reads, but why is it important for writes?
 > There's such a thing as a dependent read, but writes are usually buffered
 > and we can wait as long as we like for a write to complete.
 
-That was exactly my reasoning on why I did always defer the write
-completions in the initial iomap direct I/O code, and until now no
-one has complained.
+The OP cares about async direct IO performance, not buffered writes.
+And for DIO writes, there is most definitely such a thing as
+"dependent writes".
 
-I could see why people care either about synchronous writes, or polled
-io_uring writes, for which we might be able to do the work in the
-completion thread context, but for aio writes this feels a bit odd.
+Think about journalled data - you can't overwrite data in place
+until the data write to the journal has first completed all the way
+down to stable storage.  i.e. there's an inherent IO
+completion-to-submission write ordering constraint in the algorithm,
+and so we have dependent writes.
+
+And that's the whole point of the DIO write FUA optimisations in
+iomap; they avoid the dependent "write" that provides data integrity
+i.e.  the journal flush and/or device cache flush that
+generic_write_sync() issues in IO completion is a dependent write
+because it cannot start until all the data being written has reached
+the device entirely.
+
+Using completion-to-submission ordering of the integrity operations
+means we don't need to block other IOs to the same file, other
+journal operations in the filesystem or other data IO to provide
+that data integrity requirement for the specific O_DSYNC DIO write
+IO. If we can use an FUA write for this instead of a separate cache
+flush, then we end up providing O_DSYNC writes with about 40% lower
+completion latency than a "write + cache flush" sequential IO pair.
+
+This means that things like high performance databases improve
+throughput by 25-50% and operational latency goes down by ~30-40% if
+we can make extensive use of FUA writes to provide the desired data
+integrity guarantees.
+
+From that perspective, an application doing pure overwrites with
+ordering depedencies might actually be very dependent on minimising
+individual DIO write latency for overall performance...
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
