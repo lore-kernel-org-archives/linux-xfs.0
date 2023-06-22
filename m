@@ -2,101 +2,124 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id F28F3EB64D8
-	for <linux-xfs@archiver.kernel.org>; Thu, 22 Jun 2023 05:29:52 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 88FC2EB64D8
+	for <linux-xfs@archiver.kernel.org>; Thu, 22 Jun 2023 05:35:01 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230320AbjFVF3w (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 22 Jun 2023 01:29:52 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56642 "EHLO
+        id S229889AbjFVFfA (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 22 Jun 2023 01:35:00 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57950 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229828AbjFVF3v (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 22 Jun 2023 01:29:51 -0400
-Received: from mail-pg1-x52e.google.com (mail-pg1-x52e.google.com [IPv6:2607:f8b0:4864:20::52e])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 61B0C1AC
-        for <linux-xfs@vger.kernel.org>; Wed, 21 Jun 2023 22:29:50 -0700 (PDT)
-Received: by mail-pg1-x52e.google.com with SMTP id 41be03b00d2f7-553a1f13d9fso3974074a12.1
-        for <linux-xfs@vger.kernel.org>; Wed, 21 Jun 2023 22:29:50 -0700 (PDT)
+        with ESMTP id S229680AbjFVFe7 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 22 Jun 2023 01:34:59 -0400
+Received: from mail-lf1-x129.google.com (mail-lf1-x129.google.com [IPv6:2a00:1450:4864:20::129])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 35CA9E42
+        for <linux-xfs@vger.kernel.org>; Wed, 21 Jun 2023 22:34:58 -0700 (PDT)
+Received: by mail-lf1-x129.google.com with SMTP id 2adb3069b0e04-4f95c975995so311353e87.0
+        for <linux-xfs@vger.kernel.org>; Wed, 21 Jun 2023 22:34:58 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=fromorbit-com.20221208.gappssmtp.com; s=20221208; t=1687411790; x=1690003790;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
-        bh=anvZw6cO8MKlWn1hIrVh5wjoOcSzm1ZkgJQlB41QQfE=;
-        b=Y2+fQmqkTRf9iW+K4H5FPnGgJp91MYVPv6KEb+nrxSB0eXaqxilrhqNq1YSb4ZVsq/
-         psSTLjRxKCOROPdO+W09otz1naDlbIO4WTNGMm59M9N2XXO1Aw7LHRtWjH417OjJa1Ch
-         uibnIAzf021+su/Im2Q6bS7FXAJj7cIfNu3/1kxgeGKqRLv0TKsv5S4dXN8eHFjgpuzw
-         NmdJrH2MCXa5OSQfJN7ztxkjReCQmS3uuQ7nz6KtyAx9TCorsOhM/VXZsdquY57iVZta
-         4Pm3eqi2iLIeayHkuYkwr9r4IdhRgbmrqkwnUDHWHXlw3SSl1ovryLjy0U7dRo5/KfSN
-         MLKQ==
+        d=gmail.com; s=20221208; t=1687412096; x=1690004096;
+        h=to:subject:message-id:date:from:mime-version:from:to:cc:subject
+         :date:message-id:reply-to;
+        bh=OjoT31gl796kFxnYg4s5OWfbapn6Gr3Nryd8bH6El/o=;
+        b=BnWWDm8eT+CzsPrM1fBby8YyqgiZsmQCXJ2xV7i/ZGiNYUnxr/ZSA0QOl5be9kVrw5
+         7JH91FcqSQ5mHnictcU/qpJ8yYmGzB/WGRsZ9kCEf5HJ3IuAmD9XmdNc+Pz8l1fBpaSj
+         uo63J7a9DKPt7eWeKDxocc4WD+S85aVxuIOInsF2tyaEvqJsidDhCauHJMT3Io6zg4nQ
+         J5L82vH8qYTaC2KIXqGPJkFnEWo8Ffbu2Xh287AEHbjrGoQLZtSieyF/yklr3aqHjOrq
+         i6Lv2L0OwGeGhkQ5oOJSulrdDtq5mSaw3Lmgp2/b24LO7MLmzMFJhubw4Ib0buoU57DS
+         i9Kw==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20221208; t=1687411790; x=1690003790;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=anvZw6cO8MKlWn1hIrVh5wjoOcSzm1ZkgJQlB41QQfE=;
-        b=SApwFnjQdmfYCtKetQJtVeLB0pSDUeT70G+s4/kCU4pguXfp/6l6alUHAwLMoV6PsS
-         awObKbmc4G1DHsghixxbUhazkyoRMGDioIdyOoQMAnZDyW6pqRYFd6Q9Kp2dy3ldfrfc
-         yu7utzJOrbchrnE5P03oqY+plR5CEZfGP0E7gexHcYuAuDELmF4/3fubBgM5NVBKZuoU
-         iMHrkKZFNp7UBmUcvirQb/Z/NaMPvEoJ8CkeYopVPgw1CLka+5KY4ncvmHtqkU4/jNK9
-         1dcvYDM42w/d7HOEjJR6hbsCOmuXqIXzdqvyrmJngq5xau+sHfa9Z7rW+0VQGOhPUpSL
-         OPgg==
-X-Gm-Message-State: AC+VfDxQxDSX9TfhMEfmBBUxXNXApdfSRBIa9KCOLyBi1sV/0zbz/UO9
-        Rj5HWEM3tgULCVA9sgQ+SL5KVA==
-X-Google-Smtp-Source: ACHHUZ7YS4UnVaitvJxmT+5c774eroZcdYqIVSoMb1zUI8iiJhlNafiqbNvrjjAl58cyJaTqtkX9zg==
-X-Received: by 2002:a17:90a:7064:b0:25e:2db8:cc5f with SMTP id f91-20020a17090a706400b0025e2db8cc5fmr17391121pjk.40.1687411789845;
-        Wed, 21 Jun 2023 22:29:49 -0700 (PDT)
-Received: from dread.disaster.area (pa49-180-13-202.pa.nsw.optusnet.com.au. [49.180.13.202])
-        by smtp.gmail.com with ESMTPSA id a19-20020a656413000000b005287a0560c9sm3668682pgv.1.2023.06.21.22.29.48
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 21 Jun 2023 22:29:49 -0700 (PDT)
-Received: from dave by dread.disaster.area with local (Exim 4.96)
-        (envelope-from <david@fromorbit.com>)
-        id 1qCCt8-00EjK1-2q;
-        Thu, 22 Jun 2023 15:29:46 +1000
-Date:   Thu, 22 Jun 2023 15:29:46 +1000
-From:   Dave Chinner <david@fromorbit.com>
-To:     Lars Wendler <polynomial-c@gmx.de>
-Cc:     linux-xfs@vger.kernel.org
-Subject: Re: [PATCH] xfsprogs: po/de.po: Fix possible typo which makes
- gettext-0.22 unhappy
-Message-ID: <ZJPcSvOp1Fvrb5Wm@dread.disaster.area>
-References: <ZJNyn817MpCB3nbr@dread.disaster.area>
- <20230622052354.12849-1-polynomial-c@gmx.de>
+        d=1e100.net; s=20221208; t=1687412096; x=1690004096;
+        h=to:subject:message-id:date:from:mime-version:x-gm-message-state
+         :from:to:cc:subject:date:message-id:reply-to;
+        bh=OjoT31gl796kFxnYg4s5OWfbapn6Gr3Nryd8bH6El/o=;
+        b=FaB6BZG++ACC68ahAs5cp6YbiJ0Ybw+aNSEcKIO0a/6VrPlatVnpfzqjiK4uDVSxWc
+         shZvrPRoyHDkUawu/5KhsSCUMMgOOvcxyP/ddO0FYUpBNViBePnChWr7zf4J1wLV5vq0
+         uusVFPBtCQ5KqrfCB5stTBICecX48+7jPt3QfJCtwZuWgXMZ40l9OSZjq39sDM6SYiwG
+         wk3t7T+bBJQfQUBrYLXHtQhphJoUKVh1VEr2OahVfHJrZ0o8VDJOLfa7ZklNQIaLknxC
+         YmUzimCT7fc+ZR2C+ge16ZGxd1MhBbclLwy0JmQQtCEchYXFR0jUbEVvJKlhzxFas2Fk
+         1Puw==
+X-Gm-Message-State: AC+VfDxLD7ur9N8QV5pSjO1goilqdFO65KGH4EofNzqUIl4i/cKs5/qg
+        scz2W6S844H+OmhC64O7H+pO0sjfgv9rjTdTWSHSU7Wi1tc=
+X-Google-Smtp-Source: ACHHUZ79HIt60GjRQbtfV/U1SiJldzzmLD5Pr/SewxYhmk4/FCbcYdaa0Cfs8AT5JW2zubC2BaVCLRsqrV9pUbRnSHs=
+X-Received: by 2002:a2e:a261:0:b0:2b3:4efe:dcd3 with SMTP id
+ k1-20020a2ea261000000b002b34efedcd3mr10142055ljm.0.1687412095453; Wed, 21 Jun
+ 2023 22:34:55 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20230622052354.12849-1-polynomial-c@gmx.de>
+From:   Masahiko Sawada <sawada.mshk@gmail.com>
+Date:   Thu, 22 Jun 2023 14:34:18 +0900
+Message-ID: <CAD21AoCWW20ga6GKR+7RwRtvPU0VyFt3_acut_y+Fg7E-4nzWw@mail.gmail.com>
+Subject: Question on slow fallocate
+To:     linux-xfs@vger.kernel.org
+Content-Type: multipart/mixed; boundary="0000000000008a236b05feb13e04"
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Thu, Jun 22, 2023 at 07:23:54AM +0200, Lars Wendler wrote:
-> The removed line contains "%.lf" with a lowercase letter L.
-> The added line contains "%.1f" where the lowercase letter L was replaced
-> with the digit 1.
-> 
-> Signed-off-by: Lars Wendler <polynomial-c@gmx.de>
-> ---
->  po/de.po | 2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
-> 
-> diff --git a/po/de.po b/po/de.po
-> index 944b0e91..a6f8fde1 100644
-> --- a/po/de.po
-> +++ b/po/de.po
-> @@ -3084,7 +3084,7 @@ msgstr "%llu Spezialdateien\n"
->  #: .././estimate/xfs_estimate.c:191
->  #, c-format
->  msgid "%s will take about %.1f megabytes\n"
-> -msgstr "%s wird etwa %.lf Megabytes einnehmen\n"
-> +msgstr "%s wird etwa %.1f Megabytes einnehmen\n"
-> 
->  #: .././estimate/xfs_estimate.c:198
->  #, c-format
+--0000000000008a236b05feb13e04
+Content-Type: text/plain; charset="UTF-8"
 
-Thanks Lars, looks good!
+Hi all,
 
-Reviewed-by: Dave Chinner <dchinner@redhat.com>
+When testing PostgreSQL, I found a performance degradation. After some
+investigation, it ultimately reached the attached simple C program and
+turned out that the performance degradation happens on only the xfs
+filesystem (doesn't happen on neither ext3 nor ext4). In short, the
+program alternately does two things to extend a file (1) call
+posix_fallocate() to extend by 8192 bytes and (2) call pwrite() to
+extend by 8192 bytes. If I do only either (1) or (2), the program is
+completed in 2 sec, but if I do (1) and (2) alternatively, it is
+completed in 90 sec.
+
+$ gcc -o test test.c
+$ time ./test test.1 1
+total   200000
+fallocate       200000
+filewrite       0
+
+real    0m1.305s
+user    0m0.050s
+sys     0m1.255s
+
+$ time ./test test.2 2
+total   200000
+fallocate       100000
+filewrite       100000
+
+real    1m29.222s
+user    0m0.139s
+sys     0m3.139s
+
+Why does it take so long in the latter case? and are there any
+workaround or configuration changes to deal with it?
+
+Regards,
 
 -- 
-Dave Chinner
-david@fromorbit.com
+Masahiko Sawada
+Amazon Web Services: https://aws.amazon.com
+
+--0000000000008a236b05feb13e04
+Content-Type: application/octet-stream; name="test.c"
+Content-Disposition: attachment; filename="test.c"
+Content-Transfer-Encoding: base64
+Content-ID: <f_lj6peac20>
+X-Attachment-Id: f_lj6peac20
+
+I2luY2x1ZGUgPHN0ZGlvLmg+CiNpbmNsdWRlIDxzdGRsaWIuaD4KI2luY2x1ZGUgPGZjbnRsLmg+
+CiNpbmNsdWRlIDx1bmlzdGQuaD4KCmludAptYWluKGludCBhcmdjLCBjaGFyICoqYXJndikKewog
+ICAgY2hhciAqZmlsZW5hbWUgPSBhcmd2WzFdOwogICAgaW50IHJhdGlvID0gYXRvaShhcmd2WzJd
+KTsKICAgIGNoYXIgYmxvY2tbODE5Ml0gPSB7MH07CiAgICBpbnQgZmQ7CiAgICBpbnQgdG90YWxf
+bGVuID0gMDsKICAgIGludCBuX2ZhbGxvY2F0ZSA9IDA7CiAgICBpbnQgbl9maWxld3JpdGUgPSAw
+OwogICAgaW50IGk7CgogICAgZmQgPSBvcGVuKGZpbGVuYW1lLCBPX1JEV1IgfCBPX0NSRUFULCBT
+X0lSV1hVKTsKICAgIGlmIChmZCA8IDApCiAgICB7CiAgICAgICAgZnByaW50ZihzdGRlcnIsICJj
+b3VsZCBub3Qgb3BlbiBmaWxlICVzOiAlbVxuIiwgZmlsZW5hbWUpOwogICAgICAgIHJldHVybiAx
+OwogICAgfQoKICAgIGZvciAoaSA9IDA7IGkgPCAyMDAwMDA7IGkrKykKICAgIHsKICAgICAgICBp
+bnQgcmV0OwoKICAgICAgICBpZiAocmF0aW8gIT0gMCAmJiBpICUgcmF0aW8gPT0gMCkKICAgICAg
+ICB7CiAgICAgICAgICAgIHBvc2l4X2ZhbGxvY2F0ZShmZCwgdG90YWxfbGVuLCA4MTkyKTsKICAg
+ICAgICAgICAgbl9mYWxsb2NhdGUrKzsKICAgICAgICB9CiAgICAgICAgZWxzZQogICAgICAgIHsK
+ICAgICAgICAgICAgcHdyaXRlKGZkLCBibG9jaywgODE5MiwgdG90YWxfbGVuKTsKICAgICAgICAg
+ICAgbl9maWxld3JpdGUrKzsKICAgICAgICB9CiAgICAgICAgdG90YWxfbGVuICs9IDgxOTI7CiAg
+ICB9CgogICAgcHJpbnRmKCJ0b3RhbFx0JWRcbiIsIGkpOwogICAgcHJpbnRmKCJmYWxsb2NhdGVc
+dCVkXG4iLCBuX2ZhbGxvY2F0ZSk7CiAgICBwcmludGYoImZpbGV3cml0ZVx0JWRcbiIsIG5fZmls
+ZXdyaXRlKTsKCiAgICBjbG9zZShmZCk7CiAgICByZXR1cm4gMDsKfQ==
+--0000000000008a236b05feb13e04--
