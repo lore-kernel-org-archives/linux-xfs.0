@@ -2,103 +2,105 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 49A4CEB64D7
-	for <linux-xfs@archiver.kernel.org>; Thu, 22 Jun 2023 03:13:30 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0670CEB64D8
+	for <linux-xfs@archiver.kernel.org>; Thu, 22 Jun 2023 03:17:40 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229530AbjFVDN2 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 21 Jun 2023 23:13:28 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48886 "EHLO
+        id S229595AbjFVDRi (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 21 Jun 2023 23:17:38 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49514 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229453AbjFVDN0 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 21 Jun 2023 23:13:26 -0400
-Received: from mail-pf1-x42f.google.com (mail-pf1-x42f.google.com [IPv6:2607:f8b0:4864:20::42f])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4002E1BD6
-        for <linux-xfs@vger.kernel.org>; Wed, 21 Jun 2023 20:13:25 -0700 (PDT)
-Received: by mail-pf1-x42f.google.com with SMTP id d2e1a72fcca58-6682909acadso2837633b3a.3
-        for <linux-xfs@vger.kernel.org>; Wed, 21 Jun 2023 20:13:25 -0700 (PDT)
+        with ESMTP id S229453AbjFVDRh (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 21 Jun 2023 23:17:37 -0400
+Received: from mail-ot1-x32c.google.com (mail-ot1-x32c.google.com [IPv6:2607:f8b0:4864:20::32c])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B188E10F6
+        for <linux-xfs@vger.kernel.org>; Wed, 21 Jun 2023 20:17:36 -0700 (PDT)
+Received: by mail-ot1-x32c.google.com with SMTP id 46e09a7af769-6b5915d0816so2529624a34.1
+        for <linux-xfs@vger.kernel.org>; Wed, 21 Jun 2023 20:17:36 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=fromorbit-com.20221208.gappssmtp.com; s=20221208; t=1687403605; x=1689995605;
+        d=fromorbit-com.20221208.gappssmtp.com; s=20221208; t=1687403856; x=1689995856;
         h=in-reply-to:content-disposition:mime-version:references:message-id
          :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
-        bh=HtM5z56/oWT+ryLH4JOoXRno2HnX4sd+5Fb00XQ2qJw=;
-        b=SAp6yLCYhzbH8IxqHqi3xqhPjwFLGjTRmHnUmpTOQkDPPRnAGkPtQDne29LYHHec7D
-         4Rdph2q21putAzzlgoE6URdfSmLjBle4sj+OqtsSaeiXK359uqk8oaPdozcRQ+6VflCm
-         /MwUQn5zpOiaoukvnlKep6c7PjkkvZI2UheBlbx/Y2jim580e9f0iGzWXS3KwGq7IJts
-         +iNNUv44ZsWvuo3i2/5PK+KGwYQxW7zAnkfITdo8hGZnlQgNHhL9kxc2G9jAjXn/YcJj
-         OpB/w7ZOiGGS6Ax2BcfBTzC3LsnwvU7aiZtE2r1Hxz4F3QTPa+bRUJ0NlAoKL/o42CTk
-         GR+g==
+        bh=TWSGgOltI6NC/J9w1gQfeept9+o9HtE4hRq02VGl+yk=;
+        b=0vwGxYTjzB0HCo9FGs4b8AEDKDZzeRoCihVQHRphO3+MzRZmqVZp+1AxKC9LmsiMwr
+         yKLp01q3vfdcpgVHwIy2iOI1YQnUr19Vu63kuxII3BWKBQPHITQA/zII0YJvKCjIx5zX
+         2z9s4EUU/S6W7/C3Vff0c02isTAgo5Noffr0xKYper9KvT8wKFinshv4kdJV/L2VAq7i
+         I5cAlBfdBMeXnlO5aPOiuDTt6HdguaapOIPtoLY8Cy0MDb3XdFlk5JnjSpbUQx8BNKft
+         Opcw9kFybj1dDgWkFzlW/Eoxqgx080HXFI9fC5+13jZzkYJlBTFY3KGK8rOgyKLXxF5p
+         I4zQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20221208; t=1687403605; x=1689995605;
+        d=1e100.net; s=20221208; t=1687403856; x=1689995856;
         h=in-reply-to:content-disposition:mime-version:references:message-id
          :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
          :message-id:reply-to;
-        bh=HtM5z56/oWT+ryLH4JOoXRno2HnX4sd+5Fb00XQ2qJw=;
-        b=dkVSMlMBIgzZxJSunnPO/YhOQJWHgpSKylAN2XDvUXQLDMC1qgwuXIuGwWhdv7J34S
-         9wDfBKa4MSw3z0h6Rcg8k7nnSnbNKnUOYW3X2Skd0AHVmMkJ3iMPCX1+l5Ihe+qxFKhg
-         PQLAV+FrOFEjKTJZbPYxD/QPL0ZrL/0ajsJM8a+zshK69aouqCGfqMyO4kxISZe+Ua+6
-         4CYi1RrQTbV+lnep4FRQOSww7AtLQLCJ8Dkym+y2D4jEpHqMVbC98BU+sSbyg4xpAvCe
-         oBEwUkEKS55yFqeaXyalYJ07i4lN4/Mh4/zQ1uReooNRK40B28HgFPLLL9wHDGW0MzNN
-         lEKw==
-X-Gm-Message-State: AC+VfDxkQjnOO8m9kKdFdriaBWbrLszFwcuJ5qYK/j9nn4y9KWk3BRZ5
-        7JTXwX5OT9OBc02+x1FuslcoTWHYa8YT+Wvw2vI=
-X-Google-Smtp-Source: ACHHUZ7Y+OQHADD4lXIpsIQlk3+kHdJ6yL883TOyioTuPBGsjq2514Sn1rOuvY0CnochzaNFvVy6ww==
-X-Received: by 2002:a05:6a00:23c5:b0:668:7744:10de with SMTP id g5-20020a056a0023c500b00668774410demr9547859pfc.9.1687403604599;
-        Wed, 21 Jun 2023 20:13:24 -0700 (PDT)
+        bh=TWSGgOltI6NC/J9w1gQfeept9+o9HtE4hRq02VGl+yk=;
+        b=LD0N5pZ/LKWlWTRFnIR+ZeY6xhwLtZT4chV8kZe+i0G8hiLJ/2qn8XSng9Irj1CPwj
+         x0yD8sC9RHnXq5FORGFVbVcCOD936U03d8wxW0pudNeio1C8EurA4ltlIdiuoY3da57T
+         XZm8JDQVAW3OSF5hmhjuFYyCIJIKdpMen1pIE5C7yuaHx2AZHWpX15gX0/zTdDeoGzGx
+         gRB62xWMMThUvkqJsT7/SfVonKRyCplUJfij8sOaHrlvTJktG7vUOYrW2QGkPWcPi/w/
+         AJdKD5M7tzWDcpJfuiM1Fgmqg/10c9U5LV/8rztgHXyisYTEmbWbUoCpWyH/sJ+aK/86
+         8udg==
+X-Gm-Message-State: AC+VfDzJJgWJQPgJjncI9n0i4Qenbhkwww/jEzNukVggFB/nVg4J7ADI
+        0u3CZROO+ePjZb8JIysLY/AxHu1fWBfZXd+6Wro=
+X-Google-Smtp-Source: ACHHUZ7MO++vITGw7wFvarZjxvP7CXxQWDm61nJeerHADiIdPUXxa/8lkV7fs0ceeB9yorKfryK/wA==
+X-Received: by 2002:a05:6358:f0e:b0:12b:ed05:18bb with SMTP id b14-20020a0563580f0e00b0012bed0518bbmr12109238rwj.27.1687403855957;
+        Wed, 21 Jun 2023 20:17:35 -0700 (PDT)
 Received: from dread.disaster.area (pa49-180-13-202.pa.nsw.optusnet.com.au. [49.180.13.202])
-        by smtp.gmail.com with ESMTPSA id m25-20020aa78a19000000b0065e154bac6dsm3534887pfa.133.2023.06.21.20.13.23
+        by smtp.gmail.com with ESMTPSA id q24-20020a62e118000000b00666b7446219sm3527187pfh.45.2023.06.21.20.17.34
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 21 Jun 2023 20:13:23 -0700 (PDT)
+        Wed, 21 Jun 2023 20:17:34 -0700 (PDT)
 Received: from dave by dread.disaster.area with local (Exim 4.96)
         (envelope-from <david@fromorbit.com>)
-        id 1qCAl7-00EgwB-1j;
-        Thu, 22 Jun 2023 13:13:21 +1000
-Date:   Thu, 22 Jun 2023 13:13:21 +1000
+        id 1qCApA-00EgzC-1g;
+        Thu, 22 Jun 2023 13:17:32 +1000
+Date:   Thu, 22 Jun 2023 13:17:32 +1000
 From:   Dave Chinner <david@fromorbit.com>
 To:     "Darrick J. Wong" <djwong@kernel.org>
 Cc:     linux-xfs@vger.kernel.org
-Subject: Re: [PATCHSET v25.0 0/2] xfs: miscellaneous repair tweaks
-Message-ID: <ZJO8UYwHKiRemLvi@dread.disaster.area>
-References: <20230526000020.GJ11620@frogsfrogsfrogs>
- <168506057223.3730021.15237048674614006148.stgit@frogsfrogsfrogs>
+Subject: Re: [PATCH 2/2] xfs: allow userspace to rebuild metadata structures
+Message-ID: <ZJO9TA2f+ne6y7cT@dread.disaster.area>
+References: <168506057570.3730125.9735079571472245559.stgit@frogsfrogsfrogs>
+ <168506057600.3730125.4561906767586624097.stgit@frogsfrogsfrogs>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <168506057223.3730021.15237048674614006148.stgit@frogsfrogsfrogs>
+In-Reply-To: <168506057600.3730125.4561906767586624097.stgit@frogsfrogsfrogs>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Thu, May 25, 2023 at 05:29:27PM -0700, Darrick J. Wong wrote:
-> Hi all,
+On Thu, May 25, 2023 at 05:50:47PM -0700, Darrick J. Wong wrote:
+> From: Darrick J. Wong <djwong@kernel.org>
 > 
-> Before we start adding online repair functionality, there's a few tweaks
-> that I'd like to make to the common repair code.  First is a fix to the
-> integration between repair and the health status code that was
-> interfering with repair re-evaluations.  Second is a minor tweak to the
-> sole existing repair functions to make one last check that the user
-> hasn't terminated the calling process before we start writing to the
-> filesystem.  This is a pattern that will repeat throughout the rest of
-> the repair functions.
+> Add a new (superuser-only) flag to the online metadata repair ioctl to
+> force it to rebuild structures, even if they're not broken.  We will use
+> this to move metadata structures out of the way during a free space
+> defragmentation operation.
 > 
-> If you're going to start using this mess, you probably ought to just
-> pull from my git trees, which are linked below.
-> 
-> This is an extraordinary way to destroy everything.  Enjoy!
-> Comments and questions are, as always, welcome.
-> 
-> --D
-> 
-> kernel git tree:
-> https://git.kernel.org/cgit/linux/kernel/git/djwong/xfs-linux.git/log/?h=repair-tweaks
+> Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 > ---
->  fs/xfs/scrub/agheader_repair.c |   16 ++++++++++++++++
->  fs/xfs/scrub/health.c          |   10 ++++++++++
->  2 files changed, 26 insertions(+)
+>  fs/xfs/libxfs/xfs_fs.h |    6 +++++-
+>  fs/xfs/scrub/scrub.c   |   11 ++++++++++-
+>  fs/xfs/scrub/trace.h   |    3 ++-
+>  3 files changed, 17 insertions(+), 3 deletions(-)
+> 
+> 
+> diff --git a/fs/xfs/libxfs/xfs_fs.h b/fs/xfs/libxfs/xfs_fs.h
+> index 1cfd5bc6520a..920fd4513fcb 100644
+> --- a/fs/xfs/libxfs/xfs_fs.h
+> +++ b/fs/xfs/libxfs/xfs_fs.h
+> @@ -741,7 +741,11 @@ struct xfs_scrub_metadata {
+>   */
+>  #define XFS_SCRUB_OFLAG_NO_REPAIR_NEEDED (1u << 7)
+>  
+> -#define XFS_SCRUB_FLAGS_IN	(XFS_SCRUB_IFLAG_REPAIR)
+> +/* i: Rebuild the data structure. */
+> +#define XFS_SCRUB_IFLAG_FORCE_REBUILD	(1 << 31)
 
-LGTM.
+(1U << 31), otherwise a compiler somewhere will complain.
 
-Reviewed-by: Dave Chinner <dchinner@redhat.com>
+Also, why use the high bit here?
 
+-Dave.
 -- 
 Dave Chinner
 david@fromorbit.com
