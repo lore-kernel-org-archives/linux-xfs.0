@@ -2,131 +2,89 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5737BEB64D8
-	for <linux-xfs@archiver.kernel.org>; Thu, 22 Jun 2023 09:09:10 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 95020EB64D8
+	for <linux-xfs@archiver.kernel.org>; Thu, 22 Jun 2023 09:12:20 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232241AbjFVJJJ (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 22 Jun 2023 05:09:09 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53400 "EHLO
+        id S232284AbjFVJMT (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 22 Jun 2023 05:12:19 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53530 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232116AbjFVJIr (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 22 Jun 2023 05:08:47 -0400
-Received: from mail-oi1-x22b.google.com (mail-oi1-x22b.google.com [IPv6:2607:f8b0:4864:20::22b])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8F53E30DE
-        for <linux-xfs@vger.kernel.org>; Thu, 22 Jun 2023 02:00:07 -0700 (PDT)
-Received: by mail-oi1-x22b.google.com with SMTP id 5614622812f47-39ea511930eso4552378b6e.1
-        for <linux-xfs@vger.kernel.org>; Thu, 22 Jun 2023 02:00:07 -0700 (PDT)
+        with ESMTP id S231888AbjFVJLw (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 22 Jun 2023 05:11:52 -0400
+Received: from mail-pf1-x42f.google.com (mail-pf1-x42f.google.com [IPv6:2607:f8b0:4864:20::42f])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8557261BC
+        for <linux-xfs@vger.kernel.org>; Thu, 22 Jun 2023 02:02:21 -0700 (PDT)
+Received: by mail-pf1-x42f.google.com with SMTP id d2e1a72fcca58-668842bc50dso867510b3a.1
+        for <linux-xfs@vger.kernel.org>; Thu, 22 Jun 2023 02:02:21 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=fromorbit-com.20221208.gappssmtp.com; s=20221208; t=1687424400; x=1690016400;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
-        bh=jPSAB1IsF/VpYmXqBS/Ay90kwHTcXo9Cx9zDFJ8+ziU=;
-        b=ycoJuwPuH0fNU7QpZXfw4G0SJgU7/eWOxsDi+DHFOUtOJUcbqkREd4Wgb+HEiaX4rG
-         nStYztqmuBeIsp/9XQtxHBFVkZkaHcncwvhnv7sxAw+Op2tRla6LadaTlVKBd2uP7oB2
-         2qXskmBr7lvibTY6tdkIdsGK/6bN9JcDEw51sNHpanxfu/AkgRvZ5iwUBEq24MZa+nJa
-         9f/4gim+B2adRghgqinEFLusFys9UfWnzkCMDcTwJlB44mkASVwri8cq09i+vbJn8B51
-         WG1CMOAM7A9wBkffEtmFaHXXCra04QsKRqkdsixAUTX1PJB99OJRedQfz8mU+/YCheTX
-         XeAg==
+        d=bytedance.com; s=google; t=1687424541; x=1690016541;
+        h=content-transfer-encoding:in-reply-to:from:references:cc:to
+         :content-language:subject:user-agent:mime-version:date:message-id
+         :from:to:cc:subject:date:message-id:reply-to;
+        bh=zKVeIBLjGDnMEk399X22nqGU5gR+IkjsspTDpWJPksU=;
+        b=HjY0DB39Dcl5lSGLQjq20skrYCeeFmph379iAYLH+Ge7wfAKg53bPqsk6H2fP7EYBS
+         t5DpaPmOpMe9PHj27s46dMLM2Bj/1z5x+ZEL5MvZJuXhJY2H/Zc1d9fn+QrQnej+vVdY
+         vzCZGIIlTPo2rLaoGoYpJ1L3vbMVEY3NdkrXdCuf8JyzXegOrVS1Vjiyr+OQJLWRHhKk
+         EYYaud7eSqVUu6DRfGnsjIklhfOOGSE9DMnkFqVVNxWwjgF6B/w1c5xtOvh0H76XPlTG
+         hJ3GGBNx4/T/av8JLo7MkeEFcvm+/A4v85iddIKGKlUHLAO6ueBAEAbEtaFjl/PvtvxB
+         9ScQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20221208; t=1687424400; x=1690016400;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=jPSAB1IsF/VpYmXqBS/Ay90kwHTcXo9Cx9zDFJ8+ziU=;
-        b=YQL+/T74i+YeZC+oADXeu3ScuBcMd4zpcH/IgbByNPY21EA+4AvFdnq3O+BXTjaJPJ
-         euJTRKxzlIBuvjo7jgNryTAZxl4DWNNIJRl8p5ZmcXdh0CzC1xtCieQAzGc+Dl+vZbG5
-         qnmlmfk1GOs2o/J/ioxTHi1ZQHzM3DSzmJkC2kykMrJpmhRm/PtLCyOn0KbzrQnWOerV
-         Pf8A8z3Eu7POlfr/7669EK/6hSRHkAXlPDzARoFQIPjVvzIHEwBL5taUkUPNlLHzRUbp
-         dFwenJp5D/6KeymkQhlYQ1h+vROotQ1HDmYeunels+I7oQmhxY4DVQPHErYaJYqlUTln
-         SzzA==
-X-Gm-Message-State: AC+VfDwpYN1cAmC2skdoWfOBUZ8kc+rD9D5Ya7Fk/g6Jpk28b0MgRSj4
-        NifrJPHAz4wV35eKynY0Ry5BmA==
-X-Google-Smtp-Source: ACHHUZ4Vh4Xpzv6yUURTmtbS6smTEGwjM3MVIC3+EUzRzo0B3ipbuKGT2tK6Qgn0p86wGjhLxhT54g==
-X-Received: by 2002:a05:6808:424d:b0:38e:a824:27d3 with SMTP id dp13-20020a056808424d00b0038ea82427d3mr16982583oib.27.1687424400035;
-        Thu, 22 Jun 2023 02:00:00 -0700 (PDT)
-Received: from dread.disaster.area (pa49-180-13-202.pa.nsw.optusnet.com.au. [49.180.13.202])
-        by smtp.gmail.com with ESMTPSA id ev8-20020a17090aeac800b0024e4f169931sm10409008pjb.2.2023.06.22.01.59.58
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 22 Jun 2023 01:59:59 -0700 (PDT)
-Received: from dave by dread.disaster.area with local (Exim 4.96)
-        (envelope-from <david@fromorbit.com>)
-        id 1qCGAW-00Emvj-0o;
-        Thu, 22 Jun 2023 18:59:56 +1000
-Date:   Thu, 22 Jun 2023 18:59:56 +1000
-From:   Dave Chinner <david@fromorbit.com>
-To:     Eric Biggers <ebiggers@kernel.org>
-Cc:     syzbot <syzbot+9d0b0d54a8bd799f6ae4@syzkaller.appspotmail.com>,
-        dchinner@redhat.com, djwong@kernel.org, hch@lst.de,
-        linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-xfs@vger.kernel.org, syzkaller-bugs@googlegroups.com
-Subject: Re: [syzbot] [xfs?] WARNING: Reset corrupted AGFL on AG NUM. NUM
- blocks leaked. Please unmount and run xfs_repair.
-Message-ID: <ZJQNjFJhLh0C84u/@dread.disaster.area>
-References: <000000000000ffcb2e05fe9a445c@google.com>
- <ZJKhoxnkNF3VspbP@dread.disaster.area>
- <20230621075421.GA56560@sol.localdomain>
+        d=1e100.net; s=20221208; t=1687424541; x=1690016541;
+        h=content-transfer-encoding:in-reply-to:from:references:cc:to
+         :content-language:subject:user-agent:mime-version:date:message-id
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=zKVeIBLjGDnMEk399X22nqGU5gR+IkjsspTDpWJPksU=;
+        b=VB3q2Odel/vdeCF4kLK7PjrPc/PpMNyg4UGmrDH1w1KfM8Ks2mVtWQCDVR0dan/drM
+         aqiwBmdg7pnSGR/fnQ8BaV57piNRdAKB7cDCG50xwj7jjOWJi0aqEsPE5mPEp2YbUnpw
+         oqjG/MIGrOdzpc7byanOpk7Pvx4+Hja+YOgWOcMOXpoUDbGImTBeP2XwS1n971odpcRd
+         MHbMHhEq7bELlYsw51G+sgXxlIugjX6/v/G624D/c5o+kaDdRA3XVRTiyTb1c2/hHPdm
+         LRi7G364hi3O0OUb3+7WnFy9/dho95NRuIha/YLtBV4gwCv51d/PidxqqoQVURi9YLUq
+         SA8Q==
+X-Gm-Message-State: AC+VfDxL7hLK+7Ij8O4bYhBlQIHEIB8wIx3lPOVbNBt/3SpVXXR840at
+        gKjtkFJxBnjqPCNh2hf3jetAOg==
+X-Google-Smtp-Source: ACHHUZ7vbwmhYAYkPUIyhZunGrGDutPqIs+afT9QzkvrLydl1MlC9S7gSKJ8cU+dWHpEZBjCPLu5gw==
+X-Received: by 2002:aa7:8556:0:b0:668:728e:64d8 with SMTP id y22-20020aa78556000000b00668728e64d8mr12967640pfn.1.1687424541033;
+        Thu, 22 Jun 2023 02:02:21 -0700 (PDT)
+Received: from [10.4.168.167] ([139.177.225.254])
+        by smtp.gmail.com with ESMTPSA id c12-20020aa78e0c000000b0063f2a5a59d1sm4124268pfr.190.2023.06.22.02.02.13
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Thu, 22 Jun 2023 02:02:20 -0700 (PDT)
+Message-ID: <ab40cfba-94c3-bcea-10b0-c2cc20809f3d@bytedance.com>
+Date:   Thu, 22 Jun 2023 17:02:11 +0800
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20230621075421.GA56560@sol.localdomain>
+User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:102.0)
+ Gecko/20100101 Thunderbird/102.12.0
+Subject: Re: [PATCH 00/29] use refcount+RCU method to implement lockless slab
+ shrink
+Content-Language: en-US
+To:     akpm@linux-foundation.org, david@fromorbit.com, tkhai@ya.ru,
+        vbabka@suse.cz, roman.gushchin@linux.dev, djwong@kernel.org,
+        brauner@kernel.org, paulmck@kernel.org, tytso@mit.edu
+Cc:     linux-kernel@vger.kernel.org, linux-mm@kvack.org,
+        intel-gfx@lists.freedesktop.org, dri-devel@lists.freedesktop.org,
+        linux-arm-msm@vger.kernel.org, dm-devel@redhat.com,
+        linux-raid@vger.kernel.org, linux-bcache@vger.kernel.org,
+        virtualization@lists.linux-foundation.org,
+        linux-fsdevel@vger.kernel.org, linux-ext4@vger.kernel.org,
+        linux-nfs@vger.kernel.org, linux-xfs@vger.kernel.org,
+        linux-btrfs@vger.kernel.org
+References: <20230622085335.77010-1-zhengqi.arch@bytedance.com>
+From:   Qi Zheng <zhengqi.arch@bytedance.com>
+In-Reply-To: <20230622085335.77010-1-zhengqi.arch@bytedance.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Wed, Jun 21, 2023 at 12:54:21AM -0700, Eric Biggers wrote:
-> On Wed, Jun 21, 2023 at 05:07:15PM +1000, 'Dave Chinner' via syzkaller-bugs wrote:
-> > On Tue, Jun 20, 2023 at 07:10:19PM -0700, syzbot wrote:
-> > So exactly what is syzbot complaining about here? There's no kernel
-> > issue here at all.
-> > 
-> > Also, I cannot tell syzbot "don't ever report this as a bug again",
-> > so the syzbot developers are going to have to triage and fix this
-> > syzbot problem themselves so it doesn't keep getting reported to
-> > us...
-> 
-> I think the problem here was that XFS logged a message beginning with
-> "WARNING:", followed by a stack trace.  In the log that looks like a warning
-> generated by the WARN_ON() macro, which is meant for reporting recoverable
-> kernel bugs.  It's difficult for any program to understand the log in cases like
-> this.  This is why include/asm-generic/bug.h contains the following comment:
-> 
->  * Do not include "BUG"/"WARNING" in format strings manually to make these
->  * conditions distinguishable from kernel issues.
+Hi all,
 
-Nice.
+Well, this one was sent successfully.
 
-Syzbot author doesn't like log messages using certain key words
-because it's hard for syzbot to work out what went wrong.
+Since I always get the following error message, I deleted the original
+cc people and only kept the mailing lists.
 
-Gets new rule added to kernel in a comment in some header file that
-almost nobody doing kernel development work ever looks at.
+	4.7.1 Error: too many recipients from 49.7.199.173
 
-Nothing was added to the coding style rules or checkpatch so nobody
-is likely to accidentally trip over this new rule that nobody has
-been told about.
-
-Syzbot maintainer also fails to do an audit of the kernel to remove
-all existing "WARNING" keywords from existing log messages so leaves
-landmines for subsystems to have to handle at some time in the
-future.
-
-Five years later, syzbot trips over a log message containing WARNING
-in it that was in code introduced before the rule was "introduced".
-Subsystem maintainers are blamed for not know the rule existed.
-
-Result: *yet again* we are being told that our only option is
-to *change code that is not broken* just to *shut up some fucking
-bot* we have no control over and could happily live without.
-
-> If you have a constructive suggestion of how all programs that
-> parse the kernel log can identify real warnings reliably without
-> getting confused by cases like this, I'm sure that would be
-> appreciated.  It would need to be documented and then the guidance
-> in bug.h could then be removed.  But until then, the above is the
-> current guidance.
-
-That is so not the problem here, Eric.
-
--- 
-Dave Chinner
-david@fromorbit.com
+Thanks,
+Qi
