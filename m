@@ -2,275 +2,227 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3139DEB64DD
-	for <linux-xfs@archiver.kernel.org>; Thu, 22 Jun 2023 10:15:01 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3C17EEB64D8
+	for <linux-xfs@archiver.kernel.org>; Thu, 22 Jun 2023 11:46:07 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230163AbjFVKO7 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 22 Jun 2023 06:14:59 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36808 "EHLO
+        id S229691AbjFVLqF (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 22 Jun 2023 07:46:05 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45978 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230009AbjFVKOw (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 22 Jun 2023 06:14:52 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 73FA2DD;
-        Thu, 22 Jun 2023 03:14:49 -0700 (PDT)
+        with ESMTP id S229647AbjFVLqE (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 22 Jun 2023 07:46:04 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C38B0D3
+        for <linux-xfs@vger.kernel.org>; Thu, 22 Jun 2023 04:46:03 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
          key-exchange X25519 server-signature RSA-PSS (2048 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id F2EBF617C7;
-        Thu, 22 Jun 2023 10:14:48 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id C2888C433C9;
-        Thu, 22 Jun 2023 10:14:31 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 43AF860905
+        for <linux-xfs@vger.kernel.org>; Thu, 22 Jun 2023 11:46:03 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 9F00EC433C8;
+        Thu, 22 Jun 2023 11:46:01 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1687428888;
-        bh=7+cabg86v1cYpPv8vDJOW5RfunjhlSEWXfJLwIkmtqs=;
-        h=Subject:From:To:Date:In-Reply-To:References:From;
-        b=bash4qEoN8ysoF4HTnLUBoIb4R/VvEf+WW/D9VIwZ7IkIbfsRZHAuo5DrHgU3mESQ
-         YV3L6vJlJ5RLoTi5/71VkN5rQAydrP7yy38zcSGGfwasNdQxjqfQEDJO2KhRfaS72P
-         L3pOkZCMNStmacczTh8Bxts4KstAt3iUVQoAzfNq5O0qEkTp/AQ/ZxnvFiOtuM8Rrh
-         hGFigQvIDdzAyY8j4H2gTF58blmQ8XCJxFBrtJ8bp21DHjiO/HINP7f4QOOgCaaZnm
-         wPOh/3PFD9MITyv48Pm3mcErp57QuFgfhsUJhmJROqlUtadgwIZDzlw31/avwVXFpE
-         VwFt0TPP5toFA==
-Message-ID: <ad4bfb630128709588164db6f1fd2ef39c31d2a5.camel@kernel.org>
-Subject: Re: [PATCH 01/79] fs: add ctime accessors infrastructure
-From:   Jeff Layton <jlayton@kernel.org>
-To:     Damien Le Moal <dlemoal@kernel.org>, Jeremy Kerr <jk@ozlabs.org>,
-        Arnd Bergmann <arnd@arndb.de>,
-        Michael Ellerman <mpe@ellerman.id.au>,
-        Nicholas Piggin <npiggin@gmail.com>,
-        Christophe Leroy <christophe.leroy@csgroup.eu>,
-        Heiko Carstens <hca@linux.ibm.com>,
-        Vasily Gorbik <gor@linux.ibm.com>,
-        Alexander Gordeev <agordeev@linux.ibm.com>,
-        Christian Borntraeger <borntraeger@linux.ibm.com>,
-        Sven Schnelle <svens@linux.ibm.com>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        Arve =?ISO-8859-1?Q?Hj=F8nnev=E5g?= <arve@android.com>,
-        Todd Kjos <tkjos@android.com>,
-        Martijn Coenen <maco@android.com>,
-        Joel Fernandes <joel@joelfernandes.org>,
-        Christian Brauner <brauner@kernel.org>,
-        Carlos Llamas <cmllamas@google.com>,
-        Suren Baghdasaryan <surenb@google.com>,
-        Dennis Dalessandro <dennis.dalessandro@cornelisnetworks.com>,
-        Jason Gunthorpe <jgg@ziepe.ca>,
-        Leon Romanovsky <leon@kernel.org>,
-        Brad Warrum <bwarrum@linux.ibm.com>,
-        Ritu Agarwal <rituagar@linux.ibm.com>,
-        Eric Van Hensbergen <ericvh@kernel.org>,
-        Latchesar Ionkov <lucho@ionkov.net>,
-        Dominique Martinet <asmadeus@codewreck.org>,
-        Christian Schoenebeck <linux_oss@crudebyte.com>,
-        David Sterba <dsterba@suse.com>,
-        David Howells <dhowells@redhat.com>,
-        Marc Dionne <marc.dionne@auristor.com>,
-        Alexander Viro <viro@zeniv.linux.org.uk>,
-        Ian Kent <raven@themaw.net>,
-        Luis de Bethencourt <luisbg@kernel.org>,
-        Salah Triki <salah.triki@gmail.com>,
-        "Tigran A. Aivazian" <aivazian.tigran@gmail.com>,
-        Eric Biederman <ebiederm@xmission.com>,
-        Kees Cook <keescook@chromium.org>, Chris Mason <clm@fb.com>,
-        Josef Bacik <josef@toxicpanda.com>,
-        Xiubo Li <xiubli@redhat.com>,
-        Ilya Dryomov <idryomov@gmail.com>,
-        Jan Harkes <jaharkes@cs.cmu.edu>, coda@cs.cmu.edu,
-        Joel Becker <jlbec@evilplan.org>,
-        Christoph Hellwig <hch@lst.de>,
-        Nicolas Pitre <nico@fluxnic.net>,
-        "Rafael J. Wysocki" <rafael@kernel.org>,
-        Tyler Hicks <code@tyhicks.com>,
-        Ard Biesheuvel <ardb@kernel.org>, Gao Xiang <xiang@kernel.org>,
-        Chao Yu <chao@kernel.org>, Yue Hu <huyue2@coolpad.com>,
-        Jeffle Xu <jefflexu@linux.alibaba.com>,
-        Namjae Jeon <linkinjeon@kernel.org>,
-        Sungjong Seo <sj1557.seo@samsung.com>,
-        Jan Kara <jack@suse.com>, Theodore Ts'o <tytso@mit.edu>,
-        Andreas Dilger <adilger.kernel@dilger.ca>,
-        Jaegeuk Kim <jaegeuk@kernel.org>,
-        OGAWA Hirofumi <hirofumi@mail.parknet.co.jp>,
-        Miklos Szeredi <miklos@szeredi.hu>,
-        Bob Peterson <rpeterso@redhat.com>,
-        Andreas Gruenbacher <agruenba@redhat.com>,
-        Richard Weinberger <richard@nod.at>,
-        Anton Ivanov <anton.ivanov@cambridgegreys.com>,
-        Johannes Berg <johannes@sipsolutions.net>,
-        Mikulas Patocka <mikulas@artax.karlin.mff.cuni.cz>,
-        Mike Kravetz <mike.kravetz@oracle.com>,
-        Muchun Song <muchun.song@linux.dev>,
-        David Woodhouse <dwmw2@infradead.org>,
-        Dave Kleikamp <shaggy@kernel.org>, Tejun Heo <tj@kernel.org>,
-        Trond Myklebust <trond.myklebust@hammerspace.com>,
-        Anna Schumaker <anna@kernel.org>,
-        Chuck Lever <chuck.lever@oracle.com>,
-        Ryusuke Konishi <konishi.ryusuke@gmail.com>,
-        Anton Altaparmakov <anton@tuxera.com>,
-        Konstantin Komarov <almaz.alexandrovich@paragon-software.com>,
-        Mark Fasheh <mark@fasheh.com>,
-        Joseph Qi <joseph.qi@linux.alibaba.com>,
-        Bob Copeland <me@bobcopeland.com>,
-        Mike Marshall <hubcap@omnibond.com>,
-        Martin Brandenburg <martin@omnibond.com>,
-        Luis Chamberlain <mcgrof@kernel.org>,
-        Iurii Zaikin <yzaikin@google.com>,
-        Tony Luck <tony.luck@intel.com>,
-        "Guilherme G. Piccoli" <gpiccoli@igalia.com>,
-        Anders Larsen <al@alarsen.net>,
-        Steve French <sfrench@samba.org>,
-        Paulo Alcantara <pc@manguebit.com>,
-        Ronnie Sahlberg <lsahlber@redhat.com>,
-        Shyam Prasad N <sprasad@microsoft.com>,
-        Tom Talpey <tom@talpey.com>,
-        Sergey Senozhatsky <senozhatsky@chromium.org>,
-        Phillip Lougher <phillip@squashfs.org.uk>,
-        Steven Rostedt <rostedt@goodmis.org>,
-        Masami Hiramatsu <mhiramat@kernel.org>,
-        Evgeniy Dushistov <dushistov@mail.ru>,
-        Hans de Goede <hdegoede@redhat.com>,
-        "Darrick J. Wong" <djwong@kernel.org>,
-        Naohiro Aota <naohiro.aota@wdc.com>,
-        Johannes Thumshirn <jth@kernel.org>,
-        Alexei Starovoitov <ast@kernel.org>,
-        Daniel Borkmann <daniel@iogearbox.net>,
-        Andrii Nakryiko <andrii@kernel.org>,
-        Martin KaFai Lau <martin.lau@linux.dev>,
-        Song Liu <song@kernel.org>, Yonghong Song <yhs@fb.com>,
-        John Fastabend <john.fastabend@gmail.com>,
-        KP Singh <kpsingh@kernel.org>,
-        Stanislav Fomichev <sdf@google.com>,
-        Hao Luo <haoluo@google.com>, Jiri Olsa <jolsa@kernel.org>,
-        Hugh Dickins <hughd@google.com>,
-        Andrew Morton <akpm@linux-foundation.org>,
-        "David S. Miller" <davem@davemloft.net>,
-        Eric Dumazet <edumazet@google.com>,
-        Jakub Kicinski <kuba@kernel.org>,
-        Paolo Abeni <pabeni@redhat.com>,
-        John Johansen <john.johansen@canonical.com>,
-        Paul Moore <paul@paul-moore.com>,
-        James Morris <jmorris@namei.org>,
-        "Serge E. Hallyn" <serge@hallyn.com>,
-        Stephen Smalley <stephen.smalley.work@gmail.com>,
-        Eric Paris <eparis@parisplace.org>,
-        Juergen Gross <jgross@suse.com>,
-        Ruihan Li <lrh2000@pku.edu.cn>,
-        Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>,
-        Wolfram Sang <wsa+renesas@sang-engineering.com>,
-        Udipto Goswami <quic_ugoswami@quicinc.com>,
-        Linyu Yuan <quic_linyyuan@quicinc.com>,
-        John Keeping <john@keeping.me.uk>,
-        Andrzej Pietrasiewicz <andrzej.p@collabora.com>,
-        Dan Carpenter <error27@gmail.com>,
-        Yuta Hayama <hayama@lineo.co.jp>,
-        Jozef Martiniak <jomajm@gmail.com>,
-        Jens Axboe <axboe@kernel.dk>,
-        Alan Stern <stern@rowland.harvard.edu>,
-        Sandeep Dhavale <dhavale@google.com>,
-        Dave Chinner <dchinner@redhat.com>,
-        Johannes Weiner <hannes@cmpxchg.org>,
-        ZhangPeng <zhangpeng362@huawei.com>,
-        Viacheslav Dubeyko <slava@dubeyko.com>,
-        Tetsuo Handa <penguin-kernel@I-love.SAKURA.ne.jp>,
-        Aditya Garg <gargaditya08@live.com>,
-        Erez Zadok <ezk@cs.stonybrook.edu>,
-        Yifei Liu <yifeliu@cs.stonybrook.edu>,
-        Yu Zhe <yuzhe@nfschina.com>,
-        "Matthew Wilcox (Oracle)" <willy@infradead.org>,
-        Oleg Kanatov <okanatov@gmail.com>,
-        "Dr. David Alan Gilbert" <linux@treblig.org>,
-        Jiangshan Yi <yijiangshan@kylinos.cn>,
-        xu xin <cgel.zte@gmail.com>, Stefan Roesch <shr@devkernel.io>,
-        Zhihao Cheng <chengzhihao1@huawei.com>,
-        "Liam R. Howlett" <Liam.Howlett@Oracle.com>,
-        Alexey Dobriyan <adobriyan@gmail.com>,
-        Minghao Chi <chi.minghao@zte.com.cn>,
-        Seth Forshee <sforshee@digitalocean.com>,
-        Zeng Jingxiang <linuszeng@tencent.com>,
-        Bart Van Assche <bvanassche@acm.org>,
-        Mimi Zohar <zohar@linux.ibm.com>,
-        Roberto Sassu <roberto.sassu@huawei.com>,
-        Zhang Yi <yi.zhang@huawei.com>, Tom Rix <trix@redhat.com>,
-        "Fabio M. De Francesco" <fmdefrancesco@gmail.com>,
-        Chen Zhongjin <chenzhongjin@huawei.com>,
-        Zhengchao Shao <shaozhengchao@huawei.com>,
-        Rik van Riel <riel@surriel.com>,
-        Jingyu Wang <jingyuwang_vip@163.com>,
-        Hangyu Hua <hbh25y@gmail.com>, linuxppc-dev@lists.ozlabs.org,
-        linux-kernel@vger.kernel.org, linux-s390@vger.kernel.org,
-        linux-rdma@vger.kernel.org, linux-usb@vger.kernel.org,
-        v9fs@lists.linux.dev, linux-fsdevel@vger.kernel.org,
-        linux-afs@lists.infradead.org, autofs@vger.kernel.org,
-        linux-mm@kvack.org, linux-btrfs@vger.kernel.org,
-        ceph-devel@vger.kernel.org, codalist@coda.cs.cmu.edu,
-        ecryptfs@vger.kernel.org, linux-efi@vger.kernel.org,
-        linux-erofs@lists.ozlabs.org, linux-ext4@vger.kernel.org,
-        linux-f2fs-devel@lists.sourceforge.net, cluster-devel@redhat.com,
-        linux-um@lists.infradead.org, linux-mtd@lists.infradead.org,
-        jfs-discussion@lists.sourceforge.net, linux-nfs@vger.kernel.org,
-        linux-nilfs@vger.kernel.org, linux-ntfs-dev@lists.sourceforge.net,
-        ntfs3@lists.linux.dev, ocfs2-devel@oss.oracle.com,
-        linux-karma-devel@lists.sourceforge.net, devel@lists.orangefs.org,
-        linux-unionfs@vger.kernel.org, linux-hardening@vger.kernel.org,
-        reiserfs-devel@vger.kernel.org, linux-cifs@vger.kernel.org,
-        samba-technical@lists.samba.org,
-        linux-trace-kernel@vger.kernel.org, linux-xfs@vger.kernel.org,
-        bpf@vger.kernel.org, netdev@vger.kernel.org,
-        apparmor@lists.ubuntu.com, linux-security-module@vger.kernel.org,
-        selinux@vger.kernel.org
-Date:   Thu, 22 Jun 2023 06:14:30 -0400
-In-Reply-To: <99b3c749-23d9-6f09-fb75-6a84f3d1b066@kernel.org>
-References: <20230621144507.55591-1-jlayton@kernel.org>
-         <20230621144507.55591-2-jlayton@kernel.org>
-         <99b3c749-23d9-6f09-fb75-6a84f3d1b066@kernel.org>
-Content-Type: text/plain; charset="ISO-8859-15"
-Content-Transfer-Encoding: quoted-printable
-User-Agent: Evolution 3.48.3 (3.48.3-1.fc38) 
+        s=k20201202; t=1687434362;
+        bh=0/0aMYH+IhnfLX9DoTkTS8L1eujRciO2WO1EYcPlrmM=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=SA0KwLZnRoZ1ws36atp3LvRAP4S/0nT+uBX8hUByCoaGINaufIiy9wu+9RiuLBYiK
+         FIAu+psS/XydtAZTMcMAhUI2LaYA3WKDY9NN4iuqMXye80HPHGitI+41bspGB3ks4a
+         +a9+HgEEblTN9gu65eQw1NGa7H/FWlqjB3m/jQCNgILwY8pVQVJvOVy3IItZ+Ele6b
+         2VvTChfDW4VT2C4PIaq+gpPip3evYGg5EdJWt/iYpOzZ1ewUwxYXgD9qJPPhCrx8pI
+         73WpKpLDJR/UC9t4Ylgt8v6ER02pSnBvHglHQSTJcp8WnAcmpHfhzVcs8kULuxyyLU
+         KfaP5MQ/6DI8Q==
+Date:   Thu, 22 Jun 2023 13:45:58 +0200
+From:   Carlos Maiolino <cem@kernel.org>
+To:     "Darrick J. Wong" <djwong@kernel.org>
+Cc:     linux-xfs@vger.kernel.org, david@fromorbit.com, hch@infradead.org
+Subject: Re: [PATCH v2 3/5] xfs_db: fix metadump name obfuscation for
+ ascii-ci filesystems
+Message-ID: <20230622114558.gcpczbdcdhb5h6yu@andromeda>
+References: <168597938725.1226098.18077307069307502725.stgit@frogsfrogsfrogs>
+ <168597940416.1226098.14610650380180437820.stgit@frogsfrogsfrogs>
+ <QC3hxVYr7-4z00FDKMApZIGYoHxcG52ZNcZf38RCjyhNn9qe2Q5I7Bha_eThxX3VdtRktdEp5UphNWLW7FN7GA==@protonmail.internalid>
+ <20230615161104.GP11441@frogsfrogsfrogs>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20230615161104.GP11441@frogsfrogsfrogs>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Thu, 2023-06-22 at 09:46 +0900, Damien Le Moal wrote:
-> On 6/21/23 23:45, Jeff Layton wrote:
-> > struct timespec64 has unused bits in the tv_nsec field that can be used
-> > for other purposes. In future patches, we're going to change how the
-> > inode->i_ctime is accessed in certain inodes in order to make use of
-> > them. In order to do that safely though, we'll need to eradicate raw
-> > accesses of the inode->i_ctime field from the kernel.
-> >=20
-> > Add new accessor functions for the ctime that we can use to replace the=
-m.
-> >=20
-> > Signed-off-by: Jeff Layton <jlayton@kernel.org>
->=20
-> [...]
->=20
-> > +/**
-> > + * inode_ctime_peek - fetch the current ctime from the inode
-> > + * @inode: inode from which to fetch ctime
-> > + *
-> > + * Grab the current ctime from the inode and return it.
-> > + */
-> > +static inline struct timespec64 inode_ctime_peek(const struct inode *i=
-node)
->=20
-> To be consistent with inode_ctime_set(), why not call this one inode_ctim=
-e_get()
+On Thu, Jun 15, 2023 at 09:11:04AM -0700, Darrick J. Wong wrote:
+> From: Darrick J. Wong <djwong@kernel.org>
+> 
+> Now that we've stabilized the dirent hash function for ascii-ci
+> filesystems, adapt the metadump name obfuscation code to detect when
+> it's obfuscating a directory entry name on an ascii-ci filesystem and
+> spit out names that actually have the same hash.
+> 
+> Signed-off-by: Darrick J. Wong <djwong@kernel.org>
+> ---
+> v2: s/alloca/malloc/
+> ---
+>  db/metadump.c |   82 +++++++++++++++++++++++++++++++++++++++++++++++++++------
+>  1 file changed, 73 insertions(+), 9 deletions(-)
 
-In later patches fetching the ctime for presentation may have side
-effects on certain filesystems. Using "peek" here is a hint that we want
-to avoid those side effects in these calls.
+Thanks for fixing it!
 
-> ? Also, inode_set_ctime() & inode_get_ctime() may be a little more natura=
-l. But
-> no strong opinion about that though.
->=20
+Reviewed-by: Carlos Maiolino <cmaiolino@redhat.com>
 
-I like the consistency of the inode_ctime_* prefix. It makes it simpler
-to find these calls when grepping, etc.
-
-That said, my opinions on naming are pretty loosely-held, so if the
-consensus is that the names should as you suggest, I'll go along with
-it.
---=20
-Jeff Layton <jlayton@kernel.org>
+> 
+> diff --git a/db/metadump.c b/db/metadump.c
+> index 317ff72802d..9ccee0b7ace 100644
+> --- a/db/metadump.c
+> +++ b/db/metadump.c
+> @@ -817,13 +817,17 @@ static void
+>  obfuscate_name(
+>  	xfs_dahash_t	hash,
+>  	size_t		name_len,
+> -	unsigned char	*name)
+> +	unsigned char	*name,
+> +	bool		is_dirent)
+>  {
+> -	unsigned char	*newp = name;
+> +	unsigned char	*oldname = NULL;
+> +	unsigned char	*newp;
+>  	int		i;
+> -	xfs_dahash_t	new_hash = 0;
+> +	xfs_dahash_t	new_hash;
+>  	unsigned char	*first;
+>  	unsigned char	high_bit;
+> +	int		tries = 0;
+> +	bool		is_ci_name = is_dirent && xfs_has_asciici(mp);
+>  	int		shift;
+> 
+>  	/*
+> @@ -836,6 +840,26 @@ obfuscate_name(
+>  	if (name_len < 5)
+>  		return;
+> 
+> +	if (is_ci_name) {
+> +		oldname = malloc(name_len);
+> +		if (!oldname)
+> +			return;
+> +		memcpy(oldname, name, name_len);
+> +	}
+> +
+> +again:
+> +	newp = name;
+> +	new_hash = 0;
+> +
+> +	/*
+> +	 * If we cannot generate a ci-compatible obfuscated name after 1000
+> +	 * tries, don't bother obfuscating the name.
+> +	 */
+> +	if (tries++ > 1000) {
+> +		memcpy(name, oldname, name_len);
+> +		goto out_free;
+> +	}
+> +
+>  	/*
+>  	 * The beginning of the obfuscated name can be pretty much
+>  	 * anything, so fill it in with random characters.
+> @@ -843,7 +867,11 @@ obfuscate_name(
+>  	 */
+>  	for (i = 0; i < name_len - 5; i++) {
+>  		*newp = random_filename_char();
+> -		new_hash = *newp ^ rol32(new_hash, 7);
+> +		if (is_ci_name)
+> +			new_hash = xfs_ascii_ci_xfrm(*newp) ^
+> +							rol32(new_hash, 7);
+> +		else
+> +			new_hash = *newp ^ rol32(new_hash, 7);
+>  		newp++;
+>  	}
+> 
+> @@ -867,6 +895,17 @@ obfuscate_name(
+>  			high_bit = 0x80;
+>  		} else
+>  			high_bit = 0;
+> +
+> +		/*
+> +		 * If ascii-ci is enabled, uppercase characters are converted
+> +		 * to lowercase characters while computing the name hash.  If
+> +		 * any of the necessary correction bytes are uppercase, the
+> +		 * hash of the new name will not match.  Try again with a
+> +		 * different prefix.
+> +		 */
+> +		if (is_ci_name && xfs_ascii_ci_need_xfrm(*newp))
+> +			goto again;
+> +
+>  		ASSERT(!is_invalid_char(*newp));
+>  		newp++;
+>  	}
+> @@ -880,8 +919,15 @@ obfuscate_name(
+>  	 */
+>  	if (high_bit) {
+>  		*first ^= 0x10;
+> +
+> +		if (is_ci_name && xfs_ascii_ci_need_xfrm(*first))
+> +			goto again;
+> +
+>  		ASSERT(!is_invalid_char(*first));
+>  	}
+> +
+> +out_free:
+> +	free(oldname);
+>  }
+> 
+>  /*
+> @@ -1177,6 +1223,24 @@ handle_duplicate_name(xfs_dahash_t hash, size_t name_len, unsigned char *name)
+>  	return 1;
+>  }
+> 
+> +static inline xfs_dahash_t
+> +dirattr_hashname(
+> +	bool		is_dirent,
+> +	const uint8_t	*name,
+> +	int		namelen)
+> +{
+> +	if (is_dirent) {
+> +		struct xfs_name	xname = {
+> +			.name	= name,
+> +			.len	= namelen,
+> +		};
+> +
+> +		return libxfs_dir2_hashname(mp, &xname);
+> +	}
+> +
+> +	return libxfs_da_hashname(name, namelen);
+> +}
+> +
+>  static void
+>  generate_obfuscated_name(
+>  	xfs_ino_t		ino,
+> @@ -1205,9 +1269,9 @@ generate_obfuscated_name(
+> 
+>  	/* Obfuscate the name (if possible) */
+> 
+> -	hash = libxfs_da_hashname(name, namelen);
+> -	obfuscate_name(hash, namelen, name);
+> -	ASSERT(hash == libxfs_da_hashname(name, namelen));
+> +	hash = dirattr_hashname(ino != 0, name, namelen);
+> +	obfuscate_name(hash, namelen, name, ino != 0);
+> +	ASSERT(hash == dirattr_hashname(ino != 0, name, namelen));
+> 
+>  	/*
+>  	 * Make sure the name is not something already seen.  If we
+> @@ -1320,7 +1384,7 @@ obfuscate_path_components(
+>  			/* last (or single) component */
+>  			namelen = strnlen((char *)comp, len);
+>  			hash = libxfs_da_hashname(comp, namelen);
+> -			obfuscate_name(hash, namelen, comp);
+> +			obfuscate_name(hash, namelen, comp, false);
+>  			ASSERT(hash == libxfs_da_hashname(comp, namelen));
+>  			break;
+>  		}
+> @@ -1332,7 +1396,7 @@ obfuscate_path_components(
+>  			continue;
+>  		}
+>  		hash = libxfs_da_hashname(comp, namelen);
+> -		obfuscate_name(hash, namelen, comp);
+> +		obfuscate_name(hash, namelen, comp, false);
+>  		ASSERT(hash == libxfs_da_hashname(comp, namelen));
+>  		comp += namelen + 1;
+>  		len -= namelen + 1;
