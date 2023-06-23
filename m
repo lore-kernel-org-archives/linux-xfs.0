@@ -2,162 +2,119 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9BE6AC0015E
-	for <linux-xfs@archiver.kernel.org>; Fri, 23 Jun 2023 06:29:49 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 67389EB64D7
+	for <linux-xfs@archiver.kernel.org>; Fri, 23 Jun 2023 06:30:17 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231168AbjFWG3r (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 23 Jun 2023 02:29:47 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46442 "EHLO
+        id S230143AbjFWGaQ (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 23 Jun 2023 02:30:16 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46384 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229726AbjFWG3q (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 23 Jun 2023 02:29:46 -0400
-Received: from mail-pl1-x630.google.com (mail-pl1-x630.google.com [IPv6:2607:f8b0:4864:20::630])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D55241BE1
-        for <linux-xfs@vger.kernel.org>; Thu, 22 Jun 2023 23:29:43 -0700 (PDT)
-Received: by mail-pl1-x630.google.com with SMTP id d9443c01a7336-1b52bf6e669so2085345ad.2
-        for <linux-xfs@vger.kernel.org>; Thu, 22 Jun 2023 23:29:43 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=fromorbit-com.20221208.gappssmtp.com; s=20221208; t=1687501783; x=1690093783;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
-        bh=zCEqJX5mm9cbUE56OVCDucRVQniQh/jh7QjO1tCYRyw=;
-        b=VCN1cKAzYZWGpOm/hUHuPZp8plVnErZlG9G0OlFzhPpXaNGHYvVufkX79JUDsPqJVj
-         SxdYAM9A9ivCYhtFxc3SyvMZr6s5SlnDngyF1CSlxpEdm/HUuOSGwHgmJomuuYgedrRX
-         aqax0M2Dw9QUTGwitN8bpL0qLseKhs7EVUc6lepS488qyivLAQHSFGtevNE0LyqUhWPi
-         NKkNR95/QZWn2OoaLsjXJllgmMFsp0mHDlbo5o60jR1YeUkdYXlMSdAiD7/jZsXdB48G
-         reDdzoxXO5mM4WdQ8i9rMsSwtC5huiBFlnlMXvIXzYTlsiTrC5P7Z8F16npWgNIfnf8B
-         ShDw==
+        with ESMTP id S230050AbjFWGaN (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 23 Jun 2023 02:30:13 -0400
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 963D5172A
+        for <linux-xfs@vger.kernel.org>; Thu, 22 Jun 2023 23:29:28 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1687501767;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:
+         content-transfer-encoding:content-transfer-encoding;
+        bh=M8jDOmxChVtHNpj0ZbP6Rb9FFegsuTlRQ5nsYUjwXTE=;
+        b=C9mkI6mX/CACVLFCOMDCzfruV/u4M1W+UhA+NLAsQ9PiJ49gXCf4kIgFfEIx0x2Dmirj2Y
+        TwIeoFqVlsbRk2OayGshu+/Q0CGWyZzZrHiIihunR5MEYn8D1mm5a1x3J7xmrVufGBpkcY
+        9/3c/vnUum+e2EewEDVII+7Huewii/s=
+Received: from mail-pf1-f198.google.com (mail-pf1-f198.google.com
+ [209.85.210.198]) by relay.mimecast.com with ESMTP with STARTTLS
+ (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
+ us-mta-304-iX8av4WdOemqVQec0RpevQ-1; Fri, 23 Jun 2023 02:29:26 -0400
+X-MC-Unique: iX8av4WdOemqVQec0RpevQ-1
+Received: by mail-pf1-f198.google.com with SMTP id d2e1a72fcca58-666ee6aeddbso72942b3a.3
+        for <linux-xfs@vger.kernel.org>; Thu, 22 Jun 2023 23:29:26 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20221208; t=1687501783; x=1690093783;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=zCEqJX5mm9cbUE56OVCDucRVQniQh/jh7QjO1tCYRyw=;
-        b=Jn3b5gdeVO6RKXhG+d6cz/D05pzLBSziyxSsV2tD4dXP/NAvx9w87YzjtpYoiCZRG6
-         w10RvJhY3Yzpf6Zvw61K66nEzkH12m7PRQgxInfOgdHB7Eojxw7aepDMQZBDplCnlP7b
-         AuhgfQZ8IFLMdZqPdTYogL3xfM+X/Z84w9y3A+bEkl9siN93UC9xoGxckho5dG4u3f6V
-         804WHfY8+WgC5aMQJCUZ5tAzj11xe6ac+I1AyrxItXGhH0OkcQV1CaXWilFp/N8qgFgj
-         b5FF0gjC0iO7vZS+tUKPZ47jY97Iq2HmxmD7xOJJS4OGeYUYcr2F7bVGt1AcKdpzutBy
-         VtGQ==
-X-Gm-Message-State: AC+VfDzR8SBOD7e7naE/nRap9W3zJiCVp+jcr2C9du48Qc8X9E2OL9tr
-        U3WRGqE6cQAlzF1O+QAH16LvXw==
-X-Google-Smtp-Source: ACHHUZ6xCu/M/0AOwG5LVLb8OX3DoTsqyFTeplRrHsUG1u2SLkBGduWAm9ZrSI41Zhf0Zeq1UunMJA==
-X-Received: by 2002:a17:902:8214:b0:1aa:d971:4623 with SMTP id x20-20020a170902821400b001aad9714623mr18870991pln.38.1687501783228;
-        Thu, 22 Jun 2023 23:29:43 -0700 (PDT)
-Received: from dread.disaster.area (pa49-180-13-202.pa.nsw.optusnet.com.au. [49.180.13.202])
-        by smtp.gmail.com with ESMTPSA id x5-20020a1709027c0500b001b246dcffb7sm6311389pll.300.2023.06.22.23.29.42
+        d=1e100.net; s=20221208; t=1687501765; x=1690093765;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-message-state:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=M8jDOmxChVtHNpj0ZbP6Rb9FFegsuTlRQ5nsYUjwXTE=;
+        b=GmUi2NpPMYFHYDnr6cGIBUgHyOntOEOr/2O7h7FhRren+IrzSniEQKWy8seV3AyHSh
+         SuDDdo4c9GLwEkH3/PptXEkbzLsUYUZOQi9xVTMYyzkqHKJLbT+UeDscKSLDsEt7EC/0
+         oQFAYjAQmIQ1m6HelQ1C72ZtaMxbcDK4dm55IrO08t9EN4fbBJCEjVEsCEVdOLOPQhNf
+         l9SMHYsthgIUa1QEKPIAANFTNVbsxnsH7ZXz4PZgYGvkxMOdGy5X6VSOqA7GvQousluc
+         AxGS45ajaW/8tawDfBs+9kYzavd66Zqi09jt8uMkvBKyzxax4zzxNhODUWULTR39XATx
+         xCfQ==
+X-Gm-Message-State: AC+VfDwSBkALVEJX+Aqm6Uzh+79eBo+oGB9cno1DZj7NvCv+eCxKfSgc
+        Mse0KmZ0je4kZJNlLT/n2SQPMdE1uCm60GMgUdvvoO+OrNcoumtBJUKM9sYrQCtLZf9i6QiEBrA
+        cFM6y2nvDdyuXwaHB2i32vR1CPhC+lvOlHlwnjE+wLm739ry6d5EHVuW/Z77Y46PWJXSFbVCgut
+        zkvaVM
+X-Received: by 2002:a05:6a20:430d:b0:11f:38d4:2df with SMTP id h13-20020a056a20430d00b0011f38d402dfmr19427496pzk.20.1687501765006;
+        Thu, 22 Jun 2023 23:29:25 -0700 (PDT)
+X-Google-Smtp-Source: ACHHUZ6SAiDdF5M9fqW9pyT+7Lgt5IUl7eHWzOQ/NamPYtqyzkFsH+fcIjoHiJ1QidnsDjjgO3kBvQ==
+X-Received: by 2002:a05:6a20:430d:b0:11f:38d4:2df with SMTP id h13-20020a056a20430d00b0011f38d402dfmr19427481pzk.20.1687501764674;
+        Thu, 22 Jun 2023 23:29:24 -0700 (PDT)
+Received: from anathem.redhat.com ([2001:8003:4b08:fb00:e45d:9492:62e8:873c])
+        by smtp.gmail.com with ESMTPSA id x2-20020a170902ea8200b001ae3b51269dsm6335879plb.262.2023.06.22.23.29.22
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 22 Jun 2023 23:29:42 -0700 (PDT)
-Received: from dave by dread.disaster.area with local (Exim 4.96)
-        (envelope-from <david@fromorbit.com>)
-        id 1qCaId-00F8x8-0s;
-        Fri, 23 Jun 2023 16:29:39 +1000
-Date:   Fri, 23 Jun 2023 16:29:39 +1000
-From:   Dave Chinner <david@fromorbit.com>
-To:     Vlastimil Babka <vbabka@suse.cz>
-Cc:     Qi Zheng <zhengqi.arch@bytedance.com>, akpm@linux-foundation.org,
-        tkhai@ya.ru, roman.gushchin@linux.dev, djwong@kernel.org,
-        brauner@kernel.org, paulmck@kernel.org, tytso@mit.edu,
-        linux-kernel@vger.kernel.org, linux-mm@kvack.org,
-        intel-gfx@lists.freedesktop.org, dri-devel@lists.freedesktop.org,
-        linux-arm-msm@vger.kernel.org, dm-devel@redhat.com,
-        linux-raid@vger.kernel.org, linux-bcache@vger.kernel.org,
-        virtualization@lists.linux-foundation.org,
-        linux-fsdevel@vger.kernel.org, linux-ext4@vger.kernel.org,
-        linux-nfs@vger.kernel.org, linux-xfs@vger.kernel.org,
-        linux-btrfs@vger.kernel.org
-Subject: Re: [PATCH 24/29] mm: vmscan: make global slab shrink lockless
-Message-ID: <ZJU708VIyJ/3StAX@dread.disaster.area>
-References: <20230622085335.77010-1-zhengqi.arch@bytedance.com>
- <20230622085335.77010-25-zhengqi.arch@bytedance.com>
- <cf0d9b12-6491-bf23-b464-9d01e5781203@suse.cz>
+        Thu, 22 Jun 2023 23:29:24 -0700 (PDT)
+From:   Donald Douwsma <ddouwsma@redhat.com>
+To:     linux-xfs@vger.kernel.org
+Cc:     Donald Douwsma <ddouwsma@redhat.com>
+Subject: [PATCH] xfsrestore: suggest -x rather than assert for false roots
+Date:   Fri, 23 Jun 2023 16:29:18 +1000
+Message-Id: <20230623062918.636014-1-ddouwsma@redhat.com>
+X-Mailer: git-send-email 2.39.3
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <cf0d9b12-6491-bf23-b464-9d01e5781203@suse.cz>
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Thu, Jun 22, 2023 at 05:12:02PM +0200, Vlastimil Babka wrote:
-> On 6/22/23 10:53, Qi Zheng wrote:
-> > @@ -1067,33 +1068,27 @@ static unsigned long shrink_slab(gfp_t gfp_mask, int nid,
-> >  	if (!mem_cgroup_disabled() && !mem_cgroup_is_root(memcg))
-> >  		return shrink_slab_memcg(gfp_mask, nid, memcg, priority);
-> >  
-> > -	if (!down_read_trylock(&shrinker_rwsem))
-> > -		goto out;
-> > -
-> > -	list_for_each_entry(shrinker, &shrinker_list, list) {
-> > +	rcu_read_lock();
-> > +	list_for_each_entry_rcu(shrinker, &shrinker_list, list) {
-> >  		struct shrink_control sc = {
-> >  			.gfp_mask = gfp_mask,
-> >  			.nid = nid,
-> >  			.memcg = memcg,
-> >  		};
-> >  
-> > +		if (!shrinker_try_get(shrinker))
-> > +			continue;
-> > +		rcu_read_unlock();
-> 
-> I don't think you can do this unlock?
-> 
-> > +
-> >  		ret = do_shrink_slab(&sc, shrinker, priority);
-> >  		if (ret == SHRINK_EMPTY)
-> >  			ret = 0;
-> >  		freed += ret;
-> > -		/*
-> > -		 * Bail out if someone want to register a new shrinker to
-> > -		 * prevent the registration from being stalled for long periods
-> > -		 * by parallel ongoing shrinking.
-> > -		 */
-> > -		if (rwsem_is_contended(&shrinker_rwsem)) {
-> > -			freed = freed ? : 1;
-> > -			break;
-> > -		}
-> > -	}
-> >  
-> > -	up_read(&shrinker_rwsem);
-> > -out:
-> > +		rcu_read_lock();
-> 
-> That new rcu_read_lock() won't help AFAIK, the whole
-> list_for_each_entry_rcu() needs to be under the single rcu_read_lock() to be
-> safe.
+If we're going to have a fix for false root problems its a good idea to
+let people know that there's a way to recover, error out with a useful
+message that mentions the `-x` option rather than just assert.
 
-Yeah, that's the pattern we've been taught and the one we can look
-at and immediately say "this is safe".
+Before
 
-This is a different pattern, as has been explained bi Qi, and I
-think it *might* be safe.
+  xfsrestore: searching media for directory dump
+  xfsrestore: reading directories
+  xfsrestore: tree.c:757: tree_begindir: Assertion `ino != persp->p_rootino || hardh == persp->p_rooth' failed.
+  Aborted
 
-*However.*
+After
 
-Right now I don't have time to go through a novel RCU list iteration
-pattern it one step at to determine the correctness of the
-algorithm. I'm mostly worried about list manipulations that can
-occur outside rcu_read_lock() section bleeding into the RCU
-critical section because rcu_read_lock() by itself is not a memory
-barrier.
+  xfsrestore: ERROR: tree.c:791: tree_begindir: Assertion `ino != persp->p_rootino || hardh == persp->p_rooth` failed.
+  xfsrestore: ERROR: False root detected. Recovery may be possible using the `-x` option
+  Aborted
 
-Maybe Paul has seen this pattern often enough he could simply tell
-us what conditions it is safe in. But for me to work that out from
-first principles? I just don't have the time to do that right now.
+Fixes: d7cba74 ("xfsrestore: fix rootdir due to xfsdump bulkstat misuse")
+Signed-off-by: Donald Douwsma <ddouwsma@redhat.com>
+---
+ restore/tree.c | 13 +++++++++++--
+ 1 file changed, 11 insertions(+), 2 deletions(-)
 
-> IIUC this is why Dave in [4] suggests unifying shrink_slab() with
-> shrink_slab_memcg(), as the latter doesn't iterate the list but uses IDR.
-
-Yes, I suggested the IDR route because radix tree lookups under RCU
-with reference counted objects are a known safe pattern that we can
-easily confirm is correct or not.  Hence I suggested the unification
-+ IDR route because it makes the life of reviewers so, so much
-easier...
-
-Cheers,
-
-Dave.
+diff --git a/restore/tree.c b/restore/tree.c
+index bfa07fe..0b65d0f 100644
+--- a/restore/tree.c
++++ b/restore/tree.c
+@@ -783,8 +783,17 @@ tree_begindir(filehdr_t *fhdrp, dah_t *dahp)
+ 	/* lookup head of hardlink list
+ 	 */
+ 	hardh = link_hardh(ino, gen);
+-	if (need_fixrootdir == BOOL_FALSE)
+-		assert(ino != persp->p_rootino || hardh == persp->p_rooth);
++	if (need_fixrootdir == BOOL_FALSE
++		&& !(ino != persp->p_rootino || hardh == persp->p_rooth)) {
++		mlog(MLOG_ERROR | MLOG_TREE, 
++			"%s:%d: %s: Assertion "
++			"`ino != persp->p_rootino || hardh == persp->p_rooth` failed.\n",
++			__FILE__, __LINE__, __FUNCTION__);
++		mlog(MLOG_ERROR | MLOG_TREE, _(
++			"False root detected. "
++			"Recovery may be possible using the `-x` option\n"));
++		return NH_NULL;
++	};
+ 
+ 	/* already present
+ 	 */
 -- 
-Dave Chinner
-david@fromorbit.com
+2.39.3
+
