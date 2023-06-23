@@ -2,129 +2,142 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6B095EB64D7
-	for <linux-xfs@archiver.kernel.org>; Fri, 23 Jun 2023 21:14:19 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1FCF3C001DD
+	for <linux-xfs@archiver.kernel.org>; Fri, 23 Jun 2023 21:51:02 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230421AbjFWVOS (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 23 Jun 2023 17:14:18 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50032 "EHLO
+        id S229541AbjFWVvA (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 23 Jun 2023 17:51:00 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40326 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230355AbjFWVOR (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 23 Jun 2023 17:14:17 -0400
-Received: from sandeen.net (sandeen.net [63.231.237.45])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 8F2E710F2
-        for <linux-xfs@vger.kernel.org>; Fri, 23 Jun 2023 14:14:15 -0700 (PDT)
-Received: from [10.1.184.212] (unknown [149.34.244.156])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+        with ESMTP id S232753AbjFWVtk (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 23 Jun 2023 17:49:40 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6BFBB26A5;
+        Fri, 23 Jun 2023 14:49:39 -0700 (PDT)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange X25519 server-signature RSA-PSS (2048 bits))
         (No client certificate requested)
-        by sandeen.net (Postfix) with ESMTPSA id 32C4D5196FD;
-        Fri, 23 Jun 2023 16:14:13 -0500 (CDT)
-DKIM-Filter: OpenDKIM Filter v2.11.0 sandeen.net 32C4D5196FD
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=sandeen.net;
-        s=default; t=1687554854;
-        bh=X3V0gzE2EckvTXDHgaxv2WJ23PquQPij1IyxeDlTCwQ=;
-        h=Date:Subject:To:References:From:In-Reply-To:From;
-        b=kXB/2a4R3T6FCIgLr6bun1sIYt/4XZgnx4fjLHi56oGJvGXbrxtAl0vrQ4COioAkZ
-         dUnVX6Vbqf86lbX3cTknPCC1NtCNAIAkOgZILdWh0sQe2f09IOKBcqI/sUBUGvfyp4
-         8J4T1VPCTz96EgCdZEBZ+iCes/ioHbtY/PyQTTu/clSbggBl+K/EZySQTn5Vg+MiNb
-         bQf6AaoS0nDXkDiC98pWgjsIPI8oJrxTjLvoibTfV8UJEvp+uFckk7l3SCuewefZw6
-         /IA7MiMWxrA01HsskxdOV2jvG9rM1v8vrJI8MI1XkoPd9xmav264BadVQbhd6nGsSJ
-         5mXGRFEfqHFvQ==
-Message-ID: <3def220e-bc7b-ceb2-f875-cffe3af8471b@sandeen.net>
-Date:   Fri, 23 Jun 2023 16:14:11 -0500
+        by dfw.source.kernel.org (Postfix) with ESMTPS id E89EC60AF5;
+        Fri, 23 Jun 2023 21:49:38 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id A1671C433C8;
+        Fri, 23 Jun 2023 21:49:36 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1687556978;
+        bh=bPOn8vNljb4Kts16IvF12pTxf9JAyk3Q+pkgmofKYTI=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=l4LxiaK6FHJV+LaN+k19qJLvpsW7q6peMpRqQDAloqrBAb7yaQiFzdxyJRQOlUbhL
+         XBecHa58jNv7ky9A034GYSD2hm6ptEDQNutUwI9YecVIS3WmPXE3L9OmXsZUz8kwS8
+         TTwQFFfOfOtb8MAgVm196q6ZTVuewtnjos3fSTZ9GEVB31g3k5MJS42AVjc5SzUh/V
+         FyhyE7GMMMzgjXlbaXwq0dZEfCVwkgehGZA7UY2GwQKM2vvvfQX8LDHnVUTOmbhZdZ
+         3Ac0f71z1GBnxhPGwb/beOuZzWJU5QKmGVyY8UMScHTrLfTWh6qN+V7ajaXz+LKLHt
+         /jQ/IQ+1PydAw==
+Date:   Fri, 23 Jun 2023 17:49:34 -0400
+From:   Chuck Lever <cel@kernel.org>
+To:     Qi Zheng <zhengqi.arch@bytedance.com>
+Cc:     akpm@linux-foundation.org, david@fromorbit.com, tkhai@ya.ru,
+        vbabka@suse.cz, roman.gushchin@linux.dev, djwong@kernel.org,
+        brauner@kernel.org, paulmck@kernel.org, tytso@mit.edu,
+        linux-bcache@vger.kernel.org, linux-xfs@vger.kernel.org,
+        linux-nfs@vger.kernel.org, linux-arm-msm@vger.kernel.org,
+        intel-gfx@lists.freedesktop.org, linux-kernel@vger.kernel.org,
+        dri-devel@lists.freedesktop.org,
+        virtualization@lists.linux-foundation.org,
+        linux-raid@vger.kernel.org, linux-mm@kvack.org,
+        dm-devel@redhat.com, linux-fsdevel@vger.kernel.org,
+        linux-ext4@vger.kernel.org, linux-btrfs@vger.kernel.org
+Subject: Re: [PATCH 15/29] NFSD: dynamically allocate the nfsd-client shrinker
+Message-ID: <ZJYTbnmRKF7j3CHW@manet.1015granger.net>
+References: <20230622085335.77010-1-zhengqi.arch@bytedance.com>
+ <20230622085335.77010-16-zhengqi.arch@bytedance.com>
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:102.0)
- Gecko/20100101 Thunderbird/102.12.0
-Subject: Re: xfs_rapair fails with err 117. Can I fix the fs or recover
- individual files somehow?
-Content-Language: en-US
-To:     Fernando CMK <ferna.cmk@gmail.com>, linux-xfs@vger.kernel.org
-References: <CAEBim7C575WhuWGO7_VJ62+6s2g4XFFgoF6=SrGX30nBYcD12Q@mail.gmail.com>
-From:   Eric Sandeen <sandeen@sandeen.net>
-In-Reply-To: <CAEBim7C575WhuWGO7_VJ62+6s2g4XFFgoF6=SrGX30nBYcD12Q@mail.gmail.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20230622085335.77010-16-zhengqi.arch@bytedance.com>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On 6/23/23 3:25 PM, Fernando CMK wrote:
-> Scenario
+On Thu, Jun 22, 2023 at 04:53:21PM +0800, Qi Zheng wrote:
+> In preparation for implementing lockless slab shrink,
+> we need to dynamically allocate the nfsd-client shrinker,
+> so that it can be freed asynchronously using kfree_rcu().
+> Then it doesn't need to wait for RCU read-side critical
+> section when releasing the struct nfsd_net.
 > 
-> opensuse 15.5, the fs was originally created on an earlier opensuse
-> release. The failed file system is on top of a mdadm raid 5, where
-> other xfs file systems were also created, but only this one is having
-> issues. The others are doing fine.
+> Signed-off-by: Qi Zheng <zhengqi.arch@bytedance.com>
+
+For 15/29 and 16/29 of this series:
+
+Acked-by: Chuck Lever <chuck.lever@oracle.com>
+
+
+> ---
+>  fs/nfsd/netns.h     |  2 +-
+>  fs/nfsd/nfs4state.c | 20 ++++++++++++--------
+>  2 files changed, 13 insertions(+), 9 deletions(-)
 > 
-> xfs_repair and xfs_repair -L both fail:
-
-Full logs please, not the truncated version.
-
-> Phase 6 - check inode connectivity...
->         - resetting contents of realtime bitmap and summary inodes
->         - traversing filesystem ...
->         - traversal finished ...
->         - moving disconnected inodes to lost+found ...
-> Phase 7 - verify and correct link counts...
->         - 16:15:34: verify and correct link counts - 42 of 42
-> allocation groups done
-> stripe width (17591899783168) is too large
-> Metadata corruption detected at 0x55f819658468, xfs_sb block 0x0/0x1000
-> libxfs_bwrite: write verifier failed on xfs_sb bno 0x0/0x8
-> stripe width (17591899783168) is too large
-
-0xFFFEEF00000 - that's suspicious. No idea how the stripe unit could 
-have been set to something so big.
-
-> Metadata corruption detected at 0x55f819658468, xfs_sb block 0x0/0x1000
-> libxfs_bwrite: write verifier failed on xfs_sb bno 0x0/0x8
-> xfs_repair: Releasing dirty buffer to free list!
-> xfs_repair: Refusing to write a corrupt buffer to the data device!
-> xfs_repair: Lost a write to the data device!
+> diff --git a/fs/nfsd/netns.h b/fs/nfsd/netns.h
+> index ec49b200b797..f669444d5336 100644
+> --- a/fs/nfsd/netns.h
+> +++ b/fs/nfsd/netns.h
+> @@ -195,7 +195,7 @@ struct nfsd_net {
+>  	int			nfs4_max_clients;
+>  
+>  	atomic_t		nfsd_courtesy_clients;
+> -	struct shrinker		nfsd_client_shrinker;
+> +	struct shrinker		*nfsd_client_shrinker;
+>  	struct work_struct	nfsd_shrinker_work;
+>  };
+>  
+> diff --git a/fs/nfsd/nfs4state.c b/fs/nfsd/nfs4state.c
+> index 6e61fa3acaf1..a06184270548 100644
+> --- a/fs/nfsd/nfs4state.c
+> +++ b/fs/nfsd/nfs4state.c
+> @@ -4388,8 +4388,7 @@ static unsigned long
+>  nfsd4_state_shrinker_count(struct shrinker *shrink, struct shrink_control *sc)
+>  {
+>  	int count;
+> -	struct nfsd_net *nn = container_of(shrink,
+> -			struct nfsd_net, nfsd_client_shrinker);
+> +	struct nfsd_net *nn = shrink->private_data;
+>  
+>  	count = atomic_read(&nn->nfsd_courtesy_clients);
+>  	if (!count)
+> @@ -8094,14 +8093,19 @@ static int nfs4_state_create_net(struct net *net)
+>  	INIT_WORK(&nn->nfsd_shrinker_work, nfsd4_state_shrinker_worker);
+>  	get_net(net);
+>  
+> -	nn->nfsd_client_shrinker.scan_objects = nfsd4_state_shrinker_scan;
+> -	nn->nfsd_client_shrinker.count_objects = nfsd4_state_shrinker_count;
+> -	nn->nfsd_client_shrinker.seeks = DEFAULT_SEEKS;
+> -
+> -	if (register_shrinker(&nn->nfsd_client_shrinker, "nfsd-client"))
+> +	nn->nfsd_client_shrinker = shrinker_alloc_and_init(nfsd4_state_shrinker_count,
+> +							   nfsd4_state_shrinker_scan,
+> +							   0, DEFAULT_SEEKS, 0,
+> +							   nn);
+> +	if (!nn->nfsd_client_shrinker)
+>  		goto err_shrinker;
+> +
+> +	if (register_shrinker(nn->nfsd_client_shrinker, "nfsd-client"))
+> +		goto err_register;
+>  	return 0;
+>  
+> +err_register:
+> +	shrinker_free(nn->nfsd_client_shrinker);
+>  err_shrinker:
+>  	put_net(net);
+>  	kfree(nn->sessionid_hashtbl);
+> @@ -8197,7 +8201,7 @@ nfs4_state_shutdown_net(struct net *net)
+>  	struct list_head *pos, *next, reaplist;
+>  	struct nfsd_net *nn = net_generic(net, nfsd_net_id);
+>  
+> -	unregister_shrinker(&nn->nfsd_client_shrinker);
+> +	unregister_and_free_shrinker(nn->nfsd_client_shrinker);
+>  	cancel_work(&nn->nfsd_shrinker_work);
+>  	cancel_delayed_work_sync(&nn->laundromat_work);
+>  	locks_end_grace(&nn->nfsd4_manager);
+> -- 
+> 2.30.2
 > 
-> fatal error -- File system metadata writeout failed, err=117.  Re-run
-> xfs_repair.
-> 
-> I ran xfs_repair multiple times, but I always get the same error.
-
-First, what version of xfs_repair are you using? xfs_Repair -V.
-Latest is roughly the latest kernel, 6.x.
-
-> Is there any way to fix the above?
-> 
-> I tried xfs_db on an image file I created from the file system, and I
-> can  see individual paths  and file "good":
-
-> xfs_db> path /certainpath
-> xfs_db> ls
-> 10         1550204032         directory      0x0000002e   1 . (good)
-> 12         1024               directory      0x0000172e   2 .. (good)
-> 25         1613125696         directory      0x99994f93  13 .AfterShotPro (good)
-> 
-> 
-> Is there a way to extract files from the file system image without
-> mounting the fs ? Or is there a way to mount the file system
-> regardless of its state?
-
-mount -o ro,norecovery should get you something ...
-
-> Trying a regular mount, with or withour -o norecovery, I get:
-> mount: /mnt: mount(2) system call failed: Structure needs cleaning.
-
-... oh. And what did the kernel dmesg say when that happened?
-
-What happened in between this filesystem being ok, and not being ok? 
-What was the first sign of trouble?
-
-If you want to provide an xfs_metadump (compressed, on gdrive or 
-something, you can email me off-list) I can take a look.
-
--Eric
-
-> 
-> 
-> 
-> 
-> Regards.
-> 
-
