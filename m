@@ -2,204 +2,199 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 540A6C001DD
-	for <linux-xfs@archiver.kernel.org>; Fri, 23 Jun 2023 10:01:29 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id DBE41C001B0
+	for <linux-xfs@archiver.kernel.org>; Fri, 23 Jun 2023 10:09:16 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231828AbjFWKBZ (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 23 Jun 2023 06:01:25 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43210 "EHLO
+        id S231472AbjFWKJQ (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 23 Jun 2023 06:09:16 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45574 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229564AbjFWKBV (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 23 Jun 2023 06:01:21 -0400
-Received: from foss.arm.com (foss.arm.com [217.140.110.172])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id EC52D189;
-        Fri, 23 Jun 2023 03:01:18 -0700 (PDT)
-Received: from usa-sjc-imap-foss1.foss.arm.com (unknown [10.121.207.14])
-        by usa-sjc-mx-foss1.foss.arm.com (Postfix) with ESMTP id 61950C14;
-        Fri, 23 Jun 2023 03:02:02 -0700 (PDT)
-Received: from [10.1.30.17] (e122027.cambridge.arm.com [10.1.30.17])
-        by usa-sjc-imap-foss1.foss.arm.com (Postfix) with ESMTPSA id E25C23F64C;
-        Fri, 23 Jun 2023 03:01:13 -0700 (PDT)
-Message-ID: <35f80572-0ba2-be54-c947-fcbe2d71ed5e@arm.com>
-Date:   Fri, 23 Jun 2023 11:01:11 +0100
+        with ESMTP id S230379AbjFWKIo (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 23 Jun 2023 06:08:44 -0400
+Received: from mail-pg1-x52c.google.com (mail-pg1-x52c.google.com [IPv6:2607:f8b0:4864:20::52c])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A9B9330F8
+        for <linux-xfs@vger.kernel.org>; Fri, 23 Jun 2023 03:07:29 -0700 (PDT)
+Received: by mail-pg1-x52c.google.com with SMTP id 41be03b00d2f7-553a1f13d9fso447424a12.1
+        for <linux-xfs@vger.kernel.org>; Fri, 23 Jun 2023 03:07:29 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=fromorbit-com.20221208.gappssmtp.com; s=20221208; t=1687514848; x=1690106848;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
+        bh=eqpph6BhYxGRpPSQVY/2+QTLWY04QDtQbiANBuVNTPc=;
+        b=Lqi8SYS9c2ZHNFqlmDxTakgbajLF16h+KjyRTyyVJWkCdPgE1bfq/UCbc5L2/zpnJ/
+         X63Coq//UJ6s1s9kzQDY1p06R88xlU8H4C75f/nzs2Nzw/+rXEy262BgoTv9bzOYtudX
+         UVkoCJrmiMjQlTaTa7hOPUeb3n8uyAguYDnTVzw7SeIBVjpg15XPvlZ8oYrO1fQsXrC+
+         dpXInLqztmkcfHxIzZJtSqO3wKMWz1x5ksOtMP+8n2JQLvUz/4S81yKJV48crhWJbXoG
+         9nyXnhjaXJkivjGKXKbtLwDynH8MpKgmK4Gg2hFGvVTFR9GshFVWr9VLHspQe5NQbzpW
+         zitA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20221208; t=1687514848; x=1690106848;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=eqpph6BhYxGRpPSQVY/2+QTLWY04QDtQbiANBuVNTPc=;
+        b=DMtY5a9eRCpUt+I+ChQiDclGNOXSgJ84bbpGlNH00dtzymAU3AbTqpccQf8Vt+EJYi
+         H/uXfFDAw1cAx7EeEae6bEGqy15QJIg94ErW2mxU+JpE+CGkFE4vnBFgu2zjw0qNYWJz
+         M8hQbS2DKGjLdyAG9VUymfi1h0xcv0olMhzOzgUx8jHtzCZyqsDZJz+TKxEspvQGBc0M
+         F65vbwZ6S97W5MUhzg1p34C0/IIXaeYP4edT/k6dYZHqsQ/N1Ays458hPMGo+sYyGiEy
+         k9fYx2aRDbwipv3Pfff15s0oqZuLzGq01yzLXHjHSkq2EnYv6JNQ20uq9OrG2FaVg+ZQ
+         Gu+A==
+X-Gm-Message-State: AC+VfDw7DfqG/G5ISP9ndpbr0WpeEoWxlyU1+j9u4/L2TiMc1gibrj1Q
+        UekHTX0Yf+sKfkPaFzzkrrr+xw==
+X-Google-Smtp-Source: ACHHUZ6QIMa5fvNGlV+qdMZJbn2aZKPFd81C/dFpHi16DJTaT9HYfJV9b0AlFjDUfIJ9zd3zdYz+hQ==
+X-Received: by 2002:a17:90a:194e:b0:262:ad89:8e22 with SMTP id 14-20020a17090a194e00b00262ad898e22mr394709pjh.24.1687514847938;
+        Fri, 23 Jun 2023 03:07:27 -0700 (PDT)
+Received: from dread.disaster.area (pa49-186-94-37.pa.vic.optusnet.com.au. [49.186.94.37])
+        by smtp.gmail.com with ESMTPSA id ei16-20020a17090ae55000b0024de39e8746sm1145949pjb.11.2023.06.23.03.07.27
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Fri, 23 Jun 2023 03:07:27 -0700 (PDT)
+Received: from dave by dread.disaster.area with local (Exim 4.96)
+        (envelope-from <david@fromorbit.com>)
+        id 1qCdhM-00FCbZ-1O;
+        Fri, 23 Jun 2023 20:07:24 +1000
+Date:   Fri, 23 Jun 2023 20:07:24 +1000
+From:   Dave Chinner <david@fromorbit.com>
+To:     Ritesh Harjani <ritesh.list@gmail.com>
+Cc:     Masahiko Sawada <sawada.mshk@gmail.com>, linux-xfs@vger.kernel.org
+Subject: Re: Question on slow fallocate
+Message-ID: <ZJVu3Kf/HTWGnA/O@dread.disaster.area>
+References: <ZJTrrwirZqykiVxn@dread.disaster.area>
+ <874jmy4m49.fsf@doe.com>
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
- Thunderbird/102.11.0
-Subject: Re: [PATCH 05/29] drm/panfrost: dynamically allocate the drm-panfrost
- shrinker
-To:     Qi Zheng <qi.zheng@linux.dev>, akpm@linux-foundation.org,
-        david@fromorbit.com, tkhai@ya.ru, vbabka@suse.cz,
-        roman.gushchin@linux.dev, djwong@kernel.org, brauner@kernel.org,
-        paulmck@kernel.org, tytso@mit.edu
-Cc:     linux-bcache@vger.kernel.org, linux-xfs@vger.kernel.org,
-        linux-nfs@vger.kernel.org, linux-arm-msm@vger.kernel.org,
-        intel-gfx@lists.freedesktop.org, linux-kernel@vger.kernel.org,
-        dri-devel@lists.freedesktop.org,
-        virtualization@lists.linux-foundation.org,
-        linux-raid@vger.kernel.org, linux-mm@kvack.org,
-        dm-devel@redhat.com, Qi Zheng <zhengqi.arch@bytedance.com>,
-        linux-fsdevel@vger.kernel.org, linux-ext4@vger.kernel.org,
-        freedreno@lists.freedesktop.org, linux-btrfs@vger.kernel.org
-References: <20230622083932.4090339-1-qi.zheng@linux.dev>
- <20230622083932.4090339-6-qi.zheng@linux.dev>
-Content-Language: en-GB
-From:   Steven Price <steven.price@arm.com>
-In-Reply-To: <20230622083932.4090339-6-qi.zheng@linux.dev>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <874jmy4m49.fsf@doe.com>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On 22/06/2023 09:39, Qi Zheng wrote:
-> From: Qi Zheng <zhengqi.arch@bytedance.com>
+On Fri, Jun 23, 2023 at 01:59:58PM +0530, Ritesh Harjani wrote:
+> Dave Chinner <david@fromorbit.com> writes:
 > 
-> In preparation for implementing lockless slab shrink,
-> we need to dynamically allocate the drm-panfrost shrinker,
-> so that it can be freed asynchronously using kfree_rcu().
-> Then it doesn't need to wait for RCU read-side critical
-> section when releasing the struct panfrost_device.
+> > On Thu, Jun 22, 2023 at 02:34:18PM +0900, Masahiko Sawada wrote:
+> >> Hi all,
+> >> 
+> >> When testing PostgreSQL, I found a performance degradation. After some
+> >> investigation, it ultimately reached the attached simple C program and
+> >> turned out that the performance degradation happens on only the xfs
+> >> filesystem (doesn't happen on neither ext3 nor ext4). In short, the
+> >> program alternately does two things to extend a file (1) call
+> >> posix_fallocate() to extend by 8192 bytes
+> >
+> > This is a well known anti-pattern - it always causes problems. Do
+> > not do this.
+> >
+> >> and (2) call pwrite() to
+> >> extend by 8192 bytes. If I do only either (1) or (2), the program is
+> >> completed in 2 sec, but if I do (1) and (2) alternatively, it is
+> >> completed in 90 sec.
+> >
+> > Well, yes. Using fallocate to extend the file has very different
+> > constraints to using pwrite to extend the file.
+> >
+> >> $ gcc -o test test.c
+> >> $ time ./test test.1 1
+> >> total   200000
+> >> fallocate       200000
+> >> filewrite       0
+> >
+> > No data is written here, so this is just a series of 8kB allocations
+> > and file size extension operations. There are no constraints here
+> > because it is a pure metadata operation.
+> >
+> >> real    0m1.305s
+> >> user    0m0.050s
+> >> sys     0m1.255s
+> >> 
+> >> $ time ./test test.2 2
+> >> total   200000
+> >> fallocate       100000
+> >> filewrite       100000
+> >>
+> >> real    1m29.222s
+> >> user    0m0.139s
+> >> sys     0m3.139s
+> >
+> > Now we have fallocate extending the file and doing unwritten extent
+> > allocation, followed by writing into that unwritten extent which
+> > then does unwritten extent conversion.
+> >
+> > This introduces data vs metadata update ordering constraints to the
+> > workload.
+> >
+> > The problem here in that the "truncate up" operation that
+> > fallocate is doing to move the file size. The "truncate up" is going
+> > to move the on-disk file size to the end of the fallocated range via
+> > a journal transaction, and so it will expose the range of the
+> > previous write as containing valid data.
+> >
+> > However, the previous data write is still only in memory and not on
+> > disk. The result of journalling the file size change is that if we
+> > crash after the size change is made but the data is not on disk,
+> > we end up with lost data - the file contains zeros (or NULLs) where
+> > the in memory data previously existed.
+> >
+> > Go google for "NULL file data exposure" and you'll see this is a
+> > problem we fixed in ~2006, caused by extending the file size on disk
+> > without first having written all the in-memory data into the file.
 > 
-> Signed-off-by: Qi Zheng <zhengqi.arch@bytedance.com>
-> ---
->  drivers/gpu/drm/panfrost/panfrost_device.h    |  2 +-
->  .../gpu/drm/panfrost/panfrost_gem_shrinker.c  | 24 ++++++++++---------
->  2 files changed, 14 insertions(+), 12 deletions(-)
-> 
-> diff --git a/drivers/gpu/drm/panfrost/panfrost_device.h b/drivers/gpu/drm/panfrost/panfrost_device.h
-> index b0126b9fbadc..e667e5689353 100644
-> --- a/drivers/gpu/drm/panfrost/panfrost_device.h
-> +++ b/drivers/gpu/drm/panfrost/panfrost_device.h
-> @@ -118,7 +118,7 @@ struct panfrost_device {
->  
->  	struct mutex shrinker_lock;
->  	struct list_head shrinker_list;
-> -	struct shrinker shrinker;
-> +	struct shrinker *shrinker;
->  
->  	struct panfrost_devfreq pfdevfreq;
->  };
-> diff --git a/drivers/gpu/drm/panfrost/panfrost_gem_shrinker.c b/drivers/gpu/drm/panfrost/panfrost_gem_shrinker.c
-> index bf0170782f25..2a5513eb9e1f 100644
-> --- a/drivers/gpu/drm/panfrost/panfrost_gem_shrinker.c
-> +++ b/drivers/gpu/drm/panfrost/panfrost_gem_shrinker.c
-> @@ -18,8 +18,7 @@
->  static unsigned long
->  panfrost_gem_shrinker_count(struct shrinker *shrinker, struct shrink_control *sc)
->  {
-> -	struct panfrost_device *pfdev =
-> -		container_of(shrinker, struct panfrost_device, shrinker);
-> +	struct panfrost_device *pfdev = shrinker->private_data;
->  	struct drm_gem_shmem_object *shmem;
->  	unsigned long count = 0;
->  
-> @@ -65,8 +64,7 @@ static bool panfrost_gem_purge(struct drm_gem_object *obj)
->  static unsigned long
->  panfrost_gem_shrinker_scan(struct shrinker *shrinker, struct shrink_control *sc)
->  {
-> -	struct panfrost_device *pfdev =
-> -		container_of(shrinker, struct panfrost_device, shrinker);
-> +	struct panfrost_device *pfdev = shrinker->private_data;
->  	struct drm_gem_shmem_object *shmem, *tmp;
->  	unsigned long freed = 0;
->  
-> @@ -100,10 +98,15 @@ panfrost_gem_shrinker_scan(struct shrinker *shrinker, struct shrink_control *sc)
->  void panfrost_gem_shrinker_init(struct drm_device *dev)
->  {
->  	struct panfrost_device *pfdev = dev->dev_private;
-> -	pfdev->shrinker.count_objects = panfrost_gem_shrinker_count;
-> -	pfdev->shrinker.scan_objects = panfrost_gem_shrinker_scan;
-> -	pfdev->shrinker.seeks = DEFAULT_SEEKS;
-> -	WARN_ON(register_shrinker(&pfdev->shrinker, "drm-panfrost"));
-> +
-> +	pfdev->shrinker = shrinker_alloc_and_init(panfrost_gem_shrinker_count,
-> +						  panfrost_gem_shrinker_scan, 0,
-> +						  DEFAULT_SEEKS, 0, pfdev);
-> +	if (pfdev->shrinker &&
-> +	    register_shrinker(pfdev->shrinker, "drm-panfrost")) {
-> +		shrinker_free(pfdev->shrinker);
-> +		WARN_ON(1);
-> +	}
+> I guess here is the <patch> you are speaking of. So this prevents from
+> exposing nulls within a file in case of a crash.
 
-So we didn't have good error handling here before, but this is
-significantly worse. Previously if register_shrinker() failed then the
-driver could safely continue without a shrinker - it would waste memory
-but still function.
+Well, we're not really "exposing NULLs". No data got written before
+the crash, so a read from that range after a crash will find a hole
+or unwritten extents in the file and return zeros.
 
-However we now have two failure conditions:
- * shrinker_alloc_init() returns NULL. No warning and NULL deferences
-   will happen later.
+> I guess the behavior is not the same with ext4. ext4 does not seem to be
+> doing filemap_write_and_wait_range() if the new i_disksize is more than
+> oldsize. So then I think ext4 must be ok if in case of a crash the
+> file has nulls in between. That's why I think the observation of slow
+> performance is not seen in ext4.
 
- * register_shrinker() fails, shrinker_free() will free pdev->shrinker
-   we get a warning, but followed by a use-after-free later.
+ext4 also has a similar problem issue where crashes can lead to
+files full of zeroes, and many of the mitigations they use were
+copied from the XFS mitigations for the same problem.  However, ext4
+has a completely different way of handling failures after truncate
+(via an orphan list, IIRC) so it doesn't need to actually write
+the data to avoid potential stale data exposure issues.
 
-I think we need to modify panfrost_gem_shrinker_init() to be able to
-return an error, so a change something like the below (untested) before
-your change.
+> Few queres-
+> - If the user doesn't issue a flush and if the system crashes, then
+>   anyways it is not expected that the file will have all the data right?
 
-Steve
+Correct.
 
-----8<---
-diff --git a/drivers/gpu/drm/panfrost/panfrost_drv.c
-b/drivers/gpu/drm/panfrost/panfrost_drv.c
-index bbada731bbbd..f705bbdea360 100644
---- a/drivers/gpu/drm/panfrost/panfrost_drv.c
-+++ b/drivers/gpu/drm/panfrost/panfrost_drv.c
-@@ -598,10 +598,14 @@ static int panfrost_probe(struct platform_device
-*pdev)
- 	if (err < 0)
- 		goto err_out1;
+> - Also is that "data/inode size update order" which you are mentioning in
+>   this patch. Is this something that all filesystems should follow?
 
--	panfrost_gem_shrinker_init(ddev);
-+	err = panfrost_gem_shrinker_init(ddev);
-+	if (err)
-+		goto err_out2;
+No, it's the specific fix for the inode size update ordering problem
+that lead to user visible symptoms after a crash. We avoid the
+problem in two ways now - first we always journal inode size
+updates, and second we always write dependent data before we journal
+said size updates.
 
- 	return 0;
+> - I was wondering what exactly it breaks which the applications depend
+>   upon? Because not all filesystems tend to follow this practice right?
 
-+err_out2:
-+	drm_dev_unregister(ddev);
- err_out1:
- 	pm_runtime_disable(pfdev->dev);
- 	panfrost_device_fini(pfdev);
-diff --git a/drivers/gpu/drm/panfrost/panfrost_gem.h
-b/drivers/gpu/drm/panfrost/panfrost_gem.h
-index ad2877eeeccd..863d2ec8d4f0 100644
---- a/drivers/gpu/drm/panfrost/panfrost_gem.h
-+++ b/drivers/gpu/drm/panfrost/panfrost_gem.h
-@@ -81,7 +81,7 @@ panfrost_gem_mapping_get(struct panfrost_gem_object *bo,
- void panfrost_gem_mapping_put(struct panfrost_gem_mapping *mapping);
- void panfrost_gem_teardown_mappings_locked(struct panfrost_gem_object *bo);
+The filesystems didn't break anything - applications failed to write
+and/or overwrite data safely, and when they did this data got lost.
 
--void panfrost_gem_shrinker_init(struct drm_device *dev);
-+int panfrost_gem_shrinker_init(struct drm_device *dev);
- void panfrost_gem_shrinker_cleanup(struct drm_device *dev);
+However, because the same type of failure didn't result in data loss
+on ext3, then the data loss was considered by users and application
+developers as a filesystem bug, rather than an inevitable result of
+an application failing to ensure the user's data was actually
+written to the filesystem in a crash-safe manner.
 
- #endif /* __PANFROST_GEM_H__ */
-diff --git a/drivers/gpu/drm/panfrost/panfrost_gem_shrinker.c
-b/drivers/gpu/drm/panfrost/panfrost_gem_shrinker.c
-index bf0170782f25..90265b37636f 100644
---- a/drivers/gpu/drm/panfrost/panfrost_gem_shrinker.c
-+++ b/drivers/gpu/drm/panfrost/panfrost_gem_shrinker.c
-@@ -97,13 +97,17 @@ panfrost_gem_shrinker_scan(struct shrinker
-*shrinker, struct shrink_control *sc)
-  *
-  * This function registers and sets up the panfrost shrinker.
-  */
--void panfrost_gem_shrinker_init(struct drm_device *dev)
-+int panfrost_gem_shrinker_init(struct drm_device *dev)
- {
- 	struct panfrost_device *pfdev = dev->dev_private;
-+	int ret;
-+
- 	pfdev->shrinker.count_objects = panfrost_gem_shrinker_count;
- 	pfdev->shrinker.scan_objects = panfrost_gem_shrinker_scan;
- 	pfdev->shrinker.seeks = DEFAULT_SEEKS;
--	WARN_ON(register_shrinker(&pfdev->shrinker, "drm-panfrost"));
-+	ret = register_shrinker(&pfdev->shrinker, "drm-panfrost");
-+
-+	return ret;
- }
+i.e. users and application developers demanded that filesystem's
+provide be omnipotent and provide a higher level of data integrity
+than the application/user asks them to provide.
 
- /**
+The result is that we provided that higher level of data integrity
+that users demanded, but it came at a cost....
 
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
