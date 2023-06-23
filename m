@@ -2,119 +2,169 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 67389EB64D7
-	for <linux-xfs@archiver.kernel.org>; Fri, 23 Jun 2023 06:30:17 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2F528EB64D7
+	for <linux-xfs@archiver.kernel.org>; Fri, 23 Jun 2023 08:30:15 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230143AbjFWGaQ (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 23 Jun 2023 02:30:16 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46384 "EHLO
+        id S231492AbjFWIaN (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 23 Jun 2023 04:30:13 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34778 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230050AbjFWGaN (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 23 Jun 2023 02:30:13 -0400
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 963D5172A
-        for <linux-xfs@vger.kernel.org>; Thu, 22 Jun 2023 23:29:28 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1687501767;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:
-         content-transfer-encoding:content-transfer-encoding;
-        bh=M8jDOmxChVtHNpj0ZbP6Rb9FFegsuTlRQ5nsYUjwXTE=;
-        b=C9mkI6mX/CACVLFCOMDCzfruV/u4M1W+UhA+NLAsQ9PiJ49gXCf4kIgFfEIx0x2Dmirj2Y
-        TwIeoFqVlsbRk2OayGshu+/Q0CGWyZzZrHiIihunR5MEYn8D1mm5a1x3J7xmrVufGBpkcY
-        9/3c/vnUum+e2EewEDVII+7Huewii/s=
-Received: from mail-pf1-f198.google.com (mail-pf1-f198.google.com
- [209.85.210.198]) by relay.mimecast.com with ESMTP with STARTTLS
- (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
- us-mta-304-iX8av4WdOemqVQec0RpevQ-1; Fri, 23 Jun 2023 02:29:26 -0400
-X-MC-Unique: iX8av4WdOemqVQec0RpevQ-1
-Received: by mail-pf1-f198.google.com with SMTP id d2e1a72fcca58-666ee6aeddbso72942b3a.3
-        for <linux-xfs@vger.kernel.org>; Thu, 22 Jun 2023 23:29:26 -0700 (PDT)
+        with ESMTP id S229451AbjFWIaK (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 23 Jun 2023 04:30:10 -0400
+Received: from mail-pj1-x102a.google.com (mail-pj1-x102a.google.com [IPv6:2607:f8b0:4864:20::102a])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id EBA4B2105
+        for <linux-xfs@vger.kernel.org>; Fri, 23 Jun 2023 01:30:07 -0700 (PDT)
+Received: by mail-pj1-x102a.google.com with SMTP id 98e67ed59e1d1-25edd424306so164386a91.1
+        for <linux-xfs@vger.kernel.org>; Fri, 23 Jun 2023 01:30:07 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20221208; t=1687509007; x=1690101007;
+        h=in-reply-to:subject:cc:to:from:message-id:date:from:to:cc:subject
+         :date:message-id:reply-to;
+        bh=hn0zfldQfegiutsOWnC6DiYOTUjHi4DbT1yTVMIyFWw=;
+        b=p9ZB09LTSJmXmvcBP4SLGbgUoOM6C6K3GMw+Gg81P9/M8I9xOCoFBe0VXJw72KxuWx
+         /w71bGmzfLnMpmf3xEFo8eDc6cNKsNiVmVCVU9P2UIqDUGV2nRSTWUTUtPSTZ2kjPVlo
+         0j9Ncmj3tiF6Sv2qffS3ASedqkdgF3apVH77x1xP19olOjFFfzImapgEVvvj1nA9R8uV
+         qpSAqiwWXYqG3Y5jRPKIiZsjfNGiJKTG83Enyp82FFz5oIjUHQLEo7ZXf4oWsvUDIJaZ
+         DxvrpOYA+FAfnS5xTU3vlFYPliSCKBz+q3OCnZ3KUaOqFd0Bqqavy2hOlmgk88CAUKL4
+         Vm2w==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20221208; t=1687501765; x=1690093765;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:x-gm-message-state:from:to:cc:subject:date:message-id
-         :reply-to;
-        bh=M8jDOmxChVtHNpj0ZbP6Rb9FFegsuTlRQ5nsYUjwXTE=;
-        b=GmUi2NpPMYFHYDnr6cGIBUgHyOntOEOr/2O7h7FhRren+IrzSniEQKWy8seV3AyHSh
-         SuDDdo4c9GLwEkH3/PptXEkbzLsUYUZOQi9xVTMYyzkqHKJLbT+UeDscKSLDsEt7EC/0
-         oQFAYjAQmIQ1m6HelQ1C72ZtaMxbcDK4dm55IrO08t9EN4fbBJCEjVEsCEVdOLOPQhNf
-         l9SMHYsthgIUa1QEKPIAANFTNVbsxnsH7ZXz4PZgYGvkxMOdGy5X6VSOqA7GvQousluc
-         AxGS45ajaW/8tawDfBs+9kYzavd66Zqi09jt8uMkvBKyzxax4zzxNhODUWULTR39XATx
-         xCfQ==
-X-Gm-Message-State: AC+VfDwSBkALVEJX+Aqm6Uzh+79eBo+oGB9cno1DZj7NvCv+eCxKfSgc
-        Mse0KmZ0je4kZJNlLT/n2SQPMdE1uCm60GMgUdvvoO+OrNcoumtBJUKM9sYrQCtLZf9i6QiEBrA
-        cFM6y2nvDdyuXwaHB2i32vR1CPhC+lvOlHlwnjE+wLm739ry6d5EHVuW/Z77Y46PWJXSFbVCgut
-        zkvaVM
-X-Received: by 2002:a05:6a20:430d:b0:11f:38d4:2df with SMTP id h13-20020a056a20430d00b0011f38d402dfmr19427496pzk.20.1687501765006;
-        Thu, 22 Jun 2023 23:29:25 -0700 (PDT)
-X-Google-Smtp-Source: ACHHUZ6SAiDdF5M9fqW9pyT+7Lgt5IUl7eHWzOQ/NamPYtqyzkFsH+fcIjoHiJ1QidnsDjjgO3kBvQ==
-X-Received: by 2002:a05:6a20:430d:b0:11f:38d4:2df with SMTP id h13-20020a056a20430d00b0011f38d402dfmr19427481pzk.20.1687501764674;
-        Thu, 22 Jun 2023 23:29:24 -0700 (PDT)
-Received: from anathem.redhat.com ([2001:8003:4b08:fb00:e45d:9492:62e8:873c])
-        by smtp.gmail.com with ESMTPSA id x2-20020a170902ea8200b001ae3b51269dsm6335879plb.262.2023.06.22.23.29.22
+        d=1e100.net; s=20221208; t=1687509007; x=1690101007;
+        h=in-reply-to:subject:cc:to:from:message-id:date:x-gm-message-state
+         :from:to:cc:subject:date:message-id:reply-to;
+        bh=hn0zfldQfegiutsOWnC6DiYOTUjHi4DbT1yTVMIyFWw=;
+        b=QArajP/PVKVXrhRML8/pG+/AcN92LUDeCDaSdtApfaucHCMtcZ9zy4tJM4KIUyuyGd
+         MziX4tR+olQ9IvV6kYt7609RbGxYDcWSLhuRaQxVN9r4bv/A4rbKUSi7ECqofqEcCN/0
+         UC6emeS6K7RJ/EP+RFDVnPj1XCzXdAzM5RUa0lsH6ObE/2Zi/6ZNv6f+RPrRBf25xCAN
+         WbrporqVZBvOYgcJylK8JzjHl9lP+nZ+oJ8b/AeBd7eOUW5S+Xwfy8xFuhPjONlFUTVq
+         aLUiF4iIEAz4B8hL9qc1eHY8YXR910AmAgXBcP/7thXSOEA2+8uq9OnaNVx5SaZc3GCs
+         6SyA==
+X-Gm-Message-State: AC+VfDyoOZX+ayaNKZchbhIaD0uj0ZkXXl3LAODigf8oqAPpqKCUhJna
+        MxrhE8IIHEM29dRKde5VAG5pyDWYYOQ=
+X-Google-Smtp-Source: ACHHUZ4d0Ybyk0lViNzgqSWUBOeRJ774JNydRC09LIlSqFEBd7u0UqdZAVkttbJ+LU6lHgHBANGnZg==
+X-Received: by 2002:a17:90a:eb0c:b0:253:727e:4b41 with SMTP id j12-20020a17090aeb0c00b00253727e4b41mr10224995pjz.34.1687509006589;
+        Fri, 23 Jun 2023 01:30:06 -0700 (PDT)
+Received: from dw-tp ([49.207.220.159])
+        by smtp.gmail.com with ESMTPSA id b1-20020a17090a800100b002599ef80ab9sm953306pjn.3.2023.06.23.01.30.04
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 22 Jun 2023 23:29:24 -0700 (PDT)
-From:   Donald Douwsma <ddouwsma@redhat.com>
-To:     linux-xfs@vger.kernel.org
-Cc:     Donald Douwsma <ddouwsma@redhat.com>
-Subject: [PATCH] xfsrestore: suggest -x rather than assert for false roots
-Date:   Fri, 23 Jun 2023 16:29:18 +1000
-Message-Id: <20230623062918.636014-1-ddouwsma@redhat.com>
-X-Mailer: git-send-email 2.39.3
-MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+        Fri, 23 Jun 2023 01:30:05 -0700 (PDT)
+Date:   Fri, 23 Jun 2023 13:59:58 +0530
+Message-Id: <874jmy4m49.fsf@doe.com>
+From:   Ritesh Harjani (IBM) <ritesh.list@gmail.com>
+To:     Dave Chinner <david@fromorbit.com>,
+        Masahiko Sawada <sawada.mshk@gmail.com>
+Cc:     linux-xfs@vger.kernel.org
+Subject: Re: Question on slow fallocate
+In-Reply-To: <ZJTrrwirZqykiVxn@dread.disaster.area>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-If we're going to have a fix for false root problems its a good idea to
-let people know that there's a way to recover, error out with a useful
-message that mentions the `-x` option rather than just assert.
+Dave Chinner <david@fromorbit.com> writes:
 
-Before
+> On Thu, Jun 22, 2023 at 02:34:18PM +0900, Masahiko Sawada wrote:
+>> Hi all,
+>> 
+>> When testing PostgreSQL, I found a performance degradation. After some
+>> investigation, it ultimately reached the attached simple C program and
+>> turned out that the performance degradation happens on only the xfs
+>> filesystem (doesn't happen on neither ext3 nor ext4). In short, the
+>> program alternately does two things to extend a file (1) call
+>> posix_fallocate() to extend by 8192 bytes
+>
+> This is a well known anti-pattern - it always causes problems. Do
+> not do this.
+>
+>> and (2) call pwrite() to
+>> extend by 8192 bytes. If I do only either (1) or (2), the program is
+>> completed in 2 sec, but if I do (1) and (2) alternatively, it is
+>> completed in 90 sec.
+>
+> Well, yes. Using fallocate to extend the file has very different
+> constraints to using pwrite to extend the file.
+>
+>> $ gcc -o test test.c
+>> $ time ./test test.1 1
+>> total   200000
+>> fallocate       200000
+>> filewrite       0
+>
+> No data is written here, so this is just a series of 8kB allocations
+> and file size extension operations. There are no constraints here
+> because it is a pure metadata operation.
+>
+>> real    0m1.305s
+>> user    0m0.050s
+>> sys     0m1.255s
+>> 
+>> $ time ./test test.2 2
+>> total   200000
+>> fallocate       100000
+>> filewrite       100000
+>>
+>> real    1m29.222s
+>> user    0m0.139s
+>> sys     0m3.139s
+>
+> Now we have fallocate extending the file and doing unwritten extent
+> allocation, followed by writing into that unwritten extent which
+> then does unwritten extent conversion.
+>
+> This introduces data vs metadata update ordering constraints to the
+> workload.
+>
+> The problem here in that the "truncate up" operation that
+> fallocate is doing to move the file size. The "truncate up" is going
+> to move the on-disk file size to the end of the fallocated range via
+> a journal transaction, and so it will expose the range of the
+> previous write as containing valid data.
+>
+> However, the previous data write is still only in memory and not on
+> disk. The result of journalling the file size change is that if we
+> crash after the size change is made but the data is not on disk,
+> we end up with lost data - the file contains zeros (or NULLs) where
+> the in memory data previously existed.
+>
+> Go google for "NULL file data exposure" and you'll see this is a
+> problem we fixed in ~2006, caused by extending the file size on disk
+> without first having written all the in-memory data into the file.
 
-  xfsrestore: searching media for directory dump
-  xfsrestore: reading directories
-  xfsrestore: tree.c:757: tree_begindir: Assertion `ino != persp->p_rootino || hardh == persp->p_rooth' failed.
-  Aborted
+I guess here is the <patch> you are speaking of. So this prevents from
+exposing nulls within a file in case of a crash.
 
-After
+I guess the behavior is not the same with ext4. ext4 does not seem to be
+doing filemap_write_and_wait_range() if the new i_disksize is more than
+oldsize. So then I think ext4 must be ok if in case of a crash the
+file has nulls in between. That's why I think the observation of slow
+performance is not seen in ext4.
 
-  xfsrestore: ERROR: tree.c:791: tree_begindir: Assertion `ino != persp->p_rootino || hardh == persp->p_rooth` failed.
-  xfsrestore: ERROR: False root detected. Recovery may be possible using the `-x` option
-  Aborted
+Few queres-
+- If the user doesn't issue a flush and if the system crashes, then
+  anyways it is not expected that the file will have all the data right?
 
-Fixes: d7cba74 ("xfsrestore: fix rootdir due to xfsdump bulkstat misuse")
-Signed-off-by: Donald Douwsma <ddouwsma@redhat.com>
----
- restore/tree.c | 13 +++++++++++--
- 1 file changed, 11 insertions(+), 2 deletions(-)
+- Also is that "data/inode size update order" which you are mentioning in
+  this patch. Is this something that all filesystems should follow?
 
-diff --git a/restore/tree.c b/restore/tree.c
-index bfa07fe..0b65d0f 100644
---- a/restore/tree.c
-+++ b/restore/tree.c
-@@ -783,8 +783,17 @@ tree_begindir(filehdr_t *fhdrp, dah_t *dahp)
- 	/* lookup head of hardlink list
- 	 */
- 	hardh = link_hardh(ino, gen);
--	if (need_fixrootdir == BOOL_FALSE)
--		assert(ino != persp->p_rootino || hardh == persp->p_rooth);
-+	if (need_fixrootdir == BOOL_FALSE
-+		&& !(ino != persp->p_rootino || hardh == persp->p_rooth)) {
-+		mlog(MLOG_ERROR | MLOG_TREE, 
-+			"%s:%d: %s: Assertion "
-+			"`ino != persp->p_rootino || hardh == persp->p_rooth` failed.\n",
-+			__FILE__, __LINE__, __FUNCTION__);
-+		mlog(MLOG_ERROR | MLOG_TREE, _(
-+			"False root detected. "
-+			"Recovery may be possible using the `-x` option\n"));
-+		return NH_NULL;
-+	};
- 
- 	/* already present
- 	 */
--- 
-2.39.3
+- I was wondering what exactly it breaks which the applications depend
+  upon? Because not all filesystems tend to follow this practice right?
+
+
+Thanks for the detailed explaination! I got interested in this thread
+after looking at your explaination and since the thread mention this
+happens with postgres.
+
+-ritesh
+
+<patch>
+[XFS] Fix inode size update before data write in xfs_setattr
+
+When changing the file size by a truncate() call, we log the change in the
+inode size. However, we do not flush any outstanding data that might not
+have been written to disk, thereby violating the data/inode size update
+order. This can leave files full of NULLs on crash.
+
+Hence if we are truncating the file, flush any unwritten data that may lie
+between the curret on disk inode size and the new inode size that is being
+logged to ensure that ordering is preserved.
+
+
 
