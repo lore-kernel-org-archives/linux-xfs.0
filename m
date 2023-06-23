@@ -2,256 +2,125 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A02C0EB64D7
-	for <linux-xfs@archiver.kernel.org>; Fri, 23 Jun 2023 13:34:02 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9B7B6EB64D7
+	for <linux-xfs@archiver.kernel.org>; Fri, 23 Jun 2023 14:05:45 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231236AbjFWNeB (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 23 Jun 2023 09:34:01 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55710 "EHLO
+        id S229712AbjFWOFo (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 23 Jun 2023 10:05:44 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41790 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229673AbjFWNeA (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 23 Jun 2023 09:34:00 -0400
-Received: from mail-pl1-x62e.google.com (mail-pl1-x62e.google.com [IPv6:2607:f8b0:4864:20::62e])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 776FD2694
-        for <linux-xfs@vger.kernel.org>; Fri, 23 Jun 2023 06:33:34 -0700 (PDT)
-Received: by mail-pl1-x62e.google.com with SMTP id d9443c01a7336-1b52418c25bso936965ad.0
-        for <linux-xfs@vger.kernel.org>; Fri, 23 Jun 2023 06:33:34 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=bytedance.com; s=google; t=1687527214; x=1690119214;
-        h=content-transfer-encoding:in-reply-to:from:references:cc:to
-         :content-language:subject:user-agent:mime-version:date:message-id
-         :from:to:cc:subject:date:message-id:reply-to;
-        bh=ACoox6lHywQa9wO0MGPPVAOCZzDjfudqnGd2G0lw0os=;
-        b=fa1yyl1XuChlZVeuHnAOkkfkq2hZyLQlU7Qx7FIzebWZlha3QE3pftRSrj+DJxI7Rv
-         UhXvlkHo3Vcdolq+ME68HhnTz0k5XIGoqWorIAsqCzinXOgMm/YBV2p6rPjxxhB9xA+p
-         CKbtixmq104K/XaeP7c/FRQEzfBhOolOJ13XEqLz2Vl/3W9UCdfjI5o3p38fxwPZQ7jM
-         f2Nv1spQskpxwNqmrAc0KV9Etlyt/W0NlU64HVCq3FTgTv7qi6xblmtVtEFrypVRLxTd
-         swjUrDnQOk53j5e/5rffnzu2n8zAvNVx/4KpVQ/7vpT1VvkShyKZT45f4U4Mq3kIEUCc
-         sA+A==
+        with ESMTP id S230516AbjFWOFk (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 23 Jun 2023 10:05:40 -0400
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 348B126A1
+        for <linux-xfs@vger.kernel.org>; Fri, 23 Jun 2023 07:04:50 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1687529089;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=ZP0IWYqeFzBoqE7uL5sxbIvqLQiDloXBF4Ry3osbSRw=;
+        b=S1zXODWieCFSKmWGifW253EjSjMQEGcPhybHHOmB68LV3KLXKqQ6F6sDAful5KAEg0CxSp
+        rVZyP9UlIJ9Hyel6RFpPnTXORAkbUjPuhcQdBmJ/17alGQNaoWwhfgwKOAWN6kSiXFwTZz
+        uB8V2yuam+DMJ+HsfGjAKotp5CcJQKM=
+Received: from mail-qt1-f197.google.com (mail-qt1-f197.google.com
+ [209.85.160.197]) by relay.mimecast.com with ESMTP with STARTTLS
+ (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
+ us-mta-9-D-VSqi5qM1uh8xO8v2Xukg-1; Fri, 23 Jun 2023 10:04:47 -0400
+X-MC-Unique: D-VSqi5qM1uh8xO8v2Xukg-1
+Received: by mail-qt1-f197.google.com with SMTP id d75a77b69052e-3ff2a12961dso9968561cf.0
+        for <linux-xfs@vger.kernel.org>; Fri, 23 Jun 2023 07:04:46 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20221208; t=1687527214; x=1690119214;
-        h=content-transfer-encoding:in-reply-to:from:references:cc:to
+        d=1e100.net; s=20221208; t=1687529085; x=1690121085;
+        h=content-transfer-encoding:in-reply-to:from:references:to
          :content-language:subject:user-agent:mime-version:date:message-id
          :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=ACoox6lHywQa9wO0MGPPVAOCZzDjfudqnGd2G0lw0os=;
-        b=U9dTm1MyH8yZppToy3ra2ECIIhdfOcIR13cVLOORkoAnCsYKDOZQy8XuddE/GdNbJK
-         ZwPJ8pQOqt3bfU7ScHWyXNp9h4D+JfNg1KoPXxW0N2ppbBK2AL8STkOwaxf9819LmIKI
-         Z/NhQfj/ONgCwG+0VN7dCjSvzRNneaGm8U5qR2HI2S1HLt29m7OocHkSpupUbEXBz/f6
-         /Y+IGJSDhnFb1M2vjuyPjkqKsuEx4r0dzlcEDfVcuOul/zzNfZa0TZhwMAlF3GcTx6m3
-         8TA13Z2GDIsWV66OkufFzQouxOKnkPLHkIDhf2jYD+1wmWvlwnu6Bwl2S4qc3qx+jalD
-         ZnTw==
-X-Gm-Message-State: AC+VfDxpXjoR91c/sPokzcjdvewse2kI2FfS8njTgJ5KZSwQq9huacyE
-        loP+LGZuoEHOky/M5GACf7j5QQ==
-X-Google-Smtp-Source: ACHHUZ7fC8cfi9SbpxWbw1P19vY2WFeiY5bxjWE/lWxj83YOdeMLdFfAi7QBoo42W5+SZOFqK06Ryw==
-X-Received: by 2002:a17:902:c945:b0:1ae:3ff8:7fa7 with SMTP id i5-20020a170902c94500b001ae3ff87fa7mr26069073pla.4.1687527213878;
-        Fri, 23 Jun 2023 06:33:33 -0700 (PDT)
-Received: from [10.4.168.167] ([139.177.225.254])
-        by smtp.gmail.com with ESMTPSA id kg14-20020a170903060e00b001b6a27dff99sm4341406plb.159.2023.06.23.06.33.26
+        bh=ZP0IWYqeFzBoqE7uL5sxbIvqLQiDloXBF4Ry3osbSRw=;
+        b=I+GSB4B5tF5OY7WEOJar4cFDTYOGs83UnKyeMJhHaFEbPrOgUNNotsrIp8eLIe+Ph3
+         V0zj6GbThnX77lBtKxdYvnKk16kvl/5lOwXLMZmE+dMFCjlVeTK/c3q76xdCvV93TbA7
+         R3QXwrYfiIw7RNzBbeMa3UIybd/1uBJReq5yMNph85n7oxb+rNJ6+7W5xFbk8J9/VYPG
+         AVQsPk65ZFm8fgcLQSzEBZ4aYFo+XHMYvriMVYLnC3VOp2afcVaMwkYCRpug67rJkEyf
+         ta3i9nRJhRxzGLiyM14eEX6lRpbD3xKJ1mHp2pbZw29/svq3i6Y2Q9lNpJ+FI+kpGWjq
+         xzxg==
+X-Gm-Message-State: AC+VfDwjnByShGAYq/Z4pqnJPgRnAF6xC8EYYEj/WT63oGNRU2yD+XUS
+        LlG0iffadw8muQ5CCIdUg1PKT7cH9mM8/70XeV0OebCpSkrTJr0sprxYSL4YwYqcEbT39inFYBJ
+        /gyZrDmBRQ3jvTvYunWdedWa8GriF
+X-Received: by 2002:ac8:5753:0:b0:3f6:9a18:e67c with SMTP id 19-20020ac85753000000b003f69a18e67cmr26253071qtx.66.1687529085190;
+        Fri, 23 Jun 2023 07:04:45 -0700 (PDT)
+X-Google-Smtp-Source: ACHHUZ48mn2/k5H++EFxCq2pvCOlJFlun5V6uoqoRnwchpXIADsUrWp9MrOcOQ5V4zS5Af3LHi50tA==
+X-Received: by 2002:ac8:5753:0:b0:3f6:9a18:e67c with SMTP id 19-20020ac85753000000b003f69a18e67cmr26253041qtx.66.1687529084828;
+        Fri, 23 Jun 2023 07:04:44 -0700 (PDT)
+Received: from [192.168.1.104] (gw19-pha-stl-mmo-2.avonet.cz. [131.117.213.218])
+        by smtp.gmail.com with ESMTPSA id r26-20020ac867da000000b003ff654694b6sm2492464qtp.46.2023.06.23.07.04.43
         (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Fri, 23 Jun 2023 06:33:33 -0700 (PDT)
-Message-ID: <43a07dbe-5049-8596-da58-51e0a0d6243c@bytedance.com>
-Date:   Fri, 23 Jun 2023 21:33:24 +0800
+        Fri, 23 Jun 2023 07:04:44 -0700 (PDT)
+Message-ID: <568b2a82-7ca3-af09-f74b-1ad9c0d85946@redhat.com>
+Date:   Fri, 23 Jun 2023 16:04:41 +0200
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:102.0)
- Gecko/20100101 Thunderbird/102.12.0
-Subject: Re: [PATCH 05/29] drm/panfrost: dynamically allocate the drm-panfrost
- shrinker
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
+ Thunderbird/102.12.0
+Subject: Re: [PATCH] xfsrestore: suggest -x rather than assert for false roots
 Content-Language: en-US
-To:     Steven Price <steven.price@arm.com>
-Cc:     linux-kernel@vger.kernel.org, linux-mm@kvack.org,
-        intel-gfx@lists.freedesktop.org, dri-devel@lists.freedesktop.org,
-        linux-arm-msm@vger.kernel.org, dm-devel@redhat.com,
-        linux-raid@vger.kernel.org, linux-bcache@vger.kernel.org,
-        virtualization@lists.linux-foundation.org,
-        linux-fsdevel@vger.kernel.org, linux-ext4@vger.kernel.org,
-        linux-nfs@vger.kernel.org, linux-xfs@vger.kernel.org,
-        linux-btrfs@vger.kernel.org, akpm@linux-foundation.org,
-        david@fromorbit.com, tkhai@ya.ru, vbabka@suse.cz,
-        roman.gushchin@linux.dev, djwong@kernel.org, brauner@kernel.org,
-        paulmck@kernel.org, tytso@mit.edu
-References: <20230622085335.77010-1-zhengqi.arch@bytedance.com>
- <20230622085335.77010-6-zhengqi.arch@bytedance.com>
-From:   Qi Zheng <zhengqi.arch@bytedance.com>
-In-Reply-To: <20230622085335.77010-6-zhengqi.arch@bytedance.com>
+To:     Donald Douwsma <ddouwsma@redhat.com>, linux-xfs@vger.kernel.org
+References: <20230623062918.636014-1-ddouwsma@redhat.com>
+From:   Pavel Reichl <preichl@redhat.com>
+In-Reply-To: <20230623062918.636014-1-ddouwsma@redhat.com>
 Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Hi Steven,
 
-The email you replied to was the failed version (due to the error
-below), so I copied your reply and replied to you on this successful
-version.
-
-(4.7.1 Error: too many recipients from 49.7.199.173)
-
-On 2023/6/23 18:01, Steven Price wrote:
- > On 22/06/2023 09:39, Qi Zheng wrote:
- >> From: Qi Zheng <zhengqi.arch@bytedance.com>
- >>
- >> In preparation for implementing lockless slab shrink,
- >> we need to dynamically allocate the drm-panfrost shrinker,
- >> so that it can be freed asynchronously using kfree_rcu().
- >> Then it doesn't need to wait for RCU read-side critical
- >> section when releasing the struct panfrost_device.
- >>
- >> Signed-off-by: Qi Zheng <zhengqi.arch@bytedance.com>
- >> ---
- >>   drivers/gpu/drm/panfrost/panfrost_device.h    |  2 +-
- >>   .../gpu/drm/panfrost/panfrost_gem_shrinker.c  | 24 ++++++++++---------
- >>   2 files changed, 14 insertions(+), 12 deletions(-)
- >>
- >> diff --git a/drivers/gpu/drm/panfrost/panfrost_device.h 
-b/drivers/gpu/drm/panfrost/panfrost_device.h
- >> index b0126b9fbadc..e667e5689353 100644
- >> --- a/drivers/gpu/drm/panfrost/panfrost_device.h
- >> +++ b/drivers/gpu/drm/panfrost/panfrost_device.h
- >> @@ -118,7 +118,7 @@ struct panfrost_device {
- >>
- >>   	struct mutex shrinker_lock;
- >>   	struct list_head shrinker_list;
- >> -	struct shrinker shrinker;
- >> +	struct shrinker *shrinker;
- >>
- >>   	struct panfrost_devfreq pfdevfreq;
- >>   };
- >> diff --git a/drivers/gpu/drm/panfrost/panfrost_gem_shrinker.c 
-b/drivers/gpu/drm/panfrost/panfrost_gem_shrinker.c
- >> index bf0170782f25..2a5513eb9e1f 100644
- >> --- a/drivers/gpu/drm/panfrost/panfrost_gem_shrinker.c
- >> +++ b/drivers/gpu/drm/panfrost/panfrost_gem_shrinker.c
- >> @@ -18,8 +18,7 @@
- >>   static unsigned long
- >>   panfrost_gem_shrinker_count(struct shrinker *shrinker, struct 
-shrink_control *sc)
- >>   {
- >> -	struct panfrost_device *pfdev =
- >> -		container_of(shrinker, struct panfrost_device, shrinker);
- >> +	struct panfrost_device *pfdev = shrinker->private_data;
- >>   	struct drm_gem_shmem_object *shmem;
- >>   	unsigned long count = 0;
- >>
- >> @@ -65,8 +64,7 @@ static bool panfrost_gem_purge(struct 
-drm_gem_object *obj)
- >>   static unsigned long
- >>   panfrost_gem_shrinker_scan(struct shrinker *shrinker, struct 
-shrink_control *sc)
- >>   {
- >> -	struct panfrost_device *pfdev =
- >> -		container_of(shrinker, struct panfrost_device, shrinker);
- >> +	struct panfrost_device *pfdev = shrinker->private_data;
- >>   	struct drm_gem_shmem_object *shmem, *tmp;
- >>   	unsigned long freed = 0;
- >>
- >> @@ -100,10 +98,15 @@ panfrost_gem_shrinker_scan(struct shrinker 
-*shrinker, struct shrink_control *sc)
- >>   void panfrost_gem_shrinker_init(struct drm_device *dev)
- >>   {
- >>   	struct panfrost_device *pfdev = dev->dev_private;
- >> -	pfdev->shrinker.count_objects = panfrost_gem_shrinker_count;
- >> -	pfdev->shrinker.scan_objects = panfrost_gem_shrinker_scan;
- >> -	pfdev->shrinker.seeks = DEFAULT_SEEKS;
- >> -	WARN_ON(register_shrinker(&pfdev->shrinker, "drm-panfrost"));
- >> +
- >> +	pfdev->shrinker = shrinker_alloc_and_init(panfrost_gem_shrinker_count,
- >> +						  panfrost_gem_shrinker_scan, 0,
- >> +						  DEFAULT_SEEKS, 0, pfdev);
- >> +	if (pfdev->shrinker &&
- >> +	    register_shrinker(pfdev->shrinker, "drm-panfrost")) {
- >> +		shrinker_free(pfdev->shrinker);
- >> +		WARN_ON(1);
- >> +	}
- >
- > So we didn't have good error handling here before, but this is
- > significantly worse. Previously if register_shrinker() failed then the
- > driver could safely continue without a shrinker - it would waste memory
- > but still function.
- >
- > However we now have two failure conditions:
- >   * shrinker_alloc_init() returns NULL. No warning and NULL deferences
- >     will happen later.
- >
- >   * register_shrinker() fails, shrinker_free() will free pdev->shrinker
- >     we get a warning, but followed by a use-after-free later.
- >
- > I think we need to modify panfrost_gem_shrinker_init() to be able to
- > return an error, so a change something like the below (untested) before
- > your change.
-
-Indeed. I will fix it in the v2.
-
-Thanks,
-Qi
-
- >
- > Steve
- >
- > ----8<---
- > diff --git a/drivers/gpu/drm/panfrost/panfrost_drv.c
- > b/drivers/gpu/drm/panfrost/panfrost_drv.c
- > index bbada731bbbd..f705bbdea360 100644
- > --- a/drivers/gpu/drm/panfrost/panfrost_drv.c
- > +++ b/drivers/gpu/drm/panfrost/panfrost_drv.c
- > @@ -598,10 +598,14 @@ static int panfrost_probe(struct platform_device
- > *pdev)
- >   	if (err < 0)
- >   		goto err_out1;
- >
- > -	panfrost_gem_shrinker_init(ddev);
- > +	err = panfrost_gem_shrinker_init(ddev);
- > +	if (err)
- > +		goto err_out2;
- >
- >   	return 0;
- >
- > +err_out2:
- > +	drm_dev_unregister(ddev);
- >   err_out1:
- >   	pm_runtime_disable(pfdev->dev);
- >   	panfrost_device_fini(pfdev);
- > diff --git a/drivers/gpu/drm/panfrost/panfrost_gem.h
- > b/drivers/gpu/drm/panfrost/panfrost_gem.h
- > index ad2877eeeccd..863d2ec8d4f0 100644
- > --- a/drivers/gpu/drm/panfrost/panfrost_gem.h
- > +++ b/drivers/gpu/drm/panfrost/panfrost_gem.h
- > @@ -81,7 +81,7 @@ panfrost_gem_mapping_get(struct panfrost_gem_object 
-*bo,
- >   void panfrost_gem_mapping_put(struct panfrost_gem_mapping *mapping);
- >   void panfrost_gem_teardown_mappings_locked(struct 
-panfrost_gem_object *bo);
- >
- > -void panfrost_gem_shrinker_init(struct drm_device *dev);
- > +int panfrost_gem_shrinker_init(struct drm_device *dev);
- >   void panfrost_gem_shrinker_cleanup(struct drm_device *dev);
- >
- >   #endif /* __PANFROST_GEM_H__ */
- > diff --git a/drivers/gpu/drm/panfrost/panfrost_gem_shrinker.c
- > b/drivers/gpu/drm/panfrost/panfrost_gem_shrinker.c
- > index bf0170782f25..90265b37636f 100644
- > --- a/drivers/gpu/drm/panfrost/panfrost_gem_shrinker.c
- > +++ b/drivers/gpu/drm/panfrost/panfrost_gem_shrinker.c
- > @@ -97,13 +97,17 @@ panfrost_gem_shrinker_scan(struct shrinker
- > *shrinker, struct shrink_control *sc)
- >    *
- >    * This function registers and sets up the panfrost shrinker.
- >    */
- > -void panfrost_gem_shrinker_init(struct drm_device *dev)
- > +int panfrost_gem_shrinker_init(struct drm_device *dev)
- >   {
- >   	struct panfrost_device *pfdev = dev->dev_private;
- > +	int ret;
- > +
- >   	pfdev->shrinker.count_objects = panfrost_gem_shrinker_count;
- >   	pfdev->shrinker.scan_objects = panfrost_gem_shrinker_scan;
- >   	pfdev->shrinker.seeks = DEFAULT_SEEKS;
- > -	WARN_ON(register_shrinker(&pfdev->shrinker, "drm-panfrost"));
- > +	ret = register_shrinker(&pfdev->shrinker, "drm-panfrost");
- > +
- > +	return ret;
- >   }
- >
- >   /**
- >
+On 6/23/23 08:29, Donald Douwsma wrote:
+> If we're going to have a fix for false root problems its a good idea to
+> let people know that there's a way to recover, error out with a useful
+> message that mentions the `-x` option rather than just assert.
+>
+> Before
+>
+>    xfsrestore: searching media for directory dump
+>    xfsrestore: reading directories
+>    xfsrestore: tree.c:757: tree_begindir: Assertion `ino != persp->p_rootino || hardh == persp->p_rooth' failed.
+>    Aborted
+>
+> After
+>
+>    xfsrestore: ERROR: tree.c:791: tree_begindir: Assertion `ino != persp->p_rootino || hardh == persp->p_rooth` failed.
+>    xfsrestore: ERROR: False root detected. Recovery may be possible using the `-x` option
+>    Aborted
+>
+> Fixes: d7cba74 ("xfsrestore: fix rootdir due to xfsdump bulkstat misuse")
+> Signed-off-by: Donald Douwsma <ddouwsma@redhat.com>
+> ---
+>   restore/tree.c | 13 +++++++++++--
+>   1 file changed, 11 insertions(+), 2 deletions(-)
+>
+> diff --git a/restore/tree.c b/restore/tree.c
+> index bfa07fe..0b65d0f 100644
+> --- a/restore/tree.c
+> +++ b/restore/tree.c
+> @@ -783,8 +783,17 @@ tree_begindir(filehdr_t *fhdrp, dah_t *dahp)
+>   	/* lookup head of hardlink list
+>   	 */
+>   	hardh = link_hardh(ino, gen);
+> -	if (need_fixrootdir == BOOL_FALSE)
+> -		assert(ino != persp->p_rootino || hardh == persp->p_rooth);
+> +	if (need_fixrootdir == BOOL_FALSE
+> +		&& !(ino != persp->p_rootino || hardh == persp->p_rooth)) {
+> +		mlog(MLOG_ERROR | MLOG_TREE,
+Trailing white space
+> +			"%s:%d: %s: Assertion "
+> +			"`ino != persp->p_rootino || hardh == persp->p_rooth` failed.\n",
+> +			__FILE__, __LINE__, __FUNCTION__);
+> +		mlog(MLOG_ERROR | MLOG_TREE, _(
+> +			"False root detected. "
+> +			"Recovery may be possible using the `-x` option\n"));
+> +		return NH_NULL;
+> +	};
+Extra semicolon
+>   	/* already present
+>   	 */
+Otherwise looks good to me, applies and builds.
 
