@@ -2,58 +2,58 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 18865EB64DA
-	for <linux-xfs@archiver.kernel.org>; Sat, 24 Jun 2023 16:08:39 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 36CE4EB64DC
+	for <linux-xfs@archiver.kernel.org>; Sat, 24 Jun 2023 18:25:54 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230507AbjFXQIh (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Sat, 24 Jun 2023 12:08:37 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57496 "EHLO
+        id S229824AbjFXSZv (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Sat, 24 Jun 2023 14:25:51 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45242 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229485AbjFXQIh (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sat, 24 Jun 2023 12:08:37 -0400
-Received: from mail-vs1-xe36.google.com (mail-vs1-xe36.google.com [IPv6:2607:f8b0:4864:20::e36])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id DC8CA1BC1
-        for <linux-xfs@vger.kernel.org>; Sat, 24 Jun 2023 09:08:35 -0700 (PDT)
-Received: by mail-vs1-xe36.google.com with SMTP id ada2fe7eead31-44350ef5831so51223137.2
-        for <linux-xfs@vger.kernel.org>; Sat, 24 Jun 2023 09:08:35 -0700 (PDT)
+        with ESMTP id S229623AbjFXSZt (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sat, 24 Jun 2023 14:25:49 -0400
+Received: from mail-qv1-xf36.google.com (mail-qv1-xf36.google.com [IPv6:2607:f8b0:4864:20::f36])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5D3F51BC1
+        for <linux-xfs@vger.kernel.org>; Sat, 24 Jun 2023 11:25:44 -0700 (PDT)
+Received: by mail-qv1-xf36.google.com with SMTP id 6a1803df08f44-62ffe4cabc0so14033986d6.1
+        for <linux-xfs@vger.kernel.org>; Sat, 24 Jun 2023 11:25:44 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20221208; t=1687622914; x=1690214914;
+        d=gmail.com; s=20221208; t=1687631143; x=1690223143;
         h=content-transfer-encoding:cc:to:subject:message-id:date:from
          :in-reply-to:references:mime-version:from:to:cc:subject:date
          :message-id:reply-to;
-        bh=3RMn8DD49Gz27bWXzIiBZ70P/ipOea1Akgeo0yKNDSA=;
-        b=nup5tzSymaHpZxuuclS9RK3zvmjxO04eqYZVIGVxi4pyKTuWWWxbDtjgFO5ClrIbco
-         W+Qz7wBo+x/6IAbedIL/nzxTQlWYvXT1c+An8WMYKrSwSR+Wu/IYVQxghKTf7BLMfoBD
-         pWvNGuMSURM4kqTGDFsYr74UClX+VAtCv3+7rLBUj+Q8C6y6pCt9ZEQbxqM0WhtyVYkD
-         kcu8eYGwTgAFHiMLQOzDjqqnnijUCu1op/70yKZw50YAJKv2EuO20r+xkubiUcvZM3l3
-         1PPz2DRjFi4D4aZ1DEholsElOx9OLTBzwDYk/rbTHH0mra1RYeECxDXW5pcENV3I/Wu7
-         fYmw==
+        bh=nAqmTGl3Ar509uWL5B5CVIqe/ep4FsCEtSXfox80pks=;
+        b=MehdBcZzo+oJ4VFph4S12dbzN6HO0+hty4E/cQszBZWhR7o1e3fnajIX6MbEZf6tYy
+         5xW5voWXJiqu+ubAYgCzCQQmIy3V54W2SrQ19stz3zSqfQE9sn5cRGd7yEpms2LKJD8+
+         jIxQpNr9AxeKt29KV2AyFwW94hNXdmV5XlAq0JP9KruORckL0FGACEl5gqI/2JvcYbDx
+         xAmo0+HeY5jcsqt9T+0ninL/+gCEH50LXQV9ycVtFiBma6zi1fYXmHAkylxBqETKJWkx
+         iaXre6lYFkBgXoSH6u4OLG3rSUMoL8gFSGhzFGdR/k3/GleqhywIrISeWVfIXJ764vkE
+         jteg==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20221208; t=1687622914; x=1690214914;
+        d=1e100.net; s=20221208; t=1687631143; x=1690223143;
         h=content-transfer-encoding:cc:to:subject:message-id:date:from
          :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
          :subject:date:message-id:reply-to;
-        bh=3RMn8DD49Gz27bWXzIiBZ70P/ipOea1Akgeo0yKNDSA=;
-        b=FPbN/xqraOFsmv/mAK3dEXEVTeHRaJfB+EgXhwIOVYW5sn98Rh9e/KxwH/0db/YC8U
-         5FmjcWrYGRpc1p9/Rs+mPerHt0p/W72obIEoNNRXv36uLERHpTmXjyQmKWTOpb3Rp3PP
-         sTiSMRF6R57LE5YwJFDSF/7MPGBuQ00Q9zzs+khvJRasW78I+B2axFCt2431XQVwO8jq
-         iRzkwshfURDb+TgYrMkHihsl8OCWAbRJaBHteh/lcsU63oDfegMz3dUN1nc+XQUDh2nA
-         eGYoERL6CHShN+Otbw645QsuKxfXdFii0BPluAoUloBjNQ9qD4EoLQmML03mQgOpAzoQ
-         v4tg==
-X-Gm-Message-State: AC+VfDzapd9TxHKEuH/ptTAWNKKKZItonB0KRPquhdYaUd0Tam5RoOg6
-        TfUEGpSDu+sbrJkPAQY4uWK2f1VR+vH3GEfr+hxHd1Ad/6I=
-X-Google-Smtp-Source: ACHHUZ74mid7wr3RHcs6KPRd0Z+9QwCytU5qGi16lNQ+P3VubKJLdHyy1ivzeamF8ynvyvKQWrxsL3Op2WpfnEeg4K0=
-X-Received: by 2002:a67:e98e:0:b0:43b:1f8a:d581 with SMTP id
- b14-20020a67e98e000000b0043b1f8ad581mr13181248vso.31.1687622914466; Sat, 24
- Jun 2023 09:08:34 -0700 (PDT)
+        bh=nAqmTGl3Ar509uWL5B5CVIqe/ep4FsCEtSXfox80pks=;
+        b=MYOj6hEMRqBi9usntxEkc+KQN37VXuyWUGWBpRRKwA5gpse1yxV48ukycacNxTOsOo
+         pHH9WJ19vt/zRPR7YJF7Zy9vCN+HLG7B4OKVHK93BiKw2o4qm0GRFCqLL6Ozf9df7lEd
+         kA7gx1cIyPdS+hoOcL4dufsYvj8HFzpO5JSzUrExIW8NysUGTeMPV64JnHj50ygQFc7o
+         +Nr3SuNfrzgIREL+6u5b/NxI+wmI72OYQPwkAr+8ppgJPctlX5MzYiWRSmv0eMfgiN2F
+         KL38jZmrnUS2oOeYdAunSz9dqNrn3QXbbDe4dR2D3UpEnK7KFXpVGXnKPu6KWCOJypb9
+         AL8Q==
+X-Gm-Message-State: AC+VfDwJlu1E71x53fSGFfpK6eYg2XTG0espPanpSAMQsyQdTK+GdJVh
+        92foAoYGdIV5BTxLByiBZQwV4GpTK8XDl5nfG7onsF9z
+X-Google-Smtp-Source: ACHHUZ5QECnWOxJxazOXMlSXZjPrLC+FB3qeItOmTEc9cRSidaBMSfAIlZEI+RzaFr6RnEva27vvq/OJEFFaOZPEc/Q=
+X-Received: by 2002:a05:6214:4008:b0:635:7744:c08e with SMTP id
+ kd8-20020a056214400800b006357744c08emr1559495qvb.58.1687631143384; Sat, 24
+ Jun 2023 11:25:43 -0700 (PDT)
 MIME-Version: 1.0
 References: <CAEBim7C575WhuWGO7_VJ62+6s2g4XFFgoF6=SrGX30nBYcD12Q@mail.gmail.com>
  <3def220e-bc7b-ceb2-f875-cffe3af8471b@sandeen.net> <CAEBim7DSUKg6TGZ_DKZ1rhbEHpfLN0aBDkc57gkgUgtnnc7xNQ@mail.gmail.com>
  <de3023eb-4481-ae72-183b-2d91f3c25212@sandeen.net>
 In-Reply-To: <de3023eb-4481-ae72-183b-2d91f3c25212@sandeen.net>
 From:   Fernando CMK <ferna.cmk@gmail.com>
-Date:   Sat, 24 Jun 2023 13:08:23 -0300
-Message-ID: <CAEBim7AguwTk4Rhin-btHM2iDtUQf4Vq5uRM_pmqGWt4OchE6Q@mail.gmail.com>
+Date:   Sat, 24 Jun 2023 15:25:32 -0300
+Message-ID: <CAEBim7BZsCYxjucpN5R8HpP+BpFezSzZ1QiA1COqU3-MZ18eXQ@mail.gmail.com>
 Subject: Re: xfs_rapair fails with err 117. Can I fix the fs or recover
  individual files somehow?
 To:     Eric Sandeen <sandeen@sandeen.net>
@@ -63,48 +63,6 @@ Content-Transfer-Encoding: quoted-printable
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
-
-Hello Eric
-
-sent you the dd output you requested on a separate email. Here's the
-xfs_info output of image of the damaged fs, and also another xfs_info
-on the same md raid device where I already did a mkfs.xfs again, so it
-should be a similar FS on top of the same LV where the damaged FS used
-to live.
-
-New fs  on same LV on the same RAID5 MD array:
-meta-data=3D/dev/mapper/raid5--8tb--1-usbraid5--2
-isize=3D512    agcount=3D33, agsize=3D10649472 blks
-        =3D                       sectsz=3D4096  attr=3D2, projid32bit=3D1
-        =3D                       crc=3D1        finobt=3D1, sparse=3D1, rm=
-apbt=3D0
-        =3D                       reflink=3D0    bigtime=3D0 inobtcount=3D0
-data     =3D                       bsize=3D4096   blocks=3D340787200, imaxp=
-ct=3D5
-        =3D                       sunit=3D128    swidth=3D256 blks
-naming   =3Dversion 2              bsize=3D4096   ascii-ci=3D0, ftype=3D1
-log      =3Dinternal log           bsize=3D4096   blocks=3D166400, version=
-=3D2
-        =3D                       sectsz=3D4096  sunit=3D1 blks, lazy-count=
-=3D1
-realtime =3Dnone                   extsz=3D4096   blocks=3D0, rtextents=3D0
-
-
-meta-data=3Ddisk-dump-usbraid5-2   isize=3D512    agcount=3D42, agsize=3D81=
-92000 blks
-        =3D                       sectsz=3D4096  attr=3D2, projid32bit=3D1
-        =3D                       crc=3D1        finobt=3D1, sparse=3D0, rm=
-apbt=3D0
-        =3D                       reflink=3D0    bigtime=3D0 inobtcount=3D0
-data     =3D                       bsize=3D4096   blocks=3D340787200, imaxp=
-ct=3D25
-        =3D                       sunit=3D128    swidth=3D4294897408 blks
-naming   =3Dversion 2              bsize=3D4096   ascii-ci=3D0, ftype=3D1
-log      =3Dinternal log           bsize=3D4096   blocks=3D128000, version=
-=3D2
-        =3D                       sectsz=3D4096  sunit=3D1 blks, lazy-count=
-=3D1
-realtime =3Dnone                   extsz=3D4096   blocks=3D0, rtextents=3D0
 
 On Sat, Jun 24, 2023 at 12:26=E2=80=AFAM Eric Sandeen <sandeen@sandeen.net>=
  wrote:
@@ -140,6 +98,10 @@ et> wrote:
 >
 > It seems that the only problem w/ the filesystem detected by repair is a
 > ridiculously large stripe width, and that's found on every superblock.
+
+If that's the issue, is there a way to set the correct stripe width?
+Also... the md array involved has 3 disks, if that's of any help.
+
 >
 > dmesg (expectedly) finds the same error when mounting.
 >
