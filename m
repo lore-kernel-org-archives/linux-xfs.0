@@ -2,98 +2,161 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3A45DEB64DA
-	for <linux-xfs@archiver.kernel.org>; Sat, 24 Jun 2023 03:27:04 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3EA1BEB64DD
+	for <linux-xfs@archiver.kernel.org>; Sat, 24 Jun 2023 11:09:02 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229451AbjFXD1A (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 23 Jun 2023 23:27:00 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45500 "EHLO
+        id S233026AbjFXLJA (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Sat, 24 Jun 2023 07:09:00 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41284 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229964AbjFXD07 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 23 Jun 2023 23:26:59 -0400
-Received: from sandeen.net (sandeen.net [63.231.237.45])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 032699D
-        for <linux-xfs@vger.kernel.org>; Fri, 23 Jun 2023 20:26:57 -0700 (PDT)
-Received: from [10.0.0.71] (liberator.sandeen.net [10.0.0.71])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
-        (No client certificate requested)
-        by sandeen.net (Postfix) with ESMTPSA id 2E28C55244F;
-        Fri, 23 Jun 2023 22:26:57 -0500 (CDT)
-DKIM-Filter: OpenDKIM Filter v2.11.0 sandeen.net 2E28C55244F
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=sandeen.net;
-        s=default; t=1687577217;
-        bh=rJ+f0OScVut9AYPACdZ5k+jeLgpPoQ/8JW6bRhnREzU=;
-        h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
-        b=Ewg+H9sBjZJfSp7Jw81CdXrSalqsJrX7woPsXZCXJfalrmscIFqYF/Th/CPNh29s4
-         MNp6gS7Qt6DF2sshEFZHrQ5jCA1/vZB2IQncgsNhMFVIDV+zfQ4oNRo3TbvlD1IDfK
-         zj6JDA0CmdTpKJJBPfIiMnkuGxbVttYUyY20YKaMPJ+XmrBc/0HkYGkDiFLnGTCf0G
-         cOcSkmWW0jXYn2GrVVbrYMavGSUmwiyH7uoXOaN0Wa7FecfBu8aroDz02wz7wDGYfA
-         OYIYBr/Annk7a8HNRnHBCbckw2DDeQzc4MZ5rRJ3jeowGTEWpCT6qz/i2v20YgR2Ps
-         YF4JTZw/CkglA==
-Message-ID: <de3023eb-4481-ae72-183b-2d91f3c25212@sandeen.net>
-Date:   Fri, 23 Jun 2023 22:26:56 -0500
+        with ESMTP id S232919AbjFXLI4 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sat, 24 Jun 2023 07:08:56 -0400
+Received: from mail-pl1-x62b.google.com (mail-pl1-x62b.google.com [IPv6:2607:f8b0:4864:20::62b])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 85F262130
+        for <linux-xfs@vger.kernel.org>; Sat, 24 Jun 2023 04:08:29 -0700 (PDT)
+Received: by mail-pl1-x62b.google.com with SMTP id d9443c01a7336-1b693afe799so2529965ad.1
+        for <linux-xfs@vger.kernel.org>; Sat, 24 Jun 2023 04:08:29 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=bytedance.com; s=google; t=1687604909; x=1690196909;
+        h=content-transfer-encoding:in-reply-to:from:content-language
+         :references:cc:to:subject:user-agent:mime-version:date:message-id
+         :from:to:cc:subject:date:message-id:reply-to;
+        bh=7tnz7s8ew6fhhs0dR9M9QnK0rlCy7+XAhEAWksz3vrg=;
+        b=UmCBKPF4sv1MHFXsiXJ20hfDGRh4FqZyWNYAXvwJ4aTGGxIidAh9WvDmw+TkimJm1h
+         mWSpmHZ6C1d0YyoGyiszU38sSq69kPhXPhm56U4+6FVITcJ1CEZHjLEmCAtp6wktOCK/
+         DxOdRsySk1sXqY68RWF0JOe4/zeVPJtvQ9lHfsJ6x6SdMyQcNVrIa4NXa7fRi6mlad+o
+         t//wFgxPhT7EPECahYPUyLpil8jkwMy0/+XEXxUh0Le8+U2ufonOfsscVTgC+SrRoDCH
+         iM7noG8OLDFE0tdGr8824/JUhvbwrqjbGrrMdkGxtRD/cnqrUyFsNqPJcdX8JFikXXu+
+         BdTw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20221208; t=1687604909; x=1690196909;
+        h=content-transfer-encoding:in-reply-to:from:content-language
+         :references:cc:to:subject:user-agent:mime-version:date:message-id
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=7tnz7s8ew6fhhs0dR9M9QnK0rlCy7+XAhEAWksz3vrg=;
+        b=KtkWh6rss0x5aOLiTrpoTl8k2vsm0y2TfCg6O5VMBDDYiVfSb5knBOzlo1DpIO2Ibd
+         1fQnGpQP4CfpFpGO0lfn1CTC0PC8/hcWUViuLsOUsOwxdcDUk2BfgrMeXeuw0I6eSHfV
+         O1B6M5rkI4whD3KazWW0w3KlWOMKd8zNE8n+W3Ll1tT2dg05PmQG/FKSQZBicNxYBDBO
+         /pl+s3K2amw/NcbAqEQ58lHNcvSGNS/0BwNM22s+2VJQ1jAiJ5tPJ0K2ksVG8Dt2n6gL
+         gHD85sjzfVgb9I4jtz1FvC3WbVQg1psOl09trHlMaEuLHLeV5v5jDMW6tzS7GPmEXZI2
+         shhg==
+X-Gm-Message-State: AC+VfDwqEE0n5OyowMwkEHXB26DQDPiKkrjcfDpC0muvmfHtZL/2lEte
+        DeqW8qcMUQMOcLNZ0wNncUYxXg==
+X-Google-Smtp-Source: ACHHUZ48xugwBy1Yb59MA7iADNA4mtjxjJVDK/TEG1GiFnnp8kgPq3uDjFXVnvd+Ayx9tItAR27KLA==
+X-Received: by 2002:a17:903:32c4:b0:1b3:e352:6d88 with SMTP id i4-20020a17090332c400b001b3e3526d88mr29305254plr.6.1687604908733;
+        Sat, 24 Jun 2023 04:08:28 -0700 (PDT)
+Received: from [10.4.162.153] ([139.177.225.251])
+        by smtp.gmail.com with ESMTPSA id bg6-20020a1709028e8600b001b3d0aff88fsm1021644plb.109.2023.06.24.04.08.21
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Sat, 24 Jun 2023 04:08:28 -0700 (PDT)
+Message-ID: <a7baf44a-1eb8-d4e1-d112-93cf9cdb7beb@bytedance.com>
+Date:   Sat, 24 Jun 2023 19:08:18 +0800
 MIME-Version: 1.0
 User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:102.0)
  Gecko/20100101 Thunderbird/102.12.0
-Subject: Re: xfs_rapair fails with err 117. Can I fix the fs or recover
- individual files somehow?
+Subject: Re: [PATCH 24/29] mm: vmscan: make global slab shrink lockless
+To:     Dave Chinner <david@fromorbit.com>, paulmck@kernel.org
+Cc:     Vlastimil Babka <vbabka@suse.cz>, akpm@linux-foundation.org,
+        tkhai@ya.ru, roman.gushchin@linux.dev, djwong@kernel.org,
+        brauner@kernel.org, tytso@mit.edu, linux-kernel@vger.kernel.org,
+        linux-mm@kvack.org, intel-gfx@lists.freedesktop.org,
+        dri-devel@lists.freedesktop.org, linux-arm-msm@vger.kernel.org,
+        dm-devel@redhat.com, linux-raid@vger.kernel.org,
+        linux-bcache@vger.kernel.org,
+        virtualization@lists.linux-foundation.org,
+        linux-fsdevel@vger.kernel.org, linux-ext4@vger.kernel.org,
+        linux-nfs@vger.kernel.org, linux-xfs@vger.kernel.org,
+        linux-btrfs@vger.kernel.org
+References: <20230622085335.77010-1-zhengqi.arch@bytedance.com>
+ <20230622085335.77010-25-zhengqi.arch@bytedance.com>
+ <cf0d9b12-6491-bf23-b464-9d01e5781203@suse.cz>
+ <ZJU708VIyJ/3StAX@dread.disaster.area>
+ <a21047bb-3b87-a50a-94a7-f3fa4847bc08@bytedance.com>
+ <ZJYaYv4pACmCaBoT@dread.disaster.area>
 Content-Language: en-US
-To:     Fernando CMK <ferna.cmk@gmail.com>
-Cc:     linux-xfs@vger.kernel.org
-References: <CAEBim7C575WhuWGO7_VJ62+6s2g4XFFgoF6=SrGX30nBYcD12Q@mail.gmail.com>
- <3def220e-bc7b-ceb2-f875-cffe3af8471b@sandeen.net>
- <CAEBim7DSUKg6TGZ_DKZ1rhbEHpfLN0aBDkc57gkgUgtnnc7xNQ@mail.gmail.com>
-From:   Eric Sandeen <sandeen@sandeen.net>
-In-Reply-To: <CAEBim7DSUKg6TGZ_DKZ1rhbEHpfLN0aBDkc57gkgUgtnnc7xNQ@mail.gmail.com>
+From:   Qi Zheng <zhengqi.arch@bytedance.com>
+In-Reply-To: <ZJYaYv4pACmCaBoT@dread.disaster.area>
 Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 8bit
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On 6/23/23 6:26 PM, Fernando CMK wrote:
-> On Fri, Jun 23, 2023 at 6:14 PM Eric Sandeen <sandeen@sandeen.net> wrote:
+Hi Dave,
+
+On 2023/6/24 06:19, Dave Chinner wrote:
+> On Fri, Jun 23, 2023 at 09:10:57PM +0800, Qi Zheng wrote:
+>> On 2023/6/23 14:29, Dave Chinner wrote:
+>>> On Thu, Jun 22, 2023 at 05:12:02PM +0200, Vlastimil Babka wrote:
+>>>> On 6/22/23 10:53, Qi Zheng wrote:
+>>> Yes, I suggested the IDR route because radix tree lookups under RCU
+>>> with reference counted objects are a known safe pattern that we can
+>>> easily confirm is correct or not.  Hence I suggested the unification
+>>> + IDR route because it makes the life of reviewers so, so much
+>>> easier...
 >>
->> On 6/23/23 3:25 PM, Fernando CMK wrote:
->>> Scenario
->>>
->>> opensuse 15.5, the fs was originally created on an earlier opensuse
->>> release. The failed file system is on top of a mdadm raid 5, where
->>> other xfs file systems were also created, but only this one is having
->>> issues. The others are doing fine.
->>>
->>> xfs_repair and xfs_repair -L both fail:
->>
->> Full logs please, not the truncated version.
+>> In fact, I originally planned to try the unification + IDR method you
+>> suggested at the beginning. But in the case of CONFIG_MEMCG disabled,
+>> the struct mem_cgroup is not even defined, and root_mem_cgroup and
+>> shrinker_info will not be allocated.  This required more code changes, so
+>> I ended up keeping the shrinker_list and implementing the above pattern.
 > 
-> Phase 1 - find and verify superblock...
->         - reporting progress in intervals of 15 minutes
-> Phase 2 - using internal log
->         - zero log...
->         - 16:14:46: zeroing log - 128000 of 128000 blocks done
->         - scan filesystem freespace and inode maps...
-> stripe width (17591899783168) is too large
-> Metadata corruption detected at 0x55f819658658, xfs_sb block 0xfa00000/0x1000
-> stripe width (17591899783168) is too large
+> Yes. Go back and read what I originally said needed to be done
+> first. In the case of CONFIG_MEMCG=n, a dummy root memcg still needs
+> to exist that holds all of the global shrinkers. Then shrink_slab()
+> is only ever passed a memcg that should be iterated.
+> 
+> Yes, it needs changes external to the shrinker code itself to be
+> made to work. And even if memcg's are not enabled, we can still use
+> the memcg structures to ensure a common abstraction is used for the
+> shrinker tracking infrastructure....
 
-<repeated many times>
+Yeah, what I imagined before was to define a more concise struct
+mem_cgroup in the case of CONFIG_MEMCG=n, then allocate a dummy root
+memcg on system boot:
 
-It seems that the only problem w/ the filesystem detected by repair is a 
-ridiculously large stripe width, and that's found on every superblock.
+#ifdef !CONFIG_MEMCG
 
-dmesg (expectedly) finds the same error when mounting.
+struct shrinker_info {
+	struct rcu_head rcu;
+	atomic_long_t *nr_deferred;
+	unsigned long *map;
+	int map_nr_max;
+};
 
-Pretty weird, I've never seen this before. And, xfs_repair seems unable 
-to fix this type of corruption.
+struct mem_cgroup_per_node {
+	struct shrinker_info __rcu	*shrinker_info;
+};
 
-can you do:
+struct mem_cgroup {
+	struct mem_cgroup_per_node *nodeinfo[];
+};
 
-dd if=<filesystem device or image> bs=512 count=1 | hexdump -C
+#endif
 
-and paste that here?
+But I have a concern: if all global shrinkers are tracking with the
+info->map of root memcg, a shrinker->id needs to be assigned to them,
+which will cause info->map_nr_max to become larger than before, then
+making the traversal of info->map slower.
 
-I'd also like to see what xfs_ifo says about other filesystems on the md 
-raid.
+> 
+>> If the above pattern is not safe, I will go back to the unification +
+>> IDR method.
+> 
+> And that is exactly how we got into this mess in the first place....
 
--Eric
+I only found one similar pattern in the kernel:
 
+fs/smb/server/oplock.c:find_same_lease_key/smb_break_all_levII_oplock/lookup_lease_in_table
+
+But IIUC, the refcount here needs to be decremented after holding
+rcu lock as I did above.
+
+So regardless of whether we choose unification + IDR in the end, I still
+want to confirm whether the pattern I implemented above is safe. :)
+
+Thanks,
+Qi
+
+> 
+> -Dave
