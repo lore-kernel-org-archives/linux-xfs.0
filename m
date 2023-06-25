@@ -2,174 +2,102 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4A73EEB64DA
-	for <linux-xfs@archiver.kernel.org>; Sun, 25 Jun 2023 03:15:51 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 32DCFEB64DD
+	for <linux-xfs@archiver.kernel.org>; Sun, 25 Jun 2023 17:38:49 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231669AbjFYDPr (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Sat, 24 Jun 2023 23:15:47 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47080 "EHLO
+        id S229660AbjFYRiq (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Sun, 25 Jun 2023 13:38:46 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52700 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230506AbjFYDPg (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sat, 24 Jun 2023 23:15:36 -0400
-Received: from mail-pf1-x42e.google.com (mail-pf1-x42e.google.com [IPv6:2607:f8b0:4864:20::42e])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 28A2EE73
-        for <linux-xfs@vger.kernel.org>; Sat, 24 Jun 2023 20:15:11 -0700 (PDT)
-Received: by mail-pf1-x42e.google.com with SMTP id d2e1a72fcca58-6687b209e5aso495379b3a.0
-        for <linux-xfs@vger.kernel.org>; Sat, 24 Jun 2023 20:15:11 -0700 (PDT)
+        with ESMTP id S229639AbjFYRio (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sun, 25 Jun 2023 13:38:44 -0400
+Received: from mail-qv1-xf2d.google.com (mail-qv1-xf2d.google.com [IPv6:2607:f8b0:4864:20::f2d])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 208C719F
+        for <linux-xfs@vger.kernel.org>; Sun, 25 Jun 2023 10:38:43 -0700 (PDT)
+Received: by mail-qv1-xf2d.google.com with SMTP id 6a1803df08f44-635783b8b80so13754266d6.1
+        for <linux-xfs@vger.kernel.org>; Sun, 25 Jun 2023 10:38:43 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=bytedance.com; s=google; t=1687662910; x=1690254910;
-        h=content-transfer-encoding:in-reply-to:references:cc:to:from
-         :content-language:subject:user-agent:mime-version:date:message-id
-         :from:to:cc:subject:date:message-id:reply-to;
-        bh=TKI5JnbDIC0GxIDWgHq4O/cOoJK+mFi4lHzSLMfVTqU=;
-        b=ZAMx9Z9f9sidua+INHohqUOzi6qohVG8u4jVCH5kW+5KNZXm213btXme0+oY3eiFas
-         kJ1eg2nzkYdYzNdOe7oa9qHmaJUnXCYxjS+yzRkh4fKBRaJsJ8sThwNTH8lHQfNkQNAM
-         VzcFUF7+yXpjBTL7GbZNoITLErtoJw0Vjk1rTp/DbKRrvAbdhI1W9mMFrodUhQiTOgU4
-         x87qi5B+whZkF6jL19/UUqYgrCxdv27BCv4u4d4gCY3C0TEpHKxxaHXbF0gjifwSN242
-         21vqEHW8Cm8PCiF/LjQeQL8d9CMETY+gbtFossFoUbQJa5ZrwnE/J5ioBpxXDyTlqBxM
-         qigg==
+        d=gmail.com; s=20221208; t=1687714723; x=1690306723;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=RrA1jj0sbuS7qnDi1/w+/r07BoPDDnF9j6v+8W3e2So=;
+        b=Erb2gR7thcdNLtG13m4xEQsPkt/NkeSH8BEI9aFw/X6ig6ppwvAC99+KZPwQcw3p//
+         31xm9sako+oktqJZxPQDqBt1wWT8i6J3tNSR4VqOeAeXS21/ksZyXLzFEeidWe71jozC
+         cVPC/N1F0lSrE5eP89m/DGqOOcgmL5qfPLcqDoS2W5xI5jhvFAix7P5Yux94fMpvjfqn
+         4AmSRruKCgTYtD3728z+YrypIiqQcMOW+5VkAT3QxkfbvCZmJ+EukglnT5RBKPLJSZwq
+         UCDWY/N9cI5pXQi9E7Y72azExLG3vCK8lf2BGiN2vlGfnNPtS49wNNB0cDUTrCeZLLx3
+         690A==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20221208; t=1687662910; x=1690254910;
-        h=content-transfer-encoding:in-reply-to:references:cc:to:from
-         :content-language:subject:user-agent:mime-version:date:message-id
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=TKI5JnbDIC0GxIDWgHq4O/cOoJK+mFi4lHzSLMfVTqU=;
-        b=OBLnNRFyMuoRoae8Da18guS+o8AJRdeE5YwG6K89kvfvp9HjnyNK9YdUhsFhVvVldu
-         UF25ZsfR16XkJKp7BL+akXTGczGjip48XrGc3ECKodk6rZRnr93Tg2S0t19d4wJWHxsk
-         HJwV28YUPx0gzV0IzLll5iAAxUDSw7kQeN7XJbsmdrRI+VQ59ohEKQukAOV0y4E+DPaP
-         bmXFJSE3reJzYLCiGVgMWTx0P6W93bUoSsnnIGH+KFhQK1uGzmoTBI4X7zalKqtT8qxA
-         aeCCjTwSG5Pg6Gc48o085AyiRYsu8/R5UjKLxWG0PDGVcq3vnjTIswx3UbayvFtKJV2H
-         AFdQ==
-X-Gm-Message-State: AC+VfDyNOw87l4aSqgzJ3oDzfhyj7Qvgn4+olbnafY0OlYO8ppGrjn61
-        P2wFurtuPhAlJXvbaR2gIG95XQ==
-X-Google-Smtp-Source: ACHHUZ4cDGND46+rMO/jpoItKK6gyWoVPMpHTImOruhTgKiq3D9MdRMxw7KZsaNY9vtDgu3MtWReMw==
-X-Received: by 2002:a05:6a20:8426:b0:11f:7829:6d6c with SMTP id c38-20020a056a20842600b0011f78296d6cmr28507253pzd.3.1687662910560;
-        Sat, 24 Jun 2023 20:15:10 -0700 (PDT)
-Received: from [10.70.252.135] ([203.208.167.146])
-        by smtp.gmail.com with ESMTPSA id r9-20020a62e409000000b0066642f95bc5sm1648412pfh.35.2023.06.24.20.15.03
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Sat, 24 Jun 2023 20:15:10 -0700 (PDT)
-Message-ID: <00641d5b-86a3-f5d1-02ee-13b4f815df75@bytedance.com>
-Date:   Sun, 25 Jun 2023 11:15:01 +0800
+        d=1e100.net; s=20221208; t=1687714723; x=1690306723;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=RrA1jj0sbuS7qnDi1/w+/r07BoPDDnF9j6v+8W3e2So=;
+        b=bbIna9bP2mvepk41c4onAac9FkQ62t7Vq8e5lriO4I9W54za1uOqIFmqYwgCR3WCxJ
+         1+BjejeuqH+btVnM3g4ey6FiBQiTIgaqeMdfS3Gs5JK1KLDZZp9wZ7r4JsXkJ4XkmRKy
+         wvLbAwT5D5uO9v6qgBq1QVSPo8nZHjF+chaZgW5g06B5utNZevSq+A844tSaNKlYoSqD
+         B7lkOGYACpNo+ILfLah29/58MnD6WPxlE7g90bf5KUX/5Y3WlAi7ETlFfkhbJHiJmDf9
+         ZqaLn5zw4RnRStFbm1JAN7H8XaB8oi3qNHVtbVELeTdhphdOXGWiQauwGoyswWN8+VAx
+         kMNQ==
+X-Gm-Message-State: AC+VfDx1vMBhZtfMkWjQDHDMaOWHD1d578CKI2pn5MPsDltSy21eZfmR
+        J8ZpNq4eP/K7PQmv6RtEv2Az2Mr0ncrzba9sHWjH0pup6CA=
+X-Google-Smtp-Source: ACHHUZ5GxXmT1mmLt0+/GpZE2jZ3+WPIqiId8yxhJQcNdev78flYD6VikF/CMGNsyjX3X8o0q/3obo/YHheaUq+zMx0=
+X-Received: by 2002:a05:6214:501b:b0:62f:ec06:6c93 with SMTP id
+ jo27-20020a056214501b00b0062fec066c93mr22998489qvb.51.1687714722899; Sun, 25
+ Jun 2023 10:38:42 -0700 (PDT)
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:102.0)
- Gecko/20100101 Thunderbird/102.12.0
-Subject: Re: [PATCH 24/29] mm: vmscan: make global slab shrink lockless
-Content-Language: en-US
-From:   Qi Zheng <zhengqi.arch@bytedance.com>
-To:     Dave Chinner <david@fromorbit.com>, paulmck@kernel.org
-Cc:     Vlastimil Babka <vbabka@suse.cz>, akpm@linux-foundation.org,
-        tkhai@ya.ru, roman.gushchin@linux.dev, djwong@kernel.org,
-        brauner@kernel.org, tytso@mit.edu, linux-kernel@vger.kernel.org,
-        linux-mm@kvack.org, intel-gfx@lists.freedesktop.org,
-        dri-devel@lists.freedesktop.org, linux-arm-msm@vger.kernel.org,
-        dm-devel@redhat.com, linux-raid@vger.kernel.org,
-        linux-bcache@vger.kernel.org,
-        virtualization@lists.linux-foundation.org,
-        linux-fsdevel@vger.kernel.org, linux-ext4@vger.kernel.org,
-        linux-nfs@vger.kernel.org, linux-xfs@vger.kernel.org,
-        linux-btrfs@vger.kernel.org, RCU <rcu@vger.kernel.org>
-References: <20230622085335.77010-1-zhengqi.arch@bytedance.com>
- <20230622085335.77010-25-zhengqi.arch@bytedance.com>
- <cf0d9b12-6491-bf23-b464-9d01e5781203@suse.cz>
- <ZJU708VIyJ/3StAX@dread.disaster.area>
- <a21047bb-3b87-a50a-94a7-f3fa4847bc08@bytedance.com>
- <ZJYaYv4pACmCaBoT@dread.disaster.area>
- <a7baf44a-1eb8-d4e1-d112-93cf9cdb7beb@bytedance.com>
-In-Reply-To: <a7baf44a-1eb8-d4e1-d112-93cf9cdb7beb@bytedance.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 8bit
+References: <CAEBim7C575WhuWGO7_VJ62+6s2g4XFFgoF6=SrGX30nBYcD12Q@mail.gmail.com>
+ <3def220e-bc7b-ceb2-f875-cffe3af8471b@sandeen.net> <CAEBim7DSUKg6TGZ_DKZ1rhbEHpfLN0aBDkc57gkgUgtnnc7xNQ@mail.gmail.com>
+ <de3023eb-4481-ae72-183b-2d91f3c25212@sandeen.net> <CAEBim7BZsCYxjucpN5R8HpP+BpFezSzZ1QiA1COqU3-MZ18eXQ@mail.gmail.com>
+ <99544e27-0871-6d0e-0576-5f28bc736978@sandeen.net>
+In-Reply-To: <99544e27-0871-6d0e-0576-5f28bc736978@sandeen.net>
+From:   Fernando CMK <ferna.cmk@gmail.com>
+Date:   Sun, 25 Jun 2023 14:38:31 -0300
+Message-ID: <CAEBim7B1C3P=zzyBvNhis7=HmTb_NZrmKG8cie=F+qVVYENisg@mail.gmail.com>
+Subject: Re: xfs_rapair fails with err 117. Can I fix the fs or recover
+ individual files somehow?
+To:     Eric Sandeen <sandeen@sandeen.net>
+Cc:     linux-xfs@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
+Ok, I'll try it on a new copy. BTW, are you sure it's "swidth"?
+
+It's complaining as follows:
+
+Metadata corruption detected at 0x5627b63fec08, xfs_sb block 0x98580000/0x1=
+000
+field swidth not found
+
+Thanks for your help.
 
 
-On 2023/6/24 19:08, Qi Zheng wrote:
-> Hi Dave,
-> 
-> On 2023/6/24 06:19, Dave Chinner wrote:
->> On Fri, Jun 23, 2023 at 09:10:57PM +0800, Qi Zheng wrote:
->>> On 2023/6/23 14:29, Dave Chinner wrote:
->>>> On Thu, Jun 22, 2023 at 05:12:02PM +0200, Vlastimil Babka wrote:
->>>>> On 6/22/23 10:53, Qi Zheng wrote:
->>>> Yes, I suggested the IDR route because radix tree lookups under RCU
->>>> with reference counted objects are a known safe pattern that we can
->>>> easily confirm is correct or not.  Hence I suggested the unification
->>>> + IDR route because it makes the life of reviewers so, so much
->>>> easier...
->>>
->>> In fact, I originally planned to try the unification + IDR method you
->>> suggested at the beginning. But in the case of CONFIG_MEMCG disabled,
->>> the struct mem_cgroup is not even defined, and root_mem_cgroup and
->>> shrinker_info will not be allocated.  This required more code 
->>> changes, so
->>> I ended up keeping the shrinker_list and implementing the above pattern.
->>
->> Yes. Go back and read what I originally said needed to be done
->> first. In the case of CONFIG_MEMCG=n, a dummy root memcg still needs
->> to exist that holds all of the global shrinkers. Then shrink_slab()
->> is only ever passed a memcg that should be iterated.
->>
->> Yes, it needs changes external to the shrinker code itself to be
->> made to work. And even if memcg's are not enabled, we can still use
->> the memcg structures to ensure a common abstraction is used for the
->> shrinker tracking infrastructure....
-> 
-> Yeah, what I imagined before was to define a more concise struct
-> mem_cgroup in the case of CONFIG_MEMCG=n, then allocate a dummy root
-> memcg on system boot:
-> 
-> #ifdef !CONFIG_MEMCG
-> 
-> struct shrinker_info {
->      struct rcu_head rcu;
->      atomic_long_t *nr_deferred;
->      unsigned long *map;
->      int map_nr_max;
-> };
-> 
-> struct mem_cgroup_per_node {
->      struct shrinker_info __rcu    *shrinker_info;
-> };
-> 
-> struct mem_cgroup {
->      struct mem_cgroup_per_node *nodeinfo[];
-> };
-> 
-> #endif
-> 
-> But I have a concern: if all global shrinkers are tracking with the
-> info->map of root memcg, a shrinker->id needs to be assigned to them,
-> which will cause info->map_nr_max to become larger than before, then
-> making the traversal of info->map slower.
 
-But most of the system is 'sb-xxx' shrinker instances, they all have
-the SHRINKER_MEMCG_AWARE flag, so it should have little impact on the
-speed of traversing info->map. ;)
-
-> 
->>
->>> If the above pattern is not safe, I will go back to the unification +
->>> IDR method.
->>
->> And that is exactly how we got into this mess in the first place....
-> 
-> I only found one similar pattern in the kernel:
-> 
-> fs/smb/server/oplock.c:find_same_lease_key/smb_break_all_levII_oplock/lookup_lease_in_table
-> 
-> But IIUC, the refcount here needs to be decremented after holding
-> rcu lock as I did above.
-> 
-> So regardless of whether we choose unification + IDR in the end, I still
-> want to confirm whether the pattern I implemented above is safe. :)
-
-Also + RCU mailing list.
-
-> 
-> Thanks,
-> Qi
-> 
->>
->> -Dave
+On Sat, Jun 24, 2023 at 10:48=E2=80=AFPM Eric Sandeen <sandeen@sandeen.net>=
+ wrote:
+>
+> On 6/24/23 1:25 PM, Fernando CMK wrote:
+> >> It seems that the only problem w/ the filesystem detected by repair is=
+ a
+> >> ridiculously large stripe width, and that's found on every superblock.
+> > If that's the issue, is there a way to set the correct stripe width?
+> > Also... the md array involved has 3 disks, if that's of any help.
+> >
+>
+> Yes, you can rewrite each superblock (all 42) with xfs_db in -x mode.
+>
+> I would suggest trying it on a fresh copy of the image file in case
+> something goes wrong.
+>
+> for S in `seq 0 41`; do
+>   xfs_db -x -c "sb $S" -c "write swidth 256" <image_file>
+> done
+>
+> or something similar
+>
+> I'm really baffled about how your filesystem possibly got into this
+> shape, though.
