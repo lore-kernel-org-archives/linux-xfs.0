@@ -2,167 +2,174 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 387A5EB64DA
-	for <linux-xfs@archiver.kernel.org>; Sun, 25 Jun 2023 02:58:23 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4A73EEB64DA
+	for <linux-xfs@archiver.kernel.org>; Sun, 25 Jun 2023 03:15:51 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230458AbjFYC6W (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Sat, 24 Jun 2023 22:58:22 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46316 "EHLO
+        id S231669AbjFYDPr (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Sat, 24 Jun 2023 23:15:47 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47080 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229841AbjFYC6V (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sat, 24 Jun 2023 22:58:21 -0400
-Received: from casper.infradead.org (casper.infradead.org [IPv6:2001:8b0:10b:1236::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 177FEE6A
-        for <linux-xfs@vger.kernel.org>; Sat, 24 Jun 2023 19:58:18 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=infradead.org; s=casper.20170209; h=In-Reply-To:Content-Transfer-Encoding:
-        Content-Type:MIME-Version:References:Message-ID:Subject:Cc:To:From:Date:
-        Sender:Reply-To:Content-ID:Content-Description;
-        bh=qPL9/shs39uE+MzoDsPBytUvAg0ntFA6zH8yvLz1he4=; b=P4PfdYYwYgSgCnhvlrz6i2y6LP
-        Q/7hydn/v8iTsP5ONrYC38I+oH9ZFv6ts2MHb4IyLfywLW4VDaRM04+FRvWvBaf92F95/gbSP+NIy
-        eZ1Fzmdk3JzVrQFgmZ21BnrfOXli4eSFF2Wq0St2pqFNj83VJIy01pSoGeo9rhqumrLH644cwahOU
-        ROMnleVENo6BXYotx4t5amhT/WppOI1nZtGWGo+OeA5xn2kD7NX7iEQFP6nuLI5RoHltJosMCsAMq
-        wX/KJqwckTdJdOoTgUaSJjyU2ZTAEdohaR/bdHkj074GMXn0lt6T42qDwDW/2TRdbmZaDAwEqSep6
-        LWLJLOvw==;
-Received: from willy by casper.infradead.org with local (Exim 4.94.2 #2 (Red Hat Linux))
-        id 1qDFx9-000JTp-Bv; Sun, 25 Jun 2023 02:58:15 +0000
-Date:   Sun, 25 Jun 2023 03:58:15 +0100
-From:   Matthew Wilcox <willy@infradead.org>
-To:     Dave Chinner <david@fromorbit.com>
-Cc:     linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 4/4] xfs: fix AGF vs inode cluster buffer deadlock
-Message-ID: <ZJetR4WyR33vzjsj@casper.infradead.org>
-References: <20230517000449.3997582-1-david@fromorbit.com>
- <20230517000449.3997582-5-david@fromorbit.com>
+        with ESMTP id S230506AbjFYDPg (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sat, 24 Jun 2023 23:15:36 -0400
+Received: from mail-pf1-x42e.google.com (mail-pf1-x42e.google.com [IPv6:2607:f8b0:4864:20::42e])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 28A2EE73
+        for <linux-xfs@vger.kernel.org>; Sat, 24 Jun 2023 20:15:11 -0700 (PDT)
+Received: by mail-pf1-x42e.google.com with SMTP id d2e1a72fcca58-6687b209e5aso495379b3a.0
+        for <linux-xfs@vger.kernel.org>; Sat, 24 Jun 2023 20:15:11 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=bytedance.com; s=google; t=1687662910; x=1690254910;
+        h=content-transfer-encoding:in-reply-to:references:cc:to:from
+         :content-language:subject:user-agent:mime-version:date:message-id
+         :from:to:cc:subject:date:message-id:reply-to;
+        bh=TKI5JnbDIC0GxIDWgHq4O/cOoJK+mFi4lHzSLMfVTqU=;
+        b=ZAMx9Z9f9sidua+INHohqUOzi6qohVG8u4jVCH5kW+5KNZXm213btXme0+oY3eiFas
+         kJ1eg2nzkYdYzNdOe7oa9qHmaJUnXCYxjS+yzRkh4fKBRaJsJ8sThwNTH8lHQfNkQNAM
+         VzcFUF7+yXpjBTL7GbZNoITLErtoJw0Vjk1rTp/DbKRrvAbdhI1W9mMFrodUhQiTOgU4
+         x87qi5B+whZkF6jL19/UUqYgrCxdv27BCv4u4d4gCY3C0TEpHKxxaHXbF0gjifwSN242
+         21vqEHW8Cm8PCiF/LjQeQL8d9CMETY+gbtFossFoUbQJa5ZrwnE/J5ioBpxXDyTlqBxM
+         qigg==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20221208; t=1687662910; x=1690254910;
+        h=content-transfer-encoding:in-reply-to:references:cc:to:from
+         :content-language:subject:user-agent:mime-version:date:message-id
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=TKI5JnbDIC0GxIDWgHq4O/cOoJK+mFi4lHzSLMfVTqU=;
+        b=OBLnNRFyMuoRoae8Da18guS+o8AJRdeE5YwG6K89kvfvp9HjnyNK9YdUhsFhVvVldu
+         UF25ZsfR16XkJKp7BL+akXTGczGjip48XrGc3ECKodk6rZRnr93Tg2S0t19d4wJWHxsk
+         HJwV28YUPx0gzV0IzLll5iAAxUDSw7kQeN7XJbsmdrRI+VQ59ohEKQukAOV0y4E+DPaP
+         bmXFJSE3reJzYLCiGVgMWTx0P6W93bUoSsnnIGH+KFhQK1uGzmoTBI4X7zalKqtT8qxA
+         aeCCjTwSG5Pg6Gc48o085AyiRYsu8/R5UjKLxWG0PDGVcq3vnjTIswx3UbayvFtKJV2H
+         AFdQ==
+X-Gm-Message-State: AC+VfDyNOw87l4aSqgzJ3oDzfhyj7Qvgn4+olbnafY0OlYO8ppGrjn61
+        P2wFurtuPhAlJXvbaR2gIG95XQ==
+X-Google-Smtp-Source: ACHHUZ4cDGND46+rMO/jpoItKK6gyWoVPMpHTImOruhTgKiq3D9MdRMxw7KZsaNY9vtDgu3MtWReMw==
+X-Received: by 2002:a05:6a20:8426:b0:11f:7829:6d6c with SMTP id c38-20020a056a20842600b0011f78296d6cmr28507253pzd.3.1687662910560;
+        Sat, 24 Jun 2023 20:15:10 -0700 (PDT)
+Received: from [10.70.252.135] ([203.208.167.146])
+        by smtp.gmail.com with ESMTPSA id r9-20020a62e409000000b0066642f95bc5sm1648412pfh.35.2023.06.24.20.15.03
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Sat, 24 Jun 2023 20:15:10 -0700 (PDT)
+Message-ID: <00641d5b-86a3-f5d1-02ee-13b4f815df75@bytedance.com>
+Date:   Sun, 25 Jun 2023 11:15:01 +0800
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
-In-Reply-To: <20230517000449.3997582-5-david@fromorbit.com>
+User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:102.0)
+ Gecko/20100101 Thunderbird/102.12.0
+Subject: Re: [PATCH 24/29] mm: vmscan: make global slab shrink lockless
+Content-Language: en-US
+From:   Qi Zheng <zhengqi.arch@bytedance.com>
+To:     Dave Chinner <david@fromorbit.com>, paulmck@kernel.org
+Cc:     Vlastimil Babka <vbabka@suse.cz>, akpm@linux-foundation.org,
+        tkhai@ya.ru, roman.gushchin@linux.dev, djwong@kernel.org,
+        brauner@kernel.org, tytso@mit.edu, linux-kernel@vger.kernel.org,
+        linux-mm@kvack.org, intel-gfx@lists.freedesktop.org,
+        dri-devel@lists.freedesktop.org, linux-arm-msm@vger.kernel.org,
+        dm-devel@redhat.com, linux-raid@vger.kernel.org,
+        linux-bcache@vger.kernel.org,
+        virtualization@lists.linux-foundation.org,
+        linux-fsdevel@vger.kernel.org, linux-ext4@vger.kernel.org,
+        linux-nfs@vger.kernel.org, linux-xfs@vger.kernel.org,
+        linux-btrfs@vger.kernel.org, RCU <rcu@vger.kernel.org>
+References: <20230622085335.77010-1-zhengqi.arch@bytedance.com>
+ <20230622085335.77010-25-zhengqi.arch@bytedance.com>
+ <cf0d9b12-6491-bf23-b464-9d01e5781203@suse.cz>
+ <ZJU708VIyJ/3StAX@dread.disaster.area>
+ <a21047bb-3b87-a50a-94a7-f3fa4847bc08@bytedance.com>
+ <ZJYaYv4pACmCaBoT@dread.disaster.area>
+ <a7baf44a-1eb8-d4e1-d112-93cf9cdb7beb@bytedance.com>
+In-Reply-To: <a7baf44a-1eb8-d4e1-d112-93cf9cdb7beb@bytedance.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Wed, May 17, 2023 at 10:04:49AM +1000, Dave Chinner wrote:
-> Lock order in XFS is AGI -> AGF, hence for operations involving
-> inode unlinked list operations we always lock the AGI first. Inode
-> unlinked list operations operate on the inode cluster buffer,
-> so the lock order there is AGI -> inode cluster buffer.
 
-Hi Dave,
 
-This commit reliably produces an assertion failure for me.  I haven't
-tried to analyse why.  It's pretty clear though; I can run generic/426
-in a loop for hundreds of seconds on the parent commit (cb042117488d),
-but it'll die within 30 seconds on commit 82842fee6e59.
+On 2023/6/24 19:08, Qi Zheng wrote:
+> Hi Dave,
+> 
+> On 2023/6/24 06:19, Dave Chinner wrote:
+>> On Fri, Jun 23, 2023 at 09:10:57PM +0800, Qi Zheng wrote:
+>>> On 2023/6/23 14:29, Dave Chinner wrote:
+>>>> On Thu, Jun 22, 2023 at 05:12:02PM +0200, Vlastimil Babka wrote:
+>>>>> On 6/22/23 10:53, Qi Zheng wrote:
+>>>> Yes, I suggested the IDR route because radix tree lookups under RCU
+>>>> with reference counted objects are a known safe pattern that we can
+>>>> easily confirm is correct or not.  Hence I suggested the unification
+>>>> + IDR route because it makes the life of reviewers so, so much
+>>>> easier...
+>>>
+>>> In fact, I originally planned to try the unification + IDR method you
+>>> suggested at the beginning. But in the case of CONFIG_MEMCG disabled,
+>>> the struct mem_cgroup is not even defined, and root_mem_cgroup and
+>>> shrinker_info will not be allocated.  This required more code 
+>>> changes, so
+>>> I ended up keeping the shrinker_list and implementing the above pattern.
+>>
+>> Yes. Go back and read what I originally said needed to be done
+>> first. In the case of CONFIG_MEMCG=n, a dummy root memcg still needs
+>> to exist that holds all of the global shrinkers. Then shrink_slab()
+>> is only ever passed a memcg that should be iterated.
+>>
+>> Yes, it needs changes external to the shrinker code itself to be
+>> made to work. And even if memcg's are not enabled, we can still use
+>> the memcg structures to ensure a common abstraction is used for the
+>> shrinker tracking infrastructure....
+> 
+> Yeah, what I imagined before was to define a more concise struct
+> mem_cgroup in the case of CONFIG_MEMCG=n, then allocate a dummy root
+> memcg on system boot:
+> 
+> #ifdef !CONFIG_MEMCG
+> 
+> struct shrinker_info {
+>      struct rcu_head rcu;
+>      atomic_long_t *nr_deferred;
+>      unsigned long *map;
+>      int map_nr_max;
+> };
+> 
+> struct mem_cgroup_per_node {
+>      struct shrinker_info __rcu    *shrinker_info;
+> };
+> 
+> struct mem_cgroup {
+>      struct mem_cgroup_per_node *nodeinfo[];
+> };
+> 
+> #endif
+> 
+> But I have a concern: if all global shrinkers are tracking with the
+> info->map of root memcg, a shrinker->id needs to be assigned to them,
+> which will cause info->map_nr_max to become larger than before, then
+> making the traversal of info->map slower.
 
-    export MKFS_OPTIONS=3D"-m reflink=3D1,rmapbt=3D1 -i sparse=3D1 -b size=
-=3D1024"
+But most of the system is 'sb-xxx' shrinker instances, they all have
+the SHRINKER_MEMCG_AWARE flag, so it should have little impact on the
+speed of traversing info->map. ;)
 
-I suspect the size=3D1024 is the important thing, but I haven't tested
-that hypothesis.  This is on an x86-64 virtual machine; full qemu
-command line at the end [1]
+> 
+>>
+>>> If the above pattern is not safe, I will go back to the unification +
+>>> IDR method.
+>>
+>> And that is exactly how we got into this mess in the first place....
+> 
+> I only found one similar pattern in the kernel:
+> 
+> fs/smb/server/oplock.c:find_same_lease_key/smb_break_all_levII_oplock/lookup_lease_in_table
+> 
+> But IIUC, the refcount here needs to be decremented after holding
+> rcu lock as I did above.
+> 
+> So regardless of whether we choose unification + IDR in the end, I still
+> want to confirm whether the pattern I implemented above is safe. :)
 
-00028 FSTYP         -- xfs (debug)
-00028 PLATFORM      -- Linux/x86_64 pepe-kvm 6.4.0-rc5-00004-g82842fee6e59 =
-#182 SMP PREEMPT_DYNAMIC Sat Jun 24 22:51:32 EDT 2023
-00028 MKFS_OPTIONS  -- -f -m reflink=3D1,rmapbt=3D1 -i sparse=3D1 -b size=
-=3D1024 /dev/sdc
-00028 MOUNT_OPTIONS -- /dev/sdc /mnt/scratch
-00028
-00028 XFS (sdc): Mounting V5 Filesystem 591c2048-7cce-4eda-acf7-649e19cd8554
-00028 XFS (sdc): Ending clean mount
-00028 XFS (sdc): Unmounting Filesystem 591c2048-7cce-4eda-acf7-649e19cd8554
-00028 XFS (sdb): EXPERIMENTAL online scrub feature in use. Use at your own =
-risk!
-00028 XFS (sdb): Unmounting Filesystem 9db9e0a2-c05b-4690-a938-ae8f7b70be8e
-00028 XFS (sdb): Mounting V5 Filesystem 9db9e0a2-c05b-4690-a938-ae8f7b70be8e
-00028 XFS (sdb): Ending clean mount
-00028 generic/426       run fstests generic/426 at 2023-06-25 02:52:07
-00029 XFS: Assertion failed: bp->b_flags & XBF_DONE, file: fs/xfs/xfs_trans=
-_buf.c, line: 241
-00029 ------------[ cut here ]------------
-00029 kernel BUG at fs/xfs/xfs_message.c:102!
-00029 invalid opcode: 0000 [#1] PREEMPT SMP NOPTI
-00029 CPU: 1 PID: 62 Comm: kworker/1:1 Kdump: loaded Not tainted 6.4.0-rc5-=
-00004-g82842fee6e59 #182
-00029 Hardware name: QEMU Standard PC (Q35 + ICH9, 2009), BIOS 1.16.2-debia=
-n-1.16.2-1 04/01/2014
-00029 Workqueue: xfs-inodegc/sdb xfs_inodegc_worker
-00029 RIP: 0010:assfail+0x30/0x40
-00029 Code: c9 48 c7 c2 48 f8 ea 81 48 89 f1 48 89 e5 48 89 fe 48 c7 c7 b9 =
-cc e5 81 e8 fd fd ff ff 80 3d f6 2f d3 00 00 75 04 0f 0b 5d c3 <0f> 0b 66 6=
-6 2e 0f 1f 84 00 00 00 00 00 0f 1f 00 55 48 63 f6 49 89
-00029 RSP: 0018:ffff88800317bc78 EFLAGS: 00010202
-00029 RAX: 00000000ffffffea RBX: ffff88800611e000 RCX: 000000007fffffff
-00029 RDX: 0000000000000021 RSI: 0000000000000000 RDI: ffffffff81e5ccb9
-00029 RBP: ffff88800317bc78 R08: 0000000000000000 R09: 000000000000000a
-00029 R10: 000000000000000a R11: 0fffffffffffffff R12: ffff88800c780800
-00029 R13: ffff88800317bce0 R14: 0000000000000001 R15: ffff88800c73d000
-00029 FS:  0000000000000000(0000) GS:ffff88807d840000(0000) knlGS:000000000=
-0000000
-00029 CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
-00029 CR2: 00005623b1911068 CR3: 000000000ee28003 CR4: 0000000000770ea0
-00029 PKRU: 55555554
-00029 Call Trace:
-00029  <TASK>
-00029  ? show_regs+0x5c/0x70
-00029  ? die+0x32/0x90
-00029  ? do_trap+0xbb/0xe0
-00029  ? do_error_trap+0x67/0x90
-00029  ? assfail+0x30/0x40
-00029  ? exc_invalid_op+0x52/0x70
-00029  ? assfail+0x30/0x40
-00029  ? asm_exc_invalid_op+0x1b/0x20
-00029  ? assfail+0x30/0x40
-00029  ? assfail+0x23/0x40
-00029  xfs_trans_read_buf_map+0x2d9/0x480
-00029  xfs_imap_to_bp+0x3d/0x40
-00029  xfs_inode_item_precommit+0x176/0x200
-00029  xfs_trans_run_precommits+0x65/0xc0
-00029  __xfs_trans_commit+0x3d/0x360
-00029  xfs_trans_commit+0xb/0x10
-00029  xfs_inactive_ifree.isra.0+0xea/0x200
-00029  xfs_inactive+0x132/0x230
-00029  xfs_inodegc_worker+0xb6/0x1a0
-00029  process_one_work+0x1a9/0x3a0
-00029  worker_thread+0x4e/0x3a0
-00029  ? process_one_work+0x3a0/0x3a0
-00029  kthread+0xf9/0x130
+Also + RCU mailing list.
 
-In case things have moved around since that commit, the particular line
-throwing the assertion is in this paragraph:
-
-        if (bp) {
-                ASSERT(xfs_buf_islocked(bp));
-                ASSERT(bp->b_transp =3D=3D tp);
-                ASSERT(bp->b_log_item !=3D NULL);
-                ASSERT(!bp->b_error);
-                ASSERT(bp->b_flags & XBF_DONE);
-
-It's the last one that trips.  Sorry for not catching this earlier; my
-test suite experienced a bit of a failure and I only just got around to
-fixing it enough to run all the way through.
-
-[1] qemu-system-x86_64 -nodefaults -nographic -cpu host -machine type=3Dq35=
-,accel=3Dkvm,nvdimm=3Don -m 2G,slots=3D8,maxmem=3D256G -smp 8 -kernel /home=
-/willy/kernel/linux-next/.build_test_kernel-x86_64/kpgk/vmlinuz -append mit=
-igations=3Doff console=3Dhvc0 root=3D/dev/sda rw log_buf_len=3D8M ktest.dir=
-=3D/home/willy/kernel/ktest ktest.env=3D/tmp/build-test-kernel-FzOfFCHDVD/e=
-nv crashkernel=3D128M no_console_suspend page_owner=3Don -device virtio-ser=
-ial -chardev stdio,id=3Dconsole -device virtconsole,chardev=3Dconsole -seri=
-al unix:/tmp/build-test-kernel-FzOfFCHDVD/vm-kgdb,server,nowait -monitor un=
-ix:/tmp/build-test-kernel-FzOfFCHDVD/vm-mon,server,nowait -gdb unix:/tmp/bu=
-ild-test-kernel-FzOfFCHDVD/vm-gdb,server,nowait -device virtio-rng-pci -vir=
-tfs local,path=3D/,mount_tag=3Dhost,security_model=3Dnone -device virtio-sc=
-si-pci,id=3Dhba -nic user,model=3Dvirtio,hostfwd=3Dtcp:127.0.0.1:28201-:22 =
--drive if=3Dnone,format=3Draw,id=3Ddisk0,file=3D/var/lib/ktest/root.amd64,s=
-napshot=3Don -device scsi-hd,bus=3Dhba.0,drive=3Ddisk0 -drive if=3Dnone,for=
-mat=3Draw,id=3Ddisk1,file=3D/tmp/build-test-kernel-FzOfFCHDVD/dev-1,cache=
-=3Dunsafe -device scsi-hd,bus=3Dhba.0,drive=3Ddisk1 -drive if=3Dnone,format=
-=3Draw,id=3Ddisk2,file=3D/tmp/build-test-kernel-FzOfFCHDVD/dev-2,cache=3Dun=
-safe -device scsi-hd,bus=3Dhba.0,drive=3Ddisk2 -drive if=3Dnone,format=3Dra=
-w,id=3Ddisk3,file=3D/tmp/build-test-kernel-FzOfFCHDVD/dev-3,cache=3Dunsafe =
--device scsi-hd,bus=3Dhba.0,drive=3Ddisk3 -drive if=3Dnone,format=3Draw,id=
-=3Ddisk4,file=3D/tmp/build-test-kernel-FzOfFCHDVD/dev-4,cache=3Dunsafe -dev=
-ice scsi-hd,bus=3Dhba.0,drive=3Ddisk4
+> 
+> Thanks,
+> Qi
+> 
+>>
+>> -Dave
