@@ -2,130 +2,286 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E4A72EB64DC
-	for <linux-xfs@archiver.kernel.org>; Mon, 26 Jun 2023 02:22:27 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id F1CA6EB64DC
+	for <linux-xfs@archiver.kernel.org>; Mon, 26 Jun 2023 03:18:33 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229619AbjFZCW0 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Sun, 25 Jun 2023 22:22:26 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34920 "EHLO
+        id S229616AbjFZDSc (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Sun, 25 Jun 2023 23:18:32 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54852 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229506AbjFZCW0 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sun, 25 Jun 2023 22:22:26 -0400
-Received: from APC01-TYZ-obe.outbound.protection.outlook.com (mail-tyzapc01on2120.outbound.protection.outlook.com [40.107.117.120])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9DF6918D;
-        Sun, 25 Jun 2023 19:22:24 -0700 (PDT)
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=Ud0KCepAa2AAhRzEOJKS7KaM5Gb6UHvkwugk7lnZBLDSK3d5Mw2s3tk/GCz9fxCLuD6df8eWu+IDpDSSckjiaS6bS7X4KlsdDqaKQEz3P2vQWN+5NtjBBj1ggkZhMKGc7HfBXcscdhQsBHQFydcEfsPmVUbi6cavRmIRifr+b6mWZl5HUczrySDL3N8KvnkyCNgyUP104sQ/z90/XaqC71gvKFjN6Qb1AsnS4lYzQIKppZ0q2X9e9ZkwiuSUHx2JdIqu+XEamQC8lSrz4aqUc5kWTSWJ46CMRw7eO0c8JU0PQ3Mv7SpCrnZB1B36TePGv1Mdvyt38EtfVvZxLe0BVA==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector9901;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=M1VZXuA5FY4aP11+wbi0TJZvIsm2JQmjpPOm1lMiyjI=;
- b=QvTDy9n5Qrbztr697ZXBsPEq196xUjesQytYV2nWMYBmxFEZH6KH1+TJbrot52SsXfWkU7bdkIPVPJZiVhLTd+grvUp0r/cbwp7WJJ/Zw/+BGahwhfFm8Rkw1/xmyNrJqNqhy1mURrifA6gQXKnU+Ew9RgWEO6Dhfyygm9hZw1p/knFIgbM1snibq8di4SSa4+m/xq5sbu0/GKJ0JrYmwfBj8oZPVZjrV9IcufLyNsw8aF/imTv/5FLxYuxoVZv+5+gcMpQcgjU0xI93kHZcO4KjmaAMifRvFU8KueLBhvJ825YHIdLkHL0UBs7fllIkCGS5A1VvRP//ZuY6FM7Rsg==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=vivo.com; dmarc=pass action=none header.from=vivo.com;
- dkim=pass header.d=vivo.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=vivo.com; s=selector2;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=M1VZXuA5FY4aP11+wbi0TJZvIsm2JQmjpPOm1lMiyjI=;
- b=pJPSISTfERgBHhZMEq+CRzow+WCTcZymkb8mZFO8ycN9hoxCsVINW9uMWy+x+wUccsJTB7/WtAncQHDdSs2IrELsQusjdCG0Wd3adkZKv/zarFeUopN+kg4E/J2ArUo8gGleJH0HHWSKb0VZl+yeXIc3FNtYlyasHpZ6pDiIkm8C4+6ROs6ME46Xb7Gekyj21J2S6KXjKwyxfdRAXqoIV/qxhgXqrLKXl1dUG3Tbfxc1/5dqXLgxkOkyIbMw+th9XSgv8N9Hdz7VTsosTNAhp4JTc7M5PdMIt6URLCf3nCGSmzDU/sADVY1T09VepN98tN7zI2F3Djp4ul7q45ytwQ==
-Authentication-Results: dkim=none (message not signed)
- header.d=none;dmarc=none action=none header.from=vivo.com;
-Received: from TYZPR06MB6697.apcprd06.prod.outlook.com (2603:1096:400:451::6)
- by TYZPR06MB6215.apcprd06.prod.outlook.com (2603:1096:400:33d::8) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.6521.23; Mon, 26 Jun
- 2023 02:22:21 +0000
-Received: from TYZPR06MB6697.apcprd06.prod.outlook.com
- ([fe80::f652:a96b:482:409e]) by TYZPR06MB6697.apcprd06.prod.outlook.com
- ([fe80::f652:a96b:482:409e%6]) with mapi id 15.20.6521.023; Mon, 26 Jun 2023
- 02:22:21 +0000
-From:   Lu Hongfei <luhongfei@vivo.com>
-To:     Christoph Hellwig <hch@infradead.org>,
-        "Darrick J. Wong" <djwong@kernel.org>, linux-xfs@vger.kernel.org,
-        linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org
-Cc:     opensource.kernel@vivo.com, luhongfei@vivo.com
-Subject: [PATCH] fs: iomap: replace the ternary conditional operator with max_t()
-Date:   Mon, 26 Jun 2023 10:22:12 +0800
-Message-Id: <20230626022212.30297-1-luhongfei@vivo.com>
-X-Mailer: git-send-email 2.39.0
-Content-Transfer-Encoding: 8bit
-Content-Type: text/plain
-X-ClientProxiedBy: TYCP286CA0073.JPNP286.PROD.OUTLOOK.COM
- (2603:1096:400:31a::18) To TYZPR06MB6697.apcprd06.prod.outlook.com
- (2603:1096:400:451::6)
+        with ESMTP id S229559AbjFZDSb (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sun, 25 Jun 2023 23:18:31 -0400
+Received: from mail-lj1-x235.google.com (mail-lj1-x235.google.com [IPv6:2a00:1450:4864:20::235])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id BC1BA11C
+        for <linux-xfs@vger.kernel.org>; Sun, 25 Jun 2023 20:18:29 -0700 (PDT)
+Received: by mail-lj1-x235.google.com with SMTP id 38308e7fff4ca-2b588fa06d3so5684251fa.1
+        for <linux-xfs@vger.kernel.org>; Sun, 25 Jun 2023 20:18:29 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20221208; t=1687749508; x=1690341508;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=Eqh2lEFJW7qzYey6Vp9BxMSITWDx8dOTTaMjVWMBfaE=;
+        b=psN+E4O5ZIlE3BkuCFbkpeovkYEjqVpMy6lLzrirC9ZyEpMViaGX2FqXorZ4u6jePu
+         3NCh+9y08n6JUw58bB608TD2QQx9jWnPu9rqKfhES7Y6Vv7Z6OsPhUjLwthtRTZkPO71
+         PFr9DESKtFwIDmMwGnuRoKyxvyBq1GDirufCFBR9cdtylI74CWgVgcJX6W+7yeu5Er1Z
+         rStwl4mvZb9HJbBMxJlCLVSTrTrHF8UoQofj7sj1cocaE4oPc8/K5Ba4UJHSl2SW22Oj
+         KrSIRhr4Qr7/B2fXa+tGgQr6Tarh2+GwtGeyuqq+TD7XU0W6MwVJ7wNEa7OdMfeYt1wP
+         8pTA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20221208; t=1687749508; x=1690341508;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=Eqh2lEFJW7qzYey6Vp9BxMSITWDx8dOTTaMjVWMBfaE=;
+        b=fY7boofiiJCv29qqwXH02DjAlMN5pcXsbUIytrELDcjZt9oreB7BJv1dmQ1foVzNXv
+         xXGs/4XC4l0XXEjjj5iOVPSA48zqjca3Dee0l4UcMu8eveEdvNuAyaIEnZCvefFtgQmb
+         AkQ+cIRh+iUAiHp/JlLlMkBvIui+0q15IogyeNJFnU30JKEVI6Bi1xhdfl9nzhcz9lMQ
+         pGkHvqMhEQTIIb5WD0PgI75sN2dj6AgZMjrm3SdW3T8HvAOl3glxS3+Da778g/OT/U/p
+         4ADN8BNhqUTyHvo/BC+/qAEH4BCx8adEvFjrbNby7FRDxoAYGddpJJKfb3Dqi94plF3f
+         HtOQ==
+X-Gm-Message-State: AC+VfDwunFyhSVfSIhXfVu4qtOnF7TWOHiWWYH3lSBeh830GOP0slNqp
+        2K0zPlGY5hh28LLunBPQ0BKdcH8t5JmaSOM2gQqzd2QysZI=
+X-Google-Smtp-Source: ACHHUZ51oHECKLHOQqs48RfZwWVxZo7anzEtTr/6D1B6KmksZg8PjPtQaK0fwLsGCzd6tMsUeRk56jvs1g/A1h3G9Do=
+X-Received: by 2002:a05:651c:1192:b0:2b6:999f:b16c with SMTP id
+ w18-20020a05651c119200b002b6999fb16cmr1182969ljo.4.1687749507477; Sun, 25 Jun
+ 2023 20:18:27 -0700 (PDT)
 MIME-Version: 1.0
-X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: TYZPR06MB6697:EE_|TYZPR06MB6215:EE_
-X-MS-Office365-Filtering-Correlation-Id: 59a5cb2c-51ef-4512-36e9-08db75ec2bf6
-X-MS-Exchange-SenderADCheck: 1
-X-MS-Exchange-AntiSpam-Relay: 0
-X-Microsoft-Antispam: BCL:0;
-X-Microsoft-Antispam-Message-Info: rQnW5s3s3eqF6eXYojZ966ddSjDSsQ4fX0S0awi2r2KuNsO/FioLUNyOO31BeIv+vx0/siU7Wk0GC8wPrSydonY7nFTHFfSCUDVY4iT11nvL+Xrp6LHYtTyvGLlbI0J5icii02KDGsA3ge+jiVhS8x3eHVuWR8JW5y28TIORN6JT3DEk77S4VezSRtOH6aRvyFsl/W+q4YeTDgB4wbFzOrIudNsN6h+vR2gXksEbELIhg7837I37HQ7Z8a4+oWRKhBOF/1uAY9M8mPDYS0ZeQ7igp0ecCY9nihOMdiBqX1jgcTnW9Bi1fK/+Mx8NHDgri+9gXUz/boSqzFZebV2FjPxF/t3IoIY57S9aZiAOuAMKAZ6oTAT9fg16RxtgucssblOmlIS5GHpA9ZIucl7vzd5ho4NJafN06wOIuIC1s81rxQfPwYtROZZ2K2DVZeaVmRHfGoP/uDvXXx+WrIrpSPROb/KQy+WP2Koy5PaC5Cwv5EUQEGdUtH//GMCZZ/QNZSI8IShu8byyHv9jO/ua8HZbegMw3X9IwsVqHdO8QAcciO0clC2UK3D04Y1E6cFUemepi9L4pDr5EhmtDhvZ6+GnoOd3XO3rwOSXa8QRHjAdSMxNzBy+EsSF6wVvDIXx
-X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:TYZPR06MB6697.apcprd06.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230028)(4636009)(39850400004)(136003)(346002)(396003)(376002)(366004)(451199021)(8676002)(8936002)(66556008)(66946007)(41300700001)(316002)(66476007)(4326008)(6506007)(26005)(6512007)(1076003)(186003)(107886003)(2616005)(478600001)(110136005)(6666004)(52116002)(6486002)(2906002)(4744005)(5660300002)(38350700002)(38100700002)(36756003)(86362001)(83380400001);DIR:OUT;SFP:1102;
-X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0: =?us-ascii?Q?opzszIhSluMuDS1yygl2L+OWslmMcscICaSckKS24DMyfz9q3h1etlFyCo3/?=
- =?us-ascii?Q?7FG3ei7X2uFIQwZKyj4BGpl+vkWRnxKosqcNRPG72ASGne/7aGLIf4zE2jfj?=
- =?us-ascii?Q?pUzScd1fOf00EiPM1rvBa0I1lVDQwqAWsRSF+1/vJTVt9yIaMprk3zGoNial?=
- =?us-ascii?Q?VB4jDadKjKA4S46FGHYbxrPwkzc0dqYrS/WFpBwkrV2lNSA8iZyR1n2PV+Vl?=
- =?us-ascii?Q?dbZU9Hx39zSIVYGW9hLVFf3bjbRpowSNVyrKcZhNZrSC+5T1UhbRhpIcje+K?=
- =?us-ascii?Q?XlckC8AT/tuDxxcKBVWxyeXSzwy9HMyjEXNP7TdXhFnF4xzQ2rv5WeK9Qnnz?=
- =?us-ascii?Q?V/NzYIfr1R4tezOM38+9GRBhgYvn8iKF54TkITKv/e2dM0AP3f1NOEpQyedX?=
- =?us-ascii?Q?2iPplNZEd10WKxIWYC0v4La0UPj4vdpSkfnckjGQD1w3Li94AZ53scNA9Wh2?=
- =?us-ascii?Q?Uar3GXtlpyZq/zz8hqKiBCFKN09f1NiUKACaX7PYlwZctSmvULocLp8qU5ZP?=
- =?us-ascii?Q?lfoBoFbOZ7+QRs7jQou4qTbMhpjclAgvtJzTZl0ZCZF0QVjJ5M5dsHSjnW99?=
- =?us-ascii?Q?MwUsNDCnhHKz9HhuMuzkRLCkk8nMqUJbtlWsNq/ptzkvgqLeHZymJxzfUxYl?=
- =?us-ascii?Q?xLkWUtZ0/UzC31h0n9EaHiN5g5BTmNxAfPgxfmna8VHYFohAuZfHBVWp922K?=
- =?us-ascii?Q?FgbBtOpztkgPLJYCl7N8M0QWxdh9jeGMtMRd36PI+kQafVLPj7VMy3Px2zZd?=
- =?us-ascii?Q?kDWh/h3d4wBgQfuMc/Y96eFxrL8o30oOosrisafdXf4sLFsPiz+9t9+2ocFt?=
- =?us-ascii?Q?2GUCVeWgoV0TYAzmR9zPmiWC7KlkXYBU29M9NQM0blX95yZ/ILA7LDtWM6//?=
- =?us-ascii?Q?dOCIvjYD6429zoswsNyb5y0ycfc3VEmsMYVqCI+YrYeFnutQomp+RvaL4T2q?=
- =?us-ascii?Q?t/bAopijd/6dLbeC2YZUT+RrJ6SCQzGTAUD2J7/L3tMHcgydo9U+vkCNFtZc?=
- =?us-ascii?Q?V7nyBJ1VIrmfNtjshn+LJKJkvaPNqU61SOrz7k9TWq0miMPmQUS11ezDQ6lR?=
- =?us-ascii?Q?eJL9AD66UeK5q0pYTrGJiH+ZGC6JSDjTE8pdsaEOTUlV6pQmT6nVQypTaYdU?=
- =?us-ascii?Q?T/491YiOcpgY9FUgZAaQj4EYqkiCw3xOHv4XPSL6kG2UtL+HX4AiS3iGQjnx?=
- =?us-ascii?Q?kQUk811iIClM/yKSW2yx0FHNORJy1qrNaVkVpByig0GeRpU1n9OhE0WMmJci?=
- =?us-ascii?Q?43d+A9p4uDSWSfrbmMWHxnDqCzhVyY7+apXJtl8Prw8/hvooZuI1dAoAaKbd?=
- =?us-ascii?Q?sgsBjQLgCxu78S92PQKXHsh9S9p1U2m3+T3ncCyj24w/g4oBhWzTnLF8iwfL?=
- =?us-ascii?Q?GzDfLLVCRUXWBUr9YmuGr+2Qiyb0DQcaXwjv5aHNwb2kTAmPP/WmxD5g6efr?=
- =?us-ascii?Q?kI+gUTKU/P1nO8vUSKn5RCLCys6JVE03eMPH1aWh4nSXhG4HeffWHWQjKR28?=
- =?us-ascii?Q?/sleuoZPl55Ui8gBOILnoIlXJqcsS37+gKOyi/R37oUpdd+b1ilbmAPEoDxf?=
- =?us-ascii?Q?HlDi5cBcOSomRuBM8IXmaLrAuz2UJtfmt0BPyBnV?=
-X-OriginatorOrg: vivo.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 59a5cb2c-51ef-4512-36e9-08db75ec2bf6
-X-MS-Exchange-CrossTenant-AuthSource: TYZPR06MB6697.apcprd06.prod.outlook.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 26 Jun 2023 02:22:21.5700
- (UTC)
-X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
-X-MS-Exchange-CrossTenant-Id: 923e42dc-48d5-4cbe-b582-1a797a6412ed
-X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: S6MMS7ms5UfbzlmA4CkgUSQFOmzfcNyfbRf/MLbLQC1cpcVFs1QWPcyxYq9Jx4A6SxRkd+3IZ1NayDUYVH70EQ==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: TYZPR06MB6215
+References: <CAD21AoCWW20ga6GKR+7RwRtvPU0VyFt3_acut_y+Fg7E-4nzWw@mail.gmail.com>
+ <ZJTrrwirZqykiVxn@dread.disaster.area>
+In-Reply-To: <ZJTrrwirZqykiVxn@dread.disaster.area>
+From:   Masahiko Sawada <sawada.mshk@gmail.com>
+Date:   Mon, 26 Jun 2023 12:17:50 +0900
+Message-ID: <CAD21AoC9=8Q2o3-+ueuP05+8298z--5vgBWtvSxMHHF2jdyr_w@mail.gmail.com>
+Subject: Re: Question on slow fallocate
+To:     Dave Chinner <david@fromorbit.com>
+Cc:     linux-xfs@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-It would be better to replace the traditional ternary conditional
-operator with max_t() in iomap_iter
+On Fri, Jun 23, 2023 at 9:47=E2=80=AFAM Dave Chinner <david@fromorbit.com> =
+wrote:
+>
+> On Thu, Jun 22, 2023 at 02:34:18PM +0900, Masahiko Sawada wrote:
+> > Hi all,
+> >
+> > When testing PostgreSQL, I found a performance degradation. After some
+> > investigation, it ultimately reached the attached simple C program and
+> > turned out that the performance degradation happens on only the xfs
+> > filesystem (doesn't happen on neither ext3 nor ext4). In short, the
+> > program alternately does two things to extend a file (1) call
+> > posix_fallocate() to extend by 8192 bytes
+>
+> This is a well known anti-pattern - it always causes problems. Do
+> not do this.
+>
+> > and (2) call pwrite() to
+> > extend by 8192 bytes. If I do only either (1) or (2), the program is
+> > completed in 2 sec, but if I do (1) and (2) alternatively, it is
+> > completed in 90 sec.
+>
+> Well, yes. Using fallocate to extend the file has very different
+> constraints to using pwrite to extend the file.
+>
+> > $ gcc -o test test.c
+> > $ time ./test test.1 1
+> > total   200000
+> > fallocate       200000
+> > filewrite       0
+>
+> No data is written here, so this is just a series of 8kB allocations
+> and file size extension operations. There are no constraints here
+> because it is a pure metadata operation.
+>
+> > real    0m1.305s
+> > user    0m0.050s
+> > sys     0m1.255s
+> >
+> > $ time ./test test.2 2
+> > total   200000
+> > fallocate       100000
+> > filewrite       100000
+> >
+> > real    1m29.222s
+> > user    0m0.139s
+> > sys     0m3.139s
+>
+> Now we have fallocate extending the file and doing unwritten extent
+> allocation, followed by writing into that unwritten extent which
+> then does unwritten extent conversion.
+>
+> This introduces data vs metadata update ordering constraints to the
+> workload.
+>
+> The problem here in that the "truncate up" operation that
+> fallocate is doing to move the file size. The "truncate up" is going
+> to move the on-disk file size to the end of the fallocated range via
+> a journal transaction, and so it will expose the range of the
+> previous write as containing valid data.
+>
+> However, the previous data write is still only in memory and not on
+> disk. The result of journalling the file size change is that if we
+> crash after the size change is made but the data is not on disk,
+> we end up with lost data - the file contains zeros (or NULLs) where
+> the in memory data previously existed.
+>
+> Go google for "NULL file data exposure" and you'll see this is a
+> problem we fixed in ~2006, caused by extending the file size on disk
+> without first having written all the in-memory data into the file.
+> And even though we fixed the problem over 15 years ago, we still
+> hear people today saying "XFS overwrites user data with NULLs!" as
+> their reason for never using XFS, even though this was never true in
+> the first place..
+>
+> The result of users demanding that we prevent poorly written
+> applications from losing their data is that users get poor
+> performance when their applications are poorly written. i.e. they do
+> something that triggers the data integrity ordering constraints that
+> users demand we work within.
 
-Signed-off-by: Lu Hongfei <luhongfei@vivo.com>
----
- fs/iomap/iter.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+Thank you for the detailed explanation.
 
-diff --git a/fs/iomap/iter.c b/fs/iomap/iter.c
-index 79a0614eaab7..528fd196c50b 100644
---- a/fs/iomap/iter.c
-+++ b/fs/iomap/iter.c
-@@ -77,7 +77,7 @@ int iomap_iter(struct iomap_iter *iter, const struct iomap_ops *ops)
- 
- 	if (iter->iomap.length && ops->iomap_end) {
- 		ret = ops->iomap_end(iter->inode, iter->pos, iomap_length(iter),
--				iter->processed > 0 ? iter->processed : 0,
-+				max_t(s64, iter->processed, 0),
- 				iter->flags, &iter->iomap);
- 		if (ret < 0 && !iter->processed)
- 			return ret;
--- 
-2.39.0
+>
+> So, how to avoid the problem?
+>
+> With 'posix_fallocate(fd, total_len, 8192);':
+>
+> $ rm /mnt/scratch/foo ; time ./fwtest /mnt/scratch/foo 1
+> total   200000
+> fallocate       200000
+> filewrite       0
+>
+> real    0m2.557s
+> user    0m0.025s
+> sys     0m2.531s
+> $ rm /mnt/scratch/foo ; time ./fwtest /mnt/scratch/foo 2
+> total   200000
+> fallocate       100000
+> filewrite       100000
+>
+> real    0m39.564s
+> user    0m0.117s
+> sys     0m7.535s
+>
+>
+> With 'fallocate(fd, FALLOC_FL_KEEP_SIZE, total_len, 8192);':
+>
+> $ rm /mnt/scratch/foo ; time ./fwtest /mnt/scratch/foo 1
+> total   200000
+> fallocate       200000
+> filewrite       0
+>
+> real    0m2.269s
+> user    0m0.037s
+> sys     0m2.233s
+> $ rm /mnt/scratch/foo ; time ./fwtest /mnt/scratch/foo 2
+> total   200000
+> fallocate       100000
+> filewrite       100000
+>
+> real    0m1.068s
+> user    0m0.028s
+> sys     0m1.040s
+>
+> Yup, just stop fallocate() from extending the file size and leave
+> that to the pwrite() call that actually writes the data into the
+> file.
+>
+> As it is, using fallocate/pwrite like test does is a well known
+> anti-pattern:
+>
+>         error =3D fallocate(fd, off, len);
+>         if (error =3D=3D ENOSPC) {
+>                 /* abort write!!! */
+>         }
+>         error =3D pwrite(fd, off, len);
+>         ASSERT(error !=3D ENOSPC);
+>         if (error) {
+>                 /* handle error */
+>         }
+>
 
+The test.c and what PostgreSQL does are slightly different from the
+above pattern actually: it calls fallocate and pwrites for different
+8kB blocks. For example, it calls fallocate to extend the file from 0
+byte to 8192 bytes, and then calls pwrite to extend the file from 8192
+bytes to 16384 bytes. But it's also not a recommended use, right?
+
+> Why does the code need a call to fallocate() here it prevent ENOSPC in th=
+e
+> pwrite() call?
+>
+> The answer here is that it *doesn't need to use fallocate() here*.
+> THat is, the fallocate() ENOSPC check before the space is allocated
+> is exactly the same as the ENOSPC check done in the pwrite() call to
+> see if there is space for the write to proceed.
+>
+> IOWs, the fallocate() call is *completely redundant*, yet it is
+> actively harmful to performance in the short term (as per the
+> issue in this thread) as well as being harmful for file fragmentation
+> levels and filesystem longevity because it prevents the filesystem
+> from optimising away unnecessary allocations. i.e. it defeats
+> delayed allocation which allows filesystem to combine lots of
+> small sequential write() calls in a single big contiguous extent
+> allocation when the data is getting written to disk.
+>
+> IOWs, using fallocate() in the way described in this test is a sign
+> of applicaiton developers not understanding what preallocation
+> actually does and the situations where it actually provides some
+> kinds of benefit.
+>
+> i.e. fallocate() is intended to allow applications to preallocate
+> space in large chunks long before it is needed, and still have it
+> available when the application actually needs to write to it. e.g.
+> preallocate 10MB at a time, not have to run fallocate again until the
+> existing preallocated chunk is entirely used up by the next thousand
+> 8KB writes that extend the file.
+>
+> Using fallocate() as a replacement for "truncate up before write" is
+> *not a recommended use*.
+
+FYI, to share the background of what PostgreSQL does, when
+bulk-insertions into one table are running concurrently, one process
+extends the underlying files depending on how many concurrent
+processes are waiting to extend. The more processes wait, the more 8kB
+blocks are appended. As the current implementation, if the process
+needs to extend the table by more than 8 blocks (i.e. 64kB) it uses
+posix_fallocate(), otherwise it uses pwrites() (see the code[1] for
+details). We don't use fallocate() for small extensions as it's slow
+on some filesystems. Therefore, if a bulk-insertion process tries to
+extend the table by say 5~10 blocks many times, it could use
+poxis_fallocate() and pwrite() alternatively, which led to the slow
+performance as I reported.
+
+>
+> > Why does it take so long in the latter case? and are there any
+> > workaround or configuration changes to deal with it?
+>
+> Let pwrite() do the file extension because it natively handles data
+> vs metadata ordering without having to flush data to disk and wait
+> for it. i.e. do not use fallocate() as if it is ftruncate(). Also,
+> do not use posix_fallocate() - it gives you no control over how
+> preallocation is done, use fallocate() directly. And if you must use
+> fallocate() before a write, use fallocate(fd, FALLOC_FL_KEEP_SIZE,
+> off, len) so that the file extension is done by the pwrite() to
+> avoid any metadata/data ordering constraints that might exist with
+> non-data write related file size changes.
+>
+
+Thanks. Wang Yugui reported that this slow performance seems not to
+happen on newer kernel versions, but is that right?
+
+Fortunately, this behavior is still beta (PG16 beta). I will discuss
+alternative solutions in the PostgreSQL community.
+
+Regards,
+
+[1] https://github.com/postgres/postgres/blob/master/src/backend/storage/sm=
+gr/md.c#L577
+
+--=20
+Masahiko Sawada
+Amazon Web Services: https://aws.amazon.com
