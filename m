@@ -2,75 +2,162 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E8636EB64D9
-	for <linux-xfs@archiver.kernel.org>; Tue, 27 Jun 2023 21:30:51 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D7C55EB64DC
+	for <linux-xfs@archiver.kernel.org>; Tue, 27 Jun 2023 22:44:25 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229953AbjF0Vau (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 27 Jun 2023 17:30:50 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36182 "EHLO
+        id S229676AbjF0WoY (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 27 Jun 2023 18:44:24 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60306 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229488AbjF0Vau (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 27 Jun 2023 17:30:50 -0400
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C8950F5
-        for <linux-xfs@vger.kernel.org>; Tue, 27 Jun 2023 14:30:05 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1687901404;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:mime-version:mime-version:
-         content-transfer-encoding:content-transfer-encoding;
-        bh=JquQOtG6dT86uuoh2j7ROM20YdnhBJX/RFUsZGtW5OY=;
-        b=f+KogcFdyiv5cC2CxM6u794c4bz8ueT3UstpYrmmGy81UA5ePmODbOA28gv2aw1ah1Pm7S
-        6n571jdQ2lCr087kMhxp8CrLN1VnqXzzRcmu6LB3TvEbwJA9ZhZdP31nQqgOJdWOtiRMxe
-        bemsJtcZ/mBrlOmw4c9+hVoBIcjdDDw=
-Received: from mimecast-mx02.redhat.com (mimecast-mx02.redhat.com
- [66.187.233.88]) by relay.mimecast.com with ESMTP with STARTTLS
- (version=TLSv1.2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- us-mta-223-zGPv96GjMbyd11e1LwB0sQ-1; Tue, 27 Jun 2023 17:30:03 -0400
-X-MC-Unique: zGPv96GjMbyd11e1LwB0sQ-1
-Received: from smtp.corp.redhat.com (int-mx04.intmail.prod.int.rdu2.redhat.com [10.11.54.4])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mimecast-mx02.redhat.com (Postfix) with ESMTPS id 339C1830DB8
-        for <linux-xfs@vger.kernel.org>; Tue, 27 Jun 2023 21:30:03 +0000 (UTC)
-Received: from toolbox.redhat.com (unknown [10.22.8.171])
-        by smtp.corp.redhat.com (Postfix) with ESMTP id 12AAA200BA8D
-        for <linux-xfs@vger.kernel.org>; Tue, 27 Jun 2023 21:30:03 +0000 (UTC)
-From:   Yaakov Selkowitz <yselkowi@redhat.com>
+        with ESMTP id S229895AbjF0WoX (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 27 Jun 2023 18:44:23 -0400
+Received: from mail-pl1-x635.google.com (mail-pl1-x635.google.com [IPv6:2607:f8b0:4864:20::635])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 20C7A270C
+        for <linux-xfs@vger.kernel.org>; Tue, 27 Jun 2023 15:44:19 -0700 (PDT)
+Received: by mail-pl1-x635.google.com with SMTP id d9443c01a7336-1b80bce2592so16111455ad.2
+        for <linux-xfs@vger.kernel.org>; Tue, 27 Jun 2023 15:44:18 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=fromorbit-com.20221208.gappssmtp.com; s=20221208; t=1687905858; x=1690497858;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:to
+         :from:from:to:cc:subject:date:message-id:reply-to;
+        bh=g90+Y120xVJH/76WmII9v5m9YQetqErv0aZddrO2Bg0=;
+        b=Srrokoy6TV9fna0cedAhl3eE8SteCrgGDGXToW81aUCdRv3My2WPgrfDd/a+NwQ+qQ
+         HprPj+gT1fGg5MmmkhpMT5Z8XoceucnyGTStAHykCa8oGpKZu7O7Oi3gL5zMtzaAh1O8
+         CtzLj3ATtffKqGLh6poZx+ptMg8AgZDzBrTry6F19AHNk5KpB4kRUvyRzFlwZHv21urp
+         f5X3wd0cOONOJmlwcLZl2zFBczgt+Cq9lyGHWa1zUWpaElWgiblpZikHLHZ6dQMRlovV
+         Z8BhJazuBifmHMP3xBXsZsY+ip5mmaSnM/jPaJ/xFysM3jGhRiiny2KIIzGq7Pw8wRIc
+         Y7Dw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20221208; t=1687905858; x=1690497858;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:to
+         :from:x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=g90+Y120xVJH/76WmII9v5m9YQetqErv0aZddrO2Bg0=;
+        b=iWHWt0VDnSLEoOLLixURGCrE+G+AyDf6uBKp4173rFEhC9hoArT2ZqSlkuVzTFoeJH
+         gSyucSiVMLlHKyuB/xNWrn0PKgJ2K96HghuK0aqI+Y4aBKsrTt6HuE9cxfmo0vYyPLB+
+         DTKA2Ixy4EalpapcuHHShEWZsmngmpxC+g0kVvu/obJQ/FQmy63ZfGCssq4Gr+JyKpL+
+         /sFrFk8jrRi2ehSU+HMOJPzds+2LWajEMGIe2lFjTQLllzvhCY/E1BRNf9rdFaDuFVBF
+         zexE24EsG8Cm+bI5dz7ibjwTQQBA51ZwR+33aNowilzsQw4de1X1KOthRDa2teZJliZQ
+         IHoA==
+X-Gm-Message-State: AC+VfDzJ1ydg/ZUa4PLrimPNV69MZZS2ealdapIgCl6Fq4bNFNwwUTnT
+        +7fGhpJ7POYiOCK4tvf3p2wTyySCHCosEX2eTiI=
+X-Google-Smtp-Source: ACHHUZ7YyAq75ZsebxKitniZHC9BrbOu0Xknc+xTzY3v/ucjvMrf5jidE9JvqXuEqGZJm8QYy6uLcQ==
+X-Received: by 2002:a17:903:1210:b0:1b0:2658:daf7 with SMTP id l16-20020a170903121000b001b02658daf7mr9133296plh.36.1687905858407;
+        Tue, 27 Jun 2023 15:44:18 -0700 (PDT)
+Received: from dread.disaster.area (pa49-186-94-37.pa.vic.optusnet.com.au. [49.186.94.37])
+        by smtp.gmail.com with ESMTPSA id u15-20020a17090341cf00b001b539640aa3sm6449831ple.283.2023.06.27.15.44.17
+        for <linux-xfs@vger.kernel.org>
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Tue, 27 Jun 2023 15:44:17 -0700 (PDT)
+Received: from [192.168.253.23] (helo=devoid.disaster.area)
+        by dread.disaster.area with esmtp (Exim 4.96)
+        (envelope-from <dave@fromorbit.com>)
+        id 1qEHPz-00GzwP-0q
+        for linux-xfs@vger.kernel.org;
+        Wed, 28 Jun 2023 08:44:15 +1000
+Received: from dave by devoid.disaster.area with local (Exim 4.96)
+        (envelope-from <dave@devoid.disaster.area>)
+        id 1qEHPy-009Zm4-2q
+        for linux-xfs@vger.kernel.org;
+        Wed, 28 Jun 2023 08:44:14 +1000
+From:   Dave Chinner <david@fromorbit.com>
 To:     linux-xfs@vger.kernel.org
-Subject: [PATCH] po: fix German translation
-Date:   Tue, 27 Jun 2023 17:29:31 -0400
-Message-ID: <20230627212959.1155472-1-yselkowi@redhat.com>
+Subject: [PATCH 0/8 v3] xfs: various fixes for 6.5
+Date:   Wed, 28 Jun 2023 08:44:04 +1000
+Message-Id: <20230627224412.2242198-1-david@fromorbit.com>
+X-Mailer: git-send-email 2.40.1
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-X-Scanned-By: MIMEDefang 3.1 on 10.11.54.4
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-gettext-0.22 raises an error on what is clearly an typo in the translation:
+Hi folks,
 
-  de.po:3087: 'msgstr' is not a valid C format string, unlike 'msgid'.
-  Reason: In the directive number 2, the argument size specifier is invalid.
+This is an update of the fixes patchset I sent here:
 
-Signed-off-by: Yaakov Selkowitz <yselkowi@redhat.com>
+https://lore.kernel.org/linux-xfs/20230620002021.1038067-1-david@fromorbit.com/
+
+There are new patches in the series - patch two is a new patch to
+fix a potential issue in the non-blocking busy extent flush code
+that Chandan noticed where btree block freeing could potentially
+trip over busy extents and return -EAGAIN that isn't handled.
+Patches 7 and 8 are new patches to this series; they are outstanding
+standalone bug fixes that need review, so I've included them here,
+too.
+
+Original cover letter (with patch numbers updated) follows.
+
+-Dave.
+
+--
+
+This is a wrap up of version 3 of all the fixes I have recently
+pushed out for review.
+
+The first patch fixes a AIL ordering problem identified when testing
+patches 3-5 in this series. This patch only addresses the AIL ordering
+problem that was found, it does not address any other corner cases
+in intent recovery that may be exposed by patches 3-5.
+
+Patches 3-5 allow partial handling of multi-extent EFIs during
+runtime operation and during journal recovery. This is needed as
+we attempt to process all the extents in the EFI in a single
+transaction and we can deadlock during AGFL fixup if the transaction
+context holds the only free space in the AG in a busy extent.
+
+This patchset uncovered a problem where log recovery would run off
+the end of the list of intents to recover and into intents that
+require deferred processing. This was caused by the ordering issue
+fixed in patch 1.
+
+This patchset does not attempt to address the end of intent recovery
+detection issues - this raises other issues with the intent recovery
+beyond loop termination. Solving those issues requires more thought,
+and the problem can largely be avoided by the first patch in the
+series. As it is, CUI recovery has been vulnerable to these intent
+recovery loop termination issues for several years but we don't have
+any evidence that systems have tripped over this so the urgency to
+fix the loop termination fully isn't as high as fixing the AIL bulk
+insertion ordering problem that exposed it.
+
+Finally, patch 6 addresses journal geometry validation issues. It
+makes all geometry mismatches hard failures for V4 and V5
+filesystems, except for the log size being too small on V4
+filesystems. This addresses the problem on V4 filesystems where we'd
+fail to perform ithe remaining validation on the geometry once we'd
+detected that the log was too small or too large.
+
+This all passed fstests on v4 and v5 filesystems without
+regressions.
+
 ---
- po/de.po | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+Version 3:
+- patch 2
+  - new patch to defer block freeing for inobt and refcountbt
+    blocks. This is to close a problem Chandan found during review
+    of "xfs: don't block in busy flushing when freeing extents" in
+    the V2 series.
+- patch 7
+  - pulled in AGF length bounds chekcing fixes patch.
+  - rearranged slightly for better error discrimination
+  - comments added
+  - minor syntax and comment fixes
+- patch 8
+  - new bug fix for a memory leak regression discovered by Coverity
+    during xfsprogs scan.
 
-diff --git a/po/de.po b/po/de.po
-index 944b0e91..a6f8fde1 100644
---- a/po/de.po
-+++ b/po/de.po
-@@ -3084,7 +3084,7 @@ msgstr "%llu Spezialdateien\n"
- #: .././estimate/xfs_estimate.c:191
- #, c-format
- msgid "%s will take about %.1f megabytes\n"
--msgstr "%s wird etwa %.lf Megabytes einnehmen\n"
-+msgstr "%s wird etwa %.1f Megabytes einnehmen\n"
- 
- #: .././estimate/xfs_estimate.c:198
- #, c-format
--- 
-2.41.0
+Version 2:
+- patch 1
+  - rewritten commit message
+- patch 2
+  - uint32_t alloc_flag conversion pushed all the way down into
+    xfs_extent_busy_flush
+- patch 3
+  - Updated comment for xfs_efd_from_efi()
+  - fixed whitespace damage
+  - check error return from xfs_free_extent_later()
+- patch 5
+  - update error message for max LSU size check
+  - fix whitespace damage
+  - clean up error handling in xfs_log_mount() changes
 
