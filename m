@@ -2,278 +2,147 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E1C8AC001B0
-	for <linux-xfs@archiver.kernel.org>; Tue, 27 Jun 2023 22:44:32 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1C352EB64D9
+	for <linux-xfs@archiver.kernel.org>; Tue, 27 Jun 2023 22:50:35 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229948AbjF0Wob (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 27 Jun 2023 18:44:31 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60384 "EHLO
+        id S229797AbjF0Wud (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 27 Jun 2023 18:50:33 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33732 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229982AbjF0Wo2 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 27 Jun 2023 18:44:28 -0400
-Received: from mail-pf1-x42f.google.com (mail-pf1-x42f.google.com [IPv6:2607:f8b0:4864:20::42f])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C44302947
-        for <linux-xfs@vger.kernel.org>; Tue, 27 Jun 2023 15:44:22 -0700 (PDT)
-Received: by mail-pf1-x42f.google.com with SMTP id d2e1a72fcca58-668730696a4so2754812b3a.1
-        for <linux-xfs@vger.kernel.org>; Tue, 27 Jun 2023 15:44:22 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=fromorbit-com.20221208.gappssmtp.com; s=20221208; t=1687905862; x=1690497862;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:to:from:from:to:cc:subject:date:message-id
-         :reply-to;
-        bh=4O2k46lv/gI7xyqpvXtBgdwqM0g/QagZozuLf4U9K4c=;
-        b=cKgdrZ43YU4na7peEhU2pWxrT3ycVrcStWKlDD3d2SXyyHQ7Gjh4tFS42r8SJJiH/6
-         /zUvTh93MiFUtvP/TE9L811XX2NhSCzEH1QuSQcW6uJy/ovkdhFpHhnNnZpcxxQapB7g
-         nX4xeBx+GTklHAdtT6qGawUEtlumdu3EFexBoXxeveA1Q29hzIPGCs51wDWz6hLQZKTv
-         LsUg13Q4jpjrOOBbPTaIWTOWu8DfBrb629f2GL/PMcBHZ2kcoN0YU0Rm4OqoNULWeLzb
-         dtpSPFqCDE9m89SGLt6h2ptDUkOXkYCwHSNI/mPe4eu8ECPrd5NdXithj+aAJUCEwZVh
-         mcbQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20221208; t=1687905862; x=1690497862;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:to:from:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=4O2k46lv/gI7xyqpvXtBgdwqM0g/QagZozuLf4U9K4c=;
-        b=C94+GuXpolvh+I1JHhgM5QYneJbs9P9DJCyRNpZ35wqytRTIndtK2ams9aW2OLsa4w
-         r5uSSxSIysWqhubjtmULJeB1kDDj70s0SvGZdRJiRcbRDvpSeFAfaBiZDEPg9IOew1UK
-         6NnuhY8gQ7ekT/sAc7tNKCqfHsK2S56nuxqP+Y0TQqAdYzJSqvS7vuHjqp8RRQdCxdAU
-         8sCprtU8qiLcnHLeY4NnVD1I89kXftuUuPi5+l6w4TpFT3uONuVwDgZYjodOk1AZrWhu
-         JEhCUbMmrJeyHoBmQ37JLOsxnD46jHcZY7FySumPI3m15nDKlv5Cknlp/V0B5CB5jR72
-         I20A==
-X-Gm-Message-State: AC+VfDwTH+Twc7AQberqwn65hlUSgxypFgabSy/hE4ZZOUAXIAIyLeAy
-        cNfQ8sexSeHUMQ2aB5ZBLM30DCfWr7joIcWFjrk=
-X-Google-Smtp-Source: ACHHUZ67g6fUTtjziPJRgLpZIRQA/oKWq6w5y0mzV755YfeWH4uh55MmcDS+M5kxUbWXnjw+4Rwd2w==
-X-Received: by 2002:a05:6a00:3919:b0:643:aa8d:8cd7 with SMTP id fh25-20020a056a00391900b00643aa8d8cd7mr24682916pfb.32.1687905861960;
-        Tue, 27 Jun 2023 15:44:21 -0700 (PDT)
-Received: from dread.disaster.area (pa49-186-94-37.pa.vic.optusnet.com.au. [49.186.94.37])
-        by smtp.gmail.com with ESMTPSA id y11-20020a62b50b000000b0063f0068cf6csm5878864pfe.198.2023.06.27.15.44.18
-        for <linux-xfs@vger.kernel.org>
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 27 Jun 2023 15:44:20 -0700 (PDT)
-Received: from [192.168.253.23] (helo=devoid.disaster.area)
-        by dread.disaster.area with esmtp (Exim 4.96)
-        (envelope-from <dave@fromorbit.com>)
-        id 1qEHPz-00Gzwh-1m
-        for linux-xfs@vger.kernel.org;
-        Wed, 28 Jun 2023 08:44:15 +1000
-Received: from dave by devoid.disaster.area with local (Exim 4.96)
-        (envelope-from <dave@devoid.disaster.area>)
-        id 1qEHPz-009ZmV-0e
-        for linux-xfs@vger.kernel.org;
-        Wed, 28 Jun 2023 08:44:15 +1000
-From:   Dave Chinner <david@fromorbit.com>
-To:     linux-xfs@vger.kernel.org
-Subject: [PATCH 6/8] xfs: journal geometry is not properly bounds checked
-Date:   Wed, 28 Jun 2023 08:44:10 +1000
-Message-Id: <20230627224412.2242198-7-david@fromorbit.com>
-X-Mailer: git-send-email 2.40.1
-In-Reply-To: <20230627224412.2242198-1-david@fromorbit.com>
-References: <20230627224412.2242198-1-david@fromorbit.com>
+        with ESMTP id S229501AbjF0Wuc (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 27 Jun 2023 18:50:32 -0400
+Received: from NAM12-BN8-obe.outbound.protection.outlook.com (mail-bn8nam12on2077.outbound.protection.outlook.com [40.107.237.77])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id BEAB426B3;
+        Tue, 27 Jun 2023 15:50:27 -0700 (PDT)
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
+ b=DYNlRsL+9CijMSvXt6e4GYTGtObY3Tzib+tPmCjsfLZH0z7qIzD8RHedNlkNP6h6jplxWie7ylG3Ry3IBzQau+yxb6vJWpi427QVJfI8RG8naSTDJeQE5pkZCeJcLatolfHpQjKDFLpHfo5V+Dk8bgoD7++8yu1QSV3txDzMeBx2sHVKwDZMYwbV9AInP0C/4vxKxnGz3Fea75Z2i8jGQahHAiWg9E62Xunv55Xo7qtLkPJIN7i1FfuLBO03UsewcbQJXtj98m0FkvFMEwc5KRIrvXADvIl7uh/TcE1UIkzaT+IpS7+QzCbpCJa6FP1owgFeJf2F6PLgxd0KbkTvfA==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector9901;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=m0xy0ko7wUqCRVQHUEFCzLdKZxjAZXd4y84HUM7fo8M=;
+ b=Y1WFRJ287gVidWOMTtQ7+xMyncRrWviV/EwVRvHXcYhf55j00eP3UlYa7E2Ni691qlyikOstVsGFpXWzspCFaCSARsLO2BK+Com7WJTL2SSp6h/e4U7f+7LumQrPruoahgylD8Nhf7dE5ADRd5Q77ac7MlQKRe5ZAMuPWkV0qPMMwK6eB5sYMP49XRRAUdUf0yN2+BQRSHHkxAC+ny5rl0BAAEGEXxbcK/BY1GKkboHw5uaDvrzcDbyC9W9GJMwvnwPinAGW652T3PB3CMUgdeJafCe2JrHS1DO/y3lT7oYcHNN6a9R3hMw3MezkyyKeqsdWunpaL300OqXlFt2utA==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=nvidia.com; dmarc=pass action=none header.from=nvidia.com;
+ dkim=pass header.d=nvidia.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=Nvidia.com;
+ s=selector2;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=m0xy0ko7wUqCRVQHUEFCzLdKZxjAZXd4y84HUM7fo8M=;
+ b=L2cS82VZhZmftv0OHiz/77dyANRbIe4KGRIdCftxhR7AYNNA+mDsjRFy9sVU2//VsCkQaOqCO2bx27oaFYQTLZFLDMat1+Mgmme0Th94Bsr5ELvgrVJwKDYplH3Xw+Q1wl5EoydmJgrx/1PfpC0X5B8OpxIhpwiv8x7lrzcefNM/Owa0JMcf0uTHvyxoDX2VItim2jQNzr/epymMxeEhK8NVUC58+69zX7NjYhcPW2VfI66cVE3W1/fZvjQH8a5VpC9oRuiJc8qYcyrgscr7s2gRN8IRCibOVitz/BIutRXvF3AZBz/ydlSWOBJlEjwnGY7sx/iz3c6BWKK6rdAzJA==
+Received: from MW2PR12MB4667.namprd12.prod.outlook.com (2603:10b6:302:12::28)
+ by MN2PR12MB4333.namprd12.prod.outlook.com (2603:10b6:208:1d3::23) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.6521.24; Tue, 27 Jun
+ 2023 22:50:25 +0000
+Received: from MW2PR12MB4667.namprd12.prod.outlook.com
+ ([fe80::92c6:4b21:586d:dabc]) by MW2PR12MB4667.namprd12.prod.outlook.com
+ ([fe80::92c6:4b21:586d:dabc%4]) with mapi id 15.20.6521.024; Tue, 27 Jun 2023
+ 22:50:25 +0000
+From:   Chaitanya Kulkarni <chaitanyak@nvidia.com>
+To:     Lu Hongfei <luhongfei@vivo.com>
+CC:     "linux-fsdevel@vger.kernel.org" <linux-fsdevel@vger.kernel.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        "linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>,
+        "Darrick J. Wong" <djwong@kernel.org>,
+        "opensource.kernel@vivo.com" <opensource.kernel@vivo.com>,
+        Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH] fs: iomap: Change the type of blocksize from 'int' to
+ 'unsigned int' in iomap_file_buffered_write_punch_delalloc
+Thread-Topic: [PATCH] fs: iomap: Change the type of blocksize from 'int' to
+ 'unsigned int' in iomap_file_buffered_write_punch_delalloc
+Thread-Index: AQHZqN8x8d8w79yS0kWj3Bz681z1u6+fQceA
+Date:   Tue, 27 Jun 2023 22:50:25 +0000
+Message-ID: <df06d21b-9ae2-1e07-53f9-152eb2966bb9@nvidia.com>
+References: <20230627100325.51290-1-luhongfei@vivo.com>
+In-Reply-To: <20230627100325.51290-1-luhongfei@vivo.com>
+Accept-Language: en-US
+Content-Language: en-US
+X-MS-Has-Attach: 
+X-MS-TNEF-Correlator: 
+user-agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
+ Thunderbird/102.11.0
+authentication-results: dkim=none (message not signed)
+ header.d=none;dmarc=none action=none header.from=nvidia.com;
+x-ms-publictraffictype: Email
+x-ms-traffictypediagnostic: MW2PR12MB4667:EE_|MN2PR12MB4333:EE_
+x-ms-office365-filtering-correlation-id: 182ef9b8-54de-482d-6ae9-08db7760e5c3
+x-ms-exchange-senderadcheck: 1
+x-ms-exchange-antispam-relay: 0
+x-microsoft-antispam: BCL:0;
+x-microsoft-antispam-message-info: fT3MA5e/RUk5RXIPBngxJdKpbOMkfcDvq4upxNYcHoQ/jQFW/i73wlHq4ZNcINhKK+6DoQSjrdC7tbJE1FFnTvmUKKIIleHc6+QyPD8UARTWDzT5GJgoS2GaGh1KbejHl6KP+EA8UTwtRIOg4DNxIiohUqv+dwQFS7+yE+FLyL5rwH/muyjZB8/MuR8A15GnfoPAFqM+tz3f/FnH/+5ApcWAieWZCEJ76LeYkuR6IjsBXCS3S/fSEVUxTOixhI2AvIGLmLTM3U3vvDR1G+61f7mpFLeDgbG7SehiYeVF9jwf3d90PBYwRyjlBMtQuWBPzyhN5GrzIUZcpLFiH86bPS3lAeBg2+g8a/ThmnrBR9uYmlk/iFxAJyiZVIOtLJuiUaUrlVrW5aDi84BP8fKab8TmPMbWzaxE1XD7edBiAyTjYpIES2lEZW/axnBZKTrInKjzUixfOv0Ii6J7lt7JVAhUvNtpHaY6kprIXeNO3rTQLX8E2bkBAFhPxW1Z47rmZeKcXuMI50LCKcc74eW2v5d7aaWgo1S1VdJCsn+kkRtkpKQ7kPELD3SBiSrdDxzk3FOsn4EH+AlYnY6yJsGi/7BD4GLwGb18z8ySFu/ygxJEb+GYDwyMTdzrDCJcvfKZX+DEPHTscalpdVEmYou+g9FWHSuCcsZ0ZIslMhZ1A1AY0Y15X8qX3YH6Bc3tpQt3
+x-forefront-antispam-report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:MW2PR12MB4667.namprd12.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230028)(4636009)(346002)(39860400002)(396003)(136003)(376002)(366004)(451199021)(31686004)(36756003)(6506007)(122000001)(76116006)(66476007)(5660300002)(316002)(86362001)(64756008)(6916009)(4326008)(8936002)(31696002)(66446008)(38070700005)(66556008)(38100700002)(41300700001)(66946007)(8676002)(91956017)(6486002)(6512007)(2906002)(53546011)(4744005)(186003)(71200400001)(478600001)(83380400001)(2616005)(54906003)(45980500001)(43740500002);DIR:OUT;SFP:1101;
+x-ms-exchange-antispam-messagedata-chunkcount: 1
+x-ms-exchange-antispam-messagedata-0: =?utf-8?B?MW4wUW9DZStiYmVNdys3aU5MRUNBdnBvS2U5SWltUjU0aWp3NVlIODEvbm45?=
+ =?utf-8?B?RWluNUZxbEkzSmZTY3lXZkJOODM0dVNXT3Y2YmRHY0dJRWx1OXpmdzU4TFJh?=
+ =?utf-8?B?cjdnaTUwMkhIQ2cvUHoyVnNvNjFEWFZNMXVLZzhTcW1EZFlnVE4za3JaNVlu?=
+ =?utf-8?B?R0dCVTlHbHUrcHNQZFQ1elB1aXdGNkd2ZDIzVWJIdTVtdDRmblVtS1g5bm1u?=
+ =?utf-8?B?aE50eFhGaEtsM2h6Ykc3WXQvWEJIZ1YwTWtDVG90ZTMxZGFWNGREeEl6MnB0?=
+ =?utf-8?B?a1pidFVPRTdmK3ppcTk1YnlLeVFweExHUTNGWXkzUnFQRE45WHFzZGFwb3NB?=
+ =?utf-8?B?RUxsbEdWTVpHVTBEYjhTVDdyYkxJd0lTOHhuUXB5K1kzZHRUSWVFeHVMM2dD?=
+ =?utf-8?B?N1o0TndnN3R5VVoxSEtROURxVkwvOEVuQUFXcHFvNEpXRndKQjhwcWJuTzBa?=
+ =?utf-8?B?Q3c1bkdPVXVjcWF0KzFxanFob2E5Z2V3L3ViUmdOVEExaTFBNHJGUXY4N2Z3?=
+ =?utf-8?B?NVpqOU1UbTFMNXUzVXBFNGRabnlPd1dEeGJDV251dk9EOTNwWE9CY3diVTNw?=
+ =?utf-8?B?WWt4V0syUDRDaEdYN2tFdERzN3RsMFlnQ24zVE9aVjlxVzU5QVVsSzlvMFVO?=
+ =?utf-8?B?cU9tMm1XT2I3WjlOVExwTjZwc0JCemVqckVsNHVDdHYxM2t4dko4QWVvbDRi?=
+ =?utf-8?B?STE4ejMxcjljeHgyNUNuZmVnN29ORGU5YzExRndRZU1TWlExaHNiNEE1clFQ?=
+ =?utf-8?B?S2djdkxDRWxlSlc3RnhUK0s0VjJrZ1RibHVoeXhWZXRGaWNodHNCTnRXeVNq?=
+ =?utf-8?B?QSthQ3luOWlNR0Fta25tbThTeFc0R1lVNktZbmZqN1BTZnlhb1FyTE1VMVFH?=
+ =?utf-8?B?MWxZRjFZdzVyNlNoZDh5RSsrWkVJUWUwZWx0VjdVVmF0cEF3QzE5S1JyQWNn?=
+ =?utf-8?B?K29Vc2hZd0NrM2JvQ3EvYTVQVnFDNFcrTTVSdzdjUHRCTnZiOVg2Uk9HU3Bs?=
+ =?utf-8?B?Q2FNZnZBdlgxQW5PREtncUhBb1B0bmtMV2xFNkhJQUliWDJKcEVSbmNrbTEy?=
+ =?utf-8?B?cW5vRjc1VVJLQnBRS25yK1A3V1FUWFBaOXhuYkduVnhBSG95UFZ2ZkZvVVJB?=
+ =?utf-8?B?ZFF6aVhMRGcyWVl0SmJWMUd1Z3kzK3NCNmFzWDNwUzZuN1pvTjhub252RmY4?=
+ =?utf-8?B?ZFRqSEFFaUNxZElYY3REc2JIT25aNTdINlRBWURPdDF0NUtjTkNXTld2MytB?=
+ =?utf-8?B?ZnZlYndHL0wzeUtRVmtNYjZUaTNGWE9CM3BncVBVUUJBRmVvVE9jZ3M2MW1I?=
+ =?utf-8?B?bWRkUUp0MFBsVnNLS1ByK05VTFRGQVpKSVhHQVR4a3FYLzBFc0ZFbFRjd2dI?=
+ =?utf-8?B?T1FkT3Y5MlZlR1Z5RzYxSHUxQXNXL3FicHVDR1RWd1BONzBXZFlWMXJBTHVG?=
+ =?utf-8?B?T0lPZ2o4dHNBZ3c5RktNNlhWclZYaVp4a0NyRnlka1B6aS84dmdsVUxSdkJw?=
+ =?utf-8?B?TnZyOHV2MEZ0dlBpUXRxWXo1bTlnc0dHRTZVU29BY0llZ3ViU21uVERkdHg1?=
+ =?utf-8?B?TEkwdGRrMUtSNjdFMmlySktLZ2x5VEVzZzR6ZlovMmh4dWYrSWJNd1pQQlVS?=
+ =?utf-8?B?ZURXaDVBclBTS041YXBSd2hOQThmeTQrcUhsY0FwKzF3YXNmNC96UmpEbG1J?=
+ =?utf-8?B?bXVYdUM1MXBqT0ErUnhiNDRoSkk5Rjg0cXI4cENTNkI0ZERpQjdNNjlBRFMr?=
+ =?utf-8?B?ZTNnQTJubVpydGtOTWt2TXJqTklNSmpZK2NJQVdaWXlMS3p1d09jaVRLZVFK?=
+ =?utf-8?B?TjYwaXBIa0IwMGE3ZmVLaW96RENOeXEwbVRnWjhFWUhWMW96RkhUYUhTa0lP?=
+ =?utf-8?B?SnduNE9Hcy9RZEUza1gwTjJxL3M5WEJ0ZFRRZUtyRDZEekNMeUt3WVFBNEtn?=
+ =?utf-8?B?WSsvZ0tjcHZ5eEl5MlErZkJLOUlWOUhKL2szRUF3T25VcjhBQTFQOEVyMnNU?=
+ =?utf-8?B?L0NXZEpNSnVYb2luUEN5eTc4OW9IVlVHbndxVkVSSzJnZWhIdmVZbWxNTjhR?=
+ =?utf-8?B?Ui9tOHBYN1BYdWVYdVZnRi8rNlVvNlNYcmtvaGhGNVRyVUpQcmFmem8vYXBj?=
+ =?utf-8?B?Qk83a2YrRzF6dzBLeE4zakY4UDlNbXVGaHR6YVpRTjFVWktYa0RIeWVLbXkx?=
+ =?utf-8?Q?99Vs5sc2wtuJLl9/nNXsPYcXW8A32tVMVDiBwRmNsvyg?=
+Content-Type: text/plain; charset="utf-8"
+Content-ID: <CDACCC7EBD4C7A43A5F5E220F0D05F00@namprd12.prod.outlook.com>
+Content-Transfer-Encoding: base64
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+X-OriginatorOrg: Nvidia.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-AuthSource: MW2PR12MB4667.namprd12.prod.outlook.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: 182ef9b8-54de-482d-6ae9-08db7760e5c3
+X-MS-Exchange-CrossTenant-originalarrivaltime: 27 Jun 2023 22:50:25.7940
+ (UTC)
+X-MS-Exchange-CrossTenant-fromentityheader: Hosted
+X-MS-Exchange-CrossTenant-id: 43083d15-7273-40c1-b7db-39efd9ccc17a
+X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
+X-MS-Exchange-CrossTenant-userprincipalname: H+Pm6MXp+/9GOfIy9CvLMsYjMe0O7LlYi2ge7s9/hEeaqSeeabUWHczgC05hOJ9pF8nex6pcGURhLnnRjlVD6w==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: MN2PR12MB4333
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-From: Dave Chinner <dchinner@redhat.com>
-
-If the journal geometry results in a sector or log stripe unit
-validation problem, it indicates that we cannot set the log up to
-safely write to the the journal. In these cases, we must abort the
-mount because the corruption needs external intervention to resolve.
-Similarly, a journal that is too large cannot be written to safely,
-either, so we shouldn't allow those geometries to mount, either.
-
-If the log is too small, we risk having transaction reservations
-overruning the available log space and the system hanging waiting
-for space it can never provide. This is purely a runtime hang issue,
-not a corruption issue as per the first cases listed above. We abort
-mounts of the log is too small for V5 filesystems, but we must allow
-v4 filesystems to mount because, historically, there was no log size
-validity checking and so some systems may still be out there with
-undersized logs.
-
-The problem is that on V4 filesystems, when we discover a log
-geometry problem, we skip all the remaining checks and then allow
-the log to continue mounting. This mean that if one of the log size
-checks fails, we skip the log stripe unit check. i.e. we allow the
-mount because a "non-fatal" geometry is violated, and then fail to
-check the hard fail geometries that should fail the mount.
-
-Move all these fatal checks to the superblock verifier, and add a
-new check for the two log sector size geometry variables having the
-same values. This will prevent any attempt to mount a log that has
-invalid or inconsistent geometries long before we attempt to mount
-the log.
-
-However, for the minimum log size checks, we can only do that once
-we've setup up the log and calculated all the iclog sizes and
-roundoffs. Hence this needs to remain in the log mount code after
-the log has been initialised. It is also the only case where we
-should allow a v4 filesystem to continue running, so leave that
-handling in place, too.
-
-Signed-off-by: Dave Chinner <dchinner@redhat.com>
----
- fs/xfs/libxfs/xfs_sb.c | 56 +++++++++++++++++++++++++++++++++++++++++-
- fs/xfs/xfs_log.c       | 47 +++++++++++------------------------
- 2 files changed, 70 insertions(+), 33 deletions(-)
-
-diff --git a/fs/xfs/libxfs/xfs_sb.c b/fs/xfs/libxfs/xfs_sb.c
-index ba0f17bc1dc0..5e174685a77c 100644
---- a/fs/xfs/libxfs/xfs_sb.c
-+++ b/fs/xfs/libxfs/xfs_sb.c
-@@ -412,7 +412,6 @@ xfs_validate_sb_common(
- 	    sbp->sb_inodelog < XFS_DINODE_MIN_LOG			||
- 	    sbp->sb_inodelog > XFS_DINODE_MAX_LOG			||
- 	    sbp->sb_inodesize != (1 << sbp->sb_inodelog)		||
--	    sbp->sb_logsunit > XLOG_MAX_RECORD_BSIZE			||
- 	    sbp->sb_inopblock != howmany(sbp->sb_blocksize,sbp->sb_inodesize) ||
- 	    XFS_FSB_TO_B(mp, sbp->sb_agblocks) < XFS_MIN_AG_BYTES	||
- 	    XFS_FSB_TO_B(mp, sbp->sb_agblocks) > XFS_MAX_AG_BYTES	||
-@@ -430,6 +429,61 @@ xfs_validate_sb_common(
- 		return -EFSCORRUPTED;
- 	}
- 
-+	/*
-+	 * Logs that are too large are not supported at all. Reject them
-+	 * outright. Logs that are too small are tolerated on v4 filesystems,
-+	 * but we can only check that when mounting the log. Hence we skip
-+	 * those checks here.
-+	 */
-+	if (sbp->sb_logblocks > XFS_MAX_LOG_BLOCKS) {
-+		xfs_notice(mp,
-+		"Log size 0x%x blocks too large, maximum size is 0x%llx blocks",
-+			 sbp->sb_logblocks, XFS_MAX_LOG_BLOCKS);
-+		return -EFSCORRUPTED;
-+	}
-+
-+	if (XFS_FSB_TO_B(mp, sbp->sb_logblocks) > XFS_MAX_LOG_BYTES) {
-+		xfs_warn(mp,
-+		"log size 0x%llx bytes too large, maximum size is 0x%llx bytes",
-+			 XFS_FSB_TO_B(mp, sbp->sb_logblocks),
-+			 XFS_MAX_LOG_BYTES);
-+		return -EFSCORRUPTED;
-+	}
-+
-+	/*
-+	 * Do not allow filesystems with corrupted log sector or stripe units to
-+	 * be mounted. We cannot safely size the iclogs or write to the log if
-+	 * the log stripe unit is not valid.
-+	 */
-+	if (sbp->sb_versionnum & XFS_SB_VERSION_SECTORBIT) {
-+		if (sbp->sb_logsectsize != (1U << sbp->sb_logsectlog)) {
-+			xfs_notice(mp,
-+			"log sector size in bytes/log2 (0x%x/0x%x) must match",
-+				sbp->sb_logsectsize, 1U << sbp->sb_logsectlog);
-+			return -EFSCORRUPTED;
-+		}
-+	} else if (sbp->sb_logsectsize || sbp->sb_logsectlog) {
-+		xfs_notice(mp,
-+		"log sector size in bytes/log2 (0x%x/0x%x) are not zero",
-+			sbp->sb_logsectsize, sbp->sb_logsectlog);
-+		return -EFSCORRUPTED;
-+	}
-+
-+	if (sbp->sb_logsunit > 1) {
-+		if (sbp->sb_logsunit % sbp->sb_blocksize) {
-+			xfs_notice(mp,
-+		"log stripe unit 0x%x bytes must be a multiple of block size",
-+				sbp->sb_logsunit);
-+			return -EFSCORRUPTED;
-+		}
-+		if (sbp->sb_logsunit > XLOG_MAX_RECORD_BSIZE) {
-+			xfs_notice(mp,
-+		"log stripe unit 0x%x bytes over maximum size (0x%x bytes)",
-+				sbp->sb_logsunit, XLOG_MAX_RECORD_BSIZE);
-+			return -EFSCORRUPTED;
-+		}
-+	}
-+
- 	/* Validate the realtime geometry; stolen from xfs_repair */
- 	if (sbp->sb_rextsize * sbp->sb_blocksize > XFS_MAX_RTEXTSIZE ||
- 	    sbp->sb_rextsize * sbp->sb_blocksize < XFS_MIN_RTEXTSIZE) {
-diff --git a/fs/xfs/xfs_log.c b/fs/xfs/xfs_log.c
-index fc61cc024023..79004d193e54 100644
---- a/fs/xfs/xfs_log.c
-+++ b/fs/xfs/xfs_log.c
-@@ -639,7 +639,6 @@ xfs_log_mount(
- 	int		num_bblks)
- {
- 	struct xlog	*log;
--	bool		fatal = xfs_has_crc(mp);
- 	int		error = 0;
- 	int		min_logfsbs;
- 
-@@ -663,53 +662,37 @@ xfs_log_mount(
- 	mp->m_log = log;
- 
- 	/*
--	 * Validate the given log space and drop a critical message via syslog
--	 * if the log size is too small that would lead to some unexpected
--	 * situations in transaction log space reservation stage.
-+	 * Now that we have set up the log and it's internal geometry
-+	 * parameters, we can validate the given log space and drop a critical
-+	 * message via syslog if the log size is too small. A log that is too
-+	 * small can lead to unexpected situations in transaction log space
-+	 * reservation stage. The superblock verifier has already validated all
-+	 * the other log geometry constraints, so we don't have to check those
-+	 * here.
- 	 *
--	 * Note: we can't just reject the mount if the validation fails.  This
--	 * would mean that people would have to downgrade their kernel just to
--	 * remedy the situation as there is no way to grow the log (short of
--	 * black magic surgery with xfs_db).
-+	 * Note: For v4 filesystems, we can't just reject the mount if the
-+	 * validation fails.  This would mean that people would have to
-+	 * downgrade their kernel just to remedy the situation as there is no
-+	 * way to grow the log (short of black magic surgery with xfs_db).
- 	 *
--	 * We can, however, reject mounts for CRC format filesystems, as the
-+	 * We can, however, reject mounts for V5 format filesystems, as the
- 	 * mkfs binary being used to make the filesystem should never create a
- 	 * filesystem with a log that is too small.
- 	 */
- 	min_logfsbs = xfs_log_calc_minimum_size(mp);
--
- 	if (mp->m_sb.sb_logblocks < min_logfsbs) {
- 		xfs_warn(mp,
- 		"Log size %d blocks too small, minimum size is %d blocks",
- 			 mp->m_sb.sb_logblocks, min_logfsbs);
--		error = -EINVAL;
--	} else if (mp->m_sb.sb_logblocks > XFS_MAX_LOG_BLOCKS) {
--		xfs_warn(mp,
--		"Log size %d blocks too large, maximum size is %lld blocks",
--			 mp->m_sb.sb_logblocks, XFS_MAX_LOG_BLOCKS);
--		error = -EINVAL;
--	} else if (XFS_FSB_TO_B(mp, mp->m_sb.sb_logblocks) > XFS_MAX_LOG_BYTES) {
--		xfs_warn(mp,
--		"log size %lld bytes too large, maximum size is %lld bytes",
--			 XFS_FSB_TO_B(mp, mp->m_sb.sb_logblocks),
--			 XFS_MAX_LOG_BYTES);
--		error = -EINVAL;
--	} else if (mp->m_sb.sb_logsunit > 1 &&
--		   mp->m_sb.sb_logsunit % mp->m_sb.sb_blocksize) {
--		xfs_warn(mp,
--		"log stripe unit %u bytes must be a multiple of block size",
--			 mp->m_sb.sb_logsunit);
--		error = -EINVAL;
--		fatal = true;
--	}
--	if (error) {
-+
- 		/*
- 		 * Log check errors are always fatal on v5; or whenever bad
- 		 * metadata leads to a crash.
- 		 */
--		if (fatal) {
-+		if (xfs_has_crc(mp)) {
- 			xfs_crit(mp, "AAIEEE! Log failed size checks. Abort!");
- 			ASSERT(0);
-+			error = -EINVAL;
- 			goto out_free_log;
- 		}
- 		xfs_crit(mp, "Log size out of supported range.");
--- 
-2.40.1
-
+T24gNi8yNy8yMyAwMzowMywgTHUgSG9uZ2ZlaSB3cm90ZToNCj4gVGhlIHJldHVybiB2YWx1ZSB0
+eXBlIG9mIGlfYmxvY2tzaXplKCkgaXMgJ3Vuc2lnbmVkIGludCcsIHNvIHRoZQ0KPiB0eXBlIG9m
+IGJsb2Nrc2l6ZSBoYXMgYmVlbiBtb2RpZmllZCBmcm9tICdpbnQnIHRvICd1bnNpZ25lZCBpbnQn
+DQo+IHRvIGVuc3VyZSBkYXRhIHR5cGUgY29uc2lzdGVuY3kuDQo+DQo+IFNpZ25lZC1vZmYtYnk6
+IEx1IEhvbmdmZWkgPGx1aG9uZ2ZlaUB2aXZvLmNvbT4NCj4gLS0tDQo+ICAgZnMvaW9tYXAvYnVm
+ZmVyZWQtaW8uYyB8IDIgKy0NCj4gICAxIGZpbGUgY2hhbmdlZCwgMSBpbnNlcnRpb24oKyksIDEg
+ZGVsZXRpb24oLSkNCj4NCj4gZGlmZiAtLWdpdCBhL2ZzL2lvbWFwL2J1ZmZlcmVkLWlvLmMgYi9m
+cy9pb21hcC9idWZmZXJlZC1pby5jDQo+IGluZGV4IGE0ZmE4MWFmNjBkOS4uOTBlYTllMDljMWFl
+IDEwMDY0NA0KPiAtLS0gYS9mcy9pb21hcC9idWZmZXJlZC1pby5jDQo+ICsrKyBiL2ZzL2lvbWFw
+L2J1ZmZlcmVkLWlvLmMNCj4gQEAgLTEwNzYsNyArMTA3Niw3IEBAIGludCBpb21hcF9maWxlX2J1
+ZmZlcmVkX3dyaXRlX3B1bmNoX2RlbGFsbG9jKHN0cnVjdCBpbm9kZSAqaW5vZGUsDQo+ICAgew0K
+PiAgIAlsb2ZmX3QJCQlzdGFydF9ieXRlOw0KPiAgIAlsb2ZmX3QJCQllbmRfYnl0ZTsNCj4gLQlp
+bnQJCQlibG9ja3NpemUgPSBpX2Jsb2Nrc2l6ZShpbm9kZSk7DQo+ICsJdW5zaWduZWQgaW50CWJs
+b2Nrc2l6ZSA9IGlfYmxvY2tzaXplKGlub2RlKTsNCj4gICANCj4gICAJaWYgKGlvbWFwLT50eXBl
+ICE9IElPTUFQX0RFTEFMTE9DKQ0KPiAgIAkJcmV0dXJuIDA7DQoNCkluZGVlZCBhcyBwZXIgaW5j
+bHVkZS9saW51eC9mcy5oOg0KNzE5IHN0YXRpYyBpbmxpbmUgdW5zaWduZWQgaW50IGlfYmxvY2tz
+aXplKGNvbnN0IHN0cnVjdCBpbm9kZSAqbm9kZSkNCg0KTG9va3MgZ29vZC4NCg0KUmV2aWV3ZWQt
+Ynk6IENoYWl0YW55YSBLdWxrYXJuaSA8a2NoQG52aWRpYS5jb20+DQoNCi1jaw0KDQoNCg==
