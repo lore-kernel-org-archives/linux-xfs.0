@@ -2,85 +2,98 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 90107EB64DC
-	for <linux-xfs@archiver.kernel.org>; Tue, 27 Jun 2023 16:12:05 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9452FEB64D9
+	for <linux-xfs@archiver.kernel.org>; Tue, 27 Jun 2023 18:40:35 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229982AbjF0QME (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 27 Jun 2023 12:12:04 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38560 "EHLO
+        id S229676AbjF0Ske (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 27 Jun 2023 14:40:34 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33850 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229845AbjF0QME (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 27 Jun 2023 12:12:04 -0400
-Received: from sandeen.net (sandeen.net [63.231.237.45])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id D13D12697
-        for <linux-xfs@vger.kernel.org>; Tue, 27 Jun 2023 09:12:02 -0700 (PDT)
-Received: from [10.0.0.71] (liberator.sandeen.net [10.0.0.71])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
-        (No client certificate requested)
-        by sandeen.net (Postfix) with ESMTPSA id 3A9F45CC129;
-        Tue, 27 Jun 2023 11:12:02 -0500 (CDT)
-DKIM-Filter: OpenDKIM Filter v2.11.0 sandeen.net 3A9F45CC129
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=sandeen.net;
-        s=default; t=1687882322;
-        bh=F2Y5k95yxul+nOpqne00J5fL9V0Fdw0WfMBuLncPAE8=;
-        h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
-        b=sFkmUiHXISxERXeTYnGFRFFbr5oufyVccjBtnnwbYltwouwMhfstZrBJJf82j4UYZ
-         7YKoJdVNpUV6WYKi2QmOX2jqgqSWEAzEDNBJImUFJJlKK7/nv9QV+kp7b1cTPXWl35
-         PBypEZ+h5hlABwxqMjJ7W/EifdgwAjKR7cl36LgOLuqsUEAkRN3eJ/azDUEAximinc
-         D4lBJ70D1UnLECGk2sqjYtqqN9TepgpzT83AHMwx7nhNDN79zmVoPtEWaDou/ERNDz
-         5y9pXO6btNFUwcVN6gEfxk3VA04PiOUrkznyIhy4K8bTCYZymoAjckLNTIu/P4QVcO
-         8ziIDXalaEzEw==
-Message-ID: <82b74cbc-8a1d-6b6f-fa2f-5f120d958dad@sandeen.net>
-Date:   Tue, 27 Jun 2023 11:12:01 -0500
+        with ESMTP id S229593AbjF0Skc (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 27 Jun 2023 14:40:32 -0400
+Received: from mail-il1-x129.google.com (mail-il1-x129.google.com [IPv6:2607:f8b0:4864:20::129])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 461EEE71
+        for <linux-xfs@vger.kernel.org>; Tue, 27 Jun 2023 11:40:28 -0700 (PDT)
+Received: by mail-il1-x129.google.com with SMTP id e9e14a558f8ab-3458211a731so19938175ab.0
+        for <linux-xfs@vger.kernel.org>; Tue, 27 Jun 2023 11:40:28 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20221208; t=1687891227; x=1690483227;
+        h=content-transfer-encoding:in-reply-to:from:content-language
+         :references:cc:to:subject:user-agent:mime-version:date:message-id
+         :from:to:cc:subject:date:message-id:reply-to;
+        bh=n8+SpkcOHO0RavgrK9DG6Xu61QPv4FuCO2sMEhUYGEs=;
+        b=UBZjYxsaIbY14re975yxEimEEOCGTJKlgvgEtfL1PGnXdIOqsvYV1WSeNdgrg8igLp
+         hV0KWzoCInTAleasZQ8j6cEshMcZrD2KeGVSz9mTRkaXcMCnxlxnDTwJWKQhDS6iqzbR
+         hnmxXKMV68WagfVbMoX1paRAoDPT+HntmL65524G7Xx9YRpdBrS2NR6krrzyNZdxuJxm
+         RPsSF+Yg4d2IKdWlpag5lOkenrSYLh7NFexJvZJLYevXgMSgXiF2w0mw+agiLINXlDcC
+         GY3FXaj4dFlUWTWySizgqrO+Z6V/Eu7kQQKlybHOR2ic4e3ATbpzW+Kg6f5YABBXmXOp
+         /UEw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20221208; t=1687891227; x=1690483227;
+        h=content-transfer-encoding:in-reply-to:from:content-language
+         :references:cc:to:subject:user-agent:mime-version:date:message-id
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=n8+SpkcOHO0RavgrK9DG6Xu61QPv4FuCO2sMEhUYGEs=;
+        b=cVHuF2lhExTacU43+m1KtjImpf6gDU/VZAJU0ynOjPnrH9B7N6tFt8dWh5aA9ifrus
+         GxkgQ5EeiHVP1a25CoRW9hshyNr+cK4D2UelnSuMTkg/tB2mtmOnMtVPzKj8Ct9LzInQ
+         MsxtZlMm3VJnpo6aLX0ImKmGarEDM7C5xfw4vHBUFFmRh8WYckxqJW2m3MictpohwLWa
+         ThkNUkD/cnznvmjeckhXp/BT8HeZ57qUa26+7sH50u1rly71TDcRTBwTQAZId/ym2bY8
+         NzLHqRAZpe20RJ9MxhBG5A/qb6eB50Qu6cuxy+HG2j2oq2GF2xqJ+JPQl8hMIo4Gy8C7
+         JKaA==
+X-Gm-Message-State: AC+VfDxW9fxx655gbkyhPAhxGkz0fheIfisxDk8sDfK9G8SCSeVj0ukP
+        ygK0mai89PU1QZZcmXrOERW3+H7K8tciiw==
+X-Google-Smtp-Source: ACHHUZ6buLuh+SRGVJA8eKdir4Ti3q+fPClnT6BjGxq5a5rTSMsOlqn7RZWzTrfJEDZ1fA6J1YvKiw==
+X-Received: by 2002:a92:c68c:0:b0:345:a806:fa16 with SMTP id o12-20020a92c68c000000b00345a806fa16mr8054029ilg.10.1687891227483;
+        Tue, 27 Jun 2023 11:40:27 -0700 (PDT)
+Received: from ?IPV6:2606:4700:110:8939:3cc4:589f:70ed:f5b0? ([2a09:bac0:1000:a2::4:2ed])
+        by smtp.gmail.com with ESMTPSA id p38-20020a634f66000000b005535ddd8dcfsm6079046pgl.89.2023.06.27.11.40.26
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Tue, 27 Jun 2023 11:40:26 -0700 (PDT)
+Message-ID: <dcbdc718-fec4-286f-468b-eed61749dd63@gmail.com>
+Date:   Tue, 27 Jun 2023 11:40:25 -0700
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:102.0)
- Gecko/20100101 Thunderbird/102.12.0
-Subject: Re: Question on slow fallocate
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
+ Thunderbird/102.10.0
+Subject: Re: Question on the xfs inode slab memory
+To:     Dave Chinner <david@fromorbit.com>
+Cc:     linux-xfs@vger.kernel.org
+References: <CAMj1M42L6hH9weqroQNaWu_SG+Yg8NrAuzgNO1b8jiWPJ2M-5A@mail.gmail.com>
+ <ZHfhYsqln68N1HyO@dread.disaster.area>
+ <7572072d-8132-d918-285c-3391cb041cff@gmail.com>
+ <ZHkRHW9Fd19du0Zv@dread.disaster.area>
+ <b9c528fd-9556-12c5-4628-4163c070e45d@gmail.com>
+ <ZH/pk1UYR7BrT78b@dread.disaster.area>
 Content-Language: en-US
-To:     Masahiko Sawada <sawada.mshk@gmail.com>
-Cc:     Dave Chinner <david@fromorbit.com>, linux-xfs@vger.kernel.org
-References: <CAD21AoCWW20ga6GKR+7RwRtvPU0VyFt3_acut_y+Fg7E-4nzWw@mail.gmail.com>
- <ZJTrrwirZqykiVxn@dread.disaster.area>
- <CAD21AoC9=8Q2o3-+ueuP05+8298z--5vgBWtvSxMHHF2jdyr_w@mail.gmail.com>
- <3f604849-877b-f519-8cae-4694c82ac7e4@sandeen.net>
- <CAD21AoBHd35HhFpbh9YBHPsLN+F_TZX5b47iy+-s44jPT+fyZQ@mail.gmail.com>
-From:   Eric Sandeen <sandeen@sandeen.net>
-In-Reply-To: <CAD21AoBHd35HhFpbh9YBHPsLN+F_TZX5b47iy+-s44jPT+fyZQ@mail.gmail.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 8bit
+From:   Jianan Wang <wangjianan.zju@gmail.com>
+In-Reply-To: <ZH/pk1UYR7BrT78b@dread.disaster.area>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On 6/27/23 10:50 AM, Masahiko Sawada wrote:
-> On Tue, Jun 27, 2023 at 12:32 AM Eric Sandeen <sandeen@sandeen.net> wrote:
->>
->> On 6/25/23 10:17 PM, Masahiko Sawada wrote:
->>> FYI, to share the background of what PostgreSQL does, when
->>> bulk-insertions into one table are running concurrently, one process
->>> extends the underlying files depending on how many concurrent
->>> processes are waiting to extend. The more processes wait, the more 8kB
->>> blocks are appended. As the current implementation, if the process
->>> needs to extend the table by more than 8 blocks (i.e. 64kB) it uses
->>> posix_fallocate(), otherwise it uses pwrites() (see the code[1] for
->>> details). We don't use fallocate() for small extensions as it's slow
->>> on some filesystems. Therefore, if a bulk-insertion process tries to
->>> extend the table by say 5~10 blocks many times, it could use
->>> poxis_fallocate() and pwrite() alternatively, which led to the slow
->>> performance as I reported.
->>
->> To what end? What problem is PostgreSQL trying to solve with this
->> scheme? I might be missing something but it seems like you've described
->> the "what" in detail, but no "why."
-> 
-> It's for better scalability. SInce the process who wants to extend the
-> table needs to hold an exclusive lock on the table, we need to
-> minimize the work while holding the lock.
+Hi Dave,
 
-Ok, but what is the reason for zeroing out the blocks prior to them 
-being written with real data? I'm wondering what the core requirement 
-here is for the zeroing, either via fallocate (which btw posix_fallocate 
-does not guarantee) or pwrites of zeros.
+Sorry for the late response. No, we actually did not get OOM kill issue in a small-scale testing phase when we try to stress the filesystem i/o. We plan to roll out to larger cluster for scale-testing. Could you please help advice if we need to reformat the xfs volume to take effect or we could simply upgrade the kernel module and expect it to work?
 
-Thanks,
--Eric
+Best Regards.
+
+Jianan.
+
+On 6/6/23 19:21, Dave Chinner wrote:
+> On Tue, Jun 06, 2023 at 04:00:56PM -0700, Jianan Wang wrote:
+>> Hi Dave,
+>>
+>> Just to follow up on this. We have performed the testing using the
+>> Ubuntu 20.04 with 5.15 kernel as well as our custom built xfs 5.9,
+>> but we still see significant slab memory build-up during the
+>> process.
+> That's to be expected. Nothing has changed with respect to inode
+> cache size management. All the changes were to how the XFS inode
+> cache gets reclaimed.  Are you getting OOM killer reports when under
+> memory pressure on 5.15 like you originally reported for the 5.4
+> kernel you were running?
+>
+> Cheers,
+>
+> Dave.
