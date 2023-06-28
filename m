@@ -2,81 +2,85 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id BC553EB64D7
-	for <linux-xfs@archiver.kernel.org>; Wed, 28 Jun 2023 14:14:48 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2B46AEB64D7
+	for <linux-xfs@archiver.kernel.org>; Wed, 28 Jun 2023 16:42:28 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231163AbjF1OOr (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 28 Jun 2023 10:14:47 -0400
-Received: from dfw.source.kernel.org ([139.178.84.217]:47070 "EHLO
-        dfw.source.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230512AbjF1OOq (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 28 Jun 2023 10:14:46 -0400
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature RSA-PSS (2048 bits))
+        id S231573AbjF1Qm0 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 28 Jun 2023 12:42:26 -0400
+Received: from us-smtp-delivery-124.mimecast.com ([170.10.133.124]:24250 "EHLO
+        us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S230014AbjF1QmY (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 28 Jun 2023 12:42:24 -0400
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1687970494;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=RnVyCujzdEZQCQhWIXvD4KgctZ350N170aw6MNVL7b8=;
+        b=MPuEVqd25gvtHieFODS13sRdV0G4bZVH+PMmgUWa5IAjHsGPG/AG8tCDWpHCVuepvybE8F
+        DGzFv1LdfZZaBDuyr2k2PnlhgCgosNLhkT1RDKnWOXvj/KZZJgXvVF+ZLuKLU4L4Uwi4l6
+        nWgxoclMrgjWRbV+jOS+GhRR7P45hVs=
+Received: from mimecast-mx02.redhat.com (mx3-rdu2.redhat.com
+ [66.187.233.73]) by relay.mimecast.com with ESMTP with STARTTLS
+ (version=TLSv1.2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ us-mta-608-mvbvvUpqO5KW0JldaqOrMA-1; Wed, 28 Jun 2023 12:41:31 -0400
+X-MC-Unique: mvbvvUpqO5KW0JldaqOrMA-1
+Received: from smtp.corp.redhat.com (int-mx05.intmail.prod.int.rdu2.redhat.com [10.11.54.5])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 1B8B160DDF
-        for <linux-xfs@vger.kernel.org>; Wed, 28 Jun 2023 14:14:46 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 92902C433C0
-        for <linux-xfs@vger.kernel.org>; Wed, 28 Jun 2023 14:14:44 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1687961685;
-        bh=OwVtLQknFDK0dMfdE5+FrHmY2a9/m3szYO0B3VLEJcQ=;
-        h=Date:From:To:Subject:From;
-        b=CvbfgLpsQzXaVl/gbu+wRWcAb+RAwmtBEbeb0PkcnQtNF+3069IblaA6dSFujPkDX
-         9pVUP58t4bwIkF6nBoC0U3S3D3cpFkurNpfPdLskidShDXISEAhHQX957TzhVwguDx
-         XVMP4cqw6EH81h4DT0LDNnILTwmQWcKVjrY+mk7flfN3aM2hzvUnvJH+VrB4KBr0TE
-         YO32Gc+9mrr5AfDU6XeqXuQeiOxNySba3/bAdmAfbF0hwetB5tW06K3PH/zA7EWoKF
-         V1j9Uy3lEfHvn6PPQ2xecRfnUKB6eJGY53Ypnunes05ZAIwq7+PQ/WZFvfbwHrFCnK
-         ctHHTZJPVdPqA==
-Date:   Wed, 28 Jun 2023 16:14:41 +0200
-From:   Carlos Maiolino <cem@kernel.org>
-To:     linux-xfs@vger.kernel.org
-Subject: [ANNOUNCE] xfsprogs: for-next updated to e05d65121
-Message-ID: <20230628141441.j6n7anpsxamw5pay@andromeda>
+        by mimecast-mx02.redhat.com (Postfix) with ESMTPS id DC46E3C108CB;
+        Wed, 28 Jun 2023 16:41:29 +0000 (UTC)
+Received: from redhat.com (unknown [10.22.8.236])
+        by smtp.corp.redhat.com (Postfix) with ESMTPS id 02AF1F5CD9;
+        Wed, 28 Jun 2023 16:41:28 +0000 (UTC)
+Date:   Wed, 28 Jun 2023 11:41:27 -0500
+From:   Bill O'Donnell <billodo@redhat.com>
+To:     Yangtao Li <frank.li@vivo.com>
+Cc:     axboe@kernel.dk, song@kernel.org, viro@zeniv.linux.org.uk,
+        brauner@kernel.org, xiang@kernel.org, chao@kernel.org,
+        huyue2@coolpad.com, jefflexu@linux.alibaba.com, hch@infradead.org,
+        djwong@kernel.org, linux-block@vger.kernel.org,
+        linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org,
+        linux-fsdevel@vger.kernel.org, linux-erofs@lists.ozlabs.org,
+        linux-xfs@vger.kernel.org
+Subject: Re: [PATCH 6/7] xfs: Convert to bdev_logical_block_mask()
+Message-ID: <ZJxit/naWMq3v6OU@redhat.com>
+References: <20230628093500.68779-1-frank.li@vivo.com>
+ <20230628093500.68779-6-frank.li@vivo.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
+In-Reply-To: <20230628093500.68779-6-frank.li@vivo.com>
+X-Scanned-By: MIMEDefang 3.1 on 10.11.54.5
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Hello.
+On Wed, Jun 28, 2023 at 05:34:59PM +0800, Yangtao Li wrote:
+> Use bdev_logical_block_mask() to simplify code.
+> 
+> Signed-off-by: Yangtao Li <frank.li@vivo.com>
 
-The xfsprogs for-next branch, located at:
+Reviewed-by: Bill O'Donnell <bodonnel@redhat.com>
 
-https://git.kernel.org/pub/scm/fs/xfs/xfsprogs-dev.git/refs/?h=for-next
+> ---
+>  fs/xfs/xfs_buf.c | 2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
+> 
+> diff --git a/fs/xfs/xfs_buf.c b/fs/xfs/xfs_buf.c
+> index 15d1e5a7c2d3..f784daa21219 100644
+> --- a/fs/xfs/xfs_buf.c
+> +++ b/fs/xfs/xfs_buf.c
+> @@ -1968,7 +1968,7 @@ xfs_setsize_buftarg(
+>  
+>  	/* Set up device logical sector size mask */
+>  	btp->bt_logical_sectorsize = bdev_logical_block_size(btp->bt_bdev);
+> -	btp->bt_logical_sectormask = bdev_logical_block_size(btp->bt_bdev) - 1;
+> +	btp->bt_logical_sectormask = bdev_logical_block_mask(btp->bt_bdev);
+>  
+>  	return 0;
+>  }
+> -- 
+> 2.39.0
+> 
 
-Has just been updated.
-
-Patches often get missed, so if your outstanding patches are properly reviewed on
-the list and not included in this update, please let me know.
-
-The new head of the for-next branch is commit:
-
-e05d65121e7dc97a2b010d87514187fec28e4eb4
-
-10 new commits:
-
-Darrick J. Wong (10):
-      [5a9c316e3] xfs_repair: don't spray correcting imap all by itself
-      [61872b1b2] xfs_repair: don't log inode problems without printing resolution
-      [3668ccd82] xfs_repair: fix messaging when shortform_dir2_junk is called
-      [42453d22a] xfs_repair: fix messaging in longform_dir2_entry_check_data
-      [54f51a36c] xfs_repair: fix messaging when fixing imap due to sparse cluster
-      [ceec18a22] xfs_repair: don't add junked entries to the rebuilt directory
-      [3f734ce4c] xfs_repair: always perform extended xattr checks on uncertain inodes
-      [36f558c4f] xfs_repair: check low keys of rmap btrees
-      [144a92750] xfs_repair: warn about unwritten bits set in rmap btree keys
-      [e05d65121] xfs_db: expose the unwritten flag in rmapbt keys
-
-Code Diffstat:
-
- db/btblock.c         |  4 ++++
- repair/dino_chunks.c | 14 ++++++------
- repair/phase6.c      | 46 ++++++++++++++++++----------------------
- repair/scan.c        | 60 +++++++++++++++++++++++++++++++++++++++++++++++++++-
- 4 files changed, 90 insertions(+), 34 deletions(-)
-
--- 
-Carlos
