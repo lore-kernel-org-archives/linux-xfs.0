@@ -2,113 +2,117 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 83DDFEB64DC
-	for <linux-xfs@archiver.kernel.org>; Wed, 28 Jun 2023 08:38:34 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C47A0EB64DA
+	for <linux-xfs@archiver.kernel.org>; Wed, 28 Jun 2023 09:01:54 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232252AbjF1Iid (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 28 Jun 2023 04:38:33 -0400
-Received: from szxga01-in.huawei.com ([45.249.212.187]:21996 "EHLO
-        szxga01-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231221AbjF1Idm (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 28 Jun 2023 04:33:42 -0400
-Received: from dggpemm500014.china.huawei.com (unknown [172.30.72.54])
-        by szxga01-in.huawei.com (SkyGuard) with ESMTP id 4QrXSB22ZvzlWMg;
-        Wed, 28 Jun 2023 14:56:42 +0800 (CST)
-Received: from [10.174.177.211] (10.174.177.211) by
- dggpemm500014.china.huawei.com (7.185.36.153) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2507.27; Wed, 28 Jun 2023 14:59:26 +0800
-Message-ID: <6129fa9a-73aa-99e5-6231-88a1cc60f189@huawei.com>
-Date:   Wed, 28 Jun 2023 14:59:25 +0800
-MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:91.0) Gecko/20100101
- Thunderbird/91.0.3
-Subject: Re: [PATCH] mkfs.xfs: fix segmentation fault caused by accessing a
- null pointer
-To:     Dave Chinner <david@fromorbit.com>
-CC:     <cem@kernel.org>, "Darrick J. Wong" <djwong@kernel.org>,
-        <linux-xfs@vger.kernel.org>, <louhongxiang@huawei.com>,
-        <liuzhiqiang26@huawei.com>
-References: <48402a8a-95db-f7b5-196e-32f3b4b2bf4e@huawei.com>
- <ZJNxj+Tm0cIDKaAR@dread.disaster.area>
-From:   Wu Guanghao <wuguanghao3@huawei.com>
-In-Reply-To: <ZJNxj+Tm0cIDKaAR@dread.disaster.area>
+        id S233081AbjF1JBt (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 28 Jun 2023 05:01:49 -0400
+Received: from dfw.source.kernel.org ([139.178.84.217]:52440 "EHLO
+        dfw.source.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S231134AbjF1Iup (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 28 Jun 2023 04:50:45 -0400
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange X25519 server-signature RSA-PSS (2048 bits))
+        (No client certificate requested)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 05A1261272
+        for <linux-xfs@vger.kernel.org>; Wed, 28 Jun 2023 08:50:45 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPS id 28CADC433CC
+        for <linux-xfs@vger.kernel.org>; Wed, 28 Jun 2023 08:50:44 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1687942244;
+        bh=v7T4WN68VRP40mQOeiUPVN9WiSKjHI5gpWQmzcebCbw=;
+        h=From:To:Subject:Date:From;
+        b=suDGphfpd4DyLV+q3DvUKNs/cIrMg3F0hV51QCZbc02XcJAbONh3PidHSalqNryH+
+         BU6lu5SvqnDbBzN9k4BS3XFGEj6FPxH+XoMAuEGGaC/V5xfhdK0gKVJdTDqnpsyn6a
+         Syew/NkUYni3XXiCJnehSlVxspnFYbt0fS0+bDP+P8UWIy5WHzrB0GfYZLiBQDOzUx
+         I1zsWs0lwSEd7quREjjeC8Fxm547+6700tSn4hF37FwhNOaP+k9IU23B/tVQg0CKwF
+         /Ubw/P9/ykHZUW09Vv48vkaww5zTJUGCKXkHT1N6h7S58gDil4wKgMCPvrsb1Vp0Sh
+         1daEjo+VO18mQ==
+Received: by aws-us-west-2-korg-bugzilla-1.web.codeaurora.org (Postfix, from userid 48)
+        id 15747C4332E; Wed, 28 Jun 2023 08:50:44 +0000 (UTC)
+From:   bugzilla-daemon@kernel.org
+To:     linux-xfs@vger.kernel.org
+Subject: [Bug 217604] New: Kernel metadata repair facility is not available,
+ but kernel has CONFIG_XFS_ONLINE_REPAIR=y
+Date:   Wed, 28 Jun 2023 08:50:43 +0000
+X-Bugzilla-Reason: None
+X-Bugzilla-Type: new
+X-Bugzilla-Watch-Reason: AssignedTo filesystem_xfs@kernel-bugs.kernel.org
+X-Bugzilla-Product: File System
+X-Bugzilla-Component: XFS
+X-Bugzilla-Version: 2.5
+X-Bugzilla-Keywords: 
+X-Bugzilla-Severity: normal
+X-Bugzilla-Who: j.fikar@gmail.com
+X-Bugzilla-Status: NEW
+X-Bugzilla-Resolution: 
+X-Bugzilla-Priority: P3
+X-Bugzilla-Assigned-To: filesystem_xfs@kernel-bugs.kernel.org
+X-Bugzilla-Flags: 
+X-Bugzilla-Changed-Fields: bug_id short_desc product version rep_platform
+ op_sys bug_status bug_severity priority component assigned_to reporter
+ cf_regression
+Message-ID: <bug-217604-201763@https.bugzilla.kernel.org/>
 Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 8bit
-X-Originating-IP: [10.174.177.211]
-X-ClientProxiedBy: dggems701-chm.china.huawei.com (10.3.19.178) To
- dggpemm500014.china.huawei.com (7.185.36.153)
-X-CFilter-Loop: Reflected
+Content-Transfer-Encoding: quoted-printable
+X-Bugzilla-URL: https://bugzilla.kernel.org/
+Auto-Submitted: auto-generated
+MIME-Version: 1.0
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
+https://bugzilla.kernel.org/show_bug.cgi?id=3D217604
 
+            Bug ID: 217604
+           Summary: Kernel metadata repair facility is not available, but
+                    kernel has CONFIG_XFS_ONLINE_REPAIR=3Dy
+           Product: File System
+           Version: 2.5
+          Hardware: All
+                OS: Linux
+            Status: NEW
+          Severity: normal
+          Priority: P3
+         Component: XFS
+          Assignee: filesystem_xfs@kernel-bugs.kernel.org
+          Reporter: j.fikar@gmail.com
+        Regression: No
 
-在 2023/6/22 5:54, Dave Chinner 写道:
-> On Wed, Jun 21, 2023 at 05:25:27PM +0800, Wu Guanghao wrote:
->> We encountered a segfault while testing the mkfs.xfs + iscsi.
->>
->> (gdb) bt
->> #0 libxfs_log_sb (tp=0xaaaafaea0630) at xfs_sb.c:810
->> #1 0x0000aaaaca991468 in __xfs_trans_commit (tp=<optimized out>, tp@entry=0xaaaafaea0630, regrant=regrant@entry=true) at trans.c:995
->> #2 0x0000aaaaca991790 in libxfs_trans_roll (tpp=tpp@entry=0xfffffe1f3018) at trans.c:103
->> #3 0x0000aaaaca9bcde8 in xfs_dialloc_roll (agibp=0xaaaafaea2fa0, tpp=0xfffffe1f31c8) at xfs_ialloc.c:1561
->> #4 xfs_dialloc_try_ag (ok_alloc=true, new_ino=<synthetic pointer>, parent=0, pag=0xaaaafaea0210, tpp=0xfffffe1f31c8) at xfs_ialloc.c:1698
->> #5 xfs_dialloc (tpp=tpp@entry=0xfffffe1f31c8, parent=0, mode=mode@entry=16877, new_ino=new_ino@entry=0xfffffe1f3128) at xfs_ialloc.c:1776
->> #6 0x0000aaaaca9925b0 in libxfs_dir_ialloc (tpp=tpp@entry=0xfffffe1f31c8, dp=dp@entry=0x0, mode=mode@entry=16877, nlink=nlink@entry=1, rdev=rdev@entry=0, cr=cr@entry=0xfffffe1f31d0,
->>     fsx=fsx@entry=0xfffffe1f36a4, ipp=ipp@entry=0xfffffe1f31c0) at util.c:525
->> #7 0x0000aaaaca988fac in parseproto (mp=0xfffffe1f36c8, pip=0x0, fsxp=0xfffffe1f36a4, pp=0xfffffe1f3370, name=0x0) at proto.c:552
->> #8 0x0000aaaaca9867a4 in main (argc=<optimized out>, argv=<optimized out>) at xfs_mkfs.c:4217
->>
->> (gdb) p bp
->> $1 = 0x0
->>
->> ```
->> void
->> xfs_log_sb(
->>         struct xfs_trans        *tp)
->> {
->>         // iscsi offline
->>         ...
->>         // failed to read sb, bp = NULL
->>         struct xfs_buf          *bp = xfs_trans_getsb(tp);
->>         ...
->> }
->> ```
->>
->> When writing data to sb, if the device is abnormal at this time,
->> the bp may be empty. Using it without checking will result in
->> a segfault.
-> 
-> xfs_trans_getsb() is not supposed to fail. In the kernel code (which
-> this is a copy of) it can't fail because the superblock buffer is
-> always pinned in memory at mount time and so is *never read from the
-> storage* after mount.
-> 
-Thank you for your suggestion. Later, I will send a patch for the V2 patch.
+Hi,
 
-Thanks,
-Guanghao
-> Hence something similar needs to be in userspace with libxfs_getsb()
-> so that the superblock is only read when setting up the initial
-> mount state in libxfs....
-> 
->> diff --git a/libxfs/xfs_attr_leaf.c b/libxfs/xfs_attr_leaf.c
->> index 6cac2531..73079df1 100644
->> --- a/libxfs/xfs_attr_leaf.c
->> +++ b/libxfs/xfs_attr_leaf.c
->> @@ -668,7 +668,7 @@ xfs_sbversion_add_attr2(
->>         spin_lock(&mp->m_sb_lock);
->>         xfs_add_attr2(mp);
->>         spin_unlock(&mp->m_sb_lock);
->> -       xfs_log_sb(tp);
->> +       ASSERT(!xfs_log_sb(tp));
-> 
-> FWIW, that's never a valid conversion nor a valid way to handle
-> something that can fail. That turns the code into code that is only
-> executed on debug builds, and it will panic the debug build rather
-> than handle the error.....
-> 
-> -Dave.
-> 
+I'm trying the new xfs_scrub and I get this error:
+
+$ sudo xfs_scrub /mnt/xfs
+EXPERIMENTAL xfs_scrub program in use! Use at your own risk!
+Error: /mnt/xfs: Kernel metadata repair facility is not available.  Use -n =
+to
+scrub.
+Info: /mnt/xfs: Scrub aborted after phase 1.
+/mnt/xfs: operational errors found: 1
+
+But the XFS_ONLINE_SCRUB and XFS_ONLINE_REPAIR are enabled in my kernel:
+
+$ zcat /proc/config.gz | grep XFS
+CONFIG_XFS_FS=3Dy
+CONFIG_XFS_SUPPORT_V4=3Dy
+# CONFIG_XFS_QUOTA is not set
+CONFIG_XFS_POSIX_ACL=3Dy
+# CONFIG_XFS_RT is not set
+CONFIG_XFS_ONLINE_SCRUB=3Dy
+CONFIG_XFS_ONLINE_REPAIR=3Dy
+# CONFIG_XFS_WARN is not set
+# CONFIG_XFS_DEBUG is not set
+# CONFIG_VXFS_FS is not set
+
+I'm on kernel 6.3.8 and xfsprogs 6.3.0. Do I need to enable XFS_DEBUG as we=
+ll?
+
+xfs_scrub -n seems to run fine.
+
+--=20
+You may reply to this email to add a comment.
+
+You are receiving this mail because:
+You are watching the assignee of the bug.=
