@@ -2,204 +2,136 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4B5CCEB64D9
-	for <linux-xfs@archiver.kernel.org>; Wed, 28 Jun 2023 02:36:20 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id CC1DAEB64DC
+	for <linux-xfs@archiver.kernel.org>; Wed, 28 Jun 2023 02:44:22 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230257AbjF1CgT (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 27 Jun 2023 22:36:19 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42176 "EHLO
+        id S231307AbjF1CoU (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 27 Jun 2023 22:44:20 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43436 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231196AbjF1CgR (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 27 Jun 2023 22:36:17 -0400
-Received: from szxga01-in.huawei.com (szxga01-in.huawei.com [45.249.212.187])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D493C19A2
-        for <linux-xfs@vger.kernel.org>; Tue, 27 Jun 2023 19:36:12 -0700 (PDT)
-Received: from dggpemm500014.china.huawei.com (unknown [172.30.72.55])
-        by szxga01-in.huawei.com (SkyGuard) with ESMTP id 4QrQcQ3QYkzlWPT;
-        Wed, 28 Jun 2023 10:33:26 +0800 (CST)
-Received: from [10.174.177.211] (10.174.177.211) by
- dggpemm500014.china.huawei.com (7.185.36.153) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2507.27; Wed, 28 Jun 2023 10:36:10 +0800
-Message-ID: <426f7bd4-1b31-664e-bff0-68d9d26940fb@huawei.com>
-Date:   Wed, 28 Jun 2023 10:36:09 +0800
+        with ESMTP id S231221AbjF1CoQ (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 27 Jun 2023 22:44:16 -0400
+Received: from NAM10-BN7-obe.outbound.protection.outlook.com (mail-bn7nam10on2063.outbound.protection.outlook.com [40.107.92.63])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C88222D7C;
+        Tue, 27 Jun 2023 19:44:11 -0700 (PDT)
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
+ b=EsGthPhnG+eaWAKJ49s70W1Chg10SgXmAAdCXOdU+qkmcIaSovXDu0sh16j10o6VWbfttYxNg5aWQKt0luIurBgYH57R/4U0PleXAqGmlOXJUrBySCUnmmAdRaTrXAdbtL9Jegrlgu2tiL0C+bECaOWduMcybLxcp4eQ13/NKJD+G1jdjcL8s8xZ2IKawCcf+Mu/q7uPczBuyw32MCSiHz0qJaJMQ1PEAwSNYAGfKYgPRJWGhZDUKHQ153fkgpAhg7LQeuFICOG2JYPilLNUbFRVHhjCyhk5wUdKx5on0ceLWOnEujyHioTFGKcdgz7auieiTyRz5TEANplf5GK7gA==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector9901;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=mofqvIQgClIzLpDBY5gp0FvFCyeoFe+s6MwKvoQ/T04=;
+ b=gYXh47Ho2qj3wOg4P4kjhORv8KKKOGnr8CQ23H6F2fc7kuqppcxRSeiP38zsDXsE/vsvB+B/qS+1+lB9ju0qsDf2Qa/E6v8Ke1UlMEnvO7dqqmwmpSMniEqb0YjyF/g2LNk4j2AV68U5pWIQzktFiKfUh6P3TqoZZZEY3Nl1SbXaVwZPWKsOlVi49y26f4UeRo7FmKbiCFgEwdeJHVcKetd26YD+oDhNLtN86coaoqwwjLHnm+vZ2idOc9p8yaauCDKP+mvheXWNbgrysdQe6jcXpqgcfq56VFBTkwD7mgI6UbroIbmHSN5k/Ns1f5WtBYH27/RyeLkgRKrERmkPTw==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=nvidia.com; dmarc=pass action=none header.from=nvidia.com;
+ dkim=pass header.d=nvidia.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=Nvidia.com;
+ s=selector2;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=mofqvIQgClIzLpDBY5gp0FvFCyeoFe+s6MwKvoQ/T04=;
+ b=QG4gllWtzGvH9T0/IdEddIjtR9U8ACAtg80/eN1m4Oo/RewaIkVti2AWvqb4cDCK9yH5O7svpjBZDxsPPF6VcwyoqZWtR12+twQpUmkIol9Avj41kN/i1N6ZYL11dx8lM55rCe1uFiYKBRdbBB+mPF2iERyDYln2EMr9pzuXTDwDIinShzI7wdShhNnrIh3S3JWHO10LQyjoIm7V0HeNgJtKwzXTNbt5FMNRZTQbrsX7lxOe3Bpiyf91UIPs8QBYtXS2nq3KEh8os9cTa5suhHtStVsLiDPV4RFUhAefSfqn1RbFqv6LxtYZ+sXYHGqjtpE+6Hw5NAmK+Uk9CHAdPw==
+Received: from MW2PR12MB4667.namprd12.prod.outlook.com (2603:10b6:302:12::28)
+ by SJ2PR12MB7893.namprd12.prod.outlook.com (2603:10b6:a03:4cc::6) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.6521.24; Wed, 28 Jun
+ 2023 02:44:09 +0000
+Received: from MW2PR12MB4667.namprd12.prod.outlook.com
+ ([fe80::92c6:4b21:586d:dabc]) by MW2PR12MB4667.namprd12.prod.outlook.com
+ ([fe80::92c6:4b21:586d:dabc%4]) with mapi id 15.20.6521.024; Wed, 28 Jun 2023
+ 02:44:09 +0000
+From:   Chaitanya Kulkarni <chaitanyak@nvidia.com>
+To:     Lu Hongfei <luhongfei@vivo.com>,
+        Christoph Hellwig <hch@infradead.org>,
+        "Darrick J. Wong" <djwong@kernel.org>,
+        "linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>,
+        "linux-fsdevel@vger.kernel.org" <linux-fsdevel@vger.kernel.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+CC:     "opensource.kernel@vivo.com" <opensource.kernel@vivo.com>
+Subject: Re: [PATCH v2] fs: iomap: Change the type of blocksize from 'int' to
+ 'unsigned int' in iomap_file_buffered_write_punch_delalloc
+Thread-Topic: [PATCH v2] fs: iomap: Change the type of blocksize from 'int' to
+ 'unsigned int' in iomap_file_buffered_write_punch_delalloc
+Thread-Index: AQHZqWQIiUvvKw68fESRmtcE/MqleK+fggoA
+Date:   Wed, 28 Jun 2023 02:44:09 +0000
+Message-ID: <e47aee74-82d4-470f-2d2d-2ea22b232c6c@nvidia.com>
+References: <20230628015803.58517-1-luhongfei@vivo.com>
+In-Reply-To: <20230628015803.58517-1-luhongfei@vivo.com>
+Accept-Language: en-US
+Content-Language: en-US
+X-MS-Has-Attach: 
+X-MS-TNEF-Correlator: 
+user-agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
+ Thunderbird/102.11.0
+authentication-results: dkim=none (message not signed)
+ header.d=none;dmarc=none action=none header.from=nvidia.com;
+x-ms-publictraffictype: Email
+x-ms-traffictypediagnostic: MW2PR12MB4667:EE_|SJ2PR12MB7893:EE_
+x-ms-office365-filtering-correlation-id: 1707d9db-4557-4d81-b873-08db77818c59
+x-ms-exchange-senderadcheck: 1
+x-ms-exchange-antispam-relay: 0
+x-microsoft-antispam: BCL:0;
+x-microsoft-antispam-message-info: c9DSAzKwlRt1+LOTbVFgMFFQpjOlWq5eqk5Vhc3oI3Qdt8dUztg3XUD/RsdUnD2cTCYr7q8TQAHiQ7HLEssLJiImxiRGCIR7Ge0MucIyLC1QIk6udGKX/l3iEnypnx1trBknMLAXnbUBQddulc0RpvaNepMZ9AeTMPRdM76zxLTwRw9OREYddUXbh3XYa7Uyi2L/QEneNfDx2UZAz2mhQaFXKNSyDcW+NtjTFyNBm1icyxbiee2wY6OdEMNNj3xA9gUkrBSSYsEH3rmgsoVH75zlX0wvZWmZPFDp3AF0vQtZT6dHNe+WMTTt1sT/GMjeymxBOUGlIiS42UiGOrHm5A1wXbgYvnfOGpqPdTyqDg7aAuHpvvxmstm1qRzsUI71uDc6onpDwTeStqkBKuugqxVV28Laqh1tWksKVdwMhFchKWokM9s1Pns6teLSZHoDiSqV+WR+kpWc6bBEpy3Ce6+bcb8XV0jYVNaRf24IvAgvTODMnBg8K5OqmdQOcTsZJca6glTtmN0wSVc9YFH05LX+N2K308MT+9mpxcXXxrCeNZqH1IxVZOtTwRXPZAvLR/W0a/9sav/WAbmZ1qG3gr5BdtL9JtcUrm7Ii8wg8tWPTNpX9K94bU8tIZyOU/h6XfitZLdo74hFg7sPUNk/2mSQXep0/yQLilU4zQGFgbOuXdEZhinq7M6NkQ4OzWnM
+x-forefront-antispam-report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:MW2PR12MB4667.namprd12.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230028)(4636009)(136003)(346002)(376002)(39860400002)(366004)(396003)(451199021)(71200400001)(31686004)(6486002)(8936002)(66476007)(5660300002)(8676002)(66556008)(478600001)(558084003)(110136005)(6512007)(4326008)(186003)(83380400001)(53546011)(6506007)(2616005)(316002)(66946007)(66446008)(91956017)(86362001)(38070700005)(2906002)(31696002)(76116006)(41300700001)(64756008)(38100700002)(36756003)(122000001)(45980500001)(43740500002);DIR:OUT;SFP:1101;
+x-ms-exchange-antispam-messagedata-chunkcount: 1
+x-ms-exchange-antispam-messagedata-0: =?utf-8?B?TTQ5ZlFIV2ZiN082UmhDZGNjUzhTU1BrdWFUbWNNbjM3dzltb0M3cUpRcTJk?=
+ =?utf-8?B?RUhsbVdQTnJiV2s5R0ltWG9MWmhLanV6MGhRQWhaQngzY1BMYnl6UGVMZkQy?=
+ =?utf-8?B?REk0WFBuZ2MrMTZqanRmYlpTZGNzSTBnUXVFUTFmZGpJdHphOFFXMFRzZE5m?=
+ =?utf-8?B?QkhzdkR3MW1Jc3QzUlpTUGExMDFvd3RoUnVVYlkzNVFoUXROekJpV1VoSE81?=
+ =?utf-8?B?aWRsUjhtMlFiNUw1bnRxRzIxQjVZRUNiSklpdHp6K1N3ZUxaNXFGdFk3alBI?=
+ =?utf-8?B?b2JGVTUreTZseTlKc2ZKYmtsSVg1N3NKa1FBQ1doTE1LMjBWNUtvZkpGS3Mw?=
+ =?utf-8?B?Y2hIN3VIWTdXZWFaSUpSd1Z4aGpvdUNHaXZvRUJpeUMydElIaW1nV0VTZzh5?=
+ =?utf-8?B?OWtjZkJxQlRtUjVIcVAxQTJjbVgyc1VKUGJYVFFCRlhBT1I3M1A1NjRsQjZ0?=
+ =?utf-8?B?ZW9HU3lKSFpzdlRESlRZeS92TWhMSnBhN0JUYndza01qV3lsTUJpYWhXM3NR?=
+ =?utf-8?B?Z3plYkIycXlDMGlpdmUySU9IV1RZNTNsMmZON1BQZFRybC8xWEhOOENHNzM2?=
+ =?utf-8?B?L3BvN0tKd3FDdmFvZHZKUmtDc1Uxb0sxQWswRk1Gand5TTcrOEtxcVNJUmMx?=
+ =?utf-8?B?K013VlF1M1dFaE9OUjJkT3J0SHhKejZhekpJTUp2dytaU2g3TE02YXBQWnZo?=
+ =?utf-8?B?b1MyZ2dNdkdVcnJaMDdVY25GUE5wTEt4SDk4KzgrYm5wNXczQ01HbjdNSnhF?=
+ =?utf-8?B?UG9Kcnp0aCsvOEdyUlZPQnVKMUx5YjZVUFVqNVl1cVdIRUppWUNyb1lhZnEx?=
+ =?utf-8?B?NU1lTlp2ZDVNbHUyMlYvQ1RxWExkQ1BhWVUwNWJnK1JUZlZJMDliYnFyWTB2?=
+ =?utf-8?B?SlhKUDhxZlNKQVhMa0dSKzdKQU1yWjRKdEk4dXV5YUJneHFCY1JrdytWNVly?=
+ =?utf-8?B?RnJCMDNYaHRuaURJeklnQUdjcFlSY0J3UU9yQ1NoVGh3Vnl2dUVxZktxcU9u?=
+ =?utf-8?B?VGlYcmovNStoVURWUFZBUDA2OWpLNGFRUTRUU1hiaE9DNGxoRWVVMHpHcWkx?=
+ =?utf-8?B?OC9KbWgzVmRNejUraU1lZ2dpWFJxRzQ3d203bVU2di9wVkRGbVEwajlveldi?=
+ =?utf-8?B?TFlsS0tleWZubzZpeTAxMHYxKzNZVi9SZ0NscVhSb0gxOE5YVC9RR0RxVklQ?=
+ =?utf-8?B?YWNuanBEa3BvMUhrVDF2dEhSUzlvN3FlVlQ5Z1ErNHRvZTRQNHZCVStzZ3Fw?=
+ =?utf-8?B?amhUTUpObFc1eWFaZkRyWjEyaUt4eU9ObVJNRHdHNitDb3puM2FuMktjb2h4?=
+ =?utf-8?B?OW1PS2hjKzhEdHdEa3dWYndrRm1kdjJsQ002K3FUZzNNSGRRaFRlNjV1Tmx5?=
+ =?utf-8?B?WEwyODFwTzhjOEY3eVVVOVh5bmh5N2lsVnNVN2I1WGJjbVVoZXNrNzgzWTdy?=
+ =?utf-8?B?b2p0WGwvUUI3Q0FiVHQvbHpBeTN4cVdlLzh3ZUhMVTBYSU51c2FIOEF5bEJX?=
+ =?utf-8?B?UnJvNzRIamtpZjhHTW9wQWFuSW9wM1kyWWFodDROTW9nRXZuODZnaWlKdDNQ?=
+ =?utf-8?B?WW5YTHkxY3g4RENvcHlIem0zUzM1RVkyMTBrNVZ3alJETlpxUTlwbGw5YmFq?=
+ =?utf-8?B?bDh6LzdVU2dtL1ZWVWtlSG9KQTRISEprSFp6RkUvanBNaGN4dWdpSmIvQVRa?=
+ =?utf-8?B?c0QwNHdXRUdTekdjUFJtZkRQTnE1TFhmdGIrczhOMm9NZHI4a2VoTTFsQjdq?=
+ =?utf-8?B?MUswa29IRkgxc0NzSXl5cm5xTFRIdy83djFqY3JieDFVMXM3bFZkb1IzdUtj?=
+ =?utf-8?B?RE5iWmdUeUdmZDhTTzZDdjF5K2o4b3RSRHh1UHBSZ09jWjcvcjBGcENGVGJk?=
+ =?utf-8?B?T2N2QUEwTm45YjN6UUtKRFJOYnd3dmZrRnhhOUI3NVlGdHhveWRlKzBtTkFk?=
+ =?utf-8?B?NmIwYnZYMzMwZnZmSHJMV0xHZ0NKZzMyNXNEMHNmZFpUd2phV1FqNy8rMDhq?=
+ =?utf-8?B?bXl3SzdJcDExb0JRbHZiaGZ1OFhoMmEydUZLTmppNXQyRFJGNzNWbWpKaGNU?=
+ =?utf-8?B?NWRCUXV1MUJBMnpSd0NqTHdIdTk2c3JMU0dBM3dHamFQenJZTStoZXdPazNZ?=
+ =?utf-8?B?Yy9YVmRlRVd2OEg1WUJYZGVsUUQwcjdOb1VyQmdtbWtYRmRXM1JUMi9MQW83?=
+ =?utf-8?Q?NjpZcDu7buHYQ8/z39o6Av8RF3HRFKvIZDmSuvmPxPIQ?=
+Content-Type: text/plain; charset="utf-8"
+Content-ID: <9140E510542BCE42AA4ECE6E58B0EEA0@namprd12.prod.outlook.com>
+Content-Transfer-Encoding: base64
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:91.0) Gecko/20100101
- Thunderbird/91.0.3
-Subject: Re: [PATCH]xfs_repair: fix the problem of repair failure caused by
- dirty flag being abnormally set on buffer
-To:     "Darrick J. Wong" <djwong@kernel.org>
-CC:     <cem@kernel.org>, <linux-xfs@vger.kernel.org>,
-        <louhongxiang@huawei.com>,
-        "liuzhiqiang (I)" <liuzhiqiang26@huawei.com>
-References: <0bdbc18a-e062-9d39-2d01-75a0480c692e@huawei.com>
- <eb138689-d7c9-5d1c-d7bf-acdf2859a879@huawei.com>
- <20230610024412.GT72267@frogsfrogsfrogs>
-From:   Wu Guanghao <wuguanghao3@huawei.com>
-In-Reply-To: <20230610024412.GT72267@frogsfrogsfrogs>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 8bit
-X-Originating-IP: [10.174.177.211]
-X-ClientProxiedBy: dggems706-chm.china.huawei.com (10.3.19.183) To
- dggpemm500014.china.huawei.com (7.185.36.153)
-X-CFilter-Loop: Reflected
+X-OriginatorOrg: Nvidia.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-AuthSource: MW2PR12MB4667.namprd12.prod.outlook.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: 1707d9db-4557-4d81-b873-08db77818c59
+X-MS-Exchange-CrossTenant-originalarrivaltime: 28 Jun 2023 02:44:09.1722
+ (UTC)
+X-MS-Exchange-CrossTenant-fromentityheader: Hosted
+X-MS-Exchange-CrossTenant-id: 43083d15-7273-40c1-b7db-39efd9ccc17a
+X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
+X-MS-Exchange-CrossTenant-userprincipalname: I3kUGiADZFfhx9EozXXpVSFM5cHagDRAYJuDKW07yIpQpgxD159bbpLnl09iCEivaDLmD/+ht/Fu0zJZVk2JtQ==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: SJ2PR12MB7893
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-
-
-在 2023/6/10 10:44, Darrick J. Wong 写道:
-> On Fri, Jun 09, 2023 at 09:08:01AM +0800, Wu Guanghao wrote:
->> We found an issue where repair failed in the fault injection.
->>
->> $ xfs_repair test.img
->> ...
->> Phase 3 - for each AG...
->>         - scan and clear agi unlinked lists...
->>         - process known inodes and perform inode discovery...
->>         - agno = 0
->>         - agno = 1
->>         - agno = 2
->> Metadata CRC error detected at 0x55a30e420c7d, xfs_bmbt block 0x51d68/0x1000
->>         - agno = 3
->> Metadata CRC error detected at 0x55a30e420c7d, xfs_bmbt block 0x51d68/0x1000
->> btree block 0/41901 is suspect, error -74
->> bad magic # 0x58534c4d in inode 3306572 (data fork) bmbt block 41901
->> bad data fork in inode 3306572
->> cleared inode 3306572
->> ...
->> Phase 7 - verify and correct link counts...
->> Metadata corruption detected at 0x55a30e420b58, xfs_bmbt block 0x51d68/0x1000
->> libxfs_bwrite: write verifier failed on xfs_bmbt bno 0x51d68/0x8
->> xfs_repair: Releasing dirty buffer to free list!
->> xfs_repair: Refusing to write a corrupt buffer to the data device!
->> xfs_repair: Lost a write to the data device!
->>
->> fatal error -- File system metadata writeout failed, err=117.  Re-run xfs_repair.
->>
->>
->> $ xfs_db test.img
->> xfs_db> inode 3306572
->> xfs_db> p
->> core.magic = 0x494e
->> core.mode = 0100666		  // regular file
->> core.version = 3
->> core.format = 3 (btree)	
->> ...
->> u3.bmbt.keys[1] = [startoff]
->> 1:[6]
->> u3.bmbt.ptrs[1] = 41901	 // btree root
->> ...
->>
->> $ hexdump -C -n 4096 41901.img
->> 00000000  58 53 4c 4d 00 00 00 00  00 00 01 e8 d6 f4 03 14  |XSLM............|
->> 00000010  09 f3 a6 1b 0a 3c 45 5a  96 39 41 ac 09 2f 66 99  |.....<EZ.9A../f.|
->> 00000020  00 00 00 00 00 05 1f fb  00 00 00 00 00 05 1d 68  |...............h|
->> ...
->>
->> The block data associated with inode 3306572 is abnormal, but check the CRC first
->> when reading. If the CRC check fails, badcrc will be set. Then the dirty flag
->> will be set on bp when badcrc is set. In the final stage of repair, the dirty bp
->> will be refreshed in batches. When refresh to the disk, the data in bp will be
->> verified. At this time, if the data verification fails, resulting in a repair
->> error.
->>
->> After scan_bmapbt returns an error, the inode will be cleaned up. Then bp
->> doesn't need to set dirty flag, so that it won't trigger writeback verification
->> failure.
->>
->> Signed-off-by: Wu Guanghao <wuguanghao3@huawei.com>
->> ---
->>  repair/scan.c | 2 +-
->>  1 file changed, 1 insertion(+), 1 deletion(-)
->>
->> diff --git a/repair/scan.c b/repair/scan.c
->> index 7b720131..b5458eb8 100644
->> --- a/repair/scan.c
->> +++ b/repair/scan.c
->> @@ -185,7 +185,7 @@ scan_lbtree(
->>
->>  	ASSERT(dirty == 0 || (dirty && !no_modify));
->>
->> -	if ((dirty || badcrc) && !no_modify) {
->> +	if (!err && (dirty || badcrc) && !no_modify) {
->>  		libxfs_buf_mark_dirty(bp);
->>  		libxfs_buf_relse(bp);
-> 
-> Hm.  So if scan_lbtree returns 1, that means that we clear the inode.
-> Hence there's no point in dirtying this buffer since we're going to zap
-> the whole inode anyway.
-> 
-> This looks correct to me, so
-> Reviewed-by: Darrick J. Wong <djwong@kernel.org>
-> 
-> But that said, you could refactor this part:
-> 
-> 	if (!err && (dirty || badcrc) && !no_modify)
-> 		libxfs_buf_mark_dirty(bp);
-> 	libxfs_buf_relse(bp);
-> 
-> More questions: Let's say that the btree-format fork has this btree:
-> 
->         fork
->        / | \
->       A  B  C
-> 
-> Are there any cases where A is corrupt enough that the write verifier
-> will trip but scan_lbtree/scan_bmapbt return 0?
-> 
-I'm sorry for replying so late.
-
-This situation should not exist.
-scan_bmapbt() performs the following checks:
-1. Check the magic of the block
-2. Check the level of the block
-3. Check which inode the owner of the block belongs to.
-4. If it is a V5 filesystem,it will check three items: UUID, block consistency,
-and which inode the block belongs to.
-5. Calculate which AG the block belongs to and see the usage of the block
-6. If it is a leaf node, it will check whether the number of records exceeds the maximum value
-
-xfs_bmbt_write_verify() performs the following checks:
-1. Check the magic of the block
-2. If it is a V5 filesystem,it will check three items: UUID, block consistency,
-and which inode the block belongs to.
-3. Check if the level of the block is within the specified range
-4. Check if the number of nodes in the block record exceeds the maximum limit
-5. Check if the left and right nodes of the block are within the range of the file system
-
-As can be seen from above, scan_bmapbt() checks more and in more detail than
-xfs_bmbt_write_verify(). Therefore, if scan_bmapbt() returns 0,
-xfs_bmbt_write_verify() will not report an error.
-
-> Or, let's say that we dirty A, then scan_bmapbt decides that B is total
-> garbage and returns 1.  Should we then mark A stale so that it doesn't
-> get written out unnecessarily?
-> 
-We can allocate space in process_btinode() and pass it to scan_lbtree/scan_bmapbt.
-If a bp is set as dirty, we record it. If the inode needs to be cleaned up,
-we set all recorded bps as stale.However, this does not affect the repair process.
-Even if no record is kept, it only adds some unnecessary data writing.
-
-If there is nothing wrong with this，I will push V2 patch.
-
-Thanks
-
-Guanghao
-
-> Or, let's say that A is corrupt enough to trip the write verifier but
-> scan_lbtree/scan_bmapbt return 0; and B is corrupt enough that
-> scan_bmapbt returns 1.  In that case, we'd need to mark A stale so that
-> we clear the inode and repair can complete without tripping over A or B.
-> Does that actually happen?
-> 
-
-> --D
-> 
->>  	}
->> -- 
->> 2.27.0
->>
-> .
-> 
+T24gNi8yNy8yMyAxODo1OCwgTHUgSG9uZ2ZlaSB3cm90ZToNCj4gVGhlIHJldHVybiB2YWx1ZSB0
+eXBlIG9mIGlfYmxvY2tzaXplKCkgaXMgJ3Vuc2lnbmVkIGludCcsIHNvIHRoZQ0KPiB0eXBlIG9m
+IGJsb2Nrc2l6ZSBoYXMgYmVlbiBtb2RpZmllZCBmcm9tICdpbnQnIHRvICd1bnNpZ25lZCBpbnQn
+DQo+IHRvIGVuc3VyZSBkYXRhIHR5cGUgY29uc2lzdGVuY3kuDQo+DQo+IFNpZ25lZC1vZmYtYnk6
+IEx1IEhvbmdmZWkgPGx1aG9uZ2ZlaUB2aXZvLmNvbT4NCj4gLS0tDQo+DQoNCkxvb2tzIGdvb2Qu
+DQoNClJldmlld2VkLWJ5OiBDaGFpdGFueWEgS3Vsa2FybmkgPGtjaEBudmlkaWEuY29tPg0KDQot
+Y2sNCg0KDQo=
