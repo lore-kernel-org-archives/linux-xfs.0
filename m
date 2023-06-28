@@ -2,78 +2,79 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1194DEB64D7
-	for <linux-xfs@archiver.kernel.org>; Wed, 28 Jun 2023 21:58:43 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 32F2BEB64DA
+	for <linux-xfs@archiver.kernel.org>; Wed, 28 Jun 2023 21:58:45 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229639AbjF1V6k (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 28 Jun 2023 17:58:40 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40366 "EHLO
+        id S230081AbjF1V6n (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 28 Jun 2023 17:58:43 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40394 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229732AbjF1V6j (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 28 Jun 2023 17:58:39 -0400
-Received: from mail-pf1-x434.google.com (mail-pf1-x434.google.com [IPv6:2607:f8b0:4864:20::434])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4BB30107
-        for <linux-xfs@vger.kernel.org>; Wed, 28 Jun 2023 14:58:38 -0700 (PDT)
-Received: by mail-pf1-x434.google.com with SMTP id d2e1a72fcca58-666ecf9a0ceso14697b3a.2
-        for <linux-xfs@vger.kernel.org>; Wed, 28 Jun 2023 14:58:38 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=fromorbit-com.20221208.gappssmtp.com; s=20221208; t=1687989518; x=1690581518;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
-        bh=l1MfNYGEQIj/FK/5LPgDAXCj/XTBV2FvJ10MEeMy7nc=;
-        b=dbfILMOvtyXsRoyZfU2hYfJ2lCK1O4uz8/zU1bL0aGf8/6lVtw9Rj94VVz0nXoV24s
-         0HQkazpTkEQ6ohSCfX6g3nfjNeM9Q++f8MpNnYOPFn06RpWLVm+m/JZZdPYq09lrTdSM
-         B/V8e7psjdLuM51zrOgwqDLCjyBN83mCX+DBg0T3cTDXLfK7A1EAPo+pzFhBjeYbZRMk
-         Hr6zBxc2cI9yvDK5qwzSjnd9oEmDSjnKJGSrLMshOzIJlRJ0z/8BU7oCBvC6dlO57GS+
-         KVzhaGcbWVXIwgqNJi6FRArjDYMV1CMisxqIBz6nSuzcrJhzO2N+Tsvjb5amCcYplBS8
-         5hew==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20221208; t=1687989518; x=1690581518;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=l1MfNYGEQIj/FK/5LPgDAXCj/XTBV2FvJ10MEeMy7nc=;
-        b=eJoyjeS/9X9KrZqHT4Sk7JT2xbNoRDoLWgoP0KHA/01DQ9zwDnkgwTeID0ZUGtJJLZ
-         FVm9aI8oOSr6RFbVVwHgY7kmx9a+ZQFdMQOOfnx1ijDaxe3I12HXlNa/EyKnMfgqK93s
-         qUEugoKGu+ayuSkEUglFRgNvlINK5zBOj27oeFR0+v6fsKqmrx7WWwNLdd7uDWT6tSMC
-         Ew3bRF1VTnxIVnIs0thbX/RkYJ4FeA7QLBPJXuES85umOTHGZJAK6z0fV59/F5uHdNWw
-         ik+WW52glZygWI5pws2j1HCTSBQ8GWDVEVuiDDZMrJ6zd0nOIakyPqdFcZyYg0JKCAeG
-         5XZw==
-X-Gm-Message-State: AC+VfDyjp1UA7Y3L1Y44B02s7QJ0kX86Ik/Igk9A9RMnhUEesuk7II2B
-        FbTzGE48nejXh11M1XJPd733azK892XzU5UOBvQ=
-X-Google-Smtp-Source: ACHHUZ7/hfqWEDbJbH8mBkm9zIDaicdsBcgbrw5DeR5fujBy2y2jBLxoiOJfzaKbDCFpDbOj70UCqQ==
-X-Received: by 2002:a05:6a00:3a10:b0:668:8596:7524 with SMTP id fj16-20020a056a003a1000b0066885967524mr28433379pfb.20.1687989517742;
-        Wed, 28 Jun 2023 14:58:37 -0700 (PDT)
-Received: from dread.disaster.area (pa49-186-94-37.pa.vic.optusnet.com.au. [49.186.94.37])
-        by smtp.gmail.com with ESMTPSA id a25-20020aa78659000000b0067738f65039sm5417596pfo.83.2023.06.28.14.58.36
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 28 Jun 2023 14:58:36 -0700 (PDT)
-Received: from dave by dread.disaster.area with local (Exim 4.96)
-        (envelope-from <david@fromorbit.com>)
-        id 1qEdBJ-00HO2m-1g;
-        Thu, 29 Jun 2023 07:58:33 +1000
-Date:   Thu, 29 Jun 2023 07:58:33 +1000
-From:   Dave Chinner <david@fromorbit.com>
-To:     bugzilla-daemon@kernel.org
-Cc:     linux-xfs@vger.kernel.org
-Subject: Re: [Bug 217604] New: Kernel metadata repair facility is not
- available, but kernel has CONFIG_XFS_ONLINE_REPAIR=y
-Message-ID: <ZJytCV1TLr3k2fa7@dread.disaster.area>
-References: <bug-217604-201763@https.bugzilla.kernel.org/>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
+        with ESMTP id S230243AbjF1V6m (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 28 Jun 2023 17:58:42 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 324E32103
+        for <linux-xfs@vger.kernel.org>; Wed, 28 Jun 2023 14:58:42 -0700 (PDT)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange X25519 server-signature RSA-PSS (2048 bits))
+        (No client certificate requested)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id B5FDC61479
+        for <linux-xfs@vger.kernel.org>; Wed, 28 Jun 2023 21:58:41 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPS id 24D65C43391
+        for <linux-xfs@vger.kernel.org>; Wed, 28 Jun 2023 21:58:41 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1687989521;
+        bh=SWJMXDN9AIGKdQx3JbAhXVd0Xxq9onqgKBEUHYoobQE=;
+        h=From:To:Subject:Date:In-Reply-To:References:From;
+        b=euFPHkIf0sPI5yCWHP6A++KPba0leUPueEDWy6lId8RWpEVM3QUpYjEckXD5cC2MQ
+         RHCAX5SZcRl200PxxPEYfQRQnSq0dMd18qxMiPnrmOgPNqAr7iofqhiVYnEibqdc/o
+         zIp1xU91XWDnXC36R4dPZdPRj4HAlv1HtbrA62SvDa0lZhy4Y0/spm/fD81jk7PPTX
+         4/PufgduTAGCz2kcqgvTTxQvb4WQ6KFOrBniZlunrFwJCIE0kkTgHhqtci2I+OGnGu
+         C0oYId3+NRR+9grui1PZF14AJS7OmAxnAs6uizImyp8ECUPTR4tCISAnXewGB0mMyG
+         0EN/b/mc9sSzg==
+Received: by aws-us-west-2-korg-bugzilla-1.web.codeaurora.org (Postfix, from userid 48)
+        id 13AD1C53BD5; Wed, 28 Jun 2023 21:58:41 +0000 (UTC)
+From:   bugzilla-daemon@kernel.org
+To:     linux-xfs@vger.kernel.org
+Subject: [Bug 217604] Kernel metadata repair facility is not available, but
+ kernel has XFS_ONLINE_REPAIR=y
+Date:   Wed, 28 Jun 2023 21:58:40 +0000
+X-Bugzilla-Reason: None
+X-Bugzilla-Type: changed
+X-Bugzilla-Watch-Reason: AssignedTo filesystem_xfs@kernel-bugs.kernel.org
+X-Bugzilla-Product: File System
+X-Bugzilla-Component: XFS
+X-Bugzilla-Version: 2.5
+X-Bugzilla-Keywords: 
+X-Bugzilla-Severity: normal
+X-Bugzilla-Who: david@fromorbit.com
+X-Bugzilla-Status: NEW
+X-Bugzilla-Resolution: 
+X-Bugzilla-Priority: P3
+X-Bugzilla-Assigned-To: filesystem_xfs@kernel-bugs.kernel.org
+X-Bugzilla-Flags: 
+X-Bugzilla-Changed-Fields: 
+Message-ID: <bug-217604-201763-eLoFWuNm3U@https.bugzilla.kernel.org/>
 In-Reply-To: <bug-217604-201763@https.bugzilla.kernel.org/>
+References: <bug-217604-201763@https.bugzilla.kernel.org/>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
+X-Bugzilla-URL: https://bugzilla.kernel.org/
+Auto-Submitted: auto-generated
+MIME-Version: 1.0
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
+https://bugzilla.kernel.org/show_bug.cgi?id=3D217604
+
+--- Comment #1 from Dave Chinner (david@fromorbit.com) ---
 On Wed, Jun 28, 2023 at 08:50:43AM +0000, bugzilla-daemon@kernel.org wrote:
-> https://bugzilla.kernel.org/show_bug.cgi?id=217604
-> 
+> https://bugzilla.kernel.org/show_bug.cgi?id=3D217604
+>=20
 >             Bug ID: 217604
 >            Summary: Kernel metadata repair facility is not available, but
->                     kernel has CONFIG_XFS_ONLINE_REPAIR=y
+>                     kernel has CONFIG_XFS_ONLINE_REPAIR=3Dy
 >            Product: File System
 >            Version: 2.5
 >           Hardware: All
@@ -85,14 +86,15 @@ On Wed, Jun 28, 2023 at 08:50:43AM +0000, bugzilla-daemon@kernel.org wrote:
 >           Assignee: filesystem_xfs@kernel-bugs.kernel.org
 >           Reporter: j.fikar@gmail.com
 >         Regression: No
-> 
+>=20
 > Hi,
-> 
+>=20
 > I'm trying the new xfs_scrub and I get this error:
-> 
+>=20
 > $ sudo xfs_scrub /mnt/xfs
 > EXPERIMENTAL xfs_scrub program in use! Use at your own risk!
-> Error: /mnt/xfs: Kernel metadata repair facility is not available.  Use -n to
+> Error: /mnt/xfs: Kernel metadata repair facility is not available.  Use -=
+n to
 > scrub.
 > Info: /mnt/xfs: Scrub aborted after phase 1.
 > /mnt/xfs: operational errors found: 1
@@ -107,6 +109,9 @@ FWIW, it is far better to send a message to the mailing list
 is than it is to raise a bug just to ask a question about support...
 
 -Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+
+--=20
+You may reply to this email to add a comment.
+
+You are receiving this mail because:
+You are watching the assignee of the bug.=
