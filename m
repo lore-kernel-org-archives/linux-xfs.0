@@ -2,167 +2,62 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 47906EB64D7
-	for <linux-xfs@archiver.kernel.org>; Wed, 28 Jun 2023 09:02:20 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 88D0EEB64DA
+	for <linux-xfs@archiver.kernel.org>; Wed, 28 Jun 2023 09:28:41 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234337AbjF1JBv (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 28 Jun 2023 05:01:51 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41158 "EHLO
+        id S231697AbjF1J23 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 28 Jun 2023 05:28:29 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34236 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S234296AbjF1IZ4 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 28 Jun 2023 04:25:56 -0400
-Received: from mail-qt1-x82b.google.com (mail-qt1-x82b.google.com [IPv6:2607:f8b0:4864:20::82b])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3EABD294C
-        for <linux-xfs@vger.kernel.org>; Wed, 28 Jun 2023 01:17:34 -0700 (PDT)
-Received: by mail-qt1-x82b.google.com with SMTP id d75a77b69052e-4008b90d2f9so47674231cf.2
-        for <linux-xfs@vger.kernel.org>; Wed, 28 Jun 2023 01:17:34 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=fromorbit-com.20221208.gappssmtp.com; s=20221208; t=1687940253; x=1690532253;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
-        bh=uHAgK31V+qto7lF6nuR/80Td2cQl7pkgJYcZX0wiCp0=;
-        b=leRJ3DCLBProlSABh12KVuGRuXb9dOS74ytKKjQlFBJ+Nckv7hCmqzbFWfVrefC8xv
-         KgKbRvw6sJQLSO0oJfwwPoMifszxniTBp3YH4skmhKkK6zD1MJMhhHOKQsv/ctnzS7M5
-         HwXELPUSfKBF3uxbI480imS7glFwJtEXQP2NEgYEkobo145Cu3fUXXZJ8lvFQMleQyHm
-         1WyMC0WmGKVR0AijvBi/D6u+Ws+esPF/qGBCyWqluWSoKHVAzxUdMD/HFeHzFOfRWZJV
-         J1Oc7UZXWMyVMpLPSLoF3GXPxGDVxluAl2/2y5zp2t9MrujhLmJyUwcUAQigwUUw4cIY
-         EShg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20221208; t=1687940253; x=1690532253;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=uHAgK31V+qto7lF6nuR/80Td2cQl7pkgJYcZX0wiCp0=;
-        b=SMb3YHS8N84R0jrGPIw8KDfJNSZsW4NsY4FUzla/6ALozJ/gDr+dlFLwTIYbUAFo5U
-         05aC90Y6ILIjEf/S+FK/X7vqlRdpv9pqzwO72ZmwDTjRXk4oEq5+0nY0HdO6r7TG8wN1
-         qvRLg3BL1eYKggwk8lFsnYpcAnJj1QY5YDwc3reDXkI0fF3/wODd7b7FCIMmfmeJXwmc
-         2oVkx1vuBfMBZcwX66yLeXfamtW5Xd4XUwad+79cjjcQMn5dilORGE0tygsA7ps/L88a
-         jiECcXXCVsxQFDR/P9eRNAOiJZJvQjXxAmFzA/vMjyKhahUJQVbzLv+BxbR/rhagRi7m
-         FlSA==
-X-Gm-Message-State: AC+VfDyK9fwMA8jJYZYUcYJa02NqqXWItXnArA3OhDXkAyaMOmKixWiz
-        PkklldYrNKo7T92mZtRsJCZQMuGZHDmsGuABCA4=
-X-Google-Smtp-Source: ACHHUZ5pcyU1ZdsQRDTFTZhqk3lwq5J3PYJPPfCxFLzmOpkCbD/rrIPtsr4daA6QuGSFAL44K0Qikg==
-X-Received: by 2002:a05:6a00:1a87:b0:66a:386c:e6a6 with SMTP id e7-20020a056a001a8700b0066a386ce6a6mr27418447pfv.6.1687934300968;
-        Tue, 27 Jun 2023 23:38:20 -0700 (PDT)
-Received: from dread.disaster.area (pa49-186-94-37.pa.vic.optusnet.com.au. [49.186.94.37])
-        by smtp.gmail.com with ESMTPSA id v26-20020aa7851a000000b0064f708ca12asm4682222pfn.70.2023.06.27.23.38.20
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 27 Jun 2023 23:38:20 -0700 (PDT)
-Received: from dave by dread.disaster.area with local (Exim 4.96)
-        (envelope-from <david@fromorbit.com>)
-        id 1qEOoi-00H80M-2E;
-        Wed, 28 Jun 2023 16:38:16 +1000
-Date:   Wed, 28 Jun 2023 16:38:16 +1000
-From:   Dave Chinner <david@fromorbit.com>
-To:     Christoph Hellwig <hch@infradead.org>
-Cc:     linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 6/8] xfs: journal geometry is not properly bounds checked
-Message-ID: <ZJvVWOHGnW/KGfe2@dread.disaster.area>
-References: <20230627224412.2242198-1-david@fromorbit.com>
- <20230627224412.2242198-7-david@fromorbit.com>
- <ZJvObtDmbYVyR+KO@infradead.org>
+        with ESMTP id S231654AbjF1H4M (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 28 Jun 2023 03:56:12 -0400
+Received: from bombadil.infradead.org (bombadil.infradead.org [IPv6:2607:7c80:54:3::133])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id F38A430F1
+        for <linux-xfs@vger.kernel.org>; Wed, 28 Jun 2023 00:55:19 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Type:MIME-Version
+        :References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
+        Content-Transfer-Encoding:Content-ID:Content-Description;
+        bh=Ez/Z2zHWUBd1mh8aHsFgJlAr7+zbfSoMLzqwmgQ88JE=; b=YIBw1Ig1zbkSY8+mAUUC7KJQ5O
+        rohB7QgwYN4aq7VZjcHA9glWCz/c8syWP6qPpyH5R7NvCSd4ajaOZrB4ycNPC4URhScvnD7J5JAvS
+        0ISlOGKcHhrI5WE/uhXp9mo2TjfGLmZUXvakK3Hpr2Q+VGX96+tzbkNYa4BJT3FpqkchuRv28aR4d
+        g+qnL5FitruxGRMKGSSFwcKV80nd1/Z88f+Zdji4jsfwlqILgNCcEoT5FQ2ZjUYSgIY5qz/0s9FEm
+        7Je/K8H4VU2lokIfzM5mtpKKPso8OEx0zcBsSntrfXhWVJNiR0F9wmEsqL0z9fZ2BytS9pTSMul88
+        yvRVZb0g==;
+Received: from hch by bombadil.infradead.org with local (Exim 4.96 #2 (Red Hat Linux))
+        id 1qENEX-00EpbI-0Y;
+        Wed, 28 Jun 2023 04:56:49 +0000
+Date:   Tue, 27 Jun 2023 21:56:49 -0700
+From:   Christoph Hellwig <hch@infradead.org>
+To:     Eric Sandeen <sandeen@sandeen.net>
+Cc:     Masahiko Sawada <sawada.mshk@gmail.com>,
+        Dave Chinner <david@fromorbit.com>, linux-xfs@vger.kernel.org
+Subject: Re: Question on slow fallocate
+Message-ID: <ZJu9kb14LcXgGmjA@infradead.org>
+References: <CAD21AoCWW20ga6GKR+7RwRtvPU0VyFt3_acut_y+Fg7E-4nzWw@mail.gmail.com>
+ <ZJTrrwirZqykiVxn@dread.disaster.area>
+ <CAD21AoC9=8Q2o3-+ueuP05+8298z--5vgBWtvSxMHHF2jdyr_w@mail.gmail.com>
+ <3f604849-877b-f519-8cae-4694c82ac7e4@sandeen.net>
+ <CAD21AoBHd35HhFpbh9YBHPsLN+F_TZX5b47iy+-s44jPT+fyZQ@mail.gmail.com>
+ <82b74cbc-8a1d-6b6f-fa2f-5f120d958dad@sandeen.net>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <ZJvObtDmbYVyR+KO@infradead.org>
+In-Reply-To: <82b74cbc-8a1d-6b6f-fa2f-5f120d958dad@sandeen.net>
+X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Tue, Jun 27, 2023 at 11:08:46PM -0700, Christoph Hellwig wrote:
-> > +	if (sbp->sb_logblocks > XFS_MAX_LOG_BLOCKS) {
-> > +		xfs_notice(mp,
-> > +		"Log size 0x%x blocks too large, maximum size is 0x%llx blocks",
-> > +			 sbp->sb_logblocks, XFS_MAX_LOG_BLOCKS);
-> 
-> Just a little nitpick, didn't we traditionally align the overly
-> long format strings with a single tab and not to the same line as
-> the xfs_notice/warn/etc?
+On Tue, Jun 27, 2023 at 11:12:01AM -0500, Eric Sandeen wrote:
+> Ok, but what is the reason for zeroing out the blocks prior to them being
+> written with real data? I'm wondering what the core requirement here is for
+> the zeroing, either via fallocate (which btw posix_fallocate does not
+> guarantee) or pwrites of zeros.
 
-I don't think we have a particluarly formal definition of that.
- 
-I mean, just look at all the different variants in
-xfs_sb_validate_common:
+Note that even a plain truncate will zero the data visible to the
+user.  I could see this tring to reduce fragmentation by making sure
+the whole file extension is allocated together insted of split up
+as the difference processes write their areas.  But is there data
+showing this fragmentation even happens and actually hurts?
 
-	if (xfs_sb_is_v5(sbp)) {
-                if (sbp->sb_blocksize < XFS_MIN_CRC_BLOCKSIZE) {
-                        xfs_notice(mp,
-"Block size (%u bytes) too small for Version 5 superblock (minimum %d bytes)",
-                                sbp->sb_blocksize, XFS_MIN_CRC_BLOCKSIZE);
-                        return -EFSCORRUPTED;
-                }
-
-                /* V5 has a separate project quota inode */
-                if (sbp->sb_qflags & (XFS_OQUOTA_ENFD | XFS_OQUOTA_CHKD)) {
-                        xfs_notice(mp,
-                           "Version 5 of Super block has XFS_OQUOTA bits.");
-                        return -EFSCORRUPTED;
-                }
-
-                /*
-                 * Full inode chunks must be aligned to inode chunk size when
-                 * sparse inodes are enabled to support the sparse chunk
-                 * allocation algorithm and prevent overlapping inode records.
-                 */
-                if (sbp->sb_features_incompat & XFS_SB_FEAT_INCOMPAT_SPINODES) {
-                        uint32_t        align;
-
-                        align = XFS_INODES_PER_CHUNK * sbp->sb_inodesize
-                                        >> sbp->sb_blocklog;
-                        if (sbp->sb_inoalignmt != align) {
-                                xfs_warn(mp,
-"Inode block alignment (%u) must match chunk size (%u) for sparse inodes.",
-                                         sbp->sb_inoalignmt, align);
-                                return -EINVAL;
-                        }
-                }
-        } else if (sbp->sb_qflags & (XFS_PQUOTA_ENFD | XFS_GQUOTA_ENFD |
-                                XFS_PQUOTA_CHKD | XFS_GQUOTA_CHKD)) {
-                        xfs_notice(mp,
-"Superblock earlier than Version 5 has XFS_{P|G}QUOTA_{ENFD|CHKD} bits.");
-                        return -EFSCORRUPTED;
-        }
-
-        if (unlikely(
-            sbp->sb_logstart == 0 && mp->m_logdev_targp == mp->m_ddev_targp)) {
-                xfs_warn(mp,
-                "filesystem is marked as having an external log; "
-                "specify logdev on the mount command line.");
-                return -EINVAL;
-        }
-
-        if (unlikely(
-            sbp->sb_logstart != 0 && mp->m_logdev_targp != mp->m_ddev_targp)) {
-                xfs_warn(mp,
-                "filesystem is marked as having an internal log; "
-                "do not specify logdev on the mount command line.");
-                return -EINVAL;
-        }
-
-There's 4-5 different variations in indenting in 6-7 warning
-messages. And there are more variations in that function, too.
-
-There's no consistent rule to follow, so I just set the indenting
-such that the format string didn't run over 80 columns and didn't
-think any further..
-
-I think that if we really care, a separate cleanup patch to make all
-the long format strings use consistent zero-indenting and the
-variables one tab like this one:
-
-                        xfs_notice(mp,
-"Block size (%u bytes) too small for Version 5 superblock (minimum %d bytes)",
-                                sbp->sb_blocksize, XFS_MIN_CRC_BLOCKSIZE);
-
-Could be done. If I'm ever lacking for something to do...
-
-> Otherwise looks good:
-> 
-> Reviewed-by: Christoph Hellwig <hch@lst.de>
-
-Thanks!
-
-_dave.
--- 
-Dave Chinner
-david@fromorbit.com
