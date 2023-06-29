@@ -2,54 +2,97 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3CAAFEB64DC
-	for <linux-xfs@archiver.kernel.org>; Thu, 29 Jun 2023 05:44:45 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D7323EB64D9
+	for <linux-xfs@archiver.kernel.org>; Thu, 29 Jun 2023 07:10:40 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231566AbjF2Fom (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 29 Jun 2023 01:44:42 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33138 "EHLO
+        id S231981AbjF2HKj (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 29 Jun 2023 03:10:39 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48836 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231573AbjF2Fod (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 29 Jun 2023 01:44:33 -0400
-Received: from bombadil.infradead.org (bombadil.infradead.org [IPv6:2607:7c80:54:3::133])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0ED1D2D51;
-        Wed, 28 Jun 2023 22:44:29 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Type:MIME-Version
-        :References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
-        Content-Transfer-Encoding:Content-ID:Content-Description;
-        bh=ZH2LZio22mQexeVRx+H7ULNKh+Hfj2iXIK15cwYlRjg=; b=hIR4hN4B74sge6G08Zg+Qjk1rl
-        ISOCFeylq83bOt3snrPFKtcEmAHmeq57aNIRevl11V5CG9cN5G/XN8YBGCXEP83isYLUD2qV2WANo
-        amlrQRjGmkV4ldL/Fqa9U1yIjq2WzqAOlo3RbDOQNiKon1Z4Scqgwn57t4s05mxtfB2WJtCqRUpPx
-        ZHfokhkLhi4p0z1GxvwIoL5GKrQIMCZ/LqSzrqQNx/8fLld2gkijRbVCoLt9dzym4n//fQ6IhQIho
-        HJI/2Jn+Q9/wkpolyqxIV2DVhpJLbuyBG28eV1Qq8jhTp5+bqppW+d82eUZvxXOiMUUYAa5QAjexj
-        HPq2bJ6A==;
-Received: from hch by bombadil.infradead.org with local (Exim 4.96 #2 (Red Hat Linux))
-        id 1qEkRt-0001dI-0L;
-        Thu, 29 Jun 2023 05:44:09 +0000
-Date:   Wed, 28 Jun 2023 22:44:09 -0700
-From:   Christoph Hellwig <hch@infradead.org>
-To:     Yangtao Li <frank.li@vivo.com>
-Cc:     axboe@kernel.dk, song@kernel.org, viro@zeniv.linux.org.uk,
-        brauner@kernel.org, xiang@kernel.org, chao@kernel.org,
-        huyue2@coolpad.com, jefflexu@linux.alibaba.com, hch@infradead.org,
-        djwong@kernel.org, linux-block@vger.kernel.org,
-        linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org,
-        linux-fsdevel@vger.kernel.org, linux-erofs@lists.ozlabs.org,
-        linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 1/7] block: add queue_logical_block_mask() and
- bdev_logical_block_mask()
-Message-ID: <ZJ0aKU2w9xwS/vg1@infradead.org>
-References: <20230628093500.68779-1-frank.li@vivo.com>
+        with ESMTP id S231709AbjF2HKh (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 29 Jun 2023 03:10:37 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 185F02114
+        for <linux-xfs@vger.kernel.org>; Thu, 29 Jun 2023 00:10:37 -0700 (PDT)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange X25519 server-signature RSA-PSS (2048 bits))
+        (No client certificate requested)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id A79C0614D7
+        for <linux-xfs@vger.kernel.org>; Thu, 29 Jun 2023 07:10:36 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPS id 12D5DC433CC
+        for <linux-xfs@vger.kernel.org>; Thu, 29 Jun 2023 07:10:36 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1688022636;
+        bh=y+VUDPaVjiDOYBMuu9Ux9KPNSUrG8HnD2ecAUX7/mXQ=;
+        h=From:To:Subject:Date:In-Reply-To:References:From;
+        b=m2bWjXxwwzKJ1ajhr7hSu0uoSa8BC9MY4Vi0GJcXuwTWUqs4pnxRDsDBTBcho7jaz
+         mFcJhwkxpeUno1/R4gXgvpf0EXvD32tC+YV2kdR541N28cl28q2fwJwxtQ2pUdTThH
+         WzV5cXgazvXE+FUP24epUPZKqszJ+GCDaGRSzl49EeA+CsbMnHafiiL49UvGwbr7HU
+         vjSnFFVj5oPwM1ZRsUhlQKWaRNKDV+F9wvg8Fxobt6f5S8dQAePqD1m7ZfsyET9FjD
+         iaXND2nCfDvxtngyaXyH+qiH/jUjAxBPn20R5mOj2IZe9aatY9t7TLS4GfW1iX38RX
+         rtQNp/3MQGZrw==
+Received: by aws-us-west-2-korg-bugzilla-1.web.codeaurora.org (Postfix, from userid 48)
+        id 02072C53BCD; Thu, 29 Jun 2023 07:10:36 +0000 (UTC)
+From:   bugzilla-daemon@kernel.org
+To:     linux-xfs@vger.kernel.org
+Subject: [Bug 217604] Kernel metadata repair facility is not available, but
+ kernel has XFS_ONLINE_REPAIR=y
+Date:   Thu, 29 Jun 2023 07:10:35 +0000
+X-Bugzilla-Reason: None
+X-Bugzilla-Type: changed
+X-Bugzilla-Watch-Reason: AssignedTo filesystem_xfs@kernel-bugs.kernel.org
+X-Bugzilla-Product: File System
+X-Bugzilla-Component: XFS
+X-Bugzilla-Version: 2.5
+X-Bugzilla-Keywords: 
+X-Bugzilla-Severity: normal
+X-Bugzilla-Who: j.fikar@gmail.com
+X-Bugzilla-Status: RESOLVED
+X-Bugzilla-Resolution: DOCUMENTED
+X-Bugzilla-Priority: P3
+X-Bugzilla-Assigned-To: filesystem_xfs@kernel-bugs.kernel.org
+X-Bugzilla-Flags: 
+X-Bugzilla-Changed-Fields: bug_status resolution
+Message-ID: <bug-217604-201763-INXcwbWsOM@https.bugzilla.kernel.org/>
+In-Reply-To: <bug-217604-201763@https.bugzilla.kernel.org/>
+References: <bug-217604-201763@https.bugzilla.kernel.org/>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
+X-Bugzilla-URL: https://bugzilla.kernel.org/
+Auto-Submitted: auto-generated
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20230628093500.68779-1-frank.li@vivo.com>
-X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-What is the value add of this series?
+https://bugzilla.kernel.org/show_bug.cgi?id=3D217604
 
+j.fikar@gmail.com changed:
 
+           What    |Removed                     |Added
+----------------------------------------------------------------------------
+             Status|NEW                         |RESOLVED
+         Resolution|---                         |DOCUMENTED
+
+--- Comment #2 from j.fikar@gmail.com ---
+OK Dave, I'll do that. Maybe the help for XFS_ONLINE_REPAIR can mention tha=
+t it
+is not yet working, to avoid future confusion.
+
+Actually, I was reporting another kernel bug (vmalloc error), which was
+probably seen before and currently it is in network drivers (no idea, why i=
+t is
+there).
+
+I'm telling you, as it might be XFS related. I see the bug exactly once a d=
+ay
+and when I look at my cron.daily jobs, it happens during xfs_fsr run.
+
+https://bugzilla.kernel.org/show_bug.cgi?id=3D217502
+
+--=20
+You may reply to this email to add a comment.
+
+You are receiving this mail because:
+You are watching the assignee of the bug.=
