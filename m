@@ -2,158 +2,159 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 951B8EB64D9
-	for <linux-xfs@archiver.kernel.org>; Thu, 29 Jun 2023 11:55:18 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E4240C001B1
+	for <linux-xfs@archiver.kernel.org>; Thu, 29 Jun 2023 12:03:43 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231140AbjF2LzR (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 29 Jun 2023 07:55:17 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46286 "EHLO
+        id S231269AbjF2MDn (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 29 Jun 2023 08:03:43 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46780 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229987AbjF2LzQ (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 29 Jun 2023 07:55:16 -0400
-Received: from dggsgout11.his.huawei.com (unknown [45.249.212.51])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 31B7F13D
-        for <linux-xfs@vger.kernel.org>; Thu, 29 Jun 2023 04:55:15 -0700 (PDT)
-Received: from mail02.huawei.com (unknown [172.30.67.143])
-        by dggsgout11.his.huawei.com (SkyGuard) with ESMTP id 4QsH265YNzz4f3prv
-        for <linux-xfs@vger.kernel.org>; Thu, 29 Jun 2023 19:55:10 +0800 (CST)
-Received: from [10.174.177.210] (unknown [10.174.177.210])
-        by APP2 (Coremail) with SMTP id Syh0CgBnW+kecZ1kgZrlMg--.16719S3;
-        Thu, 29 Jun 2023 19:55:11 +0800 (CST)
-Message-ID: <4d6ee3b3-6d4b-ddb6-eb8e-e04a7e0c1ab0@huaweicloud.com>
-Date:   Thu, 29 Jun 2023 19:55:10 +0800
+        with ESMTP id S230198AbjF2MDl (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 29 Jun 2023 08:03:41 -0400
+Received: from mga06.intel.com (mga06b.intel.com [134.134.136.31])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 623232D69;
+        Thu, 29 Jun 2023 05:03:40 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1688040220; x=1719576220;
+  h=date:from:to:cc:subject:message-id:references:
+   mime-version:in-reply-to;
+  bh=MBbSbcK9F4Hh8jsyxNjcbnUbWXs38VmIRaYcEIVQG+g=;
+  b=UdNzH6ao7xb40vcc8ab0hXM6gdgQWWi02flZwYqSYISzUTZ1/GW6moGW
+   ini4jEtICfDP7oF9PrhV5QLelK+f5R4xh3sR4MEhOE6dDElR4m/PNqu5j
+   9O8lMlF7ZIQPaswu4Fja8c4POa/4s/Zi4CukxO+EbkZBre7XC07F7jitx
+   JYf0L80NvJG7svT6q3DWiMs0+c8TwuWWv1gCKWsG8LX6bjC+oUG9S4cka
+   qfwBrCRh+VtGt/2fuQqPQcLcmMcDUVKwTxethVIgevMQ5+3pdFHC8l8sl
+   XxTy/4Wr2ytNIhf6+m5pFdFLHYUSQMODHLlx3xXa4dCTGXPup6H8tdqqk
+   Q==;
+X-IronPort-AV: E=McAfee;i="6600,9927,10755"; a="425759056"
+X-IronPort-AV: E=Sophos;i="6.01,168,1684825200"; 
+   d="scan'208";a="425759056"
+Received: from orsmga003.jf.intel.com ([10.7.209.27])
+  by orsmga104.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 29 Jun 2023 05:03:28 -0700
+X-ExtLoop1: 1
+X-IronPort-AV: E=McAfee;i="6600,9927,10755"; a="667488588"
+X-IronPort-AV: E=Sophos;i="6.01,168,1684825200"; 
+   d="scan'208";a="667488588"
+Received: from lkp-server01.sh.intel.com (HELO 783282924a45) ([10.239.97.150])
+  by orsmga003.jf.intel.com with ESMTP; 29 Jun 2023 05:03:25 -0700
+Received: from kbuild by 783282924a45 with local (Exim 4.96)
+        (envelope-from <lkp@intel.com>)
+        id 1qEqMu-000E7d-21;
+        Thu, 29 Jun 2023 12:03:24 +0000
+Date:   Thu, 29 Jun 2023 20:02:52 +0800
+From:   kernel test robot <lkp@intel.com>
+To:     Shiyang Ruan <ruansy.fnst@fujitsu.com>,
+        linux-fsdevel@vger.kernel.org, nvdimm@lists.linux.dev,
+        linux-xfs@vger.kernel.org, linux-mm@kvack.org
+Cc:     oe-kbuild-all@lists.linux.dev, dan.j.williams@intel.com,
+        willy@infradead.org, jack@suse.cz, akpm@linux-foundation.org,
+        djwong@kernel.org, mcgrof@kernel.org
+Subject: Re: [PATCH v12 2/2] mm, pmem, xfs: Introduce MF_MEM_REMOVE for unbind
+Message-ID: <202306291954.zqVvCUZ5-lkp@intel.com>
+References: <20230629081651.253626-3-ruansy.fnst@fujitsu.com>
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:102.0) Gecko/20100101
- Thunderbird/102.5.1
-Subject: Re: [PATCH] xfs: fix deadlock when set label online
-To:     Dave Chinner <david@fromorbit.com>
-Cc:     djwong@kernel.org, dchinner@redhat.com, sandeen@redhat.com,
-        linux-xfs@vger.kernel.org, yangerkun@huawei.com, yukuai3@huawei.com
-References: <20230626131542.3711391-1-yangerkun@huaweicloud.com>
- <ZJoHEuoMkg2Ngn5o@dread.disaster.area>
- <c4f2edcd-efe2-2a96-316b-40f7ac95e6ce@huaweicloud.com>
- <ZJy9/9uqtTyS2fIA@dread.disaster.area>
-From:   yangerkun <yangerkun@huaweicloud.com>
-In-Reply-To: <ZJy9/9uqtTyS2fIA@dread.disaster.area>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 8bit
-X-CM-TRANSID: Syh0CgBnW+kecZ1kgZrlMg--.16719S3
-X-Coremail-Antispam: 1UD129KBjvJXoWxCFy8Zr4UWryftr1UCF1UGFg_yoWrJw1xpr
-        ZYkFZ8GrsxKr4F9rs2yw1jq3WrKa1UJa1kXrn0grsYvas8Zr1SgFySqr4agF9rZrs7Cw4j
-        vF10v3s7Xw13Ca7anT9S1TB71UUUUUUqnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-        9KBjDU0xBIdaVrnRJUUUyEb4IE77IF4wAFF20E14v26r4j6ryUM7CY07I20VC2zVCF04k2
-        6cxKx2IYs7xG6rWj6s0DM7CIcVAFz4kK6r1j6r18M28lY4IEw2IIxxk0rwA2F7IY1VAKz4
-        vEj48ve4kI8wA2z4x0Y4vE2Ix0cI8IcVAFwI0_tr0E3s1l84ACjcxK6xIIjxv20xvEc7Cj
-        xVAFwI0_Gr1j6F4UJwA2z4x0Y4vEx4A2jsIE14v26rxl6s0DM28EF7xvwVC2z280aVCY1x
-        0267AKxVW0oVCq3wAS0I0E0xvYzxvE52x082IY62kv0487Mc02F40EFcxC0VAKzVAqx4xG
-        6I80ewAv7VC0I7IYx2IY67AKxVWUJVWUGwAv7VC2z280aVAFwI0_Jr0_Gr1lOx8S6xCaFV
-        Cjc4AY6r1j6r4UM4x0Y48IcVAKI48JMxk0xIA0c2IEe2xFo4CEbIxvr21l42xK82IYc2Ij
-        64vIr41l4I8I3I0E4IkC6x0Yz7v_Jr0_Gr1lx2IqxVAqx4xG67AKxVWUJVWUGwC20s026x
-        8GjcxK67AKxVWUGVWUWwC2zVAF1VAY17CE14v26r126r1DMIIYrxkI7VAKI48JMIIF0xvE
-        2Ix0cI8IcVAFwI0_Jr0_JF4lIxAIcVC0I7IYx2IY6xkF7I0E14v26r1j6r4UMIIF0xvE42
-        xK8VAvwI8IcIk0rVWrZr1j6s0DMIIF0xvEx4A2jsIE14v26r1j6r4UMIIF0xvEx4A2jsIE
-        c7CjxVAFwI0_Jr0_GrUvcSsGvfC2KfnxnUUI43ZEXa7IU1zuWJUUUUU==
-X-CM-SenderInfo: 51dqwvhunx0q5kxd4v5lfo033gof0z/
-X-CFilter-Loop: Reflected
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20230629081651.253626-3-ruansy.fnst@fujitsu.com>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
+Hi Shiyang,
+
+kernel test robot noticed the following build errors:
+
+[auto build test ERROR on akpm-mm/mm-everything]
+
+url:    https://github.com/intel-lab-lkp/linux/commits/Shiyang-Ruan/xfs-fix-the-calculation-for-end-and-length/20230629-161913
+base:   https://git.kernel.org/pub/scm/linux/kernel/git/akpm/mm.git mm-everything
+patch link:    https://lore.kernel.org/r/20230629081651.253626-3-ruansy.fnst%40fujitsu.com
+patch subject: [PATCH v12 2/2] mm, pmem, xfs: Introduce MF_MEM_REMOVE for unbind
+config: x86_64-kexec (https://download.01.org/0day-ci/archive/20230629/202306291954.zqVvCUZ5-lkp@intel.com/config)
+compiler: gcc-12 (Debian 12.2.0-14) 12.2.0
+reproduce: (https://download.01.org/0day-ci/archive/20230629/202306291954.zqVvCUZ5-lkp@intel.com/reproduce)
+
+If you fix the issue in a separate patch/commit (i.e. not just a new version of
+the same patch/commit), kindly add following tags
+| Reported-by: kernel test robot <lkp@intel.com>
+| Closes: https://lore.kernel.org/oe-kbuild-all/202306291954.zqVvCUZ5-lkp@intel.com/
+
+All errors (new ones prefixed by >>):
+
+   fs/xfs/xfs_notify_failure.c: In function 'xfs_dax_notify_failure_freeze':
+>> fs/xfs/xfs_notify_failure.c:127:33: error: 'FREEZE_HOLDER_KERNEL' undeclared (first use in this function)
+     127 |         while (freeze_super(sb, FREEZE_HOLDER_KERNEL) != 0) {
+         |                                 ^~~~~~~~~~~~~~~~~~~~
+   fs/xfs/xfs_notify_failure.c:127:33: note: each undeclared identifier is reported only once for each function it appears in
+>> fs/xfs/xfs_notify_failure.c:127:16: error: too many arguments to function 'freeze_super'
+     127 |         while (freeze_super(sb, FREEZE_HOLDER_KERNEL) != 0) {
+         |                ^~~~~~~~~~~~
+   In file included from include/linux/huge_mm.h:8,
+                    from include/linux/mm.h:988,
+                    from fs/xfs/kmem.h:11,
+                    from fs/xfs/xfs_linux.h:24,
+                    from fs/xfs/xfs.h:22,
+                    from fs/xfs/xfs_notify_failure.c:6:
+   include/linux/fs.h:2289:12: note: declared here
+    2289 | extern int freeze_super(struct super_block *super);
+         |            ^~~~~~~~~~~~
+   fs/xfs/xfs_notify_failure.c: In function 'xfs_dax_notify_failure_thaw':
+   fs/xfs/xfs_notify_failure.c:140:32: error: 'FREEZE_HOLDER_KERNEL' undeclared (first use in this function)
+     140 |         error = thaw_super(sb, FREEZE_HOLDER_KERNEL);
+         |                                ^~~~~~~~~~~~~~~~~~~~
+>> fs/xfs/xfs_notify_failure.c:140:17: error: too many arguments to function 'thaw_super'
+     140 |         error = thaw_super(sb, FREEZE_HOLDER_KERNEL);
+         |                 ^~~~~~~~~~
+   include/linux/fs.h:2290:12: note: declared here
+    2290 | extern int thaw_super(struct super_block *super);
+         |            ^~~~~~~~~~
+>> fs/xfs/xfs_notify_failure.c:148:24: error: 'FREEZE_HOLDER_USERSPACE' undeclared (first use in this function)
+     148 |         thaw_super(sb, FREEZE_HOLDER_USERSPACE);
+         |                        ^~~~~~~~~~~~~~~~~~~~~~~
+   fs/xfs/xfs_notify_failure.c:148:9: error: too many arguments to function 'thaw_super'
+     148 |         thaw_super(sb, FREEZE_HOLDER_USERSPACE);
+         |         ^~~~~~~~~~
+   include/linux/fs.h:2290:12: note: declared here
+    2290 | extern int thaw_super(struct super_block *super);
+         |            ^~~~~~~~~~
 
 
-在 2023/6/29 7:10, Dave Chinner 写道:
-> On Tue, Jun 27, 2023 at 04:42:41PM +0800, yangerkun wrote:
->>
->>
->> 在 2023/6/27 5:45, Dave Chinner 写道:
->>> On Mon, Jun 26, 2023 at 09:15:42PM +0800, yangerkun wrote:
->>>> From: yangerkun <yangerkun@huawei.com>
->>>>
->>>> Combine use of xfs_trans_hold and xfs_trans_set_sync in xfs_sync_sb_buf
->>>> can trigger a deadlock once shutdown happened concurrently. xlog_ioend_work
->>>> will first unpin the sb(which stuck with xfs_buf_lock), then wakeup
->>>> xfs_sync_sb_buf. However, xfs_sync_sb_buf never get the chance to unlock
->>>> sb until been wakeup by xlog_ioend_work.
->>>>
->>>> xfs_sync_sb_buf
->>>>     xfs_trans_getsb // lock sb buf
->>>>     xfs_trans_bhold // sb buf keep lock until success commit
->>>>     xfs_trans_commit
->>>>     ...
->>>>       xfs_log_force_seq
->>>>         xlog_force_lsn
->>>>           xlog_wait_on_iclog
->>>>             xlog_wait(&iclog->ic_force_wait... // shutdown happened
->>>>     xfs_buf_relse // unlock sb buf
->>>>
->>>> xlog_ioend_work
->>>>     xlog_force_shutdown
->>>>       xlog_state_shutdown_callbacks
->>>>         xlog_cil_process_committed
->>>>           xlog_cil_committed
->>>>           ...
->>>>           xfs_buf_item_unpin
->>>>             xfs_buf_lock // deadlock
->>>>         wake_up_all(&iclog->ic_force_wait)
->>>>
->>>> xfs_ioc_setlabel use xfs_sync_sb_buf to make sure userspace will see the
->>>> change for sb immediately. We can simply call xfs_ail_push_all_sync to
->>>> do this and sametime fix the deadlock.
->>>
->>> Why is this deadlock specific to the superblock buffer?
->>
->> Hi Dave,
->>
->> Thanks a lot for your revirew! We find this problem when do some code
->> reading(which can help us to fix another growfs bug). And then reproduce it
->> easily when we set label online frequently with IO error inject at the
->> sametime.
-> 
-> Right, I know how it can be triggered; that's not actually my
-> concern...
-> 
->>> Can't any buffer that is held locked over a synchronous transaction
->>> commit deadlock during a shutdown like this?
->>
->> After check all place use xfs_buf_bhold, it seems xfs_sync_sb_buf is the
->> only convict that combine use xfs_trans_hold and xfs_trans_set_sync(I'm not
->> familiar with xfs yet, so I may have some problems with my code check)...
-> 
-> Yes, I can also see that. But my concern is that this change only
-> addresses the symptom, but leaves the underlying deadlock unsolved.
-> 
-> Indeed, this isn't xfs_trans_commit() I'm worried about here; it's
-> the call to xfs_log_force(mp, XFS_LOG_SYNC) or
-> xfs_log_force_seq(XFS_LOG_SYNC) with a buffer held locked that I'm
-> worried about.
-> 
-> i.e. We have a buffer in the CIL (from a previous transaction) that
-> we currently hold locked while we call xfs_log_force(XFS_LOG_SYNC).
-> If a shutdown occurs while we are waiting for journal IO completion
-> to occur, then xlog_ioend_work() will attempt to lock the buffer and
-> deadlock, right?
-> 
-> e.g. I'm thinking of things like busy extent flushing (hold AGF +
-> AGFL + AG btree blocks locked when we call xfs_log_force()) could
-> also be vulnerable to the same deadlock...
+vim +/FREEZE_HOLDER_KERNEL +127 fs/xfs/xfs_notify_failure.c
 
-You mean something like xfs_allocbt_alloc_block(call xfs_log_force to
-flush busy extent which keep agf locked sametime)?
+   119	
+   120	static void
+   121	xfs_dax_notify_failure_freeze(
+   122		struct xfs_mount	*mp)
+   123	{
+   124		struct super_block 	*sb = mp->m_super;
+   125	
+   126		/* Wait until no one is holding the FREEZE_HOLDER_KERNEL. */
+ > 127		while (freeze_super(sb, FREEZE_HOLDER_KERNEL) != 0) {
+   128			// Shall we just wait, or print warning then return -EBUSY?
+   129			delay(HZ / 10);
+   130		}
+   131	}
+   132	
+   133	static void
+   134	xfs_dax_notify_failure_thaw(
+   135		struct xfs_mount	*mp)
+   136	{
+   137		struct super_block	*sb = mp->m_super;
+   138		int			error;
+   139	
+ > 140		error = thaw_super(sb, FREEZE_HOLDER_KERNEL);
+   141		if (error)
+   142			xfs_emerg(mp, "still frozen after notify failure, err=%d",
+   143				  error);
+   144		/*
+   145		 * Also thaw userspace call anyway because the device is about to be
+   146		 * removed immediately.
+   147		 */
+ > 148		thaw_super(sb, FREEZE_HOLDER_USERSPACE);
+   149	}
+   150	
 
-We call xfs_log_force(mp, XFS_LOG_SYNC) after lock agf and before
-xfs_trans_commit. It seems ok since xfs_buf_item_unpin will not call
-xfs_buf_lock because bli_refcount still keep active(once we hold locked
-agf, the bli_refcount will inc in _xfs_trans_bjoin, and keep it until
-xfs_trans_commit success(clean agf item) or .iop_unpin(dirty agf item,
-call from xlog_ioend_work) which can be called after xfs_trans_commit
-too)...
-
-
-> 
-> If that's true, how do we avoid the shutdown from causing a deadlock
-> in these situations?
-> 
-> Cheers,
-> 
-> Dave.
-
+-- 
+0-DAY CI Kernel Test Service
+https://github.com/intel/lkp-tests/wiki
