@@ -2,97 +2,101 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D7323EB64D9
-	for <linux-xfs@archiver.kernel.org>; Thu, 29 Jun 2023 07:10:40 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id F0A50EB64DC
+	for <linux-xfs@archiver.kernel.org>; Thu, 29 Jun 2023 08:21:06 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231981AbjF2HKj (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 29 Jun 2023 03:10:39 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48836 "EHLO
+        id S232312AbjF2IVE (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 29 Jun 2023 04:21:04 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46126 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231709AbjF2HKh (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 29 Jun 2023 03:10:37 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 185F02114
-        for <linux-xfs@vger.kernel.org>; Thu, 29 Jun 2023 00:10:37 -0700 (PDT)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature RSA-PSS (2048 bits))
-        (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id A79C0614D7
-        for <linux-xfs@vger.kernel.org>; Thu, 29 Jun 2023 07:10:36 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPS id 12D5DC433CC
-        for <linux-xfs@vger.kernel.org>; Thu, 29 Jun 2023 07:10:36 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1688022636;
-        bh=y+VUDPaVjiDOYBMuu9Ux9KPNSUrG8HnD2ecAUX7/mXQ=;
-        h=From:To:Subject:Date:In-Reply-To:References:From;
-        b=m2bWjXxwwzKJ1ajhr7hSu0uoSa8BC9MY4Vi0GJcXuwTWUqs4pnxRDsDBTBcho7jaz
-         mFcJhwkxpeUno1/R4gXgvpf0EXvD32tC+YV2kdR541N28cl28q2fwJwxtQ2pUdTThH
-         WzV5cXgazvXE+FUP24epUPZKqszJ+GCDaGRSzl49EeA+CsbMnHafiiL49UvGwbr7HU
-         vjSnFFVj5oPwM1ZRsUhlQKWaRNKDV+F9wvg8Fxobt6f5S8dQAePqD1m7ZfsyET9FjD
-         iaXND2nCfDvxtngyaXyH+qiH/jUjAxBPn20R5mOj2IZe9aatY9t7TLS4GfW1iX38RX
-         rtQNp/3MQGZrw==
-Received: by aws-us-west-2-korg-bugzilla-1.web.codeaurora.org (Postfix, from userid 48)
-        id 02072C53BCD; Thu, 29 Jun 2023 07:10:36 +0000 (UTC)
-From:   bugzilla-daemon@kernel.org
-To:     linux-xfs@vger.kernel.org
-Subject: [Bug 217604] Kernel metadata repair facility is not available, but
- kernel has XFS_ONLINE_REPAIR=y
-Date:   Thu, 29 Jun 2023 07:10:35 +0000
-X-Bugzilla-Reason: None
-X-Bugzilla-Type: changed
-X-Bugzilla-Watch-Reason: AssignedTo filesystem_xfs@kernel-bugs.kernel.org
-X-Bugzilla-Product: File System
-X-Bugzilla-Component: XFS
-X-Bugzilla-Version: 2.5
-X-Bugzilla-Keywords: 
-X-Bugzilla-Severity: normal
-X-Bugzilla-Who: j.fikar@gmail.com
-X-Bugzilla-Status: RESOLVED
-X-Bugzilla-Resolution: DOCUMENTED
-X-Bugzilla-Priority: P3
-X-Bugzilla-Assigned-To: filesystem_xfs@kernel-bugs.kernel.org
-X-Bugzilla-Flags: 
-X-Bugzilla-Changed-Fields: bug_status resolution
-Message-ID: <bug-217604-201763-INXcwbWsOM@https.bugzilla.kernel.org/>
-In-Reply-To: <bug-217604-201763@https.bugzilla.kernel.org/>
-References: <bug-217604-201763@https.bugzilla.kernel.org/>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
-X-Bugzilla-URL: https://bugzilla.kernel.org/
-Auto-Submitted: auto-generated
+        with ESMTP id S232570AbjF2ITp (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 29 Jun 2023 04:19:45 -0400
+Received: from esa9.hc1455-7.c3s2.iphmx.com (esa9.hc1455-7.c3s2.iphmx.com [139.138.36.223])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C7D5730E5;
+        Thu, 29 Jun 2023 01:18:17 -0700 (PDT)
+X-IronPort-AV: E=McAfee;i="6600,9927,10755"; a="110917759"
+X-IronPort-AV: E=Sophos;i="6.01,168,1684767600"; 
+   d="scan'208";a="110917759"
+Received: from unknown (HELO yto-r3.gw.nic.fujitsu.com) ([218.44.52.219])
+  by esa9.hc1455-7.c3s2.iphmx.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 29 Jun 2023 17:18:15 +0900
+Received: from yto-m1.gw.nic.fujitsu.com (yto-nat-yto-m1.gw.nic.fujitsu.com [192.168.83.64])
+        by yto-r3.gw.nic.fujitsu.com (Postfix) with ESMTP id 1689F11475;
+        Thu, 29 Jun 2023 17:18:13 +0900 (JST)
+Received: from kws-ab3.gw.nic.fujitsu.com (kws-ab3.gw.nic.fujitsu.com [192.51.206.21])
+        by yto-m1.gw.nic.fujitsu.com (Postfix) with ESMTP id 4DBD8CF7ED;
+        Thu, 29 Jun 2023 17:18:12 +0900 (JST)
+Received: from irides.g08.fujitsu.local (unknown [10.167.234.230])
+        by kws-ab4.gw.nic.fujitsu.com (Postfix) with ESMTP id E62E36C9C4;
+        Thu, 29 Jun 2023 17:18:05 +0900 (JST)
+From:   Shiyang Ruan <ruansy.fnst@fujitsu.com>
+To:     linux-fsdevel@vger.kernel.org, nvdimm@lists.linux.dev,
+        linux-xfs@vger.kernel.org, linux-mm@kvack.org
+Cc:     dan.j.williams@intel.com, willy@infradead.org, jack@suse.cz,
+        akpm@linux-foundation.org, djwong@kernel.org, mcgrof@kernel.org
+Subject: [PATCH v12 1/2] xfs: fix the calculation for "end" and "length"
+Date:   Thu, 29 Jun 2023 16:16:50 +0800
+Message-Id: <20230629081651.253626-2-ruansy.fnst@fujitsu.com>
+X-Mailer: git-send-email 2.40.1
+In-Reply-To: <20230629081651.253626-1-ruansy.fnst@fujitsu.com>
+References: <20230629081651.253626-1-ruansy.fnst@fujitsu.com>
 MIME-Version: 1.0
+Content-Transfer-Encoding: 8bit
+X-TM-AS-GCONF: 00
+X-TM-AS-Product-Ver: IMSS-9.1.0.1417-9.0.0.1002-27720.006
+X-TM-AS-User-Approved-Sender: Yes
+X-TMASE-Version: IMSS-9.1.0.1417-9.0.1002-27720.006
+X-TMASE-Result: 10--2.821700-10.000000
+X-TMASE-MatchedRID: EXd9akoenk2hhjsqgSuNbxF4zyLyne+ATJDl9FKHbrm/XSsQNWtCeMJ0
+        8DtUl59d4vM1YF6AJbbieYV7J8ae4wtuKBGekqUpnH7sbImOEBSyUkKnsigAVUOq1cc3wR7p3qY
+        uO0eYbQA38/3PGuNu2whL582BEnpEUGPLb8eYNh9sPkQVQvEczTS8aTKeU4mx11kmIvi83kKbDR
+        BqS2n66yzP5xAyz9Oenvkw4sh/+PcMX5CwH5DTUmgGZNLBHGNe
+X-TMASE-SNAP-Result: 1.821001.0001-0-1-22:0,33:0,34:0-0
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-https://bugzilla.kernel.org/show_bug.cgi?id=3D217604
+The value of "end" should be "start + length - 1".
 
-j.fikar@gmail.com changed:
+Signed-off-by: Shiyang Ruan <ruansy.fnst@fujitsu.com>
+Reviewed-by: Darrick J. Wong <djwong@kernel.org>
+---
+ fs/xfs/xfs_notify_failure.c | 9 +++++----
+ 1 file changed, 5 insertions(+), 4 deletions(-)
 
-           What    |Removed                     |Added
-----------------------------------------------------------------------------
-             Status|NEW                         |RESOLVED
-         Resolution|---                         |DOCUMENTED
+diff --git a/fs/xfs/xfs_notify_failure.c b/fs/xfs/xfs_notify_failure.c
+index c4078d0ec108..4a9bbd3fe120 100644
+--- a/fs/xfs/xfs_notify_failure.c
++++ b/fs/xfs/xfs_notify_failure.c
+@@ -114,7 +114,8 @@ xfs_dax_notify_ddev_failure(
+ 	int			error = 0;
+ 	xfs_fsblock_t		fsbno = XFS_DADDR_TO_FSB(mp, daddr);
+ 	xfs_agnumber_t		agno = XFS_FSB_TO_AGNO(mp, fsbno);
+-	xfs_fsblock_t		end_fsbno = XFS_DADDR_TO_FSB(mp, daddr + bblen);
++	xfs_fsblock_t		end_fsbno = XFS_DADDR_TO_FSB(mp,
++							     daddr + bblen - 1);
+ 	xfs_agnumber_t		end_agno = XFS_FSB_TO_AGNO(mp, end_fsbno);
+ 
+ 	error = xfs_trans_alloc_empty(mp, &tp);
+@@ -210,7 +211,7 @@ xfs_dax_notify_failure(
+ 	ddev_end = ddev_start + bdev_nr_bytes(mp->m_ddev_targp->bt_bdev) - 1;
+ 
+ 	/* Ignore the range out of filesystem area */
+-	if (offset + len < ddev_start)
++	if (offset + len - 1 < ddev_start)
+ 		return -ENXIO;
+ 	if (offset > ddev_end)
+ 		return -ENXIO;
+@@ -222,8 +223,8 @@ xfs_dax_notify_failure(
+ 		len -= ddev_start - offset;
+ 		offset = 0;
+ 	}
+-	if (offset + len > ddev_end)
+-		len -= ddev_end - offset;
++	if (offset + len - 1 > ddev_end)
++		len = ddev_end - offset + 1;
+ 
+ 	return xfs_dax_notify_ddev_failure(mp, BTOBB(offset), BTOBB(len),
+ 			mf_flags);
+-- 
+2.40.1
 
---- Comment #2 from j.fikar@gmail.com ---
-OK Dave, I'll do that. Maybe the help for XFS_ONLINE_REPAIR can mention tha=
-t it
-is not yet working, to avoid future confusion.
-
-Actually, I was reporting another kernel bug (vmalloc error), which was
-probably seen before and currently it is in network drivers (no idea, why i=
-t is
-there).
-
-I'm telling you, as it might be XFS related. I see the bug exactly once a d=
-ay
-and when I look at my cron.daily jobs, it happens during xfs_fsr run.
-
-https://bugzilla.kernel.org/show_bug.cgi?id=3D217502
-
---=20
-You may reply to this email to add a comment.
-
-You are receiving this mail because:
-You are watching the assignee of the bug.=
