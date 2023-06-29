@@ -2,177 +2,512 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1A809C001B3
-	for <linux-xfs@archiver.kernel.org>; Thu, 29 Jun 2023 12:27:07 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D723CEB64D9
+	for <linux-xfs@archiver.kernel.org>; Thu, 29 Jun 2023 12:27:14 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230164AbjF2M1G (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 29 Jun 2023 08:27:06 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55024 "EHLO
+        id S230504AbjF2M1N (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 29 Jun 2023 08:27:13 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55866 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232217AbjF2M0u (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 29 Jun 2023 08:26:50 -0400
-Received: from mx0b-00069f02.pphosted.com (mx0b-00069f02.pphosted.com [205.220.177.32])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9585D3596
-        for <linux-xfs@vger.kernel.org>; Thu, 29 Jun 2023 05:24:50 -0700 (PDT)
-Received: from pps.filterd (m0246632.ppops.net [127.0.0.1])
-        by mx0b-00069f02.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 35TAoQeV003653;
-        Thu, 29 Jun 2023 12:24:49 GMT
+        with ESMTP id S231956AbjF2M05 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 29 Jun 2023 08:26:57 -0400
+Received: from mx0a-00069f02.pphosted.com (mx0a-00069f02.pphosted.com [205.220.165.32])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 10F223588
+        for <linux-xfs@vger.kernel.org>; Thu, 29 Jun 2023 05:26:15 -0700 (PDT)
+Received: from pps.filterd (m0246629.ppops.net [127.0.0.1])
+        by mx0b-00069f02.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 35TAogx2005011;
+        Thu, 29 Jun 2023 12:26:13 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=references : from :
  to : cc : subject : date : in-reply-to : message-id : content-type :
  mime-version; s=corp-2023-03-30;
- bh=Le54rLeKbusUtldv8bCqC2zCV56RRhhjtCSjavyuLgs=;
- b=TFCeUYVfJeXXrnbnBqAv5ymkPGOGrB29r9RxN6BlsNfu3HcizrRgcThr4bf9JoCyknYA
- tQ5mnvw1BFoSxw8T8oKJa0OEoWNlN4ET9IVHuap1TMXuN/aAIr7SIZbcsr+PjhM0Vixn
- FePGae5mFFFpu+gGhvRZaK4Y4qU6D0PFHVQHqDjXcQ/dnLt6gwexMERiTl+vu8LvNgHY
- vq+04sIUoiFqGSxycXePxY9ql0Exa0A5ig5UxIEa01InGhJfra+M3bUp2WjBiNAXNA2P
- L5CnRXJoz5d3BVt3HuTDgQAKf6kUxk8jUelOa6fUIrVkXgyP9goRhOrp69i7FAPL+QG3 Yg== 
-Received: from phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com (phxpaimrmta02.appoci.oracle.com [147.154.114.232])
-        by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 3rf40ea7xa-1
+ bh=X/AM+8dg+GC0IIvp4oZu4ghv+HcQlhFCzrN4SoNImdk=;
+ b=Ru4GgAjfWusiuL+sbmqVRxbWVBddWQH5QHs9EknuqRDX52Wq2L+DJPiGUkmSwvnY2iXl
+ nmRMhBNovDwalkdIxVd6V5Sx5cAFQb33WQ9wJnxjRuj2hYvaSoD2Rhs7i72gUPzGobur
+ 1rA/Uxt+yopWWUUkAMQ7Ow6YVp0ebOS7fixAI/FQl4Cg5Y92CNznvXmAGhtd89CKoYBg
+ y2s+T+cbcwrjvtrRxHiFLJoKm1ugJXV92VCzkxEm4XSe2AyLvqApWbf1HSI0Q491XSlA
+ tdw7f5/4mDsoqEbFwi1CFBhuQUvzbr4fIRNiezLI/EzJni7H3O/cnHhbbcBuHPUnj8Hk FA== 
+Received: from iadpaimrmta03.imrmtpd1.prodappiadaev1.oraclevcn.com (iadpaimrmta03.appoci.oracle.com [130.35.103.27])
+        by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 3rdrcabmvx-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Thu, 29 Jun 2023 12:24:49 +0000
-Received: from pps.filterd (phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com [127.0.0.1])
-        by phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com (8.17.1.19/8.17.1.19) with ESMTP id 35TBoBuw029638;
-        Thu, 29 Jun 2023 12:24:48 GMT
-Received: from nam11-co1-obe.outbound.protection.outlook.com (mail-co1nam11lp2176.outbound.protection.outlook.com [104.47.56.176])
-        by phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com (PPS) with ESMTPS id 3rdpx7akag-1
+        Thu, 29 Jun 2023 12:26:13 +0000
+Received: from pps.filterd (iadpaimrmta03.imrmtpd1.prodappiadaev1.oraclevcn.com [127.0.0.1])
+        by iadpaimrmta03.imrmtpd1.prodappiadaev1.oraclevcn.com (8.17.1.19/8.17.1.19) with ESMTP id 35TCNPbR038207;
+        Thu, 29 Jun 2023 12:26:11 GMT
+Received: from nam10-bn7-obe.outbound.protection.outlook.com (mail-bn7nam10lp2109.outbound.protection.outlook.com [104.47.70.109])
+        by iadpaimrmta03.imrmtpd1.prodappiadaev1.oraclevcn.com (PPS) with ESMTPS id 3rdpxdug36-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Thu, 29 Jun 2023 12:24:48 +0000
+        Thu, 29 Jun 2023 12:26:11 +0000
 ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=HTZ3rN2wKGRFP4aDBeYwcLesYmuscS6UcJOxO7vE0UVSof/4R4c+S2sR3kOKPj+1f55JEBZWPhwlmgdtwWI/qwR+3eQVwKoZT1038zZQYypmJo2JQIJrYdPL/CDL9oQVpRK7hcM92fMJHvpkKd2k8HwXU1JucPvg5vvIciNzlaYKPqkMQ8sJnhqDHIJw6gmltb0VMazVfLBahQZ2gKnTTJcHBgK47KKFtE9idKqDJQI0qJO9zKbkZZ0fdtd0/vSbWLOCGuBiTCxCBQXulkGfYQNb1LTTRMmE1If2vs5grAMWg45/upwdk2WoXn7YNoy1OHPEAluUvjv81zp/rbl5DA==
+ b=K0q9H7g7CtEN04NhF0353SQSnmrk8CxVWt5XAPhuBFIhGke7GKzP8OCp1+1uRjPgNQkFN8BIxI5MEYAHZ1D/vsM2Wms16hlQWSsFKWZ76STAgu1FBQraMILhZvI40/iv5wVnnvYvtYp/IlbZGVSKHTRGCsd3goPzoAv9kMilLQuudte8hta83M5zk85uy9iIZ8aYJw6h1uR+jpI836FOdjfrAp7+Js4Eo5MlCOHfWdlLzlAcRmTce1/tc7DzxPAJvLmAG2e+IV2wods9qv5QesFZypi+5LUsX964Gr8vD06QuY6h7OJRuVYTIbHPgZGnZzW1H6w4P4BKSPiqcCzBOg==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
  s=arcselector9901;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=Le54rLeKbusUtldv8bCqC2zCV56RRhhjtCSjavyuLgs=;
- b=nEqnSRnDFVKqauOms2gJj+65nAIsQ5p62I60mLwyGqJ11sP4KrFYc1JmVhjF1RnzPLzPurBNmD/jbnpEp9svVlB6g4/Pi2mjLn46eon4EcC1Jv91aRpDsJRtRsoNNExepVhPRznfs+gbSb3tIv20O+HaKuMKBnp7A7AwgcYT5MIluSeaAsJR8XKs+/P2vJWvTSwGYgnEKQ9nCvtSYy/zMEoRTFJjduYQEnjut1DTJW/D8CTnJD7i+R8Sz33QBOlajuvS+Eh6UPALETaeGyc6R5IVJ9Eyr9S0AN/4vJDb6apklqys4C13DZ/kcy2/fUxBJlsYlYAzwZ23Xu5SP8Vovw==
+ bh=X/AM+8dg+GC0IIvp4oZu4ghv+HcQlhFCzrN4SoNImdk=;
+ b=Xs7r1ORl4IE2vZlqAdt5hf5PHkRlgx97FDaWcJQVzBsT6O6hotNT5S4Ej9iUy8UpOK5rpZHIUyMsU/d3FhmuU7rZ1OWw/4a9Zs4RxM6JZiRgwjo3xxBCSjvoVbGQC0nS1YpNrra9bPnKaalJuGdDDPP4W/kt6hB3aro4PDoV9fHT0cahSz2Akn/QsGdm+aF+ACYheI2RZDvvZdmNoO0lACsNBxlV3sDAapV0VGysL0m4i/E9Zl7Zs2jKT9g3HA9FdwX8GOi4l+mLZ7+pva6ZVRtkb7X3xypKNEMKNSfeklhuJ7B+NZfZPgg9o+FIHIfKL52yVC83/WNc9G1kAxMoXw==
 ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
  smtp.mailfrom=oracle.com; dmarc=pass action=none header.from=oracle.com;
  dkim=pass header.d=oracle.com; arc=none
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
  d=oracle.onmicrosoft.com; s=selector2-oracle-onmicrosoft-com;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=Le54rLeKbusUtldv8bCqC2zCV56RRhhjtCSjavyuLgs=;
- b=zAS8l0q6YOrQy0IdQlawHDWlpZfj3BSLKfYzR7tcs44frumB+dVj17Qa4NJUyZFDue+15R25N1dU0LGMtfI5+6hLK8/hkzZMAAikdHYOq6CkJ/l97t55FQCuuph1N8epU4m+4gwPcCjcVimISHsuGTQKQuPvnEvv9wjTVrngA0I=
+ bh=X/AM+8dg+GC0IIvp4oZu4ghv+HcQlhFCzrN4SoNImdk=;
+ b=Feu8d+wrIeOBfrzH2i2DIZBfH1tkfhRTFmKqcZP8xkg6g5AXe/2kwySIailUm+lks6tEQpyjXnTMXROAiiW5TNvuS1BYwW9P1dOkx3Bi8N6IiaCnXnYi92G03kqRqYq3H6BZczkCH6sk240Mqzgpex3HJT5R32QSXRLfZjS859A=
 Received: from SA1PR10MB5867.namprd10.prod.outlook.com (2603:10b6:806:233::19)
  by PH7PR10MB7717.namprd10.prod.outlook.com (2603:10b6:510:308::8) with
  Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.6521.24; Thu, 29 Jun
- 2023 12:24:46 +0000
+ 2023 12:26:10 +0000
 Received: from SA1PR10MB5867.namprd10.prod.outlook.com
  ([fe80::8fff:d710:92bc:cf17]) by SA1PR10MB5867.namprd10.prod.outlook.com
  ([fe80::8fff:d710:92bc:cf17%6]) with mapi id 15.20.6521.024; Thu, 29 Jun 2023
- 12:24:46 +0000
+ 12:26:10 +0000
 References: <20230627224412.2242198-1-david@fromorbit.com>
- <20230627224412.2242198-3-david@fromorbit.com>
+ <20230627224412.2242198-4-david@fromorbit.com>
 User-agent: mu4e 1.8.10; emacs 27.1
 From:   Chandan Babu R <chandan.babu@oracle.com>
 To:     Dave Chinner <david@fromorbit.com>
 Cc:     linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 2/8] xfs: use deferred frees for btree block freeing
-Date:   Thu, 29 Jun 2023 13:22:22 +0530
-In-reply-to: <20230627224412.2242198-3-david@fromorbit.com>
-Message-ID: <87a5wi1mnz.fsf@debian-BULLSEYE-live-builder-AMD64>
+Subject: Re: [PATCH 3/8] xfs: pass alloc flags through to
+ xfs_extent_busy_flush()
+Date:   Thu, 29 Jun 2023 15:14:00 +0530
+In-reply-to: <20230627224412.2242198-4-david@fromorbit.com>
+Message-ID: <875y761mli.fsf@debian-BULLSEYE-live-builder-AMD64>
 Content-Type: text/plain
-X-ClientProxiedBy: SG3P274CA0023.SGPP274.PROD.OUTLOOK.COM (2603:1096:4:be::35)
- To SA1PR10MB5867.namprd10.prod.outlook.com (2603:10b6:806:233::19)
+X-ClientProxiedBy: SG2PR03CA0098.apcprd03.prod.outlook.com
+ (2603:1096:4:7c::26) To SA1PR10MB5867.namprd10.prod.outlook.com
+ (2603:10b6:806:233::19)
 MIME-Version: 1.0
 X-MS-PublicTrafficType: Email
 X-MS-TrafficTypeDiagnostic: SA1PR10MB5867:EE_|PH7PR10MB7717:EE_
-X-MS-Office365-Filtering-Correlation-Id: 45c9985b-bfa8-48cc-7aa4-08db789bd33b
+X-MS-Office365-Filtering-Correlation-Id: c770f8ff-a5e8-43f7-77ea-08db789c0500
 X-MS-Exchange-SenderADCheck: 1
 X-MS-Exchange-AntiSpam-Relay: 0
 X-Microsoft-Antispam: BCL:0;
-X-Microsoft-Antispam-Message-Info: SnytMoA1BT5m2c5f3GipChJhTmD21sB2irMHp2AxH45462zz69fvF37HCwvF8iY3I6QQ8EDQX9tOlv+74O8CAXiq2DLy4/JTifUp7Z0txF4yIoj44D418cM42sSeZI/nmzjNKW8oiBw7+JUJ/f5tNjQbGi2NNN5e00S2laDq2Q0CaRndIptsv7LTWpxCE9T32cP5Yr677U4mriGF8kuO8u9THNXmel1U9Ruq5TzQ56XxvFLs2R5OJah81TwEXe0XWtGQVIv5IQ4EdTp8fg53p7o1gCnEyFrakNOsCBe9ybI+CraU2NmN/RRrLsk7qkfHA8Vrlpl+RaaN/4OsDlLjVo24Yrunm+JoktN6OCKl790b6Txm6hD4MhzARtUo1g2hb2aK6SeU/SIIIJt2Doij6F8JxNMrWg+QXJ4kLveGBRzkepEwgPYWpdf3ZXJS25B26iueariTIMxtJI6USdY+R9V3Mk2GTJ/jwSq9dK/Gsr+h+dK0eGC2PbxQ6Ndae/5ZVJkDABa6IcD6WWftnDCDk/vucfAcq93zDCAWm44IqfbKjaRPZnidYIAB3JPwfDXS
-X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:SA1PR10MB5867.namprd10.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230028)(7916004)(136003)(376002)(346002)(39860400002)(366004)(396003)(451199021)(9686003)(26005)(186003)(6512007)(53546011)(6506007)(83380400001)(6486002)(33716001)(5660300002)(8676002)(6666004)(38100700002)(8936002)(86362001)(478600001)(2906002)(316002)(41300700001)(66946007)(4326008)(6916009)(66556008)(66476007);DIR:OUT;SFP:1101;
+X-Microsoft-Antispam-Message-Info: omAILBZz/zikB734/Sh1PGtUTR5Vlx0fj4c11XSkMXie4arUAYoShEqfubtyVKzUOrLbdMYNp9FXxwbCy0fIkJK50uCPuGQS/9oI8b+ZiN8cVEkY1OtzrTxgBIKSuqfvIjOl0FwAHFrj50W9Swbr8EM9zBu0OlHXZXsEi+QgwBQT378n+ZYc+w/4uoFSCgZrfy002TcN9zhnVd1baDsTwKqaD7gLnVFMQKf8U/rfapLZJWYfg1bgG17TxhFTI2q9tAqruM50D3oZRC/cQWKGw2SApbOulutwmZbQ1nnc+rw7HPwTWIV+AbmQSbeRDVItNP84N99Lj7Drou+fbNKoSnRLfCwaJGIJMwxqOkIIERQpWJUV3k2OICLQ3o/hmIAYA0K/hz4iyGrR3d4SVYd2bkLeuVoMYEiR0LmMXwAF5S6P++vPsKvOerPPA4QyuCrI0wrlQ6ejWuKoU3+CNFQtWjWZP0DvYRbFtdJi7gaSzMPDbE6s8QGjbdtCGQNdUwTt8NHoz9BcAI+KlaUSY5CiUyTl5nZCMiJ+Z5wLx3K4KpjppqC3FTYqWS1cXDgrjkwe
+X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:SA1PR10MB5867.namprd10.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230028)(7916004)(136003)(376002)(346002)(39860400002)(366004)(396003)(451199021)(9686003)(26005)(186003)(6512007)(53546011)(6506007)(83380400001)(6486002)(33716001)(5660300002)(8676002)(6666004)(38100700002)(8936002)(86362001)(478600001)(30864003)(2906002)(316002)(41300700001)(66946007)(4326008)(6916009)(66556008)(66476007);DIR:OUT;SFP:1101;
 X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0: =?us-ascii?Q?7b7Xs0BC4Ove3gsRdS86AZJbcmL1AUC/OPTl83jxnfw7dg4XRVixNlEA8uLS?=
- =?us-ascii?Q?jPouXEBGjD8Hc1LXOjuVB7mnDOAKT+T2v/8YpS7/q88q/1ifuuf64/btQtfd?=
- =?us-ascii?Q?wQwsVHDlTVhuDGAJ8PZkda0u2ZDX3vP+yJG5F8JLrW6pM3KPa3mcxeFYmcnV?=
- =?us-ascii?Q?ELkW8iqglQrBfD+WKrDFWWFFF/gzD+wD4Mv8S0F4nQmdbB4ApHh59Lxjb9i5?=
- =?us-ascii?Q?PZLUaPQO92mKHETuQ9bZ4JBEupyX2j6ZbBbMamJNhN7VwmkDfiKeOt2TiLGS?=
- =?us-ascii?Q?295BfayekJnld9CBm6DitbiWh7ZG54SyKVPahqILqVWm2dJWq7W0t2xm2TNo?=
- =?us-ascii?Q?nq7Qbb7WbqhrXCPyUmfmGaNL3Tje5pa/kpqnEbRELPT628d5DCEhLWktrmmb?=
- =?us-ascii?Q?nXJrD3SfkL26+P0ctVx5yNMTmLqe31mDwD8cO48WJleYi759QOGOB4YR1Bov?=
- =?us-ascii?Q?ES5zLod8V+oNGwTrm3aRUvQNiwr9bW1i7trmrRK1bqjkxYLNjQ0flNAR4aHS?=
- =?us-ascii?Q?1pudfABhXEL9GUXRClJ0byTBRDfqaTf87T+Dj1wq67jm0LXB86cfrTFHHQ1C?=
- =?us-ascii?Q?XLoACdCyvo9+YVtzF4sLvZXgp43m5ufpLOczl+WsHqxN1lA6SbXraQ6ISrar?=
- =?us-ascii?Q?GpyrLwJFEisVX+sIWDhsXFHSLAQMqFqefE7dzaATmYg7TsughnqwL+VWGWRI?=
- =?us-ascii?Q?E6fNr8VLE/JLdQYB9bd3hhxMNIIOt8gHTHh9NjWMnBVQBatxlygENNqCE/zR?=
- =?us-ascii?Q?Q9n7/6c5HvbZl4sN3kVim7nXu/4ExY1nhiF8i5JH0tLufpXq8FMXMxd87gH1?=
- =?us-ascii?Q?gWJXNWyqG+TR57ucF5b5o2GZpqPzU7f/fIHkZ9DBaE/pl70m39KsL9qCy3MX?=
- =?us-ascii?Q?Km9yCkKyZLSg/IjUhutjcyCghuqKF5lf1P8B+/U9Z6mg1DaXCwwBGcZq39wl?=
- =?us-ascii?Q?z1+T3MhIuEIHrk3XY6BlDsiO9PtGxvJv2/bwvTMgRb3Ys8Y4rrXA+BIcZveZ?=
- =?us-ascii?Q?b+wg/Cb9tgyLrfTAkhdNE3DZvy8cC7bU5OzqxqVBeV4pu/JLNrzk8OAdsnWx?=
- =?us-ascii?Q?L0aCeaBnPBC0AYQUgLMMne2UjpeaU/lmdDu2zOEGKVUY+05oItI+jibFSTNl?=
- =?us-ascii?Q?YrNUDqTDH/pdug81RmiOq7Zcyldhs1jZmV0slMnabQ3DlbzKrDm2uj9BhfrZ?=
- =?us-ascii?Q?1vHh40QZd1WIjCBzYHUP3S02CGgG+K65o5yy1jr/lBSo4VXWLlVar5n1teur?=
- =?us-ascii?Q?dayqe0optXQsLEv8T1dlwoQSQaZ/ClfUlSBvRT3o0aYtcFNqczr8ZrWR8GYf?=
- =?us-ascii?Q?rNwWEst6wpbMO9K9GNs/kMfGmrMv7NAhyDdvhf2sSHD6mfYERh+DvkcFeA2S?=
- =?us-ascii?Q?cEoRqAyt2QdoS3DydG3CgHeiR81tAvBLWPysfv0kyG1zCdu80MnmW91tynLK?=
- =?us-ascii?Q?AlTv+5Obn1Y9eZuv66AtzwjvHwZ/mg+OZ8bJLsJcpeOuINAmFBAStN23cEOe?=
- =?us-ascii?Q?v89ccXtja1TkjSvWwD14EDqLWWeY21HjiwZEW+OEz9VnsqVSfpht22XggkMC?=
- =?us-ascii?Q?BauFiRe3YagWUBjA1kHO521E3mHdV6zhFqqWP5/Z/CaOibG7p6ePtw0d4O5X?=
- =?us-ascii?Q?eg=3D=3D?=
+X-MS-Exchange-AntiSpam-MessageData-0: =?us-ascii?Q?2ToIZbuPLJfG59GXSth0askyXCG9pegYrC59xRc3J3LmTX9WODgjHVYOiP0S?=
+ =?us-ascii?Q?WPFIZSl1gnICNpPol8g2oVs+Q/lTGsfWopJpr6sAv5CrYaXt9JMFQdV2v5mM?=
+ =?us-ascii?Q?RlX+7mjbUefMeIdDfnLTmSDme36YGT7m0MJdBi9rWzYMFbViLV1snx1kOL7B?=
+ =?us-ascii?Q?A/ES6BeB25uohP2SYP9oKK7B8YbJ3JEVEXTCG7XQpEkj2u6b4I/ErdeN007X?=
+ =?us-ascii?Q?gJpgkC9LvAhfg9KwsEuS+IuTk1EyZ9tl6l5uOwJVr8v9lIQo0AkEzxVA1kI0?=
+ =?us-ascii?Q?z6vr8oo9RWyP/osWyo9fWNjv4wQxX7tbusN56/ekMEjyTCuisuRrf9SdPunV?=
+ =?us-ascii?Q?C9Q7pp9qEb72dvYwVnjN1/0qevPbd5d8svbfkYKgSNKlova3+qagYpVDjWDL?=
+ =?us-ascii?Q?0TWN+vCFMhjSMv3om9hwpp2j8dYGvzWBuqzQyARAZ6OQPf+bMYX/rqb6itrq?=
+ =?us-ascii?Q?kU8jls3CFKgLrdG5K7Eb4acRzYFZB8bTT7CbvT7qZv/Z3eGY9CjjoS/vlrVM?=
+ =?us-ascii?Q?JoROteCDdp7u3uMyUU1EiaQ2RKmbzls/a70gp16I5uJ1HB0KA012JFTlLUH/?=
+ =?us-ascii?Q?yKb3s7hRdvCGxJ2YFq0ruePg1E0SgdqBUZy1SQ+nHPD4UMtM5yeBG3IdptDn?=
+ =?us-ascii?Q?L5rpwpjKq5vEzUA9B+NXT+Ilb0/avI+LBYahBTeILTZz8KO3GmaftnGcqVT2?=
+ =?us-ascii?Q?2vVimjFPJTsHFcxk3bp+Nwuevz8kT1xxzEdDqu/dyykUaYMbaT+QsNN8dvKZ?=
+ =?us-ascii?Q?Unb8LeVVjvH+taYZjhl43VS3GvQJX7O9YY+gD2DD2oUTflPxO6FYDaPZ2mjX?=
+ =?us-ascii?Q?EJyYkeRDTvMIob1beeAFuwdCuXntIieDDI+qwbLHnc/T5Y1R69rZwnmnLid3?=
+ =?us-ascii?Q?fQzyfGCkaO0Dtk9A1XtuBDbsNRSSESIU56IYhfoqCn2StGAKNPBCNRa41MXn?=
+ =?us-ascii?Q?4fVzljO4soKZhMaDEZJoN/HqANK+yOqN69o25R7eeBs7fBLHDALzuCiT81Di?=
+ =?us-ascii?Q?h9p9jkRjU2l4nAJi1/BhnlJOwUK3fGg3yT425K1YpBTAsIEGmPAnBnOxpEUU?=
+ =?us-ascii?Q?t07p7dwG7HN4SV01kMu5YKJCIE+xbU5/kANKle33/YrIiY6ySl4TmHOKhcZe?=
+ =?us-ascii?Q?ZCPsIBQXbhBKH0LmWKzllxeJvz8jmlrdeI9KJYhwzmKLpk5zKhzEXyH/WftT?=
+ =?us-ascii?Q?Fhba5Yha53K+nYNGVHNMgQiwzx0BAx0OTYGlQeE0eIp5McF16Lm6f6umgDX8?=
+ =?us-ascii?Q?bxUGZ3DUuYIj+kMlIHF8qQpdUHbbMLi/rvv1HT4VyG7pLUW2vBDHT8979gLZ?=
+ =?us-ascii?Q?xtystNKvZYyCNeHaICwcRwvZbayoJtZL3vkmS9XmzgW54MWN+lCvRpwD3PA2?=
+ =?us-ascii?Q?RVfiLUnLcCGUtCHOO5j26CkZ3t7EeCtpxF1spLQgHJ0wd86WZJMc1T6LqmV0?=
+ =?us-ascii?Q?Prh3DMePvLx+CBI+TvAdCI892Kks4VYgRReUZEKNLVOBb84RYpYhMneWH9C/?=
+ =?us-ascii?Q?zFiD93Q4gJTVDu7Wug2X0ta+4Zg7trqanGwPE1A3LDhC9sFUSjcwvzMXPBEm?=
+ =?us-ascii?Q?LiQ9i2bTX3895Dh2Do1wGOV1OG5rt6BBCBRtd9w9?=
 X-MS-Exchange-AntiSpam-ExternalHop-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-ExternalHop-MessageData-0: AX3zLNgncFpucWObOXmHS4aoxrj0BY8vLX0jAu4w1U0exrMPTMGhtgjLACcMw+hQG+qnfDDbo+N3wD302tyZe+93Ho+WtQCaf3dDlEog91vUemKIiPZ12W8WF8YPJjyiJ833SKxBicYIn2xQj3AvJbyVD2pnIm7UUFw7xlTThNqLGIBDKhyZ8eXr/JW1DEt0McOqTj1mhOg/r+U5cyZXBL44Ddv+tLj/uNSaBK/uVOILyoV5RYBeNtbm9WBu+zhxIvl8Iv+y1Ozx50oZBZ1jUglly+jTh8Aq0G9Xg9VeI22+lugDCaZdj93XfC8cgMbZHSYyYmNzf9Mu9zl2qPfVEc4C4AN4zsK86UNbGijnaSS3fjwZxVM5DwRZR4pfB7LFZ0lWry2s9+lx1w1mrgS9eM3+imed+4ZKYnhYbCzwolk4zodQwMaDHO/A92lFe2oF6AjduLcBSLs4MIoVo31OeTEB4yTP8SwzCFtMeAc4bYpuURM/L/X0joUqodBdsPn0hLawNYhuVyuGAFDqWygswm/cLmGDoq0QU3iKav/Zac30Qpv1P1aYoLyfmqegH4kgMcRZdk7SfvZQS1DoUs9cfMDIqPyZf/lnBHaZ5G7rcKOdXMEpRCpPzn3wWUatx60G7E/1M36VbSkwBUyDDYQ0NU8zAf60+esG1A9sqCZT95O2Wo/fZAe1pjlIPeRbSLOf11onV2syYigBhkJovsZoZvimkluagUk5sV05SDh4CYcwINcR19sXaX91+AhpoGJOcvJA1nfgS1psP4C/mTehOr22PV+9TNuS4TyI+YlThas=
+X-MS-Exchange-AntiSpam-ExternalHop-MessageData-0: MkW/cahqeIhdKgk4GZfwrsGYj2ERaVUsjg6ZD/mY/8lOzQNaylFeOH9AYLk3zHyiawF+dSxWZ75Ks/O56G7aBPLkXUXewIwzEKvN5z3r75Fx+cf4hiXFagPvgcS/VCenz/MjlpAWWnncHFOliJyMdGnigMUu6QvIzsVNdcLEXI5nD9NlofvEoyx/Rkd3YfPIKZ7rEGsOGnXwE/z8N/OpvvU6DCjhPy0o8nCiBL9ycoN3W+lrWaeo1MUGHTxyRoq8mzLDC5DR7jGT0Hx/toiITxDKvirLD2kq7vG8OgKQPq+6JrolnIUfad2zDecrgoEs2GS5m+vPjim+2rVNelMXtoFjqlFQjjCDzPxGpXqmYjNwO1bkt83VPlOs15MPjPZ5bIwlFCbKScrGSftnrMaN1BmA00wshtHir7VWmZLRk69S718o/aT+iOPr597eOZobILnkugHsD1ycYKHW7coZCnwoeTeQ6+oh9E/NfWnjyFaYs6kW4WUGMmHYS6Ff/HL7GM0D/lB1PjH7XVbNzXrKXk2PqcF+ZrvsMBYTQoq3nhS5KmXuf8x+7+tWMWwq69k3wnfH1EOKv3yTW6WZ+g4Or6KOaiC2160Q6fj/D/m3hXAXiKNRbXoLvF0fM89B+T8jla6EhAYbOuW/enizqhk7QgBOkEGhxDUc7eJfGsZonOVCmNioOl1Fh5xArAZmAWFK0tYf9/Rjkq6wQdpBnaxoW9s8RdduojVoMye+0xh/tDloLdbCYhhjLNDPysWodne3Gf6mg+E+h7OcO7Buhlzu+4tSWUjgealENZJ+IvehWVs=
 X-OriginatorOrg: oracle.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 45c9985b-bfa8-48cc-7aa4-08db789bd33b
+X-MS-Exchange-CrossTenant-Network-Message-Id: c770f8ff-a5e8-43f7-77ea-08db789c0500
 X-MS-Exchange-CrossTenant-AuthSource: SA1PR10MB5867.namprd10.prod.outlook.com
 X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 29 Jun 2023 12:24:46.4918
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 29 Jun 2023 12:26:09.9988
  (UTC)
 X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
 X-MS-Exchange-CrossTenant-Id: 4e2c6054-71cb-48f1-bd6c-3a9705aca71b
 X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: GdBnshiuo16h9FL6RVEScjH+UYK8LlhyXALhelJ+kzM2tRWqSDUG/K4I5wTD/J29UbTIHeOXuA16id1Sp9T2zg==
+X-MS-Exchange-CrossTenant-UserPrincipalName: jz4/c5gl2duDVr37l4IO0lDrLa/WTGMWkejYQLmKEZFvITRD3R+U5oF50D09wHy5+fV6E51APG2I26arj2Tltg==
 X-MS-Exchange-Transport-CrossTenantHeadersStamped: PH7PR10MB7717
 X-Proofpoint-Virus-Version: vendor=baseguard
  engine=ICAP:2.0.254,Aquarius:18.0.957,Hydra:6.0.591,FMLib:17.11.176.26
  definitions=2023-06-29_03,2023-06-27_01,2023-05-22_02
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 spamscore=0 suspectscore=0
- malwarescore=0 adultscore=0 mlxlogscore=999 phishscore=0 bulkscore=0
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 adultscore=0 spamscore=0
+ mlxlogscore=999 malwarescore=0 phishscore=0 bulkscore=0 suspectscore=0
  mlxscore=0 classifier=spam adjust=0 reason=mlx scancount=1
  engine=8.12.0-2305260000 definitions=main-2306290111
-X-Proofpoint-GUID: Q_FWPiG34x1vTHVVJGb4cQHCxtLR8V_3
-X-Proofpoint-ORIG-GUID: Q_FWPiG34x1vTHVVJGb4cQHCxtLR8V_3
+X-Proofpoint-ORIG-GUID: hD65_3cE_vHYHXfALAWFutMsdPeU1_oQ
+X-Proofpoint-GUID: hD65_3cE_vHYHXfALAWFutMsdPeU1_oQ
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Wed, Jun 28, 2023 at 08:44:06 AM +1000, Dave Chinner wrote:
+On Wed, Jun 28, 2023 at 08:44:07 AM +1000, Dave Chinner wrote:
 > From: Dave Chinner <dchinner@redhat.com>
 >
-> Btrees that aren't freespace management trees use the normal extent
-> allocation and freeing routines for their blocks. Hence when a btree
-> block is freed, a direct call to xfs_free_extent() is made and the
-> extent is immediately freed. This puts the entire free space
-> management btrees under this path, so we are stacking btrees on
-> btrees in the call stack. The inobt, finobt and refcount btrees
-> all do this.
->
-> However, the bmap btree does not do this - it calls
-> xfs_free_extent_later() to defer the extent free operation via an
-> XEFI and hence it gets processed in deferred operation processing
-> during the commit of the primary transaction (i.e. via intent
-> chaining).
->
-> We need to change xfs_free_extent() to behave in a non-blocking
-> manner so that we can avoid deadlocks with busy extents near ENOSPC
-> in transactions that free multiple extents. Inserting or removing a
-> record from a btree can cause a multi-level tree merge operation and
-> that will free multiple blocks from the btree in a single
-> transaction. i.e. we can call xfs_free_extent() multiple times, and
-> hence the btree manipulation transaction is vulnerable to this busy
-> extent deadlock vector.
->
-> To fix this, convert all the remaining callers of xfs_free_extent()
-> to use xfs_free_extent_later() to queue XEFIs and hence defer
-> processing of the extent frees to a context that can be safely
-> restarted if a deadlock condition is detected.
+> To avoid blocking in xfs_extent_busy_flush() when freeing extents
+> and the only busy extents are held by the current transaction, we
+> need to pass the XFS_ALLOC_FLAG_FREEING flag context all the way
+> into xfs_extent_busy_flush().
 >
 
-The changes look good to me.
+Looks good to me.
 
 Reviewed-by: Chandan Babu R <chandan.babu@oracle.com>
+
+> Signed-off-by: Dave Chinner <dchinner@redhat.com>
+> Reviewed-by: Darrick J. Wong <djwong@kernel.org>
+> ---
+>  fs/xfs/libxfs/xfs_alloc.c | 96 +++++++++++++++++++++------------------
+>  fs/xfs/libxfs/xfs_alloc.h |  2 +-
+>  fs/xfs/xfs_extent_busy.c  |  3 +-
+>  fs/xfs/xfs_extent_busy.h  |  2 +-
+>  4 files changed, 56 insertions(+), 47 deletions(-)
+>
+> diff --git a/fs/xfs/libxfs/xfs_alloc.c b/fs/xfs/libxfs/xfs_alloc.c
+> index cc3f7b905ea1..ba929f6b5c9b 100644
+> --- a/fs/xfs/libxfs/xfs_alloc.c
+> +++ b/fs/xfs/libxfs/xfs_alloc.c
+> @@ -1536,7 +1536,8 @@ xfs_alloc_ag_vextent_lastblock(
+>   */
+>  STATIC int
+>  xfs_alloc_ag_vextent_near(
+> -	struct xfs_alloc_arg	*args)
+> +	struct xfs_alloc_arg	*args,
+> +	uint32_t		alloc_flags)
+>  {
+>  	struct xfs_alloc_cur	acur = {};
+>  	int			error;		/* error code */
+> @@ -1612,7 +1613,7 @@ xfs_alloc_ag_vextent_near(
+>  		if (acur.busy) {
+>  			trace_xfs_alloc_near_busy(args);
+>  			xfs_extent_busy_flush(args->mp, args->pag,
+> -					      acur.busy_gen);
+> +					      acur.busy_gen, alloc_flags);
+>  			goto restart;
+>  		}
+>  		trace_xfs_alloc_size_neither(args);
+> @@ -1635,21 +1636,22 @@ xfs_alloc_ag_vextent_near(
+>   * and of the form k * prod + mod unless there's nothing that large.
+>   * Return the starting a.g. block, or NULLAGBLOCK if we can't do it.
+>   */
+> -STATIC int				/* error */
+> +static int
+>  xfs_alloc_ag_vextent_size(
+> -	xfs_alloc_arg_t	*args)		/* allocation argument structure */
+> +	struct xfs_alloc_arg	*args,
+> +	uint32_t		alloc_flags)
+>  {
+> -	struct xfs_agf	*agf = args->agbp->b_addr;
+> -	struct xfs_btree_cur *bno_cur;	/* cursor for bno btree */
+> -	struct xfs_btree_cur *cnt_cur;	/* cursor for cnt btree */
+> -	int		error;		/* error result */
+> -	xfs_agblock_t	fbno;		/* start of found freespace */
+> -	xfs_extlen_t	flen;		/* length of found freespace */
+> -	int		i;		/* temp status variable */
+> -	xfs_agblock_t	rbno;		/* returned block number */
+> -	xfs_extlen_t	rlen;		/* length of returned extent */
+> -	bool		busy;
+> -	unsigned	busy_gen;
+> +	struct xfs_agf		*agf = args->agbp->b_addr;
+> +	struct xfs_btree_cur	*bno_cur;
+> +	struct xfs_btree_cur	*cnt_cur;
+> +	xfs_agblock_t		fbno;		/* start of found freespace */
+> +	xfs_extlen_t		flen;		/* length of found freespace */
+> +	xfs_agblock_t		rbno;		/* returned block number */
+> +	xfs_extlen_t		rlen;		/* length of returned extent */
+> +	bool			busy;
+> +	unsigned		busy_gen;
+> +	int			error;
+> +	int			i;
+>  
+>  restart:
+>  	/*
+> @@ -1717,8 +1719,8 @@ xfs_alloc_ag_vextent_size(
+>  				xfs_btree_del_cursor(cnt_cur,
+>  						     XFS_BTREE_NOERROR);
+>  				trace_xfs_alloc_size_busy(args);
+> -				xfs_extent_busy_flush(args->mp,
+> -							args->pag, busy_gen);
+> +				xfs_extent_busy_flush(args->mp, args->pag,
+> +						busy_gen, alloc_flags);
+>  				goto restart;
+>  			}
+>  		}
+> @@ -1802,7 +1804,8 @@ xfs_alloc_ag_vextent_size(
+>  		if (busy) {
+>  			xfs_btree_del_cursor(cnt_cur, XFS_BTREE_NOERROR);
+>  			trace_xfs_alloc_size_busy(args);
+> -			xfs_extent_busy_flush(args->mp, args->pag, busy_gen);
+> +			xfs_extent_busy_flush(args->mp, args->pag, busy_gen,
+> +					alloc_flags);
+>  			goto restart;
+>  		}
+>  		goto out_nominleft;
+> @@ -2572,7 +2575,7 @@ xfs_exact_minlen_extent_available(
+>  int			/* error */
+>  xfs_alloc_fix_freelist(
+>  	struct xfs_alloc_arg	*args,	/* allocation argument structure */
+> -	int			flags)	/* XFS_ALLOC_FLAG_... */
+> +	uint32_t		alloc_flags)
+>  {
+>  	struct xfs_mount	*mp = args->mp;
+>  	struct xfs_perag	*pag = args->pag;
+> @@ -2588,7 +2591,7 @@ xfs_alloc_fix_freelist(
+>  	ASSERT(tp->t_flags & XFS_TRANS_PERM_LOG_RES);
+>  
+>  	if (!xfs_perag_initialised_agf(pag)) {
+> -		error = xfs_alloc_read_agf(pag, tp, flags, &agbp);
+> +		error = xfs_alloc_read_agf(pag, tp, alloc_flags, &agbp);
+>  		if (error) {
+>  			/* Couldn't lock the AGF so skip this AG. */
+>  			if (error == -EAGAIN)
+> @@ -2604,13 +2607,13 @@ xfs_alloc_fix_freelist(
+>  	 */
+>  	if (xfs_perag_prefers_metadata(pag) &&
+>  	    (args->datatype & XFS_ALLOC_USERDATA) &&
+> -	    (flags & XFS_ALLOC_FLAG_TRYLOCK)) {
+> -		ASSERT(!(flags & XFS_ALLOC_FLAG_FREEING));
+> +	    (alloc_flags & XFS_ALLOC_FLAG_TRYLOCK)) {
+> +		ASSERT(!(alloc_flags & XFS_ALLOC_FLAG_FREEING));
+>  		goto out_agbp_relse;
+>  	}
+>  
+>  	need = xfs_alloc_min_freelist(mp, pag);
+> -	if (!xfs_alloc_space_available(args, need, flags |
+> +	if (!xfs_alloc_space_available(args, need, alloc_flags |
+>  			XFS_ALLOC_FLAG_CHECK))
+>  		goto out_agbp_relse;
+>  
+> @@ -2619,7 +2622,7 @@ xfs_alloc_fix_freelist(
+>  	 * Can fail if we're not blocking on locks, and it's held.
+>  	 */
+>  	if (!agbp) {
+> -		error = xfs_alloc_read_agf(pag, tp, flags, &agbp);
+> +		error = xfs_alloc_read_agf(pag, tp, alloc_flags, &agbp);
+>  		if (error) {
+>  			/* Couldn't lock the AGF so skip this AG. */
+>  			if (error == -EAGAIN)
+> @@ -2634,7 +2637,7 @@ xfs_alloc_fix_freelist(
+>  
+>  	/* If there isn't enough total space or single-extent, reject it. */
+>  	need = xfs_alloc_min_freelist(mp, pag);
+> -	if (!xfs_alloc_space_available(args, need, flags))
+> +	if (!xfs_alloc_space_available(args, need, alloc_flags))
+>  		goto out_agbp_relse;
+>  
+>  #ifdef DEBUG
+> @@ -2672,11 +2675,12 @@ xfs_alloc_fix_freelist(
+>  	 */
+>  	memset(&targs, 0, sizeof(targs));
+>  	/* struct copy below */
+> -	if (flags & XFS_ALLOC_FLAG_NORMAP)
+> +	if (alloc_flags & XFS_ALLOC_FLAG_NORMAP)
+>  		targs.oinfo = XFS_RMAP_OINFO_SKIP_UPDATE;
+>  	else
+>  		targs.oinfo = XFS_RMAP_OINFO_AG;
+> -	while (!(flags & XFS_ALLOC_FLAG_NOSHRINK) && pag->pagf_flcount > need) {
+> +	while (!(alloc_flags & XFS_ALLOC_FLAG_NOSHRINK) &&
+> +			pag->pagf_flcount > need) {
+>  		error = xfs_alloc_get_freelist(pag, tp, agbp, &bno, 0);
+>  		if (error)
+>  			goto out_agbp_relse;
+> @@ -2704,7 +2708,7 @@ xfs_alloc_fix_freelist(
+>  		targs.resv = XFS_AG_RESV_AGFL;
+>  
+>  		/* Allocate as many blocks as possible at once. */
+> -		error = xfs_alloc_ag_vextent_size(&targs);
+> +		error = xfs_alloc_ag_vextent_size(&targs, alloc_flags);
+>  		if (error)
+>  			goto out_agflbp_relse;
+>  
+> @@ -2714,7 +2718,7 @@ xfs_alloc_fix_freelist(
+>  		 * on a completely full ag.
+>  		 */
+>  		if (targs.agbno == NULLAGBLOCK) {
+> -			if (flags & XFS_ALLOC_FLAG_FREEING)
+> +			if (alloc_flags & XFS_ALLOC_FLAG_FREEING)
+>  				break;
+>  			goto out_agflbp_relse;
+>  		}
+> @@ -3230,7 +3234,7 @@ xfs_alloc_vextent_check_args(
+>  static int
+>  xfs_alloc_vextent_prepare_ag(
+>  	struct xfs_alloc_arg	*args,
+> -	uint32_t		flags)
+> +	uint32_t		alloc_flags)
+>  {
+>  	bool			need_pag = !args->pag;
+>  	int			error;
+> @@ -3239,7 +3243,7 @@ xfs_alloc_vextent_prepare_ag(
+>  		args->pag = xfs_perag_get(args->mp, args->agno);
+>  
+>  	args->agbp = NULL;
+> -	error = xfs_alloc_fix_freelist(args, flags);
+> +	error = xfs_alloc_fix_freelist(args, alloc_flags);
+>  	if (error) {
+>  		trace_xfs_alloc_vextent_nofix(args);
+>  		if (need_pag)
+> @@ -3361,6 +3365,7 @@ xfs_alloc_vextent_this_ag(
+>  {
+>  	struct xfs_mount	*mp = args->mp;
+>  	xfs_agnumber_t		minimum_agno;
+> +	uint32_t		alloc_flags = 0;
+>  	int			error;
+>  
+>  	ASSERT(args->pag != NULL);
+> @@ -3379,9 +3384,9 @@ xfs_alloc_vextent_this_ag(
+>  		return error;
+>  	}
+>  
+> -	error = xfs_alloc_vextent_prepare_ag(args, 0);
+> +	error = xfs_alloc_vextent_prepare_ag(args, alloc_flags);
+>  	if (!error && args->agbp)
+> -		error = xfs_alloc_ag_vextent_size(args);
+> +		error = xfs_alloc_ag_vextent_size(args, alloc_flags);
+>  
+>  	return xfs_alloc_vextent_finish(args, minimum_agno, error, false);
+>  }
+> @@ -3410,20 +3415,20 @@ xfs_alloc_vextent_iterate_ags(
+>  	xfs_agnumber_t		minimum_agno,
+>  	xfs_agnumber_t		start_agno,
+>  	xfs_agblock_t		target_agbno,
+> -	uint32_t		flags)
+> +	uint32_t		alloc_flags)
+>  {
+>  	struct xfs_mount	*mp = args->mp;
+>  	xfs_agnumber_t		restart_agno = minimum_agno;
+>  	xfs_agnumber_t		agno;
+>  	int			error = 0;
+>  
+> -	if (flags & XFS_ALLOC_FLAG_TRYLOCK)
+> +	if (alloc_flags & XFS_ALLOC_FLAG_TRYLOCK)
+>  		restart_agno = 0;
+>  restart:
+>  	for_each_perag_wrap_range(mp, start_agno, restart_agno,
+>  			mp->m_sb.sb_agcount, agno, args->pag) {
+>  		args->agno = agno;
+> -		error = xfs_alloc_vextent_prepare_ag(args, flags);
+> +		error = xfs_alloc_vextent_prepare_ag(args, alloc_flags);
+>  		if (error)
+>  			break;
+>  		if (!args->agbp) {
+> @@ -3437,10 +3442,10 @@ xfs_alloc_vextent_iterate_ags(
+>  		 */
+>  		if (args->agno == start_agno && target_agbno) {
+>  			args->agbno = target_agbno;
+> -			error = xfs_alloc_ag_vextent_near(args);
+> +			error = xfs_alloc_ag_vextent_near(args, alloc_flags);
+>  		} else {
+>  			args->agbno = 0;
+> -			error = xfs_alloc_ag_vextent_size(args);
+> +			error = xfs_alloc_ag_vextent_size(args, alloc_flags);
+>  		}
+>  		break;
+>  	}
+> @@ -3457,8 +3462,8 @@ xfs_alloc_vextent_iterate_ags(
+>  	 * constraining flags by the caller, drop them and retry the allocation
+>  	 * without any constraints being set.
+>  	 */
+> -	if (flags) {
+> -		flags = 0;
+> +	if (alloc_flags & XFS_ALLOC_FLAG_TRYLOCK) {
+> +		alloc_flags &= ~XFS_ALLOC_FLAG_TRYLOCK;
+>  		restart_agno = minimum_agno;
+>  		goto restart;
+>  	}
+> @@ -3486,6 +3491,7 @@ xfs_alloc_vextent_start_ag(
+>  	xfs_agnumber_t		start_agno;
+>  	xfs_agnumber_t		rotorstep = xfs_rotorstep;
+>  	bool			bump_rotor = false;
+> +	uint32_t		alloc_flags = XFS_ALLOC_FLAG_TRYLOCK;
+>  	int			error;
+>  
+>  	ASSERT(args->pag == NULL);
+> @@ -3512,7 +3518,7 @@ xfs_alloc_vextent_start_ag(
+>  
+>  	start_agno = max(minimum_agno, XFS_FSB_TO_AGNO(mp, target));
+>  	error = xfs_alloc_vextent_iterate_ags(args, minimum_agno, start_agno,
+> -			XFS_FSB_TO_AGBNO(mp, target), XFS_ALLOC_FLAG_TRYLOCK);
+> +			XFS_FSB_TO_AGBNO(mp, target), alloc_flags);
+>  
+>  	if (bump_rotor) {
+>  		if (args->agno == start_agno)
+> @@ -3539,6 +3545,7 @@ xfs_alloc_vextent_first_ag(
+>  	struct xfs_mount	*mp = args->mp;
+>  	xfs_agnumber_t		minimum_agno;
+>  	xfs_agnumber_t		start_agno;
+> +	uint32_t		alloc_flags = XFS_ALLOC_FLAG_TRYLOCK;
+>  	int			error;
+>  
+>  	ASSERT(args->pag == NULL);
+> @@ -3557,7 +3564,7 @@ xfs_alloc_vextent_first_ag(
+>  
+>  	start_agno = max(minimum_agno, XFS_FSB_TO_AGNO(mp, target));
+>  	error = xfs_alloc_vextent_iterate_ags(args, minimum_agno, start_agno,
+> -			XFS_FSB_TO_AGBNO(mp, target), 0);
+> +			XFS_FSB_TO_AGBNO(mp, target), alloc_flags);
+>  	return xfs_alloc_vextent_finish(args, minimum_agno, error, true);
+>  }
+>  
+> @@ -3610,6 +3617,7 @@ xfs_alloc_vextent_near_bno(
+>  	struct xfs_mount	*mp = args->mp;
+>  	xfs_agnumber_t		minimum_agno;
+>  	bool			needs_perag = args->pag == NULL;
+> +	uint32_t		alloc_flags = 0;
+>  	int			error;
+>  
+>  	if (!needs_perag)
+> @@ -3630,9 +3638,9 @@ xfs_alloc_vextent_near_bno(
+>  	if (needs_perag)
+>  		args->pag = xfs_perag_grab(mp, args->agno);
+>  
+> -	error = xfs_alloc_vextent_prepare_ag(args, 0);
+> +	error = xfs_alloc_vextent_prepare_ag(args, alloc_flags);
+>  	if (!error && args->agbp)
+> -		error = xfs_alloc_ag_vextent_near(args);
+> +		error = xfs_alloc_ag_vextent_near(args, alloc_flags);
+>  
+>  	return xfs_alloc_vextent_finish(args, minimum_agno, error, needs_perag);
+>  }
+> diff --git a/fs/xfs/libxfs/xfs_alloc.h b/fs/xfs/libxfs/xfs_alloc.h
+> index 121faf1e11ad..50119ebaede9 100644
+> --- a/fs/xfs/libxfs/xfs_alloc.h
+> +++ b/fs/xfs/libxfs/xfs_alloc.h
+> @@ -195,7 +195,7 @@ int xfs_alloc_read_agfl(struct xfs_perag *pag, struct xfs_trans *tp,
+>  		struct xfs_buf **bpp);
+>  int xfs_free_agfl_block(struct xfs_trans *, xfs_agnumber_t, xfs_agblock_t,
+>  			struct xfs_buf *, struct xfs_owner_info *);
+> -int xfs_alloc_fix_freelist(struct xfs_alloc_arg *args, int flags);
+> +int xfs_alloc_fix_freelist(struct xfs_alloc_arg *args, uint32_t alloc_flags);
+>  int xfs_free_extent_fix_freelist(struct xfs_trans *tp, struct xfs_perag *pag,
+>  		struct xfs_buf **agbp);
+>  
+> diff --git a/fs/xfs/xfs_extent_busy.c b/fs/xfs/xfs_extent_busy.c
+> index f3d328e4a440..5f44936eae1c 100644
+> --- a/fs/xfs/xfs_extent_busy.c
+> +++ b/fs/xfs/xfs_extent_busy.c
+> @@ -571,7 +571,8 @@ void
+>  xfs_extent_busy_flush(
+>  	struct xfs_mount	*mp,
+>  	struct xfs_perag	*pag,
+> -	unsigned		busy_gen)
+> +	unsigned		busy_gen,
+> +	uint32_t		alloc_flags)
+>  {
+>  	DEFINE_WAIT		(wait);
+>  	int			error;
+> diff --git a/fs/xfs/xfs_extent_busy.h b/fs/xfs/xfs_extent_busy.h
+> index 4a118131059f..7a82c689bfa4 100644
+> --- a/fs/xfs/xfs_extent_busy.h
+> +++ b/fs/xfs/xfs_extent_busy.h
+> @@ -53,7 +53,7 @@ xfs_extent_busy_trim(struct xfs_alloc_arg *args, xfs_agblock_t *bno,
+>  
+>  void
+>  xfs_extent_busy_flush(struct xfs_mount *mp, struct xfs_perag *pag,
+> -	unsigned busy_gen);
+> +	unsigned busy_gen, uint32_t alloc_flags);
+>  
+>  void
+>  xfs_extent_busy_wait_all(struct xfs_mount *mp);
+
 
 -- 
 chandan
