@@ -2,82 +2,158 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C2672EB64D9
-	for <linux-xfs@archiver.kernel.org>; Thu, 29 Jun 2023 08:23:19 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 951B8EB64D9
+	for <linux-xfs@archiver.kernel.org>; Thu, 29 Jun 2023 11:55:18 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232420AbjF2IXS (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 29 Jun 2023 04:23:18 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45414 "EHLO
+        id S231140AbjF2LzR (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 29 Jun 2023 07:55:17 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46286 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232431AbjF2IWi (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 29 Jun 2023 04:22:38 -0400
-X-Greylist: delayed 123 seconds by postgrey-1.37 at lindbergh.monkeyblade.net; Thu, 29 Jun 2023 01:21:20 PDT
-Received: from esa3.hc1455-7.c3s2.iphmx.com (esa3.hc1455-7.c3s2.iphmx.com [207.54.90.49])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2B745131
-        for <linux-xfs@vger.kernel.org>; Thu, 29 Jun 2023 01:21:19 -0700 (PDT)
-X-IronPort-AV: E=McAfee;i="6600,9927,10755"; a="122675962"
-X-IronPort-AV: E=Sophos;i="6.01,168,1684767600"; 
-   d="scan'208";a="122675962"
-Received: from unknown (HELO yto-r1.gw.nic.fujitsu.com) ([218.44.52.217])
-  by esa3.hc1455-7.c3s2.iphmx.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 29 Jun 2023 17:18:10 +0900
-Received: from yto-m3.gw.nic.fujitsu.com (yto-nat-yto-m3.gw.nic.fujitsu.com [192.168.83.66])
-        by yto-r1.gw.nic.fujitsu.com (Postfix) with ESMTP id 72FA4DB4C2;
-        Thu, 29 Jun 2023 17:18:06 +0900 (JST)
-Received: from kws-ab4.gw.nic.fujitsu.com (kws-ab4.gw.nic.fujitsu.com [192.51.206.22])
-        by yto-m3.gw.nic.fujitsu.com (Postfix) with ESMTP id B97E8D9692;
-        Thu, 29 Jun 2023 17:18:05 +0900 (JST)
-Received: from irides.g08.fujitsu.local (unknown [10.167.234.230])
-        by kws-ab4.gw.nic.fujitsu.com (Postfix) with ESMTP id E94226C9C4;
-        Thu, 29 Jun 2023 17:17:59 +0900 (JST)
-From:   Shiyang Ruan <ruansy.fnst@fujitsu.com>
-To:     linux-fsdevel@vger.kernel.org, nvdimm@lists.linux.dev,
-        linux-xfs@vger.kernel.org, linux-mm@kvack.org
-Cc:     dan.j.williams@intel.com, willy@infradead.org, jack@suse.cz,
-        akpm@linux-foundation.org, djwong@kernel.org, mcgrof@kernel.org
-Subject: [PATCH v12 0/2] mm, pmem, xfs: Introduce MF_MEM_REMOVE for unbind
-Date:   Thu, 29 Jun 2023 16:16:49 +0800
-Message-Id: <20230629081651.253626-1-ruansy.fnst@fujitsu.com>
-X-Mailer: git-send-email 2.40.1
+        with ESMTP id S229987AbjF2LzQ (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 29 Jun 2023 07:55:16 -0400
+Received: from dggsgout11.his.huawei.com (unknown [45.249.212.51])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 31B7F13D
+        for <linux-xfs@vger.kernel.org>; Thu, 29 Jun 2023 04:55:15 -0700 (PDT)
+Received: from mail02.huawei.com (unknown [172.30.67.143])
+        by dggsgout11.his.huawei.com (SkyGuard) with ESMTP id 4QsH265YNzz4f3prv
+        for <linux-xfs@vger.kernel.org>; Thu, 29 Jun 2023 19:55:10 +0800 (CST)
+Received: from [10.174.177.210] (unknown [10.174.177.210])
+        by APP2 (Coremail) with SMTP id Syh0CgBnW+kecZ1kgZrlMg--.16719S3;
+        Thu, 29 Jun 2023 19:55:11 +0800 (CST)
+Message-ID: <4d6ee3b3-6d4b-ddb6-eb8e-e04a7e0c1ab0@huaweicloud.com>
+Date:   Thu, 29 Jun 2023 19:55:10 +0800
 MIME-Version: 1.0
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:102.0) Gecko/20100101
+ Thunderbird/102.5.1
+Subject: Re: [PATCH] xfs: fix deadlock when set label online
+To:     Dave Chinner <david@fromorbit.com>
+Cc:     djwong@kernel.org, dchinner@redhat.com, sandeen@redhat.com,
+        linux-xfs@vger.kernel.org, yangerkun@huawei.com, yukuai3@huawei.com
+References: <20230626131542.3711391-1-yangerkun@huaweicloud.com>
+ <ZJoHEuoMkg2Ngn5o@dread.disaster.area>
+ <c4f2edcd-efe2-2a96-316b-40f7ac95e6ce@huaweicloud.com>
+ <ZJy9/9uqtTyS2fIA@dread.disaster.area>
+From:   yangerkun <yangerkun@huaweicloud.com>
+In-Reply-To: <ZJy9/9uqtTyS2fIA@dread.disaster.area>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 8bit
-X-TM-AS-GCONF: 00
-X-TM-AS-Product-Ver: IMSS-9.1.0.1417-9.0.0.1002-27720.005
-X-TM-AS-User-Approved-Sender: Yes
-X-TMASE-Version: IMSS-9.1.0.1417-9.0.1002-27720.005
-X-TMASE-Result: 10--9.126200-10.000000
-X-TMASE-MatchedRID: hVaMx/vKxVQoSt6MGxonhwrcxrzwsv5usnK72MaPSqdujEcOZiInj57V
-        Ny7+UW/9bDnaZmit5bheZNY97UagkJpOjqlsrZgYKsurITpSv+MQhNjZQYyI3Jsoi2XrUn/Js98
-        n9dYnJNNQSFbL1bvQASAHAopEd76vRWXiIgS5n2V4xdTY+QAKe3yk+v4CROBMf8DjiQCwSeDQ86
-        vbNAcB2g==
-X-TMASE-SNAP-Result: 1.821001.0001-0-1-22:0,33:0,34:0-0
+X-CM-TRANSID: Syh0CgBnW+kecZ1kgZrlMg--.16719S3
+X-Coremail-Antispam: 1UD129KBjvJXoWxCFy8Zr4UWryftr1UCF1UGFg_yoWrJw1xpr
+        ZYkFZ8GrsxKr4F9rs2yw1jq3WrKa1UJa1kXrn0grsYvas8Zr1SgFySqr4agF9rZrs7Cw4j
+        vF10v3s7Xw13Ca7anT9S1TB71UUUUUUqnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+        9KBjDU0xBIdaVrnRJUUUyEb4IE77IF4wAFF20E14v26r4j6ryUM7CY07I20VC2zVCF04k2
+        6cxKx2IYs7xG6rWj6s0DM7CIcVAFz4kK6r1j6r18M28lY4IEw2IIxxk0rwA2F7IY1VAKz4
+        vEj48ve4kI8wA2z4x0Y4vE2Ix0cI8IcVAFwI0_tr0E3s1l84ACjcxK6xIIjxv20xvEc7Cj
+        xVAFwI0_Gr1j6F4UJwA2z4x0Y4vEx4A2jsIE14v26rxl6s0DM28EF7xvwVC2z280aVCY1x
+        0267AKxVW0oVCq3wAS0I0E0xvYzxvE52x082IY62kv0487Mc02F40EFcxC0VAKzVAqx4xG
+        6I80ewAv7VC0I7IYx2IY67AKxVWUJVWUGwAv7VC2z280aVAFwI0_Jr0_Gr1lOx8S6xCaFV
+        Cjc4AY6r1j6r4UM4x0Y48IcVAKI48JMxk0xIA0c2IEe2xFo4CEbIxvr21l42xK82IYc2Ij
+        64vIr41l4I8I3I0E4IkC6x0Yz7v_Jr0_Gr1lx2IqxVAqx4xG67AKxVWUJVWUGwC20s026x
+        8GjcxK67AKxVWUGVWUWwC2zVAF1VAY17CE14v26r126r1DMIIYrxkI7VAKI48JMIIF0xvE
+        2Ix0cI8IcVAFwI0_Jr0_JF4lIxAIcVC0I7IYx2IY6xkF7I0E14v26r1j6r4UMIIF0xvE42
+        xK8VAvwI8IcIk0rVWrZr1j6s0DMIIF0xvEx4A2jsIE14v26r1j6r4UMIIF0xvEx4A2jsIE
+        c7CjxVAFwI0_Jr0_GrUvcSsGvfC2KfnxnUUI43ZEXa7IU1zuWJUUUUU==
+X-CM-SenderInfo: 51dqwvhunx0q5kxd4v5lfo033gof0z/
+X-CFilter-Loop: Reflected
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-This patchset is to add gracefully unbind support for pmem.
-Patch1 corrects the calculation of length and end of a given range.
-Patch2 introduces a new flag call MF_MEM_REMOVE, to let dax holder know
-it is a remove event.  With the help of notify_failure mechanism, we are
-able to shutdown the filesystem on the pmem gracefully.
 
-Changes since v11:
- Patch1:
-  1. correct the count calculation in xfs_failure_pgcnt().
-      (was a wrong fix in v11)
- Patch2:
-  1. use new exclusive freeze_super/thaw_super API, to make sure the unbind
-      progress won't be disturbed by any other freezer.
 
-Shiyang Ruan (2):
-  xfs: fix the calculation for "end" and "length"
-  mm, pmem, xfs: Introduce MF_MEM_REMOVE for unbind
+在 2023/6/29 7:10, Dave Chinner 写道:
+> On Tue, Jun 27, 2023 at 04:42:41PM +0800, yangerkun wrote:
+>>
+>>
+>> 在 2023/6/27 5:45, Dave Chinner 写道:
+>>> On Mon, Jun 26, 2023 at 09:15:42PM +0800, yangerkun wrote:
+>>>> From: yangerkun <yangerkun@huawei.com>
+>>>>
+>>>> Combine use of xfs_trans_hold and xfs_trans_set_sync in xfs_sync_sb_buf
+>>>> can trigger a deadlock once shutdown happened concurrently. xlog_ioend_work
+>>>> will first unpin the sb(which stuck with xfs_buf_lock), then wakeup
+>>>> xfs_sync_sb_buf. However, xfs_sync_sb_buf never get the chance to unlock
+>>>> sb until been wakeup by xlog_ioend_work.
+>>>>
+>>>> xfs_sync_sb_buf
+>>>>     xfs_trans_getsb // lock sb buf
+>>>>     xfs_trans_bhold // sb buf keep lock until success commit
+>>>>     xfs_trans_commit
+>>>>     ...
+>>>>       xfs_log_force_seq
+>>>>         xlog_force_lsn
+>>>>           xlog_wait_on_iclog
+>>>>             xlog_wait(&iclog->ic_force_wait... // shutdown happened
+>>>>     xfs_buf_relse // unlock sb buf
+>>>>
+>>>> xlog_ioend_work
+>>>>     xlog_force_shutdown
+>>>>       xlog_state_shutdown_callbacks
+>>>>         xlog_cil_process_committed
+>>>>           xlog_cil_committed
+>>>>           ...
+>>>>           xfs_buf_item_unpin
+>>>>             xfs_buf_lock // deadlock
+>>>>         wake_up_all(&iclog->ic_force_wait)
+>>>>
+>>>> xfs_ioc_setlabel use xfs_sync_sb_buf to make sure userspace will see the
+>>>> change for sb immediately. We can simply call xfs_ail_push_all_sync to
+>>>> do this and sametime fix the deadlock.
+>>>
+>>> Why is this deadlock specific to the superblock buffer?
+>>
+>> Hi Dave,
+>>
+>> Thanks a lot for your revirew! We find this problem when do some code
+>> reading(which can help us to fix another growfs bug). And then reproduce it
+>> easily when we set label online frequently with IO error inject at the
+>> sametime.
+> 
+> Right, I know how it can be triggered; that's not actually my
+> concern...
+> 
+>>> Can't any buffer that is held locked over a synchronous transaction
+>>> commit deadlock during a shutdown like this?
+>>
+>> After check all place use xfs_buf_bhold, it seems xfs_sync_sb_buf is the
+>> only convict that combine use xfs_trans_hold and xfs_trans_set_sync(I'm not
+>> familiar with xfs yet, so I may have some problems with my code check)...
+> 
+> Yes, I can also see that. But my concern is that this change only
+> addresses the symptom, but leaves the underlying deadlock unsolved.
+> 
+> Indeed, this isn't xfs_trans_commit() I'm worried about here; it's
+> the call to xfs_log_force(mp, XFS_LOG_SYNC) or
+> xfs_log_force_seq(XFS_LOG_SYNC) with a buffer held locked that I'm
+> worried about.
+> 
+> i.e. We have a buffer in the CIL (from a previous transaction) that
+> we currently hold locked while we call xfs_log_force(XFS_LOG_SYNC).
+> If a shutdown occurs while we are waiting for journal IO completion
+> to occur, then xlog_ioend_work() will attempt to lock the buffer and
+> deadlock, right?
+> 
+> e.g. I'm thinking of things like busy extent flushing (hold AGF +
+> AGFL + AG btree blocks locked when we call xfs_log_force()) could
+> also be vulnerable to the same deadlock...
 
- drivers/dax/super.c         |  3 +-
- fs/xfs/xfs_notify_failure.c | 95 +++++++++++++++++++++++++++++++++----
- include/linux/mm.h          |  1 +
- mm/memory-failure.c         | 17 +++++--
- 4 files changed, 101 insertions(+), 15 deletions(-)
+You mean something like xfs_allocbt_alloc_block(call xfs_log_force to
+flush busy extent which keep agf locked sametime)?
 
--- 
-2.40.1
+We call xfs_log_force(mp, XFS_LOG_SYNC) after lock agf and before
+xfs_trans_commit. It seems ok since xfs_buf_item_unpin will not call
+xfs_buf_lock because bli_refcount still keep active(once we hold locked
+agf, the bli_refcount will inc in _xfs_trans_bjoin, and keep it until
+xfs_trans_commit success(clean agf item) or .iop_unpin(dirty agf item,
+call from xlog_ioend_work) which can be called after xfs_trans_commit
+too)...
+
+
+> 
+> If that's true, how do we avoid the shutdown from causing a deadlock
+> in these situations?
+> 
+> Cheers,
+> 
+> Dave.
 
