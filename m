@@ -2,42 +2,45 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C7447EB64DA
-	for <linux-xfs@archiver.kernel.org>; Sun,  2 Jul 2023 16:25:59 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 877BDEB64DD
+	for <linux-xfs@archiver.kernel.org>; Sun,  2 Jul 2023 16:36:06 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229737AbjGBQZ6 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Sun, 2 Jul 2023 12:25:58 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59902 "EHLO
+        id S229644AbjGBQgE (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Sun, 2 Jul 2023 12:36:04 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:32830 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229644AbjGBQZ6 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sun, 2 Jul 2023 12:25:58 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 01CEDE61
-        for <linux-xfs@vger.kernel.org>; Sun,  2 Jul 2023 09:25:56 -0700 (PDT)
+        with ESMTP id S229516AbjGBQgE (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sun, 2 Jul 2023 12:36:04 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1AA77E60;
+        Sun,  2 Jul 2023 09:36:03 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature RSA-PSS (2048 bits))
+         key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 5748D60C32
-        for <linux-xfs@vger.kernel.org>; Sun,  2 Jul 2023 16:25:56 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id B285BC433C8;
-        Sun,  2 Jul 2023 16:25:55 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 9300F60C52;
+        Sun,  2 Jul 2023 16:36:02 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id D2821C433C7;
+        Sun,  2 Jul 2023 16:36:01 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1688315155;
-        bh=lqACvG6PtePb07DV350MjXmAy2rTIU5a1He9+6gurAg=;
+        s=k20201202; t=1688315761;
+        bh=a5Ul8SjZIvkIzNbCOa5Q1mOct0Ddcq/z6DUZB/zk3rw=;
         h=Date:From:To:Cc:Subject:From;
-        b=RLHUWyLwhk8/VcOCwtfoA0gBrmpFjkEo7G+wWkGw6ajseSiBqCXGCasXZCOup+4nd
-         nnHWqm0tPWxrnWxP1NRyhtz9LOW8hZs6LCmGVl0VGa74cUymxl46Ghg6gvNUawtyWG
-         YmmRpRA7fz/hTsGs7Yttk2nR78B1wdkvyP9mFM7hZAHO2XaCs2+CfaE155johBVoiT
-         2Toyd+jorN5yJb4wWXqoGkKRR1V7NAB7SJsntFUKd1O5qqNt0aLFPR8nohFYePoTas
-         ji1t4VqE03BXZkGIUsiTQk1hyh6erSvCVXECPUr2rHbIn84EvZAIQ+1SfOQ9Qaw0Bp
-         51MD++pbF8mzQ==
-Date:   Sun, 2 Jul 2023 09:25:55 -0700
+        b=YSBe1MOZZukpoiEItsSQsT0PDXsHuvPiypHF8kMh5r2BKdVhQYNdRFNznsHFA4iaP
+         AP3kGHQutg9wSdSHPj4+nUEzkW1K+Jc4qBh6pCNcqgFr/PUNxJLAKCU3Xm0f0meP0O
+         qpBhm7NbDJnBe0SBMT/XeoArRBQ0awOpdUanuOxptNBec/hXqUZ5dR6PFR8AO8e1Wd
+         ZpfYN/ligcxGqDZRLgAkm5+hUc9eOr+HqvpC40xWixVXnL/iy6fGswjrCp+sXjsoch
+         ymDMQ1q/o7+/qJ9eAR2Fq80/BKwGiMcwqgeKRDrCiWicSYsJvUBUWDVfG7750tTKNQ
+         L+SpciZZpPibw==
+Date:   Sun, 2 Jul 2023 09:36:01 -0700
 From:   "Darrick J. Wong" <djwong@kernel.org>
-To:     Dave Chinner <david@fromorbit.com>
-Cc:     xfs <linux-xfs@vger.kernel.org>
-Subject: [PATCH] xfs: AGI length should be bounds checked
-Message-ID: <20230702162555.GL11441@frogsfrogsfrogs>
+To:     djwong@kernel.org
+Cc:     chandan.babu@oracle.com, chandanrlinux@gmail.com,
+        colin.i.king@gmail.com, dchinner@redhat.com, hch@lst.de,
+        linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org,
+        ruansy.fnst@fujitsu.com, wen.gang.wang@oracle.com
+Subject: [ANNOUNCE] xfs-linux: for-next updated to 5cf32f63b0f4
+Message-ID: <168831570915.552142.2712544895758062687.stg-ugh@frogsfrogsfrogs>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
@@ -45,189 +48,72 @@ Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-From: Darrick J. Wong <djwong@kernel.org>
+Hi folks,
 
-Similar to the recent patch strengthening the AGF agf_length
-verification, the AGI verifier does not check that the AGI length field
-is within known good bounds.  This isn't currently checked by runtime
-kernel code, yet we assume in many places that it is correct and verify
-other metadata against it.
+The for-next branch of the xfs-linux repository at:
 
-Add length verification to the AGI verifier.  Just like the AGF length
-checking, the length of the AGI must be equal to the size of the AG
-specified in the superblock, unless it is the last AG in the filesystem.
-In that case, it must be less than or equal to sb->sb_agblocks and
-greater than XFS_MIN_AG_BLOCKS, which is the smallest AG a growfs
-operation will allow to exist.
+git://git.kernel.org/pub/scm/fs/xfs/xfs-linux.git
 
-There's only one place in the filesystem that actually uses agi_length,
-but let's not leave it vulnerable to the same weird nonsense that
-generates syzbot bugs, eh?
+has just been updated.
 
-Signed-off-by: Darrick J. Wong <djwong@kernel.org>
----
- fs/xfs/libxfs/xfs_alloc.c  |   72 ++++++++++++++++++++++++++++----------------
- fs/xfs/libxfs/xfs_alloc.h  |    3 ++
- fs/xfs/libxfs/xfs_ialloc.c |   24 +++++++--------
- 3 files changed, 60 insertions(+), 39 deletions(-)
+Patches often get missed, so please check if your outstanding patches
+were in this update. If they have not been in this update, please
+resubmit them to linux-xfs@vger.kernel.org so they can be picked up in
+the next update.  There's at least one more bugfix out for review; if
+you have more, please send them.
 
-diff --git a/fs/xfs/libxfs/xfs_alloc.c b/fs/xfs/libxfs/xfs_alloc.c
-index e2da7de9b37e..72501d4a9328 100644
---- a/fs/xfs/libxfs/xfs_alloc.c
-+++ b/fs/xfs/libxfs/xfs_alloc.c
-@@ -2956,6 +2956,47 @@ xfs_alloc_put_freelist(
- 	return 0;
- }
- 
-+/*
-+ * Check that this AGF/AGI header's sequence number and length matches the AG
-+ * number and size in fsblocks.
-+ */
-+xfs_failaddr_t
-+xfs_validate_ag_length(
-+	struct xfs_buf		*bp,
-+	uint32_t		seqno,
-+	uint32_t		length)
-+{
-+	struct xfs_mount	*mp = bp->b_mount;
-+	/*
-+	 * During growfs operations, the perag is not fully initialised,
-+	 * so we can't use it for any useful checking. growfs ensures we can't
-+	 * use it by using uncached buffers that don't have the perag attached
-+	 * so we can detect and avoid this problem.
-+	 */
-+	if (bp->b_pag && seqno != bp->b_pag->pag_agno)
-+		return __this_address;
-+
-+	/*
-+	 * Only the last AG in the filesystem is allowed to be shorter
-+	 * than the AG size recorded in the superblock.
-+	 */
-+	if (length != mp->m_sb.sb_agblocks) {
-+		/*
-+		 * During growfs, the new last AG can get here before we
-+		 * have updated the superblock. Give it a pass on the seqno
-+		 * check.
-+		 */
-+		if (bp->b_pag && seqno != mp->m_sb.sb_agcount - 1)
-+			return __this_address;
-+		if (length < XFS_MIN_AG_BLOCKS)
-+			return __this_address;
-+		if (length > mp->m_sb.sb_agblocks)
-+			return __this_address;
-+	}
-+
-+	return NULL;
-+}
-+
- /*
-  * Verify the AGF is consistent.
-  *
-@@ -2975,6 +3016,8 @@ xfs_agf_verify(
- {
- 	struct xfs_mount	*mp = bp->b_mount;
- 	struct xfs_agf		*agf = bp->b_addr;
-+	xfs_failaddr_t		fa;
-+	uint32_t		agf_seqno = be32_to_cpu(agf->agf_seqno);
- 	uint32_t		agf_length = be32_to_cpu(agf->agf_length);
- 
- 	if (xfs_has_crc(mp)) {
-@@ -2993,33 +3036,10 @@ xfs_agf_verify(
- 	/*
- 	 * Both agf_seqno and agf_length need to validated before anything else
- 	 * block number related in the AGF or AGFL can be checked.
--	 *
--	 * During growfs operations, the perag is not fully initialised,
--	 * so we can't use it for any useful checking. growfs ensures we can't
--	 * use it by using uncached buffers that don't have the perag attached
--	 * so we can detect and avoid this problem.
- 	 */
--	if (bp->b_pag && be32_to_cpu(agf->agf_seqno) != bp->b_pag->pag_agno)
--		return __this_address;
--
--	/*
--	 * Only the last AGF in the filesytsem is allowed to be shorter
--	 * than the AG size recorded in the superblock.
--	 */
--	if (agf_length != mp->m_sb.sb_agblocks) {
--		/*
--		 * During growfs, the new last AGF can get here before we
--		 * have updated the superblock. Give it a pass on the seqno
--		 * check.
--		 */
--		if (bp->b_pag &&
--		    be32_to_cpu(agf->agf_seqno) != mp->m_sb.sb_agcount - 1)
--			return __this_address;
--		if (agf_length < XFS_MIN_AG_BLOCKS)
--			return __this_address;
--		if (agf_length > mp->m_sb.sb_agblocks)
--			return __this_address;
--	}
-+	fa = xfs_validate_ag_length(bp, agf_seqno, agf_length);
-+	if (fa)
-+		return fa;
- 
- 	if (be32_to_cpu(agf->agf_flfirst) >= xfs_agfl_size(mp))
- 		return __this_address;
-diff --git a/fs/xfs/libxfs/xfs_alloc.h b/fs/xfs/libxfs/xfs_alloc.h
-index e544ee43fba6..6bb8d295c321 100644
---- a/fs/xfs/libxfs/xfs_alloc.h
-+++ b/fs/xfs/libxfs/xfs_alloc.h
-@@ -273,4 +273,7 @@ extern struct kmem_cache	*xfs_extfree_item_cache;
- int __init xfs_extfree_intent_init_cache(void);
- void xfs_extfree_intent_destroy_cache(void);
- 
-+xfs_failaddr_t xfs_validate_ag_length(struct xfs_buf *bp, uint32_t seqno,
-+		uint32_t length);
-+
- #endif	/* __XFS_ALLOC_H__ */
-diff --git a/fs/xfs/libxfs/xfs_ialloc.c b/fs/xfs/libxfs/xfs_ialloc.c
-index 1e5fafbc0cdb..b83e54c70906 100644
---- a/fs/xfs/libxfs/xfs_ialloc.c
-+++ b/fs/xfs/libxfs/xfs_ialloc.c
-@@ -2486,11 +2486,14 @@ xfs_ialloc_log_agi(
- 
- static xfs_failaddr_t
- xfs_agi_verify(
--	struct xfs_buf	*bp)
-+	struct xfs_buf		*bp)
- {
--	struct xfs_mount *mp = bp->b_mount;
--	struct xfs_agi	*agi = bp->b_addr;
--	int		i;
-+	struct xfs_mount	*mp = bp->b_mount;
-+	struct xfs_agi		*agi = bp->b_addr;
-+	xfs_failaddr_t		fa;
-+	uint32_t		agi_seqno = be32_to_cpu(agi->agi_seqno);
-+	uint32_t		agi_length = be32_to_cpu(agi->agi_length);
-+	int			i;
- 
- 	if (xfs_has_crc(mp)) {
- 		if (!uuid_equal(&agi->agi_uuid, &mp->m_sb.sb_meta_uuid))
-@@ -2507,6 +2510,10 @@ xfs_agi_verify(
- 	if (!XFS_AGI_GOOD_VERSION(be32_to_cpu(agi->agi_versionnum)))
- 		return __this_address;
- 
-+	fa = xfs_validate_ag_length(bp, agi_seqno, agi_length);
-+	if (fa)
-+		return fa;
-+
- 	if (be32_to_cpu(agi->agi_level) < 1 ||
- 	    be32_to_cpu(agi->agi_level) > M_IGEO(mp)->inobt_maxlevels)
- 		return __this_address;
-@@ -2516,15 +2523,6 @@ xfs_agi_verify(
- 	     be32_to_cpu(agi->agi_free_level) > M_IGEO(mp)->inobt_maxlevels))
- 		return __this_address;
- 
--	/*
--	 * during growfs operations, the perag is not fully initialised,
--	 * so we can't use it for any useful checking. growfs ensures we can't
--	 * use it by using uncached buffers that don't have the perag attached
--	 * so we can detect and avoid this problem.
--	 */
--	if (bp->b_pag && be32_to_cpu(agi->agi_seqno) != bp->b_pag->pag_agno)
--		return __this_address;
--
- 	for (i = 0; i < XFS_AGI_UNLINKED_BUCKETS; i++) {
- 		if (agi->agi_unlinked[i] == cpu_to_be32(NULLAGINO))
- 			continue;
+The new head of the for-next branch is commit:
+
+5cf32f63b0f4 xfs: fix the calculation for "end" and "length"
+
+17 new commits:
+
+Colin Ian King (1):
+[347eb95b27eb] xfs: remove redundant initializations of pointers drop_leaf and save_leaf
+
+Darrick J. Wong (7):
+[63ef7a35912d] xfs: fix interval filtering in multi-step fsmap queries
+[7975aba19cba] xfs: fix integer overflows in the fsmap rtbitmap and logdev backends
+[d898137d789c] xfs: fix getfsmap reporting past the last rt extent
+[f045dd00328d] xfs: clean up the rtbitmap fsmap backend
+[a949a1c2a198] xfs: fix logdev fsmap query result filtering
+[3ee9351e7490] xfs: validate fsmap offsets specified in the query keys
+[75dc03453122] xfs: fix xfs_btree_query_range callers to initialize btree rec fully
+
+Dave Chinner (8):
+[939bd50dfbe7] xfs: don't reverse order of items in bulk AIL insertion
+[b742d7b4f0e0] xfs: use deferred frees for btree block freeing
+[6a2a9d776c4a] xfs: pass alloc flags through to xfs_extent_busy_flush()
+[0853b5de42b4] xfs: allow extent free intents to be retried
+[8ebbf262d468] xfs: don't block in busy flushing when freeing extents
+[f1e1765aad7d] xfs: journal geometry is not properly bounds checked
+[edd8276dd702] xfs: AGF length has never been bounds checked
+[2bed0d82c2f7] xfs: fix bounds check in xfs_defer_agfl_block()
+
+Shiyang Ruan (1):
+[5cf32f63b0f4] xfs: fix the calculation for "end" and "length"
+
+Code Diffstat:
+
+fs/xfs/libxfs/xfs_ag.c             |   2 +-
+fs/xfs/libxfs/xfs_alloc.c          | 271 +++++++++++++++++++++++--------------
+fs/xfs/libxfs/xfs_alloc.h          |  21 +--
+fs/xfs/libxfs/xfs_attr_leaf.c      |   2 -
+fs/xfs/libxfs/xfs_bmap.c           |   8 +-
+fs/xfs/libxfs/xfs_bmap_btree.c     |   3 +-
+fs/xfs/libxfs/xfs_ialloc.c         |   8 +-
+fs/xfs/libxfs/xfs_ialloc_btree.c   |   3 +-
+fs/xfs/libxfs/xfs_refcount.c       |  22 +--
+fs/xfs/libxfs/xfs_refcount_btree.c |   8 +-
+fs/xfs/libxfs/xfs_rmap.c           |  10 +-
+fs/xfs/libxfs/xfs_sb.c             |  56 +++++++-
+fs/xfs/xfs_extent_busy.c           |  36 ++++-
+fs/xfs/xfs_extent_busy.h           |   6 +-
+fs/xfs/xfs_extfree_item.c          |  75 +++++++++-
+fs/xfs/xfs_fsmap.c                 | 261 ++++++++++++++++++-----------------
+fs/xfs/xfs_log.c                   |  47 ++-----
+fs/xfs/xfs_notify_failure.c        |   9 +-
+fs/xfs/xfs_reflink.c               |   3 +-
+fs/xfs/xfs_trace.h                 |  25 ++++
+fs/xfs/xfs_trans_ail.c             |   2 +-
+21 files changed, 556 insertions(+), 322 deletions(-)
