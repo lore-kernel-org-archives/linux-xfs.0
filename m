@@ -2,118 +2,69 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 877BDEB64DD
-	for <linux-xfs@archiver.kernel.org>; Sun,  2 Jul 2023 16:36:06 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3D4D3EB64DD
+	for <linux-xfs@archiver.kernel.org>; Sun,  2 Jul 2023 18:56:26 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229644AbjGBQgE (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Sun, 2 Jul 2023 12:36:04 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:32830 "EHLO
+        id S230348AbjGBS4Z (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Sun, 2 Jul 2023 14:56:25 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37314 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229516AbjGBQgE (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sun, 2 Jul 2023 12:36:04 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1AA77E60;
-        Sun,  2 Jul 2023 09:36:03 -0700 (PDT)
+        with ESMTP id S230051AbjGBS4Y (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sun, 2 Jul 2023 14:56:24 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9968F10F1;
+        Sun,  2 Jul 2023 11:56:03 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+         key-exchange X25519 server-signature RSA-PSS (2048 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 9300F60C52;
-        Sun,  2 Jul 2023 16:36:02 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id D2821C433C7;
-        Sun,  2 Jul 2023 16:36:01 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 6894660DD8;
+        Sun,  2 Jul 2023 18:53:09 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPS id C6F26C433C8;
+        Sun,  2 Jul 2023 18:53:08 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1688315761;
-        bh=a5Ul8SjZIvkIzNbCOa5Q1mOct0Ddcq/z6DUZB/zk3rw=;
-        h=Date:From:To:Cc:Subject:From;
-        b=YSBe1MOZZukpoiEItsSQsT0PDXsHuvPiypHF8kMh5r2BKdVhQYNdRFNznsHFA4iaP
-         AP3kGHQutg9wSdSHPj4+nUEzkW1K+Jc4qBh6pCNcqgFr/PUNxJLAKCU3Xm0f0meP0O
-         qpBhm7NbDJnBe0SBMT/XeoArRBQ0awOpdUanuOxptNBec/hXqUZ5dR6PFR8AO8e1Wd
-         ZpfYN/ligcxGqDZRLgAkm5+hUc9eOr+HqvpC40xWixVXnL/iy6fGswjrCp+sXjsoch
-         ymDMQ1q/o7+/qJ9eAR2Fq80/BKwGiMcwqgeKRDrCiWicSYsJvUBUWDVfG7750tTKNQ
-         L+SpciZZpPibw==
-Date:   Sun, 2 Jul 2023 09:36:01 -0700
-From:   "Darrick J. Wong" <djwong@kernel.org>
-To:     djwong@kernel.org
-Cc:     chandan.babu@oracle.com, chandanrlinux@gmail.com,
-        colin.i.king@gmail.com, dchinner@redhat.com, hch@lst.de,
-        linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org,
-        ruansy.fnst@fujitsu.com, wen.gang.wang@oracle.com
-Subject: [ANNOUNCE] xfs-linux: for-next updated to 5cf32f63b0f4
-Message-ID: <168831570915.552142.2712544895758062687.stg-ugh@frogsfrogsfrogs>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
+        s=k20201202; t=1688323988;
+        bh=Q3EMtf5VK8uZi+RM85+MSbntYpgGHo9uKNET2So3y8U=;
+        h=Subject:From:In-Reply-To:References:Date:To:Cc:From;
+        b=lvE0d5Gw2br2VizPlRTu5es5bRWSUXHYCoe7HtDLF+zLuFza9ODFXPpceIZAlbI2n
+         WaHSfHsubRN9vfuyvuF7IeoVdGtk4PmZWU3D7KbkG4af+5A3MbYIKgoKx3yxjKFw+/
+         JqN59NqH6Tb6TwIHxfjryQNzfawhMGRPTTnFmh2h501GopP+6Py72CYuJCAlHw5U1B
+         4zGbZyDuqHmUU0Y6DEdfkfsvqycvWGOIPcMFlvQGi1deqsFfxe71a1BJi5Sctbty0A
+         lV+vbW8UNnc8HCFRtbSF6ei0IKWkD0paVOd3+QD1nQLe+EUreYeSOa8Se5IjsBjuJD
+         R1CMdz6owbkYQ==
+Received: from aws-us-west-2-korg-oddjob-1.ci.codeaurora.org (localhost.localdomain [127.0.0.1])
+        by aws-us-west-2-korg-oddjob-1.ci.codeaurora.org (Postfix) with ESMTP id B44D9C0C40E;
+        Sun,  2 Jul 2023 18:53:08 +0000 (UTC)
+Subject: Re: [GIT PULL] iomap: new code for 6.5
+From:   pr-tracker-bot@kernel.org
+In-Reply-To: <168831482682.535407.9162875426107097138.stg-ugh@frogsfrogsfrogs>
+References: <168831482682.535407.9162875426107097138.stg-ugh@frogsfrogsfrogs>
+X-PR-Tracked-List-Id: <linux-xfs.vger.kernel.org>
+X-PR-Tracked-Message-Id: <168831482682.535407.9162875426107097138.stg-ugh@frogsfrogsfrogs>
+X-PR-Tracked-Remote: git://git.kernel.org/pub/scm/fs/xfs/xfs-linux.git tags/iomap-6.5-merge-1
+X-PR-Tracked-Commit-Id: 447a0bc108e4bae4c1ea845aacf43c10c28814e8
+X-PR-Merge-Tree: torvalds/linux.git
+X-PR-Merge-Refname: refs/heads/master
+X-PR-Merge-Commit-Id: a901a3568fd26ca9c4a82d8bc5ed5b3ed844d451
+Message-Id: <168832398873.18363.17032806585074128796.pr-tracker-bot@kernel.org>
+Date:   Sun, 02 Jul 2023 18:53:08 +0000
+To:     "Darrick J. Wong" <djwong@kernel.org>
+Cc:     david@fromorbit.com, djwong@kernel.org, hch@lst.de,
+        torvalds@linux-foundation.org, linux-fsdevel@vger.kernel.org,
+        linux-xfs@vger.kernel.org, luhongfei@vivo.com
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Hi folks,
+The pull request you sent on Sun, 2 Jul 2023 09:22:55 -0700:
 
-The for-next branch of the xfs-linux repository at:
+> git://git.kernel.org/pub/scm/fs/xfs/xfs-linux.git tags/iomap-6.5-merge-1
 
-git://git.kernel.org/pub/scm/fs/xfs/xfs-linux.git
+has been merged into torvalds/linux.git:
+https://git.kernel.org/torvalds/c/a901a3568fd26ca9c4a82d8bc5ed5b3ed844d451
 
-has just been updated.
+Thank you!
 
-Patches often get missed, so please check if your outstanding patches
-were in this update. If they have not been in this update, please
-resubmit them to linux-xfs@vger.kernel.org so they can be picked up in
-the next update.  There's at least one more bugfix out for review; if
-you have more, please send them.
-
-The new head of the for-next branch is commit:
-
-5cf32f63b0f4 xfs: fix the calculation for "end" and "length"
-
-17 new commits:
-
-Colin Ian King (1):
-[347eb95b27eb] xfs: remove redundant initializations of pointers drop_leaf and save_leaf
-
-Darrick J. Wong (7):
-[63ef7a35912d] xfs: fix interval filtering in multi-step fsmap queries
-[7975aba19cba] xfs: fix integer overflows in the fsmap rtbitmap and logdev backends
-[d898137d789c] xfs: fix getfsmap reporting past the last rt extent
-[f045dd00328d] xfs: clean up the rtbitmap fsmap backend
-[a949a1c2a198] xfs: fix logdev fsmap query result filtering
-[3ee9351e7490] xfs: validate fsmap offsets specified in the query keys
-[75dc03453122] xfs: fix xfs_btree_query_range callers to initialize btree rec fully
-
-Dave Chinner (8):
-[939bd50dfbe7] xfs: don't reverse order of items in bulk AIL insertion
-[b742d7b4f0e0] xfs: use deferred frees for btree block freeing
-[6a2a9d776c4a] xfs: pass alloc flags through to xfs_extent_busy_flush()
-[0853b5de42b4] xfs: allow extent free intents to be retried
-[8ebbf262d468] xfs: don't block in busy flushing when freeing extents
-[f1e1765aad7d] xfs: journal geometry is not properly bounds checked
-[edd8276dd702] xfs: AGF length has never been bounds checked
-[2bed0d82c2f7] xfs: fix bounds check in xfs_defer_agfl_block()
-
-Shiyang Ruan (1):
-[5cf32f63b0f4] xfs: fix the calculation for "end" and "length"
-
-Code Diffstat:
-
-fs/xfs/libxfs/xfs_ag.c             |   2 +-
-fs/xfs/libxfs/xfs_alloc.c          | 271 +++++++++++++++++++++++--------------
-fs/xfs/libxfs/xfs_alloc.h          |  21 +--
-fs/xfs/libxfs/xfs_attr_leaf.c      |   2 -
-fs/xfs/libxfs/xfs_bmap.c           |   8 +-
-fs/xfs/libxfs/xfs_bmap_btree.c     |   3 +-
-fs/xfs/libxfs/xfs_ialloc.c         |   8 +-
-fs/xfs/libxfs/xfs_ialloc_btree.c   |   3 +-
-fs/xfs/libxfs/xfs_refcount.c       |  22 +--
-fs/xfs/libxfs/xfs_refcount_btree.c |   8 +-
-fs/xfs/libxfs/xfs_rmap.c           |  10 +-
-fs/xfs/libxfs/xfs_sb.c             |  56 +++++++-
-fs/xfs/xfs_extent_busy.c           |  36 ++++-
-fs/xfs/xfs_extent_busy.h           |   6 +-
-fs/xfs/xfs_extfree_item.c          |  75 +++++++++-
-fs/xfs/xfs_fsmap.c                 | 261 ++++++++++++++++++-----------------
-fs/xfs/xfs_log.c                   |  47 ++-----
-fs/xfs/xfs_notify_failure.c        |   9 +-
-fs/xfs/xfs_reflink.c               |   3 +-
-fs/xfs/xfs_trace.h                 |  25 ++++
-fs/xfs/xfs_trans_ail.c             |   2 +-
-21 files changed, 556 insertions(+), 322 deletions(-)
+-- 
+Deet-doot-dot, I am a bot.
+https://korg.docs.kernel.org/prtracker.html
