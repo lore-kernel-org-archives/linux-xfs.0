@@ -2,122 +2,78 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id BF6F4C3063F
-	for <linux-xfs@archiver.kernel.org>; Mon,  3 Jul 2023 16:55:45 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5F643C30654
+	for <linux-xfs@archiver.kernel.org>; Mon,  3 Jul 2023 17:03:37 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230330AbjGCQzo (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 3 Jul 2023 12:55:44 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33186 "EHLO
+        id S229943AbjGCRDg (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 3 Jul 2023 13:03:36 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36408 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229656AbjGCQzo (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 3 Jul 2023 12:55:44 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C8C2FE6B;
-        Mon,  3 Jul 2023 09:55:42 -0700 (PDT)
+        with ESMTP id S229930AbjGCRDf (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 3 Jul 2023 13:03:35 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C3FB4E58;
+        Mon,  3 Jul 2023 10:03:34 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
          key-exchange X25519 server-signature RSA-PSS (2048 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 65E6460FD0;
-        Mon,  3 Jul 2023 16:55:42 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id C5D69C433C8;
-        Mon,  3 Jul 2023 16:55:41 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 303CE60FE2;
+        Mon,  3 Jul 2023 17:03:34 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 89152C433C7;
+        Mon,  3 Jul 2023 17:03:33 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1688403341;
-        bh=+fJdK3HbJTp3127pSMentEHV8HU0TkL+IOput1SVlfs=;
-        h=Date:From:To:Cc:Subject:From;
-        b=doJcfgFvg65ZIY4zzasSYIw9tktRSgBfr92j5ubHgMTnlSCNAtYplA0ODmBNmFI4r
-         Nd6sErebeD7BpRl0iqcTic2Ce03B1bpjcjFexWp5SlJzxXsOnZERJ+yy6jEeUXkks5
-         p/jZFqy/gDE8Ah7g3/BJBvlHtSan4PP+Nmfk2kAAEQcj2svpu9impWu0ApfBGw9I6y
-         4OJ3FUdZs1oODcBl+0NBXIfwBYLrDG2DsEkiIxK0kHw56LBDdIe0/OD2rz1r3SkFUZ
-         cVw3WqqPW2m0fYi8HetqON0NEdB1mLYUlehSps47BjB9O8a3avmcroaV6lCascAXM2
-         Evvc40MGDQbuQ==
-Date:   Mon, 3 Jul 2023 09:55:41 -0700
+        s=k20201202; t=1688403813;
+        bh=M9lap2eq4d1GcV/OyoRcMmCQOmeJ+vEH5h9nm034Uug=;
+        h=Subject:From:To:Cc:Date:From;
+        b=h2YstszovHjIWJTGDmdH+/Wciwl9s+MKxbWWS/ZovE2dRSvdvVD8jiijtEus2XFr/
+         iTPWBSL52wguZ2wVRbMTqVPr+rDvYOOj9zqTjyp7ztrDXE4poV5cUdqLy7HmbqYH/Y
+         vIvu9UxVIWqEJrfazVln8tT/V2jyPS6jzk3WPp+vG+GHvU1fMf+pvT2TxaZX8vq3NS
+         iMapkXPtDamNx0C9tZQNY3xptaQQINxYBD9qJiqRJOWqDpJpzbiMSTLvVRDzDhevuh
+         NIRTmwR8ABFCioSmvCSo6AfairJK3OBVZN/CT+EcqeU4T/4KBCvNQXNpEcunNR/cSz
+         Y2mdAHj70qbng==
+Subject: [PATCHSET 0/5] fstests: random fixes for v2023.06.18
 From:   "Darrick J. Wong" <djwong@kernel.org>
-To:     djwong@kernel.org
-Cc:     abaci@linux.alibaba.com, chandan.babu@oracle.com,
-        chandanrlinux@gmail.com, colin.i.king@gmail.com,
-        dchinner@redhat.com, hch@lst.de, linux-fsdevel@vger.kernel.org,
-        linux-xfs@vger.kernel.org, ruansy.fnst@fujitsu.com,
-        wen.gang.wang@oracle.com, yang.lee@linux.alibaba.com
-Subject: [ANNOUNCE] xfs-linux: for-next updated to 34acceaa8818
-Message-ID: <168840330350.1303450.11213970633638533550.stg-ugh@frogsfrogsfrogs>
+To:     zlang@redhat.com, djwong@kernel.org
+Cc:     linux-xfs@vger.kernel.org, fstests@vger.kernel.org, guan@eryu.me
+Date:   Mon, 03 Jul 2023 10:03:33 -0700
+Message-ID: <168840381298.1317961.1436890061506567407.stgit@frogsfrogsfrogs>
+User-Agent: StGit/0.19
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Hi folks,
+Hi all,
 
-The for-next branch of the xfs-linux repository at:
+Here's the usual odd fixes for fstests.
 
-git://git.kernel.org/pub/scm/fs/xfs/xfs-linux.git
+If you're going to start using this mess, you probably ought to just
+pull from my git trees, which are linked below.
 
-has just been updated.
+This is an extraordinary way to destroy everything.  Enjoy!
+Comments and questions are, as always, welcome.
 
-Patches often get missed, so please check if your outstanding patches
-were in this update. If they have not been in this update, please
-resubmit them to linux-xfs@vger.kernel.org so they can be picked up in
-the next update.
+--D
 
-The new head of the for-next branch is commit:
+kernel git tree:
+https://git.kernel.org/cgit/linux/kernel/git/djwong/xfs-linux.git/log/?h=random-fixes
 
-34acceaa8818 xfs: Remove unneeded semicolon
+xfsprogs git tree:
+https://git.kernel.org/cgit/linux/kernel/git/djwong/xfsprogs-dev.git/log/?h=random-fixes
 
-19 new commits:
+fstests git tree:
+https://git.kernel.org/cgit/linux/kernel/git/djwong/xfstests-dev.git/log/?h=random-fixes
+---
+ tests/xfs/041     |    3 ++
+ tests/xfs/439     |    6 +++-
+ tests/xfs/529     |    4 +++
+ tests/xfs/569     |    2 +
+ tests/xfs/934     |   79 +++++++++++++++++++++++++++++++++++++++++++++++++++++
+ tests/xfs/934.out |   19 +++++++++++++
+ 6 files changed, 110 insertions(+), 3 deletions(-)
+ create mode 100755 tests/xfs/934
+ create mode 100644 tests/xfs/934.out
 
-Colin Ian King (1):
-[347eb95b27eb] xfs: remove redundant initializations of pointers drop_leaf and save_leaf
-
-Darrick J. Wong (8):
-[63ef7a35912d] xfs: fix interval filtering in multi-step fsmap queries
-[7975aba19cba] xfs: fix integer overflows in the fsmap rtbitmap and logdev backends
-[d898137d789c] xfs: fix getfsmap reporting past the last rt extent
-[f045dd00328d] xfs: clean up the rtbitmap fsmap backend
-[a949a1c2a198] xfs: fix logdev fsmap query result filtering
-[3ee9351e7490] xfs: validate fsmap offsets specified in the query keys
-[75dc03453122] xfs: fix xfs_btree_query_range callers to initialize btree rec fully
-[2d7d1e7ea321] xfs: AGI length should be bounds checked
-
-Dave Chinner (8):
-[939bd50dfbe7] xfs: don't reverse order of items in bulk AIL insertion
-[b742d7b4f0e0] xfs: use deferred frees for btree block freeing
-[6a2a9d776c4a] xfs: pass alloc flags through to xfs_extent_busy_flush()
-[0853b5de42b4] xfs: allow extent free intents to be retried
-[8ebbf262d468] xfs: don't block in busy flushing when freeing extents
-[f1e1765aad7d] xfs: journal geometry is not properly bounds checked
-[edd8276dd702] xfs: AGF length has never been bounds checked
-[2bed0d82c2f7] xfs: fix bounds check in xfs_defer_agfl_block()
-
-Shiyang Ruan (1):
-[5cf32f63b0f4] xfs: fix the calculation for "end" and "length"
-
-Yang Li (1):
-[34acceaa8818] xfs: Remove unneeded semicolon
-
-Code Diffstat:
-
-fs/xfs/libxfs/xfs_ag.c             |   2 +-
-fs/xfs/libxfs/xfs_alloc.c          | 291 ++++++++++++++++++++++++-------------
-fs/xfs/libxfs/xfs_alloc.h          |  24 +--
-fs/xfs/libxfs/xfs_attr_leaf.c      |   2 -
-fs/xfs/libxfs/xfs_bmap.c           |   8 +-
-fs/xfs/libxfs/xfs_bmap_btree.c     |   3 +-
-fs/xfs/libxfs/xfs_ialloc.c         |  32 ++--
-fs/xfs/libxfs/xfs_ialloc_btree.c   |   3 +-
-fs/xfs/libxfs/xfs_refcount.c       |  22 +--
-fs/xfs/libxfs/xfs_refcount_btree.c |   8 +-
-fs/xfs/libxfs/xfs_rmap.c           |  10 +-
-fs/xfs/libxfs/xfs_sb.c             |  56 ++++++-
-fs/xfs/xfs_extent_busy.c           |  36 ++++-
-fs/xfs/xfs_extent_busy.h           |   6 +-
-fs/xfs/xfs_extfree_item.c          |  75 +++++++++-
-fs/xfs/xfs_fsmap.c                 | 261 +++++++++++++++++----------------
-fs/xfs/xfs_log.c                   |  47 ++----
-fs/xfs/xfs_notify_failure.c        |   9 +-
-fs/xfs/xfs_reflink.c               |   3 +-
-fs/xfs/xfs_trace.h                 |  25 ++++
-fs/xfs/xfs_trans_ail.c             |   2 +-
-21 files changed, 590 insertions(+), 335 deletions(-)
