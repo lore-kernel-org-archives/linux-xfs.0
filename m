@@ -2,101 +2,84 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 62853EB64DD
-	for <linux-xfs@archiver.kernel.org>; Mon,  3 Jul 2023 22:31:02 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 37393EB64DC
+	for <linux-xfs@archiver.kernel.org>; Mon,  3 Jul 2023 23:20:29 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229579AbjGCWax (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 3 Jul 2023 18:30:53 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38462 "EHLO
+        id S230406AbjGCXU2 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 3 Jul 2023 19:20:28 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49102 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229896AbjGCWaw (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 3 Jul 2023 18:30:52 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4D66DE69
-        for <linux-xfs@vger.kernel.org>; Mon,  3 Jul 2023 15:30:51 -0700 (PDT)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature RSA-PSS (2048 bits))
-        (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id D2B126108B
-        for <linux-xfs@vger.kernel.org>; Mon,  3 Jul 2023 22:30:50 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPS id 484D1C433CA
-        for <linux-xfs@vger.kernel.org>; Mon,  3 Jul 2023 22:30:50 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1688423450;
-        bh=31ffmsl14ELTB3DdrOraU8vY3r6XgQ7G6XXid/264Wc=;
-        h=From:To:Subject:Date:In-Reply-To:References:From;
-        b=o5O9pDcV1oCvEyOXaorFD0gcTevDxObe+50LJDEYlJgNUF4ypFNVHhEgkoL7H/jQE
-         zajwwFlSIhBjF1g6MydwdSBkM14o0SDLprUaDECRX57NY1rHtvLIdx6Q4ZYlwq+GSP
-         X9vR7GngKstgIHWlpbOL7e6FX8/Fie6P+iMYFhIn4B1rhG7T/pj5o23xitcME7rbQt
-         whDLsLJpBiKCT+MdTi0mCy1jzwGMqjGz0Qpj+/uIWOU/DjCzV368fK6ICE1b846XZR
-         EOUgGWYkefVwa+styrE0oloU6AqiIODFMkVA4JaSELd9cnrZaU1fpyRjiT+VZ0b1Yd
-         KUk0TN4T+x/tg==
-Received: by aws-us-west-2-korg-bugzilla-1.web.codeaurora.org (Postfix, from userid 48)
-        id 37536C53BD3; Mon,  3 Jul 2023 22:30:50 +0000 (UTC)
-From:   bugzilla-daemon@kernel.org
-To:     linux-xfs@vger.kernel.org
-Subject: [Bug 217572] Initial blocked tasks causing deterioration over hours
- until (nearly) complete system lockup and data loss with PostgreSQL 13
-Date:   Mon, 03 Jul 2023 22:30:49 +0000
-X-Bugzilla-Reason: None
-X-Bugzilla-Type: changed
-X-Bugzilla-Watch-Reason: AssignedTo filesystem_xfs@kernel-bugs.kernel.org
-X-Bugzilla-Product: File System
-X-Bugzilla-Component: XFS
-X-Bugzilla-Version: 2.5
-X-Bugzilla-Keywords: 
-X-Bugzilla-Severity: high
-X-Bugzilla-Who: david@fromorbit.com
-X-Bugzilla-Status: NEW
-X-Bugzilla-Resolution: 
-X-Bugzilla-Priority: P3
-X-Bugzilla-Assigned-To: filesystem_xfs@kernel-bugs.kernel.org
-X-Bugzilla-Flags: 
-X-Bugzilla-Changed-Fields: 
-Message-ID: <bug-217572-201763-kZ0EnQ2aFc@https.bugzilla.kernel.org/>
-In-Reply-To: <bug-217572-201763@https.bugzilla.kernel.org/>
-References: <bug-217572-201763@https.bugzilla.kernel.org/>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
-X-Bugzilla-URL: https://bugzilla.kernel.org/
-Auto-Submitted: auto-generated
+        with ESMTP id S229662AbjGCXU1 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 3 Jul 2023 19:20:27 -0400
+Received: from bombadil.infradead.org (bombadil.infradead.org [IPv6:2607:7c80:54:3::133])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id BA15BFB;
+        Mon,  3 Jul 2023 16:20:26 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=infradead.org; s=bombadil.20210309; h=Content-Transfer-Encoding:
+        MIME-Version:Message-ID:Date:Subject:Cc:To:From:Sender:Reply-To:Content-Type:
+        Content-ID:Content-Description:In-Reply-To:References;
+        bh=zRSf4m9jljbSBgJd1u1nkIHZSTBl9hKs7qeiFu0rofw=; b=pKnAPCRHqkakphOtwlnXmSbwK0
+        FIFTmFZ/22tG6k50dRUYqbnbMCXDEVTQ+4Ix8WTfTCcupJ60usNQqDqDrzr2QR9HtX9ps0/as6ATW
+        F/HPkR++fON5Keru84UZCkKWoLZ11bF8yI7Vkw53kE5T1UX5JpLRLCWXMeRWlzccquxrROPaOu7iY
+        gAJet4u3XQlJJRpdtrsdMrqF4/8aUIxvwJbh+MLXNTpxenCuwE9YCmNaqGtd8Nz1M22SPyAigiNQI
+        7GSZb/XoifCILNWLu4kaLgjNTmE7QpNQb35TsGI0ze1yw8ixfl/fU1z58eLGzAq0S5ve+k8UOdpZP
+        /35liZUA==;
+Received: from [2601:1c2:980:9ec0::2764] (helo=bombadil.infradead.org)
+        by bombadil.infradead.org with esmtpsa (Exim 4.96 #2 (Red Hat Linux))
+        id 1qGSqH-00Bcwn-1Y;
+        Mon, 03 Jul 2023 23:20:25 +0000
+From:   Randy Dunlap <rdunlap@infradead.org>
+To:     linux-kernel@vger.kernel.org
+Cc:     Randy Dunlap <rdunlap@infradead.org>,
+        "Darrick J . Wong" <djwong@kernel.org>, linux-xfs@vger.kernel.org,
+        linux-mm@kvack.org, Jonathan Corbet <corbet@lwn.net>
+Subject: [PATCH v3] Documentation: admin-guide: correct "it's" to possessive "its"
+Date:   Mon,  3 Jul 2023 16:20:24 -0700
+Message-ID: <20230703232024.8069-1-rdunlap@infradead.org>
+X-Mailer: git-send-email 2.41.0
 MIME-Version: 1.0
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-https://bugzilla.kernel.org/show_bug.cgi?id=3D217572
+Correct 2 uses of "it's" to the possessive "its" as needed.
 
---- Comment #7 from Dave Chinner (david@fromorbit.com) ---
-On Mon, Jul 03, 2023 at 07:56:36PM +0000, bugzilla-daemon@kernel.org wrote:
-> https://bugzilla.kernel.org/show_bug.cgi?id=3D217572
->=20
-> --- Comment #6 from Christian Theune (ct@flyingcircus.io) ---
-> Daniel pointed me to this patch they're considering as a valid fix:
->
-> https://lore.kernel.org/linux-fsdevel/20221129001632.GX3600936@dread.disa=
-ster.area/
+Signed-off-by: Randy Dunlap <rdunlap@infradead.org>
+Cc: Darrick J. Wong <djwong@kernel.org>
+Cc: linux-xfs@vger.kernel.org
+Cc: linux-mm@kvack.org
+Cc: Jonathan Corbet <corbet@lwn.net>
+Reviewed-by: Darrick J. Wong <djwong@kernel.org>
+---
+v2: add Rev-by: Darrick
+v3: rebase/resend
 
-No, that has nothing to do with the problem you are seeing on 6.1.31
-kernels. That was a fix for a regression introduced in 6.3-rc1, and
-hence does not exist in 6.1.y kernels.
+ Documentation/admin-guide/mm/numa_memory_policy.rst |    2 +-
+ Documentation/admin-guide/xfs.rst                   |    2 +-
+ 2 files changed, 2 insertions(+), 2 deletions(-)
 
-The problem you are tripping over appears to be a livelock in the
-page cache iterator infrastructure, not an issue with the filesystem
-itself. This has been seen occasionally (maybe once every couple of
-months of testing across the entire dev community) during testing
-since large folios were enabled in the page cache, but nobody has
-been able to reproduce it reliably enough to be able to isolate the
-root cause and fix it yet.
-
-If you can reproduce it reliably and quickly, then putting together
-a recipe that we can use to trigger it would be a great help.
-
--Dave.
-
---=20
-You may reply to this email to add a comment.
-
-You are receiving this mail because:
-You are watching the assignee of the bug.=
+diff -- a/Documentation/admin-guide/mm/numa_memory_policy.rst b/Documentation/admin-guide/mm/numa_memory_policy.rst
+--- a/Documentation/admin-guide/mm/numa_memory_policy.rst
++++ b/Documentation/admin-guide/mm/numa_memory_policy.rst
+@@ -109,7 +109,7 @@ VMA Policy
+ 	* A task may install a new VMA policy on a sub-range of a
+ 	  previously mmap()ed region.  When this happens, Linux splits
+ 	  the existing virtual memory area into 2 or 3 VMAs, each with
+-	  it's own policy.
++	  its own policy.
+ 
+ 	* By default, VMA policy applies only to pages allocated after
+ 	  the policy is installed.  Any pages already faulted into the
+diff -- a/Documentation/admin-guide/xfs.rst b/Documentation/admin-guide/xfs.rst
+--- a/Documentation/admin-guide/xfs.rst
++++ b/Documentation/admin-guide/xfs.rst
+@@ -192,7 +192,7 @@ When mounting an XFS filesystem, the fol
+ 	are any integer multiple of a valid ``sunit`` value.
+ 
+ 	Typically the only time these mount options are necessary if
+-	after an underlying RAID device has had it's geometry
++	after an underlying RAID device has had its geometry
+ 	modified, such as adding a new disk to a RAID5 lun and
+ 	reshaping it.
+ 
