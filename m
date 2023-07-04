@@ -2,105 +2,109 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 24DABC001DB
-	for <linux-xfs@archiver.kernel.org>; Tue,  4 Jul 2023 14:06:34 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0BD41EB64DA
+	for <linux-xfs@archiver.kernel.org>; Tue,  4 Jul 2023 14:19:47 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231364AbjGDOGc (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 4 Jul 2023 10:06:32 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37116 "EHLO
+        id S231748AbjGDOTq (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 4 Jul 2023 10:19:46 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45524 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230197AbjGDOGb (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 4 Jul 2023 10:06:31 -0400
-Received: from mail-pl1-f169.google.com (mail-pl1-f169.google.com [209.85.214.169])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6CB9BF7;
-        Tue,  4 Jul 2023 07:06:30 -0700 (PDT)
-Received: by mail-pl1-f169.google.com with SMTP id d9443c01a7336-1b8303cd32aso44543055ad.2;
-        Tue, 04 Jul 2023 07:06:30 -0700 (PDT)
+        with ESMTP id S229708AbjGDOTp (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 4 Jul 2023 10:19:45 -0400
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 16BE5E76
+        for <linux-xfs@vger.kernel.org>; Tue,  4 Jul 2023 07:18:59 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1688480338;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=1bX3l9kHHxprZ87a696qDndKt6iFUuC65A9XHK4GEDE=;
+        b=I18StjqiENlgdYJuKfXgmc27EQ94w8W0Legg0Avfy6jLKC8sH1UoWVjNu5Bo9VbL0suHx9
+        Htfsc+V5ynx41mN9ZACq8xMeoC9GGSJiZUOcL1tRNRd8qVd4z6pvpX6+Mj9HAz22+iV/IT
+        i182qEHA0IXK3CI4ds5tg04hZM9swWY=
+Received: from mail-qk1-f198.google.com (mail-qk1-f198.google.com
+ [209.85.222.198]) by relay.mimecast.com with ESMTP with STARTTLS
+ (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
+ us-mta-438-hOmkdw8jOEmF7qQnChwa0A-1; Tue, 04 Jul 2023 10:18:57 -0400
+X-MC-Unique: hOmkdw8jOEmF7qQnChwa0A-1
+Received: by mail-qk1-f198.google.com with SMTP id af79cd13be357-7656c94fc4eso679233385a.2
+        for <linux-xfs@vger.kernel.org>; Tue, 04 Jul 2023 07:18:57 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20221208; t=1688479590; x=1691071590;
-        h=content-transfer-encoding:in-reply-to:from:references:cc:to
-         :content-language:subject:user-agent:mime-version:date:message-id
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=JV2SCOEdB9t0w6tigDexjJMYhGF54ZwsLlYmJ1gE7wU=;
-        b=bMICWCFC1W076H+YN1lR/nCQau0HbgCI0H4vl8vZYXgociPXrYyV5p2vJwJSn4IvXw
-         X0VdLEzWRujDjUle97qp5ejyEiOTvK9cEwtJF9fXchWUeZ3V4uQSdYUun19YJ76vkPzg
-         EZ1VW7i4f34rBtELVeYa/NvSt/WWf8EGkE3xgRc0FNndIJufTeQZZj1KiqF78g6Qv4BO
-         0X8PwY5ee/rPn2rjRArQ76JDuSpgQ/4XYckAc/yuSHkTasvw/OegnkRz43f6yLq3W0e3
-         rRA6atJmAtXopQDEq1HSeWbL6ASsixUt+la82hfgmJxFH2y2NJEwaZhVIkeu3mm+1ick
-         EadQ==
-X-Gm-Message-State: ABy/qLaMBNDn1rNBaXGQB2u/UKIklMPTeUzdebm00ZhMy9QxeJpBvQHH
-        tDxcOHS51TLWDp/ELdGfDOY=
-X-Google-Smtp-Source: APBJJlEESj5502hCCjnCrW5aNdhMviGxH5NXIz8SFwBF+614aVB6e0+1hJtWMTw8TJzZNuQy8olTNg==
-X-Received: by 2002:a17:903:447:b0:1b8:a31b:ac85 with SMTP id iw7-20020a170903044700b001b8a31bac85mr2719760plb.41.1688479589749;
-        Tue, 04 Jul 2023 07:06:29 -0700 (PDT)
-Received: from [192.168.50.14] ([98.51.102.78])
-        by smtp.gmail.com with ESMTPSA id jk4-20020a170903330400b001b672af624esm13083569plb.164.2023.07.04.07.06.26
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Tue, 04 Jul 2023 07:06:29 -0700 (PDT)
-Message-ID: <bb91e76b-0bd8-a949-f8b9-868f919ebcb9@acm.org>
-Date:   Tue, 4 Jul 2023 07:06:26 -0700
+        d=1e100.net; s=20221208; t=1688480336; x=1691072336;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=1bX3l9kHHxprZ87a696qDndKt6iFUuC65A9XHK4GEDE=;
+        b=iTDh7R2upjWgcH8Y6WA9u5+iY0cy396aAOgTRCyj/3BadShQ54SK4grEih0VXPD8UT
+         9fUPMenhYngTc8N6oCxgDTamxp5fi+9Nm/z0OR3DP/YaY8txQVtxPzHpNjnsVIzJu8k+
+         xXUZSRtHFkT2A94iyjjXq6W0hffQNQahykX5UgUKeitQ2zHTjTrBzWEt7seT+HQNL0zG
+         ciEDoOrMIUQ6fsyq9FHxcbvKMbNVoLdigI+L5YxgVCDH1OxFHaXnoS7LaAAhCboWs4IW
+         yLlSsn2y95Jh7PLUfzhHjOfr8VyMKYlndooPDAMEIoiARW93H8wjYrRwz18bY7YH38bE
+         IBdA==
+X-Gm-Message-State: AC+VfDzcw4pnSAbAWYy4cBrgBnrKZLzZ5oprG38w50Kuxk7d1RVWIWS+
+        oMic6T6hgbplGKR/08Y0ps0MWIICo+z8EGCysS9czx4YNGs7d386IPZrY7umNGpZS8ebeS2800l
+        ArVw1mtRPP9GHxSEjvqo=
+X-Received: by 2002:a05:620a:1a04:b0:763:d33b:e7b8 with SMTP id bk4-20020a05620a1a0400b00763d33be7b8mr16042810qkb.45.1688480336786;
+        Tue, 04 Jul 2023 07:18:56 -0700 (PDT)
+X-Google-Smtp-Source: ACHHUZ5COzTjGOXQOf5HoUvdopyT6F5TUbmRh8TnG/iC5Pxiu4c5Q5Ptzi0LbY1hnFEmf/4FUZZX0g==
+X-Received: by 2002:a05:620a:1a04:b0:763:d33b:e7b8 with SMTP id bk4-20020a05620a1a0400b00763d33be7b8mr16042787qkb.45.1688480336465;
+        Tue, 04 Jul 2023 07:18:56 -0700 (PDT)
+Received: from aalbersh.remote.csb ([109.183.6.197])
+        by smtp.gmail.com with ESMTPSA id w15-20020ae9e50f000000b00765aa3ffa07sm8646066qkf.98.2023.07.04.07.18.55
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Tue, 04 Jul 2023 07:18:56 -0700 (PDT)
+Date:   Tue, 4 Jul 2023 16:18:53 +0200
+From:   Andrey Albershteyn <aalbersh@redhat.com>
+To:     "Darrick J. Wong" <djwong@kernel.org>
+Cc:     zlang@redhat.com, linux-xfs@vger.kernel.org,
+        fstests@vger.kernel.org, guan@eryu.me
+Subject: Re: [PATCH 2/5] xfs/569: skip post-test fsck run
+Message-ID: <20230704141853.orxwkglv4fafwex5@aalbersh.remote.csb>
+References: <168840381298.1317961.1436890061506567407.stgit@frogsfrogsfrogs>
+ <168840382437.1317961.10711798856849951797.stgit@frogsfrogsfrogs>
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
- Thunderbird/102.11.0
-Subject: Re: [PATCH 01/32] block: Provide blkdev_get_handle_* functions
-Content-Language: en-US
-To:     Jan Kara <jack@suse.cz>, linux-block@vger.kernel.org
-Cc:     linux-fsdevel@vger.kernel.org, Jens Axboe <axboe@kernel.dk>,
-        Christoph Hellwig <hch@infradead.org>,
-        Alasdair Kergon <agk@redhat.com>,
-        Andrew Morton <akpm@linux-foundation.org>,
-        Anna Schumaker <anna@kernel.org>, Chao Yu <chao@kernel.org>,
-        Christian Borntraeger <borntraeger@linux.ibm.com>,
-        "Darrick J. Wong" <djwong@kernel.org>,
-        Dave Kleikamp <shaggy@kernel.org>,
-        David Sterba <dsterba@suse.com>, dm-devel@redhat.com,
-        drbd-dev@lists.linbit.com, Gao Xiang <xiang@kernel.org>,
-        Jack Wang <jinpu.wang@ionos.com>,
-        Jaegeuk Kim <jaegeuk@kernel.org>,
-        jfs-discussion@lists.sourceforge.net,
-        Joern Engel <joern@lazybastard.org>,
-        Joseph Qi <joseph.qi@linux.alibaba.com>,
-        Kent Overstreet <kent.overstreet@gmail.com>,
-        linux-bcache@vger.kernel.org, linux-btrfs@vger.kernel.org,
-        linux-erofs@lists.ozlabs.org, linux-ext4@vger.kernel.org,
-        linux-f2fs-devel@lists.sourceforge.net, linux-mm@kvack.org,
-        linux-mtd@lists.infradead.org, linux-nfs@vger.kernel.org,
-        linux-nilfs@vger.kernel.org, linux-nvme@lists.infradead.org,
-        linux-pm@vger.kernel.org, linux-raid@vger.kernel.org,
-        linux-s390@vger.kernel.org, linux-scsi@vger.kernel.org,
-        linux-xfs@vger.kernel.org,
-        "Md. Haris Iqbal" <haris.iqbal@ionos.com>,
-        Mike Snitzer <snitzer@kernel.org>,
-        Minchan Kim <minchan@kernel.org>, ocfs2-devel@oss.oracle.com,
-        reiserfs-devel@vger.kernel.org,
-        Sergey Senozhatsky <senozhatsky@chromium.org>,
-        Song Liu <song@kernel.org>,
-        Sven Schnelle <svens@linux.ibm.com>,
-        target-devel@vger.kernel.org, Ted Tso <tytso@mit.edu>,
-        Trond Myklebust <trond.myklebust@hammerspace.com>,
-        xen-devel@lists.xenproject.org
-References: <20230629165206.383-1-jack@suse.cz>
- <20230704122224.16257-1-jack@suse.cz>
-From:   Bart Van Assche <bvanassche@acm.org>
-In-Reply-To: <20230704122224.16257-1-jack@suse.cz>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <168840382437.1317961.10711798856849951797.stgit@frogsfrogsfrogs>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On 7/4/23 05:21, Jan Kara wrote:
-> +struct bdev_handle {
-> +	struct block_device *bdev;
-> +	void *holder;
-> +};
+On 2023-07-03 10:03:44, Darrick J. Wong wrote:
+> From: Darrick J. Wong <djwong@kernel.org>
+> 
+> This test examines the behavior of mkfs.xfs with specific filesystem
+> configuration files by formatting the scratch device directly with those
+> exact parameters.  IOWs, it doesn't include external log devices or
+> realtime devices.  If external devices are set up, the post-test fsck
+> run fails because the filesystem doesnt' use the (allegedly) configured
+> external devices.  Fix that by adding _require_scratch_nocheck.
+> 
+> Signed-off-by: Darrick J. Wong <djwong@kernel.org>
+> ---
+>  tests/xfs/569 |    2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
+> 
+> 
+> diff --git a/tests/xfs/569 b/tests/xfs/569
+> index e8902708bc..b6d5798058 100755
+> --- a/tests/xfs/569
+> +++ b/tests/xfs/569
+> @@ -14,7 +14,7 @@ _begin_fstest mkfs
+>  
+>  # Modify as appropriate.
+>  _supported_fs xfs
+> -_require_scratch
+> +_require_scratch_nocheck
+>  
+>  ls /usr/share/xfsprogs/mkfs/*.conf &>/dev/null || \
+>  	_notrun "No mkfs.xfs config files installed"
+> 
 
-Please explain in the patch description why a holder pointer is 
-introduced in struct bdev_handle and how it relates to the bd_holder 
-pointer in struct block_device. Is one of the purposes of this patch 
-series perhaps to add support for multiple holders per block device?
+Looks good to me:
+Reviewed-by: Andrey Albershteyn <aalbersh@redhat.com>
 
-Thanks,
-
-Bart.
+-- 
+- Andrey
 
