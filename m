@@ -2,54 +2,54 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8C20EEB64D9
-	for <linux-xfs@archiver.kernel.org>; Tue,  4 Jul 2023 12:57:07 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 740BAEB64DD
+	for <linux-xfs@archiver.kernel.org>; Tue,  4 Jul 2023 12:57:08 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231443AbjGDM5G (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 4 Jul 2023 08:57:06 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56116 "EHLO
+        id S231481AbjGDM5H (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 4 Jul 2023 08:57:07 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56114 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231341AbjGDM5F (ORCPT
+        with ESMTP id S229441AbjGDM5F (ORCPT
         <rfc822;linux-xfs@vger.kernel.org>); Tue, 4 Jul 2023 08:57:05 -0400
-Received: from smtp-out1.suse.de (smtp-out1.suse.de [195.135.220.28])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D6D6DE70;
+Received: from smtp-out2.suse.de (smtp-out2.suse.de [195.135.220.29])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C5B2B12E;
         Tue,  4 Jul 2023 05:57:04 -0700 (PDT)
 Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
         (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
          key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
         (No client certificate requested)
-        by smtp-out1.suse.de (Postfix) with ESMTPS id 91A3722804;
+        by smtp-out2.suse.de (Postfix) with ESMTPS id 843E920571;
         Tue,  4 Jul 2023 12:57:03 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.cz; s=susede2_rsa;
         t=1688475423; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
          mime-version:mime-version:
          content-transfer-encoding:content-transfer-encoding:
          in-reply-to:in-reply-to:references:references;
-        bh=aNFQKK84PQeMU0o2BrZwqCpmBRXyfLB4X6NQO+cVhGk=;
-        b=b464PnUFS3a/2+VaWwFL45DNjCqS5bDW3wdH5p12pEY9dDf1eUx5rHX0kMnhEi4pQPu9OE
-        ISCbSTatRa3SFnE3jXevxH4fWe6G063EsWfB0ab3s81qIxzBNNJZ/VEBi1g/Sl2jCvZEKc
-        aQ1VyHgzQwb/J7WuS67VBftf/8CztAk=
+        bh=LtayAV5T0tBVByT6zZ44nOPb8V5tXSVkxuDIXL3faJ0=;
+        b=Duy5fugiJmqDcIDpwsbYTPiA4IruxmPPijcS0WaD9OElGUyAEUmlma53ORRQLV40JgzbzK
+        UaFkS5V/S3hLlFh6GKsjqW/xqLk0pSE3Ngr+aBl+MmkIaomBJNnQi7QPRD3GBmNJtPUThl
+        bhejAQlSvLbpYVGjYbQIHYRolrXxxK8=
 DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.cz;
         s=susede2_ed25519; t=1688475423;
         h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
          mime-version:mime-version:
          content-transfer-encoding:content-transfer-encoding:
          in-reply-to:in-reply-to:references:references;
-        bh=aNFQKK84PQeMU0o2BrZwqCpmBRXyfLB4X6NQO+cVhGk=;
-        b=6sa68DwCV1Y0vXgnLzTEQWJLE3dhaylF7zJF8L+/e3GObWZTxHUedkHQeB5ClMWbTxMPS8
-        qly98fmlPibnPfBg==
+        bh=LtayAV5T0tBVByT6zZ44nOPb8V5tXSVkxuDIXL3faJ0=;
+        b=pLKG5TNw/8Mra2nNSLGkoVJeHKs8nIKwgmkwbOHYCLdmNz89+ls+Siibr1V38bbFZE12gh
+        o+qF3lu/O5Lrv6Dw==
 Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
         (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
          key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
         (No client certificate requested)
-        by imap2.suse-dmz.suse.de (Postfix) with ESMTPS id 813F213A26;
+        by imap2.suse-dmz.suse.de (Postfix) with ESMTPS id 6F4F31346D;
         Tue,  4 Jul 2023 12:57:03 +0000 (UTC)
 Received: from dovecot-director2.suse.de ([192.168.254.65])
         by imap2.suse-dmz.suse.de with ESMTPSA
-        id rRSKHx8XpGREQwAAMHmgww
+        id xqk2Gx8XpGRAQwAAMHmgww
         (envelope-from <jack@suse.cz>); Tue, 04 Jul 2023 12:57:03 +0000
 Received: by quack3.suse.cz (Postfix, from userid 1000)
-        id F37E6A0766; Tue,  4 Jul 2023 14:57:02 +0200 (CEST)
+        id EE456A0765; Tue,  4 Jul 2023 14:57:02 +0200 (CEST)
 From:   Jan Kara <jack@suse.cz>
 To:     <linux-fsdevel@vger.kernel.org>
 Cc:     <linux-block@vger.kernel.org>,
@@ -62,14 +62,14 @@ Cc:     <linux-block@vger.kernel.org>,
         Eric Biggers <ebiggers@google.com>,
         <linux-xfs@vger.kernel.org>, linux-btrfs@vger.kernel.org,
         Dmitry Vyukov <dvyukov@google.com>, Jan Kara <jack@suse.cz>
-Subject: [PATCH 4/6] ext4: Block writes to journal device
-Date:   Tue,  4 Jul 2023 14:56:52 +0200
-Message-Id: <20230704125702.23180-4-jack@suse.cz>
+Subject: [PATCH 3/6] xfs: Block writes to log device
+Date:   Tue,  4 Jul 2023 14:56:51 +0200
+Message-Id: <20230704125702.23180-3-jack@suse.cz>
 X-Mailer: git-send-email 2.35.3
 In-Reply-To: <20230704122727.17096-1-jack@suse.cz>
 References: <20230704122727.17096-1-jack@suse.cz>
 MIME-Version: 1.0
-X-Developer-Signature: v=1; a=openpgp-sha256; l=782; i=jack@suse.cz; h=from:subject; bh=NWBGOYVyzhEFvSkBdLLt9GRq3HmyHTawgFiLLwCAWLM=; b=owEBbQGS/pANAwAIAZydqgc/ZEDZAcsmYgBkpBcU6vLiCKXLfKbqhj0Vfj2Xn+cC+fHAN/x6rTa+ 9bJ+VRmJATMEAAEIAB0WIQSrWdEr1p4yirVVKBycnaoHP2RA2QUCZKQXFAAKCRCcnaoHP2RA2ZVkB/ 9PkYH97s+87SyqxmrXaecUvErsUd5cNv05UrhvfR6NrjkaCwsK432m1QAWSO0oaxJnPAlbCUw9k6X1 CQJ7pNDtVnZg2ycu3WFyFDhR3XKbn1K9qlsgIMcAQVbcpWXXw1otA2PXF2qV5g0TU3jNzE1k6tLMj2 moEkTG41L7PHUj35bfhF27SxRfqy6m5liCh7O0khnw65f3f7YaBffmmCG94eJdHGE/ol+dgFXtaFCa M/0iI7XbnMXLkRoUuoWpyGTSmcXXf/1FR3jkw+VNjdgIjPR7x8Egm+LcZ3XvsLH6q0HmuDgVtD6Kvj DiwdnRXR+LvDOI+TsTk/KHWA9egQ0Y
+X-Developer-Signature: v=1; a=openpgp-sha256; l=792; i=jack@suse.cz; h=from:subject; bh=nhXkhndcPMW2C+uoE+VwcqIIQEbUdMbuuEt4QVO2k/Q=; b=owEBbQGS/pANAwAIAZydqgc/ZEDZAcsmYgBkpBcTQayx7dbOByhLrjumejN1JUQPoK85sd4AETva TsjocFOJATMEAAEIAB0WIQSrWdEr1p4yirVVKBycnaoHP2RA2QUCZKQXEwAKCRCcnaoHP2RA2VgoCA DQyETerLQPbUl9el+W2isQ3GPWuVGKOhq1DNPEDd2haY+G45LN9cI64qaXk8br1iB/LPwukLuPMv3Q V2ygL0uXAcCH8LzvnGBSHIQNrHqcpj6g+StWqdIrrxjY9Rs4nzXCMLLfyVv+59aVk6hzD0iiykK29c Y4AqrrZIzdXxaxLBGjyATLbJ80oPQu8ff5lhnSrMj58aCFWQX0uDYRBw8DgXOZldrSTvivy1wmtMSl BEBfwodl2YYmh8iEr9RmpbDK/vzd0ONTVOxTnRNNCsndncJ8Tqw9pBSJIL3O9vXOGVNNxba/cl78u+ RtG9pEBcwiK2qR//mTi4dz4ycxKt2s
 X-Developer-Key: i=jack@suse.cz; a=openpgp; fpr=93C6099A142276A28BBE35D815BC833443038D8C
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
@@ -77,29 +77,29 @@ List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
 Ask block layer to not allow other writers to open block device used
-for ext4 journal.
+for xfs log.
 
 Signed-off-by: Jan Kara <jack@suse.cz>
 ---
- fs/ext4/super.c | 5 +++--
+ fs/xfs/xfs_super.c | 5 +++--
  1 file changed, 3 insertions(+), 2 deletions(-)
 
-diff --git a/fs/ext4/super.c b/fs/ext4/super.c
-index cbeb8a555fe3..8181285b7549 100644
---- a/fs/ext4/super.c
-+++ b/fs/ext4/super.c
-@@ -1112,8 +1112,9 @@ static struct bdev_handle *ext4_blkdev_get(dev_t dev, struct super_block *sb)
+diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
+index b0fbf8ea7846..3808b4507552 100644
+--- a/fs/xfs/xfs_super.c
++++ b/fs/xfs/xfs_super.c
+@@ -396,8 +396,9 @@ xfs_blkdev_get(
  {
- 	struct bdev_handle *handle;
+ 	int			error = 0;
  
--	handle = blkdev_get_by_dev(dev, BLK_OPEN_READ | BLK_OPEN_WRITE, sb,
--				   &ext4_holder_ops);
-+	handle = blkdev_get_by_dev(dev,
+-	*handlep = blkdev_get_by_path(name, BLK_OPEN_READ | BLK_OPEN_WRITE,
+-				      mp, &xfs_holder_ops);
++	*handlep = blkdev_get_by_path(name,
 +			BLK_OPEN_READ | BLK_OPEN_WRITE | BLK_OPEN_BLOCK_WRITES,
-+			sb, &ext4_holder_ops);
- 	if (IS_ERR(handle))
- 		goto fail;
- 	return handle;
++			mp, &xfs_holder_ops);
+ 	if (IS_ERR(*handlep)) {
+ 		error = PTR_ERR(*handlep);
+ 		xfs_warn(mp, "Invalid device [%s], error=%d", name, error);
 -- 
 2.35.3
 
