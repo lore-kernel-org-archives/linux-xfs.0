@@ -2,84 +2,272 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 37393EB64DC
-	for <linux-xfs@archiver.kernel.org>; Mon,  3 Jul 2023 23:20:29 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3170FEB64D9
+	for <linux-xfs@archiver.kernel.org>; Tue,  4 Jul 2023 03:45:57 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230406AbjGCXU2 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 3 Jul 2023 19:20:28 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49102 "EHLO
+        id S230287AbjGDDp4 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 3 Jul 2023 23:45:56 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46582 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229662AbjGCXU1 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 3 Jul 2023 19:20:27 -0400
-Received: from bombadil.infradead.org (bombadil.infradead.org [IPv6:2607:7c80:54:3::133])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id BA15BFB;
-        Mon,  3 Jul 2023 16:20:26 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=infradead.org; s=bombadil.20210309; h=Content-Transfer-Encoding:
-        MIME-Version:Message-ID:Date:Subject:Cc:To:From:Sender:Reply-To:Content-Type:
-        Content-ID:Content-Description:In-Reply-To:References;
-        bh=zRSf4m9jljbSBgJd1u1nkIHZSTBl9hKs7qeiFu0rofw=; b=pKnAPCRHqkakphOtwlnXmSbwK0
-        FIFTmFZ/22tG6k50dRUYqbnbMCXDEVTQ+4Ix8WTfTCcupJ60usNQqDqDrzr2QR9HtX9ps0/as6ATW
-        F/HPkR++fON5Keru84UZCkKWoLZ11bF8yI7Vkw53kE5T1UX5JpLRLCWXMeRWlzccquxrROPaOu7iY
-        gAJet4u3XQlJJRpdtrsdMrqF4/8aUIxvwJbh+MLXNTpxenCuwE9YCmNaqGtd8Nz1M22SPyAigiNQI
-        7GSZb/XoifCILNWLu4kaLgjNTmE7QpNQb35TsGI0ze1yw8ixfl/fU1z58eLGzAq0S5ve+k8UOdpZP
-        /35liZUA==;
-Received: from [2601:1c2:980:9ec0::2764] (helo=bombadil.infradead.org)
-        by bombadil.infradead.org with esmtpsa (Exim 4.96 #2 (Red Hat Linux))
-        id 1qGSqH-00Bcwn-1Y;
-        Mon, 03 Jul 2023 23:20:25 +0000
-From:   Randy Dunlap <rdunlap@infradead.org>
-To:     linux-kernel@vger.kernel.org
-Cc:     Randy Dunlap <rdunlap@infradead.org>,
-        "Darrick J . Wong" <djwong@kernel.org>, linux-xfs@vger.kernel.org,
-        linux-mm@kvack.org, Jonathan Corbet <corbet@lwn.net>
-Subject: [PATCH v3] Documentation: admin-guide: correct "it's" to possessive "its"
-Date:   Mon,  3 Jul 2023 16:20:24 -0700
-Message-ID: <20230703232024.8069-1-rdunlap@infradead.org>
-X-Mailer: git-send-email 2.41.0
+        with ESMTP id S229579AbjGDDpz (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 3 Jul 2023 23:45:55 -0400
+Received: from mail-pl1-x62b.google.com (mail-pl1-x62b.google.com [IPv6:2607:f8b0:4864:20::62b])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A1DEDE59
+        for <linux-xfs@vger.kernel.org>; Mon,  3 Jul 2023 20:45:28 -0700 (PDT)
+Received: by mail-pl1-x62b.google.com with SMTP id d9443c01a7336-1b7e0904a3aso5922945ad.0
+        for <linux-xfs@vger.kernel.org>; Mon, 03 Jul 2023 20:45:28 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=bytedance.com; s=google; t=1688442328; x=1691034328;
+        h=content-transfer-encoding:in-reply-to:from:references:cc:to
+         :content-language:subject:user-agent:mime-version:date:message-id
+         :from:to:cc:subject:date:message-id:reply-to;
+        bh=MFeBrddeuJ5VLdpmCCc9Ly4sKMWZlJ9dQaH0OIDXyXU=;
+        b=j7xJWhzFM4GE3eR0BWlTsy0HOBZgoak2dvLTatqMXnZnLNlVtwEQEMD37hReh1XlxL
+         r7hBjmyn6FTskoa4La7xZKdevvzdRYT77+N3epv4gV4kf7cq17ylBfxUBggc5e3s855p
+         GBBkk0n7PQiIlJc4/4tEUrT3R4iVDw8hzgofihKHl2t9qpb1Wo/DBMbPRp1jN35Ysfyk
+         NehRpBrYeu3yLN9/0Wq7Sp995UEH4u6Jpn1UiV9vGd2Ip0zNqgcG1X9kw2r/e/NkF6jp
+         XN82IHgovy+BsnEHQ6hQjvSqng1pgoniLOJy363s3drrdrxX6tuIJ1PwqNuLdqN7Qt1x
+         0hhA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20221208; t=1688442328; x=1691034328;
+        h=content-transfer-encoding:in-reply-to:from:references:cc:to
+         :content-language:subject:user-agent:mime-version:date:message-id
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=MFeBrddeuJ5VLdpmCCc9Ly4sKMWZlJ9dQaH0OIDXyXU=;
+        b=iK4TINJw8F47PM2tv0EP8iSpdF5WZMzgcpMe7p8CGrh58ZaEQm5QJ1FT58++FIBus7
+         zAMTo9uxwxI64bKyayHuCyu5FvhrBjHwVnEuWL3ow4kI67/Dh8ueGwNG5njx0OAeic6p
+         TfpEllda2ooiFrvBVCwW0446/+f4F9Dxo8Qx9QAdRGV6ltMeWS/Yxb9xucVZH5R+DhVF
+         2yKpxTF61HBnwfq8rKHzaNleqyoiOvp7aBcvmSWnERiZx1V1/S2jTLPCPcVGAMzy3ayp
+         OFnespLY3XzhKlXlCiScgbqwf4sS4d+3nfO0B+rBFVsXq3OO5UZi/idDM4cQdB7XHkJO
+         jkzg==
+X-Gm-Message-State: ABy/qLZZyiHGL31Dg0RULv+mZWvvMUWuOEEjYIyTGApfnucckKZ1hb86
+        pmJRqSBPln13xAKI2EIBHIJwd5xCU/EeZCtsVSc=
+X-Google-Smtp-Source: APBJJlF81QfMj+OzGuweGT/AC35DngvuObAYHLJM7qqWJeHFGWrQw9pznSu7LGwsdhDNw+giWeybWA==
+X-Received: by 2002:a17:902:b20b:b0:1ae:4567:2737 with SMTP id t11-20020a170902b20b00b001ae45672737mr12710934plr.2.1688442328020;
+        Mon, 03 Jul 2023 20:45:28 -0700 (PDT)
+Received: from [10.70.252.135] ([203.208.167.147])
+        by smtp.gmail.com with ESMTPSA id az10-20020a170902a58a00b001b1866f7b5csm15891733plb.138.2023.07.03.20.45.19
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Mon, 03 Jul 2023 20:45:27 -0700 (PDT)
+Message-ID: <3efa68e0-b04f-5c11-4fe2-2db0784064fc@bytedance.com>
+Date:   Tue, 4 Jul 2023 11:45:16 +0800
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:102.0)
+ Gecko/20100101 Thunderbird/102.12.0
+Subject: Re: [PATCH 24/29] mm: vmscan: make global slab shrink lockless
+Content-Language: en-US
+To:     paulmck@kernel.org, Dave Chinner <david@fromorbit.com>
+Cc:     Vlastimil Babka <vbabka@suse.cz>, akpm@linux-foundation.org,
+        tkhai@ya.ru, roman.gushchin@linux.dev, djwong@kernel.org,
+        brauner@kernel.org, tytso@mit.edu, linux-kernel@vger.kernel.org,
+        linux-mm@kvack.org, intel-gfx@lists.freedesktop.org,
+        dri-devel@lists.freedesktop.org, linux-arm-msm@vger.kernel.org,
+        dm-devel@redhat.com, linux-raid@vger.kernel.org,
+        linux-bcache@vger.kernel.org,
+        virtualization@lists.linux-foundation.org,
+        linux-fsdevel@vger.kernel.org, linux-ext4@vger.kernel.org,
+        linux-nfs@vger.kernel.org, linux-xfs@vger.kernel.org,
+        linux-btrfs@vger.kernel.org
+References: <20230622085335.77010-1-zhengqi.arch@bytedance.com>
+ <20230622085335.77010-25-zhengqi.arch@bytedance.com>
+ <cf0d9b12-6491-bf23-b464-9d01e5781203@suse.cz>
+ <ZJU708VIyJ/3StAX@dread.disaster.area>
+ <cc894c77-717a-4e9f-b649-48bab40e7c60@paulmck-laptop>
+From:   Qi Zheng <zhengqi.arch@bytedance.com>
+In-Reply-To: <cc894c77-717a-4e9f-b649-48bab40e7c60@paulmck-laptop>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Correct 2 uses of "it's" to the possessive "its" as needed.
 
-Signed-off-by: Randy Dunlap <rdunlap@infradead.org>
-Cc: Darrick J. Wong <djwong@kernel.org>
-Cc: linux-xfs@vger.kernel.org
-Cc: linux-mm@kvack.org
-Cc: Jonathan Corbet <corbet@lwn.net>
-Reviewed-by: Darrick J. Wong <djwong@kernel.org>
----
-v2: add Rev-by: Darrick
-v3: rebase/resend
 
- Documentation/admin-guide/mm/numa_memory_policy.rst |    2 +-
- Documentation/admin-guide/xfs.rst                   |    2 +-
- 2 files changed, 2 insertions(+), 2 deletions(-)
+On 2023/7/4 00:39, Paul E. McKenney wrote:
+> On Fri, Jun 23, 2023 at 04:29:39PM +1000, Dave Chinner wrote:
+>> On Thu, Jun 22, 2023 at 05:12:02PM +0200, Vlastimil Babka wrote:
+>>> On 6/22/23 10:53, Qi Zheng wrote:
+>>>> @@ -1067,33 +1068,27 @@ static unsigned long shrink_slab(gfp_t gfp_mask, int nid,
+>>>>   	if (!mem_cgroup_disabled() && !mem_cgroup_is_root(memcg))
+>>>>   		return shrink_slab_memcg(gfp_mask, nid, memcg, priority);
+>>>>   
+>>>> -	if (!down_read_trylock(&shrinker_rwsem))
+>>>> -		goto out;
+>>>> -
+>>>> -	list_for_each_entry(shrinker, &shrinker_list, list) {
+>>>> +	rcu_read_lock();
+>>>> +	list_for_each_entry_rcu(shrinker, &shrinker_list, list) {
+>>>>   		struct shrink_control sc = {
+>>>>   			.gfp_mask = gfp_mask,
+>>>>   			.nid = nid,
+>>>>   			.memcg = memcg,
+>>>>   		};
+>>>>   
+>>>> +		if (!shrinker_try_get(shrinker))
+>>>> +			continue;
+>>>> +		rcu_read_unlock();
+>>>
+>>> I don't think you can do this unlock?
+> 
+> Sorry to be slow to respond here, this one fell through the cracks.
+> And thank you to Qi for reminding me!
+> 
+> If you do this unlock, you had jolly well better nail down the current
+> element (the one referenced by shrinker), for example, by acquiring an
+> explicit reference count on the object.  And presumably this is exactly
+> what shrinker_try_get() is doing.  And a look at your 24/29 confirms this,
+> at least assuming that shrinker->refcount is set to zero before the call
+> to synchronize_rcu() in free_module() *and* that synchronize_rcu() doesn't
+> start until *after* shrinker_put() calls complete().  Plus, as always,
+> the object must be removed from the list before the synchronize_rcu()
+> starts.  (On these parts of the puzzle, I defer to those more familiar
+> with this code path.  And I strongly suggest carefully commenting this
+> type of action-at-a-distance design pattern.)
 
-diff -- a/Documentation/admin-guide/mm/numa_memory_policy.rst b/Documentation/admin-guide/mm/numa_memory_policy.rst
---- a/Documentation/admin-guide/mm/numa_memory_policy.rst
-+++ b/Documentation/admin-guide/mm/numa_memory_policy.rst
-@@ -109,7 +109,7 @@ VMA Policy
- 	* A task may install a new VMA policy on a sub-range of a
- 	  previously mmap()ed region.  When this happens, Linux splits
- 	  the existing virtual memory area into 2 or 3 VMAs, each with
--	  it's own policy.
-+	  its own policy.
- 
- 	* By default, VMA policy applies only to pages allocated after
- 	  the policy is installed.  Any pages already faulted into the
-diff -- a/Documentation/admin-guide/xfs.rst b/Documentation/admin-guide/xfs.rst
---- a/Documentation/admin-guide/xfs.rst
-+++ b/Documentation/admin-guide/xfs.rst
-@@ -192,7 +192,7 @@ When mounting an XFS filesystem, the fol
- 	are any integer multiple of a valid ``sunit`` value.
- 
- 	Typically the only time these mount options are necessary if
--	after an underlying RAID device has had it's geometry
-+	after an underlying RAID device has had its geometry
- 	modified, such as adding a new disk to a RAID5 lun and
- 	reshaping it.
- 
+Yeah, I think I've done it like above. A more detailed timing diagram is
+below.
+
+> 
+> Why is this important?  Because otherwise that object might be freed
+> before you get to the call to rcu_read_lock() at the end of this loop.
+> And if that happens, list_for_each_entry_rcu() will be walking the
+> freelist, which is quite bad for the health and well-being of your kernel.
+> 
+> There are a few other ways to make this sort of thing work:
+> 
+> 1.	Defer the shrinker_put() to the beginning of the loop.
+> 	You would need a flag initially set to zero, and then set to
+> 	one just before (or just after) the rcu_read_lock() above.
+> 	You would also need another shrinker_old pointer to track the
+> 	old pointer.  Then at the top of the loop, if the flag is set,
+> 	invoke shrinker_put() on shrinker_old.	This ensures that the
+> 	previous shrinker structure stays around long enough to allow
+> 	the loop to find the next shrinker structure in the list.
+> 
+> 	This approach is attractive when the removal code path
+> 	can invoke shrinker_put() after the grace period ends.
+> 
+> 2.	Make shrinker_put() invoke call_rcu() when ->refcount reaches
+> 	zero, and have the callback function free the object.  This of
+> 	course requires adding an rcu_head structure to the shrinker
+> 	structure, which might or might not be a reasonable course of
+> 	action.  If adding that rcu_head is reasonable, this simplifies
+> 	the logic quite a bit.
+> 
+> 3.	For the shrinker-structure-removal code path, remove the shrinker
+> 	structure, then remove the initial count from ->refcount,
+> 	and then keep doing grace periods until ->refcount is zero,
+> 	then do one more.  Of course, if the result of removing the
+> 	initial count was zero, then only a single additional grace
+> 	period is required.
+> 
+> 	This would need to be carefully commented, as it is a bit
+> 	unconventional.
+
+Thanks for such a detailed addition!
+
+> 
+> There are probably many other ways, but just to give an idea of a few
+> other ways to do this.
+> 
+>>>> +
+>>>>   		ret = do_shrink_slab(&sc, shrinker, priority);
+>>>>   		if (ret == SHRINK_EMPTY)
+>>>>   			ret = 0;
+>>>>   		freed += ret;
+>>>> -		/*
+>>>> -		 * Bail out if someone want to register a new shrinker to
+>>>> -		 * prevent the registration from being stalled for long periods
+>>>> -		 * by parallel ongoing shrinking.
+>>>> -		 */
+>>>> -		if (rwsem_is_contended(&shrinker_rwsem)) {
+>>>> -			freed = freed ? : 1;
+>>>> -			break;
+>>>> -		}
+>>>> -	}
+>>>>   
+>>>> -	up_read(&shrinker_rwsem);
+>>>> -out:
+>>>> +		rcu_read_lock();
+>>>
+>>> That new rcu_read_lock() won't help AFAIK, the whole
+>>> list_for_each_entry_rcu() needs to be under the single rcu_read_lock() to be
+>>> safe.
+>>
+>> Yeah, that's the pattern we've been taught and the one we can look
+>> at and immediately say "this is safe".
+>>
+>> This is a different pattern, as has been explained bi Qi, and I
+>> think it *might* be safe.
+>>
+>> *However.*
+>>
+>> Right now I don't have time to go through a novel RCU list iteration
+>> pattern it one step at to determine the correctness of the
+>> algorithm. I'm mostly worried about list manipulations that can
+>> occur outside rcu_read_lock() section bleeding into the RCU
+>> critical section because rcu_read_lock() by itself is not a memory
+>> barrier.
+>>
+>> Maybe Paul has seen this pattern often enough he could simply tell
+>> us what conditions it is safe in. But for me to work that out from
+>> first principles? I just don't have the time to do that right now.
+> 
+> If the code does just the right sequence of things on the removal path
+> (remove, decrement reference, wait for reference to go to zero, wait for
+> grace period, free), then it would work.  If this is what is happening,
+> I would argue for more comments.  ;-)
+
+The order of the removal path is slightly different from this:
+
+     shrink_slab                 unregister_shrinker
+     ===========                 ===================
+		
+    shrinker_try_get()
+    rcu_read_unlock()		
+                                 1. decrement initial reference
+				shrinker_put()
+				2. wait for reference to go to zero
+				wait_for_completion()
+    rcu_read_lock()
+
+    shrinker_put()
+				3. remove the shrinker from list
+				list_del_rcu()
+                                 4. wait for grace period
+				kfree_rcu()/synchronize_rcu()
+
+
+    list_for_each_entry()
+
+    shrinker_try_get()
+    rcu_read_unlock()
+				5. free the shrinker
+
+So the order is: decrement reference, wait for reference to go to zero,
+remove, wait for grace period, free.
+
+I think this can work. And we can only do the *step 3* after we hold the
+RCU read lock again, right? Please let me know if I missed something.
+
+Thanks,
+Qi
+
+> 
+> 							Thanx, Paul
+> 
+>>> IIUC this is why Dave in [4] suggests unifying shrink_slab() with
+>>> shrink_slab_memcg(), as the latter doesn't iterate the list but uses IDR.
+>>
+>> Yes, I suggested the IDR route because radix tree lookups under RCU
+>> with reference counted objects are a known safe pattern that we can
+>> easily confirm is correct or not.  Hence I suggested the unification
+>> + IDR route because it makes the life of reviewers so, so much
+>> easier...
+>>
+>> Cheers,
+>>
+>> Dave.
+>> -- 
+>> Dave Chinner
+>> david@fromorbit.com
