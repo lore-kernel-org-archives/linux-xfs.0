@@ -2,96 +2,104 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 55D1BC00528
-	for <linux-xfs@archiver.kernel.org>; Tue,  4 Jul 2023 12:44:05 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8C20EEB64D9
+	for <linux-xfs@archiver.kernel.org>; Tue,  4 Jul 2023 12:57:07 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231483AbjGDMoD (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 4 Jul 2023 08:44:03 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49958 "EHLO
+        id S231443AbjGDM5G (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 4 Jul 2023 08:57:06 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56116 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230252AbjGDMoB (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 4 Jul 2023 08:44:01 -0400
-Received: from casper.infradead.org (casper.infradead.org [IPv6:2001:8b0:10b:1236::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 199BEFC;
-        Tue,  4 Jul 2023 05:44:00 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=infradead.org; s=casper.20170209; h=In-Reply-To:Content-Type:MIME-Version:
-        References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
-        Content-Transfer-Encoding:Content-ID:Content-Description;
-        bh=MTt8zrAicdNCIRJKdOYeAgLwlWREbjuubDrB9LDLoHk=; b=FQ7AVaBk1GiVkQjqboSqkOGPBq
-        D5twh1rJ7Iuli9ASCg3UlAH0AvBtBUwBmFvGFlq65Bob5lYyyxVWcYsI1kpmfheq88Wy3j6xoPYkH
-        Yr8SWDhirVenxTbYcufP9aI7qtE9tPtw2HdVYrOWl8KhXSL1///8tHp1coXORoa2/ua7NUKFkm8+i
-        dZTW2mGKIGBkD8nw9XAEiECk0hIGw3K+rH1tSbKt2yF6JFa6PpHTgJc3LTGgE/JGwL7FWrIxLj7Op
-        grzKnmKKjadKIKnXmQRg0cnlXA7KWmhAcv93Lftb6rhIWGVuVJI8IrHKh1M51oSxQqR7AKzuvj0MI
-        qnUduz9Q==;
-Received: from willy by casper.infradead.org with local (Exim 4.94.2 #2 (Red Hat Linux))
-        id 1qGfNn-0099Sz-9Z; Tue, 04 Jul 2023 12:43:51 +0000
-Date:   Tue, 4 Jul 2023 13:43:51 +0100
-From:   Matthew Wilcox <willy@infradead.org>
-To:     Jan Kara <jack@suse.cz>
-Cc:     linux-block@vger.kernel.org, linux-fsdevel@vger.kernel.org,
-        Jens Axboe <axboe@kernel.dk>,
+        with ESMTP id S231341AbjGDM5F (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 4 Jul 2023 08:57:05 -0400
+Received: from smtp-out1.suse.de (smtp-out1.suse.de [195.135.220.28])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D6D6DE70;
+        Tue,  4 Jul 2023 05:57:04 -0700 (PDT)
+Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
+        (No client certificate requested)
+        by smtp-out1.suse.de (Postfix) with ESMTPS id 91A3722804;
+        Tue,  4 Jul 2023 12:57:03 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.cz; s=susede2_rsa;
+        t=1688475423; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+         mime-version:mime-version:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=aNFQKK84PQeMU0o2BrZwqCpmBRXyfLB4X6NQO+cVhGk=;
+        b=b464PnUFS3a/2+VaWwFL45DNjCqS5bDW3wdH5p12pEY9dDf1eUx5rHX0kMnhEi4pQPu9OE
+        ISCbSTatRa3SFnE3jXevxH4fWe6G063EsWfB0ab3s81qIxzBNNJZ/VEBi1g/Sl2jCvZEKc
+        aQ1VyHgzQwb/J7WuS67VBftf/8CztAk=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.cz;
+        s=susede2_ed25519; t=1688475423;
+        h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+         mime-version:mime-version:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=aNFQKK84PQeMU0o2BrZwqCpmBRXyfLB4X6NQO+cVhGk=;
+        b=6sa68DwCV1Y0vXgnLzTEQWJLE3dhaylF7zJF8L+/e3GObWZTxHUedkHQeB5ClMWbTxMPS8
+        qly98fmlPibnPfBg==
+Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
+        (No client certificate requested)
+        by imap2.suse-dmz.suse.de (Postfix) with ESMTPS id 813F213A26;
+        Tue,  4 Jul 2023 12:57:03 +0000 (UTC)
+Received: from dovecot-director2.suse.de ([192.168.254.65])
+        by imap2.suse-dmz.suse.de with ESMTPSA
+        id rRSKHx8XpGREQwAAMHmgww
+        (envelope-from <jack@suse.cz>); Tue, 04 Jul 2023 12:57:03 +0000
+Received: by quack3.suse.cz (Postfix, from userid 1000)
+        id F37E6A0766; Tue,  4 Jul 2023 14:57:02 +0200 (CEST)
+From:   Jan Kara <jack@suse.cz>
+To:     <linux-fsdevel@vger.kernel.org>
+Cc:     <linux-block@vger.kernel.org>,
         Christoph Hellwig <hch@infradead.org>,
-        Alasdair Kergon <agk@redhat.com>,
-        Andrew Morton <akpm@linux-foundation.org>,
-        Anna Schumaker <anna@kernel.org>, Chao Yu <chao@kernel.org>,
-        Christian Borntraeger <borntraeger@linux.ibm.com>,
-        "Darrick J. Wong" <djwong@kernel.org>,
-        Dave Kleikamp <shaggy@kernel.org>,
-        David Sterba <dsterba@suse.com>, dm-devel@redhat.com,
-        drbd-dev@lists.linbit.com, Gao Xiang <xiang@kernel.org>,
-        Jack Wang <jinpu.wang@ionos.com>,
-        Jaegeuk Kim <jaegeuk@kernel.org>,
-        jfs-discussion@lists.sourceforge.net,
-        Joern Engel <joern@lazybastard.org>,
-        Joseph Qi <joseph.qi@linux.alibaba.com>,
-        Kent Overstreet <kent.overstreet@gmail.com>,
-        linux-bcache@vger.kernel.org, linux-btrfs@vger.kernel.org,
-        linux-erofs@lists.ozlabs.org, linux-ext4@vger.kernel.org,
-        linux-f2fs-devel@lists.sourceforge.net, linux-mm@kvack.org,
-        linux-mtd@lists.infradead.org, linux-nfs@vger.kernel.org,
-        linux-nilfs@vger.kernel.org, linux-nvme@lists.infradead.org,
-        linux-pm@vger.kernel.org, linux-raid@vger.kernel.org,
-        linux-s390@vger.kernel.org, linux-scsi@vger.kernel.org,
-        linux-xfs@vger.kernel.org,
-        "Md. Haris Iqbal" <haris.iqbal@ionos.com>,
-        Mike Snitzer <snitzer@kernel.org>,
-        Minchan Kim <minchan@kernel.org>, ocfs2-devel@oss.oracle.com,
-        reiserfs-devel@vger.kernel.org,
-        Sergey Senozhatsky <senozhatsky@chromium.org>,
-        Song Liu <song@kernel.org>,
-        Sven Schnelle <svens@linux.ibm.com>,
-        target-devel@vger.kernel.org, Ted Tso <tytso@mit.edu>,
-        Trond Myklebust <trond.myklebust@hammerspace.com>,
-        xen-devel@lists.xenproject.org
-Subject: Re: [PATCH 01/32] block: Provide blkdev_get_handle_* functions
-Message-ID: <ZKQUB4rU8Gebhq6R@casper.infradead.org>
-References: <20230629165206.383-1-jack@suse.cz>
- <20230704122224.16257-1-jack@suse.cz>
+        Christian Brauner <brauner@kernel.org>,
+        Jens Axboe <axboe@kernel.dk>, Kees Cook <keescook@google.com>,
+        Ted Tso <tytso@mit.edu>,
+        syzkaller <syzkaller@googlegroups.com>,
+        Alexander Popov <alex.popov@linux.com>,
+        Eric Biggers <ebiggers@google.com>,
+        <linux-xfs@vger.kernel.org>, linux-btrfs@vger.kernel.org,
+        Dmitry Vyukov <dvyukov@google.com>, Jan Kara <jack@suse.cz>
+Subject: [PATCH 4/6] ext4: Block writes to journal device
+Date:   Tue,  4 Jul 2023 14:56:52 +0200
+Message-Id: <20230704125702.23180-4-jack@suse.cz>
+X-Mailer: git-send-email 2.35.3
+In-Reply-To: <20230704122727.17096-1-jack@suse.cz>
+References: <20230704122727.17096-1-jack@suse.cz>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20230704122224.16257-1-jack@suse.cz>
+X-Developer-Signature: v=1; a=openpgp-sha256; l=782; i=jack@suse.cz; h=from:subject; bh=NWBGOYVyzhEFvSkBdLLt9GRq3HmyHTawgFiLLwCAWLM=; b=owEBbQGS/pANAwAIAZydqgc/ZEDZAcsmYgBkpBcU6vLiCKXLfKbqhj0Vfj2Xn+cC+fHAN/x6rTa+ 9bJ+VRmJATMEAAEIAB0WIQSrWdEr1p4yirVVKBycnaoHP2RA2QUCZKQXFAAKCRCcnaoHP2RA2ZVkB/ 9PkYH97s+87SyqxmrXaecUvErsUd5cNv05UrhvfR6NrjkaCwsK432m1QAWSO0oaxJnPAlbCUw9k6X1 CQJ7pNDtVnZg2ycu3WFyFDhR3XKbn1K9qlsgIMcAQVbcpWXXw1otA2PXF2qV5g0TU3jNzE1k6tLMj2 moEkTG41L7PHUj35bfhF27SxRfqy6m5liCh7O0khnw65f3f7YaBffmmCG94eJdHGE/ol+dgFXtaFCa M/0iI7XbnMXLkRoUuoWpyGTSmcXXf/1FR3jkw+VNjdgIjPR7x8Egm+LcZ3XvsLH6q0HmuDgVtD6Kvj DiwdnRXR+LvDOI+TsTk/KHWA9egQ0Y
+X-Developer-Key: i=jack@suse.cz; a=openpgp; fpr=93C6099A142276A28BBE35D815BC833443038D8C
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Tue, Jul 04, 2023 at 02:21:28PM +0200, Jan Kara wrote:
-> +struct bdev_handle *blkdev_get_handle_by_dev(dev_t dev, blk_mode_t mode,
-> +		void *holder, const struct blk_holder_ops *hops)
-> +{
-> +	struct bdev_handle *handle = kmalloc(sizeof(struct bdev_handle),
-> +					     GFP_KERNEL);
-> +	struct block_device *bdev;
-> +
-> +	if (!handle)
-> +		return ERR_PTR(-ENOMEM);
-> +	bdev = blkdev_get_by_dev(dev, mode, holder, hops);
-> +	if (IS_ERR(bdev))
-> +		return ERR_CAST(bdev);
+Ask block layer to not allow other writers to open block device used
+for ext4 journal.
 
-Would we be better off with a handle->error (and a NULL return from this
-function means "we couldn't allocate a handle")?  I have no objection
-to what you've done here, just wondering if it might end up nicer for
-the users.
+Signed-off-by: Jan Kara <jack@suse.cz>
+---
+ fs/ext4/super.c | 5 +++--
+ 1 file changed, 3 insertions(+), 2 deletions(-)
+
+diff --git a/fs/ext4/super.c b/fs/ext4/super.c
+index cbeb8a555fe3..8181285b7549 100644
+--- a/fs/ext4/super.c
++++ b/fs/ext4/super.c
+@@ -1112,8 +1112,9 @@ static struct bdev_handle *ext4_blkdev_get(dev_t dev, struct super_block *sb)
+ {
+ 	struct bdev_handle *handle;
+ 
+-	handle = blkdev_get_by_dev(dev, BLK_OPEN_READ | BLK_OPEN_WRITE, sb,
+-				   &ext4_holder_ops);
++	handle = blkdev_get_by_dev(dev,
++			BLK_OPEN_READ | BLK_OPEN_WRITE | BLK_OPEN_BLOCK_WRITES,
++			sb, &ext4_holder_ops);
+ 	if (IS_ERR(handle))
+ 		goto fail;
+ 	return handle;
+-- 
+2.35.3
 
