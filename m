@@ -2,57 +2,41 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7F989EB64DD
-	for <linux-xfs@archiver.kernel.org>; Wed,  5 Jul 2023 13:00:39 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A67C4EB64DA
+	for <linux-xfs@archiver.kernel.org>; Wed,  5 Jul 2023 13:46:28 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231935AbjGENAi (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 5 Jul 2023 09:00:38 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56444 "EHLO
+        id S231204AbjGENq1 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 5 Jul 2023 09:46:27 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50792 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229493AbjGENAh (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 5 Jul 2023 09:00:37 -0400
-Received: from smtp-out2.suse.de (smtp-out2.suse.de [195.135.220.29])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6CC6BDA;
-        Wed,  5 Jul 2023 06:00:35 -0700 (PDT)
-Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
+        with ESMTP id S230268AbjGENq0 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 5 Jul 2023 09:46:26 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D1C80BA;
+        Wed,  5 Jul 2023 06:46:25 -0700 (PDT)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
+         key-exchange X25519 server-signature RSA-PSS (2048 bits))
         (No client certificate requested)
-        by smtp-out2.suse.de (Postfix) with ESMTPS id 1EB711FDD2;
-        Wed,  5 Jul 2023 13:00:34 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.cz; s=susede2_rsa;
-        t=1688562034; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=B43XnS/ZC1dC/Q82yVjjHxQcDLXFBbYmz36IV5qBZW4=;
-        b=oyEibUT1rTLVIdcA8+kOa4o0o7mcQcUcFrLDtxju7pCpVuGS35ZKXm6wjn1ciY+UgQU5VT
-        jzl0077R+cjRERPw49A9e1rcgV6V+unm4vE/5MlbjsRso8q49Y1Uj3Ua5ziT2NH9axGekX
-        RE4VKsGYGI3dPaAsHUNuyTVUInr+6J0=
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.cz;
-        s=susede2_ed25519; t=1688562034;
-        h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=B43XnS/ZC1dC/Q82yVjjHxQcDLXFBbYmz36IV5qBZW4=;
-        b=tReyCRoIyEJyNNW2hx+gbIb9Dz8Cl02PYpeWjq/j6tkU+gnhlAcPcGiVyycv63YUPCj4YS
-        qgmt2A26iRtaaUAg==
-Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
-        (No client certificate requested)
-        by imap2.suse-dmz.suse.de (Postfix) with ESMTPS id 0E62813460;
-        Wed,  5 Jul 2023 13:00:34 +0000 (UTC)
-Received: from dovecot-director2.suse.de ([192.168.254.65])
-        by imap2.suse-dmz.suse.de with ESMTPSA
-        id fQN/A3JppWTWXwAAMHmgww
-        (envelope-from <jack@suse.cz>); Wed, 05 Jul 2023 13:00:34 +0000
-Received: by quack3.suse.cz (Postfix, from userid 1000)
-        id 99CBEA0707; Wed,  5 Jul 2023 15:00:33 +0200 (CEST)
-Date:   Wed, 5 Jul 2023 15:00:33 +0200
-From:   Jan Kara <jack@suse.cz>
-To:     Christian Brauner <brauner@kernel.org>
-Cc:     Jan Kara <jack@suse.cz>, linux-fsdevel@vger.kernel.org,
-        linux-block@vger.kernel.org, Christoph Hellwig <hch@infradead.org>,
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 6756C61569;
+        Wed,  5 Jul 2023 13:46:25 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 2CBB4C433C8;
+        Wed,  5 Jul 2023 13:46:22 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1688564784;
+        bh=fF4OTK0l/0gKFko4faovv/YXnqcMhxu3JD/4SmKhjkw=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=Cnu6fNY96eKxSAg6ligcBUWu0R4BbWpP8c9+nAST6TkPS1KYK0YdxPGJiM3hWnXeY
+         u8zQDC/oLviyGtFrfpQZ8wpRi9LFELjqMCX5XiMzhb+XvGZRtYG5pipUNKhE7joI/S
+         wpBTuGUI807UsHESXyZRvHl8QYVMjc1VrHm6Nv0vrGd45mmh8pOryEdeZJ08l8oCmx
+         iSjEJFgZ9oVwaLOiStgwkDRjHk+T9cti+RO4M29ac7hYxUdEzrhnyKeQ2hX1cBCKaK
+         4iJrSbaATo3lOHyCcd1PMS0PFdGMxXk5T3/ES+oycwZ56/XTXIF0vdbRjv4mlGLJ1z
+         KwjlFjJMIlDVg==
+Date:   Wed, 5 Jul 2023 15:46:19 +0200
+From:   Christian Brauner <brauner@kernel.org>
+To:     Jan Kara <jack@suse.cz>
+Cc:     linux-fsdevel@vger.kernel.org, linux-block@vger.kernel.org,
+        Christoph Hellwig <hch@infradead.org>,
         Jens Axboe <axboe@kernel.dk>, Kees Cook <keescook@google.com>,
         Ted Tso <tytso@mit.edu>,
         syzkaller <syzkaller@googlegroups.com>,
@@ -61,77 +45,91 @@ Cc:     Jan Kara <jack@suse.cz>, linux-fsdevel@vger.kernel.org,
         linux-btrfs@vger.kernel.org, Dmitry Vyukov <dvyukov@google.com>
 Subject: Re: [PATCH 6/6] fs: Make bind mounts work with
  bdev_allow_write_mounted=n
-Message-ID: <20230705130033.ttv6rdywj5bnxlzx@quack3>
+Message-ID: <20230705-pumpwerk-vielversprechend-a4b1fd947b65@brauner>
 References: <20230704122727.17096-1-jack@suse.cz>
  <20230704125702.23180-6-jack@suse.cz>
  <20230704-fasching-wertarbeit-7c6ffb01c83d@brauner>
+ <20230705130033.ttv6rdywj5bnxlzx@quack3>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=utf-8
 Content-Disposition: inline
-In-Reply-To: <20230704-fasching-wertarbeit-7c6ffb01c83d@brauner>
+In-Reply-To: <20230705130033.ttv6rdywj5bnxlzx@quack3>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Tue 04-07-23 15:59:41, Christian Brauner wrote:
-> On Tue, Jul 04, 2023 at 02:56:54PM +0200, Jan Kara wrote:
-> > When we don't allow opening of mounted block devices for writing, bind
-> > mounting is broken because the bind mount tries to open the block device
+On Wed, Jul 05, 2023 at 03:00:33PM +0200, Jan Kara wrote:
+> On Tue 04-07-23 15:59:41, Christian Brauner wrote:
+> > On Tue, Jul 04, 2023 at 02:56:54PM +0200, Jan Kara wrote:
+> > > When we don't allow opening of mounted block devices for writing, bind
+> > > mounting is broken because the bind mount tries to open the block device
+> > 
+> > Sorry, I'm going to be annoying now...
+> > 
+> > Afaict, the analysis is misleading but I'm happy to be corrected ofc.
 > 
-> Sorry, I'm going to be annoying now...
+> I'm not sure what your objection exactly is. Probably I was imprecise in my
+> changelog description. What gets broken by not allowing RW open of a
+> mounted block device is:
 > 
-> Afaict, the analysis is misleading but I'm happy to be corrected ofc.
-
-I'm not sure what your objection exactly is. Probably I was imprecise in my
-changelog description. What gets broken by not allowing RW open of a
-mounted block device is:
-
-mount -t ext4 /dev/sda1 /mnt1
-mount -t ext4 /dev/sda1 /mnt2
-
-The second mount should create another mount of the superblock created by
-the first mount but before that is done, get_tree_bdev() tries to open the
-block device and fails when only patches 1 & 2 are applied. This patch
-fixes that.
-
-> Finding an existing superblock is independent of mounts. get_tree_bdev()
-> and mount_bdev() are really only interested in finding a matching
-> superblock independent of whether or not a mount for it already exists.
-> IOW, if you had two filesystem contexts for the same block device with
-> different mount options:
+> mount -t ext4 /dev/sda1 /mnt1
+> mount -t ext4 /dev/sda1 /mnt2
 > 
-> T1								T2
-> fd_fs = fsopen("ext4");						fd_fs = fsopen("ext4");
-> fsconfig(fd_fs, FSCONFIG_SET_STRING, "source", "/dev/sda");	fsconfig(fd_fs, FSCONFIG_SET_STRING, "source", "/dev/sda");
-> 
-> // create superblock
-> fsconfig(fd_fs, FSCONFIG_CMD_CREATE, ...)
-> 								// finds superblock of T1 if opts are compatible
-> 								fsconfig(fd_fs, FSCONFIG_CMD_CREATE, ...)
-> 
-> you should have the issue that you're describing.
+> The second mount should create another mount of the superblock created by
+> the first mount but before that is done, get_tree_bdev() tries to open the
+> block device and fails when only patches 1 & 2 are applied. This patch
+> fixes that.
 
-Correct, this will get broken when not allowing RW open for mounted block
-devices as well because the second fsconfig(fd_fs, FSCONFIG_CMD_CREATE,
-...) will fail to open the block device in get_tree_bdev(). But again this
-patch should fix that.
+My objection is that this has nothing to do with mounts but with
+superblocks. :) No mount need exist for this issue to appear. And I would
+prefer if we keep superblock and mount separate as this leads to unclear
+analysis and changelogs.
 
-> But for neither of them does a mount already exist as the first mount
-> here would only be created when:
 > 
-> T1								T2
-> fsmount(fd_fs);							fsmount(fd_fs);
+> > Finding an existing superblock is independent of mounts. get_tree_bdev()
+> > and mount_bdev() are really only interested in finding a matching
+> > superblock independent of whether or not a mount for it already exists.
+> > IOW, if you had two filesystem contexts for the same block device with
+> > different mount options:
+> > 
+> > T1								T2
+> > fd_fs = fsopen("ext4");						fd_fs = fsopen("ext4");
+> > fsconfig(fd_fs, FSCONFIG_SET_STRING, "source", "/dev/sda");	fsconfig(fd_fs, FSCONFIG_SET_STRING, "source", "/dev/sda");
+> > 
+> > // create superblock
+> > fsconfig(fd_fs, FSCONFIG_CMD_CREATE, ...)
+> > 								// finds superblock of T1 if opts are compatible
+> > 								fsconfig(fd_fs, FSCONFIG_CMD_CREATE, ...)
+> > 
+> > you should have the issue that you're describing.
 > 
-> is called at which point the whole superblock issue is already settled.
-> Afterwards, both mounts of both T1 and T2 refer to the same superblock -
-> as long as the fs and the mount options support this ofc.
+> Correct, this will get broken when not allowing RW open for mounted block
+> devices as well because the second fsconfig(fd_fs, FSCONFIG_CMD_CREATE,
+> ...) will fail to open the block device in get_tree_bdev(). But again this
+> patch should fix that.
+> 
+> > But for neither of them does a mount already exist as the first mount
+> > here would only be created when:
+> > 
+> > T1								T2
+> > fsmount(fd_fs);							fsmount(fd_fs);
+> > 
+> > is called at which point the whole superblock issue is already settled.
+> > Afterwards, both mounts of both T1 and T2 refer to the same superblock -
+> > as long as the fs and the mount options support this ofc.
+> 
+> I guess the confusion comes from me calling "mount" an operation as
+> performed by the mount(8) command but which is in fact multiple operations
+> with the new mount API. Anyway, is the motivation of this patch clearer
+> now?
 
-I guess the confusion comes from me calling "mount" an operation as
-performed by the mount(8) command but which is in fact multiple operations
-with the new mount API. Anyway, is the motivation of this patch clearer
+I'm clear about what you're doing here. I would just like to not have
+mounts brought into the changelog. Even before the new mount api what
+you were describing was technically a superblock only issue. If someone
+reads the changelog I want them to be able to clearly see that this is a
+fix for superblocks, not mounts.
+
+Especially, since the code you touch really only has to to with
+superblocks.
+Let me - non ironically - return the question: Is my own request clearer
 now?
-
-								Honza
--- 
-Jan Kara <jack@suse.com>
-SUSE Labs, CR
