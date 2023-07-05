@@ -2,132 +2,111 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E2927EB64DA
-	for <linux-xfs@archiver.kernel.org>; Wed,  5 Jul 2023 15:20:39 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id BE61BEB64DD
+	for <linux-xfs@archiver.kernel.org>; Wed,  5 Jul 2023 15:37:29 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232573AbjGEPUj (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 5 Jul 2023 11:20:39 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49604 "EHLO
+        id S230495AbjGEPh2 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 5 Jul 2023 11:37:28 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55582 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232620AbjGEPUi (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 5 Jul 2023 11:20:38 -0400
+        with ESMTP id S230385AbjGEPh2 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 5 Jul 2023 11:37:28 -0400
 Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C9E3F1737
-        for <linux-xfs@vger.kernel.org>; Wed,  5 Jul 2023 08:20:36 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 99C3E10F5;
+        Wed,  5 Jul 2023 08:37:27 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature RSA-PSS (2048 bits))
+         key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 690B56156A
-        for <linux-xfs@vger.kernel.org>; Wed,  5 Jul 2023 15:20:36 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id C8142C433C7;
-        Wed,  5 Jul 2023 15:20:35 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 2E44B615E7;
+        Wed,  5 Jul 2023 15:37:27 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 80DB5C433C7;
+        Wed,  5 Jul 2023 15:37:26 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1688570435;
-        bh=Pwp5y4EohTFE+up8rxfG2JBsEV4rOpL/0dlcUn67oLw=;
+        s=k20201202; t=1688571446;
+        bh=4vRe34qbwgiSMWBmSz4YLNkGXlx3w1EToV2myxbaEes=;
         h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=CFkZUMmga27bjXerK21KgwFxFxNONAKwIjIK1gRNmXFibDZr9x5Rj8N3VXpNYEy9K
-         MZu3YsA2SR9R81njJ2Vin7imutZxJFG0zIYU4mXO7FAi6QpvrTTHC1ULy1JG/zrIGk
-         c2+b9vu2ZLUaemEvEBKGxoW9soN1UEwxZJbbvNvTXQr9Kh3IYtGA1f1x783un3LkMS
-         ufXGRC/pszSjOXpWst5zdtyDaI8g4bJ9PaC0Ja0z0YmnGGnFZlcG1JkbKkMw+8gfAC
-         MbbeXmskeBQY9NXi4G5g+LjJVsyBX5PE7qBBhhfOYyZ5d/GPC734WZ25r5jBL+0oVq
-         ec0ccU61nJdTA==
-Date:   Wed, 5 Jul 2023 08:20:35 -0700
+        b=caLr+oOn2/dhzyppwvax926WYIfCPldNCnTDnYAVWMyXMumz6eei6PR5CPqd3HJUO
+         goclwt4ydE7GQ0GEgTemdaqmH8aqWN4hQQER0/YWZsH9V2fino2xQHoZZOR+wgydoj
+         LEqM9Q70uJd37sI0fyxMKQjZSON0kJqls4PgL/ogEcPsqp03DO0d6b2Clq6Noqp7ha
+         IB/T+ffEzYfhwCXkkvq235n0SPcC8wzl6wVTA9Q34yTmXaHVdIkCxCD9GxNmxSCoS8
+         KvVmUx9XYnCh0t0EgDqAtCono4uS95126GzpR9Vwk+5h+hI5EsKEDq9us+WO1sk6Yz
+         7asjvtSUYl4ug==
+Date:   Wed, 5 Jul 2023 08:37:25 -0700
 From:   "Darrick J. Wong" <djwong@kernel.org>
-To:     Wu Guanghao <wuguanghao3@huawei.com>
-Cc:     cem@kernel.org, linux-xfs@vger.kernel.org,
-        Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH V2] mkfs.xfs: fix segmentation fault caused by accessing
- a null pointer
-Message-ID: <20230705152035.GQ11441@frogsfrogsfrogs>
-References: <182e9ac9-933f-ed8e-1f5a-9ffc2d730eb7@huawei.com>
+To:     Zorro Lang <zlang@redhat.com>
+Cc:     linux-xfs@vger.kernel.org, fstests@vger.kernel.org
+Subject: Re: [PATCH 3/5] xfs/439: amend test to work with new log geometry
+ validation
+Message-ID: <20230705153725.GR11441@frogsfrogsfrogs>
+References: <168840381298.1317961.1436890061506567407.stgit@frogsfrogsfrogs>
+ <168840383001.1317961.12926483978316384291.stgit@frogsfrogsfrogs>
+ <20230705063709.4grbfaznsddnxf4c@zlang-mailbox>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <182e9ac9-933f-ed8e-1f5a-9ffc2d730eb7@huawei.com>
+In-Reply-To: <20230705063709.4grbfaznsddnxf4c@zlang-mailbox>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Thu, Jun 29, 2023 at 10:20:30AM +0800, Wu Guanghao wrote:
-> We encountered a segfault while testing the mkfs.xfs + iscsi.
+On Wed, Jul 05, 2023 at 02:37:09PM +0800, Zorro Lang wrote:
+> On Mon, Jul 03, 2023 at 10:03:50AM -0700, Darrick J. Wong wrote:
+> > From: Darrick J. Wong <djwong@kernel.org>
+> > 
+> > An upcoming patch moves more log validation checks to the superblock
+> > verifier, so update this test as needed.
+> > 
+> > Signed-off-by: Darrick J. Wong <djwong@kernel.org>
+> > ---
+> >  tests/xfs/439 |    6 ++++--
+> >  1 file changed, 4 insertions(+), 2 deletions(-)
+> > 
+> > 
+> > diff --git a/tests/xfs/439 b/tests/xfs/439
+> > index b7929493d1..8c69ece655 100755
+> > --- a/tests/xfs/439
+> > +++ b/tests/xfs/439
+> > @@ -21,7 +21,9 @@ _begin_fstest auto quick fuzzers log
+> >  _supported_fs xfs
+> >  _require_scratch_nocheck
+> >  # We corrupt XFS on purpose, and check if assert failures would crash system.
+> > -_require_no_xfs_bug_on_assert
+> > +# This used to be _require_no_xfs_bug_on_assert, but now we've fixed the sb
+> > +# verifier to reject this before xfs_log_mount gets to it:
+> > +_fixed_by_kernel_commit XXXXXXXXXXXX "xfs: journal geometry is not properly bounds checked"
 > 
-> (gdb) bt
-> #0 libxfs_log_sb (tp=0xaaaafaea0630) at xfs_sb.c:810
-> #1 0x0000aaaaca991468 in __xfs_trans_commit (tp=<optimized out>, tp@entry=0xaaaafaea0630, regrant=regrant@entry=true) at trans.c:995
-> #2 0x0000aaaaca991790 in libxfs_trans_roll (tpp=tpp@entry=0xfffffe1f3018) at trans.c:103
-> #3 0x0000aaaaca9bcde8 in xfs_dialloc_roll (agibp=0xaaaafaea2fa0, tpp=0xfffffe1f31c8) at xfs_ialloc.c:1561
-> #4 xfs_dialloc_try_ag (ok_alloc=true, new_ino=<synthetic pointer>, parent=0, pag=0xaaaafaea0210, tpp=0xfffffe1f31c8) at xfs_ialloc.c:1698
-> #5 xfs_dialloc (tpp=tpp@entry=0xfffffe1f31c8, parent=0, mode=mode@entry=16877, new_ino=new_ino@entry=0xfffffe1f3128) at xfs_ialloc.c:1776
-> #6 0x0000aaaaca9925b0 in libxfs_dir_ialloc (tpp=tpp@entry=0xfffffe1f31c8, dp=dp@entry=0x0, mode=mode@entry=16877, nlink=nlink@entry=1, rdev=rdev@entry=0, cr=cr@entry=0xfffffe1f31d0,
->     fsx=fsx@entry=0xfffffe1f36a4, ipp=ipp@entry=0xfffffe1f31c0) at util.c:525
-> #7 0x0000aaaaca988fac in parseproto (mp=0xfffffe1f36c8, pip=0x0, fsxp=0xfffffe1f36a4, pp=0xfffffe1f3370, name=0x0) at proto.c:552
-> #8 0x0000aaaaca9867a4 in main (argc=<optimized out>, argv=<optimized out>) at xfs_mkfs.c:4217
+> This case is a regression test case for:
+>   9c92ee2 ("xfs: validate sb_logsunit is a multiple of the fs blocksize")
 > 
-> (gdb) p bp
-> $1 = 0x0
-> 
-> ```
-> void
-> xfs_log_sb(
->         struct xfs_trans        *tp)
-> {
->         // iscsi offline
->         ...
->         // failed to read sb, bp = NULL
->         struct xfs_buf          *bp = xfs_trans_getsb(tp);
->         ...
-> }
-> ```
-> 
-> When writing data to sb, if the device is abnormal at this time,
-> the bp may be empty. Using it without checking will result in
-> a segfault.
-> 
-> So it's necessary to ensure that the superblock has been cached.
-> 
-> Signed-off-by: Wu Guanghao <wuguanghao3@huawei.com>
-> ---
->  mkfs/xfs_mkfs.c | 10 ++++++++++
->  1 file changed, 10 insertions(+)
-> 
-> diff --git a/mkfs/xfs_mkfs.c b/mkfs/xfs_mkfs.c
-> index 7b3c2304..8d0ec4b5 100644
-> --- a/mkfs/xfs_mkfs.c
-> +++ b/mkfs/xfs_mkfs.c
-> @@ -4406,6 +4406,15 @@ main(
->                 exit(1);
->         }
-> 
-> +       /*
-> +        *  Cached superblock to ensure that xfs_trans_getsb() will not return NULL.
-> +        */
-> +       buf = libxfs_getsb(mp);
+> So I think it's better to write this major commit at first, before recording the
+> secondary one.
 
-prepare_devices() already creates an uncached xfs_buf for the
-superblock.  Why not reuse that instead of rereading the buffer here?
+Ok.  I guess that's a result of this test predating _fixed_by.
 
-> +       if (!buf || buf->b_error) {
-> +               fprintf(stderr, _("%s: read superblock failed, err=%d\n"),
-> +                               progname, !buf ? EIO : -buf->b_error);
-> +               exit(1);
-> +       }
->         /*
->          * Initialise the freespace freelists (i.e. AGFLs) in each AG.
->          */
-> @@ -4433,6 +4442,7 @@ main(
->          * Need to drop references to inodes we still hold, first.
->          */
->         libxfs_rtmount_destroy(mp);
-> +       libxfs_buf_relse(buf);
->         libxfs_bcache_purge();
+Also I'll update this with the real kernel commit id, now that there is
+one.
+
+> >  
+> >  rm -f "$seqres.full"
+> >  
+> > @@ -33,7 +35,7 @@ blksz=$(_scratch_xfs_get_sb_field blocksize)
+> >  _scratch_xfs_set_sb_field logsunit $((blksz - 1)) >> $seqres.full 2>&1
+> >  
+> >  # Check if logsunit is set correctly
+> > -lsunit=$(_scratch_xfs_get_sb_field logsunit)
+> > +lsunit=$(_scratch_xfs_get_sb_field logsunit 2>/dev/null)
 > 
->         /*
+> What kind of error should be ignored at here?
 
-...and then we don't have read it yet again down here to clear the
-sb_inprogress field?
+The same new logsunit validation code, when ported to userspace, causes
+xfs_db to emit verifier complaints that disturb the golden output.
 
 --D
 
-> --
-> 2.27.0
+> 
+> >  [ $lsunit -ne $((blksz - 1)) ] && _notrun "failed to set sb_logsunit"
+> >  
+> >  # Mount and writing log may trigger a crash on buggy kernel
+> > 
+> 
