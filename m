@@ -2,120 +2,132 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3F8C5C001B3
-	for <linux-xfs@archiver.kernel.org>; Wed,  5 Jul 2023 06:38:06 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 45209EB64DD
+	for <linux-xfs@archiver.kernel.org>; Wed,  5 Jul 2023 10:21:36 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231479AbjGEGiF (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 5 Jul 2023 02:38:05 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47056 "EHLO
+        id S231152AbjGEKVe (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 5 Jul 2023 06:21:34 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45760 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231754AbjGEGiD (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 5 Jul 2023 02:38:03 -0400
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 19F8E1701
-        for <linux-xfs@vger.kernel.org>; Tue,  4 Jul 2023 23:37:20 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1688539039;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+        with ESMTP id S231213AbjGEKVb (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 5 Jul 2023 06:21:31 -0400
+Received: from smtp-out2.suse.de (smtp-out2.suse.de [195.135.220.29])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A246B122;
+        Wed,  5 Jul 2023 03:21:30 -0700 (PDT)
+Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
+        (No client certificate requested)
+        by smtp-out2.suse.de (Postfix) with ESMTPS id 58F0C1F6E6;
+        Wed,  5 Jul 2023 10:21:29 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.cz; s=susede2_rsa;
+        t=1688552489; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+         mime-version:mime-version:content-type:content-type:
          in-reply-to:in-reply-to:references:references;
-        bh=NUWX5UvhowWYsdPQKhRlSWjHJ9IgFtq6PuCnNgnxE/c=;
-        b=UyDzwP8MddJXYwNrZhdLUxRJE9p5RgQHG3ZUmx4MfIaTElvbAZk5otWeVFsaWZDNawWMoU
-        4rdyU8GeZmVtJZPv6WbgvFdk7VARAYMYb4W2bCZLDrgXYDB45Gbcvf0Z0r8ENLkglca2vk
-        RFcjL+pAZ+Mf266MM5GrBoy2PcbR83U=
-Received: from mail-pg1-f200.google.com (mail-pg1-f200.google.com
- [209.85.215.200]) by relay.mimecast.com with ESMTP with STARTTLS
- (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
- us-mta-458-uzbpj0pYM0-GrbdZ6Shncg-1; Wed, 05 Jul 2023 02:37:15 -0400
-X-MC-Unique: uzbpj0pYM0-GrbdZ6Shncg-1
-Received: by mail-pg1-f200.google.com with SMTP id 41be03b00d2f7-528ab71c95cso5696775a12.0
-        for <linux-xfs@vger.kernel.org>; Tue, 04 Jul 2023 23:37:14 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20221208; t=1688539034; x=1691131034;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=NUWX5UvhowWYsdPQKhRlSWjHJ9IgFtq6PuCnNgnxE/c=;
-        b=PfMmiG+XhhfdLPECSIp3xCbdXtG00xffRSrNl7rfpZrZ1ymqvmcHhNPsdnWZj3G8gg
-         BdQZJFFoolQMKWUvw0EMaLM938QvoeOukZKRL9F/J7B4qvR1tTBUZDHfOjfqIB3hXEbh
-         hBXVPKd+v7A7BoKOqC6g/4SWJnCmdFhcLWkGhDf/DnZ+NeVxWNHOCWTZu8T7Ar9SJ5sX
-         Pfz0AOIRN54ZCko1u8LMjFDZkldsx+DCMK3Fud4GpR1z+JyEEu34TJevXsV1jPlzFLD9
-         EvAmNmcvQkAMmZ+mETW7ErYwsusQ6cr8fiij2lbfLDokaY9Rj6K/muFH1Rtqy9GSYHqb
-         iaAA==
-X-Gm-Message-State: ABy/qLaxsVea+sfmMHxcg295zj4zjrh9GWfOILNSc0FDvWF71S+Js81y
-        4GRgfrY0fa5AOMPf86lAEurjHAqdh/S7RXBzv2liEFZdLlDo2u16AhFDiE3aUAVrVkHTZYhGZFS
-        Eip97wK1ATLvrzEDb6Q9c
-X-Received: by 2002:a05:6a20:3955:b0:11f:b885:e83a with SMTP id r21-20020a056a20395500b0011fb885e83amr14819065pzg.57.1688539033982;
-        Tue, 04 Jul 2023 23:37:13 -0700 (PDT)
-X-Google-Smtp-Source: APBJJlHtcHVO2xFemkdavNw1sqIuI05mR6jkvj+chy+9Ote8/pYCCNbPd+dkvSc7hMq1p/UWQ7RhJw==
-X-Received: by 2002:a05:6a20:3955:b0:11f:b885:e83a with SMTP id r21-20020a056a20395500b0011fb885e83amr14819055pzg.57.1688539033672;
-        Tue, 04 Jul 2023 23:37:13 -0700 (PDT)
-Received: from zlang-mailbox ([43.228.180.230])
-        by smtp.gmail.com with ESMTPSA id 12-20020a170902c10c00b001b694140d96sm9233434pli.170.2023.07.04.23.37.12
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 04 Jul 2023 23:37:13 -0700 (PDT)
-Date:   Wed, 5 Jul 2023 14:37:09 +0800
-From:   Zorro Lang <zlang@redhat.com>
-To:     "Darrick J. Wong" <djwong@kernel.org>
-Cc:     linux-xfs@vger.kernel.org, fstests@vger.kernel.org
-Subject: Re: [PATCH 3/5] xfs/439: amend test to work with new log geometry
- validation
-Message-ID: <20230705063709.4grbfaznsddnxf4c@zlang-mailbox>
-References: <168840381298.1317961.1436890061506567407.stgit@frogsfrogsfrogs>
- <168840383001.1317961.12926483978316384291.stgit@frogsfrogsfrogs>
+        bh=qqER76PXnxWxMVZH46uY+IP0A7ISNxa4dFOpqm8Npig=;
+        b=rK+eFTza2+XXgbRvOv5tQtV93F/4zZpu7norREAepZy5yow7baD/dvvqWhpeeItBt0IPcu
+        Y5rwLWutv/on4mwv5EJraqTeqhb05mRkTW0yYXikGz/UA9AQcATVDIgxrBuvXRHMAszN6R
+        RSIAN/j2D8s9RJrt3/Umhb+lT3pvazU=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.cz;
+        s=susede2_ed25519; t=1688552489;
+        h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+         mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=qqER76PXnxWxMVZH46uY+IP0A7ISNxa4dFOpqm8Npig=;
+        b=0Ik5A3faiNr6MKUo0ZlFf0SVDy0zGGeX4x6PTOEnPlUJVjHk96v3tsbq/TGqKcufwhGJGx
+        3sf2EXg0rHzUTICQ==
+Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
+        (No client certificate requested)
+        by imap2.suse-dmz.suse.de (Postfix) with ESMTPS id 44C0D13460;
+        Wed,  5 Jul 2023 10:21:29 +0000 (UTC)
+Received: from dovecot-director2.suse.de ([192.168.254.65])
+        by imap2.suse-dmz.suse.de with ESMTPSA
+        id Xem5EClEpWRSCwAAMHmgww
+        (envelope-from <jack@suse.cz>); Wed, 05 Jul 2023 10:21:29 +0000
+Received: by quack3.suse.cz (Postfix, from userid 1000)
+        id C5467A0707; Wed,  5 Jul 2023 12:21:28 +0200 (CEST)
+Date:   Wed, 5 Jul 2023 12:21:28 +0200
+From:   Jan Kara <jack@suse.cz>
+To:     Keith Busch <kbusch@kernel.org>
+Cc:     Jan Kara <jack@suse.cz>, linux-block@vger.kernel.org,
+        linux-fsdevel@vger.kernel.org, Jens Axboe <axboe@kernel.dk>,
+        Christoph Hellwig <hch@infradead.org>,
+        Alasdair Kergon <agk@redhat.com>,
+        Andrew Morton <akpm@linux-foundation.org>,
+        Anna Schumaker <anna@kernel.org>, Chao Yu <chao@kernel.org>,
+        Christian Borntraeger <borntraeger@linux.ibm.com>,
+        "Darrick J. Wong" <djwong@kernel.org>,
+        Dave Kleikamp <shaggy@kernel.org>,
+        David Sterba <dsterba@suse.com>, dm-devel@redhat.com,
+        drbd-dev@lists.linbit.com, Gao Xiang <xiang@kernel.org>,
+        Jack Wang <jinpu.wang@ionos.com>,
+        Jaegeuk Kim <jaegeuk@kernel.org>,
+        jfs-discussion@lists.sourceforge.net,
+        Joern Engel <joern@lazybastard.org>,
+        Joseph Qi <joseph.qi@linux.alibaba.com>,
+        Kent Overstreet <kent.overstreet@gmail.com>,
+        linux-bcache@vger.kernel.org, linux-btrfs@vger.kernel.org,
+        linux-erofs@lists.ozlabs.org, linux-ext4@vger.kernel.org,
+        linux-f2fs-devel@lists.sourceforge.net, linux-mm@kvack.org,
+        linux-mtd@lists.infradead.org, linux-nfs@vger.kernel.org,
+        linux-nilfs@vger.kernel.org, linux-nvme@lists.infradead.org,
+        linux-pm@vger.kernel.org, linux-raid@vger.kernel.org,
+        linux-s390@vger.kernel.org, linux-scsi@vger.kernel.org,
+        linux-xfs@vger.kernel.org,
+        "Md. Haris Iqbal" <haris.iqbal@ionos.com>,
+        Mike Snitzer <snitzer@kernel.org>,
+        Minchan Kim <minchan@kernel.org>, ocfs2-devel@oss.oracle.com,
+        reiserfs-devel@vger.kernel.org,
+        Sergey Senozhatsky <senozhatsky@chromium.org>,
+        Song Liu <song@kernel.org>,
+        Sven Schnelle <svens@linux.ibm.com>,
+        target-devel@vger.kernel.org, Ted Tso <tytso@mit.edu>,
+        Trond Myklebust <trond.myklebust@hammerspace.com>,
+        xen-devel@lists.xenproject.org
+Subject: Re: [PATCH 01/32] block: Provide blkdev_get_handle_* functions
+Message-ID: <20230705102128.vquve4qencbbn2br@quack3>
+References: <20230629165206.383-1-jack@suse.cz>
+ <20230704122224.16257-1-jack@suse.cz>
+ <ZKRItBRhm8f5Vba/@kbusch-mbp>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <168840383001.1317961.12926483978316384291.stgit@frogsfrogsfrogs>
+In-Reply-To: <ZKRItBRhm8f5Vba/@kbusch-mbp>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Mon, Jul 03, 2023 at 10:03:50AM -0700, Darrick J. Wong wrote:
-> From: Darrick J. Wong <djwong@kernel.org>
+On Tue 04-07-23 10:28:36, Keith Busch wrote:
+> On Tue, Jul 04, 2023 at 02:21:28PM +0200, Jan Kara wrote:
+> > +struct bdev_handle *blkdev_get_handle_by_dev(dev_t dev, blk_mode_t mode,
+> > +		void *holder, const struct blk_holder_ops *hops)
+> > +{
+> > +	struct bdev_handle *handle = kmalloc(sizeof(struct bdev_handle),
+> > +					     GFP_KERNEL);
 > 
-> An upcoming patch moves more log validation checks to the superblock
-> verifier, so update this test as needed.
+> I believe 'sizeof(*handle)' is the preferred style.
+
+OK.
+
+> > +	struct block_device *bdev;
+> > +
+> > +	if (!handle)
+> > +		return ERR_PTR(-ENOMEM);
+> > +	bdev = blkdev_get_by_dev(dev, mode, holder, hops);
+> > +	if (IS_ERR(bdev))
+> > +		return ERR_CAST(bdev);
 > 
-> Signed-off-by: Darrick J. Wong <djwong@kernel.org>
-> ---
->  tests/xfs/439 |    6 ++++--
->  1 file changed, 4 insertions(+), 2 deletions(-)
-> 
-> 
-> diff --git a/tests/xfs/439 b/tests/xfs/439
-> index b7929493d1..8c69ece655 100755
-> --- a/tests/xfs/439
-> +++ b/tests/xfs/439
-> @@ -21,7 +21,9 @@ _begin_fstest auto quick fuzzers log
->  _supported_fs xfs
->  _require_scratch_nocheck
->  # We corrupt XFS on purpose, and check if assert failures would crash system.
-> -_require_no_xfs_bug_on_assert
-> +# This used to be _require_no_xfs_bug_on_assert, but now we've fixed the sb
-> +# verifier to reject this before xfs_log_mount gets to it:
-> +_fixed_by_kernel_commit XXXXXXXXXXXX "xfs: journal geometry is not properly bounds checked"
+> Need a 'kfree(handle)' before the error return. Or would it be simpler
+> to get the bdev first so you can check the mode settings against a
+> read-only bdev prior to the kmalloc?
 
-This case is a regression test case for:
-  9c92ee2 ("xfs: validate sb_logsunit is a multiple of the fs blocksize")
-
-So I think it's better to write this major commit at first, before recording the
-secondary one.
-
->  
->  rm -f "$seqres.full"
->  
-> @@ -33,7 +35,7 @@ blksz=$(_scratch_xfs_get_sb_field blocksize)
->  _scratch_xfs_set_sb_field logsunit $((blksz - 1)) >> $seqres.full 2>&1
->  
->  # Check if logsunit is set correctly
-> -lsunit=$(_scratch_xfs_get_sb_field logsunit)
-> +lsunit=$(_scratch_xfs_get_sb_field logsunit 2>/dev/null)
-
-What kind of error should be ignored at here?
-
->  [ $lsunit -ne $((blksz - 1)) ] && _notrun "failed to set sb_logsunit"
->  
->  # Mount and writing log may trigger a crash on buggy kernel
-> 
-
+Yeah. Good point with kfree(). I'm not sure calling blkdev_get_by_dev()
+first will be "simpler" - then we need blkdev_put() in case of kmalloc()
+failure. Thanks for review!
+ 
+								Honza
+-- 
+Jan Kara <jack@suse.com>
+SUSE Labs, CR
