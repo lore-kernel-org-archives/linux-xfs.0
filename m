@@ -2,133 +2,104 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C7071C001DB
-	for <linux-xfs@archiver.kernel.org>; Wed,  5 Jul 2023 23:37:39 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 10977EB64DA
+	for <linux-xfs@archiver.kernel.org>; Wed,  5 Jul 2023 23:49:04 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231267AbjGEXhi (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 5 Jul 2023 19:37:38 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44332 "EHLO
+        id S231992AbjGEXtD (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 5 Jul 2023 19:49:03 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48978 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230487AbjGEXhi (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 5 Jul 2023 19:37:38 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E6A591995
-        for <linux-xfs@vger.kernel.org>; Wed,  5 Jul 2023 16:37:36 -0700 (PDT)
+        with ESMTP id S231539AbjGEXtB (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 5 Jul 2023 19:49:01 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 084AA10F5;
+        Wed,  5 Jul 2023 16:49:01 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
          key-exchange X25519 server-signature RSA-PSS (2048 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 6E37561852
-        for <linux-xfs@vger.kernel.org>; Wed,  5 Jul 2023 23:37:36 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id CCE38C433C7;
-        Wed,  5 Jul 2023 23:37:35 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 86E19616D6;
+        Wed,  5 Jul 2023 23:49:00 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id E0ED6C433C8;
+        Wed,  5 Jul 2023 23:48:59 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1688600255;
-        bh=MAEPgaR64JUfY/mVhGNzDCyhXdQ2OLr/KLKfEAcmrlU=;
+        s=k20201202; t=1688600939;
+        bh=6DP+UIUGnos6zRt5nWNRf2nJb77uRi/aVfw+fuuR72g=;
         h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=gy14gjwXKc6EN3SWR9OlZqtEJVAdKFhe9bpGLkW6tLFuXaX4T615o3dW7198Aa4Rr
-         6SloqLhzK686Jin3PYJz5vAtompRa5ViH95hiaKXU2nzB88bnd9W6RyaLO3T+ooS3X
-         kzIKhJJJhiat2Gk4Ss2XXk61lPBWVpwoC18/k3xFg6+vINL+1bwG4v/BU414WW+mtg
-         REXUTpZQ04o9ht5fyHcT6Axom7lmINWth9sCKPfWZJH+PyE5NHrjt8nCMATQjfICSe
-         7Ic0t8pwXpAsS2ncrXqMgTYFJYnTWXqwGSHzlGlJrr5+9hNdyVynqy9Iz4WhHu7rTa
-         wC4mv46inkgkg==
-Date:   Wed, 5 Jul 2023 16:37:35 -0700
+        b=o/iQlmXNsGwyfEygBWpfh/gmBtVYjQIL61c7KHLv6YQ0cZyyH4DQc8LqxM5SZh1ob
+         dxNd6UcsRPsIPc+U45reWwAHq7KjACwk0SpM8bBP68ItwX9CxfuRDOV3dgaPE1U7dd
+         yeWdVchGwXnw7jSLUv6hKmemhT98C6LD/5Fc8RaRGOPuZ6J8yiKPqMXTVyLLDt/mtm
+         wdL14gFEi+oH/2bNgSqomTf+m3ij25EBx1TpwE4DMFVEIt3f4G4l6GwLk4ok6OzmVz
+         zgAyGFEukHXOnD7q3QE2owbVgHaUotOkOXQ5IDmj9Ogn5i7mAIYMv7AAy+CiJMaciH
+         thhJiIbE0M1/Q==
+Date:   Wed, 5 Jul 2023 16:48:59 -0700
 From:   "Darrick J. Wong" <djwong@kernel.org>
 To:     Dave Chinner <david@fromorbit.com>
-Cc:     linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 1/6] xfs: force all buffers to be written during btree
- bulk load
-Message-ID: <20230705233735.GU11441@frogsfrogsfrogs>
-References: <168506056054.3728458.14583795170430652277.stgit@frogsfrogsfrogs>
- <168506056076.3728458.7329874829310609452.stgit@frogsfrogsfrogs>
- <ZJJa7Cnni0mb/9sN@dread.disaster.area>
+Cc:     Kent Overstreet <kent.overstreet@linux.dev>,
+        linux-xfs@vger.kernel.org, willy@infradead.org,
+        linux-fsdevel@vger.kernel.org
+Subject: Re: [PATCH 1/7] xfs: create a big array data structure
+Message-ID: <20230705234859.GV11441@frogsfrogsfrogs>
+References: <168506056447.3729324.13624212283929857624.stgit@frogsfrogsfrogs>
+ <168506056469.3729324.10116553858401440150.stgit@frogsfrogsfrogs>
+ <ZJO4L56mB5o3BJ06@dread.disaster.area>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <ZJJa7Cnni0mb/9sN@dread.disaster.area>
+In-Reply-To: <ZJO4L56mB5o3BJ06@dread.disaster.area>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Wed, Jun 21, 2023 at 12:05:32PM +1000, Dave Chinner wrote:
-> On Thu, May 25, 2023 at 05:45:35PM -0700, Darrick J. Wong wrote:
-> > @@ -2112,6 +2112,37 @@ xfs_buf_delwri_queue(
-> >  	return true;
-> >  }
-> >  
+On Thu, Jun 22, 2023 at 12:55:43PM +1000, Dave Chinner wrote:
+> On Thu, May 25, 2023 at 05:47:08PM -0700, Darrick J. Wong wrote:
+> > From: Darrick J. Wong <djwong@kernel.org>
+> > 
+> > Create a simple 'big array' data structure for storage of fixed-size
+> > metadata records that will be used to reconstruct a btree index.  For
+> > repair operations, the most important operations are append, iterate,
+> > and sort.
+> ....
 > > +/*
-> > + * Queue a buffer to this delwri list as part of a data integrity operation.
-> > + * If the buffer is on any other delwri list, we'll wait for that to clear
-> > + * so that the caller can submit the buffer for IO and wait for the result.
-> > + * Callers must ensure the buffer is not already on the list.
+> > + * Initialize a big memory array.  Array records cannot be larger than a
+> > + * page, and the array cannot span more bytes than the page cache supports.
+> > + * If @required_capacity is nonzero, the maximum array size will be set to this
+> > + * quantity and the array creation will fail if the underlying storage cannot
+> > + * support that many records.
 > > + */
-> > +void
-> > +xfs_buf_delwri_queue_here(
-> 
-> This is more of an "exclusive" queuing semantic. i.e. queue this
-> buffer exclusively on the list provided, rather than just ensuring
-> it is queued on some delwri list....
-> 
-> > +	struct xfs_buf		*bp,
-> > +	struct list_head	*buffer_list)
+> > +int
+> > +xfarray_create(
+> > +	struct xfs_mount	*mp,
+> > +	const char		*description,
+> > +	unsigned long long	required_capacity,
+> > +	size_t			obj_size,
+> > +	struct xfarray		**arrayp)
 > > +{
-> > +	/*
-> > +	 * We need this buffer to end up on the /caller's/ delwri list, not any
-> > +	 * old list.  This can happen if the buffer is marked stale (which
-> > +	 * clears DELWRI_Q) after the AIL queues the buffer to its list but
-> > +	 * before the AIL has a chance to submit the list.
-> > +	 */
-> > +	while (!list_empty(&bp->b_list)) {
-> > +		xfs_buf_unlock(bp);
-> > +		delay(1);
-> > +		xfs_buf_lock(bp);
-> > +	}
+> > +	struct xfarray		*array;
+> > +	struct xfile		*xfile;
+> > +	int			error;
+> > +
+> > +	ASSERT(obj_size < PAGE_SIZE);
+> > +
+> > +	error = xfile_create(mp, description, 0, &xfile);
+> > +	if (error)
+> > +		return error;
 > 
-> Not a big fan of this as it the buffer can be on the AIL buffer list
-> for some time (e.g. AIL might have a hundred thousand buffers to
-> push).
-> 
-> This seems more like a case for:
-> 
-> 	while (!list_empty(&bp->b_list)) {
-> 		xfs_buf_unlock(bp);
-> 		wait_event_var(bp->b_flags, !(bp->b_flags & _XBF_DELWRI_Q));
-> 		xfs_buf_lock(bp);
-> 	}
-> 
-> And a wrapper:
-> 
-> void xfs_buf_remove_delwri(
-> 	struct xfs_buf	*bp)
-> {
-> 	list_del(&bp->b_list);
-> 	bp->b_flags &= ~_XBF_DELWRI_Q;
-> 	wake_up_var(bp->b_flags);
-> }
-> 
-> And we replace all the places where the buffer is taken off the
-> delwri list with calls to xfs_buf_remove_delwri()...
-> 
-> This will greatly reduce the number of context switches during a
-> wait cycle, and reduce the latency of waiting for buffers that are
-> queued for delwri...
+> The xfarray and xfile can be completely independent of anything XFS
+> at all by passing the full xfile "filename" that is to be used here
+> rather than having xfile_create prefix the description with a string
+> like "XFS (devname):".
 
-The thing is, we're really waiting for the buffer to clear /all/
-delwri-related lists.  This could be the actual buffer list, but it
-could also be the xfs_buf_delwri_submit's wait_list.  It's not
-sufficient for repair to allow some other (probably the AIL) thread to
-write the new structure's buffer because that caller could see an
-EIO/ENOSPC error, and repair needs to return the specific condition to
-the caller.
-
-That said, I suppose we could spring a wait_var_event on bp->b_list.next
-to look for list_empty(&bp->b_list).  I'll try that out tonight.
+Ok, I'll shift the "XFS (devname)" part into the callers for the next
+round.
 
 --D
 
-> Cheers,
+> .....
 > 
-> Dave.
+> Otherwise this is all fine.
+> 
+> -Dave.
 > -- 
 > Dave Chinner
 > david@fromorbit.com
