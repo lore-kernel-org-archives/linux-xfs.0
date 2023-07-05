@@ -2,134 +2,276 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A67C4EB64DA
-	for <linux-xfs@archiver.kernel.org>; Wed,  5 Jul 2023 13:46:28 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 62577EB64DA
+	for <linux-xfs@archiver.kernel.org>; Wed,  5 Jul 2023 15:12:28 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231204AbjGENq1 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 5 Jul 2023 09:46:27 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50792 "EHLO
+        id S233168AbjGEPM1 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 5 Jul 2023 11:12:27 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46768 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230268AbjGENq0 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 5 Jul 2023 09:46:26 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D1C80BA;
-        Wed,  5 Jul 2023 06:46:25 -0700 (PDT)
+        with ESMTP id S233146AbjGEPMX (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 5 Jul 2023 11:12:23 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C12D910EA;
+        Wed,  5 Jul 2023 08:12:20 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
          key-exchange X25519 server-signature RSA-PSS (2048 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 6756C61569;
-        Wed,  5 Jul 2023 13:46:25 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 2CBB4C433C8;
-        Wed,  5 Jul 2023 13:46:22 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 4FEA5615DB;
+        Wed,  5 Jul 2023 15:12:20 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 9EEBBC433C8;
+        Wed,  5 Jul 2023 15:12:19 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1688564784;
-        bh=fF4OTK0l/0gKFko4faovv/YXnqcMhxu3JD/4SmKhjkw=;
+        s=k20201202; t=1688569939;
+        bh=9M3W0jvMSHORjdwvhYVllucAG8b5Te1BpjD+BHEHQUM=;
         h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=Cnu6fNY96eKxSAg6ligcBUWu0R4BbWpP8c9+nAST6TkPS1KYK0YdxPGJiM3hWnXeY
-         u8zQDC/oLviyGtFrfpQZ8wpRi9LFELjqMCX5XiMzhb+XvGZRtYG5pipUNKhE7joI/S
-         wpBTuGUI807UsHESXyZRvHl8QYVMjc1VrHm6Nv0vrGd45mmh8pOryEdeZJ08l8oCmx
-         iSjEJFgZ9oVwaLOiStgwkDRjHk+T9cti+RO4M29ac7hYxUdEzrhnyKeQ2hX1cBCKaK
-         4iJrSbaATo3lOHyCcd1PMS0PFdGMxXk5T3/ES+oycwZ56/XTXIF0vdbRjv4mlGLJ1z
-         KwjlFjJMIlDVg==
-Date:   Wed, 5 Jul 2023 15:46:19 +0200
-From:   Christian Brauner <brauner@kernel.org>
+        b=D0X+2gWbVDQvenj2EVDuTAux8ELig2SSC53a6H8OazUmgef7tiiRnJxH3AjIVUh7l
+         fX7ESEx+ujNA2eWYpecvIMgX2G+FNkRdEcMvmfkQwF3EQFFSxhSBeXvaipGTYK8FM2
+         c6lm5vWPpmOARpP4wqCmvRLb+tpoizdBsmk/IHNmoPEBOmxjtezhDarZA0S67xNPp8
+         CMXQjKLpFd3a/z4kWtia6MMI2dN3+qz64tqzNlsi1ISYpqSkeh3NXv5zZfLfGHSA8K
+         A0msPWEED96D5MYn7Ib50MepuiSU7cUpuO8A/BFjD8oqdW16cQxTolDX1Z5tWc/Dlw
+         KzsgxqVU1u0Hw==
+Date:   Wed, 5 Jul 2023 08:12:18 -0700
+From:   "Darrick J. Wong" <djwong@kernel.org>
 To:     Jan Kara <jack@suse.cz>
 Cc:     linux-fsdevel@vger.kernel.org, linux-block@vger.kernel.org,
         Christoph Hellwig <hch@infradead.org>,
+        Christian Brauner <brauner@kernel.org>,
         Jens Axboe <axboe@kernel.dk>, Kees Cook <keescook@google.com>,
         Ted Tso <tytso@mit.edu>,
         syzkaller <syzkaller@googlegroups.com>,
         Alexander Popov <alex.popov@linux.com>,
         Eric Biggers <ebiggers@google.com>, linux-xfs@vger.kernel.org,
         linux-btrfs@vger.kernel.org, Dmitry Vyukov <dvyukov@google.com>
-Subject: Re: [PATCH 6/6] fs: Make bind mounts work with
- bdev_allow_write_mounted=n
-Message-ID: <20230705-pumpwerk-vielversprechend-a4b1fd947b65@brauner>
+Subject: Re: [PATCH 1/6] block: Add config option to not allow writing to
+ mounted devices
+Message-ID: <20230705151218.GP11441@frogsfrogsfrogs>
 References: <20230704122727.17096-1-jack@suse.cz>
- <20230704125702.23180-6-jack@suse.cz>
- <20230704-fasching-wertarbeit-7c6ffb01c83d@brauner>
- <20230705130033.ttv6rdywj5bnxlzx@quack3>
+ <20230704125702.23180-1-jack@suse.cz>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20230705130033.ttv6rdywj5bnxlzx@quack3>
+In-Reply-To: <20230704125702.23180-1-jack@suse.cz>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Wed, Jul 05, 2023 at 03:00:33PM +0200, Jan Kara wrote:
-> On Tue 04-07-23 15:59:41, Christian Brauner wrote:
-> > On Tue, Jul 04, 2023 at 02:56:54PM +0200, Jan Kara wrote:
-> > > When we don't allow opening of mounted block devices for writing, bind
-> > > mounting is broken because the bind mount tries to open the block device
-> > 
-> > Sorry, I'm going to be annoying now...
-> > 
-> > Afaict, the analysis is misleading but I'm happy to be corrected ofc.
+On Tue, Jul 04, 2023 at 02:56:49PM +0200, Jan Kara wrote:
+> Writing to mounted devices is dangerous and can lead to filesystem
+> corruption as well as crashes. Furthermore syzbot comes with more and
+> more involved examples how to corrupt block device under a mounted
+> filesystem leading to kernel crashes and reports we can do nothing
+> about. Add tracking of writers to each block device and a kernel cmdline
+> argument which controls whether writes to block devices open with
+> BLK_OPEN_BLOCK_WRITES flag are allowed. We will make filesystems use
+> this flag for used devices.
 > 
-> I'm not sure what your objection exactly is. Probably I was imprecise in my
-> changelog description. What gets broken by not allowing RW open of a
-> mounted block device is:
+> Syzbot can use this cmdline argument option to avoid uninteresting
+> crashes. Also users whose userspace setup does not need writing to
+> mounted block devices can set this option for hardening.
 > 
-> mount -t ext4 /dev/sda1 /mnt1
-> mount -t ext4 /dev/sda1 /mnt2
+> Link: https://lore.kernel.org/all/60788e5d-5c7c-1142-e554-c21d709acfd9@linaro.org
+> Signed-off-by: Jan Kara <jack@suse.cz>
+> ---
+>  block/Kconfig             | 16 ++++++++++
+>  block/bdev.c              | 63 ++++++++++++++++++++++++++++++++++++++-
+>  include/linux/blk_types.h |  1 +
+>  include/linux/blkdev.h    |  3 ++
+>  4 files changed, 82 insertions(+), 1 deletion(-)
 > 
-> The second mount should create another mount of the superblock created by
-> the first mount but before that is done, get_tree_bdev() tries to open the
-> block device and fails when only patches 1 & 2 are applied. This patch
-> fixes that.
+> diff --git a/block/Kconfig b/block/Kconfig
+> index 86122e459fe0..8b4fa105b854 100644
+> --- a/block/Kconfig
+> +++ b/block/Kconfig
+> @@ -77,6 +77,22 @@ config BLK_DEV_INTEGRITY_T10
+>  	select CRC_T10DIF
+>  	select CRC64_ROCKSOFT
+>  
+> +config BLK_DEV_WRITE_MOUNTED
+> +	bool "Allow writing to mounted block devices"
+> +	default y
+> +	help
+> +	When a block device is mounted, writing to its buffer cache very likely
+> +	going to cause filesystem corruption. It is also rather easy to crash
+> +	the kernel in this way since the filesystem has no practical way of
+> +	detecting these writes to buffer cache and verifying its metadata
+> +	integrity. However there are some setups that need this capability
+> +	like running fsck on read-only mounted root device, modifying some
+> +	features on mounted ext4 filesystem, and similar. If you say N, the
+> +	kernel will prevent processes from writing to block devices that are
+> +	mounted by filesystems which provides some more protection from runaway
+> +	priviledged processes. If in doubt, say Y. The configuration can be
+> +	overridden with bdev_allow_write_mounted boot option.
+> +
+>  config BLK_DEV_ZONED
+>  	bool "Zoned block device support"
+>  	select MQ_IOSCHED_DEADLINE
+> diff --git a/block/bdev.c b/block/bdev.c
+> index 523ea7289834..346e68dbf0bf 100644
+> --- a/block/bdev.c
+> +++ b/block/bdev.c
+> @@ -30,6 +30,9 @@
+>  #include "../fs/internal.h"
+>  #include "blk.h"
+>  
+> +/* Should we allow writing to mounted block devices? */
+> +static bool bdev_allow_write_mounted = IS_ENABLED(CONFIG_BLK_DEV_WRITE_MOUNTED);
 
-My objection is that this has nothing to do with mounts but with
-superblocks. :) No mount need exist for this issue to appear. And I would
-prefer if we keep superblock and mount separate as this leads to unclear
-analysis and changelogs.
+This might be premature at this point, but I wonder if you've given any
+consideration to adding a lockdown prohibition as well?  e.g.
 
-> 
-> > Finding an existing superblock is independent of mounts. get_tree_bdev()
-> > and mount_bdev() are really only interested in finding a matching
-> > superblock independent of whether or not a mount for it already exists.
-> > IOW, if you had two filesystem contexts for the same block device with
-> > different mount options:
-> > 
-> > T1								T2
-> > fd_fs = fsopen("ext4");						fd_fs = fsopen("ext4");
-> > fsconfig(fd_fs, FSCONFIG_SET_STRING, "source", "/dev/sda");	fsconfig(fd_fs, FSCONFIG_SET_STRING, "source", "/dev/sda");
-> > 
-> > // create superblock
-> > fsconfig(fd_fs, FSCONFIG_CMD_CREATE, ...)
-> > 								// finds superblock of T1 if opts are compatible
-> > 								fsconfig(fd_fs, FSCONFIG_CMD_CREATE, ...)
-> > 
-> > you should have the issue that you're describing.
-> 
-> Correct, this will get broken when not allowing RW open for mounted block
-> devices as well because the second fsconfig(fd_fs, FSCONFIG_CMD_CREATE,
-> ...) will fail to open the block device in get_tree_bdev(). But again this
-> patch should fix that.
-> 
-> > But for neither of them does a mount already exist as the first mount
-> > here would only be created when:
-> > 
-> > T1								T2
-> > fsmount(fd_fs);							fsmount(fd_fs);
-> > 
-> > is called at which point the whole superblock issue is already settled.
-> > Afterwards, both mounts of both T1 and T2 refer to the same superblock -
-> > as long as the fs and the mount options support this ofc.
-> 
-> I guess the confusion comes from me calling "mount" an operation as
-> performed by the mount(8) command but which is in fact multiple operations
-> with the new mount API. Anyway, is the motivation of this patch clearer
-> now?
+static inline bool bdev_allow_write_mounted(void)
+{
+	if (security_locked_down(LOCKDOWN_MOUNTED_BDEV) != 0)
+		return false;
 
-I'm clear about what you're doing here. I would just like to not have
-mounts brought into the changelog. Even before the new mount api what
-you were describing was technically a superblock only issue. If someone
-reads the changelog I want them to be able to clearly see that this is a
-fix for superblocks, not mounts.
+	return __bdev_allow_write_mounted;
+}
 
-Especially, since the code you touch really only has to to with
-superblocks.
-Let me - non ironically - return the question: Is my own request clearer
-now?
+--D
+
+>  struct bdev_inode {
+>  	struct block_device bdev;
+>  	struct inode vfs_inode;
+> @@ -744,7 +747,34 @@ void blkdev_put_no_open(struct block_device *bdev)
+>  {
+>  	put_device(&bdev->bd_device);
+>  }
+> -	
+> +
+> +static bool bdev_writes_blocked(struct block_device *bdev)
+> +{
+> +	return bdev->bd_writers == -1;
+> +}
+> +
+> +static void bdev_block_writes(struct block_device *bdev)
+> +{
+> +	bdev->bd_writers = -1;
+> +}
+> +
+> +static void bdev_unblock_writes(struct block_device *bdev)
+> +{
+> +	bdev->bd_writers = 0;
+> +}
+> +
+> +static bool blkdev_open_compatible(struct block_device *bdev, blk_mode_t mode)
+> +{
+> +	if (!bdev_allow_write_mounted) {
+> +		/* Writes blocked? */
+> +		if (mode & BLK_OPEN_WRITE && bdev_writes_blocked(bdev))
+> +			return false;
+> +		if (mode & BLK_OPEN_BLOCK_WRITES && bdev->bd_writers > 0)
+> +			return false;
+> +	}
+> +	return true;
+> +}
+> +
+>  /**
+>   * blkdev_get_by_dev - open a block device by device number
+>   * @dev: device number of block device to open
+> @@ -787,6 +817,10 @@ struct bdev_handle *blkdev_get_by_dev(dev_t dev, blk_mode_t mode, void *holder,
+>  	if (ret)
+>  		goto free_handle;
+>  
+> +	/* Blocking writes requires exclusive opener */
+> +	if (mode & BLK_OPEN_BLOCK_WRITES && !holder)
+> +		return ERR_PTR(-EINVAL);
+> +
+>  	bdev = blkdev_get_no_open(dev);
+>  	if (!bdev) {
+>  		ret = -ENXIO;
+> @@ -814,12 +848,21 @@ struct bdev_handle *blkdev_get_by_dev(dev_t dev, blk_mode_t mode, void *holder,
+>  		goto abort_claiming;
+>  	if (!try_module_get(disk->fops->owner))
+>  		goto abort_claiming;
+> +	ret = -EBUSY;
+> +	if (!blkdev_open_compatible(bdev, mode))
+> +		goto abort_claiming;
+>  	if (bdev_is_partition(bdev))
+>  		ret = blkdev_get_part(bdev, mode);
+>  	else
+>  		ret = blkdev_get_whole(bdev, mode);
+>  	if (ret)
+>  		goto put_module;
+> +	if (!bdev_allow_write_mounted) {
+> +		if (mode & BLK_OPEN_BLOCK_WRITES)
+> +			bdev_block_writes(bdev);
+> +		else if (mode & BLK_OPEN_WRITE)
+> +			bdev->bd_writers++;
+> +	}
+>  	if (holder) {
+>  		bd_finish_claiming(bdev, holder, hops);
+>  
+> @@ -842,6 +885,7 @@ struct bdev_handle *blkdev_get_by_dev(dev_t dev, blk_mode_t mode, void *holder,
+>  		disk_unblock_events(disk);
+>  	handle->bdev = bdev;
+>  	handle->holder = holder;
+> +	handle->mode = mode;
+>  	return handle;
+>  put_module:
+>  	module_put(disk->fops->owner);
+> @@ -914,6 +958,14 @@ void blkdev_put(struct bdev_handle *handle)
+>  		sync_blockdev(bdev);
+>  
+>  	mutex_lock(&disk->open_mutex);
+> +	if (!bdev_allow_write_mounted) {
+> +		/* The exclusive opener was blocking writes? Unblock them. */
+> +		if (handle->mode & BLK_OPEN_BLOCK_WRITES)
+> +			bdev_unblock_writes(bdev);
+> +		else if (handle->mode & BLK_OPEN_WRITE)
+> +			bdev->bd_writers--;
+> +	}
+> +
+>  	if (handle->holder)
+>  		bd_end_claim(bdev, handle->holder);
+>  
+> @@ -1070,3 +1122,12 @@ void bdev_statx_dioalign(struct inode *inode, struct kstat *stat)
+>  
+>  	blkdev_put_no_open(bdev);
+>  }
+> +
+> +static int __init setup_bdev_allow_write_mounted(char *str)
+> +{
+> +	if (kstrtobool(str, &bdev_allow_write_mounted))
+> +		pr_warn("Invalid option string for bdev_allow_write_mounted:"
+> +			" '%s'\n", str);
+> +	return 1;
+> +}
+> +__setup("bdev_allow_write_mounted=", setup_bdev_allow_write_mounted);
+> diff --git a/include/linux/blk_types.h b/include/linux/blk_types.h
+> index 0bad62cca3d0..5bf0d2d458fd 100644
+> --- a/include/linux/blk_types.h
+> +++ b/include/linux/blk_types.h
+> @@ -70,6 +70,7 @@ struct block_device {
+>  #ifdef CONFIG_FAIL_MAKE_REQUEST
+>  	bool			bd_make_it_fail;
+>  #endif
+> +	int			bd_writers;
+>  	/*
+>  	 * keep this out-of-line as it's both big and not needed in the fast
+>  	 * path
+> diff --git a/include/linux/blkdev.h b/include/linux/blkdev.h
+> index 4ae3647a0322..ca467525e6e4 100644
+> --- a/include/linux/blkdev.h
+> +++ b/include/linux/blkdev.h
+> @@ -124,6 +124,8 @@ typedef unsigned int __bitwise blk_mode_t;
+>  #define BLK_OPEN_NDELAY		((__force blk_mode_t)(1 << 3))
+>  /* open for "writes" only for ioctls (specialy hack for floppy.c) */
+>  #define BLK_OPEN_WRITE_IOCTL	((__force blk_mode_t)(1 << 4))
+> +/* open is exclusive wrt all other BLK_OPEN_WRITE opens to the device */
+> +#define BLK_OPEN_BLOCK_WRITES	((__force blk_mode_t)(1 << 5))
+>  
+>  struct gendisk {
+>  	/*
+> @@ -1474,6 +1476,7 @@ struct blk_holder_ops {
+>  struct bdev_handle {
+>  	struct block_device *bdev;
+>  	void *holder;
+> +	blk_mode_t mode;
+>  };
+>  
+>  struct bdev_handle *blkdev_get_by_dev(dev_t dev, blk_mode_t mode, void *holder,
+> -- 
+> 2.35.3
+> 
