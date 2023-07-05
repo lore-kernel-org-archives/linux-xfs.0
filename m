@@ -2,147 +2,135 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B3AF1EB64DA
-	for <linux-xfs@archiver.kernel.org>; Wed,  5 Jul 2023 15:51:33 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 212DDEB64DA
+	for <linux-xfs@archiver.kernel.org>; Wed,  5 Jul 2023 16:12:33 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232618AbjGEPvc (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 5 Jul 2023 11:51:32 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60160 "EHLO
+        id S231925AbjGEQMb (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 5 Jul 2023 12:12:31 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46146 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232525AbjGEPv3 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 5 Jul 2023 11:51:29 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D24D91998;
-        Wed,  5 Jul 2023 08:51:19 -0700 (PDT)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        with ESMTP id S230286AbjGEQM2 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 5 Jul 2023 12:12:28 -0400
+Received: from smtp-out1.suse.de (smtp-out1.suse.de [195.135.220.28])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 805621700;
+        Wed,  5 Jul 2023 09:12:27 -0700 (PDT)
+Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
         (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature RSA-PSS (2048 bits))
+         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 479D4615DA;
-        Wed,  5 Jul 2023 15:51:19 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id A6DC4C433C7;
-        Wed,  5 Jul 2023 15:51:18 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1688572278;
-        bh=/+gukm9092XPOmNSgfpDynEVvTB7M8InrJsJ9kK+m7E=;
-        h=Date:From:To:Cc:Subject:From;
-        b=RjtL9uVscWM0V5TNlClunYX+wSLPl+zZU+SDwGx/e1lj565rAPM0I5WoYMnD6Oa44
-         VKndPZCAFDoLo+z3TcilhHCA7UK8r6aHkWZci6uo/gMKryVq/YgJzgIPbTd+TYQ7h3
-         y6/GOA0B0LiZWa0HK+woXtDmGQi1f0ASNedOkXGceywOtHHjzqsI5bTvOW9yIZ7qlO
-         +ve7gGPhFoCl5al0sE074UZQDTdyOvooq3VX2Bdh2Iw314aOAsRPnpabCwZ+naRJgL
-         aYBv4UNJ1phQlBuKcUfhU9nMvk/NjahvH/9UCHeC+LmJGgHxBQw4EGMBvVk3zryoZa
-         3/aaWjfcCEczg==
-Date:   Wed, 5 Jul 2023 08:51:17 -0700
-From:   "Darrick J. Wong" <djwong@kernel.org>
-To:     djwong@kernel.org, torvalds@linux-foundation.org
-Cc:     abaci@linux.alibaba.com, chandan.babu@oracle.com,
-        chandanrlinux@gmail.com, colin.i.king@gmail.com,
-        dchinner@redhat.com, hch@lst.de, linux-fsdevel@vger.kernel.org,
-        linux-xfs@vger.kernel.org, ruansy.fnst@fujitsu.com,
-        wen.gang.wang@oracle.com, yang.lee@linux.alibaba.com
-Subject: [GIT PULL] xfs: more new code for 6.5
-Message-ID: <168857207832.2801401.3108975452748877163.stg-ugh@frogsfrogsfrogs>
+        by smtp-out1.suse.de (Postfix) with ESMTPS id CB46921E20;
+        Wed,  5 Jul 2023 16:12:25 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.cz; s=susede2_rsa;
+        t=1688573545; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+         mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=laJnl7HhQK/Tv/PqzUYoidR/wXDE+WAIJVPIFf2lcfQ=;
+        b=pVxtRSYxDum30xk4c2JQyuaRHFNvjqGI5pa+1l9TjK2H7ROMjo7EdIGdDlzQXwaIwGyi0D
+        MYHnvgKqRst/eyFC+Okrc961iU1V/Mr8qyrvjiZzwHXWReUpWSrhSFOpe79t3kyTfJeQAV
+        Hf2p1cnNnsYhDEREwuHH1JI7foWXj1M=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.cz;
+        s=susede2_ed25519; t=1688573545;
+        h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+         mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=laJnl7HhQK/Tv/PqzUYoidR/wXDE+WAIJVPIFf2lcfQ=;
+        b=6GnGLv2MGHnmlspZbI9IPcwZjE0UgNGbJUyuJME/ujhWk8XPp6xGrnnDrvfBxv6bSto5fw
+        0j8hz2dNTzGg/WAQ==
+Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
+        (No client certificate requested)
+        by imap2.suse-dmz.suse.de (Postfix) with ESMTPS id A8D5D134F3;
+        Wed,  5 Jul 2023 16:12:25 +0000 (UTC)
+Received: from dovecot-director2.suse.de ([192.168.254.65])
+        by imap2.suse-dmz.suse.de with ESMTPSA
+        id p7ssKWmWpWRbQAAAMHmgww
+        (envelope-from <jack@suse.cz>); Wed, 05 Jul 2023 16:12:25 +0000
+Received: by quack3.suse.cz (Postfix, from userid 1000)
+        id 1C3A6A0707; Wed,  5 Jul 2023 18:12:25 +0200 (CEST)
+Date:   Wed, 5 Jul 2023 18:12:25 +0200
+From:   Jan Kara <jack@suse.cz>
+To:     Bart Van Assche <bvanassche@acm.org>
+Cc:     Jan Kara <jack@suse.cz>, linux-block@vger.kernel.org,
+        linux-fsdevel@vger.kernel.org, Jens Axboe <axboe@kernel.dk>,
+        Christoph Hellwig <hch@infradead.org>,
+        Alasdair Kergon <agk@redhat.com>,
+        Andrew Morton <akpm@linux-foundation.org>,
+        Anna Schumaker <anna@kernel.org>, Chao Yu <chao@kernel.org>,
+        Christian Borntraeger <borntraeger@linux.ibm.com>,
+        "Darrick J. Wong" <djwong@kernel.org>,
+        Dave Kleikamp <shaggy@kernel.org>,
+        David Sterba <dsterba@suse.com>, dm-devel@redhat.com,
+        drbd-dev@lists.linbit.com, Gao Xiang <xiang@kernel.org>,
+        Jack Wang <jinpu.wang@ionos.com>,
+        Jaegeuk Kim <jaegeuk@kernel.org>,
+        jfs-discussion@lists.sourceforge.net,
+        Joern Engel <joern@lazybastard.org>,
+        Joseph Qi <joseph.qi@linux.alibaba.com>,
+        Kent Overstreet <kent.overstreet@gmail.com>,
+        linux-bcache@vger.kernel.org, linux-btrfs@vger.kernel.org,
+        linux-erofs@lists.ozlabs.org, linux-ext4@vger.kernel.org,
+        linux-f2fs-devel@lists.sourceforge.net, linux-mm@kvack.org,
+        linux-mtd@lists.infradead.org, linux-nfs@vger.kernel.org,
+        linux-nilfs@vger.kernel.org, linux-nvme@lists.infradead.org,
+        linux-pm@vger.kernel.org, linux-raid@vger.kernel.org,
+        linux-s390@vger.kernel.org, linux-scsi@vger.kernel.org,
+        linux-xfs@vger.kernel.org,
+        "Md. Haris Iqbal" <haris.iqbal@ionos.com>,
+        Mike Snitzer <snitzer@kernel.org>,
+        Minchan Kim <minchan@kernel.org>, ocfs2-devel@oss.oracle.com,
+        reiserfs-devel@vger.kernel.org,
+        Sergey Senozhatsky <senozhatsky@chromium.org>,
+        Song Liu <song@kernel.org>,
+        Sven Schnelle <svens@linux.ibm.com>,
+        target-devel@vger.kernel.org, Ted Tso <tytso@mit.edu>,
+        Trond Myklebust <trond.myklebust@hammerspace.com>,
+        xen-devel@lists.xenproject.org
+Subject: Re: [PATCH 01/32] block: Provide blkdev_get_handle_* functions
+Message-ID: <20230705161225.cwig5a3mo6oz7lew@quack3>
+References: <20230629165206.383-1-jack@suse.cz>
+ <20230704122224.16257-1-jack@suse.cz>
+ <bb91e76b-0bd8-a949-f8b9-868f919ebcb9@acm.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
+In-Reply-To: <bb91e76b-0bd8-a949-f8b9-868f919ebcb9@acm.org>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Hi Linus,
+On Tue 04-07-23 07:06:26, Bart Van Assche wrote:
+> On 7/4/23 05:21, Jan Kara wrote:
+> > +struct bdev_handle {
+> > +	struct block_device *bdev;
+> > +	void *holder;
+> > +};
+> 
+> Please explain in the patch description why a holder pointer is introduced
+> in struct bdev_handle and how it relates to the bd_holder pointer in struct
+> block_device. Is one of the purposes of this patch series perhaps to add
+> support for multiple holders per block device?
 
-Please pull this branch with changes for xfs for 6.5-rc1.
+No. The reason for adding holder to struct bdev_handle is that it is an
+argument blkdev_put() needs. Currently, every user of blkdev_put() has to
+remember what it has passed as 'holder' to blkdev_get_by_*() call and pass
+that to blkdev_put(). With struct bdev_handle this will happen
+automatically. This is already explained in the changelog of this patch:
 
-As usual, I did a test-merge with the main upstream branch as of a few
-minutes ago, and didn't see any conflicts.  Please let me know if you
-encounter any problems.  We're well into the bugfixing weeds now...
+"Create struct bdev_handle that contains all parameters that need to be
+passed to blkdev_put()..."
 
---D
+If it was only about holder, the intrusive patches would not be warranted
+but as the description also says:
 
-The following changes since commit c3b880acadc95d6e019eae5d669e072afda24f1b:
+"This will eventually allow us to pass one more argument to blkdev_put()
+without too much hassle."
 
-xfs: fix ag count overflow during growfs (2023-06-13 08:49:20 -0700)
+Because we will additionaly need to propagate the 'mode' argument used at
+open to blkdev_put().
 
-are available in the Git repository at:
+								Honza
 
-git://git.kernel.org/pub/scm/fs/xfs/xfs-linux.git tags/xfs-6.5-merge-5
-
-for you to fetch changes up to 34acceaa8818a0ff4943ec5f2f8831cfa9d3fe7e:
-
-xfs: Remove unneeded semicolon (2023-07-03 09:48:18 -0700)
-
-----------------------------------------------------------------
-More new code for 6.5:
-
-* Fix some ordering problems with log items during log recovery.
-* Don't deadlock the system by trying to flush busy freed extents while
-holding on to busy freed extents.
-* Improve validation of log geometry parameters when reading the
-primary superblock.
-* Validate the length field in the AGF header.
-* Fix recordset filtering bugs when re-calling GETFSMAP to return more
-results when the resultset didn't previously fit in the caller's buffer.
-* Fix integer overflows in GETFSMAP when working with rt volumes larger
-than 2^32 fsblocks.
-* Fix GETFSMAP reporting the undefined space beyond the last rtextent.
-* Fix filtering bugs in GETFSMAP's log device backend if the log ever
-becomes longer than 2^32 fsblocks.
-* Improve validation of file offsets in the GETFSMAP range parameters.
-* Fix an off by one bug in the pmem media failure notification
-computation.
-* Validate the length field in the AGI header too.
-
-Signed-off-by: Darrick J. Wong <djwong@kernel.org>
-
-----------------------------------------------------------------
-Colin Ian King (1):
-xfs: remove redundant initializations of pointers drop_leaf and save_leaf
-
-Darrick J. Wong (8):
-xfs: fix interval filtering in multi-step fsmap queries
-xfs: fix integer overflows in the fsmap rtbitmap and logdev backends
-xfs: fix getfsmap reporting past the last rt extent
-xfs: clean up the rtbitmap fsmap backend
-xfs: fix logdev fsmap query result filtering
-xfs: validate fsmap offsets specified in the query keys
-xfs: fix xfs_btree_query_range callers to initialize btree rec fully
-xfs: AGI length should be bounds checked
-
-Dave Chinner (8):
-xfs: don't reverse order of items in bulk AIL insertion
-xfs: use deferred frees for btree block freeing
-xfs: pass alloc flags through to xfs_extent_busy_flush()
-xfs: allow extent free intents to be retried
-xfs: don't block in busy flushing when freeing extents
-xfs: journal geometry is not properly bounds checked
-xfs: AGF length has never been bounds checked
-xfs: fix bounds check in xfs_defer_agfl_block()
-
-Shiyang Ruan (1):
-xfs: fix the calculation for "end" and "length"
-
-Yang Li (1):
-xfs: Remove unneeded semicolon
-
-fs/xfs/libxfs/xfs_ag.c             |   2 +-
-fs/xfs/libxfs/xfs_alloc.c          | 291 ++++++++++++++++++++++++-------------
-fs/xfs/libxfs/xfs_alloc.h          |  24 +--
-fs/xfs/libxfs/xfs_attr_leaf.c      |   2 -
-fs/xfs/libxfs/xfs_bmap.c           |   8 +-
-fs/xfs/libxfs/xfs_bmap_btree.c     |   3 +-
-fs/xfs/libxfs/xfs_ialloc.c         |  32 ++--
-fs/xfs/libxfs/xfs_ialloc_btree.c   |   3 +-
-fs/xfs/libxfs/xfs_refcount.c       |  22 +--
-fs/xfs/libxfs/xfs_refcount_btree.c |   8 +-
-fs/xfs/libxfs/xfs_rmap.c           |  10 +-
-fs/xfs/libxfs/xfs_sb.c             |  56 ++++++-
-fs/xfs/xfs_extent_busy.c           |  36 ++++-
-fs/xfs/xfs_extent_busy.h           |   6 +-
-fs/xfs/xfs_extfree_item.c          |  75 +++++++++-
-fs/xfs/xfs_fsmap.c                 | 261 +++++++++++++++++----------------
-fs/xfs/xfs_log.c                   |  47 ++----
-fs/xfs/xfs_notify_failure.c        |   9 +-
-fs/xfs/xfs_reflink.c               |   3 +-
-fs/xfs/xfs_trace.h                 |  25 ++++
-fs/xfs/xfs_trans_ail.c             |   2 +-
-21 files changed, 590 insertions(+), 335 deletions(-)
+-- 
+Jan Kara <jack@suse.com>
+SUSE Labs, CR
