@@ -2,57 +2,60 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5ED49EB64DA
-	for <linux-xfs@archiver.kernel.org>; Wed,  5 Jul 2023 10:31:11 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 45461EB64DD
+	for <linux-xfs@archiver.kernel.org>; Wed,  5 Jul 2023 12:27:39 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232089AbjGEKbK (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 5 Jul 2023 06:31:10 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50100 "EHLO
+        id S231676AbjGEM1h (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 5 Jul 2023 08:27:37 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42326 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229635AbjGEKbI (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 5 Jul 2023 06:31:08 -0400
-Received: from smtp-out2.suse.de (smtp-out2.suse.de [195.135.220.29])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B556BE57;
-        Wed,  5 Jul 2023 03:31:07 -0700 (PDT)
-Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
-        (No client certificate requested)
-        by smtp-out2.suse.de (Postfix) with ESMTPS id 7352D1F889;
-        Wed,  5 Jul 2023 10:31:06 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.cz; s=susede2_rsa;
-        t=1688553066; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=aTEd3fBquffgK1oTUGHJyJlGnNCl+YqrY9h3E39k8Z0=;
-        b=MdN1Mw1D0Gl+ejFEl5DSExcJnR+nOOsoIXSrgPodlt6pbm1efJ40TIIA4K7HLSfsYRzc8f
-        Wh7O3OTY3DE8s3j4j7LZc2CjluTwqhfBsDigSM3hbeSVB7hig7rD+1A4YDKSGYw4VhcTtL
-        RZguuy7IZHkg4LyVnx7kRSqzRcD4xSg=
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.cz;
-        s=susede2_ed25519; t=1688553066;
-        h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=aTEd3fBquffgK1oTUGHJyJlGnNCl+YqrY9h3E39k8Z0=;
-        b=A8PAjEkiDgH1kCNCAc2OfNvHhl1lu+MPB2qn3hF9DN3EpZlFS4ME/S1915Mjd3cz32OmC4
-        mVH+96/Y6SXRQGDw==
-Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
-        (No client certificate requested)
-        by imap2.suse-dmz.suse.de (Postfix) with ESMTPS id 6554A13460;
-        Wed,  5 Jul 2023 10:31:06 +0000 (UTC)
-Received: from dovecot-director2.suse.de ([192.168.254.65])
-        by imap2.suse-dmz.suse.de with ESMTPSA
-        id gy62GGpGpWRqEAAAMHmgww
-        (envelope-from <jack@suse.cz>); Wed, 05 Jul 2023 10:31:06 +0000
-Received: by quack3.suse.cz (Postfix, from userid 1000)
-        id 048CCA0707; Wed,  5 Jul 2023 12:31:06 +0200 (CEST)
-Date:   Wed, 5 Jul 2023 12:31:05 +0200
-From:   Jan Kara <jack@suse.cz>
-To:     "Darrick J. Wong" <djwong@kernel.org>
-Cc:     Jan Kara <jack@suse.cz>, linux-fsdevel@vger.kernel.org,
-        linux-block@vger.kernel.org, Christoph Hellwig <hch@infradead.org>,
+        with ESMTP id S231475AbjGEM1g (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 5 Jul 2023 08:27:36 -0400
+Received: from mail-lj1-x22d.google.com (mail-lj1-x22d.google.com [IPv6:2a00:1450:4864:20::22d])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0892B19B7;
+        Wed,  5 Jul 2023 05:27:18 -0700 (PDT)
+Received: by mail-lj1-x22d.google.com with SMTP id 38308e7fff4ca-2b70224ec56so4638911fa.3;
+        Wed, 05 Jul 2023 05:27:18 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=googlemail.com; s=20221208; t=1688560037; x=1691152037;
+        h=cc:to:subject:message-id:date:from:in-reply-to:references
+         :mime-version:from:to:cc:subject:date:message-id:reply-to;
+        bh=kJSPvo6YE4Pcu6NTPEmUuQAJR6NuIEKWGUFTkdLT+Zo=;
+        b=UTbFIgtSqyOkhSCGJNKlGTjaxGvpn5dtHCeSvBlpWtR6h/m/YrlsO69lGKaEehKpTP
+         5lWeOk5AYuWrzSHbYH0GvKvUVMAA78peDOsBtGc4fZv1M6uYE7Yxg7hMyewtzmbgp+aJ
+         iKmh5DsDGYEFbeoqxouKvftPiPLPOjsjeZ9rLlrb8xo2+dPYGF5SEizkGd5bHU1PuhxM
+         LZkPFZ8u+qTeEtIFJILmKG0S2Gen+TNYgKJjwoehvNcoU2CZvR1y488B4QN+T21gxrkf
+         tr2Jj7ljHPluop6P6jcV9a8wuNaqEj7ydsiJcYzSfDg350qmYjSZ1iWv9mx3W3Xne3Nc
+         v4pQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20221208; t=1688560037; x=1691152037;
+        h=cc:to:subject:message-id:date:from:in-reply-to:references
+         :mime-version:x-gm-message-state:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=kJSPvo6YE4Pcu6NTPEmUuQAJR6NuIEKWGUFTkdLT+Zo=;
+        b=iKTWcuKBlaPPJFEBCDJSuHIuLbrBH6VqtMl9fZ+TywuWJbknx4uQfmSQY3lwJjyvJT
+         APoOcOGxVU6Q4tPu4BnogiDN2Zg88gPT6dNy3JCaOqDWvgfSSsAop2c9Njo9rio2Lyx0
+         mGLV4N6e5BbgP+f+C5jmYQ3z5G6ncqQXRgh4hTpbufJaXg4yehY8v+qaTaFGOkudir9e
+         +d13pDvBCJte4B+eG+DCiKFihJSUa9HlXyDcYNNbmzjdCbyA2P6rADcrPr4NGSih0IaA
+         PlYKL2YcMl1jIQEusNVsNRKrQnW7O0n9b+3z0hVJF4Fo3AHaDSQK0qr6QUJZG8bJMvJE
+         ri6g==
+X-Gm-Message-State: ABy/qLa34ZgMOI/NFbweQxd9w5J0a8JGb67RzFSJjb7906FSY9UcpGWI
+        XX0yMNpNwZSJ4qkxR19WZuweiTqtVID+l1xugLo=
+X-Google-Smtp-Source: APBJJlGzO5WUPFKyK5n9U5kWFV8e+yxrPXUKJMYEuJ/JQY/cddmT1oRTc7JJ/G8g9GoJxyG3MkVyCxqSbRFuyoh5isI=
+X-Received: by 2002:a2e:9899:0:b0:2b6:cff1:cd1c with SMTP id
+ b25-20020a2e9899000000b002b6cff1cd1cmr11143689ljj.34.1688560036469; Wed, 05
+ Jul 2023 05:27:16 -0700 (PDT)
+MIME-Version: 1.0
+References: <20230704122727.17096-1-jack@suse.cz>
+In-Reply-To: <20230704122727.17096-1-jack@suse.cz>
+From:   Mike Fleetwood <mike.fleetwood@googlemail.com>
+Date:   Wed, 5 Jul 2023 13:27:03 +0100
+Message-ID: <CAMU1PDj7f4RGBKLaN5zLFTTERnF9NFPq3RxuWygSWnzUthnKWQ@mail.gmail.com>
+Subject: Re: [PATCH RFC 0/6 v2] block: Add config option to not allow writing
+ to mounted devices
+To:     Jan Kara <jack@suse.cz>
+Cc:     linux-fsdevel@vger.kernel.org, linux-block@vger.kernel.org,
+        Christoph Hellwig <hch@infradead.org>,
         Christian Brauner <brauner@kernel.org>,
         Jens Axboe <axboe@kernel.dk>, Kees Cook <keescook@google.com>,
         Ted Tso <tytso@mit.edu>,
@@ -60,32 +63,41 @@ Cc:     Jan Kara <jack@suse.cz>, linux-fsdevel@vger.kernel.org,
         Alexander Popov <alex.popov@linux.com>,
         Eric Biggers <ebiggers@google.com>, linux-xfs@vger.kernel.org,
         linux-btrfs@vger.kernel.org, Dmitry Vyukov <dvyukov@google.com>
-Subject: Re: [PATCH 3/6] xfs: Block writes to log device
-Message-ID: <20230705103105.cl4avnr27q6enuxc@quack3>
-References: <20230704122727.17096-1-jack@suse.cz>
- <20230704125702.23180-3-jack@suse.cz>
- <20230704155313.GO11441@frogsfrogsfrogs>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20230704155313.GO11441@frogsfrogsfrogs>
+Content-Type: text/plain; charset="UTF-8"
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Tue 04-07-23 08:53:13, Darrick J. Wong wrote:
-> On Tue, Jul 04, 2023 at 02:56:51PM +0200, Jan Kara wrote:
-> > Ask block layer to not allow other writers to open block device used
-> > for xfs log.
-> 
-> "...for the xfs log and realtime devices."
-> 
-> With that fixed,
-> Reviewed-by: Darrick J. Wong <djwong@kernel.org>
+On Tue, 4 Jul 2023 at 13:57, Jan Kara <jack@suse.cz> wrote:
+>
+> Hello!
+>
+> This is second version of the patches to add config option to not allow writing
+> to mounted block devices. For motivation why this is interesting see patch 1/6.
+> I've been testing the patches more extensively this time and I've found couple
+> of things that get broken by disallowing writes to mounted block devices:
+> 1) Bind mounts get broken because get_tree_bdev() / mount_bdev() first try to
+>    claim the bdev before searching whether it is already mounted. Patch 6
+>    reworks the mount code to avoid this problem.
+> 2) btrfs mounting is likely having the same problem as 1). It should be fixable
+>    AFAICS but for now I've left it alone until we settle on the rest of the
+>    series.
+> 3) "mount -o loop" gets broken because util-linux keeps the loop device open
+>    read-write when attempting to mount it. Hopefully fixable within util-linux.
+> 4) resize2fs online resizing gets broken because it tries to open the block
+>    device read-write only to call resizing ioctl. Trivial to fix within
+>    e2fsprogs.
+>
+> Likely there will be other breakage I didn't find yet but overall the breakage
+> looks minor enough that the option might be useful. Definitely good enough
+> for syzbot fuzzing and likely good enough for hardening of systems with
+> more tightened security.
 
-Thanks for the fixup and the review!
+5) Online e2label will break because it directly writes to the ext2/3/4
+   superblock while the FS is mounted to set the new label.  Ext4 driver
+   will have to implement the SETFSLABEL ioctl() and e2label will have
+   to use it, matching what happens for online labelling of btrfs and
+   xfs.
 
-								Honza
--- 
-Jan Kara <jack@suse.com>
-SUSE Labs, CR
+Thanks,
+Mike
