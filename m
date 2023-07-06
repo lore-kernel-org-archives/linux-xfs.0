@@ -2,61 +2,55 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4EEA5C001E0
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7314FC18E72
 	for <linux-xfs@archiver.kernel.org>; Thu,  6 Jul 2023 00:18:25 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232731AbjGFASX (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        id S232739AbjGFASX (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
         Wed, 5 Jul 2023 20:18:23 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55678 "EHLO
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55688 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232372AbjGFASS (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 5 Jul 2023 20:18:18 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id AD62A19B9;
-        Wed,  5 Jul 2023 17:18:17 -0700 (PDT)
+        with ESMTP id S232704AbjGFASW (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 5 Jul 2023 20:18:22 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 035AE19AD;
+        Wed,  5 Jul 2023 17:18:18 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
          key-exchange X25519 server-signature RSA-PSS (2048 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 11A55617D8;
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 171A6617E1;
         Thu,  6 Jul 2023 00:18:16 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPS id F3203C433D9;
-        Thu,  6 Jul 2023 00:18:14 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPS id 16A93C433B8;
+        Thu,  6 Jul 2023 00:18:15 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
         s=k20201202; t=1688602695;
-        bh=Wq4Kf5jvhnktrqkplac3NbW2zj2tA4epX9jlz+qsmxU=;
+        bh=HpMG+tyy/PpsvKEb8NWliRWVb2DUG5Z8rXMZJ3Y3mkc=;
         h=Subject:From:Date:References:In-Reply-To:To:Cc:From;
-        b=FqFLZi+08sYjnqaXYAl7RC8hWusLeRJdeJY3rxkQpMAg2656v3faM7lVBPC47eq9w
-         Ye27mWuDhpMkkbOOWhIfBLD7GWqruxk/n/4E3YevhZscqfl1NYaHhydhD8Y1w7MhOi
-         t72EFVvoOgabyvl1EvnEIHoGc9gW57dQGKiys/9Tt7JEjmdbNnvXszJOzgTHk0ZtGL
-         x5tXDyb7XsDe0FZOuxbCSC80OgwapO1qbNtM21geupHJfgNFOygMaX5FugtGkwYFKR
-         Wljo4GjMOilwWQ+w28lEf2vFPf8rU73LLcFJe/sDPVUCdXPSczpV+xwnaknMRFn8wz
-         t1C0p5ZN3fGPw==
+        b=LikA3OcMzLtL2uR3eKzQF0LeVsSNlJMLK11D/oOQ9aYM0WA8UsDwj10GcOrJC8tjt
+         pOtPDyPeQukRBF4JtgJ+YubOhUz7XE54fcrit2sn66Vdd3x7HS1eQYlvPRjNX5zd92
+         jbiBLti3sH7MFOCUBJiPHyJ4F+VPb+WyALiwovY5jyWvkCE4p8ezOZqmUEYC5vv9fY
+         v4sL7Nm2aJYhzPUkvH3ccCI0wtBJ09fMx9u1UWMg3moBDCd7LRGoHd2Z5SlXNCn/EI
+         8zubzYmjfskHw8c7CvYiw2po7nMHPqBCXwQ7gLh1SlEOU9UZq29FGodMiixx1gmjKs
+         hUJbESOiaXfLQ==
 Received: from aws-us-west-2-korg-oddjob-1.ci.codeaurora.org (localhost.localdomain [127.0.0.1])
-        by aws-us-west-2-korg-oddjob-1.ci.codeaurora.org (Postfix) with ESMTP id C19C0C0C40E;
+        by aws-us-west-2-korg-oddjob-1.ci.codeaurora.org (Postfix) with ESMTP id F0210C691EF;
         Thu,  6 Jul 2023 00:18:14 +0000 (UTC)
 Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-Subject: Re: [f2fs-dev] [PATCH 01/13] iomap: update ki_pos a little later in
- iomap_dio_complete
+Subject: Re: [f2fs-dev] [PATCH v2 0/6] fs: Fix directory corruption when moving
+ directories
 From:   patchwork-bot+f2fs@kernel.org
-Message-Id: <168860269478.29151.608883953593901827.git-patchwork-notify@kernel.org>
+Message-Id: <168860269498.29151.2669410551132746914.git-patchwork-notify@kernel.org>
 Date:   Thu, 06 Jul 2023 00:18:14 +0000
-References: <20230519093521.133226-2-hch@lst.de>
-In-Reply-To: <20230519093521.133226-2-hch@lst.de>
-To:     Christoph Hellwig <hch@lst.de>
-Cc:     willy@infradead.org, djwong@kernel.org, linux-mm@kvack.org,
-        agruenba@redhat.com, miklos@szeredi.hu, cluster-devel@redhat.com,
-        idryomov@gmail.com, linux-ext4@vger.kernel.org,
-        linux-nfs@vger.kernel.org, linux-block@vger.kernel.org,
-        dlemoal@kernel.org, viro@zeniv.linux.org.uk, jaegeuk@kernel.org,
-        ceph-devel@vger.kernel.org, xiubli@redhat.com,
-        trond.myklebust@hammerspace.com, axboe@kernel.dk,
-        brauner@kernel.org, tytso@mit.edu,
+References: <20230601104525.27897-1-jack@suse.cz>
+In-Reply-To: <20230601104525.27897-1-jack@suse.cz>
+To:     Jan Kara <jack@suse.cz>
+Cc:     viro@ZenIV.linux.org.uk, brauner@kernel.org, tytso@mit.edu,
+        miklos@szeredi.hu, djwong@kernel.org,
         linux-f2fs-devel@lists.sourceforge.net, linux-xfs@vger.kernel.org,
-        anna@kernel.org, linux-fsdevel@vger.kernel.org,
-        akpm@linux-foundation.org
+        linux-fsdevel@vger.kernel.org, jaegeuk@kernel.org,
+        linux-ext4@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
@@ -64,43 +58,33 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 Hello:
 
 This series was applied to jaegeuk/f2fs.git (dev)
-by Andrew Morton <akpm@linux-foundation.org>:
+by Christian Brauner <brauner@kernel.org>:
 
-On Fri, 19 May 2023 11:35:09 +0200 you wrote:
-> Move the ki_pos update down a bit to prepare for a better common
-> helper that invalidates pages based of an iocb.
+On Thu,  1 Jun 2023 12:58:20 +0200 you wrote:
+> Hello,
 > 
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
-> ---
->  fs/iomap/direct-io.c | 21 +++++++++++----------
->  1 file changed, 11 insertions(+), 10 deletions(-)
+> this patch set fixes a problem with cross directory renames originally reported
+> in [1]. To quickly sum it up some filesystems (so far we know at least about
+> ext4, udf, f2fs, ocfs2, likely also reiserfs, gfs2 and others) need to lock the
+> directory when it is being renamed into another directory. This is because we
+> need to update the parent pointer in the directory in that case and if that
+> races with other operation on the directory (in particular a conversion from
+> one directory format into another), bad things can happen.
+> 
+> [...]
 
 Here is the summary with links:
-  - [f2fs-dev,01/13] iomap: update ki_pos a little later in iomap_dio_complete
-    https://git.kernel.org/jaegeuk/f2fs/c/936e114a245b
-  - [f2fs-dev,02/13] filemap: update ki_pos in generic_perform_write
+  - [f2fs-dev,v2,1/6] ext4: Remove ext4 locking of moved directory
+    https://git.kernel.org/jaegeuk/f2fs/c/3658840cd363
+  - [f2fs-dev,v2,2/6] Revert "udf: Protect rename against modification of moved directory"
+    https://git.kernel.org/jaegeuk/f2fs/c/7517ce5dc4d6
+  - [f2fs-dev,v2,3/6] Revert "f2fs: fix potential corruption when moving a directory"
+    https://git.kernel.org/jaegeuk/f2fs/c/cde3c9d7e2a3
+  - [f2fs-dev,v2,4/6] fs: Establish locking order for unrelated directories
     (no matching commit)
-  - [f2fs-dev,03/13] filemap: assign current->backing_dev_info in generic_perform_write
-    (no matching commit)
-  - [f2fs-dev,04/13] filemap: add a kiocb_write_and_wait helper
-    https://git.kernel.org/jaegeuk/f2fs/c/3c435a0fe35c
-  - [f2fs-dev,05/13] filemap: add a kiocb_invalidate_pages helper
-    https://git.kernel.org/jaegeuk/f2fs/c/e003f74afbd2
-  - [f2fs-dev,06/13] filemap: add a kiocb_invalidate_post_write helper
-    (no matching commit)
-  - [f2fs-dev,07/13] iomap: update ki_pos in iomap_file_buffered_write
-    (no matching commit)
-  - [f2fs-dev,08/13] iomap: assign current->backing_dev_info in iomap_file_buffered_write
-    (no matching commit)
-  - [f2fs-dev,09/13] iomap: use kiocb_write_and_wait and kiocb_invalidate_pages
-    https://git.kernel.org/jaegeuk/f2fs/c/8ee93b4bb626
-  - [f2fs-dev,10/13] fs: factor out a direct_write_fallback helper
-    (no matching commit)
-  - [f2fs-dev,11/13] fuse: update ki_pos in fuse_perform_write
-    (no matching commit)
-  - [f2fs-dev,12/13] fuse: drop redundant arguments to fuse_perform_write
-    (no matching commit)
-  - [f2fs-dev,13/13] fuse: use direct_write_fallback
+  - [f2fs-dev,v2,5/6] fs: Lock moved directories
+    https://git.kernel.org/jaegeuk/f2fs/c/28eceeda130f
+  - [f2fs-dev,v2,6/6] fs: Restrict lock_two_nondirectories() to non-directory inodes
     (no matching commit)
 
 You are awesome, thank you!
