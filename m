@@ -2,102 +2,124 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0F109EB64DA
-	for <linux-xfs@archiver.kernel.org>; Thu,  6 Jul 2023 03:36:35 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id CB74AEB64DC
+	for <linux-xfs@archiver.kernel.org>; Thu,  6 Jul 2023 07:58:41 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232426AbjGFDgd (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 5 Jul 2023 23:36:33 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59600 "EHLO
+        id S233493AbjGFH6k (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 6 Jul 2023 03:58:40 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:32842 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230383AbjGFDgc (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 5 Jul 2023 23:36:32 -0400
-Received: from out30-101.freemail.mail.aliyun.com (out30-101.freemail.mail.aliyun.com [115.124.30.101])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id CF1951BCA
-        for <linux-xfs@vger.kernel.org>; Wed,  5 Jul 2023 20:36:30 -0700 (PDT)
-X-Alimail-AntiSpam: AC=PASS;BC=-1|-1;BR=01201311R141e4;CH=green;DM=||false|;DS=||;FP=0|-1|-1|-1|0|-1|-1|-1;HT=ay29a033018045168;MF=hsiangkao@linux.alibaba.com;NM=1;PH=DS;RN=2;SR=0;TI=SMTPD_---0Vmj24eM_1688614587;
-Received: from 30.97.48.246(mailfrom:hsiangkao@linux.alibaba.com fp:SMTPD_---0Vmj24eM_1688614587)
-          by smtp.aliyun-inc.com;
-          Thu, 06 Jul 2023 11:36:27 +0800
-Message-ID: <6fcbbb5a-6247-bab1-0515-359e663c587f@linux.alibaba.com>
-Date:   Thu, 6 Jul 2023 11:36:26 +0800
+        with ESMTP id S232934AbjGFH6k (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 6 Jul 2023 03:58:40 -0400
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1B0091BFD
+        for <linux-xfs@vger.kernel.org>; Thu,  6 Jul 2023 00:57:51 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1688630271;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=NLwk8FmCnZHmEOoEY/SC3En45441mal0yiuPqiBV2B4=;
+        b=Zu++uBvo0fe4ApwCiMHLD/dR98wPnQOGo9sfLSwWDrH8beTKHYM+OZl278HrtpTNKOhGs3
+        94bMAPqsPZLpiPtcWhwVnnK4hV7CG4itoEcXk12RltwEH61Od6yGdGkbhUSejuVJdB2RCz
+        tkWzm7bk6X5AE+X9bVj7a7nEKPeu6SA=
+Received: from mail-pl1-f198.google.com (mail-pl1-f198.google.com
+ [209.85.214.198]) by relay.mimecast.com with ESMTP with STARTTLS
+ (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
+ us-mta-86-YgJ98sYNPcCXtEBP2Ohcbg-1; Thu, 06 Jul 2023 03:57:46 -0400
+X-MC-Unique: YgJ98sYNPcCXtEBP2Ohcbg-1
+Received: by mail-pl1-f198.google.com with SMTP id d9443c01a7336-1b8bbe7a86eso2906485ad.1
+        for <linux-xfs@vger.kernel.org>; Thu, 06 Jul 2023 00:57:46 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20221208; t=1688630265; x=1691222265;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=NLwk8FmCnZHmEOoEY/SC3En45441mal0yiuPqiBV2B4=;
+        b=EI5Rg6tWQtxDkydCPFnEwVEUpru8ePBlaCB6Iz8caSW6/Z8uA+pAxG7rYAVfTB0cro
+         Uxuxi1Om3Euz7o8QER6tXuw7T4s7I9XWIGpbWeEFxH6kAfWT8rYF/uic/G9Udf57xD+f
+         hfn3erwOhRomgnUhodr5nmKCzrshw7pclLYSbyqTTBBsWu2xHCo9uMTom65GFm6up4wV
+         USKM2tieN6v4BgnAy3Kuigco+ChyCxOQgn96BVEX6HaftxCntqh6juPrRRXPcSv68CCm
+         V+115RIYFbdWYCpXDyRpYIk3KsdyJB+5wxZGhY0YwsrWMF+eZhzDSbjVUQaIsMs9Vjsn
+         Vuzw==
+X-Gm-Message-State: ABy/qLZKbBLBP3t466j0t24GtTzOnHlup4MMw2bePe5QDGobZqDhElaT
+        GewV9cS2w3SZmRIQc065VeLBaR72urHd3A4jWh/3R3Jl0Limy7gRnFo0yS5LcyPRAM5P4RDVlFV
+        +gjUnE1Xe0yj+hauXBVMRWtnoVZE1ENRSDw==
+X-Received: by 2002:a17:903:1205:b0:1b3:b998:8007 with SMTP id l5-20020a170903120500b001b3b9988007mr1024651plh.55.1688630265577;
+        Thu, 06 Jul 2023 00:57:45 -0700 (PDT)
+X-Google-Smtp-Source: APBJJlHqjJPoZAQR9iKS0/kLVEB7SiO22isSKxIg4Dtf0TyIX81w89icjxXVU1SCZ/K1+Fht+DxzGA==
+X-Received: by 2002:a17:903:1205:b0:1b3:b998:8007 with SMTP id l5-20020a170903120500b001b3b9988007mr1024636plh.55.1688630265282;
+        Thu, 06 Jul 2023 00:57:45 -0700 (PDT)
+Received: from zlang-mailbox ([209.132.188.80])
+        by smtp.gmail.com with ESMTPSA id p11-20020a1709026b8b00b001b843593e46sm755483plk.73.2023.07.06.00.57.43
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Thu, 06 Jul 2023 00:57:44 -0700 (PDT)
+Date:   Thu, 6 Jul 2023 15:57:41 +0800
+From:   Zorro Lang <zlang@redhat.com>
+To:     "Darrick J. Wong" <djwong@kernel.org>
+Cc:     linux-xfs@vger.kernel.org, fstests@vger.kernel.org
+Subject: Re: [PATCH v1.1 3/5] xfs/439: amend test to work with new log
+ geometry validation
+Message-ID: <20230706075741.vsghan7ywoj5h4wz@zlang-mailbox>
+References: <168840381298.1317961.1436890061506567407.stgit@frogsfrogsfrogs>
+ <168840383001.1317961.12926483978316384291.stgit@frogsfrogsfrogs>
+ <20230705153819.GS11441@frogsfrogsfrogs>
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:102.0)
- Gecko/20100101 Thunderbird/102.12.0
-To:     linux-xfs <linux-xfs@vger.kernel.org>,
-        Joseph Qi <joseph.qi@linux.alibaba.com>
-From:   Gao Xiang <hsiangkao@linux.alibaba.com>
-Subject: [bug report][5.10] deadlock between xfs_create() and xfs_inactive()
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20230705153819.GS11441@frogsfrogsfrogs>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Hi folks,
+On Wed, Jul 05, 2023 at 08:38:19AM -0700, Darrick J. Wong wrote:
+> From: Darrick J. Wong <djwong@kernel.org>
+> 
+> An upcoming patch moves more log validation checks to the superblock
+> verifier, so update this test as needed.
+> 
+> Signed-off-by: Darrick J. Wong <djwong@kernel.org>
+> ---
+> v2: annotate which commits this tests is testing
+> ---
+>  tests/xfs/439 |   12 +++++++++---
+>  1 file changed, 9 insertions(+), 3 deletions(-)
+> 
+> diff --git a/tests/xfs/439 b/tests/xfs/439
+> index b7929493d1..cb6fb37918 100755
+> --- a/tests/xfs/439
+> +++ b/tests/xfs/439
+> @@ -20,8 +20,14 @@ _begin_fstest auto quick fuzzers log
+>  # real QA test starts here
+>  _supported_fs xfs
+>  _require_scratch_nocheck
+> -# We corrupt XFS on purpose, and check if assert failures would crash system.
+> -_require_no_xfs_bug_on_assert
+> +
+> +# We corrupt XFS on purpose, and check if assert failures would crash the
+> +# system when trying to xfs_log_mount.  Hence this is a regression test for:
+> +_fixed_by_git_commit kernel 9c92ee208b1f "xfs: validate sb_logsunit is a multiple of the fs blocksize"
+> +
+> +# This used to be _require_no_xfs_bug_on_assert, but now we've fixed the sb
+> +# verifier to reject this before xfs_log_mount gets to it:
+> +_fixed_by_git_commit kernel f1e1765aad7d "xfs: journal geometry is not properly bounds checked"
 
-This is a report from our cloud online workloads, it could
-randomly happen about ~20days, and currently we have no idea
-how to reproduce with some artificial testcase reliably:
+Thanks, I'll replace "_fixed_by_git_commit kernel" with "_fixed_by_kernel_commit"
+when I merge this patch. Others looks good to me.
 
-The detail is as below:
+Reviewed-by: Zorro Lang <zlang@redhat.com>
 
+>  
+>  rm -f "$seqres.full"
+>  
+> @@ -33,7 +39,7 @@ blksz=$(_scratch_xfs_get_sb_field blocksize)
+>  _scratch_xfs_set_sb_field logsunit $((blksz - 1)) >> $seqres.full 2>&1
+>  
+>  # Check if logsunit is set correctly
+> -lsunit=$(_scratch_xfs_get_sb_field logsunit)
+> +lsunit=$(_scratch_xfs_get_sb_field logsunit 2>/dev/null)
+>  [ $lsunit -ne $((blksz - 1)) ] && _notrun "failed to set sb_logsunit"
+>  
+>  # Mount and writing log may trigger a crash on buggy kernel
+> 
 
-(Thread 1)
-already take AGF lock
-loop due to inode I_FREEING
-
-PID: 1894063 TASK: ffff954f494dc500 CPU: 5 COMMAND: postgres*
-#O [ffffa141ca34f920] schedule at ffffffff9ca58505
-#1 [ffffa141ca34f9b0] schedule at ffffffff9ca5899€
-#2 [ffffa141ca34f9c0] schedule timeout at ffffffff9ca5c027
-#3 [ffffa141ca34fa48] xfs_iget at ffffffffe1137b4f [xfs]	xfs_iget_cache_hit->	-> igrab(inode)
-#4 [ffffa141ca34fb00] xfs_ialloc at ffffffffc1140ab5 [xfs]
-#5 [ffffa141ca34fb80] xfs_dir_ialloc at ffffffffc1142bfc [xfs]
-#6 [ffffa141ca34fc10] xfs_create at ffffffffe1142fc8 [xfs]
-#7 [ffffa141ca34fca0] xfs_generic_create at ffffffffc1140229 [xfs]
-...
-
-(Thread 2)
-already have inode I_FREEING
-want to take AGF lock
-  
-PID: 202276 TASK: ffff954d142/0000 CPU:2 COMMAND: postgres*
-#0  [ffffa141c12638d0] schedule at ffffffff9ca58505
-#1  [ffffa141c1263960] schedule at ffffffff9ca5899c
-#2  [ffffa141c1263970] schedule timeout at ffffffff9caSc0a9
-#3  [ffffa141c1263988]
-down at ffffffff9caSaba5
-44  [ffffa141c1263a58] down at ffffffff9c146d6b
-#5  [ffffa141c1263a70] xfs_buf_lock at ffffffffc112c3dc [xfs]
-#6  [ffffa141c1263a80] xfs_buf_find at ffffffffc112c83d [xfs]
-#7  [ffffa141c1263b18] xfs_buf_get_map at ffffffffe112cb3c [xfs]
-#8  [ffffa141c1263b70] xfs_buf_read_map at ffffffffc112d175 [xfs]
-#9  [ffffa141c1263bc8] xfs_trans_read_buf map at ffffffffc116404a [xfs]
-#10 [ffffa141c1263c28] xfs_read_agf at ffffffffc10e1c44 [xfs]
-#11 [ffffa141c1263c80] xfs_alloc_read_agf at ffffffffc10e1d0a [xfs]
-#12 [ffffa141c1263cb0] xfs_agfl_free_finish item at ffffffffc115a45a [xfs]
-#13 [ffffa141c1263d00] xfs_defer_finish_noroll at ffffffffe110257e [xfs]
-#14 [ffffa141c1263d68] xfs_trans_commit at ffffffffe1150581 [xfs]
-#15 [ffffa141c1263da8] xfs_inactive_free at ffffffffc1144084 [xfs]
-#16 [ffffa141c1263dd8] xfs_inactive at ffffffffc11441f2 [xfs)
-#17 [ffffa141c1263dfO] xfs_fs_destroy_inode at ffffffffc114d489 [xfs]
-#18 [ffffa141€1263e10] destroy_inode at ffffffff9c3838a8
-#19 [ffffa141c1263e28] dentry_kill at ffffffff9c37f5d5
-#20 [ffffa141c1263e48] dput at ffffffff9c3800ab
-#21 [ffffa141c1263e70] do_renameat2 at ffffffff9c376a8b
-#22 [ffffa141c1263f38] sys_rename at ffffffff9c376cdc
-#23 [ffffa141c1263f40] do_syscall_64 at ffffffff9ca4a4c0
-#24 [ffffa141c1263f50] entry_SYSCALL_64 after hwframe at ffffffff9cc00099
-
-
-I'm not sure if the mainline kernel still has the issue, but after some
-code review, I guess even after defer inactivation, such inodes pending
-for recycling still keep I_FREEING.  IOWs, there are still some
-dependencies between inode i_state and AGF lock with different order so
-it might be racy.  Since it's online workloads, it's hard to switch the
-production environment to the latest kernel.
-
-Hopefully it helps.
-
-Thanks,
-Gao Xiang
