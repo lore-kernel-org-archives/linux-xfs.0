@@ -2,138 +2,239 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D9932C00528
-	for <linux-xfs@archiver.kernel.org>; Thu,  6 Jul 2023 14:46:24 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3F3DBEB64D9
+	for <linux-xfs@archiver.kernel.org>; Thu,  6 Jul 2023 14:52:31 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233101AbjGFOqX (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 6 Jul 2023 10:46:23 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35390 "EHLO
+        id S229527AbjGFOwa (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 6 Jul 2023 10:52:30 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41112 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233314AbjGFOqS (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 6 Jul 2023 10:46:18 -0400
-Received: from mail-pl1-x62b.google.com (mail-pl1-x62b.google.com [IPv6:2607:f8b0:4864:20::62b])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2B1121FDA;
-        Thu,  6 Jul 2023 07:46:11 -0700 (PDT)
-Received: by mail-pl1-x62b.google.com with SMTP id d9443c01a7336-1b8a44ee159so3528185ad.3;
-        Thu, 06 Jul 2023 07:46:11 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20221208; t=1688654770; x=1691246770;
-        h=in-reply-to:subject:cc:to:from:message-id:date:from:to:cc:subject
-         :date:message-id:reply-to;
-        bh=sHK40quW1VFjXNzQRez3EQrvgJhxVXz9e4IagyBzLD8=;
-        b=c5n7Jg3Lsah3E/CXz4AWL/3gKXDM9ZEgZahf3gngVTi6Z/obI3gD4NZuHs28A4CGr0
-         9PujRmHWL1YnLDdyurHkU+Od10fZbC/nap2JGuE4HCWOo5gHAEQwVz2e8l2Eyq5CXnne
-         ulTFmJQVEJd6/p61XjGo963QxBtbcCiKerQxvNzoKfU9Ss+galO6ftKPVR+nLN2sYeCm
-         PsuOOHtoyc5RAV2bRww9ltgWX6Llo1X3d1VxO2Yfrro+mok6VNCb2V3rHY+N2JxvJ8+9
-         e2WogF6misfH1q2r/XnHJCpzTAfabsP9wa/BQ8130DJhC8fy6qtdN3Jaabv3fLp497uq
-         I2Ww==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20221208; t=1688654770; x=1691246770;
-        h=in-reply-to:subject:cc:to:from:message-id:date:x-gm-message-state
-         :from:to:cc:subject:date:message-id:reply-to;
-        bh=sHK40quW1VFjXNzQRez3EQrvgJhxVXz9e4IagyBzLD8=;
-        b=g4UjJspitdsJO6gph15nUhOHfvdVZz/2mQdCL7TI87ECeRgiNF/n8+3M7O+RI90Klf
-         VgPhovb8cjw2Gd7dd7kufA8cpmbdWpHkjIA00NthapUAGBuA2ooTORi8qXtlkrM4oRGo
-         6lXJY7B/MV8QcRB/YjCKTUgIN5ZsKQ9UWAhFO0bTRxtnCNekoQbAYZczzhgVklM73pho
-         1RtZ4aidlnzNW0zsy2g13YN42pbAFF2GIw78Qk7ID2b5GLS0maRJ5K/EIGewSpOYaKrm
-         AURu5Thb4onqk/lylJdbZ5QM3JCQE84apFHcLub9eX9929l0kTs9juJQ8LHg60Uawjw8
-         oUkA==
-X-Gm-Message-State: ABy/qLYNU0C7q+0TRE/EbrSWMBk5jAfSEKT7oX6bAR3VJmwepjKoJox7
-        fhr2adrBSeuldDQ14cdvseo=
-X-Google-Smtp-Source: APBJJlEYbuUW9q0fLRSQAUQCyF8zF5TtNNIK58nurBfcGgmcrQ8OiUV8MMepZet3d0GK5qR3+09+mw==
-X-Received: by 2002:a17:903:244e:b0:1b5:edd:e3c7 with SMTP id l14-20020a170903244e00b001b50edde3c7mr1945804pls.16.1688654770404;
-        Thu, 06 Jul 2023 07:46:10 -0700 (PDT)
-Received: from dw-tp ([49.207.232.207])
-        by smtp.gmail.com with ESMTPSA id ij24-20020a170902ab5800b001ac897026cesm1552555plb.102.2023.07.06.07.46.07
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 06 Jul 2023 07:46:09 -0700 (PDT)
-Date:   Thu, 06 Jul 2023 20:16:05 +0530
-Message-Id: <87jzvdjdxu.fsf@doe.com>
-From:   Ritesh Harjani (IBM) <ritesh.list@gmail.com>
-To:     linux-xfs@vger.kernel.org
-Cc:     linux-fsdevel@vger.kernel.org,
-        "Darrick J . Wong" <djwong@kernel.org>,
-        Matthew Wilcox <willy@infradead.org>,
-        Christoph Hellwig <hch@infradead.org>,
-        Brian Foster <bfoster@redhat.com>,
-        Andreas Gruenbacher <agruenba@redhat.com>,
-        Aravinda Herle <araherle@in.ibm.com>
-Subject: Re: [PATCHv11 8/8] iomap: Add per-block dirty state tracking to improve performance
-In-Reply-To: <bb0c58bf80dcdec96d7387bc439925fb14a5a496.1688188958.git.ritesh.list@gmail.com>
+        with ESMTP id S232967AbjGFOwV (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 6 Jul 2023 10:52:21 -0400
+Received: from smtp-out2.suse.de (smtp-out2.suse.de [195.135.220.29])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7B9711FC8;
+        Thu,  6 Jul 2023 07:52:06 -0700 (PDT)
+Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
+        (No client certificate requested)
+        by smtp-out2.suse.de (Postfix) with ESMTPS id 23C1F1FD65;
+        Thu,  6 Jul 2023 14:52:05 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.cz; s=susede2_rsa;
+        t=1688655125; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+         mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=6LgZwsKI2T3oa0WncIjDyarSkI0GCAb7uNCNg6xYK9Y=;
+        b=jhNa9vmboRax7O75Hw7m7bur3/q/eg7nb3uJb3R50OnQDiTJJZbT5rqJQtMdNhg3sCGl+4
+        lC0WP/JWx30VjPRA9toi9q45dJaWY9n3swejKo9vbTlqrB6LkNIXDTTbKxkcp1FOu1JaSm
+        8Nt4Xi3vkMK/Du3rLBTJUuXDcWTS9Rg=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.cz;
+        s=susede2_ed25519; t=1688655125;
+        h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+         mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=6LgZwsKI2T3oa0WncIjDyarSkI0GCAb7uNCNg6xYK9Y=;
+        b=oHJkIUL9M1Q3+szTqQx+MYm3Gz8aEq+us9efoe/4GNIP97YsxR4WkGfQGw6QUZ9bDcvzWV
+        PgRsQHccjU1MIvCg==
+Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
+        (No client certificate requested)
+        by imap2.suse-dmz.suse.de (Postfix) with ESMTPS id 13FB41390F;
+        Thu,  6 Jul 2023 14:52:05 +0000 (UTC)
+Received: from dovecot-director2.suse.de ([192.168.254.65])
+        by imap2.suse-dmz.suse.de with ESMTPSA
+        id g5zfBBXVpmQEAwAAMHmgww
+        (envelope-from <jack@suse.cz>); Thu, 06 Jul 2023 14:52:05 +0000
+Received: by quack3.suse.cz (Postfix, from userid 1000)
+        id 8ED00A0707; Thu,  6 Jul 2023 16:52:04 +0200 (CEST)
+Date:   Thu, 6 Jul 2023 16:52:04 +0200
+From:   Jan Kara <jack@suse.cz>
+To:     Jeff Layton <jlayton@kernel.org>
+Cc:     Christian Brauner <brauner@kernel.org>,
+        "Darrick J. Wong" <djwong@kernel.org>,
+        Al Viro <viro@zeniv.linux.org.uk>, Jan Kara <jack@suse.cz>,
+        linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-xfs@vger.kernel.org
+Subject: Re: [PATCH v2 82/92] xfs: convert to ctime accessor functions
+Message-ID: <20230706145204.5n5c4oruohfqwwic@quack3>
+References: <20230705185755.579053-1-jlayton@kernel.org>
+ <20230705190309.579783-1-jlayton@kernel.org>
+ <20230705190309.579783-80-jlayton@kernel.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20230705190309.579783-80-jlayton@kernel.org>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-"Ritesh Harjani (IBM)" <ritesh.list@gmail.com> writes:
+On Wed 05-07-23 15:01:47, Jeff Layton wrote:
+> In later patches, we're going to change how the inode's ctime field is
+> used. Switch to using accessor functions instead of raw accesses of
+> inode->i_ctime.
+> 
+> Signed-off-by: Jeff Layton <jlayton@kernel.org>
 
-> @@ -1637,7 +1758,7 @@ iomap_writepage_map(struct iomap_writepage_ctx *wpc,
->  		struct writeback_control *wbc, struct inode *inode,
->  		struct folio *folio, u64 end_pos)
->  {
-> -	struct iomap_folio_state *ifs = ifs_alloc(inode, folio, 0);
-> +	struct iomap_folio_state *ifs = folio->private;
->  	struct iomap_ioend *ioend, *next;
->  	unsigned len = i_blocksize(inode);
->  	unsigned nblocks = i_blocks_per_folio(inode, folio);
-> @@ -1645,6 +1766,11 @@ iomap_writepage_map(struct iomap_writepage_ctx *wpc,
->  	int error = 0, count = 0, i;
->  	LIST_HEAD(submit_list);
+Looks good. Feel free to add:
+
+Reviewed-by: Jan Kara <jack@suse.cz>
+
+								Honza
+
+> ---
+>  fs/xfs/libxfs/xfs_inode_buf.c   | 5 +++--
+>  fs/xfs/libxfs/xfs_trans_inode.c | 2 +-
+>  fs/xfs/xfs_acl.c                | 2 +-
+>  fs/xfs/xfs_bmap_util.c          | 6 ++++--
+>  fs/xfs/xfs_inode.c              | 3 +--
+>  fs/xfs/xfs_inode_item.c         | 2 +-
+>  fs/xfs/xfs_iops.c               | 4 ++--
+>  fs/xfs/xfs_itable.c             | 4 ++--
+>  8 files changed, 15 insertions(+), 13 deletions(-)
+> 
+> diff --git a/fs/xfs/libxfs/xfs_inode_buf.c b/fs/xfs/libxfs/xfs_inode_buf.c
+> index 758aacd8166b..a35781577cad 100644
+> --- a/fs/xfs/libxfs/xfs_inode_buf.c
+> +++ b/fs/xfs/libxfs/xfs_inode_buf.c
+> @@ -222,7 +222,8 @@ xfs_inode_from_disk(
+>  	 */
+>  	inode->i_atime = xfs_inode_from_disk_ts(from, from->di_atime);
+>  	inode->i_mtime = xfs_inode_from_disk_ts(from, from->di_mtime);
+> -	inode->i_ctime = xfs_inode_from_disk_ts(from, from->di_ctime);
+> +	inode_set_ctime_to_ts(inode,
+> +			      xfs_inode_from_disk_ts(from, from->di_ctime));
 >  
-> +	if (!ifs && nblocks > 1) {
-> +		ifs = ifs_alloc(inode, folio, 0);
-> +		iomap_set_range_dirty(folio, 0, folio_size(folio));
-> +	}
-> +
->  	WARN_ON_ONCE(ifs && atomic_read(&ifs->write_bytes_pending) != 0);
+>  	ip->i_disk_size = be64_to_cpu(from->di_size);
+>  	ip->i_nblocks = be64_to_cpu(from->di_nblocks);
+> @@ -316,7 +317,7 @@ xfs_inode_to_disk(
+>  
+>  	to->di_atime = xfs_inode_to_disk_ts(ip, inode->i_atime);
+>  	to->di_mtime = xfs_inode_to_disk_ts(ip, inode->i_mtime);
+> -	to->di_ctime = xfs_inode_to_disk_ts(ip, inode->i_ctime);
+> +	to->di_ctime = xfs_inode_to_disk_ts(ip, inode_get_ctime(inode));
+>  	to->di_nlink = cpu_to_be32(inode->i_nlink);
+>  	to->di_gen = cpu_to_be32(inode->i_generation);
+>  	to->di_mode = cpu_to_be16(inode->i_mode);
+> diff --git a/fs/xfs/libxfs/xfs_trans_inode.c b/fs/xfs/libxfs/xfs_trans_inode.c
+> index cb4796b6e693..6b2296ff248a 100644
+> --- a/fs/xfs/libxfs/xfs_trans_inode.c
+> +++ b/fs/xfs/libxfs/xfs_trans_inode.c
+> @@ -67,7 +67,7 @@ xfs_trans_ichgtime(
+>  	if (flags & XFS_ICHGTIME_MOD)
+>  		inode->i_mtime = tv;
+>  	if (flags & XFS_ICHGTIME_CHG)
+> -		inode->i_ctime = tv;
+> +		inode_set_ctime_to_ts(inode, tv);
+>  	if (flags & XFS_ICHGTIME_CREATE)
+>  		ip->i_crtime = tv;
+>  }
+> diff --git a/fs/xfs/xfs_acl.c b/fs/xfs/xfs_acl.c
+> index 791db7d9c849..6b840301817a 100644
+> --- a/fs/xfs/xfs_acl.c
+> +++ b/fs/xfs/xfs_acl.c
+> @@ -233,7 +233,7 @@ xfs_acl_set_mode(
+>  	xfs_ilock(ip, XFS_ILOCK_EXCL);
+>  	xfs_trans_ijoin(tp, ip, XFS_ILOCK_EXCL);
+>  	inode->i_mode = mode;
+> -	inode->i_ctime = current_time(inode);
+> +	inode_set_ctime_current(inode);
+>  	xfs_trans_log_inode(tp, ip, XFS_ILOG_CORE);
+>  
+>  	if (xfs_has_wsync(mp))
+> diff --git a/fs/xfs/xfs_bmap_util.c b/fs/xfs/xfs_bmap_util.c
+> index fbb675563208..fcefab687285 100644
+> --- a/fs/xfs/xfs_bmap_util.c
+> +++ b/fs/xfs/xfs_bmap_util.c
+> @@ -1644,6 +1644,7 @@ xfs_swap_extents(
+>  	uint64_t		f;
+>  	int			resblks = 0;
+>  	unsigned int		flags = 0;
+> +	struct timespec64	ctime;
 >  
 >  	/*
-> @@ -1653,7 +1779,7 @@ iomap_writepage_map(struct iomap_writepage_ctx *wpc,
->  	 * invalid, grab a new one.
+>  	 * Lock the inodes against other IO, page faults and truncate to
+> @@ -1756,8 +1757,9 @@ xfs_swap_extents(
+>  	 * process that the file was not changed out from
+>  	 * under it.
 >  	 */
->  	for (i = 0; i < nblocks && pos < end_pos; i++, pos += len) {
-> -		if (ifs && !ifs_block_is_uptodate(ifs, i))
-> +		if (ifs && !ifs_block_is_dirty(folio, ifs, i))
->  			continue;
+> -	if ((sbp->bs_ctime.tv_sec != VFS_I(ip)->i_ctime.tv_sec) ||
+> -	    (sbp->bs_ctime.tv_nsec != VFS_I(ip)->i_ctime.tv_nsec) ||
+> +	ctime = inode_get_ctime(VFS_I(ip));
+> +	if ((sbp->bs_ctime.tv_sec != ctime.tv_sec) ||
+> +	    (sbp->bs_ctime.tv_nsec != ctime.tv_nsec) ||
+>  	    (sbp->bs_mtime.tv_sec != VFS_I(ip)->i_mtime.tv_sec) ||
+>  	    (sbp->bs_mtime.tv_nsec != VFS_I(ip)->i_mtime.tv_nsec)) {
+>  		error = -EBUSY;
+> diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
+> index 9e62cc500140..360fe83a334f 100644
+> --- a/fs/xfs/xfs_inode.c
+> +++ b/fs/xfs/xfs_inode.c
+> @@ -843,10 +843,9 @@ xfs_init_new_inode(
+>  	ip->i_df.if_nextents = 0;
+>  	ASSERT(ip->i_nblocks == 0);
 >  
->  		error = wpc->ops->map_blocks(wpc, inode, pos);
-> @@ -1697,6 +1823,7 @@ iomap_writepage_map(struct iomap_writepage_ctx *wpc,
->  		}
->  	}
+> -	tv = current_time(inode);
+> +	tv = inode_set_ctime_current(inode);
+>  	inode->i_mtime = tv;
+>  	inode->i_atime = tv;
+> -	inode->i_ctime = tv;
 >  
-> +	iomap_clear_range_dirty(folio, 0, end_pos - folio_pos(folio));
->  	folio_start_writeback(folio);
->  	folio_unlock(folio);
+>  	ip->i_extsize = 0;
+>  	ip->i_diflags = 0;
+> diff --git a/fs/xfs/xfs_inode_item.c b/fs/xfs/xfs_inode_item.c
+> index 91c847a84e10..127b2410eb20 100644
+> --- a/fs/xfs/xfs_inode_item.c
+> +++ b/fs/xfs/xfs_inode_item.c
+> @@ -528,7 +528,7 @@ xfs_inode_to_log_dinode(
+>  	memset(to->di_pad3, 0, sizeof(to->di_pad3));
+>  	to->di_atime = xfs_inode_to_log_dinode_ts(ip, inode->i_atime);
+>  	to->di_mtime = xfs_inode_to_log_dinode_ts(ip, inode->i_mtime);
+> -	to->di_ctime = xfs_inode_to_log_dinode_ts(ip, inode->i_ctime);
+> +	to->di_ctime = xfs_inode_to_log_dinode_ts(ip, inode_get_ctime(inode));
+>  	to->di_nlink = inode->i_nlink;
+>  	to->di_gen = inode->i_generation;
+>  	to->di_mode = inode->i_mode;
+> diff --git a/fs/xfs/xfs_iops.c b/fs/xfs/xfs_iops.c
+> index 24718adb3c16..3a9363953ef2 100644
+> --- a/fs/xfs/xfs_iops.c
+> +++ b/fs/xfs/xfs_iops.c
+> @@ -574,7 +574,7 @@ xfs_vn_getattr(
+>  	stat->ino = ip->i_ino;
+>  	stat->atime = inode->i_atime;
+>  	stat->mtime = inode->i_mtime;
+> -	stat->ctime = inode->i_ctime;
+> +	stat->ctime = inode_get_ctime(inode);
+>  	stat->blocks = XFS_FSB_TO_BB(mp, ip->i_nblocks + ip->i_delayed_blks);
 >  
-
-I think we should fold below change with this patch. 
-end_pos is calculated in iomap_do_writepage() such that it is either
-folio_pos(folio) + folio_size(folio), or if this value becomes more then
-isize, than end_pos is made isize.
-
-The current patch does not have a functional problem I guess. But in
-some cases where truncate races with writeback, it will end up marking
-more bits & later doesn't clear those. Hence I think we should correct
-it using below diff.
-
-I have added a WARN_ON_ONCE, but if you think it is obvious and not
-required, feel free to drop it.
-
-diff --git a/fs/iomap/buffered-io.c b/fs/iomap/buffered-io.c
-index 2fd9413838de..6c03e5842d44 100644
---- a/fs/iomap/buffered-io.c
-+++ b/fs/iomap/buffered-io.c
-@@ -1766,9 +1766,11 @@ iomap_writepage_map(struct iomap_writepage_ctx *wpc,
-        int error = 0, count = 0, i;
-        LIST_HEAD(submit_list);
-
-+       WARN_ON_ONCE(end_pos <= pos);
-+
-        if (!ifs && nblocks > 1) {
-                ifs = ifs_alloc(inode, folio, 0);
--               iomap_set_range_dirty(folio, 0, folio_size(folio));
-+               iomap_set_range_dirty(folio, 0, end_pos - pos);
-        }
-
-        WARN_ON_ONCE(ifs && atomic_read(&ifs->write_bytes_pending) != 0);
-
--ritesh
+>  	if (xfs_has_v3inodes(mp)) {
+> @@ -1055,7 +1055,7 @@ xfs_vn_update_time(
+>  
+>  	xfs_ilock(ip, XFS_ILOCK_EXCL);
+>  	if (flags & S_CTIME)
+> -		inode->i_ctime = *now;
+> +		inode_set_ctime_to_ts(inode, *now);
+>  	if (flags & S_MTIME)
+>  		inode->i_mtime = *now;
+>  	if (flags & S_ATIME)
+> diff --git a/fs/xfs/xfs_itable.c b/fs/xfs/xfs_itable.c
+> index f225413a993c..c2093cb56092 100644
+> --- a/fs/xfs/xfs_itable.c
+> +++ b/fs/xfs/xfs_itable.c
+> @@ -100,8 +100,8 @@ xfs_bulkstat_one_int(
+>  	buf->bs_atime_nsec = inode->i_atime.tv_nsec;
+>  	buf->bs_mtime = inode->i_mtime.tv_sec;
+>  	buf->bs_mtime_nsec = inode->i_mtime.tv_nsec;
+> -	buf->bs_ctime = inode->i_ctime.tv_sec;
+> -	buf->bs_ctime_nsec = inode->i_ctime.tv_nsec;
+> +	buf->bs_ctime = inode_get_ctime(inode).tv_sec;
+> +	buf->bs_ctime_nsec = inode_get_ctime(inode).tv_nsec;
+>  	buf->bs_gen = inode->i_generation;
+>  	buf->bs_mode = inode->i_mode;
+>  
+> -- 
+> 2.41.0
+> 
+-- 
+Jan Kara <jack@suse.com>
+SUSE Labs, CR
