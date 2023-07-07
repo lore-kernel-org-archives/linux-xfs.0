@@ -2,64 +2,123 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8A32EEB64D9
-	for <linux-xfs@archiver.kernel.org>; Fri,  7 Jul 2023 11:31:11 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id EC3A3C04FE1
+	for <linux-xfs@archiver.kernel.org>; Fri,  7 Jul 2023 12:24:43 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230040AbjGGLbK (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 7 Jul 2023 07:31:10 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41990 "EHLO
+        id S232314AbjGGMYm (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 7 Jul 2023 08:24:42 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55650 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229642AbjGGLbJ (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 7 Jul 2023 07:31:09 -0400
-Received: from bombadil.infradead.org (bombadil.infradead.org [IPv6:2607:7c80:54:3::133])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 174D21FF7;
-        Fri,  7 Jul 2023 04:31:09 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Type:MIME-Version
-        :References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
-        Content-Transfer-Encoding:Content-ID:Content-Description;
-        bh=KpSpXs9rtc8KwTa+oS0VvDtRGTMNvkl1rRk7t5RvaaM=; b=lMkIRH8IGSGjDup/13hfZVuoke
-        LUJt/K8OovVETbtxg8qSlZ1A6gFYfvjzU+lTYEH8sN0xjNGiwYhW7pnRg0vxP8ovk4kyhO31SApF9
-        nB1DGQTJ5szVWDFLpyCPXpi8evPUy282UTud9QRGXTJWY6IG4+28rO/jFh3F4ea9ol5SyRL0RbOHx
-        nxI1rZry/wVn5Nh6zJSSayyfv0bmALwr398ToWuslRCrJgEDpSCHSalk+43PHALQGxCZLRWagcIeQ
-        FedTbA4//e5LJQxEZc2vWrC6IMKUr/A2eTdb7e19szgqzY5lCK6IIpBDcn6BLeGTQ0dmd79Q+HadW
-        lr9r4lkQ==;
-Received: from hch by bombadil.infradead.org with local (Exim 4.96 #2 (Red Hat Linux))
-        id 1qHjg3-004WGE-1Q;
-        Fri, 07 Jul 2023 11:31:07 +0000
-Date:   Fri, 7 Jul 2023 04:31:07 -0700
-From:   Christoph Hellwig <hch@infradead.org>
-To:     Christian Brauner <brauner@kernel.org>
-Cc:     Jan Kara <jack@suse.cz>, Christoph Hellwig <hch@infradead.org>,
-        linux-fsdevel@vger.kernel.org, linux-block@vger.kernel.org,
-        Jens Axboe <axboe@kernel.dk>, Kees Cook <keescook@google.com>,
-        Ted Tso <tytso@mit.edu>,
-        syzkaller <syzkaller@googlegroups.com>,
-        Alexander Popov <alex.popov@linux.com>,
-        Eric Biggers <ebiggers@google.com>, linux-xfs@vger.kernel.org,
-        linux-btrfs@vger.kernel.org, Dmitry Vyukov <dvyukov@google.com>
-Subject: Re: [PATCH 6/6] fs: Make bind mounts work with
- bdev_allow_write_mounted=n
-Message-ID: <ZKf3ezb4/XMwg+3a@infradead.org>
-References: <20230704122727.17096-1-jack@suse.cz>
- <20230704125702.23180-6-jack@suse.cz>
- <ZKbj5v4VKroW7cFp@infradead.org>
- <20230706161255.t33v2yb3qrg4swcm@quack3>
- <20230707-mitangeklagt-erdumlaufbahn-688d4f493451@brauner>
+        with ESMTP id S229556AbjGGMYj (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 7 Jul 2023 08:24:39 -0400
+Received: from smtp-out2.suse.de (smtp-out2.suse.de [195.135.220.29])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A53051FE6;
+        Fri,  7 Jul 2023 05:24:36 -0700 (PDT)
+Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
+        (No client certificate requested)
+        by smtp-out2.suse.de (Postfix) with ESMTPS id F0C8D1FDB5;
+        Fri,  7 Jul 2023 12:24:34 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.cz; s=susede2_rsa;
+        t=1688732675; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+         mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=v97Z4h87RrabL7WLNBXHFysNCdL5KIt8mtxxyrwI0lE=;
+        b=LqFRs1c1G67BsNNDLuNq3gTOMo8UAqFT+ZgX0/ce2GYyjoNTkNY3JvymPyQUIIgvdCfdfA
+        wvYabjfbqON86k1PsUxAyhGKf+BANbZ0orxg0fUOS7bjyZ5ddpTiVyICESJEtA4U8iKIIb
+        0Zu9Qq9rWpT0jHo3EjIE5diazY1476M=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.cz;
+        s=susede2_ed25519; t=1688732675;
+        h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+         mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=v97Z4h87RrabL7WLNBXHFysNCdL5KIt8mtxxyrwI0lE=;
+        b=WsVzOxtNAjI8cmGR5IMHwFDPJM5ZBawTTSTtFHjjnpb4nomNuwaP8lcoennzww9M9DfIc5
+        k35MoJGFDmLh3vBw==
+Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
+        (No client certificate requested)
+        by imap2.suse-dmz.suse.de (Postfix) with ESMTPS id D97F7139E0;
+        Fri,  7 Jul 2023 12:24:34 +0000 (UTC)
+Received: from dovecot-director2.suse.de ([192.168.254.65])
+        by imap2.suse-dmz.suse.de with ESMTPSA
+        id rMQMNQIEqGT9NgAAMHmgww
+        (envelope-from <jack@suse.cz>); Fri, 07 Jul 2023 12:24:34 +0000
+Received: by quack3.suse.cz (Postfix, from userid 1000)
+        id 6AC15A0717; Fri,  7 Jul 2023 14:24:34 +0200 (CEST)
+Date:   Fri, 7 Jul 2023 14:24:34 +0200
+From:   Jan Kara <jack@suse.cz>
+To:     Christoph Hellwig <hch@infradead.org>
+Cc:     Jan Kara <jack@suse.cz>, linux-block@vger.kernel.org,
+        linux-fsdevel@vger.kernel.org, Jens Axboe <axboe@kernel.dk>,
+        Alasdair Kergon <agk@redhat.com>,
+        Andrew Morton <akpm@linux-foundation.org>,
+        Anna Schumaker <anna@kernel.org>, Chao Yu <chao@kernel.org>,
+        Christian Borntraeger <borntraeger@linux.ibm.com>,
+        "Darrick J. Wong" <djwong@kernel.org>,
+        Dave Kleikamp <shaggy@kernel.org>,
+        David Sterba <dsterba@suse.com>, dm-devel@redhat.com,
+        drbd-dev@lists.linbit.com, Gao Xiang <xiang@kernel.org>,
+        Jack Wang <jinpu.wang@ionos.com>,
+        Jaegeuk Kim <jaegeuk@kernel.org>,
+        jfs-discussion@lists.sourceforge.net,
+        Joern Engel <joern@lazybastard.org>,
+        Joseph Qi <joseph.qi@linux.alibaba.com>,
+        Kent Overstreet <kent.overstreet@gmail.com>,
+        linux-bcache@vger.kernel.org, linux-btrfs@vger.kernel.org,
+        linux-erofs@lists.ozlabs.org, linux-ext4@vger.kernel.org,
+        linux-f2fs-devel@lists.sourceforge.net, linux-mm@kvack.org,
+        linux-mtd@lists.infradead.org, linux-nfs@vger.kernel.org,
+        linux-nilfs@vger.kernel.org, linux-nvme@lists.infradead.org,
+        linux-pm@vger.kernel.org, linux-raid@vger.kernel.org,
+        linux-s390@vger.kernel.org, linux-scsi@vger.kernel.org,
+        linux-xfs@vger.kernel.org,
+        "Md. Haris Iqbal" <haris.iqbal@ionos.com>,
+        Mike Snitzer <snitzer@kernel.org>,
+        Minchan Kim <minchan@kernel.org>, ocfs2-devel@oss.oracle.com,
+        reiserfs-devel@vger.kernel.org,
+        Sergey Senozhatsky <senozhatsky@chromium.org>,
+        Song Liu <song@kernel.org>,
+        Sven Schnelle <svens@linux.ibm.com>,
+        target-devel@vger.kernel.org, Ted Tso <tytso@mit.edu>,
+        Trond Myklebust <trond.myklebust@hammerspace.com>,
+        xen-devel@lists.xenproject.org
+Subject: Re: [PATCH 01/32] block: Provide blkdev_get_handle_* functions
+Message-ID: <20230707122434.s46ytxpne42hecni@quack3>
+References: <20230629165206.383-1-jack@suse.cz>
+ <20230704122224.16257-1-jack@suse.cz>
+ <ZKbgAG5OoHVyUKOG@infradead.org>
+ <20230706161433.lj4apushiwguzvdd@quack3>
+ <ZKf26fYMDHnTCb29@infradead.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20230707-mitangeklagt-erdumlaufbahn-688d4f493451@brauner>
-X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
+In-Reply-To: <ZKf26fYMDHnTCb29@infradead.org>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Fri, Jul 07, 2023 at 09:39:05AM +0200, Christian Brauner wrote:
-> Can you do this rework independent of the bdev_handle work that you're
-> doing so this series doesn't depend on the other work and we can get
-> the VFS bits merged for this?
+On Fri 07-07-23 04:28:41, Christoph Hellwig wrote:
+> On Thu, Jul 06, 2023 at 06:14:33PM +0200, Jan Kara wrote:
+> > > struct bdev_handle *bdev_open_by_path(dev_t dev, blk_mode_t mode,
+> > > 		void *holder, const struct blk_holder_ops *hops);
+> > > void bdev_release(struct bdev_handle *handle);
+> > 
+> > I'd maybe use bdev_close() instead of bdev_release() but otherwise I like
+> > the new naming.
+> 
+> We're using release everywhese else, but if Jens is fine with that I
+> can live with close.
 
-It really should be before it.  I have a few other things related to
-it, so if Jan doesn't mind I'd be happy to take it over and post a
-series with a version of this and some sget and get_super rework.
+Dunno, to me words pair like open-close, get-put, acquire-release.
+Furthermore e.g. ->release() (and thus blkdev_release()) is called only
+when the last file reference is dropped, not when each reference is
+dropped, so that's why bdev_release() seems a bit confusing to me.
+
+								Honza
+
+-- 
+Jan Kara <jack@suse.com>
+SUSE Labs, CR
