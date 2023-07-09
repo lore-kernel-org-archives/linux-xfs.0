@@ -2,84 +2,69 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id AAB12EB64DC
-	for <linux-xfs@archiver.kernel.org>; Sun,  9 Jul 2023 15:44:15 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9415AC0015E
+	for <linux-xfs@archiver.kernel.org>; Sun,  9 Jul 2023 17:46:48 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231477AbjGIPoO (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Sun, 9 Jul 2023 11:44:14 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54316 "EHLO
+        id S232922AbjGIRqr (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Sun, 9 Jul 2023 13:46:47 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44582 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229868AbjGIPoN (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sun, 9 Jul 2023 11:44:13 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 019C091;
-        Sun,  9 Jul 2023 08:44:13 -0700 (PDT)
+        with ESMTP id S232958AbjGIRqp (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sun, 9 Jul 2023 13:46:45 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 73D3D13D;
+        Sun,  9 Jul 2023 10:46:43 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
          key-exchange X25519 server-signature RSA-PSS (2048 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 8084B60BA4;
-        Sun,  9 Jul 2023 15:44:12 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id DD22BC433C8;
-        Sun,  9 Jul 2023 15:44:11 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 11E6D60C16;
+        Sun,  9 Jul 2023 17:46:43 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPS id 75235C433C7;
+        Sun,  9 Jul 2023 17:46:42 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1688917451;
-        bh=4h80vCBurAiKJXTF3TYJdODLah3UvovPi2KN9nRuC2Q=;
-        h=Date:From:To:Cc:Subject:From;
-        b=YZxjhApdJlb1srdswwhBtJSJJf7LKE/NBW+ewZ174dqMssqbUa3uomY/z2EZ4jTrl
-         xSoWrj69A4nLD6HLg8v4Yla18QPYiDL/U6kWGyNZuLtKe0F47amnCwrMQsYAGu7bhp
-         OQLdm0HuKb1z9IumH0kwDxO86Vp3GQ1YVwpKxbhk/Znn4gPBvJLksEp1NTevFrhiaX
-         Y5Frc1XDuFptXCoD5p3Pnk2+N5wmD2bNQ3jwRMBE0Hu9RyFG84aMhVgBg+pN03jXrq
-         xo2zdz9CH87CTJDzxYQEBLTBaAiBsZizKnvfVtpsC3j4JOFq0RUpcYAR5ZyUedaLG7
-         5E8n3D+mDiGeg==
-Date:   Sun, 9 Jul 2023 08:44:11 -0700
-From:   "Darrick J. Wong" <djwong@kernel.org>
-To:     djwong@kernel.org, torvalds@linux-foundation.org
-Cc:     dchinner@redhat.com, linux-fsdevel@vger.kernel.org,
+        s=k20201202; t=1688924802;
+        bh=SetvWBBN9Go3C0p5Lfz6RahHO1ZWI96pnVgXNGJDIR4=;
+        h=Subject:From:In-Reply-To:References:Date:To:Cc:From;
+        b=W63fcVVoghy4bKq1z6K/vP3u1G+9sjxGKNi9M0r/ej/PjZ0ofgGGn9LkWYF3PDafv
+         +38qlHmFsdXnhA27FdOxPcxzEG4b16Vqv6NBX1jZD3AGOJ+9jEaGM4uiNRD9gQnmKN
+         wlGXa/FTdEOMwoAYRRkN943+ulIRhHtVo+qeGeRYI7Qy5Qd3tdKqzo5rtThbgob0Ai
+         q6TmlvnVgNsnS/0BiPLO8HDUDcoKsdzMsA5FCZiTJw1rGQqLO9Ia5LpdDDv3/4zxfi
+         zUqTDs06arJimGLv6hy0Rzz2/3gn+rMUykYxOLKYLNDcO2LA/meVwLqRz47NOm0dOR
+         JSkZCnATxMLaA==
+Received: from aws-us-west-2-korg-oddjob-1.ci.codeaurora.org (localhost.localdomain [127.0.0.1])
+        by aws-us-west-2-korg-oddjob-1.ci.codeaurora.org (Postfix) with ESMTP id 6142CC4167B;
+        Sun,  9 Jul 2023 17:46:42 +0000 (UTC)
+Subject: Re: [GIT PULL] xfs: more new code for 6.5
+From:   pr-tracker-bot@kernel.org
+In-Reply-To: <168891728293.3329585.14912305268240705363.stg-ugh@frogsfrogsfrogs>
+References: <168891728293.3329585.14912305268240705363.stg-ugh@frogsfrogsfrogs>
+X-PR-Tracked-List-Id: <linux-xfs.vger.kernel.org>
+X-PR-Tracked-Message-Id: <168891728293.3329585.14912305268240705363.stg-ugh@frogsfrogsfrogs>
+X-PR-Tracked-Remote: git://git.kernel.org/pub/scm/fs/xfs/xfs-linux.git tags/xfs-6.5-merge-6
+X-PR-Tracked-Commit-Id: ed04a91f718e6e1ab82d47a22b26e4b50c1666f6
+X-PR-Merge-Tree: torvalds/linux.git
+X-PR-Merge-Refname: refs/heads/master
+X-PR-Merge-Commit-Id: 76487845fd23bc2346244fbf7c1a6eb1ed845d28
+Message-Id: <168892480239.9789.3327746963938297586.pr-tracker-bot@kernel.org>
+Date:   Sun, 09 Jul 2023 17:46:42 +0000
+To:     "Darrick J. Wong" <djwong@kernel.org>
+Cc:     djwong@kernel.org, torvalds@linux-foundation.org,
+        dchinner@redhat.com, linux-fsdevel@vger.kernel.org,
         linux-xfs@vger.kernel.org
-Subject: [GIT PULL] xfs: more new code for 6.5
-Message-ID: <168891728293.3329585.14912305268240705363.stg-ugh@frogsfrogsfrogs>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Hi Linus,
+The pull request you sent on Sun, 9 Jul 2023 08:44:11 -0700:
 
-Please pull this branch with one last change for xfs for 6.5-rc1.
-Nothing exciting here, just getting rid of a gcc warning that I got
-tired of seeing when I turn on gcov.
+> git://git.kernel.org/pub/scm/fs/xfs/xfs-linux.git tags/xfs-6.5-merge-6
 
-As usual, I did a test-merge with the main upstream branch as of a few
-minutes ago, and didn't see any conflicts.  Please let me know if you
-encounter any problems.
+has been merged into torvalds/linux.git:
+https://git.kernel.org/torvalds/c/76487845fd23bc2346244fbf7c1a6eb1ed845d28
 
---D
+Thank you!
 
-The following changes since commit 34acceaa8818a0ff4943ec5f2f8831cfa9d3fe7e:
-
-xfs: Remove unneeded semicolon (2023-07-03 09:48:18 -0700)
-
-are available in the Git repository at:
-
-git://git.kernel.org/pub/scm/fs/xfs/xfs-linux.git tags/xfs-6.5-merge-6
-
-for you to fetch changes up to ed04a91f718e6e1ab82d47a22b26e4b50c1666f6:
-
-xfs: fix uninit warning in xfs_growfs_data (2023-07-07 20:13:41 -0700)
-
-----------------------------------------------------------------
-Minor cleanups for 6.5:
-
-* Fix an uninitialized variable warning.
-
-Signed-off-by: Darrick J. Wong <djwong@kernel.org>
-
-----------------------------------------------------------------
-Darrick J. Wong (1):
-xfs: fix uninit warning in xfs_growfs_data
-
-fs/xfs/xfs_fsops.c | 2 +-
-1 file changed, 1 insertion(+), 1 deletion(-)
+-- 
+Deet-doot-dot, I am a bot.
+https://korg.docs.kernel.org/prtracker.html
