@@ -2,177 +2,166 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E84CBEB64D9
-	for <linux-xfs@archiver.kernel.org>; Mon, 10 Jul 2023 18:19:30 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 78698EB64DA
+	for <linux-xfs@archiver.kernel.org>; Mon, 10 Jul 2023 19:17:50 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230162AbjGJSTa (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 10 Jul 2023 14:19:30 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41188 "EHLO
+        id S229563AbjGJTRt (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 10 Jul 2023 15:17:49 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38692 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229528AbjGJST3 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 10 Jul 2023 14:19:29 -0400
-Received: from mail-pl1-x630.google.com (mail-pl1-x630.google.com [IPv6:2607:f8b0:4864:20::630])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 71DB512B;
-        Mon, 10 Jul 2023 11:19:28 -0700 (PDT)
-Received: by mail-pl1-x630.google.com with SMTP id d9443c01a7336-1b8baa836a5so35949795ad.1;
-        Mon, 10 Jul 2023 11:19:28 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20221208; t=1689013168; x=1691605168;
-        h=in-reply-to:subject:cc:to:from:message-id:date:from:to:cc:subject
-         :date:message-id:reply-to;
-        bh=yElckTdbmcf0KkUywCsmMpmQ6l3geOOBU6dJNETfdPw=;
-        b=jhyjrFWklAUZu55a6j70dOCRccVkE3wOq/O0r5vQJI476puEFGxNnBltLWpE2RsXBx
-         Az3TMzhmE0m/rHezKsPD7CFOFJvBTAh/Q8bw8eDZOkgsqWaLsK6C5EW0GH3FN+xhYOlQ
-         Ms7+4bUvg+MMuJRC7ck4w3Vr2iqBtFgejaQGhthKc1CSUTrUXOu5i33/ga3nax5sn/pn
-         6LT+rQPX/5kudU7KqdCPKLsZpzeiTYi/Y27IOdKUm+gdFuSAmZ8X0hdtU3lMlG4ZZVPP
-         XFPXcQjrAfGIy++02GhKr76HGaj7FzefeoBVi8sJ67PHxrDJGLKxb0Zm3vAQTpHYCnCf
-         SfpA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20221208; t=1689013168; x=1691605168;
-        h=in-reply-to:subject:cc:to:from:message-id:date:x-gm-message-state
-         :from:to:cc:subject:date:message-id:reply-to;
-        bh=yElckTdbmcf0KkUywCsmMpmQ6l3geOOBU6dJNETfdPw=;
-        b=ScPWWLNFM6E5twJI2uxoIIZSzGWQb5bj/268DKf0VySwX1n4nE33E1A6o4tVe97daL
-         Qlprcr+18rUDodt9NyTmtG99k5qPvXFpiTQ91k6LWHwOuQfVyTBlHlb16tsh4vdZ8Ebs
-         dW+sQPsM4N4Ldzgdsy4kRtrlbAHu+Ql469RhsoFP+uENVt4rLK+TyT7//pcVstUd/ueG
-         4UqsuAFLuvdOqTxmkSnc1RAnr5nsqPiKTwh1deEeLAti7RA6A6uiZ5W/WO8B55MB52l9
-         SYTEBO5YBywgvxSNyiG/g9q0p95ez9rP3WOnrCcJTmpydF8wdWbXHLRo9M/0e7waBY2+
-         7NWA==
-X-Gm-Message-State: ABy/qLZnPRTAhIVUp292KdFltaefWKKQ7iLu9mkYP+LfKgxwNeJgGjlx
-        qnG2mvfbpDzFw0QV6gdhC6M=
-X-Google-Smtp-Source: APBJJlFrSMcifx1FyUk65hbM3kqeG/HeW2UemkNPzlQLN+qvIMKjXWnKVKxy/tYOVckMRpAeaG4Nkg==
-X-Received: by 2002:a17:903:11c8:b0:1b8:3601:9bf7 with SMTP id q8-20020a17090311c800b001b836019bf7mr16555752plh.24.1689013167727;
-        Mon, 10 Jul 2023 11:19:27 -0700 (PDT)
-Received: from dw-tp (175.101.8.98.static.excellmedia.net. [175.101.8.98])
-        by smtp.gmail.com with ESMTPSA id a2-20020a1709027d8200b001b8622c1ad2sm206527plm.130.2023.07.10.11.19.23
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 10 Jul 2023 11:19:26 -0700 (PDT)
-Date:   Mon, 10 Jul 2023 23:49:15 +0530
-Message-Id: <87cz0z4okc.fsf@doe.com>
-From:   Ritesh Harjani (IBM) <ritesh.list@gmail.com>
-To:     Matthew Wilcox <willy@infradead.org>,
-        "Darrick J . Wong" <djwong@kernel.org>
-Cc:     linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
-        "Darrick J . Wong" <djwong@kernel.org>,
-        Christoph Hellwig <hch@infradead.org>,
-        Brian Foster <bfoster@redhat.com>,
-        Andreas Gruenbacher <agruenba@redhat.com>,
-        Aravinda Herle <araherle@in.ibm.com>,
-        Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCHv11 8/8] iomap: Add per-block dirty state tracking to improve performance
-In-Reply-To: <ZKdUN7ALMSCKPBV/@casper.infradead.org>
+        with ESMTP id S229562AbjGJTRr (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 10 Jul 2023 15:17:47 -0400
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id CE225FB
+        for <linux-xfs@vger.kernel.org>; Mon, 10 Jul 2023 12:17:02 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1689016622;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=az6ZkMAdLXbafriLQT47YF+Uo7Y4XXpCufEGQDUwYrw=;
+        b=OaKh0kqa1BeB2LOfEXe85lNt3vdaRhmvwqPjU7MQiaCV9yAyqXaDHrtPTYDXWDodA1rwcl
+        XzKE38LD/dc4jmCaPtiEzX1nhO1MlZpRN8lIwL3XpFNwR1FgAwRVMf96UehVmZl1jIM8ZT
+        RY7amcQOsnJZgsEWVIutvuEV7u86S4U=
+Received: from mimecast-mx02.redhat.com (mimecast-mx02.redhat.com
+ [66.187.233.88]) by relay.mimecast.com with ESMTP with STARTTLS
+ (version=TLSv1.2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ us-mta-657-qpCFDVdFOz2RDDiGKZRrPg-1; Mon, 10 Jul 2023 15:16:58 -0400
+X-MC-Unique: qpCFDVdFOz2RDDiGKZRrPg-1
+Received: from smtp.corp.redhat.com (int-mx02.intmail.prod.int.rdu2.redhat.com [10.11.54.2])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mimecast-mx02.redhat.com (Postfix) with ESMTPS id F0732800B35;
+        Mon, 10 Jul 2023 19:16:57 +0000 (UTC)
+Received: from redhat.com (unknown [10.22.16.18])
+        by smtp.corp.redhat.com (Postfix) with ESMTPS id BBE5D40C6CD1;
+        Mon, 10 Jul 2023 19:16:57 +0000 (UTC)
+Date:   Mon, 10 Jul 2023 14:16:56 -0500
+From:   Bill O'Donnell <billodo@redhat.com>
+To:     "Darrick J. Wong" <djwong@kernel.org>
+Cc:     Carlos Maiolino <cem@kernel.org>, linux-xfs@vger.kernel.org
+Subject: Re: [PATCH] misc: remove bogus fstest
+Message-ID: <ZKxZKCNanrSiQubS@redhat.com>
+References: <20230709223750.GC11456@frogsfrogsfrogs>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20230709223750.GC11456@frogsfrogsfrogs>
+X-Scanned-By: MIMEDefang 3.1 on 10.11.54.2
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Matthew Wilcox <willy@infradead.org> writes:
+On Sun, Jul 09, 2023 at 03:37:50PM -0700, Darrick J. Wong wrote:
+> From: Darrick J. Wong <djwong@kernel.org>
+> 
+> Remove this test, not sure why it was committed...
 
-Sorry for the delayed response. I am currently on travel.
+Huh? I don't see it on for-next. What am I missing?
+Thanks-
+Bill
 
-> On Fri, Jul 07, 2023 at 08:16:17AM +1000, Dave Chinner wrote:
->> On Thu, Jul 06, 2023 at 06:42:36PM +0100, Matthew Wilcox wrote:
->> > On Thu, Jul 06, 2023 at 08:16:05PM +0530, Ritesh Harjani wrote:
->> > > > @@ -1645,6 +1766,11 @@ iomap_writepage_map(struct iomap_writepage_ctx *wpc,
->> > > >  	int error = 0, count = 0, i;
->> > > >  	LIST_HEAD(submit_list);
->> > > >  
->> > > > +	if (!ifs && nblocks > 1) {
->> > > > +		ifs = ifs_alloc(inode, folio, 0);
->> > > > +		iomap_set_range_dirty(folio, 0, folio_size(folio));
->> > > > +	}
->> > > > +
->> > > >  	WARN_ON_ONCE(ifs && atomic_read(&ifs->write_bytes_pending) != 0);
->> > > >  
->> > > >  	/*
->> > > > @@ -1653,7 +1779,7 @@ iomap_writepage_map(struct iomap_writepage_ctx *wpc,
->> > > >  	 * invalid, grab a new one.
->> > > >  	 */
->> > > >  	for (i = 0; i < nblocks && pos < end_pos; i++, pos += len) {
->> > > > -		if (ifs && !ifs_block_is_uptodate(ifs, i))
->> > > > +		if (ifs && !ifs_block_is_dirty(folio, ifs, i))
->> > > >  			continue;
->> > > >  
->> > > >  		error = wpc->ops->map_blocks(wpc, inode, pos);
->> > > > @@ -1697,6 +1823,7 @@ iomap_writepage_map(struct iomap_writepage_ctx *wpc,
->> > > >  		}
->> > > >  	}
->> > > >  
->> > > > +	iomap_clear_range_dirty(folio, 0, end_pos - folio_pos(folio));
->> > > >  	folio_start_writeback(folio);
->> > > >  	folio_unlock(folio);
->> > > >  
->> > > 
->> > > I think we should fold below change with this patch. 
->> > > end_pos is calculated in iomap_do_writepage() such that it is either
->> > > folio_pos(folio) + folio_size(folio), or if this value becomes more then
->> > > isize, than end_pos is made isize.
->> > > 
->> > > The current patch does not have a functional problem I guess. But in
->> > > some cases where truncate races with writeback, it will end up marking
->> > > more bits & later doesn't clear those. Hence I think we should correct
->> > > it using below diff.
->> > 
->> > I don't think this is the only place where we'll set dirty bits beyond
->> > EOF.  For example, if we mmap the last partial folio in a file,
->> > page_mkwrite will dirty the entire folio, but we won't write back
->> > blocks past EOF.  I think we'd be better off clearing all the dirty
->> > bits in the folio, even the ones past EOF.  What do you think?
+> 
+> Signed-off-by: Darrick J. Wong <djwong@kernel.org>
+> ---
+>  tests/xfs/999     |   66 -----------------------------------------------------
+>  tests/xfs/999.out |   15 ------------
+>  2 files changed, 81 deletions(-)
+>  delete mode 100755 tests/xfs/999
+>  delete mode 100644 tests/xfs/999.out
+> 
+> diff --git a/tests/xfs/999 b/tests/xfs/999
+> deleted file mode 100755
+> index 9e799f66e72..00000000000
+> --- a/tests/xfs/999
+> +++ /dev/null
+> @@ -1,66 +0,0 @@
+> -#! /bin/bash
+> -# SPDX-License-Identifier: GPL-2.0
+> -# Copyright (c) 2020 Red Hat, Inc.  All Rights Reserved.
+> -#
+> -# FS QA Test 521
+> -#
+> -# Test xfs_repair's progress reporting
+> -#
+> -. ./common/preamble
+> -_begin_fstest auto repair
+> -
+> -# Override the default cleanup function.
+> -_cleanup()
+> -{
+> -	cd /
+> -	rm -f $tmp.*
+> -	_cleanup_delay > /dev/null 2>&1
+> -}
+> -
+> -# Import common functions.
+> -. ./common/filter
+> -. ./common/dmdelay
+> -. ./common/populate
+> -
+> -# real QA test starts here
+> -
+> -# Modify as appropriate.
+> -_supported_fs xfs
+> -_require_scratch
+> -_require_dm_target delay
+> -
+> -# Filter output specific to the formatters in xfs_repair/progress.c
+> -# Ideally we'd like to see hits on anything that matches
+> -# awk '/{FMT/' xfsprogs-dev/repair/progress.c
+> -filter_repair()
+> -{
+> -	sed -nre '
+> -	s/[0-9]+/#/g;
+> -	s/^\s+/ /g;
+> -	s/(# (week|day|hour|minute|second)s?(, )?)+/{progres}/g;
+> -	/#:#:#:/p
+> -	'
+> -}
+> -
+> -echo "Format and populate"
+> -_scratch_populate_cached nofill > $seqres.full 2>&1
+> -
+> -echo "Introduce a dmdelay"
+> -_init_delay
+> -DELAY_MS=38
+> -
+> -# Introduce a read I/O delay
+> -# The default in common/dmdelay is a bit too agressive
+> -BLK_DEV_SIZE=`blockdev --getsz $SCRATCH_DEV`
+> -DELAY_TABLE_RDELAY="0 $BLK_DEV_SIZE delay $SCRATCH_DEV 0 $DELAY_MS"
+> -_load_delay_table $DELAY_READ
+> -
+> -echo "Run repair"
+> -SCRATCH_DEV=$DELAY_DEV _scratch_xfs_repair -o ag_stride=4 -t 1 2>&1 |
+> -        tee -a $seqres.full > $tmp.repair
+> -
+> -cat $tmp.repair | filter_repair | sort -u
+> -
+> -# success, all done
+> -status=0
+> -exit
+> diff --git a/tests/xfs/999.out b/tests/xfs/999.out
+> deleted file mode 100644
+> index e27534d8de6..00000000000
+> --- a/tests/xfs/999.out
+> +++ /dev/null
+> @@ -1,15 +0,0 @@
+> -QA output created by 999
+> -Format and populate
+> -Introduce a dmdelay
+> -Run repair
+> - - #:#:#: Phase #: #% done - estimated remaining time {progres}
+> - - #:#:#: Phase #: elapsed time {progres} - processed # inodes per minute
+> - - #:#:#: check for inodes claiming duplicate blocks - # of # inodes done
+> - - #:#:#: process known inodes and inode discovery - # of # inodes done
+> - - #:#:#: process newly discovered inodes - # of # allocation groups done
+> - - #:#:#: rebuild AG headers and trees - # of # allocation groups done
+> - - #:#:#: scanning agi unlinked lists - # of # allocation groups done
+> - - #:#:#: scanning filesystem freespace - # of # allocation groups done
+> - - #:#:#: setting up duplicate extent list - # of # allocation groups done
+> - - #:#:#: verify and correct link counts - # of # allocation groups done
+> - - #:#:#: zeroing log - # of # blocks done
+> 
 
-Yup. I agree, it's better that way to clear all dirty bits in the folio.
-Thanks for the suggestion & nice catch!! 
-
->> 
->> Clear the dirty bits beyond EOF where we zero the data range beyond
->> EOF in iomap_do_writepage() via folio_zero_segment()?
->
-> That would work, but I think it's simpler to change:
->
-> -	iomap_clear_range_dirty(folio, 0, end_pos - folio_pos(folio));
-> +	iomap_clear_range_dirty(folio, 0, folio_size(folio));
-
-Right. 
-
-@Darrick,
-IMO, we should fold below change with Patch-8. If you like I can send a v12
-with this change. I re-tested 1k-blocksize fstests on x86 with
-below changes included and didn't find any surprise. Also v11 series
-including the below folded change is cleanly applicable on your
-iomap-for-next branch.
-
-
-diff --git a/fs/iomap/buffered-io.c b/fs/iomap/buffered-io.c
-index b6280e053d68..de212b6fe467 100644
---- a/fs/iomap/buffered-io.c
-+++ b/fs/iomap/buffered-io.c
-@@ -1766,9 +1766,11 @@ iomap_writepage_map(struct iomap_writepage_ctx *wpc,
-        int error = 0, count = 0, i;
-        LIST_HEAD(submit_list);
-
-+       WARN_ON_ONCE(end_pos <= pos);
-+
-        if (!ifs && nblocks > 1) {
-                ifs = ifs_alloc(inode, folio, 0);
--               iomap_set_range_dirty(folio, 0, folio_size(folio));
-+               iomap_set_range_dirty(folio, 0, end_pos - pos);
-        }
-
-        WARN_ON_ONCE(ifs && atomic_read(&ifs->write_bytes_pending) != 0);
-@@ -1823,7 +1825,12 @@ iomap_writepage_map(struct iomap_writepage_ctx *wpc,
-                }
-        }
-
--       iomap_clear_range_dirty(folio, 0, end_pos - folio_pos(folio));
-+       /*
-+        * We can have dirty bits set past end of file in page_mkwrite path
-+        * while mapping the last partial folio. Hence it's better to clear
-+        * all the dirty bits in the folio here.
-+        */
-+       iomap_clear_range_dirty(folio, 0, folio_size(folio));
-        folio_start_writeback(folio);
-        folio_unlock(folio);
-
---
-2.30.2
-
-
--ritesh
