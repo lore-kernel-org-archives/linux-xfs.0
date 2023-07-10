@@ -2,30 +2,30 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5863CEB64D9
-	for <linux-xfs@archiver.kernel.org>; Mon, 10 Jul 2023 13:04:22 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6B38CEB64DA
+	for <linux-xfs@archiver.kernel.org>; Mon, 10 Jul 2023 13:04:23 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232848AbjGJNEV (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 10 Jul 2023 09:04:21 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49836 "EHLO
+        id S232312AbjGJNEW (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 10 Jul 2023 09:04:22 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48370 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232312AbjGJNEJ (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 10 Jul 2023 09:04:09 -0400
+        with ESMTP id S233074AbjGJNEK (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 10 Jul 2023 09:04:10 -0400
 Received: from casper.infradead.org (casper.infradead.org [IPv6:2001:8b0:10b:1236::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C406F268D;
-        Mon, 10 Jul 2023 06:03:03 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 251F6E7F;
+        Mon, 10 Jul 2023 06:03:05 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
         d=infradead.org; s=casper.20170209; h=Content-Transfer-Encoding:MIME-Version:
         References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:Sender:Reply-To:
         Content-Type:Content-ID:Content-Description;
-        bh=Xa62x9tUe4HdESmmryNJxUBaFH7m3AqjBIhlcBkeDm8=; b=FFhwt7/0AsvUiMBzPstg+Qq1DT
-        bDT+M53lIT+ER0YOXK++7ZawneOi8wN4m2wfLwI8AMjAY7BqsAdxHqWxzQXE+Q9gytc9vko6ITMk7
-        ucmC0zUEI3vT/dDt2R3IAA+nqMefP7Tk49JuwBMTcr/8bxggh/VjfYaxtKfucpIesU+owRhV/AkRN
-        WQL+tpVAe5rWx4VGiHV93hkIShXBugd9eNe6aVsfYE3MEsJIx1sEPnjz9EYbaLJBa72GB+xCWIL0t
-        6Kz1L19a76SqED9GDggf+yRgGukriA3ijPyE1uOalPxb6/keeZGSNmwrlBKwDcHB9gyIZw6+ZRO13
-        TEV4AUeg==;
+        bh=TvAG4zvqCXDWU2qbJkekP8mvYlTFnLqtA5p6bdq1nY4=; b=Qbg/E6Jnq1hfaF8D+6CqrhdQu1
+        1RIAwvu2eUk7YdWV4MxA0aU3cwU6kZJuAP70mp9CpsrmeJEU5jv7ruOVJlUcprRZSjzK6GcYFgB/7
+        d0RskUbIsv0CHUVZm8qMPVEnxIg9RDKGIwoGa4OInHr989/NA/FxfnMEpddMf5KhBKXbqKVILbIMy
+        s9nScSoemYxB7MT6Z5FqUP3wVVJO8E+ZpYOl8yGyWzl41/vtneGJqViwJ94T3HZOovQMLwMAIk5Mb
+        9RFKRJ+iKikfW9LVgx2IByFf/ps9ELkckPJ/wmNOphUP7VsFIZRCw/ePjjlPq/sRaWsF3Bo/mrMAT
+        wtjySNqA==;
 Received: from willy by casper.infradead.org with local (Exim 4.94.2 #2 (Red Hat Linux))
-        id 1qIqXY-00EcXT-2T; Mon, 10 Jul 2023 13:02:56 +0000
+        id 1qIqXX-00EcXB-E8; Mon, 10 Jul 2023 13:02:55 +0000
 From:   "Matthew Wilcox (Oracle)" <willy@infradead.org>
 To:     linux-fsdevel@vger.kernel.org
 Cc:     "Matthew Wilcox (Oracle)" <willy@infradead.org>,
@@ -33,11 +33,10 @@ Cc:     "Matthew Wilcox (Oracle)" <willy@infradead.org>,
         Dave Chinner <david@fromorbit.com>,
         Christoph Hellwig <hch@infradead.org>,
         "Darrick J . Wong" <djwong@kernel.org>,
-        Kent Overstreet <kent.overstreet@linux.dev>,
-        Christoph Hellwig <hch@lst.de>
-Subject: [PATCH v4 9/9] iomap: Copy larger chunks from userspace
-Date:   Mon, 10 Jul 2023 14:02:53 +0100
-Message-Id: <20230710130253.3484695-10-willy@infradead.org>
+        Kent Overstreet <kent.overstreet@linux.dev>
+Subject: [PATCH v4 2/9] iov_iter: Add copy_folio_from_iter_atomic()
+Date:   Mon, 10 Jul 2023 14:02:46 +0100
+Message-Id: <20230710130253.3484695-3-willy@infradead.org>
 X-Mailer: git-send-email 2.37.1
 In-Reply-To: <20230710130253.3484695-1-willy@infradead.org>
 References: <20230710130253.3484695-1-willy@infradead.org>
@@ -47,85 +46,54 @@ Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-If we have a large folio, we can copy in larger chunks than PAGE_SIZE.
-Start at the maximum page cache size and shrink by half every time we
-hit the "we are short on memory" problem.
+Add a folio wrapper around copy_page_from_iter_atomic().
 
 Signed-off-by: Matthew Wilcox (Oracle) <willy@infradead.org>
-Reviewed-by: Christoph Hellwig <hch@lst.de>
 ---
- fs/iomap/buffered-io.c | 32 +++++++++++++++++---------------
- 1 file changed, 17 insertions(+), 15 deletions(-)
+ include/linux/uio.h | 9 ++++++++-
+ lib/iov_iter.c      | 2 +-
+ 2 files changed, 9 insertions(+), 2 deletions(-)
 
-diff --git a/fs/iomap/buffered-io.c b/fs/iomap/buffered-io.c
-index 2d3e90f4d16e..f21f1f641c4a 100644
---- a/fs/iomap/buffered-io.c
-+++ b/fs/iomap/buffered-io.c
-@@ -769,6 +769,7 @@ static size_t iomap_write_end(struct iomap_iter *iter, loff_t pos, size_t len,
- static loff_t iomap_write_iter(struct iomap_iter *iter, struct iov_iter *i)
+diff --git a/include/linux/uio.h b/include/linux/uio.h
+index ff81e5ccaef2..42bce38a8e87 100644
+--- a/include/linux/uio.h
++++ b/include/linux/uio.h
+@@ -163,7 +163,7 @@ static inline size_t iov_length(const struct iovec *iov, unsigned long nr_segs)
+ 	return ret;
+ }
+ 
+-size_t copy_page_from_iter_atomic(struct page *page, unsigned offset,
++size_t copy_page_from_iter_atomic(struct page *page, size_t offset,
+ 				  size_t bytes, struct iov_iter *i);
+ void iov_iter_advance(struct iov_iter *i, size_t bytes);
+ void iov_iter_revert(struct iov_iter *i, size_t bytes);
+@@ -184,6 +184,13 @@ static inline size_t copy_folio_to_iter(struct folio *folio, size_t offset,
  {
- 	loff_t length = iomap_length(iter);
-+	size_t chunk = PAGE_SIZE << MAX_PAGECACHE_ORDER;
- 	loff_t pos = iter->pos;
- 	ssize_t written = 0;
- 	long status = 0;
-@@ -777,15 +778,12 @@ static loff_t iomap_write_iter(struct iomap_iter *iter, struct iov_iter *i)
+ 	return copy_page_to_iter(&folio->page, offset, bytes, i);
+ }
++
++static inline size_t copy_folio_from_iter_atomic(struct folio *folio,
++		size_t offset, size_t bytes, struct iov_iter *i)
++{
++	return copy_page_from_iter_atomic(&folio->page, offset, bytes, i);
++}
++
+ size_t copy_page_to_iter_nofault(struct page *page, unsigned offset,
+ 				 size_t bytes, struct iov_iter *i);
  
- 	do {
- 		struct folio *folio;
--		struct page *page;
--		unsigned long offset;	/* Offset into pagecache page */
--		unsigned long bytes;	/* Bytes to write to page */
-+		size_t offset;		/* Offset into folio */
-+		size_t bytes;		/* Bytes to write to folio */
- 		size_t copied;		/* Bytes copied from user */
+diff --git a/lib/iov_iter.c b/lib/iov_iter.c
+index c728b6e4fb18..8da566a549ad 100644
+--- a/lib/iov_iter.c
++++ b/lib/iov_iter.c
+@@ -566,7 +566,7 @@ size_t iov_iter_zero(size_t bytes, struct iov_iter *i)
+ }
+ EXPORT_SYMBOL(iov_iter_zero);
  
--		offset = offset_in_page(pos);
--		bytes = min_t(unsigned long, PAGE_SIZE - offset,
--						iov_iter_count(i));
--again:
-+		offset = pos & (chunk - 1);
-+		bytes = min(chunk - offset, iov_iter_count(i));
- 		status = balance_dirty_pages_ratelimited_flags(mapping,
- 							       bdp_flags);
- 		if (unlikely(status))
-@@ -815,12 +813,14 @@ static loff_t iomap_write_iter(struct iomap_iter *iter, struct iov_iter *i)
- 		if (iter->iomap.flags & IOMAP_F_STALE)
- 			break;
- 
--		page = folio_file_page(folio, pos >> PAGE_SHIFT);
--		if (mapping_writably_mapped(mapping))
--			flush_dcache_page(page);
-+		offset = offset_in_folio(folio, pos);
-+		if (bytes > folio_size(folio) - offset)
-+			bytes = folio_size(folio) - offset;
- 
--		copied = copy_page_from_iter_atomic(page, offset, bytes, i);
-+		if (mapping_writably_mapped(mapping))
-+			flush_dcache_folio(folio);
- 
-+		copied = copy_folio_from_iter_atomic(folio, offset, bytes, i);
- 		status = iomap_write_end(iter, pos, bytes, copied, folio);
- 
- 		if (unlikely(copied != status))
-@@ -836,11 +836,13 @@ static loff_t iomap_write_iter(struct iomap_iter *iter, struct iov_iter *i)
- 			 */
- 			if (copied)
- 				bytes = copied;
--			goto again;
-+			if (chunk > PAGE_SIZE)
-+				chunk /= 2;
-+		} else {
-+			pos += status;
-+			written += status;
-+			length -= status;
- 		}
--		pos += status;
--		written += status;
--		length -= status;
- 	} while (iov_iter_count(i) && length);
- 
- 	if (status == -EAGAIN) {
+-size_t copy_page_from_iter_atomic(struct page *page, unsigned offset,
++size_t copy_page_from_iter_atomic(struct page *page, size_t offset,
+ 		size_t bytes, struct iov_iter *i)
+ {
+ 	size_t n, copied = 0;
 -- 
 2.39.2
 
