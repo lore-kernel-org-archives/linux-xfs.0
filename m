@@ -2,149 +2,167 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id EAB71EB64D9
-	for <linux-xfs@archiver.kernel.org>; Mon, 10 Jul 2023 22:01:10 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3A809EB64D9
+	for <linux-xfs@archiver.kernel.org>; Mon, 10 Jul 2023 22:08:00 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229669AbjGJWBJ (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 10 Jul 2023 18:01:09 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49646 "EHLO
+        id S229577AbjGJWHy (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 10 Jul 2023 18:07:54 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51900 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230021AbjGJWBI (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 10 Jul 2023 18:01:08 -0400
-X-Greylist: delayed 429 seconds by postgrey-1.37 at lindbergh.monkeyblade.net; Mon, 10 Jul 2023 15:01:07 PDT
-Received: from smtp1.onthe.net.au (smtp1.onthe.net.au [203.22.196.249])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 25294DB
-        for <linux-xfs@vger.kernel.org>; Mon, 10 Jul 2023 15:01:06 -0700 (PDT)
-Received: from localhost (smtp2.private.onthe.net.au [10.200.63.13])
-        by smtp1.onthe.net.au (Postfix) with ESMTP id 3368461980
-        for <linux-xfs@vger.kernel.org>; Tue, 11 Jul 2023 07:53:55 +1000 (EST)
-Received: from smtp1.onthe.net.au ([10.200.63.11])
-        by localhost (smtp.onthe.net.au [10.200.63.13]) (amavisd-new, port 10028)
-        with ESMTP id SiSIze3Z3uGj for <linux-xfs@vger.kernel.org>;
-        Tue, 11 Jul 2023 07:53:55 +1000 (AEST)
-Received: from athena.private.onthe.net.au (chris-gw2-vpn.private.onthe.net.au [10.9.3.2])
-        by smtp1.onthe.net.au (Postfix) with ESMTP id 039E56196C
-        for <linux-xfs@vger.kernel.org>; Tue, 11 Jul 2023 07:53:55 +1000 (EST)
-Received: by athena.private.onthe.net.au (Postfix, from userid 1026)
-        id DC4B968061C; Tue, 11 Jul 2023 07:53:54 +1000 (AEST)
-Date:   Tue, 11 Jul 2023 07:53:54 +1000
-From:   Chris Dunlop <chris@onthe.net.au>
-To:     linux-xfs@vger.kernel.org
-Subject: rm hanging, v6.1.35
-Message-ID: <20230710215354.GA679018@onthe.net.au>
+        with ESMTP id S229450AbjGJWHw (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 10 Jul 2023 18:07:52 -0400
+Received: from mail-pf1-x42f.google.com (mail-pf1-x42f.google.com [IPv6:2607:f8b0:4864:20::42f])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id BE07CB1
+        for <linux-xfs@vger.kernel.org>; Mon, 10 Jul 2023 15:07:50 -0700 (PDT)
+Received: by mail-pf1-x42f.google.com with SMTP id d2e1a72fcca58-668711086f4so3195925b3a.1
+        for <linux-xfs@vger.kernel.org>; Mon, 10 Jul 2023 15:07:50 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=fromorbit-com.20221208.gappssmtp.com; s=20221208; t=1689026870; x=1691618870;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
+        bh=yXlC3vCug7dGJje39dSSt20g1gPIQkzSekXpa7x+ytw=;
+        b=B2LqsDp51YQK0xT3s4Kdnmp3zrfRGZdM6i2cQKQA3+c/QFF15iWtmu8DxQ8zuISnIa
+         B2t5AMYH/7haU7o6SxLxvnQRe/ww5+FLgdVdrbs7a+1dks9TpFGTvcVHLHWh/7b3MZHj
+         iCn8R/YldPTsYxIAmWzqCbfW0msphMXoSCot+SEQM27g3vTPqaXM/C45RMOUxqJuZa5x
+         mmndUp8MPh1FDIhlnYc/uuTfisC/dn1PtQ+9iX8aFWCKsz5Bzm5AEWjGeEo5XnK2SUbo
+         edJW7uw7MoymQga/K2YOmHu60LQK+zNB/Cjpqw2qlZ6sluYoioI2TujEWh9s0SOIyZce
+         V/og==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20221208; t=1689026870; x=1691618870;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=yXlC3vCug7dGJje39dSSt20g1gPIQkzSekXpa7x+ytw=;
+        b=jo30w4ghI1pa1xc/yWdKa61wqmSLkNSLwK/vr4QNYh1S0oZ9WfmSiIjZ/zFWY5re4Z
+         LkxLRgzkEKIrxj+IfeeDapFYPlicSZsTB4OHTtHadeZgHasQyz78I1Jrfwcx6ae/2yVy
+         S1CqBrWHKKiY/3VI6lvBZcM2/iKx9khB78TnreANgWdti2/8QRzJ5GA3y45E4YOsUhnK
+         zp9fQX55yMzlOF+DhYqmPa7H0PSZVjCdtZFCnVKHb4WWSeDmuGXPyLyOA4DhP5obJMp9
+         m8rbAJs+j4PK0coMxZfBEuSVRzP5dK6RlAT4EjH9XzRaU+bPjd+p5XhotEo6pumf7QTX
+         1gbw==
+X-Gm-Message-State: ABy/qLbKQLNWyjqBEj7i8VGbardh+7o5UbQwR9eVtVCDGRYbMX118U/i
+        zOZJ3JgWWelSTUohna8iv7oByg==
+X-Google-Smtp-Source: APBJJlHJmdZocLbdnzQr4hZhYKMrU+zYrGdWybeFMBqbIxfEmWE1Ps55cZhsYwom6i25IzuHorWsKA==
+X-Received: by 2002:a05:6a00:802:b0:673:6cb4:7b0c with SMTP id m2-20020a056a00080200b006736cb47b0cmr21270397pfk.2.1689026870138;
+        Mon, 10 Jul 2023 15:07:50 -0700 (PDT)
+Received: from dread.disaster.area (pa49-180-246-40.pa.nsw.optusnet.com.au. [49.180.246.40])
+        by smtp.gmail.com with ESMTPSA id j9-20020a62b609000000b00678afd4824asm251124pff.175.2023.07.10.15.07.49
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Mon, 10 Jul 2023 15:07:49 -0700 (PDT)
+Received: from dave by dread.disaster.area with local (Exim 4.96)
+        (envelope-from <david@fromorbit.com>)
+        id 1qIz2o-004YFl-1u;
+        Tue, 11 Jul 2023 08:07:46 +1000
+Date:   Tue, 11 Jul 2023 08:07:46 +1000
+From:   Dave Chinner <david@fromorbit.com>
+To:     "Darrick J. Wong" <djwong@kernel.org>
+Cc:     linux-xfs@vger.kernel.org
+Subject: Re: [PATCH 7/9] xfs: ignore stale buffers when scanning the buffer
+ cache
+Message-ID: <ZKyBMpFH1sSsS7L5@dread.disaster.area>
+References: <168506055606.3728180.16225214578338421625.stgit@frogsfrogsfrogs>
+ <168506055718.3728180.15781485173918712234.stgit@frogsfrogsfrogs>
+ <ZJEb2nSpIWoiKm6a@dread.disaster.area>
+ <20230620044443.GE11467@frogsfrogsfrogs>
+ <ZJFAqTaV6AO37v04@dread.disaster.area>
+ <20230705231736.GT11441@frogsfrogsfrogs>
+ <ZKs/eo/13sCfEqvQ@dread.disaster.area>
+ <20230709233216.GE11456@frogsfrogsfrogs>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
+In-Reply-To: <20230709233216.GE11456@frogsfrogsfrogs>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Hi,
+On Sun, Jul 09, 2023 at 04:32:16PM -0700, Darrick J. Wong wrote:
+> On Mon, Jul 10, 2023 at 09:15:06AM +1000, Dave Chinner wrote:
+> > On Wed, Jul 05, 2023 at 04:17:36PM -0700, Darrick J. Wong wrote:
+> > > Concrete example:
+> > > 
+> > > So let's pretend that we have an xfs with fs blocksize 4k and dir
+> > > blocksize 8k.  Let's suppose the directory's data fork maps fsblock 16,
+> > > resulting in a buffer (daddr 128, length 16).  Let us further suppose
+> > > the inobt then allocates fsblock 17, resulting in a buffer (daddr 136,
+> > > length 8).  These are crosslinked.
+> > 
+> > RIght, that's an intersection of {128,16} and {136,8}. The search
+> > region for buffer invalidation is {128, 8} {128, 16} and {136, 8}.
+> > They are the only possible buffers that can be cached in that region
+> > for a 4kB block size filesystem, as there can be no metadata buffers
+> > starting at daddrs 129-135 or 137-143...
+> 
+> <nod> There's nothing in this flag that *prevents* someone from spending
+> a lot of time pounding on the buffer cache with a per-daddr scan.  But
+> note that the next patch only ever calls it with fsblock-aligned daddr
+> and length values.  So in the end, the only xfs_buf queries will indded
+> be for {128, 8} {128, 16} and {136, 8} like you said.
+> 
+> See the next patch for the actual usage.  Sorry that I've been unclear
+> about all this and compounding it with not very good examples.  It's
+> been a /very/ long time since I actually touched this code (this rewrite
+> has been waiting for merge since ... 2019?) and I'm basically coming in
+> cold. :(
+> 
+> Ultimately I make invalidation scan code look like this:
+> 
+> /* Buffer cache scan context. */
+> struct xrep_bufscan {
+> 	/* Disk address for the buffers we want to scan. */
+> 	xfs_daddr_t		daddr;
+> 
+> 	/* Maximum number of sectors to scan. */
+> 	xfs_daddr_t		max_sectors;
+> 
+> 	/* Each round, increment the search length by this number of sectors. */
+> 	xfs_daddr_t		daddr_step;
+> 
+> 	/* Internal scan state; initialize to zero. */
+> 	xfs_daddr_t		__sector_count;
+> };
+> 
+> /*
+>  * Return an incore buffer from a sector scan, or NULL if there are no buffers
+>  * left to return.
+>  */
+> struct xfs_buf *
+> xrep_bufscan_advance(
+> 	struct xfs_mount	*mp,
+> 	struct xrep_bufscan	*scan)
+> {
+> 	scan->__sector_count += scan->daddr_step;
+> 	while (scan->__sector_count <= scan->max_sectors) {
+> 		struct xfs_buf	*bp = NULL;
+> 		int		error;
+> 
+> 		error = xfs_buf_incore(mp->m_ddev_targp, scan->daddr,
+> 				scan->__sector_count, XBF_LIVESCAN, &bp);
+> 		if (!error)
+> 			return bp;
+> 
+> 		scan->__sector_count += scan->daddr_step;
+> 	}
+> 
+> 	return NULL;
+> }
 
-This box is newly booted into linux v6.1.35 (2 days ago), it was 
-previously running v5.15.118 without any problems (other than that fixed 
-by "5e672cd69f0a xfs: non-blocking inodegc pushes", the reason for the 
-upgrade).
+.....
 
-I have rm operations on two files that have been stuck for in excess of 22 
-hours and 18 hours respectively:
+Yup, that's much better, will do for now.
 
-$ ps -opid,lstart,state,wchan=WCHAN-xxxxxxxxxxxxxxx,cmd -C rm
-     PID                  STARTED S WCHAN-xxxxxxxxxxxxxxx CMD
-2379355 Mon Jul 10 09:07:57 2023 D vfs_unlink            /bin/rm -rf /aaa/5539_tmp
-2392421 Mon Jul 10 09:18:27 2023 D down_write_nested     /bin/rm -rf /aaa/5539_tmp
-2485728 Mon Jul 10 09:28:57 2023 D down_write_nested     /bin/rm -rf /aaa/5539_tmp
-2488254 Mon Jul 10 09:39:27 2023 D down_write_nested     /bin/rm -rf /aaa/5539_tmp
-2491180 Mon Jul 10 09:49:58 2023 D down_write_nested     /bin/rm -rf /aaa/5539_tmp
-3014914 Mon Jul 10 13:00:33 2023 D vfs_unlink            /bin/rm -rf /bbb/5541_tmp
-3095893 Mon Jul 10 13:11:03 2023 D down_write_nested     /bin/rm -rf /bbb/5541_tmp
-3098809 Mon Jul 10 13:21:35 2023 D down_write_nested     /bin/rm -rf /bbb/5541_tmp
-3101387 Mon Jul 10 13:32:06 2023 D down_write_nested     /bin/rm -rf /bbb/5541_tmp
-3195017 Mon Jul 10 13:42:37 2023 D down_write_nested     /bin/rm -rf /bbb/5541_tmp
+I suspect this could be smarter with a custom rhashtable walker; all
+the buffers at a given daddr should have the same key (i.e. daddr)
+so should hash to the same list, so we should be able to walk an
+entire list in one pass doing a bjoin/binval callback on each
+non-stale buffer that matches the key....
 
-The "rm"s are run from a process that's obviously tried a few times to get 
-rid of these files.
-
-There's nothing extraordinary about the files in terms of size:
-
-$ ls -ltrn --full-time /aaa/5539_tmp /bbb/5541_tmp
--rw-rw-rw- 1 1482 1482 7870643 2023-07-10 06:07:58.684036505 +1000 /aaa/5539_tmp
--rw-rw-rw- 1 1482 1482  701240 2023-07-10 10:00:34.181064549 +1000 /bbb/5541_tmp
-
-As hinted by the WCHAN in the ps output above, each "primary" rm (i.e. the 
-first one run on each file) stack trace looks like:
-
-[<0>] vfs_unlink+0x48/0x270
-[<0>] do_unlinkat+0x1f5/0x290
-[<0>] __x64_sys_unlinkat+0x3b/0x60
-[<0>] do_syscall_64+0x34/0x80
-[<0>] entry_SYSCALL_64_after_hwframe+0x46/0xb0
-
-And each "secondary" rm (i.e. the subsequent ones on each file) stack 
-trace looks like:
-
-== blog-230710-xfs-rm-stuckd
-[<0>] down_write_nested+0xdc/0x100
-[<0>] do_unlinkat+0x10d/0x290
-[<0>] __x64_sys_unlinkat+0x3b/0x60
-[<0>] do_syscall_64+0x34/0x80
-[<0>] entry_SYSCALL_64_after_hwframe+0x46/0xb0
-
-Multiple kernel strack traces don't show vfs_unlink or anything related 
-that I can see, or anything else consistent or otherwise interesting. Most 
-cores are idle.
-
-Each of /aaa and /bbb are separate XFS filesystems:
-
-$ xfs_info /aaa
-meta-data=/dev/mapper/aaa        isize=512    agcount=2, agsize=268434432 blks
-          =                       sectsz=4096  attr=2, projid32bit=1
-          =                       crc=1        finobt=1, sparse=1, rmapbt=1
-          =                       reflink=1    bigtime=1 inobtcount=1
-data     =                       bsize=4096   blocks=536868864, imaxpct=5
-          =                       sunit=256    swidth=256 blks
-naming   =version 2              bsize=4096   ascii-ci=0, ftype=1
-log      =internal log           bsize=4096   blocks=262143, version=2
-          =                       sectsz=4096  sunit=1 blks, lazy-count=1
-realtime =none                   extsz=4096   blocks=0, rtextents=0
-
-$ xfs_info /bbb
-meta-data=/dev/mapper/bbb        isize=512    agcount=8, agsize=268434432 blks
-          =                       sectsz=4096  attr=2, projid32bit=1
-          =                       crc=1        finobt=1, sparse=1, rmapbt=1
-          =                       reflink=1    bigtime=1 inobtcount=1
-data     =                       bsize=4096   blocks=1879047168, imaxpct=5
-          =                       sunit=256    swidth=256 blks
-naming   =version 2              bsize=4096   ascii-ci=0, ftype=1
-log      =internal log           bsize=4096   blocks=521728, version=2
-          =                       sectsz=4096  sunit=1 blks, lazy-count=1
-realtime =none                   extsz=4096   blocks=0, rtextents=0
-
-There's plenty of free space at the fs level:
-
-$ df -h /aaa /bbb
-Filesystem          Size  Used Avail Use% Mounted on
-/dev/mapper/aaa     2.0T  551G  1.5T  27% /aaa
-/dev/mapper/bbb     7.0T  3.6T  3.5T  52% /bbb
-
-The fses are on sparse ceph/rbd volumes, the underlying storage tells me 
-they're 50-60% utilised:
-
-aaa: provisioned="2048G" used="1015.9G"
-bbb: provisioned="7168G" used="4925.3G"
-
-Where to from here?
-
-I'm guessing only a reboot is going to unstick this. Anything I should be 
-looking at before reverting to v5.15.118?
-
-...subsequent to starting writing all this down I have another two sets of 
-rms stuck, again on unremarkable files, and on two more separate 
-filesystems.
-
-...oh. And an 'ls' on those files is hanging. The reboot has become more 
-urgent.
+But that can be done later, it's not necessary for correctness and
+this looks a lot better than the original code.
 
 Cheers,
 
-Chris
+Dave.
+
+-- 
+Dave Chinner
+david@fromorbit.com
