@@ -2,30 +2,30 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DB23DEB64D9
-	for <linux-xfs@archiver.kernel.org>; Mon, 10 Jul 2023 13:04:18 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5863CEB64D9
+	for <linux-xfs@archiver.kernel.org>; Mon, 10 Jul 2023 13:04:22 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232241AbjGJNER (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 10 Jul 2023 09:04:17 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49788 "EHLO
+        id S232848AbjGJNEV (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 10 Jul 2023 09:04:21 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49836 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232810AbjGJNEG (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 10 Jul 2023 09:04:06 -0400
+        with ESMTP id S232312AbjGJNEJ (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 10 Jul 2023 09:04:09 -0400
 Received: from casper.infradead.org (casper.infradead.org [IPv6:2001:8b0:10b:1236::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7B14F2123;
-        Mon, 10 Jul 2023 06:02:59 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C406F268D;
+        Mon, 10 Jul 2023 06:03:03 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
         d=infradead.org; s=casper.20170209; h=Content-Transfer-Encoding:MIME-Version:
-        Message-Id:Date:Subject:Cc:To:From:Sender:Reply-To:Content-Type:Content-ID:
-        Content-Description:In-Reply-To:References;
-        bh=r795vGm91lvykHKzEm1Ts4A5WyyKNMg9Cr/ucWaUEaY=; b=bGm7hB1vQZAoOtIR434uLuIR+Q
-        hSecTGhXtPdju6a+Ems4UA4mANFkcxJEt8b/3rJQuBhDJOrljpxcn0iQWWtybb+7GELRmTnqxSSiz
-        Fsqgf49CPxie90LHsQiZXoAwjr7a6UGYTQXMfoIzCpYgXJOJ9oWNEK76YMGvWl3Gv+J5yTTH3Xq06
-        VzjlSu7tKSfyIhJKuDwMU/mdl+Yp5gvo1Yw8kh6UcRNCGpxQX0SUb6gQxp29ZWQUcJWEfuHFCdZd5
-        TJZb1mtIBSLUaZ96l8TF8Vn2F4y8+c1RmNJm/baLySgpzGvB9DsqzyHEU1mErQPf6zR0iK4b7DxGz
-        9Sx6khyQ==;
+        References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:Sender:Reply-To:
+        Content-Type:Content-ID:Content-Description;
+        bh=Xa62x9tUe4HdESmmryNJxUBaFH7m3AqjBIhlcBkeDm8=; b=FFhwt7/0AsvUiMBzPstg+Qq1DT
+        bDT+M53lIT+ER0YOXK++7ZawneOi8wN4m2wfLwI8AMjAY7BqsAdxHqWxzQXE+Q9gytc9vko6ITMk7
+        ucmC0zUEI3vT/dDt2R3IAA+nqMefP7Tk49JuwBMTcr/8bxggh/VjfYaxtKfucpIesU+owRhV/AkRN
+        WQL+tpVAe5rWx4VGiHV93hkIShXBugd9eNe6aVsfYE3MEsJIx1sEPnjz9EYbaLJBa72GB+xCWIL0t
+        6Kz1L19a76SqED9GDggf+yRgGukriA3ijPyE1uOalPxb6/keeZGSNmwrlBKwDcHB9gyIZw6+ZRO13
+        TEV4AUeg==;
 Received: from willy by casper.infradead.org with local (Exim 4.94.2 #2 (Red Hat Linux))
-        id 1qIqXW-00EcX2-Vg; Mon, 10 Jul 2023 13:02:55 +0000
+        id 1qIqXY-00EcXT-2T; Mon, 10 Jul 2023 13:02:56 +0000
 From:   "Matthew Wilcox (Oracle)" <willy@infradead.org>
 To:     linux-fsdevel@vger.kernel.org
 Cc:     "Matthew Wilcox (Oracle)" <willy@infradead.org>,
@@ -33,91 +33,99 @@ Cc:     "Matthew Wilcox (Oracle)" <willy@infradead.org>,
         Dave Chinner <david@fromorbit.com>,
         Christoph Hellwig <hch@infradead.org>,
         "Darrick J . Wong" <djwong@kernel.org>,
-        Kent Overstreet <kent.overstreet@linux.dev>
-Subject: [PATCH v4 0/9] Create large folios in iomap buffered write path
-Date:   Mon, 10 Jul 2023 14:02:44 +0100
-Message-Id: <20230710130253.3484695-1-willy@infradead.org>
+        Kent Overstreet <kent.overstreet@linux.dev>,
+        Christoph Hellwig <hch@lst.de>
+Subject: [PATCH v4 9/9] iomap: Copy larger chunks from userspace
+Date:   Mon, 10 Jul 2023 14:02:53 +0100
+Message-Id: <20230710130253.3484695-10-willy@infradead.org>
 X-Mailer: git-send-email 2.37.1
+In-Reply-To: <20230710130253.3484695-1-willy@infradead.org>
+References: <20230710130253.3484695-1-willy@infradead.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Commit ebb7fb1557b1 limited the length of ioend chains to 4096 entries
-to improve worst-case latency.  Unfortunately, this had the effect of
-limiting the performance of:
+If we have a large folio, we can copy in larger chunks than PAGE_SIZE.
+Start at the maximum page cache size and shrink by half every time we
+hit the "we are short on memory" problem.
 
-fio -name write-bandwidth -rw=write -bs=1024Ki -size=32Gi -runtime=30 \
-        -iodepth 1 -ioengine sync -zero_buffers=1 -direct=0 -end_fsync=1 \
-        -numjobs=4 -directory=/mnt/test
+Signed-off-by: Matthew Wilcox (Oracle) <willy@infradead.org>
+Reviewed-by: Christoph Hellwig <hch@lst.de>
+---
+ fs/iomap/buffered-io.c | 32 +++++++++++++++++---------------
+ 1 file changed, 17 insertions(+), 15 deletions(-)
 
-The problem ends up being lock contention on the i_pages spinlock as we
-clear the writeback bit on each folio (and propagate that up through
-the tree).  By using larger folios, we decrease the number of folios
-to be processed by a factor of 256 for this benchmark, eliminating the
-lock contention.
-
-It's also the right thing to do.  This is a project that has been on
-the back burner for years, it just hasn't been important enough to do
-before now.
-
-I think it's probably best if this goes through the iomap tree since
-the changes outside iomap are either to the page cache or they're
-trivial.
-
-v4:
- - Rebase on v6.5-rc1
- - Add documentation for fgf_set_order()
- - Improve documentation for iomap_get_page()
- - Fix crash caused by shadow kaddr name in copy_page_from_iter_atomic()
- - Add copy_folio_from_iter_atomic()
- - Improve comment in iomap_release_folio()
- - Use __GFP_NORETRY | __GRP_NOWARN to allocate large folios
- - Change an 'unsigned long bytes' to 'size_t bytes' for consistency
- - Restructure iomap_write_iter() loop slightly
-
-v3:
- - Fix the handling of compound highmem pages in copy_page_from_iter_atomic()
- - Rename fgp_t to fgf_t
- - Clarify some wording in the documentation
-
-v2:
- - Fix misplaced semicolon
- - Rename fgp_order to fgp_set_order
- - Rename FGP_ORDER to FGP_GET_ORDER
- - Add fgp_t
- - Update the documentation for ->release_folio
- - Fix iomap_invalidate_folio()
- - Update iomap_release_folio()
-
-Matthew Wilcox (Oracle) (9):
-  iov_iter: Handle compound highmem pages in
-    copy_page_from_iter_atomic()
-  iov_iter: Add copy_folio_from_iter_atomic()
-  iomap: Remove large folio handling in iomap_invalidate_folio()
-  doc: Correct the description of ->release_folio
-  iomap: Remove unnecessary test from iomap_release_folio()
-  filemap: Add fgf_t typedef
-  filemap: Allow __filemap_get_folio to allocate large folios
-  iomap: Create large folios in the buffered write path
-  iomap: Copy larger chunks from userspace
-
- Documentation/filesystems/locking.rst | 15 +++--
- fs/btrfs/file.c                       |  6 +-
- fs/f2fs/compress.c                    |  2 +-
- fs/f2fs/f2fs.h                        |  2 +-
- fs/gfs2/bmap.c                        |  2 +-
- fs/iomap/buffered-io.c                | 54 +++++++++---------
- include/linux/iomap.h                 |  2 +-
- include/linux/pagemap.h               | 82 +++++++++++++++++++++++----
- include/linux/uio.h                   |  9 ++-
- lib/iov_iter.c                        | 43 +++++++++-----
- mm/filemap.c                          | 65 +++++++++++----------
- mm/folio-compat.c                     |  2 +-
- mm/readahead.c                        | 13 -----
- 13 files changed, 187 insertions(+), 110 deletions(-)
-
+diff --git a/fs/iomap/buffered-io.c b/fs/iomap/buffered-io.c
+index 2d3e90f4d16e..f21f1f641c4a 100644
+--- a/fs/iomap/buffered-io.c
++++ b/fs/iomap/buffered-io.c
+@@ -769,6 +769,7 @@ static size_t iomap_write_end(struct iomap_iter *iter, loff_t pos, size_t len,
+ static loff_t iomap_write_iter(struct iomap_iter *iter, struct iov_iter *i)
+ {
+ 	loff_t length = iomap_length(iter);
++	size_t chunk = PAGE_SIZE << MAX_PAGECACHE_ORDER;
+ 	loff_t pos = iter->pos;
+ 	ssize_t written = 0;
+ 	long status = 0;
+@@ -777,15 +778,12 @@ static loff_t iomap_write_iter(struct iomap_iter *iter, struct iov_iter *i)
+ 
+ 	do {
+ 		struct folio *folio;
+-		struct page *page;
+-		unsigned long offset;	/* Offset into pagecache page */
+-		unsigned long bytes;	/* Bytes to write to page */
++		size_t offset;		/* Offset into folio */
++		size_t bytes;		/* Bytes to write to folio */
+ 		size_t copied;		/* Bytes copied from user */
+ 
+-		offset = offset_in_page(pos);
+-		bytes = min_t(unsigned long, PAGE_SIZE - offset,
+-						iov_iter_count(i));
+-again:
++		offset = pos & (chunk - 1);
++		bytes = min(chunk - offset, iov_iter_count(i));
+ 		status = balance_dirty_pages_ratelimited_flags(mapping,
+ 							       bdp_flags);
+ 		if (unlikely(status))
+@@ -815,12 +813,14 @@ static loff_t iomap_write_iter(struct iomap_iter *iter, struct iov_iter *i)
+ 		if (iter->iomap.flags & IOMAP_F_STALE)
+ 			break;
+ 
+-		page = folio_file_page(folio, pos >> PAGE_SHIFT);
+-		if (mapping_writably_mapped(mapping))
+-			flush_dcache_page(page);
++		offset = offset_in_folio(folio, pos);
++		if (bytes > folio_size(folio) - offset)
++			bytes = folio_size(folio) - offset;
+ 
+-		copied = copy_page_from_iter_atomic(page, offset, bytes, i);
++		if (mapping_writably_mapped(mapping))
++			flush_dcache_folio(folio);
+ 
++		copied = copy_folio_from_iter_atomic(folio, offset, bytes, i);
+ 		status = iomap_write_end(iter, pos, bytes, copied, folio);
+ 
+ 		if (unlikely(copied != status))
+@@ -836,11 +836,13 @@ static loff_t iomap_write_iter(struct iomap_iter *iter, struct iov_iter *i)
+ 			 */
+ 			if (copied)
+ 				bytes = copied;
+-			goto again;
++			if (chunk > PAGE_SIZE)
++				chunk /= 2;
++		} else {
++			pos += status;
++			written += status;
++			length -= status;
+ 		}
+-		pos += status;
+-		written += status;
+-		length -= status;
+ 	} while (iov_iter_count(i) && length);
+ 
+ 	if (status == -EAGAIN) {
 -- 
 2.39.2
 
