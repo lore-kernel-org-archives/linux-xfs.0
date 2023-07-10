@@ -2,134 +2,44 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E8482C00528
-	for <linux-xfs@archiver.kernel.org>; Mon, 10 Jul 2023 13:33:17 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 88DA8EB64D9
+	for <linux-xfs@archiver.kernel.org>; Mon, 10 Jul 2023 16:29:35 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232750AbjGJNdP (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 10 Jul 2023 09:33:15 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43150 "EHLO
+        id S229862AbjGJQ3e (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 10 Jul 2023 12:29:34 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39894 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232944AbjGJNdF (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 10 Jul 2023 09:33:05 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8B68019F;
-        Mon, 10 Jul 2023 06:32:44 -0700 (PDT)
+        with ESMTP id S229663AbjGJQ3e (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 10 Jul 2023 12:29:34 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 260C9123;
+        Mon, 10 Jul 2023 09:29:32 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
          key-exchange X25519 server-signature RSA-PSS (2048 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 5933560FE9;
-        Mon, 10 Jul 2023 13:32:43 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id A7E3BC433C9;
-        Mon, 10 Jul 2023 13:32:24 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 79FD561063;
+        Mon, 10 Jul 2023 16:29:31 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 771B0C433C7;
+        Mon, 10 Jul 2023 16:29:30 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1688995962;
-        bh=ypo6EEC/a10vTp0LME1omXwBE1UiKK/mReyAl6l5UHQ=;
-        h=Subject:From:To:Cc:Date:In-Reply-To:References:From;
-        b=J7Z7W1QfjLNRfgVQcSdKnYFRxtD+3fk+fVeHY9xuci1TKV61DCMVSYVvDG9kwuCBX
-         g+QpzC0XDkSjeL9nV9+lGdPbp68Q96EXBiPlDNXBynN9HrAz4Y+E89ZYAnFm4gMFob
-         SGwQAd+JWX6wsLqjr9V4UXCKsBkrO6/s1MT1FJcjDjR0RhV1HnH8M/padgIYfYI3iT
-         50AKfuQ1Ba3eH+A3TeCdkft2SWR53hIVATzxttJnSld1dtaOLY6XNcMPkiIrdtp3w+
-         UMgZy7XJf81pa8iQgs3v7vGfymFo80jGgmK2T6kIjmEHcqRaAvCUmLi8QnIHmVmDpT
-         pZFJemBst7t+w==
-Message-ID: <c4eaff9389fe63ec4e29404ec0d1181b74935426.camel@kernel.org>
-Subject: Re: [PATCH v2 00/89] fs: new accessors for inode->i_ctime
+        s=k20201202; t=1689006570;
+        bh=ae6QFQNElQd1BKJDZoXkx4iL3ughYws6hFQur12yufk=;
+        h=Subject:From:To:Cc:Date:From;
+        b=hUCDxWsHhARI3B5PrEurFf7cbATDizmyuaZ6X/wA8vTZzptNdoa4cKwOv1z1rebLw
+         AiOwF55RAzzcEck4zSQsQC/+0OreK6zF3aNPyr1NQPVNgEfPw6l94j4SDI+QRHi1I7
+         09zI2gxgow/80qSASd4jeDN2WX24l8FMfrXXkB22mhE0g5iBQTzUY68noBj5fvRo2a
+         aq6oxMRd4ohv2liFlTSWL2AzNo/0dlZ4tVA90/8fUNaRiWFu8jVuLPobOLBBeTOgDQ
+         1EOXkh5NUJ6hQKsZ14kjqfJ18GIouoEh+Mf1aY50ISGY4uYb/p7Wchj7pk4SsRX3P0
+         GNv5nE5oFsgyQ==
+Message-ID: <17881cf776b2c19dcd5a6d628fdfb54dae0eb4f8.camel@kernel.org>
+Subject: xfs WARNING on v6.5-rc1 kernel
 From:   Jeff Layton <jlayton@kernel.org>
-To:     Christian Brauner <brauner@kernel.org>
-Cc:     jk@ozlabs.org, arnd@arndb.de, mpe@ellerman.id.au,
-        npiggin@gmail.com, christophe.leroy@csgroup.eu, hca@linux.ibm.com,
-        gor@linux.ibm.com, agordeev@linux.ibm.com,
-        borntraeger@linux.ibm.com, svens@linux.ibm.com,
-        gregkh@linuxfoundation.org, arve@android.com, tkjos@android.com,
-        maco@android.com, joel@joelfernandes.org, cmllamas@google.com,
-        surenb@google.com, dennis.dalessandro@cornelisnetworks.com,
-        jgg@ziepe.ca, leon@kernel.org, bwarrum@linux.ibm.com,
-        rituagar@linux.ibm.com, ericvh@kernel.org, lucho@ionkov.net,
-        asmadeus@codewreck.org, linux_oss@crudebyte.com, dsterba@suse.com,
-        dhowells@redhat.com, marc.dionne@auristor.com,
-        viro@zeniv.linux.org.uk, raven@themaw.net, luisbg@kernel.org,
-        salah.triki@gmail.com, aivazian.tigran@gmail.com,
-        ebiederm@xmission.com, keescook@chromium.org, clm@fb.com,
-        josef@toxicpanda.com, xiubli@redhat.com, idryomov@gmail.com,
-        jaharkes@cs.cmu.edu, coda@cs.cmu.edu, jlbec@evilplan.org,
-        hch@lst.de, nico@fluxnic.net, rafael@kernel.org, code@tyhicks.com,
-        ardb@kernel.org, xiang@kernel.org, chao@kernel.org,
-        huyue2@coolpad.com, jefflexu@linux.alibaba.com,
-        linkinjeon@kernel.org, sj1557.seo@samsung.com, jack@suse.com,
-        tytso@mit.edu, adilger.kernel@dilger.ca, jaegeuk@kernel.org,
-        hirofumi@mail.parknet.co.jp, miklos@szeredi.hu,
-        rpeterso@redhat.com, agruenba@redhat.com, richard@nod.at,
-        anton.ivanov@cambridgegreys.com, johannes@sipsolutions.net,
-        mikulas@artax.karlin.mff.cuni.cz, mike.kravetz@oracle.com,
-        muchun.song@linux.dev, dwmw2@infradead.org, shaggy@kernel.org,
-        tj@kernel.org, trond.myklebust@hammerspace.com, anna@kernel.org,
-        chuck.lever@oracle.com, neilb@suse.de, kolga@netapp.com,
-        Dai.Ngo@oracle.com, tom@talpey.com, konishi.ryusuke@gmail.com,
-        anton@tuxera.com, almaz.alexandrovich@paragon-software.com,
-        mark@fasheh.com, joseph.qi@linux.alibaba.com, me@bobcopeland.com,
-        hubcap@omnibond.com, martin@omnibond.com, amir73il@gmail.com,
-        mcgrof@kernel.org, yzaikin@google.com, tony.luck@intel.com,
-        gpiccoli@igalia.com, al@alarsen.net, sfrench@samba.org,
-        pc@manguebit.com, lsahlber@redhat.com, sprasad@microsoft.com,
-        senozhatsky@chromium.org, phillip@squashfs.org.uk,
-        rostedt@goodmis.org, mhiramat@kernel.org, dushistov@mail.ru,
-        hdegoede@redhat.com, djwong@kernel.org, dlemoal@kernel.org,
-        naohiro.aota@wdc.com, jth@kernel.org, ast@kernel.org,
-        daniel@iogearbox.net, andrii@kernel.org, martin.lau@linux.dev,
-        song@kernel.org, yhs@fb.com, john.fastabend@gmail.com,
-        kpsingh@kernel.org, sdf@google.com, haoluo@google.com,
-        jolsa@kernel.org, hughd@google.com, akpm@linux-foundation.org,
-        davem@davemloft.net, edumazet@google.com, kuba@kernel.org,
-        pabeni@redhat.com, john.johansen@canonical.com,
-        paul@paul-moore.com, jmorris@namei.org, serge@hallyn.com,
-        stephen.smalley.work@gmail.com, eparis@parisplace.org,
-        jgross@suse.com, stern@rowland.harvard.edu, lrh2000@pku.edu.cn,
-        sebastian.reichel@collabora.com, wsa+renesas@sang-engineering.com,
-        quic_ugoswami@quicinc.com, quic_linyyuan@quicinc.com,
-        john@keeping.me.uk, error27@gmail.com, quic_uaggarwa@quicinc.com,
-        hayama@lineo.co.jp, jomajm@gmail.com, axboe@kernel.dk,
-        dhavale@google.com, dchinner@redhat.com, hannes@cmpxchg.org,
-        zhangpeng362@huawei.com, slava@dubeyko.com, gargaditya08@live.com,
-        penguin-kernel@I-love.SAKURA.ne.jp, yifeliu@cs.stonybrook.edu,
-        madkar@cs.stonybrook.edu, ezk@cs.stonybrook.edu,
-        yuzhe@nfschina.com, willy@infradead.org, okanatov@gmail.com,
-        jeffxu@chromium.org, linux@treblig.org, mirimmad17@gmail.com,
-        yijiangshan@kylinos.cn, yang.yang29@zte.com.cn,
-        xu.xin16@zte.com.cn, chengzhihao1@huawei.com, shr@devkernel.io,
-        Liam.Howlett@Oracle.com, adobriyan@gmail.com,
-        chi.minghao@zte.com.cn, roberto.sassu@huawei.com,
-        linuszeng@tencent.com, bvanassche@acm.org, zohar@linux.ibm.com,
-        yi.zhang@huawei.com, trix@redhat.com, fmdefrancesco@gmail.com,
-        ebiggers@google.com, princekumarmaurya06@gmail.com,
-        chenzhongjin@huawei.com, riel@surriel.com,
-        shaozhengchao@huawei.com, jingyuwang_vip@163.com,
-        linuxppc-dev@lists.ozlabs.org, linux-kernel@vger.kernel.org,
-        linux-s390@vger.kernel.org, linux-rdma@vger.kernel.org,
-        linux-usb@vger.kernel.org, v9fs@lists.linux.dev,
-        linux-fsdevel@vger.kernel.org, linux-afs@lists.infradead.org,
-        autofs@vger.kernel.org, linux-mm@kvack.org,
-        linux-btrfs@vger.kernel.org, ceph-devel@vger.kernel.org,
-        codalist@coda.cs.cmu.edu, ecryptfs@vger.kernel.org,
-        linux-efi@vger.kernel.org, linux-erofs@lists.ozlabs.org,
-        linux-ext4@vger.kernel.org, linux-f2fs-devel@lists.sourceforge.net,
-        cluster-devel@redhat.com, linux-um@lists.infradead.org,
-        linux-mtd@lists.infradead.org,
-        jfs-discussion@lists.sourceforge.net, linux-nfs@vger.kernel.org,
-        linux-nilfs@vger.kernel.org, linux-ntfs-dev@lists.sourceforge.net,
-        ntfs3@lists.linux.dev, ocfs2-devel@lists.linux.dev,
-        linux-karma-devel@lists.sourceforge.net, devel@lists.orangefs.org,
-        linux-unionfs@vger.kernel.org, linux-hardening@vger.kernel.org,
-        reiserfs-devel@vger.kernel.org, linux-cifs@vger.kernel.org,
-        samba-technical@lists.samba.org,
-        linux-trace-kernel@vger.kernel.org, linux-xfs@vger.kernel.org,
-        bpf@vger.kernel.org, netdev@vger.kernel.org,
-        apparmor@lists.ubuntu.com, linux-security-module@vger.kernel.org,
-        selinux@vger.kernel.org
-Date:   Mon, 10 Jul 2023 09:32:23 -0400
-In-Reply-To: <20230710-zudem-entkam-bb508cbd8c78@brauner>
-References: <20230705185812.579118-1-jlayton@kernel.org>
-         <5e40891f6423feb5b68f025e31f26e9a50ae9390.camel@kernel.org>
-         <20230710-zudem-entkam-bb508cbd8c78@brauner>
+To:     linux-xfs <linux-xfs@vger.kernel.org>,
+        Kees Cook <keescook@chromium.org>
+Cc:     linux-kernel <linux-kernel@vger.kernel.org>,
+        Kees Cook <keescook@chromium.org>
+Date:   Mon, 10 Jul 2023 12:29:29 -0400
 Content-Type: text/plain; charset="ISO-8859-15"
 Content-Transfer-Encoding: quoted-printable
 User-Agent: Evolution 3.48.4 (3.48.4-1.fc38) 
@@ -138,67 +48,251 @@ Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Mon, 2023-07-10 at 14:35 +0200, Christian Brauner wrote:
-> On Fri, Jul 07, 2023 at 08:42:31AM -0400, Jeff Layton wrote:
-> > On Wed, 2023-07-05 at 14:58 -0400, Jeff Layton wrote:
-> > > v2:
-> > > - prepend patches to add missing ctime updates
-> > > - add simple_rename_timestamp helper function
-> > > - rename ctime accessor functions as inode_get_ctime/inode_set_ctime_=
-*
-> > > - drop individual inode_ctime_set_{sec,nsec} helpers
-> > >=20
-> >=20
-> > After review by Jan and others, and Jan's ext4 rework, the diff on top
-> > of the series I posted a couple of days ago is below. I don't really
-> > want to spam everyone with another ~100 patch v3 series, but I can if
-> > you think that's best.
-> >=20
-> > Christian, what would you like me to do here?
->=20
-> I picked up the series from the list and folded the fixups you posted
-> here into the respective fs conversion patches. I hope that helps you
-> avoid a resend. You should have received a separate "thank you" mail for
-> all of this.
->=20
-> To each patch that I folded one of the fixlets from below into I added a
-> git note that records a link to your mail here and the respective patch
-> hunk from this mail that I folded into the patch. git.kernel.org will
-> show notes by default. For example,
-> https://git.kernel.org/pub/scm/linux/kernel/git/vfs/vfs.git/commit/?h=3Dv=
-fs.ctime&id=3D8b0e3c2e99004609a16ba145bcbdfdddb78e220e
-> should show you the note I added. You can also fetch them via
-> git fetch $remote refs/notes/*:refs/notes/*
-> (You probably know that ofc but jic.) if you're interested.
->=20
-> Based on v6.5-rc1 as of today.
->=20
+I hit this this morning while running generic/013 (fsstress), with a
+kernel based on v6.5-rc1. The main changes on top of this are timestamp
+related, so I doubt they're a factor here.
 
-Many thanks!!! I'll get to work rebasing the multigrain timestamp series
-on top of that.
+Is this some of the flexarray hardening?
 
-> Btw, both b4 and patchwork somehow treat the series in weird was.
-> IOW, based on the message id of the cover letter I was able to pull most
-> messages except for:
->=20
-> [07/92] fs: add ctime accessors infrastructure
-> [08/92] fs: new helper: simple_rename_timestamp
-> [92/92] fs: rename i_ctime field to __i_ctime
->=20
-> which I pulled in separately. Not sure what the cause of=A0
->=20
-> this is.
+[ 2704.665314] run fstests generic/013 at 2023-07-10 16:09:58
+[ 2705.646507] XFS (loop16): Unmounting Filesystem 3058c032-3f67-4fb9-b24e-=
+c1414b0b532b
+[ 2705.820402] XFS (loop16): Mounting V5 Filesystem 3058c032-3f67-4fb9-b24e=
+-c1414b0b532b
+[ 2705.838655] XFS (loop16): Ending clean mount
+[ 2705.916080] ------------[ cut here ]------------
+[ 2705.917615] memcpy: detected field-spanning write (size 2) of single fie=
+ld "(char *)name_loc->nameval" at fs/xfs/libxfs/xfs_attr_leaf.c:1559 (size =
+1)
+[ 2705.921569] WARNING: CPU: 6 PID: 48206 at fs/xfs/libxfs/xfs_attr_leaf.c:=
+1559 xfs_attr3_leaf_add_work+0x4ee/0x530 [xfs]
+[ 2705.926783] Modules linked in: xfs nls_iso8859_1 nls_cp437 vfat fat ext4=
+ 9p crc16 mbcache netfs jbd2 kvm_intel cirrus virtio_net kvm joydev drm_shm=
+em_helper net_failover pcspkr virtio_balloon 9pnet_virtio psmouse irqbypass=
+ failover drm_kms_helper evdev button drm loop dm_mod zram zsmalloc crct10d=
+if_pclmul crc32_pclmul ghash_clmulni_intel sha512_ssse3 sha512_generic nvme=
+ virtio_blk nvme_core t10_pi aesni_intel virtio_pci crc64_rocksoft_generic =
+crypto_simd cryptd crc64_rocksoft virtio i6300esb crc64 virtio_pci_legacy_d=
+ev virtio_pci_modern_dev virtio_ring serio_raw btrfs blake2b_generic libcrc=
+32c crc32c_generic crc32c_intel xor raid6_pq autofs4
+[ 2705.942668] CPU: 6 PID: 48206 Comm: fsstress Not tainted 6.5.0-rc1+ #13
+[ 2705.945361] Hardware name: QEMU Standard PC (Q35 + ICH9, 2009), BIOS 1.1=
+6.2-1.fc38 04/01/2014
+[ 2705.947758] RIP: 0010:xfs_attr3_leaf_add_work+0x4ee/0x530 [xfs]
+[ 2705.949442] Code: fe ff ff b9 01 00 00 00 4c 89 fe 48 c7 c2 c8 2e fc c0 =
+48 c7 c7 10 2f fc c0 48 89 44 24 08 c6 05 ac 9c 0e 00 01 e8 a2 de 67 d0 <0f=
+> 0b 48 8b 44 24 08 e9 88 fe ff ff 80 3d 93 9c 0e 00 00 0f 85 bd
+[ 2705.953536] RSP: 0018:ffffb52ac29bb8c0 EFLAGS: 00010282
+[ 2705.954925] RAX: 0000000000000000 RBX: ffffb52ac29bb990 RCX: 00000000000=
+00000
+[ 2705.956604] RDX: 0000000000000002 RSI: ffffffff92612d95 RDI: 00000000fff=
+fffff
+[ 2705.958998] RBP: ffffb52ac29bb924 R08: 0000000000000000 R09: ffffb52ac29=
+bb760
+[ 2705.960903] R10: 0000000000000003 R11: ffffffff928c1aa8 R12: ffff8ecf3ad=
+c8050
+[ 2705.962537] R13: ffff8ecf3adc8000 R14: ffff8ecf3adc8fcc R15: 00000000000=
+00002
+[ 2705.964083] FS:  00007fcb152f4740(0000) GS:ffff8ed077d80000(0000) knlGS:=
+0000000000000000
+[ 2705.965752] CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+[ 2705.967124] CR2: 00007ff8022cd2d8 CR3: 000000015e1d2005 CR4: 00000000000=
+60ee0
+[ 2705.969279] Call Trace:
+[ 2705.970318]  <TASK>
+[ 2705.971321]  ? xfs_attr3_leaf_add_work+0x4ee/0x530 [xfs]
+[ 2705.973729]  ? __warn+0x7d/0x130
+[ 2705.974822]  ? xfs_attr3_leaf_add_work+0x4ee/0x530 [xfs]
+[ 2705.976251]  ? report_bug+0x18d/0x1c0
+[ 2705.977242]  ? handle_bug+0x3c/0x80
+[ 2705.978282]  ? exc_invalid_op+0x13/0x60
+[ 2705.979310]  ? asm_exc_invalid_op+0x16/0x20
+[ 2705.980648]  ? xfs_attr3_leaf_add_work+0x4ee/0x530 [xfs]
+[ 2705.982645]  xfs_attr3_leaf_add+0x173/0x1e0 [xfs]
+[ 2705.984131]  xfs_attr_shortform_to_leaf+0x21d/0x230 [xfs]
+[ 2705.985415]  xfs_attr_set_iter+0x766/0x900 [xfs]
+[ 2705.986514]  ? path_setxattr+0xc7/0xe0
+[ 2705.987324]  xfs_xattri_finish_update+0x18/0x50 [xfs]
+[ 2705.988486]  xfs_attr_finish_item+0x1a/0xb0 [xfs]
+[ 2705.989566]  xfs_defer_finish_noroll+0x192/0x6e0 [xfs]
+[ 2705.990714]  __xfs_trans_commit+0x242/0x360 [xfs]
+[ 2705.991768]  xfs_attr_set+0x462/0x680 [xfs]
+[ 2705.993079]  xfs_xattr_set+0x89/0xe0 [xfs]
+[ 2705.994183]  __vfs_setxattr+0x95/0xd0
+[ 2705.995160]  __vfs_setxattr_noperm+0x73/0x1d0
+[ 2705.996536]  vfs_setxattr+0x9b/0x180
+[ 2705.997510]  setxattr+0x88/0xa0
+[ 2705.998249]  ? __pfx_free_object_rcu+0x10/0x10
+[ 2705.999190]  ? __call_rcu_common.constprop.0+0x107/0x220
+[ 2706.000196]  ? user_path_at_empty+0x40/0x50
+[ 2706.001045]  ? kmem_cache_free+0x160/0x380
+[ 2706.001881]  ? preempt_count_add+0x47/0xa0
+[ 2706.002719]  ? __mnt_want_write+0x61/0x90
+[ 2706.003528]  path_setxattr+0xc7/0xe0
+[ 2706.004277]  __x64_sys_setxattr+0x27/0x30
+[ 2706.005074]  do_syscall_64+0x3b/0x90
+[ 2706.005800]  entry_SYSCALL_64_after_hwframe+0x6e/0xd8
+[ 2706.006739] RIP: 0033:0x7fcb1540515e
+[ 2706.007628] Code: 48 8b 0d ad 6c 0c 00 f7 d8 64 89 01 48 83 c8 ff c3 66 =
+2e 0f 1f 84 00 00 00 00 00 90 f3 0f 1e fa 49 89 ca b8 bc 00 00 00 0f 05 <48=
+> 3d 01 f0 ff ff 73 01 c3 48 8b 0d 7a 6c 0c 00 f7 d8 64 89 01 48
+[ 2706.010450] RSP: 002b:00007fffe4df12d8 EFLAGS: 00000246 ORIG_RAX: 000000=
+00000000bc
+[ 2706.011976] RAX: ffffffffffffffda RBX: 0000000000000061 RCX: 00007fcb154=
+0515e
+[ 2706.013103] RDX: 0000000001548010 RSI: 00007fffe4df1320 RDI: 00000000015=
+5cf50
+[ 2706.014103] RBP: 0000000001548071 R08: 0000000000000000 R09: 00000000000=
+00000
+[ 2706.015177] R10: 0000000000000061 R11: 0000000000000246 R12: 00000000015=
+48010
+[ 2706.016236] R13: 0000000001548071 R14: 0410410410410411 R15: 00000000015=
+26450
+[ 2706.017238]  </TASK>
+[ 2706.017817] ---[ end trace 0000000000000000 ]---
+[ 2706.737755] ------------[ cut here ]------------
+[ 2706.739255] memmove: detected field-spanning write (size 24) of single f=
+ield "entry" at fs/xfs/libxfs/xfs_attr_leaf.c:2235 (size 8)
+[ 2706.743694] WARNING: CPU: 1 PID: 48206 at fs/xfs/libxfs/xfs_attr_leaf.c:=
+2235 xfs_attr3_leaf_remove+0x4a7/0x4d0 [xfs]
+[ 2706.747045] Modules linked in: xfs nls_iso8859_1 nls_cp437 vfat fat ext4=
+ 9p crc16 mbcache netfs jbd2 kvm_intel cirrus virtio_net kvm joydev drm_shm=
+em_helper net_failover pcspkr virtio_balloon 9pnet_virtio psmouse irqbypass=
+ failover drm_kms_helper evdev button drm loop dm_mod zram zsmalloc crct10d=
+if_pclmul crc32_pclmul ghash_clmulni_intel sha512_ssse3 sha512_generic nvme=
+ virtio_blk nvme_core t10_pi aesni_intel virtio_pci crc64_rocksoft_generic =
+crypto_simd cryptd crc64_rocksoft virtio i6300esb crc64 virtio_pci_legacy_d=
+ev virtio_pci_modern_dev virtio_ring serio_raw btrfs blake2b_generic libcrc=
+32c crc32c_generic crc32c_intel xor raid6_pq autofs4
+[ 2706.763271] CPU: 1 PID: 48206 Comm: fsstress Tainted: G        W        =
+  6.5.0-rc1+ #13
+[ 2706.765484] Hardware name: QEMU Standard PC (Q35 + ICH9, 2009), BIOS 1.1=
+6.2-1.fc38 04/01/2014
+[ 2706.767821] RIP: 0010:xfs_attr3_leaf_remove+0x4a7/0x4d0 [xfs]
+[ 2706.769821] Code: c7 c2 00 30 fc c0 48 89 c6 48 c7 c7 08 2e fc c0 44 89 =
+44 24 14 4c 89 4c 24 08 48 89 04 24 c6 05 30 6e 0e 00 01 e8 29 b0 67 d0 <0f=
+> 0b 44 8b 44 24 14 4c 8b 4c 24 08 48 8b 04 24 e9 62 fd ff ff e8
+[ 2706.774843] RSP: 0018:ffffb52ac29bba20 EFLAGS: 00010282
+[ 2706.776465] RAX: 0000000000000000 RBX: 0000000000000f08 RCX: 00000000000=
+00000
+[ 2706.778427] RDX: 0000000000000002 RSI: ffffffff92612d95 RDI: 00000000fff=
+fffff
+[ 2706.780343] RBP: ffffb52ac29bbc70 R08: 0000000000000000 R09: ffffb52ac29=
+bb8c0
+[ 2706.782170] R10: 0000000000000003 R11: ffffffff928c1aa8 R12: ffff8ecf3ad=
+c8050
+[ 2706.783934] R13: ffff8ecf61308900 R14: ffff8ecf3adc8000 R15: 00000000000=
+00fcc
+[ 2706.786138] FS:  00007fcb152f4740(0000) GS:ffff8ed077c40000(0000) knlGS:=
+0000000000000000
+[ 2706.788370] CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+[ 2706.790691] CR2: 0000000001606000 CR3: 000000015e1d2005 CR4: 00000000000=
+60ee0
+[ 2706.792692] Call Trace:
+[ 2706.793721]  <TASK>
+[ 2706.794717]  ? xfs_attr3_leaf_remove+0x4a7/0x4d0 [xfs]
+[ 2706.796542]  ? __warn+0x7d/0x130
+[ 2706.797701]  ? xfs_attr3_leaf_remove+0x4a7/0x4d0 [xfs]
+[ 2706.799435]  ? report_bug+0x18d/0x1c0
+[ 2706.800684]  ? handle_bug+0x3c/0x80
+[ 2706.801938]  ? exc_invalid_op+0x13/0x60
+[ 2706.803272]  ? asm_exc_invalid_op+0x16/0x20
+[ 2706.804474]  ? xfs_attr3_leaf_remove+0x4a7/0x4d0 [xfs]
+[ 2706.806068]  xfs_attr_leaf_removename+0xad/0x110 [xfs]
+[ 2706.808661]  ? xfs_defer_add+0x57/0x160 [xfs]
+[ 2706.810164]  xfs_attr_set_iter+0x63/0x900 [xfs]
+[ 2706.811611]  ? removexattr+0x77/0x110
+[ 2706.812779]  xfs_xattri_finish_update+0x18/0x50 [xfs]
+[ 2706.814338]  xfs_attr_finish_item+0x1a/0xb0 [xfs]
+[ 2706.815799]  xfs_defer_finish_noroll+0x192/0x6e0 [xfs]
+[ 2706.817405]  __xfs_trans_commit+0x242/0x360 [xfs]
+[ 2706.818916]  xfs_attr_set+0x462/0x680 [xfs]
+[ 2706.820252]  xfs_xattr_set+0x89/0xe0 [xfs]
+[ 2706.822251]  __vfs_removexattr+0x7f/0xb0
+[ 2706.823463]  __vfs_removexattr_locked+0xb7/0x140
+[ 2706.824648]  vfs_removexattr+0x54/0x100
+[ 2706.825667]  removexattr+0x77/0x110
+[ 2706.826830]  ? __pfx_free_object_rcu+0x10/0x10
+[ 2706.827853]  ? __call_rcu_common.constprop.0+0x107/0x220
+[ 2706.828989]  ? user_path_at_empty+0x40/0x50
+[ 2706.830468]  ? kmem_cache_free+0x160/0x380
+[ 2706.831638]  ? preempt_count_add+0x47/0xa0
+[ 2706.832611]  ? __mnt_want_write+0x61/0x90
+[ 2706.833569]  path_removexattr+0x9f/0xc0
+[ 2706.834506]  __x64_sys_removexattr+0x17/0x20
+[ 2706.835443]  do_syscall_64+0x3b/0x90
+[ 2706.836267]  entry_SYSCALL_64_after_hwframe+0x6e/0xd8
+[ 2706.837302] RIP: 0033:0x7fcb1540512b
+[ 2706.838118] Code: f0 ff ff 73 01 c3 48 8b 0d da 6c 0c 00 f7 d8 64 89 01 =
+48 83 c8 ff c3 0f 1f 84 00 00 00 00 00 f3 0f 1e fa b8 c5 00 00 00 0f 05 <48=
+> 3d 01 f0 ff ff 73 01 c3 48 8b 0d ad 6c 0c 00 f7 d8 64 89 01 48
+[ 2706.841389] RSP: 002b:00007fffe4df1318 EFLAGS: 00000246 ORIG_RAX: 000000=
+00000000c5
+[ 2706.842767] RAX: ffffffffffffffda RBX: 000000000000019e RCX: 00007fcb154=
+0512b
+[ 2706.844024] RDX: 0000000000000000 RSI: 00007fffe4df1340 RDI: 00000000015=
+5d270
+[ 2706.845254] RBP: 00000000015345a0 R08: 0000000000000064 R09: 00000000000=
+00000
+[ 2706.846557] R10: 0000000000000000 R11: 0000000000000246 R12: 028f5c28f5c=
+28f5c
+[ 2706.847786] R13: 8f5c28f5c28f5c29 R14: 00000000004054b0 R15: 00007fcb152=
+f46c8
+[ 2706.849029]  </TASK>
+[ 2706.849578] ---[ end trace 0000000000000000 ]---
 
-Good to know.
 
-I ended up doing the send in two phases: one for the cover letter and
-infrastructure patches that went to everyone, and one for the per-
-subsystem patches that went do individual maintainers and lists.
+For reference:
 
-I suspect that screwed up the message IDs somehow. Hopefully I won't
-need to do a posting like that again soon, but I'll pay closer attention
-to the message id handling next time.
+^1da177e4c3f4 fs/xfs/xfs_attr_leaf.c        (Linus Torvalds      2005-04-16=
+ 15:20:36 -0700 1555)        if (entry->flags & XFS_ATTR_LOCAL) {
+517c22207b045 fs/xfs/xfs_attr_leaf.c        (Dave Chinner        2013-04-24=
+ 18:58:55 +1000 1556)                name_loc =3D xfs_attr3_leaf_name_local=
+(leaf, args->index);
+^1da177e4c3f4 fs/xfs/xfs_attr_leaf.c        (Linus Torvalds      2005-04-16=
+ 15:20:36 -0700 1557)                name_loc->namelen =3D args->namelen;
+053b5758cbc09 fs/xfs/xfs_attr_leaf.c        (Nathan Scott        2006-03-17=
+ 17:29:09 +1100 1558)                name_loc->valuelen =3D cpu_to_be16(arg=
+s->valuelen);
+^1da177e4c3f4 fs/xfs/xfs_attr_leaf.c        (Linus Torvalds      2005-04-16=
+ 15:20:36 -0700 1559)                memcpy((char *)name_loc->nameval, args=
+->name, args->namelen);
+^1da177e4c3f4 fs/xfs/xfs_attr_leaf.c        (Linus Torvalds      2005-04-16=
+ 15:20:36 -0700 1560)                memcpy((char *)&name_loc->nameval[args=
+->namelen], args->value,
+053b5758cbc09 fs/xfs/xfs_attr_leaf.c        (Nathan Scott        2006-03-17=
+ 17:29:09 +1100 1561)                                   be16_to_cpu(name_lo=
+c->valuelen));
+^1da177e4c3f4 fs/xfs/xfs_attr_leaf.c        (Linus Torvalds      2005-04-16=
+ 15:20:36 -0700 1562)        } else {
 
-Thanks again!
+[...]
+
+^1da177e4c3f4 fs/xfs/xfs_attr_leaf.c        (Linus Torvalds      2005-04-16=
+ 15:20:36 -0700 2233)=20
+517c22207b045 fs/xfs/xfs_attr_leaf.c        (Dave Chinner        2013-04-24=
+ 18:58:55 +1000 2234)        tmp =3D (ichdr.count - args->index) * sizeof(x=
+fs_attr_leaf_entry_t);
+517c22207b045 fs/xfs/xfs_attr_leaf.c        (Dave Chinner        2013-04-24=
+ 18:58:55 +1000 2235)        memmove(entry, entry + 1, tmp);
+517c22207b045 fs/xfs/xfs_attr_leaf.c        (Dave Chinner        2013-04-24=
+ 18:58:55 +1000 2236)        ichdr.count--;
+1d9025e56143c fs/xfs/xfs_attr_leaf.c        (Dave Chinner        2012-06-22=
+ 18:50:14 +1000 2237)        xfs_trans_log_buf(args->trans, bp,
+517c22207b045 fs/xfs/xfs_attr_leaf.c        (Dave Chinner        2013-04-24=
+ 18:58:55 +1000 2238)            XFS_DA_LOGRANGE(leaf, entry, tmp + sizeof(=
+xfs_attr_leaf_entry_t)));
+517c22207b045 fs/xfs/xfs_attr_leaf.c        (Dave Chinner        2013-04-24=
+ 18:58:55 +1000 2239)=20
+517c22207b045 fs/xfs/xfs_attr_leaf.c        (Dave Chinner        2013-04-24=
+ 18:58:55 +1000 2240)        entry =3D &xfs_attr3_leaf_entryp(leaf)[ichdr.c=
+ount];
+517c22207b045 fs/xfs/xfs_attr_leaf.c        (Dave Chinner        2013-04-24=
+ 18:58:55 +1000 2241)        memset(entry, 0, sizeof(xfs_attr_leaf_entry_t)=
+);
+^1da177e4c3f4 fs/xfs/xfs_attr_leaf.c        (Linus Torvalds      2005-04-16=
+ 15:20:36 -0700 2242)=20
+
+
 --=20
 Jeff Layton <jlayton@kernel.org>
