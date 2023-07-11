@@ -2,68 +2,86 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 75A9DEB64DC
-	for <linux-xfs@archiver.kernel.org>; Tue, 11 Jul 2023 20:47:08 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id DA5BFEB64DC
+	for <linux-xfs@archiver.kernel.org>; Tue, 11 Jul 2023 21:37:31 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229641AbjGKUrH (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 11 Jul 2023 16:47:07 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51080 "EHLO
+        id S229786AbjGKVhb (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 11 Jul 2023 17:37:31 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40632 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231163AbjGKUq7 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 11 Jul 2023 16:46:59 -0400
-Received: from casper.infradead.org (casper.infradead.org [IPv6:2001:8b0:10b:1236::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2C01C19BE;
-        Tue, 11 Jul 2023 13:46:53 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=infradead.org; s=casper.20170209; h=In-Reply-To:Content-Type:MIME-Version:
-        References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
-        Content-Transfer-Encoding:Content-ID:Content-Description;
-        bh=9g5scv8hIFZXb+DK9StTPf2rz5BCTsTPOwTWmyYsrV0=; b=rUAMsZdBXnF1KeVRZXnNDm+GZQ
-        E7HSL4OIdIuFhhyYgjPG8QyuPJDyWL5SUI49OcGUwxb6Z5fpeelixbJiswvFfWXUYTHcBEJgqMQgN
-        3TSGre6We8XWGgOzkjq+srYxRhcV7apzSp2FubWIXqk0DU6WCI2IMrK0CjNTotvMe36M7+m7yUI6k
-        oTfvgJ/3sPgtLn8ffukbg55hN2TBXiYeIfJwg6mDN92GQSa8SYqYCZZpHm0FQ/MgoZdeOxhs+EUVX
-        gFTcYBMW5i21nXtBKjuBCt1zPJ0Eig6WNa3Cv+RzFntRPFz/QHzc6/aDCZMS2zkGYr1VdDWz7gBFA
-        n4gKi7bw==;
-Received: from willy by casper.infradead.org with local (Exim 4.94.2 #2 (Red Hat Linux))
-        id 1qJKG1-00G2Zt-F1; Tue, 11 Jul 2023 20:46:49 +0000
-Date:   Tue, 11 Jul 2023 21:46:49 +0100
-From:   Matthew Wilcox <willy@infradead.org>
-To:     Christoph Hellwig <hch@infradead.org>
-Cc:     linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org,
-        Wang Yugui <wangyugui@e16-tech.com>,
-        Dave Chinner <david@fromorbit.com>,
-        "Darrick J . Wong" <djwong@kernel.org>,
-        Kent Overstreet <kent.overstreet@linux.dev>
-Subject: Re: [PATCH v4 2/9] iov_iter: Add copy_folio_from_iter_atomic()
-Message-ID: <ZK2/ubktKtEQdBUD@casper.infradead.org>
-References: <20230710130253.3484695-1-willy@infradead.org>
- <20230710130253.3484695-3-willy@infradead.org>
- <ZKz3NP2/UNysc1+e@infradead.org>
+        with ESMTP id S230472AbjGKVha (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 11 Jul 2023 17:37:30 -0400
+Received: from mail-pf1-x433.google.com (mail-pf1-x433.google.com [IPv6:2607:f8b0:4864:20::433])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5DC1E1733
+        for <linux-xfs@vger.kernel.org>; Tue, 11 Jul 2023 14:37:22 -0700 (PDT)
+Received: by mail-pf1-x433.google.com with SMTP id d2e1a72fcca58-666ed230c81so5477150b3a.0
+        for <linux-xfs@vger.kernel.org>; Tue, 11 Jul 2023 14:37:22 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=chromium.org; s=google; t=1689111442; x=1691703442;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
+        bh=RKp/iJWUOzi9KMXmJKLevJSI+NVSsqJRkj/8g2JsU8E=;
+        b=cu5+S530R/eq040xxEUPFXyShpV5poEU7JpztU9iDouEAMhHEha6D+VLWsTLjREscx
+         H14PqMpBkBneS79SqcJ6ebnD+bjqC+dRgWJw4dWUEcc7MGNlb5l2NOAESlsgHjaz/x+8
+         MBys/t8lXi8vfZxpoR9aN14q9zVmOEdHxSNwQ=
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20221208; t=1689111442; x=1691703442;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=RKp/iJWUOzi9KMXmJKLevJSI+NVSsqJRkj/8g2JsU8E=;
+        b=g/vJ2cf+47sUBgHQ7oGWPfyvhh7/j93d30hnJrzNyW/f9tw/C2yzM8JdUsm6+5BQSJ
+         z1uc01ZWujXfIyM6t/gkOOpodJ8Mqy3PFOEGxnZsC33wHurxRvpFJdigAbDbNHO5Y2oA
+         pTvD9jtXb97bo7efMU2WdxJjNLaDPWidX5APmcd2M4i1mOle52bkOI3Dsmzvhln17v25
+         D1V8fYN13UJHFcVybtMM76JSaYp8h3zALE+dgIMztIuXnhdcGQ+95pRiyrM3nwaailmg
+         JrrikVmc2L/5+EKXiHTdUOO8mWQV8lHFUrfYsRZgV7Z26Bqx9WArbKn4YGB+C6ywCMVR
+         u5oA==
+X-Gm-Message-State: ABy/qLaJUujJquUjdVqNP2jMQoRS2+ShUCp9ls8HWsDrBRdJRpAg1aAf
+        QNQEUgSURv7w9XSkDqarql7qnV9UJ09a87CVKoQ=
+X-Google-Smtp-Source: APBJJlFHw1J61BjsIKrEI1HNcYSK6FCsFONXV06oHSAjIGr/JI8k4AmvLLm/LB4JHwss+ywUCREizA==
+X-Received: by 2002:a17:902:b711:b0:1b7:fd82:973c with SMTP id d17-20020a170902b71100b001b7fd82973cmr16407025pls.39.1689111441812;
+        Tue, 11 Jul 2023 14:37:21 -0700 (PDT)
+Received: from www.outflux.net (198-0-35-241-static.hfc.comcastbusiness.net. [198.0.35.241])
+        by smtp.gmail.com with ESMTPSA id i10-20020a170902eb4a00b001b8b73da7b1sm2382979pli.227.2023.07.11.14.37.20
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Tue, 11 Jul 2023 14:37:21 -0700 (PDT)
+Date:   Tue, 11 Jul 2023 14:37:20 -0700
+From:   Kees Cook <keescook@chromium.org>
+To:     "Darrick J. Wong" <djwong@kernel.org>
+Cc:     Jeff Layton <jlayton@kernel.org>,
+        linux-xfs <linux-xfs@vger.kernel.org>,
+        linux-kernel <linux-kernel@vger.kernel.org>
+Subject: Re: xfs WARNING on v6.5-rc1 kernel
+Message-ID: <202307111435.1C23ECE259@keescook>
+References: <17881cf776b2c19dcd5a6d628fdfb54dae0eb4f8.camel@kernel.org>
+ <20230710170243.GF11456@frogsfrogsfrogs>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <ZKz3NP2/UNysc1+e@infradead.org>
+In-Reply-To: <20230710170243.GF11456@frogsfrogsfrogs>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Mon, Jul 10, 2023 at 11:31:16PM -0700, Christoph Hellwig wrote:
-> On Mon, Jul 10, 2023 at 02:02:46PM +0100, Matthew Wilcox (Oracle) wrote:
-> > Add a folio wrapper around copy_page_from_iter_atomic().
+On Mon, Jul 10, 2023 at 10:02:43AM -0700, Darrick J. Wong wrote:
+> On Mon, Jul 10, 2023 at 12:29:29PM -0400, Jeff Layton wrote:
+> > I hit this this morning while running generic/013 (fsstress), with a
+> > kernel based on v6.5-rc1. The main changes on top of this are timestamp
+> > related, so I doubt they're a factor here.
+> > 
+> > Is this some of the flexarray hardening?
 > 
-> As mentioned in the previous patch it would probably be a lot more
-> obvious if the folio version was the based implementation and the
-> page variant the wrapper.  But I'm not going to delay the series for
-> it.
+> Yes.
+> 
+> https://lore.kernel.org/linux-xfs/ZI+3QXDHiohgv%2FPb@dread.disaster.area/
+> https://lore.kernel.org/linux-xfs/bug-217522-201763-D34HpuP9xe@https.bugzilla.kernel.org%2F/
+> https://lore.kernel.org/linux-xfs/Y9xiYmVLRIKdpJcC@work/
 
-My plan for that is:
+It looks like these just need struct tweaks to avoid using legacy array
+definitions. It can be done without changes to the size of the structs,
+etc.
 
- - Add copy_folio_from_iter() wrapper
- - Convert all users
- - Convert all users of copy_page_to_iter()
- - Convert copy_page_to_iter_nofault() to copy_folio_to_iter_nofault()
-   (it has one user)
- - Convert page_copy_sane() to folio_copy_sane()
+I'll send a patch...
 
-But this is pretty low priority compared to all the other page->folio
-conversions that need to happen.  So many filesystems ...
+-- 
+Kees Cook
