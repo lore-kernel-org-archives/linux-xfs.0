@@ -2,141 +2,68 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 02802C04E69
-	for <linux-xfs@archiver.kernel.org>; Tue, 11 Jul 2023 20:33:40 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 75A9DEB64DC
+	for <linux-xfs@archiver.kernel.org>; Tue, 11 Jul 2023 20:47:08 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229884AbjGKUdk (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 11 Jul 2023 16:33:40 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44876 "EHLO
+        id S229641AbjGKUrH (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 11 Jul 2023 16:47:07 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51080 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229888AbjGKUdi (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 11 Jul 2023 16:33:38 -0400
-Received: from mail-pf1-x429.google.com (mail-pf1-x429.google.com [IPv6:2607:f8b0:4864:20::429])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D277C1AE
-        for <linux-xfs@vger.kernel.org>; Tue, 11 Jul 2023 13:33:37 -0700 (PDT)
-Received: by mail-pf1-x429.google.com with SMTP id d2e1a72fcca58-682eef7d752so840247b3a.0
-        for <linux-xfs@vger.kernel.org>; Tue, 11 Jul 2023 13:33:37 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=kernel-dk.20221208.gappssmtp.com; s=20221208; t=1689107617; x=1689712417;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=ixQUY57vnvYb5HvRH5ijyFihp5oJ/szTZ8856/uqLoU=;
-        b=sI/EhwbO/KOMFb7uDzGESwMGWUkuorv7KqjZikEwkCW+0t36HgzSjPtaR7itUyd0M2
-         SHnZ2gCDDMoHxCeO9HB1Z3MzwkTyeF3jBmz2F4QHoGwfa0yvgQrZa79pbXDxtYyVob1K
-         HRAR0y/cbmJb62fG8vH5iKRyUuXhtWrVOD6nTA9i8SFhSBZnGn4GYmBRSbx2gsBy5CJk
-         fNIK5hQGgLik6/2F4YzjVa829WpmPNBrQhYDN6PFnVLR2ArPoS7Eyn6d7Q3inkHCFF2U
-         /AVXYeUiEnGnKC1NY6/qsKYspwRS4kDipl++OGWF0KYDplasu3M6dlE0DwIAOzX8z2j/
-         hkSw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20221208; t=1689107617; x=1689712417;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=ixQUY57vnvYb5HvRH5ijyFihp5oJ/szTZ8856/uqLoU=;
-        b=N3LJVepXM7icfbpOsQNCznAqintVbi2JTBAt/Az3xQjUwrxSqyMMjIFfUs7YLTyFtp
-         WfTHFPrNVj7yTufZHc+1BQS6e5CIitEchn1qDuMrCHBDXgwDAeL9gFHgDFW5UPmAuA2m
-         2+dVgi5opXARrBVLSTj3jgVnk6+VJLDS9+QRqbkajpi6/yoImGObjSVam5YF+FR0uTiv
-         iDqAaMiEERWTh68kU13BVkD9HRym051ZBORiBOfnr8L6cCQLdpkNLZiZ51pIJo+maw4Y
-         n21q33uRowmaW49dVOGProc3AH9ACyw+YbL4HQn9rBRhGaTp5YKDv5bGBuI7Wn2NtP5Y
-         iXVw==
-X-Gm-Message-State: ABy/qLaiV8ULXjrd0NxnuhojAS0waEJIw2jp7GWuvcF3JK1qDLAUSIx2
-        aSt206hUUDPMZJtlZ8OQncHLyFa7XQB8WtoA7G8=
-X-Google-Smtp-Source: APBJJlE0Fdjl9niH1fLBogzYDLzZpwQEuTCuENjw7d/RyTpMB94Vv2knTegxp7PH5nQo9z3SCc2jMg==
-X-Received: by 2002:a05:6a20:4289:b0:12c:76d1:bcde with SMTP id o9-20020a056a20428900b0012c76d1bcdemr23311409pzj.4.1689107617361;
-        Tue, 11 Jul 2023 13:33:37 -0700 (PDT)
-Received: from localhost.localdomain ([198.8.77.157])
-        by smtp.gmail.com with ESMTPSA id fk13-20020a056a003a8d00b0067903510abbsm2108081pfb.163.2023.07.11.13.33.36
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 11 Jul 2023 13:33:36 -0700 (PDT)
-From:   Jens Axboe <axboe@kernel.dk>
-To:     io-uring@vger.kernel.org, linux-xfs@vger.kernel.org
-Cc:     hch@lst.de, andres@anarazel.de, Jens Axboe <axboe@kernel.dk>
-Subject: [PATCH 5/5] iomap: support IOCB_DIO_DEFER
-Date:   Tue, 11 Jul 2023 14:33:25 -0600
-Message-Id: <20230711203325.208957-6-axboe@kernel.dk>
-X-Mailer: git-send-email 2.40.1
-In-Reply-To: <20230711203325.208957-1-axboe@kernel.dk>
-References: <20230711203325.208957-1-axboe@kernel.dk>
+        with ESMTP id S231163AbjGKUq7 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 11 Jul 2023 16:46:59 -0400
+Received: from casper.infradead.org (casper.infradead.org [IPv6:2001:8b0:10b:1236::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2C01C19BE;
+        Tue, 11 Jul 2023 13:46:53 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=infradead.org; s=casper.20170209; h=In-Reply-To:Content-Type:MIME-Version:
+        References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
+        Content-Transfer-Encoding:Content-ID:Content-Description;
+        bh=9g5scv8hIFZXb+DK9StTPf2rz5BCTsTPOwTWmyYsrV0=; b=rUAMsZdBXnF1KeVRZXnNDm+GZQ
+        E7HSL4OIdIuFhhyYgjPG8QyuPJDyWL5SUI49OcGUwxb6Z5fpeelixbJiswvFfWXUYTHcBEJgqMQgN
+        3TSGre6We8XWGgOzkjq+srYxRhcV7apzSp2FubWIXqk0DU6WCI2IMrK0CjNTotvMe36M7+m7yUI6k
+        oTfvgJ/3sPgtLn8ffukbg55hN2TBXiYeIfJwg6mDN92GQSa8SYqYCZZpHm0FQ/MgoZdeOxhs+EUVX
+        gFTcYBMW5i21nXtBKjuBCt1zPJ0Eig6WNa3Cv+RzFntRPFz/QHzc6/aDCZMS2zkGYr1VdDWz7gBFA
+        n4gKi7bw==;
+Received: from willy by casper.infradead.org with local (Exim 4.94.2 #2 (Red Hat Linux))
+        id 1qJKG1-00G2Zt-F1; Tue, 11 Jul 2023 20:46:49 +0000
+Date:   Tue, 11 Jul 2023 21:46:49 +0100
+From:   Matthew Wilcox <willy@infradead.org>
+To:     Christoph Hellwig <hch@infradead.org>
+Cc:     linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org,
+        Wang Yugui <wangyugui@e16-tech.com>,
+        Dave Chinner <david@fromorbit.com>,
+        "Darrick J . Wong" <djwong@kernel.org>,
+        Kent Overstreet <kent.overstreet@linux.dev>
+Subject: Re: [PATCH v4 2/9] iov_iter: Add copy_folio_from_iter_atomic()
+Message-ID: <ZK2/ubktKtEQdBUD@casper.infradead.org>
+References: <20230710130253.3484695-1-willy@infradead.org>
+ <20230710130253.3484695-3-willy@infradead.org>
+ <ZKz3NP2/UNysc1+e@infradead.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <ZKz3NP2/UNysc1+e@infradead.org>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-If IOCB_DIO_DEFER is set, utilize that to set kiocb->dio_complete handler
-and data for that callback. Rather than punt the completion to a
-workqueue, we pass back the handler and data to the issuer and will get a
-callback from a safe task context.
+On Mon, Jul 10, 2023 at 11:31:16PM -0700, Christoph Hellwig wrote:
+> On Mon, Jul 10, 2023 at 02:02:46PM +0100, Matthew Wilcox (Oracle) wrote:
+> > Add a folio wrapper around copy_page_from_iter_atomic().
+> 
+> As mentioned in the previous patch it would probably be a lot more
+> obvious if the folio version was the based implementation and the
+> page variant the wrapper.  But I'm not going to delay the series for
+> it.
 
-Using the following fio job to randomly dio write 4k blocks at
-queue depths of 1..16:
+My plan for that is:
 
-fio --name=dio-write --filename=/data1/file --time_based=1 \
---runtime=10 --bs=4096 --rw=randwrite --norandommap --buffered=0 \
---cpus_allowed=4 --ioengine=io_uring --iodepth=16
+ - Add copy_folio_from_iter() wrapper
+ - Convert all users
+ - Convert all users of copy_page_to_iter()
+ - Convert copy_page_to_iter_nofault() to copy_folio_to_iter_nofault()
+   (it has one user)
+ - Convert page_copy_sane() to folio_copy_sane()
 
-shows the following results before and after this patch:
-
-	Stock	Patched		Diff
-=======================================
-QD1	155K	162K		+ 4.5%
-QD2	290K	313K		+ 7.9%
-QD4	533K	597K		+12.0%
-QD8	604K	827K		+36.9%
-QD16	615K	845K		+37.4%
-
-which shows nice wins all around. If we factored in per-IOP efficiency,
-the wins look even nicer. This becomes apparent as queue depth rises,
-as the offloaded workqueue completions runs out of steam.
-
-Signed-off-by: Jens Axboe <axboe@kernel.dk>
----
- fs/iomap/direct-io.c | 24 ++++++++++++++++++++++++
- 1 file changed, 24 insertions(+)
-
-diff --git a/fs/iomap/direct-io.c b/fs/iomap/direct-io.c
-index 94ef78b25b76..bd7b948a29a7 100644
---- a/fs/iomap/direct-io.c
-+++ b/fs/iomap/direct-io.c
-@@ -130,6 +130,11 @@ ssize_t iomap_dio_complete(struct iomap_dio *dio)
- }
- EXPORT_SYMBOL_GPL(iomap_dio_complete);
- 
-+static ssize_t iomap_dio_deferred_complete(void *data)
-+{
-+	return iomap_dio_complete(data);
-+}
-+
- static void iomap_dio_complete_work(struct work_struct *work)
- {
- 	struct iomap_dio *dio = container_of(work, struct iomap_dio, aio.work);
-@@ -167,6 +172,25 @@ void iomap_dio_bio_end_io(struct bio *bio)
- 			   !(dio->flags & IOMAP_DIO_WRITE)) {
- 			WRITE_ONCE(iocb->private, NULL);
- 			iomap_dio_complete_work(&dio->aio.work);
-+		} else if ((iocb->ki_flags & IOCB_DIO_DEFER) &&
-+			   !(dio->flags & IOMAP_DIO_NEED_SYNC)) {
-+			/* only polled IO cares about private cleared */
-+			iocb->private = dio;
-+			iocb->dio_complete = iomap_dio_deferred_complete;
-+			/*
-+			 * Invoke ->ki_complete() directly. We've assigned
-+			 * out dio_complete callback handler, and since the
-+			 * issuer set IOCB_DIO_DEFER, we know their
-+			 * ki_complete handler will notice ->dio_complete
-+			 * being set and will defer calling that handler
-+			 * until it can be done from a safe task context.
-+			 *
-+			 * Note that the 'res' being passed in here is
-+			 * not important for this case. The actual completion
-+			 * value of the request will be gotten from dio_complete
-+			 * when that is run by the issuer.
-+			 */
-+			iocb->ki_complete(iocb, 0);
- 		} else {
- 			struct inode *inode = file_inode(iocb->ki_filp);
- 
--- 
-2.40.1
-
+But this is pretty low priority compared to all the other page->folio
+conversions that need to happen.  So many filesystems ...
