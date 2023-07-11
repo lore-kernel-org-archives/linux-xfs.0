@@ -2,119 +2,164 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 442FCEB64D9
-	for <linux-xfs@archiver.kernel.org>; Tue, 11 Jul 2023 02:09:13 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0CDE5EB64DA
+	for <linux-xfs@archiver.kernel.org>; Tue, 11 Jul 2023 02:29:52 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231215AbjGKCJM (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 10 Jul 2023 22:09:12 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57746 "EHLO
+        id S230399AbjGKC3u (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 10 Jul 2023 22:29:50 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34504 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231305AbjGKCJL (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 10 Jul 2023 22:09:11 -0400
-Received: from casper.infradead.org (casper.infradead.org [IPv6:2001:8b0:10b:1236::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8DA06136;
-        Mon, 10 Jul 2023 19:09:01 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=infradead.org; s=casper.20170209; h=In-Reply-To:Content-Transfer-Encoding:
-        Content-Type:MIME-Version:References:Message-ID:Subject:Cc:To:From:Date:
-        Sender:Reply-To:Content-ID:Content-Description;
-        bh=XyKenLjvs1L+lR6yAc0FRSo1jPgG5FIXSLMnx1/HtTE=; b=QZeyHjlYsAz1uwu5m3O2fnv+6U
-        M+6xODkBKt511Bd7Ng/HPZnpFQ8CmGy+OUB7vnqUzR9KbK12YpqmZf2jIKyrpvmgHc1LU5xQiXjNy
-        yN4Lx9sde9VCsZdVCwPOZ1hd9NnVIHY4PBV+yU9N/25vPLp8ceI4y5Hi7Ek3648nK+QcnKtoQPOFY
-        R03lKo4esJvGDE0MlrO57icqMX9cC3NcYRzjzDQ6Is0Wyw+KA3jiNnC4kC0dT+fioXHtNYDs1X8yY
-        EXM76m2a2O2/4H04sA8NPRpXinLDfEmlScS6V4bt/xVZtPjkvZK4Q9SNbc6BfDDcjNwVMo7N3zJV5
-        AiwBPs8Q==;
-Received: from willy by casper.infradead.org with local (Exim 4.94.2 #2 (Red Hat Linux))
-        id 1qJ2o9-00FCD7-A3; Tue, 11 Jul 2023 02:08:53 +0000
-Date:   Tue, 11 Jul 2023 03:08:53 +0100
-From:   Matthew Wilcox <willy@infradead.org>
-To:     Andreas Gruenbacher <agruenba@redhat.com>
-Cc:     Wang Yugui <wangyugui@e16-tech.com>,
-        Bob Peterson <rpeterso@redhat.com>, cluster-devel@redhat.com,
-        linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org,
-        Dave Chinner <david@fromorbit.com>,
-        Christoph Hellwig <hch@infradead.org>,
-        "Darrick J . Wong" <djwong@kernel.org>
-Subject: Re: [Cluster-devel] gfs2 write bandwidth regression on 6.4-rc3
- compareto 5.15.y
-Message-ID: <ZKy5tYed3EiPPZSi@casper.infradead.org>
-References: <20230523085929.614A.409509F4@e16-tech.com>
- <20230528235314.7852.409509F4@e16-tech.com>
- <CAHc6FU5YYADEE1m2skcZxOb5fC24JDcJvHtBoq6ZCttB3BhObA@mail.gmail.com>
+        with ESMTP id S229736AbjGKC3u (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 10 Jul 2023 22:29:50 -0400
+Received: from mail-ot1-x334.google.com (mail-ot1-x334.google.com [IPv6:2607:f8b0:4864:20::334])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A440F1A2
+        for <linux-xfs@vger.kernel.org>; Mon, 10 Jul 2023 19:29:48 -0700 (PDT)
+Received: by mail-ot1-x334.google.com with SMTP id 46e09a7af769-6b8a6ca994eso4570445a34.1
+        for <linux-xfs@vger.kernel.org>; Mon, 10 Jul 2023 19:29:48 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=fromorbit-com.20221208.gappssmtp.com; s=20221208; t=1689042588; x=1691634588;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
+        bh=PAcYcQjSn8xP98Kv6S6ayhAabmO1DM5t1UR0BBuH+OE=;
+        b=WZ3Cco+0z7/goRk3rzbW1Q8Bm4NGTZcWnUC4vx8nMXY8TEYFlAEhAh/31nyCtxASLI
+         L0XUXJAEbEb33DoxeF6TkhvLwj+vqCoG4LoSfb8eeYaC6cpxlzYbMdC+bWUQrT8KeEqO
+         UOkra5wQjWOgV8+D1ElqXs2KXM1lYzwOSPikHVw+B3WYEtsDfuJjxr+F+XFJHP354+ah
+         l77MfOmlkTIe8LM6g+ZdXxdOA0blmTvsYghrNylAKBUYLXWothqZTrQgjWb3qQ0kRWCo
+         M5e1jgUk/3a6Mh5J2vJlylGoUtbkBLxElCO1U3Q04sFoHKvT0xzj+VJH/qC4sv5fiPeJ
+         pFKQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20221208; t=1689042588; x=1691634588;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=PAcYcQjSn8xP98Kv6S6ayhAabmO1DM5t1UR0BBuH+OE=;
+        b=SOy5RWpX4Z58xQAIN0WgiRGhWUoASE7/3naJzQO1ApTHtIqfCuCTdaPgm+QNOTIlnQ
+         lm7v689iUPpD6nQwaMH5cJ9XbX15I4Qu7Bd0mJseacxfTkM22cS9xboXLyTpLZurNdNB
+         t3Jrkrff7JALmjsKxClwjtJolEdBg5zWghA9OZlJ24x4ARpioZgYyFhrCjQj16ARJRGs
+         rIbq3lli3suBnWQhGZwDIcPRLPkLUnZu8hPOOXaoaT3HJ4jploFIyUh0qMz7H8IMzXbg
+         /eU33lO2couVVDxtlhzwRgP2Tm2E1o8x+yrWv4QyepbcBeDEY//B+uRiQ+c5txBmGbuk
+         XSCQ==
+X-Gm-Message-State: ABy/qLZRKLcf2tuPv7eOC+NPU6UPjFZEqYvkPP8cMVEFtzeQXpIvN7q2
+        W4ubciGz2whNSFPD/mPf17Q3tw==
+X-Google-Smtp-Source: APBJJlElSoBOffVTVDIpbJy4UIiu3P3+qhqg6us2VrXGZDT0hzskw1HitduzKJ97j3awUJOVmxodsg==
+X-Received: by 2002:a9d:5e18:0:b0:6b4:54f6:59d2 with SMTP id d24-20020a9d5e18000000b006b454f659d2mr13483143oti.3.1689042587927;
+        Mon, 10 Jul 2023 19:29:47 -0700 (PDT)
+Received: from dread.disaster.area (pa49-180-246-40.pa.nsw.optusnet.com.au. [49.180.246.40])
+        by smtp.gmail.com with ESMTPSA id c16-20020a17090ab29000b002657aa777f1sm6880198pjr.19.2023.07.10.19.29.47
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Mon, 10 Jul 2023 19:29:47 -0700 (PDT)
+Received: from dave by dread.disaster.area with local (Exim 4.96)
+        (envelope-from <david@fromorbit.com>)
+        id 1qJ38J-004clZ-0w;
+        Tue, 11 Jul 2023 12:29:43 +1000
+Date:   Tue, 11 Jul 2023 12:29:43 +1000
+From:   Dave Chinner <david@fromorbit.com>
+To:     Bagas Sanjaya <bagasdotme@gmail.com>
+Cc:     Chris Dunlop <chris@onthe.net.au>,
+        Linux XFS <linux-xfs@vger.kernel.org>,
+        Dave Chinner <dchinner@redhat.com>,
+        "Darrick J. Wong" <djwong@kernel.org>,
+        Linux Stable <stable@vger.kernel.org>,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+        Linux Regressions <regressions@lists.linux.dev>
+Subject: Re: rm hanging, v6.1.35
+Message-ID: <ZKy+lxkSDKs84Edr@dread.disaster.area>
+References: <20230710215354.GA679018@onthe.net.au>
+ <ZKyoD7WDKfzsKAaT@debian.me>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <CAHc6FU5YYADEE1m2skcZxOb5fC24JDcJvHtBoq6ZCttB3BhObA@mail.gmail.com>
+In-Reply-To: <ZKyoD7WDKfzsKAaT@debian.me>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Mon, Jul 10, 2023 at 03:19:54PM +0200, Andreas Gruenbacher wrote:
-> Hi Wang Yugui,
-> 
-> On Sun, May 28, 2023 at 5:53 PM Wang Yugui <wangyugui@e16-tech.com> wrote:
+On Tue, Jul 11, 2023 at 07:53:35AM +0700, Bagas Sanjaya wrote:
+> On Tue, Jul 11, 2023 at 07:53:54AM +1000, Chris Dunlop wrote:
 > > Hi,
-> >
-> > > Hi,
-> > >
-> > > gfs2 write bandwidth regression on 6.4-rc3 compare to 5.15.y.
-> > >
-> > > we added  linux-xfs@ and linux-fsdevel@ because some related problem[1]
-> > > and related patches[2].
-> > >
-> > > we compared 6.4-rc3(rather than 6.1.y) to 5.15.y because some related patches[2]
-> > > work only for 6.4 now.
-> > >
-> > > [1] https://lore.kernel.org/linux-xfs/20230508172406.1CF3.409509F4@e16-tech.com/
-> > > [2] https://lore.kernel.org/linux-xfs/20230520163603.1794256-1-willy@infradead.org/
-> > >
-> > >
-> > > test case:
-> > > 1) PCIe3 SSD *4 with LVM
-> > > 2) gfs2 lock_nolock
-> > >     gfs2 attr(T) GFS2_AF_ORLOV
-> > >    # chattr +T /mnt/test
-> > > 3) fio
-> > > fio --name=global --rw=write -bs=1024Ki -size=32Gi -runtime=30 -iodepth 1
-> > > -ioengine sync -zero_buffers=1 -direct=0 -end_fsync=1 -numjobs=1 \
-> > >       -name write-bandwidth-1 -filename=/mnt/test/sub1/1.txt \
-> > >       -name write-bandwidth-2 -filename=/mnt/test/sub2/1.txt \
-> > >       -name write-bandwidth-3 -filename=/mnt/test/sub3/1.txt \
-> > >       -name write-bandwidth-4 -filename=/mnt/test/sub4/1.txt
-> > > 4) patches[2] are applied to 6.4-rc3.
-> > >
-> > >
-> > > 5.15.y result
-> > >       fio WRITE: bw=5139MiB/s (5389MB/s),
-> > > 6.4-rc3 result
-> > >       fio  WRITE: bw=2599MiB/s (2725MB/s)
-> >
-> > more test result:
-> >
-> > 5.17.0  WRITE: bw=4988MiB/s (5231MB/s)
-> > 5.18.0  WRITE: bw=5165MiB/s (5416MB/s)
-> > 5.19.0  WRITE: bw=5511MiB/s (5779MB/s)
-> > 6.0.5   WRITE: bw=3055MiB/s (3203MB/s), WRITE: bw=3225MiB/s (3382MB/s)
-> > 6.1.30  WRITE: bw=2579MiB/s (2705MB/s)
-> >
-> > so this regression  happen in some code introduced in 6.0,
-> > and maybe some minor regression in 6.1 too?
-> 
-> thanks for this bug report. Bob has noticed a similar looking
-> performance regression recently, and it turned out that commit
-> e1fa9ea85ce8 ("gfs2: Stop using glock holder auto-demotion for now")
-> inadvertently caused buffered writes to fall back to writing single
-> pages instead of multiple pages at once. That patch was added in
-> v5.18, so it doesn't perfectly align with the regression history
-> you're reporting, but maybe there's something else going on that we're
-> not aware of.
+> > 
+> > This box is newly booted into linux v6.1.35 (2 days ago), it was previously
+> > running v5.15.118 without any problems (other than that fixed by
+> > "5e672cd69f0a xfs: non-blocking inodegc pushes", the reason for the
+> > upgrade).
+> > 
+> > I have rm operations on two files that have been stuck for in excess of 22
+> > hours and 18 hours respectively:
+> > 
+> > $ ps -opid,lstart,state,wchan=WCHAN-xxxxxxxxxxxxxxx,cmd -C rm
+> >     PID                  STARTED S WCHAN-xxxxxxxxxxxxxxx CMD
+> > 2379355 Mon Jul 10 09:07:57 2023 D vfs_unlink            /bin/rm -rf /aaa/5539_tmp
+> > 2392421 Mon Jul 10 09:18:27 2023 D down_write_nested     /bin/rm -rf /aaa/5539_tmp
+> > 2485728 Mon Jul 10 09:28:57 2023 D down_write_nested     /bin/rm -rf /aaa/5539_tmp
+> > 2488254 Mon Jul 10 09:39:27 2023 D down_write_nested     /bin/rm -rf /aaa/5539_tmp
+> > 2491180 Mon Jul 10 09:49:58 2023 D down_write_nested     /bin/rm -rf /aaa/5539_tmp
+> > 3014914 Mon Jul 10 13:00:33 2023 D vfs_unlink            /bin/rm -rf /bbb/5541_tmp
+> > 3095893 Mon Jul 10 13:11:03 2023 D down_write_nested     /bin/rm -rf /bbb/5541_tmp
+> > 3098809 Mon Jul 10 13:21:35 2023 D down_write_nested     /bin/rm -rf /bbb/5541_tmp
+> > 3101387 Mon Jul 10 13:32:06 2023 D down_write_nested     /bin/rm -rf /bbb/5541_tmp
+> > 3195017 Mon Jul 10 13:42:37 2023 D down_write_nested     /bin/rm -rf /bbb/5541_tmp
+> > 
+> > The "rm"s are run from a process that's obviously tried a few times to get
+> > rid of these files.
+>
+> > There's nothing extraordinary about the files in terms of size:
+> > 
+> > $ ls -ltrn --full-time /aaa/5539_tmp /bbb/5541_tmp
+> > -rw-rw-rw- 1 1482 1482 7870643 2023-07-10 06:07:58.684036505 +1000 /aaa/5539_tmp
+> > -rw-rw-rw- 1 1482 1482  701240 2023-07-10 10:00:34.181064549 +1000 /bbb/5541_tmp
+> > 
+> > As hinted by the WCHAN in the ps output above, each "primary" rm (i.e. the
+> > first one run on each file) stack trace looks like:
+> > 
+> > [<0>] vfs_unlink+0x48/0x270
+> > [<0>] do_unlinkat+0x1f5/0x290
+> > [<0>] __x64_sys_unlinkat+0x3b/0x60
+> > [<0>] do_syscall_64+0x34/0x80
+> > [<0>] entry_SYSCALL_64_after_hwframe+0x46/0xb0
 
-Dave gave a good explanation of the problem here:
+This looks to be stuck on the target inode lock (i.e. the locks for
+the inodes at /aaa/5539_tmp and /bbb/5541_tmp).
 
-https://lore.kernel.org/linux-xfs/ZKybxCxzmuI1TFYn@dread.disaster.area/
+What's holding these inode locks? This hasn't even got to XFS yet
+here, so there's something else going on in the background. Attached
+the full output of 'echo w > /proc/sysrq-trigger' and 'echo t >
+/proc/sysrq-trigger', please?
 
-It's a pagecache locking contention problem rather than an individual
-filesystem problem.
+> > 
+> > And each "secondary" rm (i.e. the subsequent ones on each file) stack trace
+> > looks like:
+> > 
+> > == blog-230710-xfs-rm-stuckd
+> > [<0>] down_write_nested+0xdc/0x100
+> > [<0>] do_unlinkat+0x10d/0x290
+> > [<0>] __x64_sys_unlinkat+0x3b/0x60
+> > [<0>] do_syscall_64+0x34/0x80
+> > [<0>] entry_SYSCALL_64_after_hwframe+0x46/0xb0
 
-... are you interested in supporting large folios in gfs2?  ;-)
+These are likely all stuck on the parent directory inode lock (i.e.
+/aaa and /bbb).
+
+
+> > Where to from here?
+> > 
+> > I'm guessing only a reboot is going to unstick this. Anything I should be
+> > looking at before reverting to v5.15.118?
+> > 
+> > ...subsequent to starting writing all this down I have another two sets of
+> > rms stuck, again on unremarkable files, and on two more separate
+> > filesystems.
+
+What's an "unremarkable file" look like? Is is a reflink copy of
+something else, a hard link, a small/large regular data file or something else?
+
+> > 
+> > ...oh. And an 'ls' on those files is hanging. The reboot has become more
+> > urgent.
+
+Yup, that's most likely getting stuck on the directory locks that
+the unlinks are holding....
+
+-Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
