@@ -2,79 +2,86 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E5AA5C001DF
-	for <linux-xfs@archiver.kernel.org>; Tue, 11 Jul 2023 01:51:28 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id DFBF1EB64DA
+	for <linux-xfs@archiver.kernel.org>; Tue, 11 Jul 2023 01:57:24 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230094AbjGKBv2 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 10 Jul 2023 21:51:28 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51130 "EHLO
+        id S230281AbjGKB5X (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 10 Jul 2023 21:57:23 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53462 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230227AbjGKBvZ (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 10 Jul 2023 21:51:25 -0400
-X-Greylist: delayed 1200 seconds by postgrey-1.37 at lindbergh.monkeyblade.net; Mon, 10 Jul 2023 18:51:08 PDT
+        with ESMTP id S229577AbjGKB5W (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 10 Jul 2023 21:57:22 -0400
 Received: from smtp1.onthe.net.au (smtp1.onthe.net.au [203.22.196.249])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 24882197;
-        Mon, 10 Jul 2023 18:51:08 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id A953CA4
+        for <linux-xfs@vger.kernel.org>; Mon, 10 Jul 2023 18:57:19 -0700 (PDT)
 Received: from localhost (smtp2.private.onthe.net.au [10.200.63.13])
-        by smtp1.onthe.net.au (Postfix) with ESMTP id 289AE619B5;
-        Tue, 11 Jul 2023 11:13:39 +1000 (EST)
+        by smtp1.onthe.net.au (Postfix) with ESMTP id D61F9619B5
+        for <linux-xfs@vger.kernel.org>; Tue, 11 Jul 2023 11:57:18 +1000 (EST)
 Received: from smtp1.onthe.net.au ([10.200.63.11])
         by localhost (smtp.onthe.net.au [10.200.63.13]) (amavisd-new, port 10028)
-        with ESMTP id rLMolZfa5ziw; Tue, 11 Jul 2023 11:13:39 +1000 (AEST)
+        with ESMTP id FqcvHMtJ2b6j for <linux-xfs@vger.kernel.org>;
+        Tue, 11 Jul 2023 11:57:18 +1000 (AEST)
 Received: from athena.private.onthe.net.au (chris-gw2-vpn.private.onthe.net.au [10.9.3.2])
-        by smtp1.onthe.net.au (Postfix) with ESMTP id DCF1D6196C;
-        Tue, 11 Jul 2023 11:13:38 +1000 (EST)
+        by smtp1.onthe.net.au (Postfix) with ESMTP id A60DE6196C
+        for <linux-xfs@vger.kernel.org>; Tue, 11 Jul 2023 11:57:18 +1000 (EST)
 Received: by athena.private.onthe.net.au (Postfix, from userid 1026)
-        id C349B68061C; Tue, 11 Jul 2023 11:13:38 +1000 (AEST)
-Date:   Tue, 11 Jul 2023 11:13:38 +1000
+        id 1CF2F68061C; Tue, 11 Jul 2023 11:57:16 +1000 (AEST)
+Date:   Tue, 11 Jul 2023 11:57:16 +1000
 From:   Chris Dunlop <chris@onthe.net.au>
-To:     Bagas Sanjaya <bagasdotme@gmail.com>
-Cc:     Linux XFS <linux-xfs@vger.kernel.org>,
-        Dave Chinner <dchinner@redhat.com>,
-        "Darrick J. Wong" <djwong@kernel.org>,
-        Linux Stable <stable@vger.kernel.org>,
-        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-        Linux Regressions <regressions@lists.linux.dev>
+To:     linux-xfs@vger.kernel.org
 Subject: Re: rm hanging, v6.1.35
-Message-ID: <20230711011338.GB683098@onthe.net.au>
+Message-ID: <20230711015716.GA687252@onthe.net.au>
 References: <20230710215354.GA679018@onthe.net.au>
- <ZKyoD7WDKfzsKAaT@debian.me>
+ <20230711001331.GA683098@onthe.net.au>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Disposition: inline
-In-Reply-To: <ZKyoD7WDKfzsKAaT@debian.me>
+In-Reply-To: <20230711001331.GA683098@onthe.net.au>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Tue, Jul 11, 2023 at 07:53:35AM +0700, Bagas Sanjaya wrote:
+On Tue, Jul 11, 2023 at 10:13:31AM +1000, Chris Dunlop wrote:
 > On Tue, Jul 11, 2023 at 07:53:54AM +1000, Chris Dunlop wrote:
 >> Hi,
 >>
->> This box is newly booted into linux v6.1.35 (2 days ago), it was previously
->> running v5.15.118 without any problems (other than that fixed by
->> "5e672cd69f0a xfs: non-blocking inodegc pushes", the reason for the
->> upgrade).
+>> This box is newly booted into linux v6.1.35 (2 days ago), it was 
+>> previously running v5.15.118 without any problems (other than that 
+>> fixed by "5e672cd69f0a xfs: non-blocking inodegc pushes", the reason 
+>> for the upgrade).
 >>
->> I have rm operations on two files that have been stuck for in excess of 22
->> hours and 18 hours respectively:
+>> I have rm operations on two files that have been stuck for in excess 
+>> of 22 hours and 18 hours respectively:
+> ...
+>> ...subsequent to starting writing all this down I have another two 
+>> sets of rms stuck, again on unremarkable files, and on two more 
+>> separate filesystems.
+>>
+>> ...oh. And an 'ls' on those files is hanging. The reboot has become 
+>> more urgent.
 >
-> Smells like regression resurfaced, right? I mean, does 5e672cd69f0a53 not
-> completely fix your reported blocking regression earlier?
+> FYI, it's not 'ls' that's hanging, it's bash, because I used a 
+> wildcard on the command line. The bash stack:
 >
-> I'm kinda confused...
+> $ cat /proc/24779/stack
+> [<0>] iterate_dir+0x3e/0x180
+> [<0>] __x64_sys_getdents64+0x71/0x100
+> [<0>] do_syscall_64+0x34/0x80
+> [<0>] entry_SYSCALL_64_after_hwframe+0x46/0xb0
+>
+> 'lsof' shows me it's trying to read one of the directories holding the 
+> file that one of the newer hanging "rm"s is trying to remove.
 
-It looks like a completely different problem. I was wanting 5e672cd69f0a53 
-as a resolution to this:
+Ugh. It wasn't just the "rm"s and bash hanging (and as it turns out, 
+xfs_logprint), they were just obvious because that's what I was looking 
+at.  It turns out there was a whole lot more hanging.
 
-https://lore.kernel.org/all/20220510215411.GT1098723@dread.disaster.area/T/
+Full sysrq-w output at:
 
-In that case there were kernel stacks etc. showing inodegc stuff, and the 
-problem eventually resolved itself once the massive amount of work had 
-been processed (5e672cd69f0a53 puts that work into the background).
+https://file.io/tg7F5OqIWo1B
 
-In this case it looks like it's just a pure hang or deadlock - there's 
-apparently nothing happening.
+Sorry if there's more I could be looking at, but I've gotta reboot this 
+thing NOW...
 
 Cheers,
 
