@@ -2,85 +2,74 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 927F8EB64D9
-	for <linux-xfs@archiver.kernel.org>; Tue, 11 Jul 2023 00:07:44 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D6E3DEB64D9
+	for <linux-xfs@archiver.kernel.org>; Tue, 11 Jul 2023 00:13:40 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230016AbjGKAHn (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 10 Jul 2023 20:07:43 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34256 "EHLO
+        id S229785AbjGKANj (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 10 Jul 2023 20:13:39 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34528 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229931AbjGKAHn (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 10 Jul 2023 20:07:43 -0400
-Received: from casper.infradead.org (casper.infradead.org [IPv6:2001:8b0:10b:1236::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 858521A7;
-        Mon, 10 Jul 2023 17:07:42 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=infradead.org; s=casper.20170209; h=In-Reply-To:Content-Type:MIME-Version:
-        References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
-        Content-Transfer-Encoding:Content-ID:Content-Description;
-        bh=qIoe5JGgFeAY5726K1xkwOnbXeFuwkk4STNzO4mGXdQ=; b=CaCNv049Bq0gse0X/MKP0apWMJ
-        SUH9DXsdlvyyV6Q5Y58fuLgsjCigfuLVe3CO2eCybs3vJsWN6qSaZ3yzUec8WbUXYF1hnb8eZtvl+
-        E4twqENQRo/FTGtqCSvE+gc9J+Q3ZFMrgu+GGM7tgkwtdPY5tKyfBqj3cs0ODMN//3USzQoPjWcXQ
-        bKjE4fws7ZEqzlxqHbQfYHyhpoZPRg850f0GXiVRitxPFWiFIrVRsg7MfG5K9CoT1Sl5pAPOBhXB4
-        xUVNQRBwWfQhDqWEPT5T56pAXidoYhclWeIfX2RxhPddIb2fQtLP2nXgGLiP50GoUWpqg3OvB2DjK
-        qgaFdtow==;
-Received: from willy by casper.infradead.org with local (Exim 4.94.2 #2 (Red Hat Linux))
-        id 1qJ0un-00F49f-TW; Tue, 11 Jul 2023 00:07:37 +0000
-Date:   Tue, 11 Jul 2023 01:07:37 +0100
-From:   Matthew Wilcox <willy@infradead.org>
-To:     Luis Chamberlain <mcgrof@kernel.org>
-Cc:     linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org,
-        Wang Yugui <wangyugui@e16-tech.com>,
-        Dave Chinner <david@fromorbit.com>,
-        Christoph Hellwig <hch@infradead.org>,
-        "Darrick J . Wong" <djwong@kernel.org>,
-        Kent Overstreet <kent.overstreet@linux.dev>,
-        Christoph Hellwig <hch@lst.de>
-Subject: Re: [PATCH v4 7/9] filemap: Allow __filemap_get_folio to allocate
- large folios
-Message-ID: <ZKydSZM70Fd2LW/q@casper.infradead.org>
-References: <20230710130253.3484695-1-willy@infradead.org>
- <20230710130253.3484695-8-willy@infradead.org>
- <ZKybP22DRs1w4G3a@bombadil.infradead.org>
+        with ESMTP id S229688AbjGKANj (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 10 Jul 2023 20:13:39 -0400
+Received: from smtp1.onthe.net.au (smtp1.onthe.net.au [203.22.196.249])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 19B6BFB
+        for <linux-xfs@vger.kernel.org>; Mon, 10 Jul 2023 17:13:38 -0700 (PDT)
+Received: from localhost (smtp2.private.onthe.net.au [10.200.63.13])
+        by smtp1.onthe.net.au (Postfix) with ESMTP id 6F8EA619B5
+        for <linux-xfs@vger.kernel.org>; Tue, 11 Jul 2023 10:13:35 +1000 (EST)
+Received: from smtp1.onthe.net.au ([10.200.63.11])
+        by localhost (smtp.onthe.net.au [10.200.63.13]) (amavisd-new, port 10028)
+        with ESMTP id 2ESqHAeWepSx for <linux-xfs@vger.kernel.org>;
+        Tue, 11 Jul 2023 10:13:35 +1000 (AEST)
+Received: from athena.private.onthe.net.au (chris-gw2-vpn.private.onthe.net.au [10.9.3.2])
+        by smtp1.onthe.net.au (Postfix) with ESMTP id 3008D6196C
+        for <linux-xfs@vger.kernel.org>; Tue, 11 Jul 2023 10:13:35 +1000 (EST)
+Received: by athena.private.onthe.net.au (Postfix, from userid 1026)
+        id 0D47168061C; Tue, 11 Jul 2023 10:13:31 +1000 (AEST)
+Date:   Tue, 11 Jul 2023 10:13:31 +1000
+From:   Chris Dunlop <chris@onthe.net.au>
+To:     linux-xfs@vger.kernel.org
+Subject: Re: rm hanging, v6.1.35
+Message-ID: <20230711001331.GA683098@onthe.net.au>
+References: <20230710215354.GA679018@onthe.net.au>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Disposition: inline
-In-Reply-To: <ZKybP22DRs1w4G3a@bombadil.infradead.org>
+In-Reply-To: <20230710215354.GA679018@onthe.net.au>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Mon, Jul 10, 2023 at 04:58:55PM -0700, Luis Chamberlain wrote:
-> > @@ -1914,26 +1916,44 @@ struct folio *__filemap_get_folio(struct address_space *mapping, pgoff_t index,
-> >  			gfp &= ~GFP_KERNEL;
-> >  			gfp |= GFP_NOWAIT | __GFP_NOWARN;
-> >  		}
-> > -
-> > -		folio = filemap_alloc_folio(gfp, 0);
-> > -		if (!folio)
-> > -			return ERR_PTR(-ENOMEM);
-> > -
-> >  		if (WARN_ON_ONCE(!(fgp_flags & (FGP_LOCK | FGP_FOR_MMAP))))
-> >  			fgp_flags |= FGP_LOCK;
-> >  
-> > -		/* Init accessed so avoid atomic mark_page_accessed later */
-> > -		if (fgp_flags & FGP_ACCESSED)
-> > -			__folio_set_referenced(folio);
-> > +		if (!mapping_large_folio_support(mapping))
-> > +			order = 0;
-> > +		if (order > MAX_PAGECACHE_ORDER)
-> > +			order = MAX_PAGECACHE_ORDER;
-> 
-> Curious how this ended up being the heuristic used to shoot for the
-> MAX_PAGECACHE_ORDER sky first, and then go down 1/2 each time. I don't
-> see it explained on the commit log but I'm sure there's has to be
-> some reasonable rationale. From the cover letter, I could guess that
-> it means the gains of always using the largest folio possible means
-> an implied latency savings through other means, so the small latencies
-> spent looking seem to no where compare to the saving in using. But
-> I rather understand a bit more for the rationale.
+On Tue, Jul 11, 2023 at 07:53:54AM +1000, Chris Dunlop wrote:
+> Hi,
+>
+> This box is newly booted into linux v6.1.35 (2 days ago), it was 
+> previously running v5.15.118 without any problems (other than that 
+> fixed by "5e672cd69f0a xfs: non-blocking inodegc pushes", the reason 
+> for the upgrade).
+>
+> I have rm operations on two files that have been stuck for in excess 
+> of 22 hours and 18 hours respectively:
+...
+> ...subsequent to starting writing all this down I have another two 
+> sets of rms stuck, again on unremarkable files, and on two more 
+> separate filesystems.
+>
+> ...oh. And an 'ls' on those files is hanging. The reboot has become 
+> more urgent.
 
-You've completely misunderstood this patch.  The caller hints at the
-folio size it wants, and this code you're highlighting limits it to be
-less than MAX_PAGECACHE_ORDER.
+FYI, it's not 'ls' that's hanging, it's bash, because I used a wildcard on 
+the command line. The bash stack:
 
+$ cat /proc/24779/stack
+[<0>] iterate_dir+0x3e/0x180
+[<0>] __x64_sys_getdents64+0x71/0x100
+[<0>] do_syscall_64+0x34/0x80
+[<0>] entry_SYSCALL_64_after_hwframe+0x46/0xb0
+
+'lsof' shows me it's trying to read one of the directories holding the 
+file that one of the newer hanging "rm"s is trying to remove.
+
+Cheers,
+
+Chris
