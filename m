@@ -2,136 +2,119 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id BF9F2EB64D9
-	for <linux-xfs@archiver.kernel.org>; Tue, 11 Jul 2023 01:59:08 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 442FCEB64D9
+	for <linux-xfs@archiver.kernel.org>; Tue, 11 Jul 2023 02:09:13 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230218AbjGKB7I (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 10 Jul 2023 21:59:08 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54216 "EHLO
+        id S231215AbjGKCJM (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 10 Jul 2023 22:09:12 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57746 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230459AbjGKB7H (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 10 Jul 2023 21:59:07 -0400
-Received: from out28-78.mail.aliyun.com (out28-78.mail.aliyun.com [115.124.28.78])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id F0A7994;
-        Mon, 10 Jul 2023 18:59:05 -0700 (PDT)
-X-Alimail-AntiSpam: AC=CONTINUE;BC=0.1186628|-1;CH=green;DM=|CONTINUE|false|;DS=CONTINUE|ham_system_inform|0.0158702-0.000342115-0.983788;FP=0|0|0|0|0|-1|-1|-1;HT=ay29a033018047203;MF=wangyugui@e16-tech.com;NM=1;PH=DS;RN=9;RT=9;SR=0;TI=SMTPD_---.Tqe65Uz_1689040731;
-Received: from 192.168.2.112(mailfrom:wangyugui@e16-tech.com fp:SMTPD_---.Tqe65Uz_1689040731)
-          by smtp.aliyun-inc.com;
-          Tue, 11 Jul 2023 09:58:58 +0800
-Date:   Tue, 11 Jul 2023 09:58:59 +0800
-From:   Wang Yugui <wangyugui@e16-tech.com>
+        with ESMTP id S231305AbjGKCJL (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 10 Jul 2023 22:09:11 -0400
+Received: from casper.infradead.org (casper.infradead.org [IPv6:2001:8b0:10b:1236::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8DA06136;
+        Mon, 10 Jul 2023 19:09:01 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=infradead.org; s=casper.20170209; h=In-Reply-To:Content-Transfer-Encoding:
+        Content-Type:MIME-Version:References:Message-ID:Subject:Cc:To:From:Date:
+        Sender:Reply-To:Content-ID:Content-Description;
+        bh=XyKenLjvs1L+lR6yAc0FRSo1jPgG5FIXSLMnx1/HtTE=; b=QZeyHjlYsAz1uwu5m3O2fnv+6U
+        M+6xODkBKt511Bd7Ng/HPZnpFQ8CmGy+OUB7vnqUzR9KbK12YpqmZf2jIKyrpvmgHc1LU5xQiXjNy
+        yN4Lx9sde9VCsZdVCwPOZ1hd9NnVIHY4PBV+yU9N/25vPLp8ceI4y5Hi7Ek3648nK+QcnKtoQPOFY
+        R03lKo4esJvGDE0MlrO57icqMX9cC3NcYRzjzDQ6Is0Wyw+KA3jiNnC4kC0dT+fioXHtNYDs1X8yY
+        EXM76m2a2O2/4H04sA8NPRpXinLDfEmlScS6V4bt/xVZtPjkvZK4Q9SNbc6BfDDcjNwVMo7N3zJV5
+        AiwBPs8Q==;
+Received: from willy by casper.infradead.org with local (Exim 4.94.2 #2 (Red Hat Linux))
+        id 1qJ2o9-00FCD7-A3; Tue, 11 Jul 2023 02:08:53 +0000
+Date:   Tue, 11 Jul 2023 03:08:53 +0100
+From:   Matthew Wilcox <willy@infradead.org>
 To:     Andreas Gruenbacher <agruenba@redhat.com>
-Subject: Re: [Cluster-devel] gfs2 write bandwidth regression on 6.4-rc3 compareto 5.15.y
-Cc:     Bob Peterson <rpeterso@redhat.com>, cluster-devel@redhat.com,
+Cc:     Wang Yugui <wangyugui@e16-tech.com>,
+        Bob Peterson <rpeterso@redhat.com>, cluster-devel@redhat.com,
         linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org,
         Dave Chinner <david@fromorbit.com>,
         Christoph Hellwig <hch@infradead.org>,
-        "Darrick J . Wong" <djwong@kernel.org>,
-        "Matthew Wilcox (Oracle)" <willy@infradead.org>
-In-Reply-To: <20230711085830.FA1E.409509F4@e16-tech.com>
-References: <CAHc6FU5YYADEE1m2skcZxOb5fC24JDcJvHtBoq6ZCttB3BhObA@mail.gmail.com> <20230711085830.FA1E.409509F4@e16-tech.com>
-Message-Id: <20230711095850.2CD4.409509F4@e16-tech.com>
+        "Darrick J . Wong" <djwong@kernel.org>
+Subject: Re: [Cluster-devel] gfs2 write bandwidth regression on 6.4-rc3
+ compareto 5.15.y
+Message-ID: <ZKy5tYed3EiPPZSi@casper.infradead.org>
+References: <20230523085929.614A.409509F4@e16-tech.com>
+ <20230528235314.7852.409509F4@e16-tech.com>
+ <CAHc6FU5YYADEE1m2skcZxOb5fC24JDcJvHtBoq6ZCttB3BhObA@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="US-ASCII"
-Content-Transfer-Encoding: 7bit
-X-Mailer: Becky! ver. 2.81.04 [en]
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <CAHc6FU5YYADEE1m2skcZxOb5fC24JDcJvHtBoq6ZCttB3BhObA@mail.gmail.com>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Hi,
-
-> Hi,
+On Mon, Jul 10, 2023 at 03:19:54PM +0200, Andreas Gruenbacher wrote:
+> Hi Wang Yugui,
 > 
-> > Hi Wang Yugui,
-> > 
-> > On Sun, May 28, 2023 at 5:53?PM Wang Yugui <wangyugui@e16-tech.com> wrote:
+> On Sun, May 28, 2023 at 5:53 PM Wang Yugui <wangyugui@e16-tech.com> wrote:
+> > Hi,
+> >
 > > > Hi,
 > > >
-> > > > Hi,
-> > > >
-> > > > gfs2 write bandwidth regression on 6.4-rc3 compare to 5.15.y.
-> > > >
-> > > > we added  linux-xfs@ and linux-fsdevel@ because some related problem[1]
-> > > > and related patches[2].
-> > > >
-> > > > we compared 6.4-rc3(rather than 6.1.y) to 5.15.y because some related patches[2]
-> > > > work only for 6.4 now.
-> > > >
-> > > > [1] https://lore.kernel.org/linux-xfs/20230508172406.1CF3.409509F4@e16-tech.com/
-> > > > [2] https://lore.kernel.org/linux-xfs/20230520163603.1794256-1-willy@infradead.org/
-> > > >
-> > > >
-> > > > test case:
-> > > > 1) PCIe3 SSD *4 with LVM
-> > > > 2) gfs2 lock_nolock
-> > > >     gfs2 attr(T) GFS2_AF_ORLOV
-> > > >    # chattr +T /mnt/test
-> > > > 3) fio
-> > > > fio --name=global --rw=write -bs=1024Ki -size=32Gi -runtime=30 -iodepth 1
-> > > > -ioengine sync -zero_buffers=1 -direct=0 -end_fsync=1 -numjobs=1 \
-> > > >       -name write-bandwidth-1 -filename=/mnt/test/sub1/1.txt \
-> > > >       -name write-bandwidth-2 -filename=/mnt/test/sub2/1.txt \
-> > > >       -name write-bandwidth-3 -filename=/mnt/test/sub3/1.txt \
-> > > >       -name write-bandwidth-4 -filename=/mnt/test/sub4/1.txt
-> > > > 4) patches[2] are applied to 6.4-rc3.
-> > > >
-> > > >
-> > > > 5.15.y result
-> > > >       fio WRITE: bw=5139MiB/s (5389MB/s),
-> > > > 6.4-rc3 result
-> > > >       fio  WRITE: bw=2599MiB/s (2725MB/s)
+> > > gfs2 write bandwidth regression on 6.4-rc3 compare to 5.15.y.
 > > >
-> > > more test result:
+> > > we added  linux-xfs@ and linux-fsdevel@ because some related problem[1]
+> > > and related patches[2].
 > > >
-> > > 5.17.0  WRITE: bw=4988MiB/s (5231MB/s)
-> > > 5.18.0  WRITE: bw=5165MiB/s (5416MB/s)
-> > > 5.19.0  WRITE: bw=5511MiB/s (5779MB/s)
-> > > 6.0.5   WRITE: bw=3055MiB/s (3203MB/s), WRITE: bw=3225MiB/s (3382MB/s)
-> > > 6.1.30  WRITE: bw=2579MiB/s (2705MB/s)
+> > > we compared 6.4-rc3(rather than 6.1.y) to 5.15.y because some related patches[2]
+> > > work only for 6.4 now.
 > > >
-> > > so this regression  happen in some code introduced in 6.0,
-> > > and maybe some minor regression in 6.1 too?
-> > 
-> > thanks for this bug report. Bob has noticed a similar looking
-> > performance regression recently, and it turned out that commit
-> > e1fa9ea85ce8 ("gfs2: Stop using glock holder auto-demotion for now")
-> > inadvertently caused buffered writes to fall back to writing single
-> > pages instead of multiple pages at once. That patch was added in
-> > v5.18, so it doesn't perfectly align with the regression history
-> > you're reporting, but maybe there's something else going on that we're
-> > not aware of.
-> > 
-> > In any case, the regression introduced by commit e1fa9ea85ce8 should
-> > be fixed by commit c8ed1b359312 ("gfs2: Fix duplicate
-> > should_fault_in_pages() call"), which ended up in v6.5-rc1.
-> > 
-> > Could you please check where we end up with that fix?
+> > > [1] https://lore.kernel.org/linux-xfs/20230508172406.1CF3.409509F4@e16-tech.com/
+> > > [2] https://lore.kernel.org/linux-xfs/20230520163603.1794256-1-willy@infradead.org/
+> > >
+> > >
+> > > test case:
+> > > 1) PCIe3 SSD *4 with LVM
+> > > 2) gfs2 lock_nolock
+> > >     gfs2 attr(T) GFS2_AF_ORLOV
+> > >    # chattr +T /mnt/test
+> > > 3) fio
+> > > fio --name=global --rw=write -bs=1024Ki -size=32Gi -runtime=30 -iodepth 1
+> > > -ioengine sync -zero_buffers=1 -direct=0 -end_fsync=1 -numjobs=1 \
+> > >       -name write-bandwidth-1 -filename=/mnt/test/sub1/1.txt \
+> > >       -name write-bandwidth-2 -filename=/mnt/test/sub2/1.txt \
+> > >       -name write-bandwidth-3 -filename=/mnt/test/sub3/1.txt \
+> > >       -name write-bandwidth-4 -filename=/mnt/test/sub4/1.txt
+> > > 4) patches[2] are applied to 6.4-rc3.
+> > >
+> > >
+> > > 5.15.y result
+> > >       fio WRITE: bw=5139MiB/s (5389MB/s),
+> > > 6.4-rc3 result
+> > >       fio  WRITE: bw=2599MiB/s (2725MB/s)
+> >
+> > more test result:
+> >
+> > 5.17.0  WRITE: bw=4988MiB/s (5231MB/s)
+> > 5.18.0  WRITE: bw=5165MiB/s (5416MB/s)
+> > 5.19.0  WRITE: bw=5511MiB/s (5779MB/s)
+> > 6.0.5   WRITE: bw=3055MiB/s (3203MB/s), WRITE: bw=3225MiB/s (3382MB/s)
+> > 6.1.30  WRITE: bw=2579MiB/s (2705MB/s)
+> >
+> > so this regression  happen in some code introduced in 6.0,
+> > and maybe some minor regression in 6.1 too?
 > 
-> I applied c8ed1b359312 on 6.1.36.
-> # the build/test of 6.5-rc1 is yet not ready.
-> 
-> fio performance result:
->   WRITE: bw=2683MiB/s (2813MB/s)
-> 
-> but  the performance of fio 'Laying out IO file' is improved.
-> Jobs: 4 (f=4): [F(4)][100.0%][w=5168MiB/s][w=5168 IOPS][eta 00m:00s]
-> 
-> so there seems 2 problems,  one is fixed by c8ed1b359312.
-> but another is still left.
+> thanks for this bug report. Bob has noticed a similar looking
+> performance regression recently, and it turned out that commit
+> e1fa9ea85ce8 ("gfs2: Stop using glock holder auto-demotion for now")
+> inadvertently caused buffered writes to fall back to writing single
+> pages instead of multiple pages at once. That patch was added in
+> v5.18, so it doesn't perfectly align with the regression history
+> you're reporting, but maybe there's something else going on that we're
+> not aware of.
 
+Dave gave a good explanation of the problem here:
 
-We build/test on 6.5-rc1 too.
-fio  WRITE: bw=2643MiB/s (2771MB/s)
+https://lore.kernel.org/linux-xfs/ZKybxCxzmuI1TFYn@dread.disaster.area/
 
-the performance of fio 'Laying out IO file'.
-Jobs: 4 (f=4): [F(4)][100.0%][w=4884MiB/s][w=4884 IOPS][eta 00m:00s]
+It's a pagecache locking contention problem rather than an individual
+filesystem problem.
 
-so the performance result on 6.5-rc1 is the same level as
-6.1.36 with c8ed1b359312.
-
-Best Regards
-Wang Yugui (wangyugui@e16-tech.com)
-2023/07/11
-
-
+... are you interested in supporting large folios in gfs2?  ;-)
