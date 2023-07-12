@@ -2,82 +2,102 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2B5E5EB64DA
-	for <linux-xfs@archiver.kernel.org>; Wed, 12 Jul 2023 15:22:10 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C14C8EB64DD
+	for <linux-xfs@archiver.kernel.org>; Wed, 12 Jul 2023 15:44:57 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230207AbjGLPWJ (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 12 Jul 2023 11:22:09 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42164 "EHLO
+        id S233792AbjGLPo5 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 12 Jul 2023 11:44:57 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58140 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232582AbjGLPWH (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 12 Jul 2023 11:22:07 -0400
-Received: from verein.lst.de (verein.lst.de [213.95.11.211])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8243C1726;
-        Wed, 12 Jul 2023 08:22:05 -0700 (PDT)
-Received: by verein.lst.de (Postfix, from userid 2407)
-        id 1135467373; Wed, 12 Jul 2023 17:22:02 +0200 (CEST)
-Date:   Wed, 12 Jul 2023 17:22:01 +0200
-From:   Christoph Hellwig <hch@lst.de>
-To:     Dave Chinner <david@fromorbit.com>
-Cc:     Jens Axboe <axboe@kernel.dk>, io-uring@vger.kernel.org,
-        linux-xfs@vger.kernel.org, hch@lst.de, andres@anarazel.de
-Subject: Re: [PATCH 1/5] iomap: complete polled writes inline
-Message-ID: <20230712152201.GA23566@lst.de>
-References: <20230711203325.208957-1-axboe@kernel.dk> <20230711203325.208957-2-axboe@kernel.dk> <ZK37j/BqFYXLjV/B@dread.disaster.area>
+        with ESMTP id S231856AbjGLPo4 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 12 Jul 2023 11:44:56 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2F58810C4
+        for <linux-xfs@vger.kernel.org>; Wed, 12 Jul 2023 08:44:55 -0700 (PDT)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange X25519 server-signature RSA-PSS (2048 bits))
+        (No client certificate requested)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id C13DD61871
+        for <linux-xfs@vger.kernel.org>; Wed, 12 Jul 2023 15:44:54 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 210CAC433C7;
+        Wed, 12 Jul 2023 15:44:54 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1689176694;
+        bh=4HynN4gJAuFfP5i5kPqYkjPpt+kinSyN6YDdbdAqeXs=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=hVyeTvRK12AyjCf3Kc1yOu5EejJsKYUgbRBAEtdudoRYtOswvKVMTGnlaJB3b+qYw
+         NIVDBaL2dgIZ2BmHSz1RqXKmwT+RCu4or2ZNTS5nTYdZTrzYfSBoGavQnHF05e24c+
+         ntaTwFoxnPKZe3bM3VgVnfFUkV0bGWjLOYfNXKPXTxmnVGgGHgo5a695+7QQTfbKZc
+         mxYTjIxhtVAK6xnGaj4Siu2rHN/7VDFDKtCcldKevc+JNILkQ9Efl+mMPUnqGzYTMh
+         x5wshmCx1Qg+QXYxD3mg3jwtGK0Qbr9rauALwY7UFDcHpzvcBSdo5bKeB/edgC8RCS
+         w1ENufTlwfVOg==
+Date:   Wed, 12 Jul 2023 08:44:53 -0700
+From:   "Darrick J. Wong" <djwong@kernel.org>
+To:     Amir Goldstein <amir73il@gmail.com>
+Cc:     Chandan Babu R <chandan.babu@oracle.com>,
+        Leah Rumancik <leah.rumancik@gmail.com>,
+        Dave Chinner <david@fromorbit.com>,
+        Chris Dunlop <chris@onthe.net.au>, linux-xfs@vger.kernel.org
+Subject: Re: [PATCH 6.1 CANDIDATE 0/3] xfs inodegc fixes for 6.1.y (from v6.4)
+Message-ID: <20230712154453.GE108251@frogsfrogsfrogs>
+References: <20230712094733.1265038-1-amir73il@gmail.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <ZK37j/BqFYXLjV/B@dread.disaster.area>
-User-Agent: Mutt/1.5.17 (2007-11-01)
+In-Reply-To: <20230712094733.1265038-1-amir73il@gmail.com>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Wed, Jul 12, 2023 at 11:02:07AM +1000, Dave Chinner wrote:
-> I'm not sure this is safe for all polled writes. What if the DIO
-> write was into a hole and we have to run unwritten extent
-> completion via:
+On Wed, Jul 12, 2023 at 12:47:30PM +0300, Amir Goldstein wrote:
+> Darrick,
 > 
-> iomap_dio_complete_work(work)
->   iomap_dio_complete(dio)
->     dio->end_io(iocb)
->       xfs_dio_write_end_io()
->         xfs_iomap_write_unwritten()
->           <runs transactions, takes rwsems, does IO>
->   .....
->   ki->ki_complete()
->     io_complete_rw_iopoll()
->   .....
+> These are the patches we discussed that Leah requested for the 5.15.y
+> backport of non-blocking inodegc pushes series [1].
 > 
-> I don't see anything in the iomap DIO path that prevents us from
-> doing HIPRI/REQ_POLLED IO on IOMAP_UNWRITTEN extents, hence I think
-> this change will result in bad things happening in general.
+> They may or may not help the 5.15.y -> 6.1.y regression that was
+> reported by Chris [2].
+> 
+> Note that I did not include:
+> 2d5f38a31980 ("xfs: disable reaping in fscounters scrub")
+> in this backport set, because I generally do not want to deal with
+> backporting fixes for experimental features.
 
-Where the bad thing is that we're doing fairly expensive work in the
-completion thread.  Which is probably horrible for performance, but
-should be otherwise unproblematic.
+I don't agree with this decision because the comment for
+xfs_inodegc_stop now says that callers must hold s_umount.
+xchk_stop_reaping definitely does /not/ hold that lock, which means it's
+now buggy.  Someone downstream could be using scrub, even if it's still
+experimental.
 
-> Regardless of the correctness of the code, I don't think adding this
-> special case is the right thing to do here.  We should be able to
-> complete all writes that don't require blocking completions directly
-> here, not just polled writes.
+I've generally said not to bother with scrub fixes, but I don't think
+it's correct to introduce a bug in an LTS kernel.  Please backport
+2d5f38a31980 since all it does is removes the offending call and turns
+off code in fscounters.c.
 
-Note that we have quite a few completion handlers that don't block,
-but still require user context, as they take a spinlock without
-irq protection.
+--D
 
-Thinks are a bit more complicated now compared to the legacy direct
-I/O, because back then non-XFS file system usually dindn't support
-i_size updates from asynchronous dio.
-
-> Essentially, we shouldn't be using IOMAP_DIO_WRITE as the
-> determining factor for queuing completions - we should be using
-> the information the iocb and the iomap provides us at submission
-> time similar to how we determine if we can use REQ_FUA for O_DSYNC
-> writes to determine if iomap IO completion queuing is required.
-
-We also need information from the file system, e.g. zonefs always
-takes a mutex at least for the zone files.
-
-In other words the optimize non-sync or FUA pure overwrites has a fair
-bit of overlap with this, but actually is a more complex issue.
+> This series has gone through the usual kdevops testing routine.
+> 
+> Please ACK.
+> 
+> Thanks,
+> Amir.
+> 
+> [1] https://www.spinics.net/lists/linux-xfs/msg61813.html
+> [2] https://lore.kernel.org/all/ZK4E%2FgGuaBu+qvKL@dread.disaster.area/
+> 
+> Darrick J. Wong (3):
+>   xfs: explicitly specify cpu when forcing inodegc delayed work to run
+>     immediately
+>   xfs: check that per-cpu inodegc workers actually run on that cpu
+>   xfs: fix xfs_inodegc_stop racing with mod_delayed_work
+> 
+>  fs/xfs/xfs_icache.c | 40 +++++++++++++++++++++++++++++++++-------
+>  fs/xfs/xfs_mount.h  |  3 +++
+>  fs/xfs/xfs_super.c  |  3 +++
+>  3 files changed, 39 insertions(+), 7 deletions(-)
+> 
+> -- 
+> 2.34.1
+> 
