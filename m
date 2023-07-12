@@ -2,205 +2,214 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1235EEB64DC
-	for <linux-xfs@archiver.kernel.org>; Wed, 12 Jul 2023 01:14:35 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0C269C0015E
+	for <linux-xfs@archiver.kernel.org>; Wed, 12 Jul 2023 01:17:53 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229505AbjGLBOC (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 11 Jul 2023 21:14:02 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47202 "EHLO
+        id S229537AbjGLBRw (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 11 Jul 2023 21:17:52 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48174 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229772AbjGLBN7 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 11 Jul 2023 21:13:59 -0400
-Received: from smtp2.onthe.net.au (smtp2.onthe.net.au [203.22.196.248])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id C9E141717
-        for <linux-xfs@vger.kernel.org>; Tue, 11 Jul 2023 18:13:57 -0700 (PDT)
-Received: from localhost (smtp2.private.onthe.net.au [10.200.63.13])
-        by smtp2.onthe.net.au (Postfix) with ESMTP id 204CF891;
-        Wed, 12 Jul 2023 11:13:57 +1000 (AEST)
-Received: from smtp2.onthe.net.au ([10.200.63.13])
-        by localhost (smtp.onthe.net.au [10.200.63.13]) (amavisd-new, port 10024)
-        with ESMTP id IwVOJn7SndoB; Wed, 12 Jul 2023 11:13:57 +1000 (AEST)
-Received: from athena.private.onthe.net.au (chris-gw2-vpn.private.onthe.net.au [10.9.3.2])
-        by smtp2.onthe.net.au (Postfix) with ESMTP id F3D9A883;
-        Wed, 12 Jul 2023 11:13:56 +1000 (AEST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=onthe.net.au;
-        s=default; t=1689124437;
-        bh=e5jXvpuQKz5c241s8gwT82dYSDyOCrR8YrlSZPMRJdw=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=aixsA1d8o1c4cq8qrXdy248EIMjrW/qqTns+xn14KQcYTN3ZxMCSdXuAHFHoVI6sn
-         B+3W/EWT1AY4UkvDUWc+CHTLD4bnPdCkNQHavSzvOmYailHTFscnwt22pKrVmrs8Qm
-         b3qPFNV7aChHK+E5CZckmLB1qChLG/wcgV+wC0tmYx6vEHkunISzAyUjRWzveHV9Vt
-         GlXGozdx+Cgaszjv/5El+5oVVjfJvaKB4MUx9QV4Vw/UFm/FQ9+uIJA5baOfEkY7wj
-         ayliRzy9wE/dQQOpSQELISUv95PTM3T2xc+ymj4sUy4d9qjXpzRjpZXo/vz6gyNwQs
-         zvnb/ge8O7Pyg==
-Received: by athena.private.onthe.net.au (Postfix, from userid 1026)
-        id D65EC68061B; Wed, 12 Jul 2023 11:13:56 +1000 (AEST)
-Date:   Wed, 12 Jul 2023 11:13:56 +1000
-From:   Chris Dunlop <chris@onthe.net.au>
-To:     Dave Chinner <david@fromorbit.com>
-Cc:     linux-xfs@vger.kernel.org
-Subject: Re: rm hanging, v6.1.35
-Message-ID: <20230712011356.GB886834@onthe.net.au>
-References: <20230710215354.GA679018@onthe.net.au>
- <20230711001331.GA683098@onthe.net.au>
- <20230711015716.GA687252@onthe.net.au>
- <ZKzIE6m+iCEd+ZWk@dread.disaster.area>
- <20230711070530.GA761114@onthe.net.au>
- <ZK3V1wQ6jQCxtTZJ@dread.disaster.area>
+        with ESMTP id S230015AbjGLBRs (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 11 Jul 2023 21:17:48 -0400
+Received: from mail-pf1-x430.google.com (mail-pf1-x430.google.com [IPv6:2607:f8b0:4864:20::430])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8657C95
+        for <linux-xfs@vger.kernel.org>; Tue, 11 Jul 2023 18:17:46 -0700 (PDT)
+Received: by mail-pf1-x430.google.com with SMTP id d2e1a72fcca58-66d6a9851f3so1021065b3a.0
+        for <linux-xfs@vger.kernel.org>; Tue, 11 Jul 2023 18:17:46 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=kernel-dk.20221208.gappssmtp.com; s=20221208; t=1689124666; x=1691716666;
+        h=content-transfer-encoding:in-reply-to:from:references:cc:to
+         :content-language:subject:user-agent:mime-version:date:message-id
+         :from:to:cc:subject:date:message-id:reply-to;
+        bh=VGkTC8Gj/gfYNbDNWTQmXKgHFOdtSXd2APw2ttqbxOE=;
+        b=5gVnq2uSnSnj+pxBw+jJRhxaDg2WfindRgD9xptAakFOuQ9SqF11kbB0lfjuUuPS5m
+         xQiGP+DWnq0Sn4S5APHO7GfhEZrVC5qK1Kfvrt+3//XRaNKHIb/Kx+Hk2ikhobgVhHdt
+         YFBbDaWYLaznRfCr+fYzQg1EcGyeSLadMThYXl8yucO45qGYVn3gpjYoggdyMErayszL
+         l6ak+02WFxKSYM4oa391m/ACEkp7Q7sHeLDeZqyu1Co9Sfcda14ZNgQLa0zd0vDUWJw0
+         lvQm5XfxcLGBOAG17rYCt9ngRv5tSSdziKb9B4h7cn3IytEKB4Mjm3Zo+zxNdxpfOXaC
+         Q89Q==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20221208; t=1689124666; x=1691716666;
+        h=content-transfer-encoding:in-reply-to:from:references:cc:to
+         :content-language:subject:user-agent:mime-version:date:message-id
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=VGkTC8Gj/gfYNbDNWTQmXKgHFOdtSXd2APw2ttqbxOE=;
+        b=aaKwRmuOc0ayI8bBQWG2I5U/qOnFXzSJEcsp4Qsd83UtHRG74FJlbW2MpGLB92tZQO
+         ak0GVHTWuFLwugRMe/8PZhzXHCBAY3/X2Ue4qZrxPlL9VysY+a/2+yBcfkNO7mdi1PZo
+         VaJXBtkmXb9rYJw570yGnZzLfZnxDwg/wQstFId1+7RJ/xOh0HDtjHUUwxmUCrcp6SS+
+         I7Lzz+D+0pOj5q9PZBv0IXB89538KNsfbTzBaf/Yhw3LtbXQwDMDdkbtkLAQBqDFwYkg
+         wUSDlo5u6FiawLSGljGHO+EM0PR45LrbMy/JlSFuo48Z47Akg860m1wSJD9pWxMqKsjN
+         WDMw==
+X-Gm-Message-State: ABy/qLZqTLnySQuFcEVQ5m1dhGbx6IucnkMGWXUk5QAL4uRNOqFpD8eI
+        X1GwLCh9dwyu/lkW4wWuIyN6wQ==
+X-Google-Smtp-Source: APBJJlEu5eSE3FjTGTXXIvsyNYXPP719bWFLbHfMUFeU92jir+RXX11lZ3/mU3OAH4Dp/6EvxECXSA==
+X-Received: by 2002:a05:6a20:4424:b0:111:a0e5:d2b7 with SMTP id ce36-20020a056a20442400b00111a0e5d2b7mr24528179pzb.4.1689124665855;
+        Tue, 11 Jul 2023 18:17:45 -0700 (PDT)
+Received: from [192.168.1.136] ([198.8.77.157])
+        by smtp.gmail.com with ESMTPSA id f21-20020aa782d5000000b006829b27f252sm2370115pfn.93.2023.07.11.18.17.44
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Tue, 11 Jul 2023 18:17:45 -0700 (PDT)
+Message-ID: <2c412c93-b197-b504-bfc5-433621a11ec5@kernel.dk>
+Date:   Tue, 11 Jul 2023 19:17:43 -0600
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Content-Disposition: inline
-In-Reply-To: <ZK3V1wQ6jQCxtTZJ@dread.disaster.area>
+User-Agent: Mozilla/5.0 (X11; Linux aarch64; rv:102.0) Gecko/20100101
+ Thunderbird/102.12.0
+Subject: Re: [PATCH 1/5] iomap: complete polled writes inline
+Content-Language: en-US
+To:     Dave Chinner <david@fromorbit.com>
+Cc:     io-uring@vger.kernel.org, linux-xfs@vger.kernel.org, hch@lst.de,
+        andres@anarazel.de
+References: <20230711203325.208957-1-axboe@kernel.dk>
+ <20230711203325.208957-2-axboe@kernel.dk>
+ <ZK37j/BqFYXLjV/B@dread.disaster.area>
+From:   Jens Axboe <axboe@kernel.dk>
+In-Reply-To: <ZK37j/BqFYXLjV/B@dread.disaster.area>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Wed, Jul 12, 2023 at 08:21:11AM +1000, Dave Chinner wrote:
-> On Tue, Jul 11, 2023 at 05:05:30PM +1000, Chris Dunlop wrote:
->> On Tue, Jul 11, 2023 at 01:10:11PM +1000, Dave Chinner wrote:
->
->> More on the problem topic below, and apologies for the aside, but 
->> this is my immediate concern: post the reboot into v5.15.118 I have 
->> one of the filesystems failing to mount with:
-...
-> I would suggest that this indicates a torn write of some kind. Given
-> the state of the system when you rebooted, and all the RAID 5/6
-> writes in progress, this is entirely possible...
-...
-> It's probably safest to just zero the log and run repair at this
-> point.
+On 7/11/23 7:02?PM, Dave Chinner wrote:
+> On Tue, Jul 11, 2023 at 02:33:21PM -0600, Jens Axboe wrote:
+>> Polled IO is always reaped in the context of the process itself, so it
+>> does not need to be punted to a workqueue for the completion. This is
+>> different than IRQ driven IO, where iomap_dio_bio_end_io() will be
+>> invoked from hard/soft IRQ context. For those cases we currently need
+>> to punt to a workqueue for further processing. For the polled case,
+>> since it's the task itself reaping completions, we're already in task
+>> context. That makes it identical to the sync completion case.
+>>
+>> Testing a basic QD 1..8 dio random write with polled IO with the
+>> following fio job:
+>>
+>> fio --name=polled-dio-write --filename=/data1/file --time_based=1 \
+>> --runtime=10 --bs=4096 --rw=randwrite --norandommap --buffered=0 \
+>> --cpus_allowed=4 --ioengine=io_uring --iodepth=$depth --hipri=1
+> 
+> Ok, so this is testing pure overwrite DIOs as fio pre-writes the
+> file prior to starting the random write part of the test.
 
-Thanks. I did that last night (after taking a snapshot) - 'xfs_repair 
--v' is still running but there's a LOT of nasty output so it's not 
-looking good.
+Correct.
 
-...oh. It finished whilst I've been writing this. If you're interested 
-in the log:
+>> yields:
+>>
+>> 	Stock	Patched		Diff
+>> =======================================
+>> QD1	180K	201K		+11%
+>> QD2	356K	394K		+10%
+>> QD4	608K	650K		+7%
+>> QD8	827K	831K		+0.5%
+>>
+>> which shows a nice win, particularly for lower queue depth writes.
+>> This is expected, as higher queue depths will be busy polling
+>> completions while the offloaded workqueue completions can happen in
+>> parallel.
+>>
+>> Signed-off-by: Jens Axboe <axboe@kernel.dk>
+>> ---
+>>  fs/iomap/direct-io.c | 9 +++++----
+>>  1 file changed, 5 insertions(+), 4 deletions(-)
+>>
+>> diff --git a/fs/iomap/direct-io.c b/fs/iomap/direct-io.c
+>> index ea3b868c8355..343bde5d50d3 100644
+>> --- a/fs/iomap/direct-io.c
+>> +++ b/fs/iomap/direct-io.c
+>> @@ -161,15 +161,16 @@ void iomap_dio_bio_end_io(struct bio *bio)
+>>  			struct task_struct *waiter = dio->submit.waiter;
+>>  			WRITE_ONCE(dio->submit.waiter, NULL);
+>>  			blk_wake_io_task(waiter);
+>> -		} else if (dio->flags & IOMAP_DIO_WRITE) {
+>> +		} else if ((bio->bi_opf & REQ_POLLED) ||
+>> +			   !(dio->flags & IOMAP_DIO_WRITE)) {
+>> +			WRITE_ONCE(dio->iocb->private, NULL);
+>> +			iomap_dio_complete_work(&dio->aio.work);
+> 
+> I'm not sure this is safe for all polled writes. What if the DIO
+> write was into a hole and we have to run unwritten extent
+> completion via:
+> 
+> iomap_dio_complete_work(work)
+>   iomap_dio_complete(dio)
+>     dio->end_io(iocb)
+>       xfs_dio_write_end_io()
+>         xfs_iomap_write_unwritten()
+>           <runs transactions, takes rwsems, does IO>
+>   .....
+>   ki->ki_complete()
+>     io_complete_rw_iopoll()
+>   .....
+> 
+> I don't see anything in the iomap DIO path that prevents us from
+> doing HIPRI/REQ_POLLED IO on IOMAP_UNWRITTEN extents, hence I think
+> this change will result in bad things happening in general.
 
-https://file.io/XOGokgxgttEX
+There is a check related to writing beyond the size of the inode:
 
-The directory structure looks sane, I'll start running checks on the 
-data.
+        if (need_zeroout ||                                                     
+            ((dio->flags & IOMAP_DIO_WRITE) && pos >= i_size_read(inode)))
+                dio->iocb->ki_flags &= ~IOCB_HIPRI;
 
->>> I don't see anything indicating a filesystem problem here. This
->>> looks like a massively overloaded RAID 5 volume. i.e. the fast
->>> storage that makes up the write cache has filled, and now everything
->>> is stuck waiting for the fast cache to drain to the slow backing
->>> store before new writes can be made to the fast cache. IOWs,
->>> everything is running as RAID5 write speed and there's a huge
->>> backlog of data being written to the RAID 5 volume(s) keeping them
->>> 100% busy.
+but whether that is enough of what, I'm not so sure.
 
-Oddly, of the 56 similarly configured filesystems (writecache/lvm/rbd) 
-on this box, with maybe 10 actively sinking writes at any time, that 
-one above is the only one that had any trouble on reboot. If it had 
-been a general problem w/ the cache device I would have thought more 
-of the active writers would have similar issues. Maybe I just got 
-lucky - and/or that demonstrates how hard xfs tries to keep your data 
-sane.
+>> +		} else {
+>>  			struct inode *inode = file_inode(dio->iocb->ki_filp);
+>>  
+>>  			WRITE_ONCE(dio->iocb->private, NULL);
+>>  			INIT_WORK(&dio->aio.work, iomap_dio_complete_work);
+>>  			queue_work(inode->i_sb->s_dio_done_wq, &dio->aio.work);
+>> -		} else {
+>> -			WRITE_ONCE(dio->iocb->private, NULL);
+>> -			iomap_dio_complete_work(&dio->aio.work);
+>>  		}
+>>  	}
+> 
+> Regardless of the correctness of the code, I don't think adding this
+> special case is the right thing to do here.  We should be able to
+> complete all writes that don't require blocking completions directly
+> here, not just polled writes.
+> 
+> We recently had this discussion over hacking a special case "don't
+> queue for writes" for ext4 into this code - I had to point out the
+> broken O_DSYNC completion cases it resulted in there, too. I also
+> pointed out that we already had generic mechanisms in iomap to
+> enable us to make a submission time decision as to whether
+> completion needed to be queued or not. Thread here:
+> 
+> https://lore.kernel.org/linux-xfs/20230621174114.1320834-1-bongiojp@gmail.com/
+> 
+> Essentially, we shouldn't be using IOMAP_DIO_WRITE as the
+> determining factor for queuing completions - we should be using
+> the information the iocb and the iomap provides us at submission
+> time similar to how we determine if we can use REQ_FUA for O_DSYNC
+> writes to determine if iomap IO completion queuing is required.
+> 
+> This will do the correct *and* optimal thing for all types of
+> writes, polled or not...
 
->> This had never been an issue with v5.15. Is it possible the upgrade 
->> to v6.1 had a hand in this or that's probably just coincidence?
->
-> It could be a dm-writecache or md raid regression, but it could be
-> just "luck".
+There's a fundamental difference between "cannot block, ever" as we have
+from any kind of irq/rcu/preemption context, and the "we should not
+block waiting for unrelated IO" which is really what the NOIO kind of
+issue that async dio or polled async dio is. This obviously goes beyond
+just this single patch and addresses the whole patchset, but it applies
+equally to the polled completions here and the task punted callbacks for
+the dio async writes. For the latter, we can certainly grab a mutex, for
+the former we cannot, ever.
 
-Ugh. Sigh. I guess at some point I'm going to have to bite the bullet 
-again, and next time watch the cache device like a hawk. I'll keep an 
-eye out for dm-writecache and md raid problems and patches etc. so see 
-what might come up.
+I do hear your point that gating this on writes is somewhat odd, but
+that's mostly because the read completions don't really need to do
+anything. Would you like it more if we made that explicit with another
+IOMAP flag? Only concern here for the polled part is that REQ_POLLED may
+be set for submission on the iomap side, but then later cleared through
+the block stack if we cannot do polled IO for this bio. This means it
+really has to be checked on the completion side, you cannot rely on any
+iocb or iomap flags set at submission time.
 
-Is there anything else that occurs to you that I might monitor prior 
-to and during any future recurrance of the problem?
+For the write checking, that's already there... And while I'm all for
+making that code cleaner, I don't necessarily think cleaning that up
+first is a fair ask. At least not without more details on what you want,
+specifically?
 
->> In particular, could "5e672cd69f0a xfs: non-blocking inodegc 
->> pushes" cause a significantly greater write load on the cache?
->
-> No.
->
->> I note that there's one fs (separate to the corrupt one above) 
->> that's still in mount recovery since the boot some hours ago. On 
->> past experience that indicates the inodegc stuff is holding things 
->> up, i.e. it would have been running prior to the reboot - or at 
->> least trying to.
->
-> I only found one inodegc working running in the trace above - it was
-> blocked on writecache doing a rmapbt block read removing extents. It
-> may have been a long running cleanup, but it may not have been.
+-- 
+Jens Axboe
 
-Probably was a cleanup: that's the reason for the update to v6.1, 
-every now and again the box was running into the problem of getting 
-blocked on the cleanup. The extent of the problem is significantly 
-reduced by moving from one large fs where any extended cleanup would 
-block everything, to multiple small-ish fs'es (500G-15T) where the 
-blast radius of an extended cleanup is far more constrained. But the 
-problem was still pretty annoying when it hits.
-
-Hmmm, maybe I can just carry a local backport of "non-blocking inodegc 
-pushes" in my local v5.15. That would push back my need to move do 
-v6.1.
-
-Or could / should it be considered for an official backport?  Looks 
-like it applies cleanly to current v5.15.120.
-
-> As it is, mount taking a long time because there's a inode with a
-> huge number of extents that need freeing on an unlinked list is
-> *not* related to background inodegc in any way - this has -always-
-> happened with XFS; it's simply what unlinked inode recovery does.
->
-> i.e. background inodegc just moved the extent freeing from syscall
-> exit context to an async worker thread; the filesystem still has
-> exactly the same work to do. If the system goes down while that work
-> is in progress, log recovery has always finished off that cleanup
-> work...
-
-Gotcha. I'd mistakenly thought "non-blocking inodegc pushes" queued up 
-the garbage collection for background processing. My further mistaken 
-hand-wavy thought was that, if the processing that was previously 
-foreground was now punted to background (perhaps with different 
-priorities) maybe the background processing was simply way more 
-efficient, enough to swamp the cache with metadata updates.
-
-But with your further explanation and actually reading the patch 
-(should have done that first) shows the gc was already queued, the 
-update was to NOT wait for the queue to be flushed.
-
-Hmmm, then again... might it be possible that, without the patch, at 
-some point after a large delete, further work was blocked whilst 
-waiting for the queue to be flushed, limiting the total amount of 
-work, but with the patch, the further work (e.g. more deletes) is able 
-to be queued - possibly to the point of swamping the cache device?
-
->> There's been no change to the cache device over the reboot, and it
->> currently looks busy, but it doesn't look completely swamped:
-> ....
->
-> About 150 1MB sized reads, and about 1000-1500 much smaller
-> writes each second, with an average write wait of near 10ms.
-> Certainly not a fast device, and it's running at about 50%
-> utilisation with an average queue depth of 10-15 IOs.
-
-That's hopefully the cache working as intended: sinking small 
-continuous writes (network data uploads) and aggregating them into 
-larger blocks to flush out to the bulk storage (i.e. reads from the 
-cache to write to the bulk).
-
->> It should be handling about the same load as prior to the reboot.
->
-> If that's the typical sustained load, I wouldn't expect it to have
-> that much extra overhead given small writes on RAID 6 volumes have
-> the worse performance characteristics possible. If the write cache
-> starts flushing lots of small discontiguous writes, I'd expect to
-> see that device go to 100% utilisation and long write wait times for
-> extended periods...
-
-There shouldn't be many small discontigous writes in the data: it's 
-basically network uploads to sequential files in the 100s MB to multi 
-GB range. But there's also a bunch of reflinking, not to mention 
-occasionally removing highly reflinked multi-TB files, so these 
-metadata updates might count as "lots of small discontiguous writes"?
-
-
-Thanks for your help,
-
-Chris
