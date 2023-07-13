@@ -2,37 +2,37 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4A9BAC001DD
-	for <linux-xfs@archiver.kernel.org>; Thu, 13 Jul 2023 04:47:37 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 46D4EC0015E
+	for <linux-xfs@archiver.kernel.org>; Thu, 13 Jul 2023 04:51:00 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233716AbjGMErg (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 13 Jul 2023 00:47:36 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45372 "EHLO
+        id S230054AbjGMEu6 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 13 Jul 2023 00:50:58 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46260 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233653AbjGMErf (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 13 Jul 2023 00:47:35 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 373E31FFD;
-        Wed, 12 Jul 2023 21:47:34 -0700 (PDT)
+        with ESMTP id S233495AbjGMEu5 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 13 Jul 2023 00:50:57 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 549541FFD;
+        Wed, 12 Jul 2023 21:50:56 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
          key-exchange X25519 server-signature RSA-PSS (2048 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id A42C361A0F;
-        Thu, 13 Jul 2023 04:47:33 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 07967C433C9;
-        Thu, 13 Jul 2023 04:47:33 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id D55F661A14;
+        Thu, 13 Jul 2023 04:50:55 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 31870C433C8;
+        Thu, 13 Jul 2023 04:50:55 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1689223653;
-        bh=4aRoxfT40RsddpslBTdLKIrLWI2rQwNxtB5Z2+wSZS0=;
+        s=k20201202; t=1689223855;
+        bh=zeNqpV5yylsYqy15fvmE8Y/SDL14rOC4lw00DZoTEfY=;
         h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=RFhm5NUUM34vPiYf1DM+4jivBfkM+nvxsvjTcDqYKudpDCl3AaZagTEp1YfHm2Cgp
-         fU+xeUR/LAtlXbswvn1nMA6UXXazR0A827Fwq33a2Z2UmwtH/PgqhippT9dd5Qp/eQ
-         X/edeycQNMcks2CEmma9o5DpMtdxbT3DaXvJqy00JlS1/1gh7NfTOdIjSllsJ1C8nv
-         L8MRBgcT4c7ggH2z4PPanWIBtpe/MzP6gGtEo6VUTN2a4tGaGOtcuUFyJdO/jZaYk8
-         qT1h+KV3WdaR2i1OGFQa+mWuqxywvfDJhU9qxlvIWnD9W0FfPfAkdL0ZTEx2HrkwMF
-         ntFg7sGtr4naw==
-Date:   Wed, 12 Jul 2023 21:47:32 -0700
+        b=PB7u7RYVV9XZOemIgmZh7zmj5IsVWoGTfnOob30IMWtY4HQO9pBuRVfdMNPPxec0W
+         VF451pj139BJ+hznFz7DpgasQ52LANTmHzcXm/QMSO78PyGQ5ZLVj2B8D9YmBLKAFg
+         yh/inV2Nd0oTJjAoOdlSX3BZNiDuzEBinay8HASKUDVL72JTyA81zx4+O5RJcdC0hQ
+         1v2LNzKY0MXoafygMOiY4K11KZ+7USIEvRYSpnEDlGbcsejpFsRqnftlAnatIIpOhn
+         cFSmAp5cBfOLAepJa6aLznQ+MHvP9tG42pLhk+3JDyG3UxgvIeUL0DUiMhuZxA17le
+         +kzBSqasuvuiw==
+Date:   Wed, 12 Jul 2023 21:50:54 -0700
 From:   "Darrick J. Wong" <djwong@kernel.org>
 To:     "Matthew Wilcox (Oracle)" <willy@infradead.org>
 Cc:     linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org,
@@ -41,229 +41,198 @@ Cc:     linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org,
         Christoph Hellwig <hch@infradead.org>,
         Kent Overstreet <kent.overstreet@linux.dev>,
         Christoph Hellwig <hch@lst.de>
-Subject: Re: [PATCH v4 6/9] filemap: Add fgf_t typedef
-Message-ID: <20230713044732.GK108251@frogsfrogsfrogs>
+Subject: Re: [PATCH v4 7/9] filemap: Allow __filemap_get_folio to allocate
+ large folios
+Message-ID: <20230713045054.GL108251@frogsfrogsfrogs>
 References: <20230710130253.3484695-1-willy@infradead.org>
- <20230710130253.3484695-7-willy@infradead.org>
+ <20230710130253.3484695-8-willy@infradead.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20230710130253.3484695-7-willy@infradead.org>
+In-Reply-To: <20230710130253.3484695-8-willy@infradead.org>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Mon, Jul 10, 2023 at 02:02:50PM +0100, Matthew Wilcox (Oracle) wrote:
-> Similarly to gfp_t, define fgf_t as its own type to prevent various
-> misuses and confusion.  Leave the flags as FGP_* for now to reduce the
-> size of this patch; they will be converted to FGF_* later.  Move the
-> documentation to the definition of the type insted of burying it in the
-> __filemap_get_folio() documentation.
+On Mon, Jul 10, 2023 at 02:02:51PM +0100, Matthew Wilcox (Oracle) wrote:
+> Allow callers of __filemap_get_folio() to specify a preferred folio
+> order in the FGP flags.  This is only honoured in the FGP_CREATE path;
+> if there is already a folio in the page cache that covers the index,
+> we will return it, no matter what its order is.  No create-around is
+> attempted; we will only create folios which start at the specified index.
+> Unmodified callers will continue to allocate order 0 folios.
 > 
 > Signed-off-by: Matthew Wilcox (Oracle) <willy@infradead.org>
 > Reviewed-by: Christoph Hellwig <hch@lst.de>
+> ---
+>  include/linux/pagemap.h | 34 ++++++++++++++++++++++++++++++
+>  mm/filemap.c            | 46 +++++++++++++++++++++++++++++------------
+>  mm/readahead.c          | 13 ------------
+>  3 files changed, 67 insertions(+), 26 deletions(-)
+> 
+> diff --git a/include/linux/pagemap.h b/include/linux/pagemap.h
+> index 911201fc41fc..d87840acbfb2 100644
+> --- a/include/linux/pagemap.h
+> +++ b/include/linux/pagemap.h
+> @@ -470,6 +470,19 @@ static inline void *detach_page_private(struct page *page)
+>  	return folio_detach_private(page_folio(page));
+>  }
+>  
+> +/*
+> + * There are some parts of the kernel which assume that PMD entries
+> + * are exactly HPAGE_PMD_ORDER.  Those should be fixed, but until then,
+> + * limit the maximum allocation order to PMD size.  I'm not aware of any
+> + * assumptions about maximum order if THP are disabled, but 8 seems like
+> + * a good order (that's 1MB if you're using 4kB pages)
+> + */
+> +#ifdef CONFIG_TRANSPARENT_HUGEPAGE
+> +#define MAX_PAGECACHE_ORDER	HPAGE_PMD_ORDER
+> +#else
+> +#define MAX_PAGECACHE_ORDER	8
+> +#endif
+> +
+>  #ifdef CONFIG_NUMA
+>  struct folio *filemap_alloc_folio(gfp_t gfp, unsigned int order);
+>  #else
+> @@ -535,9 +548,30 @@ typedef unsigned int __bitwise fgf_t;
+>  #define FGP_NOWAIT		((__force fgf_t)0x00000020)
+>  #define FGP_FOR_MMAP		((__force fgf_t)0x00000040)
+>  #define FGP_STABLE		((__force fgf_t)0x00000080)
+> +#define FGF_GET_ORDER(fgf)	(((__force unsigned)fgf) >> 26)	/* top 6 bits */
 
-Yay!
+/me is very excited for xfs to be able to ask for bigger folios for
+big allocations.  Playing with 512M folios on arm64 is very exciting,
+especially with Ritesh's patches to reduce write amplification.
+
+(Surprisingly, so far the only fstest that's broken is xfs/559, and only
+because it assumed that pagecache writes only create basepages.)
+
 Reviewed-by: Darrick J. Wong <djwong@kernel.org>
 
 --D
 
-> ---
->  fs/btrfs/file.c         |  6 +++---
->  fs/f2fs/compress.c      |  2 +-
->  fs/f2fs/f2fs.h          |  2 +-
->  fs/iomap/buffered-io.c  |  2 +-
->  include/linux/pagemap.h | 48 +++++++++++++++++++++++++++++++----------
->  mm/filemap.c            | 19 ++--------------
->  mm/folio-compat.c       |  2 +-
->  7 files changed, 46 insertions(+), 35 deletions(-)
-> 
-> diff --git a/fs/btrfs/file.c b/fs/btrfs/file.c
-> index fd03e689a6be..3876fae90fc3 100644
-> --- a/fs/btrfs/file.c
-> +++ b/fs/btrfs/file.c
-> @@ -876,9 +876,9 @@ static int prepare_uptodate_page(struct inode *inode,
->  	return 0;
->  }
->  
-> -static unsigned int get_prepare_fgp_flags(bool nowait)
-> +static fgf_t get_prepare_fgp_flags(bool nowait)
->  {
-> -	unsigned int fgp_flags = FGP_LOCK | FGP_ACCESSED | FGP_CREAT;
-> +	fgf_t fgp_flags = FGP_LOCK | FGP_ACCESSED | FGP_CREAT;
->  
->  	if (nowait)
->  		fgp_flags |= FGP_NOWAIT;
-> @@ -910,7 +910,7 @@ static noinline int prepare_pages(struct inode *inode, struct page **pages,
->  	int i;
->  	unsigned long index = pos >> PAGE_SHIFT;
->  	gfp_t mask = get_prepare_gfp_flags(inode, nowait);
-> -	unsigned int fgp_flags = get_prepare_fgp_flags(nowait);
-> +	fgf_t fgp_flags = get_prepare_fgp_flags(nowait);
->  	int err = 0;
->  	int faili;
->  
-> diff --git a/fs/f2fs/compress.c b/fs/f2fs/compress.c
-> index 236d890f560b..0f7df9c11af3 100644
-> --- a/fs/f2fs/compress.c
-> +++ b/fs/f2fs/compress.c
-> @@ -1045,7 +1045,7 @@ static int prepare_compress_overwrite(struct compress_ctx *cc,
->  	struct address_space *mapping = cc->inode->i_mapping;
->  	struct page *page;
->  	sector_t last_block_in_bio;
-> -	unsigned fgp_flag = FGP_LOCK | FGP_WRITE | FGP_CREAT;
-> +	fgf_t fgp_flag = FGP_LOCK | FGP_WRITE | FGP_CREAT;
->  	pgoff_t start_idx = start_idx_of_cluster(cc);
->  	int i, ret;
->  
-> diff --git a/fs/f2fs/f2fs.h b/fs/f2fs/f2fs.h
-> index c7cb2177b252..c275ff2753c2 100644
-> --- a/fs/f2fs/f2fs.h
-> +++ b/fs/f2fs/f2fs.h
-> @@ -2736,7 +2736,7 @@ static inline struct page *f2fs_grab_cache_page(struct address_space *mapping,
->  
->  static inline struct page *f2fs_pagecache_get_page(
->  				struct address_space *mapping, pgoff_t index,
-> -				int fgp_flags, gfp_t gfp_mask)
-> +				fgf_t fgp_flags, gfp_t gfp_mask)
->  {
->  	if (time_to_inject(F2FS_M_SB(mapping), FAULT_PAGE_GET))
->  		return NULL;
-> diff --git a/fs/iomap/buffered-io.c b/fs/iomap/buffered-io.c
-> index 7aa3009f907f..5e9380cc3e83 100644
-> --- a/fs/iomap/buffered-io.c
-> +++ b/fs/iomap/buffered-io.c
-> @@ -467,7 +467,7 @@ EXPORT_SYMBOL_GPL(iomap_is_partially_uptodate);
->   */
->  struct folio *iomap_get_folio(struct iomap_iter *iter, loff_t pos)
->  {
-> -	unsigned fgp = FGP_WRITEBEGIN | FGP_NOFS;
-> +	fgf_t fgp = FGP_WRITEBEGIN | FGP_NOFS;
->  
->  	if (iter->flags & IOMAP_NOWAIT)
->  		fgp |= FGP_NOWAIT;
-> diff --git a/include/linux/pagemap.h b/include/linux/pagemap.h
-> index 716953ee1ebd..911201fc41fc 100644
-> --- a/include/linux/pagemap.h
-> +++ b/include/linux/pagemap.h
-> @@ -501,22 +501,48 @@ pgoff_t page_cache_next_miss(struct address_space *mapping,
->  pgoff_t page_cache_prev_miss(struct address_space *mapping,
->  			     pgoff_t index, unsigned long max_scan);
->  
-> -#define FGP_ACCESSED		0x00000001
-> -#define FGP_LOCK		0x00000002
-> -#define FGP_CREAT		0x00000004
-> -#define FGP_WRITE		0x00000008
-> -#define FGP_NOFS		0x00000010
-> -#define FGP_NOWAIT		0x00000020
-> -#define FGP_FOR_MMAP		0x00000040
-> -#define FGP_STABLE		0x00000080
-> +/**
-> + * typedef fgf_t - Flags for getting folios from the page cache.
-> + *
-> + * Most users of the page cache will not need to use these flags;
-> + * there are convenience functions such as filemap_get_folio() and
-> + * filemap_lock_folio().  For users which need more control over exactly
-> + * what is done with the folios, these flags to __filemap_get_folio()
-> + * are available.
-> + *
-> + * * %FGP_ACCESSED - The folio will be marked accessed.
-> + * * %FGP_LOCK - The folio is returned locked.
-> + * * %FGP_CREAT - If no folio is present then a new folio is allocated,
-> + *   added to the page cache and the VM's LRU list.  The folio is
-> + *   returned locked.
-> + * * %FGP_FOR_MMAP - The caller wants to do its own locking dance if the
-> + *   folio is already in cache.  If the folio was allocated, unlock it
-> + *   before returning so the caller can do the same dance.
-> + * * %FGP_WRITE - The folio will be written to by the caller.
-> + * * %FGP_NOFS - __GFP_FS will get cleared in gfp.
-> + * * %FGP_NOWAIT - Don't block on the folio lock.
-> + * * %FGP_STABLE - Wait for the folio to be stable (finished writeback)
-> + * * %FGP_WRITEBEGIN - The flags to use in a filesystem write_begin()
-> + *   implementation.
-> + */
-> +typedef unsigned int __bitwise fgf_t;
-> +
-> +#define FGP_ACCESSED		((__force fgf_t)0x00000001)
-> +#define FGP_LOCK		((__force fgf_t)0x00000002)
-> +#define FGP_CREAT		((__force fgf_t)0x00000004)
-> +#define FGP_WRITE		((__force fgf_t)0x00000008)
-> +#define FGP_NOFS		((__force fgf_t)0x00000010)
-> +#define FGP_NOWAIT		((__force fgf_t)0x00000020)
-> +#define FGP_FOR_MMAP		((__force fgf_t)0x00000040)
-> +#define FGP_STABLE		((__force fgf_t)0x00000080)
 >  
 >  #define FGP_WRITEBEGIN		(FGP_LOCK | FGP_WRITE | FGP_CREAT | FGP_STABLE)
 >  
+> +/**
+> + * fgf_set_order - Encode a length in the fgf_t flags.
+> + * @size: The suggested size of the folio to create.
+> + *
+> + * The caller of __filemap_get_folio() can use this to suggest a preferred
+> + * size for the folio that is created.  If there is already a folio at
+> + * the index, it will be returned, no matter what its size.  If a folio
+> + * is freshly created, it may be of a different size than requested
+> + * due to alignment constraints, memory pressure, or the presence of
+> + * other folios at nearby indices.
+> + */
+> +static inline fgf_t fgf_set_order(size_t size)
+> +{
+> +	unsigned int shift = ilog2(size);
+> +
+> +	if (shift <= PAGE_SHIFT)
+> +		return 0;
+> +	return (__force fgf_t)((shift - PAGE_SHIFT) << 26);
+> +}
+> +
 >  void *filemap_get_entry(struct address_space *mapping, pgoff_t index);
 >  struct folio *__filemap_get_folio(struct address_space *mapping, pgoff_t index,
-> -		int fgp_flags, gfp_t gfp);
-> +		fgf_t fgp_flags, gfp_t gfp);
->  struct page *pagecache_get_page(struct address_space *mapping, pgoff_t index,
-> -		int fgp_flags, gfp_t gfp);
-> +		fgf_t fgp_flags, gfp_t gfp);
->  
->  /**
->   * filemap_get_folio - Find and get a folio.
-> @@ -590,7 +616,7 @@ static inline struct page *find_get_page(struct address_space *mapping,
->  }
->  
->  static inline struct page *find_get_page_flags(struct address_space *mapping,
-> -					pgoff_t offset, int fgp_flags)
-> +					pgoff_t offset, fgf_t fgp_flags)
->  {
->  	return pagecache_get_page(mapping, offset, fgp_flags, 0);
->  }
+>  		fgf_t fgp_flags, gfp_t gfp);
 > diff --git a/mm/filemap.c b/mm/filemap.c
-> index 9e44a49bbd74..8a669fecfd1c 100644
+> index 8a669fecfd1c..baafbf324c9f 100644
 > --- a/mm/filemap.c
 > +++ b/mm/filemap.c
-> @@ -1855,30 +1855,15 @@ void *filemap_get_entry(struct address_space *mapping, pgoff_t index)
->   *
->   * Looks up the page cache entry at @mapping & @index.
->   *
-> - * @fgp_flags can be zero or more of these flags:
-> - *
-> - * * %FGP_ACCESSED - The folio will be marked accessed.
-> - * * %FGP_LOCK - The folio is returned locked.
-> - * * %FGP_CREAT - If no page is present then a new page is allocated using
-> - *   @gfp and added to the page cache and the VM's LRU list.
-> - *   The page is returned locked and with an increased refcount.
-> - * * %FGP_FOR_MMAP - The caller wants to do its own locking dance if the
-> - *   page is already in cache.  If the page was allocated, unlock it before
-> - *   returning so the caller can do the same dance.
-> - * * %FGP_WRITE - The page will be written to by the caller.
-> - * * %FGP_NOFS - __GFP_FS will get cleared in gfp.
-> - * * %FGP_NOWAIT - Don't get blocked by page lock.
-> - * * %FGP_STABLE - Wait for the folio to be stable (finished writeback)
-> - *
->   * If %FGP_LOCK or %FGP_CREAT are specified then the function may sleep even
->   * if the %GFP flags specified for %FGP_CREAT are atomic.
->   *
-> - * If there is a page cache page, it is returned with an increased refcount.
-> + * If this function returns a folio, it is returned with an increased refcount.
->   *
->   * Return: The found folio or an ERR_PTR() otherwise.
->   */
->  struct folio *__filemap_get_folio(struct address_space *mapping, pgoff_t index,
-> -		int fgp_flags, gfp_t gfp)
-> +		fgf_t fgp_flags, gfp_t gfp)
+> @@ -1905,7 +1905,9 @@ struct folio *__filemap_get_folio(struct address_space *mapping, pgoff_t index,
+>  		folio_wait_stable(folio);
+>  no_page:
+>  	if (!folio && (fgp_flags & FGP_CREAT)) {
+> +		unsigned order = FGF_GET_ORDER(fgp_flags);
+>  		int err;
+> +
+>  		if ((fgp_flags & FGP_WRITE) && mapping_can_writeback(mapping))
+>  			gfp |= __GFP_WRITE;
+>  		if (fgp_flags & FGP_NOFS)
+> @@ -1914,26 +1916,44 @@ struct folio *__filemap_get_folio(struct address_space *mapping, pgoff_t index,
+>  			gfp &= ~GFP_KERNEL;
+>  			gfp |= GFP_NOWAIT | __GFP_NOWARN;
+>  		}
+> -
+> -		folio = filemap_alloc_folio(gfp, 0);
+> -		if (!folio)
+> -			return ERR_PTR(-ENOMEM);
+> -
+>  		if (WARN_ON_ONCE(!(fgp_flags & (FGP_LOCK | FGP_FOR_MMAP))))
+>  			fgp_flags |= FGP_LOCK;
+>  
+> -		/* Init accessed so avoid atomic mark_page_accessed later */
+> -		if (fgp_flags & FGP_ACCESSED)
+> -			__folio_set_referenced(folio);
+> +		if (!mapping_large_folio_support(mapping))
+> +			order = 0;
+> +		if (order > MAX_PAGECACHE_ORDER)
+> +			order = MAX_PAGECACHE_ORDER;
+> +		/* If we're not aligned, allocate a smaller folio */
+> +		if (index & ((1UL << order) - 1))
+> +			order = __ffs(index);
+>  
+> -		err = filemap_add_folio(mapping, folio, index, gfp);
+> -		if (unlikely(err)) {
+> +		do {
+> +			gfp_t alloc_gfp = gfp;
+> +
+> +			err = -ENOMEM;
+> +			if (order == 1)
+> +				order = 0;
+> +			if (order > 0)
+> +				alloc_gfp |= __GFP_NORETRY | __GFP_NOWARN;
+> +			folio = filemap_alloc_folio(alloc_gfp, order);
+> +			if (!folio)
+> +				continue;
+> +
+> +			/* Init accessed so avoid atomic mark_page_accessed later */
+> +			if (fgp_flags & FGP_ACCESSED)
+> +				__folio_set_referenced(folio);
+> +
+> +			err = filemap_add_folio(mapping, folio, index, gfp);
+> +			if (!err)
+> +				break;
+>  			folio_put(folio);
+>  			folio = NULL;
+> -			if (err == -EEXIST)
+> -				goto repeat;
+> -		}
+> +		} while (order-- > 0);
+>  
+> +		if (err == -EEXIST)
+> +			goto repeat;
+> +		if (err)
+> +			return ERR_PTR(err);
+>  		/*
+>  		 * filemap_add_folio locks the page, and for mmap
+>  		 * we expect an unlocked page.
+> diff --git a/mm/readahead.c b/mm/readahead.c
+> index a9c999aa19af..e815c114de21 100644
+> --- a/mm/readahead.c
+> +++ b/mm/readahead.c
+> @@ -461,19 +461,6 @@ static int try_context_readahead(struct address_space *mapping,
+>  	return 1;
+>  }
+>  
+> -/*
+> - * There are some parts of the kernel which assume that PMD entries
+> - * are exactly HPAGE_PMD_ORDER.  Those should be fixed, but until then,
+> - * limit the maximum allocation order to PMD size.  I'm not aware of any
+> - * assumptions about maximum order if THP are disabled, but 8 seems like
+> - * a good order (that's 1MB if you're using 4kB pages)
+> - */
+> -#ifdef CONFIG_TRANSPARENT_HUGEPAGE
+> -#define MAX_PAGECACHE_ORDER	HPAGE_PMD_ORDER
+> -#else
+> -#define MAX_PAGECACHE_ORDER	8
+> -#endif
+> -
+>  static inline int ra_alloc_folio(struct readahead_control *ractl, pgoff_t index,
+>  		pgoff_t mark, unsigned int order, gfp_t gfp)
 >  {
->  	struct folio *folio;
->  
-> diff --git a/mm/folio-compat.c b/mm/folio-compat.c
-> index c6f056c20503..10c3247542cb 100644
-> --- a/mm/folio-compat.c
-> +++ b/mm/folio-compat.c
-> @@ -92,7 +92,7 @@ EXPORT_SYMBOL(add_to_page_cache_lru);
->  
->  noinline
->  struct page *pagecache_get_page(struct address_space *mapping, pgoff_t index,
-> -		int fgp_flags, gfp_t gfp)
-> +		fgf_t fgp_flags, gfp_t gfp)
->  {
->  	struct folio *folio;
->  
 > -- 
 > 2.39.2
 > 
