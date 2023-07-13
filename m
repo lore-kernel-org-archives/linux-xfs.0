@@ -2,136 +2,107 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5669AEB64DA
-	for <linux-xfs@archiver.kernel.org>; Thu, 13 Jul 2023 00:58:07 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A6D75EB64DA
+	for <linux-xfs@archiver.kernel.org>; Thu, 13 Jul 2023 01:15:14 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230054AbjGMA6G (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 12 Jul 2023 20:58:06 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52868 "EHLO
+        id S231888AbjGMBPM (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 12 Jul 2023 21:15:12 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55910 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232257AbjGMA6F (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 12 Jul 2023 20:58:05 -0400
-Received: from smtp2.onthe.net.au (smtp2.onthe.net.au [203.22.196.248])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id AA4612710
-        for <linux-xfs@vger.kernel.org>; Wed, 12 Jul 2023 17:57:46 -0700 (PDT)
-Received: from localhost (smtp2.private.onthe.net.au [10.200.63.13])
-        by smtp2.onthe.net.au (Postfix) with ESMTP id 140244D4;
-        Thu, 13 Jul 2023 10:57:45 +1000 (AEST)
-Received: from smtp2.onthe.net.au ([10.200.63.13])
-        by localhost (smtp.onthe.net.au [10.200.63.13]) (amavisd-new, port 10024)
-        with ESMTP id ADyYh0iDVaDV; Thu, 13 Jul 2023 10:57:44 +1000 (AEST)
-Received: from athena.private.onthe.net.au (chris-gw2-vpn.private.onthe.net.au [10.9.3.2])
-        by smtp2.onthe.net.au (Postfix) with ESMTP id E649627;
-        Thu, 13 Jul 2023 10:57:44 +1000 (AEST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=onthe.net.au;
-        s=default; t=1689209864;
-        bh=PsA7KkTWEe6bH2193jswo5V2Mko3rfRcfUEIvynSXQI=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=sdJjAjKQR1Z1g0+RC6UwtFHVhFwLgb1+TD1nYsDWg0UdHk/qA7DmDRY7cDaJD9an5
-         4ew7NpAPvz5yvMAGubKQZ8ibsk+p7m2OQzz4m7ZDbmLqJA4axaUtDRjZDqNGPqcmKq
-         aZ6QQtYeGxD2PkOq8GN6ON0U/+t8VVyYanZGkKR3w9iHDP4gGtcFyOWAZ2pTUVwN0c
-         AGTPfnrR30bKM4FUs1/tdK3d3+oIX/NxG12Te3vqknABWph69e8RB35h8FDF7uL6Jv
-         Nrg88Rn52FgJ/LQD8/8d6Ij/PeTpCTaMnvnKyuSg8eCLT5WBy+PEnq9cI241LBKNEr
-         M9vE9FzexJaVw==
-Received: by athena.private.onthe.net.au (Postfix, from userid 1026)
-        id C734968061C; Thu, 13 Jul 2023 10:57:44 +1000 (AEST)
-Date:   Thu, 13 Jul 2023 10:57:44 +1000
-From:   Chris Dunlop <chris@onthe.net.au>
-To:     Amir Goldstein <amir73il@gmail.com>
-Cc:     Leah Rumancik <lrumancik@google.com>,
-        Theodore Ts'o <tytso@mit.edu>,
-        Dave Chinner <david@fromorbit.com>, linux-xfs@vger.kernel.org,
-        Leah Rumancik <leah.rumancik@gmail.com>,
-        "Darrick J. Wong" <djwong@kernel.org>,
-        Chandan Babu R <chandan.babu@oracle.com>
-Subject: Re: Subject: v5.15 backport - 5e672cd69f0a xfs: non-blocking inodegc
- pushes
-Message-ID: <20230713005744.GA1043347@onthe.net.au>
-References: <20230711001331.GA683098@onthe.net.au>
- <20230711015716.GA687252@onthe.net.au>
- <ZKzIE6m+iCEd+ZWk@dread.disaster.area>
- <20230711070530.GA761114@onthe.net.au>
- <ZK3V1wQ6jQCxtTZJ@dread.disaster.area>
- <20230712011356.GB886834@onthe.net.au>
- <ZK4E/gGuaBu+qvKL@dread.disaster.area>
- <20230712021713.GA902741@onthe.net.au>
- <CAOQ4uxi1h323CPy2J2=MA5H630Uv6FCfxhnrJ7GSzD5NzXuzfg@mail.gmail.com>
- <20230713003104.GA1039855@onthe.net.au>
+        with ESMTP id S229755AbjGMBPM (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 12 Jul 2023 21:15:12 -0400
+Received: from mx0a-00069f02.pphosted.com (mx0a-00069f02.pphosted.com [205.220.165.32])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 380E7127
+        for <linux-xfs@vger.kernel.org>; Wed, 12 Jul 2023 18:15:11 -0700 (PDT)
+Received: from pps.filterd (m0333521.ppops.net [127.0.0.1])
+        by mx0b-00069f02.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 36CLA0US030838
+        for <linux-xfs@vger.kernel.org>; Thu, 13 Jul 2023 01:15:10 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=from : to : cc :
+ subject : date : message-id : mime-version : content-transfer-encoding;
+ s=corp-2023-03-30; bh=Gn/VGuP6pD+8qiCMd4WKnqX6EB/ksCVbM01vWLjBk1I=;
+ b=wdyQVmvP0BAOFDTxsSYufQ8E9BEMPjv7vWRHok5KwYugIeuvXdmML4KZPMaj7Iuj0xJh
+ qtKFJBzMZQyS58gVPrAjQeLj0ii4H1rJ72XV1EokUQ3/SoyYiAuQojvCnjmy+yP/QMAv
+ /Ao4JpgwgLUX2O6auy6Q9ZBrtgnMqS9ZWzaI9ak07ngn5c7CxJjTDnadx/KJoyHqtg6/
+ Ob3ypmeFkCicd5SyRx9huFbgL1C9RDZjZ9Cj+5Ys5JotKlgN9wOLKQm56VYbNnXY4hnQ
+ U8KGt7MR7KBze2jDLiXJOehaZIjxqeA0G7+f19Bk9naM6aNVMdDj2EUsmmk9Y+Hk0UhW Fw== 
+Received: from phxpaimrmta03.imrmtpd1.prodappphxaev1.oraclevcn.com (phxpaimrmta03.appoci.oracle.com [138.1.37.129])
+        by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 3rrgn7x9f3-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
+        for <linux-xfs@vger.kernel.org>; Thu, 13 Jul 2023 01:15:10 +0000
+Received: from pps.filterd (phxpaimrmta03.imrmtpd1.prodappphxaev1.oraclevcn.com [127.0.0.1])
+        by phxpaimrmta03.imrmtpd1.prodappphxaev1.oraclevcn.com (8.17.1.19/8.17.1.19) with ESMTP id 36CNLw27033279
+        for <linux-xfs@vger.kernel.org>; Thu, 13 Jul 2023 01:15:10 GMT
+Received: from pps.reinject (localhost [127.0.0.1])
+        by phxpaimrmta03.imrmtpd1.prodappphxaev1.oraclevcn.com (PPS) with ESMTPS id 3rpx880tbt-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
+        for <linux-xfs@vger.kernel.org>; Thu, 13 Jul 2023 01:15:10 +0000
+Received: from phxpaimrmta03.imrmtpd1.prodappphxaev1.oraclevcn.com (phxpaimrmta03.imrmtpd1.prodappphxaev1.oraclevcn.com [127.0.0.1])
+        by pps.reinject (8.17.1.5/8.17.1.5) with ESMTP id 36D1Al1H010626
+        for <linux-xfs@vger.kernel.org>; Thu, 13 Jul 2023 01:15:09 GMT
+Received: from wwg-mac.us.oracle.com (dhcp-10-65-157-8.vpn.oracle.com [10.65.157.8])
+        by phxpaimrmta03.imrmtpd1.prodappphxaev1.oraclevcn.com (PPS) with ESMTP id 3rpx880tba-1;
+        Thu, 13 Jul 2023 01:15:09 +0000
+From:   Wengang Wang <wen.gang.wang@oracle.com>
+To:     linux-xfs@vger.kernel.org
+Cc:     wen.gang.wang@oracle.com
+Subject: [PATCH] xfs: xfs_trans->t_flags overflow
+Date:   Wed, 12 Jul 2023 18:15:08 -0700
+Message-Id: <20230713011508.18071-1-wen.gang.wang@oracle.com>
+X-Mailer: git-send-email 2.21.0 (Apple Git-122.2)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Disposition: inline
 Content-Transfer-Encoding: 8bit
-In-Reply-To: <20230713003104.GA1039855@onthe.net.au>
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.254,Aquarius:18.0.957,Hydra:6.0.591,FMLib:17.11.176.26
+ definitions=2023-07-12_17,2023-07-11_01,2023-05-22_02
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 bulkscore=0 mlxlogscore=937
+ adultscore=0 mlxscore=0 suspectscore=0 malwarescore=0 phishscore=0
+ spamscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2305260000 definitions=main-2307130009
+X-Proofpoint-ORIG-GUID: tlN6iAD9pO_MecTw9Gz9k6Eo13qsLTbW
+X-Proofpoint-GUID: tlN6iAD9pO_MecTw9Gz9k6Eo13qsLTbW
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Thu, Jul 13, 2023 at 10:31:04AM +1000, Chris Dunlop wrote:
-> On Wed, Jul 12, 2023 at 12:26:54PM +0300, Amir Goldstein wrote:
->> On Wed, Jul 12, 2023 at 5:37 AM Chris Dunlop <chris@onthe.net.au> wrote:
->>>
->>> Request for backport to v5.15:
->>>
->>> 5e672cd69f0a xfs: non-blocking inodegc pushes
->>
->> This is not the subject of above commit, it was the
->> subject of the cover letter:
->> https://www.spinics.net/lists/linux-xfs/msg61813.html
->>
->> containing the following upstream commits:
->> 7cf2b0f9611b xfs: bound maximum wait time for inodegc work
->> 5e672cd69f0a xfs: introduce xfs_inodegc_push()
-> ...
->> Leah has already queued these two patches for 5.15 backport,
->> but she is now on sick leave, so that was not done yet.
->>
->> We did however, identify a few more inodegc fixes from 6.4,
->> which also fix a bug in one of the two commits above:
->>
->> 03e0add80f4c xfs: explicitly specify cpu when forcing inodegc delayed
->> work to run immediately
->>  Fixes: 7cf2b0f9611b ("xfs: bound maximum wait time for inodegc work")
->> b37c4c8339cd xfs: check that per-cpu inodegc workers actually run on that cpu
->> 2254a7396a0c xfs: fix xfs_inodegc_stop racing with mod_delayed_work
->>  Fixes: 6191cf3ad59f ("xfs: flush inodegc workqueue tasks before cancel")
->>
->> 6191cf3ad59f ("xfs: flush inodegc workqueue tasks before cancel") has already
->> been applied to 5.15.y.
->>
->> stable tree rules require that the above fixes from 6.4 be applied to 6.1.y
->> before 5.15.y, so I have already tested them and they are ready to be posted.
->> I wanted to wait a bit after the 6.4.0 release to make sure that we did not pull
->> the blanket too much to the other side, because as the reports from Chris
->> demonstrate, the inodegc fixes had some unexpected outcomes.
->
-> Just to clarify: whilst I updated to 6.1 specifically to gain access 
-> to the non-blocking inodegc commits, there's no evidence those inodegc 
-> commits had anything at all to do with my issue on 6.1, and Dave's 
-> sense is that they probably weren't involved.
->
-> That said, those "Fixes:" commits that haven't yet made it to 6.1 look 
-> at least a little suspicious to my naive eye.
+Current xfs_trans->t_flags is of type uint8_t (8 bits long). We are storing
+XFS_TRANS_LOWMODE, which is 0x100, to t_flags. The highest set bit of
+XFS_TRANS_LOWMODE overflows.
 
-Hmmm.... in particular, this fix:
+Fix:
+Change the type from uint8_t to uint16_t.
 
-2254a7396a0c xfs: fix xfs_inodegc_stop racing with mod_delayed_work
-  Fixes: 6191cf3ad59f ("xfs: flush inodegc workqueue tasks before cancel")
+Signed-off-by: Wengang Wang <wen.gang.wang@oracle.com>
+---
+ fs/xfs/libxfs/xfs_shared.h | 2 +-
+ fs/xfs/xfs_log_priv.h      | 2 +-
+ 2 files changed, 2 insertions(+), 2 deletions(-)
 
-mentions:
+diff --git a/fs/xfs/libxfs/xfs_shared.h b/fs/xfs/libxfs/xfs_shared.h
+index c4381388c0c1..5532d6480d53 100644
+--- a/fs/xfs/libxfs/xfs_shared.h
++++ b/fs/xfs/libxfs/xfs_shared.h
+@@ -82,7 +82,7 @@ void	xfs_log_get_max_trans_res(struct xfs_mount *mp,
+  * for free space from AG 0. If the correct transaction reservations have been
+  * made then this algorithm will eventually find all the space it needs.
+  */
+-#define XFS_TRANS_LOWMODE	0x100	/* allocate in low space mode */
++#define XFS_TRANS_LOWMODE	(1u << 8)	/* allocate in low space mode */
+ 
+ /*
+  * Field values for xfs_trans_mod_sb.
+diff --git a/fs/xfs/xfs_log_priv.h b/fs/xfs/xfs_log_priv.h
+index 1bd2963e8fbd..e4b03edbc87b 100644
+--- a/fs/xfs/xfs_log_priv.h
++++ b/fs/xfs/xfs_log_priv.h
+@@ -151,7 +151,7 @@ typedef struct xlog_ticket {
+ 	int			t_unit_res;	/* unit reservation */
+ 	char			t_ocnt;		/* original unit count */
+ 	char			t_cnt;		/* current unit count */
+-	uint8_t			t_flags;	/* properties of reservation */
++	uint16_t		t_flags;	/* properties of reservation */
+ 	int			t_iclog_hdrs;	/* iclog hdrs in t_curr_res */
+ } xlog_ticket_t;
+ 
+-- 
+2.21.0 (Apple Git-122.2)
 
-----
-For this to trip, we must have a thread draining the inodedgc workqueue
-and a second thread trying to queue inodegc work to that workqueue.
-This can happen if freezing or a ro remount race with reclaim poking our
-faux inodegc shrinker and another thread dropping an unlinked O_RDONLY
-file:
-----
-
-I'm indeed periodically freezing these filesystems to take snapshots.
-
-So that could possibly be the source of my problem, although my kernel log 
-does not have the WARN_ON_ONCE() mentioned in the patch.
-
-Cheers,
-
-Chris
