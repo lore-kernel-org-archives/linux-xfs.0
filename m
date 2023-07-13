@@ -2,77 +2,145 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4B1D8C001DE
-	for <linux-xfs@archiver.kernel.org>; Thu, 13 Jul 2023 15:19:57 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id EF9E7C001B0
+	for <linux-xfs@archiver.kernel.org>; Thu, 13 Jul 2023 15:34:06 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230497AbjGMPT4 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 13 Jul 2023 11:19:56 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53500 "EHLO
+        id S229873AbjGMPeE (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 13 Jul 2023 11:34:04 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33576 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230174AbjGMPTz (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 13 Jul 2023 11:19:55 -0400
-X-Greylist: delayed 36907 seconds by postgrey-1.37 at lindbergh.monkeyblade.net; Thu, 13 Jul 2023 08:19:54 PDT
-Received: from out-63.mta1.migadu.com (out-63.mta1.migadu.com [IPv6:2001:41d0:203:375::3f])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5CF3AC1
-        for <linux-xfs@vger.kernel.org>; Thu, 13 Jul 2023 08:19:54 -0700 (PDT)
-Date:   Thu, 13 Jul 2023 11:19:46 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.dev; s=key1;
-        t=1689261592;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+        with ESMTP id S232007AbjGMPdw (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 13 Jul 2023 11:33:52 -0400
+Received: from smtp-out1.suse.de (smtp-out1.suse.de [IPv6:2001:67c:2178:6::1c])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id BD6981FD4;
+        Thu, 13 Jul 2023 08:33:51 -0700 (PDT)
+Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
+        (No client certificate requested)
+        by smtp-out1.suse.de (Postfix) with ESMTPS id 5C41522185;
+        Thu, 13 Jul 2023 15:33:50 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.cz; s=susede2_rsa;
+        t=1689262430; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+         mime-version:mime-version:content-type:content-type:
          in-reply-to:in-reply-to:references:references;
-        bh=xi2T4bbPuT/YZb73yStmbzssaWiIAH6aQf2vyhFk2tA=;
-        b=W7j7mHLV8eXdPp0Yz+mFZ0yguQvl5iuBiB96bfVayWOJAxFk8n+RUGMWRxKosYsaCpDXw+
-        5abU3lsXzj/WMlbY8EFhn62SORrmwvCieYHVrv5cMGi5HTa5v3+esxkFSHLIArMjiX9x65
-        IUD6zYWsL8NSg5B4SX7RbU4V4CcdwCc=
-X-Report-Abuse: Please report any abuse attempt to abuse@migadu.com and include these headers.
-From:   Kent Overstreet <kent.overstreet@linux.dev>
-To:     Matthew Wilcox <willy@infradead.org>
-Cc:     linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org,
-        Wang Yugui <wangyugui@e16-tech.com>,
-        Dave Chinner <david@fromorbit.com>,
-        Christoph Hellwig <hch@infradead.org>,
-        "Darrick J . Wong" <djwong@kernel.org>,
-        Christoph Hellwig <hch@lst.de>
-Subject: Re: [PATCH v4 7/9] filemap: Allow __filemap_get_folio to allocate
- large folios
-Message-ID: <20230713151946.afkekednznhazno7@moria.home.lan>
-References: <20230710130253.3484695-1-willy@infradead.org>
- <20230710130253.3484695-8-willy@infradead.org>
- <20230713050439.ehtbvs3bugm6vvtb@moria.home.lan>
- <ZLANSurqCQi2jHmP@casper.infradead.org>
+        bh=ZnsbM2wbDJKZoJO63kCqa7skAvyrvbFpqW+OFngO6J0=;
+        b=sV1pgtAi27tWlGMws6tV7hf/GEtyL/tfm4WbvICemOjJMuus/p2+X17CiUlFl/l1j+rjgD
+        xKsKyh+PUXOM5Mtqqoc/ExfUrXx6RAHwtZ6Lb7OFEryuzF6O5kA/QwwDb0pnIavlwHUUdU
+        pG3UxM2hej8IJ+lTSLLmhqbB30xUz/0=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.cz;
+        s=susede2_ed25519; t=1689262430;
+        h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+         mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=ZnsbM2wbDJKZoJO63kCqa7skAvyrvbFpqW+OFngO6J0=;
+        b=9pXKKiCXJGy/exWne0PvxfT2nb5/QqIeeq771ADv8xv5NQVJ9/i551YInR/xTA9frjX5m8
+        AoqlkLi8oC3II5Bg==
+Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
+        (No client certificate requested)
+        by imap2.suse-dmz.suse.de (Postfix) with ESMTPS id 42C8613489;
+        Thu, 13 Jul 2023 15:33:50 +0000 (UTC)
+Received: from dovecot-director2.suse.de ([192.168.254.65])
+        by imap2.suse-dmz.suse.de with ESMTPSA
+        id e3taEF4ZsGTsGAAAMHmgww
+        (envelope-from <chrubis@suse.cz>); Thu, 13 Jul 2023 15:33:50 +0000
+Date:   Thu, 13 Jul 2023 17:34:55 +0200
+From:   Cyril Hrubis <chrubis@suse.cz>
+To:     Christoph Hellwig <hch@lst.de>
+Cc:     kernel test robot <oliver.sang@intel.com>,
+        "Darrick J. Wong" <djwong@kernel.org>,
+        Andreas Gruenbacher <agruenba@redhat.com>,
+        Miklos Szeredi <miklos@szeredi.hu>,
+        Matthew Wilcox <willy@infradead.org>, cluster-devel@redhat.com,
+        Ilya Dryomov <idryomov@gmail.com>,
+        Miklos Szeredi <mszeredi@redhat.com>,
+        Chao Yu <chao@kernel.org>, linux-fsdevel@vger.kernel.org,
+        Al Viro <viro@zeniv.linux.org.uk>,
+        Jaegeuk Kim <jaegeuk@kernel.org>, Xiubo Li <xiubli@redhat.com>,
+        Trond Myklebust <trond.myklebust@hammerspace.com>,
+        ltp@lists.linux.it, lkp@intel.com, Jens Axboe <axboe@kernel.dk>,
+        Christian Brauner <brauner@kernel.org>,
+        Theodore Ts'o <tytso@mit.edu>,
+        Johannes Thumshirn <johannes.thumshirn@wdc.com>,
+        linux-kernel@vger.kernel.org, linux-xfs@vger.kernel.org,
+        Anna Schumaker <anna@kernel.org>, oe-lkp@lists.linux.dev,
+        Andrew Morton <akpm@linux-foundation.org>,
+        Hannes Reinecke <hare@suse.de>
+Subject: Re: [LTP] [linus:master] [iomap]  219580eea1: ltp.writev07.fail
+Message-ID: <ZLAZn_SBmoIFG5F5@yuki>
+References: <202307132107.2ce4ea2f-oliver.sang@intel.com>
+ <20230713150923.GA28246@lst.de>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <ZLANSurqCQi2jHmP@casper.infradead.org>
-X-Migadu-Flow: FLOW_OUT
+In-Reply-To: <20230713150923.GA28246@lst.de>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Thu, Jul 13, 2023 at 03:42:18PM +0100, Matthew Wilcox wrote:
-> On Thu, Jul 13, 2023 at 01:04:39AM -0400, Kent Overstreet wrote:
-> > On Mon, Jul 10, 2023 at 02:02:51PM +0100, Matthew Wilcox (Oracle) wrote:
-> > > Allow callers of __filemap_get_folio() to specify a preferred folio
-> > > order in the FGP flags.  This is only honoured in the FGP_CREATE path;
-> > > if there is already a folio in the page cache that covers the index,
-> > > we will return it, no matter what its order is.  No create-around is
-> > > attempted; we will only create folios which start at the specified index.
-> > > Unmodified callers will continue to allocate order 0 folios.
-> > 
-> > Why not just add an end_index parameter to filemap_get_folio()?
-> 
-> I'm reluctant to add more parameters.  Aside from the churn, every extra
-> parameter makes the function that little bit harder to use.  I like this
-> encoding; users who don't know/care about it get the current default
-> behaviour, and it's a simple addition to the users who do want to care.
-> end_index is particularly tricky ... what if it's lower than index?
+Hi!
+> I can't reproduce this on current mainline.  Is this a robust failure
+> or flapping test?  Especiall as the FAIL conditions look rather
+> unrelated.
 
-But we're refactoring all this code (and chaning our thinking) to
-extents/ranges, not blocks - I'd say end_index is more natural in the
-long run.
+Actually the test is spot on, the difference is that previously the
+error was returned form the iomap_file_buffered_write() only if we
+failed with the first buffer from the iov, now we always return the
+error and we do not advance the offset.
 
-Plus, it lets us put the logic for "how big of a folio do we want to
-allocate" in one place.
+The change that broke it:
 
-(end_index < index is just a BUG_ON()).
+diff --git a/fs/iomap/buffered-io.c b/fs/iomap/buffered-io.c
+index 063133ec77f4..550525a525c4 100644
+--- a/fs/iomap/buffered-io.c
++++ b/fs/iomap/buffered-io.c
+@@ -864,16 +864,19 @@ iomap_file_buffered_write(struct kiocb *iocb, struct iov_iter *i,
+                .len            = iov_iter_count(i),
+                .flags          = IOMAP_WRITE,
+        };
+-       int ret;
++       ssize_t ret;
+
+        if (iocb->ki_flags & IOCB_NOWAIT)
+                iter.flags |= IOMAP_NOWAIT;
+
+        while ((ret = iomap_iter(&iter, ops)) > 0)
+                iter.processed = iomap_write_iter(&iter, i);
+-       if (iter.pos == iocb->ki_pos)
++
++       if (unlikely(ret < 0))
+                return ret;
+-       return iter.pos - iocb->ki_pos;
++       ret = iter.pos - iocb->ki_pos;
++       iocb->ki_pos += ret;
++       return ret;
+ }
+
+I suppose that we shoudl fix is with something as:
+
+diff --git a/fs/iomap/buffered-io.c b/fs/iomap/buffered-io.c
+index adb92cdb24b0..bfb39f7bc303 100644
+--- a/fs/iomap/buffered-io.c
++++ b/fs/iomap/buffered-io.c
+@@ -872,11 +872,12 @@ iomap_file_buffered_write(struct kiocb *iocb, struct iov_iter *i,
+        while ((ret = iomap_iter(&iter, ops)) > 0)
+                iter.processed = iomap_write_iter(&iter, i);
+
++       iocb->ki_pos += iter.pos - iocb->ki_pos;
++
+        if (unlikely(ret < 0))
+                return ret;
+-       ret = iter.pos - iocb->ki_pos;
+-       iocb->ki_pos += ret;
+-       return ret;
++
++       return iter.pos - iocb->ki_pos;
+ }
+ EXPORT_SYMBOL_GPL(iomap_file_buffered_write);
+
+
+-- 
+Cyril Hrubis
+chrubis@suse.cz
