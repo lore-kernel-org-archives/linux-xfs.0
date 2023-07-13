@@ -2,67 +2,99 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5D1EFC001DD
-	for <linux-xfs@archiver.kernel.org>; Thu, 13 Jul 2023 14:42:27 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C6E33C001B0
+	for <linux-xfs@archiver.kernel.org>; Thu, 13 Jul 2023 15:11:16 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230158AbjGMOm0 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 13 Jul 2023 10:42:26 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51898 "EHLO
+        id S232387AbjGMPLP (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 13 Jul 2023 11:11:15 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46096 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230081AbjGMOmZ (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 13 Jul 2023 10:42:25 -0400
-Received: from casper.infradead.org (casper.infradead.org [IPv6:2001:8b0:10b:1236::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2A4922705;
-        Thu, 13 Jul 2023 07:42:25 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=infradead.org; s=casper.20170209; h=In-Reply-To:Content-Type:MIME-Version:
-        References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
-        Content-Transfer-Encoding:Content-ID:Content-Description;
-        bh=qlBSNZe+0NvNZn+P5G748gKaiHgsz3ciqEGyUuZBWjY=; b=D0QNrR2P0oNIy7MaTXRI+ArkOC
-        URsmfC9MHg39RcQQZVmyGDySTaD2Pj57LcxQmPM4seAF2bGHpenh6tA8IkLPJj3R3IoY4fWocGnyU
-        dNChIBk9sqJRRwZkJeyD8RW+noZi6wbfPIjNVov6KwtDPB2dJZDRIn/ZTX52zf7wQFXGBz3bqD/KW
-        NTeRLnwTh0d7OGY654VUO6DgmpsXTwshYlx4oDUP0kfDYVShY8TTfEghSJ4xrZBVlFDhvKnH+48dG
-        H2MHBrXXp7Iq28BXSYYg66g18mcIPnXRPor94tD2a9Lc8CwC6a1C4LsGEJ4zm07j9x/+Qt8PJlMW3
-        QnmDEMcg==;
-Received: from willy by casper.infradead.org with local (Exim 4.94.2 #2 (Red Hat Linux))
-        id 1qJxWM-000EHP-W7; Thu, 13 Jul 2023 14:42:19 +0000
-Date:   Thu, 13 Jul 2023 15:42:18 +0100
-From:   Matthew Wilcox <willy@infradead.org>
-To:     Kent Overstreet <kent.overstreet@linux.dev>
-Cc:     linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org,
-        Wang Yugui <wangyugui@e16-tech.com>,
-        Dave Chinner <david@fromorbit.com>,
-        Christoph Hellwig <hch@infradead.org>,
-        "Darrick J . Wong" <djwong@kernel.org>,
-        Christoph Hellwig <hch@lst.de>
-Subject: Re: [PATCH v4 7/9] filemap: Allow __filemap_get_folio to allocate
- large folios
-Message-ID: <ZLANSurqCQi2jHmP@casper.infradead.org>
-References: <20230710130253.3484695-1-willy@infradead.org>
- <20230710130253.3484695-8-willy@infradead.org>
- <20230713050439.ehtbvs3bugm6vvtb@moria.home.lan>
+        with ESMTP id S232955AbjGMPLO (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 13 Jul 2023 11:11:14 -0400
+Received: from smtp-out1.suse.de (smtp-out1.suse.de [IPv6:2001:67c:2178:6::1c])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 69825C1;
+        Thu, 13 Jul 2023 08:11:12 -0700 (PDT)
+Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
+        (No client certificate requested)
+        by smtp-out1.suse.de (Postfix) with ESMTPS id 2276322158;
+        Thu, 13 Jul 2023 15:11:11 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.cz; s=susede2_rsa;
+        t=1689261071; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+         mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=wCLBmF2e2dRCNx7+d13fHc8+rkei0zsayK8x+eKdnGc=;
+        b=qomcWisImhIgTGE3b4ZUEPF9NcyOW0hyDzZnyCPVzVgRuINKpG8MQbpCS13E9V1HBOrMO/
+        iAyUdkn6A+IJpPb5QvbPi4sRRNNjhjdXjokIMH8S4MUYkByXeu7CRlgjWvkVWDawXd8vHp
+        8AT5b9KhPS/AKO4mxgcaNhfFavUADcU=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.cz;
+        s=susede2_ed25519; t=1689261071;
+        h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+         mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=wCLBmF2e2dRCNx7+d13fHc8+rkei0zsayK8x+eKdnGc=;
+        b=2D2YEL/BjKdkgcqnhmm74ZlNQAyBcVXYYRhOK4PSceT9B8FBt6yWbDy3bm5gYdZm5fpfJG
+        MnQHKcIOISrEZ3Dw==
+Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
+        (No client certificate requested)
+        by imap2.suse-dmz.suse.de (Postfix) with ESMTPS id 0AC70133D6;
+        Thu, 13 Jul 2023 15:11:11 +0000 (UTC)
+Received: from dovecot-director2.suse.de ([192.168.254.65])
+        by imap2.suse-dmz.suse.de with ESMTPSA
+        id FtJUAg8UsGQOBwAAMHmgww
+        (envelope-from <chrubis@suse.cz>); Thu, 13 Jul 2023 15:11:11 +0000
+Date:   Thu, 13 Jul 2023 17:12:15 +0200
+From:   Cyril Hrubis <chrubis@suse.cz>
+To:     kernel test robot <oliver.sang@intel.com>
+Cc:     Christoph Hellwig <hch@lst.de>,
+        "Darrick J. Wong" <djwong@kernel.org>,
+        Andreas Gruenbacher <agruenba@redhat.com>,
+        Miklos Szeredi <miklos@szeredi.hu>,
+        Matthew Wilcox <willy@infradead.org>, cluster-devel@redhat.com,
+        Ilya Dryomov <idryomov@gmail.com>,
+        Miklos Szeredi <mszeredi@redhat.com>,
+        Chao Yu <chao@kernel.org>, linux-fsdevel@vger.kernel.org,
+        Al Viro <viro@zeniv.linux.org.uk>,
+        Jaegeuk Kim <jaegeuk@kernel.org>, Xiubo Li <xiubli@redhat.com>,
+        Trond Myklebust <trond.myklebust@hammerspace.com>,
+        ltp@lists.linux.it, lkp@intel.com, Jens Axboe <axboe@kernel.dk>,
+        Christian Brauner <brauner@kernel.org>,
+        Theodore Ts'o <tytso@mit.edu>,
+        Johannes Thumshirn <johannes.thumshirn@wdc.com>,
+        linux-kernel@vger.kernel.org, linux-xfs@vger.kernel.org,
+        Anna Schumaker <anna@kernel.org>, oe-lkp@lists.linux.dev,
+        Andrew Morton <akpm@linux-foundation.org>,
+        Hannes Reinecke <hare@suse.de>
+Subject: Re: [LTP] [linus:master] [iomap]  219580eea1: ltp.writev07.fail
+Message-ID: <ZLAUT_19ST-47Wed@yuki>
+References: <202307132107.2ce4ea2f-oliver.sang@intel.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20230713050439.ehtbvs3bugm6vvtb@moria.home.lan>
+In-Reply-To: <202307132107.2ce4ea2f-oliver.sang@intel.com>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Thu, Jul 13, 2023 at 01:04:39AM -0400, Kent Overstreet wrote:
-> On Mon, Jul 10, 2023 at 02:02:51PM +0100, Matthew Wilcox (Oracle) wrote:
-> > Allow callers of __filemap_get_folio() to specify a preferred folio
-> > order in the FGP flags.  This is only honoured in the FGP_CREATE path;
-> > if there is already a folio in the page cache that covers the index,
-> > we will return it, no matter what its order is.  No create-around is
-> > attempted; we will only create folios which start at the specified index.
-> > Unmodified callers will continue to allocate order 0 folios.
-> 
-> Why not just add an end_index parameter to filemap_get_folio()?
+Hi!
+The test description:
 
-I'm reluctant to add more parameters.  Aside from the churn, every extra
-parameter makes the function that little bit harder to use.  I like this
-encoding; users who don't know/care about it get the current default
-behaviour, and it's a simple addition to the users who do want to care.
-end_index is particularly tricky ... what if it's lower than index?
+ Verify writev() behaviour with partially valid iovec list.
+ Kernel <4.8 used to shorten write up to first bad invalid
+ iovec. Starting with 4.8, a writev with short data (under
+ page size) is likely to get shorten to 0 bytes and return
+ EFAULT.
 
+ This test doesn't make assumptions how much will write get
+ shortened. It only tests that file content/offset after
+ syscall corresponds to return value of writev().
+
+ See: [RFC] writev() semantics with invalid iovec in the middle
+      https://marc.info/?l=linux-kernel&m=147388891614289&w=2
+
+-- 
+Cyril Hrubis
+chrubis@suse.cz
