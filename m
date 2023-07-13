@@ -2,165 +2,130 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7A1B7C001DD
-	for <linux-xfs@archiver.kernel.org>; Thu, 13 Jul 2023 05:33:36 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2B6EDEB64DD
+	for <linux-xfs@archiver.kernel.org>; Thu, 13 Jul 2023 05:44:55 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233911AbjGMFdf (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 13 Jul 2023 01:33:35 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58182 "EHLO
+        id S232950AbjGMFoy (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 13 Jul 2023 01:44:54 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33322 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232495AbjGMFde (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 13 Jul 2023 01:33:34 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5F7DB119;
-        Wed, 12 Jul 2023 22:33:33 -0700 (PDT)
+        with ESMTP id S232641AbjGMFox (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 13 Jul 2023 01:44:53 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 868451989;
+        Wed, 12 Jul 2023 22:44:52 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
          key-exchange X25519 server-signature RSA-PSS (2048 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id E9399618CF;
-        Thu, 13 Jul 2023 05:33:32 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 52BE0C433C8;
-        Thu, 13 Jul 2023 05:33:32 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 23B4761A24;
+        Thu, 13 Jul 2023 05:44:52 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 7361CC433C8;
+        Thu, 13 Jul 2023 05:44:51 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1689226412;
-        bh=vZkKGHhN3ishnu+kL0CphEC71YWo5yf7cD7CL+0u7hU=;
+        s=k20201202; t=1689227091;
+        bh=6XCJ3zXa9Yfor+KTu4kClEjr5YTvx3XG0W6PUIBvJgw=;
         h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=L1aPzS1NgbJC35nkRYRSvRDxg5APTYtuAwjU6/XIzegY3o2digYJt5thwQZHGoAkz
-         +vdlBVBpVhhc3juzjbmV6JsoXoZoRniarQH8aNXLGkKdo2jcFJ3dnfLjNektsD3AOx
-         tzNsV2eVpMZQNAPDVHu2uiti/5jLG1DByzurD1u8OYpiOIFwFsFEoN54rbxDK/ErDR
-         /cUI0L97F7sczbNAmqDaQzL6x/yCTQrfU7rUeG12ooQ8Yqy2QuSRbqAiOq1fAje/l0
-         x2ow0uhJ3YitMG6zXs2Al/mveVxqX9xB4uXzPA0/vCqBlHSxbXis+Kdjcd25IdzNmM
-         221GRv21w9ipA==
-Date:   Wed, 12 Jul 2023 22:33:31 -0700
+        b=XTVmWzDPSv1Nkby5x97GOJHvh7hc11w1GC1heEkW/FEgs3OTB+N2jp6Da/D1rAclD
+         l+vOzUHModm+y+JXOKWuSelpyC5D+b4PTvFoKOsqug9u3eN/K0J9jRdAEhqc9dMDYV
+         /gg/fuTv7Rs4oxdX27ZOC6XzxIb0wVTVnTTpHJ48A7hHwPPGbmSZ6SnHoJFQxBDe9a
+         K15fzypJaKzu5NbY4cEmB5uYqFjs2Ed0LSlavD/+bHOwMqJNDj+LhPl/Xk82zn93Vu
+         R0ViGF6fI3czvdmGc3Ad7YMLteN7qQWMJdv/HkSldPKBXIoR0fPYReWWGK6joR/hH8
+         x20Cp+yaPAFGw==
+Date:   Wed, 12 Jul 2023 22:44:50 -0700
 From:   "Darrick J. Wong" <djwong@kernel.org>
-To:     Ritesh Harjani <ritesh.list@gmail.com>
-Cc:     "Matthew Wilcox (Oracle)" <willy@infradead.org>,
-        linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org,
-        Wang Yugui <wangyugui@e16-tech.com>,
+To:     Christoph Hellwig <hch@infradead.org>
+Cc:     Kees Cook <keescook@chromium.org>,
+        Carlos Maiolino <cem@kernel.org>,
         Dave Chinner <david@fromorbit.com>,
-        Christoph Hellwig <hch@infradead.org>,
-        Kent Overstreet <kent.overstreet@linux.dev>,
-        Christoph Hellwig <hch@lst.de>
-Subject: Re: [PATCH v4 5/9] iomap: Remove unnecessary test from
- iomap_release_folio()
-Message-ID: <20230713053331.GG11476@frogsfrogsfrogs>
-References: <20230713044558.GJ108251@frogsfrogsfrogs>
- <87351s8jsv.fsf@doe.com>
+        Jeff Layton <jlayton@kernel.org>,
+        Eric Biggers <ebiggers@kernel.org>,
+        "Gustavo A. R. Silva" <gustavoars@kernel.org>,
+        linux-xfs@vger.kernel.org, linux-hardening@vger.kernel.org
+Subject: Re: [PATCH] libxfs: Redefine 1-element arrays as flexible arrays
+Message-ID: <20230713054450.GQ108251@frogsfrogsfrogs>
+References: <20230711222025.never.220-kees@kernel.org>
+ <20230712053738.GD108251@frogsfrogsfrogs>
+ <ZK6mC1npjONMoGMD@infradead.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <87351s8jsv.fsf@doe.com>
+In-Reply-To: <ZK6mC1npjONMoGMD@infradead.org>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Thu, Jul 13, 2023 at 10:55:20AM +0530, Ritesh Harjani wrote:
-> "Darrick J. Wong" <djwong@kernel.org> writes:
+On Wed, Jul 12, 2023 at 06:09:31AM -0700, Christoph Hellwig wrote:
+> On Tue, Jul 11, 2023 at 10:37:38PM -0700, Darrick J. Wong wrote:
+> > Here's my version, where I go for a straight a[1] -> a[] conversion and
+> > let downstream attrlist ioctl users eat their lumps.  What do you think
+> > of the excess-documentation approach?
 > 
-> > [add ritesh]
-> >
-> > On Mon, Jul 10, 2023 at 02:02:49PM +0100, Matthew Wilcox (Oracle) wrote:
-> >> The check for the folio being under writeback is unnecessary; the caller
-> >> has checked this and the folio is locked, so the folio cannot be under
-> >> writeback at this point.
-> >> 
-> >> The comment is somewhat misleading in that it talks about one specific
-> >> situation in which we can see a dirty folio.  There are others, so change
-> >> the comment to explain why we can't release the iomap_page.
-> >> 
-> >> Signed-off-by: Matthew Wilcox (Oracle) <willy@infradead.org>
-> >> Reviewed-by: Christoph Hellwig <hch@lst.de>
-> >> ---
-> >>  fs/iomap/buffered-io.c | 9 ++++-----
-> >>  1 file changed, 4 insertions(+), 5 deletions(-)
-> >> 
-> >> diff --git a/fs/iomap/buffered-io.c b/fs/iomap/buffered-io.c
-> >> index 1cb905140528..7aa3009f907f 100644
-> >> --- a/fs/iomap/buffered-io.c
-> >> +++ b/fs/iomap/buffered-io.c
-> >> @@ -483,12 +483,11 @@ bool iomap_release_folio(struct folio *folio, gfp_t gfp_flags)
-> >>  			folio_size(folio));
-> >>  
-> >>  	/*
-> >> -	 * mm accommodates an old ext3 case where clean folios might
-> >> -	 * not have had the dirty bit cleared.  Thus, it can send actual
-> >> -	 * dirty folios to ->release_folio() via shrink_active_list();
-> >> -	 * skip those here.
-> >> +	 * If the folio is dirty, we refuse to release our metadata because
-> >> +	 * it may be partially dirty.  Once we track per-block dirty state,
-> >> +	 * we can release the metadata if every block is dirty.
-> >
-> > Ritesh: I'm assuming that implementing this will be part of your v12 series?
+> I think this is roughtly the right thing, with one big caveat:
 > 
-> No, if it's any optimization, then I think we can take it up later too,
-
-<nod>
-
-> not in v12 please (I have been doing some extensive testing of current series).
-> Also let me understand it a bit more.
+> > +	/* In Linux 6.5 this flex array was changed from list[1] to list[]. */
 > 
-> @willy,
-> Is this what you are suggesting? So this is mainly to free up some
-> memory for iomap_folio_state structure then right?
+> For all the format headers there's no need for these comments.  We've
+> done this for various other structures that had the old one size arrays
+> and never bothered.
 
-I think it's also to break up compound folios to free base pages or
-other reasons.
+<nod> Dave looked at an earlier version and wanted the comments for
+xfs_da_format.h to steer people at the entsize helpers.  I more or less
+agree that it's overkill everywhere else though.
 
-https://lore.kernel.org/linux-xfs/20230713044326.GI108251@frogsfrogsfrogs/T/#mc83fe929d57e9aa3c1834232389cad0d62b66e7b
-
-> But then whenever we are doing a writeback, we anyway would be
-> allocating iomap_folio_state() and marking all the bits dirty. Isn't it
-> sub-optimal then?  
+> > diff --git a/libxfs/xfs_fs.h b/libxfs/xfs_fs.h
+> > index 9c60ebb3..8927ecb2 100644
+> > --- a/libxfs/xfs_fs.h
+> > +++ b/libxfs/xfs_fs.h
+> > @@ -588,16 +588,19 @@ typedef struct xfs_attrlist_cursor {
+> >   *
+> >   * NOTE: struct xfs_attrlist must match struct attrlist defined in libattr, and
+> >   * struct xfs_attrlist_ent must match struct attrlist_ent defined in libattr.
+> > + *
+> > + * WARNING: In Linux 6.5, al_offset and a_name were changed from array[1] to
+> > + * array[].  Anyone using sizeof is (already) broken!
+> >   */
+> >  struct xfs_attrlist {
+> >  	__s32	al_count;	/* number of entries in attrlist */
+> >  	__s32	al_more;	/* T/F: more attrs (do call again) */
+> > -	__s32	al_offset[1];	/* byte offsets of attrs [var-sized] */
+> > +	__s32	al_offset[];	/* byte offsets of attrs [var-sized] */
+> >  };
+> >  
+> >  struct xfs_attrlist_ent {	/* data from attr_list() */
+> >  	__u32	a_valuelen;	/* number bytes in value of attr */
+> > -	char	a_name[1];	/* attr name (NULL terminated) */
+> > +	char	a_name[];	/* attr name (NULL terminated) */
+> >  };
 > 
-> @@ -489,8 +489,11 @@ bool iomap_release_folio(struct folio *folio, gfp_t gfp_flags)
->          * it may be partially dirty.  Once we track per-block dirty state,
->          * we can release the metadata if every block is dirty.
->          */
-> -       if (folio_test_dirty(folio))
-> +       if (folio_test_dirty(folio)) {
-> +               if (ifs_is_fully_dirty(folio, ifs))
-> +                       iomap_page_release(folio);
->                 return false;
-> +       }
+> Now these are currently exposed in a xfsprogs headeer and IFF someone
+> is using them it would break them in nasty ways.  That being said,
+> xfsprogs itself doesn't use them as it relies on identically layed
+> out but differntly named structures from libattr.
+> 
+> So I think we should just move these two out of xfs_fs.h, because
+> while they document a UAPI, they aren't actually used by userspace.
+> 
+> With that the need for any caution goes away and we can just fix the
+> definition without any caveats.
 
-I think it's more that we *dont* break up partially dirty folios:
+So I looked at the libattr headers for Ubuntu 22.04 and saw this:
 
-	/*
-	 * Folio is partially dirty, do not throw away the state or
-	 * split the folio.
-	 */
-	if (folio_test_dirty(folio) && !ifs_is_fully_dirty(folio, ifs))
-		return false;
+/*
+ * List the names and sizes of the values of all the attributes of an object.
+ * "Cursor" must be allocated and zeroed before the first call, it is used
+ * to maintain context between system calls if all the attribute names won't
+ * fit into the buffer on the first system call.
+ * The return value is -1 on error (w/errno set appropriately), 0 on success.
+ */
+extern int attr_list(const char *__path, char *__buffer, const int __buffersize,
+		int __flags, attrlist_cursor_t *__cursor)
+	__attribute__ ((deprecated ("Use listxattr or llistxattr instead")));
+extern int attr_listf(int __fd, char *__buffer, const int __buffersize,
+		int __flags, attrlist_cursor_t *__cursor)
+	__attribute__ ((deprecated ("Use flistxattr instead")));
 
-	/* No more private state tracking, ok to split folio. */
-	iomap_page_release(folio);
-	return true;
-
-But breaking up fully dirty folios is now possible, since the mm can
-mark all the basepages dirty.
+I take that as a sign that they could drop all these xfs-specific APIs
+one day, which means we ought to keep them in xfs_fs.h.
 
 --D
-
->         iomap_page_release(folio);
->         return true;
->  }
-> 
-> (Ignore the old and new apis naming in above. It is just to get an idea)
-> 
-> -ritesh
-> 
-> >
-> > Reviewed-by: Darrick J. Wong <djwong@kernel.org>
-> >
-> > --D
-> >
-> >>  	 */
-> >> -	if (folio_test_dirty(folio) || folio_test_writeback(folio))
-> >> +	if (folio_test_dirty(folio))
-> >>  		return false;
-> >>  	iomap_page_release(folio);
-> >>  	return true;
-> >> -- 
-> >> 2.39.2
-> >> 
