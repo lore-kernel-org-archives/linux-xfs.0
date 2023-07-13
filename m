@@ -2,482 +2,227 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8C9FBC001DC
-	for <linux-xfs@archiver.kernel.org>; Thu, 13 Jul 2023 20:01:30 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id EA8C9C00528
+	for <linux-xfs@archiver.kernel.org>; Thu, 13 Jul 2023 23:01:14 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231644AbjGMUB3 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 13 Jul 2023 16:01:29 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42876 "EHLO
+        id S233881AbjGMXBN (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 13 Jul 2023 19:01:13 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45244 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231292AbjGMUB2 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 13 Jul 2023 16:01:28 -0400
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 63C7E2D4E
-        for <linux-xfs@vger.kernel.org>; Thu, 13 Jul 2023 13:00:41 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1689278440;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=RGIOr6MkkRr11h5VKVQQ25YuuFUOICbVcoaxXNpPoQQ=;
-        b=a9wNL1F4zFNeY8pNqD+q+/Zc+oylvrbT1SJDnKYs/ypUL2RXhElM9GldqJZccj36PJG29N
-        z6O1zcslKkNhT/NH2SFAUAJlOtUAGKnssNt5gbQyuCAAua7IXdqdrpsQaYjXdawwCMykGu
-        PTySRUXhSMuTvnLEF1eo+UwSi4R+vPQ=
-Received: from mail-pl1-f198.google.com (mail-pl1-f198.google.com
- [209.85.214.198]) by relay.mimecast.com with ESMTP with STARTTLS
- (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
- us-mta-556-EY1JLmwCNtWnikzq74Q9Sg-1; Thu, 13 Jul 2023 16:00:38 -0400
-X-MC-Unique: EY1JLmwCNtWnikzq74Q9Sg-1
-Received: by mail-pl1-f198.google.com with SMTP id d9443c01a7336-1b89e3715acso5198205ad.3
-        for <linux-xfs@vger.kernel.org>; Thu, 13 Jul 2023 13:00:38 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20221208; t=1689278437; x=1691870437;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=RGIOr6MkkRr11h5VKVQQ25YuuFUOICbVcoaxXNpPoQQ=;
-        b=fsBWwdM8VeThYNKWn9aXO4xzxyChZyiU9qYaRTwYgGqu+Tb8TvLss2yPBVNGtBFRY8
-         mynpC/7oAoB648P/e2ab/13XLf8PGNuXNv9z6glxivPxPpoowmFJBTtjROdMua1/bABx
-         m1BM6nZ93C9GcdCDN8Yjk62k1ZUXWW+4KIEyeVRUaco4awmjhuyrCgR+5udX6OSVJNle
-         eI8kGAUbIDnfTOZ5YOctSoT6rAoy/lLop/N0MyQd7B6eUjcyWTWJCuqHNkGIX/7RMrXb
-         /TpuZVh/DvXgF96865TKqEQ4zASKXDELRe59sChgrzzm5+aj83Awenl37zDi+tQdH4eU
-         tP6g==
-X-Gm-Message-State: ABy/qLZdYZvb5+ls3BaFkELSGSJlWTyxz93Py4n9xxCBivD0LstOPtOc
-        kpoFhUR0zavKzhqr4XZ2HP0GhYknfNevbECV+AAHW26IlmlH97R5numL10qCgDJxk6e3OrUqDG8
-        oL3jwFqGR0fChXEeERwBtZfsxGccWmDnM1g==
-X-Received: by 2002:a17:902:e54a:b0:1b8:b564:b531 with SMTP id n10-20020a170902e54a00b001b8b564b531mr2112935plf.60.1689278436917;
-        Thu, 13 Jul 2023 13:00:36 -0700 (PDT)
-X-Google-Smtp-Source: APBJJlEfKwxwMLq1VA2qVADgev5FpT+6D9XVbLpjAiNttF+Pjnp+pOPNSUMu5rjPImdUTdQKfGt2iQ==
-X-Received: by 2002:a17:902:e54a:b0:1b8:b564:b531 with SMTP id n10-20020a170902e54a00b001b8b564b531mr2112914plf.60.1689278436441;
-        Thu, 13 Jul 2023 13:00:36 -0700 (PDT)
-Received: from zlang-mailbox ([43.228.180.230])
-        by smtp.gmail.com with ESMTPSA id bc2-20020a170902930200b001b9f032bb3dsm5936362plb.3.2023.07.13.13.00.34
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 13 Jul 2023 13:00:35 -0700 (PDT)
-Date:   Fri, 14 Jul 2023 04:00:31 +0800
-From:   Zorro Lang <zlang@redhat.com>
-To:     "Darrick J. Wong" <djwong@kernel.org>
-Cc:     linux-xfs@vger.kernel.org, fstests@vger.kernel.org, guan@eryu.me
-Subject: Re: [PATCH] xfs: add a couple more tests for ascii-ci problems
-Message-ID: <20230713200031.zjjmsyyasikg5lxf@zlang-mailbox>
-References: <20230711202528.GB11442@frogsfrogsfrogs>
- <20230713151645.7dztbrccuy2i4co7@zlang-mailbox>
- <20230713170437.GR108251@frogsfrogsfrogs>
+        with ESMTP id S232353AbjGMXBL (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 13 Jul 2023 19:01:11 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 904D02127;
+        Thu, 13 Jul 2023 16:01:10 -0700 (PDT)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange X25519 server-signature RSA-PSS (2048 bits))
+        (No client certificate requested)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 05B9961B79;
+        Thu, 13 Jul 2023 23:01:10 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 61080C433C8;
+        Thu, 13 Jul 2023 23:01:03 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1689289269;
+        bh=BvE/6xVatY3gzbwR0vDrqr3MzJ01oINoYu0cSNelaB8=;
+        h=From:Subject:Date:To:Cc:From;
+        b=j9LDsK+FDIrm6x6MxYyXms5zVTjaW1P6LxjzfQKg1pbSvAHLTtuNDrEBEAvQz7a59
+         IEj5BzbSPgpyeqfAqbd+Re3r0d6jbIHKhpnRq3qprdKRfzdD9X103cXf3qX6JZft6A
+         8K/RH8+CdgTcLHSepEL1YlNk2ZQmp4oagzqZSvVyVEd/d4TvlnBEIAX/8mUMo/DIpV
+         2h3UVlHoa/Q76fgIu2dVBLs3sOHMs2qunAcM77C5kvmuuB2TAhiX7+yoiPjn4EbiL6
+         oufcrYQQLmAklyR8BnHSjocZBlFXqdC5grfG/sCfx8gif0JU3ybUeAnX6i/lTGUMEc
+         tKVmtuCgMrfHw==
+From:   Jeff Layton <jlayton@kernel.org>
+Subject: [PATCH v5 0/8] fs: implement multigrain timestamps
+Date:   Thu, 13 Jul 2023 19:00:49 -0400
+Message-Id: <20230713-mgctime-v5-0-9eb795d2ae37@kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20230713170437.GR108251@frogsfrogsfrogs>
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
+X-B4-Tracking: v=1; b=H4sIACGCsGQC/6tWKk4tykwtVrJSqFYqSi3LLM7MzwNyTHUUlJIzE
+ vPSU3UzU4B8JSMDI2MDc0Nj3dz05JLM3FTdNKNEy7RkYyMTS0MLJaDqgqLUtMwKsEnRsbW1AO6
+ XW1JZAAAA
+To:     Eric Van Hensbergen <ericvh@kernel.org>,
+        Latchesar Ionkov <lucho@ionkov.net>,
+        Dominique Martinet <asmadeus@codewreck.org>,
+        Christian Schoenebeck <linux_oss@crudebyte.com>,
+        David Howells <dhowells@redhat.com>,
+        Marc Dionne <marc.dionne@auristor.com>,
+        Chris Mason <clm@fb.com>, Josef Bacik <josef@toxicpanda.com>,
+        David Sterba <dsterba@suse.com>, Xiubo Li <xiubli@redhat.com>,
+        Ilya Dryomov <idryomov@gmail.com>,
+        Jan Harkes <jaharkes@cs.cmu.edu>, coda@cs.cmu.edu,
+        Tyler Hicks <code@tyhicks.com>, Gao Xiang <xiang@kernel.org>,
+        Chao Yu <chao@kernel.org>, Yue Hu <huyue2@coolpad.com>,
+        Jeffle Xu <jefflexu@linux.alibaba.com>,
+        Namjae Jeon <linkinjeon@kernel.org>,
+        Sungjong Seo <sj1557.seo@samsung.com>,
+        Jan Kara <jack@suse.com>, Theodore Ts'o <tytso@mit.edu>,
+        Andreas Dilger <adilger.kernel@dilger.ca>,
+        Jaegeuk Kim <jaegeuk@kernel.org>,
+        OGAWA Hirofumi <hirofumi@mail.parknet.co.jp>,
+        Miklos Szeredi <miklos@szeredi.hu>,
+        Bob Peterson <rpeterso@redhat.com>,
+        Andreas Gruenbacher <agruenba@redhat.com>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        Tejun Heo <tj@kernel.org>,
+        Alexander Viro <viro@zeniv.linux.org.uk>,
+        Christian Brauner <brauner@kernel.org>,
+        Trond Myklebust <trond.myklebust@hammerspace.com>,
+        Anna Schumaker <anna@kernel.org>,
+        Konstantin Komarov <almaz.alexandrovich@paragon-software.com>,
+        Mark Fasheh <mark@fasheh.com>,
+        Joel Becker <jlbec@evilplan.org>,
+        Joseph Qi <joseph.qi@linux.alibaba.com>,
+        Mike Marshall <hubcap@omnibond.com>,
+        Martin Brandenburg <martin@omnibond.com>,
+        Luis Chamberlain <mcgrof@kernel.org>,
+        Kees Cook <keescook@chromium.org>,
+        Iurii Zaikin <yzaikin@google.com>,
+        Steve French <sfrench@samba.org>,
+        Paulo Alcantara <pc@manguebit.com>,
+        Ronnie Sahlberg <lsahlber@redhat.com>,
+        Shyam Prasad N <sprasad@microsoft.com>,
+        Tom Talpey <tom@talpey.com>,
+        Sergey Senozhatsky <senozhatsky@chromium.org>,
+        Richard Weinberger <richard@nod.at>,
+        Hans de Goede <hdegoede@redhat.com>,
+        Hugh Dickins <hughd@google.com>,
+        Andrew Morton <akpm@linux-foundation.org>,
+        "Darrick J. Wong" <djwong@kernel.org>
+Cc:     Dave Chinner <david@fromorbit.com>, v9fs@lists.linux.dev,
+        linux-kernel@vger.kernel.org, linux-afs@lists.infradead.org,
+        linux-btrfs@vger.kernel.org, ceph-devel@vger.kernel.org,
+        codalist@coda.cs.cmu.edu, ecryptfs@vger.kernel.org,
+        linux-erofs@lists.ozlabs.org, linux-fsdevel@vger.kernel.org,
+        linux-ext4@vger.kernel.org, linux-f2fs-devel@lists.sourceforge.net,
+        cluster-devel@redhat.com, linux-nfs@vger.kernel.org,
+        ntfs3@lists.linux.dev, ocfs2-devel@lists.linux.dev,
+        devel@lists.orangefs.org, linux-cifs@vger.kernel.org,
+        samba-technical@lists.samba.org, linux-mtd@lists.infradead.org,
+        linux-mm@kvack.org, linux-xfs@vger.kernel.org,
+        Jeff Layton <jlayton@kernel.org>
+X-Mailer: b4 0.12.3
+X-Developer-Signature: v=1; a=openpgp-sha256; l=4474; i=jlayton@kernel.org;
+ h=from:subject:message-id; bh=BvE/6xVatY3gzbwR0vDrqr3MzJ01oINoYu0cSNelaB8=;
+ b=owEBbQKS/ZANAwAIAQAOaEEZVoIVAcsmYgBksIIu4PKEKGnoDdi+GMLN5ufs2UB8ZsDTn9Oqp
+ SYtweP3skyJAjMEAAEIAB0WIQRLwNeyRHGyoYTq9dMADmhBGVaCFQUCZLCCLgAKCRAADmhBGVaC
+ FXJhEADW493xZyCYf/hlVo1POCOZGol0XDpJIN1EQK3h+61XPis26awGDTcXczc9yZK/JvZV7oC
+ VtVStL44kvzeqn7kh1AH/EuLmeazbYMEFTdl5PiizH53xrWmidL26fTjpjn01gvjb9Y5gGXTvuI
+ h0JLInpNr5Hn509RQU2T5/D8WBKVnLWeHB/itiDWCZ1CG8iFNWfgbgC/bpdW2+H0eIDHvr6bUcJ
+ m0mfxwAUL6lA/b/G8kmsdj0YEEWf2bOLzdxZcQPh/MEfkRuKwWqy9d5mFLJlJ5GiheG9qiqOwOA
+ wLz9M0J4e32Di/q+QL/HpihUZOB0jrZB+bRhKxqWD04cFRtTTwE15w/xGAgjvPLe2l+sNzEUxoq
+ nIscPnAScgiRW3Bzq6PUd7ljrtLvvU6Vcgd0HqFcyfn9APLCjnLCckVW7S0ofkRL7oksLIoSGDJ
+ qo/IpJl4X/Mu1LBY//fFZp6QVhp54iwAR+D7VJ3z7wtZSktaXJ9f1o0qcT1Bo254702FlLGvbxf
+ Bkj6FZDMZrSXrx81pjrLvUB8jCQQ13oz7O3kmOzVX4pLmnO9PRLcQLj14velupamDvwexZgudyW
+ jiqR3IwVXCTiN2WgmssqUyuQi+GQ1LKePEwVpDx8izF0VnbQshX6OqMvuRzVcDG29pzQBTc0dy+
+ lAVc/7Mp3vHZu0g==
+X-Developer-Key: i=jlayton@kernel.org; a=openpgp;
+ fpr=4BC0D7B24471B2A184EAF5D3000E684119568215
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Thu, Jul 13, 2023 at 10:04:37AM -0700, Darrick J. Wong wrote:
-> On Thu, Jul 13, 2023 at 11:16:45PM +0800, Zorro Lang wrote:
-> > On Tue, Jul 11, 2023 at 01:25:28PM -0700, Darrick J. Wong wrote:
-> > > From: Darrick J. Wong <djwong@kernel.org>
-> > > 
-> > > Add some tests to make sure that userspace and the kernel actually
-> > > agree on how to do ascii case-insensitive directory lookups, and that
-> > > metadump can actually obfuscate such filesystems.
-> > > 
-> > > Signed-off-by: Darrick J. Wong <djwong@kernel.org>
-> > > ---
-> > >  tests/xfs/859     |   64 ++++++++++++++++++++++++++++++++++
-> > >  tests/xfs/859.out |   24 +++++++++++++
-> > >  tests/xfs/860     |  100 +++++++++++++++++++++++++++++++++++++++++++++++++++++
-> > >  tests/xfs/860.out |    9 +++++
-> > >  tests/xfs/861     |   90 ++++++++++++++++++++++++++++++++++++++++++++++++
-> > >  tests/xfs/861.out |    2 +
-> > >  6 files changed, 289 insertions(+)
-> > >  create mode 100755 tests/xfs/859
-> > >  create mode 100644 tests/xfs/859.out
-> > >  create mode 100755 tests/xfs/860
-> > >  create mode 100644 tests/xfs/860.out
-> > >  create mode 100755 tests/xfs/861
-> > >  create mode 100644 tests/xfs/861.out
-> > > 
-> > > diff --git a/tests/xfs/859 b/tests/xfs/859
-> > > new file mode 100755
-> > > index 0000000000..e99619c12f
-> > > --- /dev/null
-> > > +++ b/tests/xfs/859
-> > > @@ -0,0 +1,64 @@
-> > > +#! /bin/bash
-> > > +# SPDX-License-Identifier: GPL-2.0
-> > > +# Copyright (c) 2023 Oracle.  All Rights Reserved.
-> > > +#
-> > > +# FS QA Test 859
-> > > +#
-> > > +# Make sure that the kernel and userspace agree on which byte sequences are
-> > > +# ASCII uppercase letters, and how to convert them.
-> > > +#
-> > > +. ./common/preamble
-> > > +_begin_fstest auto ci dir
-> > > +
-> > > +# Override the default cleanup function.
-> > > +# _cleanup()
-> > > +# {
-> > > +# 	cd /
-> > > +# 	rm -r -f $tmp.*
-> > > +# }
-> > 
-> > Need to remove.
-> 
-> Oops, will do.
-> 
-> > > +
-> > > +# Import common functions.
-> > > +. ./common/filter
-> > > +
-> > > +_fixed_by_kernel_commit a9248538facc "xfs: stabilize the dirent name transformation function used for ascii-ci dir hash computation"
-> > > +_fixed_by_kernel_commit 9dceccc5822f "xfs: use the directory name hash function for dir scrubbing"
-> > > +
-> > > +_supported_fs xfs
-> > > +_require_scratch
-> > > +_require_xfs_mkfs_ciname
-> > > +
-> > > +_scratch_mkfs -n version=ci > $seqres.full
-> > 
-> > Ok, as you've check the version=ci in _require_xfs_mkfs_ciname, I think we don't
-> > need check the return status of this _scratch_mkfs.
-> 
-> <nod>  Also that "> $seqres.full" ought to be an append.
-> 
-> > > +_scratch_mount
-> > > +
-> > > +# Create a two-block directory to force leaf format
-> > > +mkdir "$SCRATCH_MNT/lol"
-> > > +touch "$SCRATCH_MNT/lol/autoexec.bat"
-> > > +i=0
-> > > +dblksz=$(_xfs_get_dir_blocksize "$SCRATCH_MNT")
-> > > +nr_dirents=$((dblksz * 2 / 256))
-> > > +
-> > > +for ((i = 0; i < nr_dirents; i++)); do
-> > > +	name="$(printf "y%0254d" $i)"
-> > > +	ln "$SCRATCH_MNT/lol/autoexec.bat" "$SCRATCH_MNT/lol/$name"
-> > > +done
-> > > +
-> > > +dirsz=$(stat -c '%s' $SCRATCH_MNT/lol)
-> > > +test $dirsz -gt $dblksz || echo "dir size $dirsz, expected at least $dblksz?"
-> > > +stat $SCRATCH_MNT/lol >> $seqres.full
-> > > +
-> > > +# Create names with extended ascii characters in them to exploit the fact
-> > > +# that the Linux kernel will transform extended ASCII uppercase characters
-> > > +# but libc won't.  Need to force LANG=C here so that awk doesn't spit out utf8
-> > > +# sequences.
-> > > +old_lang="$LANG"
-> > > +LANG=C
-> > 
-> > Actually fstests test LANG=C by default in common/config:
-> >   export LANG=C
-> >   export LC_ALL=C
-> > 
-> > Anyway, I don't mind we make sure LANG=C in this case.
-> 
-> Oh yeah!  I forgot that fstests sets LANG=C when I <cough> copy-pasted
-> this from an internal reproducer script.  I'll either get rid of this
-> entirely or change it to
-> 
-> test "$LANG" = "C" || _notrun "LANG!=C, did the defaults change??"
+The VFS always uses coarse-grained timestamps when updating the
+ctime and mtime after a change. This has the benefit of allowing
+filesystems to optimize away a lot metadata updates, down to around 1
+per jiffy, even when a file is under heavy writes.
 
-I don't have plan to change the default LANG=C and LC_ALL=C in fstests. But
-I can't 100% make sure that, the global parameter might be changed intentionally
-or unintentionally.
+Unfortunately, this coarseness has always been an issue when we're
+exporting via NFSv3, which relies on timestamps to validate caches. A
+lot of changes can happen in a jiffy, so timestamps aren't sufficient to
+help the client decide to invalidate the cache.
 
-So a specific local LANG=C (in a single care) makes sense to me too, you can
-think about that `LANG=C do_test` method if you worry about the LANG might be
-changed. If you don't worry about that, I think that _notrun is not needed
-either :)
+Even with NFSv4, a lot of exported filesystems don't properly support a
+change attribute and are subject to the same problems with timestamp
+granularity. Other applications have similar issues with timestamps (e.g
+backup applications).
 
-Thanks,
-Zorro
+If we were to always use fine-grained timestamps, that would improve the
+situation, but that becomes rather expensive, as the underlying
+filesystem would have to log a lot more metadata updates.
 
-> 
-> > 
-> > > +awk 'END { for (i = 192; i < 247; i++) printf("%c\n", i); }' < /dev/null | while read name; do
-> > > +	ln "$SCRATCH_MNT/lol/autoexec.bat" "$SCRATCH_MNT/lol/$name" 2>&1 | _filter_scratch
-> > > +done
-> > > +
-> > > +LANG=$old_lang
-> > 
-> > How about package your code into a local function (e.g. do_test), then does:
-> > 
-> > LANG=C do_test
-> > 
-> > Will that help? If so, that can help to avoid the LANG set and restore. Or
-> > we'd better to restore the LANG in _cleanup of this case.
-> 
-> ...and then I don't need to make any of these changes.
-> 
-> --D
-> 
-> > 
-> > (similar review points to below cases)
-> > 
-> > Thanks,
-> > Zorro
-> > 
-> > > +
-> > > +# Now just let repair run
-> > > +
-> > > +status=0
-> > > +exit
-> > > diff --git a/tests/xfs/859.out b/tests/xfs/859.out
-> > > new file mode 100644
-> > > index 0000000000..a4939ba670
-> > > --- /dev/null
-> > > +++ b/tests/xfs/859.out
-> > > @@ -0,0 +1,24 @@
-> > > +QA output created by 859
-> > > +ln: failed to create hard link 'SCRATCH_MNT/lol/'$'\340': File exists
-> > > +ln: failed to create hard link 'SCRATCH_MNT/lol/'$'\341': File exists
-> > > +ln: failed to create hard link 'SCRATCH_MNT/lol/'$'\342': File exists
-> > > +ln: failed to create hard link 'SCRATCH_MNT/lol/'$'\343': File exists
-> > > +ln: failed to create hard link 'SCRATCH_MNT/lol/'$'\344': File exists
-> > > +ln: failed to create hard link 'SCRATCH_MNT/lol/'$'\345': File exists
-> > > +ln: failed to create hard link 'SCRATCH_MNT/lol/'$'\346': File exists
-> > > +ln: failed to create hard link 'SCRATCH_MNT/lol/'$'\347': File exists
-> > > +ln: failed to create hard link 'SCRATCH_MNT/lol/'$'\350': File exists
-> > > +ln: failed to create hard link 'SCRATCH_MNT/lol/'$'\351': File exists
-> > > +ln: failed to create hard link 'SCRATCH_MNT/lol/'$'\352': File exists
-> > > +ln: failed to create hard link 'SCRATCH_MNT/lol/'$'\353': File exists
-> > > +ln: failed to create hard link 'SCRATCH_MNT/lol/'$'\354': File exists
-> > > +ln: failed to create hard link 'SCRATCH_MNT/lol/'$'\355': File exists
-> > > +ln: failed to create hard link 'SCRATCH_MNT/lol/'$'\356': File exists
-> > > +ln: failed to create hard link 'SCRATCH_MNT/lol/'$'\357': File exists
-> > > +ln: failed to create hard link 'SCRATCH_MNT/lol/'$'\360': File exists
-> > > +ln: failed to create hard link 'SCRATCH_MNT/lol/'$'\361': File exists
-> > > +ln: failed to create hard link 'SCRATCH_MNT/lol/'$'\362': File exists
-> > > +ln: failed to create hard link 'SCRATCH_MNT/lol/'$'\363': File exists
-> > > +ln: failed to create hard link 'SCRATCH_MNT/lol/'$'\364': File exists
-> > > +ln: failed to create hard link 'SCRATCH_MNT/lol/'$'\365': File exists
-> > > +ln: failed to create hard link 'SCRATCH_MNT/lol/'$'\366': File exists
-> > > diff --git a/tests/xfs/860 b/tests/xfs/860
-> > > new file mode 100755
-> > > index 0000000000..42f16efe6c
-> > > --- /dev/null
-> > > +++ b/tests/xfs/860
-> > > @@ -0,0 +1,100 @@
-> > > +#! /bin/bash
-> > > +# SPDX-License-Identifier: GPL-2.0
-> > > +# Copyright (c) 2023 Oracle.  All Rights Reserved.
-> > > +#
-> > > +# FS QA Test 860
-> > > +#
-> > > +# Make sure that metadump obfuscation works for filesystems with ascii-ci
-> > > +# enabled.
-> > > +#
-> > > +. ./common/preamble
-> > > +_begin_fstest auto dir ci
-> > > +
-> > > +_cleanup()
-> > > +{
-> > > +      cd /
-> > > +      rm -r -f $tmp.* $testdir
-> > > +}
-> > > +
-> > > +_fixed_by_git_commit xfsprogs 10a01bcd "xfs_db: fix metadump name obfuscation for ascii-ci filesystems"
-> > > +
-> > > +_supported_fs xfs
-> > > +_require_test
-> > > +_require_scratch
-> > > +_require_xfs_mkfs_ciname
-> > > +
-> > > +_scratch_mkfs -n version=ci > $seqres.full
-> > > +_scratch_mount
-> > > +
-> > > +# Create a two-block directory to force leaf format
-> > > +mkdir "$SCRATCH_MNT/lol"
-> > > +touch "$SCRATCH_MNT/lol/autoexec.bat"
-> > > +i=0
-> > > +dblksz=$(_xfs_get_dir_blocksize "$SCRATCH_MNT")
-> > > +nr_dirents=$((dblksz * 2 / 256))
-> > > +
-> > > +for ((i = 0; i < nr_dirents; i++)); do
-> > > +	name="$(printf "y%0254d" $i)"
-> > > +	ln "$SCRATCH_MNT/lol/autoexec.bat" "$SCRATCH_MNT/lol/$name"
-> > > +done
-> > > +
-> > > +dirsz=$(stat -c '%s' $SCRATCH_MNT/lol)
-> > > +test $dirsz -gt $dblksz || echo "dir size $dirsz, expected at least $dblksz?"
-> > > +stat $SCRATCH_MNT/lol >> $seqres.full
-> > > +
-> > > +# Create a two-block attr to force leaf format
-> > > +i=0
-> > > +for ((i = 0; i < nr_dirents; i++)); do
-> > > +	name="$(printf "user.%0250d" $i)"
-> > > +	$SETFATTR_PROG -n "$name" -v 1 "$SCRATCH_MNT/lol/autoexec.bat"
-> > > +done
-> > > +stat $SCRATCH_MNT/lol/autoexec.bat >> $seqres.full
-> > > +
-> > > +_scratch_unmount
-> > > +
-> > > +testdir=$TEST_DIR/$seq.metadumps
-> > > +mkdir -p $testdir
-> > > +metadump_file=$testdir/scratch.md
-> > > +metadump_file_a=${metadump_file}.a
-> > > +metadump_file_o=${metadump_file}.o
-> > > +metadump_file_ao=${metadump_file}.ao
-> > > +
-> > > +echo metadump
-> > > +_scratch_xfs_metadump $metadump_file >> $seqres.full
-> > > +
-> > > +echo metadump a
-> > > +_scratch_xfs_metadump $metadump_file_a -a >> $seqres.full
-> > > +
-> > > +echo metadump o
-> > > +_scratch_xfs_metadump $metadump_file_o -o >> $seqres.full
-> > > +
-> > > +echo metadump ao
-> > > +_scratch_xfs_metadump $metadump_file_ao -a -o >> $seqres.full
-> > > +
-> > > +echo mdrestore
-> > > +_scratch_xfs_mdrestore $metadump_file
-> > > +_scratch_mount
-> > > +_check_scratch_fs
-> > > +_scratch_unmount
-> > > +
-> > > +echo mdrestore a
-> > > +_scratch_xfs_mdrestore $metadump_file_a
-> > > +_scratch_mount
-> > > +_check_scratch_fs
-> > > +_scratch_unmount
-> > > +
-> > > +echo mdrestore o
-> > > +_scratch_xfs_mdrestore $metadump_file_o
-> > > +_scratch_mount
-> > > +_check_scratch_fs
-> > > +_scratch_unmount
-> > > +
-> > > +echo mdrestore ao
-> > > +_scratch_xfs_mdrestore $metadump_file_ao
-> > > +_scratch_mount
-> > > +_check_scratch_fs
-> > > +_scratch_unmount
-> > > +
-> > > +# success, all done
-> > > +status=0
-> > > +exit
-> > > diff --git a/tests/xfs/860.out b/tests/xfs/860.out
-> > > new file mode 100644
-> > > index 0000000000..136fc5f7d6
-> > > --- /dev/null
-> > > +++ b/tests/xfs/860.out
-> > > @@ -0,0 +1,9 @@
-> > > +QA output created by 860
-> > > +metadump
-> > > +metadump a
-> > > +metadump o
-> > > +metadump ao
-> > > +mdrestore
-> > > +mdrestore a
-> > > +mdrestore o
-> > > +mdrestore ao
-> > > diff --git a/tests/xfs/861 b/tests/xfs/861
-> > > new file mode 100755
-> > > index 0000000000..7b0a37a3f1
-> > > --- /dev/null
-> > > +++ b/tests/xfs/861
-> > > @@ -0,0 +1,90 @@
-> > > +#! /bin/bash
-> > > +# SPDX-License-Identifier: GPL-2.0
-> > > +# Copyright (c) 2023 Oracle.  All Rights Reserved.
-> > > +#
-> > > +# FS QA Test 861
-> > > +#
-> > > +# Make sure that the kernel and utilities can handle large numbers of dirhash
-> > > +# collisions in both the directory and extended attribute structures.
-> > > +#
-> > > +# This started as a regression test for the new 'hashcoll' function in xfs_db,
-> > > +# but became a regression test for an xfs_repair bug affecting hashval checks
-> > > +# applied to the second and higher node levels of a dabtree.
-> > > +#
-> > > +. ./common/preamble
-> > > +_begin_fstest auto dir
-> > > +
-> > > +_fixed_by_git_commit xfsprogs b7b81f336ac "xfs_repair: fix incorrect dabtree hashval comparison"
-> > > +
-> > > +_supported_fs xfs
-> > > +_require_xfs_db_command "hashcoll"
-> > > +_require_xfs_db_command "path"
-> > > +_require_scratch
-> > > +
-> > > +_scratch_mkfs > $seqres.full
-> > > +_scratch_mount
-> > > +
-> > > +crash_dir=$SCRATCH_MNT/lol/
-> > > +crash_attrs=$SCRATCH_MNT/hah
-> > > +
-> > > +mkdir -p "$crash_dir"
-> > > +touch "$crash_attrs"
-> > > +
-> > > +# Create enough dirents to fill two dabtree node blocks with names that all
-> > > +# hash to the same value.  Each dirent gets its own record in the dabtree,
-> > > +# so we must create enough dirents to get a dabtree of at least height 2.
-> > > +dblksz=$(_xfs_get_dir_blocksize "$SCRATCH_MNT")
-> > > +
-> > > +da_records_per_block=$((dblksz / 8))	# 32-bit hash and 32-bit before
-> > > +nr_dirents=$((da_records_per_block * 2))
-> > > +
-> > > +longname="$(mktemp --dry-run "$(perl -e 'print "X" x 255;')" | tr ' ' 'X')"
-> > > +echo "creating $nr_dirents dirents from '$longname'" >> $seqres.full
-> > > +_scratch_xfs_db -r -c "hashcoll -n $nr_dirents -p $crash_dir $longname"
-> > > +
-> > > +# Create enough xattrs to fill two dabtree nodes.  Each attribute leaf block
-> > > +# gets its own record in the dabtree, so we have to create enough attr blocks
-> > > +# (each full of attrs) to get a dabtree of at least height 2.
-> > > +blksz=$(_get_block_size "$SCRATCH_MNT")
-> > > +
-> > > +attr_records_per_block=$((blksz / 255))
-> > > +da_records_per_block=$((blksz / 8))	# 32-bit hash and 32-bit before
-> > > +nr_attrs=$((da_records_per_block * attr_records_per_block * 2))
-> > > +
-> > > +longname="$(mktemp --dry-run "$(perl -e 'print "X" x 249;')" | tr ' ' 'X')"
-> > > +echo "creating $nr_attrs attrs from '$longname'" >> $seqres.full
-> > > +_scratch_xfs_db -r -c "hashcoll -a -n $nr_attrs -p $crash_attrs $longname"
-> > > +
-> > > +_scratch_unmount
-> > > +
-> > > +# Make sure that there's one hash value dominating the dabtree block.
-> > > +# We don't require 100% because directories create dabtree records for dot
-> > > +# and dotdot.
-> > > +filter_hashvals() {
-> > > +	uniq -c | awk -v seqres_full="$seqres.full" \
-> > > +		'{print $0 >> seqres_full; tot += $1; if ($1 > biggest) biggest = $1;} END {if (biggest >= (tot - 2)) exit(0); exit(1);}'
-> > > +	test "${PIPESTATUS[1]}" -eq 0 || \
-> > > +		echo "Scattered dabtree hashes?  See seqres.full"
-> > > +}
-> > > +
-> > > +# Did we actually get a two-level dabtree for the directory?  Does it contain a
-> > > +# long run of hashes?
-> > > +echo "dir check" >> $seqres.full
-> > > +da_node_block_offset=$(( (2 ** 35) / blksz ))
-> > > +dir_db_args=(-c 'path /lol/' -c "dblock $da_node_block_offset" -c 'addr nbtree[0].before')
-> > > +dir_count="$(_scratch_xfs_db "${dir_db_args[@]}" -c 'print lhdr.count' | awk '{print $3}')"
-> > > +_scratch_xfs_db "${dir_db_args[@]}" -c "print lents[0-$((dir_count - 1))].hashval" | sed -e 's/lents\[[0-9]*\]/lents[NN]/g' | filter_hashvals
-> > > +
-> > > +# Did we actually get a two-level dabtree for the attrs?  Does it contain a
-> > > +# long run of hashes?
-> > > +echo "attr check" >> $seqres.full
-> > > +attr_db_args=(-c 'path /hah' -c "ablock 0" -c 'addr btree[0].before')
-> > > +attr_count="$(_scratch_xfs_db "${attr_db_args[@]}" -c 'print hdr.count' | awk '{print $3}')"
-> > > +_scratch_xfs_db "${attr_db_args[@]}" -c "print btree[0-$((attr_count - 1))].hashval" | sed -e 's/btree\[[0-9]*\]/btree[NN]/g' | filter_hashvals
-> > > +
-> > > +# Remount to get some coverage of xfs_scrub before seeing if xfs_repair
-> > > +# will trip over the large dabtrees.
-> > > +echo Silence is golden
-> > > +_scratch_mount
-> > > +status=0
-> > > +exit
-> > > diff --git a/tests/xfs/861.out b/tests/xfs/861.out
-> > > new file mode 100644
-> > > index 0000000000..d11b76c82e
-> > > --- /dev/null
-> > > +++ b/tests/xfs/861.out
-> > > @@ -0,0 +1,2 @@
-> > > +QA output created by 861
-> > > +Silence is golden
-> > > 
-> > 
-> 
+What we need is a way to only use fine-grained timestamps when they are
+being actively queried. The idea is to use an unused bit in the ctime's
+tv_nsec field to mark when the mtime or ctime has been queried via
+getattr. Once that has been marked, the next m/ctime update will use a
+fine-grained timestamp.
+
+This patch series is based on top of Christian's vfs.all branch, which
+has the recent conversion to the new ctime accessors. It should apply
+cleanly on top of linux-next.
+
+While the patchset does work, I'm mostly looking for feedback on the
+core infrastructure API. Does this look reasonable? Am I missing any
+races?
+
+Signed-off-by: Jeff Layton <jlayton@kernel.org>
+base-commit: cf22d118b89a09a0160586412160d89098f7c4c7
+---
+Jeff Layton (8):
+      fs: pass the request_mask to generic_fillattr
+      fs: add infrastructure for multigrain timestamps
+      tmpfs: bump the mtime/ctime/iversion when page becomes writeable
+      tmpfs: add support for multigrain timestamps
+      xfs: XFS_ICHGTIME_CREATE is unused
+      xfs: switch to multigrain timestamps
+      ext4: switch to multigrain timestamps
+      btrfs: convert to multigrain timestamps
+
+ fs/9p/vfs_inode.c               |  4 +-
+ fs/9p/vfs_inode_dotl.c          |  4 +-
+ fs/afs/inode.c                  |  2 +-
+ fs/btrfs/file.c                 | 24 ++--------
+ fs/btrfs/inode.c                |  2 +-
+ fs/btrfs/super.c                |  5 ++-
+ fs/ceph/inode.c                 |  2 +-
+ fs/coda/inode.c                 |  3 +-
+ fs/ecryptfs/inode.c             |  5 ++-
+ fs/erofs/inode.c                |  2 +-
+ fs/exfat/file.c                 |  2 +-
+ fs/ext2/inode.c                 |  2 +-
+ fs/ext4/inode.c                 |  2 +-
+ fs/ext4/super.c                 |  2 +-
+ fs/f2fs/file.c                  |  2 +-
+ fs/fat/file.c                   |  2 +-
+ fs/fuse/dir.c                   |  2 +-
+ fs/gfs2/inode.c                 |  2 +-
+ fs/hfsplus/inode.c              |  2 +-
+ fs/inode.c                      | 98 +++++++++++++++++++++++++++++------------
+ fs/kernfs/inode.c               |  2 +-
+ fs/libfs.c                      |  4 +-
+ fs/minix/inode.c                |  2 +-
+ fs/nfs/inode.c                  |  2 +-
+ fs/nfs/namespace.c              |  3 +-
+ fs/ntfs3/file.c                 |  2 +-
+ fs/ocfs2/file.c                 |  2 +-
+ fs/orangefs/inode.c             |  2 +-
+ fs/proc/base.c                  |  4 +-
+ fs/proc/fd.c                    |  2 +-
+ fs/proc/generic.c               |  2 +-
+ fs/proc/proc_net.c              |  2 +-
+ fs/proc/proc_sysctl.c           |  2 +-
+ fs/proc/root.c                  |  3 +-
+ fs/smb/client/inode.c           |  2 +-
+ fs/smb/server/smb2pdu.c         | 22 ++++-----
+ fs/smb/server/vfs.c             |  3 +-
+ fs/stat.c                       | 59 ++++++++++++++++++++-----
+ fs/sysv/itree.c                 |  3 +-
+ fs/ubifs/dir.c                  |  2 +-
+ fs/udf/symlink.c                |  2 +-
+ fs/vboxsf/utils.c               |  2 +-
+ fs/xfs/libxfs/xfs_shared.h      |  2 -
+ fs/xfs/libxfs/xfs_trans_inode.c |  8 ++--
+ fs/xfs/xfs_iops.c               |  4 +-
+ fs/xfs/xfs_super.c              |  2 +-
+ include/linux/fs.h              | 47 ++++++++++++++++++--
+ mm/shmem.c                      | 16 ++++++-
+ 48 files changed, 248 insertions(+), 129 deletions(-)
+---
+base-commit: cf22d118b89a09a0160586412160d89098f7c4c7
+change-id: 20230713-mgctime-f2a9fc324918
+
+Best regards,
+-- 
+Jeff Layton <jlayton@kernel.org>
 
