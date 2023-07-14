@@ -2,99 +2,101 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C53BDC0015E
-	for <linux-xfs@archiver.kernel.org>; Fri, 14 Jul 2023 11:53:01 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 948D1EB64DC
+	for <linux-xfs@archiver.kernel.org>; Fri, 14 Jul 2023 14:10:13 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235589AbjGNLxA (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 14 Jul 2023 07:53:00 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51280 "EHLO
+        id S234930AbjGNOKM (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 14 Jul 2023 10:10:12 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60030 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S235689AbjGNLwz (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 14 Jul 2023 07:52:55 -0400
-Received: from smtp-out1.suse.de (smtp-out1.suse.de [IPv6:2001:67c:2178:6::1c])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 66410136;
-        Fri, 14 Jul 2023 04:52:54 -0700 (PDT)
-Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
+        with ESMTP id S234693AbjGNOKL (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 14 Jul 2023 10:10:11 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A943D1989
+        for <linux-xfs@vger.kernel.org>; Fri, 14 Jul 2023 07:10:10 -0700 (PDT)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
+         key-exchange X25519 server-signature RSA-PSS (2048 bits))
         (No client certificate requested)
-        by smtp-out1.suse.de (Postfix) with ESMTPS id 01A3B2215C;
-        Fri, 14 Jul 2023 11:52:53 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.cz; s=susede2_rsa;
-        t=1689335573; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=8KDV1nJ5Jz4wRDhIKmz6NBTzJCSWRm0jEnj5bKK8jms=;
-        b=RaI2ovdDvUPrEZfWKhoWhNZo8wczuah4soS9qZNmjNs4m77GOOhIkliWi0AW6JeIY2bpTl
-        sS1XdU5o65Y83yhWiMvQHDPuT8pXn8OAcj/xhWpT2sCettpHZpXHdcAwUxw32zO95FET5+
-        a7afrjnmliXMK10v/s4xRw7EosrSLdQ=
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.cz;
-        s=susede2_ed25519; t=1689335573;
-        h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=8KDV1nJ5Jz4wRDhIKmz6NBTzJCSWRm0jEnj5bKK8jms=;
-        b=Xwjlf4wtU20I149ib7jAHqHYtFJHRAEQ7KLGUG/IqQ27Glob67oL5W1MoWY3aYVfy9nRQk
-        tVWwL8O32q1ldDBQ==
-Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
-        (No client certificate requested)
-        by imap2.suse-dmz.suse.de (Postfix) with ESMTPS id DBF04138F8;
-        Fri, 14 Jul 2023 11:52:52 +0000 (UTC)
-Received: from dovecot-director2.suse.de ([192.168.254.65])
-        by imap2.suse-dmz.suse.de with ESMTPSA
-        id vwKmNRQ3sWT7PwAAMHmgww
-        (envelope-from <chrubis@suse.cz>); Fri, 14 Jul 2023 11:52:52 +0000
-Date:   Fri, 14 Jul 2023 13:53:58 +0200
-From:   Cyril Hrubis <chrubis@suse.cz>
-To:     Jan Stancek <jstancek@redhat.com>
-Cc:     Christoph Hellwig <hch@lst.de>,
-        "Darrick J. Wong" <djwong@kernel.org>,
-        Andreas Gruenbacher <agruenba@redhat.com>,
-        Miklos Szeredi <miklos@szeredi.hu>,
-        Matthew Wilcox <willy@infradead.org>, cluster-devel@redhat.com,
-        Ilya Dryomov <idryomov@gmail.com>,
-        Miklos Szeredi <mszeredi@redhat.com>,
-        Chao Yu <chao@kernel.org>, oe-lkp@lists.linux.dev,
-        Al Viro <viro@zeniv.linux.org.uk>,
-        Jaegeuk Kim <jaegeuk@kernel.org>, Xiubo Li <xiubli@redhat.com>,
-        Trond Myklebust <trond.myklebust@hammerspace.com>,
-        ltp@lists.linux.it, lkp@intel.com, Jens Axboe <axboe@kernel.dk>,
-        Christian Brauner <brauner@kernel.org>,
-        Theodore Ts'o <tytso@mit.edu>,
-        Johannes Thumshirn <johannes.thumshirn@wdc.com>,
-        linux-kernel@vger.kernel.org, linux-xfs@vger.kernel.org,
-        kernel test robot <oliver.sang@intel.com>,
-        Anna Schumaker <anna@kernel.org>,
-        linux-fsdevel@vger.kernel.org,
-        Andrew Morton <akpm@linux-foundation.org>,
-        Hannes Reinecke <hare@suse.de>
-Subject: Re: [LTP] [linus:master] [iomap] 219580eea1: ltp.writev07.fail
-Message-ID: <ZLE3Vh5yHq_floF7@yuki>
-References: <202307132107.2ce4ea2f-oliver.sang@intel.com>
- <20230713150923.GA28246@lst.de>
- <ZLAZn_SBmoIFG5F5@yuki>
- <CAASaF6xbgSf+X+SF8wLjFrsMA4=XxHti0SXDZQP1ZqdGYp4aUQ@mail.gmail.com>
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 4460A61D26
+        for <linux-xfs@vger.kernel.org>; Fri, 14 Jul 2023 14:10:10 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 97F0AC433C7;
+        Fri, 14 Jul 2023 14:10:09 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1689343809;
+        bh=sR+15sNzsRIsLjV3G5309iNuHGuE+cNi6ZnOH3UpomQ=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=CXuxCnaOCj25VYUOcqELnFkGASjgs9TjZmMZv5jkfPiPYeZu5fJ3AXs2FD8XsOWjW
+         LBJ7qpj57XXTq9uBzlQVTH4Rr2U8Sqi1XwC7RKbk0ogA05vf61LOUoyH/pOqp2TFHk
+         4tGY5iEI6DayX3ZeVDXOpvGYTUUyyEK6RXbq4lWHc9+pVaCi6vt44vKIM/yvm5Jz5E
+         yLj0IUXtfpnY1yVcaE6RV9VTbSm0n9nLONBw6aG7XMxeF5h77BAN1S4/yYYvjlazoa
+         5A+eASHNPDNydk2/rpbzauOYXn1xjUt3imZM2bP/R3f2ICVrI5ncjnJleDujt8U5he
+         4oBNoZoD/7ewQ==
+Date:   Fri, 14 Jul 2023 07:10:08 -0700
+From:   "Darrick J. Wong" <djwong@kernel.org>
+To:     Amir Goldstein <amir73il@gmail.com>
+Cc:     Chandan Babu R <chandan.babu@oracle.com>,
+        Leah Rumancik <leah.rumancik@gmail.com>,
+        Dave Chinner <david@fromorbit.com>,
+        Chris Dunlop <chris@onthe.net.au>, linux-xfs@vger.kernel.org
+Subject: Re: [PATCH 6.1 CANDIDATE v2 0/4] xfs inodegc fixes for 6.1.y (from
+ v6.4)
+Message-ID: <20230714141008.GT108251@frogsfrogsfrogs>
+References: <20230714064509.1451122-1-amir73il@gmail.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <CAASaF6xbgSf+X+SF8wLjFrsMA4=XxHti0SXDZQP1ZqdGYp4aUQ@mail.gmail.com>
+In-Reply-To: <20230714064509.1451122-1-amir73il@gmail.com>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Hi!
-> > > I can't reproduce this on current mainline.  Is this a robust failure
-> > > or flapping test?  Especiall as the FAIL conditions look rather
-> > > unrelated.
+On Fri, Jul 14, 2023 at 09:45:05AM +0300, Amir Goldstein wrote:
+> Darrick,
 > 
-> It's consistently reproducible for me on xfs with HEAD at:
-> eb26cbb1a754 ("Merge tag 'platform-drivers-x86-v6.5-2' of
-> git://git.kernel.org/pub/scm/linux/kernel/git/pdx86/platform-drivers-x86")
+> These are the patches we discussed that Leah requested for the 5.15.y
+> backport of non-blocking inodegc pushes series [1].
+> 
+> They may or may not help the 5.15.y -> 6.1.y regression that was
+> reported by Chris [2].
+> 
+> This v2 series has gone through 3 rounds of kdevops loop on top
+> of the testing already run on v1.
+> 
+> Please ACK.
 
-Should be fixed by https://lore.kernel.org/linux-fsdevel/20230714085124.548920-1-hch@lst.de/T/#t
+Looks good to me,
+Acked-by: Darrick J. Wong <djwong@kernel.org>
 
--- 
-Cyril Hrubis
-chrubis@suse.cz
+--D
+
+> 
+> Thanks,
+> Amir.
+> 
+> Changed since v1:
+> - include: 2d5f38a31980 ("xfs: disable reaping in fscounters scrub")
+> 
+> [1] https://www.spinics.net/lists/linux-xfs/msg61813.html
+> [2] https://lore.kernel.org/all/ZK4E%2FgGuaBu+qvKL@dread.disaster.area/
+> 
+> Darrick J. Wong (4):
+>   xfs: explicitly specify cpu when forcing inodegc delayed work to run
+>     immediately
+>   xfs: check that per-cpu inodegc workers actually run on that cpu
+>   xfs: disable reaping in fscounters scrub
+>   xfs: fix xfs_inodegc_stop racing with mod_delayed_work
+> 
+>  fs/xfs/scrub/common.c     | 26 -------------------------
+>  fs/xfs/scrub/common.h     |  2 --
+>  fs/xfs/scrub/fscounters.c | 13 ++++++-------
+>  fs/xfs/scrub/scrub.c      |  2 --
+>  fs/xfs/scrub/scrub.h      |  1 -
+>  fs/xfs/xfs_icache.c       | 40 ++++++++++++++++++++++++++++++++-------
+>  fs/xfs/xfs_mount.h        |  3 +++
+>  fs/xfs/xfs_super.c        |  3 +++
+>  8 files changed, 45 insertions(+), 45 deletions(-)
+> 
+> -- 
+> 2.34.1
+> 
