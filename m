@@ -2,55 +2,73 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9E82EEB64DA
-	for <linux-xfs@archiver.kernel.org>; Fri, 14 Jul 2023 08:08:45 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 04B1EEB64DC
+	for <linux-xfs@archiver.kernel.org>; Fri, 14 Jul 2023 08:51:56 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234884AbjGNIIo (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 14 Jul 2023 04:08:44 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59442 "EHLO
+        id S235676AbjGNIvy (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 14 Jul 2023 04:51:54 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57142 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S234892AbjGNIIU (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 14 Jul 2023 04:08:20 -0400
-X-Greylist: delayed 440 seconds by postgrey-1.37 at lindbergh.monkeyblade.net; Fri, 14 Jul 2023 01:05:57 PDT
-Received: from mail.erith.pl (mail.erith.pl [89.40.118.62])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 28F5A469A
-        for <linux-xfs@vger.kernel.org>; Fri, 14 Jul 2023 01:05:56 -0700 (PDT)
-Received: by mail.erith.pl (Postfix, from userid 1001)
-        id 9EA05838D9; Fri, 14 Jul 2023 08:56:09 +0100 (BST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=erith.pl; s=mail;
-        t=1689321393; bh=ylPEEFxKikzRNxw8qePBwubcoXBfCPGkyK2Vq3svM24=;
-        h=Date:From:To:Subject:From;
-        b=gOp8dgZ4leNMDo78WsrJCoaSEa3mBfjiLcKz6fmhUH7ACk+HnRWj253s0In/uA6Y1
-         QFXL+9s1+KB3wkoGPAz+Ro3akMn6jCMASIC+f6U5vmU3cV0I2dhyehzsaeEWlyGd9z
-         tOX1u9lC7dx5BTD+jbb+JXJS40DBiwxJLeTe7VBrA8NedSNlEIevWJf9nFAnZf4rA8
-         Tvsxv8O/XFiQVrmLysnaQqC+mn0G5Zd0VETHM+/GCJBGIbWgmlMTcsE4xjg9yJ+tU6
-         oQdV3t8FoIqYTbILNyyT640PWkpm7Br/shJnDej3VKL5X/nCtausL0ZugwFgmc2DEk
-         iieuy3HfkxJ0w==
-Received: by mail.erith.pl for <linux-xfs@vger.kernel.org>; Fri, 14 Jul 2023 07:55:54 GMT
-Message-ID: <20230714074501-0.1.4i.fdfd.0.6g8cj478ra@erith.pl>
-Date:   Fri, 14 Jul 2023 07:55:54 GMT
-From:   "Dominik Chrostek" <dominik.chrostek@erith.pl>
-To:     <linux-xfs@vger.kernel.org>
-Subject: =?UTF-8?Q?Wyd=C5=82u=C5=BCony_termin_p=C5=82atno=C5=9Bci_za_kupowane_towary?=
-X-Mailer: mail.erith.pl
+        with ESMTP id S235649AbjGNIvl (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 14 Jul 2023 04:51:41 -0400
+Received: from bombadil.infradead.org (bombadil.infradead.org [IPv6:2607:7c80:54:3::133])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B1AF226A5;
+        Fri, 14 Jul 2023 01:51:36 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=infradead.org; s=bombadil.20210309; h=Content-Transfer-Encoding:
+        MIME-Version:Message-Id:Date:Subject:Cc:To:From:Sender:Reply-To:Content-Type:
+        Content-ID:Content-Description:In-Reply-To:References;
+        bh=1Mmk0hcQiy9mntBXriZUXYSFGw90mYsBEkK5jJEnRzw=; b=MvTymamHN3zkqhNT1fE1Fvzzsc
+        ASvKE8XPmBuIxwjrNchNXRmjrGlnxlV1ai8QRgjl3okWwyCiUu9hs8VCnqVuVlbbVCTxoQIVkFUeO
+        yYI0gQ/bW77LmeNvjvnJjFd1cBs41thrORAO4gwJDM3t4SZ2q+9RAMQDkzoPDEfSvhn+HGoJX4bim
+        /nTX9ag1wru9WgucL5p7PHHwL5lx+jd7v24O00JPedhRyq7pSfURfz0TRXlD5owcJR8R6zan8/S+Y
+        fVwA4+Jh4fT35VnMIUKNHcrr4r6IliPCjQA8L3Pn3oGWtPBkzc5Sm9WKBE9qrPPTBkQAn72TvvMLz
+        +iZQnq0g==;
+Received: from 2a02-8389-2341-5b80-39d3-4735-9a3c-88d8.cable.dynamic.v6.surfer.at ([2a02:8389:2341:5b80:39d3:4735:9a3c:88d8] helo=localhost)
+        by bombadil.infradead.org with esmtpsa (Exim 4.96 #2 (Red Hat Linux))
+        id 1qKEWW-005aGS-0q;
+        Fri, 14 Jul 2023 08:51:36 +0000
+From:   Christoph Hellwig <hch@lst.de>
+To:     djwong@kernel.org
+Cc:     linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
+        kernel test robot <oliver.sang@intel.com>,
+        Cyril Hrubis <chrubis@suse.cz>
+Subject: [PATCH 1/2] iomap: fix a regression for partial write errors
+Date:   Fri, 14 Jul 2023 10:51:23 +0200
+Message-Id: <20230714085124.548920-1-hch@lst.de>
+X-Mailer: git-send-email 2.39.2
 MIME-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Content-Transfer-Encoding: 8bit
+X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Dzie=C5=84 dobry,
+When write* wrote some data it should return the amount of written data
+and not the error code that caused it to stop.  Fix a recent regression
+in iomap_file_buffered_write that caused it to return the errno instead.
 
-czy wiedz=C4=85 Pa=C5=84stwo, =C5=BCe macie mo=C5=BCliwo=C5=9B=C4=87 zap=C5=
-=82aty za towar w znacznie p=C3=B3=C5=BAniejszym terminie?
+Fixes: 219580eea1ee ("iomap: update ki_pos in iomap_file_buffered_write")
+Reported-by: kernel test robot <oliver.sang@intel.com>
+Reported-by: Cyril Hrubis <chrubis@suse.cz>
+Signed-off-by: Christoph Hellwig <hch@lst.de>
+---
+ fs/iomap/buffered-io.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-Terminowo uregulujemy w Pa=C5=84stwa imieniu faktury u dostawc=C3=B3w, a =
-po zap=C5=82acie wystawiamy Pa=C5=84stwu faktur=C4=99 sprzeda=C5=BCy z od=
-roczonym terminem p=C5=82atno=C5=9Bci (30-90 dni).
+diff --git a/fs/iomap/buffered-io.c b/fs/iomap/buffered-io.c
+index adb92cdb24b009..7cc9f7274883a5 100644
+--- a/fs/iomap/buffered-io.c
++++ b/fs/iomap/buffered-io.c
+@@ -872,7 +872,7 @@ iomap_file_buffered_write(struct kiocb *iocb, struct iov_iter *i,
+ 	while ((ret = iomap_iter(&iter, ops)) > 0)
+ 		iter.processed = iomap_write_iter(&iter, i);
+ 
+-	if (unlikely(ret < 0))
++	if (unlikely(iter.pos == iocb->ki_pos))
+ 		return ret;
+ 	ret = iter.pos - iocb->ki_pos;
+ 	iocb->ki_pos += ret;
+-- 
+2.39.2
 
-S=C4=85 Pa=C5=84stwo zainteresowani takim rozwi=C4=85zaniem?
-
-
-Pozdrawiam
-Dominik Chrostek
