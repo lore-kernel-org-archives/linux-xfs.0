@@ -2,44 +2,44 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 98DCAEB64DC
-	for <linux-xfs@archiver.kernel.org>; Mon, 17 Jul 2023 15:58:23 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id EADC5C0015E
+	for <linux-xfs@archiver.kernel.org>; Mon, 17 Jul 2023 16:14:37 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230100AbjGQP6W (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 17 Jul 2023 11:58:22 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51504 "EHLO
+        id S231205AbjGQQOg (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 17 Jul 2023 12:14:36 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59876 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229731AbjGQP6W (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 17 Jul 2023 11:58:22 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 75EBCD8;
-        Mon, 17 Jul 2023 08:58:21 -0700 (PDT)
+        with ESMTP id S232079AbjGQQOP (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 17 Jul 2023 12:14:15 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4F6FA10E3;
+        Mon, 17 Jul 2023 09:14:13 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
          key-exchange X25519 server-signature RSA-PSS (2048 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 12D8C6113A;
-        Mon, 17 Jul 2023 15:58:21 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 6DB4DC433C7;
-        Mon, 17 Jul 2023 15:58:20 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id C983661128;
+        Mon, 17 Jul 2023 16:14:12 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 32713C433C7;
+        Mon, 17 Jul 2023 16:14:12 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1689609500;
-        bh=E3WQDmvbMr9g++qYe5eJfisyc4QJ7fepJT7ML7kTuDU=;
+        s=k20201202; t=1689610452;
+        bh=rLN1a6AgAx4gc3Ss335mxYugFtNLV4lT0gCdC3UBlpk=;
         h=Date:From:To:Cc:Subject:From;
-        b=egn7RyN5rXrbZzLdlWr2bXPl3CKQLkwyYe239GTP7ozF5mdMva7wWdFmiVr5/FML1
-         ZD0Wb+6S6nHR/I/NYHqvskPSpd4OorMPk09/2NqWp7XVbIATqBal8/qsKy7V+U0f/4
-         JONTARS1O+L7umMavH4IOm+EtanuGsQc5kcNxaWnRoiYwdV8IjiScjhxlyjkKfO6xA
-         2kRBwU7JdImbuKT6Z6Tyc/StFyippJgK22BAiNtDtdV3x9mRyymL6bgUi9a9b3AZh5
-         lLCeVHg4fcYYSXrDIbcRGmuHffd5Ydz/Jr8E4bG++rt4gLCcOKRl59eySCrkBGrn68
-         QP6UW/uVtUhYw==
-Date:   Mon, 17 Jul 2023 08:58:19 -0700
+        b=Jfvuzglc2RgHSEWuIpP7YrmPlvwMrHRhjUTLXV6QMdWaF4MUxfCdbiY1a08AKV+6R
+         vg6aei3s2qZHy7bWVLBb7VVJyOfnpmVqlUCxM3fqlrzEBdJ5L0azpIO4jlGeeqi8H2
+         Pk5a4EXc+lVNLBxL0tvQIk9q0z/UrF5Pmbo8jYjX6znLUmMDT1JzPDGinnt74cHtNO
+         Dsvu5oTHQ0uR8jdUnqyS4yLP5IoqJ92k0Xe+r6katiMyo/CmcIhLGJvRaKmlH3ho6m
+         eYaDx8d/SNpQ2vQLSh4pb8EYEklwm7WnPlQKRqKyxTEhffxLXd+qz+BAhgFzqK0z/M
+         9w0Noepby/OZg==
+Date:   Mon, 17 Jul 2023 09:14:11 -0700
 From:   "Darrick J. Wong" <djwong@kernel.org>
-To:     david@fromorbit.com, djwong@kernel.org
-Cc:     chrubis@suse.cz, hch@lst.de, linux-fsdevel@vger.kernel.org,
-        linux-xfs@vger.kernel.org, oliver.sang@intel.com,
-        ritesh.harjani@gmail.com
-Subject: [ANNOUNCE] xfs-linux: iomap-for-next updated to efa96cc99793
-Message-ID: <168960931578.372681.16081228005926090503.stg-ugh@frogsfrogsfrogs>
+To:     djwong@kernel.org
+Cc:     dchinner@redhat.com, hch@infradead.org, hch@lst.de, jack@suse.cz,
+        linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org,
+        mcgrof@kernel.org, ruansy.fnst@fujitsu.com
+Subject: [ANNOUNCE] xfs-linux: vfs-for-next updated to 59ba4fdd2d1f
+Message-ID: <168961008514.386829.4713520213666748279.stg-ugh@frogsfrogsfrogs>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
@@ -49,7 +49,7 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 
 Hi folks,
 
-The iomap-for-next branch of the xfs-linux repository at:
+The vfs-for-next branch of the xfs-linux repository at:
 
 git://git.kernel.org/pub/scm/fs/xfs/xfs-linux.git
 
@@ -58,20 +58,33 @@ has just been updated.
 Patches often get missed, so please check if your outstanding patches
 were in this update. If they have not been in this update, please
 resubmit them to linux-xfs@vger.kernel.org so they can be picked up in
-the next update.  I based this off -rc2 because it includes a few
-bugfixes that hanged the recoveryloop tests.
+the next update.
 
-The new head of the iomap-for-next branch is commit:
+I decided to push this out as a work branch for wider testing in
+for-next, though these patches may very well end up getting folded into
+either (a) Luis Chamberlain's work to auto-freeze filesystems; (b) the
+xfs tree for 6.6 if Shiyang Ruan's pmem failure notification work moves
+ahead; or (c) the xfs tree if that part of online fsck gets merged for
+6.6.  Either way, test early, test often.
 
-efa96cc99793 iomap: micro optimize the ki_pos assignment in iomap_file_buffered_write
+The new head of the vfs-for-next branch is commit:
+
+59ba4fdd2d1f fs: wait for partially frozen filesystems
 
 2 new commits:
 
-Christoph Hellwig (2):
-[20c64ec83a9f] iomap: fix a regression for partial write errors
-[efa96cc99793] iomap: micro optimize the ki_pos assignment in iomap_file_buffered_write
+Darrick J. Wong (2):
+[880b9577855e] fs: distinguish between user initiated freeze and kernel initiated freeze
+[59ba4fdd2d1f] fs: wait for partially frozen filesystems
 
 Code Diffstat:
 
-fs/iomap/buffered-io.c | 4 ++--
-1 file changed, 2 insertions(+), 2 deletions(-)
+Documentation/filesystems/vfs.rst |   6 +-
+block/bdev.c                      |   8 +--
+fs/f2fs/gc.c                      |   8 ++-
+fs/gfs2/super.c                   |  12 ++--
+fs/gfs2/sys.c                     |   4 +-
+fs/ioctl.c                        |   8 +--
+fs/super.c                        | 113 ++++++++++++++++++++++++++++++++++----
+include/linux/fs.h                |  15 +++--
+8 files changed, 138 insertions(+), 36 deletions(-)
