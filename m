@@ -2,132 +2,158 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3702DC0015E
-	for <linux-xfs@archiver.kernel.org>; Mon, 17 Jul 2023 03:04:07 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7E1DAEB64DC
+	for <linux-xfs@archiver.kernel.org>; Mon, 17 Jul 2023 05:12:43 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231203AbjGQDEF (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Sun, 16 Jul 2023 23:04:05 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35550 "EHLO
+        id S230426AbjGQFMm (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 17 Jul 2023 01:12:42 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35266 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231191AbjGQDD6 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sun, 16 Jul 2023 23:03:58 -0400
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id EE55B113
-        for <linux-xfs@vger.kernel.org>; Sun, 16 Jul 2023 20:03:11 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1689562991;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=ohf9oTE8PoNQM+gBA+nwQjAZJRHtXYuggoi5MTM7ouA=;
-        b=Hw7HM4RU+woz+dmdLoj1PZVPe8zIdBQ+gqpbsyRGQQy+q0M7+HJyta3wVlBHoDgkk9gKvA
-        bUba3mqIXl4FNeuunhBK1y4XQhHex7u3NbS0yMKr/RJHkJWWolatzNkrKgvW4JknetDgPc
-        DxNneLr9SbIvUku2gtMQocYNFd+Cf+8=
-Received: from mail-pl1-f199.google.com (mail-pl1-f199.google.com
- [209.85.214.199]) by relay.mimecast.com with ESMTP with STARTTLS
- (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
- us-mta-263-p0AvoNVTOKi1NYqrSjTFCQ-1; Sun, 16 Jul 2023 23:03:09 -0400
-X-MC-Unique: p0AvoNVTOKi1NYqrSjTFCQ-1
-Received: by mail-pl1-f199.google.com with SMTP id d9443c01a7336-1b8af49a5d2so32207045ad.2
-        for <linux-xfs@vger.kernel.org>; Sun, 16 Jul 2023 20:03:09 -0700 (PDT)
+        with ESMTP id S229920AbjGQFMl (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 17 Jul 2023 01:12:41 -0400
+Received: from mail-pj1-x1031.google.com (mail-pj1-x1031.google.com [IPv6:2607:f8b0:4864:20::1031])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A4F35E5E;
+        Sun, 16 Jul 2023 22:12:40 -0700 (PDT)
+Received: by mail-pj1-x1031.google.com with SMTP id 98e67ed59e1d1-26586e824e7so2007134a91.3;
+        Sun, 16 Jul 2023 22:12:40 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20221208; t=1689570760; x=1692162760;
+        h=in-reply-to:subject:cc:to:from:message-id:date:from:to:cc:subject
+         :date:message-id:reply-to;
+        bh=/IgqUR9PvjzJ1jJmva5aVdtFrmS/jtLMZS//FD+XYVU=;
+        b=Ckcr2Y5CE8xWEYz9QwHVm36yHJeL2lcfus7o4m3EY4+MHR1C+g7aRHdpkXlZwW/qsB
+         sLjmtm8Q19kLcnJ8ppyTRW3kS47OQvzwLlIAuWpdYwzyAtz2WcW0TVom9BmpPD09x236
+         +XUPr0K1ZFhTBZUxvDdBwxOQXsbotx1dltzGMg0UEbXOkQRx2xqa7gKmLQ7S0gTXSFRq
+         cVXCxMQNJ4cuaoEgbkT6eX8u7ip25lr0AtlKg3XNXYSNfAgkiN/gyr9kJF0y58K8YumD
+         qK/oRyFp3lo5fu5R3qM1JY7B3gNjoU5Y4sGUFuQGD+4TE3MmRS3ln0SRCr2gVEbg857V
+         Y2BQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20221208; t=1689562988; x=1692154988;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=ohf9oTE8PoNQM+gBA+nwQjAZJRHtXYuggoi5MTM7ouA=;
-        b=KQch0yM4FoITTHx9hTEoX9hukuww5iwe37mLVn07m4e3RqzD3tBAdWrfRplyR9v27D
-         MJ+3AgdVgI7GBaslH6YzVLowjG49WP571tFDL+E1EmFqTzURuL5hGdR3E2r+QPc+eSVx
-         tJF7Hu55vuDfsKfFjyX/OqDtVKwmnsWsSGd5Y0ecURT7mCT0AGC+gpbTpEBTawUPOYGb
-         JFWgZhjPErHf63IMhcAYmeGXicvhfILnirWQVIBmqIt0C+qlOwugOjbNT6jk3nUjfB/s
-         /Bjx4dz+aJdg/udt44agQqKh3vnA7UyGXp/mldTpgs+AziaIPz6To4z4LYl8k8pz2Cnr
-         NDrw==
-X-Gm-Message-State: ABy/qLb47Wymx42/RghY3sMjRiihk8KgruN7KxdU1g2rETcWNlrF3DiW
-        CwbUJ9pSrwMci46adGQFdgEJfczRDJb8Qy5hd2+8dK2lu9RLsmYfScL3AToCSbckk86mf49+raj
-        5HX3rP5qVOcmwQFyaheCl
-X-Received: by 2002:a17:903:32c9:b0:1b8:9598:6508 with SMTP id i9-20020a17090332c900b001b895986508mr15969565plr.18.1689562988521;
-        Sun, 16 Jul 2023 20:03:08 -0700 (PDT)
-X-Google-Smtp-Source: APBJJlFjIVdnxQL4YXmYK6fefJwo/CmOB2L4VfbDTw32sAIHT2Xg0S8EWdBTcFEGuH8pSVYWzEay6g==
-X-Received: by 2002:a17:903:32c9:b0:1b8:9598:6508 with SMTP id i9-20020a17090332c900b001b895986508mr15969552plr.18.1689562988233;
-        Sun, 16 Jul 2023 20:03:08 -0700 (PDT)
-Received: from zlang-mailbox ([43.228.180.230])
-        by smtp.gmail.com with ESMTPSA id jc6-20020a17090325c600b001b2069072ccsm11602636plb.18.2023.07.16.20.03.06
+        d=1e100.net; s=20221208; t=1689570760; x=1692162760;
+        h=in-reply-to:subject:cc:to:from:message-id:date:x-gm-message-state
+         :from:to:cc:subject:date:message-id:reply-to;
+        bh=/IgqUR9PvjzJ1jJmva5aVdtFrmS/jtLMZS//FD+XYVU=;
+        b=O9y7BYD/9K6ZFrtdR0oAzec48uswSM6ygtfPEpOaMep7FWXyCjHYPm2DXQW6sYNQbu
+         BJm4bUoTMp3wOyNdQtYPmJlyCzMpQswp7yXO7Hc4O/l9XDdNXbu2DyZnXMgE6G0w1Sm1
+         KPBhrIroE4SSE8GUqZpPtFtmiB/Fu3drbEqCPhDOYcaMzFJMWlwMAQ44eQ0UhLKh2nrH
+         sPk3UCh6qmdLU1eYl5JhF5zffih3mU4DjMqCMjlS+pPfjuizW4TVGDL+GMUKQ5/6Ytdl
+         GJYKzeGt1XhDW1i+u24Jj3uVnvN/ipTgk638D5gINFG2QcY+lTlo80lR9XToSlOfw6nD
+         T6fg==
+X-Gm-Message-State: ABy/qLYUlgurQTDXN4PDJoqgTtk3DLXT+RJ0uh6gwhsOeWeQW6cacXY4
+        Yh7veI+SKekXf5aeTtwF564xOpGEmlU=
+X-Google-Smtp-Source: APBJJlGPBrC+4NpRUL/jdnWZgBzb4KGDJ7nOVPgI2jEFz73XoaSGm8C+p8RRw8LNRdeG0Ils1kr+UA==
+X-Received: by 2002:a17:90a:db17:b0:262:ffd2:ced with SMTP id g23-20020a17090adb1700b00262ffd20cedmr9485431pjv.0.1689570759975;
+        Sun, 16 Jul 2023 22:12:39 -0700 (PDT)
+Received: from dw-tp ([49.207.232.207])
+        by smtp.gmail.com with ESMTPSA id l6-20020a17090a49c600b00263cca08d95sm4088967pjm.55.2023.07.16.22.12.37
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Sun, 16 Jul 2023 20:03:07 -0700 (PDT)
-Date:   Mon, 17 Jul 2023 11:03:03 +0800
-From:   Zorro Lang <zlang@redhat.com>
-To:     "Darrick J. Wong" <djwong@kernel.org>
-Cc:     linux-xfs@vger.kernel.org, fstests@vger.kernel.org,
-        mpatocka@redhat.com
-Subject: Re: [PATCH] generic/558: avoid forkbombs on filesystems with many
- free inodes
-Message-ID: <20230717030303.i3stvautu3oh55ao@zlang-mailbox>
-References: <20230714145900.GM11442@frogsfrogsfrogs>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20230714145900.GM11442@frogsfrogsfrogs>
+        Sun, 16 Jul 2023 22:12:39 -0700 (PDT)
+Date:   Mon, 17 Jul 2023 10:42:31 +0530
+Message-Id: <87ttu3nmtc.fsf@doe.com>
+From:   Ritesh Harjani (IBM) <ritesh.list@gmail.com>
+To:     Christoph Hellwig <hch@lst.de>, djwong@kernel.org
+Cc:     linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
+        kernel test robot <oliver.sang@intel.com>,
+        Cyril Hrubis <chrubis@suse.cz>
+Subject: Re: [PATCH 1/2] iomap: fix a regression for partial write errors
+In-Reply-To: <20230714085124.548920-1-hch@lst.de>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Fri, Jul 14, 2023 at 07:59:00AM -0700, Darrick J. Wong wrote:
-> From: Darrick J. Wong <djwong@kernel.org>
-> 
-> Mikulas reported that this test became a forkbomb on his system when he
-> tested it with bcachefs.  Unlike XFS and ext4, which have large inodes
-> consuming hundreds of bytes, bcachefs has very tiny ones.  Therefore, it
-> reports a large number of free inodes on a freshly mounted 1GB fs (~15
-> million), which causes this test to try to create 15000 processes.
-> 
-> There's really no reason to do that -- all this test wanted to do was to
-> exhaust the number of inodes as quickly as possible using all available
-> CPUs, and then it ran xfs_repair to try to reproduce a bug.  Set the
-> number of subshells to 4x the CPU count and spread the work among them
-> instead of forking thousands of processes.
-> 
-> Reported-by: Mikulas Patocka <mpatocka@redhat.com>
-> Signed-off-by: Darrick J. Wong <djwong@kernel.org>
-> Tested-by: Mikulas Patocka <mpatocka@redhat.com>
+Christoph Hellwig <hch@lst.de> writes:
+
+> When write* wrote some data it should return the amount of written data
+> and not the error code that caused it to stop.  Fix a recent regression
+> in iomap_file_buffered_write that caused it to return the errno instead.
+>
+
+Agreed. Reviewed the change and it looks right to me. 
+Feel free to add - 
+
+Reviewed-by: Ritesh Harjani (IBM) <ritesh.list@gmail.com>
+
+> Fixes: 219580eea1ee ("iomap: update ki_pos in iomap_file_buffered_write")
+> Reported-by: kernel test robot <oliver.sang@intel.com>
+> Reported-by: Cyril Hrubis <chrubis@suse.cz>
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
 > ---
->  tests/generic/558 |   18 ++++++++++++------
->  1 file changed, 12 insertions(+), 6 deletions(-)
-> 
-> diff --git a/tests/generic/558 b/tests/generic/558
-> index 4e22ce656b..de5c28d00d 100755
-> --- a/tests/generic/558
-> +++ b/tests/generic/558
-> @@ -39,15 +39,21 @@ _scratch_mkfs_sized $((1024 * 1024 * 1024)) >>$seqres.full 2>&1
->  _scratch_mount
+
+In case anyone wanted to see before and after test failures output of
+
+./runltp -f syscalls -s writev07 -d /mnt1/test
+
+<without this patch>
+tst_test.c:1558: TINFO: Timeout per run is 0h 00m 30s
+writev07.c:50: TINFO: starting test with initial file offset: 0
+writev07.c:73: TINFO: got EFAULT
+writev07.c:78: TFAIL: file was written to
+writev07.c:84: TPASS: offset stayed unchanged
+writev07.c:50: TINFO: starting test with initial file offset: 65
+writev07.c:73: TINFO: got EFAULT
+writev07.c:78: TFAIL: file was written to
+writev07.c:84: TPASS: offset stayed unchanged
+writev07.c:50: TINFO: starting test with initial file offset: 4096
+writev07.c:73: TINFO: got EFAULT
+writev07.c:80: TPASS: file stayed untouched
+writev07.c:84: TPASS: offset stayed unchanged
+writev07.c:50: TINFO: starting test with initial file offset: 4097
+writev07.c:73: TINFO: got EFAULT
+writev07.c:80: TPASS: file stayed untouched
+writev07.c:84: TPASS: offset stayed unchanged
+
+Summary:
+passed   6
+failed   2
+broken   0
+skipped  0
+warnings 0
+
+
+<with this patch>
+tst_test.c:1558: TINFO: Timeout per run is 0h 00m 30s
+writev07.c:50: TINFO: starting test with initial file offset: 0
+writev07.c:94: TINFO: writev() has written 64 bytes
+writev07.c:105: TPASS: file has expected content
+writev07.c:116: TPASS: offset at 64 as expected
+writev07.c:50: TINFO: starting test with initial file offset: 65
+writev07.c:94: TINFO: writev() has written 64 bytes
+writev07.c:105: TPASS: file has expected content
+writev07.c:116: TPASS: offset at 129 as expected
+writev07.c:50: TINFO: starting test with initial file offset: 4096
+writev07.c:94: TINFO: writev() has written 64 bytes
+writev07.c:105: TPASS: file has expected content
+writev07.c:116: TPASS: offset at 4160 as expected
+writev07.c:50: TINFO: starting test with initial file offset: 4097
+writev07.c:94: TINFO: writev() has written 64 bytes
+writev07.c:105: TPASS: file has expected content
+writev07.c:116: TPASS: offset at 4161 as expected
+
+Summary:
+passed   8
+failed   0
+broken   0
+skipped  0
+warnings 0
+
+
+
+>  fs/iomap/buffered-io.c | 2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
+>
+> diff --git a/fs/iomap/buffered-io.c b/fs/iomap/buffered-io.c
+> index adb92cdb24b009..7cc9f7274883a5 100644
+> --- a/fs/iomap/buffered-io.c
+> +++ b/fs/iomap/buffered-io.c
+> @@ -872,7 +872,7 @@ iomap_file_buffered_write(struct kiocb *iocb, struct iov_iter *i,
+>  	while ((ret = iomap_iter(&iter, ops)) > 0)
+>  		iter.processed = iomap_write_iter(&iter, i);
 >  
->  i=0
-> -free_inode=`_get_free_inode $SCRATCH_MNT`
-> -file_per_dir=1000
-> -loop=$((free_inode / file_per_dir + 1))
-> +free_inodes=$(_get_free_inode $SCRATCH_MNT)
-> +nr_cpus=$(( $($here/src/feature -o) * 4 * LOAD_FACTOR ))
-> +echo "free inodes: $free_inodes nr_cpus: $nr_cpus" >> $seqres.full
-> +
-> +if ((free_inodes <= nr_cpus)); then
-> +	nr_cpus=1
-> +	files_per_dir=$free_inodes
-> +else
-> +	files_per_dir=$(( (free_inodes + nr_cpus - 1) / nr_cpus ))
-> +fi
->  mkdir -p $SCRATCH_MNT/testdir
->  
->  echo "Create $((loop * file_per_dir)) files in $SCRATCH_MNT/testdir" >>$seqres.full
+> -	if (unlikely(ret < 0))
+> +	if (unlikely(iter.pos == iocb->ki_pos))
+>  		return ret;
+>  	ret = iter.pos - iocb->ki_pos;
+>  	iocb->ki_pos += ret;
+> -- 
+> 2.39.2
 
-Has the $loop been removed?
-
-
-> -while [ $i -lt $loop ]; do
-> -	create_file $SCRATCH_MNT/testdir $file_per_dir $i >>$seqres.full 2>&1 &
-> -	let i=$i+1
-> +for ((i = 0; i < nr_cpus; i++)); do
-> +	create_file $SCRATCH_MNT/testdir $files_per_dir $i >>$seqres.full 2>&1 &
->  done
->  wait
->  
-> 
-
+-ritesh
