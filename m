@@ -2,43 +2,37 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id AC114C0015E
-	for <linux-xfs@archiver.kernel.org>; Mon, 17 Jul 2023 16:17:18 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0ABCCC0015E
+	for <linux-xfs@archiver.kernel.org>; Mon, 17 Jul 2023 16:23:51 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229630AbjGQQRR (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 17 Jul 2023 12:17:17 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34062 "EHLO
+        id S230076AbjGQQXu (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 17 Jul 2023 12:23:50 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37440 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231687AbjGQQRR (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 17 Jul 2023 12:17:17 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7F92FDD
-        for <linux-xfs@vger.kernel.org>; Mon, 17 Jul 2023 09:17:16 -0700 (PDT)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature RSA-PSS (2048 bits))
-        (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 1EF0761159
-        for <linux-xfs@vger.kernel.org>; Mon, 17 Jul 2023 16:17:16 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 83E03C433C7;
-        Mon, 17 Jul 2023 16:17:15 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1689610635;
-        bh=/f3vWLuuHnedUQ/yUU0Bn9Bbr2CE2cMLToS7HAdsfF4=;
-        h=Date:From:To:Cc:Subject:From;
-        b=r/REbl5pdEhcYX4H7Le4vIU/8W4RggGpCicGz3YB96luC0bl9I4nc9SVkUE0W8tJx
-         8s4QzZTRByjSzF8N4nschp0BqPKHKm2mUiox5cfREl3BBmacCzqaGP4ZAqjG6RPR5N
-         NieDcnkEjY+50hyMMlRjqGhyJBMELNYqbHTB06iD+7HYbyTY2CVd6P99xPwrsgAlbg
-         wKTpZpAD3C6bj1cOCTrIR5v3TaBvpHgjTqYYDsATPf9OWFVEm6l5qyiVOsc1I4cC+p
-         GHdQhWo0AVZfQVwbJFT9jrHcX0b+G3szuJvs24aQJjiAErp9xKavfuUrx0PksIfteW
-         ae+QPE/gd8W5A==
-Date:   Mon, 17 Jul 2023 09:17:15 -0700
-From:   "Darrick J. Wong" <djwong@kernel.org>
-To:     djwong@kernel.org
-Cc:     david@fromorbit.com, hch@lst.de, keescook@chromium.org,
-        linux-xfs@vger.kernel.org
-Subject: [ANNOUNCE] xfs-linux: for-next updated to f6250e205691
-Message-ID: <168961060284.394583.9141765514597482376.stg-ugh@frogsfrogsfrogs>
+        with ESMTP id S229973AbjGQQXt (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 17 Jul 2023 12:23:49 -0400
+Received: from casper.infradead.org (casper.infradead.org [IPv6:2001:8b0:10b:1236::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 698001B6;
+        Mon, 17 Jul 2023 09:23:48 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=infradead.org; s=casper.20170209; h=Content-Type:MIME-Version:Message-ID:
+        Subject:Cc:To:From:Date:Sender:Reply-To:Content-Transfer-Encoding:Content-ID:
+        Content-Description:In-Reply-To:References;
+        bh=duT/m3Hd3Z4Y2RKmKZpeJ99AKfX3MN9dkuBLS4jq2kg=; b=p7CvstCwXJSjBe/sv5P9ORiwfA
+        CkL1ChzNrUtW1W5eOcMnAbQ5WcfRJm+pRsxpFOTd00w6NoQsj+EV0yrgqaYsWZ5cza0IH+Fkss3LI
+        yrv2JCbeDcdHtXJF3ENMro/YNbwiHLUmzklSi4e3w6LgV/DeSyub/eF7TqcO8JmBsK5y/mdd6oH6n
+        epHdnOD0Uc5kLpKYkDba9Ms3toVVuVbNya4oB07r5NpfzdKNJx3uTp0c1f4HC+9MbkSehz+8X7ltT
+        h3k7fTKnP3wJOLWTsiAMV+q9NGh8sXe++2AIe6zzWRzNcZaBtAWsxsH9WBmdPVcjLzMSl8vmABYSW
+        Eko0zZCg==;
+Received: from willy by casper.infradead.org with local (Exim 4.94.2 #2 (Red Hat Linux))
+        id 1qLR0k-0044au-6W; Mon, 17 Jul 2023 16:23:46 +0000
+Date:   Mon, 17 Jul 2023 17:23:46 +0100
+From:   Matthew Wilcox <willy@infradead.org>
+To:     linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org,
+        "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc:     linux-kernel@vger.kernel.org
+Subject: [GIT PULL] Create large folios in iomap buffered write path
+Message-ID: <ZLVrEkVU2YCneoXR@casper.infradead.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
@@ -46,33 +40,70 @@ Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Hi folks,
+The following changes since commit 5b8d6e8539498e8b2fa67fbcce3fe87834d44a7a:
 
-The for-next branch of the xfs-linux repository at:
+  Merge tag 'xtensa-20230716' of https://github.com/jcmvbkbc/linux-xtensa (2023-07-16 14:12:49 -0700)
 
-git://git.kernel.org/pub/scm/fs/xfs/xfs-linux.git
+are available in the Git repository at:
 
-has just been updated.
+  git://git.infradead.org/users/willy/pagecache.git tags/large-folio-writes
 
-Patches often get missed, so please check if your outstanding patches
-were in this update. If they have not been in this update, please
-resubmit them to linux-xfs@vger.kernel.org so they can be picked up in
-the next update.
+for you to fetch changes up to b684c2e69df4883c2d00045bdd159b6a94d28c98:
 
-The new head of the for-next branch is commit:
+  iomap: Copy larger chunks from userspace (2023-07-16 17:53:18 -0400)
+----------------------------------------------------------------
 
-f6250e205691 xfs: convert flex-array declarations in xfs attr shortform objects
+Compared to the last version I sent out by email, I split the
+copy_page_from_iter_atomic() change into two pieces based on Luis &
+Christoph's feedback.  There should be no other changes.  I also added
+the Reviewed-by tags that were offered.
 
-3 new commits:
+----------------------------------------------------------------
+Create large folios in iomap buffered write path
 
-Darrick J. Wong (3):
-[371baf5c9750] xfs: convert flex-array declarations in struct xfs_attrlist*
-[a49bbce58ea9] xfs: convert flex-array declarations in xfs attr leaf blocks
-[f6250e205691] xfs: convert flex-array declarations in xfs attr shortform objects
+Commit ebb7fb1557b1 limited the length of ioend chains to 4096 entries
+to improve worst-case latency.  Unfortunately, this had the effect of
+limiting the performance of:
 
-Code Diffstat:
+fio -name write-bandwidth -rw=write -bs=1024Ki -size=32Gi -runtime=30 \
+        -iodepth 1 -ioengine sync -zero_buffers=1 -direct=0 -end_fsync=1 \
+        -numjobs=4 -directory=/mnt/test
 
-fs/xfs/libxfs/xfs_da_format.h | 75 +++++++++++++++++++++++++++++++++++++------
-fs/xfs/libxfs/xfs_fs.h        |  4 +--
-fs/xfs/xfs_ondisk.h           |  5 +--
-3 files changed, 71 insertions(+), 13 deletions(-)
+The problem ends up being lock contention on the i_pages spinlock as we
+clear the writeback bit on each folio (and propagate that up through
+the tree).  By using larger folios, we decrease the number of folios
+to be processed by a factor of 256 for this benchmark, eliminating the
+lock contention.
+
+Creating large folios in the buffered write path is also the right
+thing to do.  It's a project that has been on the back burner for years,
+it just hasn't been important enough to do before now.
+
+----------------------------------------------------------------
+Matthew Wilcox (Oracle) (10):
+      iov_iter: Map the page later in copy_page_from_iter_atomic()
+      iov_iter: Handle compound highmem pages in copy_page_from_iter_atomic()
+      iov_iter: Add copy_folio_from_iter_atomic()
+      iomap: Remove large folio handling in iomap_invalidate_folio()
+      doc: Correct the description of ->release_folio
+      iomap: Remove unnecessary test from iomap_release_folio()
+      filemap: Add fgf_t typedef
+      filemap: Allow __filemap_get_folio to allocate large folios
+      iomap: Create large folios in the buffered write path
+      iomap: Copy larger chunks from userspace
+
+ Documentation/filesystems/locking.rst | 15 +++++--
+ fs/btrfs/file.c                       |  6 +--
+ fs/f2fs/compress.c                    |  2 +-
+ fs/f2fs/f2fs.h                        |  2 +-
+ fs/gfs2/bmap.c                        |  2 +-
+ fs/iomap/buffered-io.c                | 54 +++++++++++------------
+ include/linux/iomap.h                 |  2 +-
+ include/linux/pagemap.h               | 82 ++++++++++++++++++++++++++++++-----
+ include/linux/uio.h                   |  9 +++-
+ lib/iov_iter.c                        | 43 +++++++++++-------
+ mm/filemap.c                          | 65 ++++++++++++++-------------
+ mm/folio-compat.c                     |  2 +-
+ mm/readahead.c                        | 13 ------
+ 13 files changed, 187 insertions(+), 110 deletions(-)
+
