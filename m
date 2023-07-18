@@ -2,214 +2,182 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C3FA9C0015E
-	for <linux-xfs@archiver.kernel.org>; Tue, 18 Jul 2023 22:56:20 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id DA274EB64DC
+	for <linux-xfs@archiver.kernel.org>; Tue, 18 Jul 2023 22:58:01 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229703AbjGRW4T (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 18 Jul 2023 18:56:19 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33938 "EHLO
+        id S229452AbjGRW6B (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 18 Jul 2023 18:58:01 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34784 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229577AbjGRW4T (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 18 Jul 2023 18:56:19 -0400
-Received: from mail-pg1-x531.google.com (mail-pg1-x531.google.com [IPv6:2607:f8b0:4864:20::531])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 978E8E0
-        for <linux-xfs@vger.kernel.org>; Tue, 18 Jul 2023 15:56:17 -0700 (PDT)
-Received: by mail-pg1-x531.google.com with SMTP id 41be03b00d2f7-52cb8e5e9f5so148609a12.0
-        for <linux-xfs@vger.kernel.org>; Tue, 18 Jul 2023 15:56:17 -0700 (PDT)
+        with ESMTP id S231438AbjGRW54 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 18 Jul 2023 18:57:56 -0400
+Received: from mx0b-00069f02.pphosted.com (mx0b-00069f02.pphosted.com [205.220.177.32])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4E1B7113
+        for <linux-xfs@vger.kernel.org>; Tue, 18 Jul 2023 15:57:48 -0700 (PDT)
+Received: from pps.filterd (m0246631.ppops.net [127.0.0.1])
+        by mx0b-00069f02.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 36ILebXJ017993
+        for <linux-xfs@vger.kernel.org>; Tue, 18 Jul 2023 22:57:47 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=from : to : cc :
+ subject : date : message-id : content-type : content-id :
+ content-transfer-encoding : mime-version; s=corp-2023-03-30;
+ bh=ebiAS4pJ9bQrApBOMqYrC+F/3OacsOekgmZhBsAgSQw=;
+ b=JMlQGHO5rotkq1+dC1S58TjGKEf4o1gS1tiLwcL2kKB6VgH2mbFE7QtmNtRzZK+uTacs
+ tWLJzVOtCeMJtGxoVVkB9IkBa80Q8EoWTPzkeKif41tH3X+LdJYtLh6vf/2q7IKh4BSa
+ 97IPlCIl/NzDit9iTjIFECc0164Zt8FahfHJp+s8DeXz/M2kkhhsou0P65ijJPABgtRq
+ uXG7gduDbFRdZ+jEcDaHaeGUFVoYLYTqi7bq3XT4R6CzYJ4pONKX3TC7vkJuuKDXHEor
+ tUEQC5xTSsQskjMpOQ8EKdkTZ98I2dt9GunheJmdRYPMTzrrzQ195yt+x+C7lXqgRr11 rQ== 
+Received: from phxpaimrmta01.imrmtpd1.prodappphxaev1.oraclevcn.com (phxpaimrmta01.appoci.oracle.com [138.1.114.2])
+        by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 3run8a6b3a-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
+        for <linux-xfs@vger.kernel.org>; Tue, 18 Jul 2023 22:57:47 +0000
+Received: from pps.filterd (phxpaimrmta01.imrmtpd1.prodappphxaev1.oraclevcn.com [127.0.0.1])
+        by phxpaimrmta01.imrmtpd1.prodappphxaev1.oraclevcn.com (8.17.1.19/8.17.1.19) with ESMTP id 36IKpSgj038189
+        for <linux-xfs@vger.kernel.org>; Tue, 18 Jul 2023 22:57:46 GMT
+Received: from nam10-mw2-obe.outbound.protection.outlook.com (mail-mw2nam10lp2109.outbound.protection.outlook.com [104.47.55.109])
+        by phxpaimrmta01.imrmtpd1.prodappphxaev1.oraclevcn.com (PPS) with ESMTPS id 3ruhw5ugx6-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
+        for <linux-xfs@vger.kernel.org>; Tue, 18 Jul 2023 22:57:46 +0000
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
+ b=mQNdMxqyKo6Xb7dfal27pFFBf5/oQ4ogD/SEG9S8VjsE5FPGvBsaFf1CGEPP+ygM3mKNjJrR1dGbLtthTrOi1O5RjDLa01yBrbL3mVhCfkLP3A/JtsNZM0SmD+TcuPKNPRq7D8TRCPTU6QW5Yf3X0f5NyFlcoaRnLQLE4dva0oTdk92N+Ihu1QrapdPJji+2t5BWEHofLTnnEJhdG0Vzc/dIq25USaUejDN7ohn6c4b43uR5sDKSWBlMUDQ4/N2iKh90CbVAva5r115XkIZBP/BL5GfI6xLB8xp39gtvSaLRwB8+tzav1E8kzFrzz5LVYJPMvf5gdzDYTcOZspBS7A==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector9901;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=ebiAS4pJ9bQrApBOMqYrC+F/3OacsOekgmZhBsAgSQw=;
+ b=GMTFLUvsggNmB7ziBa3M5SMpMmOVSrG3lwkE4wP+IH/Wwg7QZUkaSuFNvpr+LdWiHErI/dSfI/h/AQvXsYQU23p+ePvm7F7dSuUtlnWRnX3QekXp95YrY3CJ7i8acHNeGoCj9JXf5RpeibK4VhptY727HqrtD67isrcSzM3tral2ByvDUO8S60xVkBg33IliLDs7hA9ZrLffQKhMT0Aa/gGe330MC2g8W8z3u6bwquOiPcE1rYnUShUMNoVTKkOoCV6Lbg8/8wEgqN5/iPdaGQtuc9Pq2XUfLw59DzlY7EoRw7hnb32DT5EGQO7C+LOGFpK8WV0ZtDYjIJxD/R0y0w==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=oracle.com; dmarc=pass action=none header.from=oracle.com;
+ dkim=pass header.d=oracle.com; arc=none
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=fromorbit-com.20221208.gappssmtp.com; s=20221208; t=1689720977; x=1692312977;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
-        bh=ldfZ6lOKERdJNpkH9/Fwa0WYhwOT+qCrSUEcI/k8P5M=;
-        b=cq5tD8GHeHgz8KfZoA8FCEw3xL9g7hwH7WkD4/bOCdavBVBakfd80i+P5gvmZSm/Ai
-         FEYRBWlcb8qjO12GLj+2s87FkJUsPhqwqrA5EpFEd+r+eUcxX7xaHQUe8ryXgxBeC+xk
-         7BtD9Qhdh67zbcWk4Fomyow656yPnlkRweBhsVDwHZkjI3CotxvBt5KjFydAjerGn0xX
-         jGiGASSe9wOErxeuoQilk9Wag3bFH0kpTAktRrODGau4wbqv3H5pORdbgHSiCDFeh8H5
-         GhXQ+rY0QWVGyWS3F1GBMzMVZ+e/afbckG0uTiVVpppDWX09G2eZ+jRnGY7vKgkltVfi
-         KTWA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20221208; t=1689720977; x=1692312977;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=ldfZ6lOKERdJNpkH9/Fwa0WYhwOT+qCrSUEcI/k8P5M=;
-        b=M0vGarmIbmIr+l+iuGGCdwayWzZm3OueiG9Ma4dsvBgp9s2yVK3rL544PeHA/es14x
-         K1jrFzY5YiWWjP2Lkwutpk/Ti6oFEvc52APPaD+KnVq0UdgGuOQflAZ2fjf2cDyeV02Q
-         /KYq4NVC1aN+sFnzhth3DrOPEvbZsvm1+1W77H6uDXJCidkP1xHypKMGQYEuhZDJm5I3
-         9ZDZZX0H9YMN/QB4i7CF7UA8ZsUNNk9vyAOj1Q+mJ2quJ+ukZRrB6Q7SWSNeGWmJaMDN
-         oSabYFQBOdWE8lORy7OHJsQ5hlv1vT6ETt8tpRVd6JoS956B8OVYP1Dg+CwjAssf/evG
-         YhCQ==
-X-Gm-Message-State: ABy/qLaZWc3ZCdSe0igbcuyu4ZhNXdxqx2YtQmolhmPH8scbyOMHg7o3
-        glJrn2OqkmlYszUkqvcTeKrz6g==
-X-Google-Smtp-Source: APBJJlG2vp50w8Tx86+ab2QE7UkhEW2kMRnEbpWTZ8QP6Scw8E1ddFUjtGGjfesKWtqoz99uTGWJ3w==
-X-Received: by 2002:a17:90a:17ab:b0:265:d7ac:55b1 with SMTP id q40-20020a17090a17ab00b00265d7ac55b1mr618906pja.4.1689720976911;
-        Tue, 18 Jul 2023 15:56:16 -0700 (PDT)
-Received: from dread.disaster.area (pa49-186-119-116.pa.vic.optusnet.com.au. [49.186.119.116])
-        by smtp.gmail.com with ESMTPSA id u63-20020a17090a51c500b00256a4d59bfasm92243pjh.23.2023.07.18.15.56.16
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 18 Jul 2023 15:56:16 -0700 (PDT)
-Received: from dave by dread.disaster.area with local (Exim 4.96)
-        (envelope-from <david@fromorbit.com>)
-        id 1qLtc5-007jn1-0w;
-        Wed, 19 Jul 2023 08:56:13 +1000
-Date:   Wed, 19 Jul 2023 08:56:13 +1000
-From:   Dave Chinner <david@fromorbit.com>
-To:     Jens Axboe <axboe@kernel.dk>
-Cc:     io-uring@vger.kernel.org, linux-xfs@vger.kernel.org, hch@lst.de,
-        andres@anarazel.de
-Subject: Re: [PATCH 1/5] iomap: simplify logic for when a dio can get
- completed inline
-Message-ID: <ZLcYjW6vJhEXy7hU@dread.disaster.area>
-References: <20230718194920.1472184-1-axboe@kernel.dk>
- <20230718194920.1472184-3-axboe@kernel.dk>
+ d=oracle.onmicrosoft.com; s=selector2-oracle-onmicrosoft-com;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=ebiAS4pJ9bQrApBOMqYrC+F/3OacsOekgmZhBsAgSQw=;
+ b=N0iD7nflkjYdVeG8TcM9QFjqIBMOVsTw+Mi5ktL9etU5WYPKEydiELl4yeKaLi//7xcPByGpHg8wH7nQpli+PuphUZ06B9n3oY5bwFpQ7LYV7MuzTXf8PjS71KBl34Kj9rRKh+J8+oMKAQp/EHdHcpmQpOmS264loutHnvQVQwQ=
+Received: from SN6PR10MB2701.namprd10.prod.outlook.com (2603:10b6:805:45::20)
+ by CY8PR10MB7291.namprd10.prod.outlook.com (2603:10b6:930:7e::13) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.6588.27; Tue, 18 Jul
+ 2023 22:57:39 +0000
+Received: from SN6PR10MB2701.namprd10.prod.outlook.com
+ ([fe80::72f4:e7e3:9b11:8c74]) by SN6PR10MB2701.namprd10.prod.outlook.com
+ ([fe80::72f4:e7e3:9b11:8c74%5]) with mapi id 15.20.6588.031; Tue, 18 Jul 2023
+ 22:57:39 +0000
+From:   Wengang Wang <wen.gang.wang@oracle.com>
+To:     "linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>
+CC:     Srikanth C S <srikanth.c.s@oracle.com>
+Subject: Question: reserve log space at IO time for recover
+Thread-Topic: Question: reserve log space at IO time for recover
+Thread-Index: AQHZuctApGWc9uvtR0uQfuoZOzE5mw==
+Date:   Tue, 18 Jul 2023 22:57:38 +0000
+Message-ID: <1DB9F8BB-4A7C-4422-B447-90A08E310E17@oracle.com>
+Accept-Language: en-US
+Content-Language: en-US
+X-MS-Has-Attach: 
+X-MS-TNEF-Correlator: 
+x-mailer: Apple Mail (2.3731.500.231)
+x-ms-publictraffictype: Email
+x-ms-traffictypediagnostic: SN6PR10MB2701:EE_|CY8PR10MB7291:EE_
+x-ms-office365-filtering-correlation-id: 7f0f59a1-8fc4-4f92-21f7-08db87e2628f
+x-ms-exchange-senderadcheck: 1
+x-ms-exchange-antispam-relay: 0
+x-microsoft-antispam: BCL:0;
+x-microsoft-antispam-message-info: vkvXCzXCVbTQCcbMk2GCFQ8CgMQaftbqI7ysu3uLb1/lhh+7fKE7xiZDw3dk05e38KYKmmGK9ryIuF6eVDmKWBFj9RdZX+Hmk4pcIRLvG91UGWZ1viaU9Jjoy7JqK2FVBrAcCYhyVH85snNZLxFZwzPzcB30PeQy1wgazI1HIiBq7Y0Y+xxMLC8Xd7yLUjFcwq0mwh2cmset5N01o1vL8zbTeCkmkqbkRVaqvMs7ntu2BL097dWhjoNQ4x3yehB99cn+jFrM2/j0EGhSZ3/D6Oe+5In4Y88IQbIzQWQg2UbYMTfN9am+sIdY55xhiTbIkkD8luofzU24ReuZYUIyIdmaIVfSG/L5KlcKSBeWwVHZtg6/4iY+hp0lB5aaKi2hbfhW33EZ0plUFeGlbNuzU5Qj1jePoPu3pRrFcDp9JSSkmmAZweaVAnWPj/lgFw7uwrNHvYEH33TsE61DvcHeXhCbYys43WdIWi8o61cjkmKv3OT4v55N8Mbes8IWa1uPnjo4ovIL8K7WKGbpqORo2EKa39ySCwTk7Gx8i2NfLEHBlXH8HJSqQSe6Z4GMc0Kj24voRCI2ckUop5EujQKWQzUtJElyPUgBBh2Pfk7yWwuLD54XkZdmf5OLfAJvb7vwL9tJOFB/8w8Z5CRsZ6utEQ==
+x-forefront-antispam-report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:SN6PR10MB2701.namprd10.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230028)(136003)(346002)(366004)(39860400002)(376002)(396003)(451199021)(86362001)(478600001)(33656002)(41300700001)(36756003)(107886003)(8936002)(6512007)(8676002)(4326008)(64756008)(6916009)(6486002)(66476007)(76116006)(316002)(66556008)(66446008)(66946007)(186003)(5660300002)(6506007)(91956017)(26005)(71200400001)(2906002)(2616005)(38070700005)(122000001)(38100700002)(45980500001);DIR:OUT;SFP:1101;
+x-ms-exchange-antispam-messagedata-chunkcount: 1
+x-ms-exchange-antispam-messagedata-0: =?utf-8?B?WEVXM2c3UkQvbUsvaE44TDcrV3JxaTRpN1J6Q3ZyaWk5c1I5T3pHSHZ0dk5B?=
+ =?utf-8?B?UXQvMnZFVlE3WVhrb3U3YmpiZ1ZJQlhjYkd2RnRsaXFiTlZEWTFRTjhlYzh5?=
+ =?utf-8?B?elVZZlNSdjBYL2NVcFhJT3ZybWpSMndveWtRN25VSkl0WFZxWEdVbXZqQU53?=
+ =?utf-8?B?NjdqUVBBc0s3N2FPSzZ4dml4RkppZ2M0QU1RcFY5OGNRWU1vcUpmTHlGV0w3?=
+ =?utf-8?B?TEFVMUFTZ1l4cmNob0czUGVPVzdvUHpRU3g4M1lBSUhqZWIxNDBoa1FVMWxJ?=
+ =?utf-8?B?dnNVZnVqc0w3QVpRYmtFczdidU83dmtGMGNEQlhtT201RGVTNEx0THFtSHV2?=
+ =?utf-8?B?dTYxRW5BWm1reEFTK1pUdHVMTEpnZHkzMVRGS0hscXZld2ZEcTJKRjVNVktG?=
+ =?utf-8?B?bmhmRlpwZEpvRkxOQmRtY2ZtSUVLQmlRZHpnWi9jSnkyNndqbzViNkttcVE4?=
+ =?utf-8?B?WEo2QnVJOFZJcVBEU2IvR2p5ZzVYdkxXUHNjbk9RMHd5aUFLUFJ1OUNlRjRy?=
+ =?utf-8?B?MUVXejJ0MFlYZDJVL1RwUHhBYWdNUWZKaWxUTkxlcXJ6ZDlta1dRQTFJT2No?=
+ =?utf-8?B?cXkyTXhMWjRBRHdPV21IODE3NWpnVWd2ZllGM0pkTkhpY24wR1pmUjVLQnRQ?=
+ =?utf-8?B?T0hrM1JVZFJ4OXh3SmJMTVJpajdDVHRnY1ZCditadUMrOStPM3JHaExDSUdj?=
+ =?utf-8?B?RTFtTE1mRDJ1K2lEM3ZWb2hmVDh5RURVeUc0MFVZcmxiVjdwaWhrakkwU0VV?=
+ =?utf-8?B?YTFlWDNJODJuUW5PSE10QVRBRVF5dmRuR3JWeFNZQWNER0gwWmlkNUdqNjdq?=
+ =?utf-8?B?d2hjanVSNUpDYm0vTjhMVENHMG85TkJXVW5heWVaVWY3Nkk4WUdjbUJGUDJt?=
+ =?utf-8?B?RUUzRkFCYnlCVForSEZsNFMzR2hjUjlDbUpURDc4dlpaSEVreW1BcWpGYjY3?=
+ =?utf-8?B?dHB2YzVtRktEaUk5aXFTZjM0N0pEajdlc2tUQjNObWpPZFlIYm1TYzJJL3B1?=
+ =?utf-8?B?ZDMza2svYVpxK2cxSllZRFRzYVNZMktrNzZZbG45MWhQNnYxV0NKdFFvQWp1?=
+ =?utf-8?B?d0h0YWcveUtXdXBxOGRzT2dPYjIzVm9hZ0E2aHV1aGVkd3lWWG9Ca2hHbUtV?=
+ =?utf-8?B?SE9pY3pHSmFZMnV4T1FUNW1RVkZqVFFEZHJHL000V3pPQjg3bHBHcCtTM0lk?=
+ =?utf-8?B?MXlPdENhenIrRGtZN0xOanB2eUxtaVc5ekpvYUdYNWlJNWg1ZUxvdGdVMU9Q?=
+ =?utf-8?B?TnJFVnE5K1dIOEJydWQzWDg1QU56Vmw5V3RMZ1JIOU5lMVFHTlMyZWZvU2dG?=
+ =?utf-8?B?Qno3RkIzNGxoMS9ralpiQ29tMjVlTnh2NEpGUmFGZHpnREN4Ri9NWGdua0ZI?=
+ =?utf-8?B?ZUhKZGQ0TTFVN0pUemR6MWZ5WDNxNzJvZ1M3MVppM0NndUhoQUhRQytBbURX?=
+ =?utf-8?B?RzA0V2FQME1XaHBqR0NLaGt2QUV0a0tWNWlQV2hzRFN4Rmt1Tm1jcHVlMk83?=
+ =?utf-8?B?SUd1aWNiWElyc3Z4MFF3Z1BMWEhFS2FFcWQvUDhSU2dTTlJFSnhYallBWk5q?=
+ =?utf-8?B?dDB5RDNUMWRWVUsxVVdFUmw5QUFxcldid3ErMThyeEU4YVFjcDgyOXdtQUV5?=
+ =?utf-8?B?dGVmd1h6NWNJUi9CZ1hydlAzK052MWczN0tVRDFYWUsrZ3lwRmNrVnFQUG5l?=
+ =?utf-8?B?TERkcHRuR0E4UGovdUlDYTV4QXBFanVZb0JtTlk4eTRieFhjZUt4YTRLUzdi?=
+ =?utf-8?B?TnJ4NnpSVWtRM00rSVlYTDZlNGxDdUw4Q2twTzNrUEdIM2xhTGhhOXNtWkln?=
+ =?utf-8?B?Q0hJaml0MkdKSlNWc1l0WmMxQWlvczVCVTJocGowWTNTaVFFMXhac014L2Fo?=
+ =?utf-8?B?blJjTjNwTDdMU0grZVlGVVYrSlJob2prQmc2bkNwaXF6TjlMaEhMK2V0R1Nl?=
+ =?utf-8?B?WVVMbmhLMzk5NzdpdmdicTNyemg0U3dvUTAyVm52MCtTUUN0UWVEd2dnWm5a?=
+ =?utf-8?B?TDFDUnhQeW9GQnZHVm9jOHFMSE9OeW9BQldoNDdDS1ZLRFdWYzVpNTk5SVFC?=
+ =?utf-8?B?bUVsS2sxcWJ3UFVEOUF2MHl0Q0NDQXRVM3d5VUpnRGVSZ3g5UXA2OWhNWGor?=
+ =?utf-8?B?Z1BOSVB4UXc4c0o1cjBGWVpJQ1Q5b0JqNkhhRi95QlVkKzZRR0pUWjRYUE85?=
+ =?utf-8?B?MUE9PQ==?=
+Content-Type: text/plain; charset="utf-8"
+Content-ID: <A5F4CE9AE75AC54BAF15201122C1BDB3@namprd10.prod.outlook.com>
+Content-Transfer-Encoding: base64
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20230718194920.1472184-3-axboe@kernel.dk>
+X-MS-Exchange-AntiSpam-ExternalHop-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-ExternalHop-MessageData-0: +qNt7OHnfKTcfA487qhSgUN6vH1IAGU2nThirjRZWzOewmUEWYNUF3CqrhEMkUAH4rQhx3u08MAqmcpugnT3yTo64Yw/ZI3h9ZoVhJ4K6EBgi1JVoBup1O0Qq/2NyY/b/f3tZjeExNQy4zY7qX0I85AeXKn+VVqP1hHps59ePYVQvUM2vyrmAEEYteAaTxHLz1Ddz0HsIVXs5w/Tqv/QmxBO6T7330J6KaiCF/+RpTq4Z2A715uDx0D9jCMRWESZRufnnVwBSvJ6CXnEjMQZvpK4ordpsVdLZWNnlcFDayNNj5cNW41JLgwszTnTIc+5e+D4V9vvB8uKW7I06718h4TSLNVTSL4RkF3iJT751Sbptbt3B4UMx34KdYuPOBB2cedOGFwWn0J3+wcB+5EYwA1RodqpBUHjSfmytSHBINapPdSsyBJKWF/CKRzWeduOGWnjK6aPgoRbDqDaFQaZkSJkkDkTx+srVRzPxv5WM+X/MXxB5C687uNVOS13+yRzuFkUuYF2MF7przNKRxtFIv+W5FZ5hDP0bH7+qI4P4/n4xOG3Hzm6e6zjhsgsUBGn5TUP1y0iW3XOkCA2f9SE83EcYgERDGq+E/K4eRv4TGlHxw/u0XodLknhy+qzKMrGHBUbTUXZ8t8xwUhH/d7Khlu/lPBSGvCe5AGrS49sQ2uAZg3PHHXEvzZH2iVgHv+nVwsbDJjy10HYfRPHkVImO+Q+en3vZlH/HBb5fa+bnZSN4rV2N/p8sCxYgIOcU2jU+q5Ik+dCrbV6gTPKTqrkGg==
+X-OriginatorOrg: oracle.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-AuthSource: SN6PR10MB2701.namprd10.prod.outlook.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: 7f0f59a1-8fc4-4f92-21f7-08db87e2628f
+X-MS-Exchange-CrossTenant-originalarrivaltime: 18 Jul 2023 22:57:38.8857
+ (UTC)
+X-MS-Exchange-CrossTenant-fromentityheader: Hosted
+X-MS-Exchange-CrossTenant-id: 4e2c6054-71cb-48f1-bd6c-3a9705aca71b
+X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
+X-MS-Exchange-CrossTenant-userprincipalname: D/goHh8vnUUGkN8PQcmMUgMacAxwcetUk94odoCrL69hJ6A5hLlF/BKuCWD+e5vXRxBytUkKYDB0AjgWezULJylXRIR9yTBswJibu6m+qBY=
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: CY8PR10MB7291
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.254,Aquarius:18.0.957,Hydra:6.0.591,FMLib:17.11.176.26
+ definitions=2023-07-18_17,2023-07-18_01,2023-05-22_02
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=0 mlxscore=0 phishscore=0
+ adultscore=0 spamscore=0 bulkscore=0 malwarescore=0 mlxlogscore=999
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2306200000
+ definitions=main-2307180203
+X-Proofpoint-ORIG-GUID: doSYDnZPc29dz40PXnlIFJFxdqRtK_0K
+X-Proofpoint-GUID: doSYDnZPc29dz40PXnlIFJFxdqRtK_0K
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Tue, Jul 18, 2023 at 01:49:16PM -0600, Jens Axboe wrote:
-> Currently iomap gates this on !IOMAP_DIO_WRITE, but this isn't entirely
-> accurate. Some writes can complete just fine inline. One such example is
-> polled IO, where the completion always happens in task context.
-> 
-> Add IOMAP_DIO_INLINE_COMP which tells the completion side if we can
-> complete this dio inline, or if it needs punting to a workqueue. We set
-> this flag by default for any dio, and turn it off for unwritten extents
-> or blocks that require a sync at completion time.
-
-Ignoring the O_DSYNC case (I'll get to that at the end), this is
-still wrong - it misses extending writes that need to change file
-size at IO completion. For some filesystems, file extension at IO
-completion has the same constraints as unwritten extent conversion
-(i.e. requires locking and transactions), but the iomap
-infrastructure has no idea whether the filesystem performing the IO
-requires this or not.
-
-i.e. if iomap always punts unwritten extent IO to a workqueue, we
-also have to punt extending writes to a workqueue.  Fundamentally,
-the iomap code itself cannot make a correct determination of whether
-IO completion of any specific write IO requires completion in task
-context.
-
-Only the filesystem knows that,
-
-However, the filesystem knows if the IO is going to need IO
-completion processing at submission time. It tells iomap that it
-needs completion processing via the IOMAP_F_DIRTY flag. This allows
-filesystems to determine what IOs iomap can consider as "writes that
-don't need filesystem completion processing".
-
-With this flag, iomap can optimise the IO appropriately. We can use
-REQ_FUA for O_DSYNC writes if IOMAP_F_DIRTY is not set. We can do
-inline completion if IOMAP_F_DIRTY is not set. But if IOMAP_F_DIRTY
-is set, the filesystem needs to run it's own completion processing,
-and so iomap cannot run that write with an inline completion.
-
-> Gate the inline completion on whether we're in a task or not as well.
-> This will always be true for polled IO, but for IRQ driven IO, the
-> completion context may not allow for inline completions.
-
-Again, context does not matter for pure overwrites - we can complete
-them inline regardless of completion context. The task context only
-matters when the filesystem needs to do completion work, and we've
-already established that we are not doing inline completion
-for polled IO for unwritten, O_DSYNC or extending file writes.
-
-IOWs, we already avoid polled completions for all the situations
-where IOMAP_F_DIRTY is set by the filesystem to indicate the
-operation is not a pure overwrite....
-
-
-> ---
->  fs/iomap/direct-io.c | 14 +++++++++-----
->  1 file changed, 9 insertions(+), 5 deletions(-)
-> 
-> diff --git a/fs/iomap/direct-io.c b/fs/iomap/direct-io.c
-> index ea3b868c8355..6fa77094cf0a 100644
-> --- a/fs/iomap/direct-io.c
-> +++ b/fs/iomap/direct-io.c
-> @@ -20,6 +20,7 @@
->   * Private flags for iomap_dio, must not overlap with the public ones in
->   * iomap.h:
->   */
-> +#define IOMAP_DIO_INLINE_COMP	(1 << 27)
->  #define IOMAP_DIO_WRITE_FUA	(1 << 28)
->  #define IOMAP_DIO_NEED_SYNC	(1 << 29)
->  #define IOMAP_DIO_WRITE		(1 << 30)
-> @@ -161,15 +162,15 @@ void iomap_dio_bio_end_io(struct bio *bio)
->  			struct task_struct *waiter = dio->submit.waiter;
->  			WRITE_ONCE(dio->submit.waiter, NULL);
->  			blk_wake_io_task(waiter);
-> -		} else if (dio->flags & IOMAP_DIO_WRITE) {
-> +		} else if ((dio->flags & IOMAP_DIO_INLINE_COMP) && in_task()) {
-
-Regardless of whether the code is correct or not, this needs a
-comment explaining what problem the in_task() check is working
-around...
-
-> +			WRITE_ONCE(dio->iocb->private, NULL);
-> +			iomap_dio_complete_work(&dio->aio.work);
-> +		} else {
->  			struct inode *inode = file_inode(dio->iocb->ki_filp);
->  
->  			WRITE_ONCE(dio->iocb->private, NULL);
->  			INIT_WORK(&dio->aio.work, iomap_dio_complete_work);
->  			queue_work(inode->i_sb->s_dio_done_wq, &dio->aio.work);
-> -		} else {
-> -			WRITE_ONCE(dio->iocb->private, NULL);
-> -			iomap_dio_complete_work(&dio->aio.work);
->  		}
->  	}
->  
-> @@ -244,6 +245,7 @@ static loff_t iomap_dio_bio_iter(const struct iomap_iter *iter,
->  
->  	if (iomap->type == IOMAP_UNWRITTEN) {
->  		dio->flags |= IOMAP_DIO_UNWRITTEN;
-> +		dio->flags &= ~IOMAP_DIO_INLINE_COMP;
->  		need_zeroout = true;
->  	}
->  
-> @@ -500,7 +502,8 @@ __iomap_dio_rw(struct kiocb *iocb, struct iov_iter *iter,
->  	dio->i_size = i_size_read(inode);
->  	dio->dops = dops;
->  	dio->error = 0;
-> -	dio->flags = 0;
-> +	/* default to inline completion, turned off when not supported */
-> +	dio->flags = IOMAP_DIO_INLINE_COMP;
->  	dio->done_before = done_before;
-
-I think this is poorly coded. If we get the clearing logic
-wrong (as is the case in this patch) then bad things will
-happen when we run inline completion in an irq context when
-the filesystem needs to run a transaction. e.g. file extension.
-
-It looks to me like you hacked around this "default is wrong" case
-with the "in_task()" check in completion, but given that check is
-completely undocumented....
-
->  	dio->submit.iter = iter;
-> @@ -535,6 +538,7 @@ __iomap_dio_rw(struct kiocb *iocb, struct iov_iter *iter,
->  		/* for data sync or sync, we need sync completion processing */
->  		if (iocb_is_dsync(iocb)) {
->  			dio->flags |= IOMAP_DIO_NEED_SYNC;
-> +			dio->flags &= ~IOMAP_DIO_INLINE_COMP;
-
-This is looks wrong, too. We set IOMAP_DIO_WRITE_FUA ca couple of
-lines later, and during bio submission we check if REQ_FUA can be
-used if IOMAP_F_DIRTY is not set. If all the bios we submit use
-REQ_FUA, then we clear IOMAP_DIO_NEED_SYNC before we drop the dio
-submission reference.
-
-For such a REQ_FUA bio chains, we can now safely do inline
-completion because we don't run generic_write_sync() in IO
-completion now. The filesystem does not need to perform blocking or
-IO operations in completion, either, so these IOs can be completed
-in line like any other pure overwrite DIO....
-
--Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+SGksDQoNCkkgaGF2ZSBhIFhGUyBtZXRhZHVtcCAod2FzIHJ1bm5pbmcgd2l0aCA0LjE0LjM1IHBs
+dXNzaW5nIHNvbWUgYmFjayBwb3J0ZWQgcGF0Y2hlcyksDQptb3VudGluZyBpdCAobG9nIHJlY292
+ZXIpIGhhbmcgYXQgbG9nIHNwYWNlIHJlc2VydmF0aW9uLiBUaGVyZSBpcyAxODE3NjAgYnl0ZXMg
+b24tZGlzaw0KZnJlZSBqb3VybmFsIHNwYWNlLCB3aGlsZSB0aGUgdHJhbnNhY3Rpb24gbmVlZHMg
+dG8gcmVzZXJ2ZSAzNjA0MTYgYnl0ZXMgdG8gc3RhcnQgdGhlIHJlY292ZXJ5Lg0KVGh1cyB0aGUg
+bW91bnQgaGFuZ3MgZm9yIGV2ZXIuIFRoYXQgaGFwcGVucyB3aXRoIDQuMTQuMzUga2VybmVsIGFu
+ZCBhbHNvIHVwc3RyZWFtDQprZXJuZWwgKDYuNC4wKS4NCg0KVGhlIGlzIHRoZSByZWxhdGVkIHN0
+YWNrIGR1bXBpbmcgKDYuNC4wIGtlcm5lbCk6DQoNCls8MD5dIHhsb2dfZ3JhbnRfaGVhZF93YWl0
+KzB4YmQvMHgyMDAgW3hmc10NCls8MD5dIHhsb2dfZ3JhbnRfaGVhZF9jaGVjaysweGQ5LzB4MTAw
+IFt4ZnNdDQpbPDA+XSB4ZnNfbG9nX3Jlc2VydmUrMHhiYy8weDFlMCBbeGZzXQ0KWzwwPl0geGZz
+X3RyYW5zX3Jlc2VydmUrMHgxMzgvMHgxNzAgW3hmc10NCls8MD5dIHhmc190cmFuc19hbGxvYysw
+eGU4LzB4MjIwIFt4ZnNdDQpbPDA+XSB4ZnNfZWZpX2l0ZW1fcmVjb3ZlcisweDExMC8weDI1MCBb
+eGZzXQ0KWzwwPl0geGxvZ19yZWNvdmVyX3Byb2Nlc3NfaW50ZW50cy5pc3JhLjI4KzB4YmEvMHgy
+ZDAgW3hmc10NCls8MD5dIHhsb2dfcmVjb3Zlcl9maW5pc2grMHgzMy8weDMxMCBbeGZzXQ0KWzww
+Pl0geGZzX2xvZ19tb3VudF9maW5pc2grMHhkYi8weDE2MCBbeGZzXQ0KWzwwPl0geGZzX21vdW50
+ZnMrMHg1MWMvMHg5MDAgW3hmc10NCls8MD5dIHhmc19mc19maWxsX3N1cGVyKzB4NGI4LzB4OTQw
+IFt4ZnNdDQpbPDA+XSBnZXRfdHJlZV9iZGV2KzB4MTkzLzB4MjgwDQpbPDA+XSB2ZnNfZ2V0X3Ry
+ZWUrMHgyNi8weGQwDQpbPDA+XSBwYXRoX21vdW50KzB4NjlkLzB4OWIwDQpbPDA+XSBkb19tb3Vu
+dCsweDdkLzB4YTANCls8MD5dIF9feDY0X3N5c19tb3VudCsweGRjLzB4MTAwDQpbPDA+XSBkb19z
+eXNjYWxsXzY0KzB4M2IvMHg5MA0KWzwwPl0gZW50cnlfU1lTQ0FMTF82NF9hZnRlcl9od2ZyYW1l
+KzB4NmUvMHhkOA0KDQpUaHVzIHdlIGNhbiBzYXkgNC4xNC4zNSBrZXJuZWwgZGlkbuKAmXQgcmVz
+ZXJ2ZSBsb2cgc3BhY2UgYXQgSU8gdGltZSB0byBtYWtlIGxvZyByZWNvdmVyDQpzYWZlLiBVcHN0
+cmVhbSBrZXJuZWwgZG9lc27igJl0IGRvIHRoYXQgZWl0aGVyIGlmIEkgcmVhZCB0aGUgc291cmNl
+IGNvZGUgcmlnaHQgKEkgbWlnaHQgYmUgd3JvbmcpLg0KDQpTbyBzaGFsbCB3ZSByZXNlcnZlIHBy
+b3BlciBhbW91bnQgb2YgbG9nIHNwYWNlIGF0IElPIHRpbWUsIGNhbGwgaXQgVW5mbHVzaC1SZXNl
+cnZlLCB0bw0KZW5zdXJlIGxvZyByZWNvdmVyeSBzYWZlPyAgVGhlIG51bWJlciBvZiBVUiBpcyBk
+ZXRlcm1pbmVkIGJ5IGN1cnJlbnQgdW4gZmx1c2hlZCBsb2cgaXRlbXMuDQpJdCBnZXRzIGluY3Jl
+YXNlZCBqdXN0IGFmdGVyIHRyYW5zYWN0aW9uIGlzIGNvbW1pdHRlZCBhbmQgZ2V0cyBkZWNyZWFz
+ZWQgd2hlbiBsb2cgaXRlbXMgYXJlDQpmbHVzaGVkLiBXaXRoIHRoZSBVUiwgd2UgYXJlIHNhZmUg
+dG8gaGF2ZSBlbm91Z2ggbG9nIHNwYWNlIGZvciB0aGUgdHJhbnNhY3Rpb25zIHVzZWQgYnkgbG9n
+DQpyZWNvdmVyeS4NCg0KdGhhbmtzLA0Kd2VuZ2FuZw==
