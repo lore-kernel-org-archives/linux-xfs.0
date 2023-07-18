@@ -2,298 +2,165 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5E3A1EB64DC
-	for <linux-xfs@archiver.kernel.org>; Mon, 17 Jul 2023 21:06:56 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E981CEB64DC
+	for <linux-xfs@archiver.kernel.org>; Tue, 18 Jul 2023 00:58:40 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231463AbjGQVGz (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 17 Jul 2023 17:06:55 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49254 "EHLO
+        id S229630AbjGRA6k (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 17 Jul 2023 20:58:40 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50424 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231375AbjGQVGp (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 17 Jul 2023 17:06:45 -0400
-Received: from mail-pl1-x62e.google.com (mail-pl1-x62e.google.com [IPv6:2607:f8b0:4864:20::62e])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5CBA81703
-        for <linux-xfs@vger.kernel.org>; Mon, 17 Jul 2023 14:06:39 -0700 (PDT)
-Received: by mail-pl1-x62e.google.com with SMTP id d9443c01a7336-1b890e2b9b7so27994045ad.3
-        for <linux-xfs@vger.kernel.org>; Mon, 17 Jul 2023 14:06:39 -0700 (PDT)
+        with ESMTP id S229481AbjGRA6j (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 17 Jul 2023 20:58:39 -0400
+Received: from mx0a-00069f02.pphosted.com (mx0a-00069f02.pphosted.com [205.220.165.32])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C3202C0
+        for <linux-xfs@vger.kernel.org>; Mon, 17 Jul 2023 17:58:38 -0700 (PDT)
+Received: from pps.filterd (m0246627.ppops.net [127.0.0.1])
+        by mx0b-00069f02.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 36HKOfOX026249
+        for <linux-xfs@vger.kernel.org>; Tue, 18 Jul 2023 00:58:38 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=from : to : subject :
+ date : message-id : content-transfer-encoding : content-type :
+ mime-version; s=corp-2023-03-30;
+ bh=mak46UXcilkj417dCDa9Mtr3u0tRdkRpXxnvZ70z1lw=;
+ b=RryvHrJ6qdmOSmTeQK9x5dNy0VMve05jNw41+lcQBn3O/DEwGJdWR1yXOe0/naX9uyP6
+ zfdPBw9awQQ2y1crrQYfDJfQ0imaWg9iAzqBbEM2atTGA6ddtPjU9844p1thCGMqoyfC
+ Yq7amlh0TAWT8I+mKMoSRGKqrYYQvrMGusjyD8ogE7yqRzAKdiQG1LaKwp2nAbJL+xUA
+ D4dovSdp3Av1dh3sDTnnih6MUdfJ+UC1RhlFf9fVwGxub+qA/gpwB6SGHculf9fKVx2d
+ eelYv+16d1EPVyMnM42fvp7AnwcoVfmOz37mM1AhhXMhawMfqC9Ls7hfNlIKiXgDhydV zw== 
+Received: from phxpaimrmta01.imrmtpd1.prodappphxaev1.oraclevcn.com (phxpaimrmta01.appoci.oracle.com [138.1.114.2])
+        by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 3run76uykt-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
+        for <linux-xfs@vger.kernel.org>; Tue, 18 Jul 2023 00:58:38 +0000
+Received: from pps.filterd (phxpaimrmta01.imrmtpd1.prodappphxaev1.oraclevcn.com [127.0.0.1])
+        by phxpaimrmta01.imrmtpd1.prodappphxaev1.oraclevcn.com (8.17.1.19/8.17.1.19) with ESMTP id 36HNZRZt038158
+        for <linux-xfs@vger.kernel.org>; Tue, 18 Jul 2023 00:58:37 GMT
+Received: from nam11-bn8-obe.outbound.protection.outlook.com (mail-bn8nam11lp2168.outbound.protection.outlook.com [104.47.58.168])
+        by phxpaimrmta01.imrmtpd1.prodappphxaev1.oraclevcn.com (PPS) with ESMTPS id 3ruhw4dep5-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
+        for <linux-xfs@vger.kernel.org>; Tue, 18 Jul 2023 00:58:37 +0000
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
+ b=BlBJy3pAytJVtIdhyu5dFmM1bA9+FGfSD0IsndWFK9sIG5egS1NFHqmLDip3J7xAsacMYjtC5bjugKuc177nB5TIEkZv5A+43CJdnIY0dqlkBIejjApSyFCsnZ4pVu3vAxFKBZwTrki2H3MM3Sa83B965vfZaiDKpEuoZm5mUVyeFT26bDezMZh2tB6dO8+AeUep8rwk6BnLK/RVl3UJJrfrptaUMBwDzeSBW6HTElO5QyDpMFlflXhAh59oM+8Lt8JmsCJom5MU+qZtl5b4g/bHMpAnFUmdYrAtsFERIQ7eLWYbYGenCu4hks6JnNyjmNwoAzb2tkuE1EcrztVTUw==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector9901;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=mak46UXcilkj417dCDa9Mtr3u0tRdkRpXxnvZ70z1lw=;
+ b=mzHO0rRFjcPvwbFCXL2a7QwiCnsVV/hv3dH5kEtG5qX60+lMh4I9uwUI9wwOib9vESNZaz7iGm4b1VeBNG6oQRKexfKfyxOjFww1HFbWvA8x5JT134QgVGx1XPI0YH1Z5o2DTtyR9W8lzFpSDv8m3Hx2i39jqLzDBZCjr9KdwVLu2++UJSLb6KjZr2p+EkR03bIwd+v3yTfBzSqpk6qfRGJ5dSn4/Ob0lTREUKx2gSn+oL9xWDC5yZ/peC1JQvgtkUI5xq1XcYwBgdrrHNk4UGN0jYEb/aCioXn+aJFpryIYrJMGT9wf75wlVkoByuZzPjz5h7Ts9nAS42Dx6naE+A==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=oracle.com; dmarc=pass action=none header.from=oracle.com;
+ dkim=pass header.d=oracle.com; arc=none
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=osandov-com.20221208.gappssmtp.com; s=20221208; t=1689627998; x=1692219998;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
-        bh=xYLfk/ezEG3eoKGHYBdO3nbOuMt1DJo0XW1xZaU+H/4=;
-        b=fU/9WefaoF7BeYXKcSeGBRfgSMr9nCmOp7EhcEvnj2q7m7x91QnQoU5tquqiz2T1LU
-         F3iS4Jfcrc73EBBT7Z5swoNHV9lznLq0mV1fI9TTBtKQM0XFUG42OPeqgS9E9py4FC0x
-         ygHsA/+wxQKXFH1HwsQEEy6NmM+QRqxLRK0MRXsjAzpUA1LrXDmMPo5OdKCKvIOEXkel
-         gKrMQNHszfMz3MbEI0QdU8Z6fsybFJr7RhjO05YIz4+xLWdNanfTK+7nggRIAuv2GvBV
-         gzcUWJE4BVGsiJl1hSC/mvsZ0WU23iKrqmw5j4pHNaVYVGd9cu7RpxHoCe6NOVukdjXY
-         0cNw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20221208; t=1689627998; x=1692219998;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=xYLfk/ezEG3eoKGHYBdO3nbOuMt1DJo0XW1xZaU+H/4=;
-        b=kwSXs/hK7EJvjURhbfw3/9TdYVx1/pmroQs3TX7bEFkth/unDEGUAW7N6l2nJeGy9q
-         aQTZbudBFue1SO3BySrBuPkrV5IrvP3r1P4QqVtcb2iO5P2v12st/i+6+R+kelotW6zF
-         fCsVq0qAb5WSWixblmuzOe2N+4EqVUjdBjWq3vv8cpSS1AQ5ax7qJlhxfVRmAbcH6HsD
-         sT8NZBmTvnCgUnX5EauJuQy0Xu1J+KFew5YQfl4kGPX93gBs4O5ZMJ9LRG7myU0stbNQ
-         yyVbb9HPV9duNEC/hj7uRGVkXmWbsjOmNj/n7eePXwRjOvchNP3em9zg49MfB9+kgcTF
-         TK9Q==
-X-Gm-Message-State: ABy/qLa/fx3ih/NN/Y86F9rqjt5MNg4ROsXzvZpLfjWetzsSqJDxHHnw
-        0kwEPcLDZ7ppWjMOfYaKyi4vpA==
-X-Google-Smtp-Source: APBJJlGve5nvfBPxUrdF8cqnFuerb7G6mOOM4C7qGoJIwzXOMBWpATVIo5dMGVxCwb6qNHdhWoxZbQ==
-X-Received: by 2002:a17:902:d2cd:b0:1b5:49fc:e336 with SMTP id n13-20020a170902d2cd00b001b549fce336mr13118020plc.42.1689627998456;
-        Mon, 17 Jul 2023 14:06:38 -0700 (PDT)
-Received: from telecaster ([2620:10d:c090:400::5:7a5c])
-        by smtp.gmail.com with ESMTPSA id y17-20020a170902b49100b001b9d95945afsm304925plr.155.2023.07.17.14.06.37
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 17 Jul 2023 14:06:37 -0700 (PDT)
-Date:   Mon, 17 Jul 2023 14:06:36 -0700
-From:   Omar Sandoval <osandov@osandov.com>
-To:     "Darrick J. Wong" <djwong@kernel.org>
-Cc:     linux-xfs@vger.kernel.org, kernel-team@fb.com,
-        Prashant Nema <pnema@fb.com>
-Subject: Re: [PATCH 5/6] xfs: don't try redundant allocations in
- xfs_rtallocate_extent_near()
-Message-ID: <ZLWtXNLcRKpBgt45@telecaster>
-References: <cover.1687296675.git.osandov@osandov.com>
- <a5bd4ca288dd1456f8c7aa5a1b7f3e1c2d9b511a.1687296675.git.osandov@osandov.com>
- <20230712233403.GY108251@frogsfrogsfrogs>
+ d=oracle.onmicrosoft.com; s=selector2-oracle-onmicrosoft-com;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=mak46UXcilkj417dCDa9Mtr3u0tRdkRpXxnvZ70z1lw=;
+ b=JD7WqbVNZV1bURW8uBGDu/d2Rf9LG/oejXU0LfpMTkq/P+gfxurpzUgHhpRGBoOdRF3loJvOURt25QB3emy4zmdJaJ9PAMFRIH44QQL8pfaTJMPylfKk1XVWu1v7GOA3R6nXrSCZIpGHBPGEr7cytXTo2CGy6jAvj2+JUkuqV3E=
+Received: from BLAPR10MB5316.namprd10.prod.outlook.com (2603:10b6:208:326::6)
+ by CY5PR10MB6012.namprd10.prod.outlook.com (2603:10b6:930:27::18) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.6588.32; Tue, 18 Jul
+ 2023 00:58:35 +0000
+Received: from BLAPR10MB5316.namprd10.prod.outlook.com
+ ([fe80::c1df:c537:ecc:4a6b]) by BLAPR10MB5316.namprd10.prod.outlook.com
+ ([fe80::c1df:c537:ecc:4a6b%4]) with mapi id 15.20.6588.031; Tue, 18 Jul 2023
+ 00:58:35 +0000
+From:   Catherine Hoang <catherine.hoang@oracle.com>
+To:     linux-xfs@vger.kernel.org
+Subject: [PATCH v1 0/2] xfs_db: add command to copy out files
+Date:   Mon, 17 Jul 2023 17:58:31 -0700
+Message-Id: <20230718005833.97091-1-catherine.hoang@oracle.com>
+X-Mailer: git-send-email 2.39.2 (Apple Git-143)
+Content-Transfer-Encoding: 8bit
+Content-Type: text/plain
+X-ClientProxiedBy: SJ0PR03CA0179.namprd03.prod.outlook.com
+ (2603:10b6:a03:338::34) To BLAPR10MB5316.namprd10.prod.outlook.com
+ (2603:10b6:208:326::6)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20230712233403.GY108251@frogsfrogsfrogs>
+X-MS-PublicTrafficType: Email
+X-MS-TrafficTypeDiagnostic: BLAPR10MB5316:EE_|CY5PR10MB6012:EE_
+X-MS-Office365-Filtering-Correlation-Id: 53c4753b-e56c-4300-2c3c-08db872a1d44
+X-MS-Exchange-SenderADCheck: 1
+X-MS-Exchange-AntiSpam-Relay: 0
+X-Microsoft-Antispam: BCL:0;
+X-Microsoft-Antispam-Message-Info: 0hc6J6T/Cg9zikiFa9GsIS2VtFrAzeAAF+zleNgr9K5TYkFDIj7J+fPwbhNxjGx0HTzEGqIYdTjdPcccnovfJejDz0wS8c+CsdgMaDZ/msabpUDhDGN5V3u6GpkhQi6GZDRJG0K8NK2f0qnuYWe547mramjG1UHj5XmJyrezk5IGRKyf9m/EZp+QIVqcTTO2SoL1BoBRDvBwB0hWvEDxL4nylY0TaKedW/V4E5JZSdugM3UrRvaJIA7+nDzxyFUBs62sXA+p/bBRkYvvWo1g/Z1qkzSkww1fKpPVOgB3FEfiTshL1asVfvBiXPIWeWJ35V59oCyC3gnnfU1/fvf3uBjO51Z5np18q/0lZhTW9Fg22QG1nscKStn3+cb30nr0sn89GaBhXE/ZBWDmbYV1ezB+3n0N9fvmXTWd6IUqhzXTmlnKsbK6GoeR2XglAJOz3PZz6pCpj5Kjf5YmgrhYSCbx+SpIA8VqVtNG7eGEX0xwaAmU5TnWK8X2n1Xbhw5rU0mxOBpiMsKNNjG3phyTtEIKQnmotzVbP2SauKEqjdzTIxF9a60QUrUpcvprLweU
+X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:BLAPR10MB5316.namprd10.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230028)(366004)(346002)(39860400002)(396003)(376002)(136003)(451199021)(2616005)(316002)(6506007)(1076003)(6512007)(83380400001)(186003)(41300700001)(6486002)(478600001)(6666004)(6916009)(44832011)(66946007)(66476007)(66556008)(38100700002)(5660300002)(8936002)(86362001)(8676002)(2906002)(36756003)(4744005);DIR:OUT;SFP:1101;
+X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-MessageData-0: =?us-ascii?Q?oDp0bksIoh77TXpoBbnn7St5kznWGObuOHX1joa2em2oTHnkCbzFo7OrIHqW?=
+ =?us-ascii?Q?mS/S0Ikevh6lKdhwrQRO6VzarJn/oQpmVk8asgZywRRTB8LQACyiG3UNEBzX?=
+ =?us-ascii?Q?+VLWx5R2mEMQ62aGgvubFnndtuxz/NgVGqW4cXExvBIh/1GEjtxjJCfHhASv?=
+ =?us-ascii?Q?FOK3SuZa3WeMPhx06vU5WGnZ8oC451Q6Y9ifVs4blxXQc4hAR0j02T1EqDIh?=
+ =?us-ascii?Q?JVFAmwPVuYucPIspP9pIqiQbzZ6F8UpK+SkMA0Df7Z3/yYDPxWxFw6cXEjC4?=
+ =?us-ascii?Q?7weXZ2QUU0E+V84/o8u9GIV8+zaNhUlx5OBhePWy/ApRqIcZuITc9X+z5BeQ?=
+ =?us-ascii?Q?crTdw5LW53DzuD2aFBXldLhDHea2pQ9+a+suDhTvjn7dv7AgKcdDC42FT1Tf?=
+ =?us-ascii?Q?Xr99LJU/9UsZyLzZjFIhVLEWuzp/DgiSWZ+v8W9A6sjLBSZGNPaMXgRDfcYk?=
+ =?us-ascii?Q?rTDNQEV1hSkBliIBhFZQguFc7v0M2I5pXganrPgyKs+JVlDEziILh7d8owO8?=
+ =?us-ascii?Q?RO9ZNucV3mCbru41hoYbHNCahCyXkDyAiCiVha4JhhG0cPVrtboden+hkRb/?=
+ =?us-ascii?Q?15mfTQPX4XuA5Vq5eTbsJBgpPkb0bIuu6mxgfVwvNSNZQsj4aRnaTesaEeqC?=
+ =?us-ascii?Q?5h1fyjUprgIQY0l4gDbTbxa+pF/HFODj/32jcvKm5FHNRD/s+33/LPngicJb?=
+ =?us-ascii?Q?l1pfU14jy+ciHY+kkvb/H+oNlSvkXCHRVE5kRp9uURLV07exF+1y6hoxiRLw?=
+ =?us-ascii?Q?DnHBGgr8POrQuuQcgx3/Ws307hGkKYq9W4giseEiJFhl+HlUPUz9pZ2sOD9S?=
+ =?us-ascii?Q?Ak/MowV6tTs6Rezh7mL9MR11XBmYw7HGPb3O9nR71clrC5wzwx6Lk8W5UZJw?=
+ =?us-ascii?Q?1oDnyi8QlOiJRhIzpM/S5FEmEf7uXNKeF7jB3VgXdGC0tXlQ6lGe65dU3rJE?=
+ =?us-ascii?Q?TucNNB15GATN+A54T7obApfjV9zV1jrJRo3dovY3qj86NMCHb4iCu6t6WJ0Z?=
+ =?us-ascii?Q?4vk4kuUK3hCyDplH8pgw9XGvNBSwViq4SMFV4PFRLFF9zMG4u3qv9Rl6y01V?=
+ =?us-ascii?Q?IpXx9R5OpIgIqS2tY94GbunF0c2rLv43Y/W4JAnVEtVVGXsrPVkz7GmxQOc4?=
+ =?us-ascii?Q?V5avGjWo+GEhylHJAQmPtNIUNbegPk+LhUVF6wHY/uWn3qNKu+gKJa1sj0kX?=
+ =?us-ascii?Q?ekLvM+CWlqlqXyAl2I1v4iswfdcjwb7cdW8HrbNxfSiTSvNONY9hafZgBvzQ?=
+ =?us-ascii?Q?1A5lJtsqCYtHyTXhjt1U9ayUNl51dUU9kS5WAV2BNXonryU9nyqYqXDCoiF7?=
+ =?us-ascii?Q?1bbNFuDdSKjCCB5mq1lOY0znBQrFO9vp8oQqgAG5X3bPKO51SxK/8wa5+MGS?=
+ =?us-ascii?Q?LNYVdPTLE109mFNjI5VRPnQ0RY6MduwkyQUkIIbknEpvX4ci8c8jqR1QxJhd?=
+ =?us-ascii?Q?m2UFNhZesKlDrbl5M5Ggfmn+R8hBuEvO7H8HtZydF5xcSgBCQworjyRjf0ov?=
+ =?us-ascii?Q?RcBQdq/V4pzd5LisD2Z3cuugHF7Vm7hIZTo2JCeAWPL7JgL1+NIdxV8igkX8?=
+ =?us-ascii?Q?Xx3Dz0HL2RJi8Q/Y5sn33/KjFm7s6/bGZqEtgpujSbCIu2GLIQx3A+mvaYwU?=
+ =?us-ascii?Q?+bLTkGBxUK1eUuieKu7m3B8NH42OdP7KaFK8tQQh7LN11sxVXseYSTenFIyb?=
+ =?us-ascii?Q?XXdSiA=3D=3D?=
+X-MS-Exchange-AntiSpam-ExternalHop-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-ExternalHop-MessageData-0: 3r7g0VDEgfDEkmYoUbXlp71WMva6B7Zpp4/YqMkx0WvZOtW3vwIbb6BlgM2wJl/P79gQV9JMCb6O5R9dzKDlgfGzMoDzZ1cozbxpSSH9DNuGUIG86aeblbFtj2HYno5OZsmtSmZqf0I3SILpGZsudOHQqPWnLYG39J3xXJKdub2qe5PwI1IHK5PVa7q2sE334w21aLzGQYbqJEeRPQboXxgxrlCOZZrarwnYN+cJbbkomItFWQXTXnmzPyRSyuYMY7ImiZsRCzAl3kW3j/4RxCILvqytIEZ+4eZMwbL/ueAAQIGLllxYsKwiwojL4qMVaNNranl98jHi/Dp+Ue+ItYbtqlWe5+sqbFpYJ7MWiPPnN5COpC6lW9tQXd3sC3OT2UpOza92i2geS8ySG3yEiUZ3JtIhQQBG5evSukIfTM9zhb9zWSrEhb1C0tt8nwBaycw7yHI04NKz0tdJ6wRI92F2+z6F5cG3XyqbRJy6+MgIqvryQoBjWxtP+3QQ1pMBZOfzuf1+UJVpOvRZftJai52t7vsWHn0ZrMuEok77/cc1WyzrqpeFPeImuyJKEtilmmA+iukjHuL2RVIRP/iMXKE9t9SxawiS+bCgZOYUbumHsTms8F3P47RKPnMeo+5y257rLW2ZtXSy/8wleID+hsfBeB1B9cfSGGdCbFheWeFO1TbrnI/P93EtPl1a2vdlC+ms4yvcMDbXqpo1MJqksdwmvmSrTFqNifpUMfCKxZGfxnBACtAHm+uG8sQCY24I+NnECP4g7/4lcCxixwZR1A==
+X-OriginatorOrg: oracle.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: 53c4753b-e56c-4300-2c3c-08db872a1d44
+X-MS-Exchange-CrossTenant-AuthSource: BLAPR10MB5316.namprd10.prod.outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 18 Jul 2023 00:58:35.3799
+ (UTC)
+X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
+X-MS-Exchange-CrossTenant-Id: 4e2c6054-71cb-48f1-bd6c-3a9705aca71b
+X-MS-Exchange-CrossTenant-MailboxType: HOSTED
+X-MS-Exchange-CrossTenant-UserPrincipalName: e4EKnDKW75uh+tan0rcyFHF8NI1mvlkNjHG1C7u0kP4dFasuwLyoMUSxPQxW49Fl5Z+7W7FEEvW1jpD1uAJHZfD8ZDcVgfh58nFLtx/6fQ4=
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: CY5PR10MB6012
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.254,Aquarius:18.0.957,Hydra:6.0.591,FMLib:17.11.176.26
+ definitions=2023-07-17_15,2023-07-13_01,2023-05-22_02
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=0 mlxscore=0 phishscore=0
+ adultscore=0 spamscore=0 bulkscore=0 malwarescore=0 mlxlogscore=877
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2306200000
+ definitions=main-2307180007
+X-Proofpoint-GUID: sJ_ln52iw5su-ufrhrGeJ_pWk0FMSGxz
+X-Proofpoint-ORIG-GUID: sJ_ln52iw5su-ufrhrGeJ_pWk0FMSGxz
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Wed, Jul 12, 2023 at 04:34:03PM -0700, Darrick J. Wong wrote:
-> On Tue, Jun 20, 2023 at 02:32:15PM -0700, Omar Sandoval wrote:
-> > From: Omar Sandoval <osandov@fb.com>
-> > 
-> > xfs_rtallocate_extent_near() tries to find a free extent as close to a
-> > target bitmap block given by bbno as possible, which may be before or
-> > after bbno. Searching backwards has a complication: the realtime summary
-> > accounts for free space _starting_ in a bitmap block, but not straddling
-> > or ending in a bitmap block. So, when the negative search finds a free
-> > extent in the realtime summary, in order to end up closer to the target,
-> > it looks for the end of the free extent. For example, if bbno - 2 has a
-> > free extent, then it will check bbno - 1, then bbno - 2. But then if
-> > bbno - 3 has a free extent, it will check bbno - 1 again, then bbno - 2
-> > again, and then bbno - 3. This results in a quadratic loop, which is
-> > completely pointless since the repeated checks won't find anything new.
-> > 
-> > Fix it by remembering where we last checked up to and continue from
-> > there. This also obviates the need for a check of the realtime summary.
-> > 
-> > Signed-off-by: Omar Sandoval <osandov@fb.com>
-> > ---
-> >  fs/xfs/xfs_rtalloc.c | 46 +++-----------------------------------------
-> >  1 file changed, 3 insertions(+), 43 deletions(-)
-> > 
-> > diff --git a/fs/xfs/xfs_rtalloc.c b/fs/xfs/xfs_rtalloc.c
-> > index d079dfb77c73..4d9d0be2e616 100644
-> > --- a/fs/xfs/xfs_rtalloc.c
-> > +++ b/fs/xfs/xfs_rtalloc.c
-> > @@ -468,6 +468,7 @@ xfs_rtallocate_extent_near(
-> >  	}
-> >  	bbno = XFS_BITTOBLOCK(mp, bno);
-> >  	i = 0;
-> > +	j = -1;
-> >  	ASSERT(minlen != 0);
-> >  	log2len = xfs_highbit32(minlen);
-> >  	/*
-> > @@ -518,31 +519,11 @@ xfs_rtallocate_extent_near(
-> >  			else {		/* i < 0 */
-> >  				/*
-> >  				 * Loop backwards through the bitmap blocks from
-> > -				 * the starting point-1 up to where we are now.
-> > +				 * where we last checked up to where we are now.
-> 
-> I find this comment a bit unclear -- aren't we looping backwards from
-> where we last checked *downwards*?  I was reading "where we are now" to
-> mean @i, which contains a negative value.
+Hi all,
 
-Yes, "where we last checked down to where we are now" might be better
-wording.
+This patchset adds a new xfs_db command that enables users to copy out files
+from a block device to a specified destination.
 
-> "When @i is negative, we try to find a free extent that starts in the
-> bitmap blocks before bbno.  Starting from the last bitmap block that we
-> checked in a negative scan (initially bbno - 1) and walking downwards
-> towards (bbno + i), try to allocate an extent of satisfactory length."
-> 
-> But now having worked my way through that, now I'm wondering what the j
-> loop is even doing.  Doesn't the sequence of blocks that we call
-> xfs_rtallocate_extent_block on alternate backwards and forwards?  e.g.
-> 
-> Try to find a satisfactory free extent that starts in:
-> 
-> bbno
-> bbno + 1
-> bbno - 1
-> bbno + 2
-> bbno - 2
-> ...
-> etc?
-> 
-> Why not avoid the loop entirely by calling xfs_rtallocate_extent_block
-> on bbno + i once before switching back to positive @i?  What am I
-> missing here?
+Comments and feedback appreciated!
 
-There are two ways I can think of to remove the j loop, so I'll address
-both.
+Catherine
 
-If you mean: make the i >= 0 and i < 0 branches the same and call
-xfs_rtallocate_extent_block() if and only if xfs_rtany_summary() returns
-a non-zero maxlog, i.e.:
+Catherine Hoang (2):
+  xfs_db: create header file for directory iteration code
+  xfs_db: add a directory copy command
 
-diff --git a/fs/xfs/xfs_rtalloc.c b/fs/xfs/xfs_rtalloc.c
-index 4ab03eafd39f..9d7296c40ddd 100644
---- a/fs/xfs/xfs_rtalloc.c
-+++ b/fs/xfs/xfs_rtalloc.c
-@@ -495,10 +495,6 @@ xfs_rtallocate_extent_near(
- 			xfs_extlen_t maxavail =
- 				min_t(xfs_rtblock_t, maxlen,
- 				      (1ULL << (maxlog + 1)) - 1);
--			/*
--			 * On the positive side of the starting location.
--			 */
--			if (i >= 0) {
- 			/*
- 			 * Try to allocate an extent starting in
- 			 * this block.
-@@ -517,33 +513,6 @@ xfs_rtallocate_extent_near(
- 				return 0;
- 			}
- 		}
--			/*
--			 * On the negative side of the starting location.
--			 */
--			else {		/* i < 0 */
--				/*
--				 * Loop backwards through the bitmap blocks from
--				 * where we last checked up to where we are now.
--				 * There should be an extent which ends in this
--				 * bitmap block and is long enough.
--				 */
--				for (; j >= i; j--) {
--					error = xfs_rtallocate_extent_block(mp,
--						tp, bbno + j, minlen, maxavail,
--						len, &n, rtbufc, prod, &r);
--					if (error) {
--						return error;
--					}
--					/*
--					 * If it works, return the extent.
--					 */
--					if (r != NULLRTBLOCK) {
--						*rtblock = r;
--						return 0;
--					}
--				}
--			}
--		}
- 		/*
- 		 * Loop control.  If we were on the positive side, and there's
- 		 * still more blocks on the negative side, go there.
+ db/Makefile       |   4 +-
+ db/command.c      |   1 +
+ db/command.h      |   1 +
+ db/copyout.c      | 320 ++++++++++++++++++++++++++++++++++++++++++++++
+ db/namei.c        |  48 ++++---
+ db/namei.h        |  13 ++
+ man/man8/xfs_db.8 |   7 +
+ 7 files changed, 373 insertions(+), 21 deletions(-)
+ create mode 100644 db/copyout.c
+ create mode 100644 db/namei.h
 
-Then when i < 0, this will only find the _beginning_ of a free extent
-before bbno rather than the apparent goal of trying to allocate as close
-as possible to bbno, i.e., the _end_ of the free extent. (This is what I
-tried to explain in the commit message.)
+-- 
+2.34.1
 
-If instead you mean: unconditionally call xfs_rtallocate_extent_block()
-for bbno + i when i < 0, i.e.:
-
-diff --git a/fs/xfs/xfs_rtalloc.c b/fs/xfs/xfs_rtalloc.c
-index 4ab03eafd39f..1cf42910c0e8 100644
---- a/fs/xfs/xfs_rtalloc.c
-+++ b/fs/xfs/xfs_rtalloc.c
-@@ -491,14 +491,10 @@ xfs_rtallocate_extent_near(
- 		 * If there are any useful extents starting here, try
- 		 * allocating one.
- 		 */
--		if (maxlog >= 0) {
-+		if (maxlog >= 0 || i < 0) {
- 			xfs_extlen_t maxavail =
- 				min_t(xfs_rtblock_t, maxlen,
- 				      (1ULL << (maxlog + 1)) - 1);
--			/*
--			 * On the positive side of the starting location.
--			 */
--			if (i >= 0) {
- 			/*
- 			 * Try to allocate an extent starting in
- 			 * this block.
-@@ -517,33 +513,6 @@ xfs_rtallocate_extent_near(
- 				return 0;
- 			}
- 		}
--			/*
--			 * On the negative side of the starting location.
--			 */
--			else {		/* i < 0 */
--				/*
--				 * Loop backwards through the bitmap blocks from
--				 * where we last checked up to where we are now.
--				 * There should be an extent which ends in this
--				 * bitmap block and is long enough.
--				 */
--				for (; j >= i; j--) {
--					error = xfs_rtallocate_extent_block(mp,
--						tp, bbno + j, minlen, maxavail,
--						len, &n, rtbufc, prod, &r);
--					if (error) {
--						return error;
--					}
--					/*
--					 * If it works, return the extent.
--					 */
--					if (r != NULLRTBLOCK) {
--						*rtblock = r;
--						return 0;
--					}
--				}
--			}
--		}
- 		/*
- 		 * Loop control.  If we were on the positive side, and there's
- 		 * still more blocks on the negative side, go there.
-
-
-Then this will find the end of the extent, but we will waste a lot of
-time searching bitmap blocks that don't have any usable free space. (In
-fact, this is something that patch 6 tries to reduce further.)
-
-> >  				 * There should be an extent which ends in this
-> >  				 * bitmap block and is long enough.
-> >  				 */
-> > -				for (j = -1; j > i; j--) {
-> > -					/*
-> > -					 * Grab the summary information for
-> > -					 * this bitmap block.
-> > -					 */
-> > -					error = xfs_rtany_summary(mp, tp,
-> > -						log2len, mp->m_rsumlevels - 1,
-> > -						bbno + j, rtbufc, &maxlog);
-> > -					if (error) {
-> > -						return error;
-> > -					}
-> > -					/*
-> > -					 * If there's no extent given in the
-> > -					 * summary that means the extent we
-> > -					 * found must carry over from an
-> > -					 * earlier block.  If there is an
-> > -					 * extent given, we've already tried
-> > -					 * that allocation, don't do it again.
-> > -					 */
-> > -					if (maxlog >= 0)
-> > -						continue;
-> > +				for (; j >= i; j--) {
-> 
-> Changing the j > i to j >= i is what obviates the extra call to
-> xfs_rtallocate_extent_block below, correct?
-
-Correct. Before, the loop body was different because it contained a call
-to xfs_rtany_summary(). But now there's no check, so the extra call can
-be included in the loop.
