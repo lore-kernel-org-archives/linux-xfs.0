@@ -2,232 +2,183 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6B825C001DC
-	for <linux-xfs@archiver.kernel.org>; Wed, 19 Jul 2023 20:31:11 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7615AC001DC
+	for <linux-xfs@archiver.kernel.org>; Wed, 19 Jul 2023 20:38:11 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229637AbjGSUbK (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 19 Jul 2023 16:31:10 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33290 "EHLO
+        id S231176AbjGSUiJ (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 19 Jul 2023 16:38:09 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41082 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229790AbjGSUbJ (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 19 Jul 2023 16:31:09 -0400
-Received: from wout4-smtp.messagingengine.com (wout4-smtp.messagingengine.com [64.147.123.20])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 436701FD6
-        for <linux-xfs@vger.kernel.org>; Wed, 19 Jul 2023 13:30:40 -0700 (PDT)
-Received: from compute4.internal (compute4.nyi.internal [10.202.2.44])
-        by mailout.west.internal (Postfix) with ESMTP id 8F2243200368;
-        Wed, 19 Jul 2023 16:29:19 -0400 (EDT)
-Received: from mailfrontend2 ([10.202.2.163])
-  by compute4.internal (MEProxy); Wed, 19 Jul 2023 16:29:19 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=anarazel.de; h=
-        cc:cc:content-type:content-type:date:date:from:from:in-reply-to
-        :in-reply-to:message-id:mime-version:references:reply-to:sender
-        :subject:subject:to:to; s=fm3; t=1689798559; x=1689884959; bh=u2
-        YVSGAGtpFTna622Jhr7hM3YqFVfXqe8o57wA0bWZA=; b=muZ8QcA1Th2PVS1ljK
-        iGBU98eHsl0dCrPpLfVu5Cme3yl4UZg2uhu6VWCAIY96b/4RI4ThnNmZiGp7oFR/
-        dsnq0y/S/E5ng54+L5ffyaFi3h9DZ+nVwyP+nCqxdi3ZHWPb6UbwG5Am3KuJKj9w
-        6s5MN+St+4P/jhD7CPdiQAzLexvkkYczwW2OgxXGoTrmIqslHDpt7ZuNA2whaTwr
-        eE2u6Y3jZvV7o4eHUF8ZM5b7Sjx8TS2M+HWWhKUr9PhS8ExRMDIW9Jlp0C+Vw3Bh
-        11VScaVz8BmHsR6ncXeBugWsjcV4rOTXJ715LrzkcZ0PIjOi2jOgtJ2ESYP2YsbB
-        zCKg==
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=
-        messagingengine.com; h=cc:cc:content-type:content-type:date:date
-        :feedback-id:feedback-id:from:from:in-reply-to:in-reply-to
-        :message-id:mime-version:references:reply-to:sender:subject
-        :subject:to:to:x-me-proxy:x-me-proxy:x-me-sender:x-me-sender
-        :x-sasl-enc; s=fm3; t=1689798559; x=1689884959; bh=u2YVSGAGtpFTn
-        a622Jhr7hM3YqFVfXqe8o57wA0bWZA=; b=XyL3JGKCP681EkpEYtxERy5nomXzS
-        ZhnqKlBVn9CjqS97bA/kyk5fCXiKgO+c8HQE5luz5UWTxCsjX7NbJH6oAqu/IxCE
-        R8Jg4VIOL67tJFvbhU5TWn8/2zGiJrs/hIoAOKRK6qhEToz8mllSCPIuRjri3ps2
-        pRjFAL1QOBtCPe52kAXP09UZgDAGlvmRAmt/W/Md5VEUyrtCjxzAxdBtw/rIPqSg
-        7m4MWlYioc1csQXj4Ah1rT/SVDz8KY1X4xXmMV5kp/iHVJKJ5bkyqbxwL0gi+VB4
-        jtvPOpDLJ8qRtXpaQo8l2w30rFIBWouD1VAcBWwFtoU+KxAe5IxB+6lBA==
-X-ME-Sender: <xms:nke4ZOMs68v3GIPrcHj1rf75bCu3GRjCjkRFRFznPDdshhIVs779bg>
-    <xme:nke4ZM8qsKBDo6Hk573JZM_X10FRyQe4kz_nKmEZgCMXz1A1a2cC_Vp7gKva65_Kk
-    XzqNpgvYyxQMmMEzA>
-X-ME-Received: <xmr:nke4ZFSMrKH4R7GMW5_oehe4cZ0bgdsC55YQ0oxJI34t-0d7cC7-QeyJFGCT4Z9FzqaWm8L91Re-vXYK7HdGlGJC3XAfpWgvGBGPr0wn9EDXExgBJL2YYRN_xFEs>
-X-ME-Proxy-Cause: gggruggvucftvghtrhhoucdtuddrgedviedrgeekgddufeefucetufdoteggodetrfdotf
-    fvucfrrhhofhhilhgvmecuhfgrshhtofgrihhlpdfqfgfvpdfurfetoffkrfgpnffqhgen
-    uceurghilhhouhhtmecufedttdenucesvcftvggtihhpihgvnhhtshculddquddttddmne
-    cujfgurhepfffhvfevuffkfhggtggujgesthdtredttddtvdenucfhrhhomheptehnughr
-    vghsucfhrhgvuhhnugcuoegrnhgurhgvshesrghnrghrrgiivghlrdguvgeqnecuggftrf
-    grthhtvghrnhepvdfffeevhfetveffgeeiteefhfdtvdffjeevhfeuteegleduheetvedu
-    ieettddunecuvehluhhsthgvrhfuihiivgeptdenucfrrghrrghmpehmrghilhhfrhhomh
-    eprghnughrvghssegrnhgrrhgriigvlhdruggv
-X-ME-Proxy: <xmx:nke4ZOuj3laf_fG-YpaNckvI4Gc6cWGtJamUOENoHx4u-mzh7ixnuw>
-    <xmx:nke4ZGex-CZPPHjwHkVEkgSem-nskpQRx452fYR__RIhZntk1l3pnw>
-    <xmx:nke4ZC2vIGVbbhtO-ZIBXzyAJfiojgfqGRCoP-SWBj2lpz2img7ujA>
-    <xmx:n0e4ZHrk69U1nsqJn_c_wG2UfNNgH7YMdTBry84KX55IgZuBWtq4Hw>
-Feedback-ID: id4a34324:Fastmail
-Received: by mail.messagingengine.com (Postfix) with ESMTPA; Wed,
- 19 Jul 2023 16:29:18 -0400 (EDT)
-Date:   Wed, 19 Jul 2023 13:29:17 -0700
-From:   Andres Freund <andres@anarazel.de>
-To:     Dave Chinner <david@fromorbit.com>
-Cc:     Eric Sandeen <sandeen@sandeen.net>,
-        Masahiko Sawada <sawada.mshk@gmail.com>,
-        linux-xfs@vger.kernel.org
-Subject: Re: Question on slow fallocate
-Message-ID: <20230719202917.qkgtvk43scl4rt2m@awork3.anarazel.de>
-References: <CAD21AoCWW20ga6GKR+7RwRtvPU0VyFt3_acut_y+Fg7E-4nzWw@mail.gmail.com>
- <ZJTrrwirZqykiVxn@dread.disaster.area>
- <CAD21AoC9=8Q2o3-+ueuP05+8298z--5vgBWtvSxMHHF2jdyr_w@mail.gmail.com>
- <3f604849-877b-f519-8cae-4694c82ac7e4@sandeen.net>
- <CAD21AoBHd35HhFpbh9YBHPsLN+F_TZX5b47iy+-s44jPT+fyZQ@mail.gmail.com>
- <82b74cbc-8a1d-6b6f-fa2f-5f120d958dad@sandeen.net>
- <20230711224911.yd3ns6qcrlepbptq@awork3.anarazel.de>
- <ZLeP8VwYuXGKYC/Z@dread.disaster.area>
+        with ESMTP id S229463AbjGSUiI (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 19 Jul 2023 16:38:08 -0400
+Received: from mail-oo1-xc29.google.com (mail-oo1-xc29.google.com [IPv6:2607:f8b0:4864:20::c29])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id DB4602109
+        for <linux-xfs@vger.kernel.org>; Wed, 19 Jul 2023 13:37:45 -0700 (PDT)
+Received: by mail-oo1-xc29.google.com with SMTP id 006d021491bc7-5661e8f4c45so105903eaf.1
+        for <linux-xfs@vger.kernel.org>; Wed, 19 Jul 2023 13:37:45 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=cloudflare.com; s=google; t=1689799065; x=1692391065;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=1yalhP6R+1z0UDsb9+7HJFdN5dchw61s0+06SJ8cM6k=;
+        b=KuRKkiicFarGSCBqnr3LP7ne8/CcZXp61/wOUdOrRxindvG65FMP54jxAQljSUmMRu
+         0ImZCsR+QPc+umybUE+Ax3vYzbRHxuZ4QhZLWo1MjdmFKXWanAOl3Foy+M/ZSaMSlJ8C
+         sXf0djcu0QzTJcW9L78VBSTXlbebdDb3RiQqc=
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20221208; t=1689799065; x=1692391065;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=1yalhP6R+1z0UDsb9+7HJFdN5dchw61s0+06SJ8cM6k=;
+        b=cFhUtU60CGD2BAnVJBIaUAIA8dZwiptnqIauddacHetu7SDdUae9zdGBu0clsFhIHo
+         xgsyXX2BrN4OW5Q+OeNiYwqqNOlBam31J2r/ZgLThwTCPhZJZw8I8tvHdukssyGmryJy
+         Ei5EKwnRybxr234nnDlb2bvVRCj9Wm+wi+oqL3CRYUJ2iwIthlmpMCAEjesuTGsHXtmY
+         zliNyjHMCXsYlg0gRClxogv43vN2xuc4nrCg21Ry+hoR3Xo+LwDo69bQYJpjf3Qlpep/
+         OWz/gW9zhqQvXfKd6/cyMIOnJTYeyTYHc2WlQzMcMWJichr672LCIQYDiX9PYlyYC6gD
+         LRBQ==
+X-Gm-Message-State: ABy/qLZnZYbMaYHJlOxUI33c7ExzAkjaa3vIGOszXdG+WCmStayPk7NA
+        6JfCs3kkvDPdlNhjQogMp8QV4sEf3Do8RR9nnwkJ1A==
+X-Google-Smtp-Source: APBJJlEajt4aVc6CuRc8TCx+yM+UYYfOrW0NRG2NsLH3+frhp/KMJRs6pc+HGpPbRnF5/LFCbQ1GEjdPFY+oFOOshCk=
+X-Received: by 2002:a05:6808:1441:b0:3a4:1319:9af1 with SMTP id
+ x1-20020a056808144100b003a413199af1mr24407262oiv.51.1689799064974; Wed, 19
+ Jul 2023 13:37:44 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <ZLeP8VwYuXGKYC/Z@dread.disaster.area>
+References: <CA+wXwBRdcjHW2zxDABdFU3c26mc1u+g6iWG7HrXJRL7Po3Qp0w@mail.gmail.com>
+ <ZJ2yeJR5TB4AyQIn@casper.infradead.org> <20230629181408.GM11467@frogsfrogsfrogs>
+ <CALrw=nFwbp06M7LB_Z0eFVPe29uFFUxAhKQ841GSDMtjP-JdXA@mail.gmail.com>
+ <CAOQ4uxiD6a9GmKwagRpUWBPRWCczB52Tsu5m6_igDzTQSLcs0w@mail.gmail.com>
+ <CALrw=nHH2u=+utzy8NfP6+fM6kOgtW0hdUHwK9-BWdYq+t-UoA@mail.gmail.com>
+ <CAOQ4uxju10zrQhVDA5WS+vTSbuW17vOD6EGBBJUmZg8c95vsrA@mail.gmail.com> <20230630151657.GJ11441@frogsfrogsfrogs>
+In-Reply-To: <20230630151657.GJ11441@frogsfrogsfrogs>
+From:   Ignat Korchagin <ignat@cloudflare.com>
+Date:   Wed, 19 Jul 2023 21:37:33 +0100
+Message-ID: <CALrw=nFv82aODZ0URzknqnZavyjCxV1vKOP9oYijfSdyaYEQ3g@mail.gmail.com>
+Subject: Re: Backporting of series xfs/iomap: fix data corruption due to stale
+ cached iomap
+To:     "Darrick J. Wong" <djwong@kernel.org>,
+        Amir Goldstein <amir73il@gmail.com>
+Cc:     Matthew Wilcox <willy@infradead.org>,
+        Daniel Dao <dqminh@cloudflare.com>,
+        Dave Chinner <david@fromorbit.com>,
+        kernel-team <kernel-team@cloudflare.com>,
+        linux-fsdevel@vger.kernel.org,
+        Chandan Babu R <chandanrlinux@gmail.com>,
+        Leah Rumancik <lrumancik@google.com>,
+        linux-xfs <linux-xfs@vger.kernel.org>,
+        "Luis R. Rodriguez" <mcgrof@kernel.org>,
+        Fred Lawler <fred@cloudflare.com>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Hi,
+On Fri, Jun 30, 2023 at 4:17=E2=80=AFPM Darrick J. Wong <djwong@kernel.org>=
+ wrote:
+>
+> On Fri, Jun 30, 2023 at 04:05:36PM +0300, Amir Goldstein wrote:
+> > On Fri, Jun 30, 2023 at 3:30=E2=80=AFPM Ignat Korchagin <ignat@cloudfla=
+re.com> wrote:
+> > >
+> > > On Fri, Jun 30, 2023 at 11:39=E2=80=AFAM Amir Goldstein <amir73il@gma=
+il.com> wrote:
+> > > >
+> > > > On Thu, Jun 29, 2023 at 10:31=E2=80=AFPM Ignat Korchagin <ignat@clo=
+udflare.com> wrote:
+> > > > >
+> > > > > On Thu, Jun 29, 2023 at 7:14=E2=80=AFPM Darrick J. Wong <djwong@k=
+ernel.org> wrote:
+> > > > > >
+> > > > > > [add the xfs lts maintainers]
+> > > > > >
+> > > > > > On Thu, Jun 29, 2023 at 05:34:00PM +0100, Matthew Wilcox wrote:
+> > > > > > > On Thu, Jun 29, 2023 at 05:09:41PM +0100, Daniel Dao wrote:
+> > > > > > > > Hi Dave and Derrick,
+> > > > > > > >
+> > > > > > > > We are tracking down some corruptions on xfs for our rocksd=
+b workload,
+> > > > > > > > running on kernel 6.1.25. The corruptions were
+> > > > > > > > detected by rocksdb block checksum. The workload seems to s=
+hare some
+> > > > > > > > similarities
+> > > > > > > > with the multi-threaded write workload described in
+> > > > > > > > https://lore.kernel.org/linux-fsdevel/20221129001632.GX3600=
+936@dread.disaster.area/
+> > > > > > > >
+> > > > > > > > Can we backport the patch series to stable since it seemed =
+to fix data
+> > > > > > > > corruptions ?
+> > > > > > >
+> > > > > > > For clarity, are you asking for permission or advice about do=
+ing this
+> > > > > > > yourself, or are you asking somebody else to do the backport =
+for you?
+> > > > > >
+> > > > > > Nobody's officially committed to backporting and testing patche=
+s for
+> > > > > > 6.1; are you (Cloudflare) volunteering?
+> > > > >
+> > > > > Yes, we have applied them on top of 6.1.36, will be gradually
+> > > > > releasing to our servers and will report back if we see the issue=
+s go
+> > > > > away
+> > > > >
+> > > >
+> > > > Getting feedback back from Cloudflare production servers is awesome
+> > > > but it's not enough.
+> > > >
+> > > > The standard for getting xfs LTS backports approved is:
+> > > > 1. Test the backports against regressions with several rounds of fs=
+tests
+> > > >     check -g auto on selected xfs configurations [1]
+> > > > 2. Post the backport series to xfs list and get an ACK from upstrea=
+m
+> > > >     xfs maintainers
+> > > >
+> > > > We have volunteers doing this work for 5.4.y, 5.10.y and 5.15.y.
+> > > > We do not yet have a volunteer to do that work for 6.1.y.
+> > > >
+> > > > The question is whether you (or your team) are volunteering to
+> > > > do that work for 6.1.y xfs backports to help share the load?
 
-On 2023-07-19 17:25:37 +1000, Dave Chinner wrote:
-> On Tue, Jul 11, 2023 at 03:49:11PM -0700, Andres Freund wrote:
-> > The goal is to avoid ENOSPC at a later time. We do this before filling our own
-> > in-memory buffer pool with pages containing new contents. If we have dirty
-> > pages in our buffer that we can't write out due to ENOSPC, we're in trouble,
-> > because we can't checkpoint. Which typically will make the ENOSPC situation
-> > worse, because we also can't remove WAL / journal files without the checkpoint
-> > having succeeded.  Of course a successful fallocate() / pwrite() doesn't
-> > guarantee that much on a COW filesystem, but there's not much we can do about
-> > that, to my knowledge.
-> 
-> Yup, which means you're screwed on XFS, ZFS and btrfs right now, and
-> also bcachefs when people start using it.
+Circling back on this. So far it seems that the patchset in question
+does fix the issues of rocksdb corruption as we haven't seen them for
+some time on our test group. We're happy to dedicate some efforts now
+to get them officially backported to 6.1 according to the process. We
+did try basic things with kdevops and would like to learn more. Fred
+(cc-ed here) is happy to drive the effort and be the primary contact
+on this. Could you, please, guide us/him on the process?
 
-I'd be happy to hear of a better alternative... fallocate() should avoid
-ENOSPC on XFS unless snapshots trigger COW on a write, correct?
+> > > We are not a big team and apart from other internal project work our
+> > > efforts are focused on fixing this issue in production, because it
+> > > affects many teams and workloads. If we confirm that these patches fi=
+x
+> > > the issue in production, we will definitely consider dedicating some
+> > > work to ensure they are officially backported. But if not - we would
+> > > be required to search for a fix first before we can commit to any
+> > > work.
+> > >
+> > > So, IOW - can we come back to you a bit later on this after we get th=
+e
+> > > feedback from production?
+> > >
+> >
+> > Of course.
+> > The volunteering question for 6.1.y is independent.
+> >
+> > When you decide that you have a series of backports
+> > that proves to fix a real bug in production,
+> > a way to test the series will be worked out.
+>
+> /me notes that xfs/558 and xfs/559 (in fstests) are the functional tests
+> for these patches that you're backporting; it would be useful to have a
+> third party (i.e. not just the reporter and the author) confirm that the
+> two fstests pass when real workloads are fixed.
+>
+> --D
+>
+> > Thanks,
+> > Amir.
 
-
-> > Using fallocate() for small extensions is problematic because it a) causes
-> > We're also working on using DIO FWIW, where using fallocate() is just about
-> > mandatory...
-> 
-> No, no it isn't. fallocate() is even more important to avoid with
-> DIO than buffered IO because fallocate() completely serialises *all*
-> IO to the file. That's the last thing you want with DIO given the
-> only reason for using DIO is to maximising IO concurrency and
-> minimise IO latency to individual files.
-
-Not using any form of preallocation (potentially via extent size hints as you
-mention below), when multiple files are being appended to simultaneously with
-DIO, does lead to terrifying levels of fragmentation on xfs.
-
-On a newly initialized xfs (mkfs.xfs version 6.3.0, 6.5.0-rc2):
-
-rm -f fragtest-* && fio --minimal --name fragtest-1 --buffered=0 --filesize=128MB --fallocate=none --rw write --bs=$((4096*4)) --nrfiles=10
-
-filefrag fragtest-1.0.*
-
-fragtest-1.0.1: 8192 extents found
-fragtest-1.0.2: 8192 extents found
-fragtest-1.0.3: 8192 extents found
-fragtest-1.0.4: 8192 extents found
-fragtest-1.0.5: 8192 extents found
-fragtest-1.0.6: 8192 extents found
-fragtest-1.0.7: 8192 extents found
-fragtest-1.0.8: 8192 extents found
-fragtest-1.0.9: 8192 extents found
-
-On a more "aged" filesystem, it's not quite as regular, but still above 7k
-extents for all files.  Similarly, if I use io_uring for more concurrent IOs,
-there's a bit less fragmentation, presumbly because sometimes two IOs for the
-same file happen in subsequently.
-
-
-Of course just writing four blocks at a time is a bit extreme, I wanted to
-showcase the issue here, but even with a bit bigger writes, the problem is
-still severe.  Writing multiple files at the same time is extremely common for
-us (think of table and its indexes, or multiple partitions of a table being
-filled concurrently).
-
-It looks to me that with a single file being written, each write only
-allocates a small extent, but the extent can be extended in subsequent
-writes. But when 2+ files are being written, that rarely is possible, because
-the space was already used for the other file(s).
-
-
-
-> If you want to minimise fragmentation with DIO workloads, then you
-> should be using extent size hints of an appropriate size. That will
-> align and size extents to the hint regardless of fallocate/write
-> ranges, hence this controls worst case fragmentation effectively.
-
-That might be an option, but I'm not sure how realistic it is. Lookes like one
-can't adjust the extsize for a file with existing contents, if I see this
-correctly. We don't know what data will be how large ahead of time, so we
-can't just configure a large extsize and be done with that.
-
-Given the above fragmentation behaviour, and the fact that extsizes can't be
-adjusted, I don't really see how we can get away from using fallocate() to
-avoid fragmentation.
-
-Then there's also the issue of extsize being xfs specific, without
-corresponding fetures in other filesystems...
-
-
-> If you want enospc guarantees for future writes, then large,
-> infrequent fallocate(FALLOC_FL_KEEP_SIZE) calls should be used. Do
-> not use this mechanism as an anti-fragmentation mechanism, that's
-> what extent size hints are for.
-
-Is there documentation about extent size hints anywhere beyond the paragraphs
-in the ioctl_xfs_fsgetxattr(2)? I didn't find much...
-
-
-> Use fallocate() as *little as possible*.
-> 
-> In my experience, fine grained management of file space by userspace
-> applications via fallocate() is nothing but a recipe for awful
-> performance, highly variable IO latency, bad file fragmentation, and
-> poor filesystem aging characteristics. Just don't do it.
-
-I'd like to avoid it, but so far experience has shown that that causes plenty
-issues as well.
-
-
-Somewhat tangential: I still would like a fallocate() option that actually
-zeroes out new extents (via "write zeroes", if supported), rather than just
-setting them up as unwritten extents. Nor for "data" files, but for
-WAL/journal files.
-
-Unwrittent extent "conversion", or actually extending the file, makes durable
-journal writes via O_DSYNC or fdatasync() unusably slow. So one has to
-overwrite the file with zeroes "manually" - even though "write zeroes" would
-often be more efficient.
-
-rm -f durable-*;fio --buffered=0 --filesize=32MB --fallocate=1 --rw write --bs=$((8192)) --nrfiles=1 --ioengine io_uring --iodepth 16 --sync dsync --name durable-overwrite --overwrite 1 --name durable-nooverwrite --overwrite 0 --stonewall --name durable-nofallocate --overwrite 0 --fallocate 0 --stonewall
-
-slow-ish nvme:
-
-Run status group 0 (all jobs):
-  WRITE: bw=45.1MiB/s (47.3MB/s), 45.1MiB/s-45.1MiB/s (47.3MB/s-47.3MB/s), io=32.0MiB (33.6MB), run=710-710msec
-
-Run status group 1 (all jobs):
-  WRITE: bw=3224KiB/s (3302kB/s), 3224KiB/s-3224KiB/s (3302kB/s-3302kB/s), io=32.0MiB (33.6MB), run=10163-10163msec
-
-Run status group 2 (all jobs):
-  WRITE: bw=2660KiB/s (2724kB/s), 2660KiB/s-2660KiB/s (2724kB/s-2724kB/s), io=32.0MiB (33.6MB), run=12320-12320msec
-
-
-fast nvme:
-
-Run status group 0 (all jobs):
-  WRITE: bw=1600MiB/s (1678MB/s), 1600MiB/s-1600MiB/s (1678MB/s-1678MB/s), io=32.0MiB (33.6MB), run=20-20msec
-
-Run status group 1 (all jobs):
-  WRITE: bw=356MiB/s (373MB/s), 356MiB/s-356MiB/s (373MB/s-373MB/s), io=32.0MiB (33.6MB), run=90-90msec
-
-Run status group 2 (all jobs):
-  WRITE: bw=260MiB/s (273MB/s), 260MiB/s-260MiB/s (273MB/s-273MB/s), io=32.0MiB (33.6MB), run=123-123msec
-
-
-Greetings,
-
-Andres Freund
+Ignat
