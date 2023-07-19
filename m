@@ -2,241 +2,226 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1CE66EB64DA
-	for <linux-xfs@archiver.kernel.org>; Wed, 19 Jul 2023 15:24:21 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B25B9C001B0
+	for <linux-xfs@archiver.kernel.org>; Wed, 19 Jul 2023 15:29:11 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231811AbjGSPYT (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 19 Jul 2023 11:24:19 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33140 "EHLO
+        id S231279AbjGSP3K (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 19 Jul 2023 11:29:10 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38462 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231810AbjGSPYF (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 19 Jul 2023 11:24:05 -0400
-Received: from mail-io1-xd32.google.com (mail-io1-xd32.google.com [IPv6:2607:f8b0:4864:20::d32])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 757DF19A1
-        for <linux-xfs@vger.kernel.org>; Wed, 19 Jul 2023 08:24:00 -0700 (PDT)
-Received: by mail-io1-xd32.google.com with SMTP id ca18e2360f4ac-78706966220so47381539f.1
-        for <linux-xfs@vger.kernel.org>; Wed, 19 Jul 2023 08:24:00 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=kernel-dk.20221208.gappssmtp.com; s=20221208; t=1689780239; x=1692372239;
-        h=content-transfer-encoding:in-reply-to:from:references:cc:to
-         :content-language:subject:user-agent:mime-version:date:message-id
-         :from:to:cc:subject:date:message-id:reply-to;
-        bh=rsmw396UyGg9KI2OxjnWSL3C8+sAXu99zZ/mRUVEeQI=;
-        b=a0Ny9jepRR1yW8Tr5V5FOcP29BSI3qvArsOR6oIL2V+QMaveMAHLbCeL4IXC6HiCN4
-         aa3OKByHI/nGfqwHNTo46s7Tk25p75q2eCf08rRnrDmhjczTruiv/RSQ3FE5FoKEDq/p
-         xgeV9Lzcj2KRnTRuUx9Luj+Cak/uxJMFwxfxtcN8XlGKbkjvfLzM8Rnc0CjDt67mD1Vc
-         ua8efj2E6X4PjzUMsZBlnrpfRp0cI4lfD7jSEW+jCzq6LJ2y7IbzU9DqF5DekJ32+9oO
-         xRGnKt5tINEIrUpEYY+NE+4DksgrcMWB/QbCvXdwEip3FpFUT1gqRCLVA6G9S8xrhJ5G
-         LQ4Q==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20221208; t=1689780239; x=1692372239;
-        h=content-transfer-encoding:in-reply-to:from:references:cc:to
-         :content-language:subject:user-agent:mime-version:date:message-id
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=rsmw396UyGg9KI2OxjnWSL3C8+sAXu99zZ/mRUVEeQI=;
-        b=Y1T5hz/MaeD6D3SKJIDuvRkgOaGCnS+ZUMAANUYaI4WFzr27mZ936TZt3eUwJp0Ar0
-         AhEbjJNnjfS2/3JPnp3KABDJbOA9j10Gzv+Jy189EkMAt0+exMT3MCPmzl9AG4UhS9nX
-         Gtxoi9EaybG5i2elY5jeB2dY82cLUmy9tTUfjF81WHLXCp3M8uDRFqt8p8e5g2v/EmA/
-         s5sPvHqL78dkB2FXp3Uw57B/pMQRKs+zCFmYvLeWmT4/eabyF/4+yAWnIxaDCG0pMAnC
-         Bo6eb2WXybNwNs3Y6y25LtpAgGBNUsCD7mlXvSbRwmPTDT684WZdgfi0opsArfqKZEjo
-         QjnA==
-X-Gm-Message-State: ABy/qLb9lNvzL5TbYohdfXtmUbV44C2cZ/JSjOE1RkXk1sWFQIMZpnpo
-        EpwRTs6ngnwiZYnN0Hr6u7RRKg==
-X-Google-Smtp-Source: APBJJlEtKxmCvgVMkfiujpUOZGAmVwNVd0aqz/4C7hzBnfmq7TSo5+cK/lWh2iEZiMIR+OcRzMKrpQ==
-X-Received: by 2002:a6b:c992:0:b0:77a:ee79:652 with SMTP id z140-20020a6bc992000000b0077aee790652mr4425333iof.1.1689780239460;
-        Wed, 19 Jul 2023 08:23:59 -0700 (PDT)
-Received: from [192.168.1.94] ([96.43.243.2])
-        by smtp.gmail.com with ESMTPSA id k9-20020a5e8909000000b00786ea00bdb5sm1422931ioj.2.2023.07.19.08.23.58
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Wed, 19 Jul 2023 08:23:58 -0700 (PDT)
-Message-ID: <11151547-1bea-7c92-31b6-2d4250ada604@kernel.dk>
-Date:   Wed, 19 Jul 2023 09:23:58 -0600
+        with ESMTP id S230526AbjGSP3J (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 19 Jul 2023 11:29:09 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id CC27EB7;
+        Wed, 19 Jul 2023 08:29:08 -0700 (PDT)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange X25519 server-signature RSA-PSS (2048 bits))
+        (No client certificate requested)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 5D03B6162A;
+        Wed, 19 Jul 2023 15:29:08 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 9F958C433C7;
+        Wed, 19 Jul 2023 15:29:07 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1689780547;
+        bh=2kHUEw5V7dGXd1WLGmHasPp+VRW7MqtgNhTm2defC8Y=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=Yr7b+H4aBDvC30+GV3mHRUK0EI8ki8t+xTnrnTuzaUuWRMtlKWKNBx6bcaLWY9+Kl
+         Ww1MEbdZa+Rq4JbIpZe0pq78S0FkoTyRoSrLOSMcKbGLDF0GuqGNULp+JUaXAjafX4
+         pfGy2f2u7y16eOp2Gb1hpWRpXc1kwsvA9s4UOxO9FnUsFi6HOv/LtPZlxgl7mYuUZw
+         zqoTfbTq7HFqIejMScJrbJR7bb53fQftb4U1xWjlP2XZLNlcWuCTraGcRtp1WWXBkV
+         aDTQy+cEr6Qrr8YWyv0j1pgyuZ6iNq/WhvmV3aebjrQDlDP5voCPrTmKvbV98lIDXf
+         KOT5kQQPrG94w==
+Date:   Wed, 19 Jul 2023 08:29:07 -0700
+From:   "Darrick J. Wong" <djwong@kernel.org>
+To:     Zorro Lang <zlang@redhat.com>
+Cc:     tytso@mit.edu, linux-xfs@vger.kernel.org, fstests@vger.kernel.org
+Subject: Re: [PATCH 1/2] check: add a -smoketest option
+Message-ID: <20230719152907.GA11377@frogsfrogsfrogs>
+References: <168972905065.1698606.6829635791058054610.stgit@frogsfrogsfrogs>
+ <168972905626.1698606.12419796694170752316.stgit@frogsfrogsfrogs>
+ <20230719151024.ef7vgjmtoxwxkmjm@zlang-mailbox>
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux aarch64; rv:102.0) Gecko/20100101
- Thunderbird/102.13.0
-Subject: Re: [PATCH 1/5] iomap: simplify logic for when a dio can get
- completed inline
-Content-Language: en-US
-To:     Dave Chinner <david@fromorbit.com>
-Cc:     io-uring@vger.kernel.org, linux-xfs@vger.kernel.org, hch@lst.de,
-        andres@anarazel.de
-References: <20230718194920.1472184-1-axboe@kernel.dk>
- <20230718194920.1472184-3-axboe@kernel.dk>
- <ZLcYjW6vJhEXy7hU@dread.disaster.area>
-From:   Jens Axboe <axboe@kernel.dk>
-In-Reply-To: <ZLcYjW6vJhEXy7hU@dread.disaster.area>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20230719151024.ef7vgjmtoxwxkmjm@zlang-mailbox>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On 7/18/23 4:56?PM, Dave Chinner wrote:
-> On Tue, Jul 18, 2023 at 01:49:16PM -0600, Jens Axboe wrote:
->> Currently iomap gates this on !IOMAP_DIO_WRITE, but this isn't entirely
->> accurate. Some writes can complete just fine inline. One such example is
->> polled IO, where the completion always happens in task context.
->>
->> Add IOMAP_DIO_INLINE_COMP which tells the completion side if we can
->> complete this dio inline, or if it needs punting to a workqueue. We set
->> this flag by default for any dio, and turn it off for unwritten extents
->> or blocks that require a sync at completion time.
+On Wed, Jul 19, 2023 at 11:10:24PM +0800, Zorro Lang wrote:
+> On Tue, Jul 18, 2023 at 06:10:56PM -0700, Darrick J. Wong wrote:
+> > From: Darrick J. Wong <djwong@kernel.org>
+> > 
+> > Create a "-smoketest" parameter to check that will run generic
+> > filesystem smoke testing for five minutes apiece.  Since there are only
+> > five smoke tests, this is effectively a 16min super-quick test.
+> > 
+> > With gcov enabled, running these tests yields about ~75% coverage for
+> > iomap and ~60% for xfs; or ~50% for ext4 and ~75% for ext4; and ~45% for
+> > btrfs.  Coverage was about ~65% for the pagecache.
+> > 
+> > Cc: tytso@mit.edu
+> > Signed-off-by: Darrick J. Wong <djwong@kernel.org>
+> > ---
+> >  check               |    6 +++++-
+> >  doc/group-names.txt |    1 +
+> >  tests/generic/475   |    2 +-
+> >  tests/generic/476   |    2 +-
+> >  tests/generic/521   |    2 +-
+> >  tests/generic/522   |    2 +-
+> >  tests/generic/642   |    2 +-
+> >  7 files changed, 11 insertions(+), 6 deletions(-)
+> > 
+> > 
+> > diff --git a/check b/check
+> > index 89e7e7bf20..97c7c4c7d1 100755
+> > --- a/check
+> > +++ b/check
+> > @@ -68,6 +68,7 @@ check options
+> >      -pvfs2		test PVFS2
+> >      -tmpfs		test TMPFS
+> >      -ubifs		test ubifs
+> > +    -smoketest		run smoke tests for 4min each
 > 
-> Ignoring the O_DSYNC case (I'll get to that at the end), this is
-> still wrong - it misses extending writes that need to change file
-> size at IO completion. For some filesystems, file extension at IO
-> completion has the same constraints as unwritten extent conversion
-> (i.e. requires locking and transactions), but the iomap
-> infrastructure has no idea whether the filesystem performing the IO
-> requires this or not.
+> We have both "smoketest" and "smoke", that's a bit confused :)
+
+We do?  git grep doesn't show anything other than what I added:
+
+$ git grep smoke
+check:71:    -smoketest         run smoke tests for 4min each
+check:294:      -smoketest)
+check:296:              GROUP_LIST="smoketest"
+doc/group-names.txt:123:smoketest               Simple smoke tests
+tests/generic/475:15:_begin_fstest shutdown auto log metadata eio recoveryloop smoketest
+tests/generic/476:11:_begin_fstest auto rw long_rw stress soak smoketest
+tests/generic/521:10:_begin_fstest soak long_rw smoketest
+tests/generic/522:10:_begin_fstest soak long_rw smoketest
+tests/generic/533:9:# Simple attr smoke tests for user EAs, dereived from generic/097.
+tests/generic/642:11:_begin_fstest auto soak attr long_rw stress smoketest
+
+> >      -l			line mode diff
+> >      -udiff		show unified diff (default)
+> >      -n			show me, do not run tests
+> > @@ -290,7 +291,10 @@ while [ $# -gt 0 ]; do
+> >  		FSTYP=overlay
+> >  		export OVERLAY=true
+> >  		;;
+> > -
+> > +	-smoketest)
 > 
-> i.e. if iomap always punts unwritten extent IO to a workqueue, we
-> also have to punt extending writes to a workqueue.  Fundamentally,
-> the iomap code itself cannot make a correct determination of whether
-> IO completion of any specific write IO requires completion in task
-> context.
+> Hmm... I'm wondering if it's worth having a specific running option for
+> someone test group. If each "meaningful" testing way need a specific check
+> option, the ./check file will be too complicated.
 > 
-> Only the filesystem knows that,
+> If we need some recommended test ways, how about make some separated wrappers
+> of ./check? For example:
 > 
-> However, the filesystem knows if the IO is going to need IO
-> completion processing at submission time. It tells iomap that it
-> needs completion processing via the IOMAP_F_DIRTY flag. This allows
-> filesystems to determine what IOs iomap can consider as "writes that
-> don't need filesystem completion processing".
+> # mkdir fstests/runtest/
+> # cat > fstests/runtest/smoketest <<EOF
+> export SOAK_DURATION="4m"
+> ./check -g smoketest
+> EOF
 > 
-> With this flag, iomap can optimise the IO appropriately. We can use
-> REQ_FUA for O_DSYNC writes if IOMAP_F_DIRTY is not set. We can do
-> inline completion if IOMAP_F_DIRTY is not set. But if IOMAP_F_DIRTY
-> is set, the filesystem needs to run it's own completion processing,
-> and so iomap cannot run that write with an inline completion.
+> Of course you can write more codes in it.
 
-Gotcha, so we need to gate INLINE_COMP on !IOMAP_F_DIRTY as well. I'll
-make that change.
+The goal here was to give casual developers an easy way to run a quick
+15 minute exercise *without* having to write wrapper scripts or type
+all that in every time.  Compare:
 
->> Gate the inline completion on whether we're in a task or not as well.
->> This will always be true for polled IO, but for IRQ driven IO, the
->> completion context may not allow for inline completions.
+$ ./check -smoketest
+
+vs.
+
+$ SOAK_DURATION=4m ./check -g smoketest
+
+--D
+
+> Thanks,
+> Zorro
 > 
-> Again, context does not matter for pure overwrites - we can complete
-> them inline regardless of completion context. The task context only
-> matters when the filesystem needs to do completion work, and we've
-> already established that we are not doing inline completion
-> for polled IO for unwritten, O_DSYNC or extending file writes.
-
-Right, looks like I was just missing that bit as well, I assumed that
-the previous case would co er it.
-
-> IOWs, we already avoid polled completions for all the situations
-> where IOMAP_F_DIRTY is set by the filesystem to indicate the
-> operation is not a pure overwrite....
-
-Yep
-
->>  fs/iomap/direct-io.c | 14 +++++++++-----
->>  1 file changed, 9 insertions(+), 5 deletions(-)
->>
->> diff --git a/fs/iomap/direct-io.c b/fs/iomap/direct-io.c
->> index ea3b868c8355..6fa77094cf0a 100644
->> --- a/fs/iomap/direct-io.c
->> +++ b/fs/iomap/direct-io.c
->> @@ -20,6 +20,7 @@
->>   * Private flags for iomap_dio, must not overlap with the public ones in
->>   * iomap.h:
->>   */
->> +#define IOMAP_DIO_INLINE_COMP	(1 << 27)
->>  #define IOMAP_DIO_WRITE_FUA	(1 << 28)
->>  #define IOMAP_DIO_NEED_SYNC	(1 << 29)
->>  #define IOMAP_DIO_WRITE		(1 << 30)
->> @@ -161,15 +162,15 @@ void iomap_dio_bio_end_io(struct bio *bio)
->>  			struct task_struct *waiter = dio->submit.waiter;
->>  			WRITE_ONCE(dio->submit.waiter, NULL);
->>  			blk_wake_io_task(waiter);
->> -		} else if (dio->flags & IOMAP_DIO_WRITE) {
->> +		} else if ((dio->flags & IOMAP_DIO_INLINE_COMP) && in_task()) {
+> > +		SOAK_DURATION="4m"
+> > +		GROUP_LIST="smoketest"
+> > +		;;
+> >  	-g)	group=$2 ; shift ;
+> >  		GROUP_LIST="$GROUP_LIST ${group//,/ }"
+> >  		;;
+> > diff --git a/doc/group-names.txt b/doc/group-names.txt
+> > index 1c35a39432..c3dcca3755 100644
+> > --- a/doc/group-names.txt
+> > +++ b/doc/group-names.txt
+> > @@ -118,6 +118,7 @@ selftest		tests with fixed results, used to validate testing setup
+> >  send			btrfs send/receive
+> >  shrinkfs		decreasing the size of a filesystem
+> >  shutdown		FS_IOC_SHUTDOWN ioctl
+> > +smoketest		Simple smoke tests
+> >  snapshot		btrfs snapshots
+> >  soak			long running soak tests whose runtime can be controlled
+> >                          directly by setting the SOAK_DURATION variable
+> > diff --git a/tests/generic/475 b/tests/generic/475
+> > index 0cbf5131c2..ce7fe013b1 100755
+> > --- a/tests/generic/475
+> > +++ b/tests/generic/475
+> > @@ -12,7 +12,7 @@
+> >  # testing efforts.
+> >  #
+> >  . ./common/preamble
+> > -_begin_fstest shutdown auto log metadata eio recoveryloop
+> > +_begin_fstest shutdown auto log metadata eio recoveryloop smoketest
+> >  
+> >  # Override the default cleanup function.
+> >  _cleanup()
+> > diff --git a/tests/generic/476 b/tests/generic/476
+> > index 8e93b73457..b1ae4df4d4 100755
+> > --- a/tests/generic/476
+> > +++ b/tests/generic/476
+> > @@ -8,7 +8,7 @@
+> >  # bugs in the write path.
+> >  #
+> >  . ./common/preamble
+> > -_begin_fstest auto rw long_rw stress soak
+> > +_begin_fstest auto rw long_rw stress soak smoketest
+> >  
+> >  # Override the default cleanup function.
+> >  _cleanup()
+> > diff --git a/tests/generic/521 b/tests/generic/521
+> > index 22dd31a8ec..0956e50171 100755
+> > --- a/tests/generic/521
+> > +++ b/tests/generic/521
+> > @@ -7,7 +7,7 @@
+> >  # Long-soak directio fsx test
+> >  #
+> >  . ./common/preamble
+> > -_begin_fstest soak long_rw
+> > +_begin_fstest soak long_rw smoketest
+> >  
+> >  # Import common functions.
+> >  . ./common/filter
+> > diff --git a/tests/generic/522 b/tests/generic/522
+> > index f0cbcb245c..0e4e6009ed 100755
+> > --- a/tests/generic/522
+> > +++ b/tests/generic/522
+> > @@ -7,7 +7,7 @@
+> >  # Long-soak buffered fsx test
+> >  #
+> >  . ./common/preamble
+> > -_begin_fstest soak long_rw
+> > +_begin_fstest soak long_rw smoketest
+> >  
+> >  # Import common functions.
+> >  . ./common/filter
+> > diff --git a/tests/generic/642 b/tests/generic/642
+> > index eba90903a3..e6a475a8b5 100755
+> > --- a/tests/generic/642
+> > +++ b/tests/generic/642
+> > @@ -8,7 +8,7 @@
+> >  # bugs in the xattr code.
+> >  #
+> >  . ./common/preamble
+> > -_begin_fstest auto soak attr long_rw stress
+> > +_begin_fstest auto soak attr long_rw stress smoketest
+> >  
+> >  _cleanup()
+> >  {
+> > 
 > 
-> Regardless of whether the code is correct or not, this needs a
-> comment explaining what problem the in_task() check is working
-> around...
-
-It's meant to catch cases where we're doing polled IO, but it got
-cleared/disabled in the block layer. We cannot catch this at submission
-time, it has to be checked at completion time. There are a few ways we
-could check for that, one would be in_task(), another would be to check
-the bio REQ_POLLED flag like v1 did. I don't have a strong preference
-here, though it did seem like a saner check to use in_task() as generic
-catch-all for if we're doing this from soft/hard irq processing or not,
-unexpectedly.
-
-
->> +			WRITE_ONCE(dio->iocb->private, NULL);
->> +			iomap_dio_complete_work(&dio->aio.work);
->> +		} else {
->>  			struct inode *inode = file_inode(dio->iocb->ki_filp);
->>  
->>  			WRITE_ONCE(dio->iocb->private, NULL);
->>  			INIT_WORK(&dio->aio.work, iomap_dio_complete_work);
->>  			queue_work(inode->i_sb->s_dio_done_wq, &dio->aio.work);
->> -		} else {
->> -			WRITE_ONCE(dio->iocb->private, NULL);
->> -			iomap_dio_complete_work(&dio->aio.work);
->>  		}
->>  	}
->>  
->> @@ -244,6 +245,7 @@ static loff_t iomap_dio_bio_iter(const struct iomap_iter *iter,
->>  
->>  	if (iomap->type == IOMAP_UNWRITTEN) {
->>  		dio->flags |= IOMAP_DIO_UNWRITTEN;
->> +		dio->flags &= ~IOMAP_DIO_INLINE_COMP;
->>  		need_zeroout = true;
->>  	}
->>  
->> @@ -500,7 +502,8 @@ __iomap_dio_rw(struct kiocb *iocb, struct iov_iter *iter,
->>  	dio->i_size = i_size_read(inode);
->>  	dio->dops = dops;
->>  	dio->error = 0;
->> -	dio->flags = 0;
->> +	/* default to inline completion, turned off when not supported */
->> +	dio->flags = IOMAP_DIO_INLINE_COMP;
->>  	dio->done_before = done_before;
-> 
-> I think this is poorly coded. If we get the clearing logic
-> wrong (as is the case in this patch) then bad things will
-> happen when we run inline completion in an irq context when
-> the filesystem needs to run a transaction. e.g. file extension.
-
-Agree, it seems a bit fragile. The alternative is doing it the other way
-around, enabling it for cases that we know it'll work for instead. I'll
-take a stab at that approach along with the other changes.
-
-> It looks to me like you hacked around this "default is wrong" case
-> with the "in_task()" check in completion, but given that check is
-> completely undocumented....
-
-It's not a hacky work-around, it's a known case that could go wrong.
-> 
->>  	dio->submit.iter = iter;
->> @@ -535,6 +538,7 @@ __iomap_dio_rw(struct kiocb *iocb, struct iov_iter *iter,
->>  		/* for data sync or sync, we need sync completion processing */
->>  		if (iocb_is_dsync(iocb)) {
->>  			dio->flags |= IOMAP_DIO_NEED_SYNC;
->> +			dio->flags &= ~IOMAP_DIO_INLINE_COMP;
-> 
-> This is looks wrong, too. We set IOMAP_DIO_WRITE_FUA ca couple of
-> lines later, and during bio submission we check if REQ_FUA can be
-> used if IOMAP_F_DIRTY is not set. If all the bios we submit use
-> REQ_FUA, then we clear IOMAP_DIO_NEED_SYNC before we drop the dio
-> submission reference.
-> 
-> For such a REQ_FUA bio chains, we can now safely do inline
-> completion because we don't run generic_write_sync() in IO
-> completion now. The filesystem does not need to perform blocking or
-> IO operations in completion, either, so these IOs can be completed
-> in line like any other pure overwrite DIO....
-
-True, non-extending FUA writes would be fine as well.
-
-Thanks for the review!
-
--- 
-Jens Axboe
-
