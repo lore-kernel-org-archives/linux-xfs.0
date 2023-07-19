@@ -2,209 +2,394 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 94C12C001DC
-	for <linux-xfs@archiver.kernel.org>; Wed, 19 Jul 2023 06:25:11 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id DBDF5EB64DA
+	for <linux-xfs@archiver.kernel.org>; Wed, 19 Jul 2023 06:32:24 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230003AbjGSGZK (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 19 Jul 2023 02:25:10 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53730 "EHLO
+        id S230205AbjGSGcW (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 19 Jul 2023 02:32:22 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55060 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230237AbjGSGZJ (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 19 Jul 2023 02:25:09 -0400
-Received: from mail-pf1-x42f.google.com (mail-pf1-x42f.google.com [IPv6:2607:f8b0:4864:20::42f])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C79731BFF
-        for <linux-xfs@vger.kernel.org>; Tue, 18 Jul 2023 23:25:05 -0700 (PDT)
-Received: by mail-pf1-x42f.google.com with SMTP id d2e1a72fcca58-666eef03ebdso4352218b3a.1
-        for <linux-xfs@vger.kernel.org>; Tue, 18 Jul 2023 23:25:05 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=fromorbit-com.20221208.gappssmtp.com; s=20221208; t=1689747905; x=1692339905;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
-        bh=hP25Soed1QEFQaJ+ZzPLh9PaqofcnmWmosfc3ZNfSCg=;
-        b=KbgqbmeHGIFvP3tzeKNjIvVZj9zCB8bBt1AqxyHymAssvSVXK6b4XkVJrStEXFSv5B
-         yNder67Z4QSB+OxeYwrjrHNkWk1wrieFoV9jYc4tYRcbde1fU9DGg/mO557Dpds3Di0H
-         C+jFj8mssWiCkwwcQ/nAxMbd6CZrXyj+PeX2+sFuMtKRMewAMPmbxKTvcf0miMK/TbiC
-         1V7TYZPIKsykSgJdjB/bvl069tt49nCneojDJDvEpHU/7O3hI1iei81cN7PgYDigkKs6
-         dsevr5B83nphcF11rRMniuNVB15UuxV0R5frd+VFYi7EZ6szj0kbX0SVjlWK8iCN7ypr
-         gB1A==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20221208; t=1689747905; x=1692339905;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=hP25Soed1QEFQaJ+ZzPLh9PaqofcnmWmosfc3ZNfSCg=;
-        b=fEBeXV8al/DeRUWYdJykb1EVKyF6DANEYyOYX9eKvPY6DH/Xh0tVTBRRVb3Oq2tU2i
-         NOq3u1DRjAsFrhkJtTWgyPvxCleYZIT07tzOZl9gSlgWazh2znswFHVWDkGcaVRfZvO7
-         AK+Qoj6IQTLw4vJiQf6ZOJ2QrxqhU1jIiOn5rfC46GPNbAMumwhCf8PmHu0GUuPVAV+m
-         1x/WtNSuoWTXBZ7Fuofgw60A6QbYNK/PCCC/YcCZ0VKOv78XRPynxSu5Y+IcoUy+ebqY
-         xcb3Fx4sMAwVwSv8Mk2uVgXXQ+y4ey0LpVNezJAGT9GXHqmL7FrG7KnrX7GZbY3/N91n
-         YLEQ==
-X-Gm-Message-State: ABy/qLaf9jgBt/hraCHSHt3x6GJfj+vXaJb4IEbO2jrrnsX9IYsMPDet
-        KO+yyod0O1Myv6DlRxsK7KgmbQ==
-X-Google-Smtp-Source: APBJJlHJcLqc+SwKJm7Fy8MEucoXoNKi8EEAlVmuwpZ8oG9CtRJgoYIp24Qtdc4iVvIA+axkDhULoA==
-X-Received: by 2002:a05:6a20:8e1f:b0:133:6b64:c92 with SMTP id y31-20020a056a208e1f00b001336b640c92mr18056560pzj.44.1689747905057;
-        Tue, 18 Jul 2023 23:25:05 -0700 (PDT)
-Received: from dread.disaster.area (pa49-186-119-116.pa.vic.optusnet.com.au. [49.186.119.116])
-        by smtp.gmail.com with ESMTPSA id d1-20020aa78e41000000b006826df9e295sm2491398pfr.113.2023.07.18.23.25.04
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 18 Jul 2023 23:25:04 -0700 (PDT)
-Received: from dave by dread.disaster.area with local (Exim 4.96)
-        (envelope-from <david@fromorbit.com>)
-        id 1qM0cP-007rQK-1n;
-        Wed, 19 Jul 2023 16:25:01 +1000
-Date:   Wed, 19 Jul 2023 16:25:01 +1000
-From:   Dave Chinner <david@fromorbit.com>
-To:     "Darrick J. Wong" <djwong@kernel.org>
-Cc:     Wengang Wang <wen.gang.wang@oracle.com>,
-        "linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>,
-        Srikanth C S <srikanth.c.s@oracle.com>
-Subject: Re: Question: reserve log space at IO time for recover
-Message-ID: <ZLeBvfTdRbFJ+mj2@dread.disaster.area>
-References: <1DB9F8BB-4A7C-4422-B447-90A08E310E17@oracle.com>
- <ZLcqF2/7ZBI44C65@dread.disaster.area>
- <20230719014413.GC11352@frogsfrogsfrogs>
+        with ESMTP id S230029AbjGSGcU (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 19 Jul 2023 02:32:20 -0400
+X-Greylist: delayed 579 seconds by postgrey-1.37 at lindbergh.monkeyblade.net; Tue, 18 Jul 2023 23:32:16 PDT
+Received: from out-19.mta1.migadu.com (out-19.mta1.migadu.com [95.215.58.19])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id F1CA51FCB
+        for <linux-xfs@vger.kernel.org>; Tue, 18 Jul 2023 23:32:16 -0700 (PDT)
+Message-ID: <00d67c43-462d-6cb3-3480-95dd7c0b9371@linux.dev>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.dev; s=key1;
+        t=1689747753;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=71n4Xa7UFYGKpDrvw+b0UFZFwOJM8DPjWTmV1p9m74M=;
+        b=UhG2005Y1mu4XM2jOQjdWyYR2PGe2u+BTkKXuyEi6SLx/eBWqAyh6M7Ya5voKPxqxQPkhC
+        Mtmxuddv30bt84P00O2sP0MvYcoPIqrRuYewAtdJvCTmLX7idT8hScff17y1nqQJHRiF0A
+        ZwjYIZPFfv8D2k1hNB1BbLUreEHRtec=
+Date:   Wed, 19 Jul 2023 14:22:20 +0800
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20230719014413.GC11352@frogsfrogsfrogs>
+Subject: Fwd: [PATCH 4/5] xfs: add NOWAIT semantics for readdir
+References: <20230718132112.461218-5-hao.xu@linux.dev>
+Content-Language: en-US
+To:     linux-xfs@vger.kernel.org
+X-Report-Abuse: Please report any abuse attempt to abuse@migadu.com and include these headers.
+From:   Hao Xu <hao.xu@linux.dev>
+In-Reply-To: <20230718132112.461218-5-hao.xu@linux.dev>
+X-Forwarded-Message-Id: <20230718132112.461218-5-hao.xu@linux.dev>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
+X-Migadu-Flow: FLOW_OUT
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Tue, Jul 18, 2023 at 06:44:13PM -0700, Darrick J. Wong wrote:
-> On Wed, Jul 19, 2023 at 10:11:03AM +1000, Dave Chinner wrote:
-> > On Tue, Jul 18, 2023 at 10:57:38PM +0000, Wengang Wang wrote:
-> > > Hi,
-> > > 
-> > > I have a XFS metadump (was running with 4.14.35 plussing some back ported patches),
-> > > mounting it (log recover) hang at log space reservation. There is 181760 bytes on-disk
-> > > free journal space, while the transaction needs to reserve 360416 bytes to start the recovery.
-> > > Thus the mount hangs for ever.
-> > 
-> > Most likely something went wrong at runtime on the 4.14.35 kernel
-> > prior to the crash, leaving the on-disk state in an impossible to
-> > recover state. Likely an accounting leak in a transaction
-> > reservation somewhere, likely in passing the space used from the
-> > transaction to the CIL. We've had bugs in this area before, they
-> > eventually manifest in log hangs like this either at runtime or
-> > during recovery...
-> > 
-> > > That happens with 4.14.35 kernel and also upstream
-> > > kernel (6.4.0).
-> > 
-> > Upgrading the kernel won't fix recovery - it is likely that the
-> > journal state on disk is invalid and so the mount cannot complete 
-> 
-> Hmm.  It'd be nice to know what the kernel thought it was doing when it
-> went down.
-> 
-> /me wonders if this has anything to do with the EFI recovery creating a
-> transaction with tr_itruncate reservation because the log itself doesn't
-> record the reservations of the active transactions.
 
-Possibly - it's been that way since 1994 but I don't recall it ever
-causing any issues in the past. That's not to say it's correct - I
-think it's wrong, but I think the whole transaction reservation
-calculation infrastructure needs a complete overhaul....
-
->
-> <begin handwaving>
-> 
-> Let's say you have a 1000K log, a tr_write reservation is 100k, and a
-> tr_itruncate reservations are 300k.  In this case, you could
-> theoretically have 10x tr_write transactions running concurrently; or
-> you could have 3x tr_itruncate transactions running concurrently.
-> 
-> Now let's say that someone fires up 10 programs that try to fpunch 10
-> separate files.  Those ten threads will consume all the log grant space,
-> unmap a block, and log an EFI. I think in reality tr_logcount means
-> that 5 threads each consume (2*100k) grant space, but the point here is
-> that we've used up all the log grant space.
->
-> Then crash the system, having committed the first transaction of the
-> two-transaction chain.
-> 
-> Upon recovery, we'll find the 10x unfinished EFIs and pass them to EFI
-> recovery.  However, recovery creates a separate tr_itruncate transaction
-> to finish each EFI.  Now do we have a problem because the required log
-> grant space is 300k * 10 = 3000k?
-
-Hmmmm. That smells wrong. Can't put my finger on it .....
+Forward to xfs mail list as well.
 
 
-.... ah. Yeah. That.
+-------- Forwarded Message --------
+Subject: [PATCH 4/5] xfs: add NOWAIT semantics for readdir
+Date: Tue, 18 Jul 2023 21:21:11 +0800
+From: Hao Xu <hao.xu@linux.dev>
+To: io-uring@vger.kernel.org, Jens Axboe <axboe@kernel.dk>
+CC: Dominique Martinet <asmadeus@codewreck.org>, Pavel Begunkov 
+<asml.silence@gmail.com>, Christian Brauner <brauner@kernel.org>, 
+Alexander Viro <viro@zeniv.linux.org.uk>, Stefan Roesch <shr@fb.com>, 
+Clay Harris <bugs@claycon.org>, Dave Chinner <david@fromorbit.com>, 
+linux-fsdevel@vger.kernel.org, Wanpeng Li <wanpengli@tencent.com>
+Newsgroups: org.kernel.vger.io-uring,org.kernel.vger.linux-fsdevel
+References: <20230718132112.461218-1-hao.xu@linux.dev>
 
-We only run one transaction at a time, and we commit the transaction
-after logging new intents and capturing the work that remains. So we
-return the unused part of the reservation (most of it) back to the
-log before we try to recover the next intent in the AIL.
+From: Hao Xu <howeyxu@tencent.com>
 
-Hence we don't need (300k * 10) in the log to recover these EFIs as
-we don't hold all ten reservations at the same time (as we would
-have at runtime) - we need (log space used by recovery of intents +
-one reservation) to recover them all.
+Implement NOWAIT semantics for readdir. Return EAGAIN error to the
+caller if it would block, like failing to get locks, or going to
+do IO.
 
-Once we've replayed all the intents from the AIL and converted them
-into newly captured intents, they are removed from the AIL and that
-moves the tail of the log forwards. This frees up the entire of the
-log, and we then run the captured intents that still need to be
-processed. We run them one at a time to completion, committing them
-as we go, so again we only need space in the log for a single
-transaction reservation to complete recovery of the intent chaings.
+Co-developed-by: Dave Chinner <dchinner@redhat.com>
+Signed-off-by: Dave Chinner <dchinner@redhat.com>
+Signed-off-by: Hao Xu <howeyxu@tencent.com>
+[fixes deadlock issue, tweak code style]
+---
+  fs/xfs/libxfs/xfs_da_btree.c   | 16 ++++++++++
+  fs/xfs/libxfs/xfs_da_btree.h   |  1 +
+  fs/xfs/libxfs/xfs_dir2_block.c |  7 ++--
+  fs/xfs/libxfs/xfs_dir2_priv.h  |  2 +-
+  fs/xfs/scrub/dir.c             |  2 +-
+  fs/xfs/scrub/readdir.c         |  2 +-
+  fs/xfs/xfs_dir2_readdir.c      | 58 +++++++++++++++++++++++++++-------
+  fs/xfs/xfs_inode.c             | 17 ++++++++++
+  fs/xfs/xfs_inode.h             | 15 +++++----
+  9 files changed, 96 insertions(+), 24 deletions(-)
 
-IOWs, because recovery of intents is single threaded, we only need
-to preserve space in the log for a single reservation to make
-forwards progress.
-
-> It's late and I don't remember how recovery for non-intent items works
-> quite well enough to think that scenario adds up.  Maybe it was the case
-> that before the system went down, the log had used 800K of the grant
-> space for logged buffers and 100K for a single EFI logged in a tr_write
-> transaction.  Then we crashed, reloaded the 800K of stuff, and now we're
-> trying to allocate 300K for a tr_itruncate to restart the EFI, but
-> there's not enough log grant space?
-
-Possible, if the EFI pins the tail of the log and the rest of the
-log is full. I've never seen that happen, and we've been using
-itrunc reservations in recovery since 1994, but that doesn't mean it
-can't happen.
-
-FWIW, I don't think this is EFI specific. BUI recovery use itrunc
-reservations, but what if it was an unlink operation using a remove
-reservation to free a directory block that logs a BUI? Same problem,
-different vector, right?
-
-I suspect what we really need is for all the intent processing to be
-restartable. We already have those for RUIs to relog/restart them
-there isn't enough reservation space available to complete
-processing the current RUI. We just made EFIs restartable to avoid
-busy extent deadlocks, we can easily extend that the same "enough
-reservation available" as we use for RUIs, etc. Do the same for BUIs
-and RUIs, and then...
-
-... we can set up a reservation calculation for each intent type,
-and the reservation needed for a given chain of operations is the
-max of all the steps in the chain. Hence if we get part way through
-a chain and run out of reservation, we can restart the chain the
-the reservation we know is large enough to complete the remaining
-part of the chain.
-
-The new reservation may be smaller than the reservation that was
-held when we start the intent processing (because it's a rolling
-chain with an inherited log ticket), but this guarantees that we can
-reduce the reservation to the minimum required at any point in
-time if we are running low on log space....
-
-This also gets around the problem of having to reserve enough space
-for N operations (e.g. 4 extents in an EFI) when the vast majority
-only use and need space for 1 operation. If we get an EFI with N
-extents in it, we can try a reservation for (N * efi_res) and if we
-can't get that we could just use efi_res and work through the EFI
-one extent at a time....
-
-Cheers,
-
-Dave.
+diff --git a/fs/xfs/libxfs/xfs_da_btree.c b/fs/xfs/libxfs/xfs_da_btree.c
+index e576560b46e9..7a1a0af24197 100644
+--- a/fs/xfs/libxfs/xfs_da_btree.c
++++ b/fs/xfs/libxfs/xfs_da_btree.c
+@@ -2643,16 +2643,32 @@ xfs_da_read_buf(
+  	struct xfs_buf_map	map, *mapp = &map;
+  	int			nmap = 1;
+  	int			error;
++	int			buf_flags = 0;
+   	*bpp = NULL;
+  	error = xfs_dabuf_map(dp, bno, flags, whichfork, &mapp, &nmap);
+  	if (error || !nmap)
+  		goto out_free;
+  +	/*
++	 * NOWAIT semantics mean we don't wait on the buffer lock nor do we
++	 * issue IO for this buffer if it is not already in memory. Caller will
++	 * retry. This will return -EAGAIN if the buffer is in memory and cannot
++	 * be locked, and no buffer and no error if it isn't in memory.  We
++	 * translate both of those into a return state of -EAGAIN and *bpp =
++	 * NULL.
++	 */
++	if (flags & XFS_DABUF_NOWAIT)
++		buf_flags |= XBF_TRYLOCK | XBF_INCORE;
+  	error = xfs_trans_read_buf_map(mp, tp, mp->m_ddev_targp, mapp, nmap, 0,
+  			&bp, ops);
+  	if (error)
+  		goto out_free;
++	if (!bp) {
++		ASSERT(flags & XFS_DABUF_NOWAIT);
++		error = -EAGAIN;
++		goto out_free;
++	}
+   	if (whichfork == XFS_ATTR_FORK)
+  		xfs_buf_set_ref(bp, XFS_ATTR_BTREE_REF);
+diff --git a/fs/xfs/libxfs/xfs_da_btree.h b/fs/xfs/libxfs/xfs_da_btree.h
+index ffa3df5b2893..32e7b1cca402 100644
+--- a/fs/xfs/libxfs/xfs_da_btree.h
++++ b/fs/xfs/libxfs/xfs_da_btree.h
+@@ -205,6 +205,7 @@ int	xfs_da3_node_read_mapped(struct xfs_trans *tp, 
+struct xfs_inode *dp,
+   */
+   #define XFS_DABUF_MAP_HOLE_OK	(1u << 0)
++#define XFS_DABUF_NOWAIT	(1u << 1)
+   int	xfs_da_grow_inode(xfs_da_args_t *args, xfs_dablk_t *new_blkno);
+  int	xfs_da_grow_inode_int(struct xfs_da_args *args, xfs_fileoff_t *bno,
+diff --git a/fs/xfs/libxfs/xfs_dir2_block.c b/fs/xfs/libxfs/xfs_dir2_block.c
+index 00f960a703b2..59b24a594add 100644
+--- a/fs/xfs/libxfs/xfs_dir2_block.c
++++ b/fs/xfs/libxfs/xfs_dir2_block.c
+@@ -135,13 +135,14 @@ int
+  xfs_dir3_block_read(
+  	struct xfs_trans	*tp,
+  	struct xfs_inode	*dp,
++	unsigned int		flags,
+  	struct xfs_buf		**bpp)
+  {
+  	struct xfs_mount	*mp = dp->i_mount;
+  	xfs_failaddr_t		fa;
+  	int			err;
+  -	err = xfs_da_read_buf(tp, dp, mp->m_dir_geo->datablk, 0, bpp,
++	err = xfs_da_read_buf(tp, dp, mp->m_dir_geo->datablk, flags, bpp,
+  				XFS_DATA_FORK, &xfs_dir3_block_buf_ops);
+  	if (err || !*bpp)
+  		return err;
+@@ -380,7 +381,7 @@ xfs_dir2_block_addname(
+  	tp = args->trans;
+   	/* Read the (one and only) directory block into bp. */
+-	error = xfs_dir3_block_read(tp, dp, &bp);
++	error = xfs_dir3_block_read(tp, dp, 0, &bp);
+  	if (error)
+  		return error;
+  @@ -695,7 +696,7 @@ xfs_dir2_block_lookup_int(
+  	dp = args->dp;
+  	tp = args->trans;
+  -	error = xfs_dir3_block_read(tp, dp, &bp);
++	error = xfs_dir3_block_read(tp, dp, 0, &bp);
+  	if (error)
+  		return error;
+  diff --git a/fs/xfs/libxfs/xfs_dir2_priv.h b/fs/xfs/libxfs/xfs_dir2_priv.h
+index 7404a9ff1a92..7d4cf8a0f15b 100644
+--- a/fs/xfs/libxfs/xfs_dir2_priv.h
++++ b/fs/xfs/libxfs/xfs_dir2_priv.h
+@@ -51,7 +51,7 @@ extern int xfs_dir_cilookup_result(struct xfs_da_args 
+*args,
+   /* xfs_dir2_block.c */
+  extern int xfs_dir3_block_read(struct xfs_trans *tp, struct xfs_inode *dp,
+-			       struct xfs_buf **bpp);
++			       unsigned int flags, struct xfs_buf **bpp);
+  extern int xfs_dir2_block_addname(struct xfs_da_args *args);
+  extern int xfs_dir2_block_lookup(struct xfs_da_args *args);
+  extern int xfs_dir2_block_removename(struct xfs_da_args *args);
+diff --git a/fs/xfs/scrub/dir.c b/fs/xfs/scrub/dir.c
+index 0b491784b759..5cc51f201bd7 100644
+--- a/fs/xfs/scrub/dir.c
++++ b/fs/xfs/scrub/dir.c
+@@ -313,7 +313,7 @@ xchk_directory_data_bestfree(
+  		/* dir block format */
+  		if (lblk != XFS_B_TO_FSBT(mp, XFS_DIR2_DATA_OFFSET))
+  			xchk_fblock_set_corrupt(sc, XFS_DATA_FORK, lblk);
+-		error = xfs_dir3_block_read(sc->tp, sc->ip, &bp);
++		error = xfs_dir3_block_read(sc->tp, sc->ip, 0, &bp);
+  	} else {
+  		/* dir data format */
+  		error = xfs_dir3_data_read(sc->tp, sc->ip, lblk, 0, &bp);
+diff --git a/fs/xfs/scrub/readdir.c b/fs/xfs/scrub/readdir.c
+index e51c1544be63..f0a727311632 100644
+--- a/fs/xfs/scrub/readdir.c
++++ b/fs/xfs/scrub/readdir.c
+@@ -101,7 +101,7 @@ xchk_dir_walk_block(
+  	unsigned int		off, next_off, end;
+  	int			error;
+  -	error = xfs_dir3_block_read(sc->tp, dp, &bp);
++	error = xfs_dir3_block_read(sc->tp, dp, 0, &bp);
+  	if (error)
+  		return error;
+  diff --git a/fs/xfs/xfs_dir2_readdir.c b/fs/xfs/xfs_dir2_readdir.c
+index 9f3ceb461515..55bccc2d0da7 100644
+--- a/fs/xfs/xfs_dir2_readdir.c
++++ b/fs/xfs/xfs_dir2_readdir.c
+@@ -149,6 +149,7 @@ xfs_dir2_block_getdents(
+  	struct xfs_da_geometry	*geo = args->geo;
+  	unsigned int		offset, next_offset;
+  	unsigned int		end;
++	unsigned int		flags = 0;
+   	/*
+  	 * If the block number in the offset is out of range, we're done.
+@@ -156,7 +157,9 @@ xfs_dir2_block_getdents(
+  	if (xfs_dir2_dataptr_to_db(geo, ctx->pos) > geo->datablk)
+  		return 0;
+  -	error = xfs_dir3_block_read(args->trans, dp, &bp);
++	if (ctx->flags & DIR_CONTEXT_F_NOWAIT)
++		flags |= XFS_DABUF_NOWAIT;
++	error = xfs_dir3_block_read(args->trans, dp, flags, &bp);
+  	if (error)
+  		return error;
+  @@ -240,6 +243,7 @@ xfs_dir2_block_getdents(
+  STATIC int
+  xfs_dir2_leaf_readbuf(
+  	struct xfs_da_args	*args,
++	struct dir_context	*ctx,
+  	size_t			bufsize,
+  	xfs_dir2_off_t		*cur_off,
+  	xfs_dablk_t		*ra_blk,
+@@ -258,10 +262,15 @@ xfs_dir2_leaf_readbuf(
+  	struct xfs_iext_cursor	icur;
+  	int			ra_want;
+  	int			error = 0;
+-
+-	error = xfs_iread_extents(args->trans, dp, XFS_DATA_FORK);
+-	if (error)
+-		goto out;
++	unsigned int		flags = 0;
++
++	if (ctx->flags & DIR_CONTEXT_F_NOWAIT) {
++		flags |= XFS_DABUF_NOWAIT;
++	} else {
++		error = xfs_iread_extents(args->trans, dp, XFS_DATA_FORK);
++		if (error)
++			goto out;
++	}
+   	/*
+  	 * Look for mapped directory blocks at or above the current offset.
+@@ -280,7 +289,7 @@ xfs_dir2_leaf_readbuf(
+  	new_off = xfs_dir2_da_to_byte(geo, map.br_startoff);
+  	if (new_off > *cur_off)
+  		*cur_off = new_off;
+-	error = xfs_dir3_data_read(args->trans, dp, map.br_startoff, 0, &bp);
++	error = xfs_dir3_data_read(args->trans, dp, map.br_startoff, flags, &bp);
+  	if (error)
+  		goto out;
+  @@ -337,6 +346,16 @@ xfs_dir2_leaf_readbuf(
+  	goto out;
+  }
+  +static inline int
++xfs_ilock_for_readdir(
++	struct xfs_inode	*dp,
++	bool			nowait)
++{
++	if (nowait)
++		return xfs_ilock_data_map_shared_nowait(dp);
++	return xfs_ilock_data_map_shared(dp);
++}
++
+  /*
+   * Getdents (readdir) for leaf and node directories.
+   * This reads the data blocks only, so is the same for both forms.
+@@ -360,6 +379,7 @@ xfs_dir2_leaf_getdents(
+  	int			byteoff;	/* offset in current block */
+  	unsigned int		offset = 0;
+  	int			error = 0;	/* error return value */
++	int			written = 0;
+   	/*
+  	 * If the offset is at or past the largest allowed value,
+@@ -391,10 +411,16 @@ xfs_dir2_leaf_getdents(
+  				bp = NULL;
+  			}
+  -			if (*lock_mode == 0)
+-				*lock_mode = xfs_ilock_data_map_shared(dp);
+-			error = xfs_dir2_leaf_readbuf(args, bufsize, &curoff,
+-					&rablk, &bp);
++			if (*lock_mode == 0) {
++				*lock_mode = xfs_ilock_for_readdir(dp,
++					ctx->flags & DIR_CONTEXT_F_NOWAIT);
++				if (!*lock_mode) {
++					error = -EAGAIN;
++					break;
++				}
++			}
++			error = xfs_dir2_leaf_readbuf(args, ctx, bufsize,
++					&curoff, &rablk, &bp);
+  			if (error || !bp)
+  				break;
+  @@ -479,6 +505,7 @@ xfs_dir2_leaf_getdents(
+  		 */
+  		offset += length;
+  		curoff += length;
++		written += length;
+  		/* bufsize may have just been a guess; don't go negative */
+  		bufsize = bufsize > length ? bufsize - length : 0;
+  	}
+@@ -492,6 +519,8 @@ xfs_dir2_leaf_getdents(
+  		ctx->pos = xfs_dir2_byte_to_dataptr(curoff) & 0x7fffffff;
+  	if (bp)
+  		xfs_trans_brelse(args->trans, bp);
++	if (error == -EAGAIN && written > 0)
++		error = 0;
+  	return error;
+  }
+  @@ -514,6 +543,7 @@ xfs_readdir(
+  	unsigned int		lock_mode;
+  	bool			isblock;
+  	int			error;
++	bool			nowait;
+   	trace_xfs_readdir(dp);
+  @@ -531,7 +561,11 @@ xfs_readdir(
+  	if (dp->i_df.if_format == XFS_DINODE_FMT_LOCAL)
+  		return xfs_dir2_sf_getdents(&args, ctx);
+  -	lock_mode = xfs_ilock_data_map_shared(dp);
++	nowait = ctx->flags & DIR_CONTEXT_F_NOWAIT;
++	lock_mode = xfs_ilock_for_readdir(dp, nowait);
++	if (!lock_mode)
++		return -EAGAIN;
++
+  	error = xfs_dir2_isblock(&args, &isblock);
+  	if (error)
+  		goto out_unlock;
+@@ -546,5 +580,7 @@ xfs_readdir(
+  out_unlock:
+  	if (lock_mode)
+  		xfs_iunlock(dp, lock_mode);
++	if (error == -EAGAIN)
++		ASSERT(nowait);
+  	return error;
+  }
+diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
+index 9e62cc500140..48b1257b3ec4 100644
+--- a/fs/xfs/xfs_inode.c
++++ b/fs/xfs/xfs_inode.c
+@@ -120,6 +120,23 @@ xfs_ilock_data_map_shared(
+  	return lock_mode;
+  }
+  +/*
++ * Similar to xfs_ilock_data_map_shared(), except that it will only try 
+to lock
++ * the inode in shared mode if the extents are already in memory. If it 
+fails to
++ * get the lock or has to do IO to read the extent list, fail the 
+operation by
++ * returning 0 as the lock mode.
++ */
++uint
++xfs_ilock_data_map_shared_nowait(
++	struct xfs_inode	*ip)
++{
++	if (xfs_need_iread_extents(&ip->i_df))
++		return 0;
++	if (!xfs_ilock_nowait(ip, XFS_ILOCK_SHARED))
++		return 0;
++	return XFS_ILOCK_SHARED;
++}
++
+  uint
+  xfs_ilock_attr_map_shared(
+  	struct xfs_inode	*ip)
+diff --git a/fs/xfs/xfs_inode.h b/fs/xfs/xfs_inode.h
+index 7547caf2f2ab..2cdb4daadacf 100644
+--- a/fs/xfs/xfs_inode.h
++++ b/fs/xfs/xfs_inode.h
+@@ -490,13 +490,14 @@ int		xfs_rename(struct mnt_idmap *idmap,
+  			   struct xfs_name *target_name,
+  			   struct xfs_inode *target_ip, unsigned int flags);
+  -void		xfs_ilock(xfs_inode_t *, uint);
+-int		xfs_ilock_nowait(xfs_inode_t *, uint);
+-void		xfs_iunlock(xfs_inode_t *, uint);
+-void		xfs_ilock_demote(xfs_inode_t *, uint);
+-bool		xfs_isilocked(struct xfs_inode *, uint);
+-uint		xfs_ilock_data_map_shared(struct xfs_inode *);
+-uint		xfs_ilock_attr_map_shared(struct xfs_inode *);
++void		xfs_ilock(struct xfs_inode *ip, uint lockmode);
++int		xfs_ilock_nowait(struct xfs_inode *ip, uint lockmode);
++void		xfs_iunlock(struct xfs_inode *ip, uint lockmode);
++void		xfs_ilock_demote(struct xfs_inode *ip, uint lockmode);
++bool		xfs_isilocked(struct xfs_inode *ip, uint lockmode);
++uint		xfs_ilock_data_map_shared(struct xfs_inode *ip);
++uint		xfs_ilock_data_map_shared_nowait(struct xfs_inode *ip);
++uint		xfs_ilock_attr_map_shared(struct xfs_inode *ip);
+   uint		xfs_ip2xflags(struct xfs_inode *);
+  int		xfs_ifree(struct xfs_trans *, struct xfs_inode *);
 -- 
-Dave Chinner
-david@fromorbit.com
+2.25.1
+
