@@ -2,183 +2,107 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7615AC001DC
-	for <linux-xfs@archiver.kernel.org>; Wed, 19 Jul 2023 20:38:11 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D6489C001DC
+	for <linux-xfs@archiver.kernel.org>; Wed, 19 Jul 2023 20:39:12 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231176AbjGSUiJ (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 19 Jul 2023 16:38:09 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41082 "EHLO
+        id S229694AbjGSUjM (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 19 Jul 2023 16:39:12 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41224 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229463AbjGSUiI (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 19 Jul 2023 16:38:08 -0400
-Received: from mail-oo1-xc29.google.com (mail-oo1-xc29.google.com [IPv6:2607:f8b0:4864:20::c29])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id DB4602109
-        for <linux-xfs@vger.kernel.org>; Wed, 19 Jul 2023 13:37:45 -0700 (PDT)
-Received: by mail-oo1-xc29.google.com with SMTP id 006d021491bc7-5661e8f4c45so105903eaf.1
-        for <linux-xfs@vger.kernel.org>; Wed, 19 Jul 2023 13:37:45 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=cloudflare.com; s=google; t=1689799065; x=1692391065;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=1yalhP6R+1z0UDsb9+7HJFdN5dchw61s0+06SJ8cM6k=;
-        b=KuRKkiicFarGSCBqnr3LP7ne8/CcZXp61/wOUdOrRxindvG65FMP54jxAQljSUmMRu
-         0ImZCsR+QPc+umybUE+Ax3vYzbRHxuZ4QhZLWo1MjdmFKXWanAOl3Foy+M/ZSaMSlJ8C
-         sXf0djcu0QzTJcW9L78VBSTXlbebdDb3RiQqc=
+        with ESMTP id S229530AbjGSUjL (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 19 Jul 2023 16:39:11 -0400
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E5416189
+        for <linux-xfs@vger.kernel.org>; Wed, 19 Jul 2023 13:38:22 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1689799102;
+        h=from:from:reply-to:reply-to:subject:subject:date:date:
+         message-id:message-id:to:to:cc:cc:mime-version:mime-version:
+         content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=SgRYG1yPEdYUax9y1XDYKcS5/JUvwRiwpBw53hja6CY=;
+        b=CdYNz8CL0feaAMOZnXD3WXw74Bbm1bvUrVx1ClpwoSnjV2HSeb49x6lGzWBOsPzLpyv/e2
+        lnNLNAMkVGGcY+lu7WRqdD0sZAMAgDPRBPzVWgwNIRDKxLPLLqiCErtourX32myjjaue59
+        J3mt5D1yzk/2AqxMKBBskKA1WxxEBW8=
+Received: from mail-io1-f69.google.com (mail-io1-f69.google.com
+ [209.85.166.69]) by relay.mimecast.com with ESMTP with STARTTLS
+ (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
+ us-mta-624-fzQ2IgZ4NCeqoLOoQr0n3g-1; Wed, 19 Jul 2023 16:38:21 -0400
+X-MC-Unique: fzQ2IgZ4NCeqoLOoQr0n3g-1
+Received: by mail-io1-f69.google.com with SMTP id ca18e2360f4ac-77e3eaa1343so954239f.2
+        for <linux-xfs@vger.kernel.org>; Wed, 19 Jul 2023 13:38:20 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20221208; t=1689799065; x=1692391065;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=1yalhP6R+1z0UDsb9+7HJFdN5dchw61s0+06SJ8cM6k=;
-        b=cFhUtU60CGD2BAnVJBIaUAIA8dZwiptnqIauddacHetu7SDdUae9zdGBu0clsFhIHo
-         xgsyXX2BrN4OW5Q+OeNiYwqqNOlBam31J2r/ZgLThwTCPhZJZw8I8tvHdukssyGmryJy
-         Ei5EKwnRybxr234nnDlb2bvVRCj9Wm+wi+oqL3CRYUJ2iwIthlmpMCAEjesuTGsHXtmY
-         zliNyjHMCXsYlg0gRClxogv43vN2xuc4nrCg21Ry+hoR3Xo+LwDo69bQYJpjf3Qlpep/
-         OWz/gW9zhqQvXfKd6/cyMIOnJTYeyTYHc2WlQzMcMWJichr672LCIQYDiX9PYlyYC6gD
-         LRBQ==
-X-Gm-Message-State: ABy/qLZnZYbMaYHJlOxUI33c7ExzAkjaa3vIGOszXdG+WCmStayPk7NA
-        6JfCs3kkvDPdlNhjQogMp8QV4sEf3Do8RR9nnwkJ1A==
-X-Google-Smtp-Source: APBJJlEajt4aVc6CuRc8TCx+yM+UYYfOrW0NRG2NsLH3+frhp/KMJRs6pc+HGpPbRnF5/LFCbQ1GEjdPFY+oFOOshCk=
-X-Received: by 2002:a05:6808:1441:b0:3a4:1319:9af1 with SMTP id
- x1-20020a056808144100b003a413199af1mr24407262oiv.51.1689799064974; Wed, 19
- Jul 2023 13:37:44 -0700 (PDT)
+        d=1e100.net; s=20221208; t=1689799100; x=1690403900;
+        h=content-transfer-encoding:in-reply-to:from:references:cc:to
+         :content-language:subject:reply-to:user-agent:mime-version:date
+         :message-id:x-gm-message-state:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=SgRYG1yPEdYUax9y1XDYKcS5/JUvwRiwpBw53hja6CY=;
+        b=I9CXKps5cGC7WGYT5vvkjsLzbNHeDX3iXdbsNbZyMGEa7Kgbd32NyKVxNHkpIHbHEj
+         zPmOzCbB5SfDOWFNMNAkvjwe/bE6QyCFWZEnr+Fdw+H4+ROxzj4YgWWc2qBo86+VRaOk
+         iPBafmP7Sy77Mqq9LaxOiooVJ3NACi64tqQZRI1PlJqUIIEF9w0IUPyk6n/A5WAnZbhB
+         tiGlmbuRiTeZ8PS+56O6b3jyCW79MVPEbdxUFIET8ZZzdtfva55xGq9rF+TkYNe76l1G
+         NZJvQdeQiH/y5WG+J/6p6rds8Qm7SfAvSdMylg5LeCUcWOPf24b1T4mhb+o8iT1WS2Uj
+         nWPA==
+X-Gm-Message-State: ABy/qLbj8nF6Ksg2KXrN2J/fuGiB23Z2Sz6fItjfWd044hu+2p0ntYOZ
+        Nl9CUbulfQsxa5xOPSdOTZBPUTE86ODpWYdM4b0BD7ggBDq/1jrI5dbzQap3CGPSoz5efXbMeRr
+        s26Jct5y8rRTGqcxnwrO/IdxdT4au
+X-Received: by 2002:a6b:d013:0:b0:787:34d:f1a4 with SMTP id x19-20020a6bd013000000b00787034df1a4mr6508359ioa.4.1689799099966;
+        Wed, 19 Jul 2023 13:38:19 -0700 (PDT)
+X-Google-Smtp-Source: APBJJlEILmGMFmg2/mmx959pQb4da6rheWMJQKbDJaCaMeqMwgJZhHt1fudfABS6fVi6QFrDDhrxXA==
+X-Received: by 2002:a6b:d013:0:b0:787:34d:f1a4 with SMTP id x19-20020a6bd013000000b00787034df1a4mr6508354ioa.4.1689799099747;
+        Wed, 19 Jul 2023 13:38:19 -0700 (PDT)
+Received: from [10.0.0.71] (sandeen.net. [63.231.237.45])
+        by smtp.gmail.com with ESMTPSA id s12-20020a02cf2c000000b0041f552e4aa2sm1472568jar.135.2023.07.19.13.38.19
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Wed, 19 Jul 2023 13:38:19 -0700 (PDT)
+Message-ID: <b630989d-1eb5-6285-6e22-9946de8e2ca5@redhat.com>
+Date:   Wed, 19 Jul 2023 15:38:18 -0500
 MIME-Version: 1.0
-References: <CA+wXwBRdcjHW2zxDABdFU3c26mc1u+g6iWG7HrXJRL7Po3Qp0w@mail.gmail.com>
- <ZJ2yeJR5TB4AyQIn@casper.infradead.org> <20230629181408.GM11467@frogsfrogsfrogs>
- <CALrw=nFwbp06M7LB_Z0eFVPe29uFFUxAhKQ841GSDMtjP-JdXA@mail.gmail.com>
- <CAOQ4uxiD6a9GmKwagRpUWBPRWCczB52Tsu5m6_igDzTQSLcs0w@mail.gmail.com>
- <CALrw=nHH2u=+utzy8NfP6+fM6kOgtW0hdUHwK9-BWdYq+t-UoA@mail.gmail.com>
- <CAOQ4uxju10zrQhVDA5WS+vTSbuW17vOD6EGBBJUmZg8c95vsrA@mail.gmail.com> <20230630151657.GJ11441@frogsfrogsfrogs>
-In-Reply-To: <20230630151657.GJ11441@frogsfrogsfrogs>
-From:   Ignat Korchagin <ignat@cloudflare.com>
-Date:   Wed, 19 Jul 2023 21:37:33 +0100
-Message-ID: <CALrw=nFv82aODZ0URzknqnZavyjCxV1vKOP9oYijfSdyaYEQ3g@mail.gmail.com>
-Subject: Re: Backporting of series xfs/iomap: fix data corruption due to stale
- cached iomap
-To:     "Darrick J. Wong" <djwong@kernel.org>,
-        Amir Goldstein <amir73il@gmail.com>
-Cc:     Matthew Wilcox <willy@infradead.org>,
-        Daniel Dao <dqminh@cloudflare.com>,
-        Dave Chinner <david@fromorbit.com>,
-        kernel-team <kernel-team@cloudflare.com>,
-        linux-fsdevel@vger.kernel.org,
-        Chandan Babu R <chandanrlinux@gmail.com>,
-        Leah Rumancik <lrumancik@google.com>,
-        linux-xfs <linux-xfs@vger.kernel.org>,
-        "Luis R. Rodriguez" <mcgrof@kernel.org>,
-        Fred Lawler <fred@cloudflare.com>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:102.0)
+ Gecko/20100101 Thunderbird/102.13.0
+Reply-To: sandeen@redhat.com
+Subject: Re: Question on slow fallocate
+Content-Language: en-US
+To:     Andres Freund <andres@anarazel.de>,
+        Dave Chinner <david@fromorbit.com>
+Cc:     Eric Sandeen <sandeen@sandeen.net>,
+        Masahiko Sawada <sawada.mshk@gmail.com>,
+        linux-xfs@vger.kernel.org
+References: <CAD21AoCWW20ga6GKR+7RwRtvPU0VyFt3_acut_y+Fg7E-4nzWw@mail.gmail.com>
+ <ZJTrrwirZqykiVxn@dread.disaster.area>
+ <CAD21AoC9=8Q2o3-+ueuP05+8298z--5vgBWtvSxMHHF2jdyr_w@mail.gmail.com>
+ <3f604849-877b-f519-8cae-4694c82ac7e4@sandeen.net>
+ <CAD21AoBHd35HhFpbh9YBHPsLN+F_TZX5b47iy+-s44jPT+fyZQ@mail.gmail.com>
+ <82b74cbc-8a1d-6b6f-fa2f-5f120d958dad@sandeen.net>
+ <20230711224911.yd3ns6qcrlepbptq@awork3.anarazel.de>
+ <ZLeP8VwYuXGKYC/Z@dread.disaster.area>
+ <20230719202917.qkgtvk43scl4rt2m@awork3.anarazel.de>
+From:   Eric Sandeen <esandeen@redhat.com>
+In-Reply-To: <20230719202917.qkgtvk43scl4rt2m@awork3.anarazel.de>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Fri, Jun 30, 2023 at 4:17=E2=80=AFPM Darrick J. Wong <djwong@kernel.org>=
- wrote:
->
-> On Fri, Jun 30, 2023 at 04:05:36PM +0300, Amir Goldstein wrote:
-> > On Fri, Jun 30, 2023 at 3:30=E2=80=AFPM Ignat Korchagin <ignat@cloudfla=
-re.com> wrote:
-> > >
-> > > On Fri, Jun 30, 2023 at 11:39=E2=80=AFAM Amir Goldstein <amir73il@gma=
-il.com> wrote:
-> > > >
-> > > > On Thu, Jun 29, 2023 at 10:31=E2=80=AFPM Ignat Korchagin <ignat@clo=
-udflare.com> wrote:
-> > > > >
-> > > > > On Thu, Jun 29, 2023 at 7:14=E2=80=AFPM Darrick J. Wong <djwong@k=
-ernel.org> wrote:
-> > > > > >
-> > > > > > [add the xfs lts maintainers]
-> > > > > >
-> > > > > > On Thu, Jun 29, 2023 at 05:34:00PM +0100, Matthew Wilcox wrote:
-> > > > > > > On Thu, Jun 29, 2023 at 05:09:41PM +0100, Daniel Dao wrote:
-> > > > > > > > Hi Dave and Derrick,
-> > > > > > > >
-> > > > > > > > We are tracking down some corruptions on xfs for our rocksd=
-b workload,
-> > > > > > > > running on kernel 6.1.25. The corruptions were
-> > > > > > > > detected by rocksdb block checksum. The workload seems to s=
-hare some
-> > > > > > > > similarities
-> > > > > > > > with the multi-threaded write workload described in
-> > > > > > > > https://lore.kernel.org/linux-fsdevel/20221129001632.GX3600=
-936@dread.disaster.area/
-> > > > > > > >
-> > > > > > > > Can we backport the patch series to stable since it seemed =
-to fix data
-> > > > > > > > corruptions ?
-> > > > > > >
-> > > > > > > For clarity, are you asking for permission or advice about do=
-ing this
-> > > > > > > yourself, or are you asking somebody else to do the backport =
-for you?
-> > > > > >
-> > > > > > Nobody's officially committed to backporting and testing patche=
-s for
-> > > > > > 6.1; are you (Cloudflare) volunteering?
-> > > > >
-> > > > > Yes, we have applied them on top of 6.1.36, will be gradually
-> > > > > releasing to our servers and will report back if we see the issue=
-s go
-> > > > > away
-> > > > >
-> > > >
-> > > > Getting feedback back from Cloudflare production servers is awesome
-> > > > but it's not enough.
-> > > >
-> > > > The standard for getting xfs LTS backports approved is:
-> > > > 1. Test the backports against regressions with several rounds of fs=
-tests
-> > > >     check -g auto on selected xfs configurations [1]
-> > > > 2. Post the backport series to xfs list and get an ACK from upstrea=
-m
-> > > >     xfs maintainers
-> > > >
-> > > > We have volunteers doing this work for 5.4.y, 5.10.y and 5.15.y.
-> > > > We do not yet have a volunteer to do that work for 6.1.y.
-> > > >
-> > > > The question is whether you (or your team) are volunteering to
-> > > > do that work for 6.1.y xfs backports to help share the load?
+On 7/19/23 3:29 PM, Andres Freund wrote:
+> Somewhat tangential: I still would like a fallocate() option that actually
+> zeroes out new extents (via "write zeroes", if supported), rather than just
+> setting them up as unwritten extents. Nor for "data" files, but for
+> WAL/journal files.
 
-Circling back on this. So far it seems that the patchset in question
-does fix the issues of rocksdb corruption as we haven't seen them for
-some time on our test group. We're happy to dedicate some efforts now
-to get them officially backported to 6.1 according to the process. We
-did try basic things with kdevops and would like to learn more. Fred
-(cc-ed here) is happy to drive the effort and be the primary contact
-on this. Could you, please, guide us/him on the process?
+Like this?
 
-> > > We are not a big team and apart from other internal project work our
-> > > efforts are focused on fixing this issue in production, because it
-> > > affects many teams and workloads. If we confirm that these patches fi=
-x
-> > > the issue in production, we will definitely consider dedicating some
-> > > work to ensure they are officially backported. But if not - we would
-> > > be required to search for a fix first before we can commit to any
-> > > work.
-> > >
-> > > So, IOW - can we come back to you a bit later on this after we get th=
-e
-> > > feedback from production?
-> > >
-> >
-> > Of course.
-> > The volunteering question for 6.1.y is independent.
-> >
-> > When you decide that you have a series of backports
-> > that proves to fix a real bug in production,
-> > a way to test the series will be worked out.
->
-> /me notes that xfs/558 and xfs/559 (in fstests) are the functional tests
-> for these patches that you're backporting; it would be useful to have a
-> third party (i.e. not just the reporter and the author) confirm that the
-> two fstests pass when real workloads are fixed.
->
-> --D
->
-> > Thanks,
-> > Amir.
+fallocate(2):
 
-Ignat
+    Zeroing file space
+        Specifying  the  FALLOC_FL_ZERO_RANGE  flag  (available  since 
+Linux 3.15) in mode zeros space in the byte range starting at offset and 
+continuing for len bytes.
+
+Under the covers, that uses efficient zeroing methods when available.
+
+-Eric
+
