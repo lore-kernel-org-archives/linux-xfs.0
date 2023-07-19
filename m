@@ -2,243 +2,162 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E7C1AEB64DC
-	for <linux-xfs@archiver.kernel.org>; Wed, 19 Jul 2023 01:28:25 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E6352C04FE0
+	for <linux-xfs@archiver.kernel.org>; Wed, 19 Jul 2023 01:35:48 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229614AbjGSB2Z (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 18 Jul 2023 21:28:25 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37136 "EHLO
+        id S229610AbjGSBfr (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 18 Jul 2023 21:35:47 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38216 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229478AbjGSB2Y (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 18 Jul 2023 21:28:24 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B6EBA1BD7
-        for <linux-xfs@vger.kernel.org>; Tue, 18 Jul 2023 18:28:22 -0700 (PDT)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature RSA-PSS (2048 bits))
-        (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 44C8C615F8
-        for <linux-xfs@vger.kernel.org>; Wed, 19 Jul 2023 01:28:22 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 9B59AC433C8;
-        Wed, 19 Jul 2023 01:28:21 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1689730101;
-        bh=2577NxD5fcV3kNLGrNHllr8AJOxhPX/AE521vxzivac=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=HxA3XyRxFqcRR7tOYl2Uq3MaCwZnQxyZrtgOycCxUoyCRWIVw64E6NtfidmyPO/J7
-         GzhXahwO7VSgOWFn5d825QRyrE0VcZhbT++VOguYdFkxq2qOLkpnCcoKPjXnfmeicC
-         luLQlZaEfC5v8SOn3LQsZ/Zy1uq92CSI0lPAhZ7ECTOQZE/HV02o8nARpeR/ro9JFa
-         w1ft3ecFqC8W/SjEXsA8Ulb4EB7/yb8iuVvtocu/aVAcEyF4CyYYsp1tHY0oNcZqka
-         40IV8uEHVeP414YdO9EsncIKOr6PB0RE9oxeM6ycKiSK/RTOgVibkvTNkHpY3t98X1
-         IpfefnHh58kGQ==
-Date:   Tue, 18 Jul 2023 18:28:21 -0700
-From:   "Darrick J. Wong" <djwong@kernel.org>
-To:     Wu Guanghao <wuguanghao3@huawei.com>
-Cc:     cem@kernel.org, linux-xfs@vger.kernel.org, louhongxiang@huawei.com,
-        "liuzhiqiang (I)" <liuzhiqiang26@huawei.com>
-Subject: Re: [PATCH]xfs_repair: fix the problem of repair failure caused by
- dirty flag being abnormally set on buffer
-Message-ID: <20230719012821.GB11352@frogsfrogsfrogs>
-References: <0bdbc18a-e062-9d39-2d01-75a0480c692e@huawei.com>
- <eb138689-d7c9-5d1c-d7bf-acdf2859a879@huawei.com>
- <20230610024412.GT72267@frogsfrogsfrogs>
- <426f7bd4-1b31-664e-bff0-68d9d26940fb@huawei.com>
- <20230713052022.GP108251@frogsfrogsfrogs>
- <cecf81d0-a570-92ca-338f-e35789fa17c2@huawei.com>
+        with ESMTP id S229909AbjGSBfp (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 18 Jul 2023 21:35:45 -0400
+Received: from mail-oa1-x35.google.com (mail-oa1-x35.google.com [IPv6:2001:4860:4864:20::35])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6C48D1BD6
+        for <linux-xfs@vger.kernel.org>; Tue, 18 Jul 2023 18:35:42 -0700 (PDT)
+Received: by mail-oa1-x35.google.com with SMTP id 586e51a60fabf-1b0249f1322so4825033fac.3
+        for <linux-xfs@vger.kernel.org>; Tue, 18 Jul 2023 18:35:42 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=fromorbit-com.20221208.gappssmtp.com; s=20221208; t=1689730541; x=1692322541;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
+        bh=xZssYNKocP7SJAjxckC3wBJ507CzulE9IvrMWjf3P+k=;
+        b=5Slf0Wf1DkEOl9A1TiQUYv8SMKm8hpMZkE2pdlrBFVPzzvpLYuiVjUXLVmHCw57mm3
+         QfMAXPNPanSdHmq5ZWXmuM6TgukKEbveLzpwksx2dw9ZklwdjhA52vimEHT2eirBfa+2
+         IT2vnquxNaJm7BjHGdah8DmKJSIjdo0Yp6c26+N05rt7PzrzOKrn94s8yKsSInPTUfNp
+         YfGoevKBsYDtPuhIbewKvY1jLvJ5fb914inI0h60wc0+K8b0g/S/UYKcw11+BXpzkI08
+         6FecWUvMm8TYFIR2erayRFzaDHDt6sysMcKT2DfDdd2VqMiXCbsW5RRwMl7laE7GyBrL
+         HnfQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20221208; t=1689730541; x=1692322541;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=xZssYNKocP7SJAjxckC3wBJ507CzulE9IvrMWjf3P+k=;
+        b=PYBcoTeo1jg9RT5s+JYv6iRd11zHOaPhXum2kDAiv9simd+aFHABN0qv6nwt/zVdWF
+         PqOrOlufEwlpTNOQufwmMRICrw6FYtulVO/zUi+7ap4NbmoqjU0ml8D6r979oMHo8SCB
+         oBfiI3AjEAz3e1HwaufcBl9yPz4CPHVPeFQZN66eCivFGxJeVlOE6r2CM7HK/LiEuk0y
+         w1aLhAWhHWDhImDLCrjNjiC2QjE39Ot36udOV9yHNbiIqNhoyJZkMdXhqiz55bGl7OLY
+         /XjDVLhOHP3MeS+g3g1LvDW8Ysp/1blwemy5AInMHrDAEZh2Y6VnN0li68d1vJiWPVjA
+         gbsQ==
+X-Gm-Message-State: ABy/qLYG+Tznr96a22veBjKQA24KtZ1MY1rQTa5KSsNAu28j83IBS6PR
+        jB9FroTvxuuZS5CVd6kvCMTAUg==
+X-Google-Smtp-Source: APBJJlHb4gEwJfD+TL2icCrXL1rPSO1/If2sqk52+FC1gSV2ztjdma15fYoDbEqUpP5c7bsoFPcHEw==
+X-Received: by 2002:a05:6870:96a6:b0:1b3:8d35:c85f with SMTP id o38-20020a05687096a600b001b38d35c85fmr1011777oaq.1.1689730541592;
+        Tue, 18 Jul 2023 18:35:41 -0700 (PDT)
+Received: from dread.disaster.area (pa49-186-119-116.pa.vic.optusnet.com.au. [49.186.119.116])
+        by smtp.gmail.com with ESMTPSA id 201-20020a6301d2000000b005633311c70dsm2343100pgb.32.2023.07.18.18.35.40
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Tue, 18 Jul 2023 18:35:40 -0700 (PDT)
+Received: from dave by dread.disaster.area with local (Exim 4.96)
+        (envelope-from <david@fromorbit.com>)
+        id 1qLw6L-007mcz-1V;
+        Wed, 19 Jul 2023 11:35:37 +1000
+Date:   Wed, 19 Jul 2023 11:35:37 +1000
+From:   Dave Chinner <david@fromorbit.com>
+To:     Jeff Layton <jlayton@kernel.org>
+Cc:     Eric Van Hensbergen <ericvh@kernel.org>,
+        Latchesar Ionkov <lucho@ionkov.net>,
+        Dominique Martinet <asmadeus@codewreck.org>,
+        Christian Schoenebeck <linux_oss@crudebyte.com>,
+        David Howells <dhowells@redhat.com>,
+        Marc Dionne <marc.dionne@auristor.com>,
+        Chris Mason <clm@fb.com>, Josef Bacik <josef@toxicpanda.com>,
+        David Sterba <dsterba@suse.com>, Xiubo Li <xiubli@redhat.com>,
+        Ilya Dryomov <idryomov@gmail.com>,
+        Jan Harkes <jaharkes@cs.cmu.edu>, coda@cs.cmu.edu,
+        Tyler Hicks <code@tyhicks.com>, Gao Xiang <xiang@kernel.org>,
+        Chao Yu <chao@kernel.org>, Yue Hu <huyue2@coolpad.com>,
+        Jeffle Xu <jefflexu@linux.alibaba.com>,
+        Namjae Jeon <linkinjeon@kernel.org>,
+        Sungjong Seo <sj1557.seo@samsung.com>,
+        Jan Kara <jack@suse.com>, Theodore Ts'o <tytso@mit.edu>,
+        Andreas Dilger <adilger.kernel@dilger.ca>,
+        Jaegeuk Kim <jaegeuk@kernel.org>,
+        OGAWA Hirofumi <hirofumi@mail.parknet.co.jp>,
+        Miklos Szeredi <miklos@szeredi.hu>,
+        Bob Peterson <rpeterso@redhat.com>,
+        Andreas Gruenbacher <agruenba@redhat.com>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        Tejun Heo <tj@kernel.org>,
+        Alexander Viro <viro@zeniv.linux.org.uk>,
+        Christian Brauner <brauner@kernel.org>,
+        Trond Myklebust <trond.myklebust@hammerspace.com>,
+        Anna Schumaker <anna@kernel.org>,
+        Konstantin Komarov <almaz.alexandrovich@paragon-software.com>,
+        Mark Fasheh <mark@fasheh.com>,
+        Joel Becker <jlbec@evilplan.org>,
+        Joseph Qi <joseph.qi@linux.alibaba.com>,
+        Mike Marshall <hubcap@omnibond.com>,
+        Martin Brandenburg <martin@omnibond.com>,
+        Luis Chamberlain <mcgrof@kernel.org>,
+        Kees Cook <keescook@chromium.org>,
+        Iurii Zaikin <yzaikin@google.com>,
+        Steve French <sfrench@samba.org>,
+        Paulo Alcantara <pc@manguebit.com>,
+        Ronnie Sahlberg <lsahlber@redhat.com>,
+        Shyam Prasad N <sprasad@microsoft.com>,
+        Tom Talpey <tom@talpey.com>,
+        Sergey Senozhatsky <senozhatsky@chromium.org>,
+        Richard Weinberger <richard@nod.at>,
+        Hans de Goede <hdegoede@redhat.com>,
+        Hugh Dickins <hughd@google.com>,
+        Andrew Morton <akpm@linux-foundation.org>,
+        "Darrick J. Wong" <djwong@kernel.org>, v9fs@lists.linux.dev,
+        linux-kernel@vger.kernel.org, linux-afs@lists.infradead.org,
+        linux-btrfs@vger.kernel.org, ceph-devel@vger.kernel.org,
+        codalist@coda.cs.cmu.edu, ecryptfs@vger.kernel.org,
+        linux-erofs@lists.ozlabs.org, linux-fsdevel@vger.kernel.org,
+        linux-ext4@vger.kernel.org, linux-f2fs-devel@lists.sourceforge.net,
+        cluster-devel@redhat.com, linux-nfs@vger.kernel.org,
+        ntfs3@lists.linux.dev, ocfs2-devel@lists.linux.dev,
+        devel@lists.orangefs.org, linux-cifs@vger.kernel.org,
+        samba-technical@lists.samba.org, linux-mtd@lists.infradead.org,
+        linux-mm@kvack.org, linux-xfs@vger.kernel.org
+Subject: Re: [PATCH v5 6/8] xfs: switch to multigrain timestamps
+Message-ID: <ZLc96V2Yo72sthsi@dread.disaster.area>
+References: <20230713-mgctime-v5-0-9eb795d2ae37@kernel.org>
+ <20230713-mgctime-v5-6-9eb795d2ae37@kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <cecf81d0-a570-92ca-338f-e35789fa17c2@huawei.com>
+In-Reply-To: <20230713-mgctime-v5-6-9eb795d2ae37@kernel.org>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Mon, Jul 17, 2023 at 10:02:41AM +0800, Wu Guanghao wrote:
+On Thu, Jul 13, 2023 at 07:00:55PM -0400, Jeff Layton wrote:
+> Enable multigrain timestamps, which should ensure that there is an
+> apparent change to the timestamp whenever it has been written after
+> being actively observed via getattr.
 > 
+> Also, anytime the mtime changes, the ctime must also change, and those
+> are now the only two options for xfs_trans_ichgtime. Have that function
+> unconditionally bump the ctime, and warn if XFS_ICHGTIME_CHG is ever not
+> set.
 > 
-> 在 2023/7/13 13:20, Darrick J. Wong 写道:
-> > On Wed, Jun 28, 2023 at 10:36:09AM +0800, Wu Guanghao wrote:
-> >>
-> >>
-> >> 在 2023/6/10 10:44, Darrick J. Wong 写道:
-> >>> On Fri, Jun 09, 2023 at 09:08:01AM +0800, Wu Guanghao wrote:
-> >>>> We found an issue where repair failed in the fault injection.
-> >>>>
-> >>>> $ xfs_repair test.img
-> >>>> ...
-> >>>> Phase 3 - for each AG...
-> >>>>         - scan and clear agi unlinked lists...
-> >>>>         - process known inodes and perform inode discovery...
-> >>>>         - agno = 0
-> >>>>         - agno = 1
-> >>>>         - agno = 2
-> >>>> Metadata CRC error detected at 0x55a30e420c7d, xfs_bmbt block 0x51d68/0x1000
-> >>>>         - agno = 3
-> >>>> Metadata CRC error detected at 0x55a30e420c7d, xfs_bmbt block 0x51d68/0x1000
-> >>>> btree block 0/41901 is suspect, error -74
-> >>>> bad magic # 0x58534c4d in inode 3306572 (data fork) bmbt block 41901
-> >>>> bad data fork in inode 3306572
-> >>>> cleared inode 3306572
-> >>>> ...
-> >>>> Phase 7 - verify and correct link counts...
-> >>>> Metadata corruption detected at 0x55a30e420b58, xfs_bmbt block 0x51d68/0x1000
-> >>>> libxfs_bwrite: write verifier failed on xfs_bmbt bno 0x51d68/0x8
-> >>>> xfs_repair: Releasing dirty buffer to free list!
-> >>>> xfs_repair: Refusing to write a corrupt buffer to the data device!
-> >>>> xfs_repair: Lost a write to the data device!
-> >>>>
-> >>>> fatal error -- File system metadata writeout failed, err=117.  Re-run xfs_repair.
-> >>>>
-> >>>>
-> >>>> $ xfs_db test.img
-> >>>> xfs_db> inode 3306572
-> >>>> xfs_db> p
-> >>>> core.magic = 0x494e
-> >>>> core.mode = 0100666		  // regular file
-> >>>> core.version = 3
-> >>>> core.format = 3 (btree)	
-> >>>> ...
-> >>>> u3.bmbt.keys[1] = [startoff]
-> >>>> 1:[6]
-> >>>> u3.bmbt.ptrs[1] = 41901	 // btree root
-> >>>> ...
-> >>>>
-> >>>> $ hexdump -C -n 4096 41901.img
-> >>>> 00000000  58 53 4c 4d 00 00 00 00  00 00 01 e8 d6 f4 03 14  |XSLM............|
-> >>>> 00000010  09 f3 a6 1b 0a 3c 45 5a  96 39 41 ac 09 2f 66 99  |.....<EZ.9A../f.|
-> >>>> 00000020  00 00 00 00 00 05 1f fb  00 00 00 00 00 05 1d 68  |...............h|
-> >>>> ...
-> >>>>
-> >>>> The block data associated with inode 3306572 is abnormal, but check the CRC first
-> >>>> when reading. If the CRC check fails, badcrc will be set. Then the dirty flag
-> >>>> will be set on bp when badcrc is set. In the final stage of repair, the dirty bp
-> >>>> will be refreshed in batches. When refresh to the disk, the data in bp will be
-> >>>> verified. At this time, if the data verification fails, resulting in a repair
-> >>>> error.
-> >>>>
-> >>>> After scan_bmapbt returns an error, the inode will be cleaned up. Then bp
-> >>>> doesn't need to set dirty flag, so that it won't trigger writeback verification
-> >>>> failure.
-> >>>>
-> >>>> Signed-off-by: Wu Guanghao <wuguanghao3@huawei.com>
-> >>>> ---
-> >>>>  repair/scan.c | 2 +-
-> >>>>  1 file changed, 1 insertion(+), 1 deletion(-)
-> >>>>
-> >>>> diff --git a/repair/scan.c b/repair/scan.c
-> >>>> index 7b720131..b5458eb8 100644
-> >>>> --- a/repair/scan.c
-> >>>> +++ b/repair/scan.c
-> >>>> @@ -185,7 +185,7 @@ scan_lbtree(
-> >>>>
-> >>>>  	ASSERT(dirty == 0 || (dirty && !no_modify));
-> >>>>
-> >>>> -	if ((dirty || badcrc) && !no_modify) {
-> >>>> +	if (!err && (dirty || badcrc) && !no_modify) {
-> >>>>  		libxfs_buf_mark_dirty(bp);
-> >>>>  		libxfs_buf_relse(bp);
-> >>>
-> >>> Hm.  So if scan_lbtree returns 1, that means that we clear the inode.
-> >>> Hence there's no point in dirtying this buffer since we're going to zap
-> >>> the whole inode anyway.
-> >>>
-> >>> This looks correct to me, so
-> >>> Reviewed-by: Darrick J. Wong <djwong@kernel.org>
-> >>>
-> >>> But that said, you could refactor this part:
-> >>>
-> >>> 	if (!err && (dirty || badcrc) && !no_modify)
-> >>> 		libxfs_buf_mark_dirty(bp);
-> >>> 	libxfs_buf_relse(bp);
-> >>>
-> >>> More questions: Let's say that the btree-format fork has this btree:
-> >>>
-> >>>         fork
-> >>>        / | \
-> >>>       A  B  C
-> >>>
-> >>> Are there any cases where A is corrupt enough that the write verifier
-> >>> will trip but scan_lbtree/scan_bmapbt return 0?
-> >>>
-> >> I'm sorry for replying so late.
-> > 
-> > Don't worry about it, I'm just as slow. :)
-> > 
-> >> This situation should not exist.
-> >> scan_bmapbt() performs the following checks:
-> >> 1. Check the magic of the block
-> >> 2. Check the level of the block
-> >> 3. Check which inode the owner of the block belongs to.
-> >> 4. If it is a V5 filesystem,it will check three items: UUID, block consistency,
-> >> and which inode the block belongs to.
-> >> 5. Calculate which AG the block belongs to and see the usage of the block
-> >> 6. If it is a leaf node, it will check whether the number of records exceeds the maximum value
-> >>
-> >> xfs_bmbt_write_verify() performs the following checks:
-> >> 1. Check the magic of the block
-> >> 2. If it is a V5 filesystem,it will check three items: UUID, block consistency,
-> >> and which inode the block belongs to.
-> >> 3. Check if the level of the block is within the specified range
-> >> 4. Check if the number of nodes in the block record exceeds the maximum limit
-> >> 5. Check if the left and right nodes of the block are within the range of the file system
-> >>
-> >> As can be seen from above, scan_bmapbt() checks more and in more detail than
-> >> xfs_bmbt_write_verify(). Therefore, if scan_bmapbt() returns 0,
-> >> xfs_bmbt_write_verify() will not report an error.
-> >>
-> >>> Or, let's say that we dirty A, then scan_bmapbt decides that B is total
-> >>> garbage and returns 1.  Should we then mark A stale so that it doesn't
-> >>> get written out unnecessarily?
-> >>>
-> >> We can allocate space in process_btinode() and pass it to scan_lbtree/scan_bmapbt.
-> >> If a bp is set as dirty, we record it. If the inode needs to be cleaned up,
-> >> we set all recorded bps as stale.However, this does not affect the repair process.
-> >> Even if no record is kept, it only adds some unnecessary data writing.
-> >>
-> >> If there is nothing wrong with this，I will push V2 patch.
-> > 
-> > Hmm.  It's tempting to have scan_bmapbt put all the buffers it finds on
-> > a list.  The corrected ones would be marked dirty, the good ones just
-> > end up on the list.  If we decide to kill the bmbt we can then
-> > invalidate all the buffers.  If we keep it, then we can write the dirty
-> > blocks.
-> > 
-> > Ugh.  But that gets gross -- if the bmbt is larger than memory, we then
-> > can end up OOMing xfs_repair.  Creating an interval bitmap of fsblock
-> > numbers visited buffers might be less bad, but who knows.
-> > 
-> > (Or I guess we could just apply this patch and see if anyone complains
-> > about A being written after we decided to kill the bmbt due to B. ;))
-> > 
+> Signed-off-by: Jeff Layton <jlayton@kernel.org>
+> ---
+>  fs/xfs/libxfs/xfs_trans_inode.c | 6 +++---
+>  fs/xfs/xfs_iops.c               | 4 ++--
+>  fs/xfs/xfs_super.c              | 2 +-
+>  3 files changed, 6 insertions(+), 6 deletions(-)
 > 
-> OK, I agree. Do I need to resend the patch or do something else?
+> diff --git a/fs/xfs/libxfs/xfs_trans_inode.c b/fs/xfs/libxfs/xfs_trans_inode.c
+> index 0c9df8df6d4a..86f5ffce2d89 100644
+> --- a/fs/xfs/libxfs/xfs_trans_inode.c
+> +++ b/fs/xfs/libxfs/xfs_trans_inode.c
+> @@ -62,12 +62,12 @@ xfs_trans_ichgtime(
+>  	ASSERT(tp);
+>  	ASSERT(xfs_isilocked(ip, XFS_ILOCK_EXCL));
+>  
+> -	tv = current_time(inode);
+> +	/* If the mtime changes, then ctime must also change */
+> +	WARN_ON_ONCE(!(flags & XFS_ICHGTIME_CHG));
 
-Yeah, you might as well resend it with my RVB tag attached.
+Make that an ASSERT(flags & XFS_ICHGTIME_CHG), please. There's no
+need to verify this at runtime on production kernels.
 
---D
-
-> > --D
-> > 
-> >> Thanks
-> >>
-> >> Guanghao
-> >>
-> >>> Or, let's say that A is corrupt enough to trip the write verifier but
-> >>> scan_lbtree/scan_bmapbt return 0; and B is corrupt enough that
-> >>> scan_bmapbt returns 1.  In that case, we'd need to mark A stale so that
-> >>> we clear the inode and repair can complete without tripping over A or B.
-> >>> Does that actually happen?
-> >>>
-> >>
-> >>> --D
-> >>>
-> >>>>  	}
-> >>>> -- 
-> >>>> 2.27.0
-> >>>>
-> >>> .
-> >>>
-> > .
-> > 
+-Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
