@@ -2,162 +2,174 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E6352C04FE0
-	for <linux-xfs@archiver.kernel.org>; Wed, 19 Jul 2023 01:35:48 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4B87FEB64DC
+	for <linux-xfs@archiver.kernel.org>; Wed, 19 Jul 2023 01:44:18 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229610AbjGSBfr (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 18 Jul 2023 21:35:47 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38216 "EHLO
+        id S229525AbjGSBoR (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 18 Jul 2023 21:44:17 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39542 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229909AbjGSBfp (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 18 Jul 2023 21:35:45 -0400
-Received: from mail-oa1-x35.google.com (mail-oa1-x35.google.com [IPv6:2001:4860:4864:20::35])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6C48D1BD6
-        for <linux-xfs@vger.kernel.org>; Tue, 18 Jul 2023 18:35:42 -0700 (PDT)
-Received: by mail-oa1-x35.google.com with SMTP id 586e51a60fabf-1b0249f1322so4825033fac.3
-        for <linux-xfs@vger.kernel.org>; Tue, 18 Jul 2023 18:35:42 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=fromorbit-com.20221208.gappssmtp.com; s=20221208; t=1689730541; x=1692322541;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
-        bh=xZssYNKocP7SJAjxckC3wBJ507CzulE9IvrMWjf3P+k=;
-        b=5Slf0Wf1DkEOl9A1TiQUYv8SMKm8hpMZkE2pdlrBFVPzzvpLYuiVjUXLVmHCw57mm3
-         QfMAXPNPanSdHmq5ZWXmuM6TgukKEbveLzpwksx2dw9ZklwdjhA52vimEHT2eirBfa+2
-         IT2vnquxNaJm7BjHGdah8DmKJSIjdo0Yp6c26+N05rt7PzrzOKrn94s8yKsSInPTUfNp
-         YfGoevKBsYDtPuhIbewKvY1jLvJ5fb914inI0h60wc0+K8b0g/S/UYKcw11+BXpzkI08
-         6FecWUvMm8TYFIR2erayRFzaDHDt6sysMcKT2DfDdd2VqMiXCbsW5RRwMl7laE7GyBrL
-         HnfQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20221208; t=1689730541; x=1692322541;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=xZssYNKocP7SJAjxckC3wBJ507CzulE9IvrMWjf3P+k=;
-        b=PYBcoTeo1jg9RT5s+JYv6iRd11zHOaPhXum2kDAiv9simd+aFHABN0qv6nwt/zVdWF
-         PqOrOlufEwlpTNOQufwmMRICrw6FYtulVO/zUi+7ap4NbmoqjU0ml8D6r979oMHo8SCB
-         oBfiI3AjEAz3e1HwaufcBl9yPz4CPHVPeFQZN66eCivFGxJeVlOE6r2CM7HK/LiEuk0y
-         w1aLhAWhHWDhImDLCrjNjiC2QjE39Ot36udOV9yHNbiIqNhoyJZkMdXhqiz55bGl7OLY
-         /XjDVLhOHP3MeS+g3g1LvDW8Ysp/1blwemy5AInMHrDAEZh2Y6VnN0li68d1vJiWPVjA
-         gbsQ==
-X-Gm-Message-State: ABy/qLYG+Tznr96a22veBjKQA24KtZ1MY1rQTa5KSsNAu28j83IBS6PR
-        jB9FroTvxuuZS5CVd6kvCMTAUg==
-X-Google-Smtp-Source: APBJJlHb4gEwJfD+TL2icCrXL1rPSO1/If2sqk52+FC1gSV2ztjdma15fYoDbEqUpP5c7bsoFPcHEw==
-X-Received: by 2002:a05:6870:96a6:b0:1b3:8d35:c85f with SMTP id o38-20020a05687096a600b001b38d35c85fmr1011777oaq.1.1689730541592;
-        Tue, 18 Jul 2023 18:35:41 -0700 (PDT)
-Received: from dread.disaster.area (pa49-186-119-116.pa.vic.optusnet.com.au. [49.186.119.116])
-        by smtp.gmail.com with ESMTPSA id 201-20020a6301d2000000b005633311c70dsm2343100pgb.32.2023.07.18.18.35.40
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 18 Jul 2023 18:35:40 -0700 (PDT)
-Received: from dave by dread.disaster.area with local (Exim 4.96)
-        (envelope-from <david@fromorbit.com>)
-        id 1qLw6L-007mcz-1V;
-        Wed, 19 Jul 2023 11:35:37 +1000
-Date:   Wed, 19 Jul 2023 11:35:37 +1000
-From:   Dave Chinner <david@fromorbit.com>
-To:     Jeff Layton <jlayton@kernel.org>
-Cc:     Eric Van Hensbergen <ericvh@kernel.org>,
-        Latchesar Ionkov <lucho@ionkov.net>,
-        Dominique Martinet <asmadeus@codewreck.org>,
-        Christian Schoenebeck <linux_oss@crudebyte.com>,
-        David Howells <dhowells@redhat.com>,
-        Marc Dionne <marc.dionne@auristor.com>,
-        Chris Mason <clm@fb.com>, Josef Bacik <josef@toxicpanda.com>,
-        David Sterba <dsterba@suse.com>, Xiubo Li <xiubli@redhat.com>,
-        Ilya Dryomov <idryomov@gmail.com>,
-        Jan Harkes <jaharkes@cs.cmu.edu>, coda@cs.cmu.edu,
-        Tyler Hicks <code@tyhicks.com>, Gao Xiang <xiang@kernel.org>,
-        Chao Yu <chao@kernel.org>, Yue Hu <huyue2@coolpad.com>,
-        Jeffle Xu <jefflexu@linux.alibaba.com>,
-        Namjae Jeon <linkinjeon@kernel.org>,
-        Sungjong Seo <sj1557.seo@samsung.com>,
-        Jan Kara <jack@suse.com>, Theodore Ts'o <tytso@mit.edu>,
-        Andreas Dilger <adilger.kernel@dilger.ca>,
-        Jaegeuk Kim <jaegeuk@kernel.org>,
-        OGAWA Hirofumi <hirofumi@mail.parknet.co.jp>,
-        Miklos Szeredi <miklos@szeredi.hu>,
-        Bob Peterson <rpeterso@redhat.com>,
-        Andreas Gruenbacher <agruenba@redhat.com>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        Tejun Heo <tj@kernel.org>,
-        Alexander Viro <viro@zeniv.linux.org.uk>,
-        Christian Brauner <brauner@kernel.org>,
-        Trond Myklebust <trond.myklebust@hammerspace.com>,
-        Anna Schumaker <anna@kernel.org>,
-        Konstantin Komarov <almaz.alexandrovich@paragon-software.com>,
-        Mark Fasheh <mark@fasheh.com>,
-        Joel Becker <jlbec@evilplan.org>,
-        Joseph Qi <joseph.qi@linux.alibaba.com>,
-        Mike Marshall <hubcap@omnibond.com>,
-        Martin Brandenburg <martin@omnibond.com>,
-        Luis Chamberlain <mcgrof@kernel.org>,
-        Kees Cook <keescook@chromium.org>,
-        Iurii Zaikin <yzaikin@google.com>,
-        Steve French <sfrench@samba.org>,
-        Paulo Alcantara <pc@manguebit.com>,
-        Ronnie Sahlberg <lsahlber@redhat.com>,
-        Shyam Prasad N <sprasad@microsoft.com>,
-        Tom Talpey <tom@talpey.com>,
-        Sergey Senozhatsky <senozhatsky@chromium.org>,
-        Richard Weinberger <richard@nod.at>,
-        Hans de Goede <hdegoede@redhat.com>,
-        Hugh Dickins <hughd@google.com>,
-        Andrew Morton <akpm@linux-foundation.org>,
-        "Darrick J. Wong" <djwong@kernel.org>, v9fs@lists.linux.dev,
-        linux-kernel@vger.kernel.org, linux-afs@lists.infradead.org,
-        linux-btrfs@vger.kernel.org, ceph-devel@vger.kernel.org,
-        codalist@coda.cs.cmu.edu, ecryptfs@vger.kernel.org,
-        linux-erofs@lists.ozlabs.org, linux-fsdevel@vger.kernel.org,
-        linux-ext4@vger.kernel.org, linux-f2fs-devel@lists.sourceforge.net,
-        cluster-devel@redhat.com, linux-nfs@vger.kernel.org,
-        ntfs3@lists.linux.dev, ocfs2-devel@lists.linux.dev,
-        devel@lists.orangefs.org, linux-cifs@vger.kernel.org,
-        samba-technical@lists.samba.org, linux-mtd@lists.infradead.org,
-        linux-mm@kvack.org, linux-xfs@vger.kernel.org
-Subject: Re: [PATCH v5 6/8] xfs: switch to multigrain timestamps
-Message-ID: <ZLc96V2Yo72sthsi@dread.disaster.area>
-References: <20230713-mgctime-v5-0-9eb795d2ae37@kernel.org>
- <20230713-mgctime-v5-6-9eb795d2ae37@kernel.org>
+        with ESMTP id S229463AbjGSBoQ (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 18 Jul 2023 21:44:16 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id AED3E1BCD
+        for <linux-xfs@vger.kernel.org>; Tue, 18 Jul 2023 18:44:15 -0700 (PDT)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange X25519 server-signature RSA-PSS (2048 bits))
+        (No client certificate requested)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 488E761680
+        for <linux-xfs@vger.kernel.org>; Wed, 19 Jul 2023 01:44:15 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 95A46C433C8;
+        Wed, 19 Jul 2023 01:44:14 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1689731054;
+        bh=V0zteiBiMI30pen05CQ7TxQtcTDFs7UdwJhM3zmEw/0=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=NMjrkiusH3kqm79tm5R4WsjAMe5asaBjOD+NKW0DSzdGlsOTNdoVASEauvAlrM06z
+         k60VSr5ze4SR0t/IJ4MzuNAyLlcnM9juh/QVfcxcjX2BrD5wi/32yulkpX1DAPExTV
+         qAhl2rfYUwPTyDOn0bS/2MrkvwfTfIUL47//cqMPCNbhB6JNFh+a516QL8GmbRRPqT
+         qsJycW3WVa4qc9tcs6mLC+8s3G4SDO5EkaGQxCpmCJ/w4xLgsdqGZmxDil3hoMy83m
+         dIeVuqoNvW/dw0cRZyiaoHLbwM+YVv3M0MkzgruemFJFJZwoFEgmcQLL8ZgjEq8Sma
+         y32PwRT07GIhQ==
+Date:   Tue, 18 Jul 2023 18:44:13 -0700
+From:   "Darrick J. Wong" <djwong@kernel.org>
+To:     Dave Chinner <david@fromorbit.com>
+Cc:     Wengang Wang <wen.gang.wang@oracle.com>,
+        "linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>,
+        Srikanth C S <srikanth.c.s@oracle.com>
+Subject: Re: Question: reserve log space at IO time for recover
+Message-ID: <20230719014413.GC11352@frogsfrogsfrogs>
+References: <1DB9F8BB-4A7C-4422-B447-90A08E310E17@oracle.com>
+ <ZLcqF2/7ZBI44C65@dread.disaster.area>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=utf-8
 Content-Disposition: inline
-In-Reply-To: <20230713-mgctime-v5-6-9eb795d2ae37@kernel.org>
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <ZLcqF2/7ZBI44C65@dread.disaster.area>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Thu, Jul 13, 2023 at 07:00:55PM -0400, Jeff Layton wrote:
-> Enable multigrain timestamps, which should ensure that there is an
-> apparent change to the timestamp whenever it has been written after
-> being actively observed via getattr.
+On Wed, Jul 19, 2023 at 10:11:03AM +1000, Dave Chinner wrote:
+> On Tue, Jul 18, 2023 at 10:57:38PM +0000, Wengang Wang wrote:
+> > Hi,
+> > 
+> > I have a XFS metadump (was running with 4.14.35 plussing some back ported patches),
+> > mounting it (log recover) hang at log space reservation. There is 181760 bytes on-disk
+> > free journal space, while the transaction needs to reserve 360416 bytes to start the recovery.
+> > Thus the mount hangs for ever.
 > 
-> Also, anytime the mtime changes, the ctime must also change, and those
-> are now the only two options for xfs_trans_ichgtime. Have that function
-> unconditionally bump the ctime, and warn if XFS_ICHGTIME_CHG is ever not
-> set.
+> Most likely something went wrong at runtime on the 4.14.35 kernel
+> prior to the crash, leaving the on-disk state in an impossible to
+> recover state. Likely an accounting leak in a transaction
+> reservation somewhere, likely in passing the space used from the
+> transaction to the CIL. We've had bugs in this area before, they
+> eventually manifest in log hangs like this either at runtime or
+> during recovery...
 > 
-> Signed-off-by: Jeff Layton <jlayton@kernel.org>
-> ---
->  fs/xfs/libxfs/xfs_trans_inode.c | 6 +++---
->  fs/xfs/xfs_iops.c               | 4 ++--
->  fs/xfs/xfs_super.c              | 2 +-
->  3 files changed, 6 insertions(+), 6 deletions(-)
+> > That happens with 4.14.35 kernel and also upstream
+> > kernel (6.4.0).
 > 
-> diff --git a/fs/xfs/libxfs/xfs_trans_inode.c b/fs/xfs/libxfs/xfs_trans_inode.c
-> index 0c9df8df6d4a..86f5ffce2d89 100644
-> --- a/fs/xfs/libxfs/xfs_trans_inode.c
-> +++ b/fs/xfs/libxfs/xfs_trans_inode.c
-> @@ -62,12 +62,12 @@ xfs_trans_ichgtime(
->  	ASSERT(tp);
->  	ASSERT(xfs_isilocked(ip, XFS_ILOCK_EXCL));
->  
-> -	tv = current_time(inode);
-> +	/* If the mtime changes, then ctime must also change */
-> +	WARN_ON_ONCE(!(flags & XFS_ICHGTIME_CHG));
+> Upgrading the kernel won't fix recovery - it is likely that the
+> journal state on disk is invalid and so the mount cannot complete 
 
-Make that an ASSERT(flags & XFS_ICHGTIME_CHG), please. There's no
-need to verify this at runtime on production kernels.
+Hmm.  It'd be nice to know what the kernel thought it was doing when it
+went down.
 
--Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+/me wonders if this has anything to do with the EFI recovery creating a
+transaction with tr_itruncate reservation because the log itself doesn't
+record the reservations of the active transactions.
+
+<begin handwaving>
+
+Let's say you have a 1000K log, a tr_write reservation is 100k, and a
+tr_itruncate reservations are 300k.  In this case, you could
+theoretically have 10x tr_write transactions running concurrently; or
+you could have 3x tr_itruncate transactions running concurrently.
+
+Now let's say that someone fires up 10 programs that try to fpunch 10
+separate files.  Those ten threads will consume all the log grant space,
+unmap a block, and log an EFI.  I think in reality tr_logcount means
+that 5 threads each consume (2*100k) grant space, but the point here is
+that we've used up all the log grant space.
+
+Then crash the system, having committed the first transaction of the
+two-transaction chain.
+
+Upon recovery, we'll find the 10x unfinished EFIs and pass them to EFI
+recovery.  However, recovery creates a separate tr_itruncate transaction
+to finish each EFI.  Now do we have a problem because the required log
+grant space is 300k * 10 = 3000k?
+
+It's late and I don't remember how recovery for non-intent items works
+quite well enough to think that scenario adds up.  Maybe it was the case
+that before the system went down, the log had used 800K of the grant
+space for logged buffers and 100K for a single EFI logged in a tr_write
+transaction.  Then we crashed, reloaded the 800K of stuff, and now we're
+trying to allocate 300K for a tr_itruncate to restart the EFI, but
+there's not enough log grant space?
+
+<muggawuggamuggawugga>
+
+--D
+
+> > The is the related stack dumping (6.4.0 kernel):
+> > 
+> > [<0>] xlog_grant_head_wait+0xbd/0x200 [xfs]
+> > [<0>] xlog_grant_head_check+0xd9/0x100 [xfs]
+> > [<0>] xfs_log_reserve+0xbc/0x1e0 [xfs]
+> > [<0>] xfs_trans_reserve+0x138/0x170 [xfs]
+> > [<0>] xfs_trans_alloc+0xe8/0x220 [xfs]
+> > [<0>] xfs_efi_item_recover+0x110/0x250 [xfs]
+> > [<0>] xlog_recover_process_intents.isra.28+0xba/0x2d0 [xfs]
+> > [<0>] xlog_recover_finish+0x33/0x310 [xfs]
+> > [<0>] xfs_log_mount_finish+0xdb/0x160 [xfs]
+> > [<0>] xfs_mountfs+0x51c/0x900 [xfs]
+> > [<0>] xfs_fs_fill_super+0x4b8/0x940 [xfs]
+> > [<0>] get_tree_bdev+0x193/0x280
+> > [<0>] vfs_get_tree+0x26/0xd0
+> > [<0>] path_mount+0x69d/0x9b0
+> > [<0>] do_mount+0x7d/0xa0
+> > [<0>] __x64_sys_mount+0xdc/0x100
+> > [<0>] do_syscall_64+0x3b/0x90
+> > [<0>] entry_SYSCALL_64_after_hwframe+0x6e/0xd8
+> > 
+> > Thus we can say 4.14.35 kernel didn’t reserve log space at IO time to make log recover
+> > safe. Upstream kernel doesn’t do that either if I read the source code right (I might be wrong).
+> 
+> Sure they do.
+> 
+> Log space usage is what the grant heads track; transactions are not
+> allowed to start if there isn't both reserve and write grant head
+> space available for them, and transaction rolls get held until there
+> is write grant space available for them (i.e. they can block in
+> xfs_trans_roll() -> xfs_trans_reserve() waiting for write grant head
+> space).
+> 
+> There have been bugs in the grant head accounting mechanisms in the
+> past, there may well still be bugs in it. But it is the grant head
+> mechanisms that is supposed to guarantee there is always space in
+> the journal for a transaction to commit, and by extension, ensure
+> that we always have space in the journal for a transaction to be
+> fully recovered.
+> 
+> > So shall we reserve proper amount of log space at IO time, call it Unflush-Reserve, to
+> > ensure log recovery safe?  The number of UR is determined by current un flushed log items.
+> > It gets increased just after transaction is committed and gets decreased when log items are
+> > flushed. With the UR, we are safe to have enough log space for the transactions used by log
+> > recovery.
+> 
+> The grant heads already track log space usage and reservations like
+> this. If you want to learn more about the nitty gritty details, look
+> at this patch set that is aimed at changing how the grant heads
+> track the used/reserved log space to improve performance:
+> 
+> https://lore.kernel.org/linux-xfs/20221220232308.3482960-1-david@fromorbit.com/
+> 
+> Cheers,
+> 
+> Dave.
+> -- 
+> Dave Chinner
+> david@fromorbit.com
