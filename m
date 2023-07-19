@@ -2,226 +2,272 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B25B9C001B0
-	for <linux-xfs@archiver.kernel.org>; Wed, 19 Jul 2023 15:29:11 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5E46AC001DE
+	for <linux-xfs@archiver.kernel.org>; Wed, 19 Jul 2023 16:12:36 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231279AbjGSP3K (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 19 Jul 2023 11:29:10 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38462 "EHLO
+        id S231347AbjGSQMf (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 19 Jul 2023 12:12:35 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38234 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230526AbjGSP3J (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 19 Jul 2023 11:29:09 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id CC27EB7;
-        Wed, 19 Jul 2023 08:29:08 -0700 (PDT)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature RSA-PSS (2048 bits))
-        (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 5D03B6162A;
-        Wed, 19 Jul 2023 15:29:08 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 9F958C433C7;
-        Wed, 19 Jul 2023 15:29:07 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1689780547;
-        bh=2kHUEw5V7dGXd1WLGmHasPp+VRW7MqtgNhTm2defC8Y=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=Yr7b+H4aBDvC30+GV3mHRUK0EI8ki8t+xTnrnTuzaUuWRMtlKWKNBx6bcaLWY9+Kl
-         Ww1MEbdZa+Rq4JbIpZe0pq78S0FkoTyRoSrLOSMcKbGLDF0GuqGNULp+JUaXAjafX4
-         pfGy2f2u7y16eOp2Gb1hpWRpXc1kwsvA9s4UOxO9FnUsFi6HOv/LtPZlxgl7mYuUZw
-         zqoTfbTq7HFqIejMScJrbJR7bb53fQftb4U1xWjlP2XZLNlcWuCTraGcRtp1WWXBkV
-         aDTQy+cEr6Qrr8YWyv0j1pgyuZ6iNq/WhvmV3aebjrQDlDP5voCPrTmKvbV98lIDXf
-         KOT5kQQPrG94w==
-Date:   Wed, 19 Jul 2023 08:29:07 -0700
-From:   "Darrick J. Wong" <djwong@kernel.org>
-To:     Zorro Lang <zlang@redhat.com>
+        with ESMTP id S230122AbjGSQMc (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 19 Jul 2023 12:12:32 -0400
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 53701113
+        for <linux-xfs@vger.kernel.org>; Wed, 19 Jul 2023 09:11:47 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1689783101;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=1CpUzzltVjyS41ACkqxAqvg6cEsXM7R+IvIjcaJGzQE=;
+        b=AcEOj7WY5Jfq9kufhEvE4b19pHLJU3SsARQF92ZDO5PGKvo9bF5CvAnuNdP/kNac5sYN9R
+        euiTpSXvWXvnR+P8Yj3hLgWNZVK+ozCmEv8PP8mD2XlEn8fAmGUdVbQ2NJPoebyltge9/S
+        Ka/5hRwtBscy7ebURzEgk6pKSXrIoKY=
+Received: from mail-pl1-f200.google.com (mail-pl1-f200.google.com
+ [209.85.214.200]) by relay.mimecast.com with ESMTP with STARTTLS
+ (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
+ us-mta-657-84Smhoa7NdeVuuf8ibY01A-1; Wed, 19 Jul 2023 12:11:33 -0400
+X-MC-Unique: 84Smhoa7NdeVuuf8ibY01A-1
+Received: by mail-pl1-f200.google.com with SMTP id d9443c01a7336-1b9de135bddso34878245ad.3
+        for <linux-xfs@vger.kernel.org>; Wed, 19 Jul 2023 09:11:22 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20221208; t=1689783079; x=1690387879;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=1CpUzzltVjyS41ACkqxAqvg6cEsXM7R+IvIjcaJGzQE=;
+        b=DByeRi33agyFxiknh2qj82j+7JLMxe44J0En8fyLafnppZmNoIqJ4Rni6Lley+KX4M
+         QyU3Hov6j84r5sATe9tUzBay9CoWWRO+Y8XFyPUYczHKEvb9P1f/U+z2+B/C29l2PZms
+         Cvijon4IcU0xu9uONtGF1KxddOx0NlmKRKkFm4brknQxiygAV8mT9ViNrlas9MQePdUp
+         pfkRmVhTmIRyBAG/fJ4Pp06mjixRUAbKBEZQ+QlzT1tOAUvW08O4CRiwE3IAbK6DmkZD
+         HUByMSZvQn7V38EiANKzTMdFHTUBtVmS5bLHJzcN1zqWfqFS8Sl2OScUiL/p0/oLpPUJ
+         ivqw==
+X-Gm-Message-State: ABy/qLYFOHX7tatydUqQHMjbKSdYIfwp0WG7IPBWfNDOCwtnzgDDHTsB
+        RfAVYo9FdPjBlQf8XKdTevRp0EXNdvsXdqC3TIIw4UjLntTwbAkz77qbOXWLHMVOah4A0VORNrM
+        8n1MVF02eNlav7VCMro5mfd21fJ9J70M=
+X-Received: by 2002:a17:902:f7d3:b0:1bb:59a0:3d34 with SMTP id h19-20020a170902f7d300b001bb59a03d34mr750277plw.30.1689783079563;
+        Wed, 19 Jul 2023 09:11:19 -0700 (PDT)
+X-Google-Smtp-Source: APBJJlGt4D8+HukxHUAxsGwHDobQnP4RLrQHM26sU8caF+ZIoqMmDPky35VyOT9677m3i5EgsXQJaA==
+X-Received: by 2002:a17:902:f7d3:b0:1bb:59a0:3d34 with SMTP id h19-20020a170902f7d300b001bb59a03d34mr750264plw.30.1689783079224;
+        Wed, 19 Jul 2023 09:11:19 -0700 (PDT)
+Received: from zlang-mailbox ([43.228.180.230])
+        by smtp.gmail.com with ESMTPSA id l10-20020a170902f68a00b001b89536974bsm4181688plg.202.2023.07.19.09.11.17
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Wed, 19 Jul 2023 09:11:18 -0700 (PDT)
+Date:   Thu, 20 Jul 2023 00:11:15 +0800
+From:   Zorro Lang <zlang@redhat.com>
+To:     "Darrick J. Wong" <djwong@kernel.org>
 Cc:     tytso@mit.edu, linux-xfs@vger.kernel.org, fstests@vger.kernel.org
 Subject: Re: [PATCH 1/2] check: add a -smoketest option
-Message-ID: <20230719152907.GA11377@frogsfrogsfrogs>
+Message-ID: <20230719161115.byva7tvwoafkesga@zlang-mailbox>
 References: <168972905065.1698606.6829635791058054610.stgit@frogsfrogsfrogs>
  <168972905626.1698606.12419796694170752316.stgit@frogsfrogsfrogs>
  <20230719151024.ef7vgjmtoxwxkmjm@zlang-mailbox>
+ <20230719152907.GA11377@frogsfrogsfrogs>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20230719151024.ef7vgjmtoxwxkmjm@zlang-mailbox>
+In-Reply-To: <20230719152907.GA11377@frogsfrogsfrogs>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Wed, Jul 19, 2023 at 11:10:24PM +0800, Zorro Lang wrote:
-> On Tue, Jul 18, 2023 at 06:10:56PM -0700, Darrick J. Wong wrote:
-> > From: Darrick J. Wong <djwong@kernel.org>
+On Wed, Jul 19, 2023 at 08:29:07AM -0700, Darrick J. Wong wrote:
+> On Wed, Jul 19, 2023 at 11:10:24PM +0800, Zorro Lang wrote:
+> > On Tue, Jul 18, 2023 at 06:10:56PM -0700, Darrick J. Wong wrote:
+> > > From: Darrick J. Wong <djwong@kernel.org>
+> > > 
+> > > Create a "-smoketest" parameter to check that will run generic
+> > > filesystem smoke testing for five minutes apiece.  Since there are only
+> > > five smoke tests, this is effectively a 16min super-quick test.
+> > > 
+> > > With gcov enabled, running these tests yields about ~75% coverage for
+> > > iomap and ~60% for xfs; or ~50% for ext4 and ~75% for ext4; and ~45% for
+> > > btrfs.  Coverage was about ~65% for the pagecache.
+> > > 
+> > > Cc: tytso@mit.edu
+> > > Signed-off-by: Darrick J. Wong <djwong@kernel.org>
+> > > ---
+> > >  check               |    6 +++++-
+> > >  doc/group-names.txt |    1 +
+> > >  tests/generic/475   |    2 +-
+> > >  tests/generic/476   |    2 +-
+> > >  tests/generic/521   |    2 +-
+> > >  tests/generic/522   |    2 +-
+> > >  tests/generic/642   |    2 +-
+> > >  7 files changed, 11 insertions(+), 6 deletions(-)
+> > > 
+> > > 
+> > > diff --git a/check b/check
+> > > index 89e7e7bf20..97c7c4c7d1 100755
+> > > --- a/check
+> > > +++ b/check
+> > > @@ -68,6 +68,7 @@ check options
+> > >      -pvfs2		test PVFS2
+> > >      -tmpfs		test TMPFS
+> > >      -ubifs		test ubifs
+> > > +    -smoketest		run smoke tests for 4min each
 > > 
-> > Create a "-smoketest" parameter to check that will run generic
-> > filesystem smoke testing for five minutes apiece.  Since there are only
-> > five smoke tests, this is effectively a 16min super-quick test.
+> > We have both "smoketest" and "smoke", that's a bit confused :)
+> 
+> We do?  git grep doesn't show anything other than what I added:
+> 
+> $ git grep smoke
+> check:71:    -smoketest         run smoke tests for 4min each
+> check:294:      -smoketest)
+> check:296:              GROUP_LIST="smoketest"
+> doc/group-names.txt:123:smoketest               Simple smoke tests
+> tests/generic/475:15:_begin_fstest shutdown auto log metadata eio recoveryloop smoketest
+> tests/generic/476:11:_begin_fstest auto rw long_rw stress soak smoketest
+> tests/generic/521:10:_begin_fstest soak long_rw smoketest
+> tests/generic/522:10:_begin_fstest soak long_rw smoketest
+> tests/generic/533:9:# Simple attr smoke tests for user EAs, dereived from generic/097.
+> tests/generic/642:11:_begin_fstest auto soak attr long_rw stress smoketest
+
+Oh, sorry, my memory is a bit of jumbled ...
+
+> 
+> > >      -l			line mode diff
+> > >      -udiff		show unified diff (default)
+> > >      -n			show me, do not run tests
+> > > @@ -290,7 +291,10 @@ while [ $# -gt 0 ]; do
+> > >  		FSTYP=overlay
+> > >  		export OVERLAY=true
+> > >  		;;
+> > > -
+> > > +	-smoketest)
 > > 
-> > With gcov enabled, running these tests yields about ~75% coverage for
-> > iomap and ~60% for xfs; or ~50% for ext4 and ~75% for ext4; and ~45% for
-> > btrfs.  Coverage was about ~65% for the pagecache.
+> > Hmm... I'm wondering if it's worth having a specific running option for
+> > someone test group. If each "meaningful" testing way need a specific check
+> > option, the ./check file will be too complicated.
 > > 
-> > Cc: tytso@mit.edu
-> > Signed-off-by: Darrick J. Wong <djwong@kernel.org>
-> > ---
-> >  check               |    6 +++++-
-> >  doc/group-names.txt |    1 +
-> >  tests/generic/475   |    2 +-
-> >  tests/generic/476   |    2 +-
-> >  tests/generic/521   |    2 +-
-> >  tests/generic/522   |    2 +-
-> >  tests/generic/642   |    2 +-
-> >  7 files changed, 11 insertions(+), 6 deletions(-)
+> > If we need some recommended test ways, how about make some separated wrappers
+> > of ./check? For example:
 > > 
+> > # mkdir fstests/runtest/
+> > # cat > fstests/runtest/smoketest <<EOF
+> > export SOAK_DURATION="4m"
+> > ./check -g smoketest
+> > EOF
 > > 
-> > diff --git a/check b/check
-> > index 89e7e7bf20..97c7c4c7d1 100755
-> > --- a/check
-> > +++ b/check
-> > @@ -68,6 +68,7 @@ check options
-> >      -pvfs2		test PVFS2
-> >      -tmpfs		test TMPFS
-> >      -ubifs		test ubifs
-> > +    -smoketest		run smoke tests for 4min each
+> > Of course you can write more codes in it.
 > 
-> We have both "smoketest" and "smoke", that's a bit confused :)
-
-We do?  git grep doesn't show anything other than what I added:
-
-$ git grep smoke
-check:71:    -smoketest         run smoke tests for 4min each
-check:294:      -smoketest)
-check:296:              GROUP_LIST="smoketest"
-doc/group-names.txt:123:smoketest               Simple smoke tests
-tests/generic/475:15:_begin_fstest shutdown auto log metadata eio recoveryloop smoketest
-tests/generic/476:11:_begin_fstest auto rw long_rw stress soak smoketest
-tests/generic/521:10:_begin_fstest soak long_rw smoketest
-tests/generic/522:10:_begin_fstest soak long_rw smoketest
-tests/generic/533:9:# Simple attr smoke tests for user EAs, dereived from generic/097.
-tests/generic/642:11:_begin_fstest auto soak attr long_rw stress smoketest
-
-> >      -l			line mode diff
-> >      -udiff		show unified diff (default)
-> >      -n			show me, do not run tests
-> > @@ -290,7 +291,10 @@ while [ $# -gt 0 ]; do
-> >  		FSTYP=overlay
-> >  		export OVERLAY=true
-> >  		;;
-> > -
-> > +	-smoketest)
+> The goal here was to give casual developers an easy way to run a quick
+> 15 minute exercise *without* having to write wrapper scripts or type
+> all that in every time.  Compare:
 > 
-> Hmm... I'm wondering if it's worth having a specific running option for
-> someone test group. If each "meaningful" testing way need a specific check
-> option, the ./check file will be too complicated.
+> $ ./check -smoketest
 > 
-> If we need some recommended test ways, how about make some separated wrappers
-> of ./check? For example:
+> vs.
 > 
-> # mkdir fstests/runtest/
-> # cat > fstests/runtest/smoketest <<EOF
-> export SOAK_DURATION="4m"
-> ./check -g smoketest
-> EOF
+> $ SOAK_DURATION=4m ./check -g smoketest
+
+Oh, I don't mean let users write that wrapper, I mean we provide some wrapper
+scripts (to be recommended). E.g.
+
+# ./runtest/smoaktest
+
+If we give "smoaktest" a specific run option, what will we do if more people
+want to add more options like that?
+
+But a wrapper is not an offical running option, it's just a reference which
+can be used directly or can be copied. Then we can have more wrappers from
+each fs expert as reference, to recommend other users how to use fstests
+specially. And I don't need to add options for each of them. What do you think?
+
+Thanks,
+Zorro
+
 > 
-> Of course you can write more codes in it.
-
-The goal here was to give casual developers an easy way to run a quick
-15 minute exercise *without* having to write wrapper scripts or type
-all that in every time.  Compare:
-
-$ ./check -smoketest
-
-vs.
-
-$ SOAK_DURATION=4m ./check -g smoketest
-
---D
-
-> Thanks,
-> Zorro
+> --D
 > 
-> > +		SOAK_DURATION="4m"
-> > +		GROUP_LIST="smoketest"
-> > +		;;
-> >  	-g)	group=$2 ; shift ;
-> >  		GROUP_LIST="$GROUP_LIST ${group//,/ }"
-> >  		;;
-> > diff --git a/doc/group-names.txt b/doc/group-names.txt
-> > index 1c35a39432..c3dcca3755 100644
-> > --- a/doc/group-names.txt
-> > +++ b/doc/group-names.txt
-> > @@ -118,6 +118,7 @@ selftest		tests with fixed results, used to validate testing setup
-> >  send			btrfs send/receive
-> >  shrinkfs		decreasing the size of a filesystem
-> >  shutdown		FS_IOC_SHUTDOWN ioctl
-> > +smoketest		Simple smoke tests
-> >  snapshot		btrfs snapshots
-> >  soak			long running soak tests whose runtime can be controlled
-> >                          directly by setting the SOAK_DURATION variable
-> > diff --git a/tests/generic/475 b/tests/generic/475
-> > index 0cbf5131c2..ce7fe013b1 100755
-> > --- a/tests/generic/475
-> > +++ b/tests/generic/475
-> > @@ -12,7 +12,7 @@
-> >  # testing efforts.
-> >  #
-> >  . ./common/preamble
-> > -_begin_fstest shutdown auto log metadata eio recoveryloop
-> > +_begin_fstest shutdown auto log metadata eio recoveryloop smoketest
-> >  
-> >  # Override the default cleanup function.
-> >  _cleanup()
-> > diff --git a/tests/generic/476 b/tests/generic/476
-> > index 8e93b73457..b1ae4df4d4 100755
-> > --- a/tests/generic/476
-> > +++ b/tests/generic/476
-> > @@ -8,7 +8,7 @@
-> >  # bugs in the write path.
-> >  #
-> >  . ./common/preamble
-> > -_begin_fstest auto rw long_rw stress soak
-> > +_begin_fstest auto rw long_rw stress soak smoketest
-> >  
-> >  # Override the default cleanup function.
-> >  _cleanup()
-> > diff --git a/tests/generic/521 b/tests/generic/521
-> > index 22dd31a8ec..0956e50171 100755
-> > --- a/tests/generic/521
-> > +++ b/tests/generic/521
-> > @@ -7,7 +7,7 @@
-> >  # Long-soak directio fsx test
-> >  #
-> >  . ./common/preamble
-> > -_begin_fstest soak long_rw
-> > +_begin_fstest soak long_rw smoketest
-> >  
-> >  # Import common functions.
-> >  . ./common/filter
-> > diff --git a/tests/generic/522 b/tests/generic/522
-> > index f0cbcb245c..0e4e6009ed 100755
-> > --- a/tests/generic/522
-> > +++ b/tests/generic/522
-> > @@ -7,7 +7,7 @@
-> >  # Long-soak buffered fsx test
-> >  #
-> >  . ./common/preamble
-> > -_begin_fstest soak long_rw
-> > +_begin_fstest soak long_rw smoketest
-> >  
-> >  # Import common functions.
-> >  . ./common/filter
-> > diff --git a/tests/generic/642 b/tests/generic/642
-> > index eba90903a3..e6a475a8b5 100755
-> > --- a/tests/generic/642
-> > +++ b/tests/generic/642
-> > @@ -8,7 +8,7 @@
-> >  # bugs in the xattr code.
-> >  #
-> >  . ./common/preamble
-> > -_begin_fstest auto soak attr long_rw stress
-> > +_begin_fstest auto soak attr long_rw stress smoketest
-> >  
-> >  _cleanup()
-> >  {
+> > Thanks,
+> > Zorro
+> > 
+> > > +		SOAK_DURATION="4m"
+> > > +		GROUP_LIST="smoketest"
+> > > +		;;
+> > >  	-g)	group=$2 ; shift ;
+> > >  		GROUP_LIST="$GROUP_LIST ${group//,/ }"
+> > >  		;;
+> > > diff --git a/doc/group-names.txt b/doc/group-names.txt
+> > > index 1c35a39432..c3dcca3755 100644
+> > > --- a/doc/group-names.txt
+> > > +++ b/doc/group-names.txt
+> > > @@ -118,6 +118,7 @@ selftest		tests with fixed results, used to validate testing setup
+> > >  send			btrfs send/receive
+> > >  shrinkfs		decreasing the size of a filesystem
+> > >  shutdown		FS_IOC_SHUTDOWN ioctl
+> > > +smoketest		Simple smoke tests
+> > >  snapshot		btrfs snapshots
+> > >  soak			long running soak tests whose runtime can be controlled
+> > >                          directly by setting the SOAK_DURATION variable
+> > > diff --git a/tests/generic/475 b/tests/generic/475
+> > > index 0cbf5131c2..ce7fe013b1 100755
+> > > --- a/tests/generic/475
+> > > +++ b/tests/generic/475
+> > > @@ -12,7 +12,7 @@
+> > >  # testing efforts.
+> > >  #
+> > >  . ./common/preamble
+> > > -_begin_fstest shutdown auto log metadata eio recoveryloop
+> > > +_begin_fstest shutdown auto log metadata eio recoveryloop smoketest
+> > >  
+> > >  # Override the default cleanup function.
+> > >  _cleanup()
+> > > diff --git a/tests/generic/476 b/tests/generic/476
+> > > index 8e93b73457..b1ae4df4d4 100755
+> > > --- a/tests/generic/476
+> > > +++ b/tests/generic/476
+> > > @@ -8,7 +8,7 @@
+> > >  # bugs in the write path.
+> > >  #
+> > >  . ./common/preamble
+> > > -_begin_fstest auto rw long_rw stress soak
+> > > +_begin_fstest auto rw long_rw stress soak smoketest
+> > >  
+> > >  # Override the default cleanup function.
+> > >  _cleanup()
+> > > diff --git a/tests/generic/521 b/tests/generic/521
+> > > index 22dd31a8ec..0956e50171 100755
+> > > --- a/tests/generic/521
+> > > +++ b/tests/generic/521
+> > > @@ -7,7 +7,7 @@
+> > >  # Long-soak directio fsx test
+> > >  #
+> > >  . ./common/preamble
+> > > -_begin_fstest soak long_rw
+> > > +_begin_fstest soak long_rw smoketest
+> > >  
+> > >  # Import common functions.
+> > >  . ./common/filter
+> > > diff --git a/tests/generic/522 b/tests/generic/522
+> > > index f0cbcb245c..0e4e6009ed 100755
+> > > --- a/tests/generic/522
+> > > +++ b/tests/generic/522
+> > > @@ -7,7 +7,7 @@
+> > >  # Long-soak buffered fsx test
+> > >  #
+> > >  . ./common/preamble
+> > > -_begin_fstest soak long_rw
+> > > +_begin_fstest soak long_rw smoketest
+> > >  
+> > >  # Import common functions.
+> > >  . ./common/filter
+> > > diff --git a/tests/generic/642 b/tests/generic/642
+> > > index eba90903a3..e6a475a8b5 100755
+> > > --- a/tests/generic/642
+> > > +++ b/tests/generic/642
+> > > @@ -8,7 +8,7 @@
+> > >  # bugs in the xattr code.
+> > >  #
+> > >  . ./common/preamble
+> > > -_begin_fstest auto soak attr long_rw stress
+> > > +_begin_fstest auto soak attr long_rw stress smoketest
+> > >  
+> > >  _cleanup()
+> > >  {
+> > > 
 > > 
 > 
+
