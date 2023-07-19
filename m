@@ -2,254 +2,209 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D98A7EB64DC
-	for <linux-xfs@archiver.kernel.org>; Wed, 19 Jul 2023 02:19:19 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 94C12C001DC
+	for <linux-xfs@archiver.kernel.org>; Wed, 19 Jul 2023 06:25:11 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229708AbjGSCTS (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 18 Jul 2023 22:19:18 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50662 "EHLO
+        id S230003AbjGSGZK (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 19 Jul 2023 02:25:10 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53730 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229560AbjGSCTS (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 18 Jul 2023 22:19:18 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B023A1BC1
-        for <linux-xfs@vger.kernel.org>; Tue, 18 Jul 2023 19:19:16 -0700 (PDT)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature RSA-PSS (2048 bits))
-        (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 39FF8615D5
-        for <linux-xfs@vger.kernel.org>; Wed, 19 Jul 2023 02:19:16 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 5CAD2C433C8;
-        Wed, 19 Jul 2023 02:19:15 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1689733155;
-        bh=Ux8w6l1/PeBGqE3q2NDqf/Xy03mKQRL/gK8q8FDX4oA=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=P9JvgOYH89WMWXMv0j4XpnV7NCTmFOLtiNjM5VVDncEF7z8Kei5nvLnZGu5wr9xZ1
-         AxER5Am9k3VJBUfc3JaKYapj738nnXCOhKjfo6YPMa4jp0HMqr34aGxYM0qhcMS9Fi
-         F4uWvgkFhO9nT2hg6/dGrBv4nTHpep3a+J9SuwvhBuSQ2ToH2jm7i7C7eV0dvwjbze
-         Tx5GgsjsBlg2BN6EJ0RqibJJ59Mtw1xS26EkGzJZHrBVXHWhw67vbH2gLIXyVcmF9U
-         QX7e3fahaL/nLB02s+odFHRJWiTKhI6qJALFo+FQlWB+kSKXAgMnEbCAzduXtmSMEe
-         pGW1/uDjN8s5Q==
-Date:   Tue, 18 Jul 2023 19:19:14 -0700
-From:   "Darrick J. Wong" <djwong@kernel.org>
-To:     Long Li <leo.lilong@huawei.com>
-Cc:     david@fromorbit.com, linux-xfs@vger.kernel.org,
-        yi.zhang@huawei.com, houtao1@huawei.com, yangerkun@huawei.com
-Subject: Re: [PATCH v2 3/3] xfs: make sure done item committed before cancel
- intents
-Message-ID: <20230719021914.GF11352@frogsfrogsfrogs>
-References: <20230715063647.2094989-1-leo.lilong@huawei.com>
- <20230715063647.2094989-4-leo.lilong@huawei.com>
+        with ESMTP id S230237AbjGSGZJ (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 19 Jul 2023 02:25:09 -0400
+Received: from mail-pf1-x42f.google.com (mail-pf1-x42f.google.com [IPv6:2607:f8b0:4864:20::42f])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C79731BFF
+        for <linux-xfs@vger.kernel.org>; Tue, 18 Jul 2023 23:25:05 -0700 (PDT)
+Received: by mail-pf1-x42f.google.com with SMTP id d2e1a72fcca58-666eef03ebdso4352218b3a.1
+        for <linux-xfs@vger.kernel.org>; Tue, 18 Jul 2023 23:25:05 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=fromorbit-com.20221208.gappssmtp.com; s=20221208; t=1689747905; x=1692339905;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
+        bh=hP25Soed1QEFQaJ+ZzPLh9PaqofcnmWmosfc3ZNfSCg=;
+        b=KbgqbmeHGIFvP3tzeKNjIvVZj9zCB8bBt1AqxyHymAssvSVXK6b4XkVJrStEXFSv5B
+         yNder67Z4QSB+OxeYwrjrHNkWk1wrieFoV9jYc4tYRcbde1fU9DGg/mO557Dpds3Di0H
+         C+jFj8mssWiCkwwcQ/nAxMbd6CZrXyj+PeX2+sFuMtKRMewAMPmbxKTvcf0miMK/TbiC
+         1V7TYZPIKsykSgJdjB/bvl069tt49nCneojDJDvEpHU/7O3hI1iei81cN7PgYDigkKs6
+         dsevr5B83nphcF11rRMniuNVB15UuxV0R5frd+VFYi7EZ6szj0kbX0SVjlWK8iCN7ypr
+         gB1A==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20221208; t=1689747905; x=1692339905;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=hP25Soed1QEFQaJ+ZzPLh9PaqofcnmWmosfc3ZNfSCg=;
+        b=fEBeXV8al/DeRUWYdJykb1EVKyF6DANEYyOYX9eKvPY6DH/Xh0tVTBRRVb3Oq2tU2i
+         NOq3u1DRjAsFrhkJtTWgyPvxCleYZIT07tzOZl9gSlgWazh2znswFHVWDkGcaVRfZvO7
+         AK+Qoj6IQTLw4vJiQf6ZOJ2QrxqhU1jIiOn5rfC46GPNbAMumwhCf8PmHu0GUuPVAV+m
+         1x/WtNSuoWTXBZ7Fuofgw60A6QbYNK/PCCC/YcCZ0VKOv78XRPynxSu5Y+IcoUy+ebqY
+         xcb3Fx4sMAwVwSv8Mk2uVgXXQ+y4ey0LpVNezJAGT9GXHqmL7FrG7KnrX7GZbY3/N91n
+         YLEQ==
+X-Gm-Message-State: ABy/qLaf9jgBt/hraCHSHt3x6GJfj+vXaJb4IEbO2jrrnsX9IYsMPDet
+        KO+yyod0O1Myv6DlRxsK7KgmbQ==
+X-Google-Smtp-Source: APBJJlHJcLqc+SwKJm7Fy8MEucoXoNKi8EEAlVmuwpZ8oG9CtRJgoYIp24Qtdc4iVvIA+axkDhULoA==
+X-Received: by 2002:a05:6a20:8e1f:b0:133:6b64:c92 with SMTP id y31-20020a056a208e1f00b001336b640c92mr18056560pzj.44.1689747905057;
+        Tue, 18 Jul 2023 23:25:05 -0700 (PDT)
+Received: from dread.disaster.area (pa49-186-119-116.pa.vic.optusnet.com.au. [49.186.119.116])
+        by smtp.gmail.com with ESMTPSA id d1-20020aa78e41000000b006826df9e295sm2491398pfr.113.2023.07.18.23.25.04
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Tue, 18 Jul 2023 23:25:04 -0700 (PDT)
+Received: from dave by dread.disaster.area with local (Exim 4.96)
+        (envelope-from <david@fromorbit.com>)
+        id 1qM0cP-007rQK-1n;
+        Wed, 19 Jul 2023 16:25:01 +1000
+Date:   Wed, 19 Jul 2023 16:25:01 +1000
+From:   Dave Chinner <david@fromorbit.com>
+To:     "Darrick J. Wong" <djwong@kernel.org>
+Cc:     Wengang Wang <wen.gang.wang@oracle.com>,
+        "linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>,
+        Srikanth C S <srikanth.c.s@oracle.com>
+Subject: Re: Question: reserve log space at IO time for recover
+Message-ID: <ZLeBvfTdRbFJ+mj2@dread.disaster.area>
+References: <1DB9F8BB-4A7C-4422-B447-90A08E310E17@oracle.com>
+ <ZLcqF2/7ZBI44C65@dread.disaster.area>
+ <20230719014413.GC11352@frogsfrogsfrogs>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20230715063647.2094989-4-leo.lilong@huawei.com>
+In-Reply-To: <20230719014413.GC11352@frogsfrogsfrogs>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Sat, Jul 15, 2023 at 02:36:47PM +0800, Long Li wrote:
-> KASAN report a uaf when recover intents fails:
+On Tue, Jul 18, 2023 at 06:44:13PM -0700, Darrick J. Wong wrote:
+> On Wed, Jul 19, 2023 at 10:11:03AM +1000, Dave Chinner wrote:
+> > On Tue, Jul 18, 2023 at 10:57:38PM +0000, Wengang Wang wrote:
+> > > Hi,
+> > > 
+> > > I have a XFS metadump (was running with 4.14.35 plussing some back ported patches),
+> > > mounting it (log recover) hang at log space reservation. There is 181760 bytes on-disk
+> > > free journal space, while the transaction needs to reserve 360416 bytes to start the recovery.
+> > > Thus the mount hangs for ever.
+> > 
+> > Most likely something went wrong at runtime on the 4.14.35 kernel
+> > prior to the crash, leaving the on-disk state in an impossible to
+> > recover state. Likely an accounting leak in a transaction
+> > reservation somewhere, likely in passing the space used from the
+> > transaction to the CIL. We've had bugs in this area before, they
+> > eventually manifest in log hangs like this either at runtime or
+> > during recovery...
+> > 
+> > > That happens with 4.14.35 kernel and also upstream
+> > > kernel (6.4.0).
+> > 
+> > Upgrading the kernel won't fix recovery - it is likely that the
+> > journal state on disk is invalid and so the mount cannot complete 
 > 
->  ==================================================================
->  BUG: KASAN: slab-use-after-free in xfs_cui_release+0xb7/0xc0
->  Read of size 4 at addr ffff888012575e60 by task kworker/u8:3/103
->  CPU: 3 PID: 103 Comm: kworker/u8:3 Not tainted 6.4.0-rc7-next-20230619-00003-g94543a53f9a4-dirty #166
->  Workqueue: xfs-cil/sda xlog_cil_push_work
->  Call Trace:
->   <TASK>
->   dump_stack_lvl+0x50/0x70
->   print_report+0xc2/0x600
->   kasan_report+0xb6/0xe0
->   xfs_cui_release+0xb7/0xc0
->   xfs_cud_item_release+0x3c/0x90
->   xfs_trans_committed_bulk+0x2d5/0x7f0
->   xlog_cil_committed+0xaba/0xf20
->   xlog_cil_push_work+0x1a60/0x2360
->   process_one_work+0x78e/0x1140
->   worker_thread+0x58b/0xf60
->   kthread+0x2cd/0x3c0
->   ret_from_fork+0x1f/0x30
->   </TASK>
+> Hmm.  It'd be nice to know what the kernel thought it was doing when it
+> went down.
 > 
->  Allocated by task 531:
->   kasan_save_stack+0x22/0x40
->   kasan_set_track+0x25/0x30
->   __kasan_slab_alloc+0x55/0x60
->   kmem_cache_alloc+0x195/0x5f0
->   xfs_cui_init+0x198/0x1d0
->   xlog_recover_cui_commit_pass2+0x133/0x5f0
->   xlog_recover_items_pass2+0x107/0x230
->   xlog_recover_commit_trans+0x3e7/0x9c0
->   xlog_recovery_process_trans+0x140/0x1d0
->   xlog_recover_process_ophdr+0x1a0/0x3d0
->   xlog_recover_process_data+0x108/0x2d0
->   xlog_recover_process+0x1f6/0x280
->   xlog_do_recovery_pass+0x609/0xdb0
->   xlog_do_log_recovery+0x84/0xe0
->   xlog_do_recover+0x7d/0x470
->   xlog_recover+0x25f/0x490
->   xfs_log_mount+0x2dd/0x6f0
->   xfs_mountfs+0x11ce/0x1e70
->   xfs_fs_fill_super+0x10ec/0x1b20
->   get_tree_bdev+0x3c8/0x730
->   vfs_get_tree+0x89/0x2c0
->   path_mount+0xecf/0x1800
->   do_mount+0xf3/0x110
->   __x64_sys_mount+0x154/0x1f0
->   do_syscall_64+0x39/0x80
->   entry_SYSCALL_64_after_hwframe+0x63/0xcd
-> 
->  Freed by task 531:
->   kasan_save_stack+0x22/0x40
->   kasan_set_track+0x25/0x30
->   kasan_save_free_info+0x2b/0x40
->   __kasan_slab_free+0x114/0x1b0
->   kmem_cache_free+0xf8/0x510
->   xfs_cui_item_free+0x95/0xb0
->   xfs_cui_release+0x86/0xc0
->   xlog_recover_cancel_intents.isra.0+0xf8/0x210
->   xlog_recover_finish+0x7e7/0x980
->   xfs_log_mount_finish+0x2bb/0x4a0
->   xfs_mountfs+0x14bf/0x1e70
->   xfs_fs_fill_super+0x10ec/0x1b20
->   get_tree_bdev+0x3c8/0x730
->   vfs_get_tree+0x89/0x2c0
->   path_mount+0xecf/0x1800
->   do_mount+0xf3/0x110
->   __x64_sys_mount+0x154/0x1f0
->   do_syscall_64+0x39/0x80
->   entry_SYSCALL_64_after_hwframe+0x63/0xcd
-> 
->  The buggy address belongs to the object at ffff888012575dc8
->   which belongs to the cache xfs_cui_item of size 432
->  The buggy address is located 152 bytes inside of
->   freed 432-byte region [ffff888012575dc8, ffff888012575f78)
-> 
->  The buggy address belongs to the physical page:
->  page:ffffea0000495d00 refcount:1 mapcount:0 mapping:0000000000000000 index:0xffff888012576208 pfn:0x12574
->  head:ffffea0000495d00 order:2 entire_mapcount:0 nr_pages_mapped:0 pincount:0
->  flags: 0x1fffff80010200(slab|head|node=0|zone=1|lastcpupid=0x1fffff)
->  page_type: 0xffffffff()
->  raw: 001fffff80010200 ffff888012092f40 ffff888014570150 ffff888014570150
->  raw: ffff888012576208 00000000001e0010 00000001ffffffff 0000000000000000
->  page dumped because: kasan: bad access detected
-> 
->  Memory state around the buggy address:
->   ffff888012575d00: fb fb fb fb fb fb fb fb fb fb fb fc fc fc fc fc
->   ffff888012575d80: fc fc fc fc fc fc fc fc fc fa fb fb fb fb fb fb
->  >ffff888012575e00: fb fb fb fb fb fb fb fb fb fb fb fb fb fb fb fb
->                                                         ^
->   ffff888012575e80: fb fb fb fb fb fb fb fb fb fb fb fb fb fb fb fb
->   ffff888012575f00: fb fb fb fb fb fb fb fb fb fb fb fb fb fb fb fc
->  ==================================================================
-> 
-> If process intents fails, intent items left in AIL will be delete
-> from AIL and freed in error handling, even intent items that have been
-> recovered and created done items. After this, uaf will be triggered when
-> done item commited, because at this point the released intent item will
-> be accessed.
-> 
-> xlog_recover_finish                     xlog_cil_push_work
-> ----------------------------            ---------------------------
-> xlog_recover_process_intents
->   xfs_cui_item_recover//cui_refcount == 1
->     xfs_trans_get_cud
->     xfs_trans_commit
->       <add cud item to cil>
->   xfs_cui_item_recover
->     <error occurred and return>
-> xlog_recover_cancel_intents
->   xfs_cui_release     //cui_refcount == 0
->     xfs_cui_item_free //free cui
->   <release other intent items>
-> xlog_force_shutdown   //shutdown
->                                <...>
->                                         <push items in cil>
->                                         xlog_cil_committed
->                                           xfs_cud_item_release
->                                             xfs_cui_release // UAF
-> 
-> Fix it by move log force forward to make sure done items committed before
-> cancel intents.
-> 
-> Fixes: 2e76f188fd90 ("xfs: cancel intents immediately if process_intents fails")
-> Signed-off-by: Long Li <leo.lilong@huawei.com>
-> ---
->  fs/xfs/xfs_log_recover.c | 14 +++++++-------
->  1 file changed, 7 insertions(+), 7 deletions(-)
-> 
-> diff --git a/fs/xfs/xfs_log_recover.c b/fs/xfs/xfs_log_recover.c
-> index fdaa0ffe029b..c37031e64db5 100644
-> --- a/fs/xfs/xfs_log_recover.c
-> +++ b/fs/xfs/xfs_log_recover.c
-> @@ -3444,6 +3444,13 @@ xlog_recover_finish(
->  	int	error;
->  
->  	error = xlog_recover_process_intents(log);
-> +	/*
-> +	 * Sync the log to get all the intents that have done item out of
+> /me wonders if this has anything to do with the EFI recovery creating a
+> transaction with tr_itruncate reservation because the log itself doesn't
+> record the reservations of the active transactions.
 
-"...that have intent done items out of the AIL."
+Possibly - it's been that way since 1994 but I don't recall it ever
+causing any issues in the past. That's not to say it's correct - I
+think it's wrong, but I think the whole transaction reservation
+calculation infrastructure needs a complete overhaul....
 
-> +	 * the AIL.  This isn't absolutely necessary, but it helps in case
-> +	 * the unlink transactions would have problems pushing the intents
-> +	 * out of the way.
-> +	 */
-> +	xfs_log_force(log->l_mp, XFS_LOG_SYNC);
-
-Hmm.  Why doesn't the shutdown force the (now dead) dead log items out
-of memory?
-
-	/*
-	 * Flush all the completed transactions to disk before marking the log
-	 * being shut down. We need to do this first as shutting down the log
-	 * before the force will prevent the log force from flushing the iclogs
-	 * to disk.
-	 *
-	 * When we are in recovery, there are no transactions to flush, and
-	 * we don't want to touch the log because we don't want to perturb the
-	 * current head/tail for future recovery attempts. Hence we need to
-	 * avoid a log force in this case.
-	 *
-	 * If we are shutting down due to a log IO error, then we must avoid
-	 * trying to write the log as that may just result in more IO errors and
-	 * an endless shutdown/force loop.
-	 */
-	if (!log_error && !xlog_in_recovery(log))
-		xfs_log_force(log->l_mp, XFS_LOG_SYNC);
-
-Oh.  We're in recovery, but we've passed the part where we've finished
-with the log/inode/dquot items that we read from the disk.  IOWs, now
-we've gotten to the part of recovery where we're actually standing up
-new transactions to finish the work that was in the intents ... with new
-incore intents.
-
-I wonder, does the problem go away if you (hackishly)
-clear_bit(XLOG_ACTIVE_RECOVERY, &log->l_opstate); before the
-xlog_force_shutdown?
-
---D
-
->  	if (error) {
->  		/*
->  		 * Cancel all the unprocessed intent items now so that we don't
-> @@ -3458,13 +3465,6 @@ xlog_recover_finish(
->  		return error;
->  	}
->  
-> -	/*
-> -	 * Sync the log to get all the intents out of the AIL.  This isn't
-> -	 * absolutely necessary, but it helps in case the unlink transactions
-> -	 * would have problems pushing the intents out of the way.
-> -	 */
-> -	xfs_log_force(log->l_mp, XFS_LOG_SYNC);
-> -
->  	/*
->  	 * Now that we've recovered the log and all the intents, we can clear
->  	 * the log incompat feature bits in the superblock because there's no
-> -- 
-> 2.31.1
+>
+> <begin handwaving>
 > 
+> Let's say you have a 1000K log, a tr_write reservation is 100k, and a
+> tr_itruncate reservations are 300k.  In this case, you could
+> theoretically have 10x tr_write transactions running concurrently; or
+> you could have 3x tr_itruncate transactions running concurrently.
+> 
+> Now let's say that someone fires up 10 programs that try to fpunch 10
+> separate files.  Those ten threads will consume all the log grant space,
+> unmap a block, and log an EFI. I think in reality tr_logcount means
+> that 5 threads each consume (2*100k) grant space, but the point here is
+> that we've used up all the log grant space.
+>
+> Then crash the system, having committed the first transaction of the
+> two-transaction chain.
+> 
+> Upon recovery, we'll find the 10x unfinished EFIs and pass them to EFI
+> recovery.  However, recovery creates a separate tr_itruncate transaction
+> to finish each EFI.  Now do we have a problem because the required log
+> grant space is 300k * 10 = 3000k?
+
+Hmmmm. That smells wrong. Can't put my finger on it .....
+
+
+.... ah. Yeah. That.
+
+We only run one transaction at a time, and we commit the transaction
+after logging new intents and capturing the work that remains. So we
+return the unused part of the reservation (most of it) back to the
+log before we try to recover the next intent in the AIL.
+
+Hence we don't need (300k * 10) in the log to recover these EFIs as
+we don't hold all ten reservations at the same time (as we would
+have at runtime) - we need (log space used by recovery of intents +
+one reservation) to recover them all.
+
+Once we've replayed all the intents from the AIL and converted them
+into newly captured intents, they are removed from the AIL and that
+moves the tail of the log forwards. This frees up the entire of the
+log, and we then run the captured intents that still need to be
+processed. We run them one at a time to completion, committing them
+as we go, so again we only need space in the log for a single
+transaction reservation to complete recovery of the intent chaings.
+
+IOWs, because recovery of intents is single threaded, we only need
+to preserve space in the log for a single reservation to make
+forwards progress.
+
+> It's late and I don't remember how recovery for non-intent items works
+> quite well enough to think that scenario adds up.  Maybe it was the case
+> that before the system went down, the log had used 800K of the grant
+> space for logged buffers and 100K for a single EFI logged in a tr_write
+> transaction.  Then we crashed, reloaded the 800K of stuff, and now we're
+> trying to allocate 300K for a tr_itruncate to restart the EFI, but
+> there's not enough log grant space?
+
+Possible, if the EFI pins the tail of the log and the rest of the
+log is full. I've never seen that happen, and we've been using
+itrunc reservations in recovery since 1994, but that doesn't mean it
+can't happen.
+
+FWIW, I don't think this is EFI specific. BUI recovery use itrunc
+reservations, but what if it was an unlink operation using a remove
+reservation to free a directory block that logs a BUI? Same problem,
+different vector, right?
+
+I suspect what we really need is for all the intent processing to be
+restartable. We already have those for RUIs to relog/restart them
+there isn't enough reservation space available to complete
+processing the current RUI. We just made EFIs restartable to avoid
+busy extent deadlocks, we can easily extend that the same "enough
+reservation available" as we use for RUIs, etc. Do the same for BUIs
+and RUIs, and then...
+
+... we can set up a reservation calculation for each intent type,
+and the reservation needed for a given chain of operations is the
+max of all the steps in the chain. Hence if we get part way through
+a chain and run out of reservation, we can restart the chain the
+the reservation we know is large enough to complete the remaining
+part of the chain.
+
+The new reservation may be smaller than the reservation that was
+held when we start the intent processing (because it's a rolling
+chain with an inherited log ticket), but this guarantees that we can
+reduce the reservation to the minimum required at any point in
+time if we are running low on log space....
+
+This also gets around the problem of having to reserve enough space
+for N operations (e.g. 4 extents in an EFI) when the vast majority
+only use and need space for 1 operation. If we get an EFI with N
+extents in it, we can try a reservation for (N * efi_res) and if we
+can't get that we could just use efi_res and work through the EFI
+one extent at a time....
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
