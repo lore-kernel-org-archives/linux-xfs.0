@@ -2,47 +2,54 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id EDA9CEB64DA
-	for <linux-xfs@archiver.kernel.org>; Wed, 19 Jul 2023 14:29:47 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6F216EB64DA
+	for <linux-xfs@archiver.kernel.org>; Wed, 19 Jul 2023 14:33:09 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230289AbjGSO3r (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 19 Jul 2023 10:29:47 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59842 "EHLO
+        id S231666AbjGSOdI (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 19 Jul 2023 10:33:08 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60412 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230151AbjGSO3q (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 19 Jul 2023 10:29:46 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id CF351D3
-        for <linux-xfs@vger.kernel.org>; Wed, 19 Jul 2023 07:29:44 -0700 (PDT)
+        with ESMTP id S231636AbjGSOdD (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 19 Jul 2023 10:33:03 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 28BFDC7
+        for <linux-xfs@vger.kernel.org>; Wed, 19 Jul 2023 07:33:02 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
          key-exchange X25519 server-signature RSA-PSS (2048 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 4B4606171C
-        for <linux-xfs@vger.kernel.org>; Wed, 19 Jul 2023 14:29:44 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 7F808C433CD
-        for <linux-xfs@vger.kernel.org>; Wed, 19 Jul 2023 14:29:42 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 76C4A6170A
+        for <linux-xfs@vger.kernel.org>; Wed, 19 Jul 2023 14:33:01 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id CA1ECC433C8
+        for <linux-xfs@vger.kernel.org>; Wed, 19 Jul 2023 14:32:59 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1689776983;
-        bh=RmMfCgMSmPiNXEJvPEgiZ/8o+QTZR0swGVsqlHc9g3c=;
+        s=k20201202; t=1689777180;
+        bh=WAnUfp5SN5kIlV5VsRfkoyGgF0x/bae8OlERlNI8pJA=;
         h=Date:From:To:Subject:From;
-        b=GyPX860ZBMwNRggVLh7wjkn4EZpV42NATsajnXq97/GzLv7zKuTpDRI72NgvCVSg6
-         Pz7x5vjvVz+CCAaSR1kbHvJLghv3UhpaeF2tSzK2HXh2quJZFT23ovVLBLUy2BRDbe
-         kmiWg/oPwuefXA+cws2QrjjO9zAmNqOyJpSunWK5lapgGihgz3ktL+eKlDyCOOMv63
-         0T0KGQ9cox+SLMytCJoNRWc01P2z6pknyHCiBw01TnScC7v/hCyfdT9f+dlnY7AYu7
-         InT8yEOdKH1tsJeiFusmRA5dIoZYopS/wddJtNFQNtNV6t8FTrOjYDYMZhunC9kyLT
-         5tMj7LWwNpVdA==
-Date:   Wed, 19 Jul 2023 16:29:39 +0200
+        b=id1GXmMMN/mgtQcb0wafftLqlPE6TWJioyKvCOZOI6deCleoGyJlElwoRE4ggQD3t
+         1I29zYcVZ9iHACrMYR1Ylajw999azHHT4M262M5cURZ6JidiSbBlsSK5by/exjP5TL
+         WCcaiRa4hQ7El+isnnUrc1xG+wxTV7QLcGD6V0S/huJblkpCzDH1lw4WTPU4FeqOJx
+         67HwawyjWFixh1sEAYFBDeRexhkU9gDC2s4er3UMogHBAWihqpeoL/GdXR/DWmLJcu
+         cfuiZVMRttasL8Xk8udjI3x8e/Oc5V1DYUIkCzCYipsymhajNt8M4z9T32JpoESS+s
+         ghqfG8fbuR6og==
+Date:   Wed, 19 Jul 2023 16:32:57 +0200
 From:   Carlos Maiolino <cem@kernel.org>
 To:     linux-xfs@vger.kernel.org
-Subject: xfsprogs-6.4.0 released
-Message-ID: <20230719142939.gewzxvuc2nufotcn@andromeda>
+Subject: [ANNOUNCE] xfsprogs-6.4.0 released
+Message-ID: <20230719143257.uwxq56xc6s7mk6qa@andromeda>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
+
+
+TL;DR;
+Exactly same email announce as before, just adding [ANNOUNCE] tag, so people can
+properly filter it, sorry to have forgotten it on the previous announce...
+
+Original message follows..
 
 Hello.
 
@@ -218,5 +225,5 @@ Code Diffstat:
  create mode 100644 db/obfuscate.h
 
 
--- 
+--
 Carlos
