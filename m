@@ -2,272 +2,231 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5E46AC001DE
-	for <linux-xfs@archiver.kernel.org>; Wed, 19 Jul 2023 16:12:36 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 44DE9C001B0
+	for <linux-xfs@archiver.kernel.org>; Wed, 19 Jul 2023 16:20:12 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231347AbjGSQMf (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 19 Jul 2023 12:12:35 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38234 "EHLO
+        id S229603AbjGSQUL (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 19 Jul 2023 12:20:11 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43554 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230122AbjGSQMc (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 19 Jul 2023 12:12:32 -0400
+        with ESMTP id S229449AbjGSQUK (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 19 Jul 2023 12:20:10 -0400
 Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 53701113
-        for <linux-xfs@vger.kernel.org>; Wed, 19 Jul 2023 09:11:47 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id DA245172E
+        for <linux-xfs@vger.kernel.org>; Wed, 19 Jul 2023 09:19:23 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1689783101;
+        s=mimecast20190719; t=1689783563;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:cc:mime-version:mime-version:content-type:content-type:
          in-reply-to:in-reply-to:references:references;
-        bh=1CpUzzltVjyS41ACkqxAqvg6cEsXM7R+IvIjcaJGzQE=;
-        b=AcEOj7WY5Jfq9kufhEvE4b19pHLJU3SsARQF92ZDO5PGKvo9bF5CvAnuNdP/kNac5sYN9R
-        euiTpSXvWXvnR+P8Yj3hLgWNZVK+ozCmEv8PP8mD2XlEn8fAmGUdVbQ2NJPoebyltge9/S
-        Ka/5hRwtBscy7ebURzEgk6pKSXrIoKY=
-Received: from mail-pl1-f200.google.com (mail-pl1-f200.google.com
- [209.85.214.200]) by relay.mimecast.com with ESMTP with STARTTLS
+        bh=+Vmv4nvA+TZ6YsiKikqUAavYF5C7EEWbcdxc/T6rZ5s=;
+        b=DewyG4fCZKRdw8cskFqL6xmUHtoKpZdow0f+zIjNmy3uaa+QJbj161Pq5Ns0kdELyS8JYH
+        pStUENHn1z0i6m2UPs50wYXFPQ/uUEc3g0xt4gIGUf1gruES+32GGtFc7pCgwlGLZei0C9
+        Q/W4HQHBHYwxWgHom3fj52OlrftDHbI=
+Received: from mail-pl1-f198.google.com (mail-pl1-f198.google.com
+ [209.85.214.198]) by relay.mimecast.com with ESMTP with STARTTLS
  (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
- us-mta-657-84Smhoa7NdeVuuf8ibY01A-1; Wed, 19 Jul 2023 12:11:33 -0400
-X-MC-Unique: 84Smhoa7NdeVuuf8ibY01A-1
-Received: by mail-pl1-f200.google.com with SMTP id d9443c01a7336-1b9de135bddso34878245ad.3
-        for <linux-xfs@vger.kernel.org>; Wed, 19 Jul 2023 09:11:22 -0700 (PDT)
+ us-mta-319-eNNry1lEPha6h1Lc8N9PCA-1; Wed, 19 Jul 2023 12:19:21 -0400
+X-MC-Unique: eNNry1lEPha6h1Lc8N9PCA-1
+Received: by mail-pl1-f198.google.com with SMTP id d9443c01a7336-1b9de135bddso34928685ad.3
+        for <linux-xfs@vger.kernel.org>; Wed, 19 Jul 2023 09:19:21 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20221208; t=1689783079; x=1690387879;
+        d=1e100.net; s=20221208; t=1689783560; x=1690388360;
         h=in-reply-to:content-disposition:mime-version:references:message-id
          :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
          :message-id:reply-to;
-        bh=1CpUzzltVjyS41ACkqxAqvg6cEsXM7R+IvIjcaJGzQE=;
-        b=DByeRi33agyFxiknh2qj82j+7JLMxe44J0En8fyLafnppZmNoIqJ4Rni6Lley+KX4M
-         QyU3Hov6j84r5sATe9tUzBay9CoWWRO+Y8XFyPUYczHKEvb9P1f/U+z2+B/C29l2PZms
-         Cvijon4IcU0xu9uONtGF1KxddOx0NlmKRKkFm4brknQxiygAV8mT9ViNrlas9MQePdUp
-         pfkRmVhTmIRyBAG/fJ4Pp06mjixRUAbKBEZQ+QlzT1tOAUvW08O4CRiwE3IAbK6DmkZD
-         HUByMSZvQn7V38EiANKzTMdFHTUBtVmS5bLHJzcN1zqWfqFS8Sl2OScUiL/p0/oLpPUJ
-         ivqw==
-X-Gm-Message-State: ABy/qLYFOHX7tatydUqQHMjbKSdYIfwp0WG7IPBWfNDOCwtnzgDDHTsB
-        RfAVYo9FdPjBlQf8XKdTevRp0EXNdvsXdqC3TIIw4UjLntTwbAkz77qbOXWLHMVOah4A0VORNrM
-        8n1MVF02eNlav7VCMro5mfd21fJ9J70M=
-X-Received: by 2002:a17:902:f7d3:b0:1bb:59a0:3d34 with SMTP id h19-20020a170902f7d300b001bb59a03d34mr750277plw.30.1689783079563;
-        Wed, 19 Jul 2023 09:11:19 -0700 (PDT)
-X-Google-Smtp-Source: APBJJlGt4D8+HukxHUAxsGwHDobQnP4RLrQHM26sU8caF+ZIoqMmDPky35VyOT9677m3i5EgsXQJaA==
-X-Received: by 2002:a17:902:f7d3:b0:1bb:59a0:3d34 with SMTP id h19-20020a170902f7d300b001bb59a03d34mr750264plw.30.1689783079224;
-        Wed, 19 Jul 2023 09:11:19 -0700 (PDT)
+        bh=+Vmv4nvA+TZ6YsiKikqUAavYF5C7EEWbcdxc/T6rZ5s=;
+        b=YNtwcZITG2HSJCArMJ8FQ8nxw8kDt0/S1BiBgPvF4cduLgENSNv0+2elI6pReacpvS
+         VUHAKqudbADzwg2dnSHVOv69ibKCObFzVvnU6WCS0+/8rb9gn8OCFdXyeBasWe5CXVC/
+         sE16PLaSx5H0k2JGY0419v+5ibyyuR5t8LwsB8rqPqwS/F5PAn0x5RAPwxSJSHzphQ5c
+         cwIkYa8F/01RzxsqAU/XpEttmUqXM6HbBUZyTEiqjlVQKAAICM0cBg9UNUKoXhjPZfnl
+         U9vfMxOPy7WtRsZLh7pvJsQWh8Ov0wobG/xKFqZhvDlvJtekLoKYKsd9e+iGrQzb3h+A
+         qBVg==
+X-Gm-Message-State: ABy/qLbKFxsSC2DnToUqtyfH69EqFUu9SG+Qy0Fo3NN8CnssugM8ffYT
+        5ouL0SNK3ubmlv2wIOQU+OwNAH03igCZRgouIwpr2oynBM5Wurk5AykjnUsP7Rnw35kKScEuoMB
+        I9gxzHk0sD41YwRR+94p5usprfg9/gSE=
+X-Received: by 2002:a17:902:ce91:b0:1b9:e1d6:7c7d with SMTP id f17-20020a170902ce9100b001b9e1d67c7dmr20261839plg.47.1689783560624;
+        Wed, 19 Jul 2023 09:19:20 -0700 (PDT)
+X-Google-Smtp-Source: APBJJlFG2p9DklozMDjbocCxKQVPhB95IQxSMcZQPzHBO/gv6vIV9O7E0jyMiNTRuPbOzNUau1gs2Q==
+X-Received: by 2002:a17:902:ce91:b0:1b9:e1d6:7c7d with SMTP id f17-20020a170902ce9100b001b9e1d67c7dmr20261816plg.47.1689783560270;
+        Wed, 19 Jul 2023 09:19:20 -0700 (PDT)
 Received: from zlang-mailbox ([43.228.180.230])
-        by smtp.gmail.com with ESMTPSA id l10-20020a170902f68a00b001b89536974bsm4181688plg.202.2023.07.19.09.11.17
+        by smtp.gmail.com with ESMTPSA id o1-20020a170902bcc100b001a6f7744a27sm4183588pls.87.2023.07.19.09.19.18
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 19 Jul 2023 09:11:18 -0700 (PDT)
-Date:   Thu, 20 Jul 2023 00:11:15 +0800
+        Wed, 19 Jul 2023 09:19:19 -0700 (PDT)
+Date:   Thu, 20 Jul 2023 00:19:16 +0800
 From:   Zorro Lang <zlang@redhat.com>
 To:     "Darrick J. Wong" <djwong@kernel.org>
-Cc:     tytso@mit.edu, linux-xfs@vger.kernel.org, fstests@vger.kernel.org
-Subject: Re: [PATCH 1/2] check: add a -smoketest option
-Message-ID: <20230719161115.byva7tvwoafkesga@zlang-mailbox>
+Cc:     tytso@mit.edu, kent.overstreet@linux.dev,
+        linux-xfs@vger.kernel.org, fstests@vger.kernel.org
+Subject: Re: [PATCH 2/2] check: generate gcov code coverage reports at the
+ end of each section
+Message-ID: <20230719161916.qne7ng4lnu32pw3w@zlang-mailbox>
 References: <168972905065.1698606.6829635791058054610.stgit@frogsfrogsfrogs>
- <168972905626.1698606.12419796694170752316.stgit@frogsfrogsfrogs>
- <20230719151024.ef7vgjmtoxwxkmjm@zlang-mailbox>
- <20230719152907.GA11377@frogsfrogsfrogs>
+ <168972906191.1698606.10738894314642211560.stgit@frogsfrogsfrogs>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20230719152907.GA11377@frogsfrogsfrogs>
+In-Reply-To: <168972906191.1698606.10738894314642211560.stgit@frogsfrogsfrogs>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Wed, Jul 19, 2023 at 08:29:07AM -0700, Darrick J. Wong wrote:
-> On Wed, Jul 19, 2023 at 11:10:24PM +0800, Zorro Lang wrote:
-> > On Tue, Jul 18, 2023 at 06:10:56PM -0700, Darrick J. Wong wrote:
-> > > From: Darrick J. Wong <djwong@kernel.org>
-> > > 
-> > > Create a "-smoketest" parameter to check that will run generic
-> > > filesystem smoke testing for five minutes apiece.  Since there are only
-> > > five smoke tests, this is effectively a 16min super-quick test.
-> > > 
-> > > With gcov enabled, running these tests yields about ~75% coverage for
-> > > iomap and ~60% for xfs; or ~50% for ext4 and ~75% for ext4; and ~45% for
-> > > btrfs.  Coverage was about ~65% for the pagecache.
-> > > 
-> > > Cc: tytso@mit.edu
-> > > Signed-off-by: Darrick J. Wong <djwong@kernel.org>
-> > > ---
-> > >  check               |    6 +++++-
-> > >  doc/group-names.txt |    1 +
-> > >  tests/generic/475   |    2 +-
-> > >  tests/generic/476   |    2 +-
-> > >  tests/generic/521   |    2 +-
-> > >  tests/generic/522   |    2 +-
-> > >  tests/generic/642   |    2 +-
-> > >  7 files changed, 11 insertions(+), 6 deletions(-)
-> > > 
-> > > 
-> > > diff --git a/check b/check
-> > > index 89e7e7bf20..97c7c4c7d1 100755
-> > > --- a/check
-> > > +++ b/check
-> > > @@ -68,6 +68,7 @@ check options
-> > >      -pvfs2		test PVFS2
-> > >      -tmpfs		test TMPFS
-> > >      -ubifs		test ubifs
-> > > +    -smoketest		run smoke tests for 4min each
-> > 
-> > We have both "smoketest" and "smoke", that's a bit confused :)
+On Tue, Jul 18, 2023 at 06:11:01PM -0700, Darrick J. Wong wrote:
+> From: Darrick J. Wong <djwong@kernel.org>
 > 
-> We do?  git grep doesn't show anything other than what I added:
+> Support collecting kernel code coverage information as reported in
+> debugfs.  At the start of each section, we reset the gcov counters;
+> during the section wrapup, we'll collect the kernel gcov data.
 > 
-> $ git grep smoke
-> check:71:    -smoketest         run smoke tests for 4min each
-> check:294:      -smoketest)
-> check:296:              GROUP_LIST="smoketest"
-> doc/group-names.txt:123:smoketest               Simple smoke tests
-> tests/generic/475:15:_begin_fstest shutdown auto log metadata eio recoveryloop smoketest
-> tests/generic/476:11:_begin_fstest auto rw long_rw stress soak smoketest
-> tests/generic/521:10:_begin_fstest soak long_rw smoketest
-> tests/generic/522:10:_begin_fstest soak long_rw smoketest
-> tests/generic/533:9:# Simple attr smoke tests for user EAs, dereived from generic/097.
-> tests/generic/642:11:_begin_fstest auto soak attr long_rw stress smoketest
+> If lcov is installed and the kernel source code is available, it will
+> also generate a nice html report.  If a CLI web browser is available, it
+> will also format the html report into text for easy grepping.
+> 
+> This requires the test runner to set REPORT_GCOV=1 explicitly and gcov
+> to be enabled in the kernel.
+> 
+> Cc: tytso@mit.edu
+> Cc: kent.overstreet@linux.dev
+> Signed-off-by: Darrick J. Wong <djwong@kernel.org>
+> ---
 
-Oh, sorry, my memory is a bit of jumbled ...
+Hi Darrick,
 
-> 
-> > >      -l			line mode diff
-> > >      -udiff		show unified diff (default)
-> > >      -n			show me, do not run tests
-> > > @@ -290,7 +291,10 @@ while [ $# -gt 0 ]; do
-> > >  		FSTYP=overlay
-> > >  		export OVERLAY=true
-> > >  		;;
-> > > -
-> > > +	-smoketest)
-> > 
-> > Hmm... I'm wondering if it's worth having a specific running option for
-> > someone test group. If each "meaningful" testing way need a specific check
-> > option, the ./check file will be too complicated.
-> > 
-> > If we need some recommended test ways, how about make some separated wrappers
-> > of ./check? For example:
-> > 
-> > # mkdir fstests/runtest/
-> > # cat > fstests/runtest/smoketest <<EOF
-> > export SOAK_DURATION="4m"
-> > ./check -g smoketest
-> > EOF
-> > 
-> > Of course you can write more codes in it.
-> 
-> The goal here was to give casual developers an easy way to run a quick
-> 15 minute exercise *without* having to write wrapper scripts or type
-> all that in every time.  Compare:
-> 
-> $ ./check -smoketest
-> 
-> vs.
-> 
-> $ SOAK_DURATION=4m ./check -g smoketest
-
-Oh, I don't mean let users write that wrapper, I mean we provide some wrapper
-scripts (to be recommended). E.g.
-
-# ./runtest/smoaktest
-
-If we give "smoaktest" a specific run option, what will we do if more people
-want to add more options like that?
-
-But a wrapper is not an offical running option, it's just a reference which
-can be used directly or can be copied. Then we can have more wrappers from
-each fs expert as reference, to recommend other users how to use fstests
-specially. And I don't need to add options for each of them. What do you think?
+Is that possible to split this function from check script to tools/ ?
 
 Thanks,
 Zorro
 
+>  README |    3 ++
+>  check  |   86 ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+>  2 files changed, 89 insertions(+)
 > 
-> --D
 > 
-> > Thanks,
-> > Zorro
-> > 
-> > > +		SOAK_DURATION="4m"
-> > > +		GROUP_LIST="smoketest"
-> > > +		;;
-> > >  	-g)	group=$2 ; shift ;
-> > >  		GROUP_LIST="$GROUP_LIST ${group//,/ }"
-> > >  		;;
-> > > diff --git a/doc/group-names.txt b/doc/group-names.txt
-> > > index 1c35a39432..c3dcca3755 100644
-> > > --- a/doc/group-names.txt
-> > > +++ b/doc/group-names.txt
-> > > @@ -118,6 +118,7 @@ selftest		tests with fixed results, used to validate testing setup
-> > >  send			btrfs send/receive
-> > >  shrinkfs		decreasing the size of a filesystem
-> > >  shutdown		FS_IOC_SHUTDOWN ioctl
-> > > +smoketest		Simple smoke tests
-> > >  snapshot		btrfs snapshots
-> > >  soak			long running soak tests whose runtime can be controlled
-> > >                          directly by setting the SOAK_DURATION variable
-> > > diff --git a/tests/generic/475 b/tests/generic/475
-> > > index 0cbf5131c2..ce7fe013b1 100755
-> > > --- a/tests/generic/475
-> > > +++ b/tests/generic/475
-> > > @@ -12,7 +12,7 @@
-> > >  # testing efforts.
-> > >  #
-> > >  . ./common/preamble
-> > > -_begin_fstest shutdown auto log metadata eio recoveryloop
-> > > +_begin_fstest shutdown auto log metadata eio recoveryloop smoketest
-> > >  
-> > >  # Override the default cleanup function.
-> > >  _cleanup()
-> > > diff --git a/tests/generic/476 b/tests/generic/476
-> > > index 8e93b73457..b1ae4df4d4 100755
-> > > --- a/tests/generic/476
-> > > +++ b/tests/generic/476
-> > > @@ -8,7 +8,7 @@
-> > >  # bugs in the write path.
-> > >  #
-> > >  . ./common/preamble
-> > > -_begin_fstest auto rw long_rw stress soak
-> > > +_begin_fstest auto rw long_rw stress soak smoketest
-> > >  
-> > >  # Override the default cleanup function.
-> > >  _cleanup()
-> > > diff --git a/tests/generic/521 b/tests/generic/521
-> > > index 22dd31a8ec..0956e50171 100755
-> > > --- a/tests/generic/521
-> > > +++ b/tests/generic/521
-> > > @@ -7,7 +7,7 @@
-> > >  # Long-soak directio fsx test
-> > >  #
-> > >  . ./common/preamble
-> > > -_begin_fstest soak long_rw
-> > > +_begin_fstest soak long_rw smoketest
-> > >  
-> > >  # Import common functions.
-> > >  . ./common/filter
-> > > diff --git a/tests/generic/522 b/tests/generic/522
-> > > index f0cbcb245c..0e4e6009ed 100755
-> > > --- a/tests/generic/522
-> > > +++ b/tests/generic/522
-> > > @@ -7,7 +7,7 @@
-> > >  # Long-soak buffered fsx test
-> > >  #
-> > >  . ./common/preamble
-> > > -_begin_fstest soak long_rw
-> > > +_begin_fstest soak long_rw smoketest
-> > >  
-> > >  # Import common functions.
-> > >  . ./common/filter
-> > > diff --git a/tests/generic/642 b/tests/generic/642
-> > > index eba90903a3..e6a475a8b5 100755
-> > > --- a/tests/generic/642
-> > > +++ b/tests/generic/642
-> > > @@ -8,7 +8,7 @@
-> > >  # bugs in the xattr code.
-> > >  #
-> > >  . ./common/preamble
-> > > -_begin_fstest auto soak attr long_rw stress
-> > > +_begin_fstest auto soak attr long_rw stress smoketest
-> > >  
-> > >  _cleanup()
-> > >  {
-> > > 
-> > 
+> diff --git a/README b/README
+> index 9790334db1..ccfdcbe703 100644
+> --- a/README
+> +++ b/README
+> @@ -249,6 +249,9 @@ Kernel/Modules related configuration:
+>     to "forever" and we'll wait forever until the module is gone.
+>   - Set KCONFIG_PATH to specify your preferred location of kernel config
+>     file. The config is used by tests to check if kernel feature is enabled.
+> + - Set REPORT_GCOV to a directory path to make lcov and genhtml generate
+> +   html reports from any gcov code coverage data collected by the kernel.
+> +   If REPORT_GCOV is set to 1, the report will be written to $REPORT_DIR/gcov/.
+>  
+>  Test control:
+>   - Set LOAD_FACTOR to a nonzero positive integer to increase the amount of
+> diff --git a/check b/check
+> index 97c7c4c7d1..3e6f27c653 100755
+> --- a/check
+> +++ b/check
+> @@ -451,6 +451,87 @@ _global_log() {
+>  	fi
+>  }
+>  
+> +GCOV_DIR=/sys/kernel/debug/gcov
+> +
+> +# Find the topmost directories of the .gcno directory hierarchy
+> +_gcov_find_topdirs() {
+> +	find "${GCOV_DIR}/" -name '*.gcno' -printf '%d|%h\n' | \
+> +		sort -g -k 1 | \
+> +		uniq | \
+> +		$AWK_PROG -F '|' 'BEGIN { x = -1 } { if (x < 0) x = $1; if ($1 == x) printf("%s\n", $2);}'
+> +}
+> +
+> +# Generate lcov html report from kernel gcov data if configured
+> +_gcov_generate_report() {
+> +	unset REPORT_GCOV	# don't trigger multiple times if ^C
+> +
+> +	local output_dir="$1"
+> +	test -n "${output_dir}" || return
+> +	test "$output_dir" = "1" && output_dir="$REPORT_DIR/gcov"
+> +
+> +	# Kernel support built in?
+> +	test -d "$GCOV_DIR" || return
+> +
+> +	readarray -t gcno_dirs < <(_gcov_find_topdirs)
+> +	test "${#gcno_dirs[@]}" -gt 0 || return
+> +
+> +	mkdir -p "${output_dir}/"
+> +
+> +	# Collect raw coverage data from the kernel
+> +	readarray -t source_dirs < <(find "${GCOV_DIR}/" -mindepth 1 -maxdepth 1 -type d)
+> +	for dir in "${source_dirs[@]}"; do
+> +		cp -p -R -d -u "${dir}" "${output_dir}/"
+> +	done
+> +
+> +	# If lcov is installed, use it to summarize the gcda data.
+> +	# If it is not installed, there's no point in going forward
+> +	command -v lcov > /dev/null || return
+> +	local lcov=(lcov --exclude 'include*' --capture)
+> +	lcov+=(--output-file "${output_dir}/gcov.report")
+> +	for d in "${gcno_dirs[@]}"; do
+> +		lcov+=(--directory "${d}")
+> +	done
+> +
+> +	# Generate a detailed HTML report from the summary
+> +	local gcov_start_time="$(date --date="${fstests_start_time:-now}")"
+> +	local genhtml=()
+> +	if command -v genhtml > /dev/null; then
+> +		genhtml+=(genhtml -o "${output_dir}/" "${output_dir}/gcov.report")
+> +		genhtml+=(--title "fstests on $(hostname -s) @ ${gcov_start_time}" --legend)
+> +	fi
+> +
+> +	# Try to convert the HTML report summary as text for easier grepping if
+> +	# there's an HTML renderer present
+> +	local totext=()
+> +	test "${#totext[@]}" -eq 0 && \
+> +		command -v lynx &>/dev/null && \
+> +		totext=(lynx -dump "${output_dir}/index.html" -width 120 -nonumbers -nolist)
+> +	test "${#totext[@]}" -eq 0 && \
+> +		command -v links &>/dev/null && \
+> +		totext=(links -dump "${output_dir}/index.html" -width 120)
+> +	test "${#totext[@]}" -eq 0 && \
+> +		command -v elinks &>/dev/null && \
+> +		totext=(elinks -dump "${output_dir}/index.html" --dump-width 120 --no-numbering --no-references)
+> +
+> +	# Analyze kernel data
+> +	"${lcov[@]}" > "${output_dir}/gcov.stdout" 2> "${output_dir}/gcov.stderr"
+> +	test "${#genhtml[@]}" -ne 0 && \
+> +		"${genhtml[@]}" >> "${output_dir}/gcov.stdout" 2>> "${output_dir}/gcov.stderr"
+> +	test "${#totext[@]}" -ne 0 && \
+> +		"${totext[@]}" > "${output_dir}/index.txt" 2>> "${output_dir}/gcov.stderr"
+> +}
+> +
+> +# Reset gcov usage data
+> +_gcov_reset() {
+> +	test -n "${REPORT_GCOV}" || return
+> +
+> +	if [ -w "${GCOV_DIR}/reset" ]; then
+> +		echo 1 > "${GCOV_DIR}/reset"
+> +	else
+> +		unset REPORT_GCOV
+> +	fi
+> +}
+> +
+>  _wrapup()
+>  {
+>  	seq="check"
+> @@ -527,6 +608,10 @@ _wrapup()
+>  					     "${#bad[*]}" "${#notrun[*]}" \
+>  					     "$((sect_stop - sect_start))"
+>  		fi
+> +
+> +		# Generate code coverage report
+> +		test -n "$REPORT_GCOV" && _gcov_generate_report "$REPORT_GCOV"
+> +
+>  		needwrap=false
+>  	fi
+>  
+> @@ -801,6 +886,7 @@ function run_section()
+>  	  echo "MOUNT_OPTIONS -- `_scratch_mount_options`"
+>  	fi
+>  	echo
+> +	_gcov_reset
+>  	needwrap=true
+>  
+>  	if [ ! -z "$SCRATCH_DEV" ]; then
 > 
 
