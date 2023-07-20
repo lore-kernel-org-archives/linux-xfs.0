@@ -2,58 +2,59 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9A314EB64DC
-	for <linux-xfs@archiver.kernel.org>; Thu, 20 Jul 2023 15:45:36 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id BFFCCEB64DD
+	for <linux-xfs@archiver.kernel.org>; Thu, 20 Jul 2023 15:46:07 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232909AbjGTPpf (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 20 Jul 2023 11:45:35 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49726 "EHLO
+        id S232930AbjGTPqG (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 20 Jul 2023 11:46:06 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50252 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232907AbjGTPpe (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 20 Jul 2023 11:45:34 -0400
-Received: from smtp-out1.suse.de (smtp-out1.suse.de [IPv6:2001:67c:2178:6::1c])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C2A68CE;
-        Thu, 20 Jul 2023 08:45:33 -0700 (PDT)
+        with ESMTP id S232933AbjGTPqF (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 20 Jul 2023 11:46:05 -0400
+Received: from smtp-out2.suse.de (smtp-out2.suse.de [195.135.220.29])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1D0251BD;
+        Thu, 20 Jul 2023 08:46:02 -0700 (PDT)
 Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
         (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
          key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
         (No client certificate requested)
-        by smtp-out1.suse.de (Postfix) with ESMTPS id 80E0E22BD5;
-        Thu, 20 Jul 2023 15:45:32 +0000 (UTC)
+        by smtp-out2.suse.de (Postfix) with ESMTPS id 8C7ED1F8CD;
+        Thu, 20 Jul 2023 15:46:01 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
-        t=1689867932; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+        t=1689867961; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
          mime-version:mime-version:content-type:content-type:
          content-transfer-encoding:content-transfer-encoding:
          in-reply-to:in-reply-to:references:references;
-        bh=aTba3o2kPyRQo+UGixsLvGCxMe88Bb3EA6h99cQRtps=;
-        b=qwJKksOHdTuFkyFwhRtlp1LxANP966bXCKrJEG+5m9/hdDiiLELUR8k5SWL+g+17AMoMtK
-        PqZyd/GAZJVC3YADkrIKx2an4UXF5kowEwhjx7a5uCVUI7ReM58aktrYbnoxz9Lk0r4uIg
-        WB/GEV9X7fnfP3XzO1YaywemMkiupKY=
+        bh=cNi1qLamVROLuXSjZj4PshjNTHiXYw7TMcvsJyWcAPQ=;
+        b=zbONYkJBQlRG8294B8kZL8aAjlTJ6twEOyHBgU1ijVpcYG8Xh+UEsukUowV41na368ISAz
+        gqbWNg+dDJjSi1bcLQ0sC0Hgkt+jsFvQxVPW74f8/A5tpuIFIO5S1e223DwYEevY2YFelH
+        UtM3C2gIZH/ovfeMw8ZXbIvS9tna8RQ=
 DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
-        s=susede2_ed25519; t=1689867932;
+        s=susede2_ed25519; t=1689867961;
         h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
          mime-version:mime-version:content-type:content-type:
          content-transfer-encoding:content-transfer-encoding:
          in-reply-to:in-reply-to:references:references;
-        bh=aTba3o2kPyRQo+UGixsLvGCxMe88Bb3EA6h99cQRtps=;
-        b=q+mWssqwkd56oXHR8sXORz3ZI/rQgTF4jkb5FtlroAYjyypjl+qRCJT/9jX7clWCW5PTxq
-        1ZsMm3v6IGYwm6DQ==
+        bh=cNi1qLamVROLuXSjZj4PshjNTHiXYw7TMcvsJyWcAPQ=;
+        b=1/nYl5PLeI13TzjZ3+LYfklMVlbUil0+/fb3tILeeBcmmGbfnDHvUuj7i6f29tgI1kfIf6
+        K0yW1uK6WniLS3Dg==
 Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
         (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
          key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
         (No client certificate requested)
-        by imap2.suse-dmz.suse.de (Postfix) with ESMTPS id 4689A133DD;
-        Thu, 20 Jul 2023 15:45:32 +0000 (UTC)
+        by imap2.suse-dmz.suse.de (Postfix) with ESMTPS id 46C53133DD;
+        Thu, 20 Jul 2023 15:46:01 +0000 (UTC)
 Received: from dovecot-director2.suse.de ([192.168.254.65])
         by imap2.suse-dmz.suse.de with ESMTPSA
-        id GrMgEJxWuWTvIAAAMHmgww
-        (envelope-from <hare@suse.de>); Thu, 20 Jul 2023 15:45:32 +0000
-Message-ID: <e7c306c1-4e5f-afb1-8d26-857f6884e87b@suse.de>
-Date:   Thu, 20 Jul 2023 17:45:31 +0200
+        id v752ELlWuWQoIQAAMHmgww
+        (envelope-from <hare@suse.de>); Thu, 20 Jul 2023 15:46:01 +0000
+Message-ID: <2a3f4e35-9838-d7a5-6b5b-3407c5adb6b2@suse.de>
+Date:   Thu, 20 Jul 2023 17:46:00 +0200
 MIME-Version: 1.0
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
  Thunderbird/102.12.0
-Subject: Re: [PATCH 2/6] fs: rename and move block_page_mkwrite_return
+Subject: Re: [PATCH 3/6] block: open code __generic_file_write_iter for blkdev
+ writes
 Content-Language: en-US
 To:     Christoph Hellwig <hch@lst.de>, Jens Axboe <axboe@kernel.dk>
 Cc:     "Darrick J. Wong" <djwong@kernel.org>,
@@ -64,9 +65,9 @@ Cc:     "Darrick J. Wong" <djwong@kernel.org>,
         linux-xfs@vger.kernel.org, linux-mm@kvack.org,
         linux-kernel@vger.kernel.org
 References: <20230720140452.63817-1-hch@lst.de>
- <20230720140452.63817-3-hch@lst.de>
+ <20230720140452.63817-4-hch@lst.de>
 From:   Hannes Reinecke <hare@suse.de>
-In-Reply-To: <20230720140452.63817-3-hch@lst.de>
+In-Reply-To: <20230720140452.63817-4-hch@lst.de>
 Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
@@ -74,21 +75,13 @@ List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
 On 7/20/23 16:04, Christoph Hellwig wrote:
-> block_page_mkwrite_return is neither block nor mkwrite specific, and
-> should not be under CONFIG_BLOCK.  Move it to mm.h and rename it to
-> vmf_fs_error.
+> Open code __generic_file_write_iter to remove the indirect call into
+> ->direct_IO and to prepare using the iomap based write code.
 > 
 > Signed-off-by: Christoph Hellwig <hch@lst.de>
 > ---
->   fs/ext4/inode.c             |  2 +-
->   fs/f2fs/file.c              |  2 +-
->   fs/gfs2/file.c              | 16 ++++++++--------
->   fs/iomap/buffered-io.c      |  2 +-
->   fs/nilfs2/file.c            |  2 +-
->   fs/udf/file.c               |  2 +-
->   include/linux/buffer_head.h | 12 ------------
->   include/linux/mm.h          | 18 ++++++++++++++++++
->   8 files changed, 31 insertions(+), 25 deletions(-)
+>   block/fops.c | 44 ++++++++++++++++++++++++++++++++++++++++++--
+>   1 file changed, 42 insertions(+), 2 deletions(-)
 > 
 Reviewed-by: Hannes Reinecke <hare@suse.de>
 
