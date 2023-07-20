@@ -2,60 +2,60 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0E61EC04E69
-	for <linux-xfs@archiver.kernel.org>; Thu, 20 Jul 2023 18:13:22 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B2DC0C04A94
+	for <linux-xfs@archiver.kernel.org>; Thu, 20 Jul 2023 18:13:23 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230526AbjGTSNV (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 20 Jul 2023 14:13:21 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53042 "EHLO
+        id S229887AbjGTSNW (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 20 Jul 2023 14:13:22 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53060 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229887AbjGTSNU (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 20 Jul 2023 14:13:20 -0400
-Received: from mail-il1-x12b.google.com (mail-il1-x12b.google.com [IPv6:2607:f8b0:4864:20::12b])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5378BFC
-        for <linux-xfs@vger.kernel.org>; Thu, 20 Jul 2023 11:13:19 -0700 (PDT)
-Received: by mail-il1-x12b.google.com with SMTP id e9e14a558f8ab-34637e55d9dso1179055ab.1
-        for <linux-xfs@vger.kernel.org>; Thu, 20 Jul 2023 11:13:19 -0700 (PDT)
+        with ESMTP id S231200AbjGTSNV (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 20 Jul 2023 14:13:21 -0400
+Received: from mail-il1-x12d.google.com (mail-il1-x12d.google.com [IPv6:2607:f8b0:4864:20::12d])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C068AE6F
+        for <linux-xfs@vger.kernel.org>; Thu, 20 Jul 2023 11:13:20 -0700 (PDT)
+Received: by mail-il1-x12d.google.com with SMTP id e9e14a558f8ab-34637e55d9dso1179125ab.1
+        for <linux-xfs@vger.kernel.org>; Thu, 20 Jul 2023 11:13:20 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=kernel-dk.20221208.gappssmtp.com; s=20221208; t=1689876798; x=1690481598;
+        d=kernel-dk.20221208.gappssmtp.com; s=20221208; t=1689876800; x=1690481600;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:from:to:cc:subject:date
          :message-id:reply-to;
-        bh=lO/y0JczduNfKF+qr7m+WoYz7I0WlwYaSUZRVfc+zV4=;
-        b=Pu/zmaJZ90qixup8NFEiStAk1UF0+44ZzF3j0OatYBtmtF3Gy4E0O+Dj2c2tEZkiem
-         oNjk/U4ulEDcKKOVfsRpe7QvqLeQp2s/gMbZCUBK2yR2DFYnrtOTFxH4rZipRCRyPoii
-         uY8TVDqC7Oix7O441rOzuJUU+WfZ+j/l4oI3msU2Dq2PMU5uqJfX2tKtdQ6FUPOADp6I
-         QQESLDkScyP48b+XwLJgO1fz04/S6J/fzGXaygiN17dnm4zsYbdtjvTee9nosFmcV0QV
-         WJB6iyJC2QRnSUvFl9ZjzceIVXB+oO4ysU/LGDKKOs8E8K1lePgmvNrMLzmIWGgkcqnh
-         c0rw==
+        bh=Evtw5/CKfgOAfc/VQ4aHsJxNdKm95vnozn2z+EJmynA=;
+        b=2FZWTI6VE/8V0avffLim6HIwlxD9Fk2MtUln2XBht9nr7LlA02/G+cdms+E2P1SqX/
+         HuvnxtiX+9vWPOpcH4gnsA+7c3lSZM2wtY24DPAKQCEEcEeWOhT3WiI/2xVQ8HIFN31W
+         1614oB0Lg3n2wiX+b4OV2JZCbBVrUaXcpPVXl6MnWEIHtETEwB7RiMq/wPu+XA6kbzBR
+         YgPF0aQppdrVuLkXBF9mc1wJU86C5ASd9XkupSuUroSPNP3OulB86OrEOK0zvXglZEHJ
+         t1F3hQTNxBee51uRpPwUDh0YrAIM/9xN7NF1MEOKdXD3GCYNhqa54dLWUgHZjJYE+ErR
+         /z8Q==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20221208; t=1689876798; x=1690481598;
+        d=1e100.net; s=20221208; t=1689876800; x=1690481600;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:x-gm-message-state:from:to:cc
          :subject:date:message-id:reply-to;
-        bh=lO/y0JczduNfKF+qr7m+WoYz7I0WlwYaSUZRVfc+zV4=;
-        b=XvDSF2MhuoJjzprH4tOUR60mJlYgqutiNAq+euuRjcQ53Eri/E7jsukFNa8WJxa+4W
-         c2n3WpLKFd51hbfzJ1efOS3DnUHKzM8ARcITQdaNAXl8jU5v8j+CjGLJotMMGQbN8wCO
-         5zXQ4FtMiWIRI001SM5yZ5gWOiDzN7TLno8ddWhwOOf20ESp7Y3hZd1QQgOVdZz5GdP+
-         3S38Mw7J5VQGkF00R3OD7NyvfyebkmmE0alxvly8jGgniVEjkIX8YD0baoaAyVAcGcJV
-         0itaIulQQAbE55N/NfbapN5TEwK2szhNCw1KebWnrqmlQtimz2epvdcWWA7bE4oL/2uk
-         q3Ww==
-X-Gm-Message-State: ABy/qLYkokrkXIelsbA835Va81opWexG56SxoaW367sFCkNCmXclk51v
-        zBvCNA6lSmf8ViBcfggaYZpjlg==
-X-Google-Smtp-Source: APBJJlE7fUZUWzIAkTh5EVdAECs4Ej9tOOcP9r7khn+zVkqb+CMEgaCM9pBkodR5d/h/5QA0K7QCcg==
-X-Received: by 2002:a05:6e02:17c8:b0:346:4eb9:9081 with SMTP id z8-20020a056e0217c800b003464eb99081mr12451755ilu.3.1689876798649;
-        Thu, 20 Jul 2023 11:13:18 -0700 (PDT)
+        bh=Evtw5/CKfgOAfc/VQ4aHsJxNdKm95vnozn2z+EJmynA=;
+        b=N3ZDBvJKNg4jQqRIn5ibfoK0/A5O/dJzm4Pzo2OS+7qg0JgqUOh80VOcSEN5sDJJWU
+         uXp2ISQ76x3YqWehcwzGDSFWouTm23wgE/riCoOtd7RBhfrMaSF7LbWac7Hldv4JAw7B
+         ZkdMPUjIKGSGGxcbEEZHNxQiPHaY1ub5YRYvWSi06sEgllrlvUcun+r7gmR2ruvYqLHU
+         whpkM36wL5y2+EVBQpBTsdxEr6eBpu/u4PL7xrtAbeDubS1BaK9Jo2EeTDmmSUtG/WL7
+         tKt4KSSp7dcRrFLVj71pBjnIzbtjkmxlprTn13Pzfci4Ul7eIAmrk1XJ5mRVFGdwOiK0
+         BO3Q==
+X-Gm-Message-State: ABy/qLaETMG/6niRg2KuHlhaIrpHIj3qvDV2oXMjff5og4i3i98FYlwB
+        IaGrGiClvAN6UUwhAm62l9oQYw==
+X-Google-Smtp-Source: APBJJlFssnsUezB0DYxfeknIGY4IWa5Hun4JEj8st3lJH1IWgoUsLVFo7skmJAH77DlOnsrYnJF1TA==
+X-Received: by 2002:a92:c243:0:b0:346:1919:7cb1 with SMTP id k3-20020a92c243000000b0034619197cb1mr12076111ilo.2.1689876800080;
+        Thu, 20 Jul 2023 11:13:20 -0700 (PDT)
 Received: from localhost.localdomain ([96.43.243.2])
-        by smtp.gmail.com with ESMTPSA id v6-20020a92c6c6000000b003457e1daba8sm419171ilm.8.2023.07.20.11.13.17
+        by smtp.gmail.com with ESMTPSA id v6-20020a92c6c6000000b003457e1daba8sm419171ilm.8.2023.07.20.11.13.18
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 20 Jul 2023 11:13:17 -0700 (PDT)
+        Thu, 20 Jul 2023 11:13:19 -0700 (PDT)
 From:   Jens Axboe <axboe@kernel.dk>
 To:     io-uring@vger.kernel.org, linux-xfs@vger.kernel.org
 Cc:     hch@lst.de, andres@anarazel.de, david@fromorbit.com,
         Jens Axboe <axboe@kernel.dk>
-Subject: [PATCH 3/8] iomap: treat a write through cache the same as FUA
-Date:   Thu, 20 Jul 2023 12:13:05 -0600
-Message-Id: <20230720181310.71589-4-axboe@kernel.dk>
+Subject: [PATCH 4/8] iomap: completed polled IO inline
+Date:   Thu, 20 Jul 2023 12:13:06 -0600
+Message-Id: <20230720181310.71589-5-axboe@kernel.dk>
 X-Mailer: git-send-email 2.40.1
 In-Reply-To: <20230720181310.71589-1-axboe@kernel.dk>
 References: <20230720181310.71589-1-axboe@kernel.dk>
@@ -65,104 +65,44 @@ Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Whether we have a write back cache and are using FUA or don't have
-a write back cache at all is the same situation. Treat them the same.
-
-This makes the IOMAP_DIO_WRITE_FUA name a bit misleading, as we have
-two cases that provide stable writes:
-
-1) Volatile write cache with FUA writes
-2) Normal write without a volatile write cache
-
-Rename that flag to IOMAP_DIO_STABLE_WRITE to make that clearer, and
-update some of the FUA comments as well.
+Polled IO is only allowed for conditions where task completion is safe
+anyway, so we can always complete it inline. This cannot easily be
+checked with a submission side flag, as the block layer may clear the
+polled flag and turn it into a regular IO instead. Hence we need to
+check this at completion time. If REQ_POLLED is still set, then we know
+that this IO was successfully polled, and is completing in task context.
 
 Signed-off-by: Jens Axboe <axboe@kernel.dk>
 ---
- fs/iomap/direct-io.c | 29 +++++++++++++++++------------
- 1 file changed, 17 insertions(+), 12 deletions(-)
+ fs/iomap/direct-io.c | 14 ++++++++++++--
+ 1 file changed, 12 insertions(+), 2 deletions(-)
 
 diff --git a/fs/iomap/direct-io.c b/fs/iomap/direct-io.c
-index c654612b24e5..9f97d0d03724 100644
+index 9f97d0d03724..c3ea1839628f 100644
 --- a/fs/iomap/direct-io.c
 +++ b/fs/iomap/direct-io.c
-@@ -21,7 +21,7 @@
-  * iomap.h:
-  */
- #define IOMAP_DIO_INLINE_COMP	(1 << 27)
--#define IOMAP_DIO_WRITE_FUA	(1 << 28)
-+#define IOMAP_DIO_STABLE_WRITE	(1 << 28)
- #define IOMAP_DIO_NEED_SYNC	(1 << 29)
- #define IOMAP_DIO_WRITE		(1 << 30)
- #define IOMAP_DIO_DIRTY		(1 << 31)
-@@ -222,7 +222,7 @@ static void iomap_dio_zero(const struct iomap_iter *iter, struct iomap_dio *dio,
- /*
-  * Figure out the bio's operation flags from the dio request, the
-  * mapping, and whether or not we want FUA.  Note that we can end up
-- * clearing the WRITE_FUA flag in the dio request.
-+ * clearing the STABLE_WRITE flag in the dio request.
-  */
- static inline blk_opf_t iomap_dio_bio_opflags(struct iomap_dio *dio,
- 		const struct iomap *iomap, bool use_fua)
-@@ -236,7 +236,7 @@ static inline blk_opf_t iomap_dio_bio_opflags(struct iomap_dio *dio,
- 	if (use_fua)
- 		opflags |= REQ_FUA;
- 	else
--		dio->flags &= ~IOMAP_DIO_WRITE_FUA;
-+		dio->flags &= ~IOMAP_DIO_STABLE_WRITE;
- 
- 	return opflags;
- }
-@@ -276,11 +276,13 @@ static loff_t iomap_dio_bio_iter(const struct iomap_iter *iter,
- 		 * Use a FUA write if we need datasync semantics, this is a pure
- 		 * data IO that doesn't require any metadata updates (including
- 		 * after IO completion such as unwritten extent conversion) and
--		 * the underlying device supports FUA. This allows us to avoid
--		 * cache flushes on IO completion.
-+		 * the underlying device either supports FUA or doesn't have
-+		 * a volatile write cache. This allows us to avoid cache flushes
-+		 * on IO completion.
- 		 */
- 		if (!(iomap->flags & (IOMAP_F_SHARED|IOMAP_F_DIRTY)) &&
--		    (dio->flags & IOMAP_DIO_WRITE_FUA) && bdev_fua(iomap->bdev))
-+		    (dio->flags & IOMAP_DIO_STABLE_WRITE) &&
-+		    (bdev_fua(iomap->bdev) || !bdev_write_cache(iomap->bdev)))
- 			use_fua = true;
+@@ -173,9 +173,19 @@ void iomap_dio_bio_end_io(struct bio *bio)
  	}
  
-@@ -560,12 +562,15 @@ __iomap_dio_rw(struct kiocb *iocb, struct iov_iter *iter,
- 
- 		       /*
- 			* For datasync only writes, we optimistically try
--			* using FUA for this IO.  Any non-FUA write that
--			* occurs will clear this flag, hence we know before
--			* completion whether a cache flush is necessary.
-+			* using STABLE_WRITE for this IO. Stable writes are
-+			* either FUA with a write cache, or a normal write to
-+			* a device without a volatile write cache. For the
-+			* former, Any non-FUA write that occurs will clear this
-+			* flag, hence we know before completion whether a cache
-+			* flush is necessary.
- 			*/
- 			if (!(iocb->ki_flags & IOCB_SYNC))
--				dio->flags |= IOMAP_DIO_WRITE_FUA;
-+				dio->flags |= IOMAP_DIO_STABLE_WRITE;
- 		}
- 
- 		/*
-@@ -627,10 +632,10 @@ __iomap_dio_rw(struct kiocb *iocb, struct iov_iter *iter,
- 		iomap_dio_set_error(dio, ret);
- 
  	/*
--	 * If all the writes we issued were FUA, we don't need to flush the
-+	 * If all the writes we issued were stable, we don't need to flush the
- 	 * cache on IO completion. Clear the sync flag for this case.
+-	 * Flagged with IOMAP_DIO_INLINE_COMP, we can complete it inline
++	 * Flagged with IOMAP_DIO_INLINE_COMP, we can complete it inline.
++	 * Ditto for polled requests - if the flag is still at completion
++	 * time, then we know the request was actually polled and completion
++	 * is called from the task itself. This is why we need to check it
++	 * here rather than flag it at issue time.
  	 */
--	if (dio->flags & IOMAP_DIO_WRITE_FUA)
-+	if (dio->flags & IOMAP_DIO_STABLE_WRITE)
- 		dio->flags &= ~IOMAP_DIO_NEED_SYNC;
- 
- 	WRITE_ONCE(iocb->private, dio->submit.poll_bio);
+-	if (dio->flags & IOMAP_DIO_INLINE_COMP) {
++	if ((dio->flags & IOMAP_DIO_INLINE_COMP) || (bio->bi_opf & REQ_POLLED)) {
++		/*
++		 * For polled IO, we need to clear ->private as it points to
++		 * the bio being polled for. The completion side uses it to
++		 * know if a given request has been found yet or not. For
++		 * non-polled IO, ->private isn't applicable.
++		 */
+ 		WRITE_ONCE(iocb->private, NULL);
+ 		iomap_dio_complete_work(&dio->aio.work);
+ 		goto release_bio;
 -- 
 2.40.1
 
