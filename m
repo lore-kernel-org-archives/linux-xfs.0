@@ -2,205 +2,138 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 68C2CC001DC
-	for <linux-xfs@archiver.kernel.org>; Thu, 20 Jul 2023 18:13:29 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C9B8FEB64DA
+	for <linux-xfs@archiver.kernel.org>; Thu, 20 Jul 2023 18:30:11 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230487AbjGTSN2 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 20 Jul 2023 14:13:28 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53184 "EHLO
+        id S232034AbjGTSaL (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 20 Jul 2023 14:30:11 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35776 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231314AbjGTSN1 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 20 Jul 2023 14:13:27 -0400
-Received: from mail-io1-xd2e.google.com (mail-io1-xd2e.google.com [IPv6:2607:f8b0:4864:20::d2e])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D03DB2711
-        for <linux-xfs@vger.kernel.org>; Thu, 20 Jul 2023 11:13:25 -0700 (PDT)
-Received: by mail-io1-xd2e.google.com with SMTP id ca18e2360f4ac-760dff4b701so13419339f.0
-        for <linux-xfs@vger.kernel.org>; Thu, 20 Jul 2023 11:13:25 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=kernel-dk.20221208.gappssmtp.com; s=20221208; t=1689876805; x=1690481605;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=uXqZdaZ6Mquv4fIr1Ve7JSk8CcFji/eSZ6SaOz1unh0=;
-        b=gkBbhoaJhW9QE7tFd5BKEysDmJS6oIW0zakPz2TmWExyM5h0e0/zYspxWItXES0B2c
-         AmUMz1xk4bpSXgZVRJDz2L59lYjvt+2CPyXqTha5Tn7xc3FAUTHNRP/9Uu3ELEcHGUek
-         mbbJ7WZ2ryoaRSW1t37jYZfYAYw98N8W2M8lS05npoJjj3QTOnCHIdx5tTwqHlfaVWoG
-         4bsgA5MEtBPU75KQdCvK1lFVtqrIkRIu6bSeVgnEUAN7Dj8kp4scq7G8nxRL27W67QBL
-         ZXPin3bk6sqG7COAkitQ+WWXoUIZyHPvJal/OYtfGyLm2JLIZ1sYkkrE5mjoQJxLK1FY
-         Lj7w==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20221208; t=1689876805; x=1690481605;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=uXqZdaZ6Mquv4fIr1Ve7JSk8CcFji/eSZ6SaOz1unh0=;
-        b=OOjqVMf8xbyN3lq4zCnP/LXEX7cTBuEqSSFrtCj9ig0XgUlvIAd3ucCtEQ6TASCr5C
-         //en5LfDPXhqKXuJbnAOnC61jAm2uLeJg5H9xNg5aSplFfY+1egAl8JGO1ezA/8OYBVh
-         SeJEUFj3/yqdjVXCF5djyQALZChpZltUG07Nr8yK+MTCopmurz0KqF0C8RIQb3gTUKG2
-         nKRihyL/Y6RmjWT56LN9iX6Xjlfufd02T9Kw/ggXg/u7ssW/mib/hCPpGKjZxSteiGNC
-         /zj3JeSYqaG0ffmwqjd0901ZbP4y9Jhg8QwuCjFscyGXgAKIBC4Geg4ZwOjaDT80HF6O
-         SaNg==
-X-Gm-Message-State: ABy/qLYOFtgyDGQsewOjMPpISnesCJ9+B5yJ9u2Z0Eiic48ii4JiJNDO
-        lZc7/Nwq/gkGXMFRpqdAhFXO0i13sICtTYLOZ0Q=
-X-Google-Smtp-Source: APBJJlH7ibxVZcFGYESD3kYWTxfRRHxo2GQ6mcaCElNBn5D+3k2OZwRxH4WCvaIa00ZBvqqERnpfcw==
-X-Received: by 2002:a92:dacf:0:b0:345:db9a:be2c with SMTP id o15-20020a92dacf000000b00345db9abe2cmr3262388ilq.1.1689876805117;
-        Thu, 20 Jul 2023 11:13:25 -0700 (PDT)
-Received: from localhost.localdomain ([96.43.243.2])
-        by smtp.gmail.com with ESMTPSA id v6-20020a92c6c6000000b003457e1daba8sm419171ilm.8.2023.07.20.11.13.23
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 20 Jul 2023 11:13:24 -0700 (PDT)
-From:   Jens Axboe <axboe@kernel.dk>
-To:     io-uring@vger.kernel.org, linux-xfs@vger.kernel.org
-Cc:     hch@lst.de, andres@anarazel.de, david@fromorbit.com,
-        Jens Axboe <axboe@kernel.dk>
-Subject: [PATCH 8/8] iomap: support IOCB_DIO_DEFER
-Date:   Thu, 20 Jul 2023 12:13:10 -0600
-Message-Id: <20230720181310.71589-9-axboe@kernel.dk>
-X-Mailer: git-send-email 2.40.1
-In-Reply-To: <20230720181310.71589-1-axboe@kernel.dk>
-References: <20230720181310.71589-1-axboe@kernel.dk>
+        with ESMTP id S232048AbjGTSaH (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 20 Jul 2023 14:30:07 -0400
+Received: from bombadil.infradead.org (bombadil.infradead.org [IPv6:2607:7c80:54:3::133])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id ABFFDE44;
+        Thu, 20 Jul 2023 11:30:06 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=infradead.org; s=bombadil.20210309; h=Sender:In-Reply-To:
+        Content-Transfer-Encoding:Content-Type:MIME-Version:References:Message-ID:
+        Subject:Cc:To:From:Date:Reply-To:Content-ID:Content-Description;
+        bh=yi1OQndfSAKROqv7J0RkOh857pRhe/ujJHjrZQ98YWs=; b=u1872vr6m+1g/EyQr5YbAPgIXi
+        8iuoeRHRChMThcfhq3UY4wdI2nXNzWYwgSIa+3FDugCI22X9Bm1XyJGiHJIu6D5kJQ9V0G5MO4iSE
+        OCY/rnMGrX1oQMmEiQ6EuF5nDQiX+ItXKTRxJ9DE/fIzrL9ODNmxrh9E1IxReSdEhLdvD66Ms/603
+        blSaDFm4qvspOBzeZCxfkeVeDnuHwotDQpz6ndikocgFBQUi1Ogq9+0S6tu/LSy8MI/j+CE58dhM4
+        SRty9xES0AVwyKdaUEC6HK5PTRUFutpUlznQI77UF5EffHqLSujOGKQT1cY/f22YqEvy8xv5GJ1j3
+        qxNb+hRw==;
+Received: from mcgrof by bombadil.infradead.org with local (Exim 4.96 #2 (Red Hat Linux))
+        id 1qMYPb-00Bu2n-0Y;
+        Thu, 20 Jul 2023 18:30:03 +0000
+Date:   Thu, 20 Jul 2023 11:30:03 -0700
+From:   Luis Chamberlain <mcgrof@kernel.org>
+To:     Amir Goldstein <amir73il@gmail.com>
+Cc:     Ignat Korchagin <ignat@cloudflare.com>,
+        "Darrick J. Wong" <djwong@kernel.org>,
+        Matthew Wilcox <willy@infradead.org>,
+        Daniel Dao <dqminh@cloudflare.com>,
+        Dave Chinner <david@fromorbit.com>,
+        kernel-team <kernel-team@cloudflare.com>,
+        linux-fsdevel@vger.kernel.org,
+        Chandan Babu R <chandanrlinux@gmail.com>,
+        Leah Rumancik <lrumancik@google.com>,
+        linux-xfs <linux-xfs@vger.kernel.org>,
+        Fred Lawler <fred@cloudflare.com>
+Subject: Re: Backporting of series xfs/iomap: fix data corruption due to
+ stale cached iomap
+Message-ID: <ZLl9K7jODHNYybTY@bombadil.infradead.org>
+References: <CA+wXwBRdcjHW2zxDABdFU3c26mc1u+g6iWG7HrXJRL7Po3Qp0w@mail.gmail.com>
+ <ZJ2yeJR5TB4AyQIn@casper.infradead.org>
+ <20230629181408.GM11467@frogsfrogsfrogs>
+ <CALrw=nFwbp06M7LB_Z0eFVPe29uFFUxAhKQ841GSDMtjP-JdXA@mail.gmail.com>
+ <CAOQ4uxiD6a9GmKwagRpUWBPRWCczB52Tsu5m6_igDzTQSLcs0w@mail.gmail.com>
+ <CALrw=nHH2u=+utzy8NfP6+fM6kOgtW0hdUHwK9-BWdYq+t-UoA@mail.gmail.com>
+ <CAOQ4uxju10zrQhVDA5WS+vTSbuW17vOD6EGBBJUmZg8c95vsrA@mail.gmail.com>
+ <20230630151657.GJ11441@frogsfrogsfrogs>
+ <CALrw=nFv82aODZ0URzknqnZavyjCxV1vKOP9oYijfSdyaYEQ3g@mail.gmail.com>
+ <CAOQ4uxgvawD4=4g8BaRiNvyvKN1oreuov_ie6sK6arq3bf8fxw@mail.gmail.com>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
 Content-Transfer-Encoding: 8bit
+In-Reply-To: <CAOQ4uxgvawD4=4g8BaRiNvyvKN1oreuov_ie6sK6arq3bf8fxw@mail.gmail.com>
+Sender: Luis Chamberlain <mcgrof@infradead.org>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-If IOCB_DIO_DEFER is set, utilize that to set kiocb->dio_complete handler
-and data for that callback. Rather than punt the completion to a
-workqueue, we pass back the handler and data to the issuer and will get a
-callback from a safe task context.
+On Thu, Jul 20, 2023 at 09:45:14AM +0300, Amir Goldstein wrote:
+> On Wed, Jul 19, 2023 at 11:37 PM Ignat Korchagin <ignat@cloudflare.com> wrote:
+> >
+> > Circling back on this. So far it seems that the patchset in question
+> > does fix the issues of rocksdb corruption as we haven't seen them for
+> > some time on our test group. We're happy to dedicate some efforts now
+> > to get them officially backported to 6.1 according to the process. We
+> > did try basic things with kdevops and would like to learn more. Fred
+> > (cc-ed here) is happy to drive the effort and be the primary contact
+> > on this. Could you, please, guide us/him on the process?
+> >
+> 
+> Hi Fred,
+> 
+> I'd love to help you get started with kdevops and xfs testing.
+> However, I am going on vacation tomorrow for three weeks,
+> so I'll just drop a few pointers and let the others help you out.
+> 
+> Luis (@mcgrof) is your best point of contact for kdevops.
 
-Using the following fio job to randomly dio write 4k blocks at
-queue depths of 1..16:
+I'm happy to help.
 
-fio --name=dio-write --filename=/data1/file --time_based=1 \
---runtime=10 --bs=4096 --rw=randwrite --norandommap --buffered=0 \
---cpus_allowed=4 --ioengine=io_uring --iodepth=$depth
+> Chandan should be able to help you with xfs backporting questions.
+> 
+> Better yet, use the discord channel:
+>   https://bit.ly/linux-kdevops-chat
+> 
+> Someone is almost always available to answer questions there.
 
-shows the following results before and after this patch:
+Indeed and also on irc.oftc.net on #kdevops too if you prefer IRC.
+But discord seems to be more happening for kdevops these days.
 
-	Stock	Patched		Diff
-=======================================
-QD1	155K	162K		+ 4.5%
-QD2	290K	313K		+ 7.9%
-QD4	533K	597K		+12.0%
-QD8	604K	827K		+36.9%
-QD16	615K	845K		+37.4%
+> TESTING:
+> --------------
+> The most challenging part of running fstests with kdevops is
+> establishing the baseline (which tests pass in current 6.1.y per xfs config),
+> but the baseline for that has already been established and committed
+> in kdevops repo.
+> 
+> There is a little quirk, that the baseline is associated only with exact
+> kernel version, hence commits like:
+> * c4e3de1 bootlinux: add expunge link for v6.1.39
 
-which shows nice wins all around. If we factored in per-IOP efficiency,
-the wins look even nicer. This becomes apparent as queue depth rises,
-as the offloaded workqueue completions runs out of steam.
+Indeed so our latest baseline is in
 
-Signed-off-by: Jens Axboe <axboe@kernel.dk>
----
- fs/iomap/direct-io.c | 54 +++++++++++++++++++++++++++++++++++++++++++-
- 1 file changed, 53 insertions(+), 1 deletion(-)
+workflows/fstests/expunges/6.1.39/xfs/unassigned/
 
-diff --git a/fs/iomap/direct-io.c b/fs/iomap/direct-io.c
-index cce9af019705..de86680968a4 100644
---- a/fs/iomap/direct-io.c
-+++ b/fs/iomap/direct-io.c
-@@ -20,6 +20,7 @@
-  * Private flags for iomap_dio, must not overlap with the public ones in
-  * iomap.h:
-  */
-+#define IOMAP_DIO_DEFER_COMP	(1 << 26)
- #define IOMAP_DIO_INLINE_COMP	(1 << 27)
- #define IOMAP_DIO_STABLE_WRITE	(1 << 28)
- #define IOMAP_DIO_NEED_SYNC	(1 << 29)
-@@ -132,6 +133,11 @@ ssize_t iomap_dio_complete(struct iomap_dio *dio)
- }
- EXPORT_SYMBOL_GPL(iomap_dio_complete);
- 
-+static ssize_t iomap_dio_deferred_complete(void *data)
-+{
-+	return iomap_dio_complete(data);
-+}
-+
- static void iomap_dio_complete_work(struct work_struct *work)
- {
- 	struct iomap_dio *dio = container_of(work, struct iomap_dio, aio.work);
-@@ -192,6 +198,31 @@ void iomap_dio_bio_end_io(struct bio *bio)
- 		goto release_bio;
- 	}
- 
-+	/*
-+	 * If this dio is flagged with IOMAP_DIO_DEFER_COMP, then schedule
-+	 * our completion that way to avoid an async punt to a workqueue.
-+	 */
-+	if (dio->flags & IOMAP_DIO_DEFER_COMP) {
-+		/* only polled IO cares about private cleared */
-+		iocb->private = dio;
-+		iocb->dio_complete = iomap_dio_deferred_complete;
-+
-+		/*
-+		 * Invoke ->ki_complete() directly. We've assigned out
-+		 * dio_complete callback handler, and since the issuer set
-+		 * IOCB_DIO_DEFER, we know their ki_complete handler will
-+		 * notice ->dio_complete being set and will defer calling that
-+		 * handler until it can be done from a safe task context.
-+		 *
-+		 * Note that the 'res' being passed in here is not important
-+		 * for this case. The actual completion value of the request
-+		 * will be gotten from dio_complete when that is run by the
-+		 * issuer.
-+		 */
-+		iocb->ki_complete(iocb, 0);
-+		goto release_bio;
-+	}
-+
- 	/*
- 	 * Async DIO completion that requires filesystem level completion work
- 	 * gets punted to a work queue to complete as the operation may require
-@@ -288,12 +319,17 @@ static loff_t iomap_dio_bio_iter(const struct iomap_iter *iter,
- 		 * after IO completion such as unwritten extent conversion) and
- 		 * the underlying device either supports FUA or doesn't have
- 		 * a volatile write cache. This allows us to avoid cache flushes
--		 * on IO completion.
-+		 * on IO completion. If we can't use stable writes and need to
-+		 * sync, disable in-task completions as dio completion will
-+		 * need to call generic_write_sync() which will do a blocking
-+		 * fsync / cache flush call.
- 		 */
- 		if (!(iomap->flags & (IOMAP_F_SHARED|IOMAP_F_DIRTY)) &&
- 		    (dio->flags & IOMAP_DIO_STABLE_WRITE) &&
- 		    (bdev_fua(iomap->bdev) || !bdev_write_cache(iomap->bdev)))
- 			use_fua = true;
-+		else if (dio->flags & IOMAP_DIO_NEED_SYNC)
-+			dio->flags &= ~IOMAP_DIO_DEFER_COMP;
- 	}
- 
- 	/*
-@@ -319,6 +355,13 @@ static loff_t iomap_dio_bio_iter(const struct iomap_iter *iter,
- 		pad = pos & (fs_block_size - 1);
- 		if (pad)
- 			iomap_dio_zero(iter, dio, pos - pad, pad);
-+
-+		/*
-+		 * If need_zeroout is set, then this is a new or unwritten
-+		 * extent. These need extra handling at completion time, so
-+		 * disable in-task deferred completion for those.
-+		 */
-+		dio->flags &= ~IOMAP_DIO_DEFER_COMP;
- 	}
- 
- 	/*
-@@ -557,6 +600,15 @@ __iomap_dio_rw(struct kiocb *iocb, struct iov_iter *iter,
- 		iomi.flags |= IOMAP_WRITE;
- 		dio->flags |= IOMAP_DIO_WRITE;
- 
-+		/*
-+		 * Flag as supporting deferred completions, if the issuer
-+		 * groks it. This can avoid a workqueue punt for writes.
-+		 * We may later clear this flag if we need to do other IO
-+		 * as part of this IO completion.
-+		 */
-+		if (iocb->ki_flags & IOCB_DIO_DEFER)
-+			dio->flags |= IOMAP_DIO_DEFER_COMP;
-+
- 		if (dio_flags & IOMAP_DIO_OVERWRITE_ONLY) {
- 			ret = -EAGAIN;
- 			if (iomi.pos >= dio->i_size ||
--- 
-2.40.1
+> Make sure that you test your patches against one of those tags
+> or add new symlinks to other tags.
+> Start by running a sanity test without your patches, because different
+> running environments and kdevops configs may disagree on the baseline.
 
+You want to first run at least one loop to confirm your setup is fine
+and that you don't find any other failures other than the ones above.
+
+> You can use kdevops to either run local VMs with libvirt or launch
+> cloud VMs with terraform - you need to configure this and more
+> during the 'make menuconfig' step.
+> Attaching my kdevops config (for libvirt guests) as a reference.
+
+Please read:
+
+https://github.com/linux-kdevops/kdevops
+https://github.com/linux-kdevops/kdevops/blob/master/docs/requirements.md
+https://github.com/linux-kdevops/kdevops/blob/master/docs/kdevops-first-run.md
+https://github.com/linux-kdevops/kdevops/blob/master/docs/kdevops-mirror.md
+
+And the video demonstrations. Then I'm happy to schedule some time to
+cover anything the docs didn't cover, in particular to help you test new
+patches you wish to backport for a stable kernel and the testing
+criteria for that.
+
+  Luis
