@@ -2,176 +2,245 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 76860C0015E
-	for <linux-xfs@archiver.kernel.org>; Thu, 20 Jul 2023 14:15:20 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id BFE18EB64DA
+	for <linux-xfs@archiver.kernel.org>; Thu, 20 Jul 2023 14:25:26 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231707AbjGTOPT (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 20 Jul 2023 10:15:19 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48438 "EHLO
+        id S232216AbjGTOZZ (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 20 Jul 2023 10:25:25 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54988 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231831AbjGTOPM (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 20 Jul 2023 10:15:12 -0400
-Received: from esa6.hgst.iphmx.com (esa6.hgst.iphmx.com [216.71.154.45])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5A29D26BB;
-        Thu, 20 Jul 2023 07:15:09 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
-  d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
-  t=1689862509; x=1721398509;
-  h=from:to:cc:subject:date:message-id:references:
-   in-reply-to:content-id:content-transfer-encoding:
-   mime-version;
-  bh=joufdrNO2/FLdgGzlnaieoHfZ28FYCwNXGhrZ08f24E=;
-  b=MefOI/dOt4p162yhIK0Lq/JkpEUwa1GWe5Z9SW6ZffXIXBnfSQLiPab8
-   /RqSN/W2LJrVipXBFn2VugnBmVTJ7n3vVWOton/gbSmml1gZXvtjiNAlV
-   /mBfj7c3rx2iF1wcb+BfjOcWi1k3K8cENc+QiDULZeUmmDWLuByHOCrZv
-   QTaYtdxwsZ4Wxqlu9w7NC6CuZOLHRumNm0csi6QYHD9pDEf20HTXuMrip
-   zqcunq8oYwocMV6GXWCnHwL7UXwN2RrUn/jehonm9MYqelU0dqoUH7yo1
-   bpaiiGbGpBuIGOObLwRhl4xb8BX+MgoFi81h5GvrBqNO42qzKR6EW1sMl
-   Q==;
-X-IronPort-AV: E=Sophos;i="6.01,219,1684771200"; 
-   d="scan'208";a="238971386"
-Received: from mail-dm6nam10lp2107.outbound.protection.outlook.com (HELO NAM10-DM6-obe.outbound.protection.outlook.com) ([104.47.58.107])
-  by ob1.hgst.iphmx.com with ESMTP; 20 Jul 2023 22:15:07 +0800
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=JGZmM6SGvIm3cj/zfa21be/6FxUjLZSSltqV8pkC3bG0yr6eHUmpwA+jKx/ARD858tr7gmxLcGgKBhE8Qt5RfseKLXjumNL5pgI67jqnX7C6D0Hcrpem9Bu7Z8/6tXnh010MmB13ITTEo8GiA2+dBD1Ps9oKkOY4j/NAaZ8neWD/USHuVfhAqXHTLZ7UZ6NnbuF7iyj493DvMB5ahpFjhfeHyUsTF2WeWgPD74F4TrudMhukArE3Mbyn5n1my2SSu7rd5sIy14+YI1S+B//1C1oiVgWgyLncc6pxQ906/98/wR2skHcDvt/TZKfH+SCZ6rmhwEEYkMhzhNkWTRk8lQ==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector9901;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=joufdrNO2/FLdgGzlnaieoHfZ28FYCwNXGhrZ08f24E=;
- b=WfN0uXtgPFL+N9Ryi8ceq0ewCgfL477LRPV11KbWT8j2R3c4Gk9Kq50cphrE1JeY70PVsL84HByI4gUyRIpPtJCJ8r6aLeeJrajzz8are3F1Xa/6Uy/avFqIiIVu48Fq4ixCWC0mlH6IwxBfwZJiz5cF/or8/GhLt9X2bbC45TDdXpHLHxIW5RNttdSRU9auTSFrBvg6p66dPXglu3YABTRNcKjvL1jCwF+3yYhJS24ThoQtqpAhvK26QVJBkDd2sXua25NETlE+ZdtJZ3Ed4yeTEbpVmgPfPsjD+GjriPIiDM1rCgLh/EltYj7xCubwqnfqB/9jfB54GT+q9m0GCg==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=wdc.com; dmarc=pass action=none header.from=wdc.com; dkim=pass
- header.d=wdc.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
- d=sharedspace.onmicrosoft.com; s=selector2-sharedspace-onmicrosoft-com;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=joufdrNO2/FLdgGzlnaieoHfZ28FYCwNXGhrZ08f24E=;
- b=SJ8luUCX5HkWEXktRWmcY2uCFJcnh6UeuefIlrZOmJuSi8GA2irYC/fw5EVFBvkaLSb+sp3ISuuk6YDjLOy/R2VImKkPvYhdrfLQO2MIWj45lbvn8W0KoNf7iWF92NN5N5B2ZaXSGC9L7X9rNhkz2azy0wvrdqWicg2QSadr8Ko=
-Received: from PH0PR04MB7416.namprd04.prod.outlook.com (2603:10b6:510:12::17)
- by SA2PR04MB7658.namprd04.prod.outlook.com (2603:10b6:806:14d::11) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.6609.24; Thu, 20 Jul
- 2023 14:15:06 +0000
-Received: from PH0PR04MB7416.namprd04.prod.outlook.com
- ([fe80::64cc:161:b43c:a656]) by PH0PR04MB7416.namprd04.prod.outlook.com
- ([fe80::64cc:161:b43c:a656%3]) with mapi id 15.20.6609.025; Thu, 20 Jul 2023
- 14:15:06 +0000
-From:   Johannes Thumshirn <Johannes.Thumshirn@wdc.com>
-To:     Christoph Hellwig <hch@lst.de>, Jens Axboe <axboe@kernel.dk>
-CC:     "Darrick J. Wong" <djwong@kernel.org>,
-        Andrew Morton <akpm@linux-foundation.org>,
-        Matthew Wilcox <willy@infradead.org>,
-        Christian Brauner <christian@brauner.io>,
-        "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>,
-        "linux-fsdevel@vger.kernel.org" <linux-fsdevel@vger.kernel.org>,
-        "linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>,
-        "linux-mm@kvack.org" <linux-mm@kvack.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Subject: Re: [PATCH 4/6] block: stop setting ->direct_IO
-Thread-Topic: [PATCH 4/6] block: stop setting ->direct_IO
-Thread-Index: AQHZuxNGGrQ7dkGeRk6nimBnlIHHxK/CswKA
-Date:   Thu, 20 Jul 2023 14:15:05 +0000
-Message-ID: <2f73984b-c104-c5f7-bea4-6e2a873462c7@wdc.com>
-References: <20230720140452.63817-1-hch@lst.de>
- <20230720140452.63817-5-hch@lst.de>
-In-Reply-To: <20230720140452.63817-5-hch@lst.de>
-Accept-Language: en-US
-Content-Language: en-US
-X-MS-Has-Attach: 
-X-MS-TNEF-Correlator: 
-user-agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:102.0)
- Gecko/20100101 Thunderbird/102.13.0
-authentication-results: dkim=none (message not signed)
- header.d=none;dmarc=none action=none header.from=wdc.com;
-x-ms-publictraffictype: Email
-x-ms-traffictypediagnostic: PH0PR04MB7416:EE_|SA2PR04MB7658:EE_
-x-ms-office365-filtering-correlation-id: 3f97bc94-3292-4c94-a833-08db892bb793
-wdcipoutbound: EOP-TRUE
-x-ms-exchange-senderadcheck: 1
-x-ms-exchange-antispam-relay: 0
-x-microsoft-antispam: BCL:0;
-x-microsoft-antispam-message-info: qr66ox30vAqLORpzdx04CVMQEIcxeFE9mGCfYx/Sn4Lq09w7KgUmEwz8pRvq2jRof5eagpUppEcndJCOzj10utb+qLjLyT1zYCjvtyCBqCfjpsGnCYvDWogo/tS9/FszIwPzV5bqiA9bpQVrFg6OSGKpUj4h6OMN4koUH3K+HWd4Hkf6whnjzreVjQqxB+TAV1YO0M8Ykttfi6vf67nt21Po4yYQVebNjP9174khRBTKWzbl1+7l2N7qzXk3s1cwQQ5PrWT4QduxA5DoKJH/HXav4M6kw3EzNKQ0YKENrImEYOQBl+hJ1loFAukj3XDWF2kOaW61BzEbN8UdqCFsbG0iRqF3f6h8zgfG2g2Bj7+PMJO78Zqn3dE0CqHm2cjtbseUD2yqChCJma0soNR7lRrwPZhs9eIZyTWIBUTz5cIeOzIuQwytzlMCUnj8KYu4e7Wmao2vJTshAX4AXMK8WrbZSVX4UEZ1O1t60yJpdOk4WHDva6DdSJnlhnEj2xaum5tmrZPyMwSc/lPIOJTGCKrhniNbRZzIabnJC7exqT0gJDzMULNHZ6Gm9v1ck+LUg4z+2jkbnyx+NdLmdaWmkmptdmMkiSyvIjWmgdTw7GBfgwEi3ZYYHLfbqlj2egTm3J2cWrVAI6OfzPXWlfmkWj7Elk3A4QNgGOs5eKCATSCSi/PX5PEffixkiWT/8wum
-x-forefront-antispam-report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:PH0PR04MB7416.namprd04.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230028)(4636009)(396003)(346002)(376002)(39860400002)(366004)(136003)(451199021)(86362001)(478600001)(4270600006)(19618925003)(26005)(41300700001)(186003)(38100700002)(71200400001)(31696002)(110136005)(31686004)(54906003)(8936002)(8676002)(7416002)(316002)(2906002)(4326008)(122000001)(558084003)(66556008)(6512007)(64756008)(66946007)(6486002)(66476007)(66446008)(38070700005)(6506007)(91956017)(82960400001)(2616005)(76116006)(5660300002)(36756003)(43740500002)(45980500001);DIR:OUT;SFP:1102;
-x-ms-exchange-antispam-messagedata-chunkcount: 1
-x-ms-exchange-antispam-messagedata-0: =?utf-8?B?Zi9nbEJHY0tvcnZUd0JLejZsSDdRQXk5VW1iUllVeVptUGNIZTZ4VDRvbFBC?=
- =?utf-8?B?UjN1djVwSG5kWTEyRVY3TGtSYThPbi9md3paTHQ5SGVSOGxZbjRiY2Z1MGFw?=
- =?utf-8?B?ZE80aytPdW5CK0dMelJsSjgyTzdiWmI0S282Tk9JdGNVQ0JiRmNQTFFER1F6?=
- =?utf-8?B?cWxaM1dKRFJWR3VBM0VRWTIyTnhxSXdvcDFhSU5TSXIrdU1QYjJvVmZYQkJw?=
- =?utf-8?B?Tkp3aWtESHMzQmRSK3B4UlJHOWN2NkIzSFF1cU5OdEVjVnRKYzllcC83SGJQ?=
- =?utf-8?B?bCt2MCtLbENmLy9BMXVla3BzQ3lCUk5IbSttL3B3bkg5aFhPcGp0SGVwQ0dw?=
- =?utf-8?B?eTlicldBZTY2eFptdlZRYWZ4SUY4VzR4eGxwUmx5VWJLem4rakJFN2NRVGNm?=
- =?utf-8?B?ZWhDVURmSGdJbmVEa2V5eHdTTjg5elRFd08wL3VlU2RKNWV3aUF5UzV0Uml1?=
- =?utf-8?B?OXlIb0gwWE13ZERHbExMM2pOOVRYWGgrUVl4bTVycmQwdGFMc3NQaDdId2lM?=
- =?utf-8?B?THZURXZlNkdIUGZKM0ROaUhaendmaldEaDV6VjNEZm43M0I0L1JuZkt1Q095?=
- =?utf-8?B?bmt4eVYyL1V5UUtqckM5cm9CV0JhWFJvU1M2TFlpWkhBMmlDQjNyZGJiWDZk?=
- =?utf-8?B?Y2FZRHRaeTFrUGFaOW8vWi80Vjc1aEhRMnVpR3dqemNWa0E1YkM4ODNtWWVX?=
- =?utf-8?B?b0pRM1pPeWlLN3JFMHprZjR2QkR6Y0RzWlNZSU42Ny9wL1BkN2lZNWVnQXVx?=
- =?utf-8?B?OGhwazN4alJoSyt3SGdBNkJ4b00wbkdZNm1PNm0vMHVlNVc0QXZxdWFKT0dx?=
- =?utf-8?B?SXFhanVUb3FUdmhqemp3MjJKOW5JTC9HTERZajJTcnAyRFZKRm9BYjdIeWty?=
- =?utf-8?B?NTdSNkEvOFJOMU9HSHFGNGhxV0NpMU9DT01od0NYU2o0RkZKNGs1UThYY1dM?=
- =?utf-8?B?STlTc2hkTkUrQkJKT21UbnUrY0xyWktxQ0NtRTRaOG81U3FmVXN4K2oxd3gv?=
- =?utf-8?B?VXFIcUNJL29MQ2VlWHBtOGxQRUk4SW4rQWVuRVRnTjJrTlZjNXJNdG9vdGJ5?=
- =?utf-8?B?NWw5bjdnL0d0b0FiUFAyMjkrZlc1dTRGNzBXWTIzSDYycEU0VDYxQWtKQmJO?=
- =?utf-8?B?V3puNEVhb3hxOGhYYkx2SWdIODYzc3pXaU5Nelo5ZkhTZU1WWC9MK1RXVE0x?=
- =?utf-8?B?Z3oyRTVDM2JuWnBlYTFpcFppblp0aUZtbXE0YURGaTN4aDNzV2d5ekdyQk9N?=
- =?utf-8?B?b1BUSEllMU80L3drT2Z2UUdHcVc5SDZKM2RXdEc0T0pORHdya2tPUzNoWjl4?=
- =?utf-8?B?ejNraTdEV2RPQlNiaGNZODJGUGpJL2xrMjhaNno1MUF2UDZtaVhEaDBiVEZ2?=
- =?utf-8?B?enE1SzFwK1hYMzJXNGhWdlA0NWMrMUFia0JIU0JlZXd4dEcvRVpQekpOcjVM?=
- =?utf-8?B?QWxDcGtXOGVSTGxOMWNuMndJaGdrTm9OdzhlMlI4MDZGaWxRSXowdFJpTzAv?=
- =?utf-8?B?Wkd6SEw3bHhjME5aQy9DY2RsU0hTeXFJN1paRitYcGx6NWlMKytLck1KY1pR?=
- =?utf-8?B?QW81N1JaYnlIeGkzN1BoN1pmRzJGdTFGSzB6Vk8xNHYrYVBKRFVFYXlrUTdT?=
- =?utf-8?B?eWg4NXhiaGFLeG1LdFREdjNpakVNalpBbkg3QWFtWkNHTkcxa1cvdGVPdWRZ?=
- =?utf-8?B?eHZHV1RyVW5tQlNJSm1YdSs1ZEpCNHpRRnpBaWI1Wm83dDhCTi8yOXpBbE5L?=
- =?utf-8?B?MEpNNDR0WFVRbU04TXc0dHJFYkNIN1FwSkxMLzVZY0xtQ1Z4eEhtRWVzbk5y?=
- =?utf-8?B?Tm0zY05Vc014cUZMRCs3UTJCZDc0bnlmdmlDTU4yOHphZzJlWkJmeVV1bGFD?=
- =?utf-8?B?WUNxOUEzM0NpNW9tUlp3QndqaHRzS1FpMldlUWxvSzBDZUIwOHRlbkt2b0pt?=
- =?utf-8?B?cGZwcEFVT3hxWWttVDgzZG5LOEgrNHN5SERqL2RoRUkrNTcvYWp2VVVVMEMr?=
- =?utf-8?B?SHJQUStpTDhBTWQrcFJLclRPYTVNVTJZZmFLSkYrSEF1MEp1elNraHd3VlNr?=
- =?utf-8?B?U1ErU0dSQjdMOXlJODIxaXVWUUZqVWdlZGpVMHRCZy95QjlSUDZIUkVkVXdn?=
- =?utf-8?B?dGtqVDFIQnBXeUpHV3h5ZjFiM0lVOW9QMHVsNzNLZVVkZXUvVW1aS29qa1BK?=
- =?utf-8?B?Y2c9PQ==?=
-Content-Type: text/plain; charset="utf-8"
-Content-ID: <DC1F61F79535F346BCEAFEFD1436801C@namprd04.prod.outlook.com>
-Content-Transfer-Encoding: base64
+        with ESMTP id S232209AbjGTOZY (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 20 Jul 2023 10:25:24 -0400
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4425E26AD
+        for <linux-xfs@vger.kernel.org>; Thu, 20 Jul 2023 07:24:37 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1689863077;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=nhaS/1LPrpm8e9Hwm8UQJhMXVu++nUOT3Jas2FMgy/M=;
+        b=hE/ZNALMVYkPE72ibD3ww5rKrQCyqPox+3Y9trd9ii+xK6q+6JxcvqhNYAqPaPXealzdc/
+        f9Leq6hFsIHfDNV70WxEYDSQkPkTCwC9uqQYwOUuurjySfLEsKF9RA8tEEfXib+kNOjNHC
+        UXhoPX73Fd9n0719tuQ0KJBnOxoKgjw=
+Received: from mail-pl1-f200.google.com (mail-pl1-f200.google.com
+ [209.85.214.200]) by relay.mimecast.com with ESMTP with STARTTLS
+ (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
+ us-mta-316-bPnDTxIaPdavOYls-6ma2g-1; Thu, 20 Jul 2023 10:24:34 -0400
+X-MC-Unique: bPnDTxIaPdavOYls-6ma2g-1
+Received: by mail-pl1-f200.google.com with SMTP id d9443c01a7336-1b8902f02a1so4690495ad.2
+        for <linux-xfs@vger.kernel.org>; Thu, 20 Jul 2023 07:24:34 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20221208; t=1689863073; x=1690467873;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=nhaS/1LPrpm8e9Hwm8UQJhMXVu++nUOT3Jas2FMgy/M=;
+        b=aomFYOdYdhjY1JiaNYNMXE+y6IwLoPsXPfjkX8eEtiNZzU1j5pmJPYNHre6iieyyE2
+         mM8kfoMjETMAY02Y2cm384hDQkjHRbmPz9ERd3NWxKYuYuUnCFEYWQSEbyAPprB1dGGO
+         HAIS17oxwz3pYqUErAibCMxLgerWNomKTuqZZiE7Dp40aqZa5ZtSZCBXTj60tU+me0Ii
+         u1qdYZ2dYHgBX6kIv8t6k9OblhmdnH7bE17fB26eDVAKPYXK1Z4cTbW7K39aIeB0n4Tf
+         UhY927NPI0OteQZSpc1EfqEb7/3m6GLU9t+MxIVYQEn3pVUXOAraJSEqBIbjuE+sQR+O
+         N7bQ==
+X-Gm-Message-State: ABy/qLbI+Nr2xZzN/04RxWQ4wS0N4MsOqTzQsR0SnyJ8J+wdro/EELk0
+        VPHgUe5yUyw6OrAMR18aXxFQ5l3G9rF5Kvzbtq7f4PFeVCOqVgwknc05CSpf9UaNurHsfXOg8bm
+        0Kp3TjEJ5vz+SHM3nHOAa
+X-Received: by 2002:a17:902:ce91:b0:1b9:e1d6:7c7d with SMTP id f17-20020a170902ce9100b001b9e1d67c7dmr23347430plg.47.1689863073472;
+        Thu, 20 Jul 2023 07:24:33 -0700 (PDT)
+X-Google-Smtp-Source: APBJJlG1jKuEjXI989LKkPy0hxD3gdJR9B1R6Z40RPChy21Gqy030RU3WAongcfC2x/rBopP94gLTw==
+X-Received: by 2002:a17:902:ce91:b0:1b9:e1d6:7c7d with SMTP id f17-20020a170902ce9100b001b9e1d67c7dmr23347408plg.47.1689863073113;
+        Thu, 20 Jul 2023 07:24:33 -0700 (PDT)
+Received: from zlang-mailbox ([43.228.180.230])
+        by smtp.gmail.com with ESMTPSA id jf11-20020a170903268b00b001b9e9edbf43sm1429298plb.171.2023.07.20.07.24.31
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Thu, 20 Jul 2023 07:24:32 -0700 (PDT)
+Date:   Thu, 20 Jul 2023 22:24:29 +0800
+From:   Zorro Lang <zlang@redhat.com>
+To:     "Darrick J. Wong" <djwong@kernel.org>
+Cc:     tytso@mit.edu, kent.overstreet@linux.dev,
+        linux-xfs@vger.kernel.org, fstests@vger.kernel.org
+Subject: Re: [PATCH 2/2] check: generate gcov code coverage reports at the
+ end of each section
+Message-ID: <20230720142429.pp4rv7xqjnaqlfmb@zlang-mailbox>
+References: <168972905065.1698606.6829635791058054610.stgit@frogsfrogsfrogs>
+ <168972906191.1698606.10738894314642211560.stgit@frogsfrogsfrogs>
+ <20230719161916.qne7ng4lnu32pw3w@zlang-mailbox>
+ <20230720022924.GI11352@frogsfrogsfrogs>
 MIME-Version: 1.0
-X-MS-Exchange-AntiSpam-ExternalHop-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-ExternalHop-MessageData-0: =?utf-8?B?UDJJUmJwbUkrUEE0SS83RDlHM2lCVzYvQThQdUJzaFFGQTNlVHc3UHVwcFRr?=
- =?utf-8?B?OWRZMlAwSVlueWdzdEYzYnBmVUZOK1ZKSUc5NWpNREpoRmo4N0ZMMnVrSVdx?=
- =?utf-8?B?K1RORmtrVDhkM2Rhbmhuc1RHNmt0VWx2N1dzNnh3MldzMzBlR21rVGx4dHR4?=
- =?utf-8?B?Wlg2SEQzVkRnclAzOHhOdWZpcE5NYmdwNW1TRkZLTURMTEtEbExEQXdvZUJy?=
- =?utf-8?B?SE9wUkIyNzlCNVhlYWNzV3lab2U1RXF3TDRSUlhTSDJOd3paQkVROUgxRTJB?=
- =?utf-8?B?RHluNzdiZTZtT1ZWSTVOaTJTRi9hY2NrTStHZlV0U09BK25EcGdldWYwdXNk?=
- =?utf-8?B?dityeDNjbFlGeUNMZDNtcTRTbHlwUnNITDAxVndwRjVMZXVGN1Z5c3FPK0hK?=
- =?utf-8?B?aS8waWNSaHNsWFVpMk9kbTJqNUlJNmxoc1VHSmNSbzkwNzM4Z1VOZmZ0MEMv?=
- =?utf-8?B?dHpTMXF4NlNsc1lWeTJVRStmZVVQTlRuZkdLZ2h3SUhQaHBQSFA3dThYaEJ6?=
- =?utf-8?B?T2p6enZWTGV3SVVNNUVkajR2RjAzaFBGT3ZZUDV1TzJJOG42aWJhM0lKS3Nq?=
- =?utf-8?B?UEN5MWdYWVBqeCs2YjlYWWNNY0ZWeXBNRnpTTTZPL1MrS0xaWCs2K2JlbXFK?=
- =?utf-8?B?dnU2NE1JZWNOVTFOMHAvN0tDVGJOSis0WWFlVDQzZGpIZ2pCcHpaSHRNQU1M?=
- =?utf-8?B?dTZDTjdOUVQ0ZTkwU3NHQ3gyQm15ZHowdlZvYitBcTNUZXlNTU9Qdy9qZDha?=
- =?utf-8?B?Tjkrc2VVaDc5YlhyUjhFK2FQTW8vTk9MbWcySDNiNE8wai9jQlB3aTNzTlZh?=
- =?utf-8?B?TEcvdEsvMzVlOHk5TURhQk9BMFJydjNoUCt4bW1oYks0bjdld0dJTWFzdndi?=
- =?utf-8?B?dlg4WWJHbTByQ0JHRmZVcW00QXkxaC93UXJablVFMjYwOERKY3RsOGM2Y0ls?=
- =?utf-8?B?R3E1OHFWWnVwM2xyRW9GWW55SVFidDc5bVZDU1VybUJVZzhLTStjbTE0SkNn?=
- =?utf-8?B?Ti94QjNxaEJEaERFbW1idjNEZ01MWEtWdjdQSWNiR3VXZ29VeFdDWGRXa1lN?=
- =?utf-8?B?T0Y3UkFPSlRPVExCOGkzcGR6V0pXbjBRVmVwRFpBb0lteGp2bjlhbWlsM2Zn?=
- =?utf-8?B?QU15dW4xY213Y2pwMm1OdEZpRUE1aWNoWDZ0aktZeURqazB3dHdsTlhBMDRR?=
- =?utf-8?B?b2tzQmMzT1hrcHNoNk8vMnk0RFdSTVhqdFRGNFVidllHUTlYMktZWUlBTlN4?=
- =?utf-8?B?aGw1dDl4Tk1ORXQxUG5qZHlnQ2d4aGFhVTkxbjg3aXNJSTR1ZVozK0ZNb0t5?=
- =?utf-8?Q?kz+EmVjQiu6TA4oxCcvmznKg3SZWA3IQ1K?=
-X-OriginatorOrg: wdc.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-AuthSource: PH0PR04MB7416.namprd04.prod.outlook.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 3f97bc94-3292-4c94-a833-08db892bb793
-X-MS-Exchange-CrossTenant-originalarrivaltime: 20 Jul 2023 14:15:05.9310
- (UTC)
-X-MS-Exchange-CrossTenant-fromentityheader: Hosted
-X-MS-Exchange-CrossTenant-id: b61c8803-16f3-4c35-9b17-6f65f441df86
-X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
-X-MS-Exchange-CrossTenant-userprincipalname: IoCemEKcHJM0IC1V0KfIVRKqxHY6lcAQUPixOCFwYLgRraVEomTbhwzqXGxOSYQs/42EPSoHO4hOI/1OlNIfEUdM8GKd61DYKl8BHxp/0ZE=
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: SA2PR04MB7658
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20230720022924.GI11352@frogsfrogsfrogs>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-TG9va3MgZ29vZCwNClJldmlld2VkLWJ5OiBKb2hhbm5lcyBUaHVtc2hpcm4gPGpvaGFubmVzLnRo
-dW1zaGlybkB3ZGMuY29tPg0K
+On Wed, Jul 19, 2023 at 07:29:24PM -0700, Darrick J. Wong wrote:
+> On Thu, Jul 20, 2023 at 12:19:16AM +0800, Zorro Lang wrote:
+> > On Tue, Jul 18, 2023 at 06:11:01PM -0700, Darrick J. Wong wrote:
+> > > From: Darrick J. Wong <djwong@kernel.org>
+> > > 
+> > > Support collecting kernel code coverage information as reported in
+> > > debugfs.  At the start of each section, we reset the gcov counters;
+> > > during the section wrapup, we'll collect the kernel gcov data.
+> > > 
+> > > If lcov is installed and the kernel source code is available, it will
+> > > also generate a nice html report.  If a CLI web browser is available, it
+> > > will also format the html report into text for easy grepping.
+> > > 
+> > > This requires the test runner to set REPORT_GCOV=1 explicitly and gcov
+> > > to be enabled in the kernel.
+> > > 
+> > > Cc: tytso@mit.edu
+> > > Cc: kent.overstreet@linux.dev
+> > > Signed-off-by: Darrick J. Wong <djwong@kernel.org>
+> > > ---
+> > 
+> > Hi Darrick,
+> > 
+> > Is that possible to split this function from check script to tools/ ?
+> 
+> I don't mind separating it, though I don't see much reason to.  Are you
+> concerned about ./check growing larger?
+
+Yeah, a little bit, the check script become smore and more complicated.
+
+> 
+> --D
+> 
+> > Thanks,
+> > Zorro
+> > 
+> > >  README |    3 ++
+> > >  check  |   86 ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+> > >  2 files changed, 89 insertions(+)
+> > > 
+> > > 
+> > > diff --git a/README b/README
+> > > index 9790334db1..ccfdcbe703 100644
+> > > --- a/README
+> > > +++ b/README
+> > > @@ -249,6 +249,9 @@ Kernel/Modules related configuration:
+> > >     to "forever" and we'll wait forever until the module is gone.
+> > >   - Set KCONFIG_PATH to specify your preferred location of kernel config
+> > >     file. The config is used by tests to check if kernel feature is enabled.
+> > > + - Set REPORT_GCOV to a directory path to make lcov and genhtml generate
+> > > +   html reports from any gcov code coverage data collected by the kernel.
+> > > +   If REPORT_GCOV is set to 1, the report will be written to $REPORT_DIR/gcov/.
+> > >  
+> > >  Test control:
+> > >   - Set LOAD_FACTOR to a nonzero positive integer to increase the amount of
+> > > diff --git a/check b/check
+> > > index 97c7c4c7d1..3e6f27c653 100755
+> > > --- a/check
+> > > +++ b/check
+> > > @@ -451,6 +451,87 @@ _global_log() {
+> > >  	fi
+> > >  }
+> > >  
+> > > +GCOV_DIR=/sys/kernel/debug/gcov
+> > > +
+> > > +# Find the topmost directories of the .gcno directory hierarchy
+> > > +_gcov_find_topdirs() {
+> > > +	find "${GCOV_DIR}/" -name '*.gcno' -printf '%d|%h\n' | \
+> > > +		sort -g -k 1 | \
+> > > +		uniq | \
+> > > +		$AWK_PROG -F '|' 'BEGIN { x = -1 } { if (x < 0) x = $1; if ($1 == x) printf("%s\n", $2);}'
+> > > +}
+> > > +
+> > > +# Generate lcov html report from kernel gcov data if configured
+> > > +_gcov_generate_report() {
+> > > +	unset REPORT_GCOV	# don't trigger multiple times if ^C
+> > > +
+> > > +	local output_dir="$1"
+> > > +	test -n "${output_dir}" || return
+> > > +	test "$output_dir" = "1" && output_dir="$REPORT_DIR/gcov"
+> > > +
+> > > +	# Kernel support built in?
+> > > +	test -d "$GCOV_DIR" || return
+> > > +
+> > > +	readarray -t gcno_dirs < <(_gcov_find_topdirs)
+> > > +	test "${#gcno_dirs[@]}" -gt 0 || return
+> > > +
+> > > +	mkdir -p "${output_dir}/"
+> > > +
+> > > +	# Collect raw coverage data from the kernel
+> > > +	readarray -t source_dirs < <(find "${GCOV_DIR}/" -mindepth 1 -maxdepth 1 -type d)
+> > > +	for dir in "${source_dirs[@]}"; do
+> > > +		cp -p -R -d -u "${dir}" "${output_dir}/"
+> > > +	done
+> > > +
+> > > +	# If lcov is installed, use it to summarize the gcda data.
+> > > +	# If it is not installed, there's no point in going forward
+> > > +	command -v lcov > /dev/null || return
+> > > +	local lcov=(lcov --exclude 'include*' --capture)
+> > > +	lcov+=(--output-file "${output_dir}/gcov.report")
+> > > +	for d in "${gcno_dirs[@]}"; do
+> > > +		lcov+=(--directory "${d}")
+> > > +	done
+> > > +
+> > > +	# Generate a detailed HTML report from the summary
+> > > +	local gcov_start_time="$(date --date="${fstests_start_time:-now}")"
+> > > +	local genhtml=()
+> > > +	if command -v genhtml > /dev/null; then
+> > > +		genhtml+=(genhtml -o "${output_dir}/" "${output_dir}/gcov.report")
+> > > +		genhtml+=(--title "fstests on $(hostname -s) @ ${gcov_start_time}" --legend)
+> > > +	fi
+> > > +
+> > > +	# Try to convert the HTML report summary as text for easier grepping if
+> > > +	# there's an HTML renderer present
+> > > +	local totext=()
+> > > +	test "${#totext[@]}" -eq 0 && \
+> > > +		command -v lynx &>/dev/null && \
+> > > +		totext=(lynx -dump "${output_dir}/index.html" -width 120 -nonumbers -nolist)
+> > > +	test "${#totext[@]}" -eq 0 && \
+> > > +		command -v links &>/dev/null && \
+> > > +		totext=(links -dump "${output_dir}/index.html" -width 120)
+> > > +	test "${#totext[@]}" -eq 0 && \
+> > > +		command -v elinks &>/dev/null && \
+> > > +		totext=(elinks -dump "${output_dir}/index.html" --dump-width 120 --no-numbering --no-references)
+> > > +
+> > > +	# Analyze kernel data
+> > > +	"${lcov[@]}" > "${output_dir}/gcov.stdout" 2> "${output_dir}/gcov.stderr"
+> > > +	test "${#genhtml[@]}" -ne 0 && \
+> > > +		"${genhtml[@]}" >> "${output_dir}/gcov.stdout" 2>> "${output_dir}/gcov.stderr"
+> > > +	test "${#totext[@]}" -ne 0 && \
+> > > +		"${totext[@]}" > "${output_dir}/index.txt" 2>> "${output_dir}/gcov.stderr"
+> > > +}
+> > > +
+> > > +# Reset gcov usage data
+> > > +_gcov_reset() {
+> > > +	test -n "${REPORT_GCOV}" || return
+> > > +
+> > > +	if [ -w "${GCOV_DIR}/reset" ]; then
+> > > +		echo 1 > "${GCOV_DIR}/reset"
+> > > +	else
+> > > +		unset REPORT_GCOV
+> > > +	fi
+> > > +}
+> > > +
+> > >  _wrapup()
+> > >  {
+> > >  	seq="check"
+> > > @@ -527,6 +608,10 @@ _wrapup()
+> > >  					     "${#bad[*]}" "${#notrun[*]}" \
+> > >  					     "$((sect_stop - sect_start))"
+> > >  		fi
+> > > +
+> > > +		# Generate code coverage report
+> > > +		test -n "$REPORT_GCOV" && _gcov_generate_report "$REPORT_GCOV"
+> > > +
+> > >  		needwrap=false
+> > >  	fi
+> > >  
+> > > @@ -801,6 +886,7 @@ function run_section()
+> > >  	  echo "MOUNT_OPTIONS -- `_scratch_mount_options`"
+> > >  	fi
+> > >  	echo
+> > > +	_gcov_reset
+> > >  	needwrap=true
+> > >  
+> > >  	if [ ! -z "$SCRATCH_DEV" ]; then
+> > > 
+> > 
+> 
+
