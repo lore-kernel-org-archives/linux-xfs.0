@@ -2,151 +2,363 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 52BD4C001E0
-	for <linux-xfs@archiver.kernel.org>; Thu, 20 Jul 2023 01:40:33 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id AA057C001E0
+	for <linux-xfs@archiver.kernel.org>; Thu, 20 Jul 2023 01:51:10 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229820AbjGTBkc (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 19 Jul 2023 21:40:32 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48462 "EHLO
+        id S229589AbjGTBvJ (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 19 Jul 2023 21:51:09 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49822 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229569AbjGTBkb (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 19 Jul 2023 21:40:31 -0400
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 23350172A
-        for <linux-xfs@vger.kernel.org>; Wed, 19 Jul 2023 18:39:43 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1689817182;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=OchssuLsI8TgAPpPN1HYvAbN+Zz0angfOEiv64DZQpg=;
-        b=YSWiQHocpRboPTg8i3afG7wJ94p/OgQHPxrd4+u9uNcF3AcVT0wWWD8DuYEifIAMHHYFb3
-        HmzbIfCqrYesCozIdPwthxR//Ooh2GVkWtkVXLWzn1bwGCg8cytQlIHBhTwCm8zJDTirI/
-        Mr/l9hLbeOQ386Y156vNR5srnln9Dms=
-Received: from mail-pj1-f72.google.com (mail-pj1-f72.google.com
- [209.85.216.72]) by relay.mimecast.com with ESMTP with STARTTLS
- (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
- us-mta-606-16Zdmj0hMTaI729o-zomfA-1; Wed, 19 Jul 2023 21:39:40 -0400
-X-MC-Unique: 16Zdmj0hMTaI729o-zomfA-1
-Received: by mail-pj1-f72.google.com with SMTP id 98e67ed59e1d1-262dc0bab18so125756a91.2
-        for <linux-xfs@vger.kernel.org>; Wed, 19 Jul 2023 18:39:40 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20221208; t=1689817179; x=1690421979;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=OchssuLsI8TgAPpPN1HYvAbN+Zz0angfOEiv64DZQpg=;
-        b=hswiUN74fw40Fa9D7pOX3xLJqJh4QlrytEF+CcS81+kENVuxhSTa7iHOhbFunLgsPk
-         fzijt3lQsQ3CZ9L0rLG6FKVJvSGW7h6GgiMIlweo1uYGx5R9FUuOBaBXELeXEIlv19gV
-         rwp54dd9TYQOsXM3IBlsCv3hpngGSxrHLo+fcpIJDFlZJHef8QGIIFR1rIK5ZGO13qq9
-         oFQ48j3ziynD0zxvJwh/eGU6YR/I9IbaxJRuYVVDAPmRkTPPfxZy2bes21eTUZtRjhm/
-         kuSffSnNcQ8gKV70EH7pD59lFep3TuPqvwwqbT6iF5zE65FeYAAFj956Q0xLAjzqbUi+
-         N7ug==
-X-Gm-Message-State: ABy/qLYWLo2uUhBMFX07nvWsiBLODEv9xs5gkkI31AADGpVn8nXT0loT
-        GM9GV2BDt6pCvmNprXyppOLM2A9IHdzOhN+JigMcxeWzFzQ6igpyuwxO/e2b9hXSC6OGGO6dTrR
-        nhgEvtiKLckdpCQZWz0NBzIa3DbADlU0=
-X-Received: by 2002:a17:90b:195:b0:265:d6d7:468 with SMTP id t21-20020a17090b019500b00265d6d70468mr676143pjs.24.1689817179327;
-        Wed, 19 Jul 2023 18:39:39 -0700 (PDT)
-X-Google-Smtp-Source: APBJJlEM44lkwhqKYx3rhW6uGA9TwFBwP1NFM1xjeL//8vKhhOwWCL/UCm/oaQoBbr9Sym4eUoLc8Q==
-X-Received: by 2002:a17:90b:195:b0:265:d6d7:468 with SMTP id t21-20020a17090b019500b00265d6d70468mr676134pjs.24.1689817179045;
-        Wed, 19 Jul 2023 18:39:39 -0700 (PDT)
-Received: from zlang-mailbox ([43.228.180.230])
-        by smtp.gmail.com with ESMTPSA id o4-20020a17090a420400b002638e5d2986sm1651422pjg.17.2023.07.19.18.39.37
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 19 Jul 2023 18:39:38 -0700 (PDT)
-Date:   Thu, 20 Jul 2023 09:39:35 +0800
-From:   Zorro Lang <zlang@redhat.com>
-To:     "Darrick J. Wong" <djwong@kernel.org>
-Cc:     linux-xfs@vger.kernel.org, fstests@vger.kernel.org
-Subject: Re: [PATCH 1/1] generic/558: avoid forkbombs on filesystems with
- many free inodes
-Message-ID: <20230720013935.vwrqz6kpa2ia2zjk@zlang-mailbox>
-References: <168972904158.1698538.17755661226352965399.stgit@frogsfrogsfrogs>
- <168972904731.1698538.2489183241457829688.stgit@frogsfrogsfrogs>
+        with ESMTP id S229521AbjGTBvI (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 19 Jul 2023 21:51:08 -0400
+Received: from esa6.hc1455-7.c3s2.iphmx.com (esa6.hc1455-7.c3s2.iphmx.com [68.232.139.139])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 409751FD8;
+        Wed, 19 Jul 2023 18:51:06 -0700 (PDT)
+X-IronPort-AV: E=McAfee;i="6600,9927,10776"; a="126384892"
+X-IronPort-AV: E=Sophos;i="6.01,216,1684767600"; 
+   d="scan'208";a="126384892"
+Received: from unknown (HELO oym-r3.gw.nic.fujitsu.com) ([210.162.30.91])
+  by esa6.hc1455-7.c3s2.iphmx.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 20 Jul 2023 10:51:04 +0900
+Received: from oym-m4.gw.nic.fujitsu.com (oym-nat-oym-m4.gw.nic.fujitsu.com [192.168.87.61])
+        by oym-r3.gw.nic.fujitsu.com (Postfix) with ESMTP id 716AACA1E4;
+        Thu, 20 Jul 2023 10:51:01 +0900 (JST)
+Received: from kws-ab3.gw.nic.fujitsu.com (kws-ab3.gw.nic.fujitsu.com [192.51.206.21])
+        by oym-m4.gw.nic.fujitsu.com (Postfix) with ESMTP id 9EB20D623C;
+        Thu, 20 Jul 2023 10:51:00 +0900 (JST)
+Received: from edo.cn.fujitsu.com (edo.cn.fujitsu.com [10.167.33.5])
+        by kws-ab3.gw.nic.fujitsu.com (Postfix) with ESMTP id 3044B20079113;
+        Thu, 20 Jul 2023 10:51:00 +0900 (JST)
+Received: from [192.168.50.5] (unknown [10.167.234.230])
+        by edo.cn.fujitsu.com (Postfix) with ESMTP id 11A541A0071;
+        Thu, 20 Jul 2023 09:50:58 +0800 (CST)
+Message-ID: <191fbccb-173b-64d3-df6b-ec98973bddc3@fujitsu.com>
+Date:   Thu, 20 Jul 2023 09:50:58 +0800
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <168972904731.1698538.2489183241457829688.stgit@frogsfrogsfrogs>
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:102.0) Gecko/20100101
+ Thunderbird/102.12.0
+Subject: Re: [PATCH v12 2/2] mm, pmem, xfs: Introduce MF_MEM_REMOVE for unbind
+To:     "Darrick J. Wong" <djwong@kernel.org>
+Cc:     linux-mm@kvack.org, linux-xfs@vger.kernel.org,
+        nvdimm@lists.linux.dev, linux-fsdevel@vger.kernel.org,
+        dan.j.williams@intel.com, willy@infradead.org, jack@suse.cz,
+        akpm@linux-foundation.org, mcgrof@kernel.org
+References: <20230629081651.253626-1-ruansy.fnst@fujitsu.com>
+ <20230629081651.253626-3-ruansy.fnst@fujitsu.com>
+ <2840406d-0b7d-9897-87f6-ef3627e9ed5d@fujitsu.com>
+ <20230714141834.GV108251@frogsfrogsfrogs>
+From:   Shiyang Ruan <ruansy.fnst@fujitsu.com>
+In-Reply-To: <20230714141834.GV108251@frogsfrogsfrogs>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 8bit
+X-TM-AS-GCONF: 00
+X-TM-AS-Product-Ver: IMSS-9.1.0.1417-9.0.0.1002-27762.003
+X-TM-AS-User-Approved-Sender: Yes
+X-TMASE-Version: IMSS-9.1.0.1417-9.0.1002-27762.003
+X-TMASE-Result: 10--22.962100-10.000000
+X-TMASE-MatchedRID: 6TrKLN/GtviPvrMjLFD6eHchRkqzj/bEC/ExpXrHizw0tugJQ9Wdw3HJ
+        dVMZw6tLLJoLOSH2KMayBgfewqvpfXaJlMFevvypOE8QJa8KOA9lH44U2Ru12jm1yj+M+IObY2i
+        R7K8Wcszod+F7EpZSHFewJwmHzLN4IQPGoj5DOk7Sg3E9X/QoxE0s9CXRACW0ymP/1piI/6HXQj
+        bjf/eQSSv8kZcrVutp6evDC+0ZWEh7g4ZY3xtN68Q4mpKyfkqZbfVFVoam0SFrRM6wvXgDaRCZo
+        aSfGjDzK6Y65q1qYVwpqjiZNhCgAmRByQkQLdDa5CghTisABMyMhbTsXysU328ksUxxlDnvvwUe
+        vDt+uW68MEz9q9cihr4bIQExOBD23tF9vYxzQ41v+ggm5QAi4QV54COoxb6XgQF5fS5D6ekwFuW
+        3vOCUwRvbAvo9dTeHQrdYRvkIyHAzyQYFzErEzXV7tdtvoibaSdIdCi8Ba4DgmDZo451ggpFzJQ
+        EhbMPxFHsndmu4CUEntaEwTpgkFRJ8EINAmcWb8Jb881FGn9mCMN25048Eep7fzNec2D1DDr6s/
+        MdfXxsF+xZkYaXQCZ2oLZ8u2T3Ev1l2Uvx6idrAuFFGa+JUhQLDAYP4AXVR7nY51lwLq0+8QIu4
+        z6HhEH7cGd19dSFd
+X-TMASE-SNAP-Result: 1.821001.0001-0-1-22:0,33:0,34:0-0
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Tue, Jul 18, 2023 at 06:10:47PM -0700, Darrick J. Wong wrote:
-> From: Darrick J. Wong <djwong@kernel.org>
-> 
-> Mikulas reported that this test became a forkbomb on his system when he
-> tested it with bcachefs.  Unlike XFS and ext4, which have large inodes
-> consuming hundreds of bytes, bcachefs has very tiny ones.  Therefore, it
-> reports a large number of free inodes on a freshly mounted 1GB fs (~15
-> million), which causes this test to try to create 15000 processes.
-> 
-> There's really no reason to do that -- all this test wanted to do was to
-> exhaust the number of inodes as quickly as possible using all available
-> CPUs, and then it ran xfs_repair to try to reproduce a bug.  Set the
-> number of subshells to 4x the CPU count and spread the work among them
-> instead of forking thousands of processes.
-> 
-> Reported-by: Mikulas Patocka <mpatocka@redhat.com>
-> Signed-off-by: Darrick J. Wong <djwong@kernel.org>
-> Tested-by: Mikulas Patocka <mpatocka@redhat.com>
-> Reviewed-by: Bill O'Donnell <bodonnel@redhat.com>
-> ---
 
-This version is good to me, will merge it.
 
-Reviewed-by: Zorro Lang <zlang@redhat.com>
+在 2023/7/14 22:18, Darrick J. Wong 写道:
+> On Fri, Jul 14, 2023 at 05:07:58PM +0800, Shiyang Ruan wrote:
+>> Hi Darrick,
+>>
+>> Thanks for applying the 1st patch.
+>>
+>> Now, since this patch is based on the new freeze_super()/thaw_super()
+>> api[1], I'd like to ask what's the plan for this api?  It seems to have
+>> missed the v6.5-rc1.
+>>
+>> [1] https://lore.kernel.org/linux-xfs/168688010689.860947.1788875898367401950.stgit@frogsfrogsfrogs/
+> 
+> 6.6.  I intend to push the XFS UBSAN fixes to the list today for review.
+> Early next week I'll resend the 6.5 rebase of the kernelfreeze series
+> and push it to vfs-for-next.  Some time after that will come large folio
+> writes.
 
->  tests/generic/558 |   27 ++++++++++++++++++---------
->  1 file changed, 18 insertions(+), 9 deletions(-)
-> 
-> 
-> diff --git a/tests/generic/558 b/tests/generic/558
-> index 4e22ce656b..510b06f281 100755
-> --- a/tests/generic/558
-> +++ b/tests/generic/558
-> @@ -19,9 +19,8 @@ create_file()
->  	local prefix=$3
->  	local i=0
->  
-> -	while [ $i -lt $nr_file ]; do
-> +	for ((i = 0; i < nr_file; i++)); do
->  		echo -n > $dir/${prefix}_${i}
-> -		let i=$i+1
->  	done
->  }
->  
-> @@ -39,15 +38,25 @@ _scratch_mkfs_sized $((1024 * 1024 * 1024)) >>$seqres.full 2>&1
->  _scratch_mount
->  
->  i=0
-> -free_inode=`_get_free_inode $SCRATCH_MNT`
-> -file_per_dir=1000
-> -loop=$((free_inode / file_per_dir + 1))
-> +free_inodes=$(_get_free_inode $SCRATCH_MNT)
-> +# Round the number of inodes to create up to the nearest 1000, like the old
-> +# code did to make sure that we *cannot* allocate any more inodes at all.
-> +free_inodes=$(( ( (free_inodes + 999) / 1000) * 1000 ))
-> +nr_cpus=$(( $($here/src/feature -o) * 4 * LOAD_FACTOR ))
-> +echo "free inodes: $free_inodes nr_cpus: $nr_cpus" >> $seqres.full
-> +
-> +if ((free_inodes <= nr_cpus)); then
-> +	nr_cpus=1
-> +	files_per_dir=$free_inodes
-> +else
-> +	files_per_dir=$(( (free_inodes + nr_cpus - 1) / nr_cpus ))
-> +fi
->  mkdir -p $SCRATCH_MNT/testdir
-> +echo "nr_cpus: $nr_cpus files_per_dir: $files_per_dir" >> $seqres.full
->  
-> -echo "Create $((loop * file_per_dir)) files in $SCRATCH_MNT/testdir" >>$seqres.full
-> -while [ $i -lt $loop ]; do
-> -	create_file $SCRATCH_MNT/testdir $file_per_dir $i >>$seqres.full 2>&1 &
-> -	let i=$i+1
-> +echo "Create $((nr_cpus * files_per_dir)) files in $SCRATCH_MNT/testdir" >>$seqres.full
-> +for ((i = 0; i < nr_cpus; i++)); do
-> +	create_file $SCRATCH_MNT/testdir $files_per_dir $i >>$seqres.full 2>&1 &
->  done
->  wait
->  
-> 
+Got it.  Thanks for your information!
 
+
+--
+Ruan.
+
+> 
+> --D
+> 
+>>
+>> --
+>> Thanks,
+>> Ruan.
+>>
+>>
+>> 在 2023/6/29 16:16, Shiyang Ruan 写道:
+>>> This patch is inspired by Dan's "mm, dax, pmem: Introduce
+>>> dev_pagemap_failure()"[1].  With the help of dax_holder and
+>>> ->notify_failure() mechanism, the pmem driver is able to ask filesystem
+>>> on it to unmap all files in use, and notify processes who are using
+>>> those files.
+>>>
+>>> Call trace:
+>>> trigger unbind
+>>>    -> unbind_store()
+>>>     -> ... (skip)
+>>>      -> devres_release_all()
+>>>       -> kill_dax()
+>>>        -> dax_holder_notify_failure(dax_dev, 0, U64_MAX, MF_MEM_PRE_REMOVE)
+>>>         -> xfs_dax_notify_failure()
+>>>         `-> freeze_super()             // freeze (kernel call)
+>>>         `-> do xfs rmap
+>>>         ` -> mf_dax_kill_procs()
+>>>         `  -> collect_procs_fsdax()    // all associated processes
+>>>         `  -> unmap_and_kill()
+>>>         ` -> invalidate_inode_pages2_range() // drop file's cache
+>>>         `-> thaw_super()               // thaw (both kernel & user call)
+>>>
+>>> Introduce MF_MEM_PRE_REMOVE to let filesystem know this is a remove
+>>> event.  Use the exclusive freeze/thaw[2] to lock the filesystem to prevent
+>>> new dax mapping from being created.  Do not shutdown filesystem directly
+>>> if configuration is not supported, or if failure range includes metadata
+>>> area.  Make sure all files and processes(not only the current progress)
+>>> are handled correctly.  Also drop the cache of associated files before
+>>> pmem is removed.
+>>>
+>>> [1]: https://lore.kernel.org/linux-mm/161604050314.1463742.14151665140035795571.stgit@dwillia2-desk3.amr.corp.intel.com/
+>>> [2]: https://lore.kernel.org/linux-xfs/168688010689.860947.1788875898367401950.stgit@frogsfrogsfrogs/
+>>>
+>>> Signed-off-by: Shiyang Ruan <ruansy.fnst@fujitsu.com>
+>>> ---
+>>>    drivers/dax/super.c         |  3 +-
+>>>    fs/xfs/xfs_notify_failure.c | 86 ++++++++++++++++++++++++++++++++++---
+>>>    include/linux/mm.h          |  1 +
+>>>    mm/memory-failure.c         | 17 ++++++--
+>>>    4 files changed, 96 insertions(+), 11 deletions(-)
+>>>
+>>> diff --git a/drivers/dax/super.c b/drivers/dax/super.c
+>>> index c4c4728a36e4..2e1a35e82fce 100644
+>>> --- a/drivers/dax/super.c
+>>> +++ b/drivers/dax/super.c
+>>> @@ -323,7 +323,8 @@ void kill_dax(struct dax_device *dax_dev)
+>>>    		return;
+>>>    	if (dax_dev->holder_data != NULL)
+>>> -		dax_holder_notify_failure(dax_dev, 0, U64_MAX, 0);
+>>> +		dax_holder_notify_failure(dax_dev, 0, U64_MAX,
+>>> +				MF_MEM_PRE_REMOVE);
+>>>    	clear_bit(DAXDEV_ALIVE, &dax_dev->flags);
+>>>    	synchronize_srcu(&dax_srcu);
+>>> diff --git a/fs/xfs/xfs_notify_failure.c b/fs/xfs/xfs_notify_failure.c
+>>> index 4a9bbd3fe120..f6ec56b76db6 100644
+>>> --- a/fs/xfs/xfs_notify_failure.c
+>>> +++ b/fs/xfs/xfs_notify_failure.c
+>>> @@ -22,6 +22,7 @@
+>>>    #include <linux/mm.h>
+>>>    #include <linux/dax.h>
+>>> +#include <linux/fs.h>
+>>>    struct xfs_failure_info {
+>>>    	xfs_agblock_t		startblock;
+>>> @@ -73,10 +74,16 @@ xfs_dax_failure_fn(
+>>>    	struct xfs_mount		*mp = cur->bc_mp;
+>>>    	struct xfs_inode		*ip;
+>>>    	struct xfs_failure_info		*notify = data;
+>>> +	struct address_space		*mapping;
+>>> +	pgoff_t				pgoff;
+>>> +	unsigned long			pgcnt;
+>>>    	int				error = 0;
+>>>    	if (XFS_RMAP_NON_INODE_OWNER(rec->rm_owner) ||
+>>>    	    (rec->rm_flags & (XFS_RMAP_ATTR_FORK | XFS_RMAP_BMBT_BLOCK))) {
+>>> +		/* Continue the query because this isn't a failure. */
+>>> +		if (notify->mf_flags & MF_MEM_PRE_REMOVE)
+>>> +			return 0;
+>>>    		notify->want_shutdown = true;
+>>>    		return 0;
+>>>    	}
+>>> @@ -92,14 +99,55 @@ xfs_dax_failure_fn(
+>>>    		return 0;
+>>>    	}
+>>> -	error = mf_dax_kill_procs(VFS_I(ip)->i_mapping,
+>>> -				  xfs_failure_pgoff(mp, rec, notify),
+>>> -				  xfs_failure_pgcnt(mp, rec, notify),
+>>> -				  notify->mf_flags);
+>>> +	mapping = VFS_I(ip)->i_mapping;
+>>> +	pgoff = xfs_failure_pgoff(mp, rec, notify);
+>>> +	pgcnt = xfs_failure_pgcnt(mp, rec, notify);
+>>> +
+>>> +	/* Continue the rmap query if the inode isn't a dax file. */
+>>> +	if (dax_mapping(mapping))
+>>> +		error = mf_dax_kill_procs(mapping, pgoff, pgcnt,
+>>> +					  notify->mf_flags);
+>>> +
+>>> +	/* Invalidate the cache in dax pages. */
+>>> +	if (notify->mf_flags & MF_MEM_PRE_REMOVE)
+>>> +		invalidate_inode_pages2_range(mapping, pgoff,
+>>> +					      pgoff + pgcnt - 1);
+>>> +
+>>>    	xfs_irele(ip);
+>>>    	return error;
+>>>    }
+>>> +static void
+>>> +xfs_dax_notify_failure_freeze(
+>>> +	struct xfs_mount	*mp)
+>>> +{
+>>> +	struct super_block 	*sb = mp->m_super;
+>>> +
+>>> +	/* Wait until no one is holding the FREEZE_HOLDER_KERNEL. */
+>>> +	while (freeze_super(sb, FREEZE_HOLDER_KERNEL) != 0) {
+>>> +		// Shall we just wait, or print warning then return -EBUSY?
+>>> +		delay(HZ / 10);
+>>> +	}
+>>> +}
+>>> +
+>>> +static void
+>>> +xfs_dax_notify_failure_thaw(
+>>> +	struct xfs_mount	*mp)
+>>> +{
+>>> +	struct super_block	*sb = mp->m_super;
+>>> +	int			error;
+>>> +
+>>> +	error = thaw_super(sb, FREEZE_HOLDER_KERNEL);
+>>> +	if (error)
+>>> +		xfs_emerg(mp, "still frozen after notify failure, err=%d",
+>>> +			  error);
+>>> +	/*
+>>> +	 * Also thaw userspace call anyway because the device is about to be
+>>> +	 * removed immediately.
+>>> +	 */
+>>> +	thaw_super(sb, FREEZE_HOLDER_USERSPACE);
+>>> +}
+>>> +
+>>>    static int
+>>>    xfs_dax_notify_ddev_failure(
+>>>    	struct xfs_mount	*mp,
+>>> @@ -120,7 +168,7 @@ xfs_dax_notify_ddev_failure(
+>>>    	error = xfs_trans_alloc_empty(mp, &tp);
+>>>    	if (error)
+>>> -		return error;
+>>> +		goto out;
+>>>    	for (; agno <= end_agno; agno++) {
+>>>    		struct xfs_rmap_irec	ri_low = { };
+>>> @@ -165,11 +213,23 @@ xfs_dax_notify_ddev_failure(
+>>>    	}
+>>>    	xfs_trans_cancel(tp);
+>>> +
+>>> +	/*
+>>> +	 * Determine how to shutdown the filesystem according to the
+>>> +	 * error code and flags.
+>>> +	 */
+>>>    	if (error || notify.want_shutdown) {
+>>>    		xfs_force_shutdown(mp, SHUTDOWN_CORRUPT_ONDISK);
+>>>    		if (!error)
+>>>    			error = -EFSCORRUPTED;
+>>> -	}
+>>> +	} else if (mf_flags & MF_MEM_PRE_REMOVE)
+>>> +		xfs_force_shutdown(mp, SHUTDOWN_FORCE_UMOUNT);
+>>> +
+>>> +out:
+>>> +	/* Thaw the fs if it is freezed before. */
+>>> +	if (mf_flags & MF_MEM_PRE_REMOVE)
+>>> +		xfs_dax_notify_failure_thaw(mp);
+>>> +
+>>>    	return error;
+>>>    }
+>>> @@ -197,6 +257,8 @@ xfs_dax_notify_failure(
+>>>    	if (mp->m_logdev_targp && mp->m_logdev_targp->bt_daxdev == dax_dev &&
+>>>    	    mp->m_logdev_targp != mp->m_ddev_targp) {
+>>> +		if (mf_flags & MF_MEM_PRE_REMOVE)
+>>> +			return 0;
+>>>    		xfs_err(mp, "ondisk log corrupt, shutting down fs!");
+>>>    		xfs_force_shutdown(mp, SHUTDOWN_CORRUPT_ONDISK);
+>>>    		return -EFSCORRUPTED;
+>>> @@ -210,6 +272,12 @@ xfs_dax_notify_failure(
+>>>    	ddev_start = mp->m_ddev_targp->bt_dax_part_off;
+>>>    	ddev_end = ddev_start + bdev_nr_bytes(mp->m_ddev_targp->bt_bdev) - 1;
+>>> +	/* Notify failure on the whole device. */
+>>> +	if (offset == 0 && len == U64_MAX) {
+>>> +		offset = ddev_start;
+>>> +		len = bdev_nr_bytes(mp->m_ddev_targp->bt_bdev);
+>>> +	}
+>>> +
+>>>    	/* Ignore the range out of filesystem area */
+>>>    	if (offset + len - 1 < ddev_start)
+>>>    		return -ENXIO;
+>>> @@ -226,6 +294,12 @@ xfs_dax_notify_failure(
+>>>    	if (offset + len - 1 > ddev_end)
+>>>    		len = ddev_end - offset + 1;
+>>> +	if (mf_flags & MF_MEM_PRE_REMOVE) {
+>>> +		xfs_info(mp, "device is about to be removed!");
+>>> +		/* Freeze fs to prevent new mappings from being created. */
+>>> +		xfs_dax_notify_failure_freeze(mp);
+>>> +	}
+>>> +
+>>>    	return xfs_dax_notify_ddev_failure(mp, BTOBB(offset), BTOBB(len),
+>>>    			mf_flags);
+>>>    }
+>>> diff --git a/include/linux/mm.h b/include/linux/mm.h
+>>> index 27ce77080c79..a80c255b88d2 100644
+>>> --- a/include/linux/mm.h
+>>> +++ b/include/linux/mm.h
+>>> @@ -3576,6 +3576,7 @@ enum mf_flags {
+>>>    	MF_UNPOISON = 1 << 4,
+>>>    	MF_SW_SIMULATED = 1 << 5,
+>>>    	MF_NO_RETRY = 1 << 6,
+>>> +	MF_MEM_PRE_REMOVE = 1 << 7,
+>>>    };
+>>>    int mf_dax_kill_procs(struct address_space *mapping, pgoff_t index,
+>>>    		      unsigned long count, int mf_flags);
+>>> diff --git a/mm/memory-failure.c b/mm/memory-failure.c
+>>> index 5b663eca1f29..483b75f2fcfb 100644
+>>> --- a/mm/memory-failure.c
+>>> +++ b/mm/memory-failure.c
+>>> @@ -688,7 +688,7 @@ static void add_to_kill_fsdax(struct task_struct *tsk, struct page *p,
+>>>     */
+>>>    static void collect_procs_fsdax(struct page *page,
+>>>    		struct address_space *mapping, pgoff_t pgoff,
+>>> -		struct list_head *to_kill)
+>>> +		struct list_head *to_kill, bool pre_remove)
+>>>    {
+>>>    	struct vm_area_struct *vma;
+>>>    	struct task_struct *tsk;
+>>> @@ -696,8 +696,15 @@ static void collect_procs_fsdax(struct page *page,
+>>>    	i_mmap_lock_read(mapping);
+>>>    	read_lock(&tasklist_lock);
+>>>    	for_each_process(tsk) {
+>>> -		struct task_struct *t = task_early_kill(tsk, true);
+>>> +		struct task_struct *t = tsk;
+>>> +		/*
+>>> +		 * Search for all tasks while MF_MEM_PRE_REMOVE, because the
+>>> +		 * current may not be the one accessing the fsdax page.
+>>> +		 * Otherwise, search for the current task.
+>>> +		 */
+>>> +		if (!pre_remove)
+>>> +			t = task_early_kill(tsk, true);
+>>>    		if (!t)
+>>>    			continue;
+>>>    		vma_interval_tree_foreach(vma, &mapping->i_mmap, pgoff, pgoff) {
+>>> @@ -1793,6 +1800,7 @@ int mf_dax_kill_procs(struct address_space *mapping, pgoff_t index,
+>>>    	dax_entry_t cookie;
+>>>    	struct page *page;
+>>>    	size_t end = index + count;
+>>> +	bool pre_remove = mf_flags & MF_MEM_PRE_REMOVE;
+>>>    	mf_flags |= MF_ACTION_REQUIRED | MF_MUST_KILL;
+>>> @@ -1804,9 +1812,10 @@ int mf_dax_kill_procs(struct address_space *mapping, pgoff_t index,
+>>>    		if (!page)
+>>>    			goto unlock;
+>>> -		SetPageHWPoison(page);
+>>> +		if (!pre_remove)
+>>> +			SetPageHWPoison(page);
+>>> -		collect_procs_fsdax(page, mapping, index, &to_kill);
+>>> +		collect_procs_fsdax(page, mapping, index, &to_kill, pre_remove);
+>>>    		unmap_and_kill(&to_kill, page_to_pfn(page), mapping,
+>>>    				index, mf_flags);
+>>>    unlock:
