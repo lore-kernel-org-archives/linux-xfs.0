@@ -2,37 +2,63 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D27C5C001DE
-	for <linux-xfs@archiver.kernel.org>; Fri, 21 Jul 2023 06:22:08 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 048F7EB64DC
+	for <linux-xfs@archiver.kernel.org>; Fri, 21 Jul 2023 06:24:30 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230411AbjGUGWH (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 21 Jul 2023 02:22:07 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55494 "EHLO
+        id S230028AbjGUGY3 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 21 Jul 2023 02:24:29 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56830 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230413AbjGUGVo (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 21 Jul 2023 02:21:44 -0400
+        with ESMTP id S229786AbjGUGY2 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 21 Jul 2023 02:24:28 -0400
 Received: from verein.lst.de (verein.lst.de [213.95.11.211])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 411F835B8;
-        Thu, 20 Jul 2023 23:19:39 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9F556CE;
+        Thu, 20 Jul 2023 23:24:27 -0700 (PDT)
 Received: by verein.lst.de (Postfix, from userid 2407)
-        id AFAF76732D; Fri, 21 Jul 2023 08:19:36 +0200 (CEST)
-Date:   Fri, 21 Jul 2023 08:19:36 +0200
+        id 8D3CB6732D; Fri, 21 Jul 2023 08:24:23 +0200 (CEST)
+Date:   Fri, 21 Jul 2023 08:24:23 +0200
 From:   Christoph Hellwig <hch@lst.de>
-To:     Jens Axboe <axboe@kernel.dk>
-Cc:     io-uring@vger.kernel.org, linux-xfs@vger.kernel.org, hch@lst.de,
-        andres@anarazel.de, david@fromorbit.com
-Subject: Re: [PATCH 8/8] iomap: support IOCB_DIO_DEFER
-Message-ID: <20230721061936.GH20600@lst.de>
-References: <20230720181310.71589-1-axboe@kernel.dk> <20230720181310.71589-9-axboe@kernel.dk>
+To:     Matthew Wilcox <willy@infradead.org>
+Cc:     Christoph Hellwig <hch@lst.de>, Jens Axboe <axboe@kernel.dk>,
+        "Darrick J. Wong" <djwong@kernel.org>,
+        Andrew Morton <akpm@linux-foundation.org>,
+        Christian Brauner <christian@brauner.io>,
+        linux-block@vger.kernel.org, linux-fsdevel@vger.kernel.org,
+        linux-xfs@vger.kernel.org, linux-mm@kvack.org,
+        linux-kernel@vger.kernel.org
+Subject: Re: [PATCH 6/6] fs: add CONFIG_BUFFER_HEAD
+Message-ID: <20230721062423.GA20845@lst.de>
+References: <20230720140452.63817-1-hch@lst.de> <20230720140452.63817-7-hch@lst.de> <ZLlId9+kXl5Tb7wj@casper.infradead.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20230720181310.71589-9-axboe@kernel.dk>
+In-Reply-To: <ZLlId9+kXl5Tb7wj@casper.infradead.org>
 User-Agent: Mutt/1.5.17 (2007-11-01)
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Looks good:
+On Thu, Jul 20, 2023 at 03:45:11PM +0100, Matthew Wilcox wrote:
+> On Thu, Jul 20, 2023 at 04:04:52PM +0200, Christoph Hellwig wrote:
+> > @@ -400,7 +391,8 @@ static int blkdev_iomap_begin(struct inode *inode, loff_t offset, loff_t length,
+> >  	iomap->type = IOMAP_MAPPED;
+> >  	iomap->addr = iomap->offset;
+> >  	iomap->length = isize - iomap->offset;
+> > -	iomap->flags |= IOMAP_F_BUFFER_HEAD;
+> > +	if (IS_ENABLED(CONFIG_BUFFER_HEAD))
+> > +		iomap->flags |= IOMAP_F_BUFFER_HEAD;
+> 
+> Wouldn't it be simpler to do ...
+> 
+> +#ifdef CONFIG_BUFFER_HEAD
+>  #define IOMAP_F_BUFFER_HEAD     (1U << 4)
+> +#else
+> +#define IOMAP_F_BUFFER_HEAD	0
+> +#endif
+> 
+> in include/linux/iomap.h ?
 
-Reviewed-by: Christoph Hellwig <hch@lst.de>
+> ... because this function then goes away.
+
+I guess we could do that.  It is less intrusive, but I have to say I find
+flags that get defined away to 0 fairly confusing for the reader.
