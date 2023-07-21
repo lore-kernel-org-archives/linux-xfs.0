@@ -2,60 +2,60 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B5106C001DC
-	for <linux-xfs@archiver.kernel.org>; Fri, 21 Jul 2023 16:18:43 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 78039C001E0
+	for <linux-xfs@archiver.kernel.org>; Fri, 21 Jul 2023 16:18:44 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232607AbjGUQSm (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 21 Jul 2023 12:18:42 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45842 "EHLO
+        id S230171AbjGUQSn (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 21 Jul 2023 12:18:43 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45314 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232730AbjGUQSI (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 21 Jul 2023 12:18:08 -0400
-Received: from mail-io1-xd32.google.com (mail-io1-xd32.google.com [IPv6:2607:f8b0:4864:20::d32])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3E90F422A
-        for <linux-xfs@vger.kernel.org>; Fri, 21 Jul 2023 09:17:06 -0700 (PDT)
-Received: by mail-io1-xd32.google.com with SMTP id ca18e2360f4ac-78706966220so20986339f.1
-        for <linux-xfs@vger.kernel.org>; Fri, 21 Jul 2023 09:17:06 -0700 (PDT)
+        with ESMTP id S232735AbjGUQSJ (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 21 Jul 2023 12:18:09 -0400
+Received: from mail-io1-xd34.google.com (mail-io1-xd34.google.com [IPv6:2607:f8b0:4864:20::d34])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 15BFE422D
+        for <linux-xfs@vger.kernel.org>; Fri, 21 Jul 2023 09:17:07 -0700 (PDT)
+Received: by mail-io1-xd34.google.com with SMTP id ca18e2360f4ac-78706966220so20986839f.1
+        for <linux-xfs@vger.kernel.org>; Fri, 21 Jul 2023 09:17:07 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=kernel-dk.20221208.gappssmtp.com; s=20221208; t=1689956222; x=1690561022;
+        d=kernel-dk.20221208.gappssmtp.com; s=20221208; t=1689956223; x=1690561023;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:from:to:cc:subject:date
          :message-id:reply-to;
-        bh=Oy9lAbgIR3CkabfYbdlhMEs1+yC10+0lr3pYvZ/QmXg=;
-        b=yA33Zd9ldVZY9NhyqqsuksHoALn2lUyr0D0f/gixUZQWH8C4+c1CVBC4l8R43ZFLP2
-         N5gTPBqbYIOmh5fV+DUWjJo7f+HfJN8yZOboqOMTi4xZRiR0X1NqYFlRM3rDImIkb2b4
-         kRLj3GWIe/RSi9MZ1LCewwZsIg7T3DVHX+DbHVpMPrUb7LxxsiAGoH0S0d7OWiYn7Quf
-         EyjnR+KLkNRR9cW7N8FaN3ifEglDPAept1S+foWG7lqtQgj1c5I8jhfq5aICdN/EQP9l
-         LTyHQbZ2dmJC58eS4d2WoIbmXg8C/pqPZWC1PGOlylsmG9cZJrcM/PovfSmPdSH70JTl
-         Lm9g==
+        bh=yyNahqPc1pwMUX1EtsLZ1EOWwyO2cqWRsqmVBpYW9+Y=;
+        b=0aWP+E4GFdNzNflre1kamqe9PsnlmI/2nmygaFNWCPd+YY0Hm0To8JVrGDpwOmY/Jy
+         MswOWnIV9AXXasYUcaiYtWjMfW0mmViPwZu1nVQExuJg+jQMUXeguYDwnd4YMhImYw5Z
+         KtSmd0IOrMhZ/oxbtJ6r7m4EY3Zyo7laIfbJkmDmKE4HhK7QNOHpz16ToyOc/ua5FI60
+         Q8PqqBUe1vFN3xwmGe/y0ZAOlhi8v8/RduhDD+CAibE231b7YNtFC83RzhHAXpa1dLwr
+         XplSxoAjDSaoG8jpM7HN892Jvl2oSKfkBMw2WFNW3vLcaDGNMzf+oqwT1Dic1qUBZJyb
+         wbWw==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20221208; t=1689956222; x=1690561022;
+        d=1e100.net; s=20221208; t=1689956223; x=1690561023;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:x-gm-message-state:from:to:cc
          :subject:date:message-id:reply-to;
-        bh=Oy9lAbgIR3CkabfYbdlhMEs1+yC10+0lr3pYvZ/QmXg=;
-        b=Q331gvGe7oU1XvaEBkxZknx3DswJPgko38Qp6anZ/PwdjIjSsxQDsAzXhPhnCKsZjE
-         IH+u0ph8eeVK6KWFTBG68/v2FCsGU5177Xxvd4d4TQXbnNBV85ng0uYLj48oUEhBnLW8
-         AfmcTvBb/7u5nGDVe5wfz/3hNflfp2rk312HZo/Uh3NgVC0gspNO5F6oveJeVC5Fz6q7
-         gx5syMxMre+tHuOvlXjtIAIqEHViJQ66z/xrrhmOKB9tV8rq32nEL0oOLcdKo7UhehyI
-         dCmWL3ZbkvQYsV1qFS2dEM25U5SDme6NCbQ8WhEZgt4pk0w7RRU5MrEBI58N4eFAIgb2
-         +5Rw==
-X-Gm-Message-State: ABy/qLZsN6ObNXwIaDkzMSu9EXCact0YrMaSRaHBQd8Q7jgUPIpVDFcN
-        s6vhCpQmVlkHzwMSk3WHWXrfiA==
-X-Google-Smtp-Source: APBJJlFEmx3jVQR75X1RQwVd/oXQyZs3MLao8dRJtepXvYv9avdnDUd6eEC7lVQbGsW6gWOVuwrHfA==
-X-Received: by 2002:a05:6602:4809:b0:77a:ee79:652 with SMTP id ed9-20020a056602480900b0077aee790652mr2360499iob.1.1689956222242;
-        Fri, 21 Jul 2023 09:17:02 -0700 (PDT)
+        bh=yyNahqPc1pwMUX1EtsLZ1EOWwyO2cqWRsqmVBpYW9+Y=;
+        b=NKVbXVtaoMOrHEe47o61zx4YzQfmCBycrVzQHy71An/JtChk5V4lQsX7ldFrvMUiIT
+         UlViW8gmQHo5xFNPleV+cOGTK90/LMIWmhC2Q/W1jrWrRvQBD6LEEJMEYEebPdjT29JN
+         iVRVnwcQSIE+9AP8wuj/jH0ZyR6dG0yYqaxBDUszqiTuFK0WYNvCf/J1wUnPbtjjhhdN
+         0B9OmBarHjqCYITtccsE0YWhUot5+d2ajq0oiKX/Vo1oqw/sH253tZeJjzYgPW6t3/46
+         ah8CYRNshglDtQVWg42sgLbQSYwVLhLvQLlINqmX7hBbem5eXJzWWEFCYq3m7DhcsNhT
+         zHwQ==
+X-Gm-Message-State: ABy/qLYEqNF5PkUTKwyKAgWZhrM4ep2IqYUjOlB79MMGQ+yqtuHxj0RR
+        ZZsK7GKQmA45PgVHOQNLOk7d3N40KGdMi7VCfeg=
+X-Google-Smtp-Source: APBJJlFal8EmDiwtuR8AOwBCrps/dQIMAByn1uNcUwe3Vb9BP9vhPAAXlDgWaXYBHjITsO62APenbA==
+X-Received: by 2002:a05:6602:4809:b0:77a:ee79:652 with SMTP id ed9-20020a056602480900b0077aee790652mr2360554iob.1.1689956223422;
+        Fri, 21 Jul 2023 09:17:03 -0700 (PDT)
 Received: from localhost.localdomain ([96.43.243.2])
-        by smtp.gmail.com with ESMTPSA id l7-20020a02a887000000b0042b599b224bsm1150450jam.121.2023.07.21.09.17.01
+        by smtp.gmail.com with ESMTPSA id l7-20020a02a887000000b0042b599b224bsm1150450jam.121.2023.07.21.09.17.02
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 21 Jul 2023 09:17:01 -0700 (PDT)
+        Fri, 21 Jul 2023 09:17:02 -0700 (PDT)
 From:   Jens Axboe <axboe@kernel.dk>
 To:     io-uring@vger.kernel.org, linux-xfs@vger.kernel.org
 Cc:     hch@lst.de, andres@anarazel.de, david@fromorbit.com,
         djwong@kernel.org, Jens Axboe <axboe@kernel.dk>
-Subject: [PATCH 5/9] iomap: only set iocb->private for polled bio
-Date:   Fri, 21 Jul 2023 10:16:46 -0600
-Message-Id: <20230721161650.319414-6-axboe@kernel.dk>
+Subject: [PATCH 6/9] fs: add IOCB flags related to passing back dio completions
+Date:   Fri, 21 Jul 2023 10:16:47 -0600
+Message-Id: <20230721161650.319414-7-axboe@kernel.dk>
 X-Mailer: git-send-email 2.40.1
 In-Reply-To: <20230721161650.319414-1-axboe@kernel.dk>
 References: <20230721161650.319414-1-axboe@kernel.dk>
@@ -65,74 +65,86 @@ Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-iocb->private is only used for polled IO, where the completer will
-find the bio to poll through that field.
+Async dio completions generally happen from hard/soft IRQ context, which
+means that users like iomap may need to defer some of the completion
+handling to a workqueue. This is less efficient than having the original
+issuer handle it, like we do for sync IO, and it adds latency to the
+completions.
 
-Assign it when we're submitting a polled bio, and get rid of the
-dio->poll_bio indirection.
+Add IOCB_DIO_CALLER_COMP, which the issuer can set if it is able to
+safely punt these completions to a safe context. If the dio handler is
+aware of this flag, assign a callback handler in kiocb->dio_complete and
+associated data io kiocb->private. The issuer will then call this
+handler with that data from task context.
 
-Reviewed-by: Darrick J. Wong <djwong@kernel.org>
+No functional changes in this patch.
+
 Reviewed-by: Christoph Hellwig <hch@lst.de>
 Signed-off-by: Jens Axboe <axboe@kernel.dk>
 ---
- fs/iomap/direct-io.c | 13 +++++--------
- 1 file changed, 5 insertions(+), 8 deletions(-)
+ include/linux/fs.h | 35 +++++++++++++++++++++++++++++++++--
+ 1 file changed, 33 insertions(+), 2 deletions(-)
 
-diff --git a/fs/iomap/direct-io.c b/fs/iomap/direct-io.c
-index 2b453e12dc16..6ffa1b1ebe90 100644
---- a/fs/iomap/direct-io.c
-+++ b/fs/iomap/direct-io.c
-@@ -42,7 +42,6 @@ struct iomap_dio {
- 		struct {
- 			struct iov_iter		*iter;
- 			struct task_struct	*waiter;
--			struct bio		*poll_bio;
- 		} submit;
+diff --git a/include/linux/fs.h b/include/linux/fs.h
+index 6867512907d6..60e2b4ecfc4d 100644
+--- a/include/linux/fs.h
++++ b/include/linux/fs.h
+@@ -338,6 +338,20 @@ enum rw_hint {
+ #define IOCB_NOIO		(1 << 20)
+ /* can use bio alloc cache */
+ #define IOCB_ALLOC_CACHE	(1 << 21)
++/*
++ * IOCB_DIO_CALLER_COMP can be set by the iocb owner, to indicate that the
++ * iocb completion can be passed back to the owner for execution from a safe
++ * context rather than needing to be punted through a workqueue.If this If this
++ * flag is set, the bio completion handling may set iocb->dio_complete to a
++ * handler function and iocb->private to context information for that handler.
++ * The issuer should call the handler with that context information from task
++ * context to complete the processing of the iocb. Note that while this
++ * provides a task context for the dio_complete() callback, it should only be
++ * used on the completion side for non-IO generating completions. It's fine to
++ * call blocking functions from this callback, but they should not wait for
++ * unrelated IO (like cache flushing, new IO generation, etc).
++ */
++#define IOCB_DIO_CALLER_COMP	(1 << 22)
  
- 		/* used for aio completion: */
-@@ -64,12 +63,14 @@ static struct bio *iomap_dio_alloc_bio(const struct iomap_iter *iter,
- static void iomap_dio_submit_bio(const struct iomap_iter *iter,
- 		struct iomap_dio *dio, struct bio *bio, loff_t pos)
- {
-+	struct kiocb *iocb = dio->iocb;
-+
- 	atomic_inc(&dio->ref);
+ /* for use in trace events */
+ #define TRACE_IOCB_STRINGS \
+@@ -351,7 +365,8 @@ enum rw_hint {
+ 	{ IOCB_WRITE,		"WRITE" }, \
+ 	{ IOCB_WAITQ,		"WAITQ" }, \
+ 	{ IOCB_NOIO,		"NOIO" }, \
+-	{ IOCB_ALLOC_CACHE,	"ALLOC_CACHE" }
++	{ IOCB_ALLOC_CACHE,	"ALLOC_CACHE" }, \
++	{ IOCB_DIO_CALLER_COMP,	"CALLER_COMP" }
  
- 	/* Sync dio can't be polled reliably */
--	if ((dio->iocb->ki_flags & IOCB_HIPRI) && !is_sync_kiocb(dio->iocb)) {
--		bio_set_polled(bio, dio->iocb);
--		dio->submit.poll_bio = bio;
-+	if ((iocb->ki_flags & IOCB_HIPRI) && !is_sync_kiocb(iocb)) {
-+		bio_set_polled(bio, iocb);
-+		WRITE_ONCE(iocb->private, bio);
- 	}
+ struct kiocb {
+ 	struct file		*ki_filp;
+@@ -360,7 +375,23 @@ struct kiocb {
+ 	void			*private;
+ 	int			ki_flags;
+ 	u16			ki_ioprio; /* See linux/ioprio.h */
+-	struct wait_page_queue	*ki_waitq; /* for async buffered IO */
++	union {
++		/*
++		 * Only used for async buffered reads, where it denotes the
++		 * page waitqueue associated with completing the read. Valid
++		 * IFF IOCB_WAITQ is set.
++		 */
++		struct wait_page_queue	*ki_waitq;
++		/*
++		 * Can be used for O_DIRECT IO, where the completion handling
++		 * is punted back to the issuer of the IO. May only be set
++		 * if IOCB_DIO_CALLER_COMP is set by the issuer, and the issuer
++		 * must then check for presence of this handler when ki_complete
++		 * is invoked. The data passed in to this handler must be
++		 * assigned to ->private when dio_complete is assigned.
++		 */
++		ssize_t (*dio_complete)(void *data);
++	};
+ };
  
- 	if (dio->dops && dio->dops->submit_io)
-@@ -197,7 +198,6 @@ void iomap_dio_bio_end_io(struct bio *bio)
- 	 * more IO to be issued to finalise filesystem metadata changes or
- 	 * guarantee data integrity.
- 	 */
--	WRITE_ONCE(iocb->private, NULL);
- 	INIT_WORK(&dio->aio.work, iomap_dio_complete_work);
- 	queue_work(file_inode(iocb->ki_filp)->i_sb->s_dio_done_wq,
- 			&dio->aio.work);
-@@ -536,7 +536,6 @@ __iomap_dio_rw(struct kiocb *iocb, struct iov_iter *iter,
- 
- 	dio->submit.iter = iter;
- 	dio->submit.waiter = current;
--	dio->submit.poll_bio = NULL;
- 
- 	if (iocb->ki_flags & IOCB_NOWAIT)
- 		iomi.flags |= IOMAP_NOWAIT;
-@@ -648,8 +647,6 @@ __iomap_dio_rw(struct kiocb *iocb, struct iov_iter *iter,
- 	if (dio->flags & IOMAP_DIO_WRITE_THROUGH)
- 		dio->flags &= ~IOMAP_DIO_NEED_SYNC;
- 
--	WRITE_ONCE(iocb->private, dio->submit.poll_bio);
--
- 	/*
- 	 * We are about to drop our additional submission reference, which
- 	 * might be the last reference to the dio.  There are three different
+ static inline bool is_sync_kiocb(struct kiocb *kiocb)
 -- 
 2.40.1
 
