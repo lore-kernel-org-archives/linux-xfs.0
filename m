@@ -2,60 +2,60 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0887BEB64DC
-	for <linux-xfs@archiver.kernel.org>; Fri, 21 Jul 2023 16:18:45 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 64914C001DC
+	for <linux-xfs@archiver.kernel.org>; Fri, 21 Jul 2023 16:18:48 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232621AbjGUQSo (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 21 Jul 2023 12:18:44 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45944 "EHLO
+        id S231150AbjGUQSq (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 21 Jul 2023 12:18:46 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46098 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230211AbjGUQSR (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 21 Jul 2023 12:18:17 -0400
-Received: from mail-io1-xd34.google.com (mail-io1-xd34.google.com [IPv6:2607:f8b0:4864:20::d34])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id BCC263C01
-        for <linux-xfs@vger.kernel.org>; Fri, 21 Jul 2023 09:17:08 -0700 (PDT)
-Received: by mail-io1-xd34.google.com with SMTP id ca18e2360f4ac-780c89d1998so28217939f.1
-        for <linux-xfs@vger.kernel.org>; Fri, 21 Jul 2023 09:17:08 -0700 (PDT)
+        with ESMTP id S231210AbjGUQSZ (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 21 Jul 2023 12:18:25 -0400
+Received: from mail-io1-xd35.google.com (mail-io1-xd35.google.com [IPv6:2607:f8b0:4864:20::d35])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9881B4482
+        for <linux-xfs@vger.kernel.org>; Fri, 21 Jul 2023 09:17:10 -0700 (PDT)
+Received: by mail-io1-xd35.google.com with SMTP id ca18e2360f4ac-785ccd731a7so26078539f.0
+        for <linux-xfs@vger.kernel.org>; Fri, 21 Jul 2023 09:17:10 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=kernel-dk.20221208.gappssmtp.com; s=20221208; t=1689956224; x=1690561024;
+        d=kernel-dk.20221208.gappssmtp.com; s=20221208; t=1689956226; x=1690561026;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:from:to:cc:subject:date
          :message-id:reply-to;
-        bh=0K7Dvo7paWgjEVh49lf7ANu+PDRkYsLiCLFfzkR8qLs=;
-        b=3xPTlZlQRZBxIsm15+JS0gtC8owGRTHiYuFA5FVf+3R59m8jSoVd+Aad9Gju5NSOME
-         DFR4N+ny5AJPtBa4DIY+4OMRuFVywbPq07tOgAs7L2SrzWEkXL2MdHebpAEE9lXVp38I
-         8Oh3IHvSrtYXz/nLdFZ/ckMt+ASJ1b2JrMo1TvsQR4wKe/CxsXwgj0fTOTfHzaHWnvLG
-         W5JoREMNpl6EF3alGMzryTEFVEMNWAs97JFUz/Ws0EsiEmSSOmxHB9JjiGKx3obwltwh
-         U425f+oqLCmcnPPMP6oglw35A54wo7zoHa8BciLXc0BVvqbQQO2v3VvN77WNHuOfSDDo
-         YHqw==
+        bh=wU0I1Crk0A9YQHr2dSuYw08fghtgkYJZMMemssUA97A=;
+        b=Wt5B/jrczgGplo7izRUX1x6J0TXmv3X4LjWC0vhre8KoqZSeJ0R+n4O5/8E5Yn5RzU
+         U8GcrQgZvg2nAnpoHBIhrA7J463hFjfY0zSft1/0m63AT+ULNz/2ipmMVeZYWRFWDIZT
+         PR7sqWdxomduhToaloAmi41xmfvbS1b3OKK+CEkX5o+NqmzI82LS6FVfipirWK2GnN6V
+         vkzuLZ4qkZQgtkCgsgbdmYbCUbgFi0xcZvVRoqADIjKeQlJHU1krPh18DhxVeOMXoSlE
+         2trh8lLHbuGH+lmA2ikTAiWdqguI0D9WGE4IHMbeZ47FQiuf/kjQfgKAN/sTifObJblc
+         q4hA==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20221208; t=1689956224; x=1690561024;
+        d=1e100.net; s=20221208; t=1689956226; x=1690561026;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:x-gm-message-state:from:to:cc
          :subject:date:message-id:reply-to;
-        bh=0K7Dvo7paWgjEVh49lf7ANu+PDRkYsLiCLFfzkR8qLs=;
-        b=Np+rK3UraGTPHzSghRrpEXTXp/s7H5EQDv5Zg2cTh7CCjnwPfZLpqCiQu5ftkazETt
-         etxqj3j78pdBAiwa+sn3eAlOpLNenSyEv1eZ1tQGRp+B4K4tf8Tda0JZ2NXFh9/9Lfwv
-         toaAbZXa0xflG5h+rWEUg3IUOWKY88SJC/3sOca5RrYa47eaQlduDWub4nbL5F+2sfPs
-         Kc8U9uDg11c82jkOq6sj5B1Kv4Z/zc3ni8HmVeKjkYKLFHkfUUWI736OfKDplcbEQQkn
-         9xI4uFIh0rcEHefvIY2B/mZWd5sBqjlg9vQZmaGzcrd/fupVlh8o9Fz2yfrjgxo6y0nP
-         3k+g==
-X-Gm-Message-State: ABy/qLYRShdrE8Bg252b9FqzV/g8RHBaee0kTjJbNE4+/L8tYy6ohCvG
-        TQDQd337DWczdAm3mbJ5VNaolw==
-X-Google-Smtp-Source: APBJJlGyujB7gg6Xoypqc8Ia7cP1l3+HuYf0PntZvVUWZ8Lc0yUkwdvkmlxtPWqSHyNJb9MxPcbysg==
-X-Received: by 2002:a05:6602:480b:b0:780:d6ef:160 with SMTP id ed11-20020a056602480b00b00780d6ef0160mr2532052iob.1.1689956224684;
-        Fri, 21 Jul 2023 09:17:04 -0700 (PDT)
+        bh=wU0I1Crk0A9YQHr2dSuYw08fghtgkYJZMMemssUA97A=;
+        b=VJIIwoFKYqXTQpoeQZf7yE5A1s+1/nUstndNBeQxPtfpspEs8NyR/Ob+GeLkJgCpH+
+         NkVA+E48DEGOnhDFf/zHEqsZC29Thl6DGlyfqq4uH9WZqOZaWdaloWs5Z9+4NUXptuDh
+         IzcOiKaYuvaNWZ8fLbx8JFEaI3SRvMFd4dzpSPXkWGuwB3/HEwiBFkxFUByzgEA5f3Vd
+         DPWn1Zc7Bv+5ipDWPLn05chTvXjSHSeUBKmfnY6Loxej2mMG4JYrx+Fj9WjpXUJ1ZwtG
+         hLMpWKe69IViSC5bZB7RfxTEpvfDCf6LLlCywtZCwAxnIbmas0+FlRgICXLc3Aeit+83
+         zHfA==
+X-Gm-Message-State: ABy/qLacZEfAs26IXEyupDXnuw3qc7hqMNUr7awFjpTEnD0W7C+zjZej
+        VeqiQ/d/24jPG9AkGdWLCGhVmg==
+X-Google-Smtp-Source: APBJJlFVkVxscNIXOSMsYXKUWkRhB6n4mYkuHnJWS77o7eUQJyD/zAvZuu23HuKW4mNHvm0bDEzxVg==
+X-Received: by 2002:a05:6602:14d2:b0:783:6ec1:65f6 with SMTP id b18-20020a05660214d200b007836ec165f6mr3087186iow.1.1689956225757;
+        Fri, 21 Jul 2023 09:17:05 -0700 (PDT)
 Received: from localhost.localdomain ([96.43.243.2])
-        by smtp.gmail.com with ESMTPSA id l7-20020a02a887000000b0042b599b224bsm1150450jam.121.2023.07.21.09.17.03
+        by smtp.gmail.com with ESMTPSA id l7-20020a02a887000000b0042b599b224bsm1150450jam.121.2023.07.21.09.17.04
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 21 Jul 2023 09:17:03 -0700 (PDT)
+        Fri, 21 Jul 2023 09:17:05 -0700 (PDT)
 From:   Jens Axboe <axboe@kernel.dk>
 To:     io-uring@vger.kernel.org, linux-xfs@vger.kernel.org
 Cc:     hch@lst.de, andres@anarazel.de, david@fromorbit.com,
         djwong@kernel.org, Jens Axboe <axboe@kernel.dk>
-Subject: [PATCH 7/9] io_uring/rw: add write support for IOCB_DIO_CALLER_COMP
-Date:   Fri, 21 Jul 2023 10:16:48 -0600
-Message-Id: <20230721161650.319414-8-axboe@kernel.dk>
+Subject: [PATCH 8/9] iomap: support IOCB_DIO_CALLER_COMP
+Date:   Fri, 21 Jul 2023 10:16:49 -0600
+Message-Id: <20230721161650.319414-9-axboe@kernel.dk>
 X-Mailer: git-send-email 2.40.1
 In-Reply-To: <20230721161650.319414-1-axboe@kernel.dk>
 References: <20230721161650.319414-1-axboe@kernel.dk>
@@ -65,84 +65,145 @@ Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-If the filesystem dio handler understands IOCB_DIO_CALLER_COMP, we'll
-get a kiocb->ki_complete() callback with kiocb->dio_complete set. In
-that case, rather than complete the IO directly through task_work, queue
-up an intermediate task_work handler that first processes this callback
-and then immediately completes the request.
+If IOCB_DIO_CALLER_COMP is set, utilize that to set kiocb->dio_complete
+handler and data for that callback. Rather than punt the completion to a
+workqueue, we pass back the handler and data to the issuer and will get
+a callback from a safe task context.
 
-For XFS, this avoids a punt through a workqueue, which is a lot less
-efficient and adds latency to lower queue depth (or sync) O_DIRECT
-writes.
+Using the following fio job to randomly dio write 4k blocks at
+queue depths of 1..16:
 
-Only do this for non-polled IO, as polled IO doesn't need this kind
-of deferral as it always completes within the task itself. This then
-avoids a check for deferral in the polled IO completion handler.
+fio --name=dio-write --filename=/data1/file --time_based=1 \
+--runtime=10 --bs=4096 --rw=randwrite --norandommap --buffered=0 \
+--cpus_allowed=4 --ioengine=io_uring --iodepth=$depth
 
+shows the following results before and after this patch:
+
+	Stock	Patched		Diff
+=======================================
+QD1	155K	162K		+ 4.5%
+QD2	290K	313K		+ 7.9%
+QD4	533K	597K		+12.0%
+QD8	604K	827K		+36.9%
+QD16	615K	845K		+37.4%
+
+which shows nice wins all around. If we factored in per-IOP efficiency,
+the wins look even nicer. This becomes apparent as queue depth rises,
+as the offloaded workqueue completions runs out of steam.
+
+Reviewed-by: Darrick J. Wong <djwong@kernel.org>
 Reviewed-by: Christoph Hellwig <hch@lst.de>
 Signed-off-by: Jens Axboe <axboe@kernel.dk>
 ---
- io_uring/rw.c | 26 +++++++++++++++++++++++---
- 1 file changed, 23 insertions(+), 3 deletions(-)
+ fs/iomap/direct-io.c | 55 +++++++++++++++++++++++++++++++++++++++++++-
+ 1 file changed, 54 insertions(+), 1 deletion(-)
 
-diff --git a/io_uring/rw.c b/io_uring/rw.c
-index 1bce2208b65c..f19f65b3f0ee 100644
---- a/io_uring/rw.c
-+++ b/io_uring/rw.c
-@@ -105,6 +105,7 @@ int io_prep_rw(struct io_kiocb *req, const struct io_uring_sqe *sqe)
- 	} else {
- 		rw->kiocb.ki_ioprio = get_current_ioprio();
- 	}
-+	rw->kiocb.dio_complete = NULL;
- 
- 	rw->addr = READ_ONCE(sqe->addr);
- 	rw->len = READ_ONCE(sqe->len);
-@@ -285,6 +286,14 @@ static inline int io_fixup_rw_res(struct io_kiocb *req, long res)
- 
- void io_req_rw_complete(struct io_kiocb *req, struct io_tw_state *ts)
- {
-+	struct io_rw *rw = io_kiocb_to_cmd(req, struct io_rw);
-+
-+	if (rw->kiocb.dio_complete) {
-+		long res = rw->kiocb.dio_complete(rw->kiocb.private);
-+
-+		io_req_set_res(req, io_fixup_rw_res(req, res), 0);
-+	}
-+
- 	io_req_io_end(req);
- 
- 	if (req->flags & (REQ_F_BUFFER_SELECTED|REQ_F_BUFFER_RING)) {
-@@ -300,9 +309,11 @@ static void io_complete_rw(struct kiocb *kiocb, long res)
- 	struct io_rw *rw = container_of(kiocb, struct io_rw, kiocb);
- 	struct io_kiocb *req = cmd_to_io_kiocb(rw);
- 
--	if (__io_complete_rw_common(req, res))
--		return;
--	io_req_set_res(req, io_fixup_rw_res(req, res), 0);
-+	if (!rw->kiocb.dio_complete) {
-+		if (__io_complete_rw_common(req, res))
-+			return;
-+		io_req_set_res(req, io_fixup_rw_res(req, res), 0);
-+	}
- 	req->io_task_work.func = io_req_rw_complete;
- 	__io_req_task_work_add(req, IOU_F_TWQ_LAZY_WAKE);
+diff --git a/fs/iomap/direct-io.c b/fs/iomap/direct-io.c
+index 6ffa1b1ebe90..ae9046d16d71 100644
+--- a/fs/iomap/direct-io.c
++++ b/fs/iomap/direct-io.c
+@@ -20,6 +20,7 @@
+  * Private flags for iomap_dio, must not overlap with the public ones in
+  * iomap.h:
+  */
++#define IOMAP_DIO_CALLER_COMP	(1 << 26)
+ #define IOMAP_DIO_INLINE_COMP	(1 << 27)
+ #define IOMAP_DIO_WRITE_THROUGH	(1 << 28)
+ #define IOMAP_DIO_NEED_SYNC	(1 << 29)
+@@ -132,6 +133,11 @@ ssize_t iomap_dio_complete(struct iomap_dio *dio)
  }
-@@ -916,6 +927,15 @@ int io_write(struct io_kiocb *req, unsigned int issue_flags)
+ EXPORT_SYMBOL_GPL(iomap_dio_complete);
+ 
++static ssize_t iomap_dio_deferred_complete(void *data)
++{
++	return iomap_dio_complete(data);
++}
++
+ static void iomap_dio_complete_work(struct work_struct *work)
+ {
+ 	struct iomap_dio *dio = container_of(work, struct iomap_dio, aio.work);
+@@ -192,6 +198,31 @@ void iomap_dio_bio_end_io(struct bio *bio)
+ 		goto release_bio;
  	}
- 	kiocb->ki_flags |= IOCB_WRITE;
  
 +	/*
-+	 * For non-polled IO, set IOCB_DIO_CALLER_COMP, stating that our handler
-+	 * groks deferring the completion to task context. This isn't
-+	 * necessary and useful for polled IO as that can always complete
-+	 * directly.
++	 * If this dio is flagged with IOMAP_DIO_CALLER_COMP, then schedule
++	 * our completion that way to avoid an async punt to a workqueue.
 +	 */
-+	if (!(kiocb->ki_flags & IOCB_HIPRI))
-+		kiocb->ki_flags |= IOCB_DIO_CALLER_COMP;
++	if (dio->flags & IOMAP_DIO_CALLER_COMP) {
++		/* only polled IO cares about private cleared */
++		iocb->private = dio;
++		iocb->dio_complete = iomap_dio_deferred_complete;
 +
- 	if (likely(req->file->f_op->write_iter))
- 		ret2 = call_write_iter(req->file, kiocb, &s->iter);
- 	else if (req->file->f_op->write)
++		/*
++		 * Invoke ->ki_complete() directly. We've assigned our
++		 * dio_complete callback handler, and since the issuer set
++		 * IOCB_DIO_CALLER_COMP, we know their ki_complete handler will
++		 * notice ->dio_complete being set and will defer calling that
++		 * handler until it can be done from a safe task context.
++		 *
++		 * Note that the 'res' being passed in here is not important
++		 * for this case. The actual completion value of the request
++		 * will be gotten from dio_complete when that is run by the
++		 * issuer.
++		 */
++		iocb->ki_complete(iocb, 0);
++		goto release_bio;
++	}
++
+ 	/*
+ 	 * Async DIO completion that requires filesystem level completion work
+ 	 * gets punted to a work queue to complete as the operation may require
+@@ -288,12 +319,17 @@ static loff_t iomap_dio_bio_iter(const struct iomap_iter *iter,
+ 		 * after IO completion such as unwritten extent conversion) and
+ 		 * the underlying device either supports FUA or doesn't have
+ 		 * a volatile write cache. This allows us to avoid cache flushes
+-		 * on IO completion.
++		 * on IO completion. If we can't use writethrough and need to
++		 * sync, disable in-task completions as dio completion will
++		 * need to call generic_write_sync() which will do a blocking
++		 * fsync / cache flush call.
+ 		 */
+ 		if (!(iomap->flags & (IOMAP_F_SHARED|IOMAP_F_DIRTY)) &&
+ 		    (dio->flags & IOMAP_DIO_WRITE_THROUGH) &&
+ 		    (bdev_fua(iomap->bdev) || !bdev_write_cache(iomap->bdev)))
+ 			use_fua = true;
++		else if (dio->flags & IOMAP_DIO_NEED_SYNC)
++			dio->flags &= ~IOMAP_DIO_CALLER_COMP;
+ 	}
+ 
+ 	/*
+@@ -319,6 +355,14 @@ static loff_t iomap_dio_bio_iter(const struct iomap_iter *iter,
+ 		pad = pos & (fs_block_size - 1);
+ 		if (pad)
+ 			iomap_dio_zero(iter, dio, pos - pad, pad);
++
++		/*
++		 * If need_zeroout is set, then this is a new or unwritten
++		 * extent, or dirty file metadata have not been persisted to
++		 * disk. These need extra handling at completion time, so
++		 * disable in-task deferred completion for those.
++		 */
++		dio->flags &= ~IOMAP_DIO_CALLER_COMP;
+ 	}
+ 
+ 	/*
+@@ -557,6 +601,15 @@ __iomap_dio_rw(struct kiocb *iocb, struct iov_iter *iter,
+ 		iomi.flags |= IOMAP_WRITE;
+ 		dio->flags |= IOMAP_DIO_WRITE;
+ 
++		/*
++		 * Flag as supporting deferred completions, if the issuer
++		 * groks it. This can avoid a workqueue punt for writes.
++		 * We may later clear this flag if we need to do other IO
++		 * as part of this IO completion.
++		 */
++		if (iocb->ki_flags & IOCB_DIO_CALLER_COMP)
++			dio->flags |= IOMAP_DIO_CALLER_COMP;
++
+ 		if (dio_flags & IOMAP_DIO_OVERWRITE_ONLY) {
+ 			ret = -EAGAIN;
+ 			if (iomi.pos >= dio->i_size ||
 -- 
 2.40.1
 
