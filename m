@@ -2,104 +2,145 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 42CA5EB64DC
-	for <linux-xfs@archiver.kernel.org>; Fri, 21 Jul 2023 16:30:48 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B8E94C0015E
+	for <linux-xfs@archiver.kernel.org>; Fri, 21 Jul 2023 16:31:26 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229713AbjGUQaq (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 21 Jul 2023 12:30:46 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56726 "EHLO
+        id S231753AbjGUQbZ (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 21 Jul 2023 12:31:25 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56760 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230168AbjGUQa2 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 21 Jul 2023 12:30:28 -0400
-Received: from mail-il1-x12f.google.com (mail-il1-x12f.google.com [IPv6:2607:f8b0:4864:20::12f])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7E10A4206
-        for <linux-xfs@vger.kernel.org>; Fri, 21 Jul 2023 09:28:30 -0700 (PDT)
-Received: by mail-il1-x12f.google.com with SMTP id e9e14a558f8ab-3461b58c61dso2680185ab.1
-        for <linux-xfs@vger.kernel.org>; Fri, 21 Jul 2023 09:28:30 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=kernel-dk.20221208.gappssmtp.com; s=20221208; t=1689956838; x=1690561638;
-        h=content-transfer-encoding:in-reply-to:from:references:cc:to
-         :content-language:subject:user-agent:mime-version:date:message-id
-         :from:to:cc:subject:date:message-id:reply-to;
-        bh=ahIwLnlD7cr1aBwhJXa2haUworAGpZ2mINQou78VDu0=;
-        b=kBchZozexoXJ18KlGDkAVrvIjopBR6UbqhqhmZBCWTlfv+s9mxQSa6rsA1ygC+JnqP
-         gFllWoUzcqOZOkrVu4APmgIXh29nyu2VfvHnXYEpy1qH9SfMZVF+rlEkBQQ81MBV9yug
-         Tw7B7uBn1+7rK/kyMGpJq11vEQPoC/QxbiK47MoLWrzt1MhP2tEV1bsosv7minWeuZ/h
-         xLqMVp+VXPQSX5Tws9SSN0x4ZlJSNRjFk8eedx001nQKDh5e+V3CFO8NdWzum77xcYvk
-         mWBQbMAvT3izkyGhmF6Yn62dSpQuCrmGQfOm1dPkY8Pr8JnpTkD1RFNQFLwmWW1b+avm
-         jyUA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20221208; t=1689956838; x=1690561638;
-        h=content-transfer-encoding:in-reply-to:from:references:cc:to
-         :content-language:subject:user-agent:mime-version:date:message-id
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=ahIwLnlD7cr1aBwhJXa2haUworAGpZ2mINQou78VDu0=;
-        b=Ia9IKaBGtIlLBHrM/Yu+FVodXleP34ZEkY1szzbZiws7yt//CO7iW8ddRw3lhFpMZ4
-         83TmieWRkTOR+EFNxjN5VS3Ta9X22jQWRS3m2wiFIMPBGfXqNf+qUspID9nXwptJwZMi
-         EfmIg7b0qvnuJfaQQ1dBA1IQ9ELVg6xNiuXvCQR8wF20HuBIvZgsrmt/yTccbHTHoRV3
-         /Nmxx7UObJmGrWCVZXY9z/nSxZh7zpj+nZRJSm3tGkO1V7idYy/x3paSTS9QoGtoztxy
-         xavf2WnS0HuSRjLjaaKjI8GCmv+BBctjpFc6DDNWn/APwvxo09k4Yqb9uTriflQcK71L
-         4L4Q==
-X-Gm-Message-State: ABy/qLZhOnG/VOX1ZNKs7+no3HKrSWKHNSYQMHRdNyYWIFNWiFS/Dbq9
-        UMiA+LeyIDS7ijVxlIYad4k/1Q==
-X-Google-Smtp-Source: APBJJlHyDmJ6heC6rQgvSlxNOq/BYAOkCm+9EuNUvAih72hZqnStNzY3DW2e7C3MZSglmBhNYdWLXg==
-X-Received: by 2002:a05:6602:4809:b0:77a:ee79:652 with SMTP id ed9-20020a056602480900b0077aee790652mr2393302iob.1.1689956838086;
-        Fri, 21 Jul 2023 09:27:18 -0700 (PDT)
-Received: from [192.168.1.94] ([96.43.243.2])
-        by smtp.gmail.com with ESMTPSA id a20-20020a029f94000000b0042b34d4d07fsm1098840jam.156.2023.07.21.09.27.17
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Fri, 21 Jul 2023 09:27:17 -0700 (PDT)
-Message-ID: <4fcc44be-f2da-9a7c-03ca-f7e38ac147cb@kernel.dk>
-Date:   Fri, 21 Jul 2023 10:27:16 -0600
-MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux aarch64; rv:102.0) Gecko/20100101
- Thunderbird/102.13.0
-Subject: Re: [PATCH 3/9] iomap: treat a write through cache the same as FUA
-Content-Language: en-US
-To:     "Darrick J. Wong" <djwong@kernel.org>
+        with ESMTP id S231564AbjGUQbH (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 21 Jul 2023 12:31:07 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id DAE9C3AAD;
+        Fri, 21 Jul 2023 09:29:09 -0700 (PDT)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange X25519 server-signature RSA-PSS (2048 bits))
+        (No client certificate requested)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id D795661D19;
+        Fri, 21 Jul 2023 16:28:08 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 428CBC433C8;
+        Fri, 21 Jul 2023 16:28:08 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1689956888;
+        bh=GrXCeuTWgBbj6biTr+wDYPmdsZ0gc4ne9Z3Z2q6kEWk=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=laIiM6VqXLMXUuD21TykYG670dDEsDusDjKmspE0IWxxdtVzV3kfA0PIV+q1vKu5+
+         KTXxfVmFRY/+f5W4i70hCAREsphJTCMsxkJXpL2t8uxvsCvzXLEnvWkRyBuXCusgvw
+         YEmyLvjYABsuYa44ph2dcBO+JlCHsXTGJRUjjTWHKiB6hk3itjDmflPT/vrXpPrn/7
+         82I0VLIwTIVfEibmopHPkq52Qk5cQG07Wg9j5ScZBsVGGYiFl1KNJlV9l2kdyqA+eV
+         wxsBo4yb+jfYKQx376mxk/aCN0cGKPSFJmE8/Y88sZHLdB/zQSqZGr+i1oZN+Yq5IF
+         +TS8xXXxPcwlA==
+Date:   Fri, 21 Jul 2023 09:28:07 -0700
+From:   "Darrick J. Wong" <djwong@kernel.org>
+To:     Jens Axboe <axboe@kernel.dk>
 Cc:     io-uring@vger.kernel.org, linux-xfs@vger.kernel.org, hch@lst.de,
         andres@anarazel.de, david@fromorbit.com
+Subject: Re: [PATCH 6/9] fs: add IOCB flags related to passing back dio
+ completions
+Message-ID: <20230721162807.GT11352@frogsfrogsfrogs>
 References: <20230721161650.319414-1-axboe@kernel.dk>
- <20230721161650.319414-4-axboe@kernel.dk>
- <20230721162553.GS11352@frogsfrogsfrogs>
-From:   Jens Axboe <axboe@kernel.dk>
-In-Reply-To: <20230721162553.GS11352@frogsfrogsfrogs>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+ <20230721161650.319414-7-axboe@kernel.dk>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20230721161650.319414-7-axboe@kernel.dk>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On 7/21/23 10:25?AM, Darrick J. Wong wrote:
->> @@ -560,12 +562,15 @@ __iomap_dio_rw(struct kiocb *iocb, struct iov_iter *iter,
->>  
->>  		       /*
->>  			* For datasync only writes, we optimistically try
->> -			* using FUA for this IO.  Any non-FUA write that
->> -			* occurs will clear this flag, hence we know before
->> -			* completion whether a cache flush is necessary.
->> +			* using WRITE_THROUGH for this IO. Stable writes are
+On Fri, Jul 21, 2023 at 10:16:47AM -0600, Jens Axboe wrote:
+> Async dio completions generally happen from hard/soft IRQ context, which
+> means that users like iomap may need to defer some of the completion
+> handling to a workqueue. This is less efficient than having the original
+> issuer handle it, like we do for sync IO, and it adds latency to the
+> completions.
 > 
-> "...using WRITE_THROUGH for this IO.  This flag requires either FUA
-> writes through the device's write cache, or a normal write..."
+> Add IOCB_DIO_CALLER_COMP, which the issuer can set if it is able to
+> safely punt these completions to a safe context. If the dio handler is
+> aware of this flag, assign a callback handler in kiocb->dio_complete and
+> associated data io kiocb->private. The issuer will then call this
+> handler with that data from task context.
 > 
->> @@ -627,10 +632,10 @@ __iomap_dio_rw(struct kiocb *iocb, struct iov_iter *iter,
->>  		iomap_dio_set_error(dio, ret);
->>  
->>  	/*
->> -	 * If all the writes we issued were FUA, we don't need to flush the
->> +	 * If all the writes we issued were stable, we don't need to flush the
+> No functional changes in this patch.
 > 
-> "If all the writes we issued were already written through to the media,
-> we don't need to flush..."
+> Reviewed-by: Christoph Hellwig <hch@lst.de>
+> Signed-off-by: Jens Axboe <axboe@kernel.dk>
+> ---
+>  include/linux/fs.h | 35 +++++++++++++++++++++++++++++++++--
+>  1 file changed, 33 insertions(+), 2 deletions(-)
 > 
-> With those fixes,
-> Reviewed-by: Darrick J. Wong <djwong@kernel.org>
+> diff --git a/include/linux/fs.h b/include/linux/fs.h
+> index 6867512907d6..60e2b4ecfc4d 100644
+> --- a/include/linux/fs.h
+> +++ b/include/linux/fs.h
+> @@ -338,6 +338,20 @@ enum rw_hint {
+>  #define IOCB_NOIO		(1 << 20)
+>  /* can use bio alloc cache */
+>  #define IOCB_ALLOC_CACHE	(1 << 21)
+> +/*
+> + * IOCB_DIO_CALLER_COMP can be set by the iocb owner, to indicate that the
+> + * iocb completion can be passed back to the owner for execution from a safe
+> + * context rather than needing to be punted through a workqueue.If this If this
 
-If you're queueing up this series, could you just make those two edits
-while applying? I don't want to spam resend with just a comment change,
-at least if I can avoid it...
+"...through a workqueue.  If this flag is set..."
 
--- 
-Jens Axboe
+Need a space after the period, and delete one of the "If this".
 
+With that fixed,
+Reviewed-by: Darrick J. Wong <djwong@kernel.org>
+
+--D
+
+> + * flag is set, the bio completion handling may set iocb->dio_complete to a
+> + * handler function and iocb->private to context information for that handler.
+> + * The issuer should call the handler with that context information from task
+> + * context to complete the processing of the iocb. Note that while this
+> + * provides a task context for the dio_complete() callback, it should only be
+> + * used on the completion side for non-IO generating completions. It's fine to
+> + * call blocking functions from this callback, but they should not wait for
+> + * unrelated IO (like cache flushing, new IO generation, etc).
+> + */
+> +#define IOCB_DIO_CALLER_COMP	(1 << 22)
+>  
+>  /* for use in trace events */
+>  #define TRACE_IOCB_STRINGS \
+> @@ -351,7 +365,8 @@ enum rw_hint {
+>  	{ IOCB_WRITE,		"WRITE" }, \
+>  	{ IOCB_WAITQ,		"WAITQ" }, \
+>  	{ IOCB_NOIO,		"NOIO" }, \
+> -	{ IOCB_ALLOC_CACHE,	"ALLOC_CACHE" }
+> +	{ IOCB_ALLOC_CACHE,	"ALLOC_CACHE" }, \
+> +	{ IOCB_DIO_CALLER_COMP,	"CALLER_COMP" }
+>  
+>  struct kiocb {
+>  	struct file		*ki_filp;
+> @@ -360,7 +375,23 @@ struct kiocb {
+>  	void			*private;
+>  	int			ki_flags;
+>  	u16			ki_ioprio; /* See linux/ioprio.h */
+> -	struct wait_page_queue	*ki_waitq; /* for async buffered IO */
+> +	union {
+> +		/*
+> +		 * Only used for async buffered reads, where it denotes the
+> +		 * page waitqueue associated with completing the read. Valid
+> +		 * IFF IOCB_WAITQ is set.
+> +		 */
+> +		struct wait_page_queue	*ki_waitq;
+> +		/*
+> +		 * Can be used for O_DIRECT IO, where the completion handling
+> +		 * is punted back to the issuer of the IO. May only be set
+> +		 * if IOCB_DIO_CALLER_COMP is set by the issuer, and the issuer
+> +		 * must then check for presence of this handler when ki_complete
+> +		 * is invoked. The data passed in to this handler must be
+> +		 * assigned to ->private when dio_complete is assigned.
+> +		 */
+> +		ssize_t (*dio_complete)(void *data);
+> +	};
+>  };
+>  
+>  static inline bool is_sync_kiocb(struct kiocb *kiocb)
+> -- 
+> 2.40.1
+> 
