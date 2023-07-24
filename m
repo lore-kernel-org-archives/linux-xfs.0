@@ -2,251 +2,377 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 292C8EB64DD
-	for <linux-xfs@archiver.kernel.org>; Mon, 24 Jul 2023 04:37:54 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 59AF6EB64DD
+	for <linux-xfs@archiver.kernel.org>; Mon, 24 Jul 2023 04:37:57 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229543AbjGXEht (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 24 Jul 2023 00:37:49 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52732 "EHLO
+        id S230038AbjGXEh4 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 24 Jul 2023 00:37:56 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52842 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230022AbjGXEhr (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 24 Jul 2023 00:37:47 -0400
+        with ESMTP id S230054AbjGXEhz (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 24 Jul 2023 00:37:55 -0400
 Received: from mx0b-00069f02.pphosted.com (mx0b-00069f02.pphosted.com [205.220.177.32])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A453F122
-        for <linux-xfs@vger.kernel.org>; Sun, 23 Jul 2023 21:37:46 -0700 (PDT)
-Received: from pps.filterd (m0333520.ppops.net [127.0.0.1])
-        by mx0b-00069f02.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 36NNnXb6018552;
-        Mon, 24 Jul 2023 04:37:42 GMT
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7A3981A5
+        for <linux-xfs@vger.kernel.org>; Sun, 23 Jul 2023 21:37:53 -0700 (PDT)
+Received: from pps.filterd (m0246630.ppops.net [127.0.0.1])
+        by mx0b-00069f02.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 36O2jvwG026582;
+        Mon, 24 Jul 2023 04:37:50 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=from : to : cc :
  subject : date : message-id : in-reply-to : references :
  content-transfer-encoding : content-type : mime-version;
- s=corp-2023-03-30; bh=aS7aNBYCuCoCy9DN+ETg4jVMG9CziEaLI/hvKubgldo=;
- b=CprH75KrtBB2KhdLfWmFCMgc4dLwdsrQBOm/wd75fLeEUqolMSmGhF0UnZFba9J2exov
- 4icNsifC9DI0O1SVQzocfu3y+A78oiyUpAVyPLGKueMXJMSUNrCly24SvJWV46qaIkZZ
- v4BCAwlvrGS/+Qza7crm4NoDZ1corKC8Ek8QFfFeZC+O85zJMknnoSrENlaCyz63lA8A
- gh2Wrm9BohlcdhgVq4Q66HnTZu0vfnj81Db7GdDPp7UdcxtrroctfWxQQgkPe+eJ5Ft4
- om+zl2SInJLPI0Hs5D2JZxLZOKSwFDQqqeqY+8uACyxozWNFI50gvTOeFcubxbVxyXwF xA== 
-Received: from iadpaimrmta01.imrmtpd1.prodappiadaev1.oraclevcn.com (iadpaimrmta01.appoci.oracle.com [130.35.100.223])
-        by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 3s075d1u1y-1
+ s=corp-2023-03-30; bh=H66qGbjV70ou8FWBBgOpLIkBPi9qfcwQl+qUFzfsv6Q=;
+ b=DMxPBpiqX2t2iEsPqby2Ww/8rzERqvVt4mLyV/LOyiZ/4Us0epdl4J5z+JOtulX0mBBv
+ 6EC/NCF1mv2aUEvOYFxp6E18hdZUVHmeEQaUvptQAWjFNDREfV0SD6RkAXYV0a7wW6xZ
+ mZ1M4YiIWsVYgN4U0zviGRJbciugsC5SzYKoCNgXa6IcxQn/WuCRbap5A64rLI2F/wxQ
+ CtURkeAhEKabex5LpuGRDQTNxoIS8JrZVbdnk8hPY3ecRNkAeEeA1cMTAdwbIVbl6By5
+ 7OMlv9PfZQ1oX51AGOYmaVFnPLnBvfObrxMowf7eUWGJdK4mhJWa/gb4Rmh9NmyUhp66 Kg== 
+Received: from iadpaimrmta02.imrmtpd1.prodappiadaev1.oraclevcn.com (iadpaimrmta02.appoci.oracle.com [147.154.18.20])
+        by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 3s05hdsv9a-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Mon, 24 Jul 2023 04:37:42 +0000
-Received: from pps.filterd (iadpaimrmta01.imrmtpd1.prodappiadaev1.oraclevcn.com [127.0.0.1])
-        by iadpaimrmta01.imrmtpd1.prodappiadaev1.oraclevcn.com (8.17.1.19/8.17.1.19) with ESMTP id 36O440SG029092;
-        Mon, 24 Jul 2023 04:37:42 GMT
-Received: from nam12-dm6-obe.outbound.protection.outlook.com (mail-dm6nam12lp2172.outbound.protection.outlook.com [104.47.59.172])
-        by iadpaimrmta01.imrmtpd1.prodappiadaev1.oraclevcn.com (PPS) with ESMTPS id 3s05j96jjf-1
+        Mon, 24 Jul 2023 04:37:50 +0000
+Received: from pps.filterd (iadpaimrmta02.imrmtpd1.prodappiadaev1.oraclevcn.com [127.0.0.1])
+        by iadpaimrmta02.imrmtpd1.prodappiadaev1.oraclevcn.com (8.17.1.19/8.17.1.19) with ESMTP id 36O26NSY028227;
+        Mon, 24 Jul 2023 04:37:49 GMT
+Received: from nam12-dm6-obe.outbound.protection.outlook.com (mail-dm6nam12lp2177.outbound.protection.outlook.com [104.47.59.177])
+        by iadpaimrmta02.imrmtpd1.prodappiadaev1.oraclevcn.com (PPS) with ESMTPS id 3s05j96cfr-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Mon, 24 Jul 2023 04:37:41 +0000
+        Mon, 24 Jul 2023 04:37:49 +0000
 ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=Kp+fAw+dReMhHJWpSEW8LMkh7wX0w8+WNqqHFsiUOcZYybKXP7+y4dXa18s6CgkBSP8ohqRn9ytj0gbxlyyPFkugnUXzFZ8fCBHZifiKvOM9uwOj+fNgrFrnlKXFYnyCgc/U/UdnhBR7WKyAh2hwmrIYi51TN6jrG/tKTLFBiRgylHb77/3zxTIcKctyAmDkRt92x6c6iDogmXuEsz8pkyB0YEP6TkySZpmilvR/IM3gsEUEf2JaPhy7FW50U/cNUzgiF57RjEbc2H68hgJQOsSNh1Kxy6xWXZKD48coiFNBRFPnRFq9ic/qI7T8v4wfr+ZhfOIFaGjYj9leyYA7JA==
+ b=RcDf6SvR3gPCpm/byPY5gH4x6GktfFTcN0Eb56qUWCmgjrC8JxJCrH4yVp4Ojsk8E/+7cI5UXh91pGv/Sk9xsBQd83mNbfRy7GU0yRSn+2YB5ue5hYVLKP05pMXPr8xlmQ8k0Ny4Ir/jVp+eX7W1IhGnCikHE5EST2UhF+QCZCMRV6VlLpg/8WGCPDO4dnikO9J7SZ/X3Vx5tYZKepcR+kmOdiCxfgQtGoTpN8O/A/OLSLYJAEyiQvd/VqJ4cU7rUCuxQuDNPJhZ1HiWIl13PtADmll+7vpLeyyGq0rapcAxMiCYTpbYM4Zo6zOJluAKTk/AbpjVnJ81cRdMJUAgIA==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
  s=arcselector9901;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=aS7aNBYCuCoCy9DN+ETg4jVMG9CziEaLI/hvKubgldo=;
- b=PLHZtjBvMUx8liT4co4XTmrXydSNho7cYTss+7k4pppJms54wj++u1/pF8p4C0eal6prY4ewYLHJp8U/lgUFxwXb0Hf5GXxxS2acaw1N7KaH9/3z6+vUiiFDAEzZRc4myqAhpZxf7pK557v9v60mAx0+eI3HX8K8JdZm5KBcWYfRJi4jGL/Whw0DXvAcAjmfw994xTLZKIz0NzlTQXA7S8h4APNpaqKB7ZrP9AsalklG4ebrWif20T2lUtrtvZUsAFB4EnSZSsjujIgvWEUHZH/xQ43A08d+ekVoFuvqN5n533AAbpBabxm5zcSbvs50Xr54sPWiL6U/XsBKGW8XqQ==
+ bh=H66qGbjV70ou8FWBBgOpLIkBPi9qfcwQl+qUFzfsv6Q=;
+ b=MRrXyeuiJ7zRHwMQqBwopJpZ+GHGz2wiehsWSS2Uv9fOXpnBS/lHN7TnZbawL1UoU7ReVWFE3mYyRSij/dwrh1UPJTHXq8TcFUP/+BcAevYZbHvrjoC6L2TN5pXaIIPh5K731P0HndF3h3u0trL+izG3k4F15VFYUSSYpHLSZcnBkfXsvsGRSf7EN5jZLTtjB9DWjB4W35c+9dGdbF9aTQlQ4eLRnNH6TiOVedVw/xHV8cDwGvrn4ZZ7I1ekBzT6AEQdC482aFh8Iq8lIX1UeiTeyi8EjrlrHRysLjQN0TPCMUbhesqW5qDE/yciNhAm7tk/N6Q/RpbbgOUe5y0adg==
 ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
  smtp.mailfrom=oracle.com; dmarc=pass action=none header.from=oracle.com;
  dkim=pass header.d=oracle.com; arc=none
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
  d=oracle.onmicrosoft.com; s=selector2-oracle-onmicrosoft-com;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=aS7aNBYCuCoCy9DN+ETg4jVMG9CziEaLI/hvKubgldo=;
- b=MBrhnv+mmAVfeMAlisggYioz20ZI66x5V6tvZUKo9cqb6Vpx4q+2YHIU9bn6azGAMZeWxpYuET1G/m3Usz58BcWfCt8It0347jKg3YcJVGwt9Bcmg7sXul7SJL7skiyP5WBLVSzoFjJUMLeQ+TQbV4njbXgJgQny6zi2v4D81ag=
+ bh=H66qGbjV70ou8FWBBgOpLIkBPi9qfcwQl+qUFzfsv6Q=;
+ b=kohilrwY+fw8ye0+5ahqYuMNRTJEIGHU+dxdLRNEn2z4/JvFlPU+KPJB1FWFIFmLJuynrTP9nk5z5bjmT/npLAQStN/Fs/Af0PjEgnOV+U6AAiJzhnGy50r6WO541hhlYTNwyFMtAfzji7yoBXjO6hR6FifEyZyKUqUPKEM03hc=
 Received: from SA1PR10MB5867.namprd10.prod.outlook.com (2603:10b6:806:233::19)
- by PH0PR10MB4774.namprd10.prod.outlook.com (2603:10b6:510:3b::22) with
+ by BLAPR10MB4963.namprd10.prod.outlook.com (2603:10b6:208:326::23) with
  Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.6609.32; Mon, 24 Jul
- 2023 04:37:40 +0000
+ 2023 04:37:47 +0000
 Received: from SA1PR10MB5867.namprd10.prod.outlook.com
  ([fe80::707c:5a02:87a1:38e0]) by SA1PR10MB5867.namprd10.prod.outlook.com
  ([fe80::707c:5a02:87a1:38e0%3]) with mapi id 15.20.6609.031; Mon, 24 Jul 2023
- 04:37:40 +0000
+ 04:37:46 +0000
 From:   Chandan Babu R <chandan.babu@oracle.com>
 To:     linux-xfs@vger.kernel.org
 Cc:     Chandan Babu R <chandan.babu@oracle.com>, djwong@kernel.org,
         cem@kernel.org
-Subject: [PATCH V3 12/23] xfs_db: Add support to read from external log device
-Date:   Mon, 24 Jul 2023 10:05:16 +0530
-Message-Id: <20230724043527.238600-13-chandan.babu@oracle.com>
+Subject: [PATCH V3 13/23] metadump: Add support for passing version option
+Date:   Mon, 24 Jul 2023 10:05:17 +0530
+Message-Id: <20230724043527.238600-14-chandan.babu@oracle.com>
 X-Mailer: git-send-email 2.39.1
 In-Reply-To: <20230724043527.238600-1-chandan.babu@oracle.com>
 References: <20230724043527.238600-1-chandan.babu@oracle.com>
 Content-Transfer-Encoding: 8bit
 Content-Type: text/plain
-X-ClientProxiedBy: TYCPR01CA0016.jpnprd01.prod.outlook.com (2603:1096:405::28)
- To SA1PR10MB5867.namprd10.prod.outlook.com (2603:10b6:806:233::19)
+X-ClientProxiedBy: TYCP286CA0337.JPNP286.PROD.OUTLOOK.COM
+ (2603:1096:400:38e::15) To SA1PR10MB5867.namprd10.prod.outlook.com
+ (2603:10b6:806:233::19)
 MIME-Version: 1.0
 X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: SA1PR10MB5867:EE_|PH0PR10MB4774:EE_
-X-MS-Office365-Filtering-Correlation-Id: 46142786-2573-4a05-38a7-08db8bffb680
+X-MS-TrafficTypeDiagnostic: SA1PR10MB5867:EE_|BLAPR10MB4963:EE_
+X-MS-Office365-Filtering-Correlation-Id: a48ebea6-3651-43c3-d512-08db8bffba7e
 X-MS-Exchange-SenderADCheck: 1
 X-MS-Exchange-AntiSpam-Relay: 0
 X-Microsoft-Antispam: BCL:0;
-X-Microsoft-Antispam-Message-Info: TPG4MEguzD2G9yazJCDHjZuqeJTIYRLNImyYVsEBFTynK6u5C0uhKF55hB9YaSkI1UhDEXHxTvVJaKugcOS1tVkc9gVDi5mtevHmbxzTw5PwU7KhyAst3/QhMLoaOKG87V8rnYN4DHrmuO/fTR7nspeWMVx32nx0nJaeMU/9PVta0EyH8dLEdLLPKXKtNjm6Zx503jeTPu9P09y2J90TKcveZglUb575KCRuGksifcpo2DvF4uZOcWtwgAbrg006WkkvBcuulr47X0iOOIHgT7Qv9gOiS7CUzEK3+ZUf8WfQqswx9TNbOOi+wrfsXqzDishtR+iQlJPe+y0f7Mxs25sAanXIiwqsMD+7+rsF/KKm7d8432iFM+JonelYiVs+PDjrJU1G96w33ZDvm7jdaCEIo+/0oilzocIk9SU1vFCvkWEJSLey3k0yGBfrOrszKFFB+eR4c1WfowjNjtsBOwDgD1L2YrtXQ8JFvCD2negvZFHBpt2+/rI8VV1zccmAuNUhRhtpLzIhQArtHHgD7cZWCnmbY6SACkksoz8v1UCw0zAnmDeuO66xgLAUiCM8
+X-Microsoft-Antispam-Message-Info: R32Hwi5XqOlJilJYh8jd8Nj0+UMsWP7P6bBsB+MGHTyoe+7B7kIgEKVukKLuRoXPxagu8zdqN49P+uGbq14SeXxYGekjUX3fH7Z93fiPEGCDSgpzN1SsuxCadc5nsmT4sAXqk7ZFPtiQ80wGrEfrZfDOmgDcYgQxt9Z7sFxC4+Xhsnom4l23ct+0rimGqIBdvwN+2CiAGKQM69DIEuQDpqX5aOKGlCA43D54kvDr/cVdjEMBMQjmkMMMqOeVRB4kTRFUtNRpea3bgUwTbgWz1YMU4aJIc9bTQ/mg8JjHYJfHJZNIyG4wnfMB+7SaTjD93zdi7iZXXFLY73e+nbTL8bP8uoVpL6iiE6LU7BxJc9n3ATAmKzY09oAbycTfoD5U1ragY0uxpZEF3ruh7+LLOxrkK3HMJuxf2tcc94Q060xFkpzV0RnQIbPeyUByK4VtqpyFDk2prspG0dFKtkTQ3y3fz4nCRha3Huc90zNSdYIWTRgH8RRZxqTSZGaa+wo4lYFuhlznT83oWLvBQnOCZV6/v9eENfhC0PZLqRNLK6nb48U84xLZ5PxXomjxmT1R
 X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:SA1PR10MB5867.namprd10.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230028)(396003)(346002)(376002)(39860400002)(136003)(366004)(451199021)(2906002)(66946007)(66556008)(66476007)(4326008)(6916009)(6486002)(6666004)(478600001)(86362001)(6512007)(83380400001)(36756003)(186003)(2616005)(26005)(1076003)(6506007)(38100700002)(41300700001)(8936002)(8676002)(5660300002)(316002);DIR:OUT;SFP:1101;
 X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0: =?us-ascii?Q?vJL/V7J0VIp9yB+UkwAy3xqsXXP/qEUZsBmx1xL0exppU3Za3HB2IBkdTsZj?=
- =?us-ascii?Q?uVWyBMauiy67Qjqhe5tSQ0GlYXXsabdcYhjDc1NW5UrTMlYZ01SaqTzamg+p?=
- =?us-ascii?Q?tmcoi/hMEXnnYiMBckv32Yy56tvbItqluPvqdI6EhdNvHIJtPAKU1cALDHM+?=
- =?us-ascii?Q?WT3M2CM8INSp+BZzud/UdTP7KaSd+5ihUDLYLybRFtsr0QRHvfNTN+TS+yPy?=
- =?us-ascii?Q?ccAr1jQwudK3BZtE6cV7JXqvoU9C5l6qIQCHy5Cx56eNtW8ESdOv71IaC0s7?=
- =?us-ascii?Q?y0LwgA1ueE3duimO3KBF6zivcwiJI94gmrd3Y9/If+XpQu8/Y3Qh/aCHV1i5?=
- =?us-ascii?Q?Od+YTpXAOqSHEhsNjxYSIDvbB2YDlkw4OQwmdrTnMUnyUdz5Av1E0gG/IptE?=
- =?us-ascii?Q?M6/jxcY+9H7AzxK6iUitA9RfQ2UWkIFoB5TPQWwZxbuXWmXYcEGisTqpSZe7?=
- =?us-ascii?Q?94vOPBLCRaILnUwJYKJ5Uhsmbo8CsuRcxY1xfa/B1WuhvslMGUnGbu2yusG/?=
- =?us-ascii?Q?+2NzXfGUpq4aZZjt4MFPdQEEUA45iRyKbqESPKKoPWPbqREJjCPt5ity1ExI?=
- =?us-ascii?Q?zCJjHk1Xmz03MEX4YpK+RV7OLDyEEuwFBniHUGltJiZ7hzgBKZabZwWZB1Ba?=
- =?us-ascii?Q?ah3eb227tUwDd4TJ6hMwrM+S6xjNiKT7O4pWDPbfkNAz/2E36tvX7SKHnhGf?=
- =?us-ascii?Q?Y5X7AdXInCqFz8wU/EG6QVyaRWGHwRXsfSP+U5Eq+HwHWecMyD3wGEh9No+4?=
- =?us-ascii?Q?1VQYw5h72MRT/a7yhvgtTPPJyBgcdbBP6BJP+x5HfMA5Z+fPVZL7P74wAk6O?=
- =?us-ascii?Q?6ZwKHUb9RBY1k29l3OrQYz5MlS16YhcgZVpA7Xdob7x/CahlSIC0M+zQblGt?=
- =?us-ascii?Q?SCaIUpepQCmq3frUudjCHt2yyNYHSmGIM9a7hudX+iXJ0s00BSRsqkzJDyZ/?=
- =?us-ascii?Q?KsfOFLRLyajURRvw9Fr3OOgzFdDB/o8UDEcNEvVhzmYQ3Ff/Lzx+7QyC6zb9?=
- =?us-ascii?Q?FhJiICZnY9mg4Owa2j5RxK6ub3BDf2bvtZmyA9iT/sdm8UMG42HlFWRPWjKP?=
- =?us-ascii?Q?p8SCNO0wTIQvcWdGdSorCzmraHPfQV3hb+5i6Olol6ynMazU+NGVuAzY79Vm?=
- =?us-ascii?Q?Udacs7rWWoiMcxFWBAkuXVRYl/Lz1/pP/frUQLauxwoR1cnXl6h/mTOoxMsK?=
- =?us-ascii?Q?ZIpwC9UpD+JvcYleh4n1j38hQSbbA/0iP7EAiZk2tI34HDCfFloq55jVef/D?=
- =?us-ascii?Q?qjBKJ/Kke7ILDoeOjUKcYV/wG+2HtILj4TMRs9pBwBYwFaCECEVHj+3+39bn?=
- =?us-ascii?Q?+ra57lLDNxM9Pxh3XwZCLVAHqbYXTlSC1lbT7oDB1Rwtke73uqEwXgBaPGWn?=
- =?us-ascii?Q?S5y4kZOke5OZ6pDBUqDa8SMfrYWb98PLf0LXlHg/CSjDx2rDI8EFwZxC5Yyw?=
- =?us-ascii?Q?Lwn+m1E/6zoUDhuvu63jdQoCemPZWJjYX24vWQG2bzZx0tKneiXmA6XjJWaL?=
- =?us-ascii?Q?gLBpfOajnLJPeQWbbwni+8Cky8vK/Vrpnt8eomj+wkFChi90dOi2MRKDfnFR?=
- =?us-ascii?Q?tkCRMyeV5e16ZKrpuLQNU0grfEfJOTJSPWaM6fp5SwZldat2mriUF4yjp/rD?=
- =?us-ascii?Q?vg=3D=3D?=
+X-MS-Exchange-AntiSpam-MessageData-0: =?us-ascii?Q?X9DTgGGWnQ808z/m8dU4cLpMOavJ6YaEy/nLtMOm4t0hsNr/DK2ydhedTQWs?=
+ =?us-ascii?Q?4abXgjZ171YQdtdFu3w2fbGT9uazw0hrxNNwLENCRWvdgCU3nH0Ku7qnAH1E?=
+ =?us-ascii?Q?4qxvo4/BpIX50CzU9dJyUULT2bzVqJGlxG6g/5JeaoqNJcl430Q/TSeoTD8J?=
+ =?us-ascii?Q?KLIAqXnoIYAuVs3Nt/fYlOf3bHmF0PJctfsQMkSH9+R87nl2maKbSITKYYpd?=
+ =?us-ascii?Q?0en9Og/kdnXBhVpHXOfnYm9+JMk/ebKkz8Ie1IUhZAPPQyAHFoK3nAFikoSF?=
+ =?us-ascii?Q?J8iWHsgmRav6ADoAinttbEebvMA11FxkxGWimwF9X8WscAjMqUIlFt20KC3Z?=
+ =?us-ascii?Q?/KjT1IIV41CoGKijRmNYBp/bD7TNM2GvigxfBRPxhGP7Y5mcYrzfeX/j3WMN?=
+ =?us-ascii?Q?SixeDu8jN1cOMmTf+Z63jj/P+My5UXzQXgIgodwe9VIbJ2k0/Fw1rGgfLtKP?=
+ =?us-ascii?Q?XpNV4HF7aAEqSCe+evJySf7flFgSFGDeZx13L/GRgOjysYhmg/2Ti/+ktIuh?=
+ =?us-ascii?Q?yhJGYEHIdfrJUQrnXatFx6t0kfJtlSD2OlVotBm+nkwG/6jeS9mQQK8Jc/KH?=
+ =?us-ascii?Q?K5/eT2bCPM2Ig0UfYOEC+CGnuO49HLTDwGmR9j858vwXXX8xwUSqDczJwLwg?=
+ =?us-ascii?Q?APX0FH/EM6gVACWMhN7hEFm8eYG+52w6vYEEcEgHLYs1xAes8TDUmhY1Dp6/?=
+ =?us-ascii?Q?XisA7A4TzCQvqVhtGgdujz3LEtbiwbb7Kmg/vOeyXj5TL1xQ8vC05OfhsPxe?=
+ =?us-ascii?Q?3YZhvs2ckgucDFIW5nCf6120HFfRBO/g9XZPFvIQfoL3RzyJH47rOKSGdfP2?=
+ =?us-ascii?Q?6I2rYBmtSStPx9gL/gJ7lp6VC10cXk1se7COP+VIzenh+4Jd5yMonW40g7jJ?=
+ =?us-ascii?Q?no4dG3JDPX6HI4MxNsle+Yra9Dz9BjPALoZn8MPB59IWqEUAmMnzwFEIAmwN?=
+ =?us-ascii?Q?/2eMmyHAEVSM+NuCZRzvudEjLoaZ9KOP1vMfXw7MfhiGeEaZSmGhdonSamZb?=
+ =?us-ascii?Q?5UeQ5c7Wp+l36l8grpHsDj0pIovwRtcQgNirxmb9t/+v1xVPPzwvceEgJrAV?=
+ =?us-ascii?Q?K6l1hgPn5qgN+NPFUejHc+E54j219PqA3GpaWixHxvSiKyc28u8/nBq7vVMD?=
+ =?us-ascii?Q?7hmdNXSmHPllzFbMw8w6rW7akKXlE2CCxsfelXhd+Sl2YMeZB2PNz0Gu5Hah?=
+ =?us-ascii?Q?XQHK/ZGABCe5k76KyhsbFMl5dJyuWQIiXDmU/hRT1pC+ihyY+rXZLK5t4MmT?=
+ =?us-ascii?Q?ZwdCW0vyE4jkU9l5ji17d2J6hnxlulgXbc468SB3YqhIwjCBoQ7aOq+cLnkn?=
+ =?us-ascii?Q?md3kqSrs8BADD9DKh5Yx31QcwP3dXhaxsipXlc1vAwPlRy7pVRHGdWg7gM+E?=
+ =?us-ascii?Q?j2XNjB96zz0pQ1J560VGYrkt/Rj7t8zUpKB3FS4o8+O9E6XJU2L+O635NPAZ?=
+ =?us-ascii?Q?PNHbx7vsYXNmFyAGJcJ18fhK7VRiEevE4a3+yZPs//UgrMkcQS+TJclCA+/a?=
+ =?us-ascii?Q?4NBKiHETUt8TMVTszN7sOOqGVaPAStaqSjdg9URulrON0JBa/CXU2c0nOvJA?=
+ =?us-ascii?Q?sbW0DL/LL4QQcB7M4bu1GERY+hSvH0MPvB6APiT9PyEjak/CeqtjDOd4vtzR?=
+ =?us-ascii?Q?ww=3D=3D?=
 X-MS-Exchange-AntiSpam-ExternalHop-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-ExternalHop-MessageData-0: nnpdAI5+NTmDtjvaJKmAzWrWFgFdV9Vp3jELio5xYbKGVlFoS8Aw/6YDYGtqUm+Rnp6UthEhgPgMFuk8BXlnf3ijUxghgdC/YvWOwFGcbluF8BDr5iPWoMo7Y47p1BEqLLf71WITGPUnfJ2rd6izSq4w16QzlRd3i5duSgOpBNM4NKOlNnAqogvnaOjkc4zbWX6nQzUMVhHs9W7wb2qzF48u1UvDk9EO1TN5LRYKn99On0ra5qbBrrLBq+y6KFERIr5XUGle59EOvW/Sa5fqxWHSagFHNXTFBGezVQ47/o2rrQlBolQ8c7/taAavQaUmMaR1OW0OWuBUz4Njdq2Ac2QpyB9isSRxZvTg36jG6iC+8ofZQN7oIhnfvD8aka7REk8oBkzH9oe3l4G6zK9U2R3DvfAkV2xkgIMpiiMBST/AD2794AU9G16zRtmvcZdxJs+7kgXcvQY2Ml33cQzcA358EIcgH4QD0nuzZFa5UGUwaUPTSHhTZNJ+iLr8KBoOCEdXgB+13MDgUqpfqZdf8tuV+/P/dHGC543RGZuJY72cukCIPm8Q91s8C9BqRNC56HJWJnebFzOCDYYUMS42aSfJK4oZkPIA2f83+B2fjM12gjIgD4dXImq/RcZVyb47sb1cYN2BjT3RQAs9SXOWv/YMKcLquvqmZ55xsEuvPZwiDdmwBWN0uJOxrA4wcknyEuHLluN8FGNkdG88FVRcya2TO6ZtMYFBhL5+z85cRoDNqglRveHSvG2PphFkFj7XnkaSnOLBQSWMIKvKItiG5v8rv1IrYx9JSyrs/NtpQeU=
+X-MS-Exchange-AntiSpam-ExternalHop-MessageData-0: WAl/TDnvz6j428MhOnGiMb6DwSe4wszp1XoVZLRjybS9vBZhS1sgA5DXVg1LhbFATYexu7SpGcJJTr5yJ5VoPIXSAOC/5TbUEPon2vMBKKOEgwrAMk8f22QrT2g9wD441UUbUuN4ZGdsAO6jIc6ItSJOgAFTIdN9gzbBS99B6Mm+245xILY4uPFQvOWd/gw56Zzx717YVniGqEcqd3QNfF/1pt7eY0ObQ5HSdOhF5DOH7kLu3xsdItFAzCfs9cm+TPhFkSyNCz51U4XBGAfLySV5/uqiNZFRGOLp2yyz7I1fW973dOns1KJRkdG+lax9FpByGelsbSriqMsOXqM0Xz9gENpj/YXsBZ7JhQstBFNFqIuWhWczlOy/oaCItSfpCBm3SASeHExxguLHI2YfSwU+RQmwsV0wmRNAilsWwkm8t2JFs5rEuEMjehMIID5Uho0PzP5Lr5KZ2HeUhTucxPm0knBJf0PbYrzpzZUH6bofOLuENhcF9ht7PI0ZwpE8dgQI7/4+CKXjmH9xZs43BbRFY/dMinOWlH17Pee/BuJvn2M7AIP6fQUJLiHObzpxFd9Ih3mopYLv0SePFZjdMPd7Ib+d/iJBPEjeAQkcKua54L/yMPL4c5CBl+jogBnasQr5P9aA6Zq5MXh/4sIuD9KjAUM6y0/XuqRAXn9RhBMB9DO1uwUtkD9WKAHMVRFhQKb6b0zvF+WDo5yAkErmqZsT67KuqesWfIWlgF6B8s02uvMykTjDXVtM3oJoi8aKajqNbu478dcKGeFY8kPPJej6NJBKrihAySn5bDWrZMQ=
 X-OriginatorOrg: oracle.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 46142786-2573-4a05-38a7-08db8bffb680
+X-MS-Exchange-CrossTenant-Network-Message-Id: a48ebea6-3651-43c3-d512-08db8bffba7e
 X-MS-Exchange-CrossTenant-AuthSource: SA1PR10MB5867.namprd10.prod.outlook.com
 X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 24 Jul 2023 04:37:39.9857
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 24 Jul 2023 04:37:46.7004
  (UTC)
 X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
 X-MS-Exchange-CrossTenant-Id: 4e2c6054-71cb-48f1-bd6c-3a9705aca71b
 X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: SRZ9tG0TaBHZtquxOi6GyQq2dWGGPJWniKKMzdgh49N7h9qo/7zuj1pRRAam12D/tz/Vp0174VNlW8jJJQTeNQ==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: PH0PR10MB4774
+X-MS-Exchange-CrossTenant-UserPrincipalName: cL7vNaJ/qu2i+IzaX03xRU/FWZ1MXVSmY1sk8KnAj+m5JfzUD/6xMimUwpNTc1yM20+ah1xUjzBKJLjjpKX21g==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: BLAPR10MB4963
 X-Proofpoint-Virus-Version: vendor=baseguard
  engine=ICAP:2.0.254,Aquarius:18.0.957,Hydra:6.0.591,FMLib:17.11.176.26
  definitions=2023-07-24_03,2023-07-20_01,2023-05-22_02
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 mlxlogscore=999 spamscore=0
- adultscore=0 suspectscore=0 phishscore=0 malwarescore=0 mlxscore=0
- bulkscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2306200000 definitions=main-2307240041
-X-Proofpoint-ORIG-GUID: dHNRbtUjZ0IIeiQZhhx6psjibckvo6Rr
-X-Proofpoint-GUID: dHNRbtUjZ0IIeiQZhhx6psjibckvo6Rr
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 spamscore=0 adultscore=0 bulkscore=0
+ mlxlogscore=999 suspectscore=0 phishscore=0 malwarescore=0 mlxscore=0
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2306200000
+ definitions=main-2307240041
+X-Proofpoint-ORIG-GUID: terID1S7hMVJXVXstKO0_1ha-_l8WTvt
+X-Proofpoint-GUID: terID1S7hMVJXVXstKO0_1ha-_l8WTvt
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-This commit introduces a new function set_log_cur() allowing xfs_db to read
-from an external log device. This is required by a future commit which will
-add the ability to dump metadata from external log devices.
+The new option allows the user to explicitly specify the version of metadump
+to use. However, we will default to using the v1 format.
 
 Signed-off-by: Chandan Babu R <chandan.babu@oracle.com>
 ---
- db/io.c | 56 +++++++++++++++++++++++++++++++++++++++++++-------------
- db/io.h |  2 ++
- 2 files changed, 45 insertions(+), 13 deletions(-)
+ db/metadump.c           | 81 +++++++++++++++++++++++++++++++++++------
+ db/xfs_metadump.sh      |  3 +-
+ man/man8/xfs_metadump.8 | 14 +++++++
+ 3 files changed, 86 insertions(+), 12 deletions(-)
 
-diff --git a/db/io.c b/db/io.c
-index 3d257236..5ccfe3b5 100644
---- a/db/io.c
-+++ b/db/io.c
-@@ -508,18 +508,19 @@ write_cur(void)
+diff --git a/db/metadump.c b/db/metadump.c
+index 9b4ed70d..9fe9fe65 100644
+--- a/db/metadump.c
++++ b/db/metadump.c
+@@ -37,7 +37,7 @@ static void	metadump_help(void);
  
+ static const cmdinfo_t	metadump_cmd =
+ 	{ "metadump", NULL, metadump_f, 0, -1, 0,
+-		N_("[-a] [-e] [-g] [-m max_extent] [-w] [-o] filename"),
++		N_("[-a] [-e] [-g] [-m max_extent] [-w] [-o] [-v 1|2] filename"),
+ 		N_("dump metadata to a file"), metadump_help };
+ 
+ struct metadump_ops {
+@@ -74,6 +74,7 @@ static struct metadump {
+ 	bool			zero_stale_data;
+ 	bool			progress_since_warning;
+ 	bool			dirty_log;
++	bool			external_log;
+ 	bool			stdout_metadump;
+ 	xfs_ino_t		cur_ino;
+ 	/* Metadump file */
+@@ -107,6 +108,7 @@ metadump_help(void)
+ "   -g -- Display dump progress\n"
+ "   -m -- Specify max extent size in blocks to copy (default = %d blocks)\n"
+ "   -o -- Don't obfuscate names and extended attributes\n"
++"   -v -- Metadump version to be used\n"
+ "   -w -- Show warnings of bad metadata information\n"
+ "\n"), DEFAULT_MAX_EXT_SIZE);
  }
+@@ -2909,8 +2911,20 @@ copy_log(void)
+ 		print_progress("Copying log");
  
--void
--set_cur(
--	const typ_t	*type,
--	xfs_daddr_t	blknum,
--	int		len,
--	int		ring_flag,
--	bbmap_t		*bbmap)
-+static void
-+__set_cur(
-+	struct xfs_buftarg	*btargp,
-+	const typ_t		*type,
-+	xfs_daddr_t		 blknum,
-+	int			 len,
-+	int			 ring_flag,
-+	bbmap_t			*bbmap)
- {
--	struct xfs_buf	*bp;
--	xfs_ino_t	dirino;
--	xfs_ino_t	ino;
--	uint16_t	mode;
-+	struct xfs_buf		*bp;
-+	xfs_ino_t		dirino;
-+	xfs_ino_t		ino;
-+	uint16_t		mode;
- 	const struct xfs_buf_ops *ops = type ? type->bops : NULL;
- 	int		error;
- 
-@@ -548,11 +549,11 @@ set_cur(
- 		if (!iocur_top->bbmap)
- 			return;
- 		memcpy(iocur_top->bbmap, bbmap, sizeof(struct bbmap));
--		error = -libxfs_buf_read_map(mp->m_ddev_targp, bbmap->b,
-+		error = -libxfs_buf_read_map(btargp, bbmap->b,
- 				bbmap->nmaps, LIBXFS_READBUF_SALVAGE, &bp,
- 				ops);
- 	} else {
--		error = -libxfs_buf_read(mp->m_ddev_targp, blknum, len,
-+		error = -libxfs_buf_read(btargp, blknum, len,
- 				LIBXFS_READBUF_SALVAGE, &bp, ops);
- 		iocur_top->bbmap = NULL;
- 	}
-@@ -589,6 +590,35 @@ set_cur(
- 		ring_add();
- }
- 
-+void
-+set_cur(
-+	const typ_t	*type,
-+	xfs_daddr_t	blknum,
-+	int		len,
-+	int		ring_flag,
-+	bbmap_t		*bbmap)
-+{
-+	__set_cur(mp->m_ddev_targp, type, blknum, len, ring_flag, bbmap);
-+}
-+
-+void
-+set_log_cur(
-+	const typ_t	*type,
-+	xfs_daddr_t	blknum,
-+	int		len,
-+	int		ring_flag,
-+	bbmap_t		*bbmap)
-+{
-+	if (mp->m_logdev_targp->bt_bdev == mp->m_ddev_targp->bt_bdev) {
-+		fprintf(stderr, "no external log specified\n");
-+		exitcode = 1;
-+		return;
+ 	push_cur();
+-	set_cur(&typtab[TYP_LOG], XFS_FSB_TO_DADDR(mp, mp->m_sb.sb_logstart),
+-			mp->m_sb.sb_logblocks * blkbb, DB_RING_IGN, NULL);
++	if (metadump.external_log) {
++		ASSERT(mp->m_sb.sb_logstart == 0);
++		set_log_cur(&typtab[TYP_LOG],
++				XFS_FSB_TO_DADDR(mp, mp->m_sb.sb_logstart),
++				mp->m_sb.sb_logblocks * blkbb, DB_RING_IGN,
++				NULL);
++	} else {
++		ASSERT(mp->m_sb.sb_logstart != 0);
++		set_cur(&typtab[TYP_LOG],
++				XFS_FSB_TO_DADDR(mp, mp->m_sb.sb_logstart),
++				mp->m_sb.sb_logblocks * blkbb, DB_RING_IGN,
++				NULL);
 +	}
 +
-+	__set_cur(mp->m_logdev_targp, type, blknum, len, ring_flag, bbmap);
-+}
+ 	if (iocur_top->data == NULL) {
+ 		pop_cur();
+ 		print_warning("cannot read log");
+@@ -3071,6 +3085,8 @@ init_metadump_v2(void)
+ 		compat_flags |= XFS_MD2_INCOMPAT_FULLBLOCKS;
+ 	if (metadump.dirty_log)
+ 		compat_flags |= XFS_MD2_INCOMPAT_DIRTYLOG;
++	if (metadump.external_log)
++		compat_flags |= XFS_MD2_INCOMPAT_EXTERNALLOG;
+ 
+ 	xmh.xmh_compat_flags = cpu_to_be32(compat_flags);
+ 
+@@ -3131,6 +3147,7 @@ metadump_f(
+ 	int		outfd = -1;
+ 	int		ret;
+ 	char		*p;
++	bool		version_opt_set = false;
+ 
+ 	exitcode = 1;
+ 
+@@ -3142,6 +3159,7 @@ metadump_f(
+ 	metadump.obfuscate = true;
+ 	metadump.zero_stale_data = true;
+ 	metadump.dirty_log = false;
++	metadump.external_log = false;
+ 
+ 	if (mp->m_sb.sb_magicnum != XFS_SB_MAGIC) {
+ 		print_warning("bad superblock magic number %x, giving up",
+@@ -3159,7 +3177,7 @@ metadump_f(
+ 		return 0;
+ 	}
+ 
+-	while ((c = getopt(argc, argv, "aegm:ow")) != EOF) {
++	while ((c = getopt(argc, argv, "aegm:ov:w")) != EOF) {
+ 		switch (c) {
+ 			case 'a':
+ 				metadump.zero_stale_data = false;
+@@ -3183,6 +3201,17 @@ metadump_f(
+ 			case 'o':
+ 				metadump.obfuscate = false;
+ 				break;
++			case 'v':
++				metadump.version = (int)strtol(optarg, &p, 0);
++				if (*p != '\0' ||
++				    (metadump.version != 1 &&
++						metadump.version != 2)) {
++					print_warning("bad metadump version: %s",
++						optarg);
++					return 0;
++				}
++				version_opt_set = true;
++				break;
+ 			case 'w':
+ 				metadump.show_warnings = true;
+ 				break;
+@@ -3197,12 +3226,42 @@ metadump_f(
+ 		return 0;
+ 	}
+ 
+-	/* If we'll copy the log, see if the log is dirty */
+-	if (mp->m_sb.sb_logstart) {
++	if (mp->m_logdev_targp->bt_bdev != mp->m_ddev_targp->bt_bdev)
++		metadump.external_log = true;
 +
++	if (metadump.external_log && !version_opt_set)
++		metadump.version = 2;
 +
- void
- set_iocur_type(
- 	const typ_t	*type)
-diff --git a/db/io.h b/db/io.h
-index c29a7488..bd86c31f 100644
---- a/db/io.h
-+++ b/db/io.h
-@@ -49,6 +49,8 @@ extern void	push_cur_and_set_type(void);
- extern void	write_cur(void);
- extern void	set_cur(const struct typ *type, xfs_daddr_t blknum,
- 			int len, int ring_add, bbmap_t *bbmap);
-+extern void	set_log_cur(const struct typ *type, xfs_daddr_t blknum,
-+			int len, int ring_add, bbmap_t *bbmap);
- extern void     ring_add(void);
- extern void	set_iocur_type(const struct typ *type);
- extern void	xfs_dummy_verify(struct xfs_buf *bp);
++	if (metadump.version == 2 && mp->m_sb.sb_logstart == 0 &&
++	    !metadump.external_log) {
++		print_warning("external log device not loaded, use -l");
++		return -ENODEV;
++	}
++
++	/*
++	 * If we'll copy the log, see if the log is dirty.
++	 *
++	 * Metadump v1 does not support dumping the contents of an external
++	 * log. Hence we skip the dirty log check.
++	 */
++	if (!(metadump.version == 1 && metadump.external_log)) {
+ 		push_cur();
+-		set_cur(&typtab[TYP_LOG],
+-			XFS_FSB_TO_DADDR(mp, mp->m_sb.sb_logstart),
+-			mp->m_sb.sb_logblocks * blkbb, DB_RING_IGN, NULL);
++		if (metadump.external_log) {
++			ASSERT(mp->m_sb.sb_logstart == 0);
++			set_log_cur(&typtab[TYP_LOG],
++					XFS_FSB_TO_DADDR(mp,
++							mp->m_sb.sb_logstart),
++					mp->m_sb.sb_logblocks * blkbb,
++					DB_RING_IGN, NULL);
++		} else {
++			ASSERT(mp->m_sb.sb_logstart != 0);
++			set_cur(&typtab[TYP_LOG],
++					XFS_FSB_TO_DADDR(mp,
++							mp->m_sb.sb_logstart),
++					mp->m_sb.sb_logblocks * blkbb,
++					DB_RING_IGN, NULL);
++		}
++
+ 		if (iocur_top->data) {	/* best effort */
+ 			struct xlog	log;
+ 
+@@ -3278,8 +3337,8 @@ metadump_f(
+ 	if (!exitcode)
+ 		exitcode = !copy_sb_inodes();
+ 
+-	/* copy log if it's internal */
+-	if ((mp->m_sb.sb_logstart != 0) && !exitcode)
++	/* copy log */
++	if (!exitcode && !(metadump.version == 1 && metadump.external_log))
+ 		exitcode = !copy_log();
+ 
+ 	/* write the remaining index */
+diff --git a/db/xfs_metadump.sh b/db/xfs_metadump.sh
+index 9852a5bc..9e8f86e5 100755
+--- a/db/xfs_metadump.sh
++++ b/db/xfs_metadump.sh
+@@ -8,7 +8,7 @@ OPTS=" "
+ DBOPTS=" "
+ USAGE="Usage: xfs_metadump [-aefFogwV] [-m max_extents] [-l logdev] source target"
+ 
+-while getopts "aefgl:m:owFV" c
++while getopts "aefgl:m:owFv:V" c
+ do
+ 	case $c in
+ 	a)	OPTS=$OPTS"-a ";;
+@@ -20,6 +20,7 @@ do
+ 	f)	DBOPTS=$DBOPTS" -f";;
+ 	l)	DBOPTS=$DBOPTS" -l "$OPTARG" ";;
+ 	F)	DBOPTS=$DBOPTS" -F";;
++	v)	OPTS=$OPTS"-v "$OPTARG" ";;
+ 	V)	xfs_db -p xfs_metadump -V
+ 		status=$?
+ 		exit $status
+diff --git a/man/man8/xfs_metadump.8 b/man/man8/xfs_metadump.8
+index c0e79d77..1732012c 100644
+--- a/man/man8/xfs_metadump.8
++++ b/man/man8/xfs_metadump.8
+@@ -11,6 +11,9 @@ xfs_metadump \- copy XFS filesystem metadata to a file
+ ] [
+ .B \-l
+ .I logdev
++] [
++.B \-v
++.I version
+ ]
+ .I source
+ .I target
+@@ -74,6 +77,12 @@ metadata such as filenames is not considered sensitive.  If obfuscation
+ is required on a metadump with a dirty log, please inform the recipient
+ of the metadump image about this situation.
+ .PP
++The contents of an external log device can be dumped only when using the v2
++format.
++Metadump in v2 format can be generated by passing the "-v 2" option.
++Metadump in v2 format is generated by default if the filesystem has an
++external log and the metadump version to use is not explicitly mentioned.
++.PP
+ .B xfs_metadump
+ should not be used for any purposes other than for debugging and reporting
+ filesystem problems. The most common usage scenario for this tool is when
+@@ -134,6 +143,11 @@ this value.  The default size is 2097151 blocks.
+ .B \-o
+ Disables obfuscation of file names and extended attributes.
+ .TP
++.B \-v
++The format of the metadump file to be produced.
++Valid values are 1 and 2.
++The default metadump format is 1.
++.TP
+ .B \-w
+ Prints warnings of inconsistent metadata encountered to stderr. Bad metadata
+ is still copied.
 -- 
 2.39.1
 
