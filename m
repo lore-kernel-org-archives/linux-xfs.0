@@ -2,53 +2,53 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 98FE6C04FDF
-	for <linux-xfs@archiver.kernel.org>; Mon, 24 Jul 2023 09:46:40 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 11BA9C04A94
+	for <linux-xfs@archiver.kernel.org>; Mon, 24 Jul 2023 09:46:59 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231223AbjGXJqj (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 24 Jul 2023 05:46:39 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46044 "EHLO
+        id S232373AbjGXJq5 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 24 Jul 2023 05:46:57 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46608 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232317AbjGXJqE (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 24 Jul 2023 05:46:04 -0400
-Received: from mail-pf1-x431.google.com (mail-pf1-x431.google.com [IPv6:2607:f8b0:4864:20::431])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 08D9210DE
-        for <linux-xfs@vger.kernel.org>; Mon, 24 Jul 2023 02:45:31 -0700 (PDT)
-Received: by mail-pf1-x431.google.com with SMTP id d2e1a72fcca58-6864c144897so1022432b3a.1
-        for <linux-xfs@vger.kernel.org>; Mon, 24 Jul 2023 02:45:31 -0700 (PDT)
+        with ESMTP id S230398AbjGXJq3 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 24 Jul 2023 05:46:29 -0400
+Received: from mail-pl1-x630.google.com (mail-pl1-x630.google.com [IPv6:2607:f8b0:4864:20::630])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 889461998
+        for <linux-xfs@vger.kernel.org>; Mon, 24 Jul 2023 02:45:55 -0700 (PDT)
+Received: by mail-pl1-x630.google.com with SMTP id d9443c01a7336-1b8c364ad3bso8855625ad.1
+        for <linux-xfs@vger.kernel.org>; Mon, 24 Jul 2023 02:45:55 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=bytedance.com; s=google; t=1690191931; x=1690796731;
+        d=bytedance.com; s=google; t=1690191955; x=1690796755;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:from:to:cc:subject:date
          :message-id:reply-to;
-        bh=ewD/GNBDsb9emQZc+crYJJhL9Ok7DRtPygkZmojk224=;
-        b=DyvUb16iFXGbECeKR4Jj5b9Aqu7GqNXEePNkHat23I7b1VL4ke9XL7AFF21PJI8D03
-         dadzrjq6WC5mtymsIwcgysKxt2IeQhVQYSg0yzEciG/3J3jMvvonWrabgIjT5cyrH4U0
-         K1NmdQ2LZEMZR3X0ctjhZi8pkjfdY6FiANez7gH72dxDBt7t+C7AalBczQoExmv/leVd
-         sjx5yitsqqA/ZPm80lkfCIhjuAfvEuRwNIJ4RlVw9F2GYFjyskW1Ygf/DVx+iz0W5Dlm
-         41zeCUlShQCZl1UPIlyRzbY5fG4LbR2jBKDZp6zvisQp1bayYn113SLSSif4m+cEaf+t
-         mhLw==
+        bh=jmPwAlPL0TnDBmalzCzATtOPmfxfqu3Q+7XaFZclAtg=;
+        b=IZCH5tV1VdvhB0RXcuG+SL+gg1mEbPZMQJz8qUY1fWCpYBfjAR72/AnWbcPpstjQLI
+         aFpv+l8Q67Kc3iJwSzziW/zZbsYehvkdZbQbXx8X8jR6oJCUrIFV8Qzo50G/FYmT9t2/
+         w6ZN7N+ZviCRVJxyy+bucuBxrS6SRhon2EIiX0i15H4OrDXIvK+dChrAy0pj6MjsuwdC
+         6yiqEWuw0/0mdj0SNL2xTjIsK+WXPpE1gw9KgQ4WCUpGSoFe6rXH0GXBficEqbQlrShV
+         wc7SdQklmSH69kiwU3dxFC6F0qOnJE6NuoEe6VBjJkE5shAIs2KVw9Ha+vCxjUcFWX2y
+         lSHQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20221208; t=1690191931; x=1690796731;
+        d=1e100.net; s=20221208; t=1690191955; x=1690796755;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:x-gm-message-state:from:to:cc
          :subject:date:message-id:reply-to;
-        bh=ewD/GNBDsb9emQZc+crYJJhL9Ok7DRtPygkZmojk224=;
-        b=Fc7gGi62BKUJdXCdlDce2npc2n3AerXKy11XaIbZ15QLl3INDKinl0HAKVfU9q7jeF
-         kY/Wd0PJB2u+K7lWDbsMCf+saQx21AvywoNuAajUMjQuRwxIDbV7CUmQ6sblRdrXEoaJ
-         0WzJRJSrzwTeMlMsfCvjzym2QWWXesXDfQv5nhtEjfQkerZJQEI5dtZmdezAo3DaGmKy
-         HICugfLEXe++OFy2k+bm5+Rx4qApvpeq0KPynrVC4Ebqh18KB4Pk9wJKNngtsr32xcHK
-         xixRkzSXrJ+GpsZw+xBpJPP/bWdl5URgCeFebILLAEPGA88/soB8CL9Zcwuop+xC8Nas
-         oRnA==
-X-Gm-Message-State: ABy/qLZHxPQkhNFVFhiSoAZ6dgH9g3k0kuVX+cA0IIGKl985MnCl+UPL
-        TFWAx6Qd5PbaZo+2Y3nje8IQSw==
-X-Google-Smtp-Source: APBJJlF4hVHTEAcnrryQeIsWufK3e63a7rX2g1OMpnBMufUIHv2BcOagu97Dc7evIwstimu7xBX17w==
-X-Received: by 2002:a17:902:e849:b0:1b8:35fa:cdcc with SMTP id t9-20020a170902e84900b001b835facdccmr12688015plg.5.1690191930816;
-        Mon, 24 Jul 2023 02:45:30 -0700 (PDT)
+        bh=jmPwAlPL0TnDBmalzCzATtOPmfxfqu3Q+7XaFZclAtg=;
+        b=lR2CahgW0zTp1Cm0pmt1zF4n6MMuRrN/6f+NSKKZWVk/E0x2qUWrLPuk+PUKG1HjED
+         DpUxBjJl9t/H/CZvbiUEqO/oJXK+1b66dH/nYA0FGe/MF/IvyT1PdH7PPtnwohagroYE
+         ucYahNSZo0txex2eBGkVumgEZ2UAbKON2XP7SfFZzVfEalsP4wIN3Y/hW9vxKx5hC2Gi
+         Km7T2slRGRKGQVQz303lbT8hSp4RjkSw7gOg2/71sfGco5GHNwSW1wQGXCzQaojUV0ch
+         L4oduUUZSG3rfPST36qj4zMypemcojz4pau+Pyd64n0dzllaoYXiOa7kdZMZFUddAt1W
+         cvlA==
+X-Gm-Message-State: ABy/qLYgpV3Kk4NJacgz0tWrXw2wjD7ztMdaT9VXwXVqaO8W4godeAFF
+        xSEolR2XWkO8d8Rlz+rSMOnD3Q==
+X-Google-Smtp-Source: APBJJlHDY1qhgSa+H4mr70oj6h44PLP3QUTUzXb3MsGg4I77oDNLLFWrtOaIhBAmIAnOXFQDdEVBFw==
+X-Received: by 2002:a17:902:d4cb:b0:1b1:9272:55e2 with SMTP id o11-20020a170902d4cb00b001b1927255e2mr12365119plg.3.1690191954835;
+        Mon, 24 Jul 2023 02:45:54 -0700 (PDT)
 Received: from C02DW0BEMD6R.bytedance.net ([203.208.167.147])
-        by smtp.gmail.com with ESMTPSA id d5-20020a170902c18500b001bb20380bf2sm8467233pld.13.2023.07.24.02.45.19
+        by smtp.gmail.com with ESMTPSA id d5-20020a170902c18500b001bb20380bf2sm8467233pld.13.2023.07.24.02.45.43
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 24 Jul 2023 02:45:30 -0700 (PDT)
+        Mon, 24 Jul 2023 02:45:54 -0700 (PDT)
 From:   Qi Zheng <zhengqi.arch@bytedance.com>
 To:     akpm@linux-foundation.org, david@fromorbit.com, tkhai@ya.ru,
         vbabka@suse.cz, roman.gushchin@linux.dev, djwong@kernel.org,
@@ -69,9 +69,9 @@ Cc:     linux-kernel@vger.kernel.org, linux-mm@kvack.org, x86@kernel.org,
         linux-fsdevel@vger.kernel.org, linux-ext4@vger.kernel.org,
         linux-xfs@vger.kernel.org, linux-btrfs@vger.kernel.org,
         Qi Zheng <zhengqi.arch@bytedance.com>
-Subject: [PATCH v2 02/47] mm: shrinker: remove redundant shrinker_rwsem in debugfs operations
-Date:   Mon, 24 Jul 2023 17:43:09 +0800
-Message-Id: <20230724094354.90817-3-zhengqi.arch@bytedance.com>
+Subject: [PATCH v2 04/47] kvm: mmu: dynamically allocate the x86-mmu shrinker
+Date:   Mon, 24 Jul 2023 17:43:11 +0800
+Message-Id: <20230724094354.90817-5-zhengqi.arch@bytedance.com>
 X-Mailer: git-send-email 2.24.3 (Apple Git-128)
 In-Reply-To: <20230724094354.90817-1-zhengqi.arch@bytedance.com>
 References: <20230724094354.90817-1-zhengqi.arch@bytedance.com>
@@ -81,69 +81,58 @@ Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-The debugfs_remove_recursive() will wait for debugfs_file_put() to return,
-so the shrinker will not be freed when doing debugfs operations (such as
-shrinker_debugfs_count_show() and shrinker_debugfs_scan_write()), so there
-is no need to hold shrinker_rwsem during debugfs operations.
+Use new APIs to dynamically allocate the x86-mmu shrinker.
 
 Signed-off-by: Qi Zheng <zhengqi.arch@bytedance.com>
 ---
- mm/shrinker_debug.c | 14 --------------
- 1 file changed, 14 deletions(-)
+ arch/x86/kvm/mmu/mmu.c | 18 ++++++++++--------
+ 1 file changed, 10 insertions(+), 8 deletions(-)
 
-diff --git a/mm/shrinker_debug.c b/mm/shrinker_debug.c
-index 3ab53fad8876..f1becfd45853 100644
---- a/mm/shrinker_debug.c
-+++ b/mm/shrinker_debug.c
-@@ -55,11 +55,6 @@ static int shrinker_debugfs_count_show(struct seq_file *m, void *v)
- 	if (!count_per_node)
- 		return -ENOMEM;
+diff --git a/arch/x86/kvm/mmu/mmu.c b/arch/x86/kvm/mmu/mmu.c
+index ec169f5c7dce..ab405e0a8954 100644
+--- a/arch/x86/kvm/mmu/mmu.c
++++ b/arch/x86/kvm/mmu/mmu.c
+@@ -6847,11 +6847,7 @@ static unsigned long mmu_shrink_count(struct shrinker *shrink,
+ 	return percpu_counter_read_positive(&kvm_total_used_mmu_pages);
+ }
  
--	ret = down_read_killable(&shrinker_rwsem);
--	if (ret) {
--		kfree(count_per_node);
--		return ret;
--	}
- 	rcu_read_lock();
+-static struct shrinker mmu_shrinker = {
+-	.count_objects = mmu_shrink_count,
+-	.scan_objects = mmu_shrink_scan,
+-	.seeks = DEFAULT_SEEKS * 10,
+-};
++static struct shrinker *mmu_shrinker;
  
- 	memcg_aware = shrinker->flags & SHRINKER_MEMCG_AWARE;
-@@ -92,7 +87,6 @@ static int shrinker_debugfs_count_show(struct seq_file *m, void *v)
- 	} while ((memcg = mem_cgroup_iter(NULL, memcg, NULL)) != NULL);
+ static void mmu_destroy_caches(void)
+ {
+@@ -6984,10 +6980,16 @@ int kvm_mmu_vendor_module_init(void)
+ 	if (percpu_counter_init(&kvm_total_used_mmu_pages, 0, GFP_KERNEL))
+ 		goto out;
  
- 	rcu_read_unlock();
--	up_read(&shrinker_rwsem);
+-	ret = register_shrinker(&mmu_shrinker, "x86-mmu");
+-	if (ret)
++	mmu_shrinker = shrinker_alloc(0, "x86-mmu");
++	if (!mmu_shrinker)
+ 		goto out_shrinker;
  
- 	kfree(count_per_node);
- 	return ret;
-@@ -117,7 +111,6 @@ static ssize_t shrinker_debugfs_scan_write(struct file *file,
- 	struct mem_cgroup *memcg = NULL;
- 	int nid;
- 	char kbuf[72];
--	ssize_t ret;
++	mmu_shrinker->count_objects = mmu_shrink_count;
++	mmu_shrinker->scan_objects = mmu_shrink_scan;
++	mmu_shrinker->seeks = DEFAULT_SEEKS * 10;
++
++	shrinker_register(mmu_shrinker);
++
+ 	return 0;
  
- 	read_len = size < (sizeof(kbuf) - 1) ? size : (sizeof(kbuf) - 1);
- 	if (copy_from_user(kbuf, buf, read_len))
-@@ -146,12 +139,6 @@ static ssize_t shrinker_debugfs_scan_write(struct file *file,
- 		return -EINVAL;
- 	}
+ out_shrinker:
+@@ -7009,7 +7011,7 @@ void kvm_mmu_vendor_module_exit(void)
+ {
+ 	mmu_destroy_caches();
+ 	percpu_counter_destroy(&kvm_total_used_mmu_pages);
+-	unregister_shrinker(&mmu_shrinker);
++	shrinker_unregister(mmu_shrinker);
+ }
  
--	ret = down_read_killable(&shrinker_rwsem);
--	if (ret) {
--		mem_cgroup_put(memcg);
--		return ret;
--	}
--
- 	sc.nid = nid;
- 	sc.memcg = memcg;
- 	sc.nr_to_scan = nr_to_scan;
-@@ -159,7 +146,6 @@ static ssize_t shrinker_debugfs_scan_write(struct file *file,
- 
- 	shrinker->scan_objects(shrinker, &sc);
- 
--	up_read(&shrinker_rwsem);
- 	mem_cgroup_put(memcg);
- 
- 	return size;
+ /*
 -- 
 2.30.2
 
