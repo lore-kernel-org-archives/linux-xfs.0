@@ -2,67 +2,133 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id BCEE7C04A6A
-	for <linux-xfs@archiver.kernel.org>; Mon, 24 Jul 2023 20:16:14 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id DDCECC001B0
+	for <linux-xfs@archiver.kernel.org>; Mon, 24 Jul 2023 20:23:07 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229898AbjGXUQN (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 24 Jul 2023 16:16:13 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57704 "EHLO
+        id S229700AbjGXUW5 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 24 Jul 2023 16:22:57 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59182 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229479AbjGXUQM (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 24 Jul 2023 16:16:12 -0400
-Received: from bombadil.infradead.org (bombadil.infradead.org [IPv6:2607:7c80:54:3::133])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3F017C7;
-        Mon, 24 Jul 2023 13:16:12 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=infradead.org; s=bombadil.20210309; h=Sender:In-Reply-To:Content-Type:
-        MIME-Version:References:Message-ID:Subject:Cc:To:From:Date:Reply-To:
-        Content-Transfer-Encoding:Content-ID:Content-Description;
-        bh=tgMGRzESWkQ+jza5LIM+2YG5UUtrxuCLlNlof8Ub3HI=; b=O7F9hoVVXTS2psPy2k7JJ4s7IV
-        IFRIFjXM/COmp3BhCSgJJIcqjslFLLiil0flagqfpYDSLagDfxTp1mMnXvkwm2dO9XAhtNcuGhvCW
-        CjL28WFSFwTOaCPuYP9QVCU/w1XbZUJKIvL+kHSltzWxU2aDD7rT1907mwDx6mDoJEYlLeRrXmdMw
-        97GKTpo9aZaesc/sYpE0k17UAbn+xod3TYGf/H0f1sBRhOsRwB53FIEn93d9HMgD5LCGKg9m80Zid
-        ollV6hUINPUnfmUSgmc0tnDaX9/1cj6QYZmrrNy8gBFixAvJArEZTKUDSgTEY8sHHb0hjsdUFGm1Z
-        lHr8V6IA==;
-Received: from mcgrof by bombadil.infradead.org with local (Exim 4.96 #2 (Red Hat Linux))
-        id 1qO1yS-005MyN-1n;
-        Mon, 24 Jul 2023 20:16:08 +0000
-Date:   Mon, 24 Jul 2023 13:16:08 -0700
-From:   Luis Chamberlain <mcgrof@kernel.org>
-To:     Christoph Hellwig <hch@lst.de>
-Cc:     Jens Axboe <axboe@kernel.dk>,
-        "Darrick J. Wong" <djwong@kernel.org>,
-        Andrew Morton <akpm@linux-foundation.org>,
-        Matthew Wilcox <willy@infradead.org>,
-        Christian Brauner <christian@brauner.io>,
-        linux-block@vger.kernel.org, linux-fsdevel@vger.kernel.org,
-        linux-xfs@vger.kernel.org, linux-mm@kvack.org,
-        linux-kernel@vger.kernel.org
-Subject: Re: [PATCH 6/6] fs: add CONFIG_BUFFER_HEAD
-Message-ID: <ZL7cCNGhe4/YhLWn@bombadil.infradead.org>
-References: <20230720140452.63817-1-hch@lst.de>
- <20230720140452.63817-7-hch@lst.de>
+        with ESMTP id S229678AbjGXUW5 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 24 Jul 2023 16:22:57 -0400
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E0C9910E2
+        for <linux-xfs@vger.kernel.org>; Mon, 24 Jul 2023 13:22:11 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1690230131;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=ShKXd85SOx0saxITqxIawBxKdACPZs/8Qk1lelqQbIY=;
+        b=i89A0hytLlFD7DzWB2nLICvVHhPOecPGGEkNhBiw6H3ZermO5eZ8CJLCdLvUvN0FamxRaJ
+        pM2jRTI9VvQBYkYeXXlUgGV601pL+PtQ/lw3PANnVpXcjyYgF0Jlepx+QFMWzyqgvBQLpr
+        OLv3L1fSsnNqiNJ4DYZhBx5Nq8285BI=
+Received: from mimecast-mx02.redhat.com (mimecast-mx02.redhat.com
+ [66.187.233.88]) by relay.mimecast.com with ESMTP with STARTTLS
+ (version=TLSv1.2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ us-mta-543-7eNZMO9ONJuqpUPYsJfYuw-1; Mon, 24 Jul 2023 16:22:05 -0400
+X-MC-Unique: 7eNZMO9ONJuqpUPYsJfYuw-1
+Received: from smtp.corp.redhat.com (int-mx09.intmail.prod.int.rdu2.redhat.com [10.11.54.9])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mimecast-mx02.redhat.com (Postfix) with ESMTPS id B2B56802666;
+        Mon, 24 Jul 2023 20:22:04 +0000 (UTC)
+Received: from segfault.boston.devel.redhat.com (segfault.boston.devel.redhat.com [10.19.60.26])
+        by smtp.corp.redhat.com (Postfix) with ESMTPS id 1B701492CA6;
+        Mon, 24 Jul 2023 20:22:04 +0000 (UTC)
+From:   Jeff Moyer <jmoyer@redhat.com>
+To:     Pavel Begunkov <asml.silence@gmail.com>
+Cc:     Jens Axboe <axboe@kernel.dk>, Greg KH <gregkh@linuxfoundation.org>,
+        Phil Elwell <phil@raspberrypi.com>, andres@anarazel.de,
+        david@fromorbit.com, hch@lst.de, io-uring@vger.kernel.org,
+        LKML <linux-kernel@vger.kernel.org>, linux-xfs@vger.kernel.org,
+        stable <stable@vger.kernel.org>, riel@surriel.com
+Subject: Re: [PATCH] io_uring: Use io_schedule* in cqring wait
+References: <CAMEGJJ2RxopfNQ7GNLhr7X9=bHXKo+G5OOe0LUq=+UgLXsv1Xg@mail.gmail.com>
+        <2023072438-aftermath-fracture-3dff@gregkh>
+        <140065e3-0368-0b5d-8a0d-afe49b741ad2@kernel.dk>
+        <ecb821a2-e90a-fec1-d2ca-b355c16b7515@kernel.dk>
+        <0f63b072-840c-db5d-13cd-7faa554975d3@gmail.com>
+X-PGP-KeyID: 1F78E1B4
+X-PGP-CertKey: F6FE 280D 8293 F72C 65FD  5A58 1FF8 A7CA 1F78 E1B4
+Date:   Mon, 24 Jul 2023 16:27:53 -0400
+In-Reply-To: <0f63b072-840c-db5d-13cd-7faa554975d3@gmail.com> (Pavel
+        Begunkov's message of "Mon, 24 Jul 2023 20:22:28 +0100")
+Message-ID: <x49cz0hxdfa.fsf@segfault.boston.devel.redhat.com>
+User-Agent: Gnus/5.13 (Gnus v5.13) Emacs/26.1 (gnu/linux)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20230720140452.63817-7-hch@lst.de>
-Sender: Luis Chamberlain <mcgrof@infradead.org>
+Content-Type: text/plain
+X-Scanned-By: MIMEDefang 3.1 on 10.11.54.9
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Thu, Jul 20, 2023 at 04:04:52PM +0200, Christoph Hellwig wrote:
-> Add a new config option that controls building the buffer_head code, and
-> select it from all file systems and stacking drivers that need it.
-> 
-> For the block device nodes and alternative iomap based buffered I/O path
-> is provided when buffer_head support is not enabled, and iomap needs a
-> little tweak to be able to compile out the buffer_head based code path.
-> 
-> Otherwise this is just Kconfig and ifdef changes.
-> 
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
+Pavel Begunkov <asml.silence@gmail.com> writes:
 
-Reviewed-by: Luis Chamberlain <mcgrof@kernel.org>
+> On 7/24/23 16:58, Jens Axboe wrote:
+>> Even though I don't think this is an actual problem, it is a bit
+>> confusing that you get 100% iowait while waiting without having IO
+>> pending. So I do think the suggested patch is probably worthwhile
+>> pursuing. I'll post it and hopefully have Andres test it too, if he's
+>> available.
+>
+> Emmm, what's the definition of the "IO" state? Unless we can say what exactly
+> it is there will be no end to adjustments, because I can easily argue that
+> CQ waiting by itself is IO.
+> Do we consider sleep(N) to be "IO"? I don't think the kernel uses io
+> schedule around that, and so it'd be different from io_uring waiting for
+> a timeout request. What about epoll waiting, etc.?
 
-  Luis
+See Documentation/filesystems/proc.rst (and mainly commit 9c240d757658
+("Change the document about iowait")):
+
+- iowait: In a word, iowait stands for waiting for I/O to complete. But there
+  are several problems:
+
+  1. CPU will not wait for I/O to complete, iowait is the time that a task is
+     waiting for I/O to complete. When CPU goes into idle state for
+     outstanding task I/O, another task will be scheduled on this CPU.
+  2. In a multi-core CPU, the task waiting for I/O to complete is not running
+     on any CPU, so the iowait of each CPU is difficult to calculate.
+  3. The value of iowait field in /proc/stat will decrease in certain
+     conditions.
+
+  So, the iowait is not reliable by reading from /proc/stat.
+
+Also, vmstat(8):
+       wa: Time spent waiting for IO.  Prior to Linux 2.5.41, included in idle.
+
+iostat/mpstat man pages:
+              %iowait
+                     Show the percentage of time that the  CPU  or  CPUs  were
+                     idle  during which the system had an outstanding disk I/O
+                     request.
+
+sar(1):
+              %iowait
+                     Percentage of time that the CPU or CPUs were idle  during
+                     which the system had an outstanding disk I/O request.
+
+iowait was initially introduced in 2002 by Rik van Riel in historical
+git commit 7b88e5e0bdf25 ("[PATCH] "io wait" process accounting").  The
+changelog from akpm reads:
+
+    Patch from Rik adds "I/O wait" statistics to /proc/stat.
+    
+    This allows us to determine how much system time is being spent
+    awaiting IO completion.  This is an important statistic, as it tends to
+    directly subtract from job completion time.
+    
+    procps-2.0.9 is OK with this, but doesn't report it.
+
+I vaguely recall there was confusion from users about why the system was
+idle when running database workloads.  Maybe Rik can remember more
+clearly.
+
+Anyway, as you can see, the definition is murky, at best.  I don't think
+we should overthink it.  I agree with the principle of Jens'
+patch--let's just not surprise users with a change in behavior.
+
+Cheers,
+Jeff
+
