@@ -2,191 +2,242 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4DE97C001DC
-	for <linux-xfs@archiver.kernel.org>; Mon, 24 Jul 2023 01:05:56 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 00AF1EB64DD
+	for <linux-xfs@archiver.kernel.org>; Mon, 24 Jul 2023 04:36:26 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229537AbjGXBFz (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Sun, 23 Jul 2023 21:05:55 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42740 "EHLO
+        id S229597AbjGXEgZ (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 24 Jul 2023 00:36:25 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52612 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229456AbjGXBFy (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sun, 23 Jul 2023 21:05:54 -0400
-Received: from mail-yw1-x1133.google.com (mail-yw1-x1133.google.com [IPv6:2607:f8b0:4864:20::1133])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8957B186
-        for <linux-xfs@vger.kernel.org>; Sun, 23 Jul 2023 18:05:53 -0700 (PDT)
-Received: by mail-yw1-x1133.google.com with SMTP id 00721157ae682-583b3aa4f41so18699247b3.2
-        for <linux-xfs@vger.kernel.org>; Sun, 23 Jul 2023 18:05:53 -0700 (PDT)
+        with ESMTP id S229547AbjGXEgY (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 24 Jul 2023 00:36:24 -0400
+Received: from mx0a-00069f02.pphosted.com (mx0a-00069f02.pphosted.com [205.220.165.32])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 40B941A1
+        for <linux-xfs@vger.kernel.org>; Sun, 23 Jul 2023 21:36:23 -0700 (PDT)
+Received: from pps.filterd (m0246629.ppops.net [127.0.0.1])
+        by mx0b-00069f02.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 36NKlNkA003163;
+        Mon, 24 Jul 2023 04:36:20 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=from : to : cc :
+ subject : date : message-id : content-transfer-encoding : content-type :
+ mime-version; s=corp-2023-03-30;
+ bh=aVMDePUZsxWVIDV4lQGpgT1tAWXv8MT1BrIeu0+z9XE=;
+ b=qMQA5orDlwiY/IKO8rYpfcfNytT/s4my8IQFtGJJNVADaFZ8MwmFV5/5rOYeZHGFBlfh
+ tMBd8V8JrzwO3dhu7yF0uPBy33rSov5eD9yI465tmJObs0j3RI24ZTY2LZYC1InKKEkB
+ G7B0Prl2ONfMSoQtM0fhyvb8pOp71TrCY0V7RZjJojsUxCPFksozxmFSLzROtF48TAU4
+ r5UrJnYtXEMC0Q9YwjLuk4b7Zxt1H/YGRAkHcRtCr+6flzTzufNtGdJo3RGgEiPnlNr7
+ 60fOTWQ049Xy3x/WlpcBmEeA9ZlkddMZU3VjnAX/VVh2HXIwXnxHL+0XaOSM75ZTgNFc Xg== 
+Received: from iadpaimrmta01.imrmtpd1.prodappiadaev1.oraclevcn.com (iadpaimrmta01.appoci.oracle.com [130.35.100.223])
+        by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 3s070asteu-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Mon, 24 Jul 2023 04:36:20 +0000
+Received: from pps.filterd (iadpaimrmta01.imrmtpd1.prodappiadaev1.oraclevcn.com [127.0.0.1])
+        by iadpaimrmta01.imrmtpd1.prodappiadaev1.oraclevcn.com (8.17.1.19/8.17.1.19) with ESMTP id 36O0lISD029039;
+        Mon, 24 Jul 2023 04:36:18 GMT
+Received: from nam12-dm6-obe.outbound.protection.outlook.com (mail-dm6nam12lp2170.outbound.protection.outlook.com [104.47.59.170])
+        by iadpaimrmta01.imrmtpd1.prodappiadaev1.oraclevcn.com (PPS) with ESMTPS id 3s05j96hpf-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Mon, 24 Jul 2023 04:36:18 +0000
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
+ b=ZVrsbJiEmDWD9Wpb/3jJF+Swv2yDheWnys617H5ekuVrRsgv+FYsdcEsl+rrkdnX3CNchj8noOsNEhe1rWhnQXT0PDcTxRHxLtc7WkthZfsg0MCFnlXkJJNaxyJ6VK4tqe5NbuEX6ve6oYoDCNswzZ0dqCiqGmRlgoVrOEQcgWu6EIHnc/t9clb35SV7xng7+I8PzovGdJptQ6cNFiwBgjackPXwX0D4QC9N2Np9dm90mgWLi3qwjRZsv5odSCUWGZsakJUDEuuLNPK7rDQRpakw+FPbav97NRyoW+U2cdN+wDK9isa5RW8VKkRwrKPqR+7YMPC8qp3+XRRwq7E63A==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector9901;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=aVMDePUZsxWVIDV4lQGpgT1tAWXv8MT1BrIeu0+z9XE=;
+ b=W4J94Y9bdpi2JmIHIzgyhKT7FpXm6mDCSSf0ZhnP5uLIDRQbrmO7IdNzp44WAxIyTfZDaeCM1mKZEyxJsb8mvWUgzWDESWwdP5WNarfaYomWZOmb93ixQlMr4e+/6/YdIp0ZEVsU8dKj3mMfaZIg8wrKbAQpi8p33sQuTh9h1g1G2oYBP2S5ygNnn/E1GOLoLlQGg0w2cxYldT1WTNbsWZ7Lm9bmBfJH8gYBBD/EZMTHHL1MhKSTDl5KfDTpcypTUCoJNaQ7j4g8++M5FFd0yYHh23LThY1GygNvxdVS+IfnWoIchWO08+X25YXGga/BGVMdkl4fjMhcPEn0raWDKA==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=oracle.com; dmarc=pass action=none header.from=oracle.com;
+ dkim=pass header.d=oracle.com; arc=none
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=fromorbit-com.20221208.gappssmtp.com; s=20221208; t=1690160753; x=1690765553;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
-        bh=vjZ/Jsp6PMrdLM+7kXf9xZA3z9U12JKy9mZNOcYumIk=;
-        b=NJRzjKKcLPZvx/msSpx7innoWnfHL9i4nNMyEwTnMGoNvrb3WmrZhgAwGWgekixjuc
-         lEbYjyj/kOW9MAVoHqd6XeXTN4twuVLZwiQQbD1UcYs8Kp+vo0V/qRBr5xMFQEdnhvfG
-         4gLJUt9G9vY5sgLdqpWO2NeVMwhLoI+X9PhR6RL1JynD/s47Mmxw5eyrq7cg2ilzSIpG
-         TxosXyEch8Cu5tOt1l/KFM79cLItlrEAmuf+m8k9vLwKan1/ysvEHDzKMAXiP0DlJslS
-         ECqHdOiLL7HhVWgWIq0mrKwVqyyt1OSL2IGnrwmpifyrmgELb+nH8R8oE4QUlVKEeJvd
-         y+tA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20221208; t=1690160753; x=1690765553;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=vjZ/Jsp6PMrdLM+7kXf9xZA3z9U12JKy9mZNOcYumIk=;
-        b=i/ord5pt0ypfKuc5Ry1tnNmd18Rncvldl1YjeIa76MDPgWi6dgzuSKVED9oMR0Ilb3
-         Me9gES8TT2rd+jD51LAYAkgBJrI0SsVj79Sm2E43kZSGkR3N2tnJOrp10auh2wzAawWr
-         S04lx41VOcBZvAyWJzkMiFEPVQLesakiS88J6PnnO9UBYyIN+7LnPAZNPSt0jAsuBmt7
-         2awNAOuifGkED3gtdzomINFnZkAndsbNw9zXz0Vc2IdAEzDs+xVTfMhauCjS4O1BN0Ym
-         a/tUnACeVgWHh4GHUT55DDYOYVvMeQSaZ9/Uq5iFBWMuADgxYIfJqLUwRNksvR3Mi2ir
-         ZkZA==
-X-Gm-Message-State: ABy/qLaKuV7xIZUDIK03DGoE6TLVN5phPq6DbvwAqtGjUMnvmhHbDPV+
-        w2zq2mNsGQiWf9vlLMNIVqGTh/ahoMD13xE+nkY=
-X-Google-Smtp-Source: APBJJlGhCrOiZACfPAruZSx2ySFYnOZN0yle0lM7wxCLj3eS9uk3EZQyQcWdf/+rwmD/0feecoYpzQ==
-X-Received: by 2002:a81:4fd6:0:b0:583:5a34:cfd with SMTP id d205-20020a814fd6000000b005835a340cfdmr5554982ywb.2.1690160752776;
-        Sun, 23 Jul 2023 18:05:52 -0700 (PDT)
-Received: from dread.disaster.area (pa49-186-119-116.pa.vic.optusnet.com.au. [49.186.119.116])
-        by smtp.gmail.com with ESMTPSA id j8-20020a62e908000000b00682669dc19bsm6402106pfh.201.2023.07.23.18.05.52
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Sun, 23 Jul 2023 18:05:52 -0700 (PDT)
-Received: from dave by dread.disaster.area with local (Exim 4.96)
-        (envelope-from <david@fromorbit.com>)
-        id 1qNk1E-009lDM-1a;
-        Mon, 24 Jul 2023 11:05:48 +1000
-Date:   Mon, 24 Jul 2023 11:05:48 +1000
-From:   Dave Chinner <david@fromorbit.com>
-To:     Long Li <leo.lilong@huaweicloud.com>
-Cc:     Long Li <leo.lilong@huawei.com>, djwong@kernel.org,
-        linux-xfs@vger.kernel.org, yi.zhang@huawei.com, houtao1@huawei.com,
-        yangerkun@huawei.com
-Subject: Re: [PATCH v2 3/3] xfs: make sure done item committed before cancel
- intents
-Message-ID: <ZL3ObF23wET/rT7x@dread.disaster.area>
-References: <20230715063647.2094989-1-leo.lilong@huawei.com>
- <20230715063647.2094989-4-leo.lilong@huawei.com>
- <ZLeFpQWSUVmYNJXJ@dread.disaster.area>
- <20230722011909.GA4061995@ceph-admin>
+ d=oracle.onmicrosoft.com; s=selector2-oracle-onmicrosoft-com;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=aVMDePUZsxWVIDV4lQGpgT1tAWXv8MT1BrIeu0+z9XE=;
+ b=qj6sFpEWFvLvJ2LApwvpD21aRLmqWR2rR20HWpJ6TSA+yyUjxu2y8Q8G9NwVJQZX5X7AKHRTNdfiIAPV693VySTHJWG6+eNZzPTjNLw0Eg+ZAD6bA6WzWNYgWP9gryY8aNeUphP4UcIT/MSEa4ANOWhvQaYmXxiBYkkbWPrFozA=
+Received: from SA1PR10MB5867.namprd10.prod.outlook.com (2603:10b6:806:233::19)
+ by PH0PR10MB4774.namprd10.prod.outlook.com (2603:10b6:510:3b::22) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.6609.32; Mon, 24 Jul
+ 2023 04:36:16 +0000
+Received: from SA1PR10MB5867.namprd10.prod.outlook.com
+ ([fe80::707c:5a02:87a1:38e0]) by SA1PR10MB5867.namprd10.prod.outlook.com
+ ([fe80::707c:5a02:87a1:38e0%3]) with mapi id 15.20.6609.031; Mon, 24 Jul 2023
+ 04:36:16 +0000
+From:   Chandan Babu R <chandan.babu@oracle.com>
+To:     linux-xfs@vger.kernel.org
+Cc:     Chandan Babu R <chandan.babu@oracle.com>, djwong@kernel.org,
+        cem@kernel.org
+Subject: [PATCH V3 00/23] Metadump v2
+Date:   Mon, 24 Jul 2023 10:05:04 +0530
+Message-Id: <20230724043527.238600-1-chandan.babu@oracle.com>
+X-Mailer: git-send-email 2.39.1
+Content-Transfer-Encoding: 8bit
+Content-Type: text/plain
+X-ClientProxiedBy: TYAPR03CA0022.apcprd03.prod.outlook.com
+ (2603:1096:404:14::34) To SA1PR10MB5867.namprd10.prod.outlook.com
+ (2603:10b6:806:233::19)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20230722011909.GA4061995@ceph-admin>
+X-MS-PublicTrafficType: Email
+X-MS-TrafficTypeDiagnostic: SA1PR10MB5867:EE_|PH0PR10MB4774:EE_
+X-MS-Office365-Filtering-Correlation-Id: d767d427-c64c-4629-822f-08db8bff84c9
+X-MS-Exchange-SenderADCheck: 1
+X-MS-Exchange-AntiSpam-Relay: 0
+X-Microsoft-Antispam: BCL:0;
+X-Microsoft-Antispam-Message-Info: 40vIKRB9zNQXQIA0tzUhtpOXcfrjG3hokf4/V2AM8pz49CpebDne0mDinydgosfKmhA/iw+PwRnxIbsy3jYa6H04oqjCL4yESWs5sixIWUUcIqNSFjuPqUXB0BZPh3FEMYup5wQ8hptCenyHDcPdwHrNIrBeaGvHp64rvuQuRX1+IJpfKUCNSIrIZB4qe2jnAYAufID6AL2uTm4TSf+n89F5A+g5GXOMhwlqCrKOVE7R7ufxHEsn2Xbu4pVVhUmlh7njJR62SSYiybMuhy+PAo8ZEJC11i1hJUSLZ3r8Vi1VM/5mQACQCdLKEk3YBmCSJyMWF6EL881cKGspKzqmn0AAcGhJ88DJ7AzV7Gv7nrg590tvCojXIpqP1pDAp5k2iks1s1Qw8oBa5a63grx7ozdTL7efnvFEin4hdtaRTDbGL71tP5BezdIYeSA+Ed0V0XFM0MmF29zq/V5bdtgFSQUokdVda9u4ENH1SKTODxxo/WpHL9XtQ9m/kuIz59arv8Ed6V7/6gCZ5B7x/KgQYu3lyCpl+rUlbq1H0n9yS7U825JwpQT1vbpa8NgBI6TOPkY4+tGRED0GfIeJL13EJA==
+X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:SA1PR10MB5867.namprd10.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230028)(396003)(346002)(376002)(39860400002)(136003)(366004)(451199021)(2906002)(66946007)(66556008)(66476007)(4326008)(6916009)(6486002)(6666004)(478600001)(86362001)(6512007)(966005)(83380400001)(36756003)(186003)(2616005)(26005)(1076003)(6506007)(38100700002)(41300700001)(8936002)(8676002)(5660300002)(316002);DIR:OUT;SFP:1101;
+X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-MessageData-0: =?us-ascii?Q?f1EJgF78VSs3nVgfAuX09mkD79Fs34D/FjwExaUHAaoYKz3k6zX9vo2h9U/V?=
+ =?us-ascii?Q?/7TVNa1nG6rlaYH6CmKPPS9s/5vpRtC66JExCnDqsOhEh9WlLNGkd/ockJ3y?=
+ =?us-ascii?Q?X9/z4Q4om5lDRgqlBGkSPerWJTxObO9EMjCkdHrpi6OEU3X3K2PRGJceaPWB?=
+ =?us-ascii?Q?/hhFk6vmccoUoV3tO+GA0DvlZqGltwIiWviQnkTAmqBPVdf2Lgu3PIZc365Z?=
+ =?us-ascii?Q?v+ZRjMubD6OGm3KsxTjOXPrCritQU4M9li6oW+upWkTkebLSnfZW+u2f3fFG?=
+ =?us-ascii?Q?uzK6/3WcQcUHmn7VgPfprXhdRLbX5fF4KjJaELKvZxTHzNTkwyYesJ0mbESH?=
+ =?us-ascii?Q?TFvZyyQImqCf5y6C/StuMkYsujLr7oMV05vGrp/5xEJhMV0yEprKGTWcD0Hk?=
+ =?us-ascii?Q?mahiSjzN172ayqQk8fGaHrb57HCsdZMz2ihchVbKzT870qQqOCsvppeOZedE?=
+ =?us-ascii?Q?ZtVPbIU6x8fU5TmlQ562fZXDWJ8nSgP20CLLaSzTF2NyHcU9vI+elYBI0I74?=
+ =?us-ascii?Q?ef6swuZxMoa/1gMyiI2TGMPIi3Qw9efecFSSm3TfLhjFDGXBaPvcayJqLxJu?=
+ =?us-ascii?Q?dxhjZVRjmHtD4CyE9PGJvsZfFpIC/om0D3LNIdL/uMHee9SABN3ycdf9Ev44?=
+ =?us-ascii?Q?Vdy/uAQ2Pe8tMW4IBGaTz+0WIThFVXAmbEEp0EJPAgaIwolRxXFzLNdh0YhU?=
+ =?us-ascii?Q?/RFI7ZIPfZ7J0X7ydhHZhjL2PGl1Zr9H6PI6gozcvDvFJyBq1jQiaeRPIAdh?=
+ =?us-ascii?Q?SKPU2RoIeTu9m6DXD0T2ziuV17Usahn2WMK/vW23k6mTeMR/2/L9WbgZFfwY?=
+ =?us-ascii?Q?Ez22D3dlecVORkVxm1JSes9DQfEWRlynaSJ6zl/5BAx/y4d1SBAR9dJ1Cbs+?=
+ =?us-ascii?Q?KM8rlA+E7qrLl6iTx70ENlsubbYih8f9Hkokqc156I3KutV9ZbZ1UbURcMZJ?=
+ =?us-ascii?Q?bHOYAqxQAh8xlRu0CoB/uLroK7xt0lHPMZoxgmi3QDxiQe77kertWT00WeVe?=
+ =?us-ascii?Q?wmymQaGk2jaS3wgkTkfggynyY9HsaTwuuGPp8V2gBaW5MxX8OCN77Vc5yn7y?=
+ =?us-ascii?Q?U2hyLtKHtm86YaolZq/tSoofhc/hGhMBtAeHVWt3mR0QDqG4NQ81HIGQX1RV?=
+ =?us-ascii?Q?h0H9OeMp6e95AaYLAsykpnPc85Ufb+GT5YQJkSN7XRjHUHi4yl+RIs1aUQod?=
+ =?us-ascii?Q?V1Hyq7ZtqykkCa8yRKtKF0eFMiIUpcJrfyNHecWWaQxUYf0DJ+foMEinLz5g?=
+ =?us-ascii?Q?wa8stc8/3Oxl/HOVtDu+yu4eDX5R1cb7XCjZYJqeqcRAk8IryqudLfDmh6MZ?=
+ =?us-ascii?Q?5FDp2KRoAd7GzZx6CsvovKEPHjoi1NdgNu001ROuIAZSDxrxHASiN6YOMZkr?=
+ =?us-ascii?Q?thT6fjj6rxF3JaMdDpy9/COrz/ZLWQpzrIvf79fKWaUadFZNCHq9h9y8diBj?=
+ =?us-ascii?Q?5lxqRFmOzhhq6tv/FoI5jXgdVggL/m/8RfooGtilxHE9HdQuz7+G7jp0suA7?=
+ =?us-ascii?Q?u+sqAF8m1W+C9mV9iV8cXzAo/v9ZmBQUw6DXgGzDLgEJs0ZDPpi8V+nf2GOo?=
+ =?us-ascii?Q?eqRGiOUZ/xk/5ijS1yLY9c/hb5mmNpf9n1D9ehXd?=
+X-MS-Exchange-AntiSpam-ExternalHop-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-ExternalHop-MessageData-0: PYZg/ZUnp2SUMxbKb94YYk36va/AYwOaPwe+9fV+6ZoiTYetHeFZJadRnHnFuZ5DQtiZZGjUntQaiJzeVpcRvcKljnfjP3+MkFZV206GrySyykofolxv0J9Y1IRjOor5UZgfN+7+wgWUNLA6qCKkUAaaM+je4gPIRqKjiS2+quFQj/hgyPKju6FEEvqBcSPdBNX6AkxjjoUqETgB+FVsCjOo/QxOTHvUOaUc9VdtCDejjf6ivjLpf/nuL5WDAjuMq4b39I/tGT1WwmblJxh/pqpJX02qixpQztniebOEUUFU4ojBdx3y+JLxEzmz9202IgfxrKnjw4Rrl6QixR1ln5fg6C+AwSI+VdBYfTMP2M3ZRwEmMdiqoBMtGVRx+H0AiIlyWV9sAc7vmx53lZNcQ8jNBj4HG6GRRH00/RULDYEMeN20KYcgOr9WSAEE15zhQo7yTw25fzkeQRILY5XDvKzlTs9mS+4Rj0fsy7VVxkSh77i9ezePAQ4zk2dZduG59u+qdPNviMz0fv0gwHZl5m8uaevoePyAZ5VJe54EytxIN5shX2GffBnZvsH+dZg+79+s4UwYkgoyuleLlflu1rg6EMmQl4UMxH4s4TUxiqfP+IY/IkMlvdVCrKGdSqMEen16S1qC+dvDNtSuk1pMqGOXbg6UxKM23mFiat8yYWTJgqBMhRkW2PhIljnkINQCt35VoieH8/i/925wXescFlbj57NldjdWfsxMJe+eYL0IfJt9cFHzACK9ImmWwbxMUFujvufiPg53+8OrKENgHpFCDmA9WeeWVU4521gl1bU=
+X-OriginatorOrg: oracle.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: d767d427-c64c-4629-822f-08db8bff84c9
+X-MS-Exchange-CrossTenant-AuthSource: SA1PR10MB5867.namprd10.prod.outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 24 Jul 2023 04:36:16.6159
+ (UTC)
+X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
+X-MS-Exchange-CrossTenant-Id: 4e2c6054-71cb-48f1-bd6c-3a9705aca71b
+X-MS-Exchange-CrossTenant-MailboxType: HOSTED
+X-MS-Exchange-CrossTenant-UserPrincipalName: iE6FoHb3LZwErdk3DsggcEwdM5BKseghQDxFcinVn0GSRRVMefCmIHSzx67k7Yoe/Do1Ne8F3N3AUpqFbFHf+g==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: PH0PR10MB4774
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.254,Aquarius:18.0.957,Hydra:6.0.591,FMLib:17.11.176.26
+ definitions=2023-07-24_03,2023-07-20_01,2023-05-22_02
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 mlxlogscore=999 spamscore=0
+ adultscore=0 suspectscore=0 phishscore=0 malwarescore=0 mlxscore=0
+ bulkscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2306200000 definitions=main-2307240041
+X-Proofpoint-GUID: OA706Ysqin5HUMOH5F8_5vF_LWAaNdUD
+X-Proofpoint-ORIG-GUID: OA706Ysqin5HUMOH5F8_5vF_LWAaNdUD
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Sat, Jul 22, 2023 at 09:19:09AM +0800, Long Li wrote:
-> On Wed, Jul 19, 2023 at 04:41:41PM +1000, Dave Chinner wrote:
-> > On Sat, Jul 15, 2023 at 02:36:47PM +0800, Long Li wrote:
-> > > KASAN report a uaf when recover intents fails:
-> > ....
-> > > 
-> > > If process intents fails, intent items left in AIL will be delete
-> > > from AIL and freed in error handling, even intent items that have been
-> > > recovered and created done items. After this, uaf will be triggered when
-> > > done item commited, because at this point the released intent item will
-> > > be accessed.
-> > > 
-> > > xlog_recover_finish                     xlog_cil_push_work
-> > > ----------------------------            ---------------------------
-> > > xlog_recover_process_intents
-> > >   xfs_cui_item_recover//cui_refcount == 1
-> > >     xfs_trans_get_cud
-> > >     xfs_trans_commit
-> > >       <add cud item to cil>
-> > >   xfs_cui_item_recover
-> > >     <error occurred and return>
-> > > xlog_recover_cancel_intents
-> > >   xfs_cui_release     //cui_refcount == 0
-> > >     xfs_cui_item_free //free cui
-> > >   <release other intent items>
-> > > xlog_force_shutdown   //shutdown
-> > >                                <...>
-> > >                                         <push items in cil>
-> > >                                         xlog_cil_committed
-> > >                                           xfs_cud_item_release
-> > >                                             xfs_cui_release // UAF
-> > 
-> > Huh. The log stores items in the AIL without holding a reference to
-> > them, then on shutdown takes the intent done reference away because
-> > it assumes the intent has not been processed as it is still in the
-> > AIL.
-> > 
-> > Ok, that's broken.
-> > 
-> > > Fix it by move log force forward to make sure done items committed before
-> > > cancel intents.
-> > 
-> > That doesn't fix the fact we have a reference counted object that is
-> > being accessed by code that doesn't actually own a reference to the
-> > object.  Intent log items are created with a reference count of 2 -
-> > one for the creator, and one for the intent done object.
-> > 
-> > Look at xlog_recover_cui_commit_pass2():
-> > 
-> >         /*
-> >          * Insert the intent into the AIL directly and drop one reference so
-> >          * that finishing or canceling the work will drop the other.
-> >          */
-> >         xfs_trans_ail_insert(log->l_ailp, &cuip->cui_item, lsn);
-> >         xfs_cui_release(cuip);
-> >         return 0;
-> > }
-> > 
-> > Log recovery explicitly drops the creator reference after it is
-> > inserted into the AIL, but it then processes the log item as if it
-> > also owns the intent-done reference. The moment we call
-> > ->iop_recover(), the intent-done reference should be owned by the
-> > log item.
-> 
-> Hi, Dave
-> 
-> Thanks for the reply. Yes, your analysis seems reasonable, it helped me a
-> lot to understand the intent lifecycle.
-> 
-> > 
-> > The recovery of the BUI, RUI and EFI all do the same thing. I
-> > suspect that these references should actually be held by log
-> > recovery until it is done processing the item, at which point it
-> > should be removed from the AIL by xlog_recover_process_intents().
-> 
-> Why do we need to remove the intent from the AIL at this point,
+Hi all,
 
-Because we've processed the recovery of it - it is either completely
-done or we have a new intent in the CIL ready to continue operation.
-Either way, the next write to the journal will remove the item from
-the AIL when it completes.
+This patch series extends metadump/mdrestore tools to be able to dump
+and restore contents of an external log device. It also adds the
+ability to copy larger blocks (e.g. 4096 bytes instead of 512 bytes)
+into the metadump file. These objectives are accomplished by
+introducing a new metadump file format.
 
-Intents don't need to be in the AIL, though - we can cancel them
-in memory (see the intent whiteout code) and so when we process the
-done item from journal IO completion the last reference goes away
-and they won't be in the AIL at this point in time.
+I have tested the patchset by extending metadump/mdrestore tests in
+fstests to cover the newly introduced metadump v2 format. The tests
+can be found at
+https://github.com/chandanr/xfstests/commits/metadump-v2.
 
-IOWs, the intent freeing code doesn't care if the intent is in the
-AIL or not, it does the right thing either way.
+The patch series can also be obtained from
+https://github.com/chandanr/xfsprogs-dev/commits/metadump-v2.
 
-Hence if we remove the intent from the list of intents that need to
-be recovered after we have done the initial recovery, we acheive two
-things:
+Darrick, Please note that I have removed your RVB from "metadump: Add
+support for passing version option" patch. copy_log() and metadump_f()
+were invoking set_log_cur() for both "internal log" and "external
+log". In the V3 patchset, I have modified the copy_log() function to,
+1. Invoke set_log_cur() when the filesystem has an external log.
+2. Invoke set_cur() when the filesystem has an internal log.
 
-1. the tail of the log can be moved forward with the commit of the
-done intent or new intent to continue the operation, and
+Changelog:
+V2 -> V3:
+  1. Document the meanings of metadump v2's ondisk flags.
+  2. Rename metadump_ops->end_write() to metadump_ops->finish_dump().
+  3. Pass a pointer to the newly introduced "union mdrestore_headers"
+     to callbacks in "struct mdrestore_ops" instead of a pointer to
+     "void".
+  4. Use set_log_cur() only when metadump has to be read from an
+     external log device.
+  5. Verify that primary superblock read from metadump file was indeed
+     read from the data device.
+  6. Fix indentation issues.
 
-2. We avoid the problem of trying to determine how many reference
-counts we need to drop from intent recovery cancelling because we
-never come across intents we've actually attempted recovery on.
+V1 -> V2:
+  1. Introduce the new incompat flag XFS_MD2_INCOMPAT_EXTERNALLOG to
+     indicate that the metadump file contains data obtained from an
+     external log.
+  2. Interpret bits 54 and 55 of xfs_meta_extent.xme_addr as a counter
+     such that 00 maps to the data device and 01 maps to the log
+     device.
+  3. Define the new function set_log_cur() to read from
+     internal/external log device. This allows us to continue using
+     TYP_LOG to read from both internal and external log.
+  4. In order to support reading metadump from a pipe, mdrestore now
+     reads the first four bytes of the header to determine the
+     metadump version rather than reading the entire header in a
+     single call to fread().
+  5. Add an ASCII diagram to describe metadump v2's ondisk layout in
+     xfs_metadump.h.
+  6. Update metadump's man page to indicate that metadump in v2 format
+     is generated by default if the filesystem has an external log and
+     the metadump version to use is not explicitly mentioned on the
+     command line.
+  7. Remove '_metadump' suffix from function pointer names in "struct
+     metadump_ops".
+  8. Use xfs_daddr_t type for declaring variables containing disk
+     offset value.
+  9. Use bool type rather than int for variables holding a boolean
+     value.
+  11. Remove unnecessary whitespace.
 
-> shouldn't
-> it be removed from the AIL when the done intent is committed? Or is there
-> any way to ensure that the intents are removed from the AIL when they are
-> processed.
 
-THe reference counting ensures the right thing is done when the last
-reference goes away. If it is in the AIL, it will get removed, if it
-is not in the AIL, then AIL removal is a no-op and nothign bad
-happens.
+Chandan Babu R (23):
+  metadump: Use boolean values true/false instead of 1/0
+  mdrestore: Fix logic used to check if target device is large enough
+  metadump: Declare boolean variables with bool type
+  metadump: Define and use struct metadump
+  metadump: Add initialization and release functions
+  metadump: Postpone invocation of init_metadump()
+  metadump: Introduce struct metadump_ops
+  metadump: Introduce metadump v1 operations
+  metadump: Rename XFS_MD_MAGIC to XFS_MD_MAGIC_V1
+  metadump: Define metadump v2 ondisk format structures and macros
+  metadump: Define metadump ops for v2 format
+  xfs_db: Add support to read from external log device
+  metadump: Add support for passing version option
+  mdrestore: Declare boolean variables with bool type
+  mdrestore: Define and use struct mdrestore
+  mdrestore: Detect metadump v1 magic before reading the header
+  mdrestore: Add open_device(), read_header() and show_info() functions
+  mdrestore: Introduce struct mdrestore_ops
+  mdrestore: Replace metadump header pointer argument with a union
+    pointer
+  mdrestore: Introduce mdrestore v1 operations
+  mdrestore: Extract target device size verification into a function
+  mdrestore: Define mdrestore ops for v2 format
+  mdrestore: Add support for passing log device as an argument
 
-Cheers,
+ db/io.c                   |  56 ++-
+ db/io.h                   |   2 +
+ db/metadump.c             | 777 ++++++++++++++++++++++++--------------
+ db/xfs_metadump.sh        |   3 +-
+ include/xfs_metadump.h    |  70 +++-
+ man/man8/xfs_mdrestore.8  |   8 +
+ man/man8/xfs_metadump.8   |  14 +
+ mdrestore/xfs_mdrestore.c | 497 ++++++++++++++++++------
+ 8 files changed, 1014 insertions(+), 413 deletions(-)
 
-Dave.
 -- 
-Dave Chinner
-david@fromorbit.com
+2.39.1
+
