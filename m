@@ -2,157 +2,106 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B1DA0C001B0
-	for <linux-xfs@archiver.kernel.org>; Mon, 24 Jul 2023 18:18:27 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id CF1D9C41513
+	for <linux-xfs@archiver.kernel.org>; Mon, 24 Jul 2023 18:22:12 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229870AbjGXSS1 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 24 Jul 2023 14:18:27 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38458 "EHLO
+        id S229981AbjGXSWL (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 24 Jul 2023 14:22:11 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40334 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229862AbjGXSS0 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 24 Jul 2023 14:18:26 -0400
-Received: from bombadil.infradead.org (bombadil.infradead.org [IPv6:2607:7c80:54:3::133])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id ABB0FE4E;
-        Mon, 24 Jul 2023 11:18:23 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=infradead.org; s=bombadil.20210309; h=Sender:In-Reply-To:Content-Type:
-        MIME-Version:References:Message-ID:Subject:Cc:To:From:Date:Reply-To:
-        Content-Transfer-Encoding:Content-ID:Content-Description;
-        bh=FftEnjrfbBAd3Ww9EqN8sppXbEA0boEKYQQaC3XYChY=; b=ALkl62CiRE28E2LSizMN3y7fEY
-        kJycbVRJZEvZWmguJTa9cV8saw4voW845Dk7ZUIQ/EpBqHehcYEObAuEhAbV5cICUXMxpEHgWD1xY
-        0G6eQD7tzvNPI+5LLNz+rczyJT/b6KyVcZ+bYO3jrw6raTDm6jxMaJpIvIG1XxtiGTStkaoeXQ5ux
-        i2K6PllfRHRUSgqlIGCCkFHMYoEy4mFvIGC8wSVGTqOtUaudgrq/YQeHfsLxDw4QBvQ2/XP3rLron
-        /nYKqQX7yUCVJiO+cQev86wNP91/7Iz+oGCh9AS1aLKpPK5iq4sDhzycio7fP17V8xO0Lv6e1RKak
-        XdsSA3Lg==;
-Received: from mcgrof by bombadil.infradead.org with local (Exim 4.96 #2 (Red Hat Linux))
-        id 1qO08S-005BNK-31;
-        Mon, 24 Jul 2023 18:18:20 +0000
-Date:   Mon, 24 Jul 2023 11:18:20 -0700
-From:   Luis Chamberlain <mcgrof@kernel.org>
-To:     Alistair Popple <apopple@nvidia.com>,
-        linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org,
-        Pankaj Raghav <p.raghav@samsung.com>
-Cc:     SeongJae Park <sj@kernel.org>, kevin.tian@intel.com,
-        x86@kernel.org, ajd@linux.ibm.com, kvm@vger.kernel.org,
-        linux-mm@kvack.org, catalin.marinas@arm.com, seanjc@google.com,
-        will@kernel.org, linux-kernel@vger.kernel.org, npiggin@gmail.com,
-        zhi.wang.linux@gmail.com, jgg@ziepe.ca, iommu@lists.linux.dev,
-        nicolinc@nvidia.com, jhubbard@nvidia.com, fbarrat@linux.ibm.com,
-        akpm@linux-foundation.org, linuxppc-dev@lists.ozlabs.org,
-        linux-arm-kernel@lists.infradead.org, robin.murphy@arm.com,
-        mcgrof@kernel.org
-Subject: Re: [PATCH v2 3/5] mmu_notifiers: Call invalidate_range() when
- invalidating TLBs
-Message-ID: <ZL7AbLJ+RUUgzt8O@bombadil.infradead.org>
-References: <8f293bb51a423afa71ddc3ba46e9f323ee9ffbc7.1689768831.git-series.apopple@nvidia.com>
- <20230719225105.1934-1-sj@kernel.org>
- <877cqvl7vr.fsf@nvdebian.thelocal>
+        with ESMTP id S229931AbjGXSWL (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 24 Jul 2023 14:22:11 -0400
+Received: from mail-il1-x12b.google.com (mail-il1-x12b.google.com [IPv6:2607:f8b0:4864:20::12b])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4F66010D9
+        for <linux-xfs@vger.kernel.org>; Mon, 24 Jul 2023 11:22:09 -0700 (PDT)
+Received: by mail-il1-x12b.google.com with SMTP id e9e14a558f8ab-348de7bc865so239235ab.0
+        for <linux-xfs@vger.kernel.org>; Mon, 24 Jul 2023 11:22:09 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=kernel-dk.20221208.gappssmtp.com; s=20221208; t=1690222928; x=1690827728;
+        h=content-transfer-encoding:in-reply-to:from:references:cc:to
+         :content-language:subject:user-agent:mime-version:date:message-id
+         :from:to:cc:subject:date:message-id:reply-to;
+        bh=ZlGqwdb6bAoylkqLXqRNncq4LrSVbEkxLHu0eBS0UCo=;
+        b=SbDqTYDYrGfwh+e6v+ZS5/BSB8MarGS6nvaJI+QlbYAw4Qhj0G4GRSrfEA51SabuqI
+         4qyzgUnfiTSx5pVPmcKrI6NZQla58YVwtZYp5dBlDehg8aQbe92/u2zNzzHTrAiemJn7
+         C0yWsFFzvZ8MWmAA/QgDuKf7th0nR81ICYUISmqDm4Yd3KwwfF1vIKIi3VLPvLZ627y7
+         dag0yJM6fnek3ENIuSi9GTCkiTDdsLEBbpGc/ARu0IsY5PtBGK3QvEV26kxN5lm5BGIL
+         BcgDZh3T5AH/3uCsGeROBYGnSzWDnV8WvZPq0z1u/gwLdBwhTA3CYtguTHCiJomGOcHH
+         MZCw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20221208; t=1690222928; x=1690827728;
+        h=content-transfer-encoding:in-reply-to:from:references:cc:to
+         :content-language:subject:user-agent:mime-version:date:message-id
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=ZlGqwdb6bAoylkqLXqRNncq4LrSVbEkxLHu0eBS0UCo=;
+        b=ZutJzE016QZaNq0gD+OY/Tk2r9PLnaQ6QJYrYPzsET4MVlx9eiqrZm2zhISUqUhjye
+         dDVLlTnG3n6171XAfJCKEB6BI+4zGwH5WWEVZu66ZMrKk03wCFkXMiAW6L3vcC006tjA
+         DPQ4WEOggFXzcl3FKBZFdRfBf5PSTRpQG72KiQ+0lAtKoYgEn4rbE21d42IDlD/eoiCT
+         UhqKTMF/fgT8Xug2Gn/L5OwlwCVz96PWNBACWXrqWQp4ZiLSr5bxQb3F80dPv5vEw62G
+         4NF8VT0ZMOdOefRl4ZsOFm+zXOyveSEQzxEEHfeMabqbyHxLL7OKWUiY2sO1i6jx8b7Q
+         aP7A==
+X-Gm-Message-State: ABy/qLagVk3vHu4dpTCrtecEm92jwk/OgxwMM++8udSrfbPSGYMxRH6p
+        pAkFYPUU8e0nDnXR/opF1aJhfxyyC2zHA4M0RAQ=
+X-Google-Smtp-Source: APBJJlGOaq3eY9t8T7Eh1q/nPBtpvZXB+aZaoDKkzrXd7wpYNzUQxjZqSuSQRfhk2xfUsDEgn7j0cw==
+X-Received: by 2002:a05:6602:3e87:b0:780:cb36:6f24 with SMTP id el7-20020a0566023e8700b00780cb366f24mr8633262iob.2.1690222928696;
+        Mon, 24 Jul 2023 11:22:08 -0700 (PDT)
+Received: from [192.168.1.94] ([96.43.243.2])
+        by smtp.gmail.com with ESMTPSA id c20-20020a5d9754000000b00760e7a343c1sm3521048ioo.30.2023.07.24.11.22.07
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Mon, 24 Jul 2023 11:22:08 -0700 (PDT)
+Message-ID: <fb2e6c9d-028c-3ed8-1068-0e654bdb63a4@kernel.dk>
+Date:   Mon, 24 Jul 2023 12:22:07 -0600
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <877cqvl7vr.fsf@nvdebian.thelocal>
-Sender: Luis Chamberlain <mcgrof@infradead.org>
+User-Agent: Mozilla/5.0 (X11; Linux aarch64; rv:102.0) Gecko/20100101
+ Thunderbird/102.13.0
+Subject: Re: [PATCH] io_uring: Use io_schedule* in cqring wait
+Content-Language: en-US
+To:     Phil Elwell <phil@raspberrypi.com>
+Cc:     Greg KH <gregkh@linuxfoundation.org>, andres@anarazel.de,
+        asml.silence@gmail.com, david@fromorbit.com, hch@lst.de,
+        io-uring@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>,
+        linux-xfs@vger.kernel.org, stable <stable@vger.kernel.org>
+References: <CAMEGJJ2RxopfNQ7GNLhr7X9=bHXKo+G5OOe0LUq=+UgLXsv1Xg@mail.gmail.com>
+ <2023072438-aftermath-fracture-3dff@gregkh>
+ <140065e3-0368-0b5d-8a0d-afe49b741ad2@kernel.dk>
+ <ecb821a2-e90a-fec1-d2ca-b355c16b7515@kernel.dk>
+ <CAMEGJJ3SjWdJFwzB+sz79ojWqAAMULa2CFAas0tv+JJLJMwoGQ@mail.gmail.com>
+ <0ae07b66-956a-bb62-e4e8-85fa5f72362f@kernel.dk>
+ <CAMEGJJ0oNGBg=9jRogsstcYCBUVnDGpuijwXVZZQEJr=2awaqA@mail.gmail.com>
+From:   Jens Axboe <axboe@kernel.dk>
+In-Reply-To: <CAMEGJJ0oNGBg=9jRogsstcYCBUVnDGpuijwXVZZQEJr=2awaqA@mail.gmail.com>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Cc'ing fsdevel + xfs folks as this fixes a regression tests with
-XFS with generic/176.
+On 7/24/23 10:48 AM, Phil Elwell wrote:
+> Hi Jens,
+> 
+> On Mon, 24 Jul 2023 at 17:08, Jens Axboe <axboe@kernel.dk> wrote:
+>>
+>> On 7/24/23 10:07?AM, Phil Elwell wrote:
+>>>> Even though I don't think this is an actual problem, it is a bit
+>>>> confusing that you get 100% iowait while waiting without having IO
+>>>> pending. So I do think the suggested patch is probably worthwhile
+>>>> pursuing. I'll post it and hopefully have Andres test it too, if he's
+>>>> available.
+>>>
+>>> If you CC me I'll happily test it for you.
+>>
+>> Here it is.
+> 
+> < snip >
+> 
+> Thanks, that works for me on top of 6.5-rc3. Going to 6.1 is a
+> non-trivial (for me) back-port - the switch from "ret = 0" in 6.5 to
+> "ret = 1" in 6.1 is surprising.
 
-On Thu, Jul 20, 2023 at 10:52:59AM +1000, Alistair Popple wrote:
-> 
-> SeongJae Park <sj@kernel.org> writes:
-> 
-> > Hi Alistair,
-> >
-> > On Wed, 19 Jul 2023 22:18:44 +1000 Alistair Popple <apopple@nvidia.com> wrote:
-> >
-> >> The invalidate_range() is going to become an architecture specific mmu
-> >> notifier used to keep the TLB of secondary MMUs such as an IOMMU in
-> >> sync with the CPU page tables. Currently it is called from separate
-> >> code paths to the main CPU TLB invalidations. This can lead to a
-> >> secondary TLB not getting invalidated when required and makes it hard
-> >> to reason about when exactly the secondary TLB is invalidated.
-> >> 
-> >> To fix this move the notifier call to the architecture specific TLB
-> >> maintenance functions for architectures that have secondary MMUs
-> >> requiring explicit software invalidations.
-> >> 
-> >> This fixes a SMMU bug on ARM64. On ARM64 PTE permission upgrades
-> >> require a TLB invalidation. This invalidation is done by the
-> >> architecutre specific ptep_set_access_flags() which calls
-> >> flush_tlb_page() if required. However this doesn't call the notifier
-> >> resulting in infinite faults being generated by devices using the SMMU
-> >> if it has previously cached a read-only PTE in it's TLB.
-> >> 
-> >> Moving the invalidations into the TLB invalidation functions ensures
-> >> all invalidations happen at the same time as the CPU invalidation. The
-> >> architecture specific flush_tlb_all() routines do not call the
-> >> notifier as none of the IOMMUs require this.
-> >> 
-> >> Signed-off-by: Alistair Popple <apopple@nvidia.com>
-> >> Suggested-by: Jason Gunthorpe <jgg@ziepe.ca>
-> >
-> > I found below kernel NULL-dereference issue on latest mm-unstable tree, and
-> > bisect points me to the commit of this patch, namely
-> > 75c400f82d347af1307010a3e06f3aa5d831d995.
-> >
-> > To reproduce, I use 'stress-ng --bigheap $(nproc)'.  The issue happens as soon
-> > as it starts reclaiming memory.  I didn't dive deep into this yet, but
-> > reporting this issue first, since you might have an idea already.
-> 
-> Thanks for the report SJ!
-> 
-> I see the problem - current->mm can (obviously!) be NULL which is what's
-> leading to the NULL dereference. Instead I think on x86 I need to call
-> the notifier when adding the invalidate to the tlbbatch in
-> arch_tlbbatch_add_pending() which is equivalent to what ARM64 does.
-> 
-> The below should fix it. Will do a respin with this.
-> 
-> ---
-> 
-> diff --git a/arch/x86/include/asm/tlbflush.h b/arch/x86/include/asm/tlbflush.h
-> index 837e4a50281a..79c46da919b9 100644
-> --- a/arch/x86/include/asm/tlbflush.h
-> +++ b/arch/x86/include/asm/tlbflush.h
-> @@ -4,6 +4,7 @@
->  
->  #include <linux/mm_types.h>
->  #include <linux/sched.h>
-> +#include <linux/mmu_notifier.h>
->  
->  #include <asm/processor.h>
->  #include <asm/cpufeature.h>
-> @@ -282,6 +283,7 @@ static inline void arch_tlbbatch_add_pending(struct arch_tlbflush_unmap_batch *b
->  {
->  	inc_mm_tlb_gen(mm);
->  	cpumask_or(&batch->cpumask, &batch->cpumask, mm_cpumask(mm));
-> +	mmu_notifier_arch_invalidate_secondary_tlbs(mm, 0, -1UL);
->  }
->  
->  static inline void arch_flush_tlb_batched_pending(struct mm_struct *mm)
-> diff --git a/arch/x86/mm/tlb.c b/arch/x86/mm/tlb.c
-> index 0b990fb56b66..2d253919b3e8 100644
-> --- a/arch/x86/mm/tlb.c
-> +++ b/arch/x86/mm/tlb.c
-> @@ -1265,7 +1265,6 @@ void arch_tlbbatch_flush(struct arch_tlbflush_unmap_batch *batch)
->  
->  	put_flush_tlb_info();
->  	put_cpu();
-> -	mmu_notifier_arch_invalidate_secondary_tlbs(current->mm, 0, -1UL);
->  }
->  
->  /*
+Great, thanks for testing. I'll take care of the stable backports
+once the patch lands in upstream -git later this week.
 
-This patch also fixes a regression introduced on linux-next, the same
-crash on arch_tlbbatch_flush() is reproducible with fstests generic/176
-on XFS. This patch fixes that regression [0]. This should also close out
-the syzbot crash too [1]
+-- 
+Jens Axboe
 
-[0] https://gist.github.com/mcgrof/b37fc8cf7e6e1b3935242681de1a83e2
-[1] https://lore.kernel.org/all/0000000000003afcb4060135a664@google.com/
 
-Tested-by: Luis Chamberlain <mcgrof@kernel.org>
-
-  Luis
