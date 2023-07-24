@@ -2,224 +2,440 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id AD4BAEB64DD
-	for <linux-xfs@archiver.kernel.org>; Mon, 24 Jul 2023 04:39:27 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8DE1AC001E0
+	for <linux-xfs@archiver.kernel.org>; Mon, 24 Jul 2023 09:45:41 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229572AbjGXEj0 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 24 Jul 2023 00:39:26 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53366 "EHLO
+        id S231782AbjGXJpk (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 24 Jul 2023 05:45:40 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45854 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229503AbjGXEjZ (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 24 Jul 2023 00:39:25 -0400
-Received: from mx0a-00069f02.pphosted.com (mx0a-00069f02.pphosted.com [205.220.165.32])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B9DB3122
-        for <linux-xfs@vger.kernel.org>; Sun, 23 Jul 2023 21:39:24 -0700 (PDT)
-Received: from pps.filterd (m0246617.ppops.net [127.0.0.1])
-        by mx0b-00069f02.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 36NMan1J018630;
-        Mon, 24 Jul 2023 04:39:23 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=from : to : cc :
- subject : date : message-id : in-reply-to : references :
- content-transfer-encoding : content-type : mime-version;
- s=corp-2023-03-30; bh=SIU9hbnyPKO4rmv2bFc88tWCvlQ563t9f31OOptKbTQ=;
- b=GWgkis5XrjfsXezZFabaSfzqTYA4qqKuT10Wpqwib+nv07uQ0MBo2o6QpcNuhurZc7HH
- +pyXi2LZYmIU7ofuMRNaFYYDTuAqydWSlXALFocCus4EOJUf3FvF/utShT+jyi3hP441
- tHFiY8exnLdsnjc7jfnDtU5qEszp7Hf+hCa8m8iRIMYkHcMTNXPtOrlSz2pnx2+UtifL
- 9tBSNtBRX77Wvg4M7sIgQIWxma15iTQoCK6QNWGHy3rzL0m/byGpTAqpbssePZ06eQ+8
- 41wGkgG/W6XvZAcIm1byp0c8Ie36lOSlGO2tucZSngt3oStLJgI74amQe8/ZJgUDx6id Sw== 
-Received: from phxpaimrmta03.imrmtpd1.prodappphxaev1.oraclevcn.com (phxpaimrmta03.appoci.oracle.com [138.1.37.129])
-        by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 3s07nuhsp4-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Mon, 24 Jul 2023 04:39:22 +0000
-Received: from pps.filterd (phxpaimrmta03.imrmtpd1.prodappphxaev1.oraclevcn.com [127.0.0.1])
-        by phxpaimrmta03.imrmtpd1.prodappphxaev1.oraclevcn.com (8.17.1.19/8.17.1.19) with ESMTP id 36O0r7T6000494;
-        Mon, 24 Jul 2023 04:39:11 GMT
-Received: from nam12-dm6-obe.outbound.protection.outlook.com (mail-dm6nam12lp2173.outbound.protection.outlook.com [104.47.59.173])
-        by phxpaimrmta03.imrmtpd1.prodappphxaev1.oraclevcn.com (PPS) with ESMTPS id 3s05j3eaym-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Mon, 24 Jul 2023 04:39:11 +0000
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=JJXessMCLMVA+s19MWFuHOgR5spSRW65OXRNyWFv4Cuc2K8R7Cei/4cT1x9oU+Jkka3WeQVWeJqH5/jIZsTiu+MDtSWW9HmSIE0bwT1oOwrOx/hr1T1ZI0CWBpCYwvwZFxpJmQCiVo3FQEOc7Kt38m6Ek2qAia3hO1nFgoWxZoJS8U5yobF7lmOaCN2kxefxC9iFbG8zmezF0mXLelCZTcPn9Qg9ze1vePSXKDYuY8KlMNtMqeGDQ4tRpCv2ldWmanFabRAqsZ2lFNUNaIPQczaOvgOKp9XVjG7MNmSYUAfuBtfiChODTOLWr8uyg8mvkqjZ2UtvFUfXDHn8vwKXoQ==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector9901;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=SIU9hbnyPKO4rmv2bFc88tWCvlQ563t9f31OOptKbTQ=;
- b=ORt8DYrkjzU+oRASd1Pq07p0uY8BFbHWsObDpIOoNBGDz+xcjszuGXGR9F8sXi4NN9gVhHyzABMLDynVd+qWi6rBhsIwq1M05wcpKIdnSVY3ImlCagdLjfMmUVv1baT1n3lNHpfn6TDDtf/VIx8p7I4xItyxN3bOG7kfgei09hZXTVu6YBEYL/LApuGO7kD5RYpAEy4xTSkSoHFXrnz2nyXvutwLvIkxewj+hi7bte/eMUUgJY7fpwMjRgncsJD5mjDulTDb+XGK1XDY+bMLbY11An6dL8l5Q08DkZmUvoGDm8rNc1Yj535l5RjCNq2R0N7XlaJgO9OFl7h34xH4bQ==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=oracle.com; dmarc=pass action=none header.from=oracle.com;
- dkim=pass header.d=oracle.com; arc=none
+        with ESMTP id S231872AbjGXJpf (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 24 Jul 2023 05:45:35 -0400
+Received: from mail-pl1-x62c.google.com (mail-pl1-x62c.google.com [IPv6:2607:f8b0:4864:20::62c])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7B865E56
+        for <linux-xfs@vger.kernel.org>; Mon, 24 Jul 2023 02:45:07 -0700 (PDT)
+Received: by mail-pl1-x62c.google.com with SMTP id d9443c01a7336-1bba9539a23so639165ad.1
+        for <linux-xfs@vger.kernel.org>; Mon, 24 Jul 2023 02:45:07 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
- d=oracle.onmicrosoft.com; s=selector2-oracle-onmicrosoft-com;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=SIU9hbnyPKO4rmv2bFc88tWCvlQ563t9f31OOptKbTQ=;
- b=KCpQtxc0gnEJeUJON026g4rqhbTYg3gxT8ssGTuTjVUUrhGuRdO5d4gyt4DmED1LgmLTAKaOW2hX6KMGjSA0219wpUcYjndIYotF4W6uBkzzTdI8mpTJYGrVsVPxB9uG9rGijOjWMGlrEUHhU6XI2l4nM4sOfS1vO44MLrzQqXs=
-Received: from SA1PR10MB5867.namprd10.prod.outlook.com (2603:10b6:806:233::19)
- by BLAPR10MB4963.namprd10.prod.outlook.com (2603:10b6:208:326::23) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.6609.32; Mon, 24 Jul
- 2023 04:39:09 +0000
-Received: from SA1PR10MB5867.namprd10.prod.outlook.com
- ([fe80::707c:5a02:87a1:38e0]) by SA1PR10MB5867.namprd10.prod.outlook.com
- ([fe80::707c:5a02:87a1:38e0%3]) with mapi id 15.20.6609.031; Mon, 24 Jul 2023
- 04:39:09 +0000
-From:   Chandan Babu R <chandan.babu@oracle.com>
-To:     linux-xfs@vger.kernel.org
-Cc:     Chandan Babu R <chandan.babu@oracle.com>, djwong@kernel.org,
-        cem@kernel.org
-Subject: [PATCH V3 23/23] mdrestore: Add support for passing log device as an argument
-Date:   Mon, 24 Jul 2023 10:05:27 +0530
-Message-Id: <20230724043527.238600-24-chandan.babu@oracle.com>
-X-Mailer: git-send-email 2.39.1
-In-Reply-To: <20230724043527.238600-1-chandan.babu@oracle.com>
-References: <20230724043527.238600-1-chandan.babu@oracle.com>
-Content-Transfer-Encoding: 8bit
-Content-Type: text/plain
-X-ClientProxiedBy: SI1PR02CA0035.apcprd02.prod.outlook.com
- (2603:1096:4:1f6::8) To SA1PR10MB5867.namprd10.prod.outlook.com
- (2603:10b6:806:233::19)
+        d=bytedance.com; s=google; t=1690191907; x=1690796707;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to;
+        bh=GhsBT9Fumj8uBYrifNTbdeUWiupPg7k66ZIkdolEOus=;
+        b=Mux1pbqzjbfqRXVfJEIWZc81mrnEot0PRQ/rTJrVGIim7ktrzSNm05Fsso5ilARRvv
+         faySszbFYa9OO4CMI3npMpUlhKd9leJWtwrwrnGBgTFgyKPWAZhGDLwNVS7t8DhkjiqN
+         RwEnjMy2GP0KMYlVucQ6x1a/u1Cr93p0iJndU/bpqFkEM97m8/txQF/6lkl5JDWlk8AU
+         3iT7I2JCi3x9P2zSBpP/ZmfJYfqHGCek7eMXdifxANKuP/Fuf+mUHCVg2tSmefehawea
+         n1OerRq0jnWZtgNyWPX2fjm4/jIjVqZyDgwY5w5AIUqAK7zCLOIJi1p74U5td8CU8Ec4
+         mzxg==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20221208; t=1690191907; x=1690796707;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-message-state:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=GhsBT9Fumj8uBYrifNTbdeUWiupPg7k66ZIkdolEOus=;
+        b=X83DJeDKNvqA1upMdOOUhew2Mn+CBZeBgvq1BxSOkwDygxg7lEG1tz41mOgr4MWklg
+         jepc/6PKFR3nvapQM3F/cKGWZ3tfzSywZjuaiYaxw34gdH7IT7yyHdbHKlEu5lyl0Nmo
+         xgPtLYbsQsmzl+w+9kQ3zyNmfZ58/HOBLj9I2NMXpEGz9QEt1HyoLAJRycib2pwZIJfv
+         so9jlHz0/P4Z2l2SQFlIpXoEKAuyZE4073oggw2kkvcBs/T4z0XkDlW62SxUDY1d4kc+
+         MWj8yRbqWMmK5jNkWOrSqlcrAD+3fvmrpFC356H3mog+zB/M6jbWbVssNOR6kG+GMSAh
+         8/ug==
+X-Gm-Message-State: ABy/qLY1YzEGS16+Gf9YxqnQn0YwtKtXY1y+frO3MHXFjUMKADJOAARW
+        HOdj72EQLJio6f4/kL6poCAKTQ==
+X-Google-Smtp-Source: APBJJlG2lKEMpVGWAV6dsRZ28hllsUFknqcdUwpJ+mz8ptX/BQjWY5s2WSDY0Jqf92PnyDAdPtn/0A==
+X-Received: by 2002:a17:902:ea01:b0:1bb:83ec:832 with SMTP id s1-20020a170902ea0100b001bb83ec0832mr8326265plg.2.1690191906857;
+        Mon, 24 Jul 2023 02:45:06 -0700 (PDT)
+Received: from C02DW0BEMD6R.bytedance.net ([203.208.167.147])
+        by smtp.gmail.com with ESMTPSA id d5-20020a170902c18500b001bb20380bf2sm8467233pld.13.2023.07.24.02.44.54
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Mon, 24 Jul 2023 02:45:06 -0700 (PDT)
+From:   Qi Zheng <zhengqi.arch@bytedance.com>
+To:     akpm@linux-foundation.org, david@fromorbit.com, tkhai@ya.ru,
+        vbabka@suse.cz, roman.gushchin@linux.dev, djwong@kernel.org,
+        brauner@kernel.org, paulmck@kernel.org, tytso@mit.edu,
+        steven.price@arm.com, cel@kernel.org, senozhatsky@chromium.org,
+        yujie.liu@intel.com, gregkh@linuxfoundation.org,
+        muchun.song@linux.dev
+Cc:     linux-kernel@vger.kernel.org, linux-mm@kvack.org, x86@kernel.org,
+        kvm@vger.kernel.org, xen-devel@lists.xenproject.org,
+        linux-erofs@lists.ozlabs.org,
+        linux-f2fs-devel@lists.sourceforge.net, cluster-devel@redhat.com,
+        linux-nfs@vger.kernel.org, linux-mtd@lists.infradead.org,
+        rcu@vger.kernel.org, netdev@vger.kernel.org,
+        dri-devel@lists.freedesktop.org, linux-arm-msm@vger.kernel.org,
+        dm-devel@redhat.com, linux-raid@vger.kernel.org,
+        linux-bcache@vger.kernel.org,
+        virtualization@lists.linux-foundation.org,
+        linux-fsdevel@vger.kernel.org, linux-ext4@vger.kernel.org,
+        linux-xfs@vger.kernel.org, linux-btrfs@vger.kernel.org,
+        Qi Zheng <zhengqi.arch@bytedance.com>
+Subject: [PATCH v2 00/47] use refcount+RCU method to implement lockless slab shrink
+Date:   Mon, 24 Jul 2023 17:43:07 +0800
+Message-Id: <20230724094354.90817-1-zhengqi.arch@bytedance.com>
+X-Mailer: git-send-email 2.24.3 (Apple Git-128)
 MIME-Version: 1.0
-X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: SA1PR10MB5867:EE_|BLAPR10MB4963:EE_
-X-MS-Office365-Filtering-Correlation-Id: 97b2c88b-8969-4659-7d7b-08db8bffebe4
-X-MS-Exchange-SenderADCheck: 1
-X-MS-Exchange-AntiSpam-Relay: 0
-X-Microsoft-Antispam: BCL:0;
-X-Microsoft-Antispam-Message-Info: hYBRQtxJli+I+dxxYEXQAZ2j/vYDWATiaFTpstUdrWz6HokdBWKojevQLQuEJIz7hGMcwrApV2aj4YBPDT0Erx4gy0Ee63gT3daqAjizcaWq7p+6Npo2awYtgQJhAhTwK5k/tm8GpFPL5vtNTE0VxnLPAeXFjAxXpUo4foxdu66RmOKvke03+t7BWMnTSap+j1d5Q7CE3wfTFRUm/llj2WCzgF9a5JoqdBOFPbGWK9VMmvxbH1qFrjIUAWv4iJk0NocT32qvGf2/gTULGqe7XG7ylEzgzZ/sgv+H+wB1iadZs57edV5ymPjdQRXGD+DKPqqIGOXmTv66rTVpAIUErJ1rJst2YJnGB/cbyEIE2Uwt1FfaWPxuchZV87tmC1vvsf+6hg3c0cKXh7QUXDNyl4UTvt8WcDOhZIei+09F/9/u1LYf4OjU+Amu4Sqct1NAYZ1gL3iN46QBe336W56WX5fo7UJ/+1NNRJO807u74dAWQCKx7h869194JNBoSw/CabBDxSlq5fHTT1bJIendmcne/PzSi6HIALxdrOUrnys9IWanLrncA+UxY4K4nWtN
-X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:SA1PR10MB5867.namprd10.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230028)(396003)(346002)(376002)(39860400002)(136003)(366004)(451199021)(2906002)(66946007)(66556008)(66476007)(4326008)(6916009)(6486002)(6666004)(478600001)(86362001)(6512007)(83380400001)(36756003)(186003)(2616005)(26005)(1076003)(6506007)(38100700002)(41300700001)(8936002)(8676002)(5660300002)(316002);DIR:OUT;SFP:1101;
-X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0: =?us-ascii?Q?3E/ZGdqvZr8ybyhsiBSh+wecVc+ltUwy/hd5j9xoAs7Tt1kzVjldqd6wlT/P?=
- =?us-ascii?Q?Bf+PrBFjY/VNQIrU2lrHCZduJ8sYp0lqxwnq4DZzlGB525E1dA/N4zkfxesE?=
- =?us-ascii?Q?K5ttTZqS8VRgUSdFCOOYdmP/FYqGAtqyhAAJ1RFWqYce9bzRnMcMxR+VyJCS?=
- =?us-ascii?Q?41WRogItsSZ+HBi857qihBM7Zo5VxipyvLPgBL3lju7QMMqTkmKg0xQ1AUph?=
- =?us-ascii?Q?2pjd/EHHh85Y10MtiUatxh1imSoYds4g21z6Az+We9q+kI7e1JDrMo8YQGaN?=
- =?us-ascii?Q?7nKqc7WDvEppLilUWiBdV9nFlUgTp+C6F0NfG/aeEFJXP8qemuEvMs8vlVYa?=
- =?us-ascii?Q?13BmjeMZANEBmSTRl1Oxl5fRaor/qjZQGNvDmmChZFPAeNT7JkxaDAwrI7b4?=
- =?us-ascii?Q?vylZ1v2oOwSyYk+63Rxof0OmaZJjHtsackyJzP5cq6mCyyapvmhqxZM66A0k?=
- =?us-ascii?Q?Qq12L0JriBnX1lhlGGuG0qdGW9+b7E03JE6L2irDuyQ2D3R+EtYKLvuOOgiM?=
- =?us-ascii?Q?o+zGbb4gCQJ3mNfmFeiMyhkHvgpKjWOykZdHwwyut8dECe20gIfjnXvaQJkW?=
- =?us-ascii?Q?8Gxxpb1xxC6kQiTTqH9+PgVJYac2SE6uyKFDKpg3zNMxxAfpcvlLzv93n6aO?=
- =?us-ascii?Q?TO7+uCHmOOYF8NEXU+SyefrLA8FNEYqEy8TMSgCjyHODJ9KGwRx6ChbuSx5T?=
- =?us-ascii?Q?Gv3OvY6hsU4e8+dRwAbkqI9kmccWwopZ9ZQsmRPZ8BmUu3I06qrjnVZFdebh?=
- =?us-ascii?Q?Ui3FmM0xpiI7rDM6ejGYkSielJYaiK3QEVIKs9p3aX7f4idKHT6a1At6uakB?=
- =?us-ascii?Q?F8l8e3ojie3pVA9JTxsrrGGByjA3UPBP/yg3i0L0tTyV9lzmgndEJxvahrLZ?=
- =?us-ascii?Q?MspT2mwWPVt7f7Ckf5kAt29akFw1pzRPjxwpSN5qRgfQf12okKk9QCMRhvOE?=
- =?us-ascii?Q?48bkYWJiw3GC994at5T/q6EHEAgZDU++blbyjmxJXPvA69skQteD5r/uvUj8?=
- =?us-ascii?Q?S07U2B1CIbmg60axsE4hgfGaaPDE+oKONdU0fH16U49PkGH+PdRGSSWHnC66?=
- =?us-ascii?Q?dRbJkX0OpRA2U0MDacmuFP7N6ZyVtl5MyZo/TeqfvrsshsNc7YffdeO8dO/M?=
- =?us-ascii?Q?09am0Muyo+CT5KyQNEZkzofcUcM+xiXVjTBw6Bns9MUC7F8HZAe4R2+8UhfJ?=
- =?us-ascii?Q?Rui9+XHkZX8UgzVNvvBp/xaizxCwY3m+I3QdfECwVZ8kaSmbt6yJ34kiKAU5?=
- =?us-ascii?Q?2bSVayxEB+LO81mp8452ij2ZU5RfVA0mgNdkuBW9nFZlfM7SojgJc/Pc7Oi6?=
- =?us-ascii?Q?XrMj+CuCho3boopchAVOz4wHD8vLIH33TiDAe6RWxNqLfeOXttF++M8VvtVq?=
- =?us-ascii?Q?YYbOCXtbz1eJQpf3G4k/BrvcSxg3TF8DnCtfk5SzuKJN667FniN0K2U3+Z1t?=
- =?us-ascii?Q?T9ASOqVssj2BypUFgpx5yjmVXO56DHA+qMOLr9UxHRdthQMqy8+bbkyaQK4q?=
- =?us-ascii?Q?l1awk1iUHoc9S1nlUH13EOsMlHZ5A0A8HiHkAK8Z5jcLkPAcz3P5iJ2SAftJ?=
- =?us-ascii?Q?nGcOmOdWYLbpwsMS8n5agbW8kFvHKZVBdtM9oY3eb7tIlFgzvXuqSBogzIBI?=
- =?us-ascii?Q?Sg=3D=3D?=
-X-MS-Exchange-AntiSpam-ExternalHop-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-ExternalHop-MessageData-0: mfAv7tqwhhkrECYEJxz1Txqy/i4UbYE1NbnJh0KtQcWunC5yiflR16+mzF/xKOrAFOtb/BrebzZC35zi9ZKWUJ5lzGGHLZOV+Ac2Uaw/vHHtFDGG019OpuYuXaRA+EF7vupNyKHS4/l1mBWMsPbO7vx2YZReOL4xoHA7SPN8Tfdp3XkB6Adir1KOCs7HUrbNR5PCSN5u6Ydx3vGaC4AR03t0WB1W4JzUggNZGmK8bvMbz07Fugai9Y3eqI44m4is8Q+TBcenAKTxLsflc50a8CIJrjH+Glj5EPPnMmGK1uvO91fq6/bphnXff7K0MoYcyTtOvsEfFg0qeRPZkQ3BD2oTj/3c5jDZGNqs1UEJNAE2efewPCNAJwHr4x4s2mSlHQznoeq4m9fmQ7rf5TRzKfA9zFB9pBbfgxHrod4cGdTj54YorP3GaN2Mt/MW/jKvFWOy15yPLg33EWLU8YA8+JpZrdC/x6EyPNGHhTE/dsc2VkjuHEj0Lq14bvW7InkxUXrQ2hgp4k4JOH0mXCHBXwnGICSD1fN95+ey2Tzg/ND3oFLN6QUZ+T3gGPmncGVCix/6SJS1+HiL4OmeuVPATmmgVDVuKmNAr946v/Hh9qoURt1e5yoMfo0MP6R+Fb+JnpyeBBXivfLixh+/UlEd7hPCUWyNFYS2t18MM2n8dpqVRqnjWqiy2mv+N5c8YGeVd9me7IxvcClQf1CZHY3jMZf0PrfCfQASrqUfono3XPjhf3jGrdS/Zf6C8gJgG1LcNkhWiuyb0CkF1NbzIBcRdUjPCbtoRogFeXGmtfYGLfU=
-X-OriginatorOrg: oracle.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 97b2c88b-8969-4659-7d7b-08db8bffebe4
-X-MS-Exchange-CrossTenant-AuthSource: SA1PR10MB5867.namprd10.prod.outlook.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 24 Jul 2023 04:39:09.6784
- (UTC)
-X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
-X-MS-Exchange-CrossTenant-Id: 4e2c6054-71cb-48f1-bd6c-3a9705aca71b
-X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: JWDkqtlmYeQbKvqxeBQBXkpuN3MwdJGZK/svRxxfCE8dpRbV6ATeOK4CyH4Qg2ZDt1x/8qPXVHtgkuFn/5lEvA==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: BLAPR10MB4963
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.254,Aquarius:18.0.957,Hydra:6.0.591,FMLib:17.11.176.26
- definitions=2023-07-24_03,2023-07-20_01,2023-05-22_02
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 malwarescore=0 mlxlogscore=999
- adultscore=0 mlxscore=0 phishscore=0 suspectscore=0 bulkscore=0
- spamscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2306200000 definitions=main-2307240042
-X-Proofpoint-ORIG-GUID: hgpgd6nBcPmFwldVNQgHIY7PYnVwWacH
-X-Proofpoint-GUID: hgpgd6nBcPmFwldVNQgHIY7PYnVwWacH
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-metadump v2 format allows dumping metadata from external log devices. This
-commit allows passing the device file to which log data must be restored from
-the corresponding metadump file.
+Hi all,
 
-Reviewed-by: Darrick J. Wong <djwong@kernel.org>
-Signed-off-by: Chandan Babu R <chandan.babu@oracle.com>
----
- man/man8/xfs_mdrestore.8  |  8 ++++++++
- mdrestore/xfs_mdrestore.c | 11 +++++++++--
- 2 files changed, 17 insertions(+), 2 deletions(-)
+1. Background
+=============
 
-diff --git a/man/man8/xfs_mdrestore.8 b/man/man8/xfs_mdrestore.8
-index 72f3b297..6e7457c0 100644
---- a/man/man8/xfs_mdrestore.8
-+++ b/man/man8/xfs_mdrestore.8
-@@ -5,6 +5,9 @@ xfs_mdrestore \- restores an XFS metadump image to a filesystem image
- .B xfs_mdrestore
- [
- .B \-gi
-+] [
-+.B \-l
-+.I logdev
- ]
- .I source
- .I target
-@@ -49,6 +52,11 @@ Shows metadump information on stdout.  If no
- is specified, exits after displaying information.  Older metadumps man not
- include any descriptive information.
- .TP
-+.B \-l " logdev"
-+Metadump in v2 format can contain metadata dumped from an external log.
-+In such a scenario, the user has to provide a device to which the log device
-+contents from the metadump file are copied.
-+.TP
- .B \-V
- Prints the version number and exits.
- .SH DIAGNOSTICS
-diff --git a/mdrestore/xfs_mdrestore.c b/mdrestore/xfs_mdrestore.c
-index 85a61c8b..beb23489 100644
---- a/mdrestore/xfs_mdrestore.c
-+++ b/mdrestore/xfs_mdrestore.c
-@@ -453,7 +453,8 @@ static struct mdrestore_ops mdrestore_ops_v2 = {
- static void
- usage(void)
- {
--	fprintf(stderr, "Usage: %s [-V] [-g] [-i] source target\n", progname);
-+	fprintf(stderr, "Usage: %s [-V] [-g] [-i] [-l logdev] source target\n",
-+		progname);
- 	exit(1);
- }
- 
-@@ -478,7 +479,7 @@ main(
- 
- 	progname = basename(argv[0]);
- 
--	while ((c = getopt(argc, argv, "giV")) != EOF) {
-+	while ((c = getopt(argc, argv, "gil:V")) != EOF) {
- 		switch (c) {
- 			case 'g':
- 				mdrestore.show_progress = true;
-@@ -486,6 +487,10 @@ main(
- 			case 'i':
- 				mdrestore.show_info = true;
- 				break;
-+			case 'l':
-+				logdev = optarg;
-+				mdrestore.external_log = true;
-+				break;
- 			case 'V':
- 				printf("%s version %s\n", progname, VERSION);
- 				exit(0);
-@@ -522,6 +527,8 @@ main(
- 
- 	switch (be32_to_cpu(headers.magic)) {
- 	case XFS_MD_MAGIC_V1:
-+		if (logdev != NULL)
-+			usage();
- 		mdrestore.mdrops = &mdrestore_ops_v1;
- 		break;
- 
+We used to implement the lockless slab shrink with SRCU [1], but then kernel
+test robot reported -88.8% regression in stress-ng.ramfs.ops_per_sec test
+case [2], so we reverted it [3].
+
+This patch series aims to re-implement the lockless slab shrink using the
+refcount+RCU method proposed by Dave Chinner [4].
+
+[1]. https://lore.kernel.org/lkml/20230313112819.38938-1-zhengqi.arch@bytedance.com/
+[2]. https://lore.kernel.org/lkml/202305230837.db2c233f-yujie.liu@intel.com/
+[3]. https://lore.kernel.org/all/20230609081518.3039120-1-qi.zheng@linux.dev/
+[4]. https://lore.kernel.org/lkml/ZIJhou1d55d4H1s0@dread.disaster.area/
+
+2. Implementation
+=================
+
+Currently, the shrinker instances can be divided into the following three types:
+
+a) global shrinker instance statically defined in the kernel, such as
+   workingset_shadow_shrinker.
+
+b) global shrinker instance statically defined in the kernel modules, such as
+   mmu_shrinker in x86.
+
+c) shrinker instance embedded in other structures.
+
+For case a, the memory of shrinker instance is never freed. For case b, the
+memory of shrinker instance will be freed after synchronize_rcu() when the
+module is unloaded. For case c, the memory of shrinker instance will be freed
+along with the structure it is embedded in.
+
+In preparation for implementing lockless slab shrink, we need to dynamically
+allocate those shrinker instances in case c, then the memory can be dynamically
+freed alone by calling kfree_rcu().
+
+This patchset adds the following new APIs for dynamically allocating shrinker,
+and add a private_data field to struct shrinker to record and get the original
+embedded structure.
+
+1. shrinker_alloc()
+2. shrinker_free_non_registered()
+3. shrinker_register()
+4. shrinker_unregister()
+
+In order to simplify shrinker-related APIs and make shrinker more independent of
+other kernel mechanisms, this patchset uses the above APIs to convert all
+shrinkers (including case a and b) to dynamically allocated, and then remove all
+existing APIs. This will also have another advantage mentioned by Dave Chinner:
+
+```
+The other advantage of this is that it will break all the existing out of tree
+code and third party modules using the old API and will no longer work with a
+kernel using lockless slab shrinkers. They need to break (both at the source and
+binary levels) to stop bad things from happening due to using uncoverted
+shrinkers in the new setup.
+```
+
+Then we free the shrinker by calling kfree_rcu(), and use rcu_read_{lock,unlock}()
+to ensure that the shrinker instance is valid. And the shrinker::refcount
+mechanism ensures that the shrinker instance will not be run again after
+unregistration. So the structure that records the pointer of shrinker instance
+can be safely freed without waiting for the RCU read-side critical section.
+
+In this way, while we implement the lockless slab shrink, we don't need to be
+blocked in unregister_shrinker() to wait RCU read-side critical section.
+
+PATCH 1: move shrinker-related code into a separate file
+PATCH 2: remove redundant shrinker_rwsem in debugfs operations
+PATCH 3: add infrastructure for dynamically allocating shrinker
+PATCH 4 ~ 21: dynamically allocate the shrinker instances in case a and b
+PATCH 22 ~ 40: dynamically allocate the shrinker instances in case c
+PATCH 41: remove old APIs
+PATCH 42: introduce pool_shrink_rwsem to implement private synchronize_shrinkers()
+PATCH 43: add a secondary array for shrinker_info::{map, nr_deferred}
+PATCH 44 ~ 45: implement the lockless slab shrink
+PATCH 46 ~ 47: convert shrinker_rwsem to mutex
+
+3. Testing
+==========
+
+3.1 slab shrink stress test
+---------------------------
+
+We can reproduce the down_read_trylock() hotspot through the following script:
+
+```
+
+DIR="/root/shrinker/memcg/mnt"
+
+do_create()
+{
+    mkdir -p /sys/fs/cgroup/memory/test
+    echo 4G > /sys/fs/cgroup/memory/test/memory.limit_in_bytes
+    for i in `seq 0 $1`;
+    do
+        mkdir -p /sys/fs/cgroup/memory/test/$i;
+        echo $$ > /sys/fs/cgroup/memory/test/$i/cgroup.procs;
+        mkdir -p $DIR/$i;
+    done
+}
+
+do_mount()
+{
+    for i in `seq $1 $2`;
+    do
+        mount -t tmpfs $i $DIR/$i;
+    done
+}
+
+do_touch()
+{
+    for i in `seq $1 $2`;
+    do
+        echo $$ > /sys/fs/cgroup/memory/test/$i/cgroup.procs;
+        dd if=/dev/zero of=$DIR/$i/file$i bs=1M count=1 &
+    done
+}
+
+case "$1" in
+  touch)
+    do_touch $2 $3
+    ;;
+  test)
+    do_create 4000
+    do_mount 0 4000
+    do_touch 0 3000
+    ;;
+  *)
+    exit 1
+    ;;
+esac
+```
+
+Save the above script, then run test and touch commands. Then we can use the
+following perf command to view hotspots:
+
+perf top -U -F 999
+
+1) Before applying this patchset:
+
+  40.44%  [kernel]            [k] down_read_trylock
+  17.59%  [kernel]            [k] up_read
+  13.64%  [kernel]            [k] pv_native_safe_halt
+  11.90%  [kernel]            [k] shrink_slab
+   8.21%  [kernel]            [k] idr_find
+   2.71%  [kernel]            [k] _find_next_bit
+   1.36%  [kernel]            [k] shrink_node
+   0.81%  [kernel]            [k] shrink_lruvec
+   0.80%  [kernel]            [k] __radix_tree_lookup
+   0.50%  [kernel]            [k] do_shrink_slab
+   0.21%  [kernel]            [k] list_lru_count_one
+   0.16%  [kernel]            [k] mem_cgroup_iter
+
+2) After applying this patchset:
+
+  60.17%  [kernel]           [k] shrink_slab
+  20.42%  [kernel]           [k] pv_native_safe_halt
+   3.03%  [kernel]           [k] do_shrink_slab
+   2.73%  [kernel]           [k] shrink_node
+   2.27%  [kernel]           [k] shrink_lruvec
+   2.00%  [kernel]           [k] __rcu_read_unlock
+   1.92%  [kernel]           [k] mem_cgroup_iter
+   0.98%  [kernel]           [k] __rcu_read_lock
+   0.91%  [kernel]           [k] osq_lock
+   0.63%  [kernel]           [k] mem_cgroup_calculate_protection
+   0.55%  [kernel]           [k] shrinker_put
+   0.46%  [kernel]           [k] list_lru_count_one
+
+We can see that the first perf hotspot becomes shrink_slab, which is what we
+expect.
+
+3.2 registeration and unregisteration stress test
+-------------------------------------------------
+
+Run the command below to test:
+
+stress-ng --timeout 60 --times --verify --metrics-brief --ramfs 9 &
+
+1) Before applying this patchset:
+
+setting to a 60 second run per stressor
+dispatching hogs: 9 ramfs
+stressor       bogo ops real time  usr time  sys time   bogo ops/s     bogo ops/s
+                          (secs)    (secs)    (secs)   (real time) (usr+sys time)
+ramfs            735238     60.00     12.37    363.70     12253.05        1955.08
+for a 60.01s run time:
+   1440.27s available CPU time
+     12.36s user time   (  0.86%)
+    363.70s system time ( 25.25%)
+    376.06s total time  ( 26.11%)
+load average: 10.79 4.47 1.69
+passed: 9: ramfs (9)
+failed: 0
+skipped: 0
+successful run completed in 60.01s (1 min, 0.01 secs)
+
+2) After applying this patchset:
+
+setting to a 60 second run per stressor
+dispatching hogs: 9 ramfs
+stressor       bogo ops real time  usr time  sys time   bogo ops/s     bogo ops/s
+                          (secs)    (secs)    (secs)   (real time) (usr+sys time)
+ramfs            746677     60.00     12.22    367.75     12443.70        1965.13
+for a 60.01s run time:
+   1440.26s available CPU time
+     12.21s user time   (  0.85%)
+    367.75s system time ( 25.53%)
+    379.96s total time  ( 26.38%)
+load average: 8.37 2.48 0.86
+passed: 9: ramfs (9)
+failed: 0
+skipped: 0
+successful run completed in 60.01s (1 min, 0.01 secs)
+
+We can see that the ops/s has hardly changed.
+
+This series is based on next-20230711, and the [PATCH v2 05/49] depends on the
+patch: https://lore.kernel.org/lkml/20230625154937.64316-1-qi.zheng@linux.dev/.
+
+Comments and suggestions are welcome.
+
+Thanks,
+Qi
+
+Changelog in v1 -> v2:
+ - implement the new APIs and convert all shrinkers to use it.
+   (suggested by Dave Chinner)
+ - fix UAF in PATCH [05/29] (pointed by Steven Price)
+ - add a secondary array for shrinker_info::{map, nr_deferred}
+ - re-implement the lockless slab shrink
+   (Since unifying the processing of global and memcg slab shrink needs to
+    modify the startup sequence (As I mentioned in https://lore.kernel.org/lkml/38b14080-4ce5-d300-8a0a-c630bca6806b@bytedance.com/),
+    I finally choose to process them separately.)
+ - collect Acked-bys
+
+Qi Zheng (47):
+  mm: vmscan: move shrinker-related code into a separate file
+  mm: shrinker: remove redundant shrinker_rwsem in debugfs operations
+  mm: shrinker: add infrastructure for dynamically allocating shrinker
+  kvm: mmu: dynamically allocate the x86-mmu shrinker
+  binder: dynamically allocate the android-binder shrinker
+  drm/ttm: dynamically allocate the drm-ttm_pool shrinker
+  xenbus/backend: dynamically allocate the xen-backend shrinker
+  erofs: dynamically allocate the erofs-shrinker
+  f2fs: dynamically allocate the f2fs-shrinker
+  gfs2: dynamically allocate the gfs2-glock shrinker
+  gfs2: dynamically allocate the gfs2-qd shrinker
+  NFSv4.2: dynamically allocate the nfs-xattr shrinkers
+  nfs: dynamically allocate the nfs-acl shrinker
+  nfsd: dynamically allocate the nfsd-filecache shrinker
+  quota: dynamically allocate the dquota-cache shrinker
+  ubifs: dynamically allocate the ubifs-slab shrinker
+  rcu: dynamically allocate the rcu-lazy shrinker
+  rcu: dynamically allocate the rcu-kfree shrinker
+  mm: thp: dynamically allocate the thp-related shrinkers
+  sunrpc: dynamically allocate the sunrpc_cred shrinker
+  mm: workingset: dynamically allocate the mm-shadow shrinker
+  drm/i915: dynamically allocate the i915_gem_mm shrinker
+  drm/msm: dynamically allocate the drm-msm_gem shrinker
+  drm/panfrost: dynamically allocate the drm-panfrost shrinker
+  dm: dynamically allocate the dm-bufio shrinker
+  dm zoned: dynamically allocate the dm-zoned-meta shrinker
+  md/raid5: dynamically allocate the md-raid5 shrinker
+  bcache: dynamically allocate the md-bcache shrinker
+  vmw_balloon: dynamically allocate the vmw-balloon shrinker
+  virtio_balloon: dynamically allocate the virtio-balloon shrinker
+  mbcache: dynamically allocate the mbcache shrinker
+  ext4: dynamically allocate the ext4-es shrinker
+  jbd2,ext4: dynamically allocate the jbd2-journal shrinker
+  nfsd: dynamically allocate the nfsd-client shrinker
+  nfsd: dynamically allocate the nfsd-reply shrinker
+  xfs: dynamically allocate the xfs-buf shrinker
+  xfs: dynamically allocate the xfs-inodegc shrinker
+  xfs: dynamically allocate the xfs-qm shrinker
+  zsmalloc: dynamically allocate the mm-zspool shrinker
+  fs: super: dynamically allocate the s_shrink
+  mm: shrinker: remove old APIs
+  drm/ttm: introduce pool_shrink_rwsem
+  mm: shrinker: add a secondary array for shrinker_info::{map,
+    nr_deferred}
+  mm: shrinker: make global slab shrink lockless
+  mm: shrinker: make memcg slab shrink lockless
+  mm: shrinker: hold write lock to reparent shrinker nr_deferred
+  mm: shrinker: convert shrinker_rwsem to mutex
+
+ arch/x86/kvm/mmu/mmu.c                        |  18 +-
+ drivers/android/binder_alloc.c                |  31 +-
+ drivers/gpu/drm/i915/gem/i915_gem_shrinker.c  |  30 +-
+ drivers/gpu/drm/i915/i915_drv.h               |   2 +-
+ drivers/gpu/drm/msm/msm_drv.c                 |   4 +-
+ drivers/gpu/drm/msm/msm_drv.h                 |   4 +-
+ drivers/gpu/drm/msm/msm_gem_shrinker.c        |  36 +-
+ drivers/gpu/drm/panfrost/panfrost_device.h    |   2 +-
+ drivers/gpu/drm/panfrost/panfrost_drv.c       |   6 +-
+ drivers/gpu/drm/panfrost/panfrost_gem.h       |   2 +-
+ .../gpu/drm/panfrost/panfrost_gem_shrinker.c  |  32 +-
+ drivers/gpu/drm/ttm/ttm_pool.c                |  38 +-
+ drivers/md/bcache/bcache.h                    |   2 +-
+ drivers/md/bcache/btree.c                     |  27 +-
+ drivers/md/bcache/sysfs.c                     |   3 +-
+ drivers/md/dm-bufio.c                         |  26 +-
+ drivers/md/dm-cache-metadata.c                |   2 +-
+ drivers/md/dm-zoned-metadata.c                |  28 +-
+ drivers/md/raid5.c                            |  25 +-
+ drivers/md/raid5.h                            |   2 +-
+ drivers/misc/vmw_balloon.c                    |  38 +-
+ drivers/virtio/virtio_balloon.c               |  25 +-
+ drivers/xen/xenbus/xenbus_probe_backend.c     |  17 +-
+ fs/btrfs/super.c                              |   2 +-
+ fs/erofs/utils.c                              |  20 +-
+ fs/ext4/ext4.h                                |   2 +-
+ fs/ext4/extents_status.c                      |  22 +-
+ fs/f2fs/super.c                               |  32 +-
+ fs/gfs2/glock.c                               |  20 +-
+ fs/gfs2/main.c                                |   6 +-
+ fs/gfs2/quota.c                               |  26 +-
+ fs/gfs2/quota.h                               |   3 +-
+ fs/jbd2/journal.c                             |  27 +-
+ fs/kernfs/mount.c                             |   2 +-
+ fs/mbcache.c                                  |  23 +-
+ fs/nfs/nfs42xattr.c                           |  87 +-
+ fs/nfs/super.c                                |  20 +-
+ fs/nfsd/filecache.c                           |  22 +-
+ fs/nfsd/netns.h                               |   4 +-
+ fs/nfsd/nfs4state.c                           |  20 +-
+ fs/nfsd/nfscache.c                            |  31 +-
+ fs/proc/root.c                                |   2 +-
+ fs/quota/dquot.c                              |  17 +-
+ fs/super.c                                    |  39 +-
+ fs/ubifs/super.c                              |  22 +-
+ fs/xfs/xfs_buf.c                              |  25 +-
+ fs/xfs/xfs_buf.h                              |   2 +-
+ fs/xfs/xfs_icache.c                           |  26 +-
+ fs/xfs/xfs_mount.c                            |   4 +-
+ fs/xfs/xfs_mount.h                            |   2 +-
+ fs/xfs/xfs_qm.c                               |  26 +-
+ fs/xfs/xfs_qm.h                               |   2 +-
+ include/linux/fs.h                            |   2 +-
+ include/linux/jbd2.h                          |   2 +-
+ include/linux/memcontrol.h                    |  12 +-
+ include/linux/shrinker.h                      |  54 +-
+ kernel/rcu/tree.c                             |  21 +-
+ kernel/rcu/tree_nocb.h                        |  19 +-
+ mm/Makefile                                   |   4 +-
+ mm/huge_memory.c                              |  69 +-
+ mm/shrinker.c                                 | 772 ++++++++++++++++++
+ mm/shrinker_debug.c                           |  76 +-
+ mm/vmscan.c                                   | 701 ----------------
+ mm/workingset.c                               |  26 +-
+ mm/zsmalloc.c                                 |  28 +-
+ net/sunrpc/auth.c                             |  19 +-
+ 66 files changed, 1516 insertions(+), 1225 deletions(-)
+ create mode 100644 mm/shrinker.c
+
 -- 
-2.39.1
+2.30.2
 
