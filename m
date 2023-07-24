@@ -2,53 +2,53 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 11BA9C04A94
-	for <linux-xfs@archiver.kernel.org>; Mon, 24 Jul 2023 09:46:59 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 40375C001E0
+	for <linux-xfs@archiver.kernel.org>; Mon, 24 Jul 2023 09:47:16 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232373AbjGXJq5 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 24 Jul 2023 05:46:57 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46608 "EHLO
+        id S231909AbjGXJrP (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 24 Jul 2023 05:47:15 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46730 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230398AbjGXJq3 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 24 Jul 2023 05:46:29 -0400
-Received: from mail-pl1-x630.google.com (mail-pl1-x630.google.com [IPv6:2607:f8b0:4864:20::630])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 889461998
-        for <linux-xfs@vger.kernel.org>; Mon, 24 Jul 2023 02:45:55 -0700 (PDT)
-Received: by mail-pl1-x630.google.com with SMTP id d9443c01a7336-1b8c364ad3bso8855625ad.1
-        for <linux-xfs@vger.kernel.org>; Mon, 24 Jul 2023 02:45:55 -0700 (PDT)
+        with ESMTP id S231945AbjGXJqj (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 24 Jul 2023 05:46:39 -0400
+Received: from mail-pl1-x633.google.com (mail-pl1-x633.google.com [IPv6:2607:f8b0:4864:20::633])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 33887E41
+        for <linux-xfs@vger.kernel.org>; Mon, 24 Jul 2023 02:46:07 -0700 (PDT)
+Received: by mail-pl1-x633.google.com with SMTP id d9443c01a7336-1b867f9198dso8893855ad.0
+        for <linux-xfs@vger.kernel.org>; Mon, 24 Jul 2023 02:46:07 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=bytedance.com; s=google; t=1690191955; x=1690796755;
+        d=bytedance.com; s=google; t=1690191966; x=1690796766;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:from:to:cc:subject:date
          :message-id:reply-to;
-        bh=jmPwAlPL0TnDBmalzCzATtOPmfxfqu3Q+7XaFZclAtg=;
-        b=IZCH5tV1VdvhB0RXcuG+SL+gg1mEbPZMQJz8qUY1fWCpYBfjAR72/AnWbcPpstjQLI
-         aFpv+l8Q67Kc3iJwSzziW/zZbsYehvkdZbQbXx8X8jR6oJCUrIFV8Qzo50G/FYmT9t2/
-         w6ZN7N+ZviCRVJxyy+bucuBxrS6SRhon2EIiX0i15H4OrDXIvK+dChrAy0pj6MjsuwdC
-         6yiqEWuw0/0mdj0SNL2xTjIsK+WXPpE1gw9KgQ4WCUpGSoFe6rXH0GXBficEqbQlrShV
-         wc7SdQklmSH69kiwU3dxFC6F0qOnJE6NuoEe6VBjJkE5shAIs2KVw9Ha+vCxjUcFWX2y
-         lSHQ==
+        bh=vu9DfqGDIkVtY7CS+mn/8y6VlhAfp+/Q2ofuaCWar5Q=;
+        b=At3xco+o52slbk+Wt2XjpJ6Cu9i6sYrBgnCMc/5CS86ucLHJsGEmN+KJGEE3nRi6sH
+         tP3qBPXEcwpvnQz66wRWSap6a1c2U02VEHsWoEgBKOJ+J1jRKgicNVIHL7YJb/2E7nTO
+         mH8QuWqeK2DOxQytNGG5waBMmbk4L4jbPvrdsdxuK9v3y/Gywd5CYYO64IbHl7UYCZKj
+         8Q8aIDwesLUsAzLtg/KQ6AQafF3z6VJJ9ci5NRM3KksRfjknsFWZGEpbW519fA18aLaX
+         x2A/u6CY/jHlR9bkZrq6ZtCOein2LXegx+J7Hclhb+m/DWqNAehg6T+OKXqpv2vIgzAt
+         zKew==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20221208; t=1690191955; x=1690796755;
+        d=1e100.net; s=20221208; t=1690191966; x=1690796766;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:x-gm-message-state:from:to:cc
          :subject:date:message-id:reply-to;
-        bh=jmPwAlPL0TnDBmalzCzATtOPmfxfqu3Q+7XaFZclAtg=;
-        b=lR2CahgW0zTp1Cm0pmt1zF4n6MMuRrN/6f+NSKKZWVk/E0x2qUWrLPuk+PUKG1HjED
-         DpUxBjJl9t/H/CZvbiUEqO/oJXK+1b66dH/nYA0FGe/MF/IvyT1PdH7PPtnwohagroYE
-         ucYahNSZo0txex2eBGkVumgEZ2UAbKON2XP7SfFZzVfEalsP4wIN3Y/hW9vxKx5hC2Gi
-         Km7T2slRGRKGQVQz303lbT8hSp4RjkSw7gOg2/71sfGco5GHNwSW1wQGXCzQaojUV0ch
-         L4oduUUZSG3rfPST36qj4zMypemcojz4pau+Pyd64n0dzllaoYXiOa7kdZMZFUddAt1W
-         cvlA==
-X-Gm-Message-State: ABy/qLYgpV3Kk4NJacgz0tWrXw2wjD7ztMdaT9VXwXVqaO8W4godeAFF
-        xSEolR2XWkO8d8Rlz+rSMOnD3Q==
-X-Google-Smtp-Source: APBJJlHDY1qhgSa+H4mr70oj6h44PLP3QUTUzXb3MsGg4I77oDNLLFWrtOaIhBAmIAnOXFQDdEVBFw==
-X-Received: by 2002:a17:902:d4cb:b0:1b1:9272:55e2 with SMTP id o11-20020a170902d4cb00b001b1927255e2mr12365119plg.3.1690191954835;
-        Mon, 24 Jul 2023 02:45:54 -0700 (PDT)
+        bh=vu9DfqGDIkVtY7CS+mn/8y6VlhAfp+/Q2ofuaCWar5Q=;
+        b=QL7Pp9VUaaV+jPHf4yDyBAyq4DneQrPN3cjyp7dw3yUoMsTqp4TjATULzQRb6Y4Ass
+         yX29JFIoqS76K0gxeq633wI23pmWAWi/CviOnVBlDO7oGTBktSTdJ8JvAg9qKY+8sdpr
+         fpRF/z48E5+W4T484BSS1ATCCuet19hpGvKgcTY9F+cAAbdWvv3k8q7FaWHcmHr1pAVk
+         N/Lepct0IE12QvVNQE40KS9PJXGtnixLKKT3hJUqBec9ihVAvW397N3tttavfD0AAydf
+         HC2W7AqSnHZEdaHNKjDSSh8Kyc3JxXpEhHNv3pZopxaorPjzvjq3k9S+G6UEG4sG6VW3
+         PhuA==
+X-Gm-Message-State: ABy/qLYvSmW9/SNBJrVW37SDL2XO9Adsni/DB6+mHXMvDfNHL+P0OdPf
+        KtVGFyFtDnpFYbWx151gYjV6Aw==
+X-Google-Smtp-Source: APBJJlGrsdFKJ71ukJT79kDa1W+M4ztJszdSUa3mf2ArYfnWEb5YwD/wtpSbLXe4wEi7ibAUftTBwg==
+X-Received: by 2002:a17:902:ecd2:b0:1b8:b4f6:1327 with SMTP id a18-20020a170902ecd200b001b8b4f61327mr12288935plh.6.1690191966684;
+        Mon, 24 Jul 2023 02:46:06 -0700 (PDT)
 Received: from C02DW0BEMD6R.bytedance.net ([203.208.167.147])
-        by smtp.gmail.com with ESMTPSA id d5-20020a170902c18500b001bb20380bf2sm8467233pld.13.2023.07.24.02.45.43
+        by smtp.gmail.com with ESMTPSA id d5-20020a170902c18500b001bb20380bf2sm8467233pld.13.2023.07.24.02.45.55
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 24 Jul 2023 02:45:54 -0700 (PDT)
+        Mon, 24 Jul 2023 02:46:06 -0700 (PDT)
 From:   Qi Zheng <zhengqi.arch@bytedance.com>
 To:     akpm@linux-foundation.org, david@fromorbit.com, tkhai@ya.ru,
         vbabka@suse.cz, roman.gushchin@linux.dev, djwong@kernel.org,
@@ -69,9 +69,9 @@ Cc:     linux-kernel@vger.kernel.org, linux-mm@kvack.org, x86@kernel.org,
         linux-fsdevel@vger.kernel.org, linux-ext4@vger.kernel.org,
         linux-xfs@vger.kernel.org, linux-btrfs@vger.kernel.org,
         Qi Zheng <zhengqi.arch@bytedance.com>
-Subject: [PATCH v2 04/47] kvm: mmu: dynamically allocate the x86-mmu shrinker
-Date:   Mon, 24 Jul 2023 17:43:11 +0800
-Message-Id: <20230724094354.90817-5-zhengqi.arch@bytedance.com>
+Subject: [PATCH v2 05/47] binder: dynamically allocate the android-binder shrinker
+Date:   Mon, 24 Jul 2023 17:43:12 +0800
+Message-Id: <20230724094354.90817-6-zhengqi.arch@bytedance.com>
 X-Mailer: git-send-email 2.24.3 (Apple Git-128)
 In-Reply-To: <20230724094354.90817-1-zhengqi.arch@bytedance.com>
 References: <20230724094354.90817-1-zhengqi.arch@bytedance.com>
@@ -81,58 +81,68 @@ Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Use new APIs to dynamically allocate the x86-mmu shrinker.
+Use new APIs to dynamically allocate the android-binder shrinker.
 
 Signed-off-by: Qi Zheng <zhengqi.arch@bytedance.com>
 ---
- arch/x86/kvm/mmu/mmu.c | 18 ++++++++++--------
- 1 file changed, 10 insertions(+), 8 deletions(-)
+ drivers/android/binder_alloc.c | 31 +++++++++++++++++++------------
+ 1 file changed, 19 insertions(+), 12 deletions(-)
 
-diff --git a/arch/x86/kvm/mmu/mmu.c b/arch/x86/kvm/mmu/mmu.c
-index ec169f5c7dce..ab405e0a8954 100644
---- a/arch/x86/kvm/mmu/mmu.c
-+++ b/arch/x86/kvm/mmu/mmu.c
-@@ -6847,11 +6847,7 @@ static unsigned long mmu_shrink_count(struct shrinker *shrink,
- 	return percpu_counter_read_positive(&kvm_total_used_mmu_pages);
+diff --git a/drivers/android/binder_alloc.c b/drivers/android/binder_alloc.c
+index e3db8297095a..019981d65e1e 100644
+--- a/drivers/android/binder_alloc.c
++++ b/drivers/android/binder_alloc.c
+@@ -1053,11 +1053,7 @@ binder_shrink_scan(struct shrinker *shrink, struct shrink_control *sc)
+ 			    NULL, sc->nr_to_scan);
  }
  
--static struct shrinker mmu_shrinker = {
--	.count_objects = mmu_shrink_count,
--	.scan_objects = mmu_shrink_scan,
--	.seeks = DEFAULT_SEEKS * 10,
+-static struct shrinker binder_shrinker = {
+-	.count_objects = binder_shrink_count,
+-	.scan_objects = binder_shrink_scan,
+-	.seeks = DEFAULT_SEEKS,
 -};
-+static struct shrinker *mmu_shrinker;
++static struct shrinker *binder_shrinker;
  
- static void mmu_destroy_caches(void)
+ /**
+  * binder_alloc_init() - called by binder_open() for per-proc initialization
+@@ -1077,19 +1073,30 @@ void binder_alloc_init(struct binder_alloc *alloc)
+ 
+ int binder_alloc_shrinker_init(void)
  {
-@@ -6984,10 +6980,16 @@ int kvm_mmu_vendor_module_init(void)
- 	if (percpu_counter_init(&kvm_total_used_mmu_pages, 0, GFP_KERNEL))
- 		goto out;
+-	int ret = list_lru_init(&binder_alloc_lru);
++	int ret;
  
--	ret = register_shrinker(&mmu_shrinker, "x86-mmu");
--	if (ret)
-+	mmu_shrinker = shrinker_alloc(0, "x86-mmu");
-+	if (!mmu_shrinker)
- 		goto out_shrinker;
- 
-+	mmu_shrinker->count_objects = mmu_shrink_count;
-+	mmu_shrinker->scan_objects = mmu_shrink_scan;
-+	mmu_shrinker->seeks = DEFAULT_SEEKS * 10;
+-	if (ret == 0) {
+-		ret = register_shrinker(&binder_shrinker, "android-binder");
+-		if (ret)
+-			list_lru_destroy(&binder_alloc_lru);
++	ret = list_lru_init(&binder_alloc_lru);
++	if (ret)
++		return ret;
 +
-+	shrinker_register(mmu_shrinker);
++	binder_shrinker = shrinker_alloc(0, "android-binder");
++	if (!binder_shrinker) {
++		list_lru_destroy(&binder_alloc_lru);
++		return -ENOMEM;
+ 	}
+-	return ret;
 +
- 	return 0;
- 
- out_shrinker:
-@@ -7009,7 +7011,7 @@ void kvm_mmu_vendor_module_exit(void)
- {
- 	mmu_destroy_caches();
- 	percpu_counter_destroy(&kvm_total_used_mmu_pages);
--	unregister_shrinker(&mmu_shrinker);
-+	shrinker_unregister(mmu_shrinker);
++	binder_shrinker->count_objects = binder_shrink_count;
++	binder_shrinker->scan_objects = binder_shrink_scan;
++	binder_shrinker->seeks = DEFAULT_SEEKS;
++
++	shrinker_register(binder_shrinker);
++
++	return 0;
  }
  
- /*
+ void binder_alloc_shrinker_exit(void)
+ {
+-	unregister_shrinker(&binder_shrinker);
++	shrinker_unregister(binder_shrinker);
+ 	list_lru_destroy(&binder_alloc_lru);
+ }
+ 
 -- 
 2.30.2
 
