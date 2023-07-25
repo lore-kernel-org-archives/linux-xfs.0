@@ -2,108 +2,103 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E4FF3C001DE
-	for <linux-xfs@archiver.kernel.org>; Tue, 25 Jul 2023 00:45:32 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6C118C001B0
+	for <linux-xfs@archiver.kernel.org>; Tue, 25 Jul 2023 02:49:57 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230070AbjGYApb (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 24 Jul 2023 20:45:31 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36988 "EHLO
+        id S231177AbjGYCt4 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 24 Jul 2023 22:49:56 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48276 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229608AbjGYApb (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 24 Jul 2023 20:45:31 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D82A410F9;
-        Mon, 24 Jul 2023 17:45:29 -0700 (PDT)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature RSA-PSS (2048 bits))
-        (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 7099861486;
-        Tue, 25 Jul 2023 00:45:29 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 953B7C433C7;
-        Tue, 25 Jul 2023 00:45:28 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1690245928;
-        bh=hBv3qa2DL7bn7fw8RIoZNx51Zbvz7PAHljshT2Ia2qI=;
-        h=Date:From:To:Cc:Subject:From;
-        b=ViSZd/cg0zEDO5+Sjl/rAVAYl4SwV9Gb87ELJLZnjLD0ZnIly8Am8lgUvuDuWdv6H
-         BKK4TeZIQjHniiGJFSg8N5/0b2zvWSUSqzJfpThkqXWG0KdhvJPpRsd/7nL6a85R5s
-         Yavi1jv2M922rvAlwQvi8y2IrMYstu2g5P7UgOAqrZygXCu75aTuQSQxp4JDx/KCNe
-         +rk4TDlPvQn7O0VYNRi1eEx33zwer2/YC34qko8TN/VJA67qnZL2G/GYXJorZ7m6eO
-         UOqeZ/MeV7yxum2iGd8UENjEE+D5zuxL4roh7D6EUAfQZ8lJto4lc6bvSUFHSX5YdE
-         ggkZfCl699k6g==
-Date:   Mon, 24 Jul 2023 17:45:28 -0700
-From:   "Darrick J. Wong" <djwong@kernel.org>
-To:     linux-fsdevel <linux-fsdevel@vger.kernel.org>,
-        xfs <linux-xfs@vger.kernel.org>
-Cc:     djwong@kernel.org, hch@lst.de, kent.overstreet@linux.dev,
-        willy@infradead.org,
-        "Ritesh Harjani (IBM)" <ritesh.list@gmail.com>,
-        Dave Chinner <david@fromorbit.com>
-Subject: [ANNOUNCE] xfs-linux: iomap-for-next updated to d42bd17c6a20
-Message-ID: <20230725004528.GB11336@frogsfrogsfrogs>
+        with ESMTP id S231473AbjGYCtu (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 24 Jul 2023 22:49:50 -0400
+X-Greylist: delayed 786 seconds by postgrey-1.37 at lindbergh.monkeyblade.net; Mon, 24 Jul 2023 19:49:25 PDT
+Received: from out-47.mta1.migadu.com (out-47.mta1.migadu.com [IPv6:2001:41d0:203:375::2f])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3A0191BCC
+        for <linux-xfs@vger.kernel.org>; Mon, 24 Jul 2023 19:49:24 -0700 (PDT)
+Content-Type: text/plain;
+        charset=us-ascii
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.dev; s=key1;
+        t=1690252555;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=0+VnVPZa4UeOCG7Yrfiew8gKr6k3ViuPV5Oe7aKEwA0=;
+        b=OouSnERnVUq8t87+qMJi+ElF1O+pkB5HJ/XjlEV4XPIdaL5qKz/r9JLMMUeUfOnb3ZMOdj
+        khOpzTQ2idnb6S4y6b+9cHD3wy9I4UTOUPXGpsseW4bB+Gm8jsDjdu3ImL8BlNp++kk+K8
+        DDellGRauVWKhKhaf7FrGB51gwHD7wU=
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
+Subject: Re: [PATCH v2 01/47] mm: vmscan: move shrinker-related code into a
+ separate file
+X-Report-Abuse: Please report any abuse attempt to abuse@migadu.com and include these headers.
+From:   Muchun Song <muchun.song@linux.dev>
+In-Reply-To: <20230724094354.90817-2-zhengqi.arch@bytedance.com>
+Date:   Tue, 25 Jul 2023 10:35:01 +0800
+Cc:     Andrew Morton <akpm@linux-foundation.org>, david@fromorbit.com,
+        tkhai@ya.ru, Vlastimil Babka <vbabka@suse.cz>,
+        Roman Gushchin <roman.gushchin@linux.dev>, djwong@kernel.org,
+        Christian Brauner <brauner@kernel.org>,
+        "Paul E. McKenney" <paulmck@kernel.org>, tytso@mit.edu,
+        steven.price@arm.com, cel@kernel.org,
+        Sergey Senozhatsky <senozhatsky@chromium.org>,
+        yujie.liu@intel.com, Greg KH <gregkh@linuxfoundation.org>,
+        LKML <linux-kernel@vger.kernel.org>,
+        Linux Memory Management List <linux-mm@kvack.org>,
+        x86@kernel.org, kvm@vger.kernel.org,
+        xen-devel@lists.xenproject.org, linux-erofs@lists.ozlabs.org,
+        linux-f2fs-devel@lists.sourceforge.net, cluster-devel@redhat.com,
+        linux-nfs@vger.kernel.org, linux-mtd@lists.infradead.org,
+        rcu@vger.kernel.org, netdev <netdev@vger.kernel.org>,
+        dri-devel@lists.freedesktop.org, linux-arm-msm@vger.kernel.org,
+        dm-devel@redhat.com, linux-raid@vger.kernel.org,
+        linux-bcache@vger.kernel.org,
+        virtualization@lists.linux-foundation.org,
+        linux-fsdevel@vger.kernel.org, linux-ext4@vger.kernel.org,
+        linux-xfs@vger.kernel.org, linux-btrfs@vger.kernel.org
+Content-Transfer-Encoding: quoted-printable
+Message-Id: <97E80C37-8872-4C5A-A027-A0B35F39152A@linux.dev>
+References: <20230724094354.90817-1-zhengqi.arch@bytedance.com>
+ <20230724094354.90817-2-zhengqi.arch@bytedance.com>
+To:     Qi Zheng <zhengqi.arch@bytedance.com>
+X-Migadu-Flow: FLOW_OUT
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Hi folks,
 
-The iomap-for-next branch of the xfs-linux repository at:
 
-	git://git.kernel.org/pub/scm/fs/xfs/xfs-linux.git
+> On Jul 24, 2023, at 17:43, Qi Zheng <zhengqi.arch@bytedance.com> =
+wrote:
+>=20
+> The mm/vmscan.c file is too large, so separate the shrinker-related
+> code from it into a separate file. No functional changes.
+>=20
+> Signed-off-by: Qi Zheng <zhengqi.arch@bytedance.com>
+> ---
+> include/linux/shrinker.h |   3 +
+> mm/Makefile              |   4 +-
+> mm/shrinker.c            | 707 +++++++++++++++++++++++++++++++++++++++
+> mm/vmscan.c              | 701 --------------------------------------
+> 4 files changed, 712 insertions(+), 703 deletions(-)
+> create mode 100644 mm/shrinker.c
+>=20
+> diff --git a/include/linux/shrinker.h b/include/linux/shrinker.h
+> index 224293b2dd06..961cb84e51f5 100644
+> --- a/include/linux/shrinker.h
+> +++ b/include/linux/shrinker.h
+> @@ -96,6 +96,9 @@ struct shrinker {
+>  */
+> #define SHRINKER_NONSLAB (1 << 3)
+>=20
+> +unsigned long shrink_slab(gfp_t gfp_mask, int nid, struct mem_cgroup =
+*memcg,
+> +			   int priority);
 
-has just been updated.
+A good cleanup, vmscan.c is so huge.
 
-Patches often get missed, so please check if your outstanding patches
-were in this update. If they have not been in this update, please
-resubmit them to linux-xfs@vger.kernel.org so they can be picked up in
-the next update.
+I'd like to introduce a new header in mm/ directory and contains those
+declarations of functions (like this and other debug function in
+shrinker_debug.c) since they are used internally across mm.
 
-So.  I've merged willy's large folio writes series into the branch, and
-next I'd like to merge Ritesh's dirty block tracking changes.  Ritesh,
-could you rebase your changes against this branch and send me a pull
-request?
+Thanks.
 
-(Next in line could be the dio completions thing that Jens is working
-on, though iirc Dave still had some questions about that...)
-
-The new head of the iomap-for-next branch is commit:
-
-d42bd17c6a20 Merge tag 'large-folio-writes' of git://git.infradead.org/users/willy/pagecache into iomap-6.6-merge
-
-11 new commits:
-
-Darrick J. Wong (1):
-      [d42bd17c6a20] Merge tag 'large-folio-writes' of git://git.infradead.org/users/willy/pagecache into iomap-6.6-merge
-
-Matthew Wilcox (Oracle) (10):
-      [f7f9a0c8736d] iov_iter: Map the page later in copy_page_from_iter_atomic()
-      [908a1ad89466] iov_iter: Handle compound highmem pages in copy_page_from_iter_atomic()
-      [1b0306981e0f] iov_iter: Add copy_folio_from_iter_atomic()
-      [a221ab717c43] iomap: Remove large folio handling in iomap_invalidate_folio()
-      [32b29cc9db45] doc: Correct the description of ->release_folio
-      [7a8eb01b078f] iomap: Remove unnecessary test from iomap_release_folio()
-      [ffc143db63ee] filemap: Add fgf_t typedef
-      [4f6617011910] filemap: Allow __filemap_get_folio to allocate large folios
-      [d6bb59a9444d] iomap: Create large folios in the buffered write path
-      [5d8edfb900d5] iomap: Copy larger chunks from userspace
-
-Code Diffstat:
-
- Documentation/filesystems/locking.rst | 15 +++++--
- fs/btrfs/file.c                       |  6 +--
- fs/f2fs/compress.c                    |  2 +-
- fs/f2fs/f2fs.h                        |  2 +-
- fs/gfs2/bmap.c                        |  2 +-
- fs/iomap/buffered-io.c                | 54 +++++++++++------------
- include/linux/iomap.h                 |  2 +-
- include/linux/pagemap.h               | 82 ++++++++++++++++++++++++++++++-----
- include/linux/uio.h                   |  9 +++-
- lib/iov_iter.c                        | 43 +++++++++++-------
- mm/filemap.c                          | 65 ++++++++++++++-------------
- mm/folio-compat.c                     |  2 +-
- mm/readahead.c                        | 13 ------
- 13 files changed, 187 insertions(+), 110 deletions(-)
