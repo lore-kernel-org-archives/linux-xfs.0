@@ -2,376 +2,193 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D6666C001DE
-	for <linux-xfs@archiver.kernel.org>; Tue, 25 Jul 2023 09:56:50 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5227EC001E0
+	for <linux-xfs@archiver.kernel.org>; Tue, 25 Jul 2023 12:28:30 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232091AbjGYJ4t (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 25 Jul 2023 05:56:49 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55534 "EHLO
+        id S232129AbjGYM23 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 25 Jul 2023 08:28:29 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51580 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231690AbjGYJ4r (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 25 Jul 2023 05:56:47 -0400
-Received: from mail-pj1-x102d.google.com (mail-pj1-x102d.google.com [IPv6:2607:f8b0:4864:20::102d])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D109E19A0
-        for <linux-xfs@vger.kernel.org>; Tue, 25 Jul 2023 02:56:43 -0700 (PDT)
-Received: by mail-pj1-x102d.google.com with SMTP id 98e67ed59e1d1-2680edb9767so399437a91.0
-        for <linux-xfs@vger.kernel.org>; Tue, 25 Jul 2023 02:56:43 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=bytedance.com; s=google; t=1690279003; x=1690883803;
-        h=content-transfer-encoding:in-reply-to:from:references:cc:to
-         :content-language:subject:user-agent:mime-version:date:message-id
-         :from:to:cc:subject:date:message-id:reply-to;
-        bh=/casiWQBa8FLPDyI/Gjog1Q/iFy65e/7JWaM5Gwrppw=;
-        b=kzP9jxhdW7EUIP2JpY6nQ4V3KB8KzHZHwXd+bJOEeLU9gCN3lvtKTIOyV+D6pg6POw
-         Q2+Agk0fHs6Wf0nJIf8rf8T9VZNFr/hsapg2zga11FSk7AOs0JkWfaLjemq0FDeG0Uw5
-         HhEk2mitTuKDolaaQqjf+O9IL+c+U5F1pPsQI+4eucs75jhsRhGM9fqq3uQDPTEvroq0
-         /U4/CVAvtL3Xk0W286vaVtW9MXQ1p85A5kNQw+kxMFfLtXWo8Tn1go6QyxS1jqmnrw9a
-         uFzHc2WhcIqVkW0xdKzdkJ+42hQ6tNSe2IXCsgIEyfURXIjl60ODrk022w8+JVfo8hQI
-         ne/Q==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20221208; t=1690279003; x=1690883803;
-        h=content-transfer-encoding:in-reply-to:from:references:cc:to
-         :content-language:subject:user-agent:mime-version:date:message-id
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=/casiWQBa8FLPDyI/Gjog1Q/iFy65e/7JWaM5Gwrppw=;
-        b=IjsKzKGcncQ2i8cEaLnpA28eL9uDzrLxFFKSA3aaMQIbvFGBRJmDFCJn5Adh8x/Sw6
-         MJJIdsS1fiKCopy95SIgE/5eGKL0Xx+0HfrQFoz7Rvy+thkQHDTBmkRPaZN1D6OcN3tw
-         2RXicfLGhNUlHGNxeyZVAirteW5AOI1XMWx6omYmk2zSt8ziXNyQrZq6DkVk8y07iZD1
-         QXtHkW2Mwp/g94q5s/o/i+4vZYYadPvMVXQKfzb/0qqhR/NeM4PabPJ3d7N2+xZxtucL
-         Xlj15AFi6FhZ0FJyFJCHusA1ev1XkTJ1XJ/AFLowPRzlFTnrz42xbmwqisXKXQ3T80Lq
-         qKbQ==
-X-Gm-Message-State: ABy/qLb0lAuvlDWq72JMJhTniqyP1UhBr3JaxBi5sIfoyQvMzWv2bxc0
-        SNurF3jHKoexhGZP1VTYUkOqLg==
-X-Google-Smtp-Source: APBJJlE4g3zxacKAsn4H4YysRKAp71VN9gqUpsqodFXfAXxBRsoAel6FjePiWo+WkUy1agkNvA6LJQ==
-X-Received: by 2002:a17:90a:74cf:b0:268:196f:9656 with SMTP id p15-20020a17090a74cf00b00268196f9656mr4627258pjl.1.1690279003192;
-        Tue, 25 Jul 2023 02:56:43 -0700 (PDT)
-Received: from [10.70.252.135] ([203.208.167.147])
-        by smtp.gmail.com with ESMTPSA id j8-20020a170902da8800b001b39ffff838sm10605398plx.25.2023.07.25.02.56.31
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Tue, 25 Jul 2023 02:56:42 -0700 (PDT)
-Message-ID: <c1a1952f-0c3e-2fa1-fdf9-8b3b8a592b23@bytedance.com>
-Date:   Tue, 25 Jul 2023 17:56:29 +0800
+        with ESMTP id S232119AbjGYM22 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 25 Jul 2023 08:28:28 -0400
+Received: from dggsgout11.his.huawei.com (unknown [45.249.212.51])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B31D61992
+        for <linux-xfs@vger.kernel.org>; Tue, 25 Jul 2023 05:28:26 -0700 (PDT)
+Received: from mail02.huawei.com (unknown [172.30.67.143])
+        by dggsgout11.his.huawei.com (SkyGuard) with ESMTP id 4R9GXP64nYz4f400W
+        for <linux-xfs@vger.kernel.org>; Tue, 25 Jul 2023 20:28:21 +0800 (CST)
+Received: from localhost (unknown [10.175.127.227])
+        by APP4 (Coremail) with SMTP id gCh0CgBn0LPkv79k3ZAdOw--.46119S3;
+        Tue, 25 Jul 2023 20:28:22 +0800 (CST)
+Date:   Tue, 25 Jul 2023 20:25:25 +0800
+From:   Long Li <leo.lilong@huaweicloud.com>
+To:     Dave Chinner <david@fromorbit.com>
+Cc:     Long Li <leo.lilong@huawei.com>, djwong@kernel.org,
+        linux-xfs@vger.kernel.org, yi.zhang@huawei.com, houtao1@huawei.com,
+        yangerkun@huawei.com
+Subject: Re: [PATCH v2 3/3] xfs: make sure done item committed before cancel
+ intents
+Message-ID: <20230725122525.GA3607472@ceph-admin>
+References: <20230715063647.2094989-1-leo.lilong@huawei.com>
+ <20230715063647.2094989-4-leo.lilong@huawei.com>
+ <ZLeFpQWSUVmYNJXJ@dread.disaster.area>
+ <20230722011909.GA4061995@ceph-admin>
+ <ZL3ObF23wET/rT7x@dread.disaster.area>
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:102.0)
- Gecko/20100101 Thunderbird/102.12.0
-Subject: Re: [PATCH v2 03/47] mm: shrinker: add infrastructure for dynamically
- allocating shrinker
-Content-Language: en-US
-To:     Muchun Song <muchun.song@linux.dev>
-Cc:     linux-kernel@vger.kernel.org, linux-mm@kvack.org, x86@kernel.org,
-        kvm@vger.kernel.org, xen-devel@lists.xenproject.org,
-        linux-erofs@lists.ozlabs.org,
-        linux-f2fs-devel@lists.sourceforge.net, cluster-devel@redhat.com,
-        linux-nfs@vger.kernel.org, linux-mtd@lists.infradead.org,
-        rcu@vger.kernel.org, netdev@vger.kernel.org,
-        dri-devel@lists.freedesktop.org, linux-arm-msm@vger.kernel.org,
-        dm-devel@redhat.com, linux-raid@vger.kernel.org,
-        linux-bcache@vger.kernel.org,
-        virtualization@lists.linux-foundation.org,
-        linux-fsdevel@vger.kernel.org, linux-ext4@vger.kernel.org,
-        linux-xfs@vger.kernel.org, linux-btrfs@vger.kernel.org,
-        akpm@linux-foundation.org, david@fromorbit.com, tkhai@ya.ru,
-        vbabka@suse.cz, roman.gushchin@linux.dev, djwong@kernel.org,
-        brauner@kernel.org, paulmck@kernel.org, tytso@mit.edu,
-        steven.price@arm.com, cel@kernel.org, senozhatsky@chromium.org,
-        yujie.liu@intel.com, gregkh@linuxfoundation.org
-References: <20230724094354.90817-1-zhengqi.arch@bytedance.com>
- <20230724094354.90817-4-zhengqi.arch@bytedance.com>
- <3648ca69-d65e-8431-135a-a5738586bc25@linux.dev>
-From:   Qi Zheng <zhengqi.arch@bytedance.com>
-In-Reply-To: <3648ca69-d65e-8431-135a-a5738586bc25@linux.dev>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+In-Reply-To: <ZL3ObF23wET/rT7x@dread.disaster.area>
+X-CM-TRANSID: gCh0CgBn0LPkv79k3ZAdOw--.46119S3
+X-Coremail-Antispam: 1UD129KBjvJXoWxuFyDWr4rZF15tFWkuFyfJFb_yoW7Xw47pr
+        WfKa47KF4kJ3WxtrZ3t3W8Ja4Yyr43tr15ury5trn7ZF95Cr1a9rW3KFW8uF98uFWvga1j
+        vr1jqrZrZ34DW3DanT9S1TB71UUUUUUqnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+        9KBjDU0xBIdaVrnRJUUUgmb4IE77IF4wAFF20E14v26r4j6ryUM7CY07I20VC2zVCF04k2
+        6cxKx2IYs7xG6rWj6s0DM7CIcVAFz4kK6r1j6r18M28lY4IEw2IIxxk0rwA2F7IY1VAKz4
+        vEj48ve4kI8wA2z4x0Y4vE2Ix0cI8IcVAFwI0_Xr0_Ar1l84ACjcxK6xIIjxv20xvEc7Cj
+        xVAFwI0_Cr0_Gr1UM28EF7xvwVC2z280aVAFwI0_GcCE3s1l84ACjcxK6I8E87Iv6xkF7I
+        0E14v26rxl6s0DM2AIxVAIcxkEcVAq07x20xvEncxIr21l5I8CrVACY4xI64kE6c02F40E
+        x7xfMcIj6xIIjxv20xvE14v26r1j6r18McIj6I8E87Iv67AKxVWUJVW8JwAm72CE4IkC6x
+        0Yz7v_Jr0_Gr1lF7xvr2IY64vIr41l42xK82IYc2Ij64vIr41l4I8I3I0E4IkC6x0Yz7v_
+        Jr0_Gr1lx2IqxVAqx4xG67AKxVWUJVWUGwC20s026x8GjcxK67AKxVWUGVWUWwC2zVAF1V
+        AY17CE14v26r126r1DMIIYrxkI7VAKI48JMIIF0xvE2Ix0cI8IcVAFwI0_Jr0_JF4lIxAI
+        cVC0I7IYx2IY6xkF7I0E14v26r1j6r4UMIIF0xvE42xK8VAvwI8IcIk0rVWrZr1j6s0DMI
+        IF0xvEx4A2jsIE14v26r1j6r4UMIIF0xvEx4A2jsIEc7CjxVAFwI0_Jr0_GrUvcSsGvfC2
+        KfnxnUUI43ZEXa7IU1zuWJUUUUU==
+X-CM-SenderInfo: hohrhzxlor0w46kxt4xhlfz01xgou0bp/
+X-CFilter-Loop: Reflected
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Hi Muchun,
+On Mon, Jul 24, 2023 at 11:05:48AM +1000, Dave Chinner wrote:
+> On Sat, Jul 22, 2023 at 09:19:09AM +0800, Long Li wrote:
+> > On Wed, Jul 19, 2023 at 04:41:41PM +1000, Dave Chinner wrote:
+> > > On Sat, Jul 15, 2023 at 02:36:47PM +0800, Long Li wrote:
+> > > > KASAN report a uaf when recover intents fails:
+> > > ....
+> > > > 
+> > > > If process intents fails, intent items left in AIL will be delete
+> > > > from AIL and freed in error handling, even intent items that have been
+> > > > recovered and created done items. After this, uaf will be triggered when
+> > > > done item commited, because at this point the released intent item will
+> > > > be accessed.
+> > > > 
+> > > > xlog_recover_finish                     xlog_cil_push_work
+> > > > ----------------------------            ---------------------------
+> > > > xlog_recover_process_intents
+> > > >   xfs_cui_item_recover//cui_refcount == 1
+> > > >     xfs_trans_get_cud
+> > > >     xfs_trans_commit
+> > > >       <add cud item to cil>
+> > > >   xfs_cui_item_recover
+> > > >     <error occurred and return>
+> > > > xlog_recover_cancel_intents
+> > > >   xfs_cui_release     //cui_refcount == 0
+> > > >     xfs_cui_item_free //free cui
+> > > >   <release other intent items>
+> > > > xlog_force_shutdown   //shutdown
+> > > >                                <...>
+> > > >                                         <push items in cil>
+> > > >                                         xlog_cil_committed
+> > > >                                           xfs_cud_item_release
+> > > >                                             xfs_cui_release // UAF
+> > > 
+> > > Huh. The log stores items in the AIL without holding a reference to
+> > > them, then on shutdown takes the intent done reference away because
+> > > it assumes the intent has not been processed as it is still in the
+> > > AIL.
+> > > 
+> > > Ok, that's broken.
+> > > 
+> > > > Fix it by move log force forward to make sure done items committed before
+> > > > cancel intents.
+> > > 
+> > > That doesn't fix the fact we have a reference counted object that is
+> > > being accessed by code that doesn't actually own a reference to the
+> > > object.  Intent log items are created with a reference count of 2 -
+> > > one for the creator, and one for the intent done object.
+> > > 
+> > > Look at xlog_recover_cui_commit_pass2():
+> > > 
+> > >         /*
+> > >          * Insert the intent into the AIL directly and drop one reference so
+> > >          * that finishing or canceling the work will drop the other.
+> > >          */
+> > >         xfs_trans_ail_insert(log->l_ailp, &cuip->cui_item, lsn);
+> > >         xfs_cui_release(cuip);
+> > >         return 0;
+> > > }
+> > > 
+> > > Log recovery explicitly drops the creator reference after it is
+> > > inserted into the AIL, but it then processes the log item as if it
+> > > also owns the intent-done reference. The moment we call
+> > > ->iop_recover(), the intent-done reference should be owned by the
+> > > log item.
+> > 
+> > Hi, Dave
+> > 
+> > Thanks for the reply. Yes, your analysis seems reasonable, it helped me a
+> > lot to understand the intent lifecycle.
+> > 
+> > > 
+> > > The recovery of the BUI, RUI and EFI all do the same thing. I
+> > > suspect that these references should actually be held by log
+> > > recovery until it is done processing the item, at which point it
+> > > should be removed from the AIL by xlog_recover_process_intents().
+> > 
+> > Why do we need to remove the intent from the AIL at this point,
+> 
+> Because we've processed the recovery of it - it is either completely
+> done or we have a new intent in the CIL ready to continue operation.
+> Either way, the next write to the journal will remove the item from
+> the AIL when it completes.
+> 
+> Intents don't need to be in the AIL, though - we can cancel them
+> in memory (see the intent whiteout code) and so when we process the
+> done item from journal IO completion the last reference goes away
+> and they won't be in the AIL at this point in time.
+> 
+> IOWs, the intent freeing code doesn't care if the intent is in the
+> AIL or not, it does the right thing either way.
+> 
+> Hence if we remove the intent from the list of intents that need to
+> be recovered after we have done the initial recovery, we acheive two
+> things:
+> 
+> 1. the tail of the log can be moved forward with the commit of the
+> done intent or new intent to continue the operation, and
+> 
+> 2. We avoid the problem of trying to determine how many reference
+> counts we need to drop from intent recovery cancelling because we
+> never come across intents we've actually attempted recovery on.
+> 
+> > shouldn't
+> > it be removed from the AIL when the done intent is committed? Or is there
+> > any way to ensure that the intents are removed from the AIL when they are
+> > processed.
+> 
+> THe reference counting ensures the right thing is done when the last
+> reference goes away. If it is in the AIL, it will get removed, if it
+> is not in the AIL, then AIL removal is a no-op and nothign bad
+> happens.
 
-On 2023/7/25 17:02, Muchun Song wrote:
-> 
-> 
-> On 2023/7/24 17:43, Qi Zheng wrote:
->> Currently, the shrinker instances can be divided into the following three
->> types:
->>
->> a) global shrinker instance statically defined in the kernel, such as
->>     workingset_shadow_shrinker.
->>
->> b) global shrinker instance statically defined in the kernel modules, 
->> such
->>     as mmu_shrinker in x86.
->>
->> c) shrinker instance embedded in other structures.
->>
->> For case a, the memory of shrinker instance is never freed. For case b,
->> the memory of shrinker instance will be freed after synchronize_rcu() 
->> when
->> the module is unloaded. For case c, the memory of shrinker instance will
->> be freed along with the structure it is embedded in.
->>
->> In preparation for implementing lockless slab shrink, we need to
->> dynamically allocate those shrinker instances in case c, then the memory
->> can be dynamically freed alone by calling kfree_rcu().
->>
->> So this commit adds the following new APIs for dynamically allocating
->> shrinker, and add a private_data field to struct shrinker to record and
->> get the original embedded structure.
->>
->> 1. shrinker_alloc()
->>
->> Used to allocate shrinker instance itself and related memory, it will
->> return a pointer to the shrinker instance on success and NULL on failure.
->>
->> 2. shrinker_free_non_registered()
->>
->> Used to destroy the non-registered shrinker instance.
-> 
-> At least I don't like this name. I know you want to tell others
-> this function only should be called when shrinker has not been
-> registed but allocated. Maybe shrinker_free() is more simple.
-> And and a comment to tell the users when to use it.
+Thank you for your detailed answer, it was great, I understand
+what you mean.
 
-OK, if no one else objects, I will change it to shrinker_free() in
-the next version.
+The intent item stays in the AIL until the done item is committed,
+which prevents the tail lsn from moving forward. After the transaction
+is alloced in ->iop_recover(), we don't need to stop tail lsn from
+moving forward because there is no other thread committing the
+transaction at this point, the intent item will not be overwritten
+until the done intent is written to the log, so we can just remove
+the intent item from the AIL.
 
-> 
->>
->> 3. shrinker_register()
->>
->> Used to register the shrinker instance, which is same as the current
->> register_shrinker_prepared().
->>
->> 4. shrinker_unregister()
->>
->> Used to unregister and free the shrinker instance.
->>
->> In order to simplify shrinker-related APIs and make shrinker more
->> independent of other kernel mechanisms, subsequent submissions will use
->> the above API to convert all shrinkers (including case a and b) to
->> dynamically allocated, and then remove all existing APIs.
->>
->> This will also have another advantage mentioned by Dave Chinner:
->>
->> ```
->> The other advantage of this is that it will break all the existing
->> out of tree code and third party modules using the old API and will
->> no longer work with a kernel using lockless slab shrinkers. They
->> need to break (both at the source and binary levels) to stop bad
->> things from happening due to using uncoverted shrinkers in the new
->> setup.
->> ```
->>
->> Signed-off-by: Qi Zheng <zhengqi.arch@bytedance.com>
->> ---
->>   include/linux/shrinker.h |   6 +++
->>   mm/shrinker.c            | 113 +++++++++++++++++++++++++++++++++++++++
->>   2 files changed, 119 insertions(+)
->>
->> diff --git a/include/linux/shrinker.h b/include/linux/shrinker.h
->> index 961cb84e51f5..296f5e163861 100644
->> --- a/include/linux/shrinker.h
->> +++ b/include/linux/shrinker.h
->> @@ -70,6 +70,8 @@ struct shrinker {
->>       int seeks;    /* seeks to recreate an obj */
->>       unsigned flags;
->> +    void *private_data;
->> +
->>       /* These are for internal use */
->>       struct list_head list;
->>   #ifdef CONFIG_MEMCG
->> @@ -98,6 +100,10 @@ struct shrinker {
->>   unsigned long shrink_slab(gfp_t gfp_mask, int nid, struct mem_cgroup 
->> *memcg,
->>                 int priority);
->> +struct shrinker *shrinker_alloc(unsigned int flags, const char *fmt, 
->> ...);
->> +void shrinker_free_non_registered(struct shrinker *shrinker);
->> +void shrinker_register(struct shrinker *shrinker);
->> +void shrinker_unregister(struct shrinker *shrinker);
->>   extern int __printf(2, 3) prealloc_shrinker(struct shrinker *shrinker,
->>                           const char *fmt, ...);
->> diff --git a/mm/shrinker.c b/mm/shrinker.c
->> index 0a32ef42f2a7..d820e4cc5806 100644
->> --- a/mm/shrinker.c
->> +++ b/mm/shrinker.c
->> @@ -548,6 +548,119 @@ unsigned long shrink_slab(gfp_t gfp_mask, int 
->> nid, struct mem_cgroup *memcg,
->>       return freed;
->>   }
->> +struct shrinker *shrinker_alloc(unsigned int flags, const char *fmt, 
->> ...)
->> +{
->> +    struct shrinker *shrinker;
->> +    unsigned int size;
->> +    va_list __maybe_unused ap;
->> +    int err;
->> +
->> +    shrinker = kzalloc(sizeof(struct shrinker), GFP_KERNEL);
->> +    if (!shrinker)
->> +        return NULL;
->> +
->> +#ifdef CONFIG_SHRINKER_DEBUG
->> +    va_start(ap, fmt);
->> +    shrinker->name = kvasprintf_const(GFP_KERNEL, fmt, ap);
->> +    va_end(ap);
->> +    if (!shrinker->name)
->> +        goto err_name;
->> +#endif
-> 
-> So why not introduce another helper to handle this and declare it
-> as a void function when !CONFIG_SHRINKER_DEBUG? Something like the
-> following:
-> 
-> #ifdef CONFIG_SHRINKER_DEBUG
-> static int shrinker_debugfs_name_alloc(struct shrinker *shrinker, const 
-> char *fmt,
->                                         va_list vargs)
-> 
-> {
->      shrinker->name = kvasprintf_const(GFP_KERNEL, fmt, vargs);
->      return shrinker->name ? 0 : -ENOMEM;
-> }
-> #else
-> static int shrinker_debugfs_name_alloc(struct shrinker *shrinker, const 
-> char *fmt,
->                                         va_list vargs)
-> {
->      return 0;
-> }
-> #endif
+I think we can remove the intent item from the AIL as soon as the
+done item is created, since the reference count has already been
+passed to the done item. Eventually the problem can be fixed.
 
-Will do in the next version.
+This is my understanding.
 
-> 
->> +    shrinker->flags = flags;
->> +
->> +    if (flags & SHRINKER_MEMCG_AWARE) {
->> +        err = prealloc_memcg_shrinker(shrinker);
->> +        if (err == -ENOSYS)
->> +            shrinker->flags &= ~SHRINKER_MEMCG_AWARE;
->> +        else if (err == 0)
->> +            goto done;
->> +        else
->> +            goto err_flags;
->> +    }
->> +
->> +    /*
->> +     * The nr_deferred is available on per memcg level for memcg aware
->> +     * shrinkers, so only allocate nr_deferred in the following cases:
->> +     *  - non memcg aware shrinkers
->> +     *  - !CONFIG_MEMCG
->> +     *  - memcg is disabled by kernel command line
->> +     */
->> +    size = sizeof(*shrinker->nr_deferred);
->> +    if (flags & SHRINKER_NUMA_AWARE)
->> +        size *= nr_node_ids;
->> +
->> +    shrinker->nr_deferred = kzalloc(size, GFP_KERNEL);
->> +    if (!shrinker->nr_deferred)
->> +        goto err_flags;
->> +
->> +done:
->> +    return shrinker;
->> +
->> +err_flags:
->> +#ifdef CONFIG_SHRINKER_DEBUG
->> +    kfree_const(shrinker->name);
->> +    shrinker->name = NULL;
-> 
-> This could be shrinker_debugfs_name_free()
+Thanks
+Long Li
 
-Will do.
-
-> 
->> +err_name:
->> +#endif
->> +    kfree(shrinker);
->> +    return NULL;
->> +}
->> +EXPORT_SYMBOL(shrinker_alloc);
->> +
->> +void shrinker_free_non_registered(struct shrinker *shrinker)
->> +{
->> +#ifdef CONFIG_SHRINKER_DEBUG
->> +    kfree_const(shrinker->name);
->> +    shrinker->name = NULL;
-> 
-> This could be shrinker_debugfs_name_free()
-> 
->> +#endif
->> +    if (shrinker->flags & SHRINKER_MEMCG_AWARE) {
->> +        down_write(&shrinker_rwsem);
->> +        unregister_memcg_shrinker(shrinker);
->> +        up_write(&shrinker_rwsem);
->> +    }
->> +
->> +    kfree(shrinker->nr_deferred);
->> +    shrinker->nr_deferred = NULL;
->> +
->> +    kfree(shrinker);
->> +}
->> +EXPORT_SYMBOL(shrinker_free_non_registered);
->> +
->> +void shrinker_register(struct shrinker *shrinker)
->> +{
->> +    down_write(&shrinker_rwsem);
->> +    list_add_tail(&shrinker->list, &shrinker_list);
->> +    shrinker->flags |= SHRINKER_REGISTERED;
->> +    shrinker_debugfs_add(shrinker);
->> +    up_write(&shrinker_rwsem);
->> +}
->> +EXPORT_SYMBOL(shrinker_register);
->> +
->> +void shrinker_unregister(struct shrinker *shrinker)
-> 
-> You have made all shrinkers to be dynamically allocated, so
-> we should prevent users from allocating shrinkers statically and
-> use this function to unregister it. It is better to add a
-> flag like SHRINKER_ALLOCATED which is set in shrinker_alloc(),
-> and check whether it is set in shrinker_unregister(), if not
-> maybe a warning should be added to tell the users what happened.
-
-Make sense, will do.
-
-> 
->> +{
->> +    struct dentry *debugfs_entry;
->> +    int debugfs_id;
->> +
->> +    if (!shrinker || !(shrinker->flags & SHRINKER_REGISTERED))
->> +        return;
->> +
->> +    down_write(&shrinker_rwsem);
->> +    list_del(&shrinker->list);
->> +    shrinker->flags &= ~SHRINKER_REGISTERED;
->> +    if (shrinker->flags & SHRINKER_MEMCG_AWARE)
->> +        unregister_memcg_shrinker(shrinker);
->> +    debugfs_entry = shrinker_debugfs_detach(shrinker, &debugfs_id);
-> 
-> In the internal of this function, you also could use
-> shrinker_debugfs_name_free().
-
-Yeah, will do.
-
-Thanks,
-Qi
-
-> 
-> Thanks.
-> 
->> +    up_write(&shrinker_rwsem);
->> +
->> +    shrinker_debugfs_remove(debugfs_entry, debugfs_id);
->> +
->> +    kfree(shrinker->nr_deferred);
->> +    shrinker->nr_deferred = NULL;
->> +
->> +    kfree(shrinker);
->> +}
->> +EXPORT_SYMBOL(shrinker_unregister);
->> +
->>   /*
->>    * Add a shrinker callback to be called from the vm.
->>    */
-> 
