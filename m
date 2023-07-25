@@ -2,218 +2,169 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 792F1C001DE
-	for <linux-xfs@archiver.kernel.org>; Mon, 24 Jul 2023 22:55:27 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C3096EB64DD
+	for <linux-xfs@archiver.kernel.org>; Tue, 25 Jul 2023 00:23:59 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230186AbjGXWz0 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 24 Jul 2023 18:55:26 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33562 "EHLO
+        id S230259AbjGYAX6 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 24 Jul 2023 20:23:58 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58678 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230301AbjGXWzZ (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 24 Jul 2023 18:55:25 -0400
-Received: from mail-pl1-x62f.google.com (mail-pl1-x62f.google.com [IPv6:2607:f8b0:4864:20::62f])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1141D100
-        for <linux-xfs@vger.kernel.org>; Mon, 24 Jul 2023 15:55:24 -0700 (PDT)
-Received: by mail-pl1-x62f.google.com with SMTP id d9443c01a7336-1bba9539a23so1826095ad.1
-        for <linux-xfs@vger.kernel.org>; Mon, 24 Jul 2023 15:55:24 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=kernel-dk.20221208.gappssmtp.com; s=20221208; t=1690239323; x=1690844123;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=+DqlprFT3rIJ93hb4ytZ/U+5DLbYbXZZtopIzdBjbSs=;
-        b=qZyXJ5GOrSNROW0VLYT+HLv0T1KL6Mh1WHD9ZALp0ngmW4xvke7aJv0gGltZeOBrt7
-         bYoLfr0qjEzJN0R3KP25nnJ08in3S5axLYskHHTWQa8/hIZk22fjqiljQemLyYOewTUp
-         vM3o42lLuoR0DnSDGIF9IyswN6hE/xUDaE7CqjnM3Cpjv/PnCLuQplD8m28cfjs+DjJL
-         86VtF80yyUGCWXrYz3lDs1YP135U8OlFUr8wntQYEUacAU8U5UdksHX+IxUYL7C77Wqn
-         Egf3Snu+mupFd09XqzSbFVwpjOB5GTaRwQ1+lHrY5pxcqXhGEa7adagVSIppXj3681SW
-         PZLQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20221208; t=1690239323; x=1690844123;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=+DqlprFT3rIJ93hb4ytZ/U+5DLbYbXZZtopIzdBjbSs=;
-        b=M5b2fytB+UGU0p3WJB7qhO02+IPacJSXy0076dtSLxsYhdvLyEMlL3KzlXl1weHtSW
-         piaZCh+yCxq8jU4f8hEUYhdQxcGQtShRC8XyrP2QULGqnIUf930Y8ViiNrklqV13ab+4
-         fh/vI0bAyxLwS+9as4/mMWeNoH423/aAnSmQYtCzj4YQ7YUgzZ/HxPHZAei61Vgw3xyb
-         qwPNDxxuxRxxpzESXvoUTEwEfnLymPar1C82I9MMD1CR6eKMVymIxfB1GyyEVLJZpDEW
-         fYfzYy6Xff6M3+HgcOMc8Ot1jzs69vizMMs8uO6D58dvq81Jc3Xls4c0MJ/BdCub+UT/
-         vB8w==
-X-Gm-Message-State: ABy/qLazbq04BGlEp3ma0AZJNkiJUiqlibtOqTdrdN3H2t16DT1YJDHw
-        j5iVTzSOReOlw0OaEP+nX5PYFw==
-X-Google-Smtp-Source: APBJJlF7N9AmmkBTysR/mafF4wuzyAwYLu/QLUnYzQrf7ApEXKA6OZJFE1/IL+aC4TOHfQMOGzedBg==
-X-Received: by 2002:a17:902:ea01:b0:1bb:83ec:832 with SMTP id s1-20020a170902ea0100b001bb83ec0832mr10583875plg.2.1690239323510;
-        Mon, 24 Jul 2023 15:55:23 -0700 (PDT)
-Received: from localhost.localdomain ([198.8.77.157])
-        by smtp.gmail.com with ESMTPSA id p7-20020a1709026b8700b001acae9734c0sm9424733plk.266.2023.07.24.15.55.22
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 24 Jul 2023 15:55:23 -0700 (PDT)
-From:   Jens Axboe <axboe@kernel.dk>
-To:     io-uring@vger.kernel.org, linux-xfs@vger.kernel.org
-Cc:     hch@lst.de, andres@anarazel.de, david@fromorbit.com,
-        djwong@kernel.org, Jens Axboe <axboe@kernel.dk>
-Subject: [PATCH 8/8] iomap: support IOCB_DIO_CALLER_COMP
-Date:   Mon, 24 Jul 2023 16:55:11 -0600
-Message-Id: <20230724225511.599870-9-axboe@kernel.dk>
-X-Mailer: git-send-email 2.40.1
-In-Reply-To: <20230724225511.599870-1-axboe@kernel.dk>
-References: <20230724225511.599870-1-axboe@kernel.dk>
+        with ESMTP id S229624AbjGYAX6 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 24 Jul 2023 20:23:58 -0400
+Received: from NAM11-CO1-obe.outbound.protection.outlook.com (mail-co1nam11on2075.outbound.protection.outlook.com [40.107.220.75])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 312D2115;
+        Mon, 24 Jul 2023 17:23:57 -0700 (PDT)
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
+ b=kQshaVJo+Imw5FT/PvX0SjTY1S/D5JTwn+kMFtJBELz5ci1VIEATPDbjWlA3X+dA7fTNk4byOnlnUfMzEHUyYXnaxNHe3VLDDGu/7TiHxfSVIQmQAdljcibGiQ6+PwCQopPpXemQq2r94D0nIpoeXsTkLY1w44Nx/UzbtwtEOv2npAR0nPKO6OW+qwSPNehOO4NvmjyzGXEdgn8KfxMoAag6PiKSu1PVNkkyBZb3CDn3x2gW09zNUXC5TtuLGPl7ky1I+K/AV6OwGlI1a00wb3THQ2DFq4hFeo456OXovbVtPJ/7Di6hd4+870Y8u2wg7/3tRjtXjw1e1dXR0fm6bw==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector9901;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=ku6MUz4MWhYaOMPRiAjUDVhN6Zt5HLCAWnUljt2NgLo=;
+ b=JQ25lgqCSeh5MPALkOkA9kQ0tNXkhLmMn7HgUpgZK4hrrWV0i1b0kgPGYyZb0Z2EwWcsTBjKh+tAxcCULGXKA04b7KCw4Z33UBJ2Mk2nb6FguIqF3OaUpuihgYFPWt0zgmZFcuC9rVUlm01wf0cc89AxS7Xjmty3/aK9BmMwryPUpcL7trPAnGrz1EfJ7GjCOg9OFQH9TzYHsi0Lgg/CV8XPJWQOqNW+DACdDseULXI2BDkJL0vZ9fqFMYKSXivPmJISRJzlqlrEJArb8uR/AXqCmW2MNPB5S85F3OTA0K3eXaToY+duCvA8RTZ6geTwzEb0hEDauRtifyFY3uQg0A==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=nvidia.com; dmarc=pass action=none header.from=nvidia.com;
+ dkim=pass header.d=nvidia.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=Nvidia.com;
+ s=selector2;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=ku6MUz4MWhYaOMPRiAjUDVhN6Zt5HLCAWnUljt2NgLo=;
+ b=mdsDlMRO0DBL2q0erXUI795RiQl6DMQUds39J3UEyLbK23zeMbizJDRR0f//NbcQsDUd6EQT9gc71FmrWEq4tayoEuJCrBXIClK6yGe7/50QzWOauI779HblHYX8YsExnIfxSgQb1TjbHGzbjmQ/13eoFXUNL9Nb8/roFp3wCTu2ZoJH1XsgbJkLc5l24RwVDsnZr0WbRVykDNQps2Qin8itswWkBx90aYierPwu88n07Zu2904e5PsWiA8xeB1WLr4faD84USCBMZZwIomszGKrK0cSKSNVMh51sP7hkjZKU17wvlVyWSYzy+JrQntOe2IIpSjRgmaQ7pbCYxLBFg==
+Authentication-Results: dkim=none (message not signed)
+ header.d=none;dmarc=none action=none header.from=nvidia.com;
+Received: from DM6PR12MB3179.namprd12.prod.outlook.com (2603:10b6:5:183::18)
+ by SJ0PR12MB5405.namprd12.prod.outlook.com (2603:10b6:a03:3af::11) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.6609.33; Tue, 25 Jul
+ 2023 00:23:55 +0000
+Received: from DM6PR12MB3179.namprd12.prod.outlook.com
+ ([fe80::3eb6:cda8:4a56:25fe]) by DM6PR12MB3179.namprd12.prod.outlook.com
+ ([fe80::3eb6:cda8:4a56:25fe%7]) with mapi id 15.20.6609.031; Tue, 25 Jul 2023
+ 00:23:54 +0000
+References: <8f293bb51a423afa71ddc3ba46e9f323ee9ffbc7.1689768831.git-series.apopple@nvidia.com>
+ <20230719225105.1934-1-sj@kernel.org> <877cqvl7vr.fsf@nvdebian.thelocal>
+ <ZL7AbLJ+RUUgzt8O@bombadil.infradead.org>
+User-agent: mu4e 1.8.13; emacs 28.2
+From:   Alistair Popple <apopple@nvidia.com>
+To:     Luis Chamberlain <mcgrof@kernel.org>
+Cc:     linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org,
+        Pankaj Raghav <p.raghav@samsung.com>,
+        SeongJae Park <sj@kernel.org>, kevin.tian@intel.com,
+        x86@kernel.org, ajd@linux.ibm.com, kvm@vger.kernel.org,
+        linux-mm@kvack.org, catalin.marinas@arm.com, seanjc@google.com,
+        will@kernel.org, linux-kernel@vger.kernel.org, npiggin@gmail.com,
+        zhi.wang.linux@gmail.com, jgg@ziepe.ca, iommu@lists.linux.dev,
+        nicolinc@nvidia.com, jhubbard@nvidia.com, fbarrat@linux.ibm.com,
+        akpm@linux-foundation.org, linuxppc-dev@lists.ozlabs.org,
+        linux-arm-kernel@lists.infradead.org, robin.murphy@arm.com
+Subject: Re: [PATCH v2 3/5] mmu_notifiers: Call invalidate_range() when
+ invalidating TLBs
+Date:   Tue, 25 Jul 2023 10:20:52 +1000
+In-reply-to: <ZL7AbLJ+RUUgzt8O@bombadil.infradead.org>
+Message-ID: <87v8e8zvmz.fsf@nvdebian.thelocal>
+Content-Type: text/plain
+X-ClientProxiedBy: SY6PR01CA0124.ausprd01.prod.outlook.com
+ (2603:10c6:10:1b8::17) To DM6PR12MB3179.namprd12.prod.outlook.com
+ (2603:10b6:5:183::18)
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+X-MS-PublicTrafficType: Email
+X-MS-TrafficTypeDiagnostic: DM6PR12MB3179:EE_|SJ0PR12MB5405:EE_
+X-MS-Office365-Filtering-Correlation-Id: f49de129-5bb2-4bb7-a2a6-08db8ca56d99
+X-MS-Exchange-SenderADCheck: 1
+X-MS-Exchange-AntiSpam-Relay: 0
+X-Microsoft-Antispam: BCL:0;
+X-Microsoft-Antispam-Message-Info: S4kV4QoyxWeJb12KnNIxvGW2EgcWAB4DcWd8MnqcX5Ow77pu+WNj0mqYhoDaSOvEx688pjOalI0g3D69B1b5S3pJDpucMVbLIM5xDSW3DDbPkitABTHFRmmxEBPbbchrPEuEp29VBu5gX+Fji3Kd9pyybSWspIE2b59MqtI8K/eA0AUCnuDtpXew2ZYCXqN+LtR5ZS6iOr4+XIdXHWGo2pWvOzYuL3yv4RcqZiyc6Mu/4iT6+zWkTBaNOiMyM9p9w4vwJjSQ6S6auhGwvkoNOJI4azOMdTOKNk0erjctx47pxsJDEnYRUHc6pec0cnhTFWx2miMAr7FFXk1hmeIj/qSotl5Ct9yuEl78Jkxt4nI+AEOG3QzaU21kWHFF3UyoXy54iLeUXQzT7zDtA1ACbihsJX6EHZuSDZqEaBVc8n1nJI06XZvconfz40/SD6XcOrb8A8c1n1zNUBcfkgdjK4Pi+rSeqfmkMT0anCle7Hw2ef64r3/YGYHlqbLryv8BZPxOEqcREM9bjx6PILY76VgcS7WdrXHoUncswyis3epNqj00f7WEm4TKreeJw1wcfRA0WaXaVNxRh9wwgasvr5t9vYaGF8vH+C6v8orLTrU=
+X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:DM6PR12MB3179.namprd12.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230028)(4636009)(39860400002)(366004)(346002)(396003)(136003)(376002)(451199021)(5660300002)(83380400001)(2906002)(7416002)(8676002)(8936002)(38100700002)(54906003)(966005)(6486002)(6506007)(478600001)(26005)(186003)(41300700001)(6512007)(86362001)(66556008)(9686003)(66476007)(6916009)(4326008)(316002)(66946007);DIR:OUT;SFP:1101;
+X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-MessageData-0: =?us-ascii?Q?ZyENK2BIcQ5IWgp+X9tHTNXPyEU2ibIZKb/CxXI7KPjGUXl2e1C2NjDvWLEy?=
+ =?us-ascii?Q?FCE7ql9oHYZnGFD7yPmqjKzdjlGs5nxc0B/2+1/78nTSY+PXPzsmedG1U2tY?=
+ =?us-ascii?Q?DvUsvPk90g7GOec06g20huyXnTlkyFZvqKG7wynGda5SpiSsVNy//xbKKmFZ?=
+ =?us-ascii?Q?4fVZkz195vhwdNJfyTeMiroNal2tPv7oyk+dypUhWTBO+nmm/Faf3afCyGle?=
+ =?us-ascii?Q?OaiDn9FjxPf7A/27VlZnDJjQjyO/fexi3lCnVV8U/pKbm7hvPGY/BllJmM8G?=
+ =?us-ascii?Q?2eOBjFGGuQ1EMorDmCL7tfIr+ub2FOYH49AOsGznIeT72IXfNLGVhvmprD0+?=
+ =?us-ascii?Q?fFE7sEfz7tVuivNsGnJGsIfT92Ty6uKfBXwZ9z/UQUZPET9RSvxunw0XwMtx?=
+ =?us-ascii?Q?QGQfUpC4EptsRoglaoOSIYmlUmRcNcEYGrgDwb7d88tkEtkiWYO8atgzsPzQ?=
+ =?us-ascii?Q?XQLG/fCAxX7nc+J2TNWud49o1zbXaaiWco/bBQn0AEspmz3iS+Z6cdBrPViB?=
+ =?us-ascii?Q?zR9zQGdjqGBFp4h7K7oZl78p0tgoUlGn7nKuJzEqsDUlo+crpHXEoo7YRFYo?=
+ =?us-ascii?Q?V7pI73iJpwdKBDo+Vv9ryW/xjGu6fYKKvTEUSpwOr5Hd21gBFpb9lY/jjOxP?=
+ =?us-ascii?Q?aPUoiEH3y5Bi/hiPSf4MdeEN9kf+G7MtUTZg+7f9u4/WylIrqMqWudmaOsvR?=
+ =?us-ascii?Q?e002RKAENuJk9uJ7rG3ZkSRLGzNbtcRI/Y9IM3eJvpiRkHwqfpK+YMp3Ubdk?=
+ =?us-ascii?Q?2r55Bv+ixReWr0L2So9UjZZVYmHiRBpZmxXfHYO5RwlHo8EEMVZvs4d7+HZs?=
+ =?us-ascii?Q?Rz3UnkBnwXmmI89M7T6XhHnJYvU9crECnHqPA5QYuQj6uh6JOdbqOGJdFJce?=
+ =?us-ascii?Q?BUoQEw0dgszYgqG+u11LJ4TKPxdFdszj49y55tEKwVwugjvfc4s6JVGoLfdA?=
+ =?us-ascii?Q?x6JbPFmMjOq4xBLt5k//MKiyQX+sHUH0e53UC5JApyJmhbUhFd232DrdvfM9?=
+ =?us-ascii?Q?V2rskMU4Njjco3qKO5Gx85ybYeCc+9qyneJIzalvi0fd+Fl1RX9UcZQVrCmH?=
+ =?us-ascii?Q?76hN2qLIhVud1cwyqJeqJlV34hMTJ2CTBA3+aNfM2yWFDIXvBZDG84GZ1+HK?=
+ =?us-ascii?Q?VbhEgahty7wb+WNBZXeKBBhaRiqOeBH58cytgiU8ZUxZNeiyk/tC6orRSMZs?=
+ =?us-ascii?Q?SKjZAMAsIlxC1nJMqK5GOmlQbO8FmIiUAKzb/yLvGzARhMu7AAn2SENY7TQl?=
+ =?us-ascii?Q?WhGpF2oAsO/Whxg9cRrwB6cRPa7hAmTX86LiIc/hvKCx+FeKgjjAYM6TQHJG?=
+ =?us-ascii?Q?2RJRl/n1sVXTTvIGrLnW9KSSU6hcOrKNWVPBP6B4f1pnxEDmwvAEejfPhZ5W?=
+ =?us-ascii?Q?ynTzvyvS3nwiUKeNhTSwX21JZigGHyyh/6vR+sQHrHEo29GL38/ABjO21srJ?=
+ =?us-ascii?Q?zyod2d5ILmLm1CI7qxzq1zmCSgEGL1jfUlbgrdSdIlDO1Qn6xKiXar475e0q?=
+ =?us-ascii?Q?luHlPvAulu15qyucFAim1QDreiIygQX+AE+Q9Ek8f6da/gEG3gSSgR0vzoHK?=
+ =?us-ascii?Q?EKywRnJG3sP18fYRfnm2tUygPXqLy7J6vmVK60ZE?=
+X-OriginatorOrg: Nvidia.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: f49de129-5bb2-4bb7-a2a6-08db8ca56d99
+X-MS-Exchange-CrossTenant-AuthSource: DM6PR12MB3179.namprd12.prod.outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 25 Jul 2023 00:23:54.1641
+ (UTC)
+X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
+X-MS-Exchange-CrossTenant-Id: 43083d15-7273-40c1-b7db-39efd9ccc17a
+X-MS-Exchange-CrossTenant-MailboxType: HOSTED
+X-MS-Exchange-CrossTenant-UserPrincipalName: ReXHcJFhI812pCDjT2afAZrcaKRkKrRr85XtzIEtPfHZTzrKl/Dd8y2PkKPUY8EW4JYPcWveeNVV7H4KOl+Bwg==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: SJ0PR12MB5405
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-If IOCB_DIO_CALLER_COMP is set, utilize that to set kiocb->dio_complete
-handler and data for that callback. Rather than punt the completion to a
-workqueue, we pass back the handler and data to the issuer and will get
-a callback from a safe task context.
 
-Using the following fio job to randomly dio write 4k blocks at
-queue depths of 1..16:
+Luis Chamberlain <mcgrof@kernel.org> writes:
 
-fio --name=dio-write --filename=/data1/file --time_based=1 \
---runtime=10 --bs=4096 --rw=randwrite --norandommap --buffered=0 \
---cpus_allowed=4 --ioengine=io_uring --iodepth=$depth
+>> diff --git a/arch/x86/include/asm/tlbflush.h b/arch/x86/include/asm/tlbflush.h
+>> index 837e4a50281a..79c46da919b9 100644
+>> --- a/arch/x86/include/asm/tlbflush.h
+>> +++ b/arch/x86/include/asm/tlbflush.h
+>> @@ -4,6 +4,7 @@
+>>  
+>>  #include <linux/mm_types.h>
+>>  #include <linux/sched.h>
+>> +#include <linux/mmu_notifier.h>
+>>  
+>>  #include <asm/processor.h>
+>>  #include <asm/cpufeature.h>
+>> @@ -282,6 +283,7 @@ static inline void arch_tlbbatch_add_pending(struct arch_tlbflush_unmap_batch *b
+>>  {
+>>  	inc_mm_tlb_gen(mm);
+>>  	cpumask_or(&batch->cpumask, &batch->cpumask, mm_cpumask(mm));
+>> +	mmu_notifier_arch_invalidate_secondary_tlbs(mm, 0, -1UL);
+>>  }
+>>  
+>>  static inline void arch_flush_tlb_batched_pending(struct mm_struct *mm)
+>> diff --git a/arch/x86/mm/tlb.c b/arch/x86/mm/tlb.c
+>> index 0b990fb56b66..2d253919b3e8 100644
+>> --- a/arch/x86/mm/tlb.c
+>> +++ b/arch/x86/mm/tlb.c
+>> @@ -1265,7 +1265,6 @@ void arch_tlbbatch_flush(struct arch_tlbflush_unmap_batch *batch)
+>>  
+>>  	put_flush_tlb_info();
+>>  	put_cpu();
+>> -	mmu_notifier_arch_invalidate_secondary_tlbs(current->mm, 0, -1UL);
+>>  }
+>>  
+>>  /*
+>
+> This patch also fixes a regression introduced on linux-next, the same
+> crash on arch_tlbbatch_flush() is reproducible with fstests generic/176
+> on XFS. This patch fixes that regression [0]. This should also close out
+> the syzbot crash too [1]
+>
+> [0] https://gist.github.com/mcgrof/b37fc8cf7e6e1b3935242681de1a83e2
+> [1] https://lore.kernel.org/all/0000000000003afcb4060135a664@google.com/
+>
+> Tested-by: Luis Chamberlain <mcgrof@kernel.org>
 
-shows the following results before and after this patch:
+Thanks Luis. The above fix/respin is already in yesterdays linux-next
+(next-20230724) so hopefully you are no longer seeing issues.
 
-	Stock	Patched		Diff
-=======================================
-QD1	155K	162K		+ 4.5%
-QD2	290K	313K		+ 7.9%
-QD4	533K	597K		+12.0%
-QD8	604K	827K		+36.9%
-QD16	615K	845K		+37.4%
-
-which shows nice wins all around. If we factored in per-IOP efficiency,
-the wins look even nicer. This becomes apparent as queue depth rises,
-as the offloaded workqueue completions runs out of steam.
-
-Reviewed-by: Darrick J. Wong <djwong@kernel.org>
-Reviewed-by: Christoph Hellwig <hch@lst.de>
-Signed-off-by: Jens Axboe <axboe@kernel.dk>
----
- fs/iomap/direct-io.c | 62 ++++++++++++++++++++++++++++++++++++++++++--
- 1 file changed, 60 insertions(+), 2 deletions(-)
-
-diff --git a/fs/iomap/direct-io.c b/fs/iomap/direct-io.c
-index b943bc5c7b18..bcd3f8cf5ea4 100644
---- a/fs/iomap/direct-io.c
-+++ b/fs/iomap/direct-io.c
-@@ -20,6 +20,7 @@
-  * Private flags for iomap_dio, must not overlap with the public ones in
-  * iomap.h:
-  */
-+#define IOMAP_DIO_CALLER_COMP	(1U << 26)
- #define IOMAP_DIO_INLINE_COMP	(1U << 27)
- #define IOMAP_DIO_WRITE_THROUGH	(1U << 28)
- #define IOMAP_DIO_NEED_SYNC	(1U << 29)
-@@ -132,6 +133,11 @@ ssize_t iomap_dio_complete(struct iomap_dio *dio)
- }
- EXPORT_SYMBOL_GPL(iomap_dio_complete);
- 
-+static ssize_t iomap_dio_deferred_complete(void *data)
-+{
-+	return iomap_dio_complete(data);
-+}
-+
- static void iomap_dio_complete_work(struct work_struct *work)
- {
- 	struct iomap_dio *dio = container_of(work, struct iomap_dio, aio.work);
-@@ -182,6 +188,31 @@ void iomap_dio_bio_end_io(struct bio *bio)
- 		goto release_bio;
- 	}
- 
-+	/*
-+	 * If this dio is flagged with IOMAP_DIO_CALLER_COMP, then schedule
-+	 * our completion that way to avoid an async punt to a workqueue.
-+	 */
-+	if (dio->flags & IOMAP_DIO_CALLER_COMP) {
-+		/* only polled IO cares about private cleared */
-+		iocb->private = dio;
-+		iocb->dio_complete = iomap_dio_deferred_complete;
-+
-+		/*
-+		 * Invoke ->ki_complete() directly. We've assigned our
-+		 * dio_complete callback handler, and since the issuer set
-+		 * IOCB_DIO_CALLER_COMP, we know their ki_complete handler will
-+		 * notice ->dio_complete being set and will defer calling that
-+		 * handler until it can be done from a safe task context.
-+		 *
-+		 * Note that the 'res' being passed in here is not important
-+		 * for this case. The actual completion value of the request
-+		 * will be gotten from dio_complete when that is run by the
-+		 * issuer.
-+		 */
-+		iocb->ki_complete(iocb, 0);
-+		goto release_bio;
-+	}
-+
- 	/*
- 	 * Async DIO completion that requires filesystem level completion work
- 	 * gets punted to a work queue to complete as the operation may require
-@@ -278,12 +309,17 @@ static loff_t iomap_dio_bio_iter(const struct iomap_iter *iter,
- 		 * after IO completion such as unwritten extent conversion) and
- 		 * the underlying device either supports FUA or doesn't have
- 		 * a volatile write cache. This allows us to avoid cache flushes
--		 * on IO completion.
-+		 * on IO completion. If we can't use writethrough and need to
-+		 * sync, disable in-task completions as dio completion will
-+		 * need to call generic_write_sync() which will do a blocking
-+		 * fsync / cache flush call.
- 		 */
- 		if (!(iomap->flags & (IOMAP_F_SHARED|IOMAP_F_DIRTY)) &&
- 		    (dio->flags & IOMAP_DIO_WRITE_THROUGH) &&
- 		    (bdev_fua(iomap->bdev) || !bdev_write_cache(iomap->bdev)))
- 			use_fua = true;
-+		else if (dio->flags & IOMAP_DIO_NEED_SYNC)
-+			dio->flags &= ~IOMAP_DIO_CALLER_COMP;
- 	}
- 
- 	/*
-@@ -298,10 +334,23 @@ static loff_t iomap_dio_bio_iter(const struct iomap_iter *iter,
- 		goto out;
- 
- 	/*
--	 * We can only poll for single bio I/Os.
-+	 * We can only do deferred completion for pure overwrites that
-+	 * don't require additional IO at completion. This rules out
-+	 * writes that need zeroing or extent conversion, extend
-+	 * the file size, or issue journal IO or cache flushes
-+	 * during completion processing.
- 	 */
- 	if (need_zeroout ||
-+	    ((dio->flags & IOMAP_DIO_NEED_SYNC) && !use_fua) ||
- 	    ((dio->flags & IOMAP_DIO_WRITE) && pos >= i_size_read(inode)))
-+		dio->flags &= ~IOMAP_DIO_CALLER_COMP;
-+
-+	/*
-+	 * The rules for polled IO completions follow the guidelines as the
-+	 * ones we set for inline and deferred completions. If none of those
-+	 * are available for this IO, clear the polled flag.
-+	 */
-+	if (!(dio->flags & (IOMAP_DIO_INLINE_COMP|IOMAP_DIO_CALLER_COMP)))
- 		dio->iocb->ki_flags &= ~IOCB_HIPRI;
- 
- 	if (need_zeroout) {
-@@ -547,6 +596,15 @@ __iomap_dio_rw(struct kiocb *iocb, struct iov_iter *iter,
- 		iomi.flags |= IOMAP_WRITE;
- 		dio->flags |= IOMAP_DIO_WRITE;
- 
-+		/*
-+		 * Flag as supporting deferred completions, if the issuer
-+		 * groks it. This can avoid a workqueue punt for writes.
-+		 * We may later clear this flag if we need to do other IO
-+		 * as part of this IO completion.
-+		 */
-+		if (iocb->ki_flags & IOCB_DIO_CALLER_COMP)
-+			dio->flags |= IOMAP_DIO_CALLER_COMP;
-+
- 		if (dio_flags & IOMAP_DIO_OVERWRITE_ONLY) {
- 			ret = -EAGAIN;
- 			if (iomi.pos >= dio->i_size ||
--- 
-2.40.1
+>   Luis
 
