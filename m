@@ -2,248 +2,325 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 33064EB64DD
-	for <linux-xfs@archiver.kernel.org>; Tue, 25 Jul 2023 04:00:50 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8D10EC04A6A
+	for <linux-xfs@archiver.kernel.org>; Tue, 25 Jul 2023 09:03:35 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229824AbjGYEAs (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 25 Jul 2023 00:00:48 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46222 "EHLO
+        id S232889AbjGYJDe (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 25 Jul 2023 05:03:34 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45892 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229452AbjGYEAr (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 25 Jul 2023 00:00:47 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6C8B5E57
-        for <linux-xfs@vger.kernel.org>; Mon, 24 Jul 2023 21:00:46 -0700 (PDT)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature RSA-PSS (2048 bits))
-        (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 013E461507
-        for <linux-xfs@vger.kernel.org>; Tue, 25 Jul 2023 04:00:46 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 5765AC433C8;
-        Tue, 25 Jul 2023 04:00:45 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1690257645;
-        bh=OauOWu+rLo7kLBW6I959b4NtdnfNcdqOwnRl8hmko2k=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=oeDfK49Xa2bzmCwDlcr+BIndG9BnQjb+8Hzh1ZnsKLpGe5Yv1LmuToXnQx/330NDJ
-         089wbHxs/g9GOU9Ij/CjpCy+ov4sgoNtaQMZ7ukMlEFhSWpsQequkMBG+h1/pLao0t
-         p6hq5o1LZYPYCOUNjspvJe8gzEwsAdUVQJ17jeQm2T0lGflL6eVe9zjs5YPduJEUDf
-         1Pi/PJH3V5OlUWF9QPti0AbXVG9xwrMUKNHuK/zwNj54vRPs2heEuFEw2e4b7xwFm0
-         QXPuV6IHFzYuCxVlRvwUi5UBqOqjCh0b8VrQoZuqocoofIm1SMGAif734XxAydSoT1
-         uEtdIO3UFt2sw==
-Date:   Mon, 24 Jul 2023 21:00:44 -0700
-From:   "Darrick J. Wong" <djwong@kernel.org>
-To:     Christoph Hellwig <hch@lst.de>, Dave Chinner <david@fromorbit.com>
-Cc:     linux-xfs@vger.kernel.org
-Subject: Re: [PATCH] xfs: remove the XFS_IOC_ATTRLIST_BY_HANDLE definitions
- out of xfs_fs.h
-Message-ID: <20230725040044.GY11352@frogsfrogsfrogs>
-References: <20230724154404.34524-1-hch@lst.de>
- <20230724154404.34524-2-hch@lst.de>
- <20230725034913.GX11352@frogsfrogsfrogs>
+        with ESMTP id S233182AbjGYJDU (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 25 Jul 2023 05:03:20 -0400
+Received: from out-13.mta1.migadu.com (out-13.mta1.migadu.com [IPv6:2001:41d0:203:375::d])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3BED82107
+        for <linux-xfs@vger.kernel.org>; Tue, 25 Jul 2023 02:03:05 -0700 (PDT)
+Message-ID: <3648ca69-d65e-8431-135a-a5738586bc25@linux.dev>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.dev; s=key1;
+        t=1690275782;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=jkjBh/Kp2KZsbd5A9bxpjAJZxN02Eft+lFTspqPnOCk=;
+        b=C86+NnAgVOWWduY0bypLj9pEd8+f7K2hQWQRdMiOl+4lNoex/sNqQF/OzRY+XF6R/pQj3x
+        RJfrwmBw/U62Xz7gGIQfDrsff33dmTRFy6JUY2ZoASoV8vvmjWXkOHfSOC62P8ONIDS3dq
+        14Z/qjc5TC07VTaeF50qDKBsNsdzhz4=
+Date:   Tue, 25 Jul 2023 17:02:47 +0800
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20230725034913.GX11352@frogsfrogsfrogs>
+Subject: Re: [PATCH v2 03/47] mm: shrinker: add infrastructure for dynamically
+ allocating shrinker
+To:     Qi Zheng <zhengqi.arch@bytedance.com>
+Cc:     linux-kernel@vger.kernel.org, linux-mm@kvack.org, x86@kernel.org,
+        kvm@vger.kernel.org, xen-devel@lists.xenproject.org,
+        linux-erofs@lists.ozlabs.org,
+        linux-f2fs-devel@lists.sourceforge.net, cluster-devel@redhat.com,
+        linux-nfs@vger.kernel.org, linux-mtd@lists.infradead.org,
+        rcu@vger.kernel.org, netdev@vger.kernel.org,
+        dri-devel@lists.freedesktop.org, linux-arm-msm@vger.kernel.org,
+        dm-devel@redhat.com, linux-raid@vger.kernel.org,
+        linux-bcache@vger.kernel.org,
+        virtualization@lists.linux-foundation.org,
+        linux-fsdevel@vger.kernel.org, linux-ext4@vger.kernel.org,
+        linux-xfs@vger.kernel.org, linux-btrfs@vger.kernel.org,
+        akpm@linux-foundation.org, david@fromorbit.com, tkhai@ya.ru,
+        vbabka@suse.cz, roman.gushchin@linux.dev, djwong@kernel.org,
+        brauner@kernel.org, paulmck@kernel.org, tytso@mit.edu,
+        steven.price@arm.com, cel@kernel.org, senozhatsky@chromium.org,
+        yujie.liu@intel.com, gregkh@linuxfoundation.org
+References: <20230724094354.90817-1-zhengqi.arch@bytedance.com>
+ <20230724094354.90817-4-zhengqi.arch@bytedance.com>
+X-Report-Abuse: Please report any abuse attempt to abuse@migadu.com and include these headers.
+From:   Muchun Song <muchun.song@linux.dev>
+In-Reply-To: <20230724094354.90817-4-zhengqi.arch@bytedance.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 8bit
+X-Migadu-Flow: FLOW_OUT
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Mon, Jul 24, 2023 at 08:49:13PM -0700, Darrick J. Wong wrote:
-> On Mon, Jul 24, 2023 at 08:44:04AM -0700, Christoph Hellwig wrote:
-> > The xfs_attrlist and xfs_attrlist_ent structures as well as the
-> > XFS_ATTR_* flags used by the XFS_IOC_ATTRLIST_BY_HANDLE are a very
-> > odd and special kind of UAPI in that there is no userspace actually
-> > ever using the definition.  The reason for that is that libattr has
-> > copies of these definitions without the xfs_ prefix that are used
-> > by libattr for the emulation of the IRIX-style attr calls, to which
-> > XFS_IOC_ATTRLIST_BY_HANDLE is an extension, and users of
-> > XFS_IOC_ATTRLIST_BY_HANDLE like xfsdump (though libhandle in xfsprogs)
-> > use that definition.
-> > 
-> > So far, so odd, but with the change away from the deprecated and
-> > dangerous "[1]" syntax for variable sized array, the kernel now
-> > has actually changed the sizeof these structures, so even if some
-> > obscure unkown userspace actually used it, it could easily get in
-> > trouble next time xfs_fs.h gets synced to xfsprogs and it picks it up.
-> > 
-> > Move the definition to a new private xfs_ioctl_attr.h so that it
-> > stops getting exposed in xfsprogs with the next sync.
-> > 
-> > Signed-off-by: Christoph Hellwig <hch@lst.de>
-> > ---
-> >  fs/xfs/libxfs/xfs_fs.h  | 36 -------------------------------
-> >  fs/xfs/xfs_ioctl.c      |  1 +
-> >  fs/xfs/xfs_ioctl_attr.h | 48 +++++++++++++++++++++++++++++++++++++++++
-> >  3 files changed, 49 insertions(+), 36 deletions(-)
-> >  create mode 100644 fs/xfs/xfs_ioctl_attr.h
-> > 
-> > diff --git a/fs/xfs/libxfs/xfs_fs.h b/fs/xfs/libxfs/xfs_fs.h
-> > index 2cbf9ea39b8cc4..d069a72b8ae246 100644
-> > --- a/fs/xfs/libxfs/xfs_fs.h
-> > +++ b/fs/xfs/libxfs/xfs_fs.h
-> > @@ -560,46 +560,10 @@ typedef struct xfs_fsop_handlereq {
-> >  	__u32		__user *ohandlen;/* user buffer length		*/
-> >  } xfs_fsop_handlereq_t;
-> >  
-> > -/*
-> > - * Compound structures for passing args through Handle Request interfaces
-> > - * xfs_attrlist_by_handle, xfs_attrmulti_by_handle
-> > - * - ioctls: XFS_IOC_ATTRLIST_BY_HANDLE, and XFS_IOC_ATTRMULTI_BY_HANDLE
-> > - */
-> > -
-> > -/*
-> > - * Flags passed in xfs_attr_multiop.am_flags for the attr ioctl interface.
-> > - *
-> > - * NOTE: Must match the values declared in libattr without the XFS_IOC_ prefix.
-> > - */
-> > -#define XFS_IOC_ATTR_ROOT	0x0002	/* use attrs in root namespace */
-> > -#define XFS_IOC_ATTR_SECURE	0x0008	/* use attrs in security namespace */
-> > -#define XFS_IOC_ATTR_CREATE	0x0010	/* fail if attr already exists */
-> > -#define XFS_IOC_ATTR_REPLACE	0x0020	/* fail if attr does not exist */
-> > -
-> >  typedef struct xfs_attrlist_cursor {
-> >  	__u32		opaque[4];
-> >  } xfs_attrlist_cursor_t;
-> >  
-> > -/*
-> > - * Define how lists of attribute names are returned to userspace from the
-> > - * XFS_IOC_ATTRLIST_BY_HANDLE ioctl.  struct xfs_attrlist is the header at the
-> > - * beginning of the returned buffer, and a each entry in al_offset contains the
-> > - * relative offset of an xfs_attrlist_ent containing the actual entry.
-> > - *
-> > - * NOTE: struct xfs_attrlist must match struct attrlist defined in libattr, and
-> > - * struct xfs_attrlist_ent must match struct attrlist_ent defined in libattr.
-> > - */
-> > -struct xfs_attrlist {
-> > -	__s32	al_count;	/* number of entries in attrlist */
-> > -	__s32	al_more;	/* T/F: more attrs (do call again) */
-> > -	__s32	al_offset[];	/* byte offsets of attrs [var-sized] */
-> > -};
-> > -
-> > -struct xfs_attrlist_ent {	/* data from attr_list() */
-> > -	__u32	a_valuelen;	/* number bytes in value of attr */
-> > -	char	a_name[];	/* attr name (NULL terminated) */
-> > -};
-> > -
-> >  typedef struct xfs_fsop_attrlist_handlereq {
-> 
-> /me is confused by this patch -- attributes.h in libattr also has
-> definitions for a struct attrlist_cursor and a struct attr_multiop, so
-> why not remove them from xfs_fs.h?
-> 
-> OTOH, there's XFS_IOC_ATTR{LIST,MULTI}_BY_HANDLE -- these ioctls format
-> the user's buffer into xfs_attrlist and xfs_attrlist_ent structs.  They
-> haven't been deprecated or removed, so why wouldn't we leave all these
-> structs exactly where they are?
-> 
-> Or: Why not hoist all this to include/uapi/?
 
-[adding dchinner]
 
-Further questions, now that I've recalled trying to program xfs_scrub to
-use ATTRLIST_BY_HANDLE:
+On 2023/7/24 17:43, Qi Zheng wrote:
+> Currently, the shrinker instances can be divided into the following three
+> types:
+>
+> a) global shrinker instance statically defined in the kernel, such as
+>     workingset_shadow_shrinker.
+>
+> b) global shrinker instance statically defined in the kernel modules, such
+>     as mmu_shrinker in x86.
+>
+> c) shrinker instance embedded in other structures.
+>
+> For case a, the memory of shrinker instance is never freed. For case b,
+> the memory of shrinker instance will be freed after synchronize_rcu() when
+> the module is unloaded. For case c, the memory of shrinker instance will
+> be freed along with the structure it is embedded in.
+>
+> In preparation for implementing lockless slab shrink, we need to
+> dynamically allocate those shrinker instances in case c, then the memory
+> can be dynamically freed alone by calling kfree_rcu().
+>
+> So this commit adds the following new APIs for dynamically allocating
+> shrinker, and add a private_data field to struct shrinker to record and
+> get the original embedded structure.
+>
+> 1. shrinker_alloc()
+>
+> Used to allocate shrinker instance itself and related memory, it will
+> return a pointer to the shrinker instance on success and NULL on failure.
+>
+> 2. shrinker_free_non_registered()
+>
+> Used to destroy the non-registered shrinker instance.
 
-Why is it that ATTR_ENTRY is defined in the libattr headers but not
-xfs_fs.h?  xfsprogs has its own attr_list_by_handle function in
-libhandle that does all the work of iterating information out of the
-kernel, but then the poor caller doesn't get a helper function to walk
-the resulting buffer...?
+At least I don't like this name. I know you want to tell others
+this function only should be called when shrinker has not been
+registed but allocated. Maybe shrinker_free() is more simple.
+And and a comment to tell the users when to use it.
 
-Even more strangely, libattr has that "attr_list" function, but all that
-does is calls listxattr() and then formats the listxattr output into
-ATTRLIST_BY_HANDLE format.  listxattr is (AFAICT) a much worse version
-of ATTRLIST since the VFS implementation forces a max buffer size of 64k.
-Why would anyone want that?
+>
+> 3. shrinker_register()
+>
+> Used to register the shrinker instance, which is same as the current
+> register_shrinker_prepared().
+>
+> 4. shrinker_unregister()
+>
+> Used to unregister and free the shrinker instance.
+>
+> In order to simplify shrinker-related APIs and make shrinker more
+> independent of other kernel mechanisms, subsequent submissions will use
+> the above API to convert all shrinkers (including case a and b) to
+> dynamically allocated, and then remove all existing APIs.
+>
+> This will also have another advantage mentioned by Dave Chinner:
+>
+> ```
+> The other advantage of this is that it will break all the existing
+> out of tree code and third party modules using the old API and will
+> no longer work with a kernel using lockless slab shrinkers. They
+> need to break (both at the source and binary levels) to stop bad
+> things from happening due to using uncoverted shrinkers in the new
+> setup.
+> ```
+>
+> Signed-off-by: Qi Zheng <zhengqi.arch@bytedance.com>
+> ---
+>   include/linux/shrinker.h |   6 +++
+>   mm/shrinker.c            | 113 +++++++++++++++++++++++++++++++++++++++
+>   2 files changed, 119 insertions(+)
+>
+> diff --git a/include/linux/shrinker.h b/include/linux/shrinker.h
+> index 961cb84e51f5..296f5e163861 100644
+> --- a/include/linux/shrinker.h
+> +++ b/include/linux/shrinker.h
+> @@ -70,6 +70,8 @@ struct shrinker {
+>   	int seeks;	/* seeks to recreate an obj */
+>   	unsigned flags;
+>   
+> +	void *private_data;
+> +
+>   	/* These are for internal use */
+>   	struct list_head list;
+>   #ifdef CONFIG_MEMCG
+> @@ -98,6 +100,10 @@ struct shrinker {
+>   
+>   unsigned long shrink_slab(gfp_t gfp_mask, int nid, struct mem_cgroup *memcg,
+>   			  int priority);
+> +struct shrinker *shrinker_alloc(unsigned int flags, const char *fmt, ...);
+> +void shrinker_free_non_registered(struct shrinker *shrinker);
+> +void shrinker_register(struct shrinker *shrinker);
+> +void shrinker_unregister(struct shrinker *shrinker);
+>   
+>   extern int __printf(2, 3) prealloc_shrinker(struct shrinker *shrinker,
+>   					    const char *fmt, ...);
+> diff --git a/mm/shrinker.c b/mm/shrinker.c
+> index 0a32ef42f2a7..d820e4cc5806 100644
+> --- a/mm/shrinker.c
+> +++ b/mm/shrinker.c
+> @@ -548,6 +548,119 @@ unsigned long shrink_slab(gfp_t gfp_mask, int nid, struct mem_cgroup *memcg,
+>   	return freed;
+>   }
+>   
+> +struct shrinker *shrinker_alloc(unsigned int flags, const char *fmt, ...)
+> +{
+> +	struct shrinker *shrinker;
+> +	unsigned int size;
+> +	va_list __maybe_unused ap;
+> +	int err;
+> +
+> +	shrinker = kzalloc(sizeof(struct shrinker), GFP_KERNEL);
+> +	if (!shrinker)
+> +		return NULL;
+> +
+> +#ifdef CONFIG_SHRINKER_DEBUG
+> +	va_start(ap, fmt);
+> +	shrinker->name = kvasprintf_const(GFP_KERNEL, fmt, ap);
+> +	va_end(ap);
+> +	if (!shrinker->name)
+> +		goto err_name;
+> +#endif
 
-libhandle *also* doesn't define struct attrlist_ent, which makes it even
-more weird that it wraps a system call to return data but doesn't define
-the format of that data.
+So why not introduce another helper to handle this and declare it
+as a void function when !CONFIG_SHRINKER_DEBUG? Something like the
+following:
 
-Oh, and then there was that other weird thing: when I wired up
-ATTRLIST_BY_HANDLE into xfs_scrub, I then discovered that the
-implementation had a bug where it forgot to write the cursor contents
-back to userspace, which meant that userspace will continuously requery
-the first buffer's worth of names until the sun dies.
+#ifdef CONFIG_SHRINKER_DEBUG
+static int shrinker_debugfs_name_alloc(struct shrinker *shrinker, const 
+char *fmt,
+                                        va_list vargs)
 
-Does anyone actually /use/ these extended extended attribute functions?
+{
+     shrinker->name = kvasprintf_const(GFP_KERNEL, fmt, vargs);
+     return shrinker->name ? 0 : -ENOMEM;
+}
+#else
+static int shrinker_debugfs_name_alloc(struct shrinker *shrinker, const 
+char *fmt,
+                                        va_list vargs)
+{
+     return 0;
+}
+#endif
 
-I get the feeling I'm opening a weird can of "XFS porting to Linux"
-friction that I don't know about...
+> +	shrinker->flags = flags;
+> +
+> +	if (flags & SHRINKER_MEMCG_AWARE) {
+> +		err = prealloc_memcg_shrinker(shrinker);
+> +		if (err == -ENOSYS)
+> +			shrinker->flags &= ~SHRINKER_MEMCG_AWARE;
+> +		else if (err == 0)
+> +			goto done;
+> +		else
+> +			goto err_flags;
+> +	}
+> +
+> +	/*
+> +	 * The nr_deferred is available on per memcg level for memcg aware
+> +	 * shrinkers, so only allocate nr_deferred in the following cases:
+> +	 *  - non memcg aware shrinkers
+> +	 *  - !CONFIG_MEMCG
+> +	 *  - memcg is disabled by kernel command line
+> +	 */
+> +	size = sizeof(*shrinker->nr_deferred);
+> +	if (flags & SHRINKER_NUMA_AWARE)
+> +		size *= nr_node_ids;
+> +
+> +	shrinker->nr_deferred = kzalloc(size, GFP_KERNEL);
+> +	if (!shrinker->nr_deferred)
+> +		goto err_flags;
+> +
+> +done:
+> +	return shrinker;
+> +
+> +err_flags:
+> +#ifdef CONFIG_SHRINKER_DEBUG
+> +	kfree_const(shrinker->name);
+> +	shrinker->name = NULL;
 
---D
+This could be shrinker_debugfs_name_free()
 
-> --D
-> 
-> >  	struct xfs_fsop_handlereq	hreq; /* handle interface structure */
-> >  	struct xfs_attrlist_cursor	pos; /* opaque cookie, list offset */
-> > diff --git a/fs/xfs/xfs_ioctl.c b/fs/xfs/xfs_ioctl.c
-> > index 55bb01173cde8c..7d9154e0e198f6 100644
-> > --- a/fs/xfs/xfs_ioctl.c
-> > +++ b/fs/xfs/xfs_ioctl.c
-> > @@ -38,6 +38,7 @@
-> >  #include "xfs_reflink.h"
-> >  #include "xfs_ioctl.h"
-> >  #include "xfs_xattr.h"
-> > +#include "xfs_ioctl_attr.h"
-> >  
-> >  #include <linux/mount.h>
-> >  #include <linux/namei.h>
-> > diff --git a/fs/xfs/xfs_ioctl_attr.h b/fs/xfs/xfs_ioctl_attr.h
-> > new file mode 100644
-> > index 00000000000000..7bf3046665c322
-> > --- /dev/null
-> > +++ b/fs/xfs/xfs_ioctl_attr.h
-> > @@ -0,0 +1,48 @@
-> > +/* SPDX-License-Identifier: LGPL-2.1 */
-> > +/*
-> > + * Copyright (c) 1995-2005 Silicon Graphics, Inc.
-> > + * All Rights Reserved.
-> > + */
-> > +#ifndef _XFS_ATTR_IOCTL_H
-> > +#define _XFS_ATTR_IOCTL_H
-> > +
-> > +/*
-> > + * Attr structures for passing through XFS_IOC_ATTRLIST_BY_HANDLE.
-> > + *
-> > + * These are UAPIs, but in a rather strange way - nothing in userspace uses
-> > + * these declarations directly, but instead they use separate definitions
-> > + * in libattr that are derived from the same IRIX interface and must stay
-> > + * binary compatible forever.  They generally match the names in this file,
-> > + * but without the xfs_ or XFS_ prefix.
-> > + *
-> > + * For extra fun the kernel version has replace the [1] sized arrays for
-> > + * variable sized parts with the newer [] syntax that produces the same
-> > + * structure layout, but can produce different sizeof results.
-> > + */
-> > +
-> > +/*
-> > + * Flags passed in xfs_attr_multiop.am_flags for the attr ioctl interface.
-> > + */
-> > +#define XFS_IOC_ATTR_ROOT	0x0002	/* use attrs in root namespace */
-> > +#define XFS_IOC_ATTR_SECURE	0x0008	/* use attrs in security namespace */
-> > +#define XFS_IOC_ATTR_CREATE	0x0010	/* fail if attr already exists */
-> > +#define XFS_IOC_ATTR_REPLACE	0x0020	/* fail if attr does not exist */
-> > +
-> > +/*
-> > + * Define how lists of attribute names are returned to userspace from the
-> > + * XFS_IOC_ATTRLIST_BY_HANDLE ioctl.  struct xfs_attrlist is the header at the
-> > + * beginning of the returned buffer, and a each entry in al_offset contains the
-> > + * relative offset of an xfs_attrlist_ent containing the actual entry.
-> > + */
-> > +struct xfs_attrlist {
-> > +	__s32	al_count;	/* number of entries in attrlist */
-> > +	__s32	al_more;	/* T/F: more attrs (do call again) */
-> > +	__s32	al_offset[];	/* byte offsets of attrs [var-sized] */
-> > +};
-> > +
-> > +struct xfs_attrlist_ent {	/* data from attr_list() */
-> > +	__u32	a_valuelen;	/* number bytes in value of attr */
-> > +	char	a_name[];	/* attr name (NULL terminated) */
-> > +};
-> > +
-> > +#endif /* _XFS_ATTR_IOCTL_H */
-> > -- 
-> > 2.39.2
-> > 
+> +err_name:
+> +#endif
+> +	kfree(shrinker);
+> +	return NULL;
+> +}
+> +EXPORT_SYMBOL(shrinker_alloc);
+> +
+> +void shrinker_free_non_registered(struct shrinker *shrinker)
+> +{
+> +#ifdef CONFIG_SHRINKER_DEBUG
+> +	kfree_const(shrinker->name);
+> +	shrinker->name = NULL;
+
+This could be shrinker_debugfs_name_free()
+
+> +#endif
+> +	if (shrinker->flags & SHRINKER_MEMCG_AWARE) {
+> +		down_write(&shrinker_rwsem);
+> +		unregister_memcg_shrinker(shrinker);
+> +		up_write(&shrinker_rwsem);
+> +	}
+> +
+> +	kfree(shrinker->nr_deferred);
+> +	shrinker->nr_deferred = NULL;
+> +
+> +	kfree(shrinker);
+> +}
+> +EXPORT_SYMBOL(shrinker_free_non_registered);
+> +
+> +void shrinker_register(struct shrinker *shrinker)
+> +{
+> +	down_write(&shrinker_rwsem);
+> +	list_add_tail(&shrinker->list, &shrinker_list);
+> +	shrinker->flags |= SHRINKER_REGISTERED;
+> +	shrinker_debugfs_add(shrinker);
+> +	up_write(&shrinker_rwsem);
+> +}
+> +EXPORT_SYMBOL(shrinker_register);
+> +
+> +void shrinker_unregister(struct shrinker *shrinker)
+
+You have made all shrinkers to be dynamically allocated, so
+we should prevent users from allocating shrinkers statically and
+use this function to unregister it. It is better to add a
+flag like SHRINKER_ALLOCATED which is set in shrinker_alloc(),
+and check whether it is set in shrinker_unregister(), if not
+maybe a warning should be added to tell the users what happened.
+
+> +{
+> +	struct dentry *debugfs_entry;
+> +	int debugfs_id;
+> +
+> +	if (!shrinker || !(shrinker->flags & SHRINKER_REGISTERED))
+> +		return;
+> +
+> +	down_write(&shrinker_rwsem);
+> +	list_del(&shrinker->list);
+> +	shrinker->flags &= ~SHRINKER_REGISTERED;
+> +	if (shrinker->flags & SHRINKER_MEMCG_AWARE)
+> +		unregister_memcg_shrinker(shrinker);
+> +	debugfs_entry = shrinker_debugfs_detach(shrinker, &debugfs_id);
+
+In the internal of this function, you also could use
+shrinker_debugfs_name_free().
+
+Thanks.
+
+> +	up_write(&shrinker_rwsem);
+> +
+> +	shrinker_debugfs_remove(debugfs_entry, debugfs_id);
+> +
+> +	kfree(shrinker->nr_deferred);
+> +	shrinker->nr_deferred = NULL;
+> +
+> +	kfree(shrinker);
+> +}
+> +EXPORT_SYMBOL(shrinker_unregister);
+> +
+>   /*
+>    * Add a shrinker callback to be called from the vm.
+>    */
+
