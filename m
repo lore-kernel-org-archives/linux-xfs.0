@@ -2,182 +2,176 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 96AB5C001B0
-	for <linux-xfs@archiver.kernel.org>; Wed, 26 Jul 2023 14:55:36 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id ADE2AC001DF
+	for <linux-xfs@archiver.kernel.org>; Wed, 26 Jul 2023 15:23:27 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233621AbjGZOzf (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 26 Jul 2023 10:55:35 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40338 "EHLO
+        id S234818AbjGZPX0 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 26 Jul 2023 11:23:26 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36520 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S234120AbjGZOze (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 26 Jul 2023 10:55:34 -0400
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8DEC12685
-        for <linux-xfs@vger.kernel.org>; Wed, 26 Jul 2023 07:54:50 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1690383289;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=GInM7LYBvIjPovjW2qhN9wZ9AsgqFw8qJN5/ZwzfhKI=;
-        b=JI4lBV14htOS2Mck6REV5zKShhygPf7baO11NncvKUrAnnUcDr/4iXONuA62mtC7waTtr2
-        FEbcna/VhoR+qTzOtDOv6Y37+yJ3bTuiQ3haEmoax451QLcdpntFKG7R/fCsUxuR9puKgg
-        yoYIxfJa/4t49q/5diyYzY5RWKYE1DA=
-Received: from mail-pl1-f200.google.com (mail-pl1-f200.google.com
- [209.85.214.200]) by relay.mimecast.com with ESMTP with STARTTLS
- (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
- us-mta-642-K3p0xBcvOwSg42lxoxZjCQ-1; Wed, 26 Jul 2023 10:54:48 -0400
-X-MC-Unique: K3p0xBcvOwSg42lxoxZjCQ-1
-Received: by mail-pl1-f200.google.com with SMTP id d9443c01a7336-1bb9e556af0so18559765ad.0
-        for <linux-xfs@vger.kernel.org>; Wed, 26 Jul 2023 07:54:48 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20221208; t=1690383287; x=1690988087;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=GInM7LYBvIjPovjW2qhN9wZ9AsgqFw8qJN5/ZwzfhKI=;
-        b=B4Qktgt/9lTDXKvf8x0P8hwfV8oxAp+KSSnW0Z3VpOJgpXQiC0HTpjo8N61ymodF5d
-         tayudfy0VG1URxEOKK59b/IrnLgd4mPcJCQO+Rwryl6WGfI3jihmpL9PAnLqbragsoZt
-         f9kchTS6UVCzdBtcEuTPlIqdUv1wxmx/3WHwv/9/0jD/4jN7cQIagIYSAmm5ywRpOmkf
-         28kb8gNBR33QtUTJntpKqj7jGBoKQPk8R0d31+vxiKAEYlQn1XA2MzPeFC8nUOPB3zuI
-         h+enjHTJgcTxZB5n6NWICElQSagEEqglSdW1Q4Us+yPPgunMGB8U2TeRchGS/Ok4Krob
-         hN3A==
-X-Gm-Message-State: ABy/qLZnH7XdX/DHqyISvXQUEr5nr47/iFdMdS0ka3kXyC54XJrA0qtH
-        kjytEh1tudsDIhNYVgROBjmGsvE/QiP5wVwRtWMjJawj1x8jEAIS08JfozTmIli0PukBtKzYgRx
-        U3NHn6RRuCHKbQTvYt7nOLVXn0MwCaDrPGg==
-X-Received: by 2002:a17:902:e742:b0:1bb:a922:4a1a with SMTP id p2-20020a170902e74200b001bba9224a1amr2265400plf.6.1690383286902;
-        Wed, 26 Jul 2023 07:54:46 -0700 (PDT)
-X-Google-Smtp-Source: APBJJlE1rDoCtwsVjgxw9H4T4mr3lGe+HQhHV98EaNwkWimPShRCGOv+HZVRmLwAXBWneHChuFjabA==
-X-Received: by 2002:a17:902:e742:b0:1bb:a922:4a1a with SMTP id p2-20020a170902e74200b001bba9224a1amr2265379plf.6.1690383286521;
-        Wed, 26 Jul 2023 07:54:46 -0700 (PDT)
-Received: from zlang-mailbox ([43.228.180.230])
-        by smtp.gmail.com with ESMTPSA id 20-20020a170902e9d400b001bba27d1b65sm6755032plk.85.2023.07.26.07.54.44
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 26 Jul 2023 07:54:46 -0700 (PDT)
-Date:   Wed, 26 Jul 2023 22:54:41 +0800
-From:   Zorro Lang <zlang@redhat.com>
-To:     Theodore Ts'o <tytso@mit.edu>
-Cc:     "Darrick J. Wong" <djwong@kernel.org>, linux-xfs@vger.kernel.org,
-        fstests@vger.kernel.org
-Subject: Re: [PATCH 1/2] check: add a -smoketest option
-Message-ID: <20230726145441.lbzzokwigrztimyq@zlang-mailbox>
-References: <168972905065.1698606.6829635791058054610.stgit@frogsfrogsfrogs>
- <168972905626.1698606.12419796694170752316.stgit@frogsfrogsfrogs>
- <20230719151024.ef7vgjmtoxwxkmjm@zlang-mailbox>
- <20230719152907.GA11377@frogsfrogsfrogs>
- <20230719161115.byva7tvwoafkesga@zlang-mailbox>
- <20230720022756.GH11352@frogsfrogsfrogs>
- <20230720143433.n5gkhukdkz7s5ab7@zlang-mailbox>
- <20230726000524.GG11340@frogsfrogsfrogs>
- <20230726060102.GB30264@mit.edu>
+        with ESMTP id S233963AbjGZPXX (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 26 Jul 2023 11:23:23 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 463D519A0
+        for <linux-xfs@vger.kernel.org>; Wed, 26 Jul 2023 08:23:22 -0700 (PDT)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange X25519 server-signature RSA-PSS (2048 bits))
+        (No client certificate requested)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 9EB8761B3B
+        for <linux-xfs@vger.kernel.org>; Wed, 26 Jul 2023 15:23:21 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 0733EC433C7;
+        Wed, 26 Jul 2023 15:23:21 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1690385001;
+        bh=VP0aa4UG+E5T/PHkZK2nCe1hiXm5U4CxuJm+3lRbVhU=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=gbPdmlXtRuA/tjusDzk4XVmtytfjOVj7aWYFeuNTUyG/qJ1I61tSNPzaGtTtUrjVf
+         lOh3DU6zRo+y9myUQbNNeMHb/dS1VmxZrpiIWj/gGN2UBOMnt14FwAyW49fPiClev0
+         g7M0Ka4pbxVPveV1wBS2uYFht+UHtJ4l9TOXNjcflPJiNs9gyOHEbgmgau1HLzi4cL
+         BsKDC0b4BjUjvaFAreqJC9xTu4tMIi2Obr88KpANSpV5iRwfP2wvW9S8ZIvm17OYbe
+         0BEwEaMDPHebxd1OsxLCapu4Dm3Js96ubonHk+bdP+3E5bhZCKfeG/bJAqKrg7nO6a
+         35KI6rGQiZ1zg==
+Date:   Wed, 26 Jul 2023 08:23:20 -0700
+From:   "Darrick J. Wong" <djwong@kernel.org>
+To:     Dave Chinner <david@fromorbit.com>
+Cc:     Wengang Wang <wen.gang.wang@oracle.com>,
+        "linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>,
+        Srikanth C S <srikanth.c.s@oracle.com>
+Subject: Re: Question: reserve log space at IO time for recover
+Message-ID: <20230726152320.GA11352@frogsfrogsfrogs>
+References: <1DB9F8BB-4A7C-4422-B447-90A08E310E17@oracle.com>
+ <ZLcqF2/7ZBI44C65@dread.disaster.area>
+ <20230719014413.GC11352@frogsfrogsfrogs>
+ <ZLeBvfTdRbFJ+mj2@dread.disaster.area>
+ <2A3BFAC0-1482-412E-A126-7EAFE65282E8@oracle.com>
+ <ZL3MlgtPWx5NHnOa@dread.disaster.area>
+ <2D5E234E-3EE3-4040-81DA-576B92FF7401@oracle.com>
+ <ZMCcJSLiWIi3KBOl@dread.disaster.area>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=utf-8
 Content-Disposition: inline
-In-Reply-To: <20230726060102.GB30264@mit.edu>
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <ZMCcJSLiWIi3KBOl@dread.disaster.area>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Wed, Jul 26, 2023 at 02:01:02AM -0400, Theodore Ts'o wrote:
-> On Tue, Jul 25, 2023 at 05:05:24PM -0700, Darrick J. Wong wrote:
+On Wed, Jul 26, 2023 at 02:08:05PM +1000, Dave Chinner wrote:
+> On Mon, Jul 24, 2023 at 06:03:02PM +0000, Wengang Wang wrote:
+> > > On Jul 23, 2023, at 5:57 PM, Dave Chinner <david@fromorbit.com> wrote:
+> > > On Fri, Jul 21, 2023 at 07:36:03PM +0000, Wengang Wang wrote:
+> > >> FYI:
+> > >> 
+> > >> I am able reproduce the XFS mount hang issue with hacked kernels based on
+> > >> both 4.14.35 kernel or 6.4.0 kernel.
+> > >> Reproduce steps:
+> > >> 
+> > >> 1. create a XFS with 10MiB log size (small so easier to reproduce). The following
+> > >>   steps all aim at this XFS volume.
+> > > 
+> > > Actually, make that a few milliseconds.... :)
 > > 
-> > If someone wants that, then ok.  The taret audience for this are the
-> > drive-by filesystem patch authors.  IOWs, people who have some small bug
-> > they want to try to fix and want to run a quick test to see if their
-> > change works.
+> > :)
+> > 
+> > > mkfs/xfs_info output would be appreciated.
+> > 
+> > sure,
+> > # xfs_info 20GB.bk2
+> > meta-data=20GB.bk2               isize=256    agcount=4, agsize=1310720 blks
+> >          =                       sectsz=512   attr=2, projid32bit=1
+> >          =                       crc=0        finobt=0, sparse=0, rmapbt=0
+> >          =                       reflink=0
 > 
-> Zorro,
+> Hmmmm. Why are you only testing v4 filesystems? They are deprecated
+> and support is largely due to be dropped from upstream in 2025...
 > 
-> FYI, the context behind this was a comment I had made to Darrick that
-> the time necessary to run "-g quick" had been getting longer and
-> longer, and it might be nice to create a manually curated "-g smoke"
-> that was good enough for drive-by patch authors.  I was originally
-> thinking about a cut-down set of tests by selecting a subset of "-g
-> quick", but Darrick suggested that instead, we just run a very small
-> set of tests (mostly based on fsstress / fsx) and just run them in a
-> loop for 4 minutes or so.
+> Does the same problem occur with a v5 filesystems?
 > 
-> We also talked about having a time budget (say, 15 minutes) and then
-> just dividing 15 time by the number of tests, and just run them in for
-> a specified soak time, so that the total time is known ahead of time.
+> > >> 5. Checking the on disk left free log space, it’s 181760 bytes for both 4.14.35
+> > >>   kernel and 6.4.0 kernel.
+> > > 
+> > > Which is is clearly wrong. It should be at least 360416 bytes (i.e
+> > > tr_itrunc), because that's what the EFI being processed that pins
+> > > the tail of the log is supposed to have reserved when it was
+> > > stalled.
+> > 
+> > Yep, exactly.
+> > 
+> > > So where has the ~180kB of leaked space come from?
+> > > 
+> > > Have you traced the grant head reservations to find out
+> > > what the runtime log space and grant head reservations actually are?
+> > I have the numbers in vmcore (ignore the WARNs),
 > 
-> To be honest, I was a bit dubious it could be that simple, but that's
-> where using kcov to show that you get a pretty good code coverage
-> using something that simple comes from.
+> That's not what I'm asking. You've dumped the values at the time of
+> the hang, not traced the runtime reservations that have been made.
 > 
-> > I don't think it's reasonable to expect drive-by'ers to know all that
-> > much about the fstests groups or spend the hours it takes to run -g all.
-> > As a maintainer, I prefer that these folks have done at least a small
-> > taste of QA before they start talking to the lists.
+> > > i.e. we have full tracing of the log reservation accounting via
+> > > tracepoints in the kernel. If there is a leak occurring, you need to
+> > > capture a trace of all the reservation accounting operations and
+> > > post process the output to find out what operation is leaking
+> > > reserved space. e.g.
+> > > 
+> > > # trace-cmd record -e xfs_log\* -e xlog\* -e printk touch /mnt/scratch/foo
+> > > ....
+> > > # trace-cmd report > s.t
+> > > # head -3 s.t
+> > > cpus=16
+> > >          touch-289000 [008] 430907.633820: xfs_log_reserve:      dev 253:32 t_ocnt 2 t_cnt 2 t_curr_res 240888 t_unit_res 240888 t_flags XLOG_TIC_PERM_RESERV reserveq empty writeq empty grant_reserve_cycle 1 grant_reserve_bytes 1024 grant_write_cycle 1 grant_write_bytes 1024 curr_cycle 1 curr_block 2 tail_cycle 1 tail_block 2
+> > >          touch-289000 [008] 430907.633829: xfs_log_reserve_exit: dev 253:32 t_ocnt 2 t_cnt 2 t_curr_res 240888 t_unit_res 240888 t_flags XLOG_TIC_PERM_RESERV reserveq empty writeq empty grant_reserve_cycle 1 grant_reserve_bytes 482800 grant_write_cycle 1 grant_write_bytes 482800 curr_cycle 1 curr_block 2 tail_cycle 1 tail_block 2
+> > > 
+> > > #
+> > > 
+> > > So this tells us the transaction reservation unit size, the count of
+> > > reservations, the current reserve and grant head locations, and the
+> > > current head and tail of the log at the time the transaction
+> > > reservation is started and then after it completes.
+> > 
+> > Will do that and report back. You want full log or only some typical
+> > ones? Full log would be big, how shall I share? 
 > 
-> A big problem for the drive-by'ers is that that the top-level xfstests
-> README file is just plain scary, and has far too many steps for a
-> drive-by patch author to follow.
+> I don't want to see the log. It'll be huge - I regularly generate
+> traces containing gigabytes of log accounting traces like this from
+> a single workload.
 > 
-> What I plan to add to a maintainer-entry-file.rst file for ext4 in the
-> kernel docs is to tell that drive-by posters that should run
-> "kvm-xfstests smoke" before submitting a patch, and setting up
-> kvm-xfstess is dead simple easy:
+> What I'm asking you to do is run the tracing and then post process
+> the values from the trace to determine what operation is using more
+> space than is being freed back to the log.
 > 
-> 
-> 1)  Install kvm-xfstests --- you only have to run this once
-> 
-> % git clone https://github.com/tytso/xfstests-bld fstests
-> % cd fstests
-> % make ; make install
-> 
-> # Optional, if your file system you are developing isn't ext4;
-> # change f2fs to the file system of your choice
-> % echo PRIMARY_FSTYPE=f2fs >> ~/.config/kvm-xfstests
-> 
-> 
-> 2) Build the kernel suitable for use with kvm-xfstests
-> 
-> % cd /path/to/your/kernel
-> % install-kconfig
-> % kbuild
-> 
-> 3) Run the smoke test --- assuming the cwd is /path/to/your/kernel
-> 
-> (Note: today this runs -g quick, but it would be good if this could be
-> faster)
-> 
-> % kvm-xfstests smoke 
-> 
-> 
-> It's simple, and since the kvm-xfstests script will download a
-> pre-compiled test appliance image automatically, there's no need to
-> require the drive-by tester to figure out how compile xfstests with
-> any of its prerequisites.
-> 
-> And once things are set up, then it's just a matter of running
-> "kbuild" to build your kernel after you make changes, and running
-> "kvm-xfstests smoke" to do a quick smoke testing run.
-> 
-> No muss, no fuss, no dirty dishes...   :-)
+> I generally do this with grep, awk and sed. some people use python
+> or perl. But either way it's a *lot* of work - in the past I have
+> spent _weeks_ on trace analysis to find a 4 byte leak in the log
+> space accounting. DOing things like graphing the head, tail and grant
+> spaces over time tend to show if this is a gradual leak versus a
+> sudden step change. If it's a sudden step change, then you can
+> isolate it in the trace and work out what happened. If it's a
+> gradual change, then you need to start looking for accounting
+> discrepancies...
 
-Hi Ted,
+Any chance you'd be willing to share that pipeline?  It'd be useful to
+stash that kind of debugging program in xfsprogs/tools to save time and
+eliminate an entire class of "Hey Dave, did I capture this correctly?"
+questions.
 
-Thanks for this detailed explanation!
+(At least until someone changes the tracepoints :P)
 
-Ahaha, I'm just waiting for Darrick wake up, then ask him is there any
-requirement/context about this patch. Due to he (looks like) a bit
-hurry to push this patch :)
+--D
 
-If most of you prefer this way (an ./check option, not a separated wrapper
-script), I'm OK with that.
-
-Just recently I'm a bit worry about the ./check code, it's becoming more
-and more complex. I hope to separate something from it, but many things
-entwined, and growing. Anyway that's another story, I'll look into this
-patchset and review it soon.
-
-Thanks,
-Zorro
-
+> e.g. a transaction records 32 bytes used in the item, so it releases
+> t_unit - 32 bytes at commit. However, the CIL may then only track 28
+> bytes of space for the item in the journal and we leak 4 bytes of
+> reservation on every on of those items committed.
+> 
+> These sorts of leaks typically only add up to being somethign
+> significant in situations where the log is flooded with tiny inode
+> timestamp changes - 4 bytes iper item doesn't really matter when you
+> only have a few thousand items in the log, but when you have
+> hundreds of thousands of tiny items in the log...
 > 
 > Cheers,
 > 
-> 					- Ted
-> 
-
+> Dave.
+> -- 
+> Dave Chinner
+> david@fromorbit.com
