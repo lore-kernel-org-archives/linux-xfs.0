@@ -2,123 +2,98 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 49C27C001DF
-	for <linux-xfs@archiver.kernel.org>; Wed, 26 Jul 2023 20:59:44 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 09330C0015E
+	for <linux-xfs@archiver.kernel.org>; Wed, 26 Jul 2023 21:50:51 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230224AbjGZU7n (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 26 Jul 2023 16:59:43 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36762 "EHLO
+        id S229850AbjGZVut (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 26 Jul 2023 17:50:49 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50320 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229721AbjGZU7m (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 26 Jul 2023 16:59:42 -0400
-Received: from outgoing.mit.edu (outgoing-auth-1.mit.edu [18.9.28.11])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9450519B6
-        for <linux-xfs@vger.kernel.org>; Wed, 26 Jul 2023 13:59:41 -0700 (PDT)
-Received: from cwcc.thunk.org (pool-173-48-115-64.bstnma.fios.verizon.net [173.48.115.64])
-        (authenticated bits=0)
-        (User authenticated as tytso@ATHENA.MIT.EDU)
-        by outgoing.mit.edu (8.14.7/8.12.4) with ESMTP id 36QKxUeM017140
-        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Wed, 26 Jul 2023 16:59:31 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=mit.edu; s=outgoing;
-        t=1690405172; bh=fwwcd203P4+rAd7TlalyYy+grQDBBdIhp5JCjNTMb8Q=;
-        h=Date:From:Subject:Message-ID:MIME-Version:Content-Type;
-        b=O5W8lvE9i18FdE7LjwUqx9hZsLzI3hAT9dsZfOGkYoNvMfFWQuwhVdta9NurPfAb0
-         yQ42uRaom776r4xqesvHzTGH+31Ls5SLjIcnKafgYIcg6hXX1ydiwSRxq80VtHtSt3
-         X1yXjbaOxrlHN2JrnoOYuTT2I8jLXnS74EhGZ+wJnp+BuNRKsOAqpYSJcD3QMTGViW
-         GdgFRDB2R4vXxrovQ7r4cD+L7krwe9RMhQ4V2An62nGGtMTwTT/KiNs1th2hsGVCFX
-         iS0V92GwsI5NcBCYnLP8qQ+pzwbpl1Eqwcu4276Cws7KpHfCevUEcKhZ+3HtJCvE7b
-         hw/f6KFjAlJ5A==
-Received: by cwcc.thunk.org (Postfix, from userid 15806)
-        id C5B9115C04DF; Wed, 26 Jul 2023 16:59:30 -0400 (EDT)
-Date:   Wed, 26 Jul 2023 16:59:30 -0400
-From:   "Theodore Ts'o" <tytso@mit.edu>
-To:     Zorro Lang <zlang@redhat.com>
-Cc:     "Darrick J. Wong" <djwong@kernel.org>, linux-xfs@vger.kernel.org,
-        fstests@vger.kernel.org
-Subject: Re: [PATCH 1/2] check: add a -smoketest option
-Message-ID: <20230726205930.GC30264@mit.edu>
-References: <168972905065.1698606.6829635791058054610.stgit@frogsfrogsfrogs>
- <168972905626.1698606.12419796694170752316.stgit@frogsfrogsfrogs>
- <20230719151024.ef7vgjmtoxwxkmjm@zlang-mailbox>
- <20230719152907.GA11377@frogsfrogsfrogs>
- <20230719161115.byva7tvwoafkesga@zlang-mailbox>
- <20230720022756.GH11352@frogsfrogsfrogs>
- <20230720143433.n5gkhukdkz7s5ab7@zlang-mailbox>
- <20230726000524.GG11340@frogsfrogsfrogs>
- <20230726060102.GB30264@mit.edu>
- <20230726145441.lbzzokwigrztimyq@zlang-mailbox>
+        with ESMTP id S229495AbjGZVut (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 26 Jul 2023 17:50:49 -0400
+Received: from mail-pl1-x62f.google.com (mail-pl1-x62f.google.com [IPv6:2607:f8b0:4864:20::62f])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 82F5D127
+        for <linux-xfs@vger.kernel.org>; Wed, 26 Jul 2023 14:50:47 -0700 (PDT)
+Received: by mail-pl1-x62f.google.com with SMTP id d9443c01a7336-1b89cfb4571so2136305ad.3
+        for <linux-xfs@vger.kernel.org>; Wed, 26 Jul 2023 14:50:47 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=fromorbit-com.20221208.gappssmtp.com; s=20221208; t=1690408247; x=1691013047;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
+        bh=oEVsgMhfJCo3+WMo9jBocLy7Yo6Kj93DjounOZpsoZ8=;
+        b=JImPWHdVbo7ZJgolrQI/m8aHyPEXt0Of30eNRqZAa8bdH+gsYimY42WGx7XcoqTiz/
+         wW9Ik+WwYLvLnD5860DeZxolVzNv1e8r5hy2PB9G8Or8v39vUOHg1xG0x5ibSBxqwSQm
+         MiPuxdFBcYromSZ0J+88yBmN6GQLzO1vBRM/PirC6Mu8N0CtTbAWlmODJ2ZayZ3mbWU+
+         W36vZpVaHKxdb3Qi0jq6FJZClLAUPYMkyQp6u3q/GgBhucYRY01GL6ai7O9VP/RSax8Q
+         kvBabVIWwmi62NhNBFWp4mKro1HRN/z1hYz2Kgj5+p504uztWFPMUlFllQke6DUBeF2J
+         Cn8Q==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20221208; t=1690408247; x=1691013047;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=oEVsgMhfJCo3+WMo9jBocLy7Yo6Kj93DjounOZpsoZ8=;
+        b=dhVoq0ylrKhmOeyW7f9pJ9gMM8fE1N+6lFT5xCEYuUPVJ7MudnpyeioN5YvXvRpupf
+         ycZgfcMqOekwCRxpM5nAIj/vwlCdHF+0yEOPUmsuVURoDdC5eFXOfJCOZXwTX3F1fZhS
+         +2Ye24ofse5WKK0ZXk9aS+H84g66YtSAA7FHPKupY5s30oHbPtndg5sdOxxxATNYi7CA
+         KGoqiZTdUWnzd5PFzA9efY3tYEncyJboaTcMqYURihdQJPqHj/BQDGe0SzqE0NPPp0cI
+         PlXFqUi0/nw+1Z8l5+OCbol2YM7RyODeu+hagbCYGxa0XDx8uXTczcBcv5iW79tNHq4p
+         f9Vg==
+X-Gm-Message-State: ABy/qLYXUPFZPh8zxduDG0iSZXWFQSeoWB1HYPqIjbZe1UTpZdDQyJKc
+        Vtl+fGpPbyazQHi8AVMGKaeNrA==
+X-Google-Smtp-Source: APBJJlEYMi5IrHUY78a1kRiay85JTqoZqaM8MkfAimsJL8TH5HyPPxcjiUtXy1E0Yotpel0Ii7ehpA==
+X-Received: by 2002:a17:902:f80a:b0:1bb:d048:3173 with SMTP id ix10-20020a170902f80a00b001bbd0483173mr1929140plb.61.1690408246973;
+        Wed, 26 Jul 2023 14:50:46 -0700 (PDT)
+Received: from dread.disaster.area (pa49-186-119-116.pa.vic.optusnet.com.au. [49.186.119.116])
+        by smtp.gmail.com with ESMTPSA id jj6-20020a170903048600b001ab39cd875csm25252plb.133.2023.07.26.14.50.46
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Wed, 26 Jul 2023 14:50:46 -0700 (PDT)
+Received: from dave by dread.disaster.area with local (Exim 4.96)
+        (envelope-from <david@fromorbit.com>)
+        id 1qOmP5-00AuAE-0V;
+        Thu, 27 Jul 2023 07:50:43 +1000
+Date:   Thu, 27 Jul 2023 07:50:43 +1000
+From:   Dave Chinner <david@fromorbit.com>
+To:     Hao Xu <hao.xu@linux.dev>
+Cc:     io-uring@vger.kernel.org, Jens Axboe <axboe@kernel.dk>,
+        Dominique Martinet <asmadeus@codewreck.org>,
+        Pavel Begunkov <asml.silence@gmail.com>,
+        Christian Brauner <brauner@kernel.org>,
+        Alexander Viro <viro@zeniv.linux.org.uk>,
+        Stefan Roesch <shr@fb.com>, Clay Harris <bugs@claycon.org>,
+        "Darrick J . Wong" <djwong@kernel.org>,
+        linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org,
+        linux-ext4@vger.kernel.org, Wanpeng Li <wanpengli@tencent.com>
+Subject: Re: [PATCH 1/7] iomap: merge iomap_seek_hole() and iomap_seek_data()
+Message-ID: <ZMGVM/BdgsjMSsIF@dread.disaster.area>
+References: <20230726102603.155522-1-hao.xu@linux.dev>
+ <20230726102603.155522-2-hao.xu@linux.dev>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20230726145441.lbzzokwigrztimyq@zlang-mailbox>
+In-Reply-To: <20230726102603.155522-2-hao.xu@linux.dev>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Wed, Jul 26, 2023 at 10:54:41PM +0800, Zorro Lang wrote:
+On Wed, Jul 26, 2023 at 06:25:57PM +0800, Hao Xu wrote:
+> From: Hao Xu <howeyxu@tencent.com>
 > 
-> Ahaha, I'm just waiting for Darrick wake up, then ask him is there any
-> requirement/context about this patch. Due to he (looks like) a bit
-> hurry to push this patch :)
-> 
-> If most of you prefer this way (an ./check option, not a separated wrapper
-> script), I'm OK with that.
+> The two functions share almost same code, merge them together.
+> No functional change in this patch.
 
-I'm agnostic on that front, since I already *have* my own wrapper
-script.  So if we need to do it in the wrapper script, I'm certainly
-OK with that.  OTOH, if we think it's a feature which is generally
-interesting to multiple developers and/or test wrappers, maybe it
-makes sense to push things into the ./check sccript.
+No, please don't. seek data and seek hole have subtly different
+semantics and return values, and we've explicitly kept them separate
+because it's much easier to maintain them as separate functions with
+separate semantics than combine them into a single function with
+lots of non-obvious conditional behaviour.
 
-So I certainly don't have any objections to adding support to my
-/root/runtests.sh so that "{gce,kvm,android}-xfstests smoke" gets ends
-up running the moral equivalent of:
+The fact that the new iomap_seek() API requires a boolean "SEEK_DATA
+or SEEK_HOLE" field to indicate that the caller wants makes it clear
+that this isn't actually an improvement over explicit
+iomap_seek_data() and iomap_seek_hole() API calls.
 
-SOAK_DURATION=4m ./check -g smoketest
-
-... and adding extra special case support in the check script just for
-this use case.  I'm doing enough other stuff in runtests.sh[1] that
-it's really not a big deal for me.  :-)
-
-[1] https://github.com/tytso/xfstests-bld/blob/master/test-appliance/files/root/runtests.sh
-
-
-More generally, there are some "intresting" hacks --- for example, I
-want to be able to run code in between every single test run, and the
-way I do it is a big ugly, but effective.  I basically set
-
-LOGGER_PROG to my own special script, gce-logger[2]
-
-[2] https://github.com/tytso/xfstests-bld/blob/master/test-appliance/files/usr/local/lib/gce-logger
-
-and this allows the user to upload a script which will get run in
-between every single individual fstest (e.g., to grab information from
-BPF, or grab and reset lockstats, etc.).  This script also updates the
-VM metadata so someone can query the VM to find out what test it's
-currently running, and the percentage completion for that VM.
-
-I could have asked for extra features in check, but whenever possible
-I try to work around it to limit the number of special things just for
-my set of wrapper scripts.
-
-
-> Just recently I'm a bit worry about the ./check code, it's becoming more
-> and more complex. I hope to separate something from it, but many things
-> entwined, and growing. Anyway that's another story, I'll look into this
-> patchset and review it soon.
-
-Well, I don't use the config sections feature at all, because my
-wrapper script has a lot more functionality than what you can get with
-the config sections, so I just pass in TEST_DEV, SCRATCH_DEV,
-MKFS_OPTIONS, etc., via environment variables, and I have my own set
-of scripts to set up te test parameters.
-
-So if you were going to simplify things by removing config sections,
-*I* wouldn't care.  Enough other people might be using it that
-changing the fstests interface for this might raise a lot of
-objections from other folks, though.
-
-Cheers,
-
-					- Ted
+-Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
