@@ -2,194 +2,123 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id EBF42C001DF
-	for <linux-xfs@archiver.kernel.org>; Wed, 26 Jul 2023 01:39:46 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id F1BA1EB64DD
+	for <linux-xfs@archiver.kernel.org>; Wed, 26 Jul 2023 01:43:21 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230196AbjGZBjm (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 25 Jul 2023 21:39:42 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43528 "EHLO
+        id S229562AbjGZBnV (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 25 Jul 2023 21:43:21 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44256 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230128AbjGZBjl (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 25 Jul 2023 21:39:41 -0400
-Received: from mail-yw1-x1132.google.com (mail-yw1-x1132.google.com [IPv6:2607:f8b0:4864:20::1132])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0402826A6
-        for <linux-xfs@vger.kernel.org>; Tue, 25 Jul 2023 18:39:39 -0700 (PDT)
-Received: by mail-yw1-x1132.google.com with SMTP id 00721157ae682-583b3aa4f41so47257857b3.2
-        for <linux-xfs@vger.kernel.org>; Tue, 25 Jul 2023 18:39:38 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20221208; t=1690335578; x=1690940378;
-        h=mime-version:references:message-id:in-reply-to:subject:cc:to:from
-         :date:from:to:cc:subject:date:message-id:reply-to;
-        bh=g4+spZWgq0eS9irqfihzysgfAABYfYXXmt6SNBBeIWA=;
-        b=MZxYT2MdZ0Omg+tGFjNofeHkNy3Qahh2PBaeRGC1CPgAvaobe+CbfQzviGlH2bRGld
-         yZXqVlc4rdM7Hn/0uDpIIp7PtuXFyXV1rOEzEcPsa6KfHQ8WsO8NrD1ggf9GGi+atd7F
-         nKDBxVEOzhZviRxzmHMsde7z3UqWCZoSc0lNm1akA/R8EHPW9npAKef3Z/pjfCjWQWBN
-         xmycegOze/hxSYYenv2HpylIbUfqF9JiHr0gy59wVHZoy8dXEq78uEH7BvhlWGHxnNVM
-         Pm/pG6h4Z3mK+EEHLb2xoyIraXRTQQ+dd3MgzFr8XAVX1x101W0eH3RmqvYAcZ2a0tMf
-         tMBA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20221208; t=1690335578; x=1690940378;
-        h=mime-version:references:message-id:in-reply-to:subject:cc:to:from
-         :date:x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=g4+spZWgq0eS9irqfihzysgfAABYfYXXmt6SNBBeIWA=;
-        b=E/bnKUYmW7F3o1Y07j9WEU61PgcDphfvBjfA8Z3xKGwkpU1H2Pg5gunaE8MTJBhgJT
-         Fie92S5N6WmIwn7ot8suzkLLS4LEefCm16qaDnxvmDlMnkdJi32+1z3CHCEjYfjVfzY2
-         t9upoCK6zg8Au4uAzGv+yJChryIWj9h3jOdDtqMFqzpSkB++c4kPOyuU1uBoIwIYLVXd
-         m3pd4tG26UnV9wnTkrXE/XHWgmxZVLbJVkZCSC0gNOOaMbcm/kfgGjp8ZlkyNfJJTrOh
-         b5uI4slYrdrxTv1XHoYwLA53HlqOuaKWLBBIx7+d12WWDMVEMxXcLoVx/jBX7uyGRrwB
-         IN+Q==
-X-Gm-Message-State: ABy/qLYGjl2eaJQQ5WiHgC2WeUzTMqXUM5dBE6BullaevqgO012qUQl3
-        e89MOb9dGAmEdLWOafxCbDYe1w==
-X-Google-Smtp-Source: APBJJlHxqCs0/k9opPHZr1oFjC/IjLn2NWFjtEyuaFY5bDdVyDOg3sTAz2vkUnxY9z5liUX1UEynKA==
-X-Received: by 2002:a81:46c3:0:b0:56d:2189:d87a with SMTP id t186-20020a8146c3000000b0056d2189d87amr821699ywa.15.1690335578030;
-        Tue, 25 Jul 2023 18:39:38 -0700 (PDT)
-Received: from ripple.attlocal.net (172-10-233-147.lightspeed.sntcca.sbcglobal.net. [172.10.233.147])
-        by smtp.gmail.com with ESMTPSA id s10-20020a5b044a000000b00c654cc439fesm3165326ybp.52.2023.07.25.18.39.32
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 25 Jul 2023 18:39:37 -0700 (PDT)
-Date:   Tue, 25 Jul 2023 18:39:25 -0700 (PDT)
-From:   Hugh Dickins <hughd@google.com>
-X-X-Sender: hugh@ripple.attlocal.net
-To:     Jeff Layton <jlayton@kernel.org>
-cc:     Eric Van Hensbergen <ericvh@kernel.org>,
-        Latchesar Ionkov <lucho@ionkov.net>,
-        Dominique Martinet <asmadeus@codewreck.org>,
-        Christian Schoenebeck <linux_oss@crudebyte.com>,
-        David Howells <dhowells@redhat.com>,
-        Marc Dionne <marc.dionne@auristor.com>,
-        Chris Mason <clm@fb.com>, Josef Bacik <josef@toxicpanda.com>,
-        David Sterba <dsterba@suse.com>, Xiubo Li <xiubli@redhat.com>,
-        Ilya Dryomov <idryomov@gmail.com>,
-        Jan Harkes <jaharkes@cs.cmu.edu>, coda@cs.cmu.edu,
-        Tyler Hicks <code@tyhicks.com>, Gao Xiang <xiang@kernel.org>,
-        Chao Yu <chao@kernel.org>, Yue Hu <huyue2@coolpad.com>,
-        Jeffle Xu <jefflexu@linux.alibaba.com>,
-        Namjae Jeon <linkinjeon@kernel.org>,
-        Sungjong Seo <sj1557.seo@samsung.com>,
-        Jan Kara <jack@suse.com>, Theodore Ts'o <tytso@mit.edu>,
-        Andreas Dilger <adilger.kernel@dilger.ca>,
-        Jaegeuk Kim <jaegeuk@kernel.org>,
-        OGAWA Hirofumi <hirofumi@mail.parknet.co.jp>,
-        Miklos Szeredi <miklos@szeredi.hu>,
-        Bob Peterson <rpeterso@redhat.com>,
-        Andreas Gruenbacher <agruenba@redhat.com>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        Tejun Heo <tj@kernel.org>,
-        Alexander Viro <viro@zeniv.linux.org.uk>,
-        Christian Brauner <brauner@kernel.org>,
-        Trond Myklebust <trond.myklebust@hammerspace.com>,
-        Anna Schumaker <anna@kernel.org>,
-        Konstantin Komarov <almaz.alexandrovich@paragon-software.com>,
-        Mark Fasheh <mark@fasheh.com>,
-        Joel Becker <jlbec@evilplan.org>,
-        Joseph Qi <joseph.qi@linux.alibaba.com>,
-        Mike Marshall <hubcap@omnibond.com>,
-        Martin Brandenburg <martin@omnibond.com>,
-        Luis Chamberlain <mcgrof@kernel.org>,
-        Kees Cook <keescook@chromium.org>,
-        Iurii Zaikin <yzaikin@google.com>,
-        Steve French <sfrench@samba.org>,
-        Paulo Alcantara <pc@manguebit.com>,
-        Ronnie Sahlberg <lsahlber@redhat.com>,
-        Shyam Prasad N <sprasad@microsoft.com>,
-        Tom Talpey <tom@talpey.com>,
-        Sergey Senozhatsky <senozhatsky@chromium.org>,
-        Richard Weinberger <richard@nod.at>,
-        Hans de Goede <hdegoede@redhat.com>,
-        Hugh Dickins <hughd@google.com>,
-        Andrew Morton <akpm@linux-foundation.org>,
-        "Darrick J. Wong" <djwong@kernel.org>,
-        Dave Chinner <david@fromorbit.com>,
-        Anthony Iliopoulos <ailiop@suse.com>, v9fs@lists.linux.dev,
-        linux-kernel@vger.kernel.org, linux-afs@lists.infradead.org,
-        linux-btrfs@vger.kernel.org, ceph-devel@vger.kernel.org,
-        codalist@coda.cs.cmu.edu, ecryptfs@vger.kernel.org,
-        linux-erofs@lists.ozlabs.org, linux-fsdevel@vger.kernel.org,
-        linux-ext4@vger.kernel.org, linux-f2fs-devel@lists.sourceforge.net,
-        cluster-devel@redhat.com, linux-nfs@vger.kernel.org,
-        ntfs3@lists.linux.dev, ocfs2-devel@lists.linux.dev,
-        devel@lists.orangefs.org, linux-cifs@vger.kernel.org,
-        samba-technical@lists.samba.org, linux-mtd@lists.infradead.org,
-        linux-mm@kvack.org, linux-xfs@vger.kernel.org
-Subject: Re: [PATCH v6 3/7] tmpfs: bump the mtime/ctime/iversion when page
- becomes writeable
-In-Reply-To: <20230725-mgctime-v6-3-a794c2b7abca@kernel.org>
-Message-ID: <42c5bbe-a7a4-3546-e898-3f33bd71b062@google.com>
-References: <20230725-mgctime-v6-0-a794c2b7abca@kernel.org> <20230725-mgctime-v6-3-a794c2b7abca@kernel.org>
+        with ESMTP id S229498AbjGZBnU (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 25 Jul 2023 21:43:20 -0400
+Received: from szxga01-in.huawei.com (szxga01-in.huawei.com [45.249.212.187])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3FE2F26A2
+        for <linux-xfs@vger.kernel.org>; Tue, 25 Jul 2023 18:43:19 -0700 (PDT)
+Received: from dggpemm500014.china.huawei.com (unknown [172.30.72.53])
+        by szxga01-in.huawei.com (SkyGuard) with ESMTP id 4R9c5v178RztRnj;
+        Wed, 26 Jul 2023 09:40:03 +0800 (CST)
+Received: from [10.174.177.211] (10.174.177.211) by
+ dggpemm500014.china.huawei.com (7.185.36.153) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
+ 15.1.2507.27; Wed, 26 Jul 2023 09:43:16 +0800
+Message-ID: <bbaaee4c-06a7-36ca-a754-cf3677424f78@huawei.com>
+Date:   Wed, 26 Jul 2023 09:43:16 +0800
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:91.0) Gecko/20100101
+ Thunderbird/91.0.3
+To:     <cem@kernel.org>, "Darrick J. Wong" <djwong@kernel.org>,
+        <linux-xfs@vger.kernel.org>
+CC:     <louhongxiang@huawei.com>, <liuzhiqiang26@huawei.com>
+From:   Wu Guanghao <wuguanghao3@huawei.com>
+Subject: [PATCH]xfs_repair: fix the problem of repair failure caused by dirty
+ flag being abnormally set on buffer
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
+X-Originating-IP: [10.174.177.211]
+X-ClientProxiedBy: dggems701-chm.china.huawei.com (10.3.19.178) To
+ dggpemm500014.china.huawei.com (7.185.36.153)
+X-CFilter-Loop: Reflected
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Tue, 25 Jul 2023, Jeff Layton wrote:
+We found an issue where repair failed in the fault injection.
 
-> Most filesystems that use the pagecache will update the mtime, ctime,
-> and change attribute when a page becomes writeable. Add a page_mkwrite
-> operation for tmpfs and just use it to bump the mtime, ctime and change
-> attribute.
-> 
-> This fixes xfstest generic/080 on tmpfs.
+$ xfs_repair test.img
+...
+Phase 3 - for each AG...
+        - scan and clear agi unlinked lists...
+        - process known inodes and perform inode discovery...
+        - agno = 0
+        - agno = 1
+        - agno = 2
+Metadata CRC error detected at 0x55a30e420c7d, xfs_bmbt block 0x51d68/0x1000
+        - agno = 3
+Metadata CRC error detected at 0x55a30e420c7d, xfs_bmbt block 0x51d68/0x1000
+btree block 0/41901 is suspect, error -74
+bad magic # 0x58534c4d in inode 3306572 (data fork) bmbt block 41901
+bad data fork in inode 3306572
+cleared inode 3306572
+...
+Phase 7 - verify and correct link counts...
+Metadata corruption detected at 0x55a30e420b58, xfs_bmbt block 0x51d68/0x1000
+libxfs_bwrite: write verifier failed on xfs_bmbt bno 0x51d68/0x8
+xfs_repair: Releasing dirty buffer to free list!
+xfs_repair: Refusing to write a corrupt buffer to the data device!
+xfs_repair: Lost a write to the data device!
 
-Huh.  I didn't notice when this one crept into the multigrain series.
+fatal error -- File system metadata writeout failed, err=117.  Re-run xfs_repair.
 
-I'm inclined to NAK this patch: at the very least, it does not belong
-in the series, but should be discussed separately.
 
-Yes, tmpfs does not and never has used page_mkwrite, and gains some
-performance advantage from that.  Nobody has ever asked for this
-change before, or not that I recall.
+$ xfs_db test.img
+xfs_db> inode 3306572
+xfs_db> p
+core.magic = 0x494e
+core.mode = 0100666		  // regular file
+core.version = 3
+core.format = 3 (btree)	
+...
+u3.bmbt.keys[1] = [startoff]
+1:[6]
+u3.bmbt.ptrs[1] = 41901	 // btree root
+...
 
-Please drop it from the series: and if you feel strongly, or know
-strong reasons why tmpfs suddenly needs to use page_mkwrite now,
-please argue them separately.  To pass generic/080 is not enough.
+$ hexdump -C -n 4096 41901.img
+00000000  58 53 4c 4d 00 00 00 00  00 00 01 e8 d6 f4 03 14  |XSLM............|
+00000010  09 f3 a6 1b 0a 3c 45 5a  96 39 41 ac 09 2f 66 99  |.....<EZ.9A../f.|
+00000020  00 00 00 00 00 05 1f fb  00 00 00 00 00 05 1d 68  |...............h|
+...
 
-Thanks,
-Hugh
+The block data associated with inode 3306572 is abnormal, but check the CRC first
+when reading. If the CRC check fails, badcrc will be set. Then the dirty flag
+will be set on bp when badcrc is set. In the final stage of repair, the dirty bp
+will be refreshed in batches. When refresh to the disk, the data in bp will be
+verified. At this time, if the data verification fails, resulting in a repair
+error.
 
-> 
-> Signed-off-by: Jeff Layton <jlayton@kernel.org>
-> ---
->  mm/shmem.c | 12 ++++++++++++
->  1 file changed, 12 insertions(+)
-> 
-> diff --git a/mm/shmem.c b/mm/shmem.c
-> index b154af49d2df..654d9a585820 100644
-> --- a/mm/shmem.c
-> +++ b/mm/shmem.c
-> @@ -2169,6 +2169,16 @@ static vm_fault_t shmem_fault(struct vm_fault *vmf)
->  	return ret;
->  }
->  
-> +static vm_fault_t shmem_page_mkwrite(struct vm_fault *vmf)
-> +{
-> +	struct vm_area_struct *vma = vmf->vma;
-> +	struct inode *inode = file_inode(vma->vm_file);
-> +
-> +	file_update_time(vma->vm_file);
-> +	inode_inc_iversion(inode);
-> +	return 0;
-> +}
-> +
->  unsigned long shmem_get_unmapped_area(struct file *file,
->  				      unsigned long uaddr, unsigned long len,
->  				      unsigned long pgoff, unsigned long flags)
-> @@ -4210,6 +4220,7 @@ static const struct super_operations shmem_ops = {
->  
->  static const struct vm_operations_struct shmem_vm_ops = {
->  	.fault		= shmem_fault,
-> +	.page_mkwrite	= shmem_page_mkwrite,
->  	.map_pages	= filemap_map_pages,
->  #ifdef CONFIG_NUMA
->  	.set_policy     = shmem_set_policy,
-> @@ -4219,6 +4230,7 @@ static const struct vm_operations_struct shmem_vm_ops = {
->  
->  static const struct vm_operations_struct shmem_anon_vm_ops = {
->  	.fault		= shmem_fault,
-> +	.page_mkwrite	= shmem_page_mkwrite,
->  	.map_pages	= filemap_map_pages,
->  #ifdef CONFIG_NUMA
->  	.set_policy     = shmem_set_policy,
-> 
-> -- 
-> 2.41.0
+After scan_bmapbt returns an error, the inode will be cleaned up. Then bp
+doesn't need to set dirty flag, so that it won't trigger writeback verification
+failure.
+
+Signed-off-by: Wu Guanghao <wuguanghao3@huawei.com>
+Reviewed-by: Darrick J. Wong <djwong@kernel.org>
+---
+ repair/scan.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/repair/scan.c b/repair/scan.c
+index 7b720131..b5458eb8 100644
+--- a/repair/scan.c
++++ b/repair/scan.c
+@@ -185,7 +185,7 @@ scan_lbtree(
+
+ 	ASSERT(dirty == 0 || (dirty && !no_modify));
+
+-	if ((dirty || badcrc) && !no_modify) {
++	if (!err && (dirty || badcrc) && !no_modify) {
+ 		libxfs_buf_mark_dirty(bp);
+ 		libxfs_buf_relse(bp);
+ 	}
+-- 
+2.27.0
+
