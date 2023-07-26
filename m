@@ -2,221 +2,123 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 82A64C41513
-	for <linux-xfs@archiver.kernel.org>; Wed, 26 Jul 2023 20:03:37 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 49C27C001DF
+	for <linux-xfs@archiver.kernel.org>; Wed, 26 Jul 2023 20:59:44 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229954AbjGZUDg (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 26 Jul 2023 16:03:36 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46964 "EHLO
+        id S230224AbjGZU7n (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 26 Jul 2023 16:59:43 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36762 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229924AbjGZUDf (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 26 Jul 2023 16:03:35 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1B6AC26AE;
-        Wed, 26 Jul 2023 13:03:33 -0700 (PDT)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature RSA-PSS (2048 bits))
-        (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 918A361C9A;
-        Wed, 26 Jul 2023 20:03:32 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id ADC89C433C8;
-        Wed, 26 Jul 2023 20:03:30 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1690401812;
-        bh=tTGZyVE7Fxwe20XQWb0Q6NTaOY7dMk1gosTaLl20W+s=;
-        h=From:To:Cc:Subject:Date:From;
-        b=LYZDLEqBHHCs/qtJ+TtfD3vaZw9ymaECIn9/7TUS4Cu2LfxrRaQrJZHmpLjseKbXy
-         jsPgCp/73eOyvH7TzYj+gmDSXckku5fftlpDb8TVegeANxCrDJeVl/8d8Zi1Wh9dYZ
-         0h7GL96hL6FU+SsrXG92gUNW0zoGXSvXeguQX/BoEJCYflitpEgm9O1vA/1V1m/7Jz
-         iXK5RBMQnF8izsdrF/DfKGg7/T1mcxWPIJz3G+uBjxGG0d/mnzm6qWqilDuAOJKWT2
-         MySbUgJ1qOWibZmeS406lZF5C8oXxO4aYumwWT13tYILAzw7/SokdUbs6dPC0H4XGl
-         seng6xY1qadIg==
-From:   Zorro Lang <zlang@kernel.org>
-To:     fstests@vger.kernel.org
-Cc:     djwong@kernel.org, tytso@mit.edu, linux-xfs@vger.kernel.org
-Subject: [PATCH] fstests: provides smoketest template
-Date:   Thu, 27 Jul 2023 04:03:27 +0800
-Message-Id: <20230726200327.239085-1-zlang@kernel.org>
-X-Mailer: git-send-email 2.40.1
+        with ESMTP id S229721AbjGZU7m (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 26 Jul 2023 16:59:42 -0400
+Received: from outgoing.mit.edu (outgoing-auth-1.mit.edu [18.9.28.11])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9450519B6
+        for <linux-xfs@vger.kernel.org>; Wed, 26 Jul 2023 13:59:41 -0700 (PDT)
+Received: from cwcc.thunk.org (pool-173-48-115-64.bstnma.fios.verizon.net [173.48.115.64])
+        (authenticated bits=0)
+        (User authenticated as tytso@ATHENA.MIT.EDU)
+        by outgoing.mit.edu (8.14.7/8.12.4) with ESMTP id 36QKxUeM017140
+        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+        Wed, 26 Jul 2023 16:59:31 -0400
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=mit.edu; s=outgoing;
+        t=1690405172; bh=fwwcd203P4+rAd7TlalyYy+grQDBBdIhp5JCjNTMb8Q=;
+        h=Date:From:Subject:Message-ID:MIME-Version:Content-Type;
+        b=O5W8lvE9i18FdE7LjwUqx9hZsLzI3hAT9dsZfOGkYoNvMfFWQuwhVdta9NurPfAb0
+         yQ42uRaom776r4xqesvHzTGH+31Ls5SLjIcnKafgYIcg6hXX1ydiwSRxq80VtHtSt3
+         X1yXjbaOxrlHN2JrnoOYuTT2I8jLXnS74EhGZ+wJnp+BuNRKsOAqpYSJcD3QMTGViW
+         GdgFRDB2R4vXxrovQ7r4cD+L7krwe9RMhQ4V2An62nGGtMTwTT/KiNs1th2hsGVCFX
+         iS0V92GwsI5NcBCYnLP8qQ+pzwbpl1Eqwcu4276Cws7KpHfCevUEcKhZ+3HtJCvE7b
+         hw/f6KFjAlJ5A==
+Received: by cwcc.thunk.org (Postfix, from userid 15806)
+        id C5B9115C04DF; Wed, 26 Jul 2023 16:59:30 -0400 (EDT)
+Date:   Wed, 26 Jul 2023 16:59:30 -0400
+From:   "Theodore Ts'o" <tytso@mit.edu>
+To:     Zorro Lang <zlang@redhat.com>
+Cc:     "Darrick J. Wong" <djwong@kernel.org>, linux-xfs@vger.kernel.org,
+        fstests@vger.kernel.org
+Subject: Re: [PATCH 1/2] check: add a -smoketest option
+Message-ID: <20230726205930.GC30264@mit.edu>
+References: <168972905065.1698606.6829635791058054610.stgit@frogsfrogsfrogs>
+ <168972905626.1698606.12419796694170752316.stgit@frogsfrogsfrogs>
+ <20230719151024.ef7vgjmtoxwxkmjm@zlang-mailbox>
+ <20230719152907.GA11377@frogsfrogsfrogs>
+ <20230719161115.byva7tvwoafkesga@zlang-mailbox>
+ <20230720022756.GH11352@frogsfrogsfrogs>
+ <20230720143433.n5gkhukdkz7s5ab7@zlang-mailbox>
+ <20230726000524.GG11340@frogsfrogsfrogs>
+ <20230726060102.GB30264@mit.edu>
+ <20230726145441.lbzzokwigrztimyq@zlang-mailbox>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20230726145441.lbzzokwigrztimyq@zlang-mailbox>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Darrick suggests that fstests can provide a simple smoketest, by running
-several generic filesystem smoke testing for five minutes apiece. Since
-there are only five smoke tests, this is effectively a 16min super-quick
-test.
+On Wed, Jul 26, 2023 at 10:54:41PM +0800, Zorro Lang wrote:
+> 
+> Ahaha, I'm just waiting for Darrick wake up, then ask him is there any
+> requirement/context about this patch. Due to he (looks like) a bit
+> hurry to push this patch :)
+> 
+> If most of you prefer this way (an ./check option, not a separated wrapper
+> script), I'm OK with that.
 
-With gcov enabled, running these tests yields about ~75% coverage for
-iomap and ~60% for xfs; or ~50% for ext4 and ~75% for ext4; and ~45% for
-btrfs.  Coverage was about ~65% for the pagecache.
+I'm agnostic on that front, since I already *have* my own wrapper
+script.  So if we need to do it in the wrapper script, I'm certainly
+OK with that.  OTOH, if we think it's a feature which is generally
+interesting to multiple developers and/or test wrappers, maybe it
+makes sense to push things into the ./check sccript.
 
-To implement that, this patch add a new "-t" option to ./check, and a
-new directory "template" under xfstests/, then we can have smoketest
-template, also can have more other testing templates.
+So I certainly don't have any objections to adding support to my
+/root/runtests.sh so that "{gce,kvm,android}-xfstests smoke" gets ends
+up running the moral equivalent of:
 
-Signed-off-by: Darrick J. Wong <djwong@kernel.org>
-Signed-off-by: Zorro Lang <zlang@kernel.org>
----
+SOAK_DURATION=4m ./check -g smoketest
 
-Hi,
+... and adding extra special case support in the check script just for
+this use case.  I'm doing enough other stuff in runtests.sh[1] that
+it's really not a big deal for me.  :-)
 
-This patch uses another way to achieve the smoketest requirement[1]. When
-I reviewed the patch from Darrick [2], I thought "smoketest" might not be
-the last one requirement likes that. I don't want to give each kind of
-tests a separated option. But we might can leave a hook for more fs-devel
-who have good testing templates for fstests.
-
-Although we have test groups, but those group names are too complex for
-the users who not always use fstests. So I'm thinking about providing
-some simple templates to run fstests, these templates base on test groups
-and some fstests global parameters, help users to know what kind of
-test they can do.
-
-Feel free to discuss, and if most of you prefer the original patch [2],
-I'll also think about merging the original one :)
-
-Thanks,
-Zorro
-
-[1]
-https://lore.kernel.org/fstests/20230726145441.lbzzokwigrztimyq@zlang-mailbox/T/#mabc0de98699f1b877c87caccb13809c9283c0606
-[2]
-https://lore.kernel.org/fstests/169033660570.3222210.3010411210438664310.stgit@frogsfrogsfrogs/T/#u
+[1] https://github.com/tytso/xfstests-bld/blob/master/test-appliance/files/root/runtests.sh
 
 
- check               |  8 ++++++++
- doc/group-names.txt |  1 +
- templates/smoketest | 16 ++++++++++++++++
- tests/generic/475   |  2 +-
- tests/generic/476   |  2 +-
- tests/generic/521   |  2 +-
- tests/generic/522   |  2 +-
- tests/generic/642   |  2 +-
- 8 files changed, 30 insertions(+), 5 deletions(-)
- create mode 100644 templates/smoketest
+More generally, there are some "intresting" hacks --- for example, I
+want to be able to run code in between every single test run, and the
+way I do it is a big ugly, but effective.  I basically set
 
-diff --git a/check b/check
-index 89e7e7bf..7100aae4 100755
---- a/check
-+++ b/check
-@@ -335,6 +335,14 @@ while [ $# -gt 0 ]; do
- 		;;
- 	-i)	iterations=$2; shift ;;
- 	-I) 	iterations=$2; istop=true; shift ;;
-+	-t)
-+		source templates/$2
-+		if [ $? -ne 0 ];then
-+			echo "Cannot import the templates/$2"
-+			exit 1
-+		fi
-+		shift
-+		;;
- 	-T)	timestamp=true ;;
- 	-d)	DUMP_OUTPUT=true ;;
- 	-b)	brief_test_summary=true;;
-diff --git a/doc/group-names.txt b/doc/group-names.txt
-index 1c35a394..c3dcca37 100644
---- a/doc/group-names.txt
-+++ b/doc/group-names.txt
-@@ -118,6 +118,7 @@ selftest		tests with fixed results, used to validate testing setup
- send			btrfs send/receive
- shrinkfs		decreasing the size of a filesystem
- shutdown		FS_IOC_SHUTDOWN ioctl
-+smoketest		Simple smoke tests
- snapshot		btrfs snapshots
- soak			long running soak tests whose runtime can be controlled
-                         directly by setting the SOAK_DURATION variable
-diff --git a/templates/smoketest b/templates/smoketest
-new file mode 100644
-index 00000000..40a0104b
---- /dev/null
-+++ b/templates/smoketest
-@@ -0,0 +1,16 @@
-+##/bin/bash
-+# For infrequent filesystem developers who simply want to run a quick test
-+# of the most commonly used filesystem functionality, use this command:
-+#
-+#     ./check -t smoketest <other config options>
-+#
-+# This template helps fstests to run several tests to exercise the file I/O,
-+# metadata, and crash recovery exercisers for four minutes apiece.  This
-+# should complete in approximately 20 minutes.
-+
-+echo "**********************"
-+echo "* A Quick Smoke Test *"
-+echo "**********************"
-+
-+[ -z "$SOAK_DURATION" ] && SOAK_DURATION="4m"
-+GROUP_LIST="smoketest"
-diff --git a/tests/generic/475 b/tests/generic/475
-index 0cbf5131..ce7fe013 100755
---- a/tests/generic/475
-+++ b/tests/generic/475
-@@ -12,7 +12,7 @@
- # testing efforts.
- #
- . ./common/preamble
--_begin_fstest shutdown auto log metadata eio recoveryloop
-+_begin_fstest shutdown auto log metadata eio recoveryloop smoketest
- 
- # Override the default cleanup function.
- _cleanup()
-diff --git a/tests/generic/476 b/tests/generic/476
-index 8e93b734..b1ae4df4 100755
---- a/tests/generic/476
-+++ b/tests/generic/476
-@@ -8,7 +8,7 @@
- # bugs in the write path.
- #
- . ./common/preamble
--_begin_fstest auto rw long_rw stress soak
-+_begin_fstest auto rw long_rw stress soak smoketest
- 
- # Override the default cleanup function.
- _cleanup()
-diff --git a/tests/generic/521 b/tests/generic/521
-index 22dd31a8..0956e501 100755
---- a/tests/generic/521
-+++ b/tests/generic/521
-@@ -7,7 +7,7 @@
- # Long-soak directio fsx test
- #
- . ./common/preamble
--_begin_fstest soak long_rw
-+_begin_fstest soak long_rw smoketest
- 
- # Import common functions.
- . ./common/filter
-diff --git a/tests/generic/522 b/tests/generic/522
-index f0cbcb24..0e4e6009 100755
---- a/tests/generic/522
-+++ b/tests/generic/522
-@@ -7,7 +7,7 @@
- # Long-soak buffered fsx test
- #
- . ./common/preamble
--_begin_fstest soak long_rw
-+_begin_fstest soak long_rw smoketest
- 
- # Import common functions.
- . ./common/filter
-diff --git a/tests/generic/642 b/tests/generic/642
-index eba90903..e6a475a8 100755
---- a/tests/generic/642
-+++ b/tests/generic/642
-@@ -8,7 +8,7 @@
- # bugs in the xattr code.
- #
- . ./common/preamble
--_begin_fstest auto soak attr long_rw stress
-+_begin_fstest auto soak attr long_rw stress smoketest
- 
- _cleanup()
- {
--- 
-2.40.1
+LOGGER_PROG to my own special script, gce-logger[2]
 
+[2] https://github.com/tytso/xfstests-bld/blob/master/test-appliance/files/usr/local/lib/gce-logger
+
+and this allows the user to upload a script which will get run in
+between every single individual fstest (e.g., to grab information from
+BPF, or grab and reset lockstats, etc.).  This script also updates the
+VM metadata so someone can query the VM to find out what test it's
+currently running, and the percentage completion for that VM.
+
+I could have asked for extra features in check, but whenever possible
+I try to work around it to limit the number of special things just for
+my set of wrapper scripts.
+
+
+> Just recently I'm a bit worry about the ./check code, it's becoming more
+> and more complex. I hope to separate something from it, but many things
+> entwined, and growing. Anyway that's another story, I'll look into this
+> patchset and review it soon.
+
+Well, I don't use the config sections feature at all, because my
+wrapper script has a lot more functionality than what you can get with
+the config sections, so I just pass in TEST_DEV, SCRATCH_DEV,
+MKFS_OPTIONS, etc., via environment variables, and I have my own set
+of scripts to set up te test parameters.
+
+So if you were going to simplify things by removing config sections,
+*I* wouldn't care.  Enough other people might be using it that
+changing the fstests interface for this might raise a lot of
+objections from other folks, though.
+
+Cheers,
+
+					- Ted
