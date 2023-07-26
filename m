@@ -2,85 +2,194 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6527DEB64DD
-	for <linux-xfs@archiver.kernel.org>; Wed, 26 Jul 2023 00:23:32 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id EBF42C001DF
+	for <linux-xfs@archiver.kernel.org>; Wed, 26 Jul 2023 01:39:46 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230370AbjGZAXb (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 25 Jul 2023 20:23:31 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55430 "EHLO
+        id S230196AbjGZBjm (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 25 Jul 2023 21:39:42 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43528 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229459AbjGZAXa (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 25 Jul 2023 20:23:30 -0400
-Received: from mail-pl1-x635.google.com (mail-pl1-x635.google.com [IPv6:2607:f8b0:4864:20::635])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8A74F11F
-        for <linux-xfs@vger.kernel.org>; Tue, 25 Jul 2023 17:23:29 -0700 (PDT)
-Received: by mail-pl1-x635.google.com with SMTP id d9443c01a7336-1bb8a89b975so18509375ad.1
-        for <linux-xfs@vger.kernel.org>; Tue, 25 Jul 2023 17:23:29 -0700 (PDT)
+        with ESMTP id S230128AbjGZBjl (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 25 Jul 2023 21:39:41 -0400
+Received: from mail-yw1-x1132.google.com (mail-yw1-x1132.google.com [IPv6:2607:f8b0:4864:20::1132])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0402826A6
+        for <linux-xfs@vger.kernel.org>; Tue, 25 Jul 2023 18:39:39 -0700 (PDT)
+Received: by mail-yw1-x1132.google.com with SMTP id 00721157ae682-583b3aa4f41so47257857b3.2
+        for <linux-xfs@vger.kernel.org>; Tue, 25 Jul 2023 18:39:38 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=fromorbit-com.20221208.gappssmtp.com; s=20221208; t=1690331009; x=1690935809;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
-        bh=Aszh+XgVxwL/lzEyX7X1UsJhP7dqoF3ZW93khaildOI=;
-        b=3iq6rNKTfBbVDbhkxo82tap08DnzS/ApRBso2ErZvUW0DKNBe4ErRzePZ/J8/21TYf
-         aJL5+lMa5ozmbTj9Tw36SH6hlaZFOa4NGcJ7PHL2pgXg5mSon9AsCnHmwMdQgI86PK4o
-         oAp9iN75WGjNqB+iic37lO9KMuAP5L95e2x6BEBPhHjUA/Tx4W6KuL21R3qFj8puggv0
-         ZPIR1bnT7rqfGCPa7ILlC+YMKAVUyDgAFeU5oQfisUtO11PwAurIee8w2HtQCPPgNk4l
-         bmdxa7kbCAZp4Jh8YbrwjnV1P2OLxcBw/V3fIw8LRsBR2WM7UMTyEAlvADHex/CYGCRn
-         oQJQ==
+        d=google.com; s=20221208; t=1690335578; x=1690940378;
+        h=mime-version:references:message-id:in-reply-to:subject:cc:to:from
+         :date:from:to:cc:subject:date:message-id:reply-to;
+        bh=g4+spZWgq0eS9irqfihzysgfAABYfYXXmt6SNBBeIWA=;
+        b=MZxYT2MdZ0Omg+tGFjNofeHkNy3Qahh2PBaeRGC1CPgAvaobe+CbfQzviGlH2bRGld
+         yZXqVlc4rdM7Hn/0uDpIIp7PtuXFyXV1rOEzEcPsa6KfHQ8WsO8NrD1ggf9GGi+atd7F
+         nKDBxVEOzhZviRxzmHMsde7z3UqWCZoSc0lNm1akA/R8EHPW9npAKef3Z/pjfCjWQWBN
+         xmycegOze/hxSYYenv2HpylIbUfqF9JiHr0gy59wVHZoy8dXEq78uEH7BvhlWGHxnNVM
+         Pm/pG6h4Z3mK+EEHLb2xoyIraXRTQQ+dd3MgzFr8XAVX1x101W0eH3RmqvYAcZ2a0tMf
+         tMBA==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20221208; t=1690331009; x=1690935809;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=Aszh+XgVxwL/lzEyX7X1UsJhP7dqoF3ZW93khaildOI=;
-        b=FRdSTnaAXMR2MKk9JU9YvyLDrEIs0ea0Q8ymt0KO8WHbNLk9R4V06sm+P8kOtHnrV/
-         Wg/4hNFrJDYoTpFwdfXDGeEBwBMcnPu3QxF6W4R2EOKXeCbU3pZyrFLEiim+fYmFe6PS
-         mqqcMTY9nMDZ6XRbse2zVgzrTmpU66sYPaOVOQNhg9Qvwx/bsFNokZ1gEfVMxXIauVgz
-         JJMParB1Rv0Sw+6Zf3JuMJmFD1L4RnhrWsgFZhs3IPu4oO9h+X1J78zT4Pu2Ur3i+Tae
-         5oJUc+/R0eAVtCfvtL9DakdUjPic5d1hz6c5/RhPDX5b/V8f0eaADUj87XgbwKyfWJ6I
-         nB1A==
-X-Gm-Message-State: ABy/qLYtQtYG6w9FglO5phmOTQP4JR9TEiPnS2SzVp4ddmisAQGH2kDr
-        lgtaNBr7gq5cOT8mIvEUdI1aKw==
-X-Google-Smtp-Source: APBJJlHq6Yyz3XYHy2jaar94WNm+tPC6IaHtDy11ZCwU1iPRoxpZZ32yia+lNbYkv4ik100U71mzAQ==
-X-Received: by 2002:a17:903:2308:b0:1b8:aef2:773e with SMTP id d8-20020a170903230800b001b8aef2773emr736158plh.46.1690331008981;
-        Tue, 25 Jul 2023 17:23:28 -0700 (PDT)
-Received: from dread.disaster.area (pa49-186-119-116.pa.vic.optusnet.com.au. [49.186.119.116])
-        by smtp.gmail.com with ESMTPSA id l2-20020a170902f68200b001b89536974bsm11659651plg.202.2023.07.25.17.23.28
+        d=1e100.net; s=20221208; t=1690335578; x=1690940378;
+        h=mime-version:references:message-id:in-reply-to:subject:cc:to:from
+         :date:x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=g4+spZWgq0eS9irqfihzysgfAABYfYXXmt6SNBBeIWA=;
+        b=E/bnKUYmW7F3o1Y07j9WEU61PgcDphfvBjfA8Z3xKGwkpU1H2Pg5gunaE8MTJBhgJT
+         Fie92S5N6WmIwn7ot8suzkLLS4LEefCm16qaDnxvmDlMnkdJi32+1z3CHCEjYfjVfzY2
+         t9upoCK6zg8Au4uAzGv+yJChryIWj9h3jOdDtqMFqzpSkB++c4kPOyuU1uBoIwIYLVXd
+         m3pd4tG26UnV9wnTkrXE/XHWgmxZVLbJVkZCSC0gNOOaMbcm/kfgGjp8ZlkyNfJJTrOh
+         b5uI4slYrdrxTv1XHoYwLA53HlqOuaKWLBBIx7+d12WWDMVEMxXcLoVx/jBX7uyGRrwB
+         IN+Q==
+X-Gm-Message-State: ABy/qLYGjl2eaJQQ5WiHgC2WeUzTMqXUM5dBE6BullaevqgO012qUQl3
+        e89MOb9dGAmEdLWOafxCbDYe1w==
+X-Google-Smtp-Source: APBJJlHxqCs0/k9opPHZr1oFjC/IjLn2NWFjtEyuaFY5bDdVyDOg3sTAz2vkUnxY9z5liUX1UEynKA==
+X-Received: by 2002:a81:46c3:0:b0:56d:2189:d87a with SMTP id t186-20020a8146c3000000b0056d2189d87amr821699ywa.15.1690335578030;
+        Tue, 25 Jul 2023 18:39:38 -0700 (PDT)
+Received: from ripple.attlocal.net (172-10-233-147.lightspeed.sntcca.sbcglobal.net. [172.10.233.147])
+        by smtp.gmail.com with ESMTPSA id s10-20020a5b044a000000b00c654cc439fesm3165326ybp.52.2023.07.25.18.39.32
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 25 Jul 2023 17:23:28 -0700 (PDT)
-Received: from dave by dread.disaster.area with local (Exim 4.96)
-        (envelope-from <david@fromorbit.com>)
-        id 1qOSJJ-00AXtp-1g;
-        Wed, 26 Jul 2023 10:23:25 +1000
-Date:   Wed, 26 Jul 2023 10:23:25 +1000
-From:   Dave Chinner <david@fromorbit.com>
-To:     "Darrick J. Wong" <djwong@kernel.org>
-Cc:     Christoph Hellwig <hch@lst.de>, linux-xfs@vger.kernel.org
-Subject: Re: [PATCH] xfs: remove the XFS_IOC_ATTRLIST_BY_HANDLE definitions
- out of xfs_fs.h
-Message-ID: <ZMBnfRBoUqkLmsQG@dread.disaster.area>
-References: <20230724154404.34524-1-hch@lst.de>
- <20230724154404.34524-2-hch@lst.de>
- <20230725034913.GX11352@frogsfrogsfrogs>
- <20230725040044.GY11352@frogsfrogsfrogs>
+        Tue, 25 Jul 2023 18:39:37 -0700 (PDT)
+Date:   Tue, 25 Jul 2023 18:39:25 -0700 (PDT)
+From:   Hugh Dickins <hughd@google.com>
+X-X-Sender: hugh@ripple.attlocal.net
+To:     Jeff Layton <jlayton@kernel.org>
+cc:     Eric Van Hensbergen <ericvh@kernel.org>,
+        Latchesar Ionkov <lucho@ionkov.net>,
+        Dominique Martinet <asmadeus@codewreck.org>,
+        Christian Schoenebeck <linux_oss@crudebyte.com>,
+        David Howells <dhowells@redhat.com>,
+        Marc Dionne <marc.dionne@auristor.com>,
+        Chris Mason <clm@fb.com>, Josef Bacik <josef@toxicpanda.com>,
+        David Sterba <dsterba@suse.com>, Xiubo Li <xiubli@redhat.com>,
+        Ilya Dryomov <idryomov@gmail.com>,
+        Jan Harkes <jaharkes@cs.cmu.edu>, coda@cs.cmu.edu,
+        Tyler Hicks <code@tyhicks.com>, Gao Xiang <xiang@kernel.org>,
+        Chao Yu <chao@kernel.org>, Yue Hu <huyue2@coolpad.com>,
+        Jeffle Xu <jefflexu@linux.alibaba.com>,
+        Namjae Jeon <linkinjeon@kernel.org>,
+        Sungjong Seo <sj1557.seo@samsung.com>,
+        Jan Kara <jack@suse.com>, Theodore Ts'o <tytso@mit.edu>,
+        Andreas Dilger <adilger.kernel@dilger.ca>,
+        Jaegeuk Kim <jaegeuk@kernel.org>,
+        OGAWA Hirofumi <hirofumi@mail.parknet.co.jp>,
+        Miklos Szeredi <miklos@szeredi.hu>,
+        Bob Peterson <rpeterso@redhat.com>,
+        Andreas Gruenbacher <agruenba@redhat.com>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        Tejun Heo <tj@kernel.org>,
+        Alexander Viro <viro@zeniv.linux.org.uk>,
+        Christian Brauner <brauner@kernel.org>,
+        Trond Myklebust <trond.myklebust@hammerspace.com>,
+        Anna Schumaker <anna@kernel.org>,
+        Konstantin Komarov <almaz.alexandrovich@paragon-software.com>,
+        Mark Fasheh <mark@fasheh.com>,
+        Joel Becker <jlbec@evilplan.org>,
+        Joseph Qi <joseph.qi@linux.alibaba.com>,
+        Mike Marshall <hubcap@omnibond.com>,
+        Martin Brandenburg <martin@omnibond.com>,
+        Luis Chamberlain <mcgrof@kernel.org>,
+        Kees Cook <keescook@chromium.org>,
+        Iurii Zaikin <yzaikin@google.com>,
+        Steve French <sfrench@samba.org>,
+        Paulo Alcantara <pc@manguebit.com>,
+        Ronnie Sahlberg <lsahlber@redhat.com>,
+        Shyam Prasad N <sprasad@microsoft.com>,
+        Tom Talpey <tom@talpey.com>,
+        Sergey Senozhatsky <senozhatsky@chromium.org>,
+        Richard Weinberger <richard@nod.at>,
+        Hans de Goede <hdegoede@redhat.com>,
+        Hugh Dickins <hughd@google.com>,
+        Andrew Morton <akpm@linux-foundation.org>,
+        "Darrick J. Wong" <djwong@kernel.org>,
+        Dave Chinner <david@fromorbit.com>,
+        Anthony Iliopoulos <ailiop@suse.com>, v9fs@lists.linux.dev,
+        linux-kernel@vger.kernel.org, linux-afs@lists.infradead.org,
+        linux-btrfs@vger.kernel.org, ceph-devel@vger.kernel.org,
+        codalist@coda.cs.cmu.edu, ecryptfs@vger.kernel.org,
+        linux-erofs@lists.ozlabs.org, linux-fsdevel@vger.kernel.org,
+        linux-ext4@vger.kernel.org, linux-f2fs-devel@lists.sourceforge.net,
+        cluster-devel@redhat.com, linux-nfs@vger.kernel.org,
+        ntfs3@lists.linux.dev, ocfs2-devel@lists.linux.dev,
+        devel@lists.orangefs.org, linux-cifs@vger.kernel.org,
+        samba-technical@lists.samba.org, linux-mtd@lists.infradead.org,
+        linux-mm@kvack.org, linux-xfs@vger.kernel.org
+Subject: Re: [PATCH v6 3/7] tmpfs: bump the mtime/ctime/iversion when page
+ becomes writeable
+In-Reply-To: <20230725-mgctime-v6-3-a794c2b7abca@kernel.org>
+Message-ID: <42c5bbe-a7a4-3546-e898-3f33bd71b062@google.com>
+References: <20230725-mgctime-v6-0-a794c2b7abca@kernel.org> <20230725-mgctime-v6-3-a794c2b7abca@kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20230725040044.GY11352@frogsfrogsfrogs>
+Content-Type: text/plain; charset=US-ASCII
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Mon, Jul 24, 2023 at 09:00:44PM -0700, Darrick J. Wong wrote:
-> Does anyone actually /use/ these extended extended attribute functions?
+On Tue, 25 Jul 2023, Jeff Layton wrote:
 
-xfsdump, for one.
+> Most filesystems that use the pagecache will update the mtime, ctime,
+> and change attribute when a page becomes writeable. Add a page_mkwrite
+> operation for tmpfs and just use it to bump the mtime, ctime and change
+> attribute.
+> 
+> This fixes xfstest generic/080 on tmpfs.
 
-And, IIRC, there were other SGI HSM-aware applications that used
-libhandle for these functions too, but I think we can largely ignore
-those on Linux nowdays.
+Huh.  I didn't notice when this one crept into the multigrain series.
 
--Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+I'm inclined to NAK this patch: at the very least, it does not belong
+in the series, but should be discussed separately.
+
+Yes, tmpfs does not and never has used page_mkwrite, and gains some
+performance advantage from that.  Nobody has ever asked for this
+change before, or not that I recall.
+
+Please drop it from the series: and if you feel strongly, or know
+strong reasons why tmpfs suddenly needs to use page_mkwrite now,
+please argue them separately.  To pass generic/080 is not enough.
+
+Thanks,
+Hugh
+
+> 
+> Signed-off-by: Jeff Layton <jlayton@kernel.org>
+> ---
+>  mm/shmem.c | 12 ++++++++++++
+>  1 file changed, 12 insertions(+)
+> 
+> diff --git a/mm/shmem.c b/mm/shmem.c
+> index b154af49d2df..654d9a585820 100644
+> --- a/mm/shmem.c
+> +++ b/mm/shmem.c
+> @@ -2169,6 +2169,16 @@ static vm_fault_t shmem_fault(struct vm_fault *vmf)
+>  	return ret;
+>  }
+>  
+> +static vm_fault_t shmem_page_mkwrite(struct vm_fault *vmf)
+> +{
+> +	struct vm_area_struct *vma = vmf->vma;
+> +	struct inode *inode = file_inode(vma->vm_file);
+> +
+> +	file_update_time(vma->vm_file);
+> +	inode_inc_iversion(inode);
+> +	return 0;
+> +}
+> +
+>  unsigned long shmem_get_unmapped_area(struct file *file,
+>  				      unsigned long uaddr, unsigned long len,
+>  				      unsigned long pgoff, unsigned long flags)
+> @@ -4210,6 +4220,7 @@ static const struct super_operations shmem_ops = {
+>  
+>  static const struct vm_operations_struct shmem_vm_ops = {
+>  	.fault		= shmem_fault,
+> +	.page_mkwrite	= shmem_page_mkwrite,
+>  	.map_pages	= filemap_map_pages,
+>  #ifdef CONFIG_NUMA
+>  	.set_policy     = shmem_set_policy,
+> @@ -4219,6 +4230,7 @@ static const struct vm_operations_struct shmem_vm_ops = {
+>  
+>  static const struct vm_operations_struct shmem_anon_vm_ops = {
+>  	.fault		= shmem_fault,
+> +	.page_mkwrite	= shmem_page_mkwrite,
+>  	.map_pages	= filemap_map_pages,
+>  #ifdef CONFIG_NUMA
+>  	.set_policy     = shmem_set_policy,
+> 
+> -- 
+> 2.41.0
