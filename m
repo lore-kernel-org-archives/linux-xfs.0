@@ -2,176 +2,221 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id ADE2AC001DF
-	for <linux-xfs@archiver.kernel.org>; Wed, 26 Jul 2023 15:23:27 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 82A64C41513
+	for <linux-xfs@archiver.kernel.org>; Wed, 26 Jul 2023 20:03:37 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234818AbjGZPX0 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 26 Jul 2023 11:23:26 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36520 "EHLO
+        id S229954AbjGZUDg (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 26 Jul 2023 16:03:36 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46964 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233963AbjGZPXX (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 26 Jul 2023 11:23:23 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 463D519A0
-        for <linux-xfs@vger.kernel.org>; Wed, 26 Jul 2023 08:23:22 -0700 (PDT)
+        with ESMTP id S229924AbjGZUDf (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 26 Jul 2023 16:03:35 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1B6AC26AE;
+        Wed, 26 Jul 2023 13:03:33 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
          key-exchange X25519 server-signature RSA-PSS (2048 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 9EB8761B3B
-        for <linux-xfs@vger.kernel.org>; Wed, 26 Jul 2023 15:23:21 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 0733EC433C7;
-        Wed, 26 Jul 2023 15:23:21 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 918A361C9A;
+        Wed, 26 Jul 2023 20:03:32 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id ADC89C433C8;
+        Wed, 26 Jul 2023 20:03:30 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1690385001;
-        bh=VP0aa4UG+E5T/PHkZK2nCe1hiXm5U4CxuJm+3lRbVhU=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=gbPdmlXtRuA/tjusDzk4XVmtytfjOVj7aWYFeuNTUyG/qJ1I61tSNPzaGtTtUrjVf
-         lOh3DU6zRo+y9myUQbNNeMHb/dS1VmxZrpiIWj/gGN2UBOMnt14FwAyW49fPiClev0
-         g7M0Ka4pbxVPveV1wBS2uYFht+UHtJ4l9TOXNjcflPJiNs9gyOHEbgmgau1HLzi4cL
-         BsKDC0b4BjUjvaFAreqJC9xTu4tMIi2Obr88KpANSpV5iRwfP2wvW9S8ZIvm17OYbe
-         0BEwEaMDPHebxd1OsxLCapu4Dm3Js96ubonHk+bdP+3E5bhZCKfeG/bJAqKrg7nO6a
-         35KI6rGQiZ1zg==
-Date:   Wed, 26 Jul 2023 08:23:20 -0700
-From:   "Darrick J. Wong" <djwong@kernel.org>
-To:     Dave Chinner <david@fromorbit.com>
-Cc:     Wengang Wang <wen.gang.wang@oracle.com>,
-        "linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>,
-        Srikanth C S <srikanth.c.s@oracle.com>
-Subject: Re: Question: reserve log space at IO time for recover
-Message-ID: <20230726152320.GA11352@frogsfrogsfrogs>
-References: <1DB9F8BB-4A7C-4422-B447-90A08E310E17@oracle.com>
- <ZLcqF2/7ZBI44C65@dread.disaster.area>
- <20230719014413.GC11352@frogsfrogsfrogs>
- <ZLeBvfTdRbFJ+mj2@dread.disaster.area>
- <2A3BFAC0-1482-412E-A126-7EAFE65282E8@oracle.com>
- <ZL3MlgtPWx5NHnOa@dread.disaster.area>
- <2D5E234E-3EE3-4040-81DA-576B92FF7401@oracle.com>
- <ZMCcJSLiWIi3KBOl@dread.disaster.area>
+        s=k20201202; t=1690401812;
+        bh=tTGZyVE7Fxwe20XQWb0Q6NTaOY7dMk1gosTaLl20W+s=;
+        h=From:To:Cc:Subject:Date:From;
+        b=LYZDLEqBHHCs/qtJ+TtfD3vaZw9ymaECIn9/7TUS4Cu2LfxrRaQrJZHmpLjseKbXy
+         jsPgCp/73eOyvH7TzYj+gmDSXckku5fftlpDb8TVegeANxCrDJeVl/8d8Zi1Wh9dYZ
+         0h7GL96hL6FU+SsrXG92gUNW0zoGXSvXeguQX/BoEJCYflitpEgm9O1vA/1V1m/7Jz
+         iXK5RBMQnF8izsdrF/DfKGg7/T1mcxWPIJz3G+uBjxGG0d/mnzm6qWqilDuAOJKWT2
+         MySbUgJ1qOWibZmeS406lZF5C8oXxO4aYumwWT13tYILAzw7/SokdUbs6dPC0H4XGl
+         seng6xY1qadIg==
+From:   Zorro Lang <zlang@kernel.org>
+To:     fstests@vger.kernel.org
+Cc:     djwong@kernel.org, tytso@mit.edu, linux-xfs@vger.kernel.org
+Subject: [PATCH] fstests: provides smoketest template
+Date:   Thu, 27 Jul 2023 04:03:27 +0800
+Message-Id: <20230726200327.239085-1-zlang@kernel.org>
+X-Mailer: git-send-email 2.40.1
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
 Content-Transfer-Encoding: 8bit
-In-Reply-To: <ZMCcJSLiWIi3KBOl@dread.disaster.area>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Wed, Jul 26, 2023 at 02:08:05PM +1000, Dave Chinner wrote:
-> On Mon, Jul 24, 2023 at 06:03:02PM +0000, Wengang Wang wrote:
-> > > On Jul 23, 2023, at 5:57 PM, Dave Chinner <david@fromorbit.com> wrote:
-> > > On Fri, Jul 21, 2023 at 07:36:03PM +0000, Wengang Wang wrote:
-> > >> FYI:
-> > >> 
-> > >> I am able reproduce the XFS mount hang issue with hacked kernels based on
-> > >> both 4.14.35 kernel or 6.4.0 kernel.
-> > >> Reproduce steps:
-> > >> 
-> > >> 1. create a XFS with 10MiB log size (small so easier to reproduce). The following
-> > >>   steps all aim at this XFS volume.
-> > > 
-> > > Actually, make that a few milliseconds.... :)
-> > 
-> > :)
-> > 
-> > > mkfs/xfs_info output would be appreciated.
-> > 
-> > sure,
-> > # xfs_info 20GB.bk2
-> > meta-data=20GB.bk2               isize=256    agcount=4, agsize=1310720 blks
-> >          =                       sectsz=512   attr=2, projid32bit=1
-> >          =                       crc=0        finobt=0, sparse=0, rmapbt=0
-> >          =                       reflink=0
-> 
-> Hmmmm. Why are you only testing v4 filesystems? They are deprecated
-> and support is largely due to be dropped from upstream in 2025...
-> 
-> Does the same problem occur with a v5 filesystems?
-> 
-> > >> 5. Checking the on disk left free log space, it’s 181760 bytes for both 4.14.35
-> > >>   kernel and 6.4.0 kernel.
-> > > 
-> > > Which is is clearly wrong. It should be at least 360416 bytes (i.e
-> > > tr_itrunc), because that's what the EFI being processed that pins
-> > > the tail of the log is supposed to have reserved when it was
-> > > stalled.
-> > 
-> > Yep, exactly.
-> > 
-> > > So where has the ~180kB of leaked space come from?
-> > > 
-> > > Have you traced the grant head reservations to find out
-> > > what the runtime log space and grant head reservations actually are?
-> > I have the numbers in vmcore (ignore the WARNs),
-> 
-> That's not what I'm asking. You've dumped the values at the time of
-> the hang, not traced the runtime reservations that have been made.
-> 
-> > > i.e. we have full tracing of the log reservation accounting via
-> > > tracepoints in the kernel. If there is a leak occurring, you need to
-> > > capture a trace of all the reservation accounting operations and
-> > > post process the output to find out what operation is leaking
-> > > reserved space. e.g.
-> > > 
-> > > # trace-cmd record -e xfs_log\* -e xlog\* -e printk touch /mnt/scratch/foo
-> > > ....
-> > > # trace-cmd report > s.t
-> > > # head -3 s.t
-> > > cpus=16
-> > >          touch-289000 [008] 430907.633820: xfs_log_reserve:      dev 253:32 t_ocnt 2 t_cnt 2 t_curr_res 240888 t_unit_res 240888 t_flags XLOG_TIC_PERM_RESERV reserveq empty writeq empty grant_reserve_cycle 1 grant_reserve_bytes 1024 grant_write_cycle 1 grant_write_bytes 1024 curr_cycle 1 curr_block 2 tail_cycle 1 tail_block 2
-> > >          touch-289000 [008] 430907.633829: xfs_log_reserve_exit: dev 253:32 t_ocnt 2 t_cnt 2 t_curr_res 240888 t_unit_res 240888 t_flags XLOG_TIC_PERM_RESERV reserveq empty writeq empty grant_reserve_cycle 1 grant_reserve_bytes 482800 grant_write_cycle 1 grant_write_bytes 482800 curr_cycle 1 curr_block 2 tail_cycle 1 tail_block 2
-> > > 
-> > > #
-> > > 
-> > > So this tells us the transaction reservation unit size, the count of
-> > > reservations, the current reserve and grant head locations, and the
-> > > current head and tail of the log at the time the transaction
-> > > reservation is started and then after it completes.
-> > 
-> > Will do that and report back. You want full log or only some typical
-> > ones? Full log would be big, how shall I share? 
-> 
-> I don't want to see the log. It'll be huge - I regularly generate
-> traces containing gigabytes of log accounting traces like this from
-> a single workload.
-> 
-> What I'm asking you to do is run the tracing and then post process
-> the values from the trace to determine what operation is using more
-> space than is being freed back to the log.
-> 
-> I generally do this with grep, awk and sed. some people use python
-> or perl. But either way it's a *lot* of work - in the past I have
-> spent _weeks_ on trace analysis to find a 4 byte leak in the log
-> space accounting. DOing things like graphing the head, tail and grant
-> spaces over time tend to show if this is a gradual leak versus a
-> sudden step change. If it's a sudden step change, then you can
-> isolate it in the trace and work out what happened. If it's a
-> gradual change, then you need to start looking for accounting
-> discrepancies...
+Darrick suggests that fstests can provide a simple smoketest, by running
+several generic filesystem smoke testing for five minutes apiece. Since
+there are only five smoke tests, this is effectively a 16min super-quick
+test.
 
-Any chance you'd be willing to share that pipeline?  It'd be useful to
-stash that kind of debugging program in xfsprogs/tools to save time and
-eliminate an entire class of "Hey Dave, did I capture this correctly?"
-questions.
+With gcov enabled, running these tests yields about ~75% coverage for
+iomap and ~60% for xfs; or ~50% for ext4 and ~75% for ext4; and ~45% for
+btrfs.  Coverage was about ~65% for the pagecache.
 
-(At least until someone changes the tracepoints :P)
+To implement that, this patch add a new "-t" option to ./check, and a
+new directory "template" under xfstests/, then we can have smoketest
+template, also can have more other testing templates.
 
---D
+Signed-off-by: Darrick J. Wong <djwong@kernel.org>
+Signed-off-by: Zorro Lang <zlang@kernel.org>
+---
 
-> e.g. a transaction records 32 bytes used in the item, so it releases
-> t_unit - 32 bytes at commit. However, the CIL may then only track 28
-> bytes of space for the item in the journal and we leak 4 bytes of
-> reservation on every on of those items committed.
-> 
-> These sorts of leaks typically only add up to being somethign
-> significant in situations where the log is flooded with tiny inode
-> timestamp changes - 4 bytes iper item doesn't really matter when you
-> only have a few thousand items in the log, but when you have
-> hundreds of thousands of tiny items in the log...
-> 
-> Cheers,
-> 
-> Dave.
-> -- 
-> Dave Chinner
-> david@fromorbit.com
+Hi,
+
+This patch uses another way to achieve the smoketest requirement[1]. When
+I reviewed the patch from Darrick [2], I thought "smoketest" might not be
+the last one requirement likes that. I don't want to give each kind of
+tests a separated option. But we might can leave a hook for more fs-devel
+who have good testing templates for fstests.
+
+Although we have test groups, but those group names are too complex for
+the users who not always use fstests. So I'm thinking about providing
+some simple templates to run fstests, these templates base on test groups
+and some fstests global parameters, help users to know what kind of
+test they can do.
+
+Feel free to discuss, and if most of you prefer the original patch [2],
+I'll also think about merging the original one :)
+
+Thanks,
+Zorro
+
+[1]
+https://lore.kernel.org/fstests/20230726145441.lbzzokwigrztimyq@zlang-mailbox/T/#mabc0de98699f1b877c87caccb13809c9283c0606
+[2]
+https://lore.kernel.org/fstests/169033660570.3222210.3010411210438664310.stgit@frogsfrogsfrogs/T/#u
+
+
+ check               |  8 ++++++++
+ doc/group-names.txt |  1 +
+ templates/smoketest | 16 ++++++++++++++++
+ tests/generic/475   |  2 +-
+ tests/generic/476   |  2 +-
+ tests/generic/521   |  2 +-
+ tests/generic/522   |  2 +-
+ tests/generic/642   |  2 +-
+ 8 files changed, 30 insertions(+), 5 deletions(-)
+ create mode 100644 templates/smoketest
+
+diff --git a/check b/check
+index 89e7e7bf..7100aae4 100755
+--- a/check
++++ b/check
+@@ -335,6 +335,14 @@ while [ $# -gt 0 ]; do
+ 		;;
+ 	-i)	iterations=$2; shift ;;
+ 	-I) 	iterations=$2; istop=true; shift ;;
++	-t)
++		source templates/$2
++		if [ $? -ne 0 ];then
++			echo "Cannot import the templates/$2"
++			exit 1
++		fi
++		shift
++		;;
+ 	-T)	timestamp=true ;;
+ 	-d)	DUMP_OUTPUT=true ;;
+ 	-b)	brief_test_summary=true;;
+diff --git a/doc/group-names.txt b/doc/group-names.txt
+index 1c35a394..c3dcca37 100644
+--- a/doc/group-names.txt
++++ b/doc/group-names.txt
+@@ -118,6 +118,7 @@ selftest		tests with fixed results, used to validate testing setup
+ send			btrfs send/receive
+ shrinkfs		decreasing the size of a filesystem
+ shutdown		FS_IOC_SHUTDOWN ioctl
++smoketest		Simple smoke tests
+ snapshot		btrfs snapshots
+ soak			long running soak tests whose runtime can be controlled
+                         directly by setting the SOAK_DURATION variable
+diff --git a/templates/smoketest b/templates/smoketest
+new file mode 100644
+index 00000000..40a0104b
+--- /dev/null
++++ b/templates/smoketest
+@@ -0,0 +1,16 @@
++##/bin/bash
++# For infrequent filesystem developers who simply want to run a quick test
++# of the most commonly used filesystem functionality, use this command:
++#
++#     ./check -t smoketest <other config options>
++#
++# This template helps fstests to run several tests to exercise the file I/O,
++# metadata, and crash recovery exercisers for four minutes apiece.  This
++# should complete in approximately 20 minutes.
++
++echo "**********************"
++echo "* A Quick Smoke Test *"
++echo "**********************"
++
++[ -z "$SOAK_DURATION" ] && SOAK_DURATION="4m"
++GROUP_LIST="smoketest"
+diff --git a/tests/generic/475 b/tests/generic/475
+index 0cbf5131..ce7fe013 100755
+--- a/tests/generic/475
++++ b/tests/generic/475
+@@ -12,7 +12,7 @@
+ # testing efforts.
+ #
+ . ./common/preamble
+-_begin_fstest shutdown auto log metadata eio recoveryloop
++_begin_fstest shutdown auto log metadata eio recoveryloop smoketest
+ 
+ # Override the default cleanup function.
+ _cleanup()
+diff --git a/tests/generic/476 b/tests/generic/476
+index 8e93b734..b1ae4df4 100755
+--- a/tests/generic/476
++++ b/tests/generic/476
+@@ -8,7 +8,7 @@
+ # bugs in the write path.
+ #
+ . ./common/preamble
+-_begin_fstest auto rw long_rw stress soak
++_begin_fstest auto rw long_rw stress soak smoketest
+ 
+ # Override the default cleanup function.
+ _cleanup()
+diff --git a/tests/generic/521 b/tests/generic/521
+index 22dd31a8..0956e501 100755
+--- a/tests/generic/521
++++ b/tests/generic/521
+@@ -7,7 +7,7 @@
+ # Long-soak directio fsx test
+ #
+ . ./common/preamble
+-_begin_fstest soak long_rw
++_begin_fstest soak long_rw smoketest
+ 
+ # Import common functions.
+ . ./common/filter
+diff --git a/tests/generic/522 b/tests/generic/522
+index f0cbcb24..0e4e6009 100755
+--- a/tests/generic/522
++++ b/tests/generic/522
+@@ -7,7 +7,7 @@
+ # Long-soak buffered fsx test
+ #
+ . ./common/preamble
+-_begin_fstest soak long_rw
++_begin_fstest soak long_rw smoketest
+ 
+ # Import common functions.
+ . ./common/filter
+diff --git a/tests/generic/642 b/tests/generic/642
+index eba90903..e6a475a8 100755
+--- a/tests/generic/642
++++ b/tests/generic/642
+@@ -8,7 +8,7 @@
+ # bugs in the xattr code.
+ #
+ . ./common/preamble
+-_begin_fstest auto soak attr long_rw stress
++_begin_fstest auto soak attr long_rw stress smoketest
+ 
+ _cleanup()
+ {
+-- 
+2.40.1
+
