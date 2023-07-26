@@ -2,36 +2,37 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 55423C04A6A
-	for <linux-xfs@archiver.kernel.org>; Wed, 26 Jul 2023 07:49:32 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A66C0C41513
+	for <linux-xfs@archiver.kernel.org>; Wed, 26 Jul 2023 07:50:34 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232916AbjGZHta (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 26 Jul 2023 03:49:30 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39710 "EHLO
+        id S232601AbjGZHu2 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 26 Jul 2023 03:50:28 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40282 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232988AbjGZHsL (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 26 Jul 2023 03:48:11 -0400
-Received: from out-36.mta0.migadu.com (out-36.mta0.migadu.com [91.218.175.36])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 330924492
-        for <linux-xfs@vger.kernel.org>; Wed, 26 Jul 2023 00:43:53 -0700 (PDT)
+        with ESMTP id S232643AbjGZHtN (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 26 Jul 2023 03:49:13 -0400
+Received: from out-15.mta0.migadu.com (out-15.mta0.migadu.com [IPv6:2001:41d0:1004:224b::f])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8EE5E55A8
+        for <linux-xfs@vger.kernel.org>; Wed, 26 Jul 2023 00:44:18 -0700 (PDT)
 Content-Type: text/plain;
         charset=us-ascii
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.dev; s=key1;
-        t=1690357431;
+        t=1690357456;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:cc:mime-version:mime-version:content-type:content-type:
          content-transfer-encoding:content-transfer-encoding:
          in-reply-to:in-reply-to:references:references;
-        bh=a3ULO+Vxmkb6xksXoS4ybd7NRJZ1IUtzBzsRjrvus9c=;
-        b=nYQ62uKjxX88WM5P8sDgL4eT+IxccKZ1Bz9uh79DZNvhsKrwxOFwGCLy84LISyYseR95J2
-        yYS6BxTbWUyEJx1Geopid+DDx1DrJ04Fmbfb1W5NRe89QJmgxfeZm0I8SUGCOcTGjkjLL+
-        GWNJBEk3EgYkStTpHlPsv4QWLHeCki4=
+        bh=YERirZpLP4FYzC9W9Cuhwy4vJFALDqDsk3pczk62JOQ=;
+        b=kOMq/HUlDvH603KrUUEza/PyymEgyIbW/Pmz8Heb+hJF3i5dVIkpDD+1wHWXrClPqGAw2s
+        a+xs9b+zND6HNviDHK0RhcBhFdy5suPaPW4D1t29z7ZNacrVxFACfaaCFl7IiD41gZEpbX
+        ZxOTECTjTAugfJjk//XKlUEVfOYnzaA=
 MIME-Version: 1.0
-Subject: Re: [PATCH v2 38/47] xfs: dynamically allocate the xfs-qm shrinker
+Subject: Re: [PATCH v2 39/47] zsmalloc: dynamically allocate the mm-zspool
+ shrinker
 X-Report-Abuse: Please report any abuse attempt to abuse@migadu.com and include these headers.
 From:   Muchun Song <muchun.song@linux.dev>
-In-Reply-To: <20230724094354.90817-39-zhengqi.arch@bytedance.com>
-Date:   Wed, 26 Jul 2023 15:43:12 +0800
+In-Reply-To: <20230724094354.90817-40-zhengqi.arch@bytedance.com>
+Date:   Wed, 26 Jul 2023 15:43:36 +0800
 Cc:     Andrew Morton <akpm@linux-foundation.org>, david@fromorbit.com,
         tkhai@ya.ru, Vlastimil Babka <vbabka@suse.cz>,
         Roman Gushchin <roman.gushchin@linux.dev>, djwong@kernel.org,
@@ -52,9 +53,9 @@ Cc:     Andrew Morton <akpm@linux-foundation.org>, david@fromorbit.com,
         linux-fsdevel@vger.kernel.org, linux-ext4@vger.kernel.org,
         linux-xfs@vger.kernel.org, linux-btrfs@vger.kernel.org
 Content-Transfer-Encoding: 7bit
-Message-Id: <99BAA621-E9B3-4D87-A1DD-D5242D0BC483@linux.dev>
+Message-Id: <D4BCB662-30A7-430C-965F-DC993F9E061A@linux.dev>
 References: <20230724094354.90817-1-zhengqi.arch@bytedance.com>
- <20230724094354.90817-39-zhengqi.arch@bytedance.com>
+ <20230724094354.90817-40-zhengqi.arch@bytedance.com>
 To:     Qi Zheng <zhengqi.arch@bytedance.com>
 X-Migadu-Flow: FLOW_OUT
 Precedence: bulk
@@ -66,9 +67,9 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 > On Jul 24, 2023, at 17:43, Qi Zheng <zhengqi.arch@bytedance.com> wrote:
 > 
 > In preparation for implementing lockless slab shrink, use new APIs to
-> dynamically allocate the xfs-qm shrinker, so that it can be freed
+> dynamically allocate the mm-zspool shrinker, so that it can be freed
 > asynchronously using kfree_rcu(). Then it doesn't need to wait for RCU
-> read-side critical section when releasing the struct xfs_quotainfo.
+> read-side critical section when releasing the struct zs_pool.
 > 
 > Signed-off-by: Qi Zheng <zhengqi.arch@bytedance.com>
 
