@@ -2,53 +2,53 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 168A1C001E0
-	for <linux-xfs@archiver.kernel.org>; Thu, 27 Jul 2023 08:22:04 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A4824C00528
+	for <linux-xfs@archiver.kernel.org>; Thu, 27 Jul 2023 08:22:03 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233788AbjG0IV4 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 27 Jul 2023 04:21:56 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54796 "EHLO
+        id S234139AbjG0IVz (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 27 Jul 2023 04:21:55 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55932 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232328AbjG0IUT (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 27 Jul 2023 04:20:19 -0400
-Received: from mail-pf1-x434.google.com (mail-pf1-x434.google.com [IPv6:2607:f8b0:4864:20::434])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id BFB3430D6
-        for <linux-xfs@vger.kernel.org>; Thu, 27 Jul 2023 01:12:24 -0700 (PDT)
-Received: by mail-pf1-x434.google.com with SMTP id d2e1a72fcca58-682eef7d752so204503b3a.0
-        for <linux-xfs@vger.kernel.org>; Thu, 27 Jul 2023 01:12:24 -0700 (PDT)
+        with ESMTP id S234134AbjG0ISd (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 27 Jul 2023 04:18:33 -0400
+Received: from mail-pf1-x432.google.com (mail-pf1-x432.google.com [IPv6:2607:f8b0:4864:20::432])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3B80549F7
+        for <linux-xfs@vger.kernel.org>; Thu, 27 Jul 2023 01:11:00 -0700 (PDT)
+Received: by mail-pf1-x432.google.com with SMTP id d2e1a72fcca58-66d6a9851f3so168172b3a.0
+        for <linux-xfs@vger.kernel.org>; Thu, 27 Jul 2023 01:11:00 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=bytedance.com; s=google; t=1690445502; x=1691050302;
+        d=bytedance.com; s=google; t=1690445429; x=1691050229;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:from:to:cc:subject:date
          :message-id:reply-to;
-        bh=LaFX3BwmrpvhCQ7689MuoFj6fWFWMuerWJZNZNxWVVc=;
-        b=SGV84iDT12fuj4KQ/vgxpHx68bD/8JsYSa9nhb7ntFAq0TKpEUCTaHREzmRsJ3Oz9G
-         gFKmoptXd+Bze48vx/wk2NbZ7T10E7S2MEqYjOuFeG7krpKwSKpfVHBIQRglXfDWTvzO
-         H6VjPKPaTyQraf7CXaxRYntDfW/rFmDGA8pIc8wp3mkyDCZKtDmTVn+WhnbJ9UTHRuGw
-         cfWrmdeiaPvvoPdILYK4+expmzf+8d5vjjDAS5qG8jY/gHHW1jvZoSyULsapwlJ7yOSa
-         R+fxk2s2E87YRuuXF3DsPLATcyScHTHvPiXBlY0TGTmF0pFa842v0dWDdf9orTc8Pn3s
-         TgHw==
+        bh=uDu/4z0sff3MNLq2Hem41DvJLtW9HR7Ht2OY0+o3IBw=;
+        b=iVGfsyXkMcKNuSj4S4+ETT1e5FnNKRSLwcupS7aKQrOa2P/cg11EPb/fa7MepSVN0c
+         souD70V3XZBCWCF1GY2G8kOBoazYK/GwCZP5iJVITEwRi2CFhPhtCnmN6NHRYDRfscjM
+         ei11bn/3SqGlS2cI+uWxsIZ60GgV8/Th1+KRHAcGdOM/vcClXnAdg9IcKu5dXKtmCkaz
+         1Uv1368bMlurEfH1GvebpNgAfjlYTQWl+OVWRYv+SAitVhKYxMqk7I6vstlqXAV5ZTFg
+         13mCns35aGRuj+msRJnkqY3lYp1C9AqbhcZNDVttxslcFzKIxthPN+0g8mDIqHh31rTQ
+         XhNA==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20221208; t=1690445502; x=1691050302;
+        d=1e100.net; s=20221208; t=1690445429; x=1691050229;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:x-gm-message-state:from:to:cc
          :subject:date:message-id:reply-to;
-        bh=LaFX3BwmrpvhCQ7689MuoFj6fWFWMuerWJZNZNxWVVc=;
-        b=M3ovBSw2Jbd7nH0K7KFyqFPlq5pE6EzG2tDNX/0mtovgp5CA58JBG1NlJ73gVSdND8
-         0ioH3kd2QSgoX5ccPm9pzkMQTtKxMtz49smLOlKlDh7LxPARxdLVcQaA36fTLavd9eEw
-         v1vkVo0NoDFWMJqJ4v4WFgaS/hZsw4Q7sC6Ires+zXHbNACnSojL44L5FHzw+pvMhvBh
-         SITAJrr1zCHU+qNiWDhsbMlIaFz+SBApy2FU0A0xMiKBupJWaNrT8xpGj0m4yOkRYsRj
-         2EsCKguEbiBXCYHDdcXXBoE3vaJp7wx4+pzTabUKZtyVDf0aSTgIL90yBjMb6aIZD5G9
-         LBBQ==
-X-Gm-Message-State: ABy/qLZVV6qDtDupBBi1bGd75ZKAMkMIq+azSOqcpjzrk14uw3mAr4Cl
-        f3EaCTUrEW9dCvi93tEKh4ex6Q==
-X-Google-Smtp-Source: APBJJlE5krPFtX55mdmbm5NUPWWjP9qjtSRaT4qUAQtTa6jtnXVyWfbzlnq9LXdP1SlmgTnMsVycpA==
-X-Received: by 2002:a05:6a21:78a8:b0:137:3eba:b81f with SMTP id bf40-20020a056a2178a800b001373ebab81fmr6016028pzc.3.1690445502183;
-        Thu, 27 Jul 2023 01:11:42 -0700 (PDT)
+        bh=uDu/4z0sff3MNLq2Hem41DvJLtW9HR7Ht2OY0+o3IBw=;
+        b=X2CsaRhkNq8jKwDWcKuEBn8dUlHmkIKXCwQyQUz1y5UmHvmRJqOjG1Wkp+y2V2AcUx
+         yfPuXQqMheUYNDdQy5v9u93i5QWieGK3NTttpCtwXSVnmyWY+mCFN1TIl9oLKivnhONi
+         0xYyL3GrfayaUFTHWZLkHi33+UfxjzFoGzNrTHa9UWbkQa6OD7w3obqwv+nmMbT153V3
+         ejz0mqEyXymOG8ZgmTF7GzrlKTVzX0VbsHIH+RLZ9cL8ybENEgS/VCeJC6gC/ix1efcB
+         nWqhdkbZFHN9KEV4xQpf8KVmEb+++70/+X0I9Kqa/dPZwO+9vV5VJcZNKz/jfvn4jE4O
+         WjnA==
+X-Gm-Message-State: ABy/qLa5kjW1g+BWPGSpcBo4PjME+1OxGCqTqRGstGyEp41/p4TKim5T
+        Bfp2iLciBgIe2M4Oi0J43QiLmQ==
+X-Google-Smtp-Source: APBJJlHGswV8UzzwdSNooBFOlXCa2QxTNwcJjWEIeOA/B6KtVME+e61/tgitLanHgBraDSTbcyHPAw==
+X-Received: by 2002:a05:6a20:1595:b0:137:30db:bc1e with SMTP id h21-20020a056a20159500b0013730dbbc1emr5696433pzj.3.1690445429121;
+        Thu, 27 Jul 2023 01:10:29 -0700 (PDT)
 Received: from C02DW0BEMD6R.bytedance.net ([203.208.167.147])
-        by smtp.gmail.com with ESMTPSA id j8-20020aa78d08000000b006828e49c04csm885872pfe.75.2023.07.27.01.11.30
+        by smtp.gmail.com with ESMTPSA id j8-20020aa78d08000000b006828e49c04csm885872pfe.75.2023.07.27.01.10.17
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 27 Jul 2023 01:11:41 -0700 (PDT)
+        Thu, 27 Jul 2023 01:10:28 -0700 (PDT)
 From:   Qi Zheng <zhengqi.arch@bytedance.com>
 To:     akpm@linux-foundation.org, david@fromorbit.com, tkhai@ya.ru,
         vbabka@suse.cz, roman.gushchin@linux.dev, djwong@kernel.org,
@@ -68,11 +68,10 @@ Cc:     linux-kernel@vger.kernel.org, linux-mm@kvack.org, x86@kernel.org,
         virtualization@lists.linux-foundation.org,
         linux-fsdevel@vger.kernel.org, linux-ext4@vger.kernel.org,
         linux-xfs@vger.kernel.org, linux-btrfs@vger.kernel.org,
-        Qi Zheng <zhengqi.arch@bytedance.com>,
-        Muchun Song <songmuchun@bytedance.com>
-Subject: [PATCH v3 29/49] md/raid5: dynamically allocate the md-raid5 shrinker
-Date:   Thu, 27 Jul 2023 16:04:42 +0800
-Message-Id: <20230727080502.77895-30-zhengqi.arch@bytedance.com>
+        Qi Zheng <zhengqi.arch@bytedance.com>
+Subject: [PATCH v3 23/49] mm: workingset: dynamically allocate the mm-shadow shrinker
+Date:   Thu, 27 Jul 2023 16:04:36 +0800
+Message-Id: <20230727080502.77895-24-zhengqi.arch@bytedance.com>
 X-Mailer: git-send-email 2.24.3 (Apple Git-128)
 In-Reply-To: <20230727080502.77895-1-zhengqi.arch@bytedance.com>
 References: <20230727080502.77895-1-zhengqi.arch@bytedance.com>
@@ -82,92 +81,73 @@ Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-In preparation for implementing lockless slab shrink, use new APIs to
-dynamically allocate the md-raid5 shrinker, so that it can be freed
-asynchronously using kfree_rcu(). Then it doesn't need to wait for RCU
-read-side critical section when releasing the struct r5conf.
+Use new APIs to dynamically allocate the mm-shadow shrinker.
 
 Signed-off-by: Qi Zheng <zhengqi.arch@bytedance.com>
-Reviewed-by: Muchun Song <songmuchun@bytedance.com>
 ---
- drivers/md/raid5.c | 25 ++++++++++++++-----------
- drivers/md/raid5.h |  2 +-
- 2 files changed, 15 insertions(+), 12 deletions(-)
+ mm/workingset.c | 27 ++++++++++++++-------------
+ 1 file changed, 14 insertions(+), 13 deletions(-)
 
-diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
-index 85b3004594e0..fbb4e6f5ff43 100644
---- a/drivers/md/raid5.c
-+++ b/drivers/md/raid5.c
-@@ -7414,7 +7414,7 @@ static void free_conf(struct r5conf *conf)
+diff --git a/mm/workingset.c b/mm/workingset.c
+index da58a26d0d4d..3c53138903a7 100644
+--- a/mm/workingset.c
++++ b/mm/workingset.c
+@@ -763,13 +763,6 @@ static unsigned long scan_shadow_nodes(struct shrinker *shrinker,
+ 					NULL);
+ }
  
- 	log_exit(conf);
+-static struct shrinker workingset_shadow_shrinker = {
+-	.count_objects = count_shadow_nodes,
+-	.scan_objects = scan_shadow_nodes,
+-	.seeks = 0, /* ->count reports only fully expendable nodes */
+-	.flags = SHRINKER_NUMA_AWARE | SHRINKER_MEMCG_AWARE,
+-};
+-
+ /*
+  * Our list_lru->lock is IRQ-safe as it nests inside the IRQ-safe
+  * i_pages lock.
+@@ -778,9 +771,10 @@ static struct lock_class_key shadow_nodes_key;
  
--	unregister_shrinker(&conf->shrinker);
-+	shrinker_free(conf->shrinker);
- 	free_thread_groups(conf);
- 	shrink_stripes(conf);
- 	raid5_free_percpu(conf);
-@@ -7462,7 +7462,7 @@ static int raid5_alloc_percpu(struct r5conf *conf)
- static unsigned long raid5_cache_scan(struct shrinker *shrink,
- 				      struct shrink_control *sc)
+ static int __init workingset_init(void)
  {
--	struct r5conf *conf = container_of(shrink, struct r5conf, shrinker);
-+	struct r5conf *conf = shrink->private_data;
- 	unsigned long ret = SHRINK_STOP;
++	struct shrinker *workingset_shadow_shrinker;
+ 	unsigned int timestamp_bits;
+ 	unsigned int max_order;
+-	int ret;
++	int ret = -ENOMEM;
  
- 	if (mutex_trylock(&conf->cache_size_mutex)) {
-@@ -7483,7 +7483,7 @@ static unsigned long raid5_cache_scan(struct shrinker *shrink,
- static unsigned long raid5_cache_count(struct shrinker *shrink,
- 				       struct shrink_control *sc)
- {
--	struct r5conf *conf = container_of(shrink, struct r5conf, shrinker);
-+	struct r5conf *conf = shrink->private_data;
+ 	BUILD_BUG_ON(BITS_PER_LONG < EVICTION_SHIFT);
+ 	/*
+@@ -797,17 +791,24 @@ static int __init workingset_init(void)
+ 	pr_info("workingset: timestamp_bits=%d max_order=%d bucket_order=%u\n",
+ 	       timestamp_bits, max_order, bucket_order);
  
- 	if (conf->max_nr_stripes < conf->min_nr_stripes)
- 		/* unlikely, but not impossible */
-@@ -7718,18 +7718,21 @@ static struct r5conf *setup_conf(struct mddev *mddev)
- 	 * it reduces the queue depth and so can hurt throughput.
- 	 * So set it rather large, scaled by number of devices.
- 	 */
--	conf->shrinker.seeks = DEFAULT_SEEKS * conf->raid_disks * 4;
--	conf->shrinker.scan_objects = raid5_cache_scan;
--	conf->shrinker.count_objects = raid5_cache_count;
--	conf->shrinker.batch = 128;
--	conf->shrinker.flags = 0;
--	ret = register_shrinker(&conf->shrinker, "md-raid5:%s", mdname(mddev));
--	if (ret) {
--		pr_warn("md/raid:%s: couldn't register shrinker.\n",
-+	conf->shrinker = shrinker_alloc(0, "md-raid5:%s", mdname(mddev));
-+	if (!conf->shrinker) {
-+		pr_warn("md/raid:%s: couldn't allocate shrinker.\n",
- 			mdname(mddev));
- 		goto abort;
- 	}
- 
-+	conf->shrinker->seeks = DEFAULT_SEEKS * conf->raid_disks * 4;
-+	conf->shrinker->scan_objects = raid5_cache_scan;
-+	conf->shrinker->count_objects = raid5_cache_count;
-+	conf->shrinker->batch = 128;
-+	conf->shrinker->private_data = conf;
+-	ret = prealloc_shrinker(&workingset_shadow_shrinker, "mm-shadow");
+-	if (ret)
++	workingset_shadow_shrinker = shrinker_alloc(SHRINKER_NUMA_AWARE |
++						    SHRINKER_MEMCG_AWARE,
++						    "mm-shadow");
++	if (!workingset_shadow_shrinker)
+ 		goto err;
 +
-+	shrinker_register(conf->shrinker);
+ 	ret = __list_lru_init(&shadow_nodes, true, &shadow_nodes_key,
+-			      &workingset_shadow_shrinker);
++			      workingset_shadow_shrinker);
+ 	if (ret)
+ 		goto err_list_lru;
+-	register_shrinker_prepared(&workingset_shadow_shrinker);
 +
- 	sprintf(pers_name, "raid%d", mddev->new_level);
- 	rcu_assign_pointer(conf->thread,
- 			   md_register_thread(raid5d, mddev, pers_name));
-diff --git a/drivers/md/raid5.h b/drivers/md/raid5.h
-index 97a795979a35..22bea20eccbd 100644
---- a/drivers/md/raid5.h
-+++ b/drivers/md/raid5.h
-@@ -670,7 +670,7 @@ struct r5conf {
- 	wait_queue_head_t	wait_for_stripe;
- 	wait_queue_head_t	wait_for_overlap;
- 	unsigned long		cache_state;
--	struct shrinker		shrinker;
-+	struct shrinker		*shrinker;
- 	int			pool_size; /* number of disks in stripeheads in pool */
- 	spinlock_t		device_lock;
- 	struct disk_info	*disks;
++	workingset_shadow_shrinker->count_objects = count_shadow_nodes;
++	workingset_shadow_shrinker->scan_objects = scan_shadow_nodes;
++
++	shrinker_register(workingset_shadow_shrinker);
+ 	return 0;
+ err_list_lru:
+-	free_prealloced_shrinker(&workingset_shadow_shrinker);
++	shrinker_free(workingset_shadow_shrinker);
+ err:
+ 	return ret;
+ }
 -- 
 2.30.2
 
