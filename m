@@ -2,137 +2,260 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0B3BCC001DC
-	for <linux-xfs@archiver.kernel.org>; Thu, 27 Jul 2023 15:35:35 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 99245C0015E
+	for <linux-xfs@archiver.kernel.org>; Thu, 27 Jul 2023 18:21:40 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232021AbjG0Pfe (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 27 Jul 2023 11:35:34 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43870 "EHLO
+        id S229995AbjG0SVj (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 27 Jul 2023 14:21:39 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53982 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231799AbjG0Pfd (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 27 Jul 2023 11:35:33 -0400
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3A3B526BA
-        for <linux-xfs@vger.kernel.org>; Thu, 27 Jul 2023 08:34:55 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1690472094;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=83HeM6Yy5ZhHCBvAhGmYCcmmcdNeQw5Huo5S9s4zgYo=;
-        b=N1NOogn/d3JteqbrIFRV+NymWMYH3yCGjHfnEbHA5iNRPK8QcSnvr0nuVkgNb8KLFh4IDX
-        AEazswu2Qoxh/ytgOVZ2tqhA09OjwJrfvGmgY9FYEZ3n1FbzzFUAja7t1oecS+iy2929mB
-        kwJgH6V7K+MVBWLRBwCRGTwzpymdQxQ=
-Received: from mail-pl1-f197.google.com (mail-pl1-f197.google.com
- [209.85.214.197]) by relay.mimecast.com with ESMTP with STARTTLS
- (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
- us-mta-386-YcCq2ZZ5ObyWVAwxKH3VHg-1; Thu, 27 Jul 2023 11:34:52 -0400
-X-MC-Unique: YcCq2ZZ5ObyWVAwxKH3VHg-1
-Received: by mail-pl1-f197.google.com with SMTP id d9443c01a7336-1bbce3d48d9so10517625ad.0
-        for <linux-xfs@vger.kernel.org>; Thu, 27 Jul 2023 08:34:52 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20221208; t=1690472091; x=1691076891;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=83HeM6Yy5ZhHCBvAhGmYCcmmcdNeQw5Huo5S9s4zgYo=;
-        b=f15WXP/79atWysMiCT/njHHnYRcUltvTU4T8lI8euXiUBMmhX+PubV5tiGcs+XX1/A
-         wWqNjoKbdUBu80d3y5YC3wzTANoDZ0lPKx9JGD6Yg6DHzl+fJWj5HqPHo6Hw6rELVx4Z
-         7SFKUsM9X3HgqglB1JU+hkn+9SFWMTWmadjhKNUqUSWlznXFF27G0FGdraSuUMJkwTsr
-         R4jq9h8cf8g8X3V2wc4bTxIL7sIVOboFnqnA4At60OlVXNidqw5yXEKOt0cmi4H/kHv8
-         FDVMg6gP0SWNmsKVY6wRa8IjzLK9xqL5FoFwjZW5hTb80POW3iDtcRmWgH4a5q9u+q50
-         lpDg==
-X-Gm-Message-State: ABy/qLb6kfop1IQBIty7zOdc4ywVycNowmEjjSFdOvDgHhOcNLBmPSXj
-        tKapr6dE+jXrvfU7+CtDx0P0/ZSlnQk5Vql88MZ1A2r/HrJ9lpmP0zyAz4E81YqXJh4cXKgr+ZK
-        nyDdCfjYrqsfQtxVBXuD5Wfyz3ZIHqro=
-X-Received: by 2002:a17:902:9884:b0:1bb:30c5:836b with SMTP id s4-20020a170902988400b001bb30c5836bmr5135169plp.58.1690472091627;
-        Thu, 27 Jul 2023 08:34:51 -0700 (PDT)
-X-Google-Smtp-Source: APBJJlGgBJAFBiv4IqW94ImgEHmTMxJVk/8KA7PuqtoyruoXn14eMd4OHq6AFI4MR3FHaS8qw6WSdg==
-X-Received: by 2002:a17:902:9884:b0:1bb:30c5:836b with SMTP id s4-20020a170902988400b001bb30c5836bmr5135154plp.58.1690472091333;
-        Thu, 27 Jul 2023 08:34:51 -0700 (PDT)
-Received: from zlang-mailbox ([43.228.180.230])
-        by smtp.gmail.com with ESMTPSA id u5-20020a17090282c500b001b66a71a4a0sm1802486plz.32.2023.07.27.08.34.49
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 27 Jul 2023 08:34:50 -0700 (PDT)
-Date:   Thu, 27 Jul 2023 23:34:47 +0800
-From:   Zorro Lang <zlang@redhat.com>
-To:     "Darrick J. Wong" <djwong@kernel.org>
-Cc:     linux-xfs@vger.kernel.org, fstests@vger.kernel.org
-Subject: Re: [PATCH 1/1] xfs/122: adjust test for flexarray conversions in 6.5
-Message-ID: <20230727153447.5zd7vuwhoqazyacb@zlang-mailbox>
-References: <169033661482.3222297.18190312289773544342.stgit@frogsfrogsfrogs>
- <169033662042.3222297.14047592154027443561.stgit@frogsfrogsfrogs>
- <20230727135744.nhmwpv7dxt5nvshd@zlang-mailbox>
- <20230727152336.GJ11340@frogsfrogsfrogs>
+        with ESMTP id S229492AbjG0SVi (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 27 Jul 2023 14:21:38 -0400
+Received: from bombadil.infradead.org (bombadil.infradead.org [IPv6:2607:7c80:54:3::133])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1DE9030DF;
+        Thu, 27 Jul 2023 11:21:37 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=infradead.org; s=bombadil.20210309; h=Sender:Content-Type:MIME-Version:
+        Message-ID:Subject:Cc:To:From:Date:Reply-To:Content-Transfer-Encoding:
+        Content-ID:Content-Description:In-Reply-To:References;
+        bh=KjXNXgCpSbcw+Ak4vvqhiXdosw6fqv3FoC2eku2PFsk=; b=yGeOAILaRG5hOQ2r06/5WNn5Ow
+        1lZuBPy4/4IbmT0uZR+k+i8GtNDtlgTLZhA/vpo6EW87vJnG5j9nelJsPpsSLEH6Jx36T3fnfXfDp
+        dmZo1BTJX0QBrEsS3sr9c8Tv3G8Ec7AQs+2f4dyC9hqEoJEPiunxg6OI1qpzePCj05Rrlsv+aXSWt
+        p3ep2YitSJEfyMpmmHwvwHeGis5GvnV1VwABYpw2NsqhYyT+/0d5en2HWVYcnvu4U4nLnI9G9WXOo
+        WeOkcuNcvf7IOscq9jiIDnRzWhMLkwLaPmXotDwXub4Fr/35npcCjYXhK+WP+m6ZBZgZf+OlznnPh
+        CwDLvrPg==;
+Received: from mcgrof by bombadil.infradead.org with local (Exim 4.96 #2 (Red Hat Linux))
+        id 1qP5cF-00087X-0j;
+        Thu, 27 Jul 2023 18:21:35 +0000
+Date:   Thu, 27 Jul 2023 11:21:35 -0700
+From:   Luis Chamberlain <mcgrof@kernel.org>
+To:     linux-xfs@vger.kernel.org
+Cc:     Luis Chamberlain <mcgrof@kernel.org>,
+        linux-fsdevel@vger.kernel.org,
+        Pankaj Raghav <p.raghav@samsung.com>,
+        Chandan Babu R <chandan.babu@oracle.com>
+Subject: xfs kdevops baseline for next-20230725
+Message-ID: <ZMK1r91ByQERwDK+@bombadil.infradead.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20230727152336.GJ11340@frogsfrogsfrogs>
+Sender: Luis Chamberlain <mcgrof@infradead.org>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Thu, Jul 27, 2023 at 08:23:36AM -0700, Darrick J. Wong wrote:
-> On Thu, Jul 27, 2023 at 09:57:44PM +0800, Zorro Lang wrote:
-> > On Tue, Jul 25, 2023 at 06:57:00PM -0700, Darrick J. Wong wrote:
-> > > From: Darrick J. Wong <djwong@kernel.org>
-> > > 
-> > > Adjust the output of this test to handle the conversion of flexarray
-> > > declaration conversions in 6.5.
-> > > 
-> > > Signed-off-by: Darrick J. Wong <djwong@kernel.org>
-> > > ---
-> > 
-> > Looks like it's about a49bbce58ea9 ("xfs: convert flex-array declarations
-> > in xfs attr leaf blocks"). If you don't mind, I'd like to mention it in commit
-> > log when I merge it :) This patch looks good to me,
-> 
-> Please do mention it.  I wasn't sure if I should do that or a _fixed_by
-> tag, since technically there's no breakage in the xfs code itself...
+I'd like to see if this is useful so feedback is welcomed.
 
-Thanks, a _fixed_by tag looks not suitable, I also don't want to add _fixed_by
-each time we change this case. So I don't have better idea, have to mention
-the kernel commit in this commit log, to leave a record at least.
+I recently had a reason to establish a baseline for XFS as we start
+testing some new fatures we've been working on to ensure we don't create
+regressions. I've been using kdevops for this work, its on github [0] and
+on gitlab for those that prefer that [1] and tested against linux-next
+tag next-20230725, with its respective generic kernel configuration
+which has evolved over time for kdevops which let's us test with kdevops
+with qemu / virtualbox / all cloud providers [2]. We fork fstests [3] so
+have a small delta, mostly reverts to help stability on testing as
+Chandan found regressions in some new fstest changes.
 
-> 
-> --D
-> 
-> > Reviewed-by: Zorro Lang <zlang@redhat.com>
-> > 
-> > Thanks,
-> > Zorro
-> > 
-> > >  tests/xfs/122 |    8 ++++++++
-> > >  1 file changed, 8 insertions(+)
-> > > 
-> > > 
-> > > diff --git a/tests/xfs/122 b/tests/xfs/122
-> > > index e616f1987d..ba927c77c4 100755
-> > > --- a/tests/xfs/122
-> > > +++ b/tests/xfs/122
-> > > @@ -26,13 +26,21 @@ _wants_kernel_commit 03a7485cd701 \
-> > >  _type_size_filter()
-> > >  {
-> > >  	# lazy SB adds __be32 agf_btreeblks - pv960372
-> > > +	# flexarray conversion of the attr structures in Linux 6.5 changed
-> > > +	# the sizeof output
-> > >  	if [ "$($MKFS_XFS_PROG 2>&1 | grep -c lazy-count )" == "0" ]; then
-> > >  		perl -ne '
-> > >  s/sizeof\( xfs_agf_t \) = 60/sizeof( xfs_agf_t ) = <SIZE>/;
-> > > +s/sizeof\(struct xfs_attr3_leafblock\) = 80/sizeof(struct xfs_attr3_leafblock) = 88/;
-> > > +s/sizeof\(struct xfs_attr_shortform\) = 4/sizeof(struct xfs_attr_shortform) = 8/;
-> > > +s/sizeof\(xfs_attr_leafblock_t\) = 32/sizeof(xfs_attr_leafblock_t) = 40/;
-> > >  		print;'
-> > >  	else
-> > >  		perl -ne '
-> > >  s/sizeof\( xfs_agf_t \) = 64/sizeof( xfs_agf_t ) = <SIZE>/;
-> > > +s/sizeof\(struct xfs_attr3_leafblock\) = 80/sizeof(struct xfs_attr3_leafblock) = 88/;
-> > > +s/sizeof\(struct xfs_attr_shortform\) = 4/sizeof(struct xfs_attr_shortform) = 8/;
-> > > +s/sizeof\(xfs_attr_leafblock_t\) = 32/sizeof(xfs_attr_leafblock_t) = 40/;
-> > >  		print;'
-> > >  	fi
-> > >  }
-> > > 
-> > 
-> 
+[0] https://github.com/linux-kdevops/kdevops.git
+[1] https://gitlab.com/linux-kdevops/kdevops.git
+[2] https://github.com/linux-kdevops/kdevops/blob/master/playbooks/roles/bootlinux/templates/config-next-20230725
+[3] https://github.com/linux-kdevops/fstests
 
+The sections tested for are:
+
+xfs_crc
+xfs_reflink
+xfs_reflink-normapbt
+xfs_reflink_1024
+xfs_reflink_2k
+xfs_reflink_4k
+xfs_nocrc
+xfs_nocrc_512
+xfs_nocrc_1k
+xfs_nocrc_2k
+xfs_nocrc_4k
+xfs_logdev
+xfs_rtdev
+xfs_rtlogdev
+
+You can see what these sections represent in terms of xfs here:
+
+https://github.com/linux-kdevops/kdevops/blob/master/playbooks/roles/fstests/templates/xfs/xfs.config
+
+The first order of business before even considering a set of changes is
+getting baseline and building a high confidence in that baseline. We had
+a technical debt as it's been a while before we get to establish and
+publish a baseline with high confidence for XFS for linux-next. Hopefully this
+will help us keep it moving forward.
+
+The kdevops configuration used for this can be found here:
+
+https://github.com/linux-kdevops/kdevops/blob/master/workflows/fstests/results/mcgrof/libvirt-qemu/20230727/kdevops.config
+
+Worth noting is that virtio drives are used instead of NVMe since virtio
+supports io-threads, and so we get less NVMe timouts on the guest which
+have proven to cause major false positives for testing for a while as we
+have seen on the stable testing. I'll go ahead and make virtio the
+default for qemu configurations now. We expect to move back to nvme once
+distros pick up release of qemu with io-thread support.
+
+This is useful truncated / sparsefiles files with loopback file strategy
+documented here:
+
+https://github.com/linux-kdevops/kdevops/blob/master/docs/testing-with-loopback.md
+
+I'll soon re-test with real NVMe drives though as kdevops now has
+support for using them and I have some basic tests with PCIe passthrough
+(which kdevops also enables with 'make dynconfig').
+
+For now I've just ran one full set of fstests, ie, the confidence is rather
+low for my preference. After publishing this I will the tests against one
+week's worth of testing to build confidence up to 100 tests. We'll see
+if some other tests fail with a lower failure rate after that.
+
+But for now I figured I'd publish preliminary results on the first run.
+Some failures seem like test bugs. Some other failures are likely real and
+require investigation.
+
+Often we just commit into kdevops test results / expunges, but this is
+the first time publishing actual results on the mailing list. The commit
+logs detail the methodology to collect things results and go step by
+step so to help others who may want to try to start baselines with other
+filesystems, etc.
+
+You are more than welcomed to also contribute testing and your own
+results in your own kdevops namespace, the more we have the better
+(within reason of course).
+
+The tests found to be common in at least 2 secions go in the all.txt
+expunge list. Since at LSFMM we've been requested to store results
+this set of results go with results archived in XZ format and
+demonstrate how to list files in it, and also get results for failures
+out. I provide a simple super cursory review of the test failures as well.
+
+The test bugs seem related to quotes, but it's not clear to me why
+this wasn't detected in other tests before.
+
+What I'd like to know, is if this email is useful to the XFS development
+community. Should we strive to do this more often?
+
+Here are failures found in at least more than one section:
+
+cat workflows/fstests/expunges/6.5.0-rc3-next-20230725/xfs/unassigned/all.txt
+
+# lazy baseline entries are failures found at least once on multiple XFS test
+# sections. To see the actual *.bad files and *.dmesg files you can use:
+#
+# tar -tOJf workflows/fstests/results/mcgrof/libvirt-qemu/20230727/6.5.0-rc3-next-20230725.xz
+#
+# For example to see all generic/175 failures:
+#
+# tar -tOJf workflows/fstests/results/mcgrof/libvirt-qemu/20230727/6.5.0-rc3-next-20230725.xz 2>&1 | grep generic | grep 175
+# 6.5.0-rc3-next-20230725/xfs_reflink_normapbt/generic/175.out.bad
+# 6.5.0-rc3-next-20230725/xfs_reflink_normapbt/generic/175.full
+# 6.5.0-rc3-next-20230725/xfs_reflink_normapbt/generic/175.dmesg
+# 6.5.0-rc3-next-20230725/xfs_reflink/generic/175.out.bad
+# 6.5.0-rc3-next-20230725/xfs_reflink/generic/175.full
+# 6.5.0-rc3-next-20230725/xfs_reflink/generic/175.dmesg
+# 6.5.0-rc3-next-20230725/xfs_reflink_4k/generic/175.out.bad
+# 6.5.0-rc3-next-20230725/xfs_reflink_4k/generic/175.full
+# 6.5.0-rc3-next-20230725/xfs_reflink_4k/generic/175.dmesg
+# 6.5.0-rc3-next-20230725/xfs_rtdev/generic/175.out.bad
+# 6.5.0-rc3-next-20230725/xfs_rtdev/generic/175.full
+# 6.5.0-rc3-next-20230725/xfs_rtdev/generic/175.dmesg
+#
+# And now to see one individual file:
+#
+# tar -xOJf workflows/fstests/results/mcgrof/libvirt-qemu/20230727/6.5.0-rc3-next-20230725.xz 6.5.0-rc3-next-20230725/xfs_reflink_normapbt/generic/175.out.bad
+# tar -xOJf workflows/fstests/results/mcgrof/libvirt-qemu/20230727/6.5.0-rc3-next-20230725.xz 6.5.0-rc3-next-20230725/xfs_reflink_normapbt/generic/175.dmesg
+#
+generic/175 # seems like a test bug - lazy baseline - failure found in at least two sections
+generic/297 # seems like a test bug - lazy baseline - failure found in at least two sections
+generic/298 # seems like a test bug - lazy baseline - failure found in at least two sections
+generic/471 # race against loop? - lazy baseline - failure found in at least two sections
+generic/563 # needs investigation - lazy baseline - failure found in at least two sections
+xfs/157 # needs investigation - lazy baseline - failure found in at least two sections
+xfs/188 # unclear - lazy baseline - failure found in at least two sections
+xfs/205 # unclear - lazy baseline - failure found in at least two sections
+xfs/432 # test bug: blocksize should detect sector size - lazy baseline - failure found in at least two sections
+xfs/506 # needs investigation - lazy baseline - failure found in at least two sections
+xfs/516 # needs investigation - lazy baseline - failure found in at least two sections
+
+Here are failures found in just the test section which enables reflinks
+but disables rmapbt:
+
+cat workflows/fstests/expunges/6.5.0-rc3-next-20230725/xfs/unassigned/xfs_reflink_normapbt.txt
+
+# For exmaple to see these failures:
+#
+# tar -tOJf workflows/fstests/results/mcgrof/libvirt-qemu/20230727/6.5.0-rc3-next-20230725.xz 2>&1 | grep xfs | grep normap | grep 301
+#
+# 6.5.0-rc3-next-20230725/xfs_reflink_normapbt/xfs/301.out.bad
+# 6.5.0-rc3-next-20230725/xfs_reflink_normapbt/xfs/301.full
+# 6.5.0-rc3-next-20230725/xfs_reflink_normapbt/xfs/301.dmesg
+
+# To see one file output:
+# tar -xOJf workflows/fstests/results/mcgrof/libvirt-qemu/20230727/6.5.0-rc3-next-20230725.xz 6.5.0-rc3-next-20230725/xfs_reflink_normapbt/xfs/301.out.bad
+xfs/301 # needs investigation
+
+And here are failures found only on the realtime device, most are likely
+test bugs which means we gotta enhance the test to skip the realtime
+device or learn to use it, but some seem like real failures:
+
+cat workflows/fstests/expunges/6.5.0-rc3-next-20230725/xfs/unassigned/xfs_rtdev.txt
+
+# For example to see rtdev's generic/012 related files:
+#
+# tar -tOJf workflows/fstests/results/mcgrof/libvirt-qemu/20230727/6.5.0-rc3-next-20230725.xz 2>&1 | grep xfs | grep rtdev | grep 012
+#
+# To see the generic/012 out.bad file:
+# tar -xOJf workflows/fstests/results/mcgrof/libvirt-qemu/20230727/6.5.0-rc3-next-20230725.xz 6.5.0-rc3-next-20230725/xfs_rtdev/generic/012.out.bad
+#
+generic/012 # needs investigation
+generic/013 # needs investigation
+generic/015 # might be a test bug
+generic/016 # needs investigation
+generic/021 # needs investigation
+generic/022 # needs investigation
+generic/027 # might be a test bug
+generic/058 # needs investigation
+generic/060 # needs investigation
+generic/061 # needs investigation
+generic/063 # needs investigation
+generic/074 # needs investigation
+generic/075 # needs investigation
+generic/077 # might be a test bug
+generic/096 # might be a test bug
+generic/102 # might be a test bug
+generic/112 # needs investigation
+generic/113 # needs investigation
+generic/171 # might be a test bug
+generic/172 # might be a test bug
+generic/173 # might be a test bug
+generic/174 # might be a test bug
+generic/204 # might be a test bug
+generic/224 # might be a test bug
+generic/226 # might be a test bug
+generic/251 # ran out of space and then corruption?
+generic/256 # might be a test bug
+generic/269 # might be a test bug
+generic/270 # might be a test bug
+generic/273 # might be a test bug
+generic/274 # might be a test bug
+generic/275 # might be a test bug
+generic/300 # might be a test bug
+generic/312 # might be a test bug
+generic/361 # might be a test bug
+generic/371 # might be a test bug
+generic/416 # might be a test bug
+generic/427 # might be a test bug
+generic/449 # might be a test bug
+generic/488 # might be a test bug
+generic/511 # might be a test bug
+generic/515 # might be a test bug
+generic/520 # needs investigation
+generic/551 # needs investigation
+generic/558 # might be a test bug
+generic/562 # never completed
+
+  Luis
