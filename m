@@ -2,42 +2,42 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 23BAEC04A94
-	for <linux-xfs@archiver.kernel.org>; Thu, 27 Jul 2023 18:53:29 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1585DC001DC
+	for <linux-xfs@archiver.kernel.org>; Thu, 27 Jul 2023 18:53:31 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231625AbjG0Sx1 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 27 Jul 2023 14:53:27 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40976 "EHLO
+        id S230310AbjG0Sx3 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 27 Jul 2023 14:53:29 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41056 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231176AbjG0SxX (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 27 Jul 2023 14:53:23 -0400
+        with ESMTP id S231670AbjG0Sx0 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 27 Jul 2023 14:53:26 -0400
 Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 864BB19BF;
-        Thu, 27 Jul 2023 11:53:22 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 69B9C2D73;
+        Thu, 27 Jul 2023 11:53:24 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
          key-exchange X25519 server-signature RSA-PSS (2048 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 16F0161F10;
-        Thu, 27 Jul 2023 18:53:22 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 52E3BC433CA;
-        Thu, 27 Jul 2023 18:53:20 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id C754F61E90;
+        Thu, 27 Jul 2023 18:53:23 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 07537C433C8;
+        Thu, 27 Jul 2023 18:53:21 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1690484001;
-        bh=bUv+zIRsJnWwLz28bFvd20UnyAjQR/bL2Lqj4hSGRsA=;
+        s=k20201202; t=1690484003;
+        bh=vILr8bDesldAgFkxolpcXHUQ+sNJBqo8OWeAtFL+XKM=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=smaEHJxOVGlWDGSXEk4X2WLbN40S40qv/Eivk+5UsM+JU8Ere1unK/vamDjoGDMKL
-         wy/PMpSx3tPkIqdk49ex6YmNQgAQ/SforzsvNqADuvPOq//4XUF79Wnpl4RFMmwbDm
-         6Hgvnm24w04xeirRvET/DWV5aA1I1eqeEXqnIMrPOKIVuoBFcqX9VgNGlZuUPLcIoC
-         FpYoPujF8MyNtKmJYJXw9X4xSkLS2PtDdSnFJbaY8mNwfpwvK9bwH1yrUVLraGv9h1
-         osWL7Ca1FyK7/elsp0blNKB95NbJc/EhQGclsr4VrPU5TaXHNAqvEvxxN/TbdUWtP8
-         DeQIMlfimpC3w==
+        b=a26gqoYe5fJUqOPWKF1gTUSeUoaL/1wKP12ZEq8mc/qQ01VUlQLQzdyi4+BaSFYQJ
+         lrxBhiGKp1GAvQEo+PDnrpUak8UXYxEXpwIG16KGEUeK0Rm5cGbPp1Vt2BOKeXrtEw
+         ihXe24KH29Qsxuz3P1+Q2J+IlJNPXNMVS4EzZCZjC607PvOsGbJYgTvdLn7Lb6bfpN
+         dqoQYkMhDFuMa/vPbzeAhFpSmTnCb7qnE1M5RmbbNtxZeqRngSfgMCLphA3tOBRBRJ
+         gWe+fkf/XhcsEzcCHDOn+8Mpzx6R0AHkDnfIADkhZmjScjIgI7oTJoxmfv128dJpN3
+         Q6QuSmi6Boepg==
 From:   Zorro Lang <zlang@kernel.org>
 To:     fstests@vger.kernel.org
 Cc:     tytso@mit.edu, djwong@kernel.org, linux-xfs@vger.kernel.org
-Subject: [PATCH 1/2] fstests: add smoketest group
-Date:   Fri, 28 Jul 2023 02:53:14 +0800
-Message-Id: <20230727185315.530134-2-zlang@kernel.org>
+Subject: [RFC PATCH 2/2] fstests: support test template
+Date:   Fri, 28 Jul 2023 02:53:15 +0800
+Message-Id: <20230727185315.530134-3-zlang@kernel.org>
 X-Mailer: git-send-email 2.40.1
 In-Reply-To: <20230727185315.530134-1-zlang@kernel.org>
 References: <20230727185315.530134-1-zlang@kernel.org>
@@ -47,103 +47,75 @@ Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Darrick suggests that fstests can provide a simple smoketest, by
-running several generic filesystem smoke testing for five minutes
-apiece (SOAK_DURATION="5m"). Since there are only five smoke tests,
-this is effectively a 20min super-quick test.
+The fstests has too many big or small testing groups, and it keeps
+growing. It's hard for many users to pick up test cases they need.
+Likes the smoketest, soak test, random-load test, integrality test
+and so on. So most of users might just run "quick" group, or "auto"
+group, or "all" directly each time. Besides the group, there're
+some global parameters (e.g. *_FACTOR, SOAK_DURATION, etc) too, so
+there're many "portfolios" to use them.
 
-With gcov enabled, running these tests yields about ~75% coverage for
-iomap and ~60% for xfs; or ~50% for ext4 and ~75% for ext4; and ~45%
-for btrfs.  Coverage was about ~65% for the pagecache.
+So I think fstests can provide a test template, which is bigger than
+group, base on group and global parameters, provide reference about
+how to do some kinds of tests.
 
-Signed-off-by: Darrick J. Wong <djwong@kernel.org>
+Some users who are familar with fstests have their own wrappers, they
+do different kind of tests by fstests according their experience.
+They have their different testing templates, some templates might be
+helpful and recommended to others. So I'd like to let fstests provide
+a template/ directory and a "-t" option to load template. By this
+chance, hope more people can share their great test templates to
+others. We can record these templates in fstests, then anyone can use
+them directly or refer to them to write their wrapper.
+
 Signed-off-by: Zorro Lang <zlang@kernel.org>
 ---
- doc/group-names.txt | 1 +
- tests/generic/475   | 2 +-
- tests/generic/476   | 2 +-
- tests/generic/521   | 2 +-
- tests/generic/522   | 2 +-
- tests/generic/642   | 2 +-
- 6 files changed, 6 insertions(+), 5 deletions(-)
+ check               |  8 ++++++++
+ templates/smoketest | 16 ++++++++++++++++
+ 2 files changed, 24 insertions(+)
+ create mode 100644 templates/smoketest
 
-diff --git a/doc/group-names.txt b/doc/group-names.txt
-index 1c35a394..c3dcca37 100644
---- a/doc/group-names.txt
-+++ b/doc/group-names.txt
-@@ -118,6 +118,7 @@ selftest		tests with fixed results, used to validate testing setup
- send			btrfs send/receive
- shrinkfs		decreasing the size of a filesystem
- shutdown		FS_IOC_SHUTDOWN ioctl
-+smoketest		Simple smoke tests
- snapshot		btrfs snapshots
- soak			long running soak tests whose runtime can be controlled
-                         directly by setting the SOAK_DURATION variable
-diff --git a/tests/generic/475 b/tests/generic/475
-index 0cbf5131..ce7fe013 100755
---- a/tests/generic/475
-+++ b/tests/generic/475
-@@ -12,7 +12,7 @@
- # testing efforts.
- #
- . ./common/preamble
--_begin_fstest shutdown auto log metadata eio recoveryloop
-+_begin_fstest shutdown auto log metadata eio recoveryloop smoketest
- 
- # Override the default cleanup function.
- _cleanup()
-diff --git a/tests/generic/476 b/tests/generic/476
-index 8e93b734..b1ae4df4 100755
---- a/tests/generic/476
-+++ b/tests/generic/476
-@@ -8,7 +8,7 @@
- # bugs in the write path.
- #
- . ./common/preamble
--_begin_fstest auto rw long_rw stress soak
-+_begin_fstest auto rw long_rw stress soak smoketest
- 
- # Override the default cleanup function.
- _cleanup()
-diff --git a/tests/generic/521 b/tests/generic/521
-index 22dd31a8..0956e501 100755
---- a/tests/generic/521
-+++ b/tests/generic/521
-@@ -7,7 +7,7 @@
- # Long-soak directio fsx test
- #
- . ./common/preamble
--_begin_fstest soak long_rw
-+_begin_fstest soak long_rw smoketest
- 
- # Import common functions.
- . ./common/filter
-diff --git a/tests/generic/522 b/tests/generic/522
-index f0cbcb24..0e4e6009 100755
---- a/tests/generic/522
-+++ b/tests/generic/522
-@@ -7,7 +7,7 @@
- # Long-soak buffered fsx test
- #
- . ./common/preamble
--_begin_fstest soak long_rw
-+_begin_fstest soak long_rw smoketest
- 
- # Import common functions.
- . ./common/filter
-diff --git a/tests/generic/642 b/tests/generic/642
-index eba90903..e6a475a8 100755
---- a/tests/generic/642
-+++ b/tests/generic/642
-@@ -8,7 +8,7 @@
- # bugs in the xattr code.
- #
- . ./common/preamble
--_begin_fstest auto soak attr long_rw stress
-+_begin_fstest auto soak attr long_rw stress smoketest
- 
- _cleanup()
- {
+diff --git a/check b/check
+index 89e7e7bf..7100aae4 100755
+--- a/check
++++ b/check
+@@ -335,6 +335,14 @@ while [ $# -gt 0 ]; do
+ 		;;
+ 	-i)	iterations=$2; shift ;;
+ 	-I) 	iterations=$2; istop=true; shift ;;
++	-t)
++		source templates/$2
++		if [ $? -ne 0 ];then
++			echo "Cannot import the templates/$2"
++			exit 1
++		fi
++		shift
++		;;
+ 	-T)	timestamp=true ;;
+ 	-d)	DUMP_OUTPUT=true ;;
+ 	-b)	brief_test_summary=true;;
+diff --git a/templates/smoketest b/templates/smoketest
+new file mode 100644
+index 00000000..40a0104b
+--- /dev/null
++++ b/templates/smoketest
+@@ -0,0 +1,16 @@
++##/bin/bash
++# For infrequent filesystem developers who simply want to run a quick test
++# of the most commonly used filesystem functionality, use this command:
++#
++#     ./check -t smoketest <other config options>
++#
++# This template helps fstests to run several tests to exercise the file I/O,
++# metadata, and crash recovery exercisers for four minutes apiece.  This
++# should complete in approximately 20 minutes.
++
++echo "**********************"
++echo "* A Quick Smoke Test *"
++echo "**********************"
++
++[ -z "$SOAK_DURATION" ] && SOAK_DURATION="4m"
++GROUP_LIST="smoketest"
 -- 
 2.40.1
 
