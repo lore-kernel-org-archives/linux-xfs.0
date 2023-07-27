@@ -2,121 +2,124 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 79C84C0015E
-	for <linux-xfs@archiver.kernel.org>; Thu, 27 Jul 2023 13:58:38 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2EBC6C04A6A
+	for <linux-xfs@archiver.kernel.org>; Thu, 27 Jul 2023 14:33:47 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232141AbjG0N6h (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 27 Jul 2023 09:58:37 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42720 "EHLO
+        id S233600AbjG0Odq (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 27 Jul 2023 10:33:46 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33822 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232010AbjG0N6f (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 27 Jul 2023 09:58:35 -0400
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A8D7730C0
-        for <linux-xfs@vger.kernel.org>; Thu, 27 Jul 2023 06:57:52 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1690466271;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=5nEvv7chgyvMCWh3hGhvwnuUtz0kp+RYlbx94w8oY90=;
-        b=PK24vUw8qm+Xgn2FmhYKvKsfnpo+Kk10Vi60DiZY9nEl4WxQefz7AXR/YA1VndkU0OOIWT
-        IxSLaxNG2qTY3C0NtyttQEI76x/bDwukLMSPVPF5Uvpa2KgD0INAkN9sr/JsZUNeCrMHG5
-        AUXl3Tby/ffQDqZkyJCjeWyA+/iyMBs=
-Received: from mail-pl1-f200.google.com (mail-pl1-f200.google.com
- [209.85.214.200]) by relay.mimecast.com with ESMTP with STARTTLS
- (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
- us-mta-659-agpiptQ2MCqm8N_79iay0A-1; Thu, 27 Jul 2023 09:57:50 -0400
-X-MC-Unique: agpiptQ2MCqm8N_79iay0A-1
-Received: by mail-pl1-f200.google.com with SMTP id d9443c01a7336-1bb893e61d5so6074735ad.0
-        for <linux-xfs@vger.kernel.org>; Thu, 27 Jul 2023 06:57:50 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20221208; t=1690466269; x=1691071069;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=5nEvv7chgyvMCWh3hGhvwnuUtz0kp+RYlbx94w8oY90=;
-        b=demwKeXirDKLUXa8NPVUr098NGcqODMyVQaF3QLAYXUDgjSvsXmD4AXc2IB79ghfBD
-         q093F+APTkXZFALd/E4loUbUDn5ZpBRGyFlDHIbYpByuv3B1hd1FvWE5LEzKeHY18461
-         +XpYkjXVNLr+3aoCmB86eBfiw8JrxIqDucneC73+lhoDjB904qFakGgxjFSqVqBWP+nz
-         ltDF3g/N8O9ZYeSSiJbAJtnqxrNQbX6oN+bFyNSnJO/o9tdcmi5JOFc2vpEUJU0PqZSj
-         9ToOj9h3wS5pREV+HtGBsqqlGEmxTcwRSquGq/QgaypOSXaCa36KK2Cstnbe+f8w8kG2
-         oJYg==
-X-Gm-Message-State: ABy/qLZ2yFc8aRFYbecfSjON/34SbWKD8HPHRsZM3/x08LyiaK69x3Jh
-        y8Tb+BvNQXZA8KhwIZLni+hpV6ltXXv2YFF+yiwNhjA/VytdJK0aC18bvkzRw8AXMHuKHZMEawb
-        fclIumMl/4RduQvArDCwl
-X-Received: by 2002:a17:902:e80f:b0:1b8:9ecd:8b86 with SMTP id u15-20020a170902e80f00b001b89ecd8b86mr4848719plg.5.1690466269059;
-        Thu, 27 Jul 2023 06:57:49 -0700 (PDT)
-X-Google-Smtp-Source: APBJJlHqb3NPuiFjRG7z/G61xsVJ9OWrjesEHJh81WnYqkQ4ayhfGV3wUAd5/pw9boa1gjwKmGJR9Q==
-X-Received: by 2002:a17:902:e80f:b0:1b8:9ecd:8b86 with SMTP id u15-20020a170902e80f00b001b89ecd8b86mr4848702plg.5.1690466268741;
-        Thu, 27 Jul 2023 06:57:48 -0700 (PDT)
-Received: from zlang-mailbox ([43.228.180.230])
-        by smtp.gmail.com with ESMTPSA id a9-20020a170902ee8900b001bbd8cf6b57sm1658993pld.230.2023.07.27.06.57.46
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 27 Jul 2023 06:57:48 -0700 (PDT)
-Date:   Thu, 27 Jul 2023 21:57:44 +0800
-From:   Zorro Lang <zlang@redhat.com>
-To:     "Darrick J. Wong" <djwong@kernel.org>
-Cc:     linux-xfs@vger.kernel.org, fstests@vger.kernel.org
-Subject: Re: [PATCH 1/1] xfs/122: adjust test for flexarray conversions in 6.5
-Message-ID: <20230727135744.nhmwpv7dxt5nvshd@zlang-mailbox>
-References: <169033661482.3222297.18190312289773544342.stgit@frogsfrogsfrogs>
- <169033662042.3222297.14047592154027443561.stgit@frogsfrogsfrogs>
+        with ESMTP id S231774AbjG0Odp (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 27 Jul 2023 10:33:45 -0400
+Received: from outgoing.mit.edu (outgoing-auth-1.mit.edu [18.9.28.11])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7BE3F2D42
+        for <linux-xfs@vger.kernel.org>; Thu, 27 Jul 2023 07:33:44 -0700 (PDT)
+Received: from cwcc.thunk.org (pool-173-48-115-64.bstnma.fios.verizon.net [173.48.115.64])
+        (authenticated bits=0)
+        (User authenticated as tytso@ATHENA.MIT.EDU)
+        by outgoing.mit.edu (8.14.7/8.12.4) with ESMTP id 36REXQ2N011799
+        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+        Thu, 27 Jul 2023 10:33:27 -0400
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=mit.edu; s=outgoing;
+        t=1690468408; bh=tiH0gJjtJAW5yKPdP3EWVd/KsTzn/JB/KqeRfaNhPeQ=;
+        h=Date:From:Subject:Message-ID:MIME-Version:Content-Type;
+        b=DcB/RZN/jEvO7ETV/e6QLwvY7pWWRUL6ltTTaC0zsbPn1GnoA/IH7xF5OG3atJxAg
+         wQJHwGpOnxGaDtYRSwxqDTmHf/y6etIZlxzQ+smuTjHZoDO6isDkgRwb3UPsTptCtS
+         VMZVEO6iM74Kx6X7FWMLYuVwKzgAfQDfsIpPsjb3zgO/ZHjAkGQU7ymDH1JNIFj4G7
+         GtHvio2m4TNznIId45mKqAjigF24yh/+/kcj3JeHozVHTRh+JivwlMolDaRIMZl1Z5
+         GBeaHcK02U2cV9Ym9ck6r1/CNzxp3Ukk4SOkqJlRxb0nmt5GEhJPBqmiwdJoDKHmk0
+         KShXgelEC1drA==
+Received: by cwcc.thunk.org (Postfix, from userid 15806)
+        id CDFCA15C04EF; Thu, 27 Jul 2023 10:33:26 -0400 (EDT)
+Date:   Thu, 27 Jul 2023 10:33:26 -0400
+From:   "Theodore Ts'o" <tytso@mit.edu>
+To:     Zorro Lang <zlang@redhat.com>
+Cc:     "Darrick J. Wong" <djwong@kernel.org>, linux-xfs@vger.kernel.org,
+        fstests@vger.kernel.org
+Subject: Re: [PATCH 1/2] check: add a -smoketest option
+Message-ID: <20230727143326.GG30264@mit.edu>
+References: <20230719151024.ef7vgjmtoxwxkmjm@zlang-mailbox>
+ <20230719152907.GA11377@frogsfrogsfrogs>
+ <20230719161115.byva7tvwoafkesga@zlang-mailbox>
+ <20230720022756.GH11352@frogsfrogsfrogs>
+ <20230720143433.n5gkhukdkz7s5ab7@zlang-mailbox>
+ <20230726000524.GG11340@frogsfrogsfrogs>
+ <20230726060102.GB30264@mit.edu>
+ <20230726145441.lbzzokwigrztimyq@zlang-mailbox>
+ <20230726205930.GC30264@mit.edu>
+ <20230727032537.hyqyuvemnwmh25d5@zlang-mailbox>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <169033662042.3222297.14047592154027443561.stgit@frogsfrogsfrogs>
+In-Reply-To: <20230727032537.hyqyuvemnwmh25d5@zlang-mailbox>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Tue, Jul 25, 2023 at 06:57:00PM -0700, Darrick J. Wong wrote:
-> From: Darrick J. Wong <djwong@kernel.org>
+On Thu, Jul 27, 2023 at 11:25:37AM +0800, Zorro Lang wrote:
+> > SOAK_DURATION=4m ./check -g smoketest
 > 
-> Adjust the output of this test to handle the conversion of flexarray
-> declaration conversions in 6.5.
+> Now we provide two ways to help to customize testing in fstests:
 > 
-> Signed-off-by: Darrick J. Wong <djwong@kernel.org>
-> ---
-
-Looks like it's about a49bbce58ea9 ("xfs: convert flex-array declarations
-in xfs attr leaf blocks"). If you don't mind, I'd like to mention it in commit
-log when I merge it :) This patch looks good to me,
-
-Reviewed-by: Zorro Lang <zlang@redhat.com>
-
-Thanks,
-Zorro
-
->  tests/xfs/122 |    8 ++++++++
->  1 file changed, 8 insertions(+)
+> 1)
+> https://lore.kernel.org/fstests/20230727030529.r4ivp6dmtrht5zo2@zlang-mailbox/T/#mc5cdb59344f4cd681515bf0fab501d7f30f1e263
 > 
+> 2)
+> https://lore.kernel.org/fstests/169033660570.3222210.3010411210438664310.stgit@frogsfrogsfrogs/T/#u
 > 
-> diff --git a/tests/xfs/122 b/tests/xfs/122
-> index e616f1987d..ba927c77c4 100755
-> --- a/tests/xfs/122
-> +++ b/tests/xfs/122
-> @@ -26,13 +26,21 @@ _wants_kernel_commit 03a7485cd701 \
->  _type_size_filter()
->  {
->  	# lazy SB adds __be32 agf_btreeblks - pv960372
-> +	# flexarray conversion of the attr structures in Linux 6.5 changed
-> +	# the sizeof output
->  	if [ "$($MKFS_XFS_PROG 2>&1 | grep -c lazy-count )" == "0" ]; then
->  		perl -ne '
->  s/sizeof\( xfs_agf_t \) = 60/sizeof( xfs_agf_t ) = <SIZE>/;
-> +s/sizeof\(struct xfs_attr3_leafblock\) = 80/sizeof(struct xfs_attr3_leafblock) = 88/;
-> +s/sizeof\(struct xfs_attr_shortform\) = 4/sizeof(struct xfs_attr_shortform) = 8/;
-> +s/sizeof\(xfs_attr_leafblock_t\) = 32/sizeof(xfs_attr_leafblock_t) = 40/;
->  		print;'
->  	else
->  		perl -ne '
->  s/sizeof\( xfs_agf_t \) = 64/sizeof( xfs_agf_t ) = <SIZE>/;
-> +s/sizeof\(struct xfs_attr3_leafblock\) = 80/sizeof(struct xfs_attr3_leafblock) = 88/;
-> +s/sizeof\(struct xfs_attr_shortform\) = 4/sizeof(struct xfs_attr_shortform) = 8/;
-> +s/sizeof\(xfs_attr_leafblock_t\) = 32/sizeof(xfs_attr_leafblock_t) = 40/;
->  		print;'
->  	fi
->  }
-> 
+> Which one do you like to use? I'd like to hear more review points before I
+> choose one to merge.
 
+(1) is the "./check -t smoketest" option, and it provides a more
+generic way of adding new templates.  On the positive side it allows
+more of this kind of simple "configuration" style options where "-t
+smoketest" is essentially syntactic sugar for:
+
+	SOAK_DURATION=${SOAK_DURATION:-4m} ./check -g smoketest"
+
+The potential disadvantage of (1) is that it seems like extra
+complexity for what is really simple.
+
+
+(2) is "./check -smoketest" option.  Its advantage is that it might
+easier for a drive-by patcher to type.  The disadvantage is that it's
+adding Yet Another Option to the ./check script.
+
+I also will note that we have some "long options" which use a single
+hypen (e.g., -overlay and -udiff) but newer "long options" seem to use
+the double hypehn approach (e.g., --exact-order and --large-fs).  My
+personal preference is for the newer GNU getopt style of using double
+hyphens, but the fact that we have both types of long options
+is... unfortunate.
+
+
+I guess I have a slight preference for (1), but I'm really not sure
+either is really necessary.  My view is that for a drive-by tester,
+trying to set up xfstests is Too Hard.  So the reality is they will be
+using some kind of wrapper script --- either one that they've written
+for their own, such as what Darrick (and I assume other XFS developers
+have their own), or they're using something like kdevops or
+kvm-xfstests.
+
+From *my* perspective, I have absolutely *no* problem with having my
+wrapper script use:
+
+	SOACK_DURATION=4m ./check -g smoketest
+
+because I only have to do it once, and no end-user is ever going to
+see it.  They will just use "kvm-xfstests smoke", and all of the magic
+will be hidden from them.
+
+The main advantage of having some kind of "official" top-level way of
+specifying the smoke test is that it makes it more likely that
+different wrapper scripts will converge on the same kind of smoke
+test, and it becomes easier for fstests developers to communicate with
+each other because the concept of what a "smoke test" is has been well
+defined in the fstests source code.  And for that purpose, I think the
+"./check -t smoketest" approach works just fine.
+
+But really, I can live with either.   :-)
+
+Cheers,
+
+						- Ted
