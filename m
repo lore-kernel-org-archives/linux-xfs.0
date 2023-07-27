@@ -2,120 +2,98 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1585DC001DC
-	for <linux-xfs@archiver.kernel.org>; Thu, 27 Jul 2023 18:53:31 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id CCFD5C001DC
+	for <linux-xfs@archiver.kernel.org>; Thu, 27 Jul 2023 19:04:35 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230310AbjG0Sx3 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 27 Jul 2023 14:53:29 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41056 "EHLO
+        id S229873AbjG0TEe (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 27 Jul 2023 15:04:34 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46234 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231670AbjG0Sx0 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 27 Jul 2023 14:53:26 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 69B9C2D73;
-        Thu, 27 Jul 2023 11:53:24 -0700 (PDT)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature RSA-PSS (2048 bits))
-        (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id C754F61E90;
-        Thu, 27 Jul 2023 18:53:23 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 07537C433C8;
-        Thu, 27 Jul 2023 18:53:21 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1690484003;
-        bh=vILr8bDesldAgFkxolpcXHUQ+sNJBqo8OWeAtFL+XKM=;
-        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=a26gqoYe5fJUqOPWKF1gTUSeUoaL/1wKP12ZEq8mc/qQ01VUlQLQzdyi4+BaSFYQJ
-         lrxBhiGKp1GAvQEo+PDnrpUak8UXYxEXpwIG16KGEUeK0Rm5cGbPp1Vt2BOKeXrtEw
-         ihXe24KH29Qsxuz3P1+Q2J+IlJNPXNMVS4EzZCZjC607PvOsGbJYgTvdLn7Lb6bfpN
-         dqoQYkMhDFuMa/vPbzeAhFpSmTnCb7qnE1M5RmbbNtxZeqRngSfgMCLphA3tOBRBRJ
-         gWe+fkf/XhcsEzcCHDOn+8Mpzx6R0AHkDnfIADkhZmjScjIgI7oTJoxmfv128dJpN3
-         Q6QuSmi6Boepg==
-From:   Zorro Lang <zlang@kernel.org>
-To:     fstests@vger.kernel.org
-Cc:     tytso@mit.edu, djwong@kernel.org, linux-xfs@vger.kernel.org
-Subject: [RFC PATCH 2/2] fstests: support test template
-Date:   Fri, 28 Jul 2023 02:53:15 +0800
-Message-Id: <20230727185315.530134-3-zlang@kernel.org>
-X-Mailer: git-send-email 2.40.1
-In-Reply-To: <20230727185315.530134-1-zlang@kernel.org>
-References: <20230727185315.530134-1-zlang@kernel.org>
+        with ESMTP id S231898AbjG0TEd (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 27 Jul 2023 15:04:33 -0400
+Received: from outgoing.mit.edu (outgoing-auth-1.mit.edu [18.9.28.11])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 78FB32113
+        for <linux-xfs@vger.kernel.org>; Thu, 27 Jul 2023 12:04:30 -0700 (PDT)
+Received: from cwcc.thunk.org (pool-173-48-115-64.bstnma.fios.verizon.net [173.48.115.64])
+        (authenticated bits=0)
+        (User authenticated as tytso@ATHENA.MIT.EDU)
+        by outgoing.mit.edu (8.14.7/8.12.4) with ESMTP id 36RJ4AXr025022
+        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+        Thu, 27 Jul 2023 15:04:11 -0400
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=mit.edu; s=outgoing;
+        t=1690484652; bh=Tci4gZnTc+NqvOWjbW0+IR9pwCRzvvZRz9t38Ngz+wY=;
+        h=Date:From:Subject:Message-ID:MIME-Version:Content-Type;
+        b=GMJFAJRuWx1oOuo+YNL+3wxla+5T+qle0q8vH1ExajDCXyNkCA2WZbQB7TFDx0D5g
+         k7EU56VHrnCNWWRec3ZcG4CMjs2lQrcT15r9cXbjaPUxh32wHK92VGWmAl9DNuGjZv
+         k1sx1JkWVLTRNjtYf5EAXeIgzBINClYVYZMTSsxXp57J/zBkuqNfaDyS9UsFGyoJRu
+         QBbItmzFukN7foJOyDimOgE9Nmh9lnn3ecToDdSaeurAjcSTRUzup8OENxlW5eFHc2
+         OeLIFD9awL2AyUBDFcYvj9daWh/y/P53puL49Xf6gZF9dLgOwH5x1eJI8NPLLlBiLv
+         15LFf0bvPln2A==
+Received: by cwcc.thunk.org (Postfix, from userid 15806)
+        id 8FB4315C04EF; Thu, 27 Jul 2023 15:04:10 -0400 (EDT)
+Date:   Thu, 27 Jul 2023 15:04:10 -0400
+From:   "Theodore Ts'o" <tytso@mit.edu>
+To:     "Darrick J. Wong" <djwong@kernel.org>
+Cc:     zlang@redhat.com, linux-xfs@vger.kernel.org,
+        fstests@vger.kernel.org, guan@eryu.me
+Subject: Re: [PATCH 1/2] check: add a -smoketest option
+Message-ID: <20230727190410.GI30264@mit.edu>
+References: <169033659987.3222210.11071346898413396128.stgit@frogsfrogsfrogs>
+ <169033660570.3222210.3010411210438664310.stgit@frogsfrogsfrogs>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <169033660570.3222210.3010411210438664310.stgit@frogsfrogsfrogs>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-The fstests has too many big or small testing groups, and it keeps
-growing. It's hard for many users to pick up test cases they need.
-Likes the smoketest, soak test, random-load test, integrality test
-and so on. So most of users might just run "quick" group, or "auto"
-group, or "all" directly each time. Besides the group, there're
-some global parameters (e.g. *_FACTOR, SOAK_DURATION, etc) too, so
-there're many "portfolios" to use them.
+On Tue, Jul 25, 2023 at 06:56:45PM -0700, Darrick J. Wong wrote:
+> From: Darrick J. Wong <djwong@kernel.org>
+> 
+> Create a "-smoketest" parameter to check that will run generic
+> filesystem smoke testing for five minutes apiece.  Since there are only
+> five smoke tests, this is effectively a 16min super-quick test.
 
-So I think fstests can provide a test template, which is bigger than
-group, base on group and global parameters, provide reference about
-how to do some kinds of tests.
+The code is setting SOAK_DURATION to 4 minutes, not 5 minutes.
+However, when I ran the moral equivalent:
 
-Some users who are familar with fstests have their own wrappers, they
-do different kind of tests by fstests according their experience.
-They have their different testing templates, some templates might be
-helpful and recommended to others. So I'd like to let fstests provide
-a template/ directory and a "-t" option to load template. By this
-chance, hope more people can share their great test templates to
-others. We can record these templates in fstests, then anyone can use
-them directly or refer to them to write their wrapper.
+    kvm-xfstests --soak-duration 4m --fail-loop-count 0 -c ext4/4k \
+        generic/475 generic/476 generic/521 generic/522 generic/642
 
-Signed-off-by: Zorro Lang <zlang@kernel.org>
----
- check               |  8 ++++++++
- templates/smoketest | 16 ++++++++++++++++
- 2 files changed, 24 insertions(+)
- create mode 100644 templates/smoketest
+It overall took 17 minutes to run, with just under a minute of test
+infrastructure overhead (in the check script and my wrapper scripts),
+with the actual test time as follows:
 
-diff --git a/check b/check
-index 89e7e7bf..7100aae4 100755
---- a/check
-+++ b/check
-@@ -335,6 +335,14 @@ while [ $# -gt 0 ]; do
- 		;;
- 	-i)	iterations=$2; shift ;;
- 	-I) 	iterations=$2; istop=true; shift ;;
-+	-t)
-+		source templates/$2
-+		if [ $? -ne 0 ];then
-+			echo "Cannot import the templates/$2"
-+			exit 1
-+		fi
-+		shift
-+		;;
- 	-T)	timestamp=true ;;
- 	-d)	DUMP_OUTPUT=true ;;
- 	-b)	brief_test_summary=true;;
-diff --git a/templates/smoketest b/templates/smoketest
-new file mode 100644
-index 00000000..40a0104b
---- /dev/null
-+++ b/templates/smoketest
-@@ -0,0 +1,16 @@
-+##/bin/bash
-+# For infrequent filesystem developers who simply want to run a quick test
-+# of the most commonly used filesystem functionality, use this command:
-+#
-+#     ./check -t smoketest <other config options>
-+#
-+# This template helps fstests to run several tests to exercise the file I/O,
-+# metadata, and crash recovery exercisers for four minutes apiece.  This
-+# should complete in approximately 20 minutes.
-+
-+echo "**********************"
-+echo "* A Quick Smoke Test *"
-+echo "**********************"
-+
-+[ -z "$SOAK_DURATION" ] && SOAK_DURATION="4m"
-+GROUP_LIST="smoketest"
--- 
-2.40.1
+ext4/4k: 5 tests, 975 seconds
+  generic/475  Pass     242s
+  generic/476  Pass     244s
+  generic/521  Pass     241s
+  generic/522  Pass     241s
+  generic/642  Pass     7s
+Totals: 5 tests, 0 skipped, 0 failures, 0 errors, 975s
 
+The time which generic/642 ran was surprising so I took a closer look.
+It does claim to be in group "soak", and it even tries to canonicalize
+SOAK_DURATION (I'm not sure why, since the check script does this
+already).  But generic/642 doesn't seem to use SOAK_DURATION.  It does
+caculate a DURATION value, but it doesn't actually use SOAK_DURATION.
+
+So that sounds like a bug in the generic/642 test?
+
+There was also a bug xfstests's "make install" in that it doesn't
+actually install src/soak_duration.awk, but I'll send that a patch
+fixing that under separate cover.
+
+Darrick -- suppose changed the SOAK_DURATION down to 2 minutes?  How
+much do you think that would materially affect the code coverage
+metrics, and the overall effectiveness of the smoke test?  If we get
+generci/642 to honor SOAK_DURATION, using an overall 2 minute soak for
+each test would translate to the smoke test taking about 13 minutes,
+which would be great from a drive-by patch submitter perspective.
+
+      	       	     	    	     	   - Ted
+
+> With gcov enabled, running these tests yields about ~75% coverage for
+> iomap and ~60% for xfs; or ~50% for ext4 and ~75% for ext4; and ~45% for
+> btrfs.  Coverage was about ~65% for the pagecache.
