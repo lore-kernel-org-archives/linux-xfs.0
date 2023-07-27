@@ -2,43 +2,43 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1A9D2EB64DD
-	for <linux-xfs@archiver.kernel.org>; Thu, 27 Jul 2023 22:29:02 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 99075EB64DD
+	for <linux-xfs@archiver.kernel.org>; Thu, 27 Jul 2023 22:29:18 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232457AbjG0W3B (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 27 Jul 2023 18:29:01 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45204 "EHLO
+        id S232509AbjG0W3R (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 27 Jul 2023 18:29:17 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45232 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232226AbjG0W3A (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 27 Jul 2023 18:29:00 -0400
+        with ESMTP id S232483AbjG0W3Q (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 27 Jul 2023 18:29:16 -0400
 Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id F05F22D63
-        for <linux-xfs@vger.kernel.org>; Thu, 27 Jul 2023 15:28:59 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A49592D63
+        for <linux-xfs@vger.kernel.org>; Thu, 27 Jul 2023 15:29:15 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
          key-exchange X25519 server-signature RSA-PSS (2048 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 8A4C061F50
-        for <linux-xfs@vger.kernel.org>; Thu, 27 Jul 2023 22:28:59 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id EAEEBC433C7;
-        Thu, 27 Jul 2023 22:28:58 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 42BCC61EBC
+        for <linux-xfs@vger.kernel.org>; Thu, 27 Jul 2023 22:29:15 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 9F34DC433C7;
+        Thu, 27 Jul 2023 22:29:14 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1690496939;
-        bh=kYxsWyXd6O/SyMUHPAeK6sejMVX8nD0wmvQ2dLaYqz0=;
+        s=k20201202; t=1690496954;
+        bh=lFIgCWK/IrnIdOVEYUYIhux5c03MjjvKOJqpfxVk9GI=;
         h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-        b=qpJVcXYvz1QkQ27Y33p+/hLmWZC1V8r8BPRqwyKsZPjJHjaUifSh0Icxj/NVv67Ja
-         5e0oBWuvlPGz3vT3s17j9G9cTZKwC0Khr+cIpJGAfdfICHPH4HY2hEUMJZuV+3esV2
-         oMaOUWyq4CS2zzcm0Bdcs2cgGloZ7t1fC+zTO29SyMBH1bv//+Zsfg3nJGJd921y0l
-         R4E14Ug6Zt0Bph8aT61LEznzPz+5NYiLlXPG2QcSBCvnVb5UCKQtcICH/2EaHfDKT1
-         tn8jgoA3sNj2YxwMTRspuX+HxMEpxVkSrs8UvcAUTRIn8/FqpUN4ekJXFfDHYy6CCc
-         ks3Wj3mCn1VdA==
-Date:   Thu, 27 Jul 2023 15:28:58 -0700
-Subject: [PATCH 1/2] xfs: always rescan allegedly healthy per-ag metadata
- after repair
+        b=c9oVKu4DcTko7w616cUq6X0yzhvt1dTrV9CD8A2t1sYvezbf04DfJcWv1dbkdYEYc
+         T6NG6F0zvzgE6hl2pu5VvwTfczJSJyNR+Ghy2UtRDWkPXd3NnGkrzJ9eJpgN3GifAJ
+         97+7QYL6D+GKoh7h3aLQjylJu5nKlwfymhKqz5SyNnzLN4s9yaNVlv3jjhT3jrhw6U
+         3tJhRtPFS/Q5G7XjjSnu2qauJRbTLB0nYsYYCJ5Muy9ouSuZGNR8gbPqh8uuKGUO7D
+         MZqG0lDNDJqCp0GVlTX1zEHyj4uxsZGZsPEtocH+wRWJvMD17/+zfwZssyxKFD1BJZ
+         yFpI2buajVOQA==
+Date:   Thu, 27 Jul 2023 15:29:14 -0700
+Subject: [PATCH 2/2] xfs: allow the user to cancel repairs before we start
+ writing
 From:   "Darrick J. Wong" <djwong@kernel.org>
 To:     djwong@kernel.org
 Cc:     Dave Chinner <dchinner@redhat.com>, linux-xfs@vger.kernel.org
-Message-ID: <169049624679.921955.5778346578070387516.stgit@frogsfrogsfrogs>
+Message-ID: <169049624694.921955.17547336213821473858.stgit@frogsfrogsfrogs>
 In-Reply-To: <169049624664.921955.12084246901012682213.stgit@frogsfrogsfrogs>
 References: <169049624664.921955.12084246901012682213.stgit@frogsfrogsfrogs>
 User-Agent: StGit/0.19
@@ -51,39 +51,76 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-After an online repair function runs for a per-AG metadata structure,
-sc->sick_mask is supposed to reflect the per-AG metadata that the repair
-function fixed.  Our next move is to re-check the metadata to assess
-the completeness of our repair, so we don't want the rebuilt structure
-to be excluded from the rescan just because the health system previously
-logged a problem with the data structure.
+All online repair functions have the same structure: walk filesystem
+metadata structures gathering enough data to rebuild the structure,
+stage a new copy, and then commit the new copy.
+
+The gathering steps do not write anything to disk, so they are peppered
+with xchk_should_terminate calls to avoid softlockup warnings and to
+provide an opportunity to abort the repair (by killing xfs_scrub).
+However, it's not clear in the code base when is the last chance to
+abort cleanly without having to undo a bunch of structure.
+
+Therefore, add one more call to xchk_should_terminate (along with a
+comment) providing the sysadmin with the ability to abort before it's
+too late and to make it clear in the source code when it's no longer
+convenient or safe to abort a repair.   As there are only four repair
+functions right now, this patch exists more to establish a precedent for
+subsequent additions than to deliver practical functionality.
 
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 Reviewed-by: Dave Chinner <dchinner@redhat.com>
 ---
- fs/xfs/scrub/health.c |   10 ++++++++++
- 1 file changed, 10 insertions(+)
+ fs/xfs/scrub/agheader_repair.c |   16 ++++++++++++++++
+ 1 file changed, 16 insertions(+)
 
 
-diff --git a/fs/xfs/scrub/health.c b/fs/xfs/scrub/health.c
-index d2b2a1cb6533d..5e2b09ed6e29a 100644
---- a/fs/xfs/scrub/health.c
-+++ b/fs/xfs/scrub/health.c
-@@ -226,6 +226,16 @@ xchk_ag_btree_healthy_enough(
- 		return true;
- 	}
+diff --git a/fs/xfs/scrub/agheader_repair.c b/fs/xfs/scrub/agheader_repair.c
+index 7874ae8149caa..d54edd0d8538d 100644
+--- a/fs/xfs/scrub/agheader_repair.c
++++ b/fs/xfs/scrub/agheader_repair.c
+@@ -50,6 +50,10 @@ xrep_superblock(
+ 	if (error)
+ 		return error;
  
-+	/*
-+	 * If we just repaired some AG metadata, sc->sick_mask will reflect all
-+	 * the per-AG metadata types that were repaired.  Exclude these from
-+	 * the filesystem health query because we have not yet updated the
-+	 * health status and we want everything to be scanned.
-+	 */
-+	if ((sc->flags & XREP_ALREADY_FIXED) &&
-+	    type_to_health_flag[sc->sm->sm_type].group == XHG_AG)
-+		mask &= ~sc->sick_mask;
++	/* Last chance to abort before we start committing fixes. */
++	if (xchk_should_terminate(sc, &error))
++		return error;
 +
- 	if (xfs_ag_has_sickness(pag, mask)) {
- 		sc->sm->sm_flags |= XFS_SCRUB_OFLAG_XFAIL;
- 		return false;
+ 	/* Copy AG 0's superblock to this one. */
+ 	xfs_buf_zero(bp, 0, BBTOB(bp->b_length));
+ 	xfs_sb_to_disk(bp->b_addr, &mp->m_sb);
+@@ -425,6 +429,10 @@ xrep_agf(
+ 	if (error)
+ 		return error;
+ 
++	/* Last chance to abort before we start committing fixes. */
++	if (xchk_should_terminate(sc, &error))
++		return error;
++
+ 	/* Start rewriting the header and implant the btrees we found. */
+ 	xrep_agf_init_header(sc, agf_bp, &old_agf);
+ 	xrep_agf_set_roots(sc, agf, fab);
+@@ -749,6 +757,10 @@ xrep_agfl(
+ 	if (error)
+ 		goto err;
+ 
++	/* Last chance to abort before we start committing fixes. */
++	if (xchk_should_terminate(sc, &error))
++		goto err;
++
+ 	/*
+ 	 * Update AGF and AGFL.  We reset the global free block counter when
+ 	 * we adjust the AGF flcount (which can fail) so avoid updating any
+@@ -996,6 +1008,10 @@ xrep_agi(
+ 	if (error)
+ 		return error;
+ 
++	/* Last chance to abort before we start committing fixes. */
++	if (xchk_should_terminate(sc, &error))
++		return error;
++
+ 	/* Start rewriting the header and implant the btrees we found. */
+ 	xrep_agi_init_header(sc, agi_bp, &old_agi);
+ 	xrep_agi_set_roots(sc, agi, fab);
 
