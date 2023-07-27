@@ -2,159 +2,100 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 397B9C0015E
-	for <linux-xfs@archiver.kernel.org>; Thu, 27 Jul 2023 21:24:57 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0728CEB64DD
+	for <linux-xfs@archiver.kernel.org>; Thu, 27 Jul 2023 22:12:03 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231728AbjG0VYz (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 27 Jul 2023 17:24:55 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48118 "EHLO
+        id S231566AbjG0WMB (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 27 Jul 2023 18:12:01 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39922 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230399AbjG0VYm (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 27 Jul 2023 17:24:42 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9C30D4220;
-        Thu, 27 Jul 2023 14:24:20 -0700 (PDT)
+        with ESMTP id S229902AbjG0WMB (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 27 Jul 2023 18:12:01 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 137292723;
+        Thu, 27 Jul 2023 15:12:00 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
          key-exchange X25519 server-signature RSA-PSS (2048 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 9187661F3C;
-        Thu, 27 Jul 2023 21:23:56 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id F3A3EC433C7;
-        Thu, 27 Jul 2023 21:23:55 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 99E8861F5D;
+        Thu, 27 Jul 2023 22:11:59 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id ED6E9C433C7;
+        Thu, 27 Jul 2023 22:11:58 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1690493036;
-        bh=USI9e9KT6MOYKuPlMt//BD0ugBb5+AjE87OXuTIB68E=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=ZN81gHycm0s/S46NkxSdWddSjNcTtPSJdLUY7f8cPiyloK3KfuYgYxSV8D8RylIpS
-         QymzDQo1TfqZupC/UT0VDUrB4KGcxxTqbH9KufeRRhGbkkZHUAghnRNnI04WdB/eCh
-         r4raibokSjMkC5jUbUYkpkU2etSd17kwiTDuuYJkGq1wEar2zfANkv1eT3r62r6Nq4
-         ArFPqHrYMQkR5KoZcITTWMP7NpVcoAnWpZ6Wz0QPSDzAK95QKQF7kvZ2AG8TOZyl0I
-         eUUR3YjRVR1nzp7BKQTkGjMJeNjfDaH0+L7+I0xR4aJekMr6xa6pJrs5CdcoPmt2eG
-         phmi7YXD/jKzw==
-Date:   Thu, 27 Jul 2023 14:23:55 -0700
+        s=k20201202; t=1690495919;
+        bh=a90k990ogojxvVdeCNt26tl6xkRdkM2R09eaTB3375s=;
+        h=Date:From:To:Cc:Subject:From;
+        b=r6lL+TIJ/0+qYpdq14Vs8basCjozEsPa3U5o9o+9k1fjNr8vrTtHssgovsNatm1hC
+         ajUPM/1K/LNo89xOV3oHPmO0XULNJIW5p6zfyIXh62M/f5JWE5RJKaqzOyzuOag+hS
+         qNQfKom0E4+l8low6O9K3JSoAojC6u9BDWEirGvoklC9gAilV+kDcaebq6/qthOv4w
+         mT8SxVlYqpK2+aFuDil4TblzzGkK0TB3pLPuLdM9gcjXWe7XTaCukPgT3Rq1U8b1d2
+         dh1AszS6+Ke8x06IK7+ZsznAQA5hghCOivHkVZUv7P/WT2JTqGeLTD+kg8EbG3NalR
+         8vdTS30ziIDFA==
+Date:   Thu, 27 Jul 2023 15:11:58 -0700
 From:   "Darrick J. Wong" <djwong@kernel.org>
-To:     Zorro Lang <zlang@kernel.org>
-Cc:     fstests@vger.kernel.org, tytso@mit.edu, linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 1/2] fstests: add smoketest group
-Message-ID: <20230727212355.GD11352@frogsfrogsfrogs>
-References: <20230727185315.530134-1-zlang@kernel.org>
- <20230727185315.530134-2-zlang@kernel.org>
+To:     Dave Chinner <david@fromorbit.com>,
+        Chandan Babu R <chandanrlinux@gmail.com>
+Cc:     xfs <linux-xfs@vger.kernel.org>,
+        linux-fsdevel <linux-fsdevel@vger.kernel.org>,
+        Carlos Maiolino <cmaiolino@redhat.com>,
+        Catherine Hoang <catherine.hoang@oracle.com>
+Subject: [MEGAPATCHSET v26] xfs: online repair, part of part 1
+Message-ID: <20230727221158.GE11352@frogsfrogsfrogs>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20230727185315.530134-2-zlang@kernel.org>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Fri, Jul 28, 2023 at 02:53:14AM +0800, Zorro Lang wrote:
-> Darrick suggests that fstests can provide a simple smoketest, by
-> running several generic filesystem smoke testing for five minutes
-> apiece (SOAK_DURATION="5m"). Since there are only five smoke tests,
-> this is effectively a 20min super-quick test.
-> 
-> With gcov enabled, running these tests yields about ~75% coverage for
-> iomap and ~60% for xfs; or ~50% for ext4 and ~75% for ext4; and ~45%
-> for btrfs.  Coverage was about ~65% for the pagecache.
-> 
-> Signed-off-by: Darrick J. Wong <djwong@kernel.org>
-> Signed-off-by: Zorro Lang <zlang@kernel.org>
+Hi everyone,
 
-Er... this excerpt looks good to me! :)
+I've rebased the online fsck development branches atop 6.5, applied the
+changes requested during the review of v25, and cleaned up the common
+code as needed to make online fsck part 2 work more smoothly.  Part 2
+has also grown a directory tree structure checker that can find and fix
+un-tree like things.  I also added some simple performance counters that
+are accessible via debugfs.
 
-Reviewed-by: Darrick J. Wong <djwong@kernel.org>
+In other words, I'm formally submitting part 1 for inclusion in 6.6.
 
-(is that even allowed??)
+For this review, I would like people to focus the following:
+
+- Are the major subsystems sufficiently documented that you could figure
+  out what the code does?
+
+- Do you see any problems that are severe enough to cause long term
+  support hassles? (e.g. bad API design, writing weird metadata to disk)
+
+- Can you spot mis-interactions between the subsystems?
+
+- What were my blind spots in devising this feature?
+
+- Are there missing pieces that you'd like to help build?
+
+- Can I just merge all of this?
+
+The one thing that is /not/ in scope for this review are requests for
+more refactoring of existing subsystems.
+
+I've been running daily online **repairs** of every computer I own for
+the last 16 months.  So far, no damage has resulted from these
+operations.
+
+Fuzz and stress testing of online repairs have been running well for a
+year now.  As of this writing, online repair can fix slightly more
+things than offline repair, and the fsstress+repair long soak test has
+passed 250 million repairs with zero problems observed.  All issues
+observed in that time have been corrected in this submission.
+
+(For comparison, the long soak fsx test recently passed 103 billion file
+operations with only one corruption reported, so online fsck has a ways
+to go...)
+
+This is actually an excerpt of the full megapatchset -- I'm only sending
+about 51 patches from the kernel branch, which is enough to rebuild the
+space management btrees that don't require special effort.  I've left
+for another day the remaining ~400 patches in part 1.
 
 --D
-
-> ---
->  doc/group-names.txt | 1 +
->  tests/generic/475   | 2 +-
->  tests/generic/476   | 2 +-
->  tests/generic/521   | 2 +-
->  tests/generic/522   | 2 +-
->  tests/generic/642   | 2 +-
->  6 files changed, 6 insertions(+), 5 deletions(-)
-> 
-> diff --git a/doc/group-names.txt b/doc/group-names.txt
-> index 1c35a394..c3dcca37 100644
-> --- a/doc/group-names.txt
-> +++ b/doc/group-names.txt
-> @@ -118,6 +118,7 @@ selftest		tests with fixed results, used to validate testing setup
->  send			btrfs send/receive
->  shrinkfs		decreasing the size of a filesystem
->  shutdown		FS_IOC_SHUTDOWN ioctl
-> +smoketest		Simple smoke tests
->  snapshot		btrfs snapshots
->  soak			long running soak tests whose runtime can be controlled
->                          directly by setting the SOAK_DURATION variable
-> diff --git a/tests/generic/475 b/tests/generic/475
-> index 0cbf5131..ce7fe013 100755
-> --- a/tests/generic/475
-> +++ b/tests/generic/475
-> @@ -12,7 +12,7 @@
->  # testing efforts.
->  #
->  . ./common/preamble
-> -_begin_fstest shutdown auto log metadata eio recoveryloop
-> +_begin_fstest shutdown auto log metadata eio recoveryloop smoketest
->  
->  # Override the default cleanup function.
->  _cleanup()
-> diff --git a/tests/generic/476 b/tests/generic/476
-> index 8e93b734..b1ae4df4 100755
-> --- a/tests/generic/476
-> +++ b/tests/generic/476
-> @@ -8,7 +8,7 @@
->  # bugs in the write path.
->  #
->  . ./common/preamble
-> -_begin_fstest auto rw long_rw stress soak
-> +_begin_fstest auto rw long_rw stress soak smoketest
->  
->  # Override the default cleanup function.
->  _cleanup()
-> diff --git a/tests/generic/521 b/tests/generic/521
-> index 22dd31a8..0956e501 100755
-> --- a/tests/generic/521
-> +++ b/tests/generic/521
-> @@ -7,7 +7,7 @@
->  # Long-soak directio fsx test
->  #
->  . ./common/preamble
-> -_begin_fstest soak long_rw
-> +_begin_fstest soak long_rw smoketest
->  
->  # Import common functions.
->  . ./common/filter
-> diff --git a/tests/generic/522 b/tests/generic/522
-> index f0cbcb24..0e4e6009 100755
-> --- a/tests/generic/522
-> +++ b/tests/generic/522
-> @@ -7,7 +7,7 @@
->  # Long-soak buffered fsx test
->  #
->  . ./common/preamble
-> -_begin_fstest soak long_rw
-> +_begin_fstest soak long_rw smoketest
->  
->  # Import common functions.
->  . ./common/filter
-> diff --git a/tests/generic/642 b/tests/generic/642
-> index eba90903..e6a475a8 100755
-> --- a/tests/generic/642
-> +++ b/tests/generic/642
-> @@ -8,7 +8,7 @@
->  # bugs in the xattr code.
->  #
->  . ./common/preamble
-> -_begin_fstest auto soak attr long_rw stress
-> +_begin_fstest auto soak attr long_rw stress smoketest
->  
->  _cleanup()
->  {
-> -- 
-> 2.40.1
-> 
