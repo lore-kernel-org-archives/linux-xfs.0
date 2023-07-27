@@ -2,100 +2,113 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0728CEB64DD
-	for <linux-xfs@archiver.kernel.org>; Thu, 27 Jul 2023 22:12:03 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 543FBEB64DD
+	for <linux-xfs@archiver.kernel.org>; Thu, 27 Jul 2023 22:18:37 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231566AbjG0WMB (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 27 Jul 2023 18:12:01 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39922 "EHLO
+        id S229568AbjG0WSg (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 27 Jul 2023 18:18:36 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42416 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229902AbjG0WMB (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 27 Jul 2023 18:12:01 -0400
+        with ESMTP id S229495AbjG0WSf (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 27 Jul 2023 18:18:35 -0400
 Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 137292723;
-        Thu, 27 Jul 2023 15:12:00 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 02D59187
+        for <linux-xfs@vger.kernel.org>; Thu, 27 Jul 2023 15:18:34 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
          key-exchange X25519 server-signature RSA-PSS (2048 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 99E8861F5D;
-        Thu, 27 Jul 2023 22:11:59 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id ED6E9C433C7;
-        Thu, 27 Jul 2023 22:11:58 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 8AC6161F57
+        for <linux-xfs@vger.kernel.org>; Thu, 27 Jul 2023 22:18:33 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id D7182C433C8;
+        Thu, 27 Jul 2023 22:18:32 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1690495919;
-        bh=a90k990ogojxvVdeCNt26tl6xkRdkM2R09eaTB3375s=;
-        h=Date:From:To:Cc:Subject:From;
-        b=r6lL+TIJ/0+qYpdq14Vs8basCjozEsPa3U5o9o+9k1fjNr8vrTtHssgovsNatm1hC
-         ajUPM/1K/LNo89xOV3oHPmO0XULNJIW5p6zfyIXh62M/f5JWE5RJKaqzOyzuOag+hS
-         qNQfKom0E4+l8low6O9K3JSoAojC6u9BDWEirGvoklC9gAilV+kDcaebq6/qthOv4w
-         mT8SxVlYqpK2+aFuDil4TblzzGkK0TB3pLPuLdM9gcjXWe7XTaCukPgT3Rq1U8b1d2
-         dh1AszS6+Ke8x06IK7+ZsznAQA5hghCOivHkVZUv7P/WT2JTqGeLTD+kg8EbG3NalR
-         8vdTS30ziIDFA==
-Date:   Thu, 27 Jul 2023 15:11:58 -0700
+        s=k20201202; t=1690496312;
+        bh=8UQQjgrsGdr+WktLba0R6cx+oEyC6EIMBGl2tIFe5n4=;
+        h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
+        b=J5BZFWVVZQFBU7RQN94FKuXC4lDlUld+0+9Us4h//Qct3r5Y264geqYEgYD1aKJdt
+         tOtQ1RkfQnZfq+IE7LONPigvZgjK96EhccSEJf/H0+u5At8EAYGLy9Ge+q+ze3HdAX
+         lQWJ0cJlITUwKKKgYbYmOw43NiMaFIe3ipSnxMH35R8YXLwvk6Sz1rbWiMZaajOckg
+         1/4Z+osoZng8H6cgpwVUVf23jHGgl25QxSjKW4KJg7moT+kWdIYXRkbHDYYXzJo8UI
+         2yBevJGhLsYSE+yyUTJx8cjXucm6mqZFfK5/x+KXai6wTMIYL37Cgep3Zb0lNDxBX1
+         C+nOtqf1ZK8lw==
+Date:   Thu, 27 Jul 2023 15:18:32 -0700
+Subject: [PATCHSET v26.0 0/9] xfs: fix online repair block reaping
 From:   "Darrick J. Wong" <djwong@kernel.org>
-To:     Dave Chinner <david@fromorbit.com>,
-        Chandan Babu R <chandanrlinux@gmail.com>
-Cc:     xfs <linux-xfs@vger.kernel.org>,
-        linux-fsdevel <linux-fsdevel@vger.kernel.org>,
-        Carlos Maiolino <cmaiolino@redhat.com>,
-        Catherine Hoang <catherine.hoang@oracle.com>
-Subject: [MEGAPATCHSET v26] xfs: online repair, part of part 1
-Message-ID: <20230727221158.GE11352@frogsfrogsfrogs>
+To:     djwong@kernel.org
+Cc:     linux-xfs@vger.kernel.org
+Message-ID: <169049622719.921010.16542808514375882520.stgit@frogsfrogsfrogs>
+In-Reply-To: <20230727221158.GE11352@frogsfrogsfrogs>
+References: <20230727221158.GE11352@frogsfrogsfrogs>
+User-Agent: StGit/0.19
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Hi everyone,
+Hi all,
 
-I've rebased the online fsck development branches atop 6.5, applied the
-changes requested during the review of v25, and cleaned up the common
-code as needed to make online fsck part 2 work more smoothly.  Part 2
-has also grown a directory tree structure checker that can find and fix
-un-tree like things.  I also added some simple performance counters that
-are accessible via debugfs.
+These patches fix a few problems that I noticed in the code that deals
+with old btree blocks after a successful repair.
 
-In other words, I'm formally submitting part 1 for inclusion in 6.6.
+First, I observed that it is possible for repair to incorrectly
+invalidate and delete old btree blocks if they were crosslinked.  The
+solution here is to consult the reverse mappings for each block in the
+extent -- singly owned blocks are invalidated and freed, whereas for
+crosslinked blocks, we merely drop the incorrect reverse mapping.
 
-For this review, I would like people to focus the following:
+A largeish change in this patchset is moving the reaping code to a
+separate file, because the code are mostly interrelated static
+functions.  For now this also drops the ability to reap file blocks,
+which will return when we add the bmbt repair functions.
 
-- Are the major subsystems sufficiently documented that you could figure
-  out what the code does?
+Second, we convert the reap function to use EFIs so that we can commit
+to freeing as many blocks in as few transactions as we dare.  We would
+like to free as many old blocks as we can in the same transaction that
+commits the new structure to the ondisk filesystem to minimize the
+number of blocks that leak if the system crashes before the repair fully
+completes.
 
-- Do you see any problems that are severe enough to cause long term
-  support hassles? (e.g. bad API design, writing weird metadata to disk)
+The third change made in this series is to avoid tripping buffer cache
+assertions if we're merely scanning the buffer cache for buffers to
+invalidate, and find a non-stale buffer of the wrong length.  This is
+primarily cosmetic, but makes my life easier.
 
-- Can you spot mis-interactions between the subsystems?
+The fourth change restructures the reaping code to try to process as many
+blocks in one go as possible, to reduce logging traffic.
 
-- What were my blind spots in devising this feature?
+The last change switches the reaping mechanism to use per-AG bitmaps
+defined in a previous patchset.  This should reduce type confusion when
+reading the source code.
 
-- Are there missing pieces that you'd like to help build?
+If you're going to start using this mess, you probably ought to just
+pull from my git trees, which are linked below.
 
-- Can I just merge all of this?
-
-The one thing that is /not/ in scope for this review are requests for
-more refactoring of existing subsystems.
-
-I've been running daily online **repairs** of every computer I own for
-the last 16 months.  So far, no damage has resulted from these
-operations.
-
-Fuzz and stress testing of online repairs have been running well for a
-year now.  As of this writing, online repair can fix slightly more
-things than offline repair, and the fsstress+repair long soak test has
-passed 250 million repairs with zero problems observed.  All issues
-observed in that time have been corrected in this submission.
-
-(For comparison, the long soak fsx test recently passed 103 billion file
-operations with only one corruption reported, so online fsck has a ways
-to go...)
-
-This is actually an excerpt of the full megapatchset -- I'm only sending
-about 51 patches from the kernel branch, which is enough to rebuild the
-space management btrees that don't require special effort.  I've left
-for another day the remaining ~400 patches in part 1.
+This is an extraordinary way to destroy everything.  Enjoy!
+Comments and questions are, as always, welcome.
 
 --D
+
+kernel git tree:
+https://git.kernel.org/cgit/linux/kernel/git/djwong/xfs-linux.git/log/?h=repair-reap-fixes
+
+xfsprogs git tree:
+https://git.kernel.org/cgit/linux/kernel/git/djwong/xfsprogs-dev.git/log/?h=repair-reap-fixes
+---
+ fs/xfs/Makefile                |    1 
+ fs/xfs/scrub/agheader_repair.c |   75 +++---
+ fs/xfs/scrub/bitmap.c          |   78 ------
+ fs/xfs/scrub/bitmap.h          |   10 -
+ fs/xfs/scrub/reap.c            |  499 ++++++++++++++++++++++++++++++++++++++++
+ fs/xfs/scrub/reap.h            |   12 +
+ fs/xfs/scrub/repair.c          |  366 ++++-------------------------
+ fs/xfs/scrub/repair.h          |   10 -
+ fs/xfs/scrub/trace.h           |   72 +++---
+ fs/xfs/xfs_buf.c               |    9 +
+ fs/xfs/xfs_buf.h               |   13 +
+ 11 files changed, 666 insertions(+), 479 deletions(-)
+ create mode 100644 fs/xfs/scrub/reap.c
+ create mode 100644 fs/xfs/scrub/reap.h
+
