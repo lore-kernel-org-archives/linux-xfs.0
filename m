@@ -2,53 +2,53 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A3933C04E69
-	for <linux-xfs@archiver.kernel.org>; Thu, 27 Jul 2023 08:21:42 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0BF8CC04FDF
+	for <linux-xfs@archiver.kernel.org>; Thu, 27 Jul 2023 08:21:44 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233818AbjG0IVi (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 27 Jul 2023 04:21:38 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55996 "EHLO
+        id S233969AbjG0IVj (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 27 Jul 2023 04:21:39 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55194 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S234594AbjG0ITr (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 27 Jul 2023 04:19:47 -0400
-Received: from mail-pf1-x430.google.com (mail-pf1-x430.google.com [IPv6:2607:f8b0:4864:20::430])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id DAE407A94
-        for <linux-xfs@vger.kernel.org>; Thu, 27 Jul 2023 01:12:05 -0700 (PDT)
-Received: by mail-pf1-x430.google.com with SMTP id d2e1a72fcca58-686f6231bdeso113405b3a.1
-        for <linux-xfs@vger.kernel.org>; Thu, 27 Jul 2023 01:12:05 -0700 (PDT)
+        with ESMTP id S233609AbjG0IRv (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 27 Jul 2023 04:17:51 -0400
+Received: from mail-pf1-x42a.google.com (mail-pf1-x42a.google.com [IPv6:2607:f8b0:4864:20::42a])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 028DEF3
+        for <linux-xfs@vger.kernel.org>; Thu, 27 Jul 2023 01:10:16 -0700 (PDT)
+Received: by mail-pf1-x42a.google.com with SMTP id d2e1a72fcca58-682ae5d4184so170933b3a.1
+        for <linux-xfs@vger.kernel.org>; Thu, 27 Jul 2023 01:10:16 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=bytedance.com; s=google; t=1690445490; x=1691050290;
+        d=bytedance.com; s=google; t=1690445369; x=1691050169;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:from:to:cc:subject:date
          :message-id:reply-to;
-        bh=ze2BfjPj3zI6XK14aBXxwpj9cG5VKS+QoT9VkWxAsig=;
-        b=lwOoY+OdQN9yyaycuuDe1xOBPNuMdpjPWf9iVdWyTJX4Rze1Ujyu7FqyyXfPUD3aU2
-         0geNSiBV+SjLplmH7ILvbtRHCHKM3vLFmOVDmsv1BEm9fkWkTRAM1imR53z99mDpf0IW
-         ffoAdzAoMkEyhpVqT3oRFQGqTsCjJOMqkqnQ0DFV07QdT6HdoSrpGoFduwBz2OfpOwFt
-         CWOX0mmKGcSRamco0Cg7QpPpz6Lx/kpTjodIKj6Sfbh0QvlZA2O3b8FhSM1hAbz32D/P
-         0DhVwgLc1Xu9esSsJfTXPYkz1XSyCT4LoDf/9vVVRpeHu2USWPZ+XNt9qGqYRzfEx2BR
-         Y6jQ==
+        bh=et7oKjMo2RpAm9eGe6PO8KzXkO6yMET8jj6KuxhxE1o=;
+        b=ZArGb8yz+8ycxhYpd3TfnObsbskAktwxKp/LK6E+gx1lOsm2QqxHLjO1qFt766mx4G
+         4UOFzMb5rOBT3wq7QpcOo/50dqnABPqLouzBdNx69dJP3kndLHofbdJgcQSOE87tIEP3
+         gOFIB0th/ApJ4utKzdT3r6irRm20AGsjylo629bfexLkXBuL+hMcZdtnwSmPAtxRA7F8
+         l3r/R789CkvCTacsaPitu2Mn9fHBZCoAT7Xd7Py97lY3Lp4c0X3H7O8uSS1JwsanI4Cy
+         Pf3LZprk/pnZjQej6Xzx3T3CJ+QGRGxZd7LUmSV8XGImv+0X4BPv+EIagOcfGqekhivR
+         Bv+Q==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20221208; t=1690445490; x=1691050290;
+        d=1e100.net; s=20221208; t=1690445369; x=1691050169;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:x-gm-message-state:from:to:cc
          :subject:date:message-id:reply-to;
-        bh=ze2BfjPj3zI6XK14aBXxwpj9cG5VKS+QoT9VkWxAsig=;
-        b=QZDNRst/ILISEJsYpnCSsPjk8vuivLJf/vmDhga3rMuAhdzKVH8UPa4p69R43hkqAj
-         UPrG5n8QHnu8XUFhjc7uZJw6STXdW0OFNhIw5gvD4ggU+r/RnSY1Vk+4FiAz8UhbBuIV
-         1mGW3tR1Xhky8S1yL5yOSds1MQ2VC/9zFxXClC8irdlrk59DdBWJPsGVJXJlBIv2TjY7
-         Zg8qyQif4IXzDd9BG5RYIIBoEMhd0F4cX4q/2HjIDIPhHlaGV5exf9Y1tov+MIQIiOp/
-         /HyjAiiRKoGW8uCUBY24YQLXBAbdYZF12CBCSEpBgF//yZ1XgZk+Ra7Mqjh2dI9yoYlD
-         ViJg==
-X-Gm-Message-State: ABy/qLZSsU7vK/SnWbGx8IYTKj5WK4Au4JjnaUhZQ+K0napVGjgVGvdq
-        /wdAYJ/6x/K8tlA2RZj70FhcIA==
-X-Google-Smtp-Source: APBJJlFMZtECqV3NWJubuagzux89byKCTiavknA18umD2w/BadGADzl49oXppHX8YppKwxO9L0rdOg==
-X-Received: by 2002:a05:6a00:1586:b0:67f:8ef5:2643 with SMTP id u6-20020a056a00158600b0067f8ef52643mr5208150pfk.2.1690445490190;
-        Thu, 27 Jul 2023 01:11:30 -0700 (PDT)
+        bh=et7oKjMo2RpAm9eGe6PO8KzXkO6yMET8jj6KuxhxE1o=;
+        b=NFoMYXxxzJjcYWhYBLt4/eu3Zg03jHRmZIPEblhBI4QckPa3GB918ri5EVc1xk9qn4
+         6T3g0TEx0jWCxPKsj9cyWUjNiEh2/L+OtLnH4U52Dv0sk4A3Y/Qd52FPfj2Y/JLfhjxY
+         wNzRfp1TKW/eqm0Rhev2T9tKiPPrXMrcFcpTX8F3Xa4Sr3/ShMM1AZ6kI15LEYkqSww/
+         5tKSf0p8REzOdXPugmSomm0G8U/0dkTSKK4fE3bo8wyiQGoE3pnEsN2f6OFI1znCBB++
+         IIXEu+BTxCGI3YHSJIil7HnBZvg+U4uHbXxIBcKP3ePTLOCwtOlL/26TwrD3sIllQm8Z
+         i3VQ==
+X-Gm-Message-State: ABy/qLZ2Q4eIO2GaUIIDo+H7FmxcoJsAWj8uWkbVx5XA/ubcrIk0M7KD
+        nM7bOb3P8ECE2J0a1bZrZqpSFw==
+X-Google-Smtp-Source: APBJJlGUbAM65UTyBU06poLXl/mtaX6EX5YDf65AxeW9rsxnsdAR4xxA054nRzBMt6Eu4ihj5O0Oaw==
+X-Received: by 2002:a05:6a20:7da5:b0:137:3941:17b3 with SMTP id v37-20020a056a207da500b00137394117b3mr5573135pzj.6.1690445369382;
+        Thu, 27 Jul 2023 01:09:29 -0700 (PDT)
 Received: from C02DW0BEMD6R.bytedance.net ([203.208.167.147])
-        by smtp.gmail.com with ESMTPSA id j8-20020aa78d08000000b006828e49c04csm885872pfe.75.2023.07.27.01.11.18
+        by smtp.gmail.com with ESMTPSA id j8-20020aa78d08000000b006828e49c04csm885872pfe.75.2023.07.27.01.09.17
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 27 Jul 2023 01:11:29 -0700 (PDT)
+        Thu, 27 Jul 2023 01:09:28 -0700 (PDT)
 From:   Qi Zheng <zhengqi.arch@bytedance.com>
 To:     akpm@linux-foundation.org, david@fromorbit.com, tkhai@ya.ru,
         vbabka@suse.cz, roman.gushchin@linux.dev, djwong@kernel.org,
@@ -70,9 +70,9 @@ Cc:     linux-kernel@vger.kernel.org, linux-mm@kvack.org, x86@kernel.org,
         linux-xfs@vger.kernel.org, linux-btrfs@vger.kernel.org,
         Qi Zheng <zhengqi.arch@bytedance.com>,
         Muchun Song <songmuchun@bytedance.com>
-Subject: [PATCH v3 28/49] dm zoned: dynamically allocate the dm-zoned-meta shrinker
-Date:   Thu, 27 Jul 2023 16:04:41 +0800
-Message-Id: <20230727080502.77895-29-zhengqi.arch@bytedance.com>
+Subject: [PATCH v3 18/49] ubifs: dynamically allocate the ubifs-slab shrinker
+Date:   Thu, 27 Jul 2023 16:04:31 +0800
+Message-Id: <20230727080502.77895-19-zhengqi.arch@bytedance.com>
 X-Mailer: git-send-email 2.24.3 (Apple Git-128)
 In-Reply-To: <20230727080502.77895-1-zhengqi.arch@bytedance.com>
 References: <20230727080502.77895-1-zhengqi.arch@bytedance.com>
@@ -82,89 +82,77 @@ Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-In preparation for implementing lockless slab shrink, use new APIs to
-dynamically allocate the dm-zoned-meta shrinker, so that it can be freed
-asynchronously using kfree_rcu(). Then it doesn't need to wait for RCU
-read-side critical section when releasing the struct dmz_metadata.
+Use new APIs to dynamically allocate the ubifs-slab shrinker.
 
 Signed-off-by: Qi Zheng <zhengqi.arch@bytedance.com>
 Reviewed-by: Muchun Song <songmuchun@bytedance.com>
 ---
- drivers/md/dm-zoned-metadata.c | 28 ++++++++++++++++------------
- 1 file changed, 16 insertions(+), 12 deletions(-)
+ fs/ubifs/super.c | 22 ++++++++++++----------
+ 1 file changed, 12 insertions(+), 10 deletions(-)
 
-diff --git a/drivers/md/dm-zoned-metadata.c b/drivers/md/dm-zoned-metadata.c
-index 9d3cca8e3dc9..0bcb26a43578 100644
---- a/drivers/md/dm-zoned-metadata.c
-+++ b/drivers/md/dm-zoned-metadata.c
-@@ -187,7 +187,7 @@ struct dmz_metadata {
- 	struct rb_root		mblk_rbtree;
- 	struct list_head	mblk_lru_list;
- 	struct list_head	mblk_dirty_list;
--	struct shrinker		mblk_shrinker;
-+	struct shrinker		*mblk_shrinker;
+diff --git a/fs/ubifs/super.c b/fs/ubifs/super.c
+index b08fb28d16b5..c690782388a8 100644
+--- a/fs/ubifs/super.c
++++ b/fs/ubifs/super.c
+@@ -54,11 +54,7 @@ module_param_cb(default_version, &ubifs_default_version_ops, &ubifs_default_vers
+ static struct kmem_cache *ubifs_inode_slab;
  
- 	/* Zone allocation management */
- 	struct mutex		map_lock;
-@@ -615,7 +615,7 @@ static unsigned long dmz_shrink_mblock_cache(struct dmz_metadata *zmd,
- static unsigned long dmz_mblock_shrinker_count(struct shrinker *shrink,
- 					       struct shrink_control *sc)
+ /* UBIFS TNC shrinker description */
+-static struct shrinker ubifs_shrinker_info = {
+-	.scan_objects = ubifs_shrink_scan,
+-	.count_objects = ubifs_shrink_count,
+-	.seeks = DEFAULT_SEEKS,
+-};
++static struct shrinker *ubifs_shrinker_info;
+ 
+ /**
+  * validate_inode - validate inode.
+@@ -2373,7 +2369,7 @@ static void inode_slab_ctor(void *obj)
+ 
+ static int __init ubifs_init(void)
  {
--	struct dmz_metadata *zmd = container_of(shrink, struct dmz_metadata, mblk_shrinker);
-+	struct dmz_metadata *zmd = shrink->private_data;
+-	int err;
++	int err = -ENOMEM;
  
- 	return atomic_read(&zmd->nr_mblks);
- }
-@@ -626,7 +626,7 @@ static unsigned long dmz_mblock_shrinker_count(struct shrinker *shrink,
- static unsigned long dmz_mblock_shrinker_scan(struct shrinker *shrink,
- 					      struct shrink_control *sc)
- {
--	struct dmz_metadata *zmd = container_of(shrink, struct dmz_metadata, mblk_shrinker);
-+	struct dmz_metadata *zmd = shrink->private_data;
- 	unsigned long count;
+ 	BUILD_BUG_ON(sizeof(struct ubifs_ch) != 24);
  
- 	spin_lock(&zmd->mblk_lock);
-@@ -2936,19 +2936,23 @@ int dmz_ctr_metadata(struct dmz_dev *dev, int num_dev,
- 	 */
- 	zmd->min_nr_mblks = 2 + zmd->nr_map_blocks + zmd->zone_nr_bitmap_blocks * 16;
- 	zmd->max_nr_mblks = zmd->min_nr_mblks + 512;
--	zmd->mblk_shrinker.count_objects = dmz_mblock_shrinker_count;
--	zmd->mblk_shrinker.scan_objects = dmz_mblock_shrinker_scan;
--	zmd->mblk_shrinker.seeks = DEFAULT_SEEKS;
+@@ -2439,10 +2435,16 @@ static int __init ubifs_init(void)
+ 	if (!ubifs_inode_slab)
+ 		return -ENOMEM;
  
- 	/* Metadata cache shrinker */
--	ret = register_shrinker(&zmd->mblk_shrinker, "dm-zoned-meta:(%u:%u)",
--				MAJOR(dev->bdev->bd_dev),
--				MINOR(dev->bdev->bd_dev));
--	if (ret) {
--		dmz_zmd_err(zmd, "Register metadata cache shrinker failed");
-+	zmd->mblk_shrinker = shrinker_alloc(0,  "dm-zoned-meta:(%u:%u)",
-+					    MAJOR(dev->bdev->bd_dev),
-+					    MINOR(dev->bdev->bd_dev));
-+	if (!zmd->mblk_shrinker) {
-+		dmz_zmd_err(zmd, "Allocate metadata cache shrinker failed");
- 		goto err;
- 	}
+-	err = register_shrinker(&ubifs_shrinker_info, "ubifs-slab");
+-	if (err)
++	ubifs_shrinker_info = shrinker_alloc(0, "ubifs-slab");
++	if (!ubifs_shrinker_info)
+ 		goto out_slab;
  
-+	zmd->mblk_shrinker->count_objects = dmz_mblock_shrinker_count;
-+	zmd->mblk_shrinker->scan_objects = dmz_mblock_shrinker_scan;
-+	zmd->mblk_shrinker->seeks = DEFAULT_SEEKS;
-+	zmd->mblk_shrinker->private_data = zmd;
++	ubifs_shrinker_info->count_objects = ubifs_shrink_count;
++	ubifs_shrinker_info->scan_objects = ubifs_shrink_scan;
++	ubifs_shrinker_info->seeks = DEFAULT_SEEKS;
 +
-+	shrinker_register(zmd->mblk_shrinker);
++	shrinker_register(ubifs_shrinker_info);
 +
- 	dmz_zmd_info(zmd, "DM-Zoned metadata version %d", zmd->sb_version);
- 	for (i = 0; i < zmd->nr_devs; i++)
- 		dmz_print_dev(zmd, i);
-@@ -2995,7 +2999,7 @@ int dmz_ctr_metadata(struct dmz_dev *dev, int num_dev,
-  */
- void dmz_dtr_metadata(struct dmz_metadata *zmd)
- {
--	unregister_shrinker(&zmd->mblk_shrinker);
-+	shrinker_free(zmd->mblk_shrinker);
- 	dmz_cleanup_metadata(zmd);
- 	kfree(zmd);
- }
+ 	err = ubifs_compressors_init();
+ 	if (err)
+ 		goto out_shrinker;
+@@ -2467,7 +2469,7 @@ static int __init ubifs_init(void)
+ 	dbg_debugfs_exit();
+ 	ubifs_compressors_exit();
+ out_shrinker:
+-	unregister_shrinker(&ubifs_shrinker_info);
++	shrinker_free(ubifs_shrinker_info);
+ out_slab:
+ 	kmem_cache_destroy(ubifs_inode_slab);
+ 	return err;
+@@ -2483,7 +2485,7 @@ static void __exit ubifs_exit(void)
+ 	dbg_debugfs_exit();
+ 	ubifs_sysfs_exit();
+ 	ubifs_compressors_exit();
+-	unregister_shrinker(&ubifs_shrinker_info);
++	shrinker_free(ubifs_shrinker_info);
+ 
+ 	/*
+ 	 * Make sure all delayed rcu free inodes are flushed before we
 -- 
 2.30.2
 
