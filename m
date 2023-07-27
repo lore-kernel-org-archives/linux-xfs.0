@@ -2,45 +2,45 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 99075EB64DD
-	for <linux-xfs@archiver.kernel.org>; Thu, 27 Jul 2023 22:29:18 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 54B46EB64DD
+	for <linux-xfs@archiver.kernel.org>; Thu, 27 Jul 2023 22:29:34 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232509AbjG0W3R (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 27 Jul 2023 18:29:17 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45232 "EHLO
+        id S232483AbjG0W3d (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 27 Jul 2023 18:29:33 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45270 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232483AbjG0W3Q (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 27 Jul 2023 18:29:16 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A49592D63
-        for <linux-xfs@vger.kernel.org>; Thu, 27 Jul 2023 15:29:15 -0700 (PDT)
+        with ESMTP id S232226AbjG0W3c (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 27 Jul 2023 18:29:32 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 667DE2D64
+        for <linux-xfs@vger.kernel.org>; Thu, 27 Jul 2023 15:29:31 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
          key-exchange X25519 server-signature RSA-PSS (2048 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 42BCC61EBC
-        for <linux-xfs@vger.kernel.org>; Thu, 27 Jul 2023 22:29:15 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 9F34DC433C7;
-        Thu, 27 Jul 2023 22:29:14 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id EFBAA61F6A
+        for <linux-xfs@vger.kernel.org>; Thu, 27 Jul 2023 22:29:30 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 58410C433C8;
+        Thu, 27 Jul 2023 22:29:30 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1690496954;
-        bh=lFIgCWK/IrnIdOVEYUYIhux5c03MjjvKOJqpfxVk9GI=;
+        s=k20201202; t=1690496970;
+        bh=xAM1QgNOThs708gNhs8gKtMq77oiS/KDVzXrsB7diWA=;
         h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-        b=c9oVKu4DcTko7w616cUq6X0yzhvt1dTrV9CD8A2t1sYvezbf04DfJcWv1dbkdYEYc
-         T6NG6F0zvzgE6hl2pu5VvwTfczJSJyNR+Ghy2UtRDWkPXd3NnGkrzJ9eJpgN3GifAJ
-         97+7QYL6D+GKoh7h3aLQjylJu5nKlwfymhKqz5SyNnzLN4s9yaNVlv3jjhT3jrhw6U
-         3tJhRtPFS/Q5G7XjjSnu2qauJRbTLB0nYsYYCJ5Muy9ouSuZGNR8gbPqh8uuKGUO7D
-         MZqG0lDNDJqCp0GVlTX1zEHyj4uxsZGZsPEtocH+wRWJvMD17/+zfwZssyxKFD1BJZ
-         yFpI2buajVOQA==
-Date:   Thu, 27 Jul 2023 15:29:14 -0700
-Subject: [PATCH 2/2] xfs: allow the user to cancel repairs before we start
- writing
+        b=Rrte0lOdKUQmB5vw/kZSJfN6H/3ooQ1bh/gRxzfxc7lHMUiYajYnBgDltBVxqgPKd
+         SpYNTM0lP9UVk2vtW/s4j/mD6memAOG75QSRkK6oDFBQRjGExRlqmdNSOczOY1vlR4
+         VIjfg0uK3eZo3np9+xB5sawWngerqytE3TDg+1gKdJsg0plNpNsurp9s2i3EvBONOS
+         L++Sy+MAwTx41iVP8hiIQgo22zqGH3/xzwje7pLh9rMyZSwmQHwf5B6Se0Duv8F5Ch
+         tMCke6Rz4KRbAy1erVG3cP8rzei7zPNu1RPKewIIFZ+FWzG5yJWzXnWWG1YrFfrA7P
+         jv5KE9XEpkHQg==
+Date:   Thu, 27 Jul 2023 15:29:29 -0700
+Subject: [PATCH 1/2] xfs: don't complain about unfixed metadata when repairs
+ were injected
 From:   "Darrick J. Wong" <djwong@kernel.org>
 To:     djwong@kernel.org
 Cc:     Dave Chinner <dchinner@redhat.com>, linux-xfs@vger.kernel.org
-Message-ID: <169049624694.921955.17547336213821473858.stgit@frogsfrogsfrogs>
-In-Reply-To: <169049624664.921955.12084246901012682213.stgit@frogsfrogsfrogs>
-References: <169049624664.921955.12084246901012682213.stgit@frogsfrogsfrogs>
+Message-ID: <169049625034.922058.13500878099203996730.stgit@frogsfrogsfrogs>
+In-Reply-To: <169049625018.922058.9081185927358791336.stgit@frogsfrogsfrogs>
+References: <169049625018.922058.9081185927358791336.stgit@frogsfrogsfrogs>
 User-Agent: StGit/0.19
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
@@ -51,76 +51,74 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-All online repair functions have the same structure: walk filesystem
-metadata structures gathering enough data to rebuild the structure,
-stage a new copy, and then commit the new copy.
+While debugging other parts of online repair, I noticed that if someone
+injects FORCE_SCRUB_REPAIR, starts an IFLAG_REPAIR scrub on a piece of
+metadata, and the metadata repair fails, we'll log a message about
+uncorrected errors in the filesystem.
 
-The gathering steps do not write anything to disk, so they are peppered
-with xchk_should_terminate calls to avoid softlockup warnings and to
-provide an opportunity to abort the repair (by killing xfs_scrub).
-However, it's not clear in the code base when is the last chance to
-abort cleanly without having to undo a bunch of structure.
+This isn't strictly true if the scrub function didn't set OFLAG_CORRUPT
+and we're only doing the repair because the error injection knob is set.
+Repair functions are allowed to abort the entire operation at any point
+before committing new metadata, in which case the piece of metadata is
+in the same state as it was before.  Therefore, the log message should
+be gated on the results of the scrub.  Refactor the predicate and
+rearrange the code flow to make this happen.
 
-Therefore, add one more call to xchk_should_terminate (along with a
-comment) providing the sysadmin with the ability to abort before it's
-too late and to make it clear in the source code when it's no longer
-convenient or safe to abort a repair.   As there are only four repair
-functions right now, this patch exists more to establish a precedent for
-subsequent additions than to deliver practical functionality.
+Note: If the repair function errors out after it commits the new
+metadata, the transaction cancellation will shut down the filesystem,
+which is an obvious sign of corrupt metadata.
 
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 Reviewed-by: Dave Chinner <dchinner@redhat.com>
 ---
- fs/xfs/scrub/agheader_repair.c |   16 ++++++++++++++++
- 1 file changed, 16 insertions(+)
+ fs/xfs/scrub/common.h |   12 ++++++++++++
+ fs/xfs/scrub/scrub.c  |    7 ++-----
+ 2 files changed, 14 insertions(+), 5 deletions(-)
 
 
-diff --git a/fs/xfs/scrub/agheader_repair.c b/fs/xfs/scrub/agheader_repair.c
-index 7874ae8149caa..d54edd0d8538d 100644
---- a/fs/xfs/scrub/agheader_repair.c
-+++ b/fs/xfs/scrub/agheader_repair.c
-@@ -50,6 +50,10 @@ xrep_superblock(
- 	if (error)
- 		return error;
+diff --git a/fs/xfs/scrub/common.h b/fs/xfs/scrub/common.h
+index 5fe6d661d42d9..4f7cb410904d6 100644
+--- a/fs/xfs/scrub/common.h
++++ b/fs/xfs/scrub/common.h
+@@ -167,6 +167,18 @@ static inline bool xchk_skip_xref(struct xfs_scrub_metadata *sm)
+ 			       XFS_SCRUB_OFLAG_XCORRUPT);
+ }
  
-+	/* Last chance to abort before we start committing fixes. */
-+	if (xchk_should_terminate(sc, &error))
-+		return error;
++#ifdef CONFIG_XFS_ONLINE_REPAIR
++/* Decide if a repair is required. */
++static inline bool xchk_needs_repair(const struct xfs_scrub_metadata *sm)
++{
++	return sm->sm_flags & (XFS_SCRUB_OFLAG_CORRUPT |
++			       XFS_SCRUB_OFLAG_XCORRUPT |
++			       XFS_SCRUB_OFLAG_PREEN);
++}
++#else
++# define xchk_needs_repair(sc)		(false)
++#endif /* CONFIG_XFS_ONLINE_REPAIR */
 +
- 	/* Copy AG 0's superblock to this one. */
- 	xfs_buf_zero(bp, 0, BBTOB(bp->b_length));
- 	xfs_sb_to_disk(bp->b_addr, &mp->m_sb);
-@@ -425,6 +429,10 @@ xrep_agf(
- 	if (error)
- 		return error;
+ int xchk_metadata_inode_forks(struct xfs_scrub *sc);
  
-+	/* Last chance to abort before we start committing fixes. */
-+	if (xchk_should_terminate(sc, &error))
-+		return error;
-+
- 	/* Start rewriting the header and implant the btrees we found. */
- 	xrep_agf_init_header(sc, agf_bp, &old_agf);
- 	xrep_agf_set_roots(sc, agf, fab);
-@@ -749,6 +757,10 @@ xrep_agfl(
- 	if (error)
- 		goto err;
+ /*
+diff --git a/fs/xfs/scrub/scrub.c b/fs/xfs/scrub/scrub.c
+index cd0ecb29c50c6..a2492aae34d4f 100644
+--- a/fs/xfs/scrub/scrub.c
++++ b/fs/xfs/scrub/scrub.c
+@@ -537,15 +537,12 @@ xfs_scrub_metadata(
  
-+	/* Last chance to abort before we start committing fixes. */
-+	if (xchk_should_terminate(sc, &error))
-+		goto err;
-+
- 	/*
- 	 * Update AGF and AGFL.  We reset the global free block counter when
- 	 * we adjust the AGF flcount (which can fail) so avoid updating any
-@@ -996,6 +1008,10 @@ xrep_agi(
- 	if (error)
- 		return error;
+ 	if ((sc->sm->sm_flags & XFS_SCRUB_IFLAG_REPAIR) &&
+ 	    !(sc->flags & XREP_ALREADY_FIXED)) {
+-		bool needs_fix;
++		bool needs_fix = xchk_needs_repair(sc->sm);
  
-+	/* Last chance to abort before we start committing fixes. */
-+	if (xchk_should_terminate(sc, &error))
-+		return error;
-+
- 	/* Start rewriting the header and implant the btrees we found. */
- 	xrep_agi_init_header(sc, agi_bp, &old_agi);
- 	xrep_agi_set_roots(sc, agi, fab);
+ 		/* Let debug users force us into the repair routines. */
+ 		if (XFS_TEST_ERROR(false, mp, XFS_ERRTAG_FORCE_SCRUB_REPAIR))
+-			sc->sm->sm_flags |= XFS_SCRUB_OFLAG_CORRUPT;
++			needs_fix = true;
+ 
+-		needs_fix = (sc->sm->sm_flags & (XFS_SCRUB_OFLAG_CORRUPT |
+-						 XFS_SCRUB_OFLAG_XCORRUPT |
+-						 XFS_SCRUB_OFLAG_PREEN));
+ 		/*
+ 		 * If userspace asked for a repair but it wasn't necessary,
+ 		 * report that back to userspace.
 
