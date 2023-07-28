@@ -2,125 +2,204 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 62364C00528
-	for <linux-xfs@archiver.kernel.org>; Thu, 27 Jul 2023 23:49:08 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 59983C04A6A
+	for <linux-xfs@archiver.kernel.org>; Fri, 28 Jul 2023 03:11:09 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232198AbjG0XtG (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 27 Jul 2023 19:49:06 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42332 "EHLO
+        id S230198AbjG1DLH (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 27 Jul 2023 23:11:07 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51356 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231768AbjG0Xs7 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 27 Jul 2023 19:48:59 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 395133A8B;
-        Thu, 27 Jul 2023 16:48:45 -0700 (PDT)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature RSA-PSS (2048 bits))
-        (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id C2C1461EFF;
-        Thu, 27 Jul 2023 23:48:44 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 6E5FDC433C7;
-        Thu, 27 Jul 2023 23:48:39 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1690501724;
-        bh=Ttxo2VAoV3s10tVDpG1rs4f+uNBtPiAAdsRn7qEPqAI=;
-        h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
-        b=Ak6ozI5MGJ+V/aaPZbipUbe6ZARep0hinqcaIFmiUbGlXqA4l6qqKubv3sXd24Wis
-         E3nRqNpMPjywrGRezhx8kIl9BfOcFGOjuYtEl0wjzGKmd2W/r6L34Y8Q/Asia9+Ai+
-         N65piXMA54Y1i5SwziMjZGbgl+PlpLxLOgApRck3LvpJfpGiaZrCds1yq/RX5+TIOO
-         TcyhaMq04sGg4mmvI/xNg53Zl5ogRkSJoPUjgXBUN2wkW+R/Z24fG4Bcn7szmrfhkb
-         1Y0rUs2KyI/CXZncywoQIP9j5+uNlee3CVuHYo0iSwOTdXpuIWfOUm7reRjWTqpcd1
-         EASuIvTp5UKtQ==
-Message-ID: <217f3a7e-7681-0da6-aaa7-252a1451f7ba@kernel.org>
-Date:   Fri, 28 Jul 2023 08:48:37 +0900
+        with ESMTP id S229632AbjG1DLG (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 27 Jul 2023 23:11:06 -0400
+Received: from casper.infradead.org (casper.infradead.org [IPv6:2001:8b0:10b:1236::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A84B9F3;
+        Thu, 27 Jul 2023 20:11:00 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=infradead.org; s=casper.20170209; h=In-Reply-To:Content-Type:MIME-Version:
+        References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
+        Content-Transfer-Encoding:Content-ID:Content-Description;
+        bh=fR84h0xmQTbhhUm+zLcjqHD9kr8sZmMgJwmtk5SSV9Y=; b=XqUaO/MIQzXRAjNcGKGTQRQYBa
+        L9AcV2VX/oNoHkskKqQI3S3FrqgH2qqif/I7veW7uJ2gH9zrKAx6rr+1xapshIh1naEPtUbVpEa3Z
+        QwyOQ6piFxa9bHOvpKr/WVPkj53yHT/g0Gn+7EKc+jZSEBM50M85MbFCu5UWp9P97rCSjAEo1D0Ce
+        M63tFuilmQTvZN9mxZxNXwa2W7rAHrXue81iK9XdC59tYZIGK3vmxmPJghCKH0CU9xfTplfgrIlSC
+        47pPZM/vZmSMaPkhpJxRWi3JQYOfZVRyqDho7Zn/SVVo4nZuKhQZOjn95dpJxn4v9r2nK4F6u7KN9
+        V5qxAXEA==;
+Received: from willy by casper.infradead.org with local (Exim 4.94.2 #2 (Red Hat Linux))
+        id 1qPDsR-0087p5-IY; Fri, 28 Jul 2023 03:10:51 +0000
+Date:   Fri, 28 Jul 2023 04:10:51 +0100
+From:   Matthew Wilcox <willy@infradead.org>
+To:     "Darrick J. Wong" <djwong@kernel.org>
+Cc:     Kent Overstreet <kent.overstreet@linux.dev>,
+        Dave Chinner <dchinner@redhat.com>, linux-xfs@vger.kernel.org,
+        linux-fsdevel@vger.kernel.org
+Subject: Re: [PATCH 1/7] xfs: create a big array data structure
+Message-ID: <ZMMxu4wJYo9Iwp6m@casper.infradead.org>
+References: <169049623563.921478.13811535720302490179.stgit@frogsfrogsfrogs>
+ <169049623585.921478.14484774475907349490.stgit@frogsfrogsfrogs>
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
- Thunderbird/102.13.0
-Subject: Re: [PATCH v3 28/49] dm zoned: dynamically allocate the dm-zoned-meta
- shrinker
-To:     Dave Chinner <david@fromorbit.com>
-Cc:     Qi Zheng <zhengqi.arch@bytedance.com>,
-        linux-kernel@vger.kernel.org, linux-mm@kvack.org, x86@kernel.org,
-        kvm@vger.kernel.org, xen-devel@lists.xenproject.org,
-        linux-erofs@lists.ozlabs.org,
-        linux-f2fs-devel@lists.sourceforge.net, cluster-devel@redhat.com,
-        linux-nfs@vger.kernel.org, linux-mtd@lists.infradead.org,
-        rcu@vger.kernel.org, netdev@vger.kernel.org,
-        dri-devel@lists.freedesktop.org, linux-arm-msm@vger.kernel.org,
-        dm-devel@redhat.com, linux-raid@vger.kernel.org,
-        linux-bcache@vger.kernel.org,
-        virtualization@lists.linux-foundation.org,
-        linux-fsdevel@vger.kernel.org, linux-ext4@vger.kernel.org,
-        linux-xfs@vger.kernel.org, linux-btrfs@vger.kernel.org,
-        Muchun Song <songmuchun@bytedance.com>,
-        akpm@linux-foundation.org, tkhai@ya.ru, vbabka@suse.cz,
-        roman.gushchin@linux.dev, djwong@kernel.org, brauner@kernel.org,
-        paulmck@kernel.org, tytso@mit.edu, steven.price@arm.com,
-        cel@kernel.org, senozhatsky@chromium.org, yujie.liu@intel.com,
-        gregkh@linuxfoundation.org, muchun.song@linux.dev
-References: <20230727080502.77895-1-zhengqi.arch@bytedance.com>
- <20230727080502.77895-29-zhengqi.arch@bytedance.com>
- <baaf7de4-9a0e-b953-2b6a-46e60c415614@kernel.org>
- <56ee1d92-28ee-81cb-9c41-6ca7ea6556b0@bytedance.com>
- <ba0868b2-9f90-3d81-1c91-8810057fb3ce@kernel.org>
- <ZML22YJi5vPBDEDj@dread.disaster.area>
-Content-Language: en-US
-From:   Damien Le Moal <dlemoal@kernel.org>
-Organization: Western Digital Research
-In-Reply-To: <ZML22YJi5vPBDEDj@dread.disaster.area>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <169049623585.921478.14484774475907349490.stgit@frogsfrogsfrogs>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On 7/28/23 07:59, Dave Chinner wrote:
-> On Thu, Jul 27, 2023 at 07:20:46PM +0900, Damien Le Moal wrote:
->> On 7/27/23 17:55, Qi Zheng wrote:
->>>>>           goto err;
->>>>>       }
->>>>>   +    zmd->mblk_shrinker->count_objects = dmz_mblock_shrinker_count;
->>>>> +    zmd->mblk_shrinker->scan_objects = dmz_mblock_shrinker_scan;
->>>>> +    zmd->mblk_shrinker->seeks = DEFAULT_SEEKS;
->>>>> +    zmd->mblk_shrinker->private_data = zmd;
->>>>> +
->>>>> +    shrinker_register(zmd->mblk_shrinker);
->>>>
->>>> I fail to see how this new shrinker API is better... Why isn't there a
->>>> shrinker_alloc_and_register() function ? That would avoid adding all this code
->>>> all over the place as the new API call would be very similar to the current
->>>> shrinker_register() call with static allocation.
->>>
->>> In some registration scenarios, memory needs to be allocated in advance.
->>> So we continue to use the previous prealloc/register_prepared()
->>> algorithm. The shrinker_alloc_and_register() is just a helper function
->>> that combines the two, and this increases the number of APIs that
->>> shrinker exposes to the outside, so I choose not to add this helper.
->>
->> And that results in more code in many places instead of less code + a simple
->> inline helper in the shrinker header file...
-> 
-> It's not just a "simple helper" - it's a function that has to take 6
-> or 7 parameters with a return value that must be checked and
-> handled.
-> 
-> This was done in the first versions of the patch set - the amount of
-> code in each caller does not go down and, IMO, was much harder to
-> read and determine "this is obviously correct" that what we have
-> now.
-> 
->> So not adding that super simple
->> helper is not exactly the best choice in my opinion.
-> 
-> Each to their own - I much prefer the existing style/API over having
-> to go look up a helper function every time I want to check some
-> random shrinker has been set up correctly....
+On Thu, Jul 27, 2023 at 03:25:35PM -0700, Darrick J. Wong wrote:
+> diff --git a/fs/xfs/scrub/trace.h b/fs/xfs/scrub/trace.h
+> index 7418d6c60056a..0b9e781840f37 100644
+> --- a/fs/xfs/scrub/trace.h
+> +++ b/fs/xfs/scrub/trace.h
+> @@ -16,6 +16,9 @@
+>  #include <linux/tracepoint.h>
+>  #include "xfs_bit.h"
+>  
+> +struct xfile;
+> +struct xfarray;
 
-OK. All fair points.
+You dereference both a struct xfile and a struct xfarray.  Seems like
+you don't need these declarations?
 
+> +/* Compute array index given an xfile offset. */
+> +static xfarray_idx_t
+> +xfarray_idx(
+> +	struct xfarray	*array,
+> +	loff_t		pos)
+> +{
+> +	if (array->obj_size_log >= 0)
+> +		return (xfarray_idx_t)pos >> array->obj_size_log;
+> +
+> +	return div_u64((xfarray_idx_t)pos, array->obj_size);
 
--- 
-Damien Le Moal
-Western Digital Research
+If xfarray_idx_t is smaller than an loff_t, this will truncate pos,
+which isn't what you want.
+
+> +/* Compute xfile offset of array element. */
+> +static inline loff_t xfarray_pos(struct xfarray *array, xfarray_idx_t idx)
+> +{
+> +	if (array->obj_size_log >= 0)
+> +		return idx << array->obj_size_log;
+> +
+> +	return idx * array->obj_size;
+
+Likewise, you need to promote idx to loff_t before shifting/multiplying.
+
+> +static inline bool
+> +xfarray_is_unset(
+> +	struct xfarray	*array,
+> +	loff_t		pos)
+> +{
+> +	void		*temp = xfarray_scratch(array);
+> +	int		error;
+> +
+> +	if (array->unset_slots == 0)
+> +		return false;
+> +
+> +	error = xfile_obj_load(array->xfile, temp, array->obj_size, pos);
+> +	if (!error && xfarray_element_is_null(array, temp))
+> +		return true;
+> +
+> +	return false;
+
+Wouldn't this be clearer as:
+
+	return !error && xfarray_element_is_null(array, temp);
+
+> +int
+> +xfarray_store_anywhere(
+> +	struct xfarray	*array,
+> +	const void	*ptr)
+> +{
+> +	void		*temp = xfarray_scratch(array);
+> +	loff_t		endpos = xfarray_pos(array, array->nr);
+> +	loff_t		pos;
+> +	int		error;
+> +
+> +	/* Find an unset slot to put it in. */
+> +	for (pos = 0;
+> +	     pos < endpos && array->unset_slots > 0;
+> +	     pos += array->obj_size) {
+> +		error = xfile_obj_load(array->xfile, temp, array->obj_size,
+> +				pos);
+> +		if (error || !xfarray_element_is_null(array, temp))
+> +			continue;
+> +
+> +		error = xfile_obj_store(array->xfile, ptr, array->obj_size,
+> +				pos);
+> +		if (error)
+> +			return error;
+> +
+> +		array->unset_slots--;
+> +		return 0;
+> +	}
+
+... how often is this called?  This seems like it might be slow.
+
+> +	/*
+> +	 * Call SEEK_DATA on the last byte in the record we're about to read.
+> +	 * If the record ends at (or crosses) the end of a page then we know
+> +	 * that the first byte of the record is backed by pages and don't need
+> +	 * to query it.  If instead the record begins at the start of the page
+> +	 * then we know that querying the last byte is just as good as querying
+> +	 * the first byte, since records cannot be larger than a page.
+> +	 *
+> +	 * If the call returns the same file offset, we know this record is
+> +	 * backed by real pages.  We do not need to move the cursor.
+> +	 */
+
+Clever.
+
+> +ssize_t
+> +xfile_pread(
+> +	struct xfile		*xf,
+> +	void			*buf,
+> +	size_t			count,
+> +	loff_t			pos)
+> +{
+> +	struct inode		*inode = file_inode(xf->file);
+> +	struct address_space	*mapping = inode->i_mapping;
+> +	struct page		*page = NULL;
+> +	ssize_t			read = 0;
+> +	unsigned int		pflags;
+> +	int			error = 0;
+> +
+> +	if (count > MAX_RW_COUNT)
+> +		return -E2BIG;
+> +	if (inode->i_sb->s_maxbytes - pos < count)
+> +		return -EFBIG;
+> +
+> +	trace_xfile_pread(xf, pos, count);
+> +
+> +	pflags = memalloc_nofs_save();
+
+Should we be calling this here, or should this be done by the caller?
+Presumably it's the current caller that can't stand reclaim starting?
+
+> +	while (count > 0) {
+> +		void		*p, *kaddr;
+> +		unsigned int	len;
+> +
+> +		len = min_t(ssize_t, count, PAGE_SIZE - offset_in_page(pos));
+> +
+> +		/*
+> +		 * In-kernel reads of a shmem file cause it to allocate a page
+> +		 * if the mapping shows a hole.  Therefore, if we hit ENOMEM
+> +		 * we can continue by zeroing the caller's buffer.
+> +		 */
+> +		page = shmem_read_mapping_page_gfp(mapping, pos >> PAGE_SHIFT,
+> +				__GFP_NOWARN);
+
+I'm kind of hoping to transition to shmem_read_folio_gfp(), but that
+doesn't have to happen before this gets merged.
+
+> +ssize_t
+> +xfile_pwrite(
+> +	struct xfile		*xf,
+> +	const void		*buf,
+> +	size_t			count,
+> +	loff_t			pos)
+> +{
+> +	struct inode		*inode = file_inode(xf->file);
+> +	struct address_space	*mapping = inode->i_mapping;
+
+I wonder if this shoudn't be xf->file->f_mapping?
 
