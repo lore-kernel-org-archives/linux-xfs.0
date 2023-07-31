@@ -2,54 +2,62 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 33158C001DE
-	for <linux-xfs@archiver.kernel.org>; Mon, 31 Jul 2023 07:30:22 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D9DCEC001DC
+	for <linux-xfs@archiver.kernel.org>; Mon, 31 Jul 2023 09:16:03 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231465AbjGaHaU (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 31 Jul 2023 03:30:20 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37202 "EHLO
+        id S231698AbjGaJQC (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 31 Jul 2023 05:16:02 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44772 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231470AbjGaHaA (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 31 Jul 2023 03:30:00 -0400
-Received: from bombadil.infradead.org (bombadil.infradead.org [IPv6:2607:7c80:54:3::133])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 290025270
-        for <linux-xfs@vger.kernel.org>; Mon, 31 Jul 2023 00:27:18 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Type:MIME-Version
-        :References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
-        Content-Transfer-Encoding:Content-ID:Content-Description;
-        bh=UY9yKVE3sFjkDMGj7GuHAb/e9J0/DSLlY2K41ijY1/c=; b=CaO9gVBqXGJGA7AlxxpBH4IYlK
-        jrCmAepsirzSrj2VHeAAgZhHxfA86xgQImqRTBeT643eVGhvwLVZpC66+WxMTsuCCYJIeLNZQQRMZ
-        Sc2sCFU7wBCJpjzKOvrb5AMx7U8V3jijep3s6g/hqZHrJNSnqhwWvIT8MtunaPKAwuHUJvLwMufbV
-        XvEj9ptoa2EpgDk2pmXvmXrBirnrO2RuWugw4ii2jsXXmp2srZFOtq8yIiPedNondDFIQLdMp8HZX
-        /4Tss5zQwEJ0Rh+JluzTqiGUTXlJYWpD5JBmCxSGW9FJo+rFhb/q0olXTZr575qkbz0cYRtHr+QQE
-        XITQTLPw==;
-Received: from hch by bombadil.infradead.org with local (Exim 4.96 #2 (Red Hat Linux))
-        id 1qQNJF-00EJVB-0w;
-        Mon, 31 Jul 2023 07:27:17 +0000
-Date:   Mon, 31 Jul 2023 00:27:17 -0700
-From:   Christoph Hellwig <hch@infradead.org>
-To:     Shawn <neutronsharc@gmail.com>
-Cc:     linux-xfs@vger.kernel.org
-Subject: Re: how does XFS support gpu direct storage
-Message-ID: <ZMdiVS5eo0gKDbw9@infradead.org>
-References: <CAB-bdyTUFfLw2O80h67WGkok1hM0PKrsjCR_wdMzALQWqi6rrA@mail.gmail.com>
+        with ESMTP id S231709AbjGaJQB (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 31 Jul 2023 05:16:01 -0400
+X-Greylist: delayed 1205 seconds by postgrey-1.37 at lindbergh.monkeyblade.net; Mon, 31 Jul 2023 02:16:01 PDT
+Received: from mail.cothiafon.pl (mail.cothiafon.pl [217.61.106.23])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1B63AF3
+        for <linux-xfs@vger.kernel.org>; Mon, 31 Jul 2023 02:16:00 -0700 (PDT)
+Received: by mail.cothiafon.pl (Postfix, from userid 1002)
+        id 7ECF5839B5; Mon, 31 Jul 2023 10:36:28 +0200 (CEST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=cothiafon.pl; s=mail;
+        t=1690792630; bh=dwoca0X6C9VXklO/zRgFQCPapTk5LFz4tKaENdvy6Po=;
+        h=Date:From:To:Subject:From;
+        b=CwyMejBGs5OHNb07GErH6uAc49oX1yeIgDNYaj7VmJb3oHuVzgZngPG2OLnAyQRGL
+         xp9EbM/8St0u1kBAc4RcotcDbvJ97tXzzf7aVbsk9EGbmWzjDTPHhzRfLufypQ2ZrI
+         cYMS+aGHVERWZciI1/zPh4W2BSkwmOPWrRJn17JD5J6lxlS892YUxgfYIlm4H2vLZd
+         GgM22dfIm26YcqADapHtZ1F4ddVymD8ZvNsboAkyIrmGbHUIVZNWiGACafQKqVsB2d
+         pSfQJu04YefX2jAdViS9dZmhzy5TNc+NIq67DbClZUP3lYLxbqiqpRljni+fLY4v7u
+         Khlu0Y5b8BGtQ==
+Received: by mail.cothiafon.pl for <linux-xfs@vger.kernel.org>; Mon, 31 Jul 2023 08:35:48 GMT
+Message-ID: <20230731095940-0.1.28.oncx.0.r4g23mhlkj@cothiafon.pl>
+Date:   Mon, 31 Jul 2023 08:35:48 GMT
+From:   =?UTF-8?Q? "Rados=C5=82aw_Grabowski" ?= 
+        <radoslaw.grabowski@cothiafon.pl>
+To:     <linux-xfs@vger.kernel.org>
+Subject: W sprawie samochodu
+X-Mailer: mail.cothiafon.pl
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <CAB-bdyTUFfLw2O80h67WGkok1hM0PKrsjCR_wdMzALQWqi6rrA@mail.gmail.com>
-X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Sun, Jul 30, 2023 at 02:20:17PM -0700, Shawn wrote:
-> Hello all,
-> Nvidia document explains that,  in order for a filesystem to support
-> GDS (gpu direct storage) the FS needs to make a callback to
-> "nvidis-fs.ko"  to translate a virtual address to GPU physical address
-> for DMA.   However I'm unable to find the callback in XFS code.  I'm
-> curious how can XFS support GDS without calling nvidia callbacks?
+Dzie=C5=84 dobry,
 
-nidia needs to f**king stop violating our copyrights and just go away.
+chcieliby=C5=9Bmy zapewni=C4=87 Pa=C5=84stwu kompleksowe rozwi=C4=85zania=
+, je=C5=9Bli chodzi o system monitoringu GPS.
 
+Precyzyjne monitorowanie pojazd=C3=B3w na mapach cyfrowych, =C5=9Bledzeni=
+e ich parametr=C3=B3w eksploatacyjnych w czasie rzeczywistym oraz kontrol=
+a paliwa to kluczowe funkcjonalno=C5=9Bci naszego systemu.=20
+
+Organizowanie pracy pracownik=C3=B3w jest dzi=C4=99ki temu prostsze i bar=
+dziej efektywne, a oszcz=C4=99dno=C5=9Bci i optymalizacja w zakresie pono=
+szonych koszt=C3=B3w, maj=C4=85 dla ka=C5=BCdego przedsi=C4=99biorcy ogro=
+mne znaczenie.
+
+Dopasujemy nasz=C4=85 ofert=C4=99 do Pa=C5=84stwa oczekiwa=C5=84 i potrze=
+b organizacji. Czy mogliby=C5=9Bmy porozmawia=C4=87 o naszej propozycji?
+
+
+Pozdrawiam
+Rados=C5=82aw Grabowski
