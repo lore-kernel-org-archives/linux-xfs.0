@@ -2,77 +2,82 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id BB47AC001E0
-	for <linux-xfs@archiver.kernel.org>; Tue,  1 Aug 2023 15:31:50 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 03BE6C0015E
+	for <linux-xfs@archiver.kernel.org>; Tue,  1 Aug 2023 17:22:15 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232918AbjHAPbt (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 1 Aug 2023 11:31:49 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50390 "EHLO
+        id S234451AbjHARWO (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 1 Aug 2023 13:22:14 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60428 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230094AbjHAPbs (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 1 Aug 2023 11:31:48 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D89771FEE;
-        Tue,  1 Aug 2023 08:31:47 -0700 (PDT)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature RSA-PSS (2048 bits))
-        (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id CEA07615F9;
-        Tue,  1 Aug 2023 15:31:46 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 344A7C433C8;
-        Tue,  1 Aug 2023 15:31:46 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1690903906;
-        bh=O1j0cFtt/OwyMMnLCbpMAX6DujFxHllzjlfgEiYVYH4=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=D/egdKDtQKBLiyGMYKlUqsmkWZULs3obHJLWRdC6SeNb++6jUZA1LkKNCD6e5Q57o
-         rNPb8oHdJaUzTLyeq1lSk6wF5efdR86uENZKbld1TuJsmkTSiOSFcnoZbejTIGyRZx
-         t5gVu3qrKUqiCXX37d1ctfFBZPDWEmwCUbjAlBoK+fWOdcKHfUbb+/yWOiIo7YZDBi
-         OxUrh7/l6B35JY9ycOKQmg6h1ND13YqGHpsFqPi5IzUDyfiud1Q7pGwf4yltGpiWwc
-         k6AcLFg3cQ0UuxE1Qe3GM/Ac9CZQRLjhMyZvorj1o5ZvMBb8IHKURQw4dnI2sT67QI
-         vCYAlFaop5mNw==
-Date:   Tue, 1 Aug 2023 08:31:45 -0700
-From:   "Darrick J. Wong" <djwong@kernel.org>
-To:     pangzizhen001@208suo.com
-Cc:     linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] fs/xfs: Fix typos in comments
-Message-ID: <20230801153145.GH11377@frogsfrogsfrogs>
-References: <20230720154942.56848-1-wangjianli@cdjrlc.com>
- <d8927acfb0f11e0bcd2d7a015a0238a7@208suo.com>
+        with ESMTP id S234485AbjHARWM (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 1 Aug 2023 13:22:12 -0400
+Received: from bombadil.infradead.org (bombadil.infradead.org [IPv6:2607:7c80:54:3::133])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 634E7213E;
+        Tue,  1 Aug 2023 10:22:09 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=infradead.org; s=bombadil.20210309; h=Content-Transfer-Encoding:
+        MIME-Version:Message-Id:Date:Subject:Cc:To:From:Sender:Reply-To:Content-Type:
+        Content-ID:Content-Description:In-Reply-To:References;
+        bh=KI7aWHvSDXmhxzHfaalEHg4CqR1G5kysSfQhkQhMeeQ=; b=qLtl8QrLHzZR3bYK8L7GyySX8I
+        ui/iPrQEaxDZ2ZfzYU1SSMTdWMhYkH2FZalEJBLrDXxNFoxLyiD+GaUFKCZtShgsGlroNSM1mewkz
+        +K/5Jr4SSllO2UPuk94IptV+69fj7W5EzAdX/LSLm+iTyTRDAoc9qtXJQ+EMnVvG7gkK9vU9FkQ0r
+        NaOSrDyin3BImtyOJRNdcR2ARCfAsk+XaJq0t65rk7g31lgKcxWP7BClvjbC1USYJoOzx2Bkv7Jqb
+        s/Fj+GkFQtVxuKUX/FEtRMkAUM2OUYp0VnZF8342fy2gBxlRZw8VAauLrGHX/slpc1KmP7X/xB17c
+        1PuKU2JQ==;
+Received: from 2a02-8389-2341-5b80-39d3-4735-9a3c-88d8.cable.dynamic.v6.surfer.at ([2a02:8389:2341:5b80:39d3:4735:9a3c:88d8] helo=localhost)
+        by bombadil.infradead.org with esmtpsa (Exim 4.96 #2 (Red Hat Linux))
+        id 1qQt4P-002uSp-2j;
+        Tue, 01 Aug 2023 17:22:06 +0000
+From:   Christoph Hellwig <hch@lst.de>
+To:     Jens Axboe <axboe@kernel.dk>
+Cc:     "Darrick J. Wong" <djwong@kernel.org>,
+        Andrew Morton <akpm@linux-foundation.org>,
+        Matthew Wilcox <willy@infradead.org>,
+        Christian Brauner <christian@brauner.io>,
+        linux-block@vger.kernel.org, linux-fsdevel@vger.kernel.org,
+        linux-xfs@vger.kernel.org, linux-mm@kvack.org,
+        linux-kernel@vger.kernel.org
+Subject: allow building a kernel without buffer_heads v3
+Date:   Tue,  1 Aug 2023 19:21:55 +0200
+Message-Id: <20230801172201.1923299-1-hch@lst.de>
+X-Mailer: git-send-email 2.39.2
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <d8927acfb0f11e0bcd2d7a015a0238a7@208suo.com>
+Content-Transfer-Encoding: 8bit
+X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Thu, Jul 20, 2023 at 11:51:06PM +0800, pangzizhen001@208suo.com wrote:
-> Delete duplicate word "the"
-> 
-> Signed-off-by: Zizhen Pang <pangzizhen001@208suo.com>
+Hi all,
 
-Looks good,
-Reviewed-by: Darrick J. Wong <djwong@kernel.org>
+This series allows to build a kernel without buffer_heads, which I
+think is useful to show where the dependencies are, and maybe also
+for some very much limited environments, where people just needs
+xfs and/or btrfs and some of the read-only block based file systems.
 
---D
+It first switches buffered writes (but not writeback) for block devices
+to use iomap unconditionally, but still using buffer_heads, and then
+adds a CONFIG_BUFFER_HEAD selected by all file systems that need it
+(which is most block based file systems), makes the buffer_head support
+in iomap optional, and adds an alternative implementation of the block
+device address_operations using iomap.  This latter implementation
+will also be useful to support block size > PAGE_SIZE for block device
+nodes as buffer_heads won't work very well for that.
 
-> ---
->  fs/xfs/xfs_aops.c | 2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
-> 
-> diff --git a/fs/xfs/xfs_aops.c b/fs/xfs/xfs_aops.c
-> index 451942fb38ec..66b311ccc4f9 100644
-> --- a/fs/xfs/xfs_aops.c
-> +++ b/fs/xfs/xfs_aops.c
-> @@ -478,7 +478,7 @@ xfs_discard_folio(
->              folio, ip->i_ino, pos);
-> 
->      /*
-> -     * The end of the punch range is always the offset of the the first
-> +     * The end of the punch range is always the offset of the first
->       * byte of the next folio. Hence the end offset is only dependent on
-> the
->       * folio itself and not the start offset that is passed in.
->       */
+Note that for now the md software raid drivers is also disabled as it has
+some (rather questionable) buffer_head usage in the unconditionally built
+bitmap code.  I have a series pending to make the bitmap code conditional
+and deprecated it, but it hasn't been merged yet.
+
+This series is against Jens' for-6.6/block branch.
+
+Changes since v2:
+ - fix handling of a negative return value from blkdev_direct_IO
+ - drop a WARN_ON that can happen when resizing block devices
+ - define away IOMAP_F_BUFFER_HEAD to keep the intrusions to the
+   iomap code minimal (even if that's not quite my preferred style)
+
+Changes since v1:
+ - drop the already merged prep patches
+ - depend on FS_IOMAP not IOMAP
+ - pick a better new name for block_page_mkwrite_return
