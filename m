@@ -2,60 +2,77 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 04BB7C001DF
-	for <linux-xfs@archiver.kernel.org>; Tue,  1 Aug 2023 07:59:34 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id BB47AC001E0
+	for <linux-xfs@archiver.kernel.org>; Tue,  1 Aug 2023 15:31:50 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230509AbjHAH7d (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 1 Aug 2023 03:59:33 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56170 "EHLO
+        id S232918AbjHAPbt (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 1 Aug 2023 11:31:49 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50390 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229520AbjHAH7c (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 1 Aug 2023 03:59:32 -0400
-Received: from mail.durme.pl (mail.durme.pl [217.182.69.186])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 481321BE9
-        for <linux-xfs@vger.kernel.org>; Tue,  1 Aug 2023 00:59:31 -0700 (PDT)
-Received: by mail.durme.pl (Postfix, from userid 1002)
-        id CA0C44B49F; Tue,  1 Aug 2023 07:55:49 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=durme.pl; s=mail;
-        t=1690876638; bh=hFxZwVw4rIL+JwfEOGI47p+fdoVOAeqVswP6NWoHSHQ=;
-        h=Date:From:To:Subject:From;
-        b=dFHgBBO0XsgAPIQj8tTaurmIVX52HxxBVcpKYif7SkAJRtWCrABoMG9a6i4P+kftJ
-         1cBh35LQZxQdGTm88hdfod9qyapwnwuC6yGSsFwhem6sqbgszEkkr/oRSOtfvo2gv9
-         Kh1xKzlU7q1HIrHNtfHLdMzA9Znn2dNs4yqeNUCPgekj0qhwaJwRYMZnKEXOXdwwOO
-         KAmePnwWPjDpj3RkPjZgMjmdV8F/kEYS7s1MGVD95sg3ckIrTk3HcFdbGaIoE3BSI0
-         BXALVG5oo+5PW1h7rlOiKD/iqhcH9NU7fE4hjb2yu0022wddLfqieW5WbMfmW5JFeK
-         oOXuPCS2tWbkQ==
-Received: by mail.durme.pl for <linux-xfs@vger.kernel.org>; Tue,  1 Aug 2023 07:55:32 GMT
-Message-ID: <20230801064501-0.1.3f.clv6.0.oeqi3naqf8@durme.pl>
-Date:   Tue,  1 Aug 2023 07:55:32 GMT
-From:   "Krystian Wieczorek" <krystian.wieczorek@durme.pl>
-To:     <linux-xfs@vger.kernel.org>
-Subject: W sprawie samochodu
-X-Mailer: mail.durme.pl
+        with ESMTP id S230094AbjHAPbs (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 1 Aug 2023 11:31:48 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D89771FEE;
+        Tue,  1 Aug 2023 08:31:47 -0700 (PDT)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange X25519 server-signature RSA-PSS (2048 bits))
+        (No client certificate requested)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id CEA07615F9;
+        Tue,  1 Aug 2023 15:31:46 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 344A7C433C8;
+        Tue,  1 Aug 2023 15:31:46 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1690903906;
+        bh=O1j0cFtt/OwyMMnLCbpMAX6DujFxHllzjlfgEiYVYH4=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=D/egdKDtQKBLiyGMYKlUqsmkWZULs3obHJLWRdC6SeNb++6jUZA1LkKNCD6e5Q57o
+         rNPb8oHdJaUzTLyeq1lSk6wF5efdR86uENZKbld1TuJsmkTSiOSFcnoZbejTIGyRZx
+         t5gVu3qrKUqiCXX37d1ctfFBZPDWEmwCUbjAlBoK+fWOdcKHfUbb+/yWOiIo7YZDBi
+         OxUrh7/l6B35JY9ycOKQmg6h1ND13YqGHpsFqPi5IzUDyfiud1Q7pGwf4yltGpiWwc
+         k6AcLFg3cQ0UuxE1Qe3GM/Ac9CZQRLjhMyZvorj1o5ZvMBb8IHKURQw4dnI2sT67QI
+         vCYAlFaop5mNw==
+Date:   Tue, 1 Aug 2023 08:31:45 -0700
+From:   "Darrick J. Wong" <djwong@kernel.org>
+To:     pangzizhen001@208suo.com
+Cc:     linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH] fs/xfs: Fix typos in comments
+Message-ID: <20230801153145.GH11377@frogsfrogsfrogs>
+References: <20230720154942.56848-1-wangjianli@cdjrlc.com>
+ <d8927acfb0f11e0bcd2d7a015a0238a7@208suo.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <d8927acfb0f11e0bcd2d7a015a0238a7@208suo.com>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Dzie=C5=84 dobry,
+On Thu, Jul 20, 2023 at 11:51:06PM +0800, pangzizhen001@208suo.com wrote:
+> Delete duplicate word "the"
+> 
+> Signed-off-by: Zizhen Pang <pangzizhen001@208suo.com>
 
-chcieliby=C5=9Bmy zapewni=C4=87 Pa=C5=84stwu kompleksowe rozwi=C4=85zania=
-, je=C5=9Bli chodzi o system monitoringu GPS.
+Looks good,
+Reviewed-by: Darrick J. Wong <djwong@kernel.org>
 
-Precyzyjne monitorowanie pojazd=C3=B3w na mapach cyfrowych, =C5=9Bledzeni=
-e ich parametr=C3=B3w eksploatacyjnych w czasie rzeczywistym oraz kontrol=
-a paliwa to kluczowe funkcjonalno=C5=9Bci naszego systemu.=20
+--D
 
-Organizowanie pracy pracownik=C3=B3w jest dzi=C4=99ki temu prostsze i bar=
-dziej efektywne, a oszcz=C4=99dno=C5=9Bci i optymalizacja w zakresie pono=
-szonych koszt=C3=B3w, maj=C4=85 dla ka=C5=BCdego przedsi=C4=99biorcy ogro=
-mne znaczenie.
-
-Dopasujemy nasz=C4=85 ofert=C4=99 do Pa=C5=84stwa oczekiwa=C5=84 i potrze=
-b organizacji. Czy mogliby=C5=9Bmy porozmawia=C4=87 o naszej propozycji?
-
-
-Pozdrawiam
-Krystian Wieczorek
+> ---
+>  fs/xfs/xfs_aops.c | 2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
+> 
+> diff --git a/fs/xfs/xfs_aops.c b/fs/xfs/xfs_aops.c
+> index 451942fb38ec..66b311ccc4f9 100644
+> --- a/fs/xfs/xfs_aops.c
+> +++ b/fs/xfs/xfs_aops.c
+> @@ -478,7 +478,7 @@ xfs_discard_folio(
+>              folio, ip->i_ino, pos);
+> 
+>      /*
+> -     * The end of the punch range is always the offset of the the first
+> +     * The end of the punch range is always the offset of the first
+>       * byte of the next folio. Hence the end offset is only dependent on
+> the
+>       * folio itself and not the start offset that is passed in.
+>       */
