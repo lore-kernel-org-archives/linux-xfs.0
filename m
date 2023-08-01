@@ -2,100 +2,105 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9161AC00528
-	for <linux-xfs@archiver.kernel.org>; Tue,  1 Aug 2023 23:18:02 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 33CD3C001E0
+	for <linux-xfs@archiver.kernel.org>; Tue,  1 Aug 2023 23:35:13 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229499AbjHAXSB (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 1 Aug 2023 19:18:01 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55350 "EHLO
+        id S230198AbjHAXfM (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 1 Aug 2023 19:35:12 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34744 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230261AbjHAXSA (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 1 Aug 2023 19:18:00 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 26BAB26AA
-        for <linux-xfs@vger.kernel.org>; Tue,  1 Aug 2023 16:17:52 -0700 (PDT)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature RSA-PSS (2048 bits))
-        (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 919746175E
-        for <linux-xfs@vger.kernel.org>; Tue,  1 Aug 2023 23:17:51 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id ED2BFC433C8;
-        Tue,  1 Aug 2023 23:17:50 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1690931871;
-        bh=65Tp/9tJaUD3Fib6QC9NRUutewiMxa5DvWC56qPg+80=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=njms4SmUEH7HCKq24F+ry/NYlKM1jhAaE/AcCRywJYKcC7bcxz3rMBHlQj8Bg6oZS
-         5Bu17jLigCOoGN0Yfx951mTve+ozk5cdlcmyErMHP2UjqcoEVOxDGGh1xvABxA3qQm
-         OrxPTDJ8I9Cihp7uPT4ECD9u7oISF37FARyKr8kd2/JeVNHk/aR+zILV2NJ2wxkeii
-         Fm0+3BBn2XQgXNfEL2JGR4wFgsFL4aQEfH6hWqXSGE2rcQ78ZWjzAvqpQrg4D/syQU
-         kiw77FQapqXmWtHgWowP5+qizYznXJr2HsarqH7lnHqFW1JzzA+cMHGcPOmRXl2Ftb
-         Ge0C1XQLn/gyA==
-Date:   Tue, 1 Aug 2023 16:17:50 -0700
-From:   "Darrick J. Wong" <djwong@kernel.org>
-To:     Omar Sandoval <osandov@osandov.com>
-Cc:     linux-xfs@vger.kernel.org, kernel-team@fb.com,
-        Prashant Nema <pnema@fb.com>
-Subject: Re: [PATCH 2/6] xfs: invert the realtime summary cache
-Message-ID: <20230801231750.GO11352@frogsfrogsfrogs>
-References: <cover.1687296675.git.osandov@osandov.com>
- <e3ae5bfc7cd4b640e83a25f001169d4ae50d797a.1687296675.git.osandov@osandov.com>
- <20230712224001.GV108251@frogsfrogsfrogs>
- <ZLWccEOHmPGyVh4I@telecaster>
+        with ESMTP id S229997AbjHAXfK (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 1 Aug 2023 19:35:10 -0400
+Received: from mail-pg1-x52e.google.com (mail-pg1-x52e.google.com [IPv6:2607:f8b0:4864:20::52e])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8552326AF
+        for <linux-xfs@vger.kernel.org>; Tue,  1 Aug 2023 16:34:47 -0700 (PDT)
+Received: by mail-pg1-x52e.google.com with SMTP id 41be03b00d2f7-56462258cdeso294616a12.1
+        for <linux-xfs@vger.kernel.org>; Tue, 01 Aug 2023 16:34:47 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=kernel-dk.20221208.gappssmtp.com; s=20221208; t=1690932887; x=1691537687;
+        h=content-transfer-encoding:in-reply-to:from:references:cc:to
+         :content-language:subject:user-agent:mime-version:date:message-id
+         :from:to:cc:subject:date:message-id:reply-to;
+        bh=z9mtYLgCllS9ypoxJCYiXNtN9ZGOxcY6Mye5Q2NFML8=;
+        b=aHC1FYZGv7Yj9PHxYaRof/uMCWSjHHqGVpmVIilzQ5Ji+URG7g+uih1/vk8UvtMPkL
+         XdUHsb2GNsIn0gLvk+9dGvUV8KS4Udde3yGzGFn0W8YKugvuNusb8ja35rd/nMSGBUnZ
+         wtwLezLz3ObHy4XbLZ3IFa7Czdsk0B99t6Jeb06eHdS+61B6u+XMZHEQilIxZOMcL+9H
+         w3lM3hQICtYipbglkVDb7v7fSAKfUbKUz0ffw2wNsm5fU3dJ8Zs8X9ZHDYu5L8UH9E01
+         br1ETWCLQwnGj2TBmtwHc+dSgg2nR0WWTZK30ve8FqAa5N6geo4bcGPv3rRiD5X1f0CJ
+         sJGw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20221208; t=1690932887; x=1691537687;
+        h=content-transfer-encoding:in-reply-to:from:references:cc:to
+         :content-language:subject:user-agent:mime-version:date:message-id
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=z9mtYLgCllS9ypoxJCYiXNtN9ZGOxcY6Mye5Q2NFML8=;
+        b=TvfrPfpaueWijVhqr3znrJt2a17aucDLJXYPB0I2/suoAkMCM98j5vSSVj8aNN2xC6
+         8GhPidLqQOOZHBFY9TtlUARTVVHrJufmulGBK4X2ZsXC7W+dQTungrMNiNSa6fsW2/kq
+         KtFchsj0L26ZJ/G3G4m/5wzpA6BTOsrMz+wiHQ+npswelUTZRUKygaf7wIyNB7K6Lk/p
+         KuFrwL8GIsC8f24EgBdGTSGzzU18ADWDb1UodkRfFHG++gkecskPgHcAyhQy6eAdtElb
+         QFVKF/7J0GRJr/k0V1WQyhT5F/TxXL9htH76oIsw46U/CaN4xNA/mSRzarFggdZzct0g
+         jQig==
+X-Gm-Message-State: ABy/qLZ9007dulEltRpPsVeX2gIiJWpV5eMQkFP+0Ol/CMdYbaBlbS9b
+        0QuXV2HDQpenuMcgTanPfIvcqQ==
+X-Google-Smtp-Source: APBJJlFLJPBysUZweYl0GUhiZTgNhdoBhVlEGOooQN8krHB2TmlewFi/fq6iSJMSWa2qs3Kg6pvydg==
+X-Received: by 2002:a17:902:ea04:b0:1b8:a27d:f591 with SMTP id s4-20020a170902ea0400b001b8a27df591mr14114636plg.5.1690932886948;
+        Tue, 01 Aug 2023 16:34:46 -0700 (PDT)
+Received: from [192.168.1.136] ([198.8.77.157])
+        by smtp.gmail.com with ESMTPSA id 14-20020a17090a194e00b00268385b0501sm66690pjh.27.2023.08.01.16.34.46
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Tue, 01 Aug 2023 16:34:46 -0700 (PDT)
+Message-ID: <edebb2ed-8226-096d-d33a-d078f30a1221@kernel.dk>
+Date:   Tue, 1 Aug 2023 17:34:45 -0600
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <ZLWccEOHmPGyVh4I@telecaster>
+User-Agent: Mozilla/5.0 (X11; Linux aarch64; rv:102.0) Gecko/20100101
+ Thunderbird/102.13.0
+Subject: Re: [PATCHSET v6 0/8] Improve async iomap DIO performance
+Content-Language: en-US
+To:     Dave Chinner <david@fromorbit.com>
+Cc:     io-uring@vger.kernel.org, linux-xfs@vger.kernel.org, hch@lst.de,
+        andres@anarazel.de, djwong@kernel.org
+References: <20230724225511.599870-1-axboe@kernel.dk>
+ <ZMmDdEfyxIzpfezy@dread.disaster.area>
+From:   Jens Axboe <axboe@kernel.dk>
+In-Reply-To: <ZMmDdEfyxIzpfezy@dread.disaster.area>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Mon, Jul 17, 2023 at 12:54:24PM -0700, Omar Sandoval wrote:
-> On Wed, Jul 12, 2023 at 03:40:01PM -0700, Darrick J. Wong wrote:
-> > On Tue, Jun 20, 2023 at 02:32:12PM -0700, Omar Sandoval wrote:
-> > > From: Omar Sandoval <osandov@fb.com>
-> > > 
-> > > In commit 355e3532132b ("xfs: cache minimum realtime summary level"), I
-> > > added a cache of the minimum level of the realtime summary that has any
-> > > free extents. However, it turns out that the _maximum_ level is more
-> > > useful for upcoming optimizations, and basically equivalent for the
-> > > existing usage. So, let's change the meaning of the cache to be the
-> > > maximum level + 1, or 0 if there are no free extents.
-> > 
-> > Hmm.  If I'm reading xfs_rtmodify_summary_int right, m_rsum_cache[b] now
-> > tells us the maximum log2(length) of the free extents starting in
-> > rtbitmap block b?
-> > 
-> > IOWs, let's say the cache contents are:
-> > 
-> > {2, 3, 2, 15, 8}
-> > 
-> > Someone asks for a 400rtx (realtime extent) allocation, so we want to
-> > find a free space of at least magnitude floor(log2(400)) == 8.
-> > 
-> > The cache tells us that there aren't any free extents longer than 2^1
-> > blocks in rtbitmap blocks 0 and 2; longer than 2^2 blocks in rtbmp block
-> > 1; longer than 2^7 blocks in rtbmp block 4; nor longer than 2^14 blocks
-> > in rtbmp block 3?
+On 8/1/23 4:13 PM, Dave Chinner wrote:
+> On Mon, Jul 24, 2023 at 04:55:03PM -0600, Jens Axboe wrote:
+>> Hi,
+>>
+>> Hi,
+>>
+>> This patchset improves async iomap DIO performance, for XFS and ext4.
+>> For full details on this patchset, see the v4 posting:
+>>
+>> https://lore.kernel.org/io-uring/20230720181310.71589-1-axboe@kernel.dk/
+>>
+>>  fs/iomap/direct-io.c | 163 ++++++++++++++++++++++++++++++++-----------
+>>  include/linux/fs.h   |  35 +++++++++-
+>>  io_uring/rw.c        |  26 ++++++-
+>>  3 files changed, 179 insertions(+), 45 deletions(-)
+>>
+>> Can also be found here:
+>>
+>> https://git.kernel.dk/cgit/linux/log/?h=xfs-async-dio.6
+>>
+>> No change in performance since last time, and passes my testing without
+>> complaints.
 > 
-> There's a potential for an off-by-one bug here, so just to make sure
-> we're saying the same thing: the realtime summary for level n contains
-> the number of free extents starting in a bitmap block such that
-> floor(log2(size_in_realtime_extents)) == n. The maximum size of a free
-> extent in level n is therefore 2^(n + 1) - 1 realtime extents.
+> All looks good now. You can add:
 > 
-> So in your example, the cache is telling us that realtime bitmap blocks
-> 0 and 2 don't have anything free in levels 2 or above, and therefore
-> don't have any free extents longer than _or equal to_ 2^2.
+> Reviewed-by: Dave Chinner <dchinner@redhat.com>
+> 
+> To all the patches in the series.
 
-D'oh.  I forgot that subtlety that the maximum size of a free
-extent in level n is therefore 2^(n + 1) - 1 realtime extents.
+Great, thank you Dave!
 
-> I'll try to reword the commit message and comments to make this
-> unambiguous.
+-- 
+Jens Axboe
 
-Ok, thanks.  A couple of quick examples (feel free to use mine) would be
-helpful for descrambling my brain. :)
 
---D
