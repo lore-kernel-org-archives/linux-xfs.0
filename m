@@ -2,62 +2,78 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 86BE4C0015E
-	for <linux-xfs@archiver.kernel.org>; Tue,  1 Aug 2023 18:11:19 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8B439C41513
+	for <linux-xfs@archiver.kernel.org>; Tue,  1 Aug 2023 19:58:20 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231167AbjHASLS (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 1 Aug 2023 14:11:18 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60134 "EHLO
+        id S231354AbjHAT6T (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 1 Aug 2023 15:58:19 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41288 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229671AbjHASLR (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 1 Aug 2023 14:11:17 -0400
-Received: from bombadil.infradead.org (bombadil.infradead.org [IPv6:2607:7c80:54:3::133])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E9C58103;
-        Tue,  1 Aug 2023 11:11:16 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=infradead.org; s=bombadil.20210309; h=Sender:In-Reply-To:Content-Type:
-        MIME-Version:References:Message-ID:Subject:Cc:To:From:Date:Reply-To:
-        Content-Transfer-Encoding:Content-ID:Content-Description;
-        bh=tLRRDrRiHVSZcYboxyBTX+0f8b+FQnZsFjIe9Je9qAI=; b=sROSMwu0eoG2tz8B1dlMOxqxza
-        2BAyBGb6tB2Hzp+EyV51tlBMT6J7hS7ChV4M1q2UcuZ19V5K6C6Pjth+EadWmUmrAZB74T/qozKbU
-        4X3Qkamzqo6W6edygntqeh7Q5Yx/QZxh1IfszR451TSZ8At46FlOyx+1h/qAaiuNo537IpqUOG251
-        ycujEig8G0KsK8t6XS/j4kpEKlTrQxA5WE6XRuKg6mTz9+/H+b6pKhAu8sV5uuMuAAZJgQmzkWA+T
-        S7uYWwlO1TDL640NnX+dybwKDktwghFMNjPyEQJ7iq4+/IXvW8i692de6DCGL8Fp3Qd6i5aclCZpy
-        d6MyR54Q==;
-Received: from mcgrof by bombadil.infradead.org with local (Exim 4.96 #2 (Red Hat Linux))
-        id 1qQtpw-002zws-0q;
-        Tue, 01 Aug 2023 18:11:12 +0000
-Date:   Tue, 1 Aug 2023 11:11:12 -0700
-From:   Luis Chamberlain <mcgrof@kernel.org>
-To:     Christoph Hellwig <hch@lst.de>
-Cc:     Jens Axboe <axboe@kernel.dk>,
-        "Darrick J. Wong" <djwong@kernel.org>,
-        Andrew Morton <akpm@linux-foundation.org>,
-        Matthew Wilcox <willy@infradead.org>,
-        Christian Brauner <christian@brauner.io>,
-        linux-block@vger.kernel.org, linux-fsdevel@vger.kernel.org,
-        linux-xfs@vger.kernel.org, linux-mm@kvack.org,
-        linux-kernel@vger.kernel.org
-Subject: Re: [PATCH 3/6] block: open code __generic_file_write_iter for
- blkdev writes
-Message-ID: <ZMlKwEXj2q6JmDeo@bombadil.infradead.org>
-References: <20230801172201.1923299-1-hch@lst.de>
- <20230801172201.1923299-4-hch@lst.de>
+        with ESMTP id S232071AbjHAT6S (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 1 Aug 2023 15:58:18 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 99106DB;
+        Tue,  1 Aug 2023 12:58:17 -0700 (PDT)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange X25519 server-signature RSA-PSS (2048 bits))
+        (No client certificate requested)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 34D73616D7;
+        Tue,  1 Aug 2023 19:58:17 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 8FED0C433C8;
+        Tue,  1 Aug 2023 19:58:16 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1690919896;
+        bh=0rLOEj9lB+jzObAqxrHgGtwIwYUMJC354EkgMvvgg4Y=;
+        h=Subject:From:To:Cc:Date:From;
+        b=fvdkTtbW6H9HGOlGZnwPYf25tMgm2ocEPQz0C1NK/rT3iGypRtgbRnOCEQpblKxZY
+         ih4Jw6ejIlx/8BFtJ6OqPXpn6Xu1Wi0la8xJeaL26/3ZZM4wBhUfDjg5FYJCHbYgJ0
+         E2YjRGbO5rVBmVg29HyHMEA31UI+/kMFEtr3Jho4fJFnixTnmmhygJt2tmzY896EWa
+         hJ3I1wOQurwGym8nGFzTt29zrGYO+4GzooRlTAwyFBn+35WQV9s8vQSl4YlOEhdBoN
+         sMMoG8MYb+O6HmtoHQ4ASisytj2MpPQsbZhVLkmiKdEkKPbOTqDZxqILkd4LsaG1RA
+         GAKNyQPv6UHVg==
+Subject: [PATCHSET 0/3] xfs: maintainer transition for 6.6
+From:   "Darrick J. Wong" <djwong@kernel.org>
+To:     djwong@kernel.org
+Cc:     corbet@lwn.net, Chandan Babu R <chandan.babu@oracle.com>,
+        linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
+        david@fromorbit.com, cem@kernel.org, sandeen@sandeen.net,
+        chandan.babu@oracle.com, amir73il@gmail.com,
+        leah.rumancik@gmail.com, zlang@kernel.org, fstests@vger.kernel.org,
+        willy@infradead.org, shirley.ma@oracle.com, konrad.wilk@oracle.com
+Date:   Tue, 01 Aug 2023 12:58:15 -0700
+Message-ID: <169091989589.112530.11294854598557805230.stgit@frogsfrogsfrogs>
+User-Agent: StGit/0.19
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20230801172201.1923299-4-hch@lst.de>
-Sender: Luis Chamberlain <mcgrof@infradead.org>
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Tue, Aug 01, 2023 at 07:21:58PM +0200, Christoph Hellwig wrote:
-> Open code __generic_file_write_iter to remove the indirect call into
-> ->direct_IO and to prepare using the iomap based write code.
-> 
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
+Hi all,
 
-Reviewed-by: Luis Chamberlain <mcgrof@kernel.org>
+I do not choose to continue as maintainer.
 
-  Luis
+My final act as maintainer is to write down every thing that I've been
+doing as maintainer for the past six years.  There are too many demands
+placed on the maintainer, and the only way to fix this is to delegate
+the responsibilities.  I also wrote down my impressions of the unwritten
+rules about how to contribute to XFS.
+
+The patchset concludes with my nomination for a new release manager to
+keep things running in the interim.  Testing and triage; community
+management; and LTS maintenance are all open positions.
+
+This is an extraordinary way to destroy everything.  Enjoy!
+Comments and questions are, as always, welcome.
+
+--D
+---
+ Documentation/filesystems/index.rst                |    1 
+ .../filesystems/xfs-maintainer-entry-profile.rst   |  192 ++++++++++++++++++++
+ .../maintainer/maintainer-entry-profile.rst        |    1 
+ MAINTAINERS                                        |    4 
+ 4 files changed, 197 insertions(+), 1 deletion(-)
+ create mode 100644 Documentation/filesystems/xfs-maintainer-entry-profile.rst
+
