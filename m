@@ -2,54 +2,54 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D2115EB64DD
-	for <linux-xfs@archiver.kernel.org>; Tue,  1 Aug 2023 23:46:58 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6A591EB64DD
+	for <linux-xfs@archiver.kernel.org>; Tue,  1 Aug 2023 23:48:00 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229771AbjHAXq6 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 1 Aug 2023 19:46:58 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38404 "EHLO
+        id S230400AbjHAXr7 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 1 Aug 2023 19:47:59 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38488 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229657AbjHAXq5 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 1 Aug 2023 19:46:57 -0400
+        with ESMTP id S230212AbjHAXr4 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 1 Aug 2023 19:47:56 -0400
 Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 67F28E57
-        for <linux-xfs@vger.kernel.org>; Tue,  1 Aug 2023 16:46:56 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 294ED1B1
+        for <linux-xfs@vger.kernel.org>; Tue,  1 Aug 2023 16:47:55 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
          key-exchange X25519 server-signature RSA-PSS (2048 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 0285061774
-        for <linux-xfs@vger.kernel.org>; Tue,  1 Aug 2023 23:46:56 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 52F7DC433C8;
-        Tue,  1 Aug 2023 23:46:55 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id A19EF6176D
+        for <linux-xfs@vger.kernel.org>; Tue,  1 Aug 2023 23:47:54 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 02C1BC433C7;
+        Tue,  1 Aug 2023 23:47:53 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1690933615;
-        bh=mF0aRZEpFyGzdaDSO6A8tGriCaSLXo0pv938kwKvGd8=;
+        s=k20201202; t=1690933674;
+        bh=AAhZFGI7dPLKuj5buxLK4hIjd4hw4LnOu5k/jAMH8wQ=;
         h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=cYmVQ3Lo/D0BZPnzMhhv5LoDEwQWNwUDYzUqM1jIRfmt8a/XzL2S8nyvjAfTPXogH
-         F40NVaOudlK9dFxHgNzke5bNLSwLSgKA3wZ4gtRmfbR10MF/+ix7fVQtF+S6OnUVZq
-         ICjEfCLdZnMXXUyVuG//NBqpZbHyBZ7NyqYopc8+NoeQUasVrDSXT2PL9kfEZ1V2k0
-         /uIOdAwwMcuPS7cE7Dvsms28L8Nu29D9CmqgJ9hsjXeQzP56Eskl1nnq6F1CXQxtLf
-         ClyfIPwmbei/JYDHbNjWOK+J2NENHRqXiTLfLAEtb+aG3FT7QNs/F+4op1WdueliQu
-         gCSYzHbJuVLNg==
-Date:   Tue, 1 Aug 2023 16:46:54 -0700
+        b=az9cZ7anrpjFTE9n4nPlGCINy/t1B34c5LnndmJOxGHk+bVU34QGv9d5NtMwEP86T
+         Xwvwsou7CY7b0RCCnUd2JYEsmSe5dgABBfzrWHFKECas7/QM5Lsi9H3E3ize7DmhIR
+         v5s6m8sZ59bSJ7wGVWVnhgAcHB+UYLyEYcd5V9bWoZPVwkrUnUd24e857P1NS2ejcL
+         HaJZNNuh7WmcXFmhrp+lAlEIIKLOz/n9fw2dNuzz3MIbc54KKNheIgtnOEuSj+sVc0
+         qso5RbvUOa8/Qk2yq3rXCQdCFJ7B/LqxbUMVg8x1PaOPPVhK4QcLdC5lTm8mM5Y7ay
+         oO1pP6kG18w2g==
+Date:   Tue, 1 Aug 2023 16:47:53 -0700
 From:   "Darrick J. Wong" <djwong@kernel.org>
 To:     Chandan Babu R <chandan.babu@oracle.com>
 Cc:     linux-xfs@vger.kernel.org, cem@kernel.org
 Subject: Re: [PATCH V3 10/23] metadump: Define metadump v2 ondisk format
  structures and macros
-Message-ID: <20230801234654.GQ11352@frogsfrogsfrogs>
-References: <20230721094533.1351868-1-chandan.babu@oracle.com>
- <20230721094533.1351868-11-chandan.babu@oracle.com>
+Message-ID: <20230801234753.GR11352@frogsfrogsfrogs>
+References: <20230724043527.238600-1-chandan.babu@oracle.com>
+ <20230724043527.238600-11-chandan.babu@oracle.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20230721094533.1351868-11-chandan.babu@oracle.com>
+In-Reply-To: <20230724043527.238600-11-chandan.babu@oracle.com>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Fri, Jul 21, 2023 at 03:15:20PM +0530, Chandan Babu R wrote:
+On Mon, Jul 24, 2023 at 10:05:14AM +0530, Chandan Babu R wrote:
 > The corresponding metadump file's disk layout is as shown below,
 > 
 >      |------------------------------|
@@ -69,12 +69,13 @@ On Fri, Jul 21, 2023 at 03:15:20PM +0530, Chandan Babu R wrote:
 > 
 > Signed-off-by: Chandan Babu R <chandan.babu@oracle.com>
 
-For this patch,
+Looks good,
 Reviewed-by: Darrick J. Wong <djwong@kernel.org>
 
-However: could you please post an update with the new metadump2 file
-format for
+Could you please post a patch describing the metadump2 file format for
 https://git.kernel.org/pub/scm/fs/xfs/xfs-documentation.git/ ?
+
+(Sorry I posted an earlier reply to the truncated submission.)
 
 --D
 
