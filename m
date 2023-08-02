@@ -2,195 +2,247 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id AAC14C04E69
-	for <linux-xfs@archiver.kernel.org>; Wed,  2 Aug 2023 18:55:15 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A4D6EC04A94
+	for <linux-xfs@archiver.kernel.org>; Wed,  2 Aug 2023 19:26:03 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230392AbjHBSzO (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 2 Aug 2023 14:55:14 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52124 "EHLO
+        id S231442AbjHBT0C (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 2 Aug 2023 15:26:02 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38106 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232306AbjHBSyt (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 2 Aug 2023 14:54:49 -0400
-X-Greylist: delayed 402 seconds by postgrey-1.37 at lindbergh.monkeyblade.net; Wed, 02 Aug 2023 11:54:47 PDT
-Received: from mx.manguebit.com (mx.manguebit.com [167.235.159.17])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id BD14513E;
-        Wed,  2 Aug 2023 11:54:47 -0700 (PDT)
-Message-ID: <471c346601a7daace902428e56b8579b.pc@manguebit.com>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=manguebit.com;
-        s=dkim; t=1691002083;
+        with ESMTP id S230204AbjHBT0B (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 2 Aug 2023 15:26:01 -0400
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 40A22199F
+        for <linux-xfs@vger.kernel.org>; Wed,  2 Aug 2023 12:25:18 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1691004317;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:cc:mime-version:mime-version:content-type:content-type:
          in-reply-to:in-reply-to:references:references;
-        bh=LM5dlnWT81GTwNGuf8M3+0tmWSk26IjSyG3XZJNlGxg=;
-        b=q+WFWoVwU8f/i7FIz0XAfDaWphvSKk6j9cTrweJn7z9x5iBr7hiB35FGPAUBDF4ISjvz5h
-        zznWulE1I6cYjxCc8w+oI7LqEsabOb90uMokjyBo26cUl9nOO1TEwZN8Rko1gnGWvU899Z
-        +EBpH1/sTAIcDBro/WhZd/24PR+naT0wlQBLDVmBmCkMhE+2F6usEQx/ESFOSTzKfD3foi
-        57LqLxR9Es5qHclOHN7ZNd3Wf1NFp5sNHd92kPnDoE27zzkvm/xF1Zegdhw2DWwM4cUSYl
-        FcRs0tYEjK3/9OByMH8nBUpqgGgWvImVoeFcmbN4cGs0tbYOYiDHxrQ3J3/9aA==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=manguebit.com;
-        s=dkim; t=1691002083;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=LM5dlnWT81GTwNGuf8M3+0tmWSk26IjSyG3XZJNlGxg=;
-        b=AoW9sil2tg15RxkemetVcD0MQH7aqHOPx9s45t6q2mXk4iNoevRltavPuQhHJickRN06JC
-        9twitSFZovdSmN54RsIMwcP9LbHZ1K86aCiRYdAMGoHCsXm0u0QTFFXXd8+eXqppmU9Kp1
-        Q9pg/HXE5fSlbCGR+84Z036/rAjhvge6A7ij00bIpSGub9bNIOdCFcEgHSqmL5WMnIl1Uf
-        VF0itzVid71/SBJv2BhC3GrS7WwIz1UW8ofISSDCmwhyuSGM2Z2MEfKyccU/HDsRsX7g/2
-        qop6kKp78QWclngeoV7X+/F2IIcl/qVTZIg1Eck9BzyGSdE1iSwHxnOAmhWl8g==
-ARC-Authentication-Results: i=1;
-        ORIGINATING;
-        auth=pass smtp.auth=pc@manguebit.com smtp.mailfrom=pc@manguebit.com
-ARC-Seal: i=1; s=dkim; d=manguebit.com; t=1691002083; a=rsa-sha256;
-        cv=none;
-        b=cp3+mC0OMj7F40WMT7qUHuJDwt5m+4Y0ISygYXiZ4GOzzVuy+cXksXQTjexnbnoHqJnkLv
-        A/Xh4iI5m54yLclEpvkUfV+Z5z+yl3bkiSW7DPqp7d3qf2mgApmdG2r6OnrC3HAVdpFkRR
-        FGIzkra0rLP1oeUH2LzXYwCEn0h5f1JOcg5inVxvd5FI0X3iaV9zS9fxN8/uoNWsRSS8bg
-        YveFBiSbZ9Cz5RuNQ9Dpsxd6wNh4r8y+aIu582+NYrL0UgzojRiCHbVTSN7csXMG8yKhXg
-        YDPPznVWXhPSF0A8cu9cmJOJmS32KIv4mwdX1lo6pb8zpon7EJ1dEyaA13ArHw==
-From:   Paulo Alcantara <pc@manguebit.com>
-To:     Jeff Layton <jlayton@kernel.org>,
-        Eric Van Hensbergen <ericvh@kernel.org>,
-        Latchesar Ionkov <lucho@ionkov.net>,
-        Dominique Martinet <asmadeus@codewreck.org>,
-        Christian Schoenebeck <linux_oss@crudebyte.com>,
-        David Howells <dhowells@redhat.com>,
-        Marc Dionne <marc.dionne@auristor.com>,
-        Chris Mason <clm@fb.com>, Josef Bacik <josef@toxicpanda.com>,
-        David Sterba <dsterba@suse.com>, Xiubo Li <xiubli@redhat.com>,
-        Ilya Dryomov <idryomov@gmail.com>,
-        Jan Harkes <jaharkes@cs.cmu.edu>, coda@cs.cmu.edu,
-        Tyler Hicks <code@tyhicks.com>, Gao Xiang <xiang@kernel.org>,
-        Chao Yu <chao@kernel.org>, Yue Hu <huyue2@coolpad.com>,
-        Jeffle Xu <jefflexu@linux.alibaba.com>,
-        Namjae Jeon <linkinjeon@kernel.org>,
-        Sungjong Seo <sj1557.seo@samsung.com>,
-        Jan Kara <jack@suse.com>, Theodore Ts'o <tytso@mit.edu>,
-        Andreas Dilger <adilger.kernel@dilger.ca>,
-        Jaegeuk Kim <jaegeuk@kernel.org>,
-        OGAWA Hirofumi <hirofumi@mail.parknet.co.jp>,
-        Miklos Szeredi <miklos@szeredi.hu>,
-        Bob Peterson <rpeterso@redhat.com>,
-        Andreas Gruenbacher <agruenba@redhat.com>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        Tejun Heo <tj@kernel.org>,
-        Alexander Viro <viro@zeniv.linux.org.uk>,
-        Christian Brauner <brauner@kernel.org>,
-        Trond Myklebust <trond.myklebust@hammerspace.com>,
-        Anna Schumaker <anna@kernel.org>,
-        Konstantin Komarov <almaz.alexandrovich@paragon-software.com>,
-        Mark Fasheh <mark@fasheh.com>,
-        Joel Becker <jlbec@evilplan.org>,
-        Joseph Qi <joseph.qi@linux.alibaba.com>,
-        Mike Marshall <hubcap@omnibond.com>,
-        Martin Brandenburg <martin@omnibond.com>,
-        Luis Chamberlain <mcgrof@kernel.org>,
-        Kees Cook <keescook@chromium.org>,
-        Iurii Zaikin <yzaikin@google.com>,
-        Steve French <sfrench@samba.org>,
-        Ronnie Sahlberg <lsahlber@redhat.com>,
-        Shyam Prasad N <sprasad@microsoft.com>,
-        Tom Talpey <tom@talpey.com>,
-        Sergey Senozhatsky <senozhatsky@chromium.org>,
-        Richard Weinberger <richard@nod.at>,
-        Hans de Goede <hdegoede@redhat.com>,
-        Hugh Dickins <hughd@google.com>,
-        Andrew Morton <akpm@linux-foundation.org>,
-        "Darrick J. Wong" <djwong@kernel.org>
-Cc:     Dave Chinner <david@fromorbit.com>,
-        Anthony Iliopoulos <ailiop@suse.com>, v9fs@lists.linux.dev,
-        linux-kernel@vger.kernel.org, linux-afs@lists.infradead.org,
-        linux-btrfs@vger.kernel.org, ceph-devel@vger.kernel.org,
-        codalist@coda.cs.cmu.edu, ecryptfs@vger.kernel.org,
-        linux-erofs@lists.ozlabs.org, linux-fsdevel@vger.kernel.org,
-        linux-ext4@vger.kernel.org, linux-f2fs-devel@lists.sourceforge.net,
-        cluster-devel@redhat.com, linux-nfs@vger.kernel.org,
-        ntfs3@lists.linux.dev, ocfs2-devel@lists.linux.dev,
-        devel@lists.orangefs.org, linux-cifs@vger.kernel.org,
-        samba-technical@lists.samba.org, linux-mtd@lists.infradead.org,
-        linux-mm@kvack.org, linux-xfs@vger.kernel.org,
-        Jeff Layton <jlayton@kernel.org>
-Subject: Re: [PATCH v6 1/7] fs: pass the request_mask to generic_fillattr
-In-Reply-To: <20230725-mgctime-v6-1-a794c2b7abca@kernel.org>
-References: <20230725-mgctime-v6-0-a794c2b7abca@kernel.org>
- <20230725-mgctime-v6-1-a794c2b7abca@kernel.org>
-Date:   Wed, 02 Aug 2023 15:47:56 -0300
+        bh=z+NCAApqbNw2Pro3K3FkTCUJU1Tn5lJ6dVDlokitvGg=;
+        b=ImczoTgfKcc4FokDUbiTPtU1lZFjt2s0+dl0M4TqAVbXnw+6B+kdT270fSHEVhCvY9aNyl
+        goYDYJ+CiUbAfuCjeO3jK2M5qaompzdOFSRvA+X3iYPjEmjTRlv8gPtrcDSLKh02q6XHpA
+        e3S4nDmoObG0ghhf/9hWrKmoJ5WA4z8=
+Received: from mail-pl1-f198.google.com (mail-pl1-f198.google.com
+ [209.85.214.198]) by relay.mimecast.com with ESMTP with STARTTLS
+ (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
+ us-mta-54--mQvx6zONlORTChXEPGbRA-1; Wed, 02 Aug 2023 15:25:15 -0400
+X-MC-Unique: -mQvx6zONlORTChXEPGbRA-1
+Received: by mail-pl1-f198.google.com with SMTP id d9443c01a7336-1bb29dc715bso1369775ad.1
+        for <linux-xfs@vger.kernel.org>; Wed, 02 Aug 2023 12:25:15 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20221208; t=1691004314; x=1691609114;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=z+NCAApqbNw2Pro3K3FkTCUJU1Tn5lJ6dVDlokitvGg=;
+        b=AmCNE+13oOn86cBwpA+2VRKXiSEVzm7vKUPfBJLsIwkPLmqrp76OAiG4s2ulO7lLUe
+         leM1FyYAyImsjm4CmwhYJKr106dncy9V+r0dz5qtGhZTMheQ7sXh9xE7mlgJTWrwHCT1
+         wO/I4BjsiTpIOl7D10xgAA/4rWSCWUnq7hmNLygHctAO6BnGe7wBwVEnaSaAQMjXkjjm
+         6oNa7gkWV73lXHCSPkVZMBVtbr+l5YixqQYKKIwMPGTwMFPmskzoKMQ4wPrUbkyYEDFt
+         SnN2Wx3ASJDiKWfGN7aatyJ1G3jzRCgQvgzGnvvfTUk3NHVWy8yivnh9XMnDuN4Km9+n
+         tL1g==
+X-Gm-Message-State: ABy/qLbzFdp/PTHyA+E2/SE+4bA4vvTzpgPjBU3+IJqrhO5YthvxJkru
+        p7UML1cc2Mtc+zCBOoR/09nPzlO17EUMwJnkhFhvPdQ1msawq+wun2B4B37NKBHpR58mHk3lQsj
+        m52+AEpezozWSOqs71bfo4+FPoLaKO9Y=
+X-Received: by 2002:a17:902:e809:b0:1b8:7613:594d with SMTP id u9-20020a170902e80900b001b87613594dmr21942594plg.24.1691004314511;
+        Wed, 02 Aug 2023 12:25:14 -0700 (PDT)
+X-Google-Smtp-Source: APBJJlHZiwFlmOJ2fvSoNElkqU2gYznUU3MA3Fp61RAewpOqQ2xV9KWv0TiIR6/ORMRQmdlwKTIt8Q==
+X-Received: by 2002:a17:902:e809:b0:1b8:7613:594d with SMTP id u9-20020a170902e80900b001b87613594dmr21942576plg.24.1691004314186;
+        Wed, 02 Aug 2023 12:25:14 -0700 (PDT)
+Received: from zlang-mailbox ([43.228.180.230])
+        by smtp.gmail.com with ESMTPSA id b21-20020a170902d31500b001b552309aedsm12767209plc.192.2023.08.02.12.25.12
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Wed, 02 Aug 2023 12:25:13 -0700 (PDT)
+Date:   Thu, 3 Aug 2023 03:25:10 +0800
+From:   Zorro Lang <zlang@redhat.com>
+To:     "Darrick J. Wong" <djwong@kernel.org>
+Cc:     Zorro Lang <zlang@kernel.org>, fstests@vger.kernel.org,
+        linux-xfs@vger.kernel.org, linux-nfs@vger.kernel.org
+Subject: Re: [PATCH v2] nfs: test files written size as expected
+Message-ID: <20230802192510.tecctatj3kqcw3e4@zlang-mailbox>
+References: <20230802054646.2197854-1-zlang@kernel.org>
+ <20230802163640.GY11352@frogsfrogsfrogs>
+ <20230802172418.2ulrealxsj2cvnxo@zlang-mailbox>
+ <20230802174326.GL11340@frogsfrogsfrogs>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20230802174326.GL11340@frogsfrogsfrogs>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Jeff Layton <jlayton@kernel.org> writes:
+On Wed, Aug 02, 2023 at 10:43:26AM -0700, Darrick J. Wong wrote:
+> On Thu, Aug 03, 2023 at 01:24:18AM +0800, Zorro Lang wrote:
+> > On Wed, Aug 02, 2023 at 09:36:40AM -0700, Darrick J. Wong wrote:
+> > > On Wed, Aug 02, 2023 at 01:46:46PM +0800, Zorro Lang wrote:
+> > > > Test nfs and its underlying fs, make sure file size as expected
+> > > > after writting a file, and the speculative allocation space can
+> > > > be shrunken.
+> > > > 
+> > > > Signed-off-by: Zorro Lang <zlang@kernel.org>
+> > > > ---
+> > > > 
+> > > > Last year I sent a patch to fstests@, but it sometimes fails on the upstream
+> > > > kernel that year:
+> > > > 
+> > > >   https://lore.kernel.org/fstests/Y3vTbHqT64gsQ573@magnolia/
+> > > > 
+> > > > And we didn't get a proper reason for that, so that patch was blocked. Now
+> > > > I found this case test passed on current upstream linux [1] (after loop
+> > > > running it a whole night). So I think it's time to rebase and re-send this
+> > > > patch to get review.
+> > > > 
+> > > > Thanks,
+> > > > Zorro
+> > > > 
+> > > > [1]
+> > > > FSTYP         -- nfs
+> > > > PLATFORM      -- Linux/x86_64 xxxx 6.5.0-rc4 #1 SMP PREEMPT_DYNAMIC Tue Aug  1 15:32:55 EDT 2023
+> > > > MKFS_OPTIONS  -- xxxx.redhat.com:/mnt/xfstests/scratch/nfs-server
+> > > > MOUNT_OPTIONS -- -o vers=4.2 -o context=system_u:object_r:root_t:s0 xxxx.redhat.com:/mnt/xfstests/scratch/nfs-server /mnt/xfstests/scratch/nfs-client
+> > > > 
+> > > > nfs/002 4s ...  4s
+> > > > Ran: nfs/002
+> > > > Passed all 1 tests
+> > > > 
+> > > >  tests/nfs/002     | 46 ++++++++++++++++++++++++++++++++++++++++++++++
+> > > >  tests/nfs/002.out |  2 ++
+> > > >  2 files changed, 48 insertions(+)
+> > > >  create mode 100755 tests/nfs/002
+> > > >  create mode 100644 tests/nfs/002.out
+> > > > 
+> > > > diff --git a/tests/nfs/002 b/tests/nfs/002
+> > > > new file mode 100755
+> > > > index 00000000..b4b6554c
+> > > > --- /dev/null
+> > > > +++ b/tests/nfs/002
+> > > > @@ -0,0 +1,46 @@
+> > > > +#! /bin/bash
+> > > > +# SPDX-License-Identifier: GPL-2.0
+> > > > +# Copyright (c) 2023 Red Hat, Inc.  All Rights Reserved.
+> > > > +#
+> > > > +# FS QA Test 002
+> > > > +#
+> > > > +# Make sure nfs gets expected file size after writting a big sized file. It's
+> > > > +# not only testing nfs, test its underlying fs too. For example a known old bug
+> > > > +# on xfs (underlying fs) caused nfs get larger file size (e.g. 16M) after
+> > > > +# writting 10M data to a file. It's fixed by a series of patches around
+> > > > +# 579b62faa5fb16 ("xfs: add background scanning to clear eofblocks inodes")
+> > > 
+> > > Er... has this been banging around in the trunk for 11 years? ;)
+> > 
+> > Yeah, that's an old enough test case :-D I tried to tidy our internal test cases,
+> > felt this case can be in fstests.
+> > 
+> > > 
+> > > > +#
+> > > > +. ./common/preamble
+> > > > +_begin_fstest auto quick rw
+> > > > +
+> > > > +# real QA test starts here
+> > > > +_supported_fs nfs
+> > > > +# Need a series of patches related with this patch
+> > > > +_fixed_by_kernel_commit 579b62faa5fb16 \
+> > > > +	"xfs: add background scanning to clear eofblocks inodes"
+> > > > +_require_test
+> > > > +
+> > > > +localfile=$TEST_DIR/testfile.$seq
+> > > > +rm -rf $localfile
+> > > > +
+> > > > +$XFS_IO_PROG -f -t -c "pwrite 0 10m" -c "fsync" $localfile >>$seqres.full 2>&1
+> > > > +block_size=`stat -c '%B' $localfile`
+> > > > +iblocks_expected=$((10 * 1024 * 1024 / $block_size))
+> > > > +# Try several times for the speculative allocated file size can be shrunken
+> > > > +res=1
+> > > > +for ((i=0; i<10; i++));do
+> > > > +	iblocks_real=`stat -c '%b' $localfile`
+> > > > +	if [ "$iblocks_expected" = "$iblocks_real" ];then
+> > > 
+> > > What happens if real < expected?  Should there be some sort of bail out
+> > > for unexpected things like that?
+> > 
+> > Hmm... I never thought that. I saw the real >= expected, is there any
+> > chance to get real < expected?
+> 
+> <shrug> Suppose the NFS server is running on top of a filesystem that
+> supports compression and i_blocks as returned by stat reflects that?
+> 
+> --D
+> 
+> > > 
+> > > > +		res=0
+> > > > +		break
+> > > > +	fi
+> > > > +	sleep 10
+> > > > +done
+> > > 
+> > > Though I guess the runtime is capped at ~100s so maybe it doesn't
+> > > matter practically.
+> > 
+> > Mostly the test done in several seconds in my testing:
+> > 
+> > FSTYP         -- nfs
+> > PLATFORM      -- Linux/x86_64 hp-dl360g9-06 6.5.0-rc4 #1 SMP PREEMPT_DYNAMIC Tue Aug  1 15:32:55 EDT 2023
+> > MKFS_OPTIONS  -- hp-dl360g9-06.rhts.eng.pek2.redhat.com:/mnt/xfstests/scratch/nfs-server
+> > MOUNT_OPTIONS -- -o vers=4.2 -o context=system_u:object_r:root_t:s0 hp-dl360g9-06.rhts.eng.pek2.redhat.com:/mnt/xfstests/scratch/nfs-server /mnt/xfstests/scratch/nfs-client
+> > 
+> > nfs/002 5s ...  4s
+> > Ran: nfs/002
+> > Passed all 1 tests
+> 
+> Doesn't xfs remove the speculative preallocations every time a write fd
+> is closed?
+> 
+> Yes, it does do that:
+> https://lore.kernel.org/linux-xfs/155259894034.30230.7188877605950498518.stgit@magnolia/
+> 
+> IOWs, how is this test actually checking the behavior of background
+> blockgc clearing out speculative preallocations?
 
-> generic_fillattr just fills in the entire stat struct indiscriminately
-> today, copying data from the inode. There is at least one attribute
-> (STATX_CHANGE_COOKIE) that can have side effects when it is reported,
-> and we're looking at adding more with the addition of multigrain
-> timestamps.
->
-> Add a request_mask argument to generic_fillattr and have most callers
-> just pass in the value that is passed to getattr. Have other callers
-> (e.g. ksmbd) just pass in STATX_BASIC_STATS. Also move the setting of
-> STATX_CHANGE_COOKIE into generic_fillattr.
->
-> Signed-off-by: Jeff Layton <jlayton@kernel.org>
-> ---
->  fs/9p/vfs_inode.c       |  4 ++--
->  fs/9p/vfs_inode_dotl.c  |  4 ++--
->  fs/afs/inode.c          |  2 +-
->  fs/btrfs/inode.c        |  2 +-
->  fs/ceph/inode.c         |  2 +-
->  fs/coda/inode.c         |  3 ++-
->  fs/ecryptfs/inode.c     |  5 +++--
->  fs/erofs/inode.c        |  2 +-
->  fs/exfat/file.c         |  2 +-
->  fs/ext2/inode.c         |  2 +-
->  fs/ext4/inode.c         |  2 +-
->  fs/f2fs/file.c          |  2 +-
->  fs/fat/file.c           |  2 +-
->  fs/fuse/dir.c           |  2 +-
->  fs/gfs2/inode.c         |  2 +-
->  fs/hfsplus/inode.c      |  2 +-
->  fs/kernfs/inode.c       |  2 +-
->  fs/libfs.c              |  4 ++--
->  fs/minix/inode.c        |  2 +-
->  fs/nfs/inode.c          |  2 +-
->  fs/nfs/namespace.c      |  3 ++-
->  fs/ntfs3/file.c         |  2 +-
->  fs/ocfs2/file.c         |  2 +-
->  fs/orangefs/inode.c     |  2 +-
->  fs/proc/base.c          |  4 ++--
->  fs/proc/fd.c            |  2 +-
->  fs/proc/generic.c       |  2 +-
->  fs/proc/proc_net.c      |  2 +-
->  fs/proc/proc_sysctl.c   |  2 +-
->  fs/proc/root.c          |  3 ++-
->  fs/smb/client/inode.c   |  2 +-
->  fs/smb/server/smb2pdu.c | 22 +++++++++++-----------
->  fs/smb/server/vfs.c     |  3 ++-
->  fs/stat.c               | 18 ++++++++++--------
->  fs/sysv/itree.c         |  3 ++-
->  fs/ubifs/dir.c          |  2 +-
->  fs/udf/symlink.c        |  2 +-
->  fs/vboxsf/utils.c       |  2 +-
->  include/linux/fs.h      |  2 +-
->  mm/shmem.c              |  2 +-
->  40 files changed, 70 insertions(+), 62 deletions(-)
->
-> [...]
->
-> diff --git a/fs/smb/client/inode.c b/fs/smb/client/inode.c
-> index 218f03dd3f52..93fe43789d7a 100644
-> --- a/fs/smb/client/inode.c
-> +++ b/fs/smb/client/inode.c
-> @@ -2540,7 +2540,7 @@ int cifs_getattr(struct mnt_idmap *idmap, const struct path *path,
->  			return rc;
->  	}
->  
-> -	generic_fillattr(&nop_mnt_idmap, inode, stat);
-> +	generic_fillattr(&nop_mnt_idmap, request_mask, inode, stat);
->  	stat->blksize = cifs_sb->ctx->bsize;
->  	stat->ino = CIFS_I(inode)->uniqueid;
+OK, looks like this case is invalid. I'll keep it :)
 
-Reviewed-by: Paulo Alcantara (SUSE) <pc@manguebit.com>
+Thanks,
+Zorro
+
+> 
+> > > (What happens if xfs blockgc only runs every 5 minutes?)
+> > 
+> > How can can make that happen? If the 100s isn't enough, is there an upper
+> > limit, or how to make an upper limit?
+> 
+> There's no way to tell over NFS...
+> 
+> --D
+> 
+> > 
+> > Thanks,
+> > Zorro
+> > 
+> > > 
+> > > --D
+> > > 
+> > > > +if [ $res -ne 0 ];then
+> > > > +	echo "Write $iblocks_expected blocks, but get $iblocks_real blocks"
+> > > > +fi
+> > > > +
+> > > > +echo "Silence is golden"
+> > > > +# success, all done
+> > > > +status=0
+> > > > +exit
+> > > > diff --git a/tests/nfs/002.out b/tests/nfs/002.out
+> > > > new file mode 100644
+> > > > index 00000000..61705c7c
+> > > > --- /dev/null
+> > > > +++ b/tests/nfs/002.out
+> > > > @@ -0,0 +1,2 @@
+> > > > +QA output created by 002
+> > > > +Silence is golden
+> > > > -- 
+> > > > 2.40.1
+> > > > 
+> > > 
+> > 
+> 
+
