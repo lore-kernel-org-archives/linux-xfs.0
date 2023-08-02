@@ -2,331 +2,374 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id BDE4CC001DF
-	for <linux-xfs@archiver.kernel.org>; Wed,  2 Aug 2023 17:14:12 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4F4F3C001DF
+	for <linux-xfs@archiver.kernel.org>; Wed,  2 Aug 2023 17:16:48 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230367AbjHBROK (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 2 Aug 2023 13:14:10 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39362 "EHLO
+        id S231269AbjHBRQr (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 2 Aug 2023 13:16:47 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41908 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230204AbjHBROJ (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 2 Aug 2023 13:14:09 -0400
+        with ESMTP id S229607AbjHBRQq (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 2 Aug 2023 13:16:46 -0400
 Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1671C11D
-        for <linux-xfs@vger.kernel.org>; Wed,  2 Aug 2023 10:14:06 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A0AEFE0
+        for <linux-xfs@vger.kernel.org>; Wed,  2 Aug 2023 10:16:44 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
          key-exchange X25519 server-signature RSA-PSS (2048 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 655E861A33
-        for <linux-xfs@vger.kernel.org>; Wed,  2 Aug 2023 17:14:06 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id BBA1FC433C7;
-        Wed,  2 Aug 2023 17:14:05 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 19FAF61A4D
+        for <linux-xfs@vger.kernel.org>; Wed,  2 Aug 2023 17:16:44 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 6B405C433C8;
+        Wed,  2 Aug 2023 17:16:43 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1690996445;
-        bh=FAMhfyoFcTXpY4qbBMtrK5OjsvOjkHly4UEGIn6rfE0=;
+        s=k20201202; t=1690996603;
+        bh=XzpRfHVTka5UnzrT/E5eDjvfmbuK4S2UDSyldiMTyPY=;
         h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=cUNSjd1ln/7ARObYg58Z49cfYsM9ZHtVxncxSyrzXXrwChfCojmvsQRwxYJsimB+m
-         ckb2Enk1c1l1r27pH+Sy8m28UNXpuLU4sO9+Jxph/E8jtWhWLEtXh9tpZL+cV6yBAU
-         3EFtXAAt1VFjp4eMsu9GwoqDpJVA3skm1yKPodXacwYXfTCUnwRL/BErOEDlKtGsmV
-         eBo/3af6DJVYNazo/Iz7vUP5ZDzMrRzL8IJhQpstsARIFra9Gf+EdqFsoH9JMjOHpt
-         ZDYeBXYjythBZDPZgqJbly0npE7xJJN045hpI61SjJeH3fRGzHAihXfpLwiRSgUzy+
-         UP/q7jvIroiHw==
-Date:   Wed, 2 Aug 2023 10:14:05 -0700
+        b=FhQOAade55f9sR3V6kYgzX1dJ7UAyYBHBSjG1mMjlnbjnXcs6TLw0MpCdqTapVLxQ
+         PgalrtVbINrDxvvrCFTZ3GZ6j6kUSaXktNPaC4mICg7nePo4Ba7vFl9oYBrw8eFEDQ
+         L9YaRRvBShetCDYaTJv1iD3qpNaQBdYi4WMVy2oWmHCltBw2xtxncwUnzn8jnOLWq5
+         hU5KcbCI75wM8xlqLxc2WVeAyiFNS0te/7OwHz+yGR+ujGpcCff/UfOU9+l39NoB9S
+         cS9MnSO7ZoJEE24OYZ4YEt7+b0ALH9P6BaySxgC4Hc3cppr5j3sJEAD0R/5nVYkvY/
+         oZz/QYIfzb3Tg==
+Date:   Wed, 2 Aug 2023 10:16:42 -0700
 From:   "Darrick J. Wong" <djwong@kernel.org>
 To:     Chandan Babu R <chandan.babu@oracle.com>
 Cc:     linux-xfs@vger.kernel.org, cem@kernel.org
-Subject: Re: [PATCH V3 13/23] metadump: Add support for passing version option
-Message-ID: <20230802171405.GA11352@frogsfrogsfrogs>
+Subject: Re: [PATCH V3 22/23] mdrestore: Define mdrestore ops for v2 format
+Message-ID: <20230802171642.GB11352@frogsfrogsfrogs>
 References: <20230724043527.238600-1-chandan.babu@oracle.com>
- <20230724043527.238600-14-chandan.babu@oracle.com>
- <20230801235120.GU11352@frogsfrogsfrogs>
- <87h6phr349.fsf@debian-BULLSEYE-live-builder-AMD64>
+ <20230724043527.238600-23-chandan.babu@oracle.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <87h6phr349.fsf@debian-BULLSEYE-live-builder-AMD64>
+In-Reply-To: <20230724043527.238600-23-chandan.babu@oracle.com>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Wed, Aug 02, 2023 at 06:48:31PM +0530, Chandan Babu R wrote:
-> On Tue, Aug 01, 2023 at 04:51:20 PM -0700, Darrick J. Wong wrote:
-> > On Mon, Jul 24, 2023 at 10:05:17AM +0530, Chandan Babu R wrote:
-> >> The new option allows the user to explicitly specify the version of metadump
-> >> to use. However, we will default to using the v1 format.
-> >> 
-> >> Signed-off-by: Chandan Babu R <chandan.babu@oracle.com>
-> >
-> > Why did this lose its RVB tag from v2?
+On Mon, Jul 24, 2023 at 10:05:26AM +0530, Chandan Babu R wrote:
+> This commit adds functionality to restore metadump stored in v2 format.
 > 
-> copy_log() and metadump_f() were invoking set_log_cur() for both
-> "internal log" and "external log". In this version of the patchset, I
-> have modified the copy_log() function to,
-> 1. Invoke set_log_cur() when the filesystem has an external log.
-> 2. Invoke set_cur() when the filesystem has an internal log.
-> 
-> I think the above changes warrant a review. Hence, I had to remove your
-> RVB.
+> Signed-off-by: Chandan Babu R <chandan.babu@oracle.com>
 
-Ah, ok.  Well, this looks fine still, so...
-
-> >
-> > --D
-> >
-> >> ---
-> >>  db/metadump.c           | 81 +++++++++++++++++++++++++++++++++++------
-> >>  db/xfs_metadump.sh      |  3 +-
-> >>  man/man8/xfs_metadump.8 | 14 +++++++
-> >>  3 files changed, 86 insertions(+), 12 deletions(-)
-> >> 
-> >> diff --git a/db/metadump.c b/db/metadump.c
-> >> index 9b4ed70d..9fe9fe65 100644
-> >> --- a/db/metadump.c
-> >> +++ b/db/metadump.c
-> >> @@ -37,7 +37,7 @@ static void	metadump_help(void);
-> >>  
-> >>  static const cmdinfo_t	metadump_cmd =
-> >>  	{ "metadump", NULL, metadump_f, 0, -1, 0,
-> >> -		N_("[-a] [-e] [-g] [-m max_extent] [-w] [-o] filename"),
-> >> +		N_("[-a] [-e] [-g] [-m max_extent] [-w] [-o] [-v 1|2] filename"),
-> >>  		N_("dump metadata to a file"), metadump_help };
-> >>  
-> >>  struct metadump_ops {
-> >> @@ -74,6 +74,7 @@ static struct metadump {
-> >>  	bool			zero_stale_data;
-> >>  	bool			progress_since_warning;
-> >>  	bool			dirty_log;
-> >> +	bool			external_log;
-> >>  	bool			stdout_metadump;
-> >>  	xfs_ino_t		cur_ino;
-> >>  	/* Metadump file */
-> >> @@ -107,6 +108,7 @@ metadump_help(void)
-> >>  "   -g -- Display dump progress\n"
-> >>  "   -m -- Specify max extent size in blocks to copy (default = %d blocks)\n"
-> >>  "   -o -- Don't obfuscate names and extended attributes\n"
-> >> +"   -v -- Metadump version to be used\n"
-> >>  "   -w -- Show warnings of bad metadata information\n"
-> >>  "\n"), DEFAULT_MAX_EXT_SIZE);
-> >>  }
-> >> @@ -2909,8 +2911,20 @@ copy_log(void)
-> >>  		print_progress("Copying log");
-> >>  
-> >>  	push_cur();
-> >> -	set_cur(&typtab[TYP_LOG], XFS_FSB_TO_DADDR(mp, mp->m_sb.sb_logstart),
-> >> -			mp->m_sb.sb_logblocks * blkbb, DB_RING_IGN, NULL);
-> >> +	if (metadump.external_log) {
-> >> +		ASSERT(mp->m_sb.sb_logstart == 0);
-> >> +		set_log_cur(&typtab[TYP_LOG],
-> >> +				XFS_FSB_TO_DADDR(mp, mp->m_sb.sb_logstart),
-> >> +				mp->m_sb.sb_logblocks * blkbb, DB_RING_IGN,
-> >> +				NULL);
-> >> +	} else {
-> >> +		ASSERT(mp->m_sb.sb_logstart != 0);
-> >> +		set_cur(&typtab[TYP_LOG],
-> >> +				XFS_FSB_TO_DADDR(mp, mp->m_sb.sb_logstart),
-> >> +				mp->m_sb.sb_logblocks * blkbb, DB_RING_IGN,
-> >> +				NULL);
-> >> +	}
-> >> +
-> >>  	if (iocur_top->data == NULL) {
-> >>  		pop_cur();
-> >>  		print_warning("cannot read log");
-> >> @@ -3071,6 +3085,8 @@ init_metadump_v2(void)
-> >>  		compat_flags |= XFS_MD2_INCOMPAT_FULLBLOCKS;
-> >>  	if (metadump.dirty_log)
-> >>  		compat_flags |= XFS_MD2_INCOMPAT_DIRTYLOG;
-> >> +	if (metadump.external_log)
-> >> +		compat_flags |= XFS_MD2_INCOMPAT_EXTERNALLOG;
-> >>  
-> >>  	xmh.xmh_compat_flags = cpu_to_be32(compat_flags);
-> >>  
-> >> @@ -3131,6 +3147,7 @@ metadump_f(
-> >>  	int		outfd = -1;
-> >>  	int		ret;
-> >>  	char		*p;
-> >> +	bool		version_opt_set = false;
-> >>  
-> >>  	exitcode = 1;
-> >>  
-> >> @@ -3142,6 +3159,7 @@ metadump_f(
-> >>  	metadump.obfuscate = true;
-> >>  	metadump.zero_stale_data = true;
-> >>  	metadump.dirty_log = false;
-> >> +	metadump.external_log = false;
-> >>  
-> >>  	if (mp->m_sb.sb_magicnum != XFS_SB_MAGIC) {
-> >>  		print_warning("bad superblock magic number %x, giving up",
-> >> @@ -3159,7 +3177,7 @@ metadump_f(
-> >>  		return 0;
-> >>  	}
-> >>  
-> >> -	while ((c = getopt(argc, argv, "aegm:ow")) != EOF) {
-> >> +	while ((c = getopt(argc, argv, "aegm:ov:w")) != EOF) {
-> >>  		switch (c) {
-> >>  			case 'a':
-> >>  				metadump.zero_stale_data = false;
-> >> @@ -3183,6 +3201,17 @@ metadump_f(
-> >>  			case 'o':
-> >>  				metadump.obfuscate = false;
-> >>  				break;
-> >> +			case 'v':
-> >> +				metadump.version = (int)strtol(optarg, &p, 0);
-> >> +				if (*p != '\0' ||
-> >> +				    (metadump.version != 1 &&
-> >> +						metadump.version != 2)) {
-> >> +					print_warning("bad metadump version: %s",
-> >> +						optarg);
-> >> +					return 0;
-> >> +				}
-> >> +				version_opt_set = true;
-> >> +				break;
-> >>  			case 'w':
-> >>  				metadump.show_warnings = true;
-> >>  				break;
-> >> @@ -3197,12 +3226,42 @@ metadump_f(
-> >>  		return 0;
-> >>  	}
-> >>  
-> >> -	/* If we'll copy the log, see if the log is dirty */
-> >> -	if (mp->m_sb.sb_logstart) {
-> >> +	if (mp->m_logdev_targp->bt_bdev != mp->m_ddev_targp->bt_bdev)
-> >> +		metadump.external_log = true;
-> >> +
-> >> +	if (metadump.external_log && !version_opt_set)
-> >> +		metadump.version = 2;
-> >> +
-> >> +	if (metadump.version == 2 && mp->m_sb.sb_logstart == 0 &&
-> >> +	    !metadump.external_log) {
-> >> +		print_warning("external log device not loaded, use -l");
-> >> +		return -ENODEV;
-
-/me notes that any nonzero return from a *_f() function will stop
-command processing, not just negative errnos:
-
-	pushfile(stdin);
-	while (!done) {
-		if ((input = fetchline()) == NULL)
-			break;
-		v = breakline(input, &c);
-		if (c)
-			done = command(c, v);
-		doneline(input, v);
-	}
-
-The actual value here doesn't matter, so it's not a bug, just nitpicking
-on my part.
-
+Looks good now, thanks for taking care of this!
 Reviewed-by: Darrick J. Wong <djwong@kernel.org>
 
 --D
 
-> >> +	}
-> >> +
-> >> +	/*
-> >> +	 * If we'll copy the log, see if the log is dirty.
-> >> +	 *
-> >> +	 * Metadump v1 does not support dumping the contents of an external
-> >> +	 * log. Hence we skip the dirty log check.
-> >> +	 */
-> >> +	if (!(metadump.version == 1 && metadump.external_log)) {
-> >>  		push_cur();
-> >> -		set_cur(&typtab[TYP_LOG],
-> >> -			XFS_FSB_TO_DADDR(mp, mp->m_sb.sb_logstart),
-> >> -			mp->m_sb.sb_logblocks * blkbb, DB_RING_IGN, NULL);
-> >> +		if (metadump.external_log) {
-> >> +			ASSERT(mp->m_sb.sb_logstart == 0);
-> >> +			set_log_cur(&typtab[TYP_LOG],
-> >> +					XFS_FSB_TO_DADDR(mp,
-> >> +							mp->m_sb.sb_logstart),
-> >> +					mp->m_sb.sb_logblocks * blkbb,
-> >> +					DB_RING_IGN, NULL);
-> >> +		} else {
-> >> +			ASSERT(mp->m_sb.sb_logstart != 0);
-> >> +			set_cur(&typtab[TYP_LOG],
-> >> +					XFS_FSB_TO_DADDR(mp,
-> >> +							mp->m_sb.sb_logstart),
-> >> +					mp->m_sb.sb_logblocks * blkbb,
-> >> +					DB_RING_IGN, NULL);
-> >> +		}
-> >> +
-> >>  		if (iocur_top->data) {	/* best effort */
-> >>  			struct xlog	log;
-> >>  
-> >> @@ -3278,8 +3337,8 @@ metadump_f(
-> >>  	if (!exitcode)
-> >>  		exitcode = !copy_sb_inodes();
-> >>  
-> >> -	/* copy log if it's internal */
-> >> -	if ((mp->m_sb.sb_logstart != 0) && !exitcode)
-> >> +	/* copy log */
-> >> +	if (!exitcode && !(metadump.version == 1 && metadump.external_log))
-> >>  		exitcode = !copy_log();
-> >>  
-> >>  	/* write the remaining index */
-> >> diff --git a/db/xfs_metadump.sh b/db/xfs_metadump.sh
-> >> index 9852a5bc..9e8f86e5 100755
-> >> --- a/db/xfs_metadump.sh
-> >> +++ b/db/xfs_metadump.sh
-> >> @@ -8,7 +8,7 @@ OPTS=" "
-> >>  DBOPTS=" "
-> >>  USAGE="Usage: xfs_metadump [-aefFogwV] [-m max_extents] [-l logdev] source target"
-> >>  
-> >> -while getopts "aefgl:m:owFV" c
-> >> +while getopts "aefgl:m:owFv:V" c
-> >>  do
-> >>  	case $c in
-> >>  	a)	OPTS=$OPTS"-a ";;
-> >> @@ -20,6 +20,7 @@ do
-> >>  	f)	DBOPTS=$DBOPTS" -f";;
-> >>  	l)	DBOPTS=$DBOPTS" -l "$OPTARG" ";;
-> >>  	F)	DBOPTS=$DBOPTS" -F";;
-> >> +	v)	OPTS=$OPTS"-v "$OPTARG" ";;
-> >>  	V)	xfs_db -p xfs_metadump -V
-> >>  		status=$?
-> >>  		exit $status
-> >> diff --git a/man/man8/xfs_metadump.8 b/man/man8/xfs_metadump.8
-> >> index c0e79d77..1732012c 100644
-> >> --- a/man/man8/xfs_metadump.8
-> >> +++ b/man/man8/xfs_metadump.8
-> >> @@ -11,6 +11,9 @@ xfs_metadump \- copy XFS filesystem metadata to a file
-> >>  ] [
-> >>  .B \-l
-> >>  .I logdev
-> >> +] [
-> >> +.B \-v
-> >> +.I version
-> >>  ]
-> >>  .I source
-> >>  .I target
-> >> @@ -74,6 +77,12 @@ metadata such as filenames is not considered sensitive.  If obfuscation
-> >>  is required on a metadump with a dirty log, please inform the recipient
-> >>  of the metadump image about this situation.
-> >>  .PP
-> >> +The contents of an external log device can be dumped only when using the v2
-> >> +format.
-> >> +Metadump in v2 format can be generated by passing the "-v 2" option.
-> >> +Metadump in v2 format is generated by default if the filesystem has an
-> >> +external log and the metadump version to use is not explicitly mentioned.
-> >> +.PP
-> >>  .B xfs_metadump
-> >>  should not be used for any purposes other than for debugging and reporting
-> >>  filesystem problems. The most common usage scenario for this tool is when
-> >> @@ -134,6 +143,11 @@ this value.  The default size is 2097151 blocks.
-> >>  .B \-o
-> >>  Disables obfuscation of file names and extended attributes.
-> >>  .TP
-> >> +.B \-v
-> >> +The format of the metadump file to be produced.
-> >> +Valid values are 1 and 2.
-> >> +The default metadump format is 1.
-> >> +.TP
-> >>  .B \-w
-> >>  Prints warnings of inconsistent metadata encountered to stderr. Bad metadata
-> >>  is still copied.
-> >> -- 
-> >> 2.39.1
-> >> 
+> ---
+>  mdrestore/xfs_mdrestore.c | 234 ++++++++++++++++++++++++++++++++++++--
+>  1 file changed, 222 insertions(+), 12 deletions(-)
 > 
+> diff --git a/mdrestore/xfs_mdrestore.c b/mdrestore/xfs_mdrestore.c
+> index 0fdbfce7..85a61c8b 100644
+> --- a/mdrestore/xfs_mdrestore.c
+> +++ b/mdrestore/xfs_mdrestore.c
+> @@ -9,15 +9,17 @@
+>  #include <libfrog/platform.h>
+>  
+>  union mdrestore_headers {
+> -	__be32			magic;
+> -	struct xfs_metablock	v1;
+> +	__be32				magic;
+> +	struct xfs_metablock		v1;
+> +	struct xfs_metadump_header	v2;
+>  };
+>  
+>  struct mdrestore_ops {
+>  	void (*read_header)(union mdrestore_headers *header, FILE *md_fp);
+>  	void (*show_info)(union mdrestore_headers *header, const char *md_file);
+>  	void (*restore)(union mdrestore_headers *header, FILE *md_fp,
+> -			int ddev_fd, bool is_target_file);
+> +			int ddev_fd, bool is_data_target_file, int logdev_fd,
+> +			bool is_log_target_file);
+>  };
+>  
+>  static struct mdrestore {
+> @@ -25,6 +27,7 @@ static struct mdrestore {
+>  	bool			show_progress;
+>  	bool			show_info;
+>  	bool			progress_since_warning;
+> +	bool			external_log;
+>  } mdrestore;
+>  
+>  static void
+> @@ -144,7 +147,9 @@ restore_v1(
+>  	union mdrestore_headers *h,
+>  	FILE			*md_fp,
+>  	int			ddev_fd,
+> -	bool			is_target_file)
+> +	bool			is_data_target_file,
+> +	int			logdev_fd,
+> +	bool			is_log_target_file)
+>  {
+>  	struct xfs_metablock	*metablock;	/* header + index + blocks */
+>  	__be64			*block_index;
+> @@ -197,7 +202,7 @@ restore_v1(
+>  
+>  	((struct xfs_dsb*)block_buffer)->sb_inprogress = 1;
+>  
+> -	verify_device_size(ddev_fd, is_target_file, sb.sb_dblocks,
+> +	verify_device_size(ddev_fd, is_data_target_file, sb.sb_dblocks,
+>  			sb.sb_blocksize);
+>  
+>  	bytes_read = 0;
+> @@ -258,6 +263,193 @@ static struct mdrestore_ops mdrestore_ops_v1 = {
+>  	.restore	= restore_v1,
+>  };
+>  
+> +static void
+> +read_header_v2(
+> +	union mdrestore_headers		*h,
+> +	FILE				*md_fp)
+> +{
+> +	bool				want_external_log;
+> +
+> +	if (fread((uint8_t *)&(h->v2) + sizeof(h->v2.xmh_magic),
+> +			sizeof(h->v2) - sizeof(h->v2.xmh_magic), 1, md_fp) != 1)
+> +		fatal("error reading from metadump file\n");
+> +
+> +	want_external_log = !!(be32_to_cpu(h->v2.xmh_incompat_flags) &
+> +			XFS_MD2_INCOMPAT_EXTERNALLOG);
+> +
+> +	if (want_external_log && !mdrestore.external_log)
+> +		fatal("External Log device is required\n");
+> +}
+> +
+> +static void
+> +show_info_v2(
+> +	union mdrestore_headers		*h,
+> +	const char			*md_file)
+> +{
+> +	uint32_t			incompat_flags;
+> +
+> +	incompat_flags = be32_to_cpu(h->v2.xmh_incompat_flags);
+> +
+> +	printf("%s: %sobfuscated, %s log, external log contents are %sdumped, %s metadata blocks,\n",
+> +		md_file,
+> +		incompat_flags & XFS_MD2_INCOMPAT_OBFUSCATED ? "":"not ",
+> +		incompat_flags & XFS_MD2_INCOMPAT_DIRTYLOG ? "dirty":"clean",
+> +		incompat_flags & XFS_MD2_INCOMPAT_EXTERNALLOG ? "":"not ",
+> +		incompat_flags & XFS_MD2_INCOMPAT_FULLBLOCKS ? "full":"zeroed");
+> +}
+> +
+> +#define MDR_IO_BUF_SIZE (8 * 1024 * 1024)
+> +
+> +static void
+> +restore_meta_extent(
+> +	FILE		*md_fp,
+> +	int		dev_fd,
+> +	char		*device,
+> +	void		*buf,
+> +	uint64_t	offset,
+> +	int		len)
+> +{
+> +	int		io_size;
+> +
+> +	io_size = min(len, MDR_IO_BUF_SIZE);
+> +
+> +	do {
+> +		if (fread(buf, io_size, 1, md_fp) != 1)
+> +			fatal("error reading from metadump file\n");
+> +		if (pwrite(dev_fd, buf, io_size, offset) < 0)
+> +			fatal("error writing to %s device at offset %llu: %s\n",
+> +				device, offset, strerror(errno));
+> +		len -= io_size;
+> +		offset += io_size;
+> +
+> +		io_size = min(len, io_size);
+> +	} while (len);
+> +}
+> +
+> +static void
+> +restore_v2(
+> +	union mdrestore_headers	*h,
+> +	FILE			*md_fp,
+> +	int			ddev_fd,
+> +	bool			is_data_target_file,
+> +	int			logdev_fd,
+> +	bool			is_log_target_file)
+> +{
+> +	struct xfs_sb		sb;
+> +	struct xfs_meta_extent	xme;
+> +	char			*block_buffer;
+> +	int64_t			bytes_read;
+> +	uint64_t		offset;
+> +	int			len;
+> +
+> +	block_buffer = malloc(MDR_IO_BUF_SIZE);
+> +	if (block_buffer == NULL)
+> +		fatal("Unable to allocate input buffer memory\n");
+> +
+> +	if (fread(&xme, sizeof(xme), 1, md_fp) != 1)
+> +		fatal("error reading from metadump file\n");
+> +
+> +	if (xme.xme_addr != 0 || xme.xme_len == 1 ||
+> +	    (be64_to_cpu(xme.xme_addr) & XME_ADDR_DEVICE_MASK) !=
+> +			XME_ADDR_DATA_DEVICE)
+> +		fatal("Invalid superblock disk address/length\n");
+> +
+> +	len = BBTOB(be32_to_cpu(xme.xme_len));
+> +
+> +	if (fread(block_buffer, len, 1, md_fp) != 1)
+> +		fatal("error reading from metadump file\n");
+> +
+> +	libxfs_sb_from_disk(&sb, (struct xfs_dsb *)block_buffer);
+> +
+> +	if (sb.sb_magicnum != XFS_SB_MAGIC)
+> +		fatal("bad magic number for primary superblock\n");
+> +
+> +	((struct xfs_dsb *)block_buffer)->sb_inprogress = 1;
+> +
+> +	verify_device_size(ddev_fd, is_data_target_file, sb.sb_dblocks,
+> +			sb.sb_blocksize);
+> +
+> +	if (sb.sb_logstart == 0) {
+> +		ASSERT(mdrestore.external_log == true);
+> +		verify_device_size(logdev_fd, is_log_target_file, sb.sb_logblocks,
+> +				sb.sb_blocksize);
+> +	}
+> +
+> +	if (pwrite(ddev_fd, block_buffer, len, 0) < 0)
+> +		fatal("error writing primary superblock: %s\n",
+> +			strerror(errno));
+> +
+> +	bytes_read = len;
+> +
+> +	do {
+> +		char *device;
+> +		int fd;
+> +
+> +		if (fread(&xme, sizeof(xme), 1, md_fp) != 1) {
+> +			if (feof(md_fp))
+> +				break;
+> +			fatal("error reading from metadump file\n");
+> +		}
+> +
+> +		offset = BBTOB(be64_to_cpu(xme.xme_addr) & XME_ADDR_DADDR_MASK);
+> +		switch (be64_to_cpu(xme.xme_addr) & XME_ADDR_DEVICE_MASK) {
+> +		case XME_ADDR_DATA_DEVICE:
+> +			device = "data";
+> +			fd = ddev_fd;
+> +			break;
+> +		case XME_ADDR_LOG_DEVICE:
+> +			device = "log";
+> +			fd = logdev_fd;
+> +			break;
+> +		default:
+> +			fatal("Invalid device found in metadump\n");
+> +			break;
+> +		}
+> +
+> +		len = BBTOB(be32_to_cpu(xme.xme_len));
+> +
+> +		restore_meta_extent(md_fp, fd, device, block_buffer, offset,
+> +				len);
+> +
+> +		bytes_read += len;
+> +
+> +		if (mdrestore.show_progress) {
+> +			static int64_t mb_read;
+> +			int64_t mb_now = bytes_read >> 20;
+> +
+> +			if (mb_now != mb_read) {
+> +				print_progress("%lld MB read", mb_now);
+> +				mb_read = mb_now;
+> +			}
+> +		}
+> +	} while (1);
+> +
+> +	if (mdrestore.progress_since_warning)
+> +		putchar('\n');
+> +
+> +	memset(block_buffer, 0, sb.sb_sectsize);
+> +	sb.sb_inprogress = 0;
+> +	libxfs_sb_to_disk((struct xfs_dsb *)block_buffer, &sb);
+> +	if (xfs_sb_version_hascrc(&sb)) {
+> +		xfs_update_cksum(block_buffer, sb.sb_sectsize,
+> +				offsetof(struct xfs_sb, sb_crc));
+> +	}
+> +
+> +	if (pwrite(ddev_fd, block_buffer, sb.sb_sectsize, 0) < 0)
+> +		fatal("error writing primary superblock: %s\n",
+> +			strerror(errno));
+> +
+> +	free(block_buffer);
+> +
+> +	return;
+> +}
+> +
+> +static struct mdrestore_ops mdrestore_ops_v2 = {
+> +	.read_header	= read_header_v2,
+> +	.show_info	= show_info_v2,
+> +	.restore	= restore_v2,
+> +};
+> +
+>  static void
+>  usage(void)
+>  {
+> @@ -270,15 +462,19 @@ main(
+>  	int			argc,
+>  	char			**argv)
+>  {
+> -	union mdrestore_headers headers;
+> +	union mdrestore_headers	headers;
+>  	FILE			*src_f;
+> -	int			dst_fd;
+> +	char			*logdev = NULL;
+> +	int			data_dev_fd;
+> +	int			log_dev_fd;
+>  	int			c;
+> -	bool			is_target_file;
+> +	bool			is_data_dev_file;
+> +	bool			is_log_dev_file;
+>  
+>  	mdrestore.show_progress = false;
+>  	mdrestore.show_info = false;
+>  	mdrestore.progress_since_warning = false;
+> +	mdrestore.external_log = false;
+>  
+>  	progname = basename(argv[0]);
+>  
+> @@ -328,6 +524,11 @@ main(
+>  	case XFS_MD_MAGIC_V1:
+>  		mdrestore.mdrops = &mdrestore_ops_v1;
+>  		break;
+> +
+> +	case XFS_MD_MAGIC_V2:
+> +		mdrestore.mdrops = &mdrestore_ops_v2;
+> +		break;
+> +
+>  	default:
+>  		fatal("specified file is not a metadata dump\n");
+>  		break;
+> @@ -344,12 +545,21 @@ main(
+>  
+>  	optind++;
+>  
+> -	/* check and open target */
+> -	dst_fd = open_device(argv[optind], &is_target_file);
+> +	/* check and open data device */
+> +	data_dev_fd = open_device(argv[optind], &is_data_dev_file);
+> +
+> +	log_dev_fd = -1;
+> +	if (mdrestore.external_log)
+> +		/* check and open log device */
+> +		log_dev_fd = open_device(logdev, &is_log_dev_file);
+> +
+> +	mdrestore.mdrops->restore(&headers, src_f, data_dev_fd,
+> +			is_data_dev_file, log_dev_fd, is_log_dev_file);
+>  
+> -	mdrestore.mdrops->restore(&headers, src_f, dst_fd, is_target_file);
+> +	close(data_dev_fd);
+> +	if (mdrestore.external_log)
+> +		close(log_dev_fd);
+>  
+> -	close(dst_fd);
+>  	if (src_f != stdin)
+>  		fclose(src_f);
+>  
 > -- 
-> chandan
+> 2.39.1
+> 
