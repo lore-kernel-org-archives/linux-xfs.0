@@ -2,120 +2,164 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id BACA1C04E69
-	for <linux-xfs@archiver.kernel.org>; Wed,  2 Aug 2023 16:33:25 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 563B9C001E0
+	for <linux-xfs@archiver.kernel.org>; Wed,  2 Aug 2023 16:37:01 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232435AbjHBQdY (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 2 Aug 2023 12:33:24 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38104 "EHLO
+        id S233841AbjHBQg7 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 2 Aug 2023 12:36:59 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39792 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232394AbjHBQdW (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 2 Aug 2023 12:33:22 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 93BF12101;
-        Wed,  2 Aug 2023 09:33:21 -0700 (PDT)
+        with ESMTP id S233757AbjHBQgq (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 2 Aug 2023 12:36:46 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 37F26210D;
+        Wed,  2 Aug 2023 09:36:42 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
          key-exchange X25519 server-signature RSA-PSS (2048 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 329C761A24;
-        Wed,  2 Aug 2023 16:33:21 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 8773FC433C7;
-        Wed,  2 Aug 2023 16:33:20 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 7B29D61A3D;
+        Wed,  2 Aug 2023 16:36:41 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id D626EC433C7;
+        Wed,  2 Aug 2023 16:36:40 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1690994000;
-        bh=U5pXU2c37LOZ29omq1nYjOha2+PkFnv5cZZI28wk6xI=;
+        s=k20201202; t=1690994200;
+        bh=sV9qWtZYA/XAbSOW2+izp/wRSw7lq0E1fHmoZAgWLrE=;
         h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=VbhXgLKwgsrsAQ9lKMSn42pa4Ylk6IKQnzpDE7eTo6XWu8QXA8ASoiiWUp5vePHa4
-         rqKYL37JGUX9BYkCAq6Qa8f7fGtfFLzcMqz+eu6fI8dgYR1AAcKZIwk67k6sSHEK5a
-         Njz82jH8Ug+YQ2Q1h4sDTGfhQcEv4iGu0G/SVUWQa2Pt/MuSQ64lm77P0GczVG9m1Q
-         DKM8m4hoED2p4UVsLydshoE+nAb2SHTV3Q+EDW0nZpH+Ge1CA1glHR2oD3mFU2ZrFO
-         Onx7JmBXl+uQCY9uDiWr6KaBHqsgZYWYOWiRpEIGfLcVhIwvH7UOPO/1IFtwzm3fow
-         kufdy4/TMWpFw==
-Date:   Wed, 2 Aug 2023 09:33:20 -0700
+        b=Iz7CQ3kle6mGVHxGfohYo3bXWW3hzdY38Zv0nm8z0QkgnWHDuXIuAX7WmFmXyF0+S
+         SDCiLVTo3c34xmdYqltrLjab93qW/zng8X1CTyxNJKp9SM61iJcPOrkg4H3FtfdmA+
+         XdkEbH3Aj9FMVyOGLgBsyEvAriW7CSBlqyvb702iCr6XiekcM5uKA9UOWBYG27rkOY
+         RTwj6rmRNysL1yXOtGEtQVdWwpNlTMZTV+ZJdfSQupwIHCi89kGkKw3bBbfnuN/2X/
+         zuHB3zYlQf0lOa4U4spaxllHfwMfnCMsRYm0I4GIsAmOc+wxB3x/YspXNTBi6eIOCK
+         xzyNPBBX9fUmg==
+Date:   Wed, 2 Aug 2023 09:36:40 -0700
 From:   "Darrick J. Wong" <djwong@kernel.org>
-To:     Christoph Hellwig <hch@lst.de>
-Cc:     Al Viro <viro@zeniv.linux.org.uk>,
-        Christian Brauner <brauner@kernel.org>,
-        Jan Kara <jack@suse.cz>, Chris Mason <clm@fb.com>,
-        Josef Bacik <josef@toxicpanda.com>,
-        David Sterba <dsterba@suse.com>, Theodore Ts'o <tytso@mit.edu>,
-        Andreas Dilger <adilger.kernel@dilger.ca>,
-        Jaegeuk Kim <jaegeuk@kernel.org>, Chao Yu <chao@kernel.org>,
-        Ryusuke Konishi <konishi.ryusuke@gmail.com>,
-        Jens Axboe <axboe@kernel.dk>, linux-btrfs@vger.kernel.org,
-        linux-ext4@vger.kernel.org, linux-f2fs-devel@lists.sourceforge.net,
-        linux-nilfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
-        linux-xfs@vger.kernel.org, linux-block@vger.kernel.org
-Subject: Re: [PATCH 12/12] xfs use fs_holder_ops for the log and RT devices
-Message-ID: <20230802163320.GX11352@frogsfrogsfrogs>
-References: <20230802154131.2221419-1-hch@lst.de>
- <20230802154131.2221419-13-hch@lst.de>
+To:     Zorro Lang <zlang@kernel.org>
+Cc:     fstests@vger.kernel.org, linux-xfs@vger.kernel.org,
+        linux-nfs@vger.kernel.org
+Subject: Re: [PATCH v2] nfs: test files written size as expected
+Message-ID: <20230802163640.GY11352@frogsfrogsfrogs>
+References: <20230802054646.2197854-1-zlang@kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20230802154131.2221419-13-hch@lst.de>
+In-Reply-To: <20230802054646.2197854-1-zlang@kernel.org>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Wed, Aug 02, 2023 at 05:41:31PM +0200, Christoph Hellwig wrote:
-> Use the generic fs_holder_ops to shut down the file system when the
-> log or RT device goes away instead of duplicating the logic.
+On Wed, Aug 02, 2023 at 01:46:46PM +0800, Zorro Lang wrote:
+> Test nfs and its underlying fs, make sure file size as expected
+> after writting a file, and the speculative allocation space can
+> be shrunken.
 > 
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
+> Signed-off-by: Zorro Lang <zlang@kernel.org>
+> ---
+> 
+> Last year I sent a patch to fstests@, but it sometimes fails on the upstream
+> kernel that year:
+> 
+>   https://lore.kernel.org/fstests/Y3vTbHqT64gsQ573@magnolia/
+> 
+> And we didn't get a proper reason for that, so that patch was blocked. Now
+> I found this case test passed on current upstream linux [1] (after loop
+> running it a whole night). So I think it's time to rebase and re-send this
+> patch to get review.
+> 
+> Thanks,
+> Zorro
+> 
+> [1]
+> FSTYP         -- nfs
+> PLATFORM      -- Linux/x86_64 xxxx 6.5.0-rc4 #1 SMP PREEMPT_DYNAMIC Tue Aug  1 15:32:55 EDT 2023
+> MKFS_OPTIONS  -- xxxx.redhat.com:/mnt/xfstests/scratch/nfs-server
+> MOUNT_OPTIONS -- -o vers=4.2 -o context=system_u:object_r:root_t:s0 xxxx.redhat.com:/mnt/xfstests/scratch/nfs-server /mnt/xfstests/scratch/nfs-client
+> 
+> nfs/002 4s ...  4s
+> Ran: nfs/002
+> Passed all 1 tests
+> 
+>  tests/nfs/002     | 46 ++++++++++++++++++++++++++++++++++++++++++++++
+>  tests/nfs/002.out |  2 ++
+>  2 files changed, 48 insertions(+)
+>  create mode 100755 tests/nfs/002
+>  create mode 100644 tests/nfs/002.out
+> 
+> diff --git a/tests/nfs/002 b/tests/nfs/002
+> new file mode 100755
+> index 00000000..b4b6554c
+> --- /dev/null
+> +++ b/tests/nfs/002
+> @@ -0,0 +1,46 @@
+> +#! /bin/bash
+> +# SPDX-License-Identifier: GPL-2.0
+> +# Copyright (c) 2023 Red Hat, Inc.  All Rights Reserved.
+> +#
+> +# FS QA Test 002
+> +#
+> +# Make sure nfs gets expected file size after writting a big sized file. It's
+> +# not only testing nfs, test its underlying fs too. For example a known old bug
+> +# on xfs (underlying fs) caused nfs get larger file size (e.g. 16M) after
+> +# writting 10M data to a file. It's fixed by a series of patches around
+> +# 579b62faa5fb16 ("xfs: add background scanning to clear eofblocks inodes")
 
-Nice cleanup,
-Reviewed-by: Darrick J. Wong <djwong@kernel.org>
+Er... has this been banging around in the trunk for 11 years? ;)
+
+> +#
+> +. ./common/preamble
+> +_begin_fstest auto quick rw
+> +
+> +# real QA test starts here
+> +_supported_fs nfs
+> +# Need a series of patches related with this patch
+> +_fixed_by_kernel_commit 579b62faa5fb16 \
+> +	"xfs: add background scanning to clear eofblocks inodes"
+> +_require_test
+> +
+> +localfile=$TEST_DIR/testfile.$seq
+> +rm -rf $localfile
+> +
+> +$XFS_IO_PROG -f -t -c "pwrite 0 10m" -c "fsync" $localfile >>$seqres.full 2>&1
+> +block_size=`stat -c '%B' $localfile`
+> +iblocks_expected=$((10 * 1024 * 1024 / $block_size))
+> +# Try several times for the speculative allocated file size can be shrunken
+> +res=1
+> +for ((i=0; i<10; i++));do
+> +	iblocks_real=`stat -c '%b' $localfile`
+> +	if [ "$iblocks_expected" = "$iblocks_real" ];then
+
+What happens if real < expected?  Should there be some sort of bail out
+for unexpected things like that?
+
+> +		res=0
+> +		break
+> +	fi
+> +	sleep 10
+> +done
+
+Though I guess the runtime is capped at ~100s so maybe it doesn't
+matter practically.
+
+(What happens if xfs blockgc only runs every 5 minutes?)
 
 --D
 
-> ---
->  fs/xfs/xfs_super.c | 17 +++--------------
->  1 file changed, 3 insertions(+), 14 deletions(-)
-> 
-> diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
-> index d5042419ed9997..338eba71ff8667 100644
-> --- a/fs/xfs/xfs_super.c
-> +++ b/fs/xfs/xfs_super.c
-> @@ -377,17 +377,6 @@ xfs_setup_dax_always(
->  	return 0;
->  }
->  
-> -static void
-> -xfs_bdev_mark_dead(
-> -	struct block_device	*bdev)
-> -{
-> -	xfs_force_shutdown(bdev->bd_holder, SHUTDOWN_DEVICE_REMOVED);
-> -}
-> -
-> -static const struct blk_holder_ops xfs_holder_ops = {
-> -	.mark_dead		= xfs_bdev_mark_dead,
-> -};
-> -
->  STATIC int
->  xfs_blkdev_get(
->  	xfs_mount_t		*mp,
-> @@ -396,8 +385,8 @@ xfs_blkdev_get(
->  {
->  	int			error = 0;
->  
-> -	*bdevp = blkdev_get_by_path(name, BLK_OPEN_READ | BLK_OPEN_WRITE, mp,
-> -				    &xfs_holder_ops);
-> +	*bdevp = blkdev_get_by_path(name, BLK_OPEN_READ | BLK_OPEN_WRITE,
-> +				    mp->m_super, &fs_holder_ops);
->  	if (IS_ERR(*bdevp)) {
->  		error = PTR_ERR(*bdevp);
->  		xfs_warn(mp, "Invalid device [%s], error=%d", name, error);
-> @@ -412,7 +401,7 @@ xfs_blkdev_put(
->  	struct block_device	*bdev)
->  {
->  	if (bdev)
-> -		blkdev_put(bdev, mp);
-> +		blkdev_put(bdev, mp->m_super);
->  }
->  
->  STATIC void
+> +if [ $res -ne 0 ];then
+> +	echo "Write $iblocks_expected blocks, but get $iblocks_real blocks"
+> +fi
+> +
+> +echo "Silence is golden"
+> +# success, all done
+> +status=0
+> +exit
+> diff --git a/tests/nfs/002.out b/tests/nfs/002.out
+> new file mode 100644
+> index 00000000..61705c7c
+> --- /dev/null
+> +++ b/tests/nfs/002.out
+> @@ -0,0 +1,2 @@
+> +QA output created by 002
+> +Silence is golden
 > -- 
-> 2.39.2
+> 2.40.1
 > 
