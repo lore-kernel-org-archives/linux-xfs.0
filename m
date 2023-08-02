@@ -2,374 +2,217 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4F4F3C001DF
-	for <linux-xfs@archiver.kernel.org>; Wed,  2 Aug 2023 17:16:48 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C3B83C001DF
+	for <linux-xfs@archiver.kernel.org>; Wed,  2 Aug 2023 17:25:12 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231269AbjHBRQr (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 2 Aug 2023 13:16:47 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41908 "EHLO
+        id S229681AbjHBRZL (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 2 Aug 2023 13:25:11 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47236 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229607AbjHBRQq (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 2 Aug 2023 13:16:46 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A0AEFE0
-        for <linux-xfs@vger.kernel.org>; Wed,  2 Aug 2023 10:16:44 -0700 (PDT)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature RSA-PSS (2048 bits))
-        (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 19FAF61A4D
-        for <linux-xfs@vger.kernel.org>; Wed,  2 Aug 2023 17:16:44 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 6B405C433C8;
-        Wed,  2 Aug 2023 17:16:43 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1690996603;
-        bh=XzpRfHVTka5UnzrT/E5eDjvfmbuK4S2UDSyldiMTyPY=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=FhQOAade55f9sR3V6kYgzX1dJ7UAyYBHBSjG1mMjlnbjnXcs6TLw0MpCdqTapVLxQ
-         PgalrtVbINrDxvvrCFTZ3GZ6j6kUSaXktNPaC4mICg7nePo4Ba7vFl9oYBrw8eFEDQ
-         L9YaRRvBShetCDYaTJv1iD3qpNaQBdYi4WMVy2oWmHCltBw2xtxncwUnzn8jnOLWq5
-         hU5KcbCI75wM8xlqLxc2WVeAyiFNS0te/7OwHz+yGR+ujGpcCff/UfOU9+l39NoB9S
-         cS9MnSO7ZoJEE24OYZ4YEt7+b0ALH9P6BaySxgC4Hc3cppr5j3sJEAD0R/5nVYkvY/
-         oZz/QYIfzb3Tg==
-Date:   Wed, 2 Aug 2023 10:16:42 -0700
-From:   "Darrick J. Wong" <djwong@kernel.org>
-To:     Chandan Babu R <chandan.babu@oracle.com>
-Cc:     linux-xfs@vger.kernel.org, cem@kernel.org
-Subject: Re: [PATCH V3 22/23] mdrestore: Define mdrestore ops for v2 format
-Message-ID: <20230802171642.GB11352@frogsfrogsfrogs>
-References: <20230724043527.238600-1-chandan.babu@oracle.com>
- <20230724043527.238600-23-chandan.babu@oracle.com>
+        with ESMTP id S229504AbjHBRZK (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 2 Aug 2023 13:25:10 -0400
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5C1CCED
+        for <linux-xfs@vger.kernel.org>; Wed,  2 Aug 2023 10:24:26 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1690997065;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=GqIL5vfJQ5HuyjMtCodudbCn8wGREEk8Q00W319od38=;
+        b=AGA1A4jZzWmXrxu7qoJYuK+RrWM063/ij4+r+MsbkNRhj1Z8KoSsm5DiRPzc7m1IrwKc/X
+        NxDJwILmYu9i/eEhP2XAPomZfhGabg5QX2y+Qjad2kwcV9T0pTSvteRmmY2SrOc0V7pLMe
+        8t2ws+6JK3Zv/EwNQC1rdD5I/4Dc4fw=
+Received: from mail-pl1-f200.google.com (mail-pl1-f200.google.com
+ [209.85.214.200]) by relay.mimecast.com with ESMTP with STARTTLS
+ (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
+ us-mta-492-GzbK9IeuOCiyAdfP9DoI8A-1; Wed, 02 Aug 2023 13:24:24 -0400
+X-MC-Unique: GzbK9IeuOCiyAdfP9DoI8A-1
+Received: by mail-pl1-f200.google.com with SMTP id d9443c01a7336-1bbebf511abso843265ad.1
+        for <linux-xfs@vger.kernel.org>; Wed, 02 Aug 2023 10:24:24 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20221208; t=1690997063; x=1691601863;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=GqIL5vfJQ5HuyjMtCodudbCn8wGREEk8Q00W319od38=;
+        b=biXyUN+eSOL+S6DAoPIjYZxkR4SHKdCKgWywdfQvJutdUPggucS37+wIy33Q2cOlLR
+         BabhSgcSqaCAi2HfLJ7uzc05HNeDz1B7jUjuefSv+Ww/u5dytfruIEich23xTTSlC2V8
+         QVjr9KIXA+OQ7ZZU4YLEyur+3PBN7wd5/jBkv+RKFKTghbDbABNYExZoek3byj9k2D9b
+         f1sWgET5wfrztWSEZQIsByjIWSJdiuElW5T7hi12t6kEvs5nMmRCW/35ENT8Y8tW7/qy
+         0j8qC5BAqyYK0c/Sxp0N+Jm6NqdP5u79U6QZNd9NdU4nhpeJghRkaYJfKc3g0J03kJuG
+         AFJQ==
+X-Gm-Message-State: ABy/qLanbM9G3ILOrYntbgyg4tyBmceKKWs1gF9lzd0ln/LOFCoUpLqn
+        PvBtvub+r8NQKRolXGT222G7i2kXVws4PPL4FQwhA5cxxe9ygR1pL/9PiL4iipevHA6bm85iIcW
+        9ARDkTrF44+u0EgLXmVMEg2nCl8CLo3jMkQ==
+X-Received: by 2002:a17:902:efc7:b0:1bb:8064:91d2 with SMTP id ja7-20020a170902efc700b001bb806491d2mr13516658plb.69.1690997062963;
+        Wed, 02 Aug 2023 10:24:22 -0700 (PDT)
+X-Google-Smtp-Source: APBJJlFnuNZfEZ+mt1qnn2R6lYOuVHV5IgzgSCjTuNrvMybe1GYQ3Y4JjrRz9DGwjyu0ktakeGHMAQ==
+X-Received: by 2002:a17:902:efc7:b0:1bb:8064:91d2 with SMTP id ja7-20020a170902efc700b001bb806491d2mr13516642plb.69.1690997062616;
+        Wed, 02 Aug 2023 10:24:22 -0700 (PDT)
+Received: from zlang-mailbox ([43.228.180.230])
+        by smtp.gmail.com with ESMTPSA id b11-20020a170903228b00b001b8943b37a5sm12685351plh.24.2023.08.02.10.24.20
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Wed, 02 Aug 2023 10:24:22 -0700 (PDT)
+Date:   Thu, 3 Aug 2023 01:24:18 +0800
+From:   Zorro Lang <zlang@redhat.com>
+To:     "Darrick J. Wong" <djwong@kernel.org>
+Cc:     Zorro Lang <zlang@kernel.org>, fstests@vger.kernel.org,
+        linux-xfs@vger.kernel.org, linux-nfs@vger.kernel.org
+Subject: Re: [PATCH v2] nfs: test files written size as expected
+Message-ID: <20230802172418.2ulrealxsj2cvnxo@zlang-mailbox>
+References: <20230802054646.2197854-1-zlang@kernel.org>
+ <20230802163640.GY11352@frogsfrogsfrogs>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20230724043527.238600-23-chandan.babu@oracle.com>
+In-Reply-To: <20230802163640.GY11352@frogsfrogsfrogs>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Mon, Jul 24, 2023 at 10:05:26AM +0530, Chandan Babu R wrote:
-> This commit adds functionality to restore metadump stored in v2 format.
+On Wed, Aug 02, 2023 at 09:36:40AM -0700, Darrick J. Wong wrote:
+> On Wed, Aug 02, 2023 at 01:46:46PM +0800, Zorro Lang wrote:
+> > Test nfs and its underlying fs, make sure file size as expected
+> > after writting a file, and the speculative allocation space can
+> > be shrunken.
+> > 
+> > Signed-off-by: Zorro Lang <zlang@kernel.org>
+> > ---
+> > 
+> > Last year I sent a patch to fstests@, but it sometimes fails on the upstream
+> > kernel that year:
+> > 
+> >   https://lore.kernel.org/fstests/Y3vTbHqT64gsQ573@magnolia/
+> > 
+> > And we didn't get a proper reason for that, so that patch was blocked. Now
+> > I found this case test passed on current upstream linux [1] (after loop
+> > running it a whole night). So I think it's time to rebase and re-send this
+> > patch to get review.
+> > 
+> > Thanks,
+> > Zorro
+> > 
+> > [1]
+> > FSTYP         -- nfs
+> > PLATFORM      -- Linux/x86_64 xxxx 6.5.0-rc4 #1 SMP PREEMPT_DYNAMIC Tue Aug  1 15:32:55 EDT 2023
+> > MKFS_OPTIONS  -- xxxx.redhat.com:/mnt/xfstests/scratch/nfs-server
+> > MOUNT_OPTIONS -- -o vers=4.2 -o context=system_u:object_r:root_t:s0 xxxx.redhat.com:/mnt/xfstests/scratch/nfs-server /mnt/xfstests/scratch/nfs-client
+> > 
+> > nfs/002 4s ...  4s
+> > Ran: nfs/002
+> > Passed all 1 tests
+> > 
+> >  tests/nfs/002     | 46 ++++++++++++++++++++++++++++++++++++++++++++++
+> >  tests/nfs/002.out |  2 ++
+> >  2 files changed, 48 insertions(+)
+> >  create mode 100755 tests/nfs/002
+> >  create mode 100644 tests/nfs/002.out
+> > 
+> > diff --git a/tests/nfs/002 b/tests/nfs/002
+> > new file mode 100755
+> > index 00000000..b4b6554c
+> > --- /dev/null
+> > +++ b/tests/nfs/002
+> > @@ -0,0 +1,46 @@
+> > +#! /bin/bash
+> > +# SPDX-License-Identifier: GPL-2.0
+> > +# Copyright (c) 2023 Red Hat, Inc.  All Rights Reserved.
+> > +#
+> > +# FS QA Test 002
+> > +#
+> > +# Make sure nfs gets expected file size after writting a big sized file. It's
+> > +# not only testing nfs, test its underlying fs too. For example a known old bug
+> > +# on xfs (underlying fs) caused nfs get larger file size (e.g. 16M) after
+> > +# writting 10M data to a file. It's fixed by a series of patches around
+> > +# 579b62faa5fb16 ("xfs: add background scanning to clear eofblocks inodes")
 > 
-> Signed-off-by: Chandan Babu R <chandan.babu@oracle.com>
+> Er... has this been banging around in the trunk for 11 years? ;)
 
-Looks good now, thanks for taking care of this!
-Reviewed-by: Darrick J. Wong <djwong@kernel.org>
+Yeah, that's an old enough test case :-D I tried to tidy our internal test cases,
+felt this case can be in fstests.
 
---D
-
-> ---
->  mdrestore/xfs_mdrestore.c | 234 ++++++++++++++++++++++++++++++++++++--
->  1 file changed, 222 insertions(+), 12 deletions(-)
 > 
-> diff --git a/mdrestore/xfs_mdrestore.c b/mdrestore/xfs_mdrestore.c
-> index 0fdbfce7..85a61c8b 100644
-> --- a/mdrestore/xfs_mdrestore.c
-> +++ b/mdrestore/xfs_mdrestore.c
-> @@ -9,15 +9,17 @@
->  #include <libfrog/platform.h>
->  
->  union mdrestore_headers {
-> -	__be32			magic;
-> -	struct xfs_metablock	v1;
-> +	__be32				magic;
-> +	struct xfs_metablock		v1;
-> +	struct xfs_metadump_header	v2;
->  };
->  
->  struct mdrestore_ops {
->  	void (*read_header)(union mdrestore_headers *header, FILE *md_fp);
->  	void (*show_info)(union mdrestore_headers *header, const char *md_file);
->  	void (*restore)(union mdrestore_headers *header, FILE *md_fp,
-> -			int ddev_fd, bool is_target_file);
-> +			int ddev_fd, bool is_data_target_file, int logdev_fd,
-> +			bool is_log_target_file);
->  };
->  
->  static struct mdrestore {
-> @@ -25,6 +27,7 @@ static struct mdrestore {
->  	bool			show_progress;
->  	bool			show_info;
->  	bool			progress_since_warning;
-> +	bool			external_log;
->  } mdrestore;
->  
->  static void
-> @@ -144,7 +147,9 @@ restore_v1(
->  	union mdrestore_headers *h,
->  	FILE			*md_fp,
->  	int			ddev_fd,
-> -	bool			is_target_file)
-> +	bool			is_data_target_file,
-> +	int			logdev_fd,
-> +	bool			is_log_target_file)
->  {
->  	struct xfs_metablock	*metablock;	/* header + index + blocks */
->  	__be64			*block_index;
-> @@ -197,7 +202,7 @@ restore_v1(
->  
->  	((struct xfs_dsb*)block_buffer)->sb_inprogress = 1;
->  
-> -	verify_device_size(ddev_fd, is_target_file, sb.sb_dblocks,
-> +	verify_device_size(ddev_fd, is_data_target_file, sb.sb_dblocks,
->  			sb.sb_blocksize);
->  
->  	bytes_read = 0;
-> @@ -258,6 +263,193 @@ static struct mdrestore_ops mdrestore_ops_v1 = {
->  	.restore	= restore_v1,
->  };
->  
-> +static void
-> +read_header_v2(
-> +	union mdrestore_headers		*h,
-> +	FILE				*md_fp)
-> +{
-> +	bool				want_external_log;
-> +
-> +	if (fread((uint8_t *)&(h->v2) + sizeof(h->v2.xmh_magic),
-> +			sizeof(h->v2) - sizeof(h->v2.xmh_magic), 1, md_fp) != 1)
-> +		fatal("error reading from metadump file\n");
-> +
-> +	want_external_log = !!(be32_to_cpu(h->v2.xmh_incompat_flags) &
-> +			XFS_MD2_INCOMPAT_EXTERNALLOG);
-> +
-> +	if (want_external_log && !mdrestore.external_log)
-> +		fatal("External Log device is required\n");
-> +}
-> +
-> +static void
-> +show_info_v2(
-> +	union mdrestore_headers		*h,
-> +	const char			*md_file)
-> +{
-> +	uint32_t			incompat_flags;
-> +
-> +	incompat_flags = be32_to_cpu(h->v2.xmh_incompat_flags);
-> +
-> +	printf("%s: %sobfuscated, %s log, external log contents are %sdumped, %s metadata blocks,\n",
-> +		md_file,
-> +		incompat_flags & XFS_MD2_INCOMPAT_OBFUSCATED ? "":"not ",
-> +		incompat_flags & XFS_MD2_INCOMPAT_DIRTYLOG ? "dirty":"clean",
-> +		incompat_flags & XFS_MD2_INCOMPAT_EXTERNALLOG ? "":"not ",
-> +		incompat_flags & XFS_MD2_INCOMPAT_FULLBLOCKS ? "full":"zeroed");
-> +}
-> +
-> +#define MDR_IO_BUF_SIZE (8 * 1024 * 1024)
-> +
-> +static void
-> +restore_meta_extent(
-> +	FILE		*md_fp,
-> +	int		dev_fd,
-> +	char		*device,
-> +	void		*buf,
-> +	uint64_t	offset,
-> +	int		len)
-> +{
-> +	int		io_size;
-> +
-> +	io_size = min(len, MDR_IO_BUF_SIZE);
-> +
-> +	do {
-> +		if (fread(buf, io_size, 1, md_fp) != 1)
-> +			fatal("error reading from metadump file\n");
-> +		if (pwrite(dev_fd, buf, io_size, offset) < 0)
-> +			fatal("error writing to %s device at offset %llu: %s\n",
-> +				device, offset, strerror(errno));
-> +		len -= io_size;
-> +		offset += io_size;
-> +
-> +		io_size = min(len, io_size);
-> +	} while (len);
-> +}
-> +
-> +static void
-> +restore_v2(
-> +	union mdrestore_headers	*h,
-> +	FILE			*md_fp,
-> +	int			ddev_fd,
-> +	bool			is_data_target_file,
-> +	int			logdev_fd,
-> +	bool			is_log_target_file)
-> +{
-> +	struct xfs_sb		sb;
-> +	struct xfs_meta_extent	xme;
-> +	char			*block_buffer;
-> +	int64_t			bytes_read;
-> +	uint64_t		offset;
-> +	int			len;
-> +
-> +	block_buffer = malloc(MDR_IO_BUF_SIZE);
-> +	if (block_buffer == NULL)
-> +		fatal("Unable to allocate input buffer memory\n");
-> +
-> +	if (fread(&xme, sizeof(xme), 1, md_fp) != 1)
-> +		fatal("error reading from metadump file\n");
-> +
-> +	if (xme.xme_addr != 0 || xme.xme_len == 1 ||
-> +	    (be64_to_cpu(xme.xme_addr) & XME_ADDR_DEVICE_MASK) !=
-> +			XME_ADDR_DATA_DEVICE)
-> +		fatal("Invalid superblock disk address/length\n");
-> +
-> +	len = BBTOB(be32_to_cpu(xme.xme_len));
-> +
-> +	if (fread(block_buffer, len, 1, md_fp) != 1)
-> +		fatal("error reading from metadump file\n");
-> +
-> +	libxfs_sb_from_disk(&sb, (struct xfs_dsb *)block_buffer);
-> +
-> +	if (sb.sb_magicnum != XFS_SB_MAGIC)
-> +		fatal("bad magic number for primary superblock\n");
-> +
-> +	((struct xfs_dsb *)block_buffer)->sb_inprogress = 1;
-> +
-> +	verify_device_size(ddev_fd, is_data_target_file, sb.sb_dblocks,
-> +			sb.sb_blocksize);
-> +
-> +	if (sb.sb_logstart == 0) {
-> +		ASSERT(mdrestore.external_log == true);
-> +		verify_device_size(logdev_fd, is_log_target_file, sb.sb_logblocks,
-> +				sb.sb_blocksize);
-> +	}
-> +
-> +	if (pwrite(ddev_fd, block_buffer, len, 0) < 0)
-> +		fatal("error writing primary superblock: %s\n",
-> +			strerror(errno));
-> +
-> +	bytes_read = len;
-> +
-> +	do {
-> +		char *device;
-> +		int fd;
-> +
-> +		if (fread(&xme, sizeof(xme), 1, md_fp) != 1) {
-> +			if (feof(md_fp))
-> +				break;
-> +			fatal("error reading from metadump file\n");
-> +		}
-> +
-> +		offset = BBTOB(be64_to_cpu(xme.xme_addr) & XME_ADDR_DADDR_MASK);
-> +		switch (be64_to_cpu(xme.xme_addr) & XME_ADDR_DEVICE_MASK) {
-> +		case XME_ADDR_DATA_DEVICE:
-> +			device = "data";
-> +			fd = ddev_fd;
-> +			break;
-> +		case XME_ADDR_LOG_DEVICE:
-> +			device = "log";
-> +			fd = logdev_fd;
-> +			break;
-> +		default:
-> +			fatal("Invalid device found in metadump\n");
-> +			break;
-> +		}
-> +
-> +		len = BBTOB(be32_to_cpu(xme.xme_len));
-> +
-> +		restore_meta_extent(md_fp, fd, device, block_buffer, offset,
-> +				len);
-> +
-> +		bytes_read += len;
-> +
-> +		if (mdrestore.show_progress) {
-> +			static int64_t mb_read;
-> +			int64_t mb_now = bytes_read >> 20;
-> +
-> +			if (mb_now != mb_read) {
-> +				print_progress("%lld MB read", mb_now);
-> +				mb_read = mb_now;
-> +			}
-> +		}
-> +	} while (1);
-> +
-> +	if (mdrestore.progress_since_warning)
-> +		putchar('\n');
-> +
-> +	memset(block_buffer, 0, sb.sb_sectsize);
-> +	sb.sb_inprogress = 0;
-> +	libxfs_sb_to_disk((struct xfs_dsb *)block_buffer, &sb);
-> +	if (xfs_sb_version_hascrc(&sb)) {
-> +		xfs_update_cksum(block_buffer, sb.sb_sectsize,
-> +				offsetof(struct xfs_sb, sb_crc));
-> +	}
-> +
-> +	if (pwrite(ddev_fd, block_buffer, sb.sb_sectsize, 0) < 0)
-> +		fatal("error writing primary superblock: %s\n",
-> +			strerror(errno));
-> +
-> +	free(block_buffer);
-> +
-> +	return;
-> +}
-> +
-> +static struct mdrestore_ops mdrestore_ops_v2 = {
-> +	.read_header	= read_header_v2,
-> +	.show_info	= show_info_v2,
-> +	.restore	= restore_v2,
-> +};
-> +
->  static void
->  usage(void)
->  {
-> @@ -270,15 +462,19 @@ main(
->  	int			argc,
->  	char			**argv)
->  {
-> -	union mdrestore_headers headers;
-> +	union mdrestore_headers	headers;
->  	FILE			*src_f;
-> -	int			dst_fd;
-> +	char			*logdev = NULL;
-> +	int			data_dev_fd;
-> +	int			log_dev_fd;
->  	int			c;
-> -	bool			is_target_file;
-> +	bool			is_data_dev_file;
-> +	bool			is_log_dev_file;
->  
->  	mdrestore.show_progress = false;
->  	mdrestore.show_info = false;
->  	mdrestore.progress_since_warning = false;
-> +	mdrestore.external_log = false;
->  
->  	progname = basename(argv[0]);
->  
-> @@ -328,6 +524,11 @@ main(
->  	case XFS_MD_MAGIC_V1:
->  		mdrestore.mdrops = &mdrestore_ops_v1;
->  		break;
-> +
-> +	case XFS_MD_MAGIC_V2:
-> +		mdrestore.mdrops = &mdrestore_ops_v2;
-> +		break;
-> +
->  	default:
->  		fatal("specified file is not a metadata dump\n");
->  		break;
-> @@ -344,12 +545,21 @@ main(
->  
->  	optind++;
->  
-> -	/* check and open target */
-> -	dst_fd = open_device(argv[optind], &is_target_file);
-> +	/* check and open data device */
-> +	data_dev_fd = open_device(argv[optind], &is_data_dev_file);
-> +
-> +	log_dev_fd = -1;
-> +	if (mdrestore.external_log)
-> +		/* check and open log device */
-> +		log_dev_fd = open_device(logdev, &is_log_dev_file);
-> +
-> +	mdrestore.mdrops->restore(&headers, src_f, data_dev_fd,
-> +			is_data_dev_file, log_dev_fd, is_log_dev_file);
->  
-> -	mdrestore.mdrops->restore(&headers, src_f, dst_fd, is_target_file);
-> +	close(data_dev_fd);
-> +	if (mdrestore.external_log)
-> +		close(log_dev_fd);
->  
-> -	close(dst_fd);
->  	if (src_f != stdin)
->  		fclose(src_f);
->  
-> -- 
-> 2.39.1
+> > +#
+> > +. ./common/preamble
+> > +_begin_fstest auto quick rw
+> > +
+> > +# real QA test starts here
+> > +_supported_fs nfs
+> > +# Need a series of patches related with this patch
+> > +_fixed_by_kernel_commit 579b62faa5fb16 \
+> > +	"xfs: add background scanning to clear eofblocks inodes"
+> > +_require_test
+> > +
+> > +localfile=$TEST_DIR/testfile.$seq
+> > +rm -rf $localfile
+> > +
+> > +$XFS_IO_PROG -f -t -c "pwrite 0 10m" -c "fsync" $localfile >>$seqres.full 2>&1
+> > +block_size=`stat -c '%B' $localfile`
+> > +iblocks_expected=$((10 * 1024 * 1024 / $block_size))
+> > +# Try several times for the speculative allocated file size can be shrunken
+> > +res=1
+> > +for ((i=0; i<10; i++));do
+> > +	iblocks_real=`stat -c '%b' $localfile`
+> > +	if [ "$iblocks_expected" = "$iblocks_real" ];then
 > 
+> What happens if real < expected?  Should there be some sort of bail out
+> for unexpected things like that?
+
+Hmm... I never thought that. I saw the real >= expected, is there any
+chance to get real < expected?
+
+> 
+> > +		res=0
+> > +		break
+> > +	fi
+> > +	sleep 10
+> > +done
+> 
+> Though I guess the runtime is capped at ~100s so maybe it doesn't
+> matter practically.
+
+Mostly the test done in several seconds in my testing:
+
+FSTYP         -- nfs
+PLATFORM      -- Linux/x86_64 hp-dl360g9-06 6.5.0-rc4 #1 SMP PREEMPT_DYNAMIC Tue Aug  1 15:32:55 EDT 2023
+MKFS_OPTIONS  -- hp-dl360g9-06.rhts.eng.pek2.redhat.com:/mnt/xfstests/scratch/nfs-server
+MOUNT_OPTIONS -- -o vers=4.2 -o context=system_u:object_r:root_t:s0 hp-dl360g9-06.rhts.eng.pek2.redhat.com:/mnt/xfstests/scratch/nfs-server /mnt/xfstests/scratch/nfs-client
+
+nfs/002 5s ...  4s
+Ran: nfs/002
+Passed all 1 tests
+
+> 
+> (What happens if xfs blockgc only runs every 5 minutes?)
+
+How can can make that happen? If the 100s isn't enough, is there an upper
+limit, or how to make an upper limit?
+
+Thanks,
+Zorro
+
+> 
+> --D
+> 
+> > +if [ $res -ne 0 ];then
+> > +	echo "Write $iblocks_expected blocks, but get $iblocks_real blocks"
+> > +fi
+> > +
+> > +echo "Silence is golden"
+> > +# success, all done
+> > +status=0
+> > +exit
+> > diff --git a/tests/nfs/002.out b/tests/nfs/002.out
+> > new file mode 100644
+> > index 00000000..61705c7c
+> > --- /dev/null
+> > +++ b/tests/nfs/002.out
+> > @@ -0,0 +1,2 @@
+> > +QA output created by 002
+> > +Silence is golden
+> > -- 
+> > 2.40.1
+> > 
+> 
+
