@@ -2,37 +2,37 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A889FC001DF
-	for <linux-xfs@archiver.kernel.org>; Wed,  2 Aug 2023 07:21:51 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 023CEC04A94
+	for <linux-xfs@archiver.kernel.org>; Wed,  2 Aug 2023 07:23:03 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232807AbjHBHVu (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 2 Aug 2023 03:21:50 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60336 "EHLO
+        id S232299AbjHBHXC (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 2 Aug 2023 03:23:02 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33542 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232812AbjHBHVp (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 2 Aug 2023 03:21:45 -0400
+        with ESMTP id S232918AbjHBHWs (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 2 Aug 2023 03:22:48 -0400
 Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8DD6130FA;
-        Wed,  2 Aug 2023 00:21:34 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id ABC211BCC;
+        Wed,  2 Aug 2023 00:22:45 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
          key-exchange X25519 server-signature RSA-PSS (2048 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 5631761840;
-        Wed,  2 Aug 2023 07:21:33 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id A38CCC433C8;
-        Wed,  2 Aug 2023 07:21:29 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 3F56261826;
+        Wed,  2 Aug 2023 07:22:45 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 98AF3C433C8;
+        Wed,  2 Aug 2023 07:22:41 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1690960892;
-        bh=Nuc/mkQcFbT+qq6WbVCMS0uOPBaToluNS15lNjlmtbo=;
+        s=k20201202; t=1690960964;
+        bh=+HtAI5H/Tw7Tii5t667xHJhC8OSgK9bBrERPcfSYVVI=;
         h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=fX2LDoLkGRTnhIml6tUkMP4MKxondefkuQce3CRrVmCjXjBpHPvfwVJaFXw4O3RKw
-         tEGzcuiLmjhICH28WXwB82J1AIuBWcYUM0g9NYbViWbMw2hIEPguMGiGn5yumbczjg
-         pfl9DosQicI2RZFaBwvVuBt8BTRqR20b6fNbd8CCIzd8Jnhvm7TXzWbWPhxMTwlxeR
-         VV1+5DB7fkhn73pBaXovdpQruDf/WmodPI2WqgEOal+VdDUZA+qAsuE3xx0254MFJN
-         djiuc41Cg72bn/yNxQbF/R5Fb/+3lqCf68GRJKF5bFkyAqRToLnhqWcB/KvhGooXNm
-         KevpzFzbEvLFw==
-Date:   Wed, 2 Aug 2023 09:21:26 +0200
+        b=YH+JzhNhs9sfDeNTzcs+lz2izUPNPiAeAJR5/+EFKF31dJ4SDoXaqqzIM1ZCGQcxX
+         bGrIOIxvTfYuQs0MBde8gp/6aKjRXW2Lpau48F//zjr6XlUB6I6DX8H1jch5Cp0nsA
+         Q0o8jf5cO/nSCqS0qu84ZcdKuXcPqXqml3tQerqXgxt3Fq/OI3ckCnWsrxTBPx7slR
+         lL0c6qXXgZcM3QI/emUMWq7jy0UEM20w4p+fRZnVajrAAGDSCWbo+ep0ixrinsaQ3u
+         VhhhH/1dD1+ml5jGkGJVzxie0WgtrGq3GoTH7c0uPa2QKLZGPviFqbaupJdefzrerG
+         tvn/CzjDKyF/w==
+Date:   Wed, 2 Aug 2023 09:22:39 +0200
 From:   Christian Brauner <brauner@kernel.org>
 To:     Christoph Hellwig <hch@lst.de>
 Cc:     Jens Axboe <axboe@kernel.dk>,
@@ -45,21 +45,22 @@ Cc:     Jens Axboe <axboe@kernel.dk>,
         linux-kernel@vger.kernel.org, Luis Chamberlain <mcgrof@kernel.org>,
         Hannes Reinecke <hare@suse.de>,
         Johannes Thumshirn <johannes.thumshirn@wdc.com>
-Subject: Re: [PATCH 1/6] fs: remove emergency_thaw_bdev
-Message-ID: <20230802-rekultivieren-ansatz-fcda568f591a@brauner>
+Subject: Re: [PATCH 2/6] fs: rename and move block_page_mkwrite_return
+Message-ID: <20230802-sirenen-arkaden-e76a392f1842@brauner>
 References: <20230801172201.1923299-1-hch@lst.de>
- <20230801172201.1923299-2-hch@lst.de>
+ <20230801172201.1923299-3-hch@lst.de>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=utf-8
 Content-Disposition: inline
-In-Reply-To: <20230801172201.1923299-2-hch@lst.de>
+In-Reply-To: <20230801172201.1923299-3-hch@lst.de>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Tue, Aug 01, 2023 at 07:21:56PM +0200, Christoph Hellwig wrote:
-> Fold emergency_thaw_bdev into it's only caller, to prepare for buffer.c
-> to be built only when buffer_head support is enabled.
+On Tue, Aug 01, 2023 at 07:21:57PM +0200, Christoph Hellwig wrote:
+> block_page_mkwrite_return is neither block nor mkwrite specific, and
+> should not be under CONFIG_BLOCK.  Move it to mm.h and rename it to
+> vmf_fs_error.
 > 
 > Signed-off-by: Christoph Hellwig <hch@lst.de>
 > Reviewed-by: Luis Chamberlain <mcgrof@kernel.org>
