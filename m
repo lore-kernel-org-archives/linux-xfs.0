@@ -2,84 +2,95 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DCD15C00528
-	for <linux-xfs@archiver.kernel.org>; Wed,  2 Aug 2023 08:52:29 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id BBFC0C001DE
+	for <linux-xfs@archiver.kernel.org>; Wed,  2 Aug 2023 09:41:57 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231382AbjHBIw2 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 2 Aug 2023 04:52:28 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53034 "EHLO
+        id S233192AbjHBJl4 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 2 Aug 2023 05:41:56 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47584 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229589AbjHBIw1 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 2 Aug 2023 04:52:27 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E78E2D9
-        for <linux-xfs@vger.kernel.org>; Wed,  2 Aug 2023 01:52:26 -0700 (PDT)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature RSA-PSS (2048 bits))
-        (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 82CBA61882
-        for <linux-xfs@vger.kernel.org>; Wed,  2 Aug 2023 08:52:26 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 2A2E1C433C8;
-        Wed,  2 Aug 2023 08:52:24 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1690966345;
-        bh=eyQeIQit9GmWN+rJm7+vx3EwPDbE6X4PvZbNSJKjyYM=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=hPSdM4Z/j8RA0zl5c3kTr09WJqvRZbapqDtwDmn4sIZWZPHqtWyOf96dWVJ2xuFTC
-         TbVLdcDDvCPoWntdX87B1y7H3UZp13DU7pXafgbj84OtG3fMh73qpPpPVGt5kVrIo3
-         6siD1zsdyuzgy6lqDfxFXG2H9Vnxlr5G1l2Di1x30p4vP7A+cCqfEnLIL2tof9UK+v
-         CISDERjlDQhUY6plplOeTokqLN3YIJrCH9VkRfr2iXXMFNk3BgFcu2mbHM0XglWGmy
-         82xpX0/htjEyccsPMLAWz25IuXDy8W1DqQ3jglbiveQO0MTQXyX/H2DQOeJs1ABGKB
-         bUmIVdZzqtaZg==
-Date:   Wed, 2 Aug 2023 10:52:22 +0200
-From:   Carlos Maiolino <cem@kernel.org>
-To:     Bill O'Donnell <bodonnel@redhat.com>
-Cc:     linux-xfs@vger.kernel.org
-Subject: Re: [PATCH] mkfs.xfs.8: correction on mkfs.xfs manpage since reflink
- and dax are compatible
-Message-ID: <20230802085222.53cul5vymxyxjznz@andromeda>
-References: <66z3bx95e2xL_ZIVsmJU4cLb5z2V8aW7EpQ6kArDfJ2ej7brNwRcbuXvcbLP2pFWdXyFSPBFTRWG-U62SMRU7A==@protonmail.internalid>
- <20230728222017.178599-1-bodonnel@redhat.com>
+        with ESMTP id S232270AbjHBJlw (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 2 Aug 2023 05:41:52 -0400
+Received: from mail-4022.proton.ch (mail-4022.proton.ch [185.70.40.22])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2D5372D6D
+        for <linux-xfs@vger.kernel.org>; Wed,  2 Aug 2023 02:41:40 -0700 (PDT)
+Date:   Wed, 02 Aug 2023 09:41:30 +0000
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=maiolino.me;
+        s=protonmail3; t=1690969298; x=1691228498;
+        bh=QKRmuTT6LkzLHDSX6WfE4lU6d+8z1JHgigKOgB15Tlw=;
+        h=Date:To:From:Subject:Message-ID:Feedback-ID:From:To:Cc:Date:
+         Subject:Reply-To:Feedback-ID:Message-ID:BIMI-Selector;
+        b=rhqRFNEqy+oPU1mFvs45eCqCcObT2JVxy7mNHSWMfEkrtdj6DxG/XnhCDyH+wKvIw
+         6lVoKN7mM+L9MmU4csQ4IqLYHqQ5FbpDOJ6l0MfF2LVnlXZn1d6dzKnVRzhyKT38pM
+         OKrXKYaszbaMbKokIFY0eVrf0zfcSNG463wX/lFm62oy6InovMkWg4wg6goj4MeCqB
+         Ko3SCrHM/67FQGznVpJqjrX7wHz6TbqsKb2QmJw41zwuNTSqq+fHdmTgcLRu1ZdJir
+         gXgfx8ATLby5NbnAx6KfN6fCJ3IyQySU7Do+EPw6cfi/UnfdB9tS5Jv3alImYMtKnn
+         mVd/s5TNWzbeA==
+To:     linux-xfs@vger.kernel.org
+From:   Carlos Maiolino <carlos@maiolino.me>
+Subject: [ANNOUNCE] xfsprogs: for-next updated to a86308c98
+Message-ID: <20230802094128.ptcuzaycy3vzzovk@andromeda>
+Feedback-ID: 28765827:user:proton
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20230728222017.178599-1-bodonnel@redhat.com>
+Content-Type: multipart/signed; protocol="application/pgp-signature"; micalg=pgp-sha256; boundary="------65b20972c93fb43f69e661b21a3d51cca7570a9e34a213b8fefa9cf4523f1f6d"; charset=utf-8
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Fri, Jul 28, 2023 at 05:20:17PM -0500, Bill O'Donnell wrote:
-> Merged early in 2023: Commit 480017957d638 xfs: remove restrictions for fsdax
-> and reflink. There needs to be a corresponding change to the mkfs.xfs manpage
-> to remove the incompatiblity statement.
-> 
-> Signed-off-by: Bill O'Donnell <bodonnel@redhat.com>
+This is an OpenPGP/MIME signed message (RFC 4880 and 3156)
+--------65b20972c93fb43f69e661b21a3d51cca7570a9e34a213b8fefa9cf4523f1f6d
+Content-Type: text/plain; charset=UTF-8
+Date: Wed, 2 Aug 2023 11:41:28 +0200
+From: Carlos Maiolino <carlos@maiolino.me>
+To: linux-xfs@vger.kernel.org
+Subject: [ANNOUNCE] xfsprogs: for-next updated to a86308c98
+Message-ID: <20230802094128.ptcuzaycy3vzzovk@andromeda>
+MIME-Version: 1.0
+Content-Disposition: inline
 
-Reviewed-by: Carlos Maiolino <cmaiolino@redhat.com>
+Hello.
 
-> ---
->  man/man8/mkfs.xfs.8.in | 7 -------
->  1 file changed, 7 deletions(-)
-> 
-> diff --git a/man/man8/mkfs.xfs.8.in b/man/man8/mkfs.xfs.8.in
-> index ce6f1e2d..08bb92f6 100644
-> --- a/man/man8/mkfs.xfs.8.in
-> +++ b/man/man8/mkfs.xfs.8.in
-> @@ -323,13 +323,6 @@ option set. When the option
->  .B \-m crc=0
->  is used, the reference count btree feature is not supported and reflink is
->  disabled.
-> -.IP
-> -Note: the filesystem DAX mount option (
-> -.B \-o dax
-> -) is incompatible with
-> -reflink-enabled XFS filesystems.  To use filesystem DAX with XFS, specify the
-> -.B \-m reflink=0
-> -option to mkfs.xfs to disable the reflink feature.
->  .RE
->  .PP
->  .PD 0
-> --
-> 2.41.0
-> 
+The xfsprogs for-next branch, located at:
+
+https://git.kernel.org/pub/scm/fs/xfs/xfsprogs-dev.git/refs/?h=for-next
+
+Has just been updated.
+
+Patches often get missed, so if your outstanding patches are properly reviewed on
+the list and not included in this update, please let me know.
+
+The new head of the for-next branch is commit:
+
+a86308c98d33e921eb133f47faedf1d9e62f2e77
+
+2 new commits:
+
+Bill O'Donnell (1):
+      [780e93c51] mkfs.xfs.8: correction on mkfs.xfs manpage since reflink and dax are compatible
+
+Wu Guanghao (1):
+      [a86308c98] xfs_repair: fix the problem of repair failure caused by dirty flag being abnormally set on buffer
+
+Code Diffstat:
+
+ man/man8/mkfs.xfs.8.in | 7 -------
+ repair/scan.c          | 2 +-
+ 2 files changed, 1 insertion(+), 8 deletions(-)
+
+--------65b20972c93fb43f69e661b21a3d51cca7570a9e34a213b8fefa9cf4523f1f6d
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: OpenPGP digital signature
+Content-Disposition: attachment; filename="signature.asc"
+
+-----BEGIN PGP SIGNATURE-----
+Version: ProtonMail
+
+wnUEARYIACcFAmTKJMoJkOk12U/828uvFiEEj32Dn/1+aNUZzl9s6TXZT/zb
+y68AAHsVAQDLjAE4kHhB0TmFR/JF25GYhhFWid2GGZLDXT9+IRxKgAEApHtL
+5Vco0dsXWV2HL3cr3yaKSWCunAcBQyd3R/hCugU=
+=ziR3
+-----END PGP SIGNATURE-----
+
+
+--------65b20972c93fb43f69e661b21a3d51cca7570a9e34a213b8fefa9cf4523f1f6d--
+
