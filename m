@@ -2,164 +2,161 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 563B9C001E0
-	for <linux-xfs@archiver.kernel.org>; Wed,  2 Aug 2023 16:37:01 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 56572C04A6A
+	for <linux-xfs@archiver.kernel.org>; Wed,  2 Aug 2023 17:05:41 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233841AbjHBQg7 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 2 Aug 2023 12:36:59 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39792 "EHLO
+        id S229892AbjHBRFk (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 2 Aug 2023 13:05:40 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60816 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233757AbjHBQgq (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 2 Aug 2023 12:36:46 -0400
+        with ESMTP id S230355AbjHBRFj (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 2 Aug 2023 13:05:39 -0400
 Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 37F26210D;
-        Wed,  2 Aug 2023 09:36:42 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0C5CE1B9
+        for <linux-xfs@vger.kernel.org>; Wed,  2 Aug 2023 10:05:38 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
          key-exchange X25519 server-signature RSA-PSS (2048 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 7B29D61A3D;
-        Wed,  2 Aug 2023 16:36:41 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id D626EC433C7;
-        Wed,  2 Aug 2023 16:36:40 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 94F8161A4D
+        for <linux-xfs@vger.kernel.org>; Wed,  2 Aug 2023 17:05:37 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id EC193C433C8;
+        Wed,  2 Aug 2023 17:05:36 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1690994200;
-        bh=sV9qWtZYA/XAbSOW2+izp/wRSw7lq0E1fHmoZAgWLrE=;
+        s=k20201202; t=1690995937;
+        bh=hlrK8x8sei3OVRLx5rXVnQrCY8jn4lE3MFm+w14m7C4=;
         h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=Iz7CQ3kle6mGVHxGfohYo3bXWW3hzdY38Zv0nm8z0QkgnWHDuXIuAX7WmFmXyF0+S
-         SDCiLVTo3c34xmdYqltrLjab93qW/zng8X1CTyxNJKp9SM61iJcPOrkg4H3FtfdmA+
-         XdkEbH3Aj9FMVyOGLgBsyEvAriW7CSBlqyvb702iCr6XiekcM5uKA9UOWBYG27rkOY
-         RTwj6rmRNysL1yXOtGEtQVdWwpNlTMZTV+ZJdfSQupwIHCi89kGkKw3bBbfnuN/2X/
-         zuHB3zYlQf0lOa4U4spaxllHfwMfnCMsRYm0I4GIsAmOc+wxB3x/YspXNTBi6eIOCK
-         xzyNPBBX9fUmg==
-Date:   Wed, 2 Aug 2023 09:36:40 -0700
+        b=pIssmb9E/tgY1hQ/vys0RXcd3g/8zK6FwYofO7DlDnE0Q1Izl49xICC+yhAy4txy+
+         NKHXjizHS2sFIK0gbhe/FJT37eHWbO/XO1taVCpGQ687/dFmFGchTo13zeGyXbawmf
+         /m/q+E3vmAJg+UVVTtDbO1aep8jucS+W6IdScuGkklEm0JXxJf/o3dV4qN7nm7i1tu
+         fZtA28Q4LFKsNQzWC709rZbQvnT9YZsqhLpe7733v4oBnA/4ZWIsnxcQvA8qnUxsfT
+         Xnf/nYFou19Dx3nEsPDHPgb8f57llSrTLlAAmHDTr43ul06vdq7JdH73SGZqWy0YPQ
+         SgHQaPpKLhVwA==
+Date:   Wed, 2 Aug 2023 10:05:36 -0700
 From:   "Darrick J. Wong" <djwong@kernel.org>
-To:     Zorro Lang <zlang@kernel.org>
-Cc:     fstests@vger.kernel.org, linux-xfs@vger.kernel.org,
-        linux-nfs@vger.kernel.org
-Subject: Re: [PATCH v2] nfs: test files written size as expected
-Message-ID: <20230802163640.GY11352@frogsfrogsfrogs>
-References: <20230802054646.2197854-1-zlang@kernel.org>
+To:     Theodore Ts'o <tytso@mit.edu>
+Cc:     Chandan Babu R <chandan.babu@oracle.com>,
+        linux-xfs@vger.kernel.org, amir73il@gmail.com,
+        leah.rumancik@gmail.com
+Subject: Re: Interim XFS backports for 5.15 and 6.1
+Message-ID: <20230802170536.GZ11352@frogsfrogsfrogs>
+References: <20230802031039.GC358316@mit.edu>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20230802054646.2197854-1-zlang@kernel.org>
+In-Reply-To: <20230802031039.GC358316@mit.edu>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Wed, Aug 02, 2023 at 01:46:46PM +0800, Zorro Lang wrote:
-> Test nfs and its underlying fs, make sure file size as expected
-> after writting a file, and the speculative allocation space can
-> be shrunken.
+On Tue, Aug 01, 2023 at 11:10:39PM -0400, Theodore Ts'o wrote:
+> Hi,
 > 
-> Signed-off-by: Zorro Lang <zlang@kernel.org>
-> ---
+> As some of you may know, Leah has been out on medical leave for a
+> while.  I had hoped that she would be back in mid-July, but it looks
+> like it's going to be a bit longer.
 > 
-> Last year I sent a patch to fstests@, but it sometimes fails on the upstream
-> kernel that year:
+> As a result, I've taken it on myself to try to look at the more
+> obvious backlog of patches that need to be backported to 5.15.  I've
+> come up with this list (see below), and I've been giving this patch
+> series extensive testing to make sure none of these would cause
+> regressions.  Most of these fix bugs where the fact that a commit
+> needs to be backported is noted in an xfstests test, and indeed,
+> backporting the commit address the test failure.  Hence, xfs in 5.15
+> passes xfstests significantly cleaner as a result.
 > 
->   https://lore.kernel.org/fstests/Y3vTbHqT64gsQ573@magnolia/
+> I did note that there is one commit in the 6.1 LTS, "xfs: disable
+> reaping in fscounters scrub" (2d5f38a31980 in upstream) that was not
+> in the 5.15 LTS, but when I tried backporting this commit to 5.15, it
+> resulted in a number of xfstests regressions, so I've dropped this
+> commit from my proposed backports list for now.  I assume some one or
+> more additional patches would need to be backported to 5.15 LTS.  A
+> problem for later.
 > 
-> And we didn't get a proper reason for that, so that patch was blocked. Now
-> I found this case test passed on current upstream linux [1] (after loop
-> running it a whole night). So I think it's time to rebase and re-send this
-> patch to get review.
+> I'm continuing to run some additional tests, but so far, things look
+> solid.  So I'm sending this to the linux-xfs list now so (a) XFS
+> developers can take a look at the commits and the patches, and see if
+> they look sane, and (b) to ask what the process should be in terms
+> sending these commits to Greg in Leah's absence.  Leah has
+> significantly more xfs experience than I do, so I won't be offended if
+> more review is desired before giving these patches an LGTM.  In fact,
+> I'd kind of appreciate it.  :-)
+> 
+> Also, I can also e-mail these patches to linux-xfs, but I didn't know
+> if this would be desired before I potentially spammed the linux-xfs
+> list.
+
+Yes, sending a patchset tagged CANDIDATE to linux-xfs is accepted
+practice.  Usually the, er, release manager will give them the once
+over, ack them, and then you can send them to gregkh for stable.
+
+Example:
+https://lore.kernel.org/linux-xfs/20230714064509.1451122-1-amir73il@gmail.com/
+
+and acked followup:
+https://lore.kernel.org/linux-xfs/20230715063114.1485841-1-amir73il@gmail.com/
+
+> Anyway, here is the summary of the proposed backports to 5.15.  Please
+> take a look.
 > 
 > Thanks,
-> Zorro
 > 
-> [1]
-> FSTYP         -- nfs
-> PLATFORM      -- Linux/x86_64 xxxx 6.5.0-rc4 #1 SMP PREEMPT_DYNAMIC Tue Aug  1 15:32:55 EDT 2023
-> MKFS_OPTIONS  -- xxxx.redhat.com:/mnt/xfstests/scratch/nfs-server
-> MOUNT_OPTIONS -- -o vers=4.2 -o context=system_u:object_r:root_t:s0 xxxx.redhat.com:/mnt/xfstests/scratch/nfs-server /mnt/xfstests/scratch/nfs-client
+> 					- Ted
 > 
-> nfs/002 4s ...  4s
-> Ran: nfs/002
-> Passed all 1 tests
+> (Commit id's are in the xfs-5.15 branch in my xfs-lts-backports git
+> tree[1].  Commits that have the note "not yet in 6.1" branch has been
+> backported to the proposed xfs-6.1 branch, although please note that
+> the xfs-6.1 branch hasn't yet gotten as much testing as the xfs-5.15
+> branch.)
 > 
->  tests/nfs/002     | 46 ++++++++++++++++++++++++++++++++++++++++++++++
->  tests/nfs/002.out |  2 ++
->  2 files changed, 48 insertions(+)
->  create mode 100755 tests/nfs/002
->  create mode 100644 tests/nfs/002.out
+> [1] git://git.kernel.org/pub/scm/linux/kernel/git/tytso/xfs-lts-backports.git
 > 
-> diff --git a/tests/nfs/002 b/tests/nfs/002
-> new file mode 100755
-> index 00000000..b4b6554c
-> --- /dev/null
-> +++ b/tests/nfs/002
-> @@ -0,0 +1,46 @@
-> +#! /bin/bash
-> +# SPDX-License-Identifier: GPL-2.0
-> +# Copyright (c) 2023 Red Hat, Inc.  All Rights Reserved.
-> +#
-> +# FS QA Test 002
-> +#
-> +# Make sure nfs gets expected file size after writting a big sized file. It's
-> +# not only testing nfs, test its underlying fs too. For example a known old bug
-> +# on xfs (underlying fs) caused nfs get larger file size (e.g. 16M) after
-> +# writting 10M data to a file. It's fixed by a series of patches around
-> +# 579b62faa5fb16 ("xfs: add background scanning to clear eofblocks inodes")
+> 
+> 46080ca79d18 xfs: hoist refcount record merge predicates
+>     commit 9d720a5a658f5135861773f26e927449bef93d61 upstream.   (v6.2)
+>     note: not yet in 6.1 LTS
 
-Er... has this been banging around in the trunk for 11 years? ;)
-
-> +#
-> +. ./common/preamble
-> +_begin_fstest auto quick rw
-> +
-> +# real QA test starts here
-> +_supported_fs nfs
-> +# Need a series of patches related with this patch
-> +_fixed_by_kernel_commit 579b62faa5fb16 \
-> +	"xfs: add background scanning to clear eofblocks inodes"
-> +_require_test
-> +
-> +localfile=$TEST_DIR/testfile.$seq
-> +rm -rf $localfile
-> +
-> +$XFS_IO_PROG -f -t -c "pwrite 0 10m" -c "fsync" $localfile >>$seqres.full 2>&1
-> +block_size=`stat -c '%B' $localfile`
-> +iblocks_expected=$((10 * 1024 * 1024 / $block_size))
-> +# Try several times for the speculative allocated file size can be shrunken
-> +res=1
-> +for ((i=0; i<10; i++));do
-> +	iblocks_real=`stat -c '%b' $localfile`
-> +	if [ "$iblocks_expected" = "$iblocks_real" ];then
-
-What happens if real < expected?  Should there be some sort of bail out
-for unexpected things like that?
-
-> +		res=0
-> +		break
-> +	fi
-> +	sleep 10
-> +done
-
-Though I guess the runtime is capped at ~100s so maybe it doesn't
-matter practically.
-
-(What happens if xfs blockgc only runs every 5 minutes?)
+Greg will most probably NAK the whole 5.15 patchset on account of these
+patches that aren't in 6.1.  <redact angry djwong rant about unfunded
+mandates from the community leadership>
 
 --D
 
-> +if [ $res -ne 0 ];then
-> +	echo "Write $iblocks_expected blocks, but get $iblocks_real blocks"
-> +fi
-> +
-> +echo "Silence is golden"
-> +# success, all done
-> +status=0
-> +exit
-> diff --git a/tests/nfs/002.out b/tests/nfs/002.out
-> new file mode 100644
-> index 00000000..61705c7c
-> --- /dev/null
-> +++ b/tests/nfs/002.out
-> @@ -0,0 +1,2 @@
-> +QA output created by 002
-> +Silence is golden
-> -- 
-> 2.40.1
+>     pre-req for: xfs: estimate post-merge refcounts correctly
+>     
+> 45b231886605 xfs: estimate post-merge refcounts correctly
+>     commit b25d1984aa884fc91a73a5a407b9ac976d441e9b upstream.   (v6.2)
+>     note: not yet in 6.1 LTS
+>     fixes: xfs/179
+> 
+> d16ab63aad9b xfs: add missing cmap->br_state = XFS_EXT_NORM update
+>     commit 1a39ae415c1be1e46f5b3f97d438c7c4adc22b63 upstream.   (v5.18)
+>     pre-req for: xfs: Fix false ENOSPC when performing direct write on a delalloc extent in cow fork
+>     
+> b9de7b77ccd9 xfs: Fix false ENOSPC when performing direct write on a delalloc extent in cow fork
+>     commit d62113303d691bcd8d0675ae4ac63e7769afc56c upstream.   (v6.0)
+>     fixes: xfs/553
+>     
+> 60cd06e242be xfs: stabilize the dirent name transformation function used for ascii-ci dir hash computation
+>     commit a9248538facc3d9e769489e50a544509c2f9cebe upstream.   (v6.4)
+>     note: not yet in 6.1 LTS
+>     fixes: xfs/597
+>     
+> 679add840fa6 xfs: use the directory name hash function for dir scrubbing
+>     commit 9dceccc5822f2ecea12a89f24d7cad1f3e5eab7c upstream.   (v6.4)
+>     note: not yet in 6.1 LTS
+>     fixes: xfs/597
+>     
+> a07ec38ecc0e xfs: get root inode correctly at bulkstat
+>     commit 817644fa4525258992f17fecf4f1d6cdd2e1b731 upstream.   (v6.2)
+>     note: not yet in 6.1 LTS
+>     fixes: xfs/557
+>     
+> 85cd6053e920 xfs: bound maximum wait time for inodegc work
+>     commit 7cf2b0f9611b9971d663e1fc3206eeda3b902922 upstream.   (v5.19)
+>     requested backport to fix bug: https://lore.kernel.org/all/20230710215354.GA679018@onthe.net.au/T/#u
+> 
+> eb639a92fb50 xfs: introduce xfs_inodegc_push()
+>     commit 5e672cd69f0a534a445df4372141fd0d1d00901d upstream.   (v5.19)
+>     requested backport to fix bug: https://lore.kernel.org/all/20230710215354.GA679018@onthe.net.au/T/#u
 > 
