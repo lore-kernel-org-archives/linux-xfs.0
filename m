@@ -2,239 +2,140 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B5F50EB64DD
-	for <linux-xfs@archiver.kernel.org>; Wed,  2 Aug 2023 00:01:52 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 847F8EB64DD
+	for <linux-xfs@archiver.kernel.org>; Wed,  2 Aug 2023 03:11:02 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230308AbjHBABv (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 1 Aug 2023 20:01:51 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41412 "EHLO
+        id S231899AbjHBDLA (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 1 Aug 2023 23:11:00 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54236 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229535AbjHBABt (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 1 Aug 2023 20:01:49 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 38EA9170D
-        for <linux-xfs@vger.kernel.org>; Tue,  1 Aug 2023 17:01:48 -0700 (PDT)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature RSA-PSS (2048 bits))
-        (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id C9F496177E
-        for <linux-xfs@vger.kernel.org>; Wed,  2 Aug 2023 00:01:47 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 2EEA1C433C8;
-        Wed,  2 Aug 2023 00:01:47 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1690934507;
-        bh=oxUpTF3xrTZiumyUegpRbF8+GuLMr0VI/wefCsUFxIc=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=qnc+HxmA8jXEsZGZkQxiN7FSovYSQi7Zht9EHJOVwih5BqhhhRUfYzkDQCsWE48nu
-         8/Ri0VMC0Vc+3TE7ra6DJbGJ7pfw2Lz+BxPdQw7Z1pDIUXyB4IOVL0YGtNnAOZEr7J
-         huci7UIKrBaiYCoTMNorCj2+2PDleUD/deuIUo52Mly2X6t3mOxeE6+BECEPEXKONP
-         RmzRXWneYj2vARITx6ftdYpv3H3vcw1Nl1LEoBl8eTqy3pEEa6jRe3YMppu8eMhGNt
-         ugE75hYyvfX6xOKHBpk41+pFhj7NqcpANzv4SFGia2M3e9y79IfqEWS6qZm5NRkieE
-         mc04akHAw914g==
-Date:   Tue, 1 Aug 2023 17:01:46 -0700
-From:   "Darrick J. Wong" <djwong@kernel.org>
-To:     Chandan Babu R <chandan.babu@oracle.com>
-Cc:     linux-xfs@vger.kernel.org, cem@kernel.org
-Subject: Re: [PATCH V3 19/23] mdrestore: Replace metadump header pointer
- argument with a union pointer
-Message-ID: <20230802000146.GE11336@frogsfrogsfrogs>
-References: <20230724043527.238600-1-chandan.babu@oracle.com>
- <20230724043527.238600-20-chandan.babu@oracle.com>
+        with ESMTP id S231840AbjHBDK6 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 1 Aug 2023 23:10:58 -0400
+Received: from outgoing.mit.edu (outgoing-auth-1.mit.edu [18.9.28.11])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0D8A0E6F
+        for <linux-xfs@vger.kernel.org>; Tue,  1 Aug 2023 20:10:56 -0700 (PDT)
+Received: from cwcc.thunk.org (pool-173-48-112-100.bstnma.fios.verizon.net [173.48.112.100])
+        (authenticated bits=0)
+        (User authenticated as tytso@ATHENA.MIT.EDU)
+        by outgoing.mit.edu (8.14.7/8.12.4) with ESMTP id 3723AdgS021122
+        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+        Tue, 1 Aug 2023 23:10:40 -0400
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=mit.edu; s=outgoing;
+        t=1690945841; bh=oDuzipdKU583K29pRtqoQyZ9L7A8qrekewodEcpjYRk=;
+        h=Date:From:Subject:Message-ID:MIME-Version:Content-Type;
+        b=MhP+2LxlaovI9BGlSjeFkpcgCvBt9Jh79/UpOiV2xPHDByAOm2VH//4erBv+eP6Ws
+         CCBCUzMT7SKA2Q/o5frNxYb4eiwTdxwFmBuZrcJTfHQH4DCSFXJuzLtQxGbJt//qAS
+         xpFHD6ARorYVO6YIiKVel9Pw7P0a5d4mQbifSrHizAFVyAKAxz7NO5aUk9K0sv9GmO
+         H/CDJDKZuHI4TQ6YHLGpNYNV+W62paFNGx3WPfD1C65ny952nJPJ/Wo8k4uMVPzevT
+         86bIzbZpap1Ok4F30k9YSekQGcYGCeNxwisglU6sGwdaenVtZuVl364RZvzfw39Led
+         c5s8reHm2Mpaw==
+Received: by cwcc.thunk.org (Postfix, from userid 15806)
+        id 4F2B015C04F1; Tue,  1 Aug 2023 23:10:39 -0400 (EDT)
+Date:   Tue, 1 Aug 2023 23:10:39 -0400
+From:   "Theodore Ts'o" <tytso@mit.edu>
+To:     "Darrick J. Wong" <djwong@kernel.org>,
+        Chandan Babu R <chandan.babu@oracle.com>,
+        linux-xfs@vger.kernel.org, amir73il@gmail.com,
+        leah.rumancik@gmail.com
+Subject: Interim XFS backports for 5.15 and 6.1
+Message-ID: <20230802031039.GC358316@mit.edu>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20230724043527.238600-20-chandan.babu@oracle.com>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Mon, Jul 24, 2023 at 10:05:23AM +0530, Chandan Babu R wrote:
-> We will need two variants of read_header(), show_info() and restore() helper
-> functions to support two versions of metadump formats. To this end, A future
-> commit will introduce a vector of function pointers to work with the two
-> metadump formats. To have a common function signature for the function
-> pointers, this commit replaces the first argument of the previously listed
-> function pointers from "struct xfs_metablock *" with "union
-> mdrestore_headers *".
-> 
-> Signed-off-by: Chandan Babu R <chandan.babu@oracle.com>
+Hi,
 
-The overall code changes look fine to me, but I'm a little mystified why
-the *previous* patch introduces union mdrestore_headers and the
-mdrestore ops without using either of them.
+As some of you may know, Leah has been out on medical leave for a
+while.  I had hoped that she would be back in mid-July, but it looks
+like it's going to be a bit longer.
 
-IOWs, I think you could delete patch 18, move the union definition into
-this patch, and move the mdrestore ops definitions that used to be in
-patch 18 into patch 20.
+As a result, I've taken it on myself to try to look at the more
+obvious backlog of patches that need to be backported to 5.15.  I've
+come up with this list (see below), and I've been giving this patch
+series extensive testing to make sure none of these would cause
+regressions.  Most of these fix bugs where the fact that a commit
+needs to be backported is noted in an xfstests test, and indeed,
+backporting the commit address the test failure.  Hence, xfs in 5.15
+passes xfstests significantly cleaner as a result.
 
---D
+I did note that there is one commit in the 6.1 LTS, "xfs: disable
+reaping in fscounters scrub" (2d5f38a31980 in upstream) that was not
+in the 5.15 LTS, but when I tried backporting this commit to 5.15, it
+resulted in a number of xfstests regressions, so I've dropped this
+commit from my proposed backports list for now.  I assume some one or
+more additional patches would need to be backported to 5.15 LTS.  A
+problem for later.
 
-> ---
->  mdrestore/xfs_mdrestore.c | 61 +++++++++++++++++++--------------------
->  1 file changed, 29 insertions(+), 32 deletions(-)
-> 
-> diff --git a/mdrestore/xfs_mdrestore.c b/mdrestore/xfs_mdrestore.c
-> index 53c5f68e..4d1bbf28 100644
-> --- a/mdrestore/xfs_mdrestore.c
-> +++ b/mdrestore/xfs_mdrestore.c
-> @@ -91,27 +91,25 @@ open_device(
->  
->  static void
->  read_header(
-> -	struct xfs_metablock	*mb,
-> +	union mdrestore_headers	*h,
->  	FILE			*md_fp)
->  {
-> -	mb->mb_magic = cpu_to_be32(XFS_MD_MAGIC_V1);
-> -
-> -	if (fread((uint8_t *)mb + sizeof(mb->mb_magic),
-> -			sizeof(*mb) - sizeof(mb->mb_magic), 1, md_fp) != 1)
-> +	if (fread((uint8_t *)&(h->v1.mb_count),
-> +			sizeof(h->v1) - sizeof(h->magic), 1, md_fp) != 1)
->  		fatal("error reading from metadump file\n");
->  }
->  
->  static void
->  show_info(
-> -	struct xfs_metablock	*mb,
-> +	union mdrestore_headers	*h,
->  	const char		*md_file)
->  {
-> -	if (mb->mb_info & XFS_METADUMP_INFO_FLAGS) {
-> +	if (h->v1.mb_info & XFS_METADUMP_INFO_FLAGS) {
->  		printf("%s: %sobfuscated, %s log, %s metadata blocks\n",
->  			md_file,
-> -			mb->mb_info & XFS_METADUMP_OBFUSCATED ? "":"not ",
-> -			mb->mb_info & XFS_METADUMP_DIRTYLOG ? "dirty":"clean",
-> -			mb->mb_info & XFS_METADUMP_FULLBLOCKS ? "full":"zeroed");
-> +			h->v1.mb_info & XFS_METADUMP_OBFUSCATED ? "":"not ",
-> +			h->v1.mb_info & XFS_METADUMP_DIRTYLOG ? "dirty":"clean",
-> +			h->v1.mb_info & XFS_METADUMP_FULLBLOCKS ? "full":"zeroed");
->  	} else {
->  		printf("%s: no informational flags present\n", md_file);
->  	}
-> @@ -129,10 +127,10 @@ show_info(
->   */
->  static void
->  restore(
-> +	union mdrestore_headers *h,
->  	FILE			*md_fp,
->  	int			ddev_fd,
-> -	int			is_target_file,
-> -	const struct xfs_metablock	*mbp)
-> +	int			is_target_file)
->  {
->  	struct xfs_metablock	*metablock;	/* header + index + blocks */
->  	__be64			*block_index;
-> @@ -144,14 +142,14 @@ restore(
->  	xfs_sb_t		sb;
->  	int64_t			bytes_read;
->  
-> -	block_size = 1 << mbp->mb_blocklog;
-> +	block_size = 1 << h->v1.mb_blocklog;
->  	max_indices = (block_size - sizeof(xfs_metablock_t)) / sizeof(__be64);
->  
->  	metablock = (xfs_metablock_t *)calloc(max_indices + 1, block_size);
->  	if (metablock == NULL)
->  		fatal("memory allocation failure\n");
->  
-> -	mb_count = be16_to_cpu(mbp->mb_count);
-> +	mb_count = be16_to_cpu(h->v1.mb_count);
->  	if (mb_count == 0 || mb_count > max_indices)
->  		fatal("bad block count: %u\n", mb_count);
->  
-> @@ -165,8 +163,7 @@ restore(
->  	if (block_index[0] != 0)
->  		fatal("first block is not the primary superblock\n");
->  
-> -
-> -	if (fread(block_buffer, mb_count << mbp->mb_blocklog, 1, md_fp) != 1)
-> +	if (fread(block_buffer, mb_count << h->v1.mb_blocklog, 1, md_fp) != 1)
->  		fatal("error reading from metadump file\n");
->  
->  	libxfs_sb_from_disk(&sb, (struct xfs_dsb *)block_buffer);
-> @@ -213,7 +210,7 @@ restore(
->  
->  		for (cur_index = 0; cur_index < mb_count; cur_index++) {
->  			if (pwrite(ddev_fd, &block_buffer[cur_index <<
-> -					mbp->mb_blocklog], block_size,
-> +					h->v1.mb_blocklog], block_size,
->  					be64_to_cpu(block_index[cur_index]) <<
->  						BBSHIFT) < 0)
->  				fatal("error writing block %llu: %s\n",
-> @@ -232,11 +229,11 @@ restore(
->  		if (mb_count > max_indices)
->  			fatal("bad block count: %u\n", mb_count);
->  
-> -		if (fread(block_buffer, mb_count << mbp->mb_blocklog,
-> +		if (fread(block_buffer, mb_count << h->v1.mb_blocklog,
->  				1, md_fp) != 1)
->  			fatal("error reading from metadump file\n");
->  
-> -		bytes_read += block_size + (mb_count << mbp->mb_blocklog);
-> +		bytes_read += block_size + (mb_count << h->v1.mb_blocklog);
->  	}
->  
->  	if (mdrestore.progress_since_warning)
-> @@ -265,15 +262,14 @@ usage(void)
->  
->  int
->  main(
-> -	int 		argc,
-> -	char 		**argv)
-> +	int			argc,
-> +	char			**argv)
->  {
-> -	FILE		*src_f;
-> -	int		dst_fd;
-> -	int		c;
-> -	bool		is_target_file;
-> -	uint32_t	magic;
-> -	struct xfs_metablock	mb;
-> +	union mdrestore_headers headers;
-> +	FILE			*src_f;
-> +	int			dst_fd;
-> +	int			c;
-> +	bool			is_target_file;
->  
->  	mdrestore.show_progress = false;
->  	mdrestore.show_info = false;
-> @@ -320,20 +316,21 @@ main(
->  			fatal("cannot open source dump file\n");
->  	}
->  
-> -	if (fread(&magic, sizeof(magic), 1, src_f) != 1)
-> +	if (fread(&headers.magic, sizeof(headers.magic), 1, src_f) != 1)
->  		fatal("Unable to read metadump magic from metadump file\n");
->  
-> -	switch (be32_to_cpu(magic)) {
-> +	switch (be32_to_cpu(headers.magic)) {
->  	case XFS_MD_MAGIC_V1:
-> -		read_header(&mb, src_f);
->  		break;
->  	default:
->  		fatal("specified file is not a metadata dump\n");
->  		break;
->  	}
->  
-> +	read_header(&headers, src_f);
-> +
->  	if (mdrestore.show_info) {
-> -		show_info(&mb, argv[optind]);
-> +		show_info(&headers, argv[optind]);
->  
->  		if (argc - optind == 1)
->  			exit(0);
-> @@ -344,7 +341,7 @@ main(
->  	/* check and open target */
->  	dst_fd = open_device(argv[optind], &is_target_file);
->  
-> -	restore(src_f, dst_fd, is_target_file, &mb);
-> +	restore(&headers, src_f, dst_fd, is_target_file);
->  
->  	close(dst_fd);
->  	if (src_f != stdin)
-> -- 
-> 2.39.1
-> 
+I'm continuing to run some additional tests, but so far, things look
+solid.  So I'm sending this to the linux-xfs list now so (a) XFS
+developers can take a look at the commits and the patches, and see if
+they look sane, and (b) to ask what the process should be in terms
+sending these commits to Greg in Leah's absence.  Leah has
+significantly more xfs experience than I do, so I won't be offended if
+more review is desired before giving these patches an LGTM.  In fact,
+I'd kind of appreciate it.  :-)
+
+Also, I can also e-mail these patches to linux-xfs, but I didn't know
+if this would be desired before I potentially spammed the linux-xfs
+list.
+
+Anyway, here is the summary of the proposed backports to 5.15.  Please
+take a look.
+
+Thanks,
+
+					- Ted
+
+(Commit id's are in the xfs-5.15 branch in my xfs-lts-backports git
+tree[1].  Commits that have the note "not yet in 6.1" branch has been
+backported to the proposed xfs-6.1 branch, although please note that
+the xfs-6.1 branch hasn't yet gotten as much testing as the xfs-5.15
+branch.)
+
+[1] git://git.kernel.org/pub/scm/linux/kernel/git/tytso/xfs-lts-backports.git
+
+
+46080ca79d18 xfs: hoist refcount record merge predicates
+    commit 9d720a5a658f5135861773f26e927449bef93d61 upstream.   (v6.2)
+    note: not yet in 6.1 LTS
+    pre-req for: xfs: estimate post-merge refcounts correctly
+    
+45b231886605 xfs: estimate post-merge refcounts correctly
+    commit b25d1984aa884fc91a73a5a407b9ac976d441e9b upstream.   (v6.2)
+    note: not yet in 6.1 LTS
+    fixes: xfs/179
+
+d16ab63aad9b xfs: add missing cmap->br_state = XFS_EXT_NORM update
+    commit 1a39ae415c1be1e46f5b3f97d438c7c4adc22b63 upstream.   (v5.18)
+    pre-req for: xfs: Fix false ENOSPC when performing direct write on a delalloc extent in cow fork
+    
+b9de7b77ccd9 xfs: Fix false ENOSPC when performing direct write on a delalloc extent in cow fork
+    commit d62113303d691bcd8d0675ae4ac63e7769afc56c upstream.   (v6.0)
+    fixes: xfs/553
+    
+60cd06e242be xfs: stabilize the dirent name transformation function used for ascii-ci dir hash computation
+    commit a9248538facc3d9e769489e50a544509c2f9cebe upstream.   (v6.4)
+    note: not yet in 6.1 LTS
+    fixes: xfs/597
+    
+679add840fa6 xfs: use the directory name hash function for dir scrubbing
+    commit 9dceccc5822f2ecea12a89f24d7cad1f3e5eab7c upstream.   (v6.4)
+    note: not yet in 6.1 LTS
+    fixes: xfs/597
+    
+a07ec38ecc0e xfs: get root inode correctly at bulkstat
+    commit 817644fa4525258992f17fecf4f1d6cdd2e1b731 upstream.   (v6.2)
+    note: not yet in 6.1 LTS
+    fixes: xfs/557
+    
+85cd6053e920 xfs: bound maximum wait time for inodegc work
+    commit 7cf2b0f9611b9971d663e1fc3206eeda3b902922 upstream.   (v5.19)
+    requested backport to fix bug: https://lore.kernel.org/all/20230710215354.GA679018@onthe.net.au/T/#u
+
+eb639a92fb50 xfs: introduce xfs_inodegc_push()
+    commit 5e672cd69f0a534a445df4372141fd0d1d00901d upstream.   (v5.19)
+    requested backport to fix bug: https://lore.kernel.org/all/20230710215354.GA679018@onthe.net.au/T/#u
+
