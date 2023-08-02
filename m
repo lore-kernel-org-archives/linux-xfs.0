@@ -2,32 +2,32 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 01B2FC07E8A
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 341E4C0729B
 	for <linux-xfs@archiver.kernel.org>; Wed,  2 Aug 2023 15:43:34 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234932AbjHBPnd (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 2 Aug 2023 11:43:33 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34930 "EHLO
+        id S234769AbjHBPnc (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 2 Aug 2023 11:43:32 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34578 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S235299AbjHBPm1 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 2 Aug 2023 11:42:27 -0400
+        with ESMTP id S234453AbjHBPmT (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 2 Aug 2023 11:42:19 -0400
 Received: from bombadil.infradead.org (bombadil.infradead.org [IPv6:2607:7c80:54:3::133])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E49422689;
-        Wed,  2 Aug 2023 08:42:17 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7529B212D;
+        Wed,  2 Aug 2023 08:42:10 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
         d=infradead.org; s=bombadil.20210309; h=Content-Transfer-Encoding:
         MIME-Version:References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:Sender
         :Reply-To:Content-Type:Content-ID:Content-Description;
-        bh=t1/fXxbj2uJU5xas1rDU20QLxJIeGJx3IPPvaW9KT9Y=; b=2i+CcpcoXVSq4J7NqyEaRQu0MS
-        DSsA4T4HQ7JZ+g7Ov6bcczZ/tpF4ZkTz9NxECM9geFk5dv1/TztPUrp17xFtlDXKLyoX3pkpemqeB
-        OQPpsZdYMVdmbDglOG0I9dpqcqqeyV/XjkQ67mNuOFgWIEwDlobHlmhsm0iPi3w+6wR+6G5B1YZQP
-        iWapYBcFtpmWKbvl+Jn8/7LBe0gSETLk1M6EwK0Ny2GMRQFmOIyT6N6Ad/dzBzf+vmZA2pOhMR8re
-        MOaux36gSAexWnIViecm5TMwu6JeqWJ/qWyq27xWHNPjx/AhL2CBf5lfuvqnCDWkGqZsv5nzmKORQ
-        JAio8dFQ==;
+        bh=ZozxeyMGKtkHoR7QtYaUPrxcN8fxX1IcTx0bj1m0eVM=; b=tmx+7o4GP5sBLM4xYrSsgh9Bda
+        +QbMMfDpv1DNC4tqjwNcuPtyVRBYZ5oHVHlh96dQf4IlYjTn55/fw/emJuHrTvhSTgLn4CKM9zq4t
+        yT98ZOv03AtsAwaRoj6DqU98ep41F8AzGg/vBGkfVEdAUr4avk2zKXcHV0RtlssyfziJvzMueYqIu
+        KhQzE7/xrzzJxOSxfghcWbWDsTFToL/ymn6ov4rjA65Xpl2PHUsmr14itMLIKsS6o6PNsi4Ntd7Pn
+        Had/kLEX3WJqsmYXpRsZO5n2YtV4JiZvaKZR7L9CDniwRiSZTphwqLxU2Uxztca27xF+6dVMKrhoR
+        wAcOwFaA==;
 Received: from 2a02-8389-2341-5b80-39d3-4735-9a3c-88d8.cable.dynamic.v6.surfer.at ([2a02:8389:2341:5b80:39d3:4735:9a3c:88d8] helo=localhost)
         by bombadil.infradead.org with esmtpsa (Exim 4.96 #2 (Red Hat Linux))
-        id 1qRDzG-005GLm-2Q;
-        Wed, 02 Aug 2023 15:42:11 +0000
+        id 1qRDzA-005GKj-0K;
+        Wed, 02 Aug 2023 15:42:04 +0000
 From:   Christoph Hellwig <hch@lst.de>
 To:     Al Viro <viro@zeniv.linux.org.uk>,
         Christian Brauner <brauner@kernel.org>
@@ -43,9 +43,9 @@ Cc:     Jan Kara <jack@suse.cz>, Chris Mason <clm@fb.com>,
         linux-ext4@vger.kernel.org, linux-f2fs-devel@lists.sourceforge.net,
         linux-nilfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
         linux-xfs@vger.kernel.org, linux-block@vger.kernel.org
-Subject: [PATCH 10/12] ext4: use fs_holder_ops for the log device
-Date:   Wed,  2 Aug 2023 17:41:29 +0200
-Message-Id: <20230802154131.2221419-11-hch@lst.de>
+Subject: [PATCH 08/12] fs: export fs_holder_ops
+Date:   Wed,  2 Aug 2023 17:41:27 +0200
+Message-Id: <20230802154131.2221419-9-hch@lst.de>
 X-Mailer: git-send-email 2.39.2
 In-Reply-To: <20230802154131.2221419-1-hch@lst.de>
 References: <20230802154131.2221419-1-hch@lst.de>
@@ -56,43 +56,44 @@ Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Use the generic fs_holder_ops to shut down the file system when the
-log device goes away instead of duplicating the logic.
+Export fs_holder_ops so that file systems that open additional block
+devices can use it as well.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 ---
- fs/ext4/super.c | 11 +----------
- 1 file changed, 1 insertion(+), 10 deletions(-)
+ fs/super.c             | 3 ++-
+ include/linux/blkdev.h | 2 ++
+ 2 files changed, 4 insertions(+), 1 deletion(-)
 
-diff --git a/fs/ext4/super.c b/fs/ext4/super.c
-index 2ccb19d345c6dd..063832e2d12a8e 100644
---- a/fs/ext4/super.c
-+++ b/fs/ext4/super.c
-@@ -1096,15 +1096,6 @@ void ext4_update_dynamic_rev(struct super_block *sb)
- 	 */
+diff --git a/fs/super.c b/fs/super.c
+index 0cda4af0a7e16c..dac05f96ab9ac8 100644
+--- a/fs/super.c
++++ b/fs/super.c
+@@ -1244,9 +1244,10 @@ static void fs_mark_dead(struct block_device *bdev)
+ 	up_read(&sb->s_umount);
  }
  
--static void ext4_bdev_mark_dead(struct block_device *bdev)
--{
--	ext4_force_shutdown(bdev->bd_holder, EXT4_GOING_FLAGS_NOLOGFLUSH);
--}
--
--static const struct blk_holder_ops ext4_holder_ops = {
--	.mark_dead		= ext4_bdev_mark_dead,
--};
--
- /*
-  * Open the external journal device
-  */
-@@ -1113,7 +1104,7 @@ static struct block_device *ext4_blkdev_get(dev_t dev, struct super_block *sb)
- 	struct block_device *bdev;
+-static const struct blk_holder_ops fs_holder_ops = {
++const struct blk_holder_ops fs_holder_ops = {
+ 	.mark_dead		= fs_mark_dead,
+ };
++EXPORT_SYMBOL_GPL(fs_holder_ops);
  
- 	bdev = blkdev_get_by_dev(dev, BLK_OPEN_READ | BLK_OPEN_WRITE, sb,
--				 &ext4_holder_ops);
-+				 &fs_holder_ops);
- 	if (IS_ERR(bdev))
- 		goto fail;
- 	return bdev;
+ static int set_bdev_super(struct super_block *s, void *data)
+ {
+diff --git a/include/linux/blkdev.h b/include/linux/blkdev.h
+index ed44a997f629f5..83262702eea71a 100644
+--- a/include/linux/blkdev.h
++++ b/include/linux/blkdev.h
+@@ -1464,6 +1464,8 @@ struct blk_holder_ops {
+ 	void (*mark_dead)(struct block_device *bdev);
+ };
+ 
++extern const struct blk_holder_ops fs_holder_ops;
++
+ /*
+  * Return the correct open flags for blkdev_get_by_* for super block flags
+  * as stored in sb->s_flags.
 -- 
 2.39.2
 
