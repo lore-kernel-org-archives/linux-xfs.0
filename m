@@ -2,570 +2,505 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 92BE8C04FE0
-	for <linux-xfs@archiver.kernel.org>; Wed,  2 Aug 2023 20:56:36 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7B689EB64DD
+	for <linux-xfs@archiver.kernel.org>; Thu,  3 Aug 2023 05:22:50 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231444AbjHBU4c (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 2 Aug 2023 16:56:32 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44796 "EHLO
+        id S231302AbjHCFWt (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 3 Aug 2023 01:22:49 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51896 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230498AbjHBU41 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 2 Aug 2023 16:56:27 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 98EE53AAE;
-        Wed,  2 Aug 2023 13:55:57 -0700 (PDT)
+        with ESMTP id S229446AbjHCFWW (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 3 Aug 2023 01:22:22 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 550CE1B4
+        for <linux-xfs@vger.kernel.org>; Wed,  2 Aug 2023 22:22:20 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
          key-exchange X25519 server-signature RSA-PSS (2048 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 2485D61B24;
-        Wed,  2 Aug 2023 20:54:18 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 241AAC433C7;
-        Wed,  2 Aug 2023 20:54:11 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id BC93D61B8C
+        for <linux-xfs@vger.kernel.org>; Thu,  3 Aug 2023 05:22:19 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 19F5AC433C7
+        for <linux-xfs@vger.kernel.org>; Thu,  3 Aug 2023 05:22:19 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1691009657;
-        bh=eOQo/dMF0+gMrXDa2SMyyUjYDJ7k1QyvTEZKWFuh/ys=;
-        h=Subject:From:To:Cc:Date:In-Reply-To:References:From;
-        b=ZP8N/8rXbxSt0//AryOCTAZ990GcRdzzLnkSBRMOCzxFBsYHBReTdTT3OsHcM95K7
-         q7vYRFprEEDwVuBv3Niaw4cgn3uRyB0WGlNLBzdJV98gyzod+FPkYyLr+iWZ0Vpkbh
-         YaFVvhRwDy7l/6sYOtyansM5Y3IZGn24Lii3BpTRbVhh4VYitNqIBZJjS2FN34j0Om
-         LybhkRbszVR70hnZdLwgfEbLwr8htKpkZnI+aOB5+3X8owm7dEPrZraY0wibWfcm6C
-         K5pkOcpEO/KdWB0OhcjU6Sxk1HZLJTR5iUBk1a9LKp0lCdij4BZmcgKvt43vNz5W4F
-         eq0CjmAQ716IQ==
-Message-ID: <ccc52562305bd1a1affb14e94a1cc08433eb8316.camel@kernel.org>
-Subject: Re: [PATCH v6 2/7] fs: add infrastructure for multigrain timestamps
-From:   Jeff Layton <jlayton@kernel.org>
-To:     Jan Kara <jack@suse.cz>
-Cc:     Eric Van Hensbergen <ericvh@kernel.org>,
-        Latchesar Ionkov <lucho@ionkov.net>,
-        Dominique Martinet <asmadeus@codewreck.org>,
-        Christian Schoenebeck <linux_oss@crudebyte.com>,
-        David Howells <dhowells@redhat.com>,
-        Marc Dionne <marc.dionne@auristor.com>,
-        Chris Mason <clm@fb.com>, Josef Bacik <josef@toxicpanda.com>,
-        David Sterba <dsterba@suse.com>, Xiubo Li <xiubli@redhat.com>,
-        Ilya Dryomov <idryomov@gmail.com>,
-        Jan Harkes <jaharkes@cs.cmu.edu>, coda@cs.cmu.edu,
-        Tyler Hicks <code@tyhicks.com>, Gao Xiang <xiang@kernel.org>,
-        Chao Yu <chao@kernel.org>, Yue Hu <huyue2@coolpad.com>,
-        Jeffle Xu <jefflexu@linux.alibaba.com>,
-        Namjae Jeon <linkinjeon@kernel.org>,
-        Sungjong Seo <sj1557.seo@samsung.com>,
-        Jan Kara <jack@suse.com>, Theodore Ts'o <tytso@mit.edu>,
-        Andreas Dilger <adilger.kernel@dilger.ca>,
-        Jaegeuk Kim <jaegeuk@kernel.org>,
-        OGAWA Hirofumi <hirofumi@mail.parknet.co.jp>,
-        Miklos Szeredi <miklos@szeredi.hu>,
-        Bob Peterson <rpeterso@redhat.com>,
-        Andreas Gruenbacher <agruenba@redhat.com>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        Tejun Heo <tj@kernel.org>,
-        Alexander Viro <viro@zeniv.linux.org.uk>,
-        Christian Brauner <brauner@kernel.org>,
-        Trond Myklebust <trond.myklebust@hammerspace.com>,
-        Anna Schumaker <anna@kernel.org>,
-        Konstantin Komarov <almaz.alexandrovich@paragon-software.com>,
-        Mark Fasheh <mark@fasheh.com>,
-        Joel Becker <jlbec@evilplan.org>,
-        Joseph Qi <joseph.qi@linux.alibaba.com>,
-        Mike Marshall <hubcap@omnibond.com>,
-        Martin Brandenburg <martin@omnibond.com>,
-        Luis Chamberlain <mcgrof@kernel.org>,
-        Kees Cook <keescook@chromium.org>,
-        Iurii Zaikin <yzaikin@google.com>,
-        Steve French <sfrench@samba.org>,
-        Paulo Alcantara <pc@manguebit.com>,
-        Ronnie Sahlberg <lsahlber@redhat.com>,
-        Shyam Prasad N <sprasad@microsoft.com>,
-        Tom Talpey <tom@talpey.com>,
-        Sergey Senozhatsky <senozhatsky@chromium.org>,
-        Richard Weinberger <richard@nod.at>,
-        Hans de Goede <hdegoede@redhat.com>,
-        Hugh Dickins <hughd@google.com>,
-        Andrew Morton <akpm@linux-foundation.org>,
-        "Darrick J. Wong" <djwong@kernel.org>,
-        Dave Chinner <david@fromorbit.com>,
-        Anthony Iliopoulos <ailiop@suse.com>, v9fs@lists.linux.dev,
-        linux-kernel@vger.kernel.org, linux-afs@lists.infradead.org,
-        linux-btrfs@vger.kernel.org, ceph-devel@vger.kernel.org,
-        codalist@coda.cs.cmu.edu, ecryptfs@vger.kernel.org,
-        linux-erofs@lists.ozlabs.org, linux-fsdevel@vger.kernel.org,
-        linux-ext4@vger.kernel.org, linux-f2fs-devel@lists.sourceforge.net,
-        cluster-devel@redhat.com, linux-nfs@vger.kernel.org,
-        ntfs3@lists.linux.dev, ocfs2-devel@lists.linux.dev,
-        devel@lists.orangefs.org, linux-cifs@vger.kernel.org,
-        samba-technical@lists.samba.org, linux-mtd@lists.infradead.org,
-        linux-mm@kvack.org, linux-xfs@vger.kernel.org
-Date:   Wed, 02 Aug 2023 16:54:09 -0400
-In-Reply-To: <20230802193537.vtuuwuwazocjbatv@quack3>
-References: <20230725-mgctime-v6-0-a794c2b7abca@kernel.org>
-         <20230725-mgctime-v6-2-a794c2b7abca@kernel.org>
-         <20230802193537.vtuuwuwazocjbatv@quack3>
-Content-Type: text/plain; charset="ISO-8859-15"
-Content-Transfer-Encoding: quoted-printable
-User-Agent: Evolution 3.48.4 (3.48.4-1.fc38) 
+        s=k20201202; t=1691040139;
+        bh=2MRIf+lUiaBGs+TbXpBGay/TEh3dvdnhvDr5E7Jxr8s=;
+        h=Date:From:To:Subject:From;
+        b=sOlXqt1IR5C7wrTgcfPFIikMz1Eq+Z3AETvEnX+HKQEsxZX48MQ/vH1bSJDXT1NxJ
+         lg7+kPyBENquBitJyU3NsetZe04QBLx5n9jiAUXn6HERBk6lEL27kq7uvGdQrpq5U0
+         7Bj67NBYqSUstUsavAsLKbLcOoiDDuh783ybwIllr6Shbuw2Y/MVMjrELrN06f2oHB
+         vUDvI9FabmzIR0LotQP4Jh/kjJV/ZynMGUB9c6aG+bO4tLAAU2ahJ7jyNcXyfdHt/v
+         m3A9rxQ6O3xVPLApVU/3rlysR4n9KUIHItnt/G/7xIweNaf/HT78Bo1hXqldF960Zw
+         SnSp2QUF696mw==
+Date:   Wed, 2 Aug 2023 22:22:18 -0700
+From:   "Darrick J. Wong" <djwong@kernel.org>
+To:     linux-xfs@vger.kernel.org
+Subject: [PATCH] xfs: stabilize fs summary counters for online fsck
+Message-ID: <20230803052218.GE11352@frogsfrogsfrogs>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Wed, 2023-08-02 at 21:35 +0200, Jan Kara wrote:
-> On Tue 25-07-23 10:58:15, Jeff Layton wrote:
-> > The VFS always uses coarse-grained timestamps when updating the ctime
-> > and mtime after a change. This has the benefit of allowing filesystems
-> > to optimize away a lot metadata updates, down to around 1 per jiffy,
-> > even when a file is under heavy writes.
-> >=20
-> > Unfortunately, this has always been an issue when we're exporting via
-> > NFSv3, which relies on timestamps to validate caches. A lot of changes
-> > can happen in a jiffy, so timestamps aren't sufficient to help the
-> > client decide to invalidate the cache. Even with NFSv4, a lot of
-> > exported filesystems don't properly support a change attribute and are
-> > subject to the same problems with timestamp granularity. Other
-> > applications have similar issues with timestamps (e.g backup
-> > applications).
-> >=20
-> > If we were to always use fine-grained timestamps, that would improve th=
-e
-> > situation, but that becomes rather expensive, as the underlying
-> > filesystem would have to log a lot more metadata updates.
-> >=20
-> > What we need is a way to only use fine-grained timestamps when they are
-> > being actively queried.
-> >=20
-> > POSIX generally mandates that when the the mtime changes, the ctime mus=
-t
-> > also change. The kernel always stores normalized ctime values, so only
-> > the first 30 bits of the tv_nsec field are ever used.
-> >=20
-> > Use the 31st bit of the ctime tv_nsec field to indicate that something
-> > has queried the inode for the mtime or ctime. When this flag is set,
-> > on the next mtime or ctime update, the kernel will fetch a fine-grained
-> > timestamp instead of the usual coarse-grained one.
-> >=20
-> > Filesytems can opt into this behavior by setting the FS_MGTIME flag in
-> > the fstype. Filesystems that don't set this flag will continue to use
-> > coarse-grained timestamps.
-> >=20
-> > Later patches will convert individual filesystems to use the new
-> > infrastructure.
-> >=20
-> > Signed-off-by: Jeff Layton <jlayton@kernel.org>
-> > ---
-> >  fs/inode.c         | 98 ++++++++++++++++++++++++++++++++++++++--------=
---------
-> >  fs/stat.c          | 41 +++++++++++++++++++++--
-> >  include/linux/fs.h | 45 +++++++++++++++++++++++--
-> >  3 files changed, 151 insertions(+), 33 deletions(-)
-> >=20
-> > diff --git a/fs/inode.c b/fs/inode.c
-> > index d4ab92233062..369621e7faf5 100644
-> > --- a/fs/inode.c
-> > +++ b/fs/inode.c
-> > @@ -1919,6 +1919,21 @@ int inode_update_time(struct inode *inode, struc=
-t timespec64 *time, int flags)
-> >  }
-> >  EXPORT_SYMBOL(inode_update_time);
-> > =20
-> > +/**
-> > + * current_coarse_time - Return FS time
-> > + * @inode: inode.
-> > + *
-> > + * Return the current coarse-grained time truncated to the time
-> > + * granularity supported by the fs.
-> > + */
-> > +static struct timespec64 current_coarse_time(struct inode *inode)
-> > +{
-> > +	struct timespec64 now;
-> > +
-> > +	ktime_get_coarse_real_ts64(&now);
-> > +	return timestamp_truncate(now, inode);
-> > +}
-> > +
-> >  /**
-> >   *	atime_needs_update	-	update the access time
-> >   *	@path: the &struct path to update
-> > @@ -1952,7 +1967,7 @@ bool atime_needs_update(const struct path *path, =
-struct inode *inode)
-> >  	if ((mnt->mnt_flags & MNT_NODIRATIME) && S_ISDIR(inode->i_mode))
-> >  		return false;
-> > =20
-> > -	now =3D current_time(inode);
-> > +	now =3D current_coarse_time(inode);
-> > =20
-> >  	if (!relatime_need_update(mnt, inode, now))
-> >  		return false;
-> > @@ -1986,7 +2001,7 @@ void touch_atime(const struct path *path)
-> >  	 * We may also fail on filesystems that have the ability to make part=
-s
-> >  	 * of the fs read only, e.g. subvolumes in Btrfs.
-> >  	 */
-> > -	now =3D current_time(inode);
-> > +	now =3D current_coarse_time(inode);
-> >  	inode_update_time(inode, &now, S_ATIME);
-> >  	__mnt_drop_write(mnt);
-> >  skip_update:
->=20
-> There are also calls in fs/smb/client/file.c:cifs_readpage_worker() and i=
-n
-> fs/ocfs2/file.c:ocfs2_update_inode_atime() that should probably use
-> current_coarse_time() to avoid needless querying of fine grained
-> timestamps. But see below...
->=20
+From: Darrick J. Wong <djwong@kernel.org>
 
-Technically, they already devolve to current_coarse_time anyway, but
-changing them would allow them to skip the fstype flag check, but I like
-your idea below better anyway.
+If the fscounters scrubber notices incorrect summary counters, it's
+entirely possible that scrub is simply racing with other threads that
+are updating the incore counters.  There isn't a good way to stabilize
+percpu counters or set ourselves up to observe live updates with hooks
+like we do for the quotacheck or nlinks scanners, so we instead choose
+to freeze the filesystem long enough to walk the incore per-AG
+structures.
 
-> > @@ -2072,6 +2087,56 @@ int file_remove_privs(struct file *file)
-> >  }
-> >  EXPORT_SYMBOL(file_remove_privs);
-> > =20
-> > +/**
-> > + * current_mgtime - Return FS time (possibly fine-grained)
-> > + * @inode: inode.
-> > + *
-> > + * Return the current time truncated to the time granularity supported=
- by
-> > + * the fs, as suitable for a ctime/mtime change. If the ctime is flagg=
-ed
-> > + * as having been QUERIED, get a fine-grained timestamp.
-> > + */
-> > +static struct timespec64 current_mgtime(struct inode *inode)
-> > +{
-> > +	struct timespec64 now;
-> > +	atomic_long_t *pnsec =3D (atomic_long_t *)&inode->__i_ctime.tv_nsec;
-> > +	long nsec =3D atomic_long_read(pnsec);
-> > +
-> > +	if (nsec & I_CTIME_QUERIED) {
-> > +		ktime_get_real_ts64(&now);
-> > +	} else {
-> > +		struct timespec64 ctime;
-> > +
-> > +		ktime_get_coarse_real_ts64(&now);
-> > +
-> > +		/*
-> > +		 * If we've recently fetched a fine-grained timestamp
-> > +		 * then the coarse-grained one may still be earlier than the
-> > +		 * existing one. Just keep the existing ctime if so.
-> > +		 */
-> > +		ctime =3D inode_get_ctime(inode);
-> > +		if (timespec64_compare(&ctime, &now) > 0)
-> > +			now =3D ctime;
-> > +	}
-> > +
-> > +	return timestamp_truncate(now, inode);
-> > +}
-> > +
-> > +/**
-> > + * current_time - Return timestamp suitable for ctime update
-> > + * @inode: inode to eventually be updated
-> > + *
-> > + * Return the current time, which is usually coarse-grained but may be=
- fine
-> > + * grained if the filesystem uses multigrain timestamps and the existi=
-ng
-> > + * ctime was queried since the last update.
-> > + */
-> > +struct timespec64 current_time(struct inode *inode)
-> > +{
-> > +	if (is_mgtime(inode))
-> > +		return current_mgtime(inode);
-> > +	return current_coarse_time(inode);
-> > +}
-> > +EXPORT_SYMBOL(current_time);
-> > +
->=20
-> So if you modify current_time() to handle multigrain timestamps the code
-> will be still racy. In particular fill_mg_cmtime() can race with
-> inode_set_ctime_current() like:
->=20
-> fill_mg_cmtime()				inode_set_ctime_current()
->   stat->mtime =3D inode->i_mtime;
->   stat->ctime.tv_sec =3D inode->__i_ctime.tv_sec;
-> 						  now =3D current_time();
-> 							/* fetches coarse
-> 							 * grained timestamp */
->   stat->ctime.tv_nsec =3D atomic_long_fetch_or(I_CTIME_QUERIED, pnsec) &
-> 				~I_CTIME_QUERIED;
-> 						  inode_set_ctime(inode, now.tv_sec, now.tv_nsec);
->=20
-> and the information about a need for finegrained timestamp update gets
-> lost. So what I'd propose is to leave current_time() alone (just always
-> reporting coarse grained timestamps) and put all the magic into
-> inode_set_ctime_current() only. There we need something like:
->=20
-> struct timespec64 inode_set_ctime_current(struct inode *inode)
-> {
-> 	... variables ...
->=20
-> 	nsec =3D READ_ONCE(inode->__i_ctime.tv_nsec);
->  	if (!(nsec & I_CTIME_QUERIED)) {
-> 		now =3D current_time(inode);
->=20
-> 		if (!is_gmtime(inode)) {
-> 			inode_set_ctime_to_ts(inode, now);
-> 		} else {
-> 			/*
-> 			 * If we've recently fetched a fine-grained
-> 			 * timestamp then the coarse-grained one may still
-> 			 * be earlier than the existing one. Just keep the
-> 			 * existing ctime if so.
-> 			 */
-> 			ctime =3D inode_get_ctime(inode);
-> 			if (timespec64_compare(&ctime, &now) > 0)
-> 				now =3D ctime;
->=20
-> 			/*
-> 			 * Ctime updates are generally protected by inode
-> 			 * lock but we could have raced with setting of
-> 			 * I_CTIME_QUERIED flag.
-> 			 */
-> 			if (cmpxchg(&inode->__i_ctime.tv_nsec, nsec,
-> 				    now.tv_nsec) !=3D nsec)
-> 				goto fine_grained;
-> 			inode->__i_ctime.tv_sec =3D now.tv_sec;
-> 		}
-> 		return now;
-> 	}
-> fine_grained:
-> 	ktime_get_real_ts64(&now);
-> 	inode_set_ctime_to_ts(inode, now);
->=20
-> 	return now;
-> }
->=20
-> 								Honza
->=20
+Past me thought that it was going to be commonplace to have to freeze
+the filesystem to perform some kind of repair and set up a whole
+separate infrastructure to freeze the filesystem in such a way that
+userspace could not unfreeze while we were running.  This involved
+adding a mutex and freeze_super/thaw_super functions and dealing with
+the fact that the VFS freeze/thaw functions can free the VFS superblock
+references on return.
 
-This is a great idea. I'll rework the series along the lines you
-suggest. That also answers my earlier question to Christian:
+This was all very overwrought, since fscounters turned out to be the
+only user of scrub freezes, and it doesn't require the log to quiesce,
+only the incore superblock counters.  We prevent other threads from
+changing the freeze level by calling freeze_super_excl with a custom
+freeze cookie to keep everyone else out of the filesystem.
 
-I'll just resend the whole series (it's not very big anyway), and I'll
-include the fill_mg_cmtime prototype change.
+The end result is that fscounters should be much more efficient.  When
+we're checking a busy system and we can't stabilize the counters, the
+custom freeze will do less work, which should result in less downtime.
+Repair should be similarly speedy, but that's in the next patch.
 
-Cheers,
+Signed-off-by: Darrick J. Wong <djwong@kernel.org>
+---
+ fs/xfs/scrub/fscounters.c |  198 ++++++++++++++++++++++++++++++++++-----------
+ fs/xfs/scrub/fscounters.h |   20 +++++
+ fs/xfs/scrub/scrub.c      |    6 +
+ fs/xfs/scrub/scrub.h      |    1 
+ fs/xfs/scrub/trace.h      |   26 ++++++
+ 5 files changed, 203 insertions(+), 48 deletions(-)
+ create mode 100644 fs/xfs/scrub/fscounters.h
 
-> >  static int inode_needs_update_time(struct inode *inode, struct timespe=
-c64 *now)
-> >  {
-> >  	int sync_it =3D 0;
-> > @@ -2480,37 +2545,12 @@ struct timespec64 timestamp_truncate(struct tim=
-espec64 t, struct inode *inode)
-> >  }
-> >  EXPORT_SYMBOL(timestamp_truncate);
-> > =20
-> > -/**
-> > - * current_time - Return FS time
-> > - * @inode: inode.
-> > - *
-> > - * Return the current time truncated to the time granularity supported=
- by
-> > - * the fs.
-> > - *
-> > - * Note that inode and inode->sb cannot be NULL.
-> > - * Otherwise, the function warns and returns time without truncation.
-> > - */
-> > -struct timespec64 current_time(struct inode *inode)
-> > -{
-> > -	struct timespec64 now;
-> > -
-> > -	ktime_get_coarse_real_ts64(&now);
-> > -
-> > -	if (unlikely(!inode->i_sb)) {
-> > -		WARN(1, "current_time() called with uninitialized super_block in the=
- inode");
-> > -		return now;
-> > -	}
-> > -
-> > -	return timestamp_truncate(now, inode);
-> > -}
-> > -EXPORT_SYMBOL(current_time);
-> > -
-> >  /**
-> >   * inode_set_ctime_current - set the ctime to current_time
-> >   * @inode: inode
-> >   *
-> > - * Set the inode->i_ctime to the current value for the inode. Returns
-> > - * the current value that was assigned to i_ctime.
-> > + * Set the inode->__i_ctime to the current value for the inode. Return=
-s
-> > + * the current value that was assigned to __i_ctime.
-> >   */
-> >  struct timespec64 inode_set_ctime_current(struct inode *inode)
-> >  {
-> > diff --git a/fs/stat.c b/fs/stat.c
-> > index 062f311b5386..51effd1c2bc2 100644
-> > --- a/fs/stat.c
-> > +++ b/fs/stat.c
-> > @@ -26,6 +26,37 @@
-> >  #include "internal.h"
-> >  #include "mount.h"
-> > =20
-> > +/**
-> > + * fill_mg_cmtime - Fill in the mtime and ctime and flag ctime as QUER=
-IED
-> > + * @request_mask: STATX_* values requested
-> > + * @inode: inode from which to grab the c/mtime
-> > + * @stat: where to store the resulting values
-> > + *
-> > + * Given @inode, grab the ctime and mtime out if it and store the resu=
-lt
-> > + * in @stat. When fetching the value, flag it as queried so the next w=
-rite
-> > + * will use a fine-grained timestamp.
-> > + */
-> > +void fill_mg_cmtime(u32 request_mask, struct inode *inode, struct ksta=
-t *stat)
-> > +{
-> > +	atomic_long_t *pnsec =3D (atomic_long_t *)&inode->__i_ctime.tv_nsec;
-> > +
-> > +	/* If neither time was requested, then don't report them */
-> > +	if (!(request_mask & (STATX_CTIME|STATX_MTIME))) {
-> > +		stat->result_mask &=3D ~(STATX_CTIME|STATX_MTIME);
-> > +		return;
-> > +	}
-> > +
-> > +	stat->mtime =3D inode->i_mtime;
-> > +	stat->ctime.tv_sec =3D inode->__i_ctime.tv_sec;
-> > +	/*
-> > +	 * Atomically set the QUERIED flag and fetch the new value with
-> > +	 * the flag masked off.
-> > +	 */
-> > +	stat->ctime.tv_nsec =3D atomic_long_fetch_or(I_CTIME_QUERIED, pnsec) =
-&
-> > +					~I_CTIME_QUERIED;
-> > +}
-> > +EXPORT_SYMBOL(fill_mg_cmtime);
-> > +
-> >  /**
-> >   * generic_fillattr - Fill in the basic attributes from the inode stru=
-ct
-> >   * @idmap:	idmap of the mount the inode was found from
-> > @@ -58,8 +89,14 @@ void generic_fillattr(struct mnt_idmap *idmap, u32 r=
-equest_mask,
-> >  	stat->rdev =3D inode->i_rdev;
-> >  	stat->size =3D i_size_read(inode);
-> >  	stat->atime =3D inode->i_atime;
-> > -	stat->mtime =3D inode->i_mtime;
-> > -	stat->ctime =3D inode_get_ctime(inode);
-> > +
-> > +	if (is_mgtime(inode)) {
-> > +		fill_mg_cmtime(request_mask, inode, stat);
-> > +	} else {
-> > +		stat->mtime =3D inode->i_mtime;
-> > +		stat->ctime =3D inode_get_ctime(inode);
-> > +	}
-> > +
-> >  	stat->blksize =3D i_blocksize(inode);
-> >  	stat->blocks =3D inode->i_blocks;
-> > =20
-> > diff --git a/include/linux/fs.h b/include/linux/fs.h
-> > index 42d1434cc427..a0bdbefbf293 100644
-> > --- a/include/linux/fs.h
-> > +++ b/include/linux/fs.h
-> > @@ -1477,15 +1477,43 @@ static inline bool fsuidgid_has_mapping(struct =
-super_block *sb,
-> >  struct timespec64 current_time(struct inode *inode);
-> >  struct timespec64 inode_set_ctime_current(struct inode *inode);
-> > =20
-> > +/*
-> > + * Multigrain timestamps
-> > + *
-> > + * Conditionally use fine-grained ctime and mtime timestamps when ther=
-e
-> > + * are users actively observing them via getattr. The primary use-case
-> > + * for this is NFS clients that use the ctime to distinguish between
-> > + * different states of the file, and that are often fooled by multiple
-> > + * operations that occur in the same coarse-grained timer tick.
-> > + *
-> > + * The kernel always keeps normalized struct timespec64 values in the =
-ctime,
-> > + * which means that only the first 30 bits of the value are used. Use =
-the
-> > + * 31st bit of the ctime's tv_nsec field as a flag to indicate that th=
-e value
-> > + * has been queried since it was last updated.
-> > + */
-> > +#define I_CTIME_QUERIED		(1L<<30)
-> > +
-> >  /**
-> >   * inode_get_ctime - fetch the current ctime from the inode
-> >   * @inode: inode from which to fetch ctime
-> >   *
-> > - * Grab the current ctime from the inode and return it.
-> > + * Grab the current ctime tv_nsec field from the inode, mask off the
-> > + * I_CTIME_QUERIED flag and return it. This is mostly intended for use=
- by
-> > + * internal consumers of the ctime that aren't concerned with ensuring=
- a
-> > + * fine-grained update on the next change (e.g. when preparing to stor=
-e
-> > + * the value in the backing store for later retrieval).
-> > + *
-> > + * This is safe to call regardless of whether the underlying filesyste=
-m
-> > + * is using multigrain timestamps.
-> >   */
-> >  static inline struct timespec64 inode_get_ctime(const struct inode *in=
-ode)
-> >  {
-> > -	return inode->__i_ctime;
-> > +	struct timespec64 ctime;
-> > +
-> > +	ctime.tv_sec =3D inode->__i_ctime.tv_sec;
-> > +	ctime.tv_nsec =3D inode->__i_ctime.tv_nsec & ~I_CTIME_QUERIED;
-> > +
-> > +	return ctime;
-> >  }
-> > =20
-> >  /**
-> > @@ -2261,6 +2289,7 @@ struct file_system_type {
-> >  #define FS_USERNS_MOUNT		8	/* Can be mounted by userns root */
-> >  #define FS_DISALLOW_NOTIFY_PERM	16	/* Disable fanotify permission even=
-ts */
-> >  #define FS_ALLOW_IDMAP         32      /* FS has been updated to handl=
-e vfs idmappings. */
-> > +#define FS_MGTIME		64	/* FS uses multigrain timestamps */
-> >  #define FS_RENAME_DOES_D_MOVE	32768	/* FS will handle d_move() during =
-rename() internally. */
-> >  	int (*init_fs_context)(struct fs_context *);
-> >  	const struct fs_parameter_spec *parameters;
-> > @@ -2284,6 +2313,17 @@ struct file_system_type {
-> > =20
-> >  #define MODULE_ALIAS_FS(NAME) MODULE_ALIAS("fs-" NAME)
-> > =20
-> > +/**
-> > + * is_mgtime: is this inode using multigrain timestamps
-> > + * @inode: inode to test for multigrain timestamps
-> > + *
-> > + * Return true if the inode uses multigrain timestamps, false otherwis=
-e.
-> > + */
-> > +static inline bool is_mgtime(const struct inode *inode)
-> > +{
-> > +	return inode->i_sb->s_type->fs_flags & FS_MGTIME;
-> > +}
-> > +
-> >  extern struct dentry *mount_bdev(struct file_system_type *fs_type,
-> >  	int flags, const char *dev_name, void *data,
-> >  	int (*fill_super)(struct super_block *, void *, int));
-> > @@ -2919,6 +2959,7 @@ extern void page_put_link(void *);
-> >  extern int page_symlink(struct inode *inode, const char *symname, int =
-len);
-> >  extern const struct inode_operations page_symlink_inode_operations;
-> >  extern void kfree_link(void *);
-> > +void fill_mg_cmtime(u32 request_mask, struct inode *inode, struct ksta=
-t *stat);
-> >  void generic_fillattr(struct mnt_idmap *, u32, struct inode *, struct =
-kstat *);
-> >  void generic_fill_statx_attr(struct inode *inode, struct kstat *stat);
-> >  extern int vfs_getattr_nosec(const struct path *, struct kstat *, u32,=
- unsigned int);
-> >=20
-> > --=20
-> > 2.41.0
-> >=20
-
---=20
-Jeff Layton <jlayton@kernel.org>
+diff --git a/fs/xfs/scrub/fscounters.c b/fs/xfs/scrub/fscounters.c
+index e382a35e98d8..e7d5ad2f70f7 100644
+--- a/fs/xfs/scrub/fscounters.c
++++ b/fs/xfs/scrub/fscounters.c
+@@ -1,4 +1,4 @@
+-// SPDX-License-Identifier: GPL-2.0+
++// SPDX-License-Identifier: GPL-2.0-or-later
+ /*
+  * Copyright (C) 2019-2023 Oracle.  All Rights Reserved.
+  * Author: Darrick J. Wong <djwong@kernel.org>
+@@ -8,6 +8,8 @@
+ #include "xfs_shared.h"
+ #include "xfs_format.h"
+ #include "xfs_trans_resv.h"
++#include "xfs_log_format.h"
++#include "xfs_trans.h"
+ #include "xfs_mount.h"
+ #include "xfs_alloc.h"
+ #include "xfs_ialloc.h"
+@@ -16,9 +18,11 @@
+ #include "xfs_ag.h"
+ #include "xfs_rtalloc.h"
+ #include "xfs_inode.h"
++#include "xfs_icache.h"
+ #include "scrub/scrub.h"
+ #include "scrub/common.h"
+ #include "scrub/trace.h"
++#include "scrub/fscounters.h"
+ 
+ /*
+  * FS Summary Counters
+@@ -45,16 +49,6 @@
+  * our tolerance for mismatch between expected and actual counter values.
+  */
+ 
+-struct xchk_fscounters {
+-	struct xfs_scrub	*sc;
+-	uint64_t		icount;
+-	uint64_t		ifree;
+-	uint64_t		fdblocks;
+-	uint64_t		frextents;
+-	unsigned long long	icount_min;
+-	unsigned long long	icount_max;
+-};
+-
+ /*
+  * Since the expected value computation is lockless but only browses incore
+  * values, the percpu counters should be fairly close to each other.  However,
+@@ -123,6 +117,82 @@ xchk_fscount_warmup(
+ 	return error;
+ }
+ 
++static inline int
++xchk_fsfreeze(
++	struct xfs_scrub	*sc)
++{
++	int			error;
++
++	error = freeze_super(sc->mp->m_super, FREEZE_HOLDER_KERNEL);
++	trace_xchk_fsfreeze(sc, error);
++	return error;
++}
++
++static inline int
++xchk_fsthaw(
++	struct xfs_scrub	*sc)
++{
++	int			error;
++
++	/* This should always succeed, we have a kernel freeze */
++	error = thaw_super(sc->mp->m_super, FREEZE_HOLDER_KERNEL);
++	trace_xchk_fsthaw(sc, error);
++	return error;
++}
++
++/*
++ * We couldn't stabilize the filesystem long enough to sample all the variables
++ * that comprise the summary counters and compare them to the percpu counters.
++ * We need to disable all writer threads, which means taking the first two
++ * freeze levels to put userspace to sleep, and the third freeze level to
++ * prevent background threads from starting new transactions.  Take one level
++ * more to prevent other callers from unfreezing the filesystem while we run.
++ */
++STATIC int
++xchk_fscounters_freeze(
++	struct xfs_scrub	*sc)
++{
++	struct xchk_fscounters	*fsc = sc->buf;
++	int			error = 0;
++
++	if (sc->flags & XCHK_HAVE_FREEZE_PROT) {
++		sc->flags &= ~XCHK_HAVE_FREEZE_PROT;
++		mnt_drop_write_file(sc->file);
++	}
++
++	/* Try to grab a kernel freeze. */
++	while ((error = xchk_fsfreeze(sc)) == -EBUSY) {
++		if (xchk_should_terminate(sc, &error))
++			return error;
++
++		delay(HZ / 10);
++	}
++	if (error)
++		return error;
++
++	fsc->frozen = true;
++	return 0;
++}
++
++/* Thaw the filesystem after checking or repairing fscounters. */
++STATIC void
++xchk_fscounters_cleanup(
++	void			*buf)
++{
++	struct xchk_fscounters	*fsc = buf;
++	struct xfs_scrub	*sc = fsc->sc;
++	int			error;
++
++	if (!fsc->frozen)
++		return;
++
++	error = xchk_fsthaw(sc);
++	if (error)
++		xfs_emerg(sc->mp, "still frozen after scrub, err=%d", error);
++	else
++		fsc->frozen = false;
++}
++
+ int
+ xchk_setup_fscounters(
+ 	struct xfs_scrub	*sc)
+@@ -140,6 +210,7 @@ xchk_setup_fscounters(
+ 	sc->buf = kzalloc(sizeof(struct xchk_fscounters), XCHK_GFP_FLAGS);
+ 	if (!sc->buf)
+ 		return -ENOMEM;
++	sc->buf_cleanup = xchk_fscounters_cleanup;
+ 	fsc = sc->buf;
+ 	fsc->sc = sc;
+ 
+@@ -150,7 +221,18 @@ xchk_setup_fscounters(
+ 	if (error)
+ 		return error;
+ 
+-	return xchk_trans_alloc(sc, 0);
++	/*
++	 * Pause all writer activity in the filesystem while we're scrubbing to
++	 * reduce the likelihood of background perturbations to the counters
++	 * throwing off our calculations.
++	 */
++	if (sc->flags & XCHK_TRY_HARDER) {
++		error = xchk_fscounters_freeze(sc);
++		if (error)
++			return error;
++	}
++
++	return xfs_trans_alloc_empty(sc->mp, &sc->tp);
+ }
+ 
+ /*
+@@ -290,8 +372,7 @@ xchk_fscount_aggregate_agcounts(
+ 	if (fsc->ifree > fsc->icount) {
+ 		if (tries--)
+ 			goto retry;
+-		xchk_set_incomplete(sc);
+-		return 0;
++		return -EDEADLOCK;
+ 	}
+ 
+ 	return 0;
+@@ -367,6 +448,8 @@ xchk_fscount_count_frextents(
+  * Otherwise, we /might/ have a problem.  If the change in the summations is
+  * more than we want to tolerate, the filesystem is probably busy and we should
+  * just send back INCOMPLETE and see if userspace will try again.
++ *
++ * If we're repairing then we require an exact match.
+  */
+ static inline bool
+ xchk_fscount_within_range(
+@@ -396,21 +479,7 @@ xchk_fscount_within_range(
+ 	if (expected >= min_value && expected <= max_value)
+ 		return true;
+ 
+-	/*
+-	 * If the difference between the two summations is too large, the fs
+-	 * might just be busy and so we'll mark the scrub incomplete.  Return
+-	 * true here so that we don't mark the counter corrupt.
+-	 *
+-	 * XXX: In the future when userspace can grant scrub permission to
+-	 * quiesce the filesystem to solve the outsized variance problem, this
+-	 * check should be moved up and the return code changed to signal to
+-	 * userspace that we need quiesce permission.
+-	 */
+-	if (max_value - min_value >= XCHK_FSCOUNT_MIN_VARIANCE) {
+-		xchk_set_incomplete(sc);
+-		return true;
+-	}
+-
++	/* Everything else is bad. */
+ 	return false;
+ }
+ 
+@@ -422,6 +491,7 @@ xchk_fscounters(
+ 	struct xfs_mount	*mp = sc->mp;
+ 	struct xchk_fscounters	*fsc = sc->buf;
+ 	int64_t			icount, ifree, fdblocks, frextents;
++	bool			try_again = false;
+ 	int			error;
+ 
+ 	/* Snapshot the percpu counters. */
+@@ -431,9 +501,26 @@ xchk_fscounters(
+ 	frextents = percpu_counter_sum(&mp->m_frextents);
+ 
+ 	/* No negative values, please! */
+-	if (icount < 0 || ifree < 0 || fdblocks < 0 || frextents < 0)
++	if (icount < 0 || ifree < 0)
+ 		xchk_set_corrupt(sc);
+ 
++	/*
++	 * If the filesystem is not frozen, the counter summation calls above
++	 * can race with xfs_mod_freecounter, which subtracts a requested space
++	 * reservation from the counter and undoes the subtraction if that made
++	 * the counter go negative.  Therefore, it's possible to see negative
++	 * values here, and we should only flag that as a corruption if we
++	 * froze the fs.  This is much more likely to happen with frextents
++	 * since there are no reserved pools.
++	 */
++	if (fdblocks < 0 || frextents < 0) {
++		if (!fsc->frozen)
++			return -EDEADLOCK;
++
++		xchk_set_corrupt(sc);
++		return 0;
++	}
++
+ 	/* See if icount is obviously wrong. */
+ 	if (icount < fsc->icount_min || icount > fsc->icount_max)
+ 		xchk_set_corrupt(sc);
+@@ -446,12 +533,6 @@ xchk_fscounters(
+ 	if (frextents > mp->m_sb.sb_rextents)
+ 		xchk_set_corrupt(sc);
+ 
+-	/*
+-	 * XXX: We can't quiesce percpu counter updates, so exit early.
+-	 * This can be re-enabled when we gain exclusive freeze functionality.
+-	 */
+-	return 0;
+-
+ 	/*
+ 	 * If ifree exceeds icount by more than the minimum variance then
+ 	 * something's probably wrong with the counters.
+@@ -463,8 +544,6 @@ xchk_fscounters(
+ 	error = xchk_fscount_aggregate_agcounts(sc, fsc);
+ 	if (!xchk_process_error(sc, 0, XFS_SB_BLOCK(mp), &error))
+ 		return error;
+-	if (sc->sm->sm_flags & XFS_SCRUB_OFLAG_INCOMPLETE)
+-		return 0;
+ 
+ 	/* Count the free extents counter for rt volumes. */
+ 	error = xchk_fscount_count_frextents(sc, fsc);
+@@ -473,20 +552,45 @@ xchk_fscounters(
+ 	if (sc->sm->sm_flags & XFS_SCRUB_OFLAG_INCOMPLETE)
+ 		return 0;
+ 
+-	/* Compare the in-core counters with whatever we counted. */
+-	if (!xchk_fscount_within_range(sc, icount, &mp->m_icount, fsc->icount))
+-		xchk_set_corrupt(sc);
++	/*
++	 * Compare the in-core counters with whatever we counted.  If the fs is
++	 * frozen, we treat the discrepancy as a corruption because the freeze
++	 * should have stabilized the counter values.  Otherwise, we need
++	 * userspace to call us back having granted us freeze permission.
++	 */
++	if (!xchk_fscount_within_range(sc, icount, &mp->m_icount,
++				fsc->icount)) {
++		if (fsc->frozen)
++			xchk_set_corrupt(sc);
++		else
++			try_again = true;
++	}
+ 
+-	if (!xchk_fscount_within_range(sc, ifree, &mp->m_ifree, fsc->ifree))
+-		xchk_set_corrupt(sc);
++	if (!xchk_fscount_within_range(sc, ifree, &mp->m_ifree, fsc->ifree)) {
++		if (fsc->frozen)
++			xchk_set_corrupt(sc);
++		else
++			try_again = true;
++	}
+ 
+ 	if (!xchk_fscount_within_range(sc, fdblocks, &mp->m_fdblocks,
+-			fsc->fdblocks))
+-		xchk_set_corrupt(sc);
++			fsc->fdblocks)) {
++		if (fsc->frozen)
++			xchk_set_corrupt(sc);
++		else
++			try_again = true;
++	}
+ 
+ 	if (!xchk_fscount_within_range(sc, frextents, &mp->m_frextents,
+-			fsc->frextents))
+-		xchk_set_corrupt(sc);
++			fsc->frextents)) {
++		if (fsc->frozen)
++			xchk_set_corrupt(sc);
++		else
++			try_again = true;
++	}
++
++	if (try_again)
++		return -EDEADLOCK;
+ 
+ 	return 0;
+ }
+diff --git a/fs/xfs/scrub/fscounters.h b/fs/xfs/scrub/fscounters.h
+new file mode 100644
+index 000000000000..b36f7157986f
+--- /dev/null
++++ b/fs/xfs/scrub/fscounters.h
+@@ -0,0 +1,20 @@
++/* SPDX-License-Identifier: GPL-2.0-or-later */
++/*
++ * Copyright (C) 2021-2023 Oracle.  All Rights Reserved.
++ * Author: Darrick J. Wong <djwong@kernel.org>
++ */
++#ifndef __XFS_SCRUB_FSCOUNTERS_H__
++#define __XFS_SCRUB_FSCOUNTERS_H__
++
++struct xchk_fscounters {
++	struct xfs_scrub	*sc;
++	uint64_t		icount;
++	uint64_t		ifree;
++	uint64_t		fdblocks;
++	uint64_t		frextents;
++	unsigned long long	icount_min;
++	unsigned long long	icount_max;
++	bool			frozen;
++};
++
++#endif /* __XFS_SCRUB_FSCOUNTERS_H__ */
+diff --git a/fs/xfs/scrub/scrub.c b/fs/xfs/scrub/scrub.c
+index 3d98f604765e..a0fffbcd022b 100644
+--- a/fs/xfs/scrub/scrub.c
++++ b/fs/xfs/scrub/scrub.c
+@@ -184,8 +184,10 @@ xchk_teardown(
+ 			xchk_irele(sc, sc->ip);
+ 		sc->ip = NULL;
+ 	}
+-	if (sc->sm->sm_flags & XFS_SCRUB_IFLAG_REPAIR)
++	if (sc->flags & XCHK_HAVE_FREEZE_PROT) {
++		sc->flags &= ~XCHK_HAVE_FREEZE_PROT;
+ 		mnt_drop_write_file(sc->file);
++	}
+ 	if (sc->buf) {
+ 		if (sc->buf_cleanup)
+ 			sc->buf_cleanup(sc->buf);
+@@ -505,6 +507,8 @@ xfs_scrub_metadata(
+ 		error = mnt_want_write_file(sc->file);
+ 		if (error)
+ 			goto out_sc;
++
++		sc->flags |= XCHK_HAVE_FREEZE_PROT;
+ 	}
+ 
+ 	/* Set up for the operation. */
+diff --git a/fs/xfs/scrub/scrub.h b/fs/xfs/scrub/scrub.h
+index e113f2f5c254..f8ba00e51ca9 100644
+--- a/fs/xfs/scrub/scrub.h
++++ b/fs/xfs/scrub/scrub.h
+@@ -106,6 +106,7 @@ struct xfs_scrub {
+ 
+ /* XCHK state flags grow up from zero, XREP state flags grown down from 2^31 */
+ #define XCHK_TRY_HARDER		(1U << 0)  /* can't get resources, try again */
++#define XCHK_HAVE_FREEZE_PROT	(1U << 1)  /* do we have freeze protection? */
+ #define XCHK_FSGATES_DRAIN	(1U << 2)  /* defer ops draining enabled */
+ #define XCHK_NEED_DRAIN		(1U << 3)  /* scrub needs to drain defer ops */
+ #define XREP_ALREADY_FIXED	(1U << 31) /* checking our repair work */
+diff --git a/fs/xfs/scrub/trace.h b/fs/xfs/scrub/trace.h
+index b3894daeb86a..0b54f1a1cf0c 100644
+--- a/fs/xfs/scrub/trace.h
++++ b/fs/xfs/scrub/trace.h
+@@ -98,6 +98,7 @@ TRACE_DEFINE_ENUM(XFS_SCRUB_TYPE_FSCOUNTERS);
+ 
+ #define XFS_SCRUB_STATE_STRINGS \
+ 	{ XCHK_TRY_HARDER,			"try_harder" }, \
++	{ XCHK_HAVE_FREEZE_PROT,		"nofreeze" }, \
+ 	{ XCHK_FSGATES_DRAIN,			"fsgates_drain" }, \
+ 	{ XCHK_NEED_DRAIN,			"need_drain" }, \
+ 	{ XREP_ALREADY_FIXED,			"already_fixed" }
+@@ -693,6 +694,31 @@ TRACE_EVENT(xchk_fscounters_within_range,
+ 		  __entry->old_value)
+ )
+ 
++DECLARE_EVENT_CLASS(xchk_fsfreeze_class,
++	TP_PROTO(struct xfs_scrub *sc, int error),
++	TP_ARGS(sc, error),
++	TP_STRUCT__entry(
++		__field(dev_t, dev)
++		__field(unsigned int, type)
++		__field(int, error)
++	),
++	TP_fast_assign(
++		__entry->dev = sc->mp->m_super->s_dev;
++		__entry->type = sc->sm->sm_type;
++		__entry->error = error;
++	),
++	TP_printk("dev %d:%d type %s error %d",
++		  MAJOR(__entry->dev), MINOR(__entry->dev),
++		  __print_symbolic(__entry->type, XFS_SCRUB_TYPE_STRINGS),
++		  __entry->error)
++);
++#define DEFINE_XCHK_FSFREEZE_EVENT(name) \
++DEFINE_EVENT(xchk_fsfreeze_class, name, \
++	TP_PROTO(struct xfs_scrub *sc, int error), \
++	TP_ARGS(sc, error))
++DEFINE_XCHK_FSFREEZE_EVENT(xchk_fsfreeze);
++DEFINE_XCHK_FSFREEZE_EVENT(xchk_fsthaw);
++
+ TRACE_EVENT(xchk_refcount_incorrect,
+ 	TP_PROTO(struct xfs_perag *pag, const struct xfs_refcount_irec *irec,
+ 		 xfs_nlink_t seen),
