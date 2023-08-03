@@ -2,107 +2,67 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id AEC70C04A6A
-	for <linux-xfs@archiver.kernel.org>; Thu,  3 Aug 2023 14:56:02 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id EAE10C001DF
+	for <linux-xfs@archiver.kernel.org>; Thu,  3 Aug 2023 18:06:20 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S236056AbjHCO4B (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 3 Aug 2023 10:56:01 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34384 "EHLO
+        id S232455AbjHCSGT (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 3 Aug 2023 14:06:19 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36434 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S236016AbjHCOz7 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 3 Aug 2023 10:55:59 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id CB4AE1728
-        for <linux-xfs@vger.kernel.org>; Thu,  3 Aug 2023 07:55:58 -0700 (PDT)
+        with ESMTP id S231493AbjHCSGC (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 3 Aug 2023 14:06:02 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 73FAC4EE1;
+        Thu,  3 Aug 2023 11:04:35 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
          key-exchange X25519 server-signature RSA-PSS (2048 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 5878761DC4
-        for <linux-xfs@vger.kernel.org>; Thu,  3 Aug 2023 14:55:58 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id B30BCC433C8;
-        Thu,  3 Aug 2023 14:55:57 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 5543261E3E;
+        Thu,  3 Aug 2023 18:04:35 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id BC28DC433C7;
+        Thu,  3 Aug 2023 18:04:30 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1691074557;
-        bh=PZ+8ORcdsiPMGmF6Z75WfLQyh7Jag1oOfdZeTGq9CJc=;
+        s=k20201202; t=1691085874;
+        bh=eCLuzrspl2iA9AJzB2yLuYbX5hhAX4e4sNYlXnEkxWg=;
         h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=Fj8b9LX6ywFyRpOQDKDC0YBF64T3CppM1VpdsEvo/LXRTd2X6cMgN4sQH8PWtlPr5
-         bqc+qErI30i4+zh106QsxtZ79EjaavgRt9knvDU6Ws6VkrA2G8sbJ6XapDQk91waj0
-         2Yn3XmUvv+ZnovmlQsMHC7WLR5PG0gOAJsRs9H9120PupdmPCv/ffcMYQVYrUFSosn
-         E0NFBhxqFi1WxFq1zTA1pT8AV4NQZDZjsGai+sMwYeDorB9OIFyPF0cyQK/YWjBquA
-         l/nbdR8n8/IxEi8LBf+yZr+T9uy6WbVdotdoWhhCgfG0GUZH5C/ZNpVEhDnRrBIGfW
-         lW+sEB48VDjZw==
-Date:   Thu, 3 Aug 2023 07:55:57 -0700
-From:   "Darrick J. Wong" <djwong@kernel.org>
-To:     Dave Chinner <david@fromorbit.com>
-Cc:     linux-xfs@vger.kernel.org
-Subject: Re: [PATCH] xfs: stabilize fs summary counters for online fsck
-Message-ID: <20230803145557.GF11352@frogsfrogsfrogs>
-References: <20230803052218.GE11352@frogsfrogsfrogs>
- <ZMtKiMSVOtk7CbmL@dread.disaster.area>
+        b=Dl7ePWst+Fn/zB+vTBNyZ407Av71NETccv5s5eg1ogo6vQAFVqCGX2QEDriBXA9la
+         h2aslHTXX2U2bsrocTVsZ1nmjo4B6UBq2h91Gx2vahiPi4QQ78UmzOI8LXbNUflrDL
+         FAPNfKTTR1fZ0j6/+PdOIbgJ66CpgAdLA76gvCOEtrpv7EtMMR+ReL9GxeLci5PfKd
+         P9uXqdRuUap6ECaZ1XEHmFvLYlyxeOd/uUKnWx2wJpCmXSIjDwP0TsCg/27xnBkTRk
+         R9xAA/eehNcaM8eGXyancfI9Oj6aRKq8jTXGn9A39bXCqYJ7/awLi7s6Iyj1xU7PWz
+         dl2fOfiODVuqQ==
+Date:   Thu, 3 Aug 2023 20:04:28 +0200
+From:   Christian Brauner <brauner@kernel.org>
+To:     Christoph Hellwig <hch@lst.de>
+Cc:     Al Viro <viro@zeniv.linux.org.uk>, Jan Kara <jack@suse.cz>,
+        Chris Mason <clm@fb.com>, Josef Bacik <josef@toxicpanda.com>,
+        David Sterba <dsterba@suse.com>, Theodore Ts'o <tytso@mit.edu>,
+        Andreas Dilger <adilger.kernel@dilger.ca>,
+        Jaegeuk Kim <jaegeuk@kernel.org>, Chao Yu <chao@kernel.org>,
+        Ryusuke Konishi <konishi.ryusuke@gmail.com>,
+        "Darrick J. Wong" <djwong@kernel.org>,
+        Jens Axboe <axboe@kernel.dk>, linux-btrfs@vger.kernel.org,
+        linux-ext4@vger.kernel.org, linux-f2fs-devel@lists.sourceforge.net,
+        linux-nilfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
+        linux-xfs@vger.kernel.org, linux-block@vger.kernel.org
+Subject: Re: [PATCH 01/12] fs: export setup_bdev_super
+Message-ID: <20230803-decken-lernen-3939eb320283@brauner>
+References: <20230802154131.2221419-1-hch@lst.de>
+ <20230802154131.2221419-2-hch@lst.de>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=utf-8
 Content-Disposition: inline
-In-Reply-To: <ZMtKiMSVOtk7CbmL@dread.disaster.area>
+In-Reply-To: <20230802154131.2221419-2-hch@lst.de>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Thu, Aug 03, 2023 at 04:34:48PM +1000, Dave Chinner wrote:
-> On Wed, Aug 02, 2023 at 10:22:18PM -0700, Darrick J. Wong wrote:
-> > From: Darrick J. Wong <djwong@kernel.org>
-> > 
-> > If the fscounters scrubber notices incorrect summary counters, it's
-> > entirely possible that scrub is simply racing with other threads that
-> > are updating the incore counters.  There isn't a good way to stabilize
-> > percpu counters or set ourselves up to observe live updates with hooks
-> > like we do for the quotacheck or nlinks scanners, so we instead choose
-> > to freeze the filesystem long enough to walk the incore per-AG
-> > structures.
-> > 
-> > Past me thought that it was going to be commonplace to have to freeze
-> > the filesystem to perform some kind of repair and set up a whole
-> > separate infrastructure to freeze the filesystem in such a way that
-> > userspace could not unfreeze while we were running.  This involved
-> > adding a mutex and freeze_super/thaw_super functions and dealing with
-> > the fact that the VFS freeze/thaw functions can free the VFS superblock
-> > references on return.
-> > 
-> > This was all very overwrought, since fscounters turned out to be the
-> > only user of scrub freezes, and it doesn't require the log to quiesce,
-> > only the incore superblock counters.  We prevent other threads from
-> > changing the freeze level by calling freeze_super_excl with a custom
-> > freeze cookie to keep everyone else out of the filesystem.
-> > 
-> > The end result is that fscounters should be much more efficient.  When
-> > we're checking a busy system and we can't stabilize the counters, the
-> > custom freeze will do less work, which should result in less downtime.
-> > Repair should be similarly speedy, but that's in the next patch.
-> > 
-> > Signed-off-by: Darrick J. Wong <djwong@kernel.org>
-> > ---
-> >  fs/xfs/scrub/fscounters.c |  198 ++++++++++++++++++++++++++++++++++-----------
-> >  fs/xfs/scrub/fscounters.h |   20 +++++
-> >  fs/xfs/scrub/scrub.c      |    6 +
-> >  fs/xfs/scrub/scrub.h      |    1 
-> >  fs/xfs/scrub/trace.h      |   26 ++++++
-> >  5 files changed, 203 insertions(+), 48 deletions(-)
-> >  create mode 100644 fs/xfs/scrub/fscounters.h
+On Wed, Aug 02, 2023 at 05:41:20PM +0200, Christoph Hellwig wrote:
+> We'll want to use setup_bdev_super instead of duplicating it in nilfs2.
 > 
-> Code changes look ok, though I am wondering why struct
-> xchk_fscounters needs to be moved to it's own header file? AFAICT it
-> is still only used by fs/xfs/scrub/fscounters.c, so I'm not sure
-> what purpose the new header file serves....
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
+> ---
 
-The header file is the basis for the repair patch which I've previously
-sent to the list.
-https://lore.kernel.org/linux-xfs/168506061531.3732954.7713322896089390150.stgit@frogsfrogsfrogs/
-
-It's not strictly needed at this time.  I'll resend without that bit.
-
---D
-
-> -Dave.
-> -- 
-> Dave Chinner
-> david@fromorbit.com
+Looks good to me,
+Reviewed-by: Christian Brauner <brauner@kernel.org>
