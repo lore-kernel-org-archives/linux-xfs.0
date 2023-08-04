@@ -2,42 +2,42 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4A9F3C001DF
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D2B57C001DE
 	for <linux-xfs@archiver.kernel.org>; Fri,  4 Aug 2023 17:11:18 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232163AbjHDRLR (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        id S232216AbjHDRLR (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
         Fri, 4 Aug 2023 13:11:17 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43914 "EHLO
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44112 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232215AbjHDRK7 (ORCPT
+        with ESMTP id S232221AbjHDRK7 (ORCPT
         <rfc822;linux-xfs@vger.kernel.org>); Fri, 4 Aug 2023 13:10:59 -0400
 Received: from outgoing.mit.edu (outgoing-auth-1.mit.edu [18.9.28.11])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9FCB649F0
-        for <linux-xfs@vger.kernel.org>; Fri,  4 Aug 2023 10:10:46 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 67FCF4C05
+        for <linux-xfs@vger.kernel.org>; Fri,  4 Aug 2023 10:10:47 -0700 (PDT)
 Received: from cwcc.thunk.org (pool-173-48-112-100.bstnma.fios.verizon.net [173.48.112.100])
         (authenticated bits=0)
         (User authenticated as tytso@ATHENA.MIT.EDU)
-        by outgoing.mit.edu (8.14.7/8.12.4) with ESMTP id 374HAUpx018435
+        by outgoing.mit.edu (8.14.7/8.12.4) with ESMTP id 374HAWik018485
         (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Fri, 4 Aug 2023 13:10:31 -0400
+        Fri, 4 Aug 2023 13:10:33 -0400
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=mit.edu; s=outgoing;
-        t=1691169032; bh=euCSBHqrCSTxpKioaTNv1/QoCEx4QA6JUd7a9fl3J+M=;
+        t=1691169034; bh=UDwpJ5GgI9EIQrPOCj5y0w/t5ldq45OM5CixWwwHDqQ=;
         h=From:Subject:Date:Message-Id:MIME-Version;
-        b=dUr1JXoJ5V/jgTi3QkmZxaqogXdNX/fiT30TlJRzcs90Ei+j/8OTntEDiuSJPzK2e
-         efE/RCbzZOFn0r1XddtJxl+eaRpKYALLv8QGJ5TfW5OZJk0PWx7uouyUkltljMtyXB
-         ul72AWxeVlKIEwAA0k+LsfFzKA2ON+FaIytoTL5n4aGIHgWsjBGnLllmBjnA5ZoNxf
-         5Hr2eAGget148cnZ5Q3V7rYZvLqZgGfk5PEEYogmE5FAMR2AYjAgl1nYoUvgI/qFrg
-         3SHQ/8Gx/t5IaqOoQauZvcch+WGICjVT1mN48FshNqPQP3lUYKy3bmCjwbt8mhtqm7
-         FkGtMaDPB2X4g==
+        b=D0hLi3APY+HHynO3jh4sHEDsbtKcOmgXGl0h4MeHO6oNLufKJdg6YV+CMwETg07RU
+         sM7E8OiXlOiXwT6V/zlhUB1LeXQPzc8QIi1tkpLixGzsv2L0FJfPwNfmJ1yq4qPwwP
+         e94xQYcLl3ekoWVMN0sKgpcjCSTuHfBTbw2rd6e1BMZQnMQ1JgOtrKl4g0YoXtd+L4
+         hMb6oK77FGY6LMquJWUCG3zaFXtP37MdFLIjI+hSSQiGrZ0fJfg/viDzUNdX3f6ghN
+         Ypfg+sH23Rvkx2blRBgYTF9A5GpFKIQ80A3e3BhJ/oiKFRMzxt2MXqcv3JMRD5EVax
+         gEGCWOmfHf8zA==
 Received: by cwcc.thunk.org (Postfix, from userid 15806)
-        id 071CD15C04F4; Fri,  4 Aug 2023 13:10:30 -0400 (EDT)
+        id 0DCA315C04F8; Fri,  4 Aug 2023 13:10:30 -0400 (EDT)
 From:   "Theodore Ts'o" <tytso@mit.edu>
 To:     linux-xfs@vger.kernel.org
 Cc:     amir73il@gmail.com, djwong@kernel.org, chandan.babu@oracle.com,
-        leah.rumancik@gmail.com, Wengang Wang <wen.gang.wang@oracle.com>
-Subject: [PATCH CANDIDATE v5.15 4/9] xfs: Fix false ENOSPC when performing direct write on a delalloc extent in cow fork
-Date:   Fri,  4 Aug 2023 13:10:14 -0400
-Message-Id: <20230804171019.1392900-4-tytso@mit.edu>
+        leah.rumancik@gmail.com, Dave Chinner <dchinner@redhat.com>
+Subject: [PATCH CANDIDATE v5.15 8/9] xfs: bound maximum wait time for inodegc work
+Date:   Fri,  4 Aug 2023 13:10:18 -0400
+Message-Id: <20230804171019.1392900-8-tytso@mit.edu>
 X-Mailer: git-send-email 2.31.0
 In-Reply-To: <20230804171019.1392900-1-tytso@mit.edu>
 References: <20230802205747.GE358316@mit.edu>
@@ -48,342 +48,156 @@ Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-From: Chandan Babu R <chandan.babu@oracle.com>
+From: Dave Chinner <dchinner@redhat.com>
 
-commit d62113303d691bcd8d0675ae4ac63e7769afc56c upstream.
+commit 7cf2b0f9611b9971d663e1fc3206eeda3b902922 upstream.
 
-On a higly fragmented filesystem a Direct IO write can fail with -ENOSPC error
-even though the filesystem has sufficient number of free blocks.
+Currently inodegc work can sit queued on the per-cpu queue until
+the workqueue is either flushed of the queue reaches a depth that
+triggers work queuing (and later throttling). This means that we
+could queue work that waits for a long time for some other event to
+trigger flushing.
 
-This occurs if the file offset range on which the write operation is being
-performed has a delalloc extent in the cow fork and this delalloc extent
-begins much before the Direct IO range.
+Hence instead of just queueing work at a specific depth, use a
+delayed work that queues the work at a bound time. We can still
+schedule the work immediately at a given depth, but we no long need
+to worry about leaving a number of items on the list that won't get
+processed until external events prevail.
 
-In such a scenario, xfs_reflink_allocate_cow() invokes xfs_bmapi_write() to
-allocate the blocks mapped by the delalloc extent. The extent thus allocated
-may not cover the beginning of file offset range on which the Direct IO write
-was issued. Hence xfs_reflink_allocate_cow() ends up returning -ENOSPC.
-
-The following script reliably recreates the bug described above.
-
-  #!/usr/bin/bash
-
-  device=/dev/loop0
-  shortdev=$(basename $device)
-
-  mntpnt=/mnt/
-  file1=${mntpnt}/file1
-  file2=${mntpnt}/file2
-  fragmentedfile=${mntpnt}/fragmentedfile
-  punchprog=/root/repos/xfstests-dev/src/punch-alternating
-
-  errortag=/sys/fs/xfs/${shortdev}/errortag/bmap_alloc_minlen_extent
-
-  umount $device > /dev/null 2>&1
-
-  echo "Create FS"
-  mkfs.xfs -f -m reflink=1 $device > /dev/null 2>&1
-  if [[ $? != 0 ]]; then
-  	echo "mkfs failed."
-  	exit 1
-  fi
-
-  echo "Mount FS"
-  mount $device $mntpnt > /dev/null 2>&1
-  if [[ $? != 0 ]]; then
-  	echo "mount failed."
-  	exit 1
-  fi
-
-  echo "Create source file"
-  xfs_io -f -c "pwrite 0 32M" $file1 > /dev/null 2>&1
-
-  sync
-
-  echo "Create Reflinked file"
-  xfs_io -f -c "reflink $file1" $file2 &>/dev/null
-
-  echo "Set cowextsize"
-  xfs_io -c "cowextsize 16M" $file1 > /dev/null 2>&1
-
-  echo "Fragment FS"
-  xfs_io -f -c "pwrite 0 64M" $fragmentedfile > /dev/null 2>&1
-  sync
-  $punchprog $fragmentedfile
-
-  echo "Allocate block sized extent from now onwards"
-  echo -n 1 > $errortag
-
-  echo "Create 16MiB delalloc extent in CoW fork"
-  xfs_io -c "pwrite 0 4k" $file1 > /dev/null 2>&1
-
-  sync
-
-  echo "Direct I/O write at offset 12k"
-  xfs_io -d -c "pwrite 12k 8k" $file1
-
-This commit fixes the bug by invoking xfs_bmapi_write() in a loop until disk
-blocks are allocated for atleast the starting file offset of the Direct IO
-write range.
-
-Fixes: 3c68d44a2b49 ("xfs: allocate direct I/O COW blocks in iomap_begin")
-Reported-and-Root-caused-by: Wengang Wang <wen.gang.wang@oracle.com>
-Signed-off-by: Chandan Babu R <chandan.babu@oracle.com>
+Signed-off-by: Dave Chinner <dchinner@redhat.com>
 Reviewed-by: Darrick J. Wong <djwong@kernel.org>
-[djwong: slight editing to make the locking less grody, and fix some style things]
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 ---
- fs/xfs/xfs_reflink.c | 198 +++++++++++++++++++++++++++++++++++--------
- 1 file changed, 163 insertions(+), 35 deletions(-)
+ fs/xfs/xfs_icache.c | 36 ++++++++++++++++++++++--------------
+ fs/xfs/xfs_mount.h  |  2 +-
+ fs/xfs/xfs_super.c  |  2 +-
+ 3 files changed, 24 insertions(+), 16 deletions(-)
 
-diff --git a/fs/xfs/xfs_reflink.c b/fs/xfs/xfs_reflink.c
-index 628ce65d02bb..793bdf5ac2f7 100644
---- a/fs/xfs/xfs_reflink.c
-+++ b/fs/xfs/xfs_reflink.c
-@@ -340,9 +340,41 @@ xfs_find_trim_cow_extent(
- 	return 0;
+diff --git a/fs/xfs/xfs_icache.c b/fs/xfs/xfs_icache.c
+index 5e44d7bbd8fc..2c3ef553f5ef 100644
+--- a/fs/xfs/xfs_icache.c
++++ b/fs/xfs/xfs_icache.c
+@@ -458,7 +458,7 @@ xfs_inodegc_queue_all(
+ 	for_each_online_cpu(cpu) {
+ 		gc = per_cpu_ptr(mp->m_inodegc, cpu);
+ 		if (!llist_empty(&gc->list))
+-			queue_work_on(cpu, mp->m_inodegc_wq, &gc->work);
++			mod_delayed_work_on(cpu, mp->m_inodegc_wq, &gc->work, 0);
+ 	}
  }
  
--/* Allocate all CoW reservations covering a range of blocks in a file. */
--int
--xfs_reflink_allocate_cow(
-+static int
-+xfs_reflink_convert_unwritten(
-+	struct xfs_inode	*ip,
-+	struct xfs_bmbt_irec	*imap,
-+	struct xfs_bmbt_irec	*cmap,
-+	bool			convert_now)
-+{
-+	xfs_fileoff_t		offset_fsb = imap->br_startoff;
-+	xfs_filblks_t		count_fsb = imap->br_blockcount;
-+	int			error;
-+
-+	/*
-+	 * cmap might larger than imap due to cowextsize hint.
-+	 */
-+	xfs_trim_extent(cmap, offset_fsb, count_fsb);
-+
-+	/*
-+	 * COW fork extents are supposed to remain unwritten until we're ready
-+	 * to initiate a disk write.  For direct I/O we are going to write the
-+	 * data and need the conversion, but for buffered writes we're done.
-+	 */
-+	if (!convert_now || cmap->br_state == XFS_EXT_NORM)
-+		return 0;
-+
-+	trace_xfs_reflink_convert_cow(ip, cmap);
-+
-+	error = xfs_reflink_convert_cow_locked(ip, offset_fsb, count_fsb);
-+	if (!error)
-+		cmap->br_state = XFS_EXT_NORM;
-+
-+	return error;
-+}
-+
-+static int
-+xfs_reflink_fill_cow_hole(
- 	struct xfs_inode	*ip,
- 	struct xfs_bmbt_irec	*imap,
- 	struct xfs_bmbt_irec	*cmap,
-@@ -351,25 +383,12 @@ xfs_reflink_allocate_cow(
- 	bool			convert_now)
+@@ -1851,8 +1851,8 @@ void
+ xfs_inodegc_worker(
+ 	struct work_struct	*work)
  {
- 	struct xfs_mount	*mp = ip->i_mount;
--	xfs_fileoff_t		offset_fsb = imap->br_startoff;
--	xfs_filblks_t		count_fsb = imap->br_blockcount;
- 	struct xfs_trans	*tp;
--	int			nimaps, error = 0;
--	bool			found;
- 	xfs_filblks_t		resaligned;
--	xfs_extlen_t		resblks = 0;
+-	struct xfs_inodegc	*gc = container_of(work, struct xfs_inodegc,
+-							work);
++	struct xfs_inodegc	*gc = container_of(to_delayed_work(work),
++						struct xfs_inodegc, work);
+ 	struct llist_node	*node = llist_del_all(&gc->list);
+ 	struct xfs_inode	*ip, *n;
+ 
+@@ -2021,6 +2021,7 @@ xfs_inodegc_queue(
+ 	struct xfs_inodegc	*gc;
+ 	int			items;
+ 	unsigned int		shrinker_hits;
++	unsigned long		queue_delay = 1;
+ 
+ 	trace_xfs_inode_set_need_inactive(ip);
+ 	spin_lock(&ip->i_flags_lock);
+@@ -2032,19 +2033,26 @@ xfs_inodegc_queue(
+ 	items = READ_ONCE(gc->items);
+ 	WRITE_ONCE(gc->items, items + 1);
+ 	shrinker_hits = READ_ONCE(gc->shrinker_hits);
+-	put_cpu_ptr(gc);
+ 
+-	if (!xfs_is_inodegc_enabled(mp))
++	/*
++	 * We queue the work while holding the current CPU so that the work
++	 * is scheduled to run on this CPU.
++	 */
++	if (!xfs_is_inodegc_enabled(mp)) {
++		put_cpu_ptr(gc);
+ 		return;
 -
--	ASSERT(xfs_isilocked(ip, XFS_ILOCK_EXCL));
--	if (!ip->i_cowfp) {
--		ASSERT(!xfs_is_reflink_inode(ip));
--		xfs_ifork_init_cow(ip);
--	}
--
--	error = xfs_find_trim_cow_extent(ip, imap, cmap, shared, &found);
--	if (error || !*shared)
--		return error;
--	if (found)
--		goto convert;
-+	xfs_extlen_t		resblks;
-+	int			nimaps;
-+	int			error;
-+	bool			found;
- 
- 	resaligned = xfs_aligned_fsb_count(imap->br_startoff,
- 		imap->br_blockcount, xfs_get_cowextsz_hint(ip));
-@@ -385,17 +404,17 @@ xfs_reflink_allocate_cow(
- 
- 	*lockmode = XFS_ILOCK_EXCL;
- 
--	/*
--	 * Check for an overlapping extent again now that we dropped the ilock.
--	 */
- 	error = xfs_find_trim_cow_extent(ip, imap, cmap, shared, &found);
- 	if (error || !*shared)
- 		goto out_trans_cancel;
-+
- 	if (found) {
- 		xfs_trans_cancel(tp);
- 		goto convert;
+-	if (xfs_inodegc_want_queue_work(ip, items)) {
+-		trace_xfs_inodegc_queue(mp, __return_address);
+-		queue_work(mp->m_inodegc_wq, &gc->work);
  	}
  
-+	ASSERT(cmap->br_startoff > imap->br_startoff);
++	if (xfs_inodegc_want_queue_work(ip, items))
++		queue_delay = 0;
 +
- 	/* Allocate the entire reservation as unwritten blocks. */
- 	nimaps = 1;
- 	error = xfs_bmapi_write(tp, ip, imap->br_startoff, imap->br_blockcount,
-@@ -415,26 +434,135 @@ xfs_reflink_allocate_cow(
- 	 */
- 	if (nimaps == 0)
- 		return -ENOSPC;
++	trace_xfs_inodegc_queue(mp, __return_address);
++	mod_delayed_work(mp->m_inodegc_wq, &gc->work, queue_delay);
++	put_cpu_ptr(gc);
 +
- convert:
--	xfs_trim_extent(cmap, offset_fsb, count_fsb);
--	/*
--	 * COW fork extents are supposed to remain unwritten until we're ready
--	 * to initiate a disk write.  For direct I/O we are going to write the
--	 * data and need the conversion, but for buffered writes we're done.
--	 */
--	if (!convert_now || cmap->br_state == XFS_EXT_NORM)
--		return 0;
--	trace_xfs_reflink_convert_cow(ip, cmap);
--	error = xfs_reflink_convert_cow_locked(ip, offset_fsb, count_fsb);
--	if (!error)
--		cmap->br_state = XFS_EXT_NORM;
-+	return xfs_reflink_convert_unwritten(ip, imap, cmap, convert_now);
-+
-+out_trans_cancel:
-+	xfs_trans_cancel(tp);
- 	return error;
-+}
-+
-+static int
-+xfs_reflink_fill_delalloc(
-+	struct xfs_inode	*ip,
-+	struct xfs_bmbt_irec	*imap,
-+	struct xfs_bmbt_irec	*cmap,
-+	bool			*shared,
-+	uint			*lockmode,
-+	bool			convert_now)
-+{
-+	struct xfs_mount	*mp = ip->i_mount;
-+	struct xfs_trans	*tp;
-+	int			nimaps;
-+	int			error;
-+	bool			found;
-+
-+	do {
-+		xfs_iunlock(ip, *lockmode);
-+		*lockmode = 0;
-+
-+		error = xfs_trans_alloc_inode(ip, &M_RES(mp)->tr_write, 0, 0,
-+				false, &tp);
-+		if (error)
-+			return error;
-+
-+		*lockmode = XFS_ILOCK_EXCL;
-+
-+		error = xfs_find_trim_cow_extent(ip, imap, cmap, shared,
-+				&found);
-+		if (error || !*shared)
-+			goto out_trans_cancel;
-+
-+		if (found) {
-+			xfs_trans_cancel(tp);
-+			break;
-+		}
-+
-+		ASSERT(isnullstartblock(cmap->br_startblock) ||
-+		       cmap->br_startblock == DELAYSTARTBLOCK);
-+
-+		/*
-+		 * Replace delalloc reservation with an unwritten extent.
-+		 */
-+		nimaps = 1;
-+		error = xfs_bmapi_write(tp, ip, cmap->br_startoff,
-+				cmap->br_blockcount,
-+				XFS_BMAPI_COWFORK | XFS_BMAPI_PREALLOC, 0,
-+				cmap, &nimaps);
-+		if (error)
-+			goto out_trans_cancel;
-+
-+		xfs_inode_set_cowblocks_tag(ip);
-+		error = xfs_trans_commit(tp);
-+		if (error)
-+			return error;
-+
-+		/*
-+		 * Allocation succeeded but the requested range was not even
-+		 * partially satisfied?  Bail out!
-+		 */
-+		if (nimaps == 0)
-+			return -ENOSPC;
-+	} while (cmap->br_startoff + cmap->br_blockcount <= imap->br_startoff);
-+
-+	return xfs_reflink_convert_unwritten(ip, imap, cmap, convert_now);
- 
- out_trans_cancel:
- 	xfs_trans_cancel(tp);
- 	return error;
+ 	if (xfs_inodegc_want_flush_work(ip, items, shrinker_hits)) {
+ 		trace_xfs_inodegc_throttle(mp, __return_address);
+-		flush_work(&gc->work);
++		flush_delayed_work(&gc->work);
+ 	}
  }
  
-+/* Allocate all CoW reservations covering a range of blocks in a file. */
-+int
-+xfs_reflink_allocate_cow(
-+	struct xfs_inode	*ip,
-+	struct xfs_bmbt_irec	*imap,
-+	struct xfs_bmbt_irec	*cmap,
-+	bool			*shared,
-+	uint			*lockmode,
-+	bool			convert_now)
-+{
-+	int			error;
-+	bool			found;
-+
-+	ASSERT(xfs_isilocked(ip, XFS_ILOCK_EXCL));
-+	if (!ip->i_cowfp) {
-+		ASSERT(!xfs_is_reflink_inode(ip));
-+		xfs_ifork_init_cow(ip);
-+	}
-+
-+	error = xfs_find_trim_cow_extent(ip, imap, cmap, shared, &found);
-+	if (error || !*shared)
-+		return error;
-+
-+	/* CoW fork has a real extent */
-+	if (found)
-+		return xfs_reflink_convert_unwritten(ip, imap, cmap,
-+				convert_now);
-+
-+	/*
-+	 * CoW fork does not have an extent and data extent is shared.
-+	 * Allocate a real extent in the CoW fork.
-+	 */
-+	if (cmap->br_startoff > imap->br_startoff)
-+		return xfs_reflink_fill_cow_hole(ip, imap, cmap, shared,
-+				lockmode, convert_now);
-+
-+	/*
-+	 * CoW fork has a delalloc reservation. Replace it with a real extent.
-+	 * There may or may not be a data fork mapping.
-+	 */
-+	if (isnullstartblock(cmap->br_startblock) ||
-+	    cmap->br_startblock == DELAYSTARTBLOCK)
-+		return xfs_reflink_fill_delalloc(ip, imap, cmap, shared,
-+				lockmode, convert_now);
-+
-+	/* Shouldn't get here. */
-+	ASSERT(0);
-+	return -EFSCORRUPTED;
-+}
-+
+@@ -2061,7 +2069,7 @@ xfs_inodegc_cpu_dead(
+ 	unsigned int		count = 0;
+ 
+ 	dead_gc = per_cpu_ptr(mp->m_inodegc, dead_cpu);
+-	cancel_work_sync(&dead_gc->work);
++	cancel_delayed_work_sync(&dead_gc->work);
+ 
+ 	if (llist_empty(&dead_gc->list))
+ 		return;
+@@ -2080,12 +2088,12 @@ xfs_inodegc_cpu_dead(
+ 	llist_add_batch(first, last, &gc->list);
+ 	count += READ_ONCE(gc->items);
+ 	WRITE_ONCE(gc->items, count);
+-	put_cpu_ptr(gc);
+ 
+ 	if (xfs_is_inodegc_enabled(mp)) {
+ 		trace_xfs_inodegc_queue(mp, __return_address);
+-		queue_work(mp->m_inodegc_wq, &gc->work);
++		mod_delayed_work(mp->m_inodegc_wq, &gc->work, 0);
+ 	}
++	put_cpu_ptr(gc);
+ }
+ 
  /*
-  * Cancel CoW reservations for some block range of an inode.
-  *
+@@ -2180,7 +2188,7 @@ xfs_inodegc_shrinker_scan(
+ 			unsigned int	h = READ_ONCE(gc->shrinker_hits);
+ 
+ 			WRITE_ONCE(gc->shrinker_hits, h + 1);
+-			queue_work_on(cpu, mp->m_inodegc_wq, &gc->work);
++			mod_delayed_work_on(cpu, mp->m_inodegc_wq, &gc->work, 0);
+ 			no_items = false;
+ 		}
+ 	}
+diff --git a/fs/xfs/xfs_mount.h b/fs/xfs/xfs_mount.h
+index 86564295fce6..3d58938a6f75 100644
+--- a/fs/xfs/xfs_mount.h
++++ b/fs/xfs/xfs_mount.h
+@@ -61,7 +61,7 @@ struct xfs_error_cfg {
+  */
+ struct xfs_inodegc {
+ 	struct llist_head	list;
+-	struct work_struct	work;
++	struct delayed_work	work;
+ 
+ 	/* approximate count of inodes in the list */
+ 	unsigned int		items;
+diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
+index df1d6be61bfa..8fe6ca9208de 100644
+--- a/fs/xfs/xfs_super.c
++++ b/fs/xfs/xfs_super.c
+@@ -1061,7 +1061,7 @@ xfs_inodegc_init_percpu(
+ 		gc = per_cpu_ptr(mp->m_inodegc, cpu);
+ 		init_llist_head(&gc->list);
+ 		gc->items = 0;
+-		INIT_WORK(&gc->work, xfs_inodegc_worker);
++		INIT_DELAYED_WORK(&gc->work, xfs_inodegc_worker);
+ 	}
+ 	return 0;
+ }
 -- 
 2.31.0
 
