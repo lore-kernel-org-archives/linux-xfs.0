@@ -2,124 +2,99 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DF95EC001DF
-	for <linux-xfs@archiver.kernel.org>; Fri,  4 Aug 2023 15:39:46 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 067BDC04A6A
+	for <linux-xfs@archiver.kernel.org>; Fri,  4 Aug 2023 15:48:09 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229817AbjHDPjp (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 4 Aug 2023 11:39:45 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41666 "EHLO
+        id S232049AbjHDPsI (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 4 Aug 2023 11:48:08 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45380 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231263AbjHDPjn (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 4 Aug 2023 11:39:43 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7F82249C1;
-        Fri,  4 Aug 2023 08:39:32 -0700 (PDT)
+        with ESMTP id S232180AbjHDPsA (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 4 Aug 2023 11:48:00 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9BF552D71;
+        Fri,  4 Aug 2023 08:47:59 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
          key-exchange X25519 server-signature RSA-PSS (2048 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 061246202B;
-        Fri,  4 Aug 2023 15:39:31 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 31522C433C9;
-        Fri,  4 Aug 2023 15:39:26 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 3A42E6208C;
+        Fri,  4 Aug 2023 15:47:59 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 90646C433C7;
+        Fri,  4 Aug 2023 15:47:58 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1691163570;
-        bh=WBKOiXxNnEcmIAXLd9bFnF2KFmCPgIBMmS+a6ZOzWKY=;
-        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=guM3dTEfPj9gzW4hZVBn+/1D3e6V0oGJa3WQkuaCaRJm+YEkO/j0g28vpLcq+8KPx
-         00I5JDimR9O6GRpM1sCbRoDBeqI3dA0US5iDcvRFH1wRzLZGMG/AKi+37CHK3OiKfl
-         Pd3WUGjQp78CvSWurtOz9TKUp2R8T9+xWekamZzkpVJreEREn7gcZJVUpwDMtQgJPa
-         oNlJ1Fd+Wv/UAECk8iLUJUaVzEv4k+34Xo4z1QJAK3CSDmvC6vv3w+O4TwoqgSUVxv
-         yOZLQQe40+3upkBEjN2TRg8dq8CL62TzVM9oUzcd7edWypJQ/9r8RDeBu3CtctpdP3
-         S7Paz1gf4bygw==
-From:   Christian Brauner <brauner@kernel.org>
-To:     Christoph Hellwig <hch@lst.de>
-Cc:     Christian Brauner <brauner@kernel.org>, Jan Kara <jack@suse.cz>,
-        Chris Mason <clm@fb.com>, Josef Bacik <josef@toxicpanda.com>,
-        David Sterba <dsterba@suse.com>, Theodore Ts'o <tytso@mit.edu>,
-        Andreas Dilger <adilger.kernel@dilger.ca>,
-        Jaegeuk Kim <jaegeuk@kernel.org>, Chao Yu <chao@kernel.org>,
-        Ryusuke Konishi <konishi.ryusuke@gmail.com>,
-        "Darrick J. Wong" <djwong@kernel.org>,
-        Jens Axboe <axboe@kernel.dk>, linux-btrfs@vger.kernel.org,
-        linux-ext4@vger.kernel.org, linux-f2fs-devel@lists.sourceforge.net,
-        linux-nilfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
-        linux-xfs@vger.kernel.org, linux-block@vger.kernel.org,
-        Al Viro <viro@zeniv.linux.org.uk>
-Subject: Re: more blkdev_get and holder work
-Date:   Fri,  4 Aug 2023 17:39:20 +0200
-Message-Id: <20230804-wegelagerei-nagel-e5ba7e7cedd5@brauner>
-X-Mailer: git-send-email 2.34.1
-In-Reply-To: <20230802154131.2221419-1-hch@lst.de>
-References: <20230802154131.2221419-1-hch@lst.de>
+        s=k20201202; t=1691164078;
+        bh=vmYSL62gE86wbB6w4+ThrjkJq99WbHmmmtt+qKXP5ig=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=nr4GSOlggk2Oz9nBXHXo+h46NcFd/XRt8m2tXXwlhG5YlAeXfWOpPN9mGlSSFRzJj
+         5efF2T8JV8teWdU27xrpkgjTmHIeoiravkzcJqMyoYcU4/Mt5EsDUday9wN/HyS7J1
+         nxRc88/Z1+fy8xBmRuO6rupCyU93HGW+UrMxS1wWc1Q8lIHT+rTVKGpM5dZnXvbMd2
+         3AN8uwkWvchUdYh7MMWpMA1juA6uypry5mxoyjKWL0wPNsuzOwJc3b7p1SSUOQNRIA
+         J7PzhksTmRFAG0xsElJHRDCDmUC/o7NHD347m6XsNGDZeRWAOjkdmEAShUIQfuWj5H
+         rbpKgSq4CRptQ==
+Date:   Fri, 4 Aug 2023 08:47:57 -0700
+From:   "Darrick J. Wong" <djwong@kernel.org>
+To:     Guoqing Jiang <guoqing.jiang@linux.dev>
+Cc:     amir73il@gmail.com, dchinner@redhat.com, yangx.jy@fujitsu.com,
+        linux-xfs@vger.kernel.org, stable@vger.kernel.org
+Subject: Re: [PATCH 5.10 0/2] Fix xfs/179 for 5.10 stable
+Message-ID: <20230804154757.GI11352@frogsfrogsfrogs>
+References: <20230803093652.7119-1-guoqing.jiang@linux.dev>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-X-Developer-Signature: v=1; a=openpgp-sha256; l=3062; i=brauner@kernel.org; h=from:subject:message-id; bh=7FNUYW+x5CSjf6yCNgXxulkGn+cMsTW366YHSfu1h4A=; b=owGbwMvMwCU28Zj0gdSKO4sYT6slMaSclU4X5tucveB9lDl37gJ9jlmvFGN+KNg9TprAwbY/er8W 31PtjlIWBjEuBlkxRRaHdpNwueU8FZuNMjVg5rAygQxh4OIUgIncNWf4K3Hkgdv/npvLfSQ798adms 9ScvSZ2rptQtc471tqdUeIZzMyHOPQmly1SzxZ11D73stJc0XjnmfPNpO6vb5+SlL6wynWPAA=
-X-Developer-Key: i=brauner@kernel.org; a=openpgp; fpr=4880B8C9BD0E5106FC070F4F7B3C391EFEA93624
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20230803093652.7119-1-guoqing.jiang@linux.dev>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Wed, 02 Aug 2023 17:41:19 +0200, Christoph Hellwig wrote:
-> this series sits on top of the vfs.super branch in the VFS tree and does a
-> few closely related things:
+On Thu, Aug 03, 2023 at 05:36:50PM +0800, Guoqing Jiang wrote:
+> Hi,
 > 
->   1) it also converts nilfs2 and btrfs to the new scheme where the file system
->      only opens the block devices after we know that a new super_block was
->      allocated.
->   2) it then makes sure that for all file system openers the super_block is
->      stored in bd_holder, and makes use of that fact in the mark_dead method
->      so that it doesn't have to fall get_super and thus can also work on
->      block devices that sb->s_bdev doesn't point to
->   3) it then drops the fs-specific holder ops in ext4 and xfs and uses the
->      generic fs_holder_ops there
+> With the two patches applied, xfs/179 can pass in 5.10.188. Otherwise I got
 > 
-> [...]
+> [root@localhost xfstests]# ./check xfs/179
+> FSTYP         -- xfs (non-debug)
+> PLATFORM      -- Linux/x86_64 localhost 5.10.188-default #14 SMP Thu Aug 3 15:23:19 CST 2023
+> MKFS_OPTIONS  -- -f /dev/loop1
+> MOUNT_OPTIONS -- -o context=system_u:object_r:root_t:s0 /dev/loop1 /mnt/scratch
+> 
+> xfs/179 1s ... [failed, exit status 1]- output mismatch (see /root/xfstests/results//xfs/179.out.bad)
+>     --- tests/xfs/179.out	2023-07-13 16:12:27.000000000 +0800
+>     +++ /root/xfstests/results//xfs/179.out.bad	2023-08-03 16:55:38.173787911 +0800
+>     @@ -8,3 +8,5 @@
+>      Check scratch fs
+>      Remove reflinked files
+>      Check scratch fs
+>     +xfs_repair fails
+>     +(see /root/xfstests/results//xfs/179.full for details)
+>     ...
+>     (Run 'diff -u /root/xfstests/tests/xfs/179.out /root/xfstests/results//xfs/179.out.bad'  to see the entire diff)
+> 
+> HINT: You _MAY_ be missing kernel fix:
+>       b25d1984aa88 xfs: estimate post-merge refcounts correctly
+> 
+> Ran: xfs/179
+> Failures: xfs/179
+> Failed 1 of 1 tests
+> 
+> Please review if they are approriate for 5.10 stable.
 
-Let's pick this up now so it still has ample time in -next even though
-we're still missing a nod from the btrfs people. The nilfs to
-mount_bdev() conversion is probably not super urgent but if wanted a
-follow-up patch won't be frowned upon.
+Seems fine to me, but ... there is no maintainer for 5.10; is your
+employer willing to support this LTS kernel?
 
----
+--D
 
-Applied to the vfs.super branch of the vfs/vfs.git tree.
-Patches in the vfs.super branch should appear in linux-next soon.
-
-Please report any outstanding bugs that were missed during review in a
-new review to the original patch series allowing us to drop it.
-
-It's encouraged to provide Acked-bys and Reviewed-bys even though the
-patch has now been applied. If possible patch trailers will be updated.
-
-Note that commit hashes shown below are subject to change due to rebase,
-trailer updates or similar. If in doubt, please check the listed branch.
-
-tree:   https://git.kernel.org/pub/scm/linux/kernel/git/vfs/vfs.git
-branch: vfs.super
-
-[01/12] fs: export setup_bdev_super
-        https://git.kernel.org/vfs/vfs/c/71c00ec51d83
-[02/12] nilfs2: use setup_bdev_super to de-duplicate the mount code
-        https://git.kernel.org/vfs/vfs/c/c820df38784a
-[03/12] btrfs: always open the device read-only in btrfs_scan_one_device
-        https://git.kernel.org/vfs/vfs/c/75029e14cea6
-[04/12] btrfs: open block devices after superblock creation
-        https://git.kernel.org/vfs/vfs/c/364820697dbb
-[05/12] ext4: make the IS_EXT2_SB/IS_EXT3_SB checks more robust
-        https://git.kernel.org/vfs/vfs/c/4cf66c030db1
-[06/12] fs: use the super_block as holder when mounting file systems
-        https://git.kernel.org/vfs/vfs/c/c0188baf8f7e
-[07/12] fs: stop using get_super in fs_mark_dead
-        https://git.kernel.org/vfs/vfs/c/2a8402f9db25
-[08/12] fs: export fs_holder_ops
-        https://git.kernel.org/vfs/vfs/c/ee62b0ec9ff8
-[09/12] ext4: drop s_umount over opening the log device
-        https://git.kernel.org/vfs/vfs/c/644ab8c64a12
-[10/12] ext4: use fs_holder_ops for the log device
-        https://git.kernel.org/vfs/vfs/c/fba3de1aad77
-[11/12] xfs: drop s_umount over opening the log and RT devices
-        https://git.kernel.org/vfs/vfs/c/9470514a171c
-[12/12] xfs use fs_holder_ops for the log and RT devices
-        https://git.kernel.org/vfs/vfs/c/c6fb2ed736e3
+> Thanks,
+> Guoqing
+> 
+> Darrick J. Wong (2):
+>   xfs: hoist refcount record merge predicates
+>   xfs: estimate post-merge refcounts correctly
+> 
+>  fs/xfs/libxfs/xfs_refcount.c | 146 +++++++++++++++++++++++++++++++----
+>  1 file changed, 130 insertions(+), 16 deletions(-)
+> 
+> -- 
+> 2.33.0
+> 
