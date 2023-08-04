@@ -2,208 +2,169 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4669EC001DB
-	for <linux-xfs@archiver.kernel.org>; Fri,  4 Aug 2023 05:52:44 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B3EDEC04A94
+	for <linux-xfs@archiver.kernel.org>; Fri,  4 Aug 2023 06:10:33 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230344AbjHDFwn (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 4 Aug 2023 01:52:43 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52502 "EHLO
+        id S232403AbjHDGKc (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 4 Aug 2023 02:10:32 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56494 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229907AbjHDFwm (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 4 Aug 2023 01:52:42 -0400
-X-Greylist: delayed 486 seconds by postgrey-1.37 at lindbergh.monkeyblade.net; Thu, 03 Aug 2023 22:52:41 PDT
-Received: from juniper.fatooh.org (juniper.fatooh.org [173.255.221.30])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 15C7630D7
-        for <linux-xfs@vger.kernel.org>; Thu,  3 Aug 2023 22:52:39 -0700 (PDT)
-Received: from juniper.fatooh.org (juniper.fatooh.org [127.0.0.1])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-        (No client certificate requested)
-        by juniper.fatooh.org (Postfix) with ESMTPS id A9A27401DF
-        for <linux-xfs@vger.kernel.org>; Thu,  3 Aug 2023 22:44:31 -0700 (PDT)
-Received: from juniper.fatooh.org (juniper.fatooh.org [127.0.0.1])
-        by juniper.fatooh.org (Postfix) with ESMTP id 80A11402C9
-        for <linux-xfs@vger.kernel.org>; Thu,  3 Aug 2023 22:44:31 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha1; c=simple; d=fatooh.org; h=message-id
-        :date:mime-version:from:subject:to:content-type
-        :content-transfer-encoding; s=dkim; bh=AXxCeSQfIBksm5j7Ad4FVCVrl
-        6U=; b=QLcUYPG8IQspatKvFs+BP7DZhvaw8j5hyKvODEEIEZRxGP82/niEU5QN5
-        Hqi8wJMiAEt/QeVPJxt0m0WnUv8BVdgyheiqzu6Zb3gBZQHWgU+KXnxTc70i2m/F
-        Aljnw05imvUDRg5zTJsRIxpMNOxhFo0tIP7AYd4QMSfTqSWJTQ=
-DomainKey-Signature: a=rsa-sha1; c=simple; d=fatooh.org; h=message-id
-        :date:mime-version:from:subject:to:content-type
-        :content-transfer-encoding; q=dns; s=dkim; b=kzCyJb3gw9LmKaeZOeG
-        GlP/Zu7RlnzwU+rvJqr6jzk6ulyMh4I9223v6HznLpm0/DVhxHMhnl9oFBcuihEu
-        WOubPSq1tktFQZ6tMMSXQffukTmvcVlj1ZDuxV9eHdA+dctyOxQwv6rLexRp2+RO
-        RIxP8gSgc7IdpMX6rPJ4F9sk=
-Received: from [198.18.0.3] (unknown [104.184.153.121])
-        (using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
-         key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-        (No client certificate requested)
-        by juniper.fatooh.org (Postfix) with ESMTPSA id 73041401DF
-        for <linux-xfs@vger.kernel.org>; Thu,  3 Aug 2023 22:44:31 -0700 (PDT)
-Message-ID: <55225218-b866-d3db-d62b-7c075dd712de@fatooh.org>
-Date:   Thu, 3 Aug 2023 22:44:31 -0700
+        with ESMTP id S229634AbjHDGKa (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 4 Aug 2023 02:10:30 -0400
+Received: from mx0b-00069f02.pphosted.com (mx0b-00069f02.pphosted.com [205.220.177.32])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5735D1FF0;
+        Thu,  3 Aug 2023 23:10:29 -0700 (PDT)
+Received: from pps.filterd (m0246631.ppops.net [127.0.0.1])
+        by mx0b-00069f02.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 373LDisi022716;
+        Fri, 4 Aug 2023 06:10:15 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=references : from :
+ to : cc : subject : date : in-reply-to : message-id : content-type :
+ mime-version; s=corp-2023-03-30;
+ bh=LoHJK2ySiPV17YWVNkhehbyPa3xvk+KpdbaB37FREpI=;
+ b=t1KE54jB6QHBf2bPu+peNaYKqIgrTrGcDYJL91L28cyz6UFzE48mzA/HwoN6gWyDb5mZ
+ SbxMb2kmCdnvN/y1U1P6wsNsLymJaM/VsNMQV1s+ndIv4JLbJDQ1vJEYe5g3izXpB1yt
+ 5lahg9Gybi0JnkybtI8iwu0mPd1ziZDZ0Fu/N06ThCCHBUoRgH6TfkJ+AWdmmKsfAmIg
+ x+fP98nsVvpZ475dUgwToVoTJRZGip1NaihDMXgwdiKqxFGM3xqyBHt85ZMn+qbLcbfv
+ Zsfe2VPzG8X9b5G4z0aN8mK6MwElYQEvRKCELzk1ZNiSYQcjck1Xr0YHMQaA0dDCtF0f Mg== 
+Received: from phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com (phxpaimrmta02.appoci.oracle.com [147.154.114.232])
+        by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 3s79vbw62b-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Fri, 04 Aug 2023 06:10:15 +0000
+Received: from pps.filterd (phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com [127.0.0.1])
+        by phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com (8.17.1.19/8.17.1.19) with ESMTP id 3745Ijt9006807;
+        Fri, 4 Aug 2023 06:10:14 GMT
+Received: from nam02-sn1-obe.outbound.protection.outlook.com (mail-sn1nam02lp2041.outbound.protection.outlook.com [104.47.57.41])
+        by phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com (PPS) with ESMTPS id 3s8kfgudeh-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Fri, 04 Aug 2023 06:10:14 +0000
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
+ b=OZqAmbzWiONgxdxwPUz4VFvEtaw7VWE/AfeoiX6nlTYHD75hTY82PqpZ5ulsO6WnpsnbTvXF0K/za2LEH+FlG9Qjb2ohix73adLb1yDzFjt2zhELOI3gI4cgQ+jkFiujFPNAPI/UxZW8Ne/CSY/jnQY6RvCEICNPZ8gwAusfBf+KtacFvJCbp3+g4tiw9BS2C0Z/L2sUDGL+TBUu4BHIAg3Tkl9B1gQMyhOhBiemM8Y31qgLbL2w7n6+zW8s2qgvKytyf0J/d2YiztUey8TjaK9rq1rNOSxTvf2D5WpYTFQwqyU8L7TreXZc6wOd7Q0b5OVnjPpPw/KUhycPiK1n0g==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector9901;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=LoHJK2ySiPV17YWVNkhehbyPa3xvk+KpdbaB37FREpI=;
+ b=GWUjcaadZK3Bqp1CIt7MmqXhAWNSoNERZnoD6snQSGgnWvKzhlXr17wk2RIxqFwaqnn8nFn9E8/ceNqkRzGUaTN7gwrXaFsiXR7EgjmFT6lgVM7WdB0xowWcd+R6F2nih3B+q1BNZ8nfBq0Xl4sPDb02dTNGHfZxZLdDAvDzTaL03x3oMF3NwcUOIdQf7NgYRImEwbFigM8FMZm5BJTsRoiUY2h2VfVCKl1GH5O/EuiVKfNeAY0GbRj/4Q6p3eUkhrQUvBeG/cHCp/LQrwrka3CDbQ3xzOYDtHnQYX2NA95DeLwJsJjmmCadAuQ5y2SebQVtD400lwILKvSdr5XvxQ==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=oracle.com; dmarc=pass action=none header.from=oracle.com;
+ dkim=pass header.d=oracle.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+ d=oracle.onmicrosoft.com; s=selector2-oracle-onmicrosoft-com;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=LoHJK2ySiPV17YWVNkhehbyPa3xvk+KpdbaB37FREpI=;
+ b=Hhnww8v3WUW+eMjeFE9EEJbXpzMBEhmO4R+JcQs/avrIzl6N4l8MyKedjIdLlUroRe0Hr582CfqmiJi1B9eQROTVcWnffFYgz94thYgFdUsLg7j36biYnED20HI6kbrCb6mp6LibLE3pVB0GtpBQHpmkS8Yb6FyAa4ndKG9ULEk=
+Received: from SA1PR10MB5867.namprd10.prod.outlook.com (2603:10b6:806:233::19)
+ by CY8PR10MB7122.namprd10.prod.outlook.com (2603:10b6:930:70::9) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.6652.20; Fri, 4 Aug
+ 2023 06:10:12 +0000
+Received: from SA1PR10MB5867.namprd10.prod.outlook.com
+ ([fe80::707c:5a02:87a1:38e0]) by SA1PR10MB5867.namprd10.prod.outlook.com
+ ([fe80::707c:5a02:87a1:38e0%3]) with mapi id 15.20.6631.046; Fri, 4 Aug 2023
+ 06:10:12 +0000
+References: <169091989589.112530.11294854598557805230.stgit@frogsfrogsfrogs>
+ <169091990172.112530.13872332887678504055.stgit@frogsfrogsfrogs>
+ <20230804050938.GH11352@frogsfrogsfrogs>
+User-agent: mu4e 1.8.10; emacs 27.1
+From:   Chandan Babu R <chandan.babu@oracle.com>
+To:     "Darrick J. Wong" <djwong@kernel.org>
+Cc:     corbet@lwn.net, linux-xfs@vger.kernel.org,
+        linux-fsdevel@vger.kernel.org, david@fromorbit.com, cem@kernel.org,
+        sandeen@sandeen.net, amir73il@gmail.com, leah.rumancik@gmail.com,
+        zlang@kernel.org, fstests@vger.kernel.org, willy@infradead.org,
+        shirley.ma@oracle.com, konrad.wilk@oracle.com
+Subject: Re: [PATCH 1/3] docs: add maintainer entry profile for XFS
+Date:   Fri, 04 Aug 2023 11:38:30 +0530
+In-reply-to: <20230804050938.GH11352@frogsfrogsfrogs>
+Message-ID: <87h6pfwd6s.fsf@debian-BULLSEYE-live-builder-AMD64>
+Content-Type: text/plain
+X-ClientProxiedBy: SG2PR06CA0191.apcprd06.prod.outlook.com (2603:1096:4:1::23)
+ To SA1PR10MB5867.namprd10.prod.outlook.com (2603:10b6:806:233::19)
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
- Thunderbird/102.13.0
-Content-Language: en-US
-From:   Corey Hickey <bugfood-ml@fatooh.org>
-Subject: read-modify-write occurring for direct I/O on RAID-5
-To:     linux-xfs@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+X-MS-PublicTrafficType: Email
+X-MS-TrafficTypeDiagnostic: SA1PR10MB5867:EE_|CY8PR10MB7122:EE_
+X-MS-Office365-Filtering-Correlation-Id: 8dc793ce-2438-40dd-ca38-08db94b17660
+X-MS-Exchange-SenderADCheck: 1
+X-MS-Exchange-AntiSpam-Relay: 0
+X-Microsoft-Antispam: BCL:0;
+X-Microsoft-Antispam-Message-Info: G+slnAlIiW9CvGezF0vzLvRVXIhgaixvODvnCyLRrzfN8kBhdhIsF1B1VSuBmpwefGMIRtbkGIvMNgu7C56WGJVv5XrAXlGRbGJPUSdcM4YjEDt3tc+JloXALPTO82QJ1Zxg58548HQjmJVGljUvOahAeQaX9wwa2/IBtkTNaPdQ43Mm7yxZUj/v+ZeB7rdCh6fwkE/pL+la9HCCKTkU23dwkQWhH8v/2vXqgKqToeEXvWgXZIc4g9ntqlEJo7pbfpAXgWTw4HWxBzDh2L8tjn7n6s9uacLH/1hfFWAU7Im9aHuXZV/0tzRBLIq9Zi806lK0s0rgA4Ts0cq7RSKWZEQ5awSeCI3/4aaFzN1qQki9cYuL75xEV2lDI+7xUArHGtBMMnxEdnVJfjqaSiWxD5xnS30RBKtiYta2Ccg4zQCyknGgXeyKnPW9RlFmnnMMxswpmX3Y/6mKJwxevlVhIbUcxbAhxLMfBqDbkSpAyz9my2X0fDhn4NdLVszWtRQ2eMmqtURwE8hZ7wkfmQ3AmekgmN4NQ5QlNBLmq6C4O/g6XEpbBPeJIPfDbXi6Fiu5
+X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:SA1PR10MB5867.namprd10.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230028)(7916004)(346002)(396003)(39860400002)(136003)(376002)(366004)(451199021)(1800799003)(186006)(107886003)(53546011)(26005)(6506007)(8676002)(9686003)(66556008)(316002)(2906002)(66946007)(5660300002)(66476007)(6916009)(4326008)(7416002)(41300700001)(8936002)(6486002)(6512007)(6666004)(478600001)(38100700002)(558084003)(86362001)(33716001);DIR:OUT;SFP:1101;
+X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-MessageData-0: =?us-ascii?Q?Yf131NV1A5SYK37b0vGK/WWifflwzLQhYY/2i52SRvAkpNVq7/xvJjMJqjI1?=
+ =?us-ascii?Q?owW7h/SH3LByMUDY617XDJIhTi2fq+8j1LwoVteoF6MKCMf2Zf30mjY3hXom?=
+ =?us-ascii?Q?bs34BKZWqPf8Rq5I5IAuw+kV7m8+eU2LjXUlseDJgz+zlXi/7ub3ccz0ZLj9?=
+ =?us-ascii?Q?zYReF1/XVijFLa94B1LDfcrw3NGpZBZhmo2zs06wIfENxIqO/jmu3bJ6vcMS?=
+ =?us-ascii?Q?LNGa35lCu51DzdePYUfOBxSp0wW+2OKsQo9jegxXmIbCBSkvOokVvMCmshgr?=
+ =?us-ascii?Q?wt/0rLj+bz4bhg1iNsJfl5aV4dHPvFKsQzpCiMGReCiGYbLxzVV9hP0SgcsP?=
+ =?us-ascii?Q?HeNPicOm5E+SHtO3wTNgZso9kcOix6si9T6wWRxgWq5HU4O6jW5ATHXvNrpt?=
+ =?us-ascii?Q?8/ojrucw1TRiP7eLTu0zznpuhoiHlAwWai9/vlUgoXoCwJmprIejshozKQQu?=
+ =?us-ascii?Q?uQfbg9dYvOFfXBadZfk5xtsI6VW1ilPmGS2fo2s3bmxVzkmljqqkkVc+vm0a?=
+ =?us-ascii?Q?nU18IzvbGS94knnmd9nvNpeViU/rQ9WpoHPUK/hakXyMC1xAzQXzb3DNno3k?=
+ =?us-ascii?Q?gQvBbs0aYi5BWkXWxuPdmyQyDaZo+D9WegkXXWlqLgIf6VvNlGLGigUisxgI?=
+ =?us-ascii?Q?G8kolTGtycf0YlSTwxw3nbsx6aa8mTRT+NEuDcm7h1cEHA4f6Fn14qzahPSC?=
+ =?us-ascii?Q?bxhkftFkxyUke+Am1AE93IlXNFYVd3QQB3qirhi+aKjO5SQ6/w1bTmVxR1P1?=
+ =?us-ascii?Q?5+nSmqZcnf8boxkFqWHkcVwjyhUUoaTO6OkDqOVlf/H6JFTGOajg8pm1obL9?=
+ =?us-ascii?Q?iMYTGHKo8G0j36TUpmWWoFOVvDE84F2deA1X8M3igIsTyTZOALlGgPOyrnRC?=
+ =?us-ascii?Q?iohsixapVwG0oU5CbP6RVglEUknR+iHIZ35KR6FbqLL5mbntYfGNaUIDbHDp?=
+ =?us-ascii?Q?MpKYZcHZp+d1N47w580CHkE+naZCx9h9CClRqo99KNS72mvf1f1P5a0cLcGP?=
+ =?us-ascii?Q?yKhlt7IM+mo48RGIrclxXAnnUOemVlxj6s7uyMdVti9O8yE7EOXh0LBeAJnt?=
+ =?us-ascii?Q?6ic+x4+c5U3DZLl1GBxSvmB3o8VICZy20a06kgzCD/ZOYNPnTKg0R67RYEHd?=
+ =?us-ascii?Q?hbbHikcfjhpxa5S5lOzwDZhvZWzYNnc64eb5TSeTisOvUuc1aKxdwr2qlOI/?=
+ =?us-ascii?Q?v1WTQPvUKpiZp99Q+hV/IpWgXOERsQDR4tnsB8XHNXTSf6hRuGj+J3grBA5t?=
+ =?us-ascii?Q?+pzuhiBFshODJh3UWBxhVhnlL5LiswcLLw0YDaoSuGQC0vEh7YJZK2wKBhe6?=
+ =?us-ascii?Q?lDRHzKHcjvYRe5S9GfMEnwO1t8dpq4ljjV1txo8WvrvFJ0SwVqLv2ZF1QwZk?=
+ =?us-ascii?Q?0hDdRYzvH2ODSxLSmRp2M6D1zaFBmrM9nplRiR4uJLaZ8xoGb/08vX3dJHTr?=
+ =?us-ascii?Q?M1lkCSWL7Y1G0b0A25pmUemPb37UIXGH2YZ9zY+sWF9u+WNF9+5Sw/LooOOp?=
+ =?us-ascii?Q?54PJB3jrPTjBr1EiUxU3bGRJGVug8ZoSkXoF9fsOnFxA+e8S1x/+mH/B+OTR?=
+ =?us-ascii?Q?WEeEXTkl+TYtLfuuxdVkxneLSto0r5lwW2+9QhwM?=
+X-MS-Exchange-AntiSpam-ExternalHop-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-ExternalHop-MessageData-0: =?us-ascii?Q?9J+IYTLH6GB2LfEzPYVDR9h2wALuJTLX/mL8eoNW8VZxPJKcL3oL1W7/1HEJ?=
+ =?us-ascii?Q?5dC73pcbALsazjUGi36m+hpd2JWa1LrS8zm9itq6rnYOxL6+8PoPgoQND2X1?=
+ =?us-ascii?Q?+9V4cqN0D5h/0+7YT3s0X9tzIXaZrJu1Q+VYWIQV3pjSzLCvAg1TB56nzxQF?=
+ =?us-ascii?Q?EjDRphfqeYpHnLHI/6alDzkqNo/A7jSPPMEKi/qKrSZmVuEHQnVguEqXFFow?=
+ =?us-ascii?Q?iKS7UPADcMc2hOkg+NXyHcKvogmy1jhsnSLr/4fTmKYyIT8eCkwevvp5SDkp?=
+ =?us-ascii?Q?60OIEtK7zGK5MqLYUVStRNZZevZzObDzYHj+wSIY0C3MuUR7O/u1o6aOgb0X?=
+ =?us-ascii?Q?XiFJlEBBrHDj136/iR2293qk4BH73EzQ1uJddGDjef6vVp3vOAgAl9+9g7Tg?=
+ =?us-ascii?Q?/U5uLVqMPT/cdVvceEiCh67sI8zb/x38xrByq588P/b0q+l1CXi8C0G8FEVq?=
+ =?us-ascii?Q?1s7IoJJIcYAGRuqaa1WA0t6Z3cQ5HQGYerscpAvM4D1bMl04tPxAURw0wdk9?=
+ =?us-ascii?Q?YK2UJLIjkkd9UhZzU5ByRo3BnC3jHq4VTU83jRMV1OivRDzWWCuaz/nzTFHo?=
+ =?us-ascii?Q?8qq0PZDRXMLGV2L8+o5bw+/jPf88kCW+NpDtu6Go57K0tGuODx6h6WUfYtZg?=
+ =?us-ascii?Q?SFdig3qvbwjWpPERcISyAzkjJX2E5hlhtQWH4KnHZvpUpbdyFM6aQZ0hkF4n?=
+ =?us-ascii?Q?5/BMYjXkPhPHAXI4HQo6MI8iTQSZXbqf8/rCllP9F717SEB/un9Furr9wffc?=
+ =?us-ascii?Q?c2xCg9dQpJXsAFp9eZgqjAYpBqFRr/oAb+yrd7sKL1bHCEnweTxQi4brf1Dn?=
+ =?us-ascii?Q?ENarqvVx09GayG9KTHFYyE4QmeTM866oiLSLrnoSELJZk/N5wmlyY8b5rPDR?=
+ =?us-ascii?Q?rMYsGtuu/lJPMFQZbVxYKl+E1XDsIiKOciCT/42xPGEr+49aYCyihilkLnBK?=
+X-OriginatorOrg: oracle.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: 8dc793ce-2438-40dd-ca38-08db94b17660
+X-MS-Exchange-CrossTenant-AuthSource: SA1PR10MB5867.namprd10.prod.outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 04 Aug 2023 06:10:12.0895
+ (UTC)
+X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
+X-MS-Exchange-CrossTenant-Id: 4e2c6054-71cb-48f1-bd6c-3a9705aca71b
+X-MS-Exchange-CrossTenant-MailboxType: HOSTED
+X-MS-Exchange-CrossTenant-UserPrincipalName: x8aIZtTwbofGq2QHsHgoF8V57f+0JsEl7ZOEi1+LtYvMIkHRtmoj+OIf3wIbyP7QSsY8CcdJ+mJM69fhVlHeCw==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: CY8PR10MB7122
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.267,Aquarius:18.0.957,Hydra:6.0.591,FMLib:17.11.176.26
+ definitions=2023-08-04_03,2023-08-03_01,2023-05-22_02
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=0 mlxlogscore=922
+ phishscore=0 mlxscore=0 malwarescore=0 spamscore=0 adultscore=0
+ bulkscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2306200000 definitions=main-2308040053
+X-Proofpoint-GUID: 0z7NNt6VuPZnOha9j1kNT_PWmEdzSzVo
+X-Proofpoint-ORIG-GUID: 0z7NNt6VuPZnOha9j1kNT_PWmEdzSzVo
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Hello,
+On Thu, Aug 03, 2023 at 10:09:38 PM -0700, Darrick J. Wong wrote:
+> Adding a few notes from a discussion I had with Chandan this morning:
+>
 
-I am having a problem with write performance via direct I/O. My setup is:
-* Debian Sid
-* Linux 6.3.0-2 (Debian Kernel)
-* 3-disk MD RAID-5 of hard disks
-* XFS
+The contents of the patch along with the changes mentioned look good to
+me.
 
-When I do large sequential writes via direct I/O, sometimes the writes 
-are fast, but sometimes the RAID ends up doing RMW and performance gets 
-slow.
+Reviewed-by: Chandan Babu R <chandan.babu@oracle.com>
 
-If I use regular buffered I/O, then performance is better, presumably 
-due to the MD stripe cache. I could just use buffered writes, of course, 
-but I am really trying to make sure I get the alignment correct to start 
-with.
-
-
-I can reproduce the problem on a fresh RAID.
------------------------------------------------------------------------
-$ sudo mdadm --create /dev/md10 -n 3 -l 5 -z 30G /dev/sd[ghi]
-mdadm: largest drive (/dev/sdg) exceeds size (31457280K) by more than 1%
-Continue creating array? y
-mdadm: Defaulting to version 1.2 metadata
-mdadm: array /dev/md10 started.
------------------------------------------------------------------------
-For testing, I'm using "-z 30G" to limit the duration of the initial 
-RAID resync.
-
-
-For XFS I can use default options:
------------------------------------------------------------------------
-$ sudo mkfs.xfs /dev/md10
-log stripe unit (524288 bytes) is too large (maximum is 256KiB)
-log stripe unit adjusted to 32KiB
-meta-data=/dev/md10              isize=512    agcount=16, agsize=983040 blks
-          =                       sectsz=512   attr=2, projid32bit=1
-          =                       crc=1        finobt=1, sparse=1, rmapbt=0
-          =                       reflink=1    bigtime=1 inobtcount=1 
-nrext64=0
-data     =                       bsize=4096   blocks=15728640, imaxpct=25
-          =                       sunit=128    swidth=68352 blks
-naming   =version 2              bsize=4096   ascii-ci=0, ftype=1
-log      =internal log           bsize=4096   blocks=16384, version=2
-          =                       sectsz=512   sunit=8 blks, lazy-count=1
-realtime =none                   extsz=4096   blocks=0, rtextents=0
-$ sudo mount /dev/md10 /mnt/tmp
------------------------------------------------------------------------
-
-
-I am testing via dd:
------------------------------------------------------------------------
-$ sudo dd if=/dev/zero of=/mnt/tmp/test.bin iflag=fullblock oflag=direct 
-bs=1M count=10240
-10240+0 records in
-10240+0 records out
-10737418240 bytes (11 GB, 10 GiB) copied, 100.664 s, 107 MB/s
------------------------------------------------------------------------
-
-I can monitor performance with dstat (the I/O reported at the start 
-seems to be an artifact of dstat's monitoring).
------------------------------------------------------------------------
-$ dstat -dD sdg,sdh,sdi 2
---dsk/sdg-----dsk/sdh-----dsk/sdi--
-  read  writ: read  writ: read  writ
-   16G 5673M:  16G 5673M: 537M   21G  # <--not a real reading
-    0     0 :   0     0 :   0     0
-    0     0 :   0     0 :   0     0
-    0    29M:   0    29M:   0    29M  # <--test starts here
-    0   126M:   0   126M:   0   126M
-    0   134M:   0   134M:   0   134M
-    0   145M:   0   145M:   0   144M
-   16k  137M:   0   137M:   0   138M
-    0   152M:   0   152M:   0   152M
-    0   140M:   0   140M:   0   140M
-5632k  110M:5376k  110M:5376k  111M  # <--RMW begins here
-   12M   49M:  12M   49M:  12M   49M
-   14M   53M:  13M   54M:  13M   53M
-   12M   50M:  12M   50M:  12M   50M
-   12M   49M:  12M   50M:  12M   49M
-   12M   50M:  12M   49M:  12M   49M
-   13M   50M:  13M   51M:  12M   51M
-   12M   50M:  12M   50M:  12M   50M
-   12M   48M:  12M   48M:  12M   48M
-   13M   53M:  13M   52M:  13M   53M
-   13M   50M:  12M   50M:  13M   50M
-   13M   52M:  13M   52M:  13M   52M
-   12M   47M:  12M   46M:  12M   46M
-   13M   52M:  13M   52M:  13M   52M
------------------------------------------------------------------------
-(I truncated the output--the rest looks the same)
-
-Note how the I/O starts out fully as writes, but then continues with 
-many reads. I am fairly sure this is RAID-5 read-modify-write due to 
-misaligned writes.
-
-
-The default chunk size is 512K
------------------------------------------------------------------------
-$ sudo mdadm --detail /dev/md10 | grep Chunk
-         Chunk Size : 512K
-$ sudo blkid -i /dev/md10
-/dev/md10: MINIMUM_IO_SIZE="524288" OPTIMAL_IO_SIZE="279969792" 
-PHYSICAL_SECTOR_SIZE="512" LOGICAL_SECTOR_SIZE="512"
------------------------------------------------------------------------
-I don't know why blkid is reporting such a large OPTIMAL_IO_SIZE. I 
-would expect this to be 1024K (due to two data disks in a three-disk 
-RAID-5).
-
-Translating into 512-byte sectors, I think the topology should be:
-chunk size (sunit): 1024 sectors
-stripe size (swidth): 2048 sectors
-
-
-I can see the write alignment with blktrace.
------------------------------------------------------------------------
-$ sudo blktrace -d /dev/md10 -o - | blkparse -i - | grep ' Q '
-   9,10  15        1     0.000000000 186548  Q  WS 3829760 + 2048 [dd]
-   9,10  15        3     0.021087119 186548  Q  WS 3831808 + 2048 [dd]
-   9,10  15        5     0.023605705 186548  Q  WS 3833856 + 2048 [dd]
-   9,10  15        7     0.026093572 186548  Q  WS 3835904 + 2048 [dd]
-   9,10  15        9     0.028595887 186548  Q  WS 3837952 + 2048 [dd]
-   9,10  15       11     0.031171221 186548  Q  WS 3840000 + 2048 [dd]
-[...]
-   9,10   5      441    14.601942400 186608  Q  WS 8082432 + 2048 [dd]
-   9,10   5      443    14.620316654 186608  Q  WS 8084480 + 2048 [dd]
-   9,10   5      445    14.646707430 186608  Q  WS 8086528 + 2048 [dd]
-   9,10   5      447    14.654519976 186608  Q  WS 8088576 + 2048 [dd]
-   9,10   5      449    14.680901605 186608  Q  WS 8090624 + 2048 [dd]
-   9,10   5      451    14.689156421 186608  Q  WS 8092672 + 2048 [dd]
-   9,10   5      453    14.706529362 186608  Q  WS 8094720 + 2048 [dd]
-   9,10   5      455    14.732451407 186608  Q  WS 8096768 + 2048 [dd]
------------------------------------------------------------------------
-In the beginning, writes queued are stripe-aligned. For example:
-3829760 / 2048 == 1870
-
-Later on, writes end up getting misaligned by half a stripe. For example:
-8082432 / 2048 == 3946.5
-
-I tried manually specifying '-d sunit=1024,swidth=2048' for mkfs.xfs, 
-but that had pretty much the same behavior when writing (the RMW starts 
-later, but it still starts).
-
-
-Am I doing something wrong, or is there a bug, or are my expectations 
-incorrect? I had expected that large sequential writes would be aligned 
-with swidth.
-
-Thank you,
-Corey
+-- 
+chandan
