@@ -2,43 +2,43 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7EF2EC04A6A
-	for <linux-xfs@archiver.kernel.org>; Fri,  4 Aug 2023 17:12:40 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8E0EEC41513
+	for <linux-xfs@archiver.kernel.org>; Fri,  4 Aug 2023 17:12:41 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231743AbjHDRMj (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 4 Aug 2023 13:12:39 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46928 "EHLO
+        id S231484AbjHDRMk (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 4 Aug 2023 13:12:40 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46934 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231577AbjHDRMi (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 4 Aug 2023 13:12:38 -0400
+        with ESMTP id S231722AbjHDRMj (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 4 Aug 2023 13:12:39 -0400
 Received: from outgoing.mit.edu (outgoing-auth-1.mit.edu [18.9.28.11])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C7891469A
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D59DA469C
         for <linux-xfs@vger.kernel.org>; Fri,  4 Aug 2023 10:12:37 -0700 (PDT)
 Received: from cwcc.thunk.org (pool-173-48-112-100.bstnma.fios.verizon.net [173.48.112.100])
         (authenticated bits=0)
         (User authenticated as tytso@ATHENA.MIT.EDU)
-        by outgoing.mit.edu (8.14.7/8.12.4) with ESMTP id 374HCRLk019436
+        by outgoing.mit.edu (8.14.7/8.12.4) with ESMTP id 374HCRej019435
         (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
         Fri, 4 Aug 2023 13:12:28 -0400
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=mit.edu; s=outgoing;
-        t=1691169149; bh=3Dx6489r2fYooCL2ajoJdVPcDSLe97j6v4niddJEHb0=;
+        t=1691169149; bh=zV17Tokk82m4628DeAKXLqOAnHEiHZEacvyeX7wm/Ss=;
         h=From:Subject:Date:Message-Id:MIME-Version;
-        b=Ur73FNUqnoOKKUrMYm+slr41f1CsE3h/XVUr6ClCrCFuDuQPC+o1cQ6gZNnZfpm55
-         8GaogRAIOYlw956Lf8Zvv0z02q5/Bh3D5S8lBQaLI15d8gOv1M5KMSljcbw/Fqwkja
-         tYkde0nFHGaLalnmZZGa2ol4nmIysgNqEH5vryXV4ww+LlAHq+w6O9SJDa2VFyk1Hj
-         ZOvsscSA3oJbFvKBDZC57TB4XXFpyYX57NBeojoE6ovndtr0mTnWGMSGDZe9ifx3u6
-         P7W0vCnTDFC2wWRVRwOo1WceCjoP4kJyjXnruUe6QVBsXKxsWHokdYCiNYzlVS+CTu
-         UjXLtSGgt4dKw==
+        b=N6jZx1AasZpyeyk/b0tqtXgvP34WRxeGWfSV6Sm0cgWY/vaiDegSOkR+4nVc/qk9M
+         hFqtOVzfNI+PDHkhOQrAByne2DgGC5SOyBwYbt5MNIfu+kUgVlVPSw/rr8/CMjltxl
+         b8A91ihgRbd3uTXpDQOx087DNPT1RsagoWrvxxTtoe5ul2ENF8n2qXYKVmQcBBjZuc
+         uWHF6hBlhzVzh2c+a2Nvb+tPK1uwOuIxznCZ/WTYEBab7yVqiwEFM+g7/In7Kb4Iwx
+         nxKUfRAdzmYuz7YeTKc/e0qLhsw5o6SikqWZGp4/E2PX/eX6ussMBjJe6KDL6HR0dY
+         nT45pxr/xNqfQ==
 Received: by cwcc.thunk.org (Postfix, from userid 15806)
-        id 011B715C04F4; Fri,  4 Aug 2023 13:12:26 -0400 (EDT)
+        id F1C7815C04F2; Fri,  4 Aug 2023 13:12:26 -0400 (EDT)
 From:   "Theodore Ts'o" <tytso@mit.edu>
 To:     linux-xfs@vger.kernel.org
 Cc:     amir73il@gmail.com, djwong@kernel.org, chandan.babu@oracle.com,
-        leah.rumancik@gmail.com, Christoph Hellwig <hch@lst.de>,
-        Dave Chinner <dchinner@redhat.com>
-Subject: [PATCH CANDIDATE v6.1 4/5] xfs: use the directory name hash function for dir scrubbing
-Date:   Fri,  4 Aug 2023 13:12:22 -0400
-Message-Id: <20230804171223.1393045-4-tytso@mit.edu>
+        leah.rumancik@gmail.com, Dave Chinner <dchinner@redhat.com>,
+        Xiao Yang <yangx.jy@fujitsu.com>
+Subject: [PATCH CANDIDATE v6.1 2/5] xfs: estimate post-merge refcounts correctly
+Date:   Fri,  4 Aug 2023 13:12:20 -0400
+Message-Id: <20230804171223.1393045-2-tytso@mit.edu>
 X-Mailer: git-send-email 2.31.0
 In-Reply-To: <20230804171223.1393045-1-tytso@mit.edu>
 References: <20230804171223.1393045-1-tytso@mit.edu>
@@ -50,47 +50,109 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: "Darrick J. Wong" <djwong@kernel.org>
 
-The directory code has a directory-specific hash computation function
-that includes a modified hash function for case-insensitive lookups.
-Hence we must use that function (and not the raw da_hashname) when
-checking the dabtree structure.
+commit b25d1984aa884fc91a73a5a407b9ac976d441e9b upstream.
 
-Found by accidentally breaking xfs/188 to create an abnormally huge
-case-insensitive directory and watching scrub break.
+Upon enabling fsdax + reflink for XFS, xfs/179 began to report refcount
+metadata corruptions after being run.  Specifically, xfs_repair noticed
+single-block refcount records that could be combined but had not been.
 
+The root cause of this is improper MAXREFCOUNT edge case handling in
+xfs_refcount_merge_extents.  When we're trying to find candidates for a
+refcount btree record merge, we compute the refcount attribute of the
+merged record, but we fail to account for the fact that once a record
+hits rc_refcount == MAXREFCOUNT, it is pinned that way forever.  Hence
+the computed refcount is wrong, and we fail to merge the extents.
+
+Fix this by adjusting the merge predicates to compute the adjusted
+refcount correctly.
+
+Fixes: 3172725814f9 ("xfs: adjust refcount of an extent of blocks in refcount btree")
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
-Reviewed-by: Christoph Hellwig <hch@lst.de>
 Reviewed-by: Dave Chinner <dchinner@redhat.com>
-(cherry picked from commit 9dceccc5822f2ecea12a89f24d7cad1f3e5eab7c)
+Reviewed-by: Xiao Yang <yangx.jy@fujitsu.com>
 ---
- fs/xfs/scrub/dir.c | 7 ++++++-
- 1 file changed, 6 insertions(+), 1 deletion(-)
+ fs/xfs/libxfs/xfs_refcount.c | 25 +++++++++++++++++++++----
+ 1 file changed, 21 insertions(+), 4 deletions(-)
 
-diff --git a/fs/xfs/scrub/dir.c b/fs/xfs/scrub/dir.c
-index 5c87800ab223..ee29084ec44e 100644
---- a/fs/xfs/scrub/dir.c
-+++ b/fs/xfs/scrub/dir.c
-@@ -201,6 +201,7 @@ xchk_dir_rec(
- 	struct xchk_da_btree		*ds,
- 	int				level)
- {
-+	struct xfs_name			dname = { };
- 	struct xfs_da_state_blk		*blk = &ds->state->path.blk[level];
- 	struct xfs_mount		*mp = ds->state->mp;
- 	struct xfs_inode		*dp = ds->dargs.dp;
-@@ -297,7 +298,11 @@ xchk_dir_rec(
- 		xchk_fblock_set_corrupt(ds->sc, XFS_DATA_FORK, rec_bno);
- 		goto out_relse;
- 	}
--	calc_hash = xfs_da_hashname(dent->name, dent->namelen);
-+
-+	/* Does the directory hash match? */
-+	dname.name = dent->name;
-+	dname.len = dent->namelen;
-+	calc_hash = xfs_dir2_hashname(mp, &dname);
- 	if (calc_hash != hash)
- 		xchk_fblock_set_corrupt(ds->sc, XFS_DATA_FORK, rec_bno);
+diff --git a/fs/xfs/libxfs/xfs_refcount.c b/fs/xfs/libxfs/xfs_refcount.c
+index 4408893333a6..6f7ed9288fe4 100644
+--- a/fs/xfs/libxfs/xfs_refcount.c
++++ b/fs/xfs/libxfs/xfs_refcount.c
+@@ -820,6 +820,17 @@ xfs_refc_valid(
+ 	return rc->rc_startblock != NULLAGBLOCK;
+ }
  
++static inline xfs_nlink_t
++xfs_refc_merge_refcount(
++	const struct xfs_refcount_irec	*irec,
++	enum xfs_refc_adjust_op		adjust)
++{
++	/* Once a record hits MAXREFCOUNT, it is pinned there forever */
++	if (irec->rc_refcount == MAXREFCOUNT)
++		return MAXREFCOUNT;
++	return irec->rc_refcount + adjust;
++}
++
+ static inline bool
+ xfs_refc_want_merge_center(
+ 	const struct xfs_refcount_irec	*left,
+@@ -831,6 +842,7 @@ xfs_refc_want_merge_center(
+ 	unsigned long long		*ulenp)
+ {
+ 	unsigned long long		ulen = left->rc_blockcount;
++	xfs_nlink_t			new_refcount;
+ 
+ 	/*
+ 	 * To merge with a center record, both shoulder records must be
+@@ -846,9 +858,10 @@ xfs_refc_want_merge_center(
+ 		return false;
+ 
+ 	/* The shoulder record refcounts must match the new refcount. */
+-	if (left->rc_refcount != cleft->rc_refcount + adjust)
++	new_refcount = xfs_refc_merge_refcount(cleft, adjust);
++	if (left->rc_refcount != new_refcount)
+ 		return false;
+-	if (right->rc_refcount != cleft->rc_refcount + adjust)
++	if (right->rc_refcount != new_refcount)
+ 		return false;
+ 
+ 	/*
+@@ -871,6 +884,7 @@ xfs_refc_want_merge_left(
+ 	enum xfs_refc_adjust_op		adjust)
+ {
+ 	unsigned long long		ulen = left->rc_blockcount;
++	xfs_nlink_t			new_refcount;
+ 
+ 	/*
+ 	 * For a left merge, the left shoulder record must be adjacent to the
+@@ -881,7 +895,8 @@ xfs_refc_want_merge_left(
+ 		return false;
+ 
+ 	/* Left shoulder record refcount must match the new refcount. */
+-	if (left->rc_refcount != cleft->rc_refcount + adjust)
++	new_refcount = xfs_refc_merge_refcount(cleft, adjust);
++	if (left->rc_refcount != new_refcount)
+ 		return false;
+ 
+ 	/*
+@@ -903,6 +918,7 @@ xfs_refc_want_merge_right(
+ 	enum xfs_refc_adjust_op		adjust)
+ {
+ 	unsigned long long		ulen = right->rc_blockcount;
++	xfs_nlink_t			new_refcount;
+ 
+ 	/*
+ 	 * For a right merge, the right shoulder record must be adjacent to the
+@@ -913,7 +929,8 @@ xfs_refc_want_merge_right(
+ 		return false;
+ 
+ 	/* Right shoulder record refcount must match the new refcount. */
+-	if (right->rc_refcount != cright->rc_refcount + adjust)
++	new_refcount = xfs_refc_merge_refcount(cright, adjust);
++	if (right->rc_refcount != new_refcount)
+ 		return false;
+ 
+ 	/*
 -- 
 2.31.0
 
