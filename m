@@ -2,114 +2,169 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id BA723C0015E
-	for <linux-xfs@archiver.kernel.org>; Fri,  4 Aug 2023 01:57:55 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 04478C04A6A
+	for <linux-xfs@archiver.kernel.org>; Fri,  4 Aug 2023 02:02:03 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229798AbjHDB5y (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 3 Aug 2023 21:57:54 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59588 "EHLO
+        id S232762AbjHDCCA (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 3 Aug 2023 22:02:00 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33124 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229992AbjHDB5y (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 3 Aug 2023 21:57:54 -0400
-Received: from mail-pg1-x529.google.com (mail-pg1-x529.google.com [IPv6:2607:f8b0:4864:20::529])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7EDD7B9
-        for <linux-xfs@vger.kernel.org>; Thu,  3 Aug 2023 18:57:52 -0700 (PDT)
-Received: by mail-pg1-x529.google.com with SMTP id 41be03b00d2f7-56433b1b0e0so1104196a12.0
-        for <linux-xfs@vger.kernel.org>; Thu, 03 Aug 2023 18:57:52 -0700 (PDT)
+        with ESMTP id S232705AbjHDCB7 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 3 Aug 2023 22:01:59 -0400
+Received: from mail-vs1-xe2e.google.com (mail-vs1-xe2e.google.com [IPv6:2607:f8b0:4864:20::e2e])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 306E544A1;
+        Thu,  3 Aug 2023 19:01:57 -0700 (PDT)
+Received: by mail-vs1-xe2e.google.com with SMTP id ada2fe7eead31-447684c4283so673822137.2;
+        Thu, 03 Aug 2023 19:01:57 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=fromorbit-com.20221208.gappssmtp.com; s=20221208; t=1691114271; x=1691719071;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
-        bh=Sq31AbHZAJOaAaB/RK/I9P4a5b6nKqiXAZqsQ7DWAYM=;
-        b=LZUAK0z5RTxy9Rx3e/lp++bj7MzsJY94UTb/X33Ctmx4MdyxhuCLkRBBkgykToA3Tf
-         xsQyw5PSbruocgzA71Zib9k++fpoQgRmD5cqPx0b9XQm9gB0aumZwVmV1ZG9wGpvvD+V
-         23wffKyrte3LYl8PPTZEiMkPCCSez7wduurBtzQyyAx0xI33IdiwFy6oTftxKSBNuBVs
-         6P/IpdfuPCHW1Tz0uaHVz2TmgskUAVHGMN4qNcVhK13lLzmRw7bg+s1BXDz/JZUZ2W6B
-         0rRxiLacpWNFrnF8BTRfojf6bGXU/gnhgW9YeKSQ105mnTDQSYcxeoz0JBstwQJrIPaT
-         kAMQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20221208; t=1691114271; x=1691719071;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
+        d=gmail.com; s=20221208; t=1691114516; x=1691719316;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:from:to:cc:subject:date
          :message-id:reply-to;
-        bh=Sq31AbHZAJOaAaB/RK/I9P4a5b6nKqiXAZqsQ7DWAYM=;
-        b=CWorBT+jSgO9dMqK0L5dgWg17GbeNucPlH9ruGZf2ZsLW0IFCtdeAkO2xGkUbGtqqD
-         UqRybKbK17BmiElnqH2QTuuyMsDH15UEG93np1EbojgitdpwDI09yBH1D++y1ixPTklx
-         ERjXO5lDjGfS+OejHCyztVWYByQnEo3TjXRpDoSmm4XvYls73zE9R4ZRjgOaH4YmlG5v
-         hwQfN7d1Sm01O/JY5fcHaqMjFN+TqM5raEFthotpwGqqswXek7+YefcNTRcAwyD2kjqF
-         cUeQeiKVydIN7cyIIsdaVnJEpHWmrREg4Q+ww7V9qe6lyce7CVWzo3U+LJst7mssDeuJ
-         kZug==
-X-Gm-Message-State: AOJu0Yxtg2+BSeD13twICKQpdceWpVaKbzrDaOilpeo5KV6gb0bvR31m
-        EictZho5HzhwRb/FFqIfv+X+IA==
-X-Google-Smtp-Source: AGHT+IEwaCiECPDj7tkK0mOsFAN9XU91dok27cx0Oj6G//fcAMfSFPzTQP5b4gtX3esvKcS0ZwgGbA==
-X-Received: by 2002:a17:90b:18d:b0:268:1217:46bc with SMTP id t13-20020a17090b018d00b00268121746bcmr466389pjs.11.1691114271668;
-        Thu, 03 Aug 2023 18:57:51 -0700 (PDT)
-Received: from dread.disaster.area (pa49-180-166-213.pa.nsw.optusnet.com.au. [49.180.166.213])
-        by smtp.gmail.com with ESMTPSA id o15-20020a170902d4cf00b001bbab888ba0sm488289plg.138.2023.08.03.18.57.50
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 03 Aug 2023 18:57:50 -0700 (PDT)
-Received: from dave by dread.disaster.area with local (Exim 4.96)
-        (envelope-from <david@fromorbit.com>)
-        id 1qRk4Z-000mM3-2e;
-        Fri, 04 Aug 2023 11:57:47 +1000
-Date:   Fri, 4 Aug 2023 11:57:47 +1000
-From:   Dave Chinner <david@fromorbit.com>
-To:     "Darrick J. Wong" <djwong@kernel.org>
-Cc:     linux-xfs@vger.kernel.org
-Subject: Re: [PATCH v2] xfs: stabilize fs summary counters for online fsck
-Message-ID: <ZMxbG2y0k9QZNtKX@dread.disaster.area>
-References: <20230803233028.GG11352@frogsfrogsfrogs>
+        bh=Li4Rr3SDbAWbMC9vqUARkDUxqa5LNmgwNWmtZCQPN7c=;
+        b=MoVB1XjmMagsHZzn9G8ftY6HWJZOUd3UQbdoUZGHvxiTrJtRhQmKpY5hMXxXdiDzuq
+         zQBrBD4AM2yCz+AjuuOypK1qRVFL8If5W+fTO+cw9XBWSGuM7Hrx2k1cmlpjp62wiDDF
+         xmsVPYq08ScKsEB2acJFU2fLVkjAs3OQk4kUojzHHGQtCjQau8BO/IfSPhWz7s7RoG+F
+         ObfsdVyd9J6qFm5iu3TH8pCH6XZy+vWbCGwACVvcWshSg7B1v3rxfId451mLVIpY2bVi
+         GasCyfXQI0s3z46olnWXSpFmLflSUgwZZScpT/KeG4Ra5OVORJFyNsdv2rD2oRuBkEtE
+         dKlA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20221208; t=1691114516; x=1691719316;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=Li4Rr3SDbAWbMC9vqUARkDUxqa5LNmgwNWmtZCQPN7c=;
+        b=AHwHs1RDHmSRRmMjEQdp+RoWkigg69QbSEujxAVrY8D9ipzJ60Ju0TJHasS2oa2qcp
+         QbDA3n8BWOjcDu7YmnYL80StdtYdCcaJS+9TwoUiYpuxqzZt7IPnjwf0A6ImjihI7ljx
+         Rz+3hsVYQo3vef1JPaB/jl0TW3sVPCr5wgfXf91SkP92D74ssmF2C15Ah/LhHFgD6OrZ
+         Dr/G81p/groWSONlBM9e2z1WG6HPPfD3YAjCK6lfKGyxNfKaWUwVKXJL35T1lR9phjzH
+         c2uCC3MK43cARq8goc0EWtvy/EVUyEM1JWP2C5M0YA7UrRdxGcPsM3YyfBYcevdmUcOR
+         rlMw==
+X-Gm-Message-State: AOJu0YyZGsTcfdCada2Pv0UMonW1QldD/e237rGQQSMnfF7ynhVuJ9H/
+        Gm3gH9iSKS6EsN42ApoOrz+Xc1/wNT+tEcOslw0=
+X-Google-Smtp-Source: AGHT+IHATFbengwvPlZLXwXXl9tdvm/xeC68n6I1h9PJY7Qw0FOEZCU8f3gigNz/0f8AxRF04Qwf1gS0iLv+NBKaP4k=
+X-Received: by 2002:a05:6102:a35:b0:443:7635:34d with SMTP id
+ 21-20020a0561020a3500b004437635034dmr329869vsb.30.1691114516008; Thu, 03 Aug
+ 2023 19:01:56 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20230803233028.GG11352@frogsfrogsfrogs>
+References: <20230802154131.2221419-1-hch@lst.de> <20230802154131.2221419-3-hch@lst.de>
+ <20230803114651.ihtqqgthbdjjgxev@quack3>
+In-Reply-To: <20230803114651.ihtqqgthbdjjgxev@quack3>
+From:   Ryusuke Konishi <konishi.ryusuke@gmail.com>
+Date:   Fri, 4 Aug 2023 11:01:39 +0900
+Message-ID: <CAKFNMomzHg33SHnp6xGMEZY=+k6Y4t7dvBvgBDbO9H3ujzNDCw@mail.gmail.com>
+Subject: Re: [PATCH 02/12] nilfs2: use setup_bdev_super to de-duplicate the
+ mount code
+To:     Jan Kara <jack@suse.cz>
+Cc:     Christoph Hellwig <hch@lst.de>, Al Viro <viro@zeniv.linux.org.uk>,
+        Christian Brauner <brauner@kernel.org>,
+        Chris Mason <clm@fb.com>, Josef Bacik <josef@toxicpanda.com>,
+        David Sterba <dsterba@suse.com>,
+        "Theodore Ts'o" <tytso@mit.edu>,
+        Andreas Dilger <adilger.kernel@dilger.ca>,
+        Jaegeuk Kim <jaegeuk@kernel.org>, Chao Yu <chao@kernel.org>,
+        "Darrick J. Wong" <djwong@kernel.org>,
+        Jens Axboe <axboe@kernel.dk>, linux-btrfs@vger.kernel.org,
+        linux-ext4@vger.kernel.org, linux-f2fs-devel@lists.sourceforge.net,
+        linux-nilfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
+        linux-xfs@vger.kernel.org, linux-block@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Thu, Aug 03, 2023 at 04:30:28PM -0700, Darrick J. Wong wrote:
-> From: Darrick J. Wong <djwong@kernel.org>
-> 
-> If the fscounters scrubber notices incorrect summary counters, it's
-> entirely possible that scrub is simply racing with other threads that
-> are updating the incore counters.  There isn't a good way to stabilize
-> percpu counters or set ourselves up to observe live updates with hooks
-> like we do for the quotacheck or nlinks scanners, so we instead choose
-> to freeze the filesystem long enough to walk the incore per-AG
-> structures.
-> 
-> Past me thought that it was going to be commonplace to have to freeze
-> the filesystem to perform some kind of repair and set up a whole
-> separate infrastructure to freeze the filesystem in such a way that
-> userspace could not unfreeze while we were running.  This involved
-> adding a mutex and freeze_super/thaw_super functions and dealing with
-> the fact that the VFS freeze/thaw functions can free the VFS superblock
-> references on return.
-> 
-> This was all very overwrought, since fscounters turned out to be the
-> only user of scrub freezes, and it doesn't require the log to quiesce,
-> only the incore superblock counters.  We prevent other threads from
-> changing the freeze level by calling freeze_super_excl with a custom
-> freeze cookie to keep everyone else out of the filesystem.
-> 
-> The end result is that fscounters should be much more efficient.  When
-> we're checking a busy system and we can't stabilize the counters, the
-> custom freeze will do less work, which should result in less downtime.
-> Repair should be similarly speedy, but that's in the next patch.
-> 
-> Signed-off-by: Darrick J. Wong <djwong@kernel.org>
-> ---
-> v2: remove fscounters.h
-> ---
->  fs/xfs/scrub/fscounters.c |  188 ++++++++++++++++++++++++++++++++++++---------
->  fs/xfs/scrub/scrub.c      |    6 +
->  fs/xfs/scrub/scrub.h      |    1 
->  fs/xfs/scrub/trace.h      |   26 ++++++
->  4 files changed, 183 insertions(+), 38 deletions(-)
+On Thu, Aug 3, 2023 at 8:46=E2=80=AFPM Jan Kara wrote:
+>
+> On Wed 02-08-23 17:41:21, Christoph Hellwig wrote:
+> > Use the generic setup_bdev_super helper to open the main block device
+> > and do various bits of superblock setup instead of duplicating the
+> > logic.  This includes moving to the new scheme implemented in common
+> > code that only opens the block device after the superblock has allocate=
+d.
+> >
+> > It does not yet convert nilfs2 to the new mount API, but doing so will
+> > become a bit simpler after this first step.
+> >
+> > Signed-off-by: Christoph Hellwig <hch@lst.de>
+>
+> AFAICS nilfs2 could *almost* use mount_bdev() directly and then just do i=
+ts
 
-looks good.
+> snapshot thing after mount_bdev() returns. But it has this weird logic
+> that: "if the superblock is already mounted but we can shrink the whole
+> dcache, then do remount instead of ignoring mount options". Firstly, this
+> looks racy - what prevents someone from say opening a file on the sb just
+> after nilfs_tree_is_busy() shrinks dcache? Secondly, it is inconsistent
+> with any other filesystem so it's going to surprise sysadmins not
+> intimately knowing nilfs2. Thirdly, from userspace you cannot tell what
+> your mount call is going to do. Last but not least, what is it really goo=
+d
+> for? Ryusuke, can you explain please?
+>
+>                                                                 Honza
 
-Reviewed-by: Dave Chinner <dchinner@redhat.com>
--- 
-Dave Chinner
-david@fromorbit.com
+I think you are referring to the following part:
+
+>        if (!s->s_root) {
+...
+>        } else if (!sd.cno) {
+>                if (nilfs_tree_is_busy(s->s_root)) {
+>                        if ((flags ^ s->s_flags) & SB_RDONLY) {
+>                                nilfs_err(s,
+>                                          "the device already has a %s mou=
+nt.",
+>                                          sb_rdonly(s) ? "read-only" : "re=
+ad/write");
+>                                err =3D -EBUSY;
+>                                goto failed_super;
+>                        }
+>                } else {
+>                        /*
+>                         * Try remount to setup mount states if the curren=
+t
+>                         * tree is not mounted and only snapshots use this=
+ sb.
+>                         */
+>                        err =3D nilfs_remount(s, &flags, data);
+>                        if (err)
+>                                goto failed_super;
+>                }
+>        }
+
+What this logic is trying to do is, if there is already a nilfs2 mount
+instance for the device, and are trying to mounting the current tree
+(sd.cno is 0, so this is not a snapshot mount), then will switch
+depending on whether the current tree has a mount:
+
+- If the current tree is mounted, it's just like a normal filesystem.
+(A read-only mount and a read/write mount can't coexist, so check
+that, and reuse the instance if possible)
+- Otherwise, i.e. for snapshot mounts only, do whatever is necessary
+to add a new current mount, such as starting a log writer.
+   Since it does the same thing that nilfs_remount does, so
+nilfs_remount() is used there.
+
+Whether or not there is a current tree mount can be determined by
+d_count(s->s_root) > 1 as nilfs_tree_is_busy() does.
+Where s->s_root is always the root dentry of the current tree, not
+that of the mounted snapshot.
+
+I remember that calling shrink_dcache_parent() before this test was to
+do the test correctly if there was garbage left in the dcache from the
+past current mount.
+
+If the current tree isn't mounted, it just cleans up the garbage, and
+the reference count wouldn't have incremented in parallel.
+
+If the current tree is mounted, d_count(s->s_root) will not decrease
+to 1, so it's not a problem.
+However, this will cause unexpected dcache shrinkage for the in-use
+tree, so it's not a good idea, as you pointed out.  If there is
+another way of judging without this side effect, it should be
+replaced.
+
+I will reply here once.
+
+Regards,
+Ryusuke Konishi
