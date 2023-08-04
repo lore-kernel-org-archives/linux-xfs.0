@@ -2,46 +2,48 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8001FC001DE
-	for <linux-xfs@archiver.kernel.org>; Fri,  4 Aug 2023 16:25:34 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D01FEC04FE2
+	for <linux-xfs@archiver.kernel.org>; Fri,  4 Aug 2023 16:25:35 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230195AbjHDQZc (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 4 Aug 2023 12:25:32 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40566 "EHLO
+        id S230132AbjHDQZd (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 4 Aug 2023 12:25:33 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40656 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230132AbjHDQZ3 (ORCPT
+        with ESMTP id S230155AbjHDQZ3 (ORCPT
         <rfc822;linux-xfs@vger.kernel.org>); Fri, 4 Aug 2023 12:25:29 -0400
 Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 32AEE49E8;
-        Fri,  4 Aug 2023 09:25:11 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E024749CB;
+        Fri,  4 Aug 2023 09:25:16 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
          key-exchange X25519 server-signature RSA-PSS (2048 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id C4D57620AA;
-        Fri,  4 Aug 2023 16:25:10 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 2AD5AC433C8;
-        Fri,  4 Aug 2023 16:25:10 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 7E414620A3;
+        Fri,  4 Aug 2023 16:25:16 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id DE123C433C7;
+        Fri,  4 Aug 2023 16:25:15 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1691166310;
-        bh=5F0E7SS1sZXdbK1ReiEDmMbcCn9yNveqdAAt78Ozz38=;
+        s=k20201202; t=1691166315;
+        bh=6HyVwGgg0hQ242V38jdl3lmrTJewR5sqxSV03aSXNhc=;
         h=Subject:From:To:Cc:Date:In-Reply-To:References:From;
-        b=X+YiyIfYuHrGPxSSywpQ+H+/X251omeaTJEp3nIDVn+/1jRxaWdXD/m7xlFWMoORD
-         fCikS+AQ7gfLg5NMOY8fiekmFKJ+wTFeSV2h3k/yQZKMRNOUB/FXLBF613JlXoCo6G
-         gS5X5Sjp4gXAUu5cMzMGtBPagOIO9svn/Uuogl/D09WP1yqlkrG/9AdDMRs99zLr81
-         E4gKfGIw9B20NSpWz/hX6aLyDAFvLFGAjC7IEXhbEFaf8q6tM5c331enNonvnfqMBr
-         pJsjtZAypEmgUJg4aD4fguUku7PKeBjAhREhX2SVp1JNPvO5CpxewceSC5M6i+tiFl
-         +8R13w5wo/oaQ==
-Subject: [PATCH 2/3] MAINTAINERS: drop me as XFS maintainer
+        b=fyuO7nqJ5hZY7rxrVI9zOn1iMGi5KG7nOhmgYjM10ZFd5s/6tkNzzdFdcefYp7W1r
+         d/zKiV+FA0J8nhLZPD4Mhki5v5CdHYvxlAmk9vo4B3oktiNt+Fh0UjPByd9e7V9SYF
+         YWoVIeT3P704cSuoWh+aZhZW/Zy9bORv8QLNTmHc0MY5lzxga41tw1dl0VpQJtOjNH
+         7j84woyrctUxuGNSdqkW2TQXVwhFAem6lPV/2dzsi060pIBDgdA+xOHMK0dYCDer4I
+         cFrrVm7I2Ehg17sAbAo17MsDAbO7iq/PIDkfoM5/jmj6i8/OMrjx+2MLBMVUzU8XBU
+         veo5qdlj9Qnuw==
+Subject: [PATCH 3/3] MAINTAINERS: add Chandan Babu as XFS release manager
 From:   "Darrick J. Wong" <djwong@kernel.org>
 To:     djwong@kernel.org
-Cc:     linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
+Cc:     Chandan Babu R <chandan.babu@oracle.com>,
+        Chandan Babu R <chandan.babu@oracle.com>,
+        linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
         david@fromorbit.com, cem@kernel.org, sandeen@sandeen.net,
         chandan.babu@oracle.com, amir73il@gmail.com,
         leah.rumancik@gmail.com, zlang@kernel.org, fstests@vger.kernel.org,
         willy@infradead.org, shirley.ma@oracle.com, konrad.wilk@oracle.com
-Date:   Fri, 04 Aug 2023 09:25:09 -0700
-Message-ID: <169116630956.3243794.12991534530388405660.stgit@frogsfrogsfrogs>
+Date:   Fri, 04 Aug 2023 09:25:15 -0700
+Message-ID: <169116631533.3243794.12031505140377581673.stgit@frogsfrogsfrogs>
 In-Reply-To: <169116629797.3243794.7024231508559123519.stgit@frogsfrogsfrogs>
 References: <169116629797.3243794.7024231508559123519.stgit@frogsfrogsfrogs>
 User-Agent: StGit/0.19
@@ -54,42 +56,33 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-I burned out years ago trying to juggle the roles senior developer,
-reviewer, tester, triager (crappily), release manager, and (at times)
-manager liaison.  There's enough work here in this one subsystem for a
-team of 20 FT, but instead we're squeezed to half that.  I thought if I
-could hold on just a bit longer I could help to maintain the focus on
-long term development to improve the experience for users.  I was wrong.
+I nominate Chandan Babu to take over release management for the upstream
+kernel's XFS code.  He has had sufficient experience merging backports
+to the 5.4 LTS tree, testing them, and sending them on to the LTS leads.
 
-Nowadays, people working on XFS seem to spend most of their time on
-distro kernel backports and dealing with AI-generated corner case bug
-reports that aren't user reports.  Reviewing has become a nightmare of
-sifting through under-documented kernel code trying to decide if this
-new feature won't break all the other features.  Getting reviews is an
-unpleasant process of negotiating with demands for further cleanups,
-trying to figure out if a review comment is based in experience or
-unfamiliarity, and wondering if the silence means anything.
+NOTE: I am /not/ nominating Chandan to take on any of the other roles I
+have just dropped.  Bug triager, testing lead, and community manager are
+open positions that need to be filled.  There's also maintainer for
+supported LTS releases (4.14, 4.19, 5.10...).
 
-For now, I will continue to review patches and will try to get online
-fsck, parent pointers, and realtime volume modernisation merged.
-
+Cc: Chandan Babu R <chandan.babu@oracle.com>
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
+Acked-by: Chandan Babu R <chandan.babu@oracle.com>
 ---
- MAINTAINERS |    2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ MAINTAINERS |    1 +
+ 1 file changed, 1 insertion(+)
 
 
 diff --git a/MAINTAINERS b/MAINTAINERS
-index d232e9e36b87..d6b82aac42a4 100644
+index d6b82aac42a4..f059e7c30f90 100644
 --- a/MAINTAINERS
 +++ b/MAINTAINERS
-@@ -23324,7 +23324,7 @@ F:	include/xen/arm/swiotlb-xen.h
+@@ -23324,6 +23324,7 @@ F:	include/xen/arm/swiotlb-xen.h
  F:	include/xen/swiotlb-xen.h
  
  XFS FILESYSTEM
--M:	Darrick J. Wong <djwong@kernel.org>
-+R:	Darrick J. Wong <djwong@kernel.org>
++M:	Chandan Babu R <chandan.babu@oracle.com>
+ R:	Darrick J. Wong <djwong@kernel.org>
  L:	linux-xfs@vger.kernel.org
  S:	Supported
- W:	http://xfs.org/
 
