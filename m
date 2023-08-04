@@ -2,72 +2,69 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D424DC00528
-	for <linux-xfs@archiver.kernel.org>; Fri,  4 Aug 2023 20:35:32 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 88A24C001DE
+	for <linux-xfs@archiver.kernel.org>; Fri,  4 Aug 2023 21:18:09 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230282AbjHDUfb (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 4 Aug 2023 16:35:31 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47472 "EHLO
+        id S229693AbjHDVSH (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 4 Aug 2023 17:18:07 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42046 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230218AbjHDUfZ (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 4 Aug 2023 16:35:25 -0400
-Received: from outgoing.mit.edu (outgoing-auth-1.mit.edu [18.9.28.11])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E6D944EC4
-        for <linux-xfs@vger.kernel.org>; Fri,  4 Aug 2023 13:35:23 -0700 (PDT)
-Received: from cwcc.thunk.org (pool-173-48-112-100.bstnma.fios.verizon.net [173.48.112.100])
-        (authenticated bits=0)
-        (User authenticated as tytso@ATHENA.MIT.EDU)
-        by outgoing.mit.edu (8.14.7/8.12.4) with ESMTP id 374KYoJ9025333
-        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Fri, 4 Aug 2023 16:34:51 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=mit.edu; s=outgoing;
-        t=1691181294; bh=eb93p14LbhHMq9VAU9FSt+DcSUdrlvW15TyYmjztiqQ=;
-        h=Date:From:Subject:Message-ID:MIME-Version:Content-Type;
-        b=Cmbci/Vas57W7Gs1mmt04uOthaR1e+rzdGz6ITDOXZ7ar1BUIxuloHDQosTWOCKWI
-         iB56bnyujn38Bh0Bp8Z9EdtMGK5JGqwP/Dc9817D37D5RzTjBcqX7HfyweGFQEIlNc
-         BVs1/MrxyUeyzFJS766n80HD2+PFuYOP4G3VM8zfAxBDEfh2gwQRvXgsgqIMcMc0wN
-         OtpY0Qeymqh8HbDn2ZQVvOacBb7LkX38rsikz68ioX6wllgIiRTX9csEEqK5ZCQd2m
-         kHOKMhSYpzYpG5XePqQ01RloNzfxpmSlLpaGQE5i8Tm2KMJbuA8zWdXQJfaXrlAorq
-         d89+IyylQf2+A==
-Received: by cwcc.thunk.org (Postfix, from userid 15806)
-        id 594D415C04F1; Fri,  4 Aug 2023 16:34:50 -0400 (EDT)
-Date:   Fri, 4 Aug 2023 16:34:50 -0400
-From:   "Theodore Ts'o" <tytso@mit.edu>
-To:     Christoph Hellwig <hch@lst.de>
-Cc:     Al Viro <viro@zeniv.linux.org.uk>,
-        Christian Brauner <brauner@kernel.org>,
-        Jan Kara <jack@suse.cz>, Chris Mason <clm@fb.com>,
-        Josef Bacik <josef@toxicpanda.com>,
-        David Sterba <dsterba@suse.com>,
-        Andreas Dilger <adilger.kernel@dilger.ca>,
-        Jaegeuk Kim <jaegeuk@kernel.org>, Chao Yu <chao@kernel.org>,
-        Ryusuke Konishi <konishi.ryusuke@gmail.com>,
-        "Darrick J. Wong" <djwong@kernel.org>,
-        Jens Axboe <axboe@kernel.dk>, linux-btrfs@vger.kernel.org,
-        linux-ext4@vger.kernel.org, linux-f2fs-devel@lists.sourceforge.net,
-        linux-nilfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
-        linux-xfs@vger.kernel.org, linux-block@vger.kernel.org
-Subject: Re: [PATCH 09/12] ext4: drop s_umount over opening the log device
-Message-ID: <20230804203450.GD903325@mit.edu>
-References: <20230802154131.2221419-1-hch@lst.de>
- <20230802154131.2221419-10-hch@lst.de>
+        with ESMTP id S231150AbjHDVRv (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 4 Aug 2023 17:17:51 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6EDE3E42;
+        Fri,  4 Aug 2023 14:17:50 -0700 (PDT)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange X25519 server-signature RSA-PSS (2048 bits))
+        (No client certificate requested)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 0106D620B6;
+        Fri,  4 Aug 2023 21:17:50 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 638F5C433C7;
+        Fri,  4 Aug 2023 21:17:49 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1691183869;
+        bh=p09xd1KbMuSTDo044K46jCzD2ljPcJasNDqi80myx3A=;
+        h=Date:From:To:Cc:Subject:From;
+        b=vPhqXzMKzPEbVF0/UJ/V+DV6Ck+54jcluDJEYWXxES0gjhxIkdrOzddYcjRi+h6jk
+         SIZPR5QGk/A5DthBKacLK08XMfUfhy9GJaSfo1GjCzsl5uDcMeY7fBLiw1DY47u+Y9
+         JbQBPPgy6BcM9Aqv++vjFwQxjXr2eZ6t1bUiJ/x2d5PV+wP4IXvHNaCdQuAXIDLonw
+         EQ+rjCEw6AocqQ07QXT0AZdyBDp3ss/QVOZNySdskvOafoj1r5ufMvwS9rIsg0p//X
+         xzrSAQ4DKwsgQaSt+kku07tlXSoW8RWOAunWUAhBx/pksD5+UtkUO1Qq/HC5d0NwAv
+         6wuYjSzlfFg6A==
+Date:   Fri, 4 Aug 2023 14:17:48 -0700
+From:   "Darrick J. Wong" <djwong@kernel.org>
+To:     Zorro Lang <zlang@kernel.org>
+Cc:     fstests@vger.kernel.org, linux-xfs@vger.kernel.org
+Subject: [PATCH] generic/642: fix SOAK_DURATION usage in generic/642
+Message-ID: <20230804211748.GN11340@frogsfrogsfrogs>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20230802154131.2221419-10-hch@lst.de>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Wed, Aug 02, 2023 at 05:41:28PM +0200, Christoph Hellwig wrote:
-> Just like get_tree_bdev needs to drop s_umount when opening the main
-> device, we need to do the same for the ext4 log device to avoid a
-> potential lock order reversal with s_unmount for the mark_dead path.
-> 
-> It might be preferable to just drop s_umount over ->fill_super entirely,
-> but that will require a fairly massive audit first, so we'll do the easy
-> version here first.
-> 
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
+From: Darrick J. Wong <djwong@kernel.org>
 
-Acked-by: Theodore Ts'o <tytso@mit.edu>
+Misspelled variable name.  Yay bash.
+
+Fixes: 3e85dd4fe4 ("misc: add duration for long soak tests")
+Signed-off-by: Darrick J. Wong <djwong@kernel.org>
+---
+ tests/generic/642 |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/tests/generic/642 b/tests/generic/642
+index e6a475a8b5..4d0c41fd5d 100755
+--- a/tests/generic/642
++++ b/tests/generic/642
+@@ -49,7 +49,7 @@ for verb in attr_remove removefattr; do
+ done
+ args+=('-f' "setfattr=20")
+ args+=('-f' "attr_set=60")	# sets larger xattrs
+-test -n "$DURATION" && args+=(--duration="$DURATION")
++test -n "$SOAK_DURATION" && args+=(--duration="$SOAK_DURATION")
+ 
+ $FSSTRESS_PROG "${args[@]}" $FSSTRESS_AVOID -d $SCRATCH_MNT -n $nr_ops -p $nr_cpus >> $seqres.full
+ 
