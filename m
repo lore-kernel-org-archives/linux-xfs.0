@@ -2,213 +2,211 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id ADDE4C001DF
-	for <linux-xfs@archiver.kernel.org>; Fri,  4 Aug 2023 18:10:46 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 743E4C001DB
+	for <linux-xfs@archiver.kernel.org>; Fri,  4 Aug 2023 19:26:31 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230249AbjHDSKp (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 4 Aug 2023 14:10:45 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46654 "EHLO
+        id S229479AbjHDT0a (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 4 Aug 2023 15:26:30 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51908 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229732AbjHDSKp (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 4 Aug 2023 14:10:45 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 707D74C38
-        for <linux-xfs@vger.kernel.org>; Fri,  4 Aug 2023 11:10:14 -0700 (PDT)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        with ESMTP id S230140AbjHDT03 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 4 Aug 2023 15:26:29 -0400
+Received: from juniper.fatooh.org (juniper.fatooh.org [173.255.221.30])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5BE4810EA
+        for <linux-xfs@vger.kernel.org>; Fri,  4 Aug 2023 12:26:23 -0700 (PDT)
+Received: from juniper.fatooh.org (juniper.fatooh.org [127.0.0.1])
         (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature RSA-PSS (2048 bits))
+         key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 6E776620E3
-        for <linux-xfs@vger.kernel.org>; Fri,  4 Aug 2023 18:09:43 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id C6676C433C7;
-        Fri,  4 Aug 2023 18:09:42 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1691172582;
-        bh=qcqMoVfANqro1ZdfV7dW5pOkFzA5Urd1WFxrFyRvNeg=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=jqZAy3tyIxkwBd0YujOtYkOGepHPNImkMqGGNlcTVsYd0/czqFSNwpRWsxDEN2/sE
-         wyIMXPlCs7KMXFogbJeofjTC8fFek6i7YLqyORagZSg8lxWahiNgEevbkVjm6zsvwC
-         Z6CAAsR9NUIKLG+ViqfpZkNNA1eP99wyLoKOgGbJfc8NJj5Tk8xxh6cEgRhnnCiuJM
-         OdoHVjP5s/hfMyuDsHyPizxydlGt2UtgjUnkGpR4B3OKVFnMyUQCk1u2zHkICBEaXu
-         WXS5229WPMX3YixauKzzDB6ybN+YnioSJPuWxLlCAQ7PQtjNEuQXew5JYiJnQSnxeb
-         FsUYZvV8bAagw==
-Date:   Fri, 4 Aug 2023 11:09:42 -0700
-From:   "Darrick J. Wong" <djwong@kernel.org>
-To:     Theodore Ts'o <tytso@mit.edu>
-Cc:     linux-xfs@vger.kernel.org, amir73il@gmail.com,
-        chandan.babu@oracle.com, leah.rumancik@gmail.com,
-        Dave Chinner <dchinner@redhat.com>,
-        Chris Dunlop <chris@onthe.net.au>
-Subject: Re: [PATCH CANDIDATE v5.15 9/9] xfs: introduce xfs_inodegc_push()
-Message-ID: <20230804180942.GK11352@frogsfrogsfrogs>
-References: <20230802205747.GE358316@mit.edu>
- <20230804171019.1392900-1-tytso@mit.edu>
- <20230804171019.1392900-9-tytso@mit.edu>
+        by juniper.fatooh.org (Postfix) with ESMTPS id 91A86402C9;
+        Fri,  4 Aug 2023 12:26:22 -0700 (PDT)
+Received: from juniper.fatooh.org (juniper.fatooh.org [127.0.0.1])
+        by juniper.fatooh.org (Postfix) with ESMTP id 6387440369;
+        Fri,  4 Aug 2023 12:26:22 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha1; c=simple; d=fatooh.org; h=message-id
+        :date:mime-version:subject:to:cc:references:from:in-reply-to
+        :content-type:content-transfer-encoding; s=dkim; bh=LR14mn2CW1QD
+        JGqOhaMHPAO97Qc=; b=gQRB8jLF52cQPwJu2G/natyXJixUWyKxlg3Nh8xO+l8G
+        QAoQScUELbXwiIIFd9mqY0YdGCgh8p1axGfIkefNoq78OSJGZ5LnHrOFh3TkV3Jm
+        jPw/nWKk0amQY9C9g/amAS6/+UCAqPVMCWWlVz6waBwS8dDwVOWLYcjyAxcATuc=
+DomainKey-Signature: a=rsa-sha1; c=simple; d=fatooh.org; h=message-id
+        :date:mime-version:subject:to:cc:references:from:in-reply-to
+        :content-type:content-transfer-encoding; q=dns; s=dkim; b=HC7fcx
+        J0QYEYnkEX8UqyNMVLXOEBJKjSUbJpH/ME+FLZNui9axYzOkBZOcAKHCzA9pAxEM
+        7MsL6sX52udewZmPhTPF6vOWbBFma1W1YKQXotJ3ULggR+S6exGFWKZkOG0gfFRO
+        Jq0VBtKyYUtUkwat1qxbQwFRswrClOJnegzww=
+Received: from [198.18.0.3] (unknown [104.184.153.121])
+        (using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
+         key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+        (No client certificate requested)
+        by juniper.fatooh.org (Postfix) with ESMTPSA id 55269402C9;
+        Fri,  4 Aug 2023 12:26:22 -0700 (PDT)
+Message-ID: <db157228-3687-57bf-d090-10517847404d@fatooh.org>
+Date:   Fri, 4 Aug 2023 12:26:22 -0700
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20230804171019.1392900-9-tytso@mit.edu>
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
+ Thunderbird/102.13.0
+Subject: Re: read-modify-write occurring for direct I/O on RAID-5
+Content-Language: en-US
+To:     Dave Chinner <david@fromorbit.com>
+Cc:     linux-xfs@vger.kernel.org
+References: <55225218-b866-d3db-d62b-7c075dd712de@fatooh.org>
+ <ZMyxp/Udved6l9F/@dread.disaster.area>
+From:   Corey Hickey <bugfood-ml@fatooh.org>
+In-Reply-To: <ZMyxp/Udved6l9F/@dread.disaster.area>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Fri, Aug 04, 2023 at 01:10:19PM -0400, Theodore Ts'o wrote:
-> From: Dave Chinner <dchinner@redhat.com>
+On 2023-08-04 01:07, Dave Chinner wrote:
+>>           =                       sunit=128    swidth=68352 blks
+>                                                  ^^^^^^^^^^^^^^^^^
 > 
-> commit 5e672cd69f0a534a445df4372141fd0d1d00901d upstream.
+> Something is badly broken in MD land.
 > 
-> The current blocking mechanism for pushing the inodegc queue out to
-> disk can result in systems becoming unusable when there is a long
-> running inodegc operation. This is because the statfs()
-> implementation currently issues a blocking flush of the inodegc
-> queue and a significant number of common system utilities will call
-> statfs() to discover something about the underlying filesystem.
+> .....
 > 
-> This can result in userspace operations getting stuck on inodegc
-> progress, and when trying to remove a heavily reflinked file on slow
-> storage with a full journal, this can result in delays measuring in
-> hours.
+>> The default chunk size is 512K
+>> -----------------------------------------------------------------------
+>> $ sudo mdadm --detail /dev/md10 | grep Chunk
+>>          Chunk Size : 512K
+>> $ sudo blkid -i /dev/md10
+>> /dev/md10: MINIMUM_IO_SIZE="524288" OPTIMAL_IO_SIZE="279969792"
+>                                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^
 > 
-> Avoid this problem by adding "push" function that expedites the
-> flushing of the inodegc queue, but doesn't wait for it to complete.
+> Yup, that's definitely broken.
 > 
-> Convert xfs_fs_statfs() and xfs_qm_scall_getquota() to use this
-> mechanism so they don't block but still ensure that queued
-> operations are expedited.
+>> PHYSICAL_SECTOR_SIZE="512" LOGICAL_SECTOR_SIZE="512"
+>> -----------------------------------------------------------------------
+>> I don't know why blkid is reporting such a large OPTIMAL_IO_SIZE. I would
+>> expect this to be 1024K (due to two data disks in a three-disk RAID-5).
 > 
-> Fixes: ab23a7768739 ("xfs: per-cpu deferred inode inactivation queues")
-> Reported-by: Chris Dunlop <chris@onthe.net.au>
-> Signed-off-by: Dave Chinner <dchinner@redhat.com>
-> [djwong: fix _getquota_next to use _inodegc_push too]
-> Reviewed-by: Darrick J. Wong <djwong@kernel.org>
-> Signed-off-by: Darrick J. Wong <djwong@kernel.org>
+> Yup, it's broken. :/
 
-Except for the inodegc parts, this series looks good...
-Acked-by: Darrick J. Wong <djwong@kernel.org>
+For what it's worth, this test was on older disks:
+* 2 TB Seagate constellation ES.2
+* running in an external USB enclosure
 
-...but as for the inodegc part, I think you'll want to pull this in too:
-https://lore.kernel.org/linux-xfs/20230715063114.1485841-1-amir73il@gmail.com/
-lest other weird problems manifest.
+If I use newer disks:
+* 12 TB Toshiba N300
+* hooked up via internal SATA
 
---D
+...then I see the expected OPTIMAL_IO_SIZE. Maybe the issue is due to 
+the USB enclosure or due to the older disks having 512-byte physical 
+sectors. I don't know what other differences could be relevant.
 
-> ---
->  fs/xfs/xfs_icache.c      | 20 +++++++++++++++-----
->  fs/xfs/xfs_icache.h      |  1 +
->  fs/xfs/xfs_qm_syscalls.c |  9 ++++++---
->  fs/xfs/xfs_super.c       |  7 +++++--
->  fs/xfs/xfs_trace.h       |  1 +
->  5 files changed, 28 insertions(+), 10 deletions(-)
+>> Later on, writes end up getting misaligned by half a stripe. For example:
+>> 8082432 / 2048 == 3946.5
 > 
-> diff --git a/fs/xfs/xfs_icache.c b/fs/xfs/xfs_icache.c
-> index 2c3ef553f5ef..e9ebfe6f8015 100644
-> --- a/fs/xfs/xfs_icache.c
-> +++ b/fs/xfs/xfs_icache.c
-> @@ -1872,19 +1872,29 @@ xfs_inodegc_worker(
->  }
->  
->  /*
-> - * Force all currently queued inode inactivation work to run immediately and
-> - * wait for the work to finish.
-> + * Expedite all pending inodegc work to run immediately. This does not wait for
-> + * completion of the work.
->   */
->  void
-> -xfs_inodegc_flush(
-> +xfs_inodegc_push(
->  	struct xfs_mount	*mp)
->  {
->  	if (!xfs_is_inodegc_enabled(mp))
->  		return;
-> +	trace_xfs_inodegc_push(mp, __return_address);
-> +	xfs_inodegc_queue_all(mp);
-> +}
->  
-> +/*
-> + * Force all currently queued inode inactivation work to run immediately and
-> + * wait for the work to finish.
-> + */
-> +void
-> +xfs_inodegc_flush(
-> +	struct xfs_mount	*mp)
-> +{
-> +	xfs_inodegc_push(mp);
->  	trace_xfs_inodegc_flush(mp, __return_address);
-> -
-> -	xfs_inodegc_queue_all(mp);
->  	flush_workqueue(mp->m_inodegc_wq);
->  }
->  
-> diff --git a/fs/xfs/xfs_icache.h b/fs/xfs/xfs_icache.h
-> index 2e4cfddf8b8e..6cd180721659 100644
-> --- a/fs/xfs/xfs_icache.h
-> +++ b/fs/xfs/xfs_icache.h
-> @@ -76,6 +76,7 @@ void xfs_blockgc_stop(struct xfs_mount *mp);
->  void xfs_blockgc_start(struct xfs_mount *mp);
->  
->  void xfs_inodegc_worker(struct work_struct *work);
-> +void xfs_inodegc_push(struct xfs_mount *mp);
->  void xfs_inodegc_flush(struct xfs_mount *mp);
->  void xfs_inodegc_stop(struct xfs_mount *mp);
->  void xfs_inodegc_start(struct xfs_mount *mp);
-> diff --git a/fs/xfs/xfs_qm_syscalls.c b/fs/xfs/xfs_qm_syscalls.c
-> index 47fe60e1a887..322a111dfbc0 100644
-> --- a/fs/xfs/xfs_qm_syscalls.c
-> +++ b/fs/xfs/xfs_qm_syscalls.c
-> @@ -481,9 +481,12 @@ xfs_qm_scall_getquota(
->  	struct xfs_dquot	*dqp;
->  	int			error;
->  
-> -	/* Flush inodegc work at the start of a quota reporting scan. */
-> +	/*
-> +	 * Expedite pending inodegc work at the start of a quota reporting
-> +	 * scan but don't block waiting for it to complete.
-> +	 */
->  	if (id == 0)
-> -		xfs_inodegc_flush(mp);
-> +		xfs_inodegc_push(mp);
->  
->  	/*
->  	 * Try to get the dquot. We don't want it allocated on disk, so don't
-> @@ -525,7 +528,7 @@ xfs_qm_scall_getquota_next(
->  
->  	/* Flush inodegc work at the start of a quota reporting scan. */
->  	if (*id == 0)
-> -		xfs_inodegc_flush(mp);
-> +		xfs_inodegc_push(mp);
->  
->  	error = xfs_qm_dqget_next(mp, *id, type, &dqp);
->  	if (error)
-> diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
-> index 8fe6ca9208de..9b3af7611eaa 100644
-> --- a/fs/xfs/xfs_super.c
-> +++ b/fs/xfs/xfs_super.c
-> @@ -795,8 +795,11 @@ xfs_fs_statfs(
->  	xfs_extlen_t		lsize;
->  	int64_t			ffree;
->  
-> -	/* Wait for whatever inactivations are in progress. */
-> -	xfs_inodegc_flush(mp);
-> +	/*
-> +	 * Expedite background inodegc but don't wait. We do not want to block
-> +	 * here waiting hours for a billion extent file to be truncated.
-> +	 */
-> +	xfs_inodegc_push(mp);
->  
->  	statp->f_type = XFS_SUPER_MAGIC;
->  	statp->f_namelen = MAXNAMELEN - 1;
-> diff --git a/fs/xfs/xfs_trace.h b/fs/xfs/xfs_trace.h
-> index 1033a95fbf8e..ebd17ddba024 100644
-> --- a/fs/xfs/xfs_trace.h
-> +++ b/fs/xfs/xfs_trace.h
-> @@ -240,6 +240,7 @@ DEFINE_EVENT(xfs_fs_class, name,					\
->  	TP_PROTO(struct xfs_mount *mp, void *caller_ip), \
->  	TP_ARGS(mp, caller_ip))
->  DEFINE_FS_EVENT(xfs_inodegc_flush);
-> +DEFINE_FS_EVENT(xfs_inodegc_push);
->  DEFINE_FS_EVENT(xfs_inodegc_start);
->  DEFINE_FS_EVENT(xfs_inodegc_stop);
->  DEFINE_FS_EVENT(xfs_inodegc_queue);
-> -- 
-> 2.31.0
+> So it's aligned to sunit, not swidth. That will match up with a
+> discontiguity in the file layout. i.e. an extent boundary.
 > 
+> And given this is at just under 4GB written, and the AG size is
+> just under 2GB, this discontiguity is going to occur as writing
+> fills AG 1 and allocation switches to AG 2.
+
+Thanks. I figured I was seeing something like that, but I didn't know 
+the details.
+
+>> I tried manually specifying '-d sunit=1024,swidth=2048' for mkfs.xfs, but
+>> that had pretty much the same behavior when writing (the RMW starts later,
+>> but it still starts).
+> 
+> It won't change anything, actually. The first allocation in an AG
+> will determine which stripe unit the new extent starts on, and then
+> for the entire AG the write will be aligned to that choice.
+> 
+> If you do IOs much larger than the stripe width (e.g. 16MB at a
+> time) the impact of the head/tail RMW will largely go away. The
+> problem is that you are doing exactly stripe width sized IOs and so
+> is the worse case for any allocation misalignment that might occur.
+
+Thank you, yes, I have seen that behavior in testing.
+
+>> Am I doing something wrong, or is there a bug, or are my expectations
+>> incorrect? I had expected that large sequential writes would be aligned with
+>> swidth.
+> 
+> Expectations are wrong. Large allocations are aligned to stripe unit
+> in XFS by default.
+> 
+> THis is because XFS was tuned for *large* multi-layer RAID setups
+> like RAID-50 that had hardware RAID 5 luns stripe together via
+> RAID-0 in the volume manager.
+
+> In these setups, the stripe unit is the hardware RAID-5 lun stripe
+> width (the minimum size that avoids RMW) and the stripe width is the
+> RAID-0 width.
+> 
+> Hence for performance, it didn't matter which sunit allocation
+> aligned to as long as writes spanned the entire stripe width. That
+> way they would hit every lun.
+
+That is very interesting and definitely makes sense.
+
+> In general, we don't want stripe width aligned allocation, because
+> that hot-spots the first stripe unit in the stripe as all file data
+> first writes to that unit. A raid stripe is only as fast as it's
+> slowest disk, and so having a hot stripe unit slows everything down.
+> Hence by default we move the initial allocation around the stripe
+> units, and that largely removes the hotspots in the RAID luns...
+
+That makes sense. So the data allocation alignment controls the 
+alignment of the writes. I wasn't quite making that connection before.
+
+> So, yeah, there are good reasons for stripe unit aligned allocation
+> rather than stripe width aligned.
+> 
+> The problem is that MD has never behaved this way - it has always
+> exposed it's individual disk chunk size as the minimum IO size (i.e.
+> the stripe unit) and the stripe width as the optimal IO size to
+> avoid RMW cycles.
+> 
+> If you want to force XFS to do stripe width aligned allocation for
+> large files to match with how MD exposes it's topology to
+> filesytsems, use the 'swalloc' mount option. The down side is that
+> you'll hotspot the first disk in the MD array....
+
+If I use 'swalloc' with the autodetected (wrong) swidth, I don't see any 
+unaligned writes.
+
+If I manually specify the (I think) correct values, I do still get 
+writes aligned to sunit but not swidth, as before.
+
+-----------------------------------------------------------------------
+$ sudo mkfs.xfs -f -d sunit=1024,swidth=2048 /dev/md10
+mkfs.xfs: Specified data stripe width 2048 is not the same as the volume 
+stripe width 546816
+log stripe unit (524288 bytes) is too large (maximum is 256KiB)
+log stripe unit adjusted to 32KiB
+meta-data=/dev/md10              isize=512    agcount=16, agsize=982912 blks
+          =                       sectsz=512   attr=2, projid32bit=1
+          =                       crc=1        finobt=1, sparse=1, rmapbt=0
+          =                       reflink=1    bigtime=1 inobtcount=1 
+nrext64=0
+data     =                       bsize=4096   blocks=15726592, imaxpct=25
+          =                       sunit=128    swidth=256 blks
+naming   =version 2              bsize=4096   ascii-ci=0, ftype=1
+log      =internal log           bsize=4096   blocks=16384, version=2
+          =                       sectsz=512   sunit=8 blks, lazy-count=1
+realtime =none                   extsz=4096   blocks=0, rtextents=0
+
+$ sudo mount -o swalloc /dev/md10 /mnt/tmp
+-----------------------------------------------------------------------
+
+
+There's probably something else I'm doing wrong there.
+
+Still, I'll heed your advice about not making a hotspot disk and allow 
+XFS to allocate as default.
+
+Now that I understand that XFS is behaving as intended and I 
+can't/shouldn't necessarily aim for further alignment, I'll try 
+recreating my real RAID, trust in buffered writes and the MD stripe 
+cache, and see how that goes.
+
+Thank you very much for your detailed answers; I learned a lot.
+
+-Corey
