@@ -2,100 +2,126 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 49483C00528
-	for <linux-xfs@archiver.kernel.org>; Sat,  5 Aug 2023 10:39:31 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id ED5C4C04A94
+	for <linux-xfs@archiver.kernel.org>; Sat,  5 Aug 2023 13:52:49 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229715AbjHEKj2 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Sat, 5 Aug 2023 06:39:28 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48584 "EHLO
+        id S229552AbjHENws (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Sat, 5 Aug 2023 09:52:48 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44130 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229450AbjHEKj0 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sat, 5 Aug 2023 06:39:26 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id EDF2A10C4;
-        Sat,  5 Aug 2023 03:39:25 -0700 (PDT)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature RSA-PSS (2048 bits))
-        (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 7A6B060C63;
-        Sat,  5 Aug 2023 10:39:25 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id E9DD0C433C7;
-        Sat,  5 Aug 2023 10:39:20 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1691231964;
-        bh=uXGWtXBnq0nfa/jBhSY841c7zuCmhgyQEv0tqvbShRw=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=gcYazOn/niIWgO8RAq86Wd0rf6mY5HFyG8HgKYgI+uBhiJcOa1iN7eHEwWVbAcqFb
-         5XIJBVbVVoMXgQkQiYsI582grCtIP5eESCBkMFP2HJtSXo84sAac2RzSv75h991bTw
-         DlhvR7swkECQCUNJ0aVzgU1Y6/CLhGJcMtH+agnVqKKciIHJRKsst4uRWzNWqfcH/S
-         4Z5gPIEd6TmqOwMkNTU2g/kveG9q6Rla8oYlgbxLN/F6Ht72xR0/n8EjkY0FHeNts+
-         T/IgH7Tx7FR6m1gG2NYvDi0EBc0UAhmoFZi7m3tQ+5R3RXve3Uu+iNx/GDcEcrNUGm
-         nFhvs+f54VGWQ==
-Date:   Sat, 5 Aug 2023 12:39:12 +0200
-From:   Christian Brauner <brauner@kernel.org>
-To:     Christoph Hellwig <hch@lst.de>
-Cc:     "Darrick J. Wong" <djwong@kernel.org>,
-        Al Viro <viro@zeniv.linux.org.uk>, Jan Kara <jack@suse.cz>,
-        Chris Mason <clm@fb.com>, Josef Bacik <josef@toxicpanda.com>,
-        David Sterba <dsterba@suse.com>, Theodore Ts'o <tytso@mit.edu>,
-        Andreas Dilger <adilger.kernel@dilger.ca>,
-        Jaegeuk Kim <jaegeuk@kernel.org>, Chao Yu <chao@kernel.org>,
-        Ryusuke Konishi <konishi.ryusuke@gmail.com>,
-        Jens Axboe <axboe@kernel.dk>, linux-btrfs@vger.kernel.org,
-        linux-ext4@vger.kernel.org, linux-f2fs-devel@lists.sourceforge.net,
-        linux-nilfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
-        linux-xfs@vger.kernel.org, linux-block@vger.kernel.org
-Subject: Re: [PATCH 11/12] xfs: drop s_umount over opening the log and RT
- devices
-Message-ID: <20230805-galaabend-diskreditieren-27943ea3c10e@brauner>
-References: <20230802154131.2221419-1-hch@lst.de>
- <20230802154131.2221419-12-hch@lst.de>
- <20230802163219.GW11352@frogsfrogsfrogs>
- <20230805083239.GA29780@lst.de>
+        with ESMTP id S229509AbjHENws (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sat, 5 Aug 2023 09:52:48 -0400
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 97529E4A
+        for <linux-xfs@vger.kernel.org>; Sat,  5 Aug 2023 06:51:56 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1691243515;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=E97UB8xbtwjBZ/700mdBa45izV7GQAIkEwB+bI/3Wb0=;
+        b=B/Vp6uCn3g/OBYpeqqsLoLSOep5daQjYIZNKsf9KivvEgeoM1jyjTFUz/yrkemR2sd2oVC
+        l5JSD4kqV42UOjJj2hMKpDc93JGwFDkiB8Re3uRaJk/X7nJWjc+V5s8Lgli4CTqxzNLXoW
+        qHGZTYSxX6FusiHwfEGGVQXnKkTSffg=
+Received: from mail-pg1-f197.google.com (mail-pg1-f197.google.com
+ [209.85.215.197]) by relay.mimecast.com with ESMTP with STARTTLS
+ (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
+ us-mta-196-6cQtGDIkNQWr6g071dpAJQ-1; Sat, 05 Aug 2023 09:51:53 -0400
+X-MC-Unique: 6cQtGDIkNQWr6g071dpAJQ-1
+Received: by mail-pg1-f197.google.com with SMTP id 41be03b00d2f7-563379fe16aso2791162a12.3
+        for <linux-xfs@vger.kernel.org>; Sat, 05 Aug 2023 06:51:53 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20221208; t=1691243513; x=1691848313;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=E97UB8xbtwjBZ/700mdBa45izV7GQAIkEwB+bI/3Wb0=;
+        b=katFVBo23/oh4kSkF2L6IWB3rIsmNSvupSuK9Up57z1IQjj1B+fNJlFE3QwY1FrKi6
+         PPrzHO5KEBU9RBgnn7oZtmrUOfGyqb3eECnnHgsW5Oo8+7ncRrTDX/SqXkY65n2tyVI9
+         JaRlWyqk2tl6auBQrUmB3lQgpyH4aEtte0PZfWI/Gx6OC9G8v+AOx1NF3hvopz5SWmlu
+         BYbqWyhf5X/JCfw3lFlxmCwAxYD17g/zHZfADf4G0S4NDKkeeJ/F04sriyKPJ4HIbZPw
+         7FqG8tFpeNNbIl8u/tMkWNq5hyd9aIMhPEn6YHScdXR0V+mvOPPW2qj4d7UDq4+DRuft
+         Xs1g==
+X-Gm-Message-State: AOJu0YwEQaisRHfPidoMKI4awlXYmBH4JgwXBbbG2t5fHFqXyGElbTJz
+        C/z33W+wwoOZaDMaU/68DE9y1ZVIjWRmw5BdPGalC9KPhaoLXhPtpetqg2ZAQtfNdZrB2VjiZlP
+        /ot5DU42VTGbQ77uQTV9u
+X-Received: by 2002:a05:6a21:1f25:b0:11c:fc27:cda4 with SMTP id ry37-20020a056a211f2500b0011cfc27cda4mr4373066pzb.11.1691243512951;
+        Sat, 05 Aug 2023 06:51:52 -0700 (PDT)
+X-Google-Smtp-Source: AGHT+IGIgdN4FmyGZUI8Zo+TGqqCvqPGEnD+0QM/K2vkOXJiB8PLuymuquuDdeeliCO6s9X6SMcXoQ==
+X-Received: by 2002:a05:6a21:1f25:b0:11c:fc27:cda4 with SMTP id ry37-20020a056a211f2500b0011cfc27cda4mr4373056pzb.11.1691243512585;
+        Sat, 05 Aug 2023 06:51:52 -0700 (PDT)
+Received: from zlang-mailbox ([43.228.180.230])
+        by smtp.gmail.com with ESMTPSA id q24-20020a62e118000000b00679a4b56e41sm3182616pfh.43.2023.08.05.06.51.51
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Sat, 05 Aug 2023 06:51:52 -0700 (PDT)
+Date:   Sat, 5 Aug 2023 21:51:48 +0800
+From:   Zorro Lang <zlang@redhat.com>
+To:     "Darrick J. Wong" <djwong@kernel.org>
+Cc:     fstests@vger.kernel.org, linux-xfs@vger.kernel.org
+Subject: Re: [PATCH] xfs: skip fragmentation tests when alwayscow mode is
+ enabled, part 2
+Message-ID: <20230805135148.rbk7uo7ldsxj7e56@zlang-mailbox>
+References: <20230804213419.GO11340@frogsfrogsfrogs>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20230805083239.GA29780@lst.de>
+In-Reply-To: <20230804213419.GO11340@frogsfrogsfrogs>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Sat, Aug 05, 2023 at 10:32:39AM +0200, Christoph Hellwig wrote:
-> On Wed, Aug 02, 2023 at 09:32:19AM -0700, Darrick J. Wong wrote:
-> > > +	/* see get_tree_bdev why this is needed and safe */
-> > 
-> > Which part of get_tree_bdev?  Is it this?
-> > 
-> > 		/*
-> > 		 * s_umount nests inside open_mutex during
-> > 		 * __invalidate_device().  blkdev_put() acquires
-> > 		 * open_mutex and can't be called under s_umount.  Drop
-> > 		 * s_umount temporarily.  This is safe as we're
-> > 		 * holding an active reference.
-> > 		 */
-> > 		up_write(&s->s_umount);
-> > 		blkdev_put(bdev, fc->fs_type);
-> > 		down_write(&s->s_umount);
+On Fri, Aug 04, 2023 at 02:34:19PM -0700, Darrick J. Wong wrote:
+> From: Darrick J. Wong <djwong@kernel.org>
 > 
-> Yes.  With the refactoring earlier in the series get_tree_bdev should
-> be trivial enough to not need a more specific reference.  If you
-> think there's a better way to refer to it I can update the comment,
-> though.
+> If the always_cow debugging flag is enabled, all file writes turn into
+> copy writes.  This dramatically ramps up fragmentation in the filesystem
+> (intentionally!) so there's no point in complaining about fragmentation.
 > 
-> > >  		mp->m_logdev_targp = mp->m_ddev_targp;
-> > >  	}
-> > >  
-> > > -	return 0;
-> > > +	error = 0;
-> > > +out_unlock:
-> > > +	down_write(&sb->s_umount);
-> > 
-> > Isn't down_write taking s_umount?  I think the label should be
-> > out_relock or something less misleading.
+> I missed these two in the original commit because readahead for md5sum
+> would create large folios at the start of the file.  This resulted in
+> the fdatatasync after the random writes issuing writeback for the whole
+> large folio, which reduced file fragmentation to the point where this
+> test started passing.
 > 
-> Agreed.  Christian, can you just change this in your branch, or should
-> I send an incremental patch?
+> With Ritesh's patchset implementing sub-folio dirty tracking, this test
+> goes back to failing due to high fragmentation (as it did before large
+> folios) so we need to mask these off too.
+> 
+> Signed-off-by: Darrick J. Wong <djwong@kernel.org>
+> ---
 
-No need to send an incremental patch. I just s/out_unlock/out_relock/g
-in-tree. Thanks!
+Good to me, this patch is simple enough and no risk, will be inserted into
+the release directly tomorrow.
+
+Reviewed-by: Zorro Lang <zlang@redhat.com>
+
+>  tests/xfs/180 |    1 +
+>  tests/xfs/208 |    1 +
+>  2 files changed, 2 insertions(+)
+> 
+> diff --git a/tests/xfs/180 b/tests/xfs/180
+> index cfea2020ce..d2fac03a9e 100755
+> --- a/tests/xfs/180
+> +++ b/tests/xfs/180
+> @@ -23,6 +23,7 @@ _require_scratch_reflink
+>  _require_cp_reflink
+>  _require_xfs_io_command "fiemap"
+>  _require_xfs_io_command "cowextsize"
+> +_require_no_xfs_always_cow
+>  
+>  echo "Format and mount"
+>  _scratch_mkfs > $seqres.full 2>&1
+> diff --git a/tests/xfs/208 b/tests/xfs/208
+> index 9a71b74f6f..1e7734b822 100755
+> --- a/tests/xfs/208
+> +++ b/tests/xfs/208
+> @@ -26,6 +26,7 @@ _require_scratch_reflink
+>  _require_cp_reflink
+>  _require_xfs_io_command "fiemap"
+>  _require_xfs_io_command "cowextsize"
+> +_require_no_xfs_always_cow
+>  
+>  echo "Format and mount"
+>  _scratch_mkfs > $seqres.full 2>&1
+> 
+
