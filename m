@@ -2,101 +2,100 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 36640EB64DD
-	for <linux-xfs@archiver.kernel.org>; Sat,  5 Aug 2023 09:53:21 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 49483C00528
+	for <linux-xfs@archiver.kernel.org>; Sat,  5 Aug 2023 10:39:31 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229732AbjHEJxT (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Sat, 5 Aug 2023 05:53:19 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41456 "EHLO
+        id S229715AbjHEKj2 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Sat, 5 Aug 2023 06:39:28 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48584 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229501AbjHEJxT (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sat, 5 Aug 2023 05:53:19 -0400
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8B4914495
-        for <linux-xfs@vger.kernel.org>; Sat,  5 Aug 2023 02:52:42 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1691229161;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=jstZIoU+QqWoO1kxNlk2x1JDdHCq7hZS17gYR9lfuW8=;
-        b=YnRnMWP3nex0TMXL1Xi2CgNdrb44AsO333F5r7eFW6xOybUfPDKxuZWVoyTvuseVz+H5wk
-        SMLkYoXh0Bc3KxxWRtIbCxz5PsmQSYo0iCyNZ1GoCnVbaCJzFfYGrnllzzt3pNjr+5Kfeq
-        oCVwZu95APj8lyi5Vk3XoxxIxhaX9aE=
-Received: from mail-oo1-f72.google.com (mail-oo1-f72.google.com
- [209.85.161.72]) by relay.mimecast.com with ESMTP with STARTTLS
- (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
- us-mta-191-xVyWuf4COiS201GqZ3RHlA-1; Sat, 05 Aug 2023 05:52:39 -0400
-X-MC-Unique: xVyWuf4COiS201GqZ3RHlA-1
-Received: by mail-oo1-f72.google.com with SMTP id 006d021491bc7-56c877bb4a9so4367643eaf.2
-        for <linux-xfs@vger.kernel.org>; Sat, 05 Aug 2023 02:52:39 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20221208; t=1691229159; x=1691833959;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=jstZIoU+QqWoO1kxNlk2x1JDdHCq7hZS17gYR9lfuW8=;
-        b=MtgcDTXjsZKQlvGw8VYSvHWQhYPSmjABHkTcmnctUixIjlANrYaFqdXX90cDsqt02C
-         VFdv4Ru79eRA4i5DiiIiQrxw2LJSF8fl8Ct2Q+K2+C8MpDhVsTh+9ZJhhnFRodieew0X
-         iG/1iEcnZ4ytCPiFkyunDPNu8axMZGdeHclG8hw+JMgrAoNKP0QfMFIxTxkyBkGJAAGZ
-         uWtwwN1OXbJMDX1KYVrOt/1FDYUK82arAA0wbNrTsEd7A+KVzCB7yKhPu2p1ob+26UdO
-         tQEHIYDaIDyehrUmzS8ZtOMLeNZtbc6CFoTKU0LAYYXTXmpifk3ivrN2hF1EgVvnV7cz
-         /tVA==
-X-Gm-Message-State: AOJu0Yyd4GqgjFXnAVYB4hgs/Qep97XwZuOGCze4Dmf8loFAlIEUpvf/
-        qvNSP/dYyUe0qCQ/NUxN1qDByPFs120md6BaGumdCyzhrp5J2BYhQNk+Xpb4cdQsvbdBeqR82hX
-        CIw2iHmWL0CLWtPf3NXIk10uFGoEY19W83A==
-X-Received: by 2002:a05:6358:419f:b0:135:6d9:2399 with SMTP id w31-20020a056358419f00b0013506d92399mr5557400rwc.30.1691229158914;
-        Sat, 05 Aug 2023 02:52:38 -0700 (PDT)
-X-Google-Smtp-Source: AGHT+IHrcz4EKPKdaG61eCIGrmm8gyZzwmfR0kjyB9iC0bPWq/4xj8mfWVW8aZcqqs0Uv9H0m8/BbA==
-X-Received: by 2002:a05:6358:419f:b0:135:6d9:2399 with SMTP id w31-20020a056358419f00b0013506d92399mr5557381rwc.30.1691229158566;
-        Sat, 05 Aug 2023 02:52:38 -0700 (PDT)
-Received: from zlang-mailbox ([43.228.180.230])
-        by smtp.gmail.com with ESMTPSA id ff17-20020a056a002f5100b006875493da20sm2842831pfb.3.2023.08.05.02.52.37
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Sat, 05 Aug 2023 02:52:38 -0700 (PDT)
-Date:   Sat, 5 Aug 2023 17:52:35 +0800
-From:   Zorro Lang <zlang@redhat.com>
-To:     "Darrick J. Wong" <djwong@kernel.org>
-Cc:     fstests@vger.kernel.org, linux-xfs@vger.kernel.org
-Subject: Re: [PATCH] generic/642: fix SOAK_DURATION usage in generic/642
-Message-ID: <20230805095235.ywdb63aebejeyjhq@zlang-mailbox>
-References: <20230804211748.GN11340@frogsfrogsfrogs>
+        with ESMTP id S229450AbjHEKj0 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sat, 5 Aug 2023 06:39:26 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id EDF2A10C4;
+        Sat,  5 Aug 2023 03:39:25 -0700 (PDT)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange X25519 server-signature RSA-PSS (2048 bits))
+        (No client certificate requested)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 7A6B060C63;
+        Sat,  5 Aug 2023 10:39:25 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id E9DD0C433C7;
+        Sat,  5 Aug 2023 10:39:20 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1691231964;
+        bh=uXGWtXBnq0nfa/jBhSY841c7zuCmhgyQEv0tqvbShRw=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=gcYazOn/niIWgO8RAq86Wd0rf6mY5HFyG8HgKYgI+uBhiJcOa1iN7eHEwWVbAcqFb
+         5XIJBVbVVoMXgQkQiYsI582grCtIP5eESCBkMFP2HJtSXo84sAac2RzSv75h991bTw
+         DlhvR7swkECQCUNJ0aVzgU1Y6/CLhGJcMtH+agnVqKKciIHJRKsst4uRWzNWqfcH/S
+         4Z5gPIEd6TmqOwMkNTU2g/kveG9q6Rla8oYlgbxLN/F6Ht72xR0/n8EjkY0FHeNts+
+         T/IgH7Tx7FR6m1gG2NYvDi0EBc0UAhmoFZi7m3tQ+5R3RXve3Uu+iNx/GDcEcrNUGm
+         nFhvs+f54VGWQ==
+Date:   Sat, 5 Aug 2023 12:39:12 +0200
+From:   Christian Brauner <brauner@kernel.org>
+To:     Christoph Hellwig <hch@lst.de>
+Cc:     "Darrick J. Wong" <djwong@kernel.org>,
+        Al Viro <viro@zeniv.linux.org.uk>, Jan Kara <jack@suse.cz>,
+        Chris Mason <clm@fb.com>, Josef Bacik <josef@toxicpanda.com>,
+        David Sterba <dsterba@suse.com>, Theodore Ts'o <tytso@mit.edu>,
+        Andreas Dilger <adilger.kernel@dilger.ca>,
+        Jaegeuk Kim <jaegeuk@kernel.org>, Chao Yu <chao@kernel.org>,
+        Ryusuke Konishi <konishi.ryusuke@gmail.com>,
+        Jens Axboe <axboe@kernel.dk>, linux-btrfs@vger.kernel.org,
+        linux-ext4@vger.kernel.org, linux-f2fs-devel@lists.sourceforge.net,
+        linux-nilfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
+        linux-xfs@vger.kernel.org, linux-block@vger.kernel.org
+Subject: Re: [PATCH 11/12] xfs: drop s_umount over opening the log and RT
+ devices
+Message-ID: <20230805-galaabend-diskreditieren-27943ea3c10e@brauner>
+References: <20230802154131.2221419-1-hch@lst.de>
+ <20230802154131.2221419-12-hch@lst.de>
+ <20230802163219.GW11352@frogsfrogsfrogs>
+ <20230805083239.GA29780@lst.de>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=utf-8
 Content-Disposition: inline
-In-Reply-To: <20230804211748.GN11340@frogsfrogsfrogs>
+In-Reply-To: <20230805083239.GA29780@lst.de>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Fri, Aug 04, 2023 at 02:17:48PM -0700, Darrick J. Wong wrote:
-> From: Darrick J. Wong <djwong@kernel.org>
+On Sat, Aug 05, 2023 at 10:32:39AM +0200, Christoph Hellwig wrote:
+> On Wed, Aug 02, 2023 at 09:32:19AM -0700, Darrick J. Wong wrote:
+> > > +	/* see get_tree_bdev why this is needed and safe */
+> > 
+> > Which part of get_tree_bdev?  Is it this?
+> > 
+> > 		/*
+> > 		 * s_umount nests inside open_mutex during
+> > 		 * __invalidate_device().  blkdev_put() acquires
+> > 		 * open_mutex and can't be called under s_umount.  Drop
+> > 		 * s_umount temporarily.  This is safe as we're
+> > 		 * holding an active reference.
+> > 		 */
+> > 		up_write(&s->s_umount);
+> > 		blkdev_put(bdev, fc->fs_type);
+> > 		down_write(&s->s_umount);
 > 
-> Misspelled variable name.  Yay bash.
+> Yes.  With the refactoring earlier in the series get_tree_bdev should
+> be trivial enough to not need a more specific reference.  If you
+> think there's a better way to refer to it I can update the comment,
+> though.
 > 
-> Fixes: 3e85dd4fe4 ("misc: add duration for long soak tests")
-> Signed-off-by: Darrick J. Wong <djwong@kernel.org>
-> ---
-
-Quick fix, will merge it in the release this week, Thanks!
-
-Reviewed-by: Zorro Lang <zlang@redhat.com>
-
->  tests/generic/642 |    2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
+> > >  		mp->m_logdev_targp = mp->m_ddev_targp;
+> > >  	}
+> > >  
+> > > -	return 0;
+> > > +	error = 0;
+> > > +out_unlock:
+> > > +	down_write(&sb->s_umount);
+> > 
+> > Isn't down_write taking s_umount?  I think the label should be
+> > out_relock or something less misleading.
 > 
-> diff --git a/tests/generic/642 b/tests/generic/642
-> index e6a475a8b5..4d0c41fd5d 100755
-> --- a/tests/generic/642
-> +++ b/tests/generic/642
-> @@ -49,7 +49,7 @@ for verb in attr_remove removefattr; do
->  done
->  args+=('-f' "setfattr=20")
->  args+=('-f' "attr_set=60")	# sets larger xattrs
-> -test -n "$DURATION" && args+=(--duration="$DURATION")
-> +test -n "$SOAK_DURATION" && args+=(--duration="$SOAK_DURATION")
->  
->  $FSSTRESS_PROG "${args[@]}" $FSSTRESS_AVOID -d $SCRATCH_MNT -n $nr_ops -p $nr_cpus >> $seqres.full
->  
-> 
+> Agreed.  Christian, can you just change this in your branch, or should
+> I send an incremental patch?
 
+No need to send an incremental patch. I just s/out_unlock/out_relock/g
+in-tree. Thanks!
