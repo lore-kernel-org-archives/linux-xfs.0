@@ -2,150 +2,97 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 41A94C001B0
-	for <linux-xfs@archiver.kernel.org>; Sun,  6 Aug 2023 22:38:56 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1E5FAC41513
+	for <linux-xfs@archiver.kernel.org>; Mon,  7 Aug 2023 02:39:57 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229573AbjHFWiz (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Sun, 6 Aug 2023 18:38:55 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38020 "EHLO
+        id S229838AbjHGCj4 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Sun, 6 Aug 2023 22:39:56 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44076 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229636AbjHFWiy (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sun, 6 Aug 2023 18:38:54 -0400
-Received: from mail-pl1-x635.google.com (mail-pl1-x635.google.com [IPv6:2607:f8b0:4864:20::635])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0D040FA
-        for <linux-xfs@vger.kernel.org>; Sun,  6 Aug 2023 15:38:53 -0700 (PDT)
-Received: by mail-pl1-x635.google.com with SMTP id d9443c01a7336-1bc63ef9959so9024985ad.2
-        for <linux-xfs@vger.kernel.org>; Sun, 06 Aug 2023 15:38:53 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=fromorbit-com.20221208.gappssmtp.com; s=20221208; t=1691361532; x=1691966332;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
-        bh=cYsSn3cCK3EJnEI451xZvecqInTy0kcOHhqtjgp+evQ=;
-        b=eSHOzcsou+RZS9UjAMpg6e9mz1nbHsOAmE89Cnu8hzYM8Hbgn983d3yBSd7zCeHSvq
-         aWd9nphdqwlhodL/y+ShA5UWq/8KZXa32EtPDtl+pF4k0Dx/PORG+IxvMzYPql4k/XWJ
-         NsT1KgwpxUip6Iy6V+RI4Nu39O/U7Sowt5oYAaoEWS+yPf6iumQoctMC99y20QqJA/Hl
-         s0/is66Lt7N1mz7D8XtX/3qy5GPlScKKH7CD4+3/M0xQx7OB4iVYv4CJOhVFbqrBjf6I
-         qQsV8oH49//9R7YZXKeCYhSZ5hNsQ3Ui2AgsLmY0FKvgdDrqznf/RPFFj7x++1ATVa4P
-         CnqA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20221208; t=1691361532; x=1691966332;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=cYsSn3cCK3EJnEI451xZvecqInTy0kcOHhqtjgp+evQ=;
-        b=W3sA602tdiiUmj2t2ao4uyQFJ3hS3IwOZDET8CiNAXLq0TgT4s6c7Dqc5FUr33FuW+
-         5VFtIxrDmL9Vdz/Gd7BnpQkSggz91jDeZzG/kIgkYuzicC61dLnR4UD8zNbO2X/wpofS
-         cMXub4lZvnuz09DHgRqPP148XSjQCgpTe2RTxEZ/atas0hVG2tsS6R9jp2L8cfxGmZxy
-         QAQlcnnkAGNSZ1BMLeVWxfXNnAQ31CE8KvGUNYGAiKNu9d1vPv0wcIHbbyVcq/Smtwh8
-         ducSR4rrneZuEFiOa/+p4L31lE5oga0m1uHQS170cBD64iJ1OkQE7N5d0VzFq+ozLp5l
-         RIfw==
-X-Gm-Message-State: AOJu0Yz5Vua1wPKKF9s1pgM7idXdG4kwWP3Qfm89UdZMtEpj8TqFn3nx
-        FM6pCawDgyjFJDp+HwwX8pVBFIjIgj+YQsu6088=
-X-Google-Smtp-Source: AGHT+IFbOeUDxLffvXXfeiT9SRyH3Py0ch3ewYFxYPaXwNcIEbm8t0Pdxp1FylavhCQNYTPBpLGcRg==
-X-Received: by 2002:a17:903:456:b0:1b7:ffb9:ea85 with SMTP id iw22-20020a170903045600b001b7ffb9ea85mr7417777plb.29.1691361532415;
-        Sun, 06 Aug 2023 15:38:52 -0700 (PDT)
-Received: from dread.disaster.area (pa49-180-166-213.pa.nsw.optusnet.com.au. [49.180.166.213])
-        by smtp.gmail.com with ESMTPSA id je19-20020a170903265300b001b9dab0397bsm5342402plb.29.2023.08.06.15.38.51
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Sun, 06 Aug 2023 15:38:51 -0700 (PDT)
-Received: from dave by dread.disaster.area with local (Exim 4.96)
-        (envelope-from <david@fromorbit.com>)
-        id 1qSmOe-0021ei-2C;
-        Mon, 07 Aug 2023 08:38:48 +1000
-Date:   Mon, 7 Aug 2023 08:38:48 +1000
-From:   Dave Chinner <david@fromorbit.com>
-To:     Corey Hickey <bugfood-ml@fatooh.org>
-Cc:     linux-xfs@vger.kernel.org
-Subject: Re: read-modify-write occurring for direct I/O on RAID-5
-Message-ID: <ZNAg+K+eFjaVt6+y@dread.disaster.area>
-References: <55225218-b866-d3db-d62b-7c075dd712de@fatooh.org>
- <ZMyxp/Udved6l9F/@dread.disaster.area>
- <db157228-3687-57bf-d090-10517847404d@fatooh.org>
- <ZM1zOFWVm9lD8pNc@dread.disaster.area>
- <0f21f5eb-803f-c8d1-503a-bb0addeef01f@fatooh.org>
- <ZM7PHRsOqfJ71fMN@dread.disaster.area>
- <6ac1f404-2cd2-42db-87b3-e1c7d5933a2d@fatooh.org>
+        with ESMTP id S229587AbjHGCjz (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sun, 6 Aug 2023 22:39:55 -0400
+Received: from out-71.mta1.migadu.com (out-71.mta1.migadu.com [IPv6:2001:41d0:203:375::47])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 40093E6A
+        for <linux-xfs@vger.kernel.org>; Sun,  6 Aug 2023 19:39:53 -0700 (PDT)
+Message-ID: <5d44e45b-cb85-b878-f21d-d0b508c3b696@linux.dev>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.dev; s=key1;
+        t=1691375991;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=2hnInpweKZLBkHKIXgZGAhqJI9/CXpILz8h/AYQFzW0=;
+        b=vbTvrcu/gFXyM8bRPaWFXDzALqidtwTte3s8rMZhmclzD9y3biLxbDlMe9x2GD2nQiE6J6
+        eitlvgNG0xPjLheVH431n30UgZADuq7DSTLvn4FhIdKUG8zXXx4YyIGbv0ZCsDHnh9gsSk
+        msoj1iwQGXSHcqqbFVsL8iBF9Zuo6lA=
+Date:   Mon, 7 Aug 2023 10:39:44 +0800
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <6ac1f404-2cd2-42db-87b3-e1c7d5933a2d@fatooh.org>
+Subject: Re: [PATCH 5.10 0/2] Fix xfs/179 for 5.10 stable
+Content-Language: en-US
+To:     "Darrick J. Wong" <djwong@kernel.org>,
+        Greg KH <gregkh@linuxfoundation.org>
+Cc:     amir73il@gmail.com, dchinner@redhat.com, yangx.jy@fujitsu.com,
+        linux-xfs@vger.kernel.org, stable@vger.kernel.org
+References: <20230803093652.7119-1-guoqing.jiang@linux.dev>
+ <20230804154757.GI11352@frogsfrogsfrogs>
+X-Report-Abuse: Please report any abuse attempt to abuse@migadu.com and include these headers.
+From:   Guoqing Jiang <guoqing.jiang@linux.dev>
+In-Reply-To: <20230804154757.GI11352@frogsfrogsfrogs>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 8bit
+X-Migadu-Flow: FLOW_OUT
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Sun, Aug 06, 2023 at 11:21:38AM -0700, Corey Hickey wrote:
-> On 2023-08-05 15:37, Dave Chinner wrote:
-> > On Fri, Aug 04, 2023 at 06:44:47PM -0700, Corey Hickey wrote:
-> > > On 2023-08-04 14:52, Dave Chinner wrote:
-> > > > On Fri, Aug 04, 2023 at 12:26:22PM -0700, Corey Hickey wrote:
-> > > > > On 2023-08-04 01:07, Dave Chinner wrote:
-> > > > > > If you want to force XFS to do stripe width aligned allocation for
-> > > > > > large files to match with how MD exposes it's topology to
-> > > > > > filesytsems, use the 'swalloc' mount option. The down side is that
-> > > > > > you'll hotspot the first disk in the MD array....
-> > > > > 
-> > > > > If I use 'swalloc' with the autodetected (wrong) swidth, I don't see any
-> > > > > unaligned writes.
-> > > > > 
-> > > > > If I manually specify the (I think) correct values, I do still get writes
-> > > > > aligned to sunit but not swidth, as before.
-> > > > 
-> > > > Hmmm, it should not be doing that - where is the misalignment
-> > > > happening in the file? swalloc isn't widely used/tested, so there's
-> > > > every chance there's something unexpected going on in the code...
-> > > 
-> > > I don't know how to tell the file position, but I wrote a one-liner for
-> > > blktrace that may help. This should tell the position within the block
-> > > device of writes enqueued.
-> > 
-> > xfs_bmap will tell you the file extent layout (offset to lba relationship).
-> > (`xfs_bmap -vvp <file>` output is prefered if you are going to paste
-> > it into an email.)
-> Ah, nice; the flags even show the alignment.
-> 
-> Here are the results for a filesystem on a 2-data-disk RAID-5 with 128 KB
-> chunk size.
 
-....
 
-> $ sudo xfs_bmap -vvp /mnt/tmp/test.bin
-> /mnt/tmp/test.bin:
->  EXT: FILE-OFFSET           BLOCK-RANGE        AG AG-OFFSET          TOTAL FLAGS
->    0: [0..7806975]:         512..7807487        0 (512..7807487)   7806976 000000
->    1: [7806976..15613951]:  7864576..15671551   1 (512..7807487)   7806976 000011
->    2: [15613952..20971519]: 15728640..21086207  2 (512..5358079)   5357568 000000
+On 8/4/23 23:47, Darrick J. Wong wrote:
+> On Thu, Aug 03, 2023 at 05:36:50PM +0800, Guoqing Jiang wrote:
+>> Hi,
+>>
+>> With the two patches applied, xfs/179 can pass in 5.10.188. Otherwise I got
+>>
+>> [root@localhost xfstests]# ./check xfs/179
+>> FSTYP         -- xfs (non-debug)
+>> PLATFORM      -- Linux/x86_64 localhost 5.10.188-default #14 SMP Thu Aug 3 15:23:19 CST 2023
+>> MKFS_OPTIONS  -- -f /dev/loop1
+>> MOUNT_OPTIONS -- -o context=system_u:object_r:root_t:s0 /dev/loop1 /mnt/scratch
+>>
+>> xfs/179 1s ... [failed, exit status 1]- output mismatch (see /root/xfstests/results//xfs/179.out.bad)
+>>      --- tests/xfs/179.out	2023-07-13 16:12:27.000000000 +0800
+>>      +++ /root/xfstests/results//xfs/179.out.bad	2023-08-03 16:55:38.173787911 +0800
+>>      @@ -8,3 +8,5 @@
+>>       Check scratch fs
+>>       Remove reflinked files
+>>       Check scratch fs
+>>      +xfs_repair fails
+>>      +(see /root/xfstests/results//xfs/179.full for details)
+>>      ...
+>>      (Run 'diff -u /root/xfstests/tests/xfs/179.out /root/xfstests/results//xfs/179.out.bad'  to see the entire diff)
+>>
+>> HINT: You _MAY_ be missing kernel fix:
+>>        b25d1984aa88 xfs: estimate post-merge refcounts correctly
+>>
+>> Ran: xfs/179
+>> Failures: xfs/179
+>> Failed 1 of 1 tests
+>>
+>> Please review if they are approriate for 5.10 stable.
+> Seems fine to me, but ... there is no maintainer for 5.10; is your
+> employer willing to support this LTS kernel?
 
-Thanks for that, I think it points out the problem quite clearly.
-The stripe width allocation alignment looks to be working as
-intended - the "AG-OFFSET" column has the same values in each extent
-so within the AG address space everything is correctly "stripe
-width" aligned.
+Hi Darrick,
 
-What we see here is a mkfs.xfs "anti hotspot" behaviour with striped
-layouts. That is, it automagically sizes the AGs such that each AG
-header sits on a different stripe unit within the stripe so that the
-AG headers don't end up all on the same physical stripe unit.
+Thanks for your review! I think Amir is the maintainer for 5.10 😉. I 
+can help
+if needed since our kernel is heavily based on 5.10 stable. We also run 
+tests
+against 5.10 stable, that is why I send fixes patches for it.
 
-That results in the entire AG being aligned to the stripe unit
-rather than the stripe width. And so when we do stripe width aligned
-allocation within the AG, it assumes that the AG itself is stripe
-width aligned, which it isn't....
+Hi Greg,
 
-So, if you were to do something like this:
+Could you consider add the two to your list? Thank you!
 
-# mkfs.xfs -d agsize=1048576b ....
-
-To force the AG size to be a multiple of stripe width, mkfs will
-issue a warning that it is going to place all the AG headers on the
-same stripe unit, but then go and do what you asked it to do.
-
-That should work around the problem you are seeing, meanwhile I
-suspect the swalloc mechanism might need a tweak to do physical LBA
-alignment, not AG offset alignment....
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+Regards,
+Guoqing
