@@ -2,44 +2,43 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6E7DCC04FE2
-	for <linux-xfs@archiver.kernel.org>; Mon,  7 Aug 2023 19:41:26 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C4397C001DE
+	for <linux-xfs@archiver.kernel.org>; Mon,  7 Aug 2023 19:41:27 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231160AbjHGTlY (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 7 Aug 2023 15:41:24 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33770 "EHLO
+        id S230470AbjHGTl0 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 7 Aug 2023 15:41:26 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33760 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229581AbjHGTlU (ORCPT
+        with ESMTP id S229562AbjHGTlU (ORCPT
         <rfc822;linux-xfs@vger.kernel.org>); Mon, 7 Aug 2023 15:41:20 -0400
 Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 061791999;
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 06BB5199B;
         Mon,  7 Aug 2023 12:40:45 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
          key-exchange X25519 server-signature RSA-PSS (2048 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 66942621C9;
-        Mon,  7 Aug 2023 19:39:26 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 67BFCC433AB;
-        Mon,  7 Aug 2023 19:39:19 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 14483621C6;
+        Mon,  7 Aug 2023 19:39:13 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 190D6C433CB;
+        Mon,  7 Aug 2023 19:39:06 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1691437165;
-        bh=GbRbPLOxHLvc3DeuudVIv0R96Xl/KQh1gZUkLNJwaqw=;
+        s=k20201202; t=1691437152;
+        bh=FjK4CXRYiETGn7OzM9We0k7POLcZSDg/Zv0Z2hVxi0I=;
         h=From:Date:Subject:References:In-Reply-To:To:Cc:From;
-        b=jyfZZJ6oAnWrzwy6uxMcn981Ztsf8ekdYSTK5OjKoObb52LSWGYUyPDA4kmPqGF1x
-         XgdC141GcDjigpVsye6Z2fRW99llsFTyP+IfOKPAc68VweV9PIYC/Q0X43vg8N2M+z
-         Az61OjrrYIpqnlx5X/KD2MOToWd0+i939PUFYXt+NeipL/xlWufku7jraVtnp1aZIa
-         HYs+6Di3+mpLU5YwTykDK9WTNQJgdVzsmUOkrVgLqaLNB3qJ9kSvdPg+4laJyCR7YJ
-         tK4OeZHA9mQJuWModJc5QFspncoFCluv2eVgDmWS58HE9PCjeO01QWlyOyDs3rvs2t
-         9FLqopEpWQzeQ==
+        b=Ho/bKlx1W7NVzVpTF8gn0UewKv0nHppAuc8rdt0EpJYDtixyqx9Pm88/s99GjJrGi
+         VyWirQXhlLAHTHZVHTzlGto3MlaV9AC0IS4d6ITtkzLyremJTCyhuBghtZLgXI+wFI
+         BWGm+mORoGztRukCVECswMBc3DvEXZDbVqOKZXPaUiWJUmCkRudhYLBAFuaGRz0svy
+         C36sqbKO7RSDcSDE/CGOWo0cEGgTtCDEY05Q94XhMpgiKRb5sItIEiDQCoyYVBZcIf
+         Wa4V9O81hy5cBvQhbAwM4fAHf3aZVD4FS2Awad7m8GiNGAzXgq+KA8NdanYEf8qWKH
+         93tAXs2YealYw==
 From:   Jeff Layton <jlayton@kernel.org>
-Date:   Mon, 07 Aug 2023 15:38:37 -0400
-Subject: [PATCH v7 06/13] ubifs: have ubifs_update_time use
- inode_update_timestamps
+Date:   Mon, 07 Aug 2023 15:38:35 -0400
+Subject: [PATCH v7 04/13] btrfs: have it use inode_update_timestamps
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
-Message-Id: <20230807-mgctime-v7-6-d1dec143a704@kernel.org>
+Message-Id: <20230807-mgctime-v7-4-d1dec143a704@kernel.org>
 References: <20230807-mgctime-v7-0-d1dec143a704@kernel.org>
 In-Reply-To: <20230807-mgctime-v7-0-d1dec143a704@kernel.org>
 To:     Alexander Viro <viro@zeniv.linux.org.uk>,
@@ -105,57 +104,56 @@ Cc:     linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org,
         linux-unionfs@vger.kernel.org, linux-xfs@vger.kernel.org,
         Jeff Layton <jlayton@kernel.org>
 X-Mailer: b4 0.12.3
-X-Developer-Signature: v=1; a=openpgp-sha256; l=996; i=jlayton@kernel.org;
- h=from:subject:message-id; bh=GbRbPLOxHLvc3DeuudVIv0R96Xl/KQh1gZUkLNJwaqw=;
- b=owEBbQKS/ZANAwAIAQAOaEEZVoIVAcsmYgBk0Ug9wCd8uHf1JTgjFwTpewg5ScLm1k4tTu02Y
- EC0/mG6MoaJAjMEAAEIAB0WIQRLwNeyRHGyoYTq9dMADmhBGVaCFQUCZNFIPQAKCRAADmhBGVaC
- Fct1EACdouI5B+JSe5rResZvzr2jp0vI9jztehgsnHaGwZpffA5C0T8Yg38sCZ7YdqkMrSalPu3
- w5M7Xcnqdsh4N6Piv9FyxKwRSFhd6L5ltVRVHih3Qrw4CyeqQSC7cF/EoGpJa9WWyMiMRBCPwXS
- SU4LxtVbYmpo45fMxJtALEzmwSMTQIvU1bzpRV4xXlicR54RmnWjkO1z9jdwOxQ6twX9yCYJWhy
- +3XrcrBrTeCS8Z8HreMQGrXDkWsGpGOLe30hRm2zRRGLDwDg58GheX7tI3FJuoWyyPSnXy3GZc3
- IA0WXjumJsnEmtP0TTId+6zh00veQZd5f1GR1l36s9K0aaYaoM1mZs2JdqnG9u0fTI7XR41ftea
- t8+T7wkMIFECd37uaZbjycDqk1RHCXJ9ICgFsL1nEAdkbZL+3Amxg7YLPni5Idxrzm1T01riCL8
- urj0TVjv0LL8Cu70DTcMmlGNYW6HA78KZAiTzBDyB1/8z1iYpiO1fv++ontB2RmfNWnf88B+/uB
- dUK97a5CoO8W1Sg3FRMI1RzkPuF6rcuqwIopnsbtQLtxWCgvC+TTGMRmkaMSjYLODUCN/px7EYj
- 1m1keuzLArUPtUidWiCLHEoBgRNimTN+hBNrZNS9Ycr9H0FD7wiIc3WUf0F2tZ/Zb1UbnIJDvl2
- CuiXxVzCtmQDRgA==
+X-Developer-Signature: v=1; a=openpgp-sha256; l=1015; i=jlayton@kernel.org;
+ h=from:subject:message-id; bh=FjK4CXRYiETGn7OzM9We0k7POLcZSDg/Zv0Z2hVxi0I=;
+ b=owEBbQKS/ZANAwAIAQAOaEEZVoIVAcsmYgBk0Ug9ionAyEQ00FE2RysKd05kyYmr3Uo7M3P+S
+ fZsake1O9WJAjMEAAEIAB0WIQRLwNeyRHGyoYTq9dMADmhBGVaCFQUCZNFIPQAKCRAADmhBGVaC
+ FSb/D/46K68INm7LKy6yCb3jkxB2bvd3492M0QuN7zYTdZH4x4RyMrHVer1FcL+lgqeruzzWSEv
+ f1jPsb2uT+va62GuDI/zejA857D6P77Pxxt62BL6PnF8w9wZfjNo2RBhUJFbcYvEl7WV0QxsBOz
+ eVhLOFWlIfBl7qnRoQcQ1EXt/gqm3vncmzxpOhadSWSyAjf3Uyf3ySH1I8zBuzQ6i19jmqQ0RvT
+ bb3mEN/W/iBYc3G76Eud3bo16w9EvoB9nxjRlcTuuZvFPC7ModhHKFVftanzKrqnN++LssBxJTt
+ qCOGvNDD4XQsoYkNqWK/GeE2dbwuRgBPiPB4T/mRNQGXzoSkgEejZgIlG9UhkKivUvI8mAD1Fvf
+ EsZs1aXtF60wPVfCdR9EzkWR98DlT7wHqFko2/J5x3ayqhk5/Hd7Dxd9+3KOUjobqgsNV6z/0hu
+ iEa0QiZI9t2vkWtpHGQNGJWoW5i6lWMNl2ugTM4Ph4rAECf19PhJ6QMCL6sLB1t/Yg+5Y9QCkZa
+ u6JThQBEJCg3b3v0vqUh9tAePT84Au/SSSO41CUtR4p6gYotqAK/13vCIRlgBGFlSFirEva3rSu
+ O4r5y/T/dIV3T3tPLC2QfaJLzkymk/JC3a+VkmmiF/LAO2Y1vQ5KE1bfV2hX76K1OaxCpRxc3+Z
+ GjdlHLhrXMsZpbw==
 X-Developer-Key: i=jlayton@kernel.org; a=openpgp;
  fpr=4BC0D7B24471B2A184EAF5D3000E684119568215
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-In later patches, we're going to drop the "now" parameter from the
-update_time operation. Prepare ubifs for this, by having it use the new
-inode_update_timestamps helper.
+In later patches, we're going to drop the "now" argument from the
+update_time operation. Have btrfs_update_time use the new
+inode_update_timestamps helper to fetch a new timestamp and update it
+properly.
 
 Signed-off-by: Jeff Layton <jlayton@kernel.org>
 ---
- fs/ubifs/file.c | 10 ++--------
- 1 file changed, 2 insertions(+), 8 deletions(-)
+ fs/btrfs/inode.c | 9 +--------
+ 1 file changed, 1 insertion(+), 8 deletions(-)
 
-diff --git a/fs/ubifs/file.c b/fs/ubifs/file.c
-index df9086b19cd0..2d0178922e19 100644
---- a/fs/ubifs/file.c
-+++ b/fs/ubifs/file.c
-@@ -1397,15 +1397,9 @@ int ubifs_update_time(struct inode *inode, struct timespec64 *time,
- 		return err;
+diff --git a/fs/btrfs/inode.c b/fs/btrfs/inode.c
+index 29a20f828dda..d52e7d64570a 100644
+--- a/fs/btrfs/inode.c
++++ b/fs/btrfs/inode.c
+@@ -6068,14 +6068,7 @@ static int btrfs_update_time(struct inode *inode, struct timespec64 *now,
+ 	if (btrfs_root_readonly(root))
+ 		return -EROFS;
  
- 	mutex_lock(&ui->ui_mutex);
--	if (flags & S_ATIME)
--		inode->i_atime = *time;
+-	if (flags & S_VERSION)
+-		dirty |= inode_maybe_inc_iversion(inode, dirty);
 -	if (flags & S_CTIME)
--		inode_set_ctime_to_ts(inode, *time);
+-		inode_set_ctime_to_ts(inode, *now);
 -	if (flags & S_MTIME)
--		inode->i_mtime = *time;
--
--	release = ui->dirty;
-+	inode_update_timestamps(inode, flags);
- 	__mark_inode_dirty(inode, I_DIRTY_SYNC);
-+	release = ui->dirty;
- 	mutex_unlock(&ui->ui_mutex);
- 	if (release)
- 		ubifs_release_budget(c, &req);
+-		inode->i_mtime = *now;
+-	if (flags & S_ATIME)
+-		inode->i_atime = *now;
++	dirty = inode_update_timestamps(inode, flags);
+ 	return dirty ? btrfs_dirty_inode(BTRFS_I(inode)) : 0;
+ }
+ 
 
 -- 
 2.41.0
