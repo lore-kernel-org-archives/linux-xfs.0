@@ -2,97 +2,126 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1E5FAC41513
-	for <linux-xfs@archiver.kernel.org>; Mon,  7 Aug 2023 02:39:57 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4502CEB64DD
+	for <linux-xfs@archiver.kernel.org>; Mon,  7 Aug 2023 04:56:21 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229838AbjHGCj4 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Sun, 6 Aug 2023 22:39:56 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44076 "EHLO
+        id S230093AbjHGE4T (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 7 Aug 2023 00:56:19 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40772 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229587AbjHGCjz (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sun, 6 Aug 2023 22:39:55 -0400
-Received: from out-71.mta1.migadu.com (out-71.mta1.migadu.com [IPv6:2001:41d0:203:375::47])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 40093E6A
-        for <linux-xfs@vger.kernel.org>; Sun,  6 Aug 2023 19:39:53 -0700 (PDT)
-Message-ID: <5d44e45b-cb85-b878-f21d-d0b508c3b696@linux.dev>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.dev; s=key1;
-        t=1691375991;
+        with ESMTP id S229517AbjHGE4S (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 7 Aug 2023 00:56:18 -0400
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6FE0710FA
+        for <linux-xfs@vger.kernel.org>; Sun,  6 Aug 2023 21:55:28 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1691384122;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=2hnInpweKZLBkHKIXgZGAhqJI9/CXpILz8h/AYQFzW0=;
-        b=vbTvrcu/gFXyM8bRPaWFXDzALqidtwTte3s8rMZhmclzD9y3biLxbDlMe9x2GD2nQiE6J6
-        eitlvgNG0xPjLheVH431n30UgZADuq7DSTLvn4FhIdKUG8zXXx4YyIGbv0ZCsDHnh9gsSk
-        msoj1iwQGXSHcqqbFVsL8iBF9Zuo6lA=
-Date:   Mon, 7 Aug 2023 10:39:44 +0800
+         to:to:cc:cc:mime-version:mime-version:
+         content-transfer-encoding:content-transfer-encoding;
+        bh=ek4HyecNtF21r8WoqML0fISqBigNNEAEqcPdSPOlaK8=;
+        b=giVgra1yeWgnmqouFpz1+/PJ7KVqTL8CS2yhEMpzWbBOSQrvrI/nm3lM+xuhNHHkob65n8
+        hsficQycsCZfoILABMeHeQRBnCEN4RV79NYv6FTxBN9n9dXNeOwmbQQ65NiESDiLiHkeBT
+        wxpJedGkuKgPQCrqn7DxYq88bShFmsE=
+Received: from mail-yw1-f198.google.com (mail-yw1-f198.google.com
+ [209.85.128.198]) by relay.mimecast.com with ESMTP with STARTTLS
+ (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
+ us-mta-47-bxy_rBYLOk6_COyP0Nx03Q-1; Mon, 07 Aug 2023 00:55:20 -0400
+X-MC-Unique: bxy_rBYLOk6_COyP0Nx03Q-1
+Received: by mail-yw1-f198.google.com with SMTP id 00721157ae682-58960b53007so848917b3.3
+        for <linux-xfs@vger.kernel.org>; Sun, 06 Aug 2023 21:55:20 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20221208; t=1691384119; x=1691988919;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-message-state:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=ek4HyecNtF21r8WoqML0fISqBigNNEAEqcPdSPOlaK8=;
+        b=ZPgUYKTyEgZpZXhZ+0n5dlwC5dSzbvjX0ZYlG/+zimfJ4X8RqE+Ea2ezvk3Qigq/dT
+         eSdnLTBI77bZ1wojWWUvvOZvkPXI9d3qBbYWQgvLKODK9XKqOM37Gc+F/kLrqtU+aZA3
+         HCzwKJT1GCJSebKdl85FJdE8Xzd25jKt+OJ9Qh++DnySayC6MAsSugdwkoKCMmZhAUiB
+         vt682+LstxXTgWjac40QREyjPIKeq6ru9cqRd9MBSQvLDhOs8Y8AHw8Va/UlYUbpI21s
+         Vljep97hLY2eTg22aBRyPm+tq23omk8ApdDBUf4pRJxp+mZL4tiZ/T/mvv3QR5GszoH6
+         KOGg==
+X-Gm-Message-State: AOJu0YzZwcZVMR+cnRcIPsMPp2WsHSSXIPmBvw3HkRt+yGlXYgtxj6zG
+        Jc65zNniLG4HWOuZhBFSBk1TLaOGFBJh2TtEwKFUyH+IJbHn4zKhS3mQ8oIn9kqE+2DUASHXyFe
+        KHTQZsMXHI1ejd3FOtIKvWh64hbWXojbMzSANH/RKHEgNNo0OcYOfiXRUVAqMBlS+NjdHqXSEmW
+        ak3KtJ
+X-Received: by 2002:a0d:ff06:0:b0:576:bfc7:1e43 with SMTP id p6-20020a0dff06000000b00576bfc71e43mr8662992ywf.25.1691384119621;
+        Sun, 06 Aug 2023 21:55:19 -0700 (PDT)
+X-Google-Smtp-Source: AGHT+IGm6JmQvd+wexBoRh2LpK5cb5rW62RcO7c+QDiUGYmwchDWr8+IyjZWI4PyrDzACIxQWnuEGw==
+X-Received: by 2002:a0d:ff06:0:b0:576:bfc7:1e43 with SMTP id p6-20020a0dff06000000b00576bfc71e43mr8662981ywf.25.1691384119316;
+        Sun, 06 Aug 2023 21:55:19 -0700 (PDT)
+Received: from anathem.redhat.com ([2001:8003:4b08:fb00:e45d:9492:62e8:873c])
+        by smtp.gmail.com with ESMTPSA id w20-20020a17090a461400b00263dee538b1sm5060610pjg.25.2023.08.06.21.55.17
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Sun, 06 Aug 2023 21:55:18 -0700 (PDT)
+From:   Donald Douwsma <ddouwsma@redhat.com>
+To:     linux-xfs@vger.kernel.org
+Cc:     Pavel Reichl <preichl@redhat.com>,
+        "Darrick J . Wong" <djwong@kernel.org>,
+        Donald Douwsma <ddouwsma@redhat.com>
+Subject: [PATCH v2] xfsrestore: suggest -x rather than assert for false roots
+Date:   Mon,  7 Aug 2023 14:53:57 +1000
+Message-Id: <20230807045357.360114-1-ddouwsma@redhat.com>
+X-Mailer: git-send-email 2.39.3
 MIME-Version: 1.0
-Subject: Re: [PATCH 5.10 0/2] Fix xfs/179 for 5.10 stable
-Content-Language: en-US
-To:     "Darrick J. Wong" <djwong@kernel.org>,
-        Greg KH <gregkh@linuxfoundation.org>
-Cc:     amir73il@gmail.com, dchinner@redhat.com, yangx.jy@fujitsu.com,
-        linux-xfs@vger.kernel.org, stable@vger.kernel.org
-References: <20230803093652.7119-1-guoqing.jiang@linux.dev>
- <20230804154757.GI11352@frogsfrogsfrogs>
-X-Report-Abuse: Please report any abuse attempt to abuse@migadu.com and include these headers.
-From:   Guoqing Jiang <guoqing.jiang@linux.dev>
-In-Reply-To: <20230804154757.GI11352@frogsfrogsfrogs>
-Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 8bit
-X-Migadu-Flow: FLOW_OUT
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
+If we're going to have a fix for false root problems its a good idea to
+let people know that there's a way to recover, error out with a useful
+message that mentions the `-x` option rather than just assert.
 
+Before
 
-On 8/4/23 23:47, Darrick J. Wong wrote:
-> On Thu, Aug 03, 2023 at 05:36:50PM +0800, Guoqing Jiang wrote:
->> Hi,
->>
->> With the two patches applied, xfs/179 can pass in 5.10.188. Otherwise I got
->>
->> [root@localhost xfstests]# ./check xfs/179
->> FSTYP         -- xfs (non-debug)
->> PLATFORM      -- Linux/x86_64 localhost 5.10.188-default #14 SMP Thu Aug 3 15:23:19 CST 2023
->> MKFS_OPTIONS  -- -f /dev/loop1
->> MOUNT_OPTIONS -- -o context=system_u:object_r:root_t:s0 /dev/loop1 /mnt/scratch
->>
->> xfs/179 1s ... [failed, exit status 1]- output mismatch (see /root/xfstests/results//xfs/179.out.bad)
->>      --- tests/xfs/179.out	2023-07-13 16:12:27.000000000 +0800
->>      +++ /root/xfstests/results//xfs/179.out.bad	2023-08-03 16:55:38.173787911 +0800
->>      @@ -8,3 +8,5 @@
->>       Check scratch fs
->>       Remove reflinked files
->>       Check scratch fs
->>      +xfs_repair fails
->>      +(see /root/xfstests/results//xfs/179.full for details)
->>      ...
->>      (Run 'diff -u /root/xfstests/tests/xfs/179.out /root/xfstests/results//xfs/179.out.bad'  to see the entire diff)
->>
->> HINT: You _MAY_ be missing kernel fix:
->>        b25d1984aa88 xfs: estimate post-merge refcounts correctly
->>
->> Ran: xfs/179
->> Failures: xfs/179
->> Failed 1 of 1 tests
->>
->> Please review if they are approriate for 5.10 stable.
-> Seems fine to me, but ... there is no maintainer for 5.10; is your
-> employer willing to support this LTS kernel?
+  xfsrestore: searching media for directory dump
+  xfsrestore: reading directories
+  xfsrestore: tree.c:757: tree_begindir: Assertion `ino != persp->p_rootino || hardh == persp->p_rooth' failed.
+  Aborted
 
-Hi Darrick,
+After
 
-Thanks for your review! I think Amir is the maintainer for 5.10 😉. I 
-can help
-if needed since our kernel is heavily based on 5.10 stable. We also run 
-tests
-against 5.10 stable, that is why I send fixes patches for it.
+  xfsrestore: ERROR: tree.c:791: tree_begindir: Assertion `ino != persp->p_rootino || hardh == persp->p_rooth` failed.
+  xfsrestore: ERROR: False root detected. Recovery may be possible using the `-x` option
+  Aborted
 
-Hi Greg,
+Fixes: d7cba7410710 ("xfsrestore: fix rootdir due to xfsdump bulkstat misuse")
+Signed-off-by: Donald Douwsma <ddouwsma@redhat.com>
 
-Could you consider add the two to your list? Thank you!
+---
+Changes for v2
+- Use xfsprogs style for conditional
+- Remove trailing white-space
+- Place printf format all on one line for grepability
+- use __func__ instead of gcc specific __FUNCTION__
+---
+ restore/tree.c | 11 +++++++++--
+ 1 file changed, 9 insertions(+), 2 deletions(-)
 
-Regards,
-Guoqing
+diff --git a/restore/tree.c b/restore/tree.c
+index bfa07fe..e959aa1 100644
+--- a/restore/tree.c
++++ b/restore/tree.c
+@@ -783,8 +783,15 @@ tree_begindir(filehdr_t *fhdrp, dah_t *dahp)
+ 	/* lookup head of hardlink list
+ 	 */
+ 	hardh = link_hardh(ino, gen);
+-	if (need_fixrootdir == BOOL_FALSE)
+-		assert(ino != persp->p_rootino || hardh == persp->p_rooth);
++	if (need_fixrootdir == BOOL_FALSE &&
++		!(ino != persp->p_rootino || hardh == persp->p_rooth)) {
++		mlog(MLOG_ERROR | MLOG_TREE,
++"%s:%d: %s: Assertion `ino != persp->p_rootino || hardh == persp->p_rooth` failed.\n",
++			__FILE__, __LINE__, __func__);
++		mlog(MLOG_ERROR | MLOG_TREE, _(
++"False root detected. Recovery may be possible using the `-x` option\n"));
++		return NH_NULL;
++	}
+ 
+ 	/* already present
+ 	 */
+-- 
+2.39.3
+
