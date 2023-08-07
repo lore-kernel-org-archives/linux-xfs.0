@@ -2,43 +2,44 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id AF2AFC05052
-	for <linux-xfs@archiver.kernel.org>; Mon,  7 Aug 2023 19:40:49 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6E7DCC04FE2
+	for <linux-xfs@archiver.kernel.org>; Mon,  7 Aug 2023 19:41:26 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229803AbjHGTks (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 7 Aug 2023 15:40:48 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33174 "EHLO
+        id S231160AbjHGTlY (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 7 Aug 2023 15:41:24 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33770 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229458AbjHGTkp (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 7 Aug 2023 15:40:45 -0400
+        with ESMTP id S229581AbjHGTlU (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 7 Aug 2023 15:41:20 -0400
 Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 54F0E1BF4;
-        Mon,  7 Aug 2023 12:40:08 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 061791999;
+        Mon,  7 Aug 2023 12:40:45 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
          key-exchange X25519 server-signature RSA-PSS (2048 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id D100F621CE;
-        Mon,  7 Aug 2023 19:38:52 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id CC784C0760F;
-        Mon,  7 Aug 2023 19:38:45 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 66942621C9;
+        Mon,  7 Aug 2023 19:39:26 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 67BFCC433AB;
+        Mon,  7 Aug 2023 19:39:19 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1691437132;
-        bh=SoSg4hRs/3AF7gmmZ5KQieVLFGATpnVC2zTweWQTdLU=;
+        s=k20201202; t=1691437165;
+        bh=GbRbPLOxHLvc3DeuudVIv0R96Xl/KQh1gZUkLNJwaqw=;
         h=From:Date:Subject:References:In-Reply-To:To:Cc:From;
-        b=KxIu3/cu0khoRWfNJXEJNIHdkniXf13AfUwiYzwbEfIu8g3DBtfZfzYS9IOYy9Gpk
-         Bj3cYzwEKlh8g81NTtaccKy7aMqTEYuSZfyn9SEoQUp7kUA4ckYCfHueh6Qfif9NgK
-         slFb5wQGYXGFb4CWnSXlLxHUkaQKI2w9y4EhGJbBrVFp5aU9fk7DAWfQl7jLSAfqD1
-         UccpkoMfyyMBq4af30lIQ5AB/cwMdmHd6Z3n40C38snUYNYnW8fp27SzSPjzVX5Rmr
-         sneuDS6BTX/Zciu9zoJxNLu+PbQqNw9x3B9TP5CDuF4m+Ww8wcMCuyC78gSMsgXucT
-         7N0lCiWdDCoMA==
+        b=jyfZZJ6oAnWrzwy6uxMcn981Ztsf8ekdYSTK5OjKoObb52LSWGYUyPDA4kmPqGF1x
+         XgdC141GcDjigpVsye6Z2fRW99llsFTyP+IfOKPAc68VweV9PIYC/Q0X43vg8N2M+z
+         Az61OjrrYIpqnlx5X/KD2MOToWd0+i939PUFYXt+NeipL/xlWufku7jraVtnp1aZIa
+         HYs+6Di3+mpLU5YwTykDK9WTNQJgdVzsmUOkrVgLqaLNB3qJ9kSvdPg+4laJyCR7YJ
+         tK4OeZHA9mQJuWModJc5QFspncoFCluv2eVgDmWS58HE9PCjeO01QWlyOyDs3rvs2t
+         9FLqopEpWQzeQ==
 From:   Jeff Layton <jlayton@kernel.org>
-Date:   Mon, 07 Aug 2023 15:38:32 -0400
-Subject: [PATCH v7 01/13] fs: remove silly warning from current_time
+Date:   Mon, 07 Aug 2023 15:38:37 -0400
+Subject: [PATCH v7 06/13] ubifs: have ubifs_update_time use
+ inode_update_timestamps
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
-Message-Id: <20230807-mgctime-v7-1-d1dec143a704@kernel.org>
+Message-Id: <20230807-mgctime-v7-6-d1dec143a704@kernel.org>
 References: <20230807-mgctime-v7-0-d1dec143a704@kernel.org>
 In-Reply-To: <20230807-mgctime-v7-0-d1dec143a704@kernel.org>
 To:     Alexander Viro <viro@zeniv.linux.org.uk>,
@@ -104,50 +105,57 @@ Cc:     linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org,
         linux-unionfs@vger.kernel.org, linux-xfs@vger.kernel.org,
         Jeff Layton <jlayton@kernel.org>
 X-Mailer: b4 0.12.3
-X-Developer-Signature: v=1; a=openpgp-sha256; l=648; i=jlayton@kernel.org;
- h=from:subject:message-id; bh=SoSg4hRs/3AF7gmmZ5KQieVLFGATpnVC2zTweWQTdLU=;
- b=owEBbQKS/ZANAwAIAQAOaEEZVoIVAcsmYgBk0Ug9m1G2XKd9FuFQHFpf/xUPtkdl5tYH/twvk
- pTBUT8ItSeJAjMEAAEIAB0WIQRLwNeyRHGyoYTq9dMADmhBGVaCFQUCZNFIPQAKCRAADmhBGVaC
- FQz2D/0VAN0+ej/IEUpgqVfQAjQ8iolTJV7E0suDKXij0ebakC68W10jwrlT0yi9VzJjG+zWKlu
- TPi0thiI9CyD/g4niQelv35XmBxU8+fVi3c6QBE+uHc2Ye0nZvMEETJoMoCQ9vWHE0o4DGUU2J0
- 26j+6oaILlvI1X0SUof0ithfuve3VLXGJWbNFJiF0l7dGjWrFCmDi1p7+bpTkunQiHaOyb8WO8t
- 9XrB4x7Lw8nyVzPkyifucdtKaVzyIgZmBTqfzkjEb4acmJF1j/dKiwiKpIraaYMJEUmwqClF9np
- XnLxTxRAuW/grOiacgsfaNgmBqYN15Sjc04u/Q4I4g2N16lCqkw70LyyWxv++cJHfJPx4W0ZHfC
- R/gn2xIcFEAKBEHArqXew/pH7qG7uDz/b1Tj2mM3gqLV7eTr5JFzSI/7wSktMHXAzgUD24sZiHI
- ynRl73zTIzC6nZMJLAX2n8vToMIHUD3FE7/TSjsZyhMot40Erl6eO12t1dHzizbh3GH2yOW9/Rh
- 4vCxMpdrHxu0ThUYFW+V5LTlnES54b+/oIaCI5d+yTMQQ0CzptPaqHEo/3Hn1P6GXDGbu5ddJKI
- KaPeUyTJxHdX5P1JavBBd5+dhqnWjI4y5Jd1sbR9Cl9wKKlVfciVMR5ZT7Ph9rsafHUC49jW/f+
- bi/n8FB4iErM8Ig==
+X-Developer-Signature: v=1; a=openpgp-sha256; l=996; i=jlayton@kernel.org;
+ h=from:subject:message-id; bh=GbRbPLOxHLvc3DeuudVIv0R96Xl/KQh1gZUkLNJwaqw=;
+ b=owEBbQKS/ZANAwAIAQAOaEEZVoIVAcsmYgBk0Ug9wCd8uHf1JTgjFwTpewg5ScLm1k4tTu02Y
+ EC0/mG6MoaJAjMEAAEIAB0WIQRLwNeyRHGyoYTq9dMADmhBGVaCFQUCZNFIPQAKCRAADmhBGVaC
+ Fct1EACdouI5B+JSe5rResZvzr2jp0vI9jztehgsnHaGwZpffA5C0T8Yg38sCZ7YdqkMrSalPu3
+ w5M7Xcnqdsh4N6Piv9FyxKwRSFhd6L5ltVRVHih3Qrw4CyeqQSC7cF/EoGpJa9WWyMiMRBCPwXS
+ SU4LxtVbYmpo45fMxJtALEzmwSMTQIvU1bzpRV4xXlicR54RmnWjkO1z9jdwOxQ6twX9yCYJWhy
+ +3XrcrBrTeCS8Z8HreMQGrXDkWsGpGOLe30hRm2zRRGLDwDg58GheX7tI3FJuoWyyPSnXy3GZc3
+ IA0WXjumJsnEmtP0TTId+6zh00veQZd5f1GR1l36s9K0aaYaoM1mZs2JdqnG9u0fTI7XR41ftea
+ t8+T7wkMIFECd37uaZbjycDqk1RHCXJ9ICgFsL1nEAdkbZL+3Amxg7YLPni5Idxrzm1T01riCL8
+ urj0TVjv0LL8Cu70DTcMmlGNYW6HA78KZAiTzBDyB1/8z1iYpiO1fv++ontB2RmfNWnf88B+/uB
+ dUK97a5CoO8W1Sg3FRMI1RzkPuF6rcuqwIopnsbtQLtxWCgvC+TTGMRmkaMSjYLODUCN/px7EYj
+ 1m1keuzLArUPtUidWiCLHEoBgRNimTN+hBNrZNS9Ycr9H0FD7wiIc3WUf0F2tZ/Zb1UbnIJDvl2
+ CuiXxVzCtmQDRgA==
 X-Developer-Key: i=jlayton@kernel.org; a=openpgp;
  fpr=4BC0D7B24471B2A184EAF5D3000E684119568215
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-An inode with no superblock? Unpossible!
+In later patches, we're going to drop the "now" parameter from the
+update_time operation. Prepare ubifs for this, by having it use the new
+inode_update_timestamps helper.
 
 Signed-off-by: Jeff Layton <jlayton@kernel.org>
 ---
- fs/inode.c | 6 ------
- 1 file changed, 6 deletions(-)
+ fs/ubifs/file.c | 10 ++--------
+ 1 file changed, 2 insertions(+), 8 deletions(-)
 
-diff --git a/fs/inode.c b/fs/inode.c
-index d4ab92233062..3fc251bfaf73 100644
---- a/fs/inode.c
-+++ b/fs/inode.c
-@@ -2495,12 +2495,6 @@ struct timespec64 current_time(struct inode *inode)
- 	struct timespec64 now;
+diff --git a/fs/ubifs/file.c b/fs/ubifs/file.c
+index df9086b19cd0..2d0178922e19 100644
+--- a/fs/ubifs/file.c
++++ b/fs/ubifs/file.c
+@@ -1397,15 +1397,9 @@ int ubifs_update_time(struct inode *inode, struct timespec64 *time,
+ 		return err;
  
- 	ktime_get_coarse_real_ts64(&now);
+ 	mutex_lock(&ui->ui_mutex);
+-	if (flags & S_ATIME)
+-		inode->i_atime = *time;
+-	if (flags & S_CTIME)
+-		inode_set_ctime_to_ts(inode, *time);
+-	if (flags & S_MTIME)
+-		inode->i_mtime = *time;
 -
--	if (unlikely(!inode->i_sb)) {
--		WARN(1, "current_time() called with uninitialized super_block in the inode");
--		return now;
--	}
--
- 	return timestamp_truncate(now, inode);
- }
- EXPORT_SYMBOL(current_time);
+-	release = ui->dirty;
++	inode_update_timestamps(inode, flags);
+ 	__mark_inode_dirty(inode, I_DIRTY_SYNC);
++	release = ui->dirty;
+ 	mutex_unlock(&ui->ui_mutex);
+ 	if (release)
+ 		ubifs_release_budget(c, &req);
 
 -- 
 2.41.0
