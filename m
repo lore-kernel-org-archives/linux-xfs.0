@@ -2,49 +2,84 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 15963C41513
-	for <linux-xfs@archiver.kernel.org>; Mon,  7 Aug 2023 08:02:07 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id EE8F7EB64DD
+	for <linux-xfs@archiver.kernel.org>; Mon,  7 Aug 2023 08:36:58 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229691AbjHGICF (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 7 Aug 2023 04:02:05 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50970 "EHLO
+        id S229469AbjHGIg5 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 7 Aug 2023 04:36:57 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33170 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229713AbjHGICE (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 7 Aug 2023 04:02:04 -0400
-Received: from mail.loanfly.pl (mail.loanfly.pl [141.94.250.68])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 64407DD
-        for <linux-xfs@vger.kernel.org>; Mon,  7 Aug 2023 01:02:01 -0700 (PDT)
-Received: by mail.loanfly.pl (Postfix, from userid 1002)
-        id 24EA1A39EF; Mon,  7 Aug 2023 08:00:27 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=loanfly.pl; s=mail;
-        t=1691395232; bh=Y0HnXqH+26AP5Uq6M8BQXaj1HIAPQY/WndV9tkpAHHU=;
-        h=Date:From:To:Subject:From;
-        b=aYcOibU1v5+VF5FKX0EdA21XSGo2FexiEh19VukEPWA67+BA2qR1wobh/wSy8/Iml
-         MNEfbP2YM20D9rPHO0bHbhSYRXzA3wMCx8h1shCzFoP9/SzvgFaUZxhHoELDtB/5C6
-         Ck/167NPA8CYUXVx9lYGOJBqDOvUX1ZS9h6L7TSgAb+IxvkFMoun32tyzc7LSgqeE5
-         zAgPjDExEmqxjgVOO/ytwhBXnVZycj1mKXoJ4FDsO65FY9wEDJGOSHfxObSK/dpmVz
-         zi+3udJrh0oX5Y3y21RDUr/vMdXwBq9dbjLCnZ4TG0Y0OhoNtycf+axBRuNb/Ai2zB
-         7Gyr4oJMwfFrg==
-Received: by mail.loanfly.pl for <linux-xfs@vger.kernel.org>; Mon,  7 Aug 2023 08:00:09 GMT
-Message-ID: <20230807064501-0.1.br.1bs0s.0.6gl0jnl98f@loanfly.pl>
-Date:   Mon,  7 Aug 2023 08:00:09 GMT
-From:   "Damian Cichocki" <damian.cichocki@loanfly.pl>
-To:     <linux-xfs@vger.kernel.org>
-Subject: =?UTF-8?Q?Pytanie_o_samoch=C3=B3d?=
-X-Mailer: mail.loanfly.pl
+        with ESMTP id S229965AbjHGIg4 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 7 Aug 2023 04:36:56 -0400
+Received: from mail-oi1-f198.google.com (mail-oi1-f198.google.com [209.85.167.198])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A51FB172C
+        for <linux-xfs@vger.kernel.org>; Mon,  7 Aug 2023 01:36:55 -0700 (PDT)
+Received: by mail-oi1-f198.google.com with SMTP id 5614622812f47-3a36b52afcfso7666478b6e.3
+        for <linux-xfs@vger.kernel.org>; Mon, 07 Aug 2023 01:36:55 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20221208; t=1691397415; x=1692002215;
+        h=to:from:subject:message-id:date:mime-version:x-gm-message-state
+         :from:to:cc:subject:date:message-id:reply-to;
+        bh=DMSutLnpa34k/l8CgouoKF7mkj9KHuv/9BVvf3Oxcm4=;
+        b=COKWRoA/cjS5b+w6OLomFm6vohbqmKh5ryBEnR3PXyLKzXqvIVp84qcqEVUM3BGVi7
+         UM5cpC42ZxxBcVGNg3VznWxu8o4774GgSUH3Ir+lkPrr46TV1az5dWEMgf5UW7paEH31
+         8J/Ug0jNQLYirvBmRryrSAKzye2hVV7hJl+FPQMhxfNpF2uibcryH6AaBJWe06v/7LEv
+         jpUPLciiZlt4bmVCnRPzM0i74f+Z3b1f1iw23llFKF7Guvy8mC8Ak639i80Gt8PtFRTP
+         Ey4SjklO1v1GrDDojeKFo1Wm2kBeYHe7f+PonoLetf+E3piCipMNHCnd3ZrGNtH3njWx
+         UeyA==
+X-Gm-Message-State: AOJu0YwwWph1de2NsIWcQY+i3xWVuq8Ty4VNAOK6aVcONjuzxpucwRDg
+        nf91ZPmwM/gM8dIylFUmC+zgnnyi0vQVxDDfo1kFNffyxm33
+X-Google-Smtp-Source: AGHT+IEQBV2lRxaqMU43Iy1+iR8bpEHHGRaq6484w4ETQ1fDGJ82//5sszCKkz9B3PcD0fq4kk0FT2Poqjx8tf+5TNDgUrXr2jKK
 MIME-Version: 1.0
+X-Received: by 2002:a05:6808:1a1f:b0:3a7:2639:f835 with SMTP id
+ bk31-20020a0568081a1f00b003a72639f835mr16477704oib.6.1691397415038; Mon, 07
+ Aug 2023 01:36:55 -0700 (PDT)
+Date:   Mon, 07 Aug 2023 01:36:54 -0700
+X-Google-Appengine-App-Id: s~syzkaller
+X-Google-Appengine-App-Id-Alias: syzkaller
+Message-ID: <00000000000018fd5c06025126a4@google.com>
+Subject: [syzbot] Monthly xfs report (Aug 2023)
+From:   syzbot <syzbot+list53c228f913ba424c6fa5@syzkaller.appspotmail.com>
+To:     djwong@kernel.org, linux-fsdevel@vger.kernel.org,
+        linux-kernel@vger.kernel.org, linux-xfs@vger.kernel.org,
+        syzkaller-bugs@googlegroups.com
 Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Dzie=C5=84 dobry,
+Hello xfs maintainers/developers,
 
-Czy interesuje Pa=C5=84stwa rozwi=C4=85zanie umo=C5=BCliwiaj=C4=85ce moni=
-torowanie samochod=C3=B3w firmowych oraz optymalizacj=C4=99 koszt=C3=B3w =
-ich utrzymania?=20
+This is a 31-day syzbot report for the xfs subsystem.
+All related reports/information can be found at:
+https://syzkaller.appspot.com/upstream/s/xfs
 
+During the period, 0 new issues were detected and 0 were fixed.
+In total, 18 issues are still open and 22 have been fixed so far.
 
-Pozdrawiam,
-Damian Cichocki
+Some of the still happening issues:
+
+Ref Crashes Repro Title
+<1> 4258    No    KMSAN: uninit-value in __crc32c_le_base (3)
+                  https://syzkaller.appspot.com/bug?extid=a6d6b8fffa294705dbd8
+<2> 1923    Yes   UBSAN: array-index-out-of-bounds in xfs_attr3_leaf_add_work
+                  https://syzkaller.appspot.com/bug?extid=510dcbdc6befa1e6b2f6
+<3> 221     Yes   KASAN: stack-out-of-bounds Read in xfs_buf_lock
+                  https://syzkaller.appspot.com/bug?extid=0bc698a422b5e4ac988c
+<4> 69      No    KCSAN: data-race in __filemap_remove_folio / folio_mapping (2)
+                  https://syzkaller.appspot.com/bug?extid=606f94dfeaaa45124c90
+<5> 4       Yes   WARNING: Reset corrupted AGFL on AG NUM. NUM blocks leaked. Please unmount and run xfs_repair.
+                  https://syzkaller.appspot.com/bug?extid=9d0b0d54a8bd799f6ae4
+
+---
+This report is generated by a bot. It may contain errors.
+See https://goo.gl/tpsmEJ for more information about syzbot.
+syzbot engineers can be reached at syzkaller@googlegroups.com.
+
+To disable reminders for individual bugs, reply with the following command:
+#syz set <Ref> no-reminders
+
+To change bug's subsystems, reply with:
+#syz set <Ref> subsystems: new-subsystem
+
+You may send multiple commands in a single email message.
