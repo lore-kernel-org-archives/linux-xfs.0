@@ -2,53 +2,53 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DEA58C04E69
-	for <linux-xfs@archiver.kernel.org>; Tue,  8 Aug 2023 16:59:34 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 74443C04A6A
+	for <linux-xfs@archiver.kernel.org>; Tue,  8 Aug 2023 17:08:04 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233895AbjHHQ7d (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 8 Aug 2023 12:59:33 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36016 "EHLO
+        id S234016AbjHHRID (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 8 Aug 2023 13:08:03 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51280 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232295AbjHHQ6L (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 8 Aug 2023 12:58:11 -0400
+        with ESMTP id S234110AbjHHRHQ (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 8 Aug 2023 13:07:16 -0400
 Received: from smtp-out1.suse.de (smtp-out1.suse.de [IPv6:2001:67c:2178:6::1c])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id BE85D524C;
-        Tue,  8 Aug 2023 08:42:55 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 959AE1BC3;
+        Tue,  8 Aug 2023 09:02:57 -0700 (PDT)
 Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
         (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
          key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
         (No client certificate requested)
-        by smtp-out1.suse.de (Postfix) with ESMTPS id 0F7CB21AAC;
-        Tue,  8 Aug 2023 09:39:04 +0000 (UTC)
+        by smtp-out1.suse.de (Postfix) with ESMTPS id 3FF9421C09;
+        Tue,  8 Aug 2023 10:05:58 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.cz; s=susede2_rsa;
-        t=1691487544; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+        t=1691489158; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
          mime-version:mime-version:content-type:content-type:
          in-reply-to:in-reply-to:references:references;
-        bh=PVeErVjOshT1HL9BKit56tV7zQvJsI4KiQWED3rMFuk=;
-        b=Ih/dtuDlLjuehwLx/dl1alOHiAbINBHhQjqICxdO8QzvDNyayDD12QEIdQQqzzznj7Q14P
-        c5hv8MUHhglxrWQtTaFcAIVopxDABjqy/dP+ec5Lv+rEt0nndTNahsaoLReC2CFkrCP+64
-        W8/atfzAfsnelhickcggtSiPj4yTuJM=
+        bh=cOTJYjkBLnwjV/lxEVtUyReuFAMisDvl/3KW3rcsa80=;
+        b=RYwrn0fdjwhhRR7l27SfhU6sEIZlfDKsRmqY6BlBC/mbMQlEPGtvhbIdRr7h8egn/oN8yh
+        Oz6U9UuTleHENrCE1avR3NSOn0guqcLSLu7iBXijjb70nxn/BQDxhjUWhk7QvvA5/v4PB8
+        VNLrqst7KIs78O2ejOjXiqcNSNVttFQ=
 DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.cz;
-        s=susede2_ed25519; t=1691487544;
+        s=susede2_ed25519; t=1691489158;
         h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
          mime-version:mime-version:content-type:content-type:
          in-reply-to:in-reply-to:references:references;
-        bh=PVeErVjOshT1HL9BKit56tV7zQvJsI4KiQWED3rMFuk=;
-        b=j1Qrid+U1SfmOjtDLooGt12t1hCG9o0NAGXfAvVFTMysCO70VmrTAY263EbPzLWm1azsyz
-        yYZCAZd1ftjgXqAg==
+        bh=cOTJYjkBLnwjV/lxEVtUyReuFAMisDvl/3KW3rcsa80=;
+        b=3BwMkd6c3zAZ5/EGX3xW7irKJimW+k7SoacxDa/XvD8/WW5BAqfXsGAeW7PnSgHdphBpnB
+        7inqEIuyeW8nM7Cw==
 Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
         (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
          key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
         (No client certificate requested)
-        by imap2.suse-dmz.suse.de (Postfix) with ESMTPS id ECC6813451;
-        Tue,  8 Aug 2023 09:39:03 +0000 (UTC)
+        by imap2.suse-dmz.suse.de (Postfix) with ESMTPS id 2554713451;
+        Tue,  8 Aug 2023 10:05:58 +0000 (UTC)
 Received: from dovecot-director2.suse.de ([192.168.254.65])
         by imap2.suse-dmz.suse.de with ESMTPSA
-        id Oj7GOTcN0mRIHgAAMHmgww
-        (envelope-from <jack@suse.cz>); Tue, 08 Aug 2023 09:39:03 +0000
+        id 9iarCIYT0mRwKwAAMHmgww
+        (envelope-from <jack@suse.cz>); Tue, 08 Aug 2023 10:05:58 +0000
 Received: by quack3.suse.cz (Postfix, from userid 1000)
-        id 732A5A0769; Tue,  8 Aug 2023 11:39:03 +0200 (CEST)
-Date:   Tue, 8 Aug 2023 11:39:03 +0200
+        id 9F18AA0769; Tue,  8 Aug 2023 12:05:57 +0200 (CEST)
+Date:   Tue, 8 Aug 2023 12:05:57 +0200
 From:   Jan Kara <jack@suse.cz>
 To:     Jeff Layton <jlayton@kernel.org>
 Cc:     Alexander Viro <viro@zeniv.linux.org.uk>,
@@ -112,69 +112,110 @@ Cc:     Alexander Viro <viro@zeniv.linux.org.uk>,
         linux-cifs@vger.kernel.org, samba-technical@lists.samba.org,
         linux-mtd@lists.infradead.org, linux-mm@kvack.org,
         linux-unionfs@vger.kernel.org, linux-xfs@vger.kernel.org
-Subject: Re: [PATCH v7 07/13] xfs: have xfs_vn_update_time gets its own
- timestamp
-Message-ID: <20230808093903.2cg5wwbwbvflkeph@quack3>
+Subject: Re: [PATCH v7 13/13] btrfs: convert to multigrain timestamps
+Message-ID: <20230808100557.dowlxz2destpseqr@quack3>
 References: <20230807-mgctime-v7-0-d1dec143a704@kernel.org>
- <20230807-mgctime-v7-7-d1dec143a704@kernel.org>
+ <20230807-mgctime-v7-13-d1dec143a704@kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20230807-mgctime-v7-7-d1dec143a704@kernel.org>
+In-Reply-To: <20230807-mgctime-v7-13-d1dec143a704@kernel.org>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Mon 07-08-23 15:38:38, Jeff Layton wrote:
-> In later patches we're going to drop the "now" parameter from the
-> update_time operation. Prepare XFS for this by reworking how it fetches
-> timestamps and sets them in the inode. Ensure that we update the ctime
-> even if only S_MTIME is set.
+On Mon 07-08-23 15:38:44, Jeff Layton wrote:
+> Enable multigrain timestamps, which should ensure that there is an
+> apparent change to the timestamp whenever it has been written after
+> being actively observed via getattr.
+> 
+> Beyond enabling the FS_MGTIME flag, this patch eliminates
+> update_time_for_write, which goes to great pains to avoid in-memory
+> stores. Just have it overwrite the timestamps unconditionally.
 > 
 > Signed-off-by: Jeff Layton <jlayton@kernel.org>
-> ---
->  fs/xfs/xfs_iops.c | 12 ++++++++----
->  1 file changed, 8 insertions(+), 4 deletions(-)
-> 
-> diff --git a/fs/xfs/xfs_iops.c b/fs/xfs/xfs_iops.c
-> index 731f45391baa..72d18e7840f5 100644
-> --- a/fs/xfs/xfs_iops.c
-> +++ b/fs/xfs/xfs_iops.c
-> @@ -1037,6 +1037,7 @@ xfs_vn_update_time(
->  	int			log_flags = XFS_ILOG_TIMESTAMP;
->  	struct xfs_trans	*tp;
->  	int			error;
-> +	struct timespec64	now = current_time(inode);
+> Acked-by: David Sterba <dsterba@suse.com>
 
-No need to fetch current_time() here where you overwrite it just a bit
-later...
-
-> @@ -1056,12 +1057,15 @@ xfs_vn_update_time(
->  		return error;
->  
->  	xfs_ilock(ip, XFS_ILOCK_EXCL);
-> -	if (flags & S_CTIME)
-> -		inode_set_ctime_to_ts(inode, *now);
-> +	if (flags & (S_CTIME|S_MTIME))
-> +		now = inode_set_ctime_current(inode);
-> +	else
-> +		now = current_time(inode);
-> +
->  	if (flags & S_MTIME)
-> -		inode->i_mtime = *now;
-> +		inode->i_mtime = now;
->  	if (flags & S_ATIME)
-> -		inode->i_atime = *now;
-> +		inode->i_atime = now;
->  
->  	xfs_trans_ijoin(tp, ip, XFS_ILOCK_EXCL);
->  	xfs_trans_log_inode(tp, ip, log_flags);
-
-Otherwise the patch looks good to me so feel free to add:
+Looks good to me. Feel free to add:
 
 Reviewed-by: Jan Kara <jack@suse.cz>
 
 								Honza
+
+> ---
+>  fs/btrfs/file.c  | 24 ++++--------------------
+>  fs/btrfs/super.c |  5 +++--
+>  2 files changed, 7 insertions(+), 22 deletions(-)
+> 
+> diff --git a/fs/btrfs/file.c b/fs/btrfs/file.c
+> index d7a9ece7a40b..b9e75c9f95ac 100644
+> --- a/fs/btrfs/file.c
+> +++ b/fs/btrfs/file.c
+> @@ -1106,25 +1106,6 @@ void btrfs_check_nocow_unlock(struct btrfs_inode *inode)
+>  	btrfs_drew_write_unlock(&inode->root->snapshot_lock);
+>  }
+>  
+> -static void update_time_for_write(struct inode *inode)
+> -{
+> -	struct timespec64 now, ctime;
+> -
+> -	if (IS_NOCMTIME(inode))
+> -		return;
+> -
+> -	now = current_time(inode);
+> -	if (!timespec64_equal(&inode->i_mtime, &now))
+> -		inode->i_mtime = now;
+> -
+> -	ctime = inode_get_ctime(inode);
+> -	if (!timespec64_equal(&ctime, &now))
+> -		inode_set_ctime_to_ts(inode, now);
+> -
+> -	if (IS_I_VERSION(inode))
+> -		inode_inc_iversion(inode);
+> -}
+> -
+>  static int btrfs_write_check(struct kiocb *iocb, struct iov_iter *from,
+>  			     size_t count)
+>  {
+> @@ -1156,7 +1137,10 @@ static int btrfs_write_check(struct kiocb *iocb, struct iov_iter *from,
+>  	 * need to start yet another transaction to update the inode as we will
+>  	 * update the inode when we finish writing whatever data we write.
+>  	 */
+> -	update_time_for_write(inode);
+> +	if (!IS_NOCMTIME(inode)) {
+> +		inode->i_mtime = inode_set_ctime_current(inode);
+> +		inode_inc_iversion(inode);
+> +	}
+>  
+>  	start_pos = round_down(pos, fs_info->sectorsize);
+>  	oldsize = i_size_read(inode);
+> diff --git a/fs/btrfs/super.c b/fs/btrfs/super.c
+> index f1dd172d8d5b..8eda51b095c9 100644
+> --- a/fs/btrfs/super.c
+> +++ b/fs/btrfs/super.c
+> @@ -2144,7 +2144,7 @@ static struct file_system_type btrfs_fs_type = {
+>  	.name		= "btrfs",
+>  	.mount		= btrfs_mount,
+>  	.kill_sb	= btrfs_kill_super,
+> -	.fs_flags	= FS_REQUIRES_DEV | FS_BINARY_MOUNTDATA,
+> +	.fs_flags	= FS_REQUIRES_DEV | FS_BINARY_MOUNTDATA | FS_MGTIME,
+>  };
+>  
+>  static struct file_system_type btrfs_root_fs_type = {
+> @@ -2152,7 +2152,8 @@ static struct file_system_type btrfs_root_fs_type = {
+>  	.name		= "btrfs",
+>  	.mount		= btrfs_mount_root,
+>  	.kill_sb	= btrfs_kill_super,
+> -	.fs_flags	= FS_REQUIRES_DEV | FS_BINARY_MOUNTDATA | FS_ALLOW_IDMAP,
+> +	.fs_flags	= FS_REQUIRES_DEV | FS_BINARY_MOUNTDATA |
+> +			  FS_ALLOW_IDMAP | FS_MGTIME,
+>  };
+>  
+>  MODULE_ALIAS_FS("btrfs");
+> 
+> -- 
+> 2.41.0
+> 
 -- 
 Jan Kara <jack@suse.com>
 SUSE Labs, CR
