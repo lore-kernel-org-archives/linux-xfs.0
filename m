@@ -2,108 +2,177 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id AF250C001E0
-	for <linux-xfs@archiver.kernel.org>; Tue,  8 Aug 2023 21:57:45 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A34DEC001DB
+	for <linux-xfs@archiver.kernel.org>; Tue,  8 Aug 2023 21:58:18 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230411AbjHHV5p (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 8 Aug 2023 17:57:45 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48546 "EHLO
+        id S231667AbjHHV6R (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 8 Aug 2023 17:58:17 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:32934 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229585AbjHHV5o (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 8 Aug 2023 17:57:44 -0400
-Received: from mail-pf1-x42b.google.com (mail-pf1-x42b.google.com [IPv6:2607:f8b0:4864:20::42b])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id ED3A9EE
-        for <linux-xfs@vger.kernel.org>; Tue,  8 Aug 2023 14:57:43 -0700 (PDT)
-Received: by mail-pf1-x42b.google.com with SMTP id d2e1a72fcca58-686d8c8fc65so4354719b3a.0
-        for <linux-xfs@vger.kernel.org>; Tue, 08 Aug 2023 14:57:43 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=fromorbit-com.20221208.gappssmtp.com; s=20221208; t=1691531863; x=1692136663;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
-        bh=YCh0gGgdu43BffhTHRpb87yXdgZgfUbq/I3U4XU0Bzo=;
-        b=D//7qBa6JT4/W6MtNwEJBTisjWXoeIgorxn4WlicBdH9ldGPGAtvqVGzMMsvKUgGIS
-         HC3/uBzpTSPL+otgqOzpAlQExDTM4TJrPJAz+MxvZDWWWEGXfiF9VuJAWTdFsi8u4MFi
-         AO9lPxHX1QUGhjaZgfEVp7S4DBKYwVT+GLTnEQa1YWlVObwYe2N9H1e8ulWFisFgCFGE
-         yH5YhgH2Ymp9yLTUlaaP4YYuoQnD91p4DZF+PcRaGMJoR2RQ15IbCj/eUE+wMZEYJRtD
-         5TWZ9R0tM57ab+rEs3rx8pHA4Zze38yXIc2icMHOztg4PTM71GzIKzUwaecmX5M3JN0e
-         VV8w==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20221208; t=1691531863; x=1692136663;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=YCh0gGgdu43BffhTHRpb87yXdgZgfUbq/I3U4XU0Bzo=;
-        b=DxSCYq3FmhaGxvM5Ibcezs6O0N4Ba9RczDY+JSTcYQM1xIDBUWadOkGfV5S8keTVpG
-         dpI/+FZP3ET0ln68oPmYatKW5C+PRggzRupxMCkF4JaHmBQVPTLHXBGjT8izhusrNNw3
-         0S5A9d3+V+9LK00W3ZWOeI8zeh1muzFbBmZT4GO7khlHuHxi9xU00RP39JaFI33vLDwT
-         YYQLj68feqkXGC8i6MDNqkSdWXTtC0pbdYmDEYAFP/hA/d0pMk/WDrKkj5R6gQH+tP5e
-         Eyh88SLRZ8EnpQTHi1AGqP3r7HXkYiLFP3UTgDSTtonNhunC8V88RHSVUcGfaF6MCAc1
-         vmFg==
-X-Gm-Message-State: AOJu0YyjkdQFuwLSmEgjveT2rP1WTuAegN7IsGhSknksP9/NORZ/Pn+U
-        K1VYNRMUq2ekYqdAsMLMRMLY8cYZR3dSwO6MjBg=
-X-Google-Smtp-Source: AGHT+IFG4P7Z8V5q9B2l3lNYWObNNYQkrCjwQIp9IVNpTbNjmx8OlktuwiZEviJ0hlD9ByNVxtvGYg==
-X-Received: by 2002:a05:6a00:3a05:b0:687:472f:5150 with SMTP id fj5-20020a056a003a0500b00687472f5150mr679821pfb.8.1691531863379;
-        Tue, 08 Aug 2023 14:57:43 -0700 (PDT)
-Received: from dread.disaster.area (pa49-180-166-213.pa.nsw.optusnet.com.au. [49.180.166.213])
-        by smtp.gmail.com with ESMTPSA id y7-20020aa78547000000b006661562429fsm8832882pfn.97.2023.08.08.14.57.42
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 08 Aug 2023 14:57:42 -0700 (PDT)
-Received: from dave by dread.disaster.area with local (Exim 4.96)
-        (envelope-from <david@fromorbit.com>)
-        id 1qTUhv-002suo-15;
-        Wed, 09 Aug 2023 07:57:39 +1000
-Date:   Wed, 9 Aug 2023 07:57:39 +1000
-From:   Dave Chinner <david@fromorbit.com>
-To:     "Darrick J. Wong" <djwong@kernel.org>
-Cc:     linux-xfs@vger.kernel.org
-Subject: Re: [PATCH] xfs: fix dqiterate thinko
-Message-ID: <ZNK6U0T/olLZynaQ@dread.disaster.area>
-References: <20230808024030.GP11352@frogsfrogsfrogs>
+        with ESMTP id S231126AbjHHV6G (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 8 Aug 2023 17:58:06 -0400
+Received: from smtp-out2.suse.de (smtp-out2.suse.de [195.135.220.29])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B4E593A68F;
+        Tue,  8 Aug 2023 09:39:25 -0700 (PDT)
+Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
+        (No client certificate requested)
+        by smtp-out2.suse.de (Postfix) with ESMTPS id 313B020317;
+        Tue,  8 Aug 2023 09:32:27 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.cz; s=susede2_rsa;
+        t=1691487147; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+         mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=URemeKpdb8J18iMONbqIB4P02haKyRX6mS8Xu4Mgmc8=;
+        b=kAP4/qU3eebbLi9EbGgoNiblqEAMz2n9d8dDZjEU/zYHxmh4xQUAW4aRmDsDFAo1LDW4XS
+        Jz3jziQyqFQJ2OS6XJQCmcd5h9qdcD3Byn8qpddgol9CAV8ew1WhVYDKOVKgTmZrEM14u3
+        +VucJ+n1ddguqczAaW5Ki56KFXcMMvI=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.cz;
+        s=susede2_ed25519; t=1691487147;
+        h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+         mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=URemeKpdb8J18iMONbqIB4P02haKyRX6mS8Xu4Mgmc8=;
+        b=zakAo2cWrWyYBcipF4rIUwLGrOqm5ZeFyaCmUH+fTkQWLNKyEQyre7V0L+jFNWPtWdDjYF
+        EO0z/Yllpo+E3ODA==
+Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
+        (No client certificate requested)
+        by imap2.suse-dmz.suse.de (Postfix) with ESMTPS id 1EA0313451;
+        Tue,  8 Aug 2023 09:32:27 +0000 (UTC)
+Received: from dovecot-director2.suse.de ([192.168.254.65])
+        by imap2.suse-dmz.suse.de with ESMTPSA
+        id uyF3B6sL0mR7GwAAMHmgww
+        (envelope-from <jack@suse.cz>); Tue, 08 Aug 2023 09:32:27 +0000
+Received: by quack3.suse.cz (Postfix, from userid 1000)
+        id 82443A0769; Tue,  8 Aug 2023 11:32:26 +0200 (CEST)
+Date:   Tue, 8 Aug 2023 11:32:26 +0200
+From:   Jan Kara <jack@suse.cz>
+To:     Jeff Layton <jlayton@kernel.org>
+Cc:     Alexander Viro <viro@zeniv.linux.org.uk>,
+        Christian Brauner <brauner@kernel.org>,
+        Eric Van Hensbergen <ericvh@kernel.org>,
+        Latchesar Ionkov <lucho@ionkov.net>,
+        Dominique Martinet <asmadeus@codewreck.org>,
+        Christian Schoenebeck <linux_oss@crudebyte.com>,
+        David Howells <dhowells@redhat.com>,
+        Marc Dionne <marc.dionne@auristor.com>,
+        Chris Mason <clm@fb.com>, Josef Bacik <josef@toxicpanda.com>,
+        David Sterba <dsterba@suse.com>, Xiubo Li <xiubli@redhat.com>,
+        Ilya Dryomov <idryomov@gmail.com>,
+        Jan Harkes <jaharkes@cs.cmu.edu>, coda@cs.cmu.edu,
+        Tyler Hicks <code@tyhicks.com>, Gao Xiang <xiang@kernel.org>,
+        Chao Yu <chao@kernel.org>, Yue Hu <huyue2@coolpad.com>,
+        Jeffle Xu <jefflexu@linux.alibaba.com>,
+        Namjae Jeon <linkinjeon@kernel.org>,
+        Sungjong Seo <sj1557.seo@samsung.com>,
+        Jan Kara <jack@suse.com>, Theodore Ts'o <tytso@mit.edu>,
+        Andreas Dilger <adilger.kernel@dilger.ca>,
+        Jaegeuk Kim <jaegeuk@kernel.org>,
+        OGAWA Hirofumi <hirofumi@mail.parknet.co.jp>,
+        Miklos Szeredi <miklos@szeredi.hu>,
+        Bob Peterson <rpeterso@redhat.com>,
+        Andreas Gruenbacher <agruenba@redhat.com>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        Tejun Heo <tj@kernel.org>,
+        Trond Myklebust <trond.myklebust@hammerspace.com>,
+        Anna Schumaker <anna@kernel.org>,
+        Konstantin Komarov <almaz.alexandrovich@paragon-software.com>,
+        Mark Fasheh <mark@fasheh.com>,
+        Joel Becker <jlbec@evilplan.org>,
+        Joseph Qi <joseph.qi@linux.alibaba.com>,
+        Mike Marshall <hubcap@omnibond.com>,
+        Martin Brandenburg <martin@omnibond.com>,
+        Luis Chamberlain <mcgrof@kernel.org>,
+        Kees Cook <keescook@chromium.org>,
+        Iurii Zaikin <yzaikin@google.com>,
+        Steve French <sfrench@samba.org>,
+        Paulo Alcantara <pc@manguebit.com>,
+        Ronnie Sahlberg <ronniesahlberg@gmail.com>,
+        Shyam Prasad N <sprasad@microsoft.com>,
+        Tom Talpey <tom@talpey.com>,
+        Sergey Senozhatsky <senozhatsky@chromium.org>,
+        Richard Weinberger <richard@nod.at>,
+        Hans de Goede <hdegoede@redhat.com>,
+        Hugh Dickins <hughd@google.com>,
+        Andrew Morton <akpm@linux-foundation.org>,
+        Amir Goldstein <amir73il@gmail.com>,
+        "Darrick J. Wong" <djwong@kernel.org>,
+        Benjamin Coddington <bcodding@redhat.com>,
+        linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org,
+        v9fs@lists.linux.dev, linux-afs@lists.infradead.org,
+        linux-btrfs@vger.kernel.org, ceph-devel@vger.kernel.org,
+        codalist@coda.cs.cmu.edu, ecryptfs@vger.kernel.org,
+        linux-erofs@lists.ozlabs.org, linux-ext4@vger.kernel.org,
+        linux-f2fs-devel@lists.sourceforge.net, cluster-devel@redhat.com,
+        linux-nfs@vger.kernel.org, ntfs3@lists.linux.dev,
+        ocfs2-devel@lists.linux.dev, devel@lists.orangefs.org,
+        linux-cifs@vger.kernel.org, samba-technical@lists.samba.org,
+        linux-mtd@lists.infradead.org, linux-mm@kvack.org,
+        linux-unionfs@vger.kernel.org, linux-xfs@vger.kernel.org
+Subject: Re: [PATCH v7 05/13] fat: make fat_update_time get its own timestamp
+Message-ID: <20230808093226.bq2qfxv5npckk643@quack3>
+References: <20230807-mgctime-v7-0-d1dec143a704@kernel.org>
+ <20230807-mgctime-v7-5-d1dec143a704@kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20230808024030.GP11352@frogsfrogsfrogs>
+In-Reply-To: <20230807-mgctime-v7-5-d1dec143a704@kernel.org>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Mon, Aug 07, 2023 at 07:40:30PM -0700, Darrick J. Wong wrote:
-> From: Darrick J. Wong <djwong@kernel.org>
+On Mon 07-08-23 15:38:36, Jeff Layton wrote:
+> In later patches, we're going to drop the "now" parameter from the
+> update_time operation. Fix fat_update_time to fetch its own timestamp.
+> It turns out that this is easily done by just passing a NULL timestamp
+> pointer to fat_update_time.
+             ^^^ fat_truncate_time()
+
+> Also, it may be that things have changed by the time we get to calling
+> fat_update_time after checking inode_needs_update_time. Ensure that we
+> attempt the i_version bump if any of the S_* flags besides S_ATIME are
+> set.
 > 
-> For some unknown reason, when I converted the incore dquot objects to
-> store the dquot id in host endian order, I removed the increment here.
-> This causes the scan to stop after retrieving the root dquot, which
-> severely limits the usefulness of the quota scrubber.  Fix the lost
-> increment, though it won't fix the problem that the quota iterator code
-> filters out zeroed dquot records.
-> 
-> Fixes: c51df7334167e ("xfs: stop using q_core.d_id in the quota code")
-> Signed-off-by: Darrick J. Wong <djwong@kernel.org>
+> Signed-off-by: Jeff Layton <jlayton@kernel.org>
+
+Looks good. Feel free to add:
+
+Reviewed-by: Jan Kara <jack@suse.cz>
+
+								Honza
+
 > ---
->  fs/xfs/xfs_dquot.c |    2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
+>  fs/fat/misc.c | 4 ++--
+>  1 file changed, 2 insertions(+), 2 deletions(-)
 > 
-> diff --git a/fs/xfs/xfs_dquot.c b/fs/xfs/xfs_dquot.c
-> index 17c64b7b91d02..9e6dc5972ec68 100644
-> --- a/fs/xfs/xfs_dquot.c
-> +++ b/fs/xfs/xfs_dquot.c
-> @@ -1458,7 +1458,7 @@ xfs_qm_dqiterate(
->  			return error;
+> diff --git a/fs/fat/misc.c b/fs/fat/misc.c
+> index 67006ea08db6..8cab87145d63 100644
+> --- a/fs/fat/misc.c
+> +++ b/fs/fat/misc.c
+> @@ -347,14 +347,14 @@ int fat_update_time(struct inode *inode, struct timespec64 *now, int flags)
+>  		return 0;
 >  
->  		error = iter_fn(dq, type, priv);
-> -		id = dq->q_id;
-> +		id = dq->q_id + 1;
->  		xfs_qm_dqput(dq);
->  	} while (error == 0 && id != 0);
-
-I see how this happened looking at the commit mentioned, and how it
-would have easily been missed on review - there was a separate
-"id++" line after the xfs_qm_dqput() call that was removed that
-should have been left in place. This change obviously restores the
-previous behaviour.
-
-Reviewed-by: Dave Chinner <dchinner@redhat.com>
-
+>  	if (flags & (S_ATIME | S_CTIME | S_MTIME)) {
+> -		fat_truncate_time(inode, now, flags);
+> +		fat_truncate_time(inode, NULL, flags);
+>  		if (inode->i_sb->s_flags & SB_LAZYTIME)
+>  			dirty_flags |= I_DIRTY_TIME;
+>  		else
+>  			dirty_flags |= I_DIRTY_SYNC;
+>  	}
+>  
+> -	if ((flags & S_VERSION) && inode_maybe_inc_iversion(inode, false))
+> +	if ((flags & (S_VERSION|S_CTIME|S_MTIME)) && inode_maybe_inc_iversion(inode, false))
+>  		dirty_flags |= I_DIRTY_SYNC;
+>  
+>  	__mark_inode_dirty(inode, dirty_flags);
+> 
+> -- 
+> 2.41.0
+> 
 -- 
-Dave Chinner
-david@fromorbit.com
+Jan Kara <jack@suse.com>
+SUSE Labs, CR
