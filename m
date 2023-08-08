@@ -2,124 +2,86 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CD045C04A94
-	for <linux-xfs@archiver.kernel.org>; Tue,  8 Aug 2023 21:03:26 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C15A4C001E0
+	for <linux-xfs@archiver.kernel.org>; Tue,  8 Aug 2023 21:54:23 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235680AbjHHVDZ (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 8 Aug 2023 17:03:25 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57038 "EHLO
+        id S231392AbjHHVyW (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 8 Aug 2023 17:54:22 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50136 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S235282AbjHHVDM (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 8 Aug 2023 17:03:12 -0400
-Received: from bombadil.infradead.org (bombadil.infradead.org [IPv6:2607:7c80:54:3::133])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3B4865FA9B;
-        Tue,  8 Aug 2023 11:07:42 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=infradead.org; s=bombadil.20210309; h=Content-Transfer-Encoding:
-        MIME-Version:References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:Sender
-        :Reply-To:Content-Type:Content-ID:Content-Description;
-        bh=KcOpoqbZgkJsyfWlcpWY5JHgObXtvv0somhVOIZQD4w=; b=Aq9z3o3XGi9OLoFG7ORcEkpiZV
-        zNBw01/HJOmn6epF3CLZolAD6+cPRIbjA38cUsd5BM5UDqqZlCDQ4Nt8rjUtJSq4nhKXmVihmBEgA
-        Q5pLMVqVNPX07YFeyXqxksHTylsr6iVy80QFDF62ReFibCUCMy3/u9njwwcGHTS7C5zKbtgH1kFoO
-        QHNhXqF6nGzEONUlWDZYbiosx+IseNoL47W7tYD2fGk36F7LE4vE7ukOQzYfkuE6y1A/yjqPLs2sz
-        x+JU3WlpyNDV36Gaz0RInOlo5OjcKuIJlwAzodbZWkMDv8p49L/JcWwGCE95NOdHUUnKDqrkDByr2
-        GXztsAdQ==;
-Received: from [4.28.11.157] (helo=localhost)
-        by bombadil.infradead.org with esmtpsa (Exim 4.96 #2 (Red Hat Linux))
-        id 1qTPNN-002vg3-2M;
-        Tue, 08 Aug 2023 16:16:05 +0000
-From:   Christoph Hellwig <hch@lst.de>
-To:     Al Viro <viro@zeniv.linux.org.uk>,
-        Christian Brauner <brauner@kernel.org>
-Cc:     Namjae Jeon <linkinjeon@kernel.org>,
-        Sungjong Seo <sj1557.seo@samsung.com>,
-        "Theodore Ts'o" <tytso@mit.edu>,
-        Andreas Dilger <adilger.kernel@dilger.ca>,
-        Konstantin Komarov <almaz.alexandrovich@paragon-software.com>,
-        "Darrick J. Wong" <djwong@kernel.org>,
-        linux-fsdevel@vger.kernel.org, linux-ext4@vger.kernel.org,
-        ntfs3@lists.linux.dev, linux-xfs@vger.kernel.org
-Subject: [PATCH 13/13] ntfs3: free the sbi in ->kill_sb
-Date:   Tue,  8 Aug 2023 09:16:00 -0700
-Message-Id: <20230808161600.1099516-14-hch@lst.de>
-X-Mailer: git-send-email 2.39.2
-In-Reply-To: <20230808161600.1099516-1-hch@lst.de>
-References: <20230808161600.1099516-1-hch@lst.de>
+        with ESMTP id S232041AbjHHVyL (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 8 Aug 2023 17:54:11 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 46A962103
+        for <linux-xfs@vger.kernel.org>; Tue,  8 Aug 2023 14:54:06 -0700 (PDT)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange X25519 server-signature RSA-PSS (2048 bits))
+        (No client certificate requested)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id CAAC062D87
+        for <linux-xfs@vger.kernel.org>; Tue,  8 Aug 2023 21:54:05 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPS id 3F87CC433D9
+        for <linux-xfs@vger.kernel.org>; Tue,  8 Aug 2023 21:54:05 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1691531645;
+        bh=vgf3G+cQ9jIG3jPmPy7v3PxvhmH6iLrogoDMBPRyZ3Y=;
+        h=From:To:Subject:Date:In-Reply-To:References:From;
+        b=ZzXj1TMPPp/efzSD67SLneaAvt74AFl0IcaLay/iUTM+LKoGW/+8mSr7AVSGNVidD
+         dNgWaNmkTi0BVPXd1vcRp9WGAFCmughfR0HKQYomSSMX79uDwIRszl9gSHBkprhLfN
+         Jamr+VTWm/iJauRRCIa1s39qsO25jIQMPGI4EyQzvfHGFxT/jIFIu4MoE9Wg8ehjOL
+         b15zsnmf+oSCvHPVWiUkEcvi6yuREtNC1fgyl+ZTVxr0+/v0YMcxLX0Kc2SsFGSTce
+         7XiFA90SjmE/WpEBEHJzPLID/YHJX6NL3Onxnj+xvF6en1B0clGiMck0+okV2SiJuD
+         303ffofBIG0Fg==
+Received: by aws-us-west-2-korg-bugzilla-1.web.codeaurora.org (Postfix, from userid 48)
+        id 2FF2AC4332E; Tue,  8 Aug 2023 21:54:05 +0000 (UTC)
+From:   bugzilla-daemon@kernel.org
+To:     linux-xfs@vger.kernel.org
+Subject: [Bug 217769] XFS crash on mount on kernels >= 6.1
+Date:   Tue, 08 Aug 2023 21:54:04 +0000
+X-Bugzilla-Reason: None
+X-Bugzilla-Type: changed
+X-Bugzilla-Watch-Reason: AssignedTo filesystem_xfs@kernel-bugs.kernel.org
+X-Bugzilla-Product: File System
+X-Bugzilla-Component: XFS
+X-Bugzilla-Version: 2.5
+X-Bugzilla-Keywords: 
+X-Bugzilla-Severity: normal
+X-Bugzilla-Who: sandeen@sandeen.net
+X-Bugzilla-Status: NEW
+X-Bugzilla-Resolution: 
+X-Bugzilla-Priority: P3
+X-Bugzilla-Assigned-To: filesystem_xfs@kernel-bugs.kernel.org
+X-Bugzilla-Flags: 
+X-Bugzilla-Changed-Fields: 
+Message-ID: <bug-217769-201763-kage670nOp@https.bugzilla.kernel.org/>
+In-Reply-To: <bug-217769-201763@https.bugzilla.kernel.org/>
+References: <bug-217769-201763@https.bugzilla.kernel.org/>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
+X-Bugzilla-URL: https://bugzilla.kernel.org/
+Auto-Submitted: auto-generated
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-As a rule of thumb everything allocated to the fs_context and moved into
-the super_block should be freed by ->kill_sb so that the teardown
-handling doesn't need to be duplicated between the fill_super error
-path and put_super.  Implement an ntfs3-specific kill_sb method to do
-that.
+https://bugzilla.kernel.org/show_bug.cgi?id=3D217769
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
----
- fs/ntfs3/super.c | 25 ++++++++++++-------------
- 1 file changed, 12 insertions(+), 13 deletions(-)
+--- Comment #11 from Eric Sandeen (sandeen@sandeen.net) ---
+Another question - Did the systems repeatedly fail to boot, or fail once and
+then succeed?
 
-diff --git a/fs/ntfs3/super.c b/fs/ntfs3/super.c
-index 727138933a9324..5fffddea554f18 100644
---- a/fs/ntfs3/super.c
-+++ b/fs/ntfs3/super.c
-@@ -625,10 +625,6 @@ static void ntfs_put_super(struct super_block *sb)
- 
- 	/* Mark rw ntfs as clear, if possible. */
- 	ntfs_set_state(sbi, NTFS_DIRTY_CLEAR);
--
--	put_mount_options(sbi->options);
--	ntfs3_free_sbi(sbi);
--	sb->s_fs_info = NULL;
- }
- 
- static int ntfs_statfs(struct dentry *dentry, struct kstatfs *buf)
-@@ -1562,15 +1558,7 @@ static int ntfs_fill_super(struct super_block *sb, struct fs_context *fc)
- put_inode_out:
- 	iput(inode);
- out:
--	/*
--	 * Free resources here.
--	 * ntfs_fs_free will be called with fc->s_fs_info = NULL
--	 */
--	put_mount_options(sbi->options);
--	ntfs3_free_sbi(sbi);
--	sb->s_fs_info = NULL;
- 	kfree(boot2);
--
- 	return err;
- }
- 
-@@ -1726,13 +1714,24 @@ static int ntfs_init_fs_context(struct fs_context *fc)
- 	return -ENOMEM;
- }
- 
-+static void ntfs3_kill_sb(struct super_block *sb)
-+{
-+	struct ntfs_sb_info *sbi = sb->s_fs_info;
-+
-+	kill_block_super(sb);
-+
-+	if (sbi->options)
-+		put_mount_options(sbi->options);
-+	ntfs3_free_sbi(sbi);
-+}
-+
- // clang-format off
- static struct file_system_type ntfs_fs_type = {
- 	.owner			= THIS_MODULE,
- 	.name			= "ntfs3",
- 	.init_fs_context	= ntfs_init_fs_context,
- 	.parameters		= ntfs_fs_parameters,
--	.kill_sb		= kill_block_super,
-+	.kill_sb		= ntfs3_kill_sb,
- 	.fs_flags		= FS_REQUIRES_DEV | FS_ALLOW_IDMAP,
- };
- // clang-format on
--- 
-2.39.2
+If anything at all had happened on the filesystem prior to encountering the
+problem, I think that the next boot should have seen a dirty log, and clean=
+ed
+up the problem as a result.
 
+But if the first action on the fs was to create a tmpfile or unlink a file,=
+ we
+might shut down before the log ever gets dirty and requires replay.
+
+--=20
+You may reply to this email to add a comment.
+
+You are receiving this mail because:
+You are watching the assignee of the bug.=
