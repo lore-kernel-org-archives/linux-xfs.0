@@ -2,220 +2,84 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 74443C04A6A
-	for <linux-xfs@archiver.kernel.org>; Tue,  8 Aug 2023 17:08:04 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E40BFC001B0
+	for <linux-xfs@archiver.kernel.org>; Tue,  8 Aug 2023 17:14:36 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234016AbjHHRID (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 8 Aug 2023 13:08:03 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51280 "EHLO
+        id S234129AbjHHROg (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 8 Aug 2023 13:14:36 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44888 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S234110AbjHHRHQ (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 8 Aug 2023 13:07:16 -0400
-Received: from smtp-out1.suse.de (smtp-out1.suse.de [IPv6:2001:67c:2178:6::1c])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 959AE1BC3;
-        Tue,  8 Aug 2023 09:02:57 -0700 (PDT)
-Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
+        with ESMTP id S234128AbjHHRNx (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 8 Aug 2023 13:13:53 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2502819BF
+        for <linux-xfs@vger.kernel.org>; Tue,  8 Aug 2023 09:05:48 -0700 (PDT)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
+         key-exchange X25519 server-signature RSA-PSS (2048 bits))
         (No client certificate requested)
-        by smtp-out1.suse.de (Postfix) with ESMTPS id 3FF9421C09;
-        Tue,  8 Aug 2023 10:05:58 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.cz; s=susede2_rsa;
-        t=1691489158; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=cOTJYjkBLnwjV/lxEVtUyReuFAMisDvl/3KW3rcsa80=;
-        b=RYwrn0fdjwhhRR7l27SfhU6sEIZlfDKsRmqY6BlBC/mbMQlEPGtvhbIdRr7h8egn/oN8yh
-        Oz6U9UuTleHENrCE1avR3NSOn0guqcLSLu7iBXijjb70nxn/BQDxhjUWhk7QvvA5/v4PB8
-        VNLrqst7KIs78O2ejOjXiqcNSNVttFQ=
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.cz;
-        s=susede2_ed25519; t=1691489158;
-        h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=cOTJYjkBLnwjV/lxEVtUyReuFAMisDvl/3KW3rcsa80=;
-        b=3BwMkd6c3zAZ5/EGX3xW7irKJimW+k7SoacxDa/XvD8/WW5BAqfXsGAeW7PnSgHdphBpnB
-        7inqEIuyeW8nM7Cw==
-Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
-        (No client certificate requested)
-        by imap2.suse-dmz.suse.de (Postfix) with ESMTPS id 2554713451;
-        Tue,  8 Aug 2023 10:05:58 +0000 (UTC)
-Received: from dovecot-director2.suse.de ([192.168.254.65])
-        by imap2.suse-dmz.suse.de with ESMTPSA
-        id 9iarCIYT0mRwKwAAMHmgww
-        (envelope-from <jack@suse.cz>); Tue, 08 Aug 2023 10:05:58 +0000
-Received: by quack3.suse.cz (Postfix, from userid 1000)
-        id 9F18AA0769; Tue,  8 Aug 2023 12:05:57 +0200 (CEST)
-Date:   Tue, 8 Aug 2023 12:05:57 +0200
-From:   Jan Kara <jack@suse.cz>
-To:     Jeff Layton <jlayton@kernel.org>
-Cc:     Alexander Viro <viro@zeniv.linux.org.uk>,
-        Christian Brauner <brauner@kernel.org>,
-        Eric Van Hensbergen <ericvh@kernel.org>,
-        Latchesar Ionkov <lucho@ionkov.net>,
-        Dominique Martinet <asmadeus@codewreck.org>,
-        Christian Schoenebeck <linux_oss@crudebyte.com>,
-        David Howells <dhowells@redhat.com>,
-        Marc Dionne <marc.dionne@auristor.com>,
-        Chris Mason <clm@fb.com>, Josef Bacik <josef@toxicpanda.com>,
-        David Sterba <dsterba@suse.com>, Xiubo Li <xiubli@redhat.com>,
-        Ilya Dryomov <idryomov@gmail.com>,
-        Jan Harkes <jaharkes@cs.cmu.edu>, coda@cs.cmu.edu,
-        Tyler Hicks <code@tyhicks.com>, Gao Xiang <xiang@kernel.org>,
-        Chao Yu <chao@kernel.org>, Yue Hu <huyue2@coolpad.com>,
-        Jeffle Xu <jefflexu@linux.alibaba.com>,
-        Namjae Jeon <linkinjeon@kernel.org>,
-        Sungjong Seo <sj1557.seo@samsung.com>,
-        Jan Kara <jack@suse.com>, Theodore Ts'o <tytso@mit.edu>,
-        Andreas Dilger <adilger.kernel@dilger.ca>,
-        Jaegeuk Kim <jaegeuk@kernel.org>,
-        OGAWA Hirofumi <hirofumi@mail.parknet.co.jp>,
-        Miklos Szeredi <miklos@szeredi.hu>,
-        Bob Peterson <rpeterso@redhat.com>,
-        Andreas Gruenbacher <agruenba@redhat.com>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        Tejun Heo <tj@kernel.org>,
-        Trond Myklebust <trond.myklebust@hammerspace.com>,
-        Anna Schumaker <anna@kernel.org>,
-        Konstantin Komarov <almaz.alexandrovich@paragon-software.com>,
-        Mark Fasheh <mark@fasheh.com>,
-        Joel Becker <jlbec@evilplan.org>,
-        Joseph Qi <joseph.qi@linux.alibaba.com>,
-        Mike Marshall <hubcap@omnibond.com>,
-        Martin Brandenburg <martin@omnibond.com>,
-        Luis Chamberlain <mcgrof@kernel.org>,
-        Kees Cook <keescook@chromium.org>,
-        Iurii Zaikin <yzaikin@google.com>,
-        Steve French <sfrench@samba.org>,
-        Paulo Alcantara <pc@manguebit.com>,
-        Ronnie Sahlberg <ronniesahlberg@gmail.com>,
-        Shyam Prasad N <sprasad@microsoft.com>,
-        Tom Talpey <tom@talpey.com>,
-        Sergey Senozhatsky <senozhatsky@chromium.org>,
-        Richard Weinberger <richard@nod.at>,
-        Hans de Goede <hdegoede@redhat.com>,
-        Hugh Dickins <hughd@google.com>,
-        Andrew Morton <akpm@linux-foundation.org>,
-        Amir Goldstein <amir73il@gmail.com>,
-        "Darrick J. Wong" <djwong@kernel.org>,
-        Benjamin Coddington <bcodding@redhat.com>,
-        linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org,
-        v9fs@lists.linux.dev, linux-afs@lists.infradead.org,
-        linux-btrfs@vger.kernel.org, ceph-devel@vger.kernel.org,
-        codalist@coda.cs.cmu.edu, ecryptfs@vger.kernel.org,
-        linux-erofs@lists.ozlabs.org, linux-ext4@vger.kernel.org,
-        linux-f2fs-devel@lists.sourceforge.net, cluster-devel@redhat.com,
-        linux-nfs@vger.kernel.org, ntfs3@lists.linux.dev,
-        ocfs2-devel@lists.linux.dev, devel@lists.orangefs.org,
-        linux-cifs@vger.kernel.org, samba-technical@lists.samba.org,
-        linux-mtd@lists.infradead.org, linux-mm@kvack.org,
-        linux-unionfs@vger.kernel.org, linux-xfs@vger.kernel.org
-Subject: Re: [PATCH v7 13/13] btrfs: convert to multigrain timestamps
-Message-ID: <20230808100557.dowlxz2destpseqr@quack3>
-References: <20230807-mgctime-v7-0-d1dec143a704@kernel.org>
- <20230807-mgctime-v7-13-d1dec143a704@kernel.org>
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 4900C62574
+        for <linux-xfs@vger.kernel.org>; Tue,  8 Aug 2023 13:39:04 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPS id B2A3BC43391
+        for <linux-xfs@vger.kernel.org>; Tue,  8 Aug 2023 13:39:03 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1691501943;
+        bh=zwlHMeKVRflsP8gpUEVYWDWQrOcNP4C8mhhvTPiJ7Zg=;
+        h=From:To:Subject:Date:In-Reply-To:References:From;
+        b=GbCcpsGu/+GSOWut7bLpCulXF2uz/6Mjnm4CNOqyqtrksbMvr7JknVNVwHSAdt5Ts
+         9/p/4BkAUIkoxYsqty1yFGkyXdNHgnxpBmSBpfSdvKaPGPwJ7B3meB1K4+qOEwUGtB
+         HTXtVCyLff+4mCz3HAfsFkg1bISAh6G0SqeM8pI/oRzxM1zvzxIfXwHIfn+sUBDWOD
+         FcXnWLhw8vwl8D4b2Q7sddSlsfsCyT5KX5a0cKBMIQyi1+u1133vpkmRcMLsGsacwi
+         siU7rwqM/QyIIBTBeEgyGSLZ4V7LOAJPp+fcPtGU+caspXsaqGIHgNpGaOzs8vtyST
+         TYxRbh9HeHl1w==
+Received: by aws-us-west-2-korg-bugzilla-1.web.codeaurora.org (Postfix, from userid 48)
+        id A2B14C53BD0; Tue,  8 Aug 2023 13:39:03 +0000 (UTC)
+From:   bugzilla-daemon@kernel.org
+To:     linux-xfs@vger.kernel.org
+Subject: [Bug 217769] XFS crash on mount on kernels >= 6.1
+Date:   Tue, 08 Aug 2023 13:39:03 +0000
+X-Bugzilla-Reason: None
+X-Bugzilla-Type: changed
+X-Bugzilla-Watch-Reason: AssignedTo filesystem_xfs@kernel-bugs.kernel.org
+X-Bugzilla-Product: File System
+X-Bugzilla-Component: XFS
+X-Bugzilla-Version: 2.5
+X-Bugzilla-Keywords: 
+X-Bugzilla-Severity: normal
+X-Bugzilla-Who: sandeen@sandeen.net
+X-Bugzilla-Status: NEW
+X-Bugzilla-Resolution: 
+X-Bugzilla-Priority: P3
+X-Bugzilla-Assigned-To: filesystem_xfs@kernel-bugs.kernel.org
+X-Bugzilla-Flags: 
+X-Bugzilla-Changed-Fields: 
+Message-ID: <bug-217769-201763-MUCyxTlmHt@https.bugzilla.kernel.org/>
+In-Reply-To: <bug-217769-201763@https.bugzilla.kernel.org/>
+References: <bug-217769-201763@https.bugzilla.kernel.org/>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
+X-Bugzilla-URL: https://bugzilla.kernel.org/
+Auto-Submitted: auto-generated
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20230807-mgctime-v7-13-d1dec143a704@kernel.org>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Mon 07-08-23 15:38:44, Jeff Layton wrote:
-> Enable multigrain timestamps, which should ensure that there is an
-> apparent change to the timestamp whenever it has been written after
-> being actively observed via getattr.
-> 
-> Beyond enabling the FS_MGTIME flag, this patch eliminates
-> update_time_for_write, which goes to great pains to avoid in-memory
-> stores. Just have it overwrite the timestamps unconditionally.
-> 
-> Signed-off-by: Jeff Layton <jlayton@kernel.org>
-> Acked-by: David Sterba <dsterba@suse.com>
+https://bugzilla.kernel.org/show_bug.cgi?id=3D217769
 
-Looks good to me. Feel free to add:
+--- Comment #7 from Eric Sandeen (sandeen@sandeen.net) ---
+What might be most useful is to create an xfs_metadump image of the problem=
+atic
+filesystem (with -o if you are ok with showing filenames in the clear) and =
+from
+there we can examine things.
 
-Reviewed-by: Jan Kara <jack@suse.cz>
+A metadump image is metadata only, no file data, and compresses well. This =
+can
+then be turned back into a filesystem image for analysis.
 
-								Honza
+--=20
+You may reply to this email to add a comment.
 
-> ---
->  fs/btrfs/file.c  | 24 ++++--------------------
->  fs/btrfs/super.c |  5 +++--
->  2 files changed, 7 insertions(+), 22 deletions(-)
-> 
-> diff --git a/fs/btrfs/file.c b/fs/btrfs/file.c
-> index d7a9ece7a40b..b9e75c9f95ac 100644
-> --- a/fs/btrfs/file.c
-> +++ b/fs/btrfs/file.c
-> @@ -1106,25 +1106,6 @@ void btrfs_check_nocow_unlock(struct btrfs_inode *inode)
->  	btrfs_drew_write_unlock(&inode->root->snapshot_lock);
->  }
->  
-> -static void update_time_for_write(struct inode *inode)
-> -{
-> -	struct timespec64 now, ctime;
-> -
-> -	if (IS_NOCMTIME(inode))
-> -		return;
-> -
-> -	now = current_time(inode);
-> -	if (!timespec64_equal(&inode->i_mtime, &now))
-> -		inode->i_mtime = now;
-> -
-> -	ctime = inode_get_ctime(inode);
-> -	if (!timespec64_equal(&ctime, &now))
-> -		inode_set_ctime_to_ts(inode, now);
-> -
-> -	if (IS_I_VERSION(inode))
-> -		inode_inc_iversion(inode);
-> -}
-> -
->  static int btrfs_write_check(struct kiocb *iocb, struct iov_iter *from,
->  			     size_t count)
->  {
-> @@ -1156,7 +1137,10 @@ static int btrfs_write_check(struct kiocb *iocb, struct iov_iter *from,
->  	 * need to start yet another transaction to update the inode as we will
->  	 * update the inode when we finish writing whatever data we write.
->  	 */
-> -	update_time_for_write(inode);
-> +	if (!IS_NOCMTIME(inode)) {
-> +		inode->i_mtime = inode_set_ctime_current(inode);
-> +		inode_inc_iversion(inode);
-> +	}
->  
->  	start_pos = round_down(pos, fs_info->sectorsize);
->  	oldsize = i_size_read(inode);
-> diff --git a/fs/btrfs/super.c b/fs/btrfs/super.c
-> index f1dd172d8d5b..8eda51b095c9 100644
-> --- a/fs/btrfs/super.c
-> +++ b/fs/btrfs/super.c
-> @@ -2144,7 +2144,7 @@ static struct file_system_type btrfs_fs_type = {
->  	.name		= "btrfs",
->  	.mount		= btrfs_mount,
->  	.kill_sb	= btrfs_kill_super,
-> -	.fs_flags	= FS_REQUIRES_DEV | FS_BINARY_MOUNTDATA,
-> +	.fs_flags	= FS_REQUIRES_DEV | FS_BINARY_MOUNTDATA | FS_MGTIME,
->  };
->  
->  static struct file_system_type btrfs_root_fs_type = {
-> @@ -2152,7 +2152,8 @@ static struct file_system_type btrfs_root_fs_type = {
->  	.name		= "btrfs",
->  	.mount		= btrfs_mount_root,
->  	.kill_sb	= btrfs_kill_super,
-> -	.fs_flags	= FS_REQUIRES_DEV | FS_BINARY_MOUNTDATA | FS_ALLOW_IDMAP,
-> +	.fs_flags	= FS_REQUIRES_DEV | FS_BINARY_MOUNTDATA |
-> +			  FS_ALLOW_IDMAP | FS_MGTIME,
->  };
->  
->  MODULE_ALIAS_FS("btrfs");
-> 
-> -- 
-> 2.41.0
-> 
--- 
-Jan Kara <jack@suse.com>
-SUSE Labs, CR
+You are receiving this mail because:
+You are watching the assignee of the bug.=
