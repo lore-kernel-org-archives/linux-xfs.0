@@ -2,31 +2,31 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 689B9C001DB
-	for <linux-xfs@archiver.kernel.org>; Tue,  8 Aug 2023 19:54:52 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D8C4FC001B0
+	for <linux-xfs@archiver.kernel.org>; Tue,  8 Aug 2023 19:55:33 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233009AbjHHTyv (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 8 Aug 2023 15:54:51 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36466 "EHLO
+        id S233435AbjHHTzc (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 8 Aug 2023 15:55:32 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46590 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230423AbjHHTyi (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 8 Aug 2023 15:54:38 -0400
+        with ESMTP id S233473AbjHHTzQ (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 8 Aug 2023 15:55:16 -0400
 Received: from bombadil.infradead.org (bombadil.infradead.org [IPv6:2607:7c80:54:3::133])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id BD50F61B1E;
-        Tue,  8 Aug 2023 11:07:55 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id EAA8562D31;
+        Tue,  8 Aug 2023 11:08:07 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
         d=infradead.org; s=bombadil.20210309; h=Content-Transfer-Encoding:
         MIME-Version:References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:Sender
         :Reply-To:Content-Type:Content-ID:Content-Description;
-        bh=LFjCk9siGwhTEADbkyjhtNSoRlaJLLFmtFQb55pjw8A=; b=nKc8xByA5ctdV1Q+Pm2v1F1/z6
-        nSuVSQtbYZTjG974c9Sa8/OR2tdlql1EX3xG+x8wMhUMC4SYMl1fsvQz5RttkFttIlExnqrPcbNtk
-        9zHnIuoicRi5VPo/aqXw7PY0RP52CETgPw0UqUlL3mtUZGZMQyfbbU+mKrEXAIlzUyDPqpkNasa1W
-        D8EyEm0O0CAyit+1ivMnFv02jD3pZof6Zk+sShizQS4NXF2OZxZ4alSzgLYWC1fwZQ8C3vjMJa+zi
-        foExiVmD+dmyn6o8rgeU3TqKwPEONwFATvbmyOh0uxLnP94PDdKTNxW6f+hjJB9gfHxDisJmMO9cr
-        c2ah1gmg==;
+        bh=tpISbOIlVot9F9U1RNc64fDb/+3/Ds6+lWu+Mwkvzdw=; b=El3mxO87GYV8usnOyCxQQx0kP4
+        97652Jjf00cv0Jc7CYPJYWVtwCRZer14tOk+uGQbXzJo85Kmq2iVIaETR8PLaF/hzP8AHhfin4b7K
+        1axfm+detn4BLknnjJm+aQzZh4eq6LLaJ94WjkgNmpso4rRGd5AHHgNQlj2q8x/UUMd35T3yozYk5
+        dHBv4hQAKiIo13G98SSejgl4FWzTrBOraCgaZZ+7RcJkIeJYSAGDX1jnCbxjIDhFbKsHWAnVqu4kh
+        mzpEF/MynV7qM2C29sFHeh+cELLDrt7uPHMcXSB8daE7pcItf/GuhIhZhFvVDMQBvd4I9aphH54Bs
+        JCh7hhcA==;
 Received: from [4.28.11.157] (helo=localhost)
         by bombadil.infradead.org with esmtpsa (Exim 4.96 #2 (Red Hat Linux))
-        id 1qTPNN-002vfo-1P;
+        id 1qTPNN-002vfe-0P;
         Tue, 08 Aug 2023 16:16:05 +0000
 From:   Christoph Hellwig <hch@lst.de>
 To:     Al Viro <viro@zeniv.linux.org.uk>,
@@ -39,9 +39,9 @@ Cc:     Namjae Jeon <linkinjeon@kernel.org>,
         "Darrick J. Wong" <djwong@kernel.org>,
         linux-fsdevel@vger.kernel.org, linux-ext4@vger.kernel.org,
         ntfs3@lists.linux.dev, linux-xfs@vger.kernel.org
-Subject: [PATCH 12/13] ntfs3: don't call sync_blockdev in ntfs_put_super
-Date:   Tue,  8 Aug 2023 09:15:59 -0700
-Message-Id: <20230808161600.1099516-13-hch@lst.de>
+Subject: [PATCH 11/13] ntfs3: rename put_ntfs ntfs3_free_sbi
+Date:   Tue,  8 Aug 2023 09:15:58 -0700
+Message-Id: <20230808161600.1099516-12-hch@lst.de>
 X-Mailer: git-send-email 2.39.2
 In-Reply-To: <20230808161600.1099516-1-hch@lst.de>
 References: <20230808161600.1099516-1-hch@lst.de>
@@ -52,26 +52,58 @@ Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-kill_block_super will call sync_blockdev just a tad later already.
+put_ntfs is a rather unconventional name for a function that frees the
+sbi and associated resources.  Give it a more descriptive name and drop
+the duplicate name in the top of the function comment.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 ---
- fs/ntfs3/super.c | 2 --
- 1 file changed, 2 deletions(-)
+ fs/ntfs3/super.c | 10 +++++-----
+ 1 file changed, 5 insertions(+), 5 deletions(-)
 
 diff --git a/fs/ntfs3/super.c b/fs/ntfs3/super.c
-index bb985d3756d949..727138933a9324 100644
+index 1a02072b6b0e16..bb985d3756d949 100644
 --- a/fs/ntfs3/super.c
 +++ b/fs/ntfs3/super.c
-@@ -629,8 +629,6 @@ static void ntfs_put_super(struct super_block *sb)
- 	put_mount_options(sbi->options);
- 	ntfs3_free_sbi(sbi);
- 	sb->s_fs_info = NULL;
--
--	sync_blockdev(sb->s_bdev);
+@@ -569,9 +569,9 @@ static void init_once(void *foo)
  }
  
- static int ntfs_statfs(struct dentry *dentry, struct kstatfs *buf)
+ /*
+- * put_ntfs - Noinline to reduce binary size.
++ * Noinline to reduce binary size.
+  */
+-static noinline void put_ntfs(struct ntfs_sb_info *sbi)
++static noinline void ntfs3_free_sbi(struct ntfs_sb_info *sbi)
+ {
+ 	kfree(sbi->new_rec);
+ 	kvfree(ntfs_put_shared(sbi->upcase));
+@@ -627,7 +627,7 @@ static void ntfs_put_super(struct super_block *sb)
+ 	ntfs_set_state(sbi, NTFS_DIRTY_CLEAR);
+ 
+ 	put_mount_options(sbi->options);
+-	put_ntfs(sbi);
++	ntfs3_free_sbi(sbi);
+ 	sb->s_fs_info = NULL;
+ 
+ 	sync_blockdev(sb->s_bdev);
+@@ -1569,7 +1569,7 @@ static int ntfs_fill_super(struct super_block *sb, struct fs_context *fc)
+ 	 * ntfs_fs_free will be called with fc->s_fs_info = NULL
+ 	 */
+ 	put_mount_options(sbi->options);
+-	put_ntfs(sbi);
++	ntfs3_free_sbi(sbi);
+ 	sb->s_fs_info = NULL;
+ 	kfree(boot2);
+ 
+@@ -1659,7 +1659,7 @@ static void ntfs_fs_free(struct fs_context *fc)
+ 	struct ntfs_sb_info *sbi = fc->s_fs_info;
+ 
+ 	if (sbi)
+-		put_ntfs(sbi);
++		ntfs3_free_sbi(sbi);
+ 
+ 	if (opts)
+ 		put_mount_options(opts);
 -- 
 2.39.2
 
