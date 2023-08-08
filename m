@@ -2,365 +2,174 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 80A99C07E8E
-	for <linux-xfs@archiver.kernel.org>; Tue,  8 Aug 2023 18:42:44 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 25B62C001B0
+	for <linux-xfs@archiver.kernel.org>; Tue,  8 Aug 2023 18:50:30 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232140AbjHHSmm (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 8 Aug 2023 14:42:42 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60660 "EHLO
+        id S230417AbjHHSu3 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 8 Aug 2023 14:50:29 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40752 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231990AbjHHSmT (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 8 Aug 2023 14:42:19 -0400
-Received: from smtp-out1.suse.de (smtp-out1.suse.de [IPv6:2001:67c:2178:6::1c])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2985BDE9ED;
-        Tue,  8 Aug 2023 09:33:07 -0700 (PDT)
-Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
-        (No client certificate requested)
-        by smtp-out1.suse.de (Postfix) with ESMTPS id 0187B22484;
-        Tue,  8 Aug 2023 09:25:12 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.cz; s=susede2_rsa;
-        t=1691486712; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=1DEnEiKO284zxT4/+fvA4uuffbMofkDORo642+Wc/io=;
-        b=ix372cs3mbIkTWg1MsYpwEmHKxymfpU2fRqMoB3bdsY5L5+d88wTzMILXUNjN2Hey8brqp
-        /zdSMsRPF0pQ9mO8VTms56EAKaxrkXcWWBEAdzVrBPrId8dDBBUjH8L2jH5yiaPdY8XiST
-        M7jwu5Zs1qGSi0jn9fW7GgGyREZQvck=
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.cz;
-        s=susede2_ed25519; t=1691486712;
-        h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=1DEnEiKO284zxT4/+fvA4uuffbMofkDORo642+Wc/io=;
-        b=nz47GajxRXd1Kr3p+NB1XcBjrQKYlyuj0q3UvQcQR7hQOVOIMR3ZkrS9KehXlRYW0RhdS3
-        rOQzce0ROF9jIWAA==
-Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
-        (No client certificate requested)
-        by imap2.suse-dmz.suse.de (Postfix) with ESMTPS id DE500139E9;
-        Tue,  8 Aug 2023 09:25:11 +0000 (UTC)
-Received: from dovecot-director2.suse.de ([192.168.254.65])
-        by imap2.suse-dmz.suse.de with ESMTPSA
-        id KHTeNfcJ0mSOFwAAMHmgww
-        (envelope-from <jack@suse.cz>); Tue, 08 Aug 2023 09:25:11 +0000
-Received: by quack3.suse.cz (Postfix, from userid 1000)
-        id 5F488A0769; Tue,  8 Aug 2023 11:25:11 +0200 (CEST)
-Date:   Tue, 8 Aug 2023 11:25:11 +0200
-From:   Jan Kara <jack@suse.cz>
-To:     Jeff Layton <jlayton@kernel.org>
-Cc:     Alexander Viro <viro@zeniv.linux.org.uk>,
-        Christian Brauner <brauner@kernel.org>,
-        Eric Van Hensbergen <ericvh@kernel.org>,
-        Latchesar Ionkov <lucho@ionkov.net>,
-        Dominique Martinet <asmadeus@codewreck.org>,
-        Christian Schoenebeck <linux_oss@crudebyte.com>,
-        David Howells <dhowells@redhat.com>,
-        Marc Dionne <marc.dionne@auristor.com>,
-        Chris Mason <clm@fb.com>, Josef Bacik <josef@toxicpanda.com>,
-        David Sterba <dsterba@suse.com>, Xiubo Li <xiubli@redhat.com>,
-        Ilya Dryomov <idryomov@gmail.com>,
-        Jan Harkes <jaharkes@cs.cmu.edu>, coda@cs.cmu.edu,
-        Tyler Hicks <code@tyhicks.com>, Gao Xiang <xiang@kernel.org>,
-        Chao Yu <chao@kernel.org>, Yue Hu <huyue2@coolpad.com>,
-        Jeffle Xu <jefflexu@linux.alibaba.com>,
-        Namjae Jeon <linkinjeon@kernel.org>,
-        Sungjong Seo <sj1557.seo@samsung.com>,
-        Jan Kara <jack@suse.com>, Theodore Ts'o <tytso@mit.edu>,
-        Andreas Dilger <adilger.kernel@dilger.ca>,
-        Jaegeuk Kim <jaegeuk@kernel.org>,
-        OGAWA Hirofumi <hirofumi@mail.parknet.co.jp>,
-        Miklos Szeredi <miklos@szeredi.hu>,
-        Bob Peterson <rpeterso@redhat.com>,
-        Andreas Gruenbacher <agruenba@redhat.com>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        Tejun Heo <tj@kernel.org>,
-        Trond Myklebust <trond.myklebust@hammerspace.com>,
-        Anna Schumaker <anna@kernel.org>,
-        Konstantin Komarov <almaz.alexandrovich@paragon-software.com>,
-        Mark Fasheh <mark@fasheh.com>,
-        Joel Becker <jlbec@evilplan.org>,
-        Joseph Qi <joseph.qi@linux.alibaba.com>,
-        Mike Marshall <hubcap@omnibond.com>,
-        Martin Brandenburg <martin@omnibond.com>,
-        Luis Chamberlain <mcgrof@kernel.org>,
-        Kees Cook <keescook@chromium.org>,
-        Iurii Zaikin <yzaikin@google.com>,
-        Steve French <sfrench@samba.org>,
-        Paulo Alcantara <pc@manguebit.com>,
-        Ronnie Sahlberg <ronniesahlberg@gmail.com>,
-        Shyam Prasad N <sprasad@microsoft.com>,
-        Tom Talpey <tom@talpey.com>,
-        Sergey Senozhatsky <senozhatsky@chromium.org>,
-        Richard Weinberger <richard@nod.at>,
-        Hans de Goede <hdegoede@redhat.com>,
-        Hugh Dickins <hughd@google.com>,
-        Andrew Morton <akpm@linux-foundation.org>,
-        Amir Goldstein <amir73il@gmail.com>,
-        "Darrick J. Wong" <djwong@kernel.org>,
-        Benjamin Coddington <bcodding@redhat.com>,
-        linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org,
-        v9fs@lists.linux.dev, linux-afs@lists.infradead.org,
-        linux-btrfs@vger.kernel.org, ceph-devel@vger.kernel.org,
-        codalist@coda.cs.cmu.edu, ecryptfs@vger.kernel.org,
-        linux-erofs@lists.ozlabs.org, linux-ext4@vger.kernel.org,
-        linux-f2fs-devel@lists.sourceforge.net, cluster-devel@redhat.com,
-        linux-nfs@vger.kernel.org, ntfs3@lists.linux.dev,
-        ocfs2-devel@lists.linux.dev, devel@lists.orangefs.org,
-        linux-cifs@vger.kernel.org, samba-technical@lists.samba.org,
-        linux-mtd@lists.infradead.org, linux-mm@kvack.org,
-        linux-unionfs@vger.kernel.org, linux-xfs@vger.kernel.org
-Subject: Re: [PATCH v7 03/13] fs: drop the timespec64 arg from
- generic_update_time
-Message-ID: <20230808092511.jh4lxer2dztdajpo@quack3>
-References: <20230807-mgctime-v7-0-d1dec143a704@kernel.org>
- <20230807-mgctime-v7-3-d1dec143a704@kernel.org>
+        with ESMTP id S231354AbjHHSt5 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 8 Aug 2023 14:49:57 -0400
+Received: from mail-oo1-xc31.google.com (mail-oo1-xc31.google.com [IPv6:2607:f8b0:4864:20::c31])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 32A6115C62
+        for <linux-xfs@vger.kernel.org>; Tue,  8 Aug 2023 09:59:51 -0700 (PDT)
+Received: by mail-oo1-xc31.google.com with SMTP id 006d021491bc7-56c85b723cfso3580515eaf.3
+        for <linux-xfs@vger.kernel.org>; Tue, 08 Aug 2023 09:59:51 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=fromorbit-com.20221208.gappssmtp.com; s=20221208; t=1691513985; x=1692118785;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
+        bh=3fio3RZkyZiKE/XQcrLQEahB6++/2ebRHZg1oFXPG/8=;
+        b=5I3T1tJmiUiyNP/dJNrNzGd3JId9uSuD6bartq2mQCkjJRsp5WTdEHVXabu2gzmWfm
+         xtsNmM+lN8Arn/BVREjutXXLLWXDYfFEXefvu29QP6LZLbfkZabZoGGddsm0txL789ks
+         FxjvAj8KnX5VinmU5J6IXHpfr5o4yAdpMqo2CgXnQO/G89FgfKmoULvNp2AiDKeuIvsb
+         zAwVPttAV15PRZYsinD2OC8+w5F0cuB/wWBRoTw2Bs/agzNvKl01k/QEV585t1ErWNdW
+         guTvVzYt34sWygMcr72uULFD3QAuKmeNrl2pJy40Z3V94LmJ2+5jUgUu15qOvDOBxAlt
+         n7+A==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20221208; t=1691513985; x=1692118785;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=3fio3RZkyZiKE/XQcrLQEahB6++/2ebRHZg1oFXPG/8=;
+        b=Uyku8npRAOb/uhvzRUbuWWriPA8Q5WbkI4bD2f/4Fw1bbRk4GtywewBZLnc3G2uGsI
+         bi4ieyW8GtbVRlrEARea9VgMRkk8wrzGFYK3qum9VQJA9ie2A9ctPFoUt4OULi3sevwN
+         xk8yrAkcsgZGdSP6YIVzILgoY5OCuwELGrTzXumNl/XNY1NI+iY5NuOsRYNwMO9cs2f9
+         OpByoCw3ZhcCJAZMdfjy+F4MWvD/pZ81X4b/jlDgXA72qBRSngreia6ls80LJrP5Z5dc
+         rY0BLr6sh62WqWYI517OGP+G9hyfHF0SUSRnzHa4X0hcbz/qyRMKuRkB7tN/tEb0/0c2
+         8Gog==
+X-Gm-Message-State: AOJu0YzM7pxck47Yshj9Ntv2dMLLVJOyFmQbHqbvGG24VhSy/7Z9QGvF
+        CG629l7tdr9iQrLbDbIH3C08Z7dixbmuXhWpcS4=
+X-Google-Smtp-Source: AGHT+IECqNsmg3ICRn/Pg1uu5AcxsaV1MJCJAUFS+u54G0Gw9t5tjZiUQzSSIBLYr6NsOHNfkdLf4g==
+X-Received: by 2002:a17:902:cec7:b0:1bc:73bf:304c with SMTP id d7-20020a170902cec700b001bc73bf304cmr3045501plg.48.1691471844763;
+        Mon, 07 Aug 2023 22:17:24 -0700 (PDT)
+Received: from dread.disaster.area (pa49-180-166-213.pa.nsw.optusnet.com.au. [49.180.166.213])
+        by smtp.gmail.com with ESMTPSA id i14-20020a17090332ce00b001b9de2b905asm7847748plr.231.2023.08.07.22.17.24
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Mon, 07 Aug 2023 22:17:24 -0700 (PDT)
+Received: from dave by dread.disaster.area with local (Exim 4.96)
+        (envelope-from <david@fromorbit.com>)
+        id 1qTF5t-002Zzf-2A;
+        Tue, 08 Aug 2023 15:17:21 +1000
+Date:   Tue, 8 Aug 2023 15:17:21 +1000
+From:   Dave Chinner <david@fromorbit.com>
+To:     "Darrick J. Wong" <djwong@kernel.org>
+Cc:     linux-xfs@vger.kernel.org
+Subject: Re: [PATCHSET v26.0 0/9] xfs: fix online repair block reaping
+Message-ID: <ZNHP4TqsOQPIpiqf@dread.disaster.area>
+References: <20230727221158.GE11352@frogsfrogsfrogs>
+ <169049622719.921010.16542808514375882520.stgit@frogsfrogsfrogs>
+ <ZNCM35YJ/yroXI/n@dread.disaster.area>
+ <20230808004007.GM11352@frogsfrogsfrogs>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20230807-mgctime-v7-3-d1dec143a704@kernel.org>
+In-Reply-To: <20230808004007.GM11352@frogsfrogsfrogs>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Mon 07-08-23 15:38:34, Jeff Layton wrote:
-> In future patches we're going to change how the ctime is updated
-> to keep track of when it has been queried. The way that the update_time
-> operation works (and a lot of its callers) make this difficult, since
-> they grab a timestamp early and then pass it down to eventually be
-> copied into the inode.
+On Mon, Aug 07, 2023 at 05:40:07PM -0700, Darrick J. Wong wrote:
+> On Mon, Aug 07, 2023 at 04:19:11PM +1000, Dave Chinner wrote:
+> > On Thu, Jul 27, 2023 at 03:18:32PM -0700, Darrick J. Wong wrote:
+> > > Hi all,
+> > > 
+> > > These patches fix a few problems that I noticed in the code that deals
+> > > with old btree blocks after a successful repair.
+> > > 
+> > > First, I observed that it is possible for repair to incorrectly
+> > > invalidate and delete old btree blocks if they were crosslinked.  The
+> > > solution here is to consult the reverse mappings for each block in the
+> > > extent -- singly owned blocks are invalidated and freed, whereas for
+> > > crosslinked blocks, we merely drop the incorrect reverse mapping.
+> > > 
+> > > A largeish change in this patchset is moving the reaping code to a
+> > > separate file, because the code are mostly interrelated static
+> > > functions.  For now this also drops the ability to reap file blocks,
+> > > which will return when we add the bmbt repair functions.
+> > > 
+> > > Second, we convert the reap function to use EFIs so that we can commit
+> > > to freeing as many blocks in as few transactions as we dare.  We would
+> > > like to free as many old blocks as we can in the same transaction that
+> > > commits the new structure to the ondisk filesystem to minimize the
+> > > number of blocks that leak if the system crashes before the repair fully
+> > > completes.
+> > > 
+> > > The third change made in this series is to avoid tripping buffer cache
+> > > assertions if we're merely scanning the buffer cache for buffers to
+> > > invalidate, and find a non-stale buffer of the wrong length.  This is
+> > > primarily cosmetic, but makes my life easier.
+> > > 
+> > > The fourth change restructures the reaping code to try to process as many
+> > > blocks in one go as possible, to reduce logging traffic.
+> > > 
+> > > The last change switches the reaping mechanism to use per-AG bitmaps
+> > > defined in a previous patchset.  This should reduce type confusion when
+> > > reading the source code.
+> > > 
+> > > If you're going to start using this mess, you probably ought to just
+> > > pull from my git trees, which are linked below.
+> > > 
+> > > This is an extraordinary way to destroy everything.  Enjoy!
+> > > Comments and questions are, as always, welcome.
+> > 
+> > Overall I don't see any red flags, so from that perspective I think
+> > it's good to merge as is. THe buffer cache interactions are much
+> > neater this time around.
+> > 
+> > Reviewed-by: Dave Chinner <dchinner@redhat.com>
 > 
-> All of the existing update_time callers pass in the result of
-> current_time() in some fashion. Drop the "time" parameter from
-> generic_update_time, and rework it to fetch its own timestamp.
+> Thanks!
 > 
-> This change means that an update_time could fetch a different timestamp
-> than was seen in inode_needs_update_time. update_time is only ever
-> called with one of two flag combinations: Either S_ATIME is set, or
-> S_MTIME|S_CTIME|S_VERSION are set.
+> > The main thing I noticed is that the deferred freeing mechanism ifo
+> > rbulk reaping will add up to 128 XEFIs to the transaction. That
+> > could result in a single EFI with up to 128 extents in it, right?
 > 
-> With this change we now treat the flags argument as an indicator that
-> some value needed to be updated when last checked, rather than an
-> indication to update specific timestamps.
+> Welllp... the defer ops code only logs up to 16 extents per EFI log item
+> due to my, er, butchering of max_items.  So in the end, we log up to 8x
+> EFI items, each of which has up to 16y EFIs...
 > 
-> Rework the logic for updating the timestamps and put it in a new
-> inode_update_timestamps helper that other update_time routines can use.
-> S_ATIME is as treated as we always have, but if any of the other three
-> are set, then we attempt to update all three.
+> > What happens when we try to free that many extents in a single
+> > transaction loop? The extent free processing doesn't have a "have we
+> > run out of transaction reservation" check in it like the refcount
+> > item processing does, so I don't think it can roll to renew the
+> > transaction reservation if it is needed. DO we need to catch this
+> > and renew the reservation by returning -EAGAIN from
+> > xfs_extent_free_finish_item() if there isn't enough of a reservation
+> > remaining to free an extent?
 > 
-> Also, some callers of generic_update_time need to know what timestamps
-> were actually updated. Change it to return an S_* flag mask to indicate
-> that and rework the callers to expect it.
+> ...and by my estimation, those eight items consume a fraction of the
+> reservation available with tr_itruncate:
 > 
-> Signed-off-by: Jeff Layton <jlayton@kernel.org>
+> 16 x xfs_extent_64_t   = 256 bytes
+> 1 x xfs_efi_log_format = 8 bytes
+>                        = 272 bytes per EFI
+> 
+> 8 x EFI                = 2176 bytes
 
-Looks good to me. Feel free to add:
+I'm not worried by the EFIs themselves when they are created and
+committed, it's the processing of the XEFIs which are all done in a
+single transaction unless a ->finish_item() call returns -EAGAIN.
+i.e. it's the xfs_trans_free_extent() calls that are done one after
+another, and potential log different AG metadata blocks on each
+extent free operation....
 
-Reviewed-by: Jan Kara <jack@suse.cz>
+And it's not just runtime we have to worry about - if we crash and
+have to recover on of these EFIs with 16 extents in it, we have the
+problem of processing a 16 extent EFI on a single transaction
+reservation, right?
 
-								Honza
+> So far, I haven't seen any overflows with the reaping code -- for the AG
+> btree rebuilders, we end up logging and relogging the same bnobt/cntbt
+> buffers over and over again.  tr_itruncate gives us ~320K per transaction,
+> and I haven't seen any overflows yet.
 
-> ---
->  fs/gfs2/inode.c     |  3 +-
->  fs/inode.c          | 84 +++++++++++++++++++++++++++++++++++++++++------------
->  fs/orangefs/inode.c |  3 +-
->  fs/ubifs/file.c     |  6 ++--
->  fs/xfs/xfs_iops.c   |  6 ++--
->  include/linux/fs.h  |  3 +-
->  6 files changed, 80 insertions(+), 25 deletions(-)
-> 
-> diff --git a/fs/gfs2/inode.c b/fs/gfs2/inode.c
-> index 200cabf3b393..f1f04557aa21 100644
-> --- a/fs/gfs2/inode.c
-> +++ b/fs/gfs2/inode.c
-> @@ -2155,7 +2155,8 @@ static int gfs2_update_time(struct inode *inode, struct timespec64 *time,
->  		if (error)
->  			return error;
->  	}
-> -	return generic_update_time(inode, time, flags);
-> +	generic_update_time(inode, flags);
-> +	return 0;
->  }
->  
->  static const struct inode_operations gfs2_file_iops = {
-> diff --git a/fs/inode.c b/fs/inode.c
-> index 3fc251bfaf73..e07e45f6cd01 100644
-> --- a/fs/inode.c
-> +++ b/fs/inode.c
-> @@ -1881,29 +1881,76 @@ static int relatime_need_update(struct vfsmount *mnt, struct inode *inode,
->  	return 0;
->  }
->  
-> -int generic_update_time(struct inode *inode, struct timespec64 *time, int flags)
-> +/**
-> + * inode_update_timestamps - update the timestamps on the inode
-> + * @inode: inode to be updated
-> + * @flags: S_* flags that needed to be updated
-> + *
-> + * The update_time function is called when an inode's timestamps need to be
-> + * updated for a read or write operation. This function handles updating the
-> + * actual timestamps. It's up to the caller to ensure that the inode is marked
-> + * dirty appropriately.
-> + *
-> + * In the case where any of S_MTIME, S_CTIME, or S_VERSION need to be updated,
-> + * attempt to update all three of them. S_ATIME updates can be handled
-> + * independently of the rest.
-> + *
-> + * Returns a set of S_* flags indicating which values changed.
-> + */
-> +int inode_update_timestamps(struct inode *inode, int flags)
->  {
-> -	int dirty_flags = 0;
-> +	int updated = 0;
-> +	struct timespec64 now;
-> +
-> +	if (flags & (S_MTIME|S_CTIME|S_VERSION)) {
-> +		struct timespec64 ctime = inode_get_ctime(inode);
->  
-> -	if (flags & (S_ATIME | S_CTIME | S_MTIME)) {
-> -		if (flags & S_ATIME)
-> -			inode->i_atime = *time;
-> -		if (flags & S_CTIME)
-> -			inode_set_ctime_to_ts(inode, *time);
-> -		if (flags & S_MTIME)
-> -			inode->i_mtime = *time;
-> -
-> -		if (inode->i_sb->s_flags & SB_LAZYTIME)
-> -			dirty_flags |= I_DIRTY_TIME;
-> -		else
-> -			dirty_flags |= I_DIRTY_SYNC;
-> +		now = inode_set_ctime_current(inode);
-> +		if (!timespec64_equal(&now, &ctime))
-> +			updated |= S_CTIME;
-> +		if (!timespec64_equal(&now, &inode->i_mtime)) {
-> +			inode->i_mtime = now;
-> +			updated |= S_MTIME;
-> +		}
-> +		if (IS_I_VERSION(inode) && inode_maybe_inc_iversion(inode, updated))
-> +			updated |= S_VERSION;
-> +	} else {
-> +		now = current_time(inode);
->  	}
->  
-> -	if ((flags & S_VERSION) && inode_maybe_inc_iversion(inode, false))
-> -		dirty_flags |= I_DIRTY_SYNC;
-> +	if (flags & S_ATIME) {
-> +		if (!timespec64_equal(&now, &inode->i_atime)) {
-> +			inode->i_atime = now;
-> +			updated |= S_ATIME;
-> +		}
-> +	}
-> +	return updated;
-> +}
-> +EXPORT_SYMBOL(inode_update_timestamps);
-> +
-> +/**
-> + * generic_update_time - update the timestamps on the inode
-> + * @inode: inode to be updated
-> + * @flags: S_* flags that needed to be updated
-> + *
-> + * The update_time function is called when an inode's timestamps need to be
-> + * updated for a read or write operation. In the case where any of S_MTIME, S_CTIME,
-> + * or S_VERSION need to be updated we attempt to update all three of them. S_ATIME
-> + * updates can be handled done independently of the rest.
-> + *
-> + * Returns a S_* mask indicating which fields were updated.
-> + */
-> +int generic_update_time(struct inode *inode, int flags)
-> +{
-> +	int updated = inode_update_timestamps(inode, flags);
-> +	int dirty_flags = 0;
->  
-> +	if (updated & (S_ATIME|S_MTIME|S_CTIME))
-> +		dirty_flags = inode->i_sb->s_flags & SB_LAZYTIME ? I_DIRTY_TIME : I_DIRTY_SYNC;
-> +	if (updated & S_VERSION)
-> +		dirty_flags |= I_DIRTY_SYNC;
->  	__mark_inode_dirty(inode, dirty_flags);
-> -	return 0;
-> +	return updated;
->  }
->  EXPORT_SYMBOL(generic_update_time);
->  
-> @@ -1915,7 +1962,8 @@ int inode_update_time(struct inode *inode, struct timespec64 *time, int flags)
->  {
->  	if (inode->i_op->update_time)
->  		return inode->i_op->update_time(inode, time, flags);
-> -	return generic_update_time(inode, time, flags);
-> +	generic_update_time(inode, flags);
-> +	return 0;
->  }
->  EXPORT_SYMBOL(inode_update_time);
->  
-> diff --git a/fs/orangefs/inode.c b/fs/orangefs/inode.c
-> index a52c30e80f45..3afa2a69bc63 100644
-> --- a/fs/orangefs/inode.c
-> +++ b/fs/orangefs/inode.c
-> @@ -903,9 +903,10 @@ int orangefs_permission(struct mnt_idmap *idmap,
->  int orangefs_update_time(struct inode *inode, struct timespec64 *time, int flags)
->  {
->  	struct iattr iattr;
-> +
->  	gossip_debug(GOSSIP_INODE_DEBUG, "orangefs_update_time: %pU\n",
->  	    get_khandle_from_ino(inode));
-> -	generic_update_time(inode, time, flags);
-> +	flags = generic_update_time(inode, flags);
->  	memset(&iattr, 0, sizeof iattr);
->          if (flags & S_ATIME)
->  		iattr.ia_valid |= ATTR_ATIME;
-> diff --git a/fs/ubifs/file.c b/fs/ubifs/file.c
-> index 436b27d7c58f..df9086b19cd0 100644
-> --- a/fs/ubifs/file.c
-> +++ b/fs/ubifs/file.c
-> @@ -1387,8 +1387,10 @@ int ubifs_update_time(struct inode *inode, struct timespec64 *time,
->  			.dirtied_ino_d = ALIGN(ui->data_len, 8) };
->  	int err, release;
->  
-> -	if (!IS_ENABLED(CONFIG_UBIFS_ATIME_SUPPORT))
-> -		return generic_update_time(inode, time, flags);
-> +	if (!IS_ENABLED(CONFIG_UBIFS_ATIME_SUPPORT)) {
-> +		generic_update_time(inode, flags);
-> +		return 0;
-> +	}
->  
->  	err = ubifs_budget_space(c, &req);
->  	if (err)
-> diff --git a/fs/xfs/xfs_iops.c b/fs/xfs/xfs_iops.c
-> index 3a9363953ef2..731f45391baa 100644
-> --- a/fs/xfs/xfs_iops.c
-> +++ b/fs/xfs/xfs_iops.c
-> @@ -1042,8 +1042,10 @@ xfs_vn_update_time(
->  
->  	if (inode->i_sb->s_flags & SB_LAZYTIME) {
->  		if (!((flags & S_VERSION) &&
-> -		      inode_maybe_inc_iversion(inode, false)))
-> -			return generic_update_time(inode, now, flags);
-> +		      inode_maybe_inc_iversion(inode, false))) {
-> +			generic_update_time(inode, flags);
-> +			return 0;
-> +		}
->  
->  		/* Capture the iversion update that just occurred */
->  		log_flags |= XFS_ILOG_CORE;
-> diff --git a/include/linux/fs.h b/include/linux/fs.h
-> index 85977cdeda94..bb3c2c4f871f 100644
-> --- a/include/linux/fs.h
-> +++ b/include/linux/fs.h
-> @@ -2343,7 +2343,8 @@ extern int current_umask(void);
->  
->  extern void ihold(struct inode * inode);
->  extern void iput(struct inode *);
-> -extern int generic_update_time(struct inode *, struct timespec64 *, int);
-> +int inode_update_timestamps(struct inode *inode, int flags);
-> +int generic_update_time(struct inode *, int);
->  
->  /* /sys/fs */
->  extern struct kobject *fs_kobj;
-> 
-> -- 
-> 2.41.0
-> 
+I suspect it might be different with aged filesystems where the
+extents being freed could be spread across many, many btree leaf
+nodes...
+
+-Dave.
 -- 
-Jan Kara <jack@suse.com>
-SUSE Labs, CR
+Dave Chinner
+david@fromorbit.com
