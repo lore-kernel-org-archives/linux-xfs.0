@@ -2,32 +2,32 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3F198C3DA40
-	for <linux-xfs@archiver.kernel.org>; Tue,  8 Aug 2023 19:58:43 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6DFF1C001B0
+	for <linux-xfs@archiver.kernel.org>; Tue,  8 Aug 2023 19:58:46 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234177AbjHHT6m (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 8 Aug 2023 15:58:42 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46372 "EHLO
+        id S234251AbjHHT6p (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 8 Aug 2023 15:58:45 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46360 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S234229AbjHHT62 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 8 Aug 2023 15:58:28 -0400
+        with ESMTP id S234263AbjHHT63 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 8 Aug 2023 15:58:29 -0400
 Received: from bombadil.infradead.org (bombadil.infradead.org [IPv6:2607:7c80:54:3::133])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 599151D458;
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C74A61D45C;
         Tue,  8 Aug 2023 11:13:08 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
         d=infradead.org; s=bombadil.20210309; h=Content-Transfer-Encoding:
         MIME-Version:References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:Sender
         :Reply-To:Content-Type:Content-ID:Content-Description;
-        bh=6HgAL/KtG6BIrCTojp54NExjj/op5Heh2wQHIwFIOw8=; b=Y4FbUYtax9t7VP9ZegUvLd4+x5
-        eZls+Qo+cTUlxc0Q6s/WHBwevaZXNBLt2XUR0x+T80Z700W0S6XQPrkqsHgiaCvZ9fPWBxEinKiGu
-        BrunxR/FwHG2Zpt126cev29UVZhqMN2XEYa+fbOu2jUpkm7XB2Zz9yLiqaoi4sOgOq3vnzQ7J1KFC
-        E7mi42WXjGryjk3wVuDntKtA+jsukhBNr2RPa/HclXvjBilyY7jRY8+zAERowtB0doR2c4hdBqPjz
-        fEOICxgag79DSOqctlo2OtvzlK7EseQrUpO3H8oKKk36LbqEgTePTSHzlws7IVRQmxkN0H/1CA7b2
-        UgG/5igg==;
+        bh=Ag0DC0GVA6ZWEFo+6KWBzeM9QEWvQfau0HnuIyRPxDg=; b=wBNIFpZ92lh5UtJct7aTxUWk96
+        ahDDuEuWFJq+4Zn0AJsu7/RVh69PqBlhV6tugDciKSVCj3EFXjeWGpEAXOJ/NG2M0eFTvPxQU9CSc
+        XOz2eSjNLzd0MtWB+yDjEauFH78iiHc8TSGWTb0gVG7buVFpr4/Cn7DYLJqZDlYRDU8tB3hnUwfmM
+        XhDcEKymhAXQuHkt2oqWoflDfkG9ZdVYwNmHDMejua0lc9EvGOglOKcV8XHPf5IpIqMsoe+j8VchW
+        ixFg0BOKpFJfE2zCyZtAvPU8MTls08mUAWgDPDXL67v+meZRnBnzLCf3eM3kymJhIqwzSmD31TU8o
+        nzvdj4TA==;
 Received: from [4.28.11.157] (helo=localhost)
         by bombadil.infradead.org with esmtpsa (Exim 4.96 #2 (Red Hat Linux))
-        id 1qTPNK-002vdZ-3D;
-        Tue, 08 Aug 2023 16:16:03 +0000
+        id 1qTPNK-002vd4-1C;
+        Tue, 08 Aug 2023 16:16:02 +0000
 From:   Christoph Hellwig <hch@lst.de>
 To:     Al Viro <viro@zeniv.linux.org.uk>,
         Christian Brauner <brauner@kernel.org>
@@ -39,9 +39,9 @@ Cc:     Namjae Jeon <linkinjeon@kernel.org>,
         "Darrick J. Wong" <djwong@kernel.org>,
         linux-fsdevel@vger.kernel.org, linux-ext4@vger.kernel.org,
         ntfs3@lists.linux.dev, linux-xfs@vger.kernel.org
-Subject: [PATCH 05/13] xfs: don't call invalidate_bdev in xfs_free_buftarg
-Date:   Tue,  8 Aug 2023 09:15:52 -0700
-Message-Id: <20230808161600.1099516-6-hch@lst.de>
+Subject: [PATCH 03/13] xfs: free the mount in ->kill_sb
+Date:   Tue,  8 Aug 2023 09:15:50 -0700
+Message-Id: <20230808161600.1099516-4-hch@lst.de>
 X-Mailer: git-send-email 2.39.2
 In-Reply-To: <20230808161600.1099516-1-hch@lst.de>
 References: <20230808161600.1099516-1-hch@lst.de>
@@ -52,26 +52,80 @@ Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-XFS never uses the block device mapping, so there is no point in calling
-invalidate_bdev which invalidates said mapping.
+As a rule of thumb everything allocated to the fs_context and moved into
+the super_block should be freed by ->kill_sb so that the teardown
+handling doesn't need to be duplicated between the fill_super error
+path and put_super.  Implement a XFS-specific kill_sb method to do that.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 ---
- fs/xfs/xfs_buf.c | 1 -
- 1 file changed, 1 deletion(-)
+ fs/xfs/xfs_super.c | 20 +++++++++++---------
+ 1 file changed, 11 insertions(+), 9 deletions(-)
 
-diff --git a/fs/xfs/xfs_buf.c b/fs/xfs/xfs_buf.c
-index 15d1e5a7c2d340..83b8702030f71d 100644
---- a/fs/xfs/xfs_buf.c
-+++ b/fs/xfs/xfs_buf.c
-@@ -1944,7 +1944,6 @@ xfs_free_buftarg(
- 	list_lru_destroy(&btp->bt_lru);
+diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
+index 128f4a2924d49c..d2f3ae6ba8938b 100644
+--- a/fs/xfs/xfs_super.c
++++ b/fs/xfs/xfs_super.c
+@@ -1143,9 +1143,6 @@ xfs_fs_put_super(
+ 	xfs_destroy_percpu_counters(mp);
+ 	xfs_destroy_mount_workqueues(mp);
+ 	xfs_close_devices(mp);
+-
+-	sb->s_fs_info = NULL;
+-	xfs_mount_free(mp);
+ }
  
- 	blkdev_issue_flush(btp->bt_bdev);
--	invalidate_bdev(btp->bt_bdev);
- 	fs_put_dax(btp->bt_daxdev, btp->bt_mount);
+ static long
+@@ -1487,7 +1484,7 @@ xfs_fs_fill_super(
  
- 	kmem_free(btp);
+ 	error = xfs_fs_validate_params(mp);
+ 	if (error)
+-		goto out_free_names;
++		return error;
+ 
+ 	sb_min_blocksize(sb, BBSIZE);
+ 	sb->s_xattr = xfs_xattr_handlers;
+@@ -1514,7 +1511,7 @@ xfs_fs_fill_super(
+ 
+ 	error = xfs_open_devices(mp);
+ 	if (error)
+-		goto out_free_names;
++		return error;
+ 
+ 	error = xfs_init_mount_workqueues(mp);
+ 	if (error)
+@@ -1734,9 +1731,6 @@ xfs_fs_fill_super(
+ 	xfs_destroy_mount_workqueues(mp);
+  out_close_devices:
+ 	xfs_close_devices(mp);
+- out_free_names:
+-	sb->s_fs_info = NULL;
+-	xfs_mount_free(mp);
+ 	return error;
+ 
+  out_unmount:
+@@ -1999,12 +1993,20 @@ static int xfs_init_fs_context(
+ 	return 0;
+ }
+ 
++static void
++xfs_kill_sb(
++	struct super_block		*sb)
++{
++	kill_block_super(sb);
++	xfs_mount_free(XFS_M(sb));
++}
++
+ static struct file_system_type xfs_fs_type = {
+ 	.owner			= THIS_MODULE,
+ 	.name			= "xfs",
+ 	.init_fs_context	= xfs_init_fs_context,
+ 	.parameters		= xfs_fs_parameters,
+-	.kill_sb		= kill_block_super,
++	.kill_sb		= xfs_kill_sb,
+ 	.fs_flags		= FS_REQUIRES_DEV | FS_ALLOW_IDMAP,
+ };
+ MODULE_ALIAS_FS("xfs");
 -- 
 2.39.2
 
