@@ -2,32 +2,32 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6DFF1C001B0
-	for <linux-xfs@archiver.kernel.org>; Tue,  8 Aug 2023 19:58:46 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 05430C04FDF
+	for <linux-xfs@archiver.kernel.org>; Tue,  8 Aug 2023 19:58:56 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234251AbjHHT6p (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 8 Aug 2023 15:58:45 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46360 "EHLO
+        id S231636AbjHHT6z (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 8 Aug 2023 15:58:55 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45622 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S234263AbjHHT63 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 8 Aug 2023 15:58:29 -0400
+        with ESMTP id S234601AbjHHT5C (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 8 Aug 2023 15:57:02 -0400
 Received: from bombadil.infradead.org (bombadil.infradead.org [IPv6:2607:7c80:54:3::133])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C74A61D45C;
-        Tue,  8 Aug 2023 11:13:08 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 028DC1BACA;
+        Tue,  8 Aug 2023 11:11:03 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
         d=infradead.org; s=bombadil.20210309; h=Content-Transfer-Encoding:
-        MIME-Version:References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:Sender
-        :Reply-To:Content-Type:Content-ID:Content-Description;
-        bh=Ag0DC0GVA6ZWEFo+6KWBzeM9QEWvQfau0HnuIyRPxDg=; b=wBNIFpZ92lh5UtJct7aTxUWk96
-        ahDDuEuWFJq+4Zn0AJsu7/RVh69PqBlhV6tugDciKSVCj3EFXjeWGpEAXOJ/NG2M0eFTvPxQU9CSc
-        XOz2eSjNLzd0MtWB+yDjEauFH78iiHc8TSGWTb0gVG7buVFpr4/Cn7DYLJqZDlYRDU8tB3hnUwfmM
-        XhDcEKymhAXQuHkt2oqWoflDfkG9ZdVYwNmHDMejua0lc9EvGOglOKcV8XHPf5IpIqMsoe+j8VchW
-        ixFg0BOKpFJfE2zCyZtAvPU8MTls08mUAWgDPDXL67v+meZRnBnzLCf3eM3kymJhIqwzSmD31TU8o
-        nzvdj4TA==;
+        MIME-Version:Message-Id:Date:Subject:Cc:To:From:Sender:Reply-To:Content-Type:
+        Content-ID:Content-Description:In-Reply-To:References;
+        bh=bJxgIoR4mJQUg5rLnZqrYlT5xT1x+GwLxo5eAVskIAQ=; b=OHuO8Wh/1Q0P/1nF6gcUMbFQod
+        5LDs5mgcANOxNCq0J3IZZlQoDbqurokslJv5aV7vgb5wdZXBYUqawpWm00FUa/uPb02aaSVb4wI5g
+        rnCkGWvpHMwutgEFJIyE5/sBuoiFVhJo7NyGL9dOIDqkQAzPlSG1hJ0nKYjwWmAzgUHr8WKbj6YPL
+        SqOrhQza8PU1DgJrj+sXMT3/PrNpObo8Q2k8AC0XixhL1WHDOUqVAWIktwgfmggi1B9Ka3wYnfIL5
+        UU7mPiBIs3lje/6PilCNjLgTb5WM4BFOuiJzPfWVzS6/3Qwt7X4FAqkSozzcDNGTUOsRMKVnmbjYB
+        4x5fl+PQ==;
 Received: from [4.28.11.157] (helo=localhost)
         by bombadil.infradead.org with esmtpsa (Exim 4.96 #2 (Red Hat Linux))
-        id 1qTPNK-002vd4-1C;
-        Tue, 08 Aug 2023 16:16:02 +0000
+        id 1qTPNJ-002vao-0x;
+        Tue, 08 Aug 2023 16:16:01 +0000
 From:   Christoph Hellwig <hch@lst.de>
 To:     Al Viro <viro@zeniv.linux.org.uk>,
         Christian Brauner <brauner@kernel.org>
@@ -39,12 +39,10 @@ Cc:     Namjae Jeon <linkinjeon@kernel.org>,
         "Darrick J. Wong" <djwong@kernel.org>,
         linux-fsdevel@vger.kernel.org, linux-ext4@vger.kernel.org,
         ntfs3@lists.linux.dev, linux-xfs@vger.kernel.org
-Subject: [PATCH 03/13] xfs: free the mount in ->kill_sb
-Date:   Tue,  8 Aug 2023 09:15:50 -0700
-Message-Id: <20230808161600.1099516-4-hch@lst.de>
+Subject: s_fs_info and ->kill_sb revisited
+Date:   Tue,  8 Aug 2023 09:15:47 -0700
+Message-Id: <20230808161600.1099516-1-hch@lst.de>
 X-Mailer: git-send-email 2.39.2
-In-Reply-To: <20230808161600.1099516-1-hch@lst.de>
-References: <20230808161600.1099516-1-hch@lst.de>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
@@ -52,80 +50,24 @@ Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-As a rule of thumb everything allocated to the fs_context and moved into
-the super_block should be freed by ->kill_sb so that the teardown
-handling doesn't need to be duplicated between the fill_super error
-path and put_super.  Implement a XFS-specific kill_sb method to do that.
+Hi all,
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
----
- fs/xfs/xfs_super.c | 20 +++++++++++---------
- 1 file changed, 11 insertions(+), 9 deletions(-)
+this series is against the VFS vfs.super branch does two slightly
+related things:
 
-diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
-index 128f4a2924d49c..d2f3ae6ba8938b 100644
---- a/fs/xfs/xfs_super.c
-+++ b/fs/xfs/xfs_super.c
-@@ -1143,9 +1143,6 @@ xfs_fs_put_super(
- 	xfs_destroy_percpu_counters(mp);
- 	xfs_destroy_mount_workqueues(mp);
- 	xfs_close_devices(mp);
--
--	sb->s_fs_info = NULL;
--	xfs_mount_free(mp);
- }
- 
- static long
-@@ -1487,7 +1484,7 @@ xfs_fs_fill_super(
- 
- 	error = xfs_fs_validate_params(mp);
- 	if (error)
--		goto out_free_names;
-+		return error;
- 
- 	sb_min_blocksize(sb, BBSIZE);
- 	sb->s_xattr = xfs_xattr_handlers;
-@@ -1514,7 +1511,7 @@ xfs_fs_fill_super(
- 
- 	error = xfs_open_devices(mp);
- 	if (error)
--		goto out_free_names;
-+		return error;
- 
- 	error = xfs_init_mount_workqueues(mp);
- 	if (error)
-@@ -1734,9 +1731,6 @@ xfs_fs_fill_super(
- 	xfs_destroy_mount_workqueues(mp);
-  out_close_devices:
- 	xfs_close_devices(mp);
-- out_free_names:
--	sb->s_fs_info = NULL;
--	xfs_mount_free(mp);
- 	return error;
- 
-  out_unmount:
-@@ -1999,12 +1993,20 @@ static int xfs_init_fs_context(
- 	return 0;
- }
- 
-+static void
-+xfs_kill_sb(
-+	struct super_block		*sb)
-+{
-+	kill_block_super(sb);
-+	xfs_mount_free(XFS_M(sb));
-+}
-+
- static struct file_system_type xfs_fs_type = {
- 	.owner			= THIS_MODULE,
- 	.name			= "xfs",
- 	.init_fs_context	= xfs_init_fs_context,
- 	.parameters		= xfs_fs_parameters,
--	.kill_sb		= kill_block_super,
-+	.kill_sb		= xfs_kill_sb,
- 	.fs_flags		= FS_REQUIRES_DEV | FS_ALLOW_IDMAP,
- };
- MODULE_ALIAS_FS("xfs");
--- 
-2.39.2
+ - move closing of the external devices in ext4 and xfs from ->put_super
+   into ->kill_sb so that this isn't done under s_umount which creates
+   lock ordere reversal
+ - move freeing the private dta in s_fs_info into ->kill_sb for file systems
+   that pass it in through the fs_context, as otherwise we could leak it
+   before fill_super is called (this is something new on the vfs.super
+   branch because of the changed place where blkdev_get is called)
 
+Diffstat:
+ exfat/exfat_fs.h |    2 -
+ exfat/super.c    |   39 +++++++++++++-------------
+ ext4/super.c     |   50 +++++++++++++++++-----------------
+ ntfs3/super.c    |   33 ++++++++++------------
+ xfs/xfs_buf.c    |    7 +++-
+ xfs/xfs_super.c  |   80 +++++++++++++++++++++++++------------------------------
+ 6 files changed, 102 insertions(+), 109 deletions(-)
