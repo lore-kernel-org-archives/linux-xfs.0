@@ -2,168 +2,93 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 21208C04FE1
-	for <linux-xfs@archiver.kernel.org>; Tue,  8 Aug 2023 19:21:02 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0DDD1C001B0
+	for <linux-xfs@archiver.kernel.org>; Tue,  8 Aug 2023 19:40:00 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S236141AbjHHTVB (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 8 Aug 2023 15:21:01 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37132 "EHLO
+        id S236524AbjHHTj7 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 8 Aug 2023 15:39:59 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45124 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S236027AbjHHTUl (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 8 Aug 2023 15:20:41 -0400
-Received: from smtp-out2.suse.de (smtp-out2.suse.de [IPv6:2001:67c:2178:6::1d])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id F210510817A;
-        Tue,  8 Aug 2023 09:44:02 -0700 (PDT)
-Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
-        (No client certificate requested)
-        by smtp-out2.suse.de (Postfix) with ESMTPS id 32CD41F381;
-        Tue,  8 Aug 2023 09:37:02 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.cz; s=susede2_rsa;
-        t=1691487422; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=+dwojIKMsZIfKNojdAYP/LpuQmw+6rqqzdeGXh9OKdQ=;
-        b=xNkmZedHCH4JfPl5aI/7jFcoHvCmU2Ei7iO7owXcuJIhPHMXaR9JIDbudRkrv+OpRvBT78
-        QcY9S7zG3KilNTQJsdlbMzoPhbFYNRjSDo58qiEL/KKnRHAz06+KLjpoPEh0KdB8jKpl0d
-        Paghc7ScJ479EYrBJsHB5zKlYU4EE1o=
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.cz;
-        s=susede2_ed25519; t=1691487422;
-        h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=+dwojIKMsZIfKNojdAYP/LpuQmw+6rqqzdeGXh9OKdQ=;
-        b=C9mvCUPaAa2cOnSGsmSgpsXVt5ts05YWI0vruOwxYGEk08U30pxAruMbAfjG0JtSrXhSu+
-        h+OsL5aeMUqW5DAg==
-Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
-        (No client certificate requested)
-        by imap2.suse-dmz.suse.de (Postfix) with ESMTPS id 1E00A13451;
-        Tue,  8 Aug 2023 09:37:02 +0000 (UTC)
-Received: from dovecot-director2.suse.de ([192.168.254.65])
-        by imap2.suse-dmz.suse.de with ESMTPSA
-        id JlhMB74M0mRkHQAAMHmgww
-        (envelope-from <jack@suse.cz>); Tue, 08 Aug 2023 09:37:02 +0000
-Received: by quack3.suse.cz (Postfix, from userid 1000)
-        id 9F88DA0769; Tue,  8 Aug 2023 11:37:01 +0200 (CEST)
-Date:   Tue, 8 Aug 2023 11:37:01 +0200
-From:   Jan Kara <jack@suse.cz>
-To:     Jeff Layton <jlayton@kernel.org>
-Cc:     Alexander Viro <viro@zeniv.linux.org.uk>,
-        Christian Brauner <brauner@kernel.org>,
-        Eric Van Hensbergen <ericvh@kernel.org>,
-        Latchesar Ionkov <lucho@ionkov.net>,
-        Dominique Martinet <asmadeus@codewreck.org>,
-        Christian Schoenebeck <linux_oss@crudebyte.com>,
-        David Howells <dhowells@redhat.com>,
-        Marc Dionne <marc.dionne@auristor.com>,
-        Chris Mason <clm@fb.com>, Josef Bacik <josef@toxicpanda.com>,
-        David Sterba <dsterba@suse.com>, Xiubo Li <xiubli@redhat.com>,
-        Ilya Dryomov <idryomov@gmail.com>,
-        Jan Harkes <jaharkes@cs.cmu.edu>, coda@cs.cmu.edu,
-        Tyler Hicks <code@tyhicks.com>, Gao Xiang <xiang@kernel.org>,
-        Chao Yu <chao@kernel.org>, Yue Hu <huyue2@coolpad.com>,
-        Jeffle Xu <jefflexu@linux.alibaba.com>,
-        Namjae Jeon <linkinjeon@kernel.org>,
-        Sungjong Seo <sj1557.seo@samsung.com>,
-        Jan Kara <jack@suse.com>, Theodore Ts'o <tytso@mit.edu>,
-        Andreas Dilger <adilger.kernel@dilger.ca>,
-        Jaegeuk Kim <jaegeuk@kernel.org>,
-        OGAWA Hirofumi <hirofumi@mail.parknet.co.jp>,
-        Miklos Szeredi <miklos@szeredi.hu>,
-        Bob Peterson <rpeterso@redhat.com>,
-        Andreas Gruenbacher <agruenba@redhat.com>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        Tejun Heo <tj@kernel.org>,
-        Trond Myklebust <trond.myklebust@hammerspace.com>,
-        Anna Schumaker <anna@kernel.org>,
-        Konstantin Komarov <almaz.alexandrovich@paragon-software.com>,
-        Mark Fasheh <mark@fasheh.com>,
-        Joel Becker <jlbec@evilplan.org>,
-        Joseph Qi <joseph.qi@linux.alibaba.com>,
-        Mike Marshall <hubcap@omnibond.com>,
-        Martin Brandenburg <martin@omnibond.com>,
-        Luis Chamberlain <mcgrof@kernel.org>,
-        Kees Cook <keescook@chromium.org>,
-        Iurii Zaikin <yzaikin@google.com>,
-        Steve French <sfrench@samba.org>,
-        Paulo Alcantara <pc@manguebit.com>,
-        Ronnie Sahlberg <ronniesahlberg@gmail.com>,
-        Shyam Prasad N <sprasad@microsoft.com>,
-        Tom Talpey <tom@talpey.com>,
-        Sergey Senozhatsky <senozhatsky@chromium.org>,
-        Richard Weinberger <richard@nod.at>,
-        Hans de Goede <hdegoede@redhat.com>,
-        Hugh Dickins <hughd@google.com>,
-        Andrew Morton <akpm@linux-foundation.org>,
-        Amir Goldstein <amir73il@gmail.com>,
-        "Darrick J. Wong" <djwong@kernel.org>,
-        Benjamin Coddington <bcodding@redhat.com>,
-        linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org,
-        v9fs@lists.linux.dev, linux-afs@lists.infradead.org,
-        linux-btrfs@vger.kernel.org, ceph-devel@vger.kernel.org,
-        codalist@coda.cs.cmu.edu, ecryptfs@vger.kernel.org,
-        linux-erofs@lists.ozlabs.org, linux-ext4@vger.kernel.org,
-        linux-f2fs-devel@lists.sourceforge.net, cluster-devel@redhat.com,
-        linux-nfs@vger.kernel.org, ntfs3@lists.linux.dev,
-        ocfs2-devel@lists.linux.dev, devel@lists.orangefs.org,
-        linux-cifs@vger.kernel.org, samba-technical@lists.samba.org,
-        linux-mtd@lists.infradead.org, linux-mm@kvack.org,
-        linux-unionfs@vger.kernel.org, linux-xfs@vger.kernel.org
-Subject: Re: [PATCH v7 06/13] ubifs: have ubifs_update_time use
- inode_update_timestamps
-Message-ID: <20230808093701.ggyj7tyqonivl7tb@quack3>
-References: <20230807-mgctime-v7-0-d1dec143a704@kernel.org>
- <20230807-mgctime-v7-6-d1dec143a704@kernel.org>
+        with ESMTP id S236515AbjHHTjq (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 8 Aug 2023 15:39:46 -0400
+Received: from mail-pg1-x532.google.com (mail-pg1-x532.google.com [IPv6:2607:f8b0:4864:20::532])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E0866892B
+        for <linux-xfs@vger.kernel.org>; Tue,  8 Aug 2023 11:00:40 -0700 (PDT)
+Received: by mail-pg1-x532.google.com with SMTP id 41be03b00d2f7-563de62f861so3545029a12.1
+        for <linux-xfs@vger.kernel.org>; Tue, 08 Aug 2023 11:00:40 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=fromorbit-com.20221208.gappssmtp.com; s=20221208; t=1691517640; x=1692122440;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
+        bh=ZDl/slbJs9D1xKHBPHbGK/INn+cIEpxTOdRZQgeyYO0=;
+        b=qomode1iXGYc1B2ySxsLA1S8oYpqkBRfZef/E2CcQssBfOMbHQLLZs5WVtesWe0/4P
+         QMC9TL1390FDFyRIIwgFUElFp76a+yreDACSYa0+RrC6eWAKX/DxyxkzgKuOs+iYk5h5
+         b1u9N5/LXhTA2U+c4k9Qgks3GDsMzudWofnuwZlwyHTasXix61c5BQ3aUUCQmx1PmQ59
+         D4IsWfv4vQAKnqb/OG6hY6AkHKWJfGsvskslZRauZtSjDp9oMKbLdE1mQSYwvTeXQt4p
+         0SSQj1g3U+K3GaDpN+ZSkksJB/vbHw6POjVqEGLwG7AKjmhONgbaBVO/aV7V1etPthUE
+         WLrw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20221208; t=1691517640; x=1692122440;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=ZDl/slbJs9D1xKHBPHbGK/INn+cIEpxTOdRZQgeyYO0=;
+        b=SL0MoLGqHYyMu3X5k5t1ofH3owkRoVYQNjpKAsVLtBmc45lQUEET4lmWlHb+k9vaEr
+         fb0G1Tf9zhYYmL0KpXegB+lty6hAew3a+2nz2RCo4+6wRhBG3AvSWQTngBtKThEFTmth
+         SmJj+7kHler69xPDAs0nxAVchMIfXfxSdn1wUKcZB8+KiwQYjD66QcnLVNlQfITkDsjf
+         gbM41P3y+DWE9W8jycgpH/WlWcC8ja95TZ1O3etvcIUGPClDgd7y+vnfty5oXJIbv2HE
+         XCOqUqLUr/fxD6cebY/HAtvpc+aRdOfTDrTIlHNf/G9b4mLmI/KjpucD4caj7JaI0uBX
+         ASwA==
+X-Gm-Message-State: AOJu0Yx1SFsri5fQxmz632YqoZEyrHNofvYxorS7bLjL0niH8S7tDBRe
+        uIJwJh30TEVUGeQCKHR2TPCZqIn2OM0ItZ5zAXA=
+X-Google-Smtp-Source: AGHT+IFXn187w0E5tgoqmzdOZ+ABe7F+e3gdFsfzONbFjE0Qk42TXQW8ZKzCyruHnufi+wmHoRysWg==
+X-Received: by 2002:a17:902:b20e:b0:1bb:6eeb:7a08 with SMTP id t14-20020a170902b20e00b001bb6eeb7a08mr10642011plr.10.1691478562272;
+        Tue, 08 Aug 2023 00:09:22 -0700 (PDT)
+Received: from dread.disaster.area (pa49-180-166-213.pa.nsw.optusnet.com.au. [49.180.166.213])
+        by smtp.gmail.com with ESMTPSA id h4-20020a170902f7c400b001b8a3a0c928sm8197698plw.181.2023.08.08.00.09.21
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Tue, 08 Aug 2023 00:09:21 -0700 (PDT)
+Received: from dave by dread.disaster.area with local (Exim 4.96)
+        (envelope-from <david@fromorbit.com>)
+        id 1qTGqF-002c7s-0v;
+        Tue, 08 Aug 2023 17:09:19 +1000
+Date:   Tue, 8 Aug 2023 17:09:19 +1000
+From:   Dave Chinner <david@fromorbit.com>
+To:     "Darrick J. Wong" <djwong@kernel.org>
+Cc:     linux-xfs@vger.kernel.org
+Subject: Re: [PATCHSET v26.0 0/2] xfs: add usage counters for scrub
+Message-ID: <ZNHqHzFrtyy/kBSE@dread.disaster.area>
+References: <20230727221158.GE11352@frogsfrogsfrogs>
+ <169049623967.921701.643201943864960800.stgit@frogsfrogsfrogs>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20230807-mgctime-v7-6-d1dec143a704@kernel.org>
+In-Reply-To: <169049623967.921701.643201943864960800.stgit@frogsfrogsfrogs>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Mon 07-08-23 15:38:37, Jeff Layton wrote:
-> In later patches, we're going to drop the "now" parameter from the
-> update_time operation. Prepare ubifs for this, by having it use the new
-> inode_update_timestamps helper.
+On Thu, Jul 27, 2023 at 03:19:19PM -0700, Darrick J. Wong wrote:
+> Hi all,
 > 
-> Signed-off-by: Jeff Layton <jlayton@kernel.org>
+> This series introduces simple usage and performance counters for the
+> online fsck subsystem.  The goal here is to enable developers and
+> sysadmins to look at summary counts of how many objects were checked and
+> repaired; what the outcomes were; and how much time the kernel has spent
+> on these operations.  The counter file is exposed in debugfs because
+> that's easier than cramming it into the device model, and debugfs
+> doesn't have rules against complex file contents, unlike sysfs.
 
-One comment below:
+I wish we could just put these in sysfs with all the other per-mount
+stats files we have. It's just stupid to have to put them somewhere
+else because we want to put all the stats in a single file and so
+grab them with a single read operation...
 
-> diff --git a/fs/ubifs/file.c b/fs/ubifs/file.c
-> index df9086b19cd0..2d0178922e19 100644
-> --- a/fs/ubifs/file.c
-> +++ b/fs/ubifs/file.c
-> @@ -1397,15 +1397,9 @@ int ubifs_update_time(struct inode *inode, struct timespec64 *time,
->  		return err;
->  
->  	mutex_lock(&ui->ui_mutex);
-> -	if (flags & S_ATIME)
-> -		inode->i_atime = *time;
-> -	if (flags & S_CTIME)
-> -		inode_set_ctime_to_ts(inode, *time);
-> -	if (flags & S_MTIME)
-> -		inode->i_mtime = *time;
-> -
-> -	release = ui->dirty;
-> +	inode_update_timestamps(inode, flags);
->  	__mark_inode_dirty(inode, I_DIRTY_SYNC);
-> +	release = ui->dirty;
->  	mutex_unlock(&ui->ui_mutex);
 
-I think this is wrong. You need to keep sampling ui->dirty before calling
-__mark_inode_dirty(). Otherwise you could release budget for inode update
-you really need...
+Other than that, this series looks fine.
 
->  	if (release)
->  		ubifs_release_budget(c, &req);
-
-									Honza
+Reviewed-by: Dave Chinner <dchinner@redhat.com>
 
 -- 
-Jan Kara <jack@suse.com>
-SUSE Labs, CR
+Dave Chinner
+david@fromorbit.com
