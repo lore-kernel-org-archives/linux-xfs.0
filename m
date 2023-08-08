@@ -2,32 +2,32 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 05430C04FDF
-	for <linux-xfs@archiver.kernel.org>; Tue,  8 Aug 2023 19:58:56 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8B518C04A6A
+	for <linux-xfs@archiver.kernel.org>; Tue,  8 Aug 2023 19:58:59 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231636AbjHHT6z (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 8 Aug 2023 15:58:55 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45622 "EHLO
+        id S233494AbjHHT65 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 8 Aug 2023 15:58:57 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45476 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S234601AbjHHT5C (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 8 Aug 2023 15:57:02 -0400
+        with ESMTP id S230293AbjHHT6b (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 8 Aug 2023 15:58:31 -0400
 Received: from bombadil.infradead.org (bombadil.infradead.org [IPv6:2607:7c80:54:3::133])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 028DC1BACA;
-        Tue,  8 Aug 2023 11:11:03 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 048541D466;
+        Tue,  8 Aug 2023 11:13:19 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
         d=infradead.org; s=bombadil.20210309; h=Content-Transfer-Encoding:
-        MIME-Version:Message-Id:Date:Subject:Cc:To:From:Sender:Reply-To:Content-Type:
-        Content-ID:Content-Description:In-Reply-To:References;
-        bh=bJxgIoR4mJQUg5rLnZqrYlT5xT1x+GwLxo5eAVskIAQ=; b=OHuO8Wh/1Q0P/1nF6gcUMbFQod
-        5LDs5mgcANOxNCq0J3IZZlQoDbqurokslJv5aV7vgb5wdZXBYUqawpWm00FUa/uPb02aaSVb4wI5g
-        rnCkGWvpHMwutgEFJIyE5/sBuoiFVhJo7NyGL9dOIDqkQAzPlSG1hJ0nKYjwWmAzgUHr8WKbj6YPL
-        SqOrhQza8PU1DgJrj+sXMT3/PrNpObo8Q2k8AC0XixhL1WHDOUqVAWIktwgfmggi1B9Ka3wYnfIL5
-        UU7mPiBIs3lje/6PilCNjLgTb5WM4BFOuiJzPfWVzS6/3Qwt7X4FAqkSozzcDNGTUOsRMKVnmbjYB
-        4x5fl+PQ==;
+        MIME-Version:References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:Sender
+        :Reply-To:Content-Type:Content-ID:Content-Description;
+        bh=qf1FOh4o3ROh8fs91oFv2khzBF62ADi5/zosffYFjxI=; b=1lR6VA+6Rff/rDi/taUGcHytKR
+        EZVGXN/63ckalqBXMq+CA1YI6yRr2FpKiCKuYY/CZdcwZZuLswaPMfk0AovQQ7OV2WEDZyJQ05e7h
+        Bopx6JNfHBvw7HO+3xx8LNpWPkL7MEacC/LBndav4rhj/oPQj5NG/EPfvwydyg40/qP1LoN9ZZFIc
+        TuZ6QReX3gfOOCR6YJHqSZ5SjCypwULHOoQSZtjXhnsm6NceVwnTlMQmjDuW8z8VjRtvDRQdhIQF1
+        DwTLgywMxXql4ULQwd4irWiy8Uz+78empZpzdsX+43f9nv19s5z7fPuo4Blld1rYrPJVvDtNjBX1K
+        OhVHkdKg==;
 Received: from [4.28.11.157] (helo=localhost)
         by bombadil.infradead.org with esmtpsa (Exim 4.96 #2 (Red Hat Linux))
-        id 1qTPNJ-002vao-0x;
-        Tue, 08 Aug 2023 16:16:01 +0000
+        id 1qTPNM-002vei-0H;
+        Tue, 08 Aug 2023 16:16:04 +0000
 From:   Christoph Hellwig <hch@lst.de>
 To:     Al Viro <viro@zeniv.linux.org.uk>,
         Christian Brauner <brauner@kernel.org>
@@ -39,10 +39,12 @@ Cc:     Namjae Jeon <linkinjeon@kernel.org>,
         "Darrick J. Wong" <djwong@kernel.org>,
         linux-fsdevel@vger.kernel.org, linux-ext4@vger.kernel.org,
         ntfs3@lists.linux.dev, linux-xfs@vger.kernel.org
-Subject: s_fs_info and ->kill_sb revisited
-Date:   Tue,  8 Aug 2023 09:15:47 -0700
-Message-Id: <20230808161600.1099516-1-hch@lst.de>
+Subject: [PATCH 08/13] ext4: close the external journal device in ->kill_sb
+Date:   Tue,  8 Aug 2023 09:15:55 -0700
+Message-Id: <20230808161600.1099516-9-hch@lst.de>
 X-Mailer: git-send-email 2.39.2
+In-Reply-To: <20230808161600.1099516-1-hch@lst.de>
+References: <20230808161600.1099516-1-hch@lst.de>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
@@ -50,24 +52,125 @@ Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Hi all,
+blkdev_put must not be called under sb->s_umount to avoid a lock order
+reversal with disk->open_mutex.  Move closing the external journal device
+into ->kill_sb to archive that.
 
-this series is against the VFS vfs.super branch does two slightly
-related things:
+Signed-off-by: Christoph Hellwig <hch@lst.de>
+---
+ fs/ext4/super.c | 50 ++++++++++++++++++++++++-------------------------
+ 1 file changed, 25 insertions(+), 25 deletions(-)
 
- - move closing of the external devices in ext4 and xfs from ->put_super
-   into ->kill_sb so that this isn't done under s_umount which creates
-   lock ordere reversal
- - move freeing the private dta in s_fs_info into ->kill_sb for file systems
-   that pass it in through the fs_context, as otherwise we could leak it
-   before fill_super is called (this is something new on the vfs.super
-   branch because of the changed place where blkdev_get is called)
+diff --git a/fs/ext4/super.c b/fs/ext4/super.c
+index 063832e2d12a8e..0511fffb59b40d 100644
+--- a/fs/ext4/super.c
++++ b/fs/ext4/super.c
+@@ -93,6 +93,7 @@ static int ext4_get_tree(struct fs_context *fc);
+ static int ext4_reconfigure(struct fs_context *fc);
+ static void ext4_fc_free(struct fs_context *fc);
+ static int ext4_init_fs_context(struct fs_context *fc);
++static void ext4_kill_sb(struct super_block *sb);
+ static const struct fs_parameter_spec ext4_param_specs[];
+ 
+ /*
+@@ -135,7 +136,7 @@ static struct file_system_type ext2_fs_type = {
+ 	.name			= "ext2",
+ 	.init_fs_context	= ext4_init_fs_context,
+ 	.parameters		= ext4_param_specs,
+-	.kill_sb		= kill_block_super,
++	.kill_sb		= ext4_kill_sb,
+ 	.fs_flags		= FS_REQUIRES_DEV,
+ };
+ MODULE_ALIAS_FS("ext2");
+@@ -151,7 +152,7 @@ static struct file_system_type ext3_fs_type = {
+ 	.name			= "ext3",
+ 	.init_fs_context	= ext4_init_fs_context,
+ 	.parameters		= ext4_param_specs,
+-	.kill_sb		= kill_block_super,
++	.kill_sb		= ext4_kill_sb,
+ 	.fs_flags		= FS_REQUIRES_DEV,
+ };
+ MODULE_ALIAS_FS("ext3");
+@@ -1116,25 +1117,6 @@ static struct block_device *ext4_blkdev_get(dev_t dev, struct super_block *sb)
+ 	return NULL;
+ }
+ 
+-/*
+- * Release the journal device
+- */
+-static void ext4_blkdev_remove(struct ext4_sb_info *sbi)
+-{
+-	struct block_device *bdev;
+-	bdev = sbi->s_journal_bdev;
+-	if (bdev) {
+-		/*
+-		 * Invalidate the journal device's buffers.  We don't want them
+-		 * floating about in memory - the physical journal device may
+-		 * hotswapped, and it breaks the `ro-after' testing code.
+-		 */
+-		invalidate_bdev(bdev);
+-		blkdev_put(bdev, sbi->s_sb);
+-		sbi->s_journal_bdev = NULL;
+-	}
+-}
+-
+ static inline struct inode *orphan_list_entry(struct list_head *l)
+ {
+ 	return &list_entry(l, struct ext4_inode_info, i_orphan)->vfs_inode;
+@@ -1330,8 +1312,13 @@ static void ext4_put_super(struct super_block *sb)
+ 	sync_blockdev(sb->s_bdev);
+ 	invalidate_bdev(sb->s_bdev);
+ 	if (sbi->s_journal_bdev) {
++		/*
++		 * Invalidate the journal device's buffers.  We don't want them
++		 * floating about in memory - the physical journal device may
++		 * hotswapped, and it breaks the `ro-after' testing code.
++		 */
+ 		sync_blockdev(sbi->s_journal_bdev);
+-		ext4_blkdev_remove(sbi);
++		invalidate_bdev(sbi->s_journal_bdev);
+ 	}
+ 
+ 	ext4_xattr_destroy_cache(sbi->s_ea_inode_cache);
+@@ -5655,9 +5642,11 @@ failed_mount9: __maybe_unused
+ 		kfree(get_qf_name(sb, sbi, i));
+ #endif
+ 	fscrypt_free_dummy_policy(&sbi->s_dummy_enc_policy);
+-	/* ext4_blkdev_remove() calls kill_bdev(), release bh before it. */
+ 	brelse(sbi->s_sbh);
+-	ext4_blkdev_remove(sbi);
++	if (sbi->s_journal_bdev) {
++		invalidate_bdev(sbi->s_journal_bdev);
++		blkdev_put(sbi->s_journal_bdev, sb);
++	}
+ out_fail:
+ 	invalidate_bdev(sb->s_bdev);
+ 	sb->s_fs_info = NULL;
+@@ -7267,12 +7256,23 @@ static inline int ext3_feature_set_ok(struct super_block *sb)
+ 	return 1;
+ }
+ 
++static void ext4_kill_sb(struct super_block *sb)
++{
++	struct ext4_sb_info *sbi = EXT4_SB(sb);
++	struct block_device *journal_bdev = sbi ? sbi->s_journal_bdev : NULL;
++
++	kill_block_super(sb);
++
++	if (journal_bdev)
++		blkdev_put(journal_bdev, sb);
++}
++
+ static struct file_system_type ext4_fs_type = {
+ 	.owner			= THIS_MODULE,
+ 	.name			= "ext4",
+ 	.init_fs_context	= ext4_init_fs_context,
+ 	.parameters		= ext4_param_specs,
+-	.kill_sb		= kill_block_super,
++	.kill_sb		= ext4_kill_sb,
+ 	.fs_flags		= FS_REQUIRES_DEV | FS_ALLOW_IDMAP,
+ };
+ MODULE_ALIAS_FS("ext4");
+-- 
+2.39.2
 
-Diffstat:
- exfat/exfat_fs.h |    2 -
- exfat/super.c    |   39 +++++++++++++-------------
- ext4/super.c     |   50 +++++++++++++++++-----------------
- ntfs3/super.c    |   33 ++++++++++------------
- xfs/xfs_buf.c    |    7 +++-
- xfs/xfs_super.c  |   80 +++++++++++++++++++++++++------------------------------
- 6 files changed, 102 insertions(+), 109 deletions(-)
