@@ -2,32 +2,32 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6DE2FC05051
-	for <linux-xfs@archiver.kernel.org>; Wed,  9 Aug 2023 22:06:00 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1EE17C07E8D
+	for <linux-xfs@archiver.kernel.org>; Wed,  9 Aug 2023 22:06:02 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233029AbjHIWF6 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 9 Aug 2023 18:05:58 -0400
+        id S233147AbjHIWGB (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 9 Aug 2023 18:06:01 -0400
 Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33694 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231300AbjHIWFz (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 9 Aug 2023 18:05:55 -0400
+        with ESMTP id S229672AbjHIWF5 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 9 Aug 2023 18:05:57 -0400
 Received: from bombadil.infradead.org (bombadil.infradead.org [IPv6:2607:7c80:54:3::133])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D83F82103;
-        Wed,  9 Aug 2023 15:05:53 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7985D1729;
+        Wed,  9 Aug 2023 15:05:56 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
         d=infradead.org; s=bombadil.20210309; h=Content-Transfer-Encoding:
         MIME-Version:References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:Sender
         :Reply-To:Content-Type:Content-ID:Content-Description;
-        bh=6wqli7thU3l6HGCeQs5U/6Urc/CqXty5nOTjeTH4Emo=; b=3yq0rDf91n3vfK9HjgD1PKxUy5
-        QmP1l6UQ0ppll1LUaQKXscmB4gajVdjp0qkb1z4Ldd7S76zYUSJn1RuIp4RbvSOY/vWJlYW1f6PMd
-        H4KUru+MzOhHpIfeBXoVyxic6pSFYebSpOQEavoipTfn4uzPWXMa1YFjdBKAEnDasymFbI6joNzQe
-        nv7QArU208ivphc7NIp6Qoir9QF1olSnpRv0hHKltJSJr1xd5sRcf2HIVJ0K1RZHYxGtEXExGkbBp
-        hXcoPZdJWva3ISY/SpTyHXwM9W6Oniv4XOI8nkEdF9ZE56o/Z+NxZy3Z8TDQrjhFvKnEm7yS2farE
-        k5N0dFKQ==;
+        bh=Y8HEOWYHzd0yCITy4kwbsWwLvmGD2QTzJ/9iJjb6YmY=; b=j8bvS4sUYS4qUpAB/lm3BrTobv
+        GCKVKIo1DSa+vFR/zC1mKEZfeYEVWdoVqWIj5g/k0oTmXbDAMVtSlJMeWld2t0e/5fQEMumsy0vgE
+        pIpT8foOhWGfBycPltACrZpWCTGbzpMi2AMSRj1HhR57fGW9atqu0PRHuNGnEug3tXSQ73K0lMrgY
+        2EcPaFysS/jvLG0ZPBBtvgYu0X9t02g+QJJdm6ZvvP0c8auU8PojpHZ9tnSrbUS9w4Vk711vuYM7B
+        x9v4ZUn4UMXxeG34dr1aJ3E44ZYH9XYk3NWLEcjoa5h44rI3lewq6kYxPi/rYpKLSC13bo+PPsee7
+        DlMzJwQQ==;
 Received: from [4.28.11.157] (helo=localhost)
         by bombadil.infradead.org with esmtpsa (Exim 4.96 #2 (Red Hat Linux))
-        id 1qTrJK-005xnx-24;
-        Wed, 09 Aug 2023 22:05:46 +0000
+        id 1qTrJO-005xpD-3D;
+        Wed, 09 Aug 2023 22:05:51 +0000
 From:   Christoph Hellwig <hch@lst.de>
 To:     Al Viro <viro@zeniv.linux.org.uk>,
         Christian Brauner <brauner@kernel.org>
@@ -39,9 +39,9 @@ Cc:     Namjae Jeon <linkinjeon@kernel.org>,
         "Darrick J. Wong" <djwong@kernel.org>,
         linux-fsdevel@vger.kernel.org, linux-ext4@vger.kernel.org,
         ntfs3@lists.linux.dev, linux-xfs@vger.kernel.org
-Subject: [PATCH 01/13] xfs: reformat the xfs_fs_free prototype
-Date:   Wed,  9 Aug 2023 15:05:33 -0700
-Message-Id: <20230809220545.1308228-2-hch@lst.de>
+Subject: [PATCH 13/13] ntfs3: free the sbi in ->kill_sb
+Date:   Wed,  9 Aug 2023 15:05:45 -0700
+Message-Id: <20230809220545.1308228-14-hch@lst.de>
 X-Mailer: git-send-email 2.39.2
 In-Reply-To: <20230809220545.1308228-1-hch@lst.de>
 References: <20230809220545.1308228-1-hch@lst.de>
@@ -52,29 +52,75 @@ Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-The xfs_fs_free prototype formatting is a weird mix of the classic XFS
-style and the Linux style.  Fix it up to be consistent.
+As a rule of thumb everything allocated to the fs_context and moved into
+the super_block should be freed by ->kill_sb so that the teardown
+handling doesn't need to be duplicated between the fill_super error
+path and put_super.  Implement an ntfs3-specific kill_sb method to do
+that.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
-Reviewed-by: Darrick J. Wong <djwong@kernel.org>
+Reviewed-by: Christian Brauner <brauner@kernel.org>
 ---
- fs/xfs/xfs_super.c | 3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
+ fs/ntfs3/super.c | 25 ++++++++++++-------------
+ 1 file changed, 12 insertions(+), 13 deletions(-)
 
-diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
-index bf6e0a261a49e6..0a294659c18972 100644
---- a/fs/xfs/xfs_super.c
-+++ b/fs/xfs/xfs_super.c
-@@ -1933,7 +1933,8 @@ xfs_fs_reconfigure(
- 	return 0;
+diff --git a/fs/ntfs3/super.c b/fs/ntfs3/super.c
+index 727138933a9324..5fffddea554f18 100644
+--- a/fs/ntfs3/super.c
++++ b/fs/ntfs3/super.c
+@@ -625,10 +625,6 @@ static void ntfs_put_super(struct super_block *sb)
+ 
+ 	/* Mark rw ntfs as clear, if possible. */
+ 	ntfs_set_state(sbi, NTFS_DIRTY_CLEAR);
+-
+-	put_mount_options(sbi->options);
+-	ntfs3_free_sbi(sbi);
+-	sb->s_fs_info = NULL;
  }
  
--static void xfs_fs_free(
-+static void
-+xfs_fs_free(
- 	struct fs_context	*fc)
- {
- 	struct xfs_mount	*mp = fc->s_fs_info;
+ static int ntfs_statfs(struct dentry *dentry, struct kstatfs *buf)
+@@ -1562,15 +1558,7 @@ static int ntfs_fill_super(struct super_block *sb, struct fs_context *fc)
+ put_inode_out:
+ 	iput(inode);
+ out:
+-	/*
+-	 * Free resources here.
+-	 * ntfs_fs_free will be called with fc->s_fs_info = NULL
+-	 */
+-	put_mount_options(sbi->options);
+-	ntfs3_free_sbi(sbi);
+-	sb->s_fs_info = NULL;
+ 	kfree(boot2);
+-
+ 	return err;
+ }
+ 
+@@ -1726,13 +1714,24 @@ static int ntfs_init_fs_context(struct fs_context *fc)
+ 	return -ENOMEM;
+ }
+ 
++static void ntfs3_kill_sb(struct super_block *sb)
++{
++	struct ntfs_sb_info *sbi = sb->s_fs_info;
++
++	kill_block_super(sb);
++
++	if (sbi->options)
++		put_mount_options(sbi->options);
++	ntfs3_free_sbi(sbi);
++}
++
+ // clang-format off
+ static struct file_system_type ntfs_fs_type = {
+ 	.owner			= THIS_MODULE,
+ 	.name			= "ntfs3",
+ 	.init_fs_context	= ntfs_init_fs_context,
+ 	.parameters		= ntfs_fs_parameters,
+-	.kill_sb		= kill_block_super,
++	.kill_sb		= ntfs3_kill_sb,
+ 	.fs_flags		= FS_REQUIRES_DEV | FS_ALLOW_IDMAP,
+ };
+ // clang-format on
 -- 
 2.39.2
 
