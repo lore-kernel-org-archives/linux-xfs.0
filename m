@@ -2,126 +2,95 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 00F21C04FDF
-	for <linux-xfs@archiver.kernel.org>; Wed,  9 Aug 2023 09:35:41 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0EAE4EB64DD
+	for <linux-xfs@archiver.kernel.org>; Wed,  9 Aug 2023 09:44:09 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232056AbjHIJfk (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 9 Aug 2023 05:35:40 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54128 "EHLO
+        id S229683AbjHIJoI (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 9 Aug 2023 05:44:08 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34890 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229489AbjHIJfi (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 9 Aug 2023 05:35:38 -0400
-X-Greylist: delayed 300 seconds by postgrey-1.37 at lindbergh.monkeyblade.net; Wed, 09 Aug 2023 02:35:37 PDT
-Received: from mail.parknet.co.jp (mail.parknet.co.jp [210.171.160.6])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 86A6210D4;
-        Wed,  9 Aug 2023 02:35:37 -0700 (PDT)
-Received: from ibmpc.myhome.or.jp (server.parknet.ne.jp [210.171.168.39])
-        by mail.parknet.co.jp (Postfix) with ESMTPSA id 2BF732055FA1;
-        Wed,  9 Aug 2023 17:41:12 +0900 (JST)
-Received: from devron.myhome.or.jp (foobar@devron.myhome.or.jp [192.168.0.3])
-        by ibmpc.myhome.or.jp (8.17.2/8.17.2/Debian-1) with ESMTPS id 3798fAMk208573
-        (version=TLSv1.3 cipher=TLS_AES_256_GCM_SHA384 bits=256 verify=NOT);
-        Wed, 9 Aug 2023 17:41:11 +0900
-Received: from devron.myhome.or.jp (foobar@localhost [127.0.0.1])
-        by devron.myhome.or.jp (8.17.2/8.17.2/Debian-1) with ESMTPS id 3798fAiA140744
-        (version=TLSv1.3 cipher=TLS_AES_256_GCM_SHA384 bits=256 verify=NOT);
-        Wed, 9 Aug 2023 17:41:10 +0900
-Received: (from hirofumi@localhost)
-        by devron.myhome.or.jp (8.17.2/8.17.2/Submit) id 3798f9uW140743;
-        Wed, 9 Aug 2023 17:41:09 +0900
-From:   OGAWA Hirofumi <hirofumi@mail.parknet.co.jp>
-To:     Jeff Layton <jlayton@kernel.org>
-Cc:     Alexander Viro <viro@zeniv.linux.org.uk>,
-        Christian Brauner <brauner@kernel.org>,
-        Eric Van Hensbergen <ericvh@kernel.org>,
-        Latchesar Ionkov <lucho@ionkov.net>,
-        Dominique Martinet <asmadeus@codewreck.org>,
-        Christian Schoenebeck <linux_oss@crudebyte.com>,
-        David Howells <dhowells@redhat.com>,
-        Marc Dionne <marc.dionne@auristor.com>,
-        Chris Mason <clm@fb.com>, Josef Bacik <josef@toxicpanda.com>,
-        David Sterba <dsterba@suse.com>, Xiubo Li <xiubli@redhat.com>,
-        Ilya Dryomov <idryomov@gmail.com>,
-        Jan Harkes <jaharkes@cs.cmu.edu>, coda@cs.cmu.edu,
-        Tyler Hicks <code@tyhicks.com>, Gao Xiang <xiang@kernel.org>,
-        Chao Yu <chao@kernel.org>,
-        Yue Hu <huyue2@gl0jj8bn.sched.sma.tdnsstic1.cn>,
-        Jeffle Xu <jefflexu@linux.alibaba.com>,
-        Namjae Jeon <linkinjeon@kernel.org>,
-        Sungjong Seo <sj1557.seo@samsung.com>,
-        Jan Kara <jack@suse.com>, "Theodore Ts'o" <tytso@mit.edu>,
-        Andreas Dilger <adilger.kernel@dilger.ca>,
-        Jaegeuk Kim <jaegeuk@kernel.org>,
-        Miklos Szeredi <miklos@szeredi.hu>,
-        Bob Peterson <rpeterso@redhat.com>,
-        Andreas Gruenbacher <agruenba@redhat.com>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        Tejun Heo <tj@kernel.org>,
-        Trond Myklebust <trond.myklebust@hammerspace.com>,
-        Anna Schumaker <anna@kernel.org>,
-        Konstantin Komarov <almaz.alexandrovich@paragon-software.com>,
-        Mark Fasheh <mark@fasheh.com>,
-        Joel Becker <jlbec@evilplan.org>,
-        Joseph Qi <joseph.qi@linux.alibaba.com>,
-        Mike Marshall <hubcap@omnibond.com>,
-        Martin Brandenburg <martin@omnibond.com>,
-        Luis Chamberlain <mcgrof@kernel.org>,
-        Kees Cook <keescook@chromium.org>,
-        Iurii Zaikin <yzaikin@google.com>,
-        Steve French <sfrench@samba.org>,
-        Paulo Alcantara <pc@manguebit.com>,
-        Ronnie Sahlberg <ronniesahlberg@gmail.com>,
-        Shyam Prasad N <sprasad@microsoft.com>,
-        Tom Talpey <tom@talpey.com>,
-        Sergey Senozhatsky <senozhatsky@chromium.org>,
-        Richard Weinberger <richard@nod.at>,
-        Hans de Goede <hdegoede@redhat.com>,
-        Hugh Dickins <hughd@google.com>,
-        Andrew Morton <akpm@linux-foundation.org>,
-        Amir Goldstein <amir73il@gmail.com>,
-        "Darrick J. Wong" <djwong@kernel.org>,
-        Benjamin Coddington <bcodding@redhat.com>,
-        linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org,
-        v9fs@lists.linux.dev, linux-afs@lists.infradead.org,
-        linux-btrfs@vger.kernel.org, ceph-devel@vger.kernel.org,
-        codalist@telemann.coda.cs.cmu.edu, ecryptfs@vger.kernel.org,
-        linux-erofs@lists.ozlabs.org, linux-ext4@vger.kernel.org,
-        linux-f2fs-devel@lists.sourceforge.net, cluster-devel@redhat.com,
-        linux-nfs@vger.kernel.org, ntfs3@lists.linux.dev,
-        ocfs2-devel@lists.linux.dev, devel@lists.orangefs.org,
-        linux-cifs@vger.kernel.org, samba-technical@lists.samba.org,
-        linux-mtd@lists.infradead.org, linux-mm@kvack.org,
-        linux-unionfs@vger.kernel.org, linux-xfs@vger.kernel.org
-Subject: Re: [PATCH v7 05/13] fat: make fat_update_time get its own timestamp
-In-Reply-To: <87msz08vc7.fsf@mail.parknet.co.jp> (OGAWA Hirofumi's message of
-        "Wed, 09 Aug 2023 17:37:44 +0900")
-References: <20230807-mgctime-v7-0-d1dec143a704@kernel.org>
-        <20230807-mgctime-v7-5-d1dec143a704@kernel.org>
-        <87msz08vc7.fsf@mail.parknet.co.jp>
-Date:   Wed, 09 Aug 2023 17:41:09 +0900
-Message-ID: <87il9o8v6i.fsf@mail.parknet.co.jp>
-User-Agent: Gnus/5.13 (Gnus v5.13)
+        with ESMTP id S229459AbjHIJoH (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 9 Aug 2023 05:44:07 -0400
+Received: from mail-pf1-x42f.google.com (mail-pf1-x42f.google.com [IPv6:2607:f8b0:4864:20::42f])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1D87BED
+        for <linux-xfs@vger.kernel.org>; Wed,  9 Aug 2023 02:44:07 -0700 (PDT)
+Received: by mail-pf1-x42f.google.com with SMTP id d2e1a72fcca58-686f8614ce5so6453524b3a.3
+        for <linux-xfs@vger.kernel.org>; Wed, 09 Aug 2023 02:44:07 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=fromorbit-com.20221208.gappssmtp.com; s=20221208; t=1691574246; x=1692179046;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
+        bh=Ngdqj+DsTPcgR2O2EfsmzDi34kkv0FI5n2/Y8sp767U=;
+        b=axL3SrVJtDCADUAHBOu8BUzwlHgdUBV+G3N2yHuEyCbqdX5GA/DQ3KM2S+HFBFVjYX
+         pxl4ylIzBdCG/H+DkFBweo3sKXn7PEHUqglF6Iuo18EwXqFotTgM53tc0GjxBXsXzOfo
+         ssUVaRRwpiWVKCRri6DWJS8KL4AYetXx2icNpRsAsEREBnvO19M2OA6LzuaXh1Y6nOk0
+         ZLiHpVGFZYmsi9EnXhq2QB4EqqGpeWGA0D/yqAmTqt6v1FDg5wcKvEuk1pkFWG48VZqK
+         epbr6Io0BhK59PabReGGFZsze3s1XJHjSuhmRG9/w+s0HNVHFb2faTdYqTLBe8ffQuIn
+         R8ww==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20221208; t=1691574246; x=1692179046;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=Ngdqj+DsTPcgR2O2EfsmzDi34kkv0FI5n2/Y8sp767U=;
+        b=GIjjvrr7f2bq7tMI6GA+HEqqN34cGI/3XtjeBE4MbqVaWC99vkCmeFQEaOc4/OMv9G
+         jYXqfem3G8xqL1ULLdNeG4A6/yI9IAyLYcbZ0Q1xOQZ1ZAGqrTrXl1Jc96EAqkoRhjsQ
+         3EswGXhxlK78nax+gwH973ec2jx0LO8oXiB4IJGEd0qqGfGwFcFd83AuSgY0nQ0zsKue
+         DBUiblbuRJsOsEGsUCeSDYERHy6IkeRQt23vJdE4BeFvDZco5yKT3ShzGlpUVmpAQGFU
+         YW8fX5EQevp7X7ROb4A8uDeuL6yM7rmtr1XJBRTv7qpK+DviITwXq3o70DxNKjcn6rz8
+         gGEw==
+X-Gm-Message-State: AOJu0YzE//Qa2K9jTouW9FXQ21qY3ctmcL/lJxfjDDcABmFTGYVlyek7
+        FYoO1UljzILr+DursR7cBEd5FpHQQ/9lHkwA2ic=
+X-Google-Smtp-Source: AGHT+IFvcP1+kZI2qNibETY264CT/OGrhtHYm8u9LHcweZLVBbc9JHZeX+7ZjGxZ8jyjgykw7iAE0g==
+X-Received: by 2002:a05:6a21:7787:b0:126:92de:b893 with SMTP id bd7-20020a056a21778700b0012692deb893mr1902088pzc.31.1691574246574;
+        Wed, 09 Aug 2023 02:44:06 -0700 (PDT)
+Received: from dread.disaster.area (pa49-180-166-213.pa.nsw.optusnet.com.au. [49.180.166.213])
+        by smtp.gmail.com with ESMTPSA id k14-20020aa7820e000000b0063f00898245sm9729042pfi.146.2023.08.09.02.44.06
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Wed, 09 Aug 2023 02:44:06 -0700 (PDT)
+Received: from dave by dread.disaster.area with local (Exim 4.96)
+        (envelope-from <david@fromorbit.com>)
+        id 1qTfjW-0035z0-2D;
+        Wed, 09 Aug 2023 19:44:02 +1000
+Date:   Wed, 9 Aug 2023 19:44:02 +1000
+From:   Dave Chinner <david@fromorbit.com>
+To:     "Darrick J. Wong" <djwong@kernel.org>
+Cc:     linux-xfs@vger.kernel.org
+Subject: Re: [PATCHSET v26.0 0/6] xfs: online repair of inodes and forks
+Message-ID: <ZNNf4gIZg7j3SMpg@dread.disaster.area>
+References: <20230727221158.GE11352@frogsfrogsfrogs>
+ <169049626432.922543.2560381879385116722.stgit@frogsfrogsfrogs>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <169049626432.922543.2560381879385116722.stgit@frogsfrogsfrogs>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-OGAWA Hirofumi <hirofumi@mail.parknet.co.jp> writes:
+On Thu, Jul 27, 2023 at 03:21:08PM -0700, Darrick J. Wong wrote:
+> Hi all,
+> 
+> In this series, online repair gains the ability to repair inode records.
+> To do this, we must repair the ondisk inode and fork information enough
+> to pass the iget verifiers and hence make the inode igettable again.
+> Once that's done, we can perform higher level repairs on the incore
+> inode.  The fstests counterpart of this patchset implements stress
+> testing of repair.
+> 
+> If you're going to start using this mess, you probably ought to just
+> pull from my git trees, which are linked below.
 
-> Jeff Layton <jlayton@kernel.org> writes:
->
->> Also, it may be that things have changed by the time we get to calling
->> fat_update_time after checking inode_needs_update_time. Ensure that we
->> attempt the i_version bump if any of the S_* flags besides S_ATIME are
->> set.
->
-> I'm not sure what it meaning though, this is from
-> generic_update_time(). Are you going to change generic_update_time()
-> too? If so, it doesn't break lazytime feature?
->
-> Thanks.
+Most of this makes sense. I think the main thing I'd suggest is
+documenting the repair decisions being made and how things that get
+zapped are then rebuilt - it seems like there is a lot of dependency
+on running other parts of repair after zapping for things to be
+rebuilt, but it's not immediately clear how the bits are supposed to
+go together so a little bit of documentation for that would go a
+long way....
 
-BTW, fat is not implementing lazytime now, but it is for future.
+-Dave.
+
 -- 
-OGAWA Hirofumi <hirofumi@mail.parknet.co.jp>
+Dave Chinner
+david@fromorbit.com
