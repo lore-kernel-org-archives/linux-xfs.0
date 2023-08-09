@@ -2,32 +2,32 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1EE17C07E8D
-	for <linux-xfs@archiver.kernel.org>; Wed,  9 Aug 2023 22:06:02 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 143F5C07E8B
+	for <linux-xfs@archiver.kernel.org>; Wed,  9 Aug 2023 22:06:01 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233147AbjHIWGB (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 9 Aug 2023 18:06:01 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33694 "EHLO
+        id S230449AbjHIWF7 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 9 Aug 2023 18:05:59 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33682 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229672AbjHIWF5 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 9 Aug 2023 18:05:57 -0400
+        with ESMTP id S231402AbjHIWFz (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 9 Aug 2023 18:05:55 -0400
 Received: from bombadil.infradead.org (bombadil.infradead.org [IPv6:2607:7c80:54:3::133])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7985D1729;
-        Wed,  9 Aug 2023 15:05:56 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 53C1418F;
+        Wed,  9 Aug 2023 15:05:53 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
         d=infradead.org; s=bombadil.20210309; h=Content-Transfer-Encoding:
         MIME-Version:References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:Sender
         :Reply-To:Content-Type:Content-ID:Content-Description;
-        bh=Y8HEOWYHzd0yCITy4kwbsWwLvmGD2QTzJ/9iJjb6YmY=; b=j8bvS4sUYS4qUpAB/lm3BrTobv
-        GCKVKIo1DSa+vFR/zC1mKEZfeYEVWdoVqWIj5g/k0oTmXbDAMVtSlJMeWld2t0e/5fQEMumsy0vgE
-        pIpT8foOhWGfBycPltACrZpWCTGbzpMi2AMSRj1HhR57fGW9atqu0PRHuNGnEug3tXSQ73K0lMrgY
-        2EcPaFysS/jvLG0ZPBBtvgYu0X9t02g+QJJdm6ZvvP0c8auU8PojpHZ9tnSrbUS9w4Vk711vuYM7B
-        x9v4ZUn4UMXxeG34dr1aJ3E44ZYH9XYk3NWLEcjoa5h44rI3lewq6kYxPi/rYpKLSC13bo+PPsee7
-        DlMzJwQQ==;
+        bh=n7uUvh2I36vtP2pdQDofTFTMFabyiLXXmy52th8BfPE=; b=ufrdTvMm6/CpESXQWsaY5Malug
+        qAis15wD1DVhXisPEIDtllailQ7qcnTZF7ZYPgK+MPpRciUJ12wtAc45hKnDj+Yo58TaQBQvIht2W
+        AKsl23OJ3JJKCrCY6eXed+g2qU2Fp0TnhzMfaohyL+P4GkILl2+n16qDZxQIiJ1fqrL/98sRzj0Y+
+        uxn+XdFfPStfiwZROOoln3gH73GORwMAIKLFwnOPFOG7oe55Ar4qk/EL5pQm5CcUUPxVypyxKBpvl
+        Mc39GxK9wViYhgPhZy/FE1zAcPseDtfxPDJRl6ADCNKg3RabldkPf6reD9x7kz8HoYeE4Jyt6gDnJ
+        8OzwcIrQ==;
 Received: from [4.28.11.157] (helo=localhost)
         by bombadil.infradead.org with esmtpsa (Exim 4.96 #2 (Red Hat Linux))
-        id 1qTrJO-005xpD-3D;
-        Wed, 09 Aug 2023 22:05:51 +0000
+        id 1qTrJM-005xoM-0u;
+        Wed, 09 Aug 2023 22:05:48 +0000
 From:   Christoph Hellwig <hch@lst.de>
 To:     Al Viro <viro@zeniv.linux.org.uk>,
         Christian Brauner <brauner@kernel.org>
@@ -39,9 +39,9 @@ Cc:     Namjae Jeon <linkinjeon@kernel.org>,
         "Darrick J. Wong" <djwong@kernel.org>,
         linux-fsdevel@vger.kernel.org, linux-ext4@vger.kernel.org,
         ntfs3@lists.linux.dev, linux-xfs@vger.kernel.org
-Subject: [PATCH 13/13] ntfs3: free the sbi in ->kill_sb
-Date:   Wed,  9 Aug 2023 15:05:45 -0700
-Message-Id: <20230809220545.1308228-14-hch@lst.de>
+Subject: [PATCH 06/13] xfs: close the external block devices in xfs_mount_free
+Date:   Wed,  9 Aug 2023 15:05:38 -0700
+Message-Id: <20230809220545.1308228-7-hch@lst.de>
 X-Mailer: git-send-email 2.39.2
 In-Reply-To: <20230809220545.1308228-1-hch@lst.de>
 References: <20230809220545.1308228-1-hch@lst.de>
@@ -52,75 +52,108 @@ Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-As a rule of thumb everything allocated to the fs_context and moved into
-the super_block should be freed by ->kill_sb so that the teardown
-handling doesn't need to be duplicated between the fill_super error
-path and put_super.  Implement an ntfs3-specific kill_sb method to do
-that.
+blkdev_put must not be called under sb->s_umount to avoid a lock order
+reversal with disk->open_mutex.  Move closing the buftargs into ->kill_sb
+to archive that.  Note that the flushing of the disk caches and
+block device mapping invalidated needs to stay in ->put_super as the main
+block device is closed in kill_block_super already.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
-Reviewed-by: Christian Brauner <brauner@kernel.org>
 ---
- fs/ntfs3/super.c | 25 ++++++++++++-------------
- 1 file changed, 12 insertions(+), 13 deletions(-)
+ fs/xfs/xfs_buf.c   |  2 --
+ fs/xfs/xfs_super.c | 36 ++++++++++++++++++++++++++----------
+ 2 files changed, 26 insertions(+), 12 deletions(-)
 
-diff --git a/fs/ntfs3/super.c b/fs/ntfs3/super.c
-index 727138933a9324..5fffddea554f18 100644
---- a/fs/ntfs3/super.c
-+++ b/fs/ntfs3/super.c
-@@ -625,10 +625,6 @@ static void ntfs_put_super(struct super_block *sb)
+diff --git a/fs/xfs/xfs_buf.c b/fs/xfs/xfs_buf.c
+index e33eb17648dfed..3b903f6bce98d8 100644
+--- a/fs/xfs/xfs_buf.c
++++ b/fs/xfs/xfs_buf.c
+@@ -1945,8 +1945,6 @@ xfs_free_buftarg(
+ 	percpu_counter_destroy(&btp->bt_io_count);
+ 	list_lru_destroy(&btp->bt_lru);
  
- 	/* Mark rw ntfs as clear, if possible. */
- 	ntfs_set_state(sbi, NTFS_DIRTY_CLEAR);
--
--	put_mount_options(sbi->options);
--	ntfs3_free_sbi(sbi);
--	sb->s_fs_info = NULL;
+-	blkdev_issue_flush(btp->bt_bdev);
+-	invalidate_bdev(btp->bt_bdev);
+ 	fs_put_dax(btp->bt_daxdev, btp->bt_mount);
+ 	/* the main block device is closed by kill_block_super */
+ 	if (bdev != btp->bt_mount->m_super->s_bdev)
+diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
+index 368c05a2dea5b9..4ae3b01ed038c7 100644
+--- a/fs/xfs/xfs_super.c
++++ b/fs/xfs/xfs_super.c
+@@ -396,14 +396,19 @@ xfs_blkdev_get(
  }
  
- static int ntfs_statfs(struct dentry *dentry, struct kstatfs *buf)
-@@ -1562,15 +1558,7 @@ static int ntfs_fill_super(struct super_block *sb, struct fs_context *fc)
- put_inode_out:
- 	iput(inode);
- out:
--	/*
--	 * Free resources here.
--	 * ntfs_fs_free will be called with fc->s_fs_info = NULL
--	 */
--	put_mount_options(sbi->options);
--	ntfs3_free_sbi(sbi);
--	sb->s_fs_info = NULL;
- 	kfree(boot2);
--
- 	return err;
+ STATIC void
+-xfs_close_devices(
++xfs_shutdown_devices(
+ 	struct xfs_mount	*mp)
+ {
+-	if (mp->m_logdev_targp && mp->m_logdev_targp != mp->m_ddev_targp)
+-		xfs_free_buftarg(mp->m_logdev_targp);
+-	if (mp->m_rtdev_targp)
+-		xfs_free_buftarg(mp->m_rtdev_targp);
+-	xfs_free_buftarg(mp->m_ddev_targp);
++	if (mp->m_logdev_targp && mp->m_logdev_targp != mp->m_ddev_targp) {
++		blkdev_issue_flush(mp->m_logdev_targp->bt_bdev);
++		invalidate_bdev(mp->m_logdev_targp->bt_bdev);
++	}
++	if (mp->m_rtdev_targp) {
++		blkdev_issue_flush(mp->m_rtdev_targp->bt_bdev);
++		invalidate_bdev(mp->m_rtdev_targp->bt_bdev);
++	}
++	blkdev_issue_flush(mp->m_ddev_targp->bt_bdev);
++	invalidate_bdev(mp->m_ddev_targp->bt_bdev);
  }
  
-@@ -1726,13 +1714,24 @@ static int ntfs_init_fs_context(struct fs_context *fc)
- 	return -ENOMEM;
+ /*
+@@ -741,6 +746,17 @@ static void
+ xfs_mount_free(
+ 	struct xfs_mount	*mp)
+ {
++	/*
++	 * Free the buftargs here because blkdev_put needs to be called outside
++	 * of sb->s_umount, which is held around the call to ->put_super.
++	 */
++	if (mp->m_logdev_targp && mp->m_logdev_targp != mp->m_ddev_targp)
++		xfs_free_buftarg(mp->m_logdev_targp);
++	if (mp->m_rtdev_targp)
++		xfs_free_buftarg(mp->m_rtdev_targp);
++	if (mp->m_ddev_targp)
++		xfs_free_buftarg(mp->m_ddev_targp);
++
+ 	kfree(mp->m_rtname);
+ 	kfree(mp->m_logname);
+ 	kmem_free(mp);
+@@ -1126,7 +1142,7 @@ xfs_fs_put_super(
+ 	xfs_inodegc_free_percpu(mp);
+ 	xfs_destroy_percpu_counters(mp);
+ 	xfs_destroy_mount_workqueues(mp);
+-	xfs_close_devices(mp);
++	xfs_shutdown_devices(mp);
  }
  
-+static void ntfs3_kill_sb(struct super_block *sb)
-+{
-+	struct ntfs_sb_info *sbi = sb->s_fs_info;
-+
-+	kill_block_super(sb);
-+
-+	if (sbi->options)
-+		put_mount_options(sbi->options);
-+	ntfs3_free_sbi(sbi);
-+}
-+
- // clang-format off
- static struct file_system_type ntfs_fs_type = {
- 	.owner			= THIS_MODULE,
- 	.name			= "ntfs3",
- 	.init_fs_context	= ntfs_init_fs_context,
- 	.parameters		= ntfs_fs_parameters,
--	.kill_sb		= kill_block_super,
-+	.kill_sb		= ntfs3_kill_sb,
- 	.fs_flags		= FS_REQUIRES_DEV | FS_ALLOW_IDMAP,
- };
- // clang-format on
+ static long
+@@ -1499,7 +1515,7 @@ xfs_fs_fill_super(
+ 
+ 	error = xfs_init_mount_workqueues(mp);
+ 	if (error)
+-		goto out_close_devices;
++		goto out_shutdown_devices;
+ 
+ 	error = xfs_init_percpu_counters(mp);
+ 	if (error)
+@@ -1713,8 +1729,8 @@ xfs_fs_fill_super(
+ 	xfs_destroy_percpu_counters(mp);
+  out_destroy_workqueues:
+ 	xfs_destroy_mount_workqueues(mp);
+- out_close_devices:
+-	xfs_close_devices(mp);
++ out_shutdown_devices:
++	xfs_shutdown_devices(mp);
+ 	return error;
+ 
+  out_unmount:
 -- 
 2.39.2
 
