@@ -2,78 +2,92 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3126FC001B0
-	for <linux-xfs@archiver.kernel.org>; Thu, 10 Aug 2023 13:02:14 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D8C3CC001B0
+	for <linux-xfs@archiver.kernel.org>; Thu, 10 Aug 2023 15:22:29 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231774AbjHJNCM (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 10 Aug 2023 09:02:12 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41282 "EHLO
+        id S232193AbjHJPW2 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 10 Aug 2023 11:22:28 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51618 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230197AbjHJNCM (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 10 Aug 2023 09:02:12 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D4587E5D;
-        Thu, 10 Aug 2023 06:02:11 -0700 (PDT)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature RSA-PSS (2048 bits))
-        (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 69D1E657F1;
-        Thu, 10 Aug 2023 13:02:11 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id CEF34C433CA;
-        Thu, 10 Aug 2023 13:02:10 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1691672530;
-        bh=fWjzqbfyq3dqLOBOt3ZEPD08+Rztcs8+WqFfJPdEYEE=;
-        h=In-Reply-To:References:From:Date:Subject:To:Cc:From;
-        b=KVljWqOSmgio0hTSn1uej4374CX8MDSt/O/tCgjlhsWVgnNaEgFiLUjkc1sldi/Bq
-         vZNpntkTioSt/xNG5VieQzLVex9KsclxtZLK0IfThtfs90UvPRz3Nsyro8wF+8smoD
-         lWu5m4gCjWky2VB/92CHijaBdHMTzKQVQ4Vxqth5V+ArmH6zNMzHTwFxyU0iDTXwnN
-         8IJsv2fvTEu4Q0+gZpZW+fDcYiVOf4yUpdrKcDYkE7lHtc10FFKMG7g18JatGYSZO/
-         lEmN9e13BUh6NEdLG2oSFkQf+TQ5jzQe5g0dMSwkP/AX4koskZk0EG52tyKRAcnyEj
-         CbZ4HbnWd1OsQ==
-Received: by mail-oa1-f44.google.com with SMTP id 586e51a60fabf-1bef8f0904eso805736fac.2;
-        Thu, 10 Aug 2023 06:02:10 -0700 (PDT)
-X-Gm-Message-State: AOJu0YxpKoZ9QLUB4JE3i95QGtb7Z26txO1t5t6dflMEYR2g8mYJKz2K
-        I2Qiu7qPdvpyVo0jWnSj4QZP7cAp78dPGeHoMN8=
-X-Google-Smtp-Source: AGHT+IGqdLSse0MyFayFMx2um0Jvds45aRF5j4EF+uhq5gWdDfwz037RnQXgHT8V4WMer8tSRo8i0DRENFNLRBLWqKE=
-X-Received: by 2002:a05:6870:70a6:b0:1b3:f1f7:999e with SMTP id
- v38-20020a05687070a600b001b3f1f7999emr2426297oae.45.1691672530035; Thu, 10
- Aug 2023 06:02:10 -0700 (PDT)
-MIME-Version: 1.0
-Received: by 2002:a8a:482:0:b0:4e8:f6ff:2aab with HTTP; Thu, 10 Aug 2023
- 06:02:08 -0700 (PDT)
-In-Reply-To: <20230809220545.1308228-11-hch@lst.de>
-References: <20230809220545.1308228-1-hch@lst.de> <20230809220545.1308228-11-hch@lst.de>
-From:   Namjae Jeon <linkinjeon@kernel.org>
-Date:   Thu, 10 Aug 2023 22:02:08 +0900
-X-Gmail-Original-Message-ID: <CAKYAXd9TaQnWja4vrHqzjA2FSoGhkJThv1FvOBbmcoR8x2ybXw@mail.gmail.com>
-Message-ID: <CAKYAXd9TaQnWja4vrHqzjA2FSoGhkJThv1FvOBbmcoR8x2ybXw@mail.gmail.com>
-Subject: Re: [PATCH 10/13] exfat: free the sbi and iocharset in ->kill_sb
+        with ESMTP id S231600AbjHJPW1 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 10 Aug 2023 11:22:27 -0400
+Received: from casper.infradead.org (casper.infradead.org [IPv6:2001:8b0:10b:1236::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id AEC69F2;
+        Thu, 10 Aug 2023 08:22:26 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=infradead.org; s=casper.20170209; h=In-Reply-To:Content-Type:MIME-Version:
+        References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
+        Content-Transfer-Encoding:Content-ID:Content-Description;
+        bh=4iv34Jlicm8ERgfuCQchf9NtIb+1wg4jn8mgeganSkw=; b=L1hTwuI4ffaX5rq3QUEQgoGoAL
+        VM5KB4wwIPdD8Rt1W9cQ1FnjL+t9oScY/BajS3zzog2OmtRBaJZ5KHeWsv0SC0tLjAC0PxnRhuPNV
+        +xQQJ9VBhEFys1RRSGJQjW96zphO5Tev3/izIfyJCrc3lEQJTZmgmo4mMvYFQY6KZu8FX4PZapK80
+        B0A1FTNJuGFzm4bzTJBtYpH1rBpU1+5gh/UOUi+mQxxqs+Yh06Tnl7FRLx9G4/ANSGfMzTmdUtLfi
+        s/p3/XuKAPy8PPAsIb3ZS9VqzlHxzZnvaNAXwjmOhg5GRxTTcq+ntVHvkey9beUb6xFK9SMPn86Vl
+        DBkk71oQ==;
+Received: from willy by casper.infradead.org with local (Exim 4.94.2 #2 (Red Hat Linux))
+        id 1qU7UN-00DEwa-NA; Thu, 10 Aug 2023 15:22:15 +0000
+Date:   Thu, 10 Aug 2023 16:22:15 +0100
+From:   Matthew Wilcox <willy@infradead.org>
 To:     Christoph Hellwig <hch@lst.de>
 Cc:     Al Viro <viro@zeniv.linux.org.uk>,
         Christian Brauner <brauner@kernel.org>,
+        Namjae Jeon <linkinjeon@kernel.org>,
         Sungjong Seo <sj1557.seo@samsung.com>,
-        "Theodore Ts'o" <tytso@mit.edu>,
+        Theodore Ts'o <tytso@mit.edu>,
         Andreas Dilger <adilger.kernel@dilger.ca>,
         Konstantin Komarov <almaz.alexandrovich@paragon-software.com>,
         "Darrick J. Wong" <djwong@kernel.org>,
         linux-fsdevel@vger.kernel.org, linux-ext4@vger.kernel.org,
         ntfs3@lists.linux.dev, linux-xfs@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
+Subject: Re: [PATCH 07/13] xfs: document the invalidate_bdev call in
+ invalidate_bdev
+Message-ID: <ZNUAp8FJIKU1/sTn@casper.infradead.org>
+References: <20230809220545.1308228-1-hch@lst.de>
+ <20230809220545.1308228-8-hch@lst.de>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20230809220545.1308228-8-hch@lst.de>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-2023-08-10 7:05 GMT+09:00, Christoph Hellwig <hch@lst.de>:
-> As a rule of thumb everything allocated to the fs_context and moved into
-> the super_block should be freed by ->kill_sb so that the teardown
-> handling doesn't need to be duplicated between the fill_super error
-> path and put_super.  Implement an exfat-specific kill_sb method to do
-> that and share the code with the mount contex free helper for the
-> mount error handling case.
->
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
-Acked-by: Namjae Jeon <linkinjeon@kernel.org>
+On Wed, Aug 09, 2023 at 03:05:39PM -0700, Christoph Hellwig wrote:
+> +	/*
+> +	 * Udev is triggered whenever anyone closes a block device or unmounts
+> +	 * a file systemm on a block device.
+> +	 * The default udev rules invoke blkid to read the fs super and create
+> +	 * symlinks to the bdev under /dev/disk.  For this, it uses buffered
+> +	 * reads through the page cache.
+> +	 *
+> +	 * xfs_db also uses buffered reads to examine metadata.  There is no
+> +	 * coordination between xfs_db and udev, which means that they can run
+> +	 * concurrently.  Note there is no coordination between the kernel and
+> +	 * blkid either.
+> +	 *
+> +	 * On a system with 64k pages, the page cache can cache the superblock
+> +	 * and the root inode (and hence the root directory) with the same 64k
+> +	 * page.  If udev spawns blkid after the mkfs and the system is busy
+> +	 * enough that it is still running when xfs_db starts up, they'll both
+> +	 * read from the same page in the pagecache.
+> +	 *
+> +	 * The unmount writes updated inode metadata to disk directly.  The XFS
+> +	 * buffer cache does not use the bdev pagecache, nor does it invalidate
+> +	 * the pagecache on umount.  If the above scenario occurs, the pagecache
+> +	 * no longer reflects what's on disk, xfs_db reads the stale metadata,
+> +	 * and fails to find /a.  Most of the time this succeeds because closing
+> +	 * a bdev invalidates the page cache, but when processes race, everyone
+> +	 * loses.
+> +	 */
+>  	if (mp->m_logdev_targp && mp->m_logdev_targp != mp->m_ddev_targp) {
+>  		blkdev_issue_flush(mp->m_logdev_targp->bt_bdev);
+>  		invalidate_bdev(mp->m_logdev_targp->bt_bdev);
 
-Thanks!
+While I have no complaints with this as a commit message, it's just too
+verbose for an inline comment, IMO.  Something pithier and more generic
+would seem appropriate.  How about:
+
+	/*
+	 * Prevent userspace (eg blkid or xfs_db) from seeing stale data.
+	 * XFS is not coherent with the bdev's page cache.
+	 */
