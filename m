@@ -2,23 +2,23 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id AA6C2C04E69
-	for <linux-xfs@archiver.kernel.org>; Thu, 10 Aug 2023 15:52:30 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 847FCC41513
+	for <linux-xfs@archiver.kernel.org>; Thu, 10 Aug 2023 15:54:18 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229801AbjHJPw3 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 10 Aug 2023 11:52:29 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55888 "EHLO
+        id S234215AbjHJPyQ (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 10 Aug 2023 11:54:16 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41286 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233810AbjHJPw3 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 10 Aug 2023 11:52:29 -0400
+        with ESMTP id S236256AbjHJPxy (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 10 Aug 2023 11:53:54 -0400
 Received: from verein.lst.de (verein.lst.de [213.95.11.211])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 10F6C19F;
-        Thu, 10 Aug 2023 08:52:29 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9F0BA2703;
+        Thu, 10 Aug 2023 08:53:53 -0700 (PDT)
 Received: by verein.lst.de (Postfix, from userid 2407)
-        id 0AF5B67373; Thu, 10 Aug 2023 17:52:26 +0200 (CEST)
-Date:   Thu, 10 Aug 2023 17:52:25 +0200
+        id 0242267373; Thu, 10 Aug 2023 17:53:51 +0200 (CEST)
+Date:   Thu, 10 Aug 2023 17:53:50 +0200
 From:   Christoph Hellwig <hch@lst.de>
-To:     Matthew Wilcox <willy@infradead.org>
+To:     "Darrick J. Wong" <djwong@kernel.org>
 Cc:     Christoph Hellwig <hch@lst.de>, Al Viro <viro@zeniv.linux.org.uk>,
         Christian Brauner <brauner@kernel.org>,
         Namjae Jeon <linkinjeon@kernel.org>,
@@ -26,36 +26,35 @@ Cc:     Christoph Hellwig <hch@lst.de>, Al Viro <viro@zeniv.linux.org.uk>,
         Theodore Ts'o <tytso@mit.edu>,
         Andreas Dilger <adilger.kernel@dilger.ca>,
         Konstantin Komarov <almaz.alexandrovich@paragon-software.com>,
-        "Darrick J. Wong" <djwong@kernel.org>,
         linux-fsdevel@vger.kernel.org, linux-ext4@vger.kernel.org,
         ntfs3@lists.linux.dev, linux-xfs@vger.kernel.org
 Subject: Re: [PATCH 07/13] xfs: document the invalidate_bdev call in
  invalidate_bdev
-Message-ID: <20230810155225.GD28000@lst.de>
-References: <20230809220545.1308228-1-hch@lst.de> <20230809220545.1308228-8-hch@lst.de> <ZNUAp8FJIKU1/sTn@casper.infradead.org>
+Message-ID: <20230810155350.GE28000@lst.de>
+References: <20230809220545.1308228-1-hch@lst.de> <20230809220545.1308228-8-hch@lst.de> <20230809223923.GX11352@frogsfrogsfrogs>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <ZNUAp8FJIKU1/sTn@casper.infradead.org>
+In-Reply-To: <20230809223923.GX11352@frogsfrogsfrogs>
 User-Agent: Mutt/1.5.17 (2007-11-01)
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Thu, Aug 10, 2023 at 04:22:15PM +0100, Matthew Wilcox wrote:
-> >  		blkdev_issue_flush(mp->m_logdev_targp->bt_bdev);
-> >  		invalidate_bdev(mp->m_logdev_targp->bt_bdev);
+On Wed, Aug 09, 2023 at 03:39:23PM -0700, Darrick J. Wong wrote:
+> > +	 * read from the same page in the pagecache.
+> > +	 *
+> > +	 * The unmount writes updated inode metadata to disk directly.  The XFS
+> > +	 * buffer cache does not use the bdev pagecache, nor does it invalidate
+> > +	 * the pagecache on umount.  If the above scenario occurs, the pagecache
 > 
-> While I have no complaints with this as a commit message, it's just too
-> verbose for an inline comment, IMO.  Something pithier and more generic
-> would seem appropriate.  How about:
+> This sentence reads a little strangely, since "nor does it invalidate"
+> would seem to conflict with the invalidate_bdev call below.  I suggest
+> changing the verb a bit:
 > 
-> 	/*
-> 	 * Prevent userspace (eg blkid or xfs_db) from seeing stale data.
-> 	 * XFS is not coherent with the bdev's page cache.
-> 	 */
+> "The XFS buffer cache does not use the bdev pagecache, so it needs to
+> invalidate that pagecache on unmount."
 
-Well, this completely misses the point.  The point is that XFS should
-never have to invalidate the page cache because it's not using it,
-but it has to due to weird races.  I tried to condese the message but
-I could not come up with a good one that's not losing information.
+Agreed. I'll forward it to the original author of the sentence time
+permitting :)
+
