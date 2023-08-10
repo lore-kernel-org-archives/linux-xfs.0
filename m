@@ -2,199 +2,576 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0C70AC001DE
-	for <linux-xfs@archiver.kernel.org>; Wed,  9 Aug 2023 23:52:38 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1CE76C41513
+	for <linux-xfs@archiver.kernel.org>; Thu, 10 Aug 2023 00:43:55 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229793AbjHIXwh (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 9 Aug 2023 19:52:37 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45572 "EHLO
+        id S229814AbjHJAny (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 9 Aug 2023 20:43:54 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44618 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229545AbjHIXwg (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 9 Aug 2023 19:52:36 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1B7DBE74
-        for <linux-xfs@vger.kernel.org>; Wed,  9 Aug 2023 16:52:36 -0700 (PDT)
+        with ESMTP id S229733AbjHJAny (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 9 Aug 2023 20:43:54 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id CC4FFB9
+        for <linux-xfs@vger.kernel.org>; Wed,  9 Aug 2023 17:43:52 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
          key-exchange X25519 server-signature RSA-PSS (2048 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id A1E686407D
-        for <linux-xfs@vger.kernel.org>; Wed,  9 Aug 2023 23:52:35 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 092CEC433C8;
-        Wed,  9 Aug 2023 23:52:35 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 56CBB64C94
+        for <linux-xfs@vger.kernel.org>; Thu, 10 Aug 2023 00:43:52 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id A4868C433C8;
+        Thu, 10 Aug 2023 00:43:51 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1691625155;
-        bh=4QPmfPcBqAkktnljpbhrfTB4edaJooI7FKOra7FeYEU=;
+        s=k20201202; t=1691628231;
+        bh=PmXh1JWEmFX31gPE7gzmv9xoC20nx9vM/mcU3cPS3iw=;
         h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=Wfvsa+TvjHo5n8SCFl5BBWCwEDjGrwXTduOjON/PMyTA/RXV2UTHJIiJQpY3IasC4
-         ObdR+UFbeiWY5v0MqZrEOT3AtpAWXeDanzegQE+9AqtBtbBKaPNU0keAIkgZ9Tw4kV
-         ruaS2JvKXWaOuD28fwwBHQjoEfO99EHkbrfmJg9x5swvQCBMQIqwDzhILPyb6tdcmt
-         trGutIY0ekG/H0dOMzXQ4UAHkztRUdcoPaX+iFVNWMfY9NMGBjPb/5lJv20dL+b/tI
-         ap249VSYfNFnTZ8kRCZAti+NYRoOiuASdKcUk6XyuCufG9ItS30qI9lnrXFJZLp/qR
-         YPa9mfPwp3pIQ==
-Date:   Wed, 9 Aug 2023 16:52:34 -0700
+        b=cfPqLKlzr2YCdJaSbpmr6Crtm6/+VGWDIN+qIAL1kcCTpLI9M4ZzxnVqYpwSMwxGP
+         7ROKZq5s+jVbfYufzJgnKh1EIO2lYm8HVZ+WG/DEaPfYT9WD7cO2r3XpBvj+Nw+W9Q
+         YiN83JUmgiEslP1GxhhKmYIADZ7988ufrVYLXnybFGJhKTD1O4+G0p5zXd/mp8McB1
+         2KNE/o44/c6lE4QMVZ/fRSmJhQ1QNQ7EtM/P1DZ7S9XeoKzbxDs6wDX8859wGDmJ0I
+         k9KaG6MawkZwUZn3sEbKURSrdcYLZW+HCPNsYx5h3PUCZQ4axHZS9dYZnFcSri1Xtw
+         K9YF2MhdZVZCw==
+Date:   Wed, 9 Aug 2023 17:43:51 -0700
 From:   "Darrick J. Wong" <djwong@kernel.org>
 To:     Dave Chinner <david@fromorbit.com>
 Cc:     linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 3/6] xfs: log EFIs for all btree blocks being used to
- stage a btree
-Message-ID: <20230809235234.GZ11352@frogsfrogsfrogs>
-References: <169049623167.921279.16448199708156630380.stgit@frogsfrogsfrogs>
- <169049623218.921279.10028914723578681696.stgit@frogsfrogsfrogs>
- <ZNCuQ/mxsHQ67vjz@dread.disaster.area>
- <20230808005452.GN11352@frogsfrogsfrogs>
- <ZNHcgXhda8KUqOl8@dread.disaster.area>
+Subject: Re: [PATCH 3/6] xfs: repair inode records
+Message-ID: <20230810004351.GA11352@frogsfrogsfrogs>
+References: <ZNNRkggtITHqTjm9@dread.disaster.area>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <ZNHcgXhda8KUqOl8@dread.disaster.area>
+In-Reply-To: <ZNNRkggtITHqTjm9@dread.disaster.area>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Tue, Aug 08, 2023 at 04:11:13PM +1000, Dave Chinner wrote:
-> On Mon, Aug 07, 2023 at 05:54:52PM -0700, Darrick J. Wong wrote:
-> > On Mon, Aug 07, 2023 at 06:41:39PM +1000, Dave Chinner wrote:
-> > > On Thu, Jul 27, 2023 at 03:24:32PM -0700, Darrick J. Wong wrote:
-> > > > From: Darrick J. Wong <djwong@kernel.org>
-> > > > 
-> > > > We need to log EFIs for every extent that we allocate for the purpose of
-> > > > staging a new btree so that if we fail then the blocks will be freed
-> > > > during log recovery.  Add a function to relog the EFIs, so that repair
-> > > > can relog them all every time it creates a new btree block, which will
-> > > > help us to avoid pinning the log tail.
-> > > > 
-> > > > Signed-off-by: Darrick J. Wong <djwong@kernel.org>
-> > > .....
-> > > > +/*
-> > > > + * Set up automatic reaping of the blocks reserved for btree reconstruction in
-> > > > + * case we crash by logging a deferred free item for each extent we allocate so
-> > > > + * that we can get all of the space back if we crash before we can commit the
-> > > > + * new btree.  This function returns a token that can be used to cancel
-> > > > + * automatic reaping if repair is successful.
-> > > > + */
-> > > > +static int
-> > > > +xrep_newbt_schedule_autoreap(
-> > > > +	struct xrep_newbt		*xnr,
-> > > > +	struct xrep_newbt_resv		*resv)
-> > > > +{
-> > > > +	struct xfs_extent_free_item	efi_item = {
-> > > > +		.xefi_blockcount	= resv->len,
-> > > > +		.xefi_owner		= xnr->oinfo.oi_owner,
-> > > > +		.xefi_flags		= XFS_EFI_SKIP_DISCARD,
-> > > > +		.xefi_pag		= resv->pag,
-> > > > +	};
-> > > > +	struct xfs_scrub		*sc = xnr->sc;
-> > > > +	struct xfs_log_item		*lip;
-> > > > +	LIST_HEAD(items);
-> > > > +
-> > > > +	ASSERT(xnr->oinfo.oi_offset == 0);
-> > > > +
-> > > > +	efi_item.xefi_startblock = XFS_AGB_TO_FSB(sc->mp, resv->pag->pag_agno,
-> > > > +			resv->agbno);
-> > > > +	if (xnr->oinfo.oi_flags & XFS_OWNER_INFO_ATTR_FORK)
-> > > > +		efi_item.xefi_flags |= XFS_EFI_ATTR_FORK;
-> > > > +	if (xnr->oinfo.oi_flags & XFS_OWNER_INFO_BMBT_BLOCK)
-> > > > +		efi_item.xefi_flags |= XFS_EFI_BMBT_BLOCK;
-> > > > +
-> > > > +	INIT_LIST_HEAD(&efi_item.xefi_list);
-> > > > +	list_add(&efi_item.xefi_list, &items);
-> > > > +
-> > > > +	xfs_perag_intent_hold(resv->pag);
-> > > > +	lip = xfs_extent_free_defer_type.create_intent(sc->tp, &items, 1,
-> > > > +			false);
-> > > 
-> > > Hmmmm.
-> > > 
-> > > That triggered flashing lights and sirens - I'm not sure I really
-> > > like the usage of the defer type arrays like this, nor the
-> > > duplication of the defer mechanisms for relogging, etc.
+On Wed, Aug 09, 2023 at 06:42:58PM +1000, Dave Chinner wrote:
+> On Thu, Jul 27, 2023 at 03:32:53PM -0700, Darrick J. Wong wrote:
+> > From: Darrick J. Wong <djwong@kernel.org>
 > > 
-> > Yeah, I don't quite like manually tromping through the defer ops state
-> > machine here either.  Everywhere /else/ in XFS logs an EFI and finishes
-> > it to free the space.  Just to make sure we're on the same page, newbt
-> > will allocate space, log an EFI, and then:
+> > If an inode is so badly damaged that it cannot be loaded into the cache,
+> > fix the ondisk metadata and try again.  If there /is/ a cached inode,
+> > fix any problems and apply any optimizations that can be solved incore.
 > > 
-> > 1. Use the space and log an EFD for the space to cancel the EFI
-> > 2. Use some of the space, log an EFD for the space we used, immediately
-> >    log a new EFI for the unused parts, and finish the new EFI manually
-> > 3. Don't use any of the space at all, and finish the EFI manually
-> > 
-> > Initially, I tried using the regular defer ops mechanism, but this got
-> > messy on account of having to extern most of xfs_defer.c so that I could
-> > manually modify the defer ops state.  It's hard to generalize this,
-> > since there's only *one* place that actually needs manual flow control.
+> > Signed-off-by: Darrick J. Wong <djwong@kernel.org>
+> .....
+> > diff --git a/fs/xfs/scrub/inode_repair.c b/fs/xfs/scrub/inode_repair.c
+> > new file mode 100644
+> > index 0000000000000..952832e9fd029
+> > --- /dev/null
+> > +++ b/fs/xfs/scrub/inode_repair.c
+> > @@ -0,0 +1,763 @@
+> > +// SPDX-License-Identifier: GPL-2.0-or-later
+> > +/*
+> > + * Copyright (C) 2018-2023 Oracle.  All Rights Reserved.
+> > + * Author: Darrick J. Wong <djwong@kernel.org>
+> > + */
+> > +#include "xfs.h"
+> > +#include "xfs_fs.h"
+> > +#include "xfs_shared.h"
+> > +#include "xfs_format.h"
+> > +#include "xfs_trans_resv.h"
+> > +#include "xfs_mount.h"
+> > +#include "xfs_defer.h"
+> > +#include "xfs_btree.h"
+> > +#include "xfs_bit.h"
+> > +#include "xfs_log_format.h"
+> > +#include "xfs_trans.h"
+> > +#include "xfs_sb.h"
+> > +#include "xfs_inode.h"
+> > +#include "xfs_icache.h"
+> > +#include "xfs_inode_buf.h"
+> > +#include "xfs_inode_fork.h"
+> > +#include "xfs_ialloc.h"
+> > +#include "xfs_da_format.h"
+> > +#include "xfs_reflink.h"
+> > +#include "xfs_rmap.h"
+> > +#include "xfs_bmap.h"
+> > +#include "xfs_bmap_util.h"
+> > +#include "xfs_dir2.h"
+> > +#include "xfs_dir2_priv.h"
+> > +#include "xfs_quota_defs.h"
+> > +#include "xfs_quota.h"
+> > +#include "xfs_ag.h"
+> > +#include "scrub/xfs_scrub.h"
+> > +#include "scrub/scrub.h"
+> > +#include "scrub/common.h"
+> > +#include "scrub/btree.h"
+> > +#include "scrub/trace.h"
+> > +#include "scrub/repair.h"
+> > +
+> > +/*
+> > + * Inode Repair
+> > + *
+> > + * Roughly speaking, inode problems can be classified based on whether or not
+> > + * they trip the dinode verifiers.  If those trip, then we won't be able to
+> > + * _iget ourselves the inode.
+> > + *
+> > + * Therefore, the xrep_dinode_* functions fix anything that will cause the
+> > + * inode buffer verifier or the dinode verifier.  The xrep_inode_* functions
+> > + * fix things on live incore inodes.
+> > + */
 > 
-> *nod*
+> I'd like to see some of the decisions made documented here. Stuff
+> like:
 > 
-> But I can't help but think it's a manifestation of a generic
-> optimisation that could allow us to avoid needing to use unwritten
-> extents for new data alloations...
+> - "unknown di_mode converts inode to a regular file only root can
+>   read" needs to be clearly documented because that "regular file"
+>   that results might not actually contain user data....
+> - what we do with setuid/setgid on repaired inodes
+> - things we just trash and leave to other parts of repair to clean
+>   up stuff we leak or trash...
 
-I've thought about this usecase at various points in the lifetime of the
-newbt.c code.  The usecases are indeed very similar -- speculatively
-allocate some disk blocks, write to them, and either map them into the
-data fork / btree root if the writes actually succeed; or free them
-because it failed.
+Ok.
 
-However, I think we could eliminate the overhead of the speculative
-allocation out of the bnobt/cnbt (aka step 1) by boosting all of the
-tracking to the incore data structures.  Handwaving sketch:
+ * Therefore, the xrep_dinode_* functions fix anything that will cause
+ * the inode buffer verifier or the dinode verifier.  The xrep_inode_*
+ * functions fix things on live incore inodes.  The repair functions in
+ * here can make decisions with security and usability implications in
+ * order to revive a file:
+ *
+ * - Files with zero di_mode or a garbage di_mode are converted to a
+ * file that only root can read.  If the immediate data fork area or
+ * block 0 of the data fork look like a directory, the file type will be
+ * set to a directory.  If the immediate data fork area has no nulls, it
+ * will be turned into a symbolic link.  Otherwise, it is turned into a
+ * regular file.  This file may not actually contain user data, if the
+ * file was not previously a regular file.  Setuid and setgid bits are
+ * cleared.
+ *
+ * - Zero-size directories can be truncated to look empty.  It is
+ * necessary to run the bmapbtd and directory repair functions to fully
+ * rebuild the directory.
+ *
+ * - Zero-size symbolic link targets can be truncated to '.'.  It is
+ * necessary to run the bmapbtd and symlink repair functions to salvage
+ * the symlink.
+ *
+ * - Invalid extent size hints will be removed.
+ *
+ * - Quotacheck will be scheduled if we repaired an inode that was so
+ * badly damaged that the ondisk inode had to be rebuilt.
+ *
+ * - Invalid user, group, or project IDs (aka -1U) will be reset to
+ * zero.  Setuid and setgid bits are cleared.
 
-1. Find the extent we want from the free space btrees, and add a record
-to the busy extent list with some new state flag that signals
-"speculative write: do not DISCARD this extent, and allocating callers
-should move on".
+The next patch will add to that:
 
-(Not sure what happens if the allocating caller /never/ finds space?
-Does kicking writeback make sense here?  I am not sure it does.)
+ * - Data and attr forks are reset to extents format with zero extents
+ * if the fork data is inconsistent.  It is necessary to run the bmapbtd
+ * or bmapbta repair functions to recover the space mapping.
+ *
+ * - ACLs will not be recovered if the attr fork is zapped or the
+ * extended attribute structure itself requires salvaging.
+ *
+ * - If the attr fork is zapped, the user and group ids are reset to
+ * root and the setuid and setgid bits are removed.
 
-2. Create a mapping in the cow fork for the speculatively allocated
-space, along with an annotation to that effect.  Also need to absorb
-whatever space we reserved in the delalloc mapping for bmbt expansion.
+How does that sit with you?
 
-3. Write the blocks.
-
-4. If the write succeeds, we do the cow remap like we do now, but also
-remove the extent from the ondisk free space btrees and clear the space
-from the busy extent list.
-
-5. If the write fails, clear the space from busy extent list.  Maybe add
-the space to a badblocks list(??)
-
-Under this scheme, the only ondisk metadata update is step 4.  I really
-like the idea of porting newbt.c to use a mechanism like this, since
-the only time we touch the log is if the repair succeeds.
-
-Too bad it doesn't exist yet! :)
-
-For now, the oddball use of EFIs is limited to newbt.c, which means it's
-self-contained inside repair.  Except for the "too many extents attached
-to an EFI" issue, I think it works well enough to put into use until you
-or I have time to figure out how to turn either of our "unwritten extent
-for new data allocation" sketches into reality.
-
-(IOWs, I'm trying /not/ to go carving around in the allocator and the
-extent busy list when there's already so much to think about. ;))
-
-> > ISTR that was around the time bfoster and I were reworking log intent
-> > item recovery, and it was easier to do this outside of the defer ops
-> > code than try to refactor it and keep this exceptional piece working
-> > too.
-> > 
-> > > Not that I have a better idea right now - is this the final form of
-> > > this code, or is more stuff built on top of it or around it?
-> > 
-> > That's the final form of it.  The good news is that it's been stable
-> > enough despite me tearing into the EFI code again in the rt
-> > modernization patchset.  Do you have any further suggestions?
 > 
-> Not for the patchset as it stands.
+> > +/* Fix any conflicting flags that the verifiers complain about. */
+> > +STATIC void
+> > +xrep_dinode_flags(
+> > +	struct xfs_scrub	*sc,
+> > +	struct xfs_dinode	*dip)
+> > +{
+> > +	struct xfs_mount	*mp = sc->mp;
+> > +	uint64_t		flags2;
+> > +	uint16_t		mode;
+> > +	uint16_t		flags;
+> > +
+> > +	trace_xrep_dinode_flags(sc, dip);
+> > +
+> > +	mode = be16_to_cpu(dip->di_mode);
+> > +	flags = be16_to_cpu(dip->di_flags);
+> > +	flags2 = be64_to_cpu(dip->di_flags2);
+> > +
+> > +	if (xfs_has_reflink(mp) && S_ISREG(mode))
+> > +		flags2 |= XFS_DIFLAG2_REFLINK;
+> > +	else
+> > +		flags2 &= ~(XFS_DIFLAG2_REFLINK | XFS_DIFLAG2_COWEXTSIZE);
+> > +	if (flags & XFS_DIFLAG_REALTIME)
+> > +		flags2 &= ~XFS_DIFLAG2_REFLINK;
+> > +	if (flags2 & XFS_DIFLAG2_REFLINK)
+> > +		flags2 &= ~XFS_DIFLAG2_DAX;
+> 
+> IIRC, reflink and DAX co-exist just fine now....
 
-<nod> I'll add some monitoring to report the maximum extent counts that
-get added to EFIs, and work on something to constrain the number of
-extents that get added to a single EFI log item that's coming from
-repair.
+Yep.  Fixed.
+
+> > +	if (!xfs_has_bigtime(mp))
+> > +		flags2 &= ~XFS_DIFLAG2_BIGTIME;
+> > +	if (!xfs_has_large_extent_counts(mp))
+> > +		flags2 &= ~XFS_DIFLAG2_NREXT64;
+> > +	if (flags2 & XFS_DIFLAG2_NREXT64)
+> > +		dip->di_nrext64_pad = 0;
+> > +	else if (dip->di_version >= 3)
+> > +		dip->di_v3_pad = 0;
+> > +	dip->di_flags = cpu_to_be16(flags);
+> > +	dip->di_flags2 = cpu_to_be64(flags2);
+> > +}
+> > +
+> > +/*
+> > + * Blow out symlink; now it points to the current dir.  We don't have to worry
+> > + * about incore state because this inode is failing the verifiers.
+> > + */
+> > +STATIC void
+> > +xrep_dinode_zap_symlink(
+> > +	struct xfs_scrub	*sc,
+> > +	struct xfs_dinode	*dip)
+> > +{
+> > +	char			*p;
+> > +
+> > +	trace_xrep_dinode_zap_symlink(sc, dip);
+> > +
+> > +	dip->di_format = XFS_DINODE_FMT_LOCAL;
+> > +	dip->di_size = cpu_to_be64(1);
+> > +	p = XFS_DFORK_PTR(dip, XFS_DATA_FORK);
+> > +	*p = '.';
+> 
+> What if this was in extent form? Didn't we just leak an extent?
+
+Yeah.  I'll add that to the giant comment.
+
+"Zero-size symbolic link targets can be truncated to '.'.  It is
+necessary to run the bmapbtd and symlink repair functions to salvage the
+symlink."
+
+The next few patches will add the ability to zap the data and attr forks
+if either of them look bad.  After that, the (or really xfs_scrub) will
+have to call several more scrubbers to completely fix the file:
+
+bmapbtd -> symlink/directory
+
+bmapbta -> attr -> parent ptr
+
+So this is a common post-requirement for the inode repair code.  It's a
+bit racy, and arguably the kernel could auto-invoke those repair
+functions instead of requiring userspace to call back, but that's
+something for another conversation. :)
+
+(e.g. "Is it ok if this one repair function could potentially take a
+very long time to finish, and won't tell userspace what it's up to?")
+
+((The scrub vectorization in online fsck part 3 might actually be a
+reasonable way for xfs_scrub to get the kernel to do everything all at
+once.))
+
+> > +}
+> > +
+> > +/*
+> > + * Blow out dir, make it point to the root.  In the future repair will
+> > + * reconstruct this directory for us.  Note that there's no in-core directory
+> > + * inode because the sf verifier tripped, so we don't have to worry about the
+> > + * dentry cache.
+> > + */
+> > +STATIC void
+> > +xrep_dinode_zap_dir(
+> > +	struct xfs_scrub	*sc,
+> > +	struct xfs_dinode	*dip)
+> > +{
+> > +	struct xfs_mount	*mp = sc->mp;
+> > +	struct xfs_dir2_sf_hdr	*sfp;
+> > +	int			i8count;
+> > +
+> > +	trace_xrep_dinode_zap_dir(sc, dip);
+> > +
+> > +	dip->di_format = XFS_DINODE_FMT_LOCAL;
+> > +	i8count = mp->m_sb.sb_rootino > XFS_DIR2_MAX_SHORT_INUM;
+> > +	sfp = XFS_DFORK_PTR(dip, XFS_DATA_FORK);
+> > +	sfp->count = 0;
+> > +	sfp->i8count = i8count;
+> > +	xfs_dir2_sf_put_parent_ino(sfp, mp->m_sb.sb_rootino);
+> > +	dip->di_size = cpu_to_be64(xfs_dir2_sf_hdr_size(i8count));
+> > +}
+> 
+> Same here?
+
+Same as above.
+
+> > +
+> > +/* Make sure we don't have a garbage file size. */
+> > +STATIC void
+> > +xrep_dinode_size(
+> > +	struct xfs_scrub	*sc,
+> > +	struct xfs_dinode	*dip)
+> > +{
+> > +	uint64_t		size;
+> > +	uint16_t		mode;
+> > +
+> > +	trace_xrep_dinode_size(sc, dip);
+> > +
+> > +	mode = be16_to_cpu(dip->di_mode);
+> > +	size = be64_to_cpu(dip->di_size);
+> > +	switch (mode & S_IFMT) {
+> > +	case S_IFIFO:
+> > +	case S_IFCHR:
+> > +	case S_IFBLK:
+> > +	case S_IFSOCK:
+> > +		/* di_size can't be nonzero for special files */
+> > +		dip->di_size = 0;
+> > +		break;
+> > +	case S_IFREG:
+> > +		/* Regular files can't be larger than 2^63-1 bytes. */
+> > +		dip->di_size = cpu_to_be64(size & ~(1ULL << 63));
+> > +		break;
+> > +	case S_IFLNK:
+> > +		/*
+> > +		 * Truncate ridiculously oversized symlinks.  If the size is
+> > +		 * zero, reset it to point to the current directory.  Both of
+> > +		 * these conditions trigger dinode verifier errors, so there
+> > +		 * is no in-core state to reset.
+> > +		 */
+> > +		if (size > XFS_SYMLINK_MAXLEN)
+> > +			dip->di_size = cpu_to_be64(XFS_SYMLINK_MAXLEN);
+> > +		else if (size == 0)
+> > +			xrep_dinode_zap_symlink(sc, dip);
+> > +		break;
+> > +	case S_IFDIR:
+> > +		/*
+> > +		 * Directories can't have a size larger than 32G.  If the size
+> > +		 * is zero, reset it to an empty directory.  Both of these
+> > +		 * conditions trigger dinode verifier errors, so there is no
+> > +		 * in-core state to reset.
+> > +		 */
+> > +		if (size > XFS_DIR2_SPACE_SIZE)
+> > +			dip->di_size = cpu_to_be64(XFS_DIR2_SPACE_SIZE);
+> > +		else if (size == 0)
+> > +			xrep_dinode_zap_dir(sc, dip);
+> > +		break;
+> > +	}
+> > +}
+> > +
+> > +/* Fix extent size hints. */
+> > +STATIC void
+> > +xrep_dinode_extsize_hints(
+> > +	struct xfs_scrub	*sc,
+> > +	struct xfs_dinode	*dip)
+> > +{
+> > +	struct xfs_mount	*mp = sc->mp;
+> > +	uint64_t		flags2;
+> > +	uint16_t		flags;
+> > +	uint16_t		mode;
+> > +	xfs_failaddr_t		fa;
+> > +
+> > +	trace_xrep_dinode_extsize_hints(sc, dip);
+> > +
+> > +	mode = be16_to_cpu(dip->di_mode);
+> > +	flags = be16_to_cpu(dip->di_flags);
+> > +	flags2 = be64_to_cpu(dip->di_flags2);
+> > +
+> > +	fa = xfs_inode_validate_extsize(mp, be32_to_cpu(dip->di_extsize),
+> > +			mode, flags);
+> > +	if (fa) {
+> > +		dip->di_extsize = 0;
+> > +		dip->di_flags &= ~cpu_to_be16(XFS_DIFLAG_EXTSIZE |
+> > +					      XFS_DIFLAG_EXTSZINHERIT);
+> > +	}
+> > +
+> > +	if (dip->di_version < 3)
+> > +		return;
+> > +
+> > +	fa = xfs_inode_validate_cowextsize(mp, be32_to_cpu(dip->di_cowextsize),
+> > +			mode, flags, flags2);
+> > +	if (fa) {
+> > +		dip->di_cowextsize = 0;
+> > +		dip->di_flags2 &= ~cpu_to_be64(XFS_DIFLAG2_COWEXTSIZE);
+> > +	}
+> > +}
+> > +
+> > +/* Inode didn't pass verifiers, so fix the raw buffer and retry iget. */
+> > +STATIC int
+> > +xrep_dinode_core(
+> > +	struct xrep_inode	*ri)
+> > +{
+> > +	struct xfs_scrub	*sc = ri->sc;
+> > +	struct xfs_buf		*bp;
+> > +	struct xfs_dinode	*dip;
+> > +	xfs_ino_t		ino = sc->sm->sm_ino;
+> > +	int			error;
+> > +
+> > +	/* Read the inode cluster buffer. */
+> > +	error = xfs_trans_read_buf(sc->mp, sc->tp, sc->mp->m_ddev_targp,
+> > +			ri->imap.im_blkno, ri->imap.im_len, XBF_UNMAPPED, &bp,
+> > +			NULL);
+> > +	if (error)
+> > +		return error;
+> > +
+> > +	/* Make sure we can pass the inode buffer verifier. */
+> > +	xrep_dinode_buf(sc, bp);
+> > +	bp->b_ops = &xfs_inode_buf_ops;
+> 
+> Hmmmmm. Don't we at least need to check this looks like an inode
+> cluster buffer first?
+
+Check it how?  The cluster buffer could be completely trashed due to
+crosslinking with a regular file, or bad storage devices, or whatnot.
+xrep_dinode_buf will rewrite the whole buffer to get it to the point
+where it'll pass the buffer verifier.
+
+> ....
+> > +
+> > +/* Check for invalid uid/gid/prid. */
+> > +STATIC void
+> > +xrep_inode_ids(
+> > +	struct xfs_scrub	*sc)
+> > +{
+> > +	trace_xrep_inode_ids(sc);
+> > +
+> > +	if (i_uid_read(VFS_I(sc->ip)) == -1U) {
+> > +		i_uid_write(VFS_I(sc->ip), 0);
+> > +		VFS_I(sc->ip)->i_mode &= ~(S_ISUID | S_ISGID);
+> > +		if (XFS_IS_UQUOTA_ON(sc->mp))
+> > +			xrep_force_quotacheck(sc, XFS_DQTYPE_USER);
+> > +	}
+> > +
+> > +	if (i_gid_read(VFS_I(sc->ip)) == -1U) {
+> > +		i_gid_write(VFS_I(sc->ip), 0);
+> > +		VFS_I(sc->ip)->i_mode &= ~(S_ISUID | S_ISGID);
+> > +		if (XFS_IS_GQUOTA_ON(sc->mp))
+> > +			xrep_force_quotacheck(sc, XFS_DQTYPE_GROUP);
+> > +	}
+> 
+> IF we are repairing an inode that has setuid or setgid, I think we
+> should just strip those permissions regardless of whether the
+> uid/gid are valid. It think it's better to be cautious here rather
+> than leave setuid on a file that we reconstructed but have no real
+> way of knowing that data in the file is untainted.
+
+Ok, changed.
+
+> > +
+> > +	if (sc->ip->i_projid == -1U) {
+> > +		sc->ip->i_projid = 0;
+> > +		if (XFS_IS_PQUOTA_ON(sc->mp))
+> > +			xrep_force_quotacheck(sc, XFS_DQTYPE_PROJ);
+> > +	}
+> > +}
+> > +
+> > +static inline void
+> > +xrep_clamp_nsec(
+> > +	struct timespec64	*ts)
+> > +{
+> > +	ts->tv_nsec = clamp_t(long, ts->tv_nsec, 0, NSEC_PER_SEC);
+> > +}
+> > +
+> > +/* Nanosecond counters can't have more than 1 billion. */
+> > +STATIC void
+> > +xrep_inode_timestamps(
+> > +	struct xfs_inode	*ip)
+> > +{
+> > +	xrep_clamp_nsec(&VFS_I(ip)->i_atime);
+> > +	xrep_clamp_nsec(&VFS_I(ip)->i_mtime);
+> > +	xrep_clamp_nsec(&VFS_I(ip)->i_ctime);
+> > +	xrep_clamp_nsec(&ip->i_crtime);
+> > +}
+> 
+> Should we be clamping the entire timestamp within the valid
+> filesystem timestamp range here?
+
+Yes.
+
+
+static inline void
+xrep_clamp_timestamp(
+	struct xfs_inode	*ip,
+	struct timespec64	*ts)
+{
+	ts->tv_nsec = clamp_t(long, ts->tv_nsec, 0, NSEC_PER_SEC);
+	*ts = timestamp_truncate(*ts, VFS_I(ip));
+}
+
+> > +
+> > +/* Fix inode flags that don't make sense together. */
+> > +STATIC void
+> > +xrep_inode_flags(
+> > +	struct xfs_scrub	*sc)
+> > +{
+> > +	uint16_t		mode;
+> > +
+> > +	trace_xrep_inode_flags(sc);
+> ....
+> > +	/* No mixing reflink and DAX yet. */
+> > +	if (sc->ip->i_diflags2 & XFS_DIFLAG2_REFLINK)
+> > +		sc->ip->i_diflags2 &= ~XFS_DIFLAG2_DAX;
+> 
+> This can go, too...
+
+Fixed.
+
+> .....
+> > @@ -750,6 +750,38 @@ xrep_ino_dqattach(
+> >  }
+> >  #endif /* CONFIG_XFS_QUOTA */
+> >  
+> > +/*
+> > + * Ensure that the inode being repaired is ready to handle a certain number of
+> > + * extents, or return EFSCORRUPTED.  Caller must hold the ILOCK of the inode
+> > + * being repaired and have joined it to the scrub transaction.
+> > + */
+> > +int
+> > +xrep_ino_ensure_extent_count(
+> > +	struct xfs_scrub	*sc,
+> > +	int			whichfork,
+> > +	xfs_extnum_t		nextents)
+> > +{
+> > +	xfs_extnum_t		max_extents;
+> > +	bool			large_extcount;
+> > +
+> > +	large_extcount = xfs_inode_has_large_extent_counts(sc->ip);
+> > +	max_extents = xfs_iext_max_nextents(large_extcount, whichfork);
+> > +	if (nextents <= max_extents)
+> > +		return 0;
+> > +	if (large_extcount)
+> > +		return -EFSCORRUPTED;
+> > +	if (!xfs_has_large_extent_counts(sc->mp))
+> > +		return -EFSCORRUPTED;
+> 
+> This logic took me a bit of peering at to work out. large_extcount says
+> whether the inode has the large extcount flag set, which is
+> different to whether the superblock has large extcoutn flag set.
+> 
+> Can change large_extcount to inode_has_nrext64 or something like
+> that just so it's really clear that there are two different flags
+> being checked here?
+
+Yup, done.
+
+> > diff --git a/fs/xfs/scrub/repair.h b/fs/xfs/scrub/repair.h
+> > index ac8f0200b2963..e239b432d19e8 100644
+> > --- a/fs/xfs/scrub/repair.h
+> > +++ b/fs/xfs/scrub/repair.h
+> > @@ -28,6 +28,16 @@ bool xrep_ag_has_space(struct xfs_perag *pag, xfs_extlen_t nr_blocks,
+> >  		enum xfs_ag_resv_type type);
+> >  xfs_extlen_t xrep_calc_ag_resblks(struct xfs_scrub *sc);
+> >  
+> > +static inline int
+> > +xrep_trans_commit(
+> > +	struct xfs_scrub	*sc)
+> > +{
+> > +	int			error = xfs_trans_commit(sc->tp);
+> > +
+> > +	sc->tp = NULL;
+> > +	return error;
+> > +}
+> 
+> That's .... interesting formatting. I'd be happy with using standard
+> linux format for this:
+> 
+> static inline int xrep_trans_commit(struct xfs_scrub *sc)
+> {
+> 	int error = xfs_trans_commit(sc->tp);
+> 
+> 	sc->tp = NULL;
+> 	return error;
+> }
+> 
+> But that's just personal preference....
+
+Yeah, that's ok with me.
 
 --D
 
