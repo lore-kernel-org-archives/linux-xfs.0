@@ -2,42 +2,44 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8E0F7C001E0
-	for <linux-xfs@archiver.kernel.org>; Thu, 10 Aug 2023 15:28:46 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 529AAC04A6A
+	for <linux-xfs@archiver.kernel.org>; Thu, 10 Aug 2023 15:28:54 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S236033AbjHJP2p (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 10 Aug 2023 11:28:45 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56136 "EHLO
+        id S232967AbjHJP2x (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 10 Aug 2023 11:28:53 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51422 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232967AbjHJP2o (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 10 Aug 2023 11:28:44 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5330110F3
-        for <linux-xfs@vger.kernel.org>; Thu, 10 Aug 2023 08:28:44 -0700 (PDT)
+        with ESMTP id S236144AbjHJP2w (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 10 Aug 2023 11:28:52 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 658E210C7;
+        Thu, 10 Aug 2023 08:28:52 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
          key-exchange X25519 server-signature RSA-PSS (2048 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id E5CFB65305
-        for <linux-xfs@vger.kernel.org>; Thu, 10 Aug 2023 15:28:43 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 51F76C433C8;
-        Thu, 10 Aug 2023 15:28:43 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id F174B66023;
+        Thu, 10 Aug 2023 15:28:51 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 5CF83C433C9;
+        Thu, 10 Aug 2023 15:28:51 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1691681323;
-        bh=86AeCKXSO4dJMZMi514vr3NoacCQ0uor9GQUDt0C8HA=;
+        s=k20201202; t=1691681331;
+        bh=tWJLv3Tq2hwgxWt3KPp6sB8ABoshY+fdR+XTRU60v7g=;
         h=Date:From:To:Cc:Subject:From;
-        b=Jr28mVaU9gLP1SgwIsBGMQsn2/LVrUpSrInw8wp+Prq22DSBW6u1RxqEd1hHvpOq+
-         rcbLdNHWOJrCAf7s95/H9qi4RoJG5OiXezodTP8jGZKo0MLiQMnjL2XhDWtAcPTGgP
-         vPEDBYE+rBb8TjCMykqhCmTsLrItp9/xlIi6PwULP04Z7xzqEVM6dxvVBfmDm6KIba
-         LgjJM/74dtt+Poc/6JXa+bZgtRdebC/Gql/kybvYoine772s0zjpeG8iuiLDfNM6Xi
-         KV4ZUPvPBARR4dfXGSrFGGk67kFRoVJl5bTTGgzUeIn8XKZg/oWRAoGdllORvDIbpp
-         meHfAe9Zn03EQ==
-Date:   Thu, 10 Aug 2023 08:28:43 -0700
+        b=LB9Deb725GkPaZ/rYEbtkRdEmA49QY2tIlsHeX4/OidsckJuYR8dWAd2spwOsnoQV
+         pxcWtaDsKx5TxGkN576icFbmMQu2nTrE0a5EZZW65jc/Lms+lilxA3pRYRzqNdu7S6
+         od6z6UPW70NzAxY970rUSZ4RtH2w5Wb0k4XxSgYd0ATIzszeRVQAkQaqFq0/OWJmOM
+         6v0+kWbfE8gwb3I8+QuDxB08Czx3xPVcmkR40HGTb9lDZhnMHsuMCFzTpVuAjtU+zM
+         6cPNnM24JRhtXRZ5Ic1hRk6UlmfYVBynJEoycjsm+v0ZG99+Vf9jNz6K7wiWGIgoJ6
+         XYzAQc9KFXLxg==
+Date:   Thu, 10 Aug 2023 08:28:51 -0700
 From:   "Darrick J. Wong" <djwong@kernel.org>
 To:     chandan.babu@oracle.com, djwong@kernel.org
-Cc:     dchinner@redhat.com, linux-xfs@vger.kernel.org
-Subject: [GIT PULL 2/9] xfs: fix online repair block reaping
-Message-ID: <169168055657.1060601.852644481898844259.stg-ugh@frogsfrogsfrogs>
+Cc:     dchinner@redhat.com, kent.overstreet@linux.dev,
+        linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org,
+        willy@infradead.org
+Subject: [GIT PULL 3/9] xfs: stage repair information in pageable memory
+Message-ID: <169168056068.1060601.568454110317783572.stg-ugh@frogsfrogsfrogs>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
@@ -55,81 +57,62 @@ encounter any problems.
 
 --D
 
-The following changes since commit d6532904a10290b94d2375ff438313e0fb9fc9f8:
-
-MAINTAINERS: add Chandan Babu as XFS release manager (2023-08-10 07:47:54 -0700)
-
-are available in the Git repository at:
-
-https://git.kernel.org/pub/scm/linux/kernel/git/djwong/xfs-linux.git tags/repair-reap-fixes-6.6_2023-08-10
-
-for you to fetch changes up to 014ad53732d2bac34d21a251f3622a4da516e21b:
+The following changes since commit 014ad53732d2bac34d21a251f3622a4da516e21b:
 
 xfs: use per-AG bitmaps to reap unused AG metadata blocks during repair (2023-08-10 07:48:04 -0700)
 
+are available in the Git repository at:
+
+https://git.kernel.org/pub/scm/linux/kernel/git/djwong/xfs-linux.git tags/big-array-6.6_2023-08-10
+
+for you to fetch changes up to 764018caa99f7629cefc92257a26b83289a674f3:
+
+xfs: improve xfarray quicksort pivot (2023-08-10 07:48:07 -0700)
+
 ----------------------------------------------------------------
-xfs: fix online repair block reaping [v26.1]
+xfs: stage repair information in pageable memory [v26.1]
 
-These patches fix a few problems that I noticed in the code that deals
-with old btree blocks after a successful repair.
+In general, online repair of an indexed record set walks the filesystem
+looking for records.  These records are sorted and bulk-loaded into a
+new btree.  To make this happen without pinning gigabytes of metadata in
+memory, first create an abstraction ('xfile') of memfd files so that
+kernel code can access paged memory, and then an array abstraction
+('xfarray') based on xfiles so that online repair can create an array of
+new records without pinning memory.
 
-First, I observed that it is possible for repair to incorrectly
-invalidate and delete old btree blocks if they were crosslinked.  The
-solution here is to consult the reverse mappings for each block in the
-extent -- singly owned blocks are invalidated and freed, whereas for
-crosslinked blocks, we merely drop the incorrect reverse mapping.
+These two data storage abstractions are critical for repair of space
+metadata -- the memory used is pageable, which helps us avoid pinning
+kernel memory and driving OOM problems; and they are byte-accessible
+enough that we can use them like (very slow and programmatic) memory
+buffers.
 
-A largeish change in this patchset is moving the reaping code to a
-separate file, because the code are mostly interrelated static
-functions.  For now this also drops the ability to reap file blocks,
-which will return when we add the bmbt repair functions.
-
-Second, we convert the reap function to use EFIs so that we can commit
-to freeing as many blocks in as few transactions as we dare.  We would
-like to free as many old blocks as we can in the same transaction that
-commits the new structure to the ondisk filesystem to minimize the
-number of blocks that leak if the system crashes before the repair fully
-completes.
-
-The third change made in this series is to avoid tripping buffer cache
-assertions if we're merely scanning the buffer cache for buffers to
-invalidate, and find a non-stale buffer of the wrong length.  This is
-primarily cosmetic, but makes my life easier.
-
-The fourth change restructures the reaping code to try to process as many
-blocks in one go as possible, to reduce logging traffic.
-
-The last change switches the reaping mechanism to use per-AG bitmaps
-defined in a previous patchset.  This should reduce type confusion when
-reading the source code.
+Later patchsets will build on this functionality to provide blob storage
+and btrees.
 
 This has been running on the djcloud for years with no problems.  Enjoy!
 
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 
 ----------------------------------------------------------------
-Darrick J. Wong (9):
-xfs: cull repair code that will never get used
-xfs: move the post-repair block reaping code to a separate file
-xfs: only invalidate blocks if we're going to free them
-xfs: only allow reaping of per-AG blocks in xrep_reap_extents
-xfs: use deferred frees to reap old btree blocks
-xfs: rearrange xrep_reap_block to make future code flow easier
-xfs: allow scanning ranges of the buffer cache for live buffers
-xfs: reap large AG metadata extents when possible
-xfs: use per-AG bitmaps to reap unused AG metadata blocks during repair
+Darrick J. Wong (7):
+xfs: create a big array data structure
+xfs: enable sorting of xfile-backed arrays
+xfs: convert xfarray insertion sort to heapsort using scratchpad memory
+xfs: teach xfile to pass back direct-map pages to caller
+xfs: speed up xfarray sort by sorting xfile page contents directly
+xfs: cache pages used for xfarray quicksort convergence
+xfs: improve xfarray quicksort pivot
 
-fs/xfs/Makefile                |   1 +
-fs/xfs/scrub/agheader_repair.c |  75 +++----
-fs/xfs/scrub/bitmap.c          |  78 +------
-fs/xfs/scrub/bitmap.h          |  10 +-
-fs/xfs/scrub/reap.c            | 498 +++++++++++++++++++++++++++++++++++++++++
-fs/xfs/scrub/reap.h            |  12 +
-fs/xfs/scrub/repair.c          | 366 +++++-------------------------
-fs/xfs/scrub/repair.h          |  18 +-
-fs/xfs/scrub/trace.h           |  72 +++---
-fs/xfs/xfs_buf.c               |   9 +-
-fs/xfs/xfs_buf.h               |  13 ++
-11 files changed, 673 insertions(+), 479 deletions(-)
-create mode 100644 fs/xfs/scrub/reap.c
-create mode 100644 fs/xfs/scrub/reap.h
+fs/xfs/Kconfig         |    1 +
+fs/xfs/Makefile        |    2 +
+fs/xfs/scrub/trace.c   |    4 +-
+fs/xfs/scrub/trace.h   |  260 ++++++++++++
+fs/xfs/scrub/xfarray.c | 1083 ++++++++++++++++++++++++++++++++++++++++++++++++
+fs/xfs/scrub/xfarray.h |  141 +++++++
+fs/xfs/scrub/xfile.c   |  420 +++++++++++++++++++
+fs/xfs/scrub/xfile.h   |   77 ++++
+8 files changed, 1987 insertions(+), 1 deletion(-)
+create mode 100644 fs/xfs/scrub/xfarray.c
+create mode 100644 fs/xfs/scrub/xfarray.h
+create mode 100644 fs/xfs/scrub/xfile.c
+create mode 100644 fs/xfs/scrub/xfile.h
