@@ -2,42 +2,42 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4F87FC001E0
-	for <linux-xfs@archiver.kernel.org>; Thu, 10 Aug 2023 15:29:17 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id DE7FBC001E0
+	for <linux-xfs@archiver.kernel.org>; Thu, 10 Aug 2023 15:29:21 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S236152AbjHJP3Q (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 10 Aug 2023 11:29:16 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58206 "EHLO
+        id S234855AbjHJP3V (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 10 Aug 2023 11:29:21 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49198 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S236039AbjHJP3Q (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 10 Aug 2023 11:29:16 -0400
+        with ESMTP id S236039AbjHJP3U (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 10 Aug 2023 11:29:20 -0400
 Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B60612690
-        for <linux-xfs@vger.kernel.org>; Thu, 10 Aug 2023 08:29:15 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6DBBC212B
+        for <linux-xfs@vger.kernel.org>; Thu, 10 Aug 2023 08:29:20 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
          key-exchange X25519 server-signature RSA-PSS (2048 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 5438C66028
-        for <linux-xfs@vger.kernel.org>; Thu, 10 Aug 2023 15:29:15 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id B0A5FC433C8;
-        Thu, 10 Aug 2023 15:29:14 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 0C5C06508B
+        for <linux-xfs@vger.kernel.org>; Thu, 10 Aug 2023 15:29:20 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 6BA1BC433C8;
+        Thu, 10 Aug 2023 15:29:19 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1691681354;
-        bh=Qy5q5++nKvrPc8VfntsoP4sCi5cqNcwu5s7+iPL9iRg=;
+        s=k20201202; t=1691681359;
+        bh=0aN40EJM1qo4lMwRBtfC6euvR7QOnDKDjpAKCJDKrAw=;
         h=Date:From:To:Cc:Subject:From;
-        b=OjhkfDehK0ZB9tZkDphbXZ/tEqQGHtpPKyGDfSgVq0aQgHTHjr3bd33T+eLQhSTyJ
-         OFq4dr31q6Rwm27aes4EKG+sOXrH4sxAtEsOuGFN2PoLlrjmDe8Q4o/SX1PP06arl2
-         RjJB2YNMYScaCKl6Jan6xVyMzEPrwGK+De8F53qSOzpPDQ6E7y+cAIo9O/zqSstFtC
-         MTKecRoDDT0K0XAZbxcb6XRLcHwh+ii2ONjwqChcc796Acjdveu6VcPtCL+v7oWwde
-         Thuw2HjxBKHSbxrNljt1NLi+YWwvij//LrRq1tjrqlMBTDEuZdLJbbOVzK6dNKFPnu
-         cDxpmdj+qBVnA==
-Date:   Thu, 10 Aug 2023 08:29:14 -0700
+        b=rf2isW3U5q/A7P1nlCUCvm8AIOyLLhQH6TxvpIGjGMn+P+V0JMsY0wvNdFWgcjhRz
+         UUHY9KaDU7KPujGgvfoCx7Uoc1XpzDha8eEzxTp+KbcRKGu1Rd6hsX8VjK882BcTqw
+         Epia0apcCGCwHEg1oF7efVAXTxRil24Xu9cZFS0YK2MDmxMbyHqaczQMLZ7HLU9Rgv
+         k6+0RL4uweR2F5jq/v3QHorDFWrLi5A74E31gK+8oaR85bxzgICb2QQvSNRMF1QVzf
+         hqasTanREWjCCvRk2qS3uNts/tvHliJZNvcK7kblWTMQTy6GAe7KqoXMdSYS/5PdUN
+         F11xWtmSG+f5Q==
+Date:   Thu, 10 Aug 2023 08:29:19 -0700
 From:   "Darrick J. Wong" <djwong@kernel.org>
 To:     chandan.babu@oracle.com, djwong@kernel.org
 Cc:     dchinner@redhat.com, linux-xfs@vger.kernel.org
-Subject: [GIT PULL 6/9] xfs: miscellaneous repair tweaks
-Message-ID: <169168057303.1060601.14161972148325883652.stg-ugh@frogsfrogsfrogs>
+Subject: [GIT PULL 7/9] xfs: force rebuilding of metadata
+Message-ID: <169168057713.1060601.17208135472391286208.stg-ugh@frogsfrogsfrogs>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
@@ -55,29 +55,27 @@ encounter any problems.
 
 --D
 
-The following changes since commit 526aab5f5790e257cbdff1d1be89353257a3e451:
-
-xfs: implement online scrubbing of rtsummary info (2023-08-10 07:48:09 -0700)
-
-are available in the Git repository at:
-
-https://git.kernel.org/pub/scm/linux/kernel/git/djwong/xfs-linux.git tags/repair-tweaks-6.6_2023-08-10
-
-for you to fetch changes up to d728f4e3b21e74910e370b09bab54629eb66badb:
+The following changes since commit d728f4e3b21e74910e370b09bab54629eb66badb:
 
 xfs: allow the user to cancel repairs before we start writing (2023-08-10 07:48:10 -0700)
 
-----------------------------------------------------------------
-xfs: miscellaneous repair tweaks [v26.1]
+are available in the Git repository at:
 
-Before we start adding online repair functionality, there's a few tweaks
-that I'd like to make to the common repair code.  First is a fix to the
-integration between repair and the health status code that was
-interfering with repair re-evaluations.  Second is a minor tweak to the
-sole existing repair functions to make one last check that the user
-hasn't terminated the calling process before we start writing to the
-filesystem.  This is a pattern that will repeat throughout the rest of
-the repair functions.
+https://git.kernel.org/pub/scm/linux/kernel/git/djwong/xfs-linux.git tags/repair-force-rebuild-6.6_2023-08-10
+
+for you to fetch changes up to 5c83df2e54b6af870e3e02ccd2a8ecd54e36668c:
+
+xfs: allow userspace to rebuild metadata structures (2023-08-10 07:48:11 -0700)
+
+----------------------------------------------------------------
+xfs: force rebuilding of metadata [v26.1]
+
+This patchset adds a new IFLAG to the scrub ioctl so that userspace can
+force a rebuild of an otherwise consistent piece of metadata.  This will
+eventually enable the use of online repair to relocate metadata during a
+filesystem reorganization (e.g. shrink).  For now, it facilitates stress
+testing of online repair without needing the debugging knobs to be
+enabled.
 
 This has been running on the djcloud for years with no problems.  Enjoy!
 
@@ -85,9 +83,11 @@ Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 
 ----------------------------------------------------------------
 Darrick J. Wong (2):
-xfs: always rescan allegedly healthy per-ag metadata after repair
-xfs: allow the user to cancel repairs before we start writing
+xfs: don't complain about unfixed metadata when repairs were injected
+xfs: allow userspace to rebuild metadata structures
 
-fs/xfs/scrub/agheader_repair.c | 16 ++++++++++++++++
-fs/xfs/scrub/health.c          | 10 ++++++++++
-2 files changed, 26 insertions(+)
+fs/xfs/libxfs/xfs_fs.h |  6 +++++-
+fs/xfs/scrub/common.h  | 12 ++++++++++++
+fs/xfs/scrub/scrub.c   | 18 ++++++++++++------
+fs/xfs/scrub/trace.h   |  3 ++-
+4 files changed, 31 insertions(+), 8 deletions(-)
