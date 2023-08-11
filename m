@@ -2,248 +2,297 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 77893C001DE
-	for <linux-xfs@archiver.kernel.org>; Thu, 10 Aug 2023 20:36:42 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1EC0BEB64DD
+	for <linux-xfs@archiver.kernel.org>; Fri, 11 Aug 2023 06:21:24 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234892AbjHJUgl (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 10 Aug 2023 16:36:41 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41274 "EHLO
+        id S231423AbjHKGVX (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 11 Aug 2023 02:21:23 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54656 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230459AbjHJUgl (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 10 Aug 2023 16:36:41 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 65DA42737
-        for <linux-xfs@vger.kernel.org>; Thu, 10 Aug 2023 13:36:40 -0700 (PDT)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature RSA-PSS (2048 bits))
-        (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id EAC17649C3
-        for <linux-xfs@vger.kernel.org>; Thu, 10 Aug 2023 20:36:39 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 55550C433C7;
-        Thu, 10 Aug 2023 20:36:39 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1691699799;
-        bh=WnS3lek6cLKnZUHQpxu7pj/51g5dVhZJTxxevN94d08=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=WN6onp5KYZJDu/VgszewiV5AIu/XAVPv/KOfYOSfYdE8dZCRhIJdsHvG3Qd9IHIoS
-         4A+ZaIrdl0yDVBva5aOh/hPnnlUT0oBsjTmKTBa8Ztppj+5D5v0Q+1KpHKydTI+UbS
-         KVD6/8yzSa9cL+zHI4HXt90ZnSgD7QtYmkhRYsZIS713wgymeY8UafelmXcTnMItK7
-         t6McPivxOrgDgP7OJQ6ZLDsQ9cSsU6Ic1KBc7x/rq/TRcW2PPwdiNMEhhfC3trFJAP
-         mnW84HPfnXcJdXyVl26pJgQKhl3XsKDcniHv1jDL8lH/B4eKebGgZ4mbb/42c2E/wH
-         4o9z6yCnbWvCQ==
-Date:   Thu, 10 Aug 2023 13:36:38 -0700
-From:   "Darrick J. Wong" <djwong@kernel.org>
-To:     Dave Chinner <david@fromorbit.com>
-Cc:     linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 3/6] xfs: log EFIs for all btree blocks being used to
- stage a btree
-Message-ID: <20230810203638.GE11352@frogsfrogsfrogs>
-References: <169049623167.921279.16448199708156630380.stgit@frogsfrogsfrogs>
- <169049623218.921279.10028914723578681696.stgit@frogsfrogsfrogs>
- <ZNCuQ/mxsHQ67vjz@dread.disaster.area>
- <20230808005452.GN11352@frogsfrogsfrogs>
- <ZNHcgXhda8KUqOl8@dread.disaster.area>
- <20230809235234.GZ11352@frogsfrogsfrogs>
+        with ESMTP id S229706AbjHKGVW (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 11 Aug 2023 02:21:22 -0400
+Received: from szxga01-in.huawei.com (szxga01-in.huawei.com [45.249.212.187])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D1FA32D48
+        for <linux-xfs@vger.kernel.org>; Thu, 10 Aug 2023 23:21:19 -0700 (PDT)
+Received: from kwepemi500022.china.huawei.com (unknown [172.30.72.54])
+        by szxga01-in.huawei.com (SkyGuard) with ESMTP id 4RMYYZ4dhRzkX3M;
+        Fri, 11 Aug 2023 14:20:02 +0800 (CST)
+Received: from [10.174.177.210] (10.174.177.210) by
+ kwepemi500022.china.huawei.com (7.221.188.64) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
+ 15.1.2507.27; Fri, 11 Aug 2023 14:21:16 +0800
+Message-ID: <ebfee92e-c8fa-c9bc-6093-7d8a06e48c88@huawei.com>
+Date:   Fri, 11 Aug 2023 14:21:15 +0800
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20230809235234.GZ11352@frogsfrogsfrogs>
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:102.0) Gecko/20100101
+ Thunderbird/102.5.1
+Subject: Re: [PATCH] xfs: fix deadlock when set label online
+To:     yangerkun <yangerkun@huaweicloud.com>,
+        Dave Chinner <david@fromorbit.com>
+CC:     <djwong@kernel.org>, <dchinner@redhat.com>, <sandeen@redhat.com>,
+        <linux-xfs@vger.kernel.org>, <yukuai3@huawei.com>
+References: <20230626131542.3711391-1-yangerkun@huaweicloud.com>
+ <ZJoHEuoMkg2Ngn5o@dread.disaster.area>
+ <c4f2edcd-efe2-2a96-316b-40f7ac95e6ce@huaweicloud.com>
+ <ZJy9/9uqtTyS2fIA@dread.disaster.area>
+ <4d6ee3b3-6d4b-ddb6-eb8e-e04a7e0c1ab0@huaweicloud.com>
+ <ZJ4EkyxoxDYmf8rv@dread.disaster.area>
+ <4139563b-8918-d89a-c926-4155228a12dc@huaweicloud.com>
+From:   yangerkun <yangerkun@huawei.com>
+In-Reply-To: <4139563b-8918-d89a-c926-4155228a12dc@huaweicloud.com>
+Content-Type: text/plain; charset="UTF-8"; format=flowed
+Content-Transfer-Encoding: 8bit
+X-Originating-IP: [10.174.177.210]
+X-ClientProxiedBy: dggems704-chm.china.huawei.com (10.3.19.181) To
+ kwepemi500022.china.huawei.com (7.221.188.64)
+X-CFilter-Loop: Reflected
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Wed, Aug 09, 2023 at 04:52:34PM -0700, Darrick J. Wong wrote:
-> On Tue, Aug 08, 2023 at 04:11:13PM +1000, Dave Chinner wrote:
-> > On Mon, Aug 07, 2023 at 05:54:52PM -0700, Darrick J. Wong wrote:
-> > > On Mon, Aug 07, 2023 at 06:41:39PM +1000, Dave Chinner wrote:
-> > > > On Thu, Jul 27, 2023 at 03:24:32PM -0700, Darrick J. Wong wrote:
-> > > > > From: Darrick J. Wong <djwong@kernel.org>
-> > > > > 
-> > > > > We need to log EFIs for every extent that we allocate for the purpose of
-> > > > > staging a new btree so that if we fail then the blocks will be freed
-> > > > > during log recovery.  Add a function to relog the EFIs, so that repair
-> > > > > can relog them all every time it creates a new btree block, which will
-> > > > > help us to avoid pinning the log tail.
-> > > > > 
-> > > > > Signed-off-by: Darrick J. Wong <djwong@kernel.org>
-> > > > .....
-> > > > > +/*
-> > > > > + * Set up automatic reaping of the blocks reserved for btree reconstruction in
-> > > > > + * case we crash by logging a deferred free item for each extent we allocate so
-> > > > > + * that we can get all of the space back if we crash before we can commit the
-> > > > > + * new btree.  This function returns a token that can be used to cancel
-> > > > > + * automatic reaping if repair is successful.
-> > > > > + */
-> > > > > +static int
-> > > > > +xrep_newbt_schedule_autoreap(
-> > > > > +	struct xrep_newbt		*xnr,
-> > > > > +	struct xrep_newbt_resv		*resv)
-> > > > > +{
-> > > > > +	struct xfs_extent_free_item	efi_item = {
-> > > > > +		.xefi_blockcount	= resv->len,
-> > > > > +		.xefi_owner		= xnr->oinfo.oi_owner,
-> > > > > +		.xefi_flags		= XFS_EFI_SKIP_DISCARD,
-> > > > > +		.xefi_pag		= resv->pag,
-> > > > > +	};
-> > > > > +	struct xfs_scrub		*sc = xnr->sc;
-> > > > > +	struct xfs_log_item		*lip;
-> > > > > +	LIST_HEAD(items);
-> > > > > +
-> > > > > +	ASSERT(xnr->oinfo.oi_offset == 0);
-> > > > > +
-> > > > > +	efi_item.xefi_startblock = XFS_AGB_TO_FSB(sc->mp, resv->pag->pag_agno,
-> > > > > +			resv->agbno);
-> > > > > +	if (xnr->oinfo.oi_flags & XFS_OWNER_INFO_ATTR_FORK)
-> > > > > +		efi_item.xefi_flags |= XFS_EFI_ATTR_FORK;
-> > > > > +	if (xnr->oinfo.oi_flags & XFS_OWNER_INFO_BMBT_BLOCK)
-> > > > > +		efi_item.xefi_flags |= XFS_EFI_BMBT_BLOCK;
-> > > > > +
-> > > > > +	INIT_LIST_HEAD(&efi_item.xefi_list);
-> > > > > +	list_add(&efi_item.xefi_list, &items);
-> > > > > +
-> > > > > +	xfs_perag_intent_hold(resv->pag);
-> > > > > +	lip = xfs_extent_free_defer_type.create_intent(sc->tp, &items, 1,
-> > > > > +			false);
-> > > > 
-> > > > Hmmmm.
-> > > > 
-> > > > That triggered flashing lights and sirens - I'm not sure I really
-> > > > like the usage of the defer type arrays like this, nor the
-> > > > duplication of the defer mechanisms for relogging, etc.
-> > > 
-> > > Yeah, I don't quite like manually tromping through the defer ops state
-> > > machine here either.  Everywhere /else/ in XFS logs an EFI and finishes
-> > > it to free the space.  Just to make sure we're on the same page, newbt
-> > > will allocate space, log an EFI, and then:
-> > > 
-> > > 1. Use the space and log an EFD for the space to cancel the EFI
-> > > 2. Use some of the space, log an EFD for the space we used, immediately
-> > >    log a new EFI for the unused parts, and finish the new EFI manually
-> > > 3. Don't use any of the space at all, and finish the EFI manually
-> > > 
-> > > Initially, I tried using the regular defer ops mechanism, but this got
-> > > messy on account of having to extern most of xfs_defer.c so that I could
-> > > manually modify the defer ops state.  It's hard to generalize this,
-> > > since there's only *one* place that actually needs manual flow control.
-> > 
-> > *nod*
-> > 
-> > But I can't help but think it's a manifestation of a generic
-> > optimisation that could allow us to avoid needing to use unwritten
-> > extents for new data alloations...
-> 
-> I've thought about this usecase at various points in the lifetime of the
-> newbt.c code.  The usecases are indeed very similar -- speculatively
-> allocate some disk blocks, write to them, and either map them into the
-> data fork / btree root if the writes actually succeed; or free them
-> because it failed.
-> 
-> However, I think we could eliminate the overhead of the speculative
-> allocation out of the bnobt/cnbt (aka step 1) by boosting all of the
-> tracking to the incore data structures.  Handwaving sketch:
-> 
-> 1. Find the extent we want from the free space btrees, and add a record
-> to the busy extent list with some new state flag that signals
-> "speculative write: do not DISCARD this extent, and allocating callers
-> should move on".
-> 
-> (Not sure what happens if the allocating caller /never/ finds space?
-> Does kicking writeback make sense here?  I am not sure it does.)
-> 
-> 2. Create a mapping in the cow fork for the speculatively allocated
-> space, along with an annotation to that effect.  Also need to absorb
-> whatever space we reserved in the delalloc mapping for bmbt expansion.
-> 
-> 3. Write the blocks.
-> 
-> 4. If the write succeeds, we do the cow remap like we do now, but also
-> remove the extent from the ondisk free space btrees and clear the space
-> from the busy extent list.
-> 
-> 5. If the write fails, clear the space from busy extent list.  Maybe add
-> the space to a badblocks list(??)
-> 
-> Under this scheme, the only ondisk metadata update is step 4.  I really
-> like the idea of porting newbt.c to use a mechanism like this, since
-> the only time we touch the log is if the repair succeeds.
-> 
-> Too bad it doesn't exist yet! :)
-> 
-> For now, the oddball use of EFIs is limited to newbt.c, which means it's
-> self-contained inside repair.  Except for the "too many extents attached
-> to an EFI" issue, I think it works well enough to put into use until you
-> or I have time to figure out how to turn either of our "unwritten extent
-> for new data allocation" sketches into reality.
-> 
-> (IOWs, I'm trying /not/ to go carving around in the allocator and the
-> extent busy list when there's already so much to think about. ;))
-> 
-> > > ISTR that was around the time bfoster and I were reworking log intent
-> > > item recovery, and it was easier to do this outside of the defer ops
-> > > code than try to refactor it and keep this exceptional piece working
-> > > too.
-> > > 
-> > > > Not that I have a better idea right now - is this the final form of
-> > > > this code, or is more stuff built on top of it or around it?
-> > > 
-> > > That's the final form of it.  The good news is that it's been stable
-> > > enough despite me tearing into the EFI code again in the rt
-> > > modernization patchset.  Do you have any further suggestions?
-> > 
-> > Not for the patchset as it stands.
-> 
-> <nod> I'll add some monitoring to report the maximum extent counts that
-> get added to EFIs, and work on something to constrain the number of
-> extents that get added to a single EFI log item that's coming from
-> repair.
 
-My debug patch kept a per-mount maximum EFI extent count, and logged
-whenever an EFI got logged with a higher extent count.  From last
-night's fstests run, I saw this:
 
-  11297 EFI MAX DEPTH bumped to 2 (RUNTIME)
-      8 EFI MAX DEPTH bumped to 2 (RECOVERY)
-   2598 EFI MAX DEPTH bumped to 3 (RUNTIME)
-      3 EFI MAX DEPTH bumped to 3 (RECOVERY)
-    216 EFI MAX DEPTH bumped to 4 (RUNTIME)
-    100 EFI MAX DEPTH bumped to 5 (RUNTIME)
-    862 EFI MAX DEPTH bumped to 6 (RUNTIME)
-     39 EFI MAX DEPTH bumped to 7 (RUNTIME)
-     22 EFI MAX DEPTH bumped to 8 (RUNTIME)
-     40 EFI MAX DEPTH bumped to 9 (RUNTIME)
-     26 EFI MAX DEPTH bumped to 10 (RUNTIME)
-     17 EFI MAX DEPTH bumped to 11 (RUNTIME)
-     14 EFI MAX DEPTH bumped to 12 (RUNTIME)
-     42 EFI MAX DEPTH bumped to 13 (RUNTIME)
-      5 EFI MAX DEPTH bumped to 14 (RUNTIME)
-      5 EFI MAX DEPTH bumped to 15 (RUNTIME)
-    509 EFI MAX DEPTH bumped to 16 (RUNTIME)
-
-So I guess we /do/ see a healthy(?) number of EFIs with more than 4
-extents attached, and more bumps to 16 than I expected.  Granted there's
-a lot of mkfs action in fstests, so this still isn't capturing what
-might happen if there was fragmentation ahoy.
-
-Well ok the alwayscow=1 profile did this:
-
-    170 EFI MAX DEPTH bumped to 2 (RUNTIME)
-    133 EFI MAX DEPTH bumped to 3 (RUNTIME)
-     24 EFI MAX DEPTH bumped to 4 (RUNTIME)
-      9 EFI MAX DEPTH bumped to 5 (RUNTIME)
-     29 EFI MAX DEPTH bumped to 6 (RUNTIME)
-      1 EFI MAX DEPTH bumped to 7 (RUNTIME)
-      2 EFI MAX DEPTH bumped to 9 (RUNTIME)
-      1 EFI MAX DEPTH bumped to 10 (RUNTIME)
-      1 EFI MAX DEPTH bumped to 11 (RUNTIME)
-      1 EFI MAX DEPTH bumped to 12 (RUNTIME)
-      1 EFI MAX DEPTH bumped to 16 (RUNTIME)
-
---D
-
-> --D
+在 2023/6/30 10:19, yangerkun 写道:
 > 
-> > -Dave.
-> > -- 
-> > Dave Chinner
-> > david@fromorbit.com
+> 
+> 在 2023/6/30 6:24, Dave Chinner 写道:
+>> On Thu, Jun 29, 2023 at 07:55:10PM +0800, yangerkun wrote:
+>>> 在 2023/6/29 7:10, Dave Chinner 写道:
+>>>> On Tue, Jun 27, 2023 at 04:42:41PM +0800, yangerkun wrote:
+>>>>> 在 2023/6/27 5:45, Dave Chinner 写道:
+>>>>>> On Mon, Jun 26, 2023 at 09:15:42PM +0800, yangerkun wrote:
+>>>>>>> From: yangerkun <yangerkun@huawei.com>
+>>>>>>>
+>>>>>>> Combine use of xfs_trans_hold and xfs_trans_set_sync in 
+>>>>>>> xfs_sync_sb_buf
+>>>>>>> can trigger a deadlock once shutdown happened concurrently. 
+>>>>>>> xlog_ioend_work
+>>>>>>> will first unpin the sb(which stuck with xfs_buf_lock), then wakeup
+>>>>>>> xfs_sync_sb_buf. However, xfs_sync_sb_buf never get the chance to 
+>>>>>>> unlock
+>>>>>>> sb until been wakeup by xlog_ioend_work.
+>>>>>>>
+>>>>>>> xfs_sync_sb_buf
+>>>>>>>      xfs_trans_getsb // lock sb buf
+>>>>>>>      xfs_trans_bhold // sb buf keep lock until success commit
+>>>>>>>      xfs_trans_commit
+>>>>>>>      ...
+>>>>>>>        xfs_log_force_seq
+>>>>>>>          xlog_force_lsn
+>>>>>>>            xlog_wait_on_iclog
+>>>>>>>              xlog_wait(&iclog->ic_force_wait... // shutdown happened
+>>>>>>>      xfs_buf_relse // unlock sb buf
+>>>>>>>
+>>>>>>> xlog_ioend_work
+>>>>>>>      xlog_force_shutdown
+>>>>>>>        xlog_state_shutdown_callbacks
+>>>>>>>          xlog_cil_process_committed
+>>>>>>>            xlog_cil_committed
+>>>>>>>            ...
+>>>>>>>            xfs_buf_item_unpin
+>>>>>>>              xfs_buf_lock // deadlock
+>>>>>>>          wake_up_all(&iclog->ic_force_wait)
+>>>>>>>
+>>>>>>> xfs_ioc_setlabel use xfs_sync_sb_buf to make sure userspace will 
+>>>>>>> see the
+>>>>>>> change for sb immediately. We can simply call 
+>>>>>>> xfs_ail_push_all_sync to
+>>>>>>> do this and sametime fix the deadlock.
+>>>>>>
+>>>>>> Why is this deadlock specific to the superblock buffer?
+>>>>>
+>>>>> Hi Dave,
+>>>>>
+>>>>> Thanks a lot for your revirew! We find this problem when do some code
+>>>>> reading(which can help us to fix another growfs bug). And then 
+>>>>> reproduce it
+>>>>> easily when we set label online frequently with IO error inject at the
+>>>>> sametime.
+>>>>
+>>>> Right, I know how it can be triggered; that's not actually my
+>>>> concern...
+>>>>
+>>>>>> Can't any buffer that is held locked over a synchronous transaction
+>>>>>> commit deadlock during a shutdown like this?
+>>>>>
+>>>>> After check all place use xfs_buf_bhold, it seems xfs_sync_sb_buf 
+>>>>> is the
+>>>>> only convict that combine use xfs_trans_hold and 
+>>>>> xfs_trans_set_sync(I'm not
+>>>>> familiar with xfs yet, so I may have some problems with my code 
+>>>>> check)...
+>>>>
+>>>> Yes, I can also see that. But my concern is that this change only
+>>>> addresses the symptom, but leaves the underlying deadlock unsolved.
+>>>>
+>>>> Indeed, this isn't xfs_trans_commit() I'm worried about here; it's
+>>>> the call to xfs_log_force(mp, XFS_LOG_SYNC) or
+>>>> xfs_log_force_seq(XFS_LOG_SYNC) with a buffer held locked that I'm
+>>>> worried about.
+>>>>
+>>>> i.e. We have a buffer in the CIL (from a previous transaction) that
+>>>> we currently hold locked while we call xfs_log_force(XFS_LOG_SYNC).
+>>>> If a shutdown occurs while we are waiting for journal IO completion
+>>>> to occur, then xlog_ioend_work() will attempt to lock the buffer and
+>>>> deadlock, right?
+>>>>
+>>>> e.g. I'm thinking of things like busy extent flushing (hold AGF +
+>>>> AGFL + AG btree blocks locked when we call xfs_log_force()) could
+>>>> also be vulnerable to the same deadlock...
+>>>
+>>> You mean something like xfs_allocbt_alloc_block(call xfs_log_force to
+>>> flush busy extent which keep agf locked sametime)?
+>>>
+>>> We call xfs_log_force(mp, XFS_LOG_SYNC) after lock agf and before
+>>> xfs_trans_commit. It seems ok since xfs_buf_item_unpin will not call
+>>> xfs_buf_lock because bli_refcount still keep active(once we hold locked
+>>> agf, the bli_refcount will inc in _xfs_trans_bjoin, and keep it until
+>>> xfs_trans_commit success(clean agf item) or .iop_unpin(dirty agf item,
+>>> call from xlog_ioend_work) which can be called after xfs_trans_commit
+>>> too)...
+>>
+>> Again, I gave an example of the class of issue I'm worried about.
+>> Again, you chased the one example given through, but haven't
+>> mentioned a thing about all the other code paths that lead to
+>> xfs_log_force(SYNC) that might hold buffers locked that I didn't
+>> mention.
+>>
+>> I don't want to have to ask every person who proposes a fix about
+>> every possible code path the bug may manifest in -one at a time-.  I
+>> use examples to point you in the right direction for further
+>> analysis of the rest of the code base, not because that's the only
+>> thing I want checked. Please use your initiative to look at all the
+>> callers of xfs_log_force(SYNC) and determine if they are all safe or
+>> whether there are landmines lurked or even more bugs of a similar
+>> sort.
+> 
+> Hi Dave,
+> 
+> Thank you very much for pointing this out! I'm so sorry for the lack of
+> awareness of a comprehensive investigation does there any other place
+> can trigger the bug too...
+> 
+>>
+>> When we learn about a new issue, this is the sort of audit work that
+>> is necessary to determine the scope of the issue. We need to perform
+>> such audits because they direct the scope of the fix necessary. We
+>> are not interested in slapping a band-aid fix over the symptom that
+>> was reported - that only leads to more band-aid fixes as the same
+>> issue appears in other places.
+> 
+> Yes, agree with you and thanks for your advise, it can really help me to
+> forbid a band-aid fix however leads to more band-aid fixes, so can
+> contribute better!
+> 
+>>
+>> Now we know there is a lock ordering problem in this code, so before
+>> we attempt to fix it we need to know how widespread it is, what the
+>> impact is, how different code paths avoid it, etc. That requires a
+>> code audit to determine, and that requires looking at all the paths
+>> into xfs_log_force(XFS_LOG_SYNC) to determine if they are safe or
+>> not and documenting that.
+>>
+>> Yes, it's more work *right now* than slapping a quick band-aid fix
+>> over it, but it's much less work in the long run for us and we don't
+>> have to keep playing whack-a-mole because we fixed it the right way
+>> the first time.
+>>
+> 
+> I will try to look all paths into xfs_log_force(XFS_LOG_SYNC) or
+> xfs_log_force_seq(XFS_LOG_SYNC) to check if it's safe or not. Thanks
+> again for your advise!
+> 
+> Thanks,
+> Yang Erkun.
+> 
+>> -Dave.
+> 
+
+Hi, Dave,
+
+Sorry for the late reply, I was quiet busy last month and it also took 
+me long time to check does all the callers of 
+xfs_log_force(SYNC)/xfs_log_force_seq(SYNC) was safe. I'm not familiar 
+with xfs yet, so if there's anything wrong with the description below, 
+please point it out!
+
+The logic I choose was to check will we call 
+xfs_log_force(SYNC)/xfs_log_force_seq(SYNC) between 
+xfs_buf_lock/xfs_buf_trylock and xfs_buf_unlock at the same thread 
+context(I have check other item's .iop_unpin, it seems only xfs_buf item 
+can trigger the problem since it will try to lock the buf in 
+xfs_buf_item_unpin; besides, different thread context call for 
+xfs_buf_lock&xfs_log_force(SYNC)/xfs_log_force_seq(SYNC) and 
+xfs_buf_unlock is safe too since this unlock will not wait until 
+xfs_log_force(SYNC)/xfs_log_force_seq(SYNC) success return), and once it 
+happend, will we trigger the bug too?
+
+I divide the logic of calling xfs_buf_lock/xfs_buf_trylock into two 
+categories:
+
+1. Later the xfs_buf will join the tp(xfs_trans_bjoin will inc 
+.bli_refcount)
+
+a. xfs_trans_bjoin will inc .bli_refcount
+b. xfs_buf_item_pin will inc .bli_refcount when the item of xfs_buf was 
+dirty
+c. xfs_buf_item_committing will dec .bli_refcount no matter the item was 
+dirty or not, and normally it will unlock the xfs_buf, or keep the 
+xfs_buf locked when we see XFS_BLI_HOLD
+d. xfs_buf_item_unpin will dec .bli_refcount, and it won't call 
+xfs_buf_lock when another .bli_refcount exist
+
+xfs_log_force(SYNC)/xfs_log_force_seq(SYNC) can happend before we commit 
+the tp(like xfs_create, it will first read&lock agi buf, then call 
+xfs_dir_createname, which may trigger agfl fixup, the block allocation 
+may see the busy extent and call xfs_log_force(SYNC) to flush the busy 
+extent journal). It won't trigger the problem since xfs_trans_bjoin will 
+keep another .bli_refcount.
+
+xfs_log_force_seq(SYNC) can happend when we commit the tp since we see 
+XFS_TRANS_SYNC(see __xfs_trans_commit), the only case we can trigger the 
+deadlock was that we have combine called xfs_trans_bhold, or we will 
+unlock xfs_buf in xfs_buf_item_committing. The case which this patch try 
+to fix was the only case combine call for xfs_trans_bhold and set 
+XFS_TRANS_SYNC.
+
+After commit tp, xfs_buf will only keep locked because of 
+xfs_trans_bhold, and once there is a XFS_TRANS_PERM_LOG_RES tp, we may 
+trigger another commit, then xfs_log_force(SYNC)/xfs_log_force_seq(SYNC) 
+can happend too. But it is safe too since we will first rejoin xfs_buf 
+to tp which help protect us.
+
+2. The xfs_buf won't join the tp
+
+xfs_buf_readahead_map
+xfs_buf_read
+xfs_buf_get
+xfs_buf_incore
+xfs_buf_delwri_cancel
+xfs_buf_delwri_submit_buffers
+xfs_buf_delwri_pushbuf
+xfs_buf_item_unpin
+xfs_iflush_shutdown_abort
+xfs_log_quiesce
+xlog_do_recover
+xfs_freesb
+xfs_add_incompat_log_feature
+xfs_clear_incompat_log_features
+
+Most case above was io, for xfs_buf_unlock called from another thread 
+context, it is safe; for xfs_buf_unlock called from same thread context, 
+it is safe too since we won't trigger 
+xfs_log_force(SYNC)/xfs_log_force_seq(SYNC) between xfs_buf_lock and 
+xfs_buf_unlock.
+
+
+ From above, it seems only xfs_sync_sb_buf can trigger this deadlock... 
+And I prefer to add some comments to xfs_trans_bhold to notice that 
+there is a bug when combine use xfs_trans_bhold and 
+xfs_log_force(SYNC)/xfs_log_force_seq(SYNC)...
+
+
+Dave, sorry again for the late reply, and look forward to your reply!
+
+Thanks,
+Yang Erkun.
