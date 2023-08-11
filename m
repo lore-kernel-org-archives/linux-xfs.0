@@ -2,83 +2,73 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id AE075C04FE0
-	for <linux-xfs@archiver.kernel.org>; Fri, 11 Aug 2023 12:27:35 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 069CEC001B0
+	for <linux-xfs@archiver.kernel.org>; Fri, 11 Aug 2023 19:31:24 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S236512AbjHKM1e (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 11 Aug 2023 08:27:34 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40372 "EHLO
+        id S234977AbjHKTbX (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 11 Aug 2023 15:31:23 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34632 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S235414AbjHKM1c (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 11 Aug 2023 08:27:32 -0400
+        with ESMTP id S236820AbjHKTbW (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 11 Aug 2023 15:31:22 -0400
 Received: from bombadil.infradead.org (bombadil.infradead.org [IPv6:2607:7c80:54:3::133])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8E55FE60;
-        Fri, 11 Aug 2023 05:27:32 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id BA0AE30E6;
+        Fri, 11 Aug 2023 12:31:21 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Type:MIME-Version
-        :References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
+        d=infradead.org; s=bombadil.20210309; h=Sender:In-Reply-To:Content-Type:
+        MIME-Version:References:Message-ID:Subject:Cc:To:From:Date:Reply-To:
         Content-Transfer-Encoding:Content-ID:Content-Description;
-        bh=96Jyxa0hgrG24aZgu2ilDmsPaDJbIFT8CvAcqFGq7ak=; b=Lt8QMt/qiwPklQXJKNxAAayl50
-        ejm5z3TauQQgWXDYeiy6ev7CoxuktCUjLml+tQTXB0FrmwYo9bGjhm2G8bwiVtr2qWkYfM3c8FNl1
-        cPDaz7ayPa6vktH3ev1ZeHUse0hr9sV3dSKzn62142iTuA8TTM4tDaiYAHOFhJAm7nP3aQxRbODoe
-        cl8s2GHmVFeXScu6jrXcZHGDTmN2udO8XZ0pPwfpsd5QoOiRLOiFHXD6KYR9f2MEyvA/KeT9RzHmF
-        DIvDgADu/AxqynsuMYC3hcwdLyXOsBeZQBLnrFNVOoRqDCMnS+8kcWICKZ1ml8I/4TT3bYAOcmKWy
-        N15IsxAA==;
-Received: from hch by bombadil.infradead.org with local (Exim 4.96 #2 (Red Hat Linux))
-        id 1qUREm-00Abyw-17;
-        Fri, 11 Aug 2023 12:27:28 +0000
-Date:   Fri, 11 Aug 2023 05:27:28 -0700
-From:   Christoph Hellwig <hch@infradead.org>
-To:     Jan Kara <jack@suse.cz>
-Cc:     linux-fsdevel@vger.kernel.org, linux-block@vger.kernel.org,
-        Christoph Hellwig <hch@infradead.org>,
-        Alasdair Kergon <agk@redhat.com>,
-        Andrew Morton <akpm@linux-foundation.org>,
-        Anna Schumaker <anna@kernel.org>, Chao Yu <chao@kernel.org>,
-        Christian Borntraeger <borntraeger@linux.ibm.com>,
-        "Darrick J. Wong" <djwong@kernel.org>,
-        Dave Kleikamp <shaggy@kernel.org>,
-        David Sterba <dsterba@suse.com>, dm-devel@redhat.com,
-        drbd-dev@lists.linbit.com, Gao Xiang <xiang@kernel.org>,
-        Jack Wang <jinpu.wang@ionos.com>,
-        Jaegeuk Kim <jaegeuk@kernel.org>,
-        jfs-discussion@lists.sourceforge.net,
-        Joern Engel <joern@lazybastard.org>,
-        Joseph Qi <joseph.qi@linux.alibaba.com>,
-        Kent Overstreet <kent.overstreet@gmail.com>,
-        linux-bcache@vger.kernel.org, linux-btrfs@vger.kernel.org,
-        linux-erofs@lists.ozlabs.org, linux-ext4@vger.kernel.org,
-        linux-f2fs-devel@lists.sourceforge.net, linux-mm@kvack.org,
-        linux-mtd@lists.infradead.org, linux-nfs@vger.kernel.org,
-        linux-nilfs@vger.kernel.org, linux-nvme@lists.infradead.org,
-        linux-pm@vger.kernel.org, linux-raid@vger.kernel.org,
-        linux-s390@vger.kernel.org, linux-scsi@vger.kernel.org,
-        linux-xfs@vger.kernel.org,
-        "Md. Haris Iqbal" <haris.iqbal@ionos.com>,
-        Mike Snitzer <snitzer@kernel.org>,
-        Minchan Kim <minchan@kernel.org>, ocfs2-devel@oss.oracle.com,
-        reiserfs-devel@vger.kernel.org,
-        Sergey Senozhatsky <senozhatsky@chromium.org>,
-        Song Liu <song@kernel.org>,
-        Sven Schnelle <svens@linux.ibm.com>,
-        target-devel@vger.kernel.org, Ted Tso <tytso@mit.edu>,
-        Trond Myklebust <trond.myklebust@hammerspace.com>,
-        xen-devel@lists.xenproject.org
-Subject: Re: [PATCH v2 0/29] block: Make blkdev_get_by_*() return handle
-Message-ID: <ZNYpMPM5o4q1xcIt@infradead.org>
-References: <20230810171429.31759-1-jack@suse.cz>
+        bh=p5qvQ+yzO9nazRIKAyXORjIabtCXmQCWDwI1BMoHGgE=; b=y9yj2T9iBuU7QR0NCC+wFIp5bT
+        lbifkJx0QbnK/6cjOU6ilyHuw7vKWTpSLQ1GQYC0ArvwQ1TDxFzwqzbL1Lp1AEMz9UV74CM/MGIcK
+        HCl6aleTnY+zFdw2I0h1v5nE3ZA4u6T2PO6cnfkT9vFe+vJbbz+dt3MBkC6WBnlBpnEK8jT9Dlaio
+        6pTnn+9pI3lWEe07Bk5/+qojr9CPvrvi34qDa0fIMmrXsmqGYqFiNs32rcoKsES+prEe7x0UDYu5h
+        r/Np5S5Co8OllWLqM3sSoNi1/EvzwOWwvHzfXHR9+80cxQrlCNZkTOOB7QJ5C8hfJdf1tWnkjndPk
+        uIsLAatw==;
+Received: from mcgrof by bombadil.infradead.org with local (Exim 4.96 #2 (Red Hat Linux))
+        id 1qUXqw-00BSyf-2F;
+        Fri, 11 Aug 2023 19:31:18 +0000
+Date:   Fri, 11 Aug 2023 12:31:18 -0700
+From:   Luis Chamberlain <mcgrof@kernel.org>
+To:     "Darrick J. Wong" <djwong@kernel.org>,
+        Amir Goldstein <amir73il@gmail.com>
+Cc:     corbet@lwn.net, linux-xfs@vger.kernel.org,
+        linux-fsdevel@vger.kernel.org, david@fromorbit.com, cem@kernel.org,
+        sandeen@sandeen.net, chandan.babu@oracle.com, amir73il@gmail.com,
+        leah.rumancik@gmail.com, zlang@kernel.org, fstests@vger.kernel.org,
+        willy@infradead.org, shirley.ma@oracle.com, konrad.wilk@oracle.com
+Subject: Re: [PATCH 1/3] docs: add maintainer entry profile for XFS
+Message-ID: <ZNaMhgqbLJGdateQ@bombadil.infradead.org>
+References: <169091989589.112530.11294854598557805230.stgit@frogsfrogsfrogs>
+ <169091990172.112530.13872332887678504055.stgit@frogsfrogsfrogs>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20230810171429.31759-1-jack@suse.cz>
-X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
+In-Reply-To: <169091990172.112530.13872332887678504055.stgit@frogsfrogsfrogs>
+Sender: Luis Chamberlain <mcgrof@infradead.org>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Except for a mostly cosmetic nitpick this looks good to me:
+On Tue, Aug 01, 2023 at 12:58:21PM -0700, Darrick J. Wong wrote:
+> +Roles
+> +-----
+> +There are seven key roles in the XFS project.
+> +- **Testing Lead**: This person is responsible for setting the test
+> +  coverage goals of the project, negotiating with developers to decide
+> +  on new tests for new features, and making sure that developers and
+> +  release managers execute on the testing.
+> +
+> +  The testing lead should identify themselves with an ``M:`` entry in
+> +  the XFS section of the fstests MAINTAINERS file.
 
-Acked-by: Christoph Hellwig <hch@lst.de>
+I think breaking responsibility down is very sensible, and should hopefully
+allow you to not burn out. Given I realize how difficult it is to do all
+the tasks, and since I'm already doing quite a bit of testing of XFS
+on linux-next I can volunteer to help with this task of testing lead
+if folks also think it may be useful to the community.
 
-That's not eactly the deep review I'd like to do, but as I'm about to
-head out for vacation that's probably as good as it gets.
+The only thing is I'd like to also ask if Amir would join me on the
+role to avoid conflicts of interest when and if it comes down to testing
+features I'm involved in somehow.
+
+  Luis
