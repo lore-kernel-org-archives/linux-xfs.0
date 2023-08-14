@@ -2,113 +2,338 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E778EC04A94
-	for <linux-xfs@archiver.kernel.org>; Sat, 12 Aug 2023 09:05:47 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id DB3DEC41513
+	for <linux-xfs@archiver.kernel.org>; Mon, 14 Aug 2023 10:28:38 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231414AbjHLJFm (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Sat, 12 Aug 2023 05:05:42 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41498 "EHLO
+        id S233378AbjHNK2G (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 14 Aug 2023 06:28:06 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37832 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230234AbjHLJFm (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sat, 12 Aug 2023 05:05:42 -0400
-Received: from mail-vs1-xe36.google.com (mail-vs1-xe36.google.com [IPv6:2607:f8b0:4864:20::e36])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8C1DA10DE;
-        Sat, 12 Aug 2023 02:05:45 -0700 (PDT)
-Received: by mail-vs1-xe36.google.com with SMTP id ada2fe7eead31-447d394d1ebso2494670137.1;
-        Sat, 12 Aug 2023 02:05:45 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20221208; t=1691831144; x=1692435944;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=ootNDDcWDg7u7h0P5IZQvhFRhWfwQhZIpwqSVndwKtY=;
-        b=p3MnB1vmkuFkCRXQUyPTzFlLnWjxzioCkZ0WA0nk61GNrE5vj95vBGVFHw+y7UbZWI
-         oSKF2mICVjy98MVWwbmfnlpMir5i1RiCU5tVUtGUAI9u02mc+olSyJ9EDVtsj4w7+Z5d
-         RfLOo64aepaU/9ibCsXaz6A/vIH+0TE7QRtqAECOzEEySPjT8CxvXNNUIJicentg6GIO
-         BN/lhudnBa+epXXTJiCiMnfn+wh1PrgYXSUj9IcL0JNH1xOgN8RLroMWyhK/IqX+UbWE
-         XwC8l0rAX3+g5crdC+9hfr/JXp3PvrmMvidgCbETFsR+me8CBjMZ92wYqkazCD6KLSl8
-         51Fw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20221208; t=1691831144; x=1692435944;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=ootNDDcWDg7u7h0P5IZQvhFRhWfwQhZIpwqSVndwKtY=;
-        b=IL78mLhl9UE5DVh9pS94N1w7K+bl75PmrbvkEsnBBPx5INUB/w6ax2d8ger+UG7ie1
-         lKnxdI0PobjlaXVvUKfEQ/jF1rq5RNDSyJuY99sSABgurQ5QLlbQX0Bo7R9MEHNe+JIo
-         nuar4xKY78nFP56qj6f0oS0WWm5zLIXg++g49AIzNJFNyXregmpcaUW9VvvC2ysiHNyj
-         0mXQIMAH3JhmjPaV40AuBJUelWvJzBOtHENWnAtIgkey8DEDtPVnU23SjClrKLFOVvgP
-         wOybbA/PTggWBcxB6BI3eNsa3Oc7WJ8b6AN4DQPoO8QmwB1sdjQh0OPXoWz27xQDicB5
-         c8ag==
-X-Gm-Message-State: AOJu0Yz9yOeblzOycZ+tycbZWsasHA7mJLowUIXc3xbzFPKGswA3s8U4
-        pmInlT+89nIIWItX4l1uvbtLOGcZU4mJ9bwSQX/bkxqDfxM=
-X-Google-Smtp-Source: AGHT+IEhngOewU82rbL/EXnFRAzyqLuEhLcvU2IISBQ34TYC2iHCHLbaOA2+aPRRW0Rm9kqZJzrmwftzkjvdvnkTbfM=
-X-Received: by 2002:a05:6102:3b16:b0:439:3e26:990e with SMTP id
- x22-20020a0561023b1600b004393e26990emr4900072vsu.6.1691831144595; Sat, 12 Aug
- 2023 02:05:44 -0700 (PDT)
-MIME-Version: 1.0
-References: <169091989589.112530.11294854598557805230.stgit@frogsfrogsfrogs>
- <169091990172.112530.13872332887678504055.stgit@frogsfrogsfrogs>
- <ZNaMhgqbLJGdateQ@bombadil.infradead.org> <20230812000456.GA2375177@frogsfrogsfrogs>
-In-Reply-To: <20230812000456.GA2375177@frogsfrogsfrogs>
-From:   Amir Goldstein <amir73il@gmail.com>
-Date:   Sat, 12 Aug 2023 12:05:33 +0300
-Message-ID: <CAOQ4uxibnPqE5qG9R53JyaMY1bd6j9OH0pq2eQxYpxDwf3xnGw@mail.gmail.com>
-Subject: Re: [PATCH 1/3] docs: add maintainer entry profile for XFS
-To:     "Darrick J. Wong" <djwong@kernel.org>
-Cc:     Luis Chamberlain <mcgrof@kernel.org>, corbet@lwn.net,
-        linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
-        david@fromorbit.com, cem@kernel.org, sandeen@sandeen.net,
-        chandan.babu@oracle.com, leah.rumancik@gmail.com, zlang@kernel.org,
-        fstests@vger.kernel.org, willy@infradead.org,
-        shirley.ma@oracle.com, konrad.wilk@oracle.com
-Content-Type: text/plain; charset="UTF-8"
+        with ESMTP id S234901AbjHNK1x (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 14 Aug 2023 06:27:53 -0400
+Received: from mailout1.w1.samsung.com (mailout1.w1.samsung.com [210.118.77.11])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8A89AE5
+        for <linux-xfs@vger.kernel.org>; Mon, 14 Aug 2023 03:27:51 -0700 (PDT)
+Received: from eucas1p1.samsung.com (unknown [182.198.249.206])
+        by mailout1.w1.samsung.com (KnoxPortal) with ESMTP id 20230814102748euoutp01d1ff7a5bb31a697ab8d1e2a74e753a4a~7ORn-aX9_1746217462euoutp01V
+        for <linux-xfs@vger.kernel.org>; Mon, 14 Aug 2023 10:27:48 +0000 (GMT)
+DKIM-Filter: OpenDKIM Filter v2.11.0 mailout1.w1.samsung.com 20230814102748euoutp01d1ff7a5bb31a697ab8d1e2a74e753a4a~7ORn-aX9_1746217462euoutp01V
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=samsung.com;
+        s=mail20170921; t=1692008868;
+        bh=ajwDShxVNbg+HvM3I3kKNILSIkNZ3aZZ+4CsThERfGc=;
+        h=From:To:CC:Subject:Date:In-Reply-To:References:From;
+        b=PEEiuoftIQBaV+3MdjHAcq+AOHJs52eIOn5u3JmuM+HMVZYyXYlgAoEiEg9BZiykj
+         yKLZb7XRKXT6i2zIqlePs5u9ZXmt8navMun1IN2qS9bFk6jcQfBEbHkPlxhoL/Y1eQ
+         4rdSB1IDGbZpCJAz2msLp0wFb5krH31XgEqIlEMc=
+Received: from eusmges1new.samsung.com (unknown [203.254.199.242]) by
+        eucas1p1.samsung.com (KnoxPortal) with ESMTP id
+        20230814102748eucas1p1e0aea6b2bc6a373034c4e45484da0d7a~7ORng-eDN0771107711eucas1p1N;
+        Mon, 14 Aug 2023 10:27:48 +0000 (GMT)
+Received: from eucas1p1.samsung.com ( [182.198.249.206]) by
+        eusmges1new.samsung.com (EUCPMTA) with SMTP id 9A.7A.42423.4A10AD46; Mon, 14
+        Aug 2023 11:27:48 +0100 (BST)
+Received: from eusmtrp1.samsung.com (unknown [182.198.249.138]) by
+        eucas1p2.samsung.com (KnoxPortal) with ESMTPA id
+        20230814102748eucas1p269b8a53ed09fae1eb57dce3d2a7de752~7ORnPy8oz1818918189eucas1p2f;
+        Mon, 14 Aug 2023 10:27:48 +0000 (GMT)
+Received: from eusmgms1.samsung.com (unknown [182.198.249.179]) by
+        eusmtrp1.samsung.com (KnoxPortal) with ESMTP id
+        20230814102748eusmtrp17a0142b0237443c9639ad64688434d14~7ORnPQIuy0364103641eusmtrp1N;
+        Mon, 14 Aug 2023 10:27:48 +0000 (GMT)
+X-AuditID: cbfec7f2-a51ff7000002a5b7-42-64da01a4fc0e
+Received: from eusmtip2.samsung.com ( [203.254.199.222]) by
+        eusmgms1.samsung.com (EUCPMTA) with SMTP id F5.73.10549.3A10AD46; Mon, 14
+        Aug 2023 11:27:47 +0100 (BST)
+Received: from CAMSVWEXC01.scsc.local (unknown [106.1.227.71]) by
+        eusmtip2.samsung.com (KnoxPortal) with ESMTPA id
+        20230814102747eusmtip25ea4c33deed995ab619f320df474121a~7ORnCoBWJ1457814578eusmtip2L;
+        Mon, 14 Aug 2023 10:27:47 +0000 (GMT)
+Received: from CAMSVWEXC02.scsc.local (2002:6a01:e348::6a01:e348) by
+        CAMSVWEXC01.scsc.local (2002:6a01:e347::6a01:e347) with Microsoft SMTP
+        Server (TLS) id 15.0.1497.2; Mon, 14 Aug 2023 11:27:47 +0100
+Received: from CAMSVWEXC02.scsc.local ([::1]) by CAMSVWEXC02.scsc.local
+        ([fe80::3c08:6c51:fa0a:6384%13]) with mapi id 15.00.1497.012; Mon, 14 Aug
+        2023 11:27:46 +0100
+From:   Daniel Gomez <da.gomez@samsung.com>
+To:     Jan Kara <jack@suse.cz>,
+        "linux-fsdevel@vger.kernel.org" <linux-fsdevel@vger.kernel.org>
+CC:     "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>,
+        "Christoph Hellwig" <hch@infradead.org>,
+        "Darrick J. Wong" <djwong@kernel.org>,
+        "linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>
+Subject: Re: [PATCH 28/29] xfs: Convert to bdev_open_by_path()
+Thread-Topic: [PATCH 28/29] xfs: Convert to bdev_open_by_path()
+Thread-Index: AQHZzpn3frOw3CirWEi0FotpS5lDtg==
+Date:   Mon, 14 Aug 2023 10:27:46 +0000
+Message-ID: <3wo4aepjfabkpoqovt3d5j2fysgjahvd2dfli42nzjzfdklxp5@zsgzkmifxsbm>
+In-Reply-To: <20230811110504.27514-28-jack@suse.cz>
+Accept-Language: en-US, en-GB
+Content-Language: en-US
+X-MS-Has-Attach: 
+X-MS-TNEF-Correlator: 
+x-ms-exchange-messagesentrepresentingtype: 1
+x-ms-exchange-transport-fromentityheader: Hosted
+x-originating-ip: [106.110.32.67]
+Content-Type: text/plain; charset="us-ascii"
+Content-ID: <281D9B9158C24A4583606B48DD4B4AA6@scsc.local>
 Content-Transfer-Encoding: quoted-printable
+MIME-Version: 1.0
+X-Brightmail-Tracker: H4sIAAAAAAAAA02Sa0xSYRjHe885wIHCjmTxrHtm66KS3al1W7Oiti7f2lxLSE9qoiJIWK4k
+        u2iuko2mEy3NLmhbLimTxLChRmRpZRfFVtPILnwosZtGrODYxrffs+f/vL/nffeSuKCKNZlM
+        Sc+ilekyeTibR9y+P9wRfRk5E2N6zSHiLleIuF1XhYnLSo5h4rvOSHHTXQchbvSaOevZkpvV
+        CySma6fYkkeVrRzJkGn6TiKOtzqRlqccoJUL10p5yboLJYTi6fLs7ptXkBYNRhYiLgnUUui+
+        UUQUIh4poKoRmJ53cJjiGwL9DzPbnxJQQwga+uH/RJXxE4sJGRFYdAUYU/wLfen8hpjiEQKv
+        pWs0VoPAp+8h/PNsaj5YHSaOn8OoPdBWey8gxP0TzxzvWf7GBGot1P9qZjOhdWDRtrIYFsG5
+        6jLMzwQ1By40PQ0wn9oGtU1/AhkutQTcRifyM6KmQX/NSECGU0Jwuiow5hKhUFXWhDM8CXyN
+        fWyGo+DxKxdiOAbqr1gJhmdBwf0eNnNOFFRaPKO8EuztPzCGI+HqRTfO7BMKjlJX4FmBaubC
+        s3f5o4JYGMwv4zA8AT7bb3F0KMoQtJ8hyGEIchiCHIYgRyViXUNCWq1KS6JVi9JpjUglS1Op
+        05NECRlpJvTvG7X77B4zOv95UGRDGIlsCEg8PIzv3PwyUcBPlB08RCsz4pVqOa2yoSkkES7k
+        R65xJAioJFkWnUrTClr5v4uR3MlabJeOzN5iVhYWxvePVey592RgnGb5i1LJ4poCzYYXlSX9
+        RsXeGKIz2VeUihXzf61oGO+r06+quLFx2b4nRS17dz+M1poJ6ekp8+QbZuauHrtJvXFJXlvF
+        ke8db1X73A8/WH4meFzSr/pyXqvFnIdzb51JlcSl9GWWRsi1BcOiMa/3v5e1nPTaL/8c0HvS
+        3DN3xL/pHJHmjxiLx+EaU4785NzruS68rbc2InbiUnq/MLrZmvP768AdtadF42486EZTM6x0
+        RNjHo+XWrV06aVb5EUWb1ynAiHW2GblbhQd6vVn2hj+HOobPzh5Df3jwKe+E7dX8xdnbow+H
+        ZG6/hErrjocTqmTZogW4UiX7C5ShDPu1AwAA
+X-Brightmail-Tracker: H4sIAAAAAAAAA02Se0hTURjAO7t3Dwvruikehlmtt9bV6aZb2QyiXFFZQYT2sKmXKU1n926W
+        FbGKyBaRoSFttqa5TCux6bLyVbKUYVFqag2LyGVMsdRM0h7mvAb77/cdvt/3OHwchFvO5HPS
+        MzUEmalQCVhz0ba/rR/W3gLO1HDdj2hJp2u+pC2vhCExFp5jSBqcoZL6BgcqefL7EXsjS159
+        J0RurbjIkr8w29ny79bgXWgiHkOqtRpicZqa0mwQ7BdKInChVIJHiKS4MDL64LoIsSBMFpNK
+        qNKzCTJMdhhPyzMVolntUcffVluADoyE6oEPB2IiWFLmZnqYi1kAtF/fTr8HwQdjXUyaefB3
+        t56lB3Onc0YAHLIOIXTwAsCqcj2gg3IA3X/62B6Fha2GjQ7rDPtjh+DzyqdsTxLiMTocn2fq
+        8jAZtP1sYtFJsbBOZ2fSjMOCO0aGh1FsOTTVt8+wL7YDVtb/mZ01EQ7nmlEP+2CRcLDMCTwM
+        sIXwU/nkTGMEC4RO100GvQMGS+tfITQHQHff39nd1sCXPS5Aczi0WRpRmpfA3JZ3LLrOGmiu
+        G51lKWxtG2fQHApvFw8i9Gx+0HHdheaBIINXa4OXbvDSDV66wUs3A2YF8Ce0VIYygxLilCKD
+        0mYq8RR1hhVM38zDlonqR8A0MII3AwYHNAPIQQT+vs647lSub6oi5wRBqpNIrYqgmoF4+u+u
+        IvyAFPX00WVqkoRR4WKhKEoaLpZGRQoCfbdm5Sq4mFKhIY4QRBZB/vcYHB++jrHe9sMhqwna
+        5XcNTra6G23mK0WjsHROdnAvdeRXmHJBcEgolXD6ffdUsU9RQVxynZFXmbzC4jDHdsZ29k1x
+        rY/T9dqJc6sS+nPmJV7sdedf2hww4l45KRi39BDjqmeGC+2rswQHeGSZ7NuiazsGttWWzPvY
+        JV8+6upvGjLU3C9+vS2Oxy8A8QUb1KzNos/2+4O9Y3a+CM3hxnQcPanr35vQXOpCtlxYxja9
+        3x14D6t6cJ5U5WdPVHT2Tn1VgpBvHXu2fzha0r/yxj7FeJl4p0n8ZuzVJumionWWqvh844Bh
+        4Rfj+qW1pxw5x3412dSFTbKYyyfOYHcBe3iMPNsgFKBUmkIYgpCU4h82bS9IvAMAAA==
+X-CMS-MailID: 20230814102748eucas1p269b8a53ed09fae1eb57dce3d2a7de752
+X-Msg-Generator: CA
+X-RootMTR: 20230814102748eucas1p269b8a53ed09fae1eb57dce3d2a7de752
+X-EPHeader: CA
+CMS-TYPE: 201P
+X-CMS-RootMailID: 20230814102748eucas1p269b8a53ed09fae1eb57dce3d2a7de752
+References: <20230810171429.31759-1-jack@suse.cz>
+        <20230811110504.27514-28-jack@suse.cz>
+        <CGME20230814102748eucas1p269b8a53ed09fae1eb57dce3d2a7de752@eucas1p2.samsung.com>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Sat, Aug 12, 2023 at 3:04=E2=80=AFAM Darrick J. Wong <djwong@kernel.org>=
- wrote:
->
-> On Fri, Aug 11, 2023 at 12:31:18PM -0700, Luis Chamberlain wrote:
-> > On Tue, Aug 01, 2023 at 12:58:21PM -0700, Darrick J. Wong wrote:
-> > > +Roles
-> > > +-----
-> > > +There are seven key roles in the XFS project.
-> > > +- **Testing Lead**: This person is responsible for setting the test
-> > > +  coverage goals of the project, negotiating with developers to deci=
-de
-> > > +  on new tests for new features, and making sure that developers and
-> > > +  release managers execute on the testing.
-> > > +
-> > > +  The testing lead should identify themselves with an ``M:`` entry i=
-n
-> > > +  the XFS section of the fstests MAINTAINERS file.
-> >
-> > I think breaking responsibility down is very sensible, and should hopef=
-ully
-> > allow you to not burn out. Given I realize how difficult it is to do al=
-l
-> > the tasks, and since I'm already doing quite a bit of testing of XFS
-> > on linux-next I can volunteer to help with this task of testing lead
-> > if folks also think it may be useful to the community.
-> >
-> > The only thing is I'd like to also ask if Amir would join me on the
-> > role to avoid conflicts of interest when and if it comes down to testin=
-g
-> > features I'm involved in somehow.
->
-> Good question.  Amir?
->
 
-I am more than happy to help, but I don't believe that I currently perform
-or that I will have time to perform the official duties of **Testing
-Lead** role.
+Hi Jan,
 
-I fully support the nomination of Luis and I think the **Release Manager**
-should be able to resolve any conflict of interests of the **Testing Lead**
-as feature developer should any such conflicts arise :)
+On Fri, Aug 11, 2023 at 01:04:59PM +0200, Jan Kara wrote:
+> Convert xfs to use bdev_open_by_path() and pass the handle around.
+>
+> CC: "Darrick J. Wong" <djwong@kernel.org>
+> CC: linux-xfs@vger.kernel.org
+> Signed-off-by: Jan Kara <jack@suse.cz>
+> ---
+>  fs/xfs/xfs_buf.c   | 11 +++++-----
+>  fs/xfs/xfs_buf.h   |  3 ++-
+>  fs/xfs/xfs_super.c | 54 +++++++++++++++++++++++++---------------------
+>  3 files changed, 37 insertions(+), 31 deletions(-)
+>
+> diff --git a/fs/xfs/xfs_buf.c b/fs/xfs/xfs_buf.c
+> index 15d1e5a7c2d3..461a5fb6155b 100644
+> --- a/fs/xfs/xfs_buf.c
+> +++ b/fs/xfs/xfs_buf.c
+> @@ -1989,7 +1989,7 @@ xfs_setsize_buftarg_early(
+>  struct xfs_buftarg *
+>  xfs_alloc_buftarg(
+>  	struct xfs_mount	*mp,
+> -	struct block_device	*bdev)
+> +	struct bdev_handle	*bdev_handle)
+>  {
+>  	xfs_buftarg_t		*btp;
+>  	const struct dax_holder_operations *ops =3D NULL;
+> @@ -2000,9 +2000,10 @@ xfs_alloc_buftarg(
+>  	btp =3D kmem_zalloc(sizeof(*btp), KM_NOFS);
+>
+>  	btp->bt_mount =3D mp;
+> -	btp->bt_dev =3D  bdev->bd_dev;
+> -	btp->bt_bdev =3D bdev;
+> -	btp->bt_daxdev =3D fs_dax_get_by_bdev(bdev, &btp->bt_dax_part_off,
+> +	btp->bt_bdev_handle =3D bdev_handle;
+> +	btp->bt_dev =3D  bdev_handle->bdev->bd_dev;
+> +	btp->bt_bdev =3D bdev_handle->bdev;
+> +	btp->bt_daxdev =3D fs_dax_get_by_bdev(btp->bt_bdev, &btp->bt_dax_part_o=
+ff,
+>  					    mp, ops);
+>
+>  	/*
+> @@ -2012,7 +2013,7 @@ xfs_alloc_buftarg(
+>  	ratelimit_state_init(&btp->bt_ioerror_rl, 30 * HZ,
+>  			     DEFAULT_RATELIMIT_BURST);
+>
+> -	if (xfs_setsize_buftarg_early(btp, bdev))
+> +	if (xfs_setsize_buftarg_early(btp, btp->bt_bdev))
 
-Thanks,
-Amir.
+This can now be simplified to one parameter. And use the btp->bt_bdev
+directly when invoking bdev_logical_block_size.
+
+>  		goto error_free;
+>
+>  	if (list_lru_init(&btp->bt_lru))
+> diff --git a/fs/xfs/xfs_buf.h b/fs/xfs/xfs_buf.h
+> index 549c60942208..f6418c1312f5 100644
+> --- a/fs/xfs/xfs_buf.h
+> +++ b/fs/xfs/xfs_buf.h
+> @@ -92,6 +92,7 @@ typedef unsigned int xfs_buf_flags_t;
+>   */
+>  typedef struct xfs_buftarg {
+>  	dev_t			bt_dev;
+> +	struct bdev_handle	*bt_bdev_handle;
+>  	struct block_device	*bt_bdev;
+>  	struct dax_device	*bt_daxdev;
+>  	u64			bt_dax_part_off;
+> @@ -351,7 +352,7 @@ xfs_buf_update_cksum(struct xfs_buf *bp, unsigned lon=
+g cksum_offset)
+>   *	Handling of buftargs.
+>   */
+>  struct xfs_buftarg *xfs_alloc_buftarg(struct xfs_mount *mp,
+> -		struct block_device *bdev);
+> +		struct bdev_handle *bdev_handle);
+>  extern void xfs_free_buftarg(struct xfs_buftarg *);
+>  extern void xfs_buftarg_wait(struct xfs_buftarg *);
+>  extern void xfs_buftarg_drain(struct xfs_buftarg *);
+> diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
+> index 5340f2dc28bd..6189f726b309 100644
+> --- a/fs/xfs/xfs_super.c
+> +++ b/fs/xfs/xfs_super.c
+> @@ -381,14 +381,15 @@ STATIC int
+>  xfs_blkdev_get(
+>  	xfs_mount_t		*mp,
+>  	const char		*name,
+> -	struct block_device	**bdevp)
+> +	struct bdev_handle	**handlep)
+>  {
+>  	int			error =3D 0;
+>
+> -	*bdevp =3D blkdev_get_by_path(name, BLK_OPEN_READ | BLK_OPEN_WRITE,
+> -				    mp->m_super, &fs_holder_ops);
+> -	if (IS_ERR(*bdevp)) {
+> -		error =3D PTR_ERR(*bdevp);
+> +	*handlep =3D bdev_open_by_path(name, BLK_OPEN_READ | BLK_OPEN_WRITE,
+> +				     mp->m_super, &fs_holder_ops);
+> +	if (IS_ERR(*handlep)) {
+> +		error =3D PTR_ERR(*handlep);
+> +		*handlep =3D NULL;
+>  		xfs_warn(mp, "Invalid device [%s], error=3D%d", name, error);
+>  	}
+>
+> @@ -397,11 +398,10 @@ xfs_blkdev_get(
+>
+>  STATIC void
+>  xfs_blkdev_put(
+> -	struct xfs_mount	*mp,
+> -	struct block_device	*bdev)
+> +	struct bdev_handle	*handle)
+>  {
+> -	if (bdev)
+> -		blkdev_put(bdev, mp->m_super);
+> +	if (handle)
+> +		bdev_release(handle);
+>  }
+>
+>  STATIC void
+> @@ -409,16 +409,18 @@ xfs_close_devices(
+>  	struct xfs_mount	*mp)
+>  {
+>  	if (mp->m_logdev_targp && mp->m_logdev_targp !=3D mp->m_ddev_targp) {
+> -		struct block_device *logdev =3D mp->m_logdev_targp->bt_bdev;
+> +		struct bdev_handle *logdev_handle =3D
+> +			mp->m_logdev_targp->bt_bdev_handle;
+>
+>  		xfs_free_buftarg(mp->m_logdev_targp);
+> -		xfs_blkdev_put(mp, logdev);
+> +		xfs_blkdev_put(logdev_handle);
+>  	}
+>  	if (mp->m_rtdev_targp) {
+> -		struct block_device *rtdev =3D mp->m_rtdev_targp->bt_bdev;
+> +		struct bdev_handle *rtdev_handle =3D
+> +			mp->m_rtdev_targp->bt_bdev_handle;
+>
+>  		xfs_free_buftarg(mp->m_rtdev_targp);
+> -		xfs_blkdev_put(mp, rtdev);
+> +		xfs_blkdev_put(rtdev_handle);
+>  	}
+>  	xfs_free_buftarg(mp->m_ddev_targp);
+>  }
+> @@ -439,7 +441,7 @@ xfs_open_devices(
+>  {
+>  	struct super_block	*sb =3D mp->m_super;
+>  	struct block_device	*ddev =3D sb->s_bdev;
+> -	struct block_device	*logdev =3D NULL, *rtdev =3D NULL;
+> +	struct bdev_handle	*logdev_handle =3D NULL, *rtdev_handle =3D NULL;
+>  	int			error;
+>
+>  	/*
+> @@ -452,17 +454,19 @@ xfs_open_devices(
+>  	 * Open real time and log devices - order is important.
+>  	 */
+>  	if (mp->m_logname) {
+> -		error =3D xfs_blkdev_get(mp, mp->m_logname, &logdev);
+> +		error =3D xfs_blkdev_get(mp, mp->m_logname, &logdev_handle);
+>  		if (error)
+>  			goto out_relock;
+>  	}
+>
+>  	if (mp->m_rtname) {
+> -		error =3D xfs_blkdev_get(mp, mp->m_rtname, &rtdev);
+> +		error =3D xfs_blkdev_get(mp, mp->m_rtname, &rtdev_handle);
+>  		if (error)
+>  			goto out_close_logdev;
+>
+> -		if (rtdev =3D=3D ddev || rtdev =3D=3D logdev) {
+> +		if (rtdev_handle->bdev =3D=3D ddev ||
+> +		    (logdev_handle &&
+> +		     rtdev_handle->bdev =3D=3D logdev_handle->bdev)) {
+>  			xfs_warn(mp,
+>  	"Cannot mount filesystem with identical rtdev and ddev/logdev.");
+>  			error =3D -EINVAL;
+> @@ -474,18 +478,18 @@ xfs_open_devices(
+>  	 * Setup xfs_mount buffer target pointers
+>  	 */
+>  	error =3D -ENOMEM;
+> -	mp->m_ddev_targp =3D xfs_alloc_buftarg(mp, ddev);
+> +	mp->m_ddev_targp =3D xfs_alloc_buftarg(mp, sb->s_bdev_handle);
+>  	if (!mp->m_ddev_targp)
+>  		goto out_close_rtdev;
+>
+> -	if (rtdev) {
+> -		mp->m_rtdev_targp =3D xfs_alloc_buftarg(mp, rtdev);
+> +	if (rtdev_handle) {
+> +		mp->m_rtdev_targp =3D xfs_alloc_buftarg(mp, rtdev_handle);
+>  		if (!mp->m_rtdev_targp)
+>  			goto out_free_ddev_targ;
+>  	}
+>
+> -	if (logdev && logdev !=3D ddev) {
+> -		mp->m_logdev_targp =3D xfs_alloc_buftarg(mp, logdev);
+> +	if (logdev_handle && logdev_handle->bdev !=3D ddev) {
+> +		mp->m_logdev_targp =3D xfs_alloc_buftarg(mp, logdev_handle);
+>  		if (!mp->m_logdev_targp)
+>  			goto out_free_rtdev_targ;
+>  	} else {
+> @@ -503,10 +507,10 @@ xfs_open_devices(
+>   out_free_ddev_targ:
+>  	xfs_free_buftarg(mp->m_ddev_targp);
+>   out_close_rtdev:
+> -	xfs_blkdev_put(mp, rtdev);
+> +	xfs_blkdev_put(rtdev_handle);
+>   out_close_logdev:
+> -	if (logdev && logdev !=3D ddev)
+> -		xfs_blkdev_put(mp, logdev);
+> +	if (logdev_handle && logdev_handle->bdev !=3D ddev)
+> +		xfs_blkdev_put(logdev_handle);
+>  	goto out_relock;
+>  }
+>
+> --
+> 2.35.3
+>=
