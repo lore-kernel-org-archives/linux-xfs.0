@@ -2,121 +2,99 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id BF486C04E69
-	for <linux-xfs@archiver.kernel.org>; Mon, 14 Aug 2023 11:06:29 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5D242C41513
+	for <linux-xfs@archiver.kernel.org>; Mon, 14 Aug 2023 13:44:23 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233847AbjHNLF7 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 14 Aug 2023 07:05:59 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57012 "EHLO
+        id S231187AbjHNNnv (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 14 Aug 2023 09:43:51 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39944 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229623AbjHNLF2 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 14 Aug 2023 07:05:28 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0F19A1B5;
-        Mon, 14 Aug 2023 04:05:28 -0700 (PDT)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        with ESMTP id S231643AbjHNNnb (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 14 Aug 2023 09:43:31 -0400
+Received: from smtp-out2.suse.de (smtp-out2.suse.de [195.135.220.29])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 60481106;
+        Mon, 14 Aug 2023 06:43:30 -0700 (PDT)
+Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
         (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature RSA-PSS (2048 bits))
+         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 9505F63C48;
-        Mon, 14 Aug 2023 11:05:27 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 0D8AAC433C7;
-        Mon, 14 Aug 2023 11:05:21 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1692011127;
-        bh=o2GX9ktf7XmPbMjQ9eJQ/RJAYkU4u146tdoCQwdGLb0=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=bIay++Zk8I7jdq3aa314BvqvMSwSTvUrpfQ7qiM3lFepfXfKvkyxKw+ScOHOeNAeF
-         swv1N35AaYHTsafue1ph47qRvF4v7/WNS4m6C/vyxo5D8YlSLO7aA3cWTsuhPBBc5n
-         LB+rxQtjAurAl+RNPoAAUTKinsrT3dSVXbCaXI4wxEsLhMQzqaX9UtRxoIsUj5gxfY
-         +H3DHAZWgwJJoUhMVb9xrAz/MBkCw+eE9/jjoA6eBhWtNlCNXNEfgNI/4TVQRrEk3+
-         iMkeR/oOvgPUnvMrLBKF2FjWxg11L6xc3ZZzJ4Tt6uXZBsaEqVGQza9pz0gzmiarsL
-         wVtCOM+YmdytQ==
-Date:   Mon, 14 Aug 2023 13:05:19 +0200
-From:   Carlos Maiolino <cem@kernel.org>
-To:     Christoph Hellwig <hch@lst.de>
-Cc:     Al Viro <viro@zeniv.linux.org.uk>,
-        Christian Brauner <brauner@kernel.org>,
-        Jan Kara <jack@suse.cz>, Chris Mason <clm@fb.com>,
-        Josef Bacik <josef@toxicpanda.com>,
-        David Sterba <dsterba@suse.com>, Theodore Ts'o <tytso@mit.edu>,
-        Andreas Dilger <adilger.kernel@dilger.ca>,
-        Jaegeuk Kim <jaegeuk@kernel.org>, Chao Yu <chao@kernel.org>,
-        Ryusuke Konishi <konishi.ryusuke@gmail.com>,
+        by smtp-out2.suse.de (Postfix) with ESMTPS id 1EAB01F7AB;
+        Mon, 14 Aug 2023 13:43:29 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.cz; s=susede2_rsa;
+        t=1692020609; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+         mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=j5vw+gomPldsDXttNygJ42hXltBkXGcfKwGJEUtjfdM=;
+        b=cAEl3QCGzc4McHHCgShAb4E4vu3a+OXcHLXP7/odm/VFO95d3mizeI2EmvQ7HeKV8IK6oS
+        F4ZUpWtEBocnO4bv9FJdohXwd80P70J7MBmY+33t1BivVsC+OVOvkegCCTKtR0YhN0MUY6
+        sc5Mgim3iqUs/BjGWKMpD2GSnUr3ihU=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.cz;
+        s=susede2_ed25519; t=1692020609;
+        h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+         mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=j5vw+gomPldsDXttNygJ42hXltBkXGcfKwGJEUtjfdM=;
+        b=Imb7MkiR1pyxgWAedNHLI2BViKDLZ/InJ6B8SAy5R90xraYDnR4lF40uHZDWQbULgGJTaB
+        4Vwdj1LahNz8zcDQ==
+Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
+        (No client certificate requested)
+        by imap2.suse-dmz.suse.de (Postfix) with ESMTPS id 040D3138E2;
+        Mon, 14 Aug 2023 13:43:29 +0000 (UTC)
+Received: from dovecot-director2.suse.de ([192.168.254.65])
+        by imap2.suse-dmz.suse.de with ESMTPSA
+        id wwf3AIEv2mThYwAAMHmgww
+        (envelope-from <jack@suse.cz>); Mon, 14 Aug 2023 13:43:29 +0000
+Received: by quack3.suse.cz (Postfix, from userid 1000)
+        id 86DC8A0769; Mon, 14 Aug 2023 15:43:28 +0200 (CEST)
+Date:   Mon, 14 Aug 2023 15:43:28 +0200
+From:   Jan Kara <jack@suse.cz>
+To:     Daniel Gomez <da.gomez@samsung.com>
+Cc:     Jan Kara <jack@suse.cz>,
+        "linux-fsdevel@vger.kernel.org" <linux-fsdevel@vger.kernel.org>,
+        "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>,
+        Christoph Hellwig <hch@infradead.org>,
         "Darrick J. Wong" <djwong@kernel.org>,
-        Jens Axboe <axboe@kernel.dk>, linux-btrfs@vger.kernel.org,
-        linux-ext4@vger.kernel.org, linux-f2fs-devel@lists.sourceforge.net,
-        linux-nilfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
-        linux-xfs@vger.kernel.org, linux-block@vger.kernel.org
-Subject: Re: [PATCH 12/12] xfs use fs_holder_ops for the log and RT devices
-Message-ID: <20230814110519.i4vjdomisjrez3r3@andromeda>
-References: <20230802154131.2221419-1-hch@lst.de>
- <GiAHRRU8GiDH6Pv5bBBlwPA3hI_9kRXKZCNl7-CoadP8Bf7DiWIUnUt9bG1gBU92q5OuJ4Uy1Negt6JqJWxpeg==@protonmail.internalid>
- <20230802154131.2221419-13-hch@lst.de>
+        "linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>
+Subject: Re: [PATCH 28/29] xfs: Convert to bdev_open_by_path()
+Message-ID: <20230814134328.haymglxno6oaxac2@quack3>
+References: <20230810171429.31759-1-jack@suse.cz>
+ <20230811110504.27514-28-jack@suse.cz>
+ <CGME20230814102748eucas1p269b8a53ed09fae1eb57dce3d2a7de752@eucas1p2.samsung.com>
+ <3wo4aepjfabkpoqovt3d5j2fysgjahvd2dfli42nzjzfdklxp5@zsgzkmifxsbm>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20230802154131.2221419-13-hch@lst.de>
+In-Reply-To: <3wo4aepjfabkpoqovt3d5j2fysgjahvd2dfli42nzjzfdklxp5@zsgzkmifxsbm>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Wed, Aug 02, 2023 at 05:41:31PM +0200, Christoph Hellwig wrote:
-> Use the generic fs_holder_ops to shut down the file system when the
-> log or RT device goes away instead of duplicating the logic.
+On Mon 14-08-23 10:27:46, Daniel Gomez wrote:
 > 
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
+> Hi Jan,
+> 
+> On Fri, Aug 11, 2023 at 01:04:59PM +0200, Jan Kara wrote:
+> > Convert xfs to use bdev_open_by_path() and pass the handle around.
+> >
+> > CC: "Darrick J. Wong" <djwong@kernel.org>
+> > CC: linux-xfs@vger.kernel.org
+> > Signed-off-by: Jan Kara <jack@suse.cz>
+...
+> > @@ -2012,7 +2013,7 @@ xfs_alloc_buftarg(
+> >  	ratelimit_state_init(&btp->bt_ioerror_rl, 30 * HZ,
+> >  			     DEFAULT_RATELIMIT_BURST);
+> >
+> > -	if (xfs_setsize_buftarg_early(btp, bdev))
+> > +	if (xfs_setsize_buftarg_early(btp, btp->bt_bdev))
+> 
+> This can now be simplified to one parameter. And use the btp->bt_bdev
+> directly when invoking bdev_logical_block_size.
 
-Reviewed-by: Carlos Maiolino <cmaiolino@redhat.com>
+Fair point. Done.
 
-Carlos
-
-> ---
->  fs/xfs/xfs_super.c | 17 +++--------------
->  1 file changed, 3 insertions(+), 14 deletions(-)
-> 
-> diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
-> index d5042419ed9997..338eba71ff8667 100644
-> --- a/fs/xfs/xfs_super.c
-> +++ b/fs/xfs/xfs_super.c
-> @@ -377,17 +377,6 @@ xfs_setup_dax_always(
->  	return 0;
->  }
-> 
-> -static void
-> -xfs_bdev_mark_dead(
-> -	struct block_device	*bdev)
-> -{
-> -	xfs_force_shutdown(bdev->bd_holder, SHUTDOWN_DEVICE_REMOVED);
-> -}
-> -
-> -static const struct blk_holder_ops xfs_holder_ops = {
-> -	.mark_dead		= xfs_bdev_mark_dead,
-> -};
-> -
->  STATIC int
->  xfs_blkdev_get(
->  	xfs_mount_t		*mp,
-> @@ -396,8 +385,8 @@ xfs_blkdev_get(
->  {
->  	int			error = 0;
-> 
-> -	*bdevp = blkdev_get_by_path(name, BLK_OPEN_READ | BLK_OPEN_WRITE, mp,
-> -				    &xfs_holder_ops);
-> +	*bdevp = blkdev_get_by_path(name, BLK_OPEN_READ | BLK_OPEN_WRITE,
-> +				    mp->m_super, &fs_holder_ops);
->  	if (IS_ERR(*bdevp)) {
->  		error = PTR_ERR(*bdevp);
->  		xfs_warn(mp, "Invalid device [%s], error=%d", name, error);
-> @@ -412,7 +401,7 @@ xfs_blkdev_put(
->  	struct block_device	*bdev)
->  {
->  	if (bdev)
-> -		blkdev_put(bdev, mp);
-> +		blkdev_put(bdev, mp->m_super);
->  }
-> 
->  STATIC void
-> --
-> 2.39.2
-> 
+								Honza
+-- 
+Jan Kara <jack@suse.com>
+SUSE Labs, CR
