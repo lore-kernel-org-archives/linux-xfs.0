@@ -2,157 +2,59 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 851C8C04E69
-	for <linux-xfs@archiver.kernel.org>; Tue, 15 Aug 2023 09:16:46 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7732CC0015E
+	for <linux-xfs@archiver.kernel.org>; Tue, 15 Aug 2023 20:20:50 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235968AbjHOJQP (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 15 Aug 2023 05:16:15 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47132 "EHLO
+        id S233197AbjHOUUR (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 15 Aug 2023 16:20:17 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51248 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S236054AbjHOJP3 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 15 Aug 2023 05:15:29 -0400
-Received: from mail-pl1-x629.google.com (mail-pl1-x629.google.com [IPv6:2607:f8b0:4864:20::629])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 26A4F1B5
-        for <linux-xfs@vger.kernel.org>; Tue, 15 Aug 2023 02:15:02 -0700 (PDT)
-Received: by mail-pl1-x629.google.com with SMTP id d9443c01a7336-1bb91c20602so9096545ad.0
-        for <linux-xfs@vger.kernel.org>; Tue, 15 Aug 2023 02:15:02 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=bytedance.com; s=google; t=1692090901; x=1692695701;
-        h=content-transfer-encoding:in-reply-to:from:references:cc:to
-         :content-language:subject:user-agent:mime-version:date:message-id
-         :from:to:cc:subject:date:message-id:reply-to;
-        bh=N6UPah3rxy6GE+IW6hhaEXFukV19/RQgo9PDGSDaxjc=;
-        b=B4NWnukFtWBpBFBooLjjX+4xRi6cYrfaI8iegReeVzLQWKPXXt1CxHdKL4/tZ0fNPM
-         0UExtQR6YZe58qkKHpbXtHQV0uPapic2RYOUTB+6Pi7LdOE1C7GEcaF7+zgpTtYtD/de
-         UlP+/TDXrfMVghqI9OT3wDmB4f+60Ecld4ptmi3g4OGE44+/xTS+dFaCetp2KrysicqF
-         +aYy3xTBT6yAIsFwZB/EdPqMFUGo82MatiM8ko8K8L/pW/bDYDRzwOeVlfM6AvdWPq+b
-         HcGAAnq5GXzxPWbDmjMNdTVLUEtTfSjxZmvfFI4JrMMNezs7y6COdvHcs3klmaxHW6vC
-         FHlg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20221208; t=1692090901; x=1692695701;
-        h=content-transfer-encoding:in-reply-to:from:references:cc:to
-         :content-language:subject:user-agent:mime-version:date:message-id
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=N6UPah3rxy6GE+IW6hhaEXFukV19/RQgo9PDGSDaxjc=;
-        b=MFU2J3vnAdrELFkpRNEQ/qc/DwjfZdijgwUOHOdfvytApqSPKqXORyE1JY0K/XE5tn
-         TW0VSifVdYUrHpJiVenkkdwxbV1mlcpNH9/x3cf5d72INd7s1799i8Bnbj6tD55FzyYI
-         9f8ul/5e3hhtDT+fWTgmjEl8UH4XuAYRgf4n0yMn+Samtw+zlxNkhqQ1qpuVe1JTk/Ie
-         Tdxd4B6ZmoLaUjmBTIW7JBPLBBfJSXImlJjcpZYdu6XF9Iic4PQWkwDYg/OQu6WAgx/0
-         ZE0Hw7kGKB0TU5PPrjzlKBYWyK+jLavYzqsAoqU/QuP5b4m5R3sKYQitM5M/IgOYcfJd
-         2biQ==
-X-Gm-Message-State: AOJu0Yz1q4InwbRRgtfPUSjHa0ruGINR/VVUMFDc7mm5NfQdGW6GBQ4T
-        zczhp/oS0YTAOgKoYG3UlMtAig==
-X-Google-Smtp-Source: AGHT+IGKaQyK0d17VyjHV7p/Fr8yAF+2JMAJsl65uoihXD9UcmAUSi1eF134pFnOBdZUKl9ThFMr5Q==
-X-Received: by 2002:a17:902:e5c8:b0:1bb:83ec:832 with SMTP id u8-20020a170902e5c800b001bb83ec0832mr13866844plf.2.1692090901535;
-        Tue, 15 Aug 2023 02:15:01 -0700 (PDT)
-Received: from ?IPV6:fdbd:ff1:ce00:1c25:884:3ed:e1db:b610? ([240e:694:e21:b::2])
-        by smtp.gmail.com with ESMTPSA id io13-20020a17090312cd00b001b39ffff838sm10630843plb.25.2023.08.15.02.14.43
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Tue, 15 Aug 2023 02:15:01 -0700 (PDT)
-Message-ID: <4f64cd2d-90e8-7902-7ef7-1ac58d51b2a8@bytedance.com>
-Date:   Tue, 15 Aug 2023 17:14:40 +0800
-MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:102.0)
- Gecko/20100101 Thunderbird/102.14.0
-Subject: Re: [PATCH v4 01/48] mm: move some shrinker-related function
- declarations to mm/internal.h
-Content-Language: en-US
-To:     Muchun Song <muchun.song@linux.dev>
-Cc:     Andrew Morton <akpm@linux-foundation.org>, david@fromorbit.com,
-        tkhai@ya.ru, Vlastimil Babka <vbabka@suse.cz>,
-        Roman Gushchin <roman.gushchin@linux.dev>, djwong@kernel.org,
-        Christian Brauner <brauner@kernel.org>,
-        "Paul E. McKenney" <paulmck@kernel.org>, tytso@mit.edu,
-        steven.price@arm.com, cel@kernel.org,
-        Sergey Senozhatsky <senozhatsky@chromium.org>,
-        yujie.liu@intel.com, Greg KH <gregkh@linuxfoundation.org>,
-        simon.horman@corigine.com, dlemoal@kernel.org,
-        LKML <linux-kernel@vger.kernel.org>,
-        Linux-MM <linux-mm@kvack.org>, x86@kernel.org,
-        kvm@vger.kernel.org, xen-devel@lists.xenproject.org,
-        linux-erofs@lists.ozlabs.org,
-        linux-f2fs-devel@lists.sourceforge.net, cluster-devel@redhat.com,
-        linux-nfs@vger.kernel.org, linux-mtd@lists.infradead.org,
-        rcu@vger.kernel.org, netdev@vger.kernel.org,
-        dri-devel@lists.freedesktop.org, linux-arm-msm@vger.kernel.org,
-        dm-devel@redhat.com, linux-raid@vger.kernel.org,
-        linux-bcache@vger.kernel.org,
-        virtualization@lists.linux-foundation.org,
-        linux-fsdevel@vger.kernel.org, linux-ext4@vger.kernel.org,
-        linux-xfs@vger.kernel.org, linux-btrfs@vger.kernel.org
-References: <20230807110936.21819-1-zhengqi.arch@bytedance.com>
- <20230807110936.21819-2-zhengqi.arch@bytedance.com>
- <FC3AE898-443D-4ACB-BCB4-0F8F2F48CDD0@linux.dev>
-From:   Qi Zheng <zhengqi.arch@bytedance.com>
-In-Reply-To: <FC3AE898-443D-4ACB-BCB4-0F8F2F48CDD0@linux.dev>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+        with ESMTP id S236136AbjHOUT4 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 15 Aug 2023 16:19:56 -0400
+Received: from muffat.debian.org (muffat.debian.org [IPv6:2607:f8f0:614:1::1274:33])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id ABAA11BE7
+        for <linux-xfs@vger.kernel.org>; Tue, 15 Aug 2023 13:19:55 -0700 (PDT)
+Received: from usper.debian.org ([2603:400a:ffff:bb8::801f:45]:45756)
+        from C=NA,ST=NA,L=Ankh Morpork,O=Debian SMTP,OU=Debian SMTP CA,CN=usper.debian.org,EMAIL=hostmaster@usper.debian.org (verified)
+        by muffat.debian.org with esmtps (TLS1.3:ECDHE_SECP256R1__RSA_PSS_RSAE_SHA256__AES_256_GCM:256)
+        (Exim 4.94.2)
+        (envelope-from <ftpmaster@ftp-master.debian.org>)
+        id 1qW0WC-004dgd-2l
+        for linux-xfs@vger.kernel.org; Tue, 15 Aug 2023 20:19:54 +0000
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=ftp-master.debian.org; s=smtpauto.usper; h=Message-Id:Date:Subject:From:To:
+        Reply-To:Cc:MIME-Version:Content-Type:Content-Transfer-Encoding:Content-ID:
+        Content-Description:In-Reply-To:References;
+        bh=hlYmpZAMhOyFvGHRHei4LGLaexl9EZPDUeeuzNZWeJI=; b=KPkVgO9E8Wo7Gl69Kd4cHd/u10
+        2gZaCWO3wA6LibCajeyJOvjIiEcREjVde4Q81kj8W8kVyIu/s+aAEgyAQAQ5MDFG3ZelH7iTbV0hm
+        ZCv/YbpppBVoRUrzPykd2c9vlbdAvns+O9ivt6qBJ0anXbKStd33fDsSm0tk38B/y5EJz/DfcCmms
+        u963r1JapQxA6OgDW03NEM8iriKRSdItTyu1aTNeXQTxsivcPaenvl/WjFIXHkSBKFbnHjkRbfIEb
+        REsmkFv3fpouTTRATMDdW41BNGa4Aq/ghFIyAMKssADqjkBLvG9uNpKaIS4RnfpLaVKo2wS4aZAPa
+        GuBY+XsA==;
+Received: from dak-unpriv by usper.debian.org with local (Exim 4.94.2)
+        (envelope-from <ftpmaster@ftp-master.debian.org>)
+        id 1qW0W8-004UgL-I9
+        for linux-xfs@vger.kernel.org; Tue, 15 Aug 2023 20:19:52 +0000
+To:     linux-xfs@vger.kernel.org
+From:   Debian FTP Masters <ftpmaster@ftp-master.debian.org>
+Subject: Processing of xfsprogs_6.4.0-1_source.changes
+Date:   Tue, 15 Aug 2023 20:19:52 +0000
+X-Debian: DAK
+X-DAK:  DAK
+Auto-Submitted: auto-generated
+X-Debian-Package: xfsprogs
+Message-Id: <E1qW0W8-004UgL-I9@usper.debian.org>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
+xfsprogs_6.4.0-1_source.changes uploaded successfully to localhost
+along with the files:
+  xfsprogs_6.4.0-1.dsc
+  xfsprogs_6.4.0.orig.tar.xz
+  xfsprogs_6.4.0-1.debian.tar.xz
+  xfsprogs_6.4.0-1_source.buildinfo
 
+Greetings,
 
-On 2023/8/15 16:36, Muchun Song wrote:
-> 
-> 
->> On Aug 7, 2023, at 19:08, Qi Zheng <zhengqi.arch@bytedance.com> wrote:
->>
->> The following functions are only used inside the mm subsystem, so it's
->> better to move their declarations to the mm/internal.h file.
->>
->> 1. shrinker_debugfs_add()
->> 2. shrinker_debugfs_detach()
->> 3. shrinker_debugfs_remove()
->>
->> Signed-off-by: Qi Zheng <zhengqi.arch@bytedance.com>
-> 
-> Reviewed-by: Muchun Song <songmuchun@bytedance.com>
-> 
-> One nit bellow.
-> 
-> [...]
-> 
->> +
->> +/*
->> + * shrinker related functions
->> + */
-> 
-> This is a multi-comment format. "/* shrinker related functions. */" is
-> the right one-line format of comment.
-
-Will do.
-
-Thanks,
-Qi
-
-> 
->> +
->> +#ifdef CONFIG_SHRINKER_DEBUG
->> +extern int shrinker_debugfs_add(struct shrinker *shrinker);
->> +extern struct dentry *shrinker_debugfs_detach(struct shrinker *shrinker,
->> +      int *debugfs_id);
->> +extern void shrinker_debugfs_remove(struct dentry *debugfs_entry,
->> +    int debugfs_id);
->> +#else /* CONFIG_SHRINKER_DEBUG */
->> +static inline int shrinker_debugfs_add(struct shrinker *shrinker)
->> +{
->> +	return 0;
->> +}
->> +static inline struct dentry *shrinker_debugfs_detach(struct shrinker *shrinker,
->> +     int *debugfs_id)
->> +{
->> +	*debugfs_id = -1;
->> +	return NULL;
->> +}
->> +static inline void shrinker_debugfs_remove(struct dentry *debugfs_entry,
->> +	int debugfs_id)
->> +{
->> +}
->> +#endif /* CONFIG_SHRINKER_DEBUG */
->> +
->> #endif /* __MM_INTERNAL_H */
->> -- 
->> 2.30.2
->>
-> 
+	Your Debian queue daemon (running on host usper.debian.org)
