@@ -2,149 +2,125 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 93A0EC001E0
-	for <linux-xfs@archiver.kernel.org>; Mon, 14 Aug 2023 16:44:10 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0C24CC04A94
+	for <linux-xfs@archiver.kernel.org>; Tue, 15 Aug 2023 08:37:49 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230042AbjHNQni (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 14 Aug 2023 12:43:38 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53830 "EHLO
+        id S235695AbjHOIhR (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 15 Aug 2023 04:37:17 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50330 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232499AbjHNQn3 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 14 Aug 2023 12:43:29 -0400
-Received: from smtp-out1.suse.de (smtp-out1.suse.de [195.135.220.28])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id AC83610C0;
-        Mon, 14 Aug 2023 09:43:24 -0700 (PDT)
-Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
-        (No client certificate requested)
-        by smtp-out1.suse.de (Postfix) with ESMTPS id 3B23D21906;
-        Mon, 14 Aug 2023 16:43:23 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.cz; s=susede2_rsa;
-        t=1692031403; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:content-type:content-type:
+        with ESMTP id S235684AbjHOIhM (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 15 Aug 2023 04:37:12 -0400
+Received: from out-3.mta0.migadu.com (out-3.mta0.migadu.com [91.218.175.3])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2B176E72
+        for <linux-xfs@vger.kernel.org>; Tue, 15 Aug 2023 01:37:08 -0700 (PDT)
+Content-Type: text/plain;
+        charset=us-ascii
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.dev; s=key1;
+        t=1692088626;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
          in-reply-to:in-reply-to:references:references;
-        bh=oUvv9I+YRijxn7USCgt6yOIKbwQjotN/UplplcOhebw=;
-        b=zGZSRXl74qCuVw7E/cAaeiE2/vQA42KysW+S4tIkXmxqXJXhJQkiPVScxshWrxycoj40yN
-        b4iHrkX+qQ02XiqOHXy7XbPU88X5fSiKnmIDtx/ZgO5ZBxsfjC9cMsI/EWLqF0e1tbsHHM
-        s8u6+5gmXun9sz1wG+O93/QmW2Q+0Ns=
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.cz;
-        s=susede2_ed25519; t=1692031403;
-        h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=oUvv9I+YRijxn7USCgt6yOIKbwQjotN/UplplcOhebw=;
-        b=0Sl/zKo/iWi48k0GHMTje0r8oHiqbSbZJINg6D90/3Ki5JyINjXiXRJOYRU9TU3i57jvrv
-        tQgYE3dVl/VrEsBg==
-Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
-        (No client certificate requested)
-        by imap2.suse-dmz.suse.de (Postfix) with ESMTPS id 2BEBC138EE;
-        Mon, 14 Aug 2023 16:43:23 +0000 (UTC)
-Received: from dovecot-director2.suse.de ([192.168.254.65])
-        by imap2.suse-dmz.suse.de with ESMTPSA
-        id Td+3CqtZ2mQnOwAAMHmgww
-        (envelope-from <jack@suse.cz>); Mon, 14 Aug 2023 16:43:23 +0000
-Received: by quack3.suse.cz (Postfix, from userid 1000)
-        id B03AFA0769; Mon, 14 Aug 2023 18:43:22 +0200 (CEST)
-Date:   Mon, 14 Aug 2023 18:43:22 +0200
-From:   Jan Kara <jack@suse.cz>
-To:     Colin Walters <walters@verbum.org>
-Cc:     Jan Kara <jack@suse.cz>, linux-fsdevel@vger.kernel.org,
-        linux-block@vger.kernel.org, Christoph Hellwig <hch@infradead.org>,
-        Christian Brauner <brauner@kernel.org>,
-        Jens Axboe <axboe@kernel.dk>, Kees Cook <keescook@google.com>,
-        Theodore Ts'o <tytso@mit.edu>,
-        syzkaller <syzkaller@googlegroups.com>,
-        Alexander Popov <alex.popov@linux.com>,
-        Eric Biggers <ebiggers@google.com>,
-        xfs <linux-xfs@vger.kernel.org>, linux-btrfs@vger.kernel.org,
-        Dmitry Vyukov <dvyukov@google.com>
-Subject: Re: [PATCH 1/6] block: Add config option to not allow writing to
- mounted devices
-Message-ID: <20230814164322.ipqfug6466jmk6ca@quack3>
-References: <20230704122727.17096-1-jack@suse.cz>
- <20230704125702.23180-1-jack@suse.cz>
- <0c5384c2-307b-43fc-9ea6-2a194f859e9b@app.fastmail.com>
+        bh=uBmn5bY96EnmwKJFlv+WltFrhGvpjIbZEKIiYirKvRY=;
+        b=vz0KHcPQmyiJWfmlN0KqRtShPV8OO94S7Ve+8NAyKaJzlfD3l3Gwdcs50vzwkyJwFeNk42
+        wWmdUe83i5yu+zc+P73iwMyGZC6f36VMufdeZyZpMS2xcjecgpOeJWBucmjek3/RmzHbqM
+        Esg+z/IvqlGN9dYsqiRnMi0+1ICkj/k=
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <0c5384c2-307b-43fc-9ea6-2a194f859e9b@app.fastmail.com>
+Subject: Re: [PATCH v4 01/48] mm: move some shrinker-related function
+ declarations to mm/internal.h
+X-Report-Abuse: Please report any abuse attempt to abuse@migadu.com and include these headers.
+From:   Muchun Song <muchun.song@linux.dev>
+In-Reply-To: <20230807110936.21819-2-zhengqi.arch@bytedance.com>
+Date:   Tue, 15 Aug 2023 16:36:31 +0800
+Cc:     Andrew Morton <akpm@linux-foundation.org>, david@fromorbit.com,
+        tkhai@ya.ru, Vlastimil Babka <vbabka@suse.cz>,
+        Roman Gushchin <roman.gushchin@linux.dev>, djwong@kernel.org,
+        Christian Brauner <brauner@kernel.org>,
+        "Paul E. McKenney" <paulmck@kernel.org>, tytso@mit.edu,
+        steven.price@arm.com, cel@kernel.org,
+        Sergey Senozhatsky <senozhatsky@chromium.org>,
+        yujie.liu@intel.com, Greg KH <gregkh@linuxfoundation.org>,
+        simon.horman@corigine.com, dlemoal@kernel.org,
+        LKML <linux-kernel@vger.kernel.org>,
+        Linux-MM <linux-mm@kvack.org>, x86@kernel.org,
+        kvm@vger.kernel.org, xen-devel@lists.xenproject.org,
+        linux-erofs@lists.ozlabs.org,
+        linux-f2fs-devel@lists.sourceforge.net, cluster-devel@redhat.com,
+        linux-nfs@vger.kernel.org, linux-mtd@lists.infradead.org,
+        rcu@vger.kernel.org, netdev@vger.kernel.org,
+        dri-devel@lists.freedesktop.org, linux-arm-msm@vger.kernel.org,
+        dm-devel@redhat.com, linux-raid@vger.kernel.org,
+        linux-bcache@vger.kernel.org,
+        virtualization@lists.linux-foundation.org,
+        linux-fsdevel@vger.kernel.org, linux-ext4@vger.kernel.org,
+        linux-xfs@vger.kernel.org, linux-btrfs@vger.kernel.org
+Content-Transfer-Encoding: quoted-printable
+Message-Id: <FC3AE898-443D-4ACB-BCB4-0F8F2F48CDD0@linux.dev>
+References: <20230807110936.21819-1-zhengqi.arch@bytedance.com>
+ <20230807110936.21819-2-zhengqi.arch@bytedance.com>
+To:     Qi Zheng <zhengqi.arch@bytedance.com>
+X-Migadu-Flow: FLOW_OUT
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Tue 04-07-23 11:56:44, Colin Walters wrote:
-> On Tue, Jul 4, 2023, at 8:56 AM, Jan Kara wrote:
-> > Writing to mounted devices is dangerous and can lead to filesystem
-> > corruption as well as crashes. Furthermore syzbot comes with more and
-> > more involved examples how to corrupt block device under a mounted
-> > filesystem leading to kernel crashes and reports we can do nothing
-> > about. Add tracking of writers to each block device and a kernel cmdline
-> > argument which controls whether writes to block devices open with
-> > BLK_OPEN_BLOCK_WRITES flag are allowed. We will make filesystems use
-> > this flag for used devices.
-> >
-> > Syzbot can use this cmdline argument option to avoid uninteresting
-> > crashes. Also users whose userspace setup does not need writing to
-> > mounted block devices can set this option for hardening.
-> >
-> > Link: 
-> > https://lore.kernel.org/all/60788e5d-5c7c-1142-e554-c21d709acfd9@linaro.org
-> > Signed-off-by: Jan Kara <jack@suse.cz>
-> > ---
-> >  block/Kconfig             | 16 ++++++++++
-> >  block/bdev.c              | 63 ++++++++++++++++++++++++++++++++++++++-
-> >  include/linux/blk_types.h |  1 +
-> >  include/linux/blkdev.h    |  3 ++
-> >  4 files changed, 82 insertions(+), 1 deletion(-)
-> >
-> > diff --git a/block/Kconfig b/block/Kconfig
-> > index 86122e459fe0..8b4fa105b854 100644
-> > --- a/block/Kconfig
-> > +++ b/block/Kconfig
-> > @@ -77,6 +77,22 @@ config BLK_DEV_INTEGRITY_T10
-> >  	select CRC_T10DIF
-> >  	select CRC64_ROCKSOFT
-> > 
-> > +config BLK_DEV_WRITE_MOUNTED
-> > +	bool "Allow writing to mounted block devices"
-> > +	default y
-> > +	help
-> > +	When a block device is mounted, writing to its buffer cache very likely
-> 
-> s/very/is very/
-> 
-> > +	going to cause filesystem corruption. It is also rather easy to crash
-> > +	the kernel in this way since the filesystem has no practical way of
-> > +	detecting these writes to buffer cache and verifying its metadata
-> > +	integrity. However there are some setups that need this capability
-> > +	like running fsck on read-only mounted root device, modifying some
-> > +	features on mounted ext4 filesystem, and similar. If you say N, the
-> > +	kernel will prevent processes from writing to block devices that are
-> > +	mounted by filesystems which provides some more protection from runaway
-> > +	priviledged processes. If in doubt, say Y. The configuration can be
-> 
-> s/priviledged/privileged/
-> 
-> > +	overridden with bdev_allow_write_mounted boot option.
-> 
-> s/with/with the/
 
-Thanks for the language fixes!
 
-> > +/* open is exclusive wrt all other BLK_OPEN_WRITE opens to the device */
-> > +#define BLK_OPEN_BLOCK_WRITES	((__force blk_mode_t)(1 << 5))
-> 
-> Bikeshed but: I think BLK and BLOCK "stutter" here.  The doc comment
-> already uses the term "exclusive" so how about BLK_OPEN_EXCLUSIVE ?  
+> On Aug 7, 2023, at 19:08, Qi Zheng <zhengqi.arch@bytedance.com> wrote:
+>=20
+> The following functions are only used inside the mm subsystem, so it's
+> better to move their declarations to the mm/internal.h file.
+>=20
+> 1. shrinker_debugfs_add()
+> 2. shrinker_debugfs_detach()
+> 3. shrinker_debugfs_remove()
+>=20
+> Signed-off-by: Qi Zheng <zhengqi.arch@bytedance.com>
 
-Well, we already have exclusive opens of block devices which are different
-(they are exclusive only wrt other exclusive opens) so BLK_OPEN_EXCLUSIVE
-will be really confusing. But BLK_OPEN_RESTRICT_WRITES sounds good to me.
+Reviewed-by: Muchun Song <songmuchun@bytedance.com>
 
-								Honza
--- 
-Jan Kara <jack@suse.com>
-SUSE Labs, CR
+One nit bellow.
+
+[...]
+
+> +
+> +/*
+> + * shrinker related functions
+> + */
+
+This is a multi-comment format. "/* shrinker related functions. */" is
+the right one-line format of comment.
+
+> +
+> +#ifdef CONFIG_SHRINKER_DEBUG
+> +extern int shrinker_debugfs_add(struct shrinker *shrinker);
+> +extern struct dentry *shrinker_debugfs_detach(struct shrinker =
+*shrinker,
+> +      int *debugfs_id);
+> +extern void shrinker_debugfs_remove(struct dentry *debugfs_entry,
+> +    int debugfs_id);
+> +#else /* CONFIG_SHRINKER_DEBUG */
+> +static inline int shrinker_debugfs_add(struct shrinker *shrinker)
+> +{
+> +	return 0;
+> +}
+> +static inline struct dentry *shrinker_debugfs_detach(struct shrinker =
+*shrinker,
+> +     int *debugfs_id)
+> +{
+> +	*debugfs_id =3D -1;
+> +	return NULL;
+> +}
+> +static inline void shrinker_debugfs_remove(struct dentry =
+*debugfs_entry,
+> +	int debugfs_id)
+> +{
+> +}
+> +#endif /* CONFIG_SHRINKER_DEBUG */
+> +
+> #endif /* __MM_INTERNAL_H */
+> --=20
+> 2.30.2
+>=20
+
