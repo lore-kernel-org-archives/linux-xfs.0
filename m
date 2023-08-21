@@ -2,94 +2,121 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 89685EE49AB
-	for <linux-xfs@archiver.kernel.org>; Mon, 21 Aug 2023 12:21:12 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 943D7EE4993
+	for <linux-xfs@archiver.kernel.org>; Mon, 21 Aug 2023 13:07:47 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234822AbjHUMVM (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 21 Aug 2023 08:21:12 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48658 "EHLO
+        id S235203AbjHUNHr (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 21 Aug 2023 09:07:47 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37520 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232733AbjHUMVL (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 21 Aug 2023 08:21:11 -0400
-Received: from casper.infradead.org (casper.infradead.org [IPv6:2001:8b0:10b:1236::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 33784E2;
-        Mon, 21 Aug 2023 05:21:09 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=infradead.org; s=casper.20170209; h=In-Reply-To:Content-Type:MIME-Version:
-        References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
-        Content-Transfer-Encoding:Content-ID:Content-Description;
-        bh=5IiWcS1pGUM8RhlF+xFAzuOei17PLjfs94NmDiNvo6g=; b=MR/QHwNqCgmOxVS7c6EPkcvTOM
-        ewCAH+I5VyIrZrxJzwYfZLZdCgL8s90TQvZ+npslaTk64GCHlebjy/zTEFSP1XKvpvz0F1mp04dGb
-        Q4Mw4xNqTcDxevU3YZo9ZuZG7u7901KOLFAZQFBrfJj6DTvFoLmKqeOrbe9EGAWJD80G+5oUvjC9E
-        GE7/tDN7WYGjkchDeLjeoEXqx63p+j9VqmffpAwOVP34B8h7G2NH+m2Ijbr5WZl9m60lEmymGlSTH
-        3KMB/ugwe8njVx8yVWKJI7O8kZmYJA5QdxgWpCri1u728bx/fA3oJh+UCaWAdHAzd3/DRUeZhFvtJ
-        MESTOvHA==;
-Received: from willy by casper.infradead.org with local (Exim 4.94.2 #2 (Red Hat Linux))
-        id 1qY3tZ-00A7pc-KQ; Mon, 21 Aug 2023 12:20:33 +0000
-Date:   Mon, 21 Aug 2023 13:20:33 +0100
-From:   Matthew Wilcox <willy@infradead.org>
-To:     Jan Kara <jack@suse.cz>
-Cc:     Xueshi Hu <xueshi.hu@smartx.com>, dan.j.williams@intel.com,
-        vishal.l.verma@intel.com, dave.jiang@intel.com,
-        jayalk@intworks.biz, daniel@ffwll.ch, deller@gmx.de,
-        bcrl@kvack.org, viro@zeniv.linux.org.uk, brauner@kernel.org,
-        jack@suse.com, tytso@mit.edu, adilger.kernel@dilger.ca,
-        miklos@szeredi.hu, mike.kravetz@oracle.com, muchun.song@linux.dev,
-        djwong@kernel.org, akpm@linux-foundation.org, hughd@google.com,
-        nvdimm@lists.linux.dev, linux-cxl@vger.kernel.org,
-        linux-kernel@vger.kernel.org, linux-fbdev@vger.kernel.org,
-        dri-devel@lists.freedesktop.org, linux-aio@kvack.org,
-        linux-fsdevel@vger.kernel.org, linux-ext4@vger.kernel.org,
-        linux-mm@kvack.org, linux-xfs@vger.kernel.org
-Subject: Re: [PATCH] fs: clean up usage of noop_dirty_folio
-Message-ID: <ZONWka8NpDVGzI8h@casper.infradead.org>
-References: <20230819124225.1703147-1-xueshi.hu@smartx.com>
- <20230821111643.5vxtktznjqk42cak@quack3>
+        with ESMTP id S231716AbjHUNHr (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 21 Aug 2023 09:07:47 -0400
+X-Greylist: delayed 64206 seconds by postgrey-1.37 at lindbergh.monkeyblade.net; Mon, 21 Aug 2023 06:07:45 PDT
+Received: from smtp-outbound4.duck.com (smtp-outbound4.duck.com [20.67.222.11])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 460FA8F
+        for <linux-xfs@vger.kernel.org>; Mon, 21 Aug 2023 06:07:45 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20230821111643.5vxtktznjqk42cak@quack3>
+Subject: Re: Moving existing internal journal log to an external device
+ (success?)
+References: <E4E991B0-4CAA-4E7A-9AC8-531346EDAEC4.1@smtp-inbound1.duck.com>
+ <ZOKQTTxcanMX86Sx@dread.disaster.area>
+ <B4C72D86-4CD6-415D-802E-7A225C868E57.1@smtp-inbound1.duck.com>
+Content-Type: text/plain;
+        charset=US-ASCII;
+        format=flowed
+Content-Transfer-Encoding: 7bit
+To:     Dave Chinner <david@fromorbit.com>
+Cc:     "linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>
+Received: by smtp-inbound1.duck.com; Mon, 21 Aug 2023 09:07:43 -0400
+Message-ID: <4F83C26B-1841-440B-8A51-0F2BD1EFC825.1@smtp-inbound1.duck.com>
+Date:   Mon, 21 Aug 2023 09:07:43 -0400
+From:   fk1xdcio@duck.com
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=duck.com; h=From:
+ Date: Message-ID: Cc: To: Content-Transfer-Encoding: Content-Type:
+ References: Subject: MIME-Version; q=dns/txt; s=postal-KpyQVw;
+ t=1692623264; bh=+QboT3nUINaf6vgGjUpw7CR0XePAFS19LseiJWbUj+w=;
+ b=Y9vF7tn0pY0QCiiO4TZfemj/tBMvfIy5d8noWoOM7fUDnt9uCTgzpQXZaYH4B8UYF7L5gZIoE
+ VBLjzqwrjqFf4ULyFVA/M4Afq6t4VhwBFw+0trVUjJnyfXh0slz33AWvcBvUrUwnqFLrufjiJyV
+ aqR0ii9pClvcP+vI7JlmQvo=
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Mon, Aug 21, 2023 at 01:16:43PM +0200, Jan Kara wrote:
-> On Sat 19-08-23 20:42:25, Xueshi Hu wrote:
-> > In folio_mark_dirty(), it will automatically fallback to
-> > noop_dirty_folio() if a_ops->dirty_folio is not registered.
-> > 
-> > As anon_aops, dev_dax_aops and fb_deferred_io_aops becames empty, remove
-> > them too.
-> > 
-> > Signed-off-by: Xueshi Hu <xueshi.hu@smartx.com>
+On 2023-08-20 18:14, Dave Chinner wrote:
+> On Sun, Aug 20, 2023 at 03:37:38PM -0400, fk1xdcio@duck.com wrote:
+>> Does this look like a sane method for moving an existing internal log 
+>> to an
+>> external device?
+>> 
+>> 3 drives:
+>>    /dev/nvme0n1p1  2GB  Journal mirror 0
+>>    /dev/nvme1n1p1  2GB  Journal mirror 1
+>>    /dev/sda1       16TB XFS
+>> 
+>> # mdadm --create /dev/md0 --level=1 --raid-devices=2 /dev/nvme0n1p1
+>> /dev/nvme1n1p2
+>> # mkfs.xfs /dev/sda1
+>> # xfs_logprint -C journal.bin /dev/sda1
+>> # cat journal.bin > /dev/md0
+>> # xfs_db -x /dev/sda1
+>> 
+>> xfs_db> sb
+>> xfs_db> write -d logstart 0
+>> xfs_db> quit
+>> 
+>> # mount -o logdev=/dev/md0 /dev/sda1 /mnt
 > 
-> Yeah, looks sensible to me but for some callbacks we are oscilating between
-> all users having to provide some callback and providing some default
-> behavior for NULL callback. I don't have a strong opinion either way so
-> feel free to add:
+> So you are physically moving the contents of the log whilst the
+> filesystem is unmounted and unchanging.
 > 
-> Reviewed-by: Jan Kara <jack@suse.cz>
+>> -------------------------
+>> 
+>> It seems to "work" and I tested with a whole bunch of data.
 > 
-> But I guess let's see what Matthew thinks about this and what plans he has
-> so that we don't switch back again in the near future. Matthew?
+> You'll get ENOSPC earlier than you think, because you just leaked
+> the old log space (needs to be marked free space). There might be
+> other issues, but you get to keep all the broken bits to yourself if
+> you find them.
 
-I was hoping Christoph would weigh in ;-)  I don't have a strong
-feeling here, but it seems to me that a NULL ->dirty_folio() should mean
-"do the noop thing" rather than "do the buffer_head thing" or "do the
-filemap thing".  In 0af573780b0b, the buffer_head default was removed.
-I think enough time has passed that we're OK to change what a NULL
-->dirty_folio means (plus we also changed the name of ->set_page_dirty()
-to ->dirty_folio())
+It's 2GB out of terabytes so I don't really care about the space but the 
+"other issues" is a problem.
 
-So Ack to the concept.  One minor change I'd request:
 
--bool noop_dirty_folio(struct address_space *mapping, struct folio *folio)
-+static bool noop_dirty_folio(struct address_space *mapping, struct folio *folio)
- {
- 	if (!folio_test_dirty(folio))
- 		return !folio_test_set_dirty(folio);
- 	return false;
- }
--EXPORT_SYMBOL(noop_dirty_folio);
+> You can probably fix that by running xfs_repair, but then....
+> 
+>> I was also able
+>> to move the log back to internal without issue (set logstart back to 
+>> what it
+>> was originally). I don't know enough about how the filesystem layout 
+>> works
+>> to know if this will eventually break.
+> 
+> .... this won't work.
+> 
+> i.e. you can move the log back to the original position because you
+> didn't mark the space the old journal used as free, so the filesytem
+> still thinks it is in use by something....
 
-Please inline this into folio_mark_dirty() instead of calling it.
+The space being leaked is fine but xfs_repair is an issue. I did some 
+testing and yes, if I run xfs_repair on one of these filesystems with a 
+moved log it causes all sorts of problems. In fact it doesn't seem to 
+work at all. Big problem.
+
+
+>> *IF* this works, why can't xfs_growfs do it?
+> 
+> "Doctor, I can perform an amputation with a tornique and a chainsaw,
+> why can't you do that?"
+> ,,,
+> -Dave.
+
+
+Yes, I understand. I was thinking more of an offline utility for doing 
+this but I see why that can't be done in growfs.
+
+So I guess it doesn't really work. This is why I ask the experts. I'll 
+keep experimenting because due to the requirements of needing to 
+physically move disks around, being able to move the log back and forth 
+from internal to external would be extremely helpful.
+
+Thanks!
