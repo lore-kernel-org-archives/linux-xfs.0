@@ -2,156 +2,133 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7A10EEE49A4
-	for <linux-xfs@archiver.kernel.org>; Sun, 20 Aug 2023 22:14:44 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5A59FEE49A0
+	for <linux-xfs@archiver.kernel.org>; Mon, 21 Aug 2023 05:17:59 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229603AbjHTWOo (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Sun, 20 Aug 2023 18:14:44 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41662 "EHLO
+        id S233125AbjHUFR7 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 21 Aug 2023 01:17:59 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36622 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229516AbjHTWOn (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sun, 20 Aug 2023 18:14:43 -0400
-Received: from mail-pf1-x431.google.com (mail-pf1-x431.google.com [IPv6:2607:f8b0:4864:20::431])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id DE98C9D
-        for <linux-xfs@vger.kernel.org>; Sun, 20 Aug 2023 15:14:41 -0700 (PDT)
-Received: by mail-pf1-x431.google.com with SMTP id d2e1a72fcca58-68a3236a414so887135b3a.0
-        for <linux-xfs@vger.kernel.org>; Sun, 20 Aug 2023 15:14:41 -0700 (PDT)
+        with ESMTP id S231236AbjHUFR6 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 21 Aug 2023 01:17:58 -0400
+Received: from mail-oi1-x22f.google.com (mail-oi1-x22f.google.com [IPv6:2607:f8b0:4864:20::22f])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0A373A3
+        for <linux-xfs@vger.kernel.org>; Sun, 20 Aug 2023 22:17:57 -0700 (PDT)
+Received: by mail-oi1-x22f.google.com with SMTP id 5614622812f47-3a7e68f4214so2292099b6e.1
+        for <linux-xfs@vger.kernel.org>; Sun, 20 Aug 2023 22:17:57 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=fromorbit-com.20221208.gappssmtp.com; s=20221208; t=1692569681; x=1693174481;
+        d=fromorbit-com.20221208.gappssmtp.com; s=20221208; t=1692595076; x=1693199876;
         h=in-reply-to:content-disposition:mime-version:references:message-id
          :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
-        bh=C/84XVBthIaoOVt1mZXtw/Rh5qXUaqqVnFVZRqslxEw=;
-        b=JbfXBe5yJj7tuoCDtYIJh1eUs3k0BfBqEci+YnJkkxVInHNK36M9YMefi+GD5c5Uq0
-         HjXsZwRtTXGy9VKVgQQywjsCfsThKJ7kkz5EINRtVVnTZb4YKm10AQ0uIOCgMaCgXx9p
-         3axqIYW6Ng2HUTctMYnFuAUJmC6+f4tGJEbhXQSHL+59K/IXmKUa7zQdiPcuZG++hNQj
-         2NmqYhpZwJlQixYRR8oWq/4Gz0cULiFfXc2PljMVtOlMUaXPEcFYbNylThzYVgnRx+As
-         TEFYNsiGFt8xBIh52TSPMqs3vqS1sOAsB8/qTEhHft8u3pltaG4VMTyR6rpFF7qVkEuX
-         j3lw==
+        bh=OVPFeVwGL8kP97WkDZ9WBoD6Na/u2oCcPIlsc2AFaUc=;
+        b=VV0RPIxB5zDYAG/m0z51lWJ8XTOXDuhqGb5oy9EuIelkhJdU4qAetIlGJHhcXbYUfH
+         c/Qyuw8bikofrkW0tVXacc7Q8GJpG6emZtgmMU5khzsDOX3INnUkQVAqeqwmLZu6T93d
+         8BF6L9yFrX3j5z2pxDlCEKHzPuLwTBx6j5O9eoqqXSPH+U+Jo2Y6BGvyYyQsm3jNIOFq
+         BDf7A6wASDzhKK+s+QcB57hA/j/CUA5+ubuae0EHnx2Ippr/n3AvVvsOmMidPdP+OKL6
+         bEFqZhvF0kwN/hXqaTAIjYG6VZgVST6thQDZeq9feKsiE3d9Y6ZYF86aHa34qFR8W5U4
+         YHhQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20221208; t=1692569681; x=1693174481;
+        d=1e100.net; s=20221208; t=1692595076; x=1693199876;
         h=in-reply-to:content-disposition:mime-version:references:message-id
          :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
          :message-id:reply-to;
-        bh=C/84XVBthIaoOVt1mZXtw/Rh5qXUaqqVnFVZRqslxEw=;
-        b=G6cxa8FxI1X5JFpb8cD6J4LcQc0gLa4AJx+PKfho1XpBQbnVJ0AtUoJ6zC02bP3tyX
-         79Y1VTNbpVjBNpqfd0tStp4Q0sBzodlxUDSA/IYoZ/VJWchte0dZuUUIlDN2EfL5FJMq
-         WZTOHb7+44TunI2WzVZ274pBS//+h5ctE6d6uLf6xJu2iJPSMWvIqocg/Mx3OHAYaYfz
-         vFnLdFGdKJTxik334FoEPYCcmfNfGcXQcmw2BYfxW9oG7KNe9s0xVWOgpa2qeUKWqBed
-         /r0GSA2e0r6oS5pKzsxy8YQ2HnjV90eP158gve98NaVBoe1iMWJERWTHASDQe153SOlY
-         stzg==
-X-Gm-Message-State: AOJu0YyXgu5g+8rziWqVxcAUr6OG9fyVERKvrcv4jOtER1dooKG2Iwfu
-        DrdelQtL/HH77iD2188mD4DOudnJWftPVVFX0g8=
-X-Google-Smtp-Source: AGHT+IFq4WZR0ZS+ZF82L/lZKR+C8VbrJK8BYIZNA5reoBdEhoLQjz3qAvL/ar2KO6O2PC4kkzwO0w==
-X-Received: by 2002:a05:6a20:42a3:b0:149:122b:6330 with SMTP id o35-20020a056a2042a300b00149122b6330mr1257850pzj.10.1692569681242;
-        Sun, 20 Aug 2023 15:14:41 -0700 (PDT)
+        bh=OVPFeVwGL8kP97WkDZ9WBoD6Na/u2oCcPIlsc2AFaUc=;
+        b=DGx7xCAmBdksfIG4spf1YAhyXtv3kocUW6ZcsMUrdmxLJwBfbxHI5TRblJels25fIT
+         9ShiVyyGSz0nqLbe+oWTkU11+44xrzslUohpk+E+0T4CRfj9uk+hwaFj70iiC/nzS7+N
+         M3FP4UaXlwC7c3HdOkZ4yu5qYt+VymSJKwL+0sPoKSCTCxYmlt1VPJi8mOArM3X9xtmi
+         rBqYX2MoDMR4jCIOgpCdbUCTnJcqMatSzvcsPqy6g8Zi/GBmR3zxv9av8wJQ+B7lc2qe
+         lj14uKevx1DKkX5P0dZ1DyMTWq/Qs9RBfotY+XhbPg2AGhc1okd+ZR//qLxHkMOjPOGQ
+         3eiA==
+X-Gm-Message-State: AOJu0YwLYxLhOHRPA0EHtH4v2Mp4HTOdzjHpmQQtuM8q7iMp9zgcJeyQ
+        Vih83ec7DQGcRhXEWaeFy95wKA==
+X-Google-Smtp-Source: AGHT+IF2XjOgsLrZeQVWU/wJsvi/ZqJyXhxvOiJgQon66xT0p0eKU1gXE4hD4zzROmCzxETerwGVXQ==
+X-Received: by 2002:aca:2419:0:b0:3a3:6450:f5c4 with SMTP id n25-20020aca2419000000b003a36450f5c4mr7536481oic.4.1692595076353;
+        Sun, 20 Aug 2023 22:17:56 -0700 (PDT)
 Received: from dread.disaster.area (pa49-195-66-88.pa.nsw.optusnet.com.au. [49.195.66.88])
-        by smtp.gmail.com with ESMTPSA id w24-20020aa78598000000b0068892a66b5csm4865997pfn.77.2023.08.20.15.14.40
+        by smtp.gmail.com with ESMTPSA id j3-20020a62e903000000b006879493aca0sm5233715pfh.26.2023.08.20.22.17.55
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Sun, 20 Aug 2023 15:14:40 -0700 (PDT)
+        Sun, 20 Aug 2023 22:17:55 -0700 (PDT)
 Received: from dave by dread.disaster.area with local (Exim 4.96)
         (envelope-from <david@fromorbit.com>)
-        id 1qXqgv-004Jv3-0y;
-        Mon, 21 Aug 2023 08:14:37 +1000
-Date:   Mon, 21 Aug 2023 08:14:37 +1000
+        id 1qXxIW-004RoY-2P;
+        Mon, 21 Aug 2023 15:17:52 +1000
+Date:   Mon, 21 Aug 2023 15:17:52 +1000
 From:   Dave Chinner <david@fromorbit.com>
-To:     fk1xdcio@duck.com
-Cc:     linux-xfs@vger.kernel.org
-Subject: Re: Moving existing internal journal log to an external device
- (success?)
-Message-ID: <ZOKQTTxcanMX86Sx@dread.disaster.area>
-References: <E4E991B0-4CAA-4E7A-9AC8-531346EDAEC4.1@smtp-inbound1.duck.com>
+To:     "Darrick J. Wong" <djwong@kernel.org>
+Cc:     tglx@linutronix.de, peterz@infradead.org,
+        xfs <linux-xfs@vger.kernel.org>,
+        linux-kernel <linux-kernel@vger.kernel.org>
+Subject: Re: [RFC PATCH] xfs: fix per-cpu CIL structure aggregation racing
+ with dying cpus
+Message-ID: <ZOLzgBOuyWHapOyZ@dread.disaster.area>
+References: <20230804223854.GL11352@frogsfrogsfrogs>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <E4E991B0-4CAA-4E7A-9AC8-531346EDAEC4.1@smtp-inbound1.duck.com>
+In-Reply-To: <20230804223854.GL11352@frogsfrogsfrogs>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Sun, Aug 20, 2023 at 03:37:38PM -0400, fk1xdcio@duck.com wrote:
-> Does this look like a sane method for moving an existing internal log to an
-> external device?
+On Fri, Aug 04, 2023 at 03:38:54PM -0700, Darrick J. Wong wrote:
+> From: Darrick J. Wong <djwong@kernel.org>
 > 
-> 3 drives:
->    /dev/nvme0n1p1  2GB  Journal mirror 0
->    /dev/nvme1n1p1  2GB  Journal mirror 1
->    /dev/sda1       16TB XFS
+> In commit 7c8ade2121200 ("xfs: implement percpu cil space used
+> calculation"), the XFS committed (log) item list code was converted to
+> use per-cpu lists and space tracking to reduce cpu contention when
+> multiple threads are modifying different parts of the filesystem and
+> hence end up contending on the log structures during transaction commit.
+> Each CPU tracks its own commit items and space usage, and these do not
+> have to be merged into the main CIL until either someone wants to push
+> the CIL items, or we run over a soft threshold and switch to slower (but
+> more accurate) accounting with atomics.
 > 
-> # mdadm --create /dev/md0 --level=1 --raid-devices=2 /dev/nvme0n1p1
-> /dev/nvme1n1p2
-> # mkfs.xfs /dev/sda1
-> # xfs_logprint -C journal.bin /dev/sda1
-> # cat journal.bin > /dev/md0
-> # xfs_db -x /dev/sda1
+> Unfortunately, the for_each_cpu iteration suffers from the same race
+> with cpu dying problem that was identified in commit 8b57b11cca88f
+> ("pcpcntrs: fix dying cpu summation race") -- CPUs are removed from
+> cpu_online_mask before the CPUHP_XFS_DEAD callback gets called.  As a
+> result, both CIL percpu structure aggregation functions fail to collect
+> the items and accounted space usage at the correct point in time.
 > 
-> xfs_db> sb
-> xfs_db> write -d logstart 0
-> xfs_db> quit
+> If we're lucky, the items that are collected from the online cpus exceed
+> the space given to those cpus, and the log immediately shuts down in
+> xlog_cil_insert_items due to the (apparent) log reservation overrun.
+> This happens periodically with generic/650, which exercises cpu hotplug
+> vs. the filesystem code.
 > 
-> # mount -o logdev=/dev/md0 /dev/sda1 /mnt
-
-So you are physically moving the contents of the log whilst the
-filesystem is unmounted and unchanging.
-
-> -------------------------
+> Applying the same sort of fix from 8b57b11cca88f to the CIL code seems
+> to make the generic/650 problem go away, but I've been told that tglx
+> was not happy when he saw:
 > 
-> It seems to "work" and I tested with a whole bunch of data.
+> "...the only thing we actually need to care about is that
+> percpu_counter_sum() iterates dying CPUs. That's trivial to do, and when
+> there are no CPUs dying, it has no addition overhead except for a
+> cpumask_or() operation."
+> 
+> I have no idea what the /correct/ solution is, but I've been holding on
+> to this patch for 3 months.  In that time, 8b57b11cca88 hasn't been
+> reverted and cpu_dying_mask hasn't been removed, so I'm sending this and
+> we'll see what happens.
+> 
+> So, how /do/ we perform periodic aggregation of per-cpu data safely?
+> Move the xlog_cil_pcp_dead call to the dying section, where at least the
+> other cpus will all be stopped?  And have it dump its items into any
+> online cpu's data structure?
 
-You'll get ENOSPC earlier than you think, because you just leaked
-the old log space (needs to be marked free space). There might be
-other issues, but you get to keep all the broken bits to yourself if
-you find them.
+I suspect that we have to stop using for_each_*cpu() and hotplug
+notifiers altogether for this code.
 
-You can probably fix that by running xfs_repair, but then....
+That is, we simply create our own bitmap for nr_possible_cpus in the
+CIL checkpoint context we allocate for each checkpoint (i.e. the
+struct xfs_cil_ctx). When we store something on that CPU for that
+CIL context, we set the corresponding bit for that CPU. Then when we
+are aggregating the checkpoint, we simply walk all the cpus with the
+"has items" bit set and grab everything.
 
-> I was also able
-> to move the log back to internal without issue (set logstart back to what it
-> was originally). I don't know enough about how the filesystem layout works
-> to know if this will eventually break.
-
-.... this won't work.
-
-i.e. you can move the log back to the original position because you
-didn't mark the space the old journal used as free, so the filesytem
-still thinks it is in use by something....
-
-> *IF* this works, why can't xfs_growfs do it?
-
-"Doctor, I can perform an amputation with a tornique and a chainsaw,
-why can't you do that?"
-
-Mostly you are ignoring the fact that growfs in an online operation
-- actually moving the log safely and testing it rigorously is a
-whole lot harder to than changing a few fields with xfs_db....
-
-Let's ignore the simple fact we can't tell the kernel to use a
-different block device for the log via growfs right now (i.e. needs
-a new ioctl interface) and focus on what is involved in moving the
-log whilst the filesytem is mounted and actively in use.
-
-First we need an atomic, crash safe mechanism to swap from one log
-to another. We need to do that while the filesystem is running, so
-it has to be done within a freeze context. Then we have run a
-transaction that initialises the new log and tells the old log where
-the new log is so that if we crash before the superblock is written
-log recovery will replay the log switch. Then we do a sync write of
-the superblock so that the next mount will see the new log location.
-Then, while the filesystem is still frozen, we have to reconfigure
-the in memory log structures to use the new log (e.g. open new
-buftarg, update mount pointers to the log device, change the log
-state to external, reset log sequence numbers, grant heads, etc).
-
-Finally, if we got everything correct, we then need to free the old
-journal in a new transaction running in the new log to clean up the
-old journal now that it is no longer in use. Then we can unfreeze
-the filesystem...
-
-Yes, you can do amputations with a chainsaw, but it's a method of
-last resort that does not guarantee success and you take
-responsibility for the results yourself. Turning this into a
-reliable procedure that always works or fails safe for all
-conditions (professional engineering!) is a whole lot more
-complex...
+This gets rid of the need for hotplug notifiers completely - we just
+don't care if the CPU is online or offline when we sweep the CIL
+context for items at push time - if the bit is set then there's
+stuff to sweep...
 
 -Dave.
 -- 
