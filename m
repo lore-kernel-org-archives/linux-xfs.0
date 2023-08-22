@@ -2,86 +2,107 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9F7B8EE49A6
-	for <linux-xfs@archiver.kernel.org>; Tue, 22 Aug 2023 00:22:11 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9C367EE4996
+	for <linux-xfs@archiver.kernel.org>; Tue, 22 Aug 2023 01:34:14 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231867AbjHVAWL (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 21 Aug 2023 20:22:11 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58166 "EHLO
+        id S232049AbjHVBeO (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 21 Aug 2023 21:34:14 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55944 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231821AbjHVAWH (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 21 Aug 2023 20:22:07 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 077BA184;
-        Mon, 21 Aug 2023 17:22:06 -0700 (PDT)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature RSA-PSS (2048 bits))
-        (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 9ACAE633AD;
-        Tue, 22 Aug 2023 00:22:05 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id E2A03C433C7;
-        Tue, 22 Aug 2023 00:22:04 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1692663725;
-        bh=S8dUBXf0RVR3IHxUc2d7j6ePxJ+jln0LQkw4r+sP8SU=;
-        h=Date:From:To:Cc:Subject:From;
-        b=IGlA2EjNxAq7EOpu9iI9mngcePz0P5u4X9tDzfs6j36BMUQRhnLlEIXPCfVaboy4s
-         0CF9AZrZup5n/7bok6wsiqRNvREYqxc5fuB6ZkKO1+J/E/gK8oIuAMiGqpUk2QjhOt
-         29ZfkEJUmYVl280n0VDaiPzlqnXzW4YCSCF8tqq/u+aiBivPoa5yUEHds60vthpsQj
-         sezBvmqFrdLUuB3g5P1p1I8FE9zcYoM6sJt0PuGhtjw59t9jGQwZgz29eXfg9Eu+LS
-         c8vdTjBz/0mKH1ZfVvzvEMjkvT/S7pqsbz4dVZS4s96/o64VdgTwsG9bLGXLUhPfdr
-         o7tEzyS8WhHhg==
-Date:   Mon, 21 Aug 2023 17:22:04 -0700
-From:   "Darrick J. Wong" <djwong@kernel.org>
-To:     dchinner@redhat.com, Carlos Maiolino <cem@kernel.org>
-Cc:     linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org,
-        Shirley Ma <shirley.ma@oracle.com>,
-        Greg Marsden <greg.marsden@oracle.com>,
-        Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-        Allison Henderson <allison.henderson@oracle.com>,
-        Catherine Hoang <catherine.hoang@oracle.com>
-Subject: [ANNOUNCE] xfs: online repair is completely finished!
-Message-ID: <20230822002204.GA11263@frogsfrogsfrogs>
+        with ESMTP id S232050AbjHVBeN (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 21 Aug 2023 21:34:13 -0400
+Received: from casper.infradead.org (casper.infradead.org [IPv6:2001:8b0:10b:1236::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 08FBE11D;
+        Mon, 21 Aug 2023 18:34:11 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=infradead.org; s=casper.20170209; h=In-Reply-To:Content-Type:MIME-Version:
+        References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
+        Content-Transfer-Encoding:Content-ID:Content-Description;
+        bh=bmNbB4lcik3WJImnRw+7DGlZs0+TuQ35MXGFbjoZglE=; b=m7apti+Oh9q7vU5SqSK4Q+0cXg
+        CdMozgIu1G7BEXJA8fIqhg5MW9+5i2/1aIoO8J11mrqcjxgekNE8Wc6C07KdSCWNqrqpjJG9muiO9
+        5erHnCDgV9OxUsIRHfeZ4K0MfCMAiAwZzFt745NB81cyb2Zs+VSeEzUhMhR72xLyTMkkIlowV/AGe
+        fcIkktduEXJTVf7r2oTGJL2G+ptfwquhwGdyDmHoWB1PqrGrDH9TaOQDdeioEsysIwoebqFA55epW
+        JaWKWgzz2IhiM36jSrd0kS8UxgRrZGOUaF2v950xVaNsjLJa1mnx29PnxxbIUuKCf4JpQoZ7V/6ho
+        lxUddUPQ==;
+Received: from willy by casper.infradead.org with local (Exim 4.94.2 #2 (Red Hat Linux))
+        id 1qYGHW-00DZ1y-PE; Tue, 22 Aug 2023 01:34:06 +0000
+Date:   Tue, 22 Aug 2023 02:34:06 +0100
+From:   Matthew Wilcox <willy@infradead.org>
+To:     Stephen Rothwell <sfr@canb.auug.org.au>
+Cc:     Andrew Morton <akpm@linux-foundation.org>,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+        Linux Next Mailing List <linux-next@vger.kernel.org>,
+        Michael Ellerman <mpe@ellerman.id.au>,
+        Nicholas Piggin <npiggin@gmail.com>,
+        Christophe Leroy <christophe.leroy@csgroup.eu>,
+        linuxppc-dev@lists.ozlabs.org, linux-xfs@vger.kernel.org
+Subject: Re: linux-next: build failure after merge of the mm tree
+Message-ID: <ZOQQjmxeLM920/Q/@casper.infradead.org>
+References: <20230822095537.500047f7@canb.auug.org.au>
+ <ZOQLUMBB7amLUJLY@casper.infradead.org>
+ <20230822112217.185c3357@canb.auug.org.au>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
+In-Reply-To: <20230822112217.185c3357@canb.auug.org.au>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Hi folks,
+On Tue, Aug 22, 2023 at 11:22:17AM +1000, Stephen Rothwell wrote:
+> Hi Matthew,
+> 
+> On Tue, 22 Aug 2023 02:11:44 +0100 Matthew Wilcox <willy@infradead.org> wrote:
+> >
+> > On Tue, Aug 22, 2023 at 09:55:37AM +1000, Stephen Rothwell wrote:
+> > > In file included from include/trace/trace_events.h:27,
+> > >                  from include/trace/define_trace.h:102,
+> > >                  from fs/xfs/xfs_trace.h:4428,
+> > >                  from fs/xfs/xfs_trace.c:45:
+> > > include/linux/pgtable.h:8:25: error: initializer element is not constant
+> > >     8 | #define PMD_ORDER       (PMD_SHIFT - PAGE_SHIFT)  
+> > 
+> > Ummm.  PowerPC doesn't have a compile-time constant PMD size?
+> 
+> Yeah, you are not the first (or probably the last) to be caught by that.
 
-I am /very/ pleased to announce that online repair for XFS is completely
-finished.  For those of you who have been following along all this time,
-this means that part 1 and part 2 are done!
+I think this will do the trick.  Any comments?
 
-With the addition in part 2 of directory parent pointers patchset,
-xfs_scrub gains the ability to correct broken links and loops in the
-directory tree.  Part 2 also adds a faster FITRIM implementation,
-improved detection of malicious filenames, and a vectorized scrub mode
-that cuts the runtime by 20%.
+diff --git a/fs/xfs/xfs_trace.h b/fs/xfs/xfs_trace.h
+index 1904eaf7a2e9..d5a4e6c2dcd1 100644
+--- a/fs/xfs/xfs_trace.h
++++ b/fs/xfs/xfs_trace.h
+@@ -796,15 +796,6 @@ DEFINE_INODE_EVENT(xfs_inode_reclaiming);
+ DEFINE_INODE_EVENT(xfs_inode_set_need_inactive);
+ DEFINE_INODE_EVENT(xfs_inode_inactivating);
+ 
+-/*
+- * ftrace's __print_symbolic requires that all enum values be wrapped in the
+- * TRACE_DEFINE_ENUM macro so that the enum value can be encoded in the ftrace
+- * ring buffer.  Somehow this was only worth mentioning in the ftrace sample
+- * code.
+- */
+-TRACE_DEFINE_ENUM(PMD_ORDER);
+-TRACE_DEFINE_ENUM(PUD_ORDER);
+-
+ TRACE_DEFINE_ENUM(XFS_REFC_DOMAIN_SHARED);
+ TRACE_DEFINE_ENUM(XFS_REFC_DOMAIN_COW);
+ 
+@@ -823,13 +814,10 @@ TRACE_EVENT(xfs_filemap_fault,
+ 		__entry->order = order;
+ 		__entry->write_fault = write_fault;
+ 	),
+-	TP_printk("dev %d:%d ino 0x%llx %s write_fault %d",
++	TP_printk("dev %d:%d ino 0x%llx order:%u write_fault %d",
+ 		  MAJOR(__entry->dev), MINOR(__entry->dev),
+ 		  __entry->ino,
+-		  __print_symbolic(__entry->order,
+-			{ 0,		"PTE" },
+-			{ PMD_ORDER,	"PMD" },
+-			{ PUD_ORDER,	"PUD" }),
++		  __entry->order,
+ 		  __entry->write_fault)
+ )
+ 
 
-Code coverage averages around ~75% for the online fsck code (and ~85%
-for the rest of XFS), and the kernel can now rebuild 90% of the
-corruptions that can manifest on a mountable filesystem.
 
-The code itself lives in my git trees, which I've just updated:
-https://git.kernel.org/pub/scm/linux/kernel/git/djwong/xfs-linux.git/log/?h=vectorized-scrub
-https://git.kernel.org/pub/scm/linux/kernel/git/djwong/xfsprogs-dev.git/log/?h=vectorized-scrub
-https://git.kernel.org/pub/scm/linux/kernel/git/djwong/xfstests-dev.git/log/?h=scrub-directory-tree
-
-As I have now been testing online repair in its various stages [on my
-testing cloud] for two years and the fstests cloud has nearly cleared
-300 million successful filesystem repairs, I am discontinuing all
-notices about "This is an extraordinary way to destroy your data".
-It works, and it's time to merge it to get broader testing.
-
-A big thank you to Allison Henderson, Catherine Hoang for their work on
-the directory parent pointers feature; Chandan Babu for reviewing the
-design documentation; and Dave Chinner and Matthew Wilcox for staring
-at the code longer than is probably healthy. 8-)
-
-Stay tuned for more exciting announcements!
-
---Darrick
