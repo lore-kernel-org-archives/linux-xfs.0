@@ -2,114 +2,95 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E5568EE49AE
-	for <linux-xfs@archiver.kernel.org>; Tue, 22 Aug 2023 18:34:06 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 99F5CEE49AB
+	for <linux-xfs@archiver.kernel.org>; Tue, 22 Aug 2023 20:20:21 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229582AbjHVSeH (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 22 Aug 2023 14:34:07 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48370 "EHLO
+        id S230230AbjHVUUV (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 22 Aug 2023 16:20:21 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59568 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229788AbjHVSeG (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 22 Aug 2023 14:34:06 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4F46BCE9
-        for <linux-xfs@vger.kernel.org>; Tue, 22 Aug 2023 11:34:03 -0700 (PDT)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature RSA-PSS (2048 bits))
-        (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id E030664F6B
-        for <linux-xfs@vger.kernel.org>; Tue, 22 Aug 2023 18:34:02 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 4586BC433C8;
-        Tue, 22 Aug 2023 18:34:02 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1692729242;
-        bh=iJxLV3xQM7cURu79VS6RrMAVnAxfzd7/nN96UR3wK/M=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=tFSBCKLm10zp1oJx8x/mTz0IX7olRke/RF2rIIBNz8/2zB8u38IStHju+MPirfclt
-         8/NvK75D9VBuvM+6+DIlz2sIXKNVAf0y4ulIHl5XD1snrL1DllZ0PtCREjU9JOB9D1
-         Fb4QsTBM2fylgmSXK2Dhowk8vDnAXnM9nvtBb5DmidI12Fh6xdcFTY53frjq7J28/U
-         TZyiGWXKqKM3LXUvyel0h4l+rUWmTyktE4kd1Pg6FKi1yPI3eJi0jxdA1yswLVRXkr
-         iH18T1dfr1zVbxjlUo2m7ZOcUp43yIz4JcPfUQ9s36wTHftfBxM7YmitfhJcq7Waji
-         FdiE7k10bPpEw==
-Date:   Tue, 22 Aug 2023 11:34:01 -0700
-From:   "Darrick J. Wong" <djwong@kernel.org>
-To:     Donald Douwsma <ddouwsma@redhat.com>
-Cc:     linux-xfs@vger.kernel.org, Pavel Reichl <preichl@redhat.com>
-Subject: Re: [PATCH v2] xfsrestore: suggest -x rather than assert for false
- roots
-Message-ID: <20230822183401.GD11263@frogsfrogsfrogs>
-References: <20230807045357.360114-1-ddouwsma@redhat.com>
+        with ESMTP id S229774AbjHVUUV (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 22 Aug 2023 16:20:21 -0400
+Received: from casper.infradead.org (casper.infradead.org [IPv6:2001:8b0:10b:1236::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D17A8CC;
+        Tue, 22 Aug 2023 13:20:19 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=infradead.org; s=casper.20170209; h=In-Reply-To:Content-Type:MIME-Version:
+        References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
+        Content-Transfer-Encoding:Content-ID:Content-Description;
+        bh=7/LTW4ARO//V3xdtFM8fbiG79s90dMawsmxlv8Tdz4s=; b=kNmyLNVWTPJyo1gYbyI29XsPB0
+        R8OlJ9zgFHoPYUPIUnzeoLu5thoaCMOb639NKhxPvFvNAkhfiZBydiHMLBi5wH54PABEhZUmR/E1C
+        DBuv7+QNmYXDQInS0dmtd24GYu6gL88QDIdGrnAPYwooLwcfdJWevbwPty7OdKQHCXvs5TfgxB/8J
+        jhTNNBPWQlDb/FDzjGvsV+vJjW5DtBg91H3/2ZqNCPSAaJgV4wJhzqPEMoC4p9gE6o/gvby4SpJ6Q
+        NzUdAU1x9weXyRtQmoE8LdqziEL4bR7Cd71pThbbpEsyjyUeFFPEhVYVFkaQymoZMtZ9ICsZp7+t6
+        +TS4RwgQ==;
+Received: from willy by casper.infradead.org with local (Exim 4.94.2 #2 (Red Hat Linux))
+        id 1qYXrG-000iCR-H4; Tue, 22 Aug 2023 20:20:10 +0000
+Date:   Tue, 22 Aug 2023 21:20:10 +0100
+From:   Matthew Wilcox <willy@infradead.org>
+To:     "Darrick J. Wong" <djwong@kernel.org>
+Cc:     Stephen Rothwell <sfr@canb.auug.org.au>,
+        Andrew Morton <akpm@linux-foundation.org>,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+        Linux Next Mailing List <linux-next@vger.kernel.org>,
+        Michael Ellerman <mpe@ellerman.id.au>,
+        Nicholas Piggin <npiggin@gmail.com>,
+        Christophe Leroy <christophe.leroy@csgroup.eu>,
+        linuxppc-dev@lists.ozlabs.org, linux-xfs@vger.kernel.org
+Subject: Re: linux-next: build failure after merge of the mm tree
+Message-ID: <ZOUYekbtTv+n8hYf@casper.infradead.org>
+References: <20230822095537.500047f7@canb.auug.org.au>
+ <ZOQLUMBB7amLUJLY@casper.infradead.org>
+ <20230822112217.185c3357@canb.auug.org.au>
+ <ZOQQjmxeLM920/Q/@casper.infradead.org>
+ <20230822040043.GB11263@frogsfrogsfrogs>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20230807045357.360114-1-ddouwsma@redhat.com>
+In-Reply-To: <20230822040043.GB11263@frogsfrogsfrogs>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Mon, Aug 07, 2023 at 02:53:57PM +1000, Donald Douwsma wrote:
-> If we're going to have a fix for false root problems its a good idea to
-> let people know that there's a way to recover, error out with a useful
-> message that mentions the `-x` option rather than just assert.
+On Mon, Aug 21, 2023 at 09:00:43PM -0700, Darrick J. Wong wrote:
+> Please leave this ^^^ comment, because the need for TRACE_DEFINE_ENUM to
+> make enums work in tracepoints is not at all obvious.
 > 
-> Before
-> 
->   xfsrestore: searching media for directory dump
->   xfsrestore: reading directories
->   xfsrestore: tree.c:757: tree_begindir: Assertion `ino != persp->p_rootino || hardh == persp->p_rooth' failed.
->   Aborted
-> 
-> After
-> 
->   xfsrestore: ERROR: tree.c:791: tree_begindir: Assertion `ino != persp->p_rootino || hardh == persp->p_rooth` failed.
->   xfsrestore: ERROR: False root detected. Recovery may be possible using the `-x` option
->   Aborted
-> 
-> Fixes: d7cba7410710 ("xfsrestore: fix rootdir due to xfsdump bulkstat misuse")
-> Signed-off-by: Donald Douwsma <ddouwsma@redhat.com>
-> 
-> ---
-> Changes for v2
-> - Use xfsprogs style for conditional
-> - Remove trailing white-space
-> - Place printf format all on one line for grepability
-> - use __func__ instead of gcc specific __FUNCTION__
-> ---
->  restore/tree.c | 11 +++++++++--
->  1 file changed, 9 insertions(+), 2 deletions(-)
-> 
-> diff --git a/restore/tree.c b/restore/tree.c
-> index bfa07fe..e959aa1 100644
-> --- a/restore/tree.c
-> +++ b/restore/tree.c
-> @@ -783,8 +783,15 @@ tree_begindir(filehdr_t *fhdrp, dah_t *dahp)
->  	/* lookup head of hardlink list
->  	 */
->  	hardh = link_hardh(ino, gen);
-> -	if (need_fixrootdir == BOOL_FALSE)
-> -		assert(ino != persp->p_rootino || hardh == persp->p_rooth);
-> +	if (need_fixrootdir == BOOL_FALSE &&
-> +		!(ino != persp->p_rootino || hardh == persp->p_rooth)) {
-> +		mlog(MLOG_ERROR | MLOG_TREE,
+> "order %u" to match the (non dev_t) style of the rest of the xfs
+> tracepoints.
 
-Nit: Second line of the if test has the same level of indentation as the
-if body.
+ACK, thanks.
 
-With that fixed,
-Reviewed-by: Darrick J. Wong <djwong@kernel.org>
+Andrew, please add this -fix patch for "mm: Remove enum
+page_entry_size".
 
---D
-
-> +"%s:%d: %s: Assertion `ino != persp->p_rootino || hardh == persp->p_rooth` failed.\n",
-> +			__FILE__, __LINE__, __func__);
-> +		mlog(MLOG_ERROR | MLOG_TREE, _(
-> +"False root detected. Recovery may be possible using the `-x` option\n"));
-> +		return NH_NULL;
-> +	}
->  
->  	/* already present
->  	 */
-> -- 
-> 2.39.3
-> 
+diff --git a/fs/xfs/xfs_trace.h b/fs/xfs/xfs_trace.h
+index 1904eaf7a2e9..fd789e00dfd6 100644
+--- a/fs/xfs/xfs_trace.h
++++ b/fs/xfs/xfs_trace.h
+@@ -802,9 +802,6 @@ DEFINE_INODE_EVENT(xfs_inode_inactivating);
+  * ring buffer.  Somehow this was only worth mentioning in the ftrace sample
+  * code.
+  */
+-TRACE_DEFINE_ENUM(PMD_ORDER);
+-TRACE_DEFINE_ENUM(PUD_ORDER);
+-
+ TRACE_DEFINE_ENUM(XFS_REFC_DOMAIN_SHARED);
+ TRACE_DEFINE_ENUM(XFS_REFC_DOMAIN_COW);
+ 
+@@ -823,13 +820,10 @@ TRACE_EVENT(xfs_filemap_fault,
+ 		__entry->order = order;
+ 		__entry->write_fault = write_fault;
+ 	),
+-	TP_printk("dev %d:%d ino 0x%llx %s write_fault %d",
++	TP_printk("dev %d:%d ino 0x%llx order %u write_fault %d",
+ 		  MAJOR(__entry->dev), MINOR(__entry->dev),
+ 		  __entry->ino,
+-		  __print_symbolic(__entry->order,
+-			{ 0,		"PTE" },
+-			{ PMD_ORDER,	"PMD" },
+-			{ PUD_ORDER,	"PUD" }),
++		  __entry->order,
+ 		  __entry->write_fault)
+ )
+ 
