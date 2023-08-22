@@ -2,180 +2,78 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CDB52EE49AD
-	for <linux-xfs@archiver.kernel.org>; Wed, 23 Aug 2023 01:44:54 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 89697EE49A3
+	for <linux-xfs@archiver.kernel.org>; Wed, 23 Aug 2023 02:54:04 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232081AbjHWBoy (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 22 Aug 2023 21:44:54 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43270 "EHLO
+        id S232327AbjHWCyE (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 22 Aug 2023 22:54:04 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57674 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232078AbjHWBoy (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 22 Aug 2023 21:44:54 -0400
-Received: from mail-pf1-x429.google.com (mail-pf1-x429.google.com [IPv6:2607:f8b0:4864:20::429])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 467FDE4B
-        for <linux-xfs@vger.kernel.org>; Tue, 22 Aug 2023 18:44:51 -0700 (PDT)
-Received: by mail-pf1-x429.google.com with SMTP id d2e1a72fcca58-68a3082c771so2307954b3a.0
-        for <linux-xfs@vger.kernel.org>; Tue, 22 Aug 2023 18:44:51 -0700 (PDT)
+        with ESMTP id S231502AbjHWCyC (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 22 Aug 2023 22:54:02 -0400
+X-Greylist: delayed 903 seconds by postgrey-1.37 at lindbergh.monkeyblade.net; Tue, 22 Aug 2023 19:53:57 PDT
+Received: from symantec4.comsats.net.pk (symantec4.comsats.net.pk [203.124.41.30])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 40D601A5
+        for <linux-xfs@vger.kernel.org>; Tue, 22 Aug 2023 19:53:56 -0700 (PDT)
+X-AuditID: cb7c291e-055ff70000002aeb-fc-64e55c5587c2
+Received: from iesco.comsatshosting.com (iesco.comsatshosting.com [210.56.28.11])
+        (using TLS with cipher ECDHE-RSA-AES256-SHA (256/256 bits))
+        (Client did not present a certificate)
+        by symantec4.comsats.net.pk (Symantec Messaging Gateway) with SMTP id 3F.D7.10987.55C55E46; Wed, 23 Aug 2023 06:09:42 +0500 (PKT)
+DomainKey-Signature: a=rsa-sha1; c=nofws; q=dns;
+        d=iesco.com.pk; s=default;
+        h=received:content-type:mime-version:content-transfer-encoding
+          :content-description:subject:to:from:date:reply-to;
+        b=URMXjhjlr4K2A5DWfefBJ/vgnSJbdAD2QAzBPhPIKCTqStwfqPsur2DHR78N/ObY/
+          hfeollRwh2F6CtEWMMNYK5ju6KDuukD0NCuePcczBETvvI3AEGgn4DCIH1xkxKb3D
+          0CcL2RFdhFbXYir5Haz3MP6t+Cral+o4gryxkqbFI=
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=fromorbit-com.20221208.gappssmtp.com; s=20221208; t=1692755091; x=1693359891;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
-        bh=4wunJnKtF/yKa4KQLXItEcDANGdOlvDN+J91XoYYV78=;
-        b=yx/ysS+epJ2T1gKjbyDzj8DWHd87hZpV2us3wCRHNbZFLp5TtceHXRSWEAr80jqVtz
-         ydQorDgxGMhTkxX9jfilEQrqBbakPtqvfnxI3mA6iJrqQs5nGn6uW8aQqLCtyxtUveGB
-         e4sp1M32NblhC+Xn4ZNRXvWH9mrXOf/3fAM7zlCk20sxlrxeP3sTOauJQx340nk2lRDP
-         wKO4AtCBgtLpF+9Z41qgxNhBSRl+RxdmEuFlWcPaqA/LN9Af8fAGfCtfwwMbLj42cyO2
-         odaGif5lut/dfP40QB5SyFxOok/tqjwCfNcry7iJChe4tGIfVWrN85JxIGv71wOvEkKg
-         RzMA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20221208; t=1692755091; x=1693359891;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=4wunJnKtF/yKa4KQLXItEcDANGdOlvDN+J91XoYYV78=;
-        b=kANpQ7a0n98b/3gW53x8P1xsxeWYyfSFd+5VS0voCXjB5CdP0fusFI36ytFRSxUohr
-         rbSrgGF1pUr/GEr0jsxyo8aP4pNe/GC6DEEZ6j1Z2buPk/HuU7Ab2wS1Tf+khttpXStg
-         8zm/cX8Kgy2puAyuY01iYLaCumjT90MVsgW7kh4/jehO/qkmcEJR6Hmuvehd+8HB8XdL
-         7Or1AV2dI5WsrYUEC5+qC8110ttce0UNhn1j1et6QnfZViddyOgu8Jb+p1IBD6Ufx7Yx
-         pQELSIGWLYHP3Kj9gFpmQ4EG7raFyMxYaUXKxUb7U69/zLJUsRqvKyfciopfb0MsLjYr
-         3v7A==
-X-Gm-Message-State: AOJu0Yx4v0mRB1b4uWIkBlNn2xaCk4GlRleP0RldxAgkEkTuliwqdcGG
-        u56K8+Y1w6b0+H7H2Z8eaAon6zIyuDnIltb55sI=
-X-Google-Smtp-Source: AGHT+IH2OsfpjVSCScuKUXjaJ8C6rmEfGaVBtIXtRh6+A8UbXkdJErlF6kKBsfZrNIn9+DK/Die5iA==
-X-Received: by 2002:a05:6a00:2290:b0:68a:5651:b53e with SMTP id f16-20020a056a00229000b0068a5651b53emr9176049pfe.10.1692755090558;
-        Tue, 22 Aug 2023 18:44:50 -0700 (PDT)
-Received: from dread.disaster.area (pa49-195-66-88.pa.nsw.optusnet.com.au. [49.195.66.88])
-        by smtp.gmail.com with ESMTPSA id m5-20020aa78a05000000b0068a53ac9d46sm3736263pfa.100.2023.08.22.18.44.49
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 22 Aug 2023 18:44:49 -0700 (PDT)
-Received: from dave by dread.disaster.area with local (Exim 4.96)
-        (envelope-from <david@fromorbit.com>)
-        id 1qYcvP-005Frs-0B;
-        Wed, 23 Aug 2023 11:44:47 +1000
-Date:   Wed, 23 Aug 2023 11:44:47 +1000
-From:   Dave Chinner <david@fromorbit.com>
-To:     "Darrick J. Wong" <djwong@kernel.org>
-Cc:     tglx@linutronix.de, peterz@infradead.org,
-        xfs <linux-xfs@vger.kernel.org>,
-        linux-kernel <linux-kernel@vger.kernel.org>
-Subject: Re: [RFC PATCH] xfs: fix per-cpu CIL structure aggregation racing
- with dying cpus
-Message-ID: <ZOVkjxWZq0YmjrJu@dread.disaster.area>
-References: <20230804223854.GL11352@frogsfrogsfrogs>
- <ZOLzgBOuyWHapOyZ@dread.disaster.area>
- <20230822183016.GC11263@frogsfrogsfrogs>
- <ZOVEkMffTLXBJfmn@dread.disaster.area>
- <20230823012011.GE11286@frogsfrogsfrogs>
+        d=iesco.com.pk; s=default;
+        h=reply-to:date:from:to:subject:content-description
+          :content-transfer-encoding:mime-version:content-type;
+        bh=GMzYzcyTxDsE6wX/XHG6MHqAdAiHrhqbmmLQ/TZ1QnQ=;
+        b=Q3r3WU9LX7Ydee8XJll4V9HE0gOCtKKYJC1+Bjiv1ZRpQXFDs2BuFEmLTQkPFaKhL
+          cdHBceR6tGMQlSolirvWRsa+YPj8i/n8SnhXeegAml64AW4PMUbbbFANg9uk3U/Y+
+          Fl4GACwHE8nIvz83vSmn5POw1eV+uRXlx+89aNu8o=
+Received: from [94.156.6.90] (UnknownHost [94.156.6.90]) by iesco.comsatshosting.com with SMTP;
+   Wed, 23 Aug 2023 04:31:09 +0500
+Message-ID: <3F.D7.10987.55C55E46@symantec4.comsats.net.pk>
+Content-Type: text/plain; charset="iso-8859-1"
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20230823012011.GE11286@frogsfrogsfrogs>
+Content-Transfer-Encoding: quoted-printable
+Content-Description: Mail message body
+Subject: Re; Interest,
+To:     linux-xfs@vger.kernel.org
+From:   "Chen Yun" <pso.chairmanbod@iesco.com.pk>
+Date:   Tue, 22 Aug 2023 16:31:23 -0700
+Reply-To: chnyne@gmail.com
+X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFlrNLMWRmVeSWpSXmKPExsVyyUKGWzcs5mmKQeNGJotdf3awOzB6fN4k
+        F8AYxWWTkpqTWZZapG+XwJWxZN0FloLdzBVt/YtYGhgfM3UxcnBICJhINLyK6GLk4hAS2MMk
+        caF5GjuIwyKwmlli5oZ5LBDOQ2aJOW/fMHYxcgKVNTNKnD9qBmLzClhLbJ65nRnEZhbQk7gx
+        dQobRFxQ4uTMJywQcW2JZQtfM4NsYxZQk/jaVQISFhYQk/g0bRk7iC0iICsxaeUpsPFsAvoS
+        K742g9ksAqoSjw/uZoFYKyWx8cp6tgmM/LOQbJuFZNssJNtmIWxbwMiyilGiuDI3ERhoySZ6
+        yfm5xYklxXp5qSV6BdmbGIFBeLpGU24H49JLiYcYBTgYlXh4f657kiLEmlgG1HWIUYKDWUmE
+        V/r7wxQh3pTEyqrUovz4otKc1OJDjNIcLErivLZCz5KFBNITS1KzU1MLUotgskwcnFINjKYP
+        n87WDTvg/rjuumYP71qWDmuB7ws2/E3f9sU7V7imNO2hn6+FzOI1gRvUD9f9bt97N+zdK4n7
+        98omBVvdUS53nde6q4b5U/iXAoZXK+bvbJ5prFzruOjzgk85HEcZ1rj2rvi5dc9LE9dfF185
+        T7tYt/7jVN4ylaQJtWH+gluWtPa2Fdi8+qbEUpyRaKjFXFScCAAr4yATPgIAAA==
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Tue, Aug 22, 2023 at 06:20:11PM -0700, Darrick J. Wong wrote:
-> On Wed, Aug 23, 2023 at 09:28:16AM +1000, Dave Chinner wrote:
-> > On Tue, Aug 22, 2023 at 11:30:16AM -0700, Darrick J. Wong wrote:
-> > > On Mon, Aug 21, 2023 at 03:17:52PM +1000, Dave Chinner wrote:
-> > > > On Fri, Aug 04, 2023 at 03:38:54PM -0700, Darrick J. Wong wrote:
-> > > > > From: Darrick J. Wong <djwong@kernel.org>
-> > > > > 
-> > > > > In commit 7c8ade2121200 ("xfs: implement percpu cil space used
-> > > > > calculation"), the XFS committed (log) item list code was converted to
-> > > > > use per-cpu lists and space tracking to reduce cpu contention when
-> > > > > multiple threads are modifying different parts of the filesystem and
-> > > > > hence end up contending on the log structures during transaction commit.
-> > > > > Each CPU tracks its own commit items and space usage, and these do not
-> > > > > have to be merged into the main CIL until either someone wants to push
-> > > > > the CIL items, or we run over a soft threshold and switch to slower (but
-> > > > > more accurate) accounting with atomics.
-> > > > > 
-> > > > > Unfortunately, the for_each_cpu iteration suffers from the same race
-> > > > > with cpu dying problem that was identified in commit 8b57b11cca88f
-> > > > > ("pcpcntrs: fix dying cpu summation race") -- CPUs are removed from
-> > > > > cpu_online_mask before the CPUHP_XFS_DEAD callback gets called.  As a
-> > > > > result, both CIL percpu structure aggregation functions fail to collect
-> > > > > the items and accounted space usage at the correct point in time.
-> > > > > 
-> > > > > If we're lucky, the items that are collected from the online cpus exceed
-> > > > > the space given to those cpus, and the log immediately shuts down in
-> > > > > xlog_cil_insert_items due to the (apparent) log reservation overrun.
-> > > > > This happens periodically with generic/650, which exercises cpu hotplug
-> > > > > vs. the filesystem code.
-> > > > > 
-> > > > > Applying the same sort of fix from 8b57b11cca88f to the CIL code seems
-> > > > > to make the generic/650 problem go away, but I've been told that tglx
-> > > > > was not happy when he saw:
-> > > > > 
-> > > > > "...the only thing we actually need to care about is that
-> > > > > percpu_counter_sum() iterates dying CPUs. That's trivial to do, and when
-> > > > > there are no CPUs dying, it has no addition overhead except for a
-> > > > > cpumask_or() operation."
-> > > > > 
-> > > > > I have no idea what the /correct/ solution is, but I've been holding on
-> > > > > to this patch for 3 months.  In that time, 8b57b11cca88 hasn't been
-> > > > > reverted and cpu_dying_mask hasn't been removed, so I'm sending this and
-> > > > > we'll see what happens.
-> > > > > 
-> > > > > So, how /do/ we perform periodic aggregation of per-cpu data safely?
-> > > > > Move the xlog_cil_pcp_dead call to the dying section, where at least the
-> > > > > other cpus will all be stopped?  And have it dump its items into any
-> > > > > online cpu's data structure?
-> > > > 
-> > > > I suspect that we have to stop using for_each_*cpu() and hotplug
-> > > > notifiers altogether for this code.
-> > > > 
-> > > > That is, we simply create our own bitmap for nr_possible_cpus in the
-> > > > CIL checkpoint context we allocate for each checkpoint (i.e. the
-> > > > struct xfs_cil_ctx). When we store something on that CPU for that
-> > > > CIL context, we set the corresponding bit for that CPU. Then when we
-> > > > are aggregating the checkpoint, we simply walk all the cpus with the
-> > > > "has items" bit set and grab everything.
-> > > > 
-> > > > This gets rid of the need for hotplug notifiers completely - we just
-> > > > don't care if the CPU is online or offline when we sweep the CIL
-> > > > context for items at push time - if the bit is set then there's
-> > > > stuff to sweep...
-> > > 
-> > > Oooh, good idea.  Something like this, then?  Lightly tested via
-> > > generic/650 for five minutes...
-> > 
-> > Not quite what I was saying - you put the cpu mask in the struct
-> > xfs_cil, which means it can potentially be accessed from both commit
-> > and aggregation at the same time for different checkpoints.
-> > 
-> > What I was suggesting is that it gets placed in the struct
-> > xfs_cil_ctx which is guaranteed to be private to
-> 
-> private to...?
+Re; Interest,
 
-Sorry, I thought I removed that chunk from my reply - ignore it.
+I am interested in discussing the Investment proposal as I explained
+in my previous mail. May you let me know your interest and the
+possibility of a cooperation aimed for mutual interest.
 
-....
-> > .....
-> > 
-> > > diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
-> > > index 09638e8fb4ee..ef7775657ce3 100644
-> > > --- a/fs/xfs/xfs_super.c
-> > > +++ b/fs/xfs/xfs_super.c
-> > > @@ -2313,7 +2313,6 @@ xfs_cpu_dead(
-> > >  	list_for_each_entry_safe(mp, n, &xfs_mount_list, m_mount_list) {
-> > >  		spin_unlock(&xfs_mount_list_lock);
-> > >  		xfs_inodegc_cpu_dead(mp, cpu);
-> > > -		xlog_cil_pcp_dead(mp->m_log, cpu);
-> > >  		spin_lock(&xfs_mount_list_lock);
-> > >  	}
-> > >  	spin_unlock(&xfs_mount_list_lock);
-> > 
-> > I wonder if we can do something similar for the inodegc code, and
-> > once again get rid of the need for hotpulg notifiers in XFS?
-> 
-> I would imagine so, if you don't mind bloating up xfs_mount.
+Looking forward to your mail for further discussion.
 
-The xfs_mount is already huge... :)
+Regards
 
--Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+------
+Chen Yun - Chairman of CREC
+China Railway Engineering Corporation - CRECG
+China Railway Plaza, No.69 Fuxing Road, Haidian District, Beijing, P.R.
+China
+
