@@ -2,211 +2,123 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4735BEE49A5
-	for <linux-xfs@archiver.kernel.org>; Wed, 23 Aug 2023 02:59:54 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 74C40EE49A5
+	for <linux-xfs@archiver.kernel.org>; Wed, 23 Aug 2023 03:06:39 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232359AbjHWC7x (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 22 Aug 2023 22:59:53 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43064 "EHLO
+        id S232411AbjHWDGj (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 22 Aug 2023 23:06:39 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60806 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232356AbjHWC7w (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 22 Aug 2023 22:59:52 -0400
-Received: from mail-pl1-x629.google.com (mail-pl1-x629.google.com [IPv6:2607:f8b0:4864:20::629])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1990AE4D
-        for <linux-xfs@vger.kernel.org>; Tue, 22 Aug 2023 19:59:49 -0700 (PDT)
-Received: by mail-pl1-x629.google.com with SMTP id d9443c01a7336-1befe39630bso9175015ad.0
-        for <linux-xfs@vger.kernel.org>; Tue, 22 Aug 2023 19:59:49 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=bytedance.com; s=google; t=1692759588; x=1693364388;
-        h=content-transfer-encoding:in-reply-to:cc:from:references:to
-         :content-language:subject:user-agent:mime-version:date:message-id
-         :from:to:cc:subject:date:message-id:reply-to;
-        bh=bhgEqLuvf9ApSnTvUwn1L76c2o2W1Ei/QD6yE6yt7Vo=;
-        b=RzbIwpF/0rWWCHIbil/kmvbYsiH+zzV8cteo0NeX4iqS5Th3aMObOrBBZ5QIYYiYNO
-         EzLvxXnwaU3C6HJ66DVx0SYeH6DBUUXE/parOT0tZRTGaLZHY6BYCVv0BWvKsae2+Z4V
-         HEkSBtQA++hJt6hjIX8coUzQJXYdSMU0EhPZnC3wJk9rsU5aMcdQM2J2gdrxRnnAl7ZG
-         8NIlks8SUC7HZyd+TSNVs6GUNYerNVLSzTLDuAq02G7Vh6n7NQtQV5W2S/tTxnIxqdnK
-         Yk0AUrfOj+V8sxulrYV9L4sfBNDgKCkzUecP9KTfiIS3EGmzpdtRXoZ4mpHHvApm3vtv
-         04iw==
+        with ESMTP id S232429AbjHWDGf (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 22 Aug 2023 23:06:35 -0400
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 048B5CE8
+        for <linux-xfs@vger.kernel.org>; Tue, 22 Aug 2023 20:05:38 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1692759938;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=4QiA9d3P5G85In9NHSJpzGB0lSBcXOKFk4V0WBI5ChE=;
+        b=McTIZxpnbHIkNQU04NPyln2vrbappZPeK8VjxjdL16O5NaJDEbyY6USeMCh0izLyZlsI71
+        i3XJ1BelO/bvPzDylWsM6kSoBHMr8NWln2XYc6FpBGoGW+5qU3Xp3k6lV1IzNTk7Yn4lw/
+        8lnMwGj99QAl7AkSedBDcGS/gJFVlrE=
+Received: from mail-pl1-f197.google.com (mail-pl1-f197.google.com
+ [209.85.214.197]) by relay.mimecast.com with ESMTP with STARTTLS
+ (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
+ us-mta-116-RIU_HgHhOMuh8wDFTrE2ow-1; Tue, 22 Aug 2023 23:05:36 -0400
+X-MC-Unique: RIU_HgHhOMuh8wDFTrE2ow-1
+Received: by mail-pl1-f197.google.com with SMTP id d9443c01a7336-1bf39e73558so74715145ad.2
+        for <linux-xfs@vger.kernel.org>; Tue, 22 Aug 2023 20:05:36 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20221208; t=1692759588; x=1693364388;
-        h=content-transfer-encoding:in-reply-to:cc:from:references:to
+        d=1e100.net; s=20221208; t=1692759935; x=1693364735;
+        h=content-transfer-encoding:in-reply-to:from:references:to
          :content-language:subject:user-agent:mime-version:date:message-id
          :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=bhgEqLuvf9ApSnTvUwn1L76c2o2W1Ei/QD6yE6yt7Vo=;
-        b=FU+yfe0LPmq7fV/sMYUdupaU37rm/jwViVJW9lhkM7G156JYBVEjlN1rCVePi/Lgvq
-         rtwCU8nGqLERtapqvIm0au7LR0f4bCKIPQlmuDjvm/rrj/VU6e/uxIxBMed/KF1Ew6Iq
-         eqBZf4fC9nOZmPw/cwoNcyNHyXNKVR/pcAQlTfBfRro842vXZ9Us1Ugmg6ogFOrU+c3e
-         iMPFEwGg/yDieL/XsjOzenN8OqzB0n3kIMMrANo3aGo6W00kT+c3LNGosTvNVHlRtEqa
-         KZqwuTI0rE/zVZ2lfXE0II68TkqavdMrWzJ0yN+HGATihDGZZq5/M4QqpCyQztgQpux4
-         jQtQ==
-X-Gm-Message-State: AOJu0Yz9ll1x6SOptIY83AIoyK8BsPXceriyiDXutvj5rZTR40h6RfGn
-        DnTOwDrAKgFD4htTj2FezMBEHQ==
-X-Google-Smtp-Source: AGHT+IEfrTZGJtg+pRH2EfLUkWhGiT4SJbELosEEcEbXeeoUMWHqtsVXqJsCto+j1ri8qfTaL4v/sQ==
-X-Received: by 2002:a17:90a:2f41:b0:26d:4ade:fcf0 with SMTP id s59-20020a17090a2f4100b0026d4adefcf0mr10521410pjd.4.1692759588304;
-        Tue, 22 Aug 2023 19:59:48 -0700 (PDT)
-Received: from ?IPV6:fdbd:ff1:ce00:1c25:884:3ed:e1db:b610? ([2408:8000:b001:1:1f:58ff:f102:103])
-        by smtp.gmail.com with ESMTPSA id z2-20020a17090a1fc200b00262ca945cecsm11045048pjz.54.2023.08.22.19.59.38
+        bh=4QiA9d3P5G85In9NHSJpzGB0lSBcXOKFk4V0WBI5ChE=;
+        b=ADvVxma6AuohU5LtrOfMm+LwLI8hlYK8ljG3IDjKH0JbWuLFDHWtBoudyYoJHfy62v
+         NuvaWiHDYpDnsnk3e3y/RflDQ5Rbvr8fZ8akW/5qooTB5ZseKrLoqTHW+pRsiycNmwE5
+         sFd2N8GIEsD32JbxnV/wAoyE0GoXyRVITITeDBQVD+OUuJ4Jup+EVK89Gf1WgCgnckJF
+         gWhqT2zfN4yAYy4hBCrr9k4+h+VX2uh6iFtkMt/NCdom2eCUwn4QjofijPrT+Zds+r4i
+         KslglObA5NuF2p60CRADPWdz8vlO8+5x8V8eaOzHd2WWiEGxqwCl/I1h4JkvCAH+bsSX
+         KvCA==
+X-Gm-Message-State: AOJu0Yy1tYB9qHO5d0gqOZE+6btn1jBDf6MF5vZsoaDW18i00YtKk19a
+        YvhzXG5GRkljNuqoSfQ+/nZbSzQGxGxCk7VFd61ImLHdNrKBHdDSKWeg00V/4baJc1ln7BvFgKi
+        ke4EFVuVJMOHp0NJT/45oPQRVK9t+
+X-Received: by 2002:a17:902:bf47:b0:1bd:bdfb:58e9 with SMTP id u7-20020a170902bf4700b001bdbdfb58e9mr10937219pls.40.1692759935407;
+        Tue, 22 Aug 2023 20:05:35 -0700 (PDT)
+X-Google-Smtp-Source: AGHT+IHUrPFRnH57jKmgN1YG7yeqwqpr+eBffQ7Pgm/KI6B/AX2pCgm+xtFXM/Pc6rgWlttzuLqhqA==
+X-Received: by 2002:a17:902:bf47:b0:1bd:bdfb:58e9 with SMTP id u7-20020a170902bf4700b001bdbdfb58e9mr10937205pls.40.1692759935045;
+        Tue, 22 Aug 2023 20:05:35 -0700 (PDT)
+Received: from [10.64.146.155] (61-69-103-54.mel.static-ipl.aapt.com.au. [61.69.103.54])
+        by smtp.gmail.com with ESMTPSA id a16-20020a170902b59000b001bba3650448sm9760434pls.258.2023.08.22.20.05.33
         (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Tue, 22 Aug 2023 19:59:47 -0700 (PDT)
-Message-ID: <63dc1d86-2a15-6b7e-f63a-63fccb25eae2@bytedance.com>
-Date:   Wed, 23 Aug 2023 10:59:34 +0800
+        Tue, 22 Aug 2023 20:05:34 -0700 (PDT)
+Message-ID: <3d263b27-fa53-81c0-a711-aefffa2ef354@redhat.com>
+Date:   Wed, 23 Aug 2023 13:05:31 +1000
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:102.0)
- Gecko/20100101 Thunderbird/102.14.0
-Subject: Re: [PATCH v4 43/48] drm/ttm: introduce pool_shrink_rwsem
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
+ Thunderbird/102.13.0
+Subject: Re: [ANNOUNCE] xfsprogs: for-next updated to a86308c98
 Content-Language: en-US
-To:     daniel@ffwll.ch
-References: <20230807110936.21819-1-zhengqi.arch@bytedance.com>
- <20230807110936.21819-44-zhengqi.arch@bytedance.com>
- <ZOS+g51Yx9PsYkGU@phenom.ffwll.local>
-From:   Qi Zheng <zhengqi.arch@bytedance.com>
-Cc:     akpm@linux-foundation.org, david@fromorbit.com, tkhai@ya.ru,
-        vbabka@suse.cz, roman.gushchin@linux.dev, djwong@kernel.org,
-        brauner@kernel.org, paulmck@kernel.org, tytso@mit.edu,
-        steven.price@arm.com, cel@kernel.org, senozhatsky@chromium.org,
-        yujie.liu@intel.com, gregkh@linuxfoundation.org,
-        muchun.song@linux.dev, simon.horman@corigine.com,
-        dlemoal@kernel.org, kvm@vger.kernel.org,
-        dri-devel@lists.freedesktop.org,
-        virtualization@lists.linux-foundation.org, linux-mm@kvack.org,
-        dm-devel@redhat.com, linux-mtd@lists.infradead.org, x86@kernel.org,
-        cluster-devel@redhat.com, xen-devel@lists.xenproject.org,
-        linux-ext4@vger.kernel.org, linux-arm-msm@vger.kernel.org,
-        rcu@vger.kernel.org, linux-bcache@vger.kernel.org,
-        Muchun Song <songmuchun@bytedance.com>,
-        linux-raid@vger.kernel.org, linux-nfs@vger.kernel.org,
-        netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-f2fs-devel@lists.sourceforge.net, linux-xfs@vger.kernel.org,
-        linux-fsdevel@vger.kernel.org, linux-erofs@lists.ozlabs.org,
-        linux-btrfs@vger.kernel.org, daniel.vetter@ffwll.ch
-In-Reply-To: <ZOS+g51Yx9PsYkGU@phenom.ffwll.local>
+To:     Carlos Maiolino <carlos@maiolino.me>, linux-xfs@vger.kernel.org
+References: <20230802094128.ptcuzaycy3vzzovk@andromeda>
+From:   Donald Douwsma <ddouwsma@redhat.com>
+In-Reply-To: <20230802094128.ptcuzaycy3vzzovk@andromeda>
 Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Hi Daniel,
 
-On 2023/8/22 21:56, Daniel Vetter wrote:
-> On Mon, Aug 07, 2023 at 07:09:31PM +0800, Qi Zheng wrote:
->> Currently, the synchronize_shrinkers() is only used by TTM pool. It only
->> requires that no shrinkers run in parallel.
->>
->> After we use RCU+refcount method to implement the lockless slab shrink,
->> we can not use shrinker_rwsem or synchronize_rcu() to guarantee that all
->> shrinker invocations have seen an update before freeing memory.
->>
->> So we introduce a new pool_shrink_rwsem to implement a private
->> synchronize_shrinkers(), so as to achieve the same purpose.
->>
->> Signed-off-by: Qi Zheng <zhengqi.arch@bytedance.com>
->> Reviewed-by: Muchun Song <songmuchun@bytedance.com>
+
+On 2/8/23 19:41, Carlos Maiolino wrote:
+> Hello.
 > 
-> On the 5 drm patches (I counted 2 ttm and 3 drivers) for merging through
-> some other tree (since I'm assuming that's how this will land):
+> The xfsprogs for-next branch, located at:
+> 
+> https://git.kernel.org/pub/scm/fs/xfs/xfsprogs-dev.git/refs/?h=for-next
+> 
+> Has just been updated.
+> 
+> Patches often get missed, so if your outstanding patches are properly reviewed on
+> the list and not included in this update, please let me know.
+> 
 
-Yeah, there are 5 drm patches: PATCH v4 07/48 23/48 24/48 25/48 43/48.
+Its a minor one, but the unit test for xfs_repair progress reporting[1] 
+depends on
+
+xfs_repair: always print an estimate when reporting progress
+https://lore.kernel.org/linux-xfs/20230531064143.1737591-1-ddouwsma@redhat.com/
+
+[1] [PATCH v4] xfstests: add test for xfs_repair progress reporting
+https://lore.kernel.org/linux-xfs/20230610063855.gg6cd7bh5pzyobhe@zlang-mailbox/
+
+
+> The new head of the for-next branch is commit:
+> 
+> a86308c98d33e921eb133f47faedf1d9e62f2e77
+> 
+> 2 new commits:
+> 
+> Bill O'Donnell (1):
+>        [780e93c51] mkfs.xfs.8: correction on mkfs.xfs manpage since reflink and dax are compatible
+
+Mmm, this reminds me, sparse inodes have been the default for a while 
+now, I thought someone was going to submit a patch to update the 
+manpage, but I cant see it anywhere.
+
+- Don
 
 > 
-> Acked-by: Daniel Vetter <daniel.vetter@ffwll.ch>
-
-Thanks for your review!
-
-Qi
-
+> Wu Guanghao (1):
+>        [a86308c98] xfs_repair: fix the problem of repair failure caused by dirty flag being abnormally set on buffer
 > 
->> ---
->>   drivers/gpu/drm/ttm/ttm_pool.c | 15 +++++++++++++++
->>   include/linux/shrinker.h       |  2 --
->>   mm/shrinker.c                  | 15 ---------------
->>   3 files changed, 15 insertions(+), 17 deletions(-)
->>
->> diff --git a/drivers/gpu/drm/ttm/ttm_pool.c b/drivers/gpu/drm/ttm/ttm_pool.c
->> index c9c9618c0dce..38b4c280725c 100644
->> --- a/drivers/gpu/drm/ttm/ttm_pool.c
->> +++ b/drivers/gpu/drm/ttm/ttm_pool.c
->> @@ -74,6 +74,7 @@ static struct ttm_pool_type global_dma32_uncached[MAX_ORDER + 1];
->>   static spinlock_t shrinker_lock;
->>   static struct list_head shrinker_list;
->>   static struct shrinker *mm_shrinker;
->> +static DECLARE_RWSEM(pool_shrink_rwsem);
->>   
->>   /* Allocate pages of size 1 << order with the given gfp_flags */
->>   static struct page *ttm_pool_alloc_page(struct ttm_pool *pool, gfp_t gfp_flags,
->> @@ -317,6 +318,7 @@ static unsigned int ttm_pool_shrink(void)
->>   	unsigned int num_pages;
->>   	struct page *p;
->>   
->> +	down_read(&pool_shrink_rwsem);
->>   	spin_lock(&shrinker_lock);
->>   	pt = list_first_entry(&shrinker_list, typeof(*pt), shrinker_list);
->>   	list_move_tail(&pt->shrinker_list, &shrinker_list);
->> @@ -329,6 +331,7 @@ static unsigned int ttm_pool_shrink(void)
->>   	} else {
->>   		num_pages = 0;
->>   	}
->> +	up_read(&pool_shrink_rwsem);
->>   
->>   	return num_pages;
->>   }
->> @@ -572,6 +575,18 @@ void ttm_pool_init(struct ttm_pool *pool, struct device *dev,
->>   }
->>   EXPORT_SYMBOL(ttm_pool_init);
->>   
->> +/**
->> + * synchronize_shrinkers - Wait for all running shrinkers to complete.
->> + *
->> + * This is useful to guarantee that all shrinker invocations have seen an
->> + * update, before freeing memory, similar to rcu.
->> + */
->> +static void synchronize_shrinkers(void)
->> +{
->> +	down_write(&pool_shrink_rwsem);
->> +	up_write(&pool_shrink_rwsem);
->> +}
->> +
->>   /**
->>    * ttm_pool_fini - Cleanup a pool
->>    *
->> diff --git a/include/linux/shrinker.h b/include/linux/shrinker.h
->> index c55c07c3f0cb..025c8070dd86 100644
->> --- a/include/linux/shrinker.h
->> +++ b/include/linux/shrinker.h
->> @@ -103,8 +103,6 @@ struct shrinker *shrinker_alloc(unsigned int flags, const char *fmt, ...);
->>   void shrinker_register(struct shrinker *shrinker);
->>   void shrinker_free(struct shrinker *shrinker);
->>   
->> -extern void synchronize_shrinkers(void);
->> -
->>   #ifdef CONFIG_SHRINKER_DEBUG
->>   extern int __printf(2, 3) shrinker_debugfs_rename(struct shrinker *shrinker,
->>   						  const char *fmt, ...);
->> diff --git a/mm/shrinker.c b/mm/shrinker.c
->> index 3ab301ff122d..a27779ed3798 100644
->> --- a/mm/shrinker.c
->> +++ b/mm/shrinker.c
->> @@ -650,18 +650,3 @@ void shrinker_free(struct shrinker *shrinker)
->>   	kfree(shrinker);
->>   }
->>   EXPORT_SYMBOL_GPL(shrinker_free);
->> -
->> -/**
->> - * synchronize_shrinkers - Wait for all running shrinkers to complete.
->> - *
->> - * This is equivalent to calling unregister_shrink() and register_shrinker(),
->> - * but atomically and with less overhead. This is useful to guarantee that all
->> - * shrinker invocations have seen an update, before freeing memory, similar to
->> - * rcu.
->> - */
->> -void synchronize_shrinkers(void)
->> -{
->> -	down_write(&shrinker_rwsem);
->> -	up_write(&shrinker_rwsem);
->> -}
->> -EXPORT_SYMBOL(synchronize_shrinkers);
->> -- 
->> 2.30.2
->>
+> Code Diffstat:
 > 
+>   man/man8/mkfs.xfs.8.in | 7 -------
+>   repair/scan.c          | 2 +-
+>   2 files changed, 1 insertion(+), 8 deletions(-)
+
