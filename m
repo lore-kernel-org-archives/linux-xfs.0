@@ -2,301 +2,192 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2FF9BEE49BD
-	for <linux-xfs@archiver.kernel.org>; Wed, 23 Aug 2023 10:50:28 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 668D1C3DA6F
+	for <linux-xfs@archiver.kernel.org>; Wed, 23 Aug 2023 22:03:09 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234245AbjHWKu0 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 23 Aug 2023 06:50:26 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42836 "EHLO
+        id S238475AbjHWWCi (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 23 Aug 2023 18:02:38 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45988 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233875AbjHWKuX (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 23 Aug 2023 06:50:23 -0400
-Received: from smtp-out2.suse.de (smtp-out2.suse.de [195.135.220.29])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E0952E67;
-        Wed, 23 Aug 2023 03:49:26 -0700 (PDT)
-Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
-        (No client certificate requested)
-        by smtp-out2.suse.de (Postfix) with ESMTPS id 376CD20754;
-        Wed, 23 Aug 2023 10:48:59 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.cz; s=susede2_rsa;
-        t=1692787739; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=TdY1mQeKf+AcRwKiaagnOGcGjkkUde5nmVvFK+0dZPI=;
-        b=WLpZJ0PJNprwXcYkytIgJhgdn1MPVaHsxOktN6MdRgNeBGe41uFewWpycVyLhMewAVg/t0
-        lZAqrUo92jDXxu0/k9hfA5dk6lCzxmRK+Ei5NdK5bnj50LmafreEkpDT6LLOQ/atCU515U
-        7PlcoOdjK+Xn8fDSCVGn1Gq47ItXibg=
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.cz;
-        s=susede2_ed25519; t=1692787739;
-        h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=TdY1mQeKf+AcRwKiaagnOGcGjkkUde5nmVvFK+0dZPI=;
-        b=1ZsvVK7/UWz7B7afdwv7/JLZUWAJZGpHe25kj6WQ3PsV/P0yc7NaExsNbd141SsFHg/fuE
-        1GrdOQO3bk54WCDg==
-Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
-        (No client certificate requested)
-        by imap2.suse-dmz.suse.de (Postfix) with ESMTPS id 25EA013A43;
-        Wed, 23 Aug 2023 10:48:59 +0000 (UTC)
-Received: from dovecot-director2.suse.de ([192.168.254.65])
-        by imap2.suse-dmz.suse.de with ESMTPSA
-        id eZiACBvk5WR4IAAAMHmgww
-        (envelope-from <jack@suse.cz>); Wed, 23 Aug 2023 10:48:59 +0000
-Received: by quack3.suse.cz (Postfix, from userid 1000)
-        id AB130A07A0; Wed, 23 Aug 2023 12:48:57 +0200 (CEST)
-From:   Jan Kara <jack@suse.cz>
-To:     Christian Brauner <brauner@kernel.org>
-Cc:     Jens Axboe <axboe@kernel.dk>, <linux-fsdevel@vger.kernel.org>,
-        <linux-block@vger.kernel.org>,
-        Christoph Hellwig <hch@infradead.org>, Jan Kara <jack@suse.cz>,
-        "Darrick J. Wong" <djwong@kernel.org>, linux-xfs@vger.kernel.org,
-        Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 28/29] xfs: Convert to bdev_open_by_path()
-Date:   Wed, 23 Aug 2023 12:48:39 +0200
-Message-Id: <20230823104857.11437-28-jack@suse.cz>
-X-Mailer: git-send-email 2.35.3
-In-Reply-To: <20230818123232.2269-1-jack@suse.cz>
-References: <20230818123232.2269-1-jack@suse.cz>
+        with ESMTP id S236802AbjHWWCc (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 23 Aug 2023 18:02:32 -0400
+Received: from mail-pj1-x1034.google.com (mail-pj1-x1034.google.com [IPv6:2607:f8b0:4864:20::1034])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8D894198
+        for <linux-xfs@vger.kernel.org>; Wed, 23 Aug 2023 15:02:30 -0700 (PDT)
+Received: by mail-pj1-x1034.google.com with SMTP id 98e67ed59e1d1-26fc9e49859so345629a91.0
+        for <linux-xfs@vger.kernel.org>; Wed, 23 Aug 2023 15:02:30 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=fromorbit-com.20221208.gappssmtp.com; s=20221208; t=1692828150; x=1693432950;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:to
+         :from:from:to:cc:subject:date:message-id:reply-to;
+        bh=Orxzwh2gPoCeF4lHNlyJE70A8w54bo9et+AF5wdSb9E=;
+        b=aTHlN3ctOYPcJ2Kks04t/9N5x2RdMLW8R4m+eJ+h2h5pZneJPcc7FoUXS+taqrXu9Y
+         M/SALnG3MONoBY9xrcE1T12eo6bWHbbV4rAfSppM+bfjo/439eJ6W3FpVGUtEJ79alq9
+         cUOKwnX4Zwb9YlJnXYL7UPBw12ncv69b/eLVBzur5zGHrbtfkjUTdsGlKYAni/ZImIU6
+         Rcpagb8J2v7sIxhdTRPssVudXZU9rHCeYdeaV0l3KI7wKa17EsE5QC/l+pedP0A+xVh6
+         TWu+OSq2VcplMaC+WXGzpEzGrEW3mnmUu8KMGJbRa6Uv0FXMbJ2ZirInTyJWnwYFWGPc
+         dITQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20221208; t=1692828150; x=1693432950;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:to
+         :from:x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=Orxzwh2gPoCeF4lHNlyJE70A8w54bo9et+AF5wdSb9E=;
+        b=ElrBvzGLUUWjgvvw7vD0UOdXE24JZOClO9UJeOTzOI815ZIIuqXAkQ8qha1L3KoY7i
+         GL+WMyuLoirJZMGKKlF8mg/3cZBYVDH/Vi2kwecc7TMeLW19vL2ZX39peP02u8tQuiBs
+         qPm182k2sQL2Ec8O7sBFNorBxeJXD9vkjlaWCRUWhKjSYMeesREKZFTYd4kALchtGT1/
+         UHdf1Z7nEWe6iUaKohdr0k+ZYJc4mvjT/UE/YFBlnCbalfL7HZNEEeZ5hLpF0cH0tOy3
+         E/3NzTdNkOc9gR2Bnj5fdgQrPp7hG85gGw7pYlhAosJP7Lm57Fm1N3aMveh/m5Y337OY
+         CyiQ==
+X-Gm-Message-State: AOJu0YwUlE1r6SaFr6/TEL7SaukUJKBdyqEOfTOvsTOLzcl3qT2tcT6Y
+        TJXyLbLHTLA32DQWG3jU8DfoZelo9kfsTe6Xgxk=
+X-Google-Smtp-Source: AGHT+IEe2seHM+atnOzRqhMzBNABqnLXz0wUvNANjtplcSnOORAdTQfkIqpdnoJCPNS+AL7Unye7uA==
+X-Received: by 2002:a17:90a:414c:b0:269:621e:a673 with SMTP id m12-20020a17090a414c00b00269621ea673mr10881262pjg.1.1692828149808;
+        Wed, 23 Aug 2023 15:02:29 -0700 (PDT)
+Received: from dread.disaster.area (pa49-195-66-88.pa.nsw.optusnet.com.au. [49.195.66.88])
+        by smtp.gmail.com with ESMTPSA id z19-20020a17090a541300b0026b26181ac9sm242370pjh.14.2023.08.23.15.02.28
+        for <linux-xfs@vger.kernel.org>
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Wed, 23 Aug 2023 15:02:28 -0700 (PDT)
+Received: from [192.168.253.23] (helo=devoid.disaster.area)
+        by dread.disaster.area with esmtp (Exim 4.96)
+        (envelope-from <dave@fromorbit.com>)
+        id 1qYvvl-005csu-2X
+        for linux-xfs@vger.kernel.org;
+        Thu, 24 Aug 2023 08:02:25 +1000
+Received: from dave by devoid.disaster.area with local (Exim 4.96)
+        (envelope-from <dave@devoid.disaster.area>)
+        id 1qYvvl-00F4Dk-1E
+        for linux-xfs@vger.kernel.org;
+        Thu, 24 Aug 2023 08:02:25 +1000
+From:   Dave Chinner <david@fromorbit.com>
+To:     linux-xfs@vger.kernel.org
+Subject: [PATCH] xfs: read only mounts with fsopen mount API are busted
+Date:   Thu, 24 Aug 2023 08:02:25 +1000
+Message-Id: <20230823220225.3591135-1-david@fromorbit.com>
+X-Mailer: git-send-email 2.40.1
 MIME-Version: 1.0
-X-Developer-Signature: v=1; a=openpgp-sha256; l=7300; i=jack@suse.cz; h=from:subject; bh=LMguPfobIH/GMT3StJHFIM6i+KBanfuWwDUkB2CHpKM=; b=owEBbQGS/pANAwAIAZydqgc/ZEDZAcsmYgBk5eQGriqNOWJIE3fu1aKDLyAhp26zeqRwrj4TKPDA RzvFWo6JATMEAAEIAB0WIQSrWdEr1p4yirVVKBycnaoHP2RA2QUCZOXkBgAKCRCcnaoHP2RA2cWDCA DST8n8O0GeZDU/dpePkYUe/H7baHZWGOqofsKYswHOQ3qzmJOFYQr7BcfQCCzouqotTh/7XjuZAenR dWbhiOZUVU9KbGxSGL/oTdLi2nTihNAm25KVrjiSwmpyeScF9qumGBsJUiJrSInHt5768V7SAVzTHC 86FN1mNTJDMJDZgv6Dt/NvLVmWWVznaNxQMteodCBquBlAZjhvXgRUWP+UJFUVCs7zCvYxXeeB7md9 85uRVcPezZUhnCweRDPUx2HKxIj3z1Q4Xz5YSyigqfT+6mEx7eOF4pve9/kU2iaS4LZUxH1Pwn7Urt pRwPn5LTLpx3Stje+bdWABhj9tdunT
-X-Developer-Key: i=jack@suse.cz; a=openpgp; fpr=93C6099A142276A28BBE35D815BC833443038D8C
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Convert xfs to use bdev_open_by_path() and pass the handle around.
+From: Dave Chinner <dchinner@redhat.com>
 
-CC: "Darrick J. Wong" <djwong@kernel.org>
-CC: linux-xfs@vger.kernel.org
-Acked-by: Christoph Hellwig <hch@lst.de>
-Signed-off-by: Jan Kara <jack@suse.cz>
+Recently xfs/513 started failing on my test machines testing "-o
+ro,norecovery" mount options. This was being emitted in dmesg:
+
+[ 9906.932724] XFS (pmem0): no-recovery mounts must be read-only.
+
+Turns out, readonly mounts with the fsopen()/fsconfig() mount API
+have been busted since day zero. It's only taken 5 years for debian
+unstable to start using this "new" mount API, and shortly after this
+I noticed xfs/513 had started to fail as per above.
+
+The syscall trace is:
+
+fsopen("xfs", FSOPEN_CLOEXEC)           = 3
+mount_setattr(-1, NULL, 0, NULL, 0)     = -1 EINVAL (Invalid argument)
+.....
+fsconfig(3, FSCONFIG_SET_STRING, "source", "/dev/pmem0", 0) = 0
+fsconfig(3, FSCONFIG_SET_FLAG, "ro", NULL, 0) = 0
+fsconfig(3, FSCONFIG_SET_FLAG, "norecovery", NULL, 0) = 0
+fsconfig(3, FSCONFIG_CMD_CREATE, NULL, NULL, 0) = -1 EINVAL (Invalid argument)
+close(3)                                = 0
+
+Showing that the actual mount instantiation (FSCONFIG_CMD_CREATE) is
+what threw out the error.
+
+During mount instantiation, we call xfs_fs_validate_params() which
+does:
+
+        /* No recovery flag requires a read-only mount */
+        if (xfs_has_norecovery(mp) && !xfs_is_readonly(mp)) {
+                xfs_warn(mp, "no-recovery mounts must be read-only.");
+                return -EINVAL;
+        }
+
+and xfs_is_readonly() checks internal mount flags for read only
+state. This state is set in xfs_init_fs_context() from the
+context superblock flag state:
+
+        /*
+         * Copy binary VFS mount flags we are interested in.
+         */
+        if (fc->sb_flags & SB_RDONLY)
+                set_bit(XFS_OPSTATE_READONLY, &mp->m_opstate);
+
+With the old mount API, all of the VFS specific superblock flags
+had already been parsed and set before xfs_init_fs_context() is
+called, so this all works fine.
+
+However, in the brave new fsopen/fsconfig world,
+xfs_init_fs_context() is called from fsopen() context, before any
+VFS superblock have been set or parsed. Hence if we use fsopen(),
+the internal XFS readonly state is *never set*. Hence anything that
+depends on xfs_is_readonly() actually returning true for read only
+mounts is broken if fsopen() has been used to mount the filesystem.
+
+Fix this by moving this internal state initialisation to
+xfs_fs_fill_super() before we attempt to validate the parameters
+that have been set prior to the FSCONFIG_CMD_CREATE call being made.
+
+Signed-off-by: Dave Chinner <dchinner@redhat.com>
 ---
- fs/xfs/xfs_buf.c   | 22 +++++++++----------
- fs/xfs/xfs_buf.h   |  3 ++-
- fs/xfs/xfs_super.c | 54 +++++++++++++++++++++++++---------------------
- 3 files changed, 42 insertions(+), 37 deletions(-)
+ fs/xfs/xfs_super.c | 27 +++++++++++++++++----------
+ 1 file changed, 17 insertions(+), 10 deletions(-)
 
-diff --git a/fs/xfs/xfs_buf.c b/fs/xfs/xfs_buf.c
-index 3b903f6bce98..496e2f5fdcc6 100644
---- a/fs/xfs/xfs_buf.c
-+++ b/fs/xfs/xfs_buf.c
-@@ -1938,8 +1938,6 @@ void
- xfs_free_buftarg(
- 	struct xfs_buftarg	*btp)
- {
--	struct block_device	*bdev = btp->bt_bdev;
--
- 	unregister_shrinker(&btp->bt_shrinker);
- 	ASSERT(percpu_counter_sum(&btp->bt_io_count) == 0);
- 	percpu_counter_destroy(&btp->bt_io_count);
-@@ -1947,8 +1945,8 @@ xfs_free_buftarg(
- 
- 	fs_put_dax(btp->bt_daxdev, btp->bt_mount);
- 	/* the main block device is closed by kill_block_super */
--	if (bdev != btp->bt_mount->m_super->s_bdev)
--		blkdev_put(bdev, btp->bt_mount->m_super);
-+	if (btp->bt_bdev != btp->bt_mount->m_super->s_bdev)
-+		bdev_release(btp->bt_bdev_handle);
- 
- 	kmem_free(btp);
- }
-@@ -1983,16 +1981,15 @@ xfs_setsize_buftarg(
-  */
- STATIC int
- xfs_setsize_buftarg_early(
--	xfs_buftarg_t		*btp,
--	struct block_device	*bdev)
-+	xfs_buftarg_t		*btp)
- {
--	return xfs_setsize_buftarg(btp, bdev_logical_block_size(bdev));
-+	return xfs_setsize_buftarg(btp, bdev_logical_block_size(btp->bt_bdev));
- }
- 
- struct xfs_buftarg *
- xfs_alloc_buftarg(
- 	struct xfs_mount	*mp,
--	struct block_device	*bdev)
-+	struct bdev_handle	*bdev_handle)
- {
- 	xfs_buftarg_t		*btp;
- 	const struct dax_holder_operations *ops = NULL;
-@@ -2003,9 +2000,10 @@ xfs_alloc_buftarg(
- 	btp = kmem_zalloc(sizeof(*btp), KM_NOFS);
- 
- 	btp->bt_mount = mp;
--	btp->bt_dev =  bdev->bd_dev;
--	btp->bt_bdev = bdev;
--	btp->bt_daxdev = fs_dax_get_by_bdev(bdev, &btp->bt_dax_part_off,
-+	btp->bt_bdev_handle = bdev_handle;
-+	btp->bt_dev =  bdev_handle->bdev->bd_dev;
-+	btp->bt_bdev = bdev_handle->bdev;
-+	btp->bt_daxdev = fs_dax_get_by_bdev(btp->bt_bdev, &btp->bt_dax_part_off,
- 					    mp, ops);
- 
- 	/*
-@@ -2015,7 +2013,7 @@ xfs_alloc_buftarg(
- 	ratelimit_state_init(&btp->bt_ioerror_rl, 30 * HZ,
- 			     DEFAULT_RATELIMIT_BURST);
- 
--	if (xfs_setsize_buftarg_early(btp, bdev))
-+	if (xfs_setsize_buftarg_early(btp))
- 		goto error_free;
- 
- 	if (list_lru_init(&btp->bt_lru))
-diff --git a/fs/xfs/xfs_buf.h b/fs/xfs/xfs_buf.h
-index 549c60942208..f6418c1312f5 100644
---- a/fs/xfs/xfs_buf.h
-+++ b/fs/xfs/xfs_buf.h
-@@ -92,6 +92,7 @@ typedef unsigned int xfs_buf_flags_t;
-  */
- typedef struct xfs_buftarg {
- 	dev_t			bt_dev;
-+	struct bdev_handle	*bt_bdev_handle;
- 	struct block_device	*bt_bdev;
- 	struct dax_device	*bt_daxdev;
- 	u64			bt_dax_part_off;
-@@ -351,7 +352,7 @@ xfs_buf_update_cksum(struct xfs_buf *bp, unsigned long cksum_offset)
-  *	Handling of buftargs.
-  */
- struct xfs_buftarg *xfs_alloc_buftarg(struct xfs_mount *mp,
--		struct block_device *bdev);
-+		struct bdev_handle *bdev_handle);
- extern void xfs_free_buftarg(struct xfs_buftarg *);
- extern void xfs_buftarg_wait(struct xfs_buftarg *);
- extern void xfs_buftarg_drain(struct xfs_buftarg *);
 diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
-index c79eac048456..6a3a295f84b7 100644
+index 09638e8fb4ee..8ca01510628b 100644
 --- a/fs/xfs/xfs_super.c
 +++ b/fs/xfs/xfs_super.c
-@@ -381,14 +381,15 @@ STATIC int
- xfs_blkdev_get(
- 	xfs_mount_t		*mp,
- 	const char		*name,
--	struct block_device	**bdevp)
-+	struct bdev_handle	**handlep)
+@@ -1509,6 +1509,18 @@ xfs_fs_fill_super(
+ 
+ 	mp->m_super = sb;
+ 
++	/*
++	 * Copy VFS mount flags from the context now that all parameter parsing
++	 * is guaranteed to have been completed by either the old mount API or
++	 * the newer fsopen/fsconfig API.
++	 */
++	if (fc->sb_flags & SB_RDONLY)
++		set_bit(XFS_OPSTATE_READONLY, &mp->m_opstate);
++	if (fc->sb_flags & SB_DIRSYNC)
++		mp->m_features |= XFS_FEAT_DIRSYNC;
++	if (fc->sb_flags & SB_SYNCHRONOUS)
++		mp->m_features |= XFS_FEAT_WSYNC;
++
+ 	error = xfs_fs_validate_params(mp);
+ 	if (error)
+ 		goto out_free_names;
+@@ -1988,6 +2000,11 @@ static const struct fs_context_operations xfs_context_ops = {
+ 	.free        = xfs_fs_free,
+ };
+ 
++/*
++ * WARNING: do not initialise any parameters in this function that depend on
++ * mount option parsing having already been performed as this can be called from
++ * fsopen() before any parameters have been set.
++ */
+ static int xfs_init_fs_context(
+ 	struct fs_context	*fc)
  {
- 	int			error = 0;
+@@ -2019,16 +2036,6 @@ static int xfs_init_fs_context(
+ 	mp->m_logbsize = -1;
+ 	mp->m_allocsize_log = 16; /* 64k */
  
--	*bdevp = blkdev_get_by_path(name, BLK_OPEN_READ | BLK_OPEN_WRITE,
--				    mp->m_super, &fs_holder_ops);
--	if (IS_ERR(*bdevp)) {
--		error = PTR_ERR(*bdevp);
-+	*handlep = bdev_open_by_path(name, BLK_OPEN_READ | BLK_OPEN_WRITE,
-+				     mp->m_super, &fs_holder_ops);
-+	if (IS_ERR(*handlep)) {
-+		error = PTR_ERR(*handlep);
-+		*handlep = NULL;
- 		xfs_warn(mp, "Invalid device [%s], error=%d", name, error);
- 	}
- 
-@@ -426,15 +427,15 @@ xfs_shutdown_devices(
- 	 * race, everyone loses.
- 	 */
- 	if (mp->m_logdev_targp && mp->m_logdev_targp != mp->m_ddev_targp) {
--		blkdev_issue_flush(mp->m_logdev_targp->bt_bdev);
--		invalidate_bdev(mp->m_logdev_targp->bt_bdev);
-+		blkdev_issue_flush(mp->m_logdev_targp->bt_bdev_handle->bdev);
-+		invalidate_bdev(mp->m_logdev_targp->bt_bdev_handle->bdev);
- 	}
- 	if (mp->m_rtdev_targp) {
--		blkdev_issue_flush(mp->m_rtdev_targp->bt_bdev);
--		invalidate_bdev(mp->m_rtdev_targp->bt_bdev);
-+		blkdev_issue_flush(mp->m_rtdev_targp->bt_bdev_handle->bdev);
-+		invalidate_bdev(mp->m_rtdev_targp->bt_bdev_handle->bdev);
- 	}
--	blkdev_issue_flush(mp->m_ddev_targp->bt_bdev);
--	invalidate_bdev(mp->m_ddev_targp->bt_bdev);
-+	blkdev_issue_flush(mp->m_ddev_targp->bt_bdev_handle->bdev);
-+	invalidate_bdev(mp->m_ddev_targp->bt_bdev_handle->bdev);
- }
- 
- /*
-@@ -453,7 +454,7 @@ xfs_open_devices(
- {
- 	struct super_block	*sb = mp->m_super;
- 	struct block_device	*ddev = sb->s_bdev;
--	struct block_device	*logdev = NULL, *rtdev = NULL;
-+	struct bdev_handle	*logdev_handle = NULL, *rtdev_handle = NULL;
- 	int			error;
- 
- 	/*
-@@ -466,17 +467,19 @@ xfs_open_devices(
- 	 * Open real time and log devices - order is important.
- 	 */
- 	if (mp->m_logname) {
--		error = xfs_blkdev_get(mp, mp->m_logname, &logdev);
-+		error = xfs_blkdev_get(mp, mp->m_logname, &logdev_handle);
- 		if (error)
- 			goto out_relock;
- 	}
- 
- 	if (mp->m_rtname) {
--		error = xfs_blkdev_get(mp, mp->m_rtname, &rtdev);
-+		error = xfs_blkdev_get(mp, mp->m_rtname, &rtdev_handle);
- 		if (error)
- 			goto out_close_logdev;
- 
--		if (rtdev == ddev || rtdev == logdev) {
-+		if (rtdev_handle->bdev == ddev ||
-+		    (logdev_handle &&
-+		     rtdev_handle->bdev == logdev_handle->bdev)) {
- 			xfs_warn(mp,
- 	"Cannot mount filesystem with identical rtdev and ddev/logdev.");
- 			error = -EINVAL;
-@@ -488,22 +491,25 @@ xfs_open_devices(
- 	 * Setup xfs_mount buffer target pointers
- 	 */
- 	error = -ENOMEM;
--	mp->m_ddev_targp = xfs_alloc_buftarg(mp, ddev);
-+	mp->m_ddev_targp = xfs_alloc_buftarg(mp, sb->s_bdev_handle);
- 	if (!mp->m_ddev_targp)
- 		goto out_close_rtdev;
- 
--	if (rtdev) {
--		mp->m_rtdev_targp = xfs_alloc_buftarg(mp, rtdev);
-+	if (rtdev_handle) {
-+		mp->m_rtdev_targp = xfs_alloc_buftarg(mp, rtdev_handle);
- 		if (!mp->m_rtdev_targp)
- 			goto out_free_ddev_targ;
- 	}
- 
--	if (logdev && logdev != ddev) {
--		mp->m_logdev_targp = xfs_alloc_buftarg(mp, logdev);
-+	if (logdev_handle && logdev_handle->bdev != ddev) {
-+		mp->m_logdev_targp = xfs_alloc_buftarg(mp, logdev_handle);
- 		if (!mp->m_logdev_targp)
- 			goto out_free_rtdev_targ;
- 	} else {
- 		mp->m_logdev_targp = mp->m_ddev_targp;
-+		/* Handle won't be used, drop it */
-+		if (logdev_handle)
-+			bdev_release(logdev_handle);
- 	}
- 
- 	error = 0;
-@@ -517,11 +523,11 @@ xfs_open_devices(
-  out_free_ddev_targ:
- 	xfs_free_buftarg(mp->m_ddev_targp);
-  out_close_rtdev:
--	 if (rtdev)
--		 blkdev_put(rtdev, sb);
-+	 if (rtdev_handle)
-+		bdev_release(rtdev_handle);
-  out_close_logdev:
--	if (logdev && logdev != ddev)
--		blkdev_put(logdev, sb);
-+	if (logdev_handle)
-+		bdev_release(logdev_handle);
- 	goto out_relock;
- }
+-	/*
+-	 * Copy binary VFS mount flags we are interested in.
+-	 */
+-	if (fc->sb_flags & SB_RDONLY)
+-		set_bit(XFS_OPSTATE_READONLY, &mp->m_opstate);
+-	if (fc->sb_flags & SB_DIRSYNC)
+-		mp->m_features |= XFS_FEAT_DIRSYNC;
+-	if (fc->sb_flags & SB_SYNCHRONOUS)
+-		mp->m_features |= XFS_FEAT_WSYNC;
+-
+ 	fc->s_fs_info = mp;
+ 	fc->ops = &xfs_context_ops;
  
 -- 
-2.35.3
+2.40.1
 
