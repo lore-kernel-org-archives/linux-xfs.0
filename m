@@ -2,177 +2,187 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B9126EE4993
-	for <linux-xfs@archiver.kernel.org>; Wed, 23 Aug 2023 08:49:09 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 89908EE49A0
+	for <linux-xfs@archiver.kernel.org>; Wed, 23 Aug 2023 10:49:38 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234842AbjHWIsy (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 23 Aug 2023 04:48:54 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45886 "EHLO
+        id S234178AbjHWKth (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 23 Aug 2023 06:49:37 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34026 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S235146AbjHWIsV (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 23 Aug 2023 04:48:21 -0400
-Received: from esa11.hc1455-7.c3s2.iphmx.com (esa11.hc1455-7.c3s2.iphmx.com [207.54.90.137])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1D0D11BF4;
-        Wed, 23 Aug 2023 01:36:34 -0700 (PDT)
-X-IronPort-AV: E=McAfee;i="6600,9927,10810"; a="108493203"
-X-IronPort-AV: E=Sophos;i="6.01,195,1684767600"; 
-   d="scan'208";a="108493203"
-Received: from unknown (HELO oym-r3.gw.nic.fujitsu.com) ([210.162.30.91])
-  by esa11.hc1455-7.c3s2.iphmx.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 23 Aug 2023 17:36:33 +0900
-Received: from oym-m2.gw.nic.fujitsu.com (oym-nat-oym-m2.gw.nic.fujitsu.com [192.168.87.59])
-        by oym-r3.gw.nic.fujitsu.com (Postfix) with ESMTP id 8043ECA1E6;
-        Wed, 23 Aug 2023 17:36:30 +0900 (JST)
-Received: from kws-ab4.gw.nic.fujitsu.com (kws-ab4.gw.nic.fujitsu.com [192.51.206.22])
-        by oym-m2.gw.nic.fujitsu.com (Postfix) with ESMTP id B78B9BF4B8;
-        Wed, 23 Aug 2023 17:36:29 +0900 (JST)
-Received: from edo.cn.fujitsu.com (edo.cn.fujitsu.com [10.167.33.5])
-        by kws-ab4.gw.nic.fujitsu.com (Postfix) with ESMTP id 5AA5A2B1CF3;
-        Wed, 23 Aug 2023 17:36:29 +0900 (JST)
-Received: from [192.168.50.5] (unknown [10.167.234.230])
-        by edo.cn.fujitsu.com (Postfix) with ESMTP id 644271A008F;
-        Wed, 23 Aug 2023 16:36:28 +0800 (CST)
-Message-ID: <f28c7eca-0eb5-7338-2362-93d10a16cd64@fujitsu.com>
-Date:   Wed, 23 Aug 2023 16:36:28 +0800
+        with ESMTP id S233987AbjHWKt1 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 23 Aug 2023 06:49:27 -0400
+Received: from smtp-out1.suse.de (smtp-out1.suse.de [IPv6:2001:67c:2178:6::1c])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D141810CC;
+        Wed, 23 Aug 2023 03:49:01 -0700 (PDT)
+Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
+        (No client certificate requested)
+        by smtp-out1.suse.de (Postfix) with ESMTPS id 1F89B21EDA;
+        Wed, 23 Aug 2023 10:48:58 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.cz; s=susede2_rsa;
+        t=1692787738; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+         mime-version:mime-version:  content-transfer-encoding:content-transfer-encoding;
+        bh=czbolVCNdiRIhtzRMydBVuDGtNoMVf0uK7rI8VUw4Wg=;
+        b=cea+STFByaV36NWMjg8zifEKP9bUJaVFrhrdsQ1BHrDjc+6YKTyOk0XUYe/aGcn7z1GdBW
+        Sp5Xg8/PcrR30C9G8GkmtNgleVHgoFT9VpO4HmYAD81nOJQ/2ts6Z2GJ97FCPouubZqTfM
+        7Ki5cRwEgj/8O3iByHVAhCDVhrdgZS0=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.cz;
+        s=susede2_ed25519; t=1692787738;
+        h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+         mime-version:mime-version:  content-transfer-encoding:content-transfer-encoding;
+        bh=czbolVCNdiRIhtzRMydBVuDGtNoMVf0uK7rI8VUw4Wg=;
+        b=ccloVX/Tox8MPvEstSnU1swyihs7KV2puBqol0j3M4wpbT7Z67JF74RuKmYp8i9zsSQ2aK
+        Q/J06H24OiSZjOBw==
+Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
+        (No client certificate requested)
+        by imap2.suse-dmz.suse.de (Postfix) with ESMTPS id 0486813592;
+        Wed, 23 Aug 2023 10:48:58 +0000 (UTC)
+Received: from dovecot-director2.suse.de ([192.168.254.65])
+        by imap2.suse-dmz.suse.de with ESMTPSA
+        id hdjcABrk5WQsIAAAMHmgww
+        (envelope-from <jack@suse.cz>); Wed, 23 Aug 2023 10:48:58 +0000
+Received: by quack3.suse.cz (Postfix, from userid 1000)
+        id 0E216A0774; Wed, 23 Aug 2023 12:48:57 +0200 (CEST)
+From:   Jan Kara <jack@suse.cz>
+To:     Christian Brauner <brauner@kernel.org>
+Cc:     Jens Axboe <axboe@kernel.dk>, <linux-fsdevel@vger.kernel.org>,
+        <linux-block@vger.kernel.org>,
+        Christoph Hellwig <hch@infradead.org>, Jan Kara <jack@suse.cz>,
+        Alasdair Kergon <agk@redhat.com>,
+        Andrew Morton <akpm@linux-foundation.org>,
+        Anna Schumaker <anna@kernel.org>, Chao Yu <chao@kernel.org>,
+        Christian Borntraeger <borntraeger@linux.ibm.com>,
+        "Darrick J. Wong" <djwong@kernel.org>,
+        Dave Kleikamp <shaggy@kernel.org>,
+        David Sterba <dsterba@suse.com>, dm-devel@redhat.com,
+        drbd-dev@lists.linbit.com, Gao Xiang <xiang@kernel.org>,
+        Jack Wang <jinpu.wang@ionos.com>,
+        Jaegeuk Kim <jaegeuk@kernel.org>,
+        jfs-discussion@lists.sourceforge.net,
+        Joern Engel <joern@lazybastard.org>,
+        Joseph Qi <joseph.qi@linux.alibaba.com>,
+        Kent Overstreet <kent.overstreet@gmail.com>,
+        linux-bcache@vger.kernel.org, linux-btrfs@vger.kernel.org,
+        linux-erofs@lists.ozlabs.org, linux-ext4@vger.kernel.org,
+        linux-f2fs-devel@lists.sourceforge.net, linux-mm@kvack.org,
+        linux-mtd@lists.infradead.org, linux-nfs@vger.kernel.org,
+        linux-nilfs@vger.kernel.org, linux-nvme@lists.infradead.org,
+        linux-pm@vger.kernel.org, linux-raid@vger.kernel.org,
+        linux-s390@vger.kernel.org, linux-scsi@vger.kernel.org,
+        linux-xfs@vger.kernel.org,
+        "Md. Haris Iqbal" <haris.iqbal@ionos.com>,
+        Mike Snitzer <snitzer@kernel.org>,
+        Minchan Kim <minchan@kernel.org>, ocfs2-devel@oss.oracle.com,
+        reiserfs-devel@vger.kernel.org,
+        Sergey Senozhatsky <senozhatsky@chromium.org>,
+        Song Liu <song@kernel.org>,
+        Sven Schnelle <svens@linux.ibm.com>,
+        target-devel@vger.kernel.org, Ted Tso <tytso@mit.edu>,
+        Trond Myklebust <trond.myklebust@hammerspace.com>,
+        xen-devel@lists.xenproject.org
+Subject: [PATCH v3 0/29] block: Make blkdev_get_by_*() return handle
+Date:   Wed, 23 Aug 2023 12:48:11 +0200
+Message-Id: <20230818123232.2269-1-jack@suse.cz>
+X-Mailer: git-send-email 2.35.3
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v12 2/2] mm, pmem, xfs: Introduce MF_MEM_REMOVE for unbind
-To:     Dan Williams <dan.j.williams@intel.com>,
-        linux-fsdevel@vger.kernel.org, nvdimm@lists.linux.dev,
-        linux-xfs@vger.kernel.org, linux-mm@kvack.org
-Cc:     willy@infradead.org, jack@suse.cz, akpm@linux-foundation.org,
-        djwong@kernel.org, mcgrof@kernel.org
-References: <20230629081651.253626-1-ruansy.fnst@fujitsu.com>
- <20230629081651.253626-3-ruansy.fnst@fujitsu.com>
- <64d18cd6c6e09_5ea6e294fb@dwillia2-xfh.jf.intel.com.notmuch>
-Content-Language: en-US
-From:   Shiyang Ruan <ruansy.fnst@fujitsu.com>
-In-Reply-To: <64d18cd6c6e09_5ea6e294fb@dwillia2-xfh.jf.intel.com.notmuch>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+X-Developer-Signature: v=1; a=openpgp-sha256; l=3781; i=jack@suse.cz; h=from:subject:message-id; bh=cMBb8bZk7tVGWo+BW5D78pH+ebOvNFFLsxdd3Uvzd/w=; b=owEBbQGS/pANAwAIAZydqgc/ZEDZAcsmYgBk5ePhrEMij+4xGF6e8K//xuADex0OXIFxlpO0VT6g 42vu5BeJATMEAAEIAB0WIQSrWdEr1p4yirVVKBycnaoHP2RA2QUCZOXj4QAKCRCcnaoHP2RA2RqoB/ 91nt6Qs4NSStbt9M1WXY1akBbAqu+Bv3ZXdZ6WMy9kKyYwY7zCnyQziikP60M2MjCrud4NP9os4YAr 4uXdyOyVcdJ9TjbciDgTyoYdfkFl7g+rZhj1pyPeep1xmvDMn3QtNJ28EbhLegdC+nkmL6+bxPGEwd IdsuBKGrdIIEryWwhBq0+BWowL3nzmQjs5GoDtXLoHADfHYhgC8RKYK/4FaML1/SsAZRvGJ/C8wFB4 JUGsDGFE4CJx9XgiRx407CSIGNSoCciqBpMaMA7x/dbq9Tu76xcqN4/DZrtT2qyG4I7GZYetndEl3F vWMZMQFPauZmB2S1r30HY+nn2IOCrM
+X-Developer-Key: i=jack@suse.cz; a=openpgp; fpr=93C6099A142276A28BBE35D815BC833443038D8C
 Content-Transfer-Encoding: 8bit
-X-TM-AS-GCONF: 00
-X-TM-AS-Product-Ver: IMSS-9.1.0.1417-9.0.0.1002-27830.005
-X-TM-AS-User-Approved-Sender: Yes
-X-TMASE-Version: IMSS-9.1.0.1417-9.0.1002-27830.005
-X-TMASE-Result: 10--29.976500-10.000000
-X-TMASE-MatchedRID: UomY2wWC/KyPvrMjLFD6eCkMR2LAnMRp2q80vLACqaeqvcIF1TcLYI5a
-        mlqOXwWavgUEAzu+ZVNbtzD5SJbjLpGZilTi8ctSxDiakrJ+Splt9UVWhqbRIWtEzrC9eANpEJm
-        hpJ8aMPMs4TH6G8STucqWFlCQS6PJay2H+VAa8iXTCZHfjFFBzxokPBiBBj9/WAuSz3ewb23jE7
-        v208scT7xxBqTj7wDsupZIYbG9DPyAsoqIP3ENkIvefyp1glN0MzbF1gbxlQZFms6YEs23D3Nrl
-        Eb9qTKUfNghynX3+4Fh7mDBbvo6VLHUOxwKYaKnYCs5AYZvXC/4qCLIu0mtIMC5DTEMxpeQ3JB1
-        YIf9iAoPNxz2EvpSIL/t8hsriyc8pANxWw95dxPY6EGR3k/uitG3Y6ijqBt3teXjSBMYnmklVDj
-        pDxeIWyolWOAMg2fcFR2lGwd2c9E/O/cxE+VGcUWX0DfhVamwvD4YKo9SttxAzPYUSDzxTFDczN
-        /SMpBY+u+xXVO1LUDeLyT0oSNhxXAA9eFj9SfYngIgpj8eDcBZDL1gLmoa/ALDAYP4AXVR7nY51
-        lwLq0+8QIu4z6HhEH7cGd19dSFd
-X-TMASE-SNAP-Result: 1.821001.0001-0-1-22:0,33:0,34:0-0
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
+Hello,
 
+this is a v3 of the patch series which implements the idea of blkdev_get_by_*()
+calls returning bdev_handle which is then passed to blkdev_put() [1]. This
+makes the get and put calls for bdevs more obviously matching and allows us to
+propagate context from get to put without having to modify all the users
+(again!). In particular I need to propagate used open flags to blkdev_put() to
+be able count writeable opens and add support for blocking writes to mounted
+block devices. I'll send that series separately.
 
-在 2023/8/8 8:31, Dan Williams 写道:
-> Shiyang Ruan wrote:
->> This patch is inspired by Dan's "mm, dax, pmem: Introduce
->> dev_pagemap_failure()"[1].  With the help of dax_holder and
->> ->notify_failure() mechanism, the pmem driver is able to ask filesystem
->> on it to unmap all files in use, and notify processes who are using
->> those files.
->>
->> Call trace:
->> trigger unbind
->>   -> unbind_store()
->>    -> ... (skip)
->>     -> devres_release_all()
->>      -> kill_dax()
->>       -> dax_holder_notify_failure(dax_dev, 0, U64_MAX, MF_MEM_PRE_REMOVE)
->>        -> xfs_dax_notify_failure()
->>        `-> freeze_super()             // freeze (kernel call)
->>        `-> do xfs rmap
->>        ` -> mf_dax_kill_procs()
->>        `  -> collect_procs_fsdax()    // all associated processes
->>        `  -> unmap_and_kill()
->>        ` -> invalidate_inode_pages2_range() // drop file's cache
->>        `-> thaw_super()               // thaw (both kernel & user call)
->>
->> Introduce MF_MEM_PRE_REMOVE to let filesystem know this is a remove
->> event.  Use the exclusive freeze/thaw[2] to lock the filesystem to prevent
->> new dax mapping from being created.  Do not shutdown filesystem directly
->> if configuration is not supported, or if failure range includes metadata
->> area.  Make sure all files and processes(not only the current progress)
->> are handled correctly.  Also drop the cache of associated files before
->> pmem is removed.
-> 
-> I would say more about why this is important for DAX users. Yes, the
-> devm_memremap_pages() vs get_user_pages() infrastructure can be improved
-> if it has a mechanism to revoke all pages that it has handed out for a
-> given device, but that's not an end user visible effect.
-> 
-> The end user impact needs to be clear. Is this for existing deployed
-> pmem where a user accidentally removes a device and wants failures and
-> process killing instead of hangs?
-> 
-> The reason Linux has got along without this for so long is because pmem
-> is difficult to remove (and with the sunset of Optane, difficult to
-> acquire). One motivation to pursue this is CXL where hotplug is better
-> defined and use cases like dynamic capacity devices where making forward
-> progress to kill processes is better than hanging.
-> 
-> It would help to have an example of what happens without this patch.
-> 
->>
->> [1]: https://lore.kernel.org/linux-mm/161604050314.1463742.14151665140035795571.stgit@dwillia2-desk3.amr.corp.intel.com/
->> [2]: https://lore.kernel.org/linux-xfs/168688010689.860947.1788875898367401950.stgit@frogsfrogsfrogs/
->>
->> Signed-off-by: Shiyang Ruan <ruansy.fnst@fujitsu.com>
->> ---
->>   drivers/dax/super.c         |  3 +-
->>   fs/xfs/xfs_notify_failure.c | 86 ++++++++++++++++++++++++++++++++++---
->>   include/linux/mm.h          |  1 +
->>   mm/memory-failure.c         | 17 ++++++--
->>   4 files changed, 96 insertions(+), 11 deletions(-)
->>
->> diff --git a/drivers/dax/super.c b/drivers/dax/super.c
->> index c4c4728a36e4..2e1a35e82fce 100644
->> --- a/drivers/dax/super.c
->> +++ b/drivers/dax/super.c
->> @@ -323,7 +323,8 @@ void kill_dax(struct dax_device *dax_dev)
->>   		return;
->>   
->>   	if (dax_dev->holder_data != NULL)
->> -		dax_holder_notify_failure(dax_dev, 0, U64_MAX, 0);
->> +		dax_holder_notify_failure(dax_dev, 0, U64_MAX,
->> +				MF_MEM_PRE_REMOVE);
-> 
-> The motivation in the original proposal was to convey the death of
-> large extents to memory_failure(). However, that proposal predated your
-> mf_dax_kill_procs() approach. With mf_dax_kill_procs() the need for a
-> new bulk memory_failure() API is gone.
-> 
-> This is where the end user impact needs to be clear. It seems that
-> without this patch the filesystem may assume failure while the device is
-> already present, but that seems ok. The goal is forward progress after a
-> mistake not necessarily minimizing damage after a mistake. The fact that
-> the current code is not as gentle could be considered a feature because
-> graceful shutdown should always unmount before unplug, and if one
-> unplugs before unmount it is already understood that they get to keep
-> the pieces.
-> 
-> Because the driver ->remove() callback can not enforce that the device
-> is still present it seems unnecessary to optimize for the case where the
-> filesystem is the device is being removed from an actively mounted
-> filesystem, but the device is still present.
-> 
-> The dax_holder_notify_failure(dax_dev, 0, U64_MAX) is sufficient to say
-> "userspace failed to umount before hardware eject, stop trying to access
-> this range", rather than "try to finish up in this range, but it might
-> already be too late".
+The series is based on Christian's vfs tree as of today as there is quite
+some overlap. Patches have passed some reasonable testing - I've tested block
+changes, md, dm, bcache, xfs, btrfs, ext4, swap. More testing or review is
+always welcome. Thanks! I've pushed out the full branch to:
 
-Hi Dan,
+git://git.kernel.org/pub/scm/linux/kernel/git/jack/linux-fs.git bdev_handle
 
-I added an simple example of "accidentally remove pmem device" and its 
-consequences of not having this patch in the latest version.  Please review.
+to ease review / testing. Since there were not many comments for v2 and
+Christoph has acked the series I think we should start discussing how to merge
+the series. Most collisions with this series seem to happen in the filesystems
+area so VFS tree would seem as the least painful way to merge this. Jens,
+are you OK with that?
 
+Changes since v2:
+* Rebased on top of current vfs tree
+* Added some acks
+* Reflected minor nits from Christoph
+* Added missing conversion of blkdev_put() calls in cramfs and erofs
+* Fixed possible leak of bdev handle in xfs if logdev is the same as fs dev
 
---
-Thanks,
-Ruan.
+Changes since v1:
+* Rebased on top of current vfs tree
+* Renamed final functions to bdev_open_by_*() and bdev_release()
+* Fixed detection of exclusive open in blkdev_ioctl() and blkdev_fallocate()
+* Fixed swap conversion to properly reinitialize swap_info->bdev_handle
+* Fixed xfs conversion to not oops with rtdev without logdev
+* Couple other minor fixups
+
+								Honza
+
+[1] https://lore.kernel.org/all/ZJGNsVDhZx0Xgs2H@infradead.org
+
+CC: Alasdair Kergon <agk@redhat.com>
+CC: Andrew Morton <akpm@linux-foundation.org>
+CC: Anna Schumaker <anna@kernel.org>
+CC: Chao Yu <chao@kernel.org>
+CC: Christian Borntraeger <borntraeger@linux.ibm.com>
+CC: Coly Li <colyli@suse.de
+CC: "Darrick J. Wong" <djwong@kernel.org>
+CC: Dave Kleikamp <shaggy@kernel.org>
+CC: David Sterba <dsterba@suse.com>
+CC: dm-devel@redhat.com
+CC: drbd-dev@lists.linbit.com
+CC: Gao Xiang <xiang@kernel.org>
+CC: Jack Wang <jinpu.wang@ionos.com>
+CC: Jaegeuk Kim <jaegeuk@kernel.org>
+CC: jfs-discussion@lists.sourceforge.net
+CC: Joern Engel <joern@lazybastard.org>
+CC: Joseph Qi <joseph.qi@linux.alibaba.com>
+CC: Kent Overstreet <kent.overstreet@gmail.com>
+CC: linux-bcache@vger.kernel.org
+CC: linux-btrfs@vger.kernel.org
+CC: linux-erofs@lists.ozlabs.org
+CC: <linux-ext4@vger.kernel.org>
+CC: linux-f2fs-devel@lists.sourceforge.net
+CC: linux-mm@kvack.org
+CC: linux-mtd@lists.infradead.org
+CC: linux-nfs@vger.kernel.org
+CC: linux-nilfs@vger.kernel.org
+CC: linux-nvme@lists.infradead.org
+CC: linux-pm@vger.kernel.org
+CC: linux-raid@vger.kernel.org
+CC: linux-s390@vger.kernel.org
+CC: linux-scsi@vger.kernel.org
+CC: linux-xfs@vger.kernel.org
+CC: "Md. Haris Iqbal" <haris.iqbal@ionos.com>
+CC: Mike Snitzer <snitzer@kernel.org>
+CC: Minchan Kim <minchan@kernel.org>
+CC: ocfs2-devel@oss.oracle.com
+CC: reiserfs-devel@vger.kernel.org
+CC: Sergey Senozhatsky <senozhatsky@chromium.org>
+CC: Song Liu <song@kernel.org>
+CC: Sven Schnelle <svens@linux.ibm.com>
+CC: target-devel@vger.kernel.org
+CC: Ted Tso <tytso@mit.edu>
+CC: Trond Myklebust <trond.myklebust@hammerspace.com>
+CC: xen-devel@lists.xenproject.org
+
+Previous versions:
+Link: http://lore.kernel.org/r/20230629165206.383-1-jack@suse.cz # v1
+Link: http://lore.kernel.org/r/20230810171429.31759-1-jack@suse.cz # v2
