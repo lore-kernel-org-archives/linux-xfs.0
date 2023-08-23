@@ -2,187 +2,301 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 89908EE49A0
-	for <linux-xfs@archiver.kernel.org>; Wed, 23 Aug 2023 10:49:38 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2FF9BEE49BD
+	for <linux-xfs@archiver.kernel.org>; Wed, 23 Aug 2023 10:50:28 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234178AbjHWKth (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 23 Aug 2023 06:49:37 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34026 "EHLO
+        id S234245AbjHWKu0 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 23 Aug 2023 06:50:26 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42836 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233987AbjHWKt1 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 23 Aug 2023 06:49:27 -0400
-Received: from smtp-out1.suse.de (smtp-out1.suse.de [IPv6:2001:67c:2178:6::1c])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D141810CC;
-        Wed, 23 Aug 2023 03:49:01 -0700 (PDT)
+        with ESMTP id S233875AbjHWKuX (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 23 Aug 2023 06:50:23 -0400
+Received: from smtp-out2.suse.de (smtp-out2.suse.de [195.135.220.29])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E0952E67;
+        Wed, 23 Aug 2023 03:49:26 -0700 (PDT)
 Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
         (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
          key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
         (No client certificate requested)
-        by smtp-out1.suse.de (Postfix) with ESMTPS id 1F89B21EDA;
-        Wed, 23 Aug 2023 10:48:58 +0000 (UTC)
+        by smtp-out2.suse.de (Postfix) with ESMTPS id 376CD20754;
+        Wed, 23 Aug 2023 10:48:59 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.cz; s=susede2_rsa;
-        t=1692787738; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:  content-transfer-encoding:content-transfer-encoding;
-        bh=czbolVCNdiRIhtzRMydBVuDGtNoMVf0uK7rI8VUw4Wg=;
-        b=cea+STFByaV36NWMjg8zifEKP9bUJaVFrhrdsQ1BHrDjc+6YKTyOk0XUYe/aGcn7z1GdBW
-        Sp5Xg8/PcrR30C9G8GkmtNgleVHgoFT9VpO4HmYAD81nOJQ/2ts6Z2GJ97FCPouubZqTfM
-        7Ki5cRwEgj/8O3iByHVAhCDVhrdgZS0=
+        t=1692787739; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+         mime-version:mime-version:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=TdY1mQeKf+AcRwKiaagnOGcGjkkUde5nmVvFK+0dZPI=;
+        b=WLpZJ0PJNprwXcYkytIgJhgdn1MPVaHsxOktN6MdRgNeBGe41uFewWpycVyLhMewAVg/t0
+        lZAqrUo92jDXxu0/k9hfA5dk6lCzxmRK+Ei5NdK5bnj50LmafreEkpDT6LLOQ/atCU515U
+        7PlcoOdjK+Xn8fDSCVGn1Gq47ItXibg=
 DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.cz;
-        s=susede2_ed25519; t=1692787738;
+        s=susede2_ed25519; t=1692787739;
         h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:  content-transfer-encoding:content-transfer-encoding;
-        bh=czbolVCNdiRIhtzRMydBVuDGtNoMVf0uK7rI8VUw4Wg=;
-        b=ccloVX/Tox8MPvEstSnU1swyihs7KV2puBqol0j3M4wpbT7Z67JF74RuKmYp8i9zsSQ2aK
-        Q/J06H24OiSZjOBw==
+         mime-version:mime-version:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=TdY1mQeKf+AcRwKiaagnOGcGjkkUde5nmVvFK+0dZPI=;
+        b=1ZsvVK7/UWz7B7afdwv7/JLZUWAJZGpHe25kj6WQ3PsV/P0yc7NaExsNbd141SsFHg/fuE
+        1GrdOQO3bk54WCDg==
 Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
         (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
          key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
         (No client certificate requested)
-        by imap2.suse-dmz.suse.de (Postfix) with ESMTPS id 0486813592;
-        Wed, 23 Aug 2023 10:48:58 +0000 (UTC)
+        by imap2.suse-dmz.suse.de (Postfix) with ESMTPS id 25EA013A43;
+        Wed, 23 Aug 2023 10:48:59 +0000 (UTC)
 Received: from dovecot-director2.suse.de ([192.168.254.65])
         by imap2.suse-dmz.suse.de with ESMTPSA
-        id hdjcABrk5WQsIAAAMHmgww
-        (envelope-from <jack@suse.cz>); Wed, 23 Aug 2023 10:48:58 +0000
+        id eZiACBvk5WR4IAAAMHmgww
+        (envelope-from <jack@suse.cz>); Wed, 23 Aug 2023 10:48:59 +0000
 Received: by quack3.suse.cz (Postfix, from userid 1000)
-        id 0E216A0774; Wed, 23 Aug 2023 12:48:57 +0200 (CEST)
+        id AB130A07A0; Wed, 23 Aug 2023 12:48:57 +0200 (CEST)
 From:   Jan Kara <jack@suse.cz>
 To:     Christian Brauner <brauner@kernel.org>
 Cc:     Jens Axboe <axboe@kernel.dk>, <linux-fsdevel@vger.kernel.org>,
         <linux-block@vger.kernel.org>,
         Christoph Hellwig <hch@infradead.org>, Jan Kara <jack@suse.cz>,
-        Alasdair Kergon <agk@redhat.com>,
-        Andrew Morton <akpm@linux-foundation.org>,
-        Anna Schumaker <anna@kernel.org>, Chao Yu <chao@kernel.org>,
-        Christian Borntraeger <borntraeger@linux.ibm.com>,
-        "Darrick J. Wong" <djwong@kernel.org>,
-        Dave Kleikamp <shaggy@kernel.org>,
-        David Sterba <dsterba@suse.com>, dm-devel@redhat.com,
-        drbd-dev@lists.linbit.com, Gao Xiang <xiang@kernel.org>,
-        Jack Wang <jinpu.wang@ionos.com>,
-        Jaegeuk Kim <jaegeuk@kernel.org>,
-        jfs-discussion@lists.sourceforge.net,
-        Joern Engel <joern@lazybastard.org>,
-        Joseph Qi <joseph.qi@linux.alibaba.com>,
-        Kent Overstreet <kent.overstreet@gmail.com>,
-        linux-bcache@vger.kernel.org, linux-btrfs@vger.kernel.org,
-        linux-erofs@lists.ozlabs.org, linux-ext4@vger.kernel.org,
-        linux-f2fs-devel@lists.sourceforge.net, linux-mm@kvack.org,
-        linux-mtd@lists.infradead.org, linux-nfs@vger.kernel.org,
-        linux-nilfs@vger.kernel.org, linux-nvme@lists.infradead.org,
-        linux-pm@vger.kernel.org, linux-raid@vger.kernel.org,
-        linux-s390@vger.kernel.org, linux-scsi@vger.kernel.org,
-        linux-xfs@vger.kernel.org,
-        "Md. Haris Iqbal" <haris.iqbal@ionos.com>,
-        Mike Snitzer <snitzer@kernel.org>,
-        Minchan Kim <minchan@kernel.org>, ocfs2-devel@oss.oracle.com,
-        reiserfs-devel@vger.kernel.org,
-        Sergey Senozhatsky <senozhatsky@chromium.org>,
-        Song Liu <song@kernel.org>,
-        Sven Schnelle <svens@linux.ibm.com>,
-        target-devel@vger.kernel.org, Ted Tso <tytso@mit.edu>,
-        Trond Myklebust <trond.myklebust@hammerspace.com>,
-        xen-devel@lists.xenproject.org
-Subject: [PATCH v3 0/29] block: Make blkdev_get_by_*() return handle
-Date:   Wed, 23 Aug 2023 12:48:11 +0200
-Message-Id: <20230818123232.2269-1-jack@suse.cz>
+        "Darrick J. Wong" <djwong@kernel.org>, linux-xfs@vger.kernel.org,
+        Christoph Hellwig <hch@lst.de>
+Subject: [PATCH 28/29] xfs: Convert to bdev_open_by_path()
+Date:   Wed, 23 Aug 2023 12:48:39 +0200
+Message-Id: <20230823104857.11437-28-jack@suse.cz>
 X-Mailer: git-send-email 2.35.3
+In-Reply-To: <20230818123232.2269-1-jack@suse.cz>
+References: <20230818123232.2269-1-jack@suse.cz>
 MIME-Version: 1.0
-X-Developer-Signature: v=1; a=openpgp-sha256; l=3781; i=jack@suse.cz; h=from:subject:message-id; bh=cMBb8bZk7tVGWo+BW5D78pH+ebOvNFFLsxdd3Uvzd/w=; b=owEBbQGS/pANAwAIAZydqgc/ZEDZAcsmYgBk5ePhrEMij+4xGF6e8K//xuADex0OXIFxlpO0VT6g 42vu5BeJATMEAAEIAB0WIQSrWdEr1p4yirVVKBycnaoHP2RA2QUCZOXj4QAKCRCcnaoHP2RA2RqoB/ 91nt6Qs4NSStbt9M1WXY1akBbAqu+Bv3ZXdZ6WMy9kKyYwY7zCnyQziikP60M2MjCrud4NP9os4YAr 4uXdyOyVcdJ9TjbciDgTyoYdfkFl7g+rZhj1pyPeep1xmvDMn3QtNJ28EbhLegdC+nkmL6+bxPGEwd IdsuBKGrdIIEryWwhBq0+BWowL3nzmQjs5GoDtXLoHADfHYhgC8RKYK/4FaML1/SsAZRvGJ/C8wFB4 JUGsDGFE4CJx9XgiRx407CSIGNSoCciqBpMaMA7x/dbq9Tu76xcqN4/DZrtT2qyG4I7GZYetndEl3F vWMZMQFPauZmB2S1r30HY+nn2IOCrM
+X-Developer-Signature: v=1; a=openpgp-sha256; l=7300; i=jack@suse.cz; h=from:subject; bh=LMguPfobIH/GMT3StJHFIM6i+KBanfuWwDUkB2CHpKM=; b=owEBbQGS/pANAwAIAZydqgc/ZEDZAcsmYgBk5eQGriqNOWJIE3fu1aKDLyAhp26zeqRwrj4TKPDA RzvFWo6JATMEAAEIAB0WIQSrWdEr1p4yirVVKBycnaoHP2RA2QUCZOXkBgAKCRCcnaoHP2RA2cWDCA DST8n8O0GeZDU/dpePkYUe/H7baHZWGOqofsKYswHOQ3qzmJOFYQr7BcfQCCzouqotTh/7XjuZAenR dWbhiOZUVU9KbGxSGL/oTdLi2nTihNAm25KVrjiSwmpyeScF9qumGBsJUiJrSInHt5768V7SAVzTHC 86FN1mNTJDMJDZgv6Dt/NvLVmWWVznaNxQMteodCBquBlAZjhvXgRUWP+UJFUVCs7zCvYxXeeB7md9 85uRVcPezZUhnCweRDPUx2HKxIj3z1Q4Xz5YSyigqfT+6mEx7eOF4pve9/kU2iaS4LZUxH1Pwn7Urt pRwPn5LTLpx3Stje+bdWABhj9tdunT
 X-Developer-Key: i=jack@suse.cz; a=openpgp; fpr=93C6099A142276A28BBE35D815BC833443038D8C
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Hello,
+Convert xfs to use bdev_open_by_path() and pass the handle around.
 
-this is a v3 of the patch series which implements the idea of blkdev_get_by_*()
-calls returning bdev_handle which is then passed to blkdev_put() [1]. This
-makes the get and put calls for bdevs more obviously matching and allows us to
-propagate context from get to put without having to modify all the users
-(again!). In particular I need to propagate used open flags to blkdev_put() to
-be able count writeable opens and add support for blocking writes to mounted
-block devices. I'll send that series separately.
-
-The series is based on Christian's vfs tree as of today as there is quite
-some overlap. Patches have passed some reasonable testing - I've tested block
-changes, md, dm, bcache, xfs, btrfs, ext4, swap. More testing or review is
-always welcome. Thanks! I've pushed out the full branch to:
-
-git://git.kernel.org/pub/scm/linux/kernel/git/jack/linux-fs.git bdev_handle
-
-to ease review / testing. Since there were not many comments for v2 and
-Christoph has acked the series I think we should start discussing how to merge
-the series. Most collisions with this series seem to happen in the filesystems
-area so VFS tree would seem as the least painful way to merge this. Jens,
-are you OK with that?
-
-Changes since v2:
-* Rebased on top of current vfs tree
-* Added some acks
-* Reflected minor nits from Christoph
-* Added missing conversion of blkdev_put() calls in cramfs and erofs
-* Fixed possible leak of bdev handle in xfs if logdev is the same as fs dev
-
-Changes since v1:
-* Rebased on top of current vfs tree
-* Renamed final functions to bdev_open_by_*() and bdev_release()
-* Fixed detection of exclusive open in blkdev_ioctl() and blkdev_fallocate()
-* Fixed swap conversion to properly reinitialize swap_info->bdev_handle
-* Fixed xfs conversion to not oops with rtdev without logdev
-* Couple other minor fixups
-
-								Honza
-
-[1] https://lore.kernel.org/all/ZJGNsVDhZx0Xgs2H@infradead.org
-
-CC: Alasdair Kergon <agk@redhat.com>
-CC: Andrew Morton <akpm@linux-foundation.org>
-CC: Anna Schumaker <anna@kernel.org>
-CC: Chao Yu <chao@kernel.org>
-CC: Christian Borntraeger <borntraeger@linux.ibm.com>
-CC: Coly Li <colyli@suse.de
 CC: "Darrick J. Wong" <djwong@kernel.org>
-CC: Dave Kleikamp <shaggy@kernel.org>
-CC: David Sterba <dsterba@suse.com>
-CC: dm-devel@redhat.com
-CC: drbd-dev@lists.linbit.com
-CC: Gao Xiang <xiang@kernel.org>
-CC: Jack Wang <jinpu.wang@ionos.com>
-CC: Jaegeuk Kim <jaegeuk@kernel.org>
-CC: jfs-discussion@lists.sourceforge.net
-CC: Joern Engel <joern@lazybastard.org>
-CC: Joseph Qi <joseph.qi@linux.alibaba.com>
-CC: Kent Overstreet <kent.overstreet@gmail.com>
-CC: linux-bcache@vger.kernel.org
-CC: linux-btrfs@vger.kernel.org
-CC: linux-erofs@lists.ozlabs.org
-CC: <linux-ext4@vger.kernel.org>
-CC: linux-f2fs-devel@lists.sourceforge.net
-CC: linux-mm@kvack.org
-CC: linux-mtd@lists.infradead.org
-CC: linux-nfs@vger.kernel.org
-CC: linux-nilfs@vger.kernel.org
-CC: linux-nvme@lists.infradead.org
-CC: linux-pm@vger.kernel.org
-CC: linux-raid@vger.kernel.org
-CC: linux-s390@vger.kernel.org
-CC: linux-scsi@vger.kernel.org
 CC: linux-xfs@vger.kernel.org
-CC: "Md. Haris Iqbal" <haris.iqbal@ionos.com>
-CC: Mike Snitzer <snitzer@kernel.org>
-CC: Minchan Kim <minchan@kernel.org>
-CC: ocfs2-devel@oss.oracle.com
-CC: reiserfs-devel@vger.kernel.org
-CC: Sergey Senozhatsky <senozhatsky@chromium.org>
-CC: Song Liu <song@kernel.org>
-CC: Sven Schnelle <svens@linux.ibm.com>
-CC: target-devel@vger.kernel.org
-CC: Ted Tso <tytso@mit.edu>
-CC: Trond Myklebust <trond.myklebust@hammerspace.com>
-CC: xen-devel@lists.xenproject.org
+Acked-by: Christoph Hellwig <hch@lst.de>
+Signed-off-by: Jan Kara <jack@suse.cz>
+---
+ fs/xfs/xfs_buf.c   | 22 +++++++++----------
+ fs/xfs/xfs_buf.h   |  3 ++-
+ fs/xfs/xfs_super.c | 54 +++++++++++++++++++++++++---------------------
+ 3 files changed, 42 insertions(+), 37 deletions(-)
 
-Previous versions:
-Link: http://lore.kernel.org/r/20230629165206.383-1-jack@suse.cz # v1
-Link: http://lore.kernel.org/r/20230810171429.31759-1-jack@suse.cz # v2
+diff --git a/fs/xfs/xfs_buf.c b/fs/xfs/xfs_buf.c
+index 3b903f6bce98..496e2f5fdcc6 100644
+--- a/fs/xfs/xfs_buf.c
++++ b/fs/xfs/xfs_buf.c
+@@ -1938,8 +1938,6 @@ void
+ xfs_free_buftarg(
+ 	struct xfs_buftarg	*btp)
+ {
+-	struct block_device	*bdev = btp->bt_bdev;
+-
+ 	unregister_shrinker(&btp->bt_shrinker);
+ 	ASSERT(percpu_counter_sum(&btp->bt_io_count) == 0);
+ 	percpu_counter_destroy(&btp->bt_io_count);
+@@ -1947,8 +1945,8 @@ xfs_free_buftarg(
+ 
+ 	fs_put_dax(btp->bt_daxdev, btp->bt_mount);
+ 	/* the main block device is closed by kill_block_super */
+-	if (bdev != btp->bt_mount->m_super->s_bdev)
+-		blkdev_put(bdev, btp->bt_mount->m_super);
++	if (btp->bt_bdev != btp->bt_mount->m_super->s_bdev)
++		bdev_release(btp->bt_bdev_handle);
+ 
+ 	kmem_free(btp);
+ }
+@@ -1983,16 +1981,15 @@ xfs_setsize_buftarg(
+  */
+ STATIC int
+ xfs_setsize_buftarg_early(
+-	xfs_buftarg_t		*btp,
+-	struct block_device	*bdev)
++	xfs_buftarg_t		*btp)
+ {
+-	return xfs_setsize_buftarg(btp, bdev_logical_block_size(bdev));
++	return xfs_setsize_buftarg(btp, bdev_logical_block_size(btp->bt_bdev));
+ }
+ 
+ struct xfs_buftarg *
+ xfs_alloc_buftarg(
+ 	struct xfs_mount	*mp,
+-	struct block_device	*bdev)
++	struct bdev_handle	*bdev_handle)
+ {
+ 	xfs_buftarg_t		*btp;
+ 	const struct dax_holder_operations *ops = NULL;
+@@ -2003,9 +2000,10 @@ xfs_alloc_buftarg(
+ 	btp = kmem_zalloc(sizeof(*btp), KM_NOFS);
+ 
+ 	btp->bt_mount = mp;
+-	btp->bt_dev =  bdev->bd_dev;
+-	btp->bt_bdev = bdev;
+-	btp->bt_daxdev = fs_dax_get_by_bdev(bdev, &btp->bt_dax_part_off,
++	btp->bt_bdev_handle = bdev_handle;
++	btp->bt_dev =  bdev_handle->bdev->bd_dev;
++	btp->bt_bdev = bdev_handle->bdev;
++	btp->bt_daxdev = fs_dax_get_by_bdev(btp->bt_bdev, &btp->bt_dax_part_off,
+ 					    mp, ops);
+ 
+ 	/*
+@@ -2015,7 +2013,7 @@ xfs_alloc_buftarg(
+ 	ratelimit_state_init(&btp->bt_ioerror_rl, 30 * HZ,
+ 			     DEFAULT_RATELIMIT_BURST);
+ 
+-	if (xfs_setsize_buftarg_early(btp, bdev))
++	if (xfs_setsize_buftarg_early(btp))
+ 		goto error_free;
+ 
+ 	if (list_lru_init(&btp->bt_lru))
+diff --git a/fs/xfs/xfs_buf.h b/fs/xfs/xfs_buf.h
+index 549c60942208..f6418c1312f5 100644
+--- a/fs/xfs/xfs_buf.h
++++ b/fs/xfs/xfs_buf.h
+@@ -92,6 +92,7 @@ typedef unsigned int xfs_buf_flags_t;
+  */
+ typedef struct xfs_buftarg {
+ 	dev_t			bt_dev;
++	struct bdev_handle	*bt_bdev_handle;
+ 	struct block_device	*bt_bdev;
+ 	struct dax_device	*bt_daxdev;
+ 	u64			bt_dax_part_off;
+@@ -351,7 +352,7 @@ xfs_buf_update_cksum(struct xfs_buf *bp, unsigned long cksum_offset)
+  *	Handling of buftargs.
+  */
+ struct xfs_buftarg *xfs_alloc_buftarg(struct xfs_mount *mp,
+-		struct block_device *bdev);
++		struct bdev_handle *bdev_handle);
+ extern void xfs_free_buftarg(struct xfs_buftarg *);
+ extern void xfs_buftarg_wait(struct xfs_buftarg *);
+ extern void xfs_buftarg_drain(struct xfs_buftarg *);
+diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
+index c79eac048456..6a3a295f84b7 100644
+--- a/fs/xfs/xfs_super.c
++++ b/fs/xfs/xfs_super.c
+@@ -381,14 +381,15 @@ STATIC int
+ xfs_blkdev_get(
+ 	xfs_mount_t		*mp,
+ 	const char		*name,
+-	struct block_device	**bdevp)
++	struct bdev_handle	**handlep)
+ {
+ 	int			error = 0;
+ 
+-	*bdevp = blkdev_get_by_path(name, BLK_OPEN_READ | BLK_OPEN_WRITE,
+-				    mp->m_super, &fs_holder_ops);
+-	if (IS_ERR(*bdevp)) {
+-		error = PTR_ERR(*bdevp);
++	*handlep = bdev_open_by_path(name, BLK_OPEN_READ | BLK_OPEN_WRITE,
++				     mp->m_super, &fs_holder_ops);
++	if (IS_ERR(*handlep)) {
++		error = PTR_ERR(*handlep);
++		*handlep = NULL;
+ 		xfs_warn(mp, "Invalid device [%s], error=%d", name, error);
+ 	}
+ 
+@@ -426,15 +427,15 @@ xfs_shutdown_devices(
+ 	 * race, everyone loses.
+ 	 */
+ 	if (mp->m_logdev_targp && mp->m_logdev_targp != mp->m_ddev_targp) {
+-		blkdev_issue_flush(mp->m_logdev_targp->bt_bdev);
+-		invalidate_bdev(mp->m_logdev_targp->bt_bdev);
++		blkdev_issue_flush(mp->m_logdev_targp->bt_bdev_handle->bdev);
++		invalidate_bdev(mp->m_logdev_targp->bt_bdev_handle->bdev);
+ 	}
+ 	if (mp->m_rtdev_targp) {
+-		blkdev_issue_flush(mp->m_rtdev_targp->bt_bdev);
+-		invalidate_bdev(mp->m_rtdev_targp->bt_bdev);
++		blkdev_issue_flush(mp->m_rtdev_targp->bt_bdev_handle->bdev);
++		invalidate_bdev(mp->m_rtdev_targp->bt_bdev_handle->bdev);
+ 	}
+-	blkdev_issue_flush(mp->m_ddev_targp->bt_bdev);
+-	invalidate_bdev(mp->m_ddev_targp->bt_bdev);
++	blkdev_issue_flush(mp->m_ddev_targp->bt_bdev_handle->bdev);
++	invalidate_bdev(mp->m_ddev_targp->bt_bdev_handle->bdev);
+ }
+ 
+ /*
+@@ -453,7 +454,7 @@ xfs_open_devices(
+ {
+ 	struct super_block	*sb = mp->m_super;
+ 	struct block_device	*ddev = sb->s_bdev;
+-	struct block_device	*logdev = NULL, *rtdev = NULL;
++	struct bdev_handle	*logdev_handle = NULL, *rtdev_handle = NULL;
+ 	int			error;
+ 
+ 	/*
+@@ -466,17 +467,19 @@ xfs_open_devices(
+ 	 * Open real time and log devices - order is important.
+ 	 */
+ 	if (mp->m_logname) {
+-		error = xfs_blkdev_get(mp, mp->m_logname, &logdev);
++		error = xfs_blkdev_get(mp, mp->m_logname, &logdev_handle);
+ 		if (error)
+ 			goto out_relock;
+ 	}
+ 
+ 	if (mp->m_rtname) {
+-		error = xfs_blkdev_get(mp, mp->m_rtname, &rtdev);
++		error = xfs_blkdev_get(mp, mp->m_rtname, &rtdev_handle);
+ 		if (error)
+ 			goto out_close_logdev;
+ 
+-		if (rtdev == ddev || rtdev == logdev) {
++		if (rtdev_handle->bdev == ddev ||
++		    (logdev_handle &&
++		     rtdev_handle->bdev == logdev_handle->bdev)) {
+ 			xfs_warn(mp,
+ 	"Cannot mount filesystem with identical rtdev and ddev/logdev.");
+ 			error = -EINVAL;
+@@ -488,22 +491,25 @@ xfs_open_devices(
+ 	 * Setup xfs_mount buffer target pointers
+ 	 */
+ 	error = -ENOMEM;
+-	mp->m_ddev_targp = xfs_alloc_buftarg(mp, ddev);
++	mp->m_ddev_targp = xfs_alloc_buftarg(mp, sb->s_bdev_handle);
+ 	if (!mp->m_ddev_targp)
+ 		goto out_close_rtdev;
+ 
+-	if (rtdev) {
+-		mp->m_rtdev_targp = xfs_alloc_buftarg(mp, rtdev);
++	if (rtdev_handle) {
++		mp->m_rtdev_targp = xfs_alloc_buftarg(mp, rtdev_handle);
+ 		if (!mp->m_rtdev_targp)
+ 			goto out_free_ddev_targ;
+ 	}
+ 
+-	if (logdev && logdev != ddev) {
+-		mp->m_logdev_targp = xfs_alloc_buftarg(mp, logdev);
++	if (logdev_handle && logdev_handle->bdev != ddev) {
++		mp->m_logdev_targp = xfs_alloc_buftarg(mp, logdev_handle);
+ 		if (!mp->m_logdev_targp)
+ 			goto out_free_rtdev_targ;
+ 	} else {
+ 		mp->m_logdev_targp = mp->m_ddev_targp;
++		/* Handle won't be used, drop it */
++		if (logdev_handle)
++			bdev_release(logdev_handle);
+ 	}
+ 
+ 	error = 0;
+@@ -517,11 +523,11 @@ xfs_open_devices(
+  out_free_ddev_targ:
+ 	xfs_free_buftarg(mp->m_ddev_targp);
+  out_close_rtdev:
+-	 if (rtdev)
+-		 blkdev_put(rtdev, sb);
++	 if (rtdev_handle)
++		bdev_release(rtdev_handle);
+  out_close_logdev:
+-	if (logdev && logdev != ddev)
+-		blkdev_put(logdev, sb);
++	if (logdev_handle)
++		bdev_release(logdev_handle);
+ 	goto out_relock;
+ }
+ 
+-- 
+2.35.3
+
