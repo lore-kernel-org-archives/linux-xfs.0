@@ -2,154 +2,167 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7C105C3DA6F
-	for <linux-xfs@archiver.kernel.org>; Thu, 24 Aug 2023 03:43:16 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9DCEAC71145
+	for <linux-xfs@archiver.kernel.org>; Thu, 24 Aug 2023 03:53:22 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231704AbjHXDmq (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 23 Aug 2023 23:42:46 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50736 "EHLO
+        id S232350AbjHXDwY (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 23 Aug 2023 23:52:24 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48634 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S239658AbjHXDm2 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 23 Aug 2023 23:42:28 -0400
-Received: from mail-oo1-xc31.google.com (mail-oo1-xc31.google.com [IPv6:2607:f8b0:4864:20::c31])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 67B8710F3
-        for <linux-xfs@vger.kernel.org>; Wed, 23 Aug 2023 20:42:26 -0700 (PDT)
-Received: by mail-oo1-xc31.google.com with SMTP id 006d021491bc7-57128297bd7so553668eaf.0
-        for <linux-xfs@vger.kernel.org>; Wed, 23 Aug 2023 20:42:26 -0700 (PDT)
+        with ESMTP id S239931AbjHXDvA (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 23 Aug 2023 23:51:00 -0400
+Received: from mail-oa1-x36.google.com (mail-oa1-x36.google.com [IPv6:2001:4860:4864:20::36])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E2E1819AE
+        for <linux-xfs@vger.kernel.org>; Wed, 23 Aug 2023 20:50:03 -0700 (PDT)
+Received: by mail-oa1-x36.google.com with SMTP id 586e51a60fabf-1a2dd615ddcso1128411fac.0
+        for <linux-xfs@vger.kernel.org>; Wed, 23 Aug 2023 20:50:03 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=fromorbit-com.20221208.gappssmtp.com; s=20221208; t=1692848545; x=1693453345;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
-        bh=vrRf4riJ4t0fLvCBn8UMQQlz3KktSckyxk3BqGu0//Y=;
-        b=ul9TcXFUU67Xu01rjUzArK1u5YGDCNn9qghPulF1XeWiskjifpL8UE/19WsBuuFRgy
-         f5/E+tcDfAagn5YmM34LyB6UI71za9iEOO7PVt7wmgIj2EGIDbJNjbkLT258h/axbGRk
-         55zVFWn9+7ikuREdURiVlU0E6vieZGuqopeUB2i83FiCUX2rcAHsfLSJSdGKY1r8F+7o
-         AKclqS3IqRj9FBcsYGxw8YZvSOsjyiBxPzbVL/X9dHOBLYRaik8v8DEy729znUcUaY9X
-         Bvu1CcAfG82EI5dhnVOt9RICG+kGJK2mhQUzXyq0iR9SFvCR+SKMLb5JNeljuVrzdYgb
-         BFgg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20221208; t=1692848545; x=1693453345;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
+        d=bytedance.com; s=google; t=1692848949; x=1693453749;
+        h=content-transfer-encoding:mime-version:references:in-reply-to
+         :message-id:date:subject:cc:to:from:from:to:cc:subject:date
          :message-id:reply-to;
-        bh=vrRf4riJ4t0fLvCBn8UMQQlz3KktSckyxk3BqGu0//Y=;
-        b=Ork4JQMaaPy28jVczM20MWi+RNjs8unF/xl5acaOBO2K0fSLgO254OWE8TiU61Waow
-         M6dKfGuj/upAJDN3BM90A1Sq7REfWqzoTbWx3b9rzbhcDFwrfbIOr1ntmex4+4NcHVCl
-         nR5f7AgUGrQnoUReC5H5CUszo7PoWEXrsuZ0SIsPtOrEymOBU3bcFZC93Fs7Toeavx+P
-         D/LG89wLjWV6YRH/pws3X902n9zQoevhdkcRvIO4yU5g6hK12Iy36wfJdZvlZ6o711SB
-         L21tYSiu5Dlao5kLr5n5OUDMt4fTUR4hcNY9/TFnm2PUiFEoz3L7A10DC4Qk+nrArtc7
-         cZCg==
-X-Gm-Message-State: AOJu0Yx4wSWougrJ/f1TfDB/wa6BweWy720V8Sv+95tzKa1HocfuOwn3
-        wwPYIlUXqu+qKm/wMJs0SKoU6mIpCyEdiCpgcSA=
-X-Google-Smtp-Source: AGHT+IF4D0jzcH2c8HNVH6S/nNQ39//03iGwedjhOwwV6GXuyDPevWK75NoRwKXxpP/7qhpyFPS2mA==
-X-Received: by 2002:a05:6870:e394:b0:1b0:3637:2bbe with SMTP id x20-20020a056870e39400b001b036372bbemr18215277oad.54.1692848545593;
-        Wed, 23 Aug 2023 20:42:25 -0700 (PDT)
-Received: from dread.disaster.area (pa49-195-66-88.pa.nsw.optusnet.com.au. [49.195.66.88])
-        by smtp.gmail.com with ESMTPSA id 8-20020a17090a034800b00262d662c9adsm532717pjf.53.2023.08.23.20.42.24
+        bh=3h1iK4Tv/ZQ556QR/DSejIrzZMOS74OqSxj2J6MI6fo=;
+        b=CYbGa+Y8xSAbiirspSWcF7tmTfc3vNTi972ZOagbjS5hpdWO8Auyif7k5iVpc+ViYw
+         nP6fwdi1vSkIpa3diPYPZt8B+J6EPCRiz3RD/Gl9V4iTxXAdE+irsgCTblZY7vQ83DDP
+         H56UI3TSBSN9pNHl8/ieVjseHg+VmFwr1Ai/xVQz5GRGk9w7wHVRkKq0FBHVhVkOR7k8
+         8c0M8r7cnG2ZyIAnVb616SwYdzE5Uh1SFlIl/iUa4p82hojy069jJBbm+zLf/semt70K
+         Ecv68sXawysZ9mXwaGVC7F7G4j5lraYla7gomg30/07P8unn5Jr6MOZfPgKQ/rZCI098
+         +/fg==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20221208; t=1692848949; x=1693453749;
+        h=content-transfer-encoding:mime-version:references:in-reply-to
+         :message-id:date:subject:cc:to:from:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=3h1iK4Tv/ZQ556QR/DSejIrzZMOS74OqSxj2J6MI6fo=;
+        b=TJ1hM36BAAS3bT0Vf/dHJFaaN+qK6EcJVFpS3cBI3psoIgBeEla8FI6QXdpooRy2cg
+         gAbPSbNsEu1YHYVFuFVwiAcWg8TWkXAALKrMmlPF6hcw/Ghdusy0ZNquIvbkwfTpXW8a
+         2VswAg/BoEwe0ODE1q5j68eDhr0maTPw78A5B45z4VfJuxnCEtye7yG7GHIVjTPn2VrT
+         XpsVSThRmfS0pupNG9BrLTeuhZpdOVDfb5IuuH5EcJE8tfXUQZQNo3oQjCQFQMjOIUDM
+         O3XVtEeQm5znHNI9b3ahnskzMAUMx2GRWWglQTi/wGZe6lfSZ+paSHZ19WDneLL6fd4G
+         0o/w==
+X-Gm-Message-State: AOJu0YwxdLwaroANzZucr3EG8BIU8Y5VSIJpR/YbhzS/BmUxp291KK2+
+        yJnrgLN/DlqTqW3QwTC6vwzuLg==
+X-Google-Smtp-Source: AGHT+IH531Xg0nVzdtVymmtmVKGs5L1Uo5h6G3XB4ml4AX+WBlLfp5F3iDld4B5r5QTgv36fNpqXQQ==
+X-Received: by 2002:a05:6830:6782:b0:6bd:990:1a2 with SMTP id cs2-20020a056830678200b006bd099001a2mr16258206otb.0.1692848948838;
+        Wed, 23 Aug 2023 20:49:08 -0700 (PDT)
+Received: from C02DW0BEMD6R.bytedance.net ([203.208.167.146])
+        by smtp.gmail.com with ESMTPSA id t6-20020a63b246000000b005579f12a238sm10533157pgo.86.2023.08.23.20.49.00
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 23 Aug 2023 20:42:24 -0700 (PDT)
-Received: from dave by dread.disaster.area with local (Exim 4.96)
-        (envelope-from <david@fromorbit.com>)
-        id 1qZ1Ej-005j9S-2h;
-        Thu, 24 Aug 2023 13:42:21 +1000
-Date:   Thu, 24 Aug 2023 13:42:21 +1000
-From:   Dave Chinner <david@fromorbit.com>
-To:     "Darrick J. Wong" <djwong@kernel.org>
-Cc:     xfs <linux-xfs@vger.kernel.org>, fstests <fstests@vger.kernel.org>
-Subject: Re: [RFC PATCH] fstests: test fix for an agbno overflow in
- __xfs_getfsmap_datadev
-Message-ID: <ZObRnfDTls3VBnNA@dread.disaster.area>
-References: <20230823010046.GD11286@frogsfrogsfrogs>
- <20230823010239.GE11263@frogsfrogsfrogs>
- <ZObCG2iRTPr9wKuI@dread.disaster.area>
- <20230824031939.GI11263@frogsfrogsfrogs>
+        Wed, 23 Aug 2023 20:49:08 -0700 (PDT)
+From:   Qi Zheng <zhengqi.arch@bytedance.com>
+To:     akpm@linux-foundation.org, david@fromorbit.com, tkhai@ya.ru,
+        vbabka@suse.cz, roman.gushchin@linux.dev, djwong@kernel.org,
+        brauner@kernel.org, paulmck@kernel.org, tytso@mit.edu,
+        steven.price@arm.com, cel@kernel.org, senozhatsky@chromium.org,
+        yujie.liu@intel.com, gregkh@linuxfoundation.org,
+        muchun.song@linux.dev
+Cc:     linux-kernel@vger.kernel.org, linux-mm@kvack.org,
+        linux-fsdevel@vger.kernel.org,
+        Qi Zheng <zhengqi.arch@bytedance.com>,
+        Muchun Song <songmuchun@bytedance.com>,
+        Chandan Babu R <chandan.babu@oracle.com>,
+        linux-xfs@vger.kernel.org
+Subject: [PATCH v5 36/45] xfs: dynamically allocate the xfs-qm shrinker
+Date:   Thu, 24 Aug 2023 11:42:55 +0800
+Message-Id: <20230824034304.37411-37-zhengqi.arch@bytedance.com>
+X-Mailer: git-send-email 2.24.3 (Apple Git-128)
+In-Reply-To: <20230824034304.37411-1-zhengqi.arch@bytedance.com>
+References: <20230824034304.37411-1-zhengqi.arch@bytedance.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20230824031939.GI11263@frogsfrogsfrogs>
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Wed, Aug 23, 2023 at 08:19:39PM -0700, Darrick J. Wong wrote:
-> On Thu, Aug 24, 2023 at 12:36:11PM +1000, Dave Chinner wrote:
-> > On Tue, Aug 22, 2023 at 06:02:39PM -0700, Darrick J. Wong wrote:
-> > > From: Darrick J. Wong <djwong@kernel.org>
-> > > 
-> > > Dave Chinner reported that xfs/273 fails if the AG size happens to be an
-> > > exact power of two.  I traced this to an agbno integer overflow when the
-> > > current GETFSMAP call is a continuation of a previous GETFSMAP call, and
-> > > the last record returned was non-shareable space at the end of an AG.
-> > > 
-> > > This is the regression test for that bug.
-> > > 
-> > > Signed-off-by: Darrick J. Wong <djwong@kernel.org>
-> > > ---
-> > >  tests/xfs/935     |   55 +++++++++++++++++++++++++++++++++++++++++++++++++++++
-> > >  tests/xfs/935.out |    2 ++
-> > >  2 files changed, 57 insertions(+)
-> > >  create mode 100755 tests/xfs/935
-> > >  create mode 100644 tests/xfs/935.out
-> > > 
-> > > diff --git a/tests/xfs/935 b/tests/xfs/935
-> > > new file mode 100755
-> > > index 0000000000..a06f2fc8dc
-> > > --- /dev/null
-> > > +++ b/tests/xfs/935
-> > > @@ -0,0 +1,55 @@
-> > > +#! /bin/bash
-> > > +# SPDX-License-Identifier: GPL-2.0
-> > > +# Copyright (c) 2023 Oracle.  All Rights Reserved.
-> > > +#
-> > > +# FS QA Test 935
-> > > +#
-> > > +# Regression test for an agbno overflow bug in XFS GETFSMAP involving an
-> > > +# fsmap_advance call.  Userspace can indicate that a GETFSMAP call is actually
-> > > +# a continuation of a previous call by setting the "low" key to the last record
-> > > +# returned by the previous call.
-> > > +#
-> > > +# If the last record returned by GETFSMAP is a non-shareable extent at the end
-> > > +# of an AG and the AG size is exactly a power of two, the startblock in the low
-> > > +# key of the rmapbt query can be set to a value larger than EOAG.  When this
-> > > +# happens, GETFSMAP will return EINVAL instead of returning records for the
-> > > +# next AG.
-> > > +#
-> > > +. ./common/preamble
-> > > +_begin_fstest auto quick fsmap
-> > > +
-> > > +. ./common/filter
-> > > +
-> > > +_fixed_by_git_commit kernel XXXXXXXXXXXXX \
-> > > +	"xfs: fix an agbno overflow in __xfs_getfsmap_datadev"
-> > > +
-> > > +# Modify as appropriate.
-> > > +_supported_fs generic
-> > > +_require_xfs_io_command fsmap
-> > > +_require_xfs_scratch_rmapbt
-> > > +
-> > > +_scratch_mkfs | _filter_mkfs 2> $tmp.mkfs >> $seqres.full
-> > > +source $tmp.mkfs
-> > > +
-> > > +# Find the next power of two agsize smaller than whatever the default is.
-> > > +for ((p = 31; p > 0; p--)); do
-> > > +	desired_agsize=$((2 ** p))
-> > > +	test "$desired_agsize" -lt "$agsize" && break
-> > > +done
-> > > +
-> > > +echo "desired asize=$desired_agsize" >> $seqres.full
-> >                  agsize
-> 
-> Fixed.
-> 
-> > Otherwise looks fine.
-> > 
-> > Reviewed-by: Dave Chinner <dchinner@redhat.com>
-> 
-> Does the kernel patch fix the bug on your end too?
+In preparation for implementing lockless slab shrink, use new APIs to
+dynamically allocate the xfs-qm shrinker, so that it can be freed
+asynchronously via RCU. Then it doesn't need to wait for RCU read-side
+critical section when releasing the struct xfs_quotainfo.
 
-Haven't had a chance to test it yet. I'll let you know when I do.
+Signed-off-by: Qi Zheng <zhengqi.arch@bytedance.com>
+Reviewed-by: Muchun Song <songmuchun@bytedance.com>
+CC: Chandan Babu R <chandan.babu@oracle.com>
+CC: "Darrick J. Wong" <djwong@kernel.org>
+CC: linux-xfs@vger.kernel.org
+---
+ fs/xfs/xfs_qm.c | 28 +++++++++++++++-------------
+ fs/xfs/xfs_qm.h |  2 +-
+ 2 files changed, 16 insertions(+), 14 deletions(-)
 
--Dave.
+diff --git a/fs/xfs/xfs_qm.c b/fs/xfs/xfs_qm.c
+index 6abcc34fafd8..15ba23f11271 100644
+--- a/fs/xfs/xfs_qm.c
++++ b/fs/xfs/xfs_qm.c
+@@ -504,8 +504,7 @@ xfs_qm_shrink_scan(
+ 	struct shrinker		*shrink,
+ 	struct shrink_control	*sc)
+ {
+-	struct xfs_quotainfo	*qi = container_of(shrink,
+-					struct xfs_quotainfo, qi_shrinker);
++	struct xfs_quotainfo	*qi = shrink->private_data;
+ 	struct xfs_qm_isolate	isol;
+ 	unsigned long		freed;
+ 	int			error;
+@@ -539,8 +538,7 @@ xfs_qm_shrink_count(
+ 	struct shrinker		*shrink,
+ 	struct shrink_control	*sc)
+ {
+-	struct xfs_quotainfo	*qi = container_of(shrink,
+-					struct xfs_quotainfo, qi_shrinker);
++	struct xfs_quotainfo	*qi = shrink->private_data;
+ 
+ 	return list_lru_shrink_count(&qi->qi_lru, sc);
+ }
+@@ -680,15 +678,19 @@ xfs_qm_init_quotainfo(
+ 	if (XFS_IS_PQUOTA_ON(mp))
+ 		xfs_qm_set_defquota(mp, XFS_DQTYPE_PROJ, qinf);
+ 
+-	qinf->qi_shrinker.count_objects = xfs_qm_shrink_count;
+-	qinf->qi_shrinker.scan_objects = xfs_qm_shrink_scan;
+-	qinf->qi_shrinker.seeks = DEFAULT_SEEKS;
+-	qinf->qi_shrinker.flags = SHRINKER_NUMA_AWARE;
+-
+-	error = register_shrinker(&qinf->qi_shrinker, "xfs-qm:%s",
+-				  mp->m_super->s_id);
+-	if (error)
++	qinf->qi_shrinker = shrinker_alloc(SHRINKER_NUMA_AWARE, "xfs-qm:%s",
++					   mp->m_super->s_id);
++	if (!qinf->qi_shrinker) {
++		error = -ENOMEM;
+ 		goto out_free_inos;
++	}
++
++	qinf->qi_shrinker->count_objects = xfs_qm_shrink_count;
++	qinf->qi_shrinker->scan_objects = xfs_qm_shrink_scan;
++	qinf->qi_shrinker->seeks = DEFAULT_SEEKS;
++	qinf->qi_shrinker->private_data = qinf;
++
++	shrinker_register(qinf->qi_shrinker);
+ 
+ 	return 0;
+ 
+@@ -718,7 +720,7 @@ xfs_qm_destroy_quotainfo(
+ 	qi = mp->m_quotainfo;
+ 	ASSERT(qi != NULL);
+ 
+-	unregister_shrinker(&qi->qi_shrinker);
++	shrinker_free(qi->qi_shrinker);
+ 	list_lru_destroy(&qi->qi_lru);
+ 	xfs_qm_destroy_quotainos(qi);
+ 	mutex_destroy(&qi->qi_tree_lock);
+diff --git a/fs/xfs/xfs_qm.h b/fs/xfs/xfs_qm.h
+index 9683f0457d19..d5c9fc4ba591 100644
+--- a/fs/xfs/xfs_qm.h
++++ b/fs/xfs/xfs_qm.h
+@@ -63,7 +63,7 @@ struct xfs_quotainfo {
+ 	struct xfs_def_quota	qi_usr_default;
+ 	struct xfs_def_quota	qi_grp_default;
+ 	struct xfs_def_quota	qi_prj_default;
+-	struct shrinker		qi_shrinker;
++	struct shrinker		*qi_shrinker;
+ 
+ 	/* Minimum and maximum quota expiration timestamp values. */
+ 	time64_t		qi_expiry_min;
 -- 
-Dave Chinner
-david@fromorbit.com
+2.30.2
+
