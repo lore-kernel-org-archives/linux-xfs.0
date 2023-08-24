@@ -2,79 +2,79 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 75A42C6FA8F
-	for <linux-xfs@archiver.kernel.org>; Thu, 24 Aug 2023 16:13:56 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D35BAC27C40
+	for <linux-xfs@archiver.kernel.org>; Thu, 24 Aug 2023 16:15:32 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S242408AbjHXQN0 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 24 Aug 2023 12:13:26 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56626 "EHLO
+        id S238770AbjHXQPB (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 24 Aug 2023 12:15:01 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46828 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S242416AbjHXQNS (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 24 Aug 2023 12:13:18 -0400
+        with ESMTP id S242415AbjHXQOb (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 24 Aug 2023 12:14:31 -0400
 Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id F3DC319A8;
-        Thu, 24 Aug 2023 09:13:16 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1D54719A9
+        for <linux-xfs@vger.kernel.org>; Thu, 24 Aug 2023 09:14:30 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
          key-exchange X25519 server-signature RSA-PSS (2048 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 8897964542;
-        Thu, 24 Aug 2023 16:13:16 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id E373DC433C8;
-        Thu, 24 Aug 2023 16:13:15 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id AF6D965DCE
+        for <linux-xfs@vger.kernel.org>; Thu, 24 Aug 2023 16:14:29 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 0C817C433C9;
+        Thu, 24 Aug 2023 16:14:29 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1692893596;
-        bh=Zr8yoYZ5kihDdLp+868G9i8fRwxltBN0FF3XX0SbLNw=;
+        s=k20201202; t=1692893669;
+        bh=7yui3oWO0pUPs74v8rngWmNwSZGnXMwMwAdZUUmPTnc=;
         h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=HrHSDo/Yp7h9YBbWhHUhSQoipiYPzQsU4vpjeOxAG5gu1nqZGpqEOr5ZF9AJoMLgF
-         wr8cbu+L/pmqwlHC105B1lnI6pfJRBzCbFrvwfK5LxPvcm51Y+VTblpamuK5J0kcoj
-         yPtxyjU1w2Bo7uKqgI7+JD6Elnwx2esvODm+nUQSSKLofqW9o6cSXZQr2NTmKqfhfR
-         7WtKapBiiWHTkjNwiPeby/emxrMjJj8SWo27ymzo02VPSLCtg4XDN84cX0E1vEMf0Z
-         KXu+RaSTY5LKA/y2Tk7fvoxDt0e/ydRZbxG8DLrFFsFy9u2+dMBddNdf9zzHrMDuX0
-         dFXxyHbRJBi4w==
-Date:   Thu, 24 Aug 2023 09:13:15 -0700
+        b=Com2Lf5XCxBvc6YM9UL09Ard+d1YgWshPGl3bKhCFYtm5aWqVDnvxm1IjQtIAfJ3K
+         VKvNCv0jag9EhN/WmkUVvwF/fxLZzheoeRthsFz9cYmGSFfRw9IAsjdWrETTj6anTq
+         UD68GyajoPouKIdXEP48zwEQwmDAB46+Ww/dVD2lPs6B0EettSdmBJx+WSFjBsHxoV
+         pXATblKh0NhPCvuKImSR4lTTG8FlyXVktwymFte9UJOb9q8jFZkdVvwUoNeEOWtsKU
+         EduVho5+35ivnpIrVyKc7a6MEFSVVp7aDKGCs7icrkThE2XCidyZyA+xp2QavONzMl
+         NAPc91EoFyA6g==
+Date:   Thu, 24 Aug 2023 09:14:28 -0700
 From:   "Darrick J. Wong" <djwong@kernel.org>
-To:     Jiapeng Chong <jiapeng.chong@linux.alibaba.com>
-Cc:     chandan.babu@oracle.com, linux-xfs@vger.kernel.org,
-        linux-kernel@vger.kernel.org, Abaci Robot <abaci@linux.alibaba.com>
-Subject: Re: [PATCH] xfs: Remove duplicate include
-Message-ID: <20230824161315.GN11263@frogsfrogsfrogs>
-References: <20230824074723.57244-1-jiapeng.chong@linux.alibaba.com>
+To:     Yang Yingliang <yangyingliang@huawei.com>
+Cc:     linux-xfs@vger.kernel.org, chandan.babu@oracle.com,
+        kent.overstreet@linux.dev, dchinner@redhat.com
+Subject: Re: [PATCH -next] xfs: remove unnecessary check in xfile_create()
+Message-ID: <20230824161428.GO11263@frogsfrogsfrogs>
+References: <20230824091537.1072956-1-yangyingliang@huawei.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20230824074723.57244-1-jiapeng.chong@linux.alibaba.com>
+In-Reply-To: <20230824091537.1072956-1-yangyingliang@huawei.com>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Thu, Aug 24, 2023 at 03:47:23PM +0800, Jiapeng Chong wrote:
-> ./fs/xfs/scrub/xfile.c: xfs_format.h is included more than once.
-> 
-> Reported-by: Abaci Robot <abaci@linux.alibaba.com>
-> Closes: https://bugzilla.openanolis.cn/show_bug.cgi?id=6209
-> Signed-off-by: Jiapeng Chong <jiapeng.chong@linux.alibaba.com>
+On Thu, Aug 24, 2023 at 05:15:37PM +0800, Yang Yingliang wrote:
+> shmem_file_setup() returns ERR_PTR() when it fails,
+> so remove the unnecessary null pointer check.
 
-Reviewed-by: Darrick J. Wong <djwong@kernel.org>
+Technically correct, but what harm is there in leaving a null check in
+case the shmem_file_setup function ever /does/ start returning NULL?
 
 --D
 
+> Signed-off-by: Yang Yingliang <yangyingliang@huawei.com>
 > ---
->  fs/xfs/scrub/xfile.c | 1 -
->  1 file changed, 1 deletion(-)
+>  fs/xfs/scrub/xfile.c | 2 --
+>  1 file changed, 2 deletions(-)
 > 
 > diff --git a/fs/xfs/scrub/xfile.c b/fs/xfs/scrub/xfile.c
-> index d98e8e77c684..090c3ead43fd 100644
+> index d98e8e77c684..71779d81cad7 100644
 > --- a/fs/xfs/scrub/xfile.c
 > +++ b/fs/xfs/scrub/xfile.c
-> @@ -10,7 +10,6 @@
->  #include "xfs_log_format.h"
->  #include "xfs_trans_resv.h"
->  #include "xfs_mount.h"
-> -#include "xfs_format.h"
->  #include "scrub/xfile.h"
->  #include "scrub/xfarray.h"
->  #include "scrub/scrub.h"
+> @@ -70,8 +70,6 @@ xfile_create(
+>  		return -ENOMEM;
+>  
+>  	xf->file = shmem_file_setup(description, isize, 0);
+> -	if (!xf->file)
+> -		goto out_xfile;
+>  	if (IS_ERR(xf->file)) {
+>  		error = PTR_ERR(xf->file);
+>  		goto out_xfile;
 > -- 
-> 2.20.1.7.g153144c
+> 2.25.1
 > 
