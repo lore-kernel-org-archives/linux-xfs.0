@@ -2,43 +2,43 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7CA6AC727A3
+	by smtp.lore.kernel.org (Postfix) with ESMTP id CE4ECC727A8
 	for <linux-xfs@archiver.kernel.org>; Thu, 24 Aug 2023 23:22:49 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S244048AbjHXXWM (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 24 Aug 2023 19:22:12 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38500 "EHLO
+        id S244065AbjHXXWN (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 24 Aug 2023 19:22:13 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38534 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S244065AbjHXXVy (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 24 Aug 2023 19:21:54 -0400
+        with ESMTP id S244070AbjHXXVo (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 24 Aug 2023 19:21:44 -0400
 Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 18B3A1993
-        for <linux-xfs@vger.kernel.org>; Thu, 24 Aug 2023 16:21:48 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8124B198E
+        for <linux-xfs@vger.kernel.org>; Thu, 24 Aug 2023 16:21:42 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
          key-exchange X25519 server-signature RSA-PSS (2048 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id A3F8A65314
-        for <linux-xfs@vger.kernel.org>; Thu, 24 Aug 2023 23:21:47 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 10A19C433C9;
-        Thu, 24 Aug 2023 23:21:47 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 138F865314
+        for <linux-xfs@vger.kernel.org>; Thu, 24 Aug 2023 23:21:42 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 6B155C433CA;
+        Thu, 24 Aug 2023 23:21:41 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1692919307;
-        bh=b3NFzny0HHABVZsHDiAWL7mB8aU+lQQzZVbmVKRUOmw=;
+        s=k20201202; t=1692919301;
+        bh=hx6zrA3cnrEMgEuzTlQ3T9Iw7OHbae7BwzgcR6SCASU=;
         h=Subject:From:To:Cc:Date:In-Reply-To:References:From;
-        b=Jf3SoDfNPTTJVIhcTrq+R4q9WyHEF5T+dYkw/kLWH8ur9v1a5z+ohILLUfj0ObOQx
-         z1wd7PHpS6S4tJqfCKQqsFG9GGyq9NWirJe75EFvamJl4GMUO4w/f/2252fdMStbtd
-         jdKw74wndc6NzOG8GEf9QdYBP/AgEohLargkCT1mC9DCTvudvYa95Ezy9FyOHS27BI
-         8P27Wl2Q6uXFegsLJ1SiwojPspaSpV0FfDTgIFUzpabBWv/gLcQN/qFbizZwlIZ4ec
-         VzGje0AVfxruOYmTo75mKPXVkKFpSQ+qWlJsmn7SBxClnNr8abGF46KiAXy57j96QE
-         wKN7cuNK1ETlA==
-Subject: [PATCH 2/3] xfs: don't allow log recovery when unknown rocompat bits
- are set
+        b=Ke6G3sKqRReKL8EVSnsxzQRqF8mo17gpGiNhuDm+4AzvafPXD9Lu089j0aDSvG7RO
+         7tY05P1TTeKFPzkFHPElRFl8xS2LPdgf2/elwYSiH4f/qzHkq5IMQVtXcK5mSGs0mZ
+         ojd75EOw/oEx2wH3fL1B6gtJRbBkM91aNVB5ll0O8dkapWIYz6D/kCfk0YVXsE+1HD
+         CV4UxX8PU3jsQbiXj1uaSP+LVYtUGkOzOvsZ6J8ODhxqvRR3kQbZGpWhnv5Jz49jpM
+         ACOGiBEYtyUqaaQw8dd/6LaqeocKy4wkRP4iPAapnRymhGsTJHe5fl249LboSDJzAy
+         yakvQNRoVe0Xg==
+Subject: [PATCH 1/3] xfs: allow inode inactivation during a ro mount log
+ recovery
 From:   "Darrick J. Wong" <djwong@kernel.org>
 To:     chandan.babu@gmail.com, djwong@kernel.org
 Cc:     linux-xfs@vger.kernel.org, david@fromorbit.com, sandeen@sandeen.net
-Date:   Thu, 24 Aug 2023 16:21:46 -0700
-Message-ID: <169291930662.220104.8435560164784332097.stgit@frogsfrogsfrogs>
+Date:   Thu, 24 Aug 2023 16:21:41 -0700
+Message-ID: <169291930098.220104.7975355323280629292.stgit@frogsfrogsfrogs>
 In-Reply-To: <169291929524.220104.3844042018007786965.stgit@frogsfrogsfrogs>
 References: <169291929524.220104.3844042018007786965.stgit@frogsfrogsfrogs>
 User-Agent: StGit/0.19
@@ -51,119 +51,55 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-Don't allow log recovery to proceed on a readonly mount if the primary
-superblock advertises unknown rocompat bits.  We used to allow this, but
-due to a misunderstanding between Dave and Darrick back in 2016, we
-cannot do that anymore.  The XFS_SB_FEAT_RO_COMPAT_RMAPBT feature (4.8)
-protects RUI log items, and the REFLINK feature (4.9) protects CUI/BUI
-log items, which is why we can't allow older kernels to recover them.
+In the next patch, we're going to prohibit log recovery if the primary
+superblock contains an unrecognized rocompat feature bit even on
+readonly mounts.  This requires removing all the code in the log
+mounting process that temporarily disables the readonly state.
 
-Fixes: b87049444ac4 ("xfs: introduce rmap btree definitions")
+Unfortunately, inode inactivation disables itself on readonly mounts.
+Clearing the iunlinked lists after log recovery needs inactivation to
+run to free the unreferenced inodes, which (AFAICT) is the only reason
+why log mounting plays games with the readonly state in the first place.
+
+Therefore, change the inactivation predicates to allow inactivation
+during log recovery of a readonly mount.
+
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 ---
- fs/xfs/xfs_log.c         |   17 -----------------
- fs/xfs/xfs_log_recover.c |   25 +++++++++++++++++++++++++
- 2 files changed, 25 insertions(+), 17 deletions(-)
+ fs/xfs/xfs_inode.c |   14 ++++++++++----
+ 1 file changed, 10 insertions(+), 4 deletions(-)
 
 
-diff --git a/fs/xfs/xfs_log.c b/fs/xfs/xfs_log.c
-index 79004d193e54..51c100c86177 100644
---- a/fs/xfs/xfs_log.c
-+++ b/fs/xfs/xfs_log.c
-@@ -715,15 +715,7 @@ xfs_log_mount(
- 	 * just worked.
- 	 */
- 	if (!xfs_has_norecovery(mp)) {
--		/*
--		 * log recovery ignores readonly state and so we need to clear
--		 * mount-based read only state so it can write to disk.
--		 */
--		bool	readonly = test_and_clear_bit(XFS_OPSTATE_READONLY,
--						&mp->m_opstate);
- 		error = xlog_recover(log);
--		if (readonly)
--			set_bit(XFS_OPSTATE_READONLY, &mp->m_opstate);
- 		if (error) {
- 			xfs_warn(mp, "log mount/recovery failed: error %d",
- 				error);
-@@ -772,7 +764,6 @@ xfs_log_mount_finish(
- 	struct xfs_mount	*mp)
- {
- 	struct xlog		*log = mp->m_log;
--	bool			readonly;
- 	int			error = 0;
+diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
+index 9e62cc500140..6ee266be45d4 100644
+--- a/fs/xfs/xfs_inode.c
++++ b/fs/xfs/xfs_inode.c
+@@ -1643,8 +1643,11 @@ xfs_inode_needs_inactive(
+ 	if (VFS_I(ip)->i_mode == 0)
+ 		return false;
  
- 	if (xfs_has_norecovery(mp)) {
-@@ -780,12 +771,6 @@ xfs_log_mount_finish(
- 		return 0;
- 	}
+-	/* If this is a read-only mount, don't do this (would generate I/O) */
+-	if (xfs_is_readonly(mp))
++	/*
++	 * If this is a read-only mount, don't do this (would generate I/O)
++	 * unless we're in log recovery and cleaning the iunlinked list.
++	 */
++	if (xfs_is_readonly(mp) && !xlog_recovery_needed(mp->m_log))
+ 		return false;
  
--	/*
--	 * log recovery ignores readonly state and so we need to clear
--	 * mount-based read only state so it can write to disk.
--	 */
--	readonly = test_and_clear_bit(XFS_OPSTATE_READONLY, &mp->m_opstate);
--
- 	/*
- 	 * During the second phase of log recovery, we need iget and
- 	 * iput to behave like they do for an active filesystem.
-@@ -835,8 +820,6 @@ xfs_log_mount_finish(
- 	xfs_buftarg_drain(mp->m_ddev_targp);
+ 	/* If the log isn't running, push inodes straight to reclaim. */
+@@ -1704,8 +1707,11 @@ xfs_inactive(
+ 	mp = ip->i_mount;
+ 	ASSERT(!xfs_iflags_test(ip, XFS_IRECOVERY));
  
- 	clear_bit(XLOG_RECOVERY_NEEDED, &log->l_opstate);
--	if (readonly)
--		set_bit(XFS_OPSTATE_READONLY, &mp->m_opstate);
+-	/* If this is a read-only mount, don't do this (would generate I/O) */
+-	if (xfs_is_readonly(mp))
++	/*
++	 * If this is a read-only mount, don't do this (would generate I/O)
++	 * unless we're in log recovery and cleaning the iunlinked list.
++	 */
++	if (xfs_is_readonly(mp) && !xlog_recovery_needed(mp->m_log))
+ 		goto out;
  
- 	/* Make sure the log is dead if we're returning failure. */
- 	ASSERT(!error || xlog_is_shutdown(log));
-diff --git a/fs/xfs/xfs_log_recover.c b/fs/xfs/xfs_log_recover.c
-index 82c81d20459d..b4458b7fd6f7 100644
---- a/fs/xfs/xfs_log_recover.c
-+++ b/fs/xfs/xfs_log_recover.c
-@@ -3354,6 +3354,7 @@ xlog_recover(
- 	struct xlog	*log)
- {
- 	xfs_daddr_t	head_blk, tail_blk;
-+	bool		unknown_rocompat = false;
- 	int		error;
- 
- 	/* find the tail of the log */
-@@ -3370,6 +3371,12 @@ xlog_recover(
- 	    !xfs_log_check_lsn(log->l_mp, log->l_mp->m_sb.sb_lsn))
- 		return -EINVAL;
- 
-+	/* Detect unknown rocompat features in the superblock */
-+	if (xfs_has_crc(log->l_mp) &&
-+	    xfs_sb_has_ro_compat_feature(&log->l_mp->m_sb,
-+					 XFS_SB_FEAT_RO_COMPAT_UNKNOWN))
-+		unknown_rocompat = true;
-+
- 	if (tail_blk != head_blk) {
- 		/* There used to be a comment here:
- 		 *
-@@ -3407,6 +3414,24 @@ xlog_recover(
- 			return -EINVAL;
- 		}
- 
-+		/*
-+		 * Don't allow log recovery on a ro mount if there are unknown
-+		 * ro compat bits set.  We used to allow this, but BUI/CUI log
-+		 * items are protected by the REFLINK rocompat bit so now we
-+		 * cannot.
-+		 */
-+		if (xfs_is_readonly(log->l_mp) && unknown_rocompat) {
-+			xfs_alert(log->l_mp,
-+"Superblock has unknown read-only compatible features (0x%x) enabled.",
-+				 (log->l_mp->m_sb.sb_features_ro_compat &
-+						XFS_SB_FEAT_RO_COMPAT_UNKNOWN));
-+			xfs_warn(log->l_mp,
-+"The log can not be fully and/or safely recovered by this kernel.");
-+			xfs_warn(log->l_mp,
-+"Please recover the log on a kernel that supports the unknown features.");
-+			return -EINVAL;
-+		}
-+
- 		/*
- 		 * Delay log recovery if the debug hook is set. This is debug
- 		 * instrumentation to coordinate simulation of I/O failures with
+ 	/* Metadata inodes require explicit resource cleanup. */
 
