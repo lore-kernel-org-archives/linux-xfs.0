@@ -2,146 +2,178 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0CBCDC727A9
-	for <linux-xfs@archiver.kernel.org>; Thu, 24 Aug 2023 23:22:50 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4979EC88CB2
+	for <linux-xfs@archiver.kernel.org>; Thu, 24 Aug 2023 23:28:43 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S244057AbjHXXWO (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 24 Aug 2023 19:22:14 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45894 "EHLO
+        id S232300AbjHXX2N (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 24 Aug 2023 19:28:13 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37142 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S244080AbjHXXV5 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 24 Aug 2023 19:21:57 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B07401FC1
-        for <linux-xfs@vger.kernel.org>; Thu, 24 Aug 2023 16:21:53 -0700 (PDT)
+        with ESMTP id S237312AbjHXX2J (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 24 Aug 2023 19:28:09 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7F1CB19B0
+        for <linux-xfs@vger.kernel.org>; Thu, 24 Aug 2023 16:28:07 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
          key-exchange X25519 server-signature RSA-PSS (2048 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 4727464B19
-        for <linux-xfs@vger.kernel.org>; Thu, 24 Aug 2023 23:21:53 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id A6B52C433C7;
-        Thu, 24 Aug 2023 23:21:52 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 1433060C16
+        for <linux-xfs@vger.kernel.org>; Thu, 24 Aug 2023 23:28:07 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 72211C433C7;
+        Thu, 24 Aug 2023 23:28:06 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1692919312;
-        bh=QNP2RUiEFYKkkNqAxOBo5/xT5UQyi5LPXchJafajL3Q=;
-        h=Subject:From:To:Cc:Date:In-Reply-To:References:From;
-        b=QrXxKPU140h7R3WRpNlwF/m/1nlmn3rmhns1Ofq3EVJ/3Viw9LvoOYCQuBT4Kwds6
-         MkJyfkWW/buDMYYCQOrZ8jVpBvsCOKKSLF0xz7OlfLxG+yM3cVglzo++i9eWEsF6KO
-         c2Ik1sgzB28RLSSXvgvQ/oxAibXOyDPRaWUINQtiRm7saVoxtbC2LxCn4O7xgIq6eG
-         xxo4i6tYpJagIa3KaXN5NMNCdnlOW4lrj2ac/A8ZvDmtjK29kY6I49W2djbZ9ppwRU
-         Dyq9elnBPMfFjMIZO2K2ceIBssdBZRY6x3zsAn3fIES0aPJvoSTTQs5ELpc2+yX8Le
-         xovLpQ+6VpqbQ==
-Subject: [PATCH 3/3] xfs: log is not writable if we have unknown rocompat
- features
+        s=k20201202; t=1692919686;
+        bh=2GxWfyN7L7MXXz0DElcxJfxXrjphFMUoXKbRtKd9Cx0=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=et/bUqza3PPlctb1VNS5XwC86tNUz6IP/JO11GSuqKcynsICcBX03f3zoP9ObriF4
+         ak8qagydKlMcwHVXN8SYEPaq98d25iGWOtHR07of81nqWXToSgK+m07ksWAMWxGp90
+         S0VT86QW1oOHrMAfP7RlGOT554l3qPtpRkQnTOzKAHuVqwJBhWWw6ktcQDZoXdbTrX
+         1kWMkKxID1YHsdpzpg55FIKD/tP56n8XFtu3C581a1NwAPpwqhXc3L3FnCbauUrVcB
+         TveOS7zRocbiRuiufLfpHwM6S+NP7UchHW90cYr6ojzFpiG5M3uwwzMC5ye2A4S1FS
+         8nHEaabEgm9Yw==
+Date:   Thu, 24 Aug 2023 16:28:05 -0700
 From:   "Darrick J. Wong" <djwong@kernel.org>
-To:     chandan.babu@gmail.com, djwong@kernel.org
+To:     chandan.babu@gmail.com
 Cc:     linux-xfs@vger.kernel.org, david@fromorbit.com, sandeen@sandeen.net
-Date:   Thu, 24 Aug 2023 16:21:52 -0700
-Message-ID: <169291931221.220104.3437825303883889120.stgit@frogsfrogsfrogs>
-In-Reply-To: <169291929524.220104.3844042018007786965.stgit@frogsfrogsfrogs>
+Subject: [PATCH 5/3] xfs/270: actually test log recovery with unknown
+ rocompat features
+Message-ID: <20230824232805.GC17912@frogsfrogsfrogs>
 References: <169291929524.220104.3844042018007786965.stgit@frogsfrogsfrogs>
-User-Agent: StGit/0.19
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <169291929524.220104.3844042018007786965.stgit@frogsfrogsfrogs>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-Ever since commit 9e037cb7972f, the superblock write verifier will trip
-if someone tries to write a superblock with unknown rocompat features.
-However, we allow ro mounts of a filesystem with unknown rocompat
-features if the log is clean, except that has been broken for years
-because the end of an ro mount cleans the log, which logs and writes the
-superblock.
+Make sure that log recovery will not succeed if there are unknown
+rocompat features in the superblock and the log is dirty.
 
-Therefore, don't allow log writes to happen if there are unknown
-rocompat features set.
-
-Fixes: 9e037cb7972f ("xfs: check for unknown v5 feature bits in superblock write verifier")
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 ---
- fs/xfs/xfs_log.c         |    6 ++++++
- fs/xfs/xfs_log_priv.h    |    7 +++++++
- fs/xfs/xfs_log_recover.c |    7 +++++++
- 3 files changed, 20 insertions(+)
+ tests/xfs/270     |   81 ++++++++++++++++++++++++++++++++++++-----------------
+ tests/xfs/270.out |    2 +
+ 2 files changed, 57 insertions(+), 26 deletions(-)
 
-
-diff --git a/fs/xfs/xfs_log.c b/fs/xfs/xfs_log.c
-index 51c100c86177..c1bbc8040bcb 100644
---- a/fs/xfs/xfs_log.c
-+++ b/fs/xfs/xfs_log.c
-@@ -391,6 +391,8 @@ xfs_log_writable(
- 		return false;
- 	if (xlog_is_shutdown(mp->m_log))
- 		return false;
-+	if (xlog_is_readonly(mp->m_log))
-+		return false;
- 	return true;
- }
+diff --git a/tests/xfs/270 b/tests/xfs/270
+index 511dfe9fcd..ee925b0fc6 100755
+--- a/tests/xfs/270
++++ b/tests/xfs/270
+@@ -21,41 +21,48 @@ _supported_fs xfs
+ _require_scratch_nocheck
+ # Only V5 XFS disallow rw mount/remount with unknown ro-compat features
+ _require_scratch_xfs_crc
+-
+-_scratch_mkfs_xfs >>$seqres.full 2>&1
+-_scratch_mount
+-echo moo > $SCRATCH_MNT/testfile
+-_scratch_unmount
++_require_scratch_shutdown
  
-@@ -408,6 +410,8 @@ xfs_log_regrant(
+ # set the highest bit of features_ro_compat, use it as an unknown
+ # feature bit. If one day this bit become known feature, please
+ # change this case.
++set_bad_rocompat() {
++	ro_compat=$(_scratch_xfs_get_metadata_field "features_ro_compat" "sb 0")
++	echo $ro_compat | grep -q -E '^0x[[:xdigit:]]$'
++	if [[ $? != 0  ]]; then
++		echo "features_ro_compat has an invalid value."
++		return 1
++	fi
  
- 	if (xlog_is_shutdown(log))
- 		return -EIO;
-+	if (xlog_is_readonly(log))
-+		return -EROFS;
+-ro_compat=$(_scratch_xfs_get_metadata_field "features_ro_compat" "sb 0")
+-echo $ro_compat | grep -q -E '^0x[[:xdigit:]]$'
+-if [[ $? != 0  ]]; then
+-	echo "features_ro_compat has an invalid value."
+-fi
++	ro_compat=$(echo $ro_compat | \
++			    awk '/^0x[[:xdigit:]]+/ {
++					printf("0x%x\n", or(strtonum($1), 0x80000000))
++				}')
  
- 	XFS_STATS_INC(mp, xs_try_logspace);
+-ro_compat=$(echo $ro_compat | \
+-		    awk '/^0x[[:xdigit:]]+/ {
+-				printf("0x%x\n", or(strtonum($1), 0x80000000))
+-			}')
++	# write the new ro compat field to the superblock
++	_scratch_xfs_set_metadata_field "features_ro_compat" "$ro_compat" "sb 0" \
++					> $seqres.full 2>&1
  
-@@ -471,6 +475,8 @@ xfs_log_reserve(
+-# write the new ro compat field to the superblock
+-_scratch_xfs_set_metadata_field "features_ro_compat" "$ro_compat" "sb 0" \
+-				> $seqres.full 2>&1
++	# read the newly set ro compat filed for verification
++	new_ro_compat=$(_scratch_xfs_get_metadata_field "features_ro_compat" "sb 0" \
++							2>/dev/null)
  
- 	if (xlog_is_shutdown(log))
- 		return -EIO;
-+	if (xlog_is_readonly(log))
-+		return -EROFS;
- 
- 	XFS_STATS_INC(mp, xs_try_logspace);
- 
-diff --git a/fs/xfs/xfs_log_priv.h b/fs/xfs/xfs_log_priv.h
-index af87648331d5..14892e01de38 100644
---- a/fs/xfs/xfs_log_priv.h
-+++ b/fs/xfs/xfs_log_priv.h
-@@ -461,6 +461,7 @@ struct xlog {
- #define XLOG_IO_ERROR		2	/* log hit an I/O error, and being
- 				   shutdown */
- #define XLOG_TAIL_WARN		3	/* log tail verify warning issued */
-+#define XLOG_READONLY		4	/* cannot write to the log */
- 
- static inline bool
- xlog_recovery_needed(struct xlog *log)
-@@ -480,6 +481,12 @@ xlog_is_shutdown(struct xlog *log)
- 	return test_bit(XLOG_IO_ERROR, &log->l_opstate);
- }
- 
-+static inline bool
-+xlog_is_readonly(struct xlog *log)
-+{
-+	return test_bit(XLOG_READONLY, &log->l_opstate);
+-# read the newly set ro compat filed for verification
+-new_ro_compat=$(_scratch_xfs_get_metadata_field "features_ro_compat" "sb 0" \
+-						2>/dev/null)
++	# verify the new ro_compat field is correct. Without xfsprogs commit
++	# f4afdcb0ad ("xfs_db: clean up the salvage read callsites in set_cur()"),
++	# we can't get new_ro_compat value.
++	if [ "$new_ro_compat" != "$ro_compat" ]; then
++		echo "Unable to set new features_ro_compat. Wanted $ro_compat, got $new_ro_compat"
++		return 1
++	fi
++	return 0
 +}
-+
- /*
-  * Wait until the xlog_force_shutdown() has marked the log as shut down
-  * so xlog_is_shutdown() will always return true.
-diff --git a/fs/xfs/xfs_log_recover.c b/fs/xfs/xfs_log_recover.c
-index b4458b7fd6f7..f8f13d5f79cd 100644
---- a/fs/xfs/xfs_log_recover.c
-+++ b/fs/xfs/xfs_log_recover.c
-@@ -3450,6 +3450,13 @@ xlog_recover(
  
- 		error = xlog_do_recover(log, head_blk, tail_blk);
- 		set_bit(XLOG_RECOVERY_NEEDED, &log->l_opstate);
-+	} else if (unknown_rocompat) {
-+		/*
-+		 * Log recovery wasn't needed, but if the superblock has
-+		 * unknown rocompat features, don't allow log writes at all
-+		 * because the sb write verifier will trip.
-+		 */
-+		set_bit(XLOG_READONLY, &log->l_opstate);
- 	}
- 	return error;
- }
-
+-# verify the new ro_compat field is correct. Without xfsprogs commit
+-# f4afdcb0ad ("xfs_db: clean up the salvage read callsites in set_cur()"),
+-# we can't get new_ro_compat value.
+-if [ "$new_ro_compat" != "$ro_compat" ]; then
+-	echo "Unable to set new features_ro_compat. Wanted $ro_compat, got $new_ro_compat"
+-fi
++# Once with a clean filesystem...
++_scratch_mkfs_xfs >>$seqres.full 2>&1
++_scratch_mount
++echo moo > $SCRATCH_MNT/testfile
++_scratch_unmount
++set_bad_rocompat
+ 
+ # rw mount with unknown ro-compat feature should fail
+ echo "rw mount test"
+@@ -85,6 +92,28 @@ fi
+ 
+ _scratch_unmount
+ 
++# And again with a dirty filesystem...
++_scratch_mkfs_xfs >>$seqres.full 2>&1
++_scratch_mount
++echo moo > $SCRATCH_MNT/testfile
++$XFS_IO_PROG -x -c 'shutdown -f' "${SCRATCH_MNT}"
++_scratch_unmount
++set_bad_rocompat
++
++# rw mount with unknown ro-compat feature should fail
++echo "rw mount test"
++_try_scratch_mount 2>>$seqres.full
++if [ $? -eq 0 ]; then
++	_fail "rw mount test failed"
++fi
++
++# ro mount should not succeed due to log recovery
++echo "ro mount test"
++_try_scratch_mount -o ro 2>>$seqres.full
++if [ $? -eq 0 ]; then
++	_fail "ro mount test succeeded"
++fi
++
+ # success, all done
+ status=0
+ exit
+diff --git a/tests/xfs/270.out b/tests/xfs/270.out
+index edf4c25489..a519d2f328 100644
+--- a/tests/xfs/270.out
++++ b/tests/xfs/270.out
+@@ -2,3 +2,5 @@ QA output created by 270
+ rw mount test
+ ro mount test
+ rw remount test
++rw mount test
++ro mount test
