@@ -2,347 +2,309 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 738D3C27C40
-	for <linux-xfs@archiver.kernel.org>; Thu, 24 Aug 2023 04:35:04 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 73538C27C40
+	for <linux-xfs@archiver.kernel.org>; Thu, 24 Aug 2023 04:53:14 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S238544AbjHXEed (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 24 Aug 2023 00:34:33 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36254 "EHLO
+        id S235451AbjHXEwm (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 24 Aug 2023 00:52:42 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37036 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S239444AbjHXEe3 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 24 Aug 2023 00:34:29 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0F045E7F
-        for <linux-xfs@vger.kernel.org>; Wed, 23 Aug 2023 21:34:27 -0700 (PDT)
+        with ESMTP id S239356AbjHXEwi (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 24 Aug 2023 00:52:38 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1EADAEC
+        for <linux-xfs@vger.kernel.org>; Wed, 23 Aug 2023 21:52:36 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
          key-exchange X25519 server-signature RSA-PSS (2048 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 8E33760DE4
-        for <linux-xfs@vger.kernel.org>; Thu, 24 Aug 2023 04:34:26 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id E0D8DC433C7;
-        Thu, 24 Aug 2023 04:34:25 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id B07196181D
+        for <linux-xfs@vger.kernel.org>; Thu, 24 Aug 2023 04:52:35 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 057B6C433C8;
+        Thu, 24 Aug 2023 04:52:34 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1692851666;
-        bh=EMEa03tPaTiF7vjySF81r5AfTWe5mXL8PCpZSIQ6x9c=;
+        s=k20201202; t=1692852755;
+        bh=/iGYt8LSivNZNNxoJRCdBbj1T1D8gF7MUHTGrJiIJLU=;
         h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=tYlhqmXeMMQptJ+e43w2KKGOvOPWEl3aZBhpm4hrgGsfFsz//Or4TQoxODiEI5Cdh
-         dqeUAVbpnptE0w4bDUuAxW9z299hNXUjqx5ti1ST9j+oZLO8pdBYr/Dp1Wp21TbIGa
-         WRFcBGzT5z8f6vtAjFSsXO+a+UNmr+59ms4ZbgAVJKIMPnJHFBBE8433IKIBS6HmjQ
-         nDTbDp/K8l5Lt+VbzP3015ee3XwIQOsd+/TTfnZRgjSzBHaKkY0FRXPvqTMHFZdZuU
-         QrYIuvPk5T4o34uSuADSgPqE1sKnJQBy9fZie1aFhRAhyKpYi9mYDE3NHVm3+b1Gro
-         PSvWfvuOrkH2Q==
-Date:   Wed, 23 Aug 2023 21:34:25 -0700
+        b=iGVDg32cu8H4i2P27gDjncVyss5fjjTAkAnt1poXDkC63CDvXJX0zc4+MHqNfqXns
+         M/mirJioEQ+yK6J2SL55ca/X7LgTS5FZX1kOIf7U+dNmzUNJRLAACv4llnLGbEaSQG
+         9ez9Zo6IMdQErO0guwT+LIFRJSNaEitBxpIVJtJbKbXxkNrLtuC4+SRtOQO3g0Ud5V
+         H/MrVCGv04ZkOWgJetWmSPIuoNWpKa9eywpa2EyDRB6BKUmaZWoZzXvLpH9pu2wG4t
+         zfyvVjKOx55TrFasDBS2lVSQQ0ObSbtQewCrRwksB3ra3v+YHt3pxboj98W+sfgMnp
+         SQ46yWRJr4+SQ==
+Date:   Wed, 23 Aug 2023 21:52:34 -0700
 From:   "Darrick J. Wong" <djwong@kernel.org>
-To:     Long Li <leo.lilong@huawei.com>
-Cc:     david@fromorbit.com, linux-xfs@vger.kernel.org,
-        yi.zhang@huawei.com, houtao1@huawei.com, yangerkun@huawei.com
-Subject: Re: [PATCH v3 3/3] xfs: fix intent item uaf when recover intents fail
-Message-ID: <20230824043425.GJ11263@frogsfrogsfrogs>
-References: <20230731124619.3925403-1-leo.lilong@huawei.com>
- <20230731124619.3925403-4-leo.lilong@huawei.com>
+To:     Wengang Wang <wen.gang.wang@oracle.com>
+Cc:     Dave Chinner <david@fromorbit.com>,
+        "linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>,
+        Srikanth C S <srikanth.c.s@oracle.com>
+Subject: Re: Question: reserve log space at IO time for recover
+Message-ID: <20230824045234.GK11263@frogsfrogsfrogs>
+References: <1DB9F8BB-4A7C-4422-B447-90A08E310E17@oracle.com>
+ <ZLcqF2/7ZBI44C65@dread.disaster.area>
+ <20230719014413.GC11352@frogsfrogsfrogs>
+ <ZLeBvfTdRbFJ+mj2@dread.disaster.area>
+ <2A3BFAC0-1482-412E-A126-7EAFE65282E8@oracle.com>
+ <ZL3MlgtPWx5NHnOa@dread.disaster.area>
+ <2D5E234E-3EE3-4040-81DA-576B92FF7401@oracle.com>
+ <ZMCcJSLiWIi3KBOl@dread.disaster.area>
+ <BED64CCE-93D1-4110-B2C8-903A00D0013C@oracle.com>
+ <3B6E1DAE-5191-4050-BE97-75B4D22BDE24@oracle.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=utf-8
 Content-Disposition: inline
-In-Reply-To: <20230731124619.3925403-4-leo.lilong@huawei.com>
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <3B6E1DAE-5191-4050-BE97-75B4D22BDE24@oracle.com>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Mon, Jul 31, 2023 at 08:46:19PM +0800, Long Li wrote:
-> KASAN report a uaf when recover intents fail:
+On Fri, Aug 18, 2023 at 03:25:46AM +0000, Wengang Wang wrote:
+> What things looks to be:
 > 
->  ==================================================================
->  BUG: KASAN: slab-use-after-free in xfs_cui_release+0xb7/0xc0
->  Read of size 4 at addr ffff888012575e60 by task kworker/u8:3/103
->  CPU: 3 PID: 103 Comm: kworker/u8:3 Not tainted 6.4.0-rc7-next-20230619-00003-g94543a53f9a4-dirty #166
->  Workqueue: xfs-cil/sda xlog_cil_push_work
->  Call Trace:
->   <TASK>
->   dump_stack_lvl+0x50/0x70
->   print_report+0xc2/0x600
->   kasan_report+0xb6/0xe0
->   xfs_cui_release+0xb7/0xc0
->   xfs_cud_item_release+0x3c/0x90
->   xfs_trans_committed_bulk+0x2d5/0x7f0
->   xlog_cil_committed+0xaba/0xf20
->   xlog_cil_push_work+0x1a60/0x2360
->   process_one_work+0x78e/0x1140
->   worker_thread+0x58b/0xf60
->   kthread+0x2cd/0x3c0
->   ret_from_fork+0x1f/0x30
->   </TASK>
+> For the file deletion.  log bytes are reserved basing on xfs_mount->tr_itruncate which is:
+> {
+>     tr_logres = 175488,
+>     tr_logcount = 2,
+>     tr_logflags = XFS_TRANS_PERM_LOG_RES,
+> }  
+> You see it’s permanent log reservation with two log operations (two transactions in rolling mode).
+> After calculation (xlog_calc_unit_res(), adding space for various log headers), the final
+> log space needed per transaction changes from  175488 to 180208 bytes. So the total
+> log space needed is 360416 (180208 * 2).   
+> Above log space (360416 bytes) needs to be reserved for both run time inode removing
+> (xfs_inactive_truncate()) and EFI recover (xfs_efi_item_recover()).
 > 
->  Allocated by task 531:
->   kasan_save_stack+0x22/0x40
->   kasan_set_track+0x25/0x30
->   __kasan_slab_alloc+0x55/0x60
->   kmem_cache_alloc+0x195/0x5f0
->   xfs_cui_init+0x198/0x1d0
->   xlog_recover_cui_commit_pass2+0x133/0x5f0
->   xlog_recover_items_pass2+0x107/0x230
->   xlog_recover_commit_trans+0x3e7/0x9c0
->   xlog_recovery_process_trans+0x140/0x1d0
->   xlog_recover_process_ophdr+0x1a0/0x3d0
->   xlog_recover_process_data+0x108/0x2d0
->   xlog_recover_process+0x1f6/0x280
->   xlog_do_recovery_pass+0x609/0xdb0
->   xlog_do_log_recovery+0x84/0xe0
->   xlog_do_recover+0x7d/0x470
->   xlog_recover+0x25f/0x490
->   xfs_log_mount+0x2dd/0x6f0
->   xfs_mountfs+0x11ce/0x1e70
->   xfs_fs_fill_super+0x10ec/0x1b20
->   get_tree_bdev+0x3c8/0x730
->   vfs_get_tree+0x89/0x2c0
->   path_mount+0xecf/0x1800
->   do_mount+0xf3/0x110
->   __x64_sys_mount+0x154/0x1f0
->   do_syscall_64+0x39/0x80
->   entry_SYSCALL_64_after_hwframe+0x63/0xcd
+> RUNTIME
+> ========
 > 
->  Freed by task 531:
->   kasan_save_stack+0x22/0x40
->   kasan_set_track+0x25/0x30
->   kasan_save_free_info+0x2b/0x40
->   __kasan_slab_free+0x114/0x1b0
->   kmem_cache_free+0xf8/0x510
->   xfs_cui_item_free+0x95/0xb0
->   xfs_cui_release+0x86/0xc0
->   xlog_recover_cancel_intents.isra.0+0xf8/0x210
->   xlog_recover_finish+0x7e7/0x980
->   xfs_log_mount_finish+0x2bb/0x4a0
->   xfs_mountfs+0x14bf/0x1e70
->   xfs_fs_fill_super+0x10ec/0x1b20
->   get_tree_bdev+0x3c8/0x730
->   vfs_get_tree+0x89/0x2c0
->   path_mount+0xecf/0x1800
->   do_mount+0xf3/0x110
->   __x64_sys_mount+0x154/0x1f0
->   do_syscall_64+0x39/0x80
->   entry_SYSCALL_64_after_hwframe+0x63/0xcd
+> For run time inode removing. The first transaction is mainly used for inode fields change.
+> The second transaction is used for intents including extent freeing.
 > 
->  The buggy address belongs to the object at ffff888012575dc8
->   which belongs to the cache xfs_cui_item of size 432
->  The buggy address is located 152 bytes inside of
->   freed 432-byte region [ffff888012575dc8, ffff888012575f78)
+> For the first transaction, it has 180208 reserved log bytes (another 180208 bytes reserved
+> for the coming transaction).  
+> The first transaction is committed, writing some bytes to log and releasing the left reserved bytes.
 > 
->  The buggy address belongs to the physical page:
->  page:ffffea0000495d00 refcount:1 mapcount:0 mapping:0000000000000000 index:0xffff888012576208 pfn:0x12574
->  head:ffffea0000495d00 order:2 entire_mapcount:0 nr_pages_mapped:0 pincount:0
->  flags: 0x1fffff80010200(slab|head|node=0|zone=1|lastcpupid=0x1fffff)
->  page_type: 0xffffffff()
->  raw: 001fffff80010200 ffff888012092f40 ffff888014570150 ffff888014570150
->  raw: ffff888012576208 00000000001e0010 00000001ffffffff 0000000000000000
->  page dumped because: kasan: bad access detected
+> Now we have the second transaction which has 180208 log bytes reserved too. The second
+> transaction is supposed to process intents including extent freeing. With my hacking patch,
+> I blocked the extent freeing 5 hours. So in that 5 hours,  180208 (NOT 360416) log bytes are reserved.
 > 
->  Memory state around the buggy address:
->   ffff888012575d00: fb fb fb fb fb fb fb fb fb fb fb fc fc fc fc fc
->   ffff888012575d80: fc fc fc fc fc fc fc fc fc fa fb fb fb fb fb fb
->  >ffff888012575e00: fb fb fb fb fb fb fb fb fb fb fb fb fb fb fb fb
->                                                         ^
->   ffff888012575e80: fb fb fb fb fb fb fb fb fb fb fb fb fb fb fb fb
->   ffff888012575f00: fb fb fb fb fb fb fb fb fb fb fb fb fb fb fb fc
->  ==================================================================
+> With my test case, other transactions (update timestamps) then happen. As my hacking patch
+> pins the journal tail, those timestamp-updating transactions finally use up (almost) all the left available
+> log space (in memory in on disk).  And finally the on disk (and in memory) available log space
+> goes down near to 180208 bytes. Those 180208 bytes are reserved by above second (extent-free)
+> transaction.
 > 
-> If process intents fails, intent items left in AIL will be delete
-> from AIL and freed in error handling, even intent items that have been
-> recovered and created done items. After this, uaf will be triggered when
-> done item committed, because at this point the released intent item will
-> be accessed.
+> Panic the kernel and remount the xfs volume
 > 
-> xlog_recover_finish                     xlog_cil_push_work
-> ----------------------------            ---------------------------
-> xlog_recover_process_intents
->   xfs_cui_item_recover//cui_refcount == 1
->     xfs_trans_get_cud
->     xfs_trans_commit
->       <add cud item to cil>
->   xfs_cui_item_recover
->     <error occurred and return>
-> xlog_recover_cancel_intents
->   xfs_cui_release     //cui_refcount == 0
->     xfs_cui_item_free //free cui
->   <release other intent items>
-> xlog_force_shutdown   //shutdown
->                                <...>
->                                         <push items in cil>
->                                         xlog_cil_committed
->                                           xfs_cud_item_release
->                                             xfs_cui_release // UAF
+> LOG RECOVER
+> =============
 > 
-> Intent log items are created with a reference count of 2, one for the
-> creator, and one for the intent done object. Log recovery explicitly
-> drops the creator reference after it is inserted into the AIL, but it
-> then processes the log item as if it also owns the intent-done reference.
+> With log recover, during EFI recover, we use tr_itruncate again to reserve two transactions that needs
+> 360416 log bytes. Reserving 360416 bytes fails (blocks) because we now only have about 180208 available.
 > 
-> The code in ->iop_recovery should assume that it passes the reference
-> to the done intent, we can remove the intent item from the AIL after
-> creating the done-intent, but if that code fails before creating the
-> done-intent then it needs to release the intent reference by log recovery
-> itself.
-> 
-> That way when we go to cancel the intent, the only intents we find in
-> the AIL are the ones we know have not been processed yet and hence we
-> can safely drop both the creator and the intent done reference from
-> xlog_recover_cancel_intents().
-> 
-> Hence if we remove the intent from the list of intents that need to
-> be recovered after we have done the initial recovery, we acheive two
-> things:
-> 
-> 1. the tail of the log can be moved forward with the commit of the
-> done intent or new intent to continue the operation, and
-> 
-> 2. We avoid the problem of trying to determine how many reference
-> counts we need to drop from intent recovery cancelling because we
-> never come across intents we've actually attempted recovery on.
-> 
-> Fixes: 2e76f188fd90 ("xfs: cancel intents immediately if process_intents fails")
-> Suggested-by: Dave Chinner <david@fromorbit.com>
-> Signed-off-by: Long Li <leo.lilong@huawei.com>
-> ---
->  fs/xfs/xfs_attr_item.c     | 1 +
->  fs/xfs/xfs_bmap_item.c     | 1 +
->  fs/xfs/xfs_extfree_item.c  | 1 +
->  fs/xfs/xfs_refcount_item.c | 1 +
->  fs/xfs/xfs_rmap_item.c     | 1 +
->  5 files changed, 5 insertions(+)
-> 
-> diff --git a/fs/xfs/xfs_attr_item.c b/fs/xfs/xfs_attr_item.c
-> index 2788a6f2edcd..b74ba5303a96 100644
-> --- a/fs/xfs/xfs_attr_item.c
-> +++ b/fs/xfs/xfs_attr_item.c
-> @@ -625,6 +625,7 @@ xfs_attri_item_recover(
->  
->  	args->trans = tp;
->  	done_item = xfs_trans_get_attrd(tp, attrip);
-> +	xfs_trans_ail_delete(lip, 0);
+> THINKING
+> ========
+> Actually during the EFI recover, we only need one transaction to free the extents just like the 2nd
+> transaction at RUNTIME. So it only needs to reserve 180208 rather than 360416 bytes.  We have
+> (a bit) more than 180208 available log bytes  on disk, so the reservation goes and the recovery goes.
+> That is to say: we can fix the log recover part to fix the issue. We can introduce a new xfs_trans_res
+> xfs_mount->tr_ext_free
+> {
+>     tr_logres = 175488,
+>     tr_logcount = 0,
+>     tr_logflags = 0,
+> }
+> and use tr_ext_free instead of tr_itruncate in EFI recover. (didn’t try it).
 
-We haven't committed the intent-done item here, how is it safe to remove
-the recovered intent item from the AIL?  Can the log tail move forward
-(over the original intent) but then recovery fails such that the intent
-done item never gets written to the head of the log, and the whole thing
-just disappears from history?
+Hmm.  The log intent item recovery functions (e.g. xfs_efi_item_recover)
+take the recovered log item and perform *exactly* one step of the
+transaction chain.  If there's more work to do, the
+xfs_defer_ops_capture_and_commit machinery captures the defer ops, block
+reservation, and transaction reservation for later.
 
-Or, why doesn't the loop body of xlog_recover_process_intents do this:
+Later, in xlog_finish_defer_ops, we "rehydrate" the old transaction and
+block reservation, attach the defer ops, and finish the chain:
 
-		spin_unlock(&ailp->ail_lock);
-		ops = lip->li_ops;
-		error = ops->iop_recover(lip, &capture_list);
+		/*
+		 * Create a new transaction reservation from the
+		 * captured information.  Set logcount to 1 to force the
+		 * new transaction to regrant every roll so that we can
+		 * make forward progress in recovery no matter how full
+		 * the log might be.
+		 */
+		resv.tr_logres = dfc->dfc_logres;
+		resv.tr_logcount = 1;
+		resv.tr_logflags = XFS_TRANS_PERM_LOG_RES;
+
+		error = xfs_trans_alloc(mp, &resv, dfc->dfc_blkres,
+				dfc->dfc_rtxres, XFS_TRANS_RESERVE,
+				&tp);
 		if (error) {
-			/*
-			 * If iop_recover fails, assume it didn't manage to
-			 * commit a done item that's attached to lip.
-			 */
-			ops->iop_release(lip);
+			xlog_force_shutdown(mp->m_log,
+					SHUTDOWN_LOG_IO_ERROR);
+			return error;
 		}
-		spin_lock(&ailp->ail_lock);
 
-Oh, maybe I should reorient myself with normal operations.
+		/*
+		 * Transfer to this new transaction all the dfops we
+		 * captured from recovering a single intent item.
+		 */
+		list_del_init(&dfc->dfc_list);
+		xfs_defer_ops_continue(dfc, tp, &dres);
+		error = xfs_trans_commit(tp);
 
-In the regular runtime code, we create the intent item with 2 refcount,
-and we attach it to the xfs_defer_pending.dfp_intent.  When the AIL
-processes the intent item, it unpins the log item, which releases 1 of
-the refcount for the intent item.
+Since xfs_efi_item_recover is only performing one step of what could be
+a chain of deferred updates, it never rolls the transaction that it
+creates.  It therefore only requires the amount of grant space that
+you'd get with tr_logcount == 1.  It is therefore a bit silly that we
+ask for more than that, and in bad cases like this, hang log recovery
+needlessly.
 
-If we finish the xfs_defer_pending item, the defer ops mechanism creates
-the intent-done item (also with 2 refcount) and effectively transfer the
-1 remaining refcount of the intent item to the intent-done item.  When
-the intent done item commits, the cil releases the intent done item.
-The intent-done item now has refcount 1 and releases the intent item,
-which is now freed.
+Which is exactly what you theorized above.  Ok, I'm starting to be
+convinced... :)
 
-If the defer ops chain gets cancelled before the intent-done item is
-created, the defer ops mechanism itself will abort the intent item.
-This drops the 1 refcount that would have been given to the intent-done
-item; the log drops the other refcount.
+I wonder, if you add this to the variable declarations in
+xfs_efi_item_recover (or xfs_efi_recover if we're actually talking about
+UEK5 here):
 
-So that's the runtime code.  What about log recovery?
+	struct xfs_trans_resv	resv = M_RES(mp)->tr_itruncate;
 
-I guess _process_intents is single-stepping its way through the
-recovered intents in the AIL.  The log item is already committed so
-that's why we drop the recovered item's refcount when we add it to the
-AIL.  Hence we need to be able to handle two failure cases: (a) the case
-where ->iop_recover fails before creating the intent-done item; and (b)
-it fails after creating the intent-done item.
+and then change the xfs_trans_alloc call to:
 
-(b) can be easy because the recovered intent item is released when the
-intent-done item is released.
+	resv.tr_logcount = 1;
+	error = xfs_trans_alloc(mp, &resv, 0, 0, 0, &tp);
 
-(a) is also easy because _process_intents still owns the recovered
-intent item, which means it's still in the AIL, which means that
-_cancel_intents will release it.
-
-**However**, you don't want (a) to happen if (b) is also going to
-happen.  So that's why it makes sense to delete the recovered intent
-item from the AIL as soon as the intent done item has been added to the
-transaction.
-
-How does the following comment strike you?
-
-	/*
-	 * Transfer the sole remaining refcount of the recovered intent
-	 * item from the AIL list to a newly created intent-done item.
-	 */
-	budp = xfs_trans_get_bud(tp, buip);
-	xfs_trans_ail_delete(lip, 0);
-
-<-- still not sure he totally gets what's going on here.
+Does that solve the problem?
 
 --D
 
->  
->  	xfs_ilock(ip, XFS_ILOCK_EXCL);
->  	xfs_trans_ijoin(tp, ip, 0);
-> diff --git a/fs/xfs/xfs_bmap_item.c b/fs/xfs/xfs_bmap_item.c
-> index 7551c3ec4ea5..8ce3d336cd31 100644
-> --- a/fs/xfs/xfs_bmap_item.c
-> +++ b/fs/xfs/xfs_bmap_item.c
-> @@ -521,6 +521,7 @@ xfs_bui_item_recover(
->  		goto err_rele;
->  
->  	budp = xfs_trans_get_bud(tp, buip);
-> +	xfs_trans_ail_delete(lip, 0);
->  	xfs_ilock(ip, XFS_ILOCK_EXCL);
->  	xfs_trans_ijoin(tp, ip, 0);
->  
-> diff --git a/fs/xfs/xfs_extfree_item.c b/fs/xfs/xfs_extfree_item.c
-> index f1a5ecf099aa..1e0a9b82aa8c 100644
-> --- a/fs/xfs/xfs_extfree_item.c
-> +++ b/fs/xfs/xfs_extfree_item.c
-> @@ -687,6 +687,7 @@ xfs_efi_item_recover(
->  	if (error)
->  		return error;
->  	efdp = xfs_trans_get_efd(tp, efip, efip->efi_format.efi_nextents);
-> +	xfs_trans_ail_delete(lip, 0);
->  
->  	for (i = 0; i < efip->efi_format.efi_nextents; i++) {
->  		struct xfs_extent_free_item	fake = {
-> diff --git a/fs/xfs/xfs_refcount_item.c b/fs/xfs/xfs_refcount_item.c
-> index edd8587658d5..45f4e04134ff 100644
-> --- a/fs/xfs/xfs_refcount_item.c
-> +++ b/fs/xfs/xfs_refcount_item.c
-> @@ -520,6 +520,7 @@ xfs_cui_item_recover(
->  		return error;
->  
->  	cudp = xfs_trans_get_cud(tp, cuip);
-> +	xfs_trans_ail_delete(lip, 0);
->  
->  	for (i = 0; i < cuip->cui_format.cui_nextents; i++) {
->  		struct xfs_refcount_intent	fake = { };
-> diff --git a/fs/xfs/xfs_rmap_item.c b/fs/xfs/xfs_rmap_item.c
-> index 520c7ebdfed8..5a54a5135c33 100644
-> --- a/fs/xfs/xfs_rmap_item.c
-> +++ b/fs/xfs/xfs_rmap_item.c
-> @@ -535,6 +535,7 @@ xfs_rui_item_recover(
->  	if (error)
->  		return error;
->  	rudp = xfs_trans_get_rud(tp, ruip);
-> +	xfs_trans_ail_delete(lip, 0);
->  
->  	for (i = 0; i < ruip->rui_format.rui_nextents; i++) {
->  		struct xfs_rmap_intent	fake = { };
-> -- 
-> 2.31.1
+> thanks,
+> wengang
+> 
+> > On Jul 28, 2023, at 10:56 AM, Wengang Wang <wen.gang.wang@oracle.com> wrote:
+> > 
+> > 
+> > 
+> >> On Jul 25, 2023, at 9:08 PM, Dave Chinner <david@fromorbit.com> wrote:
+> >> 
+> >> On Mon, Jul 24, 2023 at 06:03:02PM +0000, Wengang Wang wrote:
+> >>>> On Jul 23, 2023, at 5:57 PM, Dave Chinner <david@fromorbit.com> wrote:
+> >>>> On Fri, Jul 21, 2023 at 07:36:03PM +0000, Wengang Wang wrote:
+> >>>>> FYI:
+> >>>>> 
+> >>>>> I am able reproduce the XFS mount hang issue with hacked kernels based on
+> >>>>> both 4.14.35 kernel or 6.4.0 kernel.
+> >>>>> Reproduce steps:
+> >>>>> 
+> >>>>> 1. create a XFS with 10MiB log size (small so easier to reproduce). The following
+> >>>>> steps all aim at this XFS volume.
+> >>>> 
+> >>>> Actually, make that a few milliseconds.... :)
+> >>> 
+> >>> :)
+> >>> 
+> >>>> mkfs/xfs_info output would be appreciated.
+> >>> 
+> >>> sure,
+> >>> # xfs_info 20GB.bk2
+> >>> meta-data=20GB.bk2               isize=256    agcount=4, agsize=1310720 blks
+> >>>        =                       sectsz=512   attr=2, projid32bit=1
+> >>>        =                       crc=0        finobt=0, sparse=0, rmapbt=0
+> >>>        =                       reflink=0
+> >> 
+> >> Hmmmm. Why are you only testing v4 filesystems? They are deprecated
+> >> and support is largely due to be dropped from upstream in 2025...
+> >> 
+> > 
+> > Ha, it just happened to be so.
+> > I was trying to reproduce it in the same environment as customer has —
+> > that’s OracleLinux7. The default behavior of mkfs.xfs in OL7 is to format
+> > v4 filesystems.  I created the xfs image in a file on OL7 and copied the image
+> > file to a 6.4.0 kernel machine. That’s why you see v4 filesystem here.
+> > 
+> >> Does the same problem occur with a v5 filesystems?
+> > 
+> > Will test and report back.
+> > 
+> >> 
+> >>>>> 5. Checking the on disk left free log space, it’s 181760 bytes for both 4.14.35
+> >>>>> kernel and 6.4.0 kernel.
+> >>>> 
+> >>>> Which is is clearly wrong. It should be at least 360416 bytes (i.e
+> >>>> tr_itrunc), because that's what the EFI being processed that pins
+> >>>> the tail of the log is supposed to have reserved when it was
+> >>>> stalled.
+> >>> 
+> >>> Yep, exactly.
+> >>> 
+> >>>> So where has the ~180kB of leaked space come from?
+> >>>> 
+> >>>> Have you traced the grant head reservations to find out
+> >>>> what the runtime log space and grant head reservations actually are?
+> >>> I have the numbers in vmcore (ignore the WARNs),
+> >> 
+> >> That's not what I'm asking. You've dumped the values at the time of
+> >> the hang, not traced the runtime reservations that have been made.
+> >> 
+> >>>> i.e. we have full tracing of the log reservation accounting via
+> >>>> tracepoints in the kernel. If there is a leak occurring, you need to
+> >>>> capture a trace of all the reservation accounting operations and
+> >>>> post process the output to find out what operation is leaking
+> >>>> reserved space. e.g.
+> >>>> 
+> >>>> # trace-cmd record -e xfs_log\* -e xlog\* -e printk touch /mnt/scratch/foo
+> >>>> ....
+> >>>> # trace-cmd report > s.t
+> >>>> # head -3 s.t
+> >>>> cpus=16
+> >>>>        touch-289000 [008] 430907.633820: xfs_log_reserve:      dev 253:32 t_ocnt 2 t_cnt 2 t_curr_res 240888 t_unit_res 240888 t_flags XLOG_TIC_PERM_RESERV reserveq empty writeq empty grant_reserve_cycle 1 grant_reserve_bytes 1024 grant_write_cycle 1 grant_write_bytes 1024 curr_cycle 1 curr_block 2 tail_cycle 1 tail_block 2
+> >>>>        touch-289000 [008] 430907.633829: xfs_log_reserve_exit: dev 253:32 t_ocnt 2 t_cnt 2 t_curr_res 240888 t_unit_res 240888 t_flags XLOG_TIC_PERM_RESERV reserveq empty writeq empty grant_reserve_cycle 1 grant_reserve_bytes 482800 grant_write_cycle 1 grant_write_bytes 482800 curr_cycle 1 curr_block 2 tail_cycle 1 tail_block 2
+> >>>> 
+> >>>> #
+> >>>> 
+> >>>> So this tells us the transaction reservation unit size, the count of
+> >>>> reservations, the current reserve and grant head locations, and the
+> >>>> current head and tail of the log at the time the transaction
+> >>>> reservation is started and then after it completes.
+> >>> 
+> >>> Will do that and report back. You want full log or only some typical
+> >>> ones? Full log would be big, how shall I share? 
+> >> 
+> >> I don't want to see the log. It'll be huge - I regularly generate
+> >> traces containing gigabytes of log accounting traces like this from
+> >> a single workload.
+> >> 
+> >> What I'm asking you to do is run the tracing and then post process
+> >> the values from the trace to determine what operation is using more
+> >> space than is being freed back to the log.
+> >> 
+> >> I generally do this with grep, awk and sed. some people use python
+> >> or perl. But either way it's a *lot* of work - in the past I have
+> >> spent _weeks_ on trace analysis to find a 4 byte leak in the log
+> >> space accounting. DOing things like graphing the head, tail and grant
+> >> spaces over time tend to show if this is a gradual leak versus a
+> >> sudden step change. If it's a sudden step change, then you can
+> >> isolate it in the trace and work out what happened. If it's a
+> >> gradual change, then you need to start looking for accounting
+> >> discrepancies...
+> >> 
+> >> e.g. a transaction records 32 bytes used in the item, so it releases
+> >> t_unit - 32 bytes at commit. However, the CIL may then only track 28
+> >> bytes of space for the item in the journal and we leak 4 bytes of
+> >> reservation on every on of those items committed.
+> >> 
+> >> These sorts of leaks typically only add up to being somethign
+> >> significant in situations where the log is flooded with tiny inode
+> >> timestamp changes - 4 bytes iper item doesn't really matter when you
+> >> only have a few thousand items in the log, but when you have
+> >> hundreds of thousands of tiny items in the log...
+> >> 
+> > 
+> > OK. will work more on this.
+> > # I am going to start a two-week vacation, and will then continue on this when back.
+> > 
+> > thanks,
+> > wengang
+> 
 > 
