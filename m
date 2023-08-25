@@ -2,60 +2,60 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 38C21C71133
-	for <linux-xfs@archiver.kernel.org>; Fri, 25 Aug 2023 12:01:43 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id AE5CDC71133
+	for <linux-xfs@archiver.kernel.org>; Fri, 25 Aug 2023 12:06:02 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S238331AbjHYMBN (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 25 Aug 2023 08:01:13 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52734 "EHLO
+        id S239938AbjHYMFa (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 25 Aug 2023 08:05:30 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41560 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S239548AbjHYMAr (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 25 Aug 2023 08:00:47 -0400
-Received: from mail-ej1-x62b.google.com (mail-ej1-x62b.google.com [IPv6:2a00:1450:4864:20::62b])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 19058198E;
-        Fri, 25 Aug 2023 05:00:45 -0700 (PDT)
-Received: by mail-ej1-x62b.google.com with SMTP id a640c23a62f3a-99bf8e5ab39so101570766b.2;
-        Fri, 25 Aug 2023 05:00:45 -0700 (PDT)
+        with ESMTP id S240494AbjHYMFV (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 25 Aug 2023 08:05:21 -0400
+Received: from mail-ej1-x631.google.com (mail-ej1-x631.google.com [IPv6:2a00:1450:4864:20::631])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3B5FE1FD7;
+        Fri, 25 Aug 2023 05:05:18 -0700 (PDT)
+Received: by mail-ej1-x631.google.com with SMTP id a640c23a62f3a-98377c5d53eso102375666b.0;
+        Fri, 25 Aug 2023 05:05:18 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20221208; t=1692964843; x=1693569643;
+        d=gmail.com; s=20221208; t=1692965117; x=1693569917;
         h=message-id:date:subject:cc:to:from:from:to:cc:subject:date
          :message-id:reply-to;
-        bh=iEKttxCzK+Mm67M/OBwLV0O7SaBvRkymMovm4HH+Y/A=;
-        b=UT5aEFvLRj5zZAYtUtNheAbMhi5dWM9FGy5ss/gCVYufeVSCg5L3ktpb8BtDdRLdkw
-         7Hz64ZFfEGBZ6FLl3sAR2YXGH/hbZJ+pXIDtLRlEd15liC8q0QC+0PqEgbC34XhNj57p
-         un1antFnLT6vdhiegdhac8/Phwf7GSxRDTYEutyZOtVi28lubv1cy2hKDegTXxjnO7yF
-         +mM/liT7wUkRKws2+8cuPemu3wqEErveRXWTtWLY3lzPDl6041+aSRs04xuBt+BrnoJA
-         sa/o3rRhS7D3dUBDQeU/527Nct16LcaPJ6ZraBFO3WuVl7Z5t9eCP/IY5r2ZU6x2vJcD
-         GO0g==
+        bh=fCIIdxGXgbtA0ZFgi3G4fDNBziu5Q20KuX0FkDoMPjY=;
+        b=KNnUnKxPA9T5qgkv61UlqXSeDdwN+Zz/1xYcGybkBrK3mnz+UHxGx+zP7wfSRH/34m
+         VphPCVqfF349uIigmK0Lbjmt24BR0YFIwn26Pu/gLBY01UO7ZFSEOxHBmxtImUlDKJb2
+         Uy8t71Ser275sWDVYhZGusaHnEvWNRJ0t3HxY4iBofLnGICkSbKZ6avRz69zmsb1oDei
+         IdEwkzB/9RbexMLxJvy0y2gVatj7cJS6UofMsVlEsSA1Bo2xrEd3xoiji+e1chmWgEgC
+         mGgDRAxrn3SR9Wb4ka7sC2aIAu4Q5/+C/FQFsj7OVrqNa9K+XOOrAMZHuFolyjaVZfxU
+         w1Pg==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20221208; t=1692964843; x=1693569643;
+        d=1e100.net; s=20221208; t=1692965117; x=1693569917;
         h=message-id:date:subject:cc:to:from:x-gm-message-state:from:to:cc
          :subject:date:message-id:reply-to;
-        bh=iEKttxCzK+Mm67M/OBwLV0O7SaBvRkymMovm4HH+Y/A=;
-        b=XT7tbrM8lXJY8pXp5+xIKR5Swk8gYT2HJU/cac3OsE5NUFTCN5nCFGxXZi7T4ppP6z
-         6m0c4A0z9LQ4Zp0ZvwKnzvg5HnXGF95I9XjxNW55OR2Pn3V8Kj2Bqy3KP563OX1YqUP/
-         KFDVHJ7WbBlTc5AxLHM66I/VBhLhzgmqaxTi01MquYAt7xoAiIsOuXcU4aOeBiBIP6Gp
-         HZ/yYwr+UKDLQNr2FNnwXlpfmxbmgZZY6hzO8dZ/B4z7ol4LfoZ9ybx9pxMMFbvDTedz
-         3jRIvkvu7D2n/WrYwGXl6gWSl+Sttv2vT30q+jibrcaveSJp4wmSeXPId9MOVprLF0dH
-         Uu9A==
-X-Gm-Message-State: AOJu0YzH8jRIQlwuLxs6unDtte6h1R1fPXNlq1euUYMXll1DOdpUZCAp
-        s7fbX3M2EbOy7EZzbcpjvHI=
-X-Google-Smtp-Source: AGHT+IFGpXchAX+me0QmgZkYFyDzhksUmHvKKo/TWK1FTt4vhPSWOBe+n5kULj6C/IKWWW0iKKdNqA==
-X-Received: by 2002:a17:907:60c7:b0:9a2:2635:daab with SMTP id hv7-20020a17090760c700b009a22635daabmr2984195ejc.47.1692964843242;
-        Fri, 25 Aug 2023 05:00:43 -0700 (PDT)
+        bh=fCIIdxGXgbtA0ZFgi3G4fDNBziu5Q20KuX0FkDoMPjY=;
+        b=dIUsXpXuuOjlnA1dSYbmI0sEaqiHv6UkTlaqmOTrvAe1IMnCivIOxmcyiH51qHJSy0
+         tyCrH5No++uG2hWJs/D0zI28/Tc9S3DpdpjAEENOYxleb03hpOK++p7XVJ+BnhOxXy0E
+         GN88F3NEC1bT6yeWla4rxcB/l126A8i5Jg08t/SuWKtiUY18sxEv36wsNNimDmFO3qIg
+         DFbvVDVVK8skpCFspSfir/C2dVkySH8sm3OYQVcGYsMS6mrESBR1b6O2qAOFvtIuI6CJ
+         +PKFpetW9bnDfihZpExPXH0zw4hS6CTSSdzKnaFoHqncFr9CevvK9lRJNyJ9LvA7fZb1
+         FRKQ==
+X-Gm-Message-State: AOJu0YydgNqlL9sGjiCuqQlQg0al3hQqNgHm86ESP6vnxhRzm4a/72MV
+        MXcaLKjcy1joHE4KHBv+Hc4=
+X-Google-Smtp-Source: AGHT+IEvSzy4l1py10ko6cQxsKtwTyta6kmj2sJKAtLcNpi5YkQsEaZ/w8LrbjQXsJUiFyQIxeF5zw==
+X-Received: by 2002:a17:906:23e1:b0:99b:f3d1:7735 with SMTP id j1-20020a17090623e100b0099bf3d17735mr12590629ejg.29.1692965116426;
+        Fri, 25 Aug 2023 05:05:16 -0700 (PDT)
 Received: from felia.fritz.box ([2a02:810d:7e40:14b0:98c5:e120:ff1e:7709])
-        by smtp.gmail.com with ESMTPSA id h7-20020a170906718700b0099bcf1c07c6sm892662ejk.138.2023.08.25.05.00.42
+        by smtp.gmail.com with ESMTPSA id s11-20020a170906354b00b00992bea2e9d2sm899199eja.62.2023.08.25.05.05.15
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 25 Aug 2023 05:00:42 -0700 (PDT)
+        Fri, 25 Aug 2023 05:05:15 -0700 (PDT)
 From:   Lukas Bulwahn <lukas.bulwahn@gmail.com>
 To:     Chandan Babu R <chandan.babu@oracle.com>,
         "Darrick J . Wong" <djwong@kernel.org>,
         Dave Chinner <dchinner@redhat.com>, linux-xfs@vger.kernel.org
 Cc:     kernel-janitors@vger.kernel.org, linux-kernel@vger.kernel.org,
         Lukas Bulwahn <lukas.bulwahn@gmail.com>
-Subject: [PATCH] xfs: fix select in config XFS_ONLINE_SCRUB_STATS
-Date:   Fri, 25 Aug 2023 14:00:40 +0200
-Message-Id: <20230825120040.26314-1-lukas.bulwahn@gmail.com>
+Subject: [PATCH v2] xfs: fix select in config XFS_ONLINE_SCRUB_STATS
+Date:   Fri, 25 Aug 2023 14:05:13 +0200
+Message-Id: <20230825120513.29235-1-lukas.bulwahn@gmail.com>
 X-Mailer: git-send-email 2.17.1
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
@@ -69,9 +69,11 @@ XFS_DEBUG.
 Fix the select in config XFS_ONLINE_SCRUB_STATS.
 
 Fixes: d7a74cad8f45 ("xfs: track usage statistics of online fsck")
-Signed-off-by: Lukas Bulwahn <lukas.bulwahn@gmail.com>i
+Signed-off-by: Lukas Bulwahn <lukas.bulwahn@gmail.com>
 ---
 Darrick, please pick this quick 'typo' fix.
+
+v2: removed a stupid last-minute insert on my Signed-off-by line.
 
  fs/xfs/Kconfig | 2 +-
  1 file changed, 1 insertion(+), 1 deletion(-)
