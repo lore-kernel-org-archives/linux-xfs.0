@@ -2,442 +2,213 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2CEE6C88CB9
-	for <linux-xfs@archiver.kernel.org>; Thu, 24 Aug 2023 23:58:16 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B200FC3DA6F
+	for <linux-xfs@archiver.kernel.org>; Fri, 25 Aug 2023 00:02:01 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235369AbjHXX5p (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 24 Aug 2023 19:57:45 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49454 "EHLO
+        id S231977AbjHYABb (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 24 Aug 2023 20:01:31 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38114 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S236722AbjHXX5O (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 24 Aug 2023 19:57:14 -0400
+        with ESMTP id S234441AbjHYABA (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 24 Aug 2023 20:01:00 -0400
 Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 85AD119BF;
-        Thu, 24 Aug 2023 16:57:11 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4936719BE
+        for <linux-xfs@vger.kernel.org>; Thu, 24 Aug 2023 17:00:57 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
          key-exchange X25519 server-signature RSA-PSS (2048 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 063B6655C8;
-        Thu, 24 Aug 2023 23:57:11 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 582F1C433C7;
-        Thu, 24 Aug 2023 23:57:10 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id DBDE863057
+        for <linux-xfs@vger.kernel.org>; Fri, 25 Aug 2023 00:00:56 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 498C4C433C7;
+        Fri, 25 Aug 2023 00:00:56 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1692921430;
-        bh=ludHYzMo2SrJufVhgRV/9FOEGSRI74BS5lNW3qDwhaA=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=fEZ7/sL0QcaaeXRag1r7zcln34SvT0eME9AyBRdST6TmE+pKXGLofpure1t6xgcrn
-         y2EzYDmk+qfLOr7LEkS/EExRhQ6er/1BkKzFUe4nndw5+/s4s9v3sZlGN2q157seNZ
-         3u7UY0DUkVaW/4lfwqOZwGxxAcmwt3WDfc3V5QQ8SXtUIRtwWo9x73dNb/BSLkd7tj
-         0wcC97FxH+IftFBJYit6NZMZuEEeTT3EfIcAVyUosSmSZFIeCzdisvFgOZvsJtB1XS
-         q1+ojgeNWcwmtRQkpTkRS6bmbkUZaEn7HCjIs2+cWACCDIbi93nWvBxY6l6ml9GAfi
-         AwD0EsxNZl9Qw==
-Date:   Thu, 24 Aug 2023 16:57:09 -0700
+        s=k20201202; t=1692921656;
+        bh=5wXt4ZMJsBCWkg66taAh0mh2BFhtrl+1Q2E0KsLDwUA=;
+        h=Date:From:To:Cc:Subject:From;
+        b=HilcCE8Ljnvtp+gIjitHkHC15A3ltykGE9Z8jv33opRU7kUnDdDEgLX4Vvv7RXEnc
+         Bu9Ca+n9aupCEuxpeh67+Vk6b+iJtJwWTMnQOQ8eioxOxU3mOZT1ySZqhrp0NdI9UC
+         qF2r7a6jNi8p7fEnZ6QUromNSEqf0M1fSEJ4jtIAKU3D/wQTuiloj0wdNdDSJEnhD9
+         TBo67ckhQIDrSBkqv3tfwohhM3luk736UdiBweLNMPQ1KTroJbIw9H6cYI7adGi7Rz
+         dozaKE+QPC83OsbAB5mWa+rJAd+Au6YUPIkz+bFrSWFcfsQ/JbuYaOAJCxLuuF5siI
+         aa/4l7UyEdK1A==
+Date:   Thu, 24 Aug 2023 17:00:55 -0700
 From:   "Darrick J. Wong" <djwong@kernel.org>
-To:     Shiyang Ruan <ruansy.fnst@fujitsu.com>
-Cc:     linux-fsdevel@vger.kernel.org, nvdimm@lists.linux.dev,
-        linux-xfs@vger.kernel.org, linux-mm@kvack.org,
-        dan.j.williams@intel.com, willy@infradead.org, jack@suse.cz,
-        akpm@linux-foundation.org, mcgrof@kernel.org
-Subject: Re: [PATCH v13] mm, pmem, xfs: Introduce MF_MEM_PRE_REMOVE for unbind
-Message-ID: <20230824235709.GA17895@frogsfrogsfrogs>
-References: <20230629081651.253626-3-ruansy.fnst@fujitsu.com>
- <20230823081706.2970430-1-ruansy.fnst@fujitsu.com>
- <20230823233601.GH11263@frogsfrogsfrogs>
- <999e83ca-df65-4a43-9d32-ff13a252c2d7@fujitsu.com>
+To:     Carlos Maiolino <cem@kernel.org>
+Cc:     Dave Chinner <david@fromorbit.com>,
+        Eric Sandeen <sandeen@redhat.com>,
+        xfs <linux-xfs@vger.kernel.org>
+Subject: [PATCH v2] xfsprogs: don't allow udisks to automount XFS filesystems
+ with no prompt
+Message-ID: <20230825000055.GE17912@frogsfrogsfrogs>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <999e83ca-df65-4a43-9d32-ff13a252c2d7@fujitsu.com>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Thu, Aug 24, 2023 at 05:41:50PM +0800, Shiyang Ruan wrote:
-> 
-> 
-> 在 2023/8/24 7:36, Darrick J. Wong 写道:
-> > On Wed, Aug 23, 2023 at 04:17:06PM +0800, Shiyang Ruan wrote:
-> > > ====
-> > > Changes since v12:
-> > >   1. correct flag name in subject (MF_MEM_REMOVE => MF_MEM_PRE_REMOVE)
-> > >   2. complete the behavior when fs has already frozen by kernel call
-> > >        NOTICE: Instead of "call notify_failure() again w/o PRE_REMOVE",
-> > >                I tried this proposal[0].
-> > >   3. call xfs_dax_notify_failure_freeze() and _thaw() in same function
-> > >   4. rebase on: xfs/xfs-linux.git vfs-for-next
-> > > ====
-> > > 
-> > > Now, if we suddenly remove a PMEM device(by calling unbind) which
-> > > contains FSDAX while programs are still accessing data in this device,
-> > > e.g.:
-> > > ```
-> > >   $FSSTRESS_PROG -d $SCRATCH_MNT -n 99999 -p 4 &
-> > >   # $FSX_PROG -N 1000000 -o 8192 -l 500000 $SCRATCH_MNT/t001 &
-> > >   echo "pfn1.1" > /sys/bus/nd/drivers/nd_pmem/unbind
-> > > ```
-> > > it could come into an unacceptable state:
-> > >    1. device has gone but mount point still exists, and umount will fail
-> > >         with "target is busy"
-> > >    2. programs will hang and cannot be killed
-> > >    3. may crash with NULL pointer dereference
-> > > 
-> > > To fix this, we introduce a MF_MEM_PRE_REMOVE flag to let it know that we
-> > > are going to remove the whole device, and make sure all related processes
-> > > could be notified so that they could end up gracefully.
-> > > 
-> > > This patch is inspired by Dan's "mm, dax, pmem: Introduce
-> > > dev_pagemap_failure()"[1].  With the help of dax_holder and
-> > > ->notify_failure() mechanism, the pmem driver is able to ask filesystem
-> > > on it to unmap all files in use, and notify processes who are using
-> > > those files.
-> > > 
-> > > Call trace:
-> > > trigger unbind
-> > >   -> unbind_store()
-> > >    -> ... (skip)
-> > >     -> devres_release_all()
-> > >      -> kill_dax()
-> > >       -> dax_holder_notify_failure(dax_dev, 0, U64_MAX, MF_MEM_PRE_REMOVE)
-> > >        -> xfs_dax_notify_failure()
-> > >        `-> freeze_super()             // freeze (kernel call)
-> > >        `-> do xfs rmap
-> > >        ` -> mf_dax_kill_procs()
-> > >        `  -> collect_procs_fsdax()    // all associated processes
-> > >        `  -> unmap_and_kill()
-> > >        ` -> invalidate_inode_pages2_range() // drop file's cache
-> > >        `-> thaw_super()               // thaw (both kernel & user call)
-> > > 
-> > > Introduce MF_MEM_PRE_REMOVE to let filesystem know this is a remove
-> > > event.  Use the exclusive freeze/thaw[2] to lock the filesystem to prevent
-> > > new dax mapping from being created.  Do not shutdown filesystem directly
-> > > if configuration is not supported, or if failure range includes metadata
-> > > area.  Make sure all files and processes(not only the current progress)
-> > > are handled correctly.  Also drop the cache of associated files before
-> > > pmem is removed.
-> > > 
-> > > [0]: https://lore.kernel.org/linux-xfs/25cf6700-4db0-a346-632c-ec9fc291793a@fujitsu.com/
-> > > [1]: https://lore.kernel.org/linux-mm/161604050314.1463742.14151665140035795571.stgit@dwillia2-desk3.amr.corp.intel.com/
-> > > [2]: https://lore.kernel.org/linux-xfs/169116275623.3187159.16862410128731457358.stg-ugh@frogsfrogsfrogs/
-> > > 
-> > > Signed-off-by: Shiyang Ruan <ruansy.fnst@fujitsu.com>
-> > > ---
-> > >   drivers/dax/super.c         |  3 +-
-> > >   fs/xfs/xfs_notify_failure.c | 99 ++++++++++++++++++++++++++++++++++---
-> > >   include/linux/mm.h          |  1 +
-> > >   mm/memory-failure.c         | 17 +++++--
-> > >   4 files changed, 109 insertions(+), 11 deletions(-)
-> > > 
-> > > diff --git a/drivers/dax/super.c b/drivers/dax/super.c
-> > > index c4c4728a36e4..2e1a35e82fce 100644
-> > > --- a/drivers/dax/super.c
-> > > +++ b/drivers/dax/super.c
-> > > @@ -323,7 +323,8 @@ void kill_dax(struct dax_device *dax_dev)
-> > >   		return;
-> > >   	if (dax_dev->holder_data != NULL)
-> > > -		dax_holder_notify_failure(dax_dev, 0, U64_MAX, 0);
-> > > +		dax_holder_notify_failure(dax_dev, 0, U64_MAX,
-> > > +				MF_MEM_PRE_REMOVE);
-> > >   	clear_bit(DAXDEV_ALIVE, &dax_dev->flags);
-> > >   	synchronize_srcu(&dax_srcu);
-> > > diff --git a/fs/xfs/xfs_notify_failure.c b/fs/xfs/xfs_notify_failure.c
-> > > index 4a9bbd3fe120..6496c32a9172 100644
-> > > --- a/fs/xfs/xfs_notify_failure.c
-> > > +++ b/fs/xfs/xfs_notify_failure.c
-> > > @@ -22,6 +22,7 @@
-> > >   #include <linux/mm.h>
-> > >   #include <linux/dax.h>
-> > > +#include <linux/fs.h>
-> > >   struct xfs_failure_info {
-> > >   	xfs_agblock_t		startblock;
-> > > @@ -73,10 +74,16 @@ xfs_dax_failure_fn(
-> > >   	struct xfs_mount		*mp = cur->bc_mp;
-> > >   	struct xfs_inode		*ip;
-> > >   	struct xfs_failure_info		*notify = data;
-> > > +	struct address_space		*mapping;
-> > > +	pgoff_t				pgoff;
-> > > +	unsigned long			pgcnt;
-> > >   	int				error = 0;
-> > >   	if (XFS_RMAP_NON_INODE_OWNER(rec->rm_owner) ||
-> > >   	    (rec->rm_flags & (XFS_RMAP_ATTR_FORK | XFS_RMAP_BMBT_BLOCK))) {
-> > > +		/* Continue the query because this isn't a failure. */
-> > > +		if (notify->mf_flags & MF_MEM_PRE_REMOVE)
-> > > +			return 0;
-> > >   		notify->want_shutdown = true;
-> > >   		return 0;
-> > >   	}
-> > > @@ -92,14 +99,60 @@ xfs_dax_failure_fn(
-> > >   		return 0;
-> > >   	}
-> > > -	error = mf_dax_kill_procs(VFS_I(ip)->i_mapping,
-> > > -				  xfs_failure_pgoff(mp, rec, notify),
-> > > -				  xfs_failure_pgcnt(mp, rec, notify),
-> > > -				  notify->mf_flags);
-> > > +	mapping = VFS_I(ip)->i_mapping;
-> > > +	pgoff = xfs_failure_pgoff(mp, rec, notify);
-> > > +	pgcnt = xfs_failure_pgcnt(mp, rec, notify);
-> > > +
-> > > +	/* Continue the rmap query if the inode isn't a dax file. */
-> > > +	if (dax_mapping(mapping))
-> > > +		error = mf_dax_kill_procs(mapping, pgoff, pgcnt,
-> > > +					  notify->mf_flags);
-> > > +
-> > > +	/* Invalidate the cache in dax pages. */
-> > > +	if (notify->mf_flags & MF_MEM_PRE_REMOVE)
-> > > +		invalidate_inode_pages2_range(mapping, pgoff,
-> > > +					      pgoff + pgcnt - 1);
-> > > +
-> > >   	xfs_irele(ip);
-> > >   	return error;
-> > >   }
-> > > +static int
-> > > +xfs_dax_notify_failure_freeze(
-> > > +	struct xfs_mount	*mp)
-> > > +{
-> > > +	struct super_block	*sb = mp->m_super;
-> > > +	int			error;
-> > > +
-> > > +	error = freeze_super(sb, FREEZE_HOLDER_KERNEL);
-> > > +	if (error)
-> > > +		xfs_emerg(mp, "already frozen by kernel, err=%d", error);
-> > > +
-> > > +	return error;
-> > > +}
-> > > +
-> > > +static void
-> > > +xfs_dax_notify_failure_thaw(
-> > > +	struct xfs_mount	*mp,
-> > > +	bool			kernel_frozen)
-> > > +{
-> > > +	struct super_block	*sb = mp->m_super;
-> > > +	int			error;
-> > > +
-> > > +	if (!kernel_frozen) {
-> > > +		error = thaw_super(sb, FREEZE_HOLDER_KERNEL);
-> > > +		if (error)
-> > > +			xfs_emerg(mp, "still frozen after notify failure, err=%d",
-> > > +				error);
-> > > +	}
-> > > +
-> > > +	/*
-> > > +	 * Also thaw userspace call anyway because the device is about to be
-> > > +	 * removed immediately.
-> > 
-> > Does a userspace freeze inhibit or otherwise break device removal?
-> 
-> It doesn't.  Device can be removed.  But after that, the mount point still
-> exists, and `umount /mnt/scratch` fails with "target is busy." `xfs_freeze
-> -u /mnt/scratch` cannot work too.
+From: Darrick J. Wong <djwong@kernel.org>
 
-Yes, that's true, but that's long been the case for removing block
-devices.  Should block device removal (since we now have hooks for
-that!) also be breaking freezes?
+The unending stream of syzbot bug reports and overwrought filing of CVEs
+for corner case handling (i.e. things that distract from actual user
+complaints) in XFS has generated all sorts of of overheated rhetoric
+about how every bug is a Serious Security Issue(tm) because anyone can
+craft a malicious filesystem on a USB stick, insert the stick into a
+victim machine, and mount will trigger a bug in the kernel driver that
+leads to some compromise or DoS or something.
 
-> So, I think thaw_super() anyway here is needed.
-> 
-> 
-> > 
-> > > +	 */
-> > > +	thaw_super(sb, FREEZE_HOLDER_USERSPACE);
-> > > +}
-> > > +
-> > >   static int
-> > >   xfs_dax_notify_ddev_failure(
-> > >   	struct xfs_mount	*mp,
-> > > @@ -112,15 +165,29 @@ xfs_dax_notify_ddev_failure(
-> > >   	struct xfs_btree_cur	*cur = NULL;
-> > >   	struct xfs_buf		*agf_bp = NULL;
-> > >   	int			error = 0;
-> > > +	bool			kernel_frozen = false;
-> > >   	xfs_fsblock_t		fsbno = XFS_DADDR_TO_FSB(mp, daddr);
-> > >   	xfs_agnumber_t		agno = XFS_FSB_TO_AGNO(mp, fsbno);
-> > >   	xfs_fsblock_t		end_fsbno = XFS_DADDR_TO_FSB(mp,
-> > >   							     daddr + bblen - 1);
-> > >   	xfs_agnumber_t		end_agno = XFS_FSB_TO_AGNO(mp, end_fsbno);
-> > > +	if (mf_flags & MF_MEM_PRE_REMOVE) {
-> > > +		xfs_info(mp, "Device is about to be removed!");
-> > > +		/* Freeze fs to prevent new mappings from being created. */
-> > > +		error = xfs_dax_notify_failure_freeze(mp);
-> > > +		if (error) {
-> > > +			/* Keep going on if filesystem is frozen by kernel. */
-> > > +			if (error == -EBUSY)
-> > > +				kernel_frozen = true;
-> > 
-> > EBUSY means that xfs_dax_notify_failure_freeze did /not/ succeed in
-> > kernel-freezing the fs.  Someone else did, and they're expecting that
-> > thaw_super will undo that.
-> > 
-> > 	switch (error) {
-> > 	case -EBUSY:
-> > 		/* someone else froze the fs, keep going */
-> > 		break;
-> > 	case 0:
-> > 		/* we froze the fs */
-> > 		kernel_frozen = true;
-> > 		break;
-> > 	default:
-> > 		/* something else broke, should we continue anyway? */
-> > 		return error;
-> > 	}
-> > 
-> > TBH I wonder why all that isn't just:
-> > 
-> > 	kernel_frozen = xfs_dax_notify_failure_freeze(mp) == 0;
-> > 
-> > Since we'd want to keep going even if (say) the pmem was already
-> > starting to fail and the freeze actually failed due to EIO, right?
-> 
-> Yes.  So we can say it is a *try* to _freeze() here.  No matter what its
-> result is, we continue.
-> 
-> Then I think the `kernel_frozen` becomes useless as well.  Because we should
-> try to call both _thaw(KERNEL_CALL) and _thaw(USER_CALL) to make sure umount
-> can work after device is gone.
+I thought that nobody would be foolish enough to automount an XFS
+filesystem.  What a fool I was!  It turns out that udisks can be told
+that it's okay to automount things, and then GNOME will do exactly that.
+Including mounting mangled XFS filesystems!
 
-I disagree -- unlike the mess that is userspace freezing, kernel code
-that obtained a kernel freeze will get very confused and potentially do
-Seriously Bad Things if the kernel freeze is yanked out from under them.
-Kernel code is not supposed to release things that they did not
-themselves obtain.
+<delete angry rant about poor decisionmaking and armchair fs developers
+blasting us on X while not actually doing any of the work>
 
-That might not ultimately matter for the narrow case of the device going
-away, but the two other usecases (online fsck and suspend) will
-malfunction if you drop a kernel freeze that they obtained.
+Turn off /this/ idiocy by adding a udev rule to tell udisks not to
+automount XFS filesystems.
 
-I don't mind if PREREMOVE can't get a freeze and keeps going with the
-invalidations anyway.  We did our best, and when the pmem goes away we
-can just kill -9 down the processes.
+This will not stop a logged in user from unwittingly inserting a
+malicious storage device and pressing [mount] and getting breached.
+This is not a substitute for a thorough audit.  This is not a substitute
+for lklfuse.  This does not solve the general problem of in-kernel fs
+drivers being a huge attack surface.  I just want a vacation from the
+sh*tstorm of bad ideas and threat models that I never agreed to support.
 
---D
+v2: Add external logs to the list too, and document the var we set
 
-> Then, I think it's better to change them:
->   `static int xfs_dax_notify_failure_freeze()`,
->   `static void xfs_dax_notify_failure_thaw()`
-> to
->   `static void xfs_dax_notify_failure_try_freeze()`,
->   `static void xfs_dax_notify_failure_try_thaw()`.
-> 
-> 
-> --
-> Thanks,
-> Ruan.
-> 
-> > 
-> > --D
-> > 
-> > > +			else
-> > > +				return error;
-> > > +		}
-> > > +	}
-> > > +
-> > >   	error = xfs_trans_alloc_empty(mp, &tp);
-> > >   	if (error)
-> > > -		return error;
-> > > +		goto out;
-> > >   	for (; agno <= end_agno; agno++) {
-> > >   		struct xfs_rmap_irec	ri_low = { };
-> > > @@ -165,11 +232,23 @@ xfs_dax_notify_ddev_failure(
-> > >   	}
-> > >   	xfs_trans_cancel(tp);
-> > > +
-> > > +	/*
-> > > +	 * Determine how to shutdown the filesystem according to the
-> > > +	 * error code and flags.
-> > > +	 */
-> > >   	if (error || notify.want_shutdown) {
-> > >   		xfs_force_shutdown(mp, SHUTDOWN_CORRUPT_ONDISK);
-> > >   		if (!error)
-> > >   			error = -EFSCORRUPTED;
-> > > -	}
-> > > +	} else if (mf_flags & MF_MEM_PRE_REMOVE)
-> > > +		xfs_force_shutdown(mp, SHUTDOWN_FORCE_UMOUNT);
-> > > +
-> > > +out:
-> > > +	/* Thaw the fs if it is frozen before. */
-> > > +	if (mf_flags & MF_MEM_PRE_REMOVE)
-> > > +		xfs_dax_notify_failure_thaw(mp, kernel_frozen);
-> > > +
-> > >   	return error;
-> > >   }
-> > > @@ -197,6 +276,8 @@ xfs_dax_notify_failure(
-> > >   	if (mp->m_logdev_targp && mp->m_logdev_targp->bt_daxdev == dax_dev &&
-> > >   	    mp->m_logdev_targp != mp->m_ddev_targp) {
-> > > +		if (mf_flags & MF_MEM_PRE_REMOVE)
-> > > +			return 0;
-> > >   		xfs_err(mp, "ondisk log corrupt, shutting down fs!");
-> > >   		xfs_force_shutdown(mp, SHUTDOWN_CORRUPT_ONDISK);
-> > >   		return -EFSCORRUPTED;
-> > > @@ -210,6 +291,12 @@ xfs_dax_notify_failure(
-> > >   	ddev_start = mp->m_ddev_targp->bt_dax_part_off;
-> > >   	ddev_end = ddev_start + bdev_nr_bytes(mp->m_ddev_targp->bt_bdev) - 1;
-> > > +	/* Notify failure on the whole device. */
-> > > +	if (offset == 0 && len == U64_MAX) {
-> > > +		offset = ddev_start;
-> > > +		len = bdev_nr_bytes(mp->m_ddev_targp->bt_bdev);
-> > > +	}
-> > > +
-> > >   	/* Ignore the range out of filesystem area */
-> > >   	if (offset + len - 1 < ddev_start)
-> > >   		return -ENXIO;
-> > > diff --git a/include/linux/mm.h b/include/linux/mm.h
-> > > index 799836e84840..944a1165a321 100644
-> > > --- a/include/linux/mm.h
-> > > +++ b/include/linux/mm.h
-> > > @@ -3577,6 +3577,7 @@ enum mf_flags {
-> > >   	MF_UNPOISON = 1 << 4,
-> > >   	MF_SW_SIMULATED = 1 << 5,
-> > >   	MF_NO_RETRY = 1 << 6,
-> > > +	MF_MEM_PRE_REMOVE = 1 << 7,
-> > >   };
-> > >   int mf_dax_kill_procs(struct address_space *mapping, pgoff_t index,
-> > >   		      unsigned long count, int mf_flags);
-> > > diff --git a/mm/memory-failure.c b/mm/memory-failure.c
-> > > index dc5ff7dd4e50..92f18c9e0aaf 100644
-> > > --- a/mm/memory-failure.c
-> > > +++ b/mm/memory-failure.c
-> > > @@ -688,7 +688,7 @@ static void add_to_kill_fsdax(struct task_struct *tsk, struct page *p,
-> > >    */
-> > >   static void collect_procs_fsdax(struct page *page,
-> > >   		struct address_space *mapping, pgoff_t pgoff,
-> > > -		struct list_head *to_kill)
-> > > +		struct list_head *to_kill, bool pre_remove)
-> > >   {
-> > >   	struct vm_area_struct *vma;
-> > >   	struct task_struct *tsk;
-> > > @@ -696,8 +696,15 @@ static void collect_procs_fsdax(struct page *page,
-> > >   	i_mmap_lock_read(mapping);
-> > >   	read_lock(&tasklist_lock);
-> > >   	for_each_process(tsk) {
-> > > -		struct task_struct *t = task_early_kill(tsk, true);
-> > > +		struct task_struct *t = tsk;
-> > > +		/*
-> > > +		 * Search for all tasks while MF_MEM_PRE_REMOVE is set, because
-> > > +		 * the current may not be the one accessing the fsdax page.
-> > > +		 * Otherwise, search for the current task.
-> > > +		 */
-> > > +		if (!pre_remove)
-> > > +			t = task_early_kill(tsk, true);
-> > >   		if (!t)
-> > >   			continue;
-> > >   		vma_interval_tree_foreach(vma, &mapping->i_mmap, pgoff, pgoff) {
-> > > @@ -1793,6 +1800,7 @@ int mf_dax_kill_procs(struct address_space *mapping, pgoff_t index,
-> > >   	dax_entry_t cookie;
-> > >   	struct page *page;
-> > >   	size_t end = index + count;
-> > > +	bool pre_remove = mf_flags & MF_MEM_PRE_REMOVE;
-> > >   	mf_flags |= MF_ACTION_REQUIRED | MF_MUST_KILL;
-> > > @@ -1804,9 +1812,10 @@ int mf_dax_kill_procs(struct address_space *mapping, pgoff_t index,
-> > >   		if (!page)
-> > >   			goto unlock;
-> > > -		SetPageHWPoison(page);
-> > > +		if (!pre_remove)
-> > > +			SetPageHWPoison(page);
-> > > -		collect_procs_fsdax(page, mapping, index, &to_kill);
-> > > +		collect_procs_fsdax(page, mapping, index, &to_kill, pre_remove);
-> > >   		unmap_and_kill(&to_kill, page_to_pfn(page), mapping,
-> > >   				index, mf_flags);
-> > >   unlock:
-> > > -- 
-> > > 2.41.0
-> > > 
+Signed-off-by: Darrick J. Wong <djwong@kernel.org>
+Reviewed-by: Dave Chinner <dchinner@redhat.com>
+---
+ configure.ac           |    1 +
+ include/builddefs.in   |    2 ++
+ m4/package_services.m4 |   42 ++++++++++++++++++++++++++++++++++++++++++
+ scrub/Makefile         |   11 +++++++++++
+ scrub/xfs.rules        |   13 +++++++++++++
+ 5 files changed, 69 insertions(+)
+ create mode 100644 scrub/xfs.rules
+
+diff --git a/configure.ac b/configure.ac
+index 58f3b8e2e90..e447121a344 100644
+--- a/configure.ac
++++ b/configure.ac
+@@ -209,6 +209,7 @@ AC_HAVE_SG_IO
+ AC_HAVE_HDIO_GETGEO
+ AC_CONFIG_SYSTEMD_SYSTEM_UNIT_DIR
+ AC_CONFIG_CROND_DIR
++AC_CONFIG_UDEV_RULE_DIR
+ 
+ if test "$enable_blkid" = yes; then
+ AC_HAVE_BLKID_TOPO
+diff --git a/include/builddefs.in b/include/builddefs.in
+index fb8e239cab2..3318e00316c 100644
+--- a/include/builddefs.in
++++ b/include/builddefs.in
+@@ -184,6 +184,8 @@ HAVE_SYSTEMD = @have_systemd@
+ SYSTEMD_SYSTEM_UNIT_DIR = @systemd_system_unit_dir@
+ HAVE_CROND = @have_crond@
+ CROND_DIR = @crond_dir@
++HAVE_UDEV = @have_udev@
++UDEV_RULE_DIR = @udev_rule_dir@
+ HAVE_LIBURCU_ATOMIC64 = @have_liburcu_atomic64@
+ HAVE_MEMFD_CLOEXEC = @have_memfd_cloexec@
+ HAVE_MEMFD_NOEXEC_SEAL = @have_memfd_noexec_seal@
+diff --git a/m4/package_services.m4 b/m4/package_services.m4
+index f2d888a099a..a683ddb93e0 100644
+--- a/m4/package_services.m4
++++ b/m4/package_services.m4
+@@ -75,3 +75,45 @@ AC_DEFUN([AC_CONFIG_CROND_DIR],
+ 	AC_SUBST(have_crond)
+ 	AC_SUBST(crond_dir)
+ ])
++
++#
++# Figure out where to put udev rule files
++#
++AC_DEFUN([AC_CONFIG_UDEV_RULE_DIR],
++[
++	AC_REQUIRE([PKG_PROG_PKG_CONFIG])
++	AC_ARG_WITH([udev_rule_dir],
++	  [AS_HELP_STRING([--with-udev-rule-dir@<:@=DIR@:>@],
++		[Install udev rules into DIR.])],
++	  [],
++	  [with_udev_rule_dir=yes])
++	AS_IF([test "x${with_udev_rule_dir}" != "xno"],
++	  [
++		AS_IF([test "x${with_udev_rule_dir}" = "xyes"],
++		  [
++			PKG_CHECK_MODULES([udev], [udev],
++			  [
++				with_udev_rule_dir="$($PKG_CONFIG --variable=udev_dir udev)/rules.d"
++			  ], [
++				with_udev_rule_dir=""
++			  ])
++			m4_pattern_allow([^PKG_(MAJOR|MINOR|BUILD|REVISION)$])
++		  ])
++		AC_MSG_CHECKING([for udev rule dir])
++		udev_rule_dir="${with_udev_rule_dir}"
++		AS_IF([test -n "${udev_rule_dir}"],
++		  [
++			AC_MSG_RESULT(${udev_rule_dir})
++			have_udev="yes"
++		  ],
++		  [
++			AC_MSG_RESULT(no)
++			have_udev="no"
++		  ])
++	  ],
++	  [
++		have_udev="disabled"
++	  ])
++	AC_SUBST(have_udev)
++	AC_SUBST(udev_rule_dir)
++])
+diff --git a/scrub/Makefile b/scrub/Makefile
+index ab9c2d14832..2b9b8d977f6 100644
+--- a/scrub/Makefile
++++ b/scrub/Makefile
+@@ -41,6 +41,11 @@ endif
+ 
+ endif	# scrub_prereqs
+ 
++UDEV_RULES = xfs.rules
++ifeq ($(HAVE_UDEV),yes)
++	INSTALL_SCRUB += install-udev
++endif
++
+ HFILES = \
+ common.h \
+ counter.h \
+@@ -180,6 +185,12 @@ install-scrub: default
+ 	$(INSTALL) -m 755 $(XFS_SCRUB_ALL_PROG) $(PKG_SBIN_DIR)
+ 	$(INSTALL) -m 755 -d $(PKG_STATE_DIR)
+ 
++install-udev: $(UDEV_RULES)
++	$(INSTALL) -m 755 -d $(UDEV_RULE_DIR)
++	for i in $(UDEV_RULES); do \
++		$(INSTALL) -m 644 $$i $(UDEV_RULE_DIR)/64-$$i; \
++	done
++
+ install-dev:
+ 
+ -include .dep
+diff --git a/scrub/xfs.rules b/scrub/xfs.rules
+new file mode 100644
+index 00000000000..c3f69b3ab90
+--- /dev/null
++++ b/scrub/xfs.rules
+@@ -0,0 +1,13 @@
++# SPDX-License-Identifier: GPL-2.0-or-later
++#
++# Copyright (C) 2023 Oracle.  All rights reserved.
++# Author: Darrick J. Wong <djwong@kernel.org>
++#
++# Don't let udisks automount XFS filesystems without even asking a user.
++# This doesn't eliminate filesystems as an attack surface; it only prevents
++# evil maid attacks when all sessions are locked.
++#
++# According to http://storaged.org/doc/udisks2-api/latest/udisks.8.html,
++# supplying UDISKS_AUTO=0 here changes the HintAuto property of the block
++# device abstraction to mean "do not automatically start" (e.g. mount).
++SUBSYSTEM=="block", ENV{ID_FS_TYPE}=="xfs|xfs_external_log", ENV{UDISKS_AUTO}="0"
