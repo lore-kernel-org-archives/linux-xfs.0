@@ -2,94 +2,116 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E34C1C3DA6F
-	for <linux-xfs@archiver.kernel.org>; Fri, 25 Aug 2023 01:09:41 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0C38BEE49B5
+	for <linux-xfs@archiver.kernel.org>; Fri, 25 Aug 2023 01:59:59 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S236772AbjHYBJL (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 24 Aug 2023 21:09:11 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59394 "EHLO
+        id S240351AbjHYB7a (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 24 Aug 2023 21:59:30 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43294 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S236173AbjHYBIq (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 24 Aug 2023 21:08:46 -0400
-Received: from mail-pl1-x62f.google.com (mail-pl1-x62f.google.com [IPv6:2607:f8b0:4864:20::62f])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7A25A19BB
-        for <linux-xfs@vger.kernel.org>; Thu, 24 Aug 2023 18:08:44 -0700 (PDT)
-Received: by mail-pl1-x62f.google.com with SMTP id d9443c01a7336-1bbc87ded50so3875895ad.1
-        for <linux-xfs@vger.kernel.org>; Thu, 24 Aug 2023 18:08:44 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=fromorbit-com.20221208.gappssmtp.com; s=20221208; t=1692925724; x=1693530524;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
-        bh=ziXWjx7YC4C3d8ZyUNW0Hr4Fur9pHQrQwRs9vQGRGzU=;
-        b=das3RpszntX1xQRLyqv29UVlo2GsacmLuvxpRxFi1P0ECJuztS+lryeb+coRs9uL+r
-         V8V2E3o38sLcJgZhZNGzpj2yhipBseCxkbC9Ek2mnTmNoem23EnGylosn+4LOwwC4OAZ
-         AmYKsAf46gMw0ZoVD1a5ICCavo09corrPdheK3aV9GXIZbX0Hs/vz+Hv/p07OM430Vmj
-         bPNrRbYPbLnMaB52NiCBHrIg8ivGWPDQPbV5wgSvHEDe7GF34DG415ofHd4Ceea6fY7U
-         mDwOcWEBejYdH1DrXjE7zHybbQTfFkg9LWepKYygOzhMnjjMzW27Tz163bfcIZTB0XWd
-         mTtQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20221208; t=1692925724; x=1693530524;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=ziXWjx7YC4C3d8ZyUNW0Hr4Fur9pHQrQwRs9vQGRGzU=;
-        b=MVioD1o6gGRVALksGNpaV4Whbc4ewPZe1Y0gAGhgkUDqLlbqcL4Kezzr0lqjUd2r7a
-         Ijx7s/yUKa4fV31MiNlgknRcUpnsc0oHPqgv7j91kPozaJLazC7un09uPcAxVbRZbaO8
-         3S1qXKj3cZ/puiPXy9TYVd037D20h9iwOkJPCWlZREshENLs39j9gMj6fcY1xZP2pTio
-         tRHlQ42HDPBBHl379SKvTTVqO+Fv60JTpkW+ug5NTJ+Qb9BGVJ1n3vDvslEU0UPS5vDx
-         XrYGgIkH/Y515oxvIiPj6Rv/PyzhjaSLBDj1hwtJal8Ypm52Afvj7LLHGIw2MTpGnrlo
-         gkxw==
-X-Gm-Message-State: AOJu0YwyrkP7BrBHtVMVfZ9JDr+o+SARrsUeURUx3JPr8j1qrNNSbWG9
-        rGnFJ59bSYO/LUYcQ2ooknSxPQ==
-X-Google-Smtp-Source: AGHT+IGBRCOu5on+NMAvFDnzVsU3cfktWqbm/naJ6icmWY8/HvcrAR9W1Rz05g8YuMe6dMrUgjZEJg==
-X-Received: by 2002:a17:902:b782:b0:1bf:22b7:86d with SMTP id e2-20020a170902b78200b001bf22b7086dmr14130284pls.3.1692925723984;
-        Thu, 24 Aug 2023 18:08:43 -0700 (PDT)
-Received: from dread.disaster.area (pa49-195-66-88.pa.nsw.optusnet.com.au. [49.195.66.88])
-        by smtp.gmail.com with ESMTPSA id jh13-20020a170903328d00b001bbab888ba0sm315424plb.138.2023.08.24.18.08.43
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 24 Aug 2023 18:08:43 -0700 (PDT)
-Received: from dave by dread.disaster.area with local (Exim 4.96)
-        (envelope-from <david@fromorbit.com>)
-        id 1qZLJZ-0067gm-0v;
-        Fri, 25 Aug 2023 11:08:41 +1000
-Date:   Fri, 25 Aug 2023 11:08:41 +1000
-From:   Dave Chinner <david@fromorbit.com>
-To:     "Darrick J. Wong" <djwong@kernel.org>
-Cc:     chandan.babu@gmail.com, linux-xfs@vger.kernel.org,
-        sandeen@sandeen.net
-Subject: Re: [PATCH 3/3] xfs: log is not writable if we have unknown rocompat
- features
-Message-ID: <ZOf/GRvDI4oy2sF+@dread.disaster.area>
-References: <169291929524.220104.3844042018007786965.stgit@frogsfrogsfrogs>
- <169291931221.220104.3437825303883889120.stgit@frogsfrogsfrogs>
+        with ESMTP id S229797AbjHYB6z (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 24 Aug 2023 21:58:55 -0400
+Received: from zeniv.linux.org.uk (zeniv.linux.org.uk [IPv6:2a03:a000:7:0:5054:ff:fe1c:15ff])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A012B1BD1;
+        Thu, 24 Aug 2023 18:58:53 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=linux.org.uk; s=zeniv-20220401; h=Sender:In-Reply-To:Content-Type:
+        MIME-Version:References:Message-ID:Subject:Cc:To:From:Date:Reply-To:
+        Content-Transfer-Encoding:Content-ID:Content-Description;
+        bh=GqmLor0hgV4H3x7IuvuyaB/m3hDiUm8Yzrd7b9keFg8=; b=bxxlNJ96rsx4L2kKszQ8LF6ai5
+        iNtBNOQ6lzvCMPjrA8d2B5SKpMA8ehWy3QlKX8FPouK+kPzVIEZKx+nUetaQRW5JSdDZgZ40B7sUp
+        hz637OO4Su1eEUgn8Gl/dIA4NQM5w6cHamU5x0h4uc+j+8uZ5OMjiX5dOjWaEByfsbwcty7NjoKFy
+        3XYbSKjy+5wYC+oyCRnyAV7fQupk+8Mu6cgtvaubPBjXdneuinMhpNkKRGbKhUYZMh2pnc+qlSq3t
+        /phSE0e2tky2IO5H3c5MgeU2/J9SsgCPwQOsXy7U4/wxiV2850iLaIsQdHEKmyDTGxCmoecJk/YQG
+        iXEtALAQ==;
+Received: from viro by zeniv.linux.org.uk with local (Exim 4.96 #2 (Red Hat Linux))
+        id 1qZM5z-000dvR-0M;
+        Fri, 25 Aug 2023 01:58:43 +0000
+Date:   Fri, 25 Aug 2023 02:58:43 +0100
+From:   Al Viro <viro@zeniv.linux.org.uk>
+To:     Jan Kara <jack@suse.cz>
+Cc:     linux-fsdevel@vger.kernel.org, linux-block@vger.kernel.org,
+        Christoph Hellwig <hch@infradead.org>,
+        Alasdair Kergon <agk@redhat.com>,
+        Andrew Morton <akpm@linux-foundation.org>,
+        Anna Schumaker <anna@kernel.org>, Chao Yu <chao@kernel.org>,
+        Christian Borntraeger <borntraeger@linux.ibm.com>,
+        "Darrick J. Wong" <djwong@kernel.org>,
+        Dave Kleikamp <shaggy@kernel.org>,
+        David Sterba <dsterba@suse.com>, dm-devel@redhat.com,
+        drbd-dev@lists.linbit.com, Gao Xiang <xiang@kernel.org>,
+        Jack Wang <jinpu.wang@ionos.com>,
+        Jaegeuk Kim <jaegeuk@kernel.org>,
+        jfs-discussion@lists.sourceforge.net,
+        Joern Engel <joern@lazybastard.org>,
+        Joseph Qi <joseph.qi@linux.alibaba.com>,
+        Kent Overstreet <kent.overstreet@gmail.com>,
+        linux-bcache@vger.kernel.org, linux-btrfs@vger.kernel.org,
+        linux-erofs@lists.ozlabs.org, linux-ext4@vger.kernel.org,
+        linux-f2fs-devel@lists.sourceforge.net, linux-mm@kvack.org,
+        linux-mtd@lists.infradead.org, linux-nfs@vger.kernel.org,
+        linux-nilfs@vger.kernel.org, linux-nvme@lists.infradead.org,
+        linux-pm@vger.kernel.org, linux-raid@vger.kernel.org,
+        linux-s390@vger.kernel.org, linux-scsi@vger.kernel.org,
+        linux-xfs@vger.kernel.org,
+        "Md. Haris Iqbal" <haris.iqbal@ionos.com>,
+        Mike Snitzer <snitzer@kernel.org>,
+        Minchan Kim <minchan@kernel.org>, ocfs2-devel@oss.oracle.com,
+        reiserfs-devel@vger.kernel.org,
+        Sergey Senozhatsky <senozhatsky@chromium.org>,
+        Song Liu <song@kernel.org>,
+        Sven Schnelle <svens@linux.ibm.com>,
+        target-devel@vger.kernel.org, Ted Tso <tytso@mit.edu>,
+        Trond Myklebust <trond.myklebust@hammerspace.com>,
+        xen-devel@lists.xenproject.org
+Subject: Re: [PATCH v2 0/29] block: Make blkdev_get_by_*() return handle
+Message-ID: <20230825015843.GB95084@ZenIV>
+References: <20230810171429.31759-1-jack@suse.cz>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <169291931221.220104.3437825303883889120.stgit@frogsfrogsfrogs>
+In-Reply-To: <20230810171429.31759-1-jack@suse.cz>
+Sender: Al Viro <viro@ftp.linux.org.uk>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Thu, Aug 24, 2023 at 04:21:52PM -0700, Darrick J. Wong wrote:
-> From: Darrick J. Wong <djwong@kernel.org>
+On Fri, Aug 11, 2023 at 01:04:31PM +0200, Jan Kara wrote:
+> Hello,
 > 
-> Ever since commit 9e037cb7972f, the superblock write verifier will trip
-> if someone tries to write a superblock with unknown rocompat features.
-> However, we allow ro mounts of a filesystem with unknown rocompat
-> features if the log is clean, except that has been broken for years
-> because the end of an ro mount cleans the log, which logs and writes the
-> superblock.
+> this is a v2 of the patch series which implements the idea of blkdev_get_by_*()
+> calls returning bdev_handle which is then passed to blkdev_put() [1]. This
+> makes the get and put calls for bdevs more obviously matching and allows us to
+> propagate context from get to put without having to modify all the users
+> (again!).  In particular I need to propagate used open flags to blkdev_put() to
+> be able count writeable opens and add support for blocking writes to mounted
+> block devices. I'll send that series separately.
 > 
-> Therefore, don't allow log writes to happen if there are unknown
-> rocompat features set.
+> The series is based on Christian's vfs tree as of yesterday as there is quite
+> some overlap. Patches have passed some reasonable testing - I've tested block
+> changes, md, dm, bcache, xfs, btrfs, ext4, swap. This obviously doesn't cover
+> everything so I'd like to ask respective maintainers to review / test their
+> changes. Thanks! I've pushed out the full branch to:
 > 
-> Fixes: 9e037cb7972f ("xfs: check for unknown v5 feature bits in superblock write verifier")
-> Signed-off-by: Darrick J. Wong <djwong@kernel.org>
+> git://git.kernel.org/pub/scm/linux/kernel/git/jack/linux-fs.git bdev_handle
+> 
+> to ease review / testing.
 
-Yup, this makes sense.
+Hmm...  Completely Insane Idea(tm): how about turning that thing inside out and
+having your bdev_open_by... return an actual opened struct file?
 
-Reviewed-by: Dave Chinner <dchinner@redhat.com>
+After all, we do that for sockets and pipes just fine and that's a whole lot
+hotter area.
 
--- 
-Dave Chinner
-david@fromorbit.com
+Suppose we leave blkdev_open()/blkdev_release() as-is.  No need to mess with
+what we have for normal opened files for block devices.  And have block_open_by_dev()
+that would find bdev, etc., same yours does and shove it into anon file.
+
+Paired with plain fput() - no need to bother with new primitives for closing.
+With a helper returning I_BDEV(bdev_file_inode(file)) to get from those to bdev.
+
+NOTE: I'm not suggesting replacing ->s_bdev with struct file * if we do that -
+we want that value cached, obviously.  Just store both...
+
+Not saying it's a good idea, but... might be interesting to look into.
+Comments?
