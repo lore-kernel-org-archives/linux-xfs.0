@@ -2,29 +2,29 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 90BD4EE49B6
-	for <linux-xfs@archiver.kernel.org>; Fri, 25 Aug 2023 14:06:39 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 02AC0EE49BD
+	for <linux-xfs@archiver.kernel.org>; Fri, 25 Aug 2023 14:06:40 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S245617AbjHYOGK (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        id S245637AbjHYOGK (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
         Fri, 25 Aug 2023 10:06:10 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36896 "EHLO
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51990 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S245686AbjHYOFj (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 25 Aug 2023 10:05:39 -0400
-Received: from out-249.mta1.migadu.com (out-249.mta1.migadu.com [IPv6:2001:41d0:203:375::f9])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0C1C72728;
-        Fri, 25 Aug 2023 07:05:11 -0700 (PDT)
+        with ESMTP id S1343525AbjHYOF4 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 25 Aug 2023 10:05:56 -0400
+Received: from out-242.mta1.migadu.com (out-242.mta1.migadu.com [95.215.58.242])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4CDDA213B
+        for <linux-xfs@vger.kernel.org>; Fri, 25 Aug 2023 07:05:31 -0700 (PDT)
 X-Report-Abuse: Please report any abuse attempt to abuse@migadu.com and include these headers.
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.dev; s=key1;
-        t=1692972304;
+        t=1692972248;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:cc:mime-version:mime-version:
          content-transfer-encoding:content-transfer-encoding:
          in-reply-to:in-reply-to:references:references;
-        bh=xYVJABOgP4/8L2CV4jLRK/KE5S9+YcPlTWp5R3EisXs=;
-        b=mPHInzP0NdE0PARLrMiNVwBxHc2RcZZ9h1TcJI1UDo2PmUbrGHosmFv1DSPqUTrb8M6kqp
-        4M25de/KL1vHeKbgvgWIJvfxIGajB7oK9YCJR4tOksovz6wykfv/qKqEWZZksomlKe2dSa
-        K35zik9gA6wCtduft3CmT9CQD0iaLDk=
+        bh=ZAHRQkTlH3B9Ayy3ByDVW6IFO8x4JKviNIiMKvNnRxw=;
+        b=rqq9t63T1b93nHdvHPb4iPnifbVgNhCPhaGA0/+lVUtdq72oLevGN3oePkSOWgj4tFeMJO
+        883BuPqR+igY5LuYYZDHjdap5mSmKgc54EL0giqHkQRTPmks0t1/1oKfHQU1t1pMyd2ThX
+        7baCMPgFPzeqpA42kG/A+w1RFMlPw/c=
 From:   Hao Xu <hao.xu@linux.dev>
 To:     io-uring@vger.kernel.org, Jens Axboe <axboe@kernel.dk>
 Cc:     Dominique Martinet <asmadeus@codewreck.org>,
@@ -46,9 +46,9 @@ Cc:     Dominique Martinet <asmadeus@codewreck.org>,
         devel@lists.orangefs.org, linux-cifs@vger.kernel.org,
         samba-technical@lists.samba.org, linux-mtd@lists.infradead.org,
         Wanpeng Li <wanpengli@tencent.com>
-Subject: [PATCH 24/29] xfs: support nowait for xfs_buf_read_map()
-Date:   Fri, 25 Aug 2023 21:54:26 +0800
-Message-Id: <20230825135431.1317785-25-hao.xu@linux.dev>
+Subject: [PATCH 22/29] xfs: comment page allocation for nowait case in xfs_buf_find_insert()
+Date:   Fri, 25 Aug 2023 21:54:24 +0800
+Message-Id: <20230825135431.1317785-23-hao.xu@linux.dev>
 In-Reply-To: <20230825135431.1317785-1-hao.xu@linux.dev>
 References: <20230825135431.1317785-1-hao.xu@linux.dev>
 MIME-Version: 1.0
@@ -60,33 +60,26 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: Hao Xu <howeyxu@tencent.com>
 
-This causes xfstests generic/232 hung in umount process, waiting for ail
-push, so I comment it for now, need some hints from xfs folks.
-Not a real patch.
+Add comments for page allocation in nowait case in xfs_buf_find_insert()
 
 Signed-off-by: Hao Xu <howeyxu@tencent.com>
 ---
- fs/xfs/xfs_buf.c | 7 +++++++
- 1 file changed, 7 insertions(+)
+ fs/xfs/xfs_buf.c | 2 ++
+ 1 file changed, 2 insertions(+)
 
 diff --git a/fs/xfs/xfs_buf.c b/fs/xfs/xfs_buf.c
-index cdad80e1ae25..284962a9f31a 100644
+index eb3cd7702545..57bdc4c5dde1 100644
 --- a/fs/xfs/xfs_buf.c
 +++ b/fs/xfs/xfs_buf.c
-@@ -828,6 +828,13 @@ xfs_buf_read_map(
- 	trace_xfs_buf_read(bp, flags, _RET_IP_);
- 
- 	if (!(bp->b_flags & XBF_DONE)) {
-+//		/*
-+//		 * Let's bypass the _xfs_buf_read() for now
-+//		 */
-+//		if (flags & XBF_NOWAIT) {
-+//			xfs_buf_relse(bp);
-+//			return -EAGAIN;
-+//		}
- 		/* Initiate the buffer read and wait. */
- 		XFS_STATS_INC(target->bt_mount, xb_get_read);
- 		bp->b_ops = ops;
+@@ -633,6 +633,8 @@ xfs_buf_find_insert(
+ 	 * allocate the memory from the heap to minimise memory usage. If we
+ 	 * can't get heap memory for these small buffers, we fall back to using
+ 	 * the page allocator.
++	 * xfs_buf_alloc_kmem may return -EAGAIN, let's not return it but turn
++	 * to page allocator as well.
+ 	 */
+ 	if (BBTOB(new_bp->b_length) >= PAGE_SIZE ||
+ 	    xfs_buf_alloc_kmem(new_bp, flags) < 0) {
 -- 
 2.25.1
 
