@@ -2,157 +2,160 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CF5F8EE49B3
-	for <linux-xfs@archiver.kernel.org>; Fri, 25 Aug 2023 13:48:58 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 440CEEE49B5
+	for <linux-xfs@archiver.kernel.org>; Fri, 25 Aug 2023 13:55:59 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S245251AbjHYNs2 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 25 Aug 2023 09:48:28 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41158 "EHLO
+        id S245342AbjHYNzb (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 25 Aug 2023 09:55:31 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45756 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S234813AbjHYNsE (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 25 Aug 2023 09:48:04 -0400
-Received: from smtp-out1.suse.de (smtp-out1.suse.de [195.135.220.28])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id CA72C2136;
-        Fri, 25 Aug 2023 06:47:58 -0700 (PDT)
-Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
-        (No client certificate requested)
-        by smtp-out1.suse.de (Postfix) with ESMTPS id 49AEC21F79;
-        Fri, 25 Aug 2023 13:47:57 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.cz; s=susede2_rsa;
-        t=1692971277; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:content-type:content-type:
+        with ESMTP id S245338AbjHYNzX (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 25 Aug 2023 09:55:23 -0400
+Received: from out-244.mta1.migadu.com (out-244.mta1.migadu.com [95.215.58.244])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9CB75213A
+        for <linux-xfs@vger.kernel.org>; Fri, 25 Aug 2023 06:55:21 -0700 (PDT)
+X-Report-Abuse: Please report any abuse attempt to abuse@migadu.com and include these headers.
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.dev; s=key1;
+        t=1692971717;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:
+         content-transfer-encoding:content-transfer-encoding:
          in-reply-to:in-reply-to:references:references;
-        bh=BpzfsfMiRxmg30OdFnKzv1mOgTevyt5wkPNcyneGwG0=;
-        b=uohLnKnqtpENx2vCia+CF25VunAvqKNxW8Gl/JZPjm2522sG0QzHP89CKm9gvg5uhIQmJN
-        WBEcUX07tygEsfRFeW0MDCmmX2lneinhEWFdq+jYTgqP+tDCYKowqEsMW88igvW28lrojs
-        hfcd/30g2Ie/qrM4mt7e3dhBm3c9V28=
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.cz;
-        s=susede2_ed25519; t=1692971277;
-        h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=BpzfsfMiRxmg30OdFnKzv1mOgTevyt5wkPNcyneGwG0=;
-        b=avw/hNX+TPhBa6q/Pyjq6dsHiVTX81moNODEW9+kRWtkr4cKF/cxPXXUPquXV79uoK0IL4
-        nSbq/d/haJGtPRAQ==
-Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
-        (No client certificate requested)
-        by imap2.suse-dmz.suse.de (Postfix) with ESMTPS id 28033138F9;
-        Fri, 25 Aug 2023 13:47:57 +0000 (UTC)
-Received: from dovecot-director2.suse.de ([192.168.254.65])
-        by imap2.suse-dmz.suse.de with ESMTPSA
-        id UJRbCQ2x6GQZAwAAMHmgww
-        (envelope-from <jack@suse.cz>); Fri, 25 Aug 2023 13:47:57 +0000
-Received: by quack3.suse.cz (Postfix, from userid 1000)
-        id A432FA0774; Fri, 25 Aug 2023 15:47:56 +0200 (CEST)
-Date:   Fri, 25 Aug 2023 15:47:56 +0200
-From:   Jan Kara <jack@suse.cz>
-To:     Al Viro <viro@zeniv.linux.org.uk>
-Cc:     Jan Kara <jack@suse.cz>, linux-fsdevel@vger.kernel.org,
-        linux-block@vger.kernel.org, Christoph Hellwig <hch@infradead.org>,
-        Alasdair Kergon <agk@redhat.com>,
-        Andrew Morton <akpm@linux-foundation.org>,
-        Anna Schumaker <anna@kernel.org>, Chao Yu <chao@kernel.org>,
-        Christian Borntraeger <borntraeger@linux.ibm.com>,
-        "Darrick J. Wong" <djwong@kernel.org>,
-        Dave Kleikamp <shaggy@kernel.org>,
-        David Sterba <dsterba@suse.com>, dm-devel@redhat.com,
-        drbd-dev@lists.linbit.com, Gao Xiang <xiang@kernel.org>,
-        Jack Wang <jinpu.wang@ionos.com>,
-        Jaegeuk Kim <jaegeuk@kernel.org>,
-        jfs-discussion@lists.sourceforge.net,
-        Joern Engel <joern@lazybastard.org>,
-        Joseph Qi <joseph.qi@linux.alibaba.com>,
-        Kent Overstreet <kent.overstreet@gmail.com>,
-        linux-bcache@vger.kernel.org, linux-btrfs@vger.kernel.org,
-        linux-erofs@lists.ozlabs.org, linux-ext4@vger.kernel.org,
-        linux-f2fs-devel@lists.sourceforge.net, linux-mm@kvack.org,
-        linux-mtd@lists.infradead.org, linux-nfs@vger.kernel.org,
-        linux-nilfs@vger.kernel.org, linux-nvme@lists.infradead.org,
-        linux-pm@vger.kernel.org, linux-raid@vger.kernel.org,
-        linux-s390@vger.kernel.org, linux-scsi@vger.kernel.org,
-        linux-xfs@vger.kernel.org,
-        "Md. Haris Iqbal" <haris.iqbal@ionos.com>,
-        Mike Snitzer <snitzer@kernel.org>,
-        Minchan Kim <minchan@kernel.org>, ocfs2-devel@oss.oracle.com,
-        reiserfs-devel@vger.kernel.org,
-        Sergey Senozhatsky <senozhatsky@chromium.org>,
-        Song Liu <song@kernel.org>,
-        Sven Schnelle <svens@linux.ibm.com>,
-        target-devel@vger.kernel.org, Ted Tso <tytso@mit.edu>,
-        Trond Myklebust <trond.myklebust@hammerspace.com>,
-        xen-devel@lists.xenproject.org, Jens Axboe <axboe@kernel.dk>,
-        Christian Brauner <brauner@kernel.org>
-Subject: Re: [PATCH v2 0/29] block: Make blkdev_get_by_*() return handle
-Message-ID: <20230825134756.o3wpq6bogndukn53@quack3>
-References: <20230810171429.31759-1-jack@suse.cz>
- <20230825015843.GB95084@ZenIV>
+        bh=M7eywqhb1fMAXTeyjh6BJsPONBLehGvo8wJ7nQSmBJs=;
+        b=sf0c3BaV5zKRH4Bb8TUwfPopplZAFyQJxSB3uPd/Bru862GHE/6uLEqra/FCbrZoDX4RQi
+        CIrt1XneKgBJ/A8gWA/etx0kgRlpMUcGJTfa14yTcf5Kv3L0Wt8Br8rgcIz1PY9X6AeQ+Q
+        Vrx6zJaXOEDBrQhrS+G7Zr51TGkx4FM=
+From:   Hao Xu <hao.xu@linux.dev>
+To:     io-uring@vger.kernel.org, Jens Axboe <axboe@kernel.dk>
+Cc:     Dominique Martinet <asmadeus@codewreck.org>,
+        Pavel Begunkov <asml.silence@gmail.com>,
+        Christian Brauner <brauner@kernel.org>,
+        Alexander Viro <viro@zeniv.linux.org.uk>,
+        Stefan Roesch <shr@fb.com>, Clay Harris <bugs@claycon.org>,
+        Dave Chinner <david@fromorbit.com>,
+        "Darrick J . Wong" <djwong@kernel.org>,
+        linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org,
+        linux-ext4@vger.kernel.org, linux-cachefs@redhat.com,
+        ecryptfs@vger.kernel.org, linux-nfs@vger.kernel.org,
+        linux-unionfs@vger.kernel.org, bpf@vger.kernel.org,
+        netdev@vger.kernel.org, linux-s390@vger.kernel.org,
+        linux-kernel@vger.kernel.org, linux-block@vger.kernel.org,
+        linux-btrfs@vger.kernel.org, codalist@coda.cs.cmu.edu,
+        linux-f2fs-devel@lists.sourceforge.net, cluster-devel@redhat.com,
+        linux-mm@kvack.org, linux-nilfs@vger.kernel.org,
+        devel@lists.orangefs.org, linux-cifs@vger.kernel.org,
+        samba-technical@lists.samba.org, linux-mtd@lists.infradead.org,
+        Wanpeng Li <wanpengli@tencent.com>
+Subject: [PATCH 01/29] fs: split off vfs_getdents function of getdents64 syscall
+Date:   Fri, 25 Aug 2023 21:54:03 +0800
+Message-Id: <20230825135431.1317785-2-hao.xu@linux.dev>
+In-Reply-To: <20230825135431.1317785-1-hao.xu@linux.dev>
+References: <20230825135431.1317785-1-hao.xu@linux.dev>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20230825015843.GB95084@ZenIV>
+Content-Transfer-Encoding: 8bit
+X-Migadu-Flow: FLOW_OUT
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Fri 25-08-23 02:58:43, Al Viro wrote:
-> On Fri, Aug 11, 2023 at 01:04:31PM +0200, Jan Kara wrote:
-> > Hello,
-> > 
-> > this is a v2 of the patch series which implements the idea of blkdev_get_by_*()
-> > calls returning bdev_handle which is then passed to blkdev_put() [1]. This
-> > makes the get and put calls for bdevs more obviously matching and allows us to
-> > propagate context from get to put without having to modify all the users
-> > (again!).  In particular I need to propagate used open flags to blkdev_put() to
-> > be able count writeable opens and add support for blocking writes to mounted
-> > block devices. I'll send that series separately.
-> > 
-> > The series is based on Christian's vfs tree as of yesterday as there is quite
-> > some overlap. Patches have passed some reasonable testing - I've tested block
-> > changes, md, dm, bcache, xfs, btrfs, ext4, swap. This obviously doesn't cover
-> > everything so I'd like to ask respective maintainers to review / test their
-> > changes. Thanks! I've pushed out the full branch to:
-> > 
-> > git://git.kernel.org/pub/scm/linux/kernel/git/jack/linux-fs.git bdev_handle
-> > 
-> > to ease review / testing.
-> 
-> Hmm...  Completely Insane Idea(tm): how about turning that thing inside out and
-> having your bdev_open_by... return an actual opened struct file?
-> 
-> After all, we do that for sockets and pipes just fine and that's a whole lot
-> hotter area.
-> 
-> Suppose we leave blkdev_open()/blkdev_release() as-is.  No need to mess with
-> what we have for normal opened files for block devices.  And have block_open_by_dev()
-> that would find bdev, etc., same yours does and shove it into anon file.
-> 
-> Paired with plain fput() - no need to bother with new primitives for closing.
-> With a helper returning I_BDEV(bdev_file_inode(file)) to get from those to bdev.
-> 
-> NOTE: I'm not suggesting replacing ->s_bdev with struct file * if we do that -
-> we want that value cached, obviously.  Just store both...
-> 
-> Not saying it's a good idea, but... might be interesting to look into.
-> Comments?
+From: Dominique Martinet <asmadeus@codewreck.org>
 
-I can see the appeal of not having to introduce the new bdev_handle type
-and just using struct file which unifies in-kernel and userspace block
-device opens. But I can see downsides too - the last fput() happening from
-task work makes me a bit nervous whether it will not break something
-somewhere with exclusive bdev opens. Getting from struct file to bdev is
-somewhat harder but I guess a helper like F_BDEV() would solve that just
-fine.
+This splits off the vfs_getdents function from the getdents64 system
+call.
+This will allow io_uring to call the vfs_getdents function.
 
-So besides my last fput() worry about I think this could work and would be
-probably a bit nicer than what I have. But before going and redoing the whole
-series let me gather some more feedback so that we don't go back and forth.
-Christoph, Christian, Jens, any opinion?
+Co-developed-by: Stefan Roesch <shr@fb.com>
+Signed-off-by: Stefan Roesch <shr@fb.com>
+Signed-off-by: Dominique Martinet <asmadeus@codewreck.org>
+Signed-off-by: Hao Xu <howeyxu@tencent.com>
+---
+ fs/internal.h |  8 ++++++++
+ fs/readdir.c  | 34 ++++++++++++++++++++++++++--------
+ 2 files changed, 34 insertions(+), 8 deletions(-)
 
-								Honza
+diff --git a/fs/internal.h b/fs/internal.h
+index f7a3dc111026..b1f66e52d61b 100644
+--- a/fs/internal.h
++++ b/fs/internal.h
+@@ -304,3 +304,11 @@ ssize_t __kernel_write_iter(struct file *file, struct iov_iter *from, loff_t *po
+ struct mnt_idmap *alloc_mnt_idmap(struct user_namespace *mnt_userns);
+ struct mnt_idmap *mnt_idmap_get(struct mnt_idmap *idmap);
+ void mnt_idmap_put(struct mnt_idmap *idmap);
++
++/*
++ * fs/readdir.c
++ */
++struct linux_dirent64;
++
++int vfs_getdents(struct file *file, struct linux_dirent64 __user *dirent,
++		 unsigned int count);
+diff --git a/fs/readdir.c b/fs/readdir.c
+index b264ce60114d..9592259b7e7f 100644
+--- a/fs/readdir.c
++++ b/fs/readdir.c
+@@ -21,6 +21,7 @@
+ #include <linux/unistd.h>
+ #include <linux/compat.h>
+ #include <linux/uaccess.h>
++#include "internal.h"
+ 
+ #include <asm/unaligned.h>
+ 
+@@ -351,10 +352,16 @@ static bool filldir64(struct dir_context *ctx, const char *name, int namlen,
+ 	return false;
+ }
+ 
+-SYSCALL_DEFINE3(getdents64, unsigned int, fd,
+-		struct linux_dirent64 __user *, dirent, unsigned int, count)
++
++/**
++ * vfs_getdents - getdents without fdget
++ * @file    : pointer to file struct of directory
++ * @dirent  : pointer to user directory structure
++ * @count   : size of buffer
++ */
++int vfs_getdents(struct file *file, struct linux_dirent64 __user *dirent,
++		 unsigned int count)
+ {
+-	struct fd f;
+ 	struct getdents_callback64 buf = {
+ 		.ctx.actor = filldir64,
+ 		.count = count,
+@@ -362,11 +369,7 @@ SYSCALL_DEFINE3(getdents64, unsigned int, fd,
+ 	};
+ 	int error;
+ 
+-	f = fdget_pos(fd);
+-	if (!f.file)
+-		return -EBADF;
+-
+-	error = iterate_dir(f.file, &buf.ctx);
++	error = iterate_dir(file, &buf.ctx);
+ 	if (error >= 0)
+ 		error = buf.error;
+ 	if (buf.prev_reclen) {
+@@ -379,6 +382,21 @@ SYSCALL_DEFINE3(getdents64, unsigned int, fd,
+ 		else
+ 			error = count - buf.count;
+ 	}
++	return error;
++}
++
++SYSCALL_DEFINE3(getdents64, unsigned int, fd,
++		struct linux_dirent64 __user *, dirent, unsigned int, count)
++{
++	struct fd f;
++	int error;
++
++	f = fdget_pos(fd);
++	if (!f.file)
++		return -EBADF;
++
++	error = vfs_getdents(f.file, dirent, count);
++
+ 	fdput_pos(f);
+ 	return error;
+ }
 -- 
-Jan Kara <jack@suse.com>
-SUSE Labs, CR
+2.25.1
+
