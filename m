@@ -2,279 +2,239 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2739FEE49B3
-	for <linux-xfs@archiver.kernel.org>; Fri, 25 Aug 2023 15:11:58 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 11758C3DA66
+	for <linux-xfs@archiver.kernel.org>; Fri, 25 Aug 2023 15:14:39 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233350AbjHYPL1 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 25 Aug 2023 11:11:27 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50034 "EHLO
+        id S232667AbjHYPOH (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 25 Aug 2023 11:14:07 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:32888 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S235346AbjHYPLT (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 25 Aug 2023 11:11:19 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id BD010212E;
-        Fri, 25 Aug 2023 08:11:16 -0700 (PDT)
+        with ESMTP id S233770AbjHYPNz (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 25 Aug 2023 11:13:55 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8C24B212A
+        for <linux-xfs@vger.kernel.org>; Fri, 25 Aug 2023 08:13:51 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
          key-exchange X25519 server-signature RSA-PSS (2048 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 4DC3962EC1;
-        Fri, 25 Aug 2023 15:11:16 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id A51CFC433C7;
-        Fri, 25 Aug 2023 15:11:15 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 12C6F6489A
+        for <linux-xfs@vger.kernel.org>; Fri, 25 Aug 2023 15:13:51 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 7530EC433C8;
+        Fri, 25 Aug 2023 15:13:50 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1692976275;
-        bh=Yk82zBo/CO5JhPqCebob30ONG4lnlvLUkORIUTY0ODE=;
+        s=k20201202; t=1692976430;
+        bh=vaXg9H+A3ibKQ+X/tJmIGTw/a35EFaJsT4EheHKoUqQ=;
         h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=NYYVRerqYqnGpLF8blJdmxVpMOEPQLv0528BjC5vvBFsZNAz6HSSGB0+0FSTqmw/7
-         Db7P0mmTsJO1oNY1/ZHWu8NyzK9JrsOCasrcwziq7v3vDEDceQvRopW668kANjqE5f
-         XtN676xYCoJvkIHN5kf251pR26YpJ9SQiBSWWbB3qvKX/kVrAeNfp0cfhulI06kGyS
-         rDA+euytpnrfPPjqUYcEaqjX12Vj0EdMyf1Oo7A6QZMfrIIcEUaHvGZ8srUTvsTFVz
-         en/rpIYHaZ7zIlQRk5TaAyXVnqxQP9imT2Z+zB9eRFWghRFbDct0Qujy/WQpJcsiaU
-         Wx3ea7l8r3I0w==
-Date:   Fri, 25 Aug 2023 08:11:15 -0700
+        b=b8rRdfPfkwwgUHPbc5Jpm0NFpvqPWogFuByNcYYpviLKEkVgYAfyIGRCnv+C53KTT
+         48SQIAlHy2YYhVyXwF1InXZWnEbp2mgLuU/dM9CPMhqqgXrP0OeYxWGxQpY/TYV2KX
+         mDopuZ/hJ+RzK+f9c8Q0rLwn180+DCDpdjxQyRIXJ7B7uvoEAhdq7H7g4zmYUxxoOV
+         mP0X46rt8klBo0G8LIZQHuP6uTxg3Dd/sCvkMAEyR38+6nO1fCB++kqJCITiEaeYnj
+         OmOq8Y/0aDhRbcTWcazh9mPRU5QX84wQk+w2OEBlcAO8DXrYs94gA5NMu4F+DMV1Xc
+         pfdohh5w3AE9g==
+Date:   Fri, 25 Aug 2023 08:13:49 -0700
 From:   "Darrick J. Wong" <djwong@kernel.org>
-To:     Hao Xu <hao.xu@linux.dev>
-Cc:     io-uring@vger.kernel.org, Jens Axboe <axboe@kernel.dk>,
-        Dominique Martinet <asmadeus@codewreck.org>,
-        Pavel Begunkov <asml.silence@gmail.com>,
-        Christian Brauner <brauner@kernel.org>,
-        Alexander Viro <viro@zeniv.linux.org.uk>,
-        Stefan Roesch <shr@fb.com>, Clay Harris <bugs@claycon.org>,
-        Dave Chinner <david@fromorbit.com>,
-        linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org,
-        linux-ext4@vger.kernel.org, linux-cachefs@redhat.com,
-        ecryptfs@vger.kernel.org, linux-nfs@vger.kernel.org,
-        linux-unionfs@vger.kernel.org, bpf@vger.kernel.org,
-        netdev@vger.kernel.org, linux-s390@vger.kernel.org,
-        linux-kernel@vger.kernel.org, linux-block@vger.kernel.org,
-        linux-btrfs@vger.kernel.org, codalist@coda.cs.cmu.edu,
-        linux-f2fs-devel@lists.sourceforge.net, cluster-devel@redhat.com,
-        linux-mm@kvack.org, linux-nilfs@vger.kernel.org,
-        devel@lists.orangefs.org, linux-cifs@vger.kernel.org,
-        samba-technical@lists.samba.org, linux-mtd@lists.infradead.org,
-        Wanpeng Li <wanpengli@tencent.com>
-Subject: Re: [PATCH RFC v5 00/29] io_uring getdents
-Message-ID: <20230825151115.GB17891@frogsfrogsfrogs>
-References: <20230825135431.1317785-1-hao.xu@linux.dev>
+To:     Carlos Maiolino <cem@kernel.org>
+Cc:     Dave Chinner <david@fromorbit.com>,
+        Eric Sandeen <sandeen@redhat.com>,
+        xfs <linux-xfs@vger.kernel.org>
+Subject: Re: [PATCH v2] xfsprogs: don't allow udisks to automount XFS
+ filesystems with no prompt
+Message-ID: <20230825151349.GI17912@frogsfrogsfrogs>
+References: <0RzlZBn72mgpehkONADeAEUyKbeUf5ven3UyPUf4WF8XosPFXoQHsVVCJ5mx5sORNwgNX3-V8yi_p2c8gseawQ==@protonmail.internalid>
+ <20230825000055.GE17912@frogsfrogsfrogs>
+ <20230825122709.3n3tu5ym4f6zjmzu@andromeda>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20230825135431.1317785-1-hao.xu@linux.dev>
+In-Reply-To: <20230825122709.3n3tu5ym4f6zjmzu@andromeda>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Fri, Aug 25, 2023 at 09:54:02PM +0800, Hao Xu wrote:
-> From: Hao Xu <howeyxu@tencent.com>
+On Fri, Aug 25, 2023 at 02:27:09PM +0200, Carlos Maiolino wrote:
+> On Thu, Aug 24, 2023 at 05:00:55PM -0700, Darrick J. Wong wrote:
+> > From: Darrick J. Wong <djwong@kernel.org>
+> > 
+> > The unending stream of syzbot bug reports and overwrought filing of CVEs
+> > for corner case handling (i.e. things that distract from actual user
+> > complaints) in XFS has generated all sorts of of overheated rhetoric
+> > about how every bug is a Serious Security Issue(tm) because anyone can
+> > craft a malicious filesystem on a USB stick, insert the stick into a
+> > victim machine, and mount will trigger a bug in the kernel driver that
+> > leads to some compromise or DoS or something.
+> > 
+> > I thought that nobody would be foolish enough to automount an XFS
+> > filesystem.  What a fool I was!  It turns out that udisks can be told
+> > that it's okay to automount things, and then GNOME will do exactly that.
+> > Including mounting mangled XFS filesystems!
+> > 
+> > <delete angry rant about poor decisionmaking and armchair fs developers
+> > blasting us on X while not actually doing any of the work>
+> > 
+> > Turn off /this/ idiocy by adding a udev rule to tell udisks not to
+> > automount XFS filesystems.
+> > 
+> > This will not stop a logged in user from unwittingly inserting a
+> > malicious storage device and pressing [mount] and getting breached.
+> > This is not a substitute for a thorough audit.  This is not a substitute
+> > for lklfuse.  This does not solve the general problem of in-kernel fs
+> > drivers being a huge attack surface.  I just want a vacation from the
+> > sh*tstorm of bad ideas and threat models that I never agreed to support.
+> > 
 > 
-> This series introduce getdents64 to io_uring, the code logic is similar
-> with the snychronized version's. It first try nowait issue, and offload
-> it to io-wq threads if the first try fails.
+> This seems great, thanks for doing it.
+> 
+> Reviewed-by: Carlos Maiolino <cmaiolino@redhat.com>
+> 
+> /me wonders how long until distros/users start to complain and report problems
+> their OS'es are not automounting xfs :)   /me runs
 
-NAK on the entire series until Jens actually writes down what NOWAIT
-does, so that we can check that the *existing* nowait code branches
-actually behave how he says it should.
+Well you don't have to include the make install steps in the fedora/rhel
+xfsprogs.spec files. :)
 
-https://lore.kernel.org/all/e2d8e5f1-f794-38eb-cecf-ed30c571206b@kernel.dk/
+Judging from the udisks git repo it sounds like they've mostly neutered
+the automount hint to a subset of "commonly" removable devices like usb
+and firewire.
 
 --D
 
 > 
-> Patch1 and Patch2 are some preparation
-> Patch3 supports nowait for xfs getdents code
-> Patch4-11 are vfs change, include adding helpers and trylock for locks
-> Patch12-29 supports nowait for involved xfs journal stuff
-> note, Patch24 and 27 are actually two questions, might be removed later.
-> an xfs test may come later.
+> Carlos
 > 
-> Tests I've done:
-> a liburing test case for functional test:
-> https://github.com/HowHsu/liburing/commit/39dc9a8e19c06a8cebf8c2301b85320eb45c061e?diff=unified
-> 
-> xfstests:
->     test/generic: 1 fails and 171 not run
->     test/xfs: 72 fails and 156 not run
-> run the code before without this patchset, same result.
-> I'll try to make the environment more right to run more tests here.
-> 
-> 
-> Tested it with a liburing performance test:
-> https://github.com/HowHsu/liburing/blob/getdents/test/getdents2.c
-> 
-> The test is controlled by the below script[2] which runs getdents2.t 100
-> times and calulate the avg.
-> The result show that io_uring version is about 2.6% faster:
-> 
-> note:
-> [1] the number of getdents call/request in io_uring and normal sync version
-> are made sure to be same beforehand.
-> 
-> [2] run_getdents.py
-> 
-> ```python3
-> 
-> import subprocess
-> 
-> N = 100
-> sum = 0.0
-> args = ["/data/home/howeyxu/tmpdir", "sync"]
-> 
-> for i in range(N):
->     output = subprocess.check_output(["./liburing/test/getdents2.t"] + args)
->     sum += float(output)
-> 
-> average = sum / N
-> print("Average of sync:", average)
-> 
-> sum = 0.0
-> args = ["/data/home/howeyxu/tmpdir", "iouring"]
-> 
-> for i in range(N):
->     output = subprocess.check_output(["./liburing/test/getdents2.t"] + args)
->     sum += float(output)
-> 
-> average = sum / N
-> print("Average of iouring:", average)
-> 
-> ```
-> 
-> v4->v5:
->  - move atime update to the beginning of getdents operation
->  - trylock for i_rwsem
->  - nowait semantics for involved xfs journal stuff
-> 
-> v3->v4:
->  - add Dave's xfs nowait code and fix a deadlock problem, with some code
->    style tweak.
->  - disable fixed file to avoid a race problem for now
->  - add a test program.
-> 
-> v2->v3:
->  - removed the kernfs patches
->  - add f_pos_lock logic
->  - remove the "reduce last EOF getdents try" optimization since
->    Dominique reports that doesn't make difference
->  - remove the rewind logic, I think the right way is to introduce lseek
->    to io_uring not to patch this logic to getdents.
->  - add Singed-off-by of Stefan Roesch for patch 1 since checkpatch
->    complained that Co-developed-by someone should be accompanied with
->    Signed-off-by same person, I can remove them if Stefan thinks that's
->    not proper.
-> 
-> 
-> Dominique Martinet (1):
->   fs: split off vfs_getdents function of getdents64 syscall
-> 
-> Hao Xu (28):
->   xfs: rename XBF_TRYLOCK to XBF_NOWAIT
->   xfs: add NOWAIT semantics for readdir
->   vfs: add nowait flag for struct dir_context
->   vfs: add a vfs helper for io_uring file pos lock
->   vfs: add file_pos_unlock() for io_uring usage
->   vfs: add a nowait parameter for touch_atime()
->   vfs: add nowait parameter for file_accessed()
->   vfs: move file_accessed() to the beginning of iterate_dir()
->   vfs: add S_NOWAIT for nowait time update
->   vfs: trylock inode->i_rwsem in iterate_dir() to support nowait
->   xfs: enforce GFP_NOIO implicitly during nowait time update
->   xfs: make xfs_trans_alloc() support nowait semantics
->   xfs: support nowait for xfs_log_reserve()
->   xfs: don't wait for free space in xlog_grant_head_check() in nowait
->     case
->   xfs: add nowait parameter for xfs_inode_item_init()
->   xfs: make xfs_trans_ijoin() error out -EAGAIN
->   xfs: set XBF_NOWAIT for xfs_buf_read_map if necessary
->   xfs: support nowait memory allocation in _xfs_buf_alloc()
->   xfs: distinguish error type of memory allocation failure for nowait
->     case
->   xfs: return -EAGAIN when bulk memory allocation fails in nowait case
->   xfs: comment page allocation for nowait case in xfs_buf_find_insert()
->   xfs: don't print warn info for -EAGAIN error in  xfs_buf_get_map()
->   xfs: support nowait for xfs_buf_read_map()
->   xfs: support nowait for xfs_buf_item_init()
->   xfs: return -EAGAIN when nowait meets sync in transaction commit
->   xfs: add a comment for xlog_kvmalloc()
->   xfs: support nowait semantics for xc_ctx_lock in xlog_cil_commit()
->   io_uring: add support for getdents
-> 
->  arch/s390/hypfs/inode.c         |  2 +-
->  block/fops.c                    |  2 +-
->  fs/btrfs/file.c                 |  2 +-
->  fs/btrfs/inode.c                |  2 +-
->  fs/cachefiles/namei.c           |  2 +-
->  fs/coda/dir.c                   |  4 +--
->  fs/ecryptfs/file.c              |  4 +--
->  fs/ext2/file.c                  |  4 +--
->  fs/ext4/file.c                  |  6 ++--
->  fs/f2fs/file.c                  |  4 +--
->  fs/file.c                       | 13 +++++++
->  fs/fuse/dax.c                   |  2 +-
->  fs/fuse/file.c                  |  4 +--
->  fs/gfs2/file.c                  |  2 +-
->  fs/hugetlbfs/inode.c            |  2 +-
->  fs/inode.c                      | 10 +++---
->  fs/internal.h                   |  8 +++++
->  fs/namei.c                      |  4 +--
->  fs/nfsd/vfs.c                   |  2 +-
->  fs/nilfs2/file.c                |  2 +-
->  fs/orangefs/file.c              |  2 +-
->  fs/orangefs/inode.c             |  2 +-
->  fs/overlayfs/file.c             |  2 +-
->  fs/overlayfs/inode.c            |  2 +-
->  fs/pipe.c                       |  2 +-
->  fs/ramfs/file-nommu.c           |  2 +-
->  fs/readdir.c                    | 61 +++++++++++++++++++++++++--------
->  fs/smb/client/cifsfs.c          |  2 +-
->  fs/splice.c                     |  2 +-
->  fs/stat.c                       |  2 +-
->  fs/ubifs/file.c                 |  2 +-
->  fs/udf/file.c                   |  2 +-
->  fs/xfs/libxfs/xfs_alloc.c       |  2 +-
->  fs/xfs/libxfs/xfs_attr_remote.c |  2 +-
->  fs/xfs/libxfs/xfs_btree.c       |  2 +-
->  fs/xfs/libxfs/xfs_da_btree.c    | 16 +++++++++
->  fs/xfs/libxfs/xfs_da_btree.h    |  1 +
->  fs/xfs/libxfs/xfs_dir2_block.c  |  7 ++--
->  fs/xfs/libxfs/xfs_dir2_priv.h   |  2 +-
->  fs/xfs/libxfs/xfs_shared.h      |  2 ++
->  fs/xfs/libxfs/xfs_trans_inode.c | 12 +++++--
->  fs/xfs/scrub/dir.c              |  2 +-
->  fs/xfs/scrub/readdir.c          |  2 +-
->  fs/xfs/scrub/repair.c           |  2 +-
->  fs/xfs/xfs_buf.c                | 43 +++++++++++++++++------
->  fs/xfs/xfs_buf.h                |  4 +--
->  fs/xfs/xfs_buf_item.c           |  9 +++--
->  fs/xfs/xfs_buf_item.h           |  2 +-
->  fs/xfs/xfs_buf_item_recover.c   |  2 +-
->  fs/xfs/xfs_dir2_readdir.c       | 49 ++++++++++++++++++++------
->  fs/xfs/xfs_dquot.c              |  2 +-
->  fs/xfs/xfs_file.c               |  6 ++--
->  fs/xfs/xfs_inode.c              | 27 +++++++++++++++
->  fs/xfs/xfs_inode.h              | 17 +++++----
->  fs/xfs/xfs_inode_item.c         | 12 ++++---
->  fs/xfs/xfs_inode_item.h         |  3 +-
->  fs/xfs/xfs_iops.c               | 31 ++++++++++++++---
->  fs/xfs/xfs_log.c                | 33 ++++++++++++------
->  fs/xfs/xfs_log.h                |  5 +--
->  fs/xfs/xfs_log_cil.c            | 17 +++++++--
->  fs/xfs/xfs_log_priv.h           |  4 +--
->  fs/xfs/xfs_trans.c              | 44 ++++++++++++++++++++----
->  fs/xfs/xfs_trans.h              |  2 +-
->  fs/xfs/xfs_trans_buf.c          | 18 ++++++++--
->  fs/zonefs/file.c                |  4 +--
->  include/linux/file.h            |  7 ++++
->  include/linux/fs.h              | 16 +++++++--
->  include/uapi/linux/io_uring.h   |  1 +
->  io_uring/fs.c                   | 53 ++++++++++++++++++++++++++++
->  io_uring/fs.h                   |  3 ++
->  io_uring/opdef.c                |  8 +++++
->  kernel/bpf/inode.c              |  4 +--
->  mm/filemap.c                    |  8 ++---
->  mm/shmem.c                      |  6 ++--
->  net/unix/af_unix.c              |  4 +--
->  75 files changed, 499 insertions(+), 161 deletions(-)
-> 
-> -- 
-> 2.25.1
-> 
+> > v2: Add external logs to the list too, and document the var we set
+> > 
+> > Signed-off-by: Darrick J. Wong <djwong@kernel.org>
+> > Reviewed-by: Dave Chinner <dchinner@redhat.com>
+> > ---
+> >  configure.ac           |    1 +
+> >  include/builddefs.in   |    2 ++
+> >  m4/package_services.m4 |   42 ++++++++++++++++++++++++++++++++++++++++++
+> >  scrub/Makefile         |   11 +++++++++++
+> >  scrub/xfs.rules        |   13 +++++++++++++
+> >  5 files changed, 69 insertions(+)
+> >  create mode 100644 scrub/xfs.rules
+> > 
+> > diff --git a/configure.ac b/configure.ac
+> > index 58f3b8e2e90..e447121a344 100644
+> > --- a/configure.ac
+> > +++ b/configure.ac
+> > @@ -209,6 +209,7 @@ AC_HAVE_SG_IO
+> >  AC_HAVE_HDIO_GETGEO
+> >  AC_CONFIG_SYSTEMD_SYSTEM_UNIT_DIR
+> >  AC_CONFIG_CROND_DIR
+> > +AC_CONFIG_UDEV_RULE_DIR
+> > 
+> >  if test "$enable_blkid" = yes; then
+> >  AC_HAVE_BLKID_TOPO
+> > diff --git a/include/builddefs.in b/include/builddefs.in
+> > index fb8e239cab2..3318e00316c 100644
+> > --- a/include/builddefs.in
+> > +++ b/include/builddefs.in
+> > @@ -184,6 +184,8 @@ HAVE_SYSTEMD = @have_systemd@
+> >  SYSTEMD_SYSTEM_UNIT_DIR = @systemd_system_unit_dir@
+> >  HAVE_CROND = @have_crond@
+> >  CROND_DIR = @crond_dir@
+> > +HAVE_UDEV = @have_udev@
+> > +UDEV_RULE_DIR = @udev_rule_dir@
+> >  HAVE_LIBURCU_ATOMIC64 = @have_liburcu_atomic64@
+> >  HAVE_MEMFD_CLOEXEC = @have_memfd_cloexec@
+> >  HAVE_MEMFD_NOEXEC_SEAL = @have_memfd_noexec_seal@
+> > diff --git a/m4/package_services.m4 b/m4/package_services.m4
+> > index f2d888a099a..a683ddb93e0 100644
+> > --- a/m4/package_services.m4
+> > +++ b/m4/package_services.m4
+> > @@ -75,3 +75,45 @@ AC_DEFUN([AC_CONFIG_CROND_DIR],
+> >  	AC_SUBST(have_crond)
+> >  	AC_SUBST(crond_dir)
+> >  ])
+> > +
+> > +#
+> > +# Figure out where to put udev rule files
+> > +#
+> > +AC_DEFUN([AC_CONFIG_UDEV_RULE_DIR],
+> > +[
+> > +	AC_REQUIRE([PKG_PROG_PKG_CONFIG])
+> > +	AC_ARG_WITH([udev_rule_dir],
+> > +	  [AS_HELP_STRING([--with-udev-rule-dir@<:@=DIR@:>@],
+> > +		[Install udev rules into DIR.])],
+> > +	  [],
+> > +	  [with_udev_rule_dir=yes])
+> > +	AS_IF([test "x${with_udev_rule_dir}" != "xno"],
+> > +	  [
+> > +		AS_IF([test "x${with_udev_rule_dir}" = "xyes"],
+> > +		  [
+> > +			PKG_CHECK_MODULES([udev], [udev],
+> > +			  [
+> > +				with_udev_rule_dir="$($PKG_CONFIG --variable=udev_dir udev)/rules.d"
+> > +			  ], [
+> > +				with_udev_rule_dir=""
+> > +			  ])
+> > +			m4_pattern_allow([^PKG_(MAJOR|MINOR|BUILD|REVISION)$])
+> > +		  ])
+> > +		AC_MSG_CHECKING([for udev rule dir])
+> > +		udev_rule_dir="${with_udev_rule_dir}"
+> > +		AS_IF([test -n "${udev_rule_dir}"],
+> > +		  [
+> > +			AC_MSG_RESULT(${udev_rule_dir})
+> > +			have_udev="yes"
+> > +		  ],
+> > +		  [
+> > +			AC_MSG_RESULT(no)
+> > +			have_udev="no"
+> > +		  ])
+> > +	  ],
+> > +	  [
+> > +		have_udev="disabled"
+> > +	  ])
+> > +	AC_SUBST(have_udev)
+> > +	AC_SUBST(udev_rule_dir)
+> > +])
+> > diff --git a/scrub/Makefile b/scrub/Makefile
+> > index ab9c2d14832..2b9b8d977f6 100644
+> > --- a/scrub/Makefile
+> > +++ b/scrub/Makefile
+> > @@ -41,6 +41,11 @@ endif
+> > 
+> >  endif	# scrub_prereqs
+> > 
+> > +UDEV_RULES = xfs.rules
+> > +ifeq ($(HAVE_UDEV),yes)
+> > +	INSTALL_SCRUB += install-udev
+> > +endif
+> > +
+> >  HFILES = \
+> >  common.h \
+> >  counter.h \
+> > @@ -180,6 +185,12 @@ install-scrub: default
+> >  	$(INSTALL) -m 755 $(XFS_SCRUB_ALL_PROG) $(PKG_SBIN_DIR)
+> >  	$(INSTALL) -m 755 -d $(PKG_STATE_DIR)
+> > 
+> > +install-udev: $(UDEV_RULES)
+> > +	$(INSTALL) -m 755 -d $(UDEV_RULE_DIR)
+> > +	for i in $(UDEV_RULES); do \
+> > +		$(INSTALL) -m 644 $$i $(UDEV_RULE_DIR)/64-$$i; \
+> > +	done
+> > +
+> >  install-dev:
+> > 
+> >  -include .dep
+> > diff --git a/scrub/xfs.rules b/scrub/xfs.rules
+> > new file mode 100644
+> > index 00000000000..c3f69b3ab90
+> > --- /dev/null
+> > +++ b/scrub/xfs.rules
+> > @@ -0,0 +1,13 @@
+> > +# SPDX-License-Identifier: GPL-2.0-or-later
+> > +#
+> > +# Copyright (C) 2023 Oracle.  All rights reserved.
+> > +# Author: Darrick J. Wong <djwong@kernel.org>
+> > +#
+> > +# Don't let udisks automount XFS filesystems without even asking a user.
+> > +# This doesn't eliminate filesystems as an attack surface; it only prevents
+> > +# evil maid attacks when all sessions are locked.
+> > +#
+> > +# According to http://storaged.org/doc/udisks2-api/latest/udisks.8.html,
+> > +# supplying UDISKS_AUTO=0 here changes the HintAuto property of the block
+> > +# device abstraction to mean "do not automatically start" (e.g. mount).
+> > +SUBSYSTEM=="block", ENV{ID_FS_TYPE}=="xfs|xfs_external_log", ENV{UDISKS_AUTO}="0"
