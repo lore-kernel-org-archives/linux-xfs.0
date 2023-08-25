@@ -2,29 +2,29 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 182A9EE49BC
-	for <linux-xfs@archiver.kernel.org>; Fri, 25 Aug 2023 14:06:40 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id AB0E8EE49B3
+	for <linux-xfs@archiver.kernel.org>; Fri, 25 Aug 2023 14:08:11 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S244466AbjHYOGL (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 25 Aug 2023 10:06:11 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45098 "EHLO
+        id S245737AbjHYOHR (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 25 Aug 2023 10:07:17 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33476 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S245660AbjHYOCo (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 25 Aug 2023 10:02:44 -0400
-Received: from out-245.mta1.migadu.com (out-245.mta1.migadu.com [95.215.58.245])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1A809271F
-        for <linux-xfs@vger.kernel.org>; Fri, 25 Aug 2023 07:02:18 -0700 (PDT)
+        with ESMTP id S239150AbjHYOHG (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 25 Aug 2023 10:07:06 -0400
+Received: from out-245.mta1.migadu.com (out-245.mta1.migadu.com [IPv6:2001:41d0:203:375::f5])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 52AA3272C;
+        Fri, 25 Aug 2023 07:06:39 -0700 (PDT)
 X-Report-Abuse: Please report any abuse attempt to abuse@migadu.com and include these headers.
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.dev; s=key1;
-        t=1692972134;
+        t=1692972353;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:cc:mime-version:mime-version:
          content-transfer-encoding:content-transfer-encoding:
          in-reply-to:in-reply-to:references:references;
-        bh=KWqxpxLv+BWdZ1zPLCWWiPjW3gW3QR8GdaNCgbqB+rA=;
-        b=W3mJ9hHH5VKigloC5U9bTjeZXL1WzXE+if57PbkgslJR/vwxXv7urAz03rnLzn8z8erL5h
-        VCpx6iOsBDC23kpw8k8XGE0qr0cLxvBRgKj1NfrV6YtEtntJMub0qfyQ1aHr3mZsH0O0dL
-        P836PFFsTuNux9i0jwQOVu5ehTDOpZM=
+        bh=4gmh1Yl1nIIBwKe+EGho8dT2/H6COtTrErlOIONZgFQ=;
+        b=gfnw7iot2v83zX2rBTLz1spXwFLJTgZUr3L11o+Xtkb6kMiY2V8isvCmRHCyeGMc3m+Cgc
+        4QGEiH3BvMZ39xF7zrn0F0ImfXnteloPQ0HANELCYOPXSgll6hNjSPIHSsKK/xLoS1sTMP
+        6uHJDx4f8EyPCrO0C+jtU3MY4km0+Ig=
 From:   Hao Xu <hao.xu@linux.dev>
 To:     io-uring@vger.kernel.org, Jens Axboe <axboe@kernel.dk>
 Cc:     Dominique Martinet <asmadeus@codewreck.org>,
@@ -46,9 +46,9 @@ Cc:     Dominique Martinet <asmadeus@codewreck.org>,
         devel@lists.orangefs.org, linux-cifs@vger.kernel.org,
         samba-technical@lists.samba.org, linux-mtd@lists.infradead.org,
         Wanpeng Li <wanpengli@tencent.com>
-Subject: [PATCH 16/29] xfs: add nowait parameter for xfs_inode_item_init()
-Date:   Fri, 25 Aug 2023 21:54:18 +0800
-Message-Id: <20230825135431.1317785-17-hao.xu@linux.dev>
+Subject: [PATCH 27/29] xfs: add a comment for xlog_kvmalloc()
+Date:   Fri, 25 Aug 2023 21:54:29 +0800
+Message-Id: <20230825135431.1317785-28-hao.xu@linux.dev>
 In-Reply-To: <20230825135431.1317785-1-hao.xu@linux.dev>
 References: <20230825135431.1317785-1-hao.xu@linux.dev>
 MIME-Version: 1.0
@@ -60,78 +60,28 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: Hao Xu <howeyxu@tencent.com>
 
-Add nowait parameter for xfs_inode_item_init() to support nowait
-semantics.
+vmalloc() always succeed in 64 bit system?
+Not a real patch.
 
 Signed-off-by: Hao Xu <howeyxu@tencent.com>
 ---
- fs/xfs/libxfs/xfs_trans_inode.c |  3 ++-
- fs/xfs/xfs_inode_item.c         | 12 ++++++++----
- fs/xfs/xfs_inode_item.h         |  3 ++-
- 3 files changed, 12 insertions(+), 6 deletions(-)
+ fs/xfs/xfs_log_cil.c | 3 +++
+ 1 file changed, 3 insertions(+)
 
-diff --git a/fs/xfs/libxfs/xfs_trans_inode.c b/fs/xfs/libxfs/xfs_trans_inode.c
-index cb4796b6e693..e7a8f63c8975 100644
---- a/fs/xfs/libxfs/xfs_trans_inode.c
-+++ b/fs/xfs/libxfs/xfs_trans_inode.c
-@@ -33,7 +33,8 @@ xfs_trans_ijoin(
+diff --git a/fs/xfs/xfs_log_cil.c b/fs/xfs/xfs_log_cil.c
+index f17c1799b3c4..b31830ee36dd 100644
+--- a/fs/xfs/xfs_log_cil.c
++++ b/fs/xfs/xfs_log_cil.c
+@@ -335,6 +335,9 @@ xlog_cil_alloc_shadow_bufs(
+ 			 * storage.
+ 			 */
+ 			kmem_free(lip->li_lv_shadow);
++			/*
++			 * May this be indefinite loop in nowait case?
++			 */
+ 			lv = xlog_kvmalloc(buf_size);
  
- 	ASSERT(xfs_isilocked(ip, XFS_ILOCK_EXCL));
- 	if (ip->i_itemp == NULL)
--		xfs_inode_item_init(ip, ip->i_mount);
-+		xfs_inode_item_init(ip, ip->i_mount,
-+				    tp->t_flags & XFS_TRANS_NOWAIT);
- 	iip = ip->i_itemp;
- 
- 	ASSERT(iip->ili_lock_flags == 0);
-diff --git a/fs/xfs/xfs_inode_item.c b/fs/xfs/xfs_inode_item.c
-index 91c847a84e10..1742920bb4ce 100644
---- a/fs/xfs/xfs_inode_item.c
-+++ b/fs/xfs/xfs_inode_item.c
-@@ -825,21 +825,25 @@ static const struct xfs_item_ops xfs_inode_item_ops = {
- /*
-  * Initialize the inode log item for a newly allocated (in-core) inode.
-  */
--void
-+int
- xfs_inode_item_init(
- 	struct xfs_inode	*ip,
--	struct xfs_mount	*mp)
-+	struct xfs_mount	*mp,
-+	bool			nowait)
- {
- 	struct xfs_inode_log_item *iip;
-+	gfp_t gfp_flags = GFP_KERNEL | (nowait ? 0 : __GFP_NOFAIL);
- 
- 	ASSERT(ip->i_itemp == NULL);
--	iip = ip->i_itemp = kmem_cache_zalloc(xfs_ili_cache,
--					      GFP_KERNEL | __GFP_NOFAIL);
-+	iip = ip->i_itemp = kmem_cache_zalloc(xfs_ili_cache, gfp_flags);
-+	if (!iip)
-+		return -EAGAIN;
- 
- 	iip->ili_inode = ip;
- 	spin_lock_init(&iip->ili_lock);
- 	xfs_log_item_init(mp, &iip->ili_item, XFS_LI_INODE,
- 						&xfs_inode_item_ops);
-+	return 0;
- }
- 
- /*
-diff --git a/fs/xfs/xfs_inode_item.h b/fs/xfs/xfs_inode_item.h
-index 377e06007804..7ba6f8a6b243 100644
---- a/fs/xfs/xfs_inode_item.h
-+++ b/fs/xfs/xfs_inode_item.h
-@@ -42,7 +42,8 @@ static inline int xfs_inode_clean(struct xfs_inode *ip)
- 	return !ip->i_itemp || !(ip->i_itemp->ili_fields & XFS_ILOG_ALL);
- }
- 
--extern void xfs_inode_item_init(struct xfs_inode *, struct xfs_mount *);
-+extern int xfs_inode_item_init(struct xfs_inode *ip, struct xfs_mount *mp,
-+			       bool nowait);
- extern void xfs_inode_item_destroy(struct xfs_inode *);
- extern void xfs_iflush_abort(struct xfs_inode *);
- extern void xfs_iflush_shutdown_abort(struct xfs_inode *);
+ 			memset(lv, 0, xlog_cil_iovec_space(niovecs));
 -- 
 2.25.1
 
