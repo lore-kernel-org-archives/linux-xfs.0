@@ -2,77 +2,158 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CD48FC83F11
-	for <linux-xfs@archiver.kernel.org>; Sat, 26 Aug 2023 14:44:02 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 19763C83F01
+	for <linux-xfs@archiver.kernel.org>; Sat, 26 Aug 2023 14:55:04 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229805AbjHZOnb (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Sat, 26 Aug 2023 10:43:31 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44330 "EHLO
+        id S229479AbjHZOyc (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Sat, 26 Aug 2023 10:54:32 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42042 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229638AbjHZOnM (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sat, 26 Aug 2023 10:43:12 -0400
-Received: from smtp-outbound7.duck.com (smtp-outbound7.duck.com [20.67.222.12])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id CCE81E4E
-        for <linux-xfs@vger.kernel.org>; Sat, 26 Aug 2023 07:43:09 -0700 (PDT)
-MIME-Version: 1.0
-Subject: Re: Moving existing internal journal log to an external device
- (success?)
-References: <E4E991B0-4CAA-4E7A-9AC8-531346EDAEC4.1@smtp-inbound1.duck.com>
- <ZOKQTTxcanMX86Sx@dread.disaster.area>
- <B4C72D86-4CD6-415D-802E-7A225C868E57.1@smtp-inbound1.duck.com>
- <4F83C26B-1841-440B-8A51-0F2BD1EFC825.1@smtp-inbound1.duck.com>
- <26eb469b-89dc-79c7-3d39-2a0e61a9632f@sandeen.net>
- <21DD2F1E-AAB5-48BC-8C9F-7A9A07F3F81C.1@smtp-inbound1.duck.com>
+        with ESMTP id S229607AbjHZOyW (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sat, 26 Aug 2023 10:54:22 -0400
+Received: from mxhk.zte.com.cn (mxhk.zte.com.cn [63.216.63.40])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 47051C9;
+        Sat, 26 Aug 2023 07:54:19 -0700 (PDT)
+Received: from mxct.zte.com.cn (unknown [192.168.251.13])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by mxhk.zte.com.cn (FangMail) with ESMTPS id 4RY0Fz5QxVz8XrRC;
+        Sat, 26 Aug 2023 22:54:15 +0800 (CST)
+Received: from mse-fl1.zte.com.cn (unknown [10.5.228.132])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by mxct.zte.com.cn (FangMail) with ESMTPS id 4RY0Fy4dvkz4xpcv;
+        Sat, 26 Aug 2023 22:54:14 +0800 (CST)
+Received: from szxlzmapp04.zte.com.cn ([10.5.231.166])
+        by mse-fl1.zte.com.cn with SMTP id 37QEs7MJ032786;
+        Sat, 26 Aug 2023 22:54:07 +0800 (+08)
+        (envelope-from cheng.lin130@zte.com.cn)
+Received: from mapi (szxlzmapp02[null])
+        by mapi (Zmail) with MAPI id mid14;
+        Sat, 26 Aug 2023 22:54:11 +0800 (CST)
+Date:   Sat, 26 Aug 2023 22:54:11 +0800 (CST)
+X-Zmail-TransId: 2b0464ea1213ffffffffb89-3eb4b
+X-Mailer: Zmail v1.0
+Message-ID: <202308262254116460369@zte.com.cn>
+In-Reply-To: <20230825180201.GL17912@frogsfrogsfrogs>
+References: 20230824161248.GM11263@frogsfrogsfrogs,202308251632226430480@zte.com.cn,20230825180201.GL17912@frogsfrogsfrogs
+Mime-Version: 1.0
+From:   <cheng.lin130@zte.com.cn>
+To:     <djwong@kernel.org>
+Cc:     <linux-xfs@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+        <jiang.yong5@zte.com.cn>, <wang.liang82@zte.com.cn>,
+        <liu.dong3@zte.com.cn>
+Subject: =?UTF-8?B?UmU6IFtQQVRDSF0geGZzOiBpbnRyb2R1Y2UgcHJvdGVjdGlvbiBmb3IgZHJvcCBubGluaw==?=
 Content-Type: text/plain;
-        charset=US-ASCII;
-        format=flowed
-Content-Transfer-Encoding: 7bit
-To:     Eric Sandeen <sandeen@sandeen.net>
-Cc:     "linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>
-Received: by smtp-inbound1.duck.com; Sat, 26 Aug 2023 10:43:08 -0400
-Message-ID: <4DD03DA0-3770-46BC-B0F8-0B2BD4363F07.1@smtp-inbound1.duck.com>
-Date:   Sat, 26 Aug 2023 10:43:08 -0400
-From:   fk1xdcio@duck.com
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=duck.com; h=From:
- Date: Message-ID: Cc: To: Content-Transfer-Encoding: Content-Type:
- References: Subject: MIME-Version; q=dns/txt; s=postal-KpyQVw;
- t=1693060988; bh=ZDzGcZC3uHT8Yo8EmW1UwjnKqTla4y0UL7GqmRXwhbo=;
- b=G+UpsgWpVCyrOgODSnLm5AgK/G8E33agaxljojGCjnfAVxPIlZZHyn5QFfkMxxmXNCGoyFySm
- 7xQ5ypvC8ICypLb7Yyh3NpsYobl3TY2Rq9gObq411zG8PzYjEPbm/1wDXg2zGPI81VBYyi/iHn9
- j+tpIhUKf9X/fE//1n4TA/I=
+        charset="UTF-8"
+X-MAIL: mse-fl1.zte.com.cn 37QEs7MJ032786
+X-Fangmail-Gw-Spam-Type: 0
+X-Fangmail-Anti-Spam-Filtered: true
+X-Fangmail-MID-QID: 64EA1217.000/4RY0Fz5QxVz8XrRC
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On 2023-08-24 16:22, Eric Sandeen wrote:
-> On 8/21/23 8:07 AM, fk1xdcio@duck.com wrote:
->> Yes, I understand. I was thinking more of an offline utility for doing
->> this but I see why that can't be done in growfs.
->> 
->> So I guess it doesn't really work. This is why I ask the experts. I'll
->> keep experimenting because due to the requirements of needing to
->> physically move disks around, being able to move the log back and 
->> forth
->> from internal to external would be extremely helpful.
->> 
->> Thanks!
-> 
-> Just out of curiosity, what is your use case? Why do you need/want to
-> move logs around?
-
-Every so often I rotate certain drives from production servers to 
-semi-offline servers for testing and verification. The production 
-servers have SSD for cache and the fast external journal but the testing 
-servers do not. The testing servers need to be able to test and verify 
-the filesystem and do periodic synchronization/mirroring but obliviously 
-can't use the original filesystem without the journal. Also some of 
-these drives are moved offsite so being able to put the journal back to 
-its internal position would simplify things.
-
-Of course it would be possible to have extra drives in the testing 
-environment that the logs could be moved to but the testing servers are 
-very physically limited as to what can be hooked up to them so there 
-really isn't enough room or ports for those extra drives. Plus the whole 
-offsite thing.
-
-It's more of a "want to help make life easier" than a hard requirement.
+> On Fri, Aug 25, 2023 at 04:32:22PM +0800, cheng.lin130@zte.com.cn wrote:
+> > > On Thu, Aug 24, 2023 at 03:43:52PM +0800, cheng.lin130@zte.com.cn wrote:
+> > >> From: Cheng Lin <cheng.lin130@zte.com.cn>
+> > >> An dir nlinks overflow which down form 0 to 0xffffffff, cause the
+> > >> directory to become unusable until the next xfs_repair run.
+> > >>
+> > >> Introduce protection for drop nlink to reduce the impact of this.
+> > >> And produce a warning for directory nlink error during remove.
+> > >>
+> > >> Signed-off-by: Cheng Lin <cheng.lin130@zte.com.cn>
+> > >> ---
+> > >>  fs/xfs/xfs_inode.c | 16 +++++++++++++++-
+> > >>  1 file changed, 15 insertions(+), 1 deletion(-)
+> > >>
+> > >> diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
+> > >> index 9e62cc5..536dbe4 100644
+> > >> --- a/fs/xfs/xfs_inode.c
+> > >> +++ b/fs/xfs/xfs_inode.c
+> > >> @@ -919,6 +919,15 @@ STATIC int xfs_iunlink_remove(struct xfs_trans *tp, struct xfs_perag *pag,
+> > >>      xfs_trans_t *tp,
+> > >>      xfs_inode_t *ip)
+> > >>  {
+> > >> +    xfs_mount_t     *mp;
+> > >> +
+> > >> +    if (VFS_I(ip)->i_nlink == 0) {
+> > >> +        mp = ip->i_mount;
+> > >> +        xfs_warn(mp, "%s: Deleting inode %llu with no links.",
+> > >> +             __func__, ip->i_ino);
+> > >> +        return 0;
+> > >> +    }
+> > >> +
+> > >>      xfs_trans_ichgtime(tp, ip, XFS_ICHGTIME_CHG);
+> > >>
+> > >>      drop_nlink(VFS_I(ip));
+> > > I'm not sure how nlink would ever get to 0xFFFFFFFF since the VFS won't
+> > > let a link count exceed s_max_links, and XFS sets that to 0x7FFFFFFF.
+> > > Unless, of course, you did that outside of Linux.
+> > In VFS drop_nlink() only produce a warning, when (inode->i_nlink == 0),
+> > not prevent its self-reduce(inode->__i_nlink--), cause it underflow
+> > from 0 to 0xffffffff.
+> It is interesting that vfs_unlink doesn't check the link counts of
+> either the parent or the child.  Maybe it should, since the VFS
+> link/mkdir/rename functions check.
+> I wonder if this is a historical leftover from the days when the VFS
+> did no checking at all?
+VFS produce a warning means it has discovered an abnormal situation.
+I don't know why it just produce a warning. But, in other fs like
+fuse/nfs/overlayfs/ext4, there is further protection for this situation.
+> > In the old kernel version, this situation was
+> > encountered, but I don't know how it happened. It was already a scene
+> > with directory errors: "Too many links".
+> >
+> >  kernel: WARNING: CPU: 12 PID: 12928 at fs/inode.c:286 drop_nlink+0x3e/0x50
+> >  kernel: CPU: 12 PID: 12928 Comm: gbased Tainted: G        W  OE  ------------ T 3.10.0-693.21.1.el7.x86_64 #1
+> >  kernel: Hardware name: HPE ProLiant BL460c Gen10/ProLiant BL460c Gen10, BIOS I41 01/23/2021
+> >  kernel: Call Trace:-------------------
+> >  kernel: [<ffffffff816c5fce>] dump_stack+0x19/0x1b
+> >  kernel: [<ffffffff8108dfa8>] __warn+0xd8/0x100/*
+> >  kernel: [<ffffffff8108e0ed>] warn_slowpath_null+0x1d/0x20
+> >  kernel: [<ffffffff8122cdfe>] drop_nlink+0x3e/0x50
+> >  kernel: [<ffffffffc03cdc78>] xfs_droplink+0x28/0x60 [xfs]
+> >  kernel: [<ffffffffc03cf87a>] xfs_remove+0x2aa/0x320 [xfs]
+> >  kernel: [<ffffffffc03c9f7a>] xfs_vn_unlink+0x5a/0xa0 [xfs]
+> >  kernel: [<ffffffff8121f19c>] vfs_rmdir+0xdc/0x150
+> >  kernel: [<ffffffff81221e41>] do_rmdir+0x1f1/0x220
+> >  kernel: [<ffffffff81223046>] SyS_rmdir+0x16/0x20
+> >  kernel: [<ffffffff816d86d5>] system_call_fastpath+0x1c/0x21
+> > > That said, why wouldn't you /pin/ the link count at -1U instead of
+> > > allowing it to overflow to zero?
+> > > Could you please take a look at this patch that's waiting in my
+> > > submission queue?
+> > > https://git.kernel.org/pub/scm/linux/kernel/git/djwong/xfs-linux.git/commit/?h=inode-repair-improvements&id=05f5a82efa6395c92038e18e008aaf7154238f27
+> > I think the XFS_NLINK_PINNEED(~0U) can be used prevent Overflow in inc_nlink().
+> > Is it better to compare i_nlink with (0U) in drop_nlink() to prevent Underflow?
+> > (like this patch does, do not make i_nlink underflow from 0 to 0xffffffff)
+> Is it a problem if a directory i_nlink underflows to XFS_NLINK_PINNED?
+> At that point the directory will never be freed, and xfs_repair/scrub
+> get to figure out the correct link count.
+> --D
+Yes, with i_nlink underflows to XFS_NLINK_PINNED, the directory will become
+unavailable until be repaired. But the running service on this directory will be
+failed. If i_nlink is protected from underflow, the use of the directory can continue,
+and the continuity of services is guaranteed. The incorrect count also will be fixed
+at next repair.
+> >
+> > Thanks.
+> > > --D
+> > >> @@ -2442,7 +2451,12 @@ STATIC int xfs_iunlink_remove(struct xfs_trans *tp, struct xfs_perag *pag,
+> > >>       */
+> > >>      if (is_dir) {
+> > >>          ASSERT(VFS_I(ip)->i_nlink >= 2);
+> > >> -        if (VFS_I(ip)->i_nlink != 2) {
+> > >> +        if (VFS_I(ip)->i_nlink < 2) {
+> > >> +            xfs_warn(ip->i_mount,
+> > >> +            "%s: Remove dir (inode %llu) with invalid links.",
+> > >> +                 __func__, ip->i_ino);
+> > >> +        }
+> > >> +        if (VFS_I(ip)->i_nlink > 2) {
+> > >>              error = -ENOTEMPTY;
+> > >>              goto out_trans_cancel;
+> > >>          }
+> > >> --
+> > >> 1.8.3.1
