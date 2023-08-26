@@ -2,153 +2,119 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 293F0C83F11
-	for <linux-xfs@archiver.kernel.org>; Sat, 26 Aug 2023 02:30:05 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id F27B8C83F12
+	for <linux-xfs@archiver.kernel.org>; Sat, 26 Aug 2023 03:09:28 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231752AbjHZC3e (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 25 Aug 2023 22:29:34 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36580 "EHLO
+        id S231415AbjHZDIz (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 25 Aug 2023 23:08:55 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35994 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231722AbjHZC3E (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 25 Aug 2023 22:29:04 -0400
-Received: from zeniv.linux.org.uk (zeniv.linux.org.uk [IPv6:2a03:a000:7:0:5054:ff:fe1c:15ff])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 59B41A8;
-        Fri, 25 Aug 2023 19:29:01 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=linux.org.uk; s=zeniv-20220401; h=Sender:In-Reply-To:Content-Type:
-        MIME-Version:References:Message-ID:Subject:Cc:To:From:Date:Reply-To:
-        Content-Transfer-Encoding:Content-ID:Content-Description;
-        bh=kRz17k12DLtH5ptlx3fiiancvtShyoQwDvuAAOUED4Y=; b=mPm/qZCa7MWW4zdrpIjhXYeIS6
-        8cbIgOvCf/9Y6gIxhhuc7MbOClbX1o3H4gTlXLJmOpOyil1pufLmdD8oxm6VhlxB4x6C/OQmKz1OC
-        9Sg7eN60e8HGn0pn/DtWEZ2zi7uHlJyyQNolWeGdXQEgqn78/62UYsbUB8gsUgOw68YkPTd36+fo0
-        kPzizyM3mKJ55bukbV99w6F1Yx4exn0ELF0EHA2mn4TEClpd2hjjcTiwEbEGv+vsWkEq4IC7ejHjR
-        rO8uE9/3ipL5VpLJjGdd7WJssIdQ5Tj/z+j2E3fQDWI0Qb9TMLDhfRhfBXk5sw2QK4rJI42xn3tDe
-        SBJa1VHw==;
-Received: from viro by zeniv.linux.org.uk with local (Exim 4.96 #2 (Red Hat Linux))
-        id 1qZj2i-0010QB-1S;
-        Sat, 26 Aug 2023 02:28:52 +0000
-Date:   Sat, 26 Aug 2023 03:28:52 +0100
-From:   Al Viro <viro@zeniv.linux.org.uk>
-To:     Jan Kara <jack@suse.cz>
-Cc:     linux-fsdevel@vger.kernel.org, linux-block@vger.kernel.org,
-        Christoph Hellwig <hch@infradead.org>,
-        Alasdair Kergon <agk@redhat.com>,
-        Andrew Morton <akpm@linux-foundation.org>,
-        Anna Schumaker <anna@kernel.org>, Chao Yu <chao@kernel.org>,
-        Christian Borntraeger <borntraeger@linux.ibm.com>,
-        "Darrick J. Wong" <djwong@kernel.org>,
-        Dave Kleikamp <shaggy@kernel.org>,
-        David Sterba <dsterba@suse.com>, dm-devel@redhat.com,
-        drbd-dev@lists.linbit.com, Gao Xiang <xiang@kernel.org>,
-        Jack Wang <jinpu.wang@ionos.com>,
-        Jaegeuk Kim <jaegeuk@kernel.org>,
-        jfs-discussion@lists.sourceforge.net,
-        Joern Engel <joern@lazybastard.org>,
-        Joseph Qi <joseph.qi@linux.alibaba.com>,
-        Kent Overstreet <kent.overstreet@gmail.com>,
-        linux-bcache@vger.kernel.org, linux-btrfs@vger.kernel.org,
-        linux-erofs@lists.ozlabs.org, linux-ext4@vger.kernel.org,
-        linux-f2fs-devel@lists.sourceforge.net, linux-mm@kvack.org,
-        linux-mtd@lists.infradead.org, linux-nfs@vger.kernel.org,
-        linux-nilfs@vger.kernel.org, linux-nvme@lists.infradead.org,
-        linux-pm@vger.kernel.org, linux-raid@vger.kernel.org,
-        linux-s390@vger.kernel.org, linux-scsi@vger.kernel.org,
-        linux-xfs@vger.kernel.org,
-        "Md. Haris Iqbal" <haris.iqbal@ionos.com>,
-        Mike Snitzer <snitzer@kernel.org>,
-        Minchan Kim <minchan@kernel.org>, ocfs2-devel@oss.oracle.com,
-        reiserfs-devel@vger.kernel.org,
-        Sergey Senozhatsky <senozhatsky@chromium.org>,
-        Song Liu <song@kernel.org>,
-        Sven Schnelle <svens@linux.ibm.com>,
-        target-devel@vger.kernel.org, Ted Tso <tytso@mit.edu>,
-        Trond Myklebust <trond.myklebust@hammerspace.com>,
-        xen-devel@lists.xenproject.org, Jens Axboe <axboe@kernel.dk>,
-        Christian Brauner <brauner@kernel.org>
-Subject: Re: [PATCH v2 0/29] block: Make blkdev_get_by_*() return handle
-Message-ID: <20230826022852.GO3390869@ZenIV>
-References: <20230810171429.31759-1-jack@suse.cz>
- <20230825015843.GB95084@ZenIV>
- <20230825134756.o3wpq6bogndukn53@quack3>
+        with ESMTP id S231244AbjHZDIv (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 25 Aug 2023 23:08:51 -0400
+Received: from mail-pg1-x52e.google.com (mail-pg1-x52e.google.com [IPv6:2607:f8b0:4864:20::52e])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 745CF210C
+        for <linux-xfs@vger.kernel.org>; Fri, 25 Aug 2023 20:08:49 -0700 (PDT)
+Received: by mail-pg1-x52e.google.com with SMTP id 41be03b00d2f7-56b2e689968so830973a12.0
+        for <linux-xfs@vger.kernel.org>; Fri, 25 Aug 2023 20:08:49 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=fromorbit-com.20221208.gappssmtp.com; s=20221208; t=1693019328; x=1693624128;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
+        bh=BNKp8DrWFBefTCanp9uY6NFh+95HSJ2HjvYLMWrxpGU=;
+        b=nyQMxN8LTPWlbMpEMk2dSKjZAQhwiNHcPTPWjnhA5HaTH8W/DjYtRz8wfepfK6VFe9
+         KA7d3vzEVBaU8KnOg0f0m5RWjpK4lPj+Y3PRadkK6dQpLaoZwYLCYDchGiF2R5UmsjpY
+         Zdx4wcf6VWB3nxtBudkvjqT/Kl8T+ioJR6nBYH5hkW8cTU/XO/LFImrWRArZks3tgQm2
+         iNeajkF0qvbLUMp5U3xO7orwddIkZmSAAde4Fmjhpky+AbxEQAvn90Z/PotEo/at1aV/
+         o01Ma8AAv+nRx9KW8v39MWuIw+n6W/wsgtfrmE/5HzmUSXaYHtKO3lr0aWIonaAFRLpH
+         6+wg==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20221208; t=1693019328; x=1693624128;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=BNKp8DrWFBefTCanp9uY6NFh+95HSJ2HjvYLMWrxpGU=;
+        b=Zvsu32G99EmpbYc14Li3XXmHODjRh8iMqOpBddJOjJilbof1UfTTc72HB1wc0AYTZt
+         VespuIGXcM0NJiInnPO8zt87oa/RkeWNMYm0Ijg5oKu3yw0mLONnhS/YTJu4FRKA0wXr
+         gBBItibOkIFjXkeS9IA6Z1SJlspDTwgDraDRlrMosCIecBZ4mj8J49Z8YEw2BlLmMpIP
+         tHf5Gz33nnRM5wHvE23q3zAjLs6wCSvYHkMei0Dz523QbZBS8pFdykNisJpKxNR63bVM
+         n8KOXsW50bzAug5LrgAnmBLprPDtlNFtZJ0wE64cSDrU3idsEgP3NRf7aeeEVPTOnSft
+         8JYA==
+X-Gm-Message-State: AOJu0Yyk/ARX8kGkxjRt2wE9gPiTNensXCzYgX5GdXQ12Y6HyENlRILe
+        P0TYU2BRScZb50DwBdHh4ouqRw==
+X-Google-Smtp-Source: AGHT+IF/VvLEuup7cpErA9Kb/Eoc6OxjLLqroSj07r35JzltvMVagdy9UHlyl+D9jPfdGYz1GiT8Jg==
+X-Received: by 2002:a05:6300:8089:b0:14c:e528:3dcd with SMTP id ap9-20020a056300808900b0014ce5283dcdmr442722pzc.55.1693019328111;
+        Fri, 25 Aug 2023 20:08:48 -0700 (PDT)
+Received: from dread.disaster.area (pa49-195-66-88.pa.nsw.optusnet.com.au. [49.195.66.88])
+        by smtp.gmail.com with ESMTPSA id a10-20020a170902ee8a00b001bb9883714dsm2506156pld.143.2023.08.25.20.08.47
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Fri, 25 Aug 2023 20:08:47 -0700 (PDT)
+Received: from dave by dread.disaster.area with local (Exim 4.96)
+        (envelope-from <david@fromorbit.com>)
+        id 1qZjfI-006b3x-1y;
+        Sat, 26 Aug 2023 13:08:44 +1000
+Date:   Sat, 26 Aug 2023 13:08:44 +1000
+From:   Dave Chinner <david@fromorbit.com>
+To:     "Darrick J. Wong" <djwong@kernel.org>
+Cc:     cheng.lin130@zte.com.cn, linux-xfs@vger.kernel.org,
+        linux-kernel@vger.kernel.org, jiang.yong5@zte.com.cn,
+        wang.liang82@zte.com.cn, liu.dong3@zte.com.cn
+Subject: Re: [PATCH] xfs: introduce protection for drop nlink
+Message-ID: <ZOlsvPa2imANAzRu@dread.disaster.area>
+References: <ZOfhoLql0TYiD5JW@dread.disaster.area>
+ <202308251709208292077@zte.com.cn>
+ <20230825175627.GK17912@frogsfrogsfrogs>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20230825134756.o3wpq6bogndukn53@quack3>
-Sender: Al Viro <viro@ftp.linux.org.uk>
+In-Reply-To: <20230825175627.GK17912@frogsfrogsfrogs>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Fri, Aug 25, 2023 at 03:47:56PM +0200, Jan Kara wrote:
-
-> I can see the appeal of not having to introduce the new bdev_handle type
-> and just using struct file which unifies in-kernel and userspace block
-> device opens. But I can see downsides too - the last fput() happening from
-> task work makes me a bit nervous whether it will not break something
-> somewhere with exclusive bdev opens. Getting from struct file to bdev is
-> somewhat harder but I guess a helper like F_BDEV() would solve that just
-> fine.
+On Fri, Aug 25, 2023 at 10:56:27AM -0700, Darrick J. Wong wrote:
+> On Fri, Aug 25, 2023 at 05:09:20PM +0800, cheng.lin130@zte.com.cn wrote:
+> > > On Thu, Aug 24, 2023 at 03:43:52PM +0800, cheng.lin130@zte.com.cn wrote:
+> > >> From: Cheng Lin <cheng.lin130@zte.com.cn>
+> > >> An dir nlinks overflow which down form 0 to 0xffffffff, cause the
+> > >> directory to become unusable until the next xfs_repair run.
+> > > Hmmm.  How does this ever happen?
+> > > IMO, if it does happen, we need to fix whatever bug that causes it
+> > > to happen, not issue a warning and do nothing about the fact we
+> > > just hit a corrupt inode state...
+> > Yes, I'm very agree with your opinion. But I don't know how it happened,
+> > and how to reproduce it.
 > 
-> So besides my last fput() worry about I think this could work and would be
-> probably a bit nicer than what I have. But before going and redoing the whole
-> series let me gather some more feedback so that we don't go back and forth.
-> Christoph, Christian, Jens, any opinion?
+> Wait, is this the result of a customer problem?  Or static analysis?
+> 
+> > >> Introduce protection for drop nlink to reduce the impact of this.
+> > >> And produce a warning for directory nlink error during remove.
+> > >>
+> > >> Signed-off-by: Cheng Lin <cheng.lin130@zte.com.cn>
+> > >> ---
+> > >>  fs/xfs/xfs_inode.c | 16 +++++++++++++++-
+> > >>  1 file changed, 15 insertions(+), 1 deletion(-)
+> > >>
+> > >> diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
+> > >> index 9e62cc5..536dbe4 100644
+> > >> --- a/fs/xfs/xfs_inode.c
+> > >> +++ b/fs/xfs/xfs_inode.c
+> > >> @@ -919,6 +919,15 @@ STATIC int xfs_iunlink_remove(struct xfs_trans *tp, struct xfs_perag *pag,
+> 
+> I'm not sure why your diff program thinks this hunk is from
+> xfs_iunlink_remove, seeing as the line numbers of the chunk point to
+> xfs_droplink.  Maybe that's what's going on in this part of the thread?
 
-Redoing is not an issue - it can be done on top of your series just
-as well.  Async behaviour of fput() might be, but...  need to look
-through the actual users; for a lot of them it's perfectly fine.
+Yes.
 
-FWIW, from a cursory look there appears to be a missing primitive: take
-an opened bdev (or bdev_handle, with your variant, or opened file if we
-go that way eventually) and claim it.
+I don't expect patches to be mangled like this - I generally
+take the hunk prefix to indicate what code is being modified when
+reading patches, not expecting that the hunk is modifying code over
+a thousand lines prior to the function in the prefix...
 
-I mean, look at claim_swapfile() for example:
-                p->bdev = blkdev_get_by_dev(inode->i_rdev,
-                                   FMODE_READ | FMODE_WRITE | FMODE_EXCL, p);
-                if (IS_ERR(p->bdev)) {
-                        error = PTR_ERR(p->bdev);
-                        p->bdev = NULL;
-                        return error;
-                }
-                p->old_block_size = block_size(p->bdev);
-                error = set_blocksize(p->bdev, PAGE_SIZE);
-                if (error < 0)
-                        return error;
-we already have the file opened, and we keep it opened all the way until
-the swapoff(2); here we have noticed that it's a block device and we
-	* open the fucker again (by device number), this time claiming
-it with our swap_info_struct as holder, to be closed at swapoff(2) time
-(just before we close the file)
-	* flip the block size to PAGE_SIZE, to be reverted at swapoff(2)
-time That really looks like it ought to be
-	* take the opened file, see that it's a block device
-	* try to claim it with that holder
-	* on success, flip the block size
-with close_filp() in the swapoff(2) (or failure exit path in swapon(2))
-doing what it would've done for an O_EXCL opened block device.
-The only difference from O_EXCL userland open is that here we would
-end up with holder pointing not to struct file in question, but to our
-swap_info_struct.  It will do the right thing.
+So, yeah, something went very wrong with the generation of this
+patch...
 
-This extra open is entirely due to "well, we need to claim it and the
-primitive that does that happens to be tied to opening"; feels rather
-counter-intuitive.
-
-For that matter, we could add an explicit "unclaim" primitive - might
-be easier to follow.  That would add another example where that could
-be used - in blkdev_bszset() we have an opened block device (it's an
-ioctl, after all), we want to change block size and we *really* don't
-want to have that happen under a mounted filesystem.  So if it's not
-opened exclusive, we do a temporary exclusive open of own and act on
-that instead.   Might as well go for a temporary claim...
-
-BTW, what happens if two threads call ioctl(fd, BLKBSZSET, &n)
-for the same descriptor that happens to have been opened O_EXCL?
-Without O_EXCL they would've been unable to claim the sucker at the same
-time - the holder we are using is the address of a function argument,
-i.e. something that points to kernel stack of the caller.  Those would
-conflict and we either get set_blocksize() calls fully serialized, or
-one of the callers would eat -EBUSY.  Not so in "opened with O_EXCL"
-case - they can very well overlap and IIRC set_blocksize() does *not*
-expect that kind of crap...  It's all under CAP_SYS_ADMIN, so it's not
-as if it was a meaningful security hole anyway, but it does look fishy.
+-Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
