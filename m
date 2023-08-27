@@ -2,201 +2,152 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 30279C83F1B
-	for <linux-xfs@archiver.kernel.org>; Sun, 27 Aug 2023 13:37:22 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2FA16C83F11
+	for <linux-xfs@archiver.kernel.org>; Sun, 27 Aug 2023 15:57:50 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231156AbjH0Ng5 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Sun, 27 Aug 2023 09:36:57 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36702 "EHLO
+        id S229815AbjH0P5P (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Sun, 27 Aug 2023 11:57:15 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51674 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231218AbjH0Ngi (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sun, 27 Aug 2023 09:36:38 -0400
-Received: from out-247.mta1.migadu.com (out-247.mta1.migadu.com [IPv6:2001:41d0:203:375::f7])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 75B0D1B6
-        for <linux-xfs@vger.kernel.org>; Sun, 27 Aug 2023 06:36:28 -0700 (PDT)
-X-Report-Abuse: Please report any abuse attempt to abuse@migadu.com and include these headers.
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.dev; s=key1;
-        t=1693143386;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=NAMtHKwgj081g8lIPVs72MliioxtTYHj7D9CTN85ELE=;
-        b=u7n0PP5Y7t8pZAzx+5IbBJkZfY9azRKTfFVD9LVMOb4Thl+C2D6j0w7wWcMlmzcA25L4C8
-        zEudurGp2ODbmGylA6BsBPQ9105gr52QFoDr/T1ABSTboWT6yVGzUbuarS4ljsFfYjiAKI
-        tkX7K8GiO8NfI2EeGspOsslEfgzb2IA=
-From:   Hao Xu <hao.xu@linux.dev>
-To:     io-uring@vger.kernel.org, Jens Axboe <axboe@kernel.dk>
-Cc:     Dominique Martinet <asmadeus@codewreck.org>,
-        Pavel Begunkov <asml.silence@gmail.com>,
-        Christian Brauner <brauner@kernel.org>,
-        Alexander Viro <viro@zeniv.linux.org.uk>,
-        Stefan Roesch <shr@fb.com>, Clay Harris <bugs@claycon.org>,
-        Dave Chinner <david@fromorbit.com>,
-        "Darrick J . Wong" <djwong@kernel.org>,
-        linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org,
-        linux-ext4@vger.kernel.org, linux-cachefs@redhat.com,
-        ecryptfs@vger.kernel.org, linux-nfs@vger.kernel.org,
-        linux-unionfs@vger.kernel.org, bpf@vger.kernel.org,
-        netdev@vger.kernel.org, linux-s390@vger.kernel.org,
-        linux-kernel@vger.kernel.org, linux-block@vger.kernel.org,
-        linux-btrfs@vger.kernel.org, codalist@coda.cs.cmu.edu,
-        linux-f2fs-devel@lists.sourceforge.net, cluster-devel@redhat.com,
-        linux-mm@kvack.org, linux-nilfs@vger.kernel.org,
-        devel@lists.orangefs.org, linux-cifs@vger.kernel.org,
-        samba-technical@lists.samba.org, linux-mtd@lists.infradead.org,
-        Wanpeng Li <wanpengli@tencent.com>
-Subject: [PATCH 11/11] io_uring: add support for getdents
-Date:   Sun, 27 Aug 2023 21:28:35 +0800
-Message-Id: <20230827132835.1373581-12-hao.xu@linux.dev>
-In-Reply-To: <20230827132835.1373581-1-hao.xu@linux.dev>
-References: <20230827132835.1373581-1-hao.xu@linux.dev>
+        with ESMTP id S229639AbjH0P4u (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sun, 27 Aug 2023 11:56:50 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0935C129;
+        Sun, 27 Aug 2023 08:56:48 -0700 (PDT)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange X25519 server-signature RSA-PSS (2048 bits))
+        (No client certificate requested)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 839CC610D5;
+        Sun, 27 Aug 2023 15:56:47 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id DD62CC433C8;
+        Sun, 27 Aug 2023 15:56:46 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1693151806;
+        bh=jIXUP4UaYNSpzrAMSlnWn/9sFqLYlDzwWHdFP+JMODw=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=mnxTWXWUgMaeLJczFtaFR2sGj2NMDwPKLomMkVJPckCJb7d6DFyZ3r1LG0ikDuR27
+         Ggv77zs+e9JxL0OKjW0QyUTK4ZpaeiEzvKxQrduHr1+tAzCPCUVrVqysc+iwLqQPs1
+         AcAo6yXHFmioVfuRPpnP0tB6RrSKuvsiVSeSL4g/XKgDgfLCPYHrSAb0tYZjGtY6lt
+         O4iwRJlOqZQ7Ty1BK9bcphEsWViSVTJfT0dM+glwPwG2APp5EMmEgFNB6ooVHFjQML
+         P3AbW1CFJsWN2GeTJ+O47uAGsaAtcajy9EvXxzhzlsWU08HxCZhSHelLLyKRgfkmJI
+         uXi4t02tVwt7A==
+Date:   Sun, 27 Aug 2023 08:56:46 -0700
+From:   "Darrick J. Wong" <djwong@kernel.org>
+To:     Zorro Lang <zlang@redhat.com>
+Cc:     xfs <linux-xfs@vger.kernel.org>, fstests <fstests@vger.kernel.org>
+Subject: Re: [RFC PATCH] fstests: test fix for an agbno overflow in
+ __xfs_getfsmap_datadev
+Message-ID: <20230827155646.GA28202@frogsfrogsfrogs>
+References: <20230823010046.GD11286@frogsfrogsfrogs>
+ <20230823010239.GE11263@frogsfrogsfrogs>
+ <20230827130644.nhdi6ihobn5qne3a@zlang-mailbox>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-Migadu-Flow: FLOW_OUT
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20230827130644.nhdi6ihobn5qne3a@zlang-mailbox>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-From: Hao Xu <howeyxu@tencent.com>
+On Sun, Aug 27, 2023 at 09:06:44PM +0800, Zorro Lang wrote:
+> On Tue, Aug 22, 2023 at 06:02:39PM -0700, Darrick J. Wong wrote:
+> > From: Darrick J. Wong <djwong@kernel.org>
+> > 
+> > Dave Chinner reported that xfs/273 fails if the AG size happens to be an
+> > exact power of two.  I traced this to an agbno integer overflow when the
+> > current GETFSMAP call is a continuation of a previous GETFSMAP call, and
+> > the last record returned was non-shareable space at the end of an AG.
+> > 
+> > This is the regression test for that bug.
+> > 
+> > Signed-off-by: Darrick J. Wong <djwong@kernel.org>
+> > ---
+> >  tests/xfs/935     |   55 +++++++++++++++++++++++++++++++++++++++++++++++++++++
+> >  tests/xfs/935.out |    2 ++
+> >  2 files changed, 57 insertions(+)
+> >  create mode 100755 tests/xfs/935
+> >  create mode 100644 tests/xfs/935.out
+> > 
+> > diff --git a/tests/xfs/935 b/tests/xfs/935
+> > new file mode 100755
+> > index 0000000000..a06f2fc8dc
+> > --- /dev/null
+> > +++ b/tests/xfs/935
+> > @@ -0,0 +1,55 @@
+> > +#! /bin/bash
+> > +# SPDX-License-Identifier: GPL-2.0
+> > +# Copyright (c) 2023 Oracle.  All Rights Reserved.
+> > +#
+> > +# FS QA Test 935
+> > +#
+> > +# Regression test for an agbno overflow bug in XFS GETFSMAP involving an
+> > +# fsmap_advance call.  Userspace can indicate that a GETFSMAP call is actually
+> > +# a continuation of a previous call by setting the "low" key to the last record
+> > +# returned by the previous call.
+> > +#
+> > +# If the last record returned by GETFSMAP is a non-shareable extent at the end
+> > +# of an AG and the AG size is exactly a power of two, the startblock in the low
+> > +# key of the rmapbt query can be set to a value larger than EOAG.  When this
+> > +# happens, GETFSMAP will return EINVAL instead of returning records for the
+> > +# next AG.
+> > +#
+> > +. ./common/preamble
+> > +_begin_fstest auto quick fsmap
+> > +
+> > +. ./common/filter
+> > +
+> > +_fixed_by_git_commit kernel XXXXXXXXXXXXX \
+> > +	"xfs: fix an agbno overflow in __xfs_getfsmap_datadev"
+> > +
+> > +# Modify as appropriate.
+> > +_supported_fs generic
+> > +_require_xfs_io_command fsmap
+> > +_require_xfs_scratch_rmapbt
+> > +
+> > +_scratch_mkfs | _filter_mkfs 2> $tmp.mkfs >> $seqres.full
+> > +source $tmp.mkfs
+> > +
+> > +# Find the next power of two agsize smaller than whatever the default is.
+> > +for ((p = 31; p > 0; p--)); do
+> > +	desired_agsize=$((2 ** p))
+> > +	test "$desired_agsize" -lt "$agsize" && break
+> > +done
+> > +
+> > +echo "desired asize=$desired_agsize" >> $seqres.full
+> > +_scratch_mkfs -d "agsize=${desired_agsize}b" | _filter_mkfs 2> $tmp.mkfs >> $seqres.full
+> > +source $tmp.mkfs
+> > +
+> > +test "$desired_agsize" -eq "$agsize" || _notrun "wanted agsize=$desired_agsize, got $agsize"
+> > +
+> > +_scratch_mount
+> > +$XFS_IO_PROG -c 'fsmap -n 1024 -v' $SCRATCH_MNT >> $tmp.big
+> > +$XFS_IO_PROG -c 'fsmap -n 1 -v' $SCRATCH_MNT >> $tmp.small
+> 
+> This line reports:
+> 
+>   xfs_io: xfsctl(XFS_IOC_GETFSMAP) iflags=0x0 ["/mnt/xfstests/scratch"]: Invalid argument
+> 
+> when the test case fails. Is that normal?
 
-This add support for getdents64 to io_uring, acting exactly like the
-syscall: the directory is iterated from it's current's position as
-stored in the file struct, and the file's position is updated exactly as
-if getdents64 had been called.
+Yes.  The attached bugfix should make that go away.
 
-For filesystems that support NOWAIT in iterate_shared(), try to use it
-first; if a user already knows the filesystem they use do not support
-nowait they can force async through IOSQE_ASYNC in the sqe flags,
-avoiding the need to bounce back through a useless EAGAIN return.
+--D
 
-Co-developed-by: Dominique Martinet <asmadeus@codewreck.org>
-Signed-off-by: Dominique Martinet <asmadeus@codewreck.org>
-Signed-off-by: Hao Xu <howeyxu@tencent.com>
----
- include/uapi/linux/io_uring.h |  1 +
- io_uring/fs.c                 | 53 +++++++++++++++++++++++++++++++++++
- io_uring/fs.h                 |  3 ++
- io_uring/opdef.c              |  8 ++++++
- 4 files changed, 65 insertions(+)
-
-diff --git a/include/uapi/linux/io_uring.h b/include/uapi/linux/io_uring.h
-index 8e61f8b7c2ce..3896397a1998 100644
---- a/include/uapi/linux/io_uring.h
-+++ b/include/uapi/linux/io_uring.h
-@@ -240,6 +240,7 @@ enum io_uring_op {
- 	IORING_OP_URING_CMD,
- 	IORING_OP_SEND_ZC,
- 	IORING_OP_SENDMSG_ZC,
-+	IORING_OP_GETDENTS,
- 
- 	/* this goes last, obviously */
- 	IORING_OP_LAST,
-diff --git a/io_uring/fs.c b/io_uring/fs.c
-index f6a69a549fd4..04711feac4e6 100644
---- a/io_uring/fs.c
-+++ b/io_uring/fs.c
-@@ -47,6 +47,12 @@ struct io_link {
- 	int				flags;
- };
- 
-+struct io_getdents {
-+	struct file			*file;
-+	struct linux_dirent64 __user	*dirent;
-+	unsigned int			count;
-+};
-+
- int io_renameat_prep(struct io_kiocb *req, const struct io_uring_sqe *sqe)
- {
- 	struct io_rename *ren = io_kiocb_to_cmd(req, struct io_rename);
-@@ -291,3 +297,50 @@ void io_link_cleanup(struct io_kiocb *req)
- 	putname(sl->oldpath);
- 	putname(sl->newpath);
- }
-+
-+int io_getdents_prep(struct io_kiocb *req, const struct io_uring_sqe *sqe)
-+{
-+	struct io_getdents *gd = io_kiocb_to_cmd(req, struct io_getdents);
-+
-+	if (READ_ONCE(sqe->off))
-+		return -EINVAL;
-+
-+	gd->dirent = u64_to_user_ptr(READ_ONCE(sqe->addr));
-+	gd->count = READ_ONCE(sqe->len);
-+
-+	return 0;
-+}
-+
-+int io_getdents(struct io_kiocb *req, unsigned int issue_flags)
-+{
-+	struct io_getdents *gd = io_kiocb_to_cmd(req, struct io_getdents);
-+	struct file *file = req->file;
-+	unsigned long getdents_flags = 0;
-+	bool force_nonblock = issue_flags & IO_URING_F_NONBLOCK;
-+	bool locked;
-+	int ret;
-+
-+	if (force_nonblock) {
-+		if (!(file->f_flags & O_NONBLOCK) &&
-+		    !(file->f_mode & FMODE_NOWAIT))
-+			return -EAGAIN;
-+
-+		getdents_flags = DIR_CONTEXT_F_NOWAIT;
-+	}
-+
-+	ret = file_pos_lock_nowait(file, force_nonblock);
-+	if (ret == -EAGAIN)
-+		return ret;
-+	locked = ret;
-+
-+	ret = vfs_getdents(file, gd->dirent, gd->count, getdents_flags);
-+	if (locked)
-+		file_pos_unlock(file);
-+
-+	if (ret == -EAGAIN && force_nonblock)
-+		return -EAGAIN;
-+
-+	io_req_set_res(req, ret, 0);
-+	return 0;
-+}
-+
-diff --git a/io_uring/fs.h b/io_uring/fs.h
-index 0bb5efe3d6bb..f83a6f3a678d 100644
---- a/io_uring/fs.h
-+++ b/io_uring/fs.h
-@@ -18,3 +18,6 @@ int io_symlinkat(struct io_kiocb *req, unsigned int issue_flags);
- int io_linkat_prep(struct io_kiocb *req, const struct io_uring_sqe *sqe);
- int io_linkat(struct io_kiocb *req, unsigned int issue_flags);
- void io_link_cleanup(struct io_kiocb *req);
-+
-+int io_getdents_prep(struct io_kiocb *req, const struct io_uring_sqe *sqe);
-+int io_getdents(struct io_kiocb *req, unsigned int issue_flags);
-diff --git a/io_uring/opdef.c b/io_uring/opdef.c
-index 3b9c6489b8b6..1bae6b2a8d0b 100644
---- a/io_uring/opdef.c
-+++ b/io_uring/opdef.c
-@@ -428,6 +428,11 @@ const struct io_issue_def io_issue_defs[] = {
- 		.prep			= io_eopnotsupp_prep,
- #endif
- 	},
-+	[IORING_OP_GETDENTS] = {
-+		.needs_file		= 1,
-+		.prep			= io_getdents_prep,
-+		.issue			= io_getdents,
-+	},
- };
- 
- 
-@@ -648,6 +653,9 @@ const struct io_cold_def io_cold_defs[] = {
- 		.fail			= io_sendrecv_fail,
- #endif
- 	},
-+	[IORING_OP_GETDENTS] = {
-+		.name			= "GETDENTS",
-+	},
- };
- 
- const char *io_uring_get_opcode(u8 opcode)
--- 
-2.25.1
-
+> > +
+> > +diff -Naurpw $tmp.big $tmp.small
+> > +
+> > +# success, all done
+> > +echo Silence is golden
+> > +status=0
+> > +exit
+> > diff --git a/tests/xfs/935.out b/tests/xfs/935.out
+> > new file mode 100644
+> > index 0000000000..1b5422d1e3
+> > --- /dev/null
+> > +++ b/tests/xfs/935.out
+> > @@ -0,0 +1,2 @@
+> > +QA output created by 935
+> > +Silence is golden
+> > 
+> 
