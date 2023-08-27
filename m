@@ -2,168 +2,211 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 555E6C83F10
-	for <linux-xfs@archiver.kernel.org>; Sun, 27 Aug 2023 13:08:23 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id DB5E7C83F1C
+	for <linux-xfs@archiver.kernel.org>; Sun, 27 Aug 2023 13:30:56 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229835AbjH0NHt (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Sun, 27 Aug 2023 09:07:49 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44760 "EHLO
+        id S229672AbjH0NaY (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Sun, 27 Aug 2023 09:30:24 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49834 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229688AbjH0NHj (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sun, 27 Aug 2023 09:07:39 -0400
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5FB8E13D
-        for <linux-xfs@vger.kernel.org>; Sun, 27 Aug 2023 06:06:51 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1693141610;
+        with ESMTP id S230255AbjH0NaO (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sun, 27 Aug 2023 09:30:14 -0400
+Received: from out-253.mta1.migadu.com (out-253.mta1.migadu.com [IPv6:2001:41d0:203:375::fd])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6DC88C6
+        for <linux-xfs@vger.kernel.org>; Sun, 27 Aug 2023 06:30:10 -0700 (PDT)
+X-Report-Abuse: Please report any abuse attempt to abuse@migadu.com and include these headers.
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.dev; s=key1;
+        t=1693143008;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=STC5a0adxidzCn6eTupSaZiKkCcldLdNmhDF9jB7Qeo=;
-        b=ZSTH2JRgmeaYz/vouLNJpxSTrkPO/038dWtVGwNewA+QbjWs+LkF8S/XYZWAETio6nQftd
-        TpFPY3/355FDd1xmJ8tKUiqA4cT8Az3ANKV+WAUS2oJFSrHi3kIn03kl//fvlGqa/iGTs1
-        OLOfGrUcKt61EB94iG2Veq19G5D+T7I=
-Received: from mail-pl1-f200.google.com (mail-pl1-f200.google.com
- [209.85.214.200]) by relay.mimecast.com with ESMTP with STARTTLS
- (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
- us-mta-675-d5r3NGfAMbqlomexptBjDA-1; Sun, 27 Aug 2023 09:06:49 -0400
-X-MC-Unique: d5r3NGfAMbqlomexptBjDA-1
-Received: by mail-pl1-f200.google.com with SMTP id d9443c01a7336-1bde8160fbdso21580845ad.1
-        for <linux-xfs@vger.kernel.org>; Sun, 27 Aug 2023 06:06:48 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20221208; t=1693141608; x=1693746408;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=STC5a0adxidzCn6eTupSaZiKkCcldLdNmhDF9jB7Qeo=;
-        b=lIzkz5JYanIjnklBt8+pLdDX+OMMWTiWIiLrJTqFv1wh6MdM30BSuJzFrS2y1dKz0y
-         R+JDqdHJP6PxeK87Bpbk+RHmKlBRWIGN0RgO+1Fmo5ViH5pQxpqGedQ8yQapZ4Nw2fZe
-         i4nTmPO9blw+hHU9SAAUNca/ab0plRmSGhVjST7AiEMMLteQTBWW36Wz/urFV4WVhEiv
-         3V6ikjFP0qertiuGZIUHprL0ZfuXahBqak+lvm7yB0GOleWHpb+975bGRJ/379oc/0Jr
-         hR97U5HHFbVrAn9axmdEP5i1tciEy04iSoo28EDwiIONTeLEcATRPyJV8dJdXWvsz1Qd
-         oKTQ==
-X-Gm-Message-State: AOJu0YxIQMhJg3mt/WdJV9ti9jVP9nc8enwTouIjPjScMXrK4ryGgCeZ
-        YdxAdg7pA2dFu268BSiSe3V1TcwTQPYaXItM9MB/WlY3+oUcKDGBxqspBPUa6mIK+my3xIvTp4W
-        GgiCJ+yxhkby6SnQDfj74
-X-Received: by 2002:a17:903:2304:b0:1c0:d17a:bff2 with SMTP id d4-20020a170903230400b001c0d17abff2mr6190408plh.20.1693141608092;
-        Sun, 27 Aug 2023 06:06:48 -0700 (PDT)
-X-Google-Smtp-Source: AGHT+IEvt0ZHIXBl9R6bsLyW34zYMDWYUHCeRZvZ0dWnQqjVg5niFN9VRwHGgNf3gcMbFfFnkJpBxg==
-X-Received: by 2002:a17:903:2304:b0:1c0:d17a:bff2 with SMTP id d4-20020a170903230400b001c0d17abff2mr6190391plh.20.1693141607743;
-        Sun, 27 Aug 2023 06:06:47 -0700 (PDT)
-Received: from zlang-mailbox ([43.228.180.230])
-        by smtp.gmail.com with ESMTPSA id jf6-20020a170903268600b001b869410ed2sm5228331plb.72.2023.08.27.06.06.46
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Sun, 27 Aug 2023 06:06:47 -0700 (PDT)
-Date:   Sun, 27 Aug 2023 21:06:44 +0800
-From:   Zorro Lang <zlang@redhat.com>
-To:     "Darrick J. Wong" <djwong@kernel.org>
-Cc:     xfs <linux-xfs@vger.kernel.org>, fstests <fstests@vger.kernel.org>
-Subject: Re: [RFC PATCH] fstests: test fix for an agbno overflow in
- __xfs_getfsmap_datadev
-Message-ID: <20230827130644.nhdi6ihobn5qne3a@zlang-mailbox>
-References: <20230823010046.GD11286@frogsfrogsfrogs>
- <20230823010239.GE11263@frogsfrogsfrogs>
+         to:to:cc:cc:mime-version:mime-version:
+         content-transfer-encoding:content-transfer-encoding;
+        bh=hH9Z1s3VyDbNI+o0MhVSnq4vtAmGphAu/NP9Lh4Iqho=;
+        b=D4glas+PskglEfull56Ie/EaUGDVyzdgOX1ZIuTOt4hIdaNgYSKi8HuTaE82KbnTe8VrVg
+        RYQOGm2sDsmgjyTzfYWA88b8swvCAy1S+AvUnlRILYK1CLtNBRiYb+57DIqLl/tE9VNEa0
+        45zeea98vHJXfwWbVyE91LWfpk5toEg=
+From:   Hao Xu <hao.xu@linux.dev>
+To:     io-uring@vger.kernel.org, Jens Axboe <axboe@kernel.dk>
+Cc:     Dominique Martinet <asmadeus@codewreck.org>,
+        Pavel Begunkov <asml.silence@gmail.com>,
+        Christian Brauner <brauner@kernel.org>,
+        Alexander Viro <viro@zeniv.linux.org.uk>,
+        Stefan Roesch <shr@fb.com>, Clay Harris <bugs@claycon.org>,
+        Dave Chinner <david@fromorbit.com>,
+        "Darrick J . Wong" <djwong@kernel.org>,
+        linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org,
+        linux-ext4@vger.kernel.org, linux-cachefs@redhat.com,
+        ecryptfs@vger.kernel.org, linux-nfs@vger.kernel.org,
+        linux-unionfs@vger.kernel.org, bpf@vger.kernel.org,
+        netdev@vger.kernel.org, linux-s390@vger.kernel.org,
+        linux-kernel@vger.kernel.org, linux-block@vger.kernel.org,
+        linux-btrfs@vger.kernel.org, codalist@coda.cs.cmu.edu,
+        linux-f2fs-devel@lists.sourceforge.net, cluster-devel@redhat.com,
+        linux-mm@kvack.org, linux-nilfs@vger.kernel.org,
+        devel@lists.orangefs.org, linux-cifs@vger.kernel.org,
+        samba-technical@lists.samba.org, linux-mtd@lists.infradead.org,
+        Wanpeng Li <wanpengli@tencent.com>
+Subject: [PATCH v6 00/11] io_uring getdents
+Date:   Sun, 27 Aug 2023 21:28:24 +0800
+Message-Id: <20230827132835.1373581-1-hao.xu@linux.dev>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20230823010239.GE11263@frogsfrogsfrogs>
+Content-Transfer-Encoding: 8bit
+X-Migadu-Flow: FLOW_OUT
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Tue, Aug 22, 2023 at 06:02:39PM -0700, Darrick J. Wong wrote:
-> From: Darrick J. Wong <djwong@kernel.org>
-> 
-> Dave Chinner reported that xfs/273 fails if the AG size happens to be an
-> exact power of two.  I traced this to an agbno integer overflow when the
-> current GETFSMAP call is a continuation of a previous GETFSMAP call, and
-> the last record returned was non-shareable space at the end of an AG.
-> 
-> This is the regression test for that bug.
-> 
-> Signed-off-by: Darrick J. Wong <djwong@kernel.org>
-> ---
->  tests/xfs/935     |   55 +++++++++++++++++++++++++++++++++++++++++++++++++++++
->  tests/xfs/935.out |    2 ++
->  2 files changed, 57 insertions(+)
->  create mode 100755 tests/xfs/935
->  create mode 100644 tests/xfs/935.out
-> 
-> diff --git a/tests/xfs/935 b/tests/xfs/935
-> new file mode 100755
-> index 0000000000..a06f2fc8dc
-> --- /dev/null
-> +++ b/tests/xfs/935
-> @@ -0,0 +1,55 @@
-> +#! /bin/bash
-> +# SPDX-License-Identifier: GPL-2.0
-> +# Copyright (c) 2023 Oracle.  All Rights Reserved.
-> +#
-> +# FS QA Test 935
-> +#
-> +# Regression test for an agbno overflow bug in XFS GETFSMAP involving an
-> +# fsmap_advance call.  Userspace can indicate that a GETFSMAP call is actually
-> +# a continuation of a previous call by setting the "low" key to the last record
-> +# returned by the previous call.
-> +#
-> +# If the last record returned by GETFSMAP is a non-shareable extent at the end
-> +# of an AG and the AG size is exactly a power of two, the startblock in the low
-> +# key of the rmapbt query can be set to a value larger than EOAG.  When this
-> +# happens, GETFSMAP will return EINVAL instead of returning records for the
-> +# next AG.
-> +#
-> +. ./common/preamble
-> +_begin_fstest auto quick fsmap
-> +
-> +. ./common/filter
-> +
-> +_fixed_by_git_commit kernel XXXXXXXXXXXXX \
-> +	"xfs: fix an agbno overflow in __xfs_getfsmap_datadev"
-> +
-> +# Modify as appropriate.
-> +_supported_fs generic
-> +_require_xfs_io_command fsmap
-> +_require_xfs_scratch_rmapbt
-> +
-> +_scratch_mkfs | _filter_mkfs 2> $tmp.mkfs >> $seqres.full
-> +source $tmp.mkfs
-> +
-> +# Find the next power of two agsize smaller than whatever the default is.
-> +for ((p = 31; p > 0; p--)); do
-> +	desired_agsize=$((2 ** p))
-> +	test "$desired_agsize" -lt "$agsize" && break
-> +done
-> +
-> +echo "desired asize=$desired_agsize" >> $seqres.full
-> +_scratch_mkfs -d "agsize=${desired_agsize}b" | _filter_mkfs 2> $tmp.mkfs >> $seqres.full
-> +source $tmp.mkfs
-> +
-> +test "$desired_agsize" -eq "$agsize" || _notrun "wanted agsize=$desired_agsize, got $agsize"
-> +
-> +_scratch_mount
-> +$XFS_IO_PROG -c 'fsmap -n 1024 -v' $SCRATCH_MNT >> $tmp.big
-> +$XFS_IO_PROG -c 'fsmap -n 1 -v' $SCRATCH_MNT >> $tmp.small
+From: Hao Xu <howeyxu@tencent.com>
 
-This line reports:
+This series introduce getdents64 to io_uring, the code logic is similar
+with the snychronized version's. It first try nowait issue, and offload
+it to io-wq threads if the first try fails.
 
-  xfs_io: xfsctl(XFS_IOC_GETFSMAP) iflags=0x0 ["/mnt/xfstests/scratch"]: Invalid argument
+Patch1 and Patch2 are some preparation
+Patch3 supports nowait for xfs getdents code
+Patch4-11 are vfs change, include adding helpers and trylock for locks
 
-when the test case fails. Is that normal?
+Tests I've done:
+A liburing test case for functional test:
+https://github.com/HowHsu/liburing/commit/39dc9a8e19c06a8cebf8c2301b85320eb45c061e?diff=unified
 
-> +
-> +diff -Naurpw $tmp.big $tmp.small
-> +
-> +# success, all done
-> +echo Silence is golden
-> +status=0
-> +exit
-> diff --git a/tests/xfs/935.out b/tests/xfs/935.out
-> new file mode 100644
-> index 0000000000..1b5422d1e3
-> --- /dev/null
-> +++ b/tests/xfs/935.out
-> @@ -0,0 +1,2 @@
-> +QA output created by 935
-> +Silence is golden
-> 
+Tested it with a liburing performance test:
+https://github.com/HowHsu/liburing/blob/getdents/test/getdents2.c
+
+The test is controlled by the below script[2] which runs getdents2.t 100
+times and calulate the avg.
+The result show that io_uring version is about 2.6% faster:
+
+note:
+[1] the number of getdents call/request in io_uring and normal sync version
+are made sure to be same beforehand.
+
+[2] run_getdents.py
+
+```python3
+
+import subprocess
+
+N = 100
+sum = 0.0
+args = ["/data/home/howeyxu/tmpdir", "sync"]
+
+for i in range(N):
+    output = subprocess.check_output(["./liburing/test/getdents2.t"] + args)
+    sum += float(output)
+
+average = sum / N
+print("Average of sync:", average)
+
+sum = 0.0
+args = ["/data/home/howeyxu/tmpdir", "iouring"]
+
+for i in range(N):
+    output = subprocess.check_output(["./liburing/test/getdents2.t"] + args)
+    sum += float(output)
+
+average = sum / N
+print("Average of iouring:", average)
+
+```
+
+v5->v6:
+ - remove xfs journal stuff since there are fundamental issues in the
+   design.
+
+v4->v5:
+ - move atime update to the beginning of getdents operation
+ - trylock for i_rwsem
+ - nowait semantics for involved xfs journal stuff
+
+v3->v4:
+ - add Dave's xfs nowait code and fix a deadlock problem, with some code
+   style tweak.
+ - disable fixed file to avoid a race problem for now
+ - add a test program.
+
+v2->v3:
+ - removed the kernfs patches
+ - add f_pos_lock logic
+ - remove the "reduce last EOF getdents try" optimization since
+   Dominique reports that doesn't make difference
+ - remove the rewind logic, I think the right way is to introduce lseek
+   to io_uring not to patch this logic to getdents.
+ - add Singed-off-by of Stefan Roesch for patch 1 since checkpatch
+   complained that Co-developed-by someone should be accompanied with
+   Signed-off-by same person, I can remove them if Stefan thinks that's
+   not proper.
+
+
+Dominique Martinet (1):
+  fs: split off vfs_getdents function of getdents64 syscall
+
+Hao Xu (10):
+  xfs: add NOWAIT semantics for readdir
+  vfs: add nowait flag for struct dir_context
+  vfs: add a vfs helper for io_uring file pos lock
+  vfs: add file_pos_unlock() for io_uring usage
+  vfs: add a nowait parameter for touch_atime()
+  vfs: add nowait parameter for file_accessed()
+  vfs: move file_accessed() to the beginning of iterate_dir()
+  vfs: error out -EAGAIN if atime needs to be updated
+  vfs: trylock inode->i_rwsem in iterate_dir() to support nowait
+  io_uring: add support for getdents
+
+ arch/s390/hypfs/inode.c        |  2 +-
+ block/fops.c                   |  2 +-
+ fs/btrfs/file.c                |  2 +-
+ fs/btrfs/inode.c               |  2 +-
+ fs/cachefiles/namei.c          |  2 +-
+ fs/coda/dir.c                  |  4 +--
+ fs/ecryptfs/file.c             |  4 +--
+ fs/ext2/file.c                 |  4 +--
+ fs/ext4/file.c                 |  6 ++--
+ fs/f2fs/file.c                 |  4 +--
+ fs/file.c                      | 13 ++++++++
+ fs/fuse/dax.c                  |  2 +-
+ fs/fuse/file.c                 |  4 +--
+ fs/gfs2/file.c                 |  2 +-
+ fs/hugetlbfs/inode.c           |  2 +-
+ fs/inode.c                     | 10 ++++--
+ fs/internal.h                  |  8 +++++
+ fs/namei.c                     |  4 +--
+ fs/nfsd/vfs.c                  |  2 +-
+ fs/nilfs2/file.c               |  2 +-
+ fs/orangefs/file.c             |  2 +-
+ fs/orangefs/inode.c            |  2 +-
+ fs/overlayfs/file.c            |  2 +-
+ fs/overlayfs/inode.c           |  2 +-
+ fs/pipe.c                      |  2 +-
+ fs/ramfs/file-nommu.c          |  2 +-
+ fs/readdir.c                   | 61 ++++++++++++++++++++++++++--------
+ fs/smb/client/cifsfs.c         |  2 +-
+ fs/splice.c                    |  2 +-
+ fs/stat.c                      |  2 +-
+ fs/ubifs/file.c                |  2 +-
+ fs/udf/file.c                  |  2 +-
+ fs/xfs/libxfs/xfs_da_btree.c   | 16 +++++++++
+ fs/xfs/libxfs/xfs_da_btree.h   |  1 +
+ fs/xfs/libxfs/xfs_dir2_block.c |  7 ++--
+ fs/xfs/libxfs/xfs_dir2_priv.h  |  2 +-
+ fs/xfs/scrub/dir.c             |  2 +-
+ fs/xfs/scrub/readdir.c         |  2 +-
+ fs/xfs/xfs_dir2_readdir.c      | 49 +++++++++++++++++++++------
+ fs/xfs/xfs_file.c              |  6 ++--
+ fs/xfs/xfs_inode.c             | 27 +++++++++++++++
+ fs/xfs/xfs_inode.h             | 17 ++++++----
+ fs/zonefs/file.c               |  4 +--
+ include/linux/file.h           |  7 ++++
+ include/linux/fs.h             | 15 +++++++--
+ include/uapi/linux/io_uring.h  |  1 +
+ io_uring/fs.c                  | 53 +++++++++++++++++++++++++++++
+ io_uring/fs.h                  |  3 ++
+ io_uring/opdef.c               |  8 +++++
+ kernel/bpf/inode.c             |  4 +--
+ mm/filemap.c                   |  8 ++---
+ mm/shmem.c                     |  6 ++--
+ net/unix/af_unix.c             |  4 +--
+ 53 files changed, 310 insertions(+), 96 deletions(-)
+
+-- 
+2.25.1
 
