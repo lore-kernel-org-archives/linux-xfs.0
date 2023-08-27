@@ -2,118 +2,168 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3CD76C71153
-	for <linux-xfs@archiver.kernel.org>; Sun, 27 Aug 2023 01:10:55 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 555E6C83F10
+	for <linux-xfs@archiver.kernel.org>; Sun, 27 Aug 2023 13:08:23 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229693AbjH0BKZ (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Sat, 26 Aug 2023 21:10:25 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35442 "EHLO
+        id S229835AbjH0NHt (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Sun, 27 Aug 2023 09:07:49 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44760 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229649AbjH0BJw (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sat, 26 Aug 2023 21:09:52 -0400
-Received: from mail-il1-x135.google.com (mail-il1-x135.google.com [IPv6:2607:f8b0:4864:20::135])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0F090139
-        for <linux-xfs@vger.kernel.org>; Sat, 26 Aug 2023 18:09:51 -0700 (PDT)
-Received: by mail-il1-x135.google.com with SMTP id e9e14a558f8ab-34ca1bcb48fso8141015ab.2
-        for <linux-xfs@vger.kernel.org>; Sat, 26 Aug 2023 18:09:51 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20221208; t=1693098590; x=1693703390;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=oNzf/kPKblCk/sBSSnEminSaBnSS+1DbUtPdDGpFQ4o=;
-        b=h8dsekPiALkeRTePqP58rwYnC+34rt+ujQCTnn/gcZeODHDUmxUk1NKqEAq8fiNJXs
-         a28hHgQhGgknMy9xdUvM36l0P6wGyc1iaY3ulkGNdk5z35PWxxvTnisLtZlNDUp3mR9X
-         JCL64gVf102qmLcVQ7bjDoQkuLTvn5f02DmX5/2sgmiiWQ6EgAKOavF5jB87MIwGn3Rm
-         yqutCfi5uvWn1/sTQOQ460ysQVyq52BJpNAOuEW0l0Bq4FIU+CUDlrR0AZMd+UYdv5A9
-         04Vy7s73jbzqLiJkxnJ7MovaEC8csq3S4PYdk7x9k2xsZiHaCGCGjSS5kOkD7AAg6/a3
-         5sgQ==
+        with ESMTP id S229688AbjH0NHj (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sun, 27 Aug 2023 09:07:39 -0400
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5FB8E13D
+        for <linux-xfs@vger.kernel.org>; Sun, 27 Aug 2023 06:06:51 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1693141610;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=STC5a0adxidzCn6eTupSaZiKkCcldLdNmhDF9jB7Qeo=;
+        b=ZSTH2JRgmeaYz/vouLNJpxSTrkPO/038dWtVGwNewA+QbjWs+LkF8S/XYZWAETio6nQftd
+        TpFPY3/355FDd1xmJ8tKUiqA4cT8Az3ANKV+WAUS2oJFSrHi3kIn03kl//fvlGqa/iGTs1
+        OLOfGrUcKt61EB94iG2Veq19G5D+T7I=
+Received: from mail-pl1-f200.google.com (mail-pl1-f200.google.com
+ [209.85.214.200]) by relay.mimecast.com with ESMTP with STARTTLS
+ (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
+ us-mta-675-d5r3NGfAMbqlomexptBjDA-1; Sun, 27 Aug 2023 09:06:49 -0400
+X-MC-Unique: d5r3NGfAMbqlomexptBjDA-1
+Received: by mail-pl1-f200.google.com with SMTP id d9443c01a7336-1bde8160fbdso21580845ad.1
+        for <linux-xfs@vger.kernel.org>; Sun, 27 Aug 2023 06:06:48 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20221208; t=1693098590; x=1693703390;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=oNzf/kPKblCk/sBSSnEminSaBnSS+1DbUtPdDGpFQ4o=;
-        b=c8P41ajESrAAQYUtzzP23C9NPAwBz3XC8f/pAzTDZBKBTO3orQfYh0zlBK1DMl03Jz
-         tjwXcjccbuAMbqfVllwtwzMvB/6BLP0h6B42V2iH/vcvQdR1ZyNgWW4w8rb7QdfIYKqt
-         tnZsamz2nA87QzbaqPdFViWs9IETF+pQewEmoQqlS3G+saZ/5ZaEknXxN83PnWbzut5u
-         KzEsuqoiQ3QSMn77N5R8tHJevmauISX7mYfZ+TWomqIS8+auwtCypYCxibW7ipjqfpGn
-         7kMOg8UewEGDYzL8BEjA695sMMMn3V4oSXirattZbjxCHurIWDCE8kQgKtjCaNr8GFJB
-         /PFQ==
-X-Gm-Message-State: AOJu0YyXH/3tLKOHsqIsCgqRMYJwS+FUmuocK7JxB6n9EKNYXJuWayxH
-        RQ8yNAWwsrDrKAI3lmxGxTYujBHylgCsTqtmjoLq62BdVkU=
-X-Google-Smtp-Source: AGHT+IHjIhU/y6Ku7W24lJPERgmBfF+4EZ0TnUlPAnuSEBdNRcLOq9+oCosi0j2CFvDtaYT3hjrTMl1z0kWtm3bm7q8=
-X-Received: by 2002:a05:6e02:1607:b0:348:f1c6:b978 with SMTP id
- t7-20020a056e02160700b00348f1c6b978mr16286901ilu.0.1693098589875; Sat, 26 Aug
- 2023 18:09:49 -0700 (PDT)
+        d=1e100.net; s=20221208; t=1693141608; x=1693746408;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=STC5a0adxidzCn6eTupSaZiKkCcldLdNmhDF9jB7Qeo=;
+        b=lIzkz5JYanIjnklBt8+pLdDX+OMMWTiWIiLrJTqFv1wh6MdM30BSuJzFrS2y1dKz0y
+         R+JDqdHJP6PxeK87Bpbk+RHmKlBRWIGN0RgO+1Fmo5ViH5pQxpqGedQ8yQapZ4Nw2fZe
+         i4nTmPO9blw+hHU9SAAUNca/ab0plRmSGhVjST7AiEMMLteQTBWW36Wz/urFV4WVhEiv
+         3V6ikjFP0qertiuGZIUHprL0ZfuXahBqak+lvm7yB0GOleWHpb+975bGRJ/379oc/0Jr
+         hR97U5HHFbVrAn9axmdEP5i1tciEy04iSoo28EDwiIONTeLEcATRPyJV8dJdXWvsz1Qd
+         oKTQ==
+X-Gm-Message-State: AOJu0YxIQMhJg3mt/WdJV9ti9jVP9nc8enwTouIjPjScMXrK4ryGgCeZ
+        YdxAdg7pA2dFu268BSiSe3V1TcwTQPYaXItM9MB/WlY3+oUcKDGBxqspBPUa6mIK+my3xIvTp4W
+        GgiCJ+yxhkby6SnQDfj74
+X-Received: by 2002:a17:903:2304:b0:1c0:d17a:bff2 with SMTP id d4-20020a170903230400b001c0d17abff2mr6190408plh.20.1693141608092;
+        Sun, 27 Aug 2023 06:06:48 -0700 (PDT)
+X-Google-Smtp-Source: AGHT+IEvt0ZHIXBl9R6bsLyW34zYMDWYUHCeRZvZ0dWnQqjVg5niFN9VRwHGgNf3gcMbFfFnkJpBxg==
+X-Received: by 2002:a17:903:2304:b0:1c0:d17a:bff2 with SMTP id d4-20020a170903230400b001c0d17abff2mr6190391plh.20.1693141607743;
+        Sun, 27 Aug 2023 06:06:47 -0700 (PDT)
+Received: from zlang-mailbox ([43.228.180.230])
+        by smtp.gmail.com with ESMTPSA id jf6-20020a170903268600b001b869410ed2sm5228331plb.72.2023.08.27.06.06.46
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Sun, 27 Aug 2023 06:06:47 -0700 (PDT)
+Date:   Sun, 27 Aug 2023 21:06:44 +0800
+From:   Zorro Lang <zlang@redhat.com>
+To:     "Darrick J. Wong" <djwong@kernel.org>
+Cc:     xfs <linux-xfs@vger.kernel.org>, fstests <fstests@vger.kernel.org>
+Subject: Re: [RFC PATCH] fstests: test fix for an agbno overflow in
+ __xfs_getfsmap_datadev
+Message-ID: <20230827130644.nhdi6ihobn5qne3a@zlang-mailbox>
+References: <20230823010046.GD11286@frogsfrogsfrogs>
+ <20230823010239.GE11263@frogsfrogsfrogs>
 MIME-Version: 1.0
-References: <CAB-bdyQVJdTcaaDLWmm+rsW_U6FLF3qCTqLEKLkM6hOgk09uZQ@mail.gmail.com>
- <20221129213436.GG3600936@dread.disaster.area> <CAB-bdyQw7hRpRPn9JTnpyJt1sA9vPDTVsUTmrhke-EMmGfaHBA@mail.gmail.com>
- <ZOl2IHacyqSUFgfi@dread.disaster.area>
-In-Reply-To: <ZOl2IHacyqSUFgfi@dread.disaster.area>
-From:   Shawn <neutronsharc@gmail.com>
-Date:   Sat, 26 Aug 2023 18:09:13 -0700
-Message-ID: <CAB-bdyRTKNQeukwjuB=fCT91BDO5uTJzA_Y7msOdEPBDAURbzg@mail.gmail.com>
-Subject: Re: Do I have to fsync after aio_write finishes (with fallocate
- preallocation) ?
-To:     Dave Chinner <david@fromorbit.com>
-Cc:     linux-xfs@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20230823010239.GE11263@frogsfrogsfrogs>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-xfs_io shows "extsize" as 0.   The data bsize is always 4096.  What's
-the implication of a 0 extsize?
+On Tue, Aug 22, 2023 at 06:02:39PM -0700, Darrick J. Wong wrote:
+> From: Darrick J. Wong <djwong@kernel.org>
+> 
+> Dave Chinner reported that xfs/273 fails if the AG size happens to be an
+> exact power of two.  I traced this to an agbno integer overflow when the
+> current GETFSMAP call is a continuation of a previous GETFSMAP call, and
+> the last record returned was non-shareable space at the end of an AG.
+> 
+> This is the regression test for that bug.
+> 
+> Signed-off-by: Darrick J. Wong <djwong@kernel.org>
+> ---
+>  tests/xfs/935     |   55 +++++++++++++++++++++++++++++++++++++++++++++++++++++
+>  tests/xfs/935.out |    2 ++
+>  2 files changed, 57 insertions(+)
+>  create mode 100755 tests/xfs/935
+>  create mode 100644 tests/xfs/935.out
+> 
+> diff --git a/tests/xfs/935 b/tests/xfs/935
+> new file mode 100755
+> index 0000000000..a06f2fc8dc
+> --- /dev/null
+> +++ b/tests/xfs/935
+> @@ -0,0 +1,55 @@
+> +#! /bin/bash
+> +# SPDX-License-Identifier: GPL-2.0
+> +# Copyright (c) 2023 Oracle.  All Rights Reserved.
+> +#
+> +# FS QA Test 935
+> +#
+> +# Regression test for an agbno overflow bug in XFS GETFSMAP involving an
+> +# fsmap_advance call.  Userspace can indicate that a GETFSMAP call is actually
+> +# a continuation of a previous call by setting the "low" key to the last record
+> +# returned by the previous call.
+> +#
+> +# If the last record returned by GETFSMAP is a non-shareable extent at the end
+> +# of an AG and the AG size is exactly a power of two, the startblock in the low
+> +# key of the rmapbt query can be set to a value larger than EOAG.  When this
+> +# happens, GETFSMAP will return EINVAL instead of returning records for the
+> +# next AG.
+> +#
+> +. ./common/preamble
+> +_begin_fstest auto quick fsmap
+> +
+> +. ./common/filter
+> +
+> +_fixed_by_git_commit kernel XXXXXXXXXXXXX \
+> +	"xfs: fix an agbno overflow in __xfs_getfsmap_datadev"
+> +
+> +# Modify as appropriate.
+> +_supported_fs generic
+> +_require_xfs_io_command fsmap
+> +_require_xfs_scratch_rmapbt
+> +
+> +_scratch_mkfs | _filter_mkfs 2> $tmp.mkfs >> $seqres.full
+> +source $tmp.mkfs
+> +
+> +# Find the next power of two agsize smaller than whatever the default is.
+> +for ((p = 31; p > 0; p--)); do
+> +	desired_agsize=$((2 ** p))
+> +	test "$desired_agsize" -lt "$agsize" && break
+> +done
+> +
+> +echo "desired asize=$desired_agsize" >> $seqres.full
+> +_scratch_mkfs -d "agsize=${desired_agsize}b" | _filter_mkfs 2> $tmp.mkfs >> $seqres.full
+> +source $tmp.mkfs
+> +
+> +test "$desired_agsize" -eq "$agsize" || _notrun "wanted agsize=$desired_agsize, got $agsize"
+> +
+> +_scratch_mount
+> +$XFS_IO_PROG -c 'fsmap -n 1024 -v' $SCRATCH_MNT >> $tmp.big
+> +$XFS_IO_PROG -c 'fsmap -n 1 -v' $SCRATCH_MNT >> $tmp.small
 
-$ sudo xfs_io -c 'stat' /mnt/S48BNW0K700192T/
-fd.path =3D "/mnt/S48BNW0K700192T/"
-fd.flags =3D non-sync,non-direct,read-write
-stat.ino =3D 64
-stat.type =3D directory
-stat.size =3D 81
-stat.blocks =3D 0
-fsxattr.xflags =3D 0x0 [--------------]
-fsxattr.projid =3D 0
-fsxattr.extsize =3D 0    <=3D=3D=3D=3D  0
-fsxattr.nextents =3D 0
-fsxattr.naextents =3D 0
-dioattr.mem =3D 0x200
-dioattr.miniosz =3D 512
-dioattr.maxiosz =3D 2147483136
+This line reports:
 
-On Fri, Aug 25, 2023 at 8:48=E2=80=AFPM Dave Chinner <david@fromorbit.com> =
-wrote:
->
-> On Mon, Aug 21, 2023 at 12:01:27PM -0700, Shawn wrote:
-> > Hello Dave,
-> > Thank you for your detailed reply.  That fallocate() thing makes a lot =
-of sense.
-> >
-> > I want to figure out the default extent size in my evn.  But
-> > "xfs_info" doesn't seem to output it? (See below output)
->
-> extent size hints are an inode property, not a filesystem geometry
-> property.  xfs_info only queries the later, it knows nothing about
-> the former.
->
-> # xfs_io -c 'stat' </path/to/mnt>
->
-> will tell you what the default extent size hint that will be
-> inherited by newly created sub-directories and files
-> (fsxattr.extsize).
->
-> >
-> > Also, I want to use this cmd to set the default extent size hint, is
-> > this correct?
-> > $ sudo mkfs.xfs -d extszinherit=3D256    <=3D=3D the data block is 4KB,=
-  so
-> > 256 is 1MB.
->
-> Yes.
->
-> -Dave.
-> --
-> Dave Chinner
-> david@fromorbit.com
+  xfs_io: xfsctl(XFS_IOC_GETFSMAP) iflags=0x0 ["/mnt/xfstests/scratch"]: Invalid argument
+
+when the test case fails. Is that normal?
+
+> +
+> +diff -Naurpw $tmp.big $tmp.small
+> +
+> +# success, all done
+> +echo Silence is golden
+> +status=0
+> +exit
+> diff --git a/tests/xfs/935.out b/tests/xfs/935.out
+> new file mode 100644
+> index 0000000000..1b5422d1e3
+> --- /dev/null
+> +++ b/tests/xfs/935.out
+> @@ -0,0 +1,2 @@
+> +QA output created by 935
+> +Silence is golden
+> 
+
