@@ -2,99 +2,125 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8B4C7C83F15
-	for <linux-xfs@archiver.kernel.org>; Mon, 28 Aug 2023 14:23:17 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D13D8C83F15
+	for <linux-xfs@archiver.kernel.org>; Mon, 28 Aug 2023 14:26:24 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231758AbjH1OWt (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 28 Aug 2023 10:22:49 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40572 "EHLO
+        id S229896AbjH1OZy (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 28 Aug 2023 10:25:54 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44580 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231808AbjH1OWb (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 28 Aug 2023 10:22:31 -0400
-Received: from bombadil.infradead.org (bombadil.infradead.org [IPv6:2607:7c80:54:3::133])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6E341C7;
-        Mon, 28 Aug 2023 07:22:28 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Type:MIME-Version
-        :References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
-        Content-Transfer-Encoding:Content-ID:Content-Description;
-        bh=9E44iiUNdZH1ZPxuMNvAhOTWH2tumtFNFWSYch117Sg=; b=nSz5L3dUuVsvh674z9OKAS8bJp
-        zYSu+GQXXg9k+ExZpIBbHRWqabXZwd02n9vS97tlwdx5M9rbbC+J+KEnpZl7StHzVI1lt44f9QJWZ
-        RhCLKSbzGCi4P76AWaT4yrVyFudAE8f1mHvZ/9LKJK5CDCAoQ07psSi8X80pfTQ2D+AXZbR9MC8+S
-        wR1nAR5ReTWrG92vtaPega/Mum3q/1hkkMbL2GzcSxnC+t33sPMa720/D25kUK/+Hg62OBp9KLF6I
-        aTXMdhkDY6yJQndP4Hyxm4zXDD+MmNGYu1+zD8ZvsnvzkuVZZ62wZGz7/VRA0T/x0Dhn8TItnvE/O
-        R0TRfFaA==;
-Received: from hch by bombadil.infradead.org with local (Exim 4.96 #2 (Red Hat Linux))
-        id 1qad8H-009hsP-1H;
-        Mon, 28 Aug 2023 14:22:21 +0000
-Date:   Mon, 28 Aug 2023 07:22:21 -0700
-From:   Christoph Hellwig <hch@infradead.org>
-To:     Jan Kara <jack@suse.cz>
-Cc:     Al Viro <viro@zeniv.linux.org.uk>, linux-fsdevel@vger.kernel.org,
-        linux-block@vger.kernel.org, Christoph Hellwig <hch@infradead.org>,
-        Alasdair Kergon <agk@redhat.com>,
-        Andrew Morton <akpm@linux-foundation.org>,
-        Anna Schumaker <anna@kernel.org>, Chao Yu <chao@kernel.org>,
-        Christian Borntraeger <borntraeger@linux.ibm.com>,
-        "Darrick J. Wong" <djwong@kernel.org>,
-        Dave Kleikamp <shaggy@kernel.org>,
-        David Sterba <dsterba@suse.com>, dm-devel@redhat.com,
-        drbd-dev@lists.linbit.com, Gao Xiang <xiang@kernel.org>,
-        Jack Wang <jinpu.wang@ionos.com>,
-        Jaegeuk Kim <jaegeuk@kernel.org>,
-        jfs-discussion@lists.sourceforge.net,
-        Joern Engel <joern@lazybastard.org>,
-        Joseph Qi <joseph.qi@linux.alibaba.com>,
-        Kent Overstreet <kent.overstreet@gmail.com>,
-        linux-bcache@vger.kernel.org, linux-btrfs@vger.kernel.org,
-        linux-erofs@lists.ozlabs.org, linux-ext4@vger.kernel.org,
-        linux-f2fs-devel@lists.sourceforge.net, linux-mm@kvack.org,
-        linux-mtd@lists.infradead.org, linux-nfs@vger.kernel.org,
-        linux-nilfs@vger.kernel.org, linux-nvme@lists.infradead.org,
-        linux-pm@vger.kernel.org, linux-raid@vger.kernel.org,
-        linux-s390@vger.kernel.org, linux-scsi@vger.kernel.org,
-        linux-xfs@vger.kernel.org,
-        "Md. Haris Iqbal" <haris.iqbal@ionos.com>,
-        Mike Snitzer <snitzer@kernel.org>,
-        Minchan Kim <minchan@kernel.org>, ocfs2-devel@oss.oracle.com,
-        reiserfs-devel@vger.kernel.org,
-        Sergey Senozhatsky <senozhatsky@chromium.org>,
-        Song Liu <song@kernel.org>,
-        Sven Schnelle <svens@linux.ibm.com>,
-        target-devel@vger.kernel.org, Ted Tso <tytso@mit.edu>,
-        Trond Myklebust <trond.myklebust@hammerspace.com>,
-        xen-devel@lists.xenproject.org, Jens Axboe <axboe@kernel.dk>,
-        Christian Brauner <brauner@kernel.org>
-Subject: Re: [PATCH v2 0/29] block: Make blkdev_get_by_*() return handle
-Message-ID: <ZOytnQV0CH+vEIrr@infradead.org>
-References: <20230810171429.31759-1-jack@suse.cz>
- <20230825015843.GB95084@ZenIV>
- <20230825134756.o3wpq6bogndukn53@quack3>
+        with ESMTP id S230017AbjH1OZ3 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 28 Aug 2023 10:25:29 -0400
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9EEF7E7
+        for <linux-xfs@vger.kernel.org>; Mon, 28 Aug 2023 07:24:47 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1693232686;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=oG9oNvWY8HbPPjSVQ5F379whN33FwG9oaIZiEO9AxAs=;
+        b=gVVk+ymi9HLl82xGyiYgJ/73Afi9+c3HhTzIRsdp8R9Ne8xZ0rUnVi9uRwKcOVATcuXQH/
+        RtrG5/xVsO99S4y3OGrXPyn9/2kY3BYRij5kR3ndibsX+ijkKtJFmpV442VGQWj27xfwL+
+        kBNQcf113IMpvtqGLMynXmc55Ml10GU=
+Received: from mail-pj1-f69.google.com (mail-pj1-f69.google.com
+ [209.85.216.69]) by relay.mimecast.com with ESMTP with STARTTLS
+ (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
+ us-mta-590-4mzjGF13NVWOLkVGCNHEoQ-1; Mon, 28 Aug 2023 10:24:45 -0400
+X-MC-Unique: 4mzjGF13NVWOLkVGCNHEoQ-1
+Received: by mail-pj1-f69.google.com with SMTP id 98e67ed59e1d1-26d4ca4ba09so3590123a91.3
+        for <linux-xfs@vger.kernel.org>; Mon, 28 Aug 2023 07:24:45 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20221208; t=1693232684; x=1693837484;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=oG9oNvWY8HbPPjSVQ5F379whN33FwG9oaIZiEO9AxAs=;
+        b=N7hCtcxff5E2gwDUv+fyFtXjg1tFTA96ptchMgZRIA9K5eTyy0358GDkIE8sr3dda8
+         zxW+5l4e1eltyNDLetWu7g91X+LGiIfEtG/DmGJbP+2gqvj0ONTCgB7uN0e4VPdfbyS3
+         9Bx0wQ2firF/c8R6Ipmus0im0+QNBRth2vq3oFfojYcjTlNUMX1H1UEnvsbkJZSI0gD3
+         t0H/1ZszTAOJ4TvR4T7Y+kE0Hcn+2TOI7ZzR3glWkWaAecBpS2jAs8H8hhl0+STD1s3D
+         K0xtzO4qNJeYqpQZy1v1HsNrjmBrX1/3IXw8XKdrjle7XfWsXuRmUAsb0Qnt/M63TBp4
+         soOw==
+X-Gm-Message-State: AOJu0YznVSmpkmVot7kh8rxuiXdZ1fO+R44hjRdllzrYCkIfID6+Ivap
+        UrjMlpqUsiNv5dwVoUSKGhI7ge1Ys29nxcIkbxCs5Z8tP/rXWiKpKj0JXBIgLKJfjQ4qv6LxLy9
+        x1gArcJIw8Pl9JHrERojoqydLpvN54Ks=
+X-Received: by 2002:a17:90a:c783:b0:26b:66f7:c9be with SMTP id gn3-20020a17090ac78300b0026b66f7c9bemr23094463pjb.10.1693232684253;
+        Mon, 28 Aug 2023 07:24:44 -0700 (PDT)
+X-Google-Smtp-Source: AGHT+IEHw8WJwCvI5EfN/K6jpKiuJZTgN8gBUA24FVVc6qQdhuqFjXon24rig77aFBY/JPBmOE8zTw==
+X-Received: by 2002:a17:90a:c783:b0:26b:66f7:c9be with SMTP id gn3-20020a17090ac78300b0026b66f7c9bemr23094446pjb.10.1693232683937;
+        Mon, 28 Aug 2023 07:24:43 -0700 (PDT)
+Received: from zlang-mailbox ([43.228.180.230])
+        by smtp.gmail.com with ESMTPSA id n4-20020a17090a394400b002684b837d88sm7735272pjf.14.2023.08.28.07.24.42
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Mon, 28 Aug 2023 07:24:43 -0700 (PDT)
+Date:   Mon, 28 Aug 2023 22:24:40 +0800
+From:   Zorro Lang <zlang@redhat.com>
+To:     Dave Chinner <david@fromorbit.com>,
+        "Darrick J. Wong" <djwong@kernel.org>
+Cc:     xfs <linux-xfs@vger.kernel.org>, fstests <fstests@vger.kernel.org>
+Subject: Re: [RFC PATCH] fstests: test fix for an agbno overflow in
+ __xfs_getfsmap_datadev
+Message-ID: <20230828142440.q5p4r2gphukyfnbu@zlang-mailbox>
+References: <20230823010046.GD11286@frogsfrogsfrogs>
+ <20230823010239.GE11263@frogsfrogsfrogs>
+ <20230827130644.nhdi6ihobn5qne3a@zlang-mailbox>
+ <20230827155646.GA28202@frogsfrogsfrogs>
+ <ZOv/25JEPQblNx1n@dread.disaster.area>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20230825134756.o3wpq6bogndukn53@quack3>
-X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
+In-Reply-To: <ZOv/25JEPQblNx1n@dread.disaster.area>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Fri, Aug 25, 2023 at 03:47:56PM +0200, Jan Kara wrote:
-> I can see the appeal of not having to introduce the new bdev_handle type
-> and just using struct file which unifies in-kernel and userspace block
-> device opens. But I can see downsides too - the last fput() happening from
-> task work makes me a bit nervous whether it will not break something
-> somewhere with exclusive bdev opens. Getting from struct file to bdev is
-> somewhat harder but I guess a helper like F_BDEV() would solve that just
-> fine.
+On Mon, Aug 28, 2023 at 12:00:59PM +1000, Dave Chinner wrote:
+> On Sun, Aug 27, 2023 at 08:56:46AM -0700, Darrick J. Wong wrote:
+> > On Sun, Aug 27, 2023 at 09:06:44PM +0800, Zorro Lang wrote:
+> > > On Tue, Aug 22, 2023 at 06:02:39PM -0700, Darrick J. Wong wrote:
+> > > > From: Darrick J. Wong <djwong@kernel.org>
+> > > > 
+> > > > Dave Chinner reported that xfs/273 fails if the AG size happens to be an
+> > > > exact power of two.  I traced this to an agbno integer overflow when the
+> > > > current GETFSMAP call is a continuation of a previous GETFSMAP call, and
+> > > > the last record returned was non-shareable space at the end of an AG.
+> > > > 
+> > > > This is the regression test for that bug.
+> > > > 
+> > > > Signed-off-by: Darrick J. Wong <djwong@kernel.org>
+> .....
+> > > > +echo "desired asize=$desired_agsize" >> $seqres.full
+> > > > +_scratch_mkfs -d "agsize=${desired_agsize}b" | _filter_mkfs 2> $tmp.mkfs >> $seqres.full
+> > > > +source $tmp.mkfs
+> > > > +
+> > > > +test "$desired_agsize" -eq "$agsize" || _notrun "wanted agsize=$desired_agsize, got $agsize"
+> > > > +
+> > > > +_scratch_mount
+> > > > +$XFS_IO_PROG -c 'fsmap -n 1024 -v' $SCRATCH_MNT >> $tmp.big
+> > > > +$XFS_IO_PROG -c 'fsmap -n 1 -v' $SCRATCH_MNT >> $tmp.small
+> > > 
+> > > This line reports:
+> > > 
+> > >   xfs_io: xfsctl(XFS_IOC_GETFSMAP) iflags=0x0 ["/mnt/xfstests/scratch"]: Invalid argument
+> > > 
+> > > when the test case fails. Is that normal?
+> > 
+> > Yes.  The attached bugfix should make that go away.
 > 
-> So besides my last fput() worry about I think this could work and would be
-> probably a bit nicer than what I have. But before going and redoing the whole
-> series let me gather some more feedback so that we don't go back and forth.
-> Christoph, Christian, Jens, any opinion?
+> The kernel bug fix fixes the same problem with xfs/273; I haven't
+> tested this specific new regression test.
 
-I did think about the file a bit.  The fact that we'd need something
-like an anon_file for the by_dev open was always a huge turn off for
-me, but maybe my concern is overblown.  Having a struct file would
-actually be really useful for a bunch of users.
+Thanks for the details from both of you, I'll merge this patch in next fstests
+release if there's not more updates.
+
+Thanks,
+Zorro
+
+> 
+> -Dave.
+> -- 
+> Dave Chinner
+> david@fromorbit.com
+> 
 
