@@ -2,204 +2,107 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 56577C83F17
-	for <linux-xfs@archiver.kernel.org>; Sun, 27 Aug 2023 21:46:25 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2CB45C83F10
+	for <linux-xfs@archiver.kernel.org>; Mon, 28 Aug 2023 01:02:02 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230306AbjH0Vpx (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Sun, 27 Aug 2023 17:45:53 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34966 "EHLO
+        id S229379AbjH1BBc (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Sun, 27 Aug 2023 21:01:32 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59176 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230287AbjH0Vpl (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sun, 27 Aug 2023 17:45:41 -0400
-Received: from zeniv.linux.org.uk (zeniv.linux.org.uk [IPv6:2a03:a000:7:0:5054:ff:fe1c:15ff])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6883E124;
-        Sun, 27 Aug 2023 14:45:38 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=linux.org.uk; s=zeniv-20220401; h=Sender:In-Reply-To:Content-Type:
-        MIME-Version:References:Message-ID:Subject:Cc:To:From:Date:Reply-To:
-        Content-Transfer-Encoding:Content-ID:Content-Description;
-        bh=kY05MXjwCqUKuXNwucsgt/McL4F7q7Pfbjm7IIALTG0=; b=rwicGoUvL4VgCd8/Qp1uGcvFJj
-        2egMEWh2qIptB38yz3LkaovCgsrzYd5qWYzYVrLDB0+2cvC8Hq94M95X4EXXJUaYQexvV5ydz/PhQ
-        3oSRutUhsOumwt9db2so3z+etJXEF+Wi2+NHOmG8HlbMqrIjqtB+TQ9YoLhUuiexvk8+I1LYJ/xSV
-        ZlLyerq6Wcockw2BEhGC0e7r/uJgQmeAavj3yTO2QGyQwB10XYMkDDZ1Bff7wCxS6uqmy7RDsW0tE
-        LxV9EZ6t5yOJ6J5Tl0xTjIsbFSoYFc5//Rfxs/6ERxlTJUc4/DLKribj0NNKKwb+gHZab/RxADkLO
-        htbC578A==;
-Received: from viro by zeniv.linux.org.uk with local (Exim 4.96 #2 (Red Hat Linux))
-        id 1qaNZO-001P52-2K;
-        Sun, 27 Aug 2023 21:45:18 +0000
-Date:   Sun, 27 Aug 2023 22:45:18 +0100
-From:   Al Viro <viro@zeniv.linux.org.uk>
-To:     Christoph Hellwig <hch@lst.de>
-Cc:     Matthew Wilcox <willy@infradead.org>, Jens Axboe <axboe@kernel.dk>,
-        Xiubo Li <xiubli@redhat.com>,
-        Ilya Dryomov <idryomov@gmail.com>,
-        Christian Brauner <brauner@kernel.org>,
-        Theodore Ts'o <tytso@mit.edu>,
-        Jaegeuk Kim <jaegeuk@kernel.org>, Chao Yu <chao@kernel.org>,
-        Miklos Szeredi <miklos@szeredi.hu>,
-        Andreas Gruenbacher <agruenba@redhat.com>,
-        "Darrick J. Wong" <djwong@kernel.org>,
-        Trond Myklebust <trond.myklebust@hammerspace.com>,
-        Anna Schumaker <anna@kernel.org>,
-        Damien Le Moal <dlemoal@kernel.org>,
-        Andrew Morton <akpm@linux-foundation.org>,
-        linux-block@vger.kernel.org, ceph-devel@vger.kernel.org,
-        linux-fsdevel@vger.kernel.org, linux-ext4@vger.kernel.org,
-        linux-f2fs-devel@lists.sourceforge.net, cluster-devel@redhat.com,
-        linux-xfs@vger.kernel.org, linux-nfs@vger.kernel.org,
-        linux-mm@kvack.org, Hannes Reinecke <hare@suse.de>
-Subject: Re: [PATCH 03/12] filemap: update ki_pos in generic_perform_write
-Message-ID: <20230827214518.GU3390869@ZenIV>
-References: <20230601145904.1385409-1-hch@lst.de>
- <20230601145904.1385409-4-hch@lst.de>
- <20230827194122.GA325446@ZenIV>
+        with ESMTP id S229489AbjH1BBZ (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sun, 27 Aug 2023 21:01:25 -0400
+Received: from mail-oa1-x33.google.com (mail-oa1-x33.google.com [IPv6:2001:4860:4864:20::33])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E0FF3116
+        for <linux-xfs@vger.kernel.org>; Sun, 27 Aug 2023 18:01:18 -0700 (PDT)
+Received: by mail-oa1-x33.google.com with SMTP id 586e51a60fabf-1ba5cda3530so1994559fac.3
+        for <linux-xfs@vger.kernel.org>; Sun, 27 Aug 2023 18:01:18 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=fromorbit-com.20221208.gappssmtp.com; s=20221208; t=1693184478; x=1693789278;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
+        bh=+ey3a3EQIL6KYkJlctVTmM6HP9fmVw4is9OF6/0zWHc=;
+        b=rhG2shLM4bM2xVdjkrG0Tuv4sCUHXiYoayLjSIzqtyRI9ATKaJ+LjWZlnulNWI8zuo
+         5gFzo2fVAoR3jpHzv/OKw0pGCDZudmARbDDWgSjrQhkXZbbSa1wJfgeV7eTVkjBgX15C
+         tIWNA/zXDuIor4gGVq77kSP4+F+8MLYon0FwCKQuWZhu7N5g+PQu2hxl/CQCYwRd9nCx
+         6EvqCD/UmIY/ViiMyN2YMKeQ2HSSdwzy3aqAYVXoN739chLYl2vnOenwyHQmGbUfcrB/
+         DyX1B37KrQ8qlrWGgmXDt7ZfEgbBt+fg9vM2HKXxmUhXljGqYgJ204H9FgEizUbkK6qR
+         kVmA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20221208; t=1693184478; x=1693789278;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=+ey3a3EQIL6KYkJlctVTmM6HP9fmVw4is9OF6/0zWHc=;
+        b=drdiT65EFnglSTa5he+6b7CUtdDjnsCZDctErS0LAuk1EvSPRvVc+Pp0Sg+bhhlXK0
+         UkWJA8xBNU5Zd9W+rjy+sYYCrAgvYx0yGD6beqZOgqOffBPO46PxTE9D0tzev/oqFqFo
+         30d5+xB9sT0HOuImrEgV714ovbObIjz1LC5faMBBkkSwpHKoFvEUqjvQilXT0iCCcJzL
+         Dy+Xkil9Txzf0quCbhACWs5Z/JGoRpk7qUZJATcPA9ptDI2LvWtq9/r6/w8/pr1mBong
+         KkAe3rO61IRzUrGUk6TcsKA/TwvT6jbb+DV4WNeGpLe7SvXKsIfrI4weSDa0VG1tN/bo
+         7ifg==
+X-Gm-Message-State: AOJu0YxJDmiZgyX6TMQFcAOdiHNWvXwquYfSu+48yGfguVo8xXa1opVT
+        xFLnb/PI9jZqUhkxdPSCpxVwX2hPNjcELN2E8WM=
+X-Google-Smtp-Source: AGHT+IE1PjiyhK22hMwbt+FAlv7IpVaq9Ta4dwO6kDQa7XfD2trIEMHHoyW7BGu/rfE5KxAOMU95lw==
+X-Received: by 2002:a05:6870:d252:b0:1c0:3110:12cc with SMTP id h18-20020a056870d25200b001c0311012ccmr11443295oac.55.1693184478067;
+        Sun, 27 Aug 2023 18:01:18 -0700 (PDT)
+Received: from dread.disaster.area (pa49-195-66-88.pa.nsw.optusnet.com.au. [49.195.66.88])
+        by smtp.gmail.com with ESMTPSA id w59-20020a17090a6bc100b00263154aab24sm6082626pjj.57.2023.08.27.18.01.16
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Sun, 27 Aug 2023 18:01:16 -0700 (PDT)
+Received: from dave by dread.disaster.area with local (Exim 4.96)
+        (envelope-from <david@fromorbit.com>)
+        id 1qaQcz-007QgG-2k;
+        Mon, 28 Aug 2023 11:01:13 +1000
+Date:   Mon, 28 Aug 2023 11:01:13 +1000
+From:   Dave Chinner <david@fromorbit.com>
+To:     Shawn <neutronsharc@gmail.com>
+Cc:     linux-xfs@vger.kernel.org
+Subject: Re: Do I have to fsync after aio_write finishes (with fallocate
+ preallocation) ?
+Message-ID: <ZOvx2Xg31EbJXPgr@dread.disaster.area>
+References: <CAB-bdyQVJdTcaaDLWmm+rsW_U6FLF3qCTqLEKLkM6hOgk09uZQ@mail.gmail.com>
+ <20221129213436.GG3600936@dread.disaster.area>
+ <CAB-bdyQw7hRpRPn9JTnpyJt1sA9vPDTVsUTmrhke-EMmGfaHBA@mail.gmail.com>
+ <ZOl2IHacyqSUFgfi@dread.disaster.area>
+ <CAB-bdyRTKNQeukwjuB=fCT91BDO5uTJzA_Y7msOdEPBDAURbzg@mail.gmail.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20230827194122.GA325446@ZenIV>
-Sender: Al Viro <viro@ftp.linux.org.uk>
+In-Reply-To: <CAB-bdyRTKNQeukwjuB=fCT91BDO5uTJzA_Y7msOdEPBDAURbzg@mail.gmail.com>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Sun, Aug 27, 2023 at 08:41:22PM +0100, Al Viro wrote:
-> On Thu, Jun 01, 2023 at 04:58:55PM +0200, Christoph Hellwig wrote:
-> > All callers of generic_perform_write need to updated ki_pos, move it into
-> > common code.
+On Sat, Aug 26, 2023 at 06:09:13PM -0700, Shawn wrote:
+> xfs_io shows "extsize" as 0.   The data bsize is always 4096.  What's
+> the implication of a 0 extsize?
 > 
-> > @@ -4034,7 +4037,6 @@ ssize_t __generic_file_write_iter(struct kiocb *iocb, struct iov_iter *from)
-> >  		endbyte = pos + status - 1;
-> >  		err = filemap_write_and_wait_range(mapping, pos, endbyte);
-> >  		if (err == 0) {
-> > -			iocb->ki_pos = endbyte + 1;
-> >  			written += status;
-> >  			invalidate_mapping_pages(mapping,
-> >  						 pos >> PAGE_SHIFT,
-> > @@ -4047,8 +4049,6 @@ ssize_t __generic_file_write_iter(struct kiocb *iocb, struct iov_iter *from)
-> >  		}
-> >  	} else {
-> >  		written = generic_perform_write(iocb, from);
-> > -		if (likely(written > 0))
-> > -			iocb->ki_pos += written;
-> >  	}
-> >  out:
-> >  	return written ? written : err;
-> 
-> [another late reply, sorry]
-> 
-> That part is somewhat fishy - there's a case where you return a positive value
-> and advance ->ki_pos by more than that amount.  I really wonder if all callers
-> of ->write_iter() are OK with that.  Consider e.g. this:
-> 
-> ssize_t ksys_write(unsigned int fd, const char __user *buf, size_t count)
-> {
->         struct fd f = fdget_pos(fd);
->         ssize_t ret = -EBADF;
-> 
->         if (f.file) {
->                 loff_t pos, *ppos = file_ppos(f.file);
->                 if (ppos) {
->                         pos = *ppos;   
->                         ppos = &pos;
->                 }
->                 ret = vfs_write(f.file, buf, count, ppos);
->                 if (ret >= 0 && ppos)
->                         f.file->f_pos = pos;
->                 fdput_pos(f);
->         }
-> 
->         return ret;
-> }
-> 
-> ssize_t vfs_write(struct file *file, const char __user *buf, size_t count, loff_t *pos)
-> {
->         ssize_t ret;
-> 
->         if (!(file->f_mode & FMODE_WRITE))
->                 return -EBADF;
->         if (!(file->f_mode & FMODE_CAN_WRITE))
->                 return -EINVAL;
->         if (unlikely(!access_ok(buf, count)))
->                 return -EFAULT;
-> 
->         ret = rw_verify_area(WRITE, file, pos, count);
->         if (ret)
->                 return ret;
->         if (count > MAX_RW_COUNT)
->                 count =  MAX_RW_COUNT;
->         file_start_write(file);
->         if (file->f_op->write)
->                 ret = file->f_op->write(file, buf, count, pos);
->         else if (file->f_op->write_iter)
->                 ret = new_sync_write(file, buf, count, pos);
->         else   
->                 ret = -EINVAL;
->         if (ret > 0) {
->                 fsnotify_modify(file);
->                 add_wchar(current, ret);
->         }
->         inc_syscw(current);
->         file_end_write(file);
->         return ret;
-> }
-> 
-> static ssize_t new_sync_write(struct file *filp, const char __user *buf, size_t len, loff_t *ppos)
-> {
->         struct kiocb kiocb;
->         struct iov_iter iter;
->         ssize_t ret; 
-> 
->         init_sync_kiocb(&kiocb, filp);
->         kiocb.ki_pos = (ppos ? *ppos : 0);
->         iov_iter_ubuf(&iter, ITER_SOURCE, (void __user *)buf, len);
-> 
->         ret = call_write_iter(filp, &kiocb, &iter);
->         BUG_ON(ret == -EIOCBQUEUED);
->         if (ret > 0 && ppos)
->                 *ppos = kiocb.ki_pos;
->         return ret;
-> } 
-> 
-> Suppose ->write_iter() ends up doing returning a positive value smaller than
-> the increment of kiocb.ki_pos.  What do we get?  ret is positive, so
-> kiocb.ki_pos gets copied into *ppos, which is ksys_write's pos and there
-> we copy it into file->f_pos.
-> 
-> Is it really OK to have write() return 4096 and advance the file position
-> by 16K?  AFAICS, userland wouldn't get any indication of something
-> odd going on - just a short write to a regular file, with followup write
-> of remaining 12K getting quietly written in the range 16K..28K.
-> 
-> I don't remember what POSIX says about that, but it would qualify as
-> nasty surprise for any userland program - sure, one can check fsync()
-> results before closing the sucker and see if everything looks fine,
-> but the way it's usually discussed could easily lead to assumption that
-> (synchronous) O_DIRECT writes would not be affected by anything of that
-> sort.
+> $ sudo xfs_io -c 'stat' /mnt/S48BNW0K700192T/
+> fd.path = "/mnt/S48BNW0K700192T/"
+> fd.flags = non-sync,non-direct,read-write
+> stat.ino = 64
+> stat.type = directory
+> stat.size = 81
+> stat.blocks = 0
+> fsxattr.xflags = 0x0 [--------------]
+> fsxattr.projid = 0
+> fsxattr.extsize = 0    <====  0
+> fsxattr.nextents = 0
+> fsxattr.naextents = 0
+> dioattr.mem = 0x200
+> dioattr.miniosz = 512
+> dioattr.maxiosz = 2147483136
 
-IOW, I suspect that the right thing to do would be something along the lines
-of
+THere are no xflags set, meaning the XFS_DIFLAG_EXTSZINHERIT is not
+set on the directory so nothing will inherit the extsize from the
+directory at creation time. An extsize of zero is the default "don't
+do any non-default extent size alignment" (i.e. align to stripe
+parameters if the filesystem has them set, but nothing else.)
 
-direct_write_fallback(): on error revert the ->ki_pos update from buffered write
+If this is the root directory of a mounted filesystem, it means the
+extent size hint was not set by mkfs, and it hasn't been set
+manually via xfs_io after mount, either.
 
-If we fail filemap_write_and_wait_range() on the range the buffered write went
-into, we only report the "number of bytes which we direct-written", to quote
-the comment in there.  Which is fine, but buffered write has already advanced
-iocb->ki_pos, so we need to roll that back.  Otherwise we end up with e.g.
-write(2) advancing position by more than the amount it reports having written.
-
-Fixes: 182c25e9c157 "filemap: update ki_pos in generic_perform_write"
-Signed-off-by: Al Viro <viro@zeniv.linux.org.uk>
----
-diff --git a/fs/libfs.c b/fs/libfs.c
-index 5b851315eeed..712c57828c0e 100644
---- a/fs/libfs.c
-+++ b/fs/libfs.c
-@@ -1646,6 +1646,7 @@ ssize_t direct_write_fallback(struct kiocb *iocb, struct iov_iter *iter,
- 		 * We don't know how much we wrote, so just return the number of
- 		 * bytes which were direct-written
- 		 */
-+		iocb->ki_pos -= buffered_written;
- 		if (direct_written)
- 			return direct_written;
- 		return err;
+-Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
