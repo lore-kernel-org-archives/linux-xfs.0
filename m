@@ -2,161 +2,112 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 416D2C83F14
-	for <linux-xfs@archiver.kernel.org>; Mon, 28 Aug 2023 01:27:45 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E6A25C83F10
+	for <linux-xfs@archiver.kernel.org>; Mon, 28 Aug 2023 02:01:52 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229580AbjH1B1H (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Sun, 27 Aug 2023 21:27:07 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60160 "EHLO
+        id S229436AbjH1CBW (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Sun, 27 Aug 2023 22:01:22 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41022 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229563AbjH1B0k (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sun, 27 Aug 2023 21:26:40 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id BBC34CA;
-        Sun, 27 Aug 2023 18:26:35 -0700 (PDT)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature RSA-PSS (2048 bits))
-        (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 5AAC560D14;
-        Mon, 28 Aug 2023 01:26:35 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id B326FC433C7;
-        Mon, 28 Aug 2023 01:26:34 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1693185994;
-        bh=GwVLq3OkJrbkUyp31uBASPopWfhS3izyPrOJi4XbiEY=;
-        h=Date:From:To:Cc:Subject:From;
-        b=YXBwHraKOp8FKvsRAACfZ6QmmRH7l+EE/fGkInKlhNcew5Tlpo22n2R6OopH/u1JS
-         jAAU0dUANBzDwjhROi5WcamJMV0WxYK/vlzjQKYnqw54x2m8r5KEFApHqiShey29wG
-         kLGRLrqekIA9mz/G8aTLSVtXiUcs45QplDMvuP0ne5EUiB4QkN9K19lZUuv0noikku
-         YjNs16OIDNcOb4qpzoLgbsGVStF9LH/IQwh/f0kTMd5tLREQWsbYornz873OmUF+yq
-         7fjS6iDkR4ksC6RvMbHn1XRAQKXsbuqc3YWMG1Co+SE2Y4RFFV++QgZlvBltkrzCDn
-         BhJ0X9IHFBPEw==
-Date:   Sun, 27 Aug 2023 18:26:34 -0700
-From:   "Darrick J. Wong" <djwong@kernel.org>
-To:     david@fromorbit.com, djwong@kernel.org,
-        torvalds@linux-foundation.org
-Cc:     araherle@in.ibm.com, axboe@kernel.dk, bfoster@redhat.com,
-        dchinner@redhat.com, hch@lst.de, kent.overstreet@linux.dev,
-        linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org,
-        ritesh.list@gmail.com, willy@infradead.org
-Subject: [GIT PULL] iomap: new code for 6.6
-Message-ID: <169318520367.1841050.6633820486162376921.stg-ugh@frogsfrogsfrogs>
+        with ESMTP id S229522AbjH1CBK (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sun, 27 Aug 2023 22:01:10 -0400
+Received: from mail-pl1-x62b.google.com (mail-pl1-x62b.google.com [IPv6:2607:f8b0:4864:20::62b])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2D93B124
+        for <linux-xfs@vger.kernel.org>; Sun, 27 Aug 2023 19:01:04 -0700 (PDT)
+Received: by mail-pl1-x62b.google.com with SMTP id d9443c01a7336-1bdbf10333bso21246225ad.1
+        for <linux-xfs@vger.kernel.org>; Sun, 27 Aug 2023 19:01:04 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=fromorbit-com.20221208.gappssmtp.com; s=20221208; t=1693188063; x=1693792863;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
+        bh=0OOpuUC9WrHx63XO3krpOCYmcaUxFgd3zsU66GiE1hw=;
+        b=b5odctLENGHiUXUUOYeCbtNMq5u5z9PG7r9KsSdSJT7eeN5m7IU4YGCKsk1zHZyLXg
+         Y0asyU+ab7/lI94c8aeOj7s8ivO6LLnQSubfLICsXQlL/ROeNnjTiwFU0R5cBdKkXlfV
+         c6F0spa4eLgt5JMAS2AdLqMwlW6D6IFRV3aym5QEw3SNWZ/QMyZ2Kp9f6QhYZsVhTUKB
+         MWWoWKWZ3D5pq/PACsrZQFNhWtkMzm8Sddp7xjksFp+i2HITffC0KMQIECKPTYNvn4Ec
+         fohDUpzKt0phRnnm12roN3tR+3L8lV7fe02UkYUr5kH7saI0hiNXkyErfqkT4hfukdoi
+         A4zg==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20221208; t=1693188063; x=1693792863;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=0OOpuUC9WrHx63XO3krpOCYmcaUxFgd3zsU66GiE1hw=;
+        b=MBTZz4YhfvA5Rgm02D1dVfFYGaEP41lfslm13oIOMflg8y5vSx3LwkKIs2QlGfDTEE
+         7RATlO53N6xqSnyoQmk0j7ErPClUMSyHLIqlNR/dij1QlVGq1y423IfQDQFjnyPCusOy
+         /wfB74eFQldAo4HYdrD3Mpok0qWG4GQP6Qe5ChhkWt8B5nHsxJcLKzfNRxnq2woVvSzT
+         9c86paKXwyIePSdrbNDjg3pgE7n20PyBEp60KAiNZwo3oakncYXudsxMULJM8HVe6cqA
+         SlEIGlrT39GKGOb5kMFF1nj2ZEemTCOj4xnJLm3f7nqc0beJKIOafL9bmqCa9roSFsJ+
+         Rmfg==
+X-Gm-Message-State: AOJu0Yz7irHY0+kvkjLw+/oP3Dm87jlJmJBYtfixEV55EJFvoRf/jh9h
+        LcoOkQN9as6DjSPX93kJlkTzKw==
+X-Google-Smtp-Source: AGHT+IEQEHw7cE3n9TM3j1prdwB4ECxh3iyjWx1gyrgkJRwQQLFZVC0IFBpmMuhOfxkpj1752eqbwQ==
+X-Received: by 2002:a17:902:8f97:b0:1b8:400a:48f2 with SMTP id z23-20020a1709028f9700b001b8400a48f2mr25586214plo.62.1693188063462;
+        Sun, 27 Aug 2023 19:01:03 -0700 (PDT)
+Received: from dread.disaster.area (pa49-195-66-88.pa.nsw.optusnet.com.au. [49.195.66.88])
+        by smtp.gmail.com with ESMTPSA id jk17-20020a170903331100b001b890b3bbb1sm5964667plb.211.2023.08.27.19.01.02
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Sun, 27 Aug 2023 19:01:02 -0700 (PDT)
+Received: from dave by dread.disaster.area with local (Exim 4.96)
+        (envelope-from <david@fromorbit.com>)
+        id 1qaRYp-007Rne-0S;
+        Mon, 28 Aug 2023 12:00:59 +1000
+Date:   Mon, 28 Aug 2023 12:00:59 +1000
+From:   Dave Chinner <david@fromorbit.com>
+To:     "Darrick J. Wong" <djwong@kernel.org>
+Cc:     Zorro Lang <zlang@redhat.com>, xfs <linux-xfs@vger.kernel.org>,
+        fstests <fstests@vger.kernel.org>
+Subject: Re: [RFC PATCH] fstests: test fix for an agbno overflow in
+ __xfs_getfsmap_datadev
+Message-ID: <ZOv/25JEPQblNx1n@dread.disaster.area>
+References: <20230823010046.GD11286@frogsfrogsfrogs>
+ <20230823010239.GE11263@frogsfrogsfrogs>
+ <20230827130644.nhdi6ihobn5qne3a@zlang-mailbox>
+ <20230827155646.GA28202@frogsfrogsfrogs>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
+In-Reply-To: <20230827155646.GA28202@frogsfrogsfrogs>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Hi Linus,
+On Sun, Aug 27, 2023 at 08:56:46AM -0700, Darrick J. Wong wrote:
+> On Sun, Aug 27, 2023 at 09:06:44PM +0800, Zorro Lang wrote:
+> > On Tue, Aug 22, 2023 at 06:02:39PM -0700, Darrick J. Wong wrote:
+> > > From: Darrick J. Wong <djwong@kernel.org>
+> > > 
+> > > Dave Chinner reported that xfs/273 fails if the AG size happens to be an
+> > > exact power of two.  I traced this to an agbno integer overflow when the
+> > > current GETFSMAP call is a continuation of a previous GETFSMAP call, and
+> > > the last record returned was non-shareable space at the end of an AG.
+> > > 
+> > > This is the regression test for that bug.
+> > > 
+> > > Signed-off-by: Darrick J. Wong <djwong@kernel.org>
+.....
+> > > +echo "desired asize=$desired_agsize" >> $seqres.full
+> > > +_scratch_mkfs -d "agsize=${desired_agsize}b" | _filter_mkfs 2> $tmp.mkfs >> $seqres.full
+> > > +source $tmp.mkfs
+> > > +
+> > > +test "$desired_agsize" -eq "$agsize" || _notrun "wanted agsize=$desired_agsize, got $agsize"
+> > > +
+> > > +_scratch_mount
+> > > +$XFS_IO_PROG -c 'fsmap -n 1024 -v' $SCRATCH_MNT >> $tmp.big
+> > > +$XFS_IO_PROG -c 'fsmap -n 1 -v' $SCRATCH_MNT >> $tmp.small
+> > 
+> > This line reports:
+> > 
+> >   xfs_io: xfsctl(XFS_IOC_GETFSMAP) iflags=0x0 ["/mnt/xfstests/scratch"]: Invalid argument
+> > 
+> > when the test case fails. Is that normal?
+> 
+> Yes.  The attached bugfix should make that go away.
 
-Please pull this branch with changes for iomap for 6.6-rc1.  We've got
-some big changes for this release -- I'm very happy to be landing
-willy's work to enable large folios for the page cache for general read
-and write IOs when the fs can make contiguous space allocations, and
-Ritesh's work to track sub-folio dirty state to eliminate the write
-amplification problems inherent in using large folios.  As a bonus,
-io_uring can now process write completions in the caller's context
-instead of bouncing through a workqueue, which should reduce io latency
-dramatically.  IOWs, XFS should see a nice performance bump for both IO
-paths.
+The kernel bug fix fixes the same problem with xfs/273; I haven't
+tested this specific new regression test.
 
-I did a test-merge with the main upstream branch as of a few minutes
-ago, and didn't see any conflicts.  Please let me know if you encounter
-any problems.
-
-As for XFS -- as has been widely covered elsewhere, I have stepped down
-from the maintainer role and welcome Chandan Babu as the new release
-manager.  Please expect the XFS pull request for 6.6 to come from him in
-a few days.  He and I haven't quite finished the gpg-and-korg git tree
-transition process yet, so please excuse any bumps along the way.
-Nearly all the patches are from me anyway, so he and I have both been
-running QA on the 6.6 merge branch in parallel for the past few weeks.
-
---D
-
-The following changes since commit 6eaae198076080886b9e7d57f4ae06fa782f90ef:
-
-Linux 6.5-rc3 (2023-07-23 15:24:10 -0700)
-
-are available in the Git repository at:
-
-https://git.kernel.org/pub/scm/fs/xfs/xfs-linux.git tags/iomap-6.6-merge-3
-
-for you to fetch changes up to 377698d4abe2cd118dd866d5ef19e2f1aa6b9758:
-
-Merge tag 'xfs-async-dio.6-2023-08-01' of git://git.kernel.dk/linux into iomap-6.6-mergeA (2023-08-01 16:41:49 -0700)
-
-----------------------------------------------------------------
-New code for 6.6:
-
-* Make large writes to the page cache fill sparse parts of the cache
-with large folios, then use large memcpy calls for the large folio.
-* Track the per-block dirty state of each large folio so that a
-buffered write to a single byte on a large folio does not result in a
-(potentially) multi-megabyte writeback IO.
-* Allow some directio completions to be performed in the initiating
-task's context instead of punting through a workqueue.  This will
-reduce latency for some io_uring requests.
-
-Signed-off-by: Darrick J. Wong <djwong@kernel.org>
-
-----------------------------------------------------------------
-Darrick J. Wong (3):
-Merge tag 'large-folio-writes' of git://git.infradead.org/users/willy/pagecache into iomap-6.6-merge
-Merge tag 'iomap-per-block-dirty-tracking' of https://github.com/riteshharjani/linux into iomap-6.6-merge
-Merge tag 'xfs-async-dio.6-2023-08-01' of git://git.kernel.dk/linux into iomap-6.6-mergeA
-
-Jens Axboe (8):
-iomap: cleanup up iomap_dio_bio_end_io()
-iomap: use an unsigned type for IOMAP_DIO_* defines
-iomap: treat a write through cache the same as FUA
-iomap: only set iocb->private for polled bio
-iomap: add IOMAP_DIO_INLINE_COMP
-fs: add IOCB flags related to passing back dio completions
-io_uring/rw: add write support for IOCB_DIO_CALLER_COMP
-iomap: support IOCB_DIO_CALLER_COMP
-
-Matthew Wilcox (Oracle) (10):
-iov_iter: Map the page later in copy_page_from_iter_atomic()
-iov_iter: Handle compound highmem pages in copy_page_from_iter_atomic()
-iov_iter: Add copy_folio_from_iter_atomic()
-iomap: Remove large folio handling in iomap_invalidate_folio()
-doc: Correct the description of ->release_folio
-iomap: Remove unnecessary test from iomap_release_folio()
-filemap: Add fgf_t typedef
-filemap: Allow __filemap_get_folio to allocate large folios
-iomap: Create large folios in the buffered write path
-iomap: Copy larger chunks from userspace
-
-Ritesh Harjani (IBM) (8):
-iomap: Rename iomap_page to iomap_folio_state and others
-iomap: Drop ifs argument from iomap_set_range_uptodate()
-iomap: Add some uptodate state handling helpers for ifs state bitmap
-iomap: Fix possible overflow condition in iomap_write_delalloc_scan
-iomap: Use iomap_punch_t typedef
-iomap: Refactor iomap_write_delalloc_punch() function out
-iomap: Allocate ifs in ->write_begin() early
-iomap: Add per-block dirty state tracking to improve performance
-
-Documentation/filesystems/locking.rst |  15 +-
-fs/btrfs/file.c                       |   6 +-
-fs/f2fs/compress.c                    |   2 +-
-fs/f2fs/f2fs.h                        |   2 +-
-fs/gfs2/aops.c                        |   2 +-
-fs/gfs2/bmap.c                        |   2 +-
-fs/iomap/buffered-io.c                | 469 +++++++++++++++++++++++-----------
-fs/iomap/direct-io.c                  | 161 +++++++++---
-fs/xfs/xfs_aops.c                     |   2 +-
-fs/zonefs/file.c                      |   2 +-
-include/linux/fs.h                    |  35 ++-
-include/linux/iomap.h                 |   3 +-
-include/linux/pagemap.h               |  82 +++++-
-include/linux/uio.h                   |   9 +-
-io_uring/rw.c                         |  27 +-
-lib/iov_iter.c                        |  43 ++--
-mm/filemap.c                          |  65 ++---
-mm/folio-compat.c                     |   2 +-
-mm/readahead.c                        |  13 -
-19 files changed, 660 insertions(+), 282 deletions(-)
+-Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
