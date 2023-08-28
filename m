@@ -2,21 +2,21 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A0C62C83F19
-	for <linux-xfs@archiver.kernel.org>; Mon, 28 Aug 2023 12:31:55 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 64D74C83F17
+	for <linux-xfs@archiver.kernel.org>; Mon, 28 Aug 2023 12:34:02 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232276AbjH1Mb1 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 28 Aug 2023 08:31:27 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41606 "EHLO
+        id S230458AbjH1Mde (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 28 Aug 2023 08:33:34 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60420 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232228AbjH1Max (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 28 Aug 2023 08:30:53 -0400
+        with ESMTP id S232709AbjH1MdX (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 28 Aug 2023 08:33:23 -0400
 Received: from verein.lst.de (verein.lst.de [213.95.11.211])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C6389107;
-        Mon, 28 Aug 2023 05:30:37 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 395EA131;
+        Mon, 28 Aug 2023 05:33:06 -0700 (PDT)
 Received: by verein.lst.de (Postfix, from userid 2407)
-        id 981DA68D05; Mon, 28 Aug 2023 14:30:25 +0200 (CEST)
-Date:   Mon, 28 Aug 2023 14:30:23 +0200
+        id 580D668AA6; Mon, 28 Aug 2023 14:33:00 +0200 (CEST)
+Date:   Mon, 28 Aug 2023 14:32:59 +0200
 From:   Christoph Hellwig <hch@lst.de>
 To:     Al Viro <viro@zeniv.linux.org.uk>
 Cc:     Christoph Hellwig <hch@lst.de>,
@@ -39,42 +39,21 @@ Cc:     Christoph Hellwig <hch@lst.de>,
         linux-xfs@vger.kernel.org, linux-nfs@vger.kernel.org,
         linux-mm@kvack.org, Hannes Reinecke <hare@suse.de>
 Subject: Re: [PATCH 03/12] filemap: update ki_pos in generic_perform_write
-Message-ID: <20230828123023.GA11084@lst.de>
-References: <20230601145904.1385409-1-hch@lst.de> <20230601145904.1385409-4-hch@lst.de> <20230827194122.GA325446@ZenIV>
+Message-ID: <20230828123259.GB11084@lst.de>
+References: <20230601145904.1385409-1-hch@lst.de> <20230601145904.1385409-4-hch@lst.de> <20230827194122.GA325446@ZenIV> <20230827214518.GU3390869@ZenIV>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20230827194122.GA325446@ZenIV>
+In-Reply-To: <20230827214518.GU3390869@ZenIV>
 User-Agent: Mutt/1.5.17 (2007-11-01)
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Sun, Aug 27, 2023 at 08:41:22PM +0100, Al Viro wrote:
-> That part is somewhat fishy - there's a case where you return a positive value
-> and advance ->ki_pos by more than that amount.  I really wonder if all callers
-> of ->write_iter() are OK with that.  Consider e.g. this:
+On Sun, Aug 27, 2023 at 10:45:18PM +0100, Al Viro wrote:
+> IOW, I suspect that the right thing to do would be something along the lines
+> of
 
-This should not exist in the latest version merged by Jens.  Can you
-check if you still  see issues in the version in the block tree or
-linux-next.
+The idea looks sensible to me, but we'll also need to do it for the
+filemap_write_and_wait_range failure case.
 
-> Suppose ->write_iter() ends up doing returning a positive value smaller than
-> the increment of kiocb.ki_pos.  What do we get?  ret is positive, so
-> kiocb.ki_pos gets copied into *ppos, which is ksys_write's pos and there
-> we copy it into file->f_pos.
-> 
-> Is it really OK to have write() return 4096 and advance the file position
-> by 16K?  AFAICS, userland wouldn't get any indication of something
-> odd going on - just a short write to a regular file, with followup write
-> of remaining 12K getting quietly written in the range 16K..28K.
-> 
-> I don't remember what POSIX says about that, but it would qualify as
-> nasty surprise for any userland program - sure, one can check fsync()
-> results before closing the sucker and see if everything looks fine,
-> but the way it's usually discussed could easily lead to assumption that
-> (synchronous) O_DIRECT writes would not be affected by anything of that
-> sort.
-
-ki_pos should always be updated by the write return value.  Everything
-else is a bug.
