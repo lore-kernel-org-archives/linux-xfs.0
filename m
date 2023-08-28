@@ -2,101 +2,161 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7C9CBC83F17
-	for <linux-xfs@archiver.kernel.org>; Mon, 28 Aug 2023 01:05:47 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 416D2C83F14
+	for <linux-xfs@archiver.kernel.org>; Mon, 28 Aug 2023 01:27:45 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229537AbjH1BFS (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Sun, 27 Aug 2023 21:05:18 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36256 "EHLO
+        id S229580AbjH1B1H (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Sun, 27 Aug 2023 21:27:07 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60160 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229525AbjH1BFE (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sun, 27 Aug 2023 21:05:04 -0400
-Received: from zeniv.linux.org.uk (zeniv.linux.org.uk [IPv6:2a03:a000:7:0:5054:ff:fe1c:15ff])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6CECBF4;
-        Sun, 27 Aug 2023 18:05:01 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=linux.org.uk; s=zeniv-20220401; h=Sender:In-Reply-To:Content-Type:
-        MIME-Version:References:Message-ID:Subject:Cc:To:From:Date:Reply-To:
-        Content-Transfer-Encoding:Content-ID:Content-Description;
-        bh=joEHMg4Vnx51INzte3pGka01/tHMgi/viw3PIuubDEg=; b=tBQRCz5+oVdl3BS/sNcy7bWOX7
-        GGqnD2dBYFuddcCAHCZIxNjDzAdi2le5BAt0r8Kntb7pX1JY0YphckowafjvL81vNIQ3iZbSuHB8W
-        r/PUBBhyIh5zGyiYSh551Ab8m+qrDF3vUESvq5gmF+156kAmT5ewUZLVGI0pVuCR+wxckZ4BuuSiW
-        RJFEDzRbT6/CwsUyBB67HLFUFCa0gDIENAIc4MS7fD/7hjHRH/QwT9ZGKRpKtatGkE8elHlNUeY9H
-        K7XCyGgu0m99e9gG1KyKu8v/0XPiv+PZlDfNvSozoVu79X3N9xA7HRVP+E5Pt/Irs6JBUgQAoXzdY
-        9136hnSA==;
-Received: from viro by zeniv.linux.org.uk with local (Exim 4.96 #2 (Red Hat Linux))
-        id 1qaQgN-001R4E-2B;
-        Mon, 28 Aug 2023 01:04:43 +0000
-Date:   Mon, 28 Aug 2023 02:04:43 +0100
-From:   Al Viro <viro@zeniv.linux.org.uk>
-To:     Christoph Hellwig <hch@lst.de>
-Cc:     Matthew Wilcox <willy@infradead.org>, Jens Axboe <axboe@kernel.dk>,
-        Xiubo Li <xiubli@redhat.com>,
-        Ilya Dryomov <idryomov@gmail.com>,
-        Christian Brauner <brauner@kernel.org>,
-        Theodore Ts'o <tytso@mit.edu>,
-        Jaegeuk Kim <jaegeuk@kernel.org>, Chao Yu <chao@kernel.org>,
-        Miklos Szeredi <miklos@szeredi.hu>,
-        Andreas Gruenbacher <agruenba@redhat.com>,
-        "Darrick J. Wong" <djwong@kernel.org>,
-        Trond Myklebust <trond.myklebust@hammerspace.com>,
-        Anna Schumaker <anna@kernel.org>,
-        Damien Le Moal <dlemoal@kernel.org>,
-        Andrew Morton <akpm@linux-foundation.org>,
-        linux-block@vger.kernel.org, ceph-devel@vger.kernel.org,
-        linux-fsdevel@vger.kernel.org, linux-ext4@vger.kernel.org,
-        linux-f2fs-devel@lists.sourceforge.net, cluster-devel@redhat.com,
-        linux-xfs@vger.kernel.org, linux-nfs@vger.kernel.org,
-        linux-mm@kvack.org, Hannes Reinecke <hare@suse.de>
-Subject: Re: [PATCH 03/12] filemap: update ki_pos in generic_perform_write
-Message-ID: <20230828010443.GV3390869@ZenIV>
-References: <20230601145904.1385409-1-hch@lst.de>
- <20230601145904.1385409-4-hch@lst.de>
- <20230827194122.GA325446@ZenIV>
+        with ESMTP id S229563AbjH1B0k (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sun, 27 Aug 2023 21:26:40 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id BBC34CA;
+        Sun, 27 Aug 2023 18:26:35 -0700 (PDT)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange X25519 server-signature RSA-PSS (2048 bits))
+        (No client certificate requested)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 5AAC560D14;
+        Mon, 28 Aug 2023 01:26:35 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id B326FC433C7;
+        Mon, 28 Aug 2023 01:26:34 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1693185994;
+        bh=GwVLq3OkJrbkUyp31uBASPopWfhS3izyPrOJi4XbiEY=;
+        h=Date:From:To:Cc:Subject:From;
+        b=YXBwHraKOp8FKvsRAACfZ6QmmRH7l+EE/fGkInKlhNcew5Tlpo22n2R6OopH/u1JS
+         jAAU0dUANBzDwjhROi5WcamJMV0WxYK/vlzjQKYnqw54x2m8r5KEFApHqiShey29wG
+         kLGRLrqekIA9mz/G8aTLSVtXiUcs45QplDMvuP0ne5EUiB4QkN9K19lZUuv0noikku
+         YjNs16OIDNcOb4qpzoLgbsGVStF9LH/IQwh/f0kTMd5tLREQWsbYornz873OmUF+yq
+         7fjS6iDkR4ksC6RvMbHn1XRAQKXsbuqc3YWMG1Co+SE2Y4RFFV++QgZlvBltkrzCDn
+         BhJ0X9IHFBPEw==
+Date:   Sun, 27 Aug 2023 18:26:34 -0700
+From:   "Darrick J. Wong" <djwong@kernel.org>
+To:     david@fromorbit.com, djwong@kernel.org,
+        torvalds@linux-foundation.org
+Cc:     araherle@in.ibm.com, axboe@kernel.dk, bfoster@redhat.com,
+        dchinner@redhat.com, hch@lst.de, kent.overstreet@linux.dev,
+        linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org,
+        ritesh.list@gmail.com, willy@infradead.org
+Subject: [GIT PULL] iomap: new code for 6.6
+Message-ID: <169318520367.1841050.6633820486162376921.stg-ugh@frogsfrogsfrogs>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20230827194122.GA325446@ZenIV>
-Sender: Al Viro <viro@ftp.linux.org.uk>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Sun, Aug 27, 2023 at 08:41:22PM +0100, Al Viro wrote:
+Hi Linus,
 
-> That part is somewhat fishy - there's a case where you return a positive value
-> and advance ->ki_pos by more than that amount.  I really wonder if all callers
-> of ->write_iter() are OK with that.
+Please pull this branch with changes for iomap for 6.6-rc1.  We've got
+some big changes for this release -- I'm very happy to be landing
+willy's work to enable large folios for the page cache for general read
+and write IOs when the fs can make contiguous space allocations, and
+Ritesh's work to track sub-folio dirty state to eliminate the write
+amplification problems inherent in using large folios.  As a bonus,
+io_uring can now process write completions in the caller's context
+instead of bouncing through a workqueue, which should reduce io latency
+dramatically.  IOWs, XFS should see a nice performance bump for both IO
+paths.
 
-Speaking of which, in case of negative return value we'd better *not* use
-->ki_pos; consider e.g. generic_file_write_iter() with O_DSYNC and
-vfs_fsync_range() failure.  An error gets returned, but ->ki_pos is left
-advanced.  Normal write(2) is fine - it will only update file->f_pos if
-->write_iter() has returned a non-negative.  However, io_uring
-kiocb_done() starts with
-        if (req->flags & REQ_F_CUR_POS)
-                req->file->f_pos = rw->kiocb.ki_pos;
-        if (ret >= 0 && (rw->kiocb.ki_complete == io_complete_rw)) {
-                if (!__io_complete_rw_common(req, ret)) {
-                        /*
-                         * Safe to call io_end from here as we're inline
-                         * from the submission path.
-                         */
-                        io_req_io_end(req);
-                        io_req_set_res(req, final_ret,
-                                       io_put_kbuf(req, issue_flags));
-                        return IOU_OK;
-                }
-        } else {
-                io_rw_done(&rw->kiocb, ret);
-        }
-Note that ->f_pos update is *NOT* conditional upon ret >= 0 - it happens
-no matter what, provided that original request had ->kiocb.ki_pos equal
-to -1 (on a non-FMODE_STREAM file).
+I did a test-merge with the main upstream branch as of a few minutes
+ago, and didn't see any conflicts.  Please let me know if you encounter
+any problems.
 
-Jens, is there any reason for doing that unconditionally?  IMO it's
-a bad idea - there's a wide scope for fuckups that way, especially
-since write(2) is not sensitive to that and this use of -1 ki_pos
-is not particularly encouraged on io_uring side either, AFAICT.
-Worse, it's handling of failure exits in the first place, which
-already gets little testing...
+As for XFS -- as has been widely covered elsewhere, I have stepped down
+from the maintainer role and welcome Chandan Babu as the new release
+manager.  Please expect the XFS pull request for 6.6 to come from him in
+a few days.  He and I haven't quite finished the gpg-and-korg git tree
+transition process yet, so please excuse any bumps along the way.
+Nearly all the patches are from me anyway, so he and I have both been
+running QA on the 6.6 merge branch in parallel for the past few weeks.
+
+--D
+
+The following changes since commit 6eaae198076080886b9e7d57f4ae06fa782f90ef:
+
+Linux 6.5-rc3 (2023-07-23 15:24:10 -0700)
+
+are available in the Git repository at:
+
+https://git.kernel.org/pub/scm/fs/xfs/xfs-linux.git tags/iomap-6.6-merge-3
+
+for you to fetch changes up to 377698d4abe2cd118dd866d5ef19e2f1aa6b9758:
+
+Merge tag 'xfs-async-dio.6-2023-08-01' of git://git.kernel.dk/linux into iomap-6.6-mergeA (2023-08-01 16:41:49 -0700)
+
+----------------------------------------------------------------
+New code for 6.6:
+
+* Make large writes to the page cache fill sparse parts of the cache
+with large folios, then use large memcpy calls for the large folio.
+* Track the per-block dirty state of each large folio so that a
+buffered write to a single byte on a large folio does not result in a
+(potentially) multi-megabyte writeback IO.
+* Allow some directio completions to be performed in the initiating
+task's context instead of punting through a workqueue.  This will
+reduce latency for some io_uring requests.
+
+Signed-off-by: Darrick J. Wong <djwong@kernel.org>
+
+----------------------------------------------------------------
+Darrick J. Wong (3):
+Merge tag 'large-folio-writes' of git://git.infradead.org/users/willy/pagecache into iomap-6.6-merge
+Merge tag 'iomap-per-block-dirty-tracking' of https://github.com/riteshharjani/linux into iomap-6.6-merge
+Merge tag 'xfs-async-dio.6-2023-08-01' of git://git.kernel.dk/linux into iomap-6.6-mergeA
+
+Jens Axboe (8):
+iomap: cleanup up iomap_dio_bio_end_io()
+iomap: use an unsigned type for IOMAP_DIO_* defines
+iomap: treat a write through cache the same as FUA
+iomap: only set iocb->private for polled bio
+iomap: add IOMAP_DIO_INLINE_COMP
+fs: add IOCB flags related to passing back dio completions
+io_uring/rw: add write support for IOCB_DIO_CALLER_COMP
+iomap: support IOCB_DIO_CALLER_COMP
+
+Matthew Wilcox (Oracle) (10):
+iov_iter: Map the page later in copy_page_from_iter_atomic()
+iov_iter: Handle compound highmem pages in copy_page_from_iter_atomic()
+iov_iter: Add copy_folio_from_iter_atomic()
+iomap: Remove large folio handling in iomap_invalidate_folio()
+doc: Correct the description of ->release_folio
+iomap: Remove unnecessary test from iomap_release_folio()
+filemap: Add fgf_t typedef
+filemap: Allow __filemap_get_folio to allocate large folios
+iomap: Create large folios in the buffered write path
+iomap: Copy larger chunks from userspace
+
+Ritesh Harjani (IBM) (8):
+iomap: Rename iomap_page to iomap_folio_state and others
+iomap: Drop ifs argument from iomap_set_range_uptodate()
+iomap: Add some uptodate state handling helpers for ifs state bitmap
+iomap: Fix possible overflow condition in iomap_write_delalloc_scan
+iomap: Use iomap_punch_t typedef
+iomap: Refactor iomap_write_delalloc_punch() function out
+iomap: Allocate ifs in ->write_begin() early
+iomap: Add per-block dirty state tracking to improve performance
+
+Documentation/filesystems/locking.rst |  15 +-
+fs/btrfs/file.c                       |   6 +-
+fs/f2fs/compress.c                    |   2 +-
+fs/f2fs/f2fs.h                        |   2 +-
+fs/gfs2/aops.c                        |   2 +-
+fs/gfs2/bmap.c                        |   2 +-
+fs/iomap/buffered-io.c                | 469 +++++++++++++++++++++++-----------
+fs/iomap/direct-io.c                  | 161 +++++++++---
+fs/xfs/xfs_aops.c                     |   2 +-
+fs/zonefs/file.c                      |   2 +-
+include/linux/fs.h                    |  35 ++-
+include/linux/iomap.h                 |   3 +-
+include/linux/pagemap.h               |  82 +++++-
+include/linux/uio.h                   |   9 +-
+io_uring/rw.c                         |  27 +-
+lib/iov_iter.c                        |  43 ++--
+mm/filemap.c                          |  65 ++---
+mm/folio-compat.c                     |   2 +-
+mm/readahead.c                        |  13 -
+19 files changed, 660 insertions(+), 282 deletions(-)
