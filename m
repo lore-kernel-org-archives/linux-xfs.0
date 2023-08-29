@@ -2,167 +2,348 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DAA4BC71153
-	for <linux-xfs@archiver.kernel.org>; Tue, 29 Aug 2023 03:11:12 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 37B5BC83F18
+	for <linux-xfs@archiver.kernel.org>; Tue, 29 Aug 2023 04:02:00 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229584AbjH2DKi (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 28 Aug 2023 23:10:38 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49626 "EHLO
+        id S229873AbjH2EB1 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 29 Aug 2023 00:01:27 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38196 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233583AbjH2DKR (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 28 Aug 2023 23:10:17 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 04E6110A
-        for <linux-xfs@vger.kernel.org>; Mon, 28 Aug 2023 20:10:14 -0700 (PDT)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature RSA-PSS (2048 bits))
-        (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 974326160D
-        for <linux-xfs@vger.kernel.org>; Tue, 29 Aug 2023 03:10:13 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id F3331C433C7;
-        Tue, 29 Aug 2023 03:10:12 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1693278613;
-        bh=eZU23QYhl7dTlIufH3rNRD0ddRaSEezakJfY6QVdpOI=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=U0P6+nR8lnRtTLMONY6bDjw481tBA+4I6HigHyxp9CnU2tXb5LphVKEET1ODS89S1
-         SVcWFvnkzRste7eZy0rHdQB/hLHHS8A9tN9UUoQbLTPZ/1J3fROzCDqOKUrBrO+m3b
-         cN+tFgMGpQX2l21B/XT6vMpHnOMKvzNNpa/2tKuQfPL+60+9Q7EXuo4PcpOuzY8ebg
-         Bv2pXL/GeTAbkAQKKtnlVVHjIu8TPzPCX+u0hWbEqCceOQXrEExuB0REOU9etlTXtf
-         Qqraw2AX5rdbEVktEAy2V/HFsCzOKGxEh9IJ55lgouhpbzaUBW/rwFYYigbbIol3jV
-         nCa5x3+QUxrLQ==
-Date:   Mon, 28 Aug 2023 20:10:12 -0700
-From:   "Darrick J. Wong" <djwong@kernel.org>
-To:     Dave Chinner <david@fromorbit.com>
-Cc:     chandan.babu@gmail.com, linux-xfs@vger.kernel.org,
-        sandeen@sandeen.net
-Subject: Re: [PATCH 2/3] xfs: don't allow log recovery when unknown rocompat
- bits are set
-Message-ID: <20230829031012.GC28186@frogsfrogsfrogs>
-References: <169291929524.220104.3844042018007786965.stgit@frogsfrogsfrogs>
- <169291930662.220104.8435560164784332097.stgit@frogsfrogsfrogs>
- <ZOf+7PqbeHj1Qs3y@dread.disaster.area>
- <20230825040417.GF17912@frogsfrogsfrogs>
- <20230828190822.GB28186@frogsfrogsfrogs>
- <ZO0WA2EwtEa5n0bC@dread.disaster.area>
+        with ESMTP id S233652AbjH2EBZ (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 29 Aug 2023 00:01:25 -0400
+Received: from mail-pj1-x1041.google.com (mail-pj1-x1041.google.com [IPv6:2607:f8b0:4864:20::1041])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 69D93132
+        for <linux-xfs@vger.kernel.org>; Mon, 28 Aug 2023 21:01:21 -0700 (PDT)
+Received: by mail-pj1-x1041.google.com with SMTP id 98e67ed59e1d1-268bc714ce0so3342744a91.0
+        for <linux-xfs@vger.kernel.org>; Mon, 28 Aug 2023 21:01:21 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=smartx-com.20221208.gappssmtp.com; s=20221208; t=1693281681; x=1693886481;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to;
+        bh=vW2xZrgOBf7/lcfCHTYPKJqiFUoci6FDNrP7hA/F5mY=;
+        b=N4OjkWgHlNm2j+1sJQ/VfYSaViy1jFytlyQldIKp/1RVYyqLDfa9yHV/jsQU3l6nom
+         07Xnja18i+9oKhTgew9NY6am5zPtY0ZrMNPwbn9xv/Ko26wleErRFr//r1j6kxWQrZD+
+         elhQbaBTb2bWEPTgQn3v8SMtBpn+g9zI66kOZ6BmqO8K05ivfOwNmW+XgLSLzwPY2buE
+         NqCUSbLHQc7hrruuE/j73gdu1OQNy7QcobHfCbFFAlcuob3B4wrPbvotw144wSOlEbH/
+         vvDtZVJvU1oLwpc1w0TLiFNrE0qFzMXEM6DSDJZJnasJbGv4YLu5KUs0XMZMJQPDb0FX
+         JRMQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20221208; t=1693281681; x=1693886481;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-message-state:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=vW2xZrgOBf7/lcfCHTYPKJqiFUoci6FDNrP7hA/F5mY=;
+        b=lviDzAAjmmUtUr5IICn7+qEi9Y+YrzmnS4wE13qymP/DcewWY+mjoTCwAad0TzLaTT
+         cqNpAMBLvxbtFsLACkBv/AKzsTX/pBQjezwphOPuB/JMEvSM70bXq1IowNBYaXtYBDhI
+         UuFYZ9Ex9DITQgP8nIFqtvu96Yc5Kd30bn41b/HD47hGYY7IzDdz7j1EnI37tjI/3jhj
+         b02tvDzObzVIQSFLbzfwqHjJkIex7Jx5Q71qylz79fXA0YFpIXivL5JQB7v7CkmfkK+1
+         uEbh3BOXaf3+CsAE6zlfKYUdHMb9ccEqi5VZ9XHxERurn1L6d2Mt3SPf98mi6uD/PSiy
+         LGCA==
+X-Gm-Message-State: AOJu0YzcmTp+IDNMnFSz65SGdPlPFoe2eHT8fdCswE9CbWkH3KS0CJ7w
+        uxqMtdLuQ9POXZCW4m7XYddRMQ==
+X-Google-Smtp-Source: AGHT+IGWoGnsHFtszBF+Q8YxqB32W7pP7GM/+pMqWGPpzcZTlPbv9SDSMuD+nBTjjNKxZd3XIUYTZg==
+X-Received: by 2002:a17:90a:e2ce:b0:269:3757:54bb with SMTP id fr14-20020a17090ae2ce00b00269375754bbmr2123024pjb.11.1693281680391;
+        Mon, 28 Aug 2023 21:01:20 -0700 (PDT)
+Received: from nixos.tailf4e9e.ts.net ([8.210.91.195])
+        by smtp.googlemail.com with ESMTPSA id a6-20020a17090a008600b00268188ea4b9sm8551079pja.19.2023.08.28.21.01.12
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Mon, 28 Aug 2023 21:01:20 -0700 (PDT)
+From:   Xueshi Hu <xueshi.hu@smartx.com>
+To:     hch@infradead.org, dan.j.williams@intel.com,
+        vishal.l.verma@intel.com, dave.jiang@intel.com,
+        jayalk@intworks.biz, daniel@ffwll.ch, deller@gmx.de,
+        bcrl@kvack.org, viro@zeniv.linux.org.uk, brauner@kernel.org,
+        jack@suse.com, tytso@mit.edu, adilger.kernel@dilger.ca,
+        miklos@szeredi.hu, mike.kravetz@oracle.com, muchun.song@linux.dev,
+        djwong@kernel.org, willy@infradead.org, akpm@linux-foundation.org,
+        hughd@google.com
+Cc:     nvdimm@lists.linux.dev, linux-cxl@vger.kernel.org,
+        linux-kernel@vger.kernel.org, linux-fbdev@vger.kernel.org,
+        dri-devel@lists.freedesktop.org, linux-aio@kvack.org,
+        linux-fsdevel@vger.kernel.org, linux-ext4@vger.kernel.org,
+        linux-mm@kvack.org, linux-xfs@vger.kernel.org,
+        Xueshi Hu <xueshi.hu@smartx.com>, Jan Kara <jack@suse.cz>,
+        Christoph Hellwig <hch@lst.de>
+Subject: [PATCH v3] fs: clean up usage of noop_dirty_folio
+Date:   Tue, 29 Aug 2023 12:00:29 +0800
+Message-Id: <20230829040029.473810-1-xueshi.hu@smartx.com>
+X-Mailer: git-send-email 2.40.1
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <ZO0WA2EwtEa5n0bC@dread.disaster.area>
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Tue, Aug 29, 2023 at 07:47:47AM +1000, Dave Chinner wrote:
-> On Mon, Aug 28, 2023 at 12:08:22PM -0700, Darrick J. Wong wrote:
-> > On Thu, Aug 24, 2023 at 09:04:17PM -0700, Darrick J. Wong wrote:
-> > > On Fri, Aug 25, 2023 at 11:07:56AM +1000, Dave Chinner wrote:
-> > > > On Thu, Aug 24, 2023 at 04:21:46PM -0700, Darrick J. Wong wrote:
-> > > > > From: Darrick J. Wong <djwong@kernel.org>
-> > > > > 
-> > > > > Don't allow log recovery to proceed on a readonly mount if the primary
-> > > > > superblock advertises unknown rocompat bits.  We used to allow this, but
-> > > > > due to a misunderstanding between Dave and Darrick back in 2016, we
-> > > > > cannot do that anymore.  The XFS_SB_FEAT_RO_COMPAT_RMAPBT feature (4.8)
-> > > > > protects RUI log items, and the REFLINK feature (4.9) protects CUI/BUI
-> > > > > log items, which is why we can't allow older kernels to recover them.
-> > > > 
-> > > > Ok, this would work for kernels that don't know waht the
-> > > > REFLINK/RMAP features are, but upstream kernels will never fail to
-> > > > recover these items because these are known ROCOMPAT bits.
-> > > > 
-> > > > The reason this problem exists is that we've accidentally
-> > > > conflated RO_COMPAT with LOG_INCOMPAT. If RUI/CUI/BUI creation had
-> > > > of set a log incompat bit whenever they are used (similar to the
-> > > > new ATTRI stuff setting log incompat bits), then older kernels
-> > > > would not have allow log recovery even if the reflink/rmap RO_COMPAT
-> > > > features were set and they didn't understand them.
-> > > > 
-> > > > However, we can't do that on current kernels because then older
-> > > > kernels that understand reflink/rmap just fine would see an unknown
-> > > > log incompat bit and refuse to replay the log. So it comes back to
-> > > > how we handle unknown ROCOMPAT flags on older kernels, not current
-> > > > upstream kernels.
-> > > > 
-> > > > i.e. this patch needs to be backported to kernels that don't know
-> > > > anything about RMAP/REFLINK to be useful to anyone. i.e. kernels
-> > > > older than 4.9 that don't know what rmap/reflink are.  I suspect
-> > > > that there are very few supported kernels that old that this might
-> > > > get backported to.
-> > 
-> > Seeing as the oldest LTS kernel now is 4.14, I agree with you, let's
-> > just forget this whole patch and try to remember not to hide LOG
-> > INCOMPAT features behind RO COMPAT flags again. :)
-> > 
-> > If we do that, then all we need to do is change xfs_validate_sb_write
-> > not to complain about unknown rocompat features if the xfs is readonly,
-> > and remove all the code that temporarily clears the readonly state
-> > around the log mount calls.
-> > 
-> > Log recovery then goes back to supporting recovery even in the presence
-> > of unknown rocompat bits, and patch 3 becomes unnecessary...
-> 
-> *nod*
-> 
-> > ...though this below is still true.
-> > 
-> > > Hmm.  The most annoying thing about LOG_INCOMPAT features is that
-> > > turning them on requires a synchronous write to the primary sb along
-> > > with a transaction to log the sb that is immediately forced to disk.
-> > > Every time the log cleans itself it clears the LOG_INCOMPAT features,
-> > > and then we have to do that /again/.
-> > > 
-> > > Parent pointers, since they require log intent items to guarantee the
-> > > dirent and pptr update, cycle the logged xattr LOG_INCOMPAT feature on
-> > > and off repeatedly.  A couple of weeks ago I decided to elide all that
-> > > LOG_INCOMPAT cycling if parent pointers are enabled, and fstests runtime
-> > > went from 4.9 hours back down to 4.4.  (Parent pointers, for whatever
-> > > reason, got an INCOMPAT feature bit so it's ok).  I was a little
-> > > surprised that xfs_log_clean ran that much, but there we go.
-> 
-> Sure, but that's only a problem for operations that are a pure
-> log format change. With parent pointers, we have an INCOMPAT bit
-> because we have a new attr filter bit that older kernels will flag
-> as corruption, and that means we don't need a log incompat bit for
-> the attr logging. IOWs, if xfs_has_parent_pointers() is true, then
-> we don't need to set the ATTRI log incompat bit, ever, because the
-> parent pointer incompat feature bit implies ATTRI log items are in use and all
-> kernels that understand the PP incompat bit also understand the
-> ATTRI log items....
+In folio_mark_dirty(), it can automatically fallback to
+noop_dirty_folio() if a_ops->dirty_folio is not registered.
 
-Aha, that's why parent pointers got an INCOMPAT flag, thanks for the
-reminder.
+In anon_aops, dev_dax_aops and fb_deferred_io_aops, replacing .dirty_folio
+with NULL makes them identical to default (empty_aops) and since we never
+compare ->a_ops pointer with either of those, we can remove them
+completely.
 
-> > > A different way to solve the cycling problem could be to start a timer
-> > > after the last caller drops l_incompat_xattrs and only clear the feature
-> > > bit after 5 minutes of idleness or unmount, instead of the next time the
-> > > log cleans itself.
-> 
-> Well, we only clear it from the xfs_log_worker() if the log needs
-> covering, so the AIL and iclogs need to be empty before the worker
-> will clear the incompat bit. That's on a 30s timer already, so
-> perhaps all we need to do is extend the log covering timeout if
-> there are incompat log flags set....
+Acked-by: Al Viro <viro@zeniv.linux.org.uk>
+Reviewed-by: Jan Kara <jack@suse.cz>
+Reviewed-by: Matthew Wilcox (Oracle) <willy@infradead.org>
+Reviewed-by: Christoph Hellwig <hch@lst.de>
+Signed-off-by: Xueshi Hu <xueshi.hu@smartx.com>
+---
+Changes in v3:
+- correct the rationale of removal three empty aops
+- v2: https://lore.kernel.org/linux-mm/20230828144242.GZ3390869@ZenIV/T/#t
 
-Well for non-pptr LARP I don't care since it's a debugging flag, but I
-suppose for swapext we might want to consider something like that.
-Though I think I might want to preserve the "30 seconds until log
-commits" default behavior and not crank that up to 5 minutes.
+Changes in v2:
+- make noop_dirty_folio() inline as suggested by Matthew
+- v1: https://lore.kernel.org/linux-mm/ZOxAfrz9etoVUfLQ@infradead.org/T/#m073d45909b1df03ff09f382557dc4e84d0607c49
 
-> > > Alternately, we drop this patch and declare an INCOMPAT_RMAPREFLINKV2
-> > > feature that wraps up all the other broken bits that we've found since
-> > > 2016 (overly large log reservations, incorrect units in xattr block
-> > > reservation calculations, etc.)
-> 
-> It's tempting, but let's try to put that off until we really need
-> to....
+ drivers/dax/device.c                |  5 -----
+ drivers/video/fbdev/core/fb_defio.c |  5 -----
+ fs/aio.c                            |  1 -
+ fs/ext2/inode.c                     |  1 -
+ fs/ext4/inode.c                     |  1 -
+ fs/fuse/dax.c                       |  1 -
+ fs/hugetlbfs/inode.c                |  1 -
+ fs/libfs.c                          |  5 -----
+ fs/xfs/xfs_aops.c                   |  1 -
+ include/linux/pagemap.h             |  1 -
+ mm/page-writeback.c                 | 18 +++++-------------
+ mm/secretmem.c                      |  1 -
+ mm/shmem.c                          |  1 -
+ mm/swap_state.c                     |  1 -
+ 14 files changed, 5 insertions(+), 38 deletions(-)
 
-Ok.
+diff --git a/drivers/dax/device.c b/drivers/dax/device.c
+index 30665a3ff6ea..018aa9f88ec7 100644
+--- a/drivers/dax/device.c
++++ b/drivers/dax/device.c
+@@ -345,10 +345,6 @@ static unsigned long dax_get_unmapped_area(struct file *filp,
+ 	return current->mm->get_unmapped_area(filp, addr, len, pgoff, flags);
+ }
+ 
+-static const struct address_space_operations dev_dax_aops = {
+-	.dirty_folio	= noop_dirty_folio,
+-};
+-
+ static int dax_open(struct inode *inode, struct file *filp)
+ {
+ 	struct dax_device *dax_dev = inode_dax(inode);
+@@ -358,7 +354,6 @@ static int dax_open(struct inode *inode, struct file *filp)
+ 	dev_dbg(&dev_dax->dev, "trace\n");
+ 	inode->i_mapping = __dax_inode->i_mapping;
+ 	inode->i_mapping->host = __dax_inode;
+-	inode->i_mapping->a_ops = &dev_dax_aops;
+ 	filp->f_mapping = inode->i_mapping;
+ 	filp->f_wb_err = filemap_sample_wb_err(filp->f_mapping);
+ 	filp->f_sb_err = file_sample_sb_err(filp);
+diff --git a/drivers/video/fbdev/core/fb_defio.c b/drivers/video/fbdev/core/fb_defio.c
+index 274f5d0fa247..08be3592281f 100644
+--- a/drivers/video/fbdev/core/fb_defio.c
++++ b/drivers/video/fbdev/core/fb_defio.c
+@@ -221,10 +221,6 @@ static const struct vm_operations_struct fb_deferred_io_vm_ops = {
+ 	.page_mkwrite	= fb_deferred_io_mkwrite,
+ };
+ 
+-static const struct address_space_operations fb_deferred_io_aops = {
+-	.dirty_folio	= noop_dirty_folio,
+-};
+-
+ int fb_deferred_io_mmap(struct fb_info *info, struct vm_area_struct *vma)
+ {
+ 	vma->vm_ops = &fb_deferred_io_vm_ops;
+@@ -307,7 +303,6 @@ void fb_deferred_io_open(struct fb_info *info,
+ {
+ 	struct fb_deferred_io *fbdefio = info->fbdefio;
+ 
+-	file->f_mapping->a_ops = &fb_deferred_io_aops;
+ 	fbdefio->open_count++;
+ }
+ EXPORT_SYMBOL_GPL(fb_deferred_io_open);
+diff --git a/fs/aio.c b/fs/aio.c
+index 77e33619de40..4cf386f9cb1c 100644
+--- a/fs/aio.c
++++ b/fs/aio.c
+@@ -484,7 +484,6 @@ static int aio_migrate_folio(struct address_space *mapping, struct folio *dst,
+ #endif
+ 
+ static const struct address_space_operations aio_ctx_aops = {
+-	.dirty_folio	= noop_dirty_folio,
+ 	.migrate_folio	= aio_migrate_folio,
+ };
+ 
+diff --git a/fs/ext2/inode.c b/fs/ext2/inode.c
+index 75983215c7a1..ce191bdf1c78 100644
+--- a/fs/ext2/inode.c
++++ b/fs/ext2/inode.c
+@@ -971,7 +971,6 @@ const struct address_space_operations ext2_aops = {
+ static const struct address_space_operations ext2_dax_aops = {
+ 	.writepages		= ext2_dax_writepages,
+ 	.direct_IO		= noop_direct_IO,
+-	.dirty_folio		= noop_dirty_folio,
+ };
+ 
+ /*
+diff --git a/fs/ext4/inode.c b/fs/ext4/inode.c
+index 43775a6ca505..67c1710c01b0 100644
+--- a/fs/ext4/inode.c
++++ b/fs/ext4/inode.c
+@@ -3561,7 +3561,6 @@ static const struct address_space_operations ext4_da_aops = {
+ static const struct address_space_operations ext4_dax_aops = {
+ 	.writepages		= ext4_dax_writepages,
+ 	.direct_IO		= noop_direct_IO,
+-	.dirty_folio		= noop_dirty_folio,
+ 	.bmap			= ext4_bmap,
+ 	.swap_activate		= ext4_iomap_swap_activate,
+ };
+diff --git a/fs/fuse/dax.c b/fs/fuse/dax.c
+index 8e74f278a3f6..50ca767cbd5e 100644
+--- a/fs/fuse/dax.c
++++ b/fs/fuse/dax.c
+@@ -1326,7 +1326,6 @@ bool fuse_dax_inode_alloc(struct super_block *sb, struct fuse_inode *fi)
+ static const struct address_space_operations fuse_dax_file_aops  = {
+ 	.writepages	= fuse_dax_writepages,
+ 	.direct_IO	= noop_direct_IO,
+-	.dirty_folio	= noop_dirty_folio,
+ };
+ 
+ static bool fuse_should_enable_dax(struct inode *inode, unsigned int flags)
+diff --git a/fs/hugetlbfs/inode.c b/fs/hugetlbfs/inode.c
+index 7b17ccfa039d..5404286f0c13 100644
+--- a/fs/hugetlbfs/inode.c
++++ b/fs/hugetlbfs/inode.c
+@@ -1266,7 +1266,6 @@ static void hugetlbfs_destroy_inode(struct inode *inode)
+ static const struct address_space_operations hugetlbfs_aops = {
+ 	.write_begin	= hugetlbfs_write_begin,
+ 	.write_end	= hugetlbfs_write_end,
+-	.dirty_folio	= noop_dirty_folio,
+ 	.migrate_folio  = hugetlbfs_migrate_folio,
+ 	.error_remove_page	= hugetlbfs_error_remove_page,
+ };
+diff --git a/fs/libfs.c b/fs/libfs.c
+index 5b851315eeed..982f220a9ee3 100644
+--- a/fs/libfs.c
++++ b/fs/libfs.c
+@@ -627,7 +627,6 @@ const struct address_space_operations ram_aops = {
+ 	.read_folio	= simple_read_folio,
+ 	.write_begin	= simple_write_begin,
+ 	.write_end	= simple_write_end,
+-	.dirty_folio	= noop_dirty_folio,
+ };
+ EXPORT_SYMBOL(ram_aops);
+ 
+@@ -1231,16 +1230,12 @@ EXPORT_SYMBOL(kfree_link);
+ 
+ struct inode *alloc_anon_inode(struct super_block *s)
+ {
+-	static const struct address_space_operations anon_aops = {
+-		.dirty_folio	= noop_dirty_folio,
+-	};
+ 	struct inode *inode = new_inode_pseudo(s);
+ 
+ 	if (!inode)
+ 		return ERR_PTR(-ENOMEM);
+ 
+ 	inode->i_ino = get_next_ino();
+-	inode->i_mapping->a_ops = &anon_aops;
+ 
+ 	/*
+ 	 * Mark the inode dirty from the very beginning,
+diff --git a/fs/xfs/xfs_aops.c b/fs/xfs/xfs_aops.c
+index 451942fb38ec..300acea9ee63 100644
+--- a/fs/xfs/xfs_aops.c
++++ b/fs/xfs/xfs_aops.c
+@@ -590,6 +590,5 @@ const struct address_space_operations xfs_address_space_operations = {
+ 
+ const struct address_space_operations xfs_dax_aops = {
+ 	.writepages		= xfs_dax_writepages,
+-	.dirty_folio		= noop_dirty_folio,
+ 	.swap_activate		= xfs_iomap_swapfile_activate,
+ };
+diff --git a/include/linux/pagemap.h b/include/linux/pagemap.h
+index 716953ee1ebd..9de3be51dee2 100644
+--- a/include/linux/pagemap.h
++++ b/include/linux/pagemap.h
+@@ -1074,7 +1074,6 @@ bool folio_clear_dirty_for_io(struct folio *folio);
+ bool clear_page_dirty_for_io(struct page *page);
+ void folio_invalidate(struct folio *folio, size_t offset, size_t length);
+ int __set_page_dirty_nobuffers(struct page *page);
+-bool noop_dirty_folio(struct address_space *mapping, struct folio *folio);
+ 
+ #ifdef CONFIG_MIGRATION
+ int filemap_migrate_folio(struct address_space *mapping, struct folio *dst,
+diff --git a/mm/page-writeback.c b/mm/page-writeback.c
+index d3f42009bb70..d2d739109bfe 100644
+--- a/mm/page-writeback.c
++++ b/mm/page-writeback.c
+@@ -2585,17 +2585,6 @@ int do_writepages(struct address_space *mapping, struct writeback_control *wbc)
+ 	return ret;
+ }
+ 
+-/*
+- * For address_spaces which do not use buffers nor write back.
+- */
+-bool noop_dirty_folio(struct address_space *mapping, struct folio *folio)
+-{
+-	if (!folio_test_dirty(folio))
+-		return !folio_test_set_dirty(folio);
+-	return false;
+-}
+-EXPORT_SYMBOL(noop_dirty_folio);
+-
+ /*
+  * Helper function for set_page_dirty family.
+  *
+@@ -2799,10 +2788,13 @@ bool folio_mark_dirty(struct folio *folio)
+ 		 */
+ 		if (folio_test_reclaim(folio))
+ 			folio_clear_reclaim(folio);
+-		return mapping->a_ops->dirty_folio(mapping, folio);
++		if (mapping->a_ops->dirty_folio)
++			return mapping->a_ops->dirty_folio(mapping, folio);
+ 	}
+ 
+-	return noop_dirty_folio(mapping, folio);
++	if (!folio_test_dirty(folio))
++		return !folio_test_set_dirty(folio);
++	return false;
+ }
+ EXPORT_SYMBOL(folio_mark_dirty);
+ 
+diff --git a/mm/secretmem.c b/mm/secretmem.c
+index 86442a15d12f..3fe1c35f9c8d 100644
+--- a/mm/secretmem.c
++++ b/mm/secretmem.c
+@@ -157,7 +157,6 @@ static void secretmem_free_folio(struct folio *folio)
+ }
+ 
+ const struct address_space_operations secretmem_aops = {
+-	.dirty_folio	= noop_dirty_folio,
+ 	.free_folio	= secretmem_free_folio,
+ 	.migrate_folio	= secretmem_migrate_folio,
+ };
+diff --git a/mm/shmem.c b/mm/shmem.c
+index d963c747dabc..9bdef68a088a 100644
+--- a/mm/shmem.c
++++ b/mm/shmem.c
+@@ -4090,7 +4090,6 @@ static int shmem_error_remove_page(struct address_space *mapping,
+ 
+ const struct address_space_operations shmem_aops = {
+ 	.writepage	= shmem_writepage,
+-	.dirty_folio	= noop_dirty_folio,
+ #ifdef CONFIG_TMPFS
+ 	.write_begin	= shmem_write_begin,
+ 	.write_end	= shmem_write_end,
+diff --git a/mm/swap_state.c b/mm/swap_state.c
+index f8ea7015bad4..3666439487db 100644
+--- a/mm/swap_state.c
++++ b/mm/swap_state.c
+@@ -30,7 +30,6 @@
+  */
+ static const struct address_space_operations swap_aops = {
+ 	.writepage	= swap_writepage,
+-	.dirty_folio	= noop_dirty_folio,
+ #ifdef CONFIG_MIGRATION
+ 	.migrate_folio	= migrate_folio,
+ #endif
+-- 
+2.40.1
 
---D
-
-> -Dave.
-> -- 
-> Dave Chinner
-> david@fromorbit.com
