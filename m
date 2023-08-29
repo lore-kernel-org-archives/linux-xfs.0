@@ -2,43 +2,46 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8702BC83F1D
-	for <linux-xfs@archiver.kernel.org>; Tue, 29 Aug 2023 23:05:10 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4F236C83F17
+	for <linux-xfs@archiver.kernel.org>; Tue, 29 Aug 2023 23:05:41 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S239194AbjH2XEk (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 29 Aug 2023 19:04:40 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56078 "EHLO
+        id S241074AbjH2XFL (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 29 Aug 2023 19:05:11 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56124 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S240583AbjH2XEc (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 29 Aug 2023 19:04:32 -0400
+        with ESMTP id S240795AbjH2XEi (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 29 Aug 2023 19:04:38 -0400
 Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2543EE9;
-        Tue, 29 Aug 2023 16:04:29 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id BB1B4CC4;
+        Tue, 29 Aug 2023 16:04:34 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
          key-exchange X25519 server-signature RSA-PSS (2048 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id AED6F63CEB;
-        Tue, 29 Aug 2023 23:04:28 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 167FAC433C8;
-        Tue, 29 Aug 2023 23:04:28 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 524C6611BD;
+        Tue, 29 Aug 2023 23:04:34 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id B0B09C433C7;
+        Tue, 29 Aug 2023 23:04:33 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1693350268;
-        bh=t9cswbQnVrukCIrOfa8Meir7genz9SlSJTVBTD1G5aE=;
-        h=Subject:From:To:Cc:Date:From;
-        b=nxNKcEDlqrbQl2Vq1jMNRLoigrCQ8kZgjqDKeXnQHKvAnCGJ2yhJtidQL/oKTGpRW
-         VUSmLUtg2+jZ4Pm8tfJAshUFNrAkETmRrcm91X67wVUcTmRZgpVjriZ9zrNoLKqcgp
-         eeVxt1QX02TsCHbQWIxQWvkhYbko6MWuqnaXuzzUbVEkbik9bzPYy5uGwQ75KzPuLI
-         gP3rW6dmn3LpiEYlqbxiSAuSNcOhNIymLs3gDtNUwMaG+cAMCuRQ6Qz0hxGhBPUVE5
-         hM8Tqnu2fl/uq+Re6R1dM8e2lQuVDsadbZlHIcPsogoZVkYB6IxB1b8qgxbl4+E5jS
-         Rk4ji0t9iu0NA==
-Subject: [PATCHSET v2 0/1] xfs: fix fsmap cursor handling
+        s=k20201202; t=1693350273;
+        bh=FoGr1iyZsPUf3+MPWQUd0ygGFyK+hSaK6/lOMQsLmkY=;
+        h=Subject:From:To:Cc:Date:In-Reply-To:References:From;
+        b=L5Gt91TF0QDsBsVOJkrNs2BarEjTxgRUecT/I4+fxuFOBD0Jxb5KPGwf9S2rtfMk1
+         erstNvEpXLR/GVdbFa5PMo5g46lCmnWKbNnvtLXkJpmeOsvKY44948Tz+r0g2UNJhF
+         A0+hUzYKdIsTgHjd/EFbj6Bg7WlsciHIO0pDuh6CRhsr0fOACNVJ/MldJqahjF5acz
+         YrkdvsoY0xcT8ZmEBKxUEGA52xt0mC2SUciRa1q6qoY6/GdjJRLAsSZor5KlW+BjMS
+         CASPEc1q5SJAl6sPomKWO/tLHVemNfQ6xeMZufArXzbmIWHSGc2jjf9fCMaOCqFzG4
+         zD4bsd19s6d0w==
+Subject: [PATCH 1/1] xfs: test fix for an agbno overflow in
+ __xfs_getfsmap_datadev
 From:   "Darrick J. Wong" <djwong@kernel.org>
 To:     djwong@kernel.org, zlang@redhat.com
 Cc:     Dave Chinner <dchinner@redhat.com>, linux-xfs@vger.kernel.org,
         fstests@vger.kernel.org, guan@eryu.me, david@fromorbit.com
-Date:   Tue, 29 Aug 2023 16:04:27 -0700
-Message-ID: <169335026762.3520701.5816499712408940016.stgit@frogsfrogsfrogs>
+Date:   Tue, 29 Aug 2023 16:04:33 -0700
+Message-ID: <169335027327.3520701.12907220694035829174.stgit@frogsfrogsfrogs>
+In-Reply-To: <169335026762.3520701.5816499712408940016.stgit@frogsfrogsfrogs>
+References: <169335026762.3520701.5816499712408940016.stgit@frogsfrogsfrogs>
 User-Agent: StGit/0.19
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
@@ -47,29 +50,92 @@ Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Hi all,
+From: Darrick J. Wong <djwong@kernel.org>
 
-This patchset addresses an integer overflow bug that Dave Chinner found
-in how fsmap handles figuring out where in the record set we left off
-when userspace calls back after the first call filled up all the
-designated record space.
+Dave Chinner reported that xfs/273 fails if the AG size happens to be an
+exact power of two.  I traced this to an agbno integer overflow when the
+current GETFSMAP call is a continuation of a previous GETFSMAP call, and
+the last record returned was non-shareable space at the end of an AG.
 
-v2: add RVB tags
+This is the regression test for that bug.
 
-If you're going to start using this code, I strongly recommend pulling
-from my git trees, which are linked below.
-
-This has been running on the djcloud for months with no problems.  Enjoy!
-Comments and questions are, as always, welcome.
-
---D
-
-fstests git tree:
-https://git.kernel.org/cgit/linux/kernel/git/djwong/xfstests-dev.git/log/?h=fix-fsmap
+Signed-off-by: Darrick J. Wong <djwong@kernel.org>
+Reviewed-by: Dave Chinner <dchinner@redhat.com>
 ---
  tests/xfs/935     |   55 +++++++++++++++++++++++++++++++++++++++++++++++++++++
  tests/xfs/935.out |    2 ++
  2 files changed, 57 insertions(+)
  create mode 100755 tests/xfs/935
  create mode 100644 tests/xfs/935.out
+
+
+diff --git a/tests/xfs/935 b/tests/xfs/935
+new file mode 100755
+index 0000000000..ddd0051848
+--- /dev/null
++++ b/tests/xfs/935
+@@ -0,0 +1,55 @@
++#! /bin/bash
++# SPDX-License-Identifier: GPL-2.0
++# Copyright (c) 2023 Oracle.  All Rights Reserved.
++#
++# FS QA Test 935
++#
++# Regression test for an agbno overflow bug in XFS GETFSMAP involving an
++# fsmap_advance call.  Userspace can indicate that a GETFSMAP call is actually
++# a continuation of a previous call by setting the "low" key to the last record
++# returned by the previous call.
++#
++# If the last record returned by GETFSMAP is a non-shareable extent at the end
++# of an AG and the AG size is exactly a power of two, the startblock in the low
++# key of the rmapbt query can be set to a value larger than EOAG.  When this
++# happens, GETFSMAP will return EINVAL instead of returning records for the
++# next AG.
++#
++. ./common/preamble
++_begin_fstest auto quick fsmap
++
++. ./common/filter
++
++_fixed_by_git_commit kernel XXXXXXXXXXXXX \
++	"xfs: fix an agbno overflow in __xfs_getfsmap_datadev"
++
++# Modify as appropriate.
++_supported_fs generic
++_require_xfs_io_command fsmap
++_require_xfs_scratch_rmapbt
++
++_scratch_mkfs | _filter_mkfs 2> $tmp.mkfs >> $seqres.full
++source $tmp.mkfs
++
++# Find the next power of two agsize smaller than whatever the default is.
++for ((p = 31; p > 0; p--)); do
++	desired_agsize=$((2 ** p))
++	test "$desired_agsize" -lt "$agsize" && break
++done
++
++echo "desired agsize=$desired_agsize" >> $seqres.full
++_scratch_mkfs -d "agsize=${desired_agsize}b" | _filter_mkfs 2> $tmp.mkfs >> $seqres.full
++source $tmp.mkfs
++
++test "$desired_agsize" -eq "$agsize" || _notrun "wanted agsize=$desired_agsize, got $agsize"
++
++_scratch_mount
++$XFS_IO_PROG -c 'fsmap -n 1024 -v' $SCRATCH_MNT >> $tmp.big
++$XFS_IO_PROG -c 'fsmap -n 1 -v' $SCRATCH_MNT >> $tmp.small
++
++diff -Naurpw $tmp.big $tmp.small
++
++# success, all done
++echo Silence is golden
++status=0
++exit
+diff --git a/tests/xfs/935.out b/tests/xfs/935.out
+new file mode 100644
+index 0000000000..1b5422d1e3
+--- /dev/null
++++ b/tests/xfs/935.out
+@@ -0,0 +1,2 @@
++QA output created by 935
++Silence is golden
 
