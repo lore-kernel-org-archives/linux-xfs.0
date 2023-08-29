@@ -2,192 +2,234 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E8EB5C83F1A
-	for <linux-xfs@archiver.kernel.org>; Tue, 29 Aug 2023 23:16:36 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 149F0C6FA8F
+	for <linux-xfs@archiver.kernel.org>; Tue, 29 Aug 2023 23:21:25 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S240353AbjH2XQH (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 29 Aug 2023 19:16:07 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33420 "EHLO
+        id S235003AbjH2XUy (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 29 Aug 2023 19:20:54 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56916 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S241089AbjH2XQE (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 29 Aug 2023 19:16:04 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1CBBDFF;
-        Tue, 29 Aug 2023 16:16:01 -0700 (PDT)
+        with ESMTP id S241146AbjH2XUr (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 29 Aug 2023 19:20:47 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D37F9132
+        for <linux-xfs@vger.kernel.org>; Tue, 29 Aug 2023 16:20:44 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
          key-exchange X25519 server-signature RSA-PSS (2048 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id A4F0960A66;
-        Tue, 29 Aug 2023 23:16:00 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 13C7BC433C8;
-        Tue, 29 Aug 2023 23:16:00 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 720C6632FC
+        for <linux-xfs@vger.kernel.org>; Tue, 29 Aug 2023 23:20:44 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id CF670C433C9;
+        Tue, 29 Aug 2023 23:20:43 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1693350960;
-        bh=nDykhvnUNbg86++3O647MH+yJIDAXbENlCTF6eeim3Q=;
-        h=Subject:From:To:Cc:Date:In-Reply-To:References:From;
-        b=fjvYdk9A23m40dwRkp9DMQYgdjGMdwDNU74NNn4+1OSxZ73w45fN+swYkhQQZJXhw
-         3a+6nIEloEoxq9VCGvplr9G0SsjhrCAgyK8GRSEhZeridEW0dYY2DEx4nGPVUDZedN
-         WRUQ510qpWi/X+0k2vX1hInORfAVOsBjty+nqtQncYMTJ0yWd5pqGcssS/rbLHSpmE
-         wxbOkoB50QKlhcA5LSAt8qyievFTMgrVCDlEo7EHyljd1alelCISJtkmpVo1QFLVwT
-         vTF7GfH0KRcx86dOhYv/QiAufLVg6p9vtzC9GjALevVJztUnRjigL1x1o4MLjq9rX+
-         LtDkbe6f9D4Vw==
-Subject: [PATCH 2/2] generic: only enable io_uring in fsstress explicitly
+        s=k20201202; t=1693351243;
+        bh=FWJ9oE2DlfBA+KgvkuH1nerE6yLWJgfdq5qEHWdsvXg=;
+        h=Date:From:To:Cc:Subject:From;
+        b=oNhMOAV78VP7BsICXHEU08xMk+UFbcpvqpbVrYw+PYcWwIfohaNQKnG0z5InTsoH4
+         JONKmoMVPRoTLGtt0YKmaS7hqtUQjINttn2Rr4j4+l6vpAQlZcF1ZNZh8RVCFW3FmO
+         LVgQW9kQI5+urNAK4KgPlyKmGaqk237ciysbcxe2ZyjQZ+JsjgcFAfXpTBJgccvL0V
+         kKbnB6E2g5o9WFP6SFUFlcwj1bDG6MoPicCA8/IIgOJV7F/cLantFgBu59No9mnBy6
+         cub6bjj2NAdHfKhD3JUy+FiPU/D/Y/wFUB9KgCKLESA/e+melkKKwnkar8xuUwrvrM
+         uzq41/eiStnqQ==
+Date:   Tue, 29 Aug 2023 16:20:43 -0700
 From:   "Darrick J. Wong" <djwong@kernel.org>
-To:     djwong@kernel.org, zlang@redhat.com
-Cc:     linux-xfs@vger.kernel.org, fstests@vger.kernel.org, guan@eryu.me
-Date:   Tue, 29 Aug 2023 16:15:59 -0700
-Message-ID: <169335095953.3534600.16325849760213190849.stgit@frogsfrogsfrogs>
-In-Reply-To: <169335094811.3534600.13011878728080983620.stgit@frogsfrogsfrogs>
-References: <169335094811.3534600.13011878728080983620.stgit@frogsfrogsfrogs>
-User-Agent: StGit/0.19
+To:     Dave Chinner <david@fromorbit.com>,
+        Eric Sandeen <sandeen@redhat.com>
+Cc:     xfs <linux-xfs@vger.kernel.org>,
+        shrikanth hegde <sshegde@linux.vnet.ibm.com>,
+        Ritesh Harjani <ritesh.list@gmail.com>
+Subject: [RFC PATCH] xfs: load uncached unlinked inodes into memory on demand
+Message-ID: <20230829232043.GE28186@frogsfrogsfrogs>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-Don't enable io_uring in fsstress unless someone asks for it explicitly,
-just like fsx.  I think both tools should require explicit opt-in to
-facilitate A/B testing between the old IO paths and this new one.
+shrikanth hegde reports that filesystems fail shortly after mount with
+the following failure:
 
-While I was playing with fstests+io_uring, I noticed quite a few
-regressions in fstests, which fell into two classes:
+	WARNING: CPU: 56 PID: 12450 at fs/xfs/xfs_inode.c:1839 xfs_iunlink_lookup+0x58/0x80 [xfs]
 
-The first class is umount failing with EBUSY.  Apparently this is due to
-the kernel uring code hanging on to file references even after the
-userspace program exits.  Tests that run fsstress and immediately
-unmount now fail sporadically due to the EBUSY.  Unfortunately, the
-metadata update stress tests, the recovery loop tests, the xfs online
-fsck functional tests, and the xfs fuzz tests make heavy use of
-"fsstress; umount" and they fail all over the place now.
+This of course is the WARN_ON_ONCE in xfs_iunlink_lookup:
 
-Something's broken, Jens and Christian said it should get fixed, but in
-the meantime this is getting in the way of me testing my own code.
+	ip = radix_tree_lookup(&pag->pag_ici_root, agino);
+	if (WARN_ON_ONCE(!ip || !ip->i_ino)) { ... }
 
-The second problem I noticed is that fsstress now lodges complaints
-about sporadic heap corruption.  I /think/ this is due to some kind of
-memory mishandling bug when uring is active but IO requests fail, but I
-haven't had the time to go figure out what's up with that.
+From diagnostic data collected by the bug reporters, it would appear
+that we cleanly mounted a filesystem that contained unlinked inodes.
+Unlinked inodes are only processed as a final step of log recovery,
+which means that clean mounts do not process the unlinked list at all.
 
-Link: https://lore.kernel.org/linux-fsdevel/CAHk-=wj8RuUosugVZk+iqCAq7x6rs=7C-9sUXcO2heu4dCuOVw@mail.gmail.com/
+Prior to the introduction of the incore unlinked lists, this wasn't a
+problem because the unlink code would (very expensively) traverse the
+entire ondisk metadata iunlink chain to keep things up to date.
+However, the incore unlinked list code complains when it realizes that
+it is out of sync with the ondisk metadata and shuts down the fs, which
+is bad.
+
+Ritesh proposed to solve this problem by unconditionally parsing the
+unlinked lists at mount time, but this imposes a mount time cost for
+every filesystem to catch something that should be very infrequent.
+Instead, let's target the places where we can encounter a next_unlinked
+pointer that refers to an inode that is not in cache, and load it into
+cache.
+
+Note: This patch does not address the problem of iget loading an inode
+from the middle of the iunlink list and needing to set i_prev_unlinked
+correctly.
+
+Link: https://lore.kernel.org/linux-xfs/e5004868-4a03-93e5-5077-e7ed0e533996@linux.vnet.ibm.com/
+Reported-by: shrikanth hegde <sshegde@linux.vnet.ibm.com>
+Triaged-by: Ritesh Harjani <ritesh.list@gmail.com>
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 ---
- ltp/fsstress.c         |   17 ++++++++++++++---
- tests/generic/1220     |   43 +++++++++++++++++++++++++++++++++++++++++++
- tests/generic/1220.out |    2 ++
- 3 files changed, 59 insertions(+), 3 deletions(-)
- create mode 100755 tests/generic/1220
- create mode 100644 tests/generic/1220.out
+ fs/xfs/xfs_inode.c |   70 ++++++++++++++++++++++++++++++++++++++++++++++++++--
+ fs/xfs/xfs_trace.h |   25 +++++++++++++++++++
+ 2 files changed, 92 insertions(+), 3 deletions(-)
 
-
-diff --git a/ltp/fsstress.c b/ltp/fsstress.c
-index abe2874253..f8bb166646 100644
---- a/ltp/fsstress.c
-+++ b/ltp/fsstress.c
-@@ -339,8 +339,8 @@ struct opdesc	ops[OP_LAST]	= {
- 	[OP_TRUNCATE]	   = {"truncate",      truncate_f,	2, 1 },
- 	[OP_UNLINK]	   = {"unlink",	       unlink_f,	1, 1 },
- 	[OP_UNRESVSP]	   = {"unresvsp",      unresvsp_f,	1, 1 },
--	[OP_URING_READ]	   = {"uring_read",    uring_read_f,	1, 0 },
--	[OP_URING_WRITE]   = {"uring_write",   uring_write_f,	1, 1 },
-+	[OP_URING_READ]	   = {"uring_read",    uring_read_f,	-1, 0 },
-+	[OP_URING_WRITE]   = {"uring_write",   uring_write_f,	-1, 1 },
- 	[OP_WRITE]	   = {"write",	       write_f,		4, 1 },
- 	[OP_WRITEV]	   = {"writev",	       writev_f,	4, 1 },
- 	[OP_XCHGRANGE]	   = {"xchgrange",     xchgrange_f,	2, 1 },
-@@ -507,7 +507,7 @@ int main(int argc, char **argv)
- 	xfs_error_injection_t	        err_inj;
- 	struct sigaction action;
- 	int		loops = 1;
--	const char	*allopts = "cd:e:f:i:l:m:M:n:o:p:rRs:S:vVwx:X:zH";
-+	const char	*allopts = "cd:e:f:i:l:m:M:n:o:p:rRs:S:UvVwx:X:zH";
- 	long long	duration;
+diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
+index 6ee266be45d4..3ab140ec09bb 100644
+--- a/fs/xfs/xfs_inode.c
++++ b/fs/xfs/xfs_inode.c
+@@ -1829,12 +1829,17 @@ xfs_iunlink_lookup(
  
- 	errrange = errtag = 0;
-@@ -603,6 +603,12 @@ int main(int argc, char **argv)
- 			printf("\n");
-                         nousage=1;
- 			break;
-+		case 'U':
-+			if (ops[OP_URING_READ].freq == -1)
-+				ops[OP_URING_READ].freq = 1;
-+			if (ops[OP_URING_WRITE].freq == -1)
-+				ops[OP_URING_WRITE].freq = 1;
-+			break;
- 		case 'V':
- 			verifiable_log = 1;
- 			break;
-@@ -640,6 +646,11 @@ int main(int argc, char **argv)
- 		}
+ 	rcu_read_lock();
+ 	ip = radix_tree_lookup(&pag->pag_ici_root, agino);
++	if (!ip) {
++		/* Caller can handle inode not being in memory. */
++		rcu_read_unlock();
++		return NULL;
++	}
+ 
+ 	/*
+-	 * Inode not in memory or in RCU freeing limbo should not happen.
+-	 * Warn about this and let the caller handle the failure.
++	 * Inode in RCU freeing limbo should not happen.  Warn about this and
++	 * let the caller handle the failure.
+ 	 */
+-	if (WARN_ON_ONCE(!ip || !ip->i_ino)) {
++	if (WARN_ON_ONCE(!ip->i_ino)) {
+ 		rcu_read_unlock();
+ 		return NULL;
  	}
+@@ -1902,6 +1907,60 @@ xfs_iunlink_update_bucket(
+ 	return 0;
+ }
  
-+	if (ops[OP_URING_READ].freq == -1)
-+		ops[OP_URING_READ].freq = 0;
-+	if (ops[OP_URING_WRITE].freq == -1)
-+		ops[OP_URING_WRITE].freq = 0;
-+
-         if (!dirname) {
-             /* no directory specified */
-             if (!nousage) usage();
-diff --git a/tests/generic/1220 b/tests/generic/1220
-new file mode 100755
-index 0000000000..ec8cafba71
---- /dev/null
-+++ b/tests/generic/1220
-@@ -0,0 +1,43 @@
-+#! /bin/bash
-+# SPDX-License-Identifier: GPL-2.0
-+# Copyright (c) 2017 Oracle, Inc.  All Rights Reserved.
-+#
-+# FS QA Test No. 1220
-+#
-+# Run an all-writes fsstress run with multiple threads and io_uring to shake
-+# out bugs in the write path.
-+#
-+. ./common/preamble
-+_begin_fstest auto rw long_rw stress soak smoketest
-+
-+# Override the default cleanup function.
-+_cleanup()
++/*
++ * Load the inode @next_agino into the cache and set its prev_unlinked pointer
++ * to @prev_agino.  Caller must hold the AGI to synchronize with other changes
++ * to the unlinked list.
++ */
++STATIC int
++xfs_iunlink_reload_next(
++	struct xfs_trans	*tp,
++	struct xfs_buf		*agibp,
++	xfs_agino_t		prev_agino,
++	xfs_agino_t		next_agino)
 +{
-+	cd /
-+	rm -f $tmp.*
-+	$KILLALL_PROG -9 fsstress > /dev/null 2>&1
++	struct xfs_perag	*pag = agibp->b_pag;
++	struct xfs_mount	*mp = pag->pag_mount;
++	struct xfs_inode	*next_ip = NULL;
++	xfs_ino_t		ino;
++	int			error;
++
++	ASSERT(next_agino != NULLAGINO);
++
++#ifdef DEBUG
++	rcu_read_lock();
++	next_ip = radix_tree_lookup(&pag->pag_ici_root, next_agino);
++	ASSERT(next_ip == NULL);
++	rcu_read_unlock();
++#endif
++
++	ino = XFS_AGINO_TO_INO(mp, pag->pag_agno, next_agino);
++	error = xfs_iget(mp, tp, ino, XFS_IGET_UNTRUSTED, 0, &next_ip);
++	if (error)
++		return error;
++
++	/* If this is not an unlinked inode, something is very wrong. */
++	if (VFS_I(next_ip)->i_nlink != 0) {
++		error = -EFSCORRUPTED;
++		goto rele;
++	}
++
++	next_ip->i_prev_unlinked = prev_agino;
++	trace_xfs_iunlink_reload_next(next_ip);
++rele:
++	/*
++	 * We're running in transaction context, so we cannot run any inode
++	 * release code.  Clear DONTCACHE on this inode to prevent the VFS from
++	 * initiating writeback and to force the irele to push this inode to
++	 * the LRU instead of dropping it immediately.
++	 */
++	spin_lock(&VFS_I(next_ip)->i_lock);
++	VFS_I(next_ip)->i_state &= ~I_DONTCACHE;
++	spin_unlock(&VFS_I(next_ip)->i_lock);
++	xfs_irele(next_ip);
++	return error;
 +}
 +
-+# Import common functions.
+ static int
+ xfs_iunlink_insert_inode(
+ 	struct xfs_trans	*tp,
+@@ -1933,6 +1992,8 @@ xfs_iunlink_insert_inode(
+ 	 * inode.
+ 	 */
+ 	error = xfs_iunlink_update_backref(pag, agino, next_agino);
++	if (error == -ENOLINK)
++		error = xfs_iunlink_reload_next(tp, agibp, agino, next_agino);
+ 	if (error)
+ 		return error;
+ 
+@@ -2027,6 +2088,9 @@ xfs_iunlink_remove_inode(
+ 	 */
+ 	error = xfs_iunlink_update_backref(pag, ip->i_prev_unlinked,
+ 			ip->i_next_unlinked);
++	if (error == -ENOLINK)
++		error = xfs_iunlink_reload_next(tp, agibp, ip->i_prev_unlinked,
++				ip->i_next_unlinked);
+ 	if (error)
+ 		return error;
+ 
+diff --git a/fs/xfs/xfs_trace.h b/fs/xfs/xfs_trace.h
+index 36bd42ed9ec8..f4e46bac9b91 100644
+--- a/fs/xfs/xfs_trace.h
++++ b/fs/xfs/xfs_trace.h
+@@ -3832,6 +3832,31 @@ TRACE_EVENT(xfs_iunlink_update_dinode,
+ 		  __entry->new_ptr)
+ );
+ 
++TRACE_EVENT(xfs_iunlink_reload_next,
++	TP_PROTO(struct xfs_inode *ip),
++	TP_ARGS(ip),
++	TP_STRUCT__entry(
++		__field(dev_t, dev)
++		__field(xfs_agnumber_t, agno)
++		__field(xfs_agino_t, agino)
++		__field(xfs_agino_t, prev_agino)
++		__field(xfs_agino_t, next_agino)
++	),
++	TP_fast_assign(
++		__entry->dev = ip->i_mount->m_super->s_dev;
++		__entry->agno = XFS_INO_TO_AGNO(ip->i_mount, ip->i_ino);
++		__entry->agino = XFS_INO_TO_AGINO(ip->i_mount, ip->i_ino);
++		__entry->prev_agino = ip->i_prev_unlinked;
++		__entry->next_agino = ip->i_next_unlinked;
++	),
++	TP_printk("dev %d:%d agno 0x%x agino 0x%x prev_unlinked 0x%x next_unlinked 0x%x",
++		  MAJOR(__entry->dev), MINOR(__entry->dev),
++		  __entry->agno,
++		  __entry->agino,
++		  __entry->prev_agino,
++		  __entry->next_agino)
++);
 +
-+# Modify as appropriate.
-+_supported_fs generic
-+
-+_require_scratch
-+_require_command "$KILLALL_PROG" "killall"
-+
-+echo "Silence is golden."
-+
-+_scratch_mkfs > $seqres.full 2>&1
-+_scratch_mount >> $seqres.full 2>&1
-+
-+nr_cpus=$((LOAD_FACTOR * 4))
-+nr_ops=$((25000 * nr_cpus * TIME_FACTOR))
-+fsstress_args=(-w -d $SCRATCH_MNT -n $nr_ops -p $nr_cpus -U)
-+test -n "$SOAK_DURATION" && fsstress_args+=(--duration="$SOAK_DURATION")
-+
-+$FSSTRESS_PROG $FSSTRESS_AVOID "${fsstress_args[@]}" >> $seqres.full
-+
-+# success, all done
-+status=0
-+exit
-diff --git a/tests/generic/1220.out b/tests/generic/1220.out
-new file mode 100644
-index 0000000000..2583a6bf73
---- /dev/null
-+++ b/tests/generic/1220.out
-@@ -0,0 +1,2 @@
-+QA output created by 1220
-+Silence is golden.
-
+ DECLARE_EVENT_CLASS(xfs_ag_inode_class,
+ 	TP_PROTO(struct xfs_inode *ip),
+ 	TP_ARGS(ip),
