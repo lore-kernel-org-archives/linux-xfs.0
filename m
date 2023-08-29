@@ -2,115 +2,96 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3BD10C6FA8F
-	for <linux-xfs@archiver.kernel.org>; Tue, 29 Aug 2023 23:42:42 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 41902C6FA8F
+	for <linux-xfs@archiver.kernel.org>; Tue, 29 Aug 2023 23:43:47 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S238656AbjH2XmL (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 29 Aug 2023 19:42:11 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53984 "EHLO
+        id S241186AbjH2XnP (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 29 Aug 2023 19:43:15 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41978 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S234643AbjH2Xlk (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 29 Aug 2023 19:41:40 -0400
+        with ESMTP id S240082AbjH2Xmq (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 29 Aug 2023 19:42:46 -0400
 Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4FF7EC2
-        for <linux-xfs@vger.kernel.org>; Tue, 29 Aug 2023 16:41:38 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0E1981BB
+        for <linux-xfs@vger.kernel.org>; Tue, 29 Aug 2023 16:42:44 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
          key-exchange X25519 server-signature RSA-PSS (2048 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id E25DC62163
-        for <linux-xfs@vger.kernel.org>; Tue, 29 Aug 2023 23:41:37 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 48735C433C7;
-        Tue, 29 Aug 2023 23:41:37 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 9AD1163F0C
+        for <linux-xfs@vger.kernel.org>; Tue, 29 Aug 2023 23:42:43 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPS id 0F96CC433BD
+        for <linux-xfs@vger.kernel.org>; Tue, 29 Aug 2023 23:42:43 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1693352497;
-        bh=W0S/+CJROE9+iLV/+wO1v2kslNVffhNw2yRnke9bdjg=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=PgLiekxAAaAu2ZUpiMjWBMNfasnVkQ6dDLtzqXmNiV+fpSeXsg1MampG8nKZb0awY
-         WxhW61lryKRU+a1+Tuy29pVi0TO8tMFlYy6s1pII7hO4RheBwrB4r/oMxVZgapjsM+
-         oP/XfyzpBtAPngbKuegpoC7bky/Zmm948OEICMp9u5QeYedpIaJgre1ImxHOLhF1c0
-         E63JPFgkzJHgE6Xjb+u0rx6QLfkzke5wcb02PU7vGRsz0HXLKWplB5K6ydan9b958z
-         S0L00K5AF/1+/cOj+Bk0zlbtEpuJWrxIiQMRJlc9T/7/U9l2J8l10uSA097BkqZHZa
-         qTMZZku26spZg==
-Date:   Tue, 29 Aug 2023 16:41:36 -0700
-From:   "Darrick J. Wong" <djwong@kernel.org>
-To:     Jose M Calhariz <jose.calhariz@tecnico.ulisboa.pt>
-Cc:     linux-xfs@vger.kernel.org
-Subject: Re: Data corruption with XFS on Debian 11 and 12 under heavy load.
-Message-ID: <20230829234136.GF28186@frogsfrogsfrogs>
-References: <ZO4nuHNg+KFzZ2Qz@calhariz.com>
+        s=k20201202; t=1693352563;
+        bh=KpzmP+VYRrGSZRLu8C4D08nKNZPuCENhXGX4+Uk2cMw=;
+        h=From:To:Subject:Date:In-Reply-To:References:From;
+        b=YIqjTYlaXN3EMqr60xryz+hNNcdU/2UA5KJjZl0fNF5Q8KvzEHUn2O1DUxWlr1xjB
+         zdlpiAuhpMbr569ZqLw1oE2IRLO7pk5oHjUeifJ+hQBYl+HkkFVNtkBicFJ5Rs9P3X
+         QfNpRfa3d2UcZanneeUgD3zHn8PI2gIZUOHEv1saqG7CsgrR2VVit2Ux1UoKpa1Pk6
+         tq/aYtnn/tzhY5lEaKGuAKe9xFn/BzXNCGAd+PLMziJVbi3CGduUHa12afWV5SVN7q
+         c1s3Ksmz0wmsJ6IW9c7j2+KMww1L4NSZbOZajizSz8TWqffoKBYAqC1tbjpSELqWe7
+         0xbeOr+/wMSaw==
+Received: by aws-us-west-2-korg-bugzilla-1.web.codeaurora.org (Postfix, from userid 48)
+        id 01E76C53BD0; Tue, 29 Aug 2023 23:42:43 +0000 (UTC)
+From:   bugzilla-daemon@kernel.org
+To:     linux-xfs@vger.kernel.org
+Subject: [Bug 217769] XFS crash on mount on kernels >= 6.1
+Date:   Tue, 29 Aug 2023 23:42:42 +0000
+X-Bugzilla-Reason: None
+X-Bugzilla-Type: changed
+X-Bugzilla-Watch-Reason: AssignedTo filesystem_xfs@kernel-bugs.kernel.org
+X-Bugzilla-Product: File System
+X-Bugzilla-Component: XFS
+X-Bugzilla-Version: 2.5
+X-Bugzilla-Keywords: 
+X-Bugzilla-Severity: normal
+X-Bugzilla-Who: djwong@kernel.org
+X-Bugzilla-Status: NEW
+X-Bugzilla-Resolution: 
+X-Bugzilla-Priority: P3
+X-Bugzilla-Assigned-To: filesystem_xfs@kernel-bugs.kernel.org
+X-Bugzilla-Flags: 
+X-Bugzilla-Changed-Fields: 
+Message-ID: <bug-217769-201763-hOfPrfWktm@https.bugzilla.kernel.org/>
+In-Reply-To: <bug-217769-201763@https.bugzilla.kernel.org/>
+References: <bug-217769-201763@https.bugzilla.kernel.org/>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
+X-Bugzilla-URL: https://bugzilla.kernel.org/
+Auto-Submitted: auto-generated
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <ZO4nuHNg+KFzZ2Qz@calhariz.com>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Tue, Aug 29, 2023 at 06:15:36PM +0100, Jose M Calhariz wrote:
-> 
-> Hi,
-> 
-> I have been chasing a data corruption problem under heavy load on 4
-> servers that I have at my care.  First I thought of an hardware
-> problem because it only happen with RAID 6 disks.  So I reported to Debian: 
-> 
-> https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=1032391
-> 
-> Further research pointed to be the XFS the common pattern, not an
-> hardware issue.  So I made an informal query to a friend in a software
-> house that relies heavily on XFS about his thought on this issue.  He
-> made reference to several problems fixed on kernel 6.2 and a
-> discussion on this mailing list about back porting the fixes to 6.1
-> kernel.
-> 
-> With this information I have tried the latest kernel at that time on
-> Debian testing over Debian v12 and I could not reproduce the
-> problem.  So I made another bug report:
-> 
-> https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=1040416
-> 
-> My questions to this mailing list:
-> 
->   - Have anyone experienced under Debian or with vanilla kernels
->   corruption under heavy load on XFS?
+https://bugzilla.kernel.org/show_bug.cgi?id=3D217769
 
-Yes.  There were a rash of corruption problems that got fixed in 6.2:
-https://git.kernel.org/pub/scm/fs/xfs/xfs-linux.git/tag/?h=xfs-6.2-merge-8
+--- Comment #16 from Darrick J. Wong (djwong@kernel.org) ---
+On Wed, Aug 09, 2023 at 07:10:03PM +0000, bugzilla-daemon@kernel.org wrote:
+> https://bugzilla.kernel.org/show_bug.cgi?id=3D217769
+>=20
+> --- Comment #15 from Richard W.M. Jones (rjones@redhat.com) ---
+> No problems.  We had a similar bug reported internally that
+> happens on VMware guests, and I'm just trying to rule out VMware
+> as a factor.
 
-My guess with no other information is either the write invalidation
-problem in iomap; or maybe COW extent allocations racing with the log.
+Does this:
+https://lore.kernel.org/linux-xfs/20230829232043.GE28186@frogsfrogsfrogs/T/=
+#u
 
-Most of these haven't been backported to 6.1 because our only choices as
-a community were (a) let a dumb bot shovel in patches with zero QA or
-(b) try to scare up volunteers to backport things to LTS kernels.  (a)
-wasn't acceptable, but then with (b)...
-
->   - Should I stop waiting for the fixes being back ported to vanilla
->   6.1 and run the latest kernel from Debian testing anyway?  Taking
->   notice that kernels from testing have less security updates on time
->   than stable kernels, specially security issues with limited
->   disclosure.
-
-...there isn't really a designated 6.1 LTS backport engineer right now.
-A couple folks from Cloudflare; Amir Goldstein; and Ted Ts'o have been
-sharing the work when they have spare time.
+help in any way?
 
 --D
 
-> I am happy to provide more info about my setup or my stability tests
-> that fail under XFS.
-> 
-> 
-> Kind regards
-> Jose M Calhariz
-> 
-> -- 
-> --
-> Um falso amigo nunca o xinga
-> 
-> Um verdadeiro amigo já o xingou de tudo quanto é
-> palavrão que existe - e até inventou alguns novos
+> --=20
+> You may reply to this email to add a comment.
+>=20
+> You are receiving this mail because:
+> You are watching the assignee of the bug.
 
+--=20
+You may reply to this email to add a comment.
 
+You are receiving this mail because:
+You are watching the assignee of the bug.=
