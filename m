@@ -2,45 +2,45 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id ADFE6C83F12
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 03757C83F1B
 	for <linux-xfs@archiver.kernel.org>; Tue, 29 Aug 2023 23:10:29 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S239389AbjH2XJ7 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 29 Aug 2023 19:09:59 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44610 "EHLO
+        id S239173AbjH2XJ6 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 29 Aug 2023 19:09:58 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55398 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S239625AbjH2XJ5 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 29 Aug 2023 19:09:57 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 55AACDB;
-        Tue, 29 Aug 2023 16:09:55 -0700 (PDT)
+        with ESMTP id S236359AbjH2XJd (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 29 Aug 2023 19:09:33 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id CC063DB
+        for <linux-xfs@vger.kernel.org>; Tue, 29 Aug 2023 16:09:30 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
          key-exchange X25519 server-signature RSA-PSS (2048 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id DFAEB61014;
-        Tue, 29 Aug 2023 23:09:54 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 4872EC433C8;
-        Tue, 29 Aug 2023 23:09:54 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 6A11F61E8C
+        for <linux-xfs@vger.kernel.org>; Tue, 29 Aug 2023 23:09:30 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id D0D9EC433C7;
+        Tue, 29 Aug 2023 23:09:29 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1693350594;
-        bh=AfNZ/oSuvjD3CbD6WRm7awj8lyEv3FwW6lXbQSp0qjE=;
+        s=k20201202; t=1693350569;
+        bh=hx6zrA3cnrEMgEuzTlQ3T9Iw7OHbae7BwzgcR6SCASU=;
         h=Subject:From:To:Cc:Date:In-Reply-To:References:From;
-        b=G83Jheld00+SSjXDV0qVEIRxxuK0V56JNO9T9aa8vkXYcEt0/5O+daH58WQzld8M+
-         6hLZ5PwBFRWy2/MNNviQPq821IAAZyE27TZTxGgkWYHHCoGTYGMfXbjFIbA1tpo94F
-         kdwHWiiEek4sUPhVZ9ffbJHH8ZowHqFdUN9CYdM/upoBz6kr+eBQOPAiigN1wS9RzX
-         D5jjTvf79fNnkNkh/yZOfxTey3po0lH4A/4GQzO4UTrmoH2aQsGPoj0IRu1OW5mgs0
-         yhM1GO8/2hMpwiWjiXZxfoEbAjZzuSLXCrX04EwU4Ey8OVRDZurRm04YN7R031X6IM
-         fRCqVx5ACmrzg==
-Subject: [PATCH 1/2] xfs/270: actually test file readability
+        b=oWYHXttgCZwf0liFCxv3JEfmOwMrjY2iJ43rvIDQBpnIhqB8H//FbJQMR+gUXn5Z3
+         nWL+AhCQX97qsrznnyAuecfYWREgZz9Nq8P9OAqlbhtdnYATIskE5NhXwrE7Ut1rI2
+         dojMev4awVeYOJFGsP2L59V4s83FYtcdfKG/H1VqixYFIBXpkH9/ywioiKzXfl5TE9
+         Xz+v7sA/9UFdrfPg2t6ZkZZl15GKyFpenIpWmKw0xS6wL5huR9QtO0QIxTlJsOAKUS
+         REs+4DoKQ/zZvO3JRsB0V64xoa5kO6cF31ikJ24xYhGSMDV7vWJU5fOR1i3x1raBNQ
+         OCvmuPCPdB26A==
+Subject: [PATCH 1/2] xfs: allow inode inactivation during a ro mount log
+ recovery
 From:   "Darrick J. Wong" <djwong@kernel.org>
-To:     zlang@redhat.com, djwong@kernel.org
-Cc:     linux-xfs@vger.kernel.org, fstests@vger.kernel.org, guan@eryu.me,
-        david@fromorbit.com, sandeen@sandeen.net
-Date:   Tue, 29 Aug 2023 16:09:53 -0700
-Message-ID: <169335059383.3526409.15894917295629170268.stgit@frogsfrogsfrogs>
-In-Reply-To: <169335058807.3526409.15604604578540143202.stgit@frogsfrogsfrogs>
-References: <169335058807.3526409.15604604578540143202.stgit@frogsfrogsfrogs>
+To:     djwong@kernel.org, chandan.babu@gmail.com
+Cc:     linux-xfs@vger.kernel.org, david@fromorbit.com, sandeen@sandeen.net
+Date:   Tue, 29 Aug 2023 16:09:29 -0700
+Message-ID: <169335056933.3525521.6054773682023937525.stgit@frogsfrogsfrogs>
+In-Reply-To: <169335056369.3525521.1326787329447266634.stgit@frogsfrogsfrogs>
+References: <169335056369.3525521.1326787329447266634.stgit@frogsfrogsfrogs>
 User-Agent: StGit/0.19
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
@@ -51,35 +51,55 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-Make sure we can actually read files off the ro mounted filesystem that
-has an unknown rocompat feature set.
+In the next patch, we're going to prohibit log recovery if the primary
+superblock contains an unrecognized rocompat feature bit even on
+readonly mounts.  This requires removing all the code in the log
+mounting process that temporarily disables the readonly state.
+
+Unfortunately, inode inactivation disables itself on readonly mounts.
+Clearing the iunlinked lists after log recovery needs inactivation to
+run to free the unreferenced inodes, which (AFAICT) is the only reason
+why log mounting plays games with the readonly state in the first place.
+
+Therefore, change the inactivation predicates to allow inactivation
+during log recovery of a readonly mount.
 
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 ---
- tests/xfs/270 |    4 ++++
- 1 file changed, 4 insertions(+)
+ fs/xfs/xfs_inode.c |   14 ++++++++++----
+ 1 file changed, 10 insertions(+), 4 deletions(-)
 
 
-diff --git a/tests/xfs/270 b/tests/xfs/270
-index 7447ce87be..511dfe9fcd 100755
---- a/tests/xfs/270
-+++ b/tests/xfs/270
-@@ -23,6 +23,9 @@ _require_scratch_nocheck
- _require_scratch_xfs_crc
+diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
+index 9e62cc500140..6ee266be45d4 100644
+--- a/fs/xfs/xfs_inode.c
++++ b/fs/xfs/xfs_inode.c
+@@ -1643,8 +1643,11 @@ xfs_inode_needs_inactive(
+ 	if (VFS_I(ip)->i_mode == 0)
+ 		return false;
  
- _scratch_mkfs_xfs >>$seqres.full 2>&1
-+_scratch_mount
-+echo moo > $SCRATCH_MNT/testfile
-+_scratch_unmount
+-	/* If this is a read-only mount, don't do this (would generate I/O) */
+-	if (xfs_is_readonly(mp))
++	/*
++	 * If this is a read-only mount, don't do this (would generate I/O)
++	 * unless we're in log recovery and cleaning the iunlinked list.
++	 */
++	if (xfs_is_readonly(mp) && !xlog_recovery_needed(mp->m_log))
+ 		return false;
  
- # set the highest bit of features_ro_compat, use it as an unknown
- # feature bit. If one day this bit become known feature, please
-@@ -68,6 +71,7 @@ if [ $? -ne 0 ]; then
- 	_fail "ro mount test failed"
- else
- 	# no hang/panic is fine
-+	cat $SCRATCH_MNT/testfile > /dev/null
- 	$FSSTRESS_PROG -d $SCRATCH_MNT -p 4 -n 400 >>$seqres.full 2>&1
- fi
+ 	/* If the log isn't running, push inodes straight to reclaim. */
+@@ -1704,8 +1707,11 @@ xfs_inactive(
+ 	mp = ip->i_mount;
+ 	ASSERT(!xfs_iflags_test(ip, XFS_IRECOVERY));
  
+-	/* If this is a read-only mount, don't do this (would generate I/O) */
+-	if (xfs_is_readonly(mp))
++	/*
++	 * If this is a read-only mount, don't do this (would generate I/O)
++	 * unless we're in log recovery and cleaning the iunlinked list.
++	 */
++	if (xfs_is_readonly(mp) && !xlog_recovery_needed(mp->m_log))
+ 		goto out;
+ 
+ 	/* Metadata inodes require explicit resource cleanup. */
 
