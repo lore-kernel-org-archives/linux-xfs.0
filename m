@@ -2,177 +2,246 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 30790C83F19
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4105FC83F18
 	for <linux-xfs@archiver.kernel.org>; Wed, 30 Aug 2023 01:02:59 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235784AbjH3BC3 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 29 Aug 2023 21:02:29 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41650 "EHLO
+        id S239675AbjH3BCa (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 29 Aug 2023 21:02:30 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41634 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S238711AbjH3BCI (ORCPT
+        with ESMTP id S238444AbjH3BCI (ORCPT
         <rfc822;linux-xfs@vger.kernel.org>); Tue, 29 Aug 2023 21:02:08 -0400
-Received: from mail-pl1-x62b.google.com (mail-pl1-x62b.google.com [IPv6:2607:f8b0:4864:20::62b])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id EB114CD2
-        for <linux-xfs@vger.kernel.org>; Tue, 29 Aug 2023 18:02:01 -0700 (PDT)
-Received: by mail-pl1-x62b.google.com with SMTP id d9443c01a7336-1bc8a2f71eeso31789825ad.0
-        for <linux-xfs@vger.kernel.org>; Tue, 29 Aug 2023 18:02:01 -0700 (PDT)
+Received: from mail-pf1-x431.google.com (mail-pf1-x431.google.com [IPv6:2607:f8b0:4864:20::431])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B97B4CCF
+        for <linux-xfs@vger.kernel.org>; Tue, 29 Aug 2023 18:02:00 -0700 (PDT)
+Received: by mail-pf1-x431.google.com with SMTP id d2e1a72fcca58-68a41031768so3661038b3a.3
+        for <linux-xfs@vger.kernel.org>; Tue, 29 Aug 2023 18:02:00 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=fromorbit-com.20221208.gappssmtp.com; s=20221208; t=1693357321; x=1693962121; darn=vger.kernel.org;
+        d=fromorbit-com.20221208.gappssmtp.com; s=20221208; t=1693357320; x=1693962120; darn=vger.kernel.org;
         h=in-reply-to:content-disposition:mime-version:references:message-id
          :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
-        bh=G04il5j1AlLhnQfS8r77+f4BwMV5C8Xsu6+67TiXKLU=;
-        b=ocSLR4UfwLJ+nTexCP7MpRFU5ojDQvnNCKX6zR1znLhOfRRiSGrlwfBDZQQATqoUM2
-         ZHrDjQ6jbTPPUABVmsHk8uNzxzxAnFvPCSYjVEv/OvQJ1agUa+QYutZm47s9G5OG/vzs
-         d/s6qgh+amoJYdw6/6znlRWWS4qHbX6UkPSnHgOSRdQOGEgnP4MWlLs82wOv9p6tKltv
-         WQsdPBwFf5NG2FNYWWnrx7TtU+LMABcgkcAWW+HIszVMxkM4UUQaxJFb+iRlcPSaVGY1
-         JKV3cCWlWlP8y/FubTl2WxnNeux3TNZPcJqmKpcvpB8gbkiuNMQDtKdTK/AdaNZAmKVb
-         vw3w==
+        bh=lUAoN2LL+wNxB4HFbzc1MNXMt8bLM1mD8DRWF9DdJpM=;
+        b=jIH9k15s/A9/4mr29EcsI+L+smLyUH6egd8HwWckJmBhlCNrt6srIrcSvbPUgD0QyJ
+         JzMTMYlCkfcg3NXLiIOSgYE33wyU+q3vmvcusz6NLtEVnOgttg8QL2Eu63JsH38/GAWU
+         vnUjG+XZaD602Adsb4c5/wcfFUuIXrWs4oIgM4xi6P/uuygtZ0TdgQD4b8F7HSNGOPfy
+         WFsJHzbpIi7Tou64IVxiXxuRkAyZrOPpM0gDly6l53ec23UPxOC6zkf/vQdHRHBpdUPV
+         P/Vnj7vfHpIJEI56IQazdg6SGtHPdPYlPMUn/syvhcODbJhunkcH0fGokfLMyu6zK997
+         H3bg==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20221208; t=1693357321; x=1693962121;
+        d=1e100.net; s=20221208; t=1693357320; x=1693962120;
         h=in-reply-to:content-disposition:mime-version:references:message-id
          :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
          :message-id:reply-to;
-        bh=G04il5j1AlLhnQfS8r77+f4BwMV5C8Xsu6+67TiXKLU=;
-        b=CVxgjwxeFlaFEKsSWJUbUsFtVEGDFyuVXA98Yp7rexUEcZZC882BFfEqVWyE1q7ZWm
-         olTd+//LSVXBL3LFDrDRmjBTEDfGs4T6ba33rYosogyj1osrhdN03X5VZP46/7vGEaug
-         6PrLDxpEsb/ILWdBTH038CxQyBT0jYwA3JLJm3/HmazNLrU7G+WMdIqZSma7JiX8HB1v
-         qX+W/aFaJ2WEOqEto87ILLwz5U5V381rcqMy7Khwk7DAb+7oWRh0LCgMp/zb5G65s0Zb
-         0VhUhAPKpVQTSvh0+oCGSj0JcEMf/pjliFbOyEgqI5Mz1sTgazb0/Q6cfQ8i55WBpyct
-         3r6Q==
-X-Gm-Message-State: AOJu0YwBXh8PVp7EgUwf91YG1G4OsBgQnUB0Kmc7UBvPoPTZh7GVv7Ai
-        OzJPJ8279SyN/C54NXl86ROUu5dUEcMJx+t84zk=
-X-Google-Smtp-Source: AGHT+IHb9V16NAMsDdQnv17HDu+d/ri9pcDaMgS3KUHIYwaNy+QLipXPyosAJlG5I51sHzYtGCJuoQ==
-X-Received: by 2002:a17:903:11c5:b0:1c1:f1db:e86d with SMTP id q5-20020a17090311c500b001c1f1dbe86dmr828137plh.7.1693357321311;
-        Tue, 29 Aug 2023 18:02:01 -0700 (PDT)
-Received: from dread.disaster.area (pa49-195-66-88.pa.nsw.optusnet.com.au. [49.195.66.88])
-        by smtp.gmail.com with ESMTPSA id b16-20020a170902d51000b00198d7b52eefsm9964942plg.257.2023.08.29.18.02.00
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        bh=lUAoN2LL+wNxB4HFbzc1MNXMt8bLM1mD8DRWF9DdJpM=;
+        b=DMckax2TVUYWZrPuqJjEihTmYmfIIdGXOvOlxs7j9ugY3auDzjt6p7NfF676n/zmfL
+         exns9V3S4werGKROEuPMoz0GBTY2XRifwjfKfoaT3Cqq/6zR5OuW/Bl4qMRBG5IKeS6j
+         wRcbj+RB0/3OfxWFT41bjn1TjEugKzQfJFbPc6SZxKceC3qAr7qRus+I6b876BC+fOXG
+         pScR4REsG5TRqTa5kr28kTg9WWZns4ndPdZXwBFPqgE2rNWE/7kHZNwtRGT/LgJwa3L5
+         XHLtlaTxPaoXibi4ih4K4P8c90RTnBi1yjrh8lO5/np7U1uwkiGAwU/ULLn7jfmvZLaf
+         B/hg==
+X-Gm-Message-State: AOJu0Yw3ynlBvtGphFrjizuMMa1X8XKiVQEmxawdxUQ6KKyCW9rlIr1U
+        HGU//ofGsAfB1mPKPrwFZUL+DQ==
+X-Google-Smtp-Source: AGHT+IE9Fa9rJ5dJK/ZUvqGA++6ZyBJzqK+SbSPBhREJGER0uiXBZXy5TEJZg6I4+ynNHjy+qLDTtA==
+X-Received: by 2002:a17:902:934c:b0:1bc:5924:2da2 with SMTP id g12-20020a170902934c00b001bc59242da2mr648690plp.56.1693357320149;
         Tue, 29 Aug 2023 18:02:00 -0700 (PDT)
+Received: from dread.disaster.area (pa49-195-66-88.pa.nsw.optusnet.com.au. [49.195.66.88])
+        by smtp.gmail.com with ESMTPSA id b16-20020a170902d51000b00198d7b52eefsm9964942plg.257.2023.08.29.18.01.59
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Tue, 29 Aug 2023 18:01:59 -0700 (PDT)
 Received: from dave by dread.disaster.area with local (Exim 4.96)
         (envelope-from <david@fromorbit.com>)
-        id 1qb6fX-008FJZ-2i;
-        Wed, 30 Aug 2023 07:54:39 +1000
-Date:   Wed, 30 Aug 2023 07:54:39 +1000
+        id 1qb8ps-008I69-1W;
+        Wed, 30 Aug 2023 10:13:28 +1000
+Date:   Wed, 30 Aug 2023 10:13:28 +1000
 From:   Dave Chinner <david@fromorbit.com>
-To:     Jose M Calhariz <jose.calhariz@tecnico.ulisboa.pt>
-Cc:     linux-xfs@vger.kernel.org
-Subject: Re: Data corruption with XFS on Debian 11 and 12 under heavy load.
-Message-ID: <ZO5pHxqSVbni0Urt@dread.disaster.area>
-References: <ZO4nuHNg+KFzZ2Qz@calhariz.com>
+To:     "Darrick J. Wong" <djwong@kernel.org>
+Cc:     Eric Sandeen <sandeen@redhat.com>, xfs <linux-xfs@vger.kernel.org>,
+        shrikanth hegde <sshegde@linux.vnet.ibm.com>,
+        Ritesh Harjani <ritesh.list@gmail.com>
+Subject: Re: [RFC PATCH] xfs: load uncached unlinked inodes into memory on
+ demand
+Message-ID: <ZO6JqOBOOUCcS4ac@dread.disaster.area>
+References: <20230829232043.GE28186@frogsfrogsfrogs>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <ZO4nuHNg+KFzZ2Qz@calhariz.com>
+In-Reply-To: <20230829232043.GE28186@frogsfrogsfrogs>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Tue, Aug 29, 2023 at 06:15:36PM +0100, Jose M Calhariz wrote:
+On Tue, Aug 29, 2023 at 04:20:43PM -0700, Darrick J. Wong wrote:
+> From: Darrick J. Wong <djwong@kernel.org>
 > 
-> Hi,
+> shrikanth hegde reports that filesystems fail shortly after mount with
+> the following failure:
 > 
-> I have been chasing a data corruption problem under heavy load on 4
-> servers that I have at my care.  First I thought of an hardware
-> problem because it only happen with RAID 6 disks.  So I reported to Debian: 
+> 	WARNING: CPU: 56 PID: 12450 at fs/xfs/xfs_inode.c:1839 xfs_iunlink_lookup+0x58/0x80 [xfs]
 > 
-> https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=1032391
-
-Summary: corruption on HW RAID6, not on a separate HW RAID1 volume
-on the same controller.
-
-Firmware update of HW RAID controller made on disk corruption on
-RAID6 volumes go away, but weird compiler failures still occurred
-indicating data corruption was likely still occuring.
-
-Updating kernel to "bookworm" which runs a 6.3 kernel didn't fix the
-problem.
-
-This smells of corruption occurring on read IO, not on write IO, and
-likely a hardware related problem given the change of behaviour with
-a firmware update.
-
-> Further research pointed to be the XFS the common pattern, not an
-> hardware issue.  So I made an informal query to a friend in a software
-> house that relies heavily on XFS about his thought on this issue.  He
-> made reference to several problems fixed on kernel 6.2 and a
-> discussion on this mailing list about back porting the fixes to 6.1
-> kernel.
-
-I can't think of any bug fix we've been talking about backporting to
-6.1 that might fix a data corruption? Anything that is a known data
-corruption fix normally gets backported pretty quickly (e.g. the
-corruption that could be triggered in 6.3.0-6.3.4 kernels had the
-fix backported into 6.3.5 as soon as we identified the cause).
-
-> With this information I have tried the latest kernel at that time on
-> Debian testing over Debian v12 and I could not reproduce the
-> problem.  So I made another bug report:
+> This of course is the WARN_ON_ONCE in xfs_iunlink_lookup:
 > 
-> https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=1040416
-
-Your test case of make -j 4096 fails on 6.1.27 but does not fail on
-6.3.7. Which is different behaviour to the above bug. This time you
-have a kernel log that indicates XFS appears to be hung up waiting
-for an AGI lock during inode allocation from the hung task timer.
-
-This does not indicate any sort of corruption is occurring - it
-means either the storage is really slow (i.e. waiting for IO
-completion on either the AGI, or IO completion on whatever is
-holding the AGI lock) or there has been a deadlock of some kind.
-EIther way, this sort of thing is not an indication of data corruption.
-
-You also don't mention what storage hardware this is on - is this
-still on the HW RAID6 volumes that were causing issues that you
-reported in the first bug above?
-
-----
-
-There's really nothing in either of these bug reports that indicate
-that XFS is the root cause, whilst there's plenty of anecdotal
-evidence from the first bug to point at storage hardware
-problems being the cause.
-
-So, which of these problems is easiest to reproduce on your
-machines? Pick one of them and:
-
-- describe the storage hardware stack (BBWC, RAID, caching strategy)
-- describe the storage software stack (drdb, lvm, xfs_info for the
-  filesystem, etc)
-- cpus, memory, etc
-- example of a corrupt data file vs a good file (i.e. what is the
-  corrupt data that is appearing in the corrupt .o files?)
-- find the minimum storage stack that reproduces the problem, and
-  determine if the problem reproduces across different storage
-  hardware in the same machine.
-- if you have known bad and known good kernels, run a bisect and see
-  where the problem goes away (e.g. which -rcX kernel between good
-  and bad results in the problem going away).
-
-> My questions to this mailing list:
+> 	ip = radix_tree_lookup(&pag->pag_ici_root, agino);
+> 	if (WARN_ON_ONCE(!ip || !ip->i_ino)) { ... }
 > 
->   - Have anyone experienced under Debian or with vanilla kernels
->   corruption under heavy load on XFS?
+> From diagnostic data collected by the bug reporters, it would appear
+> that we cleanly mounted a filesystem that contained unlinked inodes.
+> Unlinked inodes are only processed as a final step of log recovery,
+> which means that clean mounts do not process the unlinked list at all.
+> 
+> Prior to the introduction of the incore unlinked lists, this wasn't a
+> problem because the unlink code would (very expensively) traverse the
+> entire ondisk metadata iunlink chain to keep things up to date.
+> However, the incore unlinked list code complains when it realizes that
+> it is out of sync with the ondisk metadata and shuts down the fs, which
+> is bad.
+> 
+> Ritesh proposed to solve this problem by unconditionally parsing the
+> unlinked lists at mount time, but this imposes a mount time cost for
+> every filesystem to catch something that should be very infrequent.
+> Instead, let's target the places where we can encounter a next_unlinked
+> pointer that refers to an inode that is not in cache, and load it into
+> cache.
+> 
+> Note: This patch does not address the problem of iget loading an inode
+> from the middle of the iunlink list and needing to set i_prev_unlinked
+> correctly.
+> 
+> Link: https://lore.kernel.org/linux-xfs/e5004868-4a03-93e5-5077-e7ed0e533996@linux.vnet.ibm.com/
+> Reported-by: shrikanth hegde <sshegde@linux.vnet.ibm.com>
+> Triaged-by: Ritesh Harjani <ritesh.list@gmail.com>
+> Signed-off-by: Darrick J. Wong <djwong@kernel.org>
+> ---
+>  fs/xfs/xfs_inode.c |   70 ++++++++++++++++++++++++++++++++++++++++++++++++++--
+>  fs/xfs/xfs_trace.h |   25 +++++++++++++++++++
+>  2 files changed, 92 insertions(+), 3 deletions(-)
+> 
+> diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
+> index 6ee266be45d4..3ab140ec09bb 100644
+> --- a/fs/xfs/xfs_inode.c
+> +++ b/fs/xfs/xfs_inode.c
+> @@ -1829,12 +1829,17 @@ xfs_iunlink_lookup(
+>  
+>  	rcu_read_lock();
+>  	ip = radix_tree_lookup(&pag->pag_ici_root, agino);
+> +	if (!ip) {
+> +		/* Caller can handle inode not being in memory. */
+> +		rcu_read_unlock();
+> +		return NULL;
+> +	}
+>  
+>  	/*
+> -	 * Inode not in memory or in RCU freeing limbo should not happen.
+> -	 * Warn about this and let the caller handle the failure.
+> +	 * Inode in RCU freeing limbo should not happen.  Warn about this and
+> +	 * let the caller handle the failure.
+>  	 */
+> -	if (WARN_ON_ONCE(!ip || !ip->i_ino)) {
+> +	if (WARN_ON_ONCE(!ip->i_ino)) {
+>  		rcu_read_unlock();
+>  		return NULL;
+>  	}
 
-No.
+I think we should still log a message about this situation, as it implies
+that we had an unrecovered unlinked list on the filesystem and that
+should "never happen" in normal conditions.
 
-I do long term kernel soak testing with my main workstation with
-debian kernels (i.e. months of uptime, daily use with hundreds of
-browser tabs, tens of terminals, multiple VMs, lots of source tree
-work, all on XFS filesystems. I've been running this kernel:
+i.e. something like:
 
-Linux devoid 6.1.0-9-amd64 #1 SMP PREEMPT_DYNAMIC Debian 6.1.27-1 (2023-05-08) x86_64 GNU/Linux
+XFS(dev): Found unrecovered unlinked inodes in AG X. Runtime recovery initiated.
 
-on this machine for some months.
+which uses a perag state flag to only issue the message once per AG
+per mount. At least this way, if we get weird stuff happening
+because of loading an inode in the middle of an unlinked list (the
+unhandled prev_agino case) we know why weird stuff might be
+happening...
 
->   - Should I stop waiting for the fixes being back ported to vanilla
->   6.1 and run the latest kernel from Debian testing anyway?  Taking
->   notice that kernels from testing have less security updates on time
->   than stable kernels, specially security issues with limited
->   disclosure.
+> @@ -1902,6 +1907,60 @@ xfs_iunlink_update_bucket(
+>  	return 0;
+>  }
+>  
+> +/*
+> + * Load the inode @next_agino into the cache and set its prev_unlinked pointer
+> + * to @prev_agino.  Caller must hold the AGI to synchronize with other changes
+> + * to the unlinked list.
+> + */
+> +STATIC int
+> +xfs_iunlink_reload_next(
+> +	struct xfs_trans	*tp,
+> +	struct xfs_buf		*agibp,
+> +	xfs_agino_t		prev_agino,
+> +	xfs_agino_t		next_agino)
+> +{
+> +	struct xfs_perag	*pag = agibp->b_pag;
+> +	struct xfs_mount	*mp = pag->pag_mount;
+> +	struct xfs_inode	*next_ip = NULL;
+> +	xfs_ino_t		ino;
+> +	int			error;
+> +
+> +	ASSERT(next_agino != NULLAGINO);
+> +
+> +#ifdef DEBUG
+> +	rcu_read_lock();
+> +	next_ip = radix_tree_lookup(&pag->pag_ici_root, next_agino);
+> +	ASSERT(next_ip == NULL);
+> +	rcu_read_unlock();
+> +#endif
+> +
+> +	ino = XFS_AGINO_TO_INO(mp, pag->pag_agno, next_agino);
+> +	error = xfs_iget(mp, tp, ino, XFS_IGET_UNTRUSTED, 0, &next_ip);
+> +	if (error)
+> +		return error;
 
-There's nothing to "fix" or backport until we've done root cause
-analysis on the failures and identified what is actually causing
-your systems to fail.
+WHy are we using XFS_IGET_UNTRUSTED here? A comment explaining why
+we don't trust the agino on th eunlinked list we are about to try to
+recover (i.e. trust!) would be good.
+
+> +	/* If this is not an unlinked inode, something is very wrong. */
+> +	if (VFS_I(next_ip)->i_nlink != 0) {
+> +		error = -EFSCORRUPTED;
+> +		goto rele;
+> +	}
+
+*nod*
+
+> +
+> +	next_ip->i_prev_unlinked = prev_agino;
+> +	trace_xfs_iunlink_reload_next(next_ip);
+> +rele:
+> +	/*
+> +	 * We're running in transaction context, so we cannot run any inode
+> +	 * release code.  Clear DONTCACHE on this inode to prevent the VFS from
+> +	 * initiating writeback and to force the irele to push this inode to
+> +	 * the LRU instead of dropping it immediately.
+> +	 */
+> +	spin_lock(&VFS_I(next_ip)->i_lock);
+> +	VFS_I(next_ip)->i_state &= ~I_DONTCACHE;
+> +	spin_unlock(&VFS_I(next_ip)->i_lock);
+> +	xfs_irele(next_ip);
+
+Huh. We just loaded the next_ip into memory - how is it dirty,
+and what writeback will happen? Also, how would I_DONTCACHE get set
+in the first place here?
+
+
+> +	return error;
+> +}
+> +
+>  static int
+>  xfs_iunlink_insert_inode(
+>  	struct xfs_trans	*tp,
+> @@ -1933,6 +1992,8 @@ xfs_iunlink_insert_inode(
+>  	 * inode.
+>  	 */
+>  	error = xfs_iunlink_update_backref(pag, agino, next_agino);
+> +	if (error == -ENOLINK)
+> +		error = xfs_iunlink_reload_next(tp, agibp, agino, next_agino);
+>  	if (error)
+>  		return error;
+
+Where does this -ENOLINK error come from?
+xfs_iunlink_update_backref() returns either -EFSCORRUPTED or 0. Is
+the patch missing hunks or is it dependent on some other patch that
+does this?
 
 Cheers,
 
