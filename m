@@ -2,124 +2,353 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C501BC83F15
-	for <linux-xfs@archiver.kernel.org>; Wed, 30 Aug 2023 23:10:06 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0283AC83F16
+	for <linux-xfs@archiver.kernel.org>; Wed, 30 Aug 2023 23:25:17 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S239367AbjH3XKH (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 30 Aug 2023 19:10:07 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40648 "EHLO
+        id S1343589AbjH3XZS (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 30 Aug 2023 19:25:18 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54770 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S239347AbjH3XKH (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 30 Aug 2023 19:10:07 -0400
-Received: from mail-pl1-x633.google.com (mail-pl1-x633.google.com [IPv6:2607:f8b0:4864:20::633])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id EBF8283
-        for <linux-xfs@vger.kernel.org>; Wed, 30 Aug 2023 16:10:04 -0700 (PDT)
-Received: by mail-pl1-x633.google.com with SMTP id d9443c01a7336-1c1e3a4a06fso1314685ad.3
-        for <linux-xfs@vger.kernel.org>; Wed, 30 Aug 2023 16:10:04 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=fromorbit-com.20230601.gappssmtp.com; s=20230601; t=1693437004; x=1694041804; darn=vger.kernel.org;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
-        bh=pY8RbnhSGlMiv7I3aFkTawjz67jUc9YTIpapEZLnNrI=;
-        b=Fe28DdH+s6pW3uayHXyXJjFc4ZpZVRGFhQ1hSKCHJqXwfoa3zOxn2gvlsNO4IuTIR2
-         B8xEIGZ2anbDyEMQUgqzHYBlJMozcBu6fKLCogsR5wJAQ9SIA0X5/vM+q+jUlYPEZSrp
-         8uzDGqh8C42qJvUJtITFEihfdWS9qs/fCXBEzD/VvcrSL5k47FKyBMN2wO5wDPYgMMnj
-         hvjy88/sJLqtAEKZpLgH8P8hG4V1b92rXHWI8jn5MNZGkchgFAJyr/ARJ19oDQkFm5Lr
-         71zBR6E4N3y6zTJ8ycqguk4xMjqMXjTLY3p98r2htV2luuA9Krxw/6luZDCiOWmvAaS8
-         8B9Q==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20221208; t=1693437004; x=1694041804;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=pY8RbnhSGlMiv7I3aFkTawjz67jUc9YTIpapEZLnNrI=;
-        b=JoggvXuU5kZVbgdt9ukGAjuSEGraZjCQR5AmuQg5e9J/DFdNmXS15jfrwLAA9ioS2M
-         ZGmrSOu6qsQKX6ke75MeKTnffwWsiTyYCa569RxnR63AAfgAUkPEX4ZEo2kMB9Itfkez
-         LAdHVZapOU2liMZNPDTUGFsRqxRLvSEzrMKehb/SMVsh8OxsUx6jdqGw+uGOyL+XX3LH
-         NpbUbp8/jhqcrXlndi2JRhN5OHUWphbdibINMEZ35bVuSIFlu66GByg3D/hDxZdvGLBY
-         fQ4t6HWyiLnb0K049HqLmrukwRI0G8MxKXjgVMROA06FfHzLgIM6e40iRsJYlkEWgquv
-         HNTw==
-X-Gm-Message-State: AOJu0YxG7mnGPBvL9AS8OPqPQ2inQGhNiLKLfQm1Xy7sVIA/CpoWF4hY
-        m0k+GPdlwgNgfKBNCsBg0GiMxA==
-X-Google-Smtp-Source: AGHT+IH/kekC0GSQlZUGKo09NMAEckPgzzEnROIAm1WRV42FYGa4fZu0zCr9r+/SsFMApspPwx5Nvg==
-X-Received: by 2002:a17:902:cec4:b0:1bf:feb:100f with SMTP id d4-20020a170902cec400b001bf0feb100fmr4251162plg.9.1693437004415;
-        Wed, 30 Aug 2023 16:10:04 -0700 (PDT)
-Received: from dread.disaster.area (pa49-195-66-88.pa.nsw.optusnet.com.au. [49.195.66.88])
-        by smtp.gmail.com with ESMTPSA id jd4-20020a170903260400b001c0774d9327sm35530plb.91.2023.08.30.16.10.03
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 30 Aug 2023 16:10:03 -0700 (PDT)
-Received: from dave by dread.disaster.area with local (Exim 4.96)
-        (envelope-from <david@fromorbit.com>)
-        id 1qbUK0-008iPR-2Z;
-        Thu, 31 Aug 2023 09:10:00 +1000
-Date:   Thu, 31 Aug 2023 09:10:00 +1000
-From:   Dave Chinner <david@fromorbit.com>
-To:     "Darrick J. Wong" <djwong@kernel.org>
-Cc:     zlang@redhat.com, linux-xfs@vger.kernel.org,
-        fstests@vger.kernel.org, guan@eryu.me
-Subject: Re: [PATCH 2/2] generic: only enable io_uring in fsstress explicitly
-Message-ID: <ZO/MSIMQulh8A+Mr@dread.disaster.area>
-References: <169335094811.3534600.13011878728080983620.stgit@frogsfrogsfrogs>
- <169335095953.3534600.16325849760213190849.stgit@frogsfrogsfrogs>
+        with ESMTP id S1344424AbjH3XZR (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 30 Aug 2023 19:25:17 -0400
+Received: from ams.source.kernel.org (ams.source.kernel.org [IPv6:2604:1380:4601:e00::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id EBE00C5
+        for <linux-xfs@vger.kernel.org>; Wed, 30 Aug 2023 16:25:12 -0700 (PDT)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange X25519 server-signature RSA-PSS (2048 bits))
+        (No client certificate requested)
+        by ams.source.kernel.org (Postfix) with ESMTPS id A67F9B8200F
+        for <linux-xfs@vger.kernel.org>; Wed, 30 Aug 2023 23:25:11 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 5F0D8C433C7;
+        Wed, 30 Aug 2023 23:25:10 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1693437910;
+        bh=w2qaq3JOn5f7NatAbsvglZvTh7EfdOQoWd0BeMVesDU=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=Mh8MM5q4l7yiyzKDgdI7CcAM/SdLlVJFlwMlOG40XAhXUnKwTSy4VwtE8dmALXOaB
+         YS8i72gqW+8ZXVQGgQRe62dErQN81sYRDtYBYkDdxQopSxFEsXW/Om9GUkwG5XJU2U
+         SObMw/4HEkn8ZzVTSMonmWwvmC1baMmKaJjoLLCKQoVKLpRjnwH3Z7e/ZaGpIDBDjh
+         etytMwX/MUEBfuZdrjToZdcheIgFxp0GtvHUZOaqlfpN67t4yGmWu1BOMV4Cm+83b4
+         MnL/9wIMPsPu2b/ZimrNkSQCpsDoCmOw1HdU3/zOveCDx942FUbs7Fni59Dk4oefSU
+         xApaqHYGo0f6g==
+Date:   Wed, 30 Aug 2023 16:25:09 -0700
+From:   "Darrick J. Wong" <djwong@kernel.org>
+To:     Dave Chinner <david@fromorbit.com>,
+        Eric Sandeen <sandeen@redhat.com>
+Cc:     xfs <linux-xfs@vger.kernel.org>,
+        shrikanth hegde <sshegde@linux.vnet.ibm.com>,
+        Ritesh Harjani <ritesh.list@gmail.com>
+Subject: [PATCH 1/2] xfs_db: dump unlinked buckets
+Message-ID: <20230830232509.GK28186@frogsfrogsfrogs>
+References: <20230830152659.GJ28186@frogsfrogsfrogs>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <169335095953.3534600.16325849760213190849.stgit@frogsfrogsfrogs>
+In-Reply-To: <20230830152659.GJ28186@frogsfrogsfrogs>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Tue, Aug 29, 2023 at 04:15:59PM -0700, Darrick J. Wong wrote:
-> From: Darrick J. Wong <djwong@kernel.org>
-> 
-> Don't enable io_uring in fsstress unless someone asks for it explicitly,
-> just like fsx.  I think both tools should require explicit opt-in to
-> facilitate A/B testing between the old IO paths and this new one.
-> 
-> While I was playing with fstests+io_uring, I noticed quite a few
-> regressions in fstests, which fell into two classes:
-> 
-> The first class is umount failing with EBUSY.  Apparently this is due to
-> the kernel uring code hanging on to file references even after the
-> userspace program exits.  Tests that run fsstress and immediately
-> unmount now fail sporadically due to the EBUSY.  Unfortunately, the
-> metadata update stress tests, the recovery loop tests, the xfs online
-> fsck functional tests, and the xfs fuzz tests make heavy use of
-> "fsstress; umount" and they fail all over the place now.
-> 
-> Something's broken, Jens and Christian said it should get fixed, but in
-> the meantime this is getting in the way of me testing my own code.
+From: Darrick J. Wong <djwong@kernel.org>
 
-I'm not seeing regular problems with io_uring on my test machines.
-Occasionally there will be a filesystem unmount issue, but that's
-not causing anything but a single test here or there to fail. It's
-not a big deal.
+Create a new command to dump the resource usage of files in the unlinked
+buckets.
 
-> The second problem I noticed is that fsstress now lodges complaints
-> about sporadic heap corruption.  I /think/ this is due to some kind of
-> memory mishandling bug when uring is active but IO requests fail, but I
-> haven't had the time to go figure out what's up with that.
+Signed-off-by: Darrick J. Wong <djwong@kernel.org>
+---
+ db/Makefile              |    2 
+ db/command.c             |    1 
+ db/command.h             |    1 
+ db/iunlink.c             |  204 ++++++++++++++++++++++++++++++++++++++++++++++
+ libxfs/libxfs_api_defs.h |    1 
+ man/man8/xfs_db.8        |   19 ++++
+ 6 files changed, 227 insertions(+), 1 deletion(-)
+ create mode 100644 db/iunlink.c
 
-Yes, I've seen that happen in ~6.4 kernels, but current TOT doesn't
-seem to do that anymore on my test machines.
-
-Regardless, I don't think turning off io_uring support by default is
-the right thing to do. That's just shooting the messenger. We really
-do need this code to be exercised as much as possible because it is
-so full of bugs. Sure, add a flag to turn it off if you need it off
-(and add it to FSSTRESS_AVOID for your test environments), but
-otherwise we really should be exercising io_uring. Ignorance doesn't
-prevent bugs or CVEs....
-
-Realistically, what we actually need is to require io_uring
-developers to focus on testing io_uring functionality with
-filesystems and fsstress and *to fix the regressions* rather than
-endlessly adding more features and complexity that create more bugs. 
-Turning the code off certainly won't help us acheive that....
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+diff --git a/db/Makefile b/db/Makefile
+index 2f95f670..d00801ab 100644
+--- a/db/Makefile
++++ b/db/Makefile
+@@ -14,7 +14,7 @@ HFILES = addr.h agf.h agfl.h agi.h attr.h attrshort.h bit.h block.h bmap.h \
+ 	io.h logformat.h malloc.h metadump.h output.h print.h quit.h sb.h \
+ 	sig.h strvec.h text.h type.h write.h attrset.h symlink.h fsmap.h \
+ 	fuzz.h obfuscate.h
+-CFILES = $(HFILES:.h=.c) btdump.c btheight.c convert.c info.c namei.c \
++CFILES = $(HFILES:.h=.c) btdump.c btheight.c convert.c info.c iunlink.c namei.c \
+ 	timelimit.c
+ LSRCFILES = xfs_admin.sh xfs_ncheck.sh xfs_metadump.sh
+ 
+diff --git a/db/command.c b/db/command.c
+index 02f778b9..b4021c86 100644
+--- a/db/command.c
++++ b/db/command.c
+@@ -127,6 +127,7 @@ init_commands(void)
+ 	info_init();
+ 	inode_init();
+ 	input_init();
++	iunlink_init();
+ 	logres_init();
+ 	logformat_init();
+ 	io_init();
+diff --git a/db/command.h b/db/command.h
+index 498983ff..a89e7150 100644
+--- a/db/command.h
++++ b/db/command.h
+@@ -34,3 +34,4 @@ extern void		info_init(void);
+ extern void		btheight_init(void);
+ extern void		timelimit_init(void);
+ extern void		namei_init(void);
++extern void		iunlink_init(void);
+diff --git a/db/iunlink.c b/db/iunlink.c
+new file mode 100644
+index 00000000..303b5daf
+--- /dev/null
++++ b/db/iunlink.c
+@@ -0,0 +1,204 @@
++// SPDX-License-Identifier: GPL-2.0
++/*
++ * Copyright (C) 2022-2023 Oracle.  All Rights Reserved.
++ * Author: Darrick J. Wong <djwong@kernel.org>
++ */
++#include "libxfs.h"
++#include "command.h"
++#include "output.h"
++#include "init.h"
++
++static xfs_filblks_t
++count_rtblocks(
++	struct xfs_inode	*ip)
++{
++	struct xfs_iext_cursor	icur;
++	struct xfs_bmbt_irec	got;
++	xfs_filblks_t		count = 0;
++	struct xfs_ifork	*ifp = xfs_ifork_ptr(ip, XFS_DATA_FORK);
++	int			error;
++
++	error = -libxfs_iread_extents(NULL, ip, XFS_DATA_FORK);
++	if (error) {
++		dbprintf(
++_("could not read AG %u agino %u extents, err=%d\n"),
++				XFS_INO_TO_AGNO(ip->i_mount, ip->i_ino),
++				XFS_INO_TO_AGINO(ip->i_mount, ip->i_ino),
++				error);
++		return 0;
++	}
++
++	for_each_xfs_iext(ifp, &icur, &got)
++		if (!isnullstartblock(got.br_startblock))
++			count += got.br_blockcount;
++	return count;
++}
++
++static xfs_agino_t
++get_next_unlinked(
++	xfs_agnumber_t		agno,
++	xfs_agino_t		agino,
++	bool			verbose)
++{
++	struct xfs_buf		*ino_bp;
++	struct xfs_dinode	*dip;
++	struct xfs_inode	*ip;
++	xfs_ino_t		ino;
++	xfs_agino_t		ret;
++	int			error;
++
++	ino = XFS_AGINO_TO_INO(mp, agno, agino);
++	error = -libxfs_iget(mp, NULL, ino, 0, &ip);
++	if (error)
++		goto bad;
++
++	if (verbose) {
++		xfs_filblks_t	blocks, rtblks = 0;
++
++		if (XFS_IS_REALTIME_INODE(ip))
++			rtblks = count_rtblocks(ip);
++		blocks = ip->i_nblocks - rtblks;
++
++		dbprintf(_(" blocks %llu rtblocks %llu\n"),
++				blocks, rtblks);
++	} else {
++		dbprintf("\n");
++	}
++
++	error = -libxfs_imap_to_bp(mp, NULL, &ip->i_imap, &ino_bp);
++	if (error)
++		goto bad;
++
++	dip = xfs_buf_offset(ino_bp, ip->i_imap.im_boffset);
++	ret = be32_to_cpu(dip->di_next_unlinked);
++	libxfs_buf_relse(ino_bp);
++
++	return ret;
++bad:
++	dbprintf(_("AG %u agino %u: %s\n"), agno, agino, strerror(error));
++	return NULLAGINO;
++}
++
++static void
++dump_unlinked_bucket(
++	xfs_agnumber_t	agno,
++	struct xfs_buf	*agi_bp,
++	unsigned int	bucket,
++	bool		quiet,
++	bool		verbose)
++{
++	struct xfs_agi	*agi = agi_bp->b_addr;
++	xfs_agino_t	agino;
++	unsigned int	i = 0;
++
++	agino = be32_to_cpu(agi->agi_unlinked[bucket]);
++	if (agino != NULLAGINO)
++		dbprintf(_("AG %u bucket %u agino %u"), agno, bucket, agino);
++	else if (!quiet && agino == NULLAGINO)
++		dbprintf(_("AG %u bucket %u agino NULL\n"), agno, bucket);
++
++	while (agino != NULLAGINO) {
++		agino = get_next_unlinked(agno, agino, verbose);
++		if (agino != NULLAGINO)
++			dbprintf(_("    [%u] agino %u"), i++, agino);
++		else if (!quiet && agino == NULLAGINO)
++			dbprintf(_("    [%u] agino NULL\n"), i++);
++	}
++}
++
++static void
++dump_unlinked(
++	struct xfs_perag	*pag,
++	unsigned int		bucket,
++	bool			quiet,
++	bool			verbose)
++{
++	struct xfs_buf		*agi_bp;
++	xfs_agnumber_t		agno = pag->pag_agno;
++	int			error;
++
++	error = -libxfs_ialloc_read_agi(pag, NULL, &agi_bp);
++	if (error) {
++		dbprintf(_("AGI %u: %s\n"), agno, strerror(errno));
++		return;
++	}
++
++	if (bucket != -1U) {
++		dump_unlinked_bucket(agno, agi_bp, bucket, quiet, verbose);
++		goto relse;
++	}
++
++	for (bucket = 0; bucket < XFS_AGI_UNLINKED_BUCKETS; bucket++) {
++		dump_unlinked_bucket(agno, agi_bp, bucket, quiet, verbose);
++	}
++
++relse:
++	libxfs_buf_relse(agi_bp);
++}
++
++static int
++dump_iunlinked_f(
++	int			argc,
++	char			**argv)
++{
++	struct xfs_perag	*pag;
++	xfs_agnumber_t		agno = NULLAGNUMBER;
++	unsigned int		bucket = -1U;
++	bool			quiet = false;
++	bool			verbose = false;
++	int			c;
++
++	while ((c = getopt(argc, argv, "a:b:qv")) != EOF) {
++		switch (c) {
++		case 'a':
++			agno = atoi(optarg);
++			if (agno >= mp->m_sb.sb_agcount) {
++				dbprintf(_("Unknown AG %u, agcount is %u.\n"),
++						agno, mp->m_sb.sb_agcount);
++				return 0;
++			}
++			break;
++		case 'b':
++			bucket = atoi(optarg);
++			if (bucket >= XFS_AGI_UNLINKED_BUCKETS) {
++				dbprintf(_("Unknown bucket %u, max is 63.\n"),
++						bucket);
++				return 0;
++			}
++			break;
++		case 'q':
++			quiet = true;
++			break;
++		case 'v':
++			verbose = true;
++			break;
++		default:
++			dbprintf(_("Bad option for dump_iunlinked command.\n"));
++			return 0;
++		}
++	}
++
++	if (agno != NULLAGNUMBER) {
++		struct xfs_perag	*pag = libxfs_perag_get(mp, agno);
++
++		dump_unlinked(pag, bucket, quiet, verbose);
++		libxfs_perag_put(pag);
++		return 0;
++	}
++
++	for_each_perag(mp, agno, pag)
++		dump_unlinked(pag, bucket, quiet, verbose);
++
++	return 0;
++}
++
++static const cmdinfo_t	dump_iunlinked_cmd =
++	{ "dump_iunlinked", NULL, dump_iunlinked_f, 0, -1, 0,
++	  N_("[-a agno] [-b bucket] [-q] [-v]"),
++	  N_("dump chain of unlinked inode buckets"), NULL };
++
++void
++iunlink_init(void)
++{
++	add_command(&dump_iunlinked_cmd);
++}
+diff --git a/libxfs/libxfs_api_defs.h b/libxfs/libxfs_api_defs.h
+index 026aa510..ddba5c7c 100644
+--- a/libxfs/libxfs_api_defs.h
++++ b/libxfs/libxfs_api_defs.h
+@@ -125,6 +125,7 @@
+ #define xfs_idestroy_fork		libxfs_idestroy_fork
+ #define xfs_iext_lookup_extent		libxfs_iext_lookup_extent
+ #define xfs_ifork_zap_attr		libxfs_ifork_zap_attr
++#define xfs_imap_to_bp			libxfs_imap_to_bp
+ #define xfs_initialize_perag		libxfs_initialize_perag
+ #define xfs_initialize_perag_data	libxfs_initialize_perag_data
+ #define xfs_init_local_fork		libxfs_init_local_fork
+diff --git a/man/man8/xfs_db.8 b/man/man8/xfs_db.8
+index 60dcdc52..2d6d0da4 100644
+--- a/man/man8/xfs_db.8
++++ b/man/man8/xfs_db.8
+@@ -579,6 +579,25 @@ print the current debug option bits. These are for the use of the implementor.
+ .BI "dquot [" \-g | \-p | \-u ] " id"
+ Set current address to a group, project or user quota block for the given ID. Defaults to user quota.
+ .TP
++.BI "dump_iunlinked [-a " agno " ] [-b " bucket " ] [-q] [-v]"
++Dump the contents of unlinked buckets.
++
++Options include:
++.RS 1.0i
++.TP 0.4i
++.B \-a
++Print only this AG's unlinked buckets.
++.TP 0.4i
++.B \-b
++Print only this bucket within each AGI.
++.TP 0.4i
++.B \-q
++Only print the essentials.
++.TP 0.4i
++.B \-v
++Print resource usage of each file on the unlinked lists.
++.RE
++.TP
+ .BI "echo [" arg "] ..."
+ Echo the arguments to the output.
+ .TP
