@@ -2,250 +2,109 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4105FC83F18
-	for <linux-xfs@archiver.kernel.org>; Wed, 30 Aug 2023 01:02:59 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E06F7C71153
+	for <linux-xfs@archiver.kernel.org>; Wed, 30 Aug 2023 01:02:58 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S239675AbjH3BCa (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 29 Aug 2023 21:02:30 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41634 "EHLO
+        id S235624AbjH3BC3 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 29 Aug 2023 21:02:29 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41596 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S238444AbjH3BCI (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 29 Aug 2023 21:02:08 -0400
-Received: from mail-pf1-x431.google.com (mail-pf1-x431.google.com [IPv6:2607:f8b0:4864:20::431])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B97B4CCF
-        for <linux-xfs@vger.kernel.org>; Tue, 29 Aug 2023 18:02:00 -0700 (PDT)
-Received: by mail-pf1-x431.google.com with SMTP id d2e1a72fcca58-68a41031768so3661038b3a.3
-        for <linux-xfs@vger.kernel.org>; Tue, 29 Aug 2023 18:02:00 -0700 (PDT)
+        with ESMTP id S235784AbjH3BCE (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 29 Aug 2023 21:02:04 -0400
+Received: from mail-pf1-x42b.google.com (mail-pf1-x42b.google.com [IPv6:2607:f8b0:4864:20::42b])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D5C3E1BF
+        for <linux-xfs@vger.kernel.org>; Tue, 29 Aug 2023 18:01:57 -0700 (PDT)
+Received: by mail-pf1-x42b.google.com with SMTP id d2e1a72fcca58-68c576d35feso2123548b3a.2
+        for <linux-xfs@vger.kernel.org>; Tue, 29 Aug 2023 18:01:57 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=fromorbit-com.20221208.gappssmtp.com; s=20221208; t=1693357320; x=1693962120; darn=vger.kernel.org;
+        d=fromorbit-com.20221208.gappssmtp.com; s=20221208; t=1693357317; x=1693962117; darn=vger.kernel.org;
         h=in-reply-to:content-disposition:mime-version:references:message-id
          :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
-        bh=lUAoN2LL+wNxB4HFbzc1MNXMt8bLM1mD8DRWF9DdJpM=;
-        b=jIH9k15s/A9/4mr29EcsI+L+smLyUH6egd8HwWckJmBhlCNrt6srIrcSvbPUgD0QyJ
-         JzMTMYlCkfcg3NXLiIOSgYE33wyU+q3vmvcusz6NLtEVnOgttg8QL2Eu63JsH38/GAWU
-         vnUjG+XZaD602Adsb4c5/wcfFUuIXrWs4oIgM4xi6P/uuygtZ0TdgQD4b8F7HSNGOPfy
-         WFsJHzbpIi7Tou64IVxiXxuRkAyZrOPpM0gDly6l53ec23UPxOC6zkf/vQdHRHBpdUPV
-         P/Vnj7vfHpIJEI56IQazdg6SGtHPdPYlPMUn/syvhcODbJhunkcH0fGokfLMyu6zK997
-         H3bg==
+        bh=ZS+ro3hnJT+F2EuJzD8qwTtt1ieU4aDrIShCqeJ/UZY=;
+        b=m38QK2YXNjhwCYlWLb8Nw38UykY/qPZ9Q7z5mdeOVQr7HfnCXYMyqRVXUJnAeSjDyA
+         n/veRCTanIfvpthN5e7TZUPVlSqz/4E5jeZY6LU7QbVzmQuwLrpLbyHsqpGRJnh9iVmx
+         l1YzKHoY64P6GCaRRsTnuD/XM9cWnpzv7J5+RdIagROxV8k5xKQsUSNt7D9DpS+/fHM1
+         auG3XT259UeT69hrjjW/LZTYV04PeXWEc18XM4Qu+RP5qzlZjZ8VWqrJ5cvzFZH0kgEm
+         JmpeJbCBC157BtEU/UqYpdcIAIymOZ5qm2fRBIa2FDaEniukE5ZF4UiZwzDmHSDvE8Y4
+         r+Kg==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20221208; t=1693357320; x=1693962120;
+        d=1e100.net; s=20221208; t=1693357317; x=1693962117;
         h=in-reply-to:content-disposition:mime-version:references:message-id
          :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
          :message-id:reply-to;
-        bh=lUAoN2LL+wNxB4HFbzc1MNXMt8bLM1mD8DRWF9DdJpM=;
-        b=DMckax2TVUYWZrPuqJjEihTmYmfIIdGXOvOlxs7j9ugY3auDzjt6p7NfF676n/zmfL
-         exns9V3S4werGKROEuPMoz0GBTY2XRifwjfKfoaT3Cqq/6zR5OuW/Bl4qMRBG5IKeS6j
-         wRcbj+RB0/3OfxWFT41bjn1TjEugKzQfJFbPc6SZxKceC3qAr7qRus+I6b876BC+fOXG
-         pScR4REsG5TRqTa5kr28kTg9WWZns4ndPdZXwBFPqgE2rNWE/7kHZNwtRGT/LgJwa3L5
-         XHLtlaTxPaoXibi4ih4K4P8c90RTnBi1yjrh8lO5/np7U1uwkiGAwU/ULLn7jfmvZLaf
-         B/hg==
-X-Gm-Message-State: AOJu0Yw3ynlBvtGphFrjizuMMa1X8XKiVQEmxawdxUQ6KKyCW9rlIr1U
-        HGU//ofGsAfB1mPKPrwFZUL+DQ==
-X-Google-Smtp-Source: AGHT+IE9Fa9rJ5dJK/ZUvqGA++6ZyBJzqK+SbSPBhREJGER0uiXBZXy5TEJZg6I4+ynNHjy+qLDTtA==
-X-Received: by 2002:a17:902:934c:b0:1bc:5924:2da2 with SMTP id g12-20020a170902934c00b001bc59242da2mr648690plp.56.1693357320149;
-        Tue, 29 Aug 2023 18:02:00 -0700 (PDT)
+        bh=ZS+ro3hnJT+F2EuJzD8qwTtt1ieU4aDrIShCqeJ/UZY=;
+        b=jDyD/ZGOIgAcmW7Bkma3k5Vdpr6IiT7WjDP2a5+ZXlHzY0YBzD3tURNcqz+4bZyT8m
+         l+mXw+P9S2v95JGhl3bCswMGixjsANIVezJGFu2Zuk22RZbWmLu+/KBQlWZ2peC/eFKn
+         c0If9TuX9wij/FYWeeM0LFh3Sv8+UsD6P/B4uzTl41P1qd5VIvHrZV5Cf8F810tTr2gy
+         Gck1wS7Fd+41VxdZVk3zgaiPw4ePT6SHg+pEMYIRwRzeJIYGaq4sJk9wi4LLYhz7wyH2
+         RHN+W8RL15fPOoJhiG3y1Ok7x9tb0/CrVJ3DBvVET5xfHkfFBog4Fv+61Pl1DScWaAS5
+         pKdA==
+X-Gm-Message-State: AOJu0Yzj6zaLazGo9gqTb1tTm5mnI2AOxDwsymtahHSCVOcwSAWX2sde
+        vqnu49EPkopA/ztEIE2RWhywdQ==
+X-Google-Smtp-Source: AGHT+IHizfVQ0ukIvoYDQVNltW5sZzV9NL5cioiKuKL3Y+qpTho5j5MeF5mYfOZE7dqxDRNFxLbRBQ==
+X-Received: by 2002:a05:6a21:81a8:b0:14b:f386:f6fb with SMTP id pd40-20020a056a2181a800b0014bf386f6fbmr853117pzb.35.1693357317235;
+        Tue, 29 Aug 2023 18:01:57 -0700 (PDT)
 Received: from dread.disaster.area (pa49-195-66-88.pa.nsw.optusnet.com.au. [49.195.66.88])
-        by smtp.gmail.com with ESMTPSA id b16-20020a170902d51000b00198d7b52eefsm9964942plg.257.2023.08.29.18.01.59
+        by smtp.gmail.com with ESMTPSA id b16-20020a170902d51000b00198d7b52eefsm9964942plg.257.2023.08.29.18.01.56
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 29 Aug 2023 18:01:59 -0700 (PDT)
+        Tue, 29 Aug 2023 18:01:56 -0700 (PDT)
 Received: from dave by dread.disaster.area with local (Exim 4.96)
         (envelope-from <david@fromorbit.com>)
-        id 1qb8ps-008I69-1W;
-        Wed, 30 Aug 2023 10:13:28 +1000
-Date:   Wed, 30 Aug 2023 10:13:28 +1000
+        id 1qb97n-008IZC-1G;
+        Wed, 30 Aug 2023 10:31:59 +1000
+Date:   Wed, 30 Aug 2023 10:31:59 +1000
 From:   Dave Chinner <david@fromorbit.com>
 To:     "Darrick J. Wong" <djwong@kernel.org>
-Cc:     Eric Sandeen <sandeen@redhat.com>, xfs <linux-xfs@vger.kernel.org>,
-        shrikanth hegde <sshegde@linux.vnet.ibm.com>,
-        Ritesh Harjani <ritesh.list@gmail.com>
-Subject: Re: [RFC PATCH] xfs: load uncached unlinked inodes into memory on
- demand
-Message-ID: <ZO6JqOBOOUCcS4ac@dread.disaster.area>
-References: <20230829232043.GE28186@frogsfrogsfrogs>
+Cc:     chandan.babu@gmail.com, linux-xfs@vger.kernel.org,
+        sandeen@sandeen.net
+Subject: Re: [PATCH 2/2] xfs: fix log recovery when unknown rocompat bits are
+ set
+Message-ID: <ZO6N/8JBzF3Ev92x@dread.disaster.area>
+References: <169335056369.3525521.1326787329447266634.stgit@frogsfrogsfrogs>
+ <169335057499.3525521.13864967150156919137.stgit@frogsfrogsfrogs>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20230829232043.GE28186@frogsfrogsfrogs>
+In-Reply-To: <169335057499.3525521.13864967150156919137.stgit@frogsfrogsfrogs>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Tue, Aug 29, 2023 at 04:20:43PM -0700, Darrick J. Wong wrote:
+On Tue, Aug 29, 2023 at 04:09:35PM -0700, Darrick J. Wong wrote:
 > From: Darrick J. Wong <djwong@kernel.org>
 > 
-> shrikanth hegde reports that filesystems fail shortly after mount with
-> the following failure:
+> Fix log recovery to proceed on a readonly mount if the primary sb
+> advertises unknown rocompat bits.  We used to allow this, but due to a
+> misunderstanding between Eric and Darrick back in 2018, we accidentally
+> changed the superblock write verifier to shutdown the fs over that exact
+> scenario.  As a result, the log cleaning that occurs at the end of the
+> mounting process fails.
 > 
-> 	WARNING: CPU: 56 PID: 12450 at fs/xfs/xfs_inode.c:1839 xfs_iunlink_lookup+0x58/0x80 [xfs]
-> 
-> This of course is the WARN_ON_ONCE in xfs_iunlink_lookup:
-> 
-> 	ip = radix_tree_lookup(&pag->pag_ici_root, agino);
-> 	if (WARN_ON_ONCE(!ip || !ip->i_ino)) { ... }
-> 
-> From diagnostic data collected by the bug reporters, it would appear
-> that we cleanly mounted a filesystem that contained unlinked inodes.
-> Unlinked inodes are only processed as a final step of log recovery,
-> which means that clean mounts do not process the unlinked list at all.
-> 
-> Prior to the introduction of the incore unlinked lists, this wasn't a
-> problem because the unlink code would (very expensively) traverse the
-> entire ondisk metadata iunlink chain to keep things up to date.
-> However, the incore unlinked list code complains when it realizes that
-> it is out of sync with the ondisk metadata and shuts down the fs, which
-> is bad.
-> 
-> Ritesh proposed to solve this problem by unconditionally parsing the
-> unlinked lists at mount time, but this imposes a mount time cost for
-> every filesystem to catch something that should be very infrequent.
-> Instead, let's target the places where we can encounter a next_unlinked
-> pointer that refers to an inode that is not in cache, and load it into
-> cache.
-> 
-> Note: This patch does not address the problem of iget loading an inode
-> from the middle of the iunlink list and needing to set i_prev_unlinked
-> correctly.
-> 
-> Link: https://lore.kernel.org/linux-xfs/e5004868-4a03-93e5-5077-e7ed0e533996@linux.vnet.ibm.com/
-> Reported-by: shrikanth hegde <sshegde@linux.vnet.ibm.com>
-> Triaged-by: Ritesh Harjani <ritesh.list@gmail.com>
-> Signed-off-by: Darrick J. Wong <djwong@kernel.org>
-> ---
->  fs/xfs/xfs_inode.c |   70 ++++++++++++++++++++++++++++++++++++++++++++++++++--
->  fs/xfs/xfs_trace.h |   25 +++++++++++++++++++
->  2 files changed, 92 insertions(+), 3 deletions(-)
-> 
-> diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
-> index 6ee266be45d4..3ab140ec09bb 100644
-> --- a/fs/xfs/xfs_inode.c
-> +++ b/fs/xfs/xfs_inode.c
-> @@ -1829,12 +1829,17 @@ xfs_iunlink_lookup(
->  
->  	rcu_read_lock();
->  	ip = radix_tree_lookup(&pag->pag_ici_root, agino);
-> +	if (!ip) {
-> +		/* Caller can handle inode not being in memory. */
-> +		rcu_read_unlock();
-> +		return NULL;
-> +	}
->  
->  	/*
-> -	 * Inode not in memory or in RCU freeing limbo should not happen.
-> -	 * Warn about this and let the caller handle the failure.
-> +	 * Inode in RCU freeing limbo should not happen.  Warn about this and
-> +	 * let the caller handle the failure.
->  	 */
-> -	if (WARN_ON_ONCE(!ip || !ip->i_ino)) {
-> +	if (WARN_ON_ONCE(!ip->i_ino)) {
->  		rcu_read_unlock();
->  		return NULL;
->  	}
+> We now allow writing of the superblock if there are unknown rocompat
+> bits set, but only if the filesystem is read only.  Hence we still have
+> to remove all ro state toggling that occurs around the log mount calls.
 
-I think we should still log a message about this situation, as it implies
-that we had an unrecovered unlinked list on the filesystem and that
-should "never happen" in normal conditions.
+APart from the wording of the commit message, this all looks good.
+It took me a little while to parse what it meant paragraph meant,
+so can I suggest something like:
 
-i.e. something like:
+	Log recovery has always run on read only mounts, even where the
+	primary superblock advertises unknown rocompat bits. Due to a
+	misunderstanding between Eric and Darrick back in 2018, we accidentally
+	changed the superblock write verifier to shutdown the fs over that exact
+	scenario.  As a result, the log cleaning that occurs at the end of the
+	mounting process fails if there are unknown rocompat bits set.
 
-XFS(dev): Found unrecovered unlinked inodes in AG X. Runtime recovery initiated.
+	As we now allow writing of the superblock if there are unknown
+	rocompat bits set on a RO mount, we no longer want to turn off RO
+	state to allow log recovery to succeed on a RO mount.  Hence we also
+	remove all the (now unnecessary) RO state toggling from the log
+	recovery path.
 
-which uses a perag state flag to only issue the message once per AG
-per mount. At least this way, if we get weird stuff happening
-because of loading an inode in the middle of an unlinked list (the
-unhandled prev_agino case) we know why weird stuff might be
-happening...
+Other than that,
 
-> @@ -1902,6 +1907,60 @@ xfs_iunlink_update_bucket(
->  	return 0;
->  }
->  
-> +/*
-> + * Load the inode @next_agino into the cache and set its prev_unlinked pointer
-> + * to @prev_agino.  Caller must hold the AGI to synchronize with other changes
-> + * to the unlinked list.
-> + */
-> +STATIC int
-> +xfs_iunlink_reload_next(
-> +	struct xfs_trans	*tp,
-> +	struct xfs_buf		*agibp,
-> +	xfs_agino_t		prev_agino,
-> +	xfs_agino_t		next_agino)
-> +{
-> +	struct xfs_perag	*pag = agibp->b_pag;
-> +	struct xfs_mount	*mp = pag->pag_mount;
-> +	struct xfs_inode	*next_ip = NULL;
-> +	xfs_ino_t		ino;
-> +	int			error;
-> +
-> +	ASSERT(next_agino != NULLAGINO);
-> +
-> +#ifdef DEBUG
-> +	rcu_read_lock();
-> +	next_ip = radix_tree_lookup(&pag->pag_ici_root, next_agino);
-> +	ASSERT(next_ip == NULL);
-> +	rcu_read_unlock();
-> +#endif
-> +
-> +	ino = XFS_AGINO_TO_INO(mp, pag->pag_agno, next_agino);
-> +	error = xfs_iget(mp, tp, ino, XFS_IGET_UNTRUSTED, 0, &next_ip);
-> +	if (error)
-> +		return error;
+Reviewed-by: Dave Chinner <dchinner@redhat.com>
 
-WHy are we using XFS_IGET_UNTRUSTED here? A comment explaining why
-we don't trust the agino on th eunlinked list we are about to try to
-recover (i.e. trust!) would be good.
-
-> +	/* If this is not an unlinked inode, something is very wrong. */
-> +	if (VFS_I(next_ip)->i_nlink != 0) {
-> +		error = -EFSCORRUPTED;
-> +		goto rele;
-> +	}
-
-*nod*
-
-> +
-> +	next_ip->i_prev_unlinked = prev_agino;
-> +	trace_xfs_iunlink_reload_next(next_ip);
-> +rele:
-> +	/*
-> +	 * We're running in transaction context, so we cannot run any inode
-> +	 * release code.  Clear DONTCACHE on this inode to prevent the VFS from
-> +	 * initiating writeback and to force the irele to push this inode to
-> +	 * the LRU instead of dropping it immediately.
-> +	 */
-> +	spin_lock(&VFS_I(next_ip)->i_lock);
-> +	VFS_I(next_ip)->i_state &= ~I_DONTCACHE;
-> +	spin_unlock(&VFS_I(next_ip)->i_lock);
-> +	xfs_irele(next_ip);
-
-Huh. We just loaded the next_ip into memory - how is it dirty,
-and what writeback will happen? Also, how would I_DONTCACHE get set
-in the first place here?
-
-
-> +	return error;
-> +}
-> +
->  static int
->  xfs_iunlink_insert_inode(
->  	struct xfs_trans	*tp,
-> @@ -1933,6 +1992,8 @@ xfs_iunlink_insert_inode(
->  	 * inode.
->  	 */
->  	error = xfs_iunlink_update_backref(pag, agino, next_agino);
-> +	if (error == -ENOLINK)
-> +		error = xfs_iunlink_reload_next(tp, agibp, agino, next_agino);
->  	if (error)
->  		return error;
-
-Where does this -ENOLINK error come from?
-xfs_iunlink_update_backref() returns either -EFSCORRUPTED or 0. Is
-the patch missing hunks or is it dependent on some other patch that
-does this?
-
-Cheers,
-
-Dave.
 -- 
 Dave Chinner
 david@fromorbit.com
