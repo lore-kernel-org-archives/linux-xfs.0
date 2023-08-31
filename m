@@ -2,41 +2,41 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 44E6DC83F2F
-	for <linux-xfs@archiver.kernel.org>; Thu, 31 Aug 2023 18:11:45 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D5010C83F2F
+	for <linux-xfs@archiver.kernel.org>; Thu, 31 Aug 2023 20:02:09 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S242748AbjHaSLq (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 31 Aug 2023 14:11:46 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35408 "EHLO
+        id S235925AbjHaUCL (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 31 Aug 2023 16:02:11 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50602 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231166AbjHaSLq (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 31 Aug 2023 14:11:46 -0400
+        with ESMTP id S229688AbjHaUCJ (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 31 Aug 2023 16:02:09 -0400
 Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D1FCDE64
-        for <linux-xfs@vger.kernel.org>; Thu, 31 Aug 2023 11:10:55 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5AD4EEA
+        for <linux-xfs@vger.kernel.org>; Thu, 31 Aug 2023 13:01:20 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1693505455;
+        s=mimecast20190719; t=1693512079;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:cc:mime-version:mime-version:content-type:content-type:
          in-reply-to:in-reply-to:references:references;
-        bh=y3Gc8o9YvFamuIwRM0Zx5hnHuYHUqZjXJv/mthBwlHA=;
-        b=fohIBjvNw4ryTGgYM1edx10XEYKTGnC+4J/f0mPISfDXvLtVwGNajzfL7nBCM6HEPkZxlr
-        sZ9c9KfJxQiiQysJ1cjlE4a8gtg1EltAUSD4+gjLHl+CxmlDv8lqYvOJ8+qxp6bMI2RfnA
-        7OFnmkh9sUOLq7l0dM4dgca9hgoyhBw=
-Received: from mimecast-mx02.redhat.com (mimecast-mx02.redhat.com
- [66.187.233.88]) by relay.mimecast.com with ESMTP with STARTTLS
- (version=TLSv1.2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- us-mta-436-8k7fiFGbMb-Pemf_5YHnZA-1; Thu, 31 Aug 2023 14:10:51 -0400
-X-MC-Unique: 8k7fiFGbMb-Pemf_5YHnZA-1
-Received: from smtp.corp.redhat.com (int-mx05.intmail.prod.int.rdu2.redhat.com [10.11.54.5])
+        bh=mo9cfQpIItg6RAxa8mttUjcZQukn3fHmAGYAuWTEnzg=;
+        b=jD4VEnCv8dUSO1H5LQVq/5sJ9lkS134uPsWmGIIV1V4IqBsjULyaGL3MLymvCskyJaNGp1
+        JyWwXUcA3RGStcdYA25mcLexYJ5u4b1yczxzsmNU4Hd14uVqCJDmHqJKJeFlj8ZAf9N12R
+        6sb32p5DWNzsv5iIA0bRjETObEeHvtg=
+Received: from mimecast-mx02.redhat.com (mx-ext.redhat.com [66.187.233.73])
+ by relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ us-mta-116-60s40kNJNwC5a3h2l6KAjw-1; Thu, 31 Aug 2023 16:01:17 -0400
+X-MC-Unique: 60s40kNJNwC5a3h2l6KAjw-1
+Received: from smtp.corp.redhat.com (int-mx09.intmail.prod.int.rdu2.redhat.com [10.11.54.9])
         (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
         (No client certificate requested)
-        by mimecast-mx02.redhat.com (Postfix) with ESMTPS id 24DE3857A84;
-        Thu, 31 Aug 2023 18:10:51 +0000 (UTC)
+        by mimecast-mx02.redhat.com (Postfix) with ESMTPS id 4F52D3814973;
+        Thu, 31 Aug 2023 20:01:10 +0000 (UTC)
 Received: from redhat.com (unknown [10.22.34.74])
-        by smtp.corp.redhat.com (Postfix) with ESMTPS id B2FAD5CC05;
-        Thu, 31 Aug 2023 18:10:50 +0000 (UTC)
-Date:   Thu, 31 Aug 2023 13:10:49 -0500
+        by smtp.corp.redhat.com (Postfix) with ESMTPS id E13FD492C13;
+        Thu, 31 Aug 2023 20:01:09 +0000 (UTC)
+Date:   Thu, 31 Aug 2023 15:01:08 -0500
 From:   Bill O'Donnell <bodonnel@redhat.com>
 To:     "Darrick J. Wong" <djwong@kernel.org>
 Cc:     Dave Chinner <david@fromorbit.com>,
@@ -44,222 +44,324 @@ Cc:     Dave Chinner <david@fromorbit.com>,
         xfs <linux-xfs@vger.kernel.org>,
         shrikanth hegde <sshegde@linux.vnet.ibm.com>,
         Ritesh Harjani <ritesh.list@gmail.com>
-Subject: Re: [PATCH v2] xfs: load uncached unlinked inodes into memory on
- demand
-Message-ID: <ZPDXqUJ94w8ZgOqy@redhat.com>
+Subject: Re: [PATCH 1/2] xfs_db: dump unlinked buckets
+Message-ID: <ZPDxhOTVrt27rZXU@redhat.com>
 References: <20230830152659.GJ28186@frogsfrogsfrogs>
+ <20230830232509.GK28186@frogsfrogsfrogs>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20230830152659.GJ28186@frogsfrogsfrogs>
-X-Scanned-By: MIMEDefang 3.1 on 10.11.54.5
+In-Reply-To: <20230830232509.GK28186@frogsfrogsfrogs>
+X-Scanned-By: MIMEDefang 3.1 on 10.11.54.9
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Wed, Aug 30, 2023 at 08:26:59AM -0700, Darrick J. Wong wrote:
+On Wed, Aug 30, 2023 at 04:25:09PM -0700, Darrick J. Wong wrote:
 > From: Darrick J. Wong <djwong@kernel.org>
 > 
-> shrikanth hegde reports that filesystems fail shortly after mount with
-> the following failure:
+> Create a new command to dump the resource usage of files in the unlinked
+> buckets.
 > 
-> 	WARNING: CPU: 56 PID: 12450 at fs/xfs/xfs_inode.c:1839 xfs_iunlink_lookup+0x58/0x80 [xfs]
-> 
-> This of course is the WARN_ON_ONCE in xfs_iunlink_lookup:
-> 
-> 	ip = radix_tree_lookup(&pag->pag_ici_root, agino);
-> 	if (WARN_ON_ONCE(!ip || !ip->i_ino)) { ... }
-> 
-> From diagnostic data collected by the bug reporters, it would appear
-> that we cleanly mounted a filesystem that contained unlinked inodes.
-> Unlinked inodes are only processed as a final step of log recovery,
-> which means that clean mounts do not process the unlinked list at all.
-> 
-> Prior to the introduction of the incore unlinked lists, this wasn't a
-> problem because the unlink code would (very expensively) traverse the
-> entire ondisk metadata iunlink chain to keep things up to date.
-> However, the incore unlinked list code complains when it realizes that
-> it is out of sync with the ondisk metadata and shuts down the fs, which
-> is bad.
-> 
-> Ritesh proposed to solve this problem by unconditionally parsing the
-> unlinked lists at mount time, but this imposes a mount time cost for
-> every filesystem to catch something that should be very infrequent.
-> Instead, let's target the places where we can encounter a next_unlinked
-> pointer that refers to an inode that is not in cache, and load it into
-> cache.
-> 
-> Note: This patch does not address the problem of iget loading an inode
-> from the middle of the iunlink list and needing to set i_prev_unlinked
-> correctly.
-> 
-> Reported-by: shrikanth hegde <sshegde@linux.vnet.ibm.com>
-> Triaged-by: Ritesh Harjani <ritesh.list@gmail.com>
 > Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 
-This LGTM. Thanks!
 Reviewed-by: Bill O'Donnell <bodonnel@redhat.com>
 
 > ---
-> v2: log that we're doing runtime recovery, dont mess with DONTCACHE,
->     and actually return ENOLINK
-> ---
->  fs/xfs/xfs_inode.c |   75 +++++++++++++++++++++++++++++++++++++++++++++++++---
->  fs/xfs/xfs_trace.h |   25 +++++++++++++++++
->  2 files changed, 96 insertions(+), 4 deletions(-)
+>  db/Makefile              |    2 
+>  db/command.c             |    1 
+>  db/command.h             |    1 
+>  db/iunlink.c             |  204 ++++++++++++++++++++++++++++++++++++++++++++++
+>  libxfs/libxfs_api_defs.h |    1 
+>  man/man8/xfs_db.8        |   19 ++++
+>  6 files changed, 227 insertions(+), 1 deletion(-)
+>  create mode 100644 db/iunlink.c
 > 
-> diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
-> index 6ee266be45d4..2942002560b5 100644
-> --- a/fs/xfs/xfs_inode.c
-> +++ b/fs/xfs/xfs_inode.c
-> @@ -1829,12 +1829,17 @@ xfs_iunlink_lookup(
+> diff --git a/db/Makefile b/db/Makefile
+> index 2f95f670..d00801ab 100644
+> --- a/db/Makefile
+> +++ b/db/Makefile
+> @@ -14,7 +14,7 @@ HFILES = addr.h agf.h agfl.h agi.h attr.h attrshort.h bit.h block.h bmap.h \
+>  	io.h logformat.h malloc.h metadump.h output.h print.h quit.h sb.h \
+>  	sig.h strvec.h text.h type.h write.h attrset.h symlink.h fsmap.h \
+>  	fuzz.h obfuscate.h
+> -CFILES = $(HFILES:.h=.c) btdump.c btheight.c convert.c info.c namei.c \
+> +CFILES = $(HFILES:.h=.c) btdump.c btheight.c convert.c info.c iunlink.c namei.c \
+>  	timelimit.c
+>  LSRCFILES = xfs_admin.sh xfs_ncheck.sh xfs_metadump.sh
 >  
->  	rcu_read_lock();
->  	ip = radix_tree_lookup(&pag->pag_ici_root, agino);
-> +	if (!ip) {
-> +		/* Caller can handle inode not being in memory. */
-> +		rcu_read_unlock();
-> +		return NULL;
-> +	}
->  
->  	/*
-> -	 * Inode not in memory or in RCU freeing limbo should not happen.
-> -	 * Warn about this and let the caller handle the failure.
-> +	 * Inode in RCU freeing limbo should not happen.  Warn about this and
-> +	 * let the caller handle the failure.
->  	 */
-> -	if (WARN_ON_ONCE(!ip || !ip->i_ino)) {
-> +	if (WARN_ON_ONCE(!ip->i_ino)) {
->  		rcu_read_unlock();
->  		return NULL;
->  	}
-> @@ -1858,7 +1863,8 @@ xfs_iunlink_update_backref(
->  
->  	ip = xfs_iunlink_lookup(pag, next_agino);
->  	if (!ip)
-> -		return -EFSCORRUPTED;
-> +		return -ENOLINK;
-> +
->  	ip->i_prev_unlinked = prev_agino;
->  	return 0;
->  }
-> @@ -1902,6 +1908,62 @@ xfs_iunlink_update_bucket(
->  	return 0;
->  }
->  
+> diff --git a/db/command.c b/db/command.c
+> index 02f778b9..b4021c86 100644
+> --- a/db/command.c
+> +++ b/db/command.c
+> @@ -127,6 +127,7 @@ init_commands(void)
+>  	info_init();
+>  	inode_init();
+>  	input_init();
+> +	iunlink_init();
+>  	logres_init();
+>  	logformat_init();
+>  	io_init();
+> diff --git a/db/command.h b/db/command.h
+> index 498983ff..a89e7150 100644
+> --- a/db/command.h
+> +++ b/db/command.h
+> @@ -34,3 +34,4 @@ extern void		info_init(void);
+>  extern void		btheight_init(void);
+>  extern void		timelimit_init(void);
+>  extern void		namei_init(void);
+> +extern void		iunlink_init(void);
+> diff --git a/db/iunlink.c b/db/iunlink.c
+> new file mode 100644
+> index 00000000..303b5daf
+> --- /dev/null
+> +++ b/db/iunlink.c
+> @@ -0,0 +1,204 @@
+> +// SPDX-License-Identifier: GPL-2.0
 > +/*
-> + * Load the inode @next_agino into the cache and set its prev_unlinked pointer
-> + * to @prev_agino.  Caller must hold the AGI to synchronize with other changes
-> + * to the unlinked list.
+> + * Copyright (C) 2022-2023 Oracle.  All Rights Reserved.
+> + * Author: Darrick J. Wong <djwong@kernel.org>
 > + */
-> +STATIC int
-> +xfs_iunlink_reload_next(
-> +	struct xfs_trans	*tp,
-> +	struct xfs_buf		*agibp,
-> +	xfs_agino_t		prev_agino,
-> +	xfs_agino_t		next_agino)
+> +#include "libxfs.h"
+> +#include "command.h"
+> +#include "output.h"
+> +#include "init.h"
+> +
+> +static xfs_filblks_t
+> +count_rtblocks(
+> +	struct xfs_inode	*ip)
 > +{
-> +	struct xfs_perag	*pag = agibp->b_pag;
-> +	struct xfs_mount	*mp = pag->pag_mount;
-> +	struct xfs_inode	*next_ip = NULL;
-> +	xfs_ino_t		ino;
+> +	struct xfs_iext_cursor	icur;
+> +	struct xfs_bmbt_irec	got;
+> +	xfs_filblks_t		count = 0;
+> +	struct xfs_ifork	*ifp = xfs_ifork_ptr(ip, XFS_DATA_FORK);
 > +	int			error;
 > +
-> +	ASSERT(next_agino != NULLAGINO);
-> +
-> +#ifdef DEBUG
-> +	rcu_read_lock();
-> +	next_ip = radix_tree_lookup(&pag->pag_ici_root, next_agino);
-> +	ASSERT(next_ip == NULL);
-> +	rcu_read_unlock();
-> +#endif
-> +
-> +	xfs_info_ratelimited(mp,
-> + "Found unrecovered unlinked inode 0x%x in AG 0x%x.  Initiating recovery.",
-> +			next_agino, pag->pag_agno);
-> +
-> +	/*
-> +	 * Use an untrusted lookup to be cautious in case the AGI has been
-> +	 * corrupted and now points at a free inode.  That shouldn't happen,
-> +	 * but we'd rather shut down now since we're already running in a weird
-> +	 * situation.
-> +	 */
-> +	ino = XFS_AGINO_TO_INO(mp, pag->pag_agno, next_agino);
-> +	error = xfs_iget(mp, tp, ino, XFS_IGET_UNTRUSTED, 0, &next_ip);
-> +	if (error)
-> +		return error;
-> +
-> +	/* If this is not an unlinked inode, something is very wrong. */
-> +	if (VFS_I(next_ip)->i_nlink != 0) {
-> +		error = -EFSCORRUPTED;
-> +		goto rele;
+> +	error = -libxfs_iread_extents(NULL, ip, XFS_DATA_FORK);
+> +	if (error) {
+> +		dbprintf(
+> +_("could not read AG %u agino %u extents, err=%d\n"),
+> +				XFS_INO_TO_AGNO(ip->i_mount, ip->i_ino),
+> +				XFS_INO_TO_AGINO(ip->i_mount, ip->i_ino),
+> +				error);
+> +		return 0;
 > +	}
 > +
-> +	next_ip->i_prev_unlinked = prev_agino;
-> +	trace_xfs_iunlink_reload_next(next_ip);
-> +rele:
-> +	ASSERT(!(VFS_I(next_ip)->i_state & I_DONTCACHE));
-> +	xfs_irele(next_ip);
-> +	return error;
+> +	for_each_xfs_iext(ifp, &icur, &got)
+> +		if (!isnullstartblock(got.br_startblock))
+> +			count += got.br_blockcount;
+> +	return count;
 > +}
 > +
->  static int
->  xfs_iunlink_insert_inode(
->  	struct xfs_trans	*tp,
-> @@ -1933,6 +1995,8 @@ xfs_iunlink_insert_inode(
->  	 * inode.
->  	 */
->  	error = xfs_iunlink_update_backref(pag, agino, next_agino);
-> +	if (error == -ENOLINK)
-> +		error = xfs_iunlink_reload_next(tp, agibp, agino, next_agino);
->  	if (error)
->  		return error;
->  
-> @@ -2027,6 +2091,9 @@ xfs_iunlink_remove_inode(
->  	 */
->  	error = xfs_iunlink_update_backref(pag, ip->i_prev_unlinked,
->  			ip->i_next_unlinked);
-> +	if (error == -ENOLINK)
-> +		error = xfs_iunlink_reload_next(tp, agibp, ip->i_prev_unlinked,
-> +				ip->i_next_unlinked);
->  	if (error)
->  		return error;
->  
-> diff --git a/fs/xfs/xfs_trace.h b/fs/xfs/xfs_trace.h
-> index 36bd42ed9ec8..f4e46bac9b91 100644
-> --- a/fs/xfs/xfs_trace.h
-> +++ b/fs/xfs/xfs_trace.h
-> @@ -3832,6 +3832,31 @@ TRACE_EVENT(xfs_iunlink_update_dinode,
->  		  __entry->new_ptr)
->  );
->  
-> +TRACE_EVENT(xfs_iunlink_reload_next,
-> +	TP_PROTO(struct xfs_inode *ip),
-> +	TP_ARGS(ip),
-> +	TP_STRUCT__entry(
-> +		__field(dev_t, dev)
-> +		__field(xfs_agnumber_t, agno)
-> +		__field(xfs_agino_t, agino)
-> +		__field(xfs_agino_t, prev_agino)
-> +		__field(xfs_agino_t, next_agino)
-> +	),
-> +	TP_fast_assign(
-> +		__entry->dev = ip->i_mount->m_super->s_dev;
-> +		__entry->agno = XFS_INO_TO_AGNO(ip->i_mount, ip->i_ino);
-> +		__entry->agino = XFS_INO_TO_AGINO(ip->i_mount, ip->i_ino);
-> +		__entry->prev_agino = ip->i_prev_unlinked;
-> +		__entry->next_agino = ip->i_next_unlinked;
-> +	),
-> +	TP_printk("dev %d:%d agno 0x%x agino 0x%x prev_unlinked 0x%x next_unlinked 0x%x",
-> +		  MAJOR(__entry->dev), MINOR(__entry->dev),
-> +		  __entry->agno,
-> +		  __entry->agino,
-> +		  __entry->prev_agino,
-> +		  __entry->next_agino)
-> +);
+> +static xfs_agino_t
+> +get_next_unlinked(
+> +	xfs_agnumber_t		agno,
+> +	xfs_agino_t		agino,
+> +	bool			verbose)
+> +{
+> +	struct xfs_buf		*ino_bp;
+> +	struct xfs_dinode	*dip;
+> +	struct xfs_inode	*ip;
+> +	xfs_ino_t		ino;
+> +	xfs_agino_t		ret;
+> +	int			error;
 > +
->  DECLARE_EVENT_CLASS(xfs_ag_inode_class,
->  	TP_PROTO(struct xfs_inode *ip),
->  	TP_ARGS(ip),
+> +	ino = XFS_AGINO_TO_INO(mp, agno, agino);
+> +	error = -libxfs_iget(mp, NULL, ino, 0, &ip);
+> +	if (error)
+> +		goto bad;
+> +
+> +	if (verbose) {
+> +		xfs_filblks_t	blocks, rtblks = 0;
+> +
+> +		if (XFS_IS_REALTIME_INODE(ip))
+> +			rtblks = count_rtblocks(ip);
+> +		blocks = ip->i_nblocks - rtblks;
+> +
+> +		dbprintf(_(" blocks %llu rtblocks %llu\n"),
+> +				blocks, rtblks);
+> +	} else {
+> +		dbprintf("\n");
+> +	}
+> +
+> +	error = -libxfs_imap_to_bp(mp, NULL, &ip->i_imap, &ino_bp);
+> +	if (error)
+> +		goto bad;
+> +
+> +	dip = xfs_buf_offset(ino_bp, ip->i_imap.im_boffset);
+> +	ret = be32_to_cpu(dip->di_next_unlinked);
+> +	libxfs_buf_relse(ino_bp);
+> +
+> +	return ret;
+> +bad:
+> +	dbprintf(_("AG %u agino %u: %s\n"), agno, agino, strerror(error));
+> +	return NULLAGINO;
+> +}
+> +
+> +static void
+> +dump_unlinked_bucket(
+> +	xfs_agnumber_t	agno,
+> +	struct xfs_buf	*agi_bp,
+> +	unsigned int	bucket,
+> +	bool		quiet,
+> +	bool		verbose)
+> +{
+> +	struct xfs_agi	*agi = agi_bp->b_addr;
+> +	xfs_agino_t	agino;
+> +	unsigned int	i = 0;
+> +
+> +	agino = be32_to_cpu(agi->agi_unlinked[bucket]);
+> +	if (agino != NULLAGINO)
+> +		dbprintf(_("AG %u bucket %u agino %u"), agno, bucket, agino);
+> +	else if (!quiet && agino == NULLAGINO)
+> +		dbprintf(_("AG %u bucket %u agino NULL\n"), agno, bucket);
+> +
+> +	while (agino != NULLAGINO) {
+> +		agino = get_next_unlinked(agno, agino, verbose);
+> +		if (agino != NULLAGINO)
+> +			dbprintf(_("    [%u] agino %u"), i++, agino);
+> +		else if (!quiet && agino == NULLAGINO)
+> +			dbprintf(_("    [%u] agino NULL\n"), i++);
+> +	}
+> +}
+> +
+> +static void
+> +dump_unlinked(
+> +	struct xfs_perag	*pag,
+> +	unsigned int		bucket,
+> +	bool			quiet,
+> +	bool			verbose)
+> +{
+> +	struct xfs_buf		*agi_bp;
+> +	xfs_agnumber_t		agno = pag->pag_agno;
+> +	int			error;
+> +
+> +	error = -libxfs_ialloc_read_agi(pag, NULL, &agi_bp);
+> +	if (error) {
+> +		dbprintf(_("AGI %u: %s\n"), agno, strerror(errno));
+> +		return;
+> +	}
+> +
+> +	if (bucket != -1U) {
+> +		dump_unlinked_bucket(agno, agi_bp, bucket, quiet, verbose);
+> +		goto relse;
+> +	}
+> +
+> +	for (bucket = 0; bucket < XFS_AGI_UNLINKED_BUCKETS; bucket++) {
+> +		dump_unlinked_bucket(agno, agi_bp, bucket, quiet, verbose);
+> +	}
+> +
+> +relse:
+> +	libxfs_buf_relse(agi_bp);
+> +}
+> +
+> +static int
+> +dump_iunlinked_f(
+> +	int			argc,
+> +	char			**argv)
+> +{
+> +	struct xfs_perag	*pag;
+> +	xfs_agnumber_t		agno = NULLAGNUMBER;
+> +	unsigned int		bucket = -1U;
+> +	bool			quiet = false;
+> +	bool			verbose = false;
+> +	int			c;
+> +
+> +	while ((c = getopt(argc, argv, "a:b:qv")) != EOF) {
+> +		switch (c) {
+> +		case 'a':
+> +			agno = atoi(optarg);
+> +			if (agno >= mp->m_sb.sb_agcount) {
+> +				dbprintf(_("Unknown AG %u, agcount is %u.\n"),
+> +						agno, mp->m_sb.sb_agcount);
+> +				return 0;
+> +			}
+> +			break;
+> +		case 'b':
+> +			bucket = atoi(optarg);
+> +			if (bucket >= XFS_AGI_UNLINKED_BUCKETS) {
+> +				dbprintf(_("Unknown bucket %u, max is 63.\n"),
+> +						bucket);
+> +				return 0;
+> +			}
+> +			break;
+> +		case 'q':
+> +			quiet = true;
+> +			break;
+> +		case 'v':
+> +			verbose = true;
+> +			break;
+> +		default:
+> +			dbprintf(_("Bad option for dump_iunlinked command.\n"));
+> +			return 0;
+> +		}
+> +	}
+> +
+> +	if (agno != NULLAGNUMBER) {
+> +		struct xfs_perag	*pag = libxfs_perag_get(mp, agno);
+> +
+> +		dump_unlinked(pag, bucket, quiet, verbose);
+> +		libxfs_perag_put(pag);
+> +		return 0;
+> +	}
+> +
+> +	for_each_perag(mp, agno, pag)
+> +		dump_unlinked(pag, bucket, quiet, verbose);
+> +
+> +	return 0;
+> +}
+> +
+> +static const cmdinfo_t	dump_iunlinked_cmd =
+> +	{ "dump_iunlinked", NULL, dump_iunlinked_f, 0, -1, 0,
+> +	  N_("[-a agno] [-b bucket] [-q] [-v]"),
+> +	  N_("dump chain of unlinked inode buckets"), NULL };
+> +
+> +void
+> +iunlink_init(void)
+> +{
+> +	add_command(&dump_iunlinked_cmd);
+> +}
+> diff --git a/libxfs/libxfs_api_defs.h b/libxfs/libxfs_api_defs.h
+> index 026aa510..ddba5c7c 100644
+> --- a/libxfs/libxfs_api_defs.h
+> +++ b/libxfs/libxfs_api_defs.h
+> @@ -125,6 +125,7 @@
+>  #define xfs_idestroy_fork		libxfs_idestroy_fork
+>  #define xfs_iext_lookup_extent		libxfs_iext_lookup_extent
+>  #define xfs_ifork_zap_attr		libxfs_ifork_zap_attr
+> +#define xfs_imap_to_bp			libxfs_imap_to_bp
+>  #define xfs_initialize_perag		libxfs_initialize_perag
+>  #define xfs_initialize_perag_data	libxfs_initialize_perag_data
+>  #define xfs_init_local_fork		libxfs_init_local_fork
+> diff --git a/man/man8/xfs_db.8 b/man/man8/xfs_db.8
+> index 60dcdc52..2d6d0da4 100644
+> --- a/man/man8/xfs_db.8
+> +++ b/man/man8/xfs_db.8
+> @@ -579,6 +579,25 @@ print the current debug option bits. These are for the use of the implementor.
+>  .BI "dquot [" \-g | \-p | \-u ] " id"
+>  Set current address to a group, project or user quota block for the given ID. Defaults to user quota.
+>  .TP
+> +.BI "dump_iunlinked [-a " agno " ] [-b " bucket " ] [-q] [-v]"
+> +Dump the contents of unlinked buckets.
+> +
+> +Options include:
+> +.RS 1.0i
+> +.TP 0.4i
+> +.B \-a
+> +Print only this AG's unlinked buckets.
+> +.TP 0.4i
+> +.B \-b
+> +Print only this bucket within each AGI.
+> +.TP 0.4i
+> +.B \-q
+> +Only print the essentials.
+> +.TP 0.4i
+> +.B \-v
+> +Print resource usage of each file on the unlinked lists.
+> +.RE
+> +.TP
+>  .BI "echo [" arg "] ..."
+>  Echo the arguments to the output.
+>  .TP
 > 
 
