@@ -2,58 +2,62 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 81FAFC83F37
-	for <linux-xfs@archiver.kernel.org>; Thu, 31 Aug 2023 17:43:23 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 44E6DC83F2F
+	for <linux-xfs@archiver.kernel.org>; Thu, 31 Aug 2023 18:11:45 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232708AbjHaRnY (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 31 Aug 2023 13:43:24 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54524 "EHLO
+        id S242748AbjHaSLq (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 31 Aug 2023 14:11:46 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35408 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S241788AbjHaRnX (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 31 Aug 2023 13:43:23 -0400
-Received: from sandeen.net (sandeen.net [63.231.237.45])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id E41DCE63
-        for <linux-xfs@vger.kernel.org>; Thu, 31 Aug 2023 10:43:17 -0700 (PDT)
-Received: from [10.0.0.71] (liberator.sandeen.net [10.0.0.71])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+        with ESMTP id S231166AbjHaSLq (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 31 Aug 2023 14:11:46 -0400
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D1FCDE64
+        for <linux-xfs@vger.kernel.org>; Thu, 31 Aug 2023 11:10:55 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1693505455;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=y3Gc8o9YvFamuIwRM0Zx5hnHuYHUqZjXJv/mthBwlHA=;
+        b=fohIBjvNw4ryTGgYM1edx10XEYKTGnC+4J/f0mPISfDXvLtVwGNajzfL7nBCM6HEPkZxlr
+        sZ9c9KfJxQiiQysJ1cjlE4a8gtg1EltAUSD4+gjLHl+CxmlDv8lqYvOJ8+qxp6bMI2RfnA
+        7OFnmkh9sUOLq7l0dM4dgca9hgoyhBw=
+Received: from mimecast-mx02.redhat.com (mimecast-mx02.redhat.com
+ [66.187.233.88]) by relay.mimecast.com with ESMTP with STARTTLS
+ (version=TLSv1.2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ us-mta-436-8k7fiFGbMb-Pemf_5YHnZA-1; Thu, 31 Aug 2023 14:10:51 -0400
+X-MC-Unique: 8k7fiFGbMb-Pemf_5YHnZA-1
+Received: from smtp.corp.redhat.com (int-mx05.intmail.prod.int.rdu2.redhat.com [10.11.54.5])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
         (No client certificate requested)
-        by sandeen.net (Postfix) with ESMTPSA id 003BA5196E5;
-        Thu, 31 Aug 2023 12:43:16 -0500 (CDT)
-DKIM-Filter: OpenDKIM Filter v2.11.0 sandeen.net 003BA5196E5
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=sandeen.net;
-        s=default; t=1693503797;
-        bh=js3k09dLhTEzlOnwoyi7xktUZGcJc12xBRXPusEg+Gs=;
-        h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
-        b=bEpd5p0YBQldi6+EESWPMwKoOAKqy+f6Qj0dWG0Bl5vgLn9sS7c4QNbPKPRchiLNS
-         WCFO398/e2QvBC4RhjJm6Z5sjSlQL0NN8zf+f0HLJhcbb8PWzdCRyjoA1BzOlkac37
-         +YuKv2PqzIaiFOO2X59RpL90AY2FRNOYH5q194bjIZWROJOwhIITmGcOTO54jlZgsf
-         yDNjyuQ6KV5f/7m6AQAmVMXGeGZAQJ1hGKoXYPhggl8CJftmTV3G7OBICQmjo+Zi+o
-         5Q9l3tOBm7xO+EsYtDtPOTmv1cw9Xs2FObxwKWTYv8QN8d/iSia68Qsuc2pcxUzH3h
-         mVKLIXfq2AcGg==
-Message-ID: <68fe1fdb-8136-92a6-3b73-1d42772fcf22@sandeen.net>
-Date:   Thu, 31 Aug 2023 12:43:16 -0500
-MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:102.0)
- Gecko/20100101 Thunderbird/102.14.0
-Subject: Re: [PATCH v2] xfs: load uncached unlinked inodes into memory on
- demand
-Content-Language: en-US
-To:     "Darrick J. Wong" <djwong@kernel.org>,
-        Dave Chinner <david@fromorbit.com>,
-        Eric Sandeen <sandeen@redhat.com>
-Cc:     xfs <linux-xfs@vger.kernel.org>,
+        by mimecast-mx02.redhat.com (Postfix) with ESMTPS id 24DE3857A84;
+        Thu, 31 Aug 2023 18:10:51 +0000 (UTC)
+Received: from redhat.com (unknown [10.22.34.74])
+        by smtp.corp.redhat.com (Postfix) with ESMTPS id B2FAD5CC05;
+        Thu, 31 Aug 2023 18:10:50 +0000 (UTC)
+Date:   Thu, 31 Aug 2023 13:10:49 -0500
+From:   Bill O'Donnell <bodonnel@redhat.com>
+To:     "Darrick J. Wong" <djwong@kernel.org>
+Cc:     Dave Chinner <david@fromorbit.com>,
+        Eric Sandeen <sandeen@redhat.com>,
+        xfs <linux-xfs@vger.kernel.org>,
         shrikanth hegde <sshegde@linux.vnet.ibm.com>,
         Ritesh Harjani <ritesh.list@gmail.com>
+Subject: Re: [PATCH v2] xfs: load uncached unlinked inodes into memory on
+ demand
+Message-ID: <ZPDXqUJ94w8ZgOqy@redhat.com>
 References: <20230830152659.GJ28186@frogsfrogsfrogs>
-From:   Eric Sandeen <sandeen@sandeen.net>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
 In-Reply-To: <20230830152659.GJ28186@frogsfrogsfrogs>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+X-Scanned-By: MIMEDefang 3.1 on 10.11.54.5
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On 8/30/23 10:26 AM, Darrick J. Wong wrote:
+On Wed, Aug 30, 2023 at 08:26:59AM -0700, Darrick J. Wong wrote:
 > From: Darrick J. Wong <djwong@kernel.org>
 > 
 > shrikanth hegde reports that filesystems fail shortly after mount with
@@ -70,57 +74,7 @@ On 8/30/23 10:26 AM, Darrick J. Wong wrote:
 > that we cleanly mounted a filesystem that contained unlinked inodes.
 > Unlinked inodes are only processed as a final step of log recovery,
 > which means that clean mounts do not process the unlinked list at all.
-
-Thank you for working on this Darrick!
-
-I'll point out that at least one way to end up in this situation is to
-have at one point run a very old kernel which did not contain this
-commit, merged in kernel v4.14:
-
-commit 6f4a1eefdd0ad4561543270a7fceadabcca075dd
-Author: Eric Sandeen <sandeen@sandeen.net>
-Date:   Tue Aug 8 18:21:49 2017 -0700
-
-    xfs: toggle readonly state around xfs_log_mount_finish
-
-    When we do log recovery on a readonly mount, unlinked inode
-    processing does not happen due to the readonly checks in
-    xfs_inactive(), which are trying to prevent any I/O on a
-    readonly mount.
-
-    This is misguided - we do I/O on readonly mounts all the time,
-    for consistency; for example, log recovery.  So do the same
-    RDONLY flag twiddling around xfs_log_mount_finish() as we
-    do around xfs_log_mount(), for the same reason.
-
-    This all cries out for a big rework but for now this is a
-    simple fix to an obvious problem.
-
-    Signed-off-by: Eric Sandeen <sandeen@redhat.com>
-    Reviewed-by: Brian Foster <bfoster@redhat.com>
-    Reviewed-by: Christoph Hellwig <hch@lst.de>
-    Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
-    Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-
-so if you:
-
-1) Crash with unlinked inodes
-2) mount -o ro <recovers log but skips unlinked inode recovery>
-3) mount -o remount,rw
-4) umount <writes clean log record>
-
-you now have a filesystem with on-disk unlinked inodes and a clean log,
-and those inodes won't get cleaned up until log recovery runs again or
-xfs_repair is run.
-
-And in testing an old OS (RHEL7) it does seem that the root filesystem
-goes through a mount -o ro, mount -o remount,rw transition at boot time.
-So this situation may be somewhat common.
-
--Eric
-
-
-
+> 
 > Prior to the introduction of the incore unlinked lists, this wasn't a
 > problem because the unlink code would (very expensively) traverse the
 > entire ondisk metadata iunlink chain to keep things up to date.
@@ -142,6 +96,10 @@ So this situation may be somewhat common.
 > Reported-by: shrikanth hegde <sshegde@linux.vnet.ibm.com>
 > Triaged-by: Ritesh Harjani <ritesh.list@gmail.com>
 > Signed-off-by: Darrick J. Wong <djwong@kernel.org>
+
+This LGTM. Thanks!
+Reviewed-by: Bill O'Donnell <bodonnel@redhat.com>
+
 > ---
 > v2: log that we're doing runtime recovery, dont mess with DONTCACHE,
 >     and actually return ENOLINK
