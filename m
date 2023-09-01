@@ -2,147 +2,108 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5B6D4CA0FE0
-	for <linux-xfs@archiver.kernel.org>; Thu, 31 Aug 2023 22:45:54 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0310FCA0FE1
+	for <linux-xfs@archiver.kernel.org>; Fri,  1 Sep 2023 01:07:06 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231237AbjHaWpz (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 31 Aug 2023 18:45:55 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45712 "EHLO
+        id S233563AbjIABHI (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 31 Aug 2023 21:07:08 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49896 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S234666AbjHaWpz (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 31 Aug 2023 18:45:55 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 173E610C8
-        for <linux-xfs@vger.kernel.org>; Thu, 31 Aug 2023 15:45:21 -0700 (PDT)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature RSA-PSS (2048 bits))
-        (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id F0E9B616A0
-        for <linux-xfs@vger.kernel.org>; Thu, 31 Aug 2023 22:44:59 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 4DFB0C433C8;
-        Thu, 31 Aug 2023 22:44:59 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1693521899;
-        bh=9GPADTkRNFtxDViHkefrK28RWM3jCbW8IsEj7XuOR2o=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=All5IBXOP7hhVhQ4jZkmCgpfILxvOZp6SEIFIhYBHUvT9K4k8bEqv1Fu5fhg9oISv
-         zk35OF5O9EnPxQYqm6TvvEmpJAI/tiuMBey6vIyMLec6x2R0tZQN3PWIRDFkY9iWgN
-         mVrlVRkrgw3z1yJnq8RaOfzFhj3JgMvIieDltJub8Kbj/aasg+Va+O1+drDF5xa5yC
-         x2YKAFs/d5TIJP9rwJio3a8Eb9SvHLuPwlwjwDc4KeAXW8c8mEMBPbfAlOjw68vdGF
-         Kq2uF9in6mgAJdCYr3xQG/Z/u6B2aGwROsac31i1DhIgOoZo86ApCWpYcTqvOA3+Eq
-         ua86rDVwAGyNA==
-Date:   Thu, 31 Aug 2023 15:44:58 -0700
-From:   "Darrick J. Wong" <djwong@kernel.org>
-To:     Eric Sandeen <sandeen@sandeen.net>
-Cc:     "Ritesh Harjani (IBM)" <ritesh.list@gmail.com>,
-        Dave Chinner <david@fromorbit.com>,
-        Eric Sandeen <sandeen@redhat.com>,
-        xfs <linux-xfs@vger.kernel.org>,
-        shrikanth hegde <sshegde@linux.vnet.ibm.com>
-Subject: Re: [PATCH v2] xfs: load uncached unlinked inodes into memory on
- demand
-Message-ID: <20230831224458.GN28186@frogsfrogsfrogs>
-References: <87pm338jyz.fsf@doe.com>
- <e983dd25-3c38-9453-1eef-f6a6da79857d@sandeen.net>
+        with ESMTP id S232486AbjIABHD (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 31 Aug 2023 21:07:03 -0400
+Received: from mail-io1-xd32.google.com (mail-io1-xd32.google.com [IPv6:2607:f8b0:4864:20::d32])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3CECFE67
+        for <linux-xfs@vger.kernel.org>; Thu, 31 Aug 2023 18:07:00 -0700 (PDT)
+Received: by mail-io1-xd32.google.com with SMTP id ca18e2360f4ac-7926b7f8636so35857839f.1
+        for <linux-xfs@vger.kernel.org>; Thu, 31 Aug 2023 18:07:00 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20221208; t=1693530419; x=1694135219; darn=vger.kernel.org;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=4dMw9JlURCC3zxrfj1qF1BkslT+GPRDGh6sImS/gJ88=;
+        b=VOTN10AsM9NA6+aJSYJKaOvjHE+8L4n31f1WDc94IMdQiWZ1Ezzca8Gnv/rY00xPKT
+         sgvukhP9KfPtsE2TmC7FC89SXj2bJF7qgi+sGPkXU9YdlbXH9r2k9f2ZRRaVHG6pyJVK
+         f66/mU12RjRl2OfbqO09b4m3HI2n5o3RVfec6kvagsTzJT4DFWKB1v/n6DIE8GSiKD9d
+         8QqoGMtXQa5/nGO0ceITDXl1tQN1b7TIESA+hQ88ivyAc+FhSYiwuJ0hQ2mHK90CwhT6
+         YEXwlm9YS+TkMbLG12yRfCN3yBcIPr/JUkBRvH7CVqQlbD6zoUvB5+cic/CXtg6TVJ5H
+         D+gQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20221208; t=1693530419; x=1694135219;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=4dMw9JlURCC3zxrfj1qF1BkslT+GPRDGh6sImS/gJ88=;
+        b=Z/jZfUTENaDOWGU8mXohiCcXbthn5lXmwyK0tRfPgtUKb+XrjNWdb8Z2074mA0LcLp
+         TElX0VLUKeBgLOr39xtuqxBgo50nAQbLq6At1ifn6Y49TsxHbtD6MSoeKPd8joRHk8oY
+         k5b8zl+951W8QhYlt7Ac03Fheje29ftSdyd0MnAmLCfraC7RkPUabr1edWMEBE64FcTL
+         BVPZEg2GHr3helf0D3ThZgl1qH9+KYXo+VEQ83Wu35CAc/DsZEvRgIIayy82C7FTGrnu
+         iu7aC9vqPbw40L4PsHqf6ZxTUa+9HfMZIMx34DHoiJqIKdInNiQioEgF6CZ0kbZrs7VA
+         MZ+A==
+X-Gm-Message-State: AOJu0Yz7NOnjKX7fFMPbFOfn7HVzpRKfFNEt4aAFbVDIfUbnxcHow6hF
+        5rXZUdWrmOsqLVCWAIftPIZh7oR/WGwY/Vap5uHfQ46T
+X-Google-Smtp-Source: AGHT+IEDAXeZG4AY3N4X3o3i/yHBhP5HgoP/MEjY9qXu7Rlgsf8gQQ35I7wnD+v2OWjq+iAk8U+gJxAA99uT8nrPyJg=
+X-Received: by 2002:a6b:1494:0:b0:783:42bc:cc5f with SMTP id
+ 142-20020a6b1494000000b0078342bccc5fmr3992588iou.8.1693530419535; Thu, 31 Aug
+ 2023 18:06:59 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <e983dd25-3c38-9453-1eef-f6a6da79857d@sandeen.net>
+References: <CAB-bdyQVJdTcaaDLWmm+rsW_U6FLF3qCTqLEKLkM6hOgk09uZQ@mail.gmail.com>
+ <20221129213436.GG3600936@dread.disaster.area> <CAB-bdyQw7hRpRPn9JTnpyJt1sA9vPDTVsUTmrhke-EMmGfaHBA@mail.gmail.com>
+ <ZOl2IHacyqSUFgfi@dread.disaster.area> <CAB-bdyRTKNQeukwjuB=fCT91BDO5uTJzA_Y7msOdEPBDAURbzg@mail.gmail.com>
+ <ZOvx2Xg31EbJXPgr@dread.disaster.area>
+In-Reply-To: <ZOvx2Xg31EbJXPgr@dread.disaster.area>
+From:   Shawn <neutronsharc@gmail.com>
+Date:   Thu, 31 Aug 2023 18:06:23 -0700
+Message-ID: <CAB-bdyQG0gDBJDt5cHHsi7avUazDtL5RO8G6UwQZj5Rw7k-CXQ@mail.gmail.com>
+Subject: Re: Do I have to fsync after aio_write finishes (with fallocate
+ preallocation) ?
+To:     Dave Chinner <david@fromorbit.com>
+Cc:     linux-xfs@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Thu, Aug 31, 2023 at 03:39:28PM -0500, Eric Sandeen wrote:
-> On 8/31/23 7:39 AM, Ritesh Harjani (IBM) wrote:
-> > "Darrick J. Wong" <djwong@kernel.org> writes:
-> > 
-> >> From: Darrick J. Wong <djwong@kernel.org>
-> >>
-> >> shrikanth hegde reports that filesystems fail shortly after mount with
-> >> the following failure:
-> >>
-> >> 	WARNING: CPU: 56 PID: 12450 at fs/xfs/xfs_inode.c:1839 xfs_iunlink_lookup+0x58/0x80 [xfs]
-> >>
-> >> This of course is the WARN_ON_ONCE in xfs_iunlink_lookup:
-> >>
-> >> 	ip = radix_tree_lookup(&pag->pag_ici_root, agino);
-> >> 	if (WARN_ON_ONCE(!ip || !ip->i_ino)) { ... }
-> >>
-> >> From diagnostic data collected by the bug reporters, it would appear
-> >> that we cleanly mounted a filesystem that contained unlinked inodes.
-> >> Unlinked inodes are only processed as a final step of log recovery,
-> >> which means that clean mounts do not process the unlinked list at all.
-> >>
-> >> Prior to the introduction of the incore unlinked lists, this wasn't a
-> >> problem because the unlink code would (very expensively) traverse the
-> >> entire ondisk metadata iunlink chain to keep things up to date.
-> >> However, the incore unlinked list code complains when it realizes that
-> >> it is out of sync with the ondisk metadata and shuts down the fs, which
-> >> is bad.
-> >>
-> >> Ritesh proposed to solve this problem by unconditionally parsing the
-> >> unlinked lists at mount time, but this imposes a mount time cost for
-> >> every filesystem to catch something that should be very infrequent.
-> >> Instead, let's target the places where we can encounter a next_unlinked
-> >> pointer that refers to an inode that is not in cache, and load it into
-> >> cache.
-> >>
-> >> Note: This patch does not address the problem of iget loading an inode
-> >> from the middle of the iunlink list and needing to set i_prev_unlinked
-> >> correctly.
-> >>
-> >> Reported-by: shrikanth hegde <sshegde@linux.vnet.ibm.com>
-> >> Triaged-by: Ritesh Harjani <ritesh.list@gmail.com>
-> >> Signed-off-by: Darrick J. Wong <djwong@kernel.org>
-> >> ---
-> >> v2: log that we're doing runtime recovery, dont mess with DONTCACHE,
-> >>     and actually return ENOLINK
-> >> ---
-> >>  fs/xfs/xfs_inode.c |   75 +++++++++++++++++++++++++++++++++++++++++++++++++---
-> >>  fs/xfs/xfs_trace.h |   25 +++++++++++++++++
-> >>  2 files changed, 96 insertions(+), 4 deletions(-)
-> > 
-> > Hi Darrick,
-> > 
-> > Thanks for taking a look at this. I tested this patch on the setup where
-> > Shrikanth earlier saw the crash. I still can see a problem. I saw it is
-> > taking the branch from 
-> > 
-> > +	/* If this is not an unlinked inode, something is very wrong. */
-> > +	if (VFS_I(next_ip)->i_nlink != 0) {
-> > +		error = -EFSCORRUPTED;
-> > +		goto rele;
-> > +	}
-> > 
-> > Here are the logs of reference - 
-> > 
-> > [   21.399573] XFS (dm-0): Found unrecovered unlinked inode 0x2ec44d in AG 0x0.  Initiating recovery.
-> > [   21.400150] XFS (dm-0): Internal error xfs_trans_cancel at line 1104 of file fs/xfs/xfs_trans.c.  Caller xfs_remove+0x1a0/0x310 [xfs]
-> 
-> Do you have a metadump for that filesystem, to examine that inode?
+Hi Dave,
+If ext size hint is not set at all,  what's the default extent size
+alignment if the FS doesn't do striping (which is my case)?
 
-IIRC, Ritesh's problem was that there were inodes on the unlinked list
-*and* they had nonzero i_nlink.  This patch doesn't address that; you'll
-have to wait for the online repair version.
 
---D
-
-> -Eric
-> 
-> > [   21.400222] CPU: 0 PID: 1629 Comm: systemd-tmpfile Not tainted 6.5.0+ #2
-> > [   21.400226] Hardware name: IBM,9080-HEX POWER10 (raw) 0x800200 0xf000006 of:IBM,FW1010.22 (NH1010_122) hv:phyp pSeries
-> > [   21.400230] Call Trace:
-> > [   21.400231] [c000000014cdbb70] [c000000000f377b8] dump_stack_lvl+0x6c/0x9c (unreliable)
-> > [   21.400239] [c000000014cdbba0] [c008000000f7c204] xfs_error_report+0x5c/0x80 [xfs]
-> > [   21.400303] [c000000014cdbc00] [c008000000fab320] xfs_trans_cancel+0x178/0x1b0 [xfs]
-> > [   21.400371] [c000000014cdbc50] [c008000000f999d8] xfs_remove+0x1a0/0x310 [xfs]
-> > [   21.400432] [c000000014cdbcc0] [c008000000f93eb0] xfs_vn_unlink+0x68/0xf0 [xfs]
-> > [   21.400493] [c000000014cdbd20] [c0000000005b8038] vfs_rmdir+0x178/0x300
-> > [   21.400498] [c000000014cdbd60] [c0000000005be444] do_rmdir+0x124/0x240
-> > [   21.400502] [c000000014cdbdf0] [c0000000005be594] sys_rmdir+0x34/0x50
-> > [   21.400506] [c000000014cdbe10] [c000000000033c38] system_call_exception+0x148/0x3a0
-> > [   21.400511] [c000000014cdbe50] [c00000000000c6d4] system_call_common+0xf4/0x258
-> 
-> 
-> 
+On Sun, Aug 27, 2023 at 6:01=E2=80=AFPM Dave Chinner <david@fromorbit.com> =
+wrote:
+>
+> On Sat, Aug 26, 2023 at 06:09:13PM -0700, Shawn wrote:
+> > xfs_io shows "extsize" as 0.   The data bsize is always 4096.  What's
+> > the implication of a 0 extsize?
+> >
+> > $ sudo xfs_io -c 'stat' /mnt/S48BNW0K700192T/
+> > fd.path =3D "/mnt/S48BNW0K700192T/"
+> > fd.flags =3D non-sync,non-direct,read-write
+> > stat.ino =3D 64
+> > stat.type =3D directory
+> > stat.size =3D 81
+> > stat.blocks =3D 0
+> > fsxattr.xflags =3D 0x0 [--------------]
+> > fsxattr.projid =3D 0
+> > fsxattr.extsize =3D 0    <=3D=3D=3D=3D  0
+> > fsxattr.nextents =3D 0
+> > fsxattr.naextents =3D 0
+> > dioattr.mem =3D 0x200
+> > dioattr.miniosz =3D 512
+> > dioattr.maxiosz =3D 2147483136
+>
+> THere are no xflags set, meaning the XFS_DIFLAG_EXTSZINHERIT is not
+> set on the directory so nothing will inherit the extsize from the
+> directory at creation time. An extsize of zero is the default "don't
+> do any non-default extent size alignment" (i.e. align to stripe
+> parameters if the filesystem has them set, but nothing else.)
+>
+> If this is the root directory of a mounted filesystem, it means the
+> extent size hint was not set by mkfs, and it hasn't been set
+> manually via xfs_io after mount, either.
+>
+> -Dave.
+> --
+> Dave Chinner
+> david@fromorbit.com
