@@ -2,135 +2,316 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D779FCA0FE4
-	for <linux-xfs@archiver.kernel.org>; Fri,  1 Sep 2023 15:45:49 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9EC7FCA0FE4
+	for <linux-xfs@archiver.kernel.org>; Fri,  1 Sep 2023 15:58:01 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234677AbjIAPpu (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 1 Sep 2023 11:45:50 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60662 "EHLO
+        id S237326AbjIAP6D (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 1 Sep 2023 11:58:03 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46908 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S234201AbjIAPpt (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 1 Sep 2023 11:45:49 -0400
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 094A5AC
-        for <linux-xfs@vger.kernel.org>; Fri,  1 Sep 2023 08:45:07 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1693583107;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=b7XbrD8tGCXtvHoxqcZU7UP0/DK8Ou+8tHuvT5PdzIc=;
-        b=VAlTUAOu0zuTSuUD842YP/isQAoJ+as/0DejrpXzCUowKlvSzbbiifXvsf2m5RnJMs66H5
-        yQGcQ5Cz+Zwnq/Fw+8BM8gNcGc5ThuQXh3MaMo9BFiq0BcMFgGWAr0/O85xByxGmMo3/XY
-        VvUolMCXdI0ptNpM60vIPLthRS/xrb0=
-Received: from mail-pj1-f72.google.com (mail-pj1-f72.google.com
- [209.85.216.72]) by relay.mimecast.com with ESMTP with STARTTLS
- (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
- us-mta-468-d6rlvub2N_aFiqlKeuYXuA-1; Fri, 01 Sep 2023 11:45:05 -0400
-X-MC-Unique: d6rlvub2N_aFiqlKeuYXuA-1
-Received: by mail-pj1-f72.google.com with SMTP id 98e67ed59e1d1-27183f4cc79so2463902a91.0
-        for <linux-xfs@vger.kernel.org>; Fri, 01 Sep 2023 08:45:05 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20221208; t=1693583104; x=1694187904;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=b7XbrD8tGCXtvHoxqcZU7UP0/DK8Ou+8tHuvT5PdzIc=;
-        b=NNdY9pXK8o+CoLcYeOu6totSZOCXU36H4iMTrnwb7lQgP2kK0mB0mDweX0F/EEuH+8
-         HBoa1tCJscs1unaPavHMJqW4JsRP9dNV9y/dX/QJ/1aju/ToJxnplWckMrO6s9P3BJWY
-         zL9wvM91JHk0wpiDEafhGf5sAa+XYGCbyBzydO7K9OBllYkqzPaRT76FPYrfBoGWyFcN
-         9M8cfZP3GlEWJvBCCzg/4cD+LV+u3nZ3SDHcNf8iuTOKCuiiaRK5vIRS9R4jKQEG+NtM
-         FgVbIvPRv0GursXS/b2eQ7eHPZNEPSG4fqsK4frfKCP9ynEcoBXstz1VCld6KN7cgYwH
-         VoWQ==
-X-Gm-Message-State: AOJu0YxAluMVFLL9l+z3373OYo+a9TWVut1Lys/nqdczoUmNpUpnFoBW
-        8Js8AgDZlt/aGFYz244GyEviRwpsel975SrVq9dtq/gmrCGXXaaxh8LsFf/1R/Avw9m5fl+orlA
-        qfr5OOKSe8zg0sfabuuF9ptd5H1f/T+gtfg==
-X-Received: by 2002:a17:90a:6649:b0:259:10a8:2389 with SMTP id f9-20020a17090a664900b0025910a82389mr2421055pjm.35.1693583104256;
-        Fri, 01 Sep 2023 08:45:04 -0700 (PDT)
-X-Google-Smtp-Source: AGHT+IGwy2w4BVdve0afH794Zr0zj/YRLJ5XM1fM83AAHAZyvWHGGEbZEtK+07wjGJK2/F1p1ELiWw==
-X-Received: by 2002:a17:90a:6649:b0:259:10a8:2389 with SMTP id f9-20020a17090a664900b0025910a82389mr2421044pjm.35.1693583103952;
-        Fri, 01 Sep 2023 08:45:03 -0700 (PDT)
-Received: from zlang-mailbox ([43.228.180.230])
-        by smtp.gmail.com with ESMTPSA id i10-20020a17090a2a0a00b002694fee879csm5122185pjd.36.2023.09.01.08.45.02
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 01 Sep 2023 08:45:03 -0700 (PDT)
-Date:   Fri, 1 Sep 2023 23:45:00 +0800
-From:   Zorro Lang <zlang@redhat.com>
-To:     "Darrick J. Wong" <djwong@kernel.org>
-Cc:     linux-xfs@vger.kernel.org, fstests@vger.kernel.org
-Subject: Re: [PATCH v2 1/2] generic/61[67]: support SOAK_DURATION
-Message-ID: <20230901154500.4mv37y4uafbzjy7n@zlang-mailbox>
-References: <169335094811.3534600.13011878728080983620.stgit@frogsfrogsfrogs>
- <169335095385.3534600.13449847282467855019.stgit@frogsfrogsfrogs>
- <20230901145331.GP28186@frogsfrogsfrogs>
+        with ESMTP id S232647AbjIAP6A (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 1 Sep 2023 11:58:00 -0400
+Received: from sin.source.kernel.org (sin.source.kernel.org [145.40.73.55])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5CA5D10F3
+        for <linux-xfs@vger.kernel.org>; Fri,  1 Sep 2023 08:57:53 -0700 (PDT)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange X25519 server-signature RSA-PSS (2048 bits))
+        (No client certificate requested)
+        by sin.source.kernel.org (Postfix) with ESMTPS id B26B4CE2432
+        for <linux-xfs@vger.kernel.org>; Fri,  1 Sep 2023 15:57:51 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 0820CC433C7;
+        Fri,  1 Sep 2023 15:57:50 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1693583870;
+        bh=S6Q6ofeK3SoTp0WM9jJN+IYJyY7etL8zBv7LO0V8J9A=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=IqC6IrfYad+uslPQSDCrT7P/jRUxwNjdP1kFQomwpnHM15Ko6tY0JvMaVO4JA8DHb
+         Jm9DuAz802S5d3vrM46glpbyMCN/QYCPimd8nkK3uUtMgbvdUTz02y8dEMpEY/J4CZ
+         2xqbHLpDmw8twXm4lAm5/ZyDi33nWUiYCSdl1tGAbq5YhorEguN4dlKiKQCtb84prU
+         AWH2zvf2XEvsYLS7zkRHpUDMtrIcP25Z1BNDsPsP+Qq0wYuppqFU87u3EeGDR11oDe
+         dR+7AE5CECDfuoJSQ2LphsCe2BwGs49OzlnEOREkUDqfXKUup3W73QgyQwR4VJ40HN
+         OHHq9NYgPg9lA==
+Date:   Fri, 1 Sep 2023 08:57:49 -0700
+From:   "Darrick J. Wong" <djwong@kernel.org>
+To:     Chandan Babu R <chandanrlinux@gmail.com>
+Cc:     "Ritesh Harjani (IBM)" <ritesh.list@gmail.com>,
+        Dave Chinner <david@fromorbit.com>,
+        Eric Sandeen <sandeen@redhat.com>,
+        xfs <linux-xfs@vger.kernel.org>,
+        shrikanth hegde <sshegde@linux.vnet.ibm.com>,
+        Bill O'Donnell <bodonnel@redhat.com>,
+        Eric Sandeen <sandeen@sandeen.net>
+Subject: Re: [PATCH v3] xfs: load uncached unlinked inodes into memory on
+ demand
+Message-ID: <20230901155749.GS28186@frogsfrogsfrogs>
+References: <20230901150311.GR28186@frogsfrogsfrogs>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20230901145331.GP28186@frogsfrogsfrogs>
+In-Reply-To: <20230901150311.GR28186@frogsfrogsfrogs>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Fri, Sep 01, 2023 at 07:53:31AM -0700, Darrick J. Wong wrote:
+On Fri, Sep 01, 2023 at 08:03:11AM -0700, Darrick J. Wong wrote:
 > From: Darrick J. Wong <djwong@kernel.org>
 > 
-> Now that I've finally gotten liburing installed on my test machine, I
-> can actually test io_uring.  Adapt these two tests to support
-> SOAK_DURATION so I can add it to that too.
+> shrikanth hegde reports that filesystems fail shortly after mount with
+> the following failure:
 > 
+> 	WARNING: CPU: 56 PID: 12450 at fs/xfs/xfs_inode.c:1839 xfs_iunlink_lookup+0x58/0x80 [xfs]
+> 
+> This of course is the WARN_ON_ONCE in xfs_iunlink_lookup:
+> 
+> 	ip = radix_tree_lookup(&pag->pag_ici_root, agino);
+> 	if (WARN_ON_ONCE(!ip || !ip->i_ino)) { ... }
+> 
+> From diagnostic data collected by the bug reporters, it would appear
+> that we cleanly mounted a filesystem that contained unlinked inodes.
+> Unlinked inodes are only processed as a final step of log recovery,
+> which means that clean mounts do not process the unlinked list at all.
+> 
+> Prior to the introduction of the incore unlinked lists, this wasn't a
+> problem because the unlink code would (very expensively) traverse the
+> entire ondisk metadata iunlink chain to keep things up to date.
+> However, the incore unlinked list code complains when it realizes that
+> it is out of sync with the ondisk metadata and shuts down the fs, which
+> is bad.
+> 
+> Ritesh proposed to solve this problem by unconditionally parsing the
+> unlinked lists at mount time, but this imposes a mount time cost for
+> every filesystem to catch something that should be very infrequent.
+> Instead, let's target the places where we can encounter a next_unlinked
+> pointer that refers to an inode that is not in cache, and load it into
+> cache.
+> 
+> Note: This patch does not address the problem of iget loading an inode
+> from the middle of the iunlink list and needing to set i_prev_unlinked
+> correctly.
+> 
+> Eric Sandeen adds:
+> 
+> "One way to end up in this situation is to have at one point run a very
+> old kernel which did not contain this commit, merged in kernel v4.14:
+> 
+> commit 6f4a1eefdd0ad4561543270a7fceadabcca075dd
+> Author: Eric Sandeen <sandeen@sandeen.net>
+> Date:   Tue Aug 8 18:21:49 2017 -0700
+> 
+>     xfs: toggle readonly state around xfs_log_mount_finish
+> 
+>     When we do log recovery on a readonly mount, unlinked inode
+>     processing does not happen due to the readonly checks in
+>     xfs_inactive(), which are trying to prevent any I/O on a
+>     readonly mount.
+> 
+>     This is misguided - we do I/O on readonly mounts all the time,
+>     for consistency; for example, log recovery.  So do the same
+>     RDONLY flag twiddling around xfs_log_mount_finish() as we
+>     do around xfs_log_mount(), for the same reason.
+> 
+>     This all cries out for a big rework but for now this is a
+>     simple fix to an obvious problem.
+> 
+>     Signed-off-by: Eric Sandeen <sandeen@redhat.com>
+>     Reviewed-by: Brian Foster <bfoster@redhat.com>
+>     Reviewed-by: Christoph Hellwig <hch@lst.de>
+>     Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
+>     Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> 
+> "so if you:
+> 
+> 1) Crash with unlinked inodes
+> 2) mount -o ro <recovers log but skips unlinked inode recovery>
+> 3) mount -o remount,rw
+> 4) umount <writes clean log record>
+> 
+> "You now have a filesystem with on-disk unlinked inodes and a clean log,
+> and those inodes won't get cleaned up until log recovery runs again or
+> xfs_repair is run.
+> 
+> "And in testing an old OS (RHEL7) it does seem that the root filesystem
+> goes through a mount -o ro, mount -o remount,rw transition at boot time.
+> So this situation may be somewhat common."
+> 
+> Reported-by: shrikanth hegde <sshegde@linux.vnet.ibm.com>
+> Triaged-by: Ritesh Harjani <ritesh.list@gmail.com>
 > Signed-off-by: Darrick J. Wong <djwong@kernel.org>
+> Reviewed-by: Dave Chinner <dchinner@redhat.com>
+> Reviewed-by: Bill O'Donnell <bodonnel@redhat.com>
 > ---
-> v2: add to soak group
+> v3: add RVB tags and historical context from sandeen
+> v2: log that we're doing runtime recovery, dont mess with DONTCACHE,
+>     and actually return ENOLINK
 > ---
-
-Thanks! This version looks good to me,
-Reviewed-by: Zorro Lang <zlang@redhat.com>
-
->  tests/generic/616 |    3 ++-
->  tests/generic/617 |    3 ++-
->  2 files changed, 4 insertions(+), 2 deletions(-)
+>  fs/xfs/xfs_inode.c |   75 +++++++++++++++++++++++++++++++++++++++++++++++++---
+>  fs/xfs/xfs_trace.h |   25 +++++++++++++++++
+>  2 files changed, 96 insertions(+), 4 deletions(-)
 > 
-> diff --git a/tests/generic/616 b/tests/generic/616
-> index 538b480ba7..5b0b02c5e4 100755
-> --- a/tests/generic/616
-> +++ b/tests/generic/616
-> @@ -8,7 +8,7 @@
->  # fsx ops to limit the testing time to be an auto group test.
->  #
->  . ./common/preamble
-> -_begin_fstest auto rw io_uring stress
-> +_begin_fstest auto rw io_uring stress soak
->  
->  # Import common functions.
->  . ./common/filter
-> @@ -33,6 +33,7 @@ fsx_args+=(-N $nr_ops)
->  fsx_args+=(-p $((nr_ops / 100)))
->  fsx_args+=(-o $op_sz)
->  fsx_args+=(-l $file_sz)
-> +test -n "$SOAK_DURATION" && fsx_args+=(--duration="$SOAK_DURATION")
->  
->  run_fsx "${fsx_args[@]}" | sed -e '/^fsx.*/d'
->  
-> diff --git a/tests/generic/617 b/tests/generic/617
-> index 3bb3112e99..a977870023 100755
-> --- a/tests/generic/617
-> +++ b/tests/generic/617
-> @@ -8,7 +8,7 @@
->  # fsx ops to limit the testing time to be an auto group test.
->  #
->  . ./common/preamble
-> -_begin_fstest auto rw io_uring stress
-> +_begin_fstest auto rw io_uring stress soak
->  
->  # Import common functions.
->  . ./common/filter
-> @@ -39,6 +39,7 @@ fsx_args+=(-r $min_dio_sz)
->  fsx_args+=(-t $min_dio_sz)
->  fsx_args+=(-w $min_dio_sz)
->  fsx_args+=(-Z)
-> +test -n "$SOAK_DURATION" && fsx_args+=(--duration="$SOAK_DURATION")
->  
->  run_fsx "${fsx_args[@]}" | sed -e '/^fsx.*/d'
->  
-> 
+> diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
+> index 6ee266be45d4..2942002560b5 100644
+> --- a/fs/xfs/xfs_inode.c
+> +++ b/fs/xfs/xfs_inode.c
+> @@ -1829,12 +1829,17 @@ xfs_iunlink_lookup(
 
+<sigh> Somehow between the four copies of this patch that I have flying
+around (djwong-dev, patchmail, linus TOT, old 6.6 merge branch) I once
+again lost the comment change for this function, and apparently never
+actually sent that to the list.
+
+"A poor workman blames his tools", etc.
+
+I bet that workman doesn't have to do this much manual paperwork
+either...
+
+--D
+
+>  
+>  	rcu_read_lock();
+>  	ip = radix_tree_lookup(&pag->pag_ici_root, agino);
+> +	if (!ip) {
+> +		/* Caller can handle inode not being in memory. */
+> +		rcu_read_unlock();
+> +		return NULL;
+> +	}
+>  
+>  	/*
+> -	 * Inode not in memory or in RCU freeing limbo should not happen.
+> -	 * Warn about this and let the caller handle the failure.
+> +	 * Inode in RCU freeing limbo should not happen.  Warn about this and
+> +	 * let the caller handle the failure.
+>  	 */
+> -	if (WARN_ON_ONCE(!ip || !ip->i_ino)) {
+> +	if (WARN_ON_ONCE(!ip->i_ino)) {
+>  		rcu_read_unlock();
+>  		return NULL;
+>  	}
+> @@ -1858,7 +1863,8 @@ xfs_iunlink_update_backref(
+>  
+>  	ip = xfs_iunlink_lookup(pag, next_agino);
+>  	if (!ip)
+> -		return -EFSCORRUPTED;
+> +		return -ENOLINK;
+> +
+>  	ip->i_prev_unlinked = prev_agino;
+>  	return 0;
+>  }
+> @@ -1902,6 +1908,62 @@ xfs_iunlink_update_bucket(
+>  	return 0;
+>  }
+>  
+> +/*
+> + * Load the inode @next_agino into the cache and set its prev_unlinked pointer
+> + * to @prev_agino.  Caller must hold the AGI to synchronize with other changes
+> + * to the unlinked list.
+> + */
+> +STATIC int
+> +xfs_iunlink_reload_next(
+> +	struct xfs_trans	*tp,
+> +	struct xfs_buf		*agibp,
+> +	xfs_agino_t		prev_agino,
+> +	xfs_agino_t		next_agino)
+> +{
+> +	struct xfs_perag	*pag = agibp->b_pag;
+> +	struct xfs_mount	*mp = pag->pag_mount;
+> +	struct xfs_inode	*next_ip = NULL;
+> +	xfs_ino_t		ino;
+> +	int			error;
+> +
+> +	ASSERT(next_agino != NULLAGINO);
+> +
+> +#ifdef DEBUG
+> +	rcu_read_lock();
+> +	next_ip = radix_tree_lookup(&pag->pag_ici_root, next_agino);
+> +	ASSERT(next_ip == NULL);
+> +	rcu_read_unlock();
+> +#endif
+> +
+> +	xfs_info_ratelimited(mp,
+> + "Found unrecovered unlinked inode 0x%x in AG 0x%x.  Initiating recovery.",
+> +			next_agino, pag->pag_agno);
+> +
+> +	/*
+> +	 * Use an untrusted lookup just to be cautious in case the AGI has been
+> +	 * corrupted and now points at a free inode.  That shouldn't happen,
+> +	 * but we'd rather shut down now since we're already running in a weird
+> +	 * situation.
+> +	 */
+> +	ino = XFS_AGINO_TO_INO(mp, pag->pag_agno, next_agino);
+> +	error = xfs_iget(mp, tp, ino, XFS_IGET_UNTRUSTED, 0, &next_ip);
+> +	if (error)
+> +		return error;
+> +
+> +	/* If this is not an unlinked inode, something is very wrong. */
+> +	if (VFS_I(next_ip)->i_nlink != 0) {
+> +		error = -EFSCORRUPTED;
+> +		goto rele;
+> +	}
+> +
+> +	next_ip->i_prev_unlinked = prev_agino;
+> +	trace_xfs_iunlink_reload_next(next_ip);
+> +rele:
+> +	ASSERT(!(VFS_I(next_ip)->i_state & I_DONTCACHE));
+> +	xfs_irele(next_ip);
+> +	return error;
+> +}
+> +
+>  static int
+>  xfs_iunlink_insert_inode(
+>  	struct xfs_trans	*tp,
+> @@ -1933,6 +1995,8 @@ xfs_iunlink_insert_inode(
+>  	 * inode.
+>  	 */
+>  	error = xfs_iunlink_update_backref(pag, agino, next_agino);
+> +	if (error == -ENOLINK)
+> +		error = xfs_iunlink_reload_next(tp, agibp, agino, next_agino);
+>  	if (error)
+>  		return error;
+>  
+> @@ -2027,6 +2091,9 @@ xfs_iunlink_remove_inode(
+>  	 */
+>  	error = xfs_iunlink_update_backref(pag, ip->i_prev_unlinked,
+>  			ip->i_next_unlinked);
+> +	if (error == -ENOLINK)
+> +		error = xfs_iunlink_reload_next(tp, agibp, ip->i_prev_unlinked,
+> +				ip->i_next_unlinked);
+>  	if (error)
+>  		return error;
+>  
+> diff --git a/fs/xfs/xfs_trace.h b/fs/xfs/xfs_trace.h
+> index 36bd42ed9ec8..f4e46bac9b91 100644
+> --- a/fs/xfs/xfs_trace.h
+> +++ b/fs/xfs/xfs_trace.h
+> @@ -3832,6 +3832,31 @@ TRACE_EVENT(xfs_iunlink_update_dinode,
+>  		  __entry->new_ptr)
+>  );
+>  
+> +TRACE_EVENT(xfs_iunlink_reload_next,
+> +	TP_PROTO(struct xfs_inode *ip),
+> +	TP_ARGS(ip),
+> +	TP_STRUCT__entry(
+> +		__field(dev_t, dev)
+> +		__field(xfs_agnumber_t, agno)
+> +		__field(xfs_agino_t, agino)
+> +		__field(xfs_agino_t, prev_agino)
+> +		__field(xfs_agino_t, next_agino)
+> +	),
+> +	TP_fast_assign(
+> +		__entry->dev = ip->i_mount->m_super->s_dev;
+> +		__entry->agno = XFS_INO_TO_AGNO(ip->i_mount, ip->i_ino);
+> +		__entry->agino = XFS_INO_TO_AGINO(ip->i_mount, ip->i_ino);
+> +		__entry->prev_agino = ip->i_prev_unlinked;
+> +		__entry->next_agino = ip->i_next_unlinked;
+> +	),
+> +	TP_printk("dev %d:%d agno 0x%x agino 0x%x prev_unlinked 0x%x next_unlinked 0x%x",
+> +		  MAJOR(__entry->dev), MINOR(__entry->dev),
+> +		  __entry->agno,
+> +		  __entry->agino,
+> +		  __entry->prev_agino,
+> +		  __entry->next_agino)
+> +);
+> +
+>  DECLARE_EVENT_CLASS(xfs_ag_inode_class,
+>  	TP_PROTO(struct xfs_inode *ip),
+>  	TP_ARGS(ip),
