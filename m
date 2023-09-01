@@ -2,118 +2,87 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 296D5CA0FE2
-	for <linux-xfs@archiver.kernel.org>; Fri,  1 Sep 2023 02:16:23 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 36209CA0FE1
+	for <linux-xfs@archiver.kernel.org>; Fri,  1 Sep 2023 03:47:19 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1348050AbjIACQY (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 31 Aug 2023 22:16:24 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56040 "EHLO
+        id S237089AbjIADrU (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 31 Aug 2023 23:47:20 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56944 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S237340AbjIACQY (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 31 Aug 2023 22:16:24 -0400
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 62B45E6F
-        for <linux-xfs@vger.kernel.org>; Thu, 31 Aug 2023 19:15:34 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1693534533;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=2m6NIfRWGU81FmC4veM1riQ8LgQZRLXR/87iheQ744s=;
-        b=DNX3Tb+qMyRpp3e41O1yFsTleKDogiGq5vZVG6ZeV93vC0D9VtiRNQX5+RyBsOYzy8U5uG
-        0jC97Hw86m2Oxwh9QvjvOKAp0CtyGK+5J6gAtf1Sn/FU+jsS4S4kSD9sG4rB01zjiezZ71
-        wf6sCAvXGrlS4lSPifUp7aC+avo1iSg=
-Received: from mail-pl1-f197.google.com (mail-pl1-f197.google.com
- [209.85.214.197]) by relay.mimecast.com with ESMTP with STARTTLS
- (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
- us-mta-88-Um9JWwQ3MvecYTSzCuTicw-1; Thu, 31 Aug 2023 22:15:28 -0400
-X-MC-Unique: Um9JWwQ3MvecYTSzCuTicw-1
-Received: by mail-pl1-f197.google.com with SMTP id d9443c01a7336-1c09d82dfc7so16699245ad.0
-        for <linux-xfs@vger.kernel.org>; Thu, 31 Aug 2023 19:15:28 -0700 (PDT)
+        with ESMTP id S229573AbjIADrT (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 31 Aug 2023 23:47:19 -0400
+Received: from mail-pf1-x42c.google.com (mail-pf1-x42c.google.com [IPv6:2607:f8b0:4864:20::42c])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id F032B18C
+        for <linux-xfs@vger.kernel.org>; Thu, 31 Aug 2023 20:47:16 -0700 (PDT)
+Received: by mail-pf1-x42c.google.com with SMTP id d2e1a72fcca58-68a42d06d02so1282492b3a.0
+        for <linux-xfs@vger.kernel.org>; Thu, 31 Aug 2023 20:47:16 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=fromorbit-com.20230601.gappssmtp.com; s=20230601; t=1693540036; x=1694144836; darn=vger.kernel.org;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
+        bh=hpOIrXuRQYZxXMqWsb/iUpa9YdxidIVeVU0Ee0w2W+k=;
+        b=PgMxHOvqJb/qwOSkCEihpQGhDBzlhpBs8xYA52AVgp4edYwoL41stu0rsUWx1DQUBk
+         /1xPSOT7fxioSEJRORRe6sl7ly1DkywhEG9mvy1FbbxNjwgm78qRq7GhFj0qCrON/UuP
+         ERz00kS7WSHpkIg+3ReSJtrbFV4ThSGtnQ7jVNLnASoF+4YSknQL6wD1IKJ/JgthlUwS
+         MJc8Fu3+HZarDoYxZdy8FuoShv0CAi7rbNkUT8ZAIfl5xcib8OcOZ7zV2VFV+bozIDkk
+         eYSYmxbp8Rr5oZrLEP6Ssr9gAmb269oeORhgCnrmg21zc4hd3o92LxCp9beIfB0Pq5TL
+         MyXg==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20221208; t=1693534527; x=1694139327;
+        d=1e100.net; s=20221208; t=1693540036; x=1694144836;
         h=in-reply-to:content-disposition:mime-version:references:message-id
          :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
          :message-id:reply-to;
-        bh=2m6NIfRWGU81FmC4veM1riQ8LgQZRLXR/87iheQ744s=;
-        b=TIBBi6yG3+PLBqEXtnXQE2fGhPsWKGOFvjJYkWRYuO1ioGJXekOfuWY5+jtxo5nhbg
-         AmcWX8riP9VkiImMWTFE7i5mDdwrQ8eG0yxwZrCoXVuSMQEWArCR2xrbk4++R54zNOAB
-         aTdJqVJTmRJuT1gEZeYKXhhPNb3d8Yymp7z4JtbRiNnaQfXwq5Wk5L4dzVIWi38XhiB3
-         MUSeWxuH3KP04d8te1d62iDB3ybTc2FU87Pg/yTb9WQr8OeRLZI1kFicYFfG7ygxV/Lq
-         Iv3VnGUz7xv/EMyifOrk7V4yCzKquSntwQOqrJY1TtsXS3rvqUQsa/veOfONu2q60v2e
-         5XyQ==
-X-Gm-Message-State: AOJu0Yz2zRDZgm3agn8B8Q4FZ6Jn5puOt/zhPaCwXIjNBcGjVtTWCSr0
-        jkRKhsLKwd4QUI3mERZn2vyal7Cy3jEnGUyY7coUN5HgeyKrfhmIyFt5Ma0qWBv4zSKWlS/steN
-        g97UNPFM2UNFtDQlfh2/F/ua1ZBojVxOYnQ==
-X-Received: by 2002:a17:902:cec5:b0:1b7:e49f:1d with SMTP id d5-20020a170902cec500b001b7e49f001dmr1657591plg.62.1693534526968;
-        Thu, 31 Aug 2023 19:15:26 -0700 (PDT)
-X-Google-Smtp-Source: AGHT+IFx/IJbocd1YEkOLvgyP4KFjhmhiNB/+KDSKaRO+S0AvMTeO30g5cw8wAk37UysjUP0jy9LBQ==
-X-Received: by 2002:a17:902:cec5:b0:1b7:e49f:1d with SMTP id d5-20020a170902cec500b001b7e49f001dmr1657577plg.62.1693534526508;
-        Thu, 31 Aug 2023 19:15:26 -0700 (PDT)
-Received: from zlang-mailbox ([43.228.180.230])
-        by smtp.gmail.com with ESMTPSA id o9-20020a170902bcc900b001b87bedcc6fsm1833684pls.93.2023.08.31.19.15.25
+        bh=hpOIrXuRQYZxXMqWsb/iUpa9YdxidIVeVU0Ee0w2W+k=;
+        b=b4NmRDtlnITX9txRAsANy989XnpxU98VhHTGQ/KAHYGesmuYRCb5hpMQyu9a+R9H0T
+         jzKaII5OYc3JiKQkkf5QiO7+rRFgXNs60fAQGEQrfKNd9O+HARDZ+5G+mOfEBUD/M+IU
+         o9h/KK7z9VgjaPrODA/KnRJN3CKRIvCQYkz4ZaPj0GKUeuwRFzNDpK+F9K3wOMiKLfFC
+         RyfUqwgUCjZ1vuStOi8c8vB7ePIO0iSWOtQ2VYBDs6EMkRA41vx97bUhKSUleNdJkGUK
+         ZJVtKjlnpiqkBIZerM1o6bcz8PC3QC1RUKqrjREu/g4XLcaFamyaKGtntfxcHNAEAKGd
+         YkQg==
+X-Gm-Message-State: AOJu0YyYWPIDQ1tKoDYzB58FRe+uRd9CX60PzPmpXfd8vU894Wi0mtmr
+        1OG72eUUcsTeMkx4iP5MCTmVklmFq8AGH/+KSzc=
+X-Google-Smtp-Source: AGHT+IGVuEUS2psVpEs++pUy7C+rz9yGudH5H2zh99cHIE+R9bC1iISy6TNkqpwLq9OdphhGU/44dQ==
+X-Received: by 2002:a05:6a00:1952:b0:68a:4261:ab7f with SMTP id s18-20020a056a00195200b0068a4261ab7fmr1745289pfk.31.1693540036477;
+        Thu, 31 Aug 2023 20:47:16 -0700 (PDT)
+Received: from dread.disaster.area (pa49-195-66-88.pa.nsw.optusnet.com.au. [49.195.66.88])
+        by smtp.gmail.com with ESMTPSA id c17-20020aa78811000000b006884549adc8sm1979862pfo.29.2023.08.31.20.47.15
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 31 Aug 2023 19:15:26 -0700 (PDT)
-Date:   Fri, 1 Sep 2023 10:15:22 +0800
-From:   Zorro Lang <zlang@redhat.com>
-To:     "Darrick J. Wong" <djwong@kernel.org>
-Cc:     linux-xfs@vger.kernel.org, fstests@vger.kernel.org
-Subject: Re: [PATCH 2/2] generic/650: race mount and unmount with cpu hotplug
- too
-Message-ID: <20230901021522.oczewijtf5dbb7dr@zlang-mailbox>
-References: <169335047228.3523635.3342369338633870707.stgit@frogsfrogsfrogs>
- <169335048358.3523635.7191015334485086811.stgit@frogsfrogsfrogs>
+        Thu, 31 Aug 2023 20:47:15 -0700 (PDT)
+Received: from dave by dread.disaster.area with local (Exim 4.96)
+        (envelope-from <david@fromorbit.com>)
+        id 1qbv7o-009Egh-3C;
+        Fri, 01 Sep 2023 13:47:13 +1000
+Date:   Fri, 1 Sep 2023 13:47:12 +1000
+From:   Dave Chinner <david@fromorbit.com>
+To:     Shawn <neutronsharc@gmail.com>
+Cc:     linux-xfs@vger.kernel.org
+Subject: Re: Do I have to fsync after aio_write finishes (with fallocate
+ preallocation) ?
+Message-ID: <ZPFewPuuv78ZUaxo@dread.disaster.area>
+References: <CAB-bdyQVJdTcaaDLWmm+rsW_U6FLF3qCTqLEKLkM6hOgk09uZQ@mail.gmail.com>
+ <20221129213436.GG3600936@dread.disaster.area>
+ <CAB-bdyQw7hRpRPn9JTnpyJt1sA9vPDTVsUTmrhke-EMmGfaHBA@mail.gmail.com>
+ <ZOl2IHacyqSUFgfi@dread.disaster.area>
+ <CAB-bdyRTKNQeukwjuB=fCT91BDO5uTJzA_Y7msOdEPBDAURbzg@mail.gmail.com>
+ <ZOvx2Xg31EbJXPgr@dread.disaster.area>
+ <CAB-bdyQG0gDBJDt5cHHsi7avUazDtL5RO8G6UwQZj5Rw7k-CXQ@mail.gmail.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <169335048358.3523635.7191015334485086811.stgit@frogsfrogsfrogs>
+In-Reply-To: <CAB-bdyQG0gDBJDt5cHHsi7avUazDtL5RO8G6UwQZj5Rw7k-CXQ@mail.gmail.com>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Tue, Aug 29, 2023 at 04:08:03PM -0700, Darrick J. Wong wrote:
-> From: Darrick J. Wong <djwong@kernel.org>
-> 
-> Ritesh Harjani reported that mount and unmount can race with the xfs cpu
-> hotplug notifier hooks and crash the kernel.  Extend this test to
-> include that.
-> 
-> Signed-off-by: Darrick J. Wong <djwong@kernel.org>
-> ---
+On Thu, Aug 31, 2023 at 06:06:23PM -0700, Shawn wrote:
+> Hi Dave,
+> If ext size hint is not set at all,  what's the default extent size
+> alignment if the FS doesn't do striping (which is my case)?
 
-Good to me, and it helps to avoid this test takes too long time to run.
+No alignment. XFS will allocate exact sized extents for the
+writes being issued...
 
-Reviewed-by: Zorro Lang <zlang@redhat.com>
-
->  tests/generic/650 |   13 ++++++++++---
->  1 file changed, 10 insertions(+), 3 deletions(-)
-> 
-> 
-> diff --git a/tests/generic/650 b/tests/generic/650
-> index 05c939b84f..773f93c7cb 100755
-> --- a/tests/generic/650
-> +++ b/tests/generic/650
-> @@ -67,11 +67,18 @@ fsstress_args=(-w -d $stress_dir)
->  nr_cpus=$((LOAD_FACTOR * nr_hotplug_cpus))
->  test "$nr_cpus" -gt 1024 && nr_cpus="$nr_hotplug_cpus"
->  fsstress_args+=(-p $nr_cpus)
-> -test -n "$SOAK_DURATION" && fsstress_args+=(--duration="$SOAK_DURATION")
-> +if [ -n "$SOAK_DURATION" ]; then
-> +	test "$SOAK_DURATION" -lt 10 && SOAK_DURATION=10
-> +	fsstress_args+=(--duration="$((SOAK_DURATION / 10))")
-> +fi
->  
-> -nr_ops=$((25000 * TIME_FACTOR))
-> +nr_ops=$((2500 * TIME_FACTOR))
->  fsstress_args+=(-n $nr_ops)
-> -$FSSTRESS_PROG $FSSTRESS_AVOID -w "${fsstress_args[@]}" >> $seqres.full
-> +for ((i = 0; i < 10; i++)); do
-> +	$FSSTRESS_PROG $FSSTRESS_AVOID -w "${fsstress_args[@]}" >> $seqres.full
-> +	_test_cycle_mount
-> +done
-> +
->  rm -f $sentinel_file
->  
->  # success, all done
-> 
-
+-Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
