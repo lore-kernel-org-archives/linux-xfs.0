@@ -2,91 +2,125 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6D990CA0FF8
-	for <linux-xfs@archiver.kernel.org>; Fri,  1 Sep 2023 23:50:41 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 567F4CA0FFD
+	for <linux-xfs@archiver.kernel.org>; Sat,  2 Sep 2023 04:56:33 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S245571AbjIAXum (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 1 Sep 2023 19:50:42 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48382 "EHLO
+        id S1351514AbjIBE4e (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Sat, 2 Sep 2023 00:56:34 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56888 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1351231AbjIAXum (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 1 Sep 2023 19:50:42 -0400
-Received: from mail-io1-xd33.google.com (mail-io1-xd33.google.com [IPv6:2607:f8b0:4864:20::d33])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7B38AB5
-        for <linux-xfs@vger.kernel.org>; Fri,  1 Sep 2023 16:50:39 -0700 (PDT)
-Received: by mail-io1-xd33.google.com with SMTP id ca18e2360f4ac-7928dc54896so89557339f.3
-        for <linux-xfs@vger.kernel.org>; Fri, 01 Sep 2023 16:50:39 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20221208; t=1693612238; x=1694217038; darn=vger.kernel.org;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=8klfhXedLQ4WQTaVcniKGNfnP6fi2hBCnt9g+dYBP/o=;
-        b=jTEWfHiQk28Kl4rIExar/OK/mKqU2z3vFCrmkaoS9CAra/YEY5JUGgM+D9RVAbP1Wb
-         3F49KbBPEt95tHkqMJ6DOObuvbcNRYdmirBhbxNLP7p23Tgob/LcpDwld4YCx9KePW74
-         psdDxFh+GRlFrcAHkeHZUBY0bI0IWzDui4eL/ojQST9UkLjchUkk1GxmyYQu57Ba/qbV
-         PuQItBbGzRhWSbQUFXXYd+8o9AeoBG6TI4E8bgkzA+W7Y1dJHyHFe11NBr3hkOkGz+hW
-         Ss0UbeRa49Qah5MzWsFUZ/t+LPXz4BIE9tHOrZz/G0W7QWOEh1ynf008fg70F6LKo31m
-         6KKw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20221208; t=1693612239; x=1694217039;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=8klfhXedLQ4WQTaVcniKGNfnP6fi2hBCnt9g+dYBP/o=;
-        b=LePOEXPDxAMolhbYuyhf/sM/DTz947YrT8gR3Y2JcXXqURUm9wZ1sMmdFnOyvLjbrC
-         Nr4DOy6XmtTpBH/DYcq35azdt246gZFe1/2tMGO9KWVzToO8CRqPcZYzJASVEIlgNITc
-         OzFEg4u6M87mgQAgO5kStPFMfIt1tQI9nsmpsoYHWI4sF3S2HGm5bzJ6QQ8Q6J+MgXoC
-         /yg6814pjR8tcS2cGfnCwBJJB8W8JX4ZNvpuSf+3h+jXKRbd4/JERH5Y7O/5ofK2CjoB
-         EtQNJ/CeHjWXREBa00NbMxabIpwNLYVc4RXklHnzCOfPaa6epRmJAQczFvmJ4s6NGXhf
-         X+8g==
-X-Gm-Message-State: AOJu0YxpZv8oIphpYPzB1coPepqmwNrU9c6AV5AntlEn4lxYdLEAWVc1
-        Iw+Zupj7gH0ozpKbI/NguFTR6OXeuBOMY2oR5RDFnYGi
-X-Google-Smtp-Source: AGHT+IE9BDy387/Harf9PYJUjYe1qQhWZ5yA73WL3xkhmsyX6kQcyVGXk6TlkevsgRI3kN+4Yh1vDxDJOAZmjiZ+438=
-X-Received: by 2002:a05:6e02:b47:b0:34c:e84b:4c5e with SMTP id
- f7-20020a056e020b4700b0034ce84b4c5emr5467723ilu.8.1693612238569; Fri, 01 Sep
- 2023 16:50:38 -0700 (PDT)
+        with ESMTP id S240011AbjIBE4e (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sat, 2 Sep 2023 00:56:34 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A767410F9;
+        Fri,  1 Sep 2023 21:56:31 -0700 (PDT)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+        (No client certificate requested)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 45FE8615C6;
+        Sat,  2 Sep 2023 04:56:31 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 8EAC1C433C8;
+        Sat,  2 Sep 2023 04:56:30 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1693630590;
+        bh=6Vved2q/8X6dRDE9rlmeVjA/E1S0Ji8343lRxOEcTRc=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=lmDM/HJS5+E3kPAzGOJBihgs0U8QHsq8ZPtlqZmfdbRmjbY5a+uxwvOtyEJZe3Lcn
+         IzoKdRuf0cVcwPj//ed1JG+DNDlRJ+qH5IR9CIJEfMd9hryEiEWFKv6+ACe6vH20e2
+         GGSFkVzDFQDePKbveQGEVn+dIX2c0fpxo2LToLl83ucL90Xc2OC0DtX/1vrxGt4XDX
+         BCfjArcxQJPeOTyuw4DKQsK0BV6f/GdOA1IvPtGH+gnh3ATYzQmZp87TzVbWgChriw
+         AyoYL7wMwLSjaaEjbC43pe/lrCTbTLKpN9eXRNIWDsMZkHuPgVhOoN4nAoGevaOsdS
+         ltb0I+XaKdtsw==
+Date:   Fri, 1 Sep 2023 21:56:29 -0700
+From:   "Darrick J. Wong" <djwong@kernel.org>
+To:     Zorro Lang <zlang@redhat.com>
+Cc:     linux-xfs@vger.kernel.org, fstests@vger.kernel.org
+Subject: Re: [PATCH 3/3] xfs/559: adapt to kernels that use large folios for
+ writes
+Message-ID: <20230902045629.GA28170@frogsfrogsfrogs>
+References: <169335021210.3517899.17576674846994173943.stgit@frogsfrogsfrogs>
+ <169335022920.3517899.399149462227894457.stgit@frogsfrogsfrogs>
+ <20230901190802.zrttyndmri3rgekm@zlang-mailbox>
 MIME-Version: 1.0
-References: <CAB-bdyQVJdTcaaDLWmm+rsW_U6FLF3qCTqLEKLkM6hOgk09uZQ@mail.gmail.com>
- <20221129213436.GG3600936@dread.disaster.area> <CAB-bdyQw7hRpRPn9JTnpyJt1sA9vPDTVsUTmrhke-EMmGfaHBA@mail.gmail.com>
- <ZOl2IHacyqSUFgfi@dread.disaster.area> <CAB-bdyRTKNQeukwjuB=fCT91BDO5uTJzA_Y7msOdEPBDAURbzg@mail.gmail.com>
- <ZOvx2Xg31EbJXPgr@dread.disaster.area> <CAB-bdyQG0gDBJDt5cHHsi7avUazDtL5RO8G6UwQZj5Rw7k-CXQ@mail.gmail.com>
- <ZPFewPuuv78ZUaxo@dread.disaster.area>
-In-Reply-To: <ZPFewPuuv78ZUaxo@dread.disaster.area>
-From:   Shawn <neutronsharc@gmail.com>
-Date:   Fri, 1 Sep 2023 16:50:02 -0700
-Message-ID: <CAB-bdyTYnDMhqWAhW3h=G+-QRmAe7=9rYvA_gH5b3_TUKHRfEg@mail.gmail.com>
-Subject: Re: Do I have to fsync after aio_write finishes (with fallocate
- preallocation) ?
-To:     Dave Chinner <david@fromorbit.com>
-Cc:     linux-xfs@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20230901190802.zrttyndmri3rgekm@zlang-mailbox>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Thu, Aug 31, 2023 at 8:47=E2=80=AFPM Dave Chinner <david@fromorbit.com> =
-wrote:
->
-> On Thu, Aug 31, 2023 at 06:06:23PM -0700, Shawn wrote:
-> > Hi Dave,
-> > If ext size hint is not set at all,  what's the default extent size
-> > alignment if the FS doesn't do striping (which is my case)?
->
-> No alignment. XFS will allocate exact sized extents for the
-> writes being issued...
+On Sat, Sep 02, 2023 at 03:08:02AM +0800, Zorro Lang wrote:
+> On Tue, Aug 29, 2023 at 04:03:49PM -0700, Darrick J. Wong wrote:
+> > From: Darrick J. Wong <djwong@kernel.org>
+> > 
+> > The write invalidation code in iomap can only be triggered for writes
+> > that span multiple folios.  If the kernel reports a huge page size,
+> > scale up the write size.
+> > 
+> > Signed-off-by: Darrick J. Wong <djwong@kernel.org>
+> > ---
+> >  tests/xfs/559 |   29 ++++++++++++++++++++++++++++-
+> >  1 file changed, 28 insertions(+), 1 deletion(-)
+> > 
+> > 
+> > diff --git a/tests/xfs/559 b/tests/xfs/559
+> > index cffe5045a5..64fc16ebfd 100755
+> > --- a/tests/xfs/559
+> > +++ b/tests/xfs/559
+> > @@ -42,11 +42,38 @@ $XFS_IO_PROG -c 'chattr -x' $SCRATCH_MNT &> $seqres.full
+> >  _require_pagecache_access $SCRATCH_MNT
+> >  
+> >  blocks=10
+> > -blksz=$(_get_page_size)
+> > +
+> > +# If this kernel advertises huge page support, it's possible that it could be
+> > +# using large folios for the page cache writes.  It is necessary to write
+> > +# multiple folios (large or regular) to triggering the write invalidation,
+> > +# so we'll scale the test write size accordingly.
+> > +blksz=$(_get_hugepagesize)
+> 
+> Isn't _require_hugepages needed if _get_hugepagesize is used?
 
-=3D> Seems this can explain why io_submit() latency was very high for
-small aio_write (4KB, 12KB, etc).
-When I did fallocate() 1MB space before moving on to the next 1MB
-chunk, then io_submit latency becomes normal.
+Nope -- if the kernel doesn't support hugepages, then _get_hugepagesize
+returns the empty string...
 
-So ext size hint can achieve the same effect as fallocate() in this
-case, might be even better.
+> Thanks,
+> Zorro
+> 
+> > +base_pagesize=$(_get_page_size)
+> > +test -z "$blksz" && blksz=${base_pagesize}
 
->
-> -Dave.
-> --
-> Dave Chinner
-> david@fromorbit.com
+...and this line will substitute in the base page size as the block size.
+
+--D
+
+> >  filesz=$((blocks * blksz))
+> >  dirty_offset=$(( filesz - 1 ))
+> >  write_len=$(( ( (blocks - 1) * blksz) + 1 ))
+> >  
+> > +# The write invalidation that we're testing below can only occur as part of
+> > +# a single large write.  The kernel limits writes to one base page less than
+> > +# 2GiB to prevent lengthy IOs and integer overflows.  If the block size is so
+> > +# huge (e.g. 512M huge pages on arm64) that we'd exceed that, reduce the number
+> > +# of blocks to get us under the limit.
+> > +max_writesize=$((2147483647 - base_pagesize))
+> > +if ((write_len > max_writesize)); then
+> > +	blocks=$(( ( (max_writesize - 1) / blksz) + 1))
+> > +	# We need at least three blocks in the file to test invalidation
+> > +	# between writes to multiple folios.  If we drop below that,
+> > +	# reconfigure ourselves with base pages and hope for the best.
+> > +	if ((blocks < 3)); then
+> > +		blksz=$base_pagesize
+> > +		blocks=10
+> > +	fi
+> > +	filesz=$((blocks * blksz))
+> > +	dirty_offset=$(( filesz - 1 ))
+> > +	write_len=$(( ( (blocks - 1) * blksz) + 1 ))
+> > +fi
+> > +
+> >  # Create a large file with a large unwritten range.
+> >  $XFS_IO_PROG -f -c "falloc 0 $filesz" $SCRATCH_MNT/file >> $seqres.full
+> >  
+> > 
+> 
