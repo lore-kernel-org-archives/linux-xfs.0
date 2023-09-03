@@ -2,132 +2,138 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 81D5EC71153
-	for <linux-xfs@archiver.kernel.org>; Sun,  3 Sep 2023 22:27:22 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6B6B7CA0FF3
+	for <linux-xfs@archiver.kernel.org>; Sun,  3 Sep 2023 22:31:04 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S239550AbjICW1Y (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Sun, 3 Sep 2023 18:27:24 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46166 "EHLO
+        id S1348539AbjICWbF (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Sun, 3 Sep 2023 18:31:05 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42986 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229956AbjICW1W (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sun, 3 Sep 2023 18:27:22 -0400
-Received: from mail-pg1-x529.google.com (mail-pg1-x529.google.com [IPv6:2607:f8b0:4864:20::529])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B1535DA
-        for <linux-xfs@vger.kernel.org>; Sun,  3 Sep 2023 15:27:19 -0700 (PDT)
-Received: by mail-pg1-x529.google.com with SMTP id 41be03b00d2f7-56c250ff3d3so1007104a12.1
-        for <linux-xfs@vger.kernel.org>; Sun, 03 Sep 2023 15:27:19 -0700 (PDT)
+        with ESMTP id S1346086AbjICWa7 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sun, 3 Sep 2023 18:30:59 -0400
+Received: from mail-oa1-x2d.google.com (mail-oa1-x2d.google.com [IPv6:2001:4860:4864:20::2d])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C3AC9FB
+        for <linux-xfs@vger.kernel.org>; Sun,  3 Sep 2023 15:30:55 -0700 (PDT)
+Received: by mail-oa1-x2d.google.com with SMTP id 586e51a60fabf-1c50438636fso786005fac.1
+        for <linux-xfs@vger.kernel.org>; Sun, 03 Sep 2023 15:30:55 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=fromorbit-com.20230601.gappssmtp.com; s=20230601; t=1693780039; x=1694384839; darn=vger.kernel.org;
+        d=fromorbit-com.20230601.gappssmtp.com; s=20230601; t=1693780255; x=1694385055; darn=vger.kernel.org;
         h=in-reply-to:content-disposition:mime-version:references:message-id
          :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
-        bh=uey9X37TsXxaxDDta+GmGK9zdrWEFlBTA4HM9sllgko=;
-        b=aFcW5hhFseVJYvY9BxkVUGdq94OzhJT+piPShTn7nfOvOqUIAbtvyW6pEs7Y5AszBo
-         iWDtNnMZCtAlW7+p0HLHWbaSGMMLbNDURG9IT+WAldCcrTaFHwbwT7Dx/diDOf4lQlJY
-         6R8KK0OgpgRCqAM9PY7WLMAuvaLp/HcrE/qv+CrBQQZp8QV4dBd4GpggNanfFa707RJU
-         cBumvp0S6srNTFZ1wM/rPnYIQ48zm/ZbT39aeE+R4mflHAQriKOlszZTvYgc2DzoX0lx
-         IttOIZ7Me4UdAI3Vflqk+fMvvoJ1lRrTPU3SSzDtUc0bK+lCEN50YMeadQ37y7ZCwPz+
-         8UJw==
+        bh=Nv6YpToDNZJcA/Ccz8YHJKQ8zE37n7OYKvDh05ivZ8M=;
+        b=eLvFMZ6HweV3i75Mje3KyiQMHp72f3fVYJp4X8QBR1sUoWt5LbUe2oYe6gz7J03xSV
+         aHsv7iDil4KTnD32vRddboJhyW5dIQThpWZBfmdQlNdU/+SQKnZqTkI+8YNmhDFqSNM4
+         M/5uOEBZigGEpPC3vmfjiwnDFOd47IixsMl044OpUX7QG234XdFYwtba/jPyi6PCo/kZ
+         okP+nX6zzbLjyilv/Ocy1qCe5aC4gkdgDOfyh92JWGe8bVg+DmwjlPuuV3kM/V8mAkRG
+         YMrGVWwsvVs5uRT8A9BN8JD3DAOcyXyqtn49LxBGuGru+09OFjvSzk6tINPlQnplnbJD
+         r/Aw==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20221208; t=1693780039; x=1694384839;
+        d=1e100.net; s=20221208; t=1693780255; x=1694385055;
         h=in-reply-to:content-disposition:mime-version:references:message-id
          :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
          :message-id:reply-to;
-        bh=uey9X37TsXxaxDDta+GmGK9zdrWEFlBTA4HM9sllgko=;
-        b=iZkBrXyrt/9BZ/7vslOd0W9B0PQ38TP2GzY3Xkb+M0XCq32YPOrPRlwoMddc6hD5IE
-         GBcm3jBK9xoxq3ksjAXxi9teoOYER9DJdqL9WyEJ9u71ncoarE9hG02z4lWJf4DNOzHe
-         Wzp1wHZDCdu/T7Lj/wINcXM88dh9HQ7Del3kv/vnjkHgkF8OsvkGkN6n9FIpUQ1/jeEZ
-         cjulY7g37p3A57scEiATa85PAcEqGaAqp50E7R0YraekiCsMqfvX13ag57Fo56gmxcOB
-         wgwt/kvwKtY6ICEu01Paj1wRoD8XBspO982hzreqmmBfgZho9F2Ec9GLoZRPdTKnDXse
-         R2/A==
-X-Gm-Message-State: AOJu0YxHcyU4XrzTurnSw7xM9GwHm+QAApX8Jm4jzqj+bThv9exHpRVR
-        cEtbIByMdBp+5t21sLsuM7GE6Q==
-X-Google-Smtp-Source: AGHT+IGeAVpJ32MwLia9j7b+fincRrOYrEYNNZjKkEpbapJ86ueujIl+j6DWTleN+nP733gdLcwaIQ==
-X-Received: by 2002:a17:90b:d94:b0:267:f8f4:73ab with SMTP id bg20-20020a17090b0d9400b00267f8f473abmr11150197pjb.16.1693780039113;
-        Sun, 03 Sep 2023 15:27:19 -0700 (PDT)
+        bh=Nv6YpToDNZJcA/Ccz8YHJKQ8zE37n7OYKvDh05ivZ8M=;
+        b=fMZKuQ6eQdj94FE0zu2xbFu5qU/8Z1XVmRhIHrtGyzF/mCLcCB0wy/ui0w8mpdLLzY
+         n1J5OHEE6emENv6yxRK05RsZB01dUx6P7VfKsNlKB0n0L2hIBmn/A69iTChVP1FW5UKW
+         /DKjFRsT8M3e6sG6rMYoGA/UXms3gyT+OQNUFrXobewRchB814d72/ei+oHuDNffKm8C
+         ewHiVipNxaSbXwqMq+VrwQEMbcp71Zp/G25BjWEv0SH3CGS2wWAXFKkbUn4ufNnU/hc6
+         xLECreVlAaR51/JIZONmEHatb9SSGXYynZIK0EiFmvQGSI6ytyBWd25nH4ND8qd2N5dt
+         2apg==
+X-Gm-Message-State: AOJu0Yz+WCUNhR5oVUeTxMsCnEQIv9IC1LyT36KX4gGz1BP6A1vc9kcz
+        opYinF+kRHLaHl79OgGawO7d8A==
+X-Google-Smtp-Source: AGHT+IGLu9Ypqvz2HQH6Ke2apJHDtGTD5ZHmV6+9u1MT+8XuCmbNG2jkA6AQg79Zc5mY+kWQOWShIA==
+X-Received: by 2002:a05:6870:568d:b0:1be:c8e2:3ec3 with SMTP id p13-20020a056870568d00b001bec8e23ec3mr11536784oao.14.1693780255066;
+        Sun, 03 Sep 2023 15:30:55 -0700 (PDT)
 Received: from dread.disaster.area (pa49-195-66-88.pa.nsw.optusnet.com.au. [49.195.66.88])
-        by smtp.gmail.com with ESMTPSA id gb16-20020a17090b061000b00263f446d432sm7845229pjb.43.2023.09.03.15.27.18
+        by smtp.gmail.com with ESMTPSA id i15-20020a63bf4f000000b00565e96d9874sm5648132pgo.89.2023.09.03.15.30.54
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Sun, 03 Sep 2023 15:27:18 -0700 (PDT)
+        Sun, 03 Sep 2023 15:30:54 -0700 (PDT)
 Received: from dave by dread.disaster.area with local (Exim 4.96)
         (envelope-from <david@fromorbit.com>)
-        id 1qcvYp-00ASAZ-2e;
-        Mon, 04 Sep 2023 08:27:15 +1000
-Date:   Mon, 4 Sep 2023 08:27:15 +1000
+        id 1qcvcK-00ASFy-0F;
+        Mon, 04 Sep 2023 08:30:52 +1000
+Date:   Mon, 4 Sep 2023 08:30:52 +1000
 From:   Dave Chinner <david@fromorbit.com>
-To:     Mateusz Guzik <mjguzik@gmail.com>
-Cc:     syzbot <syzbot+e245f0516ee625aaa412@syzkaller.appspotmail.com>,
-        brauner@kernel.org, djwong@kernel.org,
-        linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-xfs@vger.kernel.org, llvm@lists.linux.dev, nathan@kernel.org,
-        ndesaulniers@google.com, syzkaller-bugs@googlegroups.com,
-        trix@redhat.com, viro@zeniv.linux.org.uk
-Subject: Re: [syzbot] [xfs?] INFO: task hung in __fdget_pos (4)
-Message-ID: <ZPUIQzsCSNlnBFHB@dread.disaster.area>
-References: <000000000000e6432a06046c96a5@google.com>
- <ZPQYyMBFmqrfqafL@dread.disaster.area>
- <20230903083357.75mq5l43gakuc2z7@f>
+To:     Hao Xu <hao.xu@linux.dev>
+Cc:     Matthew Wilcox <willy@infradead.org>, io-uring@vger.kernel.org,
+        Jens Axboe <axboe@kernel.dk>,
+        Dominique Martinet <asmadeus@codewreck.org>,
+        Pavel Begunkov <asml.silence@gmail.com>,
+        Christian Brauner <brauner@kernel.org>,
+        Alexander Viro <viro@zeniv.linux.org.uk>,
+        Stefan Roesch <shr@fb.com>, Clay Harris <bugs@claycon.org>,
+        "Darrick J . Wong" <djwong@kernel.org>,
+        linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org,
+        linux-ext4@vger.kernel.org, linux-cachefs@redhat.com,
+        ecryptfs@vger.kernel.org, linux-nfs@vger.kernel.org,
+        linux-unionfs@vger.kernel.org, bpf@vger.kernel.org,
+        netdev@vger.kernel.org, linux-s390@vger.kernel.org,
+        linux-kernel@vger.kernel.org, linux-block@vger.kernel.org,
+        linux-btrfs@vger.kernel.org, codalist@coda.cs.cmu.edu,
+        linux-f2fs-devel@lists.sourceforge.net, cluster-devel@redhat.com,
+        linux-mm@kvack.org, linux-nilfs@vger.kernel.org,
+        devel@lists.orangefs.org, linux-cifs@vger.kernel.org,
+        samba-technical@lists.samba.org, linux-mtd@lists.infradead.org,
+        Wanpeng Li <wanpengli@tencent.com>
+Subject: Re: [PATCH 07/11] vfs: add nowait parameter for file_accessed()
+Message-ID: <ZPUJHAKzxvXiEDYA@dread.disaster.area>
+References: <20230827132835.1373581-1-hao.xu@linux.dev>
+ <20230827132835.1373581-8-hao.xu@linux.dev>
+ <ZOvA5DJDZN0FRymp@casper.infradead.org>
+ <c728bf3f-d9db-4865-8473-058b26c11c06@linux.dev>
+ <ZO3cI+DkotHQo3md@casper.infradead.org>
+ <642de4e6-801d-fcad-a7ce-bfc6dec3b6e5@linux.dev>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20230903083357.75mq5l43gakuc2z7@f>
+In-Reply-To: <642de4e6-801d-fcad-a7ce-bfc6dec3b6e5@linux.dev>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Sun, Sep 03, 2023 at 10:33:57AM +0200, Mateusz Guzik wrote:
-> On Sun, Sep 03, 2023 at 03:25:28PM +1000, Dave Chinner wrote:
-> > On Sat, Sep 02, 2023 at 09:11:34PM -0700, syzbot wrote:
-> > > Hello,
+On Wed, Aug 30, 2023 at 02:11:31PM +0800, Hao Xu wrote:
+> On 8/29/23 19:53, Matthew Wilcox wrote:
+> > On Tue, Aug 29, 2023 at 03:46:13PM +0800, Hao Xu wrote:
+> > > On 8/28/23 05:32, Matthew Wilcox wrote:
+> > > > On Sun, Aug 27, 2023 at 09:28:31PM +0800, Hao Xu wrote:
+> > > > > From: Hao Xu <howeyxu@tencent.com>
+> > > > > 
+> > > > > Add a boolean parameter for file_accessed() to support nowait semantics.
+> > > > > Currently it is true only with io_uring as its initial caller.
+> > > > 
+> > > > So why do we need to do this as part of this series?  Apparently it
+> > > > hasn't caused any problems for filemap_read().
+> > > > 
 > > > 
-> > > syzbot found the following issue on:
-> > > 
-> > > HEAD commit:    b97d64c72259 Merge tag '6.6-rc-smb3-client-fixes-part1' of..
-> > > git tree:       upstream
-> > > console output: https://syzkaller.appspot.com/x/log.txt?x=14136d8fa80000
-> > > kernel config:  https://syzkaller.appspot.com/x/.config?x=958c1fdc38118172
-> > > dashboard link: https://syzkaller.appspot.com/bug?extid=e245f0516ee625aaa412
-> > > compiler:       Debian clang version 15.0.6, GNU ld (GNU Binutils for Debian) 2.40
-> > > 
-> > > Unfortunately, I don't have any reproducer for this issue yet.
+> > > We need this parameter to indicate if nowait semantics should be enforced in
+> > > touch_atime(), There are locks and maybe IOs in it.
 > > 
-> > Been happening for months, apparently, yet for some reason it now
-> > thinks a locking hang in __fdget_pos() is an XFS issue?
+> > That's not my point.  We currently call file_accessed() and
+> > touch_atime() for nowait reads and nowait writes.  You haven't done
+> > anything to fix those.
 > > 
-> > #syz set subsystems: fs
-> > 
+> > I suspect you can trim this patchset down significantly by avoiding
+> > fixing the file_accessed() problem.  And then come back with a later
+> > patchset that fixes it for all nowait i/o.  Or do a separate prep series
 > 
-> The report does not have info necessary to figure this out -- no
-> backtrace for whichever thread which holds f_pos_lock. I clicked on a
-> bunch of other reports and it is the same story.
+> I'm ok to do that.
+> 
+> > first that fixes it for the existing nowait users, and then a second
+> > series to do all the directory stuff.
+> > 
+> > I'd do the first thing.  Just ignore the problem.  Directory atime
+> > updates cause I/O so rarely that you can afford to ignore it.  Almost
+> > everyone uses relatime or nodiratime.
+> 
+> Hi Matthew,
+> The previous discussion shows this does cause issues in real
+> producations: https://lore.kernel.org/io-uring/2785f009-2ebb-028d-8250-d5f3a30510f0@gmail.com/#:~:text=fwiw%2C%20we%27ve%20just%20recently%20had%20similar%20problems%20with%20io_uring%20read/write
+> 
 
-That's true, but there's nothing that points at XFS in *any* of the
-bug reports. Indeed, log from the most recent report doesn't have
-any of the output from the time stuff hung. i.e. the log starts
-at kernel time 669.487771 seconds, and the hung task report is at:
-
-684.588608][   T28] INFO: task syz-executor.0:19830 blocked for more than 143 seconds
-
-About 25 seconds later. So the hung tasks were running at about
-540s, and that's just not in the logs.
-
-Every report has a different combination of filesystems being
-exercised, and a couple of them didn't even have XFS in them.
-
-So at this point, there is no single filesystem that the reports
-actually indicate is the cause, the reports don't contain the actual
-operations that hung, and there's basically nothing to go on so far.
-Hence putting it in the "fs" bucket (which encompasses all things
-filesystems!) is the rigth thing to do.
-
-The only commonality I kinda see is that secondary processes that
-are hung seem mostly to be in directory operations waiting on inode
-locks - either lookup or readdir, so it's entirely possible that a
-filesystem has screwed up ->iterate_shared locking in some way...
-
-> Can the kernel be configured to dump backtraces from *all* threads?
-
-It already is (sysrq-t), but I'm not sure that will help - if it is
-a leaked unlock then nothing will show up at all.
+Then separate it out into it's own patch set so we can have a
+discussion on the merits of requiring using noatime, relatime or
+lazytime for really latency sensitive IO applications. Changing code
+is not always the right solution...
 
 -Dave.
 -- 
