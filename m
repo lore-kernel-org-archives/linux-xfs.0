@@ -2,98 +2,85 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 87ED5C83F2D
-	for <linux-xfs@archiver.kernel.org>; Sun,  3 Sep 2023 08:34:07 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 076CDC83F2C
+	for <linux-xfs@archiver.kernel.org>; Sun,  3 Sep 2023 16:15:55 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S236057AbjICIeH (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Sun, 3 Sep 2023 04:34:07 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60114 "EHLO
+        id S231659AbjICQPz (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Sun, 3 Sep 2023 12:15:55 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40374 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S236047AbjICIeG (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sun, 3 Sep 2023 04:34:06 -0400
-Received: from mail-ej1-x632.google.com (mail-ej1-x632.google.com [IPv6:2a00:1450:4864:20::632])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id CB853189;
-        Sun,  3 Sep 2023 01:34:02 -0700 (PDT)
-Received: by mail-ej1-x632.google.com with SMTP id a640c23a62f3a-99bf1f632b8so75709766b.1;
-        Sun, 03 Sep 2023 01:34:02 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20221208; t=1693730041; x=1694334841; darn=vger.kernel.org;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
-        bh=bRudmkh8iHtCDXikKDGZnGkARDgSd/PV3cdSFjM4RgY=;
-        b=IPaxhmJx6JDAqesHN8IWaxBT+gqfr+/s9B9eexQNynGJN1jRAWoUNFEDwl/bQtFpFm
-         xpszhwjo/9EoT+uzZ3s3hVsVhkA64+w1pRNauFZZb+eiGkCN84kpCk6VyHAfK5w8WxIG
-         NZKzmzJyYgOfS9Uhnf8zBJHzq3lxcBFSzYm/IoKUgRH56aXF5vbtIEjQMskEnVZcGUML
-         gi8Lbb9gaz+rH7NGHBhr48pc/6Ry356bHmR+VOD761LoK0llmiq24UwMVyRw3alnyLt7
-         WiCqWsbjrzqYIVG740JJB+I7p0H+LI8N2iHnVBLDKUSBEB8ZMPzay+HOpLemQkiHqp5d
-         f+/Q==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20221208; t=1693730041; x=1694334841;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=bRudmkh8iHtCDXikKDGZnGkARDgSd/PV3cdSFjM4RgY=;
-        b=llmyBYbKibTh+tFvvY0AhPPVkiMeOYrKogXxf6l72MRnR4zJMx0IVBuVta/A72+g0o
-         UFKrDkWouAj5HuiH2DCdZdle05vvBB2F4Evcwx7JVWmxPOy6ueIXjZfeyQABUAFRlIJp
-         uwrZMUe/01Hcvurhj+TASQ/N5kbVwYxH0bNcuDucjSrC35A00KeMITjo3hB5xcEpWlnu
-         yBnubXjd6J/9nKJkbPUjy1C+mhgf5CxEQEcsCAg/RzHqXhReuTvZZJIrvkzUbNANPT87
-         z7xWN28WXPHCTlJ0ilCrEfOqLf5BsoiEEQAXiL8N4hV3C8C9ymXX3pgO0z1uB7J8yFlZ
-         EE/A==
-X-Gm-Message-State: AOJu0YzxBEbVKN3xPz8mlPc5VDmr5pPL4nJ6u3sIaTh0a+ch+V3Fy9qb
-        e5aSp4ySLrW02Nusp7oIwB8=
-X-Google-Smtp-Source: AGHT+IFtmzLedMqLCZW5vLdu7ViMHcVf42AWHB002lZzxWPjY7i8+/989qug0MXV+5wiJ8JBGayUjw==
-X-Received: by 2002:a17:906:3147:b0:9a5:b876:b1e3 with SMTP id e7-20020a170906314700b009a5b876b1e3mr5300019eje.20.1693730041163;
-        Sun, 03 Sep 2023 01:34:01 -0700 (PDT)
-Received: from f (cst-prg-30-15.cust.vodafone.cz. [46.135.30.15])
-        by smtp.gmail.com with ESMTPSA id i2-20020a1709064ec200b0099bc8db97bcsm4509918ejv.131.2023.09.03.01.33.59
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Sun, 03 Sep 2023 01:34:00 -0700 (PDT)
-Date:   Sun, 3 Sep 2023 10:33:57 +0200
-From:   Mateusz Guzik <mjguzik@gmail.com>
-To:     Dave Chinner <david@fromorbit.com>
-Cc:     syzbot <syzbot+e245f0516ee625aaa412@syzkaller.appspotmail.com>,
-        brauner@kernel.org, djwong@kernel.org,
-        linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-xfs@vger.kernel.org, llvm@lists.linux.dev, nathan@kernel.org,
-        ndesaulniers@google.com, syzkaller-bugs@googlegroups.com,
-        trix@redhat.com, viro@zeniv.linux.org.uk
-Subject: Re: [syzbot] [xfs?] INFO: task hung in __fdget_pos (4)
-Message-ID: <20230903083357.75mq5l43gakuc2z7@f>
-References: <000000000000e6432a06046c96a5@google.com>
- <ZPQYyMBFmqrfqafL@dread.disaster.area>
+        with ESMTP id S237525AbjICQPy (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sun, 3 Sep 2023 12:15:54 -0400
+Received: from sin.source.kernel.org (sin.source.kernel.org [IPv6:2604:1380:40e1:4800::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A5556100
+        for <linux-xfs@vger.kernel.org>; Sun,  3 Sep 2023 09:15:51 -0700 (PDT)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange X25519 server-signature RSA-PSS (2048 bits))
+        (No client certificate requested)
+        by sin.source.kernel.org (Postfix) with ESMTPS id 028F5CE0AEE
+        for <linux-xfs@vger.kernel.org>; Sun,  3 Sep 2023 16:15:50 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 1E5C6C433C8;
+        Sun,  3 Sep 2023 16:15:48 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1693757748;
+        bh=iIGinyZfTytc4kk/ZxBcokyP6spqhgx9A02T5ebgFb4=;
+        h=Subject:From:To:Cc:Date:From;
+        b=RJ3diR0Z4DP+14DodqCuoE/ulvUEb2bnW2aBFykGG3E6zJTBHkOSQib49zTR9F092
+         BoCIFAKVi5yuifZS1O7Ubg2vTETGyLvyx1IccZIRSm0LOYL0LFCwEC8dHE7kqXSVZ5
+         Ifpto1EbFFBqGJ/103bEaAaVswDzH44MYGzP0IzCKuYVy0yM2JGFtehCbnj4wDSVm9
+         Hs7lxFxP/XhPOlig8/gNPbRQpFJMldnIoKKLU7lMX3SirMz2jLZOG7jlnqb9RI8CZy
+         Zkd1JEoxsLjccc9bMnxirSePljgo4xuMMQoj5XeXBD4dgUeVysFAylIvcgNcC9JVFr
+         cc09J88Re37PQ==
+Subject: [PATCHSET 0/3] xfs: reload entire iunlink lists
+From:   "Darrick J. Wong" <djwong@kernel.org>
+To:     chandan.babu@gmail.com, djwong@kernel.org
+Cc:     linux-xfs@vger.kernel.org, david@fromorbit.com
+Date:   Sun, 03 Sep 2023 09:15:47 -0700
+Message-ID: <169375774749.3323693.18063212270653101716.stgit@frogsfrogsfrogs>
+User-Agent: StGit/0.19
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-In-Reply-To: <ZPQYyMBFmqrfqafL@dread.disaster.area>
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Sun, Sep 03, 2023 at 03:25:28PM +1000, Dave Chinner wrote:
-> On Sat, Sep 02, 2023 at 09:11:34PM -0700, syzbot wrote:
-> > Hello,
-> > 
-> > syzbot found the following issue on:
-> > 
-> > HEAD commit:    b97d64c72259 Merge tag '6.6-rc-smb3-client-fixes-part1' of..
-> > git tree:       upstream
-> > console output: https://syzkaller.appspot.com/x/log.txt?x=14136d8fa80000
-> > kernel config:  https://syzkaller.appspot.com/x/.config?x=958c1fdc38118172
-> > dashboard link: https://syzkaller.appspot.com/bug?extid=e245f0516ee625aaa412
-> > compiler:       Debian clang version 15.0.6, GNU ld (GNU Binutils for Debian) 2.40
-> > 
-> > Unfortunately, I don't have any reproducer for this issue yet.
-> 
-> Been happening for months, apparently, yet for some reason it now
-> thinks a locking hang in __fdget_pos() is an XFS issue?
-> 
-> #syz set subsystems: fs
-> 
+Hi all,
 
-The report does not have info necessary to figure this out -- no
-backtrace for whichever thread which holds f_pos_lock. I clicked on a
-bunch of other reports and it is the same story.
+This is the second part of correcting XFS to reload the incore unlinked
+inode list from the ondisk contents.  Whereas part one tackled failures
+from regular filesystem calls, this part takes on the problem of needing
+to reload the entire incore unlinked inode list on account of somebody
+loading an inode that's in the /middle/ of an unlinked list.  This
+happens during quotacheck, bulkstat, or even opening a file by handle.
 
-Can the kernel be configured to dump backtraces from *all* threads?
+In this case we don't know the length of the list that we're reloading,
+so we don't want to create a new unbounded memory load while holding
+resources locked.  Instead, we'll target UNTRUSTED iget calls to reload
+the entire bucket.
 
-If there is no feature like that I can hack it up.
+Note that this changes the definition of the incore unlinked inode list
+slightly -- i_prev_unlinked == 0 now means "not on the incore list".
+
+If you're going to start using this code, I strongly recommend pulling
+from my git trees, which are linked below.
+
+This has been lightly tested with fstests.  Enjoy!
+Comments and questions are, as always, welcome.
+
+--D
+
+kernel git tree:
+https://git.kernel.org/cgit/linux/kernel/git/djwong/xfs-linux.git/log/?h=fix-iunlink-list-6.6
+---
+ fs/xfs/xfs_export.c |    6 +++
+ fs/xfs/xfs_icache.c |    2 -
+ fs/xfs/xfs_inode.c  |  115 +++++++++++++++++++++++++++++++++++++++++++++++++--
+ fs/xfs/xfs_inode.h  |   34 ++++++++++++++-
+ fs/xfs/xfs_itable.c |    9 ++++
+ fs/xfs/xfs_mount.h  |    7 +++
+ fs/xfs/xfs_qm.c     |    7 +++
+ fs/xfs/xfs_trace.h  |   20 +++++++++
+ 8 files changed, 193 insertions(+), 7 deletions(-)
+
