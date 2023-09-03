@@ -2,180 +2,92 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1C144C83F2C
-	for <linux-xfs@archiver.kernel.org>; Sun,  3 Sep 2023 16:16:08 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8A0CFC71153
+	for <linux-xfs@archiver.kernel.org>; Sun,  3 Sep 2023 18:01:35 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S244625AbjICQQJ (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Sun, 3 Sep 2023 12:16:09 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54240 "EHLO
+        id S237951AbjICSBg (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Sun, 3 Sep 2023 14:01:36 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60080 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S237525AbjICQQJ (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sun, 3 Sep 2023 12:16:09 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 15317FE
-        for <linux-xfs@vger.kernel.org>; Sun,  3 Sep 2023 09:16:06 -0700 (PDT)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature RSA-PSS (2048 bits))
-        (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id A075960DB7
-        for <linux-xfs@vger.kernel.org>; Sun,  3 Sep 2023 16:16:05 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 0677BC433C7;
-        Sun,  3 Sep 2023 16:16:05 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1693757765;
-        bh=ToN0sqIwPGnrhTedvupzdtizHGpqAz6ZQhOPhW743gU=;
-        h=Subject:From:To:Cc:Date:In-Reply-To:References:From;
-        b=QlMkLgaoUu0DyQQi7+rpN8+dnHiKRsg6i2rtIAtx80qQCzZTzn/D1dJklxfdc+IIJ
-         zO7DCcEVRq1Uo7RqzQdtww75MjpeSZgb4c+ORetDWiXTnnn0KUhO1i4faJUtFfyiBj
-         BrX6iBj6cctvYd/olssc6oJcx90SA22y1eUvMYQZk7imNNXoNQzJMte5035r3z14wC
-         oG2ohIgpR0TA6OVE37aEIoCyT4qaOU+ioDhzPOXrujX3IfXvxbaGHHzwDN9SJvF0im
-         pfwXaFhMy5BLCxBkW5TFaBKuQxHgJ9bqJ50wFGTYkUOFsZvARzoFjWEhsRvIRW7kPt
-         d4qpG3uGpM6jQ==
-Subject: [PATCH 3/3] xfs: make inode unlinked bucket recovery work with
- quotacheck
-From:   "Darrick J. Wong" <djwong@kernel.org>
-To:     chandan.babu@gmail.com, djwong@kernel.org
-Cc:     linux-xfs@vger.kernel.org, david@fromorbit.com
-Date:   Sun, 03 Sep 2023 09:16:04 -0700
-Message-ID: <169375776451.3323693.17265659636054853468.stgit@frogsfrogsfrogs>
-In-Reply-To: <169375774749.3323693.18063212270653101716.stgit@frogsfrogsfrogs>
-References: <169375774749.3323693.18063212270653101716.stgit@frogsfrogsfrogs>
-User-Agent: StGit/0.19
+        with ESMTP id S229665AbjICSBg (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sun, 3 Sep 2023 14:01:36 -0400
+Received: from zeniv.linux.org.uk (zeniv.linux.org.uk [IPv6:2a03:a000:7:0:5054:ff:fe1c:15ff])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 42346D9;
+        Sun,  3 Sep 2023 11:01:31 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=linux.org.uk; s=zeniv-20220401; h=Sender:In-Reply-To:Content-Type:
+        MIME-Version:References:Message-ID:Subject:Cc:To:From:Date:Reply-To:
+        Content-Transfer-Encoding:Content-ID:Content-Description;
+        bh=S9Vu6m4/BeTB9HCncSagEJ1QKniB6AXPYafpsvd+t/Y=; b=Hz8Rmv8O0J2BQeSNcabh+Masdo
+        83vXuhpL/rmZRAyGK/sdDLMDWcoPLWqjyjoTZVq2EK9MHu5USNzF07SWBN//D9CoRrK4EfXj6HiOu
+        rIbcpi8cYA6CCGFrzL8EkiILQfT9h/ix/FIKmyDT7SPteIyYOtNnPW48R6jEv10NLDQ4OYuW9KlVt
+        fPnTxHMbCgwiTmYAyCxgCjczVVZUBzuyWMwXAqh7vyvittDtBpTMBpsxXuHDMjItIU7/pPhIY5t+J
+        dmaUY/ekdwOg31wUNKABWQA8QzDpTJvjIlyALWnL3MpWLvJKPuilp2Lip1LFj3/N3jVAF6KaYecJs
+        MflbsOrw==;
+Received: from viro by zeniv.linux.org.uk with local (Exim 4.96 #2 (Red Hat Linux))
+        id 1qcrPa-0037Rq-20;
+        Sun, 03 Sep 2023 18:01:26 +0000
+Date:   Sun, 3 Sep 2023 19:01:26 +0100
+From:   Al Viro <viro@zeniv.linux.org.uk>
+To:     Mateusz Guzik <mjguzik@gmail.com>
+Cc:     Dave Chinner <david@fromorbit.com>,
+        syzbot <syzbot+e245f0516ee625aaa412@syzkaller.appspotmail.com>,
+        brauner@kernel.org, djwong@kernel.org,
+        linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-xfs@vger.kernel.org, llvm@lists.linux.dev, nathan@kernel.org,
+        ndesaulniers@google.com, syzkaller-bugs@googlegroups.com,
+        trix@redhat.com
+Subject: Re: [syzbot] [xfs?] INFO: task hung in __fdget_pos (4)
+Message-ID: <20230903180126.GL3390869@ZenIV>
+References: <000000000000e6432a06046c96a5@google.com>
+ <ZPQYyMBFmqrfqafL@dread.disaster.area>
+ <20230903083357.75mq5l43gakuc2z7@f>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20230903083357.75mq5l43gakuc2z7@f>
+Sender: Al Viro <viro@ftp.linux.org.uk>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-From: Darrick J. Wong <djwong@kernel.org>
+On Sun, Sep 03, 2023 at 10:33:57AM +0200, Mateusz Guzik wrote:
+> On Sun, Sep 03, 2023 at 03:25:28PM +1000, Dave Chinner wrote:
+> > On Sat, Sep 02, 2023 at 09:11:34PM -0700, syzbot wrote:
+> > > Hello,
+> > > 
+> > > syzbot found the following issue on:
+> > > 
+> > > HEAD commit:    b97d64c72259 Merge tag '6.6-rc-smb3-client-fixes-part1' of..
+> > > git tree:       upstream
+> > > console output: https://syzkaller.appspot.com/x/log.txt?x=14136d8fa80000
+> > > kernel config:  https://syzkaller.appspot.com/x/.config?x=958c1fdc38118172
+> > > dashboard link: https://syzkaller.appspot.com/bug?extid=e245f0516ee625aaa412
+> > > compiler:       Debian clang version 15.0.6, GNU ld (GNU Binutils for Debian) 2.40
+> > > 
+> > > Unfortunately, I don't have any reproducer for this issue yet.
+> > 
+> > Been happening for months, apparently, yet for some reason it now
+> > thinks a locking hang in __fdget_pos() is an XFS issue?
+> > 
+> > #syz set subsystems: fs
+> > 
+> 
+> The report does not have info necessary to figure this out -- no
+> backtrace for whichever thread which holds f_pos_lock. I clicked on a
+> bunch of other reports and it is the same story.
+> 
+> Can the kernel be configured to dump backtraces from *all* threads?
+> 
+> If there is no feature like that I can hack it up.
 
-Teach quotacheck to reload the unlinked inode lists when walking the
-inode table.  This requires extra state handling, since it's possible
-that a reloaded inode will get inactivated before quotacheck tries to
-scan it; in this case, we need to ensure that the reloaded inode does
-not have dquots attached when it is freed.
+<break>t
 
-Signed-off-by: Darrick J. Wong <djwong@kernel.org>
----
- fs/xfs/xfs_inode.c |   12 +++++++++---
- fs/xfs/xfs_inode.h |    5 ++++-
- fs/xfs/xfs_mount.h |    7 +++++++
- fs/xfs/xfs_qm.c    |    7 +++++++
- 4 files changed, 27 insertions(+), 4 deletions(-)
+over serial console, or echo t >/proc/sysrq-trigger would do it...
 
-
-diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
-index 56f6bde6001b..22af7268169b 100644
---- a/fs/xfs/xfs_inode.c
-+++ b/fs/xfs/xfs_inode.c
-@@ -1743,9 +1743,13 @@ xfs_inactive(
- 	     ip->i_df.if_nextents > 0 || ip->i_delayed_blks > 0))
- 		truncate = 1;
- 
--	error = xfs_qm_dqattach(ip);
--	if (error)
--		goto out;
-+	if (xfs_iflags_test(ip, XFS_IQUOTAUNCHECKED)) {
-+		xfs_qm_dqdetach(ip);
-+	} else {
-+		error = xfs_qm_dqattach(ip);
-+		if (error)
-+			goto out;
-+	}
- 
- 	if (S_ISLNK(VFS_I(ip)->i_mode))
- 		error = xfs_inactive_symlink(ip);
-@@ -1963,6 +1967,8 @@ xfs_iunlink_reload_next(
- 	trace_xfs_iunlink_reload_next(next_ip);
- rele:
- 	ASSERT(!(VFS_I(next_ip)->i_state & I_DONTCACHE));
-+	if (xfs_is_quotacheck_running(mp) && next_ip)
-+		xfs_iflags_set(next_ip, XFS_IQUOTAUNCHECKED);
- 	xfs_irele(next_ip);
- 	return error;
- }
-diff --git a/fs/xfs/xfs_inode.h b/fs/xfs/xfs_inode.h
-index a111b5551ecd..0c5bdb91152e 100644
---- a/fs/xfs/xfs_inode.h
-+++ b/fs/xfs/xfs_inode.h
-@@ -344,6 +344,9 @@ static inline bool xfs_inode_has_large_extent_counts(struct xfs_inode *ip)
-  */
- #define XFS_INACTIVATING	(1 << 13)
- 
-+/* Quotacheck is running but inode has not been added to quota counts. */
-+#define XFS_IQUOTAUNCHECKED	(1 << 14)
-+
- /* All inode state flags related to inode reclaim. */
- #define XFS_ALL_IRECLAIM_FLAGS	(XFS_IRECLAIMABLE | \
- 				 XFS_IRECLAIM | \
-@@ -358,7 +361,7 @@ static inline bool xfs_inode_has_large_extent_counts(struct xfs_inode *ip)
- #define XFS_IRECLAIM_RESET_FLAGS	\
- 	(XFS_IRECLAIMABLE | XFS_IRECLAIM | \
- 	 XFS_IDIRTY_RELEASE | XFS_ITRUNCATED | XFS_NEED_INACTIVE | \
--	 XFS_INACTIVATING)
-+	 XFS_INACTIVATING | XFS_IQUOTAUNCHECKED)
- 
- /*
-  * Flags for inode locking.
-diff --git a/fs/xfs/xfs_mount.h b/fs/xfs/xfs_mount.h
-index 6e2806654e94..e6ae627ac771 100644
---- a/fs/xfs/xfs_mount.h
-+++ b/fs/xfs/xfs_mount.h
-@@ -405,6 +405,8 @@ __XFS_HAS_FEAT(nouuid, NOUUID)
- #define XFS_OPSTATE_WARNED_SHRINK	8
- /* Kernel has logged a warning about logged xattr updates being used. */
- #define XFS_OPSTATE_WARNED_LARP		9
-+/* Mount time quotacheck is running */
-+#define XFS_OPSTATE_QUOTACHECK_RUNNING	10
- 
- #define __XFS_IS_OPSTATE(name, NAME) \
- static inline bool xfs_is_ ## name (struct xfs_mount *mp) \
-@@ -427,6 +429,11 @@ __XFS_IS_OPSTATE(inode32, INODE32)
- __XFS_IS_OPSTATE(readonly, READONLY)
- __XFS_IS_OPSTATE(inodegc_enabled, INODEGC_ENABLED)
- __XFS_IS_OPSTATE(blockgc_enabled, BLOCKGC_ENABLED)
-+#ifdef CONFIG_QUOTA
-+__XFS_IS_OPSTATE(quotacheck_running, QUOTACHECK_RUNNING)
-+#else
-+# define xfs_is_quotacheck_running(mp)	(false)
-+#endif
- 
- static inline bool
- xfs_should_warn(struct xfs_mount *mp, long nr)
-diff --git a/fs/xfs/xfs_qm.c b/fs/xfs/xfs_qm.c
-index 6abcc34fafd8..7256090c3895 100644
---- a/fs/xfs/xfs_qm.c
-+++ b/fs/xfs/xfs_qm.c
-@@ -1160,6 +1160,10 @@ xfs_qm_dqusage_adjust(
- 	if (error)
- 		return error;
- 
-+	error = xfs_inode_reload_unlinked(ip);
-+	if (error)
-+		goto error0;
-+
- 	ASSERT(ip->i_delayed_blks == 0);
- 
- 	if (XFS_IS_REALTIME_INODE(ip)) {
-@@ -1173,6 +1177,7 @@ xfs_qm_dqusage_adjust(
- 	}
- 
- 	nblks = (xfs_qcnt_t)ip->i_nblocks - rtblks;
-+	xfs_iflags_clear(ip, XFS_IQUOTAUNCHECKED);
- 
- 	/*
- 	 * Add the (disk blocks and inode) resources occupied by this
-@@ -1319,8 +1324,10 @@ xfs_qm_quotacheck(
- 		flags |= XFS_PQUOTA_CHKD;
- 	}
- 
-+	xfs_set_quotacheck_running(mp);
- 	error = xfs_iwalk_threaded(mp, 0, 0, xfs_qm_dqusage_adjust, 0, true,
- 			NULL);
-+	xfs_clear_quotacheck_running(mp);
- 
- 	/*
- 	 * On error, the inode walk may have partially populated the dquot
-
+"Locking hang in __fdget_pos()" would mean either something stuck inside
+->read/->write/->read_iter/->write_iter/->llseek instance, making
+any further syscalls in that bunch on the same open file to block,
+or a lost fdput_pos() somewhere; AFAICS, we don't have anything of
+the latter variety, but the former is too wide to tell anything
+useful.
