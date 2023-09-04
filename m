@@ -2,81 +2,57 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 12EDBCA0FF7
-	for <linux-xfs@archiver.kernel.org>; Mon,  4 Sep 2023 18:11:23 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4CDDACA1009
+	for <linux-xfs@archiver.kernel.org>; Mon,  4 Sep 2023 18:11:24 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1353474AbjIDSLY (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 4 Sep 2023 14:11:24 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41176 "EHLO
+        id S1353419AbjIDSLP (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 4 Sep 2023 14:11:15 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41146 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1353426AbjIDSLQ (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 4 Sep 2023 14:11:16 -0400
-Received: from sin.source.kernel.org (sin.source.kernel.org [145.40.73.55])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 86573197;
-        Mon,  4 Sep 2023 11:11:12 -0700 (PDT)
+        with ESMTP id S236221AbjIDSLN (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 4 Sep 2023 14:11:13 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C0C55199;
+        Mon,  4 Sep 2023 11:11:10 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
          key-exchange X25519 server-signature RSA-PSS (2048 bits))
         (No client certificate requested)
-        by sin.source.kernel.org (Postfix) with ESMTPS id 9A8C7CE0E24;
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 5E283616E4;
         Mon,  4 Sep 2023 18:11:10 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPS id C9A2DC433C8;
-        Mon,  4 Sep 2023 18:11:08 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPS id 33EE4C433BC;
+        Mon,  4 Sep 2023 18:11:09 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1693851068;
-        bh=KWuluqFF5yFV+lOCkFnoct0phRXw96Jca/CuZaTU2kY=;
+        s=k20201202; t=1693851069;
+        bh=IbVZF2DzXUAo2USMUCstH3jPxauU/LW0IcO2K6LFI4c=;
         h=Subject:From:Date:References:In-Reply-To:To:Cc:From;
-        b=K3gkbkhJRwgpsacHeBsq0A7kucjUSGo8OzMP1ouPw/XPyf9sD5QK/Sf142+usc7ZE
-         C827H7oMTO9xQURopm4EWqGoFioLBjSEY4gmbRDnvHI4L+ywXrxJRVy5ldQmRaAtfj
-         1pffFi8IArgTV4dPuYUPdlhMXVuT7Hb/6kEuD4lj+4NJdrul8tjUb9OXjEUjpGn+jT
-         2ndFdt5oPLx5wHtLQ20DiaB9Xl09djxp9OA/4zW9QgSOHR3JDKxABg9kMIgFr5Ox62
-         wqlEdaiOf1aM8ubxkjKV3yvjnRyA83mc2npN6NfYoiPdtaZLbxGvWm4TgDkfWkglX8
-         L2qkw/qB1Voxg==
+        b=ia58bjh4p1fO0/CGw8J5Rs1Vo1j5XfRVWItHIwgeFn8rfWurveiBV3yEbnmuuMJ6P
+         0dX1mVg7Y6gTEzMa5Whxk59KrCLCTfB/PrZ0B0WolmEq4yaon1/tV+WLLLtJWG/xY0
+         dy6lOtzzaLf+Z8WVNjmVninPcHYRo12hw6zL2O/c4cmCpp6u16HlD9D5vcqdrB2v+e
+         G6QjlvbFoe94sLMMbEFQYkCueLzwZr9JAP+5uBddOS46Vz5NEj71bugNLgoSMI1ZvJ
+         oNh6Ld267EMxOtUHbtgOPq4KvFjwoTafZWVGD0Gm74c6TV4c+RltqlDafHZDDmUn00
+         hWR7BwYjNDGYg==
 Received: from aws-us-west-2-korg-oddjob-1.ci.codeaurora.org (localhost.localdomain [127.0.0.1])
-        by aws-us-west-2-korg-oddjob-1.ci.codeaurora.org (Postfix) with ESMTP id A2BE4C04E26;
-        Mon,  4 Sep 2023 18:11:08 +0000 (UTC)
+        by aws-us-west-2-korg-oddjob-1.ci.codeaurora.org (Postfix) with ESMTP id 1461BC04E26;
+        Mon,  4 Sep 2023 18:11:09 +0000 (UTC)
 Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-Subject: Re: [f2fs-dev] [PATCH v7 00/13] fs: implement multigrain timestamps
+Subject: Re: [f2fs-dev] [PATCH 01/12] fs: export setup_bdev_super
 From:   patchwork-bot+f2fs@kernel.org
-Message-Id: <169385106866.19669.14483196627780303129.git-patchwork-notify@kernel.org>
-Date:   Mon, 04 Sep 2023 18:11:08 +0000
-References: <20230807-mgctime-v7-0-d1dec143a704@kernel.org>
-In-Reply-To: <20230807-mgctime-v7-0-d1dec143a704@kernel.org>
-To:     Jeff Layton <jlayton@kernel.org>
-Cc:     viro@zeniv.linux.org.uk, brauner@kernel.org, ericvh@kernel.org,
-        lucho@ionkov.net, asmadeus@codewreck.org, linux_oss@crudebyte.com,
-        dhowells@redhat.com, marc.dionne@auristor.com, clm@fb.com,
-        josef@toxicpanda.com, dsterba@suse.com, xiubli@redhat.com,
-        idryomov@gmail.com, jaharkes@cs.cmu.edu, coda@cs.cmu.edu,
-        code@tyhicks.com, xiang@kernel.org, chao@kernel.org,
-        huyue2@coolpad.com, jefflexu@linux.alibaba.com,
-        linkinjeon@kernel.org, sj1557.seo@samsung.com, jack@suse.com,
-        tytso@mit.edu, adilger.kernel@dilger.ca, jaegeuk@kernel.org,
-        hirofumi@mail.parknet.co.jp, miklos@szeredi.hu,
-        rpeterso@redhat.com, agruenba@redhat.com,
-        gregkh@linuxfoundation.org, tj@kernel.org,
-        trond.myklebust@hammerspace.com, anna@kernel.org,
-        almaz.alexandrovich@paragon-software.com, mark@fasheh.com,
-        jlbec@evilplan.org, joseph.qi@linux.alibaba.com,
-        hubcap@omnibond.com, martin@omnibond.com, mcgrof@kernel.org,
-        keescook@chromium.org, yzaikin@google.com, sfrench@samba.org,
-        pc@manguebit.com, ronniesahlberg@gmail.com, sprasad@microsoft.com,
-        tom@talpey.com, senozhatsky@chromium.org, richard@nod.at,
-        hdegoede@redhat.com, hughd@google.com, akpm@linux-foundation.org,
-        amir73il@gmail.com, djwong@kernel.org, bcodding@redhat.com,
-        jack@suse.cz, linux-kernel@vger.kernel.org, linux-mm@kvack.org,
-        linux-mtd@lists.infradead.org, linux-afs@lists.infradead.org,
-        linux-cifs@vger.kernel.org, codalist@coda.cs.cmu.edu,
-        cluster-devel@redhat.com, linux-ext4@vger.kernel.org,
-        devel@lists.orangefs.org, ecryptfs@vger.kernel.org,
-        ocfs2-devel@lists.linux.dev, ceph-devel@vger.kernel.org,
-        linux-nfs@vger.kernel.org, v9fs@lists.linux.dev,
-        samba-technical@lists.samba.org, linux-unionfs@vger.kernel.org,
-        linux-f2fs-devel@lists.sourceforge.net, linux-xfs@vger.kernel.org,
-        linux-fsdevel@vger.kernel.org, ntfs3@lists.linux.dev,
-        linux-erofs@lists.ozlabs.org, linux-btrfs@vger.kernel.org
+Message-Id: <169385106908.19669.10487789391922478483.git-patchwork-notify@kernel.org>
+Date:   Mon, 04 Sep 2023 18:11:09 +0000
+References: <20230802154131.2221419-2-hch@lst.de>
+In-Reply-To: <20230802154131.2221419-2-hch@lst.de>
+To:     Christoph Hellwig <hch@lst.de>
+Cc:     viro@zeniv.linux.org.uk, brauner@kernel.org, axboe@kernel.dk,
+        linux-block@vger.kernel.org, linux-nilfs@vger.kernel.org,
+        jack@suse.cz, linux-fsdevel@vger.kernel.org, djwong@kernel.org,
+        josef@toxicpanda.com, linux-f2fs-devel@lists.sourceforge.net,
+        linux-xfs@vger.kernel.org, clm@fb.com, adilger.kernel@dilger.ca,
+        jaegeuk@kernel.org, dsterba@suse.com, tytso@mit.edu,
+        linux-ext4@vger.kernel.org, konishi.ryusuke@gmail.com,
+        linux-btrfs@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
@@ -86,46 +62,40 @@ Hello:
 This series was applied to jaegeuk/f2fs.git (dev)
 by Christian Brauner <brauner@kernel.org>:
 
-On Mon, 07 Aug 2023 15:38:31 -0400 you wrote:
-> The VFS always uses coarse-grained timestamps when updating the
-> ctime and mtime after a change. This has the benefit of allowing
-> filesystems to optimize away a lot metadata updates, down to around 1
-> per jiffy, even when a file is under heavy writes.
+On Wed,  2 Aug 2023 17:41:20 +0200 you wrote:
+> We'll want to use setup_bdev_super instead of duplicating it in nilfs2.
 > 
-> Unfortunately, this coarseness has always been an issue when we're
-> exporting via NFSv3, which relies on timestamps to validate caches. A
-> lot of changes can happen in a jiffy, so timestamps aren't sufficient to
-> help the client decide to invalidate the cache.
-> 
-> [...]
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
+> ---
+>  fs/super.c                 | 3 ++-
+>  include/linux/fs_context.h | 2 ++
+>  2 files changed, 4 insertions(+), 1 deletion(-)
 
 Here is the summary with links:
-  - [f2fs-dev,v7,01/13] fs: remove silly warning from current_time
-    https://git.kernel.org/jaegeuk/f2fs/c/b3030e4f2344
-  - [f2fs-dev,v7,02/13] fs: pass the request_mask to generic_fillattr
-    https://git.kernel.org/jaegeuk/f2fs/c/0d72b92883c6
-  - [f2fs-dev,v7,03/13] fs: drop the timespec64 arg from generic_update_time
-    https://git.kernel.org/jaegeuk/f2fs/c/541d4c798a59
-  - [f2fs-dev,v7,04/13] btrfs: have it use inode_update_timestamps
-    https://git.kernel.org/jaegeuk/f2fs/c/bb7cc0a62e47
-  - [f2fs-dev,v7,05/13] fat: make fat_update_time get its own timestamp
+  - [f2fs-dev,01/12] fs: export setup_bdev_super
+    https://git.kernel.org/jaegeuk/f2fs/c/cf6da236c27a
+  - [f2fs-dev,02/12] nilfs2: use setup_bdev_super to de-duplicate the mount code
+    https://git.kernel.org/jaegeuk/f2fs/c/c1e012ea9e83
+  - [f2fs-dev,03/12] btrfs: always open the device read-only in btrfs_scan_one_device
     (no matching commit)
-  - [f2fs-dev,v7,06/13] ubifs: have ubifs_update_time use inode_update_timestamps
+  - [f2fs-dev,04/12] btrfs: open block devices after superblock creation
     (no matching commit)
-  - [f2fs-dev,v7,07/13] xfs: have xfs_vn_update_time gets its own timestamp
+  - [f2fs-dev,05/12] ext4: make the IS_EXT2_SB/IS_EXT3_SB checks more robust
+    https://git.kernel.org/jaegeuk/f2fs/c/4b41828be268
+  - [f2fs-dev,06/12] fs: use the super_block as holder when mounting file systems
     (no matching commit)
-  - [f2fs-dev,v7,08/13] fs: drop the timespec64 argument from update_time
+  - [f2fs-dev,07/12] fs: stop using get_super in fs_mark_dead
+    https://git.kernel.org/jaegeuk/f2fs/c/9c09a7cf6220
+  - [f2fs-dev,08/12] fs: export fs_holder_ops
+    https://git.kernel.org/jaegeuk/f2fs/c/7ecd0b6f5100
+  - [f2fs-dev,09/12] ext4: drop s_umount over opening the log device
+    https://git.kernel.org/jaegeuk/f2fs/c/6f5fc7de9885
+  - [f2fs-dev,10/12] ext4: use fs_holder_ops for the log device
+    https://git.kernel.org/jaegeuk/f2fs/c/8bed1783751f
+  - [f2fs-dev,11/12] xfs: drop s_umount over opening the log and RT devices
     (no matching commit)
-  - [f2fs-dev,v7,09/13] fs: add infrastructure for multigrain timestamps
-    https://git.kernel.org/jaegeuk/f2fs/c/ffb6cf19e063
-  - [f2fs-dev,v7,10/13] tmpfs: add support for multigrain timestamps
-    https://git.kernel.org/jaegeuk/f2fs/c/d48c33972916
-  - [f2fs-dev,v7,11/13] xfs: switch to multigrain timestamps
+  - [f2fs-dev,12/12] xfs use fs_holder_ops for the log and RT devices
     (no matching commit)
-  - [f2fs-dev,v7,12/13] ext4: switch to multigrain timestamps
-    https://git.kernel.org/jaegeuk/f2fs/c/0269b585868e
-  - [f2fs-dev,v7,13/13] btrfs: convert to multigrain timestamps
-    https://git.kernel.org/jaegeuk/f2fs/c/50e9ceef1d4f
 
 You are awesome, thank you!
 -- 
