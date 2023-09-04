@@ -2,75 +2,45 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id BAB17CA0FF6
-	for <linux-xfs@archiver.kernel.org>; Mon,  4 Sep 2023 09:58:00 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 67337C83F3F
+	for <linux-xfs@archiver.kernel.org>; Mon,  4 Sep 2023 13:26:55 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1344641AbjIDJ6B (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 4 Sep 2023 05:58:01 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60496 "EHLO
+        id S1348911AbjIDN05 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 4 Sep 2023 09:26:57 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39604 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S243886AbjIDJ54 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 4 Sep 2023 05:57:56 -0400
-Received: from ams.source.kernel.org (ams.source.kernel.org [IPv6:2604:1380:4601:e00::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 32D0A10D4;
-        Mon,  4 Sep 2023 02:57:42 -0700 (PDT)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature RSA-PSS (2048 bits))
-        (No client certificate requested)
-        by ams.source.kernel.org (Postfix) with ESMTPS id B7612B80DE2;
-        Mon,  4 Sep 2023 09:57:40 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 2861AC433CA;
-        Mon,  4 Sep 2023 09:57:32 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1693821459;
-        bh=3nBALREBe4uYOQysxhL3FnVqTkdR7jMiX68zU5wvxQ8=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=pEztgc4TUkd2yfcHxcboc+zDXAcA4KHCmIGSB/gsRgCo9DGA1rLyRBmfivPzAjnOB
-         KKw5j1sjO7veroFTPAfq4w/Dw21tYljOg8WM+sB6xZikYv2ILFdOD928dMMu6jaMTA
-         hsFmv7Cbjvf4C2EEf3kIjrkFy7uHmWrX1TbMwxUdVWRcMpkNca5fPpStkr+O9O9AVs
-         oGtWlPEvUt+phBNKXuy5CCjefBQ9+fHhCcNVb2HuJp7/pDdC8MPGp01mLBBiMVtugi
-         LQHGEf2o9T+0sCa9DBGt1latLMv6pIa/RLJn+fTPda2hnB4Yrxv5cYlj5KyxA/vFa0
-         BGrzmLYXagYqw==
-Date:   Mon, 4 Sep 2023 11:57:30 +0200
-From:   Christian Brauner <brauner@kernel.org>
-To:     Hao Xu <hao.xu@linux.dev>
-Cc:     io-uring@vger.kernel.org, Jens Axboe <axboe@kernel.dk>,
-        Dominique Martinet <asmadeus@codewreck.org>,
-        Pavel Begunkov <asml.silence@gmail.com>,
-        Alexander Viro <viro@zeniv.linux.org.uk>,
-        Stefan Roesch <shr@fb.com>, Clay Harris <bugs@claycon.org>,
-        Dave Chinner <david@fromorbit.com>,
-        "Darrick J . Wong" <djwong@kernel.org>,
-        linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org,
-        linux-ext4@vger.kernel.org, linux-cachefs@redhat.com,
-        ecryptfs@vger.kernel.org, linux-nfs@vger.kernel.org,
-        linux-unionfs@vger.kernel.org, bpf@vger.kernel.org,
-        netdev@vger.kernel.org, linux-s390@vger.kernel.org,
-        linux-kernel@vger.kernel.org, linux-block@vger.kernel.org,
-        linux-btrfs@vger.kernel.org, codalist@coda.cs.cmu.edu,
-        linux-f2fs-devel@lists.sourceforge.net, cluster-devel@redhat.com,
-        linux-mm@kvack.org, linux-nilfs@vger.kernel.org,
-        devel@lists.orangefs.org, linux-cifs@vger.kernel.org,
-        samba-technical@lists.samba.org, linux-mtd@lists.infradead.org,
-        Wanpeng Li <wanpengli@tencent.com>
-Subject: Re: [PATCH v6 00/11] io_uring getdents
-Message-ID: <20230904-butterbrot-aufraffen-db483c53eab5@brauner>
-References: <20230827132835.1373581-1-hao.xu@linux.dev>
+        with ESMTP id S237952AbjIDN04 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 4 Sep 2023 09:26:56 -0400
+Received: from verein.lst.de (verein.lst.de [213.95.11.211])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 82F06CD7;
+        Mon,  4 Sep 2023 06:26:53 -0700 (PDT)
+Received: by verein.lst.de (Postfix, from userid 2407)
+        id 6BEDD68AFE; Mon,  4 Sep 2023 15:26:49 +0200 (CEST)
+Date:   Mon, 4 Sep 2023 15:26:49 +0200
+From:   Christoph Hellwig <hch@lst.de>
+To:     Dave Chinner <david@fromorbit.com>
+Cc:     syzbot <syzbot+4a08ffdf3667b36650a1@syzkaller.appspotmail.com>,
+        adilger.kernel@dilger.ca, djwong@kernel.org,
+        linux-ext4@vger.kernel.org, linux-fsdevel@vger.kernel.org,
+        linux-kernel@vger.kernel.org, linux-xfs@vger.kernel.org,
+        song@kernel.org, syzkaller-bugs@googlegroups.com, tytso@mit.edu,
+        yukuai3@huawei.com, zhang_shurong@foxmail.com,
+        linux-block@vger.kernel.org, axboe@kernel.dk, hch@lst.de
+Subject: Re: [syzbot] [xfs?] [ext4?] kernel BUG in __block_write_begin_int
+Message-ID: <20230904132649.GA4819@lst.de>
+References: <000000000000e76944060483798d@google.com> <ZPWWZeWliX7RhOAZ@dread.disaster.area>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20230827132835.1373581-1-hao.xu@linux.dev>
+In-Reply-To: <ZPWWZeWliX7RhOAZ@dread.disaster.area>
+User-Agent: Mutt/1.5.17 (2007-11-01)
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Sun, Aug 27, 2023 at 09:28:24PM +0800, Hao Xu wrote:
+On Mon, Sep 04, 2023 at 06:33:41PM +1000, Dave Chinner wrote:
+> It appears that 0010:__block_write_begin_int() has iterated beyond
+> the iomap that was passed in, triggering the BUG_ON() check in
+> iomap_to_bh().
 
-For the future it would be helpful to hold of on sending larger series
-that like this until a stable tag is out.
-
-Right now this series is generating a bunch of merge conflicts because
-of all the changes to relevant codepaths that got merged. So either we
-have to resolve them to see whether things still make sense within the
-context of all the changed code or risk that stuff we comment is outdated.
+Yes, I'll look into it.
