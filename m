@@ -2,175 +2,186 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2B0E3C83F33
-	for <linux-xfs@archiver.kernel.org>; Mon,  4 Sep 2023 18:11:30 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 93243C83F33
+	for <linux-xfs@archiver.kernel.org>; Mon,  4 Sep 2023 22:49:12 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1353497AbjIDSLb (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 4 Sep 2023 14:11:31 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41170 "EHLO
+        id S231596AbjIDWtO (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 4 Sep 2023 18:49:14 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39290 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1353418AbjIDSLP (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 4 Sep 2023 14:11:15 -0400
-Received: from ams.source.kernel.org (ams.source.kernel.org [IPv6:2604:1380:4601:e00::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id F1F9613E;
-        Mon,  4 Sep 2023 11:11:11 -0700 (PDT)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature RSA-PSS (2048 bits))
-        (No client certificate requested)
-        by ams.source.kernel.org (Postfix) with ESMTPS id 87420B80EF3;
-        Mon,  4 Sep 2023 18:11:10 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPS id 22283C433B8;
-        Mon,  4 Sep 2023 18:11:09 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1693851069;
-        bh=XLoa47KxRcps38wwidPhLGQHNoTClCg5nlSU2UvnxSI=;
-        h=Subject:From:Date:References:In-Reply-To:To:Cc:From;
-        b=XZUD/xT7QAeS9CwkDxlRqT/gRWQx0TmxhnpK0eSpl5TdmWje1tq2yvGH+3vZ2+BCT
-         jCeZ3PliMwtj4PI/YG14pbxznaZzZiLpm9dwOITxs9QimCVLsdgcY+tXdL8VHHo6Xo
-         yN1Gfw9YZmIyD8m43UuRL17+XTyHWk7a5WXn6oF5ggWXw6RS9S101xrDjQsPd+ZkCx
-         1CnWWAtQSCxTFtksNwHsJ+bzmvgeWVNV2ZHBFMah4WlUviOzbSHDkb9JT06sfaty1l
-         sU4YI09Bt9xI2xASG0RHXL6Mglihp9xk051QekITKNbwSi+f4qbVFzWkXoKrsHAJfp
-         TL/wsjYXrOQBg==
-Received: from aws-us-west-2-korg-oddjob-1.ci.codeaurora.org (localhost.localdomain [127.0.0.1])
-        by aws-us-west-2-korg-oddjob-1.ci.codeaurora.org (Postfix) with ESMTP id C90EDC2BBD7;
-        Mon,  4 Sep 2023 18:11:08 +0000 (UTC)
-Content-Type: text/plain; charset="utf-8"
+        with ESMTP id S230206AbjIDWtN (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 4 Sep 2023 18:49:13 -0400
+Received: from mail-pj1-x1032.google.com (mail-pj1-x1032.google.com [IPv6:2607:f8b0:4864:20::1032])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0D954CC
+        for <linux-xfs@vger.kernel.org>; Mon,  4 Sep 2023 15:49:10 -0700 (PDT)
+Received: by mail-pj1-x1032.google.com with SMTP id 98e67ed59e1d1-271c700efb2so867245a91.0
+        for <linux-xfs@vger.kernel.org>; Mon, 04 Sep 2023 15:49:10 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=fromorbit-com.20230601.gappssmtp.com; s=20230601; t=1693867749; x=1694472549; darn=vger.kernel.org;
+        h=in-reply-to:content-transfer-encoding:content-disposition
+         :mime-version:references:message-id:subject:cc:to:from:date:from:to
+         :cc:subject:date:message-id:reply-to;
+        bh=lOJw9QtOqVLXG0JRL3SLxF9B+sgcvGsT1z/iSC2KP7Q=;
+        b=ub5Ye8iWpCKtNXTd0tS+myFQ4JV4jwtZl7fKZe/Q92JretEWnY8d/3/3xEPMahp+3X
+         jfO5ihCbfS5jZaa6mSidfPkDCPW2eTxVZNpCf+U1L2BbtiJhMkqFbFWlUsczK5hglCjI
+         mwu7yFdG8qk13Ns5kDKI+HTByQDnKN2eUQ53wjKXU4wUnSp4WW9thHik7w5dWTOWupqF
+         89CmQ2oOHvI+dk00CWYilgUGvEa/bXyc9228rwwdmCu9BOixk9xpwxwuYWmUOCllDH7K
+         mv/xOMeusfGU7xOJwQGdHEHGzfC9Jo3p8uI1n2VAWPPvlSMwl/jPVx0GIM71frQsTHXU
+         kZIA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20221208; t=1693867749; x=1694472549;
+        h=in-reply-to:content-transfer-encoding:content-disposition
+         :mime-version:references:message-id:subject:cc:to:from:date
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=lOJw9QtOqVLXG0JRL3SLxF9B+sgcvGsT1z/iSC2KP7Q=;
+        b=BN6a+5yAr4qsBOhVVdTPjOaUcXH4Clcm+QSG4d+MY+hXe8noEyENtUz2klWK1LptL0
+         oSQlw6VeiRyzK4suoPighGh/1XGDcqcJtg87fw5fgZ6syy4iSznyQadNWKy+Gmr4/gM3
+         pu9YVnQkF2WebWa2kCsgppY03Gjj2FsluQCRQHE+iIuyNSBa9Iu3WoaEKJ85ny2k+kBC
+         skHjc0z6aFNpUn3Hx5bObYtCIUyUubmw8g8oLbTVqPrkjIkrkuw0Llpgy6e7o7PYWvF4
+         tnRIJaXYEAsGWT1DHG3qDA+H+URr8SJwkZ6b99aYjXmiOLRaUxByfyHw03byjTdCN4cV
+         +9Cw==
+X-Gm-Message-State: AOJu0YyO6be35GmnAKcc0yUa8qGXsyIDey1NlwDMBgkeBVfhMe7MuHQx
+        j01fpO+SGGxqjC2epR15f5mJkw==
+X-Google-Smtp-Source: AGHT+IFtYJDqnJpah1PX3f33aAtM2uFyAolJh+xRbcsrU86Qc2utgFDYXg+rCm3zeG/jj9bYDryXlQ==
+X-Received: by 2002:a17:90b:3b44:b0:268:553f:1938 with SMTP id ot4-20020a17090b3b4400b00268553f1938mr8071130pjb.4.1693867749400;
+        Mon, 04 Sep 2023 15:49:09 -0700 (PDT)
+Received: from dread.disaster.area (pa49-195-66-88.pa.nsw.optusnet.com.au. [49.195.66.88])
+        by smtp.gmail.com with ESMTPSA id q18-20020a170902dad200b001b898595be7sm7986674plx.291.2023.09.04.15.49.08
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Mon, 04 Sep 2023 15:49:08 -0700 (PDT)
+Received: from dave by dread.disaster.area with local (Exim 4.96)
+        (envelope-from <david@fromorbit.com>)
+        id 1qdINV-00Atsn-2j;
+        Tue, 05 Sep 2023 08:49:05 +1000
+Date:   Tue, 5 Sep 2023 08:49:05 +1000
+From:   Dave Chinner <david@fromorbit.com>
+To:     cheng.lin130@zte.com.cn
+Cc:     djwong@kernel.org, linux-xfs@vger.kernel.org,
+        linux-kernel@vger.kernel.org, jiang.yong5@zte.com.cn,
+        wang.liang82@zte.com.cn, liu.dong3@zte.com.cn
+Subject: Re: [PATCH] xfs: introduce protection for drop nlink
+Message-ID: <ZPZe4VkpxVfn5qNL@dread.disaster.area>
+References: <ZOwu2vrzX/0dX89/@dread.disaster.area>
+ <202309041042177773780@zte.com.cn>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
 Content-Transfer-Encoding: 8bit
-Subject: Re: [f2fs-dev] [PATCH v2 00/89] fs: new accessors for inode->i_ctime
-From:   patchwork-bot+f2fs@kernel.org
-Message-Id: <169385106881.19669.3510550425397118597.git-patchwork-notify@kernel.org>
-Date:   Mon, 04 Sep 2023 18:11:08 +0000
-References: <20230705185812.579118-1-jlayton@kernel.org>
-In-Reply-To: <20230705185812.579118-1-jlayton@kernel.org>
-To:     Jeff Layton <jlayton@kernel.org>
-Cc:     jk@ozlabs.org, arnd@arndb.de, mpe@ellerman.id.au,
-        npiggin@gmail.com, christophe.leroy@csgroup.eu, hca@linux.ibm.com,
-        gor@linux.ibm.com, agordeev@linux.ibm.com,
-        borntraeger@linux.ibm.com, svens@linux.ibm.com,
-        gregkh@linuxfoundation.org, arve@android.com, tkjos@android.com,
-        maco@android.com, joel@joelfernandes.org, brauner@kernel.org,
-        cmllamas@google.com, surenb@google.com,
-        dennis.dalessandro@cornelisnetworks.com, jgg@ziepe.ca,
-        leon@kernel.org, bwarrum@linux.ibm.com, rituagar@linux.ibm.com,
-        ericvh@kernel.org, lucho@ionkov.net, asmadeus@codewreck.org,
-        linux_oss@crudebyte.com, dsterba@suse.com, dhowells@redhat.com,
-        marc.dionne@auristor.com, viro@zeniv.linux.org.uk,
-        raven@themaw.net, luisbg@kernel.org, salah.triki@gmail.com,
-        aivazian.tigran@gmail.com, ebiederm@xmission.com,
-        keescook@chromium.org, clm@fb.com, josef@toxicpanda.com,
-        xiubli@redhat.com, idryomov@gmail.com, jaharkes@cs.cmu.edu,
-        coda@cs.cmu.edu, jlbec@evilplan.org, hch@lst.de, nico@fluxnic.net,
-        rafael@kernel.org, code@tyhicks.com, ardb@kernel.org,
-        xiang@kernel.org, chao@kernel.org, huyue2@coolpad.com,
-        jefflexu@linux.alibaba.com, linkinjeon@kernel.org,
-        sj1557.seo@samsung.com, jack@suse.com, tytso@mit.edu,
-        adilger.kernel@dilger.ca, jaegeuk@kernel.org,
-        hirofumi@mail.parknet.co.jp, miklos@szeredi.hu,
-        rpeterso@redhat.com, agruenba@redhat.com, richard@nod.at,
-        anton.ivanov@cambridgegreys.com, johannes@sipsolutions.net,
-        mikulas@artax.karlin.mff.cuni.cz, mike.kravetz@oracle.com,
-        muchun.song@linux.dev, dwmw2@infradead.org, shaggy@kernel.org,
-        tj@kernel.org, trond.myklebust@hammerspace.com, anna@kernel.org,
-        chuck.lever@oracle.com, neilb@suse.de, kolga@netapp.com,
-        Dai.Ngo@oracle.com, tom@talpey.com, konishi.ryusuke@gmail.com,
-        anton@tuxera.com, almaz.alexandrovich@paragon-software.com,
-        mark@fasheh.com, joseph.qi@linux.alibaba.com, me@bobcopeland.com,
-        hubcap@omnibond.com, martin@omnibond.com, amir73il@gmail.com,
-        mcgrof@kernel.org, yzaikin@google.com, tony.luck@intel.com,
-        gpiccoli@igalia.com, al@alarsen.net, sfrench@samba.org,
-        pc@manguebit.com, lsahlber@redhat.com, sprasad@microsoft.com,
-        senozhatsky@chromium.org, phillip@squashfs.org.uk,
-        rostedt@goodmis.org, mhiramat@kernel.org, dushistov@mail.ru,
-        hdegoede@redhat.com, djwong@kernel.org, dlemoal@kernel.org,
-        naohiro.aota@wdc.com, jth@kernel.org, ast@kernel.org,
-        daniel@iogearbox.net, andrii@kernel.org, martin.lau@linux.dev,
-        song@kernel.org, yhs@fb.com, john.fastabend@gmail.com,
-        kpsingh@kernel.org, sdf@google.com, haoluo@google.com,
-        jolsa@kernel.org, hughd@google.com, akpm@linux-foundation.org,
-        davem@davemloft.net, edumazet@google.com, kuba@kernel.org,
-        pabeni@redhat.com, john.johansen@canonical.com,
-        paul@paul-moore.com, jmorris@namei.org, serge@hallyn.com,
-        stephen.smalley.work@gmail.com, eparis@parisplace.org,
-        jgross@suse.com, stern@rowland.harvard.edu, lrh2000@pku.edu.cn,
-        sebastian.reichel@collabora.com, wsa+renesas@sang-engineering.com,
-        quic_ugoswami@quicinc.com, quic_linyyuan@quicinc.com,
-        john@keeping.me.uk, error27@gmail.com, quic_uaggarwa@quicinc.com,
-        hayama@lineo.co.jp, jomajm@gmail.com, axboe@kernel.dk,
-        dhavale@google.com, dchinner@redhat.com, hannes@cmpxchg.org,
-        zhangpeng362@huawei.com, slava@dubeyko.com, gargaditya08@live.com,
-        penguin-kernel@I-love.SAKURA.ne.jp, yifeliu@cs.stonybrook.edu,
-        madkar@cs.stonybrook.edu, ezk@cs.stonybrook.edu,
-        yuzhe@nfschina.com, willy@infradead.org, okanatov@gmail.com,
-        jeffxu@chromium.org, linux@treblig.org, mirimmad17@gmail.com,
-        yijiangshan@kylinos.cn, yang.yang29@zte.com.cn,
-        xu.xin16@zte.com.cn, chengzhihao1@huawei.com, shr@devkernel.io,
-        Liam.Howlett@Oracle.com, adobriyan@gmail.com,
-        chi.minghao@zte.com.cn, roberto.sassu@huawei.com,
-        linuszeng@tencent.com, bvanassche@acm.org, zohar@linux.ibm.com,
-        yi.zhang@huawei.com, trix@redhat.com, fmdefrancesco@gmail.com,
-        ebiggers@google.com, princekumarmaurya06@gmail.com,
-        chenzhongjin@huawei.com, riel@surriel.com,
-        shaozhengchao@huawei.com, jingyuwang_vip@163.com,
-        linuxppc-dev@lists.ozlabs.org, linux-kernel@vger.kernel.org,
-        linux-s390@vger.kernel.org, linux-rdma@vger.kernel.org,
-        linux-usb@vger.kernel.org, v9fs@lists.linux.dev,
-        linux-fsdevel@vger.kernel.org, linux-afs@lists.infradead.org,
-        autofs@vger.kernel.org, linux-mm@kvack.org,
-        linux-btrfs@vger.kernel.org, ceph-devel@vger.kernel.org,
-        codalist@coda.cs.cmu.edu, ecryptfs@vger.kernel.org,
-        linux-efi@vger.kernel.org, linux-erofs@lists.ozlabs.org,
-        linux-ext4@vger.kernel.org, linux-f2fs-devel@lists.sourceforge.net,
-        cluster-devel@redhat.com, linux-um@lists.infradead.org,
-        linux-mtd@lists.infradead.org,
-        jfs-discussion@lists.sourceforge.net, linux-nfs@vger.kernel.org,
-        linux-nilfs@vger.kernel.org, linux-ntfs-dev@lists.sourceforge.net,
-        ntfs3@lists.linux.dev, ocfs2-devel@lists.linux.dev,
-        linux-karma-devel@lists.sourceforge.net, devel@lists.orangefs.org,
-        linux-unionfs@vger.kernel.org, linux-hardening@vger.kernel.org,
-        reiserfs-devel@vger.kernel.org, linux-cifs@vger.kernel.org,
-        samba-technical@lists.samba.org,
-        linux-trace-kernel@vger.kernel.org, linux-xfs@vger.kernel.org,
-        bpf@vger.kernel.org, netdev@vger.kernel.org,
-        apparmor@lists.ubuntu.com, linux-security-module@vger.kernel.org,
-        selinux@vger.kernel.org
+In-Reply-To: <202309041042177773780@zte.com.cn>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Hello:
+On Mon, Sep 04, 2023 at 10:42:17AM +0800, cheng.lin130@zte.com.cn wrote:
+> > On Mon, Aug 28, 2023 at 11:29:51AM +0800, cheng.lin130@zte.com.cn wrote:
+> > > > On Sat, Aug 26, 2023 at 10:54:11PM +0800, cheng.lin130@zte.com.cn wrote:
+> > > > > > > In the old kernel version, this situation was
+> > > > > > > encountered, but I don't know how it happened. It was already a scene
+> > > > > > > with directory errors: "Too many links".
+> > > > How do you overflow the directory link count in XFS? You can't fit
+> > > > 2^31 unique names in the directory data segment - the directory will
+> > > > ENOSPC at 32GB of name data, and that typically occurs with at most
+> > > > 300-500 million dirents (depending on name lengths) in the
+> > > > directory.
+> > > > IOWs, normal operation shouldn't be able overflow the directory link
+> > > > count at all, and so underruns shouldn't occur, either.
+> > > Customer's explanation: in the nlink incorrect directory, not many directories
+> > > will be created, and normally there are only 2 regular files.
+> > > And only found this one directory with incorrect nlink when xfs_repair.
+> > > systemd-fsck[5635]: Phase 2 - using internal log
+> > > systemd-fsck[5635]: - zero log...
+> > > systemd-fsck[5635]: - scan filesystem freespace and inode maps...
+> > > systemd-fsck[5635]: agi unlinked bucket 9 is 73 in ag 22 (inode=23622320201)
+> > So the directory inode is on the unlinked list, as I suggested it
+> > would be.
+> Yes.
+> > > systemd-fsck[5635]: - 21:46:00: scanning filesystem freespace - 32 of 32 allocation groups done
+> > > systemd-fsck[5635]: - found root inode chunk
+> > > ...
+> > How many other inodes were repaired or trashed or moved to
+> > lost+found?
+> Just (inode=23622320201) repaired.
 
-This series was applied to jaegeuk/f2fs.git (dev)
-by Christian Brauner <brauner@kernel.org>:
+So only one inode on the unlinked list, and it's the inode with
+the bad link count.
 
-On Wed,  5 Jul 2023 14:58:09 -0400 you wrote:
-> v2:
-> - prepend patches to add missing ctime updates
-> - add simple_rename_timestamp helper function
-> - rename ctime accessor functions as inode_get_ctime/inode_set_ctime_*
-> - drop individual inode_ctime_set_{sec,nsec} helpers
+> > > systemd-fsck[5635]: Phase 7 - verify and correct link counts...
+> > > systemd-fsck[5635]: resetting inode 23622320201 nlinks from 4294967284 to 2
+> > The link count of the directory inode on the unlinked list was
+> > actually -12, so this isn't an "off by one" error. It's still just 2
+> > adjacent bits being cleared when they shouldn't have been, though.
+> > What is the xfs_info (or mkfs) output for the filesystem that this
+> > occurred on?
+> meta-data=/dev/mapper/vg_gbaseserver-lv_gbaseserver isize=512 agcount=32, agsize=78643168 blks
+>          = sectsz=512 attr=2, projid32bit=1
+>          = crc=1 finobt=0 spinodes=0
+
+Ok, crcs are enabled, so it's likely not storage level corruption.
+
+> data     = bsize=4096 blocks=2516581376, imaxpct=5
+>          = sunit=0 swidth=0 blks
+> naming   =version 2 bsize=4096 ascii-ci=0 ftype=1
+> log      =internal bsize=4096 blocks=521728, version=2
+>          = sectsz=512 sunit=0 blks, lazy-count=1
+> realtime =none extsz=4096 blocks=0, rtextents=0
 > 
-> I've been working on a patchset to change how the inode->i_ctime is
-> accessed in order to give us conditional, high-res timestamps for the
-> ctime and mtime. struct timespec64 has unused bits in it that we can use
-> to implement this. In order to do that however, we need to wrap all
-> accesses of inode->i_ctime to ensure that bits used as flags are
-> appropriately handled.
-> 
-> [...]
+> > ......
+> > > If it's just a incorrect count of one dicrectory, after ignore it, the fs
+> > > can work normally(with error). Is it worth stopping the entire fs
+> > > immediately for this condition?
+> > The inode is on the unlinked list with a non-zero link count. That
+> > means it cannot be removed from the unlinked list (because the inode
+> > will not be freed during inactivation) and so the unlinked list is
+> > effectively corrupt. Anything that removes an inode or creates a
+> > O_TMPFILE or uses RENAME_WHITEOUT can trip over this corrupt
+> > unlinked list and have things go from bad to worse. Hence the
+> If protect the nlink not to underflow(minimum value of nlink is 0),
+> does it means can avoid unlinked list to be corrupted？
 
-Here is the summary with links:
-  - [f2fs-dev,v2,07/92] fs: add ctime accessors infrastructure
-    https://git.kernel.org/jaegeuk/f2fs/c/9b6304c1d537
-  - [f2fs-dev,v2,08/92] fs: new helper: simple_rename_timestamp
-    https://git.kernel.org/jaegeuk/f2fs/c/0c4767923ed6
-  - [f2fs-dev,v2,92/92] fs: rename i_ctime field to __i_ctime
-    https://git.kernel.org/jaegeuk/f2fs/c/13bc24457850
+The VFS already warns when an underflow occurs - stuff has already
+gone wrong at this point, and if we are going to do anything then
+we should be shutting the filesystem down at this point because
+something is corrupt either in memory or on disk, and continuing
+after underflow propagates the corruption and makes things worse...
 
-You are awesome, thank you!
+The fact that your customer's system didn't log warnings about the
+link count going from 0 to -1 when the link count was -12 on disk
+(like it should if this happens via xfs_droplink() -> drop_link())
+it really brings into question how this situation silently
+occurred....
+
+Until we actually understand the root cause of the bad value and why
+it occurred silently in a decade old kernel, trying to fix it in a
+current upstream kernel is premature.
+
+> > corruption is not limited to the directory inode or operations
+> > involving that directory inode. We generally shut down the
+> > filesystem when this sort of corruption occurs - it needs to be
+> > repaired ASAP, otherwise other stuff will randomly fail and
+> > you'll still end up with a shut down filesystem. Better to fail
+> > fast in corruption cases than try to ignore it and vainly hope
+> > that everything will work out for the best....  Cheers, Dave.
+> > --
+> Directly shutdown filesystem is really a relatively safe approach.
+> But for customer, it's suddenly and unprepared. If keep fs
+> available as possible (If can be achieved) and allow delayed
+> repair, then customer can make more preparations before do that.
+> Do you preferred more to shutdown filesystem directly?
+
+Yes, if we've detected corruption in a modification situation (such
+as an unlink) we need to shut down the filesystem. Propagating a
+corruption from in-memory to on-disk is the worst thing we can do.
+As such, XFS has had a policy since the mid 1990s that we shut down
+the filesystem immediately rather than risk propagating a corruption
+into on-disk structures.
+
+This will change in the future as we start to leverage online repair
+in response to corruption detections like this. But that's not a
+magic bullet, and that does not help the situation with problems on
+RHEL-7 era kernels....
+
+-Dave.
+
 -- 
-Deet-doot-dot, I am a bot.
-https://korg.docs.kernel.org/patchwork/pwbot.html
-
-
+Dave Chinner
+david@fromorbit.com
