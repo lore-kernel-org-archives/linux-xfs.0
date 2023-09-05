@@ -2,49 +2,75 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DD134CA0FE2
-	for <linux-xfs@archiver.kernel.org>; Tue,  5 Sep 2023 16:25:51 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 20344C83F2C
+	for <linux-xfs@archiver.kernel.org>; Tue,  5 Sep 2023 16:25:53 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1351007AbjIEQZ0 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 5 Sep 2023 12:25:26 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50998 "EHLO
+        id S1351026AbjIEQZ1 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 5 Sep 2023 12:25:27 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49082 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1353735AbjIEHpH (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 5 Sep 2023 03:45:07 -0400
-Received: from bombadil.infradead.org (bombadil.infradead.org [IPv6:2607:7c80:54:3::133])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9F8F11A8;
-        Tue,  5 Sep 2023 00:45:01 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Type:MIME-Version
-        :References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
-        Content-Transfer-Encoding:Content-ID:Content-Description;
-        bh=I2yPyO8KwTzZJAloQMQFXyE6w4H4gDLyPF/VUjujH9w=; b=D6ocNZPrq6CZLc+BgM93gNO0a8
-        +mhp354GNUvRRmHjR/LyrZO531zXKlzD3Ut94MIzFGnbvX5Rlr8ukph2bMJ9ooyR1kRg0twVcIlpU
-        XTK6YQRP8yN5ZBbRekcLCOt2ohx7zIzlu93T6I2YuGx7h8RV4Ycjf+ZJPe0vbE6HHK5QrxDwvy0Ww
-        i6WF8aTlk/rV/ksu1KK6BWJhaGeFm1bQrspk9AFYQuq7t/P4tpXygb1Qpioqh00uet/Yq9qTt50XU
-        V+Zu+DVfx9y1VVyhiaEAtxuH+az+MJnaMptBB28lZU4LWGd0FgqlIHM2POmpv8YLObDxEBufjNjiO
-        7Fo2FXFg==;
-Received: from hch by bombadil.infradead.org with local (Exim 4.96 #2 (Red Hat Linux))
-        id 1qdQk1-005SWK-33;
-        Tue, 05 Sep 2023 07:44:53 +0000
-Date:   Tue, 5 Sep 2023 00:44:53 -0700
-From:   Christoph Hellwig <hch@infradead.org>
-To:     syzbot <syzbot+4a08ffdf3667b36650a1@syzkaller.appspotmail.com>
-Cc:     adilger.kernel@dilger.ca, djwong@kernel.org,
+        with ESMTP id S1354043AbjIEJ1J (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 5 Sep 2023 05:27:09 -0400
+Received: from mail-wm1-x334.google.com (mail-wm1-x334.google.com [IPv6:2a00:1450:4864:20::334])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4F50C1A7
+        for <linux-xfs@vger.kernel.org>; Tue,  5 Sep 2023 02:27:02 -0700 (PDT)
+Received: by mail-wm1-x334.google.com with SMTP id 5b1f17b1804b1-402bec56ca6so170415e9.0
+        for <linux-xfs@vger.kernel.org>; Tue, 05 Sep 2023 02:27:02 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=google.com; s=20221208; t=1693906021; x=1694510821; darn=vger.kernel.org;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=QivlHq495u/KUMjd8H66huPqjXNAmSye3h8RVHL8dfQ=;
+        b=kHWjUPh5E9P0PuMc1KvzZrpbBJIlK+fqtQ51r5spaT/X71HFQ1cFrIYmojupmeatNc
+         iK9Jf6KueruDB3aavndU6yXWEyu4UokzrV0ad20yU9W+Vjl7OPwUSGH6oaCtW601eiBq
+         8pgqVZ4bYHmcU9fGUepyeF+I1+Ia3NddyVr09DtoXzsalyaR3ygWs4rLiLAO/xeOSqRJ
+         HQGg+4zYX2hwLIzgjwzq2kE9X/ZBWHMIuGjrtGa3bHwmYTCxnYFV5YwFHFK5OQsxvgTk
+         IHTAmTWdYteCZS+OW/u8OBXW/XkP1OnALba/BEfDbpXYFFm1t2CdP5Oc9xUvw/nuSKAj
+         +WiA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20221208; t=1693906021; x=1694510821;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=QivlHq495u/KUMjd8H66huPqjXNAmSye3h8RVHL8dfQ=;
+        b=hgpk1y24E/y8izuxmY5To/0QKqh4+FoZ/Ys+SM35cPGjYL/rblPL2unB4hFVskZ5Hb
+         1SeH0XlN4FTkj6/1un+WzVqIA4FL5wGEbmp9b51v0WifFE1UprwoWz6rJE75GSU8f3n+
+         zPQqA//voZdCIOVsBoWNCqu1JLZOIQQ54UeNuji68akZT2UBqdQDS5kvdRPfT3JGriBc
+         CRzhq+z/rRKzdneETOFQrPD+k/CcFgS/txBFRAl2NRBbv5MPXj0wEv9T5Cx001I0AE1D
+         TCjytMxK1DAfyanSt1tjFeOyLmd5CdEmxM8MWqaNuNceSEIWbmduPOqNX0s6LIBkrdj2
+         iqLw==
+X-Gm-Message-State: AOJu0YxGQxQCBjSHiXZaEXP0dOjQC5kFVLIsY5Pq8d88bnW70vdqCHv1
+        +CN+5dmqG1mZ/XPZj7XWx75Qxcrk3YSA5cbPuWxQRA==
+X-Google-Smtp-Source: AGHT+IGENfu5/HhYPIWUo6x3+albtxhQtbOQlDFueHeuAVWyG78SAwIxkvUDeE8EOtxevF3nTDBpl1nNYQYGKf57LhM=
+X-Received: by 2002:a05:600c:512a:b0:3fe:e9ea:9653 with SMTP id
+ o42-20020a05600c512a00b003fee9ea9653mr263627wms.4.1693906020688; Tue, 05 Sep
+ 2023 02:27:00 -0700 (PDT)
+MIME-Version: 1.0
+References: <000000000000e76944060483798d@google.com> <ZPbcdagjHgbBE6A8@infradead.org>
+In-Reply-To: <ZPbcdagjHgbBE6A8@infradead.org>
+From:   Aleksandr Nogikh <nogikh@google.com>
+Date:   Tue, 5 Sep 2023 11:26:48 +0200
+Message-ID: <CANp29Y65sCETzq3CttPHww40W_tQ2S=0HockV-aSUi9dE8HGow@mail.gmail.com>
+Subject: Re: [syzbot] [xfs?] [ext4?] kernel BUG in __block_write_begin_int
+To:     Christoph Hellwig <hch@infradead.org>
+Cc:     syzbot <syzbot+4a08ffdf3667b36650a1@syzkaller.appspotmail.com>,
+        adilger.kernel@dilger.ca, djwong@kernel.org,
         linux-ext4@vger.kernel.org, linux-fsdevel@vger.kernel.org,
         linux-kernel@vger.kernel.org, linux-xfs@vger.kernel.org,
         song@kernel.org, syzkaller-bugs@googlegroups.com, tytso@mit.edu,
         yukuai3@huawei.com, zhang_shurong@foxmail.com
-Subject: Re: [syzbot] [xfs?] [ext4?] kernel BUG in __block_write_begin_int
-Message-ID: <ZPbcdagjHgbBE6A8@infradead.org>
-References: <000000000000e76944060483798d@google.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <000000000000e76944060483798d@google.com>
-X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-syz test: git://git.infradead.org/users/hch/misc.git bdev-iomap-fix
+On Tue, Sep 5, 2023 at 9:45=E2=80=AFAM Christoph Hellwig <hch@infradead.org=
+> wrote:
+>
+> syz test: git://git.infradead.org/users/hch/misc.git bdev-iomap-fix
+
+A minor correction:
+
+#syz test: git://git.infradead.org/users/hch/misc.git bdev-iomap-fix
