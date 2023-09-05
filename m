@@ -2,62 +2,103 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 35E8ACA0FF3
-	for <linux-xfs@archiver.kernel.org>; Tue,  5 Sep 2023 16:25:20 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5E252CA0FF3
+	for <linux-xfs@archiver.kernel.org>; Tue,  5 Sep 2023 16:25:22 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1350916AbjIEQZR (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 5 Sep 2023 12:25:17 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46470 "EHLO
+        id S1350947AbjIEQZS (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 5 Sep 2023 12:25:18 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36036 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1354541AbjIEM1G (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 5 Sep 2023 08:27:06 -0400
-Received: from bombadil.infradead.org (bombadil.infradead.org [IPv6:2607:7c80:54:3::133])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 158081A8;
-        Tue,  5 Sep 2023 05:27:01 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Type:MIME-Version
-        :References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
-        Content-Transfer-Encoding:Content-ID:Content-Description;
-        bh=eVxmERvkhRQsWzv7hKcub8nBL8Ebk3iyCYi7oJyr1Qk=; b=y1nZcAesjx2xv+SqYWukES/nxx
-        qxVnUugSjtZ7Rv+bkJJ6GZIdmJGlCLcs8CZEB+opdncPZkN8ySSXTFFA9n3825sRirzrtgHedCb6Y
-        xVaJXXjwPg3j1NrmFUhs2YDq66bVYir9KESsctaZ/K7zI5iJ/7/Syy9Tjm4oJ53hAypHgRYapUnBI
-        Du1mmz4gZGYHfNXUaeRFE1/vD4OBuZO6WRSug9LrHMCZd+Fxeo+r5eEjX0DEnDHXqjQn/VtktT/OS
-        lT97QzO09PtP3N5ZNy00mxVHFBt85fKdar8/4wc/er2Bx8o3t5+AcoVG2flc6LAz8j2jfr7gmohWf
-        LJKCN9qg==;
-Received: from hch by bombadil.infradead.org with local (Exim 4.96 #2 (Red Hat Linux))
-        id 1qdV8x-0060Oq-0K;
-        Tue, 05 Sep 2023 12:26:55 +0000
-Date:   Tue, 5 Sep 2023 05:26:55 -0700
-From:   Christoph Hellwig <hch@infradead.org>
-To:     syzbot <syzbot+4a08ffdf3667b36650a1@syzkaller.appspotmail.com>
-Cc:     adilger.kernel@dilger.ca, djwong@kernel.org, hch@infradead.org,
-        linux-ext4@vger.kernel.org, linux-fsdevel@vger.kernel.org,
-        linux-kernel@vger.kernel.org, linux-xfs@vger.kernel.org,
-        nogikh@google.com, song@kernel.org,
-        syzkaller-bugs@googlegroups.com, tytso@mit.edu, yukuai3@huawei.com,
-        zhang_shurong@foxmail.com
-Subject: Re: [syzbot] [block] kernel BUG in __block_write_begin_int
-Message-ID: <ZPcej+rJjg+6SgzK@infradead.org>
-References: <CANp29Y65sCETzq3CttPHww40W_tQ2S=0HockV-aSUi9dE8HGow@mail.gmail.com>
- <000000000000d9daf4060499c0c9@google.com>
+        with ESMTP id S1353947AbjIEIqe (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 5 Sep 2023 04:46:34 -0400
+Received: from smtp-out2.suse.de (smtp-out2.suse.de [IPv6:2001:67c:2178:6::1d])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E5A51AA
+        for <linux-xfs@vger.kernel.org>; Tue,  5 Sep 2023 01:46:30 -0700 (PDT)
+Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
+        (No client certificate requested)
+        by smtp-out2.suse.de (Postfix) with ESMTPS id A5CFC1F750
+        for <linux-xfs@vger.kernel.org>; Tue,  5 Sep 2023 08:46:29 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.com; s=susede1;
+        t=1693903589; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:
+         mime-version:mime-version:  content-transfer-encoding:content-transfer-encoding;
+        bh=waPUQWKSuhsPFbuH5eDakT0PFzx97UIAw85h/6xFV0Y=;
+        b=DczJR/BcG0Wk6lla1XjKNisvJ10QfU45Jhg9dXZwYkpJCczqCg6c9hKSChh/2a3jvsbmDc
+        syNJx+sBwD4WVoKkfX+3On5QSw170yDhYwIqGWit9URocRRzX0cJTfeLfRzF67il89ADzO
+        5IXAEpuBsfeU2S/xLuiD4U++ReyZ7Mg=
+Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
+        (No client certificate requested)
+        by imap2.suse-dmz.suse.de (Postfix) with ESMTPS id 965D713499
+        for <linux-xfs@vger.kernel.org>; Tue,  5 Sep 2023 08:46:29 +0000 (UTC)
+Received: from dovecot-director2.suse.de ([192.168.254.65])
+        by imap2.suse-dmz.suse.de with ESMTPSA
+        id G3nbI+Xq9mTdGAAAMHmgww
+        (envelope-from <ailiop@suse.com>)
+        for <linux-xfs@vger.kernel.org>; Tue, 05 Sep 2023 08:46:29 +0000
+From:   Anthony Iliopoulos <ailiop@suse.com>
+To:     linux-xfs@vger.kernel.org
+Subject: [PATCH] libxfs: fix atomic64_t detection on x86 32-bit architectures
+Date:   Tue,  5 Sep 2023 10:46:23 +0200
+Message-ID: <20230905084623.24865-1-ailiop@suse.com>
+X-Mailer: git-send-email 2.42.0
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <000000000000d9daf4060499c0c9@google.com>
-X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Tue, Sep 05, 2023 at 03:04:32AM -0700, syzbot wrote:
-> Hello,
-> 
-> syzbot has tested the proposed patch but the reproducer is still triggering an issue:
-> WARNING in __kthread_create_on_node
+xfsprogs during compilation tries to detect if liburcu supports atomic
+64-bit ops on the platform it is being compiled on, and if not it falls
+back to using pthread mutex locks.
 
-Well, that is
+The detection logic for that fallback relies on _uatomic_link_error()
+which is a link-time trick used by liburcu that will cause compilation
+errors on archs that lack the required support. That only works for the
+generic liburcu code though, and it is not implemented for the
+x86-specific code.
 
+In practice this means that when xfsprogs is compiled on 32-bit x86
+archs will successfully link to liburcu for atomic ops, but liburcu does
+not support atomic64_t on those archs. It indicates this during runtime
+by generating an illegal instruction that aborts execution, and thus
+causes various xfsprogs utils to be segfaulting.
 
- a) a different issue in ext4
- b) just a warning
+Fix this by executing the liburcu atomic64_t detection code during
+configure instead of only relying on the linker error, so that
+compilation will properly fall back to pthread mutexes on those archs.
+
+Fixes: 7448af588a2e ("libxfs: fix atomic64_t poorly for 32-bit architectures")
+
+Signed-off-by: Anthony Iliopoulos <ailiop@suse.com>
+---
+ m4/package_urcu.m4 | 8 ++++++--
+ 1 file changed, 6 insertions(+), 2 deletions(-)
+
+diff --git a/m4/package_urcu.m4 b/m4/package_urcu.m4
+index ef116e0cda76..f26494a69718 100644
+--- a/m4/package_urcu.m4
++++ b/m4/package_urcu.m4
+@@ -26,11 +26,15 @@ rcu_init();
+ #
+ # Make sure that calling uatomic_inc on a 64-bit integer doesn't cause a link
+ # error on _uatomic_link_error, which is how liburcu signals that it doesn't
+-# support atomic operations on 64-bit data types.
++# support atomic operations on 64-bit data types for its generic
++# implementation (which relies on compiler builtins). For certain archs
++# where liburcu carries its own implementation (such as x86_32), it
++# signals lack of support during runtime by emitting an illegal
++# instruction, so we also need to execute here to detect that.
+ #
+ AC_DEFUN([AC_HAVE_LIBURCU_ATOMIC64],
+   [ AC_MSG_CHECKING([for atomic64_t support in liburcu])
+-    AC_LINK_IFELSE(
++    AC_RUN_IFELSE(
+     [	AC_LANG_PROGRAM([[
+ #define _GNU_SOURCE
+ #include <urcu.h>
+-- 
+2.42.0
 
