@@ -2,114 +2,49 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 79312C83F2C
-	for <linux-xfs@archiver.kernel.org>; Tue,  5 Sep 2023 16:25:25 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id DD134CA0FE2
+	for <linux-xfs@archiver.kernel.org>; Tue,  5 Sep 2023 16:25:51 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1350995AbjIEQZY (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 5 Sep 2023 12:25:24 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47774 "EHLO
+        id S1351007AbjIEQZ0 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 5 Sep 2023 12:25:26 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50998 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1354174AbjIEKEg (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 5 Sep 2023 06:04:36 -0400
-Received: from mail-pj1-f71.google.com (mail-pj1-f71.google.com [209.85.216.71])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id AF5E01AE
-        for <linux-xfs@vger.kernel.org>; Tue,  5 Sep 2023 03:04:32 -0700 (PDT)
-Received: by mail-pj1-f71.google.com with SMTP id 98e67ed59e1d1-271bb60d8a8so3350521a91.3
-        for <linux-xfs@vger.kernel.org>; Tue, 05 Sep 2023 03:04:32 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20221208; t=1693908272; x=1694513072;
-        h=to:from:subject:message-id:in-reply-to:date:mime-version
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=wwZYeHvtD9GZdB9/hKTalrH/ocSz88uD/tT+zhW9brI=;
-        b=P5csUrGLfKmWgvmI7hdZOKpKKLYaMhgFSm+gjjARB3Zoly2uvf5BNRszv98usCem8y
-         Rif17T76exnmRzdkh68Whf5WgWBPS32GuoRGZaNRY0EFkjxXx6FaxNuGHptrKRwhjJbH
-         VPIaYZSfdS68Ng9cCo06d9ZbAZBxvRAgJ9syYPJFbyENTYIX6naSNi2pTQx6Rr/ZqhaQ
-         /r7cn09zE8ATqHySEinUXVMdCPugVO0rvPi6OyuIpdr8/9chRMaJQiW1xUJh+gDItQ1A
-         1nJ/htGOsDXiGzcrtZRl0Iq8tQo4om0G1CT3oogF6zXCfbavXVW9m6XSbs8lPKb/gTtm
-         lijg==
-X-Gm-Message-State: AOJu0YwlNzdHr3mbi7ohbGRK6/keh+0FSigx0s+2UIDCKuxLYwsOCOnI
-        gIhPXw81wfD8EzHWOn3p/jtUniL41dZnjoqtMHfW9yqH/DTQ
-X-Google-Smtp-Source: AGHT+IHikA7EnkeoU+BIWTDaP4XZIFS90veVBj/F+9Kv4krrGsmoDY8YF039ZFFbOkLb9ZOdVyHzzQ05/3mjkQGls8eEuUPFLn53
-MIME-Version: 1.0
-X-Received: by 2002:a17:902:f344:b0:1bb:a13a:c21e with SMTP id
- q4-20020a170902f34400b001bba13ac21emr3542263ple.10.1693908272272; Tue, 05 Sep
- 2023 03:04:32 -0700 (PDT)
-Date:   Tue, 05 Sep 2023 03:04:32 -0700
-In-Reply-To: <CANp29Y65sCETzq3CttPHww40W_tQ2S=0HockV-aSUi9dE8HGow@mail.gmail.com>
-X-Google-Appengine-App-Id: s~syzkaller
-X-Google-Appengine-App-Id-Alias: syzkaller
-Message-ID: <000000000000d9daf4060499c0c9@google.com>
-Subject: Re: [syzbot] [block] kernel BUG in __block_write_begin_int
-From:   syzbot <syzbot+4a08ffdf3667b36650a1@syzkaller.appspotmail.com>
-To:     adilger.kernel@dilger.ca, djwong@kernel.org, hch@infradead.org,
+        with ESMTP id S1353735AbjIEHpH (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 5 Sep 2023 03:45:07 -0400
+Received: from bombadil.infradead.org (bombadil.infradead.org [IPv6:2607:7c80:54:3::133])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9F8F11A8;
+        Tue,  5 Sep 2023 00:45:01 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Type:MIME-Version
+        :References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
+        Content-Transfer-Encoding:Content-ID:Content-Description;
+        bh=I2yPyO8KwTzZJAloQMQFXyE6w4H4gDLyPF/VUjujH9w=; b=D6ocNZPrq6CZLc+BgM93gNO0a8
+        +mhp354GNUvRRmHjR/LyrZO531zXKlzD3Ut94MIzFGnbvX5Rlr8ukph2bMJ9ooyR1kRg0twVcIlpU
+        XTK6YQRP8yN5ZBbRekcLCOt2ohx7zIzlu93T6I2YuGx7h8RV4Ycjf+ZJPe0vbE6HHK5QrxDwvy0Ww
+        i6WF8aTlk/rV/ksu1KK6BWJhaGeFm1bQrspk9AFYQuq7t/P4tpXygb1Qpioqh00uet/Yq9qTt50XU
+        V+Zu+DVfx9y1VVyhiaEAtxuH+az+MJnaMptBB28lZU4LWGd0FgqlIHM2POmpv8YLObDxEBufjNjiO
+        7Fo2FXFg==;
+Received: from hch by bombadil.infradead.org with local (Exim 4.96 #2 (Red Hat Linux))
+        id 1qdQk1-005SWK-33;
+        Tue, 05 Sep 2023 07:44:53 +0000
+Date:   Tue, 5 Sep 2023 00:44:53 -0700
+From:   Christoph Hellwig <hch@infradead.org>
+To:     syzbot <syzbot+4a08ffdf3667b36650a1@syzkaller.appspotmail.com>
+Cc:     adilger.kernel@dilger.ca, djwong@kernel.org,
         linux-ext4@vger.kernel.org, linux-fsdevel@vger.kernel.org,
         linux-kernel@vger.kernel.org, linux-xfs@vger.kernel.org,
-        nogikh@google.com, song@kernel.org,
-        syzkaller-bugs@googlegroups.com, tytso@mit.edu, yukuai3@huawei.com,
-        zhang_shurong@foxmail.com
-Content-Type: text/plain; charset="UTF-8"
+        song@kernel.org, syzkaller-bugs@googlegroups.com, tytso@mit.edu,
+        yukuai3@huawei.com, zhang_shurong@foxmail.com
+Subject: Re: [syzbot] [xfs?] [ext4?] kernel BUG in __block_write_begin_int
+Message-ID: <ZPbcdagjHgbBE6A8@infradead.org>
+References: <000000000000e76944060483798d@google.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <000000000000e76944060483798d@google.com>
+X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Hello,
-
-syzbot has tested the proposed patch but the reproducer is still triggering an issue:
-WARNING in __kthread_create_on_node
-
-------------[ cut here ]------------
-different return values (11 and 6) from vsnprintf("kmmpd-%.*s", ...)
-WARNING: CPU: 1 PID: 12350 at lib/kasprintf.c:31 kvasprintf+0x17b/0x190 lib/kasprintf.c:30
-Modules linked in:
-CPU: 1 PID: 12350 Comm: syz-executor.0 Not tainted 6.5.0-syzkaller-11705-gfd19eb3c02e0 #0
-Hardware name: Google Google Compute Engine/Google Compute Engine, BIOS Google 07/26/2023
-RIP: 0010:kvasprintf+0x17b/0x190 lib/kasprintf.c:30
-Code: 48 8d 65 d8 5b 41 5c 41 5d 41 5e 41 5f 5d c3 e8 cb db 55 fd 48 c7 c7 a0 0a 59 8b 44 89 e6 89 da 48 8b 4c 24 18 e8 65 56 1c fd <0f> 0b eb 98 e8 2c 46 90 06 66 2e 0f 1f 84 00 00 00 00 00 66 90 f3
-RSP: 0018:ffffc90003507620 EFLAGS: 00010246
-RAX: 2ce359f82b370100 RBX: 0000000000000006 RCX: ffff88806a543b80
-RDX: 0000000000000000 RSI: 0000000000000001 RDI: 0000000000000000
-RBP: ffffc900035076f0 R08: ffffffff81541672 R09: 1ffff1101732516a
-R10: dffffc0000000000 R11: ffffed101732516b R12: 000000000000000b
-R13: ffffc90003507880 R14: 1ffff920006a0ec8 R15: ffff888025476fa0
-FS:  00007f224ed5d6c0(0000) GS:ffff8880b9900000(0000) knlGS:0000000000000000
-CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
-CR2: 0000001b2c420000 CR3: 00000000691b6000 CR4: 00000000003506e0
-DR0: 0000000000000000 DR1: 0000000000000000 DR2: 0000000000000000
-DR3: 0000000000000000 DR6: 00000000fffe0ff0 DR7: 0000000000000400
-Call Trace:
- <TASK>
- __kthread_create_on_node+0x1a9/0x3c0 kernel/kthread.c:444
- kthread_create_on_node+0xde/0x120 kernel/kthread.c:512
- ext4_multi_mount_protect+0x792/0x9f0 fs/ext4/mmp.c:392
- __ext4_fill_super fs/ext4/super.c:5363 [inline]
- ext4_fill_super+0x4495/0x6d10 fs/ext4/super.c:5703
- get_tree_bdev+0x416/0x5b0 fs/super.c:1577
- vfs_get_tree+0x8c/0x280 fs/super.c:1750
- do_new_mount+0x28f/0xae0 fs/namespace.c:3335
- do_mount fs/namespace.c:3675 [inline]
- __do_sys_mount fs/namespace.c:3884 [inline]
- __se_sys_mount+0x2d9/0x3c0 fs/namespace.c:3861
- do_syscall_x64 arch/x86/entry/common.c:50 [inline]
- do_syscall_64+0x41/0xc0 arch/x86/entry/common.c:80
- entry_SYSCALL_64_after_hwframe+0x63/0xcd
-RIP: 0033:0x7f224e07e1ea
-Code: d8 64 89 02 48 c7 c0 ff ff ff ff eb a6 e8 de 09 00 00 66 2e 0f 1f 84 00 00 00 00 00 0f 1f 40 00 49 89 ca b8 a5 00 00 00 0f 05 <48> 3d 01 f0 ff ff 73 01 c3 48 c7 c1 b0 ff ff ff f7 d8 64 89 01 48
-RSP: 002b:00007f224ed5cee8 EFLAGS: 00000246 ORIG_RAX: 00000000000000a5
-RAX: ffffffffffffffda RBX: 00007f224ed5cf80 RCX: 00007f224e07e1ea
-RDX: 0000000020000040 RSI: 0000000020000500 RDI: 00007f224ed5cf40
-RBP: 0000000020000040 R08: 00007f224ed5cf80 R09: 0000000000004500
-R10: 0000000000004500 R11: 0000000000000246 R12: 0000000020000500
-R13: 00007f224ed5cf40 R14: 00000000000004b4 R15: 0000000020000540
- </TASK>
-
-
-Tested on:
-
-commit:         fd19eb3c iomap: handle error conditions more gracefull..
-git tree:       git://git.infradead.org/users/hch/misc.git bdev-iomap-fix
-console output: https://syzkaller.appspot.com/x/log.txt?x=11955af0680000
-kernel config:  https://syzkaller.appspot.com/x/.config?x=ff0db7a15ba54ead
-dashboard link: https://syzkaller.appspot.com/bug?extid=4a08ffdf3667b36650a1
-compiler:       Debian clang version 15.0.6, GNU ld (GNU Binutils for Debian) 2.40
-
-Note: no patches were applied.
+syz test: git://git.infradead.org/users/hch/misc.git bdev-iomap-fix
