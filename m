@@ -2,75 +2,138 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 20344C83F2C
-	for <linux-xfs@archiver.kernel.org>; Tue,  5 Sep 2023 16:25:53 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id BD071CA0FE2
+	for <linux-xfs@archiver.kernel.org>; Tue,  5 Sep 2023 17:19:09 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1351026AbjIEQZ1 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 5 Sep 2023 12:25:27 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49082 "EHLO
+        id S239864AbjIERTK (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 5 Sep 2023 13:19:10 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43778 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1354043AbjIEJ1J (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 5 Sep 2023 05:27:09 -0400
-Received: from mail-wm1-x334.google.com (mail-wm1-x334.google.com [IPv6:2a00:1450:4864:20::334])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4F50C1A7
-        for <linux-xfs@vger.kernel.org>; Tue,  5 Sep 2023 02:27:02 -0700 (PDT)
-Received: by mail-wm1-x334.google.com with SMTP id 5b1f17b1804b1-402bec56ca6so170415e9.0
-        for <linux-xfs@vger.kernel.org>; Tue, 05 Sep 2023 02:27:02 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20221208; t=1693906021; x=1694510821; darn=vger.kernel.org;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=QivlHq495u/KUMjd8H66huPqjXNAmSye3h8RVHL8dfQ=;
-        b=kHWjUPh5E9P0PuMc1KvzZrpbBJIlK+fqtQ51r5spaT/X71HFQ1cFrIYmojupmeatNc
-         iK9Jf6KueruDB3aavndU6yXWEyu4UokzrV0ad20yU9W+Vjl7OPwUSGH6oaCtW601eiBq
-         8pgqVZ4bYHmcU9fGUepyeF+I1+Ia3NddyVr09DtoXzsalyaR3ygWs4rLiLAO/xeOSqRJ
-         HQGg+4zYX2hwLIzgjwzq2kE9X/ZBWHMIuGjrtGa3bHwmYTCxnYFV5YwFHFK5OQsxvgTk
-         IHTAmTWdYteCZS+OW/u8OBXW/XkP1OnALba/BEfDbpXYFFm1t2CdP5Oc9xUvw/nuSKAj
-         +WiA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20221208; t=1693906021; x=1694510821;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=QivlHq495u/KUMjd8H66huPqjXNAmSye3h8RVHL8dfQ=;
-        b=hgpk1y24E/y8izuxmY5To/0QKqh4+FoZ/Ys+SM35cPGjYL/rblPL2unB4hFVskZ5Hb
-         1SeH0XlN4FTkj6/1un+WzVqIA4FL5wGEbmp9b51v0WifFE1UprwoWz6rJE75GSU8f3n+
-         zPQqA//voZdCIOVsBoWNCqu1JLZOIQQ54UeNuji68akZT2UBqdQDS5kvdRPfT3JGriBc
-         CRzhq+z/rRKzdneETOFQrPD+k/CcFgS/txBFRAl2NRBbv5MPXj0wEv9T5Cx001I0AE1D
-         TCjytMxK1DAfyanSt1tjFeOyLmd5CdEmxM8MWqaNuNceSEIWbmduPOqNX0s6LIBkrdj2
-         iqLw==
-X-Gm-Message-State: AOJu0YxGQxQCBjSHiXZaEXP0dOjQC5kFVLIsY5Pq8d88bnW70vdqCHv1
-        +CN+5dmqG1mZ/XPZj7XWx75Qxcrk3YSA5cbPuWxQRA==
-X-Google-Smtp-Source: AGHT+IGENfu5/HhYPIWUo6x3+albtxhQtbOQlDFueHeuAVWyG78SAwIxkvUDeE8EOtxevF3nTDBpl1nNYQYGKf57LhM=
-X-Received: by 2002:a05:600c:512a:b0:3fe:e9ea:9653 with SMTP id
- o42-20020a05600c512a00b003fee9ea9653mr263627wms.4.1693906020688; Tue, 05 Sep
- 2023 02:27:00 -0700 (PDT)
+        with ESMTP id S1353488AbjIERNy (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 5 Sep 2023 13:13:54 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 02B0B30F3
+        for <linux-xfs@vger.kernel.org>; Tue,  5 Sep 2023 09:43:40 -0700 (PDT)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange X25519 server-signature RSA-PSS (2048 bits))
+        (No client certificate requested)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 4360460A54
+        for <linux-xfs@vger.kernel.org>; Tue,  5 Sep 2023 16:42:51 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id A26CBC433C8;
+        Tue,  5 Sep 2023 16:42:50 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1693932170;
+        bh=btj3Z3ijdJyE48oomLKulblGMPvbu4l9GJtQ08N0lbg=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=SGi0ZDwq8zIkgcJPJDrRfXlmOy7N2e7oiS3xCUINLZcwvC25jPIzHUoGtzmRCOlPF
+         3dpNBo0MNEP2a53fMBuZDmKAfWiBfHj1YqNmcjyvtCEyOsOKGSUmdngiGkI7pV8Eie
+         nRUOtN86KuGDnku78rje4uO/hQ+kl3lnL5taXTTN+rbhOywF4Zoy15yW/6M3IN1rFY
+         ngMj6rmugAzH9vfj4L8PHBGDkCchpxLi7AqZngWuSjgQuQJ7LBdDrAtGgoRh0KELsT
+         tcI4gHVCYi7yFSHcwlHYD1BT0sZE5JdLI644e9sh6VtBDzXlBnuiZdpE2+KXP6dK6o
+         5Sy4cMMCd7jVQ==
+Date:   Tue, 5 Sep 2023 09:42:50 -0700
+From:   "Darrick J. Wong" <djwong@kernel.org>
+To:     Anthony Iliopoulos <ailiop@suse.com>
+Cc:     linux-xfs@vger.kernel.org
+Subject: Re: [PATCH] libxfs: fix atomic64_t detection on x86 32-bit
+ architectures
+Message-ID: <20230905164250.GV28186@frogsfrogsfrogs>
+References: <20230905084623.24865-1-ailiop@suse.com>
 MIME-Version: 1.0
-References: <000000000000e76944060483798d@google.com> <ZPbcdagjHgbBE6A8@infradead.org>
-In-Reply-To: <ZPbcdagjHgbBE6A8@infradead.org>
-From:   Aleksandr Nogikh <nogikh@google.com>
-Date:   Tue, 5 Sep 2023 11:26:48 +0200
-Message-ID: <CANp29Y65sCETzq3CttPHww40W_tQ2S=0HockV-aSUi9dE8HGow@mail.gmail.com>
-Subject: Re: [syzbot] [xfs?] [ext4?] kernel BUG in __block_write_begin_int
-To:     Christoph Hellwig <hch@infradead.org>
-Cc:     syzbot <syzbot+4a08ffdf3667b36650a1@syzkaller.appspotmail.com>,
-        adilger.kernel@dilger.ca, djwong@kernel.org,
-        linux-ext4@vger.kernel.org, linux-fsdevel@vger.kernel.org,
-        linux-kernel@vger.kernel.org, linux-xfs@vger.kernel.org,
-        song@kernel.org, syzkaller-bugs@googlegroups.com, tytso@mit.edu,
-        yukuai3@huawei.com, zhang_shurong@foxmail.com
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20230905084623.24865-1-ailiop@suse.com>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Tue, Sep 5, 2023 at 9:45=E2=80=AFAM Christoph Hellwig <hch@infradead.org=
-> wrote:
->
-> syz test: git://git.infradead.org/users/hch/misc.git bdev-iomap-fix
+On Tue, Sep 05, 2023 at 10:46:23AM +0200, Anthony Iliopoulos wrote:
+> xfsprogs during compilation tries to detect if liburcu supports atomic
+> 64-bit ops on the platform it is being compiled on, and if not it falls
+> back to using pthread mutex locks.
+> 
+> The detection logic for that fallback relies on _uatomic_link_error()
+> which is a link-time trick used by liburcu that will cause compilation
+> errors on archs that lack the required support. That only works for the
+> generic liburcu code though, and it is not implemented for the
+> x86-specific code.
+> 
+> In practice this means that when xfsprogs is compiled on 32-bit x86
+> archs will successfully link to liburcu for atomic ops, but liburcu does
+> not support atomic64_t on those archs. It indicates this during runtime
+> by generating an illegal instruction that aborts execution, and thus
+> causes various xfsprogs utils to be segfaulting.
+> 
+> Fix this by executing the liburcu atomic64_t detection code during
+> configure instead of only relying on the linker error, so that
+> compilation will properly fall back to pthread mutexes on those archs.
+> 
+> Fixes: 7448af588a2e ("libxfs: fix atomic64_t poorly for 32-bit architectures")
+> 
+> Signed-off-by: Anthony Iliopoulos <ailiop@suse.com>
+> ---
+>  m4/package_urcu.m4 | 8 ++++++--
+>  1 file changed, 6 insertions(+), 2 deletions(-)
+> 
+> diff --git a/m4/package_urcu.m4 b/m4/package_urcu.m4
+> index ef116e0cda76..f26494a69718 100644
+> --- a/m4/package_urcu.m4
+> +++ b/m4/package_urcu.m4
+> @@ -26,11 +26,15 @@ rcu_init();
+>  #
+>  # Make sure that calling uatomic_inc on a 64-bit integer doesn't cause a link
+>  # error on _uatomic_link_error, which is how liburcu signals that it doesn't
+> -# support atomic operations on 64-bit data types.
+> +# support atomic operations on 64-bit data types for its generic
+> +# implementation (which relies on compiler builtins). For certain archs
+> +# where liburcu carries its own implementation (such as x86_32), it
+> +# signals lack of support during runtime by emitting an illegal
+> +# instruction, so we also need to execute here to detect that.
+>  #
+>  AC_DEFUN([AC_HAVE_LIBURCU_ATOMIC64],
+>    [ AC_MSG_CHECKING([for atomic64_t support in liburcu])
+> -    AC_LINK_IFELSE(
+> +    AC_RUN_IFELSE(
 
-A minor correction:
+Unfortunately, this change breaks cross compiling:
 
-#syz test: git://git.infradead.org/users/hch/misc.git bdev-iomap-fix
+checking for umode_t... no
+checking for atomic64_t support in liburcu... configure: error: in
+	`.../xfsprogs/build-aarch64':
+configure: error: cannot run test program while cross compiling
+See `config.log' for more details
+
+(Note that this is an x64 host building aarch64)
+
+Seeing as we /do/ have a (slow) workaround for 32-bit machines, perhaps
+we should use it any time a long isn't 64-bits wide:
+
+diff --git a/m4/package_urcu.m4 b/m4/package_urcu.m4
+index ef116e0cda7..2ad4179aca2 100644
+--- a/m4/package_urcu.m4
++++ b/m4/package_urcu.m4
+@@ -34,8 +34,11 @@ AC_DEFUN([AC_HAVE_LIBURCU_ATOMIC64],
+     [  AC_LANG_PROGRAM([[
+ #define _GNU_SOURCE
+ #include <urcu.h>
++#define BUILD_BUG_ON(condition) ((void)sizeof(char[1 - 2*!!(condition)]))
+        ]], [[
+ long long f = 3;
++
++BUILD_BUG_ON(CAA_BITS_PER_LONG < 64);
+ uatomic_inc(&f);
+        ]])
+     ], have_liburcu_atomic64=yes
+
+This will cause suboptimal performance on any 32-bit cpu that /does/
+support atomic operations on a u64, but oh well.
+
+--D
+
+>      [	AC_LANG_PROGRAM([[
+>  #define _GNU_SOURCE
+>  #include <urcu.h>
+> -- 
+> 2.42.0
+> 
