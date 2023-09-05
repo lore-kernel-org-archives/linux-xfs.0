@@ -2,47 +2,51 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2B796CA0FE2
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 79312C83F2C
 	for <linux-xfs@archiver.kernel.org>; Tue,  5 Sep 2023 16:25:25 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1350969AbjIEQZY (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        id S1350995AbjIEQZY (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
         Tue, 5 Sep 2023 12:25:24 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58126 "EHLO
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47774 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1350771AbjIEFEv (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 5 Sep 2023 01:04:51 -0400
-Received: from mail-pg1-f206.google.com (mail-pg1-f206.google.com [209.85.215.206])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 45049CC7
-        for <linux-xfs@vger.kernel.org>; Mon,  4 Sep 2023 22:04:48 -0700 (PDT)
-Received: by mail-pg1-f206.google.com with SMTP id 41be03b00d2f7-5709e2551bcso1364340a12.3
-        for <linux-xfs@vger.kernel.org>; Mon, 04 Sep 2023 22:04:48 -0700 (PDT)
+        with ESMTP id S1354174AbjIEKEg (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 5 Sep 2023 06:04:36 -0400
+Received: from mail-pj1-f71.google.com (mail-pj1-f71.google.com [209.85.216.71])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id AF5E01AE
+        for <linux-xfs@vger.kernel.org>; Tue,  5 Sep 2023 03:04:32 -0700 (PDT)
+Received: by mail-pj1-f71.google.com with SMTP id 98e67ed59e1d1-271bb60d8a8so3350521a91.3
+        for <linux-xfs@vger.kernel.org>; Tue, 05 Sep 2023 03:04:32 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20221208; t=1693890288; x=1694495088;
-        h=to:from:subject:message-id:date:mime-version:x-gm-message-state
-         :from:to:cc:subject:date:message-id:reply-to;
-        bh=3jQMmqvgVuqqI0/4tn2U3AbzO0j9wRg/SU0o9IZdAvU=;
-        b=EJgmDopaZSIjvy5VoWPH6VeCwsaSUxtcise2th08SLOy/4MoVWGMjRuz1pwvl2femO
-         ETkA/ZDV4M6aRjXxLRbib79Tin/yLoO8ONI0Lj1AuJaS7Bdtqj+aDZe/6/vb6VMYpN3j
-         fSHxYsgH78BklEI5qeT8kkdVlqJzeIG+Og6I9LfLCkif3wGWAqmUGFDzq7USmk5n4WQi
-         kBmbkdWcG4ep1pDVCsi5KqeE3V+amanMfOm6OryDCcmgp6UvOY0Dt2bj58Wy9zB/4KoG
-         wD9wscvcdCd7raW/K90pLIOqYqkq5loJS+Lf/JVaoWnoNHzg2ZWC87uJs6czM+/47sf3
-         Rwlw==
-X-Gm-Message-State: AOJu0YyllD7QLclpkR+GTrt5jDzX3v8LrbzY1QN6bv8ZfWdiaBeRc/QW
-        9Gv1ft0ENCLVi8Lz/dO3BwVXRnAU9gF4y7dYhifRjAmHtC/f
-X-Google-Smtp-Source: AGHT+IGSp8NVJ2v6Vn3RHOrrpukycUEo09Q/eHQYzIbPWN9gBtznkdH8V9n+w50NgYe/Lxwvr9fGOnuKVTpR7SF34X60h0QDU7vq
+        d=1e100.net; s=20221208; t=1693908272; x=1694513072;
+        h=to:from:subject:message-id:in-reply-to:date:mime-version
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=wwZYeHvtD9GZdB9/hKTalrH/ocSz88uD/tT+zhW9brI=;
+        b=P5csUrGLfKmWgvmI7hdZOKpKKLYaMhgFSm+gjjARB3Zoly2uvf5BNRszv98usCem8y
+         Rif17T76exnmRzdkh68Whf5WgWBPS32GuoRGZaNRY0EFkjxXx6FaxNuGHptrKRwhjJbH
+         VPIaYZSfdS68Ng9cCo06d9ZbAZBxvRAgJ9syYPJFbyENTYIX6naSNi2pTQx6Rr/ZqhaQ
+         /r7cn09zE8ATqHySEinUXVMdCPugVO0rvPi6OyuIpdr8/9chRMaJQiW1xUJh+gDItQ1A
+         1nJ/htGOsDXiGzcrtZRl0Iq8tQo4om0G1CT3oogF6zXCfbavXVW9m6XSbs8lPKb/gTtm
+         lijg==
+X-Gm-Message-State: AOJu0YwlNzdHr3mbi7ohbGRK6/keh+0FSigx0s+2UIDCKuxLYwsOCOnI
+        gIhPXw81wfD8EzHWOn3p/jtUniL41dZnjoqtMHfW9yqH/DTQ
+X-Google-Smtp-Source: AGHT+IHikA7EnkeoU+BIWTDaP4XZIFS90veVBj/F+9Kv4krrGsmoDY8YF039ZFFbOkLb9ZOdVyHzzQ05/3mjkQGls8eEuUPFLn53
 MIME-Version: 1.0
-X-Received: by 2002:a63:774b:0:b0:553:3ba2:f36 with SMTP id
- s72-20020a63774b000000b005533ba20f36mr2601841pgc.9.1693890287840; Mon, 04 Sep
- 2023 22:04:47 -0700 (PDT)
-Date:   Mon, 04 Sep 2023 22:04:47 -0700
+X-Received: by 2002:a17:902:f344:b0:1bb:a13a:c21e with SMTP id
+ q4-20020a170902f34400b001bba13ac21emr3542263ple.10.1693908272272; Tue, 05 Sep
+ 2023 03:04:32 -0700 (PDT)
+Date:   Tue, 05 Sep 2023 03:04:32 -0700
+In-Reply-To: <CANp29Y65sCETzq3CttPHww40W_tQ2S=0HockV-aSUi9dE8HGow@mail.gmail.com>
 X-Google-Appengine-App-Id: s~syzkaller
 X-Google-Appengine-App-Id-Alias: syzkaller
-Message-ID: <000000000000e534bb0604959011@google.com>
-Subject: [syzbot] [xfs?] INFO: task hung in clean_bdev_aliases
-From:   syzbot <syzbot+1fa947e7f09e136925b8@syzkaller.appspotmail.com>
-To:     djwong@kernel.org, linux-fsdevel@vger.kernel.org,
+Message-ID: <000000000000d9daf4060499c0c9@google.com>
+Subject: Re: [syzbot] [block] kernel BUG in __block_write_begin_int
+From:   syzbot <syzbot+4a08ffdf3667b36650a1@syzkaller.appspotmail.com>
+To:     adilger.kernel@dilger.ca, djwong@kernel.org, hch@infradead.org,
+        linux-ext4@vger.kernel.org, linux-fsdevel@vger.kernel.org,
         linux-kernel@vger.kernel.org, linux-xfs@vger.kernel.org,
-        syzkaller-bugs@googlegroups.com
+        nogikh@google.com, song@kernel.org,
+        syzkaller-bugs@googlegroups.com, tytso@mit.edu, yukuai3@huawei.com,
+        zhang_shurong@foxmail.com
 Content-Type: text/plain; charset="UTF-8"
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
@@ -50,140 +54,62 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 
 Hello,
 
-syzbot found the following issue on:
+syzbot has tested the proposed patch but the reproducer is still triggering an issue:
+WARNING in __kthread_create_on_node
 
-HEAD commit:    92901222f83d Merge tag 'f2fs-for-6-6-rc1' of git://git.ker..
-git tree:       upstream
-console+strace: https://syzkaller.appspot.com/x/log.txt?x=1485e78fa80000
-kernel config:  https://syzkaller.appspot.com/x/.config?x=3bd57a1ac08277b0
-dashboard link: https://syzkaller.appspot.com/bug?extid=1fa947e7f09e136925b8
-compiler:       gcc (Debian 12.2.0-14) 12.2.0, GNU ld (GNU Binutils for Debian) 2.40
-syz repro:      https://syzkaller.appspot.com/x/repro.syz?x=13fcf738680000
-
-Downloadable assets:
-disk image: https://storage.googleapis.com/syzbot-assets/ee486d884228/disk-92901222.raw.xz
-vmlinux: https://storage.googleapis.com/syzbot-assets/b5187db0b1d1/vmlinux-92901222.xz
-kernel image: https://storage.googleapis.com/syzbot-assets/82c4e42d693e/bzImage-92901222.xz
-
-IMPORTANT: if you fix the issue, please add the following tag to the commit:
-Reported-by: syzbot+1fa947e7f09e136925b8@syzkaller.appspotmail.com
-
-INFO: task syz-executor.5:10017 blocked for more than 143 seconds.
-      Not tainted 6.5.0-syzkaller-11075-g92901222f83d #0
-"echo 0 > /proc/sys/kernel/hung_task_timeout_secs" disables this message.
-task:syz-executor.5  state:D stack:27624 pid:10017 ppid:5071   flags:0x00004006
-Call Trace:
- <TASK>
- context_switch kernel/sched/core.c:5382 [inline]
- __schedule+0xee1/0x59f0 kernel/sched/core.c:6695
- schedule+0xe7/0x1b0 kernel/sched/core.c:6771
- io_schedule+0xbe/0x130 kernel/sched/core.c:9026
- folio_wait_bit_common+0x3d2/0x9b0 mm/filemap.c:1304
- folio_lock include/linux/pagemap.h:1042 [inline]
- clean_bdev_aliases+0x56b/0x610 fs/buffer.c:1725
- clean_bdev_bh_alias include/linux/buffer_head.h:219 [inline]
- __block_write_begin_int+0x8d6/0x1470 fs/buffer.c:2115
- iomap_write_begin+0x5be/0x17b0 fs/iomap/buffered-io.c:772
- iomap_write_iter fs/iomap/buffered-io.c:907 [inline]
- iomap_file_buffered_write+0x3d6/0x9a0 fs/iomap/buffered-io.c:968
- blkdev_buffered_write block/fops.c:634 [inline]
- blkdev_write_iter+0x572/0xca0 block/fops.c:688
- call_write_iter include/linux/fs.h:1985 [inline]
- do_iter_readv_writev+0x21e/0x3c0 fs/read_write.c:735
- do_iter_write+0x17f/0x830 fs/read_write.c:860
- vfs_iter_write+0x7a/0xb0 fs/read_write.c:901
- iter_file_splice_write+0x698/0xbf0 fs/splice.c:736
- do_splice_from fs/splice.c:933 [inline]
- direct_splice_actor+0x118/0x180 fs/splice.c:1142
- splice_direct_to_actor+0x347/0xa30 fs/splice.c:1088
- do_splice_direct+0x1af/0x280 fs/splice.c:1194
- do_sendfile+0xb88/0x1390 fs/read_write.c:1254
- __do_sys_sendfile64 fs/read_write.c:1322 [inline]
- __se_sys_sendfile64 fs/read_write.c:1308 [inline]
- __x64_sys_sendfile64+0x1d6/0x220 fs/read_write.c:1308
- do_syscall_x64 arch/x86/entry/common.c:50 [inline]
- do_syscall_64+0x38/0xb0 arch/x86/entry/common.c:80
- entry_SYSCALL_64_after_hwframe+0x63/0xcd
-RIP: 0033:0x7fdb8ca7cae9
-RSP: 002b:00007ffcd642da18 EFLAGS: 00000246 ORIG_RAX: 0000000000000028
-RAX: ffffffffffffffda RBX: 00007fdb8cb9bf80 RCX: 00007fdb8ca7cae9
-RDX: 0000000000000000 RSI: 0000000000000004 RDI: 0000000000000003
-RBP: 00007fdb8cac847a R08: 0000000000000000 R09: 0000000000000000
-R10: 0100000000000042 R11: 0000000000000246 R12: 0000000000000000
-R13: 0000000000000be7 R14: 00007fdb8cb9bf80 R15: 00007fdb8cb9bf80
- </TASK>
-INFO: lockdep is turned off.
-NMI backtrace for cpu 1
-CPU: 1 PID: 29 Comm: khungtaskd Not tainted 6.5.0-syzkaller-11075-g92901222f83d #0
+------------[ cut here ]------------
+different return values (11 and 6) from vsnprintf("kmmpd-%.*s", ...)
+WARNING: CPU: 1 PID: 12350 at lib/kasprintf.c:31 kvasprintf+0x17b/0x190 lib/kasprintf.c:30
+Modules linked in:
+CPU: 1 PID: 12350 Comm: syz-executor.0 Not tainted 6.5.0-syzkaller-11705-gfd19eb3c02e0 #0
 Hardware name: Google Google Compute Engine/Google Compute Engine, BIOS Google 07/26/2023
-Call Trace:
- <TASK>
- __dump_stack lib/dump_stack.c:88 [inline]
- dump_stack_lvl+0xd9/0x1b0 lib/dump_stack.c:106
- nmi_cpu_backtrace+0x277/0x380 lib/nmi_backtrace.c:113
- nmi_trigger_cpumask_backtrace+0x299/0x300 lib/nmi_backtrace.c:62
- trigger_all_cpu_backtrace include/linux/nmi.h:160 [inline]
- check_hung_uninterruptible_tasks kernel/hung_task.c:222 [inline]
- watchdog+0xfac/0x1230 kernel/hung_task.c:379
- kthread+0x33a/0x430 kernel/kthread.c:388
- ret_from_fork+0x45/0x80 arch/x86/kernel/process.c:147
- ret_from_fork_asm+0x11/0x20 arch/x86/entry/entry_64.S:304
- </TASK>
-Sending NMI from CPU 1 to CPUs 0:
-NMI backtrace for cpu 0
-CPU: 0 PID: 17 Comm: rcu_preempt Not tainted 6.5.0-syzkaller-11075-g92901222f83d #0
-Hardware name: Google Google Compute Engine/Google Compute Engine, BIOS Google 07/26/2023
-RIP: 0010:load_balance+0x10a/0x3130 kernel/sched/fair.c:10983
-Code: 4a 8d 3c f5 40 aa 5c 8c 48 ba 00 00 00 00 00 fc ff df 48 89 f9 48 c1 e9 03 80 3c 11 00 0f 85 2f 2e 00 00 31 c0 b9 0c 00 00 00 <4e> 8b 1c f5 40 aa 5c 8c 4c 89 94 24 f8 00 00 00 48 8d bc 24 00 01
-RSP: 0018:ffffc900001676c8 EFLAGS: 00000046
-RAX: 0000000000000000 RBX: ffff8880b983c700 RCX: 000000000000000c
-RDX: dffffc0000000000 RSI: ffffffff8ae90360 RDI: ffffffff8c5caa40
-RBP: ffffc90000167898 R08: ffffc90000167960 R09: 0000000000000000
-R10: ffff88801525ac00 R11: 0000000000000000 R12: 00000000000287d8
-R13: ffffc90000167960 R14: 0000000000000000 R15: 0000000100004d48
-FS:  0000000000000000(0000) GS:ffff8880b9800000(0000) knlGS:0000000000000000
+RIP: 0010:kvasprintf+0x17b/0x190 lib/kasprintf.c:30
+Code: 48 8d 65 d8 5b 41 5c 41 5d 41 5e 41 5f 5d c3 e8 cb db 55 fd 48 c7 c7 a0 0a 59 8b 44 89 e6 89 da 48 8b 4c 24 18 e8 65 56 1c fd <0f> 0b eb 98 e8 2c 46 90 06 66 2e 0f 1f 84 00 00 00 00 00 66 90 f3
+RSP: 0018:ffffc90003507620 EFLAGS: 00010246
+RAX: 2ce359f82b370100 RBX: 0000000000000006 RCX: ffff88806a543b80
+RDX: 0000000000000000 RSI: 0000000000000001 RDI: 0000000000000000
+RBP: ffffc900035076f0 R08: ffffffff81541672 R09: 1ffff1101732516a
+R10: dffffc0000000000 R11: ffffed101732516b R12: 000000000000000b
+R13: ffffc90003507880 R14: 1ffff920006a0ec8 R15: ffff888025476fa0
+FS:  00007f224ed5d6c0(0000) GS:ffff8880b9900000(0000) knlGS:0000000000000000
 CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
-CR2: 0000000020000240 CR3: 000000000c976000 CR4: 0000000000350ef0
+CR2: 0000001b2c420000 CR3: 00000000691b6000 CR4: 00000000003506e0
+DR0: 0000000000000000 DR1: 0000000000000000 DR2: 0000000000000000
+DR3: 0000000000000000 DR6: 00000000fffe0ff0 DR7: 0000000000000400
 Call Trace:
- <NMI>
- </NMI>
  <TASK>
- newidle_balance+0x710/0x1210 kernel/sched/fair.c:12059
- pick_next_task_fair+0x87/0x1200 kernel/sched/fair.c:8234
- __pick_next_task kernel/sched/core.c:6004 [inline]
- pick_next_task kernel/sched/core.c:6079 [inline]
- __schedule+0x493/0x59f0 kernel/sched/core.c:6659
- schedule+0xe7/0x1b0 kernel/sched/core.c:6771
- schedule_timeout+0x157/0x2c0 kernel/time/timer.c:2167
- rcu_gp_fqs_loop+0x1ec/0xa50 kernel/rcu/tree.c:1613
- rcu_gp_kthread+0x249/0x380 kernel/rcu/tree.c:1812
- kthread+0x33a/0x430 kernel/kthread.c:388
- ret_from_fork+0x45/0x80 arch/x86/kernel/process.c:147
- ret_from_fork_asm+0x11/0x20 arch/x86/entry/entry_64.S:304
+ __kthread_create_on_node+0x1a9/0x3c0 kernel/kthread.c:444
+ kthread_create_on_node+0xde/0x120 kernel/kthread.c:512
+ ext4_multi_mount_protect+0x792/0x9f0 fs/ext4/mmp.c:392
+ __ext4_fill_super fs/ext4/super.c:5363 [inline]
+ ext4_fill_super+0x4495/0x6d10 fs/ext4/super.c:5703
+ get_tree_bdev+0x416/0x5b0 fs/super.c:1577
+ vfs_get_tree+0x8c/0x280 fs/super.c:1750
+ do_new_mount+0x28f/0xae0 fs/namespace.c:3335
+ do_mount fs/namespace.c:3675 [inline]
+ __do_sys_mount fs/namespace.c:3884 [inline]
+ __se_sys_mount+0x2d9/0x3c0 fs/namespace.c:3861
+ do_syscall_x64 arch/x86/entry/common.c:50 [inline]
+ do_syscall_64+0x41/0xc0 arch/x86/entry/common.c:80
+ entry_SYSCALL_64_after_hwframe+0x63/0xcd
+RIP: 0033:0x7f224e07e1ea
+Code: d8 64 89 02 48 c7 c0 ff ff ff ff eb a6 e8 de 09 00 00 66 2e 0f 1f 84 00 00 00 00 00 0f 1f 40 00 49 89 ca b8 a5 00 00 00 0f 05 <48> 3d 01 f0 ff ff 73 01 c3 48 c7 c1 b0 ff ff ff f7 d8 64 89 01 48
+RSP: 002b:00007f224ed5cee8 EFLAGS: 00000246 ORIG_RAX: 00000000000000a5
+RAX: ffffffffffffffda RBX: 00007f224ed5cf80 RCX: 00007f224e07e1ea
+RDX: 0000000020000040 RSI: 0000000020000500 RDI: 00007f224ed5cf40
+RBP: 0000000020000040 R08: 00007f224ed5cf80 R09: 0000000000004500
+R10: 0000000000004500 R11: 0000000000000246 R12: 0000000020000500
+R13: 00007f224ed5cf40 R14: 00000000000004b4 R15: 0000000020000540
  </TASK>
 
 
----
-This report is generated by a bot. It may contain errors.
-See https://goo.gl/tpsmEJ for more information about syzbot.
-syzbot engineers can be reached at syzkaller@googlegroups.com.
+Tested on:
 
-syzbot will keep track of this issue. See:
-https://goo.gl/tpsmEJ#status for how to communicate with syzbot.
+commit:         fd19eb3c iomap: handle error conditions more gracefull..
+git tree:       git://git.infradead.org/users/hch/misc.git bdev-iomap-fix
+console output: https://syzkaller.appspot.com/x/log.txt?x=11955af0680000
+kernel config:  https://syzkaller.appspot.com/x/.config?x=ff0db7a15ba54ead
+dashboard link: https://syzkaller.appspot.com/bug?extid=4a08ffdf3667b36650a1
+compiler:       Debian clang version 15.0.6, GNU ld (GNU Binutils for Debian) 2.40
 
-If the bug is already fixed, let syzbot know by replying with:
-#syz fix: exact-commit-title
-
-If you want syzbot to run the reproducer, reply with:
-#syz test: git://repo/address.git branch-or-commit-hash
-If you attach or paste a git patch, syzbot will apply it before testing.
-
-If you want to overwrite bug's subsystems, reply with:
-#syz set subsystems: new-subsystem
-(See the list of subsystem names on the web dashboard)
-
-If the bug is a duplicate of another bug, reply with:
-#syz dup: exact-subject-of-another-report
-
-If you want to undo deduplication, reply with:
-#syz undup
+Note: no patches were applied.
