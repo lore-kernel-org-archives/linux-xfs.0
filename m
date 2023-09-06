@@ -2,126 +2,142 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 98934CA101A
-	for <linux-xfs@archiver.kernel.org>; Tue,  5 Sep 2023 21:52:22 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 31476EB8FA5
+	for <linux-xfs@archiver.kernel.org>; Wed,  6 Sep 2023 07:33:29 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230432AbjIEVwY (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 5 Sep 2023 17:52:24 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55392 "EHLO
+        id S232164AbjIFHdb (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 6 Sep 2023 03:33:31 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33290 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S240179AbjIEVwY (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 5 Sep 2023 17:52:24 -0400
-Received: from mail-pg1-x530.google.com (mail-pg1-x530.google.com [IPv6:2607:f8b0:4864:20::530])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D12B5CE
-        for <linux-xfs@vger.kernel.org>; Tue,  5 Sep 2023 14:52:20 -0700 (PDT)
-Received: by mail-pg1-x530.google.com with SMTP id 41be03b00d2f7-56b2e689828so2095343a12.1
-        for <linux-xfs@vger.kernel.org>; Tue, 05 Sep 2023 14:52:20 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=osandov-com.20230601.gappssmtp.com; s=20230601; t=1693950740; x=1694555540; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=79TMpmZlkF+mCJe8ZyHjkEbIu4MuNFHSnZEvMD6z4/4=;
-        b=JlMW4pICSvWjptbXx63b2kOw2Rkbc/rmbbAqpjJSAiZhsJzwtkxI6mTjsf72zWBNkM
-         Etir/kW8RWFGzMqTxvrEl7C6EwmwZIf2uNYyRi3RfcqFeh9r7/V2ITHGsiUuiNZjBivI
-         FEbUx5xj1wAY1nRvEDPt74herVqYbFDxz3dP7wQ+QITuJBtiHofGiRAHOBJFkCvFs9s2
-         0qeZlvg+4Jq2aiEaVV/w4yVNucf9NHfJi0Jiu0WSbZvv0frxwS6sAkm+ynXOVRriZpW1
-         YuwDmQIejgr/HlVuUohIl/p0gnzL0cWk5uh0PX05UipNkzS9XmeB1FjR6nDK0479H4A4
-         dqPg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20221208; t=1693950740; x=1694555540;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=79TMpmZlkF+mCJe8ZyHjkEbIu4MuNFHSnZEvMD6z4/4=;
-        b=d3gpJNjAcB2OeEpz0bR0V/QCq9vlvqOLZPSAj1EAkEa7vHi0CV8kWeYJzU663qfNEl
-         3xbBpe1YZqqgoiZseP5aoSkXf5lExL+cDtl7uwfQjs/0u4k+A1ydVnvtwKxYDVVkbL1b
-         OaI9n/y+TYCkxSsPxY+MyxGoR9YT47+JVIOzsl6jf6XSqPaNbPgLSbJV9qygyGe0kDKF
-         UjpD8PuS2HbfJ3OGxiASrQF4rlu4zJqRxwjauhvrTsiczgv30BryngVSOSSB6p2wZymZ
-         PK4KJ4sFwQ4xnawC/fszSZtPg6y0x+84qyonH/yXJp71h6n05640Iz9sI0Zviz+mX1tP
-         dqvQ==
-X-Gm-Message-State: AOJu0YxB/acEKqs9Qfp3F32HP0STH5NEgTkyHTxi4glYMbt/rZaLCISJ
-        gck5pc7fa/gZifZ9vUmvbyFHqMoqPF63c/dtGOdrYQ==
-X-Google-Smtp-Source: AGHT+IEO5PufpgLPJS+OOLB1xK0hW6w28EJwPDa/Ai2VThafJ4Lo5Pw5FNHnNpF4SqlHM54ZxRqYlw==
-X-Received: by 2002:a05:6a20:138b:b0:137:d14d:79ea with SMTP id hn11-20020a056a20138b00b00137d14d79eamr13898628pzc.25.1693950740030;
-        Tue, 05 Sep 2023 14:52:20 -0700 (PDT)
-Received: from telecaster.hsd1.wa.comcast.net ([2620:10d:c090:400::5:e75a])
-        by smtp.gmail.com with ESMTPSA id p6-20020a62ab06000000b0068bbf578694sm9856266pff.18.2023.09.05.14.52.19
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 05 Sep 2023 14:52:19 -0700 (PDT)
-From:   Omar Sandoval <osandov@osandov.com>
+        with ESMTP id S230457AbjIFHdb (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 6 Sep 2023 03:33:31 -0400
+Received: from a3.inai.de (a3.inai.de [IPv6:2a01:4f8:10b:45d8::f5])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 712CDCA
+        for <linux-xfs@vger.kernel.org>; Wed,  6 Sep 2023 00:33:24 -0700 (PDT)
+Received: by a3.inai.de (Postfix, from userid 65534)
+        id BD977587042A6; Wed,  6 Sep 2023 09:33:19 +0200 (CEST)
+Received: from a4.inai.de (a4.inai.de [IPv6:2a01:4f8:10b:45d8::f8])
+        by a3.inai.de (Postfix) with ESMTP id 6BF0E5870428A;
+        Wed,  6 Sep 2023 09:33:19 +0200 (CEST)
+From:   Jan Engelhardt <jengelh@inai.de>
 To:     linux-xfs@vger.kernel.org
-Cc:     "Darrick J . Wong" <djwong@kernel.org>, kernel-team@fb.com,
-        Prashant Nema <pnema@fb.com>
-Subject: [PATCH v2 6/6] xfs: don't look for end of extent further than necessary in xfs_rtallocate_extent_near()
-Date:   Tue,  5 Sep 2023 14:51:57 -0700
-Message-ID: <44220273fdbc442e963bed1cfaa4707957b49326.1693950248.git.osandov@osandov.com>
-X-Mailer: git-send-email 2.41.0
-In-Reply-To: <cover.1693950248.git.osandov@osandov.com>
-References: <cover.1693950248.git.osandov@osandov.com>
+Cc:     djwong@kernel.org
+Subject: [PATCH] xfs: compact repeated Kconfig expression "depends on XFS_FS"
+Date:   Wed,  6 Sep 2023 09:33:19 +0200
+Message-ID: <20230906073319.10239-1-jengelh@inai.de>
+X-Mailer: git-send-email 2.42.0
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-From: Omar Sandoval <osandov@fb.com>
+Make issues like v5.9-rc4-90-g894645546bb1 not happen by enclosing
+the entirety of XFS options in an if..endif block, which is equivalent
+to having "depends on XFS_FS" spelled out everywhere, but shorter.
 
-As explained in the previous commit, xfs_rtallocate_extent_near() looks
-for the end of a free extent when searching backwards from the target
-bitmap block. Since the previous commit, it searches from the last
-bitmap block it checked to the bitmap block containing the start of the
-extent.
-
-This may still be more than necessary, since the free extent may not be
-that long. We know the maximum size of the free extent from the realtime
-summary. Use that to compute how many bitmap blocks we actually need to
-check.
-
-Reviewed-by: Darrick J. Wong <djwong@kernel.org>
-Signed-off-by: Omar Sandoval <osandov@fb.com>
+Signed-off-by: Jan Engelhardt <jengelh@inai.de>
 ---
- fs/xfs/xfs_rtalloc.c | 25 +++++++++++++++++++++----
- 1 file changed, 21 insertions(+), 4 deletions(-)
+ fs/xfs/Kconfig | 17 +++++++----------
+ 1 file changed, 7 insertions(+), 10 deletions(-)
 
-diff --git a/fs/xfs/xfs_rtalloc.c b/fs/xfs/xfs_rtalloc.c
-index 7cbf4ff35887..1a38e981acd4 100644
---- a/fs/xfs/xfs_rtalloc.c
-+++ b/fs/xfs/xfs_rtalloc.c
-@@ -521,12 +521,29 @@ xfs_rtallocate_extent_near(
- 			 * On the negative side of the starting location.
- 			 */
- 			else {		/* i < 0 */
-+				int maxblocks;
+diff --git a/fs/xfs/Kconfig b/fs/xfs/Kconfig
+index c9d653168ad0..2f5ae62eb528 100644
+--- a/fs/xfs/Kconfig
++++ b/fs/xfs/Kconfig
+@@ -22,9 +22,10 @@ config XFS_FS
+ 	  system of your root partition is compiled as a module, you'll need
+ 	  to use an initial ramdisk (initrd) to boot.
+ 
++if XFS_FS
 +
- 				/*
--				 * Loop backwards through the bitmap blocks from
--				 * where we last checked down to where we are
--				 * now.  There should be an extent which ends in
--				 * this bitmap block and is long enough.
-+				 * Loop backwards to find the end of the extent
-+				 * we found in the realtime summary.
-+				 *
-+				 * maxblocks is the maximum possible number of
-+				 * bitmap blocks from the start of the extent to
-+				 * the end of the extent.
- 				 */
-+				if (maxlog == 0)
-+					maxblocks = 0;
-+				else if (maxlog < mp->m_blkbit_log)
-+					maxblocks = 1;
-+				else
-+					maxblocks = 2 << (maxlog - mp->m_blkbit_log);
-+				/*
-+				 * We need to check bbno + i + maxblocks down to
-+				 * bbno + i. We already checked bbno down to
-+				 * bbno + j + 1, so we don't need to check those
-+				 * again.
-+				 */
-+				j = min(i + maxblocks, j);
- 				for (; j >= i; j--) {
- 					error = xfs_rtallocate_extent_block(mp,
- 						tp, bbno + j, minlen, maxavail,
+ config XFS_SUPPORT_V4
+ 	bool "Support deprecated V4 (crc=0) format"
+-	depends on XFS_FS
+ 	default y
+ 	help
+ 	  The V4 filesystem format lacks certain features that are supported
+@@ -49,7 +50,6 @@ config XFS_SUPPORT_V4
+ 
+ config XFS_SUPPORT_ASCII_CI
+ 	bool "Support deprecated case-insensitive ascii (ascii-ci=1) format"
+-	depends on XFS_FS
+ 	default y
+ 	help
+ 	  The ASCII case insensitivity filesystem feature only works correctly
+@@ -76,7 +76,6 @@ config XFS_SUPPORT_ASCII_CI
+ 
+ config XFS_QUOTA
+ 	bool "XFS Quota support"
+-	depends on XFS_FS
+ 	select QUOTACTL
+ 	help
+ 	  If you say Y here, you will be able to set limits for disk usage on
+@@ -94,7 +93,6 @@ config XFS_QUOTA
+ 
+ config XFS_POSIX_ACL
+ 	bool "XFS POSIX ACL support"
+-	depends on XFS_FS
+ 	select FS_POSIX_ACL
+ 	help
+ 	  POSIX Access Control Lists (ACLs) support permissions for users and
+@@ -104,7 +102,6 @@ config XFS_POSIX_ACL
+ 
+ config XFS_RT
+ 	bool "XFS Realtime subvolume support"
+-	depends on XFS_FS
+ 	help
+ 	  If you say Y here you will be able to mount and use XFS filesystems
+ 	  which contain a realtime subvolume.  The realtime subvolume is a
+@@ -127,7 +124,6 @@ config XFS_DRAIN_INTENTS
+ config XFS_ONLINE_SCRUB
+ 	bool "XFS online metadata check support"
+ 	default n
+-	depends on XFS_FS
+ 	depends on TMPFS && SHMEM
+ 	select XFS_DRAIN_INTENTS
+ 	help
+@@ -163,7 +159,7 @@ config XFS_ONLINE_SCRUB_STATS
+ config XFS_ONLINE_REPAIR
+ 	bool "XFS online metadata repair support"
+ 	default n
+-	depends on XFS_FS && XFS_ONLINE_SCRUB
++	depends on XFS_ONLINE_SCRUB
+ 	help
+ 	  If you say Y here you will be able to repair metadata on a
+ 	  mounted XFS filesystem.  This feature is intended to reduce
+@@ -180,7 +176,7 @@ config XFS_ONLINE_REPAIR
+ 
+ config XFS_WARN
+ 	bool "XFS Verbose Warnings"
+-	depends on XFS_FS && !XFS_DEBUG
++	depends on !XFS_DEBUG
+ 	help
+ 	  Say Y here to get an XFS build with many additional warnings.
+ 	  It converts ASSERT checks to WARN, so will log any out-of-bounds
+@@ -193,7 +189,6 @@ config XFS_WARN
+ 
+ config XFS_DEBUG
+ 	bool "XFS Debugging support"
+-	depends on XFS_FS
+ 	help
+ 	  Say Y here to get an XFS build with many debugging features,
+ 	  including ASSERT checks, function wrappers around macros,
+@@ -207,7 +202,7 @@ config XFS_DEBUG
+ config XFS_ASSERT_FATAL
+ 	bool "XFS fatal asserts"
+ 	default y
+-	depends on XFS_FS && XFS_DEBUG
++	depends on XFS_DEBUG
+ 	help
+ 	  Set the default DEBUG mode ASSERT failure behavior.
+ 
+@@ -216,3 +211,5 @@ config XFS_ASSERT_FATAL
+ 	  result in warnings.
+ 
+ 	  This behavior can be modified at runtime via sysfs.
++
++endif # XFS_FS
 -- 
-2.41.0
+2.42.0
 
