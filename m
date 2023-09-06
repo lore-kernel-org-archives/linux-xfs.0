@@ -2,153 +2,257 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E16F6EE14A8
-	for <linux-xfs@archiver.kernel.org>; Wed,  6 Sep 2023 15:19:57 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 21BFCEE14BB
+	for <linux-xfs@archiver.kernel.org>; Wed,  6 Sep 2023 17:20:42 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S242443AbjIFPUA (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 6 Sep 2023 11:20:00 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57592 "EHLO
+        id S241187AbjIFRUn (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 6 Sep 2023 13:20:43 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57340 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S242441AbjIFPT7 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 6 Sep 2023 11:19:59 -0400
-Received: from smtp-out1.suse.de (smtp-out1.suse.de [195.135.220.28])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 786241717
-        for <linux-xfs@vger.kernel.org>; Wed,  6 Sep 2023 08:19:54 -0700 (PDT)
-Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
-        (No client certificate requested)
-        by smtp-out1.suse.de (Postfix) with ESMTPS id 34FF322430;
-        Wed,  6 Sep 2023 15:19:53 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.com; s=susede1;
-        t=1694013593; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=tJZEAiR0QsymgjBhF1Qm86Umi96cI7YPNL5miQ+w2Rg=;
-        b=LkH398Ihug0qRpiC15f7pKPbm7AbtAEzDLf1EX2pI6Hl4tfwx4a5hY/ApvLKXVJ/vvHhyo
-        2/KQK6EiMZx0xHqeFrngiu2DmQgPFngr/Xi0m1b9to3cA6Uh5jd7vxkBwwx1G4MkXVjavc
-        TMa8ZnvdnIaHYKdEcKKyK95EzaOYpQo=
-Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
-        (No client certificate requested)
-        by imap2.suse-dmz.suse.de (Postfix) with ESMTPS id E7A161333E;
-        Wed,  6 Sep 2023 15:19:52 +0000 (UTC)
-Received: from dovecot-director2.suse.de ([192.168.254.65])
-        by imap2.suse-dmz.suse.de with ESMTPSA
-        id D3ExNZiY+GRCXQAAMHmgww
-        (envelope-from <ailiop@suse.com>); Wed, 06 Sep 2023 15:19:52 +0000
-Date:   Wed, 6 Sep 2023 17:19:52 +0200
-From:   Anthony Iliopoulos <ailiop@suse.com>
-To:     "Darrick J. Wong" <djwong@kernel.org>
-Cc:     linux-xfs@vger.kernel.org
-Subject: Re: [PATCH] libxfs: fix atomic64_t detection on x86 32-bit
- architectures
-Message-ID: <ZPiYmHsqEV45DUzY@technoir>
-References: <20230905084623.24865-1-ailiop@suse.com>
- <20230905164250.GV28186@frogsfrogsfrogs>
+        with ESMTP id S241145AbjIFRUh (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 6 Sep 2023 13:20:37 -0400
+Received: from mail-wm1-x335.google.com (mail-wm1-x335.google.com [IPv6:2a00:1450:4864:20::335])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2342D19A0
+        for <linux-xfs@vger.kernel.org>; Wed,  6 Sep 2023 10:20:31 -0700 (PDT)
+Received: by mail-wm1-x335.google.com with SMTP id 5b1f17b1804b1-4009fdc224dso3005e9.1
+        for <linux-xfs@vger.kernel.org>; Wed, 06 Sep 2023 10:20:31 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=google.com; s=20221208; t=1694020829; x=1694625629; darn=vger.kernel.org;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=+N77K5asCDO6mBYz5WiqLrKnSl+GRx2Mp7esKxryFKg=;
+        b=JPaT1r8pE9HPBtg8REXgkXnKxr5Ayegv3Gc0uDjdEM8QytYnCd89LtVafVMPBF4AIH
+         nblGcEQlwet2fsw4nrf9UD7JubSJEGlfhJw8Uvjg5LQp3jocKNBYr9vISD4FC5mfjqgz
+         w41PGZifJ/vMVr/H/0DkjOsOb5au/xy46QVi9E2sSCYmyPwNb7rrpD9eTYD6+bit43ty
+         8i/DCJQ/lDE/Qs+KVby7z7D6YkGt+iw7cW6QaVBbuJP3Hsmp9A9L/BCb0IY73W67HMbg
+         x+MK+mkBrApyMKuzishgaubdpcQ+cq6S7XN0jqzJ3wGZX0Ya+kUYB7/ezM7n6VMPwkdZ
+         hBGg==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20221208; t=1694020829; x=1694625629;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=+N77K5asCDO6mBYz5WiqLrKnSl+GRx2Mp7esKxryFKg=;
+        b=kMEovLeWFNsWaH2zjVXzBelmuJOp1QnnNjpTp4y9vU7XECvXKG9bKvcSd2OPvloY2t
+         8kiEM+dEQSYyWWHZE5yUbKrea/grsWNUTqXqY3JEyttY/d+jg7iMFRWyRGzOjpZvS59s
+         kkoAFrvQoDxnTOJH06zdKXDeJ/akcVdVVkVUH9Hvdi1O3JCFUHGdhofMVdApoibvYb5J
+         cFq2pxxXqHoDm5t7pbOKyo9nr9uMudgw2p4Ue7QGvpJwEfS9+1weHd/dfJLQev3V2oJ7
+         SbaBIAfoV7zVuNPbIP8Qw7RzI0RNCJnHHhzKYH7GgTpFJnY3T4e1nLBU+sni6QTar/v6
+         z9Xg==
+X-Gm-Message-State: AOJu0Yz+tg4fzXFd/snaDRTxr3li/nO1P4RS9VKyqgZ9IRShTuYHHSG6
+        CtTH75KMbTKNbT0JD+GqNuTonOTTSer7x62X0ZWoz8wzD50crUOsP9UvqQ==
+X-Google-Smtp-Source: AGHT+IHCatey3yZfUTLwMWiUTqgPKUuT5WGhxakTu7ICjfYTxwE/a5hvT0i+XMS+mYt0wXPp6Y3Y1PhDsYZjAluMKl8=
+X-Received: by 2002:a05:600c:46cc:b0:3fe:f32f:c57f with SMTP id
+ q12-20020a05600c46cc00b003fef32fc57fmr6328wmo.0.1694020829456; Wed, 06 Sep
+ 2023 10:20:29 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20230905164250.GV28186@frogsfrogsfrogs>
+References: <000000000000e534bb0604959011@google.com> <ZPeaH+K75a0nIyBk@dread.disaster.area>
+In-Reply-To: <ZPeaH+K75a0nIyBk@dread.disaster.area>
+From:   Aleksandr Nogikh <nogikh@google.com>
+Date:   Wed, 6 Sep 2023 19:20:15 +0200
+Message-ID: <CANp29Y4AK9dzmpMj4E9iz3gqTwhG=-_7DfA8knrWYaHy4QxrEg@mail.gmail.com>
+Subject: Re: [syzbot] [xfs?] INFO: task hung in clean_bdev_aliases
+To:     Dave Chinner <david@fromorbit.com>
+Cc:     syzbot <syzbot+1fa947e7f09e136925b8@syzkaller.appspotmail.com>,
+        djwong@kernel.org, linux-fsdevel@vger.kernel.org,
+        linux-kernel@vger.kernel.org, linux-xfs@vger.kernel.org,
+        syzkaller-bugs@googlegroups.com, linux-block@vger.kernel.org,
+        hch@lst.de
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Tue, Sep 05, 2023 at 09:42:50AM -0700, Darrick J. Wong wrote:
-> On Tue, Sep 05, 2023 at 10:46:23AM +0200, Anthony Iliopoulos wrote:
-> > xfsprogs during compilation tries to detect if liburcu supports atomic
-> > 64-bit ops on the platform it is being compiled on, and if not it falls
-> > back to using pthread mutex locks.
-> > 
-> > The detection logic for that fallback relies on _uatomic_link_error()
-> > which is a link-time trick used by liburcu that will cause compilation
-> > errors on archs that lack the required support. That only works for the
-> > generic liburcu code though, and it is not implemented for the
-> > x86-specific code.
-> > 
-> > In practice this means that when xfsprogs is compiled on 32-bit x86
-> > archs will successfully link to liburcu for atomic ops, but liburcu does
-> > not support atomic64_t on those archs. It indicates this during runtime
-> > by generating an illegal instruction that aborts execution, and thus
-> > causes various xfsprogs utils to be segfaulting.
-> > 
-> > Fix this by executing the liburcu atomic64_t detection code during
-> > configure instead of only relying on the linker error, so that
-> > compilation will properly fall back to pthread mutexes on those archs.
-> > 
-> > Fixes: 7448af588a2e ("libxfs: fix atomic64_t poorly for 32-bit architectures")
-> > 
-> > Signed-off-by: Anthony Iliopoulos <ailiop@suse.com>
+On Tue, Sep 5, 2023 at 11:14=E2=80=AFPM 'Dave Chinner' via syzkaller-bugs
+<syzkaller-bugs@googlegroups.com> wrote:
+>
+> [cc linux-block, Christoph]
+>
+> Another iomap-blockdev related issue.
+>
+> #syz set subsystems: block
+>
+> syzbot developers: Please review how you are classifying subsystems,
+> this is the third false XFS classification in 24 hours.
+
+The reason why syzbot marked this report as xfs is that, per
+MAINTAINERS, fs/iomap/ points to linux-xfs@vger.kernel.org. I can
+adjust the rules syzbot uses so that these are routed to "block".
+
+But should MAINTAINERS actually also not relate IOMAP FILESYSTEM
+LIBRARY with xfs in this case?
+
+--=20
+Aleksandr
+
+>
+> -Dave.
+>
+> On Mon, Sep 04, 2023 at 10:04:47PM -0700, syzbot wrote:
+> > Hello,
+> >
+> > syzbot found the following issue on:
+> >
+> > HEAD commit:    92901222f83d Merge tag 'f2fs-for-6-6-rc1' of git://git.=
+ker..
+> > git tree:       upstream
+> > console+strace: https://syzkaller.appspot.com/x/log.txt?x=3D1485e78fa80=
+000
+> > kernel config:  https://syzkaller.appspot.com/x/.config?x=3D3bd57a1ac08=
+277b0
+> > dashboard link: https://syzkaller.appspot.com/bug?extid=3D1fa947e7f09e1=
+36925b8
+> > compiler:       gcc (Debian 12.2.0-14) 12.2.0, GNU ld (GNU Binutils for=
+ Debian) 2.40
+> > syz repro:      https://syzkaller.appspot.com/x/repro.syz?x=3D13fcf7386=
+80000
+> >
+> > Downloadable assets:
+> > disk image: https://storage.googleapis.com/syzbot-assets/ee486d884228/d=
+isk-92901222.raw.xz
+> > vmlinux: https://storage.googleapis.com/syzbot-assets/b5187db0b1d1/vmli=
+nux-92901222.xz
+> > kernel image: https://storage.googleapis.com/syzbot-assets/82c4e42d693e=
+/bzImage-92901222.xz
+> >
+> > IMPORTANT: if you fix the issue, please add the following tag to the co=
+mmit:
+> > Reported-by: syzbot+1fa947e7f09e136925b8@syzkaller.appspotmail.com
+> >
+> > INFO: task syz-executor.5:10017 blocked for more than 143 seconds.
+> >       Not tainted 6.5.0-syzkaller-11075-g92901222f83d #0
+> > "echo 0 > /proc/sys/kernel/hung_task_timeout_secs" disables this messag=
+e.
+> > task:syz-executor.5  state:D stack:27624 pid:10017 ppid:5071   flags:0x=
+00004006
+> > Call Trace:
+> >  <TASK>
+> >  context_switch kernel/sched/core.c:5382 [inline]
+> >  __schedule+0xee1/0x59f0 kernel/sched/core.c:6695
+> >  schedule+0xe7/0x1b0 kernel/sched/core.c:6771
+> >  io_schedule+0xbe/0x130 kernel/sched/core.c:9026
+> >  folio_wait_bit_common+0x3d2/0x9b0 mm/filemap.c:1304
+> >  folio_lock include/linux/pagemap.h:1042 [inline]
+> >  clean_bdev_aliases+0x56b/0x610 fs/buffer.c:1725
+> >  clean_bdev_bh_alias include/linux/buffer_head.h:219 [inline]
+> >  __block_write_begin_int+0x8d6/0x1470 fs/buffer.c:2115
+> >  iomap_write_begin+0x5be/0x17b0 fs/iomap/buffered-io.c:772
+> >  iomap_write_iter fs/iomap/buffered-io.c:907 [inline]
+> >  iomap_file_buffered_write+0x3d6/0x9a0 fs/iomap/buffered-io.c:968
+> >  blkdev_buffered_write block/fops.c:634 [inline]
+> >  blkdev_write_iter+0x572/0xca0 block/fops.c:688
+> >  call_write_iter include/linux/fs.h:1985 [inline]
+> >  do_iter_readv_writev+0x21e/0x3c0 fs/read_write.c:735
+> >  do_iter_write+0x17f/0x830 fs/read_write.c:860
+> >  vfs_iter_write+0x7a/0xb0 fs/read_write.c:901
+> >  iter_file_splice_write+0x698/0xbf0 fs/splice.c:736
+> >  do_splice_from fs/splice.c:933 [inline]
+> >  direct_splice_actor+0x118/0x180 fs/splice.c:1142
+> >  splice_direct_to_actor+0x347/0xa30 fs/splice.c:1088
+> >  do_splice_direct+0x1af/0x280 fs/splice.c:1194
+> >  do_sendfile+0xb88/0x1390 fs/read_write.c:1254
+> >  __do_sys_sendfile64 fs/read_write.c:1322 [inline]
+> >  __se_sys_sendfile64 fs/read_write.c:1308 [inline]
+> >  __x64_sys_sendfile64+0x1d6/0x220 fs/read_write.c:1308
+> >  do_syscall_x64 arch/x86/entry/common.c:50 [inline]
+> >  do_syscall_64+0x38/0xb0 arch/x86/entry/common.c:80
+> >  entry_SYSCALL_64_after_hwframe+0x63/0xcd
+> > RIP: 0033:0x7fdb8ca7cae9
+> > RSP: 002b:00007ffcd642da18 EFLAGS: 00000246 ORIG_RAX: 0000000000000028
+> > RAX: ffffffffffffffda RBX: 00007fdb8cb9bf80 RCX: 00007fdb8ca7cae9
+> > RDX: 0000000000000000 RSI: 0000000000000004 RDI: 0000000000000003
+> > RBP: 00007fdb8cac847a R08: 0000000000000000 R09: 0000000000000000
+> > R10: 0100000000000042 R11: 0000000000000246 R12: 0000000000000000
+> > R13: 0000000000000be7 R14: 00007fdb8cb9bf80 R15: 00007fdb8cb9bf80
+> >  </TASK>
+> > INFO: lockdep is turned off.
+> > NMI backtrace for cpu 1
+> > CPU: 1 PID: 29 Comm: khungtaskd Not tainted 6.5.0-syzkaller-11075-g9290=
+1222f83d #0
+> > Hardware name: Google Google Compute Engine/Google Compute Engine, BIOS=
+ Google 07/26/2023
+> > Call Trace:
+> >  <TASK>
+> >  __dump_stack lib/dump_stack.c:88 [inline]
+> >  dump_stack_lvl+0xd9/0x1b0 lib/dump_stack.c:106
+> >  nmi_cpu_backtrace+0x277/0x380 lib/nmi_backtrace.c:113
+> >  nmi_trigger_cpumask_backtrace+0x299/0x300 lib/nmi_backtrace.c:62
+> >  trigger_all_cpu_backtrace include/linux/nmi.h:160 [inline]
+> >  check_hung_uninterruptible_tasks kernel/hung_task.c:222 [inline]
+> >  watchdog+0xfac/0x1230 kernel/hung_task.c:379
+> >  kthread+0x33a/0x430 kernel/kthread.c:388
+> >  ret_from_fork+0x45/0x80 arch/x86/kernel/process.c:147
+> >  ret_from_fork_asm+0x11/0x20 arch/x86/entry/entry_64.S:304
+> >  </TASK>
+> > Sending NMI from CPU 1 to CPUs 0:
+> > NMI backtrace for cpu 0
+> > CPU: 0 PID: 17 Comm: rcu_preempt Not tainted 6.5.0-syzkaller-11075-g929=
+01222f83d #0
+> > Hardware name: Google Google Compute Engine/Google Compute Engine, BIOS=
+ Google 07/26/2023
+> > RIP: 0010:load_balance+0x10a/0x3130 kernel/sched/fair.c:10983
+> > Code: 4a 8d 3c f5 40 aa 5c 8c 48 ba 00 00 00 00 00 fc ff df 48 89 f9 48=
+ c1 e9 03 80 3c 11 00 0f 85 2f 2e 00 00 31 c0 b9 0c 00 00 00 <4e> 8b 1c f5 =
+40 aa 5c 8c 4c 89 94 24 f8 00 00 00 48 8d bc 24 00 01
+> > RSP: 0018:ffffc900001676c8 EFLAGS: 00000046
+> > RAX: 0000000000000000 RBX: ffff8880b983c700 RCX: 000000000000000c
+> > RDX: dffffc0000000000 RSI: ffffffff8ae90360 RDI: ffffffff8c5caa40
+> > RBP: ffffc90000167898 R08: ffffc90000167960 R09: 0000000000000000
+> > R10: ffff88801525ac00 R11: 0000000000000000 R12: 00000000000287d8
+> > R13: ffffc90000167960 R14: 0000000000000000 R15: 0000000100004d48
+> > FS:  0000000000000000(0000) GS:ffff8880b9800000(0000) knlGS:00000000000=
+00000
+> > CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+> > CR2: 0000000020000240 CR3: 000000000c976000 CR4: 0000000000350ef0
+> > Call Trace:
+> >  <NMI>
+> >  </NMI>
+> >  <TASK>
+> >  newidle_balance+0x710/0x1210 kernel/sched/fair.c:12059
+> >  pick_next_task_fair+0x87/0x1200 kernel/sched/fair.c:8234
+> >  __pick_next_task kernel/sched/core.c:6004 [inline]
+> >  pick_next_task kernel/sched/core.c:6079 [inline]
+> >  __schedule+0x493/0x59f0 kernel/sched/core.c:6659
+> >  schedule+0xe7/0x1b0 kernel/sched/core.c:6771
+> >  schedule_timeout+0x157/0x2c0 kernel/time/timer.c:2167
+> >  rcu_gp_fqs_loop+0x1ec/0xa50 kernel/rcu/tree.c:1613
+> >  rcu_gp_kthread+0x249/0x380 kernel/rcu/tree.c:1812
+> >  kthread+0x33a/0x430 kernel/kthread.c:388
+> >  ret_from_fork+0x45/0x80 arch/x86/kernel/process.c:147
+> >  ret_from_fork_asm+0x11/0x20 arch/x86/entry/entry_64.S:304
+> >  </TASK>
+> >
+> >
 > > ---
-> >  m4/package_urcu.m4 | 8 ++++++--
-> >  1 file changed, 6 insertions(+), 2 deletions(-)
-> > 
-> > diff --git a/m4/package_urcu.m4 b/m4/package_urcu.m4
-> > index ef116e0cda76..f26494a69718 100644
-> > --- a/m4/package_urcu.m4
-> > +++ b/m4/package_urcu.m4
-> > @@ -26,11 +26,15 @@ rcu_init();
-> >  #
-> >  # Make sure that calling uatomic_inc on a 64-bit integer doesn't cause a link
-> >  # error on _uatomic_link_error, which is how liburcu signals that it doesn't
-> > -# support atomic operations on 64-bit data types.
-> > +# support atomic operations on 64-bit data types for its generic
-> > +# implementation (which relies on compiler builtins). For certain archs
-> > +# where liburcu carries its own implementation (such as x86_32), it
-> > +# signals lack of support during runtime by emitting an illegal
-> > +# instruction, so we also need to execute here to detect that.
-> >  #
-> >  AC_DEFUN([AC_HAVE_LIBURCU_ATOMIC64],
-> >    [ AC_MSG_CHECKING([for atomic64_t support in liburcu])
-> > -    AC_LINK_IFELSE(
-> > +    AC_RUN_IFELSE(
-> 
-> Unfortunately, this change breaks cross compiling:
-
-Of course.. I completely forgot about that.
-
-> checking for umode_t... no
-> checking for atomic64_t support in liburcu... configure: error: in
-> 	`.../xfsprogs/build-aarch64':
-> configure: error: cannot run test program while cross compiling
-> See `config.log' for more details
-> 
-> (Note that this is an x64 host building aarch64)
-> 
-> Seeing as we /do/ have a (slow) workaround for 32-bit machines, perhaps
-> we should use it any time a long isn't 64-bits wide:
-> 
-> diff --git a/m4/package_urcu.m4 b/m4/package_urcu.m4
-> index ef116e0cda7..2ad4179aca2 100644
-> --- a/m4/package_urcu.m4
-> +++ b/m4/package_urcu.m4
-> @@ -34,8 +34,11 @@ AC_DEFUN([AC_HAVE_LIBURCU_ATOMIC64],
->      [  AC_LANG_PROGRAM([[
->  #define _GNU_SOURCE
->  #include <urcu.h>
-> +#define BUILD_BUG_ON(condition) ((void)sizeof(char[1 - 2*!!(condition)]))
->         ]], [[
->  long long f = 3;
-> +
-> +BUILD_BUG_ON(CAA_BITS_PER_LONG < 64);
->  uatomic_inc(&f);
->         ]])
->      ], have_liburcu_atomic64=yes
-> 
-> This will cause suboptimal performance on any 32-bit cpu that /does/
-> support atomic operations on a u64, but oh well.
-
-I am not sure there is atomic u64 liburcu support for any 32-bit cpu
-(even if that cpu does actually support it). Everything is fenced behind
-the same conditional (#if CAA_BITS_PER_LONG == 64) in urcu headers
-already (e.g. ppc.h or pretty much anything else that falls back to
-uatomic/generic.h). So your patch may be the best way forward.
-
-Honestly I am not sure why this isn't implemented at least for x86 (e.g.
-via cmpxchg8b). There's a configure option enable-compiler-atomic-builtins
-that makes this work, but it doesn't seem to be enabled in distros
-(looks fairly new, liburcu commit 3afcf5a0407c).
-
-Regards,
-Anthony
+> > This report is generated by a bot. It may contain errors.
+> > See https://goo.gl/tpsmEJ for more information about syzbot.
+> > syzbot engineers can be reached at syzkaller@googlegroups.com.
+> >
+> > syzbot will keep track of this issue. See:
+> > https://goo.gl/tpsmEJ#status for how to communicate with syzbot.
+> >
+> > If the bug is already fixed, let syzbot know by replying with:
+> > #syz fix: exact-commit-title
+> >
+> > If you want syzbot to run the reproducer, reply with:
+> > #syz test: git://repo/address.git branch-or-commit-hash
+> > If you attach or paste a git patch, syzbot will apply it before testing=
+.
+> >
+> > If you want to overwrite bug's subsystems, reply with:
+> > #syz set subsystems: new-subsystem
+> > (See the list of subsystem names on the web dashboard)
+> >
+> > If the bug is a duplicate of another bug, reply with:
+> > #syz dup: exact-subject-of-another-report
+> >
+> > If you want to undo deduplication, reply with:
+> > #syz undup
+> >
+>
+> --
+> Dave Chinner
+> david@fromorbit.com
+>
