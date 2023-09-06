@@ -2,159 +2,153 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DD359EE14A3
-	for <linux-xfs@archiver.kernel.org>; Wed,  6 Sep 2023 14:59:55 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E16F6EE14A8
+	for <linux-xfs@archiver.kernel.org>; Wed,  6 Sep 2023 15:19:57 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S241570AbjIFO76 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 6 Sep 2023 10:59:58 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57426 "EHLO
+        id S242443AbjIFPUA (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 6 Sep 2023 11:20:00 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57592 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233482AbjIFO75 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 6 Sep 2023 10:59:57 -0400
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A67EA94
-        for <linux-xfs@vger.kernel.org>; Wed,  6 Sep 2023 07:59:53 -0700 (PDT)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 3D132C433C7;
-        Wed,  6 Sep 2023 14:59:53 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1694012393;
-        bh=7AP6LSSsudGX/fNr3T2pDmMIcOvScn0tGf514ZQ8jHo=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=bh4kzmaMaIs9faMrbdBGKLN6Apq+YFsc6+zrmjBICUEmRwt70aCCydyD+6OgraJl/
-         4hwakSVFMgWD4R4BMx/XbkPUSBfIB0WxZdZuClMBreBnTYmgXrzWI7Lk6MZ+F0NovG
-         jlvXgtxV7IscxjHoTRaGQMlliTwob138uyBuBZOekFFtr+UACnkB3MLJi96dCWUU7T
-         B51Uf0DCZC2VavMsA9P3pOEWaB7DeHbgTiui6Jq9uIVty4/FsDB0Q6f9dH9xwvTTcU
-         pNkygsNALiK7earKmFNKhI2XA52UDGkoBjr8I7gsEXhr8p3J0/piZoYk3Mob9I6Q0e
-         8rdZNLG087B8A==
-Date:   Wed, 6 Sep 2023 07:59:52 -0700
-From:   "Darrick J. Wong" <djwong@kernel.org>
-To:     Jan Engelhardt <jengelh@inai.de>
+        with ESMTP id S242441AbjIFPT7 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 6 Sep 2023 11:19:59 -0400
+Received: from smtp-out1.suse.de (smtp-out1.suse.de [195.135.220.28])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 786241717
+        for <linux-xfs@vger.kernel.org>; Wed,  6 Sep 2023 08:19:54 -0700 (PDT)
+Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
+        (No client certificate requested)
+        by smtp-out1.suse.de (Postfix) with ESMTPS id 34FF322430;
+        Wed,  6 Sep 2023 15:19:53 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.com; s=susede1;
+        t=1694013593; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+         mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=tJZEAiR0QsymgjBhF1Qm86Umi96cI7YPNL5miQ+w2Rg=;
+        b=LkH398Ihug0qRpiC15f7pKPbm7AbtAEzDLf1EX2pI6Hl4tfwx4a5hY/ApvLKXVJ/vvHhyo
+        2/KQK6EiMZx0xHqeFrngiu2DmQgPFngr/Xi0m1b9to3cA6Uh5jd7vxkBwwx1G4MkXVjavc
+        TMa8ZnvdnIaHYKdEcKKyK95EzaOYpQo=
+Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
+        (No client certificate requested)
+        by imap2.suse-dmz.suse.de (Postfix) with ESMTPS id E7A161333E;
+        Wed,  6 Sep 2023 15:19:52 +0000 (UTC)
+Received: from dovecot-director2.suse.de ([192.168.254.65])
+        by imap2.suse-dmz.suse.de with ESMTPSA
+        id D3ExNZiY+GRCXQAAMHmgww
+        (envelope-from <ailiop@suse.com>); Wed, 06 Sep 2023 15:19:52 +0000
+Date:   Wed, 6 Sep 2023 17:19:52 +0200
+From:   Anthony Iliopoulos <ailiop@suse.com>
+To:     "Darrick J. Wong" <djwong@kernel.org>
 Cc:     linux-xfs@vger.kernel.org
-Subject: Re: [PATCH] xfs: compact repeated Kconfig expression "depends on
- XFS_FS"
-Message-ID: <20230906145952.GW28186@frogsfrogsfrogs>
-References: <20230906073319.10239-1-jengelh@inai.de>
+Subject: Re: [PATCH] libxfs: fix atomic64_t detection on x86 32-bit
+ architectures
+Message-ID: <ZPiYmHsqEV45DUzY@technoir>
+References: <20230905084623.24865-1-ailiop@suse.com>
+ <20230905164250.GV28186@frogsfrogsfrogs>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20230906073319.10239-1-jengelh@inai.de>
+In-Reply-To: <20230905164250.GV28186@frogsfrogsfrogs>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Wed, Sep 06, 2023 at 09:33:19AM +0200, Jan Engelhardt wrote:
-> Make issues like v5.9-rc4-90-g894645546bb1 not happen by enclosing
-> the entirety of XFS options in an if..endif block, which is equivalent
-> to having "depends on XFS_FS" spelled out everywhere, but shorter.
+On Tue, Sep 05, 2023 at 09:42:50AM -0700, Darrick J. Wong wrote:
+> On Tue, Sep 05, 2023 at 10:46:23AM +0200, Anthony Iliopoulos wrote:
+> > xfsprogs during compilation tries to detect if liburcu supports atomic
+> > 64-bit ops on the platform it is being compiled on, and if not it falls
+> > back to using pthread mutex locks.
+> > 
+> > The detection logic for that fallback relies on _uatomic_link_error()
+> > which is a link-time trick used by liburcu that will cause compilation
+> > errors on archs that lack the required support. That only works for the
+> > generic liburcu code though, and it is not implemented for the
+> > x86-specific code.
+> > 
+> > In practice this means that when xfsprogs is compiled on 32-bit x86
+> > archs will successfully link to liburcu for atomic ops, but liburcu does
+> > not support atomic64_t on those archs. It indicates this during runtime
+> > by generating an illegal instruction that aborts execution, and thus
+> > causes various xfsprogs utils to be segfaulting.
+> > 
+> > Fix this by executing the liburcu atomic64_t detection code during
+> > configure instead of only relying on the linker error, so that
+> > compilation will properly fall back to pthread mutexes on those archs.
+> > 
+> > Fixes: 7448af588a2e ("libxfs: fix atomic64_t poorly for 32-bit architectures")
+> > 
+> > Signed-off-by: Anthony Iliopoulos <ailiop@suse.com>
+> > ---
+> >  m4/package_urcu.m4 | 8 ++++++--
+> >  1 file changed, 6 insertions(+), 2 deletions(-)
+> > 
+> > diff --git a/m4/package_urcu.m4 b/m4/package_urcu.m4
+> > index ef116e0cda76..f26494a69718 100644
+> > --- a/m4/package_urcu.m4
+> > +++ b/m4/package_urcu.m4
+> > @@ -26,11 +26,15 @@ rcu_init();
+> >  #
+> >  # Make sure that calling uatomic_inc on a 64-bit integer doesn't cause a link
+> >  # error on _uatomic_link_error, which is how liburcu signals that it doesn't
+> > -# support atomic operations on 64-bit data types.
+> > +# support atomic operations on 64-bit data types for its generic
+> > +# implementation (which relies on compiler builtins). For certain archs
+> > +# where liburcu carries its own implementation (such as x86_32), it
+> > +# signals lack of support during runtime by emitting an illegal
+> > +# instruction, so we also need to execute here to detect that.
+> >  #
+> >  AC_DEFUN([AC_HAVE_LIBURCU_ATOMIC64],
+> >    [ AC_MSG_CHECKING([for atomic64_t support in liburcu])
+> > -    AC_LINK_IFELSE(
+> > +    AC_RUN_IFELSE(
 > 
-> Signed-off-by: Jan Engelhardt <jengelh@inai.de>
+> Unfortunately, this change breaks cross compiling:
 
-Seems better than the current solution, so
-Reviewed-by: Darrick J. Wong <djwong@kernel.org>
+Of course.. I completely forgot about that.
 
---D
-
-> ---
->  fs/xfs/Kconfig | 17 +++++++----------
->  1 file changed, 7 insertions(+), 10 deletions(-)
+> checking for umode_t... no
+> checking for atomic64_t support in liburcu... configure: error: in
+> 	`.../xfsprogs/build-aarch64':
+> configure: error: cannot run test program while cross compiling
+> See `config.log' for more details
 > 
-> diff --git a/fs/xfs/Kconfig b/fs/xfs/Kconfig
-> index c9d653168ad0..2f5ae62eb528 100644
-> --- a/fs/xfs/Kconfig
-> +++ b/fs/xfs/Kconfig
-> @@ -22,9 +22,10 @@ config XFS_FS
->  	  system of your root partition is compiled as a module, you'll need
->  	  to use an initial ramdisk (initrd) to boot.
->  
-> +if XFS_FS
+> (Note that this is an x64 host building aarch64)
+> 
+> Seeing as we /do/ have a (slow) workaround for 32-bit machines, perhaps
+> we should use it any time a long isn't 64-bits wide:
+> 
+> diff --git a/m4/package_urcu.m4 b/m4/package_urcu.m4
+> index ef116e0cda7..2ad4179aca2 100644
+> --- a/m4/package_urcu.m4
+> +++ b/m4/package_urcu.m4
+> @@ -34,8 +34,11 @@ AC_DEFUN([AC_HAVE_LIBURCU_ATOMIC64],
+>      [  AC_LANG_PROGRAM([[
+>  #define _GNU_SOURCE
+>  #include <urcu.h>
+> +#define BUILD_BUG_ON(condition) ((void)sizeof(char[1 - 2*!!(condition)]))
+>         ]], [[
+>  long long f = 3;
 > +
->  config XFS_SUPPORT_V4
->  	bool "Support deprecated V4 (crc=0) format"
-> -	depends on XFS_FS
->  	default y
->  	help
->  	  The V4 filesystem format lacks certain features that are supported
-> @@ -49,7 +50,6 @@ config XFS_SUPPORT_V4
->  
->  config XFS_SUPPORT_ASCII_CI
->  	bool "Support deprecated case-insensitive ascii (ascii-ci=1) format"
-> -	depends on XFS_FS
->  	default y
->  	help
->  	  The ASCII case insensitivity filesystem feature only works correctly
-> @@ -76,7 +76,6 @@ config XFS_SUPPORT_ASCII_CI
->  
->  config XFS_QUOTA
->  	bool "XFS Quota support"
-> -	depends on XFS_FS
->  	select QUOTACTL
->  	help
->  	  If you say Y here, you will be able to set limits for disk usage on
-> @@ -94,7 +93,6 @@ config XFS_QUOTA
->  
->  config XFS_POSIX_ACL
->  	bool "XFS POSIX ACL support"
-> -	depends on XFS_FS
->  	select FS_POSIX_ACL
->  	help
->  	  POSIX Access Control Lists (ACLs) support permissions for users and
-> @@ -104,7 +102,6 @@ config XFS_POSIX_ACL
->  
->  config XFS_RT
->  	bool "XFS Realtime subvolume support"
-> -	depends on XFS_FS
->  	help
->  	  If you say Y here you will be able to mount and use XFS filesystems
->  	  which contain a realtime subvolume.  The realtime subvolume is a
-> @@ -127,7 +124,6 @@ config XFS_DRAIN_INTENTS
->  config XFS_ONLINE_SCRUB
->  	bool "XFS online metadata check support"
->  	default n
-> -	depends on XFS_FS
->  	depends on TMPFS && SHMEM
->  	select XFS_DRAIN_INTENTS
->  	help
-> @@ -163,7 +159,7 @@ config XFS_ONLINE_SCRUB_STATS
->  config XFS_ONLINE_REPAIR
->  	bool "XFS online metadata repair support"
->  	default n
-> -	depends on XFS_FS && XFS_ONLINE_SCRUB
-> +	depends on XFS_ONLINE_SCRUB
->  	help
->  	  If you say Y here you will be able to repair metadata on a
->  	  mounted XFS filesystem.  This feature is intended to reduce
-> @@ -180,7 +176,7 @@ config XFS_ONLINE_REPAIR
->  
->  config XFS_WARN
->  	bool "XFS Verbose Warnings"
-> -	depends on XFS_FS && !XFS_DEBUG
-> +	depends on !XFS_DEBUG
->  	help
->  	  Say Y here to get an XFS build with many additional warnings.
->  	  It converts ASSERT checks to WARN, so will log any out-of-bounds
-> @@ -193,7 +189,6 @@ config XFS_WARN
->  
->  config XFS_DEBUG
->  	bool "XFS Debugging support"
-> -	depends on XFS_FS
->  	help
->  	  Say Y here to get an XFS build with many debugging features,
->  	  including ASSERT checks, function wrappers around macros,
-> @@ -207,7 +202,7 @@ config XFS_DEBUG
->  config XFS_ASSERT_FATAL
->  	bool "XFS fatal asserts"
->  	default y
-> -	depends on XFS_FS && XFS_DEBUG
-> +	depends on XFS_DEBUG
->  	help
->  	  Set the default DEBUG mode ASSERT failure behavior.
->  
-> @@ -216,3 +211,5 @@ config XFS_ASSERT_FATAL
->  	  result in warnings.
->  
->  	  This behavior can be modified at runtime via sysfs.
-> +
-> +endif # XFS_FS
-> -- 
-> 2.42.0
+> +BUILD_BUG_ON(CAA_BITS_PER_LONG < 64);
+>  uatomic_inc(&f);
+>         ]])
+>      ], have_liburcu_atomic64=yes
 > 
+> This will cause suboptimal performance on any 32-bit cpu that /does/
+> support atomic operations on a u64, but oh well.
+
+I am not sure there is atomic u64 liburcu support for any 32-bit cpu
+(even if that cpu does actually support it). Everything is fenced behind
+the same conditional (#if CAA_BITS_PER_LONG == 64) in urcu headers
+already (e.g. ppc.h or pretty much anything else that falls back to
+uatomic/generic.h). So your patch may be the best way forward.
+
+Honestly I am not sure why this isn't implemented at least for x86 (e.g.
+via cmpxchg8b). There's a configure option enable-compiler-atomic-builtins
+that makes this work, but it doesn't seem to be enabled in distros
+(looks fairly new, liburcu commit 3afcf5a0407c).
+
+Regards,
+Anthony
