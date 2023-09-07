@@ -2,30 +2,30 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id AE289EC8743
-	for <linux-xfs@archiver.kernel.org>; Thu,  7 Sep 2023 17:47:36 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 80FBCEC874C
+	for <linux-xfs@archiver.kernel.org>; Thu,  7 Sep 2023 17:47:59 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S245342AbjIGRrj (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 7 Sep 2023 13:47:39 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50258 "EHLO
+        id S245349AbjIGRrk (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 7 Sep 2023 13:47:40 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50288 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S245396AbjIGRrh (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 7 Sep 2023 13:47:37 -0400
+        with ESMTP id S245369AbjIGRrk (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 7 Sep 2023 13:47:40 -0400
 Received: from casper.infradead.org (casper.infradead.org [IPv6:2001:8b0:10b:1236::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9466892;
-        Thu,  7 Sep 2023 10:47:16 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E61BCBD;
+        Thu,  7 Sep 2023 10:47:18 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
         d=infradead.org; s=casper.20170209; h=Content-Transfer-Encoding:MIME-Version:
         References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:Sender:Reply-To:
         Content-Type:Content-ID:Content-Description;
-        bh=9FU0HDBbS9848C77tpg24Iv2uyZEtVXyAgpiQsjv/fA=; b=NcXGBCh5BPyjAcESrPbWgrRsvW
-        PDdtlXUAW0k8lC/IdN0FAJeBK1laH7kwHd4DLz5VGxpxlbeGjY5LEWxmT2mnCzfiDg/9MxX1y9YIq
-        Aco2rxkVPG1Q5cC4t6HrgpCG7dzJ/n00GBBB5HYp+YIDycwMRJ2stN/4f6UCE/cu+yDvEPg/xymUe
-        gxLzC04nT4WV/5Np19ENi1c6ygMEpl7CoMfjbF6CfUeB2VJ80U//JUdE1S4mVgoEnKU3m4Us/q4ti
-        l2voBmp7JV5jVnAX2/7wySndJLGXrAMrdqgKY6dmc/C4GztfYiBEY6CBASMTB1vOnuCu23xjQCZ8Y
-        6X3U3qxQ==;
+        bh=VXFBeiZYZLxdE1EgCNB8C70Cr3AOFx9IwJaa1llihbg=; b=DV83kF/eITv9Kv5OQQmtmcXh4s
+        aLB2PI2hxlu4An2NjCFMYLMGM0Yuq/dEbT1Zmb9aJ4Xc9KSmRjqtBtstT/W86jThMfVSYimGMHEBG
+        RpTPu//7Bm/ZI/jY6/+Mdekr4QY8VSy2YQChZKQFh3JEyNgS06MTdLvu4t4UQY09KSLfv7PsS6NoW
+        Ksxmeb8/rMLRtMuq8/2lhgreBwJdoa1fxIrLHb51vg+QFQj2yu2nqRD025IPMcZM31nfpA53D+F8V
+        A+5xrl872htBCCIDaIg+jApOm9GX39pCayQ6NfVTrWvrExjy2cfEd/jc5XIW3Rrih2yROq4N02YA9
+        LNCPCoDA==;
 Received: from willy by casper.infradead.org with local (Exim 4.94.2 #2 (Red Hat Linux))
-        id 1qeJ5w-00CUFT-91; Thu, 07 Sep 2023 17:47:08 +0000
+        id 1qeJ5w-00CUFM-0r; Thu, 07 Sep 2023 17:47:08 +0000
 From:   "Matthew Wilcox (Oracle)" <willy@infradead.org>
 To:     Peter Zijlstra <peterz@infradead.org>,
         Ingo Molnar <mingo@redhat.com>, Will Deacon <will@kernel.org>,
@@ -34,9 +34,9 @@ Cc:     "Matthew Wilcox (Oracle)" <willy@infradead.org>,
         linux-kernel@vger.kernel.org, linux-mm@kvack.org,
         Chandan Babu R <chandan.babu@oracle.com>,
         "Darrick J . Wong" <djwong@kernel.org>, linux-xfs@vger.kernel.org
-Subject: [PATCH 5/5] xfs: Stop using lockdep to assert that locks are held
-Date:   Thu,  7 Sep 2023 18:47:05 +0100
-Message-Id: <20230907174705.2976191-6-willy@infradead.org>
+Subject: [PATCH 2/5] mm: Use rwsem_is_write_locked in mmap_assert_write_locked
+Date:   Thu,  7 Sep 2023 18:47:02 +0100
+Message-Id: <20230907174705.2976191-3-willy@infradead.org>
 X-Mailer: git-send-email 2.37.1
 In-Reply-To: <20230907174705.2976191-1-willy@infradead.org>
 References: <20230907174705.2976191-1-willy@infradead.org>
@@ -46,78 +46,26 @@ Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Lockdep does not know that the worker thread has inherited the lock
-from its caller.  Rather than dance around moving the ownership from the
-caller to the thread and back again, just remove the lockdep assertions
-and rely on the rwsem itself to tell us whether _somebody_ is holding
-the lock at the moment.
-
-__xfs_rwsem_islocked() simplifies into a trivial function, which is easy
-to inline into xfs_isilocked().
+This slightly strengthens our checks when lockdep is disabled.
 
 Signed-off-by: Matthew Wilcox (Oracle) <willy@infradead.org>
 ---
- fs/xfs/xfs_inode.c | 40 ++++++++--------------------------------
- 1 file changed, 8 insertions(+), 32 deletions(-)
+ include/linux/mmap_lock.h | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
-index c3cd73c29868..81ee6bf8c662 100644
---- a/fs/xfs/xfs_inode.c
-+++ b/fs/xfs/xfs_inode.c
-@@ -334,29 +334,6 @@ xfs_ilock_demote(
+diff --git a/include/linux/mmap_lock.h b/include/linux/mmap_lock.h
+index 8d38dcb6d044..0258b06668e8 100644
+--- a/include/linux/mmap_lock.h
++++ b/include/linux/mmap_lock.h
+@@ -69,7 +69,7 @@ static inline void mmap_assert_locked(struct mm_struct *mm)
+ static inline void mmap_assert_write_locked(struct mm_struct *mm)
+ {
+ 	lockdep_assert_held_write(&mm->mmap_lock);
+-	VM_BUG_ON_MM(!rwsem_is_locked(&mm->mmap_lock), mm);
++	VM_BUG_ON_MM(!rwsem_is_write_locked(&mm->mmap_lock), mm);
  }
  
- #if defined(DEBUG) || defined(XFS_WARN)
--static inline bool
--__xfs_rwsem_islocked(
--	struct rw_semaphore	*rwsem,
--	bool			shared)
--{
--	if (!debug_locks) {
--		if (!shared)
--			return rwsem_is_write_locked(rwsem);
--		return rwsem_is_locked(rwsem);
--	}
--
--	if (!shared)
--		return lockdep_is_held_type(rwsem, 0);
--
--	/*
--	 * We are checking that the lock is held at least in shared
--	 * mode but don't care that it might be held exclusively
--	 * (i.e. shared | excl). Hence we check if the lock is held
--	 * in any mode rather than an explicit shared mode.
--	 */
--	return lockdep_is_held_type(rwsem, -1);
--}
--
- bool
- xfs_isilocked(
- 	struct xfs_inode	*ip,
-@@ -366,15 +343,14 @@ xfs_isilocked(
- 		return rwsem_is_locked(&ip->i_lock);
- 	if (lock_flags & XFS_ILOCK_EXCL)
- 		return rwsem_is_write_locked(&ip->i_lock);
--	if (lock_flags & (XFS_MMAPLOCK_EXCL|XFS_MMAPLOCK_SHARED)) {
--		return __xfs_rwsem_islocked(&VFS_I(ip)->i_mapping->invalidate_lock,
--				(lock_flags & XFS_MMAPLOCK_SHARED));
--	}
--
--	if (lock_flags & (XFS_IOLOCK_EXCL | XFS_IOLOCK_SHARED)) {
--		return __xfs_rwsem_islocked(&VFS_I(ip)->i_rwsem,
--				(lock_flags & XFS_IOLOCK_SHARED));
--	}
-+	if (lock_flags & XFS_MMAPLOCK_SHARED)
-+		return rwsem_is_locked(&VFS_I(ip)->i_mapping->invalidate_lock);
-+	if (lock_flags & XFS_MMAPLOCK_EXCL)
-+		return rwsem_is_write_locked(&VFS_I(ip)->i_mapping->invalidate_lock);
-+	if (lock_flags & XFS_IOLOCK_SHARED)
-+		return rwsem_is_locked(&VFS_I(ip)->i_rwsem);
-+	if (lock_flags & XFS_IOLOCK_EXCL)
-+		return rwsem_is_write_locked(&VFS_I(ip)->i_rwsem);
- 
- 	ASSERT(0);
- 	return false;
+ #ifdef CONFIG_PER_VMA_LOCK
 -- 
 2.40.1
 
