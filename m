@@ -2,109 +2,106 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B4211EC8741
-	for <linux-xfs@archiver.kernel.org>; Thu,  7 Sep 2023 15:42:34 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 759B9EC8740
+	for <linux-xfs@archiver.kernel.org>; Thu,  7 Sep 2023 15:45:16 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230384AbjIGPmb (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 7 Sep 2023 11:42:31 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57626 "EHLO
+        id S231319AbjIGPmh (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 7 Sep 2023 11:42:37 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36230 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S235970AbjIGPXS (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 7 Sep 2023 11:23:18 -0400
-Received: from mail-pj1-x1032.google.com (mail-pj1-x1032.google.com [IPv6:2607:f8b0:4864:20::1032])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 30EFA197;
-        Thu,  7 Sep 2023 08:23:13 -0700 (PDT)
-Received: by mail-pj1-x1032.google.com with SMTP id 98e67ed59e1d1-26f3975ddd4so833304a91.1;
-        Thu, 07 Sep 2023 08:23:13 -0700 (PDT)
+        with ESMTP id S1344526AbjIGPdX (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 7 Sep 2023 11:33:23 -0400
+Received: from mail-ua1-x934.google.com (mail-ua1-x934.google.com [IPv6:2607:f8b0:4864:20::934])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id EB8C119B4
+        for <linux-xfs@vger.kernel.org>; Thu,  7 Sep 2023 08:32:57 -0700 (PDT)
+Received: by mail-ua1-x934.google.com with SMTP id a1e0cc1a2514c-7a294a4ee4bso632062241.0
+        for <linux-xfs@vger.kernel.org>; Thu, 07 Sep 2023 08:32:57 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20221208; t=1694100192; x=1694704992; darn=vger.kernel.org;
-        h=content-transfer-encoding:in-reply-to:from:references:cc:to
-         :content-language:subject:user-agent:mime-version:date:message-id
-         :sender:from:to:cc:subject:date:message-id:reply-to;
-        bh=OZ0CpUOcPuxcuBRABu/k9kg3Q8DjApWrdkW9McQp5wM=;
-        b=p2vudTLuncPRSqqNwbqQ/SsZJgMWJLDsCdiC4qlc9+z27cAoYRrl76lW0ct53nB8uB
-         s0y6ujrhdTwUh8Shcf5KwdOFv/gDYiNEBWCmXWRJ7t5zFB971AD2zq37ZtzLqHhu/Ofq
-         5qNCAmwuBNe7z9mj+UGyARurEJxSZZyqIra0NtPM3jHnA13AyVn1mrQpi/2Z5aBER+ys
-         zCKHX3tvZPUnnjNBJNJB14yBC2MO+3GyW1+9hP/P3ERJBWYqpAD2aS2JtEMA5gtp87iD
-         I5XAb86bbCUC1e4+hUU6B7hueawiRc1CmKIFuarG5zAC7w/7uY0C+CXdPcgpdoo8y2OZ
-         wpWQ==
+        d=fromorbit-com.20230601.gappssmtp.com; s=20230601; t=1694100728; x=1694705528; darn=vger.kernel.org;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
+        bh=dTQo+qXo8NRE4/g2NGMF8EJv7KRZFT/DO+LZ8OddsYA=;
+        b=KivwWswIBBVQI0cmQQKW4nUqgBPiA1TV0+mxFLPrMtZVmob00ySJh/w8a/TOxxg0im
+         vuRzto33YEIe8pppgNC1tvr1A/kIf//E8qnUZI4sEKNol7JLGRbI9IgQqCBDt3FyklLF
+         NGpB11RNVkTxmbtpItzqxKmwz5+dR51nOV8oOXjonOaSvFE8oJVbIj9HhpZn5G3VYsmR
+         xDkXG3XPvGk2tV7cn+A9ccuopZzveKTaFHRY/btpi+c9NDc1gmsFHfx/UiBubKy8XvPt
+         rEEYYxzsVS/dyVQF11HSEVv+uSqNpCij9OTtGJBRfKkcSGdQZmstQsXU3nUhuiPPnKzG
+         i2TQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20221208; t=1694100192; x=1694704992;
-        h=content-transfer-encoding:in-reply-to:from:references:cc:to
-         :content-language:subject:user-agent:mime-version:date:message-id
-         :sender:x-gm-message-state:from:to:cc:subject:date:message-id
-         :reply-to;
-        bh=OZ0CpUOcPuxcuBRABu/k9kg3Q8DjApWrdkW9McQp5wM=;
-        b=BiPA9QsY+k2rYB0PQ03VWOhmj7v8Ac9MupD9GeRM+qJ2LJcPtLeS7PvYc6hHur5law
-         IF+N25bzlDr1oJcta4oGleD6N0hM2SreweVLtCAyHHAIM+Z3pp5P9P7cGpfgPb2pzDgo
-         6EU0lp8/IeUicFTV5ohrSDeJk/AvJI2N7YNRPVZqSSis0npeTsk/d+kterqo1iR0Cy2i
-         5OoPQOaYW0HHSv+wFEh7D9sx+hs94znu7nrUBHe0FljBXFlr1Mopi1djokDqNYclUPWN
-         /Wwx72yDjXRucUd/hrAxkcvKqXtF+uJteRfncsWDmLOECPzaX0TYtDRGS+TPmYu642fi
-         jcFA==
-X-Gm-Message-State: AOJu0YysWe+05Lg4A3WwoqQuFWmt9zPIOCdrqoqso5A20ovXTKxCHEGW
-        uabGZqelzjHoLB9nvbv19PNaLUTSwM4=
-X-Google-Smtp-Source: AGHT+IFwNcs9Ljydqg3D8vQKhkC795cu5TrIekXRsrD/qAZOZq6eizQDLVHH9eoXr/ABjeBeoLRMHw==
-X-Received: by 2002:a17:90a:5d0b:b0:273:4944:2eba with SMTP id s11-20020a17090a5d0b00b0027349442ebamr17410965pji.40.1694100192395;
-        Thu, 07 Sep 2023 08:23:12 -0700 (PDT)
-Received: from ?IPV6:2600:1700:e321:62f0:329c:23ff:fee3:9d7c? ([2600:1700:e321:62f0:329c:23ff:fee3:9d7c])
-        by smtp.gmail.com with ESMTPSA id ga18-20020a17090b039200b00262eb0d141esm1611029pjb.28.2023.09.07.08.23.10
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Thu, 07 Sep 2023 08:23:11 -0700 (PDT)
-Sender: Guenter Roeck <groeck7@gmail.com>
-Message-ID: <dc4b7b2c-89c0-d16f-43e2-0aec5c9b8e1b@roeck-us.net>
-Date:   Thu, 7 Sep 2023 08:23:09 -0700
+        d=1e100.net; s=20221208; t=1694100728; x=1694705528;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=dTQo+qXo8NRE4/g2NGMF8EJv7KRZFT/DO+LZ8OddsYA=;
+        b=h9gIzlhTzp1wlzaqk6XPSDaRudmPJ2NzOqLTemYGPdSzEHMG67zXgKchE7CA49uwQZ
+         Ebkr8lSzvtT+lTrFym6iPg1emXA/gUNs0VmCEgF+JGbBUSJsD7SeB+S+XS+naSgbWQXe
+         W8GAS7uXhruBnNiZNuSTz/Eg6CGVS5z3DMQ0oJQi7F4a11Y0EUe5QD0/3tUnU5ecYBnz
+         oZkAPd0Rp1RlItpIx+fXWlOQkOEaH+RMbFkFNnm76//V6q0vHeqfGVDjP54ZrsZFUeC7
+         QK0Me1siWrYO+WVSnoAqPSxC4YXF6HveNQiwC3oDahUEDCOExsMatvEsKJgcC107u9yr
+         xjSw==
+X-Gm-Message-State: AOJu0YzFweN9sTNjitY0Mb5QBlq3lnHgVIG0cyux6q/yPKa0PO7kykSs
+        /YH6/2Et6h1AGTpYC8TlnXjp376EMPZ9EeURyss=
+X-Google-Smtp-Source: AGHT+IE9KjOT51JDRa3yNlcO+48vk1BQhgmnlt8crTvpUwNaUsbQ3XR6sIOZtS5c3ZKROx56nkOB7g==
+X-Received: by 2002:a17:902:d4c1:b0:1c0:cbaf:6954 with SMTP id o1-20020a170902d4c100b001c0cbaf6954mr2050033plg.25.1694068051172;
+        Wed, 06 Sep 2023 23:27:31 -0700 (PDT)
+Received: from dread.disaster.area (pa49-195-66-88.pa.nsw.optusnet.com.au. [49.195.66.88])
+        by smtp.gmail.com with ESMTPSA id w1-20020a170902e88100b001bafd5cf769sm12035229plg.2.2023.09.06.23.27.30
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Wed, 06 Sep 2023 23:27:30 -0700 (PDT)
+Received: from dave by dread.disaster.area with local (Exim 4.96)
+        (envelope-from <david@fromorbit.com>)
+        id 1qe8UB-00BuvJ-2n;
+        Thu, 07 Sep 2023 16:27:27 +1000
+Date:   Thu, 7 Sep 2023 16:27:27 +1000
+From:   Dave Chinner <david@fromorbit.com>
+To:     "Darrick J. Wong" <djwong@kernel.org>
+Cc:     chandan.babu@gmail.com, linux-xfs@vger.kernel.org
+Subject: Re: [PATCH 1/3] xfs: use i_prev_unlinked to distinguish inodes that
+ are not on the unlinked list
+Message-ID: <ZPltT6prfr/vboeP@dread.disaster.area>
+References: <169375774749.3323693.18063212270653101716.stgit@frogsfrogsfrogs>
+ <169375775334.3323693.5974014335978928981.stgit@frogsfrogsfrogs>
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
- Thunderbird/102.13.0
-Subject: Re: [PATCH 13/13] ntfs3: free the sbi in ->kill_sb
-Content-Language: en-US
-To:     Christian Brauner <brauner@kernel.org>
-Cc:     Christoph Hellwig <hch@lst.de>, Al Viro <viro@zeniv.linux.org.uk>,
-        Namjae Jeon <linkinjeon@kernel.org>,
-        Sungjong Seo <sj1557.seo@samsung.com>,
-        Theodore Ts'o <tytso@mit.edu>,
-        Andreas Dilger <adilger.kernel@dilger.ca>,
-        Konstantin Komarov <almaz.alexandrovich@paragon-software.com>,
-        "Darrick J. Wong" <djwong@kernel.org>,
-        linux-fsdevel@vger.kernel.org, linux-ext4@vger.kernel.org,
-        ntfs3@lists.linux.dev, linux-xfs@vger.kernel.org
-References: <20230809220545.1308228-1-hch@lst.de>
- <20230809220545.1308228-14-hch@lst.de>
- <56f72849-178a-4cb7-b2e1-b7fc6695a6ef@roeck-us.net>
- <20230907-lektion-organismus-f223e15828d9@brauner>
-From:   Guenter Roeck <linux@roeck-us.net>
-In-Reply-To: <20230907-lektion-organismus-f223e15828d9@brauner>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <169375775334.3323693.5974014335978928981.stgit@frogsfrogsfrogs>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On 9/7/23 06:54, Christian Brauner wrote:
-> On Thu, Sep 07, 2023 at 06:05:40AM -0700, Guenter Roeck wrote:
->> On Wed, Aug 09, 2023 at 03:05:45PM -0700, Christoph Hellwig wrote:
->>> As a rule of thumb everything allocated to the fs_context and moved into
->>> the super_block should be freed by ->kill_sb so that the teardown
->>> handling doesn't need to be duplicated between the fill_super error
->>> path and put_super.  Implement an ntfs3-specific kill_sb method to do
->>> that.
->>>
->>> Signed-off-by: Christoph Hellwig <hch@lst.de>
->>> Reviewed-by: Christian Brauner <brauner@kernel.org>
->>
->> This patch results in:
+On Sun, Sep 03, 2023 at 09:15:53AM -0700, Darrick J. Wong wrote:
+> From: Darrick J. Wong <djwong@kernel.org>
 > 
-> The appended patch should fix this. Are you able to test it?
-> I will as well.
+> Alter the definition of i_prev_unlinked slightly to make it more obvious
+> when an inode with 0 link count is not part of the iunlink bucket lists
+> rooted in the AGI.  This distinction is necessary because it is not
+> sufficient to check inode.i_nlink to decide if an inode is on the
+> unlinked list.  Updates to i_nlink can happen while holding only
+> ILOCK_EXCL, but updates to an inode's position in the AGI unlinked list
+> (which happen after the nlink update) requires both ILOCK_EXCL and the
+> AGI buffer lock.
+> 
+> The next few patches will make it possible to reload an entire unlinked
+> bucket list when we're walking the inode table or performing handle
+> operations and need more than the ability to iget the last inode in the
+> chain.
+> 
+> The upcoming directory repair code also needs to be able to make this
+> distinction to decide if a zero link count directory should be moved to
+> the orphanage or allowed to inactivate.  An upcoming enhancement to the
+> online AGI fsck code will need this distinction to check and rebuild the
+> AGI unlinked buckets.
+> 
+> Signed-off-by: Darrick J. Wong <djwong@kernel.org>
+> ---
+>  fs/xfs/xfs_icache.c |    2 +-
+>  fs/xfs/xfs_inode.c  |    3 ++-
+>  fs/xfs/xfs_inode.h  |   20 +++++++++++++++++++-
+>  3 files changed, 22 insertions(+), 3 deletions(-)
 
-Yes, this patch restores the previous behavior (no more backtrace or crash).
+Looks ok.
 
-Tested-by: Guenter Roeck <linux@roeck-us.net>
-
-I say "restore previous behavior" because my simple "recursive copy; partially
-remove copied files" test still fails. That problem apparently existed since
-ntfs3 has been introduced (I see it as far back as v5.15).
-
-Thanks,
-Guenter
-
+Reviewed-by: Dave Chinner <dchinner@redhat.com>
+-- 
+Dave Chinner
+david@fromorbit.com
