@@ -2,105 +2,99 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2B8DEEC8759
-	for <linux-xfs@archiver.kernel.org>; Thu,  7 Sep 2023 19:38:51 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id F2F5DEC875C
+	for <linux-xfs@archiver.kernel.org>; Thu,  7 Sep 2023 21:07:37 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S236356AbjIGTix (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 7 Sep 2023 15:38:53 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57596 "EHLO
+        id S239861AbjIGVHk (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 7 Sep 2023 17:07:40 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47286 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229977AbjIGTiw (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 7 Sep 2023 15:38:52 -0400
-Received: from casper.infradead.org (casper.infradead.org [IPv6:2001:8b0:10b:1236::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 36E12CE9;
-        Thu,  7 Sep 2023 12:38:49 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=infradead.org; s=casper.20170209; h=In-Reply-To:Content-Type:MIME-Version:
-        References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
-        Content-Transfer-Encoding:Content-ID:Content-Description;
-        bh=AwM1VwlwVIqM+B74AtASZ+ELYU+JQssLPAE0LrOcF/E=; b=ZVZBOxkLzTDNwduftx2feJdr/p
-        ClCKXvMiMdqO9Xv57aM7SDVfJdMItDeRnmjJOuDhwWy9uIoaAWHsXN0Sl3DD9t9cyIflD517Hlxrv
-        tTautZR2yS2w/xvPInpZA9+87k268fWTFbUAXN4YHNUF60eNef2UBsZvLfkNpnHLIK3lmi8ul/PqB
-        WR3Y2sLgUGM9XqEMussOkvdUHSZCkC+5Xz092Ahu2oS/evQbKOoSR2RVU1Agj44veOdRnPkdmLsAV
-        QcB72+bZf3iTkJoIaMWBRavKMdM8I4AgT7xpHdGmB4+o0PNNFMiRAztRIPPXiTXb3ZlYaxl0384O2
-        bqWcy83Q==;
-Received: from j130084.upc-j.chello.nl ([24.132.130.84] helo=noisy.programming.kicks-ass.net)
-        by casper.infradead.org with esmtpsa (Exim 4.94.2 #2 (Red Hat Linux))
-        id 1qeKpq-00D2qG-KL; Thu, 07 Sep 2023 19:38:38 +0000
-Received: by noisy.programming.kicks-ass.net (Postfix, from userid 1000)
-        id 32FC4300687; Thu,  7 Sep 2023 21:38:38 +0200 (CEST)
-Date:   Thu, 7 Sep 2023 21:38:38 +0200
-From:   Peter Zijlstra <peterz@infradead.org>
-To:     Matthew Wilcox <willy@infradead.org>
-Cc:     Ingo Molnar <mingo@redhat.com>, Will Deacon <will@kernel.org>,
-        Waiman Long <longman@redhat.com>, linux-kernel@vger.kernel.org,
-        linux-mm@kvack.org, Chandan Babu R <chandan.babu@oracle.com>,
-        "Darrick J . Wong" <djwong@kernel.org>, linux-xfs@vger.kernel.org
+        with ESMTP id S239628AbjIGVHj (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 7 Sep 2023 17:07:39 -0400
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8D1881BCD
+        for <linux-xfs@vger.kernel.org>; Thu,  7 Sep 2023 14:06:49 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1694120808;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=CLY0xNL0iM0EoMVOirrTvmKbAGvbYqhrOQaF68f9k5I=;
+        b=Li7IobYjgeX1n9yL1xUPgiIdBxrQlPtggtt75yAORpg0jyjZJZE5HIauF2v7IiQtjwJsO+
+        Bo4UANPXLzSysMDjwOCmYk9jhyJ65F3PCLPDSaLL229Ibs7bFC8c5i3Ybdl4A331aROmlu
+        ChoBmP2+6fLhbba/Q2JxC+Pqv/MkZ0o=
+Received: from mimecast-mx02.redhat.com (mimecast-mx02.redhat.com
+ [66.187.233.88]) by relay.mimecast.com with ESMTP with STARTTLS
+ (version=TLSv1.2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ us-mta-491-ZHUrKFY_NfWxsapOBhqQ4w-1; Thu, 07 Sep 2023 17:06:40 -0400
+X-MC-Unique: ZHUrKFY_NfWxsapOBhqQ4w-1
+Received: from smtp.corp.redhat.com (int-mx06.intmail.prod.int.rdu2.redhat.com [10.11.54.6])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by mimecast-mx02.redhat.com (Postfix) with ESMTPS id D1762823D5E;
+        Thu,  7 Sep 2023 21:06:39 +0000 (UTC)
+Received: from [10.22.16.164] (unknown [10.22.16.164])
+        by smtp.corp.redhat.com (Postfix) with ESMTP id 6ED91200BABC;
+        Thu,  7 Sep 2023 21:06:39 +0000 (UTC)
+Message-ID: <da1daacf-22b2-20da-b6c0-9b1362b8a901@redhat.com>
+Date:   Thu, 7 Sep 2023 17:06:39 -0400
+MIME-Version: 1.0
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
+ Thunderbird/102.14.0
 Subject: Re: [PATCH 1/5] locking: Add rwsem_is_write_locked()
-Message-ID: <20230907193838.GB14243@noisy.programming.kicks-ass.net>
+Content-Language: en-US
+To:     Matthew Wilcox <willy@infradead.org>
+Cc:     Peter Zijlstra <peterz@infradead.org>,
+        Ingo Molnar <mingo@redhat.com>, Will Deacon <will@kernel.org>,
+        linux-kernel@vger.kernel.org, linux-mm@kvack.org,
+        Chandan Babu R <chandan.babu@oracle.com>,
+        "Darrick J . Wong" <djwong@kernel.org>, linux-xfs@vger.kernel.org
 References: <20230907174705.2976191-1-willy@infradead.org>
  <20230907174705.2976191-2-willy@infradead.org>
- <20230907190810.GA14243@noisy.programming.kicks-ass.net>
- <ZPoift7B3UDQgmWB@casper.infradead.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <ZPoift7B3UDQgmWB@casper.infradead.org>
+ <2cd975ec-f868-f180-350f-b1b704118777@redhat.com>
+ <ZPolpUuCiGT/5PLO@casper.infradead.org>
+From:   Waiman Long <longman@redhat.com>
+In-Reply-To: <ZPolpUuCiGT/5PLO@casper.infradead.org>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
+X-Scanned-By: MIMEDefang 3.1 on 10.11.54.6
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Thu, Sep 07, 2023 at 08:20:30PM +0100, Matthew Wilcox wrote:
-> On Thu, Sep 07, 2023 at 09:08:10PM +0200, Peter Zijlstra wrote:
-> > On Thu, Sep 07, 2023 at 06:47:01PM +0100, Matthew Wilcox (Oracle) wrote:
-> > > Several places want to know whether the lock is held by a writer, instead
-> > > of just whether it's held.  We can implement this for both normal and
-> > > rt rwsems.  RWSEM_WRITER_LOCKED is declared in rwsem.c and exposing
-> > > it outside that file might tempt other people to use it, so just use
-> > > a comment to note that's what the 1 means, and help anybody find it if
-> > > they're looking to change the implementation.
-> > 
-> > I'm presuming this is deep in a callchain where they know they hold the
-> > lock, but they lost in what capacity?
-> 
-> No, it's just assertions.  You can see that in patch 3 where it's
-> used in functions called things like "xfs_islocked".
 
-Right, but if you're not the lock owner, your answer to the question is
-a dice-roll, it might be locked, it might not be.
+On 9/7/23 15:33, Matthew Wilcox wrote:
+> On Thu, Sep 07, 2023 at 02:05:54PM -0400, Waiman Long wrote:
+>> On 9/7/23 13:47, Matthew Wilcox (Oracle) wrote:
+>>> +static inline int rwsem_is_write_locked(struct rw_semaphore *sem)
+>>> +{
+>>> +	return atomic_long_read(&sem->count) & 1 /* RWSEM_WRITER_LOCKED */;
+>>> +}
+>> I would prefer you move the various RWSEM_* count bit macros from
+>> kernel/locking/rwsem.c to under the !PREEMPT_RT block and directly use
+>> RWSEM_WRITER_LOCKED instead of hardcoding a value of 1.
+> Just to be clear, you want the ~50 lines from:
+>
+> /*
+>   * On 64-bit architectures, the bit definitions of the count are:
+> ...
+> #define RWSEM_READ_FAILED_MASK  (RWSEM_WRITER_MASK|RWSEM_FLAG_WAITERS|\
+>                                   RWSEM_FLAG_HANDOFF|RWSEM_FLAG_READFAIL)
+>
+> moved from rwsem.c to rwsem.h?
+>
+> Or just these four lines:
+>
+> #define RWSEM_WRITER_LOCKED     (1UL << 0)
+> #define RWSEM_FLAG_WAITERS      (1UL << 1)
+> #define RWSEM_FLAG_HANDOFF      (1UL << 2)
+> #define RWSEM_FLAG_READFAIL     (1UL << (BITS_PER_LONG - 1))
 
-> > In general I strongly dislike the whole _is_locked family, because it
-> > gives very poorly defined semantics if used by anybody but the owner.
-> > 
-> > If these new functions are indeed to be used only by lock holders to
-> > determine what kind of lock they hold, could we please put:
-> > 
-> > 	lockdep_assert_held()
-> > 
-> > in them?
-> 
-> Patch 2 shows it in use in the MM code.  We already have a
-> lockdep_assert_held_write(), but most people don't enable lockdep, so
+I think just the first 3 lines will be enough. Maybe a bit of comment 
+about these bit flags in the count atomic_long value.
 
-Most devs should run with lockdep on when writing new code, and I know
-the sanitizer robots run with lockdep on.
+Cheers,
+Longman
 
-In general there seems to be a ton of lockdep on coverage.
 
-> we also have VM_BUG_ON_MM(!rwsem_is_write_locked(&mm->mmap_lock), mm)
-> to give us a good assertion when lockdep is disabled.
-
-Is that really worth it still? I mean, much of these assertions pre-date
-lockdep.
-
-> XFS has a problem with using lockdep in general, which is that a worker
-> thread can be spawned and use the fact that the spawner is holding the
-> lock.  There's no mechanism for the worker thread to ask "Does struct
-> task_struct *p hold the lock?".
-
-Will be somewhat tricky to make happen -- but might be doable. It is
-however an interface that is *very* hard to use correctly. Basically I
-think you want to also assert that your target task 'p' is blocked,
-right?
-
-That is: assert @p is blocked and holds @lock.
