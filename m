@@ -2,140 +2,87 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 83A8DEE57EF
-	for <linux-xfs@archiver.kernel.org>; Fri,  8 Sep 2023 10:44:54 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 89DFCEE7FE1
+	for <linux-xfs@archiver.kernel.org>; Fri,  8 Sep 2023 12:12:41 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232916AbjIHKoy (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 8 Sep 2023 06:44:54 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38828 "EHLO
+        id S243233AbjIHMMn (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 8 Sep 2023 08:12:43 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34028 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229604AbjIHKox (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 8 Sep 2023 06:44:53 -0400
-Received: from casper.infradead.org (casper.infradead.org [IPv6:2001:8b0:10b:1236::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4195D1BC6;
-        Fri,  8 Sep 2023 03:44:49 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=infradead.org; s=casper.20170209; h=In-Reply-To:Content-Type:MIME-Version:
-        References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
-        Content-Transfer-Encoding:Content-ID:Content-Description;
-        bh=CxXN7IaoL8RwVwQiUmo1siGJgoNZz5WFIpz2pAVAxuc=; b=KIE8pBuT0ZFIv86asxj0niU4H1
-        3jPwIv8vg1avtC+nyDT0NIvw8I9ObyOPdsxNRjZ3vNAjDkNEptCLTUFypEo3+AFUy2bsdS0sUk0LI
-        DrO4Icf0473OfWRp4uwkoWbT6Q9rbPJH8575k+dYGHfzAnkw1b6Li9kErMrBQBDyFs7PdHkxGxF+e
-        cFawBf2j5TUjya/Y7hKCJKy77g/dikCTKSAgOlGqKH4hl1MSNVx/CEu/U/msdJNFtN9xpst2dlYwh
-        FfqrbA3Z+sSVUsxSvR1rdDQtUYnjEgVtGl+qMoQ1re7dd6f4kOoypfVs15+QCyEYTUyDKEO0Gg4Sr
-        4Y0QLQwQ==;
-Received: from j130084.upc-j.chello.nl ([24.132.130.84] helo=noisy.programming.kicks-ass.net)
-        by casper.infradead.org with esmtpsa (Exim 4.94.2 #2 (Red Hat Linux))
-        id 1qeYyZ-00HGsO-1U; Fri, 08 Sep 2023 10:44:35 +0000
-Received: by noisy.programming.kicks-ass.net (Postfix, from userid 1000)
-        id 9763C300472; Fri,  8 Sep 2023 12:44:34 +0200 (CEST)
-Date:   Fri, 8 Sep 2023 12:44:34 +0200
-From:   Peter Zijlstra <peterz@infradead.org>
-To:     Dave Chinner <david@fromorbit.com>
-Cc:     Matthew Wilcox <willy@infradead.org>,
-        Ingo Molnar <mingo@redhat.com>, Will Deacon <will@kernel.org>,
-        Waiman Long <longman@redhat.com>, linux-kernel@vger.kernel.org,
-        linux-mm@kvack.org, Chandan Babu R <chandan.babu@oracle.com>,
-        "Darrick J . Wong" <djwong@kernel.org>, linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 1/5] locking: Add rwsem_is_write_locked()
-Message-ID: <20230908104434.GB24372@noisy.programming.kicks-ass.net>
-References: <20230907174705.2976191-1-willy@infradead.org>
- <20230907174705.2976191-2-willy@infradead.org>
- <20230907190810.GA14243@noisy.programming.kicks-ass.net>
- <ZPoift7B3UDQgmWB@casper.infradead.org>
- <20230907193838.GB14243@noisy.programming.kicks-ass.net>
- <ZPpV+MeFqX6RHIYw@dread.disaster.area>
+        with ESMTP id S240839AbjIHMMn (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 8 Sep 2023 08:12:43 -0400
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 93A531BC5;
+        Fri,  8 Sep 2023 05:12:39 -0700 (PDT)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 14A6EC433C8;
+        Fri,  8 Sep 2023 12:12:37 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1694175159;
+        bh=Uyx5Gq0uaYkqAfjzVD4SP/i8eS3DtLvrWwNfHuJQh9Q=;
+        h=From:To:Cc:Subject:Date:From;
+        b=l660PCO6x9FLjJ5yJaHTD6KwcxEFCVwXFctKDyyrRNDvu6Dg5zuoscLaw5fPTib2U
+         1ECDpKE0T4Sc7WWm9PWcSJ2uhGhc3TiMHGJxpCZ4x7k3SZed7mJqxcN9iWIjGdi0xj
+         yd/FoFOmEqNoKSRGdfdBmGvB0CVlI6DP5tVYq8MI3ZT7H4Y+wNNV6bWls5kCLs2Ytf
+         uFJzNDMncG0vk8HbsEnXNfrVqM1ZhIShCBht20uS4rzh/v1U7H59vT9uNun5ehFWUr
+         DhyERetfZ4q26LvLuIFcKZ0m9UITj3ILTkhTVRnbo8QrzsyAHt8e2YeO5oaja5IcPJ
+         6Vxpr/GcOASEQ==
+From:   cem@kernel.org
+To:     fstests@vger.kernel.org
+Cc:     zlang@kernel.org, linux-xfs@vger.kernel.org
+Subject: [PATCH] common: fix rt_ops setup in _scratch_mkfs_sized
+Date:   Fri,  8 Sep 2023 14:12:34 +0200
+Message-Id: <20230908121234.553218-1-cem@kernel.org>
+X-Mailer: git-send-email 2.39.2
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <ZPpV+MeFqX6RHIYw@dread.disaster.area>
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Fri, Sep 08, 2023 at 09:00:08AM +1000, Dave Chinner wrote:
+From: Carlos Maiolino <cem@kernel.org>
 
-> > Right, but if you're not the lock owner, your answer to the question is
-> > a dice-roll, it might be locked, it might not be.
-> 
-> Except that the person writing the code knows the call chain that
-> leads up to that code, and so they have a pretty good idea whether
-> the object should be locked or not. If we are running that code, and
-> the object is locked, then it's pretty much guaranteed that the
-> owner of the lock is code that executed the check, because otherwise
-> we have a *major lock implementation bug*.
+Tests using _scratch_mkfs_sized() will fail if SCRATCH_RTDEV is set,
+but, USE_EXTERNAL is not, this happens because the function pass
+"-r size=$fssize" to the _scratch_mkfs_xfs argument line, which in turn
+will not set rtdev because USE_EXTERNAL is not set.
 
-Agreed, and this is fine. However there's been some very creative
-'use' of the _is_locked() class of functions in the past that did not
-follow 'common' sense.
+Tests like xfs/015 will fail as:
 
-If all usage was: I should be holding this, lets check. I probably
-wouldn't have this bad feeling about things.
+xfs/015 6s ... [failed, exit status 1]- output mismatch
+.
+.
+    +size specified for non-existent rt subvolume
+    +Usage: mkfs.xfs
+.
+.
 
-> > Most devs should run with lockdep on when writing new code, and I know
-> > the sanitizer robots run with lockdep on.
-> > 
-> > In general there seems to be a ton of lockdep on coverage.
-> 
-> *cough*
-> 
-> Bit locks, semaphores, and all sorts of other constructs for IO
-> serialisation (like inode_dio_wait()) have no lockdep coverage at
-> all. IOWs, large chunks of many filesystems, the VFS and the VM have
-> little to no lockdep coverage at all.
+with this patch the test runs properly using the rtdev if USE_EXTERNAL
+is set.
 
-True, however I was commenting on the assertion that vm code has
-duplicate asserts with the implication that was because not a lot of
-people run with lockdep on.
+Signed-off-by: Carlos Maiolino <cmaiolino@redhat.com>
+---
 
-> > > we also have VM_BUG_ON_MM(!rwsem_is_write_locked(&mm->mmap_lock), mm)
-> > > to give us a good assertion when lockdep is disabled.
-> > 
-> > Is that really worth it still? I mean, much of these assertions pre-date
-> > lockdep.
-> 
-> And we're trying to propagate them because lockdep isn't a viable
-> option for day to day testing of filesystems because of it's
-> overhead vs how infrequently it finds new problems.
+Particularly I think SCRATCH_RTDEV should not depend on USE_EXTERNAL, as the
+latter is also linked to external logdevs, but I noticed tests specific for RT
+devices also set USE_EXTERNAL, so  I opted to change it according to the current
+usage
 
-... in XFS. Lockdep avoids a giant pile of broken from entering the
-kernel and the robots still report plenty.
+ common/rc | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-> > > XFS has a problem with using lockdep in general, which is that a worker
-> > > thread can be spawned and use the fact that the spawner is holding the
-> > > lock.  There's no mechanism for the worker thread to ask "Does struct
-> > > task_struct *p hold the lock?".
-> > 
-> > Will be somewhat tricky to make happen -- but might be doable. It is
-> > however an interface that is *very* hard to use correctly. Basically I
-> > think you want to also assert that your target task 'p' is blocked,
-> > right?
-> > 
-> > That is: assert @p is blocked and holds @lock.
-> 
-> That addresses the immediate symptom; it doesn't address the large
-> problem with lockdep and needing non-owner rwsem semantics.
-> 
-> i.e. synchronous task based locking models don't work for
-> asynchronous multi-stage pipeline processing engines like XFS. The
-> lock protects the data object and follows the data object through
-> the processing pipeline, whilst the original submitter moves on to
-> the next operation to processes without blocking.
-> 
-> This is the non-blocking, async processing model that io_uring
-> development is pushing filesystems towards, so assuming that we only
-> hand a lock to a single worker task and then wait for it complete
-> (i.e. synchronous operation) flies in the face of current
-> development directions...
+diff --git a/common/rc b/common/rc
+index 1618ded5..20608fbe 100644
+--- a/common/rc
++++ b/common/rc
+@@ -965,7 +965,7 @@ _scratch_mkfs_sized()
+ 		[ "$fssize" -gt "$devsize" ] && _notrun "Scratch device too small"
+ 	fi
+ 
+-	if [ "$FSTYP" = "xfs" ] && [ -b "$SCRATCH_RTDEV" ]; then
++	if [ "$FSTYP" = "xfs" ] && [ "$USE_EXTERNAL" = yes -a -b "$SCRATCH_RTDEV" ]; then
+ 		local rtdevsize=`blockdev --getsize64 $SCRATCH_RTDEV`
+ 		[ "$fssize" -gt "$rtdevsize" ] && _notrun "Scratch rt device too small"
+ 		rt_ops="-r size=$fssize"
+-- 
+2.39.2
 
-I was looking at things from an interface abuse perspective. How easy is
-it to do the wrong thing. As said, we've had a bunch of really dodgy
-code with the _is_locked class of functions, hence my desire to find
-something else.
-
-As to the whole non-owner locking, yes, that's problematic. I'm not
-convinced async operations require non-owner locking, at the same time I
-do see that IO completions pose a challence.
-
-Coming from the schedulability and real-time corner, non-owner locks are
-a nightmare because of the inversions. So yeah, fun to be had I'm sure.
