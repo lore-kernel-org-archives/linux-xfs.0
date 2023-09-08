@@ -2,87 +2,121 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B65B5EEB570
-	for <linux-xfs@archiver.kernel.org>; Fri,  8 Sep 2023 23:55:28 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D3466EEB57A
+	for <linux-xfs@archiver.kernel.org>; Fri,  8 Sep 2023 23:57:15 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233557AbjIHXz1 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 8 Sep 2023 19:55:27 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45746 "EHLO
+        id S241428AbjIHX5S (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 8 Sep 2023 19:57:18 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42374 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232694AbjIHXzZ (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 8 Sep 2023 19:55:25 -0400
+        with ESMTP id S232694AbjIHX5R (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 8 Sep 2023 19:57:17 -0400
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3E93E18E
-        for <linux-xfs@vger.kernel.org>; Fri,  8 Sep 2023 16:55:22 -0700 (PDT)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id C4F52C433C7;
-        Fri,  8 Sep 2023 23:55:21 +0000 (UTC)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1C4BB133;
+        Fri,  8 Sep 2023 16:57:14 -0700 (PDT)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id B072FC433C7;
+        Fri,  8 Sep 2023 23:57:13 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1694217321;
-        bh=TM8M1AwKw74n1VveYVhOHSRBpiZumSmyTCpLifrbaCE=;
+        s=k20201202; t=1694217433;
+        bh=6lBmqZwY26Xt/+O04ezUlGJ2Cb+N+JDZhJqABHZhfVc=;
         h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=FQ0WLWpuplA/Wa1CrdSyHOG1MyPapgZ7shnqAftx5AbQAPVlmv3Y+spiYMn/dB9B5
-         ax7yEyEMDVUWrxGrTE/AB/+fUTq+VIDJEhdDEMcgNlf1j9wdWrVG1L83Lc4KzaZmHo
-         8e7VwDgTiyHruCDdjNohxFV0t00lxDod5Lq2n6yzzidB7E4PMAT2e5qwsybTPMwhtd
-         RSzVwyz8ithL5O/Lk890vrwssEN+aun2QqJW6C+1DQqK/IrNF55RN0/L0b/YdnBnfI
-         R6cQBQRsxVnqNe4YFIEzUt+SMAF/fct7fPbFIT8tBmCl0Kh1qaG7nadUwILy62lTj0
-         yzYSc+1jn9Sgg==
-Date:   Fri, 8 Sep 2023 16:55:21 -0700
+        b=CpVDQiMPRbcujh8GgkYcsvP6L0FAi7z+U+uKsteB79xgyiyHvGArD1YkA7CEy5tnu
+         hGVS/1jRaQn1dkiM5xhPMi0gOcVDaKsfBzyBQHxj6zJoOspXL5EvnN2W7tJ32k5T0B
+         XqIOJWGQg6c2IMuxgJ/KXJhJ03d91QYBcUF41jojbJKcRAiu0Vybp9dYvF+c/pmwQs
+         0BS51x38CUMrzuE53SRY8p1WV2o1pRWoIB4LCEVPrew1XFu1Hs/E84RuTbucglunjh
+         Y4Oe5ZVJx191J8BECnlBU24fiXYBCwD6gmnNcZdBVVU/ITZdhG6d2990yCSax/OPAO
+         fLwwfHfH9g0ng==
+Date:   Fri, 8 Sep 2023 16:57:13 -0700
 From:   "Darrick J. Wong" <djwong@kernel.org>
-To:     Shiyang Ruan <ruansy.fnst@fujitsu.com>
-Cc:     linux-xfs@vger.kernel.org
-Subject: Re: [PATCH] xfs: correct calculation for blockcount
-Message-ID: <20230908235521.GO28202@frogsfrogsfrogs>
-References: <20230828072450.1510248-1-ruansy.fnst@fujitsu.com>
- <26b057ea-c373-4df5-9d7e-cf56d78844a5@fujitsu.com>
+To:     alexjlzheng@gmail.com
+Cc:     chandan.babu@oracle.com, linux-xfs@vger.kernel.org,
+        linux-kernel@vger.kernel.org,
+        Jinliang Zheng <alexjlzheng@tencent.com>
+Subject: Re: [PATCH] xfs: remove redundant batch variables for serialization
+Message-ID: <20230908235713.GP28202@frogsfrogsfrogs>
+References: <20230907123017.1049345-1-alexjlzheng@tencent.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <26b057ea-c373-4df5-9d7e-cf56d78844a5@fujitsu.com>
+In-Reply-To: <20230907123017.1049345-1-alexjlzheng@tencent.com>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Fri, Sep 08, 2023 at 06:18:52PM +0800, Shiyang Ruan wrote:
-> Ping~
+On Thu, Sep 07, 2023 at 08:30:18PM +0800, alexjlzheng@gmail.com wrote:
+> From: Jinliang Zheng <alexjlzheng@tencent.com>
 > 
-> 在 2023/8/28 15:24, Shiyang Ruan 写道:
-> > The blockcount, which means length, should be "end + 1 - start".  So,
-> > add the missing "+1" here.
-> > 
-> > Fixes: 5cf32f63b0f4 ("xfs: fix the calculation for "end" and "length"")
-> > Signed-off-by: Shiyang Ruan <ruansy.fnst@fujitsu.com>
-> > ---
-> >   fs/xfs/xfs_notify_failure.c | 2 +-
-> >   1 file changed, 1 insertion(+), 1 deletion(-)
-> > 
-> > diff --git a/fs/xfs/xfs_notify_failure.c b/fs/xfs/xfs_notify_failure.c
-> > index 4a9bbd3fe120..459fc8a39635 100644
-> > --- a/fs/xfs/xfs_notify_failure.c
-> > +++ b/fs/xfs/xfs_notify_failure.c
-> > @@ -151,7 +151,7 @@ xfs_dax_notify_ddev_failure(
-> >   		agend = min(be32_to_cpu(agf->agf_length),
-> >   				ri_high.rm_startblock);
+> Historically, when generic percpu counters were introduced in xfs for
+> free block counters by commit 0d485ada404b ("xfs: use generic percpu
+> counters for free block counter"), the counters use a custom batch size.
+> In xfs_mod_freecounter(), originally named xfs_mod_fdblocks(), this
+> patch attempts to serialize the program using a smaller batch size as a
+> parameter to the addition function as the counter approaches 0.
+> 
+> Commit 8c1903d3081a ("xfs: inode and free block counters need to use
+> __percpu_counter_compare") pointed out the error in commit 0d485ada404b
+> ("xfs: use generic percpu counters for free block counter") mentioned
+> above and said that "Because the counters use a custom batch size, the
+> comparison functions need to be aware of that batch size otherwise the
+> comparison does not work correctly".
+> 
+> After commit 8c1903d3081a ("xfs: inode and free block counters need to
+> use __percpu_counter_compare"), the existence of the batch variable is
+> no longer necessary, so it was removed to simplify the code.
 
-I don't understand this.  ri_high.rm_startblock should be the last agbno
-for which we want rmapbt mappings.  If agf_length is 100, then don't we
-want to be clamping agend to 99, not 100?  Block 99 is the last block in
-an AG.
+It *was removed*?  It looks like this patch is _doing_ the removing.
 
-	agend = min(be32_to_cpu(agf->agf_length) - 1,
-		    ri_high.rm_startblock);
-
-If we do the above...
-
-> >   		notify.startblock = ri_low.rm_startblock;
-> > -		notify.blockcount = agend - ri_low.rm_startblock;
-> > +		notify.blockcount = agend + 1 - ri_low.rm_startblock;
-
-...then this actually makes sense.
-
-> >   		error = xfs_rmap_query_range(cur, &ri_low, &ri_high,
-> >   				xfs_dax_failure_fn, &notify);
-
-Sorry I've been kinda slow to respond.
+I don't get it, what problem are you having?
 
 --D
+
+> Signed-off-by: Jinliang Zheng <alexjlzheng@tencent.com>
+> ---
+>  fs/xfs/xfs_mount.c | 17 +----------------
+>  1 file changed, 1 insertion(+), 16 deletions(-)
+> 
+> diff --git a/fs/xfs/xfs_mount.c b/fs/xfs/xfs_mount.c
+> index 0a0fd19573d8..72dab39376b7 100644
+> --- a/fs/xfs/xfs_mount.c
+> +++ b/fs/xfs/xfs_mount.c
+> @@ -1144,7 +1144,6 @@ xfs_mod_freecounter(
+>  	int64_t			lcounter;
+>  	long long		res_used;
+>  	uint64_t		set_aside = 0;
+> -	s32			batch;
+>  	bool			has_resv_pool;
+>  
+>  	ASSERT(counter == &mp->m_fdblocks || counter == &mp->m_frextents);
+> @@ -1177,20 +1176,6 @@ xfs_mod_freecounter(
+>  		return 0;
+>  	}
+>  
+> -	/*
+> -	 * Taking blocks away, need to be more accurate the closer we
+> -	 * are to zero.
+> -	 *
+> -	 * If the counter has a value of less than 2 * max batch size,
+> -	 * then make everything serialise as we are real close to
+> -	 * ENOSPC.
+> -	 */
+> -	if (__percpu_counter_compare(counter, 2 * XFS_FDBLOCKS_BATCH,
+> -				     XFS_FDBLOCKS_BATCH) < 0)
+> -		batch = 1;
+> -	else
+> -		batch = XFS_FDBLOCKS_BATCH;
+> -
+>  	/*
+>  	 * Set aside allocbt blocks because these blocks are tracked as free
+>  	 * space but not available for allocation. Technically this means that a
+> @@ -1204,7 +1189,7 @@ xfs_mod_freecounter(
+>  	 */
+>  	if (has_resv_pool)
+>  		set_aside = xfs_fdblocks_unavailable(mp);
+> -	percpu_counter_add_batch(counter, delta, batch);
+> +	percpu_counter_add_batch(counter, delta, XFS_FDBLOCKS_BATCH);
+>  	if (__percpu_counter_compare(counter, set_aside,
+>  				     XFS_FDBLOCKS_BATCH) >= 0) {
+>  		/* we had space! */
+> -- 
+> 2.31.1
+> 
