@@ -2,159 +2,237 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 75C98EEB57E
-	for <linux-xfs@archiver.kernel.org>; Sun, 10 Sep 2023 22:01:32 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id ADBE3EE49A4
+	for <linux-xfs@archiver.kernel.org>; Sun, 10 Sep 2023 22:56:53 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231432AbjIJWBe (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Sun, 10 Sep 2023 18:01:34 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46116 "EHLO
+        id S229873AbjIJW4z (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Sun, 10 Sep 2023 18:56:55 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34666 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229604AbjIJWBd (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sun, 10 Sep 2023 18:01:33 -0400
-Received: from mail-pf1-x436.google.com (mail-pf1-x436.google.com [IPv6:2607:f8b0:4864:20::436])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 65092136
-        for <linux-xfs@vger.kernel.org>; Sun, 10 Sep 2023 15:01:28 -0700 (PDT)
-Received: by mail-pf1-x436.google.com with SMTP id d2e1a72fcca58-68e3083aa1dso3670337b3a.1
-        for <linux-xfs@vger.kernel.org>; Sun, 10 Sep 2023 15:01:28 -0700 (PDT)
+        with ESMTP id S229834AbjIJW4z (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sun, 10 Sep 2023 18:56:55 -0400
+Received: from mail-ot1-x329.google.com (mail-ot1-x329.google.com [IPv6:2607:f8b0:4864:20::329])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0732F184
+        for <linux-xfs@vger.kernel.org>; Sun, 10 Sep 2023 15:56:50 -0700 (PDT)
+Received: by mail-ot1-x329.google.com with SMTP id 46e09a7af769-6c0a42a469dso2708345a34.2
+        for <linux-xfs@vger.kernel.org>; Sun, 10 Sep 2023 15:56:49 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=fromorbit-com.20230601.gappssmtp.com; s=20230601; t=1694383288; x=1694988088; darn=vger.kernel.org;
+        d=fromorbit-com.20230601.gappssmtp.com; s=20230601; t=1694386609; x=1694991409; darn=vger.kernel.org;
         h=in-reply-to:content-disposition:mime-version:references:message-id
          :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
-        bh=EyybjuBSw2AsBAibBPVqGccWs6P0JtTeGBB0Kwx90Dw=;
-        b=b1Q+Djrc6DRgK0lSMIXf6OVmm1S98Rb1dJdV/4AjeMobXYoqxa/k4Xb7XAYcmCuvbB
-         T8pFPhiJHk/Ig8CcU4is+jZGfReesXQjqK7ULjc+VZz110Uqhy1NjrWTu4Ej2kgb1UEn
-         ZHgnS7dDfuM0nrDuRkgBy+D/YOBtPecXxWCyUh6h/0/NlsJyyOwKHQwSKYYxfVY7xjkS
-         7I+QxdaDiDVRMV8qekGuV48jZlbOlbc6skR8a29kp5hS8zsrhWfeCv9XIJ/gwMURSkPX
-         Ncgzq9d3+KaDgvRq3XsvmeqBjcqt9Lc7ewxeY00IZtUnccPI4WIduUYqP2aDlo+H2VFl
-         7yRw==
+        bh=+TPanxOg8S3V8mMy6Pp/m7xqBOLfWHi+HzjTxmwzObk=;
+        b=tnY3gk5RmKP8McVvhdot6mmd6KSMTXAAoP76s9kb7nbSMS8bjVKjd/r7FXboiOojdY
+         aEWIVwp9rjvc7+GuR4MHcUwQzKG6w3L6Pid6lqnc26CwsXra3tLmuNR2t9NevRlFZWfP
+         RbbS51ie/YKWNxUrirkh6hdvSscdElkgZViAGgqZ6P5ke4wCtxECP2pBUxpzWlP4Ld/4
+         9o8zuqYf+0G1GejkEpFvoNR4F0gYXDwDm9cl3gVr/viPbxtzhwGG8rYl8tI8zpArVQYa
+         2CBohR0TYYPvOw/peUNiJQdO7GaNbZBjtxV8GI0NUM/X1oS6ZLH4WwpzDG7Khn3LDXD3
+         yX6g==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1694383288; x=1694988088;
+        d=1e100.net; s=20230601; t=1694386609; x=1694991409;
         h=in-reply-to:content-disposition:mime-version:references:message-id
          :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
          :message-id:reply-to;
-        bh=EyybjuBSw2AsBAibBPVqGccWs6P0JtTeGBB0Kwx90Dw=;
-        b=tgvGxDh9dGHiGGuxaCmtVGajla8O/B8rlQnK1m9sd8kY+NavnfLdAMdoII4uHx+a5E
-         HCRQYCKBu2EDvE+ac6VNh28eE0BIeXCsd6mzy5WmcekoTDAjWuSErTA6kZAzvQuxs8aC
-         5YA6WFzemyf3K6P73wbFDTlOyfnE9mBH1fqHMvSuV0k/4XasNZWMCmlJ0HoHx1VY0Jl5
-         Am/LszMMmY/aPQHkyhZ6xkrV+sA3CvtINnCXS0GR+K0AhzHGkicjtw6RvbjhrYwPJ+kP
-         B7rR/deHpUBF2+KwbKUN+kWmj8VZ4wjvfWNhTTTMfRrsYPAZf0B1B1tU+ymUFPGIRshR
-         6AUg==
-X-Gm-Message-State: AOJu0YyBKBre+lbZyfuNB/sgIddbLXhL/wmUpsK9QyrqoU05Mwx1Y5qh
-        grC1LOfcLmOhowJGQX4wu2ygLg==
-X-Google-Smtp-Source: AGHT+IHSYFPf3w2qdTZr9bikkzuSsvPYQjYYZyW+Zfc616rQWXs3Eeo2BzwinmhhOfJVOtnHj1lBTA==
-X-Received: by 2002:a05:6a00:1a0c:b0:68c:57c7:1eb0 with SMTP id g12-20020a056a001a0c00b0068c57c71eb0mr9371853pfv.11.1694383287795;
-        Sun, 10 Sep 2023 15:01:27 -0700 (PDT)
+        bh=+TPanxOg8S3V8mMy6Pp/m7xqBOLfWHi+HzjTxmwzObk=;
+        b=H09eSryeECfJBQVE/KeV/4Nxg1PR7ook6rfldoB1Ika7zy4koIxzNtr2DKCzeF4lAq
+         zuYn3U+MOmEOINksAXjPe6CZpRMHHK37QvueEc/PkPpmUTGUSuQwwfYM6T7iM8WLPRgE
+         GhG4kzkFfbZ5Y60bgXa/A9x/ugPEehNpKZtwUJbShaY1OPj9cMdUca2OTA36s9PBgnAY
+         ySmHhAdAbmibz/KkBZeBsUgZg8okGz3+mV+nk+cNEdArQw3GaPXTgaljbR27+jAk/FmC
+         bInTyzpt77pnCUvP1G7bBqlDq1tRjmtJgnN6Ja8lTO8uhRUZeilzdhtlF+jhSYCWi/kR
+         jRUA==
+X-Gm-Message-State: AOJu0Yw5juv8GFWN4RClh+dd05sncxNfdnGHOJZA18kB+zA3bjD8SNSC
+        fsVSshGfEbO+A7eZq0t66Q2PO94wPau/r+Lu6z4=
+X-Google-Smtp-Source: AGHT+IG/p9+fYYrOaawvIfMev9QnWOl8/CdwqzWwYldOYP2/A4VHMvM9tDx8xTlaFVw6ZOc1ZFKwkw==
+X-Received: by 2002:a05:6358:3422:b0:134:c1eb:8744 with SMTP id h34-20020a056358342200b00134c1eb8744mr9289128rwd.9.1694386609107;
+        Sun, 10 Sep 2023 15:56:49 -0700 (PDT)
 Received: from dread.disaster.area (pa49-195-66-88.pa.nsw.optusnet.com.au. [49.195.66.88])
-        by smtp.gmail.com with ESMTPSA id u10-20020a62ed0a000000b0068a3dd6c1dasm4403641pfh.142.2023.09.10.15.01.27
+        by smtp.gmail.com with ESMTPSA id x22-20020aa79196000000b0068bc014f352sm4378359pfa.7.2023.09.10.15.56.48
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Sun, 10 Sep 2023 15:01:27 -0700 (PDT)
+        Sun, 10 Sep 2023 15:56:48 -0700 (PDT)
 Received: from dave by dread.disaster.area with local (Exim 4.96)
         (envelope-from <david@fromorbit.com>)
-        id 1qfSUe-00DWBA-0u;
-        Mon, 11 Sep 2023 08:01:24 +1000
-Date:   Mon, 11 Sep 2023 08:01:24 +1000
+        id 1qfTMD-00DXC8-24;
+        Mon, 11 Sep 2023 08:56:45 +1000
+Date:   Mon, 11 Sep 2023 08:56:45 +1000
 From:   Dave Chinner <david@fromorbit.com>
-To:     Pavel Begunkov <asml.silence@gmail.com>
-Cc:     Hao Xu <hao.xu@linux.dev>, Matthew Wilcox <willy@infradead.org>,
-        io-uring@vger.kernel.org, Jens Axboe <axboe@kernel.dk>,
-        Dominique Martinet <asmadeus@codewreck.org>,
-        Christian Brauner <brauner@kernel.org>,
-        Alexander Viro <viro@zeniv.linux.org.uk>,
-        Stefan Roesch <shr@fb.com>, Clay Harris <bugs@claycon.org>,
-        "Darrick J . Wong" <djwong@kernel.org>,
-        linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org,
-        linux-ext4@vger.kernel.org, linux-cachefs@redhat.com,
-        ecryptfs@vger.kernel.org, linux-nfs@vger.kernel.org,
-        linux-unionfs@vger.kernel.org, bpf@vger.kernel.org,
-        netdev@vger.kernel.org, linux-s390@vger.kernel.org,
-        linux-kernel@vger.kernel.org, linux-block@vger.kernel.org,
-        linux-btrfs@vger.kernel.org, codalist@coda.cs.cmu.edu,
-        linux-f2fs-devel@lists.sourceforge.net, cluster-devel@redhat.com,
-        linux-mm@kvack.org, linux-nilfs@vger.kernel.org,
-        devel@lists.orangefs.org, linux-cifs@vger.kernel.org,
-        samba-technical@lists.samba.org, linux-mtd@lists.infradead.org,
-        Wanpeng Li <wanpengli@tencent.com>
-Subject: Re: [PATCH 07/11] vfs: add nowait parameter for file_accessed()
-Message-ID: <ZP48tAg2iS0UzKQf@dread.disaster.area>
-References: <20230827132835.1373581-1-hao.xu@linux.dev>
- <20230827132835.1373581-8-hao.xu@linux.dev>
- <ZOvA5DJDZN0FRymp@casper.infradead.org>
- <c728bf3f-d9db-4865-8473-058b26c11c06@linux.dev>
- <ZO3cI+DkotHQo3md@casper.infradead.org>
- <642de4e6-801d-fcad-a7ce-bfc6dec3b6e5@linux.dev>
- <ZPUJHAKzxvXiEDYA@dread.disaster.area>
- <6489b8cb-7d54-1e29-f192-a3449ed87fa1@gmail.com>
+To:     Peter Zijlstra <peterz@infradead.org>
+Cc:     Matthew Wilcox <willy@infradead.org>,
+        Ingo Molnar <mingo@redhat.com>, Will Deacon <will@kernel.org>,
+        Waiman Long <longman@redhat.com>, linux-kernel@vger.kernel.org,
+        linux-mm@kvack.org, Chandan Babu R <chandan.babu@oracle.com>,
+        "Darrick J . Wong" <djwong@kernel.org>, linux-xfs@vger.kernel.org
+Subject: Re: [PATCH 1/5] locking: Add rwsem_is_write_locked()
+Message-ID: <ZP5JrYOge3tSAvj7@dread.disaster.area>
+References: <20230907174705.2976191-1-willy@infradead.org>
+ <20230907174705.2976191-2-willy@infradead.org>
+ <20230907190810.GA14243@noisy.programming.kicks-ass.net>
+ <ZPoift7B3UDQgmWB@casper.infradead.org>
+ <20230907193838.GB14243@noisy.programming.kicks-ass.net>
+ <ZPpV+MeFqX6RHIYw@dread.disaster.area>
+ <20230908104434.GB24372@noisy.programming.kicks-ass.net>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <6489b8cb-7d54-1e29-f192-a3449ed87fa1@gmail.com>
+In-Reply-To: <20230908104434.GB24372@noisy.programming.kicks-ass.net>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Fri, Sep 08, 2023 at 01:29:55AM +0100, Pavel Begunkov wrote:
-> On 9/3/23 23:30, Dave Chinner wrote:
-> > On Wed, Aug 30, 2023 at 02:11:31PM +0800, Hao Xu wrote:
-> > > On 8/29/23 19:53, Matthew Wilcox wrote:
-> > > > On Tue, Aug 29, 2023 at 03:46:13PM +0800, Hao Xu wrote:
-> > > > > On 8/28/23 05:32, Matthew Wilcox wrote:
-> > > > > > On Sun, Aug 27, 2023 at 09:28:31PM +0800, Hao Xu wrote:
-> > > > > > > From: Hao Xu <howeyxu@tencent.com>
-> > > > > > > 
-> > > > > > > Add a boolean parameter for file_accessed() to support nowait semantics.
-> > > > > > > Currently it is true only with io_uring as its initial caller.
-> > > > > > 
-> > > > > > So why do we need to do this as part of this series?  Apparently it
-> > > > > > hasn't caused any problems for filemap_read().
-> > > > > > 
-> > > > > 
-> > > > > We need this parameter to indicate if nowait semantics should be enforced in
-> > > > > touch_atime(), There are locks and maybe IOs in it.
-> > > > 
-> > > > That's not my point.  We currently call file_accessed() and
-> > > > touch_atime() for nowait reads and nowait writes.  You haven't done
-> > > > anything to fix those.
-> > > > 
-> > > > I suspect you can trim this patchset down significantly by avoiding
-> > > > fixing the file_accessed() problem.  And then come back with a later
-> > > > patchset that fixes it for all nowait i/o.  Or do a separate prep series
-> > > 
-> > > I'm ok to do that.
-> > > 
-> > > > first that fixes it for the existing nowait users, and then a second
-> > > > series to do all the directory stuff.
-> > > > 
-> > > > I'd do the first thing.  Just ignore the problem.  Directory atime
-> > > > updates cause I/O so rarely that you can afford to ignore it.  Almost
-> > > > everyone uses relatime or nodiratime.
-> > > 
-> > > Hi Matthew,
-> > > The previous discussion shows this does cause issues in real
-> > > producations: https://lore.kernel.org/io-uring/2785f009-2ebb-028d-8250-d5f3a30510f0@gmail.com/#:~:text=fwiw%2C%20we%27ve%20just%20recently%20had%20similar%20problems%20with%20io_uring%20read/write
-> > > 
-> > 
-> > Then separate it out into it's own patch set so we can have a
-> > discussion on the merits of requiring using noatime, relatime or
-> > lazytime for really latency sensitive IO applications. Changing code
-> > is not always the right solution...
+On Fri, Sep 08, 2023 at 12:44:34PM +0200, Peter Zijlstra wrote:
+> On Fri, Sep 08, 2023 at 09:00:08AM +1000, Dave Chinner wrote:
 > 
-> Separation sounds reasonable, but it can hardly be said that only
-> latency sensitive apps would care about >1s nowait/async submission
-> delays. Presumably, btrfs can improve on that, but it still looks
-> like it's perfectly legit for filesystems do heavy stuff in
-> timestamping like waiting for IO. Right?
+> > > Right, but if you're not the lock owner, your answer to the question is
+> > > a dice-roll, it might be locked, it might not be.
+> > 
+> > Except that the person writing the code knows the call chain that
+> > leads up to that code, and so they have a pretty good idea whether
+> > the object should be locked or not. If we are running that code, and
+> > the object is locked, then it's pretty much guaranteed that the
+> > owner of the lock is code that executed the check, because otherwise
+> > we have a *major lock implementation bug*.
+> 
+> Agreed, and this is fine. However there's been some very creative
+> 'use' of the _is_locked() class of functions in the past that did not
+> follow 'common' sense.
+> 
+> If all usage was: I should be holding this, lets check. I probably
+> wouldn't have this bad feeling about things.
 
-Yes, it is, no-one is denying that. And some filesystems are worse
-than others, but none of that means it has to be fixed so getdents
-can be converted to NOWAIT semantics.
+So your argument against such an interface is essentially "we can't
+have nice things because someone might abuse them"?
 
-ie. this patchset is about the getdents NOWAIT machinery, and
-fiddling around with timestamps has much, much wider scope than just
-NOWAIT getdents machinery. We'll have this discussion about NOWAIT
-timestamp updates when a RFC is proposed to address the wider
-problem of how timestamp updates should behave in NOWAIT context.
+> > > Most devs should run with lockdep on when writing new code, and I know
+> > > the sanitizer robots run with lockdep on.
+> > > 
+> > > In general there seems to be a ton of lockdep on coverage.
+> > 
+> > *cough*
+> > 
+> > Bit locks, semaphores, and all sorts of other constructs for IO
+> > serialisation (like inode_dio_wait()) have no lockdep coverage at
+> > all. IOWs, large chunks of many filesystems, the VFS and the VM have
+> > little to no lockdep coverage at all.
+> 
+> True, however I was commenting on the assertion that vm code has
+> duplicate asserts with the implication that was because not a lot of
+> people run with lockdep on.
 
--Dave.
+I think that implication is pretty much spot on the money for any
+subsystem that has significant correctness testing overhead. A
+single fstests regression test pass for a single configuration for
+XFS takes well over 4 hours to run. If I add lockdep, it's about 7
+hours. If I add lockdep and KASAN, it's closer to 12 hours. It just
+isn't viable to run test kernels with these options day-in, day-out.
+Maybe once a release I'll run a weekend sanity check with them
+enabled, but otherwise the rare issue they find just isn't worth the
+cost of enabling them....
+
+
+> > > > we also have VM_BUG_ON_MM(!rwsem_is_write_locked(&mm->mmap_lock), mm)
+> > > > to give us a good assertion when lockdep is disabled.
+> > > 
+> > > Is that really worth it still? I mean, much of these assertions pre-date
+> > > lockdep.
+> > 
+> > And we're trying to propagate them because lockdep isn't a viable
+> > option for day to day testing of filesystems because of it's
+> > overhead vs how infrequently it finds new problems.
+> 
+> ... in XFS. Lockdep avoids a giant pile of broken from entering the
+> kernel and the robots still report plenty.
+
+Nobody is suggesting that lockdep gets replaced by these functions.
+They are *in addition* to lockdep, and are used to give use 99.9%
+certainty that locks are being used correctly without adding any
+runtime overhead at all.
+
+That's the whole point - it is simple introspection code that will
+find most gross locking mistakes that people make very quickly,
+without any real costs. If you're worried about people abusing
+introspection code, then you're forgetting that they can just dig
+directly at the rwsem guts directly themselves. Adding an interface
+that does introspection right and enables the internal
+imp[lementation to change without breaking anything is a no brainer;
+it stops people from just digging in the guts of the structure and
+guaranteeing that code will break if the implementation changes...
+
+> > > > XFS has a problem with using lockdep in general, which is that a worker
+> > > > thread can be spawned and use the fact that the spawner is holding the
+> > > > lock.  There's no mechanism for the worker thread to ask "Does struct
+> > > > task_struct *p hold the lock?".
+> > > 
+> > > Will be somewhat tricky to make happen -- but might be doable. It is
+> > > however an interface that is *very* hard to use correctly. Basically I
+> > > think you want to also assert that your target task 'p' is blocked,
+> > > right?
+> > > 
+> > > That is: assert @p is blocked and holds @lock.
+> > 
+> > That addresses the immediate symptom; it doesn't address the large
+> > problem with lockdep and needing non-owner rwsem semantics.
+> > 
+> > i.e. synchronous task based locking models don't work for
+> > asynchronous multi-stage pipeline processing engines like XFS. The
+> > lock protects the data object and follows the data object through
+> > the processing pipeline, whilst the original submitter moves on to
+> > the next operation to processes without blocking.
+> > 
+> > This is the non-blocking, async processing model that io_uring
+> > development is pushing filesystems towards, so assuming that we only
+> > hand a lock to a single worker task and then wait for it complete
+> > (i.e. synchronous operation) flies in the face of current
+> > development directions...
+> 
+> I was looking at things from an interface abuse perspective. How easy is
+> it to do the wrong thing. As said, we've had a bunch of really dodgy
+> code with the _is_locked class of functions, hence my desire to find
+> something else.
+> 
+> As to the whole non-owner locking, yes, that's problematic. I'm not
+> convinced async operations require non-owner locking, at the same time I
+> do see that IO completions pose a challence.
+> 
+> Coming from the schedulability and real-time corner, non-owner locks are
+> a nightmare because of the inversions. So yeah, fun to be had I'm sure.
+
+I'm not sure you understand the scope of the problem with modern
+filesystems vs RT processing. The moment code enters a modern
+filesystem, it gives up all hope of real-time response guarantees.
+There is currently nothing a RT process can do but wait for the
+filesystem to finish with the locks it holds, and the wait times are
+effectively unbound because there may be a requirement for tens of
+thousands of IOs to be done before the lock is dropped and the RT
+task can make progress.
+
+Priority inheritance for the lock owner won't make any difference
+here, because the latency is not caused by something running on a
+CPU.  IOWs, lock inversions and non-owner locks are the very least
+of the problems for RT priority apps when it comes to filesystem
+operations.
+
+The solution for RT priority apps avoiding priority inversions in
+filesystems is going be io_uring. i.e. the initial NOWAIT operation
+is done with RT priority in the RT task itself, but if that is going
+to be blocked it gets punted to a background worker for async
+processing and the RT priority task goes on to processing the next
+thing it needs to do.
+
+All the  background async operations are performed with the same
+(non-RT) priority and we just don't need to care about priority
+inversions or the problems RT has with non-owner lock contexts. The
+RT tasks themselves don't care, either, because they don't ever get
+stuck waiting on a filesystem lock that a lower priority task might
+hold, or get stuck on an operation that might require unbound
+amounts of IO to complete (e.g. transaction reservations).
+
+IOWs, if we want to make "RT with filesystems" a reality, we need to
+stop worrying about constraining lock implementations and handling
+priority inversions. Instead, we need to look towards how to make
+filesystem infrastructure fully non-blocking for RT priority tasks
+and writing RT applications to use that infrastructure....
+
+Cheers,
+
+Dave.
 -- 
 Dave Chinner
 david@fromorbit.com
