@@ -2,163 +2,82 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1E33DCA0EC4
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 638A8CA0EC3
 	for <linux-xfs@archiver.kernel.org>; Mon, 11 Sep 2023 21:29:48 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1345568AbjIKVVS (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 11 Sep 2023 17:21:18 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50102 "EHLO
+        id S1345578AbjIKVVX (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 11 Sep 2023 17:21:23 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49856 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S236093AbjIKJus (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 11 Sep 2023 05:50:48 -0400
-Received: from mail-pl1-x62b.google.com (mail-pl1-x62b.google.com [IPv6:2607:f8b0:4864:20::62b])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0D023ED
-        for <linux-xfs@vger.kernel.org>; Mon, 11 Sep 2023 02:50:21 -0700 (PDT)
-Received: by mail-pl1-x62b.google.com with SMTP id d9443c01a7336-1c39500767aso6236875ad.0
-        for <linux-xfs@vger.kernel.org>; Mon, 11 Sep 2023 02:50:21 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=bytedance.com; s=google; t=1694425820; x=1695030620; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=89uHTpJcIxLZo7abv8HLEcqu89E7sxjnosGqTuxXflE=;
-        b=hIHD0F8GO3yyHZO8YOa8ZRpyhOG3Y5eVMeDgFHBjo7pBPAxZApxCLrT5UfjzkMSXQ5
-         s/W6x43VNIJ0S1XtyToZxbPNk3AvZTow69XR69vzMnbNQVT1Z/cVsiaQojftOQhDf4q0
-         xpFLNBpNVqM+4+RvlBoprTYj9+HEOf7JoLBE2+UFSELQZl1h7BITxC/ivzCTgLl2xrir
-         C9MrPqTuAZdxOzbWcVUc4Q3J3eGrtk8w2Vo+cuyMgJWl3W8Cqe9lOgZRO7SIebfrwU3U
-         a6OKSeIp+Fnv7RxNG6FOK36XWBCDVDL3N5SjE3aEgte8K7B1CLoYUnG5krA4jKFT0FUS
-         XZ3w==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1694425820; x=1695030620;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=89uHTpJcIxLZo7abv8HLEcqu89E7sxjnosGqTuxXflE=;
-        b=syl/PPDituT2nymcjvXEgOAcnJ7d4FDqDZ7WZCvsV1pTntKki4V8oDitFBVsI+pRuE
-         zX2o1d286GKj9ceGkjwPaUA4XkvfO7LkpR4MS8CFRsS4tCAqAs+m8igd1Je8nom4jtQ1
-         2nzYkxx1zDNJ2fws/Q6l48gvw6TGdf+s6tpsA4jHtwwH/u4zjLE/D3RjzlUEdbQxt4D4
-         7QEB+g62vAqU/TAsFZwAEyLI2LVMMM+iyxS/TdRxK6hYGIjHZnEm/sBBezAbBLBVzbab
-         SSfgOKWT+8pHIbJjQGAkWncOpwshI+fvll54IECCC1B2KgExMuBTKxM2vGO/pu5Gb/tN
-         UZrg==
-X-Gm-Message-State: AOJu0Yx2IEk4Dlsq/3eIHz23BZDVOuLTk5EP90MOox3co+FRMyLn7g/H
-        TjDyn9jEz+Wm7PdITRZ1u0voog==
-X-Google-Smtp-Source: AGHT+IEvj565qWnkofccC8hLFXJuQMn8WbyJUnUdIWHGtU6d/4Mn9yJ5j8IFsYM+kWtEVXfSyuocaw==
-X-Received: by 2002:a17:902:e5c7:b0:1c1:fc5c:b34a with SMTP id u7-20020a170902e5c700b001c1fc5cb34amr10661836plf.3.1694425820591;
-        Mon, 11 Sep 2023 02:50:20 -0700 (PDT)
-Received: from C02DW0BEMD6R.bytedance.net ([203.208.167.146])
-        by smtp.gmail.com with ESMTPSA id az7-20020a170902a58700b001bdc2fdcf7esm5988188plb.129.2023.09.11.02.50.12
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 11 Sep 2023 02:50:20 -0700 (PDT)
-From:   Qi Zheng <zhengqi.arch@bytedance.com>
-To:     akpm@linux-foundation.org, david@fromorbit.com, tkhai@ya.ru,
-        vbabka@suse.cz, roman.gushchin@linux.dev, djwong@kernel.org,
-        brauner@kernel.org, paulmck@kernel.org, tytso@mit.edu,
-        steven.price@arm.com, cel@kernel.org, senozhatsky@chromium.org,
-        yujie.liu@intel.com, gregkh@linuxfoundation.org,
-        muchun.song@linux.dev
-Cc:     linux-kernel@vger.kernel.org, linux-mm@kvack.org,
-        linux-fsdevel@vger.kernel.org,
-        Qi Zheng <zhengqi.arch@bytedance.com>,
-        Muchun Song <songmuchun@bytedance.com>,
-        Chandan Babu R <chandan.babu@oracle.com>,
-        linux-xfs@vger.kernel.org
-Subject: [PATCH v6 34/45] xfs: dynamically allocate the xfs-buf shrinker
-Date:   Mon, 11 Sep 2023 17:44:33 +0800
-Message-Id: <20230911094444.68966-35-zhengqi.arch@bytedance.com>
-X-Mailer: git-send-email 2.24.3 (Apple Git-128)
-In-Reply-To: <20230911094444.68966-1-zhengqi.arch@bytedance.com>
-References: <20230911094444.68966-1-zhengqi.arch@bytedance.com>
+        with ESMTP id S236524AbjIKKtt (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 11 Sep 2023 06:49:49 -0400
+Received: from esa9.hc1455-7.c3s2.iphmx.com (esa9.hc1455-7.c3s2.iphmx.com [139.138.36.223])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 61CBBE9
+        for <linux-xfs@vger.kernel.org>; Mon, 11 Sep 2023 03:49:44 -0700 (PDT)
+X-IronPort-AV: E=McAfee;i="6600,9927,10829"; a="119902817"
+X-IronPort-AV: E=Sophos;i="6.02,243,1688396400"; 
+   d="scan'208";a="119902817"
+Received: from unknown (HELO yto-r1.gw.nic.fujitsu.com) ([218.44.52.217])
+  by esa9.hc1455-7.c3s2.iphmx.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 11 Sep 2023 19:49:41 +0900
+Received: from yto-m4.gw.nic.fujitsu.com (yto-nat-yto-m4.gw.nic.fujitsu.com [192.168.83.67])
+        by yto-r1.gw.nic.fujitsu.com (Postfix) with ESMTP id 8F28910879
+        for <linux-xfs@vger.kernel.org>; Mon, 11 Sep 2023 19:49:39 +0900 (JST)
+Received: from kws-ab4.gw.nic.fujitsu.com (kws-ab4.gw.nic.fujitsu.com [192.51.206.22])
+        by yto-m4.gw.nic.fujitsu.com (Postfix) with ESMTP id D2D64D3F02
+        for <linux-xfs@vger.kernel.org>; Mon, 11 Sep 2023 19:49:38 +0900 (JST)
+Received: from irides.g08.fujitsu.local (unknown [10.167.234.230])
+        by kws-ab4.gw.nic.fujitsu.com (Postfix) with ESMTP id 472406C9DA
+        for <linux-xfs@vger.kernel.org>; Mon, 11 Sep 2023 19:49:38 +0900 (JST)
+From:   Shiyang Ruan <ruansy.fnst@fujitsu.com>
+To:     linux-xfs@vger.kernel.org
+Subject: [PATCH v2] xfs: correct calculation for agend and blockcount
+Date:   Mon, 11 Sep 2023 18:46:41 +0800
+Message-ID: <20230911104641.331240-1-ruansy.fnst@fujitsu.com>
+X-Mailer: git-send-email 2.42.0
+In-Reply-To: <20230828072450.1510248-1-ruansy.fnst@fujitsu.com>
+References: <20230828072450.1510248-1-ruansy.fnst@fujitsu.com>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
+X-TM-AS-GCONF: 00
+X-TM-AS-Product-Ver: IMSS-9.1.0.1417-9.0.0.1002-27868.007
+X-TM-AS-User-Approved-Sender: Yes
+X-TMASE-Version: IMSS-9.1.0.1417-9.0.1002-27868.007
+X-TMASE-Result: 10-0.578200-10.000000
+X-TMASE-MatchedRID: Mq65of7y/lFdcKkf2LpmairLqyE6Ur/jwTlc9CcHMZerwqxtE531VCzy
+        bVqWyY2NLMbSJC+OPZpw8Y4z2QaJbh8TzIzimOwP/hxxPCwzUoPEQdG7H66TyHEqm8QYBtMOULs
+        0Yo8g+OF6XEjjvskZFHzc+anKATzy8YxSr4t7lATK/8k0UfMfWocxHQdEYQsT5TDkhhlxHqr7O3
+        /YTyTZ/XfxMQbVZE5/mOQbL4HfAv71SoQ16dM3BosC52Cg2T5/LkB52NJ63oQ=
+X-TMASE-SNAP-Result: 1.821001.0001-0-1-22:0,33:0,34:0-0
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-In preparation for implementing lockless slab shrink, use new APIs to
-dynamically allocate the xfs-buf shrinker, so that it can be freed
-asynchronously via RCU. Then it doesn't need to wait for RCU read-side
-critical section when releasing the struct xfs_buftarg.
+The agend should be "start + length - 1", then, blockcount should be
+"end + 1 - start".  Correct 2 calculation mistakes.
 
-Signed-off-by: Qi Zheng <zhengqi.arch@bytedance.com>
-Reviewed-by: Muchun Song <songmuchun@bytedance.com>
-CC: Chandan Babu R <chandan.babu@oracle.com>
-CC: "Darrick J. Wong" <djwong@kernel.org>
-CC: linux-xfs@vger.kernel.org
+Fixes: 5cf32f63b0f4 ("xfs: fix the calculation for "end" and "length"")
+Signed-off-by: Shiyang Ruan <ruansy.fnst@fujitsu.com>
 ---
- fs/xfs/xfs_buf.c | 24 +++++++++++++-----------
- fs/xfs/xfs_buf.h |  2 +-
- 2 files changed, 14 insertions(+), 12 deletions(-)
+ fs/xfs/xfs_notify_failure.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-diff --git a/fs/xfs/xfs_buf.c b/fs/xfs/xfs_buf.c
-index c1ece4a08ff4..9e7ba04572db 100644
---- a/fs/xfs/xfs_buf.c
-+++ b/fs/xfs/xfs_buf.c
-@@ -1913,8 +1913,7 @@ xfs_buftarg_shrink_scan(
- 	struct shrinker		*shrink,
- 	struct shrink_control	*sc)
- {
--	struct xfs_buftarg	*btp = container_of(shrink,
--					struct xfs_buftarg, bt_shrinker);
-+	struct xfs_buftarg	*btp = shrink->private_data;
- 	LIST_HEAD(dispose);
- 	unsigned long		freed;
+diff --git a/fs/xfs/xfs_notify_failure.c b/fs/xfs/xfs_notify_failure.c
+index 4a9bbd3fe120..8b8ef776bdc3 100644
+--- a/fs/xfs/xfs_notify_failure.c
++++ b/fs/xfs/xfs_notify_failure.c
+@@ -148,10 +148,10 @@ xfs_dax_notify_ddev_failure(
+ 			ri_high.rm_startblock = XFS_FSB_TO_AGBNO(mp, end_fsbno);
  
-@@ -1936,8 +1935,7 @@ xfs_buftarg_shrink_count(
- 	struct shrinker		*shrink,
- 	struct shrink_control	*sc)
- {
--	struct xfs_buftarg	*btp = container_of(shrink,
--					struct xfs_buftarg, bt_shrinker);
-+	struct xfs_buftarg	*btp = shrink->private_data;
- 	return list_lru_shrink_count(&btp->bt_lru, sc);
- }
+ 		agf = agf_bp->b_addr;
+-		agend = min(be32_to_cpu(agf->agf_length),
++		agend = min(be32_to_cpu(agf->agf_length) - 1,
+ 				ri_high.rm_startblock);
+ 		notify.startblock = ri_low.rm_startblock;
+-		notify.blockcount = agend - ri_low.rm_startblock;
++		notify.blockcount = agend + 1 - ri_low.rm_startblock;
  
-@@ -1947,7 +1945,7 @@ xfs_free_buftarg(
- {
- 	struct block_device	*bdev = btp->bt_bdev;
- 
--	unregister_shrinker(&btp->bt_shrinker);
-+	shrinker_free(btp->bt_shrinker);
- 	ASSERT(percpu_counter_sum(&btp->bt_io_count) == 0);
- 	percpu_counter_destroy(&btp->bt_io_count);
- 	list_lru_destroy(&btp->bt_lru);
-@@ -2031,13 +2029,17 @@ xfs_alloc_buftarg(
- 	if (percpu_counter_init(&btp->bt_io_count, 0, GFP_KERNEL))
- 		goto error_lru;
- 
--	btp->bt_shrinker.count_objects = xfs_buftarg_shrink_count;
--	btp->bt_shrinker.scan_objects = xfs_buftarg_shrink_scan;
--	btp->bt_shrinker.seeks = DEFAULT_SEEKS;
--	btp->bt_shrinker.flags = SHRINKER_NUMA_AWARE;
--	if (register_shrinker(&btp->bt_shrinker, "xfs-buf:%s",
--			      mp->m_super->s_id))
-+	btp->bt_shrinker = shrinker_alloc(SHRINKER_NUMA_AWARE, "xfs-buf:%s",
-+					  mp->m_super->s_id);
-+	if (!btp->bt_shrinker)
- 		goto error_pcpu;
-+
-+	btp->bt_shrinker->count_objects = xfs_buftarg_shrink_count;
-+	btp->bt_shrinker->scan_objects = xfs_buftarg_shrink_scan;
-+	btp->bt_shrinker->private_data = btp;
-+
-+	shrinker_register(btp->bt_shrinker);
-+
- 	return btp;
- 
- error_pcpu:
-diff --git a/fs/xfs/xfs_buf.h b/fs/xfs/xfs_buf.h
-index df8f47953bb4..702e7d9ea2ac 100644
---- a/fs/xfs/xfs_buf.h
-+++ b/fs/xfs/xfs_buf.h
-@@ -108,7 +108,7 @@ typedef struct xfs_buftarg {
- 	size_t			bt_logical_sectormask;
- 
- 	/* LRU control structures */
--	struct shrinker		bt_shrinker;
-+	struct shrinker		*bt_shrinker;
- 	struct list_lru		bt_lru;
- 
- 	struct percpu_counter	bt_io_count;
+ 		error = xfs_rmap_query_range(cur, &ri_low, &ri_high,
+ 				xfs_dax_failure_fn, &notify);
 -- 
-2.30.2
+2.42.0
 
