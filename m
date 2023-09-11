@@ -2,151 +2,118 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6999ACA0EC2
-	for <linux-xfs@archiver.kernel.org>; Mon, 11 Sep 2023 21:29:43 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 10645CA0EC7
+	for <linux-xfs@archiver.kernel.org>; Mon, 11 Sep 2023 21:29:45 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1345535AbjIKVVL (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 11 Sep 2023 17:21:11 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59696 "EHLO
+        id S1345540AbjIKVVM (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 11 Sep 2023 17:21:12 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56960 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S242464AbjIKPhj (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 11 Sep 2023 11:37:39 -0400
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id DF902E9
-        for <linux-xfs@vger.kernel.org>; Mon, 11 Sep 2023 08:37:33 -0700 (PDT)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 51D02C433C9;
-        Mon, 11 Sep 2023 15:37:33 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1694446653;
-        bh=QW4pb4R6Ccpb8384BjgXZniEg+jxpzOwMWDVqj1BEFw=;
-        h=Date:From:To:Cc:Subject:From;
-        b=EAr9mFNZdQ4DFI4b0vdExjwb44nggD677WpCMr8p30gqPMGPWLQ3CZOYrcnG6g7gv
-         10igkOyWRD3TLtFLoWZO0IGEgRWBeNBZ6V8kxdTNorUb4dfaz2ZXl66tapZ3Vq/ISY
-         JfPc1Emb0tkdYFaZYFmd1ssegUf+SqyJUz9jkfHGeJfDzpFm460KETfPgfo+02Wgor
-         /wl1N6Oj2DfpZicnup2lqj3i3Twigix3WX1QoqXk76I2vd8Xby5YfFqrNOYeihcB+q
-         SLdEAwY3//juMgigowHLnQ72lnQxNpNO89nGZ2CYT0z7bn4/Ld32zzatPVDl4RpN9v
-         ujibFNqa87TJg==
-Date:   Mon, 11 Sep 2023 08:37:32 -0700
-From:   "Darrick J. Wong" <djwong@kernel.org>
-To:     Chandan Babu R <chandanrlinux@gmail.com>
-Cc:     Dave Chinner <david@fromorbit.com>,
-        xfs <linux-xfs@vger.kernel.org>, harshit.m.mogalapalli@oracle.com
-Subject: [PATCH] xfs: only call xchk_stats_merge after validating scrub inputs
-Message-ID: <20230911153732.GZ28186@frogsfrogsfrogs>
+        with ESMTP id S236501AbjIKKrU (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 11 Sep 2023 06:47:20 -0400
+Received: from esa6.hc1455-7.c3s2.iphmx.com (esa6.hc1455-7.c3s2.iphmx.com [68.232.139.139])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7E43DE9
+        for <linux-xfs@vger.kernel.org>; Mon, 11 Sep 2023 03:47:15 -0700 (PDT)
+X-IronPort-AV: E=McAfee;i="6600,9927,10829"; a="132995944"
+X-IronPort-AV: E=Sophos;i="6.02,243,1688396400"; 
+   d="scan'208";a="132995944"
+Received: from unknown (HELO yto-r4.gw.nic.fujitsu.com) ([218.44.52.220])
+  by esa6.hc1455-7.c3s2.iphmx.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 11 Sep 2023 19:47:13 +0900
+Received: from yto-m2.gw.nic.fujitsu.com (yto-nat-yto-m2.gw.nic.fujitsu.com [192.168.83.65])
+        by yto-r4.gw.nic.fujitsu.com (Postfix) with ESMTP id C2C35D3EAC
+        for <linux-xfs@vger.kernel.org>; Mon, 11 Sep 2023 19:47:10 +0900 (JST)
+Received: from kws-ab4.gw.nic.fujitsu.com (kws-ab4.gw.nic.fujitsu.com [192.51.206.22])
+        by yto-m2.gw.nic.fujitsu.com (Postfix) with ESMTP id 085E2D5E8E
+        for <linux-xfs@vger.kernel.org>; Mon, 11 Sep 2023 19:47:10 +0900 (JST)
+Received: from edo.cn.fujitsu.com (edo.cn.fujitsu.com [10.167.33.5])
+        by kws-ab4.gw.nic.fujitsu.com (Postfix) with ESMTP id 8DE776C9DA
+        for <linux-xfs@vger.kernel.org>; Mon, 11 Sep 2023 19:47:09 +0900 (JST)
+Received: from [192.168.50.5] (unknown [10.167.234.230])
+        by edo.cn.fujitsu.com (Postfix) with ESMTP id 3763C1A0085;
+        Mon, 11 Sep 2023 18:47:09 +0800 (CST)
+Message-ID: <d6ea0b52-2e1b-4e83-9e0a-126f9d266008@fujitsu.com>
+Date:   Mon, 11 Sep 2023 18:47:08 +0800
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH] xfs: correct calculation for blockcount
+To:     "Darrick J. Wong" <djwong@kernel.org>
+Cc:     linux-xfs@vger.kernel.org
+References: <20230828072450.1510248-1-ruansy.fnst@fujitsu.com>
+ <26b057ea-c373-4df5-9d7e-cf56d78844a5@fujitsu.com>
+ <20230908235521.GO28202@frogsfrogsfrogs>
+From:   Shiyang Ruan <ruansy.fnst@fujitsu.com>
+In-Reply-To: <20230908235521.GO28202@frogsfrogsfrogs>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 8bit
+X-TM-AS-GCONF: 00
+X-TM-AS-Product-Ver: IMSS-9.1.0.1417-9.0.0.1002-27868.007
+X-TM-AS-User-Approved-Sender: Yes
+X-TMASE-Version: IMSS-9.1.0.1417-9.0.1002-27868.007
+X-TMASE-Result: 10--10.050200-10.000000
+X-TMASE-MatchedRID: AvuQOGDihJqPvrMjLFD6eHchRkqzj/bEC/ExpXrHizw0tugJQ9Wdw2nX
+        UUBQ4UsQykxJ5WoyZKukulA7P59GuuBRuAss+FbmEXjPIvKd74BMkOX0UoduuR+hI5qKPMbWdcs
+        jo3n3EUUhjxbeo5NwNPaR8eF8Hn3mMDQQSfAWi0Wz8d6zvo5NkDWRH7TlULWGZopoopCRD0SjxY
+        yRBa/qJaEwgORH8p/AtwKUvHHyXGXdB/CxWTRRu25FeHtsUoHuYZJ6VZDFISCCEzRwY+5XY8lDL
+        oHgP+xX5EANA1Y/Pc02RRIMOrvjaQ==
+X-TMASE-SNAP-Result: 1.821001.0001-0-1-22:0,33:0,34:0-0
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-From: Darrick J. Wong <djwong@kernel.org>
 
-Harshit Mogalapalli slogged through several reports from our internal
-syzbot instance and observed that they all had a common stack trace:
 
-BUG: KASAN: user-memory-access in instrument_atomic_read_write include/linux/instrumented.h:96 [inline]
-BUG: KASAN: user-memory-access in atomic_try_cmpxchg_acquire include/linux/atomic/atomic-instrumented.h:1294 [inline]
-BUG: KASAN: user-memory-access in queued_spin_lock include/asm-generic/qspinlock.h:111 [inline]
-BUG: KASAN: user-memory-access in do_raw_spin_lock include/linux/spinlock.h:187 [inline]
-BUG: KASAN: user-memory-access in __raw_spin_lock include/linux/spinlock_api_smp.h:134 [inline]
-BUG: KASAN: user-memory-access in _raw_spin_lock+0x76/0xe0 kernel/locking/spinlock.c:154
-Write of size 4 at addr 0000001dd87ee280 by task syz-executor365/1543
+在 2023/9/9 7:55, Darrick J. Wong 写道:
+> On Fri, Sep 08, 2023 at 06:18:52PM +0800, Shiyang Ruan wrote:
+>> Ping~
+>>
+>> 在 2023/8/28 15:24, Shiyang Ruan 写道:
+>>> The blockcount, which means length, should be "end + 1 - start".  So,
+>>> add the missing "+1" here.
+>>>
+>>> Fixes: 5cf32f63b0f4 ("xfs: fix the calculation for "end" and "length"")
+>>> Signed-off-by: Shiyang Ruan <ruansy.fnst@fujitsu.com>
+>>> ---
+>>>    fs/xfs/xfs_notify_failure.c | 2 +-
+>>>    1 file changed, 1 insertion(+), 1 deletion(-)
+>>>
+>>> diff --git a/fs/xfs/xfs_notify_failure.c b/fs/xfs/xfs_notify_failure.c
+>>> index 4a9bbd3fe120..459fc8a39635 100644
+>>> --- a/fs/xfs/xfs_notify_failure.c
+>>> +++ b/fs/xfs/xfs_notify_failure.c
+>>> @@ -151,7 +151,7 @@ xfs_dax_notify_ddev_failure(
+>>>    		agend = min(be32_to_cpu(agf->agf_length),
+>>>    				ri_high.rm_startblock);
+> 
+> I don't understand this.  ri_high.rm_startblock should be the last agbno
+> for which we want rmapbt mappings.  If agf_length is 100, then don't we
+> want to be clamping agend to 99, not 100?  Block 99 is the last block in
+> an AG.
+> 
+> 	agend = min(be32_to_cpu(agf->agf_length) - 1,
+> 		    ri_high.rm_startblock);
 
-CPU: 2 PID: 1543 Comm: syz-executor365 Not tainted 6.5.0-syzk #1
-Hardware name: Red Hat KVM, BIOS 1.13.0-2.module+el8.3.0+7860+a7792d29 04/01/2014
-Call Trace:
- <TASK>
- __dump_stack lib/dump_stack.c:88 [inline]
- dump_stack_lvl+0x83/0xb0 lib/dump_stack.c:106
- print_report+0x3f8/0x620 mm/kasan/report.c:478
- kasan_report+0xb0/0xe0 mm/kasan/report.c:588
- check_region_inline mm/kasan/generic.c:181 [inline]
- kasan_check_range+0x139/0x1e0 mm/kasan/generic.c:187
- instrument_atomic_read_write include/linux/instrumented.h:96 [inline]
- atomic_try_cmpxchg_acquire include/linux/atomic/atomic-instrumented.h:1294 [inline]
- queued_spin_lock include/asm-generic/qspinlock.h:111 [inline]
- do_raw_spin_lock include/linux/spinlock.h:187 [inline]
- __raw_spin_lock include/linux/spinlock_api_smp.h:134 [inline]
- _raw_spin_lock+0x76/0xe0 kernel/locking/spinlock.c:154
- spin_lock include/linux/spinlock.h:351 [inline]
- xchk_stats_merge_one.isra.1+0x39/0x650 fs/xfs/scrub/stats.c:191
- xchk_stats_merge+0x5f/0xe0 fs/xfs/scrub/stats.c:225
- xfs_scrub_metadata+0x252/0x14e0 fs/xfs/scrub/scrub.c:599
- xfs_ioc_scrub_metadata+0xc8/0x160 fs/xfs/xfs_ioctl.c:1646
- xfs_file_ioctl+0x3fd/0x1870 fs/xfs/xfs_ioctl.c:1955
- vfs_ioctl fs/ioctl.c:51 [inline]
- __do_sys_ioctl fs/ioctl.c:871 [inline]
- __se_sys_ioctl fs/ioctl.c:857 [inline]
- __x64_sys_ioctl+0x199/0x220 fs/ioctl.c:857
- do_syscall_x64 arch/x86/entry/common.c:50 [inline]
- do_syscall_64+0x3e/0x90 arch/x86/entry/common.c:80
- entry_SYSCALL_64_after_hwframe+0x6e/0xd8
-RIP: 0033:0x7ff155af753d
-Code: 00 c3 66 2e 0f 1f 84 00 00 00 00 00 90 f3 0f 1e fa 48 89 f8 48 89 f7 48 89 d6 48 89 ca 4d 89 c2 4d 89 c8 4c 8b 4c 24 08 0f 05 <48> 3d 01 f0 ff ff 73 01 c3 48 8b 0d 1b 79 2c 00 f7 d8 64 89 01 48
-RSP: 002b:00007ffc006e2568 EFLAGS: 00000246 ORIG_RAX: 0000000000000010
-RAX: ffffffffffffffda RBX: 0000000000000000 RCX: 00007ff155af753d
-RDX: 00000000200000c0 RSI: 00000000c040583c RDI: 0000000000000003
-RBP: 00000000ffffffff R08: 00000000004010c0 R09: 00000000004010c0
-R10: 00000000004010c0 R11: 0000000000000246 R12: 0000000000400cb0
-R13: 00007ffc006e2670 R14: 0000000000000000 R15: 0000000000000000
- </TASK>
+This is right.  Will fix this too.
 
-The root cause here is that xchk_stats_merge_one walks off the end of
-the xchk_scrub_stats.cs_stats array because it has been fed a garbage
-value in sm->sm_type.  That occurs because I put the xchk_stats_merge
-in the wrong place -- it should have been after the last xchk_teardown
-call on our way out of xfs_scrub_metadata because we only call the
-teardown function if we called the setup function, and we don't call the
-setup functions if the inputs are obviously garbage.
+> 
+> If we do the above...
+> 
+>>>    		notify.startblock = ri_low.rm_startblock;
+>>> -		notify.blockcount = agend - ri_low.rm_startblock;
+>>> +		notify.blockcount = agend + 1 - ri_low.rm_startblock;
+> 
+> ...then this actually makes sense.
+> 
+>>>    		error = xfs_rmap_query_range(cur, &ri_low, &ri_high,
+>>>    				xfs_dax_failure_fn, &notify);
+> 
+> Sorry I've been kinda slow to respond.
 
-Thanks to Harshit for triaging the bug reports and bringing this to my
-attention.  This is a helluva better way to handle syzbot reports than
-spraying sploits on the public list like Googlers do.
+No problem :)
 
-Fixes: d7a74cad8f45 ("xfs: track usage statistics of online fsck")
-Reported-by: Harshit Mogalapalli <harshit.m.mogalapalli@oracle.com>
-Signed-off-by: Darrick J. Wong <djwong@kernel.org>
----
- fs/xfs/scrub/scrub.c |    4 ++--
- fs/xfs/scrub/stats.c |    5 ++++-
- 2 files changed, 6 insertions(+), 3 deletions(-)
 
-diff --git a/fs/xfs/scrub/scrub.c b/fs/xfs/scrub/scrub.c
-index 7d3aa14d81b5..4849efcaa33a 100644
---- a/fs/xfs/scrub/scrub.c
-+++ b/fs/xfs/scrub/scrub.c
-@@ -588,6 +588,8 @@ xfs_scrub_metadata(
- out_teardown:
- 	error = xchk_teardown(sc, error);
- out_sc:
-+	if (error != -ENOENT)
-+		xchk_stats_merge(mp, sm, &run);
- 	kfree(sc);
- out:
- 	trace_xchk_done(XFS_I(file_inode(file)), sm, error);
-@@ -595,8 +597,6 @@ xfs_scrub_metadata(
- 		sm->sm_flags |= XFS_SCRUB_OFLAG_CORRUPT;
- 		error = 0;
- 	}
--	if (error != -ENOENT)
--		xchk_stats_merge(mp, sm, &run);
- 	return error;
- need_drain:
- 	error = xchk_teardown(sc, 0);
-diff --git a/fs/xfs/scrub/stats.c b/fs/xfs/scrub/stats.c
-index aeb92624176b..cd91db4a5548 100644
---- a/fs/xfs/scrub/stats.c
-+++ b/fs/xfs/scrub/stats.c
-@@ -185,7 +185,10 @@ xchk_stats_merge_one(
- {
- 	struct xchk_scrub_stats		*css;
- 
--	ASSERT(sm->sm_type < XFS_SCRUB_TYPE_NR);
-+	if (sm->sm_type >= XFS_SCRUB_TYPE_NR) {
-+		ASSERT(sm->sm_type < XFS_SCRUB_TYPE_NR);
-+		return;
-+	}
- 
- 	css = &cs->cs_stats[sm->sm_type];
- 	spin_lock(&css->css_lock);
+--
+Thanks,
+Ruan.
+
+> 
+> --D
