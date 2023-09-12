@@ -2,99 +2,91 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8AF99CA0EEB
-	for <linux-xfs@archiver.kernel.org>; Tue, 12 Sep 2023 14:23:14 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9A356CA0EEB
+	for <linux-xfs@archiver.kernel.org>; Tue, 12 Sep 2023 15:18:53 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235011AbjILOXR (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 12 Sep 2023 10:23:17 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43232 "EHLO
+        id S236278AbjILPS4 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 12 Sep 2023 11:18:56 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60466 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S235796AbjILOXQ (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 12 Sep 2023 10:23:16 -0400
-Received: from casper.infradead.org (casper.infradead.org [IPv6:2001:8b0:10b:1236::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id CEC9810D;
-        Tue, 12 Sep 2023 07:23:12 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=infradead.org; s=casper.20170209; h=In-Reply-To:Content-Type:MIME-Version:
-        References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
-        Content-Transfer-Encoding:Content-ID:Content-Description;
-        bh=/H+bFDVMZGBYCVEP7wj9urnwFfRSQ9S3k0Idab6o22M=; b=FVBXqHi4R1OgjgueOAXk3SoMxu
-        yJsijKjYeue08jJnaQ7TSXQhceSpFtRcZR/hmKb6+HClpksbboY1aO4FhUQm8+9NeGVX//ETl1kUM
-        rep3tDv674hRzvI1l/hPmOqzJFoT2ucT7qnhyxq9LZq+qYmZ2mIyxdJgpR2yf1toVfsGUm/hFPOs7
-        p9IdlUDHFw/3qtM1UOdx6ATcL0phlP6XIVvVcVNcQhik/meARVeUaGNSfGi6Oq9w3Wj1j991KwiAy
-        9Ghw0CfwmhayBX63nGFeY/o/tc5YJAUHzz8nttDzS5x5ccgNO1UrhaYunkKZv9XcbVz3jrVYoFdVN
-        W3sAHEmg==;
-Received: from j130084.upc-j.chello.nl ([24.132.130.84] helo=noisy.programming.kicks-ass.net)
-        by casper.infradead.org with esmtpsa (Exim 4.94.2 #2 (Red Hat Linux))
-        id 1qg4I8-0083sg-Ox; Tue, 12 Sep 2023 14:23:01 +0000
-Received: by noisy.programming.kicks-ass.net (Postfix, from userid 1000)
-        id 68BEE3005B2; Tue, 12 Sep 2023 16:23:00 +0200 (CEST)
-Date:   Tue, 12 Sep 2023 16:23:00 +0200
-From:   Peter Zijlstra <peterz@infradead.org>
-To:     Matthew Wilcox <willy@infradead.org>
-Cc:     Dave Chinner <david@fromorbit.com>,
-        Waiman Long <longman@redhat.com>,
-        Ingo Molnar <mingo@redhat.com>, Will Deacon <will@kernel.org>,
-        linux-kernel@vger.kernel.org, linux-mm@kvack.org,
-        Chandan Babu R <chandan.babu@oracle.com>,
-        "Darrick J . Wong" <djwong@kernel.org>, linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 1/5] locking: Add rwsem_is_write_locked()
-Message-ID: <20230912142300.GC22127@noisy.programming.kicks-ass.net>
-References: <20230908104434.GB24372@noisy.programming.kicks-ass.net>
- <ZP5JrYOge3tSAvj7@dread.disaster.area>
- <ZP5OfhXhPkntaEkc@casper.infradead.org>
- <ZP5llBaVrJteHQf3@dread.disaster.area>
- <70d89bf4-708b-f131-f90e-5250b6804d48@redhat.com>
- <ZP+U49yfkm0Fpfej@dread.disaster.area>
- <20230912090342.GC35261@noisy.programming.kicks-ass.net>
- <ZQBZXSCyG+u2+i8E@casper.infradead.org>
- <20230912135213.GA22127@noisy.programming.kicks-ass.net>
- <ZQBuiJ2n0uBOdjnr@casper.infradead.org>
+        with ESMTP id S236276AbjILPSz (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 12 Sep 2023 11:18:55 -0400
+Received: from mail-wr1-x433.google.com (mail-wr1-x433.google.com [IPv6:2a00:1450:4864:20::433])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 374E01BB
+        for <linux-xfs@vger.kernel.org>; Tue, 12 Sep 2023 08:18:51 -0700 (PDT)
+Received: by mail-wr1-x433.google.com with SMTP id ffacd0b85a97d-31f7400cb74so4919637f8f.2
+        for <linux-xfs@vger.kernel.org>; Tue, 12 Sep 2023 08:18:51 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=linaro.org; s=google; t=1694531929; x=1695136729; darn=vger.kernel.org;
+        h=content-disposition:mime-version:message-id:subject:cc:to:from:date
+         :from:to:cc:subject:date:message-id:reply-to;
+        bh=wxJCnX9ULZJZ5EZ1+KhUGW2+yh2EzIqp3qUG+6odjo0=;
+        b=wLRzgA0q66t1rXgnB/XT/MGaMLm1VOkSW++SfHAht+n5kkCtLfH4fh6Jn0PcWkq9iB
+         2Iinak9AsgbZy5aNMgkfKfNpWYYyTFILQ7v6tD6DNpZOfKRXyCs8LO/ko/82ApKYRP1k
+         2E8cnhrnsASXNf/ZZ9JuWstGwXuX1j2iENyUMzMxTEvBGW8uWE0QymdW1aIDm0qXKTfI
+         2lURgVRcmtiqmWe8UiauVYKcZ9Rs/Oxhzt56ScFM6e5yzDHFTwV0nDFa1t2oIrsH5Ri7
+         bmL4pODaqwqxQMmGI841qiG+do8222trgmfAeJ7QziIPqKp+dR+5Nx88mXJHY6upmfoe
+         8v3w==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1694531929; x=1695136729;
+        h=content-disposition:mime-version:message-id:subject:cc:to:from:date
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=wxJCnX9ULZJZ5EZ1+KhUGW2+yh2EzIqp3qUG+6odjo0=;
+        b=TkiG+H4sOhPXj+vSbI43h12naVmJeoeBr7hwa2it5q5z/zlRDXDNur6pmzuPa44JeF
+         AGMdUGW3CwIciTylkmAtNKsoOZ7R4iSGPmIV12SmGKGzdRpGhgJVICUwEci5d95D0+Zf
+         PGq8hM64kiX/KRN39JoVBeasmQb0nc9C+8FK5XKqG2uCD6iWmxzsqrqNq6MS5AWoUEiI
+         o7fPp3EAkOdEK2UvV9Kb7r2rFP+7AFj1XJEvDfUc08GYsEy26nTMuQrqVEAaEOc1bqK+
+         pTw9TJ+uEjQUW0bsinjLK6YQ0/MBXt4fEMtY23B6r7CcT6KOPTd0aq0LFbQfOKLGuT7o
+         0REw==
+X-Gm-Message-State: AOJu0YzVP8ANTjCdg1JXNh9qMoJxOsOweri4tJ1eoJr/baVTLSyNS4XV
+        zdTxfKw+26zbzw/yIlMqxnkZDQ==
+X-Google-Smtp-Source: AGHT+IG4G4EPJSBi08YRktht53x04eTCy4Xm66qjHNK8xF5mLb+PMtQt5HnUjbjnFd1cBboa+E7eNw==
+X-Received: by 2002:a5d:4584:0:b0:317:5bb2:aeca with SMTP id p4-20020a5d4584000000b003175bb2aecamr10300996wrq.16.1694531929340;
+        Tue, 12 Sep 2023 08:18:49 -0700 (PDT)
+Received: from localhost ([102.36.222.112])
+        by smtp.gmail.com with ESMTPSA id ay21-20020a5d6f15000000b0031fbbe347e1sm1805881wrb.65.2023.09.12.08.18.48
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Tue, 12 Sep 2023 08:18:48 -0700 (PDT)
+Date:   Tue, 12 Sep 2023 18:18:45 +0300
+From:   Dan Carpenter <dan.carpenter@linaro.org>
+To:     "Darrick J. Wong" <djwong@kernel.org>
+Cc:     Chandan Babu R <chandan.babu@oracle.com>,
+        Dave Chinner <dchinner@redhat.com>,
+        Kent Overstreet <kent.overstreet@linux.dev>,
+        linux-xfs@vger.kernel.org, kernel-janitors@vger.kernel.org
+Subject: [PATCH] xfs: delete some dead code in xfile_create()
+Message-ID: <1429a5db-874d-45f4-8571-7854d15da58d@moroto.mountain>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <ZQBuiJ2n0uBOdjnr@casper.infradead.org>
+X-Mailer: git-send-email haha only kidding
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Tue, Sep 12, 2023 at 02:58:32PM +0100, Matthew Wilcox wrote:
-> On Tue, Sep 12, 2023 at 03:52:13PM +0200, Peter Zijlstra wrote:
-> > On Tue, Sep 12, 2023 at 01:28:13PM +0100, Matthew Wilcox wrote:
-> > > On Tue, Sep 12, 2023 at 11:03:42AM +0200, Peter Zijlstra wrote:
-> > > > If not, then sure we can do this; it's not like I managed to get rid of
-> > > > muteX_is_locked() -- and I actually tried at some point :/
-> > > > 
-> > > > And just now I grepped for it, and look what I find:
-> > > > 
-> > > > drivers/hid/hid-nintendo.c:     if (unlikely(mutex_is_locked(&ctlr->output_mutex))) {
-> > > > drivers/nvdimm/btt.c:           if (mutex_is_locked(&arena->err_lock)
-> > > > 
-> > > > And there's more :-(
-> > > 
-> > > Are these actually abuse?  I looked at these two, and they both seem to
-> > > be asking "Does somebody else currently have this mutex?" rather than
-> > > "Do I have this mutex?".
-> > 
-> > It's effectively a random number generator in that capacity. Someone
-> > might have it or might have had it when you looked and no longer have
-> > it, or might have it now but not when you asked.
-> 
-> Well, no.
-> 
->                 if (mutex_is_locked(&arena->err_lock)
->                                 || arena->freelist[lane].has_err) {
->                         nd_region_release_lane(btt->nd_region, lane);
-> 
->                         ret = arena_clear_freelist_error(arena, lane);
-> 
-> So that's "Is somebody currently processing an error, or have they
-> already finished setting an error".  Sure, it's somewhat racy, but
-> it looks like a performance optimisation, not something that needs
-> 100% accuracy.
+The shmem_file_setup() function can't return NULL so there is no need
+to check and doing so is a bit confusing.
 
-We're arguing past one another I think. Yes mutex_is_locked() is a
-random number generator when asked for something you don't own. But it
-might not be a bug because the code is ok with races.
+Signed-off-by: Dan Carpenter <dan.carpenter@linaro.org>
+---
+No fixes tag because this is not a bug, just some confusing code.
 
-It is still fully dodgy IMO, such usage is pretty close to UB.
+ fs/xfs/scrub/xfile.c | 2 --
+ 1 file changed, 2 deletions(-)
+
+diff --git a/fs/xfs/scrub/xfile.c b/fs/xfs/scrub/xfile.c
+index d98e8e77c684..71779d81cad7 100644
+--- a/fs/xfs/scrub/xfile.c
++++ b/fs/xfs/scrub/xfile.c
+@@ -70,8 +70,6 @@ xfile_create(
+ 		return -ENOMEM;
+ 
+ 	xf->file = shmem_file_setup(description, isize, 0);
+-	if (!xf->file)
+-		goto out_xfile;
+ 	if (IS_ERR(xf->file)) {
+ 		error = PTR_ERR(xf->file);
+ 		goto out_xfile;
+-- 
+2.39.2
+
