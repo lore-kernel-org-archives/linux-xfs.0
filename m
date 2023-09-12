@@ -2,33 +2,37 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id F37FECA0EDD
-	for <linux-xfs@archiver.kernel.org>; Tue, 12 Sep 2023 13:58:43 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B9F5CCA0EDD
+	for <linux-xfs@archiver.kernel.org>; Tue, 12 Sep 2023 14:02:55 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235753AbjILN6q (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 12 Sep 2023 09:58:46 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47414 "EHLO
+        id S235566AbjILOC6 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 12 Sep 2023 10:02:58 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52420 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S234939AbjILN6p (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 12 Sep 2023 09:58:45 -0400
-Received: from casper.infradead.org (casper.infradead.org [IPv6:2001:8b0:10b:1236::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A488E10DE;
-        Tue, 12 Sep 2023 06:58:40 -0700 (PDT)
+        with ESMTP id S234834AbjILOC5 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 12 Sep 2023 10:02:57 -0400
+Received: from desiato.infradead.org (desiato.infradead.org [IPv6:2001:8b0:10b:1:d65d:64ff:fe57:4e05])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id AF52610CE;
+        Tue, 12 Sep 2023 07:02:53 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=infradead.org; s=casper.20170209; h=In-Reply-To:Content-Type:MIME-Version:
+        d=infradead.org; s=desiato.20200630; h=In-Reply-To:Content-Type:MIME-Version:
         References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
         Content-Transfer-Encoding:Content-ID:Content-Description;
-        bh=HLmUvHYjOx5CSGh1JuF73s0prezlWCqoq7fl6e++tvY=; b=C4dp3zc/srLNk1O5LCPz7WiVIl
-        WeS9N0E29pdEYfHkVCt7Btc1NSXni+wJoEFBjTeLUj/+wDBk2ullMwbj5vydn10EntGUrQAn/8sfk
-        KisApbEl4A19ddb+g1RkaOUeezkH83SpxC/HpEgwfWgXQEzKq+Lm23GXf8QrQtjaM+fh6/M3zZYJh
-        CEAODiUyuUO091KirHgiB4kCXbYBN52SbPjMJ9DTedD6MTqWaGf7VRtsGU3yyFJ+If1OWfhy7vjZ8
-        hpsdRTVjjPw1TbqE7kec1kMZgqwNDfi6FnYjrEnxLl4dHzXHVAWwTFUkqMpyjumYYdsLZIGumUaG6
-        EYx5yTtg==;
-Received: from willy by casper.infradead.org with local (Exim 4.94.2 #2 (Red Hat Linux))
-        id 1qg3uS-007vmd-JF; Tue, 12 Sep 2023 13:58:32 +0000
-Date:   Tue, 12 Sep 2023 14:58:32 +0100
-From:   Matthew Wilcox <willy@infradead.org>
-To:     Peter Zijlstra <peterz@infradead.org>
+        bh=zUdtnDARSEGsaZV8teORBRcSM/T2JFV9fIyHbs3iVko=; b=pGzPWYu3IcDq5RuGqivEEtVMUx
+        bobaHOCtt0fDZZxDVgZo16iDnL1cYW548UAtPN9P2mBKKraGDG49XFG2Lehid8HS1mkIWvV+didNG
+        gWn4lwWgbLG4PeeGlo6wIPpaXjzp3uD26m0TjSLQmEbKCMYgKORtH+MHZZP952KmEOzm65gqo3tx+
+        BaeUh+CB+8brMKPaP2LaRI63YQjol/Ef3SLtVlEO3zmkyyQBzWxY8UXYY8znTyMY6YL4YB61DFMVR
+        e1uCqbNs1D1Jjf3Y9DrRvFXs4bUERKaVdyH8U209rU9OI39yLeQR7tadKTc2AGVTeHc1Gz7kY88yj
+        iJEYg9wg==;
+Received: from j130084.upc-j.chello.nl ([24.132.130.84] helo=noisy.programming.kicks-ass.net)
+        by desiato.infradead.org with esmtpsa (Exim 4.96 #2 (Red Hat Linux))
+        id 1qg3yE-0069kM-36;
+        Tue, 12 Sep 2023 14:02:28 +0000
+Received: by noisy.programming.kicks-ass.net (Postfix, from userid 1000)
+        id 1389B300348; Tue, 12 Sep 2023 16:02:28 +0200 (CEST)
+Date:   Tue, 12 Sep 2023 16:02:28 +0200
+From:   Peter Zijlstra <peterz@infradead.org>
+To:     Matthew Wilcox <willy@infradead.org>
 Cc:     Dave Chinner <david@fromorbit.com>,
         Waiman Long <longman@redhat.com>,
         Ingo Molnar <mingo@redhat.com>, Will Deacon <will@kernel.org>,
@@ -36,7 +40,7 @@ Cc:     Dave Chinner <david@fromorbit.com>,
         Chandan Babu R <chandan.babu@oracle.com>,
         "Darrick J . Wong" <djwong@kernel.org>, linux-xfs@vger.kernel.org
 Subject: Re: [PATCH 1/5] locking: Add rwsem_is_write_locked()
-Message-ID: <ZQBuiJ2n0uBOdjnr@casper.infradead.org>
+Message-ID: <20230912140228.GA22248@noisy.programming.kicks-ass.net>
 References: <ZPpV+MeFqX6RHIYw@dread.disaster.area>
  <20230908104434.GB24372@noisy.programming.kicks-ass.net>
  <ZP5JrYOge3tSAvj7@dread.disaster.area>
@@ -76,33 +80,28 @@ On Tue, Sep 12, 2023 at 03:52:13PM +0200, Peter Zijlstra wrote:
 > might have it or might have had it when you looked and no longer have
 > it, or might have it now but not when you asked.
 
-Well, no.
+Also, there's more fun; the 'is_locked' store from spin_lock() (or
+mutex, or whatever) is not ordered vs any other write inside the
+critical section.
 
-                if (mutex_is_locked(&arena->err_lock)
-                                || arena->freelist[lane].has_err) {
-                        nd_region_release_lane(btt->nd_region, lane);
+So something like:
 
-                        ret = arena_clear_freelist_error(arena, lane);
+	bar = 0;
 
-So that's "Is somebody currently processing an error, or have they
-already finished setting an error".  Sure, it's somewhat racy, but
-it looks like a performance optimisation, not something that needs
-100% accuracy.
+	CPU0			CPU1
 
-The other one's in a similar boat; an optimisation if anyone else is
-currently holding this mutex:
+	spin_lock(&foo)		
+	bar = 1;		x = READ_ONCE(bar)
+				y = spin_is_locked(&foo);
+	spin_unlock(&foo);
 
-        /*
-         * Immediately after receiving a report is the most reliable time to
-         * send a subcommand to the controller. Wake any subcommand senders
-         * waiting for a report.
-         */
-        if (unlikely(mutex_is_locked(&ctlr->output_mutex))) {
-                spin_lock_irqsave(&ctlr->lock, flags);
-                ctlr->received_input_report = true;
-                spin_unlock_irqrestore(&ctlr->lock, flags);
-                wake_up(&ctlr->wait);
-        }
 
-Sure, they might not still be holding it, or it may have been grabbed
-one clock tick later; that just means they miss out on this optimisation.
+can have x==1 && y==0, even though CPU0 is currently inside the critical
+section.
+
+Normally that doesn't matter, and for the program-order case where you
+ask 'am I holding the lock' this obviously cannot go wrong. But the
+moment you ask: 'is someone else holding the lock' it all goes sideways
+real fast.
+
+We've been there, done that, got a t-shirt etc..
