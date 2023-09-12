@@ -2,46 +2,42 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 227D9CA0ECA
-	for <linux-xfs@archiver.kernel.org>; Tue, 12 Sep 2023 09:06:23 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 171CACA0EC3
+	for <linux-xfs@archiver.kernel.org>; Tue, 12 Sep 2023 12:29:06 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233208AbjILJGY (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 12 Sep 2023 05:06:24 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50486 "EHLO
+        id S235235AbjILM3H (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 12 Sep 2023 08:29:07 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43526 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233197AbjILJGA (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 12 Sep 2023 05:06:00 -0400
+        with ESMTP id S235236AbjILM2i (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 12 Sep 2023 08:28:38 -0400
 Received: from casper.infradead.org (casper.infradead.org [IPv6:2001:8b0:10b:1236::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B3B742681;
-        Tue, 12 Sep 2023 02:03:56 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0B63F199B;
+        Tue, 12 Sep 2023 05:28:19 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
         d=infradead.org; s=casper.20170209; h=In-Reply-To:Content-Type:MIME-Version:
         References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
         Content-Transfer-Encoding:Content-ID:Content-Description;
-        bh=OUN9qvOhvSclaajkaF7Yf2ZvZqXHPIr54l2XhmMy2iQ=; b=S5Uyc7toBN82oKnjq/FlDxHddn
-        Rjo96XKH3esWhun3HPvT/LPYurgyYDtqSovgloklKRrD4xV/A6OSsQOpEmRQv+/Dc7Uxd6R2MsVph
-        Tin0q0YT0h/IqrkCanL2ebgbXdndUBQ2vkkE0WDOIpl1K5K3z2CJpQGa9BXO12uItdSIpW9mHaNI6
-        a4MgvZCXPavoAIZvD4CaI3mYb9TLW8IWuySpqgUskFMexlLLkjPBFbzqAUiAHFuvvbvm3Wo3kJR/K
-        IDMyk/bIDSx8uJ6h+xTDqZacgvRG36C+IKFdR7hT3TTKQAb9n3e0xL7XeO55Dsv0pyvstVmyUxDYu
-        e7MV/V/A==;
-Received: from j130084.upc-j.chello.nl ([24.132.130.84] helo=noisy.programming.kicks-ass.net)
-        by casper.infradead.org with esmtpsa (Exim 4.94.2 #2 (Red Hat Linux))
-        id 1qfzJ9-006grO-DR; Tue, 12 Sep 2023 09:03:43 +0000
-Received: by noisy.programming.kicks-ass.net (Postfix, from userid 1000)
-        id 8110D300348; Tue, 12 Sep 2023 11:03:42 +0200 (CEST)
-Date:   Tue, 12 Sep 2023 11:03:42 +0200
-From:   Peter Zijlstra <peterz@infradead.org>
-To:     Dave Chinner <david@fromorbit.com>
-Cc:     Waiman Long <longman@redhat.com>,
-        Matthew Wilcox <willy@infradead.org>,
+        bh=Z8ryHLZvoZYaYVMPT2DZpm/JtTShBG1m5lfT41YyXTQ=; b=erCwDK5dpDueftgDg08gml1I+V
+        arhJrULil/JMQj5sB6V10l8iCXZXlF9ROkiDC1IHUDqRQb9g6npPOA3odnUB63pKKOx8f/Nqg8l5B
+        D8Q1uV4eaZZ6/ezbZli7/EAoFBJD3Ym4nEG6GeajOmsXjPq8Qy8voPKW8Xn5zGeX1iOH6JV2crvEW
+        B5k5hZIYgGfbAn+N/U1rqxv3FZDaf5SmnRNet1nSakFLg6pO4OIS8xa+n/w3kd9TPYfxcfUkMVOCm
+        E518FlHYGY2p91T32c1IK/eu51UlMjjKTA0j8QZZGCu8gr+eWNJR6VCSFtby7tyViqiF5nFGw8y0z
+        qGweLZBw==;
+Received: from willy by casper.infradead.org with local (Exim 4.94.2 #2 (Red Hat Linux))
+        id 1qg2V3-007XrA-8B; Tue, 12 Sep 2023 12:28:13 +0000
+Date:   Tue, 12 Sep 2023 13:28:13 +0100
+From:   Matthew Wilcox <willy@infradead.org>
+To:     Peter Zijlstra <peterz@infradead.org>
+Cc:     Dave Chinner <david@fromorbit.com>,
+        Waiman Long <longman@redhat.com>,
         Ingo Molnar <mingo@redhat.com>, Will Deacon <will@kernel.org>,
         linux-kernel@vger.kernel.org, linux-mm@kvack.org,
         Chandan Babu R <chandan.babu@oracle.com>,
         "Darrick J . Wong" <djwong@kernel.org>, linux-xfs@vger.kernel.org
 Subject: Re: [PATCH 1/5] locking: Add rwsem_is_write_locked()
-Message-ID: <20230912090342.GC35261@noisy.programming.kicks-ass.net>
-References: <20230907190810.GA14243@noisy.programming.kicks-ass.net>
- <ZPoift7B3UDQgmWB@casper.infradead.org>
+Message-ID: <ZQBZXSCyG+u2+i8E@casper.infradead.org>
+References: <ZPoift7B3UDQgmWB@casper.infradead.org>
  <20230907193838.GB14243@noisy.programming.kicks-ass.net>
  <ZPpV+MeFqX6RHIYw@dread.disaster.area>
  <20230908104434.GB24372@noisy.programming.kicks-ass.net>
@@ -50,31 +46,26 @@ References: <20230907190810.GA14243@noisy.programming.kicks-ass.net>
  <ZP5llBaVrJteHQf3@dread.disaster.area>
  <70d89bf4-708b-f131-f90e-5250b6804d48@redhat.com>
  <ZP+U49yfkm0Fpfej@dread.disaster.area>
+ <20230912090342.GC35261@noisy.programming.kicks-ass.net>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <ZP+U49yfkm0Fpfej@dread.disaster.area>
+In-Reply-To: <20230912090342.GC35261@noisy.programming.kicks-ass.net>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Tue, Sep 12, 2023 at 08:29:55AM +1000, Dave Chinner wrote:
+On Tue, Sep 12, 2023 at 11:03:42AM +0200, Peter Zijlstra wrote:
+> If not, then sure we can do this; it's not like I managed to get rid of
+> muteX_is_locked() -- and I actually tried at some point :/
+> 
+> And just now I grepped for it, and look what I find:
+> 
+> drivers/hid/hid-nintendo.c:     if (unlikely(mutex_is_locked(&ctlr->output_mutex))) {
+> drivers/nvdimm/btt.c:           if (mutex_is_locked(&arena->err_lock)
+> 
+> And there's more :-(
 
-> So, once again, we have mixed messages from the lock maintainers.
-> One says "no, it might get abused", another says "I'm fine with
-> that", and now we have a maintainer disagreement stalemate.
-
-I didn't say no, I was trying to see if there's alternatives because the
-is_locked pattern has a history of abuse.
-
-If not, then sure we can do this; it's not like I managed to get rid of
-muteX_is_locked() -- and I actually tried at some point :/
-
-And just now I grepped for it, and look what I find:
-
-drivers/hid/hid-nintendo.c:     if (unlikely(mutex_is_locked(&ctlr->output_mutex))) {
-drivers/nvdimm/btt.c:           if (mutex_is_locked(&arena->err_lock)
-
-And there's more :-(
-
-Also, please just calm down already..
+Are these actually abuse?  I looked at these two, and they both seem to
+be asking "Does somebody else currently have this mutex?" rather than
+"Do I have this mutex?".
