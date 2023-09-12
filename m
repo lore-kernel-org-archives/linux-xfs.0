@@ -2,38 +2,37 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 00DC2EE3F0A
-	for <linux-xfs@archiver.kernel.org>; Tue, 12 Sep 2023 17:39:53 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id F010EEE3F08
+	for <linux-xfs@archiver.kernel.org>; Tue, 12 Sep 2023 17:40:10 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S237108AbjILRj4 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 12 Sep 2023 13:39:56 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33370 "EHLO
+        id S232725AbjILRkN (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 12 Sep 2023 13:40:13 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33756 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S236834AbjILRj4 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 12 Sep 2023 13:39:56 -0400
+        with ESMTP id S237163AbjILRkM (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 12 Sep 2023 13:40:12 -0400
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 800F910D3
-        for <linux-xfs@vger.kernel.org>; Tue, 12 Sep 2023 10:39:52 -0700 (PDT)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 06EA5C433CB;
-        Tue, 12 Sep 2023 17:39:52 +0000 (UTC)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4E23310D3
+        for <linux-xfs@vger.kernel.org>; Tue, 12 Sep 2023 10:40:08 -0700 (PDT)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id B810EC433C7;
+        Tue, 12 Sep 2023 17:40:07 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1694540392;
-        bh=Gw1H5Zgp7y36Ew8Agq1DGWE87jEI7xTAxjv+aInnhBA=;
+        s=k20201202; t=1694540407;
+        bh=N4q3BUsDgryrPD5soZtx7mXP9wa6yek5B2LH7Ecj9to=;
         h=Date:Subject:From:To:Cc:From;
-        b=B/C2eamw0BXiRqN3Hyis0nBit5piHnArMnc+3+CcL8SHQsq3culTCkyWy9NyKx/nj
-         uYqGfmKjrPXzAx2WloYkLgRwKz2i/zWX82vixb+mEmK70qi2YwGjm1382Xz9RnxrvD
-         nWwyanfKgnG6fv5v9YgZ78iU1ynxEWZGuj9edC8RZALptvRP3TlU9C3HDz9/aLtlvQ
-         cErUIXkLSYq6DHbmKJk8+EYt4hkRWhxPZQBjz5oqQ1vERZ7nMZVuqjqY/U3s2mcI9P
-         iOX0qOJXN2mDdE9bBeWrIOq9ifT2V2ppwYHlcnqHYBV5jN5+ZtXmNSQQa9iGjRK2CA
-         RdL/h8GSGJxKg==
-Date:   Tue, 12 Sep 2023 10:39:51 -0700
-Subject: [GIT PULL 4/8] xfs: fix EFI recovery livelocks
+        b=Th60IFV7LCCBDKjjnel2v0D6E0IZy5FuFfi3qpZMmFbs+yIMDxcjKrD9krGFAYqBA
+         JkTnCaz1zUdctM4wzGwmXBZCsr15D4Vhqp5mjuIqpGVFGAug/JoUWTXVS8Wr4aSQXw
+         En0j3v6uqApHM2uHMQ8OQOZBNtDz+/tgbm2Q7j7x++jY17VBpg5+ZdRzytjgEQQlye
+         9uSoLnNintaX7oQcUmD4tJeel4jNrXxEiKSYL034zE9X5K9BmL2R4E7bH8SIs0K6Pb
+         AtQuRwNj0Gc0VYM0GKVm8IOfJpjrdUyEr9Jb5ZmfSAVuOws/J8L86JH4A6sxDzUyuu
+         /YTi2fXtkOH7g==
+Date:   Tue, 12 Sep 2023 10:40:07 -0700
+Subject: [GIT PULL 5/8] xfs: reload the last iunlink item
 From:   "Darrick J. Wong" <djwong@kernel.org>
 To:     chandan.babu@gmail.com, djwong@kernel.org
 Cc:     david@fromorbit.com, dchinner@redhat.com,
-        linux-xfs@vger.kernel.org, srikanth.c.s@oracle.com,
-        wen.gang.wang@oracle.com
-Message-ID: <169454023440.3411463.13931736328799093212.stg-ugh@frogsfrogsfrogs>
+        linux-xfs@vger.kernel.org, sshegde@linux.vnet.ibm.com
+Message-ID: <169454023537.3411463.1875006072622672736.stg-ugh@frogsfrogsfrogs>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
@@ -51,27 +50,34 @@ encounter any problems.
 
 --D
 
-The following changes since commit 74ad4693b6473950e971b3dc525b5ee7570e05d0:
-
-xfs: fix log recovery when unknown rocompat bits are set (2023-09-12 10:31:07 -0700)
-
-are available in the Git repository at:
-
-https://git.kernel.org/pub/scm/linux/kernel/git/djwong/xfs-linux.git tags/fix-efi-recovery-6.6_2023-09-12
-
-for you to fetch changes up to 3c919b0910906cc69d76dea214776f0eac73358b:
+The following changes since commit 3c919b0910906cc69d76dea214776f0eac73358b:
 
 xfs: reserve less log space when recovering log intent items (2023-09-12 10:31:07 -0700)
 
+are available in the Git repository at:
+
+https://git.kernel.org/pub/scm/linux/kernel/git/djwong/xfs-linux.git tags/fix-iunlink-6.6_2023-09-12
+
+for you to fetch changes up to 68b957f64fca1930164bfc6d6d379acdccd547d7:
+
+xfs: load uncached unlinked inodes into memory on demand (2023-09-12 10:31:07 -0700)
+
 ----------------------------------------------------------------
-xfs: fix EFI recovery livelocks
-This series fixes a customer-reported transaction reservation bug
-introduced ten years ago that could result in livelocks during log
-recovery.  Log intent item recovery single-steps each step of a deferred
-op chain, which means that each step only needs to allocate one
-transaction's worth of space in the log, not an entire chain all at
-once.  This single-stepping is critical to unpinning the log tail since
-there's nobody else to do it for us.
+xfs: reload the last iunlink item
+It turns out that there are some serious bugs in how xfs handles the
+unlinked inode lists.  Way back before 4.14, there was a bug where a ro
+mount of a dirty filesystem would recover the log bug neglect to purge
+the unlinked list.  This leads to clean unmounted filesystems with
+unlinked inodes.  Starting around 5.15, we also converted the codebase
+to maintain a doubly-linked incore unlinked list.  However, we never
+provided the ability to load the incore list from disk.  If someone
+tries to allocate an O_TMPFILE file on a clean fs with a pre-existing
+unlinked list or even deletes a file, the code will fail and the fs
+shuts down.
+
+This first part of the correction effort adds the ability to load the
+first inode in the bucket when unlinking a file; and to load the next
+inode in the list when inactivating (freeing) an inode.
 
 This has been lightly tested with fstests.  Enjoy!
 
@@ -79,13 +85,9 @@ Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 
 ----------------------------------------------------------------
 Darrick J. Wong (1):
-xfs: reserve less log space when recovering log intent items
+xfs: load uncached unlinked inodes into memory on demand
 
-fs/xfs/libxfs/xfs_log_recover.h | 22 ++++++++++++++++++++++
-fs/xfs/xfs_attr_item.c          |  7 ++++---
-fs/xfs/xfs_bmap_item.c          |  4 +++-
-fs/xfs/xfs_extfree_item.c       |  4 +++-
-fs/xfs/xfs_refcount_item.c      |  6 ++++--
-fs/xfs/xfs_rmap_item.c          |  6 ++++--
-6 files changed, 40 insertions(+), 9 deletions(-)
+fs/xfs/xfs_inode.c | 80 ++++++++++++++++++++++++++++++++++++++++++++++++++----
+fs/xfs/xfs_trace.h | 25 +++++++++++++++++
+2 files changed, 100 insertions(+), 5 deletions(-)
 
