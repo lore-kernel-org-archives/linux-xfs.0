@@ -2,43 +2,43 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B9D01EE3F0C
-	for <linux-xfs@archiver.kernel.org>; Tue, 12 Sep 2023 19:40:12 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 86837EE3F11
+	for <linux-xfs@archiver.kernel.org>; Tue, 12 Sep 2023 19:47:53 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S237628AbjILTkP (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 12 Sep 2023 15:40:15 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50828 "EHLO
+        id S231192AbjILTr4 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 12 Sep 2023 15:47:56 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48378 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230443AbjILTkO (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 12 Sep 2023 15:40:14 -0400
+        with ESMTP id S229977AbjILTrz (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 12 Sep 2023 15:47:55 -0400
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 18F51115
-        for <linux-xfs@vger.kernel.org>; Tue, 12 Sep 2023 12:40:11 -0700 (PDT)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id A9D3BC433C8;
-        Tue, 12 Sep 2023 19:40:10 +0000 (UTC)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 016E6115
+        for <linux-xfs@vger.kernel.org>; Tue, 12 Sep 2023 12:47:52 -0700 (PDT)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 972FBC433C8;
+        Tue, 12 Sep 2023 19:47:51 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1694547610;
-        bh=yBbGmGmOparUOeZ6YHikey7Xiiocuz/mtO5mvn2rNMo=;
-        h=Subject:From:To:Cc:Date:In-Reply-To:References:From;
-        b=ggb6o4z0btohys9p2p+zF1DZDsSbWoKqylMHDih/HAISocoIODrG3pLFXDj/JlYZg
-         pfF8LXo9yNS53JzGwbyhGxvTeKIiZHtLob2dUC0VVSDpho2iGDtCVE4WV/qLtnflwn
-         s+QM8fQ9odrEviZyRXtW2NuXvC0wNO21eH1La/qJDjKv45GtW9Z2kOYnRIvBG3mRz8
-         da+1PgaNKLX/FiQrYAJfEtf60rScW+Dq0UTRcuzrztCXauqOtKr9qewM3ePJAcxEBM
-         kCrXp5poy34XR5V4cA3+r8UtDyrk1GpQa2z/X4TFz527t7qLltY7HntsSYDj73oDSx
-         UU/U1XcSu7uHQ==
-Subject: [PATCH 6/6] libxfs: fix atomic64_t detection on x86 32-bit
- architectures
+        s=k20201202; t=1694548071;
+        bh=y16HFS1fB6oLGZ+y9a+djb9Z87qhzFtmc6MdOfvqBIo=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=PMqPZ/gAZI/Kr8pR/WIJlMcNA63iY3u1Sjxka1PKdA3FQIrCy58xmIOsxNR3Llz1l
+         dzqH0od8GR6Pl9OhgYAQBjCd21gJsfnMIA1jaZUpH1CG7DrErRMcsWsnjFMSWfJYdL
+         71v9sYSiWWcVmGe+BsOiUKj3jueemX4wlKykmVywOp2Unhr64+Gy6nDonEOh5Kup+e
+         Bdqfs2wxe0a5ASYVhFmzqZDF8zg2RyWdKn6et9fzqVGNWspon4/Egq6xXWmnJqsD9z
+         JwfWJUok/M6WaKjvjdUjcgefGtX6DbjFKBorpBqguR+LtWwwp7ZcLU6KoUaUmqdgX9
+         4O/pABTBy3BcA==
+Date:   Tue, 12 Sep 2023 12:47:51 -0700
 From:   "Darrick J. Wong" <djwong@kernel.org>
-To:     djwong@kernel.org, cem@kernel.org
+To:     cem@kernel.org
 Cc:     Anthony Iliopoulos <ailiop@suse.com>, linux-xfs@vger.kernel.org
-Date:   Tue, 12 Sep 2023 12:40:10 -0700
-Message-ID: <169454761010.3539425.13599600178844641233.stgit@frogsfrogsfrogs>
-In-Reply-To: <169454757570.3539425.3597048437340386509.stgit@frogsfrogsfrogs>
+Subject: [PATCH v1.1 6/6] libxfs: fix atomic64_t detection on x86 32-bit
+ architectures
+Message-ID: <20230912194751.GB3415652@frogsfrogsfrogs>
 References: <169454757570.3539425.3597048437340386509.stgit@frogsfrogsfrogs>
-User-Agent: StGit/0.19
+ <169454761010.3539425.13599600178844641233.stgit@frogsfrogsfrogs>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <169454761010.3539425.13599600178844641233.stgit@frogsfrogsfrogs>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
@@ -61,17 +61,20 @@ not support atomic64_t on those archs. It indicates this during runtime
 by generating an illegal instruction that aborts execution, and thus
 causes various xfsprogs utils to be segfaulting.
 
-Fix this by executing the liburcu atomic64_t detection code during
-configure instead of only relying on the linker error, so that
-compilation will properly fall back to pthread mutexes on those archs.
+Fix this by requiring that unsigned longs are at least 64 bits in size,
+which /usually/ means that 64-bit atomic counters are supported.  We
+can't simply execute the liburcu atomic64_t detection code during
+configure instead of only relying on the linker error because that
+doesn't work for cross-compiled packages.
 
 Fixes: 7448af588a2e ("libxfs: fix atomic64_t poorly for 32-bit architectures")
 Reported-by: Anthony Iliopoulos <ailiop@suse.com>
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 ---
+v1.1: This time with correct commit message.
+---
  m4/package_urcu.m4 |    9 ++++++++-
  1 file changed, 8 insertions(+), 1 deletion(-)
-
 
 diff --git a/m4/package_urcu.m4 b/m4/package_urcu.m4
 index ef116e0cda7..4bb2b886f06 100644
@@ -102,4 +105,3 @@ index ef116e0cda7..4bb2b886f06 100644
  uatomic_inc(&f);
  	]])
      ], have_liburcu_atomic64=yes
-
