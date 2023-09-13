@@ -2,124 +2,98 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A33E6CA5531
-	for <linux-xfs@archiver.kernel.org>; Wed, 13 Sep 2023 10:16:20 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 43CDCCA5534
+	for <linux-xfs@archiver.kernel.org>; Wed, 13 Sep 2023 10:32:52 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S239544AbjIMKQX (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 13 Sep 2023 06:16:23 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54848 "EHLO
+        id S238816AbjIMKcy (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 13 Sep 2023 06:32:54 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36094 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S239536AbjIMKQX (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 13 Sep 2023 06:16:23 -0400
-Received: from mxhk.zte.com.cn (mxhk.zte.com.cn [63.216.63.35])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9B11119B0;
-        Wed, 13 Sep 2023 03:16:17 -0700 (PDT)
-Received: from mxct.zte.com.cn (unknown [192.168.251.13])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by mxhk.zte.com.cn (FangMail) with ESMTPS id 4RlxDq6Xn4z4xPGH;
-        Wed, 13 Sep 2023 18:16:11 +0800 (CST)
-Received: from mse-fl2.zte.com.cn (unknown [10.5.228.133])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by mxct.zte.com.cn (FangMail) with ESMTPS id 4RlxDr1Ljdz4xVbt;
-        Wed, 13 Sep 2023 18:16:12 +0800 (CST)
-Received: from szxlzmapp04.zte.com.cn ([10.5.231.166])
-        by mse-fl2.zte.com.cn with SMTP id 38DAG1oD094580;
-        Wed, 13 Sep 2023 18:16:01 +0800 (+08)
-        (envelope-from cheng.lin130@zte.com.cn)
-Received: from mapi (szxlzmapp07[null])
-        by mapi (Zmail) with MAPI id mid14;
-        Wed, 13 Sep 2023 18:16:03 +0800 (CST)
-Date:   Wed, 13 Sep 2023 18:16:03 +0800 (CST)
-X-Zmail-TransId: 2b0965018be32b5-cea0c
-X-Mailer: Zmail v1.0
-Message-ID: <202309131816038673861@zte.com.cn>
-In-Reply-To: <ZQDlXPJJvp7wctbZ@dread.disaster.area>
-References: 202309111612569712762@zte.com.cn,ZQDlXPJJvp7wctbZ@dread.disaster.area
-Mime-Version: 1.0
-From:   <cheng.lin130@zte.com.cn>
-To:     <david@fromorbit.com>, <viro@zeniv.linux.org.uk>,
-        <brauner@kernel.org>
-Cc:     <djwong@kernel.org>, <linux-xfs@vger.kernel.org>,
-        <linux-kernel@vger.kernel.org>, <jiang.yong5@zte.com.cn>,
-        <wang.liang82@zte.com.cn>, <liu.dong3@zte.com.cn>,
-        <linux-fsdevel@vger.kernel.org>
-Subject: =?UTF-8?B?UmU6IFtQQVRDSCB2Ml0geGZzOiBpbnRyb2R1Y2UgcHJvdGVjdGlvbiBmb3IgZHJvcCBubGluaw==?=
-Content-Type: text/plain;
-        charset="UTF-8"
-X-MAIL: mse-fl2.zte.com.cn 38DAG1oD094580
-X-Fangmail-Gw-Spam-Type: 0
-X-Fangmail-Anti-Spam-Filtered: true
-X-Fangmail-MID-QID: 65018BEB.000/4RlxDq6Xn4z4xPGH
+        with ESMTP id S235971AbjIMKcw (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 13 Sep 2023 06:32:52 -0400
+Received: from esa11.hc1455-7.c3s2.iphmx.com (esa11.hc1455-7.c3s2.iphmx.com [207.54.90.137])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B190ED3
+        for <linux-xfs@vger.kernel.org>; Wed, 13 Sep 2023 03:32:47 -0700 (PDT)
+X-IronPort-AV: E=McAfee;i="6600,9927,10831"; a="111293206"
+X-IronPort-AV: E=Sophos;i="6.02,142,1688396400"; 
+   d="scan'208";a="111293206"
+Received: from unknown (HELO yto-r2.gw.nic.fujitsu.com) ([218.44.52.218])
+  by esa11.hc1455-7.c3s2.iphmx.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 13 Sep 2023 19:32:46 +0900
+Received: from yto-m2.gw.nic.fujitsu.com (yto-nat-yto-m2.gw.nic.fujitsu.com [192.168.83.65])
+        by yto-r2.gw.nic.fujitsu.com (Postfix) with ESMTP id ECEF9C68E1
+        for <linux-xfs@vger.kernel.org>; Wed, 13 Sep 2023 19:32:42 +0900 (JST)
+Received: from kws-ab4.gw.nic.fujitsu.com (kws-ab4.gw.nic.fujitsu.com [192.51.206.22])
+        by yto-m2.gw.nic.fujitsu.com (Postfix) with ESMTP id 31C6FD5007
+        for <linux-xfs@vger.kernel.org>; Wed, 13 Sep 2023 19:32:42 +0900 (JST)
+Received: from irides.g08.fujitsu.local (unknown [10.167.234.230])
+        by kws-ab4.gw.nic.fujitsu.com (Postfix) with ESMTP id 961731EBDBC;
+        Wed, 13 Sep 2023 19:32:41 +0900 (JST)
+From:   Shiyang Ruan <ruansy.fnst@fujitsu.com>
+To:     linux-xfs@vger.kernel.org
+Cc:     "Darrick J . Wong" <djwong@kernel.org>
+Subject: [PATCH v3] xfs: correct calculation for agend and blockcount
+Date:   Wed, 13 Sep 2023 18:29:42 +0800
+Message-ID: <20230913102942.601271-1-ruansy.fnst@fujitsu.com>
+X-Mailer: git-send-email 2.42.0
+In-Reply-To: <20230828072450.1510248-1-ruansy.fnst@fujitsu.com>
+References: <20230828072450.1510248-1-ruansy.fnst@fujitsu.com>
+MIME-Version: 1.0
+Content-Transfer-Encoding: 8bit
+X-TM-AS-GCONF: 00
+X-TM-AS-Product-Ver: IMSS-9.1.0.1417-9.0.0.1002-27872.006
+X-TM-AS-User-Approved-Sender: Yes
+X-TMASE-Version: IMSS-9.1.0.1417-9.0.1002-27872.006
+X-TMASE-Result: 10--4.655300-10.000000
+X-TMASE-MatchedRID: gONzw9UUP1YBOHW58ozCWsVUBXy8OM3/G24YVeuZGmN4YeSlHZYFoj13
+        GoPFA1HFIvrftAIhWmLy9zcRSkKate8KS96Bnw4t8Jb881FGn9mCg7hXeiWNupsoi2XrUn/Jn6K
+        dMrRsL14qtq5d3cxkNV1AUl3bmfTuuDe8/UiJb06remGyUQJ9b7CyNoKg8+kxAQsV7jHnAIjeWR
+        fwlDqXefNjlcykiDnHAZAkFozJ/xJb6lpU6KYTMIxrU96OxkmsFcUQf3Yp/ridO0/GUi4gFb0fO
+        PzpgdcEKeJ/HkAZ8Is=
+X-TMASE-SNAP-Result: 1.821001.0001-0-1-22:0,33:0,34:0-0
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-> On Mon, Sep 11, 2023 at 04:12:56PM +0800, cheng.lin130@zte.com.cn wrote:
-> > From: Cheng Lin <cheng.lin130@zte.com.cn>
-> >
-> > When abnormal drop_nlink are detected on the inode,
-> > shutdown filesystem, to avoid corruption propagation.
-> >
-> > Signed-off-by: Cheng Lin <cheng.lin130@zte.com.cn>
-> > ---
-> >  fs/xfs/xfs_fsops.c | 3 +++
-> >  fs/xfs/xfs_inode.c | 9 +++++++++
-> >  fs/xfs/xfs_mount.h | 1 +
-> >  3 files changed, 13 insertions(+)
-> >
-> > diff --git a/fs/xfs/xfs_fsops.c b/fs/xfs/xfs_fsops.c
-> > index 7cb75cb6b..6fc1cfe83 100644
-> > --- a/fs/xfs/xfs_fsops.c
-> > +++ b/fs/xfs/xfs_fsops.c
-> > @@ -543,6 +543,9 @@ xfs_do_force_shutdown(
-> >      } else if (flags & SHUTDOWN_CORRUPT_ONDISK) {
-> >          tag = XFS_PTAG_SHUTDOWN_CORRUPT;
-> >          why = "Corruption of on-disk metadata";
-> > +    } else if (flags & SHUTDOWN_CORRRUPT_ABN) {
-> > +        tag = XFS_PTAG_SHUTDOWN_CORRUPT;
-> > +        why = "Corruption of Abnormal conditions";
-> We don't need a new shutdown tag. We can consider this in-memory
-> corruption because we detected it in memory before it went to disk
-> (SHUTDOWN_CORRUPT_INCORE) or even on-disk corruption because the
-> reference count on disk is likely wrong at this point......
-> >      } else if (flags & SHUTDOWN_DEVICE_REMOVED) {
-> >          tag = XFS_PTAG_SHUTDOWN_IOERROR;
-> >          why = "Block device removal";
-> > diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
-> > index 9e62cc500..2d41f2461 100644
-> > --- a/fs/xfs/xfs_inode.c
-> > +++ b/fs/xfs/xfs_inode.c
-> > @@ -919,6 +919,15 @@ xfs_droplink(
-> >      xfs_trans_t *tp,
-> >      xfs_inode_t *ip)
-> >  {
-> > +
-> > +    if (VFS_I(ip)->i_nlink == 0) {
-> > +        xfs_alert(ip->i_mount,
-> > +              "%s: Deleting inode %llu with no links.",
-> > +              __func__, ip->i_ino);
-> > +        xfs_force_shutdown(ip->i_mount, SHUTDOWN_CORRRUPT_ABN);
-> > +        return -EFSCORRUPTED;
-> > +    }
-> > +
-> >      xfs_trans_ichgtime(tp, ip, XFS_ICHGTIME_CHG);
-> >
-> >      drop_nlink(VFS_I(ip));
-> I'd kind of prefer that drop_nlink() be made to return an error on
-> underrun - if it's important enough to drop a warning in the log and
-> potentially panic the kernel, it's important enough to tell the
-> filesystem an underrun has occurred.  But that opens a whole new can
-> of worms, so I think this will be fine.
-In VFS, (drop\clear\set\inc)_nlink() all return void. 
-Is it appropriate, if let them return an error instead of WARN_ON?
-> Note that we don't actually need a call to shut the filesystem down.
-> Simply returning -EFSCORRUPTED will result in the filesystem being
-> shut down if the transaction is dirty when it gets cancelled due to
-> the droplink error.
-> Cheers,
-> Dave.
-> --
-> Dave Chinner
-> david@fromorbit.com
+The agend should be "start + length - 1", then, blockcount should be
+"end + 1 - start".  Correct 2 calculation mistakes.
+
+Also, rename "agend" to "range_agend" because it's not the end of the AG
+per se; it's the end of the dead region within an AG's agblock space.
+
+Fixes: 5cf32f63b0f4 ("xfs: fix the calculation for "end" and "length"")
+Signed-off-by: Shiyang Ruan <ruansy.fnst@fujitsu.com>
+Reviewed-by: Darrick J. Wong <djwong@kernel.org>
+---
+ fs/xfs/xfs_notify_failure.c | 6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
+
+diff --git a/fs/xfs/xfs_notify_failure.c b/fs/xfs/xfs_notify_failure.c
+index 4a9bbd3fe120..a7daa522e00f 100644
+--- a/fs/xfs/xfs_notify_failure.c
++++ b/fs/xfs/xfs_notify_failure.c
+@@ -126,8 +126,8 @@ xfs_dax_notify_ddev_failure(
+ 		struct xfs_rmap_irec	ri_low = { };
+ 		struct xfs_rmap_irec	ri_high;
+ 		struct xfs_agf		*agf;
+-		xfs_agblock_t		agend;
+ 		struct xfs_perag	*pag;
++		xfs_agblock_t		range_agend;
+ 
+ 		pag = xfs_perag_get(mp, agno);
+ 		error = xfs_alloc_read_agf(pag, tp, 0, &agf_bp);
+@@ -148,10 +148,10 @@ xfs_dax_notify_ddev_failure(
+ 			ri_high.rm_startblock = XFS_FSB_TO_AGBNO(mp, end_fsbno);
+ 
+ 		agf = agf_bp->b_addr;
+-		agend = min(be32_to_cpu(agf->agf_length),
++		range_agend = min(be32_to_cpu(agf->agf_length) - 1,
+ 				ri_high.rm_startblock);
+ 		notify.startblock = ri_low.rm_startblock;
+-		notify.blockcount = agend - ri_low.rm_startblock;
++		notify.blockcount = range_agend + 1 - ri_low.rm_startblock;
+ 
+ 		error = xfs_rmap_query_range(cur, &ri_low, &ri_high,
+ 				xfs_dax_failure_fn, &notify);
+-- 
+2.42.0
+
