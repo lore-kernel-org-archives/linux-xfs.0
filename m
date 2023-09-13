@@ -2,158 +2,89 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 22A2FEEB59A
-	for <linux-xfs@archiver.kernel.org>; Wed, 13 Sep 2023 07:01:09 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E5698CA5511
+	for <linux-xfs@archiver.kernel.org>; Wed, 13 Sep 2023 08:59:25 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S238391AbjIMHBM (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 13 Sep 2023 03:01:12 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51174 "EHLO
+        id S239144AbjIMI73 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 13 Sep 2023 04:59:29 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49236 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233657AbjIMHBK (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 13 Sep 2023 03:01:10 -0400
-Received: from mail-wm1-x330.google.com (mail-wm1-x330.google.com [IPv6:2a00:1450:4864:20::330])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9ED8E173E
-        for <linux-xfs@vger.kernel.org>; Wed, 13 Sep 2023 00:01:06 -0700 (PDT)
-Received: by mail-wm1-x330.google.com with SMTP id 5b1f17b1804b1-401f68602a8so70096515e9.3
-        for <linux-xfs@vger.kernel.org>; Wed, 13 Sep 2023 00:01:06 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=linaro.org; s=google; t=1694588465; x=1695193265; darn=vger.kernel.org;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
-        bh=rxEwSrADigL55KUK+kn7a1SeYT+9CqL3SU8EoT51CDk=;
-        b=Wua8OQ8hb5BPxMUekouQOb5BZwOj13VSbftvNQwBa6hltLVm0VPPzkksJzVh2Hi+B7
-         dP8/NLX+E0uk4CTZ7oHsBnmjEgKaiJYuYywlMgOXdXonJ1uvkj//etMX19k7DIAVpQHf
-         DwUWHXJ9m+uJsQx2BhhjcRbIrtXdgLFWWqH9aGysbNjadt4kQsUMZk/NPwRV4+QPrK5p
-         Z2Hop3oO80VuTWlnxHOLWxAvamv4hqsnkUuHARirTPOFDXf40XqfsnKZ2HMbfkgWRngr
-         8f4wZ3jnk4Ol2mMTD/vaq/OlBcTC3JwJr0vW9NDC6hBN7QsLa++3fWXScgroeKNHaS2v
-         oC8A==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1694588465; x=1695193265;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=rxEwSrADigL55KUK+kn7a1SeYT+9CqL3SU8EoT51CDk=;
-        b=KAA3PwJgwHh05vptfXt2/Zg7Fd4FivVfJFbY5fH15V9Wy6M1baQ38UJ2ihh3Ms4dRm
-         3epDGdk4X5VkhpVCTkDvGctEh6tNzj/6kQ4cuXTKxMqeB6cJGl7q6ytIqAR573P6ESKq
-         aHdNABstBkAiDhjccF6+cIOt4IhoTRXgkWBOdsdj8Rv5UA5dNOnGkZpqxuNA8B5kJoms
-         k23G/8JWM6Ey2al1DkVEpKQ5C7WjpXEaJN07TsosEAe68yjPnGjzgNB69+i3/FuZd2H5
-         uTiPJjrO6yumOt+ADWSls21GVbMKhR1iaDULDlBY1JvWSxoEupCOj4OJdDRdt/gY51rC
-         6T0Q==
-X-Gm-Message-State: AOJu0Yw2FnDIPrRB56HUlDROtjFcqjNarw5sra1CmY9DMfcwhZEAs/IS
-        z0mPlpFNbVrDi8NWHrX/jooneQ==
-X-Google-Smtp-Source: AGHT+IGICr3IH8Jp41V2bYK9Ff2nTqLZswVkjLZvdCTwqajKf/5QT/EFKcb52xlWuAdRsrkmSCW0Rg==
-X-Received: by 2002:adf:ea85:0:b0:319:7c1f:8dae with SMTP id s5-20020adfea85000000b003197c1f8daemr1473001wrm.3.1694588465003;
-        Wed, 13 Sep 2023 00:01:05 -0700 (PDT)
-Received: from localhost ([102.36.222.112])
-        by smtp.gmail.com with ESMTPSA id g8-20020a5d4888000000b0031912c0ffebsm14594274wrq.23.2023.09.13.00.01.03
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 13 Sep 2023 00:01:04 -0700 (PDT)
-Date:   Wed, 13 Sep 2023 10:01:01 +0300
-From:   Dan Carpenter <dan.carpenter@linaro.org>
+        with ESMTP id S239100AbjIMI72 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 13 Sep 2023 04:59:28 -0400
+Received: from desiato.infradead.org (desiato.infradead.org [IPv6:2001:8b0:10b:1:d65d:64ff:fe57:4e05])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5D0981997;
+        Wed, 13 Sep 2023 01:59:24 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=infradead.org; s=desiato.20200630; h=In-Reply-To:Content-Type:MIME-Version:
+        References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
+        Content-Transfer-Encoding:Content-ID:Content-Description;
+        bh=L3SwR6hKceOlWWcSwzNum5BemzOa6jq4Kj6VEs6rV8E=; b=ngdjgQWjtCltwMErjnQ9HTxowL
+        cLOO7rhFYpVazeMHkGoLPauY0qKo+dw6JvAtN5cfcuW+u6U4PTxQNXFIqJEoMpsh4/rqDXj0cXAK4
+        Jc/8YLQIZYcjUnhPuy+EtjT2JR2CocNkPP6dI3yCwhDMYeufRDm2M7xnz3+8KnJ+gujganXTSHp8x
+        3uUb4Sl6Ue3zbeoONFB43yWdQ/gDX0vvcbmTp0TciKoAZyxdLfsFbpBkNGy8fw3k1n1XBYWKzbFvI
+        5YPVSYap5ZhmtT7nT6imFgAX+2zrj2ArF3EldtNqlHpKVghvqs956qnspB7V8G1kzyI7Vw7NEpH+c
+        wtMMz6PA==;
+Received: from j130084.upc-j.chello.nl ([24.132.130.84] helo=noisy.programming.kicks-ass.net)
+        by desiato.infradead.org with esmtpsa (Exim 4.96 #2 (Red Hat Linux))
+        id 1qgLiE-006wEO-20;
+        Wed, 13 Sep 2023 08:59:08 +0000
+Received: by noisy.programming.kicks-ass.net (Postfix, from userid 1000)
+        id B37B6300348; Wed, 13 Sep 2023 10:59:07 +0200 (CEST)
+Date:   Wed, 13 Sep 2023 10:59:07 +0200
+From:   Peter Zijlstra <peterz@infradead.org>
 To:     "Darrick J. Wong" <djwong@kernel.org>
-Cc:     Alex Elder <elder@ieee.org>,
+Cc:     Matthew Wilcox <willy@infradead.org>,
+        Dave Chinner <david@fromorbit.com>,
+        Waiman Long <longman@redhat.com>,
+        Ingo Molnar <mingo@redhat.com>, Will Deacon <will@kernel.org>,
+        linux-kernel@vger.kernel.org, linux-mm@kvack.org,
         Chandan Babu R <chandan.babu@oracle.com>,
-        Dave Chinner <dchinner@redhat.com>,
-        Kent Overstreet <kent.overstreet@linux.dev>,
-        linux-xfs@vger.kernel.org, kernel-janitors@vger.kernel.org
-Subject: Re: [PATCH] xfs: delete some dead code in xfile_create()
-Message-ID: <3c63cc50-c6a8-4bba-87d8-6556ebe1905e@kadam.mountain>
-References: <1429a5db-874d-45f4-8571-7854d15da58d@moroto.mountain>
- <20230912153824.GB28186@frogsfrogsfrogs>
- <e575bbf3-f0ba-ec39-03c5-9165678d1fc7@ieee.org>
- <20230912162315.GC28186@frogsfrogsfrogs>
+        linux-xfs@vger.kernel.org
+Subject: Re: [PATCH 1/5] locking: Add rwsem_is_write_locked()
+Message-ID: <20230913085907.GB692@noisy.programming.kicks-ass.net>
+References: <ZP5OfhXhPkntaEkc@casper.infradead.org>
+ <ZP5llBaVrJteHQf3@dread.disaster.area>
+ <70d89bf4-708b-f131-f90e-5250b6804d48@redhat.com>
+ <ZP+U49yfkm0Fpfej@dread.disaster.area>
+ <20230912090342.GC35261@noisy.programming.kicks-ass.net>
+ <ZQBZXSCyG+u2+i8E@casper.infradead.org>
+ <20230912135213.GA22127@noisy.programming.kicks-ass.net>
+ <ZQBuiJ2n0uBOdjnr@casper.infradead.org>
+ <20230912142300.GC22127@noisy.programming.kicks-ass.net>
+ <20230912152715.GS28202@frogsfrogsfrogs>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20230912162315.GC28186@frogsfrogsfrogs>
+In-Reply-To: <20230912152715.GS28202@frogsfrogsfrogs>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Tue, Sep 12, 2023 at 09:23:15AM -0700, Darrick J. Wong wrote:
-> On Tue, Sep 12, 2023 at 10:41:53AM -0500, Alex Elder wrote:
-> > On 9/12/23 10:38 AM, Darrick J. Wong wrote:
-> > > On Tue, Sep 12, 2023 at 06:18:45PM +0300, Dan Carpenter wrote:
-> > > > The shmem_file_setup() function can't return NULL so there is no need
-> > > > to check and doing so is a bit confusing.
-> > > > 
-> > > > Signed-off-by: Dan Carpenter <dan.carpenter@linaro.org>
-> > > > ---
-> > > > No fixes tag because this is not a bug, just some confusing code.
-> > > 
-> > > Please don't re-send patches that have already been presented here.
-> > > https://lore.kernel.org/linux-xfs/20230824161428.GO11263@frogsfrogsfrogs/
-> > 
-> > FWIW, I side with Dan's argument.  shmem_file_setup() *does not*
-> > return NULL.  If it ever *did* return NULL, it would be up to the
-> > person who makes that happen to change all callers to check for NULL.
+On Tue, Sep 12, 2023 at 08:27:15AM -0700, Darrick J. Wong wrote:
+
+> I could live with Longman's suggestion of an rwsem_assert_is_locked that
+> only exists if DEBUG_RWSEMS is enabled.  Something like:
 > 
-> And as I asked three weeks ago, what's the harm in checking for a NULL
-> pointer here?  The kerneldoc for shmem_file_setup doesn't explicitly
-> exclude a null return.  True, it doesn't mention the possibility of
-> ERR_PTR returns either, but that's an accepted practice for pointer
-> returns.
-
-Mixing up error pointers and NULL checking is a common bug.  We never
-hit this in run time these days because we've been using static analysis
-to prevent it for over a decade.
-
-If you look at the code we used to ship in the 2006 era it's absolutely
-amazing (bad).  Static analysis isn't perfect for everything but there
-are some kinds of simple bugs where we've almost eliminated them
-completely.
-
+> #ifdef CONFIG_DEBUG_RWSEMS
+> static inline bool __rwsem_assert_is_locked(struct rw_semaphore *rwsem,
+> 		const char *file, int line)
+> {
+> 	bool ret = rwsem_is_locked(rwsem);
+> 	if (!ret)
+> 		WARN(1, "!rwsem_is_locked(rwsem) at %s line %d", file, line);
+> 	return ret;
+> }
+> #define rwsem_assert_is_locked(r) \
+> 	__rwsem_assert_is_locked((r), __FILE__, __LINE__)
+> #endif
 > 
-> For a call outside of the xfs subsystem, I think it's prudent to have
-> stronger return value checking.  Yes, someone changing the interface
-> would have to add a null check to all the callsites, but (a) it's benign
-> to guard against a behavior change in another module and (b) people miss
-> things all the time.
+> and then XFS could do:
 > 
-> > The current code *suggests* that it could return NULL, which
-> > is not correct.
+> 	ASSERT(rwsem_assert_is_locked(&VFS_I(ip)->i_rwsem));
 > 
-> Huh?
-> 
-> Are you talking about this stupid behavior of bots where they decide
-> what a function returns based on the callsites in lieu of analyzing the
-> actual implementation code?
+> Wherein ASSERT is only #defined if CONFIG_XFS_DEBUG, and XFS_DEBUG
+> selects DEBUG_RWSEMS, per Longman's suggestion.  That's work for what we
+> want it for (simple cheap lock checking) without becoming a general
+> lockabuse predicate.
 
-In this case Smatch is looking at the implementation.
-
-$ smdb return_states shmem_file_setup | grep INTER
-mm/shmem.c | shmem_file_setup | 2229 |  4096-ptr_max|        INTERNAL | -1 |                      | struct file*(*)(char*, llong, ulong) |
-mm/shmem.c | shmem_file_setup | 2230 |  (-4095)-(-1)|        INTERNAL | -1 |                      | struct file*(*)(char*, llong, ulong) |
-mm/shmem.c | shmem_file_setup | 2231 | (-4095)-(-4),(-2)-(-1)|        INTERNAL | -1 |                      | struct file*(*)(char*, llong, ulong) |
-mm/shmem.c | shmem_file_setup | 2232 |         (-22)|        INTERNAL | -1 |                      | struct file*(*)(char*, llong, ulong) |
-mm/shmem.c | shmem_file_setup | 2233 |         (-12)|        INTERNAL | -1 |                      | struct file*(*)(char*, llong, ulong) |
-
-I also manually reviewed the function implementation to verify.
-
-> 
-> I don't feel like getting harassed by bots when someone /does/
-> accidentally change the implementation to return NULL, and now one of
-> the other build/test/syz bots starts crashing in xfile_create.
-
-If someone changes it to return NULL then there are a few things to
-note.
-
-1) That person is going to have change all the call sites.
-2) Normally when a function returns both error pointers and NULL then
-   the NULL is success. So this code doesn't handle the normal case
-   correctly because it assumes NULL is an error.
-3) Static checkers will complain if the call sites are not updated.  Try
-   to find any IS_ERR vs NULL bugs in the past year that were found at
-   run time instead of through static analysis.  Occasionally syzbot
-   will hit them before me but it's rare.  I don't even remember the
-   last time where this sort of bug managed to reach actual users.
-
-> 
-> Of course all that has bought me is ... more f*** bot harassment.
-> 
-> I'm BURNED OUT, give me a fucking break!
-
-Fair enough.  I should have seen Yang Yingliang's email.
-
-regards,
-dan carpenter
+Ack.
