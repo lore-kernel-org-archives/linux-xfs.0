@@ -2,111 +2,105 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 41849EE01E0
-	for <linux-xfs@archiver.kernel.org>; Wed, 13 Sep 2023 16:55:09 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C8D2EEE0212
+	for <linux-xfs@archiver.kernel.org>; Wed, 13 Sep 2023 23:42:09 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229486AbjIMQzM (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 13 Sep 2023 12:55:12 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49992 "EHLO
+        id S233159AbjIMXmM (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 13 Sep 2023 19:42:12 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38830 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229379AbjIMQzK (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 13 Sep 2023 12:55:10 -0400
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 69C8B1BD0
-        for <linux-xfs@vger.kernel.org>; Wed, 13 Sep 2023 09:54:30 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1694624069;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=8t37UtnRiozHhv5O+2zJx94SEMSuB1VWgYlIyW6lYPw=;
-        b=Q/5VoujzfsNASX11b0ci5eeeufpg7DTNH4/kkqjsTOZJ9B1QSos7Y2k2/JeVg0jinMiq81
-        L9t4SApEL2fRHPsC/Y+BXZVSML7eNv89XPlosl8mnoNvlFC4ePCxQsCnqUDNucqKGTa49S
-        3QcggnOsoRgxmL8vqOJTC4y/ZKLE698=
-Received: from mail-pf1-f198.google.com (mail-pf1-f198.google.com
- [209.85.210.198]) by relay.mimecast.com with ESMTP with STARTTLS
- (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
- us-mta-359-IZsEr3acM3qM7ylH6hjPIw-1; Wed, 13 Sep 2023 12:54:28 -0400
-X-MC-Unique: IZsEr3acM3qM7ylH6hjPIw-1
-Received: by mail-pf1-f198.google.com with SMTP id d2e1a72fcca58-68fbbe8a6d3so1008735b3a.0
-        for <linux-xfs@vger.kernel.org>; Wed, 13 Sep 2023 09:54:28 -0700 (PDT)
+        with ESMTP id S231515AbjIMXmM (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 13 Sep 2023 19:42:12 -0400
+Received: from mail-pj1-x1035.google.com (mail-pj1-x1035.google.com [IPv6:2607:f8b0:4864:20::1035])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 18DF5CE9
+        for <linux-xfs@vger.kernel.org>; Wed, 13 Sep 2023 16:42:08 -0700 (PDT)
+Received: by mail-pj1-x1035.google.com with SMTP id 98e67ed59e1d1-269304c135aso318590a91.3
+        for <linux-xfs@vger.kernel.org>; Wed, 13 Sep 2023 16:42:08 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=fromorbit-com.20230601.gappssmtp.com; s=20230601; t=1694648527; x=1695253327; darn=vger.kernel.org;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
+        bh=HT6xU4tcW9TDIgRseOglxWcshJSQ3PvzbPijNp+n/YM=;
+        b=3BgSZApF8fulkKRzZz5/WiO/dNF//D9ckcHVTAP0DuwzFRxjE+8T5p0uy7KRg675Vd
+         /rfD1e9NVXUguk11Wl2qxlRQtq+fWi+tRHZ2FcyiqWMHytRxUasup3yi25TZl2jLV8l6
+         rCZdW2B2lPsKPNYMsa+nLf4v2GfKJ8fFoAe/YJAI0nw2kTrZABUYB6cXhvxyChZmwXgo
+         yIjQjDw3ACBG/avQzbbUaN0TrhMP1Sq4F3iSUCN02UgmWgP2qQUJ1RMnUN5Zk9UrQGWR
+         1vIu85mubDqcVY2pg8XCo6YrJ8o/OmxVL/8OSTIcWduGKMT7hLCtNaNdJlYA9Qx/ph8c
+         nXKQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1694624067; x=1695228867;
+        d=1e100.net; s=20230601; t=1694648527; x=1695253327;
         h=in-reply-to:content-disposition:mime-version:references:message-id
          :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
          :message-id:reply-to;
-        bh=8t37UtnRiozHhv5O+2zJx94SEMSuB1VWgYlIyW6lYPw=;
-        b=P6poMcLjmy3ebaWXSghr4ad6AeVUGHZkFTQkgHZyDDX+3DUwNYwwkWoC+7V8Hiijy1
-         vANqWKFwpCCo3QgT3XlhH5UAp4oyhfknPi0mWbxOy5+iCGlE978cIt2TbD/tx5oP8uHK
-         1ilEsxB2qOupuX35ljIc4cy0aG4eORqkaZuT4fENjxwzwMABrD0AjhRhtbaDAAh+prqN
-         Ymv4VM6V/E95a4eJkVH6n/+Z0UQLhl8fLcgujLxuCNwiPnSAWEQBlwru4utSk2XQgKNm
-         7+P7km9uBrQy5da1PABk68gF+9iL0pgPrqWf0JXKJDOaelUC3B4d6Yjpre9pTgRiHeHS
-         jamg==
-X-Gm-Message-State: AOJu0YyWpBBGSsmDHqtu+mmWqAXWHAflNGbbRkWC5Z6ivT/MDDVRIcr9
-        fSURD/PEmDlpWOGvWg8ri1r3wzbKURJlQ7DQYe+Yo5a5JXqKgKeeeK4Gj8h9yk1KyzH3yZSTpYr
-        rEY/ezex4zYBWKL/Pj4sZ
-X-Received: by 2002:a05:6a00:178d:b0:68a:6d34:474b with SMTP id s13-20020a056a00178d00b0068a6d34474bmr10230802pfg.15.1694624067071;
-        Wed, 13 Sep 2023 09:54:27 -0700 (PDT)
-X-Google-Smtp-Source: AGHT+IEcqtfSMXXFqB81E2xM71nxRMnTd6xi5FKly1lKu16+hofSFfsUbFSgs6YMeldIiE9GwS8utg==
-X-Received: by 2002:a05:6a00:178d:b0:68a:6d34:474b with SMTP id s13-20020a056a00178d00b0068a6d34474bmr10230783pfg.15.1694624066796;
-        Wed, 13 Sep 2023 09:54:26 -0700 (PDT)
-Received: from zlang-mailbox ([43.228.180.230])
-        by smtp.gmail.com with ESMTPSA id fe10-20020a056a002f0a00b0064fde7ae1ffsm5532657pfb.38.2023.09.13.09.54.25
+        bh=HT6xU4tcW9TDIgRseOglxWcshJSQ3PvzbPijNp+n/YM=;
+        b=CaJ4tt5uaj2pXszvAltLMns1vva0GbeTgLB3go069ZoeUd/sgypufAgtmnrSI1Umgm
+         0/rMO5lzVbuyCxDrqA/ma4trqcFOmeDZ+JbtVCc7FLG9NgKRyWX6Xzc0XHZO2WBUdX7e
+         flFmEnB8byAxOTSDSeLrBOdnT4UfRE3RR6/GwIxPkKaRcan3HYJ3Nti2SXLnBDzw5YTz
+         ro89ln0JSyalarPhf3w4Nn0vs/ZI88wtpnuPgvanMncvlhFTvhE0hBNWl3L3l62D1YJv
+         AEr3YYFaTkvxAvDVVdxzs1/r3imupieP0B3FZ3iNC6EpPfwLTuYfu0aDbQTH8tbldO4D
+         RyEg==
+X-Gm-Message-State: AOJu0YzRmdyoSSEvo/jNjQJtDuj3/tIq2gHqMiGRNh6/8gWN2+huxxFM
+        xlgg8ydi15CogKuLO90f23WyAA==
+X-Google-Smtp-Source: AGHT+IHz1WCst6sngICBQcPJgsLGPu0AvmTkYv4volpjgPuDZ3LR/WLjbLP+KTjhIC45BB1wiR9xIg==
+X-Received: by 2002:a17:90a:ab8d:b0:25f:20f:2f7d with SMTP id n13-20020a17090aab8d00b0025f020f2f7dmr3864635pjq.2.1694648527552;
+        Wed, 13 Sep 2023 16:42:07 -0700 (PDT)
+Received: from dread.disaster.area (pa49-180-20-59.pa.nsw.optusnet.com.au. [49.180.20.59])
+        by smtp.gmail.com with ESMTPSA id ne10-20020a17090b374a00b002633fa95ac2sm1984921pjb.13.2023.09.13.16.42.06
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 13 Sep 2023 09:54:26 -0700 (PDT)
-Date:   Thu, 14 Sep 2023 00:54:23 +0800
-From:   Zorro Lang <zlang@redhat.com>
-To:     "Darrick J. Wong" <djwong@kernel.org>
-Cc:     linux-xfs@vger.kernel.org, fstests@vger.kernel.org
-Subject: Re: [PATCH 1/2] xfs/270: actually test file readability
-Message-ID: <20230913165423.msata7yyzxoe66o7@zlang-mailbox>
-References: <169335058807.3526409.15604604578540143202.stgit@frogsfrogsfrogs>
- <169335059383.3526409.15894917295629170268.stgit@frogsfrogsfrogs>
+        Wed, 13 Sep 2023 16:42:06 -0700 (PDT)
+Received: from dave by dread.disaster.area with local (Exim 4.96)
+        (envelope-from <david@fromorbit.com>)
+        id 1qgZUh-000Nj6-0s;
+        Thu, 14 Sep 2023 09:42:03 +1000
+Date:   Thu, 14 Sep 2023 09:42:03 +1000
+From:   Dave Chinner <david@fromorbit.com>
+To:     cheng.lin130@zte.com.cn
+Cc:     djwong@kernel.org, linux-xfs@vger.kernel.org,
+        linux-kernel@vger.kernel.org, jiang.yong5@zte.com.cn,
+        wang.liang82@zte.com.cn, liu.dong3@zte.com.cn
+Subject: Re: [PATCH v3] xfs: introduce protection for drop nlink
+Message-ID: <ZQJIyx419cw24ppF@dread.disaster.area>
+References: <202309131744458239465@zte.com.cn>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <169335059383.3526409.15894917295629170268.stgit@frogsfrogsfrogs>
+In-Reply-To: <202309131744458239465@zte.com.cn>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Tue, Aug 29, 2023 at 04:09:53PM -0700, Darrick J. Wong wrote:
-> From: Darrick J. Wong <djwong@kernel.org>
+On Wed, Sep 13, 2023 at 05:44:45PM +0800, cheng.lin130@zte.com.cn wrote:
+> From: Cheng Lin <cheng.lin130@zte.com.cn>
 > 
-> Make sure we can actually read files off the ro mounted filesystem that
-> has an unknown rocompat feature set.
+> When abnormal drop_nlink are detected on the inode,
+> shutdown filesystem, to avoid corruption propagation.
 > 
-> Signed-off-by: Darrick J. Wong <djwong@kernel.org>
+> Signed-off-by: Cheng Lin <cheng.lin130@zte.com.cn>
 > ---
-
-Looks good to me,
-Reviewed-by: Zorro Lang <zlang@redhat.com>
-
->  tests/xfs/270 |    4 ++++
->  1 file changed, 4 insertions(+)
+>  fs/xfs/xfs_inode.c | 9 +++++++++
+>  1 file changed, 9 insertions(+)
 > 
-> 
-> diff --git a/tests/xfs/270 b/tests/xfs/270
-> index 7447ce87be..511dfe9fcd 100755
-> --- a/tests/xfs/270
-> +++ b/tests/xfs/270
-> @@ -23,6 +23,9 @@ _require_scratch_nocheck
->  _require_scratch_xfs_crc
->  
->  _scratch_mkfs_xfs >>$seqres.full 2>&1
-> +_scratch_mount
-> +echo moo > $SCRATCH_MNT/testfile
-> +_scratch_unmount
->  
->  # set the highest bit of features_ro_compat, use it as an unknown
->  # feature bit. If one day this bit become known feature, please
-> @@ -68,6 +71,7 @@ if [ $? -ne 0 ]; then
->  	_fail "ro mount test failed"
->  else
->  	# no hang/panic is fine
-> +	cat $SCRATCH_MNT/testfile > /dev/null
->  	$FSSTRESS_PROG -d $SCRATCH_MNT -p 4 -n 400 >>$seqres.full 2>&1
->  fi
->  
-> 
+> diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
+> index 9e62cc500..40cc106ae 100644
+> --- a/fs/xfs/xfs_inode.c
+> +++ b/fs/xfs/xfs_inode.c
+> @@ -919,6 +919,15 @@ xfs_droplink(
+>  	xfs_trans_t *tp,
+>  	xfs_inode_t *ip)
+>  {
+> +
+> +	if (VFS_I(ip)->i_nlink == 0) {
+> +		xfs_alert(ip->i_mount,
+> +			  "%s: Deleting inode %llu with no links.",
+> +			  __func__, ip->i_ino);
+> +		tp->t_flags |= XFS_TRANS_DIRTY;
 
+Marking the transaction dirty is not necessary.
+
+Otherwise this seems fine.
+
+-Dave.
+
+-- 
+Dave Chinner
+david@fromorbit.com
