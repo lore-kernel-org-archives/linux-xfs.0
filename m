@@ -2,105 +2,120 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C8D2EEE0212
-	for <linux-xfs@archiver.kernel.org>; Wed, 13 Sep 2023 23:42:09 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D7816EE0212
+	for <linux-xfs@archiver.kernel.org>; Wed, 13 Sep 2023 23:44:48 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233159AbjIMXmM (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 13 Sep 2023 19:42:12 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38830 "EHLO
+        id S233122AbjIMXov (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 13 Sep 2023 19:44:51 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44168 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231515AbjIMXmM (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 13 Sep 2023 19:42:12 -0400
-Received: from mail-pj1-x1035.google.com (mail-pj1-x1035.google.com [IPv6:2607:f8b0:4864:20::1035])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 18DF5CE9
-        for <linux-xfs@vger.kernel.org>; Wed, 13 Sep 2023 16:42:08 -0700 (PDT)
-Received: by mail-pj1-x1035.google.com with SMTP id 98e67ed59e1d1-269304c135aso318590a91.3
-        for <linux-xfs@vger.kernel.org>; Wed, 13 Sep 2023 16:42:08 -0700 (PDT)
+        with ESMTP id S229894AbjIMXov (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 13 Sep 2023 19:44:51 -0400
+Received: from mail-pl1-x632.google.com (mail-pl1-x632.google.com [IPv6:2607:f8b0:4864:20::632])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1C203CE9
+        for <linux-xfs@vger.kernel.org>; Wed, 13 Sep 2023 16:44:47 -0700 (PDT)
+Received: by mail-pl1-x632.google.com with SMTP id d9443c01a7336-1c0d5b16aacso2960805ad.1
+        for <linux-xfs@vger.kernel.org>; Wed, 13 Sep 2023 16:44:47 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=fromorbit-com.20230601.gappssmtp.com; s=20230601; t=1694648527; x=1695253327; darn=vger.kernel.org;
+        d=fromorbit-com.20230601.gappssmtp.com; s=20230601; t=1694648686; x=1695253486; darn=vger.kernel.org;
         h=in-reply-to:content-disposition:mime-version:references:message-id
          :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
-        bh=HT6xU4tcW9TDIgRseOglxWcshJSQ3PvzbPijNp+n/YM=;
-        b=3BgSZApF8fulkKRzZz5/WiO/dNF//D9ckcHVTAP0DuwzFRxjE+8T5p0uy7KRg675Vd
-         /rfD1e9NVXUguk11Wl2qxlRQtq+fWi+tRHZ2FcyiqWMHytRxUasup3yi25TZl2jLV8l6
-         rCZdW2B2lPsKPNYMsa+nLf4v2GfKJ8fFoAe/YJAI0nw2kTrZABUYB6cXhvxyChZmwXgo
-         yIjQjDw3ACBG/avQzbbUaN0TrhMP1Sq4F3iSUCN02UgmWgP2qQUJ1RMnUN5Zk9UrQGWR
-         1vIu85mubDqcVY2pg8XCo6YrJ8o/OmxVL/8OSTIcWduGKMT7hLCtNaNdJlYA9Qx/ph8c
-         nXKQ==
+        bh=mbBhrEihaU82qofMP72oFh86MVO1MRdEXnN/IMvNciY=;
+        b=eeP5pjGfhDSboc+PvSwFvvJI7m97EUv/nubCBjCCeGCDudYEZWbKB1hmhfyxZ/vzQj
+         YF0YmTiIXSgUnuwV7pHgCyDAF6PEA17Q2Oga+Y5Sz9DcfZBcAJcDmr3JFJqkkwSpCbVe
+         o5y1eEq24yxf851dH5Bwv5SgEi16+w/X792tIDGzBOtlgM0338MCIWspweLarUrKsqs9
+         x1Tk7syZJ/a2nfXuPLd9Jga2lSPq7t79Ct+GpvGjXQQLnuezy3hFsRkWxVPFefAXHGkS
+         JLdn/suk9Mk0pbBDJzVfIiEg+h2nbd5hryHJC/O0TRDCqCv7kAOIwM0ahl7VdocQahFP
+         AlJA==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1694648527; x=1695253327;
+        d=1e100.net; s=20230601; t=1694648686; x=1695253486;
         h=in-reply-to:content-disposition:mime-version:references:message-id
          :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
          :message-id:reply-to;
-        bh=HT6xU4tcW9TDIgRseOglxWcshJSQ3PvzbPijNp+n/YM=;
-        b=CaJ4tt5uaj2pXszvAltLMns1vva0GbeTgLB3go069ZoeUd/sgypufAgtmnrSI1Umgm
-         0/rMO5lzVbuyCxDrqA/ma4trqcFOmeDZ+JbtVCc7FLG9NgKRyWX6Xzc0XHZO2WBUdX7e
-         flFmEnB8byAxOTSDSeLrBOdnT4UfRE3RR6/GwIxPkKaRcan3HYJ3Nti2SXLnBDzw5YTz
-         ro89ln0JSyalarPhf3w4Nn0vs/ZI88wtpnuPgvanMncvlhFTvhE0hBNWl3L3l62D1YJv
-         AEr3YYFaTkvxAvDVVdxzs1/r3imupieP0B3FZ3iNC6EpPfwLTuYfu0aDbQTH8tbldO4D
-         RyEg==
-X-Gm-Message-State: AOJu0YzRmdyoSSEvo/jNjQJtDuj3/tIq2gHqMiGRNh6/8gWN2+huxxFM
-        xlgg8ydi15CogKuLO90f23WyAA==
-X-Google-Smtp-Source: AGHT+IHz1WCst6sngICBQcPJgsLGPu0AvmTkYv4volpjgPuDZ3LR/WLjbLP+KTjhIC45BB1wiR9xIg==
-X-Received: by 2002:a17:90a:ab8d:b0:25f:20f:2f7d with SMTP id n13-20020a17090aab8d00b0025f020f2f7dmr3864635pjq.2.1694648527552;
-        Wed, 13 Sep 2023 16:42:07 -0700 (PDT)
+        bh=mbBhrEihaU82qofMP72oFh86MVO1MRdEXnN/IMvNciY=;
+        b=tLbCJrqQFPUl1OJCjOb/KXMIwxrt1JcoqEgN7UdTThd7qwHKkplYPtyJnRCdIkrB6A
+         xRW65GFTmj6NAhPbfxUPe0TZSNKkqe395gKii2zwq1zbebBZYMG5hlJdyEGo87yRIuhw
+         BEy5uEtwHYpu5OvAbwW/g1zRoxqTY/+0vpAS8T/G6cizCLu+MGJMGkjhcJ3akMtcd9/a
+         eq/dWBRB7vPpL7BMgQt4bi5FJ/2r9ptU4msjNL2Nj3CpyRXgAENM9tMA74UpBhMxSm6I
+         xA9UNZPDTYrmXs2FRC6GJn2xvzCULOhUmH4GD6xDei+aX/3QBnaD6QkLxPrU+lvcK8DE
+         shnQ==
+X-Gm-Message-State: AOJu0Yy3lXygNp/aSxCZsUMzDzxpGQ5PwChj1shaPtk2GVf3ntWTK4dJ
+        kmGYzP9G1csufTG+Qk3gOtPEZQ==
+X-Google-Smtp-Source: AGHT+IEND72MFLrMknqTQ26Ysmj35t4SzN5912iiZOSzBWCL5mDCuarLFkvNWCoco4W/f1uTXedYwQ==
+X-Received: by 2002:a17:90b:3149:b0:268:3b8b:140d with SMTP id ip9-20020a17090b314900b002683b8b140dmr3243779pjb.35.1694648686549;
+        Wed, 13 Sep 2023 16:44:46 -0700 (PDT)
 Received: from dread.disaster.area (pa49-180-20-59.pa.nsw.optusnet.com.au. [49.180.20.59])
-        by smtp.gmail.com with ESMTPSA id ne10-20020a17090b374a00b002633fa95ac2sm1984921pjb.13.2023.09.13.16.42.06
+        by smtp.gmail.com with ESMTPSA id ne10-20020a17090b374a00b002609cadc56esm148650pjb.11.2023.09.13.16.44.45
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 13 Sep 2023 16:42:06 -0700 (PDT)
+        Wed, 13 Sep 2023 16:44:46 -0700 (PDT)
 Received: from dave by dread.disaster.area with local (Exim 4.96)
         (envelope-from <david@fromorbit.com>)
-        id 1qgZUh-000Nj6-0s;
-        Thu, 14 Sep 2023 09:42:03 +1000
-Date:   Thu, 14 Sep 2023 09:42:03 +1000
+        id 1qgZXG-000Nkg-2I;
+        Thu, 14 Sep 2023 09:44:42 +1000
+Date:   Thu, 14 Sep 2023 09:44:42 +1000
 From:   Dave Chinner <david@fromorbit.com>
-To:     cheng.lin130@zte.com.cn
-Cc:     djwong@kernel.org, linux-xfs@vger.kernel.org,
-        linux-kernel@vger.kernel.org, jiang.yong5@zte.com.cn,
-        wang.liang82@zte.com.cn, liu.dong3@zte.com.cn
-Subject: Re: [PATCH v3] xfs: introduce protection for drop nlink
-Message-ID: <ZQJIyx419cw24ppF@dread.disaster.area>
-References: <202309131744458239465@zte.com.cn>
+To:     alexjlzheng@gmail.com
+Cc:     alexjlzheng@tencent.com, chandan.babu@oracle.com,
+        djwong@kernel.org, linux-kernel@vger.kernel.org,
+        linux-xfs@vger.kernel.org
+Subject: Re: [PATCH v2] xfs: remove redundant batch variables for
+ serialization
+Message-ID: <ZQJJasg4eIt99t/0@dread.disaster.area>
+References: <ZP45/7KfB0sHuCIk@dread.disaster.area>
+ <20230913034115.1238353-1-alexjlzheng@tencent.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <202309131744458239465@zte.com.cn>
+In-Reply-To: <20230913034115.1238353-1-alexjlzheng@tencent.com>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Wed, Sep 13, 2023 at 05:44:45PM +0800, cheng.lin130@zte.com.cn wrote:
-> From: Cheng Lin <cheng.lin130@zte.com.cn>
+On Wed, Sep 13, 2023 at 11:41:15AM +0800, alexjlzheng@gmail.com wrote:
+> On Mon, 11 Sep 2023 07:49:51 +1000, Dave Chinner <david@fromorbit.com> wrote:
+> > On Sat, Sep 09, 2023 at 03:17:51PM +0800, alexjlzheng@gmail.com wrote:
+> > > From: Jinliang Zheng <alexjlzheng@tencent.com>
+> > > 
+> > > Historically, when generic percpu counters were introduced in xfs for
+> > > free block counters by commit 0d485ada404b ("xfs: use generic percpu
+> > > counters for free block counter"), the counters used a custom batch
+> > > size. In xfs_mod_freecounter(), originally named xfs_mod_fdblocks(),
+> > > this patch attempted to serialize the program using a smaller batch size
+> > > as parameter to the addition function as the counter approaches 0.
+> > > 
+> > > Commit 8c1903d3081a ("xfs: inode and free block counters need to use
+> > > __percpu_counter_compare") pointed out the error in commit 0d485ada404b
+> > > ("xfs: use generic percpu counters for free block counter") mentioned
+> > > above and said that "Because the counters use a custom batch size, the
+> > > comparison functions need to be aware of that batch size otherwise the
+> > > comparison does not work correctly". Then percpu_counter_compare() was
+> > > replaced with __percpu_counter_compare() with parameter
+> > > XFS_FDBLOCKS_BATCH.
+> > > 
+> > > After commit 8c1903d3081a ("xfs: inode and free block counters need to
+> > > use __percpu_counter_compare"), the existence of the batch variable is
+> > > no longer necessary, so this patch is proposed to simplify the code by
+> > > removing it.
+> > 
+> > Hmmmm. Fiddling with percpu counter batch thresholds can expose
+> > unexpected corner case behaviours.  What testing have you done on
+> > this change?
 > 
-> When abnormal drop_nlink are detected on the inode,
-> shutdown filesystem, to avoid corruption propagation.
+> Hi, Dave,
 > 
-> Signed-off-by: Cheng Lin <cheng.lin130@zte.com.cn>
-> ---
->  fs/xfs/xfs_inode.c | 9 +++++++++
->  1 file changed, 9 insertions(+)
+> Thank you for your reply.
 > 
-> diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
-> index 9e62cc500..40cc106ae 100644
-> --- a/fs/xfs/xfs_inode.c
-> +++ b/fs/xfs/xfs_inode.c
-> @@ -919,6 +919,15 @@ xfs_droplink(
->  	xfs_trans_t *tp,
->  	xfs_inode_t *ip)
->  {
-> +
-> +	if (VFS_I(ip)->i_nlink == 0) {
-> +		xfs_alert(ip->i_mount,
-> +			  "%s: Deleting inode %llu with no links.",
-> +			  __func__, ip->i_ino);
-> +		tp->t_flags |= XFS_TRANS_DIRTY;
+> I have tested the patch using _filebench_ and _fio_.
 
-Marking the transaction dirty is not necessary.
+What about all the ENOSPC and shutdown tests in fstests?
 
-Otherwise this seems fine.
+If you haven't exercised ENOSPC conditions in your testing, then you
+haven't actually tested whether the new code can accurately and
+correctly detect ENOSPC conditions....
 
--Dave.
+Cheers,
 
+Dave.
 -- 
 Dave Chinner
 david@fromorbit.com
