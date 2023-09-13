@@ -2,146 +2,159 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4E163EE49B7
-	for <linux-xfs@archiver.kernel.org>; Wed, 13 Sep 2023 01:35:03 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1E412EE49B7
+	for <linux-xfs@archiver.kernel.org>; Wed, 13 Sep 2023 01:39:30 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S238056AbjIMBfG (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 12 Sep 2023 21:35:06 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36348 "EHLO
+        id S233540AbjIMBjd (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 12 Sep 2023 21:39:33 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52956 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231414AbjIMBfF (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 12 Sep 2023 21:35:05 -0400
-Received: from BL0PR02CU006.outbound.protection.outlook.com (mail-eastusazolkn19013050.outbound.protection.outlook.com [52.103.11.50])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 12A4110F6;
-        Tue, 12 Sep 2023 18:35:01 -0700 (PDT)
+        with ESMTP id S231204AbjIMBjc (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 12 Sep 2023 21:39:32 -0400
+Received: from CO1PR02CU001.outbound.protection.outlook.com (mail-westus2azolkn19011016.outbound.protection.outlook.com [52.103.10.16])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 431D7115;
+        Tue, 12 Sep 2023 18:39:28 -0700 (PDT)
 ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=BlF2m4rLdwr4XT9CCwkeszfRvnn1P2V6rqjCX0Miob3IZPnKiW6nNsL5cCkILTaDfKZMPa6ffqhXFejrI0ytHbbQfZ9Gpt/kYilImLBcg+CieVl1rgkUWF1hlQioAKakj+A1NCTOAEAEuNfV0T1A07kk0fbTDs50YzKwBbQgxGg3I+BraFl3DsApZ5WMAlxERY+aHzvCGvUq56uH4fNVqsTYPo5KIt+5W7QNgwGgu11uh0YjAeOR4jkvZ8NodGRO6RHX4tZf++0ZF3DXh1ocgVeYFZ517sLpUvimJAucTErmDgwMLWSdvblsiRqEDoW4JwJodOLwksbwmUSm4AKu/A==
+ b=Ih72f4B6CwQSXVjY1exJx/pBm0reLDd4NfQTyxZt+SPmF3Meuv1Swlvke7QRQa0fuWjsMwPKYL2xdU9E9witss6ubwc7bi7pxFpLGNn7r59xyvGO1MRTLeEBfouYnQfVnXjgq7jll5YGIUs7OXLXHocHJgcwqGfccd7uR/7CFd5eu7UJte8lJvduEEXnK4GYy3IqzIF9DDjHBBPpXs2Nno+gjYGLea+332HsSlrGnTy3ZQ7TaCT2DO5vP8fifSqg89mN4v0CMIpCbUSFXNKNAnnSSQGl9MqrGTH3F09j231bCq0UkWmcHAMj/sqMEUAJVaei3pe928rF9r8WgbmtpA==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
  s=arcselector9901;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=iXVLcwbqLjqM2QNMeqz+Jj6XoD9n2u/dKbetrraAbh4=;
- b=cRNK3qidcrWdxCVY1bnu9KP5iFKPOGMcLigBtuS9tYhcyWyMvvEPxIqIpKrI7y6c4Pu4yVlDhgYJoZSJng0gCRvsHEtK+WGZIkJRugbCIY1RaqxNdXb3eByFFFvr74Qx9Id9eitqJYEAGJF+laY1ydLn1Q8K7T32CgGB7QHySGXFa947deS9XeOYLpfQySHEcG4BdgweVmQc3SwTCE/yiikaDXHmCKqN1mqEVODFAsZZ/jtbnfEcTpNe97q+0EnL/HZCwkuSbys1n7WRWrAXJeNtap7dGdxxfi+T6VYbNXyIh6MOy4LNRLShkJPLz+RkaUS5I4M3n9UpFnqEWQAzrg==
+ bh=eRG3Jb8bb2nP0BTsCSJTBgtYqBy1CerpCSU9FgeIhCw=;
+ b=LvaZZkQ1zQVsWBUV9LNhGhNqFs9nbV/14KXDKY/cNcdOzeJ94MxttOvmyn75qYvGNSkT4IA0yAYt8UqUQqkLi9fObFCOKZJ9MJ6CLYiZN6efzjXiBxLl2ZUekmpo/Y5mduGz5NZrarApnAiv3NpZjYwhe20Yq58i+1QMBtiKtLxUuRly2xh5rjbye1K5lI6YdLweravD3kLKQ1jRU3nnVC3iJhKFJLb4B+wXRGzDP1sWk90QpLxqJuU9zvvlh8Tn5UX6ioktU020iLX8zi6SRTec3pis622nWLEXKzO/EWROKQ0ut16b6hmh5MICsiqW1o01vainOyPVCi7BA8OKCw==
 ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=none; dmarc=none;
  dkim=none; arc=none
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=outlook.com;
  s=selector1;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=iXVLcwbqLjqM2QNMeqz+Jj6XoD9n2u/dKbetrraAbh4=;
- b=m/8Dc5Bq4P71taW4zuduS4z5df9TNl1k98yLKvYzxGlC2Y8wycWTS18YTxM/rsBuf50SMYv10kTLLA5QQuPYEcRZzaH5xDdafRxJqIFS1E7aqFFhFHC6X4sYa3XirSAa1sTMLcNqIOxEl2xBJWneSv1WReBvkEoyHNe5ySUEnSsFXzjBhkLcJ5FXUcukoCZ/a1blPK+D2+VUVPwePQ6Oejyw/VqVXdO3rZZifEYkjoDRRkOWHjKuSbdKHKQO6Q/w6SQR3Ji8YMBYtXwg9Hgi2xW54EBsqYb2Z4qOO7lEl9kgY4XOcqhZSzSiN7WQ0L6L9J/XGhTfpSqjkDyWruayVg==
+ bh=eRG3Jb8bb2nP0BTsCSJTBgtYqBy1CerpCSU9FgeIhCw=;
+ b=Po1cWBLWeJ7DP3hJKLFlkpN4nntzaR/s35KyTYL7kyeCMV/d6Um6+JZYMsf2GMI407ZZCEjBWf+dBHwYXUqmcAFWm6hu34shwn5hEKisn91MRD0dMEBPGLGbc0XMW0RVQO5iJ5mcuJWgHyhOt1DoCeRx2d7NxeCaWPajrFk7qcPKTn3II8O/IhnjeXSOtouNYkg6q1zFjGOgi78Zw5YW6vhPFRYOijs5sqF34k3MitcFXPjFMGgtcnY+UTlf02qkP6LqDUkoTseU67a4aehLNVMFsGgJ8Eh8PqeS4z8LKiW3VMsFXO40KQe5zTFvqBlW3TGHriyWmXvpfowFx65jEQ==
 Received: from CY8PR05MB9378.namprd05.prod.outlook.com (2603:10b6:930:91::8)
- by PH7PR05MB9858.namprd05.prod.outlook.com (2603:10b6:510:2b2::17) with
+ by SJ0PR05MB7801.namprd05.prod.outlook.com (2603:10b6:a03:2ca::19) with
  Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.6768.30; Wed, 13 Sep
- 2023 01:34:59 +0000
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.6768.38; Wed, 13 Sep
+ 2023 01:39:26 +0000
 Received: from CY8PR05MB9378.namprd05.prod.outlook.com
  ([fe80::3ea2:7971:7c79:b09f]) by CY8PR05MB9378.namprd05.prod.outlook.com
  ([fe80::3ea2:7971:7c79:b09f%3]) with mapi id 15.20.6745.034; Wed, 13 Sep 2023
- 01:34:59 +0000
-Message-ID: <CY8PR05MB9378C5CE9BDB61987D6D68D4CDF0A@CY8PR05MB9378.namprd05.prod.outlook.com>
-Date:   Wed, 13 Sep 2023 09:33:32 +0800
+ 01:39:26 +0000
+Message-ID: <CY8PR05MB9378AAC222D4298DE011ED6BCDF0A@CY8PR05MB9378.namprd05.prod.outlook.com>
+Date:   Wed, 13 Sep 2023 09:38:01 +0800
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
  Thunderbird/102.15.0
-Subject: Re: [PATCH V2] xfs: use roundup_pow_of_two instead of ffs during
+Subject: [PATCH V3] xfs: use roundup_pow_of_two instead of ffs during
  xlog_find_tail
-To:     Dave Chinner <david@fromorbit.com>
-Cc:     djwong@kernel.org, linux-xfs@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-References: <63b3742c-0efe-c096-c737-a0e0419480bd@outlook.com>
- <CY8PR05MB9378060FDF6C7E15589EB668CDF1A@CY8PR05MB9378.namprd05.prod.outlook.com>
- <ZQDp1fNUgmJevXLr@dread.disaster.area>
 Content-Language: en-US
 From:   Wang Jianchao <jianchwa@outlook.com>
-In-Reply-To: <ZQDp1fNUgmJevXLr@dread.disaster.area>
+To:     djwong@kernel.org
+Cc:     linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org
+References: <63b3742c-0efe-c096-c737-a0e0419480bd@outlook.com>
+ <59dd15dd-5b35-871d-6d3a-ec779975b089@outlook.com>
+In-Reply-To: <59dd15dd-5b35-871d-6d3a-ec779975b089@outlook.com>
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
-X-TMN:  [nyvBSkCY+UKLxaFi6gHn4vmmLdTrOhUbHCzVRHraC64=]
-X-ClientProxiedBy: PS2PR01CA0034.apcprd01.prod.exchangelabs.com
- (2603:1096:300:58::22) To CY8PR05MB9378.namprd05.prod.outlook.com
+X-TMN:  [rJLQNKwNUuvPFL1yeDcZ6fPrcdRBupt03dBDEVDaMEE=]
+X-ClientProxiedBy: TYCP286CA0048.JPNP286.PROD.OUTLOOK.COM
+ (2603:1096:400:2b5::11) To CY8PR05MB9378.namprd05.prod.outlook.com
  (2603:10b6:930:91::8)
-X-Microsoft-Original-Message-ID: <3f6fe965-67f5-c7f8-4468-decc8f0ad3bc@outlook.com>
+X-Microsoft-Original-Message-ID: <0a72f462-8b8e-4dec-6ce4-f52e33423957@outlook.com>
 MIME-Version: 1.0
 X-MS-Exchange-MessageSentRepresentingType: 1
 X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: CY8PR05MB9378:EE_|PH7PR05MB9858:EE_
-X-MS-Office365-Filtering-Correlation-Id: 668c6587-e50a-468a-f1bc-08dbb3f9a3ed
+X-MS-TrafficTypeDiagnostic: CY8PR05MB9378:EE_|SJ0PR05MB7801:EE_
+X-MS-Office365-Filtering-Correlation-Id: 1a4d7f4d-950c-4bde-b3ff-08dbb3fa436f
 X-Microsoft-Antispam: BCL:0;
-X-Microsoft-Antispam-Message-Info: diCbBEsFGOyw6IcpWfOoRZoFb9b9RAGB9SgrYRRn6zsA4t5sz166TG3BNXD7pnfpCcWAVA++mkr3OzGzuHbwhyq2OsA4L6TRvafqqaySbA6gMGOQFLcFciL4fTBRl0rpxr4El8kQ5qq+k34Ao3NRI1XQqroZWwWngRoOCzTLuHtUBLz6Uym4j5Z3/Bbd3rW2AKHwnHw3ccXN1rTdMY/EzbeA/aDo2jGlqO7Psol/imWz8YKn6hbW0sPhu9bKWW+GuHj1IPr8KYqRq4yRWD4INRpFyh2ewyiRsFIXIq3XKQR+GlEIkBXTZTmmxZGkHlTpq+zrfCue9wbzYBfeaHu+ZlbTPn9YLESW2de4FK2sEakkLCG6WQjpwar5SqxqvLqDQMA+Qq2VvidXHKdiLDjGmlOZ4BocHOOQxWWOX8qx3x6cfjOmKgoxiL8yweo7ZppnKbNqEVeSI+V0cfSLHRUJ2D4SnruPXtZhSD3KJR+B7ZLxq+Gw2acO5HKthe2uZNoCS/V89okAoRfTMYW/cahhU+HWIVziaUT7KNa3TTqidPdgY1e9bBCI4uMXYM/JaRKe
+X-Microsoft-Antispam-Message-Info: rZaDU6nr2nZxd9aug41VZGrpZPKPUUsDRfSICTSWd60z/302xLXQpTRqgL98F0vOKdlKax1VIQdD02Zivog2tVE2544k4yxBJ2R6/k3m19asuBigiaI6AYefZL9i7otWHSLZqBWWBsOoMhYZvMP8OXWunAfGmlhWBuXFW8IHAlR6KnGtDV+1ub7HQY9i5L0G+xoVPimXGvoBErygBEZMUIJ5pgKaOLoXJfGR+nhZ0wlt+/D3V76bOi13WySzf+tA6tGLITb5rg7PvtC9u0K7+drKkN4EPTNVIGSaaf6tpcVOZI4EsmLuu4dNO68rN7GnBenSo7dBo4rFwjwa796e3IlfRSMA1JFssh6Ror4WxXtSZIj3toS5/F+/NMhzDi1/Ez4iPxBENRLpQ7M4NeSZgFrwMKVyC9bLKvvDG2GDx/Iy9Y2hhuKIalHUFsF2YL4+W6HLUyBYGIbc2cJ5rglLmKBMidn7rzD/Gc3aA/X/0Zk22UZjrJejrk5NeNaNLqVgWoCzOJlxb2giPJXjJRtnnO8MbHkrEdtzbeAjKP17ZEPnGw7f4RYODww3tB2f+Cpj
 X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0: =?utf-8?B?QlYzUXYxOTBSNFQyRGcyWkNOYk5oSzlEZ3poaERRYmNCdm5WYVUwcm9ZNE5W?=
- =?utf-8?B?VUszMXVES2hySlhyd3NJU3Q3UCsvN0NIUTRBS0x3Y25rTmpaY0xwSU1ET002?=
- =?utf-8?B?Rm1wUHRGNzBaeGVyOFhhN2ptbXJzY3ZqeUtCdXMyZmRDclA2ZUY2a2tSK2ps?=
- =?utf-8?B?akFBNWViQnR2SkR1QUVSa1RQTTV0QjBaQlZjVHVCTXVWNi9XekV4ZGJBRk55?=
- =?utf-8?B?cmpTTGFocUFid0YweGsrelUzU1BIdXROQlBDSG1UeWVqVXkrKzBNNjJKQ1pQ?=
- =?utf-8?B?RURtYVQzVFpFcU5mbmpWRUxlSFlGdEkwR0E4Ull6bWh1TjlyK2kxOTdydjVy?=
- =?utf-8?B?QmZsZmJkUHd6N1hmZGxIQTlZS3ExdjZWQ1A2TmlEM2tMSDBVQjN1YWJxRVhI?=
- =?utf-8?B?amxHM2oxL0wrRFl6ZWkvZFNmaVc5Y0RWYjNWZWhVT1N1eHB3aGVtTDVLMzlx?=
- =?utf-8?B?WVV4RGFpb1N0dXdWcmxzMGp5UFR6YjJ0bFVVamoveitVV0J1N3BUMmY1a1ZP?=
- =?utf-8?B?WHZwWG5YUU96cGRERGtUNGJQRXByclZFckFnZjAzU2VzMzNDNWJlUURuL3FJ?=
- =?utf-8?B?R0JieGRoK1p0cjhCNURUQ2V6TnUwRURWMDZWNUFBOEludlFhd3Q5NjZCN01Y?=
- =?utf-8?B?NWRBckFFQTFQZVdxVnRTVThKQ3lvVmtOZDE1cmZNSVE5WEROZGkxL0xTS3Jl?=
- =?utf-8?B?UVQ0MHduR0liRWQ5emdFWDd3WFA1RkxieW1lNUdmeVR4anBWTHBlOFk2UTZU?=
- =?utf-8?B?QTFoU0JRK1RYRUNjb2U1dlE4djNKbUdyS0dJTkRaZzlhVXh6dVJzWkpNR0Vv?=
- =?utf-8?B?TG1tU096UlRKY1BzUk5uN1Q0RTB3R2NjM0p3VktkRDhyZFU1QXBBT0g4K20x?=
- =?utf-8?B?blFUQjZ6NWJwVFpBUnhjSDJUK2FXZTVtWEhJVkswTWRTYUVGZmtMWUptOHBY?=
- =?utf-8?B?bzY0bFUxU3NUNVQ1MEZrdy9lRThxQ2VIdjJsMGNkWThtSWx0a0M2L2I3MXdY?=
- =?utf-8?B?UE5KblV0bFVQODNrMWhHZnlQTzNrV3ZjNmVyaElnU2hCeTRLRlNOSlhaVmRB?=
- =?utf-8?B?dXVVVnFyOThYNnlKdEtvbmVGWFRkeXZkdGNKTnUyTyt6ZFRLN2psVHZiVUhC?=
- =?utf-8?B?TDVjWDZwZTEyMWJNTkk2NlJkTUJ4cXpNSnEzR3pjL3RyS1Q5Y01ENG8ra2Ni?=
- =?utf-8?B?cHdmUktmbnJ6UzJOcVVNTVZhL0prMVlPTlB4VG5ldzBOUGE3Uko3Q1pZclg4?=
- =?utf-8?B?TmRBQ2NVWHJsUmlzWnk5bTJ6RWJnK3FRTGRndloxejRQS3hGOTJJUUJyT3BQ?=
- =?utf-8?B?RzdvakkwdFRPanJjdEpJREh0eTN5WWUwOUpRNDhuWXhpMkdmeTc4MXZwSXVY?=
- =?utf-8?B?Sk5TTzU0OWt5MmxydHVVRHRFS0tVbkt6V2tnY1Fub212eWFHNjQyQ2hFRTVN?=
- =?utf-8?B?VmhqQlFOR0RGTWZkK253YlJEMUJKc0IwcDdmc2lYcVNYbHErTUplZFpBNGFM?=
- =?utf-8?B?ZEpWL2o3eHBVY3VQR0RrMm1IU3lHK0xvNEQwQzZjTHNYS1EzVlY2TzloQ3Zr?=
- =?utf-8?B?NHZwL3JaREs4eTQrbjZLOGZSWDRmdlp6WUVnT3NWZHBzUHFsV3c1Z1NaMTdk?=
- =?utf-8?Q?7ydiHmQL7ug5iske8tM6wHyD0G0LnBeOMJcDkrmnoiQ8=3D?=
+X-MS-Exchange-AntiSpam-MessageData-0: =?utf-8?B?Tk8xMktjQ0lmVTFXcWhPbXdwbWVDTUVxb0t3REo0MjdNMjVwT2RubUY0NFdo?=
+ =?utf-8?B?bHRoV01ielBvTkdZb0JmcnJnSzBUeVBkcnZVZjhJVmlLbzVubmpKMDJidTdU?=
+ =?utf-8?B?bDIzTEJhMk1ZV0EveVlQTkRXeW03ZFhoVTZoWjFzR0NSYWF2ZXVEVXY5aHFJ?=
+ =?utf-8?B?ZkIrRVhXbTlrNy9sSDRXWGwwZGFwTUE5NHlEUVZBcms3c3l2NkdENW5CZ0Y4?=
+ =?utf-8?B?d0xOYzRRTytJQlpTRDZEMnREaXRaV0hlaGFQZE9JK3BRRFFLaEdrT005aEYz?=
+ =?utf-8?B?TEY2dUgreE5UMlBWWVc0QStoZ2c4ZmRoelVPM2JnVXQ2M2hFQWlTVzNTRFpa?=
+ =?utf-8?B?MVJaOXBteFlpVzQzL0E0RnZFTm0vV3FQcWNKNVoyMmdTUi9QQjd5T1FQU21m?=
+ =?utf-8?B?WUY0WGZFUTlwSnRNdlFqRzd6TWIzTmdWOVJrcDNxYkJlM3RNUm50VGhqYkJQ?=
+ =?utf-8?B?VTVRcE52VUJZdUI0M2UydW10YVcxbDlwenBITWI2QVc1M3d1SVNwUS92SHRw?=
+ =?utf-8?B?T1hwSEMrdHdyQnprLzZjcmE4L2ZHU2xBaXF1MzU5MTV6WUpmL3lSbFc2NWRn?=
+ =?utf-8?B?R1V5RXlNQTUxNFZza0FpdkFUY29abHNOVzcyQnJIWFNMcGVDUXZ2RWxlWnJ0?=
+ =?utf-8?B?R3JWZjlEU0trbTIwQ0ZGNUJGdkxhQlNCaVQ5dC9RVEJtN2pRQ1N5TS9Uc0lw?=
+ =?utf-8?B?SkVEWG84ZFlndEJWMEZxUDF0OHU3NXBoWmp1ZGU1aDRrd0lxTkJaSjBJaVNu?=
+ =?utf-8?B?eDIwcUdwczIrWjkvRWpQbFZIL1JCNXVkN1Yrbk1aQitJeW5haVAzYnpzTjYr?=
+ =?utf-8?B?SlUrZ3BxNEt4YVVpRklaeHNwTGN6WDJIODJsNlROcHJSL21PRENTSWlXZU5I?=
+ =?utf-8?B?cnltSFlNRlpjSlNScVM5b0h4SXVzUHJwck0zMm9jS1B6WmNGd3praUJpRDRS?=
+ =?utf-8?B?MzZwa2xpZ0pQOFF2WFJGc3lReVJ4NG1jT3VwTFI0QUM2WmpGZUkzK29BME4r?=
+ =?utf-8?B?NFVBRWZkMjJxa3Ftdlp6K2RDMkxSNW9KblFaQXlPVzFFbFpoa3N4ZU8xblVI?=
+ =?utf-8?B?MGlvVjdsMWk5a3pwZ0dibGJwam9jYkxaU3c3M1F4S0kzSmY4WnBNcTZtUGxD?=
+ =?utf-8?B?SDJzeVVEdzhpb1VxOXNvNFhBWXZVdkRFUERCK3RyNUUybUpNa0JUc3d5WFd1?=
+ =?utf-8?B?d0JXU0tLMEtZWWtwNXJRcTdVNEtYN1pEQnp4SUlkNC9RZUFXOGJ5aDYrS3BP?=
+ =?utf-8?B?NG9IVXB1b1d2SVdvb3N4bjVuQnBiVHBhbTZCenhNZWZjNlVmd1o4MXpwR0t1?=
+ =?utf-8?B?ZHZYWGNackFOSXZWOXRyWE15aXpaWW50NkpVYjU0eEo1SjhVN2MrUlB6R3p3?=
+ =?utf-8?B?L2VCVXdTamNFQjlwZUt5akxiY0VUWDZwOGVZRlpjeGRoTXNmYmRjSkxvcG4y?=
+ =?utf-8?B?RjJkR2toQlh3Kzl6YkN2TGlvb2hEYmRYeHlIbm5qV1pYK0wwaU9yQnRhVllm?=
+ =?utf-8?B?YzBNUmh4NWVzcVJVNEFkNVNTSy9NMVJBSi8vUDV2c2RibUpMMThza3NYWEdH?=
+ =?utf-8?B?WG9NM0k5d09qVm40ODZFdHVJamxBZUlMdUppNnBBekREUEdVaUs0bGFnem1i?=
+ =?utf-8?Q?uGitnokdT6GjfGx6zEPtlq8x9BWqzlQDdeIdWADtL3YM=3D?=
 X-OriginatorOrg: outlook.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 668c6587-e50a-468a-f1bc-08dbb3f9a3ed
+X-MS-Exchange-CrossTenant-Network-Message-Id: 1a4d7f4d-950c-4bde-b3ff-08dbb3fa436f
 X-MS-Exchange-CrossTenant-AuthSource: CY8PR05MB9378.namprd05.prod.outlook.com
 X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 13 Sep 2023 01:34:59.2305
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 13 Sep 2023 01:39:26.3027
  (UTC)
 X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
 X-MS-Exchange-CrossTenant-Id: 84df9e7f-e9f6-40af-b435-aaaaaaaaaaaa
 X-MS-Exchange-CrossTenant-RMS-PersistedConsumerOrg: 00000000-0000-0000-0000-000000000000
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: PH7PR05MB9858
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: SJ0PR05MB7801
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
 
+In our production environment, we find that mounting a 500M /boot
+which is umount cleanly needs ~6s. One cause is that ffs() is
+used by xlog_write_log_records() to decide the buffer size. It
+can cause a lot of small IO easily when xlog_clear_stale_blocks()
+needs to wrap around the end of log area and log head block is
+not power of two. Things are similar in xlog_find_verify_cycle().
 
-On 2023/9/13 06:44, Dave Chinner wrote:
-> On Tue, Sep 12, 2023 at 03:20:56PM +0800, Wang Jianchao wrote:
->>
->> In our production environment, we find that mounting a 500M /boot
->> which is umount cleanly needs ~6s. One cause is that ffs() is
->> used by xlog_write_log_records() to decide the buffer size. It
->> can cause a lot of small IO easily when xlog_clear_stale_blocks()
->> needs to wrap around the end of log area and log head block is
->> not power of two. Things are similar in xlog_find_verify_cycle().
->>
->> The code is able to handed bigger buffer very well, we can use
->> roundup_pow_of_two() to replace ffs() directly to avoid small
->> and sychronous IOs.
->>
->> Changes in V1:
->>  - Also replace the ffs in xlog_find_verify_cycle()
-> 
-> Change logs go either below the --- line or in the cover letter,
-> not the commit itself.
+The code is able to handed bigger buffer very well, we can use
+roundup_pow_of_two() to replace ffs() directly to avoid small
+and sychronous IOs.
 
-OK
+Reviewed-by: Dave Chinner <dchinner@redhat.com>
+Signed-off-by: Wang Jianchao <wangjc136@midea.com>
+---
 
-> 
-> Other than that, the change looks ok. The use of ffs() was added in
-> 2002 simply to make buffers a power-of-2 size. I don't think it had
-> anything to do with trying to maximise the actual buffer size at
-> all, otherwise it would have made to use fls() like
-> roundup_pow_of_two() does...
-> 
-> Reviewed-by: Dave Chinner <dchinner@redhat.com>
-> 
+Changes in V2:
+ - Move change log below "---"
+ - Add reviewed-by Dave Chinner tag
 
-Thanks
-Jianchao
+Changes in V1:
+ - Also replace the ffs in xlog_find_verify_cycle()
+
+ fs/xfs/xfs_log_recover.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/fs/xfs/xfs_log_recover.c b/fs/xfs/xfs_log_recover.c
+index 82c81d20459d..13b94d2e605b 100644
+--- a/fs/xfs/xfs_log_recover.c
++++ b/fs/xfs/xfs_log_recover.c
+@@ -329,7 +329,7 @@ xlog_find_verify_cycle(
+ 	 * try a smaller size.  We need to be able to read at least
+ 	 * a log sector, or we're out of luck.
+ 	 */
+-	bufblks = 1 << ffs(nbblks);
++	bufblks = roundup_pow_of_two(nbblks);
+ 	while (bufblks > log->l_logBBsize)
+ 		bufblks >>= 1;
+ 	while (!(buffer = xlog_alloc_buffer(log, bufblks))) {
+@@ -1528,7 +1528,7 @@ xlog_write_log_records(
+ 	 * a smaller size.  We need to be able to write at least a
+ 	 * log sector, or we're out of luck.
+ 	 */
+-	bufblks = 1 << ffs(blocks);
++	bufblks = roundup_pow_of_two(blocks);
+ 	while (bufblks > log->l_logBBsize)
+ 		bufblks >>= 1;
+ 	while (!(buffer = xlog_alloc_buffer(log, bufblks))) {
+-- 
+2.34.1
+
