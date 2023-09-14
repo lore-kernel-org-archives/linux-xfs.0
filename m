@@ -2,138 +2,141 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 184BAEEAA71
-	for <linux-xfs@archiver.kernel.org>; Thu, 14 Sep 2023 21:45:17 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id BA7C4EEAA71
+	for <linux-xfs@archiver.kernel.org>; Thu, 14 Sep 2023 21:48:29 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229472AbjINVpU (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 14 Sep 2023 17:45:20 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39074 "EHLO
+        id S229543AbjINVsc (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 14 Sep 2023 17:48:32 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34322 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229447AbjINVpT (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 14 Sep 2023 17:45:19 -0400
-Received: from mail-pl1-x62f.google.com (mail-pl1-x62f.google.com [IPv6:2607:f8b0:4864:20::62f])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8B4F9270A
-        for <linux-xfs@vger.kernel.org>; Thu, 14 Sep 2023 14:45:15 -0700 (PDT)
-Received: by mail-pl1-x62f.google.com with SMTP id d9443c01a7336-1bf6ea270b2so11370025ad.0
-        for <linux-xfs@vger.kernel.org>; Thu, 14 Sep 2023 14:45:15 -0700 (PDT)
+        with ESMTP id S229447AbjINVsb (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 14 Sep 2023 17:48:31 -0400
+Received: from mail-pl1-x636.google.com (mail-pl1-x636.google.com [IPv6:2607:f8b0:4864:20::636])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id CD13F270A
+        for <linux-xfs@vger.kernel.org>; Thu, 14 Sep 2023 14:48:27 -0700 (PDT)
+Received: by mail-pl1-x636.google.com with SMTP id d9443c01a7336-1c3d8fb23d9so12291805ad.0
+        for <linux-xfs@vger.kernel.org>; Thu, 14 Sep 2023 14:48:27 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=fromorbit-com.20230601.gappssmtp.com; s=20230601; t=1694727915; x=1695332715; darn=vger.kernel.org;
+        d=fromorbit-com.20230601.gappssmtp.com; s=20230601; t=1694728107; x=1695332907; darn=vger.kernel.org;
         h=in-reply-to:content-disposition:mime-version:references:message-id
          :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
-        bh=KNr5LZqrKJaCxDxRI6wTl7l9bDeKXSWduwdptj2eWBc=;
-        b=kfrv7XLpaA72h3J1km9tzk5TOJGcUM0WC2fOKMshyaDgB/JmAexC7gtFgg5G+IQf2a
-         5XWVfcvPJ034ZmCwpYfIKru/ruXW8T8DdcYLeVbRAqPZCT87gFqQc/isYZl7V+Wyy2c9
-         Xjby6tDYZAkF8yqPcPOg2MvaeevilG3h6wnbcF4Aiwuss5UzDlR4G5O9LbI1yq1LHsbR
-         T8KLtfoTuA7iNFZRcw/oAa/L1hjaV2Lg6TrASafx7JQJxaeGxt//95YXQ7MOU+NHXoQR
-         UdFRs2yiH011pFSjqusYK5FA3u0oQC62j+ZM6stnBVoTndLQR8/dLBG+GW+o1ZbTdwu7
-         rX3Q==
+        bh=exwyWVoL3wXucbXDFVqg0jgJTS9sr68133tcmZU+/T0=;
+        b=KXIA6uGxgb1SczEoyhsXCdn8dH7uOYe3I0Wxht9WeS4dwQ0KcaVnpm7xG0Z+7pFtyH
+         AI7O5kb42MuLUlvrWmtc0ifnE426uFMd0EQVf8qqDS0beEOivUc/1/6ZFm+qavf+h/Ko
+         TDrpu1jdG7Ex3PR759Q7M4gEq5vgG6FxOvlOTve2FSxm9wg0acCNfUPrs8IvDSsni+u5
+         ngm6h3iZRUer5WJ/I24FVJkPuwV+Ipllc3FolmRzJe02SoyFwSuaqr6BfwWQtAFq+gbK
+         /98CJ3D6BFTY5Oy7qUE5nEvr8cer3stWriGBIDCZaBWZJzBVPMBDatG2YefHclWYrV/R
+         GkmA==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1694727915; x=1695332715;
+        d=1e100.net; s=20230601; t=1694728107; x=1695332907;
         h=in-reply-to:content-disposition:mime-version:references:message-id
          :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
          :message-id:reply-to;
-        bh=KNr5LZqrKJaCxDxRI6wTl7l9bDeKXSWduwdptj2eWBc=;
-        b=wvDyv3uxSljb6t+V/L3yY8cq0sspQvnfei9Hn5gw/FpNh7NfC2bbELog/uDUjjBnyN
-         o3jnyg+T2/4XDwk8R/T2BWcM2ELWKNR6os7lJo8U2yNJA92f/r4nlnje7hw7gIuPoiHg
-         yO5NC4SjtXkJ9JgjnMGYRsdhtT3Gl107cb7MDSe6oN2baFl+nUwsKAtl/kXz+5ps+Akx
-         u3C16EW0BXOrLlKoRz6tbVv5vLlbOiYWYL9vJVa+bNOz9VKgp/pGyyUHiERJQR0+rD8t
-         dZvuX11Ua5wq1MoNbrdZjEr4Z5KBqhz7htnaLt876wksY1xkcf9gsGnNEEqIuN/+7O0n
-         xxSA==
-X-Gm-Message-State: AOJu0YydY6wzkpVeeVKprE3dORqsaY/fSAayntImLfqpwB/hPcgLT37F
-        QQi/KZ6Kkii31arpzAT8RRH9DyqApO2+CjCWIfo=
-X-Google-Smtp-Source: AGHT+IHw/0TUOAUCySngDneKknU7OX9YxUbieopgaotF4FCJ8gyUOBShTgc+yBgv1gRfUfQJnbt5Sw==
-X-Received: by 2002:a17:903:188:b0:1c0:e472:5412 with SMTP id z8-20020a170903018800b001c0e4725412mr8748987plg.18.1694727914952;
-        Thu, 14 Sep 2023 14:45:14 -0700 (PDT)
+        bh=exwyWVoL3wXucbXDFVqg0jgJTS9sr68133tcmZU+/T0=;
+        b=SJw+krSCaUdrWTKKTqja2QVpa0Npm8k3e0E1UUltxyYXtJOoGK/Mt2IZHN+PnxWZec
+         zU6ssLjE3F80EFis2np3ZjklAzW1D6QrNDsfprbzE3Ot+PNxaRZnI2iU/syiwzUBHvuO
+         GKeHUQjlBg+DueWq/cqG6943Sj17wyuR5HBuaHHQr3Hdo0JAOhvopkaDX+oyJO1tGq6e
+         isD/mqZtEBEt1GGgI55jDcJ/y6TgyiMGrzjEP65L0usZ9oGGFJu8DztgfXGeDcQbooHI
+         PIx/sf6j/Kn63xJsDwjzDTo/lggJXYdjG9njOb+uLHaNiKE17mztIDeyMTgEnL8o9iU8
+         oiTg==
+X-Gm-Message-State: AOJu0YzpDGaUyMsPBaXl21a30mtm6GRYD+TWd8jFLVzKbochxNiboq3v
+        UdijcFJMj/rcpvS9mnpFvd5BZw==
+X-Google-Smtp-Source: AGHT+IHj7BWF7ZTgjqBBejk8Rdbi8hjwAeD5w01p60NhJYz3ltxFn53uEBjpDv97pVrmB7Oo94tDRw==
+X-Received: by 2002:a17:902:f812:b0:1c4:1538:85fc with SMTP id ix18-20020a170902f81200b001c4153885fcmr2180541plb.51.1694728107260;
+        Thu, 14 Sep 2023 14:48:27 -0700 (PDT)
 Received: from dread.disaster.area (pa49-180-20-59.pa.nsw.optusnet.com.au. [49.180.20.59])
-        by smtp.gmail.com with ESMTPSA id jn3-20020a170903050300b001c0ce518e98sm2024411plb.224.2023.09.14.14.45.14
+        by smtp.gmail.com with ESMTPSA id k6-20020a170902694600b001b801044466sm2031354plt.114.2023.09.14.14.48.26
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 14 Sep 2023 14:45:14 -0700 (PDT)
+        Thu, 14 Sep 2023 14:48:26 -0700 (PDT)
 Received: from dave by dread.disaster.area with local (Exim 4.96)
         (envelope-from <david@fromorbit.com>)
-        id 1qgu99-000mS9-1U;
-        Fri, 15 Sep 2023 07:45:11 +1000
-Date:   Fri, 15 Sep 2023 07:45:11 +1000
+        id 1qguCG-000mUN-0h;
+        Fri, 15 Sep 2023 07:48:24 +1000
+Date:   Fri, 15 Sep 2023 07:48:24 +1000
 From:   Dave Chinner <david@fromorbit.com>
-To:     cem@kernel.org
-Cc:     linux-xfs@vger.kernel.org
-Subject: Re: [PATCH] mkfs: Improve warning when AG size is a multiple of
- stripe width
-Message-ID: <ZQN+5/2Ajc+/UtjW@dread.disaster.area>
-References: <20230914123640.79682-1-cem@kernel.org>
+To:     "Darrick J. Wong" <djwong@kernel.org>
+Cc:     Omar Sandoval <osandov@osandov.com>, linux-xfs@vger.kernel.org,
+        kernel-team@fb.com, Prashant Nema <pnema@fb.com>
+Subject: Re: [PATCH v2 1/6] xfs: cache last bitmap block in realtime allocator
+Message-ID: <ZQN/qNgZJZdWdxQx@dread.disaster.area>
+References: <cover.1693950248.git.osandov@osandov.com>
+ <317bb892b0afe4d3355ab78eb7132f174e44d7f7.1693950248.git.osandov@osandov.com>
+ <ZPqYU79pTYYZFmf9@dread.disaster.area>
+ <20230908152827.GX28186@frogsfrogsfrogs>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20230914123640.79682-1-cem@kernel.org>
+In-Reply-To: <20230908152827.GX28186@frogsfrogsfrogs>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Thu, Sep 14, 2023 at 02:36:40PM +0200, cem@kernel.org wrote:
-> From: Carlos Maiolino <cmaiolino@redhat.com>
+On Fri, Sep 08, 2023 at 08:28:27AM -0700, Darrick J. Wong wrote:
+> On Fri, Sep 08, 2023 at 01:43:15PM +1000, Dave Chinner wrote:
+> > On Tue, Sep 05, 2023 at 02:51:52PM -0700, Omar Sandoval wrote:
+> > > From: Omar Sandoval <osandov@fb.com>
+> > > 
+> > > Profiling a workload on a highly fragmented realtime device showed a ton
+> > > of CPU cycles being spent in xfs_trans_read_buf() called by
+> > > xfs_rtbuf_get(). Further tracing showed that much of that was repeated
+> > > calls to xfs_rtbuf_get() for the same block of the realtime bitmap.
+> > > These come from xfs_rtallocate_extent_block(): as it walks through
+> > > ranges of free bits in the bitmap, each call to xfs_rtcheck_range() and
+> > > xfs_rtfind_{forw,back}() gets the same bitmap block. If the bitmap block
+> > > is very fragmented, then this is _a lot_ of buffer lookups.
+> > > 
+> > > The realtime allocator already passes around a cache of the last used
+> > > realtime summary block to avoid repeated reads (the parameters rbpp and
+> > > rsb). We can do the same for the realtime bitmap.
+> > > 
+> > > This replaces rbpp and rsb with a struct xfs_rtbuf_cache, which caches
+> > > the most recently used block for both the realtime bitmap and summary.
+> > > xfs_rtbuf_get() now handles the caching instead of the callers, which
+> > > requires plumbing xfs_rtbuf_cache to more functions but also makes sure
+> > > we don't miss anything.
+> > > 
+> > > Signed-off-by: Omar Sandoval <osandov@fb.com>
+> > > ---
+> > >  fs/xfs/libxfs/xfs_rtbitmap.c | 179 ++++++++++++++++++-----------------
+> > >  fs/xfs/xfs_rtalloc.c         | 119 +++++++++++------------
+> > >  fs/xfs/xfs_rtalloc.h         |  30 ++++--
+> > >  3 files changed, 170 insertions(+), 158 deletions(-)
+> > 
+> > ....
+> > 
+> > > diff --git a/fs/xfs/xfs_rtalloc.h b/fs/xfs/xfs_rtalloc.h
+> > > index 62c7ad79cbb6..72f4261bb101 100644
+> > > --- a/fs/xfs/xfs_rtalloc.h
+> > > +++ b/fs/xfs/xfs_rtalloc.h
+> > > @@ -101,29 +101,40 @@ xfs_growfs_rt(
+> > >  /*
+> > >   * From xfs_rtbitmap.c
+> > >   */
+> > > +struct xfs_rtbuf_cache {
+> > > +	struct xfs_buf *bbuf;	/* bitmap block buffer */
+> > > +	xfs_fileoff_t bblock;	/* bitmap block number */
+> > > +	struct xfs_buf *sbuf;	/* summary block buffer */
+> > > +	xfs_fileoff_t sblock;	/* summary block number */
+> > 
+> > I don't think the block numbers are file offsets? Most of the code
+> > passes the bitmap and summary block numbers around as a
+> > xfs_fsblock_t...
 > 
-> The current output message prints out a suggestion of an AG size to be
-> used in lieu of the user-defined one.
-> The problem is this suggestion is printed in filesystem blocks, while
-> agsize= option receives a size in bytes (or m, g).
-
-Hmmm. The actual definition of the parameter in mkfs.xfs has
-".convert = true", which means it will take a value in filesystem
-blocks by appending "b" to the number.
-
-i.e. anything that is defined as a "value" with that supports a
-suffix like "m" or "g" requires conversion via cvtnum() to turn it
-into a byte-based units will also support suffixes for block and
-sector size units.
-
-Hence "-d agsize=10000b" will make an AG of 10000 filesystem blocks
-in size, or 40000kB in size if the block size 4kB.... 
-
-# mkfs.xfs -f -dagsize=100000b /dev/vdb
-meta-data=/dev/vdb               isize=512    agcount=42, agsize=100000 blks
-         =                       sectsz=512   attr=2, projid32bit=1
-         =                       crc=1        finobt=1, sparse=1, rmapbt=0
-         =                       reflink=1    bigtime=1 inobtcount=1 nrext64=0
-data     =                       bsize=4096   blocks=4194304, imaxpct=25
-         =                       sunit=0      swidth=0 blks
-naming   =version 2              bsize=4096   ascii-ci=0, ftype=1
-log      =internal log           bsize=4096   blocks=16384, version=2
-         =                       sectsz=512   sunit=0 blks, lazy-count=1
-realtime =none                   extsz=4096   blocks=0, rtextents=0
-Discarding blocks...Done.
-#
-
-> This patch tries to make user's life easier by outputing the suggesting
-> in bytes directly.
+> They're fed into xfs_bmapi_read as the xfs_fileoff_t parameter.
 > 
-> Signed-off-by: Carlos Maiolino <cmaiolino@redhat.com>
-> ---
->  mkfs/xfs_mkfs.c | 8 +++++---
->  1 file changed, 5 insertions(+), 3 deletions(-)
+> I have a whole series cleaning up all of the units abuse in the rt code
+> part of the realtime modernization patchdeluge:
+> https://git.kernel.org/pub/scm/linux/kernel/git/djwong/xfs-linux.git/log/?h=clean-up-realtime-units
 > 
-> diff --git a/mkfs/xfs_mkfs.c b/mkfs/xfs_mkfs.c
-> index d3a15cf44..827d5b656 100644
-> --- a/mkfs/xfs_mkfs.c
-> +++ b/mkfs/xfs_mkfs.c
-> @@ -3179,9 +3179,11 @@ _("agsize rounded to %lld, sunit = %d\n"),
->  		if (cli_opt_set(&dopts, D_AGCOUNT) ||
->  		    cli_opt_set(&dopts, D_AGSIZE)) {
->  			printf(_(
-> -"Warning: AG size is a multiple of stripe width.  This can cause performance\n\
-> -problems by aligning all AGs on the same disk.  To avoid this, run mkfs with\n\
-> -an AG size that is one stripe unit smaller or larger, for example %llu.\n"),
-> +"Warning: AG size is a multiple of stripe width. This can cause performance\n\
-> +problems by aligning all AGs on the same disk. To avoid this, run mkfs with\n\
-> +an AG size that is one stripe unit smaller or larger,\n\
-> +for example: agsize=%llu (%llu blks).\n"),
-> +				(unsigned long long)((cfg->agsize - dsunit) * cfg->blocksize),
->  				(unsigned long long)cfg->agsize - dsunit);
->  			fflush(stdout);
->  			goto validate;
+> Here's the specific patch that cleans up this one part:
+> https://git.kernel.org/pub/scm/linux/kernel/git/djwong/xfs-linux.git/commit/?h=realtime-groups&id=b344bd4bd655576f8bda193b0e33f471a6295b05
+....
 
-I have no problem with the change, though I think the man page needs
-updating to remove the "takes a value in bytes" because it has taken
-a value that supports all the suffix types the man page defines
-for quite a long time....
+> Could someone (Omar?) take a look at my other rt cleanups too?  I'd very
+> much like to get them merged out of my dev tree.
+
+Can you post the series to the list? That makes it much easier to
+comment on them....
 
 Cheers,
 
