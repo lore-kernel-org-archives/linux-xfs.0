@@ -2,125 +2,142 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3B21CEEAA5D
-	for <linux-xfs@archiver.kernel.org>; Thu, 14 Sep 2023 18:27:33 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 184BAEEAA71
+	for <linux-xfs@archiver.kernel.org>; Thu, 14 Sep 2023 21:45:17 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S240832AbjINS1g (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 14 Sep 2023 14:27:36 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51878 "EHLO
+        id S229472AbjINVpU (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 14 Sep 2023 17:45:20 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39074 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S239368AbjINS1f (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 14 Sep 2023 14:27:35 -0400
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id DC1E21BE5
-        for <linux-xfs@vger.kernel.org>; Thu, 14 Sep 2023 11:26:45 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1694716004;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=WzxwnhcGtEZiX2sPyKVzRm6582v3BkqCcS4vaj+BKjE=;
-        b=Go3wMkceUdBGaMWklkzuSdxy98xOYugitTvE+zCYZdM1M9upDD00YHzyLKyFfX45v0+PMt
-        E6PLwNk4Vkcur39ZWwef6TlSGi51UxPvQvP30qzaw7ZBjyfdW8R82fT4hpeahdrgRJnTKr
-        ZFYwR2N2GdCP8n7yhXZ4aQS+u7nyTFw=
-Received: from mimecast-mx02.redhat.com (mimecast-mx02.redhat.com
- [66.187.233.88]) by relay.mimecast.com with ESMTP with STARTTLS
- (version=TLSv1.2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- us-mta-383-5bEk2E-mPpiXC6162nmi3g-1; Thu, 14 Sep 2023 14:26:39 -0400
-X-MC-Unique: 5bEk2E-mPpiXC6162nmi3g-1
-Received: from smtp.corp.redhat.com (int-mx06.intmail.prod.int.rdu2.redhat.com [10.11.54.6])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by mimecast-mx02.redhat.com (Postfix) with ESMTPS id C356681B196;
-        Thu, 14 Sep 2023 18:26:38 +0000 (UTC)
-Received: from redhat.com (unknown [10.22.10.48])
-        by smtp.corp.redhat.com (Postfix) with ESMTPS id 8148E21B2413;
-        Thu, 14 Sep 2023 18:26:38 +0000 (UTC)
-Date:   Thu, 14 Sep 2023 13:26:37 -0500
-From:   Bill O'Donnell <bodonnel@redhat.com>
-To:     "Darrick J. Wong" <djwong@kernel.org>
-Cc:     cem@kernel.org, Anthony Iliopoulos <ailiop@suse.com>,
-        linux-xfs@vger.kernel.org
-Subject: Re: [PATCH v1.1 6/6] libxfs: fix atomic64_t detection on x86 32-bit
- architectures
-Message-ID: <ZQNQXQrSdLWpvlLn@redhat.com>
-References: <169454757570.3539425.3597048437340386509.stgit@frogsfrogsfrogs>
- <169454761010.3539425.13599600178844641233.stgit@frogsfrogsfrogs>
- <20230912194751.GB3415652@frogsfrogsfrogs>
+        with ESMTP id S229447AbjINVpT (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 14 Sep 2023 17:45:19 -0400
+Received: from mail-pl1-x62f.google.com (mail-pl1-x62f.google.com [IPv6:2607:f8b0:4864:20::62f])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8B4F9270A
+        for <linux-xfs@vger.kernel.org>; Thu, 14 Sep 2023 14:45:15 -0700 (PDT)
+Received: by mail-pl1-x62f.google.com with SMTP id d9443c01a7336-1bf6ea270b2so11370025ad.0
+        for <linux-xfs@vger.kernel.org>; Thu, 14 Sep 2023 14:45:15 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=fromorbit-com.20230601.gappssmtp.com; s=20230601; t=1694727915; x=1695332715; darn=vger.kernel.org;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
+        bh=KNr5LZqrKJaCxDxRI6wTl7l9bDeKXSWduwdptj2eWBc=;
+        b=kfrv7XLpaA72h3J1km9tzk5TOJGcUM0WC2fOKMshyaDgB/JmAexC7gtFgg5G+IQf2a
+         5XWVfcvPJ034ZmCwpYfIKru/ruXW8T8DdcYLeVbRAqPZCT87gFqQc/isYZl7V+Wyy2c9
+         Xjby6tDYZAkF8yqPcPOg2MvaeevilG3h6wnbcF4Aiwuss5UzDlR4G5O9LbI1yq1LHsbR
+         T8KLtfoTuA7iNFZRcw/oAa/L1hjaV2Lg6TrASafx7JQJxaeGxt//95YXQ7MOU+NHXoQR
+         UdFRs2yiH011pFSjqusYK5FA3u0oQC62j+ZM6stnBVoTndLQR8/dLBG+GW+o1ZbTdwu7
+         rX3Q==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1694727915; x=1695332715;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=KNr5LZqrKJaCxDxRI6wTl7l9bDeKXSWduwdptj2eWBc=;
+        b=wvDyv3uxSljb6t+V/L3yY8cq0sspQvnfei9Hn5gw/FpNh7NfC2bbELog/uDUjjBnyN
+         o3jnyg+T2/4XDwk8R/T2BWcM2ELWKNR6os7lJo8U2yNJA92f/r4nlnje7hw7gIuPoiHg
+         yO5NC4SjtXkJ9JgjnMGYRsdhtT3Gl107cb7MDSe6oN2baFl+nUwsKAtl/kXz+5ps+Akx
+         u3C16EW0BXOrLlKoRz6tbVv5vLlbOiYWYL9vJVa+bNOz9VKgp/pGyyUHiERJQR0+rD8t
+         dZvuX11Ua5wq1MoNbrdZjEr4Z5KBqhz7htnaLt876wksY1xkcf9gsGnNEEqIuN/+7O0n
+         xxSA==
+X-Gm-Message-State: AOJu0YydY6wzkpVeeVKprE3dORqsaY/fSAayntImLfqpwB/hPcgLT37F
+        QQi/KZ6Kkii31arpzAT8RRH9DyqApO2+CjCWIfo=
+X-Google-Smtp-Source: AGHT+IHw/0TUOAUCySngDneKknU7OX9YxUbieopgaotF4FCJ8gyUOBShTgc+yBgv1gRfUfQJnbt5Sw==
+X-Received: by 2002:a17:903:188:b0:1c0:e472:5412 with SMTP id z8-20020a170903018800b001c0e4725412mr8748987plg.18.1694727914952;
+        Thu, 14 Sep 2023 14:45:14 -0700 (PDT)
+Received: from dread.disaster.area (pa49-180-20-59.pa.nsw.optusnet.com.au. [49.180.20.59])
+        by smtp.gmail.com with ESMTPSA id jn3-20020a170903050300b001c0ce518e98sm2024411plb.224.2023.09.14.14.45.14
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Thu, 14 Sep 2023 14:45:14 -0700 (PDT)
+Received: from dave by dread.disaster.area with local (Exim 4.96)
+        (envelope-from <david@fromorbit.com>)
+        id 1qgu99-000mS9-1U;
+        Fri, 15 Sep 2023 07:45:11 +1000
+Date:   Fri, 15 Sep 2023 07:45:11 +1000
+From:   Dave Chinner <david@fromorbit.com>
+To:     cem@kernel.org
+Cc:     linux-xfs@vger.kernel.org
+Subject: Re: [PATCH] mkfs: Improve warning when AG size is a multiple of
+ stripe width
+Message-ID: <ZQN+5/2Ajc+/UtjW@dread.disaster.area>
+References: <20230914123640.79682-1-cem@kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20230912194751.GB3415652@frogsfrogsfrogs>
-X-Scanned-By: MIMEDefang 3.1 on 10.11.54.6
+In-Reply-To: <20230914123640.79682-1-cem@kernel.org>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Tue, Sep 12, 2023 at 12:47:51PM -0700, Darrick J. Wong wrote:
-> From: Darrick J. Wong <djwong@kernel.org>
+On Thu, Sep 14, 2023 at 02:36:40PM +0200, cem@kernel.org wrote:
+> From: Carlos Maiolino <cmaiolino@redhat.com>
 > 
-> xfsprogs during compilation tries to detect if liburcu supports atomic
-> 64-bit ops on the platform it is being compiled on, and if not it falls
-> back to using pthread mutex locks.
-> 
-> The detection logic for that fallback relies on _uatomic_link_error()
-> which is a link-time trick used by liburcu that will cause compilation
-> errors on archs that lack the required support. That only works for the
-> generic liburcu code though, and it is not implemented for the
-> x86-specific code.
-> 
-> In practice this means that when xfsprogs is compiled on 32-bit x86
-> archs will successfully link to liburcu for atomic ops, but liburcu does
-> not support atomic64_t on those archs. It indicates this during runtime
-> by generating an illegal instruction that aborts execution, and thus
-> causes various xfsprogs utils to be segfaulting.
-> 
-> Fix this by requiring that unsigned longs are at least 64 bits in size,
-> which /usually/ means that 64-bit atomic counters are supported.  We
-> can't simply execute the liburcu atomic64_t detection code during
-> configure instead of only relying on the linker error because that
-> doesn't work for cross-compiled packages.
-> 
-> Fixes: 7448af588a2e ("libxfs: fix atomic64_t poorly for 32-bit architectures")
-> Reported-by: Anthony Iliopoulos <ailiop@suse.com>
-> Signed-off-by: Darrick J. Wong <djwong@kernel.org>
+> The current output message prints out a suggestion of an AG size to be
+> used in lieu of the user-defined one.
+> The problem is this suggestion is printed in filesystem blocks, while
+> agsize= option receives a size in bytes (or m, g).
 
-Reviewed-by: Bill O'Donnell <bodonnel@redhat.com>
+Hmmm. The actual definition of the parameter in mkfs.xfs has
+".convert = true", which means it will take a value in filesystem
+blocks by appending "b" to the number.
 
+i.e. anything that is defined as a "value" with that supports a
+suffix like "m" or "g" requires conversion via cvtnum() to turn it
+into a byte-based units will also support suffixes for block and
+sector size units.
+
+Hence "-d agsize=10000b" will make an AG of 10000 filesystem blocks
+in size, or 40000kB in size if the block size 4kB.... 
+
+# mkfs.xfs -f -dagsize=100000b /dev/vdb
+meta-data=/dev/vdb               isize=512    agcount=42, agsize=100000 blks
+         =                       sectsz=512   attr=2, projid32bit=1
+         =                       crc=1        finobt=1, sparse=1, rmapbt=0
+         =                       reflink=1    bigtime=1 inobtcount=1 nrext64=0
+data     =                       bsize=4096   blocks=4194304, imaxpct=25
+         =                       sunit=0      swidth=0 blks
+naming   =version 2              bsize=4096   ascii-ci=0, ftype=1
+log      =internal log           bsize=4096   blocks=16384, version=2
+         =                       sectsz=512   sunit=0 blks, lazy-count=1
+realtime =none                   extsz=4096   blocks=0, rtextents=0
+Discarding blocks...Done.
+#
+
+> This patch tries to make user's life easier by outputing the suggesting
+> in bytes directly.
+> 
+> Signed-off-by: Carlos Maiolino <cmaiolino@redhat.com>
 > ---
-> v1.1: This time with correct commit message.
-> ---
->  m4/package_urcu.m4 |    9 ++++++++-
->  1 file changed, 8 insertions(+), 1 deletion(-)
+>  mkfs/xfs_mkfs.c | 8 +++++---
+>  1 file changed, 5 insertions(+), 3 deletions(-)
 > 
-> diff --git a/m4/package_urcu.m4 b/m4/package_urcu.m4
-> index ef116e0cda7..4bb2b886f06 100644
-> --- a/m4/package_urcu.m4
-> +++ b/m4/package_urcu.m4
-> @@ -26,7 +26,11 @@ rcu_init();
->  #
->  # Make sure that calling uatomic_inc on a 64-bit integer doesn't cause a link
->  # error on _uatomic_link_error, which is how liburcu signals that it doesn't
-> -# support atomic operations on 64-bit data types.
-> +# support atomic operations on 64-bit data types for its generic
-> +# implementation (which relies on compiler builtins). For certain archs
-> +# where liburcu carries its own implementation (such as x86_32), it
-> +# signals lack of support during runtime by emitting an illegal
-> +# instruction, so we also need to check CAA_BITS_PER_LONG to detect that.
->  #
->  AC_DEFUN([AC_HAVE_LIBURCU_ATOMIC64],
->    [ AC_MSG_CHECKING([for atomic64_t support in liburcu])
-> @@ -34,8 +38,11 @@ AC_DEFUN([AC_HAVE_LIBURCU_ATOMIC64],
->      [	AC_LANG_PROGRAM([[
->  #define _GNU_SOURCE
->  #include <urcu.h>
-> +#define BUILD_BUG_ON(condition) ((void)sizeof(char[1 - 2*!!(condition)]))
->  	]], [[
->  long long f = 3;
-> +
-> +BUILD_BUG_ON(CAA_BITS_PER_LONG < 64);
->  uatomic_inc(&f);
->  	]])
->      ], have_liburcu_atomic64=yes
-> 
+> diff --git a/mkfs/xfs_mkfs.c b/mkfs/xfs_mkfs.c
+> index d3a15cf44..827d5b656 100644
+> --- a/mkfs/xfs_mkfs.c
+> +++ b/mkfs/xfs_mkfs.c
+> @@ -3179,9 +3179,11 @@ _("agsize rounded to %lld, sunit = %d\n"),
+>  		if (cli_opt_set(&dopts, D_AGCOUNT) ||
+>  		    cli_opt_set(&dopts, D_AGSIZE)) {
+>  			printf(_(
+> -"Warning: AG size is a multiple of stripe width.  This can cause performance\n\
+> -problems by aligning all AGs on the same disk.  To avoid this, run mkfs with\n\
+> -an AG size that is one stripe unit smaller or larger, for example %llu.\n"),
+> +"Warning: AG size is a multiple of stripe width. This can cause performance\n\
+> +problems by aligning all AGs on the same disk. To avoid this, run mkfs with\n\
+> +an AG size that is one stripe unit smaller or larger,\n\
+> +for example: agsize=%llu (%llu blks).\n"),
+> +				(unsigned long long)((cfg->agsize - dsunit) * cfg->blocksize),
+>  				(unsigned long long)cfg->agsize - dsunit);
+>  			fflush(stdout);
+>  			goto validate;
 
+I have no problem with the change, though I think the man page needs
+updating to remove the "takes a value in bytes" because it has taken
+a value that supports all the suffix types the man page defines
+for quite a long time....
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
