@@ -2,170 +2,240 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 98AB2EED61E
-	for <linux-xfs@archiver.kernel.org>; Fri, 15 Sep 2023 18:29:09 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1B201EED61A
+	for <linux-xfs@archiver.kernel.org>; Fri, 15 Sep 2023 18:40:53 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235290AbjIOS2l (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 15 Sep 2023 14:28:41 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38822 "EHLO
+        id S236581AbjIOSkZ (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 15 Sep 2023 14:40:25 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39988 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S236489AbjIOS20 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 15 Sep 2023 14:28:26 -0400
-Received: from mail-ej1-x62f.google.com (mail-ej1-x62f.google.com [IPv6:2a00:1450:4864:20::62f])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 11CCB2708
-        for <linux-xfs@vger.kernel.org>; Fri, 15 Sep 2023 11:27:18 -0700 (PDT)
-Received: by mail-ej1-x62f.google.com with SMTP id a640c23a62f3a-9a58dbd5daeso322505366b.2
-        for <linux-xfs@vger.kernel.org>; Fri, 15 Sep 2023 11:27:17 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20230601; t=1694802436; x=1695407236; darn=vger.kernel.org;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=7TVRLEu9EJ9mGV2bipP8Xm97KGB9uZNTupnuQjSJdsE=;
-        b=sKKT+kRRXdqHAoUZgMTugOxbcrbgqDgkkXjasxrWctWJd77Sw8TlsGuTd98pSRft9A
-         jN/MMQ3oP4/QuTKHBD9/YypfLSNU+2cuvu8u73JxBHsdsSFjo1rojX5WJRXSO1lIrr4X
-         Q/i++DKlLWUNrBbI96a2DUSv9ydwwnivZJKP06X04/cK0r2bQFBArjWiQF6VYJBobiMX
-         PGK/u5s+F2yWQLPEdRhYCODQlNQ8S+qDRhy7Nh2noe1XmCVyac1kWiIlCNg4DMBP7SEd
-         a3S1lxEG5glLqSDYO5PGcLNoSDLKwOIaoa1Db4onOn/2goDJ5rYfzEFwI2eODMv2KWvJ
-         JQEg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1694802436; x=1695407236;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=7TVRLEu9EJ9mGV2bipP8Xm97KGB9uZNTupnuQjSJdsE=;
-        b=JLTFEzHt49KG5OwOExfW4assGY7GNIW9MbIhUZoXlBO2lkImOsLqho6MacW93SQ21j
-         QCjDuvceCo5s1ML0hjZBXBaa9WS4anYSWnyVqKgIpVlheWXHCQ8fzkEdXJI6Kja5CwzB
-         2cIoWmHasWKqt9Vz3m29VtTwb9nuWxtNViRV7+D5OpTlDjsTEnEx4a3tecf3gEqAsu46
-         mkpIp7sOYExAquXuxWJcOIe1R0a4mvzj8cRFWF00XqHlCYX4UYfTFL6DhZK7a4/TfumK
-         qxkkhsX50wCx7Yl6pLinJc5+g/4mSTuINO9HonHONGU+oyPaXnIqFPa7rl9ZiXZdG+cP
-         FDHw==
-X-Gm-Message-State: AOJu0Ywy5QRgKuPZP4/A/xC+ZnVkED/VIl+XTSDeDbNmfN0AkNnFJ/CX
-        V2jD5cjUl36P4OYV/Rslt8/LhsfogzNbhe4CD5T0yQ==
-X-Google-Smtp-Source: AGHT+IHg0l+d+9eXrE3JQYT1rNSzTJ30WS4x3AxsO8Su5H91K9tA7o+8Ltb2jJoMejIzZEOsQjI7O6t5d3aHWeK0K/E=
-X-Received: by 2002:a17:907:75fb:b0:9a1:f3a6:b906 with SMTP id
- jz27-20020a17090775fb00b009a1f3a6b906mr2140406ejc.36.1694802436299; Fri, 15
- Sep 2023 11:27:16 -0700 (PDT)
+        with ESMTP id S236720AbjIOSjz (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 15 Sep 2023 14:39:55 -0400
+Received: from mout-p-101.mailbox.org (mout-p-101.mailbox.org [80.241.56.151])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9F1EE4203;
+        Fri, 15 Sep 2023 11:38:56 -0700 (PDT)
+Received: from smtp202.mailbox.org (smtp202.mailbox.org [IPv6:2001:67c:2050:b231:465::202])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange ECDHE (P-384) server-signature RSA-PSS (4096 bits) server-digest SHA256)
+        (No client certificate requested)
+        by mout-p-101.mailbox.org (Postfix) with ESMTPS id 4RnNHw3yX1z9sTN;
+        Fri, 15 Sep 2023 20:38:52 +0200 (CEST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=pankajraghav.com;
+        s=MBO0001; t=1694803132;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding;
+        bh=RoZvNuZjqAZhkeoljsUMq/UbBCDdPgt5L/Mg1Z9UE+Y=;
+        b=PgSAERqfjl+6UWQ3YI233vHH6tt0flmW0hL6wajiTzM6TFAIR6rrmdUbs73UeVJV9c58ke
+        5Oj4mA+AtBVC/6cTmhWwO/j/L5JDiKzmUZW8SLb8dhT1dtR7lIDEoBHzJlOxrzpVGx4m5j
+        SH8JjhMCy6qJJpz4DiTPhVIlgNTPg/OzTtA5bvxdjDIErfGOFKM6r5fNYrvhHLzwGrMPZa
+        ILiAVG/U9uXzxIKdrDaPtFN7Sf1rhWHGy9lcHLTiFQE9NyVDEzcIgT4Xk7IMgqKyi8nLEp
+        qQoEL/i06O4JHKyys/CCKte2WvjDZquPiMw/AGk3/DcCYqtDjMsHaYiNoJ2H7Q==
+From:   Pankaj Raghav <kernel@pankajraghav.com>
+To:     linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org
+Cc:     p.raghav@samsung.com, david@fromorbit.com, da.gomez@samsung.com,
+        akpm@linux-foundation.org, linux-kernel@vger.kernel.org,
+        willy@infradead.org, djwong@kernel.org, linux-mm@kvack.org,
+        chandan.babu@oracle.com, mcgrof@kernel.org, gost.dev@samsung.com
+Subject: [RFC 00/23] Enable block size > page size in XFS
+Date:   Fri, 15 Sep 2023 20:38:25 +0200
+Message-Id: <20230915183848.1018717-1-kernel@pankajraghav.com>
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-References: <CGME20230915095133eucas1p267bade2888b7fcd2e1ea8e13e21c495f@eucas1p2.samsung.com>
- <20230915095042.1320180-1-da.gomez@samsung.com> <20230915095042.1320180-7-da.gomez@samsung.com>
-In-Reply-To: <20230915095042.1320180-7-da.gomez@samsung.com>
-From:   Yosry Ahmed <yosryahmed@google.com>
-Date:   Fri, 15 Sep 2023 11:26:37 -0700
-Message-ID: <CAJD7tkbU20tyGxtdL-cqJxrjf38ObG_dUttZdLstH3O2sUTKzw@mail.gmail.com>
-Subject: Re: [PATCH 6/6] shmem: add large folios support to the write path
-To:     Daniel Gomez <da.gomez@samsung.com>
-Cc:     "minchan@kernel.org" <minchan@kernel.org>,
-        "senozhatsky@chromium.org" <senozhatsky@chromium.org>,
-        "axboe@kernel.dk" <axboe@kernel.dk>,
-        "djwong@kernel.org" <djwong@kernel.org>,
-        "willy@infradead.org" <willy@infradead.org>,
-        "hughd@google.com" <hughd@google.com>,
-        "akpm@linux-foundation.org" <akpm@linux-foundation.org>,
-        "mcgrof@kernel.org" <mcgrof@kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>,
-        "linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>,
-        "linux-fsdevel@vger.kernel.org" <linux-fsdevel@vger.kernel.org>,
-        "linux-mm@kvack.org" <linux-mm@kvack.org>,
-        "gost.dev@samsung.com" <gost.dev@samsung.com>,
-        Pankaj Raghav <p.raghav@samsung.com>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Content-Transfer-Encoding: 8bit
+X-Rspamd-Queue-Id: 4RnNHw3yX1z9sTN
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Fri, Sep 15, 2023 at 2:51=E2=80=AFAM Daniel Gomez <da.gomez@samsung.com>=
- wrote:
->
-> Add large folio support for shmem write path matching the same high
-> order preference mechanism used for iomap buffered IO path as used in
-> __filemap_get_folio().
->
-> Use the __folio_get_max_order to get a hint for the order of the folio
-> based on file size which takes care of the mapping requirements.
->
-> Swap does not support high order folios for now, so make it order 0 in
-> case swap is enabled.
+From: Pankaj Raghav <p.raghav@samsung.com>
 
-I didn't take a close look at the series, but I am not sure I
-understand the rationale here. Reclaim will split high order shmem
-folios anyway, right?
+There has been efforts over the last 16 years to enable enable Large
+Block Sizes (LBS), that is block sizes in filesystems where bs > page
+size [1] [2]. Through these efforts we have learned that one of the
+main blockers to supporting bs > ps in fiesystems has been a way to
+allocate pages that are at least the filesystem block size on the page
+cache where bs > ps [3]. Another blocker was changed in filesystems due to
+buffer-heads. Thanks to these previous efforts, the surgery by Matthew
+Willcox in the page cache for adopting xarray's multi-index support, and
+iomap support, it makes supporting bs > ps in XFS possible with only a few
+line change to XFS. Most of changes are to the page cache to support minimum
+order folio support for the target block size on the filesystem.
 
-It seems like we only enable high order folios if the "noswap" mount
-option is used, which is fairly recent. I doubt it is widely used.
+A new motivation for LBS today is to support high-capacity (large amount
+of Terabytes) QLC SSDs where the internal Indirection Unit (IU) are
+typically greater than 4k [4] to help reduce DRAM and so in turn cost
+and space. In practice this then allows different architectures to use a
+base page size of 4k while still enabling support for block sizes
+aligned to the larger IUs by relying on high order folios on the page
+cache when needed. It also enables to take advantage of these same
+drive's support for larger atomics than 4k with buffered IO support in
+Linux. As described this year at LSFMM, supporting large atomics greater
+than 4k enables databases to remove the need to rely on their own
+journaling, so they can disable double buffered writes [5], which is a
+feature different cloud providers are already innovating and enabling
+customers for through custom storage solutions.
 
->
-> Signed-off-by: Daniel Gomez <da.gomez@samsung.com>
-> ---
->  mm/shmem.c | 16 +++++++++++++---
->  1 file changed, 13 insertions(+), 3 deletions(-)
->
-> diff --git a/mm/shmem.c b/mm/shmem.c
-> index adff74751065..26ca555b1669 100644
-> --- a/mm/shmem.c
-> +++ b/mm/shmem.c
-> @@ -1683,13 +1683,19 @@ static struct folio *shmem_alloc_folio(gfp_t gfp,
->  }
->
->  static struct folio *shmem_alloc_and_acct_folio(gfp_t gfp, struct inode =
-*inode,
-> -               pgoff_t index, bool huge, unsigned int *order)
-> +               pgoff_t index, bool huge, unsigned int *order,
-> +               struct shmem_sb_info *sbinfo)
->  {
->         struct shmem_inode_info *info =3D SHMEM_I(inode);
->         struct folio *folio;
->         int nr;
->         int err;
->
-> +       if (!sbinfo->noswap)
-> +               *order =3D 0;
-> +       else
-> +               *order =3D (*order =3D=3D 1) ? 0 : *order;
-> +
->         if (!IS_ENABLED(CONFIG_TRANSPARENT_HUGEPAGE))
->                 huge =3D false;
->         nr =3D huge ? HPAGE_PMD_NR : 1U << *order;
-> @@ -2032,6 +2038,8 @@ static int shmem_get_folio_gfp(struct inode *inode,=
- pgoff_t index,
->                 return 0;
->         }
->
-> +       order =3D mapping_size_order(inode->i_mapping, index, len);
-> +
->         if (!shmem_is_huge(inode, index, false,
->                            vma ? vma->vm_mm : NULL, vma ? vma->vm_flags :=
- 0))
->                 goto alloc_nohuge;
-> @@ -2039,11 +2047,11 @@ static int shmem_get_folio_gfp(struct inode *inod=
-e, pgoff_t index,
->         huge_gfp =3D vma_thp_gfp_mask(vma);
->         huge_gfp =3D limit_gfp_mask(huge_gfp, gfp);
->         folio =3D shmem_alloc_and_acct_folio(huge_gfp, inode, index, true=
-,
-> -                                          &order);
-> +                                          &order, sbinfo);
->         if (IS_ERR(folio)) {
->  alloc_nohuge:
->                 folio =3D shmem_alloc_and_acct_folio(gfp, inode, index, f=
-alse,
-> -                                                  &order);
-> +                                                  &order, sbinfo);
->         }
->         if (IS_ERR(folio)) {
->                 int retry =3D 5;
-> @@ -2147,6 +2155,8 @@ static int shmem_get_folio_gfp(struct inode *inode,=
- pgoff_t index,
->         if (folio_test_large(folio)) {
->                 folio_unlock(folio);
->                 folio_put(folio);
-> +               if (order > 0)
-> +                       order--;
->                 goto alloc_nohuge;
->         }
->  unlock:
-> --
-> 2.39.2
->
+This series still needs some polishing and fixing some crashes, but it is
+mainly targeted to get initial feedback from the community, enable initial
+experimentation, hence the RFC. It's being posted now given the results from
+our testing are proving much better results than expected and we hope to
+polish this up together with the community. After all, this has been a 16
+year old effort and none of this could have been possible without that effort.
+
+Implementation:
+
+This series only adds the notion of a minimum order of a folio in the
+page cache that was initially proposed by Willy. The minimum folio order
+requirement is set during inode creation. The minimum order will
+typically correspond to the filesystem block size. The page cache will
+in turn respect the minimum folio order requirement while allocating a
+folio. This series mainly changes the page cache's filemap, readahead, and
+truncation code to allocate and align the folios to the minimum order set for the
+filesystem's inode's respective address space mapping.
+
+Only XFS was enabled and tested as a part of this series as it has
+supported block sizes up to 64k and sector sizes up to 32k for years.
+The only thing missing was the page cache magic to enable bs > ps. However any filesystem
+that doesn't depend on buffer-heads and support larger block sizes
+already should be able to leverage this effort to also support LBS,
+bs > ps.
+
+This also paves the way for supporting block devices where their logical
+block size > page size in the future by leveraging iomap's address space
+operation added to the block device cache by Christoph Hellwig [6]. We
+have work to enable support for this, enabling LBAs > 4k on NVME,  and
+at the same time allow coexistence with buffer-heads on the same block
+device so to enable support allow for a drive to use filesystem's to
+switch between filesystem's which may depend on buffer-heads or need the
+iomap address space operations for the block device cache. Patches for
+this will be posted shortly after this patch series.
+
+Testing:
+
+The test results show, this isn't so scary. Only a few regressions so
+far on xfs where CRCs are disabled on block sizes smaller than 4k and
+some generic tests crashing the system for bs > 4k. The crashes are at most a
+handful at this point. This series has been cleaned up 3 times now after
+we passed our first billion through fsx ops on different block sizes. Not
+surprisingly there are a few test bugs for the bs > ps world.
+
+We've established baseline first against linux-next against 14 different
+XFS test profiles as maintained in kdevops [7]:
+
+xfs_crc
+xfs_reflink
+xfs_reflink_normapbt
+xfs_reflink_1024
+xfs_reflink_2k
+xfs_reflink_4k
+xfs_nocrc
+xfs_nocrc_512
+xfs_nocrc_1k
+xfs_nocrc_2k
+xfs_nocrc_4k
+xfs_logdev
+xfs_rtdev
+xfs_rtlogdev
+
+We first established a high confidence baseline for linux-next and have
+kept following that to ensure we don't regress it. The majority of
+regressions are fsx ops on no CRC block sizes of 512 and 2k, and we plan
+to fix that, but welcome others at this point to jump in and collaborate.
+
+The list of known possible regressions are then can be seen on kdevops
+with git grep:
+
+git grep regression workflows/fstests/expunges/6.6.0-rc1-large-block-20230914/ | awk -F"unassigned/" '{print $2}'
+xfs_nocrc_2k.txt:generic/075 # possible regression
+xfs_nocrc_2k.txt:generic/112 # possible regression
+xfs_nocrc_2k.txt:generic/127 # possible regression
+xfs_nocrc_2k.txt:generic/231 # possible regression
+xfs_nocrc_2k.txt:generic/263 # possible regression
+xfs_nocrc_2k.txt:generic/469 # possible regression
+xfs_nocrc_512.txt:generic/075 # possible regression
+xfs_nocrc_512.txt:generic/112 # possible regression
+xfs_nocrc_512.txt:generic/127 # possible regression
+xfs_nocrc_512.txt:generic/231 # possible regression
+xfs_nocrc_512.txt:generic/263 # possible regression
+xfs_nocrc_512.txt:generic/469 # possible regression
+xfs_reflink_1024.txt:generic/457 # possible regression crash https://gist.github.com/mcgrof/f182b250a9d091f77dc85782a83224b3
+xfs_rtdev.txt:generic/333 # might crash might be a regression, takes forever...
+
+Billion of fsx ops are possible with 16k and so far successful also with
+hundreds of millions of fsx ops against 32k and 64k with 4k sector size.
+
+To verify larger IOs are used we have been using Daniel Gomez's lbs-ctl
+tool which uses eBPF to verify different IO counts on the block layer.
+That tool will soon be published.
+
+For more details please refer to the kernel newbies page on LBS [8].
+
+[1] https://lwn.net/Articles/231793/
+[2] https://lwn.net/ml/linux-fsdevel/20181107063127.3902-1-david@fromorbit.com/
+[3] https://lore.kernel.org/linux-mm/20230308075952.GU2825702@dread.disaster.area/
+[4] https://cdrdv2-public.intel.com/605724/Achieving_Optimal_Perf_IU_SSDs-338395-003US.pdf
+[5] https://lwn.net/Articles/932900/
+[6] https://lore.kernel.org/lkml/20230801172201.1923299-2-hch@lst.de/T/
+[7] https://github.com/linux-kdevops/kdevops/blob/master/playbooks/roles/fstests/templates/xfs/xfs.config
+[8] https://kernelnewbies.org/KernelProjects/large-block-size
+
+--
+Regards,
+Pankaj
+Luis
+
+Dave Chinner (1):
+  xfs: expose block size in stat
+
+Luis Chamberlain (12):
+  filemap: set the order of the index in page_cache_delete_batch()
+  filemap: align index to mapping_min_order in filemap_range_has_page()
+  mm: call xas_set_order() in replace_page_cache_folio()
+  filemap: align the index to mapping_min_order in __filemap_add_folio()
+  filemap: align the index to mapping_min_order in
+    filemap_get_folios_tag()
+  filemap: align the index to mapping_min_order in filemap_get_pages()
+  readahead: set file_ra_state->ra_pages to be at least
+    mapping_min_order
+  readahead: add folio with at least mapping_min_order in
+    page_cache_ra_order
+  readahead: set the minimum ra size in get_(init|next)_ra
+  readahead: align ra start and size to mapping_min_order in
+    ondemand_ra()
+  truncate: align index to mapping_min_order
+  mm: round down folio split requirements
+
+Matthew Wilcox (Oracle) (1):
+  fs: Allow fine-grained control of folio sizes
+
+Pankaj Raghav (9):
+  pagemap: use mapping_min_order in fgf_set_order()
+  filemap: add folio with at least mapping_min_order in
+    __filemap_get_folio
+  filemap: use mapping_min_order while allocating folios
+  filemap: align the index to mapping_min_order in
+    do_[a]sync_mmap_readahead
+  filemap: align index to mapping_min_order in filemap_fault()
+  readahead: allocate folios with mapping_min_order in ra_unbounded()
+  readahead: align with mapping_min_order in force_page_cache_ra()
+  xfs: enable block size larger than page size support
+  xfs: set minimum order folio for page cache based on blocksize
+
+ fs/iomap/buffered-io.c  |  2 +-
+ fs/xfs/xfs_icache.c     |  8 +++-
+ fs/xfs/xfs_iops.c       |  4 +-
+ fs/xfs/xfs_mount.c      |  9 ++++-
+ fs/xfs/xfs_super.c      |  7 +---
+ include/linux/pagemap.h | 87 ++++++++++++++++++++++++++++++-----------
+ mm/filemap.c            | 87 +++++++++++++++++++++++++++++++++--------
+ mm/huge_memory.c        | 14 +++++--
+ mm/readahead.c          | 86 ++++++++++++++++++++++++++++++++++------
+ mm/truncate.c           | 34 +++++++++++-----
+ 10 files changed, 263 insertions(+), 75 deletions(-)
+
+
+base-commit: e143016b56ecb0fcda5bb6026b0a25fe55274f56
+-- 
+2.40.1
+
