@@ -2,177 +2,111 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7225CEED620
-	for <linux-xfs@archiver.kernel.org>; Fri, 15 Sep 2023 18:42:29 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 283A6EED624
+	for <linux-xfs@archiver.kernel.org>; Fri, 15 Sep 2023 18:42:30 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S236700AbjIOSmC (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 15 Sep 2023 14:42:02 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46578 "EHLO
+        id S236801AbjIOSmD (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 15 Sep 2023 14:42:03 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57232 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S236866AbjIOSlq (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 15 Sep 2023 14:41:46 -0400
-Received: from mout-p-101.mailbox.org (mout-p-101.mailbox.org [IPv6:2001:67c:2050:0:465::101])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B93D12D4B;
-        Fri, 15 Sep 2023 11:40:16 -0700 (PDT)
-Received: from smtp1.mailbox.org (smtp1.mailbox.org [IPv6:2001:67c:2050:b231:465::1])
+        with ESMTP id S236983AbjIOSlw (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 15 Sep 2023 14:41:52 -0400
+Received: from mout-p-201.mailbox.org (mout-p-201.mailbox.org [IPv6:2001:67c:2050:0:465::201])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B978B4212;
+        Fri, 15 Sep 2023 11:40:25 -0700 (PDT)
+Received: from smtp102.mailbox.org (smtp102.mailbox.org [IPv6:2001:67c:2050:b231:465::102])
         (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
          key-exchange ECDHE (P-384) server-signature RSA-PSS (4096 bits) server-digest SHA256)
         (No client certificate requested)
-        by mout-p-101.mailbox.org (Postfix) with ESMTPS id 4RnNJx3l54z9sTN;
-        Fri, 15 Sep 2023 20:39:45 +0200 (CEST)
+        by mout-p-201.mailbox.org (Postfix) with ESMTPS id 4RnNK60pC9z9sW2;
+        Fri, 15 Sep 2023 20:39:54 +0200 (CEST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=pankajraghav.com;
-        s=MBO0001; t=1694803185;
+        s=MBO0001; t=1694803194;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:cc:mime-version:mime-version:
          content-transfer-encoding:content-transfer-encoding:
          in-reply-to:in-reply-to:references:references;
-        bh=rV9SUN768+vUSf43/qCLKk3hEIsfVKLWNcCU7V4zUtQ=;
-        b=eI+gl/BNfS9Dhty41um4KR+wRrFDQO+mDTbD65wgK9zPsLejVpU804xRIAjk7oY4J+Azil
-        IVzX5dngUXpyfVClHiUUCaBnCc+02/4pud5dgOX6JQnyg72eUcxNj6QU8Sc/dnYHpcWObe
-        paf2iuxl+EBFXfzLebEiH8GmUnBXq2RbfhMZtDylytHzq6bcq/Gpwf9XOVdf78jI04ETB+
-        xT7AyyaXTYUNMDkeQe91i2XK/OSfmotxpNcOTnfyY/W3bQz1zAy50mXsvOq+rw1ZgADZ8w
-        TPwbbIX4YN/46fNwwcoiCqVkUIJwiBKy2eunAvqT3IHljCII7Tbs1TqQdCUCGg==
+        bh=VZYs+58deJjiPO8x76TVvnJ/svOQYbXd85JbMK60DK4=;
+        b=nbK0ltBUmQsL56D0EhZ4txGadxEvVy4TubQU3sjKYn6rLPyAwbUdURHJ8b7n3zRdtyN/4Z
+        ypn7d+WKBepAkrMqlYrcpEnjSMQaoXkHFqFzoi6xAKmqYIcE4d5nhd2NJIIkCltxDGFZqX
+        aPiRGdlaOPgV/tMGFjiJ/rnPBUDvjHKssw/KzOPJoi2RRiMVQtr/SMPLsZ5ZmivBbieE89
+        tSpFP1+7JVhzls4KDO9r0MQkSh811k3tpn2w1NcQ02D8BjCZtKlrXgjf8qjYLwmyE0yjlD
+        nMlVsGHg5BAV06syTuM4YAtZ4/po/zbqrO9EN8APt8gc76aXRTMNwttPDzWfeQ==
 From:   Pankaj Raghav <kernel@pankajraghav.com>
 To:     linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org
 Cc:     p.raghav@samsung.com, david@fromorbit.com, da.gomez@samsung.com,
         akpm@linux-foundation.org, linux-kernel@vger.kernel.org,
         willy@infradead.org, djwong@kernel.org, linux-mm@kvack.org,
         chandan.babu@oracle.com, mcgrof@kernel.org, gost.dev@samsung.com
-Subject: [RFC 19/23] truncate: align index to mapping_min_order
-Date:   Fri, 15 Sep 2023 20:38:44 +0200
-Message-Id: <20230915183848.1018717-20-kernel@pankajraghav.com>
+Subject: [RFC 22/23] xfs: enable block size larger than page size support
+Date:   Fri, 15 Sep 2023 20:38:47 +0200
+Message-Id: <20230915183848.1018717-23-kernel@pankajraghav.com>
 In-Reply-To: <20230915183848.1018717-1-kernel@pankajraghav.com>
 References: <20230915183848.1018717-1-kernel@pankajraghav.com>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-X-Rspamd-Queue-Id: 4RnNJx3l54z9sTN
+X-Rspamd-Queue-Id: 4RnNK60pC9z9sW2
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-From: Luis Chamberlain <mcgrof@kernel.org>
+From: Pankaj Raghav <p.raghav@samsung.com>
 
-Align indices to mapping_min_order in invalidate_inode_pages2_range(),
-mapping_try_invalidate() and truncate_inode_pages_range(). This is
-necessary to keep the folios added to the page cache aligned with
-mapping_min_order.
+Currently we don't support blocksize that is twice the page size due to
+the limitation of having at least three pages in a large folio[1].
+
+[1] https://lore.kernel.org/all/ZH0GvxAdw1RO2Shr@casper.infradead.org/
 
 Signed-off-by: Luis Chamberlain <mcgrof@kernel.org>
 Signed-off-by: Pankaj Raghav <p.raghav@samsung.com>
 ---
- mm/truncate.c | 34 ++++++++++++++++++++++++----------
- 1 file changed, 24 insertions(+), 10 deletions(-)
+ fs/xfs/xfs_mount.c | 9 +++++++--
+ fs/xfs/xfs_super.c | 7 ++-----
+ 2 files changed, 9 insertions(+), 7 deletions(-)
 
-diff --git a/mm/truncate.c b/mm/truncate.c
-index 8e3aa9e8618e..d5ce8e30df70 100644
---- a/mm/truncate.c
-+++ b/mm/truncate.c
-@@ -337,6 +337,8 @@ void truncate_inode_pages_range(struct address_space *mapping,
- 	int		i;
- 	struct folio	*folio;
- 	bool		same_folio;
-+	unsigned int order = mapping_min_folio_order(mapping);
-+	unsigned int nrpages = 1U << order;
- 
- 	if (mapping_empty(mapping))
- 		return;
-@@ -347,7 +349,9 @@ void truncate_inode_pages_range(struct address_space *mapping,
- 	 * start of the range and 'partial_end' at the end of the range.
- 	 * Note that 'end' is exclusive while 'lend' is inclusive.
- 	 */
--	start = (lstart + PAGE_SIZE - 1) >> PAGE_SHIFT;
-+	start = (lstart + (nrpages * PAGE_SIZE) - 1) >> PAGE_SHIFT;
-+	start = round_down(start, nrpages);
+diff --git a/fs/xfs/xfs_mount.c b/fs/xfs/xfs_mount.c
+index aed5be5508fe..4272898c508a 100644
+--- a/fs/xfs/xfs_mount.c
++++ b/fs/xfs/xfs_mount.c
+@@ -131,11 +131,16 @@ xfs_sb_validate_fsb_count(
+ 	xfs_sb_t	*sbp,
+ 	uint64_t	nblocks)
+ {
+-	ASSERT(PAGE_SHIFT >= sbp->sb_blocklog);
+ 	ASSERT(sbp->sb_blocklog >= BBSHIFT);
++	unsigned long mapping_count;
 +
- 	if (lend == -1)
- 		/*
- 		 * lend == -1 indicates end-of-file so we have to set 'end'
-@@ -356,7 +360,7 @@ void truncate_inode_pages_range(struct address_space *mapping,
- 		 */
- 		end = -1;
- 	else
--		end = (lend + 1) >> PAGE_SHIFT;
-+		end = round_down((lend + 1) >> PAGE_SHIFT, nrpages);
++	if (sbp->sb_blocklog <= PAGE_SHIFT)
++		mapping_count = nblocks >> (PAGE_SHIFT - sbp->sb_blocklog);
++	else
++		mapping_count = nblocks << (sbp->sb_blocklog - PAGE_SHIFT);
  
- 	folio_batch_init(&fbatch);
- 	index = start;
-@@ -372,8 +376,9 @@ void truncate_inode_pages_range(struct address_space *mapping,
- 		cond_resched();
+ 	/* Limited by ULONG_MAX of page cache index */
+-	if (nblocks >> (PAGE_SHIFT - sbp->sb_blocklog) > ULONG_MAX)
++	if (mapping_count > ULONG_MAX)
+ 		return -EFBIG;
+ 	return 0;
+ }
+diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
+index 1f77014c6e1a..75bf4d23051c 100644
+--- a/fs/xfs/xfs_super.c
++++ b/fs/xfs/xfs_super.c
+@@ -1651,13 +1651,10 @@ xfs_fs_fill_super(
+ 		goto out_free_sb;
  	}
  
--	same_folio = (lstart >> PAGE_SHIFT) == (lend >> PAGE_SHIFT);
--	folio = __filemap_get_folio(mapping, lstart >> PAGE_SHIFT, FGP_LOCK, 0);
-+	same_folio = round_down(lstart >> PAGE_SHIFT, nrpages) ==
-+		     round_down(lend >> PAGE_SHIFT, nrpages);
-+	folio = __filemap_get_folio(mapping, start, FGP_LOCK, 0);
- 	if (!IS_ERR(folio)) {
- 		same_folio = lend < folio_pos(folio) + folio_size(folio);
- 		if (!truncate_inode_partial_folio(folio, lstart, lend)) {
-@@ -387,7 +392,8 @@ void truncate_inode_pages_range(struct address_space *mapping,
- 	}
- 
- 	if (!same_folio) {
--		folio = __filemap_get_folio(mapping, lend >> PAGE_SHIFT,
-+		folio = __filemap_get_folio(mapping,
-+					    round_down(lend >> PAGE_SHIFT, nrpages),
- 						FGP_LOCK, 0);
- 		if (!IS_ERR(folio)) {
- 			if (!truncate_inode_partial_folio(folio, lstart, lend))
-@@ -497,15 +503,18 @@ EXPORT_SYMBOL(truncate_inode_pages_final);
- unsigned long mapping_try_invalidate(struct address_space *mapping,
- 		pgoff_t start, pgoff_t end, unsigned long *nr_failed)
- {
-+	unsigned int min_order = mapping_min_folio_order(mapping);
-+	unsigned int nrpages = 1UL << min_order;
- 	pgoff_t indices[PAGEVEC_SIZE];
- 	struct folio_batch fbatch;
--	pgoff_t index = start;
-+	pgoff_t index = round_up(start, nrpages);
-+	pgoff_t end_idx = round_down(end, nrpages);
- 	unsigned long ret;
- 	unsigned long count = 0;
- 	int i;
- 
- 	folio_batch_init(&fbatch);
--	while (find_lock_entries(mapping, &index, end, &fbatch, indices)) {
-+	while (find_lock_entries(mapping, &index, end_idx, &fbatch, indices)) {
- 		for (i = 0; i < folio_batch_count(&fbatch); i++) {
- 			struct folio *folio = fbatch.folios[i];
- 
-@@ -618,9 +627,11 @@ static int folio_launder(struct address_space *mapping, struct folio *folio)
- int invalidate_inode_pages2_range(struct address_space *mapping,
- 				  pgoff_t start, pgoff_t end)
- {
-+	unsigned int min_order = mapping_min_folio_order(mapping);
-+	unsigned int nrpages = 1UL << min_order;
- 	pgoff_t indices[PAGEVEC_SIZE];
- 	struct folio_batch fbatch;
--	pgoff_t index;
-+	pgoff_t index, end_idx;
- 	int i;
- 	int ret = 0;
- 	int ret2 = 0;
-@@ -630,8 +641,9 @@ int invalidate_inode_pages2_range(struct address_space *mapping,
- 		return 0;
- 
- 	folio_batch_init(&fbatch);
--	index = start;
--	while (find_get_entries(mapping, &index, end, &fbatch, indices)) {
-+	index = round_up(start, nrpages);
-+	end_idx = round_down(end, nrpages);
-+	while (find_get_entries(mapping, &index, end_idx, &fbatch, indices)) {
- 		for (i = 0; i < folio_batch_count(&fbatch); i++) {
- 			struct folio *folio = fbatch.folios[i];
- 
-@@ -660,6 +672,8 @@ int invalidate_inode_pages2_range(struct address_space *mapping,
- 				continue;
- 			}
- 			VM_BUG_ON_FOLIO(!folio_contains(folio, indices[i]), folio);
-+			VM_BUG_ON_FOLIO(folio_order(folio) < min_order, folio);
-+			VM_BUG_ON_FOLIO(folio->index & (nrpages - 1), folio);
- 			folio_wait_writeback(folio);
- 
- 			if (folio_mapped(folio))
+-	/*
+-	 * Until this is fixed only page-sized or smaller data blocks work.
+-	 */
+-	if (mp->m_sb.sb_blocksize > PAGE_SIZE) {
++	if (mp->m_sb.sb_blocksize == (2 * PAGE_SIZE)) {
+ 		xfs_warn(mp,
+ 		"File system with blocksize %d bytes. "
+-		"Only pagesize (%ld) or less will currently work.",
++		"Blocksize that is twice the pagesize %ld does not currently work.",
+ 				mp->m_sb.sb_blocksize, PAGE_SIZE);
+ 		error = -ENOSYS;
+ 		goto out_free_sb;
 -- 
 2.40.1
 
