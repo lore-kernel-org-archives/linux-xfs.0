@@ -2,104 +2,99 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id BEFAEEE645D
-	for <linux-xfs@archiver.kernel.org>; Fri, 15 Sep 2023 13:45:09 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B3D0EEED600
+	for <linux-xfs@archiver.kernel.org>; Fri, 15 Sep 2023 15:04:24 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235440AbjIONpM (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 15 Sep 2023 09:45:12 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51324 "EHLO
+        id S235884AbjIOPE1 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 15 Sep 2023 11:04:27 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45040 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S235355AbjIONpL (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 15 Sep 2023 09:45:11 -0400
-Received: from casper.infradead.org (casper.infradead.org [IPv6:2001:8b0:10b:1236::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E0FFD10D;
-        Fri, 15 Sep 2023 06:45:06 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=infradead.org; s=casper.20170209; h=In-Reply-To:Content-Type:MIME-Version:
-        References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
-        Content-Transfer-Encoding:Content-ID:Content-Description;
-        bh=jxXdIOJ+m4CtsjucCCh39wV02TblO2va85pXUJ/Yaxs=; b=CTCz3ai5firDQReWo5r4TuUiQ5
-        kXQQkghy72n5L1ex9TNzv7XVPoz7XD1X/f4lUJw6/m0VHAYNSn4JFAZdNIg63Iw0KrL7KWX3vcgAx
-        336pifuSjH+xM+zHDElonJnmXzzpuBlrs5mnC8uUqMiByFLIra2P6PhSwdcj8kw9DqYFwT2mWN60c
-        rjdTqjQdO3DCAiPOHCcaZ+264z9lBI1+gwt6DAWEvcjr6IY9u/XyP7zThcu4f35rOUVTHaONEnXzL
-        vqVWgPjQFWsYclK8Ujfwc0jZPFSB/w80mArxsYa6YL6oS1PNSCORzHNNh5lBGLJ5Z/5BF0wT72g/T
-        Jr9A9NWQ==;
-Received: from willy by casper.infradead.org with local (Exim 4.94.2 #2 (Red Hat Linux))
-        id 1qh97y-00A1dO-Lq; Fri, 15 Sep 2023 13:44:58 +0000
-Date:   Fri, 15 Sep 2023 14:44:58 +0100
-From:   Matthew Wilcox <willy@infradead.org>
-To:     Daniel Gomez <da.gomez@samsung.com>
-Cc:     "minchan@kernel.org" <minchan@kernel.org>,
-        "senozhatsky@chromium.org" <senozhatsky@chromium.org>,
-        "axboe@kernel.dk" <axboe@kernel.dk>,
-        "djwong@kernel.org" <djwong@kernel.org>,
-        "hughd@google.com" <hughd@google.com>,
-        "akpm@linux-foundation.org" <akpm@linux-foundation.org>,
-        "mcgrof@kernel.org" <mcgrof@kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>,
-        "linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>,
-        "linux-fsdevel@vger.kernel.org" <linux-fsdevel@vger.kernel.org>,
-        "linux-mm@kvack.org" <linux-mm@kvack.org>,
-        "gost.dev@samsung.com" <gost.dev@samsung.com>,
-        Pankaj Raghav <p.raghav@samsung.com>
-Subject: Re: [PATCH 3/6] shmem: account for large order folios
-Message-ID: <ZQRf2pGWurrE0uO+@casper.infradead.org>
-References: <20230915095042.1320180-1-da.gomez@samsung.com>
- <CGME20230915095128eucas1p2885c3add58d82413d9c1d17832d3d281@eucas1p2.samsung.com>
- <20230915095042.1320180-4-da.gomez@samsung.com>
+        with ESMTP id S235973AbjIOPEF (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 15 Sep 2023 11:04:05 -0400
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 7E9A62111
+        for <linux-xfs@vger.kernel.org>; Fri, 15 Sep 2023 08:03:13 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1694790192;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=lTZfA5rPlEfiTz4c92kcEKYabBvdtJsj3rwpq0qrzBM=;
+        b=HgUW12ZI8rt0KwOCZpQ/BYLuAsOUw02ROx/PQB1lOWyvLV9TVbLDMIIDZIJsOHoe560rfB
+        Y7i03RQ6T1JYdcFvuw4hIllDM0dZWC2NGMRvEP0mesWL52lm02yuKceiQ+5d9bilgW9ltF
+        uA7yfqmkrGngPW/zJ/9bpI+jcg3GvwM=
+Received: from mimecast-mx02.redhat.com (mimecast-mx02.redhat.com
+ [66.187.233.88]) by relay.mimecast.com with ESMTP with STARTTLS
+ (version=TLSv1.2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ us-mta-687-_ANoj1VnN2WU3lpoECSwCg-1; Fri, 15 Sep 2023 11:03:10 -0400
+X-MC-Unique: _ANoj1VnN2WU3lpoECSwCg-1
+Received: from smtp.corp.redhat.com (int-mx06.intmail.prod.int.rdu2.redhat.com [10.11.54.6])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by mimecast-mx02.redhat.com (Postfix) with ESMTPS id CDE1F185A73B;
+        Fri, 15 Sep 2023 15:03:09 +0000 (UTC)
+Received: from redhat.com (unknown [10.22.10.48])
+        by smtp.corp.redhat.com (Postfix) with ESMTPS id A18012156A27;
+        Fri, 15 Sep 2023 15:03:09 +0000 (UTC)
+Date:   Fri, 15 Sep 2023 10:03:08 -0500
+From:   Bill O'Donnell <bodonnel@redhat.com>
+To:     cem@kernel.org
+Cc:     linux-xfs@vger.kernel.org
+Subject: Re: [PATCH V2] mkfs: Improve warning when AG size is a multiple of
+ stripe width
+Message-ID: <ZQRyLLnvkEKbs5Wn@redhat.com>
+References: <20230915102246.108709-1-cem@kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20230915095042.1320180-4-da.gomez@samsung.com>
+In-Reply-To: <20230915102246.108709-1-cem@kernel.org>
+X-Scanned-By: MIMEDefang 3.1 on 10.11.54.6
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Fri, Sep 15, 2023 at 09:51:26AM +0000, Daniel Gomez wrote:
-> +	xas_for_each(&xas, folio, max) {
-> +		if (xas_retry(&xas, folio))
->  			continue;
-> -		if (xa_is_value(page))
-> -			swapped++;
-> +		if (xa_is_value(folio))
-> +			swapped += (folio_nr_pages(folio));
+On Fri, Sep 15, 2023 at 12:22:46PM +0200, cem@kernel.org wrote:
+> From: Carlos Maiolino <cmaiolino@redhat.com>
+> 
+> The current output message prints out a suggestion of an AG size to be
+> used in lieu of the user-defined one.
+> The problem is this suggestion is printed in filesystem blocks, without
+> specifying the suffix to be used.
+> 
+> This patch tries to make user's life easier by outputing the option as
+> it should be used by the mkfs, so users can just copy/paste it.
+> 
+> Signed-off-by: Carlos Maiolino <cmaiolino@redhat.com>
 
-Unnecessary parens.
+Reviewed-by: Bill O'Donnell <bodonnel@redhat.com>
 
-> @@ -1006,10 +1006,12 @@ static void shmem_undo_range(struct inode *inode, loff_t lstart, loff_t lend,
->  			folio = fbatch.folios[i];
->  
->  			if (xa_is_value(folio)) {
-> +				long swaps_freed;
->  				if (unfalloc)
->  					continue;
-> -				nr_swaps_freed += !shmem_free_swap(mapping,
-> -							indices[i], folio);
-> +				swaps_freed = folio_nr_pages(folio);
-> +				if (!shmem_free_swap(mapping, indices[i], folio))
-> +					nr_swaps_freed += swaps_freed;
-
-Broader change (indeed, in a separate patch), why not make
-shmem_free_swap() return the number of pages freed, rather than
-returning an errno?
-
-> @@ -1075,14 +1077,16 @@ static void shmem_undo_range(struct inode *inode, loff_t lstart, loff_t lend,
->  			folio = fbatch.folios[i];
->  
->  			if (xa_is_value(folio)) {
-> +				long swaps_freed;
->  				if (unfalloc)
->  					continue;
-> +				swaps_freed = folio_nr_pages(folio);
->  				if (shmem_free_swap(mapping, indices[i], folio)) {
->  					/* Swap was replaced by page: retry */
->  					index = indices[i];
->  					break;
->  				}
-> -				nr_swaps_freed++;
-> +				nr_swaps_freed += swaps_freed;
->  				continue;
-
-... seems like both callers would prefer that.
+> ---
+> 
+> V2:
+> 	- Keep printing it in FSBs, just add the agsize= and the 'b' suffix at
+> 	  the end
+> 
+>  mkfs/xfs_mkfs.c | 6 +++---
+>  1 file changed, 3 insertions(+), 3 deletions(-)
+> 
+> diff --git a/mkfs/xfs_mkfs.c b/mkfs/xfs_mkfs.c
+> index d3a15cf44..b61934e57 100644
+> --- a/mkfs/xfs_mkfs.c
+> +++ b/mkfs/xfs_mkfs.c
+> @@ -3179,9 +3179,9 @@ _("agsize rounded to %lld, sunit = %d\n"),
+>  		if (cli_opt_set(&dopts, D_AGCOUNT) ||
+>  		    cli_opt_set(&dopts, D_AGSIZE)) {
+>  			printf(_(
+> -"Warning: AG size is a multiple of stripe width.  This can cause performance\n\
+> -problems by aligning all AGs on the same disk.  To avoid this, run mkfs with\n\
+> -an AG size that is one stripe unit smaller or larger, for example %llu.\n"),
+> +"Warning: AG size is a multiple of stripe width. This can cause performance\n\
+> +problems by aligning all AGs on the same disk. To avoid this, run mkfs with\n\
+> +an AG size that is one stripe unit smaller or larger, for example: agsize=%llub\n"),
+>  				(unsigned long long)cfg->agsize - dsunit);
+>  			fflush(stdout);
+>  			goto validate;
+> -- 
+> 2.39.2
+> 
 
