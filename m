@@ -2,30 +2,30 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E213CCD37BC
-	for <linux-xfs@archiver.kernel.org>; Fri, 15 Sep 2023 22:48:42 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1BBD1CD37BE
+	for <linux-xfs@archiver.kernel.org>; Fri, 15 Sep 2023 22:48:43 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S237976AbjIOWoO (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 15 Sep 2023 18:44:14 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57750 "EHLO
+        id S238128AbjIOWoR (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 15 Sep 2023 18:44:17 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57778 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S238107AbjIOWn4 (ORCPT
+        with ESMTP id S238113AbjIOWn4 (ORCPT
         <rfc822;linux-xfs@vger.kernel.org>); Fri, 15 Sep 2023 18:43:56 -0400
 Received: from bombadil.infradead.org (bombadil.infradead.org [IPv6:2607:7c80:54:3::133])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D43AD2717;
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id EFD172719;
         Fri, 15 Sep 2023 15:43:49 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
         d=infradead.org; s=bombadil.20210309; h=Sender:Content-Transfer-Encoding:
         MIME-Version:References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:
         Reply-To:Content-Type:Content-ID:Content-Description;
-        bh=OTSjAv0PEMH+tCuP3ffDEqRz+yWbCz97RfaFT2lMORg=; b=xX7TFA9kztVjOz7d+p1P/TM7Ay
-        nomWAhSivQ5lCdYaAeQK3cLiJwl2lWQjj7B6LNKYf1vfNWGbzkrCZMyNLm6Xz2TU9IbPPJp2V9vDp
-        sQRh+Sstun+Z0VSd9LRO9XmHZ18g7f+6Gk3qAyBGtCb7Db23OD+grSKpMAjzWlAHpruUvoReSSHoL
-        FVA7AVwZFM51kSRVjdptDf4W4Ul1PNFHmTYueINUMel+3WCyzzfPJyYQBgAqmZUxP6GWv6YGQdUCU
-        nybG1VZrotzL0I0hsJgT58ibcJ778KXSwP4LuGA3/rm7WCzSQLcDIh/QqPl2oLQ441Z3Dm7mjfkmU
-        FcOwZwkA==;
+        bh=Cw7RdOPRUkFp9dSTX3luqJaGnpI4xwoQeOJGqBWR3yI=; b=1rmGZrmQs0g1DKXfgxLAklopAe
+        hlHs1CUpNdjbnNFHADeESgt/6Vhl4duyfWJfd4Q4DqZhJEDCXIohWQ+xV5q6vXlqM4C/+hM3D1O3Q
+        SwdqMuin1I8pjQdZVkuDAnCcy1hpH+aqLmYGzojA6vtCKn8l5wDEJqaiv7JyxJ9v+IyG9VHu5GOCP
+        TDZSQsLAhwMkPOsb30jEZw/XSRiqfzp0YsDrTdxh3PI1k2COGy8dywW8yjBv0xwqjlxt/qWVKsKZl
+        y9SMV97NUMeWJP80xqcfTSA7HtOND5LWzvqRQ+ERzBdK/tkTSieB2KIOiiQFxn4gcM02gDuZW4SFx
+        eR5tBK9A==;
 Received: from mcgrof by bombadil.infradead.org with local (Exim 4.96 #2 (Red Hat Linux))
-        id 1qhHXM-00BUtT-38;
+        id 1qhHXM-00BUtO-2p;
         Fri, 15 Sep 2023 22:43:44 +0000
 From:   Luis Chamberlain <mcgrof@kernel.org>
 To:     axboe@kernel.dk, agk@redhat.com, snitzer@kernel.org,
@@ -38,10 +38,11 @@ Cc:     patches@lists.linux.dev, linux-block@vger.kernel.org,
         drbd-dev@lists.linbit.com, linux-kernel@vger.kernel.org,
         willy@infradead.org, hare@suse.de, p.raghav@samsung.com,
         da.gomez@samsung.com, rohan.puri@samsung.com,
-        rpuri.linux@gmail.com, kbusch@kernel.org, mcgrof@kernel.org
-Subject: [PATCH v3 4/4] zram: use generic PAGE_SECTORS and PAGE_SECTORS_SHIFT
-Date:   Fri, 15 Sep 2023 15:43:43 -0700
-Message-Id: <20230915224343.2740317-5-mcgrof@kernel.org>
+        rpuri.linux@gmail.com, kbusch@kernel.org, mcgrof@kernel.org,
+        Christoph Hellwig <hch@lst.de>
+Subject: [PATCH v3 2/4] iomap: simplify iomap_init() with PAGE_SECTORS
+Date:   Fri, 15 Sep 2023 15:43:41 -0700
+Message-Id: <20230915224343.2740317-3-mcgrof@kernel.org>
 X-Mailer: git-send-email 2.38.1
 In-Reply-To: <20230915224343.2740317-1-mcgrof@kernel.org>
 References: <20230915224343.2740317-1-mcgrof@kernel.org>
@@ -52,76 +53,28 @@ Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Instead of re-defining the already existing constants use the provided ones:
+Replace common constants with generic versions. This produces no
+functional changes.
 
-So replace:
-
- o SECTORS_PER_PAGE_SHIFT with PAGE_SECTORS_SHIFT
- o SECTORS_PER_PAGE       with PAGE_SECTORS
- o SECTORS_PER_PAGE - 1   with SECTOR_MASK
-
-This produces no functional changes.
-
-Reviewed-by: Sergey Senozhatsky <senozhatsky@chromium.org>
+Reviewed-by: Christoph Hellwig <hch@lst.de>
 Signed-off-by: Luis Chamberlain <mcgrof@kernel.org>
 ---
- drivers/block/zram/zram_drv.c | 15 ++++++---------
- drivers/block/zram/zram_drv.h |  2 --
- 2 files changed, 6 insertions(+), 11 deletions(-)
+ fs/iomap/buffered-io.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/block/zram/zram_drv.c b/drivers/block/zram/zram_drv.c
-index 06673c6ca255..58d36c8574d4 100644
---- a/drivers/block/zram/zram_drv.c
-+++ b/drivers/block/zram/zram_drv.c
-@@ -1834,9 +1834,8 @@ static ssize_t recompress_store(struct device *dev,
- static void zram_bio_discard(struct zram *zram, struct bio *bio)
+diff --git a/fs/iomap/buffered-io.c b/fs/iomap/buffered-io.c
+index ae8673ce08b1..1a16c0e5d190 100644
+--- a/fs/iomap/buffered-io.c
++++ b/fs/iomap/buffered-io.c
+@@ -1985,7 +1985,7 @@ EXPORT_SYMBOL_GPL(iomap_writepages);
+ 
+ static int __init iomap_init(void)
  {
- 	size_t n = bio->bi_iter.bi_size;
--	u32 index = bio->bi_iter.bi_sector >> SECTORS_PER_PAGE_SHIFT;
--	u32 offset = (bio->bi_iter.bi_sector & (SECTORS_PER_PAGE - 1)) <<
--			SECTOR_SHIFT;
-+	u32 index = bio->bi_iter.bi_sector >> PAGE_SECTORS_SHIFT;
-+	u32 offset = (bio->bi_iter.bi_sector & SECTOR_MASK) << SECTOR_SHIFT;
- 
- 	/*
- 	 * zram manages data in physical block size units. Because logical block
-@@ -1874,9 +1873,8 @@ static void zram_bio_read(struct zram *zram, struct bio *bio)
- 	struct bvec_iter iter = bio->bi_iter;
- 
- 	do {
--		u32 index = iter.bi_sector >> SECTORS_PER_PAGE_SHIFT;
--		u32 offset = (iter.bi_sector & (SECTORS_PER_PAGE - 1)) <<
--				SECTOR_SHIFT;
-+		u32 index = iter.bi_sector >> PAGE_SECTORS_SHIFT;
-+		u32 offset = (iter.bi_sector & SECTOR_MASK) << SECTOR_SHIFT;
- 		struct bio_vec bv = bio_iter_iovec(bio, iter);
- 
- 		bv.bv_len = min_t(u32, bv.bv_len, PAGE_SIZE - offset);
-@@ -1905,9 +1903,8 @@ static void zram_bio_write(struct zram *zram, struct bio *bio)
- 	struct bvec_iter iter = bio->bi_iter;
- 
- 	do {
--		u32 index = iter.bi_sector >> SECTORS_PER_PAGE_SHIFT;
--		u32 offset = (iter.bi_sector & (SECTORS_PER_PAGE - 1)) <<
--				SECTOR_SHIFT;
-+		u32 index = iter.bi_sector >> PAGE_SECTORS_SHIFT;
-+		u32 offset = (iter.bi_sector & SECTOR_MASK) << SECTOR_SHIFT;
- 		struct bio_vec bv = bio_iter_iovec(bio, iter);
- 
- 		bv.bv_len = min_t(u32, bv.bv_len, PAGE_SIZE - offset);
-diff --git a/drivers/block/zram/zram_drv.h b/drivers/block/zram/zram_drv.h
-index ca7a15bd4845..9f2543af5c76 100644
---- a/drivers/block/zram/zram_drv.h
-+++ b/drivers/block/zram/zram_drv.h
-@@ -21,8 +21,6 @@
- 
- #include "zcomp.h"
- 
--#define SECTORS_PER_PAGE_SHIFT	(PAGE_SHIFT - SECTOR_SHIFT)
--#define SECTORS_PER_PAGE	(1 << SECTORS_PER_PAGE_SHIFT)
- #define ZRAM_LOGICAL_BLOCK_SHIFT 12
- #define ZRAM_LOGICAL_BLOCK_SIZE	(1 << ZRAM_LOGICAL_BLOCK_SHIFT)
- #define ZRAM_SECTOR_PER_LOGICAL_BLOCK	\
+-	return bioset_init(&iomap_ioend_bioset, 4 * (PAGE_SIZE / SECTOR_SIZE),
++	return bioset_init(&iomap_ioend_bioset, 4 * PAGE_SECTORS,
+ 			   offsetof(struct iomap_ioend, io_inline_bio),
+ 			   BIOSET_NEED_BVECS);
+ }
 -- 
 2.39.2
 
