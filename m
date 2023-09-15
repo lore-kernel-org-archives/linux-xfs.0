@@ -2,98 +2,146 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DF70BEED622
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 005A1EED624
 	for <linux-xfs@archiver.kernel.org>; Fri, 15 Sep 2023 18:43:01 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S236848AbjIOSmf (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 15 Sep 2023 14:42:35 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58738 "EHLO
+        id S236867AbjIOSmg (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 15 Sep 2023 14:42:36 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33348 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S237022AbjIOSm1 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 15 Sep 2023 14:42:27 -0400
-Received: from mout-p-202.mailbox.org (mout-p-202.mailbox.org [80.241.56.172])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 99CB63A84;
-        Fri, 15 Sep 2023 11:40:57 -0700 (PDT)
-Received: from smtp202.mailbox.org (smtp202.mailbox.org [10.196.197.202])
+        with ESMTP id S236981AbjIOSmS (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 15 Sep 2023 14:42:18 -0400
+Received: from mout-p-102.mailbox.org (mout-p-102.mailbox.org [80.241.56.152])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 52A324695;
+        Fri, 15 Sep 2023 11:40:54 -0700 (PDT)
+Received: from smtp2.mailbox.org (smtp2.mailbox.org [IPv6:2001:67c:2050:b231:465::2])
         (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
          key-exchange ECDHE (P-384) server-signature RSA-PSS (4096 bits) server-digest SHA256)
         (No client certificate requested)
-        by mout-p-202.mailbox.org (Postfix) with ESMTPS id 4RnNJS3W0Xz9sbL;
-        Fri, 15 Sep 2023 20:39:20 +0200 (CEST)
+        by mout-p-102.mailbox.org (Postfix) with ESMTPS id 4RnNJt60W1z9sTy;
+        Fri, 15 Sep 2023 20:39:42 +0200 (CEST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=pankajraghav.com;
-        s=MBO0001; t=1694803160;
+        s=MBO0001; t=1694803182;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:cc:mime-version:mime-version:
          content-transfer-encoding:content-transfer-encoding:
          in-reply-to:in-reply-to:references:references;
-        bh=SzrHPPmJTKjWfDrn3YXBgU9n1TNPo/kiGOZujmxfC3o=;
-        b=zv1eBTD7DSyKB/ZHl4zr3fiwfusUpLKbzkWEafjVoKUx2xfMK7rklsQPPIp19HKeoo3l8c
-        FWeg/koAWMOCS5X6e/FiZsa8S/OteBDH7E1VOVQjIAhxRZxG2855TiW8pZ388XhUkviYq2
-        bUYv3/X5vM3Wi4vWfiFfR93e4/3fPoNylQkICflCDoirfo2ziNslgUpmYPd0h1VRhy/zgi
-        U9QpS/GtWY71h/CXkrwsXNlNbS9TdIZ8rep7TVuhIWNrq3bhlA9o+chV8bjGafiMcWHOQs
-        lIMWb0XukJXAYtVaua7Mngo8ueNlG8zrZT38tUYnIZNdtKRF4sPJFkbVEB/wNA==
+        bh=LywLEuPyM84LvnszU9bu3yYyFXSjfbQxmSaZo0Anuqo=;
+        b=sPBj7+lPJjN1O52TPN3bPIvCgfHWewlpa4lD2gPArpjJc42qjZjYB0ivxNzVoPtgWUV2X9
+        baXqoaVEy427TKtHRyh9CuvB1dGk4UoKPWdumhCVK/Zj7hjnyV/9B5lvcIJez7O/RYML7a
+        7BbpTXkSIEysivDSIn8uG2RYC8Ka8TO0B9P19XqbBg8Pj8JfaNqqdtPoeNMsD2lb4sD0eY
+        cFRHPxdkrbiSJb37sUgM291kELuaAdt9gvlmR97ZVvHYeejas3FF4Zlhd05N2OYrwNWsrp
+        2xibhXY+ahHHlr/15+T/ltQEQlsnkfS5en8VhTucFA1GfYp0wjO7bbHAmSHM9Q==
 From:   Pankaj Raghav <kernel@pankajraghav.com>
 To:     linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org
 Cc:     p.raghav@samsung.com, david@fromorbit.com, da.gomez@samsung.com,
         akpm@linux-foundation.org, linux-kernel@vger.kernel.org,
         willy@infradead.org, djwong@kernel.org, linux-mm@kvack.org,
         chandan.babu@oracle.com, mcgrof@kernel.org, gost.dev@samsung.com
-Subject: [RFC 10/23] filemap: align the index to mapping_min_order in filemap_get_pages()
-Date:   Fri, 15 Sep 2023 20:38:35 +0200
-Message-Id: <20230915183848.1018717-11-kernel@pankajraghav.com>
+Subject: [RFC 18/23] readahead: align ra start and size to mapping_min_order in ondemand_ra()
+Date:   Fri, 15 Sep 2023 20:38:43 +0200
+Message-Id: <20230915183848.1018717-19-kernel@pankajraghav.com>
 In-Reply-To: <20230915183848.1018717-1-kernel@pankajraghav.com>
 References: <20230915183848.1018717-1-kernel@pankajraghav.com>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
+X-Rspamd-Queue-Id: 4RnNJt60W1z9sTy
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: Luis Chamberlain <mcgrof@kernel.org>
 
-Align the index to the mapping_min_order number of pages in
-filemap_get_pages().
+Align the ra->start and ra->size to mapping_min_order in
+ondemand_readahead(). This will ensure the folios added to the
+page_cache will be aligned to mapping_min_order number of pages.
 
 Signed-off-by: Luis Chamberlain <mcgrof@kernel.org>
 ---
-generic/451 triggers a crash in this path for bs = 16k.
+ mm/readahead.c | 29 ++++++++++++++++++++++-------
+ 1 file changed, 22 insertions(+), 7 deletions(-)
 
- mm/filemap.c | 8 +++++---
- 1 file changed, 5 insertions(+), 3 deletions(-)
-
-diff --git a/mm/filemap.c b/mm/filemap.c
-index e4d46f79e95d..8a4bbddcf575 100644
---- a/mm/filemap.c
-+++ b/mm/filemap.c
-@@ -2558,14 +2558,17 @@ static int filemap_get_pages(struct kiocb *iocb, size_t count,
- {
- 	struct file *filp = iocb->ki_filp;
- 	struct address_space *mapping = filp->f_mapping;
-+	unsigned int min_order = mapping_min_folio_order(mapping);
-+	unsigned int nrpages = 1UL << min_order;
- 	struct file_ra_state *ra = &filp->f_ra;
--	pgoff_t index = iocb->ki_pos >> PAGE_SHIFT;
-+	pgoff_t index = round_down(iocb->ki_pos >> PAGE_SHIFT, nrpages);
- 	pgoff_t last_index;
- 	struct folio *folio;
- 	int err = 0;
+diff --git a/mm/readahead.c b/mm/readahead.c
+index 7c2660815a01..03fa6f6c8145 100644
+--- a/mm/readahead.c
++++ b/mm/readahead.c
+@@ -605,7 +605,11 @@ static void ondemand_readahead(struct readahead_control *ractl,
+ 	unsigned long add_pages;
+ 	pgoff_t index = readahead_index(ractl);
+ 	pgoff_t expected, prev_index;
+-	unsigned int order = folio ? folio_order(folio) : 0;
++	unsigned int min_order = mapping_min_folio_order(ractl->mapping);
++	unsigned int min_nrpages = 1UL << min_order;
++	unsigned int order = folio ? folio_order(folio) : min_order;
++
++	VM_BUG_ON(ractl->_index & (min_nrpages - 1));
  
- 	/* "last_index" is the index of the page beyond the end of the read */
- 	last_index = DIV_ROUND_UP(iocb->ki_pos + count, PAGE_SIZE);
-+	last_index = round_up(last_index, nrpages);
- retry:
- 	if (fatal_signal_pending(current))
- 		return -EINTR;
-@@ -2581,8 +2584,7 @@ static int filemap_get_pages(struct kiocb *iocb, size_t count,
- 	if (!folio_batch_count(fbatch)) {
- 		if (iocb->ki_flags & (IOCB_NOWAIT | IOCB_WAITQ))
- 			return -EAGAIN;
--		err = filemap_create_folio(filp, mapping,
--				iocb->ki_pos >> PAGE_SHIFT, fbatch);
-+		err = filemap_create_folio(filp, mapping, index, fbatch);
- 		if (err == AOP_TRUNCATED_PAGE)
- 			goto retry;
- 		return err;
+ 	/*
+ 	 * If the request exceeds the readahead window, allow the read to
+@@ -627,9 +631,13 @@ static void ondemand_readahead(struct readahead_control *ractl,
+ 	expected = round_up(ra->start + ra->size - ra->async_size,
+ 			1UL << order);
+ 	if (index == expected || index == (ra->start + ra->size)) {
+-		ra->start += ra->size;
+-		ra->size = get_next_ra_size(ra, max_pages);
++		ra->start += round_down(ra->size, min_nrpages);
++		ra->size = get_next_ra_size(ra, min_order, max_pages);
+ 		ra->async_size = ra->size;
++
++		VM_BUG_ON(ra->size & ((1UL << min_order) - 1));
++		VM_BUG_ON(ra->start & ((1UL << min_order) - 1));
++
+ 		goto readit;
+ 	}
+ 
+@@ -647,13 +655,19 @@ static void ondemand_readahead(struct readahead_control *ractl,
+ 				max_pages);
+ 		rcu_read_unlock();
+ 
++		start = round_down(start, min_nrpages);
++
++		VM_BUG_ON(start & (min_nrpages - 1));
++		VM_BUG_ON(folio->index & (folio_nr_pages(folio) - 1));
++
+ 		if (!start || start - index > max_pages)
+ 			return;
+ 
+ 		ra->start = start;
+ 		ra->size = start - index;	/* old async_size */
+-		ra->size += req_size;
+-		ra->size = get_next_ra_size(ra, max_pages);
++		VM_BUG_ON(ra->size & (min_nrpages - 1));
++		ra->size += round_up(req_size, min_nrpages);
++		ra->size = get_next_ra_size(ra, min_order, max_pages);
+ 		ra->async_size = ra->size;
+ 		goto readit;
+ 	}
+@@ -690,7 +704,7 @@ static void ondemand_readahead(struct readahead_control *ractl,
+ 
+ initial_readahead:
+ 	ra->start = index;
+-	ra->size = get_init_ra_size(req_size, max_pages);
++	ra->size = get_init_ra_size(req_size, min_order, max_pages);
+ 	ra->async_size = ra->size > req_size ? ra->size - req_size : ra->size;
+ 
+ readit:
+@@ -701,7 +715,7 @@ static void ondemand_readahead(struct readahead_control *ractl,
+ 	 * Take care of maximum IO pages as above.
+ 	 */
+ 	if (index == ra->start && ra->size == ra->async_size) {
+-		add_pages = get_next_ra_size(ra, max_pages);
++		add_pages = get_next_ra_size(ra, min_order, max_pages);
+ 		if (ra->size + add_pages <= max_pages) {
+ 			ra->async_size = add_pages;
+ 			ra->size += add_pages;
+@@ -712,6 +726,7 @@ static void ondemand_readahead(struct readahead_control *ractl,
+ 	}
+ 
+ 	ractl->_index = ra->start;
++	VM_BUG_ON(ractl->_index & (min_nrpages - 1));
+ 	page_cache_ra_order(ractl, ra, order);
+ }
+ 
 -- 
 2.40.1
 
