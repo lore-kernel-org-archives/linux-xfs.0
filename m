@@ -2,123 +2,108 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8FC13EED623
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 304E4EED61A
 	for <linux-xfs@archiver.kernel.org>; Fri, 15 Sep 2023 18:44:37 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S236815AbjIOSoJ (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        id S236560AbjIOSoJ (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
         Fri, 15 Sep 2023 14:44:09 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56326 "EHLO
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56378 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S237078AbjIOSnh (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 15 Sep 2023 14:43:37 -0400
+        with ESMTP id S236842AbjIOSni (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 15 Sep 2023 14:43:38 -0400
 Received: from mout-p-202.mailbox.org (mout-p-202.mailbox.org [IPv6:2001:67c:2050:0:465::202])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id CA948449E;
-        Fri, 15 Sep 2023 11:40:45 -0700 (PDT)
-Received: from smtp1.mailbox.org (smtp1.mailbox.org [IPv6:2001:67c:2050:b231:465::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 93EE6449D;
+        Fri, 15 Sep 2023 11:40:44 -0700 (PDT)
+Received: from smtp202.mailbox.org (smtp202.mailbox.org [10.196.197.202])
         (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
          key-exchange ECDHE (P-384) server-signature RSA-PSS (4096 bits) server-digest SHA256)
         (No client certificate requested)
-        by mout-p-202.mailbox.org (Postfix) with ESMTPS id 4RnNJr2x9Tz9sbr;
-        Fri, 15 Sep 2023 20:39:40 +0200 (CEST)
+        by mout-p-202.mailbox.org (Postfix) with ESMTPS id 4RnNK84kWKz9sWQ;
+        Fri, 15 Sep 2023 20:39:56 +0200 (CEST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=pankajraghav.com;
-        s=MBO0001; t=1694803180;
+        s=MBO0001; t=1694803196;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:cc:mime-version:mime-version:
          content-transfer-encoding:content-transfer-encoding:
          in-reply-to:in-reply-to:references:references;
-        bh=2MKZNT2C20PsiAht17s5oJnb138+SmsAPSOiRhddgUA=;
-        b=OSDk9FFxIdRoXpbbJK7NtCBBEbBqbJXSbQ07rvOBw++aALFk+mh/xxdarUdNR4FVlQRF17
-        67UxVmkLS2OLxkjk+Ll9RummAEi7HciYPbO9Z2cBpMGtt24csMF9mj/Hk7zipaGkJ6uh32
-        Ct8c4gPXLiSnOw01drlPlIaLlnRBVRgWowE8ZQbP6rTJbkllrV9wlYlk84VeHiSctXNOjP
-        abj4O3zIc0YGlB/1ZOy/IwN/jtsEoCNZu2tkZ/e4qSfNNxLpodXBEK3pvwM6c9CuxXqvzD
-        UdDGI/JtrIJGBBxolWDhZOsfoPzAosRAcphz0UPvnj346nrxjmRCHSmp2JtQ2w==
+        bh=rdyOm0E20W1O08Haq+wboPt6O9fnOeXgM7VNGHdT/wc=;
+        b=YWBaYLR8wP7FiydPN5L35PApcVVJVdWdr9JQ0wve5greLck+YNw4kh4nrPZG0I3Irb8ki0
+        iuokOs97BSQFNTgm6YhdORbefrutGfT1KELpkS/3XMgdCJ9oOH4CtnvKt/LPo0PALntzFv
+        p3aHYP5rCYGypOCX8eQG6C8LNjayrhZbhVYUtmATnzcj1I2hW2uQpwW6y/BQVis0Zw0/VG
+        5DwtrDMNHLI60IzV77LR+S96bZ65EDdStUam1CBD+ng7P3QZexi7+Gw76NWeAcNZn30u4d
+        ZF4HNoSpiJ8j4mP9R3KSBmGwbUH3gqxJZAlgZODdsgOKSUDIhWjurPKl2hsTaw==
 From:   Pankaj Raghav <kernel@pankajraghav.com>
 To:     linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org
 Cc:     p.raghav@samsung.com, david@fromorbit.com, da.gomez@samsung.com,
         akpm@linux-foundation.org, linux-kernel@vger.kernel.org,
         willy@infradead.org, djwong@kernel.org, linux-mm@kvack.org,
         chandan.babu@oracle.com, mcgrof@kernel.org, gost.dev@samsung.com
-Subject: [RFC 17/23] readahead: set the minimum ra size in get_(init|next)_ra
-Date:   Fri, 15 Sep 2023 20:38:42 +0200
-Message-Id: <20230915183848.1018717-18-kernel@pankajraghav.com>
+Subject: [RFC 23/23] xfs: set minimum order folio for page cache based on blocksize
+Date:   Fri, 15 Sep 2023 20:38:48 +0200
+Message-Id: <20230915183848.1018717-24-kernel@pankajraghav.com>
 In-Reply-To: <20230915183848.1018717-1-kernel@pankajraghav.com>
 References: <20230915183848.1018717-1-kernel@pankajraghav.com>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-X-Rspamd-Queue-Id: 4RnNJr2x9Tz9sbr
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-From: Luis Chamberlain <mcgrof@kernel.org>
+From: Pankaj Raghav <p.raghav@samsung.com>
 
-Make sure the minimum ra size is based on mapping_min_order in
-get_init_ra() and get_next_ra(). If request ra size is greater than
-mapping_min_order of pages, align it to mapping_min_order of pages.
+Enabling a block size > PAGE_SIZE is only possible if we can
+ensure that the filesystem allocations for the block size is treated
+atomically and we do this with the min order folio requirement for the
+inode. This allows the page cache to treat this inode atomically even
+if on the block layer we may treat it separately.
 
+For instance, on x86 this enables eventual usage of block size > 4k
+so long as you use a sector size set of 4k.
+
+Signed-off-by: Pankaj Raghav <p.raghav@samsung.com>
 Signed-off-by: Luis Chamberlain <mcgrof@kernel.org>
 ---
- mm/readahead.c | 26 ++++++++++++++++++++++++--
- 1 file changed, 24 insertions(+), 2 deletions(-)
+ fs/xfs/xfs_icache.c | 8 ++++++--
+ 1 file changed, 6 insertions(+), 2 deletions(-)
 
-diff --git a/mm/readahead.c b/mm/readahead.c
-index fb5ff180c39e..7c2660815a01 100644
---- a/mm/readahead.c
-+++ b/mm/readahead.c
-@@ -357,9 +357,17 @@ void force_page_cache_ra(struct readahead_control *ractl,
-  * for small size, x 4 for medium, and x 2 for large
-  * for 128k (32 page) max ra
-  * 1-2 page = 16k, 3-4 page 32k, 5-8 page = 64k, > 8 page = 128k initial
-+ *
-+ * For higher order address space requirements we ensure no initial reads
-+ * are ever less than the min number of pages required.
-+ *
-+ * We *always* cap the max io size allowed by the device.
-  */
--static unsigned long get_init_ra_size(unsigned long size, unsigned long max)
-+static unsigned long get_init_ra_size(unsigned long size,
-+				      unsigned int min_order,
-+				      unsigned long max)
+diff --git a/fs/xfs/xfs_icache.c b/fs/xfs/xfs_icache.c
+index aacc7eec2497..81f07503f5ca 100644
+--- a/fs/xfs/xfs_icache.c
++++ b/fs/xfs/xfs_icache.c
+@@ -73,6 +73,7 @@ xfs_inode_alloc(
+ 	xfs_ino_t		ino)
  {
-+	unsigned int min_nrpages = 1UL << min_order;
- 	unsigned long newsize = roundup_pow_of_two(size);
+ 	struct xfs_inode	*ip;
++	int			min_order = 0;
  
- 	if (newsize <= max / 32)
-@@ -369,6 +377,15 @@ static unsigned long get_init_ra_size(unsigned long size, unsigned long max)
- 	else
- 		newsize = max;
+ 	/*
+ 	 * XXX: If this didn't occur in transactions, we could drop GFP_NOFAIL
+@@ -88,7 +89,8 @@ xfs_inode_alloc(
+ 	/* VFS doesn't initialise i_mode or i_state! */
+ 	VFS_I(ip)->i_mode = 0;
+ 	VFS_I(ip)->i_state = 0;
+-	mapping_set_large_folios(VFS_I(ip)->i_mapping);
++	min_order = max(min_order, ilog2(mp->m_sb.sb_blocksize) - PAGE_SHIFT);
++	mapping_set_folio_orders(VFS_I(ip)->i_mapping, min_order, MAX_PAGECACHE_ORDER);
  
-+	if (newsize < min_nrpages) {
-+		if (min_nrpages <= max)
-+			newsize = min_nrpages;
-+		else
-+			newsize = round_up(max, min_nrpages);
-+	}
-+
-+	VM_BUG_ON(newsize & (min_nrpages - 1));
-+
- 	return newsize;
- }
+ 	XFS_STATS_INC(mp, vn_active);
+ 	ASSERT(atomic_read(&ip->i_pincount) == 0);
+@@ -313,6 +315,7 @@ xfs_reinit_inode(
+ 	dev_t			dev = inode->i_rdev;
+ 	kuid_t			uid = inode->i_uid;
+ 	kgid_t			gid = inode->i_gid;
++	int			min_order = 0;
  
-@@ -377,14 +394,19 @@ static unsigned long get_init_ra_size(unsigned long size, unsigned long max)
-  *  return it as the new window size.
-  */
- static unsigned long get_next_ra_size(struct file_ra_state *ra,
-+				      unsigned int min_order,
- 				      unsigned long max)
- {
--	unsigned long cur = ra->size;
-+	unsigned int min_nrpages = 1UL << min_order;
-+	unsigned long cur = max(ra->size, min_nrpages);
-+
-+	cur = round_down(cur, min_nrpages);
+ 	error = inode_init_always(mp->m_super, inode);
  
- 	if (cur < max / 16)
- 		return 4 * cur;
- 	if (cur <= max / 2)
- 		return 2 * cur;
-+
- 	return max;
+@@ -323,7 +326,8 @@ xfs_reinit_inode(
+ 	inode->i_rdev = dev;
+ 	inode->i_uid = uid;
+ 	inode->i_gid = gid;
+-	mapping_set_large_folios(inode->i_mapping);
++	min_order = max(min_order, ilog2(mp->m_sb.sb_blocksize) - PAGE_SHIFT);
++	mapping_set_folio_orders(inode->i_mapping, min_order, MAX_PAGECACHE_ORDER);
+ 	return error;
  }
  
 -- 
