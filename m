@@ -2,31 +2,31 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5FC00EE6457
-	for <linux-xfs@archiver.kernel.org>; Fri, 15 Sep 2023 12:15:13 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2126CEE6457
+	for <linux-xfs@archiver.kernel.org>; Fri, 15 Sep 2023 12:20:28 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234641AbjIOMPQ (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 15 Sep 2023 08:15:16 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36022 "EHLO
+        id S234697AbjIOMUa (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 15 Sep 2023 08:20:30 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44388 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S234647AbjIOMPP (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 15 Sep 2023 08:15:15 -0400
+        with ESMTP id S234691AbjIOMUa (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 15 Sep 2023 08:20:30 -0400
 Received: from casper.infradead.org (casper.infradead.org [IPv6:2001:8b0:10b:1236::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C93192113;
-        Fri, 15 Sep 2023 05:15:09 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id DB774270E;
+        Fri, 15 Sep 2023 05:20:05 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
         d=infradead.org; s=casper.20170209; h=In-Reply-To:Content-Type:MIME-Version:
         References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
         Content-Transfer-Encoding:Content-ID:Content-Description;
-        bh=9cnxnW7ESMZ0JG3goy/SixkPNAd8GwuVMtcmWWhCh8M=; b=hh6qr8cfEsfSY8d709qeQzGUkh
-        UqWbKETiUA6IhftO6ApR9FkEpzteHmM+8ekxGG4ssTV4swSkqsb1TXp7TEXFZmosyzLUBBOxCxCrV
-        lUG8Crmn4dfj7jxugqd8oCM8Q/6igBT/i9H9+7IY7mFu9sfs0InzwaJ8D82+W1GJtsjHT1LAMul5E
-        lGrj/xb0Tk2yDdB26P2rvy6GpP88l0V3thIIOSknLo2fVBpglW/ONxUboUlhJ4vZEzqDRpK53DDT/
-        f4aWb4/Nm9XHkK57VOp7Rr4oRjRAmnJWS0/bZp2jyLt65GoP4gBWCbe9R83/9KVSRXryzj9mZRKd3
-        wJ9rqGzA==;
+        bh=zcm9ZNAum/1OuCWgAEkVFo/U1hKtH0j593KfRJ82drQ=; b=KwvJgFZDEOT76rMuRHZbISa1sV
+        RZE1VGxea/J7HxIU2mbnRkiki3wprSXcNf3J92Y/LvYxcBq47TmwVdEw7iYaypEAht1fBIi8d+ef4
+        qQxWh3TeW1Uu6w4RqTElSTO6jpM1pOR/YcwV0A6ZrsozQ/XGy3hZoS7GPeRkExwMxBbZqdWrLoWtW
+        CxiN+19fzF5gxam3lWayx1PHzl5WJ1gFM949cfpU8gZZYlmma3umCLK9UFJknwDElEjrnV25R/Yth
+        F89C6Js6Isw/FXrMpUwpOFjvgcLAArVa3e64MuUIFvAkK4WPrqhVxvwiMJRxu33P0+/vMigoeAUHR
+        lbMYxD7g==;
 Received: from willy by casper.infradead.org with local (Exim 4.94.2 #2 (Red Hat Linux))
-        id 1qh7iq-009cFS-1s; Fri, 15 Sep 2023 12:14:56 +0000
-Date:   Fri, 15 Sep 2023 13:14:55 +0100
+        id 1qh7ng-009cY9-Hn; Fri, 15 Sep 2023 12:19:56 +0000
+Date:   Fri, 15 Sep 2023 13:19:56 +0100
 From:   Matthew Wilcox <willy@infradead.org>
 To:     Daniel Gomez <da.gomez@samsung.com>
 Cc:     "minchan@kernel.org" <minchan@kernel.org>,
@@ -43,47 +43,31 @@ Cc:     "minchan@kernel.org" <minchan@kernel.org>,
         "linux-mm@kvack.org" <linux-mm@kvack.org>,
         "gost.dev@samsung.com" <gost.dev@samsung.com>,
         Pankaj Raghav <p.raghav@samsung.com>
-Subject: Re: [PATCH 3/6] shmem: account for large order folios
-Message-ID: <ZQRKv6NcfYCr0aWo@casper.infradead.org>
+Subject: Re: [PATCH 4/6] shmem: add order parameter support to
+ shmem_alloc_folio
+Message-ID: <ZQRL7K0rXIzD54aq@casper.infradead.org>
 References: <20230915095042.1320180-1-da.gomez@samsung.com>
- <CGME20230915095128eucas1p2885c3add58d82413d9c1d17832d3d281@eucas1p2.samsung.com>
- <20230915095042.1320180-4-da.gomez@samsung.com>
+ <CGME20230915095129eucas1p1383d75c6d62056afbb20b78a3ec15234@eucas1p1.samsung.com>
+ <20230915095042.1320180-5-da.gomez@samsung.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20230915095042.1320180-4-da.gomez@samsung.com>
+In-Reply-To: <20230915095042.1320180-5-da.gomez@samsung.com>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Fri, Sep 15, 2023 at 09:51:26AM +0000, Daniel Gomez wrote:
-> @@ -1810,13 +1815,14 @@ static void shmem_set_folio_swapin_error(struct inode *inode, pgoff_t index,
->  		return;
->  
->  	folio_wait_writeback(folio);
-> +	num_swap_pages = folio_nr_pages(folio);
->  	delete_from_swap_cache(folio);
->  	/*
->  	 * Don't treat swapin error folio as alloced. Otherwise inode->i_blocks
->  	 * won't be 0 when inode is released and thus trigger WARN_ON(i_blocks)
->  	 * in shmem_evict_inode().
->  	 */
-> -	shmem_recalc_inode(inode, -1, -1);
-> +	shmem_recalc_inode(inode, num_swap_pages, num_swap_pages);
+On Fri, Sep 15, 2023 at 09:51:28AM +0000, Daniel Gomez wrote:
+> In preparation for high order folio support for the write path, add
+> order parameter when allocating a folio. This is on the write path
+> when huge support is not enabled or when it is but the huge page
+> allocation fails, the fallback will take advantage of this too.
 
-Shouldn't that be -num_swap_pages?
+>  static struct folio *shmem_alloc_and_acct_folio(gfp_t gfp, struct inode *inode,
+> -		pgoff_t index, bool huge)
+> +		pgoff_t index, bool huge, unsigned int *order)
 
->  	swap_free(swap);
->  }
->  
-> @@ -1903,7 +1909,7 @@ static int shmem_swapin_folio(struct inode *inode, pgoff_t index,
->  	if (error)
->  		goto failed;
->  
-> -	shmem_recalc_inode(inode, 0, -1);
-> +	shmem_recalc_inode(inode, 0, folio_nr_pages(folio));
->  
->  	if (sgp == SGP_WRITE)
->  		folio_mark_accessed(folio);
+I don't understand why you keep the 'huge' parameter when you could just
+pass PMD_ORDER.  And I don't understand why you're passing a pointer to
+the order instead of just passing the order.
 
-Also here.
