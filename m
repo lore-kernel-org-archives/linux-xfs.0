@@ -2,93 +2,89 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4C60CEED61A
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 87BB0EED621
 	for <linux-xfs@archiver.kernel.org>; Fri, 15 Sep 2023 18:42:29 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S236555AbjIOSmB (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 15 Sep 2023 14:42:01 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34356 "EHLO
+        id S236783AbjIOSmC (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 15 Sep 2023 14:42:02 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46578 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S236864AbjIOSlq (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 15 Sep 2023 14:41:46 -0400
-Received: from mout-p-102.mailbox.org (mout-p-102.mailbox.org [IPv6:2001:67c:2050:0:465::102])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 926A64232;
-        Fri, 15 Sep 2023 11:40:19 -0700 (PDT)
-Received: from smtp202.mailbox.org (smtp202.mailbox.org [10.196.197.202])
+        with ESMTP id S236825AbjIOSlp (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 15 Sep 2023 14:41:45 -0400
+Received: from mout-p-101.mailbox.org (mout-p-101.mailbox.org [80.241.56.151])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 23A344206;
+        Fri, 15 Sep 2023 11:40:22 -0700 (PDT)
+Received: from smtp1.mailbox.org (smtp1.mailbox.org [IPv6:2001:67c:2050:b231:465::1])
         (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
          key-exchange ECDHE (P-384) server-signature RSA-PSS (4096 bits) server-digest SHA256)
         (No client certificate requested)
-        by mout-p-102.mailbox.org (Postfix) with ESMTPS id 4RnNK30KtMz9scy;
-        Fri, 15 Sep 2023 20:39:51 +0200 (CEST)
+        by mout-p-101.mailbox.org (Postfix) with ESMTPS id 4RnNJg0GXfz9spB;
+        Fri, 15 Sep 2023 20:39:31 +0200 (CEST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=pankajraghav.com;
-        s=MBO0001; t=1694803191;
+        s=MBO0001; t=1694803171;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:cc:mime-version:mime-version:
          content-transfer-encoding:content-transfer-encoding:
          in-reply-to:in-reply-to:references:references;
-        bh=yBandIomLcSEx0nPSvrcvRyAh/l4Pv1QDX49YB+LVO8=;
-        b=mYMhQTCPSuTWWpI2a7DZoXA2b4Z2aKNhpG6QuCtm6/2AiRPlUnh5ztr81m0prSgYeB5R2N
-        Ubm+xxqIg8F/FN+j3+bmMvc3lFgXMlwoMTJVlrwlxDrqWuSm2qLZyxjNlwSHqn/pZs5Wqv
-        4Ex7wSgqjRITqAxHX5nWM2terZrh1tp/A7U7RddsO8AguL/6WxFiG+uPzAnJusn8ziCa9d
-        SQjJDxzA7meuf23dlFCDvgDHn4S9+cb3doEld4C/rY7esq1tecmimNp0kyvrO1IowB0WOO
-        pbte7nFfRvCr28HTfjEYrVOMsJlaYLN0vE+DazB0umhH//atGpqlgDbXCGO0mg==
+        bh=591wcX/aNYK1i2+Gpz2G47nBurFy4yzLeb3z8BH/s7c=;
+        b=vcPcMUF61bQ2Sox+rVmcmmFCT5EqJKJRSDzMWuT3qx6Cthz50vAI4MWCBIJ+/FXhvQQT73
+        aUeCtC3yGQQ9yF6AYkBBl/xbuC7mwlJcI6rdrJUfFIxTR6mKGWW+d8riBrqwJycp2FTOK+
+        rSdoOS7Y9ZY2iIqkKtC/1Mzz0BmkWZt3aY7oRXjFsQGGWCf7vZNYfMMwkyXPXqdMYBuSqv
+        YshJdlp/P1VfVHttkHmJg2rDfDIzV5tFlpdaI9rPLXUlzcICnaqjt1ipzU55sAxa6mse0B
+        f3qJ8/OF95BjLF3LDOCPsStttf1OOn3/f/YPMTzUtd/kfRx+XXvz7QdxF3gFbA==
 From:   Pankaj Raghav <kernel@pankajraghav.com>
 To:     linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org
 Cc:     p.raghav@samsung.com, david@fromorbit.com, da.gomez@samsung.com,
         akpm@linux-foundation.org, linux-kernel@vger.kernel.org,
         willy@infradead.org, djwong@kernel.org, linux-mm@kvack.org,
-        chandan.babu@oracle.com, mcgrof@kernel.org, gost.dev@samsung.com,
-        Dave Chinner <dchinner@redhat.com>
-Subject: [RFC 21/23] xfs: expose block size in stat
-Date:   Fri, 15 Sep 2023 20:38:46 +0200
-Message-Id: <20230915183848.1018717-22-kernel@pankajraghav.com>
+        chandan.babu@oracle.com, mcgrof@kernel.org, gost.dev@samsung.com
+Subject: [RFC 14/23] readahead: allocate folios with mapping_min_order in ra_unbounded()
+Date:   Fri, 15 Sep 2023 20:38:39 +0200
+Message-Id: <20230915183848.1018717-15-kernel@pankajraghav.com>
 In-Reply-To: <20230915183848.1018717-1-kernel@pankajraghav.com>
 References: <20230915183848.1018717-1-kernel@pankajraghav.com>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
+X-Rspamd-Queue-Id: 4RnNJg0GXfz9spB
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-From: Dave Chinner <dchinner@redhat.com>
+From: Pankaj Raghav <p.raghav@samsung.com>
 
-For block size larger than page size, the unit of efficient IO is
-the block size, not the page size. Leaving stat() to report
-PAGE_SIZE as the block size causes test programs like fsx to issue
-illegal ranges for operations that require block size alignment
-(e.g. fallocate() insert range). Hence update the preferred IO size
-to reflect the block size in this case.
+Allocate folios with mapping_min_order order in
+page_cache_ra_unbounded(). Also adjust the accounting to take the
+folio_nr_pages in the loop.
 
-Signed-off-by: Dave Chinner <dchinner@redhat.com>
-[mcgrof: forward rebase in consideration for commit
-dd2d535e3fb29d ("xfs: cleanup calculating the stat optimal I/O size")]
-Signed-off-by: Luis Chamberlain <mcgrof@kernel.org>
+Signed-off-by: Pankaj Raghav <p.raghav@samsung.com>
 ---
- fs/xfs/xfs_iops.c | 4 +++-
- 1 file changed, 3 insertions(+), 1 deletion(-)
+ mm/readahead.c | 6 ++++--
+ 1 file changed, 4 insertions(+), 2 deletions(-)
 
-diff --git a/fs/xfs/xfs_iops.c b/fs/xfs/xfs_iops.c
-index 2ededd3f6b8c..080a79a81c46 100644
---- a/fs/xfs/xfs_iops.c
-+++ b/fs/xfs/xfs_iops.c
-@@ -515,6 +515,8 @@ xfs_stat_blksize(
- 	struct xfs_inode	*ip)
- {
- 	struct xfs_mount	*mp = ip->i_mount;
-+	unsigned long	default_size = max_t(unsigned long, PAGE_SIZE,
-+					     mp->m_sb.sb_blocksize);
+diff --git a/mm/readahead.c b/mm/readahead.c
+index 5c4e7ee64dc1..2a9e9020b7cf 100644
+--- a/mm/readahead.c
++++ b/mm/readahead.c
+@@ -250,7 +250,8 @@ void page_cache_ra_unbounded(struct readahead_control *ractl,
+ 			continue;
+ 		}
  
- 	/*
- 	 * If the file blocks are being allocated from a realtime volume, then
-@@ -543,7 +545,7 @@ xfs_stat_blksize(
- 			return 1U << mp->m_allocsize_log;
+-		folio = filemap_alloc_folio(gfp_mask, 0);
++		folio = filemap_alloc_folio(gfp_mask,
++					    mapping_min_folio_order(mapping));
+ 		if (!folio)
+ 			break;
+ 		if (filemap_add_folio(mapping, folio, index + i,
+@@ -264,7 +265,8 @@ void page_cache_ra_unbounded(struct readahead_control *ractl,
+ 		if (i == nr_to_read - lookahead_size)
+ 			folio_set_readahead(folio);
+ 		ractl->_workingset |= folio_test_workingset(folio);
+-		ractl->_nr_pages++;
++		ractl->_nr_pages += folio_nr_pages(folio);
++		i += folio_nr_pages(folio) - 1;
  	}
  
--	return PAGE_SIZE;
-+	return default_size;
- }
- 
- STATIC int
+ 	/*
 -- 
 2.40.1
 
