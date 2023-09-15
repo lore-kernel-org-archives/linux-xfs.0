@@ -2,45 +2,45 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A5827EED621
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5B722EED620
 	for <linux-xfs@archiver.kernel.org>; Fri, 15 Sep 2023 18:40:53 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S236619AbjIOSk0 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 15 Sep 2023 14:40:26 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59178 "EHLO
+        id S236447AbjIOSkZ (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 15 Sep 2023 14:40:25 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47902 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S236979AbjIOSkE (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 15 Sep 2023 14:40:04 -0400
+        with ESMTP id S236936AbjIOSj7 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 15 Sep 2023 14:39:59 -0400
 Received: from mout-p-201.mailbox.org (mout-p-201.mailbox.org [IPv6:2001:67c:2050:0:465::201])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C863F4C06;
-        Fri, 15 Sep 2023 11:39:20 -0700 (PDT)
-Received: from smtp2.mailbox.org (smtp2.mailbox.org [10.196.197.2])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id CC4FF49DA;
+        Fri, 15 Sep 2023 11:39:11 -0700 (PDT)
+Received: from smtp202.mailbox.org (smtp202.mailbox.org [10.196.197.202])
         (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
          key-exchange ECDHE (P-384) server-signature RSA-PSS (4096 bits) server-digest SHA256)
         (No client certificate requested)
-        by mout-p-201.mailbox.org (Postfix) with ESMTPS id 4RnNJL12VYz9sTm;
-        Fri, 15 Sep 2023 20:39:14 +0200 (CEST)
+        by mout-p-201.mailbox.org (Postfix) with ESMTPS id 4RnNJD57K5z9sW2;
+        Fri, 15 Sep 2023 20:39:08 +0200 (CEST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=pankajraghav.com;
-        s=MBO0001; t=1694803154;
+        s=MBO0001; t=1694803148;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:cc:mime-version:mime-version:
          content-transfer-encoding:content-transfer-encoding:
          in-reply-to:in-reply-to:references:references;
-        bh=qYagWwQkQyBo9FUt+Wer66h9atojNQ2DWonnQYgzdlw=;
-        b=sLkequQ37CkU3k8W1DxxgB42DpoCWPVkiye6O36mnozEtbvveaSpVg02AQr9gRNrsG1StT
-        zaL/G92Pk3Q9LxMD3dVHNbwZKUF2uE0xvuy7ixhERejXQHjckMQRVs4nVmKTcZ8B4ZlwxF
-        dilFyBmIzK3geH/C55u1tMzeAId6PQM20aaVRonwgd4u+BGaOLBKOVd7hyimLCr/FrViWj
-        YBvOAyGNd9SQBuLQuz8bCS/+MMijxud/FLCWs8ijotAjn63u2NB1NyM8wO0y+syInk6R+Q
-        VvQVj3aV97v3/+RLzo4tjrdpk9/BPKcdYe+8EcQcR29kNlkW4twTvSq1m+u2PQ==
+        bh=2grCxcqK8FKtyCgTOlZ0MTRPcri5sYlchrmngCOgl8U=;
+        b=j/WoRm7kqZ2NoZ5OjDxKOQdGsBPUtApoPN7xyVBhTkrQsnhPqztuwiVWc2+UMXFhXmucnn
+        yV+5CVecVrEDZ/RgmtLrE4lsA0aMvZFUc6TXMrY/E0TUv11fr40etSwDNW4JstoTE3PGdc
+        wzKsqHxrr54nqKGxraGFN5jT4guAQfbru8I95DPokA3ewiwi5qz50a3aIhjBlV9pFFIWnV
+        /3j3RMZ/xhGVgtsWXbHphYwPMEotMMqn+UED9KX4/9IgzyhYXmjjJeptgYB1o9oG1BDw5K
+        SfyVH8Havcutw80kiMU8+RDv5/rYTA2MFLmQBkfN08ZgPi5O8qpzk1LIGJ1oUw==
 From:   Pankaj Raghav <kernel@pankajraghav.com>
 To:     linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org
 Cc:     p.raghav@samsung.com, david@fromorbit.com, da.gomez@samsung.com,
         akpm@linux-foundation.org, linux-kernel@vger.kernel.org,
         willy@infradead.org, djwong@kernel.org, linux-mm@kvack.org,
         chandan.babu@oracle.com, mcgrof@kernel.org, gost.dev@samsung.com
-Subject: [RFC 08/23] filemap: align the index to mapping_min_order in filemap_get_folios_tag()
-Date:   Fri, 15 Sep 2023 20:38:33 +0200
-Message-Id: <20230915183848.1018717-9-kernel@pankajraghav.com>
+Subject: [RFC 06/23] mm: call xas_set_order() in replace_page_cache_folio()
+Date:   Fri, 15 Sep 2023 20:38:31 +0200
+Message-Id: <20230915183848.1018717-7-kernel@pankajraghav.com>
 In-Reply-To: <20230915183848.1018717-1-kernel@pankajraghav.com>
 References: <20230915183848.1018717-1-kernel@pankajraghav.com>
 MIME-Version: 1.0
@@ -51,29 +51,45 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: Luis Chamberlain <mcgrof@kernel.org>
 
-Align the index to the mapping_min_order number of pages while setting
-the XA_STATE in filemap_get_folios_tag().
+Call xas_set_order() in replace_page_cache_folio() for non hugetlb
+pages.
 
 Signed-off-by: Luis Chamberlain <mcgrof@kernel.org>
 ---
- mm/filemap.c | 4 +++-
- 1 file changed, 3 insertions(+), 1 deletion(-)
+ mm/filemap.c | 7 +++++++
+ 1 file changed, 7 insertions(+)
 
 diff --git a/mm/filemap.c b/mm/filemap.c
-index 15bc810bfc89..21e1341526ab 100644
+index 4dee24b5b61c..33de71bfa953 100644
 --- a/mm/filemap.c
 +++ b/mm/filemap.c
-@@ -2280,7 +2280,9 @@ EXPORT_SYMBOL(filemap_get_folios_contig);
- unsigned filemap_get_folios_tag(struct address_space *mapping, pgoff_t *start,
- 			pgoff_t end, xa_mark_t tag, struct folio_batch *fbatch)
+@@ -815,12 +815,14 @@ EXPORT_SYMBOL(file_write_and_wait_range);
+ void replace_page_cache_folio(struct folio *old, struct folio *new)
  {
--	XA_STATE(xas, &mapping->i_pages, *start);
+ 	struct address_space *mapping = old->mapping;
 +	unsigned int min_order = mapping_min_folio_order(mapping);
-+	unsigned int nrpages = 1UL << min_order;
-+	XA_STATE(xas, &mapping->i_pages, round_down(*start, nrpages));
- 	struct folio *folio;
+ 	void (*free_folio)(struct folio *) = mapping->a_ops->free_folio;
+ 	pgoff_t offset = old->index;
+ 	XA_STATE(xas, &mapping->i_pages, offset);
  
- 	rcu_read_lock();
+ 	VM_BUG_ON_FOLIO(!folio_test_locked(old), old);
+ 	VM_BUG_ON_FOLIO(!folio_test_locked(new), new);
++	VM_BUG_ON_FOLIO(folio_order(new) != folio_order(old), new);
+ 	VM_BUG_ON_FOLIO(new->mapping, new);
+ 
+ 	folio_get(new);
+@@ -829,6 +831,11 @@ void replace_page_cache_folio(struct folio *old, struct folio *new)
+ 
+ 	mem_cgroup_migrate(old, new);
+ 
++	if (!folio_test_hugetlb(new)) {
++		VM_BUG_ON_FOLIO(folio_order(new) < min_order, new);
++		xas_set_order(&xas, offset, folio_order(new));
++	}
++
+ 	xas_lock_irq(&xas);
+ 	xas_store(&xas, new);
+ 
 -- 
 2.40.1
 
