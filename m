@@ -2,30 +2,30 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 50273CD37B1
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4060CCD37AF
 	for <linux-xfs@archiver.kernel.org>; Fri, 15 Sep 2023 21:33:56 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S237768AbjIOVd2 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        id S237774AbjIOVd2 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
         Fri, 15 Sep 2023 17:33:28 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39910 "EHLO
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39984 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S237722AbjIOVdM (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 15 Sep 2023 17:33:12 -0400
+        with ESMTP id S237743AbjIOVdO (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 15 Sep 2023 17:33:14 -0400
 Received: from bombadil.infradead.org (bombadil.infradead.org [IPv6:2607:7c80:54:3::133])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D1479B8;
-        Fri, 15 Sep 2023 14:33:07 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9E54DF7;
+        Fri, 15 Sep 2023 14:33:08 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
         d=infradead.org; s=bombadil.20210309; h=Sender:Content-Transfer-Encoding:
-        MIME-Version:References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:
-        Reply-To:Content-Type:Content-ID:Content-Description;
-        bh=R2D5ERHgA50rjnGDJd3UTlmr28nE94IPRsx6Q30NTNM=; b=IioY1+MgNEocbawTB+OnCHuQPq
-        m334jTZ/rCCDiPzly1hKTAnORYCPXPfXiFu35XxAtsJh70qoLVkXLWWdO79+mD7WR432rlQebZrTL
-        cYwrdeEgZUkSN3sqaVas6b/eMzrthfiXWQnmOA1+sT7ytv5z33SyWfO59607OFtHrFeJ2lZSGVkxH
-        +MEHOarKFO7fXw36ZP5Fi2MZv/HiawQB8OuB1KcPEsdCTHz3XDjrAVwB0n8rNubNFaQx8l88wsHcF
-        lQqTYpYp1EkQybTcS+lydA1PawBqxqbzMb72Itu7Xlcc6pLwY6e97lZ4gggq007lKBQE0yY/f5xQo
-        gyCQ8WmQ==;
+        MIME-Version:Message-Id:Date:Subject:Cc:To:From:Reply-To:Content-Type:
+        Content-ID:Content-Description:In-Reply-To:References;
+        bh=yV0EfbURKJh4PDYaNYUDtuXfuSlOqQYcsl+NeN4c8pU=; b=LXYofCU61UT766npBrb7d4bqPz
+        I8maRneOkt/otlO6AmfY3gCmoxvXu+qP88lIcpICnNwKOVhF0uPVrLBxoRdTfghz+apCgLs3Em1Bi
+        EBDweNYcg6qZW98TkDkbtz4pz0Yee6Gec+a9mzOB480fC/vME2k7TqfvWSuLtmpm+IvrW9Ru1LcXM
+        DRlcbHbLchQM7mhA0g2ZWfn+46YQ3tK8mAfsYYLq6Q/Min/o1D6XsLBbY2YfsTB29+S4tR0Ojkor5
+        zJyWDdA367BmuJ1kAH3JTyp7nBwpF8Mnbax0PT+6B22hutkF7ShUPUfVOs3AaPpMIJSKXVk/G7rfk
+        dhYE93fw==;
 Received: from mcgrof by bombadil.infradead.org with local (Exim 4.96 #2 (Red Hat Linux))
-        id 1qhGQq-00BQnY-1P;
+        id 1qhGQq-00BQn6-0A;
         Fri, 15 Sep 2023 21:32:56 +0000
 From:   Luis Chamberlain <mcgrof@kernel.org>
 To:     hch@infradead.org, djwong@kernel.org, dchinner@redhat.com,
@@ -36,12 +36,10 @@ Cc:     willy@infradead.org, brauner@kernel.org, hare@suse.de,
         linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
         linux-block@vger.kernel.org, p.raghav@samsung.com,
         da.gomez@samsung.com, dan.helmick@samsung.com, mcgrof@kernel.org
-Subject: [RFC v2 08/10] nvme: add awun / nawun sanity check
-Date:   Fri, 15 Sep 2023 14:32:52 -0700
-Message-Id: <20230915213254.2724586-9-mcgrof@kernel.org>
+Subject: [RFC v2 00/10] bdev: LBS devices support to coexist with buffer-heads
+Date:   Fri, 15 Sep 2023 14:32:44 -0700
+Message-Id: <20230915213254.2724586-1-mcgrof@kernel.org>
 X-Mailer: git-send-email 2.38.1
-In-Reply-To: <20230915213254.2724586-1-mcgrof@kernel.org>
-References: <20230915213254.2724586-1-mcgrof@kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Sender: Luis Chamberlain <mcgrof@infradead.org>
@@ -49,90 +47,145 @@ Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-AWUN/NAWUN control the atomicity of command execution in relation to
-other commands. They impose inter-command serialization of writing of
-blocks of data to the NVM and prevent blocks of data ending up on the
-NVM containing partial data from one new command and partial data from
-one or more other new commands.
+Christoph added CONFIG_BUFFER_HEAD on v6.1 enabling a world where we can
+live without buffer-heads. When we opt into that world we end up also
+using the address space operations of the block device cache using
+iomap. Since iomap supports higher order folios it means then that block
+devices which do use the iomap aops can end up having a logical block
+size or physical block size greater than PAGE_SIZE. We refer to these as
+LBS devices. This in turn allows filesystems which support bs > 4k to be
+enabled on a 4k PAGE_SIZE world on LBS block devices. This alows LBS
+device then to take advantage of the recenlty posted work today to enable
+LBS support for filesystems [0].
 
-Parse awun / nawun to verify at least the physical block size
-exposed is not greater than this value.
+However, an issue is that disabling CONFIG_BUFFER_HEAD in practice is not viable
+for many Linux distributions since it also means disabling support for most
+filesystems other than btrfs and XFS. So we either support larger order folios
+on buffer-heads, or we draw up a solution to enable co-existence. Since at LSFMM
+2023 it was decided we would not support larger order folios on buffer-heads,
+this takes the approach to help support co-existence between using buffer-head
+based filesystems and using the iomap aops dynamically when needed on block
+devices. Folks who want to enhance buffer-heads to support larger order folios
+can do so in parallel to this effort. This just allows iomap based filesystems
+to support LBS block devices today while also allowing buffer-head based
+filesystems to be used on them as well the LBS device also supports a
+logical block of PAGE_SIZE.
 
-The special case of awun / nawun == 0xffff tells us we can ramp
-up to mdts.
+LBS devices can come in a few flavors. Adopting larger LBA format enables a
+logical block sizes to be > 4k. Different block device mechanisms which can also
+increase a block device's physical block size to be larger than 4k while still
+retaining backward compatibility with a logical block size of 4k. An example is
+NVMe drives with an LBA format of 4k and an npwg and awupf | nawupf of 16k. With
+this you a logical block size of 4k and a physical block size of 16k. Drives
+which do this may be a reality as larger Indirection Units (IUs) on QLC adopt
+IUs larger than 4k so to better support larger capacity. At least OCP 2.0 does
+require you to expose the IU through npwg. Whether or not a device supports the
+same value for awupf | nawupf (large atomic) is device specific. Devices which
+*do* sport an LBA format of 4k and npwg & awupf | nawupf >= 16k essentially can
+benefit from LBS support such as with XFS [1].
 
-Suggested-by: Dan Helmick <dan.helmick@samsung.com>
-Signed-off-by: Luis Chamberlain <mcgrof@kernel.org>
----
- drivers/nvme/host/core.c | 21 +++++++++++++++++++++
+While LBS devices come to market folks can also experiment with NVMe today
+what some of this might be like by ignoring power failure and faking the larger
+atomic up to the NVMe awun. When the NVMe awun is 0xffff it means awun is
+MDTS, so for those drives, in practice you can experiment today with LBS
+up to MDTS with real drives. This is documented on the kdevops documentation
+for LBS by using something like nvme_core.debug_large_atomics=16384 [2].
+
+To experiment with larger LBA formtas you can also use kdevops and enable
+CONFIG_QEMU_ENABLE_EXTRA_DRIVE_LARGEIO. That enables a ton of drives with
+logical and physical block sizes >= 4k up to a desriable max target for
+experimentation. Since filesystems today only support up to 32k sector sizes,
+in practice you may only want to experiment up to 32k physical / logical.
+
+Support for 64k sector sizes requires an XFS format change, which is something
+Daniel Gomez has experimental patches for, in case folks are interested in
+messing with.
+
+Patch 6 could probably be squashed with patch 5, but I wanted to be
+explicit about this, as this should be decided with the community.
+
+There might be a better way to do this than do deal with the switching
+of the aops dynamically, ideas welcomed!
+
+The NVMe debug patches are posted for pure experimentation purposes, but
+the AWUN patch might be welcomed upsteram. Unless folks really want it,
+the goal here is *not* to upstream the support for the debug module
+parameter nvme_core.debug_large_atomics=16384. On a v3 RFC I can drop those
+patches and just aim to simplify the logic to support LBA formats > ps.
+
+Changes since v1 RFC:
+
+  o Modified the approach to accept we can have different aops per super block
+    on the block device cache as suggested by Christoph
+  o Try to allow dynamically switching between iomap aops and buffer-head aops
+  o Use the iomap aops if the target block size order or min order > ps
+  o Loosten restrictions on set_blocksize() so to just check for the iomap
+    aops for now, making it easy to allow buffer-heads to later add support
+    for bs > ps as well
+  o Use buffer-head aops first always unless the min order is > ps so to always
+    support buffer-head based filesystems
+  o Adopt a flag for buffer-heads so to check for support, buffer-heads based
+    filesystems cannot be used while an LBS filesystem is being used, for
+    instance
+  o Allow iomap aops to be used when the physical block size is > ps as well
+  o NVMe changes to experiment with LBS devices without power failure
+  o NVMe changes to support LBS devices
+
+[0] https://lkml.kernel.org/r/20230608032404.1887046-1-mcgrof@kernel.org
+[1] https://lkml.kernel.org/r/20230915183848.1018717-1-kernel@pankajraghav.com
+[2] https://github.com/linux-kdevops/kdevops/blob/master/docs/lbs.md
+
+Luis Chamberlain (10):
+  bdev: rename iomap aops
+  bdev: dynamically set aops to enable LBS support
+  bdev: increase bdev max blocksize depending on the aops used
+  filesystems: add filesytem buffer-head flag
+  bdev: allow to switch between bdev aops
+  bdev: simplify coexistance
+  nvme: enhance max supported LBA format check
+  nvme: add awun / nawun sanity check
+  nvme: add nvme_core.debug_large_atomics to force high awun as phys_bs
+  nvme: enable LBS support
+
+ block/bdev.c             | 73 ++++++++++++++++++++++++++++++++++++++--
+ block/blk.h              |  1 +
+ block/fops.c             | 14 ++++----
+ drivers/nvme/host/core.c | 70 +++++++++++++++++++++++++++++++++++---
  drivers/nvme/host/nvme.h |  1 +
- 2 files changed, 22 insertions(+)
+ fs/adfs/super.c          |  2 +-
+ fs/affs/super.c          |  2 +-
+ fs/befs/linuxvfs.c       |  2 +-
+ fs/bfs/inode.c           |  2 +-
+ fs/efs/super.c           |  2 +-
+ fs/exfat/super.c         |  2 +-
+ fs/ext2/super.c          |  2 +-
+ fs/ext4/super.c          |  7 ++--
+ fs/f2fs/super.c          |  2 +-
+ fs/fat/namei_msdos.c     |  2 +-
+ fs/fat/namei_vfat.c      |  2 +-
+ fs/freevxfs/vxfs_super.c |  2 +-
+ fs/gfs2/ops_fstype.c     |  4 +--
+ fs/hfs/super.c           |  2 +-
+ fs/hfsplus/super.c       |  2 +-
+ fs/isofs/inode.c         |  2 +-
+ fs/jfs/super.c           |  2 +-
+ fs/minix/inode.c         |  2 +-
+ fs/nilfs2/super.c        |  2 +-
+ fs/ntfs/super.c          |  2 +-
+ fs/ntfs3/super.c         |  2 +-
+ fs/ocfs2/super.c         |  2 +-
+ fs/omfs/inode.c          |  2 +-
+ fs/qnx4/inode.c          |  2 +-
+ fs/qnx6/inode.c          |  2 +-
+ fs/reiserfs/super.c      |  2 +-
+ fs/super.c               |  3 +-
+ fs/sysv/super.c          |  4 +--
+ fs/udf/super.c           |  2 +-
+ fs/ufs/super.c           |  2 +-
+ include/linux/blkdev.h   |  7 ++++
+ include/linux/fs.h       |  1 +
+ 37 files changed, 189 insertions(+), 48 deletions(-)
 
-diff --git a/drivers/nvme/host/core.c b/drivers/nvme/host/core.c
-index 0365f260c514..7a3c51ac13bd 100644
---- a/drivers/nvme/host/core.c
-+++ b/drivers/nvme/host/core.c
-@@ -1911,6 +1911,7 @@ static void nvme_update_disk_info(struct gendisk *disk,
- 	sector_t capacity = nvme_lba_to_sect(ns, le64_to_cpu(id->nsze));
- 	u32 bs = 1U << ns->lba_shift;
- 	u32 atomic_bs, phys_bs, io_opt = 0;
-+	u32 awun = 0, awun_bs = 0;
- 
- 	if (!nvme_lba_shift_supported(ns)) {
- 		capacity = 0;
-@@ -1931,6 +1932,15 @@ static void nvme_update_disk_info(struct gendisk *disk,
- 			atomic_bs = (1 + le16_to_cpu(id->nawupf)) * bs;
- 		else
- 			atomic_bs = (1 + ns->ctrl->subsys->awupf) * bs;
-+		if (id->nsfeat & NVME_NS_FEAT_ATOMICS && id->nawun)
-+			awun = (1 + le16_to_cpu(id->nawun));
-+		else
-+			awun = (1 + ns->ctrl->subsys->awun);
-+		/* Indicates MDTS can be used */
-+		if (awun == 0xffff)
-+			awun_bs = ns->ctrl->max_hw_sectors << SECTOR_SHIFT;
-+		else
-+			awun_bs = awun * bs;
- 	}
- 
- 	if (id->nsfeat & NVME_NS_FEAT_IO_OPT) {
-@@ -1940,6 +1950,16 @@ static void nvme_update_disk_info(struct gendisk *disk,
- 		io_opt = bs * (1 + le16_to_cpu(id->nows));
- 	}
- 
-+	if (awun) {
-+		phys_bs = min(awun_bs, phys_bs);
-+
-+		/*
-+		 * npwg and nows could be > awun, in such cases users should
-+		 * be aware of out of order reads/writes as npwg and nows
-+		 * are purely performance optimizations.
-+		 */
-+	}
-+
- 	blk_queue_logical_block_size(disk->queue, bs);
- 	/*
- 	 * Linux filesystems assume writing a single physical block is
-@@ -2785,6 +2805,7 @@ static int nvme_init_subsystem(struct nvme_ctrl *ctrl, struct nvme_id_ctrl *id)
- 		kfree(subsys);
- 		return -EINVAL;
- 	}
-+	subsys->awun = le16_to_cpu(id->awun);
- 	subsys->awupf = le16_to_cpu(id->awupf);
- 	nvme_mpath_default_iopolicy(subsys);
- 
-diff --git a/drivers/nvme/host/nvme.h b/drivers/nvme/host/nvme.h
-index f35647c470af..071ec52d83ea 100644
---- a/drivers/nvme/host/nvme.h
-+++ b/drivers/nvme/host/nvme.h
-@@ -410,6 +410,7 @@ struct nvme_subsystem {
- 	u8			cmic;
- 	enum nvme_subsys_type	subtype;
- 	u16			vendor_id;
-+	u16			awun;
- 	u16			awupf;	/* 0's based awupf value. */
- 	struct ida		ns_ida;
- #ifdef CONFIG_NVME_MULTIPATH
 -- 
 2.39.2
 
