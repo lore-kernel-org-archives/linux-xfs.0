@@ -2,30 +2,30 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1BBD1CD37BE
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 54230C2B9FB
 	for <linux-xfs@archiver.kernel.org>; Fri, 15 Sep 2023 22:48:43 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S238128AbjIOWoR (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 15 Sep 2023 18:44:17 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57778 "EHLO
+        id S238093AbjIOWoP (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 15 Sep 2023 18:44:15 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57726 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S238113AbjIOWn4 (ORCPT
+        with ESMTP id S238101AbjIOWn4 (ORCPT
         <rfc822;linux-xfs@vger.kernel.org>); Fri, 15 Sep 2023 18:43:56 -0400
 Received: from bombadil.infradead.org (bombadil.infradead.org [IPv6:2607:7c80:54:3::133])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id EFD172719;
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id CBB5E2716;
         Fri, 15 Sep 2023 15:43:49 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
         d=infradead.org; s=bombadil.20210309; h=Sender:Content-Transfer-Encoding:
-        MIME-Version:References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:
-        Reply-To:Content-Type:Content-ID:Content-Description;
-        bh=Cw7RdOPRUkFp9dSTX3luqJaGnpI4xwoQeOJGqBWR3yI=; b=1rmGZrmQs0g1DKXfgxLAklopAe
-        hlHs1CUpNdjbnNFHADeESgt/6Vhl4duyfWJfd4Q4DqZhJEDCXIohWQ+xV5q6vXlqM4C/+hM3D1O3Q
-        SwdqMuin1I8pjQdZVkuDAnCcy1hpH+aqLmYGzojA6vtCKn8l5wDEJqaiv7JyxJ9v+IyG9VHu5GOCP
-        TDZSQsLAhwMkPOsb30jEZw/XSRiqfzp0YsDrTdxh3PI1k2COGy8dywW8yjBv0xwqjlxt/qWVKsKZl
-        y9SMV97NUMeWJP80xqcfTSA7HtOND5LWzvqRQ+ERzBdK/tkTSieB2KIOiiQFxn4gcM02gDuZW4SFx
-        eR5tBK9A==;
+        Content-Type:MIME-Version:Message-Id:Date:Subject:Cc:To:From:Reply-To:
+        Content-ID:Content-Description:In-Reply-To:References;
+        bh=7Au7GQlleAmj5M8e5CX+OM2MfEjyMcPNx8bLn2lT0zk=; b=i0rFTNFIrhpMybyhkJGOmDs4xP
+        oBHzLbvVUXzpm9ZTd/EcCT2Iw9SuWQ79s/UnmZ4WPBsOAOwEYHTSyLdvf6kcvui4XpKnR82hw/5XY
+        t67KZYZUm1S0b104aYYCMFlC5dSPvzaBnDgKSKHBb9OmFUFlBRRTFM1OnoT+BjuYEqFWJzEYaGIKF
+        XiejQ/wmAcDv5FV8u7wNAlc1idUDBYvGEDs4c+Y8af5dUGeSRk0jMFCkWjGP+dXMaBm4U9gV+y0W9
+        UFnqi+X2sRQRqRrJxB6k88JcyoS1qMrCd/M4F8O96+1kXBnPhSWFunceDmRB7FW4H/UWEZi7sFiCF
+        XhmBZLQA==;
 Received: from mcgrof by bombadil.infradead.org with local (Exim 4.96 #2 (Red Hat Linux))
-        id 1qhHXM-00BUtO-2p;
+        id 1qhHXM-00BUtK-2O;
         Fri, 15 Sep 2023 22:43:44 +0000
 From:   Luis Chamberlain <mcgrof@kernel.org>
 To:     axboe@kernel.dk, agk@redhat.com, snitzer@kernel.org,
@@ -38,43 +38,49 @@ Cc:     patches@lists.linux.dev, linux-block@vger.kernel.org,
         drbd-dev@lists.linbit.com, linux-kernel@vger.kernel.org,
         willy@infradead.org, hare@suse.de, p.raghav@samsung.com,
         da.gomez@samsung.com, rohan.puri@samsung.com,
-        rpuri.linux@gmail.com, kbusch@kernel.org, mcgrof@kernel.org,
-        Christoph Hellwig <hch@lst.de>
-Subject: [PATCH v3 2/4] iomap: simplify iomap_init() with PAGE_SECTORS
-Date:   Fri, 15 Sep 2023 15:43:41 -0700
-Message-Id: <20230915224343.2740317-3-mcgrof@kernel.org>
+        rpuri.linux@gmail.com, kbusch@kernel.org, mcgrof@kernel.org
+Subject: [PATCH v3 0/4] block: simplify with PAGE_SECTORS_SHIFT
+Date:   Fri, 15 Sep 2023 15:43:39 -0700
+Message-Id: <20230915224343.2740317-1-mcgrof@kernel.org>
 X-Mailer: git-send-email 2.38.1
-In-Reply-To: <20230915224343.2740317-1-mcgrof@kernel.org>
-References: <20230915224343.2740317-1-mcgrof@kernel.org>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
 Sender: Luis Chamberlain <mcgrof@infradead.org>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Replace common constants with generic versions. This produces no
-functional changes.
+Just spinning these low hanging fruit patches I forgot about.
 
-Reviewed-by: Christoph Hellwig <hch@lst.de>
-Signed-off-by: Luis Chamberlain <mcgrof@kernel.org>
----
- fs/iomap/buffered-io.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+Changes on v3:
 
-diff --git a/fs/iomap/buffered-io.c b/fs/iomap/buffered-io.c
-index ae8673ce08b1..1a16c0e5d190 100644
---- a/fs/iomap/buffered-io.c
-+++ b/fs/iomap/buffered-io.c
-@@ -1985,7 +1985,7 @@ EXPORT_SYMBOL_GPL(iomap_writepages);
- 
- static int __init iomap_init(void)
- {
--	return bioset_init(&iomap_ioend_bioset, 4 * (PAGE_SIZE / SECTOR_SIZE),
-+	return bioset_init(&iomap_ioend_bioset, 4 * PAGE_SECTORS,
- 			   offsetof(struct iomap_ioend, io_inline_bio),
- 			   BIOSET_NEED_BVECS);
- }
+ o Add tags for Reviews/acks
+ o rebase onto next-20230914
+ o Fixes as suggested by Johannes Thumshirn:
+   - drop not-needed parens on dm bufio
+   - use SECTOR_MASK instead of PAGE_SECTORS - 1 for the zram driver
+ o Drop shmem patches as they are already merged / modified
+
+Changes on v2:
+                                                                                                                                                                                              
+ o keep iomap math visibly simple                                                                                                                                                             
+ o Add tags for Reviews/acks                                                                                                                                                                  
+ o rebase onto next-20230525 
+
+Luis Chamberlain (4):
+  drbd: use PAGE_SECTORS_SHIFT and PAGE_SECTORS
+  iomap: simplify iomap_init() with PAGE_SECTORS
+  dm bufio: simplify by using PAGE_SECTORS_SHIFT
+  zram: use generic PAGE_SECTORS and PAGE_SECTORS_SHIFT
+
+ drivers/block/drbd/drbd_bitmap.c |  4 ++--
+ drivers/block/zram/zram_drv.c    | 15 ++++++---------
+ drivers/block/zram/zram_drv.h    |  2 --
+ drivers/md/dm-bufio.c            |  4 ++--
+ fs/iomap/buffered-io.c           |  2 +-
+ 5 files changed, 11 insertions(+), 16 deletions(-)
+
 -- 
 2.39.2
 
