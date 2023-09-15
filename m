@@ -2,160 +2,87 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DCC96EE644B
-	for <linux-xfs@archiver.kernel.org>; Fri, 15 Sep 2023 09:53:54 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B0920EE644C
+	for <linux-xfs@archiver.kernel.org>; Fri, 15 Sep 2023 09:54:02 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233892AbjIOJx5 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 15 Sep 2023 05:53:57 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60312 "EHLO
+        id S233975AbjIOJyG (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 15 Sep 2023 05:54:06 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52374 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233814AbjIOJx4 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 15 Sep 2023 05:53:56 -0400
-Received: from mailout2.w1.samsung.com (mailout2.w1.samsung.com [210.118.77.12])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8E7E04696
-        for <linux-xfs@vger.kernel.org>; Fri, 15 Sep 2023 02:51:37 -0700 (PDT)
-Received: from eucas1p1.samsung.com (unknown [182.198.249.206])
-        by mailout2.w1.samsung.com (KnoxPortal) with ESMTP id 20230915095127euoutp02c6f13bebed01dff599b35c6a9a9d4de4~FCbAtB8rq1230712307euoutp02I
-        for <linux-xfs@vger.kernel.org>; Fri, 15 Sep 2023 09:51:27 +0000 (GMT)
-DKIM-Filter: OpenDKIM Filter v2.11.0 mailout2.w1.samsung.com 20230915095127euoutp02c6f13bebed01dff599b35c6a9a9d4de4~FCbAtB8rq1230712307euoutp02I
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=samsung.com;
-        s=mail20170921; t=1694771487;
-        bh=pQ5HIMyPnnwhcYJ76rc1mPPc+k+o81B2sKXtPyg4zdw=;
-        h=From:To:CC:Subject:Date:In-Reply-To:References:From;
-        b=dRnQE4X3b17aD2oqDXZH5BTfLC+mfYSYB3NR2dMRflrnrl1BtrmPzKFgseY6oQpbQ
-         ZzkRwa4nIp88Qnirv0XY2Ve9K2j2PL4EIuwJZYmEoBYkHzlKcZliBSpnqcK4cO017M
-         XzHLOtBtiZ3MG74YPPkZIIJXV1cCDwNNHE5/9D/o=
-Received: from eusmges1new.samsung.com (unknown [203.254.199.242]) by
-        eucas1p2.samsung.com (KnoxPortal) with ESMTP id
-        20230915095126eucas1p2632b3b07d57634dee3bc87e2526e1769~FCbAZwO811725217252eucas1p2z;
-        Fri, 15 Sep 2023 09:51:26 +0000 (GMT)
-Received: from eucas1p2.samsung.com ( [182.198.249.207]) by
-        eusmges1new.samsung.com (EUCPMTA) with SMTP id F2.9A.42423.E1924056; Fri, 15
-        Sep 2023 10:51:26 +0100 (BST)
-Received: from eusmtrp2.samsung.com (unknown [182.198.249.139]) by
-        eucas1p2.samsung.com (KnoxPortal) with ESMTPA id
-        20230915095126eucas1p2cf75674dab8a81228f493a7200f4a1ba~FCbACyp_W0866108661eucas1p2R;
-        Fri, 15 Sep 2023 09:51:26 +0000 (GMT)
-Received: from eusmgms1.samsung.com (unknown [182.198.249.179]) by
-        eusmtrp2.samsung.com (KnoxPortal) with ESMTP id
-        20230915095126eusmtrp29f2fa2307f1978fafd648c484cebcafa~FCa-9WV9v1712217122eusmtrp2z;
-        Fri, 15 Sep 2023 09:51:26 +0000 (GMT)
-X-AuditID: cbfec7f2-a51ff7000002a5b7-f4-6504291e5557
-Received: from eusmtip2.samsung.com ( [203.254.199.222]) by
-        eusmgms1.samsung.com (EUCPMTA) with SMTP id B1.3B.10549.E1924056; Fri, 15
-        Sep 2023 10:51:26 +0100 (BST)
-Received: from CAMSVWEXC01.scsc.local (unknown [106.1.227.71]) by
-        eusmtip2.samsung.com (KnoxPortal) with ESMTPA id
-        20230915095126eusmtip299bf0302eaf2d7781e72b80611f92e41~FCa-x_3a21112711127eusmtip21;
-        Fri, 15 Sep 2023 09:51:26 +0000 (GMT)
-Received: from CAMSVWEXC02.scsc.local (2002:6a01:e348::6a01:e348) by
-        CAMSVWEXC01.scsc.local (2002:6a01:e347::6a01:e347) with Microsoft SMTP
-        Server (TLS) id 15.0.1497.2; Fri, 15 Sep 2023 10:51:25 +0100
-Received: from CAMSVWEXC02.scsc.local ([::1]) by CAMSVWEXC02.scsc.local
-        ([fe80::3c08:6c51:fa0a:6384%13]) with mapi id 15.00.1497.012; Fri, 15 Sep
-        2023 10:51:25 +0100
-From:   Daniel Gomez <da.gomez@samsung.com>
-To:     "minchan@kernel.org" <minchan@kernel.org>,
-        "senozhatsky@chromium.org" <senozhatsky@chromium.org>,
-        "axboe@kernel.dk" <axboe@kernel.dk>,
-        "djwong@kernel.org" <djwong@kernel.org>,
-        "willy@infradead.org" <willy@infradead.org>,
-        "hughd@google.com" <hughd@google.com>,
-        "akpm@linux-foundation.org" <akpm@linux-foundation.org>,
-        "mcgrof@kernel.org" <mcgrof@kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>,
-        "linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>,
-        "linux-fsdevel@vger.kernel.org" <linux-fsdevel@vger.kernel.org>,
-        "linux-mm@kvack.org" <linux-mm@kvack.org>
-CC:     "gost.dev@samsung.com" <gost.dev@samsung.com>,
-        Pankaj Raghav <p.raghav@samsung.com>,
-        Daniel Gomez <da.gomez@samsung.com>
-Subject: [PATCH 2/6] shmem: drop BLOCKS_PER_PAGE macro
-Thread-Topic: [PATCH 2/6] shmem: drop BLOCKS_PER_PAGE macro
-Thread-Index: AQHZ57owSgjKzHCSYUqzwv9vQRCtyw==
-Date:   Fri, 15 Sep 2023 09:51:24 +0000
-Message-ID: <20230915095042.1320180-3-da.gomez@samsung.com>
-In-Reply-To: <20230915095042.1320180-1-da.gomez@samsung.com>
-Accept-Language: en-US, en-GB
-Content-Language: en-US
-X-MS-Has-Attach: 
-X-MS-TNEF-Correlator: 
-x-ms-exchange-messagesentrepresentingtype: 1
-x-ms-exchange-transport-fromentityheader: Hosted
-x-originating-ip: [106.110.32.103]
-Content-Type: text/plain; charset="iso-8859-1"
-Content-Transfer-Encoding: quoted-printable
-MIME-Version: 1.0
-X-Brightmail-Tracker: H4sIAAAAAAAAA01SfVCLcRzvtz179pSbe1rRj2a0K9S06s65B7WrcPfQddd5u0OHnZ6rWMvt
-        afJ+ORzlpLxdrVLpZSuFJpNUunV6QURRhN7GqFxEE8toPXP67/Pyffl8f/fD2PxmzlwsVpFA
-        KRUyuQh1QvSNP5/6Cr0Ryv/ag8VE9o0ylLj29hxKtBtnEu9HUxGi9rWYqKltQYj26myUeFf2
-        h0NUT1Rxia6094AoHhvhEvcqrqKEZTwbDeaRWUnPEDJPpyJvaX3I9lYVqStNRknd6Hku2Zxh
-        QchvOmEEttUpMIqSx+6jlH7SnU4xZj2y9xNnv+VYOicJmJAU4IhBfCnUlkyAFOCE8XEtgHWf
-        h1kM+Q6gxvwKYci3SZJhQv+15DZa7YYGwOTC7v9VDfphO3kMoF7fZyclAFb3lnJs/SjuDeta
-        dFyb4YpncWBDwWlgM9j4UVj2QT2VywVfBvXPU1g27IqvhL0VL9gMlsB3D/sndQxDcC944g5l
-        k3mTJT/SLkzJjnggHBlPtMkAnwf7S35xmelu8LUxl8Wc4AyvZtWwGTwbWqv77Kctga2dRsBg
-        f3i7qM7+SiI4cTrfnlICuy5dRBkshsX5Q2wmgjNsyTRO3QtxqyPUm56xbXkgvhoammOZOS5w
-        sKmSy2AB/HM3l5UGxOpp8dTTVqinrVBPW5EHkFLgRqnouGiKDlBQiRJaFkerFNGSXfFxOjD5
-        2R5Zm0arQM7gV4kBsDBgABBji1x5aBCL4vOiZAcOUsr4HUqVnKINwB1DRG48cVDLLj4eLUug
-        9lDUXkr5z2VhjnOTWH6CHp+siDeCSBfKsqFyvYPWvL08vujKj4Qkl6/ybto3RhTu/URrXm3x
-        MvV4hhVIIxVyaU5ZQLRoFurhcXZNyMuh39LL9aH9Bq/kAjJg6UbfA7maRN9mzwvPTSiiOeI1
-        Z+zLTYct/ML4PfXrb3R4NqYWcMW7NXXCorYxrPejx/U3QYuGQv1Uiu5TrsMh6e73vhjn+1ee
-        WRiydaBWePikoONhz6oRE2dtmCD96KLRF8sHex3U1szC47+s5s4a6chAeWx98ZmhVYdTEsL8
-        Q7fRL+dcDOa1GTZ3BgrT162IWD7WMMN90wJtt1E+0GG9H9FVrikUp/4WV433fTYEhwPdIb0I
-        oWNkAT5sJS37C3e+/ZnbAwAA
-X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFjrEKsWRmVeSWpSXmKPExsVy+t/xe7pymiypBjs6uSzmrF/DZrH6bj+b
-        xeUnfBZPP/WxWOy9pW2xZ+9JFovLu+awWdxb85/VYtefHewWNyY8ZbRY9vU9u8XujYvYLH7/
-        mMPmwOsxu+Eii8eCTaUem1doeVw+W+qxaVUnm8emT5PYPU7M+M3i8XmTXABHlJ5NUX5pSapC
-        Rn5xia1StKGFkZ6hpYWekYmlnqGxeayVkamSvp1NSmpOZllqkb5dgl7Gt20sBS9ZK343TmRt
-        YHzO0sXIySEhYCIx/9g/MFtIYCmjROcrX4i4jMTGL1dZIWxhiT/Xuti6GLmAaj4ySqw8sh/K
-        OcMo8eHFLhYIZyWjxIY/n5hBWtgENCX2ndzEDpIQEZjNKnF4cQcjSIJZoE5izbNZYPuEBcwk
-        tl3qYgKxRQSsJR5svMoMYetJ3Dv1CCjOwcEioCrRsj0VJMwLVPJ9wmSwsBCQPWu6F4jJKWAj
-        8f5HOUgFo4CsxKOVv9ghFolL3HoynwniAQGJJXvOM0PYohIvH/+DekxH4uz1J4wQtoHE1qX7
-        oIGiJPGnYyHUwXoSN6ZOYYOwtSWWLXzNDHGNoMTJmU9YJjBKz0KybhaSlllIWmYhaVnAyLKK
-        USS1tDg3PbfYUK84Mbe4NC9dLzk/dxMjMDFtO/Zz8w7Gea8+6h1iZOJgPMQowcGsJMLLZsuU
-        KsSbklhZlVqUH19UmpNafIjRFBhAE5mlRJPzgakxryTe0MzA1NDEzNLA1NLMWEmc17OgI1FI
-        ID2xJDU7NbUgtQimj4mDU6qBqbB6f//C1Zwhr5xnrz01bdr361KegsJSb2a9fxgxwfbigj8B
-        k5g/cLGX8vz/cWXK7O8lYdPO77n5KOTx5AIFvp816suWr1D3YtgfEq3tLHg9wXTK9CdbAqSq
-        o/bF2Vkyvd++v22h3qve/pKSsjdmuybrrjvQ8+Oo2dZJ2kvXC888rbH6TERFjc38gP7Qp/6z
-        zzv1Cfq8E9vmJr8qw2HJ0gnJSSkR3HdKbXoX+XzZZ3+h+/UE1bwOzR1K/XPN/15KeRpWvcXk
-        Wlm7tf+TD7vfnVinP/U6j+Yk8/XzHTIVnu2WU1qrmr4v8Is3++FW5VNp3a6zRepbRO/Eaa24
-        dPW/wVybc3lSVY65Tptmrf776qESS3FGoqEWc1FxIgB/H/s+1QMAAA==
-X-CMS-MailID: 20230915095126eucas1p2cf75674dab8a81228f493a7200f4a1ba
-X-Msg-Generator: CA
-X-RootMTR: 20230915095126eucas1p2cf75674dab8a81228f493a7200f4a1ba
-X-EPHeader: CA
-CMS-TYPE: 201P
-X-CMS-RootMailID: 20230915095126eucas1p2cf75674dab8a81228f493a7200f4a1ba
-References: <20230915095042.1320180-1-da.gomez@samsung.com>
-        <CGME20230915095126eucas1p2cf75674dab8a81228f493a7200f4a1ba@eucas1p2.samsung.com>
+        with ESMTP id S233894AbjIOJyD (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 15 Sep 2023 05:54:03 -0400
+Received: from mxhk.zte.com.cn (mxhk.zte.com.cn [63.216.63.35])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3264E3C05;
+        Fri, 15 Sep 2023 02:51:37 -0700 (PDT)
+Received: from mse-fl1.zte.com.cn (unknown [10.5.228.132])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by mxhk.zte.com.cn (FangMail) with ESMTPS id 4Rn8bH0Gh7z4xPYf;
+        Fri, 15 Sep 2023 17:51:23 +0800 (CST)
+Received: from szxlzmapp01.zte.com.cn ([10.5.231.85])
+        by mse-fl1.zte.com.cn with SMTP id 38F9or5h006739;
+        Fri, 15 Sep 2023 17:50:53 +0800 (+08)
+        (envelope-from cheng.lin130@zte.com.cn)
+Received: from mapi (szxlzmapp01[null])
+        by mapi (Zmail) with MAPI id mid14;
+        Fri, 15 Sep 2023 17:50:56 +0800 (CST)
+Date:   Fri, 15 Sep 2023 17:50:56 +0800 (CST)
+X-Zmail-TransId: 2b0365042900227-d4888
+X-Mailer: Zmail v1.0
+Message-ID: <202309151750563356840@zte.com.cn>
+In-Reply-To: <ZQJIyx419cw24ppF@dread.disaster.area>
+References: 202309131744458239465@zte.com.cn,ZQJIyx419cw24ppF@dread.disaster.area
+Mime-Version: 1.0
+From:   <cheng.lin130@zte.com.cn>
+To:     <david@fromorbit.com>
+Cc:     <djwong@kernel.org>, <linux-xfs@vger.kernel.org>,
+        <linux-kernel@vger.kernel.org>, <jiang.yong5@zte.com.cn>,
+        <wang.liang82@zte.com.cn>, <liu.dong3@zte.com.cn>
+Subject: =?UTF-8?B?UmU6IFtQQVRDSCB2M10geGZzOiBpbnRyb2R1Y2UgcHJvdGVjdGlvbiBmb3IgZHJvcCBubGluaw==?=
+Content-Type: text/plain;
+        charset="UTF-8"
+X-MAIL: mse-fl1.zte.com.cn 38F9or5h006739
+X-Fangmail-Gw-Spam-Type: 0
+X-Fangmail-Anti-Spam-Filtered: true
+X-Fangmail-MID-QID: 6504291B.000/4Rn8bH0Gh7z4xPYf
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-The commit [1] replaced all BLOCKS_PER_PAGE in favor of the
-generic PAGE_SECTORS but definition was not removed. Drop it
-as unused macro.
-
-[1] e09764cff44b5 ("shmem: quota support").
-
-Signed-off-by: Daniel Gomez <da.gomez@samsung.com>
-Reviewed-by: Luis Chamberlain <mcgrof@kernel.org>
----
- mm/shmem.c | 1 -
- 1 file changed, 1 deletion(-)
-
-diff --git a/mm/shmem.c b/mm/shmem.c
-index 13c27c343820..8b3823e4d344 100644
---- a/mm/shmem.c
-+++ b/mm/shmem.c
-@@ -84,7 +84,6 @@ static struct vfsmount *shm_mnt;
-=20
- #include "internal.h"
-=20
--#define BLOCKS_PER_PAGE  (PAGE_SIZE/512)
- #define VM_ACCT(size)    (PAGE_ALIGN(size) >> PAGE_SHIFT)
-=20
- /* Pretend that each entry is of this size in directory's i_size */
---=20
-2.39.2
+> On Wed, Sep 13, 2023 at 05:44:45PM +0800, cheng.lin130@zte.com.cn wrote:
+> > From: Cheng Lin <cheng.lin130@zte.com.cn>
+> >
+> > When abnormal drop_nlink are detected on the inode,
+> > shutdown filesystem, to avoid corruption propagation.
+> >
+> > Signed-off-by: Cheng Lin <cheng.lin130@zte.com.cn>
+> > ---
+> >  fs/xfs/xfs_inode.c | 9 +++++++++
+> >  1 file changed, 9 insertions(+)
+> >
+> > diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
+> > index 9e62cc500..40cc106ae 100644
+> > --- a/fs/xfs/xfs_inode.c
+> > +++ b/fs/xfs/xfs_inode.c
+> > @@ -919,6 +919,15 @@ xfs_droplink(
+> >      xfs_trans_t *tp,
+> >      xfs_inode_t *ip)
+> >  {
+> > +
+> > +    if (VFS_I(ip)->i_nlink == 0) {
+> > +        xfs_alert(ip->i_mount,
+> > +              "%s: Deleting inode %llu with no links.",
+> > +              __func__, ip->i_ino);
+> > +        tp->t_flags |= XFS_TRANS_DIRTY;
+> Marking the transaction dirty is not necessary.
+> Otherwise this seems fine.
+Another strategy: 
+Set nlink to an invalid value(like XFS_NLINK_PINNED), and
+Complete this transaction before shutdown fs. To make sure
+nlink not be zero. If the nlink of a directory are zero, it may
+be cleaned up.
+Is that appropriate?
+> -Dave.
+> --
+> Dave Chinner
+> david@fromorbit.com
