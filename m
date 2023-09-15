@@ -2,146 +2,108 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 005A1EED624
-	for <linux-xfs@archiver.kernel.org>; Fri, 15 Sep 2023 18:43:01 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1ECDFEED627
+	for <linux-xfs@archiver.kernel.org>; Fri, 15 Sep 2023 18:43:02 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S236867AbjIOSmg (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        id S236886AbjIOSmg (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
         Fri, 15 Sep 2023 14:42:36 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33348 "EHLO
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58670 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S236981AbjIOSmS (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 15 Sep 2023 14:42:18 -0400
+        with ESMTP id S237003AbjIOSmY (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 15 Sep 2023 14:42:24 -0400
 Received: from mout-p-102.mailbox.org (mout-p-102.mailbox.org [80.241.56.152])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 52A324695;
-        Fri, 15 Sep 2023 11:40:54 -0700 (PDT)
-Received: from smtp2.mailbox.org (smtp2.mailbox.org [IPv6:2001:67c:2050:b231:465::2])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 768214680;
+        Fri, 15 Sep 2023 11:39:05 -0700 (PDT)
+Received: from smtp102.mailbox.org (smtp102.mailbox.org [10.196.197.102])
         (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
          key-exchange ECDHE (P-384) server-signature RSA-PSS (4096 bits) server-digest SHA256)
         (No client certificate requested)
-        by mout-p-102.mailbox.org (Postfix) with ESMTPS id 4RnNJt60W1z9sTy;
-        Fri, 15 Sep 2023 20:39:42 +0200 (CEST)
+        by mout-p-102.mailbox.org (Postfix) with ESMTPS id 4RnNJ229ddz9sb6;
+        Fri, 15 Sep 2023 20:38:58 +0200 (CEST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=pankajraghav.com;
-        s=MBO0001; t=1694803182;
+        s=MBO0001; t=1694803138;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:cc:mime-version:mime-version:
          content-transfer-encoding:content-transfer-encoding:
          in-reply-to:in-reply-to:references:references;
-        bh=LywLEuPyM84LvnszU9bu3yYyFXSjfbQxmSaZo0Anuqo=;
-        b=sPBj7+lPJjN1O52TPN3bPIvCgfHWewlpa4lD2gPArpjJc42qjZjYB0ivxNzVoPtgWUV2X9
-        baXqoaVEy427TKtHRyh9CuvB1dGk4UoKPWdumhCVK/Zj7hjnyV/9B5lvcIJez7O/RYML7a
-        7BbpTXkSIEysivDSIn8uG2RYC8Ka8TO0B9P19XqbBg8Pj8JfaNqqdtPoeNMsD2lb4sD0eY
-        cFRHPxdkrbiSJb37sUgM291kELuaAdt9gvlmR97ZVvHYeejas3FF4Zlhd05N2OYrwNWsrp
-        2xibhXY+ahHHlr/15+T/ltQEQlsnkfS5en8VhTucFA1GfYp0wjO7bbHAmSHM9Q==
+        bh=brBNMMPFZ5PlP6sQBgu5Kl4G5NsTW4oPgHcishpd4rM=;
+        b=H7FtLCnsLxyZnEESEUmlYWwS3HUNf7y+ztfA2o6k0H9UD8DCi3iwUcQnp3b4jG22OqxQbD
+        QFM0/lErD72ozGWznO0iOZsF/atrGWdf8N0u0R3Hkq8bk4gUT8aW8HcT+jRBFgWwrxd5Uu
+        Vus+AuRm5kbgPF1yfrMOE6cGiK4o8d/jv+ywz+Xqn4cOuOZ1fLpob2vRdUi+oU+M3pmIxD
+        7LGMNt7s1tjXR7rXizanhCgb+FofT9t8HGdpJGNM+Kvt4gFJP8E3aU4RSYvWNgOL3dM2Cw
+        rRU9mtKpZUVYEbkvs1/Q3spYJvwdrLhTQ+XZxP+V81DGW/fDC1ukMiA9Fhc+fQ==
 From:   Pankaj Raghav <kernel@pankajraghav.com>
 To:     linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org
 Cc:     p.raghav@samsung.com, david@fromorbit.com, da.gomez@samsung.com,
         akpm@linux-foundation.org, linux-kernel@vger.kernel.org,
         willy@infradead.org, djwong@kernel.org, linux-mm@kvack.org,
         chandan.babu@oracle.com, mcgrof@kernel.org, gost.dev@samsung.com
-Subject: [RFC 18/23] readahead: align ra start and size to mapping_min_order in ondemand_ra()
-Date:   Fri, 15 Sep 2023 20:38:43 +0200
-Message-Id: <20230915183848.1018717-19-kernel@pankajraghav.com>
+Subject: [RFC 02/23] pagemap: use mapping_min_order in fgf_set_order()
+Date:   Fri, 15 Sep 2023 20:38:27 +0200
+Message-Id: <20230915183848.1018717-3-kernel@pankajraghav.com>
 In-Reply-To: <20230915183848.1018717-1-kernel@pankajraghav.com>
 References: <20230915183848.1018717-1-kernel@pankajraghav.com>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-X-Rspamd-Queue-Id: 4RnNJt60W1z9sTy
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-From: Luis Chamberlain <mcgrof@kernel.org>
+From: Pankaj Raghav <p.raghav@samsung.com>
 
-Align the ra->start and ra->size to mapping_min_order in
-ondemand_readahead(). This will ensure the folios added to the
-page_cache will be aligned to mapping_min_order number of pages.
+fgf_set_order() encodes optimal order in fgp flags. Set it to at least
+mapping_min_order from the page cache. Default to the old behaviour if
+min_order is not set.
 
-Signed-off-by: Luis Chamberlain <mcgrof@kernel.org>
+Signed-off-by: Pankaj Raghav <p.raghav@samsung.com>
 ---
- mm/readahead.c | 29 ++++++++++++++++++++++-------
- 1 file changed, 22 insertions(+), 7 deletions(-)
+ fs/iomap/buffered-io.c  | 2 +-
+ include/linux/pagemap.h | 9 +++++----
+ 2 files changed, 6 insertions(+), 5 deletions(-)
 
-diff --git a/mm/readahead.c b/mm/readahead.c
-index 7c2660815a01..03fa6f6c8145 100644
---- a/mm/readahead.c
-+++ b/mm/readahead.c
-@@ -605,7 +605,11 @@ static void ondemand_readahead(struct readahead_control *ractl,
- 	unsigned long add_pages;
- 	pgoff_t index = readahead_index(ractl);
- 	pgoff_t expected, prev_index;
--	unsigned int order = folio ? folio_order(folio) : 0;
-+	unsigned int min_order = mapping_min_folio_order(ractl->mapping);
-+	unsigned int min_nrpages = 1UL << min_order;
-+	unsigned int order = folio ? folio_order(folio) : min_order;
-+
-+	VM_BUG_ON(ractl->_index & (min_nrpages - 1));
+diff --git a/fs/iomap/buffered-io.c b/fs/iomap/buffered-io.c
+index ae8673ce08b1..d4613fd550c4 100644
+--- a/fs/iomap/buffered-io.c
++++ b/fs/iomap/buffered-io.c
+@@ -549,7 +549,7 @@ struct folio *iomap_get_folio(struct iomap_iter *iter, loff_t pos, size_t len)
  
- 	/*
- 	 * If the request exceeds the readahead window, allow the read to
-@@ -627,9 +631,13 @@ static void ondemand_readahead(struct readahead_control *ractl,
- 	expected = round_up(ra->start + ra->size - ra->async_size,
- 			1UL << order);
- 	if (index == expected || index == (ra->start + ra->size)) {
--		ra->start += ra->size;
--		ra->size = get_next_ra_size(ra, max_pages);
-+		ra->start += round_down(ra->size, min_nrpages);
-+		ra->size = get_next_ra_size(ra, min_order, max_pages);
- 		ra->async_size = ra->size;
-+
-+		VM_BUG_ON(ra->size & ((1UL << min_order) - 1));
-+		VM_BUG_ON(ra->start & ((1UL << min_order) - 1));
-+
- 		goto readit;
- 	}
+ 	if (iter->flags & IOMAP_NOWAIT)
+ 		fgp |= FGP_NOWAIT;
+-	fgp |= fgf_set_order(len);
++	fgp |= fgf_set_order(iter->inode->i_mapping, len);
  
-@@ -647,13 +655,19 @@ static void ondemand_readahead(struct readahead_control *ractl,
- 				max_pages);
- 		rcu_read_unlock();
+ 	return __filemap_get_folio(iter->inode->i_mapping, pos >> PAGE_SHIFT,
+ 			fgp, mapping_gfp_mask(iter->inode->i_mapping));
+diff --git a/include/linux/pagemap.h b/include/linux/pagemap.h
+index d2b5308cc59e..5d392366420a 100644
+--- a/include/linux/pagemap.h
++++ b/include/linux/pagemap.h
+@@ -620,6 +620,7 @@ typedef unsigned int __bitwise fgf_t;
  
-+		start = round_down(start, min_nrpages);
-+
-+		VM_BUG_ON(start & (min_nrpages - 1));
-+		VM_BUG_ON(folio->index & (folio_nr_pages(folio) - 1));
-+
- 		if (!start || start - index > max_pages)
- 			return;
+ /**
+  * fgf_set_order - Encode a length in the fgf_t flags.
++ * @mapping: address_space struct from the inode
+  * @size: The suggested size of the folio to create.
+  *
+  * The caller of __filemap_get_folio() can use this to suggest a preferred
+@@ -629,13 +630,13 @@ typedef unsigned int __bitwise fgf_t;
+  * due to alignment constraints, memory pressure, or the presence of
+  * other folios at nearby indices.
+  */
+-static inline fgf_t fgf_set_order(size_t size)
++static inline fgf_t fgf_set_order(struct address_space *mapping, size_t size)
+ {
+ 	unsigned int shift = ilog2(size);
++	unsigned int min_order = mapping_min_folio_order(mapping);
++	int order = max(min_order, shift - PAGE_SHIFT);
  
- 		ra->start = start;
- 		ra->size = start - index;	/* old async_size */
--		ra->size += req_size;
--		ra->size = get_next_ra_size(ra, max_pages);
-+		VM_BUG_ON(ra->size & (min_nrpages - 1));
-+		ra->size += round_up(req_size, min_nrpages);
-+		ra->size = get_next_ra_size(ra, min_order, max_pages);
- 		ra->async_size = ra->size;
- 		goto readit;
- 	}
-@@ -690,7 +704,7 @@ static void ondemand_readahead(struct readahead_control *ractl,
- 
- initial_readahead:
- 	ra->start = index;
--	ra->size = get_init_ra_size(req_size, max_pages);
-+	ra->size = get_init_ra_size(req_size, min_order, max_pages);
- 	ra->async_size = ra->size > req_size ? ra->size - req_size : ra->size;
- 
- readit:
-@@ -701,7 +715,7 @@ static void ondemand_readahead(struct readahead_control *ractl,
- 	 * Take care of maximum IO pages as above.
- 	 */
- 	if (index == ra->start && ra->size == ra->async_size) {
--		add_pages = get_next_ra_size(ra, max_pages);
-+		add_pages = get_next_ra_size(ra, min_order, max_pages);
- 		if (ra->size + add_pages <= max_pages) {
- 			ra->async_size = add_pages;
- 			ra->size += add_pages;
-@@ -712,6 +726,7 @@ static void ondemand_readahead(struct readahead_control *ractl,
- 	}
- 
- 	ractl->_index = ra->start;
-+	VM_BUG_ON(ractl->_index & (min_nrpages - 1));
- 	page_cache_ra_order(ractl, ra, order);
+-	if (shift <= PAGE_SHIFT)
+-		return 0;
+-	return (__force fgf_t)((shift - PAGE_SHIFT) << 26);
++	return (__force fgf_t)((order) << 26);
  }
  
+ void *filemap_get_entry(struct address_space *mapping, pgoff_t index);
 -- 
 2.40.1
 
