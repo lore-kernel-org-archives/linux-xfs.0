@@ -2,30 +2,30 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 709DFCD37AA
-	for <linux-xfs@archiver.kernel.org>; Fri, 15 Sep 2023 21:33:55 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 50273CD37B1
+	for <linux-xfs@archiver.kernel.org>; Fri, 15 Sep 2023 21:33:56 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S237653AbjIOVd1 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 15 Sep 2023 17:33:27 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39968 "EHLO
+        id S237768AbjIOVd2 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 15 Sep 2023 17:33:28 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39910 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S237742AbjIOVdO (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 15 Sep 2023 17:33:14 -0400
+        with ESMTP id S237722AbjIOVdM (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 15 Sep 2023 17:33:12 -0400
 Received: from bombadil.infradead.org (bombadil.infradead.org [IPv6:2607:7c80:54:3::133])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 06A57B8;
-        Fri, 15 Sep 2023 14:33:09 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D1479B8;
+        Fri, 15 Sep 2023 14:33:07 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
         d=infradead.org; s=bombadil.20210309; h=Sender:Content-Transfer-Encoding:
         MIME-Version:References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:
         Reply-To:Content-Type:Content-ID:Content-Description;
-        bh=ywg9faqG2BCnT1wKSQTUuxdInS3gshCAShEIiU6RHjQ=; b=qZS2ofRnqhN2ypoQAYEMnwcIRF
-        HZUE+++FdwsDen9M6IhyoAQ+Y7IzzG+N6V5wdQXwdMhZwhUZOOOkXUyJn5dH5RZELYsDhvqfIyCnA
-        ZjYUrf9zEzLClRiJF4F8RlTgboxEj7+SeYzajsKRRaiu9LdY0ic7q1ZAKdUj1flkfYBD5mf2ru396
-        o6BEKaGXoMw51wobZ87Zc80mRgP73fRjgEVpPf3KoqmioNBUm5UeaqAtE4ddC30ZIYqkwxU6RlDOC
-        28YjopC1+/y6tkHKPQpwssGCKPPuBy05mqO5WZzTekd+HM/K74fIDkiSrHBRW+fDUWOH85cjqgyBi
-        gUde0Spg==;
+        bh=R2D5ERHgA50rjnGDJd3UTlmr28nE94IPRsx6Q30NTNM=; b=IioY1+MgNEocbawTB+OnCHuQPq
+        m334jTZ/rCCDiPzly1hKTAnORYCPXPfXiFu35XxAtsJh70qoLVkXLWWdO79+mD7WR432rlQebZrTL
+        cYwrdeEgZUkSN3sqaVas6b/eMzrthfiXWQnmOA1+sT7ytv5z33SyWfO59607OFtHrFeJ2lZSGVkxH
+        +MEHOarKFO7fXw36ZP5Fi2MZv/HiawQB8OuB1KcPEsdCTHz3XDjrAVwB0n8rNubNFaQx8l88wsHcF
+        lQqTYpYp1EkQybTcS+lydA1PawBqxqbzMb72Itu7Xlcc6pLwY6e97lZ4gggq007lKBQE0yY/f5xQo
+        gyCQ8WmQ==;
 Received: from mcgrof by bombadil.infradead.org with local (Exim 4.96 #2 (Red Hat Linux))
-        id 1qhGQq-00BQnS-0y;
+        id 1qhGQq-00BQnY-1P;
         Fri, 15 Sep 2023 21:32:56 +0000
 From:   Luis Chamberlain <mcgrof@kernel.org>
 To:     hch@infradead.org, djwong@kernel.org, dchinner@redhat.com,
@@ -36,9 +36,9 @@ Cc:     willy@infradead.org, brauner@kernel.org, hare@suse.de,
         linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
         linux-block@vger.kernel.org, p.raghav@samsung.com,
         da.gomez@samsung.com, dan.helmick@samsung.com, mcgrof@kernel.org
-Subject: [RFC v2 05/10] bdev: allow to switch between bdev aops
-Date:   Fri, 15 Sep 2023 14:32:49 -0700
-Message-Id: <20230915213254.2724586-6-mcgrof@kernel.org>
+Subject: [RFC v2 08/10] nvme: add awun / nawun sanity check
+Date:   Fri, 15 Sep 2023 14:32:52 -0700
+Message-Id: <20230915213254.2724586-9-mcgrof@kernel.org>
 X-Mailer: git-send-email 2.38.1
 In-Reply-To: <20230915213254.2724586-1-mcgrof@kernel.org>
 References: <20230915213254.2724586-1-mcgrof@kernel.org>
@@ -49,137 +49,90 @@ Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Now that we have annotations for filesystems which require buffer-heads we
-can use that flag to verify if we can use the filesystem on the target
-block devices which require higher order folios. A filesystems which requires
-buffer-heads cannot be used on block devices which have a logical block size
-greater than PAGE_SIZE. We also want to allow to use buffer-head filesystems
-on block devices and at a later time then unmount and switch to a filesystem
-which supports bs > PAGE_SIZE, even if the logical block size of the block
-device is PAGE_SIZE, and this requires iomap. Provide helpers to do all these
-checks and resets the aops to iomap when needed.
+AWUN/NAWUN control the atomicity of command execution in relation to
+other commands. They impose inter-command serialization of writing of
+blocks of data to the NVM and prevent blocks of data ending up on the
+NVM containing partial data from one new command and partial data from
+one or more other new commands.
 
-Leaving iomap in place after an umount would not make such block devices usable
-for buffer-head filesystems so we must reset the aops to buffer-heads also
-on unmount.
+Parse awun / nawun to verify at least the physical block size
+exposed is not greater than this value.
 
+The special case of awun / nawun == 0xffff tells us we can ramp
+up to mdts.
+
+Suggested-by: Dan Helmick <dan.helmick@samsung.com>
 Signed-off-by: Luis Chamberlain <mcgrof@kernel.org>
 ---
- block/bdev.c           | 55 ++++++++++++++++++++++++++++++++++++++++++
- fs/super.c             |  3 ++-
- include/linux/blkdev.h |  7 ++++++
- 3 files changed, 64 insertions(+), 1 deletion(-)
+ drivers/nvme/host/core.c | 21 +++++++++++++++++++++
+ drivers/nvme/host/nvme.h |  1 +
+ 2 files changed, 22 insertions(+)
 
-diff --git a/block/bdev.c b/block/bdev.c
-index 0d685270cd34..bf3cfc02aaf9 100644
---- a/block/bdev.c
-+++ b/block/bdev.c
-@@ -150,6 +150,59 @@ static int bdev_bsize_limit(struct block_device *bdev)
- 	return PAGE_SIZE;
- }
+diff --git a/drivers/nvme/host/core.c b/drivers/nvme/host/core.c
+index 0365f260c514..7a3c51ac13bd 100644
+--- a/drivers/nvme/host/core.c
++++ b/drivers/nvme/host/core.c
+@@ -1911,6 +1911,7 @@ static void nvme_update_disk_info(struct gendisk *disk,
+ 	sector_t capacity = nvme_lba_to_sect(ns, le64_to_cpu(id->nsze));
+ 	u32 bs = 1U << ns->lba_shift;
+ 	u32 atomic_bs, phys_bs, io_opt = 0;
++	u32 awun = 0, awun_bs = 0;
  
-+#ifdef CONFIG_BUFFER_HEAD
-+static void bdev_aops_set(struct block_device *bdev,
-+			  const struct address_space_operations *aops)
-+{
-+	kill_bdev(bdev);
-+	bdev->bd_inode->i_data.a_ops = aops;
-+}
+ 	if (!nvme_lba_shift_supported(ns)) {
+ 		capacity = 0;
+@@ -1931,6 +1932,15 @@ static void nvme_update_disk_info(struct gendisk *disk,
+ 			atomic_bs = (1 + le16_to_cpu(id->nawupf)) * bs;
+ 		else
+ 			atomic_bs = (1 + ns->ctrl->subsys->awupf) * bs;
++		if (id->nsfeat & NVME_NS_FEAT_ATOMICS && id->nawun)
++			awun = (1 + le16_to_cpu(id->nawun));
++		else
++			awun = (1 + ns->ctrl->subsys->awun);
++		/* Indicates MDTS can be used */
++		if (awun == 0xffff)
++			awun_bs = ns->ctrl->max_hw_sectors << SECTOR_SHIFT;
++		else
++			awun_bs = awun * bs;
+ 	}
+ 
+ 	if (id->nsfeat & NVME_NS_FEAT_IO_OPT) {
+@@ -1940,6 +1950,16 @@ static void nvme_update_disk_info(struct gendisk *disk,
+ 		io_opt = bs * (1 + le16_to_cpu(id->nows));
+ 	}
+ 
++	if (awun) {
++		phys_bs = min(awun_bs, phys_bs);
 +
-+static void bdev_aops_sync(struct super_block *sb, struct block_device *bdev,
-+			   const struct address_space_operations *aops)
-+{
-+	sync_blockdev(bdev);
-+	bdev_aops_set(bdev, aops);
-+	kill_bdev(bdev);
-+	bdev->bd_inode->i_data.a_ops = aops;
-+}
-+
-+void bdev_aops_reset(struct block_device *bdev)
-+{
-+	bdev_aops_set(bdev, &def_blk_aops);
-+}
-+
-+static int sb_bdev_aops_set(struct super_block *sb)
-+{
-+	struct block_device *bdev = sb->s_bdev;
-+
-+	if (mapping_min_folio_order(bdev->bd_inode->i_mapping) != 0 &&
-+	    sb->s_type->fs_flags & FS_BUFFER_HEADS) {
-+			pr_warn_ratelimited(
-+"block device logical block size > PAGE_SIZE, buffer-head filesystem cannot be used.\n");
-+		return -EINVAL;
++		/*
++		 * npwg and nows could be > awun, in such cases users should
++		 * be aware of out of order reads/writes as npwg and nows
++		 * are purely performance optimizations.
++		 */
 +	}
 +
-+	/*
-+	 * We can switch back and forth, but we need to use buffer-heads
-+	 * first, otherwise a filesystem created which only uses iomap
-+	 * will have it sticky and we can't detect buffer-head filesystems
-+	 * on mount.
-+	 */
-+	bdev_aops_sync(sb, bdev, &def_blk_aops);
-+	if (sb->s_type->fs_flags & FS_BUFFER_HEADS)
-+		return 0;
-+
-+	bdev_aops_sync(sb, bdev, &def_blk_aops_iomap);
-+	return 0;
-+}
-+#else
-+static int sb_bdev_aops_set(struct super_block *sb)
-+{
-+	return 0;
-+}
-+#endif
-+
- int set_blocksize(struct block_device *bdev, int size)
- {
- 	/* Size must be a power of two, and between 512 and supported order */
-@@ -173,6 +226,8 @@ EXPORT_SYMBOL(set_blocksize);
- 
- int sb_set_blocksize(struct super_block *sb, int size)
- {
-+	if (sb_bdev_aops_set(sb))
-+		return 0;
- 	if (set_blocksize(sb->s_bdev, size))
- 		return 0;
- 	/* If we get here, we know size is power of two
-diff --git a/fs/super.c b/fs/super.c
-index 816a22a5cad1..eb269c9489cb 100644
---- a/fs/super.c
-+++ b/fs/super.c
-@@ -1649,12 +1649,13 @@ void kill_block_super(struct super_block *sb)
- 	generic_shutdown_super(sb);
- 	if (bdev) {
- 		sync_blockdev(bdev);
-+		bdev_aops_reset(bdev);
- 		blkdev_put(bdev, sb);
+ 	blk_queue_logical_block_size(disk->queue, bs);
+ 	/*
+ 	 * Linux filesystems assume writing a single physical block is
+@@ -2785,6 +2805,7 @@ static int nvme_init_subsystem(struct nvme_ctrl *ctrl, struct nvme_id_ctrl *id)
+ 		kfree(subsys);
+ 		return -EINVAL;
  	}
- }
++	subsys->awun = le16_to_cpu(id->awun);
+ 	subsys->awupf = le16_to_cpu(id->awupf);
+ 	nvme_mpath_default_iopolicy(subsys);
  
- EXPORT_SYMBOL(kill_block_super);
--#endif
-+#endif /* CONFIG_BLOCK */
- 
- struct dentry *mount_nodev(struct file_system_type *fs_type,
- 	int flags, void *data,
-diff --git a/include/linux/blkdev.h b/include/linux/blkdev.h
-index eef450f25982..738a879a0786 100644
---- a/include/linux/blkdev.h
-+++ b/include/linux/blkdev.h
-@@ -1503,6 +1503,13 @@ void sync_bdevs(bool wait);
- void bdev_statx_dioalign(struct inode *inode, struct kstat *stat);
- void printk_all_partitions(void);
- int __init early_lookup_bdev(const char *pathname, dev_t *dev);
-+#ifdef CONFIG_BUFFER_HEAD
-+void bdev_aops_reset(struct block_device *bdev);
-+#else
-+static inline void bdev_aops_reset(struct block_device *bdev)
-+{
-+}
-+#endif
- #else
- static inline void invalidate_bdev(struct block_device *bdev)
- {
+diff --git a/drivers/nvme/host/nvme.h b/drivers/nvme/host/nvme.h
+index f35647c470af..071ec52d83ea 100644
+--- a/drivers/nvme/host/nvme.h
++++ b/drivers/nvme/host/nvme.h
+@@ -410,6 +410,7 @@ struct nvme_subsystem {
+ 	u8			cmic;
+ 	enum nvme_subsys_type	subtype;
+ 	u16			vendor_id;
++	u16			awun;
+ 	u16			awupf;	/* 0's based awupf value. */
+ 	struct ida		ns_ida;
+ #ifdef CONFIG_NVME_MULTIPATH
 -- 
 2.39.2
 
