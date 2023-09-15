@@ -2,111 +2,98 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 283A6EED624
-	for <linux-xfs@archiver.kernel.org>; Fri, 15 Sep 2023 18:42:30 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 83E82EED61E
+	for <linux-xfs@archiver.kernel.org>; Fri, 15 Sep 2023 18:43:01 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S236801AbjIOSmD (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 15 Sep 2023 14:42:03 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57232 "EHLO
+        id S236825AbjIOSme (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 15 Sep 2023 14:42:34 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58780 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S236983AbjIOSlw (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 15 Sep 2023 14:41:52 -0400
-Received: from mout-p-201.mailbox.org (mout-p-201.mailbox.org [IPv6:2001:67c:2050:0:465::201])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B978B4212;
-        Fri, 15 Sep 2023 11:40:25 -0700 (PDT)
-Received: from smtp102.mailbox.org (smtp102.mailbox.org [IPv6:2001:67c:2050:b231:465::102])
+        with ESMTP id S237034AbjIOSm2 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 15 Sep 2023 14:42:28 -0400
+Received: from mout-p-202.mailbox.org (mout-p-202.mailbox.org [80.241.56.172])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9C2AF49E3;
+        Fri, 15 Sep 2023 11:39:12 -0700 (PDT)
+Received: from smtp2.mailbox.org (smtp2.mailbox.org [10.196.197.2])
         (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
          key-exchange ECDHE (P-384) server-signature RSA-PSS (4096 bits) server-digest SHA256)
         (No client certificate requested)
-        by mout-p-201.mailbox.org (Postfix) with ESMTPS id 4RnNK60pC9z9sW2;
-        Fri, 15 Sep 2023 20:39:54 +0200 (CEST)
+        by mout-p-202.mailbox.org (Postfix) with ESMTPS id 4RnNJH1Xljz9sQf;
+        Fri, 15 Sep 2023 20:39:11 +0200 (CEST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=pankajraghav.com;
-        s=MBO0001; t=1694803194;
+        s=MBO0001; t=1694803151;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:cc:mime-version:mime-version:
          content-transfer-encoding:content-transfer-encoding:
          in-reply-to:in-reply-to:references:references;
-        bh=VZYs+58deJjiPO8x76TVvnJ/svOQYbXd85JbMK60DK4=;
-        b=nbK0ltBUmQsL56D0EhZ4txGadxEvVy4TubQU3sjKYn6rLPyAwbUdURHJ8b7n3zRdtyN/4Z
-        ypn7d+WKBepAkrMqlYrcpEnjSMQaoXkHFqFzoi6xAKmqYIcE4d5nhd2NJIIkCltxDGFZqX
-        aPiRGdlaOPgV/tMGFjiJ/rnPBUDvjHKssw/KzOPJoi2RRiMVQtr/SMPLsZ5ZmivBbieE89
-        tSpFP1+7JVhzls4KDO9r0MQkSh811k3tpn2w1NcQ02D8BjCZtKlrXgjf8qjYLwmyE0yjlD
-        nMlVsGHg5BAV06syTuM4YAtZ4/po/zbqrO9EN8APt8gc76aXRTMNwttPDzWfeQ==
+        bh=fo0VXOu7M+9NKfjAGLZXjFApmoEpRKKJEPK75Mez2cA=;
+        b=WfMPs8owDY4qNpPNRRBf2P7n6I/k1Vb8R9SOGAa4d0T5FLvv4ZHDjWd9yFS4HA1DKcDXoZ
+        Hs9/Lc7bdPIjyElTcSGwwlLTk8E9vLbEnQREiltl5xwCZxZhmZW2W/MIWqbzt/L0UBGJkL
+        Pg1tzwwKa0ivqVeh/dlhg7mGJoM5RT/rjcmVhwnmzmeYieP7bnYJI0tIsDaZcaMFCiYk9l
+        eQpfZrnKOiSrp4if8lwa+VZrXN/gYt7pEAXj9fNCZan1DgEdMMHsjyF5BcnH2QER2lpu5Q
+        2yAY1aQhY540+9mUaXvvL33VXZsMEat6/i+Ojfu5vHN2X5uVaD4JlKa3e5Z7bA==
 From:   Pankaj Raghav <kernel@pankajraghav.com>
 To:     linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org
 Cc:     p.raghav@samsung.com, david@fromorbit.com, da.gomez@samsung.com,
         akpm@linux-foundation.org, linux-kernel@vger.kernel.org,
         willy@infradead.org, djwong@kernel.org, linux-mm@kvack.org,
         chandan.babu@oracle.com, mcgrof@kernel.org, gost.dev@samsung.com
-Subject: [RFC 22/23] xfs: enable block size larger than page size support
-Date:   Fri, 15 Sep 2023 20:38:47 +0200
-Message-Id: <20230915183848.1018717-23-kernel@pankajraghav.com>
+Subject: [RFC 07/23] filemap: align the index to mapping_min_order in __filemap_add_folio()
+Date:   Fri, 15 Sep 2023 20:38:32 +0200
+Message-Id: <20230915183848.1018717-8-kernel@pankajraghav.com>
 In-Reply-To: <20230915183848.1018717-1-kernel@pankajraghav.com>
 References: <20230915183848.1018717-1-kernel@pankajraghav.com>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-X-Rspamd-Queue-Id: 4RnNK60pC9z9sW2
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-From: Pankaj Raghav <p.raghav@samsung.com>
+From: Luis Chamberlain <mcgrof@kernel.org>
 
-Currently we don't support blocksize that is twice the page size due to
-the limitation of having at least three pages in a large folio[1].
-
-[1] https://lore.kernel.org/all/ZH0GvxAdw1RO2Shr@casper.infradead.org/
+Align the index to the mapping_min_order number of pages while setting
+the XA_STATE and xas_set_order().
 
 Signed-off-by: Luis Chamberlain <mcgrof@kernel.org>
-Signed-off-by: Pankaj Raghav <p.raghav@samsung.com>
 ---
- fs/xfs/xfs_mount.c | 9 +++++++--
- fs/xfs/xfs_super.c | 7 ++-----
- 2 files changed, 9 insertions(+), 7 deletions(-)
+ mm/filemap.c | 10 +++++++---
+ 1 file changed, 7 insertions(+), 3 deletions(-)
 
-diff --git a/fs/xfs/xfs_mount.c b/fs/xfs/xfs_mount.c
-index aed5be5508fe..4272898c508a 100644
---- a/fs/xfs/xfs_mount.c
-+++ b/fs/xfs/xfs_mount.c
-@@ -131,11 +131,16 @@ xfs_sb_validate_fsb_count(
- 	xfs_sb_t	*sbp,
- 	uint64_t	nblocks)
+diff --git a/mm/filemap.c b/mm/filemap.c
+index 33de71bfa953..15bc810bfc89 100644
+--- a/mm/filemap.c
++++ b/mm/filemap.c
+@@ -859,7 +859,10 @@ EXPORT_SYMBOL_GPL(replace_page_cache_folio);
+ noinline int __filemap_add_folio(struct address_space *mapping,
+ 		struct folio *folio, pgoff_t index, gfp_t gfp, void **shadowp)
  {
--	ASSERT(PAGE_SHIFT >= sbp->sb_blocklog);
- 	ASSERT(sbp->sb_blocklog >= BBSHIFT);
-+	unsigned long mapping_count;
-+
-+	if (sbp->sb_blocklog <= PAGE_SHIFT)
-+		mapping_count = nblocks >> (PAGE_SHIFT - sbp->sb_blocklog);
-+	else
-+		mapping_count = nblocks << (sbp->sb_blocklog - PAGE_SHIFT);
- 
- 	/* Limited by ULONG_MAX of page cache index */
--	if (nblocks >> (PAGE_SHIFT - sbp->sb_blocklog) > ULONG_MAX)
-+	if (mapping_count > ULONG_MAX)
- 		return -EFBIG;
- 	return 0;
- }
-diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
-index 1f77014c6e1a..75bf4d23051c 100644
---- a/fs/xfs/xfs_super.c
-+++ b/fs/xfs/xfs_super.c
-@@ -1651,13 +1651,10 @@ xfs_fs_fill_super(
- 		goto out_free_sb;
+-	XA_STATE(xas, &mapping->i_pages, index);
++	unsigned int min_order = mapping_min_folio_order(mapping);
++	unsigned int nr_of_pages = (1U << min_order);
++	pgoff_t rounded_index = round_down(index, nr_of_pages);
++	XA_STATE(xas, &mapping->i_pages, rounded_index);
+ 	int huge = folio_test_hugetlb(folio);
+ 	bool charged = false;
+ 	long nr = 1;
+@@ -875,8 +878,8 @@ noinline int __filemap_add_folio(struct address_space *mapping,
+ 		charged = true;
  	}
  
--	/*
--	 * Until this is fixed only page-sized or smaller data blocks work.
--	 */
--	if (mp->m_sb.sb_blocksize > PAGE_SIZE) {
-+	if (mp->m_sb.sb_blocksize == (2 * PAGE_SIZE)) {
- 		xfs_warn(mp,
- 		"File system with blocksize %d bytes. "
--		"Only pagesize (%ld) or less will currently work.",
-+		"Blocksize that is twice the pagesize %ld does not currently work.",
- 				mp->m_sb.sb_blocksize, PAGE_SIZE);
- 		error = -ENOSYS;
- 		goto out_free_sb;
+-	VM_BUG_ON_FOLIO(index & (folio_nr_pages(folio) - 1), folio);
+-	xas_set_order(&xas, index, folio_order(folio));
++	VM_BUG_ON_FOLIO(rounded_index & (folio_nr_pages(folio) - 1), folio);
++	xas_set_order(&xas, rounded_index, folio_order(folio));
+ 	nr = folio_nr_pages(folio);
+ 
+ 	gfp &= GFP_RECLAIM_MASK;
+@@ -913,6 +916,7 @@ noinline int __filemap_add_folio(struct address_space *mapping,
+ 			}
+ 		}
+ 
++		VM_BUG_ON_FOLIO(folio_order(folio) < min_order, folio);
+ 		xas_store(&xas, folio);
+ 		if (xas_error(&xas))
+ 			goto unlock;
 -- 
 2.40.1
 
