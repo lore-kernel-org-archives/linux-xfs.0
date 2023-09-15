@@ -2,99 +2,139 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B3D0EEED600
-	for <linux-xfs@archiver.kernel.org>; Fri, 15 Sep 2023 15:04:24 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A384FEED60B
+	for <linux-xfs@archiver.kernel.org>; Fri, 15 Sep 2023 15:30:48 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235884AbjIOPE1 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 15 Sep 2023 11:04:27 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45040 "EHLO
+        id S236092AbjIOPaw (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 15 Sep 2023 11:30:52 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58160 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S235973AbjIOPEF (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 15 Sep 2023 11:04:05 -0400
+        with ESMTP id S236099AbjIOPau (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 15 Sep 2023 11:30:50 -0400
 Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 7E9A62111
-        for <linux-xfs@vger.kernel.org>; Fri, 15 Sep 2023 08:03:13 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id C3B7FFB
+        for <linux-xfs@vger.kernel.org>; Fri, 15 Sep 2023 08:29:59 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1694790192;
+        s=mimecast20190719; t=1694791798;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
          in-reply-to:in-reply-to:references:references;
-        bh=lTZfA5rPlEfiTz4c92kcEKYabBvdtJsj3rwpq0qrzBM=;
-        b=HgUW12ZI8rt0KwOCZpQ/BYLuAsOUw02ROx/PQB1lOWyvLV9TVbLDMIIDZIJsOHoe560rfB
-        Y7i03RQ6T1JYdcFvuw4hIllDM0dZWC2NGMRvEP0mesWL52lm02yuKceiQ+5d9bilgW9ltF
-        uA7yfqmkrGngPW/zJ/9bpI+jcg3GvwM=
-Received: from mimecast-mx02.redhat.com (mimecast-mx02.redhat.com
- [66.187.233.88]) by relay.mimecast.com with ESMTP with STARTTLS
- (version=TLSv1.2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- us-mta-687-_ANoj1VnN2WU3lpoECSwCg-1; Fri, 15 Sep 2023 11:03:10 -0400
-X-MC-Unique: _ANoj1VnN2WU3lpoECSwCg-1
-Received: from smtp.corp.redhat.com (int-mx06.intmail.prod.int.rdu2.redhat.com [10.11.54.6])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by mimecast-mx02.redhat.com (Postfix) with ESMTPS id CDE1F185A73B;
-        Fri, 15 Sep 2023 15:03:09 +0000 (UTC)
-Received: from redhat.com (unknown [10.22.10.48])
-        by smtp.corp.redhat.com (Postfix) with ESMTPS id A18012156A27;
-        Fri, 15 Sep 2023 15:03:09 +0000 (UTC)
-Date:   Fri, 15 Sep 2023 10:03:08 -0500
-From:   Bill O'Donnell <bodonnel@redhat.com>
-To:     cem@kernel.org
-Cc:     linux-xfs@vger.kernel.org
-Subject: Re: [PATCH V2] mkfs: Improve warning when AG size is a multiple of
- stripe width
-Message-ID: <ZQRyLLnvkEKbs5Wn@redhat.com>
-References: <20230915102246.108709-1-cem@kernel.org>
+        bh=gJpaxC+7Y+75rYPpbOd56ZO18Rl2VH2cz+UAa2NMxbE=;
+        b=WLakSZZMBYEd5UApi9AimFrktDDdt8T+Dhu3xQcH3gsfpLwZmL7wQFUnoqKG/FnaOib3Ss
+        cw7YIHhzMcoSUpDyL1gd9Q0xBSdQIz/NTPtfb1mR0g0Rxp/fZxGWrHyXpJy0CxHWHo55Hm
+        ZFjV3Lvz7Dj658ZMlz2iOgMB97cqcSs=
+Received: from mail-wm1-f70.google.com (mail-wm1-f70.google.com
+ [209.85.128.70]) by relay.mimecast.com with ESMTP with STARTTLS
+ (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
+ us-mta-629-yHGB_P1zOV6hIKBamoeYeQ-1; Fri, 15 Sep 2023 11:29:57 -0400
+X-MC-Unique: yHGB_P1zOV6hIKBamoeYeQ-1
+Received: by mail-wm1-f70.google.com with SMTP id 5b1f17b1804b1-4020645b2a2so17743955e9.2
+        for <linux-xfs@vger.kernel.org>; Fri, 15 Sep 2023 08:29:57 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1694791796; x=1695396596;
+        h=content-transfer-encoding:in-reply-to:organization:from:references
+         :cc:to:content-language:subject:user-agent:mime-version:date
+         :message-id:x-gm-message-state:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=gJpaxC+7Y+75rYPpbOd56ZO18Rl2VH2cz+UAa2NMxbE=;
+        b=b3GARq19QQLHbXbltLw0MtB/GbD+6OkK1HtZCBCdJjCOoOtWO2xlPUrwC5jbdXp8uv
+         /s98sX4FTBoUIJdVeu3PeDFSxnk0R72Zt6lsoD2++fVIaT+paWjplsVWpwSDT2ghGZIT
+         Vhh91UTVt3ihPuL6OFLrlkRx27S7Ckk50kD9jP+bQgTIvywji9xDZEgpyRnmntYuGB5X
+         pFkjtBcFiUIjCsksnBOi7y+/4uvlCtuJD/Dm3jK3DmJbKgRg8fv1TwoitJXONRh+jSZf
+         RJA6xOoe4I3kU1YdU6oOqUoapdfG7nahwR+2wemy6U+UwG/9Vfl5fG4EeVk3p6Jq1PdK
+         1mDg==
+X-Gm-Message-State: AOJu0YwITkkTH5kuTEZOfjcd2IMj72qtXWW+j6h2UXxgTp21CmgHOTQm
+        qr3896hEaYhTpXdDn1EABwNNvbxp6suiAvGSYZ3Pn93lsPdYXBjPNGiZw45ovvhG2CFEmhURhEk
+        vrr6wXaYwCFgrMSV+vQWF
+X-Received: by 2002:a05:600c:2293:b0:3fe:5501:d293 with SMTP id 19-20020a05600c229300b003fe5501d293mr1986134wmf.30.1694791796358;
+        Fri, 15 Sep 2023 08:29:56 -0700 (PDT)
+X-Google-Smtp-Source: AGHT+IFIrjtSY3mCEdjzBASUXOKYz2giyEwV+Sal1jqwjEXeA8+EAYhUpoZN7WSinZRhK3GWPQUqaw==
+X-Received: by 2002:a05:600c:2293:b0:3fe:5501:d293 with SMTP id 19-20020a05600c229300b003fe5501d293mr1986111wmf.30.1694791795956;
+        Fri, 15 Sep 2023 08:29:55 -0700 (PDT)
+Received: from ?IPV6:2003:cb:c728:e000:a4bd:1c35:a64e:5c70? (p200300cbc728e000a4bd1c35a64e5c70.dip0.t-ipconnect.de. [2003:cb:c728:e000:a4bd:1c35:a64e:5c70])
+        by smtp.gmail.com with ESMTPSA id l26-20020a056000023a00b0031ff1ef7dc0sm1867385wrz.66.2023.09.15.08.29.54
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Fri, 15 Sep 2023 08:29:55 -0700 (PDT)
+Message-ID: <b8f75b8e-77f5-4aa1-ce73-6c90f7d87d43@redhat.com>
+Date:   Fri, 15 Sep 2023 17:29:51 +0200
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20230915102246.108709-1-cem@kernel.org>
-X-Scanned-By: MIMEDefang 3.1 on 10.11.54.6
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
+ Thunderbird/102.13.0
+Subject: Re: [PATCH 0/6] shmem: high order folios support in write path
+Content-Language: en-US
+To:     Daniel Gomez <da.gomez@samsung.com>,
+        "minchan@kernel.org" <minchan@kernel.org>,
+        "senozhatsky@chromium.org" <senozhatsky@chromium.org>,
+        "axboe@kernel.dk" <axboe@kernel.dk>,
+        "djwong@kernel.org" <djwong@kernel.org>,
+        "willy@infradead.org" <willy@infradead.org>,
+        "hughd@google.com" <hughd@google.com>,
+        "akpm@linux-foundation.org" <akpm@linux-foundation.org>,
+        "mcgrof@kernel.org" <mcgrof@kernel.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>,
+        "linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>,
+        "linux-fsdevel@vger.kernel.org" <linux-fsdevel@vger.kernel.org>,
+        "linux-mm@kvack.org" <linux-mm@kvack.org>
+Cc:     "gost.dev@samsung.com" <gost.dev@samsung.com>,
+        Pankaj Raghav <p.raghav@samsung.com>
+References: <CGME20230915095123eucas1p2c23d8a8d910f5a8e9fd077dd9579ad0a@eucas1p2.samsung.com>
+ <20230915095042.1320180-1-da.gomez@samsung.com>
+From:   David Hildenbrand <david@redhat.com>
+Organization: Red Hat
+In-Reply-To: <20230915095042.1320180-1-da.gomez@samsung.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Fri, Sep 15, 2023 at 12:22:46PM +0200, cem@kernel.org wrote:
-> From: Carlos Maiolino <cmaiolino@redhat.com>
+On 15.09.23 11:51, Daniel Gomez wrote:
+> This series add support for high order folios in shmem write
+> path.
 > 
-> The current output message prints out a suggestion of an AG size to be
-> used in lieu of the user-defined one.
-> The problem is this suggestion is printed in filesystem blocks, without
-> specifying the suffix to be used.
+> This is a continuation of the shmem work from Luis here [1]
+> following Matthew Wilcox's suggestion [2] regarding the path to take
+> for the folio allocation order calculation.
 > 
-> This patch tries to make user's life easier by outputing the option as
-> it should be used by the mkfs, so users can just copy/paste it.
+> [1] RFC v2 add support for blocksize > PAGE_SIZE
+> https://lore.kernel.org/all/ZHBowMEDfyrAAOWH@bombadil.infradead.org/T/#md3e93ab46ce2ad9254e1eb54ffe71211988b5632
+> [2] https://lore.kernel.org/all/ZHD9zmIeNXICDaRJ@casper.infradead.org/
 > 
-> Signed-off-by: Carlos Maiolino <cmaiolino@redhat.com>
+> Patches have been tested and sent from next-230911. They do apply
+> cleanly to the latest next-230914.
+> 
+> fsx and fstests has been performed on tmpfs with noswap with the
+> following results:
+> - fsx: 2d test, 21,5B
+> - fstests: Same result as baseline for next-230911 [3][4][5]
+> 
+> [3] Baseline next-230911 failures are: generic/080 generic/126
+> generic/193 generic/633 generic/689
+> [4] fstests logs baseline: https://gitlab.com/-/snippets/3598621
+> [5] fstests logs patches: https://gitlab.com/-/snippets/3598628
+> 
+> There are at least 2 cases/topics to handle that I'd appreciate
+> feedback.
+> 1. With the new strategy, you might end up with a folio order matching
+> HPAGE_PMD_ORDER. However, we won't respect the 'huge' flag anymore if
+> THP is enabled.
+> 2. When the above (1.) occurs, the code skips the huge path, so
+> xa_find with hindex is skipped.
 
-Reviewed-by: Bill O'Donnell <bodonnel@redhat.com>
+Similar to large anon folios (but different to large non-shmem folios in 
+the pagecache), this can result in memory waste.
 
-> ---
-> 
-> V2:
-> 	- Keep printing it in FSBs, just add the agsize= and the 'b' suffix at
-> 	  the end
-> 
->  mkfs/xfs_mkfs.c | 6 +++---
->  1 file changed, 3 insertions(+), 3 deletions(-)
-> 
-> diff --git a/mkfs/xfs_mkfs.c b/mkfs/xfs_mkfs.c
-> index d3a15cf44..b61934e57 100644
-> --- a/mkfs/xfs_mkfs.c
-> +++ b/mkfs/xfs_mkfs.c
-> @@ -3179,9 +3179,9 @@ _("agsize rounded to %lld, sunit = %d\n"),
->  		if (cli_opt_set(&dopts, D_AGCOUNT) ||
->  		    cli_opt_set(&dopts, D_AGSIZE)) {
->  			printf(_(
-> -"Warning: AG size is a multiple of stripe width.  This can cause performance\n\
-> -problems by aligning all AGs on the same disk.  To avoid this, run mkfs with\n\
-> -an AG size that is one stripe unit smaller or larger, for example %llu.\n"),
-> +"Warning: AG size is a multiple of stripe width. This can cause performance\n\
-> +problems by aligning all AGs on the same disk. To avoid this, run mkfs with\n\
-> +an AG size that is one stripe unit smaller or larger, for example: agsize=%llub\n"),
->  				(unsigned long long)cfg->agsize - dsunit);
->  			fflush(stdout);
->  			goto validate;
-> -- 
-> 2.39.2
-> 
+We discussed that topic in the last bi-weekly mm meeting, and also how 
+to eventually configure that for shmem.
+
+Refer to of a summary. [1]
+
+[1] https://lkml.kernel.org/r/4966f496-9f71-460c-b2ab-8661384ce626@arm.com
+
+-- 
+Cheers,
+
+David / dhildenb
 
