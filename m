@@ -2,82 +2,107 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7BB8EEED620
-	for <linux-xfs@archiver.kernel.org>; Fri, 15 Sep 2023 18:41:25 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3A218EED61F
+	for <linux-xfs@archiver.kernel.org>; Fri, 15 Sep 2023 18:41:57 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235871AbjIOSk5 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 15 Sep 2023 14:40:57 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35230 "EHLO
+        id S236475AbjIOSl3 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 15 Sep 2023 14:41:29 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37418 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S236832AbjIOSkm (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 15 Sep 2023 14:40:42 -0400
-Received: from mout-p-103.mailbox.org (mout-p-103.mailbox.org [IPv6:2001:67c:2050:0:465::103])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id CDBD035AA;
-        Fri, 15 Sep 2023 11:39:54 -0700 (PDT)
+        with ESMTP id S236807AbjIOSlG (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 15 Sep 2023 14:41:06 -0400
+Received: from mout-p-201.mailbox.org (mout-p-201.mailbox.org [IPv6:2001:67c:2050:0:465::201])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D679C44B6;
+        Fri, 15 Sep 2023 11:39:04 -0700 (PDT)
 Received: from smtp202.mailbox.org (smtp202.mailbox.org [IPv6:2001:67c:2050:b231:465::202])
         (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
          key-exchange ECDHE (P-384) server-signature RSA-PSS (4096 bits) server-digest SHA256)
         (No client certificate requested)
-        by mout-p-103.mailbox.org (Postfix) with ESMTPS id 4RnNJc0jbrz9skM;
-        Fri, 15 Sep 2023 20:39:28 +0200 (CEST)
+        by mout-p-201.mailbox.org (Postfix) with ESMTPS id 4RnNJ46BJgz9sVy;
+        Fri, 15 Sep 2023 20:39:00 +0200 (CEST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=pankajraghav.com;
-        s=MBO0001; t=1694803168;
+        s=MBO0001; t=1694803140;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:cc:mime-version:mime-version:
          content-transfer-encoding:content-transfer-encoding:
          in-reply-to:in-reply-to:references:references;
-        bh=q4TCivlOldBFT8Z2wAp0Ng9dYEvWAP3/q/X1t2+ztPU=;
-        b=RPZ4s8vKpZT/VgCDTXGfaQnmmINoQDMFRzcMXIHnpBidw45xmmsecAsEx/bgHiklwedk3E
-        jvirvcLSdjCEKPoKBTXOwRhiD+JcHZqICcAdTub1hkWK1sl+vUO2I19nRcEBG44QWyKZYa
-        Q9/F/S6P5EG0+NyIw3zXCVgYKM66eP7A+kreb4oIgyIl6glr1J0ELYt+/5YuNN/+WZ++4c
-        gG0NIEJsO5zNGaAPcdC78ZH6UEtst+I+MpVN/IUixQdfIfKRDwezhqBQuACrnDm0eW/GMh
-        9oc+cvHQHKIr4P0CNSWVZ8eOFxkQ1CJn2IaTfklFETTMeeOw5hpiP+jYbhuJCg==
+        bh=FLdOtec4vpzZfm3InvylkSWZf3/uIigm2EerkCxMy5w=;
+        b=r+lyXdNhKhaZUDV6ta1NOOz4t9XIqBsPWGKdpL52UeGGpc0w2l1GrjQoagDyLq1XmHgALR
+        g1EqfgXzxsfYSrEIgCmHV7nHfJUR65ZXBz1qPyVMU38LzQvwBAQfX8hG15HCbnG3RfUlUX
+        iSsWS6wC7+rnNjpeSwf3O99fKY75M5jL78ggnhb2038nR0JjItKOOiGG6wCGGFRnuDZBUU
+        NgPx6r4jz+JR36KDLUuFNvBWQsWENMcB0tcPeeRxQuUQ5ZEuJPrOFCuxxalzPD+24MFPdX
+        zSeo8UqEgsrlR9EtOCgcPXonCPqSD7HdZB8KudYD6ZpQglZJPmDfFUMnntpKfw==
 From:   Pankaj Raghav <kernel@pankajraghav.com>
 To:     linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org
 Cc:     p.raghav@samsung.com, david@fromorbit.com, da.gomez@samsung.com,
         akpm@linux-foundation.org, linux-kernel@vger.kernel.org,
         willy@infradead.org, djwong@kernel.org, linux-mm@kvack.org,
         chandan.babu@oracle.com, mcgrof@kernel.org, gost.dev@samsung.com
-Subject: [RFC 13/23] readahead: set file_ra_state->ra_pages to be at least mapping_min_order
-Date:   Fri, 15 Sep 2023 20:38:38 +0200
-Message-Id: <20230915183848.1018717-14-kernel@pankajraghav.com>
+Subject: [RFC 03/23] filemap: add folio with at least mapping_min_order in __filemap_get_folio
+Date:   Fri, 15 Sep 2023 20:38:28 +0200
+Message-Id: <20230915183848.1018717-4-kernel@pankajraghav.com>
 In-Reply-To: <20230915183848.1018717-1-kernel@pankajraghav.com>
 References: <20230915183848.1018717-1-kernel@pankajraghav.com>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-X-Rspamd-Queue-Id: 4RnNJc0jbrz9skM
+X-Rspamd-Queue-Id: 4RnNJ46BJgz9sVy
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-From: Luis Chamberlain <mcgrof@kernel.org>
+From: Pankaj Raghav <p.raghav@samsung.com>
 
-Set the file_ra_state->ra_pages in file_ra_state_init() to be at least
-mapping_min_order of pages if the bdi->ra_pages is less than that.
+__filemap_get_folio() with FGP_CREAT should allocate at least folio of
+filemap's min_order set using folio_set_mapping_orders().
 
-Signed-off-by: Luis Chamberlain <mcgrof@kernel.org>
+A higher order folio than min_order by definition is a multiple of the
+min_order. If an index is aligned to an order higher than a min_order, it
+will also be aligned to the min order.
+
+Signed-off-by: Pankaj Raghav <p.raghav@samsung.com>
 ---
- mm/readahead.c | 6 ++++++
- 1 file changed, 6 insertions(+)
+ mm/filemap.c | 12 +++++++++++-
+ 1 file changed, 11 insertions(+), 1 deletion(-)
 
-diff --git a/mm/readahead.c b/mm/readahead.c
-index ef3b23a41973..5c4e7ee64dc1 100644
---- a/mm/readahead.c
-+++ b/mm/readahead.c
-@@ -138,7 +138,13 @@
- void
- file_ra_state_init(struct file_ra_state *ra, struct address_space *mapping)
+diff --git a/mm/filemap.c b/mm/filemap.c
+index 8962d1255905..b1ce63143df5 100644
+--- a/mm/filemap.c
++++ b/mm/filemap.c
+@@ -1862,6 +1862,10 @@ struct folio *__filemap_get_folio(struct address_space *mapping, pgoff_t index,
+ 		fgf_t fgp_flags, gfp_t gfp)
  {
-+	unsigned int order = mapping_min_folio_order(mapping);
-+	unsigned int min_nrpages = 1U << order;
-+	unsigned int max_pages = inode_to_bdi(mapping->host)->io_pages;
+ 	struct folio *folio;
++	int min_order = mapping_min_folio_order(mapping);
++	int nr_of_pages = (1U << min_order);
 +
- 	ra->ra_pages = inode_to_bdi(mapping->host)->ra_pages;
-+	if (ra->ra_pages < min_nrpages && min_nrpages < max_pages)
-+		ra->ra_pages = min_nrpages;
- 	ra->prev_pos = -1;
- }
- EXPORT_SYMBOL_GPL(file_ra_state_init);
++	index = round_down(index, nr_of_pages);
+ 
+ repeat:
+ 	folio = filemap_get_entry(mapping, index);
+@@ -1929,8 +1933,14 @@ struct folio *__filemap_get_folio(struct address_space *mapping, pgoff_t index,
+ 			err = -ENOMEM;
+ 			if (order == 1)
+ 				order = 0;
++			if (order < min_order)
++				order = min_order;
+ 			if (order > 0)
+ 				alloc_gfp |= __GFP_NORETRY | __GFP_NOWARN;
++
++			if (min_order)
++				VM_BUG_ON(index & ((1UL << order) - 1));
++
+ 			folio = filemap_alloc_folio(alloc_gfp, order);
+ 			if (!folio)
+ 				continue;
+@@ -1944,7 +1954,7 @@ struct folio *__filemap_get_folio(struct address_space *mapping, pgoff_t index,
+ 				break;
+ 			folio_put(folio);
+ 			folio = NULL;
+-		} while (order-- > 0);
++		} while (order-- > min_order);
+ 
+ 		if (err == -EEXIST)
+ 			goto repeat;
 -- 
 2.40.1
 
