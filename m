@@ -2,55 +2,79 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 58B6EEE6433
-	for <linux-xfs@archiver.kernel.org>; Fri, 15 Sep 2023 08:01:49 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C7959EE643D
+	for <linux-xfs@archiver.kernel.org>; Fri, 15 Sep 2023 08:23:34 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232141AbjIOIBw (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 15 Sep 2023 04:01:52 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57980 "EHLO
+        id S230454AbjIOIXh (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 15 Sep 2023 04:23:37 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38890 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230454AbjIOIBw (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 15 Sep 2023 04:01:52 -0400
-Received: from mail.arnisdale.pl (mail.arnisdale.pl [151.80.133.87])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 164F9AC
-        for <linux-xfs@vger.kernel.org>; Fri, 15 Sep 2023 01:01:47 -0700 (PDT)
-Received: by mail.arnisdale.pl (Postfix, from userid 1002)
-        id 838D02708C; Fri, 15 Sep 2023 08:00:40 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=arnisdale.pl; s=mail;
-        t=1694764843; bh=6DhEsVYOGxxfetVY3oiVeew+7Cm34ArcvgDq2WQYIRw=;
-        h=Date:From:To:Subject:From;
-        b=ftw3VJJArtlhuuMFkOzSuJR89mp5KlIXLk9neaFIlkI21WYRobL+7yX73lQLvqBRa
-         L4RI1S7hIlmF4GwN/BjpJp0161MqwNEYjobVDZBkklbD+ItB5uOiHvZCZnw9g78dcJ
-         d4XhEW4GbdathzQ5BVTYQ5BaexmmK3VEETvU+q8PdgIjKqbPe2z+zQd40r8B3jRcdJ
-         WfItWdEjC69YG9hrAV24fEXsOawG+3H6sw/RlBktYmXzonV9o330FOKgUrxee7mxyH
-         EWBUxRUUStfMuEGTXYuXZ9/aDKu8M4fwBSqzQiTugf6RP8lguZWiurjg9xp+7nKD2v
-         +vDsjJa5ARlmQ==
-Received: by mail.arnisdale.pl for <linux-xfs@vger.kernel.org>; Fri, 15 Sep 2023 08:00:37 GMT
-Message-ID: <20230915064502-0.1.6y.1y3rd.0.nkf9d1oddo@arnisdale.pl>
-Date:   Fri, 15 Sep 2023 08:00:37 GMT
-From:   "Maciej Telka" <maciej.telka@arnisdale.pl>
-To:     <linux-xfs@vger.kernel.org>
-Subject: =?UTF-8?Q?Prosz=C4=99_o_kontakt?=
-X-Mailer: mail.arnisdale.pl
-MIME-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+        with ESMTP id S232242AbjIOIXh (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 15 Sep 2023 04:23:37 -0400
+Received: from mxhk.zte.com.cn (mxhk.zte.com.cn [63.216.63.40])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id EE05C4C1E;
+        Fri, 15 Sep 2023 01:21:54 -0700 (PDT)
+Received: from mse-fl2.zte.com.cn (unknown [10.5.228.133])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by mxhk.zte.com.cn (FangMail) with ESMTPS id 4Rn6Zs1GXWz8XrRV;
+        Fri, 15 Sep 2023 16:20:53 +0800 (CST)
+Received: from szxlzmapp01.zte.com.cn ([10.5.231.85])
+        by mse-fl2.zte.com.cn with SMTP id 38F8KfxW021903;
+        Fri, 15 Sep 2023 16:20:41 +0800 (+08)
+        (envelope-from cheng.lin130@zte.com.cn)
+Received: from mapi (szxlzmapp07[null])
+        by mapi (Zmail) with MAPI id mid14;
+        Fri, 15 Sep 2023 16:20:43 +0800 (CST)
+Date:   Fri, 15 Sep 2023 16:20:43 +0800 (CST)
+X-Zmail-TransId: 2b09650413db226-51e14
+X-Mailer: Zmail v1.0
+Message-ID: <202309151620439011387@zte.com.cn>
+In-Reply-To: <ZQJIyx419cw24ppF@dread.disaster.area>
+References: 202309131744458239465@zte.com.cn,ZQJIyx419cw24ppF@dread.disaster.area
+Mime-Version: 1.0
+From:   <cheng.lin130@zte.com.cn>
+To:     <david@fromorbit.com>
+Cc:     <djwong@kernel.org>, <linux-xfs@vger.kernel.org>,
+        <linux-kernel@vger.kernel.org>, <jiang.yong5@zte.com.cn>,
+        <wang.liang82@zte.com.cn>, <liu.dong3@zte.com.cn>
+Subject: =?UTF-8?B?UmU6IFtQQVRDSCB2M10geGZzOiBpbnRyb2R1Y2UgcHJvdGVjdGlvbiBmb3IgZHJvcCBubGluaw==?=
+Content-Type: text/plain;
+        charset="UTF-8"
+X-MAIL: mse-fl2.zte.com.cn 38F8KfxW021903
+X-Fangmail-Gw-Spam-Type: 0
+X-Fangmail-Anti-Spam-Filtered: true
+X-Fangmail-MID-QID: 650413E5.001/4Rn6Zs1GXWz8XrRV
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Dzie=C5=84 dobry,
-
-Czy jest mo=C5=BCliwo=C5=9B=C4=87 nawi=C4=85zania wsp=C3=B3=C5=82pracy z =
-Pa=C5=84stwem?
-
-Z ch=C4=99ci=C4=85 porozmawiam z osob=C4=85 zajmuj=C4=85c=C4=85 si=C4=99 =
-dzia=C5=82aniami zwi=C4=85zanymi ze sprzeda=C5=BC=C4=85.
-
-Pomagamy skutecznie pozyskiwa=C4=87 nowych klient=C3=B3w.
-
-Zapraszam do kontaktu.
-
-
-Pozdrawiam serdecznie
-Maciej Telka
+> On Wed, Sep 13, 2023 at 05:44:45PM +0800, cheng.lin130@zte.com.cn wrote:
+> > From: Cheng Lin <cheng.lin130@zte.com.cn>
+> >
+> > When abnormal drop_nlink are detected on the inode,
+> > shutdown filesystem, to avoid corruption propagation.
+> >
+> > Signed-off-by: Cheng Lin <cheng.lin130@zte.com.cn>
+> > ---
+> >  fs/xfs/xfs_inode.c | 9 +++++++++
+> >  1 file changed, 9 insertions(+)
+> >
+> > diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
+> > index 9e62cc500..40cc106ae 100644
+> > --- a/fs/xfs/xfs_inode.c
+> > +++ b/fs/xfs/xfs_inode.c
+> > @@ -919,6 +919,15 @@ xfs_droplink(
+> >      xfs_trans_t *tp,
+> >      xfs_inode_t *ip)
+> >  {
+> > +
+> > +    if (VFS_I(ip)->i_nlink == 0) {
+> > +        xfs_alert(ip->i_mount,
+> > +              "%s: Deleting inode %llu with no links.",
+> > +              __func__, ip->i_ino);
+> > +        tp->t_flags |= XFS_TRANS_DIRTY;
+> Marking the transaction dirty is not necessary.
+> Otherwise this seems fine.
+I found the transaction maybe not dirty at this point. Dirty the transaction
+can make sure to shutdown fs in subsequent xfs_trans_cancel().
