@@ -2,103 +2,124 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6191FEED61F
-	for <linux-xfs@archiver.kernel.org>; Fri, 15 Sep 2023 18:44:05 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8FC13EED623
+	for <linux-xfs@archiver.kernel.org>; Fri, 15 Sep 2023 18:44:37 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234857AbjIOSnh (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 15 Sep 2023 14:43:37 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50024 "EHLO
+        id S236815AbjIOSoJ (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 15 Sep 2023 14:44:09 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56326 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S237089AbjIOSnD (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 15 Sep 2023 14:43:03 -0400
-Received: from mout-p-102.mailbox.org (mout-p-102.mailbox.org [80.241.56.152])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id BA8A135BF;
-        Fri, 15 Sep 2023 11:40:01 -0700 (PDT)
-Received: from smtp202.mailbox.org (smtp202.mailbox.org [10.196.197.202])
+        with ESMTP id S237078AbjIOSnh (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 15 Sep 2023 14:43:37 -0400
+Received: from mout-p-202.mailbox.org (mout-p-202.mailbox.org [IPv6:2001:67c:2050:0:465::202])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id CA948449E;
+        Fri, 15 Sep 2023 11:40:45 -0700 (PDT)
+Received: from smtp1.mailbox.org (smtp1.mailbox.org [IPv6:2001:67c:2050:b231:465::1])
         (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
          key-exchange ECDHE (P-384) server-signature RSA-PSS (4096 bits) server-digest SHA256)
         (No client certificate requested)
-        by mout-p-102.mailbox.org (Postfix) with ESMTPS id 4RnNJW0zkCz9sZG;
-        Fri, 15 Sep 2023 20:39:23 +0200 (CEST)
+        by mout-p-202.mailbox.org (Postfix) with ESMTPS id 4RnNJr2x9Tz9sbr;
+        Fri, 15 Sep 2023 20:39:40 +0200 (CEST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=pankajraghav.com;
-        s=MBO0001; t=1694803163;
+        s=MBO0001; t=1694803180;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:cc:mime-version:mime-version:
          content-transfer-encoding:content-transfer-encoding:
          in-reply-to:in-reply-to:references:references;
-        bh=SlByD57EXAWo3wBYWh+1jomz9iI/v3Qz7x+/AUImBzs=;
-        b=nuY8POIALXl0in4GfMc25TJC8coBeQG43+Ouex9LRzUcKwK8I5c7EEHIH+My1vP7A91IWR
-        JpL8fg2KOkRRAcvKGXz+vA5/mbGmclH2WEI7vYKQZvUUY4PW+gydMVf/nU+wSdB/tEf3iD
-        7fIcfZwKxubSL8Be38uKFiNVIgOf5DyDHV87W0Y8X7Qk+tOJCtgkLZ61qi2KNIDwl4i7WX
-        csxEGgzn3f5nPGSOcT7rO7zljDx1HiVZ9pDcU5CfZ4XyxCcK3iXZVxeySqazerokuxygMm
-        51rE3zIIvycA/2oxNMkX9/yceDwSbawy5u9l3xIe2eEB7PyD2gY58zVvZs2hxA==
+        bh=2MKZNT2C20PsiAht17s5oJnb138+SmsAPSOiRhddgUA=;
+        b=OSDk9FFxIdRoXpbbJK7NtCBBEbBqbJXSbQ07rvOBw++aALFk+mh/xxdarUdNR4FVlQRF17
+        67UxVmkLS2OLxkjk+Ll9RummAEi7HciYPbO9Z2cBpMGtt24csMF9mj/Hk7zipaGkJ6uh32
+        Ct8c4gPXLiSnOw01drlPlIaLlnRBVRgWowE8ZQbP6rTJbkllrV9wlYlk84VeHiSctXNOjP
+        abj4O3zIc0YGlB/1ZOy/IwN/jtsEoCNZu2tkZ/e4qSfNNxLpodXBEK3pvwM6c9CuxXqvzD
+        UdDGI/JtrIJGBBxolWDhZOsfoPzAosRAcphz0UPvnj346nrxjmRCHSmp2JtQ2w==
 From:   Pankaj Raghav <kernel@pankajraghav.com>
 To:     linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org
 Cc:     p.raghav@samsung.com, david@fromorbit.com, da.gomez@samsung.com,
         akpm@linux-foundation.org, linux-kernel@vger.kernel.org,
         willy@infradead.org, djwong@kernel.org, linux-mm@kvack.org,
         chandan.babu@oracle.com, mcgrof@kernel.org, gost.dev@samsung.com
-Subject: [RFC 11/23] filemap: align the index to mapping_min_order in do_[a]sync_mmap_readahead
-Date:   Fri, 15 Sep 2023 20:38:36 +0200
-Message-Id: <20230915183848.1018717-12-kernel@pankajraghav.com>
+Subject: [RFC 17/23] readahead: set the minimum ra size in get_(init|next)_ra
+Date:   Fri, 15 Sep 2023 20:38:42 +0200
+Message-Id: <20230915183848.1018717-18-kernel@pankajraghav.com>
 In-Reply-To: <20230915183848.1018717-1-kernel@pankajraghav.com>
 References: <20230915183848.1018717-1-kernel@pankajraghav.com>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
+X-Rspamd-Queue-Id: 4RnNJr2x9Tz9sbr
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-From: Pankaj Raghav <p.raghav@samsung.com>
+From: Luis Chamberlain <mcgrof@kernel.org>
 
-Align the index to the mapping_min_order number of pages in
-do_[a]sync_mmap_readahead().
+Make sure the minimum ra size is based on mapping_min_order in
+get_init_ra() and get_next_ra(). If request ra size is greater than
+mapping_min_order of pages, align it to mapping_min_order of pages.
 
-Signed-off-by: Pankaj Raghav <p.raghav@samsung.com>
+Signed-off-by: Luis Chamberlain <mcgrof@kernel.org>
 ---
- mm/filemap.c | 13 ++++++++++---
- 1 file changed, 10 insertions(+), 3 deletions(-)
+ mm/readahead.c | 26 ++++++++++++++++++++++++--
+ 1 file changed, 24 insertions(+), 2 deletions(-)
 
-diff --git a/mm/filemap.c b/mm/filemap.c
-index 8a4bbddcf575..3853df90f9cf 100644
---- a/mm/filemap.c
-+++ b/mm/filemap.c
-@@ -3164,7 +3164,10 @@ static struct file *do_sync_mmap_readahead(struct vm_fault *vmf)
- 	struct file *file = vmf->vma->vm_file;
- 	struct file_ra_state *ra = &file->f_ra;
- 	struct address_space *mapping = file->f_mapping;
--	DEFINE_READAHEAD(ractl, file, ra, mapping, vmf->pgoff);
-+	int order = mapping_min_folio_order(mapping);
-+	unsigned int nrpages = 1U << order;
-+	pgoff_t index = round_down(vmf->pgoff, nrpages);
-+	DEFINE_READAHEAD(ractl, file, ra, mapping, index);
- 	struct file *fpin = NULL;
- 	unsigned long vm_flags = vmf->vma->vm_flags;
- 	unsigned int mmap_miss;
-@@ -3216,10 +3219,11 @@ static struct file *do_sync_mmap_readahead(struct vm_fault *vmf)
- 	 */
- 	fpin = maybe_unlock_mmap_for_io(vmf, fpin);
- 	ra->start = max_t(long, 0, vmf->pgoff - ra->ra_pages / 2);
-+	ra->start = round_down(ra->start, nrpages);
- 	ra->size = ra->ra_pages;
- 	ra->async_size = ra->ra_pages / 4;
- 	ractl._index = ra->start;
--	page_cache_ra_order(&ractl, ra, 0);
-+	page_cache_ra_order(&ractl, ra, order);
- 	return fpin;
+diff --git a/mm/readahead.c b/mm/readahead.c
+index fb5ff180c39e..7c2660815a01 100644
+--- a/mm/readahead.c
++++ b/mm/readahead.c
+@@ -357,9 +357,17 @@ void force_page_cache_ra(struct readahead_control *ractl,
+  * for small size, x 4 for medium, and x 2 for large
+  * for 128k (32 page) max ra
+  * 1-2 page = 16k, 3-4 page 32k, 5-8 page = 64k, > 8 page = 128k initial
++ *
++ * For higher order address space requirements we ensure no initial reads
++ * are ever less than the min number of pages required.
++ *
++ * We *always* cap the max io size allowed by the device.
+  */
+-static unsigned long get_init_ra_size(unsigned long size, unsigned long max)
++static unsigned long get_init_ra_size(unsigned long size,
++				      unsigned int min_order,
++				      unsigned long max)
+ {
++	unsigned int min_nrpages = 1UL << min_order;
+ 	unsigned long newsize = roundup_pow_of_two(size);
+ 
+ 	if (newsize <= max / 32)
+@@ -369,6 +377,15 @@ static unsigned long get_init_ra_size(unsigned long size, unsigned long max)
+ 	else
+ 		newsize = max;
+ 
++	if (newsize < min_nrpages) {
++		if (min_nrpages <= max)
++			newsize = min_nrpages;
++		else
++			newsize = round_up(max, min_nrpages);
++	}
++
++	VM_BUG_ON(newsize & (min_nrpages - 1));
++
+ 	return newsize;
  }
  
-@@ -3233,7 +3237,10 @@ static struct file *do_async_mmap_readahead(struct vm_fault *vmf,
+@@ -377,14 +394,19 @@ static unsigned long get_init_ra_size(unsigned long size, unsigned long max)
+  *  return it as the new window size.
+  */
+ static unsigned long get_next_ra_size(struct file_ra_state *ra,
++				      unsigned int min_order,
+ 				      unsigned long max)
  {
- 	struct file *file = vmf->vma->vm_file;
- 	struct file_ra_state *ra = &file->f_ra;
--	DEFINE_READAHEAD(ractl, file, ra, file->f_mapping, vmf->pgoff);
-+	int order = mapping_min_folio_order(file->f_mapping);
-+	unsigned int nrpages = 1U << order;
-+	pgoff_t index = round_down(vmf->pgoff, nrpages);
-+	DEFINE_READAHEAD(ractl, file, ra, file->f_mapping, index);
- 	struct file *fpin = NULL;
- 	unsigned int mmap_miss;
+-	unsigned long cur = ra->size;
++	unsigned int min_nrpages = 1UL << min_order;
++	unsigned long cur = max(ra->size, min_nrpages);
++
++	cur = round_down(cur, min_nrpages);
+ 
+ 	if (cur < max / 16)
+ 		return 4 * cur;
+ 	if (cur <= max / 2)
+ 		return 2 * cur;
++
+ 	return max;
+ }
  
 -- 
 2.40.1
