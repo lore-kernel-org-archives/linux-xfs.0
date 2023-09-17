@@ -2,102 +2,89 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7A33BCD37B4
-	for <linux-xfs@archiver.kernel.org>; Sun, 17 Sep 2023 22:53:44 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1BB0FCD37B4
+	for <linux-xfs@archiver.kernel.org>; Sun, 17 Sep 2023 23:16:19 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232561AbjIQWxQ (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Sun, 17 Sep 2023 18:53:16 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35848 "EHLO
+        id S232103AbjIQXPv (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Sun, 17 Sep 2023 19:15:51 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50988 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232103AbjIQWw7 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sun, 17 Sep 2023 18:52:59 -0400
-Received: from mail-pl1-x62f.google.com (mail-pl1-x62f.google.com [IPv6:2607:f8b0:4864:20::62f])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id AFCEF107
-        for <linux-xfs@vger.kernel.org>; Sun, 17 Sep 2023 15:52:53 -0700 (PDT)
-Received: by mail-pl1-x62f.google.com with SMTP id d9443c01a7336-1c0ecb9a075so29954385ad.2
-        for <linux-xfs@vger.kernel.org>; Sun, 17 Sep 2023 15:52:53 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=fromorbit-com.20230601.gappssmtp.com; s=20230601; t=1694991173; x=1695595973; darn=vger.kernel.org;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
-        bh=roac4LosgX4s8S8F/sVOG7Y081vlxwQUgwpKiUp04iM=;
-        b=Key3nBAkMqFlfUlrjV0loEPZ3mJ0KGQsttsYaVCNdlN1WYrJB2E8wY/GZZOQPB3IFy
-         i3AlZuxAfyshcjHV9AU+o0jXIEmrn00N1HL6AZ8lF1/dMZZR5IYD/OJCw8xy8MOR3WkZ
-         cZ9lRA3lcT3QkdCY+KIsxyokt5pgb8D7DbYagJPL8WZolD45U2Gvf0seqtHG2p2KGe1I
-         6MFwq9MX7RXM+lOOE0w5rDmUbL0K+0Cj5D3cA2z8jGzQyZcnHGFXtZ8w4H5f24YGolLJ
-         ivH4kev744oqLvOH+L+qPj00WKfhPmZoqudP7gWC4BE+KoHbh2mseOnssmRLollPoEmU
-         sO6Q==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1694991173; x=1695595973;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=roac4LosgX4s8S8F/sVOG7Y081vlxwQUgwpKiUp04iM=;
-        b=rwmeEYE7nZ5/5qOJ2ZKGYRO5lREbFj9DWAM+2qATW16g/SrsXGhTSN6HNmdWa+tsOT
-         3BnVfy18wcOnuu4JYj825V9n+EoI0+OG2aqJYtzrrheI/yPb5z3gWf0tzL/UbuoO7z2A
-         trrzxvGMcWBwdP6tTqfs/xJhPTxYMe5v5n3qmTDqrtEYyCBskrSqldi2nDsdiDxA+xJy
-         UGpI1T1BM49AuM3MZ8Zb4mWoiZK1YoDvKPyPZTHYZ9AB6+CZcazkoCbBj1nHhCImOQO/
-         8bXhNEsADIjJ4f6fTtjeSRRfNguTZZLBpvEv1rmvJcGWFEus8EwyyUnQ9omaLbeifuJ/
-         J1qQ==
-X-Gm-Message-State: AOJu0YxLFTE+HeFglQ/ErMrSRIBXJwBA6TpqWkJwx0IgO4NB+39CGiKo
-        Kgf5wP8FkNnGcrEQv6+QtLjrFJWaGOBJNEMDCfw=
-X-Google-Smtp-Source: AGHT+IExCHSud8g0Lswc5hN9szvqu5tCku+9l27nD03qPR54id1iU2HODVyR2ueP9jqeTLTL0uBs1g==
-X-Received: by 2002:a17:902:c949:b0:1bb:b86e:8d60 with SMTP id i9-20020a170902c94900b001bbb86e8d60mr7708831pla.46.1694991173179;
-        Sun, 17 Sep 2023 15:52:53 -0700 (PDT)
-Received: from dread.disaster.area (pa49-180-20-59.pa.nsw.optusnet.com.au. [49.180.20.59])
-        by smtp.gmail.com with ESMTPSA id l21-20020a170902d35500b001ab39cd875csm7068754plk.133.2023.09.17.15.52.52
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Sun, 17 Sep 2023 15:52:52 -0700 (PDT)
-Received: from dave by dread.disaster.area with local (Exim 4.96)
-        (envelope-from <david@fromorbit.com>)
-        id 1qi0dF-0026DN-2F;
-        Mon, 18 Sep 2023 08:52:49 +1000
-Date:   Mon, 18 Sep 2023 08:52:49 +1000
-From:   Dave Chinner <david@fromorbit.com>
-To:     cem@kernel.org
-Cc:     linux-xfs@vger.kernel.org
-Subject: Re: [PATCH V2] mkfs: Improve warning when AG size is a multiple of
- stripe width
-Message-ID: <ZQeDQW7a7eBt3vGp@dread.disaster.area>
-References: <20230915102246.108709-1-cem@kernel.org>
+        with ESMTP id S231951AbjIQXPZ (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sun, 17 Sep 2023 19:15:25 -0400
+Received: from casper.infradead.org (casper.infradead.org [IPv6:2001:8b0:10b:1236::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7E39611B;
+        Sun, 17 Sep 2023 16:15:19 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=infradead.org; s=casper.20170209; h=In-Reply-To:Content-Type:MIME-Version:
+        References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
+        Content-Transfer-Encoding:Content-ID:Content-Description;
+        bh=nv2p7fEiwt/74JfgCxfcZvTioovA33E8lFlj3CEAEjY=; b=vlYcZaSanHANq0jx23+xIJAUtb
+        R+pJ1pDaY+TTfzmF/RZ7PEagoPruiVqP4bwz2L2G1nj6+zWT0Rfp3Yvon+qVu6poFMFKsjrXddv8p
+        WKS/ZWK5SyBy7N+ldrYp3SXfpxAWyHNkJ05q/35j378ajKV5ZzgvyeZjPRFoUbV+B+NcwO5reZfqX
+        5rAJjkm1CY8Rxdwkl4CQfn4Gx1/guKtGIK7lMCMzeS93PQhtEVeWBcXtgChNmxKeonN0fL6FZQ/Rs
+        EkfoQi8/5LLxOtKmMGvQ+3ZudnmemS5E0EmaDei23ujrQTru96J4cafezjnM83wH83/5ThFPextK8
+        w2/sgiAQ==;
+Received: from willy by casper.infradead.org with local (Exim 4.94.2 #2 (Red Hat Linux))
+        id 1qi0yW-007KHa-Tb; Sun, 17 Sep 2023 23:14:48 +0000
+Date:   Mon, 18 Sep 2023 00:14:48 +0100
+From:   Matthew Wilcox <willy@infradead.org>
+To:     Dave Chinner <david@fromorbit.com>
+Cc:     Luis Chamberlain <mcgrof@kernel.org>, hch@infradead.org,
+        djwong@kernel.org, dchinner@redhat.com, kbusch@kernel.org,
+        sagi@grimberg.me, axboe@fb.com, brauner@kernel.org, hare@suse.de,
+        ritesh.list@gmail.com, rgoldwyn@suse.com, jack@suse.cz,
+        ziy@nvidia.com, ryan.roberts@arm.com, patches@lists.linux.dev,
+        linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
+        linux-block@vger.kernel.org, p.raghav@samsung.com,
+        da.gomez@samsung.com, dan.helmick@samsung.com
+Subject: Re: [RFC v2 00/10] bdev: LBS devices support to coexist with
+ buffer-heads
+Message-ID: <ZQeIaN2WC+whc/OP@casper.infradead.org>
+References: <20230915213254.2724586-1-mcgrof@kernel.org>
+ <ZQd/7RYfDZgvR0n2@dread.disaster.area>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20230915102246.108709-1-cem@kernel.org>
+In-Reply-To: <ZQd/7RYfDZgvR0n2@dread.disaster.area>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Fri, Sep 15, 2023 at 12:22:46PM +0200, cem@kernel.org wrote:
-> From: Carlos Maiolino <cmaiolino@redhat.com>
+On Mon, Sep 18, 2023 at 08:38:37AM +1000, Dave Chinner wrote:
+> On Fri, Sep 15, 2023 at 02:32:44PM -0700, Luis Chamberlain wrote:
+> > LBS devices. This in turn allows filesystems which support bs > 4k to be
+> > enabled on a 4k PAGE_SIZE world on LBS block devices. This alows LBS
+> > device then to take advantage of the recenlty posted work today to enable
+> > LBS support for filesystems [0].
 > 
-> The current output message prints out a suggestion of an AG size to be
-> used in lieu of the user-defined one.
-> The problem is this suggestion is printed in filesystem blocks, without
-> specifying the suffix to be used.
+> Why do we need LBS devices to support bs > ps in XFS?
+
+It's the other way round -- we need the support in the page cache to
+reject sub-block-size folios (which is in the other patches) before we
+can sensibly talk about enabling any filesystems on top of LBS devices.
+Even XFS, or for that matter ext2 which support 16k block sizes on
+CONFIG_PAGE_SIZE_16K (or 64K) kernels need that support first.
+
+[snipping the parts I agree with; this should not be the first you're
+hearing about a format change to XFS]
+
+> > There might be a better way to do this than do deal with the switching
+> > of the aops dynamically, ideas welcomed!
 > 
-> This patch tries to make user's life easier by outputing the option as
-> it should be used by the mkfs, so users can just copy/paste it.
+> Is it even safe to switch aops dynamically? We know there are
+> inherent race conditions in doing this w.r.t. mmap and page faults,
+> as the write fault part of the processing is directly dependent
+> on the page being correctly initialised during the initial
+> population of the page data (the "read fault" side of the write
+> fault).
 > 
-> Signed-off-by: Carlos Maiolino <cmaiolino@redhat.com>
+> Hence it's not generally considered safe to change aops from one
+> mechanism to another dynamically. Block devices can be mmap()d, but
+> I don't see anything in this patch set that ensures there are no
+> other users of the block device when the swaps are done. What am I
+> missing?
 
-I'm fine with this but, as I said in my previous comment, a man page
-update for agsize is also needed. Something like this:
-
-	agsize=value
-		This is an alternative to using the agcount
-		suboption. The value is the desired size of the
--		allocation group expressed in bytes (usually using
--		the m or g suffixes).  This value must be a multiple
--		of the filesystem block size, and must be at  least
-+		allocation group expressed as a multiple of the
-+		filesystem block size.  It must be at  least
-		16MiB, and no more than 1TiB, and may be
-		automatically adjusted to properly align with the
-		stripe geometry.  The agcount and agsize suboptions
-		are mutually exclusive.
-
--Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+We need to evict all pages from the page cache before switching aops to
+prevent misinterpretation of folio->private.  If switching aops is even
+the right thing to do.  I don't see the problem with allowing buffer heads
+on block devices, but I haven't been involved with the discussion here.
