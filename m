@@ -2,202 +2,208 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 97F04CD13D2
-	for <linux-xfs@archiver.kernel.org>; Sun, 17 Sep 2023 15:37:01 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A4F4CCD13D1
+	for <linux-xfs@archiver.kernel.org>; Sun, 17 Sep 2023 16:46:23 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235011AbjIQPgd (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Sun, 17 Sep 2023 11:36:33 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40782 "EHLO
+        id S231880AbjIQQpz (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Sun, 17 Sep 2023 12:45:55 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33562 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S236993AbjIQPgJ (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sun, 17 Sep 2023 11:36:09 -0400
-Received: from mail-oi1-f206.google.com (mail-oi1-f206.google.com [209.85.167.206])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B7FF5CED
-        for <linux-xfs@vger.kernel.org>; Sun, 17 Sep 2023 08:35:05 -0700 (PDT)
-Received: by mail-oi1-f206.google.com with SMTP id 5614622812f47-3a9f2f6d356so6291298b6e.2
-        for <linux-xfs@vger.kernel.org>; Sun, 17 Sep 2023 08:35:05 -0700 (PDT)
+        with ESMTP id S236312AbjIQQpm (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sun, 17 Sep 2023 12:45:42 -0400
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id AE1C311D
+        for <linux-xfs@vger.kernel.org>; Sun, 17 Sep 2023 09:44:50 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1694969090;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=ZvBKyF9TBNiopeAp8yVSBeI6ft5Z6xlwFaJDOlLeWFs=;
+        b=dP5Gk83cfQVsW+8E0IUllT5WSPPD4gZsY9ebmhzqbqXayadl0JSa59ZNh1swbjD+yYQJ0h
+        lKsktJStFYApkQICR+cGS8uK2qc/1pNk8zLJelkxoxHuwBc3/wc7Kr0GXgbKzDfsyPJf1r
+        LRuV6Uv83ENdj1v8+3PqqdaOc1yq6wY=
+Received: from mail-oa1-f69.google.com (mail-oa1-f69.google.com
+ [209.85.160.69]) by relay.mimecast.com with ESMTP with STARTTLS
+ (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
+ us-mta-330-0N8Fok8wOh216M01vkOU1A-1; Sun, 17 Sep 2023 12:44:45 -0400
+X-MC-Unique: 0N8Fok8wOh216M01vkOU1A-1
+Received: by mail-oa1-f69.google.com with SMTP id 586e51a60fabf-1c8c1f34aadso6187523fac.3
+        for <linux-xfs@vger.kernel.org>; Sun, 17 Sep 2023 09:44:45 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1694964905; x=1695569705;
-        h=to:from:subject:message-id:in-reply-to:date:mime-version
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=84c4oOdJQqUkB+deINDKnoAGkhiQe7ZYJavUeVFWzJk=;
-        b=RQqEkil+/TmQxgPCjaroODKaaBTTufx29D50Vo4uZqFsIp6V1ahutCjZ2rfwYG79/3
-         TePAPyRUKYO6FOUJYuM7OzdvewvRDtjLmlm8GhER1XN4EZqBQj+ZsEx4zp2knvRuyp1Y
-         cH87HfoREZ04ycjgRlP0zO737mhwPYBohTCVp1h2UbfkfgsKt5RNNskd6CexfFUIW6JD
-         HcViBB9z4iC0yiruvo0uSGTBAksnZglf2KFwEWMtm+3MOLff4i6plXVMxa4QYqlMJgrY
-         wb7s+sRrvQKHw4axJukC8dD7Ht5uaOdN2P0O/1NO9xqAdXLDtaTkA70ChGX4S5VPhKLM
-         t7qA==
-X-Gm-Message-State: AOJu0Ywq6+L7lTCVD40jbzlY2i40t483dOEAOYu26+FYHRldnwMJc1Xb
-        mucLh8XT9tPQ4Xslg6O8r+ZN5mJvrkSxPfGgEcIY5pYVFdut
-X-Google-Smtp-Source: AGHT+IFcyZCdWvDJhmwEMD4YJ7jT6YW+l6H8QZo17ZV7HnUQvfeDinRE4dc8K84pZ8MyCa5BsFzF+PLCq7OvFxr7l2YN8a4/XzHJ
+        d=1e100.net; s=20230601; t=1694969085; x=1695573885;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=ZvBKyF9TBNiopeAp8yVSBeI6ft5Z6xlwFaJDOlLeWFs=;
+        b=mxhPSydfxkBgr1iSG/HuQUOXBsXF4fgIWPWUtiGbr5aFjn0pSbhUVbA6TnmR3dgYAg
+         GTfbnOeBQROg4ZNjPbTEONdk9SjNl3lI9f05JHxvu2SVrLfOry4/kFkxS8CdrDbDNyNj
+         nOpDz7pFZy3ws923f5MT+jdZ/ANYDOMZGbvRir9z/rJTsnW21vk79VF5CTmlO5ZB1riD
+         mO7P1ItbsYelElT2koi8TapeGZljvwnzA+H6kgv8K56hVejO5zLFlESRbYOpIWvq4GK/
+         icKsMKcywkbVYpix+eccnOjNuyBRbST/21IPlnRi76NV2pKgwchSqHwP0Yxs83Pp2P4n
+         wpMA==
+X-Gm-Message-State: AOJu0YwaQbPRLr5vD+TOShWEbiTuAjcEz/kQzjP23+lVjOmiBqTb/9ZE
+        mTHB10bcaRhBjYjSWMNS1rGSWjD1TRCYqmH1bq5wGBm0ntLT2wAuGNsz9a+no/uGXk2s+9kCfiB
+        8SSf6bJDFQY2s1KHLxEN4
+X-Received: by 2002:a05:6871:706:b0:1c4:ee87:d3ea with SMTP id f6-20020a056871070600b001c4ee87d3eamr8584486oap.36.1694969085050;
+        Sun, 17 Sep 2023 09:44:45 -0700 (PDT)
+X-Google-Smtp-Source: AGHT+IHetH4CGNKS8odgKlvbYcLiHq/7Skuu5to7H/TWvqTou1vTrRaR5dbm9U5VLY5o9fiCr4UfSg==
+X-Received: by 2002:a05:6871:706:b0:1c4:ee87:d3ea with SMTP id f6-20020a056871070600b001c4ee87d3eamr8584468oap.36.1694969084668;
+        Sun, 17 Sep 2023 09:44:44 -0700 (PDT)
+Received: from zlang-mailbox ([43.228.180.230])
+        by smtp.gmail.com with ESMTPSA id fw11-20020a17090b128b00b0025bd4db25f0sm5835471pjb.53.2023.09.17.09.44.43
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Sun, 17 Sep 2023 09:44:44 -0700 (PDT)
+Date:   Mon, 18 Sep 2023 00:44:40 +0800
+From:   Zorro Lang <zlang@redhat.com>
+To:     "Darrick J. Wong" <djwong@kernel.org>
+Cc:     linux-xfs@vger.kernel.org, fstests@vger.kernel.org
+Subject: Re: [PATCHSET v2 0/2] fstests: fix ro mounting with unknown rocompat
+ features
+Message-ID: <20230917164440.y27qdcugzodz6mw6@zlang-mailbox>
+References: <169335058807.3526409.15604604578540143202.stgit@frogsfrogsfrogs>
 MIME-Version: 1.0
-X-Received: by 2002:a05:6808:1a1f:b0:3ac:ab4f:ef3 with SMTP id
- bk31-20020a0568081a1f00b003acab4f0ef3mr3067526oib.6.1694964905079; Sun, 17
- Sep 2023 08:35:05 -0700 (PDT)
-Date:   Sun, 17 Sep 2023 08:35:05 -0700
-In-Reply-To: <000000000000e534bb0604959011@google.com>
-X-Google-Appengine-App-Id: s~syzkaller
-X-Google-Appengine-App-Id-Alias: syzkaller
-Message-ID: <00000000000012f99f06058fc5fa@google.com>
-Subject: Re: [syzbot] [block] INFO: task hung in clean_bdev_aliases
-From:   syzbot <syzbot+1fa947e7f09e136925b8@syzkaller.appspotmail.com>
-To:     david@fromorbit.com, djwong@kernel.org, hch@lst.de,
-        linux-block@vger.kernel.org, linux-fsdevel@vger.kernel.org,
-        linux-kernel@vger.kernel.org, linux-xfs@vger.kernel.org,
-        nogikh@google.com, syzkaller-bugs@googlegroups.com
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <169335058807.3526409.15604604578540143202.stgit@frogsfrogsfrogs>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-syzbot has found a reproducer for the following issue on:
+Hi Darrick,
 
-HEAD commit:    f0b0d403eabb Merge tag 'kbuild-fixes-v6.6' of git://git.ke..
-git tree:       upstream
-console output: https://syzkaller.appspot.com/x/log.txt?x=14bbe63c680000
-kernel config:  https://syzkaller.appspot.com/x/.config?x=999148c170811772
-dashboard link: https://syzkaller.appspot.com/bug?extid=1fa947e7f09e136925b8
-compiler:       gcc (Debian 12.2.0-14) 12.2.0, GNU ld (GNU Binutils for Debian) 2.40
-syz repro:      https://syzkaller.appspot.com/x/repro.syz?x=16148d74680000
-C reproducer:   https://syzkaller.appspot.com/x/repro.c?x=13e10762680000
+Hi Darrick,
 
-Downloadable assets:
-disk image: https://storage.googleapis.com/syzbot-assets/9067aea1d6b6/disk-f0b0d403.raw.xz
-vmlinux: https://storage.googleapis.com/syzbot-assets/5b837ae6375f/vmlinux-f0b0d403.xz
-kernel image: https://storage.googleapis.com/syzbot-assets/4b1678667256/bzImage-f0b0d403.xz
+Do these two changes cover new xfs bug fix? I hit xfs/270 fails on
+latest upstream mainline kernel testing, e.g. [1][2]. But the xfs/270
+always test passed on my side before.
 
-IMPORTANT: if you fix the issue, please add the following tag to the commit:
-Reported-by: syzbot+1fa947e7f09e136925b8@syzkaller.appspotmail.com
+Thanks,
+Zorro
 
-INFO: task syz-executor119:9037 blocked for more than 143 seconds.
-      Not tainted 6.6.0-rc1-syzkaller-00240-gf0b0d403eabb #0
-"echo 0 > /proc/sys/kernel/hung_task_timeout_secs" disables this message.
-task:syz-executor119 state:D stack:25872 pid:9037  ppid:5100   flags:0x00004006
-Call Trace:
- <TASK>
- context_switch kernel/sched/core.c:5382 [inline]
- __schedule+0xee1/0x59f0 kernel/sched/core.c:6695
- schedule+0xe7/0x1b0 kernel/sched/core.c:6771
- io_schedule+0xbe/0x130 kernel/sched/core.c:9026
- folio_wait_bit_common+0x3d2/0x9b0 mm/filemap.c:1301
- folio_lock include/linux/pagemap.h:1042 [inline]
- clean_bdev_aliases+0x56b/0x610 fs/buffer.c:1725
- clean_bdev_bh_alias include/linux/buffer_head.h:219 [inline]
- __block_write_begin_int+0x8d6/0x1470 fs/buffer.c:2115
- iomap_write_begin+0x5be/0x17b0 fs/iomap/buffered-io.c:772
- iomap_write_iter fs/iomap/buffered-io.c:907 [inline]
- iomap_file_buffered_write+0x3d6/0x9a0 fs/iomap/buffered-io.c:968
- blkdev_buffered_write block/fops.c:634 [inline]
- blkdev_write_iter+0x4f5/0xc90 block/fops.c:684
- call_write_iter include/linux/fs.h:1985 [inline]
- do_iter_readv_writev+0x21e/0x3c0 fs/read_write.c:735
- do_iter_write+0x17f/0x830 fs/read_write.c:860
- vfs_iter_write+0x7a/0xb0 fs/read_write.c:901
- iter_file_splice_write+0x698/0xbf0 fs/splice.c:736
- do_splice_from fs/splice.c:933 [inline]
- direct_splice_actor+0x118/0x180 fs/splice.c:1142
- splice_direct_to_actor+0x347/0xa30 fs/splice.c:1088
- do_splice_direct+0x1af/0x280 fs/splice.c:1194
- do_sendfile+0xb88/0x1390 fs/read_write.c:1254
- __do_sys_sendfile64 fs/read_write.c:1322 [inline]
- __se_sys_sendfile64 fs/read_write.c:1308 [inline]
- __x64_sys_sendfile64+0x1d6/0x220 fs/read_write.c:1308
- do_syscall_x64 arch/x86/entry/common.c:50 [inline]
- do_syscall_64+0x38/0xb0 arch/x86/entry/common.c:80
- entry_SYSCALL_64_after_hwframe+0x63/0xcd
-RIP: 0033:0x7f92485ce3b9
-RSP: 002b:00007f9248583158 EFLAGS: 00000246 ORIG_RAX: 0000000000000028
-RAX: ffffffffffffffda RBX: 00007f924864e3e8 RCX: 00007f92485ce3b9
-RDX: 0000000000000000 RSI: 0000000000000004 RDI: 0000000000000003
-RBP: 00007f924864e3e0 R08: 00007f92485836c0 R09: 0000000000000000
-R10: 0100000000000042 R11: 0000000000000246 R12: 00007f924864e3ec
-R13: 0000000000000016 R14: 00007ffd0b251ce0 R15: 00007ffd0b251dc8
- </TASK>
+[1]
+--- /dev/fd/63	2023-09-16 20:33:38.373115157 -0400
++++ xfs/270.out.bad	2023-09-16 20:33:37.959115275 -0400
+@@ -1,6 +1,9 @@
+ QA output created by 270
+ rw mount test
+ ro mount test
++cat: /mnt/xfstests/scratch/testfile: Input/output error
+ rw remount test
+ rw mount test
+ ro mount test
++ro mount test failed
++(see /var/lib/xfstests/results//xfs/270.full for details)
 
-Showing all locks held in the system:
-1 lock held by khungtaskd/28:
- #0: ffffffff8cba7860 (rcu_read_lock){....}-{1:2}, at: debug_show_all_locks+0x55/0x340 kernel/locking/lockdep.c:6607
-2 locks held by getty/4793:
- #0: ffff888027bb90a0 (&tty->ldisc_sem){++++}-{0:0}, at: tty_ldisc_ref_wait+0x24/0x80 drivers/tty/tty_ldisc.c:243
- #1: ffffc900020682f0 (&ldata->atomic_read_lock){+.+.}-{3:3}, at: n_tty_read+0xfc5/0x1480 drivers/tty/n_tty.c:2206
-3 locks held by syz-executor119/5099:
-3 locks held by syz-executor119/5105:
-
-=============================================
-
-NMI backtrace for cpu 1
-CPU: 1 PID: 28 Comm: khungtaskd Not tainted 6.6.0-rc1-syzkaller-00240-gf0b0d403eabb #0
-Hardware name: Google Google Compute Engine/Google Compute Engine, BIOS Google 08/04/2023
-Call Trace:
- <TASK>
- __dump_stack lib/dump_stack.c:88 [inline]
- dump_stack_lvl+0xd9/0x1b0 lib/dump_stack.c:106
- nmi_cpu_backtrace+0x277/0x380 lib/nmi_backtrace.c:113
- nmi_trigger_cpumask_backtrace+0x299/0x300 lib/nmi_backtrace.c:62
- trigger_all_cpu_backtrace include/linux/nmi.h:160 [inline]
- check_hung_uninterruptible_tasks kernel/hung_task.c:222 [inline]
- watchdog+0xfac/0x1230 kernel/hung_task.c:379
- kthread+0x33a/0x430 kernel/kthread.c:388
- ret_from_fork+0x45/0x80 arch/x86/kernel/process.c:147
- ret_from_fork_asm+0x11/0x20 arch/x86/entry/entry_64.S:304
- </TASK>
-Sending NMI from CPU 1 to CPUs 0:
-NMI backtrace for cpu 0
-CPU: 0 PID: 5097 Comm: syz-executor119 Not tainted 6.6.0-rc1-syzkaller-00240-gf0b0d403eabb #0
-Hardware name: Google Google Compute Engine/Google Compute Engine, BIOS Google 08/04/2023
-RIP: 0010:orc_find arch/x86/kernel/unwind_orc.c:217 [inline]
-RIP: 0010:unwind_next_frame+0x25f/0x2390 arch/x86/kernel/unwind_orc.c:494
-Code: 83 f4 19 00 00 e8 61 83 4c 00 45 89 ee 48 b8 00 00 00 00 00 fc ff df 4a 8d 3c b5 44 d7 00 90 48 89 fa 48 c1 ea 03 0f b6 14 02 <48> 89 f8 83 e0 07 83 c0 03 38 d0 7c 09 84 d2 74 05 e8 db 83 a1 00
-RSP: 0018:ffffc9000030f510 EFLAGS: 00000a03
-RAX: dffffc0000000000 RBX: ffffc9000030f590 RCX: 0000000000000000
-RDX: 0000000000000000 RSI: ffffffff813a49af RDI: ffffffff90043a8c
-RBP: 0000000000000001 R08: 0000000000000004 R09: 000000000000d8d2
-R10: 0000000000098000 R11: dffffc0000000000 R12: ffffffff81d8d288
-R13: 000000000000d8d2 R14: 000000000000d8d2 R15: ffffc9000030f5c5
-FS:  0000555556536480(0000) GS:ffff8880b9800000(0000) knlGS:0000000000000000
-CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
-CR2: 0000555556540808 CR3: 000000007a917000 CR4: 00000000003506f0
-DR0: 0000000000000000 DR1: 0000000000000000 DR2: 0000000000000000
-DR3: 0000000000000000 DR6: 00000000fffe0ff0 DR7: 0000000000000400
-Call Trace:
- <NMI>
- </NMI>
- <TASK>
- arch_stack_walk+0xfa/0x170 arch/x86/kernel/stacktrace.c:25
- stack_trace_save+0x96/0xd0 kernel/stacktrace.c:122
- save_stack+0x160/0x1f0 mm/page_owner.c:128
- __set_page_owner+0x1f/0x60 mm/page_owner.c:192
- set_page_owner include/linux/page_owner.h:31 [inline]
- post_alloc_hook+0x2cf/0x340 mm/page_alloc.c:1536
- prep_new_page mm/page_alloc.c:1543 [inline]
- get_page_from_freelist+0xee0/0x2f20 mm/page_alloc.c:3170
- __alloc_pages+0x1d0/0x4a0 mm/page_alloc.c:4426
- alloc_pages+0x1a9/0x270 mm/mempolicy.c:2298
- __get_free_pages+0xc/0x40 mm/page_alloc.c:4477
- _pgd_alloc arch/x86/mm/pgtable.c:420 [inline]
- pgd_alloc+0x28/0x260 arch/x86/mm/pgtable.c:436
- mm_alloc_pgd kernel/fork.c:795 [inline]
- mm_init+0x679/0xf60 kernel/fork.c:1298
- dup_mm kernel/fork.c:1683 [inline]
- copy_mm kernel/fork.c:1735 [inline]
- copy_process+0x6bf8/0x7400 kernel/fork.c:2501
- kernel_clone+0xfd/0x930 kernel/fork.c:2909
- __do_sys_clone+0xba/0x100 kernel/fork.c:3052
- do_syscall_x64 arch/x86/entry/common.c:50 [inline]
- do_syscall_64+0x38/0xb0 arch/x86/entry/common.c:80
- entry_SYSCALL_64_after_hwframe+0x63/0xcd
-RIP: 0033:0x7f92485cc1a3
-Code: 1f 84 00 00 00 00 00 64 48 8b 04 25 10 00 00 00 45 31 c0 31 d2 31 f6 bf 11 00 20 01 4c 8d 90 d0 02 00 00 b8 38 00 00 00 0f 05 <48> 3d 00 f0 ff ff 77 35 89 c2 85 c0 75 2c 64 48 8b 04 25 10 00 00
-RSP: 002b:00007ffd0b251da8 EFLAGS: 00000246 ORIG_RAX: 0000000000000038
-RAX: ffffffffffffffda RBX: 0000000000000000 RCX: 00007f92485cc1a3
-RDX: 0000000000000000 RSI: 0000000000000000 RDI: 0000000001200011
-RBP: 0000000000000000 R08: 0000000000000000 R09: 00007ffd0b251c44
-R10: 0000555556536750 R11: 0000000000000246 R12: 0000000000000001
-R13: 431bde82d7b634db R14: 000000000012b3f1 R15: 00007ffd0b251f20
- </TASK>
+[2]
+[57829.436755] run fstests xfs/270 at 2023-09-16 20:33:31
+[57832.373519] XFS (vda3): Mounting V5 Filesystem b31f9652-417d-4dd2-a5ed-54ee957fbfcb
+[57832.398699] XFS (vda3): Ending clean mount
+[57832.551895] XFS (vda3): Unmounting Filesystem b31f9652-417d-4dd2-a5ed-54ee957fbfcb
+[57832.909487] XFS (vda3): Mounting V5 Filesystem 08403da7-afbe-4bfa-a45c-487e28280acc
+[57832.934603] XFS (vda3): Ending clean mount
+[57832.963287] XFS (vda3): User initiated shutdown received.
+[57832.967959] XFS (vda3): Metadata I/O Error (0x4) detected at xfs_fs_goingdown+0x4b/0x180 [xfs] (fs/xfs/xfs_fsops.c:492).  Shutting down filesystem.
+[57832.974742] XFS (vda3): Please unmount the filesystem and rectify the problem(s)
+[57833.002720] XFS (vda3): Unmounting Filesystem 08403da7-afbe-4bfa-a45c-487e28280acc
+[57833.376473] XFS (vda3): Mounting V5 Filesystem 801b25ca-acc4-4232-9955-dc3448680467
+[57833.403380] XFS (vda3): Ending clean mount
+[57833.443719] XFS (vda3): Unmounting Filesystem 801b25ca-acc4-4232-9955-dc3448680467
+[57833.516114] [TTM] Buffer eviction failed
+[57833.519490] qxl 0000:00:02.0: object_init failed for (3149824, 0x00000001)
+[57833.523184] [drm:qxl_alloc_bo_reserved [qxl]] *ERROR* failed to allocate VRAM BO
+[57833.955746] XFS (vda3): Superblock has unknown read-only compatible features (0x80000000) enabled.
+[57833.960383] XFS (vda3): Attempted to mount read-only compatible filesystem read-write.
+[57833.964353] XFS (vda3): Filesystem can only be safely mounted read only.
+[57833.967997] XFS (vda3): SB validate failed with error -22.
+[57834.039637] XFS (vda3): Superblock has unknown read-only compatible features (0x80000000) enabled.
+[57834.046289] XFS (vda3): Mounting V5 Filesystem 801b25ca-acc4-4232-9955-dc3448680467
+[57834.075451] XFS (vda3): Ending clean mount
+[57834.082359] XFS (vda3): Corruption detected in superblock read-only compatible features (0x80000000)!
+[57834.086487] XFS (vda3): Metadata corruption detected at xfs_sb_write_verify+0x11d/0x380 [xfs], xfs_sb block 0x0 
+[57834.090716] XFS (vda3): Unmount and run xfs_repair
+[57834.093708] XFS (vda3): First 128 bytes of corrupted metadata buffer:
+[57834.096953] 00000000: 58 46 53 42 00 00 10 00 00 00 00 00 00 3c 00 00  XFSB.........<..
+[57834.100635] 00000010: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  ................
+[57834.104330] 00000020: 80 1b 25 ca ac c4 42 32 99 55 dc 34 48 68 04 67  ..%...B2.U.4Hh.g
+[57834.108273] 00000030: 00 00 00 00 00 20 00 06 00 00 00 00 00 00 00 80  ..... ..........
+[57834.112176] 00000040: 00 00 00 00 00 00 00 81 00 00 00 00 00 00 00 82  ................
+[57834.116043] 00000050: 00 00 00 01 00 0f 00 00 00 00 00 04 00 00 00 00  ................
+[57834.119693] 00000060: 00 00 40 00 b4 a5 02 00 02 00 00 08 00 00 00 00  ..@.............
+[57834.123459] 00000070: 00 00 00 00 00 00 00 00 0c 09 09 03 14 00 00 19  ................
+[57834.127159] XFS (vda3): Corruption of in-memory data (0x8) detected at _xfs_buf_ioapply+0x50b/0x5f0 [xfs] (fs/xfs/xfs_buf.c:1558).  Shutting down filesystem.
+[57834.134557] XFS (vda3): Please unmount the filesystem and rectify the problem(s)
+[57834.253491] XFS (vda3): ro->rw transition prohibited on unknown (0x80000000) ro-compat filesystem
+[57834.281980] XFS (vda3): Unmounting Filesystem 801b25ca-acc4-4232-9955-dc3448680467
+[57834.655120] XFS (vda3): Mounting V5 Filesystem 29902d21-a146-4095-8747-562850110ff6
+[57834.682299] XFS (vda3): Ending clean mount
+[57834.723067] XFS (vda3): User initiated shutdown received.
+[57834.730954] XFS (vda3): Metadata I/O Error (0x4) detected at xfs_fs_goingdown+0x4b/0x180 [xfs] (fs/xfs/xfs_fsops.c:492).  Shutting down filesystem.
+[57834.738710] XFS (vda3): Please unmount the filesystem and rectify the problem(s)
+[57834.768607] XFS (vda3): Unmounting Filesystem 29902d21-a146-4095-8747-562850110ff6
+[57835.270472] XFS (vda3): Superblock has unknown read-only compatible features (0x80000000) enabled.
+[57835.275655] XFS (vda3): Attempted to mount read-only compatible filesystem read-write.
+[57835.279434] XFS (vda3): Filesystem can only be safely mounted read only.
+[57835.283124] XFS (vda3): SB validate failed with error -22.
+[57835.357336] XFS (vda3): Superblock has unknown read-only compatible features (0x80000000) enabled.
+[57835.369968] XFS (vda3): Mounting V5 Filesystem 29902d21-a146-4095-8747-562850110ff6
+[57835.398595] XFS (vda3): Starting recovery (logdev: internal)
+[57835.410361] XFS (vda3): Superblock has unknown read-only compatible features (0x80000000) enabled.
+[57835.414593] XFS (vda3): Attempted to mount read-only compatible filesystem read-write.
+[57835.418495] XFS (vda3): Filesystem can only be safely mounted read only.
+[57835.422152] XFS (vda3): metadata I/O error in "xlog_do_recover+0x3e8/0x540 [xfs]" at daddr 0x0 len 1 error 22
+[57835.426851] XFS: Assertion failed: 0, file: fs/xfs/xfs_log_recover.c, line: 3321
+[57835.430765] ------------[ cut here ]------------
+[57835.434014] WARNING: CPU: 2 PID: 3426232 at fs/xfs/xfs_message.c:104 assfail+0x54/0x70 [xfs]
+[57835.438380] Modules linked in: ext2 overlay dm_zero dm_log_writes dm_thin_pool dm_persistent_data dm_bio_prison sd_mod t10_pi sg dm_snapshot dm_bufio ext4 mbcache jbd2 loop dm_flakey dm_mod tls rfkill intel_rapl_msr sunrpc intel_rapl_common intel_uncore_frequency_common isst_if_common nfit snd_hda_codec_generic ledtrig_audio kvm_intel snd_hda_intel snd_intel_dspcfg snd_intel_sdw_acpi snd_hda_codec kvm snd_hda_core snd_hwdep irqbypass snd_seq snd_seq_device snd_pcm qxl snd_timer drm_ttm_helper ttm pcspkr virtio_balloon snd drm_kms_helper soundcore i2c_piix4 joydev drm fuse xfs libcrc32c ata_generic crct10dif_pclmul crc32_pclmul crc32c_intel ghash_clmulni_intel ata_piix virtio_console virtio_net net_failover failover virtio_blk libata serio_raw [last unloaded: scsi_debug]
+[57835.467794] CPU: 2 PID: 3426232 Comm: mount Kdump: loaded Tainted: G        W          6.6.0-rc1+ #1
+[57835.472233] Hardware name: Red Hat KVM, BIOS 0.5.1 01/01/2011
+[57835.475946] RIP: 0010:assfail+0x54/0x70 [xfs]
+[57835.479708] Code: c0 48 ba 00 00 00 00 00 fc ff df 48 89 c1 83 e0 07 48 c1 e9 03 0f b6 14 11 38 c2 7f 04 84 d2 75 10 80 3d 6e 3f 1c 00 00 75 15 <0f> 0b c3 cc cc cc cc 48 c7 c7 10 47 99 c0 e8 79 fd 34 df eb e2 0f
+[57835.489526] RSP: 0018:ffffc9000293f918 EFLAGS: 00010246
+[57835.493381] RAX: 0000000000000000 RBX: ffff88817b73a000 RCX: 1ffffffff81328e2
+[57835.497512] RDX: 0000000000000004 RSI: ffffc9000293f680 RDI: ffffffffc0afd780
+[57835.501588] RBP: ffff8881964ea000 R08: 00000000ffffffea R09: fffff52000527ec1
+[57835.505701] R10: ffffc9000293f60f R11: fffffffffff6c2b0 R12: 00000000ffffffea
+[57835.509789] R13: ffff88817b73a0e0 R14: ffff8881b927ba80 R15: 
 
 
----
-If you want syzbot to run the reproducer, reply with:
-#syz test: git://repo/address.git branch-or-commit-hash
-If you attach or paste a git patch, syzbot will apply it before testing.
+On Tue, Aug 29, 2023 at 04:09:48PM -0700, Darrick J. Wong wrote:
+> Hi all,
+> 
+> Dave pointed out some failures in xfs/270 when he upgraded Debian
+> unstable and util-linux started using the new mount apis.  Upon further
+> inquiry I noticed that XFS is quite a hot mess when it encounters a
+> filesystem with unrecognized rocompat bits set in the superblock.
+> 
+> Whereas we used to allow readonly mounts under these conditions, a
+> change to the sb write verifier several years ago resulted in the
+> filesystem going down immediately because the post-mount log cleaning
+> writes the superblock, which trips the sb write verifier on the
+> unrecognized rocompat bit.  I made the observation that the ROCOMPAT
+> features RMAPBT and REFLINK both protect new log intent item types,
+> which means that we actually cannot support recovering the log if we
+> don't recognize all the rocompat bits.
+> 
+> Therefore -- fix inode inactivation to work when we're recovering the
+> log, disallow recovery when there's unrecognized rocompat bits, and
+> don't clean the log if doing so would trip the rocompat checks.
+> 
+> v2: change direction of series to allow log recovery on ro mounts
+> 
+> If you're going to start using this code, I strongly recommend pulling
+> from my git trees, which are linked below.
+> 
+> This has been running on the djcloud for months with no problems.  Enjoy!
+> Comments and questions are, as always, welcome.
+> 
+> --D
+> 
+> fstests git tree:
+> https://git.kernel.org/cgit/linux/kernel/git/djwong/xfstests-dev.git/log/?h=fix-ro-mounts
+> ---
+>  tests/xfs/270     |   80 ++++++++++++++++++++++++++++++++++++++---------------
+>  tests/xfs/270.out |    2 +
+>  2 files changed, 59 insertions(+), 23 deletions(-)
+> 
+
