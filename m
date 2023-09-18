@@ -2,183 +2,175 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5C12EC46CA1
-	for <linux-xfs@archiver.kernel.org>; Mon, 18 Sep 2023 05:08:53 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 551ABC46CA1
+	for <linux-xfs@archiver.kernel.org>; Mon, 18 Sep 2023 05:49:26 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S237269AbjIRFIW (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 18 Sep 2023 01:08:22 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59858 "EHLO
+        id S239702AbjIRFs6 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 18 Sep 2023 01:48:58 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50262 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231883AbjIRFHx (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 18 Sep 2023 01:07:53 -0400
-Received: from mail-pl1-x630.google.com (mail-pl1-x630.google.com [IPv6:2607:f8b0:4864:20::630])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C81A811C
-        for <linux-xfs@vger.kernel.org>; Sun, 17 Sep 2023 22:07:46 -0700 (PDT)
-Received: by mail-pl1-x630.google.com with SMTP id d9443c01a7336-1c3cbfa40d6so36836325ad.1
-        for <linux-xfs@vger.kernel.org>; Sun, 17 Sep 2023 22:07:46 -0700 (PDT)
+        with ESMTP id S239720AbjIRFss (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 18 Sep 2023 01:48:48 -0400
+Received: from mail-pf1-x42d.google.com (mail-pf1-x42d.google.com [IPv6:2607:f8b0:4864:20::42d])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 47B76122
+        for <linux-xfs@vger.kernel.org>; Sun, 17 Sep 2023 22:48:42 -0700 (PDT)
+Received: by mail-pf1-x42d.google.com with SMTP id d2e1a72fcca58-68fbd5cd0ceso3617227b3a.1
+        for <linux-xfs@vger.kernel.org>; Sun, 17 Sep 2023 22:48:42 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=fromorbit-com.20230601.gappssmtp.com; s=20230601; t=1695013666; x=1695618466; darn=vger.kernel.org;
+        d=fromorbit-com.20230601.gappssmtp.com; s=20230601; t=1695016122; x=1695620922; darn=vger.kernel.org;
         h=in-reply-to:content-disposition:mime-version:references:message-id
          :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
-        bh=M6z0XBRSxgiJriY+TPnWcbvaSWUhO2fbf3ilso8ZY+s=;
-        b=YB3b/JSAWf2HsmkfVBSfQpwGFIOi+soaGNRuCdaPIk+iTUscwbTtedkhoNs5A6/94T
-         cMm0HGKKohHZJVTtfkqnqqrPaolSMDmZQ5qYNDqX7K8qdFH0+4LqlS02WOZtY9R90Ur/
-         +E6DLq7MODP4GnwkrBbX0wdEnVyKRPmnnm/ZXXAYQhaFBDwsyJjw0ntl00mCvKgU/uCK
-         2rZS43jaejre8Dqw5nuAL5o8rRMsYPGdDAElKshxV71LLJ2LjE0Q22OoB+zNRFNyfA7g
-         8Cp3DBAybnHvsFxbkEYsCWbyx2GYWTm+8IGkru3iu4JynxnFIfaEpvvMByutMhhYNd+E
-         S4QA==
+        bh=f1DRqcBgmxswHX4pyVMaZ8qtBDRiLU8WPLBXlzgYD2k=;
+        b=Ax2fIs/7bsV/onMa7xt3ZnPIsVJ6+DYyEMRV4m4a6jAQ6+ZRfRtZzfrh+Bei1DfOZj
+         kEQA6Fw/TtxvRgqCqGq0eMQuazKA/4vSfraF0D9A+nOdCgj89/IhMMfpYuP2NeFvn3Wd
+         GqHyZZyvAwaDuTq6FKm9CmhRB+PRH27CFY7cLV1wTWn+7RCID+TAaM+4ZsywLgmta5IR
+         MH7qa6nbjsAG+ujEWfmLo6OSzV4CSvVvaFEDhWrIo8RjGTUDurTThYqSfpqchXP2P74J
+         gTWPDLpIlpOQF67TCW27qi/zux9C2JSzhirbvKjs1i1CI4sxe8v1cn8M2v5zFeVnhWBA
+         aY6g==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1695013666; x=1695618466;
+        d=1e100.net; s=20230601; t=1695016122; x=1695620922;
         h=in-reply-to:content-disposition:mime-version:references:message-id
          :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
          :message-id:reply-to;
-        bh=M6z0XBRSxgiJriY+TPnWcbvaSWUhO2fbf3ilso8ZY+s=;
-        b=ROJkwU7XijEwF6hsc0Obef6Z48cUS6IEQEsC3qmTB235e0pPlUZWt1En6+xI6KOsEF
-         kszSss86FpZ1ZhYy8GBM23i9hJ/2XjC0WfEp3hpQiiSo3S93jtUkfduQlbBk7cmgFVNp
-         NPHKh5YhdJLuMyC/uYXxSc4MyTYqjidt76949FQAbXSLfp4kI2ehDyNUg4BamuLenrCz
-         gnGM7mfFAedR+S5XplpA2ly645zkEpCpcyJlqJ/7sHEz9VkD3n3+lvRTNBwi54bDidct
-         12XTJs/5dX0fU4TfE/TDdvRR7HXMde0UlUvNwWOPTog4yatQX5pJ7YPftYvR9y7x6j45
-         FgKg==
-X-Gm-Message-State: AOJu0Yxj7pRSEdWb+ePPdRQzbvskERPRxMSr3iSGxjbzVyiWAhQxTEGt
-        cuzRPcCbmMaBcfdZ+eddIK/NpA==
-X-Google-Smtp-Source: AGHT+IE8P1OEwOYx0scttNCXcS7VvsJAwL4czH20HKd4GAJinQSVG8BkRdzXGitYN9r1svmoTect/A==
-X-Received: by 2002:a17:902:efc6:b0:1b8:76ce:9d91 with SMTP id ja6-20020a170902efc600b001b876ce9d91mr7789080plb.1.1695013666187;
-        Sun, 17 Sep 2023 22:07:46 -0700 (PDT)
+        bh=f1DRqcBgmxswHX4pyVMaZ8qtBDRiLU8WPLBXlzgYD2k=;
+        b=Psi/nUSkimA1InASM9f2Lq5jCIsbjUa/kVQO5dtLp39OwzI0wP1vetYFRLlPy1ctXz
+         pTI6oLGuqdJrw3HyduRTWCOHMo2sR/EipisH0rOZXONozbrg7GAIGFWayfHHTOsndr63
+         RXU/LbNvI8HmK0pvoBICTxXr34F0HPXaSo7vSaVstpNYXiZuR2mlgXWzCR8b7B+fGmiy
+         z/0ovZ5JsrH/oRQeRdF50YIVbMEhTPImlrrhAJEoERHJkIp8CFI1OpvfKl8tC0Zq/Q1z
+         wVYU6XInY1i5Q9cty/tgwHTFD+pP1ozKpWfXusBWN1fMLQPZSwJAr1+N1dv037JbgLD7
+         jFrA==
+X-Gm-Message-State: AOJu0YybLVnOBX0gA8UXTR0sW9WowOy5NWCyJWUri6zgjXCKpjgUokeU
+        o7+JBD17IxUV/7G1Fnym0qBNWA==
+X-Google-Smtp-Source: AGHT+IGWSjgPJY0rz+mhy5X0wouSG5p/8Gn/5BnR3iDeiNiZQcEPTgbz0a+Wja+GB/mgOJTRCfB+dg==
+X-Received: by 2002:a05:6a00:cc2:b0:690:15c7:60bf with SMTP id b2-20020a056a000cc200b0069015c760bfmr11315941pfv.20.1695016121692;
+        Sun, 17 Sep 2023 22:48:41 -0700 (PDT)
 Received: from dread.disaster.area (pa49-180-20-59.pa.nsw.optusnet.com.au. [49.180.20.59])
-        by smtp.gmail.com with ESMTPSA id iz17-20020a170902ef9100b001b9de4fb749sm7494951plb.20.2023.09.17.22.07.45
+        by smtp.gmail.com with ESMTPSA id t12-20020aa7938c000000b0068e12e6954csm6453271pfe.36.2023.09.17.22.48.40
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Sun, 17 Sep 2023 22:07:45 -0700 (PDT)
+        Sun, 17 Sep 2023 22:48:41 -0700 (PDT)
 Received: from dave by dread.disaster.area with local (Exim 4.96)
         (envelope-from <david@fromorbit.com>)
-        id 1qi6U2-002DLu-32;
-        Mon, 18 Sep 2023 15:07:42 +1000
-Date:   Mon, 18 Sep 2023 15:07:42 +1000
+        id 1qi77e-002E25-0S;
+        Mon, 18 Sep 2023 15:48:38 +1000
+Date:   Mon, 18 Sep 2023 15:48:38 +1000
 From:   Dave Chinner <david@fromorbit.com>
-To:     Luis Chamberlain <mcgrof@kernel.org>
-Cc:     Pankaj Raghav <kernel@pankajraghav.com>, linux-xfs@vger.kernel.org,
-        linux-fsdevel@vger.kernel.org, p.raghav@samsung.com,
-        da.gomez@samsung.com, akpm@linux-foundation.org,
-        linux-kernel@vger.kernel.org, willy@infradead.org,
-        djwong@kernel.org, linux-mm@kvack.org, chandan.babu@oracle.com,
-        gost.dev@samsung.com
-Subject: Re: [RFC 00/23] Enable block size > page size in XFS
-Message-ID: <ZQfbHloBUpDh+zCg@dread.disaster.area>
-References: <20230915183848.1018717-1-kernel@pankajraghav.com>
- <ZQd4IPeVI+o6M38W@dread.disaster.area>
- <ZQewKIfRYcApEYXt@bombadil.infradead.org>
+To:     cheng.lin130@zte.com.cn
+Cc:     djwong@kernel.org, linux-xfs@vger.kernel.org,
+        linux-kernel@vger.kernel.org, jiang.yong5@zte.com.cn,
+        wang.liang82@zte.com.cn, liu.dong3@zte.com.cn
+Subject: Re: [PATCH v3] xfs: introduce protection for drop nlink
+Message-ID: <ZQfktqPJ5Qzs7unT@dread.disaster.area>
+References: <ZQeBY3kmww8qAjfP@dread.disaster.area>
+ <202309181144537682244@zte.com.cn>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <ZQewKIfRYcApEYXt@bombadil.infradead.org>
+In-Reply-To: <202309181144537682244@zte.com.cn>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Sun, Sep 17, 2023 at 07:04:24PM -0700, Luis Chamberlain wrote:
-> On Mon, Sep 18, 2023 at 08:05:20AM +1000, Dave Chinner wrote:
-> > On Fri, Sep 15, 2023 at 08:38:25PM +0200, Pankaj Raghav wrote:
-> > > From: Pankaj Raghav <p.raghav@samsung.com>
-> > > 
-> > > There has been efforts over the last 16 years to enable enable Large
-> > > Block Sizes (LBS), that is block sizes in filesystems where bs > page
-> > > size [1] [2]. Through these efforts we have learned that one of the
-> > > main blockers to supporting bs > ps in fiesystems has been a way to
-> > > allocate pages that are at least the filesystem block size on the page
-> > > cache where bs > ps [3]. Another blocker was changed in filesystems due to
-> > > buffer-heads. Thanks to these previous efforts, the surgery by Matthew
-> > > Willcox in the page cache for adopting xarray's multi-index support, and
-> > > iomap support, it makes supporting bs > ps in XFS possible with only a few
-> > > line change to XFS. Most of changes are to the page cache to support minimum
-> > > order folio support for the target block size on the filesystem.
-> > > 
-> > > A new motivation for LBS today is to support high-capacity (large amount
-> > > of Terabytes) QLC SSDs where the internal Indirection Unit (IU) are
-> > > typically greater than 4k [4] to help reduce DRAM and so in turn cost
-> > > and space. In practice this then allows different architectures to use a
-> > > base page size of 4k while still enabling support for block sizes
-> > > aligned to the larger IUs by relying on high order folios on the page
-> > > cache when needed. It also enables to take advantage of these same
-> > > drive's support for larger atomics than 4k with buffered IO support in
-> > > Linux. As described this year at LSFMM, supporting large atomics greater
-> > > than 4k enables databases to remove the need to rely on their own
-> > > journaling, so they can disable double buffered writes [5], which is a
-> > > feature different cloud providers are already innovating and enabling
-> > > customers for through custom storage solutions.
-> > > 
-> > > This series still needs some polishing and fixing some crashes, but it is
-> > > mainly targeted to get initial feedback from the community, enable initial
-> > > experimentation, hence the RFC. It's being posted now given the results from
-> > > our testing are proving much better results than expected and we hope to
-> > > polish this up together with the community. After all, this has been a 16
-> > > year old effort and none of this could have been possible without that effort.
-> > > 
-> > > Implementation:
-> > > 
-> > > This series only adds the notion of a minimum order of a folio in the
-> > > page cache that was initially proposed by Willy. The minimum folio order
-> > > requirement is set during inode creation. The minimum order will
-> > > typically correspond to the filesystem block size. The page cache will
-> > > in turn respect the minimum folio order requirement while allocating a
-> > > folio. This series mainly changes the page cache's filemap, readahead, and
-> > > truncation code to allocate and align the folios to the minimum order set for the
-> > > filesystem's inode's respective address space mapping.
-> > > 
-> > > Only XFS was enabled and tested as a part of this series as it has
-> > > supported block sizes up to 64k and sector sizes up to 32k for years.
-> > > The only thing missing was the page cache magic to enable bs > ps. However any filesystem
-> > > that doesn't depend on buffer-heads and support larger block sizes
-> > > already should be able to leverage this effort to also support LBS,
-> > > bs > ps.
-> > > 
-> > > This also paves the way for supporting block devices where their logical
-> > > block size > page size in the future by leveraging iomap's address space
-> > > operation added to the block device cache by Christoph Hellwig [6]. We
-> > > have work to enable support for this, enabling LBAs > 4k on NVME,  and
-> > > at the same time allow coexistence with buffer-heads on the same block
-> > > device so to enable support allow for a drive to use filesystem's to
-> > > switch between filesystem's which may depend on buffer-heads or need the
-> > > iomap address space operations for the block device cache. Patches for
-> > > this will be posted shortly after this patch series.
-> > 
-> > Do you have a git tree branch that I can pull this from
-> > somewhere?
-> > 
-> > As it is, I'd really prefer stuff that adds significant XFS
-> > functionality that we need to test to be based on a current Linus
-> > TOT kernel so that we can test it without being impacted by all
-> > the random unrelated breakages that regularly happen in linux-next
-> > kernels....
-> 
-> That's understandable! I just rebased onto Linus' tree, this only
-> has the bs > ps support on 4k sector size:
-> 
-> https://git.kernel.org/pub/scm/linux/kernel/git/mcgrof/linux.git/log/?h=v6.6-rc2-lbs-nobdev
+On Mon, Sep 18, 2023 at 11:44:53AM +0800, cheng.lin130@zte.com.cn wrote:
+> > On Fri, Sep 15, 2023 at 05:50:56PM +0800, cheng.lin130@zte.com.cn wrote:
+> > > > On Wed, Sep 13, 2023 at 05:44:45PM +0800, cheng.lin130@zte.com.cn wrote:
+> > > > > From: Cheng Lin <cheng.lin130@zte.com.cn>
+> > > > >
+> > > > > When abnormal drop_nlink are detected on the inode,
+> > > > > shutdown filesystem, to avoid corruption propagation.
+> > > > >
+> > > > > Signed-off-by: Cheng Lin <cheng.lin130@zte.com.cn>
+> > > > > ---
+> > > > >  fs/xfs/xfs_inode.c | 9 +++++++++
+> > > > >  1 file changed, 9 insertions(+)
+> > > > >
+> > > > > diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
+> > > > > index 9e62cc500..40cc106ae 100644
+> > > > > --- a/fs/xfs/xfs_inode.c
+> > > > > +++ b/fs/xfs/xfs_inode.c
+> > > > > @@ -919,6 +919,15 @@ xfs_droplink(
+> > > > >      xfs_trans_t *tp,
+> > > > >      xfs_inode_t *ip)
+> > > > >  {
+> > > > > +
+> > > > > +    if (VFS_I(ip)->i_nlink == 0) {
+> > > > > +        xfs_alert(ip->i_mount,
+> > > > > +              "%s: Deleting inode %llu with no links.",
+> > > > > +              __func__, ip->i_ino);
+> > > > > +        tp->t_flags |= XFS_TRANS_DIRTY;
+> > > > Marking the transaction dirty is not necessary.
+> > > > Otherwise this seems fine.
+> > > Another strategy:
+> > > Set nlink to an invalid value(like XFS_NLINK_PINNED), and
+> > > Complete this transaction before shutdown fs. To make sure
+> > > nlink not be zero. If the nlink of a directory are zero, it may
+> > > be cleaned up.
+> > > Is that appropriate?
+> > No, all I'm asking you to do is drop dirtying of the transaction
+> > from this patch because it is a) unnecessary and b) a layering
+> > violation.
+> > It is unnecessary because the transaction will almost always be
+> > dirty before we get to xfs_droplink(). In the cases where it isn't
+> > dirty (e.g. xfs_remove() on a directory) we explicitly check that
+> > nlink == 2 before proceeding to call xfs_droplink(). Hence we can't
+> > actually get to xfs_droplink() with a clean transaction, and so
+> If the corrupted inode is a parent directory, when remove its
+> subdirectory, the parent's nlink will be decreased to 0.  But the
+> transaction of subdirectory removing is not dirty (There are not
+> check about the parent directory). In this situation, the transaction
+> will be failed and the filesystem will be alive.
 
+Yes, and that's perfectly fine. The transaction cancelling code has
+worked this way for the past 20 years or so...
 
-> I just did a cursory build / boot / fsx with 16k block size / 4k sector size
-> test with this tree only. I havne't ran fstests on it.
+Indeed, you said your customer wants the system to stay alive if possible,
+right? Well, so do we.
 
-W/ 64k block size, generic/042 fails (maybe just a test block size
-thing), generic/091 fails (data corruption on read after ~70 ops)
-and then generic/095 hung with a crash in iomap_readpage_iter()
-during readahead.
+If the parent directory has a bogus nlink count, and that prevents
+us from removing items from the directory, then as long as we
+haven't dirtied anything and we can return a -EFSCORRUPTED error to
+userspace to say the unlink failed and we don't have to shut the
+filesystem down. All we now have is a directory that has objects in
+it that can't be removed....
 
-Looks like a null folio was passed to ifs_alloc(), which implies the
-iomap_readpage_ctx didn't have a folio attached to it. Something
-isn't working properly in the readahead code, which would also
-explain the quick fsx failure...
+For a higher level perspective, we only need to shut the filesystem
+down if we cannot safely back out of the modification operation that
+was requested. Whilst the transaction is clean, we can safely return
+errors to userspace and continue operation because everything in
+memory and on disk is still consistent, even if we have found a
+corruption in non-crtical the metadata. Just returning an error to
+userspace can't make the problem any worse.
 
-> Just a heads up, using 512 byte sector size will fail for now, it's a
-> regression we have to fix. Likewise using block sizes 1k, 2k will also
-> regress on fsx right now. These are regressions we are aware of but
-> haven't had time yet to bisect / fix.
+This also is how we treat corruption that is found during read
+operations - we return -EFSCORRUPTED to userspace because something in
+the directory or inode we were trying to read from was corrupted. We
+do not need to shut down the filesystem because there is
+no risk of making things worse or the in-memory filesystem state
+getting out of sync with the on-disk state.
 
-I'm betting that the recently added sub-folio dirty tracking code
-got broken by this patchset....
+It is only when we are trying to modify something that corruption
+becomes a problem with fatal consequences. Once we've made a
+modification, the in-memory state is different to the on-disk state
+and whilst we are in that state any corruption we discover becomes
+fatal. That is because there is no way to reconcile the changes
+we've already made in memory with what is on-disk - we don't know
+that the in-memory changes are good because we tripped over
+corruption, and so we must not propagate bad in-memory state and
+metadata to disk over the top of what may be still be uncorrupted
+metadata on disk.
 
-Cheers,
+This "in memory matches on disk" state is effectively what the dirty
+flag in the transaction tracks, and it's done as part of the normal
+running of a transaction as items are tagged for logging. Marking a
+transaction dirty that has nothign tagged for logging is actually an
+incorrect state; we may handle it correctly, but it should never
+actually occur and we should definitely not be open coding dirtying
+of transactions to create this state.
 
-Dave.
+IOWs, the transaction modification error handling paths already do
+the right thing according to the state carried by the transaction at
+the time the error was encountered.
+
+-Dave.
 -- 
 Dave Chinner
 david@fromorbit.com
