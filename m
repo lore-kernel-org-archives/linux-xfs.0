@@ -2,145 +2,199 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id ECC39C46CA1
-	for <linux-xfs@archiver.kernel.org>; Mon, 18 Sep 2023 12:36:25 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 77CCECD3420
+	for <linux-xfs@archiver.kernel.org>; Mon, 18 Sep 2023 15:29:56 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S239152AbjIRMf6 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 18 Sep 2023 08:35:58 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33176 "EHLO
+        id S229552AbjIRP37 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 18 Sep 2023 11:29:59 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56136 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S241868AbjIRMfz (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 18 Sep 2023 08:35:55 -0400
-Received: from mailout2.w1.samsung.com (mailout2.w1.samsung.com [210.118.77.12])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 98D881B9
-        for <linux-xfs@vger.kernel.org>; Mon, 18 Sep 2023 05:35:32 -0700 (PDT)
-Received: from eucas1p1.samsung.com (unknown [182.198.249.206])
-        by mailout2.w1.samsung.com (KnoxPortal) with ESMTP id 20230918123530euoutp027de591567cff998b084bb3bf194eece0~F-mHUkkZ31501415014euoutp023
-        for <linux-xfs@vger.kernel.org>; Mon, 18 Sep 2023 12:35:30 +0000 (GMT)
-DKIM-Filter: OpenDKIM Filter v2.11.0 mailout2.w1.samsung.com 20230918123530euoutp027de591567cff998b084bb3bf194eece0~F-mHUkkZ31501415014euoutp023
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=samsung.com;
-        s=mail20170921; t=1695040530;
-        bh=i8zc9iaYygMGUIBqdtuTE0T+kxO2lOWm6HxzXg91t0A=;
-        h=Date:Subject:To:CC:From:In-Reply-To:References:From;
-        b=f8WxOS+sD490Ku8mAk2RRHaG5OUoSM+QIFzy7fI2MX5a8OmyDBWC7bJVDt0pBsEoR
-         YjrA55Bo2A4BTYdceI14iaGzzGFeE68fcIykblzXJxmG2KcWFoh5vQVXs75HjT2zdl
-         yM22O85vKSiTEd+QcdTfMU4I3nP9gWATykbL8nhE=
-Received: from eusmges1new.samsung.com (unknown [203.254.199.242]) by
-        eucas1p1.samsung.com (KnoxPortal) with ESMTP id
-        20230918123530eucas1p1b02dd398e6cc9f91afea96d8d9493af9~F-mG5gCKT1129911299eucas1p1c;
-        Mon, 18 Sep 2023 12:35:30 +0000 (GMT)
-Received: from eucas1p1.samsung.com ( [182.198.249.206]) by
-        eusmges1new.samsung.com (EUCPMTA) with SMTP id 72.9A.42423.21448056; Mon, 18
-        Sep 2023 13:35:30 +0100 (BST)
-Received: from eusmtrp1.samsung.com (unknown [182.198.249.138]) by
-        eucas1p2.samsung.com (KnoxPortal) with ESMTPA id
-        20230918123529eucas1p2eff7928119d9f97e7b4e338408db7a16~F-mGbTQOz2707827078eucas1p2W;
-        Mon, 18 Sep 2023 12:35:29 +0000 (GMT)
-Received: from eusmgms2.samsung.com (unknown [182.198.249.180]) by
-        eusmtrp1.samsung.com (KnoxPortal) with ESMTP id
-        20230918123529eusmtrp1d6a09092578b08891381f7e1215e6077~F-mGYvN8b1928419284eusmtrp1U;
-        Mon, 18 Sep 2023 12:35:29 +0000 (GMT)
-X-AuditID: cbfec7f2-a51ff7000002a5b7-46-65084412f88e
-Received: from eusmtip1.samsung.com ( [203.254.199.221]) by
-        eusmgms2.samsung.com (EUCPMTA) with SMTP id 21.76.14344.11448056; Mon, 18
-        Sep 2023 13:35:29 +0100 (BST)
-Received: from CAMSVWEXC02.scsc.local (unknown [106.1.227.72]) by
-        eusmtip1.samsung.com (KnoxPortal) with ESMTPA id
-        20230918123529eusmtip19fdff081bcf68bf4c4329787c4676c3e~F-mGPMTH81256512565eusmtip16;
-        Mon, 18 Sep 2023 12:35:29 +0000 (GMT)
-Received: from [192.168.8.209] (106.210.248.18) by CAMSVWEXC02.scsc.local
-        (2002:6a01:e348::6a01:e348) with Microsoft SMTP Server (TLS) id 15.0.1497.2;
-        Mon, 18 Sep 2023 13:35:28 +0100
-Message-ID: <4dbdcc6c-6bd1-faf4-7187-cc048acd2125@samsung.com>
-Date:   Mon, 18 Sep 2023 14:35:27 +0200
+        with ESMTP id S229852AbjIRP3v (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 18 Sep 2023 11:29:51 -0400
+Received: from smtp.kernel.org (unknown [52.25.139.140])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0F0F41BF7;
+        Mon, 18 Sep 2023 08:29:47 -0700 (PDT)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 17C0DC3277C;
+        Mon, 18 Sep 2023 15:17:59 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1695050279;
+        bh=uwl7iTqPMGYHV2a5Z30kOY4Hfdhlsvbv8rfMj4ldIQw=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=jnten6xc7x6rvDeNqlR12k+tasLbWzk5q2LSR7sFB0SjsquK/9fjvABlqdcMaOgBH
+         WEhWaFuypzCeSTMGpP9ddvIdslx5Wx2uZ2Ji/hwZez63mk+pU9MT5BFmI3mH2UMIzJ
+         lQcmMSUEKcBiihifucoChU+MsQNYg/0rus1qsKVIGK7uyvqo2hHqMJXdKm2EbcOtQJ
+         g9fR8AlrEjipC2864FQFs+5s23Ubbb+xmrqmO7KIPfncQ2LIBQZgzw8l86dUJKjuKl
+         Hid6c5tdQGoJ3yp1hkHlIY7+4SyntGemOzov1zZPZp2bufMUcxCUwGRXXmfC2yff5w
+         g/+mAhpyt4qDA==
+Date:   Mon, 18 Sep 2023 08:17:56 -0700
+From:   "Darrick J. Wong" <djwong@kernel.org>
+To:     Zorro Lang <zlang@redhat.com>
+Cc:     linux-xfs@vger.kernel.org, fstests@vger.kernel.org
+Subject: Re: [PATCHSET v2 0/2] fstests: fix ro mounting with unknown rocompat
+ features
+Message-ID: <20230918151756.GA348004@frogsfrogsfrogs>
+References: <169335058807.3526409.15604604578540143202.stgit@frogsfrogsfrogs>
+ <20230917164440.y27qdcugzodz6mw6@zlang-mailbox>
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
-        Thunderbird/102.15.1
-Subject: Re: [RFC 00/23] Enable block size > page size in XFS
-Content-Language: en-US
-To:     Matthew Wilcox <willy@infradead.org>,
-        Pankaj Raghav <kernel@pankajraghav.com>
-CC:     <linux-xfs@vger.kernel.org>, <linux-fsdevel@vger.kernel.org>,
-        <david@fromorbit.com>, <da.gomez@samsung.com>,
-        <akpm@linux-foundation.org>, <linux-kernel@vger.kernel.org>,
-        <djwong@kernel.org>, <linux-mm@kvack.org>,
-        <chandan.babu@oracle.com>, <mcgrof@kernel.org>,
-        <gost.dev@samsung.com>
-From:   Pankaj Raghav <p.raghav@samsung.com>
-In-Reply-To: <ZQSnWUF2M1iNzGWM@casper.infradead.org>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
-X-Originating-IP: [106.210.248.18]
-X-ClientProxiedBy: CAMSVWEXC01.scsc.local (2002:6a01:e347::6a01:e347) To
-        CAMSVWEXC02.scsc.local (2002:6a01:e348::6a01:e348)
-X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFtrDKsWRmVeSWpSXmKPExsWy7djPc7pCLhypBkuOSFjMWb+GzeLSUTmL
-        LcfuMVpcfsJnceblZxaLPXtPslhc3jWHzeLemv+sFrv+7GC3uDHhKaPF7x9z2By4PU4tkvDY
-        vELLY9OqTjaPTZ8msXucmPGbxePj01ssHmdXOnp83iQXwBHFZZOSmpNZllqkb5fAldE15S5T
-        wUHOihnz5zM2MO5j72Lk5JAQMJF4s2IuI4gtJLCCUWJmv2cXIxeQ/YVRYvmBD2wQzmdGiY/d
-        K+A6uhu3s0AkljNKnN67AqHq5qNmqMwuRom/Z98xdTFycPAK2Ek8eBoK0s0ioCpx8/AsJhCb
-        V0BQ4uTMJywgtqhAtMTMaQvB7hAWsJX4+OkZK4jNLCAucevJfLAxIgLBEq/PmoGMZxZYyiTx
-        4exvFpA4m4CWRGMn2HGcQMf1LO1khmjVlGjd/psdwpaX2P52DjPEA0oSC9vusEHYtRKnttxi
-        ApkpIbCaU+JJ/0qohIvEpm3noGxhiVfHt0B9LyNxenIPC4RdLfH0xm9miOYWRon+nevZQA6S
-        ELCW6DuTA1HjKHF4xXlmiDCfxI23ghD38ElM2jadeQKj6iykkJiF5ONZSF6YheSFBYwsqxjF
-        U0uLc9NTiw3zUsv1ihNzi0vz0vWS83M3MQIT2Ol/xz/tYJz76qPeIUYmDsZDjBIczEoivDMN
-        2VKFeFMSK6tSi/Lji0pzUosPMUpzsCiJ82rbnkwWEkhPLEnNTk0tSC2CyTJxcEo1MJlLLfY8
-        HWCk38EbtU+qT7qkPOfexLVrczh6tkQePjejNmze3CUno67G1//f7jrxv057+NFULzvpyCXJ
-        ZZN1PWQyd/3zF1RZ91RddbeRVYKQyJOZ4gXrJj35EzLJ1TzIV9Hh1sWz59NXOCSZuE+x/lJw
-        XXXGbndu9vzFTF+D/18zDEm28176cvqbL/4HLaZ92zrb62bjAf6KN1827ZQUvDN5Y81nXc/z
-        GgkL8macUr5ntntDqqbqBq9e5QPttaHnsheYtL2+F9F+I/BIqeUWEY6s2Z7MQjtjxCx/V3W9
-        dFbynsvaddYwm2tl8/ElL+bvKvjEXGUw8/yjhiiWdkbHJSmKvJeTnsQW/Vjsy33XR4mlOCPR
-        UIu5qDgRAGFb1UbPAwAA
-X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFvrIIsWRmVeSWpSXmKPExsVy+t/xu7qCLhypBhN3mljMWb+GzeLSUTmL
-        LcfuMVpcfsJnceblZxaLPXtPslhc3jWHzeLemv+sFrv+7GC3uDHhKaPF7x9z2By4PU4tkvDY
-        vELLY9OqTjaPTZ8msXucmPGbxePj01ssHmdXOnp83iQXwBGlZ1OUX1qSqpCRX1xiqxRtaGGk
-        Z2hpoWdkYqlnaGwea2VkqqRvZ5OSmpNZllqkb5egl9E15S5TwUHOihnz5zM2MO5j72Lk5JAQ
-        MJHobtzO0sXIxSEksJRRYtLql1AJGYmNX66yQtjCEn+udbFBFH1klFh7+i1Uxy5Gie1/bgN1
-        cHDwCthJPHgaCtLAIqAqcfPwLCYQm1dAUOLkzCcsICWiAtESXS+NQcLCArYSHz89A5vPLCAu
-        cevJfCaQEhGBYInXZ81ApjMLLGWS+HD2N9SqPYwSn16tBitiE9CSaOwEu5MT6IGepZ3MEHM0
-        JVq3/2aHsOUltr+dwwxxv5LEwrY7bBB2rcTnv88YJzCKzkJy3SwkZ8xCMmoWklELGFlWMYqk
-        lhbnpucWG+kVJ+YWl+al6yXn525iBMb9tmM/t+xgXPnqo94hRiYOxkOMEhzMSiK8Mw3ZUoV4
-        UxIrq1KL8uOLSnNSiw8xmgKDaCKzlGhyPjDx5JXEG5oZmBqamFkamFqaGSuJ83oWdCQKCaQn
-        lqRmp6YWpBbB9DFxcEo1MC36uuCfcsNOiblvgz/tkLt7peTASu1ZO942fwwp/hT93yjhquHy
-        lvSpBVLFW9y33+xamLWYjz/drSaD9USuF8vXdesuWVTzPrxkN0eNiW/ZNcv2JY5RmzO7yifN
-        CbxSXKgjGOaUtu5//4UuJxNhweaXEqsFfn9Zw3mJ19WyTPDTn+2xEe9yRZczPbVg3bPh8oZ9
-        +97rHFFv+b1r+3UjiZLHDuKZl/xznMUu7pPTylWJWjWz4tOcst5fO+Z6Fl2zkhZlYSlpXpnl
-        /pv91J+Ateb+K34HSWv8fvjhROSdOQ88C8UfzA9LkZ2Vol9z5LbcfJ2SH+/2GC9bf5rJg7VO
-        ONrALkqq80W2z0Gvyl43PiWW4oxEQy3mouJEAELC1IKEAwAA
-X-CMS-MailID: 20230918123529eucas1p2eff7928119d9f97e7b4e338408db7a16
-X-Msg-Generator: CA
-X-RootMTR: 20230915185016eucas1p18b6d44c1b875ef8d87a9575e3ddff8d1
-X-EPHeader: CA
-CMS-TYPE: 201P
-X-CMS-RootMailID: 20230915185016eucas1p18b6d44c1b875ef8d87a9575e3ddff8d1
-References: <20230915183848.1018717-1-kernel@pankajraghav.com>
-        <CGME20230915185016eucas1p18b6d44c1b875ef8d87a9575e3ddff8d1@eucas1p1.samsung.com>
-        <ZQSnWUF2M1iNzGWM@casper.infradead.org>
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20230917164440.y27qdcugzodz6mw6@zlang-mailbox>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On 2023-09-15 20:50, Matthew Wilcox wrote:
-> On Fri, Sep 15, 2023 at 08:38:25PM +0200, Pankaj Raghav wrote:
->> Only XFS was enabled and tested as a part of this series as it has
->> supported block sizes up to 64k and sector sizes up to 32k for years.
->> The only thing missing was the page cache magic to enable bs > ps. However any filesystem
->> that doesn't depend on buffer-heads and support larger block sizes
->> already should be able to leverage this effort to also support LBS,
->> bs > ps.
+On Mon, Sep 18, 2023 at 12:44:40AM +0800, Zorro Lang wrote:
+> Hi Darrick,
 > 
-> I think you should choose whether you're going to use 'bs > ps' or LBS
-> and stick to it.  They're both pretty inscrutable and using both
-> interchanagbly is worse.
+> Hi Darrick,
 > 
+> Do these two changes cover new xfs bug fix? I hit xfs/270 fails on
+> latest upstream mainline kernel testing, e.g. [1][2]. But the xfs/270
+> always test passed on my side before.
 
-Got it! Probably I will stick to Large block size and explain what it means
-at the start of the patchset.
+Yes, the changes in xfs/270 reflect the corrections to the ro mounting
+behavior in this fix series:
+https://lore.kernel.org/linux-xfs/169454023347.3411463.3256623887249978768.stg-ugh@frogsfrogsfrogs/T/#u
 
-> But I think filesystems which use buffer_heads should be fine to support
-> bs > ps.  The problems with the buffer cache are really when you try to
-> support small block sizes and large folio sizes (eg arrays of bhs on
-> the stack).  Supporting bs == folio_size shouldn't be a problem.
+The ro mount behavior regressed some 7-8 years ago; this test was
+written to test the broken fix; and we didn't notice any of this until
+6.1 added the incore unlinked list.  xfs/270 didn't check the usability
+of the mounted ro filesystem, so nobody noticed that the mount failed
+when it should have succeeded.
+
+(That's the first + line)
+
+The second diff here checks what happens when you try to ro mount with a
+dirty log.
+
+--D
+
+> Thanks,
+> Zorro
 > 
-
-I remember some patches from you trying to avoid the stack limitation while working
-with bh. Thanks for the clarification!
+> [1]
+> --- /dev/fd/63	2023-09-16 20:33:38.373115157 -0400
+> +++ xfs/270.out.bad	2023-09-16 20:33:37.959115275 -0400
+> @@ -1,6 +1,9 @@
+>  QA output created by 270
+>  rw mount test
+>  ro mount test
+> +cat: /mnt/xfstests/scratch/testfile: Input/output error
+>  rw remount test
+>  rw mount test
+>  ro mount test
+> +ro mount test failed
+> +(see /var/lib/xfstests/results//xfs/270.full for details)
+> 
+> [2]
+> [57829.436755] run fstests xfs/270 at 2023-09-16 20:33:31
+> [57832.373519] XFS (vda3): Mounting V5 Filesystem b31f9652-417d-4dd2-a5ed-54ee957fbfcb
+> [57832.398699] XFS (vda3): Ending clean mount
+> [57832.551895] XFS (vda3): Unmounting Filesystem b31f9652-417d-4dd2-a5ed-54ee957fbfcb
+> [57832.909487] XFS (vda3): Mounting V5 Filesystem 08403da7-afbe-4bfa-a45c-487e28280acc
+> [57832.934603] XFS (vda3): Ending clean mount
+> [57832.963287] XFS (vda3): User initiated shutdown received.
+> [57832.967959] XFS (vda3): Metadata I/O Error (0x4) detected at xfs_fs_goingdown+0x4b/0x180 [xfs] (fs/xfs/xfs_fsops.c:492).  Shutting down filesystem.
+> [57832.974742] XFS (vda3): Please unmount the filesystem and rectify the problem(s)
+> [57833.002720] XFS (vda3): Unmounting Filesystem 08403da7-afbe-4bfa-a45c-487e28280acc
+> [57833.376473] XFS (vda3): Mounting V5 Filesystem 801b25ca-acc4-4232-9955-dc3448680467
+> [57833.403380] XFS (vda3): Ending clean mount
+> [57833.443719] XFS (vda3): Unmounting Filesystem 801b25ca-acc4-4232-9955-dc3448680467
+> [57833.516114] [TTM] Buffer eviction failed
+> [57833.519490] qxl 0000:00:02.0: object_init failed for (3149824, 0x00000001)
+> [57833.523184] [drm:qxl_alloc_bo_reserved [qxl]] *ERROR* failed to allocate VRAM BO
+> [57833.955746] XFS (vda3): Superblock has unknown read-only compatible features (0x80000000) enabled.
+> [57833.960383] XFS (vda3): Attempted to mount read-only compatible filesystem read-write.
+> [57833.964353] XFS (vda3): Filesystem can only be safely mounted read only.
+> [57833.967997] XFS (vda3): SB validate failed with error -22.
+> [57834.039637] XFS (vda3): Superblock has unknown read-only compatible features (0x80000000) enabled.
+> [57834.046289] XFS (vda3): Mounting V5 Filesystem 801b25ca-acc4-4232-9955-dc3448680467
+> [57834.075451] XFS (vda3): Ending clean mount
+> [57834.082359] XFS (vda3): Corruption detected in superblock read-only compatible features (0x80000000)!
+> [57834.086487] XFS (vda3): Metadata corruption detected at xfs_sb_write_verify+0x11d/0x380 [xfs], xfs_sb block 0x0 
+> [57834.090716] XFS (vda3): Unmount and run xfs_repair
+> [57834.093708] XFS (vda3): First 128 bytes of corrupted metadata buffer:
+> [57834.096953] 00000000: 58 46 53 42 00 00 10 00 00 00 00 00 00 3c 00 00  XFSB.........<..
+> [57834.100635] 00000010: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  ................
+> [57834.104330] 00000020: 80 1b 25 ca ac c4 42 32 99 55 dc 34 48 68 04 67  ..%...B2.U.4Hh.g
+> [57834.108273] 00000030: 00 00 00 00 00 20 00 06 00 00 00 00 00 00 00 80  ..... ..........
+> [57834.112176] 00000040: 00 00 00 00 00 00 00 81 00 00 00 00 00 00 00 82  ................
+> [57834.116043] 00000050: 00 00 00 01 00 0f 00 00 00 00 00 04 00 00 00 00  ................
+> [57834.119693] 00000060: 00 00 40 00 b4 a5 02 00 02 00 00 08 00 00 00 00  ..@.............
+> [57834.123459] 00000070: 00 00 00 00 00 00 00 00 0c 09 09 03 14 00 00 19  ................
+> [57834.127159] XFS (vda3): Corruption of in-memory data (0x8) detected at _xfs_buf_ioapply+0x50b/0x5f0 [xfs] (fs/xfs/xfs_buf.c:1558).  Shutting down filesystem.
+> [57834.134557] XFS (vda3): Please unmount the filesystem and rectify the problem(s)
+> [57834.253491] XFS (vda3): ro->rw transition prohibited on unknown (0x80000000) ro-compat filesystem
+> [57834.281980] XFS (vda3): Unmounting Filesystem 801b25ca-acc4-4232-9955-dc3448680467
+> [57834.655120] XFS (vda3): Mounting V5 Filesystem 29902d21-a146-4095-8747-562850110ff6
+> [57834.682299] XFS (vda3): Ending clean mount
+> [57834.723067] XFS (vda3): User initiated shutdown received.
+> [57834.730954] XFS (vda3): Metadata I/O Error (0x4) detected at xfs_fs_goingdown+0x4b/0x180 [xfs] (fs/xfs/xfs_fsops.c:492).  Shutting down filesystem.
+> [57834.738710] XFS (vda3): Please unmount the filesystem and rectify the problem(s)
+> [57834.768607] XFS (vda3): Unmounting Filesystem 29902d21-a146-4095-8747-562850110ff6
+> [57835.270472] XFS (vda3): Superblock has unknown read-only compatible features (0x80000000) enabled.
+> [57835.275655] XFS (vda3): Attempted to mount read-only compatible filesystem read-write.
+> [57835.279434] XFS (vda3): Filesystem can only be safely mounted read only.
+> [57835.283124] XFS (vda3): SB validate failed with error -22.
+> [57835.357336] XFS (vda3): Superblock has unknown read-only compatible features (0x80000000) enabled.
+> [57835.369968] XFS (vda3): Mounting V5 Filesystem 29902d21-a146-4095-8747-562850110ff6
+> [57835.398595] XFS (vda3): Starting recovery (logdev: internal)
+> [57835.410361] XFS (vda3): Superblock has unknown read-only compatible features (0x80000000) enabled.
+> [57835.414593] XFS (vda3): Attempted to mount read-only compatible filesystem read-write.
+> [57835.418495] XFS (vda3): Filesystem can only be safely mounted read only.
+> [57835.422152] XFS (vda3): metadata I/O error in "xlog_do_recover+0x3e8/0x540 [xfs]" at daddr 0x0 len 1 error 22
+> [57835.426851] XFS: Assertion failed: 0, file: fs/xfs/xfs_log_recover.c, line: 3321
+> [57835.430765] ------------[ cut here ]------------
+> [57835.434014] WARNING: CPU: 2 PID: 3426232 at fs/xfs/xfs_message.c:104 assfail+0x54/0x70 [xfs]
+> [57835.438380] Modules linked in: ext2 overlay dm_zero dm_log_writes dm_thin_pool dm_persistent_data dm_bio_prison sd_mod t10_pi sg dm_snapshot dm_bufio ext4 mbcache jbd2 loop dm_flakey dm_mod tls rfkill intel_rapl_msr sunrpc intel_rapl_common intel_uncore_frequency_common isst_if_common nfit snd_hda_codec_generic ledtrig_audio kvm_intel snd_hda_intel snd_intel_dspcfg snd_intel_sdw_acpi snd_hda_codec kvm snd_hda_core snd_hwdep irqbypass snd_seq snd_seq_device snd_pcm qxl snd_timer drm_ttm_helper ttm pcspkr virtio_balloon snd drm_kms_helper soundcore i2c_piix4 joydev drm fuse xfs libcrc32c ata_generic crct10dif_pclmul crc32_pclmul crc32c_intel ghash_clmulni_intel ata_piix virtio_console virtio_net net_failover failover virtio_blk libata serio_raw [last unloaded: scsi_debug]
+> [57835.467794] CPU: 2 PID: 3426232 Comm: mount Kdump: loaded Tainted: G        W          6.6.0-rc1+ #1
+> [57835.472233] Hardware name: Red Hat KVM, BIOS 0.5.1 01/01/2011
+> [57835.475946] RIP: 0010:assfail+0x54/0x70 [xfs]
+> [57835.479708] Code: c0 48 ba 00 00 00 00 00 fc ff df 48 89 c1 83 e0 07 48 c1 e9 03 0f b6 14 11 38 c2 7f 04 84 d2 75 10 80 3d 6e 3f 1c 00 00 75 15 <0f> 0b c3 cc cc cc cc 48 c7 c7 10 47 99 c0 e8 79 fd 34 df eb e2 0f
+> [57835.489526] RSP: 0018:ffffc9000293f918 EFLAGS: 00010246
+> [57835.493381] RAX: 0000000000000000 RBX: ffff88817b73a000 RCX: 1ffffffff81328e2
+> [57835.497512] RDX: 0000000000000004 RSI: ffffc9000293f680 RDI: ffffffffc0afd780
+> [57835.501588] RBP: ffff8881964ea000 R08: 00000000ffffffea R09: fffff52000527ec1
+> [57835.505701] R10: ffffc9000293f60f R11: fffffffffff6c2b0 R12: 00000000ffffffea
+> [57835.509789] R13: ffff88817b73a0e0 R14: ffff8881b927ba80 R15: 
+> 
+> 
+> On Tue, Aug 29, 2023 at 04:09:48PM -0700, Darrick J. Wong wrote:
+> > Hi all,
+> > 
+> > Dave pointed out some failures in xfs/270 when he upgraded Debian
+> > unstable and util-linux started using the new mount apis.  Upon further
+> > inquiry I noticed that XFS is quite a hot mess when it encounters a
+> > filesystem with unrecognized rocompat bits set in the superblock.
+> > 
+> > Whereas we used to allow readonly mounts under these conditions, a
+> > change to the sb write verifier several years ago resulted in the
+> > filesystem going down immediately because the post-mount log cleaning
+> > writes the superblock, which trips the sb write verifier on the
+> > unrecognized rocompat bit.  I made the observation that the ROCOMPAT
+> > features RMAPBT and REFLINK both protect new log intent item types,
+> > which means that we actually cannot support recovering the log if we
+> > don't recognize all the rocompat bits.
+> > 
+> > Therefore -- fix inode inactivation to work when we're recovering the
+> > log, disallow recovery when there's unrecognized rocompat bits, and
+> > don't clean the log if doing so would trip the rocompat checks.
+> > 
+> > v2: change direction of series to allow log recovery on ro mounts
+> > 
+> > If you're going to start using this code, I strongly recommend pulling
+> > from my git trees, which are linked below.
+> > 
+> > This has been running on the djcloud for months with no problems.  Enjoy!
+> > Comments and questions are, as always, welcome.
+> > 
+> > --D
+> > 
+> > fstests git tree:
+> > https://git.kernel.org/cgit/linux/kernel/git/djwong/xfstests-dev.git/log/?h=fix-ro-mounts
+> > ---
+> >  tests/xfs/270     |   80 ++++++++++++++++++++++++++++++++++++++---------------
+> >  tests/xfs/270.out |    2 +
+> >  2 files changed, 59 insertions(+), 23 deletions(-)
+> > 
+> 
