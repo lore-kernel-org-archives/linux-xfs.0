@@ -2,177 +2,145 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 847F8CD13D8
-	for <linux-xfs@archiver.kernel.org>; Mon, 18 Sep 2023 12:30:34 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id ECC39C46CA1
+	for <linux-xfs@archiver.kernel.org>; Mon, 18 Sep 2023 12:36:25 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S239638AbjIRMaI (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 18 Sep 2023 08:30:08 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44934 "EHLO
+        id S239152AbjIRMf6 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 18 Sep 2023 08:35:58 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33176 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S241962AbjIRM3g (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 18 Sep 2023 08:29:36 -0400
+        with ESMTP id S241868AbjIRMfz (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 18 Sep 2023 08:35:55 -0400
 Received: from mailout2.w1.samsung.com (mailout2.w1.samsung.com [210.118.77.12])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id BEA679F
-        for <linux-xfs@vger.kernel.org>; Mon, 18 Sep 2023 05:29:28 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 98D881B9
+        for <linux-xfs@vger.kernel.org>; Mon, 18 Sep 2023 05:35:32 -0700 (PDT)
 Received: from eucas1p1.samsung.com (unknown [182.198.249.206])
-        by mailout2.w1.samsung.com (KnoxPortal) with ESMTP id 20230918122925euoutp02ff0eff7a844ed3e057858b604ca2b70f~F-gzEF_hX0712007120euoutp02F
-        for <linux-xfs@vger.kernel.org>; Mon, 18 Sep 2023 12:29:25 +0000 (GMT)
-DKIM-Filter: OpenDKIM Filter v2.11.0 mailout2.w1.samsung.com 20230918122925euoutp02ff0eff7a844ed3e057858b604ca2b70f~F-gzEF_hX0712007120euoutp02F
+        by mailout2.w1.samsung.com (KnoxPortal) with ESMTP id 20230918123530euoutp027de591567cff998b084bb3bf194eece0~F-mHUkkZ31501415014euoutp023
+        for <linux-xfs@vger.kernel.org>; Mon, 18 Sep 2023 12:35:30 +0000 (GMT)
+DKIM-Filter: OpenDKIM Filter v2.11.0 mailout2.w1.samsung.com 20230918123530euoutp027de591567cff998b084bb3bf194eece0~F-mHUkkZ31501415014euoutp023
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=samsung.com;
-        s=mail20170921; t=1695040165;
-        bh=T8vDLSLgWlgqAAt+WTBX0Wul4eBpG5N9RZJcFXyghzA=;
+        s=mail20170921; t=1695040530;
+        bh=i8zc9iaYygMGUIBqdtuTE0T+kxO2lOWm6HxzXg91t0A=;
         h=Date:Subject:To:CC:From:In-Reply-To:References:From;
-        b=Vj+S+5MQL01hMeAXbmSlxDrobhV5Eae2Nbl2jOmNZ9d8WM1LpTq2LFqF7/hslvA3Q
-         V9KY8o6m/2LkQBtPYDXcJUC5vJj9RCQr+DfVcLZA+c5pdHuJUch81IOBCtr5SNlXLX
-         R5nCYaYcmc0WmGTJ4pvb4RCMVqvnTiwr1wD8WrFU=
+        b=f8WxOS+sD490Ku8mAk2RRHaG5OUoSM+QIFzy7fI2MX5a8OmyDBWC7bJVDt0pBsEoR
+         YjrA55Bo2A4BTYdceI14iaGzzGFeE68fcIykblzXJxmG2KcWFoh5vQVXs75HjT2zdl
+         yM22O85vKSiTEd+QcdTfMU4I3nP9gWATykbL8nhE=
 Received: from eusmges1new.samsung.com (unknown [203.254.199.242]) by
-        eucas1p2.samsung.com (KnoxPortal) with ESMTP id
-        20230918122925eucas1p299320dca1a3f9a01e99b30b07589323e~F-gylZHN91246712467eucas1p2w;
-        Mon, 18 Sep 2023 12:29:25 +0000 (GMT)
+        eucas1p1.samsung.com (KnoxPortal) with ESMTP id
+        20230918123530eucas1p1b02dd398e6cc9f91afea96d8d9493af9~F-mG5gCKT1129911299eucas1p1c;
+        Mon, 18 Sep 2023 12:35:30 +0000 (GMT)
 Received: from eucas1p1.samsung.com ( [182.198.249.206]) by
-        eusmges1new.samsung.com (EUCPMTA) with SMTP id 98.F8.42423.4A248056; Mon, 18
-        Sep 2023 13:29:24 +0100 (BST)
+        eusmges1new.samsung.com (EUCPMTA) with SMTP id 72.9A.42423.21448056; Mon, 18
+        Sep 2023 13:35:30 +0100 (BST)
 Received: from eusmtrp1.samsung.com (unknown [182.198.249.138]) by
-        eucas1p1.samsung.com (KnoxPortal) with ESMTPA id
-        20230918122924eucas1p122bce924223345533b05aed016357efa~F-gyG4mCb1618116181eucas1p1O;
-        Mon, 18 Sep 2023 12:29:24 +0000 (GMT)
-Received: from eusmgms1.samsung.com (unknown [182.198.249.179]) by
+        eucas1p2.samsung.com (KnoxPortal) with ESMTPA id
+        20230918123529eucas1p2eff7928119d9f97e7b4e338408db7a16~F-mGbTQOz2707827078eucas1p2W;
+        Mon, 18 Sep 2023 12:35:29 +0000 (GMT)
+Received: from eusmgms2.samsung.com (unknown [182.198.249.180]) by
         eusmtrp1.samsung.com (KnoxPortal) with ESMTP id
-        20230918122924eusmtrp1dd7e281107acb0ea17c1fdd0727b0b1a~F-gyGOxm21513115131eusmtrp1J;
-        Mon, 18 Sep 2023 12:29:24 +0000 (GMT)
-X-AuditID: cbfec7f2-a51ff7000002a5b7-a4-650842a41b86
+        20230918123529eusmtrp1d6a09092578b08891381f7e1215e6077~F-mGYvN8b1928419284eusmtrp1U;
+        Mon, 18 Sep 2023 12:35:29 +0000 (GMT)
+X-AuditID: cbfec7f2-a51ff7000002a5b7-46-65084412f88e
 Received: from eusmtip1.samsung.com ( [203.254.199.221]) by
-        eusmgms1.samsung.com (EUCPMTA) with SMTP id 4D.C8.10549.4A248056; Mon, 18
-        Sep 2023 13:29:24 +0100 (BST)
+        eusmgms2.samsung.com (EUCPMTA) with SMTP id 21.76.14344.11448056; Mon, 18
+        Sep 2023 13:35:29 +0100 (BST)
 Received: from CAMSVWEXC02.scsc.local (unknown [106.1.227.72]) by
         eusmtip1.samsung.com (KnoxPortal) with ESMTPA id
-        20230918122924eusmtip1596c50d6c894097e01fd6ac2602f0744~F-gx7PNpM1269412694eusmtip1f;
-        Mon, 18 Sep 2023 12:29:24 +0000 (GMT)
+        20230918123529eusmtip19fdff081bcf68bf4c4329787c4676c3e~F-mGPMTH81256512565eusmtip16;
+        Mon, 18 Sep 2023 12:35:29 +0000 (GMT)
 Received: from [192.168.8.209] (106.210.248.18) by CAMSVWEXC02.scsc.local
         (2002:6a01:e348::6a01:e348) with Microsoft SMTP Server (TLS) id 15.0.1497.2;
-        Mon, 18 Sep 2023 13:29:23 +0100
-Message-ID: <806df723-78cf-c7eb-66a6-1442c02126b3@samsung.com>
-Date:   Mon, 18 Sep 2023 14:29:22 +0200
+        Mon, 18 Sep 2023 13:35:28 +0100
+Message-ID: <4dbdcc6c-6bd1-faf4-7187-cc048acd2125@samsung.com>
+Date:   Mon, 18 Sep 2023 14:35:27 +0200
 MIME-Version: 1.0
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
         Thunderbird/102.15.1
 Subject: Re: [RFC 00/23] Enable block size > page size in XFS
 Content-Language: en-US
-To:     Dave Chinner <david@fromorbit.com>,
-        Luis Chamberlain <mcgrof@kernel.org>
-CC:     Pankaj Raghav <kernel@pankajraghav.com>,
-        <linux-xfs@vger.kernel.org>, <linux-fsdevel@vger.kernel.org>,
-        <da.gomez@samsung.com>, <akpm@linux-foundation.org>,
-        <linux-kernel@vger.kernel.org>, <willy@infradead.org>,
+To:     Matthew Wilcox <willy@infradead.org>,
+        Pankaj Raghav <kernel@pankajraghav.com>
+CC:     <linux-xfs@vger.kernel.org>, <linux-fsdevel@vger.kernel.org>,
+        <david@fromorbit.com>, <da.gomez@samsung.com>,
+        <akpm@linux-foundation.org>, <linux-kernel@vger.kernel.org>,
         <djwong@kernel.org>, <linux-mm@kvack.org>,
-        <chandan.babu@oracle.com>, <gost.dev@samsung.com>,
-        <riteshh@linux.ibm.com>
+        <chandan.babu@oracle.com>, <mcgrof@kernel.org>,
+        <gost.dev@samsung.com>
 From:   Pankaj Raghav <p.raghav@samsung.com>
-In-Reply-To: <ZQfbHloBUpDh+zCg@dread.disaster.area>
+In-Reply-To: <ZQSnWUF2M1iNzGWM@casper.infradead.org>
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
 X-Originating-IP: [106.210.248.18]
 X-ClientProxiedBy: CAMSVWEXC01.scsc.local (2002:6a01:e347::6a01:e347) To
         CAMSVWEXC02.scsc.local (2002:6a01:e348::6a01:e348)
-X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFjrGKsWRmVeSWpSXmKPExsWy7djPc7pLnDhSDX49trSYs34Nm8Wlo3IW
-        W47dY7S4/ITP4szLzywWe/aeZLG4vGsOm8W9Nf9ZLXb92cFucWPCU0aLV49vsVv8/jGHzYHH
-        49QiCY/NK7Q8Nq3qZPPY9GkSu8eJGb9ZPCYsOsDo8fHpLRaPsysdPT5vkgvgjOKySUnNySxL
-        LdK3S+DKOLP2B1vBY8GKV8f7GRsYO/m6GDk5JARMJHZdaWYDsYUEVjBKdE2W6mLkArK/MEpM
-        65nCCJH4zCixt5kXpuHk71XMEEXLGSXe3D7GAuEAFc24PJsFomMXo8T2rSUgNq+AncSM+7fA
-        JrEIqErM6NjBAhEXlDg58wmYLSoQLTFz2kKwGmEBW4mPn56xgtjMAuISt57MZwKxRQR8JH4v
-        OswIsoxZ4AqTxJQbvUAOBwebgJZEYyc7SA2ngLHE4xmf2CB6NSVat/9mh7DlJba/ncMM8YGS
-        xMK2O2wQdq3EqS23mEBmSgjs5pT4/vkuK0TCReL372XsELawxKvjW6BsGYnTk3tYIOxqiac3
-        fjNDNLcwSvTvXM8GcpCEgLVE35kciBpHiTmvn7FDhPkkbrwVhLiHT2LStunMExhVZyEFxSwk
-        L89C8sIsJC8sYGRZxSieWlqcm55abJiXWq5XnJhbXJqXrpecn7uJEZjUTv87/mkH49xXH/UO
-        MTJxMB5ilOBgVhLhnWnIlirEm5JYWZValB9fVJqTWnyIUZqDRUmcV9v2ZLKQQHpiSWp2ampB
-        ahFMlomDU6qBic14jtzUj79MtLuc4m53O9y+uVXIbrmxvYOznsdp1k8NskHL43ZMiSjzuhHb
-        abFsdlBz+nJ9pqzg85NesXb+Nb90kalboNP7gO6l5kcT95yymlUaEvd1/u1gg4uKjGL5Pxsj
-        HkRnrXjreVdhOfdEjcBzdx2nb/2TfmnHEQXZe58msNaf2xs3gb9JfX2Q5om5ueavTJP+Net0
-        T+6S6yvMyDo9z7J6wbvchqUK+Wtsnb5+2SVo2HUjf+qVxZGR37scpnGc3Pnyayfz0tygYP++
-        iZcUpuy/fNBAkaH5uq/ai3LVGtMtDkeb7zaV+n5m2bfsrJ5+xoeyNasufD5jvyF6n0Km7yLO
-        xV/9NPqvRJy+pcRSnJFoqMVcVJwIABx9aNvZAwAA
-X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFvrLIsWRmVeSWpSXmKPExsVy+t/xu7pLnDhSDT68lrKYs34Nm8Wlo3IW
-        W47dY7S4/ITP4szLzywWe/aeZLG4vGsOm8W9Nf9ZLXb92cFucWPCU0aLV49vsVv8/jGHzYHH
-        49QiCY/NK7Q8Nq3qZPPY9GkSu8eJGb9ZPCYsOsDo8fHpLRaPsysdPT5vkgvgjNKzKcovLUlV
-        yMgvLrFVija0MNIztLTQMzKx1DM0No+1MjJV0rezSUnNySxLLdK3S9DLOLP2B1vBY8GKV8f7
-        GRsYO/m6GDk5JARMJE7+XsXcxcjFISSwlFGi49NjJoiEjMTGL1dZIWxhiT/Xutggij4yShw/
-        vh7K2cUo8eDMcnaQKl4BO4kZ928xgtgsAqoSMzp2sEDEBSVOznwCZHNwiApES3S9NAYJCwvY
-        Snz89AxsAbOAuMStJ/PBFosI+Ej8XnSYEWQ+s8AVJokpN3oZIZZNYJI41PcebBCbgJZEYyfY
-        Xk4BY4nHMz6xQQzSlGjd/psdwpaX2P52DjPEB0oSC9vusEHYtRKf/z5jnMAoOgvJebOQ3DEL
-        yahZSEYtYGRZxSiSWlqcm55bbKhXnJhbXJqXrpecn7uJEZgOth37uXkH47xXH/UOMTJxMB5i
-        lOBgVhLhnWnIlirEm5JYWZValB9fVJqTWnyI0RQYRhOZpUST84EJKa8k3tDMwNTQxMzSwNTS
-        zFhJnNezoCNRSCA9sSQ1OzW1ILUIpo+Jg1OqgWnVl8kvY+cetKl0SInyrtye0JJ29/fkta5m
-        ptn8U0x9Y1cvTn+fY2lzx9/2z7Eki/3zdja3idW/fdCwYItEK8fB+uBzM+eJCvmwXr4eWTXV
-        bsnnbNmsyGr55Zyu15Zl+CVP/XtmYtoex8sX9KXveT3Y1b9XTJz9ked7fqvt1rfcxdK/nH5v
-        dvW9xc/5Yo474zM27rGVtve00WVye6anY2yfLtmkIripIqFfwJX7xSYGickRSlaXpFJ+FRTJ
-        7/PP+tDlHHrWxTItbQ7Lwk9flSttXqZw1WQxSp//2T410sh0c9KehI5PWbd6z/Vdia/+cu2d
-        1r+spL/KJz6El3wtt57P+OiH1qyZnUuXu4nbKbEUZyQaajEXFScCAO6nMWyQAwAA
-X-CMS-MailID: 20230918122924eucas1p122bce924223345533b05aed016357efa
+X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFtrDKsWRmVeSWpSXmKPExsWy7djPc7pCLhypBkuOSFjMWb+GzeLSUTmL
+        LcfuMVpcfsJnceblZxaLPXtPslhc3jWHzeLemv+sFrv+7GC3uDHhKaPF7x9z2By4PU4tkvDY
+        vELLY9OqTjaPTZ8msXucmPGbxePj01ssHmdXOnp83iQXwBHFZZOSmpNZllqkb5fAldE15S5T
+        wUHOihnz5zM2MO5j72Lk5JAQMJF4s2IuI4gtJLCCUWJmv2cXIxeQ/YVRYvmBD2wQzmdGiY/d
+        K+A6uhu3s0AkljNKnN67AqHq5qNmqMwuRom/Z98xdTFycPAK2Ek8eBoK0s0ioCpx8/AsJhCb
+        V0BQ4uTMJywgtqhAtMTMaQvB7hAWsJX4+OkZK4jNLCAucevJfLAxIgLBEq/PmoGMZxZYyiTx
+        4exvFpA4m4CWRGMn2HGcQMf1LO1khmjVlGjd/psdwpaX2P52DjPEA0oSC9vusEHYtRKnttxi
+        ApkpIbCaU+JJ/0qohIvEpm3noGxhiVfHt0B9LyNxenIPC4RdLfH0xm9miOYWRon+nevZQA6S
+        ELCW6DuTA1HjKHF4xXlmiDCfxI23ghD38ElM2jadeQKj6iykkJiF5ONZSF6YheSFBYwsqxjF
+        U0uLc9NTiw3zUsv1ihNzi0vz0vWS83M3MQIT2Ol/xz/tYJz76qPeIUYmDsZDjBIczEoivDMN
+        2VKFeFMSK6tSi/Lji0pzUosPMUpzsCiJ82rbnkwWEkhPLEnNTk0tSC2CyTJxcEo1MJlLLfY8
+        HWCk38EbtU+qT7qkPOfexLVrczh6tkQePjejNmze3CUno67G1//f7jrxv057+NFULzvpyCXJ
+        ZZN1PWQyd/3zF1RZ91RddbeRVYKQyJOZ4gXrJj35EzLJ1TzIV9Hh1sWz59NXOCSZuE+x/lJw
+        XXXGbndu9vzFTF+D/18zDEm28176cvqbL/4HLaZ92zrb62bjAf6KN1827ZQUvDN5Y81nXc/z
+        GgkL8macUr5ntntDqqbqBq9e5QPttaHnsheYtL2+F9F+I/BIqeUWEY6s2Z7MQjtjxCx/V3W9
+        dFbynsvaddYwm2tl8/ElL+bvKvjEXGUw8/yjhiiWdkbHJSmKvJeTnsQW/Vjsy33XR4mlOCPR
+        UIu5qDgRAGFb1UbPAwAA
+X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFvrIIsWRmVeSWpSXmKPExsVy+t/xu7qCLhypBhN3mljMWb+GzeLSUTmL
+        LcfuMVpcfsJnceblZxaLPXtPslhc3jWHzeLemv+sFrv+7GC3uDHhKaPF7x9z2By4PU4tkvDY
+        vELLY9OqTjaPTZ8msXucmPGbxePj01ssHmdXOnp83iQXwBGlZ1OUX1qSqpCRX1xiqxRtaGGk
+        Z2hpoWdkYqlnaGwea2VkqqRvZ5OSmpNZllqkb5egl9E15S5TwUHOihnz5zM2MO5j72Lk5JAQ
+        MJHobtzO0sXIxSEksJRRYtLql1AJGYmNX66yQtjCEn+udbFBFH1klFh7+i1Uxy5Gie1/bgN1
+        cHDwCthJPHgaCtLAIqAqcfPwLCYQm1dAUOLkzCcsICWiAtESXS+NQcLCArYSHz89A5vPLCAu
+        cevJfCaQEhGBYInXZ81ApjMLLGWS+HD2N9SqPYwSn16tBitiE9CSaOwEu5MT6IGepZ3MEHM0
+        JVq3/2aHsOUltr+dwwxxv5LEwrY7bBB2rcTnv88YJzCKzkJy3SwkZ8xCMmoWklELGFlWMYqk
+        lhbnpucWG+kVJ+YWl+al6yXn525iBMb9tmM/t+xgXPnqo94hRiYOxkOMEhzMSiK8Mw3ZUoV4
+        UxIrq1KL8uOLSnNSiw8xmgKDaCKzlGhyPjDx5JXEG5oZmBqamFkamFqaGSuJ83oWdCQKCaQn
+        lqRmp6YWpBbB9DFxcEo1MC36uuCfcsNOiblvgz/tkLt7peTASu1ZO942fwwp/hT93yjhquHy
+        lvSpBVLFW9y33+xamLWYjz/drSaD9USuF8vXdesuWVTzPrxkN0eNiW/ZNcv2JY5RmzO7yifN
+        CbxSXKgjGOaUtu5//4UuJxNhweaXEqsFfn9Zw3mJ19WyTPDTn+2xEe9yRZczPbVg3bPh8oZ9
+        +97rHFFv+b1r+3UjiZLHDuKZl/xznMUu7pPTylWJWjWz4tOcst5fO+Z6Fl2zkhZlYSlpXpnl
+        /pv91J+Ateb+K34HSWv8fvjhROSdOQ88C8UfzA9LkZ2Vol9z5LbcfJ2SH+/2GC9bf5rJg7VO
+        ONrALkqq80W2z0Gvyl43PiWW4oxEQy3mouJEAELC1IKEAwAA
+X-CMS-MailID: 20230918123529eucas1p2eff7928119d9f97e7b4e338408db7a16
 X-Msg-Generator: CA
-X-RootMTR: 20230918050749eucas1p13c219481b4b08c1d58e90ea70ff7b9c8
+X-RootMTR: 20230915185016eucas1p18b6d44c1b875ef8d87a9575e3ddff8d1
 X-EPHeader: CA
 CMS-TYPE: 201P
-X-CMS-RootMailID: 20230918050749eucas1p13c219481b4b08c1d58e90ea70ff7b9c8
+X-CMS-RootMailID: 20230915185016eucas1p18b6d44c1b875ef8d87a9575e3ddff8d1
 References: <20230915183848.1018717-1-kernel@pankajraghav.com>
-        <ZQd4IPeVI+o6M38W@dread.disaster.area>
-        <ZQewKIfRYcApEYXt@bombadil.infradead.org>
-        <CGME20230918050749eucas1p13c219481b4b08c1d58e90ea70ff7b9c8@eucas1p1.samsung.com>
-        <ZQfbHloBUpDh+zCg@dread.disaster.area>
+        <CGME20230915185016eucas1p18b6d44c1b875ef8d87a9575e3ddff8d1@eucas1p1.samsung.com>
+        <ZQSnWUF2M1iNzGWM@casper.infradead.org>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
->>>
->>> As it is, I'd really prefer stuff that adds significant XFS
->>> functionality that we need to test to be based on a current Linus
->>> TOT kernel so that we can test it without being impacted by all
->>> the random unrelated breakages that regularly happen in linux-next
->>> kernels....
->>
->> That's understandable! I just rebased onto Linus' tree, this only
->> has the bs > ps support on 4k sector size:
->>
->> https://git.kernel.org/pub/scm/linux/kernel/git/mcgrof/linux.git/log/?h=v6.6-rc2-lbs-nobdev
+On 2023-09-15 20:50, Matthew Wilcox wrote:
+> On Fri, Sep 15, 2023 at 08:38:25PM +0200, Pankaj Raghav wrote:
+>> Only XFS was enabled and tested as a part of this series as it has
+>> supported block sizes up to 64k and sector sizes up to 32k for years.
+>> The only thing missing was the page cache magic to enable bs > ps. However any filesystem
+>> that doesn't depend on buffer-heads and support larger block sizes
+>> already should be able to leverage this effort to also support LBS,
+>> bs > ps.
+> 
+> I think you should choose whether you're going to use 'bs > ps' or LBS
+> and stick to it.  They're both pretty inscrutable and using both
+> interchanagbly is worse.
 > 
 
-I think this tree doesn't have some of the last minute changes I did before I sent the RFC. I will
-sync with Luis offline regarding that.
+Got it! Probably I will stick to Large block size and explain what it means
+at the start of the patchset.
 
-> 
->> I just did a cursory build / boot / fsx with 16k block size / 4k sector size
->> test with this tree only. I havne't ran fstests on it.
-> 
-> W/ 64k block size, generic/042 fails (maybe just a test block size
-> thing), generic/091 fails (data corruption on read after ~70 ops)
-> and then generic/095 hung with a crash in iomap_readpage_iter()
-> during readahead.
-> 
-> Looks like a null folio was passed to ifs_alloc(), which implies the
-> iomap_readpage_ctx didn't have a folio attached to it. Something
-> isn't working properly in the readahead code, which would also
-> explain the quick fsx failure...
+> But I think filesystems which use buffer_heads should be fine to support
+> bs > ps.  The problems with the buffer cache are really when you try to
+> support small block sizes and large folio sizes (eg arrays of bhs on
+> the stack).  Supporting bs == folio_size shouldn't be a problem.
 > 
 
-Yeah, I have noticed this as well. This is the main crash scenario I am noticing
-when I am running xfstests, and hopefully we will be able to fix it soon.
-
-In general, we have had better results with 16k block size than 64k block size. I still don't
-know why, but the ifs_alloc crash happens in generic/451 with 16k block size.
-
-
->> Just a heads up, using 512 byte sector size will fail for now, it's a
->> regression we have to fix. Likewise using block sizes 1k, 2k will also
->> regress on fsx right now. These are regressions we are aware of but
->> haven't had time yet to bisect / fix.
-> 
-> I'm betting that the recently added sub-folio dirty tracking code
-> got broken by this patchset....
-> 
-
-Hmm, this crossed my mind as well. I am assuming I can really test the sub-folio dirty
-tracking code on a system which has a page size greater than the block size? Or is there
-some tests that can already test this? CCing Ritesh as well.
-
-> Cheers,
-> 
-> Dave.
+I remember some patches from you trying to avoid the stack limitation while working
+with bh. Thanks for the clarification!
