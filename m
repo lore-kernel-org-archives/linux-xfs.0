@@ -2,164 +2,134 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 32EC8CD13D3
-	for <linux-xfs@archiver.kernel.org>; Mon, 18 Sep 2023 08:42:55 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 04524CD37B0
+	for <linux-xfs@archiver.kernel.org>; Mon, 18 Sep 2023 11:36:55 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233492AbjIRIm1 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 18 Sep 2023 04:42:27 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53170 "EHLO
+        id S241865AbjIRLg1 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 18 Sep 2023 07:36:27 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54020 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S240755AbjIRImC (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 18 Sep 2023 04:42:02 -0400
-Received: from mailout1.w1.samsung.com (mailout1.w1.samsung.com [210.118.77.11])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 904C8132
-        for <linux-xfs@vger.kernel.org>; Mon, 18 Sep 2023 01:41:41 -0700 (PDT)
-Received: from eucas1p1.samsung.com (unknown [182.198.249.206])
-        by mailout1.w1.samsung.com (KnoxPortal) with ESMTP id 20230918084139euoutp01dadf546558fb12a32e1a15bc1c0df088~F8Z7qZNnC2934629346euoutp01K
-        for <linux-xfs@vger.kernel.org>; Mon, 18 Sep 2023 08:41:39 +0000 (GMT)
-DKIM-Filter: OpenDKIM Filter v2.11.0 mailout1.w1.samsung.com 20230918084139euoutp01dadf546558fb12a32e1a15bc1c0df088~F8Z7qZNnC2934629346euoutp01K
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=samsung.com;
-        s=mail20170921; t=1695026499;
-        bh=I6/F7qFZPtrg6H/Jcv8LXXx7VGKpvo96ZTN4LGrf6fw=;
-        h=From:To:CC:Subject:Date:In-Reply-To:References:From;
-        b=dp7Lmea9EJ7tbdvZDslnP6QUxppeaNpFLMQDgxDUVIU2zPqhR6CbI85J5ObViZBoJ
-         cwH22lQE2vP1BSZbI1R0uq9/GAveSrl2JxsxypRzcuEtyFqbkS83fuF0mUQMKtNdRt
-         7mpIEHsPyhl06C5LPbz1uo0upe7xEJUpeKbeTD+U=
-Received: from eusmges3new.samsung.com (unknown [203.254.199.245]) by
-        eucas1p2.samsung.com (KnoxPortal) with ESMTP id
-        20230918084139eucas1p2bca1ce458c270cd2d518ba89853b4b2f~F8Z7Nddnn1417714177eucas1p2d;
-        Mon, 18 Sep 2023 08:41:39 +0000 (GMT)
-Received: from eucas1p1.samsung.com ( [182.198.249.206]) by
-        eusmges3new.samsung.com (EUCPMTA) with SMTP id 63.83.37758.34D08056; Mon, 18
-        Sep 2023 09:41:39 +0100 (BST)
-Received: from eusmtrp2.samsung.com (unknown [182.198.249.139]) by
-        eucas1p1.samsung.com (KnoxPortal) with ESMTPA id
-        20230918084138eucas1p1ecd026f8b438b8023d4a7b1db5b2a776~F8Z6vIPXh1114411144eucas1p1Q;
-        Mon, 18 Sep 2023 08:41:38 +0000 (GMT)
-Received: from eusmgms1.samsung.com (unknown [182.198.249.179]) by
-        eusmtrp2.samsung.com (KnoxPortal) with ESMTP id
-        20230918084138eusmtrp2db991ae9bf97063fa586edd5cedc7b12~F8Z6uUAsB0622806228eusmtrp24;
-        Mon, 18 Sep 2023 08:41:38 +0000 (GMT)
-X-AuditID: cbfec7f5-7ffff7000002937e-33-65080d43afb8
-Received: from eusmtip1.samsung.com ( [203.254.199.221]) by
-        eusmgms1.samsung.com (EUCPMTA) with SMTP id CC.AB.10549.24D08056; Mon, 18
-        Sep 2023 09:41:38 +0100 (BST)
-Received: from CAMSVWEXC02.scsc.local (unknown [106.1.227.72]) by
-        eusmtip1.samsung.com (KnoxPortal) with ESMTPA id
-        20230918084138eusmtip1ee030262885b16ac08365ff6c0b85118~F8Z6hVy1p1042310423eusmtip1B;
-        Mon, 18 Sep 2023 08:41:38 +0000 (GMT)
-Received: from CAMSVWEXC02.scsc.local (2002:6a01:e348::6a01:e348) by
-        CAMSVWEXC02.scsc.local (2002:6a01:e348::6a01:e348) with Microsoft SMTP
-        Server (TLS) id 15.0.1497.2; Mon, 18 Sep 2023 09:41:37 +0100
-Received: from CAMSVWEXC02.scsc.local ([::1]) by CAMSVWEXC02.scsc.local
-        ([fe80::3c08:6c51:fa0a:6384%13]) with mapi id 15.00.1497.012; Mon, 18 Sep
-        2023 09:41:37 +0100
-From:   Daniel Gomez <da.gomez@samsung.com>
-To:     Matthew Wilcox <willy@infradead.org>
-CC:     "minchan@kernel.org" <minchan@kernel.org>,
-        "senozhatsky@chromium.org" <senozhatsky@chromium.org>,
-        "axboe@kernel.dk" <axboe@kernel.dk>,
-        "djwong@kernel.org" <djwong@kernel.org>,
-        "hughd@google.com" <hughd@google.com>,
-        "akpm@linux-foundation.org" <akpm@linux-foundation.org>,
-        "mcgrof@kernel.org" <mcgrof@kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>,
-        "linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>,
-        "linux-fsdevel@vger.kernel.org" <linux-fsdevel@vger.kernel.org>,
-        "linux-mm@kvack.org" <linux-mm@kvack.org>,
-        "gost.dev@samsung.com" <gost.dev@samsung.com>,
-        Pankaj Raghav <p.raghav@samsung.com>
-Subject: Re: [PATCH 1/6] filemap: make the folio order calculation shareable
-Thread-Topic: [PATCH 1/6] filemap: make the folio order calculation
-        shareable
-Thread-Index: AQHZ57ovaMdf9q/cjECRh1BbWSoXsbAb1A+AgARjlAA=
-Date:   Mon, 18 Sep 2023 08:41:37 +0000
-Message-ID: <20230918084134.d276vadcmkvwonmb@sarkhan>
-In-Reply-To: <ZQRet4w5VSbvKvKB@casper.infradead.org>
-Accept-Language: en-US, en-GB
-Content-Language: en-US
-X-MS-Has-Attach: 
-X-MS-TNEF-Correlator: 
-x-ms-exchange-messagesentrepresentingtype: 1
-x-ms-exchange-transport-fromentityheader: Hosted
-x-originating-ip: [106.110.32.103]
-Content-Type: text/plain; charset="us-ascii"
-Content-ID: <DE33310D18359544AC6BBC07702B73B0@scsc.local>
-Content-Transfer-Encoding: quoted-printable
+        with ESMTP id S241827AbjIRLfz (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 18 Sep 2023 07:35:55 -0400
+Received: from smtp-out1.suse.de (smtp-out1.suse.de [IPv6:2001:67c:2178:6::1c])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 91809CC7;
+        Mon, 18 Sep 2023 04:34:47 -0700 (PDT)
+Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
+        (No client certificate requested)
+        by smtp-out1.suse.de (Postfix) with ESMTPS id 4409021B04;
+        Mon, 18 Sep 2023 11:34:46 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
+        t=1695036886; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+         mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=lsDDklBjIFoM7Jl8EU+BYlHZ0g3Sye7Xs6k5RDaXpUQ=;
+        b=1Ma+WufOY6MNQBSldMuieR9ZpirsJTdWcZsxqGoF3hzkrSmWYdUzna299yvRM5B3QCSSra
+        /JRoQvQMcnCpDBDCZwK+FqMy4pbuDhN+IQjN3aUGfjBWq10TYlBDowLFK/iFg0p58MO8WZ
+        PNgDtYb8GfwbFTLuknhCQayMBKCbPMk=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
+        s=susede2_ed25519; t=1695036886;
+        h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+         mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=lsDDklBjIFoM7Jl8EU+BYlHZ0g3Sye7Xs6k5RDaXpUQ=;
+        b=lWxYWMG8V1e8y9ZvkPybRmpUpLTWqw/jpn9kAQofvAoPUVWxscsPv0GWi4rsXS3NH9Nk2b
+        06wsECm6iRw7PZCA==
+Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
+        (No client certificate requested)
+        by imap2.suse-dmz.suse.de (Postfix) with ESMTPS id DDBA913480;
+        Mon, 18 Sep 2023 11:34:43 +0000 (UTC)
+Received: from dovecot-director2.suse.de ([192.168.254.65])
+        by imap2.suse-dmz.suse.de with ESMTPSA
+        id 33muM9M1CGXIWgAAMHmgww
+        (envelope-from <hare@suse.de>); Mon, 18 Sep 2023 11:34:43 +0000
+Message-ID: <7dbf0a76-d811-4cb0-a38e-8375334710b2@suse.de>
+Date:   Mon, 18 Sep 2023 13:34:37 +0200
 MIME-Version: 1.0
-X-Brightmail-Tracker: H4sIAAAAAAAAA02SeUiTYRzHefa+e/dutHib14ORwSgzNc0OeCuNousljFSiQLpWvbmxTWVv
-        6zCijYJSQs1Y6bSaS6fzyHw7pistVmnrorDWtDJddrAiUbND7XC+K/bf58fzPX4/eHBE8owf
-        jisy99CaTJlKionQa20/H89ZIcbpud1WhCxrqMPI2tcFGNnRN5l8N5iPki1dMeSNFidKdtjL
-        MLK77g+ftI81CUh34TtAWob7BeT1RjNGjv4ow5aJqVLdU5QysVrqcnU01fFIS7E1uRjFDhYJ
-        qHvFoyg1xEak4OmixF20SrGX1sQv3S6SX31Vx8vWifb3NFciOvBNkAeEOCQWwCf9Ll4eEOES
-        ohpAV5HbP3wF0FTkBdwwBGCl1cL7ZzlydBj4WEJUAfjnqeK/qNtY5Xc8BLD14oA/ywqg0dbN
-        91kwYjZsdbLj7TgeTETBz1fm+TQIcZcPK+pZ1KcJIpLhYLttoi6YWA+7btoQjhfDzsvnEZ8X
-        JWbCWyeCfCgmFsK3lxJ9CuH4cs6KhokUQEyDHuvIxJ0IEQa7+s77D5gCzaU3EI5D4W97L8Zx
-        LHz0og9wPBderWxFOZbCsePlgMuJhabrgxjHi+Azp53PcQy0lH+ayBSP5ztL+lDfWZAwiKC5
-        psQfuhKOfi/2LxEEve1XBIUg1hiwnzGgwxjQYQzoMAZ0mAC/BoTRWkadQTPzM+l9cYxMzWgz
-        M+J2ZqlZMP7xHvxuH24C1d6BOAfg4cABII5Ig8UlCRgtEe+SHcihNVnbNFoVzTjAVByVholj
-        kpw7JUSGbA+tpOlsWvPvlYcLw3W86S8jj+Wo3UkvxjZW6JRZxHM3eUIzNLO/1JUfeakw124D
-        kjPNIdpOxQqXvjbxgNcqarwTdTbJY0uuGli7AMtPPWiomR1xPzI1V7x/9aYLjnXL2/Vj2oX1
-        StZc+16boEkJ/SVMjWea03K/Hsou3oq4ez/u69XLDA8sR11N0QVvBiKuhWy+F9uzRmBpW7ZF
-        dNehCrNFHw8/V16ww8P/IM8aEubhux0f9aYZd1Z5XuNyxeEm+bn0nzm3RpTepOkpLvSNUnWs
-        onEkeVYa9QFUzdAbeqzLg257QhhpT17+Z/Maz5fJhpOHJx2pVUundnUknw6+vZ09tWFJfMOP
-        zg0thTukKCOXJUQjGkb2F87yX4HnAwAA
-X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFrrLKsWRmVeSWpSXmKPExsVy+t/xu7pOvBypBtOnKlrMWb+GzWL13X42
-        i8tP+Cyefupjsdh7S9tiz96TLBaXd81hs7i35j+rxa4/O9gtbkx4ymix7Ot7dovdGxexWfz+
-        MYfNgddjdsNFFo8Fm0o9Nq/Q8rh8ttRj06pONo9Nnyaxe5yY8ZvF4/MmuQCOKD2bovzSklSF
-        jPziElulaEMLIz1DSws9IxNLPUNj81grI1MlfTublNSczLLUIn27BL2MrXfWMBU0cFU82LmU
-        uYHxG3sXIyeHhICJRHPLV8YuRi4OIYGljBJbZ+1jgUjISGz8cpUVwhaW+HOtiw2i6COjRMN7
-        kASIc4ZRYn3zemYIZyWjxLvdZ5lAWtgENCX2ndwEtIODQ0RAQ+LNFiOQGmaBo6wSS9ZuAlsh
-        LOAj8en4drB6EQFfiS0ntrBB2FYSNzfPZwbpZRFQlTjQIwxi8gqYSjzeYAOx6jWjRN/8V2DX
-        cQK9cHLJerCRjAKyEo9W/gJ7jVlAXOLWk/lMEB8ISCzZc54ZwhaVePn4H9RnOhJnrz9hhLAN
-        JLYuhfleSeJPx0JGiDk6Egt2f2KDsC0lrpzcxQpha0ssW/gabCavgKDEyZlPWCYwysxCsnoW
-        kvZZSNpnIWmfhaR9ASPrKkaR1NLi3PTcYkO94sTc4tK8dL3k/NxNjMB0tu3Yz807GOe9+qh3
-        iJGJg/EQowQHs5II70xDtlQh3pTEyqrUovz4otKc1OJDjKbAoJvILCWanA9MqHkl8YZmBqaG
-        JmaWBqaWZsZK4ryeBR2JQgLpiSWp2ampBalFMH1MHJxSDUzqE5p+C8s3fn24MzO31Z9L+ml6
-        96zLRptVFfdaF+V9n8K63/IJ9/LNXoyNupcVv268tNsxMSz1HdsDCU6r79/cnbVkFnxf0aZU
-        0HJoQx2j2M/sIoZnxnt2iPJLHl/vOCPIVX772y1VdbNdJd4VN3MFs4YJPHmazqAo5nCiovs7
-        4y3jrkUdcvJmi3jVKjVZ+82XvF4hu0tc7VfrvsripN3aqVyrg8WKp62YKnnp7GN2bpY24anr
-        VnHaP7m2LN5B6fPH+4u9u9icZv+JE1Ccb/Po/JRbFtNMm55/FrLZu7Bp2qKE/VPF2XOSIpx5
-        hBcseLPxW0Tk/9bm/fdv2pgcEJ+0fvU81RW7siyfnmDXElNiKc5INNRiLipOBACzjsVg8AMA
-        AA==
-X-CMS-MailID: 20230918084138eucas1p1ecd026f8b438b8023d4a7b1db5b2a776
-X-Msg-Generator: CA
-X-RootMTR: 20230915095124eucas1p1eb0e0ef883f6316cf14c349404a51150
-X-EPHeader: CA
-CMS-TYPE: 201P
-X-CMS-RootMailID: 20230915095124eucas1p1eb0e0ef883f6316cf14c349404a51150
-References: <20230915095042.1320180-1-da.gomez@samsung.com>
-        <CGME20230915095124eucas1p1eb0e0ef883f6316cf14c349404a51150@eucas1p1.samsung.com>
-        <20230915095042.1320180-2-da.gomez@samsung.com>
-        <ZQRet4w5VSbvKvKB@casper.infradead.org>
+User-Agent: Mozilla Thunderbird
+Subject: Re: [RFC v2 00/10] bdev: LBS devices support to coexist with
+ buffer-heads
+Content-Language: en-US
+To:     Matthew Wilcox <willy@infradead.org>,
+        Dave Chinner <david@fromorbit.com>
+Cc:     Luis Chamberlain <mcgrof@kernel.org>, hch@infradead.org,
+        djwong@kernel.org, dchinner@redhat.com, kbusch@kernel.org,
+        sagi@grimberg.me, axboe@fb.com, brauner@kernel.org,
+        ritesh.list@gmail.com, rgoldwyn@suse.com, jack@suse.cz,
+        ziy@nvidia.com, ryan.roberts@arm.com, patches@lists.linux.dev,
+        linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
+        linux-block@vger.kernel.org, p.raghav@samsung.com,
+        da.gomez@samsung.com, dan.helmick@samsung.com
+References: <20230915213254.2724586-1-mcgrof@kernel.org>
+ <ZQd/7RYfDZgvR0n2@dread.disaster.area>
+ <ZQeIaN2WC+whc/OP@casper.infradead.org>
+From:   Hannes Reinecke <hare@suse.de>
+In-Reply-To: <ZQeIaN2WC+whc/OP@casper.infradead.org>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Fri, Sep 15, 2023 at 02:40:07PM +0100, Matthew Wilcox wrote:
-> On Fri, Sep 15, 2023 at 09:51:23AM +0000, Daniel Gomez wrote:
-> > To make the code that clamps the folio order in the __filemap_get_folio
-> > routine reusable to others, move and merge it to the fgf_set_order
-> > new subroutine (mapping_size_order), so when mapping the size at a
-> > given index, the order calculated is already valid and ready to be
-> > used when order is retrieved from fgp_flags with FGF_GET_ORDER.
-> >
-> > Signed-off-by: Daniel Gomez <da.gomez@samsung.com>
-> > ---
-> >  fs/iomap/buffered-io.c  |  6 ++++--
-> >  include/linux/pagemap.h | 42 ++++++++++++++++++++++++++++++++++++-----
-> >  mm/filemap.c            |  8 --------
-> >  3 files changed, 41 insertions(+), 15 deletions(-)
->
-> That seems like a lot of extra code to add in order to avoid copying
-> six lines of code and one comment into the shmem code.
->
-> It's not wrong, but it seems like a bad tradeoff to me.
+On 9/18/23 01:14, Matthew Wilcox wrote:
+> On Mon, Sep 18, 2023 at 08:38:37AM +1000, Dave Chinner wrote:
+>> On Fri, Sep 15, 2023 at 02:32:44PM -0700, Luis Chamberlain wrote:
+>>> LBS devices. This in turn allows filesystems which support bs > 4k to be
+>>> enabled on a 4k PAGE_SIZE world on LBS block devices. This alows LBS
+>>> device then to take advantage of the recenlty posted work today to enable
+>>> LBS support for filesystems [0].
+>>
+>> Why do we need LBS devices to support bs > ps in XFS?
+> 
+> It's the other way round -- we need the support in the page cache to
+> reject sub-block-size folios (which is in the other patches) before we
+> can sensibly talk about enabling any filesystems on top of LBS devices.
+> Even XFS, or for that matter ext2 which support 16k block sizes on
+> CONFIG_PAGE_SIZE_16K (or 64K) kernels need that support first.
+> 
+> [snipping the parts I agree with; this should not be the first you're
+> hearing about a format change to XFS]
+> 
+>>> There might be a better way to do this than do deal with the switching
+>>> of the aops dynamically, ideas welcomed!
+>>
+>> Is it even safe to switch aops dynamically? We know there are
+>> inherent race conditions in doing this w.r.t. mmap and page faults,
+>> as the write fault part of the processing is directly dependent
+>> on the page being correctly initialised during the initial
+>> population of the page data (the "read fault" side of the write
+>> fault).
+>>
+>> Hence it's not generally considered safe to change aops from one
+>> mechanism to another dynamically. Block devices can be mmap()d, but
+>> I don't see anything in this patch set that ensures there are no
+>> other users of the block device when the swaps are done. What am I
+>> missing?
+> 
+> We need to evict all pages from the page cache before switching aops to
+> prevent misinterpretation of folio->private.  If switching aops is even
+> the right thing to do.  I don't see the problem with allowing buffer heads
+> on block devices, but I haven't been involved with the discussion here.
 
-I saw some value in sharing the logic but I'll merge this code directly
-in shmem and add a comment 'Like filemap_' similar to the one in
-shmem_add_to_page_cache.
+Did we even have that conversation?
+That's one of the first things I've stumbled across when doing my 
+patchset, and found the implications too horrible to consider.
 
-Thanks for the quick feedback and review Matthew. I'll do a V2 with the
-changes and retest the series again using latest next tag.=
+Not a big fan, plus I don't think we need that.
+Cf my patchset :-)
+
+Cheers,
+
+Hannes
+-- 
+Dr. Hannes Reinecke                Kernel Storage Architect
+hare@suse.de                              +49 911 74053 688
+SUSE Software Solutions GmbH, Maxfeldstr. 5, 90409 Nürnberg
+HRB 36809 (AG Nürnberg), Geschäftsführer: Ivo Totev, Andrew
+Myers, Andrew McDonald, Martje Boudien Moerman
+
