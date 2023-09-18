@@ -2,205 +2,75 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 21201CD13D2
-	for <linux-xfs@archiver.kernel.org>; Mon, 18 Sep 2023 18:56:19 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A53B6CD3424
+	for <linux-xfs@archiver.kernel.org>; Mon, 18 Sep 2023 23:12:02 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229801AbjIRS4W (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 18 Sep 2023 14:56:22 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59256 "EHLO
+        id S229472AbjIRXMG (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 18 Sep 2023 19:12:06 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52912 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229750AbjIRS4V (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 18 Sep 2023 14:56:21 -0400
-Received: from mail-lj1-x232.google.com (mail-lj1-x232.google.com [IPv6:2a00:1450:4864:20::232])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 46109112
-        for <linux-xfs@vger.kernel.org>; Mon, 18 Sep 2023 11:56:15 -0700 (PDT)
-Received: by mail-lj1-x232.google.com with SMTP id 38308e7fff4ca-2c012232792so17670481fa.0
-        for <linux-xfs@vger.kernel.org>; Mon, 18 Sep 2023 11:56:15 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20230601; t=1695063373; x=1695668173; darn=vger.kernel.org;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=jXz4cq66mHWtvTDRMK7RDIs9CKkcwkIB/OuEfXB14i8=;
-        b=cWzT2L6gq0U8CHE4gMU/E2T1aUscXny7l5fWXEScREMS7yJB/jwsP/B+ePnugpPOYf
-         tojZPUTB9nz4I31h3W35TTdFAFx0nUmQu7TkB9RrHybvoW1WU5dsV+VOUAHv5LaMNqEE
-         tRtazd67n6ml/KGYdi5GqBl0eyP5r++jc98z8vNyOPSsofF98G0T26wJ9Z4nBfy/o+nG
-         LT7rkPNAyOYZ+P//2r6nsBQ1PxYz8OcGNBjHKr+48zKb+DtlYtT5Dz2jM42vwNz8fa8P
-         JdjYEcIzebUIB362VkO1kvkzI31jBSjeh8WxoDZcBgvE/pnrc05YhNY9DvEPEtJ+hupC
-         KjSQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1695063373; x=1695668173;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=jXz4cq66mHWtvTDRMK7RDIs9CKkcwkIB/OuEfXB14i8=;
-        b=PsaxqqB44o0+lpbZs5Rg/BS+Rgk6qySE1WC04cozjZepF7Q6XakuIVHXAmCQom292k
-         zq+lD1sezJFDCQIJr9iZE1MvmPp0qWORy8IamtCtbBUznGk07/nmzYfzq9nJg+upNi62
-         Cm1VB+MKM3iCFtD7bo+isUz2XzuV2dhBXjW31VaomvC88uRECX3PFOBg8NoJpPD33O+E
-         W6ojdjqETd4DqTvyxzGjeU0Qrt4GGiADZ+YSWpSI3ldzfl7GAEuDe0dlo7XnEnU0KDYO
-         WQRlG51hweZIdLmVJbHz2xFUW31fb7t7QQnwTqayMtorcS+sIWQzmvoqFh/W7Qo3RDi2
-         N+vA==
-X-Gm-Message-State: AOJu0YwTbpo7qn4qnOc9EPtR1uOWW0F43fDWueLPYekTWY3nL0HU22xk
-        5KbPM8u4BaUYCJhKVsyS7S6x+44X8zNJT1Bu/Qsq0w==
-X-Google-Smtp-Source: AGHT+IEHASyFmV1bd4FBQakOmDWzBWx3Rbg9ZbcFyr5AJUmZLMEwiCsc+/HpjVvZHJQElwIa+nplDGt/Kg+T7jbrlPc=
-X-Received: by 2002:a05:651c:210b:b0:2c0:1385:8c86 with SMTP id
- a11-20020a05651c210b00b002c013858c86mr2901745ljq.25.1695063373292; Mon, 18
- Sep 2023 11:56:13 -0700 (PDT)
+        with ESMTP id S229436AbjIRXMF (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 18 Sep 2023 19:12:05 -0400
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A31ED90;
+        Mon, 18 Sep 2023 16:12:00 -0700 (PDT)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 3523FC433C7;
+        Mon, 18 Sep 2023 23:12:00 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1695078720;
+        bh=kZYCDKLLl1LFOrASFlg3OaiiTYbfa6WuZkABtqkAOlk=;
+        h=Subject:From:To:Cc:Date:From;
+        b=bk2Be9IFJhE7+a2AG6tZRM6NN6RXN53pAryyR+sQC5PdPqCm2ftOZ030FS4LHJ3Dy
+         TfuODvmFDnI6QW/XRSLCqDrBASMdL9Ge6hl76m/h0QX5rVX1ltDE2zjUKpf0PTdPuF
+         l/SC6daKeBv1MzapnVVfbWLoTWx/TZlGE9CpFwYKS6PVbFAXyAhdWa66UYPeIWQ+7H
+         ENtNPCaXCZqJONo0lwJbDwXmij6H++qao1/eGAX6NQpPnVUBv/DZVSxAO43V6Rm4FU
+         U+NPPGDb4WgquXoQBcoj/yAmjuFCZrOnirbsBim7vi9WCukVd7Bv32EOmAJoQSpQ4M
+         rUUNBuHlfuS1g==
+Subject: [PATCHSET 0/2] iomap: fix unshare data corruption bug
+From:   "Darrick J. Wong" <djwong@kernel.org>
+To:     djwong@kernel.org
+Cc:     ritesh.list@gmail.com, willy@infradead.org,
+        linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org,
+        ritesh.list@gmail.com, willy@infradead.org
+Date:   Mon, 18 Sep 2023 16:11:59 -0700
+Message-ID: <169507871947.772278.5767091361086740046.stgit@frogsfrogsfrogs>
+User-Agent: StGit/0.19
 MIME-Version: 1.0
-References: <CGME20230915095133eucas1p267bade2888b7fcd2e1ea8e13e21c495f@eucas1p2.samsung.com>
- <20230915095042.1320180-1-da.gomez@samsung.com> <20230915095042.1320180-7-da.gomez@samsung.com>
- <CAJD7tkbU20tyGxtdL-cqJxrjf38ObG_dUttZdLstH3O2sUTKzw@mail.gmail.com> <20230918075758.vlufrhq22es2dhuu@sarkhan>
-In-Reply-To: <20230918075758.vlufrhq22es2dhuu@sarkhan>
-From:   Yosry Ahmed <yosryahmed@google.com>
-Date:   Mon, 18 Sep 2023 11:55:34 -0700
-Message-ID: <CAJD7tkZSST8Kc6duUWt6a9igrsn=ucUPSVPWWGDWEUxBs3b4bg@mail.gmail.com>
-Subject: Re: [PATCH 6/6] shmem: add large folios support to the write path
-To:     Daniel Gomez <da.gomez@samsung.com>
-Cc:     "minchan@kernel.org" <minchan@kernel.org>,
-        "senozhatsky@chromium.org" <senozhatsky@chromium.org>,
-        "axboe@kernel.dk" <axboe@kernel.dk>,
-        "djwong@kernel.org" <djwong@kernel.org>,
-        "willy@infradead.org" <willy@infradead.org>,
-        "hughd@google.com" <hughd@google.com>,
-        "akpm@linux-foundation.org" <akpm@linux-foundation.org>,
-        "mcgrof@kernel.org" <mcgrof@kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>,
-        "linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>,
-        "linux-fsdevel@vger.kernel.org" <linux-fsdevel@vger.kernel.org>,
-        "linux-mm@kvack.org" <linux-mm@kvack.org>,
-        "gost.dev@samsung.com" <gost.dev@samsung.com>,
-        Pankaj Raghav <p.raghav@samsung.com>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Mon, Sep 18, 2023 at 1:00=E2=80=AFAM Daniel Gomez <da.gomez@samsung.com>=
- wrote:
->
-> On Fri, Sep 15, 2023 at 11:26:37AM -0700, Yosry Ahmed wrote:
-> > On Fri, Sep 15, 2023 at 2:51=E2=80=AFAM Daniel Gomez <da.gomez@samsung.=
-com> wrote:
-> > >
-> > > Add large folio support for shmem write path matching the same high
-> > > order preference mechanism used for iomap buffered IO path as used in
-> > > __filemap_get_folio().
-> > >
-> > > Use the __folio_get_max_order to get a hint for the order of the foli=
-o
-> > > based on file size which takes care of the mapping requirements.
-> > >
-> > > Swap does not support high order folios for now, so make it order 0 i=
-n
-> > > case swap is enabled.
-> >
-> > I didn't take a close look at the series, but I am not sure I
-> > understand the rationale here. Reclaim will split high order shmem
-> > folios anyway, right?
->
-> For context, this is part of the enablement of large block sizes (LBS)
-> effort [1][2][3], so the assumption here is that the kernel will
-> reclaim memory with the same (large) block sizes that were written to
-> the device.
->
-> I'll add more context in the V2.
->
-> [1] https://kernelnewbies.org/KernelProjects/large-block-size
-> [2] https://docs.google.com/spreadsheets/d/e/2PACX-1vS7sQfw90S00l2rfOKm83=
-Jlg0px8KxMQE4HHp_DKRGbAGcAV-xu6LITHBEc4xzVh9wLH6WM2lR0cZS8/pubhtml#
-> [3] https://lore.kernel.org/all/ZQfbHloBUpDh+zCg@dread.disaster.area/
-> >
-> > It seems like we only enable high order folios if the "noswap" mount
-> > option is used, which is fairly recent. I doubt it is widely used.
->
-> For now, I skipped the swap path as it currently lacks support for
-> high order folios. But I'm currently looking into it as part of the LBS
-> effort (please check spreadsheet at [2] for that).
+Hi all,
 
-Thanks for the context, but I am not sure I understand.
+I rebased djwong-dev atop 6.6-rc1, and discovered that the iomap unshare
+code writes garbage into the unshared file if the unshared range covers
+at least one base page's worth of file range and there weren't any
+folios in the pagecache for that region.
 
-IIUC we are skipping allocating large folios in shmem if swap is
-enabled in this patch. Swap does not support swapping out large folios
-as a whole (except THPs), but page reclaim will split those large
-folios and swap them out as order-0 pages anyway. So I am not sure I
-understand why we need to skip allocating large folios if swap is
-enabled.
+The root cause is an optimization applied to __iomap_write_begin for 6.6
+that caused it to ignore !uptodate folios.  This is fine for the
+write/zeroing cases since they're going to write to the folio anyway,
+but unshare merely marks the folio dirty and lets writeback handle the
+unsharing.
 
+While I was rooting around in there, I also noticed that the unshare
+operation wasn't ported to use large folios.  This leads to suboptimal
+performance if userspace funshares a file and continues using the page
+cache, since the cache is now using base pages.
 
-> >
-> > >
-> > > Signed-off-by: Daniel Gomez <da.gomez@samsung.com>
-> > > ---
-> > >  mm/shmem.c | 16 +++++++++++++---
-> > >  1 file changed, 13 insertions(+), 3 deletions(-)
-> > >
-> > > diff --git a/mm/shmem.c b/mm/shmem.c
-> > > index adff74751065..26ca555b1669 100644
-> > > --- a/mm/shmem.c
-> > > +++ b/mm/shmem.c
-> > > @@ -1683,13 +1683,19 @@ static struct folio *shmem_alloc_folio(gfp_t =
-gfp,
-> > >  }
-> > >
-> > >  static struct folio *shmem_alloc_and_acct_folio(gfp_t gfp, struct in=
-ode *inode,
-> > > -               pgoff_t index, bool huge, unsigned int *order)
-> > > +               pgoff_t index, bool huge, unsigned int *order,
-> > > +               struct shmem_sb_info *sbinfo)
-> > >  {
-> > >         struct shmem_inode_info *info =3D SHMEM_I(inode);
-> > >         struct folio *folio;
-> > >         int nr;
-> > >         int err;
-> > >
-> > > +       if (!sbinfo->noswap)
-> > > +               *order =3D 0;
-> > > +       else
-> > > +               *order =3D (*order =3D=3D 1) ? 0 : *order;
-> > > +
-> > >         if (!IS_ENABLED(CONFIG_TRANSPARENT_HUGEPAGE))
-> > >                 huge =3D false;
-> > >         nr =3D huge ? HPAGE_PMD_NR : 1U << *order;
-> > > @@ -2032,6 +2038,8 @@ static int shmem_get_folio_gfp(struct inode *in=
-ode, pgoff_t index,
-> > >                 return 0;
-> > >         }
-> > >
-> > > +       order =3D mapping_size_order(inode->i_mapping, index, len);
-> > > +
-> > >         if (!shmem_is_huge(inode, index, false,
-> > >                            vma ? vma->vm_mm : NULL, vma ? vma->vm_fla=
-gs : 0))
-> > >                 goto alloc_nohuge;
-> > > @@ -2039,11 +2047,11 @@ static int shmem_get_folio_gfp(struct inode *=
-inode, pgoff_t index,
-> > >         huge_gfp =3D vma_thp_gfp_mask(vma);
-> > >         huge_gfp =3D limit_gfp_mask(huge_gfp, gfp);
-> > >         folio =3D shmem_alloc_and_acct_folio(huge_gfp, inode, index, =
-true,
-> > > -                                          &order);
-> > > +                                          &order, sbinfo);
-> > >         if (IS_ERR(folio)) {
-> > >  alloc_nohuge:
-> > >                 folio =3D shmem_alloc_and_acct_folio(gfp, inode, inde=
-x, false,
-> > > -                                                  &order);
-> > > +                                                  &order, sbinfo);
-> > >         }
-> > >         if (IS_ERR(folio)) {
-> > >                 int retry =3D 5;
-> > > @@ -2147,6 +2155,8 @@ static int shmem_get_folio_gfp(struct inode *in=
-ode, pgoff_t index,
-> > >         if (folio_test_large(folio)) {
-> > >                 folio_unlock(folio);
-> > >                 folio_put(folio);
-> > > +               if (order > 0)
-> > > +                       order--;
-> > >                 goto alloc_nohuge;
-> > >         }
-> > >  unlock:
-> > > --
-> > > 2.39.2
-> > >
+If you're going to start using this code, I strongly recommend pulling
+from my git trees, which are linked below.
+
+This has been lightly tested with fstests.  Enjoy!
+Comments and questions are, as always, welcome.
+
+--D
+
+kernel git tree:
+https://git.kernel.org/cgit/linux/kernel/git/djwong/xfs-linux.git/log/?h=iomap-fix-unshare-6.6
+---
+ fs/iomap/buffered-io.c |   28 +++++++++++++++++-----------
+ 1 file changed, 17 insertions(+), 11 deletions(-)
+
