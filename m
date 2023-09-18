@@ -2,91 +2,75 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id AA3A4C46CA1
-	for <linux-xfs@archiver.kernel.org>; Mon, 18 Sep 2023 18:09:06 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C9DF2CD13DA
+	for <linux-xfs@archiver.kernel.org>; Mon, 18 Sep 2023 18:16:01 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229468AbjIRSJK (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 18 Sep 2023 14:09:10 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37680 "EHLO
+        id S229523AbjIRSQE (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 18 Sep 2023 14:16:04 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53040 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229379AbjIRSJK (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 18 Sep 2023 14:09:10 -0400
-Received: from bombadil.infradead.org (bombadil.infradead.org [IPv6:2607:7c80:54:3::133])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8533FFD;
-        Mon, 18 Sep 2023 11:09:04 -0700 (PDT)
+        with ESMTP id S229470AbjIRSQE (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 18 Sep 2023 14:16:04 -0400
+Received: from casper.infradead.org (casper.infradead.org [IPv6:2001:8b0:10b:1236::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5C051FB;
+        Mon, 18 Sep 2023 11:15:58 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=infradead.org; s=bombadil.20210309; h=Sender:In-Reply-To:Content-Type:
-        MIME-Version:References:Message-ID:Subject:Cc:To:From:Date:Reply-To:
+        d=infradead.org; s=casper.20170209; h=In-Reply-To:Content-Type:MIME-Version:
+        References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
         Content-Transfer-Encoding:Content-ID:Content-Description;
-        bh=PSl3YIBcOMlI28KGljTBp5+6rpOLjzI4VlDZcO+V47g=; b=v51lvSCHJ27MH9SVEXRHAJB7qA
-        w2bmT2C1j4sY40YT0/lBFqUnUQofZY/n9WBhFCJUODtoIRh1Yhi6dOTCfiid1DAA5T9ItyXXUffq4
-        69/1uJ9eBsRomdm0UojreSlngN5GpIIKlXYZaHSmiyDSTmmkIMIiiVlFRkStsGO2zmdKi1zUQ1h2X
-        UXxxarA3pXN01KQqteWffiqwvCtCnZZm4fyutmKct5sD9jNukJltAcKA6UGwwL/ZKljZR3P/wzI82
-        KePlKSnNqxk7hiuBh+qjfn0mBcRw3fv4ieCqpCkY0JMkZM3bhv4I4UYRAZW/TlYeyKnXA6lPMOB0B
-        2/05ZOPw==;
-Received: from mcgrof by bombadil.infradead.org with local (Exim 4.96 #2 (Red Hat Linux))
-        id 1qiIg8-00G33u-1d;
-        Mon, 18 Sep 2023 18:09:00 +0000
-Date:   Mon, 18 Sep 2023 11:09:00 -0700
-From:   Luis Chamberlain <mcgrof@kernel.org>
-To:     Matthew Wilcox <willy@infradead.org>
-Cc:     Daniel Gomez <da.gomez@samsung.com>,
-        "minchan@kernel.org" <minchan@kernel.org>,
-        "senozhatsky@chromium.org" <senozhatsky@chromium.org>,
-        "axboe@kernel.dk" <axboe@kernel.dk>,
-        "djwong@kernel.org" <djwong@kernel.org>,
-        "hughd@google.com" <hughd@google.com>,
-        "akpm@linux-foundation.org" <akpm@linux-foundation.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>,
-        "linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>,
-        "linux-fsdevel@vger.kernel.org" <linux-fsdevel@vger.kernel.org>,
-        "linux-mm@kvack.org" <linux-mm@kvack.org>,
-        "gost.dev@samsung.com" <gost.dev@samsung.com>,
-        Pankaj Raghav <p.raghav@samsung.com>
-Subject: Re: [PATCH 1/6] filemap: make the folio order calculation shareable
-Message-ID: <ZQiSPEKRJSkeh3Fe@bombadil.infradead.org>
-References: <20230915095042.1320180-1-da.gomez@samsung.com>
- <CGME20230915095124eucas1p1eb0e0ef883f6316cf14c349404a51150@eucas1p1.samsung.com>
- <20230915095042.1320180-2-da.gomez@samsung.com>
- <ZQRet4w5VSbvKvKB@casper.infradead.org>
+        bh=bJs8GAFpWgBUplH+H7BOE7c4QYwKvsPnLGmmT4zwnIE=; b=Vr34XwU7ZL4fQoEk9kow9Lq+5x
+        cRKNFtvrvhOEQ3CNMowCtrLeWe6RdRDsn8q+wXZkHUKQ+EC2Ay4FbU3uI0QYkAhlMk1GYKSEbBOC7
+        35nnx6LP33x6UkTwxvuFE8VAbkOgb5PRVCaKsJaiclQW6PGoKPdqdyVYBLkAo85YMwKZbFdqXI7MX
+        wCp7xK9d5Qrio0pLxEJmtEYuHIuIKmCjPj2FrU2lamMPmBQST+NLbNecBFcBZ2AvY/pJfVTaadbZ7
+        mA9EUmzWV4aNZ2CDu69HYwwY4Eji+odGQ4RHg7C5fWGNM+WD9rsw9weOD9uwo/zuLY4+CBABHVUPC
+        vedOj9hg==;
+Received: from willy by casper.infradead.org with local (Exim 4.94.2 #2 (Red Hat Linux))
+        id 1qiImS-00CU5P-Dl; Mon, 18 Sep 2023 18:15:32 +0000
+Date:   Mon, 18 Sep 2023 19:15:32 +0100
+From:   Matthew Wilcox <willy@infradead.org>
+To:     Luis Chamberlain <mcgrof@kernel.org>
+Cc:     hch@infradead.org, djwong@kernel.org, dchinner@redhat.com,
+        kbusch@kernel.org, sagi@grimberg.me, axboe@fb.com,
+        brauner@kernel.org, hare@suse.de, ritesh.list@gmail.com,
+        rgoldwyn@suse.com, jack@suse.cz, ziy@nvidia.com,
+        ryan.roberts@arm.com, patches@lists.linux.dev,
+        linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
+        linux-block@vger.kernel.org, p.raghav@samsung.com,
+        da.gomez@samsung.com, dan.helmick@samsung.com
+Subject: Re: [RFC v2 00/10] bdev: LBS devices support to coexist with
+ buffer-heads
+Message-ID: <ZQiTxGxpzPBETLTw@casper.infradead.org>
+References: <20230915213254.2724586-1-mcgrof@kernel.org>
+ <ZQTR0NorkxJlcNBW@casper.infradead.org>
+ <ZQiE5HHTLdJOsVPq@bombadil.infradead.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <ZQRet4w5VSbvKvKB@casper.infradead.org>
-Sender: Luis Chamberlain <mcgrof@infradead.org>
+In-Reply-To: <ZQiE5HHTLdJOsVPq@bombadil.infradead.org>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Fri, Sep 15, 2023 at 02:40:07PM +0100, Matthew Wilcox wrote:
-> On Fri, Sep 15, 2023 at 09:51:23AM +0000, Daniel Gomez wrote:
-> > To make the code that clamps the folio order in the __filemap_get_folio
-> > routine reusable to others, move and merge it to the fgf_set_order
-> > new subroutine (mapping_size_order), so when mapping the size at a
-> > given index, the order calculated is already valid and ready to be
-> > used when order is retrieved from fgp_flags with FGF_GET_ORDER.
+On Mon, Sep 18, 2023 at 10:12:04AM -0700, Luis Chamberlain wrote:
+> On Fri, Sep 15, 2023 at 10:51:12PM +0100, Matthew Wilcox wrote:
+> > On Fri, Sep 15, 2023 at 02:32:44PM -0700, Luis Chamberlain wrote:
+> > > However, an issue is that disabling CONFIG_BUFFER_HEAD in practice is not viable
+> > > for many Linux distributions since it also means disabling support for most
+> > > filesystems other than btrfs and XFS. So we either support larger order folios
+> > > on buffer-heads, or we draw up a solution to enable co-existence. Since at LSFMM
+> > > 2023 it was decided we would not support larger order folios on buffer-heads,
 > > 
-> > Signed-off-by: Daniel Gomez <da.gomez@samsung.com>
-> > ---
-> >  fs/iomap/buffered-io.c  |  6 ++++--
-> >  include/linux/pagemap.h | 42 ++++++++++++++++++++++++++++++++++++-----
-> >  mm/filemap.c            |  8 --------
-> >  3 files changed, 41 insertions(+), 15 deletions(-)
+> > Um, I didn't agree to that.
 > 
-> That seems like a lot of extra code to add in order to avoid copying
-> six lines of code and one comment into the shmem code.
+> Coverage on sunsetting buffer-heads talk by LWN:
 > 
-> It's not wrong, but it seems like a bad tradeoff to me.
+> https://lwn.net/Articles/931809/
+> 
+> "the apparent conclusion from the session: the buffer-head layer will be
+> converted to use folios internally while minimizing changes visible to
+> the filesystems using it. Only single-page folios will be used within
+> this new buffer-head layer. Any other desires, he said, can be addressed
+> later after this problem has been solved."
 
-The suggestion to merge came from me, mostly based on later observations
-that in the future we may want to extend this with a min order to ensure
-the index is aligned the the order. This check would only be useful for
-buffred IO for iomap, readahead. It has me wondering if buffer-heads
-support for large order folios come around would we a similar check
-there?
-
-So Willy, you would know better if and when a shared piece of code would
-be best with all these things in mind.
-
-  Luis
+Other people said that.  Not me.  I said it was fine for single
+buffer_head per folio.
