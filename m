@@ -2,75 +2,99 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 154A0C46CA1
-	for <linux-xfs@archiver.kernel.org>; Mon, 18 Sep 2023 18:20:33 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A4C80CD13D2
+	for <linux-xfs@archiver.kernel.org>; Mon, 18 Sep 2023 18:25:07 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229497AbjIRSUg (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 18 Sep 2023 14:20:36 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36372 "EHLO
+        id S229674AbjIRSZL (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 18 Sep 2023 14:25:11 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36334 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229454AbjIRSUf (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 18 Sep 2023 14:20:35 -0400
-Received: from bombadil.infradead.org (bombadil.infradead.org [IPv6:2607:7c80:54:3::133])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 550B2FB;
-        Mon, 18 Sep 2023 11:20:29 -0700 (PDT)
+        with ESMTP id S229668AbjIRSZK (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 18 Sep 2023 14:25:10 -0400
+Received: from casper.infradead.org (casper.infradead.org [IPv6:2001:8b0:10b:1236::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7D2E4112;
+        Mon, 18 Sep 2023 11:25:03 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=infradead.org; s=bombadil.20210309; h=Sender:In-Reply-To:Content-Type:
-        MIME-Version:References:Message-ID:Subject:Cc:To:From:Date:Reply-To:
+        d=infradead.org; s=casper.20170209; h=In-Reply-To:Content-Type:MIME-Version:
+        References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
         Content-Transfer-Encoding:Content-ID:Content-Description;
-        bh=YtFZ4aIMH+wK5gxLvaFez4GPeCFUiImPTsyXwfH5C7Y=; b=xP8ctjwJh6nbn8EmKDuPATY+1P
-        bebaZJXtSL6UspdqmjCpgGWN7G4EFwZl4o8h8y0gFUPPGp9L8nFi+3VaH0gOf7kX+whvSsQRjV1or
-        1u1KVmuArHYxagGNl7R9/xWe3FEjATP2Rf5uVeFt7Vr6y21uk3O9IzWk0eb7Qm5JaXG6PHClEqu91
-        8vw4ZCb6P3fRhMRzfM9OkcYS72jaD2p9s6Q+keZZEVtUFeddKHtVfHyhxq+c7vo2rm5SeV16avKib
-        EmjyxF3KYOAIVWGBeeyJjjOiVkmeGaa0W7G6Zf6Su7hGbq284xw8f66CI3ZBDx/+/D3lXbXo6Pu1j
-        mmCMH6Cw==;
-Received: from mcgrof by bombadil.infradead.org with local (Exim 4.96 #2 (Red Hat Linux))
-        id 1qiIrD-00G4Zw-0J;
-        Mon, 18 Sep 2023 18:20:27 +0000
-Date:   Mon, 18 Sep 2023 11:20:27 -0700
-From:   Luis Chamberlain <mcgrof@kernel.org>
-To:     Matthew Wilcox <willy@infradead.org>
-Cc:     Pankaj Raghav <kernel@pankajraghav.com>, linux-xfs@vger.kernel.org,
-        linux-fsdevel@vger.kernel.org, p.raghav@samsung.com,
-        david@fromorbit.com, da.gomez@samsung.com,
-        akpm@linux-foundation.org, linux-kernel@vger.kernel.org,
-        djwong@kernel.org, linux-mm@kvack.org, chandan.babu@oracle.com,
-        gost.dev@samsung.com
-Subject: Re: [RFC 04/23] filemap: set the order of the index in
- page_cache_delete_batch()
-Message-ID: <ZQiU61S3fMjrirNe@bombadil.infradead.org>
-References: <20230915183848.1018717-1-kernel@pankajraghav.com>
- <20230915183848.1018717-5-kernel@pankajraghav.com>
- <ZQSz4JttC/uTZwGw@casper.infradead.org>
+        bh=TC8wfBk+ib87P7TgIQGCMrwtRUP58vsgw9dhZZ19d68=; b=hC17YkoDr54/vXu9pLxNScC1tR
+        58CYaFjKwojnqasqeKRlYiiyhGN4QyLMZXo7pvNF53AngJGnujARir/IibZbgbOBHea1gQYCq/Adb
+        bY5llp7euvOgmQscF8JZZw9iTzNILN3n52VgSdhzDId6M8HxQP0WtxdNDKMDmvtwQXhWX0X9/EnRZ
+        9Z6DFZm9ZT5/K0IK4Ws+5L/W2vrIs5ZY9T68/cVRDQHoxPATR3IoWSXl/ui2SpfPnqwTCmj9haQmR
+        RirTOGJJ0Z7SauWIWNgcAPcK3Hu/mpvfOupj/ssb6jbVGh4m3ZRjt0hZ4omWsTPNe4GOm9Y3x16Ps
+        SNP1t+ig==;
+Received: from willy by casper.infradead.org with local (Exim 4.94.2 #2 (Red Hat Linux))
+        id 1qiIvX-00CXHT-W9; Mon, 18 Sep 2023 18:24:56 +0000
+Date:   Mon, 18 Sep 2023 19:24:55 +0100
+From:   Matthew Wilcox <willy@infradead.org>
+To:     Luis Chamberlain <mcgrof@kernel.org>
+Cc:     Daniel Gomez <da.gomez@samsung.com>,
+        "minchan@kernel.org" <minchan@kernel.org>,
+        "senozhatsky@chromium.org" <senozhatsky@chromium.org>,
+        "axboe@kernel.dk" <axboe@kernel.dk>,
+        "djwong@kernel.org" <djwong@kernel.org>,
+        "hughd@google.com" <hughd@google.com>,
+        "akpm@linux-foundation.org" <akpm@linux-foundation.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>,
+        "linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>,
+        "linux-fsdevel@vger.kernel.org" <linux-fsdevel@vger.kernel.org>,
+        "linux-mm@kvack.org" <linux-mm@kvack.org>,
+        "gost.dev@samsung.com" <gost.dev@samsung.com>,
+        Pankaj Raghav <p.raghav@samsung.com>
+Subject: Re: [PATCH 1/6] filemap: make the folio order calculation shareable
+Message-ID: <ZQiV96mTMiSXF9yf@casper.infradead.org>
+References: <20230915095042.1320180-1-da.gomez@samsung.com>
+ <CGME20230915095124eucas1p1eb0e0ef883f6316cf14c349404a51150@eucas1p1.samsung.com>
+ <20230915095042.1320180-2-da.gomez@samsung.com>
+ <ZQRet4w5VSbvKvKB@casper.infradead.org>
+ <ZQiSPEKRJSkeh3Fe@bombadil.infradead.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <ZQSz4JttC/uTZwGw@casper.infradead.org>
-Sender: Luis Chamberlain <mcgrof@infradead.org>
+In-Reply-To: <ZQiSPEKRJSkeh3Fe@bombadil.infradead.org>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Fri, Sep 15, 2023 at 08:43:28PM +0100, Matthew Wilcox wrote:
-> On Fri, Sep 15, 2023 at 08:38:29PM +0200, Pankaj Raghav wrote:
-> > From: Luis Chamberlain <mcgrof@kernel.org>
+On Mon, Sep 18, 2023 at 11:09:00AM -0700, Luis Chamberlain wrote:
+> On Fri, Sep 15, 2023 at 02:40:07PM +0100, Matthew Wilcox wrote:
+> > On Fri, Sep 15, 2023 at 09:51:23AM +0000, Daniel Gomez wrote:
+> > > To make the code that clamps the folio order in the __filemap_get_folio
+> > > routine reusable to others, move and merge it to the fgf_set_order
+> > > new subroutine (mapping_size_order), so when mapping the size at a
+> > > given index, the order calculated is already valid and ready to be
+> > > used when order is retrieved from fgp_flags with FGF_GET_ORDER.
+> > > 
+> > > Signed-off-by: Daniel Gomez <da.gomez@samsung.com>
+> > > ---
+> > >  fs/iomap/buffered-io.c  |  6 ++++--
+> > >  include/linux/pagemap.h | 42 ++++++++++++++++++++++++++++++++++++-----
+> > >  mm/filemap.c            |  8 --------
+> > >  3 files changed, 41 insertions(+), 15 deletions(-)
 > > 
-> > Similar to page_cache_delete(), call xas_set_order for non-hugetlb pages
-> > while deleting an entry from the page cache.
+> > That seems like a lot of extra code to add in order to avoid copying
+> > six lines of code and one comment into the shmem code.
+> > 
+> > It's not wrong, but it seems like a bad tradeoff to me.
 > 
-> Is this necessary?  As I read xas_store(), if you're storing NULL, it
-> will wipe out all sibling entries.  Was this based on "oops, no, it
-> doesn't" or "here is a gratuitous difference, change it"?
+> The suggestion to merge came from me, mostly based on later observations
+> that in the future we may want to extend this with a min order to ensure
+> the index is aligned the the order. This check would only be useful for
+> buffred IO for iomap, readahead. It has me wondering if buffer-heads
+> support for large order folios come around would we a similar check
+> there?
+> 
+> So Willy, you would know better if and when a shared piece of code would
+> be best with all these things in mind.
 
-Based on code inspection, I saw page_cache_delete() did it. The xarray
-docs and xarray selftest was not clear about the advanced API about this
-case and the usage of the set order on page_cache_delete() gave me
-concerns we needed it here.
+In my mind, this is fundamentally code which belongs in the page cache
+rather than in individual filesystems.  The fly in the ointment is that
+shmem has forked the page cache in order to do its own slightly
+specialised thing.  I don't see the buffer_head connection; shmem is
+an extremely special case, and we shouldn't mess around with other
+filesystems to avoid changing shmem.
 
-We do have some enhancements to xarray self tests to use the advanced
-API which we could extend with this particular case before posting, so
-to prove disprove if this is really needed.
-
-Why would it be needed on page_cache_delete() but needed here?
-
-  Luis
+Ideally, we'd reunify (parts of) shmem and the regular page cache, but
+that's a lot of work, probably involving the swap layer changing.
