@@ -2,105 +2,127 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3EAB5CD37B0
-	for <linux-xfs@archiver.kernel.org>; Mon, 18 Sep 2023 03:46:04 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 81EABCD13D3
+	for <linux-xfs@archiver.kernel.org>; Mon, 18 Sep 2023 04:37:20 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S239221AbjIRDpg (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Sun, 17 Sep 2023 23:45:36 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55354 "EHLO
+        id S229835AbjIREeM (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 18 Sep 2023 00:34:12 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54374 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S236717AbjIRDpG (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sun, 17 Sep 2023 23:45:06 -0400
-Received: from mxhk.zte.com.cn (mxhk.zte.com.cn [63.216.63.40])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 388BE10A;
-        Sun, 17 Sep 2023 20:44:59 -0700 (PDT)
-Received: from mse-fl2.zte.com.cn (unknown [10.5.228.133])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by mxhk.zte.com.cn (FangMail) with ESMTPS id 4RprK34GWKz8XrRF;
-        Mon, 18 Sep 2023 11:44:55 +0800 (CST)
-Received: from szxlzmapp01.zte.com.cn ([10.5.231.85])
-        by mse-fl2.zte.com.cn with SMTP id 38I3iqSr028467;
-        Mon, 18 Sep 2023 11:44:52 +0800 (+08)
-        (envelope-from cheng.lin130@zte.com.cn)
-Received: from mapi (szxlzmapp06[null])
-        by mapi (Zmail) with MAPI id mid14;
-        Mon, 18 Sep 2023 11:44:53 +0800 (CST)
-Date:   Mon, 18 Sep 2023 11:44:53 +0800 (CST)
-X-Zmail-TransId: 2b086507c7b56cf-2fc22
-X-Mailer: Zmail v1.0
-Message-ID: <202309181144537682244@zte.com.cn>
-In-Reply-To: <ZQeBY3kmww8qAjfP@dread.disaster.area>
-References: ZQJIyx419cw24ppF@dread.disaster.area,202309151750563356840@zte.com.cn,ZQeBY3kmww8qAjfP@dread.disaster.area
-Mime-Version: 1.0
-From:   <cheng.lin130@zte.com.cn>
-To:     <david@fromorbit.com>
-Cc:     <djwong@kernel.org>, <linux-xfs@vger.kernel.org>,
-        <linux-kernel@vger.kernel.org>, <jiang.yong5@zte.com.cn>,
-        <wang.liang82@zte.com.cn>, <liu.dong3@zte.com.cn>
-Subject: =?UTF-8?B?UmU6IFtQQVRDSCB2M10geGZzOiBpbnRyb2R1Y2UgcHJvdGVjdGlvbiBmb3IgZHJvcCBubGluaw==?=
-Content-Type: text/plain;
-        charset="UTF-8"
-X-MAIL: mse-fl2.zte.com.cn 38I3iqSr028467
-X-Fangmail-Gw-Spam-Type: 0
-X-Fangmail-Anti-Spam-Filtered: true
-X-Fangmail-MID-QID: 6507C7B7.001/4RprK34GWKz8XrRF
+        with ESMTP id S239569AbjIREeC (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 18 Sep 2023 00:34:02 -0400
+Received: from mail-pl1-x633.google.com (mail-pl1-x633.google.com [IPv6:2607:f8b0:4864:20::633])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id AF69BE7;
+        Sun, 17 Sep 2023 21:33:56 -0700 (PDT)
+Received: by mail-pl1-x633.google.com with SMTP id d9443c01a7336-1c453379020so9115405ad.1;
+        Sun, 17 Sep 2023 21:33:56 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20230601; t=1695011636; x=1695616436; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:references:in-reply-to
+         :message-id:date:subject:cc:to:from:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=bTk1MSaSZ6J171Lp0y7vFzpboa0xOh5P3IIZsWDbUIA=;
+        b=X25GoB8jetdXrCQXHp36B2gHAEM+EpeiyG/F9VHEUKgWjOjCi+JXC6ICe281DXfpnv
+         vXQyuKomhhlqTkip3bOWld3G8rJ7KTemOU+T3cJGz9TQ8qAfgc7/a/I/FoNItUpQP8mN
+         gEpFsu81YlkgpfeAG6Es7w0GADJJkWTPKpscCMuKzWd8BJlUwR8i3D8qjTxFVP7PUE9g
+         nUOZV+tRrwRmOZ1Q8RMl7sDOkWGnX2GWjQ2dl6w9CC/LLlNOGkFhtaCgTpFe2O54UqoA
+         QEwxveiZwPeZHeyRYavJoyDgGGDQvVB1Y8vfMqHg+oDMuEuedASZkZtAYSPW+qXzCXY1
+         VuBg==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1695011636; x=1695616436;
+        h=content-transfer-encoding:mime-version:references:in-reply-to
+         :message-id:date:subject:cc:to:from:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=bTk1MSaSZ6J171Lp0y7vFzpboa0xOh5P3IIZsWDbUIA=;
+        b=Jk7O15I4M4eBLBZhT3gABS1dblLV9mR9Cw0R1cupOWGcT4FC1kX8hzzboYMhggQNiU
+         /uO60FDK9GV/JrzYQ77YdG07jqOKB2/wfCWhuojNY4MZ9KMSU1EfvNJpT7OLZV6BEaTn
+         7UJHNVQBRyL2kj0/itHBoQ2oP6xijn1fiMMhUCQge8pUFflYPrdjR0/c6rHripmmiSB7
+         dKkeaTawx2sJUZiwzbwp2AA8l5Sw7+j2k7Os9OD8dAuFtAVEo4RoWtse5j80kVMzfJUu
+         SdPdSdlrSm1FSgDAHdYV0aLfOZdx8MNTuPYaoZC39sH7++/hZa2OuuEaRNCx/n9v8YKC
+         rZ3w==
+X-Gm-Message-State: AOJu0YzbUOxRIpxDFrB+iRI5yIGdwxlebjgpU9DXECqMAulaNks1J7G5
+        AqMxvfNNo44Z72qfe3nV4Wg=
+X-Google-Smtp-Source: AGHT+IGR0ozaUZ3KJHjohlSc+QcXO9FQWeIFrBwMg6Xwk6/o0QegFQhpZxQhqUjSIjLOlMmaXwRelg==
+X-Received: by 2002:a17:902:728a:b0:1c3:9aa7:66e1 with SMTP id d10-20020a170902728a00b001c39aa766e1mr5909740pll.69.1695011636058;
+        Sun, 17 Sep 2023 21:33:56 -0700 (PDT)
+Received: from localhost.localdomain ([43.132.141.3])
+        by smtp.gmail.com with ESMTPSA id s18-20020a170902b19200b001bb9aadfb04sm7319285plr.220.2023.09.17.21.33.54
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Sun, 17 Sep 2023 21:33:55 -0700 (PDT)
+From:   alexjlzheng@gmail.com
+X-Google-Original-From: alexjlzheng@tencent.com
+To:     david@fromorbit.com
+Cc:     alexjlzheng@gmail.com, alexjlzheng@tencent.com,
+        chandan.babu@oracle.com, djwong@kernel.org,
+        linux-kernel@vger.kernel.org, linux-xfs@vger.kernel.org
+Subject: Re: [PATCH v2] xfs: remove redundant batch variables for serialization
+Date:   Mon, 18 Sep 2023 12:33:44 +0800
+Message-Id: <20230918043344.890817-1-alexjlzheng@tencent.com>
+X-Mailer: git-send-email 2.31.1
+In-Reply-To: <ZQJJasg4eIt99t/0@dread.disaster.area>
+References: <ZQJJasg4eIt99t/0@dread.disaster.area>
+MIME-Version: 1.0
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-> On Fri, Sep 15, 2023 at 05:50:56PM +0800, cheng.lin130@zte.com.cn wrote:
-> > > On Wed, Sep 13, 2023 at 05:44:45PM +0800, cheng.lin130@zte.com.cn wrote:
-> > > > From: Cheng Lin <cheng.lin130@zte.com.cn>
-> > > >
-> > > > When abnormal drop_nlink are detected on the inode,
-> > > > shutdown filesystem, to avoid corruption propagation.
-> > > >
-> > > > Signed-off-by: Cheng Lin <cheng.lin130@zte.com.cn>
-> > > > ---
-> > > >  fs/xfs/xfs_inode.c | 9 +++++++++
-> > > >  1 file changed, 9 insertions(+)
-> > > >
-> > > > diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
-> > > > index 9e62cc500..40cc106ae 100644
-> > > > --- a/fs/xfs/xfs_inode.c
-> > > > +++ b/fs/xfs/xfs_inode.c
-> > > > @@ -919,6 +919,15 @@ xfs_droplink(
-> > > >      xfs_trans_t *tp,
-> > > >      xfs_inode_t *ip)
-> > > >  {
-> > > > +
-> > > > +    if (VFS_I(ip)->i_nlink == 0) {
-> > > > +        xfs_alert(ip->i_mount,
-> > > > +              "%s: Deleting inode %llu with no links.",
-> > > > +              __func__, ip->i_ino);
-> > > > +        tp->t_flags |= XFS_TRANS_DIRTY;
-> > > Marking the transaction dirty is not necessary.
-> > > Otherwise this seems fine.
-> > Another strategy:
-> > Set nlink to an invalid value(like XFS_NLINK_PINNED), and
-> > Complete this transaction before shutdown fs. To make sure
-> > nlink not be zero. If the nlink of a directory are zero, it may
-> > be cleaned up.
-> > Is that appropriate?
-> No, all I'm asking you to do is drop dirtying of the transaction
-> from this patch because it is a) unnecessary and b) a layering
-> violation.
-> It is unnecessary because the transaction will almost always be
-> dirty before we get to xfs_droplink(). In the cases where it isn't
-> dirty (e.g. xfs_remove() on a directory) we explicitly check that
-> nlink == 2 before proceeding to call xfs_droplink(). Hence we can't
-> actually get to xfs_droplink() with a clean transaction, and so
-If the corrupted inode is a parent directory, when remove its
-subdirectory, the parent's nlink will be decreased to 0. But the
-transaction of subdirectory removing is not dirty (There are not
-check about the parent directory). In this situation, the transaction
-will be failed and the filesystem will be alive.
+On Thu, 14 Sep 2023 09:44:42 +1000, Dave Chinner <david@fromorbit.com> wrote:
+> On Wed, Sep 13, 2023 at 11:41:15AM +0800, alexjlzheng@gmail.com wrote:
+> > On Mon, 11 Sep 2023 07:49:51 +1000, Dave Chinner <david@fromorbit.com> wrote:
+> > > On Sat, Sep 09, 2023 at 03:17:51PM +0800, alexjlzheng@gmail.com wrote:
+> > > > From: Jinliang Zheng <alexjlzheng@tencent.com>
+> > > > 
+> > > > Historically, when generic percpu counters were introduced in xfs for
+> > > > free block counters by commit 0d485ada404b ("xfs: use generic percpu
+> > > > counters for free block counter"), the counters used a custom batch
+> > > > size. In xfs_mod_freecounter(), originally named xfs_mod_fdblocks(),
+> > > > this patch attempted to serialize the program using a smaller batch size
+> > > > as parameter to the addition function as the counter approaches 0.
+> > > > 
+> > > > Commit 8c1903d3081a ("xfs: inode and free block counters need to use
+> > > > __percpu_counter_compare") pointed out the error in commit 0d485ada404b
+> > > > ("xfs: use generic percpu counters for free block counter") mentioned
+> > > > above and said that "Because the counters use a custom batch size, the
+> > > > comparison functions need to be aware of that batch size otherwise the
+> > > > comparison does not work correctly". Then percpu_counter_compare() was
+> > > > replaced with __percpu_counter_compare() with parameter
+> > > > XFS_FDBLOCKS_BATCH.
+> > > > 
+> > > > After commit 8c1903d3081a ("xfs: inode and free block counters need to
+> > > > use __percpu_counter_compare"), the existence of the batch variable is
+> > > > no longer necessary, so this patch is proposed to simplify the code by
+> > > > removing it.
+> > > 
+> > > Hmmmm. Fiddling with percpu counter batch thresholds can expose
+> > > unexpected corner case behaviours.  What testing have you done on
+> > > this change?
+> > 
+> > Hi, Dave,
+> > 
+> > Thank you for your reply.
+> > 
+> > I have tested the patch using _filebench_ and _fio_.
+> 
+> What about all the ENOSPC and shutdown tests in fstests?
 
-> marking it dirty here on underrun is unnecessary as returning an
-> error from xfs_droplink() will result in shutting down the
-> filesystem when the transaction is cancelled.
-> -Dave.
-> --
+Sorry for the late reply.
+
+I tested this patch using xfstests last week, and all enospc and shutdown
+related tests passed.
+
+> 
+> If you haven't exercised ENOSPC conditions in your testing, then you
+> haven't actually tested whether the new code can accurately and
+> correctly detect ENOSPC conditions....
+> 
+> Cheers,
+> 
+> Dave.
+> -- 
 > Dave Chinner
 > david@fromorbit.com
+
+Best regards,
+
+Jinliang Zheng.
