@@ -2,212 +2,133 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3C43CCE79A9
-	for <linux-xfs@archiver.kernel.org>; Tue, 19 Sep 2023 21:52:22 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C3B91CE79AA
+	for <linux-xfs@archiver.kernel.org>; Tue, 19 Sep 2023 21:55:51 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233273AbjISVw0 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 19 Sep 2023 17:52:26 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56150 "EHLO
+        id S233304AbjISVzz (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 19 Sep 2023 17:55:55 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43718 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229690AbjISVwZ (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 19 Sep 2023 17:52:25 -0400
-Received: from mail-ej1-x634.google.com (mail-ej1-x634.google.com [IPv6:2a00:1450:4864:20::634])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id F326CBD
-        for <linux-xfs@vger.kernel.org>; Tue, 19 Sep 2023 14:52:18 -0700 (PDT)
-Received: by mail-ej1-x634.google.com with SMTP id a640c23a62f3a-9ae2cc4d17eso141328366b.1
-        for <linux-xfs@vger.kernel.org>; Tue, 19 Sep 2023 14:52:18 -0700 (PDT)
+        with ESMTP id S229690AbjISVzz (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 19 Sep 2023 17:55:55 -0400
+Received: from mail-pj1-x1032.google.com (mail-pj1-x1032.google.com [IPv6:2607:f8b0:4864:20::1032])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A1BF4BA
+        for <linux-xfs@vger.kernel.org>; Tue, 19 Sep 2023 14:55:49 -0700 (PDT)
+Received: by mail-pj1-x1032.google.com with SMTP id 98e67ed59e1d1-2769920fa24so1109520a91.1
+        for <linux-xfs@vger.kernel.org>; Tue, 19 Sep 2023 14:55:49 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20230601; t=1695160337; x=1695765137; darn=vger.kernel.org;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=eliXjlnUj0/AODOfq0lfgn0v2M8TIN1LeS+hCeHav/U=;
-        b=OqQcER9JyvuM3qJo1DI8aXd0lwL7//5LwyYR1Yul8THHQFKEDFCK4yMfMN3eJzl0hQ
-         gnt9CSN/ob0M1v6MHpDZAIUK4Alr+RdxRShioyRHONzszT6OFK+gPH0HVhUu6Xm5yNiF
-         SbtadUf9grV2X4kPLM71ljgOuy0lvMo7/DoCOmVW8QRDt0sXBzP2qSiyeOOnEjiJYhPJ
-         itsBMVhncsnYmdY/jixCJ8dTfL93YB2HLoJXJm2tEEtQoYmnuYbXlBlet9TdvrZ8s2o+
-         /kkZnpGWr9NCunsQ5bYZl31NMKKtwIt7aj9U2+TOx4lvGsPLtblPRxZTGZ68MJ/IkhZJ
-         a/jA==
+        d=fromorbit-com.20230601.gappssmtp.com; s=20230601; t=1695160549; x=1695765349; darn=vger.kernel.org;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
+        bh=p23pnOYGk3ABoqitzqOpkQDck52ivIL+ObmTQIK/lbM=;
+        b=Q7s12vpoHMWZfteAyD9VXAAdYxY3eZgTQxh3aqlrFQYhf+nXqLQKSKesR22KUM9oku
+         1gc/Y9wbI3G/Fl+g36VaqSPg1wqYeYVFxNSqZ6v2U8/OZMJkA/V8eF9W3FDfZrrdVUSM
+         WZFOfJno/LhzgZdpxTH63Yb986Ff5Of1gCxX6rR3oyyTOwam1GXtKm3F0QusLT/JOjan
+         XdojSyGfTNlnXyN9UDjyYr22wt/X6a+JGR4VK5PPPgv32mbFSarkXPatkGcB2QbZmx4Q
+         kRDsk+Aw/U+0m4EH8zrv1NeScgg9KCAWAh3d5mGclpH1AJ1jgnnDBEll6m7gQSHKFjBE
+         w+0Q==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1695160337; x=1695765137;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=eliXjlnUj0/AODOfq0lfgn0v2M8TIN1LeS+hCeHav/U=;
-        b=WMWbB7use7dQPoU9355C/xHzC7Nd4PhdsNxX1Nfg5BoA7C3dfPzcnl2pSaqX1Q7Tb8
-         I3lpvWCev29SLKECeBTK9b9YgCsU+e/RJxssKvO56/s+Rr3gdAKb9qS7G8We0KqXLy6I
-         2FuZwHyR2dfrJtmUedQZZiTtj/hnWg7x2hfBQRnLq9NtVbc24Pi2RbQElKXNEjqL2Xmj
-         NFhvlLueEvYwf3ij5Fuu4ajSQDXrvN3uhW6Y5opiSAYoD4Kndal4eRgYyHRzg50cyP/k
-         LBHEB8vESTRmLL287R2PM3ZlsjA8mB69QuoyP4ZLR2BvSnQ2a/EdjpQyAhj7u2Mnn1Wv
-         RDgA==
-X-Gm-Message-State: AOJu0YyCAqFzXYvqr95OjfDNkyXgiVwdVXYiPlYc1FxJPesfspNmlFul
-        tmSmyIZiLenR+/0ZhAZsMTuD7MWlI9ZOBxUJmF9Dpg==
-X-Google-Smtp-Source: AGHT+IEOBCWtLBMbM1AT0iqkM9hwo/7Pa2mMpNubzxGfRPNpEhB/75Pmmss4LVXbiittngA9ae8ICig1bNEo/UbeVZM=
-X-Received: by 2002:a17:906:18b1:b0:9a1:f3a6:b906 with SMTP id
- c17-20020a17090618b100b009a1f3a6b906mr437320ejf.36.1695160337022; Tue, 19 Sep
- 2023 14:52:17 -0700 (PDT)
+        d=1e100.net; s=20230601; t=1695160549; x=1695765349;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=p23pnOYGk3ABoqitzqOpkQDck52ivIL+ObmTQIK/lbM=;
+        b=WwgvbqiJvhAVsWbOyjCNlCsFZQjViajrHdcx6bWgFMa+69rQGAXXeBGqPrGdko1NRS
+         f50MISNa7AY8XbyS45VruS2gTBKgjv0wQ+438yf5CDOo1wGef81Puf/s1kQKJ6Zwofw3
+         j/Q6dUy8zdt66pe6lUAqlpTBIgFnRl89QBOoyB85fffqZs1+wTBj8WtCcq9YwPv5FYVQ
+         Dg2AIoHUFfjX9mqA9YYbrDlW0i2o5VGZNE6KZZVJT0XZ48VUIvrrv7NM6rVly/yZtpP7
+         y+rLYjF7P5L4CPaZlrHTZiKn2pmRIqqdW43GtOtPHymJbQHgQocOOzo4cRs2Mh23iEZ3
+         kmdg==
+X-Gm-Message-State: AOJu0YxXLKmodYJMktvlyH/QkJUUyvxRvEyW8AypR6ycydoW5Fmuvy18
+        9dJhoF0gHxDh9V+8qkiBXGRFpQ==
+X-Google-Smtp-Source: AGHT+IHspxmsKhfq6Ll9avr86y296rLfb+iCXNFGFKL7NQLpxfRwf+/96uZeezej+TkLnnrPCiSPIw==
+X-Received: by 2002:a17:90a:bb8b:b0:268:b682:23de with SMTP id v11-20020a17090abb8b00b00268b68223demr1012959pjr.28.1695160549114;
+        Tue, 19 Sep 2023 14:55:49 -0700 (PDT)
+Received: from dread.disaster.area (pa49-180-20-59.pa.nsw.optusnet.com.au. [49.180.20.59])
+        by smtp.gmail.com with ESMTPSA id q20-20020a170902e31400b001bdc664ecd3sm7004304plc.307.2023.09.19.14.55.48
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Tue, 19 Sep 2023 14:55:48 -0700 (PDT)
+Received: from dave by dread.disaster.area with local (Exim 4.96)
+        (envelope-from <david@fromorbit.com>)
+        id 1qiih7-002xdF-2X;
+        Wed, 20 Sep 2023 07:55:45 +1000
+Date:   Wed, 20 Sep 2023 07:55:45 +1000
+From:   Dave Chinner <david@fromorbit.com>
+To:     Matthew Wilcox <willy@infradead.org>
+Cc:     Dave Chinner <dchinner@redhat.com>,
+        Charles Han <hanchunchao@inspur.com>, corbet@lwn.net,
+        djwong@kernel.org, allison.henderson@oracle.com,
+        bhelgaas@google.com, linux-doc@vger.kernel.org,
+        linux-kernel@vger.kernel.org, linux-xfs@vger.kernel.org
+Subject: Re: [PATCH] Documentation: xfs: Remove repeated word in comments
+Message-ID: <ZQoY4UKcjIJYaJCO@dread.disaster.area>
+References: <20230918071905.296081-1-hanchunchao@inspur.com>
+ <ZQoMqI/QGPWEpkEi@rh>
+ <ZQoPaXNAwtu4wl02@casper.infradead.org>
 MIME-Version: 1.0
-References: <CGME20230915095133eucas1p267bade2888b7fcd2e1ea8e13e21c495f@eucas1p2.samsung.com>
- <20230915095042.1320180-1-da.gomez@samsung.com> <20230915095042.1320180-7-da.gomez@samsung.com>
- <CAJD7tkbU20tyGxtdL-cqJxrjf38ObG_dUttZdLstH3O2sUTKzw@mail.gmail.com>
- <20230918075758.vlufrhq22es2dhuu@sarkhan> <CAJD7tkZSST8Kc6duUWt6a9igrsn=ucUPSVPWWGDWEUxBs3b4bg@mail.gmail.com>
- <20230919132633.v2mvuaxp2w76zoed@sarkhan> <CAJD7tkaELyZXsUP+c=DKg9k-FeFTTRS+_9diK5fyTNdfDAykmQ@mail.gmail.com>
- <ZQoW0MVh/esJkU6H@bombadil.infradead.org>
-In-Reply-To: <ZQoW0MVh/esJkU6H@bombadil.infradead.org>
-From:   Yosry Ahmed <yosryahmed@google.com>
-Date:   Tue, 19 Sep 2023 14:51:40 -0700
-Message-ID: <CAJD7tkZjpYh=n4UrYmpMUVz2OvBX9PVzK+aP1gKsNoycnkzRag@mail.gmail.com>
-Subject: Re: [PATCH 6/6] shmem: add large folios support to the write path
-To:     Luis Chamberlain <mcgrof@kernel.org>
-Cc:     Daniel Gomez <da.gomez@samsung.com>,
-        "minchan@kernel.org" <minchan@kernel.org>,
-        "senozhatsky@chromium.org" <senozhatsky@chromium.org>,
-        "axboe@kernel.dk" <axboe@kernel.dk>,
-        "djwong@kernel.org" <djwong@kernel.org>,
-        "willy@infradead.org" <willy@infradead.org>,
-        "hughd@google.com" <hughd@google.com>,
-        "akpm@linux-foundation.org" <akpm@linux-foundation.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>,
-        "linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>,
-        "linux-fsdevel@vger.kernel.org" <linux-fsdevel@vger.kernel.org>,
-        "linux-mm@kvack.org" <linux-mm@kvack.org>,
-        "gost.dev@samsung.com" <gost.dev@samsung.com>,
-        Pankaj Raghav <p.raghav@samsung.com>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <ZQoPaXNAwtu4wl02@casper.infradead.org>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Tue, Sep 19, 2023 at 2:47=E2=80=AFPM Luis Chamberlain <mcgrof@kernel.org=
-> wrote:
->
-> On Tue, Sep 19, 2023 at 09:00:16AM -0700, Yosry Ahmed wrote:
-> > On Tue, Sep 19, 2023 at 6:27=E2=80=AFAM Daniel Gomez <da.gomez@samsung.=
-com> wrote:
-> > >
-> > > On Mon, Sep 18, 2023 at 11:55:34AM -0700, Yosry Ahmed wrote:
-> > > > On Mon, Sep 18, 2023 at 1:00=E2=80=AFAM Daniel Gomez <da.gomez@sams=
-ung.com> wrote:
-> > > > >
-> > > > > On Fri, Sep 15, 2023 at 11:26:37AM -0700, Yosry Ahmed wrote:
-> > > > > > On Fri, Sep 15, 2023 at 2:51=E2=80=AFAM Daniel Gomez <da.gomez@=
-samsung.com> wrote:
-> > > > > > >
-> > > > > > > Add large folio support for shmem write path matching the sam=
-e high
-> > > > > > > order preference mechanism used for iomap buffered IO path as=
- used in
-> > > > > > > __filemap_get_folio().
-> > > > > > >
-> > > > > > > Use the __folio_get_max_order to get a hint for the order of =
-the folio
-> > > > > > > based on file size which takes care of the mapping requiremen=
-ts.
-> > > > > > >
-> > > > > > > Swap does not support high order folios for now, so make it o=
-rder 0 in
-> > > > > > > case swap is enabled.
-> > > > > >
-> > > > > > I didn't take a close look at the series, but I am not sure I
-> > > > > > understand the rationale here. Reclaim will split high order sh=
-mem
-> > > > > > folios anyway, right?
-> > > > >
-> > > > > For context, this is part of the enablement of large block sizes =
-(LBS)
-> > > > > effort [1][2][3], so the assumption here is that the kernel will
-> > > > > reclaim memory with the same (large) block sizes that were writte=
-n to
-> > > > > the device.
-> > > > >
-> > > > > I'll add more context in the V2.
-> > > > >
-> > > > > [1] https://protect2.fireeye.com/v1/url?k=3Da80aab33-c981be05-a80=
-b207c-000babff9b5d-b656d8860b04562f&q=3D1&e=3D46666acf-d70d-4e8d-8d00-b0278=
-08ae400&u=3Dhttps%3A%2F%2Fkernelnewbies.org%2FKernelProjects%2Flarge-block-=
-size
-> > > > > [2] https://protect2.fireeye.com/v1/url?k=3D3f753ca2-5efe2994-3f7=
-4b7ed-000babff9b5d-e678f885471555e3&q=3D1&e=3D46666acf-d70d-4e8d-8d00-b0278=
-08ae400&u=3Dhttps%3A%2F%2Fdocs.google.com%2Fspreadsheets%2Fd%2Fe%2F2PACX-1v=
-S7sQfw90S00l2rfOKm83Jlg0px8KxMQE4HHp_DKRGbAGcAV-xu6LITHBEc4xzVh9wLH6WM2lR0c=
-ZS8%2Fpubhtml%23
-> > > > > [3] https://lore.kernel.org/all/ZQfbHloBUpDh+zCg@dread.disaster.a=
-rea/
-> > > > > >
-> > > > > > It seems like we only enable high order folios if the "noswap" =
-mount
-> > > > > > option is used, which is fairly recent. I doubt it is widely us=
-ed.
-> > > > >
-> > > > > For now, I skipped the swap path as it currently lacks support fo=
-r
-> > > > > high order folios. But I'm currently looking into it as part of t=
-he LBS
-> > > > > effort (please check spreadsheet at [2] for that).
-> > > >
-> > > > Thanks for the context, but I am not sure I understand.
-> > > >
-> > > > IIUC we are skipping allocating large folios in shmem if swap is
-> > > > enabled in this patch. Swap does not support swapping out large fol=
-ios
-> > > > as a whole (except THPs), but page reclaim will split those large
-> > > > folios and swap them out as order-0 pages anyway. So I am not sure =
-I
-> > > > understand why we need to skip allocating large folios if swap is
-> > > > enabled.
-> > >
-> > > I lifted noswap condition and retested it again on top of 230918 and
-> > > there is some regression. So, based on the results I guess the initia=
-l
-> > > requirement may be the way to go. But what do you think?
-> > >
-> > > Here the logs:
-> > > * shmem-large-folios-swap: https://gitlab.com/-/snippets/3600360
-> > > * shmem-baseline-swap : https://gitlab.com/-/snippets/3600362
-> > >
-> > > -Failures: generic/080 generic/126 generic/193 generic/633 generic/68=
-9
-> > > -Failed 5 of 730 tests
-> > > \ No newline at end of file
-> > > +Failures: generic/080 generic/103 generic/126 generic/193 generic/28=
-5 generic/436 generic/619 generic/633 generic/689
-> > > +Failed 9 of 730 tests
-> > > \ No newline at end of file
-> > > >
-> >
-> > I am not really familiar with these tests so I cannot really tell
-> > what's going on. I can see "swapfiles are not supported" in the logs
-> > though, so it seems like we are seeing extra failures by just lifting
-> > "noswap" even without actually swapping. I am curious if this is just
-> > hiding a different issue, I would at least try to understand what's
-> > happening.
-> >
-> > Anyway, I don't have enough context here to be useful. I was just
-> > making an observation about reclaim splitting shmem folios to swap
-> > them out as order-0 pages, and asking why this is needed based on
-> > that. I will leave it up to you and the reviewers to decide if there's
-> > anything interesting here.
->
-> The tests which are failing seem be related to permissions, I could not
-> immediate decipher why, because as you suggest we'd just be doing the
-> silly thing of splitting large folios on writepage.
->
-> I'd prefer we don't require swap until those regressions would be fixed.
->
-> Note that part of the rationale to enable this work is to eventually
-> also extend swap code to support large order folios, so it is not like
-> this would be left as-is. It is just that it may take time to resolve
-> the kinks with swap.
->
-> So I'd stick to nowap for now.
->
-> The above tests also don't stress swap too, and if we do that I would
-> imagine we might see some other undesirable failures.
->
->  Luis
+On Tue, Sep 19, 2023 at 10:15:21PM +0100, Matthew Wilcox wrote:
+> On Wed, Sep 20, 2023 at 07:03:36AM +1000, Dave Chinner wrote:
+> > [cc linux-xfs@vger.kernel.org]
+> > 
+> > Hi Charles,
+> > 
+> > For future reference, can you CC the XFS list on XFS documentation
+> > changes please?  That's much preferable to sending patches to random
+> > developers and hoping they notice it....
+> > 
+> > On Mon, Sep 18, 2023 at 03:19:05PM +0800, Charles Han wrote:
+> > > Remove the repeated word "the" in comments.
+> > > 
+> > > Signed-off-by: Charles Han <hanchunchao@inspur.com>
+> > > ---
+> > >  Documentation/filesystems/xfs-online-fsck-design.rst | 2 +-
+> > >  1 file changed, 1 insertion(+), 1 deletion(-)
+> > > 
+> > > diff --git a/Documentation/filesystems/xfs-online-fsck-design.rst b/Documentation/filesystems/xfs-online-fsck-design.rst
+> 
+> To be fair, this new file isn't listed in MAINTAINERS, so
+> scripts/get_maintainer.pl doesn't know about it.  May I
+> suggest the attached patch?
 
-I thought we already have some notion of exercising swap with large
-shmem folios from THPs, so this shouldn't be new, but perhaps I am
-missing something.
+> From e0eb2f0d1425e6a5dae23c983eb793afa5d040c1 Mon Sep 17 00:00:00 2001
+> From: "Matthew Wilcox (Oracle)" <willy@infradead.org>
+> Date: Tue, 19 Sep 2023 17:12:45 -0400
+> Subject: [PATCH] XFS: Update MAINTAINERS to catch all XFS documentation
+> 
+> Assumes that all XFS documentation will be prefixed with xfs-, which
+> seems like a good policy anyway.
+> 
+> Signed-off-by: Matthew Wilcox (Oracle) <willy@infradead.org>
+> ---
+>  MAINTAINERS | 3 +--
+>  1 file changed, 1 insertion(+), 2 deletions(-)
+> 
+> diff --git a/MAINTAINERS b/MAINTAINERS
+> index bf0f54c24f81..3554195022ee 100644
+> --- a/MAINTAINERS
+> +++ b/MAINTAINERS
+> @@ -23640,8 +23640,7 @@ T:	git git://git.kernel.org/pub/scm/fs/xfs/xfs-linux.git
+>  P:	Documentation/filesystems/xfs-maintainer-entry-profile.rst
+>  F:	Documentation/ABI/testing/sysfs-fs-xfs
+>  F:	Documentation/admin-guide/xfs.rst
+> -F:	Documentation/filesystems/xfs-delayed-logging-design.rst
+> -F:	Documentation/filesystems/xfs-self-describing-metadata.rst
+> +F:	Documentation/filesystems/xfs-*
+>  F:	fs/xfs/
+>  F:	include/uapi/linux/dqblk_xfs.h
+>  F:	include/uapi/linux/fsmap.h
+
+Looks fine to me.
+
+Reviewed-by: Dave Chinner <dchinner@redhat.com>
+
+-- 
+Dave Chinner
+david@fromorbit.com
