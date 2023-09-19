@@ -2,128 +2,92 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0C985CD343E
-	for <linux-xfs@archiver.kernel.org>; Tue, 19 Sep 2023 06:10:14 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4401ECD3440
+	for <linux-xfs@archiver.kernel.org>; Tue, 19 Sep 2023 06:37:04 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230246AbjISGKQ (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 19 Sep 2023 02:10:16 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42132 "EHLO
+        id S229449AbjISGhH (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 19 Sep 2023 02:37:07 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55270 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230445AbjISGKP (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 19 Sep 2023 02:10:15 -0400
+        with ESMTP id S229553AbjISGhG (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 19 Sep 2023 02:37:06 -0400
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 62CC410F;
-        Mon, 18 Sep 2023 23:10:09 -0700 (PDT)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 79C2DC433C8;
-        Tue, 19 Sep 2023 06:10:08 +0000 (UTC)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id BB5C4119;
+        Mon, 18 Sep 2023 23:37:00 -0700 (PDT)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id D2128C433C8;
+        Tue, 19 Sep 2023 06:36:59 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1695103809;
-        bh=GYsVDmtHjmD65ngtLU+uLhnkIlgKs4QonM8BFIhxiCs=;
-        h=From:To:Cc:Subject:Date:From;
-        b=lxB72gGaRP2wmuRVuuNK9qFo6kITeDoPhJiAnjI/hw+Jgc58f1cW5JTLPm3xd1u47
-         1WoZq+d6hMh04mEeqm1Hn/l2Ct5I1SDvGDVeu00SDVNuT3xDmD7+oBC/Hb4oFsPzw1
-         JhQqS96gt2taNd88KSH5Nbdf2h92SvqYLWp/fB/ilUZaRT3xL+RB7XVx2J1fiVv3PB
-         odKqDfrev5Wh4t+tbOMD/JNPDNckPL/neEtbaAcH5yKGdgphYMb1aPfTdDIS0nfHaW
-         p1Nez6CW1NOm0yGPsLJfmrHpStvQwqBaCqG1s6QH76iuP0fvhCjRykeXALu1VEo1D7
-         4vakumPJq5QiA==
+        s=k20201202; t=1695105420;
+        bh=fEmXkRf1BlO1aq/3eAd0nY8VtZl1PlGZ/UWAiyLWBro=;
+        h=References:From:To:Cc:Subject:Date:In-reply-to:From;
+        b=Qx3HP3frbS/kXweUYyGCFVJD7mZpTD2UVn6XZsXrerjWiRjyRnzalul/+ToeiMrr2
+         Jx3j5seVRpfHj88dx9Ufl4FCXDZQ3P+3nBA2iLtXAAL12zJ7j5hJHyf1CNLabIb7cb
+         YhZVkpfKi0NWfBxvyI5mvQU+OJVzSeXT7EdLv/x/r9X/NX7MLd5l6rDrVabKeKVNbN
+         2EMmz4buEqwbWsHxwJma+z9dv3csHp7IC2aZUJxZZOyo2XPI3MECUMajvEClaFaWLN
+         iFqugf2UZJd/8Vx8atexK9KAXpiRQuGEfK7bcUC/ABdOYyqzAmzbAKo2b14hpf7tgD
+         hkLha342dA0VQ==
+References: <63b3742c-0efe-c096-c737-a0e0419480bd@outlook.com>
+ <59dd15dd-5b35-871d-6d3a-ec779975b089@outlook.com>
+ <0a72f462-8b8e-4dec-6ce4-f52e33423957@outlook.com>
+ <CY8PR05MB9378441D3F6430D1A414142BCDFAA@CY8PR05MB9378.namprd05.prod.outlook.com>
+ <20230919032138.GC348037@frogsfrogsfrogs>
 User-agent: mu4e 1.8.10; emacs 27.1
 From:   Chandan Babu R <chandanbabu@kernel.org>
-To:     chandanbabu@kernel.org
-Cc:     bodonnel@redhat.com, david@fromorbit.com, dchinner@redhat.com,
-        djwong@kernel.org, harshit.m.mogalapalli@oracle.com,
-        linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org,
-        lukas.bulwahn@gmail.com, peterz@infradead.org,
-        ritesh.list@gmail.com, sandeen@sandeen.net,
-        srikanth.c.s@oracle.com, sshegde@linux.vnet.ibm.com,
-        tglx@linutronix.de, wangjc136@midea.com, wen.gang.wang@oracle.com
-Subject: [ANNOUNCE] xfs-linux: for-next updated to 8b010acb3154
-Date:   Tue, 19 Sep 2023 11:35:10 +0530
-Message-ID: <878r92k81t.fsf@debian-BULLSEYE-live-builder-AMD64>
+To:     "Darrick J. Wong" <djwong@kernel.org>
+Cc:     Wang Jianchao <jianchwa@outlook.com>,
+        Chandan Babu R <chandanrlinux@gmail.com>,
+        linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH V3] xfs: use roundup_pow_of_two instead of ffs during
+ xlog_find_tail
+Date:   Tue, 19 Sep 2023 12:04:44 +0530
+In-reply-to: <20230919032138.GC348037@frogsfrogsfrogs>
+Message-ID: <874jjqk6t2.fsf@debian-BULLSEYE-live-builder-AMD64>
 MIME-Version: 1.0
 Content-Type: text/plain
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Hi folks,
+On Mon, Sep 18, 2023 at 08:21:38 PM -0700, Darrick J. Wong wrote:
+> On Tue, Sep 19, 2023 at 10:06:56AM +0800, Wang Jianchao wrote:
+>> Ping ? Do I need other update on this patch ?
+>
+> Nope, I think this is ok...
+>
+>> Thanks
+>> Jianchao
+>> 
+>> On 2023/9/13 09:38, Wang Jianchao wrote:
+>> > 
+>> > In our production environment, we find that mounting a 500M /boot
+>> > which is umount cleanly needs ~6s. One cause is that ffs() is
+>> > used by xlog_write_log_records() to decide the buffer size. It
+>> > can cause a lot of small IO easily when xlog_clear_stale_blocks()
+>> > needs to wrap around the end of log area and log head block is
+>> > not power of two. Things are similar in xlog_find_verify_cycle().
+>> > 
+>> > The code is able to handed bigger buffer very well, we can use
+>> > roundup_pow_of_two() to replace ffs() directly to avoid small
+>> > and sychronous IOs.
+>> > 
+>> > Reviewed-by: Dave Chinner <dchinner@redhat.com>
+>> > Signed-off-by: Wang Jianchao <wangjc136@midea.com>
+>
+> ...so let's see if the release manager will take this patch.
+>
+> Chandan?  Could you pull in the various one-off patches floating around
+> on the list that have passed review?  ;)
 
-The for-next branch of the xfs-linux repository at:
+I had picked this patch along with others sometime last week.
 
-	https://git.kernel.org/pub/scm/fs/xfs/xfs-linux.git
+I have pushed the new set of commits to official xfs-linux git repository and
+sent the announcement mail around 30 mins ago.
 
-has just been updated.
+>
+> Reviewed-by: Darrick J. Wong <djwong@kernel.org>
+>
+> PS: If you'd like to send a pull request to push things along, please do
+>
 
-Patches often get missed, so please check if your outstanding patches
-were in this update. If they have not been in this update, please
-resubmit them to linux-xfs@vger.kernel.org so they can be picked up in
-the next update.
-
-The new head of the for-next branch is commit:
-
-8b010acb3154 xfs: use roundup_pow_of_two instead of ffs during xlog_find_tail
-
-24 new commits:
-
-Chandan Babu R (8):
-      [da6f8410e73e] Merge tag 'fix-fsmap-6.6_2023-09-12' of https://git.kernel.org/pub/scm/linux/kernel/git/djwong/xfs-linux into xfs-6.6-fixesA
-      [0a229c935a8a] Merge tag 'fix-percpu-lists-6.6_2023-09-12' of https://git.kernel.org/pub/scm/linux/kernel/git/djwong/xfs-linux into xfs-6.6-fixesA
-      [f41d7d70b0f2] Merge tag 'fix-ro-mounts-6.6_2023-09-12' of https://git.kernel.org/pub/scm/linux/kernel/git/djwong/xfs-linux into xfs-6.6-fixesA
-      [b6c2b6378d64] Merge tag 'fix-efi-recovery-6.6_2023-09-12' of https://git.kernel.org/pub/scm/linux/kernel/git/djwong/xfs-linux into xfs-6.6-fixesA
-      [fffcdcc31fa1] Merge tag 'fix-iunlink-6.6_2023-09-12' of https://git.kernel.org/pub/scm/linux/kernel/git/djwong/xfs-linux into xfs-6.6-fixesA
-      [abf7c8194f23] Merge tag 'fix-iunlink-list-6.6_2023-09-12' of https://git.kernel.org/pub/scm/linux/kernel/git/djwong/xfs-linux into xfs-6.6-fixesA
-      [6ebb6500e546] Merge tag 'fix-larp-requirements-6.6_2023-09-12' of https://git.kernel.org/pub/scm/linux/kernel/git/djwong/xfs-linux into xfs-6.6-fixesA
-      [1155b12edbb5] Merge tag 'fix-scrub-6.6_2023-09-12' of https://git.kernel.org/pub/scm/linux/kernel/git/djwong/xfs-linux into xfs-6.6-fixesA
-
-Darrick J. Wong (14):
-      [ecd49f7a36fb] xfs: fix per-cpu CIL structure aggregation racing with dying cpus
-      [cfa2df68b7ce] xfs: fix an agbno overflow in __xfs_getfsmap_datadev
-      [62334fab4762] xfs: use per-mount cpumask to track nonempty percpu inodegc lists
-      [f5bfa695f02e] xfs: remove the all-mounts list
-      [ef7d9593390a] xfs: remove CPU hotplug infrastructure
-      [f12b96683d69] xfs: use i_prev_unlinked to distinguish inodes that are not on the unlinked list
-      [76e589013fec] xfs: allow inode inactivation during a ro mount log recovery
-      [83771c50e42b] xfs: reload entire unlinked bucket lists
-      [74ad4693b647] xfs: fix log recovery when unknown rocompat bits are set
-      [3c919b091090] xfs: reserve less log space when recovering log intent items
-      [68b957f64fca] xfs: load uncached unlinked inodes into memory on demand
-      [49813a21ed57] xfs: make inode unlinked bucket recovery work with quotacheck
-      [34389616a963] xfs: require a relatively recent V5 filesystem for LARP mode
-      [e03192820002] xfs: only call xchk_stats_merge after validating scrub inputs
-
-Lukas Bulwahn (1):
-      [57c0f4a8ea3a] xfs: fix select in config XFS_ONLINE_SCRUB_STATS
-
-Wang Jianchao (1):
-      [8b010acb3154] xfs: use roundup_pow_of_two instead of ffs during xlog_find_tail
-
-Code Diffstat:
-
- fs/xfs/Kconfig                  |   2 +-
- fs/xfs/libxfs/xfs_log_recover.h |  22 +++++
- fs/xfs/libxfs/xfs_sb.c          |   3 +-
- fs/xfs/scrub/scrub.c            |   4 +-
- fs/xfs/scrub/stats.c            |   5 +-
- fs/xfs/xfs_attr_inactive.c      |   1 -
- fs/xfs/xfs_attr_item.c          |   7 +-
- fs/xfs/xfs_bmap_item.c          |   4 +-
- fs/xfs/xfs_export.c             |   6 ++
- fs/xfs/xfs_extfree_item.c       |   4 +-
- fs/xfs/xfs_fsmap.c              |  25 +++--
- fs/xfs/xfs_icache.c             |  80 ++++++---------
- fs/xfs/xfs_icache.h             |   1 -
- fs/xfs/xfs_inode.c              | 209 +++++++++++++++++++++++++++++++++++++---
- fs/xfs/xfs_inode.h              |  34 ++++++-
- fs/xfs/xfs_itable.c             |   9 ++
- fs/xfs/xfs_log.c                |  17 ----
- fs/xfs/xfs_log_cil.c            |  52 +++-------
- fs/xfs/xfs_log_priv.h           |  14 ++-
- fs/xfs/xfs_log_recover.c        |   4 +-
- fs/xfs/xfs_mount.h              |  17 +++-
- fs/xfs/xfs_qm.c                 |   7 ++
- fs/xfs/xfs_refcount_item.c      |   6 +-
- fs/xfs/xfs_rmap_item.c          |   6 +-
- fs/xfs/xfs_super.c              |  86 +----------------
- fs/xfs/xfs_trace.h              |  45 +++++++++
- fs/xfs/xfs_xattr.c              |  11 +++
- include/linux/cpuhotplug.h      |   1 -
- 28 files changed, 441 insertions(+), 241 deletions(-)
+-- 
+Chandan
