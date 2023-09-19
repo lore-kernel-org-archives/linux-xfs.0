@@ -2,196 +2,187 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3BF7FCD343C
-	for <linux-xfs@archiver.kernel.org>; Tue, 19 Sep 2023 05:51:30 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id BDBAFCD343E
+	for <linux-xfs@archiver.kernel.org>; Tue, 19 Sep 2023 05:51:52 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231128AbjISFve (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 19 Sep 2023 01:51:34 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38468 "EHLO
+        id S231344AbjISFv4 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 19 Sep 2023 01:51:56 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59158 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230513AbjISFvd (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 19 Sep 2023 01:51:33 -0400
-Received: from mail-pl1-x62f.google.com (mail-pl1-x62f.google.com [IPv6:2607:f8b0:4864:20::62f])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B4CC5FC
-        for <linux-xfs@vger.kernel.org>; Mon, 18 Sep 2023 22:51:27 -0700 (PDT)
-Received: by mail-pl1-x62f.google.com with SMTP id d9443c01a7336-1bf6ea270b2so39680425ad.0
-        for <linux-xfs@vger.kernel.org>; Mon, 18 Sep 2023 22:51:27 -0700 (PDT)
+        with ESMTP id S231214AbjISFvz (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 19 Sep 2023 01:51:55 -0400
+Received: from mail-pl1-x62a.google.com (mail-pl1-x62a.google.com [IPv6:2607:f8b0:4864:20::62a])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6E95B100;
+        Mon, 18 Sep 2023 22:51:49 -0700 (PDT)
+Received: by mail-pl1-x62a.google.com with SMTP id d9443c01a7336-1c44a25bd0bso20886555ad.0;
+        Mon, 18 Sep 2023 22:51:49 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=fromorbit-com.20230601.gappssmtp.com; s=20230601; t=1695102687; x=1695707487; darn=vger.kernel.org;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
-        bh=nV0EYWI8tvp/cEXKxNbM7kh696XH8foB3amsQbKYZis=;
-        b=slddgMGvGI2aYmuFzVm1RanTUY/Q3Uni326Fc4MXT2e3E496MnblF1YpEWtelZ1dEG
-         rmIK2lEqlxmmDypPuLoWgH9syIKPZOtsPGTuK++fIdEoA2Cmzz+v+mw6y+v/ERCAna70
-         YSe0j6G/t2tdN+xdszyvSDE6Fpm1kJTMUfqZkzeSvqeKfihJkXp2HY3em4PCNMPgpeCY
-         FTfqprG3hsoAVCfxkMf7RIcsoA0YQhIFEuvm9UiDhU3yue7WDFhcz/8R1wezf5BtDfjZ
-         sYCCHJvpOWWItgiO+N6ipjWQfiybTLWnRy3I2TvSE3tsfMyRlJGibwEAR0uUUEb+r/1g
-         KTow==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1695102687; x=1695707487;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
+        d=gmail.com; s=20230601; t=1695102708; x=1695707508; darn=vger.kernel.org;
+        h=in-reply-to:subject:to:from:message-id:date:from:to:cc:subject:date
          :message-id:reply-to;
-        bh=nV0EYWI8tvp/cEXKxNbM7kh696XH8foB3amsQbKYZis=;
-        b=g1vudAwJ+hxei+wWJV1oYmbjyes+RC2Jb2iRslB/0KBo0EeDcdGfG/Jr3OwV+/7lwJ
-         Mei5l+IRZNJuzkFJa1Jvg7uWgBetkkzzJ5+OBDqK+5Q2UwLFboT/h1b73HFvAp1C6jxt
-         7n6ZZxj78mIqqKoazq1hbGZftuc/C+nBpMYjT0dUF3e+iTUIN6hzoG9mJXWNb+5UKmRQ
-         68IOaZ6CYR82YidiuY8FJ5h+pfyd90SgAw2QSeg2sifqL7jIJIm0PwUfs4QKg39RuTT2
-         XElHle5mrzVtXj1ilqOzrKBTwCguExRKYqleUZoe5EghE/UN/mk6lYlGJgyICt0DV5pv
-         4zNw==
-X-Gm-Message-State: AOJu0YyV5JGCye2ljZRC/FEaxUajEtXxxORSkXS816i2VrdHMT74Ddu2
-        aEmJv9Zpq+m5Ia5cdDCjFLKPfA==
-X-Google-Smtp-Source: AGHT+IERXVnGNNp60R8H4+EnaYv9MWW2lFWZR8krg890dfrNgzGKwbxVRefGwplEoxU5oHKu2NpMtQ==
-X-Received: by 2002:a17:902:9303:b0:1c3:a1a8:969a with SMTP id bc3-20020a170902930300b001c3a1a8969amr9280140plb.8.1695102687007;
-        Mon, 18 Sep 2023 22:51:27 -0700 (PDT)
-Received: from dread.disaster.area (pa49-180-20-59.pa.nsw.optusnet.com.au. [49.180.20.59])
-        by smtp.gmail.com with ESMTPSA id j1-20020a170902da8100b001c3cbedbc47sm4974854plx.6.2023.09.18.22.51.26
+        bh=QcRXRyK1fCDW06SwtVVU/3oEtJExRi+6ONE5drucKAM=;
+        b=mA6YZIax2/6IhqYBXbqLyU/0yMYYQ9G4/Fc+Jbk5r88niqjXextat2EhvYLN8hZPU8
+         HXg6ki2sjugDY+tSJuJOcWHQT8UJfQqsXdy7hRU/qPgN+C1jBi4OXMTsa99vK5NOgeNg
+         DKzPKcaDHjjRhIYjgM5Whf0BqNyTT5VlLCJfut4WwaTFY7pChvi9jKJQ48fA6R1VIWP+
+         1wbcWXIQe5qcQu3GTlvGcFmDpd01vm3Gy+xLWFvNMwgaaxx9vpHOZ88mj1i/Oe8PwlP+
+         aAYa1rDr5VifC3RboKYB9JAhwJFJ9diH3kDlR3hNeUvFjVA/XOMD585bfPKQLMmCWBl0
+         87RQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1695102708; x=1695707508;
+        h=in-reply-to:subject:to:from:message-id:date:x-gm-message-state:from
+         :to:cc:subject:date:message-id:reply-to;
+        bh=QcRXRyK1fCDW06SwtVVU/3oEtJExRi+6ONE5drucKAM=;
+        b=X2XRcuGWTptWliQ2AVQODocNN4+4bQE7sSchrhX7E1bi2X25QPnKfm8w9WnA1yM37f
+         vrCBHl1o7sxlumPRZRJg9ZE6ldZukTEikyV0kXQkq7ZjVNJCLt8jfbMZozgwuc+oab6M
+         AI8W/sRw41I9YYotsTICsoh4IMEqKCCCLSlHmMJqbOQ/Ltzj4IATQBpG9jZDL+OJ2DUr
+         qsAQ4ia2jPTHMeT/84TUSJi/7HC++qQjyyvhelIfCRurZ1lv3ICpmqAbT14XNDhk9aDE
+         2dwfhQE3mZAkaY4wW2xrqXtzS3ZpR6yPqkUWzRACq07tTi4CWqWjisCbz6ufjPfJ3V6C
+         UivA==
+X-Gm-Message-State: AOJu0Yx5kyXnExrmw0bPyDJMTh4rUIno5tp3jdiBpAZ4jk2PzL+IyL6L
+        ilQoJM2VW4qBcNVd2c0GjQTUDC1VuR4=
+X-Google-Smtp-Source: AGHT+IGKXTpHw1PNtYXexI1NOlFzP7qnV1XSzLKtvTgqcbt/cosMDxjTFjMSsmDI2NjxJjKADe9Lmw==
+X-Received: by 2002:a17:902:d504:b0:1bc:2fe1:1821 with SMTP id b4-20020a170902d50400b001bc2fe11821mr2348665plg.17.1695102707803;
+        Mon, 18 Sep 2023 22:51:47 -0700 (PDT)
+Received: from dw-tp ([49.207.223.191])
+        by smtp.gmail.com with ESMTPSA id q20-20020a170902e31400b001bdc664ecd3sm5739767plc.307.2023.09.18.22.51.45
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 18 Sep 2023 22:51:26 -0700 (PDT)
-Received: from dave by dread.disaster.area with local (Exim 4.96)
-        (envelope-from <david@fromorbit.com>)
-        id 1qiTds-002fFP-0Y;
-        Tue, 19 Sep 2023 15:51:24 +1000
-Date:   Tue, 19 Sep 2023 15:51:24 +1000
-From:   Dave Chinner <david@fromorbit.com>
-To:     Catherine Hoang <catherine.hoang@oracle.com>
-Cc:     "linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>,
-        "Darrick J. Wong" <djwong@kernel.org>
-Subject: Re: proposal: enhance 'cp --reflink' to expose ioctl_ficlonerange
-Message-ID: <ZQk23NIAcY0BDpfI@dread.disaster.area>
-References: <8911B94D-DD29-4D6E-B5BC-32EAF1866245@oracle.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <8911B94D-DD29-4D6E-B5BC-32EAF1866245@oracle.com>
+        Mon, 18 Sep 2023 22:51:47 -0700 (PDT)
+Date:   Tue, 19 Sep 2023 11:21:43 +0530
+Message-Id: <87led27lsg.fsf@doe.com>
+From:   Ritesh Harjani (IBM) <ritesh.list@gmail.com>
+To:     "Darrick J. Wong" <djwong@kernel.org>, willy@infradead.org,
+        linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org
+Subject: Re: [PATCH 3/2] fstests: test FALLOC_FL_UNSHARE when pagecache is not loaded
+In-Reply-To: <20230918231945.GC348018@frogsfrogsfrogs>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Tue, Sep 19, 2023 at 02:43:32AM +0000, Catherine Hoang wrote:
-> Hi all,
-> 
-> Darrick and I have been working on designing a new ioctl FICLONERANGE2. The
-> following text attempts to explain our needs and reasoning behind this decision. 
-> 
-> 
-> Contents
-> --------
-> 1. Problem Statement
-> 2. Proof of Concept
-> 3. Proposed Solution
-> 4. User Interface
-> 5. Testing Plan
-> 
-> 
-> 1. Problem Statement
-> --------------------
-> 
-> One of our VM cluster management products needs to snapshot KVM image files
-> so that they can be restored in case of failure. Snapshotting is done by
-> redirecting VM disk writes to a sidecar file and using reflink on the disk
-> image, specifically the FICLONE ioctl as used by "cp --reflink". Reflink
-> locks the source and destination files while it operates, which means that
-> reads from the main vm disk image are blocked, causing the vm to stall. When
-> an image file is heavily fragmented, the copy process could take several
-> minutes. Some of the vm image files have 50-100 million extent records, and
-> duplicating that much metadata locks the file for 30 minutes or more. Having
-> activities suspended for such a long time in a cluster node could result in
-> node eviction. A node eviction occurs when the cluster manager determines
-> that the vm is unresponsive. One of the criteria for determining that a VM
-> is unresponsive is the failure of filesystems in the guest to respond for an
-> unacceptably long time. In order to solve this problem, we need to provide a
-> variant of FICLONE that releases the file locks periodically to allow reads
-> to occur as vmbackup runs. The purpose of this feature is to allow vmbackup
-> to run without causing downtime.
+"Darrick J. Wong" <djwong@kernel.org> writes:
 
-Interesting problem to have - let me see if I understand it
-properly.
+> Add a regression test for funsharing uncached files to ensure that we
+> actually manage the pagecache state correctly.
+>
+> Signed-off-by: Darrick J. Wong <djwong@kernel.org>
+> ---
+>  tests/xfs/1936     |   88 ++++++++++++++++++++++++++++++++++++++++++++++++++++
+>  tests/xfs/1936.out |    4 ++
+>  2 files changed, 92 insertions(+)
+>  create mode 100755 tests/xfs/1936
+>  create mode 100644 tests/xfs/1936.out
 
-Writes are redirected away from the file being cloned, but reads go
-directly to the source file being cloned?
+1936? I am not sure how that works though. 
+./new I guess automatically gives the testcase no. for a new testcase right.
 
-But cloning can take a long time, so breaking up the clone operation
-into multiple discrete ranges will allow reads through
-to the file being cloned with minimal latency. However, you don't
-want writes to the source file because that results in the
-atomicity of the clone operation being violated and corrupting the
-snapshot.
+>
+> diff --git a/tests/xfs/1936 b/tests/xfs/1936
+> new file mode 100755
+> index 0000000000..bcf9b6b478
+> --- /dev/null
+> +++ b/tests/xfs/1936
+> @@ -0,0 +1,88 @@
+> +#! /bin/bash
+> +# SPDX-License-Identifier: GPL-2.0
+> +# Copyright (c) 2023 Oracle.  All Rights Reserved.
+> +#
+> +# FS QA Test 1936
+> +#
+> +# This is a regression test for the kernel commit noted below.  The stale
+> +# memory exposure can be exploited by creating a file with shared blocks,
+> +# evicting the page cache for that file, and then funshareing at least one
+> +# memory page's worth of data.  iomap will mark the page uptodate and dirty
+> +# without ever reading the ondisk contents.
+> +#
+> +. ./common/preamble
+> +_begin_fstest auto quick unshare clone
+> +
+> +_cleanup()
+> +{
+> +	cd /
+> +	rm -r -f $tmp.* $testdir
+> +}
+> +
+> +# real QA test starts here
+> +
+> +# Import common functions.
+> +. ./common/filter
+> +. ./common/attr
+> +. ./common/reflink
+> +
+> +_fixed_by_git_commit kernel XXXXXXXXXXXXX \
+> +	"iomap: don't skip reading in !uptodate folios when unsharing a range"
+> +
+> +# real QA test starts here
+> +_require_test_reflink
+> +_require_cp_reflink
+> +_require_xfs_io_command "funshare"
+> +
+> +testdir=$TEST_DIR/test-$seq
+> +rm -rf $testdir
+> +mkdir $testdir
+> +
+> +# Create a file that is at least four pages in size and aligned to the
+> +# file allocation unit size so that we don't trigger any unnecessary zeroing.
+> +pagesz=$(_get_page_size)
+> +alloc_unit=$(_get_file_block_size $TEST_DIR)
+> +filesz=$(( ( (4 * pagesz) + alloc_unit - 1) / alloc_unit * alloc_unit))
+> +
+> +echo "Create the original file and a clone"
+> +_pwrite_byte 0x61 0 $filesz $testdir/file2.chk >> $seqres.full
+> +_pwrite_byte 0x61 0 $filesz $testdir/file1 >> $seqres.full
+> +_cp_reflink $testdir/file1 $testdir/file2
+> +_cp_reflink $testdir/file1 $testdir/file3
+> +
+> +_test_cycle_mount
+> +
+> +cat $testdir/file3 > /dev/null
+> +
+> +echo "Funshare at least one pagecache page"
+> +$XFS_IO_PROG -c "funshare 0 $filesz" $testdir/file2
+> +$XFS_IO_PROG -c "funshare 0 $filesz" $testdir/file3
+> +_pwrite_byte 0x61 0 $filesz $testdir/file2.chk >> $seqres.full
 
-Hence the redirected writes ensure that the file being cloned does
-not change from syscall to syscall. This means the time interrupted
-clone operation can restart from where it left off and you still get
-an consistent image clone for the snapshot.
+We don't need to write the bytes again to file2.chk. We already wrote above.
+Otherwise looks right to me. Nice testcase indeed.
 
-Did I get that right?
+Reviewed-by: Ritesh Harjani (IBM) <ritesh.list@gmail.com>
 
 
-If so, I'm wondering about the general usefulness of this
-multi-syscall construct - having to ensure that it isn't written to
-between syscalls is quite the constraint.
-
-I wonder if we can do better than that and not need a new syscall;
-shared read + clone seems more like an inode extent list access
-serialisation problem than anything else...
-
-<thinks for a bit>
-
-Ok. a clone does not change any data in the source file.
-
-Neither do read IO operations.
-
-Hence from a data integrity perspective, there's no reason why read
-IO and FICLONE can't run concurrently on the source file.
-
-Writes we still need to block so that the clone is an atomic
-point in time image of the file, but reads could be allowed.
-
-The XFS clone implementation takes the IOLOCK_EXCL high up, and
-then lower down it iterates one extent doing the sharing operation.
-It holds the ILOCK_EXCL while it is modifying the extent in both the
-source and destination files, then commits the transaction and drops
-the ILOCKs.
-
-OK, so we have fine-grained ILOCK serialisation during the clone for
-access/modification to the extent list. Excellent, I think we can
-make this work.
-
-So:
-
-1. take IOLOCK_EXCL like we already do on the source and destination
-files.
-
-2. Once all the pre work is done, set a "clone in progress" flag on
-the in-memory source inode.
-
-3. atomically demote the source inode IOLOCK_EXCL to IOLOCK_SHARED.
-
-4. read IO and the clone serialise access to the extent list via the
-ILOCK. We know this works fine, because that's how the extent list
-access serialisation for concurrent read and write direct IO works.
-
-5. buffered writes take the IOLOCK_EXCL, so they block until the
-clone completes. Same behaviour as right now, all good.
-
-6. direct IO writes need to be modified to check the "clone in
-progress" flag after taking the IOLOCK_SHARED. If it is set, we have
-to drop the IOLOCK_SHARED and take it IOLOCK_EXCL. This will block
-until the clone completes.
-
-7. when the clone completes, we clear the "clone in progress" flag
-and drop all the IOLOCKs that are held.
-
-AFAICT, this will give us shared clone vs read and exclusive clone
-vs write IO semantics for all clone operations. And if I've
-understood the problem statement correctly, this will avoid the
-read IO latency problems that long running clone operations cause
-without needing a new syscall.
-
-Thoughts?
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+> +
+> +echo "Check contents"
+> +
+> +# file2 wasn't cached when it was unshared, but it should match
+> +if ! cmp -s $testdir/file2.chk $testdir/file2; then
+> +	echo "file2.chk does not match file2"
+> +
+> +	echo "file2.chk contents" >> $seqres.full
+> +	od -tx1 -Ad -c $testdir/file2.chk >> $seqres.full
+> +	echo "file2 contents" >> $seqres.full
+> +	od -tx1 -Ad -c $testdir/file2 >> $seqres.full
+> +	echo "end bad contents" >> $seqres.full
+> +fi
+> +
+> +# file3 was cached when it was unshared, and it should match
+> +if ! cmp -s $testdir/file2.chk $testdir/file3; then
+> +	echo "file2.chk does not match file3"
+> +
+> +	echo "file2.chk contents" >> $seqres.full
+> +	od -tx1 -Ad -c $testdir/file2.chk >> $seqres.full
+> +	echo "file3 contents" >> $seqres.full
+> +	od -tx1 -Ad -c $testdir/file3 >> $seqres.full
+> +	echo "end bad contents" >> $seqres.full
+> +fi
+> +
+> +# success, all done
+> +status=0
+> +exit
+> diff --git a/tests/xfs/1936.out b/tests/xfs/1936.out
+> new file mode 100644
+> index 0000000000..c7c820ced5
+> --- /dev/null
+> +++ b/tests/xfs/1936.out
+> @@ -0,0 +1,4 @@
+> +QA output created by 1936
+> +Create the original file and a clone
+> +Funshare at least one pagecache page
+> +Check contents
