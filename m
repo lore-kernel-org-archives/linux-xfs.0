@@ -2,159 +2,117 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id EE457CD342E
-	for <linux-xfs@archiver.kernel.org>; Tue, 19 Sep 2023 03:33:39 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 094B7CD3439
+	for <linux-xfs@archiver.kernel.org>; Tue, 19 Sep 2023 04:42:32 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231256AbjISDdn (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 18 Sep 2023 23:33:43 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45860 "EHLO
+        id S229645AbjISEmf (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 19 Sep 2023 00:42:35 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38690 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231190AbjISDdm (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 18 Sep 2023 23:33:42 -0400
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A06DF10E;
-        Mon, 18 Sep 2023 20:33:36 -0700 (PDT)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 430B5C433C8;
-        Tue, 19 Sep 2023 03:33:36 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1695094416;
-        bh=LkrAcMJkX+W+jGridPGhkAI5FW5BVjJBEN9dcf/Fig4=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=W1hVAGdu2qLo0P9RPYKkFP8jChK4MSTSSpoB/JxYAeQSLZgJTGS++fH/u/ckxeqj3
-         ZTDL9PGVULj6rXshO84Y7OKZDDzMjlNJNpqF22mpAlxsVyjD83T2LYFE6HidnOyhiy
-         pKY8lqeHgHbi2/mW9+lSGtHdqNgl8yPtxKXFuhbXTIWTpf5UvIews0PBGmFKf0a+Qg
-         U+ViU3Qsfsdljsj/VsXUuctkL8qZW+cv2dU5662UVa/UAaxiZbARtOFn3LRluOPl4K
-         5QHNI0tC+R2/pp6tFOAYEZVQdkCb8c4GScTpB/neb8cu+/0H/qVSW/xonn/slXN21w
-         x488CwAZ1Eejg==
-Date:   Mon, 18 Sep 2023 20:33:35 -0700
-From:   "Darrick J. Wong" <djwong@kernel.org>
-To:     Dave Chinner <david@fromorbit.com>
-Cc:     cheng.lin130@zte.com.cn, linux-xfs@vger.kernel.org,
-        linux-kernel@vger.kernel.org, jiang.yong5@zte.com.cn,
-        wang.liang82@zte.com.cn, liu.dong3@zte.com.cn
-Subject: Re: [PATCH v3] xfs: introduce protection for drop nlink
-Message-ID: <20230919033335.GF348018@frogsfrogsfrogs>
-References: <ZQeBY3kmww8qAjfP@dread.disaster.area>
- <202309181144537682244@zte.com.cn>
- <ZQfktqPJ5Qzs7unT@dread.disaster.area>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <ZQfktqPJ5Qzs7unT@dread.disaster.area>
+        with ESMTP id S231417AbjISEmf (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 19 Sep 2023 00:42:35 -0400
+Received: from mail-pf1-x434.google.com (mail-pf1-x434.google.com [IPv6:2607:f8b0:4864:20::434])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D471010E;
+        Mon, 18 Sep 2023 21:42:28 -0700 (PDT)
+Received: by mail-pf1-x434.google.com with SMTP id d2e1a72fcca58-68fb79ef55eso4758230b3a.0;
+        Mon, 18 Sep 2023 21:42:28 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20230601; t=1695098548; x=1695703348; darn=vger.kernel.org;
+        h=in-reply-to:subject:cc:to:from:message-id:date:from:to:cc:subject
+         :date:message-id:reply-to;
+        bh=Df+9eLjTUVzgEqVA6Q+LlyRbAvg6Ho3M0KjpMi0md/g=;
+        b=NSEMnItVyBe3z+3o0RBqPSy8jsfpoR9FxHiGHSDdPI2p9hmoGk0s93NwWuVis5KT1A
+         IhKFqJ3h+/8ez+fBoU3VD29my32+scpIiSkhmDuObQ3SZaDex37hypt70EVbLkC6f2Im
+         A6PwFy5dKbYmhY7HWLRIKBZlF/SJO7v//7P0AMs80tWmcwSQehsp4O3d6YPMkrRQdcRO
+         4gCMiEndJVW2x6dyFsw+K1dJmRVaiBMGSn6Vg2hb9WLS5LhZLV4CyF1f+mP7JAo9kzPz
+         KSR3Mmzvq7vOmA9qsnrR7Daxf28fxBxJCy0KTcdavPej9jK80OdFLSSiGS2+7mb8D3SG
+         Lwng==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1695098548; x=1695703348;
+        h=in-reply-to:subject:cc:to:from:message-id:date:x-gm-message-state
+         :from:to:cc:subject:date:message-id:reply-to;
+        bh=Df+9eLjTUVzgEqVA6Q+LlyRbAvg6Ho3M0KjpMi0md/g=;
+        b=gIPRrmiEBtpPExG976aKJx299fotLRoXfOqy+6oPmHz0JDvEzu1ixC4aE6EoqT8SjR
+         5EWbBOQDUx+Af+J78gIG+qe61Yshkp+t30Ov5vMJmweFU4WBqBUQ6vJxYna3P5t1+6QN
+         x68LRM9+0yh6CwgQOj2Av81ld2jseebE10TU7MG0UCoVfP4NNN7w1bqxJxdh+ixIdEn0
+         1pswLlT3TPKuqhM7Wtwlmn1wu5FhBrs5c6LlLYwlTH+FhaZ1MFIw0xWaLcWahPSUlSsY
+         7VNKsqb3U+OuWL9yNXPgTpT/9f/dZwTQEV698WtFPHS0kaecb8taLS+nrYAV/cqwaqbV
+         TkUA==
+X-Gm-Message-State: AOJu0YzbyCLUDGZ2F6jbJq+ug3QufTXdNezwV1y4pTYg4MeWbOh358xO
+        pbo6j/8XwhxhYyiw95tZpDv/IXGWz58=
+X-Google-Smtp-Source: AGHT+IGB37sIyrpD0Udu1Nod//aFhAGcrTcwFgKX8tvPBguV7ClfrjejpnsVpuAAgszoQbjhrabkKg==
+X-Received: by 2002:a05:6a00:2283:b0:68a:5773:6319 with SMTP id f3-20020a056a00228300b0068a57736319mr13214107pfe.11.1695098548286;
+        Mon, 18 Sep 2023 21:42:28 -0700 (PDT)
+Received: from dw-tp ([49.207.223.191])
+        by smtp.gmail.com with ESMTPSA id fe20-20020a056a002f1400b00687dde8ae5dsm7802303pfb.154.2023.09.18.21.42.25
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Mon, 18 Sep 2023 21:42:27 -0700 (PDT)
+Date:   Tue, 19 Sep 2023 10:12:19 +0530
+Message-Id: <87sf7a7p04.fsf@doe.com>
+From:   Ritesh Harjani (IBM) <ritesh.list@gmail.com>
+To:     "Darrick J. Wong" <djwong@kernel.org>, djwong@kernel.org
+Cc:     willy@infradead.org, linux-fsdevel@vger.kernel.org,
+        linux-xfs@vger.kernel.org, willy@infradead.org
+Subject: Re: [PATCH 1/2] iomap: don't skip reading in !uptodate folios when unsharing a range
+In-Reply-To: <169507872536.772278.18183365318216726644.stgit@frogsfrogsfrogs>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Mon, Sep 18, 2023 at 03:48:38PM +1000, Dave Chinner wrote:
-> On Mon, Sep 18, 2023 at 11:44:53AM +0800, cheng.lin130@zte.com.cn wrote:
-> > > On Fri, Sep 15, 2023 at 05:50:56PM +0800, cheng.lin130@zte.com.cn wrote:
-> > > > > On Wed, Sep 13, 2023 at 05:44:45PM +0800, cheng.lin130@zte.com.cn wrote:
-> > > > > > From: Cheng Lin <cheng.lin130@zte.com.cn>
-> > > > > >
-> > > > > > When abnormal drop_nlink are detected on the inode,
-> > > > > > shutdown filesystem, to avoid corruption propagation.
-> > > > > >
-> > > > > > Signed-off-by: Cheng Lin <cheng.lin130@zte.com.cn>
-> > > > > > ---
-> > > > > >  fs/xfs/xfs_inode.c | 9 +++++++++
-> > > > > >  1 file changed, 9 insertions(+)
-> > > > > >
-> > > > > > diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
-> > > > > > index 9e62cc500..40cc106ae 100644
-> > > > > > --- a/fs/xfs/xfs_inode.c
-> > > > > > +++ b/fs/xfs/xfs_inode.c
-> > > > > > @@ -919,6 +919,15 @@ xfs_droplink(
-> > > > > >      xfs_trans_t *tp,
-> > > > > >      xfs_inode_t *ip)
-> > > > > >  {
-> > > > > > +
-> > > > > > +    if (VFS_I(ip)->i_nlink == 0) {
-> > > > > > +        xfs_alert(ip->i_mount,
-> > > > > > +              "%s: Deleting inode %llu with no links.",
-> > > > > > +              __func__, ip->i_ino);
-> > > > > > +        tp->t_flags |= XFS_TRANS_DIRTY;
-> > > > > Marking the transaction dirty is not necessary.
-> > > > > Otherwise this seems fine.
-> > > > Another strategy:
-> > > > Set nlink to an invalid value(like XFS_NLINK_PINNED), and
-> > > > Complete this transaction before shutdown fs. To make sure
-> > > > nlink not be zero. If the nlink of a directory are zero, it may
-> > > > be cleaned up.
-> > > > Is that appropriate?
-> > > No, all I'm asking you to do is drop dirtying of the transaction
-> > > from this patch because it is a) unnecessary and b) a layering
-> > > violation.
-> > > It is unnecessary because the transaction will almost always be
-> > > dirty before we get to xfs_droplink(). In the cases where it isn't
-> > > dirty (e.g. xfs_remove() on a directory) we explicitly check that
-> > > nlink == 2 before proceeding to call xfs_droplink(). Hence we can't
-> > > actually get to xfs_droplink() with a clean transaction, and so
-> > If the corrupted inode is a parent directory, when remove its
-> > subdirectory, the parent's nlink will be decreased to 0.  But the
-> > transaction of subdirectory removing is not dirty (There are not
-> > check about the parent directory). In this situation, the transaction
-> > will be failed and the filesystem will be alive.
-> 
-> Yes, and that's perfectly fine. The transaction cancelling code has
-> worked this way for the past 20 years or so...
-> 
-> Indeed, you said your customer wants the system to stay alive if possible,
-> right? Well, so do we.
-> 
-> If the parent directory has a bogus nlink count, and that prevents
-> us from removing items from the directory, then as long as we
-> haven't dirtied anything and we can return a -EFSCORRUPTED error to
-> userspace to say the unlink failed and we don't have to shut the
-> filesystem down. All we now have is a directory that has objects in
-> it that can't be removed....
-> 
-> For a higher level perspective, we only need to shut the filesystem
-> down if we cannot safely back out of the modification operation that
-> was requested. Whilst the transaction is clean, we can safely return
-> errors to userspace and continue operation because everything in
-> memory and on disk is still consistent, even if we have found a
-> corruption in non-crtical the metadata. Just returning an error to
-> userspace can't make the problem any worse.
-> 
-> This also is how we treat corruption that is found during read
-> operations - we return -EFSCORRUPTED to userspace because something in
-> the directory or inode we were trying to read from was corrupted. We
-> do not need to shut down the filesystem because there is
-> no risk of making things worse or the in-memory filesystem state
-> getting out of sync with the on-disk state.
-> 
-> It is only when we are trying to modify something that corruption
-> becomes a problem with fatal consequences. Once we've made a
-> modification, the in-memory state is different to the on-disk state
-> and whilst we are in that state any corruption we discover becomes
-> fatal. That is because there is no way to reconcile the changes
-> we've already made in memory with what is on-disk - we don't know
-> that the in-memory changes are good because we tripped over
-> corruption, and so we must not propagate bad in-memory state and
-> metadata to disk over the top of what may be still be uncorrupted
-> metadata on disk.
+"Darrick J. Wong" <djwong@kernel.org> writes:
 
-It'd be a massive effort, but wouldn't it be fun if one could attach
-defer ops to a transaction that updated incore state on commit but
-otherwise never appeared on disk?
+> From: Darrick J. Wong <djwong@kernel.org>
+>
+> Prior to commit a01b8f225248e, we would always read in the contents of a
+> !uptodate folio prior to writing userspace data into the folio,
+> allocated a folio state object, etc.  Ritesh introduced an optimization
+> that skips all of that if the write would cover the entire folio.
+>
+> Unfortunately, the optimization misses the unshare case, where we always
+> have to read in the folio contents since there isn't a data buffer
+> supplied by userspace.  This can result in stale kernel memory exposure
+> if userspace issues a FALLOC_FL_UNSHARE_RANGE call on part of a shared
+> file that isn't already cached.
+>
+> This was caught by observing fstests regressions in the "unshare around"
+> mechanism that is used for unaligned writes to a reflinked realtime
+> volume when the realtime extent size is larger than 1FSB, though I think
+> it applies to any shared file.
+>
+> Cc: ritesh.list@gmail.com, willy@infradead.org
+> Fixes: a01b8f225248e ("iomap: Allocate ifs in ->write_begin() early")
+> Signed-off-by: Darrick J. Wong <djwong@kernel.org>
+> ---
+>  fs/iomap/buffered-io.c |    6 ++++--
+>  1 file changed, 4 insertions(+), 2 deletions(-)
 
-Let me cogitate on that during part 2 of vacation...
+Thanks for catching this case. Fix for this looks good to me. 
+I have verified on my setup. w/o this patch it indeed can cause
+corruption in the unshare case, since we don't read the disk contents
+and we might end up writing garbage from the page cache.
 
---D
+Reviewed-by: Ritesh Harjani (IBM) <ritesh.list@gmail.com>
 
-> This "in memory matches on disk" state is effectively what the dirty
-> flag in the transaction tracks, and it's done as part of the normal
-> running of a transaction as items are tagged for logging. Marking a
-> transaction dirty that has nothign tagged for logging is actually an
-> incorrect state; we may handle it correctly, but it should never
-> actually occur and we should definitely not be open coding dirtying
-> of transactions to create this state.
-> 
-> IOWs, the transaction modification error handling paths already do
-> the right thing according to the state carried by the transaction at
-> the time the error was encountered.
-> 
-> -Dave.
-> -- 
-> Dave Chinner
-> david@fromorbit.com
+
+>
+>
+> diff --git a/fs/iomap/buffered-io.c b/fs/iomap/buffered-io.c
+> index ae8673ce08b1..0350830fc989 100644
+> --- a/fs/iomap/buffered-io.c
+> +++ b/fs/iomap/buffered-io.c
+> @@ -640,11 +640,13 @@ static int __iomap_write_begin(const struct iomap_iter *iter, loff_t pos,
+>  	size_t poff, plen;
+>  
+>  	/*
+> -	 * If the write completely overlaps the current folio, then
+> +	 * If the write or zeroing completely overlaps the current folio, then
+>  	 * entire folio will be dirtied so there is no need for
+>  	 * per-block state tracking structures to be attached to this folio.
+> +	 * For the unshare case, we must read in the ondisk contents because we
+> +	 * are not changing pagecache contents.
+>  	 */
+> -	if (pos <= folio_pos(folio) &&
+> +	if (!(iter->flags & IOMAP_UNSHARE) && pos <= folio_pos(folio) &&
+>  	    pos + len >= folio_pos(folio) + folio_size(folio))
+>  		return 0;
+>  
