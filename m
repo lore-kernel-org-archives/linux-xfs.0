@@ -2,154 +2,87 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B9C81EED60D
-	for <linux-xfs@archiver.kernel.org>; Tue, 19 Sep 2023 07:14:27 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8E244CD3445
+	for <linux-xfs@archiver.kernel.org>; Tue, 19 Sep 2023 07:26:03 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231681AbjISHO3 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 19 Sep 2023 03:14:29 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52704 "EHLO
+        id S231687AbjISH0G (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 19 Sep 2023 03:26:06 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45194 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231560AbjISHO0 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 19 Sep 2023 03:14:26 -0400
-X-Greylist: delayed 501 seconds by postgrey-1.37 at lindbergh.monkeyblade.net; Tue, 19 Sep 2023 00:14:19 PDT
-Received: from rivendell.linuxfromscratch.org (rivendell.linuxfromscratch.org [208.118.68.85])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id CF4CB119;
-        Tue, 19 Sep 2023 00:14:19 -0700 (PDT)
-Received: from [192.168.3.211] (unknown [36.44.140.33])
-        by rivendell.linuxfromscratch.org (Postfix) with ESMTPSA id 26A431C1DD6;
-        Tue, 19 Sep 2023 07:05:30 +0000 (GMT)
-X-Virus-Status: Clean
-X-Virus-Scanned: clamav-milter 1.0.0 at rivendell.linuxfromscratch.org
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=linuxfromscratch.org;
-        s=cert4; t=1695107155;
-        bh=9wNEeAzCOPg0mCdyHRKNEVbZmXBmTaugcI3ERiby3k0=;
-        h=Subject:From:To:Cc:Date:In-Reply-To:References;
-        b=aqoK/Ilc8LvyUE+Xk4kK0TbIhFHarWsn2uBwrCvOIBF6xZoiA1f4tJ9dbKWFKRiu6
-         paL+GBbo9SPpEBIbiWrsPB0XfpKTd2+G50VtbF86FGHEVOMJSrRDmkMaTUMORk6h/3
-         qLapgrTCCQmetnyxXQd0oMfEVgIT+/HKvVoU4IKX272amD2+FjwGF7/9QSILQuggfV
-         BI6kNxpQvUY/+hAogUxC35kr9T5IahyPaFtyYIDE5cZir6pdZggqKuZtpzkHOubZ1J
-         isHMMtWcQM3xaSsKJn5GsqEfCinyGk71Ww3uWLHV11gy8ssXk8BO2mWnXKo2ok/N19
-         WGA2g3mo4aO4w==
-Message-ID: <bf0524debb976627693e12ad23690094e4514303.camel@linuxfromscratch.org>
-Subject: Re: [PATCH v7 12/13] ext4: switch to multigrain timestamps
-From:   Xi Ruoyao <xry111@linuxfromscratch.org>
-To:     Jeff Layton <jlayton@kernel.org>,
-        Alexander Viro <viro@zeniv.linux.org.uk>,
-        Christian Brauner <brauner@kernel.org>,
-        Eric Van Hensbergen <ericvh@kernel.org>,
-        Latchesar Ionkov <lucho@ionkov.net>,
-        Dominique Martinet <asmadeus@codewreck.org>,
-        Christian Schoenebeck <linux_oss@crudebyte.com>,
-        David Howells <dhowells@redhat.com>,
-        Marc Dionne <marc.dionne@auristor.com>,
-        Chris Mason <clm@fb.com>, Josef Bacik <josef@toxicpanda.com>,
-        David Sterba <dsterba@suse.com>, Xiubo Li <xiubli@redhat.com>,
-        Ilya Dryomov <idryomov@gmail.com>,
-        Jan Harkes <jaharkes@cs.cmu.edu>, coda@cs.cmu.edu,
-        Tyler Hicks <code@tyhicks.com>, Gao Xiang <xiang@kernel.org>,
-        Chao Yu <chao@kernel.org>, Yue Hu <huyue2@coolpad.com>,
-        Jeffle Xu <jefflexu@linux.alibaba.com>,
-        Namjae Jeon <linkinjeon@kernel.org>,
-        Sungjong Seo <sj1557.seo@samsung.com>,
-        Jan Kara <jack@suse.com>, Theodore Ts'o <tytso@mit.edu>,
-        Andreas Dilger <adilger.kernel@dilger.ca>,
-        Jaegeuk Kim <jaegeuk@kernel.org>,
-        OGAWA Hirofumi <hirofumi@mail.parknet.co.jp>,
-        Miklos Szeredi <miklos@szeredi.hu>,
-        Bob Peterson <rpeterso@redhat.com>,
-        Andreas Gruenbacher <agruenba@redhat.com>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        Tejun Heo <tj@kernel.org>,
-        Trond Myklebust <trond.myklebust@hammerspace.com>,
-        Anna Schumaker <anna@kernel.org>,
-        Konstantin Komarov <almaz.alexandrovich@paragon-software.com>,
-        Mark Fasheh <mark@fasheh.com>,
-        Joel Becker <jlbec@evilplan.org>,
-        Joseph Qi <joseph.qi@linux.alibaba.com>,
-        Mike Marshall <hubcap@omnibond.com>,
-        Martin Brandenburg <martin@omnibond.com>,
-        Luis Chamberlain <mcgrof@kernel.org>,
-        Kees Cook <keescook@chromium.org>,
-        Iurii Zaikin <yzaikin@google.com>,
-        Steve French <sfrench@samba.org>,
-        Paulo Alcantara <pc@manguebit.com>,
-        Ronnie Sahlberg <ronniesahlberg@gmail.com>,
-        Shyam Prasad N <sprasad@microsoft.com>,
-        Tom Talpey <tom@talpey.com>,
-        Sergey Senozhatsky <senozhatsky@chromium.org>,
-        Richard Weinberger <richard@nod.at>,
-        Hans de Goede <hdegoede@redhat.com>,
-        Hugh Dickins <hughd@google.com>,
-        Andrew Morton <akpm@linux-foundation.org>,
-        Amir Goldstein <amir73il@gmail.com>,
-        "Darrick J. Wong" <djwong@kernel.org>,
-        Benjamin Coddington <bcodding@redhat.com>
-Cc:     linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org,
-        v9fs@lists.linux.dev, linux-afs@lists.infradead.org,
-        linux-btrfs@vger.kernel.org, ceph-devel@vger.kernel.org,
-        codalist@coda.cs.cmu.edu, ecryptfs@vger.kernel.org,
-        linux-erofs@lists.ozlabs.org, linux-ext4@vger.kernel.org,
-        linux-f2fs-devel@lists.sourceforge.net, cluster-devel@redhat.com,
-        linux-nfs@vger.kernel.org, ntfs3@lists.linux.dev,
-        ocfs2-devel@lists.linux.dev, devel@lists.orangefs.org,
-        linux-cifs@vger.kernel.org, samba-technical@lists.samba.org,
-        linux-mtd@lists.infradead.org, linux-mm@kvack.org,
-        linux-unionfs@vger.kernel.org, linux-xfs@vger.kernel.org,
-        Jan Kara <jack@suse.cz>, bug-gnulib@gnu.org
-Date:   Tue, 19 Sep 2023 15:05:24 +0800
-In-Reply-To: <20230807-mgctime-v7-12-d1dec143a704@kernel.org>
-References: <20230807-mgctime-v7-0-d1dec143a704@kernel.org>
-         <20230807-mgctime-v7-12-d1dec143a704@kernel.org>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
-User-Agent: Evolution 3.50.0 
+        with ESMTP id S229960AbjISH0F (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 19 Sep 2023 03:26:05 -0400
+Received: from gandalf.ozlabs.org (mail.ozlabs.org [IPv6:2404:9400:2221:ea00::3])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 77461FC;
+        Tue, 19 Sep 2023 00:25:58 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=canb.auug.org.au;
+        s=201702; t=1695108353;
+        bh=BXA+1Kw/6obE3VF4wSJBx7IOy9FiYg0aqGCKSySeKIY=;
+        h=Date:From:To:Cc:Subject:From;
+        b=mVNQfPoP0InAQJvX/TjwplFu7e1SK12FdFHxLSD4agdk0SblOKcarmPLquEtZZ1BM
+         SLdOtW6LbwCMQ43jPUlnjZLdz9IH+sMmiLLDU92qEx0gtyOUFxHbJuwhryBnWjb9A6
+         6S4p2qyoW3fu8A2GRHQZKyAQi63dMGZZpnDm4N1dWfNtTAoMey5umPQIN1ppd/ooEU
+         ter1KtEObPCII+QgZsv9+7E7+1IaThC4pgnJkTtAA+prnJAaY04tRFmkF/qAivQP3P
+         bflh1nOXgF/4sZPoGOWThNO7Q6uPKUCD8M39pSFUD+l68W25oCgQg5VMV5mumKCHls
+         L9AbGLIQFKd4w==
+Received: from authenticated.ozlabs.org (localhost [127.0.0.1])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange ECDHE (prime256v1) server-signature RSA-PSS (4096 bits) server-digest SHA256)
+        (No client certificate requested)
+        by mail.ozlabs.org (Postfix) with ESMTPSA id 4RqY9Y2qZdz4xNq;
+        Tue, 19 Sep 2023 17:25:53 +1000 (AEST)
+Date:   Tue, 19 Sep 2023 17:25:49 +1000
+From:   Stephen Rothwell <sfr@canb.auug.org.au>
+To:     "Darrick J. Wong" <djwong@kernel.org>,
+        David Chinner <david@fromorbit.com>,
+        <linux-xfs@vger.kernel.org>
+Cc:     Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+        Linux Next Mailing List <linux-next@vger.kernel.org>
+Subject: linux-next: Fixes tag needs some work in the xfs tree
+Message-ID: <20230919172549.5daa24d9@canb.auug.org.au>
 MIME-Version: 1.0
+Content-Type: multipart/signed; boundary="Sig_/u_tJ0ZZJSxm79sbK/i1Q9mj";
+ protocol="application/pgp-signature"; micalg=pgp-sha256
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Mon, 2023-08-07 at 15:38 -0400, Jeff Layton wrote:
-> Enable multigrain timestamps, which should ensure that there is an
-> apparent change to the timestamp whenever it has been written after
-> being actively observed via getattr.
->=20
-> For ext4, we only need to enable the FS_MGTIME flag.
+--Sig_/u_tJ0ZZJSxm79sbK/i1Q9mj
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: quoted-printable
 
-Hi Jeff,
+Hi all,
 
-This patch causes a gnulib test failure:
+In commit
 
-$ ~/sources/lfs/grep-3.11/gnulib-tests/test-stat-time
-test-stat-time.c:141: assertion 'statinfo[0].st_mtime < statinfo[2].st_mtim=
-e || (statinfo[0].st_mtime =3D=3D statinfo[2].st_mtime && (get_stat_mtime_n=
-s (&statinfo[0]) < get_stat_mtime_ns (&statinfo[2])))' failed
-Aborted (core dumped)
+  74ad4693b647 ("xfs: fix log recovery when unknown rocompat bits are set")
 
-The source code of the test:
-https://git.savannah.gnu.org/cgit/gnulib.git/tree/tests/test-stat-time.c
+Fixes tag
 
-Is this an expected change?
+  Fixes: 9e037cb7972f ("xfs: check for unknown v5 feature bits in superbloc=
+k write verifier"
 
-> Acked-by: Theodore Ts'o <tytso@mit.edu>
-> Reviewed-by: Jan Kara <jack@suse.cz>
-> Signed-off-by: Jeff Layton <jlayton@kernel.org>
-> ---
-> =C2=A0fs/ext4/super.c | 2 +-
-> =C2=A01 file changed, 1 insertion(+), 1 deletion(-)
->=20
-> diff --git a/fs/ext4/super.c b/fs/ext4/super.c
-> index b54c70e1a74e..cb1ff47af156 100644
-> --- a/fs/ext4/super.c
-> +++ b/fs/ext4/super.c
-> @@ -7279,7 +7279,7 @@ static struct file_system_type ext4_fs_type =3D {
-> =C2=A0	.init_fs_context	=3D ext4_init_fs_context,
-> =C2=A0	.parameters		=3D ext4_param_specs,
-> =C2=A0	.kill_sb		=3D kill_block_super,
-> -	.fs_flags		=3D FS_REQUIRES_DEV | FS_ALLOW_IDMAP,
-> +	.fs_flags		=3D FS_REQUIRES_DEV | FS_ALLOW_IDMAP |
-> FS_MGTIME,
-> =C2=A0};
-> =C2=A0MODULE_ALIAS_FS("ext4");
-> =C2=A0
->=20
+has these problem(s):
 
+  - Subject has leading but no trailing parentheses
+
+--=20
+Cheers,
+Stephen Rothwell
+
+--Sig_/u_tJ0ZZJSxm79sbK/i1Q9mj
+Content-Type: application/pgp-signature
+Content-Description: OpenPGP digital signature
+
+-----BEGIN PGP SIGNATURE-----
+
+iQEzBAEBCAAdFiEENIC96giZ81tWdLgKAVBC80lX0GwFAmUJTP0ACgkQAVBC80lX
+0GybbAf8DVHxuSysAz4Hk4gS2DgE3nz/Y6aA8TzonDpsVUEmuqdGPGgaOkSNpxhp
+Yj3eQfHy836C+0X/XOpJPtSseCfQDZCnT9g2MfvhN7B/nY6KG0BbYEhEYpe8fAtb
+flA5a4dfH1pgjxpR4H5jaNtjL0A9n4Aqh9kfd5fHKsUeV5n67TC6hIsJgCpVJeUM
+qyR2cl7bhuak5xglRZ5jdBPiekPXxHm6H6Skfu5sSJNNVJjbCRn0ukN6v6pmfc2V
+IKdEOGfy9LdcwQ3S0wEJMfXtZZFi2D4sxSKvFtL8RYA+hTs/wwq6MxxwnjJWDfSa
+eJEGq6XnSrWsySC83AOeVW663U5Psw==
+=A81u
+-----END PGP SIGNATURE-----
+
+--Sig_/u_tJ0ZZJSxm79sbK/i1Q9mj--
