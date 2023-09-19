@@ -2,113 +2,105 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id EEA1ECD343C
-	for <linux-xfs@archiver.kernel.org>; Tue, 19 Sep 2023 05:15:07 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5E132CD3437
+	for <linux-xfs@archiver.kernel.org>; Tue, 19 Sep 2023 05:24:38 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229534AbjISFPL (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 19 Sep 2023 01:15:11 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53410 "EHLO
+        id S231289AbjISFYm (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 19 Sep 2023 01:24:42 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46478 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230454AbjISFPL (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 19 Sep 2023 01:15:11 -0400
-Received: from mail-pl1-x630.google.com (mail-pl1-x630.google.com [IPv6:2607:f8b0:4864:20::630])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3DAFEFF;
-        Mon, 18 Sep 2023 22:15:04 -0700 (PDT)
-Received: by mail-pl1-x630.google.com with SMTP id d9443c01a7336-1c4586b12feso16452225ad.2;
-        Mon, 18 Sep 2023 22:15:04 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1695100504; x=1695705304; darn=vger.kernel.org;
-        h=in-reply-to:subject:cc:to:from:message-id:date:from:to:cc:subject
-         :date:message-id:reply-to;
-        bh=Fjszh/DitAw4XSOo3Lq7Xpzq4mY58xIKOU75EljiC8g=;
-        b=A+UMyn+mo0FQkYWYPBj6072BgY1EKm4BNIbduwlKXk09y5LeRHiPCI2NkzWcBvSfrX
-         pb7ZgI6tnGJcBob2UY3nXKqoWU10u3h5rM0OP+86RKYA7WexxqfmXEqL7/GDCW9/GfYg
-         Qzc1z/Lubi8RSgtIDsqNjMmxcsIh8p/mvwnYw5bQ834NBnWH2p1KYVgvnwcypdIpvrkT
-         iHqE1EdnmMAjKl1tKBSuvyiryIg5lW0dx1dfeqDpCSpv1xKkxuk0IIYhUCF8ihX2/xFS
-         ksSoy3SvoyepSc2GT6Z62LGNfibutb40CJ1CYhsAK5rMbYN6QSNLvSmmNv/3+Xgeb27/
-         CoRQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1695100504; x=1695705304;
-        h=in-reply-to:subject:cc:to:from:message-id:date:x-gm-message-state
-         :from:to:cc:subject:date:message-id:reply-to;
-        bh=Fjszh/DitAw4XSOo3Lq7Xpzq4mY58xIKOU75EljiC8g=;
-        b=Rsch2OJXdc3yRaYeHqu1hoXix8kSp/1/hGq0/GqWkel4696PSwPsv+30fXa+Jjhrym
-         fOvWrIEga9RLzPjbnd3hE2z5oWJQWbDAVCjvEWe0TC1d17R5Ntaclf8MfTLwnLCQi+Hb
-         Y0mNG5E63ncqpSIDGShCchRxEa+DgSqRIrWdmp6OMyfGgPMKPgl3pG4yNhCShIN4+KJL
-         0WjSlPNVOTC4T8HhDqetT+O8rAGo4PE9OCTWP+GLCzNbBp+WAvfkJ2Lb7ti8U46PYpnZ
-         arUTYsPtf8sfvsRZlxbVBJmYsyxihNn5LUhA9BbZtIqPKI/nh2BPHHeaEHgDP/rk+1kD
-         iOwg==
-X-Gm-Message-State: AOJu0YxqtL26baIDlexaVF0HYFKarmiB+GA8kGUZHbbJKlH04i0Q3IJk
-        W4K4iqlKYIQEee4ErsOBJxCXIfm5IWY=
-X-Google-Smtp-Source: AGHT+IHlqKtYrr5I+sO6GyUZZI7pdW5mpxUNrF7zz3/Pu73avrloJiElMVXzjzXERXTssJoUD9M4CQ==
-X-Received: by 2002:a17:903:32ca:b0:1c1:f3f8:3949 with SMTP id i10-20020a17090332ca00b001c1f3f83949mr11324218plr.1.1695100503510;
-        Mon, 18 Sep 2023 22:15:03 -0700 (PDT)
-Received: from dw-tp ([49.207.223.191])
-        by smtp.gmail.com with ESMTPSA id u7-20020a17090282c700b001b3bf8001a9sm4877636plz.48.2023.09.18.22.15.00
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 18 Sep 2023 22:15:02 -0700 (PDT)
-Date:   Tue, 19 Sep 2023 10:44:58 +0530
-Message-Id: <87o7hy7nhp.fsf@doe.com>
-From:   Ritesh Harjani (IBM) <ritesh.list@gmail.com>
-To:     "Darrick J. Wong" <djwong@kernel.org>, djwong@kernel.org
+        with ESMTP id S231178AbjISFYl (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 19 Sep 2023 01:24:41 -0400
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D1E6FFC;
+        Mon, 18 Sep 2023 22:24:35 -0700 (PDT)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 6EE3FC433C7;
+        Tue, 19 Sep 2023 05:24:35 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1695101075;
+        bh=CVx+g8d8hoeM7KDO7RwL3UJHnMXwhd46Mp6LAAYw9rE=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=kq9RIri+jligTmtIRuodku+XsyyjdzW5Y2E+QJ7d7dJ8OfvLyDY74/+SgjioFFnvi
+         rQ7Q6E2GWh/WyKX5LyecTFZ1LLNbypoEfrHBqXbLdmXUNFyND6dzAhmoqy35rWefQh
+         m1VOwffH3kBDUVHJUK3vpfE535wYFn5UZFtgBYIw8a79PFGPzkxULDOlSBoPiq8pAw
+         IIFCnUX4hBHzckS8fWtz3LNqcJMq0m7dRfRbgq/apX98l8h/0T6LgQYEjsbsGJRyrD
+         +s8viGtnJSl7JhFqMoBS3tyIieloDQA1X9VKxetKT8u9xawHLpFlgxY4YI791WGdmc
+         nF+7IWXNGodSg==
+Date:   Mon, 18 Sep 2023 22:24:34 -0700
+From:   "Darrick J. Wong" <djwong@kernel.org>
+To:     Ritesh Harjani <ritesh.list@gmail.com>
 Cc:     willy@infradead.org, linux-fsdevel@vger.kernel.org,
-        linux-xfs@vger.kernel.org, willy@infradead.org
-Subject: Re: [PATCH 1/2] iomap: don't skip reading in !uptodate folios when unsharing a range
-In-Reply-To: <169507872536.772278.18183365318216726644.stgit@frogsfrogsfrogs>
+        linux-xfs@vger.kernel.org
+Subject: Re: [PATCH 1/2] iomap: don't skip reading in !uptodate folios when
+ unsharing a range
+Message-ID: <20230919052434.GG348018@frogsfrogsfrogs>
+References: <169507872536.772278.18183365318216726644.stgit@frogsfrogsfrogs>
+ <87o7hy7nhp.fsf@doe.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <87o7hy7nhp.fsf@doe.com>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-"Darrick J. Wong" <djwong@kernel.org> writes:
+On Tue, Sep 19, 2023 at 10:44:58AM +0530, Ritesh Harjani wrote:
+> "Darrick J. Wong" <djwong@kernel.org> writes:
+> 
+> > From: Darrick J. Wong <djwong@kernel.org>
+> >
+> > Prior to commit a01b8f225248e, we would always read in the contents of a
+> > !uptodate folio prior to writing userspace data into the folio,
+> > allocated a folio state object, etc.  Ritesh introduced an optimization
+> > that skips all of that if the write would cover the entire folio.
+> >
+> > Unfortunately, the optimization misses the unshare case, where we always
+> > have to read in the folio contents since there isn't a data buffer
+> > supplied by userspace.  This can result in stale kernel memory exposure
+> > if userspace issues a FALLOC_FL_UNSHARE_RANGE call on part of a shared
+> > file that isn't already cached.
+> >
+> > This was caught by observing fstests regressions in the "unshare around"
+> > mechanism that is used for unaligned writes to a reflinked realtime
+> > volume when the realtime extent size is larger than 1FSB,
+> 
+> I was wondering what is testcase that you are referring here to? 
+> Can you please tell the testcase no. and the mkfs / mount config options
+> which I can use to observe the regression please?
 
-> From: Darrick J. Wong <djwong@kernel.org>
->
-> Prior to commit a01b8f225248e, we would always read in the contents of a
-> !uptodate folio prior to writing userspace data into the folio,
-> allocated a folio state object, etc.  Ritesh introduced an optimization
-> that skips all of that if the write would cover the entire folio.
->
-> Unfortunately, the optimization misses the unshare case, where we always
-> have to read in the folio contents since there isn't a data buffer
-> supplied by userspace.  This can result in stale kernel memory exposure
-> if userspace issues a FALLOC_FL_UNSHARE_RANGE call on part of a shared
-> file that isn't already cached.
->
-> This was caught by observing fstests regressions in the "unshare around"
-> mechanism that is used for unaligned writes to a reflinked realtime
-> volume when the realtime extent size is larger than 1FSB,
+https://lore.kernel.org/linux-fsdevel/169507871947.772278.5767091361086740046.stgit@frogsfrogsfrogs/T/#m8081f74f4f1fcb862399aa1544be082aabe56765
 
-I was wondering what is testcase that you are referring here to? 
-Can you please tell the testcase no. and the mkfs / mount config options
-which I can use to observe the regression please?
+(any xfs config with reflink enabled)
 
-> though I think it applies to any shared file.
->
-> Cc: ritesh.list@gmail.com, willy@infradead.org
-> Fixes: a01b8f225248e ("iomap: Allocate ifs in ->write_begin() early")
-> Signed-off-by: Darrick J. Wong <djwong@kernel.org>
-> ---
->  fs/iomap/buffered-io.c |    6 ++++--
->  1 file changed, 4 insertions(+), 2 deletions(-)
->
->
-> diff --git a/fs/iomap/buffered-io.c b/fs/iomap/buffered-io.c
-> index ae8673ce08b1..0350830fc989 100644
-> --- a/fs/iomap/buffered-io.c
-> +++ b/fs/iomap/buffered-io.c
-> @@ -640,11 +640,13 @@ static int __iomap_write_begin(const struct iomap_iter *iter, loff_t pos,
->  	size_t poff, plen;
->  
->  	/*
-> -	 * If the write completely overlaps the current folio, then
-> +	 * If the write or zeroing completely overlaps the current folio, then
->  	 * entire folio will be dirtied so there is no need for
->  	 * per-block state tracking structures to be attached to this folio.
-> +	 * For the unshare case, we must read in the ondisk contents because we
-> +	 * are not changing pagecache contents.
->  	 */
-> -	if (pos <= folio_pos(folio) &&
-> +	if (!(iter->flags & IOMAP_UNSHARE) && pos <= folio_pos(folio) &&
->  	    pos + len >= folio_pos(folio) + folio_size(folio))
->  		return 0;
->  
+--D
+
+> > though I think it applies to any shared file.
+> >
+> > Cc: ritesh.list@gmail.com, willy@infradead.org
+> > Fixes: a01b8f225248e ("iomap: Allocate ifs in ->write_begin() early")
+> > Signed-off-by: Darrick J. Wong <djwong@kernel.org>
+> > ---
+> >  fs/iomap/buffered-io.c |    6 ++++--
+> >  1 file changed, 4 insertions(+), 2 deletions(-)
+> >
+> >
+> > diff --git a/fs/iomap/buffered-io.c b/fs/iomap/buffered-io.c
+> > index ae8673ce08b1..0350830fc989 100644
+> > --- a/fs/iomap/buffered-io.c
+> > +++ b/fs/iomap/buffered-io.c
+> > @@ -640,11 +640,13 @@ static int __iomap_write_begin(const struct iomap_iter *iter, loff_t pos,
+> >  	size_t poff, plen;
+> >  
+> >  	/*
+> > -	 * If the write completely overlaps the current folio, then
+> > +	 * If the write or zeroing completely overlaps the current folio, then
+> >  	 * entire folio will be dirtied so there is no need for
+> >  	 * per-block state tracking structures to be attached to this folio.
+> > +	 * For the unshare case, we must read in the ondisk contents because we
+> > +	 * are not changing pagecache contents.
+> >  	 */
+> > -	if (pos <= folio_pos(folio) &&
+> > +	if (!(iter->flags & IOMAP_UNSHARE) && pos <= folio_pos(folio) &&
+> >  	    pos + len >= folio_pos(folio) + folio_size(folio))
+> >  		return 0;
+> >  
