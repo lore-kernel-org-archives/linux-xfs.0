@@ -2,96 +2,119 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 10077CE79AC
-	for <linux-xfs@archiver.kernel.org>; Tue, 19 Sep 2023 21:04:29 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3B37FCE79A9
+	for <linux-xfs@archiver.kernel.org>; Tue, 19 Sep 2023 21:15:42 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229627AbjISVEc (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 19 Sep 2023 17:04:32 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52816 "EHLO
+        id S233311AbjISVPq (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 19 Sep 2023 17:15:46 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55762 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233290AbjISVEc (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 19 Sep 2023 17:04:32 -0400
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 445C4B3
-        for <linux-xfs@vger.kernel.org>; Tue, 19 Sep 2023 14:03:45 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1695157424;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=SQ2jSb2HniT/9ZxZOqq4fZsdcqlotGNawe8KlI6XEwk=;
-        b=G1w6d5nJyN6mNOEz0/4YKwEXYGGELb4G924Hz3Xdxt+a+Iqr7MhHHf+hcqea9F0NMfXPfO
-        kc7NLIpb7Ws7NCXzV9dM2kTdTyKQZPuOWBXBkhlKAuwekaPE/izIDO/PKBW6i4qba/sZO2
-        RH/IeIRNLKf6I9AjTYTCQDXXf8kRy48=
-Received: from mimecast-mx02.redhat.com (mimecast-mx02.redhat.com
- [66.187.233.88]) by relay.mimecast.com with ESMTP with STARTTLS
- (version=TLSv1.2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- us-mta-493-eIRUBykjMwCw6pvVHAiSTw-1; Tue, 19 Sep 2023 17:03:42 -0400
-X-MC-Unique: eIRUBykjMwCw6pvVHAiSTw-1
-Received: from smtp.corp.redhat.com (int-mx10.intmail.prod.int.rdu2.redhat.com [10.11.54.10])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by mimecast-mx02.redhat.com (Postfix) with ESMTPS id 31963185A790;
-        Tue, 19 Sep 2023 21:03:42 +0000 (UTC)
-Received: from rh (unknown [10.64.138.2])
-        by smtp.corp.redhat.com (Postfix) with ESMTPS id D042C492C37;
-        Tue, 19 Sep 2023 21:03:41 +0000 (UTC)
-Received: from localhost ([::1] helo=rh)
-        by rh with esmtps  (TLS1.3) tls TLS_AES_256_GCM_SHA384
-        (Exim 4.96)
-        (envelope-from <dchinner@redhat.com>)
-        id 1qihsg-001H19-1L;
-        Wed, 20 Sep 2023 07:03:38 +1000
-Date:   Wed, 20 Sep 2023 07:03:36 +1000
-From:   Dave Chinner <dchinner@redhat.com>
-To:     Charles Han <hanchunchao@inspur.com>
-Cc:     corbet@lwn.net, djwong@kernel.org, allison.henderson@oracle.com,
-        bhelgaas@google.com, linux-doc@vger.kernel.org,
-        linux-kernel@vger.kernel.org, linux-xfs@vger.kernel.org
-Subject: Re: [PATCH] Documentation: xfs: Remove repeated word in comments
-Message-ID: <ZQoMqI/QGPWEpkEi@rh>
-References: <20230918071905.296081-1-hanchunchao@inspur.com>
+        with ESMTP id S233252AbjISVPp (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 19 Sep 2023 17:15:45 -0400
+Received: from bombadil.infradead.org (bombadil.infradead.org [IPv6:2607:7c80:54:3::133])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3B1E8A9;
+        Tue, 19 Sep 2023 14:15:39 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=infradead.org; s=bombadil.20210309; h=Sender:In-Reply-To:Content-Type:
+        MIME-Version:References:Message-ID:Subject:Cc:To:From:Date:Reply-To:
+        Content-Transfer-Encoding:Content-ID:Content-Description;
+        bh=SoWGV/vSjH+QSAal7RVjoWtaY6GPfVPJsY2HI1Po9NA=; b=boUnKA/KWwv2o53fF2DYhZzJHW
+        0f6aI76KTdV20mN53VyMRh3dCbFxTwr5RHi976RJMoVrluOyoyaeMvRTSJaeOHQSVqHO3fxsGIBr/
+        ae5hxtKmlTSk/1427oc6gFk5U0uNbFKfMJ322QqhXWMf0tyLUqnjCWzHa0jHypGgOnnmRlMMP2MW9
+        7672V8UtKVY6hCn5dhC+ysO2QHjqCfubvuMFx0QIs+0jI3mlwRBjtis0socm0RWiXpXtNjW2RlqqI
+        jqCi7+sEIjUq/xl4R2sLRm2BBcpy5rJ9rycLkFNSliv0s4fkNvpbB1+AbkLPNydAD8xvPMlGLvWO6
+        hoMXSL8w==;
+Received: from mcgrof by bombadil.infradead.org with local (Exim 4.96 #2 (Red Hat Linux))
+        id 1qii4E-001HO9-1Y;
+        Tue, 19 Sep 2023 21:15:34 +0000
+Date:   Tue, 19 Sep 2023 14:15:34 -0700
+From:   Luis Chamberlain <mcgrof@kernel.org>
+To:     Ritesh Harjani <ritesh.list@gmail.com>
+Cc:     Pankaj Raghav <p.raghav@samsung.com>,
+        Dave Chinner <david@fromorbit.com>,
+        Pankaj Raghav <kernel@pankajraghav.com>,
+        linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
+        da.gomez@samsung.com, akpm@linux-foundation.org,
+        linux-kernel@vger.kernel.org, willy@infradead.org,
+        djwong@kernel.org, linux-mm@kvack.org, chandan.babu@oracle.com,
+        gost.dev@samsung.com, riteshh@linux.ibm.com
+Subject: Re: [RFC 00/23] Enable block size > page size in XFS
+Message-ID: <ZQoPdiT1wbPZyRg1@bombadil.infradead.org>
+References: <806df723-78cf-c7eb-66a6-1442c02126b3@samsung.com>
+ <87a5ti74w3.fsf@doe.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20230918071905.296081-1-hanchunchao@inspur.com>
-X-Scanned-By: MIMEDefang 3.1 on 10.11.54.10
+In-Reply-To: <87a5ti74w3.fsf@doe.com>
+Sender: Luis Chamberlain <mcgrof@infradead.org>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-[cc linux-xfs@vger.kernel.org]
-
-Hi Charles,
-
-For future reference, can you CC the XFS list on XFS documentation
-changes please?  That's much preferable to sending patches to random
-developers and hoping they notice it....
-
-On Mon, Sep 18, 2023 at 03:19:05PM +0800, Charles Han wrote:
-> Remove the repeated word "the" in comments.
+On Tue, Sep 19, 2023 at 05:26:44PM +0530, Ritesh Harjani wrote:
+> Pankaj Raghav <p.raghav@samsung.com> writes:
 > 
-> Signed-off-by: Charles Han <hanchunchao@inspur.com>
-> ---
->  Documentation/filesystems/xfs-online-fsck-design.rst | 2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
+> >>>>
+> >>>> As it is, I'd really prefer stuff that adds significant XFS
+> >>>> functionality that we need to test to be based on a current Linus
+> >>>> TOT kernel so that we can test it without being impacted by all
+> >>>> the random unrelated breakages that regularly happen in linux-next
+> >>>> kernels....
+> >>>
+> >>> That's understandable! I just rebased onto Linus' tree, this only
+> >>> has the bs > ps support on 4k sector size:
+> >>>
+> >>> https://git.kernel.org/pub/scm/linux/kernel/git/mcgrof/linux.git/log/?h=v6.6-rc2-lbs-nobdev
+> >> 
+> >
+> > I think this tree doesn't have some of the last minute changes I did before I sent the RFC. I will
+> > sync with Luis offline regarding that.
+> >
+> >> 
+> >>> I just did a cursory build / boot / fsx with 16k block size / 4k sector size
+> >>> test with this tree only. I havne't ran fstests on it.
+> >> 
+> >> W/ 64k block size, generic/042 fails (maybe just a test block size
+> >> thing), generic/091 fails (data corruption on read after ~70 ops)
+> >> and then generic/095 hung with a crash in iomap_readpage_iter()
+> >> during readahead.
+> >> 
+> >> Looks like a null folio was passed to ifs_alloc(), which implies the
+> >> iomap_readpage_ctx didn't have a folio attached to it. Something
+> >> isn't working properly in the readahead code, which would also
+> >> explain the quick fsx failure...
+> >> 
+> >
+> > Yeah, I have noticed this as well. This is the main crash scenario I am noticing
+> > when I am running xfstests, and hopefully we will be able to fix it soon.
+> >
+> > In general, we have had better results with 16k block size than 64k block size. I still don't
+> > know why, but the ifs_alloc crash happens in generic/451 with 16k block size.
+> >
+> >
+> >>> Just a heads up, using 512 byte sector size will fail for now, it's a
+> >>> regression we have to fix. Likewise using block sizes 1k, 2k will also
+> >>> regress on fsx right now. These are regressions we are aware of but
+> >>> haven't had time yet to bisect / fix.
+> >> 
+> >> I'm betting that the recently added sub-folio dirty tracking code
+> >> got broken by this patchset....
+> >> 
+> >
+> > Hmm, this crossed my mind as well. I am assuming I can really test the sub-folio dirty
+> > tracking code on a system which has a page size greater than the block size? Or is there
+> > some tests that can already test this? CCing Ritesh as well.
+> >
 > 
-> diff --git a/Documentation/filesystems/xfs-online-fsck-design.rst b/Documentation/filesystems/xfs-online-fsck-design.rst
-> index 1625d1131093..a0678101a7d0 100644
-> --- a/Documentation/filesystems/xfs-online-fsck-design.rst
-> +++ b/Documentation/filesystems/xfs-online-fsck-design.rst
-> @@ -1585,7 +1585,7 @@ The transaction sequence looks like this:
->  2. The second transaction contains a physical update to the free space btrees
->     of AG 3 to release the former BMBT block and a second physical update to the
->     free space btrees of AG 7 to release the unmapped file space.
-> -   Observe that the the physical updates are resequenced in the correct order
-> +   Observe that the physical updates are resequenced in the correct order
+> Sorry I haven't yet looked into this series yet. I will spend sometime
+> reading it. Will also give a spin to run the fstests.
 
-Change looks fine, though.
+Ritesh,
 
-Reviewed: Dave Chinner <dchinner@redhat.com>
+You can save yourself time in not testing the patch series with fstests
+for block sizes below ps as we already are aware that a patch in the
+series breaks this. We just wanted to get the patch series out early for
+review given the progress. There's probably one patch which regresses
+this, if each patch regresses this, that's a bigger issue :P
 
--- 
-Dave Chinner
-dchinner@redhat.com
-
+  Luis
