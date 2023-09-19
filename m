@@ -2,58 +2,58 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4A9CBCD5BC2
-	for <linux-xfs@archiver.kernel.org>; Tue, 19 Sep 2023 13:56:15 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A1692CD5BC6
+	for <linux-xfs@archiver.kernel.org>; Tue, 19 Sep 2023 13:56:31 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232598AbjISN4R (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 19 Sep 2023 09:56:17 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52390 "EHLO
+        id S232661AbjISN4e (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 19 Sep 2023 09:56:34 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52478 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232442AbjISN4P (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 19 Sep 2023 09:56:15 -0400
-Received: from mailout2.w1.samsung.com (mailout2.w1.samsung.com [210.118.77.12])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 293B4125
-        for <linux-xfs@vger.kernel.org>; Tue, 19 Sep 2023 06:55:52 -0700 (PDT)
+        with ESMTP id S232525AbjISN4R (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 19 Sep 2023 09:56:17 -0400
+Received: from mailout1.w1.samsung.com (mailout1.w1.samsung.com [210.118.77.11])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 97C85192
+        for <linux-xfs@vger.kernel.org>; Tue, 19 Sep 2023 06:55:56 -0700 (PDT)
 Received: from eucas1p1.samsung.com (unknown [182.198.249.206])
-        by mailout2.w1.samsung.com (KnoxPortal) with ESMTP id 20230919135551euoutp0229a864d7a46d206f6125efb8b9203870~GUVjcGlFZ1535515355euoutp02Z
-        for <linux-xfs@vger.kernel.org>; Tue, 19 Sep 2023 13:55:51 +0000 (GMT)
-DKIM-Filter: OpenDKIM Filter v2.11.0 mailout2.w1.samsung.com 20230919135551euoutp0229a864d7a46d206f6125efb8b9203870~GUVjcGlFZ1535515355euoutp02Z
+        by mailout1.w1.samsung.com (KnoxPortal) with ESMTP id 20230919135554euoutp017c6d7fe8eff806890d47a866ce330c75~GUVmUOJd40199901999euoutp013
+        for <linux-xfs@vger.kernel.org>; Tue, 19 Sep 2023 13:55:54 +0000 (GMT)
+DKIM-Filter: OpenDKIM Filter v2.11.0 mailout1.w1.samsung.com 20230919135554euoutp017c6d7fe8eff806890d47a866ce330c75~GUVmUOJd40199901999euoutp013
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=samsung.com;
-        s=mail20170921; t=1695131751;
-        bh=zPiGytBfegEqHRUsVtZKimf8fdUTs88Qyc8YPePHcIk=;
+        s=mail20170921; t=1695131754;
+        bh=qf0ZYfltBJHFQkocAMfpwOGkTFM18/mnXm/sqbTG1Hc=;
         h=From:To:CC:Subject:Date:In-Reply-To:References:From;
-        b=tyM4uvQdUR1AS3aYkBsxN32j/P4q2FARUnPi8UjEsUaK/RInj4GTTsgiqt3Abi0EZ
-         xPp6E2q79rArO2yh4Pg1Npb2OgCS+RY3naCuqZ/ExDsJ2hMNQOmyGDyPb3/9yCnggt
-         2eHzkHBjYlJcVe2tWGleBwTU4JIrtv0QzsVvrREg=
-Received: from eusmges2new.samsung.com (unknown [203.254.199.244]) by
-        eucas1p1.samsung.com (KnoxPortal) with ESMTP id
-        20230919135551eucas1p1c2f79426cc02c6873649747c6b5ebe77~GUVjFDdBx1658916589eucas1p1F;
-        Tue, 19 Sep 2023 13:55:51 +0000 (GMT)
-Received: from eucas1p1.samsung.com ( [182.198.249.206]) by
-        eusmges2new.samsung.com (EUCPMTA) with SMTP id 23.8E.11320.768A9056; Tue, 19
-        Sep 2023 14:55:51 +0100 (BST)
-Received: from eusmtrp2.samsung.com (unknown [182.198.249.139]) by
-        eucas1p2.samsung.com (KnoxPortal) with ESMTPA id
-        20230919135550eucas1p2c19565924daeecf71734ea89d95c84db~GUVilHeug1635116351eucas1p2u;
-        Tue, 19 Sep 2023 13:55:50 +0000 (GMT)
-Received: from eusmgms2.samsung.com (unknown [182.198.249.180]) by
-        eusmtrp2.samsung.com (KnoxPortal) with ESMTP id
-        20230919135550eusmtrp2e393e76eb8216b24e9888cc400ce0942~GUVikiwv92324623246eusmtrp2F;
-        Tue, 19 Sep 2023 13:55:50 +0000 (GMT)
-X-AuditID: cbfec7f4-993ff70000022c38-c7-6509a8674f70
+        b=RdyrgSlxDQnZ8OoTspAB8yPA4ahyu5un4f+0ntoCmwiJDcdh42jompH23sIq8BVqW
+         ed8f1O+Q8HVOUfEHREfoorxQqo4i608JK7GT+n2oHWziyh0TcWPrXrc2pUNg0wsJie
+         1zSJwpiEYbsFnS+ZEdeLgKqZPJ2kcKgs6RKMQ9GQ=
+Received: from eusmges3new.samsung.com (unknown [203.254.199.245]) by
+        eucas1p2.samsung.com (KnoxPortal) with ESMTP id
+        20230919135554eucas1p2c289f7b4360774a8577116bad4b22a34~GUVmEZqWP1832118321eucas1p2Q;
+        Tue, 19 Sep 2023 13:55:54 +0000 (GMT)
+Received: from eucas1p2.samsung.com ( [182.198.249.207]) by
+        eusmges3new.samsung.com (EUCPMTA) with SMTP id 44.72.37758.A68A9056; Tue, 19
+        Sep 2023 14:55:54 +0100 (BST)
+Received: from eusmtrp1.samsung.com (unknown [182.198.249.138]) by
+        eucas1p1.samsung.com (KnoxPortal) with ESMTPA id
+        20230919135554eucas1p1fefbe420a2381465f3b6b2b7f298433c~GUVli9uA70405804058eucas1p13;
+        Tue, 19 Sep 2023 13:55:54 +0000 (GMT)
+Received: from eusmgms1.samsung.com (unknown [182.198.249.179]) by
+        eusmtrp1.samsung.com (KnoxPortal) with ESMTP id
+        20230919135554eusmtrp145105151189bdca9c761ae4116051b63~GUVliU81s2584925849eusmtrp1S;
+        Tue, 19 Sep 2023 13:55:54 +0000 (GMT)
+X-AuditID: cbfec7f5-815ff7000002937e-ca-6509a86ab4f5
 Received: from eusmtip1.samsung.com ( [203.254.199.221]) by
-        eusmgms2.samsung.com (EUCPMTA) with SMTP id 32.55.14344.668A9056; Tue, 19
-        Sep 2023 14:55:50 +0100 (BST)
-Received: from CAMSVWEXC01.scsc.local (unknown [106.1.227.71]) by
+        eusmgms1.samsung.com (EUCPMTA) with SMTP id EE.C9.10549.968A9056; Tue, 19
+        Sep 2023 14:55:54 +0100 (BST)
+Received: from CAMSVWEXC02.scsc.local (unknown [106.1.227.72]) by
         eusmtip1.samsung.com (KnoxPortal) with ESMTPA id
-        20230919135550eusmtip17b6283cd8a9ef8f53119b7dcf49ffc0f~GUViY2AR61888818888eusmtip1z;
-        Tue, 19 Sep 2023 13:55:50 +0000 (GMT)
+        20230919135553eusmtip1da98dd855cbc6c425b4b7b0a0fa939af~GUVlXP9Nk1382813828eusmtip1f;
+        Tue, 19 Sep 2023 13:55:53 +0000 (GMT)
 Received: from CAMSVWEXC02.scsc.local (2002:6a01:e348::6a01:e348) by
-        CAMSVWEXC01.scsc.local (2002:6a01:e347::6a01:e347) with Microsoft SMTP
-        Server (TLS) id 15.0.1497.2; Tue, 19 Sep 2023 14:55:50 +0100
+        CAMSVWEXC02.scsc.local (2002:6a01:e348::6a01:e348) with Microsoft SMTP
+        Server (TLS) id 15.0.1497.2; Tue, 19 Sep 2023 14:55:53 +0100
 Received: from CAMSVWEXC02.scsc.local ([::1]) by CAMSVWEXC02.scsc.local
         ([fe80::3c08:6c51:fa0a:6384%13]) with mapi id 15.00.1497.012; Tue, 19 Sep
-        2023 14:55:50 +0100
+        2023 14:55:53 +0100
 From:   Daniel Gomez <da.gomez@samsung.com>
 To:     "minchan@kernel.org" <minchan@kernel.org>,
         "senozhatsky@chromium.org" <senozhatsky@chromium.org>,
@@ -71,11 +71,11 @@ To:     "minchan@kernel.org" <minchan@kernel.org>,
 CC:     "gost.dev@samsung.com" <gost.dev@samsung.com>,
         Pankaj Raghav <p.raghav@samsung.com>,
         Daniel Gomez <da.gomez@samsung.com>
-Subject: [PATCH v2 3/6] shmem: account for large order folios
-Thread-Topic: [PATCH v2 3/6] shmem: account for large order folios
-Thread-Index: AQHZ6wD+Wqd1jPdfPEKUQlAv9fdGJA==
-Date:   Tue, 19 Sep 2023 13:55:49 +0000
-Message-ID: <20230919135536.2165715-4-da.gomez@samsung.com>
+Subject: [PATCH v2 5/6] shmem: add file length in shmem_get_folio path
+Thread-Topic: [PATCH v2 5/6] shmem: add file length in shmem_get_folio path
+Thread-Index: AQHZ6wEANquhpkBXk0KILtjKWHTHrQ==
+Date:   Tue, 19 Sep 2023 13:55:52 +0000
+Message-ID: <20230919135536.2165715-6-da.gomez@samsung.com>
 In-Reply-To: <20230919135536.2165715-1-da.gomez@samsung.com>
 Accept-Language: en-US, en-GB
 Content-Language: en-US
@@ -87,148 +87,224 @@ x-originating-ip: [106.110.32.103]
 Content-Type: text/plain; charset="iso-8859-1"
 Content-Transfer-Encoding: quoted-printable
 MIME-Version: 1.0
-X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFjrJKsWRmVeSWpSXmKPExsWy7djPc7rpKzhTDb42SVrMWb+GzWL13X42
-        i8tP+Cyefupjsdh7S9tiz96TLBaXd81hs7i35j+rxa4/O9gtbkx4ymix7Ot7dovdGxexWfz+
-        MYfNgddjdsNFFo8Fm0o9Nq/Q8rh8ttRj06pONo9Nnyaxe5yY8ZvF4/MmuQCOKC6blNSczLLU
-        In27BK6MaTNfsRS8kai4uvAaUwPjPpEuRk4OCQETibMrJzJ2MXJxCAmsYJTYP7mNGcL5wihx
-        fdYtNgjnM6PEkY3/WboYOcBaur+mQMSXM0p0nfvGCjIKrOjUFKjuM4wSc7vXMkE4KxklmrvW
-        MIJUsQloSuw7uYkdJCEiMJtV4vDiDrAEs0CdxJpns1hAbGEBW4n3C7+yg9giAk4Sj+dvYoGw
-        9SS2zb7DBHIGi4CqxOdTbiBhXgFriVc79zKD2JwCNhI35jaxgdiMArISj1b+YocYLy5x68l8
-        JoinBSUWzd7DDGGLSfzb9ZANwtaROHv9CSOEbSCxdek+FghbSeJPx0KoM/UkbkydwgZha0ss
-        W/iaGeIGQYmTM5+wgPwlIdDEJfGqYynUUBeJXUtnskPYwhKvjm+BsmUk/u+czzSBUXsWkvtm
-        IdkxC8mOWUh2LGBkWcUonlpanJueWmyUl1quV5yYW1yal66XnJ+7iRGY2k7/O/5lB+PyVx/1
-        DjEycTAeYpTgYFYS4Z1pyJYqxJuSWFmVWpQfX1Sak1p8iFGag0VJnFfb9mSykEB6Yklqdmpq
-        QWoRTJaJg1OqgalxedqRkwZRry9ZTG7oi6xyXHZ9kmH4MjbO3+5H1zQvPvbUVM1F56/DiYag
-        8M8rhcoKTbTb1y6qU5JnP73b3vvtvoU+yZ/bbjfe7T3xa6/vuont1x9bCgmemrT96UfuBaY3
-        2m58OayV2BGRcurS33bNoJ+h2xgEWBZXWS+9Yr2o58S0tie373e/VeqsOu+wNeKUTdyXKWfr
-        WCN2su4TnXdxfu+dfTwyR9TeOj0Lf5/KFJX12oz9mt32i4ndSkUXrsT//PT6IbOnrtTvV7yb
-        +WftNYmdu36BgUdQidp7q+OTvux4vrmSV/wmO4d4ml3Hw/5ddlJrxE5cOdp95ffBtUm3SmL0
-        1Tm9s/pqd31/OPOmEktxRqKhFnNRcSIAbnKTxdwDAAA=
-X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFjrCKsWRmVeSWpSXmKPExsVy+t/xu7ppKzhTDd79MraYs34Nm8Xqu/1s
+X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFjrBKsWRmVeSWpSXmKPExsWy7djP87pZKzhTDV4vVbaYs34Nm8Xqu/1s
+        Fpef8Fk8/dTHYrH3lrbFnr0nWSwu75rDZnFvzX9Wi11/drBb3JjwlNFi2df37Ba7Ny5is/j9
+        Yw6bA6/H7IaLLB4LNpV6bF6h5XH5bKnHplWdbB6bPk1i9zgx4zeLx+dNcgEcUVw2Kak5mWWp
+        Rfp2CVwZ7TdnsRdc1a14tUGjgXGHShcjJ4eEgIlEz4Yr7F2MXBxCAisYJWbPPcUC4XxhlPjy
+        4BszhPOZUaK36QYbTMvG1QsYIRLLGSU+vF/FBlf16WU/O0iVkMAZRolT7dEQiZWMEjOO9DOD
+        JNgENCX2ndwEtlFEYDarxOHFHYwgCWaBOok1z2YBbefgEBZwk5h2phwkLCLgLdH85yIzSFhE
+        QE+i/aYJSJhFQFXi28xbLCA2r4C1xIp3E8GmcArYSNyY2wR2KaOArMSjlb/YIaaLS9x6Mp8J
+        4gNBiUWz9zBD2GIS/3Y9hPpMR+Ls9SeMELaBxNal+1ggbCWJPx0Loa7Uk7gxdQobhK0tsWzh
+        a2aIGwQlTs58Ag47CYE2LolXtw9BNbtIrLr4kB3CFpZ4dXwLlC0jcXpyD8sERu1ZSO6bhWTH
+        LCQ7ZiHZsYCRZRWjeGppcW56arFxXmq5XnFibnFpXrpecn7uJkZgYjv97/jXHYwrXn3UO8TI
+        xMF4iFGCg1lJhHemIVuqEG9KYmVValF+fFFpTmrxIUZpDhYlcV5t25PJQgLpiSWp2ampBalF
+        MFkmDk6pBqaSuBwH+ds1VpbLp097b7xwtsSnC5bmi3zsHsg9E4vOFpM0De7P8d2z68Az75Kg
+        7kAftV81opEXXi6TszC8p/psgp1eUc4uo5wDMc9kLWWkpyz4tOm2amb/6t1XNxexmSrenWof
+        vzRFrDrs0+5VtxV3BIgvyfZev8fqwo0Jm3l/NNTX/RRcvPCW6OUZ865GyiZli/tzMPTxnF21
+        PkrddvfrV7JH8zYtU7rS7b/Hdcp8wbmq/EH959UOHY3ZOHuiyxS+xTfmzKqs5LpzeuGVkOgH
+        drui+s6vWNsb95rXdfWmEjnJePW5QZ2bfLvtPx5tm3bSob2r3e+UgN/L7U+rq6Mm9mme3t0+
+        f/bePlnh1M1KLMUZiYZazEXFiQDddZQy2wMAAA==
+X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFjrCKsWRmVeSWpSXmKPExsVy+t/xu7pZKzhTDRb+Z7SYs34Nm8Xqu/1s
         Fpef8Fk8/dTHYrH3lrbFnr0nWSwu75rDZnFvzX9Wi11/drBb3JjwlNFi2df37Ba7Ny5is/j9
         Yw6bA6/H7IaLLB4LNpV6bF6h5XH5bKnHplWdbB6bPk1i9zgx4zeLx+dNcgEcUXo2RfmlJakK
-        GfnFJbZK0YYWRnqGlhZ6RiaWeobG5rFWRqZK+nY2Kak5mWWpRfp2CXoZ02a+Yil4I1FxdeE1
-        pgbGfSJdjBwcEgImEt1fU7oYuTiEBJYySiztXc/axcgJFJeR2PjlKpQtLPHnWhcbiC0k8JFR
-        4va1YoiGM4wSbQ8nMkI4K4G6e76yg1SxCWhK7Du5iR0kISIwm1Xi8OIORpAEs0CdxJpns1hA
-        bGEBW4n3CyEaRAScJB7P38QCYetJbJt9hwnkPBYBVYnPp9xAwrwC1hKvdu5lhrgCyF64Guw6
-        TgEbiRtzm8CuYxSQlXi08hc7xCpxiVtP5jNBfCAgsWTPeWYIW1Ti5eN/UJ/pSJy9/oQRwjaQ
-        2Lp0HwuErSTxp2Mh1Ml6EjemTmGDsLUlli18zQxxj6DEyZlPWCYwSs9Csm4WkpZZSFpmIWlZ
-        wMiyilEktbQ4Nz232EivODG3uDQvXS85P3cTIzA5bTv2c8sOxpWvPuodYmTiYDzEKMHBrCTC
-        O9OQLVWINyWxsiq1KD++qDQntfgQoykwiCYyS4km5wPTY15JvKGZgamhiZmlgamlmbGSOK9n
-        QUeikEB6YklqdmpqQWoRTB8TB6dUA5P5/KOrf+Q5HfRasdX4ybW+kpuybSYvX79bfZg51+ma
-        YurLWUFnTh1ek3HpLQOLkHjzr7DurS/YQnNWmqye9EPiRvwBrqV6V9b/bj/y2sZ5Bc82zY2p
-        z1lvLBR4u+BrxvMnrA1Xmh46vFSeyvtqrf2NwDrdj+qHzRbdLedcuyVTvJDlt3KleeHRw2r/
-        7P5lGS774MfGtjo8XbQshue7561TZ1ZxZKUc9pqWxT7Td8Epg2d8pyZrROQHW6d//CQjeG71
-        V+Yzt88wpfxYGPusTSU1/KAst5ldK19A1Mygz7mf5XO9CpW4Zj4QPH/F49XJZqG4u/ZXj8he
-        uXbrg+n9Z4xrLzXkuS7f68zpd6lVIn65EktxRqKhFnNRcSIAM2aVQtcDAAA=
-X-CMS-MailID: 20230919135550eucas1p2c19565924daeecf71734ea89d95c84db
+        GfnFJbZK0YYWRnqGlhZ6RiaWeobG5rFWRqZK+nY2Kak5mWWpRfp2CXoZ7TdnsRdc1a14tUGj
+        gXGHShcjJ4eEgInExtULGLsYuTiEBJYySty49YEJIiEjsfHLVVYIW1jiz7UuNoiij4wS0x7/
+        hOo4wyjxonsxM4SzklHi69NDbCAtbAKaEvtObmIHSYgIzGaVOLy4gxEkwSxQJ7Hm2SyWLkYO
+        DmEBN4lpZ8pBwiIC3hLNfy4yg4RFBPQk2m+agIRZBFQlvs28xQJi8wpYS6x4NxFsihCQ/Wrh
+        arDrOAVsJG7MbQJbyyggK/Fo5S92iE3iEreezIf6RkBiyZ7zzBC2qMTLx/+gPtOROHv9CSOE
+        bSCxdek+FghbSeJPx0Koi/UkbkydwgZha0ssW/iaGeIeQYmTM5+wTGCUnoVk3SwkLbOQtMxC
+        0rKAkWUVo0hqaXFuem6xoV5xYm5xaV66XnJ+7iZGYHLaduzn5h2M81591DvEyMTBeIhRgoNZ
+        SYR3piFbqhBvSmJlVWpRfnxRaU5q8SFGU2AYTWSWEk3OB6bHvJJ4QzMDU0MTM0sDU0szYyVx
+        Xs+CjkQhgfTEktTs1NSC1CKYPiYOTqkGpobjl9OXWAUyCq+pPcfb+bPlqcDuP+pPdd4c6hHq
+        vj7txvJz795/tfncVTDtaKPU3Ne5Mxafme5pHeFT3/Bma/thc8fG8kP3by94GFlyYrnjj5cn
+        xT7zRm64Jmfb/2H3FzujrheM604EdUs4H4+z+ffA9HgSb9z6qwv+/tv9TPvqkysTF/VfnaLQ
+        rXnqn/rdmTVP2Z0j0g/t4+U0K13/udbY/fW8R/fWPdyyx0nbJlO+/TZblpr/jJSbQkmBKzdF
+        MEcyx+au//hoX+tdrZk6vu8YHwh982NOleJ78qEyoz/LvSNFXspDZ3FCVO3PwqUxCcfXex5M
+        T15oWOJy9JXOa18fmT2M5dJqW2TiHvd/+qHEUpyRaKjFXFScCAB3yF0I1wMAAA==
+X-CMS-MailID: 20230919135554eucas1p1fefbe420a2381465f3b6b2b7f298433c
 X-Msg-Generator: CA
-X-RootMTR: 20230919135550eucas1p2c19565924daeecf71734ea89d95c84db
+X-RootMTR: 20230919135554eucas1p1fefbe420a2381465f3b6b2b7f298433c
 X-EPHeader: CA
 CMS-TYPE: 201P
-X-CMS-RootMailID: 20230919135550eucas1p2c19565924daeecf71734ea89d95c84db
+X-CMS-RootMailID: 20230919135554eucas1p1fefbe420a2381465f3b6b2b7f298433c
 References: <20230919135536.2165715-1-da.gomez@samsung.com>
-        <CGME20230919135550eucas1p2c19565924daeecf71734ea89d95c84db@eucas1p2.samsung.com>
+        <CGME20230919135554eucas1p1fefbe420a2381465f3b6b2b7f298433c@eucas1p1.samsung.com>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-From: Luis Chamberlain <mcgrof@kernel.org>
+To be able to calculate folio order based on the file size when
+allocation occurs on the write path. Use of length 0 for non write
+paths and PAGE_SIZE for pagecache read and vm fault.
 
-shmem uses the shem_info_inode alloced, swapped to account
-for allocated pages and swapped pages. In preparation for large
-order folios adjust the accounting to use folio_nr_pages().
-
-This should produce no functional changes yet as larger order
-folios are not yet used or supported in shmem.
-
-Signed-off-by: Luis Chamberlain <mcgrof@kernel.org>
 Signed-off-by: Daniel Gomez <da.gomez@samsung.com>
 ---
- mm/shmem.c | 20 +++++++++++---------
- 1 file changed, 11 insertions(+), 9 deletions(-)
+ include/linux/shmem_fs.h |  2 +-
+ mm/khugepaged.c          |  2 +-
+ mm/shmem.c               | 32 ++++++++++++++++++--------------
+ 3 files changed, 20 insertions(+), 16 deletions(-)
 
+diff --git a/include/linux/shmem_fs.h b/include/linux/shmem_fs.h
+index 6b0c626620f5..b3509e7f1054 100644
+--- a/include/linux/shmem_fs.h
++++ b/include/linux/shmem_fs.h
+@@ -133,7 +133,7 @@ enum sgp_type {
+ };
+=20
+ int shmem_get_folio(struct inode *inode, pgoff_t index, struct folio **fol=
+iop,
+-		enum sgp_type sgp);
++		enum sgp_type sgp, size_t len);
+ struct folio *shmem_read_folio_gfp(struct address_space *mapping,
+ 		pgoff_t index, gfp_t gfp);
+=20
+diff --git a/mm/khugepaged.c b/mm/khugepaged.c
+index 88433cc25d8a..e5d3feff6de6 100644
+--- a/mm/khugepaged.c
++++ b/mm/khugepaged.c
+@@ -1856,7 +1856,7 @@ static int collapse_file(struct mm_struct *mm, unsign=
+ed long addr,
+ 				xas_unlock_irq(&xas);
+ 				/* swap in or instantiate fallocated page */
+ 				if (shmem_get_folio(mapping->host, index,
+-						&folio, SGP_NOALLOC)) {
++						&folio, SGP_NOALLOC, 0)) {
+ 					result =3D SCAN_FAIL;
+ 					goto xa_unlocked;
+ 				}
 diff --git a/mm/shmem.c b/mm/shmem.c
-index 5c9e80207cbf..d41ee5983fd4 100644
+index 66d94207b40c..38aafa0b0845 100644
 --- a/mm/shmem.c
 +++ b/mm/shmem.c
-@@ -871,16 +871,16 @@ unsigned long shmem_partial_swap_usage(struct address=
-_space *mapping,
- 						pgoff_t start, pgoff_t end)
- {
- 	XA_STATE(xas, &mapping->i_pages, start);
--	struct page *page;
-+	struct folio *folio;
- 	unsigned long swapped =3D 0;
- 	unsigned long max =3D end - 1;
-=20
- 	rcu_read_lock();
--	xas_for_each(&xas, page, max) {
--		if (xas_retry(&xas, page))
-+	xas_for_each(&xas, folio, max) {
-+		if (xas_retry(&xas, folio))
- 			continue;
--		if (xa_is_value(page))
--			swapped++;
-+		if (xa_is_value(folio))
-+			swapped +=3D folio_nr_pages(folio);
- 		if (xas.xa_index =3D=3D max)
- 			break;
- 		if (need_resched()) {
-@@ -1530,7 +1530,7 @@ static int shmem_writepage(struct page *page, struct =
-writeback_control *wbc)
- 	if (add_to_swap_cache(folio, swap,
- 			__GFP_HIGH | __GFP_NOMEMALLOC | __GFP_NOWARN,
- 			NULL) =3D=3D 0) {
--		shmem_recalc_inode(inode, 0, 1);
-+		shmem_recalc_inode(inode, 0, folio_nr_pages(folio));
- 		swap_shmem_alloc(swap);
- 		shmem_delete_from_page_cache(folio, swp_to_radix_entry(swap));
-=20
-@@ -1803,6 +1803,7 @@ static void shmem_set_folio_swapin_error(struct inode=
- *inode, pgoff_t index,
- 	struct address_space *mapping =3D inode->i_mapping;
- 	swp_entry_t swapin_error;
- 	void *old;
-+	long num_swap_pages;
-=20
- 	swapin_error =3D make_poisoned_swp_entry();
- 	old =3D xa_cmpxchg_irq(&mapping->i_pages, index,
-@@ -1812,13 +1813,14 @@ static void shmem_set_folio_swapin_error(struct ino=
-de *inode, pgoff_t index,
- 		return;
-=20
- 	folio_wait_writeback(folio);
-+	num_swap_pages =3D folio_nr_pages(folio);
- 	delete_from_swap_cache(folio);
- 	/*
- 	 * Don't treat swapin error folio as alloced. Otherwise inode->i_blocks
- 	 * won't be 0 when inode is released and thus trigger WARN_ON(i_blocks)
- 	 * in shmem_evict_inode().
+@@ -971,7 +971,7 @@ static struct folio *shmem_get_partial_folio(struct ino=
+de *inode, pgoff_t index)
+ 	 * (although in some cases this is just a waste of time).
  	 */
--	shmem_recalc_inode(inode, -1, -1);
-+	shmem_recalc_inode(inode, -num_swap_pages, -num_swap_pages);
- 	swap_free(swap);
+ 	folio =3D NULL;
+-	shmem_get_folio(inode, index, &folio, SGP_READ);
++	shmem_get_folio(inode, index, &folio, SGP_READ, 0);
+ 	return folio;
  }
 =20
-@@ -1905,7 +1907,7 @@ static int shmem_swapin_folio(struct inode *inode, pg=
+@@ -1948,7 +1948,7 @@ static int shmem_swapin_folio(struct inode *inode, pg=
 off_t index,
- 	if (error)
- 		goto failed;
+ static int shmem_get_folio_gfp(struct inode *inode, pgoff_t index,
+ 		struct folio **foliop, enum sgp_type sgp, gfp_t gfp,
+ 		struct vm_area_struct *vma, struct vm_fault *vmf,
+-		vm_fault_t *fault_type)
++		vm_fault_t *fault_type, size_t len)
+ {
+ 	struct address_space *mapping =3D inode->i_mapping;
+ 	struct shmem_inode_info *info =3D SHMEM_I(inode);
+@@ -2162,10 +2162,11 @@ static int shmem_get_folio_gfp(struct inode *inode,=
+ pgoff_t index,
+ }
 =20
--	shmem_recalc_inode(inode, 0, -1);
-+	shmem_recalc_inode(inode, 0, -folio_nr_pages(folio));
+ int shmem_get_folio(struct inode *inode, pgoff_t index, struct folio **fol=
+iop,
+-		enum sgp_type sgp)
++		enum sgp_type sgp, size_t len)
+ {
+ 	return shmem_get_folio_gfp(inode, index, foliop, sgp,
+-			mapping_gfp_mask(inode->i_mapping), NULL, NULL, NULL);
++			mapping_gfp_mask(inode->i_mapping),
++			NULL, NULL, NULL, len);
+ }
 =20
- 	if (sgp =3D=3D SGP_WRITE)
- 		folio_mark_accessed(folio);
-@@ -2665,7 +2667,7 @@ int shmem_mfill_atomic_pte(pmd_t *dst_pmd,
+ /*
+@@ -2248,8 +2249,8 @@ static vm_fault_t shmem_fault(struct vm_fault *vmf)
+ 		spin_unlock(&inode->i_lock);
+ 	}
+=20
+-	err =3D shmem_get_folio_gfp(inode, vmf->pgoff, &folio, SGP_CACHE,
+-				  gfp, vma, vmf, &ret);
++	err =3D shmem_get_folio_gfp(inode, vmf->pgoff, &folio, SGP_CACHE, gfp,
++				  vma, vmf, &ret, PAGE_SIZE);
+ 	if (err)
+ 		return vmf_error(err);
+ 	if (folio)
+@@ -2700,6 +2701,9 @@ shmem_write_begin(struct file *file, struct address_s=
+pace *mapping,
+ 	struct folio *folio;
+ 	int ret =3D 0;
+=20
++	if (!mapping_large_folio_support(mapping))
++		len =3D min_t(size_t, len, PAGE_SIZE - offset_in_page(pos));
++
+ 	/* i_rwsem is held by caller */
+ 	if (unlikely(info->seals & (F_SEAL_GROW |
+ 				   F_SEAL_WRITE | F_SEAL_FUTURE_WRITE))) {
+@@ -2709,7 +2713,7 @@ shmem_write_begin(struct file *file, struct address_s=
+pace *mapping,
+ 			return -EPERM;
+ 	}
+=20
+-	ret =3D shmem_get_folio(inode, index, &folio, SGP_WRITE);
++	ret =3D shmem_get_folio(inode, index, &folio, SGP_WRITE, len);
+=20
  	if (ret)
- 		goto out_delete_from_cache;
+ 		return ret;
+@@ -2781,7 +2785,7 @@ static ssize_t shmem_file_read_iter(struct kiocb *ioc=
+b, struct iov_iter *to)
+ 				break;
+ 		}
 =20
--	shmem_recalc_inode(inode, 1, 0);
-+	shmem_recalc_inode(inode, folio_nr_pages(folio), 0);
- 	folio_unlock(folio);
- 	return 0;
- out_delete_from_cache:
+-		error =3D shmem_get_folio(inode, index, &folio, SGP_READ);
++		error =3D shmem_get_folio(inode, index, &folio, SGP_READ, 0);
+ 		if (error) {
+ 			if (error =3D=3D -EINVAL)
+ 				error =3D 0;
+@@ -2958,7 +2962,7 @@ static ssize_t shmem_file_splice_read(struct file *in=
+, loff_t *ppos,
+ 			break;
+=20
+ 		error =3D shmem_get_folio(inode, *ppos / PAGE_SIZE, &folio,
+-					SGP_READ);
++					SGP_READ, 0);
+ 		if (error) {
+ 			if (error =3D=3D -EINVAL)
+ 				error =3D 0;
+@@ -3145,7 +3149,7 @@ static long shmem_fallocate(struct file *file, int mo=
+de, loff_t offset,
+ 			error =3D -ENOMEM;
+ 		else
+ 			error =3D shmem_get_folio(inode, index, &folio,
+-						SGP_FALLOC);
++						SGP_FALLOC, 0);
+ 		if (error) {
+ 			info->fallocend =3D undo_fallocend;
+ 			/* Remove the !uptodate folios we added */
+@@ -3500,7 +3504,7 @@ static int shmem_symlink(struct mnt_idmap *idmap, str=
+uct inode *dir,
+ 		inode->i_op =3D &shmem_short_symlink_operations;
+ 	} else {
+ 		inode_nohighmem(inode);
+-		error =3D shmem_get_folio(inode, 0, &folio, SGP_WRITE);
++		error =3D shmem_get_folio(inode, 0, &folio, SGP_WRITE, 0);
+ 		if (error)
+ 			goto out_remove_offset;
+ 		inode->i_mapping->a_ops =3D &shmem_aops;
+@@ -3548,7 +3552,7 @@ static const char *shmem_get_link(struct dentry *dent=
+ry,
+ 			return ERR_PTR(-ECHILD);
+ 		}
+ 	} else {
+-		error =3D shmem_get_folio(inode, 0, &folio, SGP_READ);
++		error =3D shmem_get_folio(inode, 0, &folio, SGP_READ, 0);
+ 		if (error)
+ 			return ERR_PTR(error);
+ 		if (!folio)
+@@ -4916,8 +4920,8 @@ struct folio *shmem_read_folio_gfp(struct address_spa=
+ce *mapping,
+ 	int error;
+=20
+ 	BUG_ON(!shmem_mapping(mapping));
+-	error =3D shmem_get_folio_gfp(inode, index, &folio, SGP_CACHE,
+-				  gfp, NULL, NULL, NULL);
++	error =3D shmem_get_folio_gfp(inode, index, &folio, SGP_CACHE, gfp, NULL,
++				    NULL, NULL, PAGE_SIZE);
+ 	if (error)
+ 		return ERR_PTR(error);
+=20
 --=20
 2.39.2
