@@ -2,53 +2,53 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 094B7CD3439
-	for <linux-xfs@archiver.kernel.org>; Tue, 19 Sep 2023 04:42:32 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id EEA1ECD343C
+	for <linux-xfs@archiver.kernel.org>; Tue, 19 Sep 2023 05:15:07 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229645AbjISEmf (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 19 Sep 2023 00:42:35 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38690 "EHLO
+        id S229534AbjISFPL (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 19 Sep 2023 01:15:11 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53410 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231417AbjISEmf (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 19 Sep 2023 00:42:35 -0400
-Received: from mail-pf1-x434.google.com (mail-pf1-x434.google.com [IPv6:2607:f8b0:4864:20::434])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D471010E;
-        Mon, 18 Sep 2023 21:42:28 -0700 (PDT)
-Received: by mail-pf1-x434.google.com with SMTP id d2e1a72fcca58-68fb79ef55eso4758230b3a.0;
-        Mon, 18 Sep 2023 21:42:28 -0700 (PDT)
+        with ESMTP id S230454AbjISFPL (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 19 Sep 2023 01:15:11 -0400
+Received: from mail-pl1-x630.google.com (mail-pl1-x630.google.com [IPv6:2607:f8b0:4864:20::630])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3DAFEFF;
+        Mon, 18 Sep 2023 22:15:04 -0700 (PDT)
+Received: by mail-pl1-x630.google.com with SMTP id d9443c01a7336-1c4586b12feso16452225ad.2;
+        Mon, 18 Sep 2023 22:15:04 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1695098548; x=1695703348; darn=vger.kernel.org;
+        d=gmail.com; s=20230601; t=1695100504; x=1695705304; darn=vger.kernel.org;
         h=in-reply-to:subject:cc:to:from:message-id:date:from:to:cc:subject
          :date:message-id:reply-to;
-        bh=Df+9eLjTUVzgEqVA6Q+LlyRbAvg6Ho3M0KjpMi0md/g=;
-        b=NSEMnItVyBe3z+3o0RBqPSy8jsfpoR9FxHiGHSDdPI2p9hmoGk0s93NwWuVis5KT1A
-         IhKFqJ3h+/8ez+fBoU3VD29my32+scpIiSkhmDuObQ3SZaDex37hypt70EVbLkC6f2Im
-         A6PwFy5dKbYmhY7HWLRIKBZlF/SJO7v//7P0AMs80tWmcwSQehsp4O3d6YPMkrRQdcRO
-         4gCMiEndJVW2x6dyFsw+K1dJmRVaiBMGSn6Vg2hb9WLS5LhZLV4CyF1f+mP7JAo9kzPz
-         KSR3Mmzvq7vOmA9qsnrR7Daxf28fxBxJCy0KTcdavPej9jK80OdFLSSiGS2+7mb8D3SG
-         Lwng==
+        bh=Fjszh/DitAw4XSOo3Lq7Xpzq4mY58xIKOU75EljiC8g=;
+        b=A+UMyn+mo0FQkYWYPBj6072BgY1EKm4BNIbduwlKXk09y5LeRHiPCI2NkzWcBvSfrX
+         pb7ZgI6tnGJcBob2UY3nXKqoWU10u3h5rM0OP+86RKYA7WexxqfmXEqL7/GDCW9/GfYg
+         Qzc1z/Lubi8RSgtIDsqNjMmxcsIh8p/mvwnYw5bQ834NBnWH2p1KYVgvnwcypdIpvrkT
+         iHqE1EdnmMAjKl1tKBSuvyiryIg5lW0dx1dfeqDpCSpv1xKkxuk0IIYhUCF8ihX2/xFS
+         ksSoy3SvoyepSc2GT6Z62LGNfibutb40CJ1CYhsAK5rMbYN6QSNLvSmmNv/3+Xgeb27/
+         CoRQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1695098548; x=1695703348;
+        d=1e100.net; s=20230601; t=1695100504; x=1695705304;
         h=in-reply-to:subject:cc:to:from:message-id:date:x-gm-message-state
          :from:to:cc:subject:date:message-id:reply-to;
-        bh=Df+9eLjTUVzgEqVA6Q+LlyRbAvg6Ho3M0KjpMi0md/g=;
-        b=gIPRrmiEBtpPExG976aKJx299fotLRoXfOqy+6oPmHz0JDvEzu1ixC4aE6EoqT8SjR
-         5EWbBOQDUx+Af+J78gIG+qe61Yshkp+t30Ov5vMJmweFU4WBqBUQ6vJxYna3P5t1+6QN
-         x68LRM9+0yh6CwgQOj2Av81ld2jseebE10TU7MG0UCoVfP4NNN7w1bqxJxdh+ixIdEn0
-         1pswLlT3TPKuqhM7Wtwlmn1wu5FhBrs5c6LlLYwlTH+FhaZ1MFIw0xWaLcWahPSUlSsY
-         7VNKsqb3U+OuWL9yNXPgTpT/9f/dZwTQEV698WtFPHS0kaecb8taLS+nrYAV/cqwaqbV
-         TkUA==
-X-Gm-Message-State: AOJu0YzbyCLUDGZ2F6jbJq+ug3QufTXdNezwV1y4pTYg4MeWbOh358xO
-        pbo6j/8XwhxhYyiw95tZpDv/IXGWz58=
-X-Google-Smtp-Source: AGHT+IGB37sIyrpD0Udu1Nod//aFhAGcrTcwFgKX8tvPBguV7ClfrjejpnsVpuAAgszoQbjhrabkKg==
-X-Received: by 2002:a05:6a00:2283:b0:68a:5773:6319 with SMTP id f3-20020a056a00228300b0068a57736319mr13214107pfe.11.1695098548286;
-        Mon, 18 Sep 2023 21:42:28 -0700 (PDT)
+        bh=Fjszh/DitAw4XSOo3Lq7Xpzq4mY58xIKOU75EljiC8g=;
+        b=Rsch2OJXdc3yRaYeHqu1hoXix8kSp/1/hGq0/GqWkel4696PSwPsv+30fXa+Jjhrym
+         fOvWrIEga9RLzPjbnd3hE2z5oWJQWbDAVCjvEWe0TC1d17R5Ntaclf8MfTLwnLCQi+Hb
+         Y0mNG5E63ncqpSIDGShCchRxEa+DgSqRIrWdmp6OMyfGgPMKPgl3pG4yNhCShIN4+KJL
+         0WjSlPNVOTC4T8HhDqetT+O8rAGo4PE9OCTWP+GLCzNbBp+WAvfkJ2Lb7ti8U46PYpnZ
+         arUTYsPtf8sfvsRZlxbVBJmYsyxihNn5LUhA9BbZtIqPKI/nh2BPHHeaEHgDP/rk+1kD
+         iOwg==
+X-Gm-Message-State: AOJu0YxqtL26baIDlexaVF0HYFKarmiB+GA8kGUZHbbJKlH04i0Q3IJk
+        W4K4iqlKYIQEee4ErsOBJxCXIfm5IWY=
+X-Google-Smtp-Source: AGHT+IHlqKtYrr5I+sO6GyUZZI7pdW5mpxUNrF7zz3/Pu73avrloJiElMVXzjzXERXTssJoUD9M4CQ==
+X-Received: by 2002:a17:903:32ca:b0:1c1:f3f8:3949 with SMTP id i10-20020a17090332ca00b001c1f3f83949mr11324218plr.1.1695100503510;
+        Mon, 18 Sep 2023 22:15:03 -0700 (PDT)
 Received: from dw-tp ([49.207.223.191])
-        by smtp.gmail.com with ESMTPSA id fe20-20020a056a002f1400b00687dde8ae5dsm7802303pfb.154.2023.09.18.21.42.25
+        by smtp.gmail.com with ESMTPSA id u7-20020a17090282c700b001b3bf8001a9sm4877636plz.48.2023.09.18.22.15.00
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 18 Sep 2023 21:42:27 -0700 (PDT)
-Date:   Tue, 19 Sep 2023 10:12:19 +0530
-Message-Id: <87sf7a7p04.fsf@doe.com>
+        Mon, 18 Sep 2023 22:15:02 -0700 (PDT)
+Date:   Tue, 19 Sep 2023 10:44:58 +0530
+Message-Id: <87o7hy7nhp.fsf@doe.com>
 From:   Ritesh Harjani (IBM) <ritesh.list@gmail.com>
 To:     "Darrick J. Wong" <djwong@kernel.org>, djwong@kernel.org
 Cc:     willy@infradead.org, linux-fsdevel@vger.kernel.org,
@@ -76,8 +76,13 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 >
 > This was caught by observing fstests regressions in the "unshare around"
 > mechanism that is used for unaligned writes to a reflinked realtime
-> volume when the realtime extent size is larger than 1FSB, though I think
-> it applies to any shared file.
+> volume when the realtime extent size is larger than 1FSB,
+
+I was wondering what is testcase that you are referring here to? 
+Can you please tell the testcase no. and the mkfs / mount config options
+which I can use to observe the regression please?
+
+> though I think it applies to any shared file.
 >
 > Cc: ritesh.list@gmail.com, willy@infradead.org
 > Fixes: a01b8f225248e ("iomap: Allocate ifs in ->write_begin() early")
@@ -85,15 +90,6 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 > ---
 >  fs/iomap/buffered-io.c |    6 ++++--
 >  1 file changed, 4 insertions(+), 2 deletions(-)
-
-Thanks for catching this case. Fix for this looks good to me. 
-I have verified on my setup. w/o this patch it indeed can cause
-corruption in the unshare case, since we don't read the disk contents
-and we might end up writing garbage from the page cache.
-
-Reviewed-by: Ritesh Harjani (IBM) <ritesh.list@gmail.com>
-
-
 >
 >
 > diff --git a/fs/iomap/buffered-io.c b/fs/iomap/buffered-io.c
