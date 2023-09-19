@@ -2,114 +2,203 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C0C95CD54A9
-	for <linux-xfs@archiver.kernel.org>; Tue, 19 Sep 2023 09:25:06 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id F38B9CD54B9
+	for <linux-xfs@archiver.kernel.org>; Tue, 19 Sep 2023 11:05:05 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229804AbjISJZK (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 19 Sep 2023 05:25:10 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55786 "EHLO
+        id S231757AbjISLFI (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 19 Sep 2023 07:05:08 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50956 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230154AbjISJZJ (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 19 Sep 2023 05:25:09 -0400
-Received: from mail-pj1-x1031.google.com (mail-pj1-x1031.google.com [IPv6:2607:f8b0:4864:20::1031])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4C9F2100;
-        Tue, 19 Sep 2023 02:25:01 -0700 (PDT)
-Received: by mail-pj1-x1031.google.com with SMTP id 98e67ed59e1d1-27499bb759cso2747513a91.3;
-        Tue, 19 Sep 2023 02:25:01 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1695115500; x=1695720300; darn=vger.kernel.org;
-        h=in-reply-to:subject:cc:to:from:message-id:date:from:to:cc:subject
-         :date:message-id:reply-to;
-        bh=S2Aq5Ukk7Fnm/UrgZLz/+HdEj7r6s/6zcK8vNUOpQoE=;
-        b=PgmYbccRGhmM86uh6ub2E+5HDW/7mYEdxVmMCEdRjhojORYFXvv3BUa+1NV0H+KhVl
-         /dgz7hzKSDKMZmsYQ/lWwYiW9MYIeLMjOqEgA/dwZJECQVCukMKnPgvMjZKPD+q9df3k
-         b/xvXzpdWfKNhgkO9nNfnv/N4tJoPgjn78FbnfxpOMB95648m6Jg8MC/UTcWHoI4q3HQ
-         65/IQUGn3yMtgEuMGDEP6FmniPs8l7eyv0pt0JoIlJZ6a9wYtkl1GCfx1ZdjGSi1n2Ns
-         Es+NpFJmulZ2n/UZrRYBOqV5iJdqojy4Bk4o2q4tjnq8MIs+5cDXUiNDmWDFz4LAqC0F
-         plYw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1695115500; x=1695720300;
-        h=in-reply-to:subject:cc:to:from:message-id:date:x-gm-message-state
-         :from:to:cc:subject:date:message-id:reply-to;
-        bh=S2Aq5Ukk7Fnm/UrgZLz/+HdEj7r6s/6zcK8vNUOpQoE=;
-        b=qIGT3tLx/P9vid7+iFca9Bix02JyePXAnQBfDGkxt25w88Vvp+vSxsaj+mJ3G4s1PY
-         7lGp100kDi/cOCJytxfZb7rRCQQmf4VIZLueNEK11k9n6asW1fDedCLFwxAD3iXmbZKz
-         7+pYtv3AcBNUC/1PfXjQ2F5UXAsNcPzHezcTFNGpOmVCTUOBxa2coF+E9D+dloWEhNnF
-         v4QuLUpC+LdcFlOA8s+i9Ah+XyakJPJGm9XYtgOgyjr57aYQuwPq6BSby8K/u2Qp824j
-         ilfFhpePRKK7VEgtIEowNctfrVL8chnaR+/3NAb+tXjnpuXXrK3FVKfzwVu3+qbkB4/K
-         egqA==
-X-Gm-Message-State: AOJu0YyDsONskBW/4r95SxlLRp1SM2cvlgsE9mIfgtqoHCmOWv8EIJ++
-        YiRM5woeO+4Xhok7eXCfHxM=
-X-Google-Smtp-Source: AGHT+IG/GWNXzoBweCHxh0HzDSXeYTA6HP4U3FPJ26/OsolQHvDiIDLHXMaiAOQ9Jg8l62uzHx2VOQ==
-X-Received: by 2002:a17:90b:3583:b0:268:7be6:29a5 with SMTP id mm3-20020a17090b358300b002687be629a5mr8760270pjb.9.1695115500538;
-        Tue, 19 Sep 2023 02:25:00 -0700 (PDT)
-Received: from dw-tp ([49.207.223.191])
-        by smtp.gmail.com with ESMTPSA id b3-20020a170902b60300b001bbb8d5166bsm9627003pls.123.2023.09.19.02.24.57
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 19 Sep 2023 02:24:59 -0700 (PDT)
-Date:   Tue, 19 Sep 2023 14:54:56 +0530
-Message-Id: <87cyye7bx3.fsf@doe.com>
-From:   Ritesh Harjani (IBM) <ritesh.list@gmail.com>
-To:     "Darrick J. Wong" <djwong@kernel.org>, djwong@kernel.org
-Cc:     willy@infradead.org, linux-fsdevel@vger.kernel.org,
-        linux-xfs@vger.kernel.org, willy@infradead.org
-Subject: Re: [PATCH 1/2] iomap: don't skip reading in !uptodate folios when unsharing a range
-In-Reply-To: <87sf7a7p04.fsf@doe.com>
+        with ESMTP id S231974AbjISLFF (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 19 Sep 2023 07:05:05 -0400
+Received: from smtp-out2.suse.de (smtp-out2.suse.de [195.135.220.29])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 85EB6130;
+        Tue, 19 Sep 2023 04:04:59 -0700 (PDT)
+Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
+        (No client certificate requested)
+        by smtp-out2.suse.de (Postfix) with ESMTPS id 163C61FDBE;
+        Tue, 19 Sep 2023 11:04:58 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.cz; s=susede2_rsa;
+        t=1695121498; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+         mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=2a6e2yyPMgqeI3y+2Rnc2fZeeo+kgiK2m70Hco9fnr4=;
+        b=cJr+PwvUYyZH2t3upcBw0eryf4DE/LlFfn7Ufm2eAWd1VY02qygFmTzBIaJahVSz94O4Vb
+        yGqIOI0jCW0Ip0Sk2rToBmP3VAYVKS3al3oLycPIe7d7v/sSOaNYyizpxk5ZIrSJFN93/P
+        SUBM4OkiK17iPKtzTKMO612fqmtdvLg=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.cz;
+        s=susede2_ed25519; t=1695121498;
+        h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+         mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=2a6e2yyPMgqeI3y+2Rnc2fZeeo+kgiK2m70Hco9fnr4=;
+        b=meYxUUYPlIj0HPS4xS8OLRDZWnsHTMsdExQo9ACa74+dnEYe0U3v8eAO6qjvM08RQNmwM8
+        rVywJglnBJnDHgDQ==
+Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
+        (No client certificate requested)
+        by imap2.suse-dmz.suse.de (Postfix) with ESMTPS id C72D013458;
+        Tue, 19 Sep 2023 11:04:57 +0000 (UTC)
+Received: from dovecot-director2.suse.de ([192.168.254.65])
+        by imap2.suse-dmz.suse.de with ESMTPSA
+        id TL5uMVmACWVNYAAAMHmgww
+        (envelope-from <jack@suse.cz>); Tue, 19 Sep 2023 11:04:57 +0000
+Received: by quack3.suse.cz (Postfix, from userid 1000)
+        id 11C86A0759; Tue, 19 Sep 2023 13:04:57 +0200 (CEST)
+Date:   Tue, 19 Sep 2023 13:04:57 +0200
+From:   Jan Kara <jack@suse.cz>
+To:     Xi Ruoyao <xry111@linuxfromscratch.org>
+Cc:     Jeff Layton <jlayton@kernel.org>,
+        Alexander Viro <viro@zeniv.linux.org.uk>,
+        Christian Brauner <brauner@kernel.org>,
+        Eric Van Hensbergen <ericvh@kernel.org>,
+        Latchesar Ionkov <lucho@ionkov.net>,
+        Dominique Martinet <asmadeus@codewreck.org>,
+        Christian Schoenebeck <linux_oss@crudebyte.com>,
+        David Howells <dhowells@redhat.com>,
+        Marc Dionne <marc.dionne@auristor.com>,
+        Chris Mason <clm@fb.com>, Josef Bacik <josef@toxicpanda.com>,
+        David Sterba <dsterba@suse.com>, Xiubo Li <xiubli@redhat.com>,
+        Ilya Dryomov <idryomov@gmail.com>,
+        Jan Harkes <jaharkes@cs.cmu.edu>, coda@cs.cmu.edu,
+        Tyler Hicks <code@tyhicks.com>, Gao Xiang <xiang@kernel.org>,
+        Chao Yu <chao@kernel.org>, Yue Hu <huyue2@coolpad.com>,
+        Jeffle Xu <jefflexu@linux.alibaba.com>,
+        Namjae Jeon <linkinjeon@kernel.org>,
+        Sungjong Seo <sj1557.seo@samsung.com>,
+        Jan Kara <jack@suse.com>, Theodore Ts'o <tytso@mit.edu>,
+        Andreas Dilger <adilger.kernel@dilger.ca>,
+        Jaegeuk Kim <jaegeuk@kernel.org>,
+        OGAWA Hirofumi <hirofumi@mail.parknet.co.jp>,
+        Miklos Szeredi <miklos@szeredi.hu>,
+        Bob Peterson <rpeterso@redhat.com>,
+        Andreas Gruenbacher <agruenba@redhat.com>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        Tejun Heo <tj@kernel.org>,
+        Trond Myklebust <trond.myklebust@hammerspace.com>,
+        Anna Schumaker <anna@kernel.org>,
+        Konstantin Komarov <almaz.alexandrovich@paragon-software.com>,
+        Mark Fasheh <mark@fasheh.com>,
+        Joel Becker <jlbec@evilplan.org>,
+        Joseph Qi <joseph.qi@linux.alibaba.com>,
+        Mike Marshall <hubcap@omnibond.com>,
+        Martin Brandenburg <martin@omnibond.com>,
+        Luis Chamberlain <mcgrof@kernel.org>,
+        Kees Cook <keescook@chromium.org>,
+        Iurii Zaikin <yzaikin@google.com>,
+        Steve French <sfrench@samba.org>,
+        Paulo Alcantara <pc@manguebit.com>,
+        Ronnie Sahlberg <ronniesahlberg@gmail.com>,
+        Shyam Prasad N <sprasad@microsoft.com>,
+        Tom Talpey <tom@talpey.com>,
+        Sergey Senozhatsky <senozhatsky@chromium.org>,
+        Richard Weinberger <richard@nod.at>,
+        Hans de Goede <hdegoede@redhat.com>,
+        Hugh Dickins <hughd@google.com>,
+        Andrew Morton <akpm@linux-foundation.org>,
+        Amir Goldstein <amir73il@gmail.com>,
+        "Darrick J. Wong" <djwong@kernel.org>,
+        Benjamin Coddington <bcodding@redhat.com>,
+        linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org,
+        v9fs@lists.linux.dev, linux-afs@lists.infradead.org,
+        linux-btrfs@vger.kernel.org, ceph-devel@vger.kernel.org,
+        codalist@coda.cs.cmu.edu, ecryptfs@vger.kernel.org,
+        linux-erofs@lists.ozlabs.org, linux-ext4@vger.kernel.org,
+        linux-f2fs-devel@lists.sourceforge.net, cluster-devel@redhat.com,
+        linux-nfs@vger.kernel.org, ntfs3@lists.linux.dev,
+        ocfs2-devel@lists.linux.dev, devel@lists.orangefs.org,
+        linux-cifs@vger.kernel.org, samba-technical@lists.samba.org,
+        linux-mtd@lists.infradead.org, linux-mm@kvack.org,
+        linux-unionfs@vger.kernel.org, linux-xfs@vger.kernel.org,
+        Jan Kara <jack@suse.cz>, bug-gnulib@gnu.org
+Subject: Re: [PATCH v7 12/13] ext4: switch to multigrain timestamps
+Message-ID: <20230919110457.7fnmzo4nqsi43yqq@quack3>
+References: <20230807-mgctime-v7-0-d1dec143a704@kernel.org>
+ <20230807-mgctime-v7-12-d1dec143a704@kernel.org>
+ <bf0524debb976627693e12ad23690094e4514303.camel@linuxfromscratch.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=iso-8859-1
+Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <bf0524debb976627693e12ad23690094e4514303.camel@linuxfromscratch.org>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Ritesh Harjani (IBM) <ritesh.list@gmail.com> writes:
+On Tue 19-09-23 15:05:24, Xi Ruoyao wrote:
+> On Mon, 2023-08-07 at 15:38 -0400, Jeff Layton wrote:
+> > Enable multigrain timestamps, which should ensure that there is an
+> > apparent change to the timestamp whenever it has been written after
+> > being actively observed via getattr.
+> > 
+> > For ext4, we only need to enable the FS_MGTIME flag.
+> 
+> Hi Jeff,
+> 
+> This patch causes a gnulib test failure:
+> 
+> $ ~/sources/lfs/grep-3.11/gnulib-tests/test-stat-time
+> test-stat-time.c:141: assertion 'statinfo[0].st_mtime < statinfo[2].st_mtime || (statinfo[0].st_mtime == statinfo[2].st_mtime && (get_stat_mtime_ns (&statinfo[0]) < get_stat_mtime_ns (&statinfo[2])))' failed
+> Aborted (core dumped)
+> 
+> The source code of the test:
+> https://git.savannah.gnu.org/cgit/gnulib.git/tree/tests/test-stat-time.c
+> 
+> Is this an expected change?
 
-> "Darrick J. Wong" <djwong@kernel.org> writes:
->
->> From: Darrick J. Wong <djwong@kernel.org>
->>
->> Prior to commit a01b8f225248e, we would always read in the contents of a
->> !uptodate folio prior to writing userspace data into the folio,
->> allocated a folio state object, etc.  Ritesh introduced an optimization
->> that skips all of that if the write would cover the entire folio.
->>
->> Unfortunately, the optimization misses the unshare case, where we always
->> have to read in the folio contents since there isn't a data buffer
->> supplied by userspace.  This can result in stale kernel memory exposure
->> if userspace issues a FALLOC_FL_UNSHARE_RANGE call on part of a shared
->> file that isn't already cached.
->>
->> This was caught by observing fstests regressions in the "unshare around"
->> mechanism that is used for unaligned writes to a reflinked realtime
->> volume when the realtime extent size is larger than 1FSB, though I think
->> it applies to any shared file.
->>
->> Cc: ritesh.list@gmail.com, willy@infradead.org
->> Fixes: a01b8f225248e ("iomap: Allocate ifs in ->write_begin() early")
->> Signed-off-by: Darrick J. Wong <djwong@kernel.org>
->> ---
->>  fs/iomap/buffered-io.c |    6 ++++--
->>  1 file changed, 4 insertions(+), 2 deletions(-)
->
-> Thanks for catching this case. Fix for this looks good to me. 
-> I have verified on my setup. w/o this patch it indeed can cause
-> corruption in the unshare case, since we don't read the disk contents
-> and we might end up writing garbage from the page cache.
+Kind of yes. The test first tries to estimate filesystem timestamp
+granularity in nap() function - due to this patch, the detected granularity
+will likely be 1 ns so effectively all the test calls will happen
+immediately one after another. But we don't bother setting the timestamps
+with more than 1 jiffy (usually 4 ms) precision unless we think someone is
+watching. So as a result timestamps of all stamp1 and stamp2 files are
+going to be equal which makes the test fail.
 
-To add more info to my above review. iomap_write_begin() is used by 
-1. iomap_write_iter()
-2. iomap_zero_iter()
-3. iomap_unshare_iter()
+The ultimate problem is that a sequence like:
 
-And looks like out of the 3, iomap_unshare_iter() is the only one which
-will not write anything to the folio in the foliocache, & we
-definitely need to read the extent in folio cache in iomap_write_begin()
-for unsharing.
+write(f1)
+stat(f2)
+write(f2)
+stat(f2)
+write(f1)
+stat(f1)
 
-Hence I believe iomap_unshare_iter() should be the only path to be
-fixed, which this patch does by checking IOMAP_UNSHARE flag in
-__iomap_write_begin().
+can result in f1 timestamp to be (slightly) lower than the final f2
+timestamp because the second write to f1 didn't bother updating the
+timestamp. That can indeed be a bit confusing to programs if they compare
+timestamps between two files. Jeff?
 
->
-> Reviewed-by: Ritesh Harjani (IBM) <ritesh.list@gmail.com>
->
->
+								Honza
 
--ritesh
+
+> > Acked-by: Theodore Ts'o <tytso@mit.edu>
+> > Reviewed-by: Jan Kara <jack@suse.cz>
+> > Signed-off-by: Jeff Layton <jlayton@kernel.org>
+> > ---
+> >  fs/ext4/super.c | 2 +-
+> >  1 file changed, 1 insertion(+), 1 deletion(-)
+> > 
+> > diff --git a/fs/ext4/super.c b/fs/ext4/super.c
+> > index b54c70e1a74e..cb1ff47af156 100644
+> > --- a/fs/ext4/super.c
+> > +++ b/fs/ext4/super.c
+> > @@ -7279,7 +7279,7 @@ static struct file_system_type ext4_fs_type = {
+> >  	.init_fs_context	= ext4_init_fs_context,
+> >  	.parameters		= ext4_param_specs,
+> >  	.kill_sb		= kill_block_super,
+> > -	.fs_flags		= FS_REQUIRES_DEV | FS_ALLOW_IDMAP,
+> > +	.fs_flags		= FS_REQUIRES_DEV | FS_ALLOW_IDMAP |
+> > FS_MGTIME,
+> >  };
+> >  MODULE_ALIAS_FS("ext4");
+> >  
+> > 
+> 
+-- 
+Jan Kara <jack@suse.com>
+SUSE Labs, CR
