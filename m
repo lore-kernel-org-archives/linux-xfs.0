@@ -2,87 +2,50 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8E244CD3445
-	for <linux-xfs@archiver.kernel.org>; Tue, 19 Sep 2023 07:26:03 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 30522CD548F
+	for <linux-xfs@archiver.kernel.org>; Tue, 19 Sep 2023 07:42:27 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231687AbjISH0G (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 19 Sep 2023 03:26:06 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45194 "EHLO
+        id S231807AbjISHmb (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 19 Sep 2023 03:42:31 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36518 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229960AbjISH0F (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 19 Sep 2023 03:26:05 -0400
-Received: from gandalf.ozlabs.org (mail.ozlabs.org [IPv6:2404:9400:2221:ea00::3])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 77461FC;
-        Tue, 19 Sep 2023 00:25:58 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=canb.auug.org.au;
-        s=201702; t=1695108353;
-        bh=BXA+1Kw/6obE3VF4wSJBx7IOy9FiYg0aqGCKSySeKIY=;
-        h=Date:From:To:Cc:Subject:From;
-        b=mVNQfPoP0InAQJvX/TjwplFu7e1SK12FdFHxLSD4agdk0SblOKcarmPLquEtZZ1BM
-         SLdOtW6LbwCMQ43jPUlnjZLdz9IH+sMmiLLDU92qEx0gtyOUFxHbJuwhryBnWjb9A6
-         6S4p2qyoW3fu8A2GRHQZKyAQi63dMGZZpnDm4N1dWfNtTAoMey5umPQIN1ppd/ooEU
-         ter1KtEObPCII+QgZsv9+7E7+1IaThC4pgnJkTtAA+prnJAaY04tRFmkF/qAivQP3P
-         bflh1nOXgF/4sZPoGOWThNO7Q6uPKUCD8M39pSFUD+l68W25oCgQg5VMV5mumKCHls
-         L9AbGLIQFKd4w==
-Received: from authenticated.ozlabs.org (localhost [127.0.0.1])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange ECDHE (prime256v1) server-signature RSA-PSS (4096 bits) server-digest SHA256)
-        (No client certificate requested)
-        by mail.ozlabs.org (Postfix) with ESMTPSA id 4RqY9Y2qZdz4xNq;
-        Tue, 19 Sep 2023 17:25:53 +1000 (AEST)
-Date:   Tue, 19 Sep 2023 17:25:49 +1000
-From:   Stephen Rothwell <sfr@canb.auug.org.au>
-To:     "Darrick J. Wong" <djwong@kernel.org>,
-        David Chinner <david@fromorbit.com>,
-        <linux-xfs@vger.kernel.org>
-Cc:     Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-        Linux Next Mailing List <linux-next@vger.kernel.org>
-Subject: linux-next: Fixes tag needs some work in the xfs tree
-Message-ID: <20230919172549.5daa24d9@canb.auug.org.au>
+        with ESMTP id S231803AbjISHma (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 19 Sep 2023 03:42:30 -0400
+X-Greylist: delayed 416 seconds by postgrey-1.37 at lindbergh.monkeyblade.net; Tue, 19 Sep 2023 00:42:24 PDT
+Received: from mail.leeswilly.pl (mail.leeswilly.pl [89.116.26.225])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id CCC6F11C
+        for <linux-xfs@vger.kernel.org>; Tue, 19 Sep 2023 00:42:24 -0700 (PDT)
+Received: by mail.leeswilly.pl (Postfix, from userid 1001)
+        id C0FC8761423; Tue, 19 Sep 2023 09:35:21 +0200 (CEST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=leeswilly.pl; s=mail;
+        t=1695108926; bh=qCQG4c3C0tvkuSSy6okg6Td4OKi9mrw7rI9pE9SwJ9g=;
+        h=Date:From:To:Subject:From;
+        b=QcV53DIFZFHJDTCPNrBZ0HTt7dsYar7NmY+Zc2fP7/Gj3F/2BM0JRSBlGq1CkMBtj
+         pfClnfkajxs0EfIH1qeF+U7cB79uXKB41jzeYXE3XIQfBiYcbvm8cFRgCVokGgN1WT
+         qb80B+PYC3edTayJYUqtptcWfcL5cXq57NUiPkLhWwUx+zQvb49Hba4/m9ZDj50yyu
+         k+sXOcVpX954V9URW7Mv9Jwfk21LZWXJGvvfSBSrYoCazzU3ay8AlrnczXb3SHFNzt
+         xx/xb/SfOySeC9svhE3IseovU109yu1qNNQSRJu9Sg65GKTuP4Dl+W8jZCwPcCcb3d
+         oRkhJs0uNGODA==
+Received: by mail.leeswilly.pl for <linux-xfs@vger.kernel.org>; Tue, 19 Sep 2023 07:35:17 GMT
+Message-ID: <20230919084500-0.1.3z.bcod.0.hkva09npdb@leeswilly.pl>
+Date:   Tue, 19 Sep 2023 07:35:17 GMT
+From:   "Jakub Lemczak" <jakub.lemczak@leeswilly.pl>
+To:     <linux-xfs@vger.kernel.org>
+Subject: =?UTF-8?Q?Pytanie_o_samoch=C3=B3d?=
+X-Mailer: mail.leeswilly.pl
 MIME-Version: 1.0
-Content-Type: multipart/signed; boundary="Sig_/u_tJ0ZZJSxm79sbK/i1Q9mj";
- protocol="application/pgp-signature"; micalg=pgp-sha256
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
---Sig_/u_tJ0ZZJSxm79sbK/i1Q9mj
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: quoted-printable
+Dzie=C5=84 dobry,
 
-Hi all,
+Czy interesuje Pa=C5=84stwa rozwi=C4=85zanie umo=C5=BCliwiaj=C4=85ce moni=
+torowanie samochod=C3=B3w firmowych oraz optymalizacj=C4=99 koszt=C3=B3w =
+ich utrzymania?=20
 
-In commit
 
-  74ad4693b647 ("xfs: fix log recovery when unknown rocompat bits are set")
-
-Fixes tag
-
-  Fixes: 9e037cb7972f ("xfs: check for unknown v5 feature bits in superbloc=
-k write verifier"
-
-has these problem(s):
-
-  - Subject has leading but no trailing parentheses
-
---=20
-Cheers,
-Stephen Rothwell
-
---Sig_/u_tJ0ZZJSxm79sbK/i1Q9mj
-Content-Type: application/pgp-signature
-Content-Description: OpenPGP digital signature
-
------BEGIN PGP SIGNATURE-----
-
-iQEzBAEBCAAdFiEENIC96giZ81tWdLgKAVBC80lX0GwFAmUJTP0ACgkQAVBC80lX
-0GybbAf8DVHxuSysAz4Hk4gS2DgE3nz/Y6aA8TzonDpsVUEmuqdGPGgaOkSNpxhp
-Yj3eQfHy836C+0X/XOpJPtSseCfQDZCnT9g2MfvhN7B/nY6KG0BbYEhEYpe8fAtb
-flA5a4dfH1pgjxpR4H5jaNtjL0A9n4Aqh9kfd5fHKsUeV5n67TC6hIsJgCpVJeUM
-qyR2cl7bhuak5xglRZ5jdBPiekPXxHm6H6Skfu5sSJNNVJjbCRn0ukN6v6pmfc2V
-IKdEOGfy9LdcwQ3S0wEJMfXtZZFi2D4sxSKvFtL8RYA+hTs/wwq6MxxwnjJWDfSa
-eJEGq6XnSrWsySC83AOeVW663U5Psw==
-=A81u
------END PGP SIGNATURE-----
-
---Sig_/u_tJ0ZZJSxm79sbK/i1Q9mj--
+Pozdrawiam
+Jakub Lemczak
