@@ -2,152 +2,135 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9CB4BCE79A8
-	for <linux-xfs@archiver.kernel.org>; Wed, 20 Sep 2023 01:07:43 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 30D8FCE79AD
+	for <linux-xfs@archiver.kernel.org>; Wed, 20 Sep 2023 05:53:48 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230447AbjITBHr (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 19 Sep 2023 21:07:47 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43552 "EHLO
+        id S230447AbjITFxv (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 20 Sep 2023 01:53:51 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33806 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229923AbjITBHq (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 19 Sep 2023 21:07:46 -0400
-Received: from mail-pl1-x62f.google.com (mail-pl1-x62f.google.com [IPv6:2607:f8b0:4864:20::62f])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id BA159B3
-        for <linux-xfs@vger.kernel.org>; Tue, 19 Sep 2023 18:07:40 -0700 (PDT)
-Received: by mail-pl1-x62f.google.com with SMTP id d9443c01a7336-1c1e3a4a06fso50079295ad.3
-        for <linux-xfs@vger.kernel.org>; Tue, 19 Sep 2023 18:07:40 -0700 (PDT)
+        with ESMTP id S229762AbjITFxv (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 20 Sep 2023 01:53:51 -0400
+Received: from mail-pf1-x42e.google.com (mail-pf1-x42e.google.com [IPv6:2607:f8b0:4864:20::42e])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 35E4894
+        for <linux-xfs@vger.kernel.org>; Tue, 19 Sep 2023 22:53:45 -0700 (PDT)
+Received: by mail-pf1-x42e.google.com with SMTP id d2e1a72fcca58-690f7d73a3aso60751b3a.0
+        for <linux-xfs@vger.kernel.org>; Tue, 19 Sep 2023 22:53:45 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=fromorbit-com.20230601.gappssmtp.com; s=20230601; t=1695172060; x=1695776860; darn=vger.kernel.org;
+        d=fromorbit-com.20230601.gappssmtp.com; s=20230601; t=1695189224; x=1695794024; darn=vger.kernel.org;
         h=in-reply-to:content-disposition:mime-version:references:message-id
          :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
-        bh=GxyH5N/b2miRd+U7J4tiePDIcwN6nLcu4WrsIulPOMo=;
-        b=N/Q3JhvCSbLssmXgCxeJE50UsLLcq8mWMGA7lMXgxwXxZ+vNYhMozZCVwoQ05DAKTj
-         l/wjmCzfnouG614oMYmNSOc6S7uYkpSYo2LA2Vkc8+KOtKI5UbLML07Lg65ZwR6UQts7
-         a22Ceea7Jf7QPUhrlTJ1WPGrprZZNQvQCrqvXmbS8xBWBXmptVignaEVqV6GqPje1dVt
-         rOMG8yZTtOy7aIaj+4wYvZFO/I1No1CWRzxZWfa+KpLXIt9iEUtZglm/dmKscw6I3Ld+
-         t1uUM6UlX+F2063QhKdZE/bSLqr4jeAFF29GrSxu0nMFRGHug/Autbhr/0dSs7RJor6G
-         az+g==
+        bh=Fyvicw7DvbDcButhDiTfGTTUtQ6dxKBZ+I6EO47ZTDo=;
+        b=rPBaquPRPXeCYzQJkv1ZeSdIN/7sjegEmomQHTMYgrXjxqzmobyJXent7wUAHpWkF9
+         llg3UyKzKRi787pzxay0Gks0z+Xjah6ZGNsCDxBo0Y9fsweFlEDgY2RPE6jxiTe+HaDw
+         C5JGvs62yHnYUZl51VHulZSqdYjUGwh40/1eu2z06D0VEFXXEoQoXDrkdYw8bNL+SlzI
+         rgN3t4cRqMt8+vc47s0vXJTmTtx2VlRDuhUdSelUIftsick9yBb/mWgP0E3KP+GyhzYw
+         GCReX53DHacoN8RnGdgL6PP6TCRcQqY5rXX/DtUvDFRtQ4l+WArR7abBURvnjGeFQcIw
+         /yfg==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1695172060; x=1695776860;
+        d=1e100.net; s=20230601; t=1695189224; x=1695794024;
         h=in-reply-to:content-disposition:mime-version:references:message-id
          :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
          :message-id:reply-to;
-        bh=GxyH5N/b2miRd+U7J4tiePDIcwN6nLcu4WrsIulPOMo=;
-        b=pf/MVgVvohYXrZflLlIxJ7EWWMhHAy/jA0RMUNr/tQ04X47acjTQWvO3mnKDXGE9pK
-         yaDTBfnHwu1SiMAeq2sZyrUcqZ4nieHbtv8+B/1FRw5o1WGWeqT4XyFsn/6uS3X+oc2H
-         rmYYogqOTEyNGqVymbB4PpQFMNSJSOVQmTjqRpHeeyBZqM2J42vn8lULWftA/SKuMnEL
-         BUzYCFqdwpCSj0Lc9zenMpueEAqgX9RiCcpc9T+1xiRrOOdJTTD+0j9jBLI/6dAZyfn5
-         fzBM7VLpN2eAavvwnzSyOmVN1rNK641UAfBb4bLtz0G5LEl66oaWAtB27+l50BJKiK42
-         +Q7g==
-X-Gm-Message-State: AOJu0YyH0GoqaB1YNPc8bG7+JaqNN2dkeCWzV94jGYU5P3ijH5tTbUCf
-        J77paYELjEZt+UXY+1swUtThaw==
-X-Google-Smtp-Source: AGHT+IFpQJMo9/VYjqogsTu5zDXtAtqVjkYndEQ58AHHkz+GFd0XMgbB8JTQV9IuXC/cTR6miGM23w==
-X-Received: by 2002:a17:903:41c5:b0:1c3:eb43:65bf with SMTP id u5-20020a17090341c500b001c3eb4365bfmr1219382ple.32.1695172060186;
-        Tue, 19 Sep 2023 18:07:40 -0700 (PDT)
+        bh=Fyvicw7DvbDcButhDiTfGTTUtQ6dxKBZ+I6EO47ZTDo=;
+        b=cos5eB0tQagiymXgoAev1oh9hM41x8iev2Fpjv4ins5H30yhGGIkhHIlSCKS/wOybZ
+         0AWLzITgtOqZe3P8d6AfiQzeiZV0ZrUAdcc9ArzK+qoPzdcon8W0ExGNYzJGNA6PqG6A
+         Lb0srY1mEWajTNC79Dw/YpvV6Nn6oLcRmFtib0k+dyfemD/Fe0HA+ZQPeKmQ5pqN9baH
+         45uhMDMxnNgOkXGrl1kIy0LdcWmF7n8T5bhqA5XMoe58cEYp3G2yBENbd/PWxbXHOB3/
+         HfZx4j6admFQL9MkcSmtWhgnZ/Ohijz+8g3NEXYyZytNdbGqlv/J5KU6OarylQStMZdk
+         A8wg==
+X-Gm-Message-State: AOJu0YwNG1Z1iBJBN1TbOpm4DRHaTwhiv/saFiu/0ij2EgV7lPdJskGW
+        qjFDNFaUxo1AP5XpQOsUXmqhqjIIYdcxTIbTsk0=
+X-Google-Smtp-Source: AGHT+IEJKUOpY208HTFnypvLTJpWQ5nb5Rd6AOYCZ5qoM/Gj/Hl3x2j3X29CxoCPYZcw7SOgYXMusg==
+X-Received: by 2002:a05:6a20:7d88:b0:13a:43e8:3fb5 with SMTP id v8-20020a056a207d8800b0013a43e83fb5mr1953730pzj.51.1695189224593;
+        Tue, 19 Sep 2023 22:53:44 -0700 (PDT)
 Received: from dread.disaster.area (pa49-180-20-59.pa.nsw.optusnet.com.au. [49.180.20.59])
-        by smtp.gmail.com with ESMTPSA id d17-20020a170902ced100b001b8b26fa6c1sm10577333plg.115.2023.09.19.18.07.39
+        by smtp.gmail.com with ESMTPSA id 27-20020a17090a031b00b0026fa1931f66sm589981pje.9.2023.09.19.22.53.43
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 19 Sep 2023 18:07:39 -0700 (PDT)
+        Tue, 19 Sep 2023 22:53:44 -0700 (PDT)
 Received: from dave by dread.disaster.area with local (Exim 4.96)
         (envelope-from <david@fromorbit.com>)
-        id 1qilgn-0031A1-1M;
-        Wed, 20 Sep 2023 11:07:37 +1000
-Date:   Wed, 20 Sep 2023 11:07:37 +1000
+        id 1qiq9c-0036M3-2i;
+        Wed, 20 Sep 2023 15:53:40 +1000
+Date:   Wed, 20 Sep 2023 15:53:40 +1000
 From:   Dave Chinner <david@fromorbit.com>
 To:     "Darrick J. Wong" <djwong@kernel.org>
-Cc:     Catherine Hoang <catherine.hoang@oracle.com>,
-        "linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>
-Subject: Re: proposal: enhance 'cp --reflink' to expose ioctl_ficlonerange
-Message-ID: <ZQpF2bRLN3lQk1j1@dread.disaster.area>
-References: <8911B94D-DD29-4D6E-B5BC-32EAF1866245@oracle.com>
- <ZQk23NIAcY0BDpfI@dread.disaster.area>
- <20230920000058.GF348037@frogsfrogsfrogs>
+Cc:     cheng.lin130@zte.com.cn, linux-xfs@vger.kernel.org,
+        linux-kernel@vger.kernel.org, jiang.yong5@zte.com.cn,
+        wang.liang82@zte.com.cn, liu.dong3@zte.com.cn
+Subject: Re: [PATCH v3] xfs: introduce protection for drop nlink
+Message-ID: <ZQqI5KNgghI5iFrC@dread.disaster.area>
+References: <ZQeBY3kmww8qAjfP@dread.disaster.area>
+ <202309181144537682244@zte.com.cn>
+ <ZQfktqPJ5Qzs7unT@dread.disaster.area>
+ <20230919033335.GF348018@frogsfrogsfrogs>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20230920000058.GF348037@frogsfrogsfrogs>
+In-Reply-To: <20230919033335.GF348018@frogsfrogsfrogs>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Tue, Sep 19, 2023 at 05:00:58PM -0700, Darrick J. Wong wrote:
-> On Tue, Sep 19, 2023 at 03:51:24PM +1000, Dave Chinner wrote:
-> > On Tue, Sep 19, 2023 at 02:43:32AM +0000, Catherine Hoang wrote:
-> > The XFS clone implementation takes the IOLOCK_EXCL high up, and
-> > then lower down it iterates one extent doing the sharing operation.
-> > It holds the ILOCK_EXCL while it is modifying the extent in both the
-> > source and destination files, then commits the transaction and drops
-> > the ILOCKs.
-> > 
-> > OK, so we have fine-grained ILOCK serialisation during the clone for
-> > access/modification to the extent list. Excellent, I think we can
-> > make this work.
-> > 
-> > So:
-> > 
-> > 1. take IOLOCK_EXCL like we already do on the source and destination
-> > files.
-> > 
-> > 2. Once all the pre work is done, set a "clone in progress" flag on
-> > the in-memory source inode.
-> > 
-> > 3. atomically demote the source inode IOLOCK_EXCL to IOLOCK_SHARED.
-> > 
-> > 4. read IO and the clone serialise access to the extent list via the
-> > ILOCK. We know this works fine, because that's how the extent list
-> > access serialisation for concurrent read and write direct IO works.
-> > 
-> > 5. buffered writes take the IOLOCK_EXCL, so they block until the
-> > clone completes. Same behaviour as right now, all good.
+On Mon, Sep 18, 2023 at 08:33:35PM -0700, Darrick J. Wong wrote:
+> On Mon, Sep 18, 2023 at 03:48:38PM +1000, Dave Chinner wrote:
+> > It is only when we are trying to modify something that corruption
+> > becomes a problem with fatal consequences. Once we've made a
+> > modification, the in-memory state is different to the on-disk state
+> > and whilst we are in that state any corruption we discover becomes
+> > fatal. That is because there is no way to reconcile the changes
+> > we've already made in memory with what is on-disk - we don't know
+> > that the in-memory changes are good because we tripped over
+> > corruption, and so we must not propagate bad in-memory state and
+> > metadata to disk over the top of what may be still be uncorrupted
+> > metadata on disk.
 > 
-> I think pnfs layouts and DAX writes also take IOLOCK_EXCL, right?  So
-> once reflink breaks the layouts, we're good there too?
+> It'd be a massive effort, but wouldn't it be fun if one could attach
+> defer ops to a transaction that updated incore state on commit but
+> otherwise never appeared on disk?
+>
+> Let me cogitate on that during part 2 of vacation...
 
-I think so.
+Sure, I'm interested to see what you might come up with.
 
-<looks to confirm>
+My thoughts on rollback of dirty transactions come from a different
+perspective.
 
-The pnfs code in xfs_fs_map_blocks() will reject mappings on any
-inode marked with shared extents, so I think the fact that we
-set the inode as having shared extents before we finish
-xfs_reflink_remap_prep() will cause pnfs mappings to kick out before
-we even take the IOLOCK.
+Conceptually being able to roll back individual transactions isn't
+that difficult. All it takes is a bit more memory and CPU - when we
+join the item to the transaction we take a copy of the item we are
+about to modify.
 
-But, regardless of that, both new PNFS mappings and DAX writes use
-IOLOCK_EXCL, and xfs_ilock2_io_mmap() breaks both PNFS and DAX
-layouts which will force them to finish what they are doing and sync
-data before the clone operation grabs the IOLOCK_EXCL. They'll block
-on the clone holding the IOLOCK from that point onwards, so I think
-we're good here.
+If we then cancel a dirty transaction, we then roll back all the
+dirty items to their original state before we unlock them.  This
+works fine for all the on-disk stuff we track in log items.
 
-hmmmmm.
+I have vague thoughts about how this could potentially be tied into
+the shadow buffers we already use for keeping a delta copy of all
+the committed in-memory changes in the CIL that we haven't yet
+committed to the journal - that's actually the entire delta between
+what is on disk and what we've changed prior to the current
+transaction we are cancelling.
 
-<notes that xfs_ilock2_io_mmap() calls filemap_invalidate_lock_two()>
+Hence, in theory, a rollback for a dirty log item is simply "read it
+from disk again, copy the CIL shadow buffer delta into it".
 
-Sigh.
+However, the complexity comes with trying to roll back associated
+in-memory state changes that we don't track as log items.  e.g.
+incore extent list changes, in memory inode flag state (e.g.
+XFS_ISTALE), etc. that's where all the hard problems to solve lie, I
+think.
 
-That will block buffered reads trying to instantiate new pages
-in the page cache. However, this isn't why the invalidate lock is
-held - that's being held to lock out lock page faults (i.e. mmap()
-access) whilst the clone is running.
+Another problem is how do we rollback from the middle of an intent
+(defer ops) chain? We have to complete that chain for things to end
+up consistent on disk, so we can't just cancel the current
+transaction and say we are done and everything is clean.  Maybe
+that's what you are thinking of here - each chain has an "undo"
+intent chain that can roll back all the changes already made?
 
+Cheers,
 
-We really only need to lock out mmap writes, and the only way to do
-that is to prevent write faults from making progress whilst the
-clone is running.
-
-__xfs_filemap_fault() currently takes XFS_MMAPLOCK_SHARED for write
-faults - I think we need it to look at the "clone in progress" flag
-for write faults, too, and use XFS_MMAPLOCK_EXCL in that case.
-
-That would then allow us to demote the invalidate lock on the source
-file the same way we do the IOLOCK, allowing buffered reads to
-populate the page caceh but have write faults block until the clone
-completes (as they do now, same as writes).
-
-Is there anything else I missed?
-
--Dave.
+Dave.
 -- 
 Dave Chinner
 david@fromorbit.com
