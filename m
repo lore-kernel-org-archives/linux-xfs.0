@@ -2,158 +2,299 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A103BCE79AB
-	for <linux-xfs@archiver.kernel.org>; Wed, 20 Sep 2023 08:06:27 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E14B9CE79B2
+	for <linux-xfs@archiver.kernel.org>; Wed, 20 Sep 2023 08:41:56 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233313AbjITIGb (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 20 Sep 2023 04:06:31 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38866 "EHLO
+        id S233556AbjITImA (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 20 Sep 2023 04:42:00 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60138 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233452AbjITIGa (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 20 Sep 2023 04:06:30 -0400
-Received: from mailout2.w1.samsung.com (mailout2.w1.samsung.com [210.118.77.12])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8B340AF
-        for <linux-xfs@vger.kernel.org>; Wed, 20 Sep 2023 01:06:24 -0700 (PDT)
-Received: from eucas1p2.samsung.com (unknown [182.198.249.207])
-        by mailout2.w1.samsung.com (KnoxPortal) with ESMTP id 20230920080622euoutp02efac826c286994aacc2e3f5656918b99~GjNs7-vDe2102921029euoutp02t
-        for <linux-xfs@vger.kernel.org>; Wed, 20 Sep 2023 08:06:22 +0000 (GMT)
-DKIM-Filter: OpenDKIM Filter v2.11.0 mailout2.w1.samsung.com 20230920080622euoutp02efac826c286994aacc2e3f5656918b99~GjNs7-vDe2102921029euoutp02t
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=samsung.com;
-        s=mail20170921; t=1695197183;
-        bh=rL1dCDLUMScax9S9apPYzcJ5uUxJ+5qWTUoLNXdgSSM=;
-        h=Date:Subject:To:CC:From:In-Reply-To:References:From;
-        b=Dd5bTxQZJYaAjj/Xc9q6TG0+PCfQ1rQDXsja8Kaz124lXDn174hvziInGxGKf9jiS
-         g9lI0xUtQo1VB8eh+wSVENpx1xWuSwPL8efWM+n2aBpCDuatc2VuUo8ZZr4LS8MFVb
-         wEcMGJLccpuMYYt6vv1kcta8QlvL7Ej/m2SPglMg=
-Received: from eusmges3new.samsung.com (unknown [203.254.199.245]) by
-        eucas1p1.samsung.com (KnoxPortal) with ESMTP id
-        20230920080622eucas1p1aecea517ed6ddabc4b068b22a3a174ec~GjNss009E1314313143eucas1p1K;
-        Wed, 20 Sep 2023 08:06:22 +0000 (GMT)
-Received: from eucas1p2.samsung.com ( [182.198.249.207]) by
-        eusmges3new.samsung.com (EUCPMTA) with SMTP id 3D.CD.37758.EF7AA056; Wed, 20
-        Sep 2023 09:06:22 +0100 (BST)
-Received: from eusmtrp2.samsung.com (unknown [182.198.249.139]) by
-        eucas1p1.samsung.com (KnoxPortal) with ESMTPA id
-        20230920080622eucas1p1e49881e06c0abda7eb7e4fdbdc40fe79~GjNsL8kTE1874818748eucas1p1V;
-        Wed, 20 Sep 2023 08:06:22 +0000 (GMT)
-Received: from eusmgms1.samsung.com (unknown [182.198.249.179]) by
-        eusmtrp2.samsung.com (KnoxPortal) with ESMTP id
-        20230920080622eusmtrp2525e8133b66a51b136356a133cd1ced0~GjNsLTzWx2686926869eusmtrp2a;
-        Wed, 20 Sep 2023 08:06:22 +0000 (GMT)
-X-AuditID: cbfec7f5-7ffff7000002937e-77-650aa7fe0602
-Received: from eusmtip1.samsung.com ( [203.254.199.221]) by
-        eusmgms1.samsung.com (EUCPMTA) with SMTP id BA.03.10549.EF7AA056; Wed, 20
-        Sep 2023 09:06:22 +0100 (BST)
-Received: from CAMSVWEXC02.scsc.local (unknown [106.1.227.72]) by
-        eusmtip1.samsung.com (KnoxPortal) with ESMTPA id
-        20230920080621eusmtip1f15a2c8851daacf5095238f550ad26c1~GjNr_bsIn2781827818eusmtip1M;
-        Wed, 20 Sep 2023 08:06:21 +0000 (GMT)
-Received: from [192.168.170.212] (106.210.248.121) by CAMSVWEXC02.scsc.local
-        (2002:6a01:e348::6a01:e348) with Microsoft SMTP Server (TLS) id 15.0.1497.2;
-        Wed, 20 Sep 2023 09:06:20 +0100
-Message-ID: <361498b3-e83f-a82c-b1e8-e44720d16fdd@samsung.com>
-Date:   Wed, 20 Sep 2023 10:06:19 +0200
+        with ESMTP id S232338AbjITIl5 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 20 Sep 2023 04:41:57 -0400
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0A50E93;
+        Wed, 20 Sep 2023 01:41:51 -0700 (PDT)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 8F97CC433C8;
+        Wed, 20 Sep 2023 08:41:33 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1695199310;
+        bh=qGh90UNcKG/Be9UhcsQucQmAlzzaN0ybdDwui9BIyYs=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=BFXFNGFoQU2CKw9WyfGOIqib6ndJAqnLiG0gf5coXTntD9bzGoDVbWnIjqFY5yw7w
+         /iL0Uod2MFZ8DEr6puUf1sJCredMIGJpWb79vtbE1ushIQwYZMxYIi/wrGi9Fb08X3
+         lSA57r158BOH8f+EL6t2kjQEmID+gvoToIjnVUls1kcLXlPyD1YnLKMqHSQHxJwNle
+         vpfc8azuJlJ8vyz4F1Ic7z+BrOBPimV2UU0lRBnSM6gAhS5GK9UYFCZFWZn+W0Rcg0
+         ZifyAdzqTfctk3qOLSOZL59aCo+mxjvM+Qd6lemjUSliLN+1OQBJgtNIB7A++8sTra
+         7xjjm3n+ayagw==
+Date:   Wed, 20 Sep 2023 10:41:30 +0200
+From:   Christian Brauner <brauner@kernel.org>
+To:     Jeff Layton <jlayton@kernel.org>
+Cc:     Bruno Haible <bruno@clisp.org>, Jan Kara <jack@suse.cz>,
+        Xi Ruoyao <xry111@linuxfromscratch.org>, bug-gnulib@gnu.org,
+        Alexander Viro <viro@zeniv.linux.org.uk>,
+        Eric Van Hensbergen <ericvh@kernel.org>,
+        Latchesar Ionkov <lucho@ionkov.net>,
+        Dominique Martinet <asmadeus@codewreck.org>,
+        Christian Schoenebeck <linux_oss@crudebyte.com>,
+        David Howells <dhowells@redhat.com>,
+        Marc Dionne <marc.dionne@auristor.com>,
+        Chris Mason <clm@fb.com>, Josef Bacik <josef@toxicpanda.com>,
+        David Sterba <dsterba@suse.com>, Xiubo Li <xiubli@redhat.com>,
+        Ilya Dryomov <idryomov@gmail.com>,
+        Jan Harkes <jaharkes@cs.cmu.edu>, coda@cs.cmu.edu,
+        Tyler Hicks <code@tyhicks.com>, Gao Xiang <xiang@kernel.org>,
+        Chao Yu <chao@kernel.org>, Yue Hu <huyue2@coolpad.com>,
+        Jeffle Xu <jefflexu@linux.alibaba.com>,
+        Namjae Jeon <linkinjeon@kernel.org>,
+        Sungjong Seo <sj1557.seo@samsung.com>,
+        Jan Kara <jack@suse.com>, Theodore Ts'o <tytso@mit.edu>,
+        Andreas Dilger <adilger.kernel@dilger.ca>,
+        Jaegeuk Kim <jaegeuk@kernel.org>,
+        OGAWA Hirofumi <hirofumi@mail.parknet.co.jp>,
+        Miklos Szeredi <miklos@szeredi.hu>,
+        Bo b Peterson <rpeterso@redhat.com>,
+        Andreas Gruenbacher <agruenba@redhat.com>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        Tejun Heo <tj@kernel.org>,
+        Trond Myklebust <trond.myklebust@hammerspace.com>,
+        Anna Schumaker <anna@kernel.org>,
+        Konstantin Komarov <almaz.alexandrovich@paragon-software.com>,
+        Mark Fasheh <mark@fasheh.com>,
+        Joel Becker <jlbec@evilplan.org>,
+        Joseph Qi <joseph.qi@linux.alibaba.com>,
+        Mike Marshall <hubcap@omnibond.com>,
+        Martin Brandenburg <martin@omnibond.com>,
+        Luis Chamberlain <mcgrof@kernel.org>,
+        Kees Cook <keescook@chromium.org>,
+        Iurii Zaikin <yzaikin@google.com>,
+        Steve French <sfrench@samba.org>,
+        Paulo Alcantara <pc@manguebit.com>,
+        Ronnie Sahlberg <ronniesahlberg@gmail.com>,
+        Shyam Prasad N <sprasad@microsoft.com>,
+        Tom Talpey <tom@talpey.com>,
+        Sergey Senozhatsky <senozhatsky@chromium.org>,
+        Richard Weinberger <richard@nod.at>,
+        Hans de Goede <hdegoede@redhat.com>,
+        Hugh Dickins <hughd@google.com>,
+        Andrew Morton <akpm@linux-foundation.org>,
+        Amir Goldstein <l@gmail.com>,
+        "Darrick J. Wong" <djwong@kernel.org>,
+        Benjamin Coddington <bcodding@redhat.com>,
+        linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org,
+        v9fs@lists.linux.dev, linux-afs@lists.infradead.org,
+        linux-btrfs@vger.kernel.org, ceph-devel@vger.kernel.org,
+        codalist@coda.cs.cmu.edu, ecryptfs@vger.kernel.org,
+        linux-erofs@lists.ozlabs.org, linux-ext4@vger.kernel.org,
+        linux-f2fs-devel@lists.sourceforge.net, cluster-devel@redhat.com,
+        linux-nfs@vger.kernel.org, ntfs3@lists.linux.dev,
+        ocfs2-devel@lists.linux.dev, devel@lists.orangefs.org,
+        linux-cifs@vger.kernel.org, samba-technical@lists.samba.org,
+        linux-mtd@lists.infradead.org, linux-mm@kvack.org,
+        linux-unionfs@vger.kernel.org, linux-xfs@vger.kernel.org
+Subject: Re: [PATCH v7 12/13] ext4: switch to multigrain timestamps
+Message-ID: <20230920-leerung-krokodil-52ec6cb44707@brauner>
+References: <20230807-mgctime-v7-0-d1dec143a704@kernel.org>
+ <20230919110457.7fnmzo4nqsi43yqq@quack3>
+ <1f29102c09c60661758c5376018eac43f774c462.camel@kernel.org>
+ <4511209.uG2h0Jr0uP@nimes>
+ <08b5c6fd3b08b87fa564bb562d89381dd4e05b6a.camel@kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
-        Thunderbird/102.15.1
-Subject: Re: [RFC 03/23] filemap: add folio with at least mapping_min_order
- in __filemap_get_folio
-Content-Language: en-US
-To:     Matthew Wilcox <willy@infradead.org>,
-        Pankaj Raghav <kernel@pankajraghav.com>
-CC:     <linux-xfs@vger.kernel.org>, <linux-fsdevel@vger.kernel.org>,
-        <david@fromorbit.com>, <da.gomez@samsung.com>,
-        <akpm@linux-foundation.org>, <linux-kernel@vger.kernel.org>,
-        <djwong@kernel.org>, <linux-mm@kvack.org>,
-        <chandan.babu@oracle.com>, <mcgrof@kernel.org>,
-        <gost.dev@samsung.com>
-From:   Pankaj Raghav <p.raghav@samsung.com>
-In-Reply-To: <ZQSpthmXGzHDbx1h@casper.infradead.org>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
-X-Originating-IP: [106.210.248.121]
-X-ClientProxiedBy: CAMSVWEXC01.scsc.local (2002:6a01:e347::6a01:e347) To
-        CAMSVWEXC02.scsc.local (2002:6a01:e348::6a01:e348)
-X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFtrLKsWRmVeSWpSXmKPExsWy7djP87r/lnOlGlx6rGYxZ/0aNotLR+Us
-        thy7x2hx+QmfxZmXn1ks9uw9yWJxedccNot7a/6zWuz6s4Pd4saEp4wWv3/MYXPg9ji1SMJj
-        8wotj02rOtk8Nn2axO5xYsZvFo+PT2+xeJxd6ejxeZNcAEcUl01Kak5mWWqRvl0CV8a8zbYF
-        fVwVf5ZOYmpgfMPexcjJISFgIvFhz2HmLkYuDiGBFYwS7YtnMkI4Xxgl3j1bwQbhfGaUeNN2
-        jBWm5fSbKUwQieWMEhc+72OBq7p68wU7hLOXUWLijEdsIC28AnYSR7/vZgSxWQRUJfpvTIWK
-        C0qcnPmEBcQWFYiWmDltIViNsECKxI6Hq5hAbGYBcYlbT+YD2RwcIgLBEq/PmoHMZxZYyiTx
-        4exvFpA4m4CWRGMn2EOcQNfd3HibBaJVU6J1+292CFteYvvbOcwQHyhLnNr+HRoAtRKnttwC
-        +0ZCYDWnxK7GXUwQCReJGw/fskDYwhKvjm+BapCR+L9zPlRNtcTTG7+ZIZpbGCX6d65nAzlI
-        QsBaou9MDkSNo0TLzFvsEGE+iRtvBSHu4ZOYtG068wRG1VlIITELycezkLwwC8kLCxhZVjGK
-        p5YW56anFhvnpZbrFSfmFpfmpesl5+duYgSmsNP/jn/dwbji1Ue9Q4xMHIyHGCU4mJVEeHPV
-        uFKFeFMSK6tSi/Lji0pzUosPMUpzsCiJ82rbnkwWEkhPLEnNTk0tSC2CyTJxcEo1MAWELXRo
-        vMDz0ojX8MqERzXhDxymcue7/zPm+PE4uW3yFYXy1rpV03LMm4VvTuEOTw42n3Li5dznR8Xk
-        4ya4T1jQynMjh5fpvsOhVX2S/C1sXl4TJ/uFs3kkPUo/Y2Og0vikcf/Fx68PzrDvWP8/bsPS
-        Wi5NpkORKRcEIvR3L/2+WWTy36vHXkRP9Fon/SctxfTc0/Z5K9U8V8k87ukzi9OIkNdkCJfa
-        M+nXhqLj62OVvk8LWLLhc42vUWOczptdGseWVdaE9LVlvfFTe1IiHmWwbu2ViUEf6npayyLU
-        90TW77IsvzU7RarSZWdmjP8ppl+bVJzPvQp+eETHS/yGWcCmy+XGqwvuWFW3ro1lVmIpzkg0
-        1GIuKk4EACaTlwfQAwAA
-X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFvrIIsWRmVeSWpSXmKPExsVy+t/xu7r/lnOlGvxtY7GYs34Nm8Wlo3IW
-        W47dY7S4/ITP4szLzywWe/aeZLG4vGsOm8W9Nf9ZLXb92cFucWPCU0aL3z/msDlwe5xaJOGx
-        eYWWx6ZVnWwemz5NYvc4MeM3i8fHp7dYPM6udPT4vEkugCNKz6Yov7QkVSEjv7jEVina0MJI
-        z9DSQs/IxFLP0Ng81srIVEnfziYlNSezLLVI3y5BL2PeZtuCPq6KP0snMTUwvmHvYuTkkBAw
-        kTj9ZgpTFyMXh5DAUkaJ+Q9ns0EkZCQ2frnKCmELS/y51sUGUfSRUWJx1wMWCGcvo8SMe1/A
-        qngF7CSOft/NCGKzCKhK9N+YygYRF5Q4OfMJUAMHh6hAtETXS2OQsLBAisSGuw1gJcwC4hK3
-        nsxnAikREQiWeH3WDGQ8s8BSJokPZ3+zwC0+8u8qO0gRm4CWRGMn2AecQB/c3HibBWKOpkTr
-        9t/sELa8xPa3c5ghHlCWOLX9O9THtRKf/z5jnMAoOgvJdbOQnDELyahZSEYtYGRZxSiSWlqc
-        m55bbKhXnJhbXJqXrpecn7uJERj324793LyDcd6rj3qHGJk4GA8xSnAwK4nw5qpxpQrxpiRW
-        VqUW5ccXleakFh9iNAUG0URmKdHkfGDiySuJNzQzMDU0MbM0MLU0M1YS5/Us6EgUEkhPLEnN
-        Tk0tSC2C6WPi4JRqYEq9coVTc77y5yOx3/+LLH1+/Urm/POu87NKA/jzjhtmea2OublGU+KF
-        W82y3I7FSnKxu/4Kzn+4+Oya1ndH/s/3CtPST1Zfe35lxw//s7prIz/u5z/emHCc53xxzJGE
-        /POykX5/b1yRuXOru039Yczf46pzNP2OPn00cVfO6nuz0i7eebnwV+NL72/H2LiPrfyQGbMk
-        uetpMM8LgZXarDKWUVGSk9/NlnbOWyKzp2Gf+tf4SykM1baVUx6f83Y9V3FarPl5s9dHnZJM
-        IYdllXbFBy8abGI3XC2SfPHv6e023ySSDhc8W9wp+Ouda/9et3/cewoOB0ds9z8UL6XwQbPj
-        0L6a2eUqQm4JS4NuLehXYinOSDTUYi4qTgQA56HPEYQDAAA=
-X-CMS-MailID: 20230920080622eucas1p1e49881e06c0abda7eb7e4fdbdc40fe79
-X-Msg-Generator: CA
-X-RootMTR: 20230915190017eucas1p2ae10e22f9bf758d554f20e4cd8d99b0d
-X-EPHeader: CA
-CMS-TYPE: 201P
-X-CMS-RootMailID: 20230915190017eucas1p2ae10e22f9bf758d554f20e4cd8d99b0d
-References: <20230915183848.1018717-1-kernel@pankajraghav.com>
-        <20230915183848.1018717-4-kernel@pankajraghav.com>
-        <CGME20230915190017eucas1p2ae10e22f9bf758d554f20e4cd8d99b0d@eucas1p2.samsung.com>
-        <ZQSpthmXGzHDbx1h@casper.infradead.org>
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+In-Reply-To: <08b5c6fd3b08b87fa564bb562d89381dd4e05b6a.camel@kernel.org>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On 2023-09-15 21:00, Matthew Wilcox wrote:
-> On Fri, Sep 15, 2023 at 08:38:28PM +0200, Pankaj Raghav wrote:
->> +++ b/mm/filemap.c
->> @@ -1862,6 +1862,10 @@ struct folio *__filemap_get_folio(struct address_space *mapping, pgoff_t index,
->>  		fgf_t fgp_flags, gfp_t gfp)
->>  {
->>  	struct folio *folio;
->> +	int min_order = mapping_min_folio_order(mapping);
->> +	int nr_of_pages = (1U << min_order);
->> +
->> +	index = round_down(index, nr_of_pages);
->>  
->>  repeat:
->>  	folio = filemap_get_entry(mapping, index);
->> @@ -1929,8 +1933,14 @@ struct folio *__filemap_get_folio(struct address_space *mapping, pgoff_t index,
->>  			err = -ENOMEM;
->>  			if (order == 1)
->>  				order = 0;
->> +			if (order < min_order)
->> +				order = min_order;
+> > f1 was last written to *after* f2 was last written to. If the timestamp of f1
+> > is then lower than the timestamp of f2, timestamps are fundamentally broken.
+> > 
+> > Many things in user-space depend on timestamps, such as build system
+> > centered around 'make', but also 'find ... -newer ...'.
+> > 
 > 
-> ... oh, you do something similar here to what I recommend in my previous
-> response.  I don't understand why you need the previous patch.
 > 
+> What does breakage with make look like in this situation? The "fuzz"
+> here is going to be on the order of a jiffy. The typical case for make
+> timestamp comparisons is comparing source files vs. a build target. If
+> those are being written nearly simultaneously, then that could be an
+> issue, but is that a typical behavior? It seems like it would be hard to
+> rely on that anyway, esp. given filesystems like NFS that can do lazy
+> writeback.
+> 
+> One of the operating principles with this series is that timestamps can
+> be of varying granularity between different files. Note that Linux
+> already violates this assumption when you're working across filesystems
+> of different types.
+> 
+> As to potential fixes if this is a real problem:
+> 
+> I don't really want to put this behind a mount or mkfs option (a'la
+> relatime, etc.), but that is one possibility.
+> 
+> I wonder if it would be feasible to just advance the coarse-grained
+> current_time whenever we end up updating a ctime with a fine-grained
+> timestamp? It might produce some inode write amplification. Files that
 
-Hmm, we made changes here a bit later and that is why it is a duplicated
-I guess in both iomap fgf order and clamping the order here to min_order. We could
-remove the previous patch and retain this one here.
+Less than ideal imho.
 
->> +			if (min_order)
->> +				VM_BUG_ON(index & ((1UL << order) - 1));
-> 
-> You don't need the 'if' here; index & ((1 << 0) - 1) becomes false.
-> 
+If this risks breaking existing workloads by enabling it unconditionally
+and there isn't a clear way to detect and handle these situations
+without risk of regression then we should move this behind a mount
+option.
 
-Sounds good!
+So how about the following:
+
+From cb14add421967f6e374eb77c36cc4a0526b10d17 Mon Sep 17 00:00:00 2001
+From: Christian Brauner <brauner@kernel.org>
+Date: Wed, 20 Sep 2023 10:00:08 +0200
+Subject: [PATCH] vfs: move multi-grain timestamps behind a mount option
+
+While we initially thought we can do this unconditionally it turns out
+that this might break existing workloads that rely on timestamps in very
+specific ways and we always knew this was a possibility. Move
+multi-grain timestamps behind a vfs mount option.
+
+Signed-off-by: Christian Brauner <brauner@kernel.org>
+---
+ fs/fs_context.c     | 18 ++++++++++++++++++
+ fs/inode.c          |  4 ++--
+ fs/proc_namespace.c |  1 +
+ fs/stat.c           |  2 +-
+ include/linux/fs.h  |  4 +++-
+ 5 files changed, 25 insertions(+), 4 deletions(-)
+
+diff --git a/fs/fs_context.c b/fs/fs_context.c
+index a0ad7a0c4680..dd4dade0bb9e 100644
+--- a/fs/fs_context.c
++++ b/fs/fs_context.c
+@@ -44,6 +44,7 @@ static const struct constant_table common_set_sb_flag[] = {
+ 	{ "mand",	SB_MANDLOCK },
+ 	{ "ro",		SB_RDONLY },
+ 	{ "sync",	SB_SYNCHRONOUS },
++	{ "mgtime",	SB_MGTIME },
+ 	{ },
+ };
+ 
+@@ -52,18 +53,32 @@ static const struct constant_table common_clear_sb_flag[] = {
+ 	{ "nolazytime",	SB_LAZYTIME },
+ 	{ "nomand",	SB_MANDLOCK },
+ 	{ "rw",		SB_RDONLY },
++	{ "nomgtime",	SB_MGTIME },
+ 	{ },
+ };
+ 
++static inline int check_mgtime(unsigned int token, const struct fs_context *fc)
++{
++	if (token != SB_MGTIME)
++		return 0;
++	if (!(fc->fs_type->fs_flags & FS_MGTIME))
++		return invalf(fc, "Filesystem doesn't support multi-grain timestamps");
++	return 0;
++}
++
+ /*
+  * Check for a common mount option that manipulates s_flags.
+  */
+ static int vfs_parse_sb_flag(struct fs_context *fc, const char *key)
+ {
+ 	unsigned int token;
++	int ret;
+ 
+ 	token = lookup_constant(common_set_sb_flag, key, 0);
+ 	if (token) {
++		ret = check_mgtime(token, fc);
++		if (ret)
++			return ret;
+ 		fc->sb_flags |= token;
+ 		fc->sb_flags_mask |= token;
+ 		return 0;
+@@ -71,6 +86,9 @@ static int vfs_parse_sb_flag(struct fs_context *fc, const char *key)
+ 
+ 	token = lookup_constant(common_clear_sb_flag, key, 0);
+ 	if (token) {
++		ret = check_mgtime(token, fc);
++		if (ret)
++			return ret;
+ 		fc->sb_flags &= ~token;
+ 		fc->sb_flags_mask |= token;
+ 		return 0;
+diff --git a/fs/inode.c b/fs/inode.c
+index 54237f4242ff..fd1a2390aaa3 100644
+--- a/fs/inode.c
++++ b/fs/inode.c
+@@ -2141,7 +2141,7 @@ EXPORT_SYMBOL(current_mgtime);
+ 
+ static struct timespec64 current_ctime(struct inode *inode)
+ {
+-	if (is_mgtime(inode))
++	if (IS_MGTIME(inode))
+ 		return current_mgtime(inode);
+ 	return current_time(inode);
+ }
+@@ -2588,7 +2588,7 @@ struct timespec64 inode_set_ctime_current(struct inode *inode)
+ 		now = current_time(inode);
+ 
+ 		/* Just copy it into place if it's not multigrain */
+-		if (!is_mgtime(inode)) {
++		if (!IS_MGTIME(inode)) {
+ 			inode_set_ctime_to_ts(inode, now);
+ 			return now;
+ 		}
+diff --git a/fs/proc_namespace.c b/fs/proc_namespace.c
+index 250eb5bf7b52..08f5bf4d2c6c 100644
+--- a/fs/proc_namespace.c
++++ b/fs/proc_namespace.c
+@@ -49,6 +49,7 @@ static int show_sb_opts(struct seq_file *m, struct super_block *sb)
+ 		{ SB_DIRSYNC, ",dirsync" },
+ 		{ SB_MANDLOCK, ",mand" },
+ 		{ SB_LAZYTIME, ",lazytime" },
++		{ SB_MGTIME, ",mgtime" },
+ 		{ 0, NULL }
+ 	};
+ 	const struct proc_fs_opts *fs_infop;
+diff --git a/fs/stat.c b/fs/stat.c
+index 6e60389d6a15..2f18dd5de18b 100644
+--- a/fs/stat.c
++++ b/fs/stat.c
+@@ -90,7 +90,7 @@ void generic_fillattr(struct mnt_idmap *idmap, u32 request_mask,
+ 	stat->size = i_size_read(inode);
+ 	stat->atime = inode->i_atime;
+ 
+-	if (is_mgtime(inode)) {
++	if (IS_MGTIME(inode)) {
+ 		fill_mg_cmtime(stat, request_mask, inode);
+ 	} else {
+ 		stat->mtime = inode->i_mtime;
+diff --git a/include/linux/fs.h b/include/linux/fs.h
+index 4aeb3fa11927..03e415fb3a7c 100644
+--- a/include/linux/fs.h
++++ b/include/linux/fs.h
+@@ -1114,6 +1114,7 @@ extern int send_sigurg(struct fown_struct *fown);
+ #define SB_NODEV        BIT(2)	/* Disallow access to device special files */
+ #define SB_NOEXEC       BIT(3)	/* Disallow program execution */
+ #define SB_SYNCHRONOUS  BIT(4)	/* Writes are synced at once */
++#define SB_MGTIME	BIT(5)	/* Use multi-grain timestamps */
+ #define SB_MANDLOCK     BIT(6)	/* Allow mandatory locks on an FS */
+ #define SB_DIRSYNC      BIT(7)	/* Directory modifications are synchronous */
+ #define SB_NOATIME      BIT(10)	/* Do not update access times. */
+@@ -2105,6 +2106,7 @@ static inline bool sb_rdonly(const struct super_block *sb) { return sb->s_flags
+ 					((inode)->i_flags & (S_SYNC|S_DIRSYNC)))
+ #define IS_MANDLOCK(inode)	__IS_FLG(inode, SB_MANDLOCK)
+ #define IS_NOATIME(inode)	__IS_FLG(inode, SB_RDONLY|SB_NOATIME)
++#define IS_MGTIME(inode)	__IS_FLG(inode, SB_MGTIME)
+ #define IS_I_VERSION(inode)	__IS_FLG(inode, SB_I_VERSION)
+ 
+ #define IS_NOQUOTA(inode)	((inode)->i_flags & S_NOQUOTA)
+@@ -2366,7 +2368,7 @@ struct file_system_type {
+  */
+ static inline bool is_mgtime(const struct inode *inode)
+ {
+-	return inode->i_sb->s_type->fs_flags & FS_MGTIME;
++	return inode->i_sb->s_flags & SB_MGTIME;
+ }
+ 
+ extern struct dentry *mount_bdev(struct file_system_type *fs_type,
+-- 
+2.34.1
+
