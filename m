@@ -2,61 +2,62 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1040CCE79AC
-	for <linux-xfs@archiver.kernel.org>; Wed, 20 Sep 2023 07:47:25 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A103BCE79AB
+	for <linux-xfs@archiver.kernel.org>; Wed, 20 Sep 2023 08:06:27 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233925AbjITHr2 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 20 Sep 2023 03:47:28 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40826 "EHLO
+        id S233313AbjITIGb (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 20 Sep 2023 04:06:31 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38866 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233850AbjITHrE (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 20 Sep 2023 03:47:04 -0400
-Received: from mailout1.w1.samsung.com (mailout1.w1.samsung.com [210.118.77.11])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1ACE5E4E
-        for <linux-xfs@vger.kernel.org>; Wed, 20 Sep 2023 00:46:42 -0700 (PDT)
-Received: from eucas1p1.samsung.com (unknown [182.198.249.206])
-        by mailout1.w1.samsung.com (KnoxPortal) with ESMTP id 20230920074639euoutp015a4b7e91aa8b03ef5c9f24efe97109f0~Gi8eyziHX1111211112euoutp01f
-        for <linux-xfs@vger.kernel.org>; Wed, 20 Sep 2023 07:46:39 +0000 (GMT)
-DKIM-Filter: OpenDKIM Filter v2.11.0 mailout1.w1.samsung.com 20230920074639euoutp015a4b7e91aa8b03ef5c9f24efe97109f0~Gi8eyziHX1111211112euoutp01f
+        with ESMTP id S233452AbjITIGa (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 20 Sep 2023 04:06:30 -0400
+Received: from mailout2.w1.samsung.com (mailout2.w1.samsung.com [210.118.77.12])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8B340AF
+        for <linux-xfs@vger.kernel.org>; Wed, 20 Sep 2023 01:06:24 -0700 (PDT)
+Received: from eucas1p2.samsung.com (unknown [182.198.249.207])
+        by mailout2.w1.samsung.com (KnoxPortal) with ESMTP id 20230920080622euoutp02efac826c286994aacc2e3f5656918b99~GjNs7-vDe2102921029euoutp02t
+        for <linux-xfs@vger.kernel.org>; Wed, 20 Sep 2023 08:06:22 +0000 (GMT)
+DKIM-Filter: OpenDKIM Filter v2.11.0 mailout2.w1.samsung.com 20230920080622euoutp02efac826c286994aacc2e3f5656918b99~GjNs7-vDe2102921029euoutp02t
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=samsung.com;
-        s=mail20170921; t=1695195999;
-        bh=mpadb/9tFj+5PzcSP6XTgQODzpOlX5ctR1kmrU44hZQ=;
+        s=mail20170921; t=1695197183;
+        bh=rL1dCDLUMScax9S9apPYzcJ5uUxJ+5qWTUoLNXdgSSM=;
         h=Date:Subject:To:CC:From:In-Reply-To:References:From;
-        b=RqiJiqir9mni6uSwxjTyCnAyWsdN66fOTrl3lQQdEGPJKUJ45r+ASLOrVcv36+UK1
-         0aTPfkQlZE6CZ6N5HikIWQtuv+04NMYz4datyc8HU9DzNSvYtr+77Q/qltcH+TQcK2
-         6HcspKq0gtSmF4a45V7nVv9l8Mml8UUX5krX5mNY=
+        b=Dd5bTxQZJYaAjj/Xc9q6TG0+PCfQ1rQDXsja8Kaz124lXDn174hvziInGxGKf9jiS
+         g9lI0xUtQo1VB8eh+wSVENpx1xWuSwPL8efWM+n2aBpCDuatc2VuUo8ZZr4LS8MFVb
+         wEcMGJLccpuMYYt6vv1kcta8QlvL7Ej/m2SPglMg=
 Received: from eusmges3new.samsung.com (unknown [203.254.199.245]) by
-        eucas1p2.samsung.com (KnoxPortal) with ESMTP id
-        20230920074639eucas1p2315f875b51eefe3573cc37eed8e420d1~Gi8eV8OOj2272522725eucas1p2x;
-        Wed, 20 Sep 2023 07:46:39 +0000 (GMT)
+        eucas1p1.samsung.com (KnoxPortal) with ESMTP id
+        20230920080622eucas1p1aecea517ed6ddabc4b068b22a3a174ec~GjNss009E1314313143eucas1p1K;
+        Wed, 20 Sep 2023 08:06:22 +0000 (GMT)
 Received: from eucas1p2.samsung.com ( [182.198.249.207]) by
-        eusmges3new.samsung.com (EUCPMTA) with SMTP id 23.C8.37758.E53AA056; Wed, 20
-        Sep 2023 08:46:39 +0100 (BST)
+        eusmges3new.samsung.com (EUCPMTA) with SMTP id 3D.CD.37758.EF7AA056; Wed, 20
+        Sep 2023 09:06:22 +0100 (BST)
 Received: from eusmtrp2.samsung.com (unknown [182.198.249.139]) by
-        eucas1p2.samsung.com (KnoxPortal) with ESMTPA id
-        20230920074638eucas1p2f7dfdd629156a591697f8ba3376446e8~Gi8dldIsw1101511015eucas1p2H;
-        Wed, 20 Sep 2023 07:46:38 +0000 (GMT)
+        eucas1p1.samsung.com (KnoxPortal) with ESMTPA id
+        20230920080622eucas1p1e49881e06c0abda7eb7e4fdbdc40fe79~GjNsL8kTE1874818748eucas1p1V;
+        Wed, 20 Sep 2023 08:06:22 +0000 (GMT)
 Received: from eusmgms1.samsung.com (unknown [182.198.249.179]) by
         eusmtrp2.samsung.com (KnoxPortal) with ESMTP id
-        20230920074638eusmtrp267241c28aabb2e2e221d362156a13169~Gi8dh4NqC1560015600eusmtrp2C;
-        Wed, 20 Sep 2023 07:46:38 +0000 (GMT)
-X-AuditID: cbfec7f5-01f15a800002937e-11-650aa35e2c32
+        20230920080622eusmtrp2525e8133b66a51b136356a133cd1ced0~GjNsLTzWx2686926869eusmtrp2a;
+        Wed, 20 Sep 2023 08:06:22 +0000 (GMT)
+X-AuditID: cbfec7f5-7ffff7000002937e-77-650aa7fe0602
 Received: from eusmtip1.samsung.com ( [203.254.199.221]) by
-        eusmgms1.samsung.com (EUCPMTA) with SMTP id A6.EE.10549.E53AA056; Wed, 20
-        Sep 2023 08:46:38 +0100 (BST)
+        eusmgms1.samsung.com (EUCPMTA) with SMTP id BA.03.10549.EF7AA056; Wed, 20
+        Sep 2023 09:06:22 +0100 (BST)
 Received: from CAMSVWEXC02.scsc.local (unknown [106.1.227.72]) by
         eusmtip1.samsung.com (KnoxPortal) with ESMTPA id
-        20230920074637eusmtip1832c020440adb3cb8ad9bab001921d4e~Gi8dT7wug1555115551eusmtip1w;
-        Wed, 20 Sep 2023 07:46:37 +0000 (GMT)
-Received: from [192.168.8.209] (106.210.248.121) by CAMSVWEXC02.scsc.local
+        20230920080621eusmtip1f15a2c8851daacf5095238f550ad26c1~GjNr_bsIn2781827818eusmtip1M;
+        Wed, 20 Sep 2023 08:06:21 +0000 (GMT)
+Received: from [192.168.170.212] (106.210.248.121) by CAMSVWEXC02.scsc.local
         (2002:6a01:e348::6a01:e348) with Microsoft SMTP Server (TLS) id 15.0.1497.2;
-        Wed, 20 Sep 2023 08:46:36 +0100
-Message-ID: <fb53a533-e430-eb1b-9e2c-ef424e466db4@samsung.com>
-Date:   Wed, 20 Sep 2023 09:46:35 +0200
+        Wed, 20 Sep 2023 09:06:20 +0100
+Message-ID: <361498b3-e83f-a82c-b1e8-e44720d16fdd@samsung.com>
+Date:   Wed, 20 Sep 2023 10:06:19 +0200
 MIME-Version: 1.0
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
         Thunderbird/102.15.1
-Subject: Re: [RFC 02/23] pagemap: use mapping_min_order in fgf_set_order()
+Subject: Re: [RFC 03/23] filemap: add folio with at least mapping_min_order
+ in __filemap_get_folio
 Content-Language: en-US
 To:     Matthew Wilcox <willy@infradead.org>,
         Pankaj Raghav <kernel@pankajraghav.com>
@@ -67,83 +68,92 @@ CC:     <linux-xfs@vger.kernel.org>, <linux-fsdevel@vger.kernel.org>,
         <chandan.babu@oracle.com>, <mcgrof@kernel.org>,
         <gost.dev@samsung.com>
 From:   Pankaj Raghav <p.raghav@samsung.com>
-In-Reply-To: <ZQSokGztDTbXBxBU@casper.infradead.org>
+In-Reply-To: <ZQSpthmXGzHDbx1h@casper.infradead.org>
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
 X-Originating-IP: [106.210.248.121]
 X-ClientProxiedBy: CAMSVWEXC01.scsc.local (2002:6a01:e347::6a01:e347) To
         CAMSVWEXC02.scsc.local (2002:6a01:e348::6a01:e348)
-X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFtrDKsWRmVeSWpSXmKPExsWy7djP87rxi7lSDU6VWsxZv4bN4tJROYst
-        x+4xWlx+wmdx5uVnFos9e0+yWFzeNYfN4t6a/6wWu/7sYLe4MeEpo8XvH3PYHLg9Ti2S8Ni8
-        Qstj06pONo9Nnyaxe5yY8ZvF4+PTWyweZ1c6enzeJBfAEcVlk5Kak1mWWqRvl8CVcWuZVsFH
-        9opj6x+yNDBeZe1i5OSQEDCReHPoC5DNxSEksIJR4vqGOywQzhdGiU1fF7NDOJ8ZJaY2PmKG
-        aWnYchCqajmjxPKbl5nhqp6dfwQ1bDdQ/6vd7CAtvAJ2EsvW/GACsVkEVCWu3FzHBhEXlDg5
-        8wkLiC0qEC0xc9pCRhBbWMBL4s2Ml2DrmAXEJW49mQ/Uy8EhIhAs8fqsGch8ZoGlTBIfzv5m
-        AYmzCWhJNHaCreIEuu7unq9sEK2aEq3bf7ND2PIS29/OgfpAWeLU9u/sEHatxKktt5hAZkoI
-        LOeU+Lt8NRtEwkWiqWMrNJSEJV4d3wLVICPxf+d8Jgi7WuLpjd/MEM0tjBL9O9ezgRwkIWAt
-        0XcmB6LGUWLR82WMEGE+iRtvBSHu4ZOYtG068wRG1VlIITELycezkLwwC8kLCxhZVjGKp5YW
-        56anFhvnpZbrFSfmFpfmpesl5+duYgQmsNP/jn/dwbji1Ue9Q4xMHIyHGCU4mJVEeHPVuFKF
-        eFMSK6tSi/Lji0pzUosPMUpzsCiJ82rbnkwWEkhPLEnNTk0tSC2CyTJxcEo1MJXus/rPu/Bt
-        /P+/TyXl7pX+fHAyhqfPZ/qlEDWxnQ+q5jptvhyy35n/3I7HsTwzhYuXNX0KFHWUudcjYOEQ
-        0yqsyLErZ3r2saUmfvunO1RqLei8xSmbcY+/9GCASLLnSumF50O2L9xsUbZM3PQh499r13cG
-        zXvB+OUM0/vfh1/HfV6a/sX9i/eJ+3f/8Kx/Kq8s4bd0jbL0sgn7Np30fquzr1V+I8uqtF+r
-        H3rKtwXrpK9OsLXn1VdMn1nxbN9CF9cP01xvhd5LKXBtPZv70FNk8bwdZtFehtfW552eJnir
-        6uIl28Ckx/171dZOPHWr3lnvbv2mDdv5na9O6le6uZo9+uab7JAWb7v5wrcEFycqsRRnJBpq
-        MRcVJwIAsTFFx88DAAA=
-X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFvrIIsWRmVeSWpSXmKPExsVy+t/xu7pxi7lSDf7cZbOYs34Nm8Wlo3IW
+X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFtrLKsWRmVeSWpSXmKPExsWy7djP87r/lnOlGlx6rGYxZ/0aNotLR+Us
+        thy7x2hx+QmfxZmXn1ks9uw9yWJxedccNot7a/6zWuz6s4Pd4saEp4wWv3/MYXPg9ji1SMJj
+        8wotj02rOtk8Nn2axO5xYsZvFo+PT2+xeJxd6ejxeZNcAEcUl01Kak5mWWqRvl0CV8a8zbYF
+        fVwVf5ZOYmpgfMPexcjJISFgIvFhz2HmLkYuDiGBFYwS7YtnMkI4Xxgl3j1bwQbhfGaUeNN2
+        jBWm5fSbKUwQieWMEhc+72OBq7p68wU7hLOXUWLijEdsIC28AnYSR7/vZgSxWQRUJfpvTIWK
+        C0qcnPmEBcQWFYiWmDltIViNsECKxI6Hq5hAbGYBcYlbT+YD2RwcIgLBEq/PmoHMZxZYyiTx
+        4exvFpA4m4CWRGMn2EOcQNfd3HibBaJVU6J1+292CFteYvvbOcwQHyhLnNr+HRoAtRKnttwC
+        +0ZCYDWnxK7GXUwQCReJGw/fskDYwhKvjm+BapCR+L9zPlRNtcTTG7+ZIZpbGCX6d65nAzlI
+        QsBaou9MDkSNo0TLzFvsEGE+iRtvBSHu4ZOYtG068wRG1VlIITELycezkLwwC8kLCxhZVjGK
+        p5YW56anFhvnpZbrFSfmFpfmpesl5+duYgSmsNP/jn/dwbji1Ue9Q4xMHIyHGCU4mJVEeHPV
+        uFKFeFMSK6tSi/Lji0pzUosPMUpzsCiJ82rbnkwWEkhPLEnNTk0tSC2CyTJxcEo1MAWELXRo
+        vMDz0ojX8MqERzXhDxymcue7/zPm+PE4uW3yFYXy1rpV03LMm4VvTuEOTw42n3Li5dznR8Xk
+        4ya4T1jQynMjh5fpvsOhVX2S/C1sXl4TJ/uFs3kkPUo/Y2Og0vikcf/Fx68PzrDvWP8/bsPS
+        Wi5NpkORKRcEIvR3L/2+WWTy36vHXkRP9Fon/SctxfTc0/Z5K9U8V8k87ukzi9OIkNdkCJfa
+        M+nXhqLj62OVvk8LWLLhc42vUWOczptdGseWVdaE9LVlvfFTe1IiHmWwbu2ViUEf6npayyLU
+        90TW77IsvzU7RarSZWdmjP8ppl+bVJzPvQp+eETHS/yGWcCmy+XGqwvuWFW3ro1lVmIpzkg0
+        1GIuKk4EACaTlwfQAwAA
+X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFvrIIsWRmVeSWpSXmKPExsVy+t/xu7r/lnOlGvxtY7GYs34Nm8Wlo3IW
         W47dY7S4/ITP4szLzywWe/aeZLG4vGsOm8W9Nf9ZLXb92cFucWPCU0aL3z/msDlwe5xaJOGx
         eYWWx6ZVnWwemz5NYvc4MeM3i8fHp7dYPM6udPT4vEkugCNKz6Yov7QkVSEjv7jEVina0MJI
-        z9DSQs/IxFLP0Ng81srIVEnfziYlNSezLLVI3y5BL+PWMq2Cj+wVx9Y/ZGlgvMraxcjJISFg
-        ItGw5SBLFyMXh5DAUkaJRwuPMEMkZCQ2foEpEpb4c62LDaLoI6PEti0/oDp2M0oc2D+VDaSK
-        V8BOYtmaH0wgNouAqsSVm+ug4oISJ2c+AWrg4BAViJboemkMEhYW8JJ4M+Ml2DJmAXGJW0/m
-        M4GUiAgES7w+awYynllgKZPEh7O/WeAWNzy6xQZSxCagJdHYyQ7Sywn0wd09X9kg5mhKtG7/
-        zQ5hy0tsfzsH6hlliVPbv7ND2LUSn/8+Y5zAKDoLyXWzkJwxC8moWUhGLWBkWcUoklpanJue
-        W2yoV5yYW1yal66XnJ+7iREY99uO/dy8g3Heq496hxiZOBgPMUpwMCuJ8OaqcaUK8aYkVlal
-        FuXHF5XmpBYfYjQFBtFEZinR5Hxg4skriTc0MzA1NDGzNDC1NDNWEuf1LOhIFBJITyxJzU5N
-        LUgtgulj4uCUamCy1uEMWfyofLkd3/mAoAvfa/dVvb9eH+YSc+ugsQBLbdntntBttV1zIkoi
-        RSfzfSmf9z4rulF807PExjXCzxOyXi5WcZcV9lVvEt20ddaf4zF6WVen1n2YUZwYu6YoxHqu
-        Qf5179U9nzWcL26aHWyu3b5W4r5ztNSxLE6tS+dZjntv9S8tiD/BYik4Y/bRapsdP3s1JT1n
-        7NwisLzxxoP9FRNZ5EvypuxfmX/GR21ekaLk/cKmxaq6W5YzRi9nE7BaOX1a3m8VazudE+1l
-        ASxpy1a7vti8wrJRo9xPXbg0rewfw6dj810FzL87Tmi8OkPh344DjvcWX/xmVXPC4oj5SSb9
-        dTGLa5l03+na3FFiKc5INNRiLipOBAAZe6NShAMAAA==
-X-CMS-MailID: 20230920074638eucas1p2f7dfdd629156a591697f8ba3376446e8
+        z9DSQs/IxFLP0Ng81srIVEnfziYlNSezLLVI3y5BL2PeZtuCPq6KP0snMTUwvmHvYuTkkBAw
+        kTj9ZgpTFyMXh5DAUkaJ+Q9ns0EkZCQ2frnKCmELS/y51sUGUfSRUWJx1wMWCGcvo8SMe1/A
+        qngF7CSOft/NCGKzCKhK9N+YygYRF5Q4OfMJUAMHh6hAtETXS2OQsLBAisSGuw1gJcwC4hK3
+        nsxnAikREQiWeH3WDGQ8s8BSJokPZ3+zwC0+8u8qO0gRm4CWRGMn2AecQB/c3HibBWKOpkTr
+        9t/sELa8xPa3c5ghHlCWOLX9O9THtRKf/z5jnMAoOgvJdbOQnDELyahZSEYtYGRZxSiSWlqc
+        m55bbKhXnJhbXJqXrpecn7uJERj324793LyDcd6rj3qHGJk4GA8xSnAwK4nw5qpxpQrxpiRW
+        VqUW5ccXleakFh9iNAUG0URmKdHkfGDiySuJNzQzMDU0MbM0MLU0M1YS5/Us6EgUEkhPLEnN
+        Tk0tSC2C6WPi4JRqYEq9coVTc77y5yOx3/+LLH1+/Urm/POu87NKA/jzjhtmea2OublGU+KF
+        W82y3I7FSnKxu/4Kzn+4+Oya1ndH/s/3CtPST1Zfe35lxw//s7prIz/u5z/emHCc53xxzJGE
+        /POykX5/b1yRuXOru039Yczf46pzNP2OPn00cVfO6nuz0i7eebnwV+NL72/H2LiPrfyQGbMk
+        uetpMM8LgZXarDKWUVGSk9/NlnbOWyKzp2Gf+tf4SykM1baVUx6f83Y9V3FarPl5s9dHnZJM
+        IYdllXbFBy8abGI3XC2SfPHv6e023ySSDhc8W9wp+Ouda/9et3/cewoOB0ds9z8UL6XwQbPj
+        0L6a2eUqQm4JS4NuLehXYinOSDTUYi4qTgQA56HPEYQDAAA=
+X-CMS-MailID: 20230920080622eucas1p1e49881e06c0abda7eb7e4fdbdc40fe79
 X-Msg-Generator: CA
-X-RootMTR: 20230915185527eucas1p1dc822c08a58effe30e3bf487103b22a0
+X-RootMTR: 20230915190017eucas1p2ae10e22f9bf758d554f20e4cd8d99b0d
 X-EPHeader: CA
 CMS-TYPE: 201P
-X-CMS-RootMailID: 20230915185527eucas1p1dc822c08a58effe30e3bf487103b22a0
+X-CMS-RootMailID: 20230915190017eucas1p2ae10e22f9bf758d554f20e4cd8d99b0d
 References: <20230915183848.1018717-1-kernel@pankajraghav.com>
-        <20230915183848.1018717-3-kernel@pankajraghav.com>
-        <CGME20230915185527eucas1p1dc822c08a58effe30e3bf487103b22a0@eucas1p1.samsung.com>
-        <ZQSokGztDTbXBxBU@casper.infradead.org>
+        <20230915183848.1018717-4-kernel@pankajraghav.com>
+        <CGME20230915190017eucas1p2ae10e22f9bf758d554f20e4cd8d99b0d@eucas1p2.samsung.com>
+        <ZQSpthmXGzHDbx1h@casper.infradead.org>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On 2023-09-15 20:55, Matthew Wilcox wrote:
-> On Fri, Sep 15, 2023 at 08:38:27PM +0200, Pankaj Raghav wrote:
->> From: Pankaj Raghav <p.raghav@samsung.com>
->>
->> fgf_set_order() encodes optimal order in fgp flags. Set it to at least
->> mapping_min_order from the page cache. Default to the old behaviour if
->> min_order is not set.
+On 2023-09-15 21:00, Matthew Wilcox wrote:
+> On Fri, Sep 15, 2023 at 08:38:28PM +0200, Pankaj Raghav wrote:
+>> +++ b/mm/filemap.c
+>> @@ -1862,6 +1862,10 @@ struct folio *__filemap_get_folio(struct address_space *mapping, pgoff_t index,
+>>  		fgf_t fgp_flags, gfp_t gfp)
+>>  {
+>>  	struct folio *folio;
+>> +	int min_order = mapping_min_folio_order(mapping);
+>> +	int nr_of_pages = (1U << min_order);
+>> +
+>> +	index = round_down(index, nr_of_pages);
+>>  
+>>  repeat:
+>>  	folio = filemap_get_entry(mapping, index);
+>> @@ -1929,8 +1933,14 @@ struct folio *__filemap_get_folio(struct address_space *mapping, pgoff_t index,
+>>  			err = -ENOMEM;
+>>  			if (order == 1)
+>>  				order = 0;
+>> +			if (order < min_order)
+>> +				order = min_order;
 > 
-> Why not simply:
+> ... oh, you do something similar here to what I recommend in my previous
+> response.  I don't understand why you need the previous patch.
 > 
 
-That is a good idea to move this to filemap instead of changing it in iomap. I will do that!
+Hmm, we made changes here a bit later and that is why it is a duplicated
+I guess in both iomap fgf order and clamping the order here to min_order. We could
+remove the previous patch and retain this one here.
 
-> +++ b/mm/filemap.c
-> @@ -1906,9 +1906,12 @@ struct folio *__filemap_get_folio(struct address_space *mapping, pgoff_t index,
->                 folio_wait_stable(folio);
->  no_page:
->         if (!folio && (fgp_flags & FGP_CREAT)) {
-> -               unsigned order = FGF_GET_ORDER(fgp_flags);
-> +               unsigned order;
->                 int err;
+>> +			if (min_order)
+>> +				VM_BUG_ON(index & ((1UL << order) - 1));
 > 
-> +               order = min(mapping_min_folio_order(mapping),
-> +                               FGF_GET_ORDER(fgp_flags));
+> You don't need the 'if' here; index & ((1 << 0) - 1) becomes false.
 > 
 
-I think this needs to max(mapping..., FGF...)
+Sounds good!
