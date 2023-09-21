@@ -2,144 +2,125 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2A0E4CD4938
-	for <linux-xfs@archiver.kernel.org>; Thu, 21 Sep 2023 01:39:53 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 71557CD493A
+	for <linux-xfs@archiver.kernel.org>; Thu, 21 Sep 2023 01:39:54 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229700AbjIUBj5 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 20 Sep 2023 21:39:57 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45180 "EHLO
+        id S229702AbjIUBj6 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 20 Sep 2023 21:39:58 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45188 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229473AbjIUBj4 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 20 Sep 2023 21:39:56 -0400
-Received: from mail-pl1-x62b.google.com (mail-pl1-x62b.google.com [IPv6:2607:f8b0:4864:20::62b])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 323D2AB
-        for <linux-xfs@vger.kernel.org>; Wed, 20 Sep 2023 18:39:51 -0700 (PDT)
-Received: by mail-pl1-x62b.google.com with SMTP id d9443c01a7336-1c0c6d4d650so3569115ad.0
-        for <linux-xfs@vger.kernel.org>; Wed, 20 Sep 2023 18:39:51 -0700 (PDT)
+        with ESMTP id S229473AbjIUBj5 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 20 Sep 2023 21:39:57 -0400
+Received: from mail-pf1-x42a.google.com (mail-pf1-x42a.google.com [IPv6:2607:f8b0:4864:20::42a])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 17D13AF
+        for <linux-xfs@vger.kernel.org>; Wed, 20 Sep 2023 18:39:52 -0700 (PDT)
+Received: by mail-pf1-x42a.google.com with SMTP id d2e1a72fcca58-68c576d35feso358369b3a.2
+        for <linux-xfs@vger.kernel.org>; Wed, 20 Sep 2023 18:39:52 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=fromorbit-com.20230601.gappssmtp.com; s=20230601; t=1695260390; x=1695865190; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:to:from:from:to:cc:subject:date:message-id
-         :reply-to;
-        bh=MLvhZIcM0SpJ7wSPoi1+k37DPAhj8JFuXNxcyOg8Bl8=;
-        b=Pux4oQWpUKGb9EBWgxzQB9tTvg+vsQa76w8EUGRqKGZYwP09SM4D+opwfA8AdDKrPs
-         C02UR+Cwlem7TZ8SeqCMbXgVLNN/2kcHiBMUJBPoSoaeWm7CRONbefy4iwmgoQYSFtSb
-         oYiAXHLIa7WfwoC+i64eE1tuMR6cRWnd1GwlsDQUxsbho3uhkwbeL2W6Iwx2XJKGF+HF
-         tIAaxuj2dzV+H0ClGIhVLqJ5O2H5P2K+GfYUYT47bE1nsIgk6LCreUabwHaKDXxUGzRi
-         qS3fqCSSff2nHCGuHClSww+uNPRUvn7fFxYf1OywtUWRaWBlkie1BjeWdIVAD06CtTL2
-         dFrw==
+        d=fromorbit-com.20230601.gappssmtp.com; s=20230601; t=1695260391; x=1695865191; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:to
+         :from:from:to:cc:subject:date:message-id:reply-to;
+        bh=QaDNa1V31M/3LYC9YApIzZS/NJvMQDZkdNGH1jbPzZs=;
+        b=VF6rgm6sq/4IEnv30zcTMCH4OK3a5DOCkhBRnZOoEdQjmEqy4Qd0clHH9Q6L3ZFJbp
+         5GZk+Sc3+W0y158fpYJ4dRRG1vt+7i7JyilJuYJhZCF7T0nw23Muevh0jtp4s4T4BqYD
+         s+SAnLn2N6dxvOMGpF9Jfa7NuFr1uPhAZ++wT/59B1E9k2sj+9Tjpo0cWyML+Yt5iecv
+         p+xeMBB66IRGu1P5bMiKdOZ2femPOxUZlNgM112xU+1mLdjZ1DiBFJZ1c56KQbHqag7C
+         WFmGvn5Bj9N61PGUI5VbgJbu5LPWgbNITK/g6XX6lsywkS8nt2DXFkB3f3kmgeMER9n+
+         Z73Q==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1695260390; x=1695865190;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:to:from:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=MLvhZIcM0SpJ7wSPoi1+k37DPAhj8JFuXNxcyOg8Bl8=;
-        b=rGO1oCuZ14DA2EmUtjUufh8j5tHKrsWuBBvOFspLcYXIqUbuBxoRsMRQUMkdmxH+y2
-         K431qKk+ngf7hIPPq69YddG2wd0jdrQ27zAR7hpQlkEv/+kjzAydF2YRhWVWtTCiYotE
-         lpHdTR60b6v3/D/+jUxGyjbOMyhG7IxWw/8cc0+tU3pdBixe2AyGFOrayKv1S43Ehozd
-         KiUQhoa2GYZoZfbw8wb0v2MH3RcdFINiogtT+89DaP6DEjv4Do8V1kn2D49zdlUybLkK
-         PwOpmF4cCchDC/+igZAvDBvhcNqsdYdi1hkCr107xoROoW6iQXW+6dGV/ZpxIeiCL3gL
-         Lnqw==
-X-Gm-Message-State: AOJu0YyB38WgCRBfcIv4HgYf0YdezgexeGyovdh18WYpd6FbVSUcOPL3
-        WW51A3iszoEbgjhzSRJ1Fp5ezrjqLUwLSB6b7hE=
-X-Google-Smtp-Source: AGHT+IEyIEmr2paM4FY8CWZBJ52WVvDxd4B8hGlItu/j/jXz4y6u+KTYomiz1e4VImWf1Y2UnnRksA==
-X-Received: by 2002:a17:902:e886:b0:1c2:1068:1f4f with SMTP id w6-20020a170902e88600b001c210681f4fmr3976835plg.17.1695260390599;
-        Wed, 20 Sep 2023 18:39:50 -0700 (PDT)
+        d=1e100.net; s=20230601; t=1695260391; x=1695865191;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:to
+         :from:x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=QaDNa1V31M/3LYC9YApIzZS/NJvMQDZkdNGH1jbPzZs=;
+        b=c/AXgiYK3EesA4dm7V/H/SYMpL7lyDrj+sNUvBpu/oyAFeIBB07/c0G1e3CgglCdcJ
+         HA22274Pju7l4+3zuvuyK/XgmwvwGMdyDNS4Y8l4X5kLdyCBE/kCwGd9kfr6yuWaT5Tv
+         TQUQWgHQo4P/zBmSoz5iMfJAXVOexzqd0Vl8G3pA1sKOXjpm9Zlf702KCpiYdiY5eUzV
+         9IlrFhJndXr27SKLLit08IAa6tVZQh5JQq578BsDKhl0RxWvQjid5bwGDwJrxjDuzfBm
+         I0WnxN5MUtlWpUIWlb9RXZ9qprxkS44wFubZFr2fqgyWBbiuephLqS3TRdCNDHMH37kV
+         hb1A==
+X-Gm-Message-State: AOJu0YxgYFEt+Ile5LwtjsKBp/0/fnJdwczLirm1UYUgfCY4x8XjVNWo
+        KsNsR9ti/x1y4tP0eWSjHj4LOpgmddKSN1kI0OU=
+X-Google-Smtp-Source: AGHT+IEK/xiI0VffyqzfrUGlafApryQkCDcZ1ty+RoXtjDzkADni+OYm9Xbrc1ZMSL/ExQBz0NOb6A==
+X-Received: by 2002:a05:6a20:a127:b0:140:6d68:ce07 with SMTP id q39-20020a056a20a12700b001406d68ce07mr4656357pzk.52.1695260391608;
+        Wed, 20 Sep 2023 18:39:51 -0700 (PDT)
 Received: from dread.disaster.area (pa49-180-20-59.pa.nsw.optusnet.com.au. [49.180.20.59])
-        by smtp.gmail.com with ESMTPSA id jj18-20020a170903049200b001c5c0d6fc76sm143442plb.233.2023.09.20.18.39.49
+        by smtp.gmail.com with ESMTPSA id d18-20020aa78692000000b00690fb385ea9sm159517pfo.47.2023.09.20.18.39.50
         for <linux-xfs@vger.kernel.org>
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 20 Sep 2023 18:39:49 -0700 (PDT)
+        Wed, 20 Sep 2023 18:39:51 -0700 (PDT)
 Received: from [192.168.253.23] (helo=devoid.disaster.area)
         by dread.disaster.area with esmtp (Exim 4.96)
         (envelope-from <dave@fromorbit.com>)
-        id 1qj8fT-003Sv6-1Y
+        id 1qj8fT-003Sux-15
         for linux-xfs@vger.kernel.org;
         Thu, 21 Sep 2023 11:39:47 +1000
 Received: from dave by devoid.disaster.area with local (Exim 4.97-RC0)
         (envelope-from <dave@devoid.disaster.area>)
-        id 1qj8fT-00000002MHQ-0xJO
+        id 1qj8fT-00000002MHF-09eh
         for linux-xfs@vger.kernel.org;
         Thu, 21 Sep 2023 11:39:47 +1000
 From:   Dave Chinner <david@fromorbit.com>
 To:     linux-xfs@vger.kernel.org
-Subject: [PATCH 3/3] xfs: abort fstrim if kernel is suspending
-Date:   Thu, 21 Sep 2023 11:39:45 +1000
-Message-Id: <20230921013945.559634-4-david@fromorbit.com>
+Subject: [PATCH 0/3] xfs: reduce AGF hold times during fstrim operations
+Date:   Thu, 21 Sep 2023 11:39:42 +1000
+Message-Id: <20230921013945.559634-1-david@fromorbit.com>
 X-Mailer: git-send-email 2.40.1
-In-Reply-To: <20230921013945.559634-1-david@fromorbit.com>
-References: <20230921013945.559634-1-david@fromorbit.com>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-From: Dave Chinner <dchinner@redhat.com>
+A recent log space overflow and recovery failure was root caused to
+a long running truncate blocking on the AGF and ending up pinning
+the tail of the log. The filesystem then hung, the machine was
+rebooted, and log recoery then refused to run because there wasn't
+enough space in the log for EFI transaction reservation.
 
-A recent ext4 patch posting from Jan Kara reminded me of a
-discussion a year ago about fstrim in progress preventing kernels
-from suspending. The fix is simple, we should do the same for XFS.
+The reason the long running truncate got blocked on the AGF for so
+long was that an fstrim was being run. THe underlying block device
+was large and very slow (10TB ceph rbd volume) and so discarding all
+the free space in the AG took a really long time.
 
-This removes the -ERESTARTSYS error return from this code, replacing
-it with either the last error seen or the number of blocks
-successfully trimmed up to the point where we detected the stop
-condition.
+The current fstrim implementation holds the AGF across the entire
+operations - both the freee space scan and the issuing of all the
+discards. The discards are synchronous and single depth, so if there
+are millions of free spaces, we hold the AGF lock across millions of
+discard operations.
 
-References: https://bugzilla.kernel.org/show_bug.cgi?id=216322
-Signed-off-by: Dave Chinner <dchinner@redhat.com>
----
- fs/xfs/xfs_discard.c | 21 +++++++++++++--------
- 1 file changed, 13 insertions(+), 8 deletions(-)
+It doesn't really need to be said that this is a Bad Thing.
 
-diff --git a/fs/xfs/xfs_discard.c b/fs/xfs/xfs_discard.c
-index f16b254b5eaa..d5787991bb5b 100644
---- a/fs/xfs/xfs_discard.c
-+++ b/fs/xfs/xfs_discard.c
-@@ -283,6 +283,12 @@ xfs_trim_gather_extents(
- 	return error;
- }
- 
-+static bool
-+xfs_trim_should_stop(void)
-+{
-+	return fatal_signal_pending(current) || freezing(current);
-+}
-+
- /*
-  * Iterate the free list gathering extents and discarding them. We need a cursor
-  * for the repeated iteration of gather/discard loop, so use the longest extent
-@@ -336,10 +342,9 @@ xfs_trim_extents(
- 		if (error)
- 			break;
- 
--		if (fatal_signal_pending(current)) {
--			error = -ERESTARTSYS;
-+		if (xfs_trim_should_stop())
- 			break;
--		}
-+
- 	} while (tcur.ar_blockcount != 0);
- 
- 	return error;
-@@ -408,12 +413,12 @@ xfs_ioc_trim(
- 	for_each_perag_range(mp, agno, xfs_daddr_to_agno(mp, end), pag) {
- 		error = xfs_trim_extents(pag, start, end, minlen,
- 					  &blocks_trimmed);
--		if (error) {
-+		if (error)
- 			last_error = error;
--			if (error == -ERESTARTSYS) {
--				xfs_perag_rele(pag);
--				break;
--			}
-+
-+		if (xfs_trim_should_stop()) {
-+			xfs_perag_rele(pag);
-+			break;
- 		}
- 	}
- 
--- 
-2.40.1
+THis series reworks the fstrim discard path to use the same
+mechanisms as online discard. This allows discards to be issued
+asynchronously without holding the AGF locked, enabling higher
+discard queue depths (much faster on fast devices) and only
+requiring the AGF lock to be held whilst we are scanning free space.
+
+To do this, we make use of busy extents - we lock the AGF, mark all
+the extents we want to discard as "busy under discard" so that
+nothing will be allowed to allocate them, and then drop the AGF
+lock. We then issue discards on the gathered busy extents and on
+discard completion remove them from the busy list.
+
+This results in AGF lock holds times for fstrim dropping to a few
+milliseconds each batch of free extents we scan, and so the hours
+long hold times that can currently occur on large, slow, badly
+fragmented device no longer occur.
+
+This passes fstests with '-o discard' enabled, and has run the '-g
+trim' group many, many times without any reported regressions.
+
+-----
+Version 2:
+- fix various typos and formatting things
+- move online discard code to fs/xfs/xfs_discard.c and make it
+  generic (new patch)
+- use xfs_alloc_rec_incore() as the iteration cursor
+- remove hacky "keep gathering until size changes" batching code now
+  that cursor can restart at an exact extent
+- rework fstrim iteration to use new shared discard code
+- added fstrim-vs-suspend holdoff fix (new patch)
+
+RFC:
+- https://lore.kernel.org/linux-xfs/20230829065710.938039-1-david@fromorbit.com/
 
