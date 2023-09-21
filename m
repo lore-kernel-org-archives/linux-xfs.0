@@ -2,231 +2,122 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id BD43AC04AAF
-	for <linux-xfs@archiver.kernel.org>; Wed, 20 Sep 2023 15:45:33 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9E90FCD493A
+	for <linux-xfs@archiver.kernel.org>; Thu, 21 Sep 2023 00:38:24 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235539AbjITPph (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 20 Sep 2023 11:45:37 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55044 "EHLO
+        id S229733AbjIUAi2 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 20 Sep 2023 20:38:28 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58322 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S234533AbjITPpf (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 20 Sep 2023 11:45:35 -0400
-Received: from smtp-out1.suse.de (smtp-out1.suse.de [IPv6:2001:67c:2178:6::1c])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 224E7A3;
-        Wed, 20 Sep 2023 08:45:29 -0700 (PDT)
-Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
-        (No client certificate requested)
-        by smtp-out1.suse.de (Postfix) with ESMTPS id BF6E422037;
-        Wed, 20 Sep 2023 15:45:27 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.cz; s=susede2_rsa;
-        t=1695224727; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=Gw0GfkzEv5qjhmPaYmrLrmVLcBgiouetaUVK1NJf9SE=;
-        b=gDmHlI6XIITA9cWR7273bMWfTaFm79ZWCKV9DUbgwsMsYlQtttv7ABQywrVa7BRoFxk5Vs
-        fY8Ytovd+JgcWaHYYF/cazBOkeQAnuEbAgfy+zWX2EEn3UHUxNv8SLgNC/S16/CAgBAqvG
-        jDzYA0P8qRNq8WfC9VqpMNAjW8ajDQM=
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.cz;
-        s=susede2_ed25519; t=1695224727;
-        h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=Gw0GfkzEv5qjhmPaYmrLrmVLcBgiouetaUVK1NJf9SE=;
-        b=486eKcFxONt6Xlrpd7pWWA685BmUhAvAAZoUWjfk3k5wgXtMAG8bbabr8rPv7UJw6UUY7B
-        IV+4KbXuBo0SdmBw==
-Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
-        (No client certificate requested)
-        by imap2.suse-dmz.suse.de (Postfix) with ESMTPS id AA9FC13A64;
-        Wed, 20 Sep 2023 15:45:27 +0000 (UTC)
-Received: from dovecot-director2.suse.de ([192.168.254.65])
-        by imap2.suse-dmz.suse.de with ESMTPSA
-        id sEc2KZcTC2VITwAAMHmgww
-        (envelope-from <jack@suse.cz>); Wed, 20 Sep 2023 15:45:27 +0000
-Received: by quack3.suse.cz (Postfix, from userid 1000)
-        id 33A59A077D; Wed, 20 Sep 2023 17:45:27 +0200 (CEST)
-Date:   Wed, 20 Sep 2023 17:45:27 +0200
-From:   Jan Kara <jack@suse.cz>
-To:     Jeff Layton <jlayton@kernel.org>
-Cc:     Jan Kara <jack@suse.cz>, Christian Brauner <brauner@kernel.org>,
-        Bruno Haible <bruno@clisp.org>,
-        Xi Ruoyao <xry111@linuxfromscratch.org>, bug-gnulib@gnu.org,
-        Alexander Viro <viro@zeniv.linux.org.uk>,
-        Eric Van Hensbergen <ericvh@kernel.org>,
-        Latchesar Ionkov <lucho@ionkov.net>,
-        Dominique Martinet <asmadeus@codewreck.org>,
-        Christian Schoenebeck <linux_oss@crudebyte.com>,
-        David Howells <dhowells@redhat.com>,
-        Marc Dionne <marc.dionne@auristor.com>,
-        Chris Mason <clm@fb.com>, Josef Bacik <josef@toxicpanda.com>,
-        David Sterba <dsterba@suse.com>, Xiubo Li <xiubli@redhat.com>,
-        Ilya Dryomov <idryomov@gmail.com>,
-        Jan Harkes <jaharkes@cs.cmu.edu>, coda@cs.cmu.edu,
-        Tyler Hicks <code@tyhicks.com>, Gao Xiang <xiang@kernel.org>,
-        Chao Yu <chao@kernel.org>, Yue Hu <huyue2@coolpad.com>,
-        Jeffle Xu <jefflexu@linux.alibaba.com>,
-        Namjae Jeon <linkinjeon@kernel.org>,
-        Sungjong Seo <sj1557.seo@samsung.com>,
-        Jan Kara <jack@suse.com>, Theodore Ts'o <tytso@mit.edu>,
-        Andreas Dilger <adilger.kernel@dilger.ca>,
-        Jaegeuk Kim <jaegeuk@kernel.org>,
-        OGAWA Hirofumi <hirofumi@mail.parknet.co.jp>,
-        Miklos Szeredi <miklos@szeredi.hu>,
-        Bo b Peterson <rpeterso@redhat.com>,
-        Andreas Gruenbacher <agruenba@redhat.com>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        Tejun Heo <tj@kernel.org>,
-        Trond Myklebust <trond.myklebust@hammerspace.com>,
-        Anna Schumaker <anna@kernel.org>,
-        Konstantin Komarov <almaz.alexandrovich@paragon-software.com>,
-        Mark Fasheh <mark@fasheh.com>,
-        Joel Becker <jlbec@evilplan.org>,
-        Joseph Qi <joseph.qi@linux.alibaba.com>,
-        Mike Marshall <hubcap@omnibond.com>,
-        Martin Brandenburg <martin@omnibond.com>,
-        Luis Chamberlain <mcgrof@kernel.org>,
-        Kees Cook <keescook@chromium.org>,
-        Iurii Zaikin <yzaikin@google.com>,
-        Steve French <sfrench@samba.org>,
-        Paulo Alcantara <pc@manguebit.com>,
-        Ronnie Sahlberg <ronniesahlberg@gmail.com>,
-        Shyam Prasad N <sprasad@microsoft.com>,
-        Tom Talpey <tom@talpey.com>,
-        Sergey Senozhatsky <senozhatsky@chromium.org>,
-        Richard Weinberger <richard@nod.at>,
-        Hans de Goede <hdegoede@redhat.com>,
-        Hugh Dickins <hughd@google.com>,
-        Andrew Morton <akpm@linux-foundation.org>,
-        Amir Goldstein <l@gmail.com>,
-        "Darrick J. Wong" <djwong@kernel.org>,
-        Benjamin Coddington <bcodding@redhat.com>,
-        linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org,
-        v9fs@lists.linux.dev, linux-afs@lists.infradead.org,
-        linux-btrfs@vger.kernel.org, ceph-devel@vger.kernel.org,
-        codalist@coda.cs.cmu.edu, ecryptfs@vger.kernel.org,
-        linux-erofs@lists.ozlabs.org, linux-ext4@vger.kernel.org,
-        linux-f2fs-devel@lists.sourceforge.net, cluster-devel@redhat.com,
-        linux-nfs@vger.kernel.org, ntfs3@lists.linux.dev,
-        ocfs2-devel@lists.linux.dev, devel@lists.orangefs.org,
-        linux-cifs@vger.kernel.org, samba-technical@lists.samba.org,
-        linux-mtd@lists.infradead.org, linux-mm@kvack.org,
-        linux-unionfs@vger.kernel.org, linux-xfs@vger.kernel.org
-Subject: Re: [PATCH v7 12/13] ext4: switch to multigrain timestamps
-Message-ID: <20230920154527.pkwot4nu2nzrnamd@quack3>
-References: <20230807-mgctime-v7-0-d1dec143a704@kernel.org>
- <20230919110457.7fnmzo4nqsi43yqq@quack3>
- <1f29102c09c60661758c5376018eac43f774c462.camel@kernel.org>
- <4511209.uG2h0Jr0uP@nimes>
- <08b5c6fd3b08b87fa564bb562d89381dd4e05b6a.camel@kernel.org>
- <20230920-leerung-krokodil-52ec6cb44707@brauner>
- <20230920101731.ym6pahcvkl57guto@quack3>
- <317d84b1b909b6c6519a2406fcb302ce22dafa41.camel@kernel.org>
- <20230920124823.ghl6crb5sh4x2pmt@quack3>
- <ca82af4d6a72d7f83223c0ddd74fd9f7bcfa96b1.camel@kernel.org>
+        with ESMTP id S229723AbjIUAi2 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 20 Sep 2023 20:38:28 -0400
+Received: from mail-pl1-x62d.google.com (mail-pl1-x62d.google.com [IPv6:2607:f8b0:4864:20::62d])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3A159DD
+        for <linux-xfs@vger.kernel.org>; Wed, 20 Sep 2023 17:38:21 -0700 (PDT)
+Received: by mail-pl1-x62d.google.com with SMTP id d9443c01a7336-1c59c40b840so3317345ad.3
+        for <linux-xfs@vger.kernel.org>; Wed, 20 Sep 2023 17:38:21 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=fromorbit-com.20230601.gappssmtp.com; s=20230601; t=1695256701; x=1695861501; darn=vger.kernel.org;
+        h=in-reply-to:content-transfer-encoding:content-disposition
+         :mime-version:references:message-id:subject:cc:to:from:date:from:to
+         :cc:subject:date:message-id:reply-to;
+        bh=jMd1KRyDEvQHJgfGmaNgihRzYBqmhVKvC+CzE4oWItk=;
+        b=FFpSRnPATnEb/+Y1pQyexh9atCnUu9eFdC9bx7xhJXmn34X+fXRiwfk67BClML5skb
+         jSE+U7TNaVrstBvFacVrq/KOmh0FRK4vlu9xy/To+FJibmqcRXl58xfOJad2sRfWdAag
+         ZCg8ixFC7MwLv1OzA8ZzsFJfw4JHnoawAAv5pXvI5UdUTWpKH3XpcPT08s5HPE0IxTP0
+         SeCxVKGdOC9rlBlLbPZxqpwHImq4kI5caSPv+gVZhvkQPsSNhFhTn6M3nMsyQSrBCBal
+         uA/z3rs86C5hpaYcszxHChDgv4tCx6OWt0cjilG7Y8Opn0Q9vkyMQrtoPsM6wvJxGNG4
+         0i6w==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1695256701; x=1695861501;
+        h=in-reply-to:content-transfer-encoding:content-disposition
+         :mime-version:references:message-id:subject:cc:to:from:date
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=jMd1KRyDEvQHJgfGmaNgihRzYBqmhVKvC+CzE4oWItk=;
+        b=T7sKzvOXhbuXTTDwxPPXq5EWfIerBEVhA682DrqCBKCilTRyair9FNkxVr5+IwujmA
+         wnpOi4s2RL0C1ltcuG/AD5znXiiW6b3a/5aGp1/CZ2yQrUTmY2NbeOQIxAPb8oFB+dvQ
+         /25T0KS0Rnm3bRR+fv3at2Kz3uQlocPpkkU+kSSPhijEs1QAKd2I0yznYtZ7NuteZiSW
+         vXV3wzPL7WAH5yiI2f1zR8G81u+xhNTJd/HFlk0t+LWDudFg4AyHfMnlEgIZidT3geHf
+         qlHVp0QO/WwWxlef07ok+sciZtva+I7O5SDfgKCCfeL4zyNwM1ICyL4JLIesit7LXZXi
+         HeEg==
+X-Gm-Message-State: AOJu0Yy+4INmPXCBGId0AT1z0Z5u0jEXGiEhcBnSYdXXnwwIH3R0Plo2
+        54KxNlxidfySH1486dDYm/AkLw==
+X-Google-Smtp-Source: AGHT+IEzLBFMk3kEDzcaTGMq6sgJhldRQhr+5QWyOipuNTfWB8uF3/9WdBQ08yQlD0BAeEqi8ebKKg==
+X-Received: by 2002:a17:903:228b:b0:1bb:e71f:793c with SMTP id b11-20020a170903228b00b001bbe71f793cmr4666954plh.44.1695256700664;
+        Wed, 20 Sep 2023 17:38:20 -0700 (PDT)
+Received: from dread.disaster.area (pa49-180-20-59.pa.nsw.optusnet.com.au. [49.180.20.59])
+        by smtp.gmail.com with ESMTPSA id ij27-20020a170902ab5b00b001bd41b70b65sm111056plb.49.2023.09.20.17.38.19
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Wed, 20 Sep 2023 17:38:19 -0700 (PDT)
+Received: from dave by dread.disaster.area with local (Exim 4.96)
+        (envelope-from <david@fromorbit.com>)
+        id 1qj7hx-003RjF-0J;
+        Thu, 21 Sep 2023 10:38:17 +1000
+Date:   Thu, 21 Sep 2023 10:38:17 +1000
+From:   Dave Chinner <david@fromorbit.com>
+To:     Aleksandr Nogikh <nogikh@google.com>
+Cc:     Christoph Hellwig <hch@lst.de>,
+        syzbot <syzbot+1fa947e7f09e136925b8@syzkaller.appspotmail.com>,
+        djwong@kernel.org, linux-fsdevel@vger.kernel.org,
+        linux-kernel@vger.kernel.org, linux-xfs@vger.kernel.org,
+        syzkaller-bugs@googlegroups.com, linux-block@vger.kernel.org
+Subject: Re: [syzbot] [xfs?] INFO: task hung in clean_bdev_aliases
+Message-ID: <ZQuQeWm3UIn31ciq@dread.disaster.area>
+References: <000000000000e534bb0604959011@google.com>
+ <ZPeaH+K75a0nIyBk@dread.disaster.area>
+ <CANp29Y4AK9dzmpMj4E9iz3gqTwhG=-_7DfA8knrWYaHy4QxrEg@mail.gmail.com>
+ <20230908082846.GB9560@lst.de>
+ <CANp29Y5yx=F1w2s-jHbz1GVWCbOR_Z-gS488L6ERbWQTAX5dRQ@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=utf-8
 Content-Disposition: inline
-In-Reply-To: <ca82af4d6a72d7f83223c0ddd74fd9f7bcfa96b1.camel@kernel.org>
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <CANp29Y5yx=F1w2s-jHbz1GVWCbOR_Z-gS488L6ERbWQTAX5dRQ@mail.gmail.com>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Wed 20-09-23 10:12:03, Jeff Layton wrote:
-> On Wed, 2023-09-20 at 14:48 +0200, Jan Kara wrote:
-> > On Wed 20-09-23 06:35:18, Jeff Layton wrote:
-> > > On Wed, 2023-09-20 at 12:17 +0200, Jan Kara wrote:
-> > > > If I were a sysadmin, I'd rather opt for something like
-> > > > finegrained timestamps + lazytime (if I needed the finegrained timestamps
-> > > > functionality). That should avoid the IO overhead of finegrained timestamps
-> > > > as well and I'd know I can have problems with timestamps only after a
-> > > > system crash.
-> > > 
-> > > > I've just got another idea how we could solve the problem: Couldn't we
-> > > > always just report coarsegrained timestamp to userspace and provide access
-> > > > to finegrained value only to NFS which should know what it's doing?
-> > > > 
-> > > 
-> > > I think that'd be hard. First of all, where would we store the second
-> > > timestamp? We can't just truncate the fine-grained ones to come up with
-> > > a coarse-grained one. It might also be confusing having nfsd and local
-> > > filesystems present different attributes.
-> > 
-> > So what I had in mind (and I definitely miss all the NFS intricacies so the
-> > idea may be bogus) was that inode->i_ctime would be maintained exactly as
-> > is now. There will be new (kernel internal at least for now) STATX flag
-> > STATX_MULTIGRAIN_TS. fill_mg_cmtime() will return timestamp truncated to
-> > sb->s_time_gran unless STATX_MULTIGRAIN_TS is set. Hence unless you set
-> > STATX_MULTIGRAIN_TS, there is no difference in the returned timestamps
-> > compared to the state before multigrain timestamps were introduced. With
-> > STATX_MULTIGRAIN_TS we return full precision timestamp as stored in the
-> > inode. Then NFS in fh_fill_pre_attrs() and fh_fill_post_attrs() needs to
-> > make sure STATX_MULTIGRAIN_TS is set when calling vfs_getattr() to get
-> > multigrain time.
-> 
-> > I agree nfsd may now be presenting slightly different timestamps than user
-> > is able to see with stat(2) directly on the filesystem. But is that a
-> > problem? Essentially it is a similar solution as the mgtime mount option
-> > but now sysadmin doesn't have to decide on filesystem mount how to report
-> > timestamps but the stat caller knowingly opts into possibly inconsistent
-> > (among files) but high precision timestamps. And in the particular NFS
-> > usecase where stat is called all the time anyway, timestamps will likely
-> > even be consistent among files.
-> > 
-> 
-> I like this idea...
-> 
-> Would we also need to raise sb->s_time_gran to something corresponding
-> to HZ on these filesystems?
+On Wed, Sep 20, 2023 at 10:56:56AM +0200, Aleksandr Nogikh wrote:
+> # set subsystems: iomap
 
-I was actually confused a bit about how timestamp_truncate() works. The
-jiffie granularity is just direct consequence of current_time() using
-ktime_get_coarse_real_ts64() and not of timestamp_truncate().
-sb->s_time_gran seems to be more about the on-disk format so it doesn't
-seem like a great idea to touch it. So probably we can just truncate
-timestamps in generic_fillattr() to HZ granularity unconditionally.
+No. As I said when I originally reassigned this from XFS to the
+block subsystem, this is a regression caused by changes to the block
+device code. Just because that overall change was to use iomap for
+block devices, that doesn't make it an iomap regression or the
+responsibility of XFS or iomap maintainers to triage and fix this
+block device regression.
 
-> If we truncate the timestamps at a granularity corresponding to HZ before
-> presenting them via statx and the like then that should work around the
-> problem with programs that compare timestamps between inodes.
+> On Fri, Sep 8, 2023 at 10:28 AM Christoph Hellwig <hch@lst.de> wrote:
+> >
+> > On Wed, Sep 06, 2023 at 07:20:15PM +0200, Aleksandr Nogikh wrote:
+> > >
+> > > The reason why syzbot marked this report as xfs is that, per
+> > > MAINTAINERS, fs/iomap/ points to linux-xfs@vger.kernel.org. I can
+> > > adjust the rules syzbot uses so that these are routed to "block".
+> > >
+> > > But should MAINTAINERS actually also not relate IOMAP FILESYSTEM
+> > > LIBRARY with xfs in this case?
+> >
+> > I'd tag it with iomap, as it's a different subsystem just sharing
+> > the mailing list.  We also have iommu@lists.linux.dev for both the
+> > iommu and dma-mapping subsystems as a similar example.
+> >
+> > But what's also important for issues like this is that often the
+> > called library code (in this case iomap) if often not, or only
+> > partially at fault.  So capturing the calling context (in this
+> > case block) might also be useful.
 
-Exactly.
+Which is exactly what Christoph also said.
 
-> With NFSv4, when a filesystem doesn't report a STATX_CHANGE_COOKIE, nfsd
-> will fake one up using the ctime. It's fine for that to use a full fine-
-> grained timestamp since we don't expect to be able to compare that value
-> with one of a different inode.
+Please don't conflate a discussion about the incorrect assignment
+by syzbot (i.e. associating iomap with XFS because of a shared
+mailing list) with the actual problem that was initially reported.
 
-Yes.
+So, set this back to the block subsystem where it actually belongs.
 
-> I think we'd want nfsd to present the mtime/ctime values as truncated,
-> just like we would with a local fs. We could hit the same problem of an
-> earlier-looking timestamp with NFS if we try to present the actual fine-
-> grained values to the clients. IOW, I'm convinced that we need to avoid
-> this behavior in most situations.
+#syz set subsystems: block
 
-I wasn't sure if there's a way to do this within NFS - i.e., if the value
-communicated via NFSv3 protocol (I know v4 has a special change cookie
-field for it) that gets used for detecting need to revalidate file contents
-isn't the one presented to client's userspace as ctime. If there's a way to
-do this then great, I'm all for presenting truncated timestamps even for
-NFS.
-
-> If we do this, then we technically don't need the mount option either.
-
-Yes, that was my hope.
-
-> We could still add it though, and have it govern whether fill_mg_cmtime
-> truncates the timestamps before storing them in the kstat.
-
-Well, if we decide these timestamps are useful for userspace as well, I'd
-rather make that a userspace visible STATX flag than a mount option. So
-applications aware of the pitfalls can get high precision timestamps
-without possibly breaking unaware applications.
-
-								Honza
+-Dave
 -- 
-Jan Kara <jack@suse.com>
-SUSE Labs, CR
+Dave Chinner
+david@fromorbit.com
