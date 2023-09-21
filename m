@@ -2,122 +2,144 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9E90FCD493A
-	for <linux-xfs@archiver.kernel.org>; Thu, 21 Sep 2023 00:38:24 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2A0E4CD4938
+	for <linux-xfs@archiver.kernel.org>; Thu, 21 Sep 2023 01:39:53 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229733AbjIUAi2 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 20 Sep 2023 20:38:28 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58322 "EHLO
+        id S229700AbjIUBj5 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 20 Sep 2023 21:39:57 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45180 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229723AbjIUAi2 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 20 Sep 2023 20:38:28 -0400
-Received: from mail-pl1-x62d.google.com (mail-pl1-x62d.google.com [IPv6:2607:f8b0:4864:20::62d])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3A159DD
-        for <linux-xfs@vger.kernel.org>; Wed, 20 Sep 2023 17:38:21 -0700 (PDT)
-Received: by mail-pl1-x62d.google.com with SMTP id d9443c01a7336-1c59c40b840so3317345ad.3
-        for <linux-xfs@vger.kernel.org>; Wed, 20 Sep 2023 17:38:21 -0700 (PDT)
+        with ESMTP id S229473AbjIUBj4 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 20 Sep 2023 21:39:56 -0400
+Received: from mail-pl1-x62b.google.com (mail-pl1-x62b.google.com [IPv6:2607:f8b0:4864:20::62b])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 323D2AB
+        for <linux-xfs@vger.kernel.org>; Wed, 20 Sep 2023 18:39:51 -0700 (PDT)
+Received: by mail-pl1-x62b.google.com with SMTP id d9443c01a7336-1c0c6d4d650so3569115ad.0
+        for <linux-xfs@vger.kernel.org>; Wed, 20 Sep 2023 18:39:51 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=fromorbit-com.20230601.gappssmtp.com; s=20230601; t=1695256701; x=1695861501; darn=vger.kernel.org;
-        h=in-reply-to:content-transfer-encoding:content-disposition
-         :mime-version:references:message-id:subject:cc:to:from:date:from:to
-         :cc:subject:date:message-id:reply-to;
-        bh=jMd1KRyDEvQHJgfGmaNgihRzYBqmhVKvC+CzE4oWItk=;
-        b=FFpSRnPATnEb/+Y1pQyexh9atCnUu9eFdC9bx7xhJXmn34X+fXRiwfk67BClML5skb
-         jSE+U7TNaVrstBvFacVrq/KOmh0FRK4vlu9xy/To+FJibmqcRXl58xfOJad2sRfWdAag
-         ZCg8ixFC7MwLv1OzA8ZzsFJfw4JHnoawAAv5pXvI5UdUTWpKH3XpcPT08s5HPE0IxTP0
-         SeCxVKGdOC9rlBlLbPZxqpwHImq4kI5caSPv+gVZhvkQPsSNhFhTn6M3nMsyQSrBCBal
-         uA/z3rs86C5hpaYcszxHChDgv4tCx6OWt0cjilG7Y8Opn0Q9vkyMQrtoPsM6wvJxGNG4
-         0i6w==
+        d=fromorbit-com.20230601.gappssmtp.com; s=20230601; t=1695260390; x=1695865190; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:references:in-reply-to
+         :message-id:date:subject:to:from:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=MLvhZIcM0SpJ7wSPoi1+k37DPAhj8JFuXNxcyOg8Bl8=;
+        b=Pux4oQWpUKGb9EBWgxzQB9tTvg+vsQa76w8EUGRqKGZYwP09SM4D+opwfA8AdDKrPs
+         C02UR+Cwlem7TZ8SeqCMbXgVLNN/2kcHiBMUJBPoSoaeWm7CRONbefy4iwmgoQYSFtSb
+         oYiAXHLIa7WfwoC+i64eE1tuMR6cRWnd1GwlsDQUxsbho3uhkwbeL2W6Iwx2XJKGF+HF
+         tIAaxuj2dzV+H0ClGIhVLqJ5O2H5P2K+GfYUYT47bE1nsIgk6LCreUabwHaKDXxUGzRi
+         qS3fqCSSff2nHCGuHClSww+uNPRUvn7fFxYf1OywtUWRaWBlkie1BjeWdIVAD06CtTL2
+         dFrw==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1695256701; x=1695861501;
-        h=in-reply-to:content-transfer-encoding:content-disposition
-         :mime-version:references:message-id:subject:cc:to:from:date
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=jMd1KRyDEvQHJgfGmaNgihRzYBqmhVKvC+CzE4oWItk=;
-        b=T7sKzvOXhbuXTTDwxPPXq5EWfIerBEVhA682DrqCBKCilTRyair9FNkxVr5+IwujmA
-         wnpOi4s2RL0C1ltcuG/AD5znXiiW6b3a/5aGp1/CZ2yQrUTmY2NbeOQIxAPb8oFB+dvQ
-         /25T0KS0Rnm3bRR+fv3at2Kz3uQlocPpkkU+kSSPhijEs1QAKd2I0yznYtZ7NuteZiSW
-         vXV3wzPL7WAH5yiI2f1zR8G81u+xhNTJd/HFlk0t+LWDudFg4AyHfMnlEgIZidT3geHf
-         qlHVp0QO/WwWxlef07ok+sciZtva+I7O5SDfgKCCfeL4zyNwM1ICyL4JLIesit7LXZXi
-         HeEg==
-X-Gm-Message-State: AOJu0Yy+4INmPXCBGId0AT1z0Z5u0jEXGiEhcBnSYdXXnwwIH3R0Plo2
-        54KxNlxidfySH1486dDYm/AkLw==
-X-Google-Smtp-Source: AGHT+IEzLBFMk3kEDzcaTGMq6sgJhldRQhr+5QWyOipuNTfWB8uF3/9WdBQ08yQlD0BAeEqi8ebKKg==
-X-Received: by 2002:a17:903:228b:b0:1bb:e71f:793c with SMTP id b11-20020a170903228b00b001bbe71f793cmr4666954plh.44.1695256700664;
-        Wed, 20 Sep 2023 17:38:20 -0700 (PDT)
+        d=1e100.net; s=20230601; t=1695260390; x=1695865190;
+        h=content-transfer-encoding:mime-version:references:in-reply-to
+         :message-id:date:subject:to:from:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=MLvhZIcM0SpJ7wSPoi1+k37DPAhj8JFuXNxcyOg8Bl8=;
+        b=rGO1oCuZ14DA2EmUtjUufh8j5tHKrsWuBBvOFspLcYXIqUbuBxoRsMRQUMkdmxH+y2
+         K431qKk+ngf7hIPPq69YddG2wd0jdrQ27zAR7hpQlkEv/+kjzAydF2YRhWVWtTCiYotE
+         lpHdTR60b6v3/D/+jUxGyjbOMyhG7IxWw/8cc0+tU3pdBixe2AyGFOrayKv1S43Ehozd
+         KiUQhoa2GYZoZfbw8wb0v2MH3RcdFINiogtT+89DaP6DEjv4Do8V1kn2D49zdlUybLkK
+         PwOpmF4cCchDC/+igZAvDBvhcNqsdYdi1hkCr107xoROoW6iQXW+6dGV/ZpxIeiCL3gL
+         Lnqw==
+X-Gm-Message-State: AOJu0YyB38WgCRBfcIv4HgYf0YdezgexeGyovdh18WYpd6FbVSUcOPL3
+        WW51A3iszoEbgjhzSRJ1Fp5ezrjqLUwLSB6b7hE=
+X-Google-Smtp-Source: AGHT+IEyIEmr2paM4FY8CWZBJ52WVvDxd4B8hGlItu/j/jXz4y6u+KTYomiz1e4VImWf1Y2UnnRksA==
+X-Received: by 2002:a17:902:e886:b0:1c2:1068:1f4f with SMTP id w6-20020a170902e88600b001c210681f4fmr3976835plg.17.1695260390599;
+        Wed, 20 Sep 2023 18:39:50 -0700 (PDT)
 Received: from dread.disaster.area (pa49-180-20-59.pa.nsw.optusnet.com.au. [49.180.20.59])
-        by smtp.gmail.com with ESMTPSA id ij27-20020a170902ab5b00b001bd41b70b65sm111056plb.49.2023.09.20.17.38.19
+        by smtp.gmail.com with ESMTPSA id jj18-20020a170903049200b001c5c0d6fc76sm143442plb.233.2023.09.20.18.39.49
+        for <linux-xfs@vger.kernel.org>
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 20 Sep 2023 17:38:19 -0700 (PDT)
-Received: from dave by dread.disaster.area with local (Exim 4.96)
-        (envelope-from <david@fromorbit.com>)
-        id 1qj7hx-003RjF-0J;
-        Thu, 21 Sep 2023 10:38:17 +1000
-Date:   Thu, 21 Sep 2023 10:38:17 +1000
+        Wed, 20 Sep 2023 18:39:49 -0700 (PDT)
+Received: from [192.168.253.23] (helo=devoid.disaster.area)
+        by dread.disaster.area with esmtp (Exim 4.96)
+        (envelope-from <dave@fromorbit.com>)
+        id 1qj8fT-003Sv6-1Y
+        for linux-xfs@vger.kernel.org;
+        Thu, 21 Sep 2023 11:39:47 +1000
+Received: from dave by devoid.disaster.area with local (Exim 4.97-RC0)
+        (envelope-from <dave@devoid.disaster.area>)
+        id 1qj8fT-00000002MHQ-0xJO
+        for linux-xfs@vger.kernel.org;
+        Thu, 21 Sep 2023 11:39:47 +1000
 From:   Dave Chinner <david@fromorbit.com>
-To:     Aleksandr Nogikh <nogikh@google.com>
-Cc:     Christoph Hellwig <hch@lst.de>,
-        syzbot <syzbot+1fa947e7f09e136925b8@syzkaller.appspotmail.com>,
-        djwong@kernel.org, linux-fsdevel@vger.kernel.org,
-        linux-kernel@vger.kernel.org, linux-xfs@vger.kernel.org,
-        syzkaller-bugs@googlegroups.com, linux-block@vger.kernel.org
-Subject: Re: [syzbot] [xfs?] INFO: task hung in clean_bdev_aliases
-Message-ID: <ZQuQeWm3UIn31ciq@dread.disaster.area>
-References: <000000000000e534bb0604959011@google.com>
- <ZPeaH+K75a0nIyBk@dread.disaster.area>
- <CANp29Y4AK9dzmpMj4E9iz3gqTwhG=-_7DfA8knrWYaHy4QxrEg@mail.gmail.com>
- <20230908082846.GB9560@lst.de>
- <CANp29Y5yx=F1w2s-jHbz1GVWCbOR_Z-gS488L6ERbWQTAX5dRQ@mail.gmail.com>
+To:     linux-xfs@vger.kernel.org
+Subject: [PATCH 3/3] xfs: abort fstrim if kernel is suspending
+Date:   Thu, 21 Sep 2023 11:39:45 +1000
+Message-Id: <20230921013945.559634-4-david@fromorbit.com>
+X-Mailer: git-send-email 2.40.1
+In-Reply-To: <20230921013945.559634-1-david@fromorbit.com>
+References: <20230921013945.559634-1-david@fromorbit.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
 Content-Transfer-Encoding: 8bit
-In-Reply-To: <CANp29Y5yx=F1w2s-jHbz1GVWCbOR_Z-gS488L6ERbWQTAX5dRQ@mail.gmail.com>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Wed, Sep 20, 2023 at 10:56:56AM +0200, Aleksandr Nogikh wrote:
-> # set subsystems: iomap
+From: Dave Chinner <dchinner@redhat.com>
 
-No. As I said when I originally reassigned this from XFS to the
-block subsystem, this is a regression caused by changes to the block
-device code. Just because that overall change was to use iomap for
-block devices, that doesn't make it an iomap regression or the
-responsibility of XFS or iomap maintainers to triage and fix this
-block device regression.
+A recent ext4 patch posting from Jan Kara reminded me of a
+discussion a year ago about fstrim in progress preventing kernels
+from suspending. The fix is simple, we should do the same for XFS.
 
-> On Fri, Sep 8, 2023 at 10:28 AM Christoph Hellwig <hch@lst.de> wrote:
-> >
-> > On Wed, Sep 06, 2023 at 07:20:15PM +0200, Aleksandr Nogikh wrote:
-> > >
-> > > The reason why syzbot marked this report as xfs is that, per
-> > > MAINTAINERS, fs/iomap/ points to linux-xfs@vger.kernel.org. I can
-> > > adjust the rules syzbot uses so that these are routed to "block".
-> > >
-> > > But should MAINTAINERS actually also not relate IOMAP FILESYSTEM
-> > > LIBRARY with xfs in this case?
-> >
-> > I'd tag it with iomap, as it's a different subsystem just sharing
-> > the mailing list.  We also have iommu@lists.linux.dev for both the
-> > iommu and dma-mapping subsystems as a similar example.
-> >
-> > But what's also important for issues like this is that often the
-> > called library code (in this case iomap) if often not, or only
-> > partially at fault.  So capturing the calling context (in this
-> > case block) might also be useful.
+This removes the -ERESTARTSYS error return from this code, replacing
+it with either the last error seen or the number of blocks
+successfully trimmed up to the point where we detected the stop
+condition.
 
-Which is exactly what Christoph also said.
+References: https://bugzilla.kernel.org/show_bug.cgi?id=216322
+Signed-off-by: Dave Chinner <dchinner@redhat.com>
+---
+ fs/xfs/xfs_discard.c | 21 +++++++++++++--------
+ 1 file changed, 13 insertions(+), 8 deletions(-)
 
-Please don't conflate a discussion about the incorrect assignment
-by syzbot (i.e. associating iomap with XFS because of a shared
-mailing list) with the actual problem that was initially reported.
-
-So, set this back to the block subsystem where it actually belongs.
-
-#syz set subsystems: block
-
--Dave
+diff --git a/fs/xfs/xfs_discard.c b/fs/xfs/xfs_discard.c
+index f16b254b5eaa..d5787991bb5b 100644
+--- a/fs/xfs/xfs_discard.c
++++ b/fs/xfs/xfs_discard.c
+@@ -283,6 +283,12 @@ xfs_trim_gather_extents(
+ 	return error;
+ }
+ 
++static bool
++xfs_trim_should_stop(void)
++{
++	return fatal_signal_pending(current) || freezing(current);
++}
++
+ /*
+  * Iterate the free list gathering extents and discarding them. We need a cursor
+  * for the repeated iteration of gather/discard loop, so use the longest extent
+@@ -336,10 +342,9 @@ xfs_trim_extents(
+ 		if (error)
+ 			break;
+ 
+-		if (fatal_signal_pending(current)) {
+-			error = -ERESTARTSYS;
++		if (xfs_trim_should_stop())
+ 			break;
+-		}
++
+ 	} while (tcur.ar_blockcount != 0);
+ 
+ 	return error;
+@@ -408,12 +413,12 @@ xfs_ioc_trim(
+ 	for_each_perag_range(mp, agno, xfs_daddr_to_agno(mp, end), pag) {
+ 		error = xfs_trim_extents(pag, start, end, minlen,
+ 					  &blocks_trimmed);
+-		if (error) {
++		if (error)
+ 			last_error = error;
+-			if (error == -ERESTARTSYS) {
+-				xfs_perag_rele(pag);
+-				break;
+-			}
++
++		if (xfs_trim_should_stop()) {
++			xfs_perag_rele(pag);
++			break;
+ 		}
+ 	}
+ 
 -- 
-Dave Chinner
-david@fromorbit.com
+2.40.1
+
