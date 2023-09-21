@@ -2,73 +2,73 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 58EB9CD493C
-	for <linux-xfs@archiver.kernel.org>; Thu, 21 Sep 2023 01:39:56 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 35EBACD493A
+	for <linux-xfs@archiver.kernel.org>; Thu, 21 Sep 2023 01:48:53 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229473AbjIUBkA (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 20 Sep 2023 21:40:00 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45212 "EHLO
+        id S229718AbjIUBs5 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 20 Sep 2023 21:48:57 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49676 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229726AbjIUBj7 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 20 Sep 2023 21:39:59 -0400
-Received: from mail-pf1-x42d.google.com (mail-pf1-x42d.google.com [IPv6:2607:f8b0:4864:20::42d])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id EB07BAB
-        for <linux-xfs@vger.kernel.org>; Wed, 20 Sep 2023 18:39:52 -0700 (PDT)
-Received: by mail-pf1-x42d.google.com with SMTP id d2e1a72fcca58-690bd8f89baso360734b3a.2
-        for <linux-xfs@vger.kernel.org>; Wed, 20 Sep 2023 18:39:52 -0700 (PDT)
+        with ESMTP id S229560AbjIUBs4 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 20 Sep 2023 21:48:56 -0400
+Received: from mail-oa1-x29.google.com (mail-oa1-x29.google.com [IPv6:2001:4860:4864:20::29])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6C031AB
+        for <linux-xfs@vger.kernel.org>; Wed, 20 Sep 2023 18:48:50 -0700 (PDT)
+Received: by mail-oa1-x29.google.com with SMTP id 586e51a60fabf-1dc5df71745so237245fac.2
+        for <linux-xfs@vger.kernel.org>; Wed, 20 Sep 2023 18:48:50 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=fromorbit-com.20230601.gappssmtp.com; s=20230601; t=1695260392; x=1695865192; darn=vger.kernel.org;
+        d=fromorbit-com.20230601.gappssmtp.com; s=20230601; t=1695260929; x=1695865729; darn=vger.kernel.org;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:to:from:from:to:cc:subject:date:message-id
          :reply-to;
-        bh=o1sCydzNwgDhwiOxlmWaW+T13wv02WNUL5B9sZGWGi8=;
-        b=o1Du2ZHkc6Q9kC2lQBvXNv8LLdJDWL2a2T1A2DAU+27ChKL9LKg5EUzA+8rPRzeb2n
-         gfii1GPsLANdgeIYbdlpe2c8jbJm3t6quFh4CgfG0PoP0bSRcv93sskkU129X4wCD7/6
-         pPVNFM6+wVzE7DMir5UGR4UOtx92aQVvxX+0rTpwc6tRkqYwdf4iVvRCTVeMeCOGjgs9
-         1QJTTa3bE3KdR27K+1HG1AsiVG62N/KFgGaxtg1eRcZ4X+Zvzmioi+Ak50uE7/BOaJ6M
-         fi7lu/JoDCqY/zHXT+ArRjIBJFJMUjK81vVn5ShR8rI8kYUFGYjM7G97z0gJPjJPbsuR
-         SdNw==
+        bh=4AFXV0OsPKII9ZxUx13tD38dsvxB+MpCWFyYnczmSN0=;
+        b=JXpV7UuB023QfroCTabwxotejzXbU5owdfvnDza5CY3DnjQ8rzsG0LRViLaGCmv3mx
+         MJzcXtoFdgwB7+v4gY5jXP7htOHzafYq/Kf27bmzunBqjojLVo71O89MVQFIuPm83w/G
+         qGRX0Z/iUOQyLXphHDRNU2H/8AuZ3BeX1cYeKeDc67bESQZRtFWmQbbr8kRvake5bwba
+         blA/GtKbKmW7NziRUktJOKZLc0zzkNNjEGctt03Ab3TIHQhKuAVdaJQUDN1SVEmG0hte
+         3pKJqymacISctqywTTGM63nDh19VeBvFCYQKnhTHygTAOQnTDJa9nUfyZUqcJhOpKAg4
+         M4fQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1695260392; x=1695865192;
+        d=1e100.net; s=20230601; t=1695260929; x=1695865729;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:to:from:x-gm-message-state:from:to:cc
          :subject:date:message-id:reply-to;
-        bh=o1sCydzNwgDhwiOxlmWaW+T13wv02WNUL5B9sZGWGi8=;
-        b=bdjVf8Ng7Lsa6WY+6RG3FL4VYRSbNZs5aAQUyJ37k4JVhCbfSbrVUqn6V3aGzk3qzy
-         7ADjWqP8imqPB4nmbhDrZm0AEM3nfI97Z6dczAclmUsU1b1mtANATYB4qA5ZhKCJooqs
-         a1oaHq34a/Yp2hglUqA+Yd9efxkqimmwyEVUH2vey1+dW460ZRKIwi6OQnJ4ISFnzQj6
-         c1eQpYDSWPFUwenHQE9CxVJAuWeI3uoZFb1aa5Coh22bagiP9YGODMECvl4lhuh2mobF
-         1TLG9o//4VSwyQ7FNyEgGudxlvzdk/q41YBj2CdMfEo1lTqfTSk2w4TEhuSz1zIixFyg
-         r7pw==
-X-Gm-Message-State: AOJu0YxnC2BrQnUnvLzoc9Muqa/iW7g+FNnQ9ynWw4XgeDTeCIzbDqRo
-        Z8ENOkXXP+1UAa6y26DVTg3nrZvINs2Hbv5RYzo=
-X-Google-Smtp-Source: AGHT+IHDJh52gpkZ5pMcsPgA+tYD5pvXBdyMTmopLPuvsDXbMQnSSBl0Xltjjn7acbe80cc/8kihUQ==
-X-Received: by 2002:a05:6a00:b44:b0:690:d413:ee13 with SMTP id p4-20020a056a000b4400b00690d413ee13mr4178471pfo.23.1695260392282;
-        Wed, 20 Sep 2023 18:39:52 -0700 (PDT)
+        bh=4AFXV0OsPKII9ZxUx13tD38dsvxB+MpCWFyYnczmSN0=;
+        b=aSDxIW9WF5swqpPeFU69WIOx5FfioO/yqW3FVe61h0Y3YD5NzJm6OrwzVxM+Oqxw7L
+         C+owx9pxCwL/covW1HPIEpp9NSItoMbRHGaPy61u91/ojSOQNa+AbSWYiDejd6XznoaH
+         54wwyPgXm/chGXDVO9Y81sE5rBVLea2bYHosmr6M4yMF2GIMqPpHgqfvcrjWZo6mRzdV
+         LWJmcZCjkFwvV42i55j2irGS9p8LxCQtEyluY/gJ/jiiewc0SVTE6XXADc4ZuG6fJofD
+         3nmIoDTqj7yxcw/RYWKHaVFgg69uImH9tqhY/fgnY1n+j3WBwQ+Ed5mUi4/F8YCUX03Z
+         XAtw==
+X-Gm-Message-State: AOJu0YwtY7CONwj7onVaIagl4bJ0FXZhLfqWTZbGO7VR/R49MN6WtqGg
+        TJG8UAT6gkbEdwYzsjQu/djHlbvDBLFMxXbRBSI=
+X-Google-Smtp-Source: AGHT+IHnO47sRjlMFQrpo31rJHX9kO6aGwupwDZnLn9iJpIbVnJihybit8Iiv2ywRl3fGvZCqcwHuA==
+X-Received: by 2002:a05:6870:c8a3:b0:1d2:4b4c:eb11 with SMTP id er35-20020a056870c8a300b001d24b4ceb11mr4717012oab.32.1695260929703;
+        Wed, 20 Sep 2023 18:48:49 -0700 (PDT)
 Received: from dread.disaster.area (pa49-180-20-59.pa.nsw.optusnet.com.au. [49.180.20.59])
-        by smtp.gmail.com with ESMTPSA id a24-20020aa78658000000b00690c0cf97c9sm155355pfo.73.2023.09.20.18.39.50
+        by smtp.gmail.com with ESMTPSA id u20-20020aa78394000000b00690fe1c928esm166493pfm.91.2023.09.20.18.48.49
         for <linux-xfs@vger.kernel.org>
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 20 Sep 2023 18:39:51 -0700 (PDT)
+        Wed, 20 Sep 2023 18:48:49 -0700 (PDT)
 Received: from [192.168.253.23] (helo=devoid.disaster.area)
         by dread.disaster.area with esmtp (Exim 4.96)
         (envelope-from <dave@fromorbit.com>)
-        id 1qj8fT-003Sv2-1O
+        id 1qj8oB-003T1g-0w
         for linux-xfs@vger.kernel.org;
-        Thu, 21 Sep 2023 11:39:47 +1000
+        Thu, 21 Sep 2023 11:48:47 +1000
 Received: from dave by devoid.disaster.area with local (Exim 4.97-RC0)
         (envelope-from <dave@devoid.disaster.area>)
-        id 1qj8fT-00000002MHM-0kc6
+        id 1qj8oB-00000002VO2-07D2
         for linux-xfs@vger.kernel.org;
-        Thu, 21 Sep 2023 11:39:47 +1000
+        Thu, 21 Sep 2023 11:48:47 +1000
 From:   Dave Chinner <david@fromorbit.com>
 To:     linux-xfs@vger.kernel.org
-Subject: [PATCH 2/3] xfs: reduce AGF hold times during fstrim operations
-Date:   Thu, 21 Sep 2023 11:39:44 +1000
-Message-Id: <20230921013945.559634-3-david@fromorbit.com>
+Subject: [PATCH 3/9] xfs: background AIL push targets physical space, not grant space
+Date:   Thu, 21 Sep 2023 11:48:38 +1000
+Message-Id: <20230921014844.582667-4-david@fromorbit.com>
 X-Mailer: git-send-email 2.40.1
-In-Reply-To: <20230921013945.559634-1-david@fromorbit.com>
-References: <20230921013945.559634-1-david@fromorbit.com>
+In-Reply-To: <20230921014844.582667-1-david@fromorbit.com>
+References: <20230921014844.582667-1-david@fromorbit.com>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
@@ -77,382 +77,147 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: Dave Chinner <dchinner@redhat.com>
 
-fstrim will hold the AGF lock for as long as it takes to walk and
-discard all the free space in the AG that meets the userspace trim
-criteria. For AGs with lots of free space extents (e.g. millions)
-or the underlying device is really slow at processing discard
-requests (e.g. Ceph RBD), this means the AGF hold time is often
-measured in minutes to hours, not a few milliseconds as we normal
-see with non-discard based operations.
+Currently the AIL attempts to keep 25% of the "log space" free,
+where the current used space is tracked by the reserve grant head.
+That is, it tracks both physical space used plus the amount reserved
+by transactions in progress.
 
-This can result in the entire filesystem hanging whilst the
-long-running fstrim is in progress. We can have transactions get
-stuck waiting for the AGF lock (data or metadata extent allocation
-and freeing), and then more transactions get stuck waiting on the
-locks those transactions hold. We can get to the point where fstrim
-blocks an extent allocation or free operation long enough that it
-ends up pinning the tail of the log and the log then runs out of
-space. At this point, every modification in the filesystem gets
-blocked. This includes read operations, if atime updates need to be
-made.
+When we start tail pushing, we are trying to make space for new
+reservations by writing back older metadata and the log is generally
+physically full of dirty metadata, and reservations for modifications
+in flight take up whatever space the AIL can physically free up.
 
-To fix this problem, we need to be able to discard free space
-extents safely without holding the AGF lock. Fortunately, we already
-do this with online discard via busy extents. We can mark free space
-extents as "busy being discarded" under the AGF lock and then unlock
-the AGF, knowing that nobody will be able to allocate that free
-space extent until we remove it from the busy tree.
-
-Modify xfs_trim_extents to use the same asynchronous discard
-mechanism backed by busy extents as is used with online discard.
-This results in the AGF only needing to be held for short periods of
-time and it is never held while we issue discards. Hence if discard
-submission gets throttled because it is slow and/or there are lots
-of them, we aren't preventing other operations from being performed
-on AGF while we wait for discards to complete...
+Hence we don't really need to take into account the reservation
+space that has been used - we just need to keep the log tail moving
+as fast as we can to free up space for more reservations to be made.
+We know exactly how much physical space the journal is consuming in
+the AIL (i.e. max LSN - min LSN) so we can base push thresholds
+directly on this state rather than have to look at grant head
+reservations to determine how much to physically push out of the
+log.
 
 Signed-off-by: Dave Chinner <dchinner@redhat.com>
+Reviewed-by: Darrick J. Wong <djwong@kernel.org>
+Reviewed-by: Christoph Hellwig <hch@lst.de>
 ---
- fs/xfs/xfs_discard.c     | 174 +++++++++++++++++++++++++++++++++++----
- fs/xfs/xfs_extent_busy.c |  34 ++++++--
- fs/xfs/xfs_extent_busy.h |   4 +
- 3 files changed, 188 insertions(+), 24 deletions(-)
+ fs/xfs/xfs_log_priv.h  | 18 ++++++++++++
+ fs/xfs/xfs_trans_ail.c | 63 +++++++++++++++++++-----------------------
+ 2 files changed, 47 insertions(+), 34 deletions(-)
 
-diff --git a/fs/xfs/xfs_discard.c b/fs/xfs/xfs_discard.c
-index 3f45c7bb94f2..f16b254b5eaa 100644
---- a/fs/xfs/xfs_discard.c
-+++ b/fs/xfs/xfs_discard.c
-@@ -19,6 +19,56 @@
- #include "xfs_log.h"
- #include "xfs_ag.h"
+diff --git a/fs/xfs/xfs_log_priv.h b/fs/xfs/xfs_log_priv.h
+index d4124ef9d97f..01c333f712ae 100644
+--- a/fs/xfs/xfs_log_priv.h
++++ b/fs/xfs/xfs_log_priv.h
+@@ -625,6 +625,24 @@ xlog_wait(
  
-+/*
-+ * Notes on an efficient, low latency fstrim algorithm
-+ *
-+ * We need to walk the filesystem free space and issue discards on the free
-+ * space that meet the search criteria (size and location). We cannot issue
-+ * discards on extents that might be in use, or are so recently in use they are
-+ * still marked as busy. To serialise against extent state changes whilst we are
-+ * gathering extents to trim, we must hold the AGF lock to lock out other
-+ * allocations and extent free operations that might change extent state.
-+ *
-+ * However, we cannot just hold the AGF for the entire AG free space walk whilst
-+ * we issue discards on each free space that is found. Storage devices can have
-+ * extremely slow discard implementations (e.g. ceph RBD) and so walking a
-+ * couple of million free extents and issuing synchronous discards on each
-+ * extent can take a *long* time. Whilst we are doing this walk, nothing else
-+ * can access the AGF, and we can stall transactions and hence the log whilst
-+ * modifications wait for the AGF lock to be released. This can lead hung tasks
-+ * kicking the hung task timer and rebooting the system. This is bad.
-+ *
-+ * Hence we need to take a leaf from the bulkstat playbook. It takes the AGI
-+ * lock, gathers a range of inode cluster buffers that are allocated, drops the
-+ * AGI lock and then reads all the inode cluster buffers and processes them. It
-+ * loops doing this, using a cursor to keep track of where it is up to in the AG
-+ * for each iteration to restart the INOBT lookup from.
-+ *
-+ * We can't do this exactly with free space - once we drop the AGF lock, the
-+ * state of the free extent is out of our control and we cannot run a discard
-+ * safely on it in this situation. Unless, of course, we've marked the free
-+ * extent as busy and undergoing a discard operation whilst we held the AGF
-+ * locked.
-+ *
-+ * This is exactly how online discard works - free extents are marked busy when
-+ * they are freed, and once the extent free has been committed to the journal,
-+ * the busy extent record is marked as "undergoing discard" and the discard is
-+ * then issued on the free extent. Once the discard completes, the busy extent
-+ * record is removed and the extent is able to be allocated again.
-+ *
-+ * In the context of fstrim, if we find a free extent we need to discard, we
-+ * don't have to discard it immediately. All we need to do it record that free
-+ * extent as being busy and under discard, and all the allocation routines will
-+ * now avoid trying to allocate it. Hence if we mark the extent as busy under
-+ * the AGF lock, we can safely discard it without holding the AGF lock because
-+ * nothing will attempt to allocate that free space until the discard completes.
-+ *
-+ * This also allows us to issue discards asynchronously like we do with online
-+ * discard, and so for fast devices fstrim will run much faster as we can have
-+ * multiple discard operations in flight at once, as well as pipeline the free
-+ * extent search so that it overlaps in flight discard IO.
-+ */
+ int xlog_wait_on_iclog(struct xlog_in_core *iclog);
+ 
++/* Calculate the distance between two LSNs in bytes */
++static inline uint64_t
++xlog_lsn_sub(
++	struct xlog	*log,
++	xfs_lsn_t	high,
++	xfs_lsn_t	low)
++{
++	uint32_t	hi_cycle = CYCLE_LSN(high);
++	uint32_t	hi_block = BLOCK_LSN(high);
++	uint32_t	lo_cycle = CYCLE_LSN(low);
++	uint32_t	lo_block = BLOCK_LSN(low);
 +
- struct workqueue_struct *xfs_discard_wq;
- 
- static void
-@@ -94,21 +144,22 @@ xfs_discard_extents(
- }
- 
- 
--STATIC int
--xfs_trim_extents(
-+static int
-+xfs_trim_gather_extents(
- 	struct xfs_perag	*pag,
- 	xfs_daddr_t		start,
- 	xfs_daddr_t		end,
- 	xfs_daddr_t		minlen,
-+	struct xfs_alloc_rec_incore *tcur,
-+	struct xfs_busy_extents	*extents,
- 	uint64_t		*blocks_trimmed)
++	if (hi_cycle == lo_cycle)
++	       return BBTOB(hi_block - lo_block);
++	ASSERT((hi_cycle == lo_cycle + 1) || xlog_is_shutdown(log));
++	return (uint64_t)log->l_logsize - BBTOB(lo_block - hi_block);
++}
++
+ /*
+  * The LSN is valid so long as it is behind the current LSN. If it isn't, this
+  * means that the next log record that includes this metadata could have a
+diff --git a/fs/xfs/xfs_trans_ail.c b/fs/xfs/xfs_trans_ail.c
+index 31a4e5e5d899..3103e16d6965 100644
+--- a/fs/xfs/xfs_trans_ail.c
++++ b/fs/xfs/xfs_trans_ail.c
+@@ -398,51 +398,46 @@ xfsaild_push_item(
+ /*
+  * Compute the LSN that we'd need to push the log tail towards in order to have
+  * at least 25% of the log space free.  If the log free space already meets this
+- * threshold, this function returns NULLCOMMITLSN.
++ * threshold, this function returns the lowest LSN in the AIL to slowly keep
++ * writeback ticking over and the tail of the log moving forward.
+  */
+ xfs_lsn_t
+ __xfs_ail_push_target(
+ 	struct xfs_ail		*ailp)
  {
- 	struct xfs_mount	*mp = pag->pag_mount;
--	struct block_device	*bdev = mp->m_ddev_targp->bt_bdev;
- 	struct xfs_btree_cur	*cur;
- 	struct xfs_buf		*agbp;
--	struct xfs_agf		*agf;
- 	int			error;
- 	int			i;
-+	int			batch = 100;
+-	struct xlog	*log = ailp->ail_log;
+-	xfs_lsn_t	threshold_lsn = 0;
+-	xfs_lsn_t	last_sync_lsn;
+-	int		free_blocks;
+-	int		free_bytes;
+-	int		threshold_block;
+-	int		threshold_cycle;
+-	int		free_threshold;
++	struct xlog		*log = ailp->ail_log;
++	struct xfs_log_item	*lip;
++	xfs_lsn_t		target_lsn = 0;
++	xfs_lsn_t		max_lsn;
++	xfs_lsn_t		min_lsn;
++	int32_t			free_bytes;
++	uint32_t		target_block;
++	uint32_t		target_cycle;
  
- 	/*
- 	 * Force out the log.  This means any transactions that might have freed
-@@ -120,20 +171,28 @@ xfs_trim_extents(
- 	error = xfs_alloc_read_agf(pag, NULL, 0, &agbp);
- 	if (error)
- 		return error;
--	agf = agbp->b_addr;
+-	free_bytes = xlog_space_left(log, &log->l_reserve_head.grant);
+-	free_blocks = BTOBBT(free_bytes);
++	lockdep_assert_held(&ailp->ail_lock);
  
- 	cur = xfs_allocbt_init_cursor(mp, NULL, agbp, pag, XFS_BTNUM_CNT);
+-	/*
+-	 * The threshold for the minimum number of free blocks is one quarter of
+-	 * the entire log space.
+-	 */
+-	free_threshold = log->l_logBBsize >> 2;
+-	if (free_blocks >= free_threshold)
++	lip = xfs_ail_max(ailp);
++	if (!lip)
+ 		return NULLCOMMITLSN;
++	max_lsn = lip->li_lsn;
++	min_lsn = __xfs_ail_min_lsn(ailp);
  
- 	/*
--	 * Look up the longest btree in the AGF and start with it.
-+	 * Look up the extent length requested in the AGF and start with it.
- 	 */
--	error = xfs_alloc_lookup_ge(cur, 0, be32_to_cpu(agf->agf_longest), &i);
-+	if (tcur->ar_startblock == NULLAGBLOCK)
-+		error = xfs_alloc_lookup_ge(cur, 0, tcur->ar_blockcount, &i);
-+	else
-+		error = xfs_alloc_lookup_le(cur, tcur->ar_startblock,
-+				tcur->ar_blockcount, &i);
- 	if (error)
- 		goto out_del_cursor;
-+	if (i == 0) {
-+		/* nothing of that length left in the AG, we are done */
-+		tcur->ar_blockcount = 0;
-+		goto out_del_cursor;
-+	}
- 
- 	/*
- 	 * Loop until we are done with all extents that are large
--	 * enough to be worth discarding.
-+	 * enough to be worth discarding or we hit batch limits.
- 	 */
- 	while (i) {
- 		xfs_agblock_t	fbno;
-@@ -148,7 +207,16 @@ xfs_trim_extents(
- 			error = -EFSCORRUPTED;
- 			break;
- 		}
--		ASSERT(flen <= be32_to_cpu(agf->agf_longest));
+-	xlog_crack_atomic_lsn(&log->l_tail_lsn, &threshold_cycle,
+-						&threshold_block);
+-	threshold_block += free_threshold;
+-	if (threshold_block >= log->l_logBBsize) {
+-		threshold_block -= log->l_logBBsize;
+-		threshold_cycle += 1;
++	free_bytes = log->l_logsize - xlog_lsn_sub(log, max_lsn, min_lsn);
++	if (free_bytes >= log->l_logsize >> 2)
++		return NULLCOMMITLSN;
 +
-+		if (--batch <= 0) {
-+			/*
-+			 * Update the cursor to point at this extent so we
-+			 * restart the next batch from this extent.
-+			 */
-+			tcur->ar_startblock = fbno;
-+			tcur->ar_blockcount = flen;
-+			break;
-+		}
- 
- 		/*
- 		 * use daddr format for all range/len calculations as that is
-@@ -163,6 +231,7 @@ xfs_trim_extents(
- 		 */
- 		if (dlen < minlen) {
- 			trace_xfs_discard_toosmall(mp, pag->pag_agno, fbno, flen);
-+			tcur->ar_blockcount = 0;
- 			break;
- 		}
- 
-@@ -185,29 +254,98 @@ xfs_trim_extents(
- 			goto next_extent;
- 		}
- 
--		trace_xfs_discard_extent(mp, pag->pag_agno, fbno, flen);
--		error = blkdev_issue_discard(bdev, dbno, dlen, GFP_NOFS);
--		if (error)
--			break;
-+		xfs_extent_busy_insert_discard(pag, fbno, flen,
-+				&extents->extent_list);
- 		*blocks_trimmed += flen;
--
- next_extent:
- 		error = xfs_btree_decrement(cur, 0, &i);
- 		if (error)
- 			break;
- 
--		if (fatal_signal_pending(current)) {
--			error = -ERESTARTSYS;
--			break;
--		}
-+		/*
-+		 * If there's no more records in the tree, we are done. Set the
-+		 * cursor block count to 0 to indicate to the caller that there
-+		 * is no more extents to search.
-+		 */
-+		if (i == 0)
-+			tcur->ar_blockcount = 0;
++	target_cycle = CYCLE_LSN(min_lsn);
++	target_block = BLOCK_LSN(min_lsn) + (log->l_logBBsize >> 2);
++	if (target_block >= log->l_logBBsize) {
++		target_block -= log->l_logBBsize;
++		target_cycle += 1;
  	}
+-	threshold_lsn = xlog_assign_lsn(threshold_cycle,
+-					threshold_block);
+-	/*
+-	 * Don't pass in an lsn greater than the lsn of the last
+-	 * log record known to be on disk. Use a snapshot of the last sync lsn
+-	 * so that it doesn't change between the compare and the set.
+-	 */
+-	last_sync_lsn = atomic64_read(&log->l_last_sync_lsn);
+-	if (XFS_LSN_CMP(threshold_lsn, last_sync_lsn) > 0)
+-		threshold_lsn = last_sync_lsn;
++	target_lsn = xlog_assign_lsn(target_cycle, target_block);
  
-+	/*
-+	 * If there was an error, release all the gathered busy extents because
-+	 * we aren't going to issue a discard on them any more.
-+	 */
-+	if (error)
-+		xfs_extent_busy_clear(mp, &extents->extent_list, false);
- out_del_cursor:
- 	xfs_btree_del_cursor(cur, error);
- 	xfs_buf_relse(agbp);
- 	return error;
+-	return threshold_lsn;
++	/* Cap the target to the highest LSN known to be in the AIL. */
++	if (XFS_LSN_CMP(target_lsn, max_lsn) > 0)
++		return max_lsn;
++	return target_lsn;
  }
  
-+/*
-+ * Iterate the free list gathering extents and discarding them. We need a cursor
-+ * for the repeated iteration of gather/discard loop, so use the longest extent
-+ * we found in the last batch as the key to start the next.
-+ */
-+static int
-+xfs_trim_extents(
-+	struct xfs_perag	*pag,
-+	xfs_daddr_t		start,
-+	xfs_daddr_t		end,
-+	xfs_daddr_t		minlen,
-+	uint64_t		*blocks_trimmed)
-+{
-+	struct xfs_alloc_rec_incore tcur = {
-+		.ar_blockcount = pag->pagf_longest,
-+		.ar_startblock = NULLAGBLOCK,
-+	};
-+	int			error = 0;
-+
-+	do {
-+		struct xfs_busy_extents	*extents;
-+
-+		extents = kzalloc(sizeof(*extents), GFP_KERNEL);
-+		if (!extents) {
-+			error = -ENOMEM;
-+			break;
-+		}
-+
-+		extents->mount = pag->pag_mount;
-+		extents->owner = extents;
-+		INIT_LIST_HEAD(&extents->extent_list);
-+
-+		error = xfs_trim_gather_extents(pag, start, end, minlen,
-+				&tcur, extents, blocks_trimmed);
-+		if (error) {
-+			kfree(extents);
-+			break;
-+		}
-+
-+		/*
-+		 * We hand the extent list to the discard function here so the
-+		 * discarded extents can be removed from the busy extent list.
-+		 * This allows the discards to run asynchronously with gathering
-+		 * the next round of extents to discard.
-+		 *
-+		 * However, we must ensure that we do not reference the extent
-+		 * list  after this function call, as it may have been freed by
-+		 * the time control returns to us.
-+		 */
-+		error = xfs_discard_extents(pag->pag_mount, extents);
-+		if (error)
-+			break;
-+
-+		if (fatal_signal_pending(current)) {
-+			error = -ERESTARTSYS;
-+			break;
-+		}
-+	} while (tcur.ar_blockcount != 0);
-+
-+	return error;
-+
-+}
-+
- /*
-  * trim a range of the filesystem.
-  *
-diff --git a/fs/xfs/xfs_extent_busy.c b/fs/xfs/xfs_extent_busy.c
-index 7c2fdc71e42d..746814815b1d 100644
---- a/fs/xfs/xfs_extent_busy.c
-+++ b/fs/xfs/xfs_extent_busy.c
-@@ -19,13 +19,13 @@
- #include "xfs_log.h"
- #include "xfs_ag.h"
- 
--void
--xfs_extent_busy_insert(
--	struct xfs_trans	*tp,
-+static void
-+xfs_extent_busy_insert_list(
- 	struct xfs_perag	*pag,
- 	xfs_agblock_t		bno,
- 	xfs_extlen_t		len,
--	unsigned int		flags)
-+	unsigned int		flags,
-+	struct list_head	*busy_list)
- {
- 	struct xfs_extent_busy	*new;
- 	struct xfs_extent_busy	*busyp;
-@@ -40,7 +40,7 @@ xfs_extent_busy_insert(
- 	new->flags = flags;
- 
- 	/* trace before insert to be able to see failed inserts */
--	trace_xfs_extent_busy(tp->t_mountp, pag->pag_agno, bno, len);
-+	trace_xfs_extent_busy(pag->pag_mount, pag->pag_agno, bno, len);
- 
- 	spin_lock(&pag->pagb_lock);
- 	rbp = &pag->pagb_tree.rb_node;
-@@ -62,10 +62,32 @@ xfs_extent_busy_insert(
- 	rb_link_node(&new->rb_node, parent, rbp);
- 	rb_insert_color(&new->rb_node, &pag->pagb_tree);
- 
--	list_add(&new->list, &tp->t_busy);
-+	list_add(&new->list, busy_list);
- 	spin_unlock(&pag->pagb_lock);
- }
- 
-+void
-+xfs_extent_busy_insert(
-+	struct xfs_trans	*tp,
-+	struct xfs_perag	*pag,
-+	xfs_agblock_t		bno,
-+	xfs_extlen_t		len,
-+	unsigned int		flags)
-+{
-+	xfs_extent_busy_insert_list(pag, bno, len, flags, &tp->t_busy);
-+}
-+
-+void
-+xfs_extent_busy_insert_discard(
-+	struct xfs_perag	*pag,
-+	xfs_agblock_t		bno,
-+	xfs_extlen_t		len,
-+	struct list_head	*busy_list)
-+{
-+	xfs_extent_busy_insert_list(pag, bno, len, XFS_EXTENT_BUSY_DISCARDED,
-+			busy_list);
-+}
-+
- /*
-  * Search for a busy extent within the range of the extent we are about to
-  * allocate.  You need to be holding the busy extent tree lock when calling
-diff --git a/fs/xfs/xfs_extent_busy.h b/fs/xfs/xfs_extent_busy.h
-index 71c28d031e3b..0639aab336f3 100644
---- a/fs/xfs/xfs_extent_busy.h
-+++ b/fs/xfs/xfs_extent_busy.h
-@@ -49,6 +49,10 @@ void
- xfs_extent_busy_insert(struct xfs_trans *tp, struct xfs_perag *pag,
- 	xfs_agblock_t bno, xfs_extlen_t len, unsigned int flags);
- 
-+void
-+xfs_extent_busy_insert_discard(struct xfs_perag *pag, xfs_agblock_t bno,
-+	xfs_extlen_t len, struct list_head *busy_list);
-+
- void
- xfs_extent_busy_clear(struct xfs_mount *mp, struct list_head *list,
- 	bool do_discard);
+ static long
 -- 
 2.40.1
 
