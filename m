@@ -2,665 +2,553 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 98A6CE7D0AF
-	for <linux-xfs@archiver.kernel.org>; Thu, 21 Sep 2023 22:21:56 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id AC04FE7D0B0
+	for <linux-xfs@archiver.kernel.org>; Thu, 21 Sep 2023 22:23:03 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231980AbjIUWV7 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 21 Sep 2023 18:21:59 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36436 "EHLO
+        id S232049AbjIUWXH (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 21 Sep 2023 18:23:07 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36270 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233260AbjIUWVi (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 21 Sep 2023 18:21:38 -0400
+        with ESMTP id S233128AbjIUWWy (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 21 Sep 2023 18:22:54 -0400
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D9D0CE7E
-        for <linux-xfs@vger.kernel.org>; Thu, 21 Sep 2023 15:20:55 -0700 (PDT)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 39416C433C9;
-        Thu, 21 Sep 2023 22:20:55 +0000 (UTC)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 05D67188
+        for <linux-xfs@vger.kernel.org>; Thu, 21 Sep 2023 15:22:43 -0700 (PDT)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 91151C433C7;
+        Thu, 21 Sep 2023 22:22:42 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1695334855;
-        bh=EXWFPDTgEOyMaessu7szQmirqshQn17DqBmL1TMxpBU=;
+        s=k20201202; t=1695334962;
+        bh=rKVCQgr4R3OY6NOYF97eeai3brfJ8Uj1rs9BGQFxaQA=;
         h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=OhOd5wrc4bW1p2mVglPHfK2+O17WyhSQdmyCrdMD2e6kgOJ+hCHQX1SXg9grm3Ght
-         5b4IYujEtY3KeaDqsfLV6Wy2hrjPvq7Hd6kHlF5HogRPa9vTEvXbxgBS3fLpZE1Wb+
-         hbdR/ZAEqTkktjZgQ6dI1sWAyPoQkml2N3o6yh+XcPptse/VzoIWapkzObyX5nCp6N
-         Zu00zYsPbK1H+b4nAj77niFt63obJmOOvwaiqbfZ8cpYawJ7CA8RyRnW9TKtSTratW
-         Eon+lgMZ7H50sScvn+uBkoiCbANrobxAnS2OUrwY/2HlPd+xoS45Dqg/2u2Dw7znmt
-         oRCwJJcytVTsQ==
-Date:   Thu, 21 Sep 2023 15:20:54 -0700
+        b=mhsFUnVPqEshwMMynz6lUayZ639XgG+zPoKdxEBQYN0j/7PijgYJPqTLluVEF1q/R
+         CW5wSgnugerfkHCnlnAYH6eTfeL6xHaT8uzPq3oH6PV2WbdE+heTBjumM5x7yr+MQq
+         7QV5CUHfZ38dTeVlg7/6CY/phRuWcsQYZP+EUETtmLLtoaO0JW3MgEs6LwhAtB4azg
+         8kJSNqBGFE1GM95RIb8fowEkT2zw652MRZ6KrZp07y/nO7tTxQ+Vve4KUgK6syeqWx
+         b4cQDBj9oL3G+Ft/V25g2TnUl6/MTmyUcnV3SIIkXZW1dhhf8FaVN17qXyvuYWkYfA
+         SdwUDiSnanUhQ==
+Date:   Thu, 21 Sep 2023 15:22:42 -0700
 From:   "Darrick J. Wong" <djwong@kernel.org>
 To:     Dave Chinner <david@fromorbit.com>
 Cc:     linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 2/9] xfs: AIL doesn't need manual pushing
-Message-ID: <20230921222054.GD11391@frogsfrogsfrogs>
+Subject: Re: [PATCH 5/9] xfs: l_last_sync_lsn is really AIL state
+Message-ID: <20230921222242.GE11391@frogsfrogsfrogs>
 References: <20230921014844.582667-1-david@fromorbit.com>
- <20230921014844.582667-3-david@fromorbit.com>
+ <20230921014844.582667-6-david@fromorbit.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20230921014844.582667-3-david@fromorbit.com>
+In-Reply-To: <20230921014844.582667-6-david@fromorbit.com>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Thu, Sep 21, 2023 at 11:48:37AM +1000, Dave Chinner wrote:
+On Thu, Sep 21, 2023 at 11:48:40AM +1000, Dave Chinner wrote:
 > From: Dave Chinner <dchinner@redhat.com>
 > 
-> We have a mechanism that checks the amount of log space remaining
-> available every time we make a transaction reservation. If the
-> amount of space is below a threshold (25% free) we push on the AIL
-> to tell it to do more work. To do this, we end up calculating the
-> LSN that the AIL needs to push to on every reservation and updating
-> the push target for the AIL with that new target LSN.
+> The current implementation of xlog_assign_tail_lsn() assumes that
+> when the AIL is empty, the log tail matches the LSN of the last
+> written commit record. This is recorded in xlog_state_set_callback()
+> as log->l_last_sync_lsn when the iclog state changes to
+> XLOG_STATE_CALLBACK. This change is then immediately followed by
+> running the callbacks on the iclog which then insert the log items
+> into the AIL at the "commit lsn" of that checkpoint.
 > 
-> This is silly and expensive. The AIL is perfectly capable of
-> calculating the push target itself, and it will always be running
-> when the AIL contains objects.
+> The AIL tracks log items via the start record LSN of the checkpoint,
+> not the commit record LSN. THis is because we can pipeline multiple
+> checkpoints, and so the start record of checkpoint N+1 can be
+> written before the commit record of checkpoint N. i.e:
 > 
-> Modify the AIL to calculate it's 25% push target before it starts a
-> push using the same reserve grant head based calculation as is
-> currently used, and remove all the places where we ask the AIL to
-> push to a new 25% free target.
+>      start N			commit N
+> 	+-------------+------------+----------------+
+> 		  start N+1			commit N+1
 > 
-> This does still require a manual push in certain circumstances.
-> These circumstances arise when the AIL is not full, but the
-> reservation grants consume the entire of the free space in the log.
-> In this case, we still need to push on the AIL to free up space, so
-> when we hit this condition (i.e. reservation going to sleep to wait
-> on log space) we do a single push to tell the AIL it should empty
-> itself. This will keep the AIL moving as new reservations come in
-> and want more space, rather than keep queuing them and having to
-> push the AIL repeatedly.
+> The tail of the log cannot be moved to the LSN of commit N when all
+> the items of that checkpoint are written back, because then the
+> start record for N+1 is no longer in the active portion of the log
+> and recovery will fail/corrupt the filesystem.
+> 
+> Hence when all the log items in checkpoint N are written back, the
+> tail of the log most now only move as far forwards as the start LSN
+> of checkpoint N+1.
+> 
+> Hence we cannot use the maximum start record LSN the AIL sees as a
+> replacement the pointer to the current head of the on-disk log
+> records. However, we currently only use the l_last_sync_lsn when the
+> AIL is empty - when there is no start LSN remaining, the tail of the
+> log moves to the LSN of the last commit record as this is where
+> recovery needs to start searching for recoverable records. THe next
+> checkpoint will have a start record LSN that is higher than
+> l_last_sync_lsn, and so everything still works correctly when new
+> checkpoints are written to an otherwise empty log.
+> 
+> l_last_sync_lsn is an atomic variable because it is currently
+> updated when an iclog with callbacks attached moves to the CALLBACK
+> state. While we hold the icloglock at this point, we don't hold the
+> AIL lock. When we assign the log tail, we hold the AIL lock, not the
+> icloglock because we have to look up the AIL. Hence it is an atomic
+> variable so it's not bound to a specific lock context.
+> 
+> However, the iclog callbacks are only used for CIL checkpoints. We
+> don't use callbacks with unmount record writes, so the
+> l_last_sync_lsn variable only gets updated when we are processing
+> CIL checkpoint callbacks. And those callbacks run under AIL lock
+> contexts, not icloglock context. The CIL checkpoint already knows
+> what the LSN of the iclog the commit record was written to (obtained
+> when written into the iclog before submission) and so we can update
+> the l_last_sync_lsn under the AIL lock in this callback. No other
+> iclog callbacks will run until the currently executing one
+> completes, and hence we can update the l_last_sync_lsn under the AIL
+> lock safely.
+> 
+> This means l_last_sync_lsn can move to the AIL as the "ail_head_lsn"
+> and it can be used to replace the atomic l_last_sync_lsn in the
+> iclog code. This makes tracking the log tail belong entirely to the
+> AIL, rather than being smeared across log, iclog and AIL state and
+> locking.
+> 
+> Signed-off-by: Dave Chinner <dchinner@redhat.com>
+> Reviewed-by: Christoph Hellwig <hch@lst.de>
 
-As hch mentioned, it'd be helpful to paste the explanations from the
-last time I read this:
+Same dumb complaint about "THis is because we can pipeline..." as last
+time:
 
-https://lore.kernel.org/linux-xfs/20220823015156.GM3600936@dread.disaster.area/ 
+https://lore.kernel.org/linux-xfs/YwlG7tLjgq3hdogK@magnolia/ 
 
-into the commit message somewhere, since I had to refer back to it to
-re-remember whats going on in this patch. :)
-
-(Don't waste tons of time reformatting; presenting it as a Q&A is fine.)
-
-Also, "XFS_AIL_OPSTATE_PUSH_ALL" should probably have '_BIT' at the end
-of the name like most of the other #defines we feed to the bitmap
-functions.
-
-Other than those two issues, the logic here looks correct to me.
+With that typo fixed,
+Reviewed-by: Darrick J. Wong <djwong@kernel.org>
 
 --D
 
-> Signed-off-by: Dave Chinner <dchinner@redhat.com>
 > ---
->  fs/xfs/libxfs/xfs_defer.c |   4 +-
->  fs/xfs/xfs_log.c          | 135 ++-----------------------------
->  fs/xfs/xfs_log.h          |   1 -
->  fs/xfs/xfs_log_priv.h     |   2 +
->  fs/xfs/xfs_trans_ail.c    | 162 +++++++++++++++++---------------------
->  fs/xfs/xfs_trans_priv.h   |  33 ++++++--
->  6 files changed, 108 insertions(+), 229 deletions(-)
+>  fs/xfs/xfs_log.c         | 81 +++++-----------------------------------
+>  fs/xfs/xfs_log_cil.c     | 54 ++++++++++++++++++++-------
+>  fs/xfs/xfs_log_priv.h    |  9 ++---
+>  fs/xfs/xfs_log_recover.c | 19 +++++-----
+>  fs/xfs/xfs_trace.c       |  1 +
+>  fs/xfs/xfs_trace.h       |  8 ++--
+>  fs/xfs/xfs_trans_ail.c   | 26 +++++++++++--
+>  fs/xfs/xfs_trans_priv.h  | 13 +++++++
+>  8 files changed, 102 insertions(+), 109 deletions(-)
 > 
-> diff --git a/fs/xfs/libxfs/xfs_defer.c b/fs/xfs/libxfs/xfs_defer.c
-> index bcfb6a4203cd..05ee0b66772d 100644
-> --- a/fs/xfs/libxfs/xfs_defer.c
-> +++ b/fs/xfs/libxfs/xfs_defer.c
-> @@ -12,12 +12,14 @@
->  #include "xfs_mount.h"
->  #include "xfs_defer.h"
->  #include "xfs_trans.h"
-> +#include "xfs_trans_priv.h"
->  #include "xfs_buf_item.h"
->  #include "xfs_inode.h"
->  #include "xfs_inode_item.h"
->  #include "xfs_trace.h"
->  #include "xfs_icache.h"
->  #include "xfs_log.h"
-> +#include "xfs_log_priv.h"
->  #include "xfs_rmap.h"
->  #include "xfs_refcount.h"
->  #include "xfs_bmap.h"
-> @@ -440,7 +442,7 @@ xfs_defer_relog(
->  		 * the log threshold once per call.
->  		 */
->  		if (threshold_lsn == NULLCOMMITLSN) {
-> -			threshold_lsn = xlog_grant_push_threshold(log, 0);
-> +			threshold_lsn = xfs_ail_push_target(log->l_ailp);
->  			if (threshold_lsn == NULLCOMMITLSN)
->  				break;
->  		}
 > diff --git a/fs/xfs/xfs_log.c b/fs/xfs/xfs_log.c
-> index 51c100c86177..bd08d1af59cb 100644
+> index b6db74de02e1..2ceadee276e2 100644
 > --- a/fs/xfs/xfs_log.c
 > +++ b/fs/xfs/xfs_log.c
-> @@ -30,10 +30,6 @@ xlog_alloc_log(
->  	struct xfs_buftarg	*log_target,
->  	xfs_daddr_t		blk_offset,
->  	int			num_bblks);
-> -STATIC int
-> -xlog_space_left(
-> -	struct xlog		*log,
-> -	atomic64_t		*head);
->  STATIC void
->  xlog_dealloc_log(
->  	struct xlog		*log);
-> @@ -51,10 +47,6 @@ xlog_state_get_iclog_space(
->  	struct xlog_ticket	*ticket,
->  	int			*logoffsetp);
->  STATIC void
-> -xlog_grant_push_ail(
-> -	struct xlog		*log,
-> -	int			need_bytes);
-> -STATIC void
->  xlog_sync(
->  	struct xlog		*log,
->  	struct xlog_in_core	*iclog,
-> @@ -242,42 +234,15 @@ xlog_grant_head_wake(
->  {
->  	struct xlog_ticket	*tic;
->  	int			need_bytes;
-> -	bool			woken_task = false;
->  
->  	list_for_each_entry(tic, &head->waiters, t_queue) {
-> -
-> -		/*
-> -		 * There is a chance that the size of the CIL checkpoints in
-> -		 * progress at the last AIL push target calculation resulted in
-> -		 * limiting the target to the log head (l_last_sync_lsn) at the
-> -		 * time. This may not reflect where the log head is now as the
-> -		 * CIL checkpoints may have completed.
-> -		 *
-> -		 * Hence when we are woken here, it may be that the head of the
-> -		 * log that has moved rather than the tail. As the tail didn't
-> -		 * move, there still won't be space available for the
-> -		 * reservation we require.  However, if the AIL has already
-> -		 * pushed to the target defined by the old log head location, we
-> -		 * will hang here waiting for something else to update the AIL
-> -		 * push target.
-> -		 *
-> -		 * Therefore, if there isn't space to wake the first waiter on
-> -		 * the grant head, we need to push the AIL again to ensure the
-> -		 * target reflects both the current log tail and log head
-> -		 * position before we wait for the tail to move again.
-> -		 */
-> -
->  		need_bytes = xlog_ticket_reservation(log, head, tic);
-> -		if (*free_bytes < need_bytes) {
-> -			if (!woken_task)
-> -				xlog_grant_push_ail(log, need_bytes);
-> +		if (*free_bytes < need_bytes)
->  			return false;
-> -		}
->  
->  		*free_bytes -= need_bytes;
->  		trace_xfs_log_grant_wake_up(log, tic);
->  		wake_up_process(tic->t_task);
-> -		woken_task = true;
->  	}
->  
->  	return true;
-> @@ -296,13 +261,15 @@ xlog_grant_head_wait(
->  	do {
->  		if (xlog_is_shutdown(log))
->  			goto shutdown;
-> -		xlog_grant_push_ail(log, need_bytes);
->  
->  		__set_current_state(TASK_UNINTERRUPTIBLE);
->  		spin_unlock(&head->lock);
->  
->  		XFS_STATS_INC(log->l_mp, xs_sleep_logspace);
->  
-> +		/* Push on the AIL to free up all the log space. */
-> +		xfs_ail_push_all(log->l_ailp);
-> +
->  		trace_xfs_log_grant_sleep(log, tic);
->  		schedule();
->  		trace_xfs_log_grant_wake(log, tic);
-> @@ -418,9 +385,6 @@ xfs_log_regrant(
->  	 * of rolling transactions in the log easily.
->  	 */
->  	tic->t_tid++;
-> -
-> -	xlog_grant_push_ail(log, tic->t_unit_res);
-> -
->  	tic->t_curr_res = tic->t_unit_res;
->  	if (tic->t_cnt > 0)
->  		return 0;
-> @@ -477,12 +441,7 @@ xfs_log_reserve(
->  	ASSERT(*ticp == NULL);
->  	tic = xlog_ticket_alloc(log, unit_bytes, cnt, permanent);
->  	*ticp = tic;
-> -
-> -	xlog_grant_push_ail(log, tic->t_cnt ? tic->t_unit_res * tic->t_cnt
-> -					    : tic->t_unit_res);
-> -
->  	trace_xfs_log_reserve(log, tic);
-> -
->  	error = xlog_grant_head_check(log, &log->l_reserve_head, tic,
->  				      &need_bytes);
->  	if (error)
-> @@ -1330,7 +1289,7 @@ xlog_assign_tail_lsn(
->   * shortcut invalidity asserts in this case so that we don't trigger them
->   * falsely.
->   */
-> -STATIC int
-> +int
->  xlog_space_left(
->  	struct xlog	*log,
->  	atomic64_t	*head)
-> @@ -1671,89 +1630,6 @@ xlog_alloc_log(
->  	return ERR_PTR(error);
->  }	/* xlog_alloc_log */
+> @@ -1230,47 +1230,6 @@ xfs_log_cover(
+>  	return error;
+>  }
 >  
 > -/*
-> - * Compute the LSN that we'd need to push the log tail towards in order to have
-> - * (a) enough on-disk log space to log the number of bytes specified, (b) at
-> - * least 25% of the log space free, and (c) at least 256 blocks free.  If the
-> - * log free space already meets all three thresholds, this function returns
-> - * NULLCOMMITLSN.
+> - * We may be holding the log iclog lock upon entering this routine.
 > - */
 > -xfs_lsn_t
-> -xlog_grant_push_threshold(
-> -	struct xlog	*log,
-> -	int		need_bytes)
+> -xlog_assign_tail_lsn_locked(
+> -	struct xfs_mount	*mp)
 > -{
-> -	xfs_lsn_t	threshold_lsn = 0;
-> -	xfs_lsn_t	last_sync_lsn;
-> -	int		free_blocks;
-> -	int		free_bytes;
-> -	int		threshold_block;
-> -	int		threshold_cycle;
-> -	int		free_threshold;
+> -	struct xlog		*log = mp->m_log;
+> -	struct xfs_log_item	*lip;
+> -	xfs_lsn_t		tail_lsn;
 > -
-> -	ASSERT(BTOBB(need_bytes) < log->l_logBBsize);
-> -
-> -	free_bytes = xlog_space_left(log, &log->l_reserve_head.grant);
-> -	free_blocks = BTOBBT(free_bytes);
+> -	assert_spin_locked(&mp->m_ail->ail_lock);
 > -
 > -	/*
-> -	 * Set the threshold for the minimum number of free blocks in the
-> -	 * log to the maximum of what the caller needs, one quarter of the
-> -	 * log, and 256 blocks.
+> -	 * To make sure we always have a valid LSN for the log tail we keep
+> -	 * track of the last LSN which was committed in log->l_last_sync_lsn,
+> -	 * and use that when the AIL was empty.
 > -	 */
-> -	free_threshold = BTOBB(need_bytes);
-> -	free_threshold = max(free_threshold, (log->l_logBBsize >> 2));
-> -	free_threshold = max(free_threshold, 256);
-> -	if (free_blocks >= free_threshold)
-> -		return NULLCOMMITLSN;
-> -
-> -	xlog_crack_atomic_lsn(&log->l_tail_lsn, &threshold_cycle,
-> -						&threshold_block);
-> -	threshold_block += free_threshold;
-> -	if (threshold_block >= log->l_logBBsize) {
-> -		threshold_block -= log->l_logBBsize;
-> -		threshold_cycle += 1;
-> -	}
-> -	threshold_lsn = xlog_assign_lsn(threshold_cycle,
-> -					threshold_block);
-> -	/*
-> -	 * Don't pass in an lsn greater than the lsn of the last
-> -	 * log record known to be on disk. Use a snapshot of the last sync lsn
-> -	 * so that it doesn't change between the compare and the set.
-> -	 */
-> -	last_sync_lsn = atomic64_read(&log->l_last_sync_lsn);
-> -	if (XFS_LSN_CMP(threshold_lsn, last_sync_lsn) > 0)
-> -		threshold_lsn = last_sync_lsn;
-> -
-> -	return threshold_lsn;
+> -	lip = xfs_ail_min(mp->m_ail);
+> -	if (lip)
+> -		tail_lsn = lip->li_lsn;
+> -	else
+> -		tail_lsn = atomic64_read(&log->l_last_sync_lsn);
+> -	trace_xfs_log_assign_tail_lsn(log, tail_lsn);
+> -	atomic64_set(&log->l_tail_lsn, tail_lsn);
+> -	return tail_lsn;
 > -}
 > -
-> -/*
-> - * Push the tail of the log if we need to do so to maintain the free log space
-> - * thresholds set out by xlog_grant_push_threshold.  We may need to adopt a
-> - * policy which pushes on an lsn which is further along in the log once we
-> - * reach the high water mark.  In this manner, we would be creating a low water
-> - * mark.
-> - */
-> -STATIC void
-> -xlog_grant_push_ail(
-> -	struct xlog	*log,
-> -	int		need_bytes)
+> -xfs_lsn_t
+> -xlog_assign_tail_lsn(
+> -	struct xfs_mount	*mp)
 > -{
-> -	xfs_lsn_t	threshold_lsn;
+> -	xfs_lsn_t		tail_lsn;
 > -
-> -	threshold_lsn = xlog_grant_push_threshold(log, need_bytes);
-> -	if (threshold_lsn == NULLCOMMITLSN || xlog_is_shutdown(log))
+> -	spin_lock(&mp->m_ail->ail_lock);
+> -	tail_lsn = xlog_assign_tail_lsn_locked(mp);
+> -	spin_unlock(&mp->m_ail->ail_lock);
+> -
+> -	return tail_lsn;
+> -}
+> -
+>  /*
+>   * Return the space in the log between the tail and the head.  The head
+>   * is passed in the cycle/bytes formal parms.  In the special case where
+> @@ -1504,7 +1463,6 @@ xlog_alloc_log(
+>  	log->l_prev_block  = -1;
+>  	/* log->l_tail_lsn = 0x100000000LL; cycle = 1; current block = 0 */
+>  	xlog_assign_atomic_lsn(&log->l_tail_lsn, 1, 0);
+> -	xlog_assign_atomic_lsn(&log->l_last_sync_lsn, 1, 0);
+>  	log->l_curr_cycle  = 1;	    /* 0 is bad since this is initial value */
+>  
+>  	if (xfs_has_logv2(mp) && mp->m_sb.sb_logsunit > 1)
+> @@ -2552,44 +2510,23 @@ xlog_get_lowest_lsn(
+>  	return lowest_lsn;
+>  }
+>  
+> -/*
+> - * Completion of a iclog IO does not imply that a transaction has completed, as
+> - * transactions can be large enough to span many iclogs. We cannot change the
+> - * tail of the log half way through a transaction as this may be the only
+> - * transaction in the log and moving the tail to point to the middle of it
+> - * will prevent recovery from finding the start of the transaction. Hence we
+> - * should only update the last_sync_lsn if this iclog contains transaction
+> - * completion callbacks on it.
+> - *
+> - * We have to do this before we drop the icloglock to ensure we are the only one
+> - * that can update it.
+> - *
+> - * If we are moving the last_sync_lsn forwards, we also need to ensure we kick
+> - * the reservation grant head pushing. This is due to the fact that the push
+> - * target is bound by the current last_sync_lsn value. Hence if we have a large
+> - * amount of log space bound up in this committing transaction then the
+> - * last_sync_lsn value may be the limiting factor preventing tail pushing from
+> - * freeing space in the log. Hence once we've updated the last_sync_lsn we
+> - * should push the AIL to ensure the push target (and hence the grant head) is
+> - * no longer bound by the old log head location and can move forwards and make
+> - * progress again.
+> - */
+>  static void
+>  xlog_state_set_callback(
+>  	struct xlog		*log,
+>  	struct xlog_in_core	*iclog,
+>  	xfs_lsn_t		header_lsn)
+>  {
+> +	/*
+> +	 * If there are no callbacks on this iclog, we can mark it clean
+> +	 * immediately and return. Otherwise we need to run the
+> +	 * callbacks.
+> +	 */
+> +	if (list_empty(&iclog->ic_callbacks)) {
+> +		xlog_state_clean_iclog(log, iclog);
+> +		return;
+> +	}
+>  	trace_xlog_iclog_callback(iclog, _RET_IP_);
+>  	iclog->ic_state = XLOG_STATE_CALLBACK;
+> -
+> -	ASSERT(XFS_LSN_CMP(atomic64_read(&log->l_last_sync_lsn),
+> -			   header_lsn) <= 0);
+> -
+> -	if (list_empty_careful(&iclog->ic_callbacks))
 > -		return;
 > -
-> -	/*
-> -	 * Get the transaction layer to kick the dirty buffers out to
-> -	 * disk asynchronously. No point in trying to do this if
-> -	 * the filesystem is shutting down.
-> -	 */
-> -	xfs_ail_push(log->l_ailp, threshold_lsn);
-> -}
-> -
+> -	atomic64_set(&log->l_last_sync_lsn, header_lsn);
+>  }
+>  
 >  /*
->   * Stamp cycle number in every block
+> diff --git a/fs/xfs/xfs_log_cil.c b/fs/xfs/xfs_log_cil.c
+> index c1fee14be5c2..1bedf03d863c 100644
+> --- a/fs/xfs/xfs_log_cil.c
+> +++ b/fs/xfs/xfs_log_cil.c
+> @@ -722,6 +722,24 @@ xlog_cil_ail_insert_batch(
+>   * items into the the AIL. This uses bulk insertion techniques to minimise AIL
+>   * lock traffic.
+>   *
+> + * The AIL tracks log items via the start record LSN of the checkpoint,
+> + * not the commit record LSN. This is because we can pipeline multiple
+> + * checkpoints, and so the start record of checkpoint N+1 can be
+> + * written before the commit record of checkpoint N. i.e:
+> + *
+> + *   start N			commit N
+> + *	+-------------+------------+----------------+
+> + *		  start N+1			commit N+1
+> + *
+> + * The tail of the log cannot be moved to the LSN of commit N when all
+> + * the items of that checkpoint are written back, because then the
+> + * start record for N+1 is no longer in the active portion of the log
+> + * and recovery will fail/corrupt the filesystem.
+> + *
+> + * Hence when all the log items in checkpoint N are written back, the
+> + * tail of the log most now only move as far forwards as the start LSN
+> + * of checkpoint N+1.
+> + *
+>   * If we are called with the aborted flag set, it is because a log write during
+>   * a CIL checkpoint commit has failed. In this case, all the items in the
+>   * checkpoint have already gone through iop_committed and iop_committing, which
+> @@ -739,24 +757,33 @@ xlog_cil_ail_insert_batch(
 >   */
-> @@ -2715,7 +2591,6 @@ xlog_state_set_callback(
->  		return;
+>  static void
+>  xlog_cil_ail_insert(
+> -	struct xlog		*log,
+> -	struct list_head	*lv_chain,
+> -	xfs_lsn_t		commit_lsn,
+> +	struct xfs_cil_ctx	*ctx,
+>  	bool			aborted)
+>  {
+>  #define LOG_ITEM_BATCH_SIZE	32
+> -	struct xfs_ail		*ailp = log->l_ailp;
+> +	struct xfs_ail		*ailp = ctx->cil->xc_log->l_ailp;
+>  	struct xfs_log_item	*log_items[LOG_ITEM_BATCH_SIZE];
+>  	struct xfs_log_vec	*lv;
+>  	struct xfs_ail_cursor	cur;
+>  	int			i = 0;
 >  
->  	atomic64_set(&log->l_last_sync_lsn, header_lsn);
-> -	xlog_grant_push_ail(log, 0);
->  }
->  
->  /*
-> diff --git a/fs/xfs/xfs_log.h b/fs/xfs/xfs_log.h
-> index 2728886c2963..6b6ee35b3885 100644
-> --- a/fs/xfs/xfs_log.h
-> +++ b/fs/xfs/xfs_log.h
-> @@ -156,7 +156,6 @@ int	xfs_log_quiesce(struct xfs_mount *mp);
->  void	xfs_log_clean(struct xfs_mount *mp);
->  bool	xfs_log_check_lsn(struct xfs_mount *, xfs_lsn_t);
->  
-> -xfs_lsn_t xlog_grant_push_threshold(struct xlog *log, int need_bytes);
->  bool	  xlog_force_shutdown(struct xlog *log, uint32_t shutdown_flags);
->  
->  void xlog_use_incompat_feat(struct xlog *log);
-> diff --git a/fs/xfs/xfs_log_priv.h b/fs/xfs/xfs_log_priv.h
-> index af87648331d5..d4124ef9d97f 100644
-> --- a/fs/xfs/xfs_log_priv.h
-> +++ b/fs/xfs/xfs_log_priv.h
-> @@ -576,6 +576,8 @@ xlog_assign_grant_head(atomic64_t *head, int cycle, int space)
->  	atomic64_set(head, xlog_assign_grant_head_val(cycle, space));
->  }
->  
-> +int xlog_space_left(struct xlog *log, atomic64_t *head);
-> +
->  /*
->   * Committed Item List interfaces
->   */
-> diff --git a/fs/xfs/xfs_trans_ail.c b/fs/xfs/xfs_trans_ail.c
-> index 1098452e7f95..31a4e5e5d899 100644
-> --- a/fs/xfs/xfs_trans_ail.c
-> +++ b/fs/xfs/xfs_trans_ail.c
-> @@ -134,25 +134,6 @@ xfs_ail_min_lsn(
->  	return lsn;
->  }
->  
-> -/*
-> - * Return the maximum lsn held in the AIL, or zero if the AIL is empty.
-> - */
-> -static xfs_lsn_t
-> -xfs_ail_max_lsn(
-> -	struct xfs_ail		*ailp)
-> -{
-> -	xfs_lsn_t       	lsn = 0;
-> -	struct xfs_log_item	*lip;
-> -
-> -	spin_lock(&ailp->ail_lock);
-> -	lip = xfs_ail_max(ailp);
-> -	if (lip)
-> -		lsn = lip->li_lsn;
-> -	spin_unlock(&ailp->ail_lock);
-> -
-> -	return lsn;
-> -}
-> -
->  /*
->   * The cursor keeps track of where our current traversal is up to by tracking
->   * the next item in the list for us. However, for this to be safe, removing an
-> @@ -414,6 +395,56 @@ xfsaild_push_item(
->  	return lip->li_ops->iop_push(lip, &ailp->ail_buf_list);
->  }
->  
-> +/*
-> + * Compute the LSN that we'd need to push the log tail towards in order to have
-> + * at least 25% of the log space free.  If the log free space already meets this
-> + * threshold, this function returns NULLCOMMITLSN.
-> + */
-> +xfs_lsn_t
-> +__xfs_ail_push_target(
-> +	struct xfs_ail		*ailp)
-> +{
-> +	struct xlog	*log = ailp->ail_log;
-> +	xfs_lsn_t	threshold_lsn = 0;
-> +	xfs_lsn_t	last_sync_lsn;
-> +	int		free_blocks;
-> +	int		free_bytes;
-> +	int		threshold_block;
-> +	int		threshold_cycle;
-> +	int		free_threshold;
-> +
-> +	free_bytes = xlog_space_left(log, &log->l_reserve_head.grant);
-> +	free_blocks = BTOBBT(free_bytes);
-> +
 > +	/*
-> +	 * The threshold for the minimum number of free blocks is one quarter of
-> +	 * the entire log space.
+> +	 * Update the AIL head LSN with the commit record LSN of this
+> +	 * checkpoint. As iclogs are always completed in order, this should
+> +	 * always be the same (as iclogs can contain multiple commit records) or
+> +	 * higher LSN than the current head. We do this before insertion of the
+> +	 * items so that log space checks during insertion will reflect the
+> +	 * space that this checkpoint has already consumed.
 > +	 */
-> +	free_threshold = log->l_logBBsize >> 2;
-> +	if (free_blocks >= free_threshold)
-> +		return NULLCOMMITLSN;
-> +
-> +	xlog_crack_atomic_lsn(&log->l_tail_lsn, &threshold_cycle,
-> +						&threshold_block);
-> +	threshold_block += free_threshold;
-> +	if (threshold_block >= log->l_logBBsize) {
-> +		threshold_block -= log->l_logBBsize;
-> +		threshold_cycle += 1;
-> +	}
-> +	threshold_lsn = xlog_assign_lsn(threshold_cycle,
-> +					threshold_block);
-> +	/*
-> +	 * Don't pass in an lsn greater than the lsn of the last
-> +	 * log record known to be on disk. Use a snapshot of the last sync lsn
-> +	 * so that it doesn't change between the compare and the set.
-> +	 */
-> +	last_sync_lsn = atomic64_read(&log->l_last_sync_lsn);
-> +	if (XFS_LSN_CMP(threshold_lsn, last_sync_lsn) > 0)
-> +		threshold_lsn = last_sync_lsn;
-> +
-> +	return threshold_lsn;
-> +}
-> +
->  static long
->  xfsaild_push(
->  	struct xfs_ail		*ailp)
-> @@ -454,21 +485,24 @@ xfsaild_push(
->  	 * capture updates that occur after the sync push waiter has gone to
->  	 * sleep.
->  	 */
-> -	if (waitqueue_active(&ailp->ail_empty)) {
-> +	if (test_bit(XFS_AIL_OPSTATE_PUSH_ALL, &ailp->ail_opstate) ||
-> +	    waitqueue_active(&ailp->ail_empty)) {
->  		lip = xfs_ail_max(ailp);
->  		if (lip)
->  			target = lip->li_lsn;
-> +		else
-> +			clear_bit(XFS_AIL_OPSTATE_PUSH_ALL, &ailp->ail_opstate);
->  	} else {
-> -		/* barrier matches the ail_target update in xfs_ail_push() */
-> -		smp_rmb();
-> -		target = ailp->ail_target;
-> -		ailp->ail_target_prev = target;
-> +		target = __xfs_ail_push_target(ailp);
->  	}
->  
-> +	if (target == NULLCOMMITLSN)
-> +		goto out_done;
-> +
->  	/* we're done if the AIL is empty or our push has reached the end */
->  	lip = xfs_trans_ail_cursor_first(ailp, &cur, ailp->ail_last_pushed_lsn);
->  	if (!lip)
-> -		goto out_done;
-> +		goto out_done_cursor;
->  
->  	XFS_STATS_INC(mp, xs_push_ail);
->  
-> @@ -553,8 +587,9 @@ xfsaild_push(
->  		lsn = lip->li_lsn;
->  	}
->  
-> -out_done:
-> +out_done_cursor:
->  	xfs_trans_ail_cursor_done(&cur);
-> +out_done:
+> +	ASSERT(XFS_LSN_CMP(ctx->commit_lsn, ailp->ail_head_lsn) >= 0 ||
+> +			aborted);
+>  	spin_lock(&ailp->ail_lock);
+> -	xfs_trans_ail_cursor_last(ailp, &cur, commit_lsn);
+> +	ailp->ail_head_lsn = ctx->commit_lsn;
+> +	xfs_trans_ail_cursor_last(ailp, &cur, ctx->start_lsn);
 >  	spin_unlock(&ailp->ail_lock);
 >  
->  	if (xfs_buf_delwri_submit_nowait(&ailp->ail_buf_list))
-> @@ -603,7 +638,7 @@ xfsaild(
->  	set_freezable();
+>  	/* unpin all the log items */
+> -	list_for_each_entry(lv, lv_chain, lv_list) {
+> +	list_for_each_entry(lv, &ctx->lv_chain, lv_list) {
+>  		struct xfs_log_item	*lip = lv->lv_item;
+>  		xfs_lsn_t		item_lsn;
 >  
->  	while (1) {
-> -		if (tout && tout <= 20)
-> +		if (tout)
->  			set_current_state(TASK_KILLABLE|TASK_FREEZABLE);
->  		else
->  			set_current_state(TASK_INTERRUPTIBLE|TASK_FREEZABLE);
-> @@ -639,21 +674,9 @@ xfsaild(
->  			break;
+> @@ -769,9 +796,10 @@ xlog_cil_ail_insert(
 >  		}
 >  
-> +		/* Idle if the AIL is empty. */
->  		spin_lock(&ailp->ail_lock);
-> -
-> -		/*
-> -		 * Idle if the AIL is empty and we are not racing with a target
-> -		 * update. We check the AIL after we set the task to a sleep
-> -		 * state to guarantee that we either catch an ail_target update
-> -		 * or that a wake_up resets the state to TASK_RUNNING.
-> -		 * Otherwise, we run the risk of sleeping indefinitely.
-> -		 *
-> -		 * The barrier matches the ail_target update in xfs_ail_push().
-> -		 */
-> -		smp_rmb();
-> -		if (!xfs_ail_min(ailp) &&
-> -		    ailp->ail_target == ailp->ail_target_prev &&
-> -		    list_empty(&ailp->ail_buf_list)) {
-> +		if (!xfs_ail_min(ailp) && list_empty(&ailp->ail_buf_list)) {
->  			spin_unlock(&ailp->ail_lock);
->  			schedule();
->  			tout = 0;
-> @@ -675,56 +698,6 @@ xfsaild(
->  	return 0;
+>  		if (lip->li_ops->iop_committed)
+> -			item_lsn = lip->li_ops->iop_committed(lip, commit_lsn);
+> +			item_lsn = lip->li_ops->iop_committed(lip,
+> +					ctx->start_lsn);
+>  		else
+> -			item_lsn = commit_lsn;
+> +			item_lsn = ctx->start_lsn;
+>  
+>  		/* item_lsn of -1 means the item needs no further processing */
+>  		if (XFS_LSN_CMP(item_lsn, (xfs_lsn_t)-1) == 0)
+> @@ -788,7 +816,7 @@ xlog_cil_ail_insert(
+>  			continue;
+>  		}
+>  
+> -		if (item_lsn != commit_lsn) {
+> +		if (item_lsn != ctx->start_lsn) {
+>  
+>  			/*
+>  			 * Not a bulk update option due to unusual item_lsn.
+> @@ -811,14 +839,15 @@ xlog_cil_ail_insert(
+>  		log_items[i++] = lv->lv_item;
+>  		if (i >= LOG_ITEM_BATCH_SIZE) {
+>  			xlog_cil_ail_insert_batch(ailp, &cur, log_items,
+> -					LOG_ITEM_BATCH_SIZE, commit_lsn);
+> +					LOG_ITEM_BATCH_SIZE, ctx->start_lsn);
+>  			i = 0;
+>  		}
+>  	}
+>  
+>  	/* make sure we insert the remainder! */
+>  	if (i)
+> -		xlog_cil_ail_insert_batch(ailp, &cur, log_items, i, commit_lsn);
+> +		xlog_cil_ail_insert_batch(ailp, &cur, log_items, i,
+> +				ctx->start_lsn);
+>  
+>  	spin_lock(&ailp->ail_lock);
+>  	xfs_trans_ail_cursor_done(&cur);
+> @@ -934,8 +963,7 @@ xlog_cil_committed(
+>  		spin_unlock(&ctx->cil->xc_push_lock);
+>  	}
+>  
+> -	xlog_cil_ail_insert(ctx->cil->xc_log, &ctx->lv_chain,
+> -					ctx->start_lsn, abort);
+> +	xlog_cil_ail_insert(ctx, abort);
+>  
+>  	xfs_extent_busy_sort(&ctx->busy_extents);
+>  	xfs_extent_busy_clear(mp, &ctx->busy_extents,
+> diff --git a/fs/xfs/xfs_log_priv.h b/fs/xfs/xfs_log_priv.h
+> index 01c333f712ae..106483cf1fb6 100644
+> --- a/fs/xfs/xfs_log_priv.h
+> +++ b/fs/xfs/xfs_log_priv.h
+> @@ -429,13 +429,10 @@ struct xlog {
+>  	int			l_prev_block;   /* previous logical log block */
+>  
+>  	/*
+> -	 * l_last_sync_lsn and l_tail_lsn are atomics so they can be set and
+> -	 * read without needing to hold specific locks. To avoid operations
+> -	 * contending with other hot objects, place each of them on a separate
+> -	 * cacheline.
+> +	 * l_tail_lsn is atomic so it can be set and read without needing to
+> +	 * hold specific locks. To avoid operations contending with other hot
+> +	 * objects, it on a separate cacheline.
+>  	 */
+> -	/* lsn of last LR on disk */
+> -	atomic64_t		l_last_sync_lsn ____cacheline_aligned_in_smp;
+>  	/* lsn of 1st LR with unflushed * buffers */
+>  	atomic64_t		l_tail_lsn ____cacheline_aligned_in_smp;
+>  
+> diff --git a/fs/xfs/xfs_log_recover.c b/fs/xfs/xfs_log_recover.c
+> index 13b94d2e605b..8d963c3db4f3 100644
+> --- a/fs/xfs/xfs_log_recover.c
+> +++ b/fs/xfs/xfs_log_recover.c
+> @@ -1177,8 +1177,8 @@ xlog_check_unmount_rec(
+>  			 */
+>  			xlog_assign_atomic_lsn(&log->l_tail_lsn,
+>  					log->l_curr_cycle, after_umount_blk);
+> -			xlog_assign_atomic_lsn(&log->l_last_sync_lsn,
+> -					log->l_curr_cycle, after_umount_blk);
+> +			log->l_ailp->ail_head_lsn =
+> +					atomic64_read(&log->l_tail_lsn);
+>  			*tail_blk = after_umount_blk;
+>  
+>  			*clean = true;
+> @@ -1212,7 +1212,7 @@ xlog_set_state(
+>  	if (bump_cycle)
+>  		log->l_curr_cycle++;
+>  	atomic64_set(&log->l_tail_lsn, be64_to_cpu(rhead->h_tail_lsn));
+> -	atomic64_set(&log->l_last_sync_lsn, be64_to_cpu(rhead->h_lsn));
+> +	log->l_ailp->ail_head_lsn = be64_to_cpu(rhead->h_lsn);
+>  	xlog_assign_grant_head(&log->l_reserve_head.grant, log->l_curr_cycle,
+>  					BBTOB(log->l_curr_block));
+>  	xlog_assign_grant_head(&log->l_write_head.grant, log->l_curr_cycle,
+> @@ -3299,14 +3299,13 @@ xlog_do_recover(
+>  
+>  	/*
+>  	 * We now update the tail_lsn since much of the recovery has completed
+> -	 * and there may be space available to use.  If there were no extent
+> -	 * or iunlinks, we can free up the entire log and set the tail_lsn to
+> -	 * be the last_sync_lsn.  This was set in xlog_find_tail to be the
+> -	 * lsn of the last known good LR on disk.  If there are extent frees
+> -	 * or iunlinks they will have some entries in the AIL; so we look at
+> -	 * the AIL to determine how to set the tail_lsn.
+> +	 * and there may be space available to use.  If there were no extent or
+> +	 * iunlinks, we can free up the entire log.  This was set in
+> +	 * xlog_find_tail to be the lsn of the last known good LR on disk.  If
+> +	 * there are extent frees or iunlinks they will have some entries in the
+> +	 * AIL; so we look at the AIL to determine how to set the tail_lsn.
+>  	 */
+> -	xlog_assign_tail_lsn(mp);
+> +	xfs_ail_assign_tail_lsn(log->l_ailp);
+>  
+>  	/*
+>  	 * Now that we've finished replaying all buffer and inode updates,
+> diff --git a/fs/xfs/xfs_trace.c b/fs/xfs/xfs_trace.c
+> index 8a5dc1538aa8..2bf489b445ee 100644
+> --- a/fs/xfs/xfs_trace.c
+> +++ b/fs/xfs/xfs_trace.c
+> @@ -22,6 +22,7 @@
+>  #include "xfs_trans.h"
+>  #include "xfs_log.h"
+>  #include "xfs_log_priv.h"
+> +#include "xfs_trans_priv.h"
+>  #include "xfs_buf_item.h"
+>  #include "xfs_quota.h"
+>  #include "xfs_dquot_item.h"
+> diff --git a/fs/xfs/xfs_trace.h b/fs/xfs/xfs_trace.h
+> index 3926cf7f2a6e..784c6d63daa9 100644
+> --- a/fs/xfs/xfs_trace.h
+> +++ b/fs/xfs/xfs_trace.h
+> @@ -1388,19 +1388,19 @@ TRACE_EVENT(xfs_log_assign_tail_lsn,
+>  		__field(dev_t, dev)
+>  		__field(xfs_lsn_t, new_lsn)
+>  		__field(xfs_lsn_t, old_lsn)
+> -		__field(xfs_lsn_t, last_sync_lsn)
+> +		__field(xfs_lsn_t, head_lsn)
+>  	),
+>  	TP_fast_assign(
+>  		__entry->dev = log->l_mp->m_super->s_dev;
+>  		__entry->new_lsn = new_lsn;
+>  		__entry->old_lsn = atomic64_read(&log->l_tail_lsn);
+> -		__entry->last_sync_lsn = atomic64_read(&log->l_last_sync_lsn);
+> +		__entry->head_lsn = log->l_ailp->ail_head_lsn;
+>  	),
+> -	TP_printk("dev %d:%d new tail lsn %d/%d, old lsn %d/%d, last sync %d/%d",
+> +	TP_printk("dev %d:%d new tail lsn %d/%d, old lsn %d/%d, head lsn %d/%d",
+>  		  MAJOR(__entry->dev), MINOR(__entry->dev),
+>  		  CYCLE_LSN(__entry->new_lsn), BLOCK_LSN(__entry->new_lsn),
+>  		  CYCLE_LSN(__entry->old_lsn), BLOCK_LSN(__entry->old_lsn),
+> -		  CYCLE_LSN(__entry->last_sync_lsn), BLOCK_LSN(__entry->last_sync_lsn))
+> +		  CYCLE_LSN(__entry->head_lsn), BLOCK_LSN(__entry->head_lsn))
+>  )
+>  
+>  DECLARE_EVENT_CLASS(xfs_file_class,
+> diff --git a/fs/xfs/xfs_trans_ail.c b/fs/xfs/xfs_trans_ail.c
+> index e31bfeb01375..4fa7f2f77563 100644
+> --- a/fs/xfs/xfs_trans_ail.c
+> +++ b/fs/xfs/xfs_trans_ail.c
+> @@ -715,6 +715,26 @@ xfs_ail_push_all_sync(
+>  	finish_wait(&ailp->ail_empty, &wait);
 >  }
 >  
-> -/*
-> - * This routine is called to move the tail of the AIL forward.  It does this by
-> - * trying to flush items in the AIL whose lsns are below the given
-> - * threshold_lsn.
-> - *
-> - * The push is run asynchronously in a workqueue, which means the caller needs
-> - * to handle waiting on the async flush for space to become available.
-> - * We don't want to interrupt any push that is in progress, hence we only queue
-> - * work if we set the pushing bit appropriately.
-> - *
-> - * We do this unlocked - we only need to know whether there is anything in the
-> - * AIL at the time we are called. We don't need to access the contents of
-> - * any of the objects, so the lock is not needed.
-> - */
-> -void
-> -xfs_ail_push(
-> -	struct xfs_ail		*ailp,
-> -	xfs_lsn_t		threshold_lsn)
-> -{
-> -	struct xfs_log_item	*lip;
-> -
-> -	lip = xfs_ail_min(ailp);
-> -	if (!lip || xlog_is_shutdown(ailp->ail_log) ||
-> -	    XFS_LSN_CMP(threshold_lsn, ailp->ail_target) <= 0)
-> -		return;
-> -
-> -	/*
-> -	 * Ensure that the new target is noticed in push code before it clears
-> -	 * the XFS_AIL_PUSHING_BIT.
-> -	 */
-> -	smp_wmb();
-> -	xfs_trans_ail_copy_lsn(ailp, &ailp->ail_target, &threshold_lsn);
-> -	smp_wmb();
-> -
-> -	wake_up_process(ailp->ail_task);
-> -}
-> -
-> -/*
-> - * Push out all items in the AIL immediately
-> - */
-> -void
-> -xfs_ail_push_all(
-> -	struct xfs_ail  *ailp)
-> -{
-> -	xfs_lsn_t       threshold_lsn = xfs_ail_max_lsn(ailp);
-> -
-> -	if (threshold_lsn)
-> -		xfs_ail_push(ailp, threshold_lsn);
-> -}
-> -
->  /*
->   * Push out all items in the AIL immediately and wait until the AIL is empty.
->   */
-> @@ -829,6 +802,13 @@ xfs_trans_ail_update_bulk(
->  	if (!list_empty(&tmp))
->  		xfs_ail_splice(ailp, cur, &tmp, lsn);
->  
-> +	/*
-> +	 * If this is the first insert, wake up the push daemon so it can
-> +	 * actively scan for items to push.
-> +	 */
-> +	if (!mlip)
-> +		wake_up_process(ailp->ail_task);
+> +void
+> +__xfs_ail_assign_tail_lsn(
+> +	struct xfs_ail		*ailp)
+> +{
+> +	struct xlog		*log = ailp->ail_log;
+> +	xfs_lsn_t		tail_lsn;
 > +
->  	xfs_ail_update_finish(ailp, tail_lsn);
->  }
+> +	assert_spin_locked(&ailp->ail_lock);
+> +
+> +	if (xlog_is_shutdown(log))
+> +		return;
+> +
+> +	tail_lsn = __xfs_ail_min_lsn(ailp);
+> +	if (!tail_lsn)
+> +		tail_lsn = ailp->ail_head_lsn;
+> +
+> +	trace_xfs_log_assign_tail_lsn(log, tail_lsn);
+> +	atomic64_set(&log->l_tail_lsn, tail_lsn);
+> +}
+> +
+>  /*
+>   * Callers should pass the the original tail lsn so that we can detect if the
+>   * tail has moved as a result of the operation that was performed. If the caller
+> @@ -729,15 +749,13 @@ xfs_ail_update_finish(
+>  {
+>  	struct xlog		*log = ailp->ail_log;
 >  
+> -	/* if the tail lsn hasn't changed, don't do updates or wakeups. */
+> +	/* If the tail lsn hasn't changed, don't do updates or wakeups. */
+>  	if (!old_lsn || old_lsn == __xfs_ail_min_lsn(ailp)) {
+>  		spin_unlock(&ailp->ail_lock);
+>  		return;
+>  	}
+>  
+> -	if (!xlog_is_shutdown(log))
+> -		xlog_assign_tail_lsn_locked(log->l_mp);
+> -
+> +	__xfs_ail_assign_tail_lsn(ailp);
+>  	if (list_empty(&ailp->ail_head))
+>  		wake_up_all(&ailp->ail_empty);
+>  	spin_unlock(&ailp->ail_lock);
 > diff --git a/fs/xfs/xfs_trans_priv.h b/fs/xfs/xfs_trans_priv.h
-> index 52a45f0a5ef1..9a131e7fae94 100644
+> index 9a131e7fae94..6541a6c3ea22 100644
 > --- a/fs/xfs/xfs_trans_priv.h
 > +++ b/fs/xfs/xfs_trans_priv.h
-> @@ -52,16 +52,18 @@ struct xfs_ail {
->  	struct xlog		*ail_log;
->  	struct task_struct	*ail_task;
->  	struct list_head	ail_head;
-> -	xfs_lsn_t		ail_target;
-> -	xfs_lsn_t		ail_target_prev;
+> @@ -55,6 +55,7 @@ struct xfs_ail {
 >  	struct list_head	ail_cursors;
 >  	spinlock_t		ail_lock;
 >  	xfs_lsn_t		ail_last_pushed_lsn;
+> +	xfs_lsn_t		ail_head_lsn;
 >  	int			ail_log_flush;
-> +	unsigned long		ail_opstate;
+>  	unsigned long		ail_opstate;
 >  	struct list_head	ail_buf_list;
->  	wait_queue_head_t	ail_empty;
->  };
+> @@ -135,6 +136,18 @@ struct xfs_log_item *	xfs_trans_ail_cursor_next(struct xfs_ail *ailp,
+>  					struct xfs_ail_cursor *cur);
+>  void			xfs_trans_ail_cursor_done(struct xfs_ail_cursor *cur);
 >  
-> +/* Push all items out of the AIL immediately. */
-> +#define XFS_AIL_OPSTATE_PUSH_ALL	0u
+> +void			__xfs_ail_assign_tail_lsn(struct xfs_ail *ailp);
 > +
->  /*
->   * From xfs_trans_ail.c
->   */
-> @@ -98,10 +100,29 @@ void xfs_ail_update_finish(struct xfs_ail *ailp, xfs_lsn_t old_lsn)
->  			__releases(ailp->ail_lock);
->  void xfs_trans_ail_delete(struct xfs_log_item *lip, int shutdown_type);
->  
-> -void			xfs_ail_push(struct xfs_ail *, xfs_lsn_t);
-> -void			xfs_ail_push_all(struct xfs_ail *);
-> -void			xfs_ail_push_all_sync(struct xfs_ail *);
-> -struct xfs_log_item	*xfs_ail_min(struct xfs_ail  *ailp);
-> +static inline void xfs_ail_push(struct xfs_ail *ailp)
+> +static inline void
+> +xfs_ail_assign_tail_lsn(
+> +	struct xfs_ail		*ailp)
 > +{
-> +	wake_up_process(ailp->ail_task);
-> +}
-> +
-> +static inline void xfs_ail_push_all(struct xfs_ail *ailp)
-> +{
-> +	if (!test_and_set_bit(XFS_AIL_OPSTATE_PUSH_ALL, &ailp->ail_opstate))
-> +		xfs_ail_push(ailp);
-> +}
-> +
-> +xfs_lsn_t		__xfs_ail_push_target(struct xfs_ail *ailp);
-> +static inline xfs_lsn_t xfs_ail_push_target(struct xfs_ail *ailp)
-> +{
-> +	xfs_lsn_t	lsn;
 > +
 > +	spin_lock(&ailp->ail_lock);
-> +	lsn = __xfs_ail_push_target(ailp);
+> +	__xfs_ail_assign_tail_lsn(ailp);
 > +	spin_unlock(&ailp->ail_lock);
-> +	return lsn;
 > +}
 > +
-> +void			xfs_ail_push_all_sync(struct xfs_ail *ailp);
->  xfs_lsn_t		xfs_ail_min_lsn(struct xfs_ail *ailp);
->  
->  struct xfs_log_item *	xfs_trans_ail_cursor_first(struct xfs_ail *ailp,
+>  #if BITS_PER_LONG != 64
+>  static inline void
+>  xfs_trans_ail_copy_lsn(
 > -- 
 > 2.40.1
 > 
