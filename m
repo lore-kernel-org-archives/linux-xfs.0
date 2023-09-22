@@ -2,70 +2,68 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0C358E8180B
-	for <linux-xfs@archiver.kernel.org>; Fri, 22 Sep 2023 19:38:22 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3FF02CE7A88
+	for <linux-xfs@archiver.kernel.org>; Fri, 22 Sep 2023 23:47:08 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229540AbjIVTi0 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 22 Sep 2023 15:38:26 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60196 "EHLO
+        id S230358AbjIVXrM (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 22 Sep 2023 19:47:12 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59096 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229495AbjIVTiZ (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 22 Sep 2023 15:38:25 -0400
-Received: from casper.infradead.org (casper.infradead.org [IPv6:2001:8b0:10b:1236::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id DC934AF;
-        Fri, 22 Sep 2023 12:38:18 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=infradead.org; s=casper.20170209; h=In-Reply-To:Content-Type:MIME-Version:
-        References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
-        Content-Transfer-Encoding:Content-ID:Content-Description;
-        bh=TwghE0UWvedzbS9x4AhHOtwKLQCqsKJyy8dRVBG0BLM=; b=J+2aR6VVMtP3vyHszk4csseJuH
-        cHY42l/HKolxgTYY1E1HcC6ojrTdLFolrI31cdR/vAFPJq3sYRWZ8odsSrTte74EyWyjpaq8ro1gY
-        AqnjXNxiPbMV/Z7/4xU17R8I4yXrdHd0w54moXRI+LrEq1SJEVXPDCBOajVnyQyLFdw0ujB0remek
-        l/oGsO8Gke0LF7eHik74oK+w314N7cqkDf9a6hIdyDCzDJWnkqGb9pDflISC2vW8t8jICY4fjfbAf
-        Eh3DKfCJd8PMRQyZqo03OKf+6v6/PUahX0ytz3bluv7VVVKc6qO3HTaH/ZOd8an84LQPNFbQriI5c
-        Tv5T5aMQ==;
-Received: from willy by casper.infradead.org with local (Exim 4.94.2 #2 (Red Hat Linux))
-        id 1qjlyZ-002Tkn-BO; Fri, 22 Sep 2023 19:38:07 +0000
-Date:   Fri, 22 Sep 2023 20:38:07 +0100
-From:   Matthew Wilcox <willy@infradead.org>
-To:     Dave Chinner <david@fromorbit.com>
-Cc:     Luis Chamberlain <mcgrof@kernel.org>,
-        Pankaj Raghav <p.raghav@samsung.com>,
-        Pankaj Raghav <kernel@pankajraghav.com>,
-        linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
-        da.gomez@samsung.com, akpm@linux-foundation.org,
-        linux-kernel@vger.kernel.org, djwong@kernel.org,
-        linux-mm@kvack.org, chandan.babu@oracle.com, gost.dev@samsung.com,
-        riteshh@linux.ibm.com
-Subject: Re: [RFC 00/23] Enable block size > page size in XFS
-Message-ID: <ZQ3tH61w+2Sf7AL2@casper.infradead.org>
-References: <20230915183848.1018717-1-kernel@pankajraghav.com>
- <ZQd4IPeVI+o6M38W@dread.disaster.area>
- <ZQewKIfRYcApEYXt@bombadil.infradead.org>
- <CGME20230918050749eucas1p13c219481b4b08c1d58e90ea70ff7b9c8@eucas1p1.samsung.com>
- <ZQfbHloBUpDh+zCg@dread.disaster.area>
- <806df723-78cf-c7eb-66a6-1442c02126b3@samsung.com>
- <ZQuxvAd2lxWppyqO@bombadil.infradead.org>
- <ZQvNVAfZMjE3hgmN@bombadil.infradead.org>
- <ZQvczBjY4vTLJFBp@dread.disaster.area>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <ZQvczBjY4vTLJFBp@dread.disaster.area>
+        with ESMTP id S229628AbjIVXrL (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 22 Sep 2023 19:47:11 -0400
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id EFD221A2;
+        Fri, 22 Sep 2023 16:47:05 -0700 (PDT)
+Received: by smtp.kernel.org (Postfix) with ESMTPS id 8F6D6C433C7;
+        Fri, 22 Sep 2023 23:47:05 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1695426425;
+        bh=TdS1ZuZlAt40479VMrdWJdEh9l9LYee0826UvUik5mc=;
+        h=Subject:From:In-Reply-To:References:Date:To:Cc:From;
+        b=IZ4iWtqnyvib+zcPrewFKVRPVvppoV6vJEedPdwikN2FnBa/5d679tJhpGcq/AGEm
+         kPUI6qGLFisg2SZd0P1mYwUYxyXCiEEDviepDxz/Nvxo2mTYLP7frv8XGVjhtoYpTJ
+         0z5g2TUsbnrpksDrOlDzYB+2sAv5QAKoHS+jRhce+FnKBaUq5suFLFq4sZUhPq8mz8
+         n18vrkaGoAGAjtd41856bJY4cXY2b8fsKPfN/uzISTbgcJk4shI9ksFfQnBPzqCDpK
+         wsq+0Y1Sn93yh0pZC36Am6soJ3VMB2F9ZwN2Nsrq+W4mg/iLhoEmninwXb3/SmYh2X
+         mNOO8hsGanM9g==
+Received: from aws-us-west-2-korg-oddjob-1.ci.codeaurora.org (localhost.localdomain [127.0.0.1])
+        by aws-us-west-2-korg-oddjob-1.ci.codeaurora.org (Postfix) with ESMTP id 7E725C04DD9;
+        Fri, 22 Sep 2023 23:47:05 +0000 (UTC)
+Subject: Re: [GIT PULL] xfs: bug fixes for 6.6
+From:   pr-tracker-bot@kernel.org
+In-Reply-To: <87ediqit40.fsf@debian-BULLSEYE-live-builder-AMD64>
+References: <87ediqit40.fsf@debian-BULLSEYE-live-builder-AMD64>
+X-PR-Tracked-List-Id: <linux-xfs.vger.kernel.org>
+X-PR-Tracked-Message-Id: <87ediqit40.fsf@debian-BULLSEYE-live-builder-AMD64>
+X-PR-Tracked-Remote: https://git.kernel.org/pub/scm/fs/xfs/xfs-linux.git xfs-6.6-fixes-1
+X-PR-Tracked-Commit-Id: 8b010acb3154b669e52f0eef4a6d925e3cc1db2f
+X-PR-Merge-Tree: torvalds/linux.git
+X-PR-Merge-Refname: refs/heads/master
+X-PR-Merge-Commit-Id: 3abc79dce60e91f2aeec8abf1d09b250722fbeb5
+Message-Id: <169542642550.13260.8636780757032586902.pr-tracker-bot@kernel.org>
+Date:   Fri, 22 Sep 2023 23:47:05 +0000
+To:     Chandan Babu R <chandanbabu@kernel.org>
+Cc:     torvalds@linux-foundation.org, chandanbabu@kernel.org,
+        linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org,
+        bodonnel@redhat.com, david@fromorbit.com, dchinner@redhat.com,
+        djwong@kernel.org, harshit.m.mogalapalli@oracle.com,
+        lukas.bulwahn@gmail.com, peterz@infradead.org,
+        ritesh.list@gmail.com, sandeen@sandeen.net,
+        srikanth.c.s@oracle.com, sshegde@linux.vnet.ibm.com,
+        tglx@linutronix.de, wangjc136@midea.com, wen.gang.wang@oracle.com
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-lOn Thu, Sep 21, 2023 at 04:03:56PM +1000, Dave Chinner wrote:
-> So there's clearly something wrong here - it's likely that the
-> filesystem IO alignment parameters pulled from the underlying block
-> device (4k physical, 512 byte logical sector sizes) are improperly
-> interpreted.  i.e. for a filesystem with a sector size of 4kB,
-> direct IO with an alignment of 512 bytes should be rejected......
+The pull request you sent on Fri, 22 Sep 2023 12:22:00 +0530:
 
-I wonder if it's something in the truncation code that's splitting folios
-that ought not to be split.  Does this test possibly keep folios in
-cache that maybe get invalidated?
+> https://git.kernel.org/pub/scm/fs/xfs/xfs-linux.git xfs-6.6-fixes-1
 
-truncate_inode_partial_folio() is the one i'm most concernd about.
-but i'm also severely jetlagged.
+has been merged into torvalds/linux.git:
+https://git.kernel.org/torvalds/c/3abc79dce60e91f2aeec8abf1d09b250722fbeb5
+
+Thank you!
+
+-- 
+Deet-doot-dot, I am a bot.
+https://korg.docs.kernel.org/prtracker.html
