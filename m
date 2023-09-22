@@ -2,165 +2,131 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B17C9E7D0D6
-	for <linux-xfs@archiver.kernel.org>; Fri, 22 Sep 2023 07:07:17 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E1E73CD4846
+	for <linux-xfs@archiver.kernel.org>; Fri, 22 Sep 2023 17:14:51 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229966AbjIVHHV (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 22 Sep 2023 03:07:21 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35826 "EHLO
+        id S230348AbjIVRO4 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 22 Sep 2023 13:14:56 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60498 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229623AbjIVHHV (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 22 Sep 2023 03:07:21 -0400
+        with ESMTP id S231687AbjIVROz (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 22 Sep 2023 13:14:55 -0400
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3734918F;
-        Fri, 22 Sep 2023 00:07:15 -0700 (PDT)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 631F3C433C7;
-        Fri, 22 Sep 2023 07:07:14 +0000 (UTC)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id EE465197;
+        Fri, 22 Sep 2023 10:14:48 -0700 (PDT)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 0C60EC433C8;
+        Fri, 22 Sep 2023 17:14:46 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1695366434;
-        bh=5mc7QDNPsWG80dur3Ssvxv2WoJhmtfg/kPi7/0MdrL4=;
-        h=From:To:Cc:Subject:Date:From;
-        b=NTujho/ZU0LA35BgvAkZWcc6zlkwH7V1gmRZroPcAnSzi//ahfuHLIShQHkd8Ibh/
-         8AQ7oY5sWTS00ZtJB/6RibQN7sXINVDcd058nBOFa0TARug4nwqFBFFwV5Qg+88WL5
-         9pvJgTl8d/yPTX01Gmj2qHtae30zAPK60Casr0qWbKuCdvSODGFiczI2T68yL1z7wE
-         OgDx4tSRuzZJYYOPDsxxpQJ+VkZm2+KHsEGLL1HJDopBxqwh6UkSUfgqmLsIftvfQq
-         gnpsGKHjKFzglr00+i2X6ilYAbZFEL/hacHUDU9rEf+TAk7OLS2Lx7zVR24Z3W5Elo
-         M2dRDmOKMQlyA==
-User-agent: mu4e 1.8.10; emacs 27.1
-From:   Chandan Babu R <chandanbabu@kernel.org>
-To:     torvalds@linux-foundation.org
-Cc:     chandanbabu@kernel.org, linux-fsdevel@vger.kernel.org,
-        linux-xfs@vger.kernel.org, bodonnel@redhat.com,
-        david@fromorbit.com, dchinner@redhat.com, djwong@kernel.org,
-        harshit.m.mogalapalli@oracle.com, lukas.bulwahn@gmail.com,
-        peterz@infradead.org, ritesh.list@gmail.com, sandeen@sandeen.net,
-        srikanth.c.s@oracle.com, sshegde@linux.vnet.ibm.com,
-        tglx@linutronix.de, wangjc136@midea.com, wen.gang.wang@oracle.com
-Subject: [GIT PULL] xfs: bug fixes for 6.6
-Date:   Fri, 22 Sep 2023 12:22:00 +0530
-Message-ID: <87ediqit40.fsf@debian-BULLSEYE-live-builder-AMD64>
+        s=k20201202; t=1695402888;
+        bh=RATeZnXh5R72GIn+XDIT+T4I9Ey9Dt25YMsmWUhQM1k=;
+        h=From:Subject:Date:To:Cc:From;
+        b=o/4UwmRgvVgOrjivAZ0m2Yp8TDz52mHti/dCTL2sfkQcSJuPMzlDIluOBnvqFXYD+
+         CxHYtc9eF5F4VlqHq3juQHqwx8G3pfckhSGlnTqVx0D4mOILYlZc0+m8ueqmdrIkuN
+         vQdfTa5f7ko3QROIKMUQcPBnM1bt62OqKQkRM0fYkAcQnj7lNWY33R5NisTSwmeC3M
+         WR8CjRHqf/pFIUXM3Is/j+ViOx2OhIkKRV6IjJIXRqsv3rs3MNo2A626KAA6OKyieO
+         so8kqb5eoFDgx6GddHxQX4lWw9z+dEnA+eRsfAJBuW9vIT2JTe84E7FFMTQxOg2PLl
+         KuUYbB8g4pbXg==
+From:   Jeff Layton <jlayton@kernel.org>
+Subject: [PATCH v8 0/5] fs: multigrain timestamps for XFS's change_cookie
+Date:   Fri, 22 Sep 2023 13:14:39 -0400
+Message-Id: <20230922-ctime-v8-0-45f0c236ede1@kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
+X-B4-Tracking: v=1; b=H4sIAIDLDWUC/6tWKk4tykwtVrJSqFYqSi3LLM7MzwNyLHQUlJIzE
+ vPSU3UzU4B8JSMDI2MDSyND3eSSzNxUXdMk80QzI4tEkyRLUyWg2oKi1LTMCrA50bG1tQBXw+L
+ xVwAAAA==
+To:     Alexander Viro <viro@zeniv.linux.org.uk>,
+        Christian Brauner <brauner@kernel.org>,
+        Chuck Lever <chuck.lever@oracle.com>,
+        Neil Brown <neilb@suse.de>,
+        Olga Kornievskaia <kolga@netapp.com>,
+        Dai Ngo <Dai.Ngo@oracle.com>, Tom Talpey <tom@talpey.com>,
+        Chandan Babu R <chandan.babu@oracle.com>,
+        "Darrick J. Wong" <djwong@kernel.org>,
+        Dave Chinner <david@fromorbit.com>, Jan Kara <jack@suse.cz>,
+        Linus Torvalds <torvalds@linux-foundation.org>
+Cc:     Kent Overstreet <kent.overstreet@linux.dev>,
+        linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-nfs@vger.kernel.org, linux-xfs@vger.kernel.org,
+        Jeff Layton <jlayton@kernel.org>
+X-Mailer: b4 0.12.3
+X-Developer-Signature: v=1; a=openpgp-sha256; l=2634; i=jlayton@kernel.org;
+ h=from:subject:message-id; bh=RATeZnXh5R72GIn+XDIT+T4I9Ey9Dt25YMsmWUhQM1k=;
+ b=owEBbQKS/ZANAwAIAQAOaEEZVoIVAcsmYgBlDcuGuFF5a+fCeaA02G7XyP4SUITqXWcEhddVl
+ pUMI5rHcZKJAjMEAAEIAB0WIQRLwNeyRHGyoYTq9dMADmhBGVaCFQUCZQ3LhgAKCRAADmhBGVaC
+ FVDZEACWaWtx8XKSHyv+QPSPgv21QuoUzBkMMJiaicQvu63y6uFY7cNRcVE6YquS0WwW3AidxAR
+ wvPXe0tS9EsUzwKMdb29WFzy6ftqJj1vVdQDIWD+lIE2ywO6G6rGOLLjhOucQuiMbcnDoj4kUfk
+ Wb9BcBnqqWQJC+UJd92dV+stZgJ+vrHGHiN3n6x54Oe67xI7s6k8t04ybGT5KDHW0lKfQbXWD5S
+ NLdnn31Au8xE6gTLaLqKco/q1yjQpGLeWiQt8h9L0JFS/UXd30ahuki0LWZLh+Vqppwg099r+rV
+ IQnEeobAP1tKKXLI9M/5xzPU49QVhgmG/ixnucX12t3SNIG38kYgv/5JtLJT4OPqhwuPBQgcnSv
+ cuXjNwmON5rlGZHKvA7DdQbgscRcWLd64v1jcEYQ7JS4mgY6Mx9OV/hpD60pF4rkfPIFKFETjMo
+ IxlfJFERXdHgymKUb7BINuwC9eI4yB8z3pOgMMfw1eeUUvNpS6r88Hix+Suhc5ay/7Ne0NH68EJ
+ YBceJVU7VM9iGPc+jmj4Ya27fr0jKdr8qidY++g/K/E9Vn3wEezCeTT2PTc3NSnTlo4+4mckzn6
+ Y8aXxGTD/qJ4ukjH7hvKKK10ENSBehzbwrmwHtTl2YeZMRMvgaJE35fCJ1U5B67YaxitY1JrROX
+ MLZTVrRZDTltulQ==
+X-Developer-Key: i=jlayton@kernel.org; a=openpgp;
+ fpr=4BC0D7B24471B2A184EAF5D3000E684119568215
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Hi Linus,
+My initial goal was to implement multigrain timestamps on most major
+filesystems, so we could present them to userland, and use them for
+NFSv3, etc.
 
-Please pull this branch with changes for xfs for 6.6-rc3. The changes are
-limited to only bug fixes whose summary is provided below.
+With the current implementation however, we can't guarantee that a file
+with a coarse grained timestamp modified after one with a fine grained
+timestamp will always appear to have a later value. This could confuse
+some programs like make, rsync, find, etc. that depend on strict
+ordering requirements for timestamps.
 
-I did a test-merge with the main upstream branch as of a few minutes ago and
-didn't see any conflicts.  Please let me know if you encounter any problems.
+The goal of this version is more modest: fix XFS' change attribute.
+XFS's change attribute is bumped on atime updates in addition to other
+deliberate changes. This makes it unsuitable for export via nfsd.
 
-The following changes since commit 0bb80ecc33a8fb5a682236443c1e740d5c917d1d:
+Jan Kara suggested keeping this functionality internal-only for now and
+plumbing the fine grained timestamps through getattr [1]. This set takes
+a slightly different approach and has XFS use the fine-grained attr to
+fake up STATX_CHANGE_COOKIE in its getattr routine itself.
 
-  Linux 6.6-rc1 (2023-09-10 16:28:41 -0700)
+While we keep fine-grained timestamps in struct inode, when presenting
+the timestamps via getattr, we truncate them at a granularity of number
+of ns per jiffy, which allows us to smooth over the fuzz that causes
+ordering problems.
 
-are available in the Git repository at:
+This set only converts XFS to use this scheme. All of the other
+commonly-exported local filesystems have a native change attribute and
+wouldn't clearly benefit from mgtime support at this time. Still, it
+should be possible to add this support to other filesystems in the
+future, as the need arises (bcachefs?).
 
-  https://git.kernel.org/pub/scm/fs/xfs/xfs-linux.git xfs-6.6-fixes-1
+I'd like to see this go in for v6.7 if possible, so getting it into
+linux-next now would be great if there are no objections.
 
-for you to fetch changes up to 8b010acb3154b669e52f0eef4a6d925e3cc1db2f:
+[1]: https://lore.kernel.org/linux-fsdevel/20230920124823.ghl6crb5sh4x2pmt@quack3/
 
-  xfs: use roundup_pow_of_two instead of ffs during xlog_find_tail (2023-09-13 10:38:20 +0530)
+Signed-off-by: Jeff Layton <jlayton@kernel.org>
+---
+Jeff Layton (5):
+      fs: add infrastructure for multigrain timestamps
+      fs: optimize away some fine-grained timestamp updates
+      fs: have setattr_copy handle multigrain timestamps appropriately
+      fs: add timestamp_truncate_to_gran helper
+      xfs: switch to multigrain timestamps
 
-----------------------------------------------------------------
-Bug fixes for 6.6-rc3:
+ fs/attr.c                       |  52 ++++++++++++--
+ fs/inode.c                      | 151 ++++++++++++++++++++++++++++++++++++----
+ fs/xfs/libxfs/xfs_trans_inode.c |   6 +-
+ fs/xfs/xfs_iops.c               |  26 +++++--
+ fs/xfs/xfs_super.c              |   2 +-
+ include/linux/fs.h              |  64 ++++++++++++++++-
+ 6 files changed, 269 insertions(+), 32 deletions(-)
+---
+base-commit: f8f2d6d669b91ea98ec8f182c22e06d3d0663e15
+change-id: 20230921-ctime-5b7a628a4b95
 
- * Fix an integer overflow bug when processing an fsmap call.
+Best regards,
+-- 
+Jeff Layton <jlayton@kernel.org>
 
- * Fix crash due to CPU hot remove event racing with filesystem mount
-   operation.
-
- * During read-only mount, XFS does not allow the contents of the log to be
-   recovered when there are one or more unrecognized rcompat features in the
-   primary superblock, since the log might have intent items which the kernel
-   does not know how to process.
-
- * During recovery of log intent items, XFS now reserves log space sufficient
-   for one cycle of a permanent transaction to execute. Otherwise, this could
-   lead to livelocks due to non-availability of log space.
-
- * On an fs which has an ondisk unlinked inode list, trying to delete a file
-   or allocating an O_TMPFILE file can cause the fs to the shutdown if the
-   first inode in the ondisk inode list is not present in the inode cache.
-   The bug is solved by explicitly loading the first inode in the ondisk
-   unlinked inode list into the inode cache if it is not already cached.
-
-   A similar problem arises when the uncached inode is present in the middle
-   of the ondisk unlinked inode list. This second bug is triggered when
-   executing operations like quotacheck and bulkstat. In this case, XFS now
-   reads in the entire ondisk unlinked inode list.
-
- * Enable LARP mode only on recent v5 filesystems.
-
- * Fix a out of bounds memory access in scrub.
-
- * Fix a performance bug when locating the tail of the log during mounting a
-   filesystem.
-
-Signed-off-by: Chandan Babu R <chandanbabu@kernel.org>
-
-----------------------------------------------------------------
-Chandan Babu R (8):
-      Merge tag 'fix-fsmap-6.6_2023-09-12' of https://git.kernel.org/pub/scm/linux/kernel/git/djwong/xfs-linux into xfs-6.6-fixesA
-      Merge tag 'fix-percpu-lists-6.6_2023-09-12' of https://git.kernel.org/pub/scm/linux/kernel/git/djwong/xfs-linux into xfs-6.6-fixesA
-      Merge tag 'fix-ro-mounts-6.6_2023-09-12' of https://git.kernel.org/pub/scm/linux/kernel/git/djwong/xfs-linux into xfs-6.6-fixesA
-      Merge tag 'fix-efi-recovery-6.6_2023-09-12' of https://git.kernel.org/pub/scm/linux/kernel/git/djwong/xfs-linux into xfs-6.6-fixesA
-      Merge tag 'fix-iunlink-6.6_2023-09-12' of https://git.kernel.org/pub/scm/linux/kernel/git/djwong/xfs-linux into xfs-6.6-fixesA
-      Merge tag 'fix-iunlink-list-6.6_2023-09-12' of https://git.kernel.org/pub/scm/linux/kernel/git/djwong/xfs-linux into xfs-6.6-fixesA
-      Merge tag 'fix-larp-requirements-6.6_2023-09-12' of https://git.kernel.org/pub/scm/linux/kernel/git/djwong/xfs-linux into xfs-6.6-fixesA
-      Merge tag 'fix-scrub-6.6_2023-09-12' of https://git.kernel.org/pub/scm/linux/kernel/git/djwong/xfs-linux into xfs-6.6-fixesA
-
-Darrick J. Wong (14):
-      xfs: fix per-cpu CIL structure aggregation racing with dying cpus
-      xfs: fix an agbno overflow in __xfs_getfsmap_datadev
-      xfs: use per-mount cpumask to track nonempty percpu inodegc lists
-      xfs: remove the all-mounts list
-      xfs: remove CPU hotplug infrastructure
-      xfs: use i_prev_unlinked to distinguish inodes that are not on the unlinked list
-      xfs: allow inode inactivation during a ro mount log recovery
-      xfs: reload entire unlinked bucket lists
-      xfs: fix log recovery when unknown rocompat bits are set
-      xfs: reserve less log space when recovering log intent items
-      xfs: load uncached unlinked inodes into memory on demand
-      xfs: make inode unlinked bucket recovery work with quotacheck
-      xfs: require a relatively recent V5 filesystem for LARP mode
-      xfs: only call xchk_stats_merge after validating scrub inputs
-
-Lukas Bulwahn (1):
-      xfs: fix select in config XFS_ONLINE_SCRUB_STATS
-
-Wang Jianchao (1):
-      xfs: use roundup_pow_of_two instead of ffs during xlog_find_tail
-
- fs/xfs/Kconfig                  |   2 +-
- fs/xfs/libxfs/xfs_log_recover.h |  22 +++++
- fs/xfs/libxfs/xfs_sb.c          |   3 +-
- fs/xfs/scrub/scrub.c            |   4 +-
- fs/xfs/scrub/stats.c            |   5 +-
- fs/xfs/xfs_attr_inactive.c      |   1 -
- fs/xfs/xfs_attr_item.c          |   7 +-
- fs/xfs/xfs_bmap_item.c          |   4 +-
- fs/xfs/xfs_export.c             |   6 ++
- fs/xfs/xfs_extfree_item.c       |   4 +-
- fs/xfs/xfs_fsmap.c              |  25 +++--
- fs/xfs/xfs_icache.c             |  80 ++++++---------
- fs/xfs/xfs_icache.h             |   1 -
- fs/xfs/xfs_inode.c              | 209 +++++++++++++++++++++++++++++++++++++---
- fs/xfs/xfs_inode.h              |  34 ++++++-
- fs/xfs/xfs_itable.c             |   9 ++
- fs/xfs/xfs_log.c                |  17 ----
- fs/xfs/xfs_log_cil.c            |  52 +++-------
- fs/xfs/xfs_log_priv.h           |  14 ++-
- fs/xfs/xfs_log_recover.c        |   4 +-
- fs/xfs/xfs_mount.h              |  17 +++-
- fs/xfs/xfs_qm.c                 |   7 ++
- fs/xfs/xfs_refcount_item.c      |   6 +-
- fs/xfs/xfs_rmap_item.c          |   6 +-
- fs/xfs/xfs_super.c              |  86 +----------------
- fs/xfs/xfs_trace.h              |  45 +++++++++
- fs/xfs/xfs_xattr.c              |  11 +++
- include/linux/cpuhotplug.h      |   1 -
- 28 files changed, 441 insertions(+), 241 deletions(-)
