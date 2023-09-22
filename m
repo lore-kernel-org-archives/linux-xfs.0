@@ -2,251 +2,205 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D17E3E7D0C2
-	for <linux-xfs@archiver.kernel.org>; Fri, 22 Sep 2023 01:02:10 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 96EF7E7D0BA
+	for <linux-xfs@archiver.kernel.org>; Fri, 22 Sep 2023 01:04:45 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230031AbjIVBCO (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 21 Sep 2023 21:02:14 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58164 "EHLO
+        id S229503AbjIVBEt (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 21 Sep 2023 21:04:49 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38688 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229596AbjIVBCN (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 21 Sep 2023 21:02:13 -0400
-Received: from mail-pl1-x631.google.com (mail-pl1-x631.google.com [IPv6:2607:f8b0:4864:20::631])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C9885191;
-        Thu, 21 Sep 2023 18:02:07 -0700 (PDT)
-Received: by mail-pl1-x631.google.com with SMTP id d9443c01a7336-1c59c40b840so14732805ad.3;
-        Thu, 21 Sep 2023 18:02:07 -0700 (PDT)
+        with ESMTP id S229452AbjIVBEt (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 21 Sep 2023 21:04:49 -0400
+Received: from mail-ot1-x332.google.com (mail-ot1-x332.google.com [IPv6:2607:f8b0:4864:20::332])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E55C6F5
+        for <linux-xfs@vger.kernel.org>; Thu, 21 Sep 2023 18:04:42 -0700 (PDT)
+Received: by mail-ot1-x332.google.com with SMTP id 46e09a7af769-6beff322a97so966793a34.3
+        for <linux-xfs@vger.kernel.org>; Thu, 21 Sep 2023 18:04:42 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1695344527; x=1695949327; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=5EQwThOiasL4de5Y5vJ+ZLwZXFoPo1unIHxbqTwkXC8=;
-        b=ERMOA85BazzCj7u5gk3carKu3tcRfeXsc9XTfVxfNkvCsF7+u0cbeB+aT6QPSsp/Fz
-         +GvQIGyfKHekxZsmk8E00aR8jcnB/ww1a7EWmJwbEyzJodHQ1IVoT5DLWTx4ScPWqVBa
-         ocIqZTBFkdc6yqSKx9nkxBBUiR9Ci4ksFS+xQHow3jSJD8bc+6CnzXZLrF8OKEcFDeqx
-         xTUd5x3xhxwUQyfUaE7Ch3QCBtV35jHl3LTgPfsdamXDvhm5EavBtlrpmVtgl5OiPAhr
-         KJjZpozISXbyuXNdFIUQDFl5nWbGfjFaAI1Qb6PrmmGWqjVNQSDcZRjQ194FkMcVa+dI
-         riRQ==
+        d=fromorbit-com.20230601.gappssmtp.com; s=20230601; t=1695344682; x=1695949482; darn=vger.kernel.org;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
+        bh=4wp+r4GdOnH58EcMX1QyqTccBfJ+GHxJ/3kfShwd91Q=;
+        b=pnEReDj7aHQHxUEX0MXVeCol7tow4//kS28hPU4sWRMi1LvNkpl/lgD7LBGuKvh9T7
+         0U0pOG8TpjBE26snXE26BevER5+Uf4IDnAOB2yiD43WHgKklN7WEzyt9q0l8dwFh7nBG
+         Rx9y6DfB04w/Q23Fp2fTMDfbNv2NRG2T1MizqfzYixMzJKn6uIzlGywOxA75yHTvPurS
+         PkaoMSvvJeY0E1VfwFuCVs633drSjBgGWD0YHl0YyVdRRMlXSfweOg4zkbjTz4yUv7+y
+         A0F/xH50a4kVz8J5mAMTOVNvnz/rxW6drjSPeBvc2dS2ncfp65q3dycukwkEUow7HvdC
+         bxvQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1695344527; x=1695949327;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=5EQwThOiasL4de5Y5vJ+ZLwZXFoPo1unIHxbqTwkXC8=;
-        b=AkUQltsGSGUTBbPdezGpAT8puepzB3EM5XH0rgCiM2j6iZ0zw4e+z2myIFBE0Hkuml
-         8As90FSs11Q2Kwbhnr31mXNLCyCSXFz7XEbp7Ulfzf8Xm6FuR9hHuCxqhPh4QkY588RH
-         JVKlyDNdB4kbBMp3jjUj67mBVJ0Tc94IvlIvfXCoycCwjGwlQ7GeKx8y2rSW+wFNtPPl
-         RWhcdeMZQnLBXktgn/UW/61WmJ8ECNdotUbZ4+1PMuiDGA/1zkS00hFZSED2S3g6qOeW
-         xO8nrUMdyvDRGImH6M2ISWMswjqm61xq47qbSDBGFZqkoD33w/jbfx+cPTBPY4pybG7I
-         WJIQ==
-X-Gm-Message-State: AOJu0YxEltKiwPCOc01K+esjQkL31L90b4J3+0M5+gO15RBtgoHXq4gO
-        RInr2rGZL0u8qWe00HeqvDgorAQlfaHeBQ==
-X-Google-Smtp-Source: AGHT+IH5MjAHpRSKHDzuu+1w7S2b6diJbtxDrdjHHxc51XoPVd/FrrmjiDSGio4AcAs6/mz29RBfjg==
-X-Received: by 2002:a17:90a:bb8b:b0:268:b682:23de with SMTP id v11-20020a17090abb8b00b00268b68223demr7562891pjr.28.1695344527027;
-        Thu, 21 Sep 2023 18:02:07 -0700 (PDT)
-Received: from lrumancik.svl.corp.google.com ([2620:15c:2a3:200:d5ff:b7b0:7028:8af6])
-        by smtp.gmail.com with ESMTPSA id u2-20020a17090282c200b001bc445e2497sm2178815plz.79.2023.09.21.18.02.06
+        d=1e100.net; s=20230601; t=1695344682; x=1695949482;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=4wp+r4GdOnH58EcMX1QyqTccBfJ+GHxJ/3kfShwd91Q=;
+        b=eLMLb4XpDm3BaiPXZfzI15vyhbVuB9WUHMt5XdRYw0B2051WtT7NO8ewYciLdqd+Ek
+         NGz1/k+ESd/E8GxfowVBeWePiiMmj+7FT/wQtBWv7vbc/P1ufk02qjqV7C5ZNHDEn/fn
+         +CD2xCIYRfo9i4+BIYaWkio4V9PdO1PaH3pvdUUEycO6H57GCHbhjThPnKkLQ/KyCNY1
+         dKvju0s83AwXa5dqAFqzSoUcI0VihQ1b6Bkd5ouGZV8mvaou+qOsECaKF8fd+cuaNTPL
+         DvFIKSzx1EfDdfRZdLnLaHzULwkTFyWgb7lJDN2Rc+G8aiI5hWmwW8UajRJgjWSm213E
+         bHBg==
+X-Gm-Message-State: AOJu0Yz4qGvXDJQA5CSa3g+GCJfTXd7pwv9iqN4DVsCRmVhc8G2+HRRn
+        Mu4mzDfvxdGK59spzzBNc0UOnQ==
+X-Google-Smtp-Source: AGHT+IEoLmd0BRoCPKRYosBuquEx7XxaJ5pFzAA9zqM515maY/fFdoBw1g+X45oc5GEKm2EoiNEhJA==
+X-Received: by 2002:a05:6358:9185:b0:13a:9d5:356a with SMTP id j5-20020a056358918500b0013a09d5356amr8999598rwa.21.1695344682083;
+        Thu, 21 Sep 2023 18:04:42 -0700 (PDT)
+Received: from dread.disaster.area (pa49-180-20-59.pa.nsw.optusnet.com.au. [49.180.20.59])
+        by smtp.gmail.com with ESMTPSA id fm1-20020a056a002f8100b0068a538cc7adsm1989818pfb.52.2023.09.21.18.04.41
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 21 Sep 2023 18:02:06 -0700 (PDT)
-From:   Leah Rumancik <leah.rumancik@gmail.com>
-To:     stable@vger.kernel.org
-Cc:     linux-xfs@vger.kernel.org, amir73il@gmail.com,
-        chandan.babu@oracle.com, "Darrick J. Wong" <djwong@kernel.org>,
-        Dave Chinner <dchinner@redhat.com>,
-        Dave Chinner <david@fromorbit.com>,
-        Leah Rumancik <leah.rumancik@gmail.com>
-Subject: [PATCH 5.15 6/6] xfs: fix xfs_inodegc_stop racing with mod_delayed_work
-Date:   Thu, 21 Sep 2023 18:01:56 -0700
-Message-ID: <20230922010156.1718782-6-leah.rumancik@gmail.com>
-X-Mailer: git-send-email 2.42.0.515.g380fc7ccd1-goog
-In-Reply-To: <20230922010156.1718782-1-leah.rumancik@gmail.com>
-References: <20230922010156.1718782-1-leah.rumancik@gmail.com>
+        Thu, 21 Sep 2023 18:04:41 -0700 (PDT)
+Received: from dave by dread.disaster.area with local (Exim 4.96)
+        (envelope-from <david@fromorbit.com>)
+        id 1qjUb0-003tNa-1m;
+        Fri, 22 Sep 2023 11:04:38 +1000
+Date:   Fri, 22 Sep 2023 11:04:38 +1000
+From:   Dave Chinner <david@fromorbit.com>
+To:     "Darrick J. Wong" <djwong@kernel.org>
+Cc:     linux-xfs@vger.kernel.org
+Subject: Re: [PATCH 1/3] xfs: move log discard work to xfs_discard.c
+Message-ID: <ZQzoJoYVrK7HV8v8@dread.disaster.area>
+References: <20230921013945.559634-1-david@fromorbit.com>
+ <20230921013945.559634-2-david@fromorbit.com>
+ <20230921155243.GC11391@frogsfrogsfrogs>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20230921155243.GC11391@frogsfrogsfrogs>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-From: "Darrick J. Wong" <djwong@kernel.org>
+On Thu, Sep 21, 2023 at 08:52:43AM -0700, Darrick J. Wong wrote:
+> On Thu, Sep 21, 2023 at 11:39:43AM +1000, Dave Chinner wrote:
+> > From: Dave Chinner <dchinner@redhat.com>
+> > 
+> > Because we are going to use the same list-based discard submission
+> > interface for fstrim-based discards, too.
+> > 
+> > Signed-off-by: Dave Chinner <dchinner@redhat.com>
+....
+> > @@ -31,6 +28,23 @@ struct xfs_extent_busy {
+> >  #define XFS_EXTENT_BUSY_SKIP_DISCARD	0x02	/* do not discard */
+> >  };
+> >  
+> > +/*
+> > + * List used to track groups of related busy extents all the way through
+> > + * to discard completion.
+> > + */
+> > +struct xfs_busy_extents {
+> > +	struct xfs_mount	*mount;
+> > +	struct list_head	extent_list;
+> > +	struct work_struct	endio_work;
+> > +
+> > +	/*
+> > +	 * Owner is the object containing the struct xfs_busy_extents to free
+> > +	 * once the busy extents have been processed. If only the
+> > +	 * xfs_busy_extents object needs freeing, then point this at itself.
+> > +	 */
+> > +	void			*owner;
+> > +};
+> > +
+> >  void
+> >  xfs_extent_busy_insert(struct xfs_trans *tp, struct xfs_perag *pag,
+> >  	xfs_agblock_t bno, xfs_extlen_t len, unsigned int flags);
+> > diff --git a/fs/xfs/xfs_log_cil.c b/fs/xfs/xfs_log_cil.c
+> > index 3aec5589d717..c340987880c8 100644
+> > --- a/fs/xfs/xfs_log_cil.c
+> > +++ b/fs/xfs/xfs_log_cil.c
+> > @@ -16,8 +16,7 @@
+> >  #include "xfs_log.h"
+> >  #include "xfs_log_priv.h"
+> >  #include "xfs_trace.h"
+> > -
+> > -struct workqueue_struct *xfs_discard_wq;
+> > +#include "xfs_discard.h"
+> >  
+> >  /*
+> >   * Allocate a new ticket. Failing to get a new ticket makes it really hard to
+> > @@ -103,7 +102,7 @@ xlog_cil_ctx_alloc(void)
+> >  
+> >  	ctx = kmem_zalloc(sizeof(*ctx), KM_NOFS);
+> >  	INIT_LIST_HEAD(&ctx->committing);
+> > -	INIT_LIST_HEAD(&ctx->busy_extents);
+> > +	INIT_LIST_HEAD(&ctx->busy_extents.extent_list);
+> 
+> I wonder if xfs_busy_extents should have an initializer function to
+> INIT_LIST_HEAD and set mount/owner?  This patch and the next one both
+> have similar initialization sequences.
+> 
+> (Not sure if you want to INIT_WORK at the same time?)
+> 
+> >  	INIT_LIST_HEAD(&ctx->log_items);
+> >  	INIT_LIST_HEAD(&ctx->lv_chain);
+> >  	INIT_WORK(&ctx->push_work, xlog_cil_push_work);
+> > @@ -132,7 +131,7 @@ xlog_cil_push_pcp_aggregate(
+> >  
+> >  		if (!list_empty(&cilpcp->busy_extents)) {
+> >  			list_splice_init(&cilpcp->busy_extents,
+> > -					&ctx->busy_extents);
+> > +					&ctx->busy_extents.extent_list);
+> 
+> Hmm.  Should xfs_trans.t_busy and xlog_cil_pcp.busy_extents also get
+> converted into xfs_busy_extents objects and a helper written to splice
+> two busy_extents lists together?
+> 
+> (This might be architecture astronauting, feel free to ignore this...)
 
-[ Upstream commit 2254a7396a0ca6309854948ee1c0a33fa4268cec ]
+These two cases are a little bit different - they are just lists of
+busy extents and do not need any of the stuff for discards. It
+doesn't make a whole lot of sense to make them xfs_busy_extents and
+then either have to open code all the places they use to add
+".extent_list" or add one line wrappers for list add, splice, and
+empty check operations.
 
-syzbot reported this warning from the faux inodegc shrinker that tries
-to kick off inodegc work:
+It's likely more code than just open coding the extent list access
+in the couple of places we need to access it directly...
 
-------------[ cut here ]------------
-WARNING: CPU: 1 PID: 102 at kernel/workqueue.c:1445 __queue_work+0xd44/0x1120 kernel/workqueue.c:1444
-RIP: 0010:__queue_work+0xd44/0x1120 kernel/workqueue.c:1444
-Call Trace:
- __queue_delayed_work+0x1c8/0x270 kernel/workqueue.c:1672
- mod_delayed_work_on+0xe1/0x220 kernel/workqueue.c:1746
- xfs_inodegc_shrinker_scan fs/xfs/xfs_icache.c:2212 [inline]
- xfs_inodegc_shrinker_scan+0x250/0x4f0 fs/xfs/xfs_icache.c:2191
- do_shrink_slab+0x428/0xaa0 mm/vmscan.c:853
- shrink_slab+0x175/0x660 mm/vmscan.c:1013
- shrink_one+0x502/0x810 mm/vmscan.c:5343
- shrink_many mm/vmscan.c:5394 [inline]
- lru_gen_shrink_node mm/vmscan.c:5511 [inline]
- shrink_node+0x2064/0x35f0 mm/vmscan.c:6459
- kswapd_shrink_node mm/vmscan.c:7262 [inline]
- balance_pgdat+0xa02/0x1ac0 mm/vmscan.c:7452
- kswapd+0x677/0xd60 mm/vmscan.c:7712
- kthread+0x2e8/0x3a0 kernel/kthread.c:376
- ret_from_fork+0x1f/0x30 arch/x86/entry/entry_64.S:308
+....
 
-This warning corresponds to this code in __queue_work:
+> > @@ -980,8 +909,8 @@ xlog_cil_committed(
+> >  
+> >  	xlog_cil_ail_insert(ctx, abort);
+> >  
+> > -	xfs_extent_busy_sort(&ctx->busy_extents);
+> > -	xfs_extent_busy_clear(mp, &ctx->busy_extents,
+> > +	xfs_extent_busy_sort(&ctx->busy_extents.extent_list);
+> > +	xfs_extent_busy_clear(mp, &ctx->busy_extents.extent_list,
+> >  			      xfs_has_discard(mp) && !abort);
+> 
+> Should these two xfs_extent_busy objects take the xfs_busy_extent object
+> as an arg instead of the mount and list_head?  It seems strange (both
+> here and the next patch) to build up this struct and then pass around
+> its individual parts.
 
-	/*
-	 * For a draining wq, only works from the same workqueue are
-	 * allowed. The __WQ_DESTROYING helps to spot the issue that
-	 * queues a new work item to a wq after destroy_workqueue(wq).
-	 */
-	if (unlikely(wq->flags & (__WQ_DESTROYING | __WQ_DRAINING) &&
-		     WARN_ON_ONCE(!is_chained_work(wq))))
-		return;
+xfs_extent_busy_sort(), no. It's just sorting a list of busy
+extents, and has nothign to do with discard contexts and it gets
+called from transaction freeing context when we abort transactions...
 
-For this to trip, we must have a thread draining the inodedgc workqueue
-and a second thread trying to queue inodegc work to that workqueue.
-This can happen if freezing or a ro remount race with reclaim poking our
-faux inodegc shrinker and another thread dropping an unlinked O_RDONLY
-file:
+xfs_extent_busy_clear() also gets called from transaction context and
+does not do discards - it just passes a list of busy extents to be
+cleared.
 
-Thread 0	Thread 1	Thread 2
+So we'd have to wrap tp->t_busy up as a xfs_busy_extents
+object just so we can pass a xfs_busy_extents object to these
+functions, even though we are just using these as list_heads and not
+for any other purpose.
 
-xfs_inodegc_stop
+Ignoring all the helpers we'd need, I'm also not convinced that the
+runtime cost of increasing the struct xfs_trans by 48 bytes with
+stuff it will never use is lower than the benefit of reducing the
+parameters we pass to one function from 3 to 2....
 
-				xfs_inodegc_shrinker_scan
-				xfs_is_inodegc_enabled
-				<yes, will continue>
+> The straight conversion aspect of this patch looks correct, so (aside
+> from the question above) any larger API cleanups can be their own patch.
 
-xfs_clear_inodegc_enabled
-xfs_inodegc_queue_all
-<list empty, do not queue inodegc worker>
+If it was a much more widely used API, it might make sense to make
+the struct xfs_busy_extents a first class citizen. But as it stands
+it's just a wrapper to enable discard operation to be abstracted so
+I've just made it as minimally invasive as I can....
 
-		xfs_inodegc_queue
-		<add to list>
-		xfs_is_inodegc_enabled
-		<no, returns>
+Cheers,
 
-drain_workqueue
-<set WQ_DRAINING>
-
-				llist_empty
-				<no, will queue list>
-				mod_delayed_work_on(..., 0)
-				__queue_work
-				<sees WQ_DRAINING, kaboom>
-
-In other words, everything between the access to inodegc_enabled state
-and the decision to poke the inodegc workqueue requires some kind of
-coordination to avoid the WQ_DRAINING state.  We could perhaps introduce
-a lock here, but we could also try to eliminate WQ_DRAINING from the
-picture.
-
-We could replace the drain_workqueue call with a loop that flushes the
-workqueue and queues workers as long as there is at least one inode
-present in the per-cpu inodegc llists.  We've disabled inodegc at this
-point, so we know that the number of queued inodes will eventually hit
-zero as long as xfs_inodegc_start cannot reactivate the workers.
-
-There are four callers of xfs_inodegc_start.  Three of them come from the
-VFS with s_umount held: filesystem thawing, failed filesystem freezing,
-and the rw remount transition.  The fourth caller is mounting rw (no
-remount or freezing possible).
-
-There are three callers ofs xfs_inodegc_stop.  One is unmounting (no
-remount or thaw possible).  Two of them come from the VFS with s_umount
-held: fs freezing and ro remount transition.
-
-Hence, it is correct to replace the drain_workqueue call with a loop
-that drains the inodegc llists.
-
-Fixes: 6191cf3ad59f ("xfs: flush inodegc workqueue tasks before cancel")
-Signed-off-by: Darrick J. Wong <djwong@kernel.org>
-Reviewed-by: Dave Chinner <dchinner@redhat.com>
-Signed-off-by: Dave Chinner <david@fromorbit.com>
-Signed-off-by: Leah Rumancik <leah.rumancik@gmail.com>
-Acked-by: Darrick J. Wong <djwong@kernel.org>
----
- fs/xfs/xfs_icache.c | 32 +++++++++++++++++++++++++++-----
- 1 file changed, 27 insertions(+), 5 deletions(-)
-
-diff --git a/fs/xfs/xfs_icache.c b/fs/xfs/xfs_icache.c
-index 02022164772d..eab98d76dbe1 100644
---- a/fs/xfs/xfs_icache.c
-+++ b/fs/xfs/xfs_icache.c
-@@ -448,18 +448,23 @@ xfs_iget_check_free_state(
- }
- 
- /* Make all pending inactivation work start immediately. */
--static void
-+static bool
- xfs_inodegc_queue_all(
- 	struct xfs_mount	*mp)
- {
- 	struct xfs_inodegc	*gc;
- 	int			cpu;
-+	bool			ret = false;
- 
- 	for_each_online_cpu(cpu) {
- 		gc = per_cpu_ptr(mp->m_inodegc, cpu);
--		if (!llist_empty(&gc->list))
-+		if (!llist_empty(&gc->list)) {
- 			mod_delayed_work_on(cpu, mp->m_inodegc_wq, &gc->work, 0);
-+			ret = true;
-+		}
- 	}
-+
-+	return ret;
- }
- 
- /*
-@@ -1902,24 +1907,41 @@ xfs_inodegc_flush(
- 
- /*
-  * Flush all the pending work and then disable the inode inactivation background
-- * workers and wait for them to stop.
-+ * workers and wait for them to stop.  Caller must hold sb->s_umount to
-+ * coordinate changes in the inodegc_enabled state.
-  */
- void
- xfs_inodegc_stop(
- 	struct xfs_mount	*mp)
- {
-+	bool			rerun;
-+
- 	if (!xfs_clear_inodegc_enabled(mp))
- 		return;
- 
-+	/*
-+	 * Drain all pending inodegc work, including inodes that could be
-+	 * queued by racing xfs_inodegc_queue or xfs_inodegc_shrinker_scan
-+	 * threads that sample the inodegc state just prior to us clearing it.
-+	 * The inodegc flag state prevents new threads from queuing more
-+	 * inodes, so we queue pending work items and flush the workqueue until
-+	 * all inodegc lists are empty.  IOWs, we cannot use drain_workqueue
-+	 * here because it does not allow other unserialized mechanisms to
-+	 * reschedule inodegc work while this draining is in progress.
-+	 */
- 	xfs_inodegc_queue_all(mp);
--	drain_workqueue(mp->m_inodegc_wq);
-+	do {
-+		flush_workqueue(mp->m_inodegc_wq);
-+		rerun = xfs_inodegc_queue_all(mp);
-+	} while (rerun);
- 
- 	trace_xfs_inodegc_stop(mp, __return_address);
- }
- 
- /*
-  * Enable the inode inactivation background workers and schedule deferred inode
-- * inactivation work if there is any.
-+ * inactivation work if there is any.  Caller must hold sb->s_umount to
-+ * coordinate changes in the inodegc_enabled state.
-  */
- void
- xfs_inodegc_start(
+Dave.
 -- 
-2.42.0.515.g380fc7ccd1-goog
-
+Dave Chinner
+david@fromorbit.com
