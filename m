@@ -2,63 +2,63 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7F091E7D0BE
-	for <linux-xfs@archiver.kernel.org>; Fri, 22 Sep 2023 01:02:07 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 74A4EE7D0C0
+	for <linux-xfs@archiver.kernel.org>; Fri, 22 Sep 2023 01:02:09 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229873AbjIVBCL (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 21 Sep 2023 21:02:11 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52268 "EHLO
+        id S229982AbjIVBCM (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 21 Sep 2023 21:02:12 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58126 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229532AbjIVBCJ (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 21 Sep 2023 21:02:09 -0400
-Received: from mail-pl1-x632.google.com (mail-pl1-x632.google.com [IPv6:2607:f8b0:4864:20::632])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id BEA32122;
-        Thu, 21 Sep 2023 18:02:03 -0700 (PDT)
-Received: by mail-pl1-x632.google.com with SMTP id d9443c01a7336-1c5db4925f9so9141245ad.1;
-        Thu, 21 Sep 2023 18:02:03 -0700 (PDT)
+        with ESMTP id S229931AbjIVBCL (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 21 Sep 2023 21:02:11 -0400
+Received: from mail-pg1-x532.google.com (mail-pg1-x532.google.com [IPv6:2607:f8b0:4864:20::532])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B491B192;
+        Thu, 21 Sep 2023 18:02:05 -0700 (PDT)
+Received: by mail-pg1-x532.google.com with SMTP id 41be03b00d2f7-578a91ac815so1236360a12.1;
+        Thu, 21 Sep 2023 18:02:05 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1695344523; x=1695949323; darn=vger.kernel.org;
+        d=gmail.com; s=20230601; t=1695344525; x=1695949325; darn=vger.kernel.org;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:from:to:cc:subject:date
          :message-id:reply-to;
-        bh=bOqjqLKBsBB4hITnkzqZ6Dh7CcePl0xuVQ/ZcmiPf/Q=;
-        b=VKKwsLch/S/zBSnfHYkqAmg/bLF7wEsv9orwEGU9TGu1Ukuvxx6yUuScSlfrj1ngZl
-         HfSOia6QBDrHf2ZFBbraIoFwr6UG5ZZdF1PsN/FcQMnYV/tKgNCxD3rWMjAYD4XNCVGH
-         CcdRREywL4Fcr+wmlaJV8EIkwuq36KzBtZPmx2LWymRIrlFR4hh2JblORKtI/gf5timx
-         nM+eLFg/H8HlCy0UGUmdHSUNR+b09Ln7d7oTiJrYL+LvlN0IXEij0Gs5v7NYjg1Fmfgu
-         VKz49Gjmyzfdhjdcy8RDhX9M4Cjv9F67YMeZyW6iWWI02LUlN1xmuJn63qT8lkmCvOi9
-         g5zg==
+        bh=5KzxESXZkFDTp3cAkXdAn0yBd85C7ZZTAhXTSFq606w=;
+        b=FqBkDtaX/Ea5bGzIwYj9BtMovBy16QgvEs0h/x2CxJaR1WNhNMX3JZO6vR41mcORGA
+         Xp5fXwJ+IwrzzJgAmDrbRNQNe0pjGXAQ+0VmhYSJdiEo10vwAqOWgnOsN1wdmw/DOZw+
+         CwiT4Mq+bzDZClXqMe0gTTw2M6wCgNXcms+fcgQHR6TXcEpRdjZDCv6Pwg9sueXFn6YJ
+         rypN0XTWF9pZXFWXmFFdWRJkS+bdSSpoKGUTTkL0BzVoyf7vHetCUvw00wSzCFOq7R99
+         CtzPXJ2nqJukW2EE1t4ZC6cpjGf3ifgKW/g5KP0IR2FgAYxi0vDhujJi+B5rmm3DXHgK
+         DjCA==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1695344523; x=1695949323;
+        d=1e100.net; s=20230601; t=1695344525; x=1695949325;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:x-gm-message-state:from:to:cc
          :subject:date:message-id:reply-to;
-        bh=bOqjqLKBsBB4hITnkzqZ6Dh7CcePl0xuVQ/ZcmiPf/Q=;
-        b=WBlKvencSeOjPcHRXn0WkMWCKpCECdXkvCvRFwqRC4S/1pkRUjhIe51W3HZRWbHqy8
-         9NkpLz7nZ+iFHDQmDG9b03+NMHYVgAaJBIuFFrMAG4Ohn3b07wCdu/qAIqXeacT5hTcu
-         xtYZfVK/vChb3CSUoo+trSopaDZGBRvc19t1Vj/IJ/uIMS8oP+u0rqPmvrsbf9fQQgef
-         sNTEqhk8WTlhUCqOHjmAXOJX6ayewuGHrQBbcnlHlOVjZo/Wtu4S/zJhXDH+gHNXLCtM
-         fkRxH0EzudddF+wOZNreoIaQTm1oSzDuPF03dDClZhc05BdCGnmznWEV0KZH/Qz+R9xJ
-         8Hlg==
-X-Gm-Message-State: AOJu0YzIfph0Bt5IxqMUPNHAS/1gAZK+9ULIxXxYUsvO45pEhYYi9i7t
-        mDa8qQuk92MV6x/griAJTupClGUD/6XMnQ==
-X-Google-Smtp-Source: AGHT+IHjhXQJaq6+lZQvCuP0q8dpitXt3UJhlxxd1an1RngaCUSEEzNu8NZISpUSFhx7J+DfzgQlZw==
-X-Received: by 2002:a17:902:f689:b0:1b4:5699:aac1 with SMTP id l9-20020a170902f68900b001b45699aac1mr1918881plg.12.1695344522839;
-        Thu, 21 Sep 2023 18:02:02 -0700 (PDT)
+        bh=5KzxESXZkFDTp3cAkXdAn0yBd85C7ZZTAhXTSFq606w=;
+        b=kmgXSRweO2f+vrF/YM+q0/v8vGOyg6M/TgXOjtyqnvh8aGa6jZMlkepQadRw6J/VEc
+         9Y59vW12OnIy6Q5anXrdVzwkOhURMKntllqwIuzm35W8yWnFiSAFwG+jeQJUYW6VIlmj
+         J5FP+4+M9nY2bymIRgPWw3BWwxAAA76r5ITdGeIWDoACvutJUhapzDxAzix88eyyxqhE
+         aiSUGU8qi6M3yJ+4C06zfV+GhM7PXUmMKb64t2ZsPf5W+1EKJnFQ0xo+VqrhRpqNWnGh
+         iwQvQ9VmvW97euF47t7psSmYyuKWjFkpuJdNJD77gp1Git6a2atr0s/FC7aD41VQxTcn
+         7XTA==
+X-Gm-Message-State: AOJu0YxeE7GR0v/Iscsz6K33jfIEZ6gEaY6MbzLL9ysur9RPKiF1lzSz
+        XyjKiPWcq2sEr9eKlo/CvFiuF1DLsSRnGg==
+X-Google-Smtp-Source: AGHT+IHz+rmFhGYxkc2yBrjyXvYlXVvmndGszepY/GJRL6ByHqffYXuw57OLi2XBPqaiYzqbYLWxxg==
+X-Received: by 2002:a17:90b:314c:b0:26d:b12:8383 with SMTP id ip12-20020a17090b314c00b0026d0b128383mr7151444pjb.8.1695344524952;
+        Thu, 21 Sep 2023 18:02:04 -0700 (PDT)
 Received: from lrumancik.svl.corp.google.com ([2620:15c:2a3:200:d5ff:b7b0:7028:8af6])
-        by smtp.gmail.com with ESMTPSA id u2-20020a17090282c200b001bc445e2497sm2178815plz.79.2023.09.21.18.02.01
+        by smtp.gmail.com with ESMTPSA id u2-20020a17090282c200b001bc445e2497sm2178815plz.79.2023.09.21.18.02.04
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 21 Sep 2023 18:02:02 -0700 (PDT)
+        Thu, 21 Sep 2023 18:02:04 -0700 (PDT)
 From:   Leah Rumancik <leah.rumancik@gmail.com>
 To:     stable@vger.kernel.org
 Cc:     linux-xfs@vger.kernel.org, amir73il@gmail.com,
-        chandan.babu@oracle.com, Dave Chinner <dchinner@redhat.com>,
-        Chris Dunlop <chris@onthe.net.au>,
-        "Darrick J . Wong" <djwong@kernel.org>,
+        chandan.babu@oracle.com, "Darrick J. Wong" <djwong@kernel.org>,
+        Dave Chinner <dchinner@redhat.com>,
+        Dave Chinner <david@fromorbit.com>,
         Leah Rumancik <leah.rumancik@gmail.com>
-Subject: [PATCH 5.15 2/6] xfs: introduce xfs_inodegc_push()
-Date:   Thu, 21 Sep 2023 18:01:52 -0700
-Message-ID: <20230922010156.1718782-2-leah.rumancik@gmail.com>
+Subject: [PATCH 5.15 4/6] xfs: check that per-cpu inodegc workers actually run on that cpu
+Date:   Thu, 21 Sep 2023 18:01:54 -0700
+Message-ID: <20230922010156.1718782-4-leah.rumancik@gmail.com>
 X-Mailer: git-send-email 2.42.0.515.g380fc7ccd1-goog
 In-Reply-To: <20230922010156.1718782-1-leah.rumancik@gmail.com>
 References: <20230922010156.1718782-1-leah.rumancik@gmail.com>
@@ -68,154 +68,66 @@ Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-From: Dave Chinner <dchinner@redhat.com>
+From: "Darrick J. Wong" <djwong@kernel.org>
 
-[ Upstream commit 5e672cd69f0a534a445df4372141fd0d1d00901d ]
+[ Upstream commit b37c4c8339cd394ea6b8b415026603320a185651 ]
 
-The current blocking mechanism for pushing the inodegc queue out to
-disk can result in systems becoming unusable when there is a long
-running inodegc operation. This is because the statfs()
-implementation currently issues a blocking flush of the inodegc
-queue and a significant number of common system utilities will call
-statfs() to discover something about the underlying filesystem.
+Now that we've allegedly worked out the problem of the per-cpu inodegc
+workers being scheduled on the wrong cpu, let's put in a debugging knob
+to let us know if a worker ever gets mis-scheduled again.
 
-This can result in userspace operations getting stuck on inodegc
-progress, and when trying to remove a heavily reflinked file on slow
-storage with a full journal, this can result in delays measuring in
-hours.
-
-Avoid this problem by adding "push" function that expedites the
-flushing of the inodegc queue, but doesn't wait for it to complete.
-
-Convert xfs_fs_statfs() and xfs_qm_scall_getquota() to use this
-mechanism so they don't block but still ensure that queued
-operations are expedited.
-
-Fixes: ab23a7768739 ("xfs: per-cpu deferred inode inactivation queues")
-Reported-by: Chris Dunlop <chris@onthe.net.au>
-Signed-off-by: Dave Chinner <dchinner@redhat.com>
-[djwong: fix _getquota_next to use _inodegc_push too]
-Reviewed-by: Darrick J. Wong <djwong@kernel.org>
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
+Reviewed-by: Dave Chinner <dchinner@redhat.com>
+Signed-off-by: Dave Chinner <david@fromorbit.com>
 Signed-off-by: Leah Rumancik <leah.rumancik@gmail.com>
 Acked-by: Darrick J. Wong <djwong@kernel.org>
 ---
- fs/xfs/xfs_icache.c      | 20 +++++++++++++++-----
- fs/xfs/xfs_icache.h      |  1 +
- fs/xfs/xfs_qm_syscalls.c |  9 ++++++---
- fs/xfs/xfs_super.c       |  7 +++++--
- fs/xfs/xfs_trace.h       |  1 +
- 5 files changed, 28 insertions(+), 10 deletions(-)
+ fs/xfs/xfs_icache.c | 2 ++
+ fs/xfs/xfs_mount.h  | 3 +++
+ fs/xfs/xfs_super.c  | 3 +++
+ 3 files changed, 8 insertions(+)
 
 diff --git a/fs/xfs/xfs_icache.c b/fs/xfs/xfs_icache.c
-index 2c3ef553f5ef..e9ebfe6f8015 100644
+index ab8181f8d08a..02022164772d 100644
 --- a/fs/xfs/xfs_icache.c
 +++ b/fs/xfs/xfs_icache.c
-@@ -1872,19 +1872,29 @@ xfs_inodegc_worker(
- }
+@@ -1856,6 +1856,8 @@ xfs_inodegc_worker(
+ 	struct llist_node	*node = llist_del_all(&gc->list);
+ 	struct xfs_inode	*ip, *n;
+ 
++	ASSERT(gc->cpu == smp_processor_id());
++
+ 	WRITE_ONCE(gc->items, 0);
+ 
+ 	if (!node)
+diff --git a/fs/xfs/xfs_mount.h b/fs/xfs/xfs_mount.h
+index 3d58938a6f75..29f35169bf9c 100644
+--- a/fs/xfs/xfs_mount.h
++++ b/fs/xfs/xfs_mount.h
+@@ -66,6 +66,9 @@ struct xfs_inodegc {
+ 	/* approximate count of inodes in the list */
+ 	unsigned int		items;
+ 	unsigned int		shrinker_hits;
++#if defined(DEBUG) || defined(XFS_WARN)
++	unsigned int		cpu;
++#endif
+ };
  
  /*
-- * Force all currently queued inode inactivation work to run immediately and
-- * wait for the work to finish.
-+ * Expedite all pending inodegc work to run immediately. This does not wait for
-+ * completion of the work.
-  */
- void
--xfs_inodegc_flush(
-+xfs_inodegc_push(
- 	struct xfs_mount	*mp)
- {
- 	if (!xfs_is_inodegc_enabled(mp))
- 		return;
-+	trace_xfs_inodegc_push(mp, __return_address);
-+	xfs_inodegc_queue_all(mp);
-+}
- 
-+/*
-+ * Force all currently queued inode inactivation work to run immediately and
-+ * wait for the work to finish.
-+ */
-+void
-+xfs_inodegc_flush(
-+	struct xfs_mount	*mp)
-+{
-+	xfs_inodegc_push(mp);
- 	trace_xfs_inodegc_flush(mp, __return_address);
--
--	xfs_inodegc_queue_all(mp);
- 	flush_workqueue(mp->m_inodegc_wq);
- }
- 
-diff --git a/fs/xfs/xfs_icache.h b/fs/xfs/xfs_icache.h
-index 2e4cfddf8b8e..6cd180721659 100644
---- a/fs/xfs/xfs_icache.h
-+++ b/fs/xfs/xfs_icache.h
-@@ -76,6 +76,7 @@ void xfs_blockgc_stop(struct xfs_mount *mp);
- void xfs_blockgc_start(struct xfs_mount *mp);
- 
- void xfs_inodegc_worker(struct work_struct *work);
-+void xfs_inodegc_push(struct xfs_mount *mp);
- void xfs_inodegc_flush(struct xfs_mount *mp);
- void xfs_inodegc_stop(struct xfs_mount *mp);
- void xfs_inodegc_start(struct xfs_mount *mp);
-diff --git a/fs/xfs/xfs_qm_syscalls.c b/fs/xfs/xfs_qm_syscalls.c
-index 47fe60e1a887..322a111dfbc0 100644
---- a/fs/xfs/xfs_qm_syscalls.c
-+++ b/fs/xfs/xfs_qm_syscalls.c
-@@ -481,9 +481,12 @@ xfs_qm_scall_getquota(
- 	struct xfs_dquot	*dqp;
- 	int			error;
- 
--	/* Flush inodegc work at the start of a quota reporting scan. */
-+	/*
-+	 * Expedite pending inodegc work at the start of a quota reporting
-+	 * scan but don't block waiting for it to complete.
-+	 */
- 	if (id == 0)
--		xfs_inodegc_flush(mp);
-+		xfs_inodegc_push(mp);
- 
- 	/*
- 	 * Try to get the dquot. We don't want it allocated on disk, so don't
-@@ -525,7 +528,7 @@ xfs_qm_scall_getquota_next(
- 
- 	/* Flush inodegc work at the start of a quota reporting scan. */
- 	if (*id == 0)
--		xfs_inodegc_flush(mp);
-+		xfs_inodegc_push(mp);
- 
- 	error = xfs_qm_dqget_next(mp, *id, type, &dqp);
- 	if (error)
 diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
-index 8fe6ca9208de..9b3af7611eaa 100644
+index 9b3af7611eaa..569960e4ea3a 100644
 --- a/fs/xfs/xfs_super.c
 +++ b/fs/xfs/xfs_super.c
-@@ -795,8 +795,11 @@ xfs_fs_statfs(
- 	xfs_extlen_t		lsize;
- 	int64_t			ffree;
+@@ -1062,6 +1062,9 @@ xfs_inodegc_init_percpu(
  
--	/* Wait for whatever inactivations are in progress. */
--	xfs_inodegc_flush(mp);
-+	/*
-+	 * Expedite background inodegc but don't wait. We do not want to block
-+	 * here waiting hours for a billion extent file to be truncated.
-+	 */
-+	xfs_inodegc_push(mp);
- 
- 	statp->f_type = XFS_SUPER_MAGIC;
- 	statp->f_namelen = MAXNAMELEN - 1;
-diff --git a/fs/xfs/xfs_trace.h b/fs/xfs/xfs_trace.h
-index 1033a95fbf8e..ebd17ddba024 100644
---- a/fs/xfs/xfs_trace.h
-+++ b/fs/xfs/xfs_trace.h
-@@ -240,6 +240,7 @@ DEFINE_EVENT(xfs_fs_class, name,					\
- 	TP_PROTO(struct xfs_mount *mp, void *caller_ip), \
- 	TP_ARGS(mp, caller_ip))
- DEFINE_FS_EVENT(xfs_inodegc_flush);
-+DEFINE_FS_EVENT(xfs_inodegc_push);
- DEFINE_FS_EVENT(xfs_inodegc_start);
- DEFINE_FS_EVENT(xfs_inodegc_stop);
- DEFINE_FS_EVENT(xfs_inodegc_queue);
+ 	for_each_possible_cpu(cpu) {
+ 		gc = per_cpu_ptr(mp->m_inodegc, cpu);
++#if defined(DEBUG) || defined(XFS_WARN)
++		gc->cpu = cpu;
++#endif
+ 		init_llist_head(&gc->list);
+ 		gc->items = 0;
+ 		INIT_DELAYED_WORK(&gc->work, xfs_inodegc_worker);
 -- 
 2.42.0.515.g380fc7ccd1-goog
 
