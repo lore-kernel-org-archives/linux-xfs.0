@@ -2,40 +2,32 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E0315CD4851
-	for <linux-xfs@archiver.kernel.org>; Fri, 22 Sep 2023 17:15:09 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 126B2CD4847
+	for <linux-xfs@archiver.kernel.org>; Fri, 22 Sep 2023 17:32:35 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232910AbjIVRPN (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 22 Sep 2023 13:15:13 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60556 "EHLO
+        id S232989AbjIVRci (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 22 Sep 2023 13:32:38 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36872 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232846AbjIVRPJ (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 22 Sep 2023 13:15:09 -0400
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D345F1A4;
-        Fri, 22 Sep 2023 10:14:55 -0700 (PDT)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 06A00C433CA;
-        Fri, 22 Sep 2023 17:14:53 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1695402895;
-        bh=v6UdIy3iF2gwyGe6YE1xuhC9UXQ7IzgYePWcUL4vSGA=;
-        h=From:Date:Subject:References:In-Reply-To:To:Cc:From;
-        b=nobLkZ57CkeLUrk9Gn+1rf8m7nE+tgakmBWN28qsQYbPxKtomzJEXpnLPmWeiWBHd
-         wYTswOnh2rBSClEgAN8YJ7iddAPu/ln8TdSlY98dSmDWgT8mSyHHGNPrxrqrggf8g2
-         TyvO3JswgOAnMLrprnEmCnW2JpN0OrcRZQR08buWuiphHcIvV/jKELnN2V9cWhnxDO
-         wcpPcNMESNGHDbERV/J3m2WiUZduLG4GMdPJ88PvbJhK+I0XYaJCd0d7MCJLgLMHrN
-         Gp3Wqyuv86lHct+I7JFQvvRUx3x352t720UkdCF/9YzCbE/5kBf5d3N60S6q5WEsdq
-         cWxgL7jwI7d0A==
-From:   Jeff Layton <jlayton@kernel.org>
-Date:   Fri, 22 Sep 2023 13:14:43 -0400
-Subject: [PATCH v8 4/5] fs: add timestamp_truncate_to_gran helper
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
-Message-Id: <20230922-ctime-v8-4-45f0c236ede1@kernel.org>
-References: <20230922-ctime-v8-0-45f0c236ede1@kernel.org>
-In-Reply-To: <20230922-ctime-v8-0-45f0c236ede1@kernel.org>
-To:     Alexander Viro <viro@zeniv.linux.org.uk>,
+        with ESMTP id S233389AbjIVRcP (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 22 Sep 2023 13:32:15 -0400
+Received: from out-195.mta1.migadu.com (out-195.mta1.migadu.com [95.215.58.195])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2A800E68
+        for <linux-xfs@vger.kernel.org>; Fri, 22 Sep 2023 10:31:45 -0700 (PDT)
+Date:   Fri, 22 Sep 2023 13:31:36 -0400
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.dev; s=key1;
+        t=1695403901;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=KN1JQxormwjI3SS7UGp04taape15hhe6enoWPWGQ680=;
+        b=w/BP4TjnJu50TWE84lFipw8dcwUC8/LZjrI4crTQk62fnPvWP25AMUGGnBQhXkCX//kUs3
+        czezKsTXTm78YSUnUPJfRbBwqbHURPpAWt/MERdkGf6V7WuGzEAGuQRzHZ5QJLqB3zBSsH
+        ogYA3jaA//TePd7rS7K7MFNNT7Yt/jQ=
+X-Report-Abuse: Please report any abuse attempt to abuse@migadu.com and include these headers.
+From:   Kent Overstreet <kent.overstreet@linux.dev>
+To:     Jeff Layton <jlayton@kernel.org>
+Cc:     Alexander Viro <viro@zeniv.linux.org.uk>,
         Christian Brauner <brauner@kernel.org>,
         Chuck Lever <chuck.lever@oracle.com>,
         Neil Brown <neilb@suse.de>,
@@ -44,113 +36,75 @@ To:     Alexander Viro <viro@zeniv.linux.org.uk>,
         Chandan Babu R <chandan.babu@oracle.com>,
         "Darrick J. Wong" <djwong@kernel.org>,
         Dave Chinner <david@fromorbit.com>, Jan Kara <jack@suse.cz>,
-        Linus Torvalds <torvalds@linux-foundation.org>
-Cc:     Kent Overstreet <kent.overstreet@linux.dev>,
+        Linus Torvalds <torvalds@linux-foundation.org>,
         linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-nfs@vger.kernel.org, linux-xfs@vger.kernel.org,
-        Jeff Layton <jlayton@kernel.org>
-X-Mailer: b4 0.12.3
-X-Developer-Signature: v=1; a=openpgp-sha256; l=2766; i=jlayton@kernel.org;
- h=from:subject:message-id; bh=v6UdIy3iF2gwyGe6YE1xuhC9UXQ7IzgYePWcUL4vSGA=;
- b=owEBbQKS/ZANAwAIAQAOaEEZVoIVAcsmYgBlDcuGcqJPwl78fHiagrBrxmzVPer9aG3oaERZI
- pqSNpvoC8aJAjMEAAEIAB0WIQRLwNeyRHGyoYTq9dMADmhBGVaCFQUCZQ3LhgAKCRAADmhBGVaC
- FakdD/9KgrOQOhGZ14ptFQspbpO6fxuNVSJ/rqEaSG7uELQqBbcBcguVCQO1J3wIoEBUiEp4inf
- gHZLXxlDNDD/4PQh9lxCHPs6stqfiR/OIeZwe36cujXOjv5XrNdGCAznIcOjEM40Px/btRNrYC/
- XJrmlw9gEU4IeAtZ9AIokdyalPTIGX7ECHLceGsMjNHU4B1zSi380XFB0r3xJsegyqiOXoY5Cta
- E7r6m8zgxedClqgOOBKcYq5FUjoh+7UfDXTciJ66u5BrlrpT/JjEisrReLys3w8xK8JyKTwHab6
- +xgn3pkVoT4O1FrXmzbstaOO1YixyuzvOazHEs9WmY/kYehP8yOB5a0wCGcXM3SrLuWNNPIEDQy
- rxfHvOoPYKWWffYf1LDuaFSMasfjUa0OPm+XY8sulTaBaMw4afqlyyRr8r4skmNpGYnAvntL39O
- /urlIhaynyYw9Mr2rF+QJ66bl8x+qgmM7l/YtOvFxQ20hCsdol8XU2DfAzgKZBtE0zlTHTVvO1J
- Q1WAUaPKZTBJMQzhgVElGkua+KRcD9EvagHXdXWiq+iV4P7ZxMF1bEjKrBZAKgzj7Rg+W2Ec1A2
- yBTVWzmA323AGRYnPvTn4+37r3SNAHo6Fs1q8y+LCauOb8Fga99iYMaleYsMUe95bWIY1u9AGYQ
- qpHGgQNLqWzi2Cw==
-X-Developer-Key: i=jlayton@kernel.org; a=openpgp;
- fpr=4BC0D7B24471B2A184EAF5D3000E684119568215
+        linux-nfs@vger.kernel.org, linux-xfs@vger.kernel.org
+Subject: Re: [PATCH v8 1/5] fs: add infrastructure for multigrain timestamps
+Message-ID: <20230922173136.qpodogsb26wq3ujj@moria.home.lan>
+References: <20230922-ctime-v8-0-45f0c236ede1@kernel.org>
+ <20230922-ctime-v8-1-45f0c236ede1@kernel.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20230922-ctime-v8-1-45f0c236ede1@kernel.org>
+X-Migadu-Flow: FLOW_OUT
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-In a future patch, we're going to need to truncate fine-grained
-timestamps down to jiffies granularity. Add a new helper that allows
-truncating down to an arbitrary granularity.
+On Fri, Sep 22, 2023 at 01:14:40PM -0400, Jeff Layton wrote:
+> The VFS always uses coarse-grained timestamps when updating the ctime
+> and mtime after a change. This has the benefit of allowing filesystems
+> to optimize away a lot metadata updates, down to around 1 per jiffy,
+> even when a file is under heavy writes.
+> 
+> Unfortunately, this has always been an issue when we're exporting via
+> NFS, which traditionally relied on timestamps to validate caches. A lot
+> of changes can happen in a jiffy, and that can lead to cache-coherency
+> issues between hosts.
+> 
+> NFSv4 added a dedicated change attribute that must change value after
+> any change to an inode. Some filesystems (btrfs, ext4 and tmpfs) utilize
+> the i_version field for this, but the NFSv4 spec allows a server to
+> generate this value from the inode's ctime.
+> 
+> What we need is a way to only use fine-grained timestamps when they are
+> being actively queried.
+> 
+> POSIX generally mandates that when the the mtime changes, the ctime must
+> also change. The kernel always stores normalized ctime values, so only
+> the first 30 bits of the tv_nsec field are ever used.
+> 
+> Use the 31st bit of the ctime tv_nsec field to indicate that something
+> has queried the inode for the mtime or ctime. When this flag is set,
+> on the next mtime or ctime update, the kernel will fetch a fine-grained
+> timestamp instead of the usual coarse-grained one.
+> 
+> Filesytems can opt into this behavior by setting the FS_MGTIME flag in
+> the fstype. Filesystems that don't set this flag will continue to use
+> coarse-grained timestamps.
 
-Signed-off-by: Jeff Layton <jlayton@kernel.org>
----
- fs/inode.c         | 38 +++++++++++++++++++++++++++-----------
- include/linux/fs.h |  1 +
- 2 files changed, 28 insertions(+), 11 deletions(-)
+Interesting...
 
-diff --git a/fs/inode.c b/fs/inode.c
-index 293f9ba623d1..ae6baa5b17c5 100644
---- a/fs/inode.c
-+++ b/fs/inode.c
-@@ -2521,6 +2521,29 @@ void inode_nohighmem(struct inode *inode)
- }
- EXPORT_SYMBOL(inode_nohighmem);
- 
-+/**
-+ * timestamp_truncate_to_gran - Truncate timespec to a granularity
-+ * @t: Timespec
-+ * @gran: the specified granularity (in ns)
-+ *
-+ * Truncate a timespec to the specified granularity. Always rounds down.
-+ * gran must not be 0 nor greater than a second (NSEC_PER_SEC, or 10^9 ns).
-+ */
-+struct timespec64 timestamp_truncate_to_gran(struct timespec64 t, unsigned int gran)
-+{
-+	/* Avoid division in the common cases 1 ns and 1 s. */
-+	if (gran == 1)
-+		; /* nothing */
-+	else if (gran == NSEC_PER_SEC)
-+		t.tv_nsec = 0;
-+	else if (gran > 1 && gran < NSEC_PER_SEC)
-+		t.tv_nsec -= t.tv_nsec % gran;
-+	else
-+		WARN(1, "invalid file time granularity: %u", gran);
-+	return t;
-+}
-+EXPORT_SYMBOL(timestamp_truncate_to_gran);
-+
- /**
-  * timestamp_truncate - Truncate timespec to a granularity
-  * @t: Timespec
-@@ -2536,19 +2559,12 @@ struct timespec64 timestamp_truncate(struct timespec64 t, struct inode *inode)
- 	unsigned int gran = sb->s_time_gran;
- 
- 	t.tv_sec = clamp(t.tv_sec, sb->s_time_min, sb->s_time_max);
--	if (unlikely(t.tv_sec == sb->s_time_max || t.tv_sec == sb->s_time_min))
-+	if (unlikely(t.tv_sec == sb->s_time_max || t.tv_sec == sb->s_time_min)) {
- 		t.tv_nsec = 0;
-+		return t;
-+	}
- 
--	/* Avoid division in the common cases 1 ns and 1 s. */
--	if (gran == 1)
--		; /* nothing */
--	else if (gran == NSEC_PER_SEC)
--		t.tv_nsec = 0;
--	else if (gran > 1 && gran < NSEC_PER_SEC)
--		t.tv_nsec -= t.tv_nsec % gran;
--	else
--		WARN(1, "invalid file time granularity: %u", gran);
--	return t;
-+	return timestamp_truncate_to_gran(t, gran);
- }
- EXPORT_SYMBOL(timestamp_truncate);
- 
-diff --git a/include/linux/fs.h b/include/linux/fs.h
-index 91239a4c1a65..fa696322dae3 100644
---- a/include/linux/fs.h
-+++ b/include/linux/fs.h
-@@ -748,6 +748,7 @@ struct inode {
- 	void			*i_private; /* fs or device private pointer */
- } __randomize_layout;
- 
-+struct timespec64 timestamp_truncate_to_gran(struct timespec64 t, unsigned int gran);
- struct timespec64 timestamp_truncate(struct timespec64 t, struct inode *inode);
- 
- static inline unsigned int i_blocksize(const struct inode *node)
+So in bcachefs, for most inode fields the btree inode is the "master
+copy"; we do inode updates via btree transactions, and then on
+successful transaction commit we update the VFS inode to match.
 
--- 
-2.41.0
+(exceptions: i_size, i_blocks)
 
+I'd been contemplating switching to that model for timestamp updates as
+well, since that would allow us to get rid of our
+super_operations.write_inode method - except we probably wouldn't want
+to do that since it would likely make timestamp updates too expensive.
+
+And now with your scheme of stashing extra state in timespec, I'm glad
+we didn't.
+
+Still, timestamp updates are a bit messier than I'd like, would be
+lovely to figure out a way to clean that up - right now we have an
+awkward mix of "sometimes timestamp updates happen in a btree
+transaction first, other times just the VFS inode is updated and marked
+dirty".
+
+xfs doesn't have .write_inode, so it's probably time to study what it
+does...
