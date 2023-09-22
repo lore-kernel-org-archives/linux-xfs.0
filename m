@@ -2,311 +2,215 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B5D5BE7D0C8
-	for <linux-xfs@archiver.kernel.org>; Fri, 22 Sep 2023 03:58:14 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B6F5AE7D0C2
+	for <linux-xfs@archiver.kernel.org>; Fri, 22 Sep 2023 05:03:46 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229497AbjIVD6S (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 21 Sep 2023 23:58:18 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53526 "EHLO
+        id S229539AbjIVFDt (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 22 Sep 2023 01:03:49 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46926 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229476AbjIVD6Q (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 21 Sep 2023 23:58:16 -0400
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 432F3F1
-        for <linux-xfs@vger.kernel.org>; Thu, 21 Sep 2023 20:57:24 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1695355043;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type;
-        bh=0ouE2Nlig4Kp76qE6ygUudOi/omCbscdOmK4j/kXElQ=;
-        b=Q1xNQ0HF+j8LAfKMAN5uNYWjQZYiBEg6EW64DyYpMXpOTO/zHZFhoTDpq3L4OJMchwFPd3
-        pN5lrtSXASlCqKXQ+aPT5wh3PzYGl8Ms8VSl+VAxS9e5HzgoWOCAw8nRwkJv4xGH7CZsVT
-        LNDkeOidmL/9QeplaPQgL4PookMRDwY=
-Received: from mail-ed1-f72.google.com (mail-ed1-f72.google.com
- [209.85.208.72]) by relay.mimecast.com with ESMTP with STARTTLS
- (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
- us-mta-488-j2Bjtb0bOka7nmii34QZbQ-1; Thu, 21 Sep 2023 23:57:21 -0400
-X-MC-Unique: j2Bjtb0bOka7nmii34QZbQ-1
-Received: by mail-ed1-f72.google.com with SMTP id 4fb4d7f45d1cf-532b7ee264cso1095237a12.2
-        for <linux-xfs@vger.kernel.org>; Thu, 21 Sep 2023 20:57:21 -0700 (PDT)
+        with ESMTP id S229611AbjIVFDm (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 22 Sep 2023 01:03:42 -0400
+Received: from mail-pl1-x62d.google.com (mail-pl1-x62d.google.com [IPv6:2607:f8b0:4864:20::62d])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 718EF195
+        for <linux-xfs@vger.kernel.org>; Thu, 21 Sep 2023 22:03:29 -0700 (PDT)
+Received: by mail-pl1-x62d.google.com with SMTP id d9443c01a7336-1c44c0f9138so14417555ad.2
+        for <linux-xfs@vger.kernel.org>; Thu, 21 Sep 2023 22:03:29 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=fromorbit-com.20230601.gappssmtp.com; s=20230601; t=1695359009; x=1695963809; darn=vger.kernel.org;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
+        bh=eKfvtCzoPO1DjRH7hqL/PCP8n2qTK2huPA+M1ou1kWk=;
+        b=FwGewhCC5HKma6r5rqI6P2X3O27I5AexLq1aWMQ5AVZLvIRv0bUVveR7vzOpzOzng2
+         xAB5PM8RBCwMhKBVevp7QEdWj8S1cEy12lZJ4E6X5g1xcbQDt/HOEJg7qumcZUzC4WQc
+         6mn8PemkY+2B5mRpE2mzkpn88OwNkzVR75s+NAaK3dp/NDpB2KtLnuoFl93Y5VNevlIc
+         LDlWRmM+udJv7MvAXVk/J4/1VzAjSKCIayNrIn17yzWTOxU8LIyqT/YgaHzR+CRhScPh
+         29CgLo/nACgxpSFk1RFzuXlErW6HoWrznzs7wVwkkB6pRpEE6G49sPHEOXJ7+hZzJ89q
+         IXcQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1695355040; x=1695959840;
-        h=cc:to:subject:message-id:date:from:mime-version:x-gm-message-state
-         :from:to:cc:subject:date:message-id:reply-to;
-        bh=0ouE2Nlig4Kp76qE6ygUudOi/omCbscdOmK4j/kXElQ=;
-        b=PgHv/Bmwjepb7sejqq+OtRNPBv/9K++6Efs4ND78tEfSkYuEKqRnB0Jt6RnFNfPkzP
-         lVotPezZJF2WMkWSxtVFNXu/VD/1IkSO/BMEycpY36SbmqoR1iuaN74zCTTw2Y8NYkhL
-         EQjaLo5boD0h7+oGRNwv1CDxnn28O5dzsxZnrbmlSnr5VArmlbEhjn+bKznsKf5fMu8q
-         GWAhWtI2IRFkgcMQ/PVCAi4SIFQmtyxqC70HMROXWfozLWCwq/FuJNv50YY6Rg1VQb9G
-         wGI+gfNTB4dRxys8kus7Qkn8X+n3kNZvc4lC5YRqM+a+J5HLK5kRCuQ8jcp6COhFMSjZ
-         kB+w==
-X-Gm-Message-State: AOJu0Yz6PCpObNbDk3VF+mRJSglZQNyx1sPm6sk8ncLMgJv66XIJakwL
-        A4NXkBoXFutBFFABVEmzllGw7DRjFLbwbrp7KIpFsi7ura5oqPnhtuWWk8DU8ySGM88tPLOo6xw
-        0FGegPnhKZclNftWqTWWXLbF7mCRCTnQM9C7DB732xEh3bebJiA==
-X-Received: by 2002:a05:6402:1658:b0:52e:1d58:a6ff with SMTP id s24-20020a056402165800b0052e1d58a6ffmr6203432edx.35.1695355040007;
-        Thu, 21 Sep 2023 20:57:20 -0700 (PDT)
-X-Google-Smtp-Source: AGHT+IHoPhutRpOWmJM9P/NZUNraxEnXv7X7kQb86LOzNj+QGTvx+rOtkHx8QpWGBoajh1dJ6NtGbABgQPwl3pz3ypw=
-X-Received: by 2002:a05:6402:1658:b0:52e:1d58:a6ff with SMTP id
- s24-20020a056402165800b0052e1d58a6ffmr6203421edx.35.1695355039721; Thu, 21
- Sep 2023 20:57:19 -0700 (PDT)
+        d=1e100.net; s=20230601; t=1695359009; x=1695963809;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=eKfvtCzoPO1DjRH7hqL/PCP8n2qTK2huPA+M1ou1kWk=;
+        b=WGTOAHdBcmgCB+pH+k8ZpSQiG/WxxihqAGMezwFH9EZg12TCcdYS1En774NNXC8tzn
+         HhP73Lxw+/nlWq1EzzdHfYgO+29gF5O/0dAGx7jYX+M6+6sibfuIunY0SzUQ7llm1B1K
+         pcDXquXc/Q3smFuLn95at/3/8/zbtewQ/qw/WJQYHkOWASlKUVPJ48zj/byfRE0B6No4
+         /7s4zCw2JKeZLlSKpOK0lj9SxaSZSvuc5y/6cdWgdPHy37c6mO/S84C0D2VcLk9sUwII
+         8kABP3VWogxUflFF7bemekQLoTWS7OUTUWQHDEKPnP+3Z298O26HUrrJPeehRp3u2OGz
+         nR9g==
+X-Gm-Message-State: AOJu0YxsGBVOFFDpUZLj3r/LliOZkwCmYp3cYLv873gHrz3GwKhjL1PH
+        4eayV3EISGGIQj41GifBDtShug==
+X-Google-Smtp-Source: AGHT+IFeu1EA7GyGKW4frzHTSmVZS0RTtP2XJVF07Ex6N8rmUJE7dIUep7oHw3F8G6mpIGwAto30ww==
+X-Received: by 2002:a17:903:2305:b0:1c2:36a:52a5 with SMTP id d5-20020a170903230500b001c2036a52a5mr7889794plh.57.1695359008731;
+        Thu, 21 Sep 2023 22:03:28 -0700 (PDT)
+Received: from dread.disaster.area (pa49-180-20-59.pa.nsw.optusnet.com.au. [49.180.20.59])
+        by smtp.gmail.com with ESMTPSA id jk13-20020a170903330d00b001bbd8cf6b57sm2466460plb.230.2023.09.21.22.03.28
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Thu, 21 Sep 2023 22:03:28 -0700 (PDT)
+Received: from dave by dread.disaster.area with local (Exim 4.96)
+        (envelope-from <david@fromorbit.com>)
+        id 1qjYK5-003xpJ-0X;
+        Fri, 22 Sep 2023 15:03:25 +1000
+Date:   Fri, 22 Sep 2023 15:03:25 +1000
+From:   Dave Chinner <david@fromorbit.com>
+To:     Luis Chamberlain <mcgrof@kernel.org>
+Cc:     Pankaj Raghav <p.raghav@samsung.com>,
+        Pankaj Raghav <kernel@pankajraghav.com>,
+        linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
+        da.gomez@samsung.com, akpm@linux-foundation.org,
+        linux-kernel@vger.kernel.org, willy@infradead.org,
+        djwong@kernel.org, linux-mm@kvack.org, chandan.babu@oracle.com,
+        gost.dev@samsung.com, riteshh@linux.ibm.com
+Subject: Re: [RFC 00/23] Enable block size > page size in XFS
+Message-ID: <ZQ0gHRvrbZUjO/rA@dread.disaster.area>
+References: <20230915183848.1018717-1-kernel@pankajraghav.com>
+ <ZQd4IPeVI+o6M38W@dread.disaster.area>
+ <ZQewKIfRYcApEYXt@bombadil.infradead.org>
+ <CGME20230918050749eucas1p13c219481b4b08c1d58e90ea70ff7b9c8@eucas1p1.samsung.com>
+ <ZQfbHloBUpDh+zCg@dread.disaster.area>
+ <806df723-78cf-c7eb-66a6-1442c02126b3@samsung.com>
+ <ZQuxvAd2lxWppyqO@bombadil.infradead.org>
+ <ZQvNVAfZMjE3hgmN@bombadil.infradead.org>
+ <ZQvczBjY4vTLJFBp@dread.disaster.area>
+ <ZQvuNaYIukAnlEDM@bombadil.infradead.org>
 MIME-Version: 1.0
-From:   Zhenyu Zhang <zhenyzha@redhat.com>
-Date:   Fri, 22 Sep 2023 11:56:43 +0800
-Message-ID: <CAJFLiB+J4mKGDOppp=1moMe2aNqeJhM9F2cD4KPTXoM6nzb5RA@mail.gmail.com>
-Subject: Endless calls to xas_split_alloc() due to corrupted xarray entry
-To:     linux-xfs@vger.kernel.org
-Cc:     Guowen Shan <gshan@redhat.com>,
-        Shaoqin Huang <shahuang@redhat.com>,
-        Zhenyu Zhang <zhenyzha@redhat.com>
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <ZQvuNaYIukAnlEDM@bombadil.infradead.org>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Hi all,
+On Thu, Sep 21, 2023 at 12:18:13AM -0700, Luis Chamberlain wrote:
+> On Thu, Sep 21, 2023 at 04:03:56PM +1000, Dave Chinner wrote:
+> > On Wed, Sep 20, 2023 at 09:57:56PM -0700, Luis Chamberlain wrote:
+> > > On Wed, Sep 20, 2023 at 08:00:12PM -0700, Luis Chamberlain wrote:
+> > > > https://git.kernel.org/pub/scm/linux/kernel/git/mcgrof/linux.git/log/?h=large-block-linus
+> > > > 
+> > > > I haven't tested yet the second branch I pushed though but it applied without any changes
+> > > > so it should be good (usual famous last words).
+> > > 
+> > > I have run some preliminary tests on that branch as well above using fsx
+> > > with larger LBA formats running them all on the *same* system at the
+> > > same time. Kernel is happy.
+> 
+> <-- snip -->
+> 
+> > So I just pulled this, built it and run generic/091 as the very
+> > first test on this:
+> > 
+> > # ./run_check.sh --mkfs-opts "-m rmapbt=1 -b size=64k" --run-opts "-s xfs_64k generic/091"
+> 
+> The cover letter for this patch series acknowledged failures in fstests.
 
-we don't know how the xarray entry was corrupted. Maybe it's a known
-issue to community.
-Lets see.
+But this is a new update, which you said fixed various issues, and
+you posted this in direct response to the bug report I gave you.
 
-Contents
---------
-1. Problem Statement
-2. The call trace
-3. The captured data by bpftrace
+> For kdevops now, we borrow the same last linux-next baseline:
+> 
+> git grep "generic/091" workflows/fstests/expunges/6.6.0-rc2-large-block-linus-nobdev
+> workflows/fstests/expunges/6.6.0-rc2-large-block-linus-nobdev/xfs/unassigned/xfs_reflink_1024.txt:generic/091 # possible regression
+> workflows/fstests/expunges/6.6.0-rc2-large-block-linus-nobdev/xfs/unassigned/xfs_reflink_16k.txt:generic/091
+> workflows/fstests/expunges/6.6.0-rc2-large-block-linus-nobdev/xfs/unassigned/xfs_reflink_32k.txt:generic/091
+> workflows/fstests/expunges/6.6.0-rc2-large-block-linus-nobdev/xfs/unassigned/xfs_reflink_64k_4ks.txt:generic/091
+> 
+> So well, we already know this fails.
 
+*cough*
 
-1. Problem Statement
---------------------
-With 4k guest and 64k host, on aarch64(Ampere's Altra Max CPU) hit Call trace:
-    Steps:
-    1) System setup hugepages on host.
-       # echo 60 > /proc/sys/vm/nr_hugepages
-    2) Mount this hugepage to /mnt/kvm_hugepage.
-       # mount -t hugetlbfs -o pagesize=524288K none /mnt/kvm_hugepage
-    3) HugePages didn't leak when using non-existent mem-path.
-       # mkdir -p /mnt/tmp
-    4) Boot guest.
-       # /usr/libexec/qemu-kvm \
-...
-         -m 30720 \
--object '{"size": 32212254720, "mem-path": "/mnt/tmp", "qom-type":
-"memory-backend-file"}'  \
--smp 4,maxcpus=4,cores=2,threads=1,clusters=1,sockets=2  \
-         -blockdev '{"node-name": "file_image1", "driver": "file",
-"auto-read-only": true, "discard": "unmap", "aio": "threads",
-"filename": "/home/kvm_autotest_root/images/back_up_4k.qcow2",
-"cache": {"direct": true, "no-flush": false}}' \
--blockdev '{"node-name": "drive_image1", "driver": "qcow2",
-"read-only": false, "cache": {"direct": true, "no-flush": false},
-"file": "file_image1"}' \
--device '{"driver": "scsi-hd", "id": "image1", "drive":
-"drive_image1", "write-cache": "on"}' \
+-You- know it already fails.
 
-    5) Wait about 1 minute ------> hit Call trace
+And you are expecting people who try the code to somehow know
+that you've explicitly ignored this fsx failure, especially after
+all your words to tell us how much fsx testing it has passed?
 
-2. The call trace
---------------------
-[   14.982751] block dm-0: the capability attribute has been deprecated.
-[   15.690043] PEFILE: Unsigned PE binary
+And that's kinda my point - you're effusing about how much fsx
+testing this has passed, yet it istill fails after just a handful of
+ops in generic/091. The dissonance could break windows...
 
+----
 
-[   90.135676] rcu: INFO: rcu_preempt detected stalls on CPUs/tasks:
-[   90.136629] rcu: 3-...0: (3 ticks this GP)
-idle=e6ec/1/0x4000000000000000 softirq=6847/6849 fqs=232
-[   90.137293] rcu: (detected by 2, t=6012 jiffies, g=2085, q=2539 ncpus=4)
-[   90.137796] Task dump for CPU 3:
-[   90.138037] task:PK-Backend      state:R  running task     stack:0
-   pid:2287  ppid:1      flags:0x00000202
-[   90.138757] Call trace:
-[   90.138940]  __switch_to+0xc8/0x110
-[   90.139203]  0xb54a54f8c5fb0700
+Fundamentally, when it comes to data integrity, it important to
+exercise as much of the operational application space as quickly as
+possible as it is that breadth of variation in operations that
+flushes out more bugs and helps stabilises the code faster.
 
-[  270.190849] rcu: INFO: rcu_preempt detected stalls on CPUs/tasks:
-[  270.191722] rcu: 3-...0: (3 ticks this GP)
-idle=e6ec/1/0x4000000000000000 softirq=6847/6849 fqs=1020
-[  270.192405] rcu: (detected by 1, t=24018 jiffies, g=2085, q=3104 ncpus=4)
-[  270.192876] Task dump for CPU 3:
-[  270.193099] task:PK-Backend      state:R  running task     stack:0
-   pid:2287  ppid:1      flags:0x00000202
-[  270.193774] Call trace:
-[  270.193946]  __switch_to+0xc8/0x110
-[  270.194336]  0xb54a54f8c5fb0700
+Why do you think we talk about the massive test matrix most
+filesytsems have and how long it takes to iterate so much? It's
+because iterating that complex test matrix is how we find all the
+whacky, weird bugs in the code.
 
-[ 1228.068406] ------------[ cut here ]------------
-[ 1228.073011] WARNING: CPU: 2 PID: 4496 at lib/xarray.c:1010
-xas_split_alloc+0xf8/0x128
-[ 1228.080828] Modules linked in: binfmt_misc vhost_net vhost
-vhost_iotlb tap xt_CHECKSUM xt_MASQUERADE xt_conntrack ipt_REJECT
-nf_reject_ipv4 nft_compat nft_chain_nat nf_nat nf_conntrack
-nf_defrag_ipv6 nf_defrag_ipv4 nf_tables nfnetlink tun bridge stp llc
-qrtr rfkill sunrpc vfat fat acpi_ipmi ipmi_ssif arm_spe_pmu
-ipmi_devintf arm_cmn arm_dmc620_pmu ipmi_msghandler cppc_cpufreq
-arm_dsu_pmu xfs libcrc32c ast drm_shmem_helper drm_kms_helper drm
-crct10dif_ce ghash_ce igb nvme sha2_ce nvme_core sha256_arm64 sha1_ce
-i2c_designware_platform sbsa_gwdt nvme_common i2c_algo_bit
-i2c_designware_core xgene_hwmon dm_mirror dm_region_hash dm_log dm_mod
-fuse
-[ 1228.137630] CPU: 2 PID: 4496 Comm: qemu-kvm Kdump: loaded Tainted:
-G        W          6.6.0-rc2-zhenyzha+ #5
-[ 1228.147529] Hardware name: GIGABYTE R152-P31-00/MP32-AR1-00, BIOS
-F31h (SCP: 2.10.20220810) 07/27/2022
-[ 1228.156820] pstate: 80400009 (Nzcv daif +PAN -UAO -TCO -DIT -SSBS BTYPE=--)
-[ 1228.163767] pc : xas_split_alloc+0xf8/0x128
-[ 1228.167938] lr : __filemap_add_folio+0x33c/0x4e0
-[ 1228.172543] sp : ffff80008dd4f1c0
-[ 1228.175844] x29: ffff80008dd4f1c0 x28: ffffd15825388c40 x27: 0000000000000001
-[ 1228.182967] x26: 0000000000000001 x25: ffffffffffffc005 x24: 0000000000000000
-[ 1228.190089] x23: ffff80008dd4f270 x22: ffffffc202b00000 x21: 0000000000000000
-[ 1228.197211] x20: ffffffc2007f9600 x19: 000000000000000d x18: 0000000000000014
-[ 1228.204334] x17: 00000000b21b8a3f x16: 0000000013a8aa94 x15: ffffd15824625944
-[ 1228.211456] x14: ffffffffffffffff x13: 0000000000000030 x12: 0101010101010101
-[ 1228.218578] x11: 7f7f7f7f7f7f7f7f x10: 000000000000000a x9 : ffffd158252dd3fc
-[ 1228.225701] x8 : ffff80008dd4f1c0 x7 : ffff07ffa0945468 x6 : ffff80008dd4f1c0
-[ 1228.232823] x5 : 0000000000000018 x4 : 0000000000000000 x3 : 0000000000012c40
-[ 1228.239945] x2 : 000000000000000d x1 : 000000000000000c x0 : 0000000000000000
-[ 1228.247067] Call trace:
-[ 1228.249500]  xas_split_alloc+0xf8/0x128
-[ 1228.253324]  __filemap_add_folio+0x33c/0x4e0
-[ 1228.257582]  filemap_add_folio+0x48/0xd0
-[ 1228.261493]  page_cache_ra_order+0x214/0x310
-[ 1228.265750]  ondemand_readahead+0x1a8/0x320
-[ 1228.269921]  page_cache_async_ra+0x64/0xa8
-[ 1228.274005]  filemap_fault+0x238/0xaa8
-[ 1228.277742]  __xfs_filemap_fault+0x60/0x3c0 [xfs]
-[ 1228.282491]  xfs_filemap_fault+0x54/0x68 [xfs]
-[ 1228.286979]  __do_fault+0x40/0x210
-[ 1228.290368]  do_cow_fault+0xf0/0x300
-[ 1228.293931]  do_pte_missing+0x140/0x238
-[ 1228.297754]  handle_pte_fault+0x100/0x160
-[ 1228.301751]  __handle_mm_fault+0x100/0x310
-[ 1228.305835]  handle_mm_fault+0x6c/0x270
-[ 1228.309659]  faultin_page+0x70/0x128
-[ 1228.313221]  __get_user_pages+0xc8/0x2d8
-[ 1228.317131]  get_user_pages_unlocked+0xc4/0x3b8
-[ 1228.321648]  hva_to_pfn+0xf8/0x468
-[ 1228.325037]  __gfn_to_pfn_memslot+0xa4/0xf8
-[ 1228.329207]  user_mem_abort+0x174/0x7e8
-[ 1228.333031]  kvm_handle_guest_abort+0x2dc/0x450
-[ 1228.337548]  handle_exit+0x70/0x1c8
-[ 1228.341024]  kvm_arch_vcpu_ioctl_run+0x224/0x5b8
-[ 1228.345628]  kvm_vcpu_ioctl+0x28c/0x9d0
-[ 1228.349450]  __arm64_sys_ioctl+0xa8/0xf0
-[ 1228.353360]  invoke_syscall.constprop.0+0x7c/0xd0
-[ 1228.358052]  do_el0_svc+0xb4/0xd0
-[ 1228.361354]  el0_svc+0x50/0x228
-[ 1228.364484]  el0t_64_sync_handler+0x134/0x150
-[ 1228.368827]  el0t_64_sync+0x17c/0x180
-[ 1228.372476] ---[ end trace 0000000000000000 ]---
-[ 1228.377124] ------------[ cut here ]------------
-[ 1228.381728] WARNING: CPU: 2 PID: 4496 at lib/xarray.c:1010
-xas_split_alloc+0xf8/0x128
-[ 1228.389546] Modules linked in: binfmt_misc vhost_net vhost
-vhost_iotlb tap xt_CHECKSUM xt_MASQUERADE xt_conntrack ipt_REJECT
-nf_reject_ipv4 nft_compat nft_chain_nat nf_nat nf_conntrack
-nf_defrag_ipv6 nf_defrag_ipv4 nf_tables nfnetlink tun bridge stp llc
-qrtr rfkill sunrpc vfat fat acpi_ipmi ipmi_ssif arm_spe_pmu
-ipmi_devintf arm_cmn arm_dmc620_pmu ipmi_msghandler cppc_cpufreq
-arm_dsu_pmu xfs libcrc32c ast drm_shmem_helper drm_kms_helper drm
-crct10dif_ce ghash_ce igb nvme sha2_ce nvme_core sha256_arm64 sha1_ce
-i2c_designware_platform sbsa_gwdt nvme_common i2c_algo_bit
-i2c_designware_core xgene_hwmon dm_mirror dm_region_hash dm_log dm_mod
-fuse
-[ 1228.446348] CPU: 2 PID: 4496 Comm: qemu-kvm Kdump: loaded Tainted:
-G        W          6.6.0-rc2-zhenyzha+ #5
-[ 1228.456248] Hardware name: GIGABYTE R152-P31-00/MP32-AR1-00, BIOS
-F31h (SCP: 2.10.20220810) 07/27/2022
-[ 1228.465538] pstate: 80400009 (Nzcv daif +PAN -UAO -TCO -DIT -SSBS BTYPE=--)
-[ 1228.472486] pc : xas_split_alloc+0xf8/0x128
-[ 1228.476656] lr : __filemap_add_folio+0x33c/0x4e0
-[ 1228.481261] sp : ffff80008dd4f1c0
-[ 1228.484563] x29: ffff80008dd4f1c0 x28: ffffd15825388c40 x27: 0000000000000001
-[ 1228.491685] x26: 0000000000000001 x25: ffffffffffffc005 x24: 0000000000000000
-[ 1228.498807] x23: ffff80008dd4f270 x22: ffffffc202b00000 x21: 0000000000000000
-[ 1228.505930] x20: ffffffc2007f9600 x19: 000000000000000d x18: 0000000000000014
-[ 1228.513052] x17: 00000000b21b8a3f x16: 0000000013a8aa94 x15: ffffd15824625944
-[ 1228.520174] x14: ffffffffffffffff x13: 0000000000000030 x12: 0101010101010101
-[ 1228.527297] x11: 7f7f7f7f7f7f7f7f x10: 000000000000000a x9 : ffffd158252dd3fc
-[ 1228.534419] x8 : ffff80008dd4f1c0 x7 : ffff07ffa0945468 x6 : ffff80008dd4f1c0
-[ 1228.541542] x5 : 0000000000000018 x4 : 0000000000000000 x3 : 0000000000012c40
-[ 1228.548664] x2 : 000000000000000d x1 : 000000000000000c x0 : 0000000000000000
-[ 1228.555786] Call trace:
-[ 1228.558220]  xas_split_alloc+0xf8/0x128
-[ 1228.562043]  __filemap_add_folio+0x33c/0x4e0
-[ 1228.566300]  filemap_add_folio+0x48/0xd0
-[ 1228.570211]  page_cache_ra_order+0x214/0x310
-[ 1228.574469]  ondemand_readahead+0x1a8/0x320
-[ 1228.578639]  page_cache_async_ra+0x64/0xa8
-[ 1228.582724]  filemap_fault+0x238/0xaa8
-[ 1228.586460]  __xfs_filemap_fault+0x60/0x3c0 [xfs]
-[ 1228.591210]  xfs_filemap_fault+0x54/0x68 [xfs]
+Concentrating on a single test configuration and running it over and
+over again won't find bugs in code it doesn't exercise no matter how
+long it is run for. Running such a setup in an automated environment
+doesn't mean you get better code coverage, it just means you cover
+the same narrow set of corner cases faster and more times. If it
+works once, it should work a million times. Iterating it a billion
+more times doesn't tell us anything additional, either.
 
+Put simply: performing deep, homogenous testing on code that has known
+data corruption bugs outside the narrow scope of the test case is
+not telling us anything useful about the overall state of the code.
+Indeed, turning off failing tests that are critical to validating the
+correct operation of the code you are modifying is bad practice.
 
+For code changes like this, all fsx testing in fstests should pass
+before you post anything for review - even for an RFC. There is no
+point reviewing code that doesn't work properly, nor wasting
+people's time by encouraging them to test it when it's clear to you
+that it's going to fail in various important ways.
 
-3. The captured data by bpftrace
-(The following part is the crawl analysis of gshan@redhat.com )
---------------------
-pid:  4475    task: qemu-kvm
-file: /mnt/tmp/qemu_back_mem.mem-machine_mem.OdGYet (deleted)
+Hence I think your testing is focussing on the wrong things and I
+suspect that you've misunderstood the statements of "we'll need
+billions of fsx ops to test this code" that various people have made
+really meant.  You've elevated running billions of fsx ops to your
+primary "it works" gating condition, at the expense of making sure
+all the other parts of the filesystem still work correctly.
 
--------------------- inode --------------------
-i_flags:               0x0
-i_ino:                 67333199
-i_size:                32212254720
+The reality is that the returns from fsx diminish as the number of
+ops go up. Once you've run the first hundred million fsx ops for a
+given operations set, the chance that the next 100M ops will find a
+new problem is -greatly- reduced. The vast majority of problems will
+be found in the first 10M ops that are run in any given fsx
+operation, and few bugs are found beyond the 100M mark. Yes, we
+occasionally find one up in the billions, but that's rare and most
+definitely not somethign to focus on when still developing RFC level
+code.
 
------------------ address_space ----------------
-flags:                 040
-invalidate_lock
-  count:               256
-  owner:               0xffff07fff6e759c1
-    pid: 4496  task: qemu-kvm
-  wait_list.next:      0xffff07ffa20422e0
-  wait_list.prev:      0xffff07ffa20422e0
+Different fsx configurations change the operation set that is run -
+mixing DIO reads with buffered writes, turning mmap on and off,
+using AIO or io_uring rather than synchronous IO, etc. These all
+exercise different code paths and corner cases and have vastly
+different code interactions, and that is what we need to cover when
+developing new code.
 
--------------------- xarray --------------------
-entry[0]:       0xffff080f7eda0002
-shift:          18
-offset:         0
-count:          2
-nr_values:      0
-parent:         0x0
-slots[00]:      0xffff07ffa094546a
-slots[01]:      0xffff07ffa1b09b22
+IOWs, we need coverage of the *entire operation space*, not just the
+same narrow set of operations run billions of time.  A wide focus
+requires billions of ops to cover because it requires lots of
+different application configurations to be run. In constrast, there
+are only three fs configurations that matter: bs < PS, bs == PS and
+bs > PS.
 
-entry[1]:       0xffff07ffa094546a
-shift:          12
-offset:         0
-count:          20
-nr_values:      0
-parent:         0xffff080f7eda0000
-slots[00]:      0xffffffc202880000
-slots[01]:      0x2
+For example, 16kB, 32kB and 64kB filesystem configs exercise exactly
+the same code paths in exactly the same way (e.g. both have non-zero
+miniumum folio orders but only differ by what that order is). Hence
+running the same test application configs on these different
+filessytem configurations does actually not improve code coverage of
+the testing at all. Testing all of them only increases the resources
+required to the test a change, it does not improve the quality of
+coverage of the testing being performed at all....
 
-entry[2]:       0xffffffc202880000
-shift:          104
-offset:         128
-count:          0
-nr_values:      0
-parent:         0xffffffc20304c888
-slots[00]:      0xffff08009a960000
-slots[01]:      0x2001ffffffff
+Hence I'd strongly suggest that, for the next posting of these
+cahnge, you focus on making fstests pass without turning off any
+failing tests, and that fsx is run with a wide variety of
+configurations (e.g. modify all the fstests cases to run for a
+configurable number of ops (e.g. via SOAK_DURATION)). We just don't
+care at this point about finding that 1 in 10^15 ops bug because
+it's code in development; what we actually care about is that
+-everything- works correctly for the vast majority of use cases....
 
-It seems the last xarray entry ("entry[2]") has been corrupted. "shift"
-becomes 104 and "offset" becomes 128, which isn't reasonable.
-It's explaining why we run into xas_split_alloc() in __filemap_add_folio()
-
-        if (order > folio_order(folio))
-                xas_split_alloc(&xas, xa_load(xas.xa, xas.xa_index),
-                                order, gfp);
-
-folio_order(folio) is likely 6 since the readahead window size on the BDI device
-is 4MB.
-However, @order figured from the corrupted xarray entry is much larger than 6.
-log2(0x400000 / 0x10000) = log2(64) = 6
-
-[root@ampere-mtsnow-altramax-28 ~]# uname -r
-6.6.0-rc2-zhenyzha+
-[root@ampere-mtsnow-altramax-28 ~]# cat
-/sys/devices/virtual/bdi/253:0/read_ahead_kb
-4096
-
+-Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
