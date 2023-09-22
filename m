@@ -2,128 +2,70 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 43652CD484B
-	for <linux-xfs@archiver.kernel.org>; Fri, 22 Sep 2023 18:22:58 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0C358E8180B
+	for <linux-xfs@archiver.kernel.org>; Fri, 22 Sep 2023 19:38:22 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229664AbjIVSXC (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 22 Sep 2023 14:23:02 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43780 "EHLO
+        id S229540AbjIVTi0 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 22 Sep 2023 15:38:26 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60196 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229634AbjIVSXB (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 22 Sep 2023 14:23:01 -0400
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id DCA65A7;
-        Fri, 22 Sep 2023 11:22:55 -0700 (PDT)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 13744C433C8;
-        Fri, 22 Sep 2023 18:22:53 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1695406975;
-        bh=nQQW+wDRVnYMRuOb8M421KByNhjssOZzRLQ2//TK7Tc=;
-        h=Subject:From:To:Cc:Date:In-Reply-To:References:From;
-        b=McHV0W81b/uba3XlQJOB+tiLW3eKS3NR+Gp6AbHLSok/P7Ero7ckGOeWW0F8xhJCV
-         g19g+Up2isP79XAe2YgwxrxnsaD4yqXBOgl8TN6XNbmwJ91k+lvlwE7afs+aN8TrkK
-         xXDgr9WluDIFpsfCM4TWWFNfMKRpqaP+rN4WQnBlu73tUub4mWeVa8XKc+o2lYbjWu
-         sTWbaKTIC/nb6GJCbHdFoQcQofsNiKsMEwIXJwXvLOPkVS5n4V8WT1iuzoUUbiSGEZ
-         xsp2Howcs3bt+Tev/8gbLPJrusoMM/g1EaBUOddBmL+9hRKmOdL26FdGtTXuKDkqgU
-         xz7dc/8/6/KQA==
-Message-ID: <f4c7e8e58db56741ae38bef6909852b52cd3df5b.camel@kernel.org>
-Subject: Re: [PATCH v8 1/5] fs: add infrastructure for multigrain timestamps
-From:   Jeff Layton <jlayton@kernel.org>
-To:     Kent Overstreet <kent.overstreet@linux.dev>
-Cc:     Alexander Viro <viro@zeniv.linux.org.uk>,
-        Christian Brauner <brauner@kernel.org>,
-        Chuck Lever <chuck.lever@oracle.com>,
-        Neil Brown <neilb@suse.de>,
-        Olga Kornievskaia <kolga@netapp.com>,
-        Dai Ngo <Dai.Ngo@oracle.com>, Tom Talpey <tom@talpey.com>,
-        Chandan Babu R <chandan.babu@oracle.com>,
-        "Darrick J. Wong" <djwong@kernel.org>,
-        Dave Chinner <david@fromorbit.com>, Jan Kara <jack@suse.cz>,
-        Linus Torvalds <torvalds@linux-foundation.org>,
-        linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-nfs@vger.kernel.org, linux-xfs@vger.kernel.org
-Date:   Fri, 22 Sep 2023 14:22:52 -0400
-In-Reply-To: <20230922173136.qpodogsb26wq3ujj@moria.home.lan>
-References: <20230922-ctime-v8-0-45f0c236ede1@kernel.org>
-         <20230922-ctime-v8-1-45f0c236ede1@kernel.org>
-         <20230922173136.qpodogsb26wq3ujj@moria.home.lan>
-Content-Type: text/plain; charset="ISO-8859-15"
-Content-Transfer-Encoding: quoted-printable
-User-Agent: Evolution 3.48.4 (3.48.4-1.fc38) 
+        with ESMTP id S229495AbjIVTiZ (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 22 Sep 2023 15:38:25 -0400
+Received: from casper.infradead.org (casper.infradead.org [IPv6:2001:8b0:10b:1236::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id DC934AF;
+        Fri, 22 Sep 2023 12:38:18 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=infradead.org; s=casper.20170209; h=In-Reply-To:Content-Type:MIME-Version:
+        References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
+        Content-Transfer-Encoding:Content-ID:Content-Description;
+        bh=TwghE0UWvedzbS9x4AhHOtwKLQCqsKJyy8dRVBG0BLM=; b=J+2aR6VVMtP3vyHszk4csseJuH
+        cHY42l/HKolxgTYY1E1HcC6ojrTdLFolrI31cdR/vAFPJq3sYRWZ8odsSrTte74EyWyjpaq8ro1gY
+        AqnjXNxiPbMV/Z7/4xU17R8I4yXrdHd0w54moXRI+LrEq1SJEVXPDCBOajVnyQyLFdw0ujB0remek
+        l/oGsO8Gke0LF7eHik74oK+w314N7cqkDf9a6hIdyDCzDJWnkqGb9pDflISC2vW8t8jICY4fjfbAf
+        Eh3DKfCJd8PMRQyZqo03OKf+6v6/PUahX0ytz3bluv7VVVKc6qO3HTaH/ZOd8an84LQPNFbQriI5c
+        Tv5T5aMQ==;
+Received: from willy by casper.infradead.org with local (Exim 4.94.2 #2 (Red Hat Linux))
+        id 1qjlyZ-002Tkn-BO; Fri, 22 Sep 2023 19:38:07 +0000
+Date:   Fri, 22 Sep 2023 20:38:07 +0100
+From:   Matthew Wilcox <willy@infradead.org>
+To:     Dave Chinner <david@fromorbit.com>
+Cc:     Luis Chamberlain <mcgrof@kernel.org>,
+        Pankaj Raghav <p.raghav@samsung.com>,
+        Pankaj Raghav <kernel@pankajraghav.com>,
+        linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
+        da.gomez@samsung.com, akpm@linux-foundation.org,
+        linux-kernel@vger.kernel.org, djwong@kernel.org,
+        linux-mm@kvack.org, chandan.babu@oracle.com, gost.dev@samsung.com,
+        riteshh@linux.ibm.com
+Subject: Re: [RFC 00/23] Enable block size > page size in XFS
+Message-ID: <ZQ3tH61w+2Sf7AL2@casper.infradead.org>
+References: <20230915183848.1018717-1-kernel@pankajraghav.com>
+ <ZQd4IPeVI+o6M38W@dread.disaster.area>
+ <ZQewKIfRYcApEYXt@bombadil.infradead.org>
+ <CGME20230918050749eucas1p13c219481b4b08c1d58e90ea70ff7b9c8@eucas1p1.samsung.com>
+ <ZQfbHloBUpDh+zCg@dread.disaster.area>
+ <806df723-78cf-c7eb-66a6-1442c02126b3@samsung.com>
+ <ZQuxvAd2lxWppyqO@bombadil.infradead.org>
+ <ZQvNVAfZMjE3hgmN@bombadil.infradead.org>
+ <ZQvczBjY4vTLJFBp@dread.disaster.area>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <ZQvczBjY4vTLJFBp@dread.disaster.area>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Fri, 2023-09-22 at 13:31 -0400, Kent Overstreet wrote:
-> On Fri, Sep 22, 2023 at 01:14:40PM -0400, Jeff Layton wrote:
-> > The VFS always uses coarse-grained timestamps when updating the ctime
-> > and mtime after a change. This has the benefit of allowing filesystems
-> > to optimize away a lot metadata updates, down to around 1 per jiffy,
-> > even when a file is under heavy writes.
-> >=20
-> > Unfortunately, this has always been an issue when we're exporting via
-> > NFS, which traditionally relied on timestamps to validate caches. A lot
-> > of changes can happen in a jiffy, and that can lead to cache-coherency
-> > issues between hosts.
-> >=20
-> > NFSv4 added a dedicated change attribute that must change value after
-> > any change to an inode. Some filesystems (btrfs, ext4 and tmpfs) utiliz=
-e
-> > the i_version field for this, but the NFSv4 spec allows a server to
-> > generate this value from the inode's ctime.
-> >=20
-> > What we need is a way to only use fine-grained timestamps when they are
-> > being actively queried.
-> >=20
-> > POSIX generally mandates that when the the mtime changes, the ctime mus=
-t
-> > also change. The kernel always stores normalized ctime values, so only
-> > the first 30 bits of the tv_nsec field are ever used.
-> >=20
-> > Use the 31st bit of the ctime tv_nsec field to indicate that something
-> > has queried the inode for the mtime or ctime. When this flag is set,
-> > on the next mtime or ctime update, the kernel will fetch a fine-grained
-> > timestamp instead of the usual coarse-grained one.
-> >=20
-> > Filesytems can opt into this behavior by setting the FS_MGTIME flag in
-> > the fstype. Filesystems that don't set this flag will continue to use
-> > coarse-grained timestamps.
->=20
-> Interesting...
->=20
-> So in bcachefs, for most inode fields the btree inode is the "master
-> copy"; we do inode updates via btree transactions, and then on
-> successful transaction commit we update the VFS inode to match.
->=20
-> (exceptions: i_size, i_blocks)
->=20
-> I'd been contemplating switching to that model for timestamp updates as
-> well, since that would allow us to get rid of our
-> super_operations.write_inode method - except we probably wouldn't want
-> to do that since it would likely make timestamp updates too expensive.
->=20
-> And now with your scheme of stashing extra state in timespec, I'm glad
-> we didn't.
->=20
-> Still, timestamp updates are a bit messier than I'd like, would be
-> lovely to figure out a way to clean that up - right now we have an
-> awkward mix of "sometimes timestamp updates happen in a btree
-> transaction first, other times just the VFS inode is updated and marked
-> dirty".
->=20
-> xfs doesn't have .write_inode, so it's probably time to study what it
-> does...
+lOn Thu, Sep 21, 2023 at 04:03:56PM +1000, Dave Chinner wrote:
+> So there's clearly something wrong here - it's likely that the
+> filesystem IO alignment parameters pulled from the underlying block
+> device (4k physical, 512 byte logical sector sizes) are improperly
+> interpreted.  i.e. for a filesystem with a sector size of 4kB,
+> direct IO with an alignment of 512 bytes should be rejected......
 
-A few months ago, we talked briefly and I asked about an i_version
-counter for bcachefs. You were going to look into it, and I wasn't sure
-if you had implemented one. If you haven't, then this may be a simpler
-alternative.
+I wonder if it's something in the truncation code that's splitting folios
+that ought not to be split.  Does this test possibly keep folios in
+cache that maybe get invalidated?
 
-For now, these aren't much good for anything other than faking up a
-change attribute for NFSv4, but=A0they should be fine for that and you
-wouldn't need to grow your on-disk inode to accommodate them.
-
-Cheers,
---=20
-Jeff Layton <jlayton@kernel.org>
+truncate_inode_partial_folio() is the one i'm most concernd about.
+but i'm also severely jetlagged.
