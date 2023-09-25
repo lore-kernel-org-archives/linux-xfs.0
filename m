@@ -2,86 +2,84 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E0ABACE7A95
-	for <linux-xfs@archiver.kernel.org>; Mon, 25 Sep 2023 15:39:07 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9E07CCE7A96
+	for <linux-xfs@archiver.kernel.org>; Mon, 25 Sep 2023 15:53:49 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229437AbjIYPjM (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 25 Sep 2023 11:39:12 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55912 "EHLO
+        id S232462AbjIYPxx (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 25 Sep 2023 11:53:53 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51386 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229458AbjIYPjL (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 25 Sep 2023 11:39:11 -0400
+        with ESMTP id S232464AbjIYPxw (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 25 Sep 2023 11:53:52 -0400
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C1F71101
-        for <linux-xfs@vger.kernel.org>; Mon, 25 Sep 2023 08:39:05 -0700 (PDT)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 68B4BC433CB;
-        Mon, 25 Sep 2023 15:39:05 +0000 (UTC)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D123BB6;
+        Mon, 25 Sep 2023 08:53:45 -0700 (PDT)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 5FE69C433C7;
+        Mon, 25 Sep 2023 15:53:45 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1695656345;
-        bh=ITtLkQ3VMv0+oqyoo8tOzA3VahM7AxkhGl/pImVOxOw=;
-        h=Date:From:To:Cc:Subject:From;
-        b=BTmsFhMvncreY0/bJrFDtOANHgUe1hQKeOd1AhcF/9+nlCf/CqqCb/bT+3BLalOJD
-         53z8MH2yKvKlyHxGmoI/93XNc+JP5GH9dn81DVFHIpl1bE0mcWERiwyKuZ37oZyV4A
-         eOflPi5tux7Q3sjIStCY4PanTM05IutVtgrRX0Wzdymg0PJ4bcy9mZ0eOY0qxFaa5L
-         V/1uwlq4qhKwJW5D5mzqHhf6LQrBPkPWYZ/ahJKrL653NNiAbFCoNm9bpk0rFdF2d/
-         PtORmqTLWNVUE48XT3JZZS/O8R9tAdmuvn52ZnjkxmRp2KH5qca9lh/Lzd9OCAt2wi
-         CmeWx7t2/4Zyw==
-Date:   Mon, 25 Sep 2023 08:39:04 -0700
+        s=k20201202; t=1695657225;
+        bh=09qfPPw0Ihsl3Yn+GLcEGbSzfunt9RjssKtlTN6fS8o=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=tCtYFOgPt9kskmmCJx09JvCJCuTnZ9RMrV6+CBmF2Jud9/76hRlEcO3uvTy3lNOJR
+         dd32MwEadx6RUtVCGWJ0iOtOhpMLymO2/iaIqR6fN1k0y2ZrE3Ni4Dnx7CXpRqJo0N
+         oCFzU4UvfmgUgmpA7gR5G35qYLZPeM6OAAcMDDEouvYHZfJFC8DprAeQJvw4DCjHLV
+         Atjzjm6f80qK2Cr2vASTrVcJwk6NlG7AN41W0TdZ2AUVSIyNM8ocbGCPYs33sI+F6T
+         JMWG2Yu7THxwxQdF5pxhv6ArjrB4LPEXIq5G263G0CZ28FGZM33D6OkGxFreDikPjc
+         ZGG3dqKZooLIw==
+Date:   Mon, 25 Sep 2023 08:53:44 -0700
 From:   "Darrick J. Wong" <djwong@kernel.org>
-To:     chandanbabu@kernel.org, djwong@kernel.org
-Cc:     david@fromorbit.com, dchinner@redhat.com, linux-xfs@vger.kernel.org
-Subject: [GIT PULL] xfs: fix reloading the last iunlink item
-Message-ID: <169565625185.1980111.13370011821352297018.stg-ugh@frogsfrogsfrogs>
+To:     Christoph Hellwig <hch@lst.de>
+Cc:     linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org,
+        brauner@kernel.org,
+        syzbot+1fa947e7f09e136925b8@syzkaller.appspotmail.com
+Subject: Re: [PATCH] iomap: add a workaround for racy i_size updates on block
+ devices
+Message-ID: <20230925155344.GA11439@frogsfrogsfrogs>
+References: <20230925095133.311224-1-hch@lst.de>
+ <20230925150902.GA11456@frogsfrogsfrogs>
+ <20230925151816.GA444@lst.de>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
+In-Reply-To: <20230925151816.GA444@lst.de>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Hi Chandan,
+On Mon, Sep 25, 2023 at 05:18:16PM +0200, Christoph Hellwig wrote:
+> On Mon, Sep 25, 2023 at 08:09:02AM -0700, Darrick J. Wong wrote:
+> > > +			/*
+> > > +			 * This can happen if truncating the block device races
+> > > +			 * with the check in the caller as i_size updates on
+> > > +			 * block devices aren't synchronized by i_rwsem for
+> > > +			 * block devices.
+> > 
+> > Why /are/ bdevs special like this (not holding i_rwsem during a
+> > truncate) anyway?  Is it because we require the sysadmin to coordinate
+> > device shrink vs. running programs?
+> 
+> It's not just truncate, they also don't hold a lock on write.
 
-Please pull this branch with changes for xfs for 6.6-rc3.
+Oh!  So they don't.  Heh.
 
-As usual, I did a test-merge with the main upstream branch as of a few
-minutes ago, and didn't see any conflicts.  Please let me know if you
-encounter any problems.
+> I think the reason is that there is no such things as the block allocator
+> and block truncation that happens for block devices, they historically
+> had a fixed size, and at some point we allowed to change that size
+> by various crude means that are only slowly becoming more standardized
+> and formal.  Real block device size changes are about 100% growing of
+> the device, as that is an actually useful feature.  Shrinks OTOH are
+> usuall a "cute" hack: block drivers set the size to 0 stop I/O when they
+> are shut down.  I've been wanting to replace that with an actual check
+> in the bdev fd I/O path for a while, but that would also mean the
+> shrinking case would still be around, just exercised a lot less.
+
+You call bdev shrink a cute hack, cloud tenants call it a cost-reducing
+activity, and cloud vendors call it a revenue opportunity because
+shrinking filesystems is un***** expensive in terms of CPU time and IO
+usage. ;)
+
+Anyway, I'm not going to argue with longstanding blockdev precedent.
+
+Reviewed-by: Darrick J. Wong <djwong@kernel.org>
 
 --D
-
-The following changes since commit 6465e260f48790807eef06b583b38ca9789b6072:
-
-Linux 6.6-rc3 (2023-09-24 14:31:13 -0700)
-
-are available in the Git repository at:
-
-https://git.kernel.org/pub/scm/linux/kernel/git/djwong/xfs-linux.git tags/fix-fix-iunlink-6.6_2023-09-25
-
-for you to fetch changes up to 537c013b140d373d1ffe6290b841dc00e67effaa:
-
-xfs: fix reloading entire unlinked bucket lists (2023-09-24 18:12:13 -0700)
-
-----------------------------------------------------------------
-xfs: fix reloading the last iunlink item
-It's not a good idea to be trying to send bug fixes to the mailing list
-while also trying to take a vacation.  Dave sent some review comments
-about the iunlink reloading patches, I changed them in djwong-dev, and
-forgot to backport those changes to my -fixes tree.
-
-As a result, the patch is missing some important pieces.  Perhaps
-manually copying code diffs between email and two separate git trees
-is archaic and stupid^W^W^W^Wisn't really a good idea?
-
-This has been lightly tested with fstests.  Enjoy!
-
-Signed-off-by: Darrick J. Wong <djwong@kernel.org>
-
-----------------------------------------------------------------
-Darrick J. Wong (1):
-xfs: fix reloading entire unlinked bucket lists
-
-fs/xfs/xfs_export.c | 16 ++++++++++++----
-fs/xfs/xfs_inode.c  | 48 +++++++++++++++++++++++++++++++++++-------------
-fs/xfs/xfs_itable.c |  2 ++
-fs/xfs/xfs_qm.c     | 15 ++++++++++++---
-4 files changed, 61 insertions(+), 20 deletions(-)
