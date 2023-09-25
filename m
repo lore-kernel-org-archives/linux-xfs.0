@@ -2,38 +2,36 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5EEE5CE79A4
-	for <linux-xfs@archiver.kernel.org>; Mon, 25 Sep 2023 21:59:19 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2212CCE7A97
+	for <linux-xfs@archiver.kernel.org>; Mon, 25 Sep 2023 21:59:22 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230187AbjIYV7Y (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 25 Sep 2023 17:59:24 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54942 "EHLO
+        id S230476AbjIYV71 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 25 Sep 2023 17:59:27 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54980 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230453AbjIYV7X (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 25 Sep 2023 17:59:23 -0400
+        with ESMTP id S230453AbjIYV70 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 25 Sep 2023 17:59:26 -0400
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id EA805116
-        for <linux-xfs@vger.kernel.org>; Mon, 25 Sep 2023 14:59:16 -0700 (PDT)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 8ED0EC433C7;
-        Mon, 25 Sep 2023 21:59:16 +0000 (UTC)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 480AF11C
+        for <linux-xfs@vger.kernel.org>; Mon, 25 Sep 2023 14:59:20 -0700 (PDT)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id D95CCC433C7;
+        Mon, 25 Sep 2023 21:59:19 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1695679156;
-        bh=dnjE6OyBIMFbJ1OvPrN4iSaHwRqvnEiliaxOUIC2b3w=;
-        h=Subject:From:To:Cc:Date:In-Reply-To:References:From;
-        b=gRud6WL17wbJbH7d2edHW5UHMiV4jKIpQjeWH7tOjmSj0HkNTKSxC5vIKv4T3rYYO
-         WZTyX+89iTI2tbqUA5BKX+xnwouJia6I2wyfYg8FfrpNGlMWDC/Pm4imijQxsFtkTM
-         FeXLdghYPHZQxvzOy1qot1U59ex7lTI4dHzHf7M0bBdOL/5dda/7X32NzHpv1DCdof
-         fJ/sCDv1YqacUOymUxxRluMDsFI0AULHTyBr3CXTRmc7s5ges7nlBkQB46h+0cpWp3
-         M2vaC0tLETjBtex5P78JyXm5SnmmFGgN8rchHUBwrvS5l0R7SvOq8XhXXgz9Dmq8/8
-         4/59cPbyj0EEw==
-Subject: [PATCH 2/2] xfs_db: use directio for device access
+        s=k20201202; t=1695679159;
+        bh=pm+ngWWCgZXLz3gNtGxpgvjDmPt0uN38Sc+Tb21ojL0=;
+        h=Subject:From:To:Cc:Date:From;
+        b=Pq3smlNhH5WOMlQtFIfzvPUlGcESXJby1V+CTzPXk2i61fMSQRgGvP6VE/zbk2Yam
+         x97GxYqwwbhAkiaw9Lcisu7T2FKb3wBOBnYataaSZWq7sWD3zHHiqZAFz2tGN9JR9F
+         wZ9CctE2zfpgFFd/OOr0Gjs6mJiVstkEdfwLCzMPwfiIKKgJGPodm3hgaXoJyFgXys
+         ZqM7RVmjBh74UrO/2w1eh57B9rkIkM/XDKQ33xXo3iIlU8zYaM9TFz/eSCusrkQETM
+         gXgDKNOm++wdcwmkzCZF83R4f9zTRVkaiebcrZkZMvickw1dJiBAmKcUB51woXoBxn
+         CzEXWfOvkE1+Q==
+Subject: [PATCHSET 0/3] xfsprogs: adjust defaults for 6.6 LTS kernels
 From:   "Darrick J. Wong" <djwong@kernel.org>
 To:     djwong@kernel.org, cem@kernel.org
 Cc:     linux-xfs@vger.kernel.org
-Date:   Mon, 25 Sep 2023 14:59:16 -0700
-Message-ID: <169567915609.2320255.8945830759168479067.stgit@frogsfrogsfrogs>
-In-Reply-To: <169567914468.2320255.9161174588218371786.stgit@frogsfrogsfrogs>
-References: <169567914468.2320255.9161174588218371786.stgit@frogsfrogsfrogs>
+Date:   Mon, 25 Sep 2023 14:59:19 -0700
+Message-ID: <169567915945.2320343.12838353246024459529.stgit@frogsfrogsfrogs>
 User-Agent: StGit/0.19
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
@@ -42,33 +40,27 @@ Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-From: Darrick J. Wong <djwong@kernel.org>
+Hi all,
 
-XFS and tools (mkfs, copy, repair) don't generally rely on the block
-device page cache, preferring instead to use directio.  For whatever
-reason, the debugger was never made to do this, but let's do that now.
+This series enables reverse mapping and 64-bit extent counts by default.
+These features are stable enough now, and with online fsck finished,
+there's a compelling reason to start enabling it on customer systems.
 
-This should eliminate the weird fstests failures resulting from
-udev/blkid pinning a cache page while the unmounting filesystem writes
-to the superblock such that xfs_db finds the stale pagecache instead of
-the post-unmount superblock.
+If you're going to start using this code, I strongly recommend pulling
+from my git trees, which are linked below.
 
-Signed-off-by: Darrick J. Wong <djwong@kernel.org>
+This has been running on the djcloud for months with no problems.  Enjoy!
+Comments and questions are, as always, welcome.
+
+--D
+
+xfsprogs git tree:
+https://git.kernel.org/cgit/linux/kernel/git/djwong/xfsprogs-dev.git/log/?h=lts-6.6-stuff
 ---
- db/init.c |    1 +
- 1 file changed, 1 insertion(+)
-
-
-diff --git a/db/init.c b/db/init.c
-index eec65d0884d..4599cc00d71 100644
---- a/db/init.c
-+++ b/db/init.c
-@@ -96,6 +96,7 @@ init(
- 		x.volname = fsdevice;
- 	else
- 		x.dname = fsdevice;
-+	x.isdirect = LIBXFS_DIRECT;
- 
- 	x.bcache_flags = CACHE_MISCOMPARE_PURGE;
- 	if (!libxfs_init(&x)) {
+ man/man8/mkfs.xfs.8.in |   11 ++++++-----
+ mkfs/Makefile          |    3 ++-
+ mkfs/lts_6.6.conf      |   14 ++++++++++++++
+ mkfs/xfs_mkfs.c        |    4 ++--
+ 4 files changed, 24 insertions(+), 8 deletions(-)
+ create mode 100644 mkfs/lts_6.6.conf
 
