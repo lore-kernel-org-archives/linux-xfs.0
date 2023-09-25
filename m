@@ -2,37 +2,36 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id EE2B1CE7A97
-	for <linux-xfs@archiver.kernel.org>; Mon, 25 Sep 2023 21:59:13 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5EEE5CE79A4
+	for <linux-xfs@archiver.kernel.org>; Mon, 25 Sep 2023 21:59:19 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230231AbjIYV7S (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 25 Sep 2023 17:59:18 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49318 "EHLO
+        id S230187AbjIYV7Y (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 25 Sep 2023 17:59:24 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54942 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230187AbjIYV7R (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 25 Sep 2023 17:59:17 -0400
+        with ESMTP id S230453AbjIYV7X (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 25 Sep 2023 17:59:23 -0400
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4DA35AF
-        for <linux-xfs@vger.kernel.org>; Mon, 25 Sep 2023 14:59:11 -0700 (PDT)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id E86F6C433C8;
-        Mon, 25 Sep 2023 21:59:10 +0000 (UTC)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id EA805116
+        for <linux-xfs@vger.kernel.org>; Mon, 25 Sep 2023 14:59:16 -0700 (PDT)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 8ED0EC433C7;
+        Mon, 25 Sep 2023 21:59:16 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1695679151;
-        bh=mlmF3kDQ4bt6+zSTNROH3YkJv9Yjdm9gHhxLBuKa2IQ=;
+        s=k20201202; t=1695679156;
+        bh=dnjE6OyBIMFbJ1OvPrN4iSaHwRqvnEiliaxOUIC2b3w=;
         h=Subject:From:To:Cc:Date:In-Reply-To:References:From;
-        b=C3NQjvIRVAeq9eiOTwK+aiiBGKDTDwtmU6B32rxtJQi/HEHe0/9hwK8KLpjOzrNrN
-         vsbvBjG5dNLHbGYJex2bTKHG8efQ69DnklwCvfYumvzsj7M0TJKP/cpBeFC7dcZ8j9
-         km8aFrlefJGx87/WyrSKWSEltWPNNVufvnpbHuQa81ILM14ug4DdCyasQciDp/mLaG
-         X8zItPrvul4hiNOcmoaaXxgv3l2rTZAxrq/oEi6q3J7W+8iOuVON52yMFkDGAALnI5
-         nO2YsWGZRxlFpnlUwMZPwXwEDZhZoQkfj8KAIAWmoyGnxDkxihmwO8/1uzE81AqyVF
-         9WZxHCaF8Ka3g==
-Subject: [PATCH 1/2] libxfs: make platform_set_blocksize optional with
- directio
+        b=gRud6WL17wbJbH7d2edHW5UHMiV4jKIpQjeWH7tOjmSj0HkNTKSxC5vIKv4T3rYYO
+         WZTyX+89iTI2tbqUA5BKX+xnwouJia6I2wyfYg8FfrpNGlMWDC/Pm4imijQxsFtkTM
+         FeXLdghYPHZQxvzOy1qot1U59ex7lTI4dHzHf7M0bBdOL/5dda/7X32NzHpv1DCdof
+         fJ/sCDv1YqacUOymUxxRluMDsFI0AULHTyBr3CXTRmc7s5ges7nlBkQB46h+0cpWp3
+         M2vaC0tLETjBtex5P78JyXm5SnmmFGgN8rchHUBwrvS5l0R7SvOq8XhXXgz9Dmq8/8
+         4/59cPbyj0EEw==
+Subject: [PATCH 2/2] xfs_db: use directio for device access
 From:   "Darrick J. Wong" <djwong@kernel.org>
 To:     djwong@kernel.org, cem@kernel.org
 Cc:     linux-xfs@vger.kernel.org
-Date:   Mon, 25 Sep 2023 14:59:10 -0700
-Message-ID: <169567915037.2320255.8793397462845978368.stgit@frogsfrogsfrogs>
+Date:   Mon, 25 Sep 2023 14:59:16 -0700
+Message-ID: <169567915609.2320255.8945830759168479067.stgit@frogsfrogsfrogs>
 In-Reply-To: <169567914468.2320255.9161174588218371786.stgit@frogsfrogsfrogs>
 References: <169567914468.2320255.9161174588218371786.stgit@frogsfrogsfrogs>
 User-Agent: StGit/0.19
@@ -45,35 +44,31 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-If we're accessing the block device with directio (and hence bypassing
-the page cache), then don't fail on BLKBSZSET not working.  We don't
-care what happens to the pagecache bufferheads.
+XFS and tools (mkfs, copy, repair) don't generally rely on the block
+device page cache, preferring instead to use directio.  For whatever
+reason, the debugger was never made to do this, but let's do that now.
+
+This should eliminate the weird fstests failures resulting from
+udev/blkid pinning a cache page while the unmounting filesystem writes
+to the superblock such that xfs_db finds the stale pagecache instead of
+the post-unmount superblock.
 
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 ---
- libxfs/init.c |    8 ++++++--
- 1 file changed, 6 insertions(+), 2 deletions(-)
+ db/init.c |    1 +
+ 1 file changed, 1 insertion(+)
 
 
-diff --git a/libxfs/init.c b/libxfs/init.c
-index fda36ba0f7d..ce6e62cde94 100644
---- a/libxfs/init.c
-+++ b/libxfs/init.c
-@@ -125,10 +125,14 @@ libxfs_device_open(char *path, int creat, int xflags, int setblksize)
- 	}
+diff --git a/db/init.c b/db/init.c
+index eec65d0884d..4599cc00d71 100644
+--- a/db/init.c
++++ b/db/init.c
+@@ -96,6 +96,7 @@ init(
+ 		x.volname = fsdevice;
+ 	else
+ 		x.dname = fsdevice;
++	x.isdirect = LIBXFS_DIRECT;
  
- 	if (!readonly && setblksize && (statb.st_mode & S_IFMT) == S_IFBLK) {
--		if (setblksize == 1)
-+		if (setblksize == 1) {
- 			/* use the default blocksize */
- 			(void)platform_set_blocksize(fd, path, statb.st_rdev, XFS_MIN_SECTORSIZE, 0);
--		else {
-+		} else if (dio) {
-+			/* try to use the given explicit blocksize */
-+			(void)platform_set_blocksize(fd, path, statb.st_rdev,
-+					setblksize, 0);
-+		} else {
- 			/* given an explicit blocksize to use */
- 			if (platform_set_blocksize(fd, path, statb.st_rdev, setblksize, 1))
- 			    exit(1);
+ 	x.bcache_flags = CACHE_MISCOMPARE_PURGE;
+ 	if (!libxfs_init(&x)) {
 
