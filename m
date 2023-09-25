@@ -2,60 +2,70 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3E234CE7A95
-	for <linux-xfs@archiver.kernel.org>; Mon, 25 Sep 2023 15:18:24 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 08691CE7A95
+	for <linux-xfs@archiver.kernel.org>; Mon, 25 Sep 2023 15:38:08 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231603AbjIYPS2 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 25 Sep 2023 11:18:28 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34734 "EHLO
+        id S230026AbjIYPiM (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 25 Sep 2023 11:38:12 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49996 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232723AbjIYPS1 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 25 Sep 2023 11:18:27 -0400
-Received: from verein.lst.de (verein.lst.de [213.95.11.211])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id DCE4B109;
-        Mon, 25 Sep 2023 08:18:20 -0700 (PDT)
-Received: by verein.lst.de (Postfix, from userid 2407)
-        id C6B0C68D05; Mon, 25 Sep 2023 17:18:16 +0200 (CEST)
-Date:   Mon, 25 Sep 2023 17:18:16 +0200
-From:   Christoph Hellwig <hch@lst.de>
-To:     "Darrick J. Wong" <djwong@kernel.org>
-Cc:     Christoph Hellwig <hch@lst.de>, linux-fsdevel@vger.kernel.org,
-        linux-xfs@vger.kernel.org, brauner@kernel.org,
-        syzbot+1fa947e7f09e136925b8@syzkaller.appspotmail.com
-Subject: Re: [PATCH] iomap: add a workaround for racy i_size updates on
- block devices
-Message-ID: <20230925151816.GA444@lst.de>
-References: <20230925095133.311224-1-hch@lst.de> <20230925150902.GA11456@frogsfrogsfrogs>
+        with ESMTP id S230049AbjIYPiL (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 25 Sep 2023 11:38:11 -0400
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9948A90
+        for <linux-xfs@vger.kernel.org>; Mon, 25 Sep 2023 08:38:05 -0700 (PDT)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 174D2C433C7;
+        Mon, 25 Sep 2023 15:38:05 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1695656285;
+        bh=8VtkmPnQlDWANyTfzJCiHnmPXqfHONscO79MneZ9/Fc=;
+        h=Subject:From:To:Cc:Date:From;
+        b=Z31WWS2uSvZHZwOzWY76QP9Tf9ldI9TS+tOQPe4AMbnQh7e/urxmvOGXTx5k17DcT
+         cCObiIM5zYcR8HhWkQNgipEbnjDXjyx9NCgoUMUVlHZKHZ8ossPomLkSKrm+PtTSST
+         TUjle89nLU/HKnpe2awcfrvKqWH6FXb/O5SZGsOqg1gTv/79RDxvRupr2joxOu4Evu
+         NytMQBVLP1h46l+idnNKq2WWDlrph4b8CD7j64Aie90qdxg7DOXkRgF4kKJwSIuYjV
+         Tyn/jwCbAl3dNYTqMZUj9cCkXp7jOo2T4csrh77vNvFvNcJKsDwTe7uMd8qros2v8u
+         Te/Uy6QfOdxmw==
+Subject: [PATCHSET 0/1] xfs: fix reloading the last iunlink item
+From:   "Darrick J. Wong" <djwong@kernel.org>
+To:     djwong@kernel.org, chandanbabu@kernel.org
+Cc:     Dave Chinner <dchinner@redhat.com>, linux-xfs@vger.kernel.org,
+        david@fromorbit.com
+Date:   Mon, 25 Sep 2023 08:38:04 -0700
+Message-ID: <169565628450.1982077.8839912830345775826.stgit@frogsfrogsfrogs>
+User-Agent: StGit/0.19
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20230925150902.GA11456@frogsfrogsfrogs>
-User-Agent: Mutt/1.5.17 (2007-11-01)
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Mon, Sep 25, 2023 at 08:09:02AM -0700, Darrick J. Wong wrote:
-> > +			/*
-> > +			 * This can happen if truncating the block device races
-> > +			 * with the check in the caller as i_size updates on
-> > +			 * block devices aren't synchronized by i_rwsem for
-> > +			 * block devices.
-> 
-> Why /are/ bdevs special like this (not holding i_rwsem during a
-> truncate) anyway?  Is it because we require the sysadmin to coordinate
-> device shrink vs. running programs?
+Hi all,
 
-It's not just truncate, they also don't hold a lock on write.
+It's not a good idea to be trying to send bug fixes to the mailing list
+while also trying to take a vacation.  Dave sent some review comments
+about the iunlink reloading patches, I changed them in djwong-dev, and
+forgot to backport those changes to my -fixes tree.
 
-I think the reason is that there is no such things as the block allocator
-and block truncation that happens for block devices, they historically
-had a fixed size, and at some point we allowed to change that size
-by various crude means that are only slowly becoming more standardized
-and formal.  Real block device size changes are about 100% growing of
-the device, as that is an actually useful feature.  Shrinks OTOH are
-usuall a "cute" hack: block drivers set the size to 0 stop I/O when they
-are shut down.  I've been wanting to replace that with an actual check
-in the bdev fd I/O path for a while, but that would also mean the
-shrinking case would still be around, just exercised a lot less.
+As a result, the patch is missing some important pieces.  Perhaps
+manually copying code diffs between email and two separate git trees
+is archaic and stupid^W^W^W^Wisn't really a good idea?
+
+If you're going to start using this code, I strongly recommend pulling
+from my git trees, which are linked below.
+
+This has been lightly tested with fstests.  Enjoy!
+Comments and questions are, as always, welcome.
+
+--D
+
+kernel git tree:
+https://git.kernel.org/cgit/linux/kernel/git/djwong/xfs-linux.git/log/?h=fix-fix-iunlink-6.6
+---
+ fs/xfs/xfs_export.c |   16 ++++++++++++----
+ fs/xfs/xfs_inode.c  |   48 +++++++++++++++++++++++++++++++++++-------------
+ fs/xfs/xfs_itable.c |    2 ++
+ fs/xfs/xfs_qm.c     |   15 ++++++++++++---
+ 4 files changed, 61 insertions(+), 20 deletions(-)
 
