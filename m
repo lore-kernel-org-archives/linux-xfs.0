@@ -2,86 +2,94 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E3FF1CE7A94
-	for <linux-xfs@archiver.kernel.org>; Mon, 25 Sep 2023 10:17:19 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B7A28CE7A95
+	for <linux-xfs@archiver.kernel.org>; Mon, 25 Sep 2023 15:09:05 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230360AbjIYKRY (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 25 Sep 2023 06:17:24 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55050 "EHLO
+        id S231452AbjIYPJK (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 25 Sep 2023 11:09:10 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42444 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229564AbjIYKRX (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 25 Sep 2023 06:17:23 -0400
+        with ESMTP id S232625AbjIYPJJ (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 25 Sep 2023 11:09:09 -0400
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9ED309F;
-        Mon, 25 Sep 2023 03:17:17 -0700 (PDT)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 8BC36C433C8;
-        Mon, 25 Sep 2023 10:17:15 +0000 (UTC)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1393D11B;
+        Mon, 25 Sep 2023 08:09:03 -0700 (PDT)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 97C25C433C8;
+        Mon, 25 Sep 2023 15:09:02 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1695637037;
-        bh=iRlJHmpvIWYSQoj21tvtV2DoXT4u3L4h+gWlWYry4PM=;
-        h=Subject:From:To:Cc:Date:In-Reply-To:References:From;
-        b=NIfRXmW1lLGxqAV/3eDoSAlnVOJLZ47aAU/jKqo58kbnYax2KcWGFD2loAF340lGJ
-         sFIB23H5PgnpEhlFlj1gFBkIhw+0As+UPG1MLX3Gj1H4jM6VkUOyRkf8tv/GeGI9HH
-         wZDSUZTCY+UdvbGFdSFtWPzEEcVKwfLOSNpiYUm2U8/MPSCmqp2waTGLv3H+UJJZre
-         ARpA0/puvMLsKXBC5yWqfaH770rGku8aA3R7DBpURcYI1Iihb0mjWqqTZ4HzIutDX+
-         DggWMd4j+g2WtmHR5gnN0TvTiLkHmayeP81udlLo8BZsmg9sPvcH97J0augzlIDXyD
-         xcklk5YYnYzOg==
-Message-ID: <9b81a1f52b4dc777dbb5259b2e12e90eba0ff507.camel@kernel.org>
-Subject: Re: [PATCH v8 0/5] fs: multigrain timestamps for XFS's change_cookie
-From:   Jeff Layton <jlayton@kernel.org>
-To:     NeilBrown <neilb@suse.de>, Christian Brauner <brauner@kernel.org>
-Cc:     Alexander Viro <viro@zeniv.linux.org.uk>,
-        Chuck Lever <chuck.lever@oracle.com>,
-        Olga Kornievskaia <kolga@netapp.com>,
-        Dai Ngo <Dai.Ngo@oracle.com>, Tom Talpey <tom@talpey.com>,
-        Chandan Babu R <chandan.babu@oracle.com>,
-        "Darrick J. Wong" <djwong@kernel.org>,
-        Dave Chinner <david@fromorbit.com>, Jan Kara <jack@suse.cz>,
-        Linus Torvalds <torvalds@linux-foundation.org>,
-        Kent Overstreet <kent.overstreet@linux.dev>,
-        linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-nfs@vger.kernel.org, linux-xfs@vger.kernel.org
-Date:   Mon, 25 Sep 2023 06:17:14 -0400
-In-Reply-To: <169559548777.19404.13247796879745924682@noble.neil.brown.name>
-References: <20230922-ctime-v8-0-45f0c236ede1@kernel.org>
-        , <20230924-mitfeiern-vorladung-13092c2af585@brauner>
-         <169559548777.19404.13247796879745924682@noble.neil.brown.name>
-Content-Type: text/plain; charset="ISO-8859-15"
-Content-Transfer-Encoding: quoted-printable
-User-Agent: Evolution 3.48.4 (3.48.4-1.fc38) 
+        s=k20201202; t=1695654542;
+        bh=N+2ZXsRFpTRKK6Mkij+zHbgHBXUeyzDyPcts7rGE+jg=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=IrQRGjTESxEIm4K1g0GW7BkC5rBOJDLwV71cPuY3W+/xoTU3dw5LhTA9Eegu/x4pP
+         iKFkG2eCPMeKmkrtr/8mtW9Gcz+rscltbg3n61CdG3lCmX68oCcMmxr1NCp1UDfLAY
+         QstW8cy5GfbRsU/um+KGUGolrWhmRfX8psWM8Clo+rotcA1M1fM5rF5eDuCj44ZmaV
+         1YFY7HqJVz10FOzigif/v5LX62ZwGEkr24aAu4As5OF4BzQ46vVUwsDWCxY7lZmKj9
+         i1hDu1/qRGVhphdNc1T7aBB825wH4QKkgAcOR4s7CUFbc7QEZe4BXtKEZNJATL4kf6
+         5vIeDWV66cCMA==
+Date:   Mon, 25 Sep 2023 08:09:02 -0700
+From:   "Darrick J. Wong" <djwong@kernel.org>
+To:     Christoph Hellwig <hch@lst.de>
+Cc:     linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org,
+        brauner@kernel.org,
+        syzbot+1fa947e7f09e136925b8@syzkaller.appspotmail.com
+Subject: Re: [PATCH] iomap: add a workaround for racy i_size updates on block
+ devices
+Message-ID: <20230925150902.GA11456@frogsfrogsfrogs>
+References: <20230925095133.311224-1-hch@lst.de>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20230925095133.311224-1-hch@lst.de>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Mon, 2023-09-25 at 08:44 +1000, NeilBrown wrote:
-> On Sun, 24 Sep 2023, Christian Brauner wrote:
-> > > My initial goal was to implement multigrain timestamps on most major
-> > > filesystems, so we could present them to userland, and use them for
-> > > NFSv3, etc.
-> >=20
-> > If there's no clear users and workloads depending on this other than fo=
-r
-> > the sake of NFS then we shouldn't expose this to userspace. We've tried
-> > this and I'm not convinced we're getting anything other than regression=
-s
-> > out of it. Keep it internal and confined to the filesystem that actuall=
-y
-> > needs this.
-> >=20
->=20
-> Some NFS servers run in userspace, and they would a "clear user" of this
-> functionality.
->=20
+On Mon, Sep 25, 2023 at 11:51:33AM +0200, Christoph Hellwig wrote:
+> A szybot reproducer that does write I/O while truncating the size of a
+> block device can end up in clean_bdev_aliases, which tries to clean the
+> bdev aliases that it uses.  This is because iomap_to_bh automatically
+> sets the BH_New flag when outside of i_size.  For block devices updates
+> to i_size are racy and we can hit this case in a tiny race window,
+> leading to the eventual clean_bdev_aliases call.  Fix this by erroring
+> out of > i_size I/O on block devices.
+> 
+> Reported-by: syzbot+1fa947e7f09e136925b8@syzkaller.appspotmail.com
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
+> Tested-by: syzbot+1fa947e7f09e136925b8@syzkaller.appspotmail.com
+> ---
+>  fs/buffer.c | 11 ++++++++++-
+>  1 file changed, 10 insertions(+), 1 deletion(-)
+> 
+> diff --git a/fs/buffer.c b/fs/buffer.c
+> index a6785cd07081cb..12e9a71c693d74 100644
+> --- a/fs/buffer.c
+> +++ b/fs/buffer.c
+> @@ -2058,8 +2058,17 @@ iomap_to_bh(struct inode *inode, sector_t block, struct buffer_head *bh,
+>  		fallthrough;
+>  	case IOMAP_MAPPED:
+>  		if ((iomap->flags & IOMAP_F_NEW) ||
+> -		    offset >= i_size_read(inode))
+> +		    offset >= i_size_read(inode)) {
+> +			/*
+> +			 * This can happen if truncating the block device races
+> +			 * with the check in the caller as i_size updates on
+> +			 * block devices aren't synchronized by i_rwsem for
+> +			 * block devices.
 
-Indeed. Also, all of the programs that we're concerned about breaking
-here (make, rsync, etc.) could benefit from proper fine-grained
-timestamps:
+Why /are/ bdevs special like this (not holding i_rwsem during a
+truncate) anyway?  Is it because we require the sysadmin to coordinate
+device shrink vs. running programs?
 
-Today, when they see two identical timestamps on files, these programs
-have to assume the worst: rsync has to do the copy, make has to update
-the target, etc. With a real distinguishable fine-grained timestamps,
-these programs would likely be more efficient and some of these unneeded
-operations would be avoided.
---=20
-Jeff Layton <jlayton@kernel.org>
+--D
+
+> +			 */
+> +			if (S_ISBLK(inode->i_mode))
+> +				return -EIO;
+>  			set_buffer_new(bh);
+> +		}
+>  		bh->b_blocknr = (iomap->addr + offset - iomap->offset) >>
+>  				inode->i_blkbits;
+>  		set_buffer_mapped(bh);
+> -- 
+> 2.39.2
+> 
