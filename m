@@ -2,36 +2,36 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 28D4DCE79A5
-	for <linux-xfs@archiver.kernel.org>; Mon, 25 Sep 2023 21:58:59 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3C747CE7A97
+	for <linux-xfs@archiver.kernel.org>; Mon, 25 Sep 2023 21:59:05 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230395AbjIYV7D (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 25 Sep 2023 17:59:03 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42150 "EHLO
+        id S230227AbjIYV7J (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 25 Sep 2023 17:59:09 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42152 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230231AbjIYV7C (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 25 Sep 2023 17:59:02 -0400
+        with ESMTP id S229481AbjIYV7J (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 25 Sep 2023 17:59:09 -0400
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 71F42112
-        for <linux-xfs@vger.kernel.org>; Mon, 25 Sep 2023 14:58:56 -0700 (PDT)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 111AAC433C7;
-        Mon, 25 Sep 2023 21:58:56 +0000 (UTC)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2E531112
+        for <linux-xfs@vger.kernel.org>; Mon, 25 Sep 2023 14:59:02 -0700 (PDT)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id B8F00C433C7;
+        Mon, 25 Sep 2023 21:59:01 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1695679136;
-        bh=w86RNB4gaHr8rqCXtyn5uYoUX2ub1h4KQHc5exYlgEA=;
+        s=k20201202; t=1695679141;
+        bh=viXtrW6RoFdVirbWvslrHr2+C77Tk0wskGeWmKs/dNk=;
         h=Subject:From:To:Cc:Date:In-Reply-To:References:From;
-        b=ozT62vXXg2SaOi/D8/sBeHrC34YHQG2+qYTzRAYnUADE5rho7eOeKgHIHbqiJn415
-         1Nc41XiD+5Qe7YcSvQzUXTuqln31y3SID6MVBsSnHmh3XbCDZ0VX3xa9UbEgpT9X7v
-         2Hq0jJoAVF/LR0jNrgTmqmP7+2uCwwVe87KFPQLY/Wr0VGfPGXYN1AJCOGumpkHwEM
-         rCBy7YPdNIaHjaukjWhwRZoiL2Pc3COOZigSfX9X9ZZuctnwEFI2evpsI/3Fmm7DJK
-         kLlOTRZ9zJ3gs3/jYp5I2+3MMJ3ACKXo5CKKQCz36jOCkfLUFZoaESekZSHmNhLJFM
-         524cX9b8zhXNA==
-Subject: [PATCH 2/3] xfs_scrub: don't retry unsupported optimizations
+        b=FD7+XGed/zfjStPdBpInbVuVGsTavaNok/Bo9OH7Di3nKYmVTd+bzG2KKOmj5sw/W
+         Nf/0awAMl8Qiibmzoux48u0BZOZX/wQUwl1x67dVyjNSHFWtlhEZq9EIQAhOXPbBIR
+         0rldNbsUpxKDrpU/Zx4124vIvQRNg5FXOYMrS8os7TIVqc+w71NutT2LZcC14Mnzic
+         A6dXMdBYHMbu8IfhOI5+2EPo3k6+WmPJsm17kqPjPwoQPhl4iMowAFrUwjhUHRA0n+
+         0Hk2DuDjYW0cSwrgmznjlNTwGcPgpBUq84FaK7avlZreSb9tOI3hm/Ztt8rDtfj/cG
+         gXvMmqkDzHfXg==
+Subject: [PATCH 3/3] xfs_scrub: try to use XFS_SCRUB_IFLAG_FORCE_REBUILD
 From:   "Darrick J. Wong" <djwong@kernel.org>
 To:     djwong@kernel.org, cem@kernel.org
 Cc:     linux-xfs@vger.kernel.org
-Date:   Mon, 25 Sep 2023 14:58:55 -0700
-Message-ID: <169567913555.2320149.9303579022453923734.stgit@frogsfrogsfrogs>
+Date:   Mon, 25 Sep 2023 14:59:01 -0700
+Message-ID: <169567914124.2320149.15117801698950181657.stgit@frogsfrogsfrogs>
 In-Reply-To: <169567912436.2320149.9404820627184014976.stgit@frogsfrogsfrogs>
 References: <169567912436.2320149.9404820627184014976.stgit@frogsfrogsfrogs>
 User-Agent: StGit/0.19
@@ -44,50 +44,249 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-If the kernel says it doesn't support optimizing a data structure, we
-should mark it done and move on.  This is much better than requeuing the
-repair, in which case it will likely keep failing.  Eventually these
-requeued repairs end up in the single-threaded last resort at the end of
-phase 4, which makes things /very/ slow.
+Now that we have a FORCE_REBUILD flag to the scrub ioctl, try to use
+that over the (much noisier) error injection knob, which may or may not
+even be enabled in the kernel config.
 
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 ---
- scrub/scrub.c |   16 +++++++++-------
- 1 file changed, 9 insertions(+), 7 deletions(-)
+ scrub/phase1.c    |   28 ++++++++++++++++++++++++++++
+ scrub/scrub.c     |   45 +++++++++++++++++++++++----------------------
+ scrub/scrub.h     |    1 +
+ scrub/xfs_scrub.c |    3 +++
+ scrub/xfs_scrub.h |    1 +
+ 5 files changed, 56 insertions(+), 22 deletions(-)
 
 
+diff --git a/scrub/phase1.c b/scrub/phase1.c
+index fd1050c9202..2daf5c7bb38 100644
+--- a/scrub/phase1.c
++++ b/scrub/phase1.c
+@@ -27,6 +27,7 @@
+ #include "scrub.h"
+ #include "repair.h"
+ #include "libfrog/fsgeom.h"
++#include "xfs_errortag.h"
+ 
+ /* Phase 1: Find filesystem geometry (and clean up after) */
+ 
+@@ -68,6 +69,27 @@ scrub_cleanup(
+ 	return error;
+ }
+ 
++/* Decide if we're using FORCE_REBUILD or injecting FORCE_REPAIR. */
++static int
++enable_force_repair(
++	struct scrub_ctx		*ctx)
++{
++	struct xfs_error_injection	inject = {
++		.fd			= ctx->mnt.fd,
++		.errtag			= XFS_ERRTAG_FORCE_SCRUB_REPAIR,
++	};
++	int				error;
++
++	use_force_rebuild = can_force_rebuild(ctx);
++	if (use_force_rebuild)
++		return 0;
++
++	error = ioctl(ctx->mnt.fd, XFS_IOC_ERROR_INJECTION, &inject);
++	if (error)
++		str_errno(ctx, _("force_repair"));
++	return error;
++}
++
+ /*
+  * Bind to the mountpoint, read the XFS geometry, bind to the block devices.
+  * Anything we've already built will be cleaned up by scrub_cleanup.
+@@ -156,6 +178,12 @@ _("Kernel metadata repair facility is not available.  Use -n to scrub."));
+ 		return ECANCELED;
+ 	}
+ 
++	if (debug_tweak_on("XFS_SCRUB_FORCE_REPAIR")) {
++		error = enable_force_repair(ctx);
++		if (error)
++			return error;
++	}
++
+ 	/* Did we find the log and rt devices, if they're present? */
+ 	if (ctx->mnt.fsgeom.logstart == 0 && ctx->fsinfo.fs_log == NULL) {
+ 		str_error(ctx, ctx->mntpoint,
 diff --git a/scrub/scrub.c b/scrub/scrub.c
-index e83d0d9ce99..1a4506875f7 100644
+index 1a4506875f7..1469058bd23 100644
 --- a/scrub/scrub.c
 +++ b/scrub/scrub.c
-@@ -668,6 +668,15 @@ _("Filesystem is shut down, aborting."));
- 		return CHECK_ABORT;
- 	case ENOTTY:
+@@ -18,7 +18,6 @@
+ #include "common.h"
+ #include "progress.h"
+ #include "scrub.h"
+-#include "xfs_errortag.h"
+ #include "repair.h"
+ #include "descr.h"
+ 
+@@ -500,26 +499,16 @@ static bool
+ __scrub_test(
+ 	struct scrub_ctx		*ctx,
+ 	unsigned int			type,
+-	bool				repair)
++	unsigned int			flags)
+ {
+ 	struct xfs_scrub_metadata	meta = {0};
+-	struct xfs_error_injection	inject;
+-	static bool			injected;
+ 	int				error;
+ 
+ 	if (debug_tweak_on("XFS_SCRUB_NO_KERNEL"))
+ 		return false;
+-	if (debug_tweak_on("XFS_SCRUB_FORCE_REPAIR") && !injected) {
+-		inject.fd = ctx->mnt.fd;
+-		inject.errtag = XFS_ERRTAG_FORCE_SCRUB_REPAIR;
+-		error = ioctl(ctx->mnt.fd, XFS_IOC_ERROR_INJECTION, &inject);
+-		if (error == 0)
+-			injected = true;
+-	}
+ 
+ 	meta.sm_type = type;
+-	if (repair)
+-		meta.sm_flags |= XFS_SCRUB_IFLAG_REPAIR;
++	meta.sm_flags = flags;
+ 	error = -xfrog_scrub_metadata(&ctx->mnt, &meta);
+ 	switch (error) {
+ 	case 0:
+@@ -532,13 +521,15 @@ _("Filesystem is mounted read-only; cannot proceed."));
+ 		str_info(ctx, ctx->mntpoint,
+ _("Filesystem is mounted norecovery; cannot proceed."));
+ 		return false;
++	case EINVAL:
  	case EOPNOTSUPP:
-+		/*
-+		 * If the kernel cannot perform the optimization that we
-+		 * requested; or we forced a repair but the kernel doesn't know
-+		 * how to perform the repair, don't requeue the request.  Mark
-+		 * it done and move on.
-+		 */
-+		if (is_unoptimized(&oldm) ||
-+		    debug_tweak_on("XFS_SCRUB_FORCE_REPAIR"))
-+			return CHECK_DONE;
- 		/*
- 		 * If we're in no-complain mode, requeue the check for
- 		 * later.  It's possible that an error in another
-@@ -678,13 +687,6 @@ _("Filesystem is shut down, aborting."));
- 		 */
- 		if (!(repair_flags & XRM_COMPLAIN_IF_UNFIXED))
- 			return CHECK_RETRY;
--		/*
--		 * If we forced repairs or this is a preen, don't
--		 * error out if the kernel doesn't know how to fix.
--		 */
--		if (is_unoptimized(&oldm) ||
--		    debug_tweak_on("XFS_SCRUB_FORCE_REPAIR"))
--			return CHECK_DONE;
- 		fallthrough;
- 	case EINVAL:
- 		/* Kernel doesn't know how to repair this? */
+ 	case ENOTTY:
+ 		if (debug || verbose)
+ 			str_info(ctx, ctx->mntpoint,
+ _("Kernel %s %s facility not detected."),
+ 					_(xfrog_scrubbers[type].descr),
+-					repair ? _("repair") : _("scrub"));
++					(flags & XFS_SCRUB_IFLAG_REPAIR) ?
++						_("repair") : _("scrub"));
+ 		return false;
+ 	case ENOENT:
+ 		/* Scrubber says not present on this fs; that's fine. */
+@@ -553,56 +544,64 @@ bool
+ can_scrub_fs_metadata(
+ 	struct scrub_ctx	*ctx)
+ {
+-	return __scrub_test(ctx, XFS_SCRUB_TYPE_PROBE, false);
++	return __scrub_test(ctx, XFS_SCRUB_TYPE_PROBE, 0);
+ }
+ 
+ bool
+ can_scrub_inode(
+ 	struct scrub_ctx	*ctx)
+ {
+-	return __scrub_test(ctx, XFS_SCRUB_TYPE_INODE, false);
++	return __scrub_test(ctx, XFS_SCRUB_TYPE_INODE, 0);
+ }
+ 
+ bool
+ can_scrub_bmap(
+ 	struct scrub_ctx	*ctx)
+ {
+-	return __scrub_test(ctx, XFS_SCRUB_TYPE_BMBTD, false);
++	return __scrub_test(ctx, XFS_SCRUB_TYPE_BMBTD, 0);
+ }
+ 
+ bool
+ can_scrub_dir(
+ 	struct scrub_ctx	*ctx)
+ {
+-	return __scrub_test(ctx, XFS_SCRUB_TYPE_DIR, false);
++	return __scrub_test(ctx, XFS_SCRUB_TYPE_DIR, 0);
+ }
+ 
+ bool
+ can_scrub_attr(
+ 	struct scrub_ctx	*ctx)
+ {
+-	return __scrub_test(ctx, XFS_SCRUB_TYPE_XATTR, false);
++	return __scrub_test(ctx, XFS_SCRUB_TYPE_XATTR, 0);
+ }
+ 
+ bool
+ can_scrub_symlink(
+ 	struct scrub_ctx	*ctx)
+ {
+-	return __scrub_test(ctx, XFS_SCRUB_TYPE_SYMLINK, false);
++	return __scrub_test(ctx, XFS_SCRUB_TYPE_SYMLINK, 0);
+ }
+ 
+ bool
+ can_scrub_parent(
+ 	struct scrub_ctx	*ctx)
+ {
+-	return __scrub_test(ctx, XFS_SCRUB_TYPE_PARENT, false);
++	return __scrub_test(ctx, XFS_SCRUB_TYPE_PARENT, 0);
+ }
+ 
+ bool
+ xfs_can_repair(
+ 	struct scrub_ctx	*ctx)
+ {
+-	return __scrub_test(ctx, XFS_SCRUB_TYPE_PROBE, true);
++	return __scrub_test(ctx, XFS_SCRUB_TYPE_PROBE, XFS_SCRUB_IFLAG_REPAIR);
++}
++
++bool
++can_force_rebuild(
++	struct scrub_ctx	*ctx)
++{
++	return __scrub_test(ctx, XFS_SCRUB_TYPE_PROBE,
++			XFS_SCRUB_IFLAG_REPAIR | XFS_SCRUB_IFLAG_FORCE_REBUILD);
+ }
+ 
+ /* General repair routines. */
+@@ -624,6 +623,8 @@ xfs_repair_metadata(
+ 	assert(!debug_tweak_on("XFS_SCRUB_NO_KERNEL"));
+ 	meta.sm_type = aitem->type;
+ 	meta.sm_flags = aitem->flags | XFS_SCRUB_IFLAG_REPAIR;
++	if (use_force_rebuild)
++		meta.sm_flags |= XFS_SCRUB_IFLAG_FORCE_REBUILD;
+ 	switch (xfrog_scrubbers[aitem->type].type) {
+ 	case XFROG_SCRUB_TYPE_AGHEADER:
+ 	case XFROG_SCRUB_TYPE_PERAG:
+diff --git a/scrub/scrub.h b/scrub/scrub.h
+index fccd82f2155..023069ee066 100644
+--- a/scrub/scrub.h
++++ b/scrub/scrub.h
+@@ -33,6 +33,7 @@ bool can_scrub_attr(struct scrub_ctx *ctx);
+ bool can_scrub_symlink(struct scrub_ctx *ctx);
+ bool can_scrub_parent(struct scrub_ctx *ctx);
+ bool xfs_can_repair(struct scrub_ctx *ctx);
++bool can_force_rebuild(struct scrub_ctx *ctx);
+ 
+ int scrub_file(struct scrub_ctx *ctx, int fd, const struct xfs_bulkstat *bstat,
+ 		unsigned int type, struct action_list *alist);
+diff --git a/scrub/xfs_scrub.c b/scrub/xfs_scrub.c
+index 7a0411b0cc8..597be59f9f9 100644
+--- a/scrub/xfs_scrub.c
++++ b/scrub/xfs_scrub.c
+@@ -157,6 +157,9 @@ bool				stdout_isatty;
+  */
+ bool				is_service;
+ 
++/* Set to true if the kernel supports XFS_SCRUB_IFLAG_FORCE_REBUILD */
++bool				use_force_rebuild;
++
+ #define SCRUB_RET_SUCCESS	(0)	/* no problems left behind */
+ #define SCRUB_RET_CORRUPT	(1)	/* corruption remains on fs */
+ #define SCRUB_RET_UNOPTIMIZED	(2)	/* fs could be optimized */
+diff --git a/scrub/xfs_scrub.h b/scrub/xfs_scrub.h
+index f6712d368c6..0d6b9dad2c9 100644
+--- a/scrub/xfs_scrub.h
++++ b/scrub/xfs_scrub.h
+@@ -21,6 +21,7 @@ extern bool			want_fstrim;
+ extern bool			stderr_isatty;
+ extern bool			stdout_isatty;
+ extern bool			is_service;
++extern bool			use_force_rebuild;
+ 
+ enum scrub_mode {
+ 	SCRUB_MODE_DRY_RUN,
 
