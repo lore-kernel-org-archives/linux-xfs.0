@@ -2,84 +2,73 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9E07CCE7A96
-	for <linux-xfs@archiver.kernel.org>; Mon, 25 Sep 2023 15:53:49 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A9891CD54BE
+	for <linux-xfs@archiver.kernel.org>; Mon, 25 Sep 2023 19:12:27 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232462AbjIYPxx (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 25 Sep 2023 11:53:53 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51386 "EHLO
+        id S233201AbjIYTMb (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 25 Sep 2023 15:12:31 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39038 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232464AbjIYPxw (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 25 Sep 2023 11:53:52 -0400
+        with ESMTP id S233148AbjIYTMb (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 25 Sep 2023 15:12:31 -0400
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D123BB6;
-        Mon, 25 Sep 2023 08:53:45 -0700 (PDT)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 5FE69C433C7;
-        Mon, 25 Sep 2023 15:53:45 +0000 (UTC)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4CD4CBF;
+        Mon, 25 Sep 2023 12:12:25 -0700 (PDT)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id BE5F4C433C7;
+        Mon, 25 Sep 2023 19:12:24 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1695657225;
-        bh=09qfPPw0Ihsl3Yn+GLcEGbSzfunt9RjssKtlTN6fS8o=;
+        s=k20201202; t=1695669145;
+        bh=PucnFeDcAVN1NNbBCz02YwzzvcIbDN/zcCe/g6iWNXc=;
         h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=tCtYFOgPt9kskmmCJx09JvCJCuTnZ9RMrV6+CBmF2Jud9/76hRlEcO3uvTy3lNOJR
-         dd32MwEadx6RUtVCGWJ0iOtOhpMLymO2/iaIqR6fN1k0y2ZrE3Ni4Dnx7CXpRqJo0N
-         oCFzU4UvfmgUgmpA7gR5G35qYLZPeM6OAAcMDDEouvYHZfJFC8DprAeQJvw4DCjHLV
-         Atjzjm6f80qK2Cr2vASTrVcJwk6NlG7AN41W0TdZ2AUVSIyNM8ocbGCPYs33sI+F6T
-         JMWG2Yu7THxwxQdF5pxhv6ArjrB4LPEXIq5G263G0CZ28FGZM33D6OkGxFreDikPjc
-         ZGG3dqKZooLIw==
-Date:   Mon, 25 Sep 2023 08:53:44 -0700
-From:   "Darrick J. Wong" <djwong@kernel.org>
-To:     Christoph Hellwig <hch@lst.de>
-Cc:     linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org,
-        brauner@kernel.org,
-        syzbot+1fa947e7f09e136925b8@syzkaller.appspotmail.com
-Subject: Re: [PATCH] iomap: add a workaround for racy i_size updates on block
- devices
-Message-ID: <20230925155344.GA11439@frogsfrogsfrogs>
-References: <20230925095133.311224-1-hch@lst.de>
- <20230925150902.GA11456@frogsfrogsfrogs>
- <20230925151816.GA444@lst.de>
+        b=ha83ywe8nzG74DwN50jjgF6EqMzm70gYzSy7mDqmlZpHRhpAootFFMoqQPS3eD3KN
+         MJa7lxWCrXQtbGhKWe59lNMIuQAK9jCKPIF6Ysr6uapbY/+FjeYYnzU/yXEy09bVq7
+         r2ZgwdFgQzrCHjZb0IUR0bZRJdWqpCJJ7rc+u/BHr6u1xGgAlOYmEowCNDeWcv4Phf
+         OLAUjPwxKLsGU3QyHSIvIjWReCY5Z04Oo0+Uc0zUun9svRs5JwvXndevgAwVt7KBwC
+         eSfYcYFuvFBAlwKFgOPCYSvvm2Cj6cx3dNojKEaGgn/ESAvaeI0eyKO/Izm/KK7VOs
+         1ICOaviIYQZuQ==
+Date:   Mon, 25 Sep 2023 15:12:23 -0400
+From:   Sasha Levin <sashal@kernel.org>
+To:     Leah Rumancik <leah.rumancik@gmail.com>
+Cc:     stable@vger.kernel.org, linux-xfs@vger.kernel.org,
+        amir73il@gmail.com, chandan.babu@oracle.com,
+        Dave Chinner <dchinner@redhat.com>,
+        "Darrick J . Wong" <djwong@kernel.org>
+Subject: Re: [PATCH 5.15 1/6] xfs: bound maximum wait time for inodegc work
+Message-ID: <ZRHbl0XZlpLBLU4H@sashalap>
+References: <20230922010156.1718782-1-leah.rumancik@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Disposition: inline
-In-Reply-To: <20230925151816.GA444@lst.de>
+In-Reply-To: <20230922010156.1718782-1-leah.rumancik@gmail.com>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Mon, Sep 25, 2023 at 05:18:16PM +0200, Christoph Hellwig wrote:
-> On Mon, Sep 25, 2023 at 08:09:02AM -0700, Darrick J. Wong wrote:
-> > > +			/*
-> > > +			 * This can happen if truncating the block device races
-> > > +			 * with the check in the caller as i_size updates on
-> > > +			 * block devices aren't synchronized by i_rwsem for
-> > > +			 * block devices.
-> > 
-> > Why /are/ bdevs special like this (not holding i_rwsem during a
-> > truncate) anyway?  Is it because we require the sysadmin to coordinate
-> > device shrink vs. running programs?
-> 
-> It's not just truncate, they also don't hold a lock on write.
+On Thu, Sep 21, 2023 at 06:01:51PM -0700, Leah Rumancik wrote:
+>From: Dave Chinner <dchinner@redhat.com>
+>
+>[ Upstream commit 7cf2b0f9611b9971d663e1fc3206eeda3b902922 ]
+>
+>Currently inodegc work can sit queued on the per-cpu queue until
+>the workqueue is either flushed of the queue reaches a depth that
+>triggers work queuing (and later throttling). This means that we
+>could queue work that waits for a long time for some other event to
+>trigger flushing.
+>
+>Hence instead of just queueing work at a specific depth, use a
+>delayed work that queues the work at a bound time. We can still
+>schedule the work immediately at a given depth, but we no long need
+>to worry about leaving a number of items on the list that won't get
+>processed until external events prevail.
+>
+>Signed-off-by: Dave Chinner <dchinner@redhat.com>
+>Reviewed-by: Darrick J. Wong <djwong@kernel.org>
+>Signed-off-by: Darrick J. Wong <djwong@kernel.org>
+>Signed-off-by: Leah Rumancik <leah.rumancik@gmail.com>
+>Acked-by: Darrick J. Wong <djwong@kernel.org>
 
-Oh!  So they don't.  Heh.
+Queued up all 6, thanks!
 
-> I think the reason is that there is no such things as the block allocator
-> and block truncation that happens for block devices, they historically
-> had a fixed size, and at some point we allowed to change that size
-> by various crude means that are only slowly becoming more standardized
-> and formal.  Real block device size changes are about 100% growing of
-> the device, as that is an actually useful feature.  Shrinks OTOH are
-> usuall a "cute" hack: block drivers set the size to 0 stop I/O when they
-> are shut down.  I've been wanting to replace that with an actual check
-> in the bdev fd I/O path for a while, but that would also mean the
-> shrinking case would still be around, just exercised a lot less.
-
-You call bdev shrink a cute hack, cloud tenants call it a cost-reducing
-activity, and cloud vendors call it a revenue opportunity because
-shrinking filesystems is un***** expensive in terms of CPU time and IO
-usage. ;)
-
-Anyway, I'm not going to argue with longstanding blockdev precedent.
-
-Reviewed-by: Darrick J. Wong <djwong@kernel.org>
-
---D
+-- 
+Thanks,
+Sasha
