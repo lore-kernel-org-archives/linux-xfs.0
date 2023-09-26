@@ -2,36 +2,36 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8D416E7F14A
+	by smtp.lore.kernel.org (Postfix) with ESMTP id DE912E7F14B
 	for <linux-xfs@archiver.kernel.org>; Wed, 27 Sep 2023 00:18:14 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229868AbjI0ASN (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 26 Sep 2023 20:18:13 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55960 "EHLO
+        id S230017AbjI0ASO (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 26 Sep 2023 20:18:14 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55912 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230488AbjI0AQM (ORCPT
+        with ESMTP id S230494AbjI0AQM (ORCPT
         <rfc822;linux-xfs@vger.kernel.org>); Tue, 26 Sep 2023 20:16:12 -0400
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 144149EEF
-        for <linux-xfs@vger.kernel.org>; Tue, 26 Sep 2023 16:37:40 -0700 (PDT)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id A8F09C433C8;
-        Tue, 26 Sep 2023 23:37:39 +0000 (UTC)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C7A4FCE7
+        for <linux-xfs@vger.kernel.org>; Tue, 26 Sep 2023 16:37:55 -0700 (PDT)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 655B1C433C7;
+        Tue, 26 Sep 2023 23:37:55 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1695771459;
-        bh=CY4X49uAIoZlHTrSincTem/bImRy3vhsGxvv+SHNGAU=;
+        s=k20201202; t=1695771475;
+        bh=qzc8ECITrXIwA2Qh4pjrJ4pRMTH+jtXUia2zdCJKetg=;
         h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-        b=PyVNsxMGzLjUARP9FI46F9jD1ZBSudy3amMt2Lx5UDrz7Ma/D2bUSHfjf6XetmOEj
-         2AnBc2VbZj+TdnQJbjdASksXfNwn8fMdnpwzx+/eC5xa3fEH7xEWuleuNRVBnuzUiv
-         f0BpBIQuaMskTEQbPmL0f1njfQOoNie70GDuEvmBjepghqS2zMXKQ8wGSiP4f6QiX/
-         Y1qupUh54Ls/GmQf/KfR1AKNdKEMx5AX5P9Y39lqxoLoP7034VBqkASZovAlTDkzE1
-         jyfGRIKSQ/mwNQ3213bQTFOVtDwfAxFfVn3S3F6I3M7NdA3M7tRU8G5Reb0pdH/GLO
-         EFVZpbCJ5eTzA==
-Date:   Tue, 26 Sep 2023 16:37:39 -0700
-Subject: [PATCH 3/5] xfs: refactor repair forcing tests into a repair.c helper
+        b=hZMXSMBCcxF3QzFL5y1l+b8iHBjhW5w/EoMiYmjs423op6mg4BtplyuSZK1mwnRWM
+         6eGd0/Bg8z0fNr7/ngXlI3Com588G4ddHCkfiE4NHp4Na/o1b5NGsZ0u6Ndi35etdT
+         LdLbrut+kPX5VArWsIC1FQJEHFbD3FQMGbDHvc8QDDcjeKgoZePC3DDq51Sy5WKEKA
+         A3lhEw3lE/IIO4Z0vzE+ZXJtzmTqLxMRxlUwCZq/XyR457tGvnYcWE1VG6pLTX1b46
+         mQlsyItPd6kGNPEdvuVuud90MhyXQCLu/C7qJwc1QPcrcGIUEqC1mzqBxEgyMAha9b
+         NWBq/471jsGSQ==
+Date:   Tue, 26 Sep 2023 16:37:54 -0700
+Subject: [PATCH 4/5] xfs: create a ranged query function for refcount btrees
 From:   "Darrick J. Wong" <djwong@kernel.org>
 To:     djwong@kernel.org
 Cc:     linux-xfs@vger.kernel.org
-Message-ID: <169577060838.3315318.16889906313033365189.stgit@frogsfrogsfrogs>
+Message-ID: <169577060852.3315318.3631096752978649916.stgit@frogsfrogsfrogs>
 In-Reply-To: <169577060786.3315318.10585901732742544483.stgit@frogsfrogsfrogs>
 References: <169577060786.3315318.10585901732742544483.stgit@frogsfrogsfrogs>
 User-Agent: StGit/0.19
@@ -44,109 +44,85 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-There are a couple of conditions that userspace can set to force repairs
-of metadata.  These really belong in the repair code and not open-coded
-into the check code, so refactor them into a helper.
+Implement ranged queries for refcount records.  The next patch will use
+this to scan refcount data.
 
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 ---
- fs/xfs/scrub/repair.c |   22 ++++++++++++++++++++++
- fs/xfs/scrub/repair.h |    2 ++
- fs/xfs/scrub/scrub.c  |   14 +-------------
- 3 files changed, 25 insertions(+), 13 deletions(-)
+ fs/xfs/libxfs/xfs_refcount.c |   41 +++++++++++++++++++++++++++++++++++++++++
+ fs/xfs/libxfs/xfs_refcount.h |   10 ++++++++++
+ 2 files changed, 51 insertions(+)
 
 
-diff --git a/fs/xfs/scrub/repair.c b/fs/xfs/scrub/repair.c
-index 4d5bfb2e4cf08..0f8dc25ef998b 100644
---- a/fs/xfs/scrub/repair.c
-+++ b/fs/xfs/scrub/repair.c
-@@ -27,6 +27,8 @@
- #include "xfs_quota.h"
- #include "xfs_qm.h"
- #include "xfs_defer.h"
-+#include "xfs_errortag.h"
-+#include "xfs_error.h"
- #include "scrub/scrub.h"
- #include "scrub/common.h"
- #include "scrub/trace.h"
-@@ -937,3 +939,23 @@ xrep_reset_perag_resv(
- out:
- 	return error;
+diff --git a/fs/xfs/libxfs/xfs_refcount.c b/fs/xfs/libxfs/xfs_refcount.c
+index 5fa1a6f32c17d..b7311122bd489 100644
+--- a/fs/xfs/libxfs/xfs_refcount.c
++++ b/fs/xfs/libxfs/xfs_refcount.c
+@@ -2039,6 +2039,47 @@ xfs_refcount_has_records(
+ 	return xfs_btree_has_records(cur, &low, &high, NULL, outcome);
  }
+ 
++struct xfs_refcount_query_range_info {
++	xfs_refcount_query_range_fn	fn;
++	void				*priv;
++};
 +
-+/* Decide if we are going to call the repair function for a scrub type. */
-+bool
-+xrep_will_attempt(
-+	struct xfs_scrub	*sc)
++/* Format btree record and pass to our callback. */
++STATIC int
++xfs_refcount_query_range_helper(
++	struct xfs_btree_cur		*cur,
++	const union xfs_btree_rec	*rec,
++	void				*priv)
 +{
-+	/* Userspace asked us to rebuild the structure regardless. */
-+	if (sc->sm->sm_flags & XFS_SCRUB_IFLAG_FORCE_REBUILD)
-+		return true;
++	struct xfs_refcount_query_range_info	*query = priv;
++	struct xfs_refcount_irec	irec;
++	xfs_failaddr_t			fa;
 +
-+	/* Let debug users force us into the repair routines. */
-+	if (XFS_TEST_ERROR(false, sc->mp, XFS_ERRTAG_FORCE_SCRUB_REPAIR))
-+		return true;
++	xfs_refcount_btrec_to_irec(rec, &irec);
++	fa = xfs_refcount_check_irec(cur, &irec);
++	if (fa)
++		return xfs_refcount_complain_bad_rec(cur, fa, &irec);
 +
-+	/* Metadata is corrupt or failed cross-referencing. */
-+	if (xchk_needs_repair(sc->sm))
-+		return true;
-+
-+	return false;
++	return query->fn(cur, &irec, query->priv);
 +}
-diff --git a/fs/xfs/scrub/repair.h b/fs/xfs/scrub/repair.h
-index 9f0c77b38ae28..73ac3eca1a781 100644
---- a/fs/xfs/scrub/repair.h
-+++ b/fs/xfs/scrub/repair.h
-@@ -28,6 +28,7 @@ static inline int xrep_notsupported(struct xfs_scrub *sc)
- /* Repair helpers */
++
++/* Find all refcount records between two keys. */
++int
++xfs_refcount_query_range(
++	struct xfs_btree_cur		*cur,
++	const struct xfs_refcount_irec	*low_rec,
++	const struct xfs_refcount_irec	*high_rec,
++	xfs_refcount_query_range_fn	fn,
++	void				*priv)
++{
++	union xfs_btree_irec		low_brec = { .rc = *low_rec };
++	union xfs_btree_irec		high_brec = { .rc = *high_rec };
++	struct xfs_refcount_query_range_info query = { .priv = priv, .fn = fn };
++
++	return xfs_btree_query_range(cur, &low_brec, &high_brec,
++			xfs_refcount_query_range_helper, &query);
++}
++
+ int __init
+ xfs_refcount_intent_init_cache(void)
+ {
+diff --git a/fs/xfs/libxfs/xfs_refcount.h b/fs/xfs/libxfs/xfs_refcount.h
+index 2d6fecb258bb1..9563eb91be172 100644
+--- a/fs/xfs/libxfs/xfs_refcount.h
++++ b/fs/xfs/libxfs/xfs_refcount.h
+@@ -129,4 +129,14 @@ extern struct kmem_cache	*xfs_refcount_intent_cache;
+ int __init xfs_refcount_intent_init_cache(void);
+ void xfs_refcount_intent_destroy_cache(void);
  
- int xrep_attempt(struct xfs_scrub *sc, struct xchk_stats_run *run);
-+bool xrep_will_attempt(struct xfs_scrub *sc);
- void xrep_failure(struct xfs_mount *mp);
- int xrep_roll_ag_trans(struct xfs_scrub *sc);
- int xrep_roll_trans(struct xfs_scrub *sc);
-@@ -117,6 +118,7 @@ int xrep_reinit_pagi(struct xfs_scrub *sc);
- #else
- 
- #define xrep_ino_dqattach(sc)	(0)
-+#define xrep_will_attempt(sc)	(false)
- 
- static inline int
- xrep_attempt(
-diff --git a/fs/xfs/scrub/scrub.c b/fs/xfs/scrub/scrub.c
-index 52a09e0652693..8397d1dce25fa 100644
---- a/fs/xfs/scrub/scrub.c
-+++ b/fs/xfs/scrub/scrub.c
-@@ -14,8 +14,6 @@
- #include "xfs_inode.h"
- #include "xfs_quota.h"
- #include "xfs_qm.h"
--#include "xfs_errortag.h"
--#include "xfs_error.h"
- #include "xfs_scrub.h"
- #include "xfs_btree.h"
- #include "xfs_btree_staging.h"
-@@ -552,21 +550,11 @@ xfs_scrub_metadata(
- 	xchk_update_health(sc);
- 
- 	if (xchk_could_repair(sc)) {
--		bool needs_fix = xchk_needs_repair(sc->sm);
--
--		/* Userspace asked us to rebuild the structure regardless. */
--		if (sc->sm->sm_flags & XFS_SCRUB_IFLAG_FORCE_REBUILD)
--			needs_fix = true;
--
--		/* Let debug users force us into the repair routines. */
--		if (XFS_TEST_ERROR(needs_fix, mp, XFS_ERRTAG_FORCE_SCRUB_REPAIR))
--			needs_fix = true;
--
- 		/*
- 		 * If userspace asked for a repair but it wasn't necessary,
- 		 * report that back to userspace.
- 		 */
--		if (!needs_fix) {
-+		if (!xrep_will_attempt(sc)) {
- 			sc->sm->sm_flags |= XFS_SCRUB_OFLAG_NO_REPAIR_NEEDED;
- 			goto out_nofix;
- 		}
++typedef int (*xfs_refcount_query_range_fn)(
++	struct xfs_btree_cur		*cur,
++	const struct xfs_refcount_irec	*rec,
++	void				*priv);
++
++int xfs_refcount_query_range(struct xfs_btree_cur *cur,
++		const struct xfs_refcount_irec *low_rec,
++		const struct xfs_refcount_irec *high_rec,
++		xfs_refcount_query_range_fn fn, void *priv);
++
+ #endif	/* __XFS_REFCOUNT_H__ */
 
