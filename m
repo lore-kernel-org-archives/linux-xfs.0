@@ -2,393 +2,207 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 94B7EE7D248
-	for <linux-xfs@archiver.kernel.org>; Tue, 26 Sep 2023 07:51:24 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D6FCCE7E625
+	for <linux-xfs@archiver.kernel.org>; Tue, 26 Sep 2023 11:32:01 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233787AbjIZHv2 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 26 Sep 2023 03:51:28 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56360 "EHLO
+        id S232314AbjIZLcG (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 26 Sep 2023 07:32:06 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35844 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233673AbjIZHv1 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 26 Sep 2023 03:51:27 -0400
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0D9B1F3
-        for <linux-xfs@vger.kernel.org>; Tue, 26 Sep 2023 00:50:32 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1695714632;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=z51xRhqUyQXWCjjVRiDRVuBOf40rCLed/28H3cdbhJo=;
-        b=I4qJ5u5P4pMdUxS0eik6WWKxbzkpGsRSUlc3bsswz/dKBQl+eOAbjb1BD9WzwJaI+rfKkW
-        OuoHgH3uqIkZZWo8BH8lVhK43/xLHRmio0RVO+VDXq8tgFagFLWk0/IFsG7gbqt+DQqJAw
-        HgiYLCIX5BxigxQuyPrywRoK219HSN4=
-Received: from mail-ej1-f70.google.com (mail-ej1-f70.google.com
- [209.85.218.70]) by relay.mimecast.com with ESMTP with STARTTLS
- (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
- us-mta-591-ggz70DN8NIe3Ah1im-6SIQ-1; Tue, 26 Sep 2023 03:50:31 -0400
-X-MC-Unique: ggz70DN8NIe3Ah1im-6SIQ-1
-Received: by mail-ej1-f70.google.com with SMTP id a640c23a62f3a-9ae70250ef5so1444871466b.0
-        for <linux-xfs@vger.kernel.org>; Tue, 26 Sep 2023 00:50:30 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1695714625; x=1696319425;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=z51xRhqUyQXWCjjVRiDRVuBOf40rCLed/28H3cdbhJo=;
-        b=BC8GLerc62DJ+ZWcHvLxiblDOlUpZa4i/qRPyr2pPZy2rnIDGdh3y132PvSTN4RxjN
-         UfYh4ZwbDOXSzKT7ARq3ow8TPhq+KlcUB+bJ4TihpfL78jwBFip0P1pwImEhR4xlBwLp
-         j1tjz760FNCLbTa6dIuH13VrjwU50nCNmiDLV6tNmIKfbKGsOaFDTkn8qc/+dN6A8w2n
-         C+Vf+Hu0sAQxRInhj+ucbC165MJUqz5c34B0kAe1v17kUVk5WDVPXi925aTSuwJbC4xh
-         ZhoM6NgUXbyB9AtmRzvedryr+tYkGYY4cTi/AUU3mvlyrJ2DpBf6gXsgDUJwxTssKA4W
-         myxA==
-X-Gm-Message-State: AOJu0YzRo9ntZwRrsT9kNYtnUrsSZ7RKqr5FPcYfUCfUX03EUCYwmpHn
-        t2/zW2whv6rXN2hLjkEkekfUGQVzqUuGv1cnQ54l4M72/oUCph+xBeZINFVmfyBVsYhUPYees6l
-        XSiYIaweapZUdPHB5jORhPuuVKbC93Wynn5rFMa9/6IM/WG7bzXxL
-X-Received: by 2002:a17:907:d94:b0:9a5:b247:3ab with SMTP id go20-20020a1709070d9400b009a5b24703abmr2990468ejc.19.1695714625210;
-        Tue, 26 Sep 2023 00:50:25 -0700 (PDT)
-X-Google-Smtp-Source: AGHT+IFN3P2SZ9eOI9CyO/RXhC6HZ9CmqPWZ+cF35mDJB1r17cBrRQERDFjp8fQP/+BLtqQCcny4ow1EmLcxqbPj+Ok=
-X-Received: by 2002:a17:907:d94:b0:9a5:b247:3ab with SMTP id
- go20-20020a1709070d9400b009a5b24703abmr2990436ejc.19.1695714624806; Tue, 26
- Sep 2023 00:50:24 -0700 (PDT)
-MIME-Version: 1.0
-References: <CAJFLiB+J4mKGDOppp=1moMe2aNqeJhM9F2cD4KPTXoM6nzb5RA@mail.gmail.com>
- <ZRFbIJH47RkQuDid@debian.me> <20230925151236.GB11456@frogsfrogsfrogs>
-In-Reply-To: <20230925151236.GB11456@frogsfrogsfrogs>
-From:   Zhenyu Zhang <zhenyzha@redhat.com>
-Date:   Tue, 26 Sep 2023 15:49:47 +0800
-Message-ID: <CAJFLiBKQPOMmUPTAe-jHpPjLEx+X2ZNUKD20qXh4+0Ay+napDw@mail.gmail.com>
-Subject: Re: Endless calls to xas_split_alloc() due to corrupted xarray entry
-To:     "Darrick J. Wong" <djwong@kernel.org>
-Cc:     Bagas Sanjaya <bagasdotme@gmail.com>,
-        Linux XFS <linux-xfs@vger.kernel.org>,
-        Linux Filesystems Development <linux-fsdevel@vger.kernel.org>,
-        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-        Guowen Shan <gshan@redhat.com>,
-        Shaoqin Huang <shahuang@redhat.com>,
-        Matthew Wilcox <willy@infradead.org>,
+        with ESMTP id S229726AbjIZLcF (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 26 Sep 2023 07:32:05 -0400
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1975DE5;
+        Tue, 26 Sep 2023 04:31:59 -0700 (PDT)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 24FE5C433C8;
+        Tue, 26 Sep 2023 11:31:57 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1695727918;
+        bh=VavTLqfwPyOPHMccoFChylXmFFUo8P7qlBTJ/DhQa2w=;
+        h=Subject:From:To:Cc:Date:In-Reply-To:References:From;
+        b=QV5akLE8cAQWKD8DSqGm3T3eFEgO4cqRzRheD5AXFFAGZjfZohBsvWfJu1z1/3Z/c
+         McIfFKUws9d2IsYbPe2f6eQwitPBCTmUwrW8L+rcqrGDI3l8T0XzHzZtyOCqGWUYl3
+         w9yvUNiNJnXyLQBL+qr9frj8ed4Fo9NlUQgF3sXPq3XAK2Q+XvDxjFA7kWCxz02wCB
+         M6lgQY/XvGaeVFTzeW0DTG+4CUYuOxJvvfSzYX+8mcxjGhE8Se9B9k/Tli5Xoi/Syt
+         4KxlktRKXg6+TLBEF1i51FpePUzCV8uSSX4n0yM25izPFG5e0Dv7apQz2Xy0gfGziV
+         T90RTT72Nl3gg==
+Message-ID: <54e79ca9adfd52a8d39e158bc246173768a0aa0d.camel@kernel.org>
+Subject: Re: [PATCH v8 0/5] fs: multigrain timestamps for XFS's change_cookie
+From:   Jeff Layton <jlayton@kernel.org>
+To:     Dave Chinner <david@fromorbit.com>
+Cc:     Amir Goldstein <amir73il@gmail.com>,
+        Alexander Viro <viro@zeniv.linux.org.uk>,
+        Christian Brauner <brauner@kernel.org>,
+        Chuck Lever <chuck.lever@oracle.com>,
+        Neil Brown <neilb@suse.de>,
+        Olga Kornievskaia <kolga@netapp.com>,
+        Dai Ngo <Dai.Ngo@oracle.com>, Tom Talpey <tom@talpey.com>,
         Chandan Babu R <chandan.babu@oracle.com>,
-        Andrew Morton <akpm@linux-foundation.org>,
-        Linus Torvalds <torvalds@linux-foundation.org>
+        "Darrick J. Wong" <djwong@kernel.org>, Jan Kara <jack@suse.cz>,
+        Linus Torvalds <torvalds@linux-foundation.org>,
+        Kent Overstreet <kent.overstreet@linux.dev>,
+        linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-nfs@vger.kernel.org, linux-xfs@vger.kernel.org
+Date:   Tue, 26 Sep 2023 07:31:55 -0400
+In-Reply-To: <ZRIKj0E8P46kerqa@dread.disaster.area>
+References: <20230922-ctime-v8-0-45f0c236ede1@kernel.org>
+         <CAOQ4uxiNfPoPiX0AERywqjaBH30MHQPxaZepnKeyEjJgTv8hYg@mail.gmail.com>
+         <5e3b8a365160344f1188ff13afb0a26103121f99.camel@kernel.org>
+         <CAOQ4uxjrt6ca4VDvPAL7USr6_SspCv0rkRkMJ4_W2S6vzV738g@mail.gmail.com>
+         <ZRC1pjwKRzLiD6I3@dread.disaster.area>
+         <77d33282068035a3b42ace946b1be57457d2b60b.camel@kernel.org>
+         <ZRIKj0E8P46kerqa@dread.disaster.area>
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: quoted-printable
+User-Agent: Evolution 3.48.4 (3.48.4-1.fc38) 
+MIME-Version: 1.0
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Hello Darrick,
+On Tue, 2023-09-26 at 08:32 +1000, Dave Chinner wrote:
+> On Mon, Sep 25, 2023 at 06:14:05AM -0400, Jeff Layton wrote:
+> > On Mon, 2023-09-25 at 08:18 +1000, Dave Chinner wrote:
+> > > On Sat, Sep 23, 2023 at 05:52:36PM +0300, Amir Goldstein wrote:
+> > > > On Sat, Sep 23, 2023 at 1:46=E2=80=AFPM Jeff Layton <jlayton@kernel=
+.org> wrote:
+> > > > >=20
+> > > > > On Sat, 2023-09-23 at 10:15 +0300, Amir Goldstein wrote:
+> > > > > > On Fri, Sep 22, 2023 at 8:15=E2=80=AFPM Jeff Layton <jlayton@ke=
+rnel.org> wrote:
+> > > > > > >=20
+> > > > > > > My initial goal was to implement multigrain timestamps on mos=
+t major
+> > > > > > > filesystems, so we could present them to userland, and use th=
+em for
+> > > > > > > NFSv3, etc.
+> > > > > > >=20
+> > > > > > > With the current implementation however, we can't guarantee t=
+hat a file
+> > > > > > > with a coarse grained timestamp modified after one with a fin=
+e grained
+> > > > > > > timestamp will always appear to have a later value. This coul=
+d confuse
+> > > > > > > some programs like make, rsync, find, etc. that depend on str=
+ict
+> > > > > > > ordering requirements for timestamps.
+> > > > > > >=20
+> > > > > > > The goal of this version is more modest: fix XFS' change attr=
+ibute.
+> > > > > > > XFS's change attribute is bumped on atime updates in addition=
+ to other
+> > > > > > > deliberate changes. This makes it unsuitable for export via n=
+fsd.
+> > > > > > >=20
+> > > > > > > Jan Kara suggested keeping this functionality internal-only f=
+or now and
+> > > > > > > plumbing the fine grained timestamps through getattr [1]. Thi=
+s set takes
+> > > > > > > a slightly different approach and has XFS use the fine-graine=
+d attr to
+> > > > > > > fake up STATX_CHANGE_COOKIE in its getattr routine itself.
+> > > > > > >=20
+> > > > > > > While we keep fine-grained timestamps in struct inode, when p=
+resenting
+> > > > > > > the timestamps via getattr, we truncate them at a granularity=
+ of number
+> > > > > > > of ns per jiffy,
+> > > > > >=20
+> > > > > > That's not good, because user explicitly set granular mtime wou=
+ld be
+> > > > > > truncated too and booting with different kernels (HZ) would cha=
+nge
+> > > > > > the observed timestamps of files.
+> > > > > >=20
+> > > > >=20
+> > > > > Thinking about this some more, I think the first problem is easil=
+y
+> > > > > addressable:
+> > > > >=20
+> > > > > The ctime isn't explicitly settable and with this set, we're alre=
+ady not
+> > > > > truncating the atime. We haven't used any of the extra bits in th=
+e mtime
+> > > > > yet, so we could just carve out a flag in there that says "this m=
+time
+> > > > > was explicitly set and shouldn't be truncated before presentation=
+".
+> > > > >=20
+> > > >=20
+> > > > I thought about this option too.
+> > > > But note that the "mtime was explicitly set" flag needs
+> > > > to be persisted to disk so you cannot store it in the high nsec bit=
+s.
+> > > > At least XFS won't store those bits if you use them - they have to
+> > > > be translated to an XFS inode flag and I don't know if changing
+> > > > XFS on-disk format was on your wish list.
+> > >=20
+> > > Remember: this multi-grain timestamp thing was an idea to solve the
+> > > NFS change attribute problem without requiring *any* filesystem with
+> > > sub-jiffie timestamp capability to change their on-disk format to
+> > > implement a persistent change attribute that matches the new
+> > > requires of the kernel nfsd.
+> > >=20
+> > > If we now need to change the on-disk format to support
+> > > some whacky new timestamp semantic to do this, then people have
+> > > completely lost sight of what problem the multi-grain timestamp idea
+> > > was supposed to address.
+> > >=20
+> >=20
+> > Yep. The main impetus for all of this was to fix XFS's change attribute
+> > without requiring an on-disk format change. If we have to rev the on-
+> > disk format, we're probably better off plumbing in a proper i_version
+> > counter and tossing this idea aside.
+> >=20
+> > That said, I think all we'd need for this scheme is a single flag per
+> > inode (to indicate that the mtime shouldn't be truncated before
+> > presentation). If that's possible to do without fully revving the inode
+> > format, then we could still pursue this. I take it that's probably not
+> > the case though.
+>=20
+> Older kernels that don't know what the flag means, but that should
+> be OK for an inode flag. The bigger issue is that none of the
+> userspace tools (xfs_db, xfs_repair, etc) know about it, so they
+> would have to be taught about it. And then there's testing it, which
+> likely means userspace needs visibility of the flag (e.g. FS_XFLAG
+> for it) and then there's more work....
+>=20
+> It's really not worth it.
+>=20
+>
+> I think that Linus's suggestion of the in-memory inode timestamp
+> always being a 64bit, 100ns granularity value instead of a timespec
+> that gets truncated at sample time has merit as a general solution.
+>=20
 
-The issue gets fixed in rc3. However, it seems not caused by commit
-6d2779ecaeb56f9 because I can't reproduce the issue with rc3 and
-the commit revert. I'm running 'git bisect' to nail it down. Hopefully,
-I can identify the problematic commit soon.
+Changing how we store timestamps in struct inode is a good idea, and
+reducing the effective granularity to 100ns seems reasonable, but that
+alone won't fix XFS's i_version counter, or the ordering problems that
+we hit with the multigrain series that had to be reverted.
 
-On Mon, Sep 25, 2023 at 11:14=E2=80=AFPM Darrick J. Wong <djwong@kernel.org=
-> wrote:
->
-> On Mon, Sep 25, 2023 at 05:04:16PM +0700, Bagas Sanjaya wrote:
-> > On Fri, Sep 22, 2023 at 11:56:43AM +0800, Zhenyu Zhang wrote:
-> > > Hi all,
-> > >
-> > > we don't know how the xarray entry was corrupted. Maybe it's a known
-> > > issue to community.
-> > > Lets see.
-> > >
-> > > Contents
-> > > --------
-> > > 1. Problem Statement
-> > > 2. The call trace
-> > > 3. The captured data by bpftrace
-> > >
-> > >
-> > > 1. Problem Statement
-> > > --------------------
-> > > With 4k guest and 64k host, on aarch64(Ampere's Altra Max CPU) hit Ca=
-ll trace:
-> > >     Steps:
-> > >     1) System setup hugepages on host.
-> > >        # echo 60 > /proc/sys/vm/nr_hugepages
-> > >     2) Mount this hugepage to /mnt/kvm_hugepage.
-> > >        # mount -t hugetlbfs -o pagesize=3D524288K none /mnt/kvm_hugep=
-age
-> >
-> > What block device/disk image you use to format the filesystem?
-> >
-> > >     3) HugePages didn't leak when using non-existent mem-path.
-> > >        # mkdir -p /mnt/tmp
-> > >     4) Boot guest.
-> > >        # /usr/libexec/qemu-kvm \
-> > > ...
-> > >          -m 30720 \
-> > > -object '{"size": 32212254720, "mem-path": "/mnt/tmp", "qom-type":
-> > > "memory-backend-file"}'  \
-> > > -smp 4,maxcpus=3D4,cores=3D2,threads=3D1,clusters=3D1,sockets=3D2  \
-> > >          -blockdev '{"node-name": "file_image1", "driver": "file",
-> > > "auto-read-only": true, "discard": "unmap", "aio": "threads",
-> > > "filename": "/home/kvm_autotest_root/images/back_up_4k.qcow2",
-> > > "cache": {"direct": true, "no-flush": false}}' \
-> > > -blockdev '{"node-name": "drive_image1", "driver": "qcow2",
-> > > "read-only": false, "cache": {"direct": true, "no-flush": false},
-> > > "file": "file_image1"}' \
-> > > -device '{"driver": "scsi-hd", "id": "image1", "drive":
-> > > "drive_image1", "write-cache": "on"}' \
-> > >
-> > >     5) Wait about 1 minute ------> hit Call trace
-> > >
-> > > 2. The call trace
-> > > --------------------
-> > > [   14.982751] block dm-0: the capability attribute has been deprecat=
-ed.
-> > > [   15.690043] PEFILE: Unsigned PE binary
-> > >
-> > >
-> > > [   90.135676] rcu: INFO: rcu_preempt detected stalls on CPUs/tasks:
-> > > [   90.136629] rcu: 3-...0: (3 ticks this GP)
-> > > idle=3De6ec/1/0x4000000000000000 softirq=3D6847/6849 fqs=3D232
-> > > [   90.137293] rcu: (detected by 2, t=3D6012 jiffies, g=3D2085, q=3D2=
-539 ncpus=3D4)
-> > > [   90.137796] Task dump for CPU 3:
-> > > [   90.138037] task:PK-Backend      state:R  running task     stack:0
-> > >    pid:2287  ppid:1      flags:0x00000202
-> > > [   90.138757] Call trace:
-> > > [   90.138940]  __switch_to+0xc8/0x110
-> > > [   90.139203]  0xb54a54f8c5fb0700
-> > >
-> > > [  270.190849] rcu: INFO: rcu_preempt detected stalls on CPUs/tasks:
-> > > [  270.191722] rcu: 3-...0: (3 ticks this GP)
-> > > idle=3De6ec/1/0x4000000000000000 softirq=3D6847/6849 fqs=3D1020
-> > > [  270.192405] rcu: (detected by 1, t=3D24018 jiffies, g=3D2085, q=3D=
-3104 ncpus=3D4)
-> > > [  270.192876] Task dump for CPU 3:
-> > > [  270.193099] task:PK-Backend      state:R  running task     stack:0
-> > >    pid:2287  ppid:1      flags:0x00000202
-> > > [  270.193774] Call trace:
-> > > [  270.193946]  __switch_to+0xc8/0x110
-> > > [  270.194336]  0xb54a54f8c5fb0700
-> > >
-> > > [ 1228.068406] ------------[ cut here ]------------
-> > > [ 1228.073011] WARNING: CPU: 2 PID: 4496 at lib/xarray.c:1010
-> > > xas_split_alloc+0xf8/0x128
-> > > [ 1228.080828] Modules linked in: binfmt_misc vhost_net vhost
-> > > vhost_iotlb tap xt_CHECKSUM xt_MASQUERADE xt_conntrack ipt_REJECT
-> > > nf_reject_ipv4 nft_compat nft_chain_nat nf_nat nf_conntrack
-> > > nf_defrag_ipv6 nf_defrag_ipv4 nf_tables nfnetlink tun bridge stp llc
-> > > qrtr rfkill sunrpc vfat fat acpi_ipmi ipmi_ssif arm_spe_pmu
-> > > ipmi_devintf arm_cmn arm_dmc620_pmu ipmi_msghandler cppc_cpufreq
-> > > arm_dsu_pmu xfs libcrc32c ast drm_shmem_helper drm_kms_helper drm
-> > > crct10dif_ce ghash_ce igb nvme sha2_ce nvme_core sha256_arm64 sha1_ce
-> > > i2c_designware_platform sbsa_gwdt nvme_common i2c_algo_bit
-> > > i2c_designware_core xgene_hwmon dm_mirror dm_region_hash dm_log dm_mo=
-d
-> > > fuse
-> > > [ 1228.137630] CPU: 2 PID: 4496 Comm: qemu-kvm Kdump: loaded Tainted:
-> > > G        W          6.6.0-rc2-zhenyzha+ #5
->
-> Please try 6.6-rc3, which doesn't have broken bit spinlocks (and hence
-> corruption problems in the vfs) on arm64.
->
-> (See commit 6d2779ecaeb56f9 "locking/atomic: scripts: fix fallback
-> ifdeffery")
->
-> --D
->
-> > > [ 1228.147529] Hardware name: GIGABYTE R152-P31-00/MP32-AR1-00, BIOS
-> > > F31h (SCP: 2.10.20220810) 07/27/2022
-> > > [ 1228.156820] pstate: 80400009 (Nzcv daif +PAN -UAO -TCO -DIT -SSBS =
-BTYPE=3D--)
-> > > [ 1228.163767] pc : xas_split_alloc+0xf8/0x128
-> > > [ 1228.167938] lr : __filemap_add_folio+0x33c/0x4e0
-> > > [ 1228.172543] sp : ffff80008dd4f1c0
-> > > [ 1228.175844] x29: ffff80008dd4f1c0 x28: ffffd15825388c40 x27: 00000=
-00000000001
-> > > [ 1228.182967] x26: 0000000000000001 x25: ffffffffffffc005 x24: 00000=
-00000000000
-> > > [ 1228.190089] x23: ffff80008dd4f270 x22: ffffffc202b00000 x21: 00000=
-00000000000
-> > > [ 1228.197211] x20: ffffffc2007f9600 x19: 000000000000000d x18: 00000=
-00000000014
-> > > [ 1228.204334] x17: 00000000b21b8a3f x16: 0000000013a8aa94 x15: ffffd=
-15824625944
-> > > [ 1228.211456] x14: ffffffffffffffff x13: 0000000000000030 x12: 01010=
-10101010101
-> > > [ 1228.218578] x11: 7f7f7f7f7f7f7f7f x10: 000000000000000a x9 : ffffd=
-158252dd3fc
-> > > [ 1228.225701] x8 : ffff80008dd4f1c0 x7 : ffff07ffa0945468 x6 : ffff8=
-0008dd4f1c0
-> > > [ 1228.232823] x5 : 0000000000000018 x4 : 0000000000000000 x3 : 00000=
-00000012c40
-> > > [ 1228.239945] x2 : 000000000000000d x1 : 000000000000000c x0 : 00000=
-00000000000
-> > > [ 1228.247067] Call trace:
-> > > [ 1228.249500]  xas_split_alloc+0xf8/0x128
-> > > [ 1228.253324]  __filemap_add_folio+0x33c/0x4e0
-> > > [ 1228.257582]  filemap_add_folio+0x48/0xd0
-> > > [ 1228.261493]  page_cache_ra_order+0x214/0x310
-> > > [ 1228.265750]  ondemand_readahead+0x1a8/0x320
-> > > [ 1228.269921]  page_cache_async_ra+0x64/0xa8
-> > > [ 1228.274005]  filemap_fault+0x238/0xaa8
-> > > [ 1228.277742]  __xfs_filemap_fault+0x60/0x3c0 [xfs]
-> > > [ 1228.282491]  xfs_filemap_fault+0x54/0x68 [xfs]
-> > > [ 1228.286979]  __do_fault+0x40/0x210
-> > > [ 1228.290368]  do_cow_fault+0xf0/0x300
-> > > [ 1228.293931]  do_pte_missing+0x140/0x238
-> > > [ 1228.297754]  handle_pte_fault+0x100/0x160
-> > > [ 1228.301751]  __handle_mm_fault+0x100/0x310
-> > > [ 1228.305835]  handle_mm_fault+0x6c/0x270
-> > > [ 1228.309659]  faultin_page+0x70/0x128
-> > > [ 1228.313221]  __get_user_pages+0xc8/0x2d8
-> > > [ 1228.317131]  get_user_pages_unlocked+0xc4/0x3b8
-> > > [ 1228.321648]  hva_to_pfn+0xf8/0x468
-> > > [ 1228.325037]  __gfn_to_pfn_memslot+0xa4/0xf8
-> > > [ 1228.329207]  user_mem_abort+0x174/0x7e8
-> > > [ 1228.333031]  kvm_handle_guest_abort+0x2dc/0x450
-> > > [ 1228.337548]  handle_exit+0x70/0x1c8
-> > > [ 1228.341024]  kvm_arch_vcpu_ioctl_run+0x224/0x5b8
-> > > [ 1228.345628]  kvm_vcpu_ioctl+0x28c/0x9d0
-> > > [ 1228.349450]  __arm64_sys_ioctl+0xa8/0xf0
-> > > [ 1228.353360]  invoke_syscall.constprop.0+0x7c/0xd0
-> > > [ 1228.358052]  do_el0_svc+0xb4/0xd0
-> > > [ 1228.361354]  el0_svc+0x50/0x228
-> > > [ 1228.364484]  el0t_64_sync_handler+0x134/0x150
-> > > [ 1228.368827]  el0t_64_sync+0x17c/0x180
-> > > [ 1228.372476] ---[ end trace 0000000000000000 ]---
-> > > [ 1228.377124] ------------[ cut here ]------------
-> > > [ 1228.381728] WARNING: CPU: 2 PID: 4496 at lib/xarray.c:1010
-> > > xas_split_alloc+0xf8/0x128
-> > > [ 1228.389546] Modules linked in: binfmt_misc vhost_net vhost
-> > > vhost_iotlb tap xt_CHECKSUM xt_MASQUERADE xt_conntrack ipt_REJECT
-> > > nf_reject_ipv4 nft_compat nft_chain_nat nf_nat nf_conntrack
-> > > nf_defrag_ipv6 nf_defrag_ipv4 nf_tables nfnetlink tun bridge stp llc
-> > > qrtr rfkill sunrpc vfat fat acpi_ipmi ipmi_ssif arm_spe_pmu
-> > > ipmi_devintf arm_cmn arm_dmc620_pmu ipmi_msghandler cppc_cpufreq
-> > > arm_dsu_pmu xfs libcrc32c ast drm_shmem_helper drm_kms_helper drm
-> > > crct10dif_ce ghash_ce igb nvme sha2_ce nvme_core sha256_arm64 sha1_ce
-> > > i2c_designware_platform sbsa_gwdt nvme_common i2c_algo_bit
-> > > i2c_designware_core xgene_hwmon dm_mirror dm_region_hash dm_log dm_mo=
-d
-> > > fuse
-> > > [ 1228.446348] CPU: 2 PID: 4496 Comm: qemu-kvm Kdump: loaded Tainted:
-> > > G        W          6.6.0-rc2-zhenyzha+ #5
-> > > [ 1228.456248] Hardware name: GIGABYTE R152-P31-00/MP32-AR1-00, BIOS
-> > > F31h (SCP: 2.10.20220810) 07/27/2022
-> > > [ 1228.465538] pstate: 80400009 (Nzcv daif +PAN -UAO -TCO -DIT -SSBS =
-BTYPE=3D--)
-> > > [ 1228.472486] pc : xas_split_alloc+0xf8/0x128
-> > > [ 1228.476656] lr : __filemap_add_folio+0x33c/0x4e0
-> > > [ 1228.481261] sp : ffff80008dd4f1c0
-> > > [ 1228.484563] x29: ffff80008dd4f1c0 x28: ffffd15825388c40 x27: 00000=
-00000000001
-> > > [ 1228.491685] x26: 0000000000000001 x25: ffffffffffffc005 x24: 00000=
-00000000000
-> > > [ 1228.498807] x23: ffff80008dd4f270 x22: ffffffc202b00000 x21: 00000=
-00000000000
-> > > [ 1228.505930] x20: ffffffc2007f9600 x19: 000000000000000d x18: 00000=
-00000000014
-> > > [ 1228.513052] x17: 00000000b21b8a3f x16: 0000000013a8aa94 x15: ffffd=
-15824625944
-> > > [ 1228.520174] x14: ffffffffffffffff x13: 0000000000000030 x12: 01010=
-10101010101
-> > > [ 1228.527297] x11: 7f7f7f7f7f7f7f7f x10: 000000000000000a x9 : ffffd=
-158252dd3fc
-> > > [ 1228.534419] x8 : ffff80008dd4f1c0 x7 : ffff07ffa0945468 x6 : ffff8=
-0008dd4f1c0
-> > > [ 1228.541542] x5 : 0000000000000018 x4 : 0000000000000000 x3 : 00000=
-00000012c40
-> > > [ 1228.548664] x2 : 000000000000000d x1 : 000000000000000c x0 : 00000=
-00000000000
-> > > [ 1228.555786] Call trace:
-> > > [ 1228.558220]  xas_split_alloc+0xf8/0x128
-> > > [ 1228.562043]  __filemap_add_folio+0x33c/0x4e0
-> > > [ 1228.566300]  filemap_add_folio+0x48/0xd0
-> > > [ 1228.570211]  page_cache_ra_order+0x214/0x310
-> > > [ 1228.574469]  ondemand_readahead+0x1a8/0x320
-> > > [ 1228.578639]  page_cache_async_ra+0x64/0xa8
-> > > [ 1228.582724]  filemap_fault+0x238/0xaa8
-> > > [ 1228.586460]  __xfs_filemap_fault+0x60/0x3c0 [xfs]
-> > > [ 1228.591210]  xfs_filemap_fault+0x54/0x68 [xfs]
-> > >
-> > >
-> > >
-> > > 3. The captured data by bpftrace
-> > > (The following part is the crawl analysis of gshan@redhat.com )
-> > > --------------------
-> > > pid:  4475    task: qemu-kvm
-> > > file: /mnt/tmp/qemu_back_mem.mem-machine_mem.OdGYet (deleted)
-> > >
-> > > -------------------- inode --------------------
-> > > i_flags:               0x0
-> > > i_ino:                 67333199
-> > > i_size:                32212254720
-> > >
-> > > ----------------- address_space ----------------
-> > > flags:                 040
-> > > invalidate_lock
-> > >   count:               256
-> > >   owner:               0xffff07fff6e759c1
-> > >     pid: 4496  task: qemu-kvm
-> > >   wait_list.next:      0xffff07ffa20422e0
-> > >   wait_list.prev:      0xffff07ffa20422e0
-> > >
-> > > -------------------- xarray --------------------
-> > > entry[0]:       0xffff080f7eda0002
-> > > shift:          18
-> > > offset:         0
-> > > count:          2
-> > > nr_values:      0
-> > > parent:         0x0
-> > > slots[00]:      0xffff07ffa094546a
-> > > slots[01]:      0xffff07ffa1b09b22
-> > >
-> > > entry[1]:       0xffff07ffa094546a
-> > > shift:          12
-> > > offset:         0
-> > > count:          20
-> > > nr_values:      0
-> > > parent:         0xffff080f7eda0000
-> > > slots[00]:      0xffffffc202880000
-> > > slots[01]:      0x2
-> > >
-> > > entry[2]:       0xffffffc202880000
-> > > shift:          104
-> > > offset:         128
-> > > count:          0
-> > > nr_values:      0
-> > > parent:         0xffffffc20304c888
-> > > slots[00]:      0xffff08009a960000
-> > > slots[01]:      0x2001ffffffff
-> > >
-> > > It seems the last xarray entry ("entry[2]") has been corrupted. "shif=
-t"
-> > > becomes 104 and "offset" becomes 128, which isn't reasonable.
-> > > It's explaining why we run into xas_split_alloc() in __filemap_add_fo=
-lio()
-> > >
-> > >         if (order > folio_order(folio))
-> > >                 xas_split_alloc(&xas, xa_load(xas.xa, xas.xa_index),
-> > >                                 order, gfp);
-> > >
-> > > folio_order(folio) is likely 6 since the readahead window size on the=
- BDI device
-> > > is 4MB.
-> > > However, @order figured from the corrupted xarray entry is much large=
-r than 6.
-> > > log2(0x400000 / 0x10000) =3D log2(64) =3D 6
-> > >
-> > > [root@ampere-mtsnow-altramax-28 ~]# uname -r
-> > > 6.6.0-rc2-zhenyzha+
-> >
-> > What commit/tree?
-> >
-> > > [root@ampere-mtsnow-altramax-28 ~]# cat
-> > > /sys/devices/virtual/bdi/253:0/read_ahead_kb
-> > > 4096
-> > >
-> >
-> > I'm confused...
-> >
-> > --
-> > An old man doll... just what I always wanted! - Clara
->
->
+> We also must not lose sight of the fact that the lazytime mount
+> option makes atime updates on XFS behave exactly as the nfsd/NFS
+> client application wants. That is, XFS will do in-memory atime
+> updates unless the atime update also sets S_VERSION to explicitly
+> bump the i_version counter if required. That leads to another
+> potential nfsd specific solution without requiring filesystems to
+> change on disk formats: the nfsd explicitly asks operations for lazy
+> atime updates...
+>=20
 
+Not exactly. The problem with XFS's i_version is that it also bumps it
+on atime updates. lazytime reduces the number of atime updates to
+~1/day. To be exactly what nfsd wants, you'd need to make that 0. I
+suppose you can work around it with noatime, but that has problems of
+its own.
+
+> And we must also keep in sight the fact that io_uring wants
+> non-blocking timestamp updates to be possible (for all types of
+> updates). Hence it looks to me like we have more than one use case
+> for per-operation/application specific timestamp update semantics.
+> Perhaps there's a generic solution to this problem (e.g.  operation
+> specific non-blocking, in-memory pure timestamp updates) that does
+> what everyone needs...
+
+--=20
+Jeff Layton <jlayton@kernel.org>
