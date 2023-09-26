@@ -2,136 +2,147 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 62403E7F14D
-	for <linux-xfs@archiver.kernel.org>; Wed, 27 Sep 2023 00:16:43 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E5ACBE7F14C
+	for <linux-xfs@archiver.kernel.org>; Wed, 27 Sep 2023 00:16:42 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231642AbjI0AQm (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 26 Sep 2023 20:16:42 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33376 "EHLO
+        id S231573AbjI0AQl (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 26 Sep 2023 20:16:41 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33362 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232650AbjI0AOk (ORCPT
+        with ESMTP id S232648AbjI0AOk (ORCPT
         <rfc822;linux-xfs@vger.kernel.org>); Tue, 26 Sep 2023 20:14:40 -0400
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D7159270C
-        for <linux-xfs@vger.kernel.org>; Tue, 26 Sep 2023 16:33:44 -0700 (PDT)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 76B40C433C8;
-        Tue, 26 Sep 2023 23:33:44 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1695771224;
-        bh=4sKTkP+YNq5eOURvDatsZRtR0+/T81bjeEfvrGKbisQ=;
-        h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-        b=qJaNZZQGJcTEmExSpQ2eaQsCf7DBdOlr6dqJt2qJQSMgJT9HwiiKtwwOxPriQMnaU
-         0y6Tls5Gzx7u9+RsO6i/DpOJhe/XGzbfi6Sinfl2pxz2ls21gUAB4CiODAD2Ih3U/1
-         TOdjVN8oMEv4qdj13eWJ2za+IiS7h2n3npClPww7aNTEFPm54cpyNgSjwuNCkaHR0e
-         B3gTUg3gB97/zUxEqpE85/3Y5OxBm/kqUqHI4EFwkTSsfLA/WdieDH7aYXGZAmy5kY
-         7J9KFixDcTvSS1O5Rw1fCqJvsgAu5J83jSo+gSbch4dZ6l80k5qO8p3uTCI32jVfuy
-         5fpW5a1cFhQkw==
-Date:   Tue, 26 Sep 2023 16:33:44 -0700
-Subject: [PATCH 3/4] xfs: move btree bulkload record initialization to
- ->get_record implementations
-From:   "Darrick J. Wong" <djwong@kernel.org>
-To:     djwong@kernel.org
-Cc:     linux-xfs@vger.kernel.org
-Message-ID: <169577059620.3313134.3261876338366428161.stgit@frogsfrogsfrogs>
-In-Reply-To: <169577059572.3313134.3407643746555317156.stgit@frogsfrogsfrogs>
-References: <169577059572.3313134.3407643746555317156.stgit@frogsfrogsfrogs>
-User-Agent: StGit/0.19
+Received: from mail-pl1-x635.google.com (mail-pl1-x635.google.com [IPv6:2607:f8b0:4864:20::635])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id EA5911F2E
+        for <linux-xfs@vger.kernel.org>; Tue, 26 Sep 2023 16:33:34 -0700 (PDT)
+Received: by mail-pl1-x635.google.com with SMTP id d9443c01a7336-1c3d6d88231so72984395ad.0
+        for <linux-xfs@vger.kernel.org>; Tue, 26 Sep 2023 16:33:34 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=fromorbit-com.20230601.gappssmtp.com; s=20230601; t=1695771214; x=1696376014; darn=vger.kernel.org;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
+        bh=fzAFOkzwhGAtezwb7Q8ZYaVN+d4jFFOQUeui0g8VHkA=;
+        b=sBnAWOGFYan30AwkwAHVHA6/L+FTM1f/NiupNKpc3STfRpE0HsEJ/8KrYtkJUY2XB9
+         XIqjUXsKH6CYscchdDYRZLYqTe0wGS1AshaM6+gjWx6550Q98rRBhWfPPkW0qZP2EY3o
+         IanCzpnqgH5eLtSPPUwk+0hB33CqjAyKaSr7O4yCesVE6EM6E39/BmkTEinl0RPiSWNj
+         cEPvY8zu2JCHuiFNwPlYiyhAj1ACFpsvEukkleY4Dwmi29a18ey97pEfEqp+4sYsoeKT
+         2mw6kl9KXR/aEbrr08UGYsMDsg5DXXxVU8X0EIiFHt6G9C40j2R51+Tipoc0oWn4w/zJ
+         kt5g==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1695771214; x=1696376014;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=fzAFOkzwhGAtezwb7Q8ZYaVN+d4jFFOQUeui0g8VHkA=;
+        b=tW/RxacrQJexs1RHhr31Abf67bxnS50fbnXZoojvIMDaqFZc4LId7wVwI7IkT5KFRT
+         3JH25c1y0pzEYwwG58r5nsaYP3ox138REI7z7EdIPdIfK75zBqwoO/bRUzWTRRAw4bBP
+         Lrumoqim8EGIROy2Ve0TsF/6J8NGt8HnTJhm9kYyT9nSOiG3rOrSb5npW53sGfgtsc+I
+         Ysllt7pVEF4VxbrbW9e2qkl/Jy4B1CmZUW32dDWwwPjZIFLJuzdG003naIKGFKd0besD
+         944xMlJ743FyDt7JuehWEexvP7VHsuISHpBrlZU+QlnW8+ZWMT2qV5/n5qUOB0kgVuXj
+         gSMQ==
+X-Gm-Message-State: AOJu0YyCtfeHebrF4EnFxTSX62jZs01bMxVrHQlDB9ogS5WH4ftXKkkw
+        G6gZDbf95tFP1tKM0PaXijOLaw==
+X-Google-Smtp-Source: AGHT+IGNDTgPnX9/61UW1DFLe1t2ekDtE9xmnNxExg0YxAsa8gYAb5Jp9QJLDjbnQrHCfTGC0cwTTQ==
+X-Received: by 2002:a17:903:246:b0:1bf:6ad7:2286 with SMTP id j6-20020a170903024600b001bf6ad72286mr239913plh.43.1695771214349;
+        Tue, 26 Sep 2023 16:33:34 -0700 (PDT)
+Received: from dread.disaster.area (pa49-180-20-59.pa.nsw.optusnet.com.au. [49.180.20.59])
+        by smtp.gmail.com with ESMTPSA id d12-20020a170902cecc00b001c42d4b3675sm4138030plg.309.2023.09.26.16.33.33
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Tue, 26 Sep 2023 16:33:33 -0700 (PDT)
+Received: from dave by dread.disaster.area with local (Exim 4.96)
+        (envelope-from <david@fromorbit.com>)
+        id 1qlHYY-0062Td-3C;
+        Wed, 27 Sep 2023 09:33:31 +1000
+Date:   Wed, 27 Sep 2023 09:33:30 +1000
+From:   Dave Chinner <david@fromorbit.com>
+To:     Jeff Layton <jlayton@kernel.org>
+Cc:     Amir Goldstein <amir73il@gmail.com>,
+        Alexander Viro <viro@zeniv.linux.org.uk>,
+        Christian Brauner <brauner@kernel.org>,
+        Chuck Lever <chuck.lever@oracle.com>,
+        Neil Brown <neilb@suse.de>,
+        Olga Kornievskaia <kolga@netapp.com>,
+        Dai Ngo <Dai.Ngo@oracle.com>, Tom Talpey <tom@talpey.com>,
+        Chandan Babu R <chandan.babu@oracle.com>,
+        "Darrick J. Wong" <djwong@kernel.org>, Jan Kara <jack@suse.cz>,
+        Linus Torvalds <torvalds@linux-foundation.org>,
+        Kent Overstreet <kent.overstreet@linux.dev>,
+        linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-nfs@vger.kernel.org, linux-xfs@vger.kernel.org
+Subject: Re: [PATCH v8 0/5] fs: multigrain timestamps for XFS's change_cookie
+Message-ID: <ZRNqSvHwkmQoynOc@dread.disaster.area>
+References: <20230922-ctime-v8-0-45f0c236ede1@kernel.org>
+ <CAOQ4uxiNfPoPiX0AERywqjaBH30MHQPxaZepnKeyEjJgTv8hYg@mail.gmail.com>
+ <5e3b8a365160344f1188ff13afb0a26103121f99.camel@kernel.org>
+ <CAOQ4uxjrt6ca4VDvPAL7USr6_SspCv0rkRkMJ4_W2S6vzV738g@mail.gmail.com>
+ <ZRC1pjwKRzLiD6I3@dread.disaster.area>
+ <77d33282068035a3b42ace946b1be57457d2b60b.camel@kernel.org>
+ <ZRIKj0E8P46kerqa@dread.disaster.area>
+ <54e79ca9adfd52a8d39e158bc246173768a0aa0d.camel@kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <54e79ca9adfd52a8d39e158bc246173768a0aa0d.camel@kernel.org>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-From: Darrick J. Wong <djwong@kernel.org>
+On Tue, Sep 26, 2023 at 07:31:55AM -0400, Jeff Layton wrote:
+> On Tue, 2023-09-26 at 08:32 +1000, Dave Chinner wrote:
+> > We also must not lose sight of the fact that the lazytime mount
+> > option makes atime updates on XFS behave exactly as the nfsd/NFS
+> > client application wants. That is, XFS will do in-memory atime
+> > updates unless the atime update also sets S_VERSION to explicitly
+> > bump the i_version counter if required. That leads to another
+> > potential nfsd specific solution without requiring filesystems to
+> > change on disk formats: the nfsd explicitly asks operations for lazy
+> > atime updates...
+> > 
+> 
+> Not exactly. The problem with XFS's i_version is that it also bumps it
+> on atime updates. lazytime reduces the number of atime updates to
+> ~1/day. To be exactly what nfsd wants, you'd need to make that 0.
 
-When we're performing a bulk load of a btree, move the code that
-actually stores the btree record in the new btree block out of the
-generic code and into the individual ->get_record implementations.
-This is preparation for being able to store multiple records with a
-single indirect call.
+As long as there are future modifications going to those files,
+lazytime completely elides the visibility of atime updates as they
+get silently aggregated into future modifications and so there are
+0 i_version changes as a resutl of pure atime updates in those cases.
 
-Signed-off-by: Darrick J. Wong <djwong@kernel.org>
----
- fs/xfs/libxfs/xfs_btree_staging.c |   17 +++++++----------
- fs/xfs/libxfs/xfs_btree_staging.h |   15 ++++++++++-----
- 2 files changed, 17 insertions(+), 15 deletions(-)
+If there are no future modifications, then just like relatime, there
+is a timestamp update every 24hrs. That's no big deal, nobody is
+complaining about this being a problem.
 
+It's the "persistent atime update after modification" heuristic
+implemented by relatime that is causing all the problems here. If
+that behaviour is elided on the server side, then most of the client
+side invalidation problems with these workloads go away.
 
-diff --git a/fs/xfs/libxfs/xfs_btree_staging.c b/fs/xfs/libxfs/xfs_btree_staging.c
-index 29e3f8ccb1852..369965cacc8c5 100644
---- a/fs/xfs/libxfs/xfs_btree_staging.c
-+++ b/fs/xfs/libxfs/xfs_btree_staging.c
-@@ -434,22 +434,19 @@ STATIC int
- xfs_btree_bload_leaf(
- 	struct xfs_btree_cur		*cur,
- 	unsigned int			recs_this_block,
--	xfs_btree_bload_get_record_fn	get_record,
-+	xfs_btree_bload_get_records_fn	get_records,
- 	struct xfs_btree_block		*block,
- 	void				*priv)
- {
--	unsigned int			j;
-+	unsigned int			j = 1;
- 	int				ret;
- 
- 	/* Fill the leaf block with records. */
--	for (j = 1; j <= recs_this_block; j++) {
--		union xfs_btree_rec	*block_rec;
--
--		ret = get_record(cur, priv);
--		if (ret)
-+	while (j <= recs_this_block) {
-+		ret = get_records(cur, j, block, recs_this_block - j + 1, priv);
-+		if (ret < 0)
- 			return ret;
--		block_rec = xfs_btree_rec_addr(cur, j, block);
--		cur->bc_ops->init_rec_from_cur(cur, block_rec);
-+		j += ret;
- 	}
- 
- 	return 0;
-@@ -787,7 +784,7 @@ xfs_btree_bload(
- 		trace_xfs_btree_bload_block(cur, level, i, blocks, &ptr,
- 				nr_this_block);
- 
--		ret = xfs_btree_bload_leaf(cur, nr_this_block, bbl->get_record,
-+		ret = xfs_btree_bload_leaf(cur, nr_this_block, bbl->get_records,
- 				block, priv);
- 		if (ret)
- 			goto out;
-diff --git a/fs/xfs/libxfs/xfs_btree_staging.h b/fs/xfs/libxfs/xfs_btree_staging.h
-index d6dea3f0088c6..82a3a8ef0f125 100644
---- a/fs/xfs/libxfs/xfs_btree_staging.h
-+++ b/fs/xfs/libxfs/xfs_btree_staging.h
-@@ -50,7 +50,9 @@ void xfs_btree_commit_ifakeroot(struct xfs_btree_cur *cur, struct xfs_trans *tp,
- 		int whichfork, const struct xfs_btree_ops *ops);
- 
- /* Bulk loading of staged btrees. */
--typedef int (*xfs_btree_bload_get_record_fn)(struct xfs_btree_cur *cur, void *priv);
-+typedef int (*xfs_btree_bload_get_records_fn)(struct xfs_btree_cur *cur,
-+		unsigned int idx, struct xfs_btree_block *block,
-+		unsigned int nr_wanted, void *priv);
- typedef int (*xfs_btree_bload_claim_block_fn)(struct xfs_btree_cur *cur,
- 		union xfs_btree_ptr *ptr, void *priv);
- typedef size_t (*xfs_btree_bload_iroot_size_fn)(struct xfs_btree_cur *cur,
-@@ -58,11 +60,14 @@ typedef size_t (*xfs_btree_bload_iroot_size_fn)(struct xfs_btree_cur *cur,
- 
- struct xfs_btree_bload {
- 	/*
--	 * This function will be called nr_records times to load records into
--	 * the btree.  The function does this by setting the cursor's bc_rec
--	 * field in in-core format.  Records must be returned in sort order.
-+	 * This function will be called to load @nr_wanted records into the
-+	 * btree.  The implementation does this by setting the cursor's bc_rec
-+	 * field in in-core format and using init_rec_from_cur to set the
-+	 * records in the btree block.  Records must be returned in sort order.
-+	 * The function must return the number of records loaded or the usual
-+	 * negative errno.
- 	 */
--	xfs_btree_bload_get_record_fn	get_record;
-+	xfs_btree_bload_get_records_fn	get_records;
- 
- 	/*
- 	 * This function will be called nr_blocks times to obtain a pointer
+IOWs, nfsd needs direct control over how atime updates should be
+treated by the VFS/filesystem (i.e. as pure in-memory updates)
+rather than leaving it to some heuristic that may do the exact
+opposite of what the nfsd application needs.
 
+That's the point I was making: we have emerging requirements for
+per-operation timestamp update behaviour control with io_uring and
+other non-blocking applications. The nfsd application also has
+specific semantics it wants the VFS/filesystem to implement
+(non-persistent atime unless something else changes)....
+
+My point is that we've now failed a couple of times now to implement
+what NFSD requires via trying to change VFS and/or filesystem
+infrastructure to provide i_version or ctime semantics the nfsd
+requires. That's a fairly good sign that we might not be approaching
+this problem from the right direction, and so doubling down and
+considering changing the timestamp infrastructure from the ground up
+just to solve a relatively niche, filesystem specific issue doesn't
+seem like the best approach.
+
+OTOH, having the application actually tell the timestamp updates
+exactly what semantics it needs (non blocking, persistent vs in
+memory, etc) will allow the VFS and filesystems can do the right
+thing for the application without having to worry about general
+heuristics that sometimes do exactly the wrong thing....
+
+-Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
