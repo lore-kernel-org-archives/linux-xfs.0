@@ -2,37 +2,37 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DC329E7F150
-	for <linux-xfs@archiver.kernel.org>; Wed, 27 Sep 2023 00:16:43 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 88D28E7F14B
+	for <linux-xfs@archiver.kernel.org>; Wed, 27 Sep 2023 00:17:03 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232607AbjI0AQm (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 26 Sep 2023 20:16:42 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42500 "EHLO
+        id S231741AbjI0ARC (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 26 Sep 2023 20:17:02 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51996 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232617AbjI0AOk (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 26 Sep 2023 20:14:40 -0400
+        with ESMTP id S231755AbjI0APC (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 26 Sep 2023 20:15:02 -0400
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3D7CD1BDD
-        for <linux-xfs@vger.kernel.org>; Tue, 26 Sep 2023 16:33:29 -0700 (PDT)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id CA006C433C8;
-        Tue, 26 Sep 2023 23:33:28 +0000 (UTC)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7BBA24213
+        for <linux-xfs@vger.kernel.org>; Tue, 26 Sep 2023 16:34:00 -0700 (PDT)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 183EDC433C8;
+        Tue, 26 Sep 2023 23:34:00 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1695771208;
-        bh=3gJq//hJG+ZlxplrFhUGZ5h+Y56FYfWNyBmMESDc1JE=;
+        s=k20201202; t=1695771240;
+        bh=rqbYiDiAl3z02gbBixD/8Y6n+4pvPHKy5+HPyB2/FfY=;
         h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-        b=LUs4mtO+Js31qtldc8mHE9khOsZzODUISz05w7lfkMfjezf0WZKi6Edd3Skha5xjo
-         EWW7CdelIFS96cKlEgF/QnE+K8r5yhncyGJOciwNmdSDC7P2wauu9AJqlTZQQEsFHx
-         JSt8plDg8gDtAGMjjv+UnSJqqUkKiq+DyOQ7QYPn32+XpCfrYtKkpJs30tb2pKXXZo
-         tBEedirfSBQOw4VoronkantyOLFc0YjMhI4gtUDQUr5y1eQikG9jCEmR8tyTUAzz+2
-         vZNh0aMLuSoFKrksMR36ES//x9atcxlEiy/o5yZXKIsr4jq9yFvANG6PxLhox+P/3M
-         4PfYwInJI1WDQ==
-Date:   Tue, 26 Sep 2023 16:33:28 -0700
-Subject: [PATCH 2/4] xfs: add debug knobs to control btree bulk load slack
- factors
+        b=h+D+UsGfiA3jKDC+ZgE4JTes5Npi84GPR6vcHYSvZMPNLoocxTMgsVD/Ffs7ZgtZN
+         Fjd+IVbNnVg3LXQgy0kMLvR8cSYidT4N20KYaFd1PrqXHFVTWIzJAAbMfzbnALVukS
+         GeoGCUvlXRiLBCEpAG5QJg9m6GhXHcUy2wKK5kR8FZJem5ov2VsvxpkMwXuxeNTNqP
+         LMcADQXBL2cHO4elHx+fDSk11D/AessgwMz4ebxgcZsLCVNpbp/GeIWswrWfvmGCFA
+         r9zkV5GTXk1jYc49hp6/ui7ry+sPMLznEcItLHPLoLnVoPYJBPFtxOMidNTPu3qkYS
+         HyFrluqs07z2w==
+Date:   Tue, 26 Sep 2023 16:33:59 -0700
+Subject: [PATCH 4/4] xfs: constrain dirty buffers while formatting a staged
+ btree
 From:   "Darrick J. Wong" <djwong@kernel.org>
 To:     djwong@kernel.org
 Cc:     linux-xfs@vger.kernel.org
-Message-ID: <169577059605.3313134.15019333471378453170.stgit@frogsfrogsfrogs>
+Message-ID: <169577059634.3313134.8316249027074233589.stgit@frogsfrogsfrogs>
 In-Reply-To: <169577059572.3313134.3407643746555317156.stgit@frogsfrogsfrogs>
 References: <169577059572.3313134.3407643746555317156.stgit@frogsfrogsfrogs>
 User-Agent: StGit/0.19
@@ -45,143 +45,180 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-Add some debug knobs so that we can control the leaf and node block
-slack when rebuilding btrees.
+Constrain the number of dirty buffers that are locked by the btree
+staging code at any given time by establishing a threshold at which we
+put them all on the delwri queue and push them to disk.  This limits
+memory consumption while writing out new btrees.
 
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 ---
- fs/xfs/scrub/newbt.c |   10 ++++++---
- fs/xfs/xfs_globals.c |   12 +++++++++++
- fs/xfs/xfs_sysctl.h  |    2 ++
- fs/xfs/xfs_sysfs.c   |   54 ++++++++++++++++++++++++++++++++++++++++++++++++++
- 4 files changed, 75 insertions(+), 3 deletions(-)
+ fs/xfs/libxfs/xfs_btree.c         |    2 +
+ fs/xfs/libxfs/xfs_btree.h         |    3 ++
+ fs/xfs/libxfs/xfs_btree_staging.c |   50 +++++++++++++++++++++++++++++--------
+ fs/xfs/libxfs/xfs_btree_staging.h |   10 +++++++
+ fs/xfs/scrub/newbt.c              |    1 +
+ 5 files changed, 54 insertions(+), 12 deletions(-)
 
 
+diff --git a/fs/xfs/libxfs/xfs_btree.c b/fs/xfs/libxfs/xfs_btree.c
+index 6a6503ab0cd76..c100e92140be1 100644
+--- a/fs/xfs/libxfs/xfs_btree.c
++++ b/fs/xfs/libxfs/xfs_btree.c
+@@ -1330,7 +1330,7 @@ xfs_btree_get_buf_block(
+  * Read in the buffer at the given ptr and return the buffer and
+  * the block pointer within the buffer.
+  */
+-STATIC int
++int
+ xfs_btree_read_buf_block(
+ 	struct xfs_btree_cur		*cur,
+ 	const union xfs_btree_ptr	*ptr,
+diff --git a/fs/xfs/libxfs/xfs_btree.h b/fs/xfs/libxfs/xfs_btree.h
+index 4d68a58be160c..e0875cec49392 100644
+--- a/fs/xfs/libxfs/xfs_btree.h
++++ b/fs/xfs/libxfs/xfs_btree.h
+@@ -700,6 +700,9 @@ void xfs_btree_set_ptr_null(struct xfs_btree_cur *cur,
+ int xfs_btree_get_buf_block(struct xfs_btree_cur *cur,
+ 		const union xfs_btree_ptr *ptr, struct xfs_btree_block **block,
+ 		struct xfs_buf **bpp);
++int xfs_btree_read_buf_block(struct xfs_btree_cur *cur,
++		const union xfs_btree_ptr *ptr, int flags,
++		struct xfs_btree_block **block, struct xfs_buf **bpp);
+ void xfs_btree_set_sibling(struct xfs_btree_cur *cur,
+ 		struct xfs_btree_block *block, const union xfs_btree_ptr *ptr,
+ 		int lr);
+diff --git a/fs/xfs/libxfs/xfs_btree_staging.c b/fs/xfs/libxfs/xfs_btree_staging.c
+index 369965cacc8c5..6fd6ea8e6fbd7 100644
+--- a/fs/xfs/libxfs/xfs_btree_staging.c
++++ b/fs/xfs/libxfs/xfs_btree_staging.c
+@@ -333,18 +333,35 @@ xfs_btree_commit_ifakeroot(
+ /*
+  * Put a btree block that we're loading onto the ordered list and release it.
+  * The btree blocks will be written to disk when bulk loading is finished.
++ * If we reach the dirty buffer threshold, flush them to disk before
++ * continuing.
+  */
+-static void
++static int
+ xfs_btree_bload_drop_buf(
+-	struct list_head	*buffers_list,
+-	struct xfs_buf		**bpp)
++	struct xfs_btree_bload		*bbl,
++	struct list_head		*buffers_list,
++	struct xfs_buf			**bpp)
+ {
+-	if (*bpp == NULL)
+-		return;
++	struct xfs_buf			*bp = *bpp;
++	int				error;
+ 
+-	xfs_buf_delwri_queue_here(*bpp, buffers_list);
+-	xfs_buf_relse(*bpp);
++	if (!bp)
++		return 0;
++
++	xfs_buf_delwri_queue_here(bp, buffers_list);
++	xfs_buf_relse(bp);
+ 	*bpp = NULL;
++	bbl->nr_dirty++;
++
++	if (!bbl->max_dirty || bbl->nr_dirty < bbl->max_dirty)
++		return 0;
++
++	error = xfs_buf_delwri_submit(buffers_list);
++	if (error)
++		return error;
++
++	bbl->nr_dirty = 0;
++	return 0;
+ }
+ 
+ /*
+@@ -416,7 +433,10 @@ xfs_btree_bload_prep_block(
+ 	 */
+ 	if (*blockp)
+ 		xfs_btree_set_sibling(cur, *blockp, &new_ptr, XFS_BB_RIGHTSIB);
+-	xfs_btree_bload_drop_buf(buffers_list, bpp);
++
++	ret = xfs_btree_bload_drop_buf(bbl, buffers_list, bpp);
++	if (ret)
++		return ret;
+ 
+ 	/* Initialize the new btree block. */
+ 	xfs_btree_init_block_cur(cur, new_bp, level, nr_this_block);
+@@ -480,7 +500,7 @@ xfs_btree_bload_node(
+ 
+ 		ASSERT(!xfs_btree_ptr_is_null(cur, child_ptr));
+ 
+-		ret = xfs_btree_get_buf_block(cur, child_ptr, &child_block,
++		ret = xfs_btree_read_buf_block(cur, child_ptr, 0, &child_block,
+ 				&child_bp);
+ 		if (ret)
+ 			return ret;
+@@ -759,6 +779,7 @@ xfs_btree_bload(
+ 	cur->bc_nlevels = bbl->btree_height;
+ 	xfs_btree_set_ptr_null(cur, &child_ptr);
+ 	xfs_btree_set_ptr_null(cur, &ptr);
++	bbl->nr_dirty = 0;
+ 
+ 	xfs_btree_bload_level_geometry(cur, bbl, level, nr_this_level,
+ 			&avg_per_block, &blocks, &blocks_with_extra);
+@@ -797,7 +818,10 @@ xfs_btree_bload(
+ 			xfs_btree_copy_ptrs(cur, &child_ptr, &ptr, 1);
+ 	}
+ 	total_blocks += blocks;
+-	xfs_btree_bload_drop_buf(&buffers_list, &bp);
++
++	ret = xfs_btree_bload_drop_buf(bbl, &buffers_list, &bp);
++	if (ret)
++		goto out;
+ 
+ 	/* Populate the internal btree nodes. */
+ 	for (level = 1; level < cur->bc_nlevels; level++) {
+@@ -839,7 +863,11 @@ xfs_btree_bload(
+ 				xfs_btree_copy_ptrs(cur, &first_ptr, &ptr, 1);
+ 		}
+ 		total_blocks += blocks;
+-		xfs_btree_bload_drop_buf(&buffers_list, &bp);
++
++		ret = xfs_btree_bload_drop_buf(bbl, &buffers_list, &bp);
++		if (ret)
++			goto out;
++
+ 		xfs_btree_copy_ptrs(cur, &child_ptr, &first_ptr, 1);
+ 	}
+ 
+diff --git a/fs/xfs/libxfs/xfs_btree_staging.h b/fs/xfs/libxfs/xfs_btree_staging.h
+index 82a3a8ef0f125..d2eaf4fdc6032 100644
+--- a/fs/xfs/libxfs/xfs_btree_staging.h
++++ b/fs/xfs/libxfs/xfs_btree_staging.h
+@@ -115,6 +115,16 @@ struct xfs_btree_bload {
+ 	 * height of the new btree.
+ 	 */
+ 	unsigned int			btree_height;
++
++	/*
++	 * Flush the new btree block buffer list to disk after this many blocks
++	 * have been formatted.  Zero prohibits writing any buffers until all
++	 * blocks have been formatted.
++	 */
++	uint16_t			max_dirty;
++
++	/* Number of dirty buffers. */
++	uint16_t			nr_dirty;
+ };
+ 
+ int xfs_btree_bload_compute_geometry(struct xfs_btree_cur *cur,
 diff --git a/fs/xfs/scrub/newbt.c b/fs/xfs/scrub/newbt.c
-index 2932fd317ab23..2c388c647d37f 100644
+index 2c388c647d37f..73e21a9e5e929 100644
 --- a/fs/xfs/scrub/newbt.c
 +++ b/fs/xfs/scrub/newbt.c
-@@ -47,9 +47,13 @@ xrep_newbt_estimate_slack(
- 	uint64_t		free;
- 	uint64_t		sz;
+@@ -89,6 +89,7 @@ xrep_newbt_init_ag(
+ 	xnr->alloc_hint = alloc_hint;
+ 	xnr->resv = resv;
+ 	INIT_LIST_HEAD(&xnr->resv_list);
++	xnr->bload.max_dirty = XFS_B_TO_FSBT(sc->mp, 256U << 10); /* 256K */
+ 	xrep_newbt_estimate_slack(xnr);
+ }
  
--	/* Let the btree code compute the default slack values. */
--	bload->leaf_slack = -1;
--	bload->node_slack = -1;
-+	/*
-+	 * The xfs_globals values are set to -1 (i.e. take the bload defaults)
-+	 * unless someone has set them otherwise, so we just pull the values
-+	 * here.
-+	 */
-+	bload->leaf_slack = xfs_globals.bload_leaf_slack;
-+	bload->node_slack = xfs_globals.bload_node_slack;
- 
- 	if (sc->ops->type == ST_PERAG) {
- 		free = sc->sa.pag->pagf_freeblks;
-diff --git a/fs/xfs/xfs_globals.c b/fs/xfs/xfs_globals.c
-index 9edc1f2bc9399..f18fec0adf666 100644
---- a/fs/xfs/xfs_globals.c
-+++ b/fs/xfs/xfs_globals.c
-@@ -44,4 +44,16 @@ struct xfs_globals xfs_globals = {
- 	.pwork_threads		=	-1,	/* automatic thread detection */
- 	.larp			=	false,	/* log attribute replay */
- #endif
-+
-+	/*
-+	 * Leave this many record slots empty when bulk loading btrees.  By
-+	 * default we load new btree leaf blocks 75% full.
-+	 */
-+	.bload_leaf_slack	=	-1,
-+
-+	/*
-+	 * Leave this many key/ptr slots empty when bulk loading btrees.  By
-+	 * default we load new btree node blocks 75% full.
-+	 */
-+	.bload_node_slack	=	-1,
- };
-diff --git a/fs/xfs/xfs_sysctl.h b/fs/xfs/xfs_sysctl.h
-index f78ad6b10ea58..276696a07040c 100644
---- a/fs/xfs/xfs_sysctl.h
-+++ b/fs/xfs/xfs_sysctl.h
-@@ -85,6 +85,8 @@ struct xfs_globals {
- 	int	pwork_threads;		/* parallel workqueue threads */
- 	bool	larp;			/* log attribute replay */
- #endif
-+	int	bload_leaf_slack;	/* btree bulk load leaf slack */
-+	int	bload_node_slack;	/* btree bulk load node slack */
- 	int	log_recovery_delay;	/* log recovery delay (secs) */
- 	int	mount_delay;		/* mount setup delay (secs) */
- 	bool	bug_on_assert;		/* BUG() the kernel on assert failure */
-diff --git a/fs/xfs/xfs_sysfs.c b/fs/xfs/xfs_sysfs.c
-index a3c6b15487237..4eaa0507ec287 100644
---- a/fs/xfs/xfs_sysfs.c
-+++ b/fs/xfs/xfs_sysfs.c
-@@ -253,6 +253,58 @@ larp_show(
- XFS_SYSFS_ATTR_RW(larp);
- #endif /* DEBUG */
- 
-+STATIC ssize_t
-+bload_leaf_slack_store(
-+	struct kobject	*kobject,
-+	const char	*buf,
-+	size_t		count)
-+{
-+	int		ret;
-+	int		val;
-+
-+	ret = kstrtoint(buf, 0, &val);
-+	if (ret)
-+		return ret;
-+
-+	xfs_globals.bload_leaf_slack = val;
-+	return count;
-+}
-+
-+STATIC ssize_t
-+bload_leaf_slack_show(
-+	struct kobject	*kobject,
-+	char		*buf)
-+{
-+	return snprintf(buf, PAGE_SIZE, "%d\n", xfs_globals.bload_leaf_slack);
-+}
-+XFS_SYSFS_ATTR_RW(bload_leaf_slack);
-+
-+STATIC ssize_t
-+bload_node_slack_store(
-+	struct kobject	*kobject,
-+	const char	*buf,
-+	size_t		count)
-+{
-+	int		ret;
-+	int		val;
-+
-+	ret = kstrtoint(buf, 0, &val);
-+	if (ret)
-+		return ret;
-+
-+	xfs_globals.bload_node_slack = val;
-+	return count;
-+}
-+
-+STATIC ssize_t
-+bload_node_slack_show(
-+	struct kobject	*kobject,
-+	char		*buf)
-+{
-+	return snprintf(buf, PAGE_SIZE, "%d\n", xfs_globals.bload_node_slack);
-+}
-+XFS_SYSFS_ATTR_RW(bload_node_slack);
-+
- static struct attribute *xfs_dbg_attrs[] = {
- 	ATTR_LIST(bug_on_assert),
- 	ATTR_LIST(log_recovery_delay),
-@@ -262,6 +314,8 @@ static struct attribute *xfs_dbg_attrs[] = {
- 	ATTR_LIST(pwork_threads),
- 	ATTR_LIST(larp),
- #endif
-+	ATTR_LIST(bload_leaf_slack),
-+	ATTR_LIST(bload_node_slack),
- 	NULL,
- };
- ATTRIBUTE_GROUPS(xfs_dbg);
 
