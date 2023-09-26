@@ -2,128 +2,106 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E5533E8181E
-	for <linux-xfs@archiver.kernel.org>; Tue, 26 Sep 2023 05:21:49 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id AD440E7D242
+	for <linux-xfs@archiver.kernel.org>; Tue, 26 Sep 2023 07:14:46 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230346AbjIZFVy (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 26 Sep 2023 01:21:54 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39794 "EHLO
+        id S232166AbjIZHOv (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 26 Sep 2023 03:14:51 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49802 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231683AbjIZFVb (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 26 Sep 2023 01:21:31 -0400
-Received: from mail-pj1-x1029.google.com (mail-pj1-x1029.google.com [IPv6:2607:f8b0:4864:20::1029])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0BD07116;
-        Mon, 25 Sep 2023 22:21:25 -0700 (PDT)
-Received: by mail-pj1-x1029.google.com with SMTP id 98e67ed59e1d1-27758c8f62aso2492261a91.0;
-        Mon, 25 Sep 2023 22:21:25 -0700 (PDT)
+        with ESMTP id S232210AbjIZHOs (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 26 Sep 2023 03:14:48 -0400
+Received: from mail-wm1-x32c.google.com (mail-wm1-x32c.google.com [IPv6:2a00:1450:4864:20::32c])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id CEC45F3
+        for <linux-xfs@vger.kernel.org>; Tue, 26 Sep 2023 00:14:41 -0700 (PDT)
+Received: by mail-wm1-x32c.google.com with SMTP id 5b1f17b1804b1-40572aeb673so49489315e9.0
+        for <linux-xfs@vger.kernel.org>; Tue, 26 Sep 2023 00:14:41 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1695705684; x=1696310484; darn=vger.kernel.org;
-        h=in-reply-to:subject:cc:to:from:message-id:date:from:to:cc:subject
-         :date:message-id:reply-to;
-        bh=JQbtwDxMKM6WQxUu1SJX2YslaptoJGmmHz+KiHujnv8=;
-        b=C03U8u08az6TKkBBAAiNEOpIo5RozdsbTbIQnqA12ztYi25E8XU2lPLsaCmAZVR7Ir
-         SAj2H02Cj0rD5hQXSvozisMR1QdsAnj4WlW2SoV4RKNZNH29BxF39XyrAJvdYymgQmhu
-         8Uwy6NQEVtw1LPzLIbb/k3NtP8tGeic1kJT3rJtd/05GZ445IdE9NSE3CVKcrxABg6yQ
-         /jXi3Ldoywtn8wT7QKofI08A7cNT692bLH/lD5I2M9gq/KIbOAeYVZ3/FLpx9IE52HsN
-         aAa6bnso5T7WMODHIXe/xyX1ptPOGTORuWH1dTANsb0lk/JKBaKZiARwKWQSq5SpQDUt
-         PLIw==
+        d=gmail.com; s=20230601; t=1695712480; x=1696317280; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:references:in-reply-to
+         :message-id:date:subject:cc:to:from:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=maymslVMxkZdvjLxwzyIPdrGUOv2Ix7Z/WHtMhZ84Ww=;
+        b=nrnZh9utsDFNEtzwb1dJLZC7urk7+nt0JkpwKJ9TN59QS3qhPqGxtVRQNPkpPRlKFJ
+         4zpaIxmd1aDH9iAQK9zCZmqg/WJkKOEEJ9EEteVj1DGe4pVulbJhptyrA/ilfxlovcrF
+         x4Y5+VzDPCixDQMAIdrnSIxjlS/dW9zSxokfUFI0Dgjt8Gk+cjFvuecY5VwAJKHAaKR2
+         botdw8xs8WOR1QrbSDRjwXm7GxD2LQilbvDz1qnfbplrHjKLUNJeGzWMrLaPKb0KMWV/
+         fQZ4/5O1HuQqZUa5nov3MSV1+YxabxF1q3+kSsPCrGiP/37HpdmQ0HX1Pp6owZwgyyQq
+         EwEA==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1695705684; x=1696310484;
-        h=in-reply-to:subject:cc:to:from:message-id:date:x-gm-message-state
-         :from:to:cc:subject:date:message-id:reply-to;
-        bh=JQbtwDxMKM6WQxUu1SJX2YslaptoJGmmHz+KiHujnv8=;
-        b=fe/uCtGFbXlwt+vQeFv/Ku6k25TW5Kg2c5UpuSYPnAYdzurhIp+ISYDb7fGuYyRzmT
-         HJWIb3xbcHp7p+lcyGQNaaczrbym5yGa+9GCyQlUHwGpTGhbsB4uyglKe/O+VyNUwevv
-         vA4DNHf8sFe0hRHRN2+Dv4nZj9fLZqk+sWPlr+7In1EOzivMuiHuKD3LplnN4Xq86kC4
-         S5ivXLoNbJuU2ygrMRD3QNTvhJ08kq89Rs2+t1zIpRKI+x+d5MmztuJm9cnYd6Jtb6DC
-         hngEb82bLfJfa+lh7Vdoh2MAPFFNxmE+ncZA/A5lBA77FHqNpmOZofveyOYNbPzbqS00
-         8smQ==
-X-Gm-Message-State: AOJu0Yz+pNK+fM0libCyqMxZMxSvNDt+3mQL0LhfFS4s4K7hNXXTREu3
-        Uy+l2DTQ9RUj00YGaPy4UX/c1luSxFQ=
-X-Google-Smtp-Source: AGHT+IHoSpPbhOM7CGS6c35kuLJhIjYgEQwJ/qBeHwDSvvSUcoHfJDz+chhWn6xa6INYUkBT7te7Jg==
-X-Received: by 2002:a17:90b:3ec5:b0:269:5adb:993 with SMTP id rm5-20020a17090b3ec500b002695adb0993mr5563931pjb.22.1695705684382;
-        Mon, 25 Sep 2023 22:21:24 -0700 (PDT)
-Received: from dw-tp ([49.207.223.191])
-        by smtp.gmail.com with ESMTPSA id 11-20020a17090a0ccb00b002635db431a0sm9863771pjt.45.2023.09.25.22.21.21
+        d=1e100.net; s=20230601; t=1695712480; x=1696317280;
+        h=content-transfer-encoding:mime-version:references:in-reply-to
+         :message-id:date:subject:cc:to:from:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=maymslVMxkZdvjLxwzyIPdrGUOv2Ix7Z/WHtMhZ84Ww=;
+        b=KJNbrA/b4X2mprHI241Fcan+KL1Fo3I88O6ln7Z/f+/FlAAbQk3NJ02JTQRtfZ8DDq
+         /z7rbeqooPqYq6fqhA8laceAoBgLZcOisA0PZPa4ljiO1nmuBnuvxAgOitV2Noxzma/H
+         v586O+x+WJpXyoe41XQtTdulE3JgDjWQPbLWsxPCxfhZJ+yF7uhKGEWHWGUkBq9vlWcH
+         53gGD918Am1KRn8FsHL6ETY1lEAsmYunAuLiyerdKc5Jdh0Mnw4/+hto0FvIkV/1GTDK
+         1NPYBs6Mh1Us9N6UF7Bbo+7dw+V5vKxn2ETrFH07qYFOH94xdjI1Aa7KfoBX6HkMlguJ
+         VWqw==
+X-Gm-Message-State: AOJu0YxyMQ0WAU7NdZ24wuM+J8LMJQjjZocR2UyYsZnaaHPTQlxKtdwP
+        wYRSqkh3puNIw4qAM+KReoC88I2nIoI=
+X-Google-Smtp-Source: AGHT+IGhKNpIjyqDkVIA2lgCZJPirIo5ErELmy1J9UjyrrK+beNLOowNpTGxRFcS3/+fVNqRlQzPNA==
+X-Received: by 2002:a05:600c:2294:b0:3fe:dcd0:2e10 with SMTP id 20-20020a05600c229400b003fedcd02e10mr8559910wmf.17.1695712479920;
+        Tue, 26 Sep 2023 00:14:39 -0700 (PDT)
+Received: from krnowak-ms-ubuntu.fritz.box ([45.135.60.1])
+        by smtp.gmail.com with ESMTPSA id r5-20020a05600c320500b003fc0505be19sm9046210wmp.37.2023.09.26.00.14.39
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 25 Sep 2023 22:21:23 -0700 (PDT)
-Date:   Tue, 26 Sep 2023 10:51:19 +0530
-Message-Id: <87h6nh5x2o.fsf@doe.com>
-From:   Ritesh Harjani (IBM) <ritesh.list@gmail.com>
-To:     "Darrick J. Wong" <djwong@kernel.org>, djwong@kernel.org,
-        zlang@redhat.com
-Cc:     linux-xfs@vger.kernel.org, fstests@vger.kernel.org, guan@eryu.me,
-        willy@infradead.org
-Subject: Re: [PATCH 1/1] generic: test FALLOC_FL_UNSHARE when pagecache is not loaded
-In-Reply-To: <169567819441.2270025.10851897053852323695.stgit@frogsfrogsfrogs>
+        Tue, 26 Sep 2023 00:14:39 -0700 (PDT)
+From:   Krzesimir Nowak <qdlacz@gmail.com>
+X-Google-Original-From: Krzesimir Nowak <knowak@microsoft.com>
+To:     linux-xfs@vger.kernel.org
+Cc:     Krzesimir Nowak <knowak@microsoft.com>
+Subject: [PATCH 1/1] libfrog: Fix cross-compilation issue with randbytes
+Date:   Tue, 26 Sep 2023 09:14:32 +0200
+Message-Id: <20230926071432.51866-2-knowak@microsoft.com>
+X-Mailer: git-send-email 2.25.1
+In-Reply-To: <20230926071432.51866-1-knowak@microsoft.com>
+References: <20230926071432.51866-1-knowak@microsoft.com>
+MIME-Version: 1.0
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-"Darrick J. Wong" <djwong@kernel.org> writes:
+randbytes.c was mostly split off from crc32.c and, like crc32.c, is
+used for selftests, which are run on the build host. As such it should
+not include platform_defs.h which in turn includes urcu.h from
+userspace-rcu library, because the build host might not have the
+library installed.
 
-> From: Darrick J. Wong <djwong@kernel.org>
->
-> Add a regression test for funsharing uncached files to ensure that we
-> actually manage the pagecache state correctly.
->
-> Signed-off-by: Darrick J. Wong <djwong@kernel.org>
-> ---
->  tests/xfs/1936     |   88 ++++++++++++++++++++++++++++++++++++++++++++++++++++
->  tests/xfs/1936.out |    4 ++
->  2 files changed, 92 insertions(+)
->  create mode 100755 tests/xfs/1936
->  create mode 100644 tests/xfs/1936.out
->
->
-> diff --git a/tests/xfs/1936 b/tests/xfs/1936
-> new file mode 100755
-> index 0000000000..e07b8f4796
-> --- /dev/null
-> +++ b/tests/xfs/1936
-> @@ -0,0 +1,88 @@
-> +#! /bin/bash
-> +# SPDX-License-Identifier: GPL-2.0
-> +# Copyright (c) 2023 Oracle.  All Rights Reserved.
-> +#
-> +# FS QA Test 1936
-> +#
-> +# This is a regression test for the kernel commit noted below.  The stale
-> +# memory exposure can be exploited by creating a file with shared blocks,
-> +# evicting the page cache for that file, and then funshareing at least one
-> +# memory page's worth of data.  iomap will mark the page uptodate and dirty
-> +# without ever reading the ondisk contents.
-> +#
-> +. ./common/preamble
-> +_begin_fstest auto quick unshare clone
-> +
-> +_cleanup()
-> +{
-> +	cd /
-> +	rm -r -f $tmp.* $testdir
-> +}
-> +
-> +# real QA test starts here
-> +
-> +# Import common functions.
-> +. ./common/filter
-> +. ./common/attr
+Signed-off-by: Krzesimir Nowak <knowak@microsoft.com>
+---
+ libfrog/randbytes.c | 1 -
+ libfrog/randbytes.h | 2 ++
+ 2 files changed, 2 insertions(+), 1 deletion(-)
 
-We might as well remove above imports if we are not using those in this test.
+diff --git a/libfrog/randbytes.c b/libfrog/randbytes.c
+index f22da0d3..2023b601 100644
+--- a/libfrog/randbytes.c
++++ b/libfrog/randbytes.c
+@@ -6,7 +6,6 @@
+  *
+  * This is the buffer of random bytes used for self tests.
+  */
+-#include "platform_defs.h"
+ #include "libfrog/randbytes.h"
+ 
+ /* 4096 random bytes */
+diff --git a/libfrog/randbytes.h b/libfrog/randbytes.h
+index 00fd7c4c..fddea9c7 100644
+--- a/libfrog/randbytes.h
++++ b/libfrog/randbytes.h
+@@ -6,6 +6,8 @@
+ #ifndef __LIBFROG_RANDBYTES_H__
+ #define __LIBFROG_RANDBYTES_H__
+ 
++#include <stdint.h>
++
+ extern uint8_t randbytes_test_buf[];
+ 
+ #endif /* __LIBFROG_RANDBYTES_H__ */
+-- 
+2.25.1
 
-> +. ./common/reflink
-> +
-> +_fixed_by_git_commit kernel XXXXXXXXXXXXX \
-> +	"iomap: don't skip reading in !uptodate folios when unsharing a range"
-
-Once I guess it is merged, we will have the commit-id. Ohh wait, we have
-it already right? 
-
-https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=35d30c9cf12730a1e37053dfde4007c7cc452d1a
-
-With that the testcode looks good to me. Thanks for finding an easy
-reproducer. Please feel free to add - 
-
-Reviewed-by: Ritesh Harjani (IBM) <ritesh.list@gmail.com>
-
--ritesh
