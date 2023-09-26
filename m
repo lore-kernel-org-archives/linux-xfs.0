@@ -2,38 +2,39 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D6908E7F14A
-	for <linux-xfs@archiver.kernel.org>; Wed, 27 Sep 2023 00:15:07 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 038EDE7F14A
+	for <linux-xfs@archiver.kernel.org>; Wed, 27 Sep 2023 00:16:42 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230422AbjI0APG (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 26 Sep 2023 20:15:06 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35164 "EHLO
+        id S229485AbjI0AQk (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 26 Sep 2023 20:16:40 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33336 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232250AbjI0ANF (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 26 Sep 2023 20:13:05 -0400
+        with ESMTP id S231634AbjI0AOk (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 26 Sep 2023 20:14:40 -0400
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D91FD30CD
-        for <linux-xfs@vger.kernel.org>; Tue, 26 Sep 2023 16:32:57 -0700 (PDT)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 71056C433C7;
-        Tue, 26 Sep 2023 23:32:57 +0000 (UTC)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 85AC9CD2
+        for <linux-xfs@vger.kernel.org>; Tue, 26 Sep 2023 16:33:13 -0700 (PDT)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 2094AC433C8;
+        Tue, 26 Sep 2023 23:33:13 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1695771177;
-        bh=9YIpxyf44PWFDrzquU0FHnz1QFvCaiUtxKhiGoeudH8=;
+        s=k20201202; t=1695771193;
+        bh=U68C8VrQqH4VRj52QY3YMe9ctsyelAUa39ealCn7LsI=;
         h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-        b=pqaO+ts3BkzGbrsF56ZFGcY3GRjhSoEMuiMyNpN+hONKlC4JpKtfpRruH85SF70T6
-         p5iFU0xqTTh0hao18XzpiNXTX++QB3M11jFGsVn3tzfcnx+Zxw/Ks6zRwA40fqgUSs
-         QRRffJzgyjJtdXHeH/pBlJ8kbno9Up5CHpqKMOUrUG2oc+6ncEb/9E3ZWn/XM840Ni
-         J+ZC7L79+rdyIhjvBnN+fgiq2uy35cnD2G1d/sfHwz5X8Y+tcT0DFNzipW2HTncE9C
-         G0BYlO/Bt57bFSCzzARKZfYtN+NJZJoalll5ej0cgUb0Z/2FmrtOq4OiooDxF4evyF
-         Kq+lvCMxx1VfA==
-Date:   Tue, 26 Sep 2023 16:32:56 -0700
-Subject: [PATCH 7/7] xfs: force small EFIs for reaping btree extents
+        b=YnCBnB+JrjaUqmP9LYtpeUzLlEm4mZDxHBSN4wOzPfKAMigQsQ3R71q7mx0hwPP6B
+         ufzjUlaW5FCTGee3wvMPUKcORQ7tUzPsWAqSNuytpEXmOMt5VW5oLF+tVhRG3D3IlX
+         uJFrzjWgXh1dF+kAzB6xvTO/XWqSIYpliu4vnQQ1o4Rlm2mo0ArkK2tiv7HSy9Ee34
+         R5whAj7KjFl/LwhvQCAd2qdha94cpmfcaE5fD4VFswIomRFXrZ6rVy8pkIb0r+lEmB
+         tPneq5aJ5+YTrfnCHn7KSURYK/WtFfU/Awcen7BQZO1x9bZ/8NH9GqrRq+jd4gJdmH
+         o2tl29XY5kvEw==
+Date:   Tue, 26 Sep 2023 16:33:12 -0700
+Subject: [PATCH 1/4] xfs: force all buffers to be written during btree bulk
+ load
 From:   "Darrick J. Wong" <djwong@kernel.org>
 To:     djwong@kernel.org
 Cc:     linux-xfs@vger.kernel.org
-Message-ID: <169577059253.3312911.14232325060465598331.stgit@frogsfrogsfrogs>
-In-Reply-To: <169577059140.3312911.17578000557997208473.stgit@frogsfrogsfrogs>
-References: <169577059140.3312911.17578000557997208473.stgit@frogsfrogsfrogs>
+Message-ID: <169577059591.3313134.16429178989629676521.stgit@frogsfrogsfrogs>
+In-Reply-To: <169577059572.3313134.3407643746555317156.stgit@frogsfrogsfrogs>
+References: <169577059572.3313134.3407643746555317156.stgit@frogsfrogsfrogs>
 User-Agent: StGit/0.19
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
@@ -44,173 +45,170 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-Introduce the concept of a defer ops barrier to separate consecutively
-queued pending work items of the same type.  With a barrier in place,
-the two work items will be tracked separately, and receive separate log
-intent items.  The goal here is to prevent reaping of old metadata
-blocks from creating unnecessarily huge EFIs that could then run the
-risk of overflowing the scrub transaction.
+While stress-testing online repair of btrees, I noticed periodic
+assertion failures from the buffer cache about buffer readers
+encountering buffers with DELWRI_Q set, even though the btree bulk load
+had already committed and the buffer itself wasn't on any delwri list.
+
+I traced this to a misunderstanding of how the delwri lists work,
+particularly with regards to the AIL's buffer list.  If a buffer is
+logged and committed, the buffer can end up on that AIL buffer list.  If
+btree repairs are run twice in rapid succession, it's possible that the
+first repair will invalidate the buffer and free it before the next time
+the AIL wakes up.  This clears DELWRI_Q from the buffer state.
+
+If the second repair allocates the same block, it will then recycle the
+buffer to start writing the new btree block.  Meanwhile, if the AIL
+wakes up and walks the buffer list, it will ignore the buffer because it
+can't lock it, and go back to sleep.
+
+When the second repair calls delwri_queue to put the buffer on the
+list of buffers to write before committing the new btree, it will set
+DELWRI_Q again, but since the buffer hasn't been removed from the AIL's
+buffer list, it won't add it to the bulkload buffer's list.
+
+This is incorrect, because the bulkload caller relies on delwri_submit
+to ensure that all the buffers have been sent to disk /before/
+committing the new btree root pointer.  This ordering requirement is
+required for data consistency.
+
+Worse, the AIL won't clear DELWRI_Q from the buffer when it does finally
+drop it, so the next thread to walk through the btree will trip over a
+debug assertion on that flag.
+
+To fix this, create a new function that waits for the buffer to be
+removed from any other delwri lists before adding the buffer to the
+caller's delwri list.  By waiting for the buffer to clear both the
+delwri list and any potential delwri wait list, we can be sure that
+repair will initiate writes of all buffers and report all write errors
+back to userspace instead of committing the new structure.
 
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 ---
- fs/xfs/libxfs/xfs_defer.c |   83 +++++++++++++++++++++++++++++++++++++++++++++
- fs/xfs/libxfs/xfs_defer.h |    3 ++
- fs/xfs/scrub/reap.c       |    5 +++
- 3 files changed, 91 insertions(+)
+ fs/xfs/libxfs/xfs_btree_staging.c |    4 +--
+ fs/xfs/xfs_buf.c                  |   47 ++++++++++++++++++++++++++++++++++---
+ fs/xfs/xfs_buf.h                  |    1 +
+ 3 files changed, 45 insertions(+), 7 deletions(-)
 
 
-diff --git a/fs/xfs/libxfs/xfs_defer.c b/fs/xfs/libxfs/xfs_defer.c
-index 6ed1ab8a7e522..072e6458ba30b 100644
---- a/fs/xfs/libxfs/xfs_defer.c
-+++ b/fs/xfs/libxfs/xfs_defer.c
-@@ -181,6 +181,58 @@ static struct kmem_cache	*xfs_defer_pending_cache;
-  * Note that the continuation requested between t2 and t3 is likely to
-  * reoccur.
-  */
-+STATIC struct xfs_log_item *
-+xfs_defer_barrier_create_intent(
-+	struct xfs_trans		*tp,
-+	struct list_head		*items,
-+	unsigned int			count,
-+	bool				sort)
-+{
-+	return NULL;
-+}
-+
-+STATIC void
-+xfs_defer_barrier_abort_intent(
-+	struct xfs_log_item		*intent)
-+{
-+	/* empty */
-+}
-+
-+STATIC struct xfs_log_item *
-+xfs_defer_barrier_create_done(
-+	struct xfs_trans		*tp,
-+	struct xfs_log_item		*intent,
-+	unsigned int			count)
-+{
-+	return NULL;
-+}
-+
-+STATIC int
-+xfs_defer_barrier_finish_item(
-+	struct xfs_trans		*tp,
-+	struct xfs_log_item		*done,
-+	struct list_head		*item,
-+	struct xfs_btree_cur		**state)
-+{
-+	ASSERT(0);
-+	return -EFSCORRUPTED;
-+}
-+
-+STATIC void
-+xfs_defer_barrier_cancel_item(
-+	struct list_head		*item)
-+{
-+	ASSERT(0);
-+}
-+
-+static const struct xfs_defer_op_type xfs_barrier_defer_type = {
-+	.max_items	= 1,
-+	.create_intent	= xfs_defer_barrier_create_intent,
-+	.abort_intent	= xfs_defer_barrier_abort_intent,
-+	.create_done	= xfs_defer_barrier_create_done,
-+	.finish_item	= xfs_defer_barrier_finish_item,
-+	.cancel_item	= xfs_defer_barrier_cancel_item,
-+};
+diff --git a/fs/xfs/libxfs/xfs_btree_staging.c b/fs/xfs/libxfs/xfs_btree_staging.c
+index dd75e208b543e..29e3f8ccb1852 100644
+--- a/fs/xfs/libxfs/xfs_btree_staging.c
++++ b/fs/xfs/libxfs/xfs_btree_staging.c
+@@ -342,9 +342,7 @@ xfs_btree_bload_drop_buf(
+ 	if (*bpp == NULL)
+ 		return;
  
- static const struct xfs_defer_op_type *defer_op_types[] = {
- 	[XFS_DEFER_OPS_TYPE_BMAP]	= &xfs_bmap_update_defer_type,
-@@ -189,6 +241,7 @@ static const struct xfs_defer_op_type *defer_op_types[] = {
- 	[XFS_DEFER_OPS_TYPE_FREE]	= &xfs_extent_free_defer_type,
- 	[XFS_DEFER_OPS_TYPE_AGFL_FREE]	= &xfs_agfl_free_defer_type,
- 	[XFS_DEFER_OPS_TYPE_ATTR]	= &xfs_attr_defer_type,
-+	[XFS_DEFER_OPS_TYPE_BARRIER]	= &xfs_barrier_defer_type,
- };
- 
- /*
-@@ -1028,3 +1081,33 @@ xfs_defer_item_unpause(
- 
- 	trace_xfs_defer_item_unpause(tp->t_mountp, dfp);
+-	if (!xfs_buf_delwri_queue(*bpp, buffers_list))
+-		ASSERT(0);
+-
++	xfs_buf_delwri_queue_here(*bpp, buffers_list);
+ 	xfs_buf_relse(*bpp);
+ 	*bpp = NULL;
  }
+diff --git a/fs/xfs/xfs_buf.c b/fs/xfs/xfs_buf.c
+index c1ece4a08ff44..b7cc88e1b5096 100644
+--- a/fs/xfs/xfs_buf.c
++++ b/fs/xfs/xfs_buf.c
+@@ -2049,6 +2049,14 @@ xfs_alloc_buftarg(
+ 	return NULL;
+ }
+ 
++static inline void
++xfs_buf_list_del(
++	struct xfs_buf		*bp)
++{
++	list_del_init(&bp->b_list);
++	wake_up_var(&bp->b_list);
++}
 +
+ /*
+  * Cancel a delayed write list.
+  *
+@@ -2066,7 +2074,7 @@ xfs_buf_delwri_cancel(
+ 
+ 		xfs_buf_lock(bp);
+ 		bp->b_flags &= ~_XBF_DELWRI_Q;
+-		list_del_init(&bp->b_list);
++		xfs_buf_list_del(bp);
+ 		xfs_buf_relse(bp);
+ 	}
+ }
+@@ -2119,6 +2127,37 @@ xfs_buf_delwri_queue(
+ 	return true;
+ }
+ 
 +/*
-+ * Add a defer ops barrier to force two otherwise adjacent deferred work items
-+ * to be tracked separately and have separate log items.
++ * Queue a buffer to this delwri list as part of a data integrity operation.
++ * If the buffer is on any other delwri list, we'll wait for that to clear
++ * so that the caller can submit the buffer for IO and wait for the result.
++ * Callers must ensure the buffer is not already on the list.
 + */
 +void
-+xfs_defer_add_barrier(
-+	struct xfs_trans		*tp)
++xfs_buf_delwri_queue_here(
++	struct xfs_buf		*bp,
++	struct list_head	*buffer_list)
 +{
-+	struct xfs_defer_pending	*dfp;
-+
-+	ASSERT(tp->t_flags & XFS_TRANS_PERM_LOG_RES);
-+
-+	/* If the last defer op added was a barrier, we're done. */
-+	if (!list_empty(&tp->t_dfops)) {
-+		dfp = list_last_entry(&tp->t_dfops,
-+				struct xfs_defer_pending, dfp_list);
-+		if (dfp->dfp_type == XFS_DEFER_OPS_TYPE_BARRIER)
-+			return;
++	/*
++	 * We need this buffer to end up on the /caller's/ delwri list, not any
++	 * old list.  This can happen if the buffer is marked stale (which
++	 * clears DELWRI_Q) after the AIL queues the buffer to its list but
++	 * before the AIL has a chance to submit the list.
++	 */
++	while (!list_empty(&bp->b_list)) {
++		xfs_buf_unlock(bp);
++		wait_var_event(&bp->b_list, list_empty(&bp->b_list));
++		xfs_buf_lock(bp);
 +	}
 +
-+	dfp = kmem_cache_zalloc(xfs_defer_pending_cache,
-+			GFP_NOFS | __GFP_NOFAIL);
-+	dfp->dfp_type = XFS_DEFER_OPS_TYPE_BARRIER;
-+	INIT_LIST_HEAD(&dfp->dfp_work);
-+	list_add_tail(&dfp->dfp_list, &tp->t_dfops);
++	ASSERT(!(bp->b_flags & _XBF_DELWRI_Q));
 +
-+	trace_xfs_defer_add_item(tp->t_mountp, dfp, NULL);
-+	dfp->dfp_count++;
++	/* This buffer is uptodate; don't let it get reread. */
++	bp->b_flags |= XBF_DONE;
++
++	xfs_buf_delwri_queue(bp, buffer_list);
 +}
-diff --git a/fs/xfs/libxfs/xfs_defer.h b/fs/xfs/libxfs/xfs_defer.h
-index 7fb4f60e5e4c5..c8889ea5ab8bf 100644
---- a/fs/xfs/libxfs/xfs_defer.h
-+++ b/fs/xfs/libxfs/xfs_defer.h
-@@ -20,6 +20,7 @@ enum xfs_defer_ops_type {
- 	XFS_DEFER_OPS_TYPE_FREE,
- 	XFS_DEFER_OPS_TYPE_AGFL_FREE,
- 	XFS_DEFER_OPS_TYPE_ATTR,
-+	XFS_DEFER_OPS_TYPE_BARRIER,
- 	XFS_DEFER_OPS_TYPE_MAX,
- };
- 
-@@ -141,4 +142,6 @@ void xfs_defer_resources_rele(struct xfs_defer_resources *dres);
- int __init xfs_defer_init_item_caches(void);
- void xfs_defer_destroy_item_caches(void);
- 
-+void xfs_defer_add_barrier(struct xfs_trans *tp);
 +
- #endif /* __XFS_DEFER_H__ */
-diff --git a/fs/xfs/scrub/reap.c b/fs/xfs/scrub/reap.c
-index 78c9f2085db46..ee26fcb500b78 100644
---- a/fs/xfs/scrub/reap.c
-+++ b/fs/xfs/scrub/reap.c
-@@ -31,6 +31,7 @@
- #include "xfs_da_btree.h"
- #include "xfs_attr.h"
- #include "xfs_attr_remote.h"
-+#include "xfs_defer.h"
- #include "scrub/scrub.h"
- #include "scrub/common.h"
- #include "scrub/trace.h"
-@@ -409,6 +410,8 @@ xreap_agextent_iter(
- 	/*
- 	 * Use deferred frees to get rid of the old btree blocks to try to
- 	 * minimize the window in which we could crash and lose the old blocks.
-+	 * Add a defer ops barrier every other extent to avoid stressing the
-+	 * system with large EFIs.
- 	 */
- 	error = xfs_free_extent_later(sc->tp, fsbno, *aglenp, rs->oinfo,
- 			rs->resv, true);
-@@ -416,6 +419,8 @@ xreap_agextent_iter(
- 		return error;
+ /*
+  * Compare function is more complex than it needs to be because
+  * the return value is only 32 bits and we are doing comparisons
+@@ -2181,7 +2220,7 @@ xfs_buf_delwri_submit_buffers(
+ 		 * reference and remove it from the list here.
+ 		 */
+ 		if (!(bp->b_flags & _XBF_DELWRI_Q)) {
+-			list_del_init(&bp->b_list);
++			xfs_buf_list_del(bp);
+ 			xfs_buf_relse(bp);
+ 			continue;
+ 		}
+@@ -2201,7 +2240,7 @@ xfs_buf_delwri_submit_buffers(
+ 			list_move_tail(&bp->b_list, wait_list);
+ 		} else {
+ 			bp->b_flags |= XBF_ASYNC;
+-			list_del_init(&bp->b_list);
++			xfs_buf_list_del(bp);
+ 		}
+ 		__xfs_buf_submit(bp, false);
+ 	}
+@@ -2255,7 +2294,7 @@ xfs_buf_delwri_submit(
+ 	while (!list_empty(&wait_list)) {
+ 		bp = list_first_entry(&wait_list, struct xfs_buf, b_list);
  
- 	rs->deferred++;
-+	if (rs->deferred % 2 == 0)
-+		xfs_defer_add_barrier(sc->tp);
- 	return 0;
- }
+-		list_del_init(&bp->b_list);
++		xfs_buf_list_del(bp);
  
+ 		/*
+ 		 * Wait on the locked buffer, check for errors and unlock and
+diff --git a/fs/xfs/xfs_buf.h b/fs/xfs/xfs_buf.h
+index df8f47953bb4e..5896b58c5f4db 100644
+--- a/fs/xfs/xfs_buf.h
++++ b/fs/xfs/xfs_buf.h
+@@ -318,6 +318,7 @@ extern void xfs_buf_stale(struct xfs_buf *bp);
+ /* Delayed Write Buffer Routines */
+ extern void xfs_buf_delwri_cancel(struct list_head *);
+ extern bool xfs_buf_delwri_queue(struct xfs_buf *, struct list_head *);
++void xfs_buf_delwri_queue_here(struct xfs_buf *bp, struct list_head *bl);
+ extern int xfs_buf_delwri_submit(struct list_head *);
+ extern int xfs_buf_delwri_submit_nowait(struct list_head *);
+ extern int xfs_buf_delwri_pushbuf(struct xfs_buf *, struct list_head *);
 
