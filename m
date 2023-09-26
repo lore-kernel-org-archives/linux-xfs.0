@@ -2,38 +2,39 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id EB7F3E7F14C
-	for <linux-xfs@archiver.kernel.org>; Wed, 27 Sep 2023 00:17:03 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 604B8E7F14C
+	for <linux-xfs@archiver.kernel.org>; Wed, 27 Sep 2023 00:17:06 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231755AbjI0ARD (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 26 Sep 2023 20:17:03 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50034 "EHLO
+        id S232900AbjI0ARE (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 26 Sep 2023 20:17:04 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35110 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231985AbjI0APC (ORCPT
+        with ESMTP id S233006AbjI0APC (ORCPT
         <rfc822;linux-xfs@vger.kernel.org>); Tue, 26 Sep 2023 20:15:02 -0400
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 22E7B449A
-        for <linux-xfs@vger.kernel.org>; Tue, 26 Sep 2023 16:34:16 -0700 (PDT)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id BB2D4C433C9;
-        Tue, 26 Sep 2023 23:34:15 +0000 (UTC)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id EF8CE4EDE
+        for <linux-xfs@vger.kernel.org>; Tue, 26 Sep 2023 16:35:18 -0700 (PDT)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 8F60FC433C7;
+        Tue, 26 Sep 2023 23:35:18 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1695771255;
-        bh=Dtk2ftJddGi3rTQIh77UOFY0KgCBtmzLdzSB9DxZ8cY=;
+        s=k20201202; t=1695771318;
+        bh=LwhCM0jBGSq7GhOGwGa4s3e1apuJT8v7hm3P+f2XyDg=;
         h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-        b=qTZvuKLZSmmtI7lShhA8NDtV+y30giI5pYl39L1vSEHhOdn3zf5yMCz1ZQR9Y1Auz
-         9jEptylrf5BDYncKZTHLbMRD2bRNeN9A2R4b0oMKedM8hvSXNvhN1x7AgxUXfsp/5Z
-         YEWS9WAXzyIw+QChRPPhuzg5NvasKcHes+wZ+nxaqOExYOO6lYxvS6qxbK3gorOT6F
-         FXwOIIoZFERMYz2JI9S/QyqRJAjEUhcY7AgQFQsUOcFRcnZ6d/8bGvgFkwAN4jpEDO
-         ejdwn0sB6MIQZ927XpYU+hTZJRE1gqGHa78OBEq2SwSpUsZSCjqvZU0VpFZaqzHooO
-         6vbULICuz7XCw==
-Date:   Tue, 26 Sep 2023 16:34:15 -0700
-Subject: [PATCH 1/4] xfs: roll the scrub transaction after completing a repair
+        b=aa2E9eCcmjLIlxiCn27YkheqQrDQRhLWX+RmXNuFa0oaj61B7asSEDQPWzYRmWOcu
+         1z9r5VMEwHgxaAlHfQwadKOA6L7AAYgyC7pbnOZu7EgmAClQN0hRayenBrwnrWtA/P
+         xfE2q1OgyGOTc6FaNtfR0/44UmYHjmH7YA/7EB0gkKacX+E4ylN9uIttTl6R+fy26P
+         nYw8Gd+qT0+7FecvAk70EiaLnYFr9V0NFehzJ1mgbpOQxh21EgHZ764LFvJr9cIwxi
+         jxb8UuJi5DjMP6R3Vkd0EkpMo+eZJjI+uozxytNpbxxGzjiAdQmfpuUuAVEZ5Syijj
+         jmby9GZebTkdw==
+Date:   Tue, 26 Sep 2023 16:35:18 -0700
+Subject: [PATCH 1/7] xfs: disable online repair quota helpers when quota not
+ enabled
 From:   "Darrick J. Wong" <djwong@kernel.org>
 To:     djwong@kernel.org
 Cc:     linux-xfs@vger.kernel.org
-Message-ID: <169577059984.3313285.18244425439253732044.stgit@frogsfrogsfrogs>
-In-Reply-To: <169577059962.3313285.5801727504839472715.stgit@frogsfrogsfrogs>
-References: <169577059962.3313285.5801727504839472715.stgit@frogsfrogsfrogs>
+Message-ID: <169577060377.3315095.15798405139562658027.stgit@frogsfrogsfrogs>
+In-Reply-To: <169577060353.3315095.13977747715399477216.stgit@frogsfrogsfrogs>
+References: <169577060353.3315095.13977747715399477216.stgit@frogsfrogsfrogs>
 User-Agent: StGit/0.19
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
@@ -44,61 +45,63 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-When we've finished repairing an AG header, roll the scrub transaction.
-This ensure that any failures caused by defer ops failing are captured
-by the xrep_done tracepoint and that any stacktraces that occur will
-point to the repair code that caused it, instead of xchk_teardown.
-
-Going forward, repair functions should commit the transaction if they're
-going to return success.  Usually the space reaping functions that run
-after a successful atomic commit of the new metadata will take care of
-that for us.
+Don't compile the quota helper functions if quota isn't being built into
+the XFS module.
 
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 ---
- fs/xfs/scrub/agheader_repair.c |    9 ++++++---
- 1 file changed, 6 insertions(+), 3 deletions(-)
+ fs/xfs/scrub/repair.c |    2 ++
+ fs/xfs/scrub/repair.h |    9 +++++++++
+ 2 files changed, 11 insertions(+)
 
 
-diff --git a/fs/xfs/scrub/agheader_repair.c b/fs/xfs/scrub/agheader_repair.c
-index 36c511f96b004..156d548e64830 100644
---- a/fs/xfs/scrub/agheader_repair.c
-+++ b/fs/xfs/scrub/agheader_repair.c
-@@ -73,7 +73,7 @@ xrep_superblock(
- 	/* Write this to disk. */
- 	xfs_trans_buf_set_type(sc->tp, bp, XFS_BLFT_SB_BUF);
- 	xfs_trans_log_buf(sc->tp, bp, 0, BBTOB(bp->b_length) - 1);
--	return error;
-+	return 0;
- }
- 
- /* AGF */
-@@ -342,7 +342,7 @@ xrep_agf_commit_new(
- 	pag->pagf_refcount_level = be32_to_cpu(agf->agf_refcount_level);
- 	set_bit(XFS_AGSTATE_AGF_INIT, &pag->pag_opstate);
- 
--	return 0;
-+	return xrep_roll_ag_trans(sc);
- }
- 
- /* Repair the AGF. v5 filesystems only. */
-@@ -790,6 +790,9 @@ xrep_agfl(
- 	/* Dump any AGFL overflow. */
- 	error = xrep_reap_agblocks(sc, &agfl_extents, &XFS_RMAP_OINFO_AG,
- 			XFS_AG_RESV_AGFL);
-+	if (error)
-+		goto err;
-+
- err:
- 	xagb_bitmap_destroy(&agfl_extents);
+diff --git a/fs/xfs/scrub/repair.c b/fs/xfs/scrub/repair.c
+index ad1df212ec4c1..18f8d54948f26 100644
+--- a/fs/xfs/scrub/repair.c
++++ b/fs/xfs/scrub/repair.c
+@@ -673,6 +673,7 @@ xrep_find_ag_btree_roots(
  	return error;
-@@ -963,7 +966,7 @@ xrep_agi_commit_new(
- 	pag->pagi_freecount = be32_to_cpu(agi->agi_freecount);
- 	set_bit(XFS_AGSTATE_AGI_INIT, &pag->pag_opstate);
- 
--	return 0;
-+	return xrep_roll_ag_trans(sc);
  }
  
- /* Repair the AGI. */
++#ifdef CONFIG_XFS_QUOTA
+ /* Force a quotacheck the next time we mount. */
+ void
+ xrep_force_quotacheck(
+@@ -734,6 +735,7 @@ xrep_ino_dqattach(
+ 
+ 	return error;
+ }
++#endif /* CONFIG_XFS_QUOTA */
+ 
+ /* Initialize all the btree cursors for an AG repair. */
+ void
+diff --git a/fs/xfs/scrub/repair.h b/fs/xfs/scrub/repair.h
+index cc7ea39427296..93814acc678a8 100644
+--- a/fs/xfs/scrub/repair.h
++++ b/fs/xfs/scrub/repair.h
+@@ -57,8 +57,15 @@ struct xrep_find_ag_btree {
+ 
+ int xrep_find_ag_btree_roots(struct xfs_scrub *sc, struct xfs_buf *agf_bp,
+ 		struct xrep_find_ag_btree *btree_info, struct xfs_buf *agfl_bp);
++
++#ifdef CONFIG_XFS_QUOTA
+ void xrep_force_quotacheck(struct xfs_scrub *sc, xfs_dqtype_t type);
+ int xrep_ino_dqattach(struct xfs_scrub *sc);
++#else
++# define xrep_force_quotacheck(sc, type)	((void)0)
++# define xrep_ino_dqattach(sc)			(0)
++#endif /* CONFIG_XFS_QUOTA */
++
+ int xrep_reset_perag_resv(struct xfs_scrub *sc);
+ 
+ /* Repair setup functions */
+@@ -87,6 +94,8 @@ int xrep_reinit_pagi(struct xfs_scrub *sc);
+ 
+ #else
+ 
++#define xrep_ino_dqattach(sc)	(0)
++
+ static inline int
+ xrep_attempt(
+ 	struct xfs_scrub	*sc,
 
