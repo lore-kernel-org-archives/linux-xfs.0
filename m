@@ -2,38 +2,38 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 41B7AE7F14D
-	for <linux-xfs@archiver.kernel.org>; Wed, 27 Sep 2023 00:20:00 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C14E7E7F14A
+	for <linux-xfs@archiver.kernel.org>; Wed, 27 Sep 2023 00:20:03 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229867AbjI0AT7 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 26 Sep 2023 20:19:59 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59374 "EHLO
+        id S229815AbjI0AUD (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 26 Sep 2023 20:20:03 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59506 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232739AbjI0AR6 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 26 Sep 2023 20:17:58 -0400
+        with ESMTP id S232778AbjI0ASC (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 26 Sep 2023 20:18:02 -0400
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id ED1AD3580
-        for <linux-xfs@vger.kernel.org>; Tue, 26 Sep 2023 16:38:42 -0700 (PDT)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 8F5A5C433C7;
-        Tue, 26 Sep 2023 23:38:42 +0000 (UTC)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E650D5243
+        for <linux-xfs@vger.kernel.org>; Tue, 26 Sep 2023 16:39:29 -0700 (PDT)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 86B2CC433C7;
+        Tue, 26 Sep 2023 23:39:29 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1695771522;
-        bh=xWEmlQ3UzOI6xLr9YHRjcRt6nTARqg6cw9ILrRSUsaA=;
+        s=k20201202; t=1695771569;
+        bh=Vj74v1rdOPZWX6SytJ61ukQyZ18q0V5YO/YqyFl/1+4=;
         h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-        b=McYTbVND4K3TMTn7NgYsf9UJYpycsGiJhU0EcO2SdNzhbGY2FEySgZd3bmzuUAmGS
-         X71kZ33sli+gQ22H0J88n78WtTbW184KyKgOQobJ3uUqxFlx+GZ2AYF/56S2pkKkVG
-         pqK1lbDhpmvBnAzfiLaermNMa9Qp+I2nT/6bP5/hPF7wFGFNLyxEzgPnIveov/zKQN
-         l4F0YPYFcbhQMX5EmxuKRBHmRDgFT54SzDF5en3UsX3YUT06Jx8nA6Q/DfhbjukzJY
-         0JhqN/ZU4VOx44g5YgvqEPj8AVjfYh2cWxxRjjC1IlOWQ0qDEuFg8rH8713wwil4bE
-         xopvZVcGPyLog==
-Date:   Tue, 26 Sep 2023 16:38:42 -0700
-Subject: [PATCH 2/4] xfs: create a new inode fork block unmap helper
+        b=qmdnKqP1BBFvqyCmZ4blopdMm/7MwJAsq8rvOjegXIL7wzEkLiX1vI6r6wM44qfuc
+         o+UNuRV/WCyPr7ZbJqWwdaC59bfp/efOgxJ+sO9IaKYsB9GCDwXs4T4OCRg7WzmimM
+         M+LPaVzoweqKUq7HfxX9bH7ylecKOXwjHLH3KtqPO/wMqdZdEFkDU4PQy3THa2rHIM
+         rybkRH1oGiAXTCLJrjlRj3S17QRjgNUtQP/FOmhq4zJck8cL/IMX9qTX6uEFNkQ3Ps
+         Qkz6zx8ZEycawG019UVWpRrNXTBVeqbqVFgQekBdVRyRs5+/pYwQN9iukQ1FptyfRQ
+         v3mEiV0nETybw==
+Date:   Tue, 26 Sep 2023 16:39:29 -0700
+Subject: [PATCH 1/5] xfs: check the ondisk space mapping behind a dquot
 From:   "Darrick J. Wong" <djwong@kernel.org>
 To:     djwong@kernel.org
 Cc:     linux-xfs@vger.kernel.org
-Message-ID: <169577061217.3315493.3049593931693882049.stgit@frogsfrogsfrogs>
-In-Reply-To: <169577061183.3315493.6171012860982301231.stgit@frogsfrogsfrogs>
-References: <169577061183.3315493.6171012860982301231.stgit@frogsfrogsfrogs>
+Message-ID: <169577061592.3315644.4664727550665513734.stgit@frogsfrogsfrogs>
+In-Reply-To: <169577061571.3315644.2567541587400012629.stgit@frogsfrogsfrogs>
+References: <169577061571.3315644.2567541587400012629.stgit@frogsfrogsfrogs>
 User-Agent: StGit/0.19
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
@@ -44,123 +44,104 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-Create a new helper to unmap blocks from an inode's fork.
+Each xfs_dquot object caches the file offset and daddr of the ondisk
+block that backs the dquot.  Make sure these cached values are the same
+as the bmapi data, and that the block state is written.
 
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 ---
- fs/xfs/libxfs/xfs_bmap.c |   39 +++++++++++++++++++++++++++++++++++++++
- fs/xfs/libxfs/xfs_bmap.h |    2 ++
- fs/xfs/xfs_inode.c       |   24 ++++--------------------
- 3 files changed, 45 insertions(+), 20 deletions(-)
+ fs/xfs/scrub/quota.c |   58 ++++++++++++++++++++++++++++++++++++++++++++++++++
+ 1 file changed, 58 insertions(+)
 
 
-diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
-index aabce6e218888..25c08519934aa 100644
---- a/fs/xfs/libxfs/xfs_bmap.c
-+++ b/fs/xfs/libxfs/xfs_bmap.c
-@@ -6248,3 +6248,42 @@ xfs_bmap_validate_extent(
- 	return xfs_bmap_validate_extent_raw(ip->i_mount,
- 			XFS_IS_REALTIME_INODE(ip), whichfork, irec);
- }
-+
-+/*
-+ * Used in xfs_itruncate_extents().  This is the maximum number of extents
-+ * freed from a file in a single transaction.
-+ */
-+#define	XFS_ITRUNC_MAX_EXTENTS	2
-+
-+/*
-+ * Unmap every extent in part of an inode's fork.  We don't do any higher level
-+ * invalidation work at all.
-+ */
-+int
-+xfs_bunmapi_range(
-+	struct xfs_trans	**tpp,
-+	struct xfs_inode	*ip,
-+	uint32_t		flags,
-+	xfs_fileoff_t		startoff,
-+	xfs_fileoff_t		endoff)
+diff --git a/fs/xfs/scrub/quota.c b/fs/xfs/scrub/quota.c
+index 5671c81534335..59350cd7a325b 100644
+--- a/fs/xfs/scrub/quota.c
++++ b/fs/xfs/scrub/quota.c
+@@ -6,6 +6,7 @@
+ #include "xfs.h"
+ #include "xfs_fs.h"
+ #include "xfs_shared.h"
++#include "xfs_bit.h"
+ #include "xfs_format.h"
+ #include "xfs_trans_resv.h"
+ #include "xfs_mount.h"
+@@ -75,6 +76,47 @@ struct xchk_quota_info {
+ 	xfs_dqid_t		last_id;
+ };
+ 
++/* There's a written block backing this dquot, right? */
++STATIC int
++xchk_quota_item_bmap(
++	struct xfs_scrub	*sc,
++	struct xfs_dquot	*dq,
++	xfs_fileoff_t		offset)
 +{
-+	xfs_filblks_t		unmap_len = endoff - startoff + 1;
-+	int			error = 0;
++	struct xfs_bmbt_irec	irec;
++	struct xfs_mount	*mp = sc->mp;
++	int			nmaps = 1;
++	int			error;
 +
-+	ASSERT(xfs_isilocked(ip, XFS_ILOCK_EXCL));
-+
-+	while (unmap_len > 0) {
-+		ASSERT((*tpp)->t_highest_agno == NULLAGNUMBER);
-+		error = __xfs_bunmapi(*tpp, ip, startoff, &unmap_len, flags,
-+				XFS_ITRUNC_MAX_EXTENTS);
-+		if (error)
-+			goto out;
-+
-+		/* free the just unmapped extents */
-+		error = xfs_defer_finish(tpp);
-+		if (error)
-+			goto out;
++	if (!xfs_verify_fileoff(mp, offset)) {
++		xchk_fblock_set_corrupt(sc, XFS_DATA_FORK, offset);
++		return 0;
 +	}
-+out:
-+	return error;
-+}
-diff --git a/fs/xfs/libxfs/xfs_bmap.h b/fs/xfs/libxfs/xfs_bmap.h
-index 8518324db2855..9bc78c717ecf7 100644
---- a/fs/xfs/libxfs/xfs_bmap.h
-+++ b/fs/xfs/libxfs/xfs_bmap.h
-@@ -273,6 +273,8 @@ int xfs_bmap_complain_bad_rec(struct xfs_inode *ip, int whichfork,
- int	xfs_bmapi_remap(struct xfs_trans *tp, struct xfs_inode *ip,
- 		xfs_fileoff_t bno, xfs_filblks_t len, xfs_fsblock_t startblock,
- 		uint32_t flags);
-+int	xfs_bunmapi_range(struct xfs_trans **tpp, struct xfs_inode *ip,
-+		uint32_t flags, xfs_fileoff_t startoff, xfs_fileoff_t endoff);
- 
- extern struct kmem_cache	*xfs_bmap_intent_cache;
- 
-diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
-index 4d55f58d99b7a..96731b98fad21 100644
---- a/fs/xfs/xfs_inode.c
-+++ b/fs/xfs/xfs_inode.c
-@@ -40,12 +40,6 @@
- 
- struct kmem_cache *xfs_inode_cache;
- 
--/*
-- * Used in xfs_itruncate_extents().  This is the maximum number of extents
-- * freed from a file in a single transaction.
-- */
--#define	XFS_ITRUNC_MAX_EXTENTS	2
--
- STATIC int xfs_iunlink(struct xfs_trans *, struct xfs_inode *);
- STATIC int xfs_iunlink_remove(struct xfs_trans *tp, struct xfs_perag *pag,
- 	struct xfs_inode *);
-@@ -1332,7 +1326,6 @@ xfs_itruncate_extents_flags(
- 	struct xfs_mount	*mp = ip->i_mount;
- 	struct xfs_trans	*tp = *tpp;
- 	xfs_fileoff_t		first_unmap_block;
--	xfs_filblks_t		unmap_len;
- 	int			error = 0;
- 
- 	ASSERT(xfs_isilocked(ip, XFS_ILOCK_EXCL));
-@@ -1364,19 +1357,10 @@ xfs_itruncate_extents_flags(
- 		return 0;
- 	}
- 
--	unmap_len = XFS_MAX_FILEOFF - first_unmap_block + 1;
--	while (unmap_len > 0) {
--		ASSERT(tp->t_highest_agno == NULLAGNUMBER);
--		error = __xfs_bunmapi(tp, ip, first_unmap_block, &unmap_len,
--				flags, XFS_ITRUNC_MAX_EXTENTS);
--		if (error)
--			goto out;
--
--		/* free the just unmapped extents */
--		error = xfs_defer_finish(&tp);
--		if (error)
--			goto out;
--	}
-+	error = xfs_bunmapi_range(&tp, ip, flags, first_unmap_block,
-+			XFS_MAX_FILEOFF);
++
++	if (dq->q_fileoffset != offset) {
++		xchk_fblock_set_corrupt(sc, XFS_DATA_FORK, offset);
++		return 0;
++	}
++
++	error = xfs_bmapi_read(sc->ip, offset, 1, &irec, &nmaps, 0);
 +	if (error)
-+		goto out;
++		return error;
++
++	if (nmaps != 1) {
++		xchk_fblock_set_corrupt(sc, XFS_DATA_FORK, offset);
++		return 0;
++	}
++
++	if (!xfs_verify_fsbno(mp, irec.br_startblock))
++		xchk_fblock_set_corrupt(sc, XFS_DATA_FORK, offset);
++	if (XFS_FSB_TO_DADDR(mp, irec.br_startblock) != dq->q_blkno)
++		xchk_fblock_set_corrupt(sc, XFS_DATA_FORK, offset);
++	if (!xfs_bmap_is_written_extent(&irec))
++		xchk_fblock_set_corrupt(sc, XFS_DATA_FORK, offset);
++
++	return 0;
++}
++
+ /* Scrub the fields in an individual quota item. */
+ STATIC int
+ xchk_quota_item(
+@@ -93,6 +135,17 @@ xchk_quota_item(
+ 	if (xchk_should_terminate(sc, &error))
+ 		return error;
  
- 	if (whichfork == XFS_DATA_FORK) {
- 		/* Remove all pending CoW reservations. */
++	/*
++	 * We want to validate the bmap record for the storage backing this
++	 * dquot, so we need to lock the dquot and the quota file.  For quota
++	 * operations, the locking order is first the ILOCK and then the dquot.
++	 * However, dqiterate gave us a locked dquot, so drop the dquot lock to
++	 * get the ILOCK.
++	 */
++	xfs_dqunlock(dq);
++	xchk_ilock(sc, XFS_ILOCK_SHARED);
++	xfs_dqlock(dq);
++
+ 	/*
+ 	 * Except for the root dquot, the actual dquot we got must either have
+ 	 * the same or higher id as we saw before.
+@@ -103,6 +156,11 @@ xchk_quota_item(
+ 
+ 	sqi->last_id = dq->q_id;
+ 
++	error = xchk_quota_item_bmap(sc, dq, offset);
++	xchk_iunlock(sc, XFS_ILOCK_SHARED);
++	if (!xchk_fblock_process_error(sc, XFS_DATA_FORK, offset, &error))
++		return error;
++
+ 	/*
+ 	 * Warn if the hard limits are larger than the fs.
+ 	 * Administrators can do this, though in production this seems
 
