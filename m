@@ -2,232 +2,87 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 05658E7F154
-	for <linux-xfs@archiver.kernel.org>; Wed, 27 Sep 2023 03:02:38 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 422E4E7F158
+	for <linux-xfs@archiver.kernel.org>; Wed, 27 Sep 2023 03:28:21 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230125AbjI0DCh (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 26 Sep 2023 23:02:37 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60704 "EHLO
+        id S229531AbjI0D2U (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 26 Sep 2023 23:28:20 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47486 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S235855AbjI0DAg (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 26 Sep 2023 23:00:36 -0400
+        with ESMTP id S229584AbjI0D0T (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 26 Sep 2023 23:26:19 -0400
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8FA545259
-        for <linux-xfs@vger.kernel.org>; Tue, 26 Sep 2023 16:35:34 -0700 (PDT)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 2D656C433C7;
-        Tue, 26 Sep 2023 23:35:34 +0000 (UTC)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id AE9F5273A
+        for <linux-xfs@vger.kernel.org>; Tue, 26 Sep 2023 18:46:33 -0700 (PDT)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 4FA5CC433C8;
+        Wed, 27 Sep 2023 01:46:33 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1695771334;
-        bh=f6NPrGVg2lWMW1nhgg7N588RyoumpzgwyopuXzA9MJE=;
-        h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-        b=DzREnP01V9ZXl7skXuuohozza8xJ0mC3UlgacIhUGxbOIzsd68nibSLMw3O9L0yH5
-         IdT25l68c4+/sG69ZNfck/KwfIRkuphL2VEqo2fXJyj5hxUtfPp/kWjQMKQH8oneo4
-         Xz0lbfcNCJebBM9188oax50qBIaMGDbdjy8txap3GHcMmEYWH+78vmMWkas1rLAi5Y
-         PsIzpnABlqRZs70ghZpYVl22jLx5Hlpm9LBI603GzRXWhlompvyYuowIzTdVfJtWYi
-         o6pnrERShlv1bFYrL+cEoK93dr3alZt25tq45Op96JQFiMceM/1HXLE1XudsgJtI4y
-         DBN6Uupcx4w+g==
-Date:   Tue, 26 Sep 2023 16:35:33 -0700
-Subject: [PATCH 2/7] xfs: try to attach dquots to files before repairing them
+        s=k20201202; t=1695779193;
+        bh=b5QrceYdkL6ZihdQ5KD7hRb1xN3D6/oep/RhSmItCy8=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=ssZH4PoTtQoyBUXskV9uyDwBkAweq5N1rOHW6QQp3EvQ/XPOw4jdX+77RgVbZqMCY
+         9DY+ZfQTMDbUwdHUw/4HNiCzJIlw7D0K41UBtzoT2mYdO/AzqT9vZaGYZNsqjFi4kl
+         j+fT+GpJVW60N1ve4DTWxl/R0pnXpsQ5ZPKLNwz+n3cC83Uk85sucQLY1VAzbGytmd
+         3uj8ZYbQs2bJaT/Dqz+AVobLfEF/yv7+jzcTPX0uOPBVd61JMIxeovbC+506HmSFQa
+         GXLgRaPydK+sbUqWSTigWskbzvcMEdj6phxIcPnC1o1Zcrc+DV4imELY3tlCgvEo0W
+         asRV9cXwzYQgQ==
+Date:   Tue, 26 Sep 2023 18:46:32 -0700
 From:   "Darrick J. Wong" <djwong@kernel.org>
-To:     djwong@kernel.org
-Cc:     linux-xfs@vger.kernel.org
-Message-ID: <169577060391.3315095.3882887569666306096.stgit@frogsfrogsfrogs>
-In-Reply-To: <169577060353.3315095.13977747715399477216.stgit@frogsfrogsfrogs>
-References: <169577060353.3315095.13977747715399477216.stgit@frogsfrogsfrogs>
-User-Agent: StGit/0.19
+To:     Dave Chinner <david@fromorbit.com>
+Cc:     Shiyang Ruan <ruansy.fnst@fujitsu.com>, linux-xfs@vger.kernel.org,
+        nvdimm@lists.linux.dev, chandan.babu@oracle.com,
+        dan.j.williams@intel.com
+Subject: Re: [PATCH] xfs: drop experimental warning for FSDAX
+Message-ID: <20230927014632.GE11456@frogsfrogsfrogs>
+References: <20230915063854.1784918-1-ruansy.fnst@fujitsu.com>
+ <86167409-aa7f-4db4-8335-3f290d507f14@fujitsu.com>
+ <20230926145519.GE11439@frogsfrogsfrogs>
+ <ZROC8hEabAGS7orb@dread.disaster.area>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <ZROC8hEabAGS7orb@dread.disaster.area>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-From: Darrick J. Wong <djwong@kernel.org>
+On Wed, Sep 27, 2023 at 11:18:42AM +1000, Dave Chinner wrote:
+> On Tue, Sep 26, 2023 at 07:55:19AM -0700, Darrick J. Wong wrote:
+> > On Thu, Sep 21, 2023 at 04:33:04PM +0800, Shiyang Ruan wrote:
+> > > Hi,
+> > > 
+> > > Any comments?
+> > 
+> > I notice that xfs/55[0-2] still fail on my fakepmem machine:
+> > 
+> > --- /tmp/fstests/tests/xfs/550.out	2023-09-23 09:40:47.839521305 -0700
+> > +++ /var/tmp/fstests/xfs/550.out.bad	2023-09-24 20:00:23.400000000 -0700
+> > @@ -3,7 +3,6 @@ Format and mount
+> >  Create the original files
+> >  Inject memory failure (1 page)
+> >  Inject poison...
+> > -Process is killed by signal: 7
+> >  Inject memory failure (2 pages)
+> >  Inject poison...
+> > -Process is killed by signal: 7
+> > +Memory failure didn't kill the process
+> > 
+> > (yes, rmap is enabled)
+> 
+> Yes, I see the same failures, too. I've just been ignoring them
+> because I thought that all the memory failure code was still not
+> complete....
 
-Inode resource usage is tracked in the quota metadata.  Repairing a file
-might change the resources used by that file, which means that we need
-to attach dquots to the file that we're examining before accessing
-anything in the file protected by the ILOCK.
+Oh, I bet we were supposed to have merged this
 
-However, there's a twist: a dquot cache miss requires the dquot to be
-read in from the quota file, during which we drop the ILOCK on the file
-being examined.  This means that we *must* try to attach the dquots
-before taking the ILOCK.
+https://lore.kernel.org/linux-xfs/20230828065744.1446462-1-ruansy.fnst@fujitsu.com/
 
-Therefore, dquots must be attached to files in the scrub setup function.
-If doing so yields corruption errors (or unknown dquot errors), we
-instead clear the quotachecked status, which will cause a quotacheck on
-next mount.  A future series will make this trigger live quotacheck.
+to complete the pmem media failure handling code.  Should we (by which I
+mostly mean Shiyang) ask Chandan to merge these two patches for 6.7?
 
-While we're here, change the xrep_ino_dqattach function to use the
-unlocked dqattach functions so that we avoid cycling the ILOCK if the
-inode already has dquots attached.  This makes the naming and locking
-requirements consistent with the rest of the filesystem.
+--D
 
-Signed-off-by: Darrick J. Wong <djwong@kernel.org>
----
- fs/xfs/scrub/bmap.c      |    4 ++++
- fs/xfs/scrub/common.c    |   25 +++++++++++++++++++++++++
- fs/xfs/scrub/common.h    |    6 ++++++
- fs/xfs/scrub/inode.c     |    4 ++++
- fs/xfs/scrub/repair.c    |   13 ++++++++-----
- fs/xfs/scrub/rtbitmap.c  |    4 ++++
- fs/xfs/scrub/rtsummary.c |    4 ++++
- 7 files changed, 55 insertions(+), 5 deletions(-)
-
-
-diff --git a/fs/xfs/scrub/bmap.c b/fs/xfs/scrub/bmap.c
-index 75588915572e9..76aa40fef84ad 100644
---- a/fs/xfs/scrub/bmap.c
-+++ b/fs/xfs/scrub/bmap.c
-@@ -78,6 +78,10 @@ xchk_setup_inode_bmap(
- 	if (error)
- 		goto out;
- 
-+	error = xchk_ino_dqattach(sc);
-+	if (error)
-+		goto out;
-+
- 	xchk_ilock(sc, XFS_ILOCK_EXCL);
- out:
- 	/* scrub teardown will unlock and release the inode */
-diff --git a/fs/xfs/scrub/common.c b/fs/xfs/scrub/common.c
-index b6725b05fb417..9b7d7010495b9 100644
---- a/fs/xfs/scrub/common.c
-+++ b/fs/xfs/scrub/common.c
-@@ -820,6 +820,26 @@ xchk_iget_agi(
- 	return 0;
- }
- 
-+#ifdef CONFIG_XFS_QUOTA
-+/*
-+ * Try to attach dquots to this inode if we think we might want to repair it.
-+ * Callers must not hold any ILOCKs.  If the dquots are broken and cannot be
-+ * attached, a quotacheck will be scheduled.
-+ */
-+int
-+xchk_ino_dqattach(
-+	struct xfs_scrub	*sc)
-+{
-+	ASSERT(sc->tp != NULL);
-+	ASSERT(sc->ip != NULL);
-+
-+	if (!xchk_could_repair(sc))
-+		return 0;
-+
-+	return xrep_ino_dqattach(sc);
-+}
-+#endif
-+
- /* Install an inode that we opened by handle for scrubbing. */
- int
- xchk_install_handle_inode(
-@@ -1031,6 +1051,11 @@ xchk_setup_inode_contents(
- 	error = xchk_trans_alloc(sc, resblks);
- 	if (error)
- 		goto out;
-+
-+	error = xchk_ino_dqattach(sc);
-+	if (error)
-+		goto out;
-+
- 	xchk_ilock(sc, XFS_ILOCK_EXCL);
- out:
- 	/* scrub teardown will unlock and release the inode for us */
-diff --git a/fs/xfs/scrub/common.h b/fs/xfs/scrub/common.h
-index 4b666f254d700..895918565df26 100644
---- a/fs/xfs/scrub/common.h
-+++ b/fs/xfs/scrub/common.h
-@@ -103,9 +103,15 @@ xchk_setup_rtsummary(struct xfs_scrub *sc)
- }
- #endif
- #ifdef CONFIG_XFS_QUOTA
-+int xchk_ino_dqattach(struct xfs_scrub *sc);
- int xchk_setup_quota(struct xfs_scrub *sc);
- #else
- static inline int
-+xchk_ino_dqattach(struct xfs_scrub *sc)
-+{
-+	return 0;
-+}
-+static inline int
- xchk_setup_quota(struct xfs_scrub *sc)
- {
- 	return -ENOENT;
-diff --git a/fs/xfs/scrub/inode.c b/fs/xfs/scrub/inode.c
-index 74b1ebb40a4c0..b1ba6c3492130 100644
---- a/fs/xfs/scrub/inode.c
-+++ b/fs/xfs/scrub/inode.c
-@@ -38,6 +38,10 @@ xchk_prepare_iscrub(
- 	if (error)
- 		return error;
- 
-+	error = xchk_ino_dqattach(sc);
-+	if (error)
-+		return error;
-+
- 	xchk_ilock(sc, XFS_ILOCK_EXCL);
- 	return 0;
- }
-diff --git a/fs/xfs/scrub/repair.c b/fs/xfs/scrub/repair.c
-index 18f8d54948f26..2e82dace10cc2 100644
---- a/fs/xfs/scrub/repair.c
-+++ b/fs/xfs/scrub/repair.c
-@@ -700,10 +700,10 @@ xrep_force_quotacheck(
-  *
-  * This function ensures that the appropriate dquots are attached to an inode.
-  * We cannot allow the dquot code to allocate an on-disk dquot block here
-- * because we're already in transaction context with the inode locked.  The
-- * on-disk dquot should already exist anyway.  If the quota code signals
-- * corruption or missing quota information, schedule quotacheck, which will
-- * repair corruptions in the quota metadata.
-+ * because we're already in transaction context.  The on-disk dquot should
-+ * already exist anyway.  If the quota code signals corruption or missing quota
-+ * information, schedule quotacheck, which will repair corruptions in the quota
-+ * metadata.
-  */
- int
- xrep_ino_dqattach(
-@@ -711,7 +711,10 @@ xrep_ino_dqattach(
- {
- 	int			error;
- 
--	error = xfs_qm_dqattach_locked(sc->ip, false);
-+	ASSERT(sc->tp != NULL);
-+	ASSERT(sc->ip != NULL);
-+
-+	error = xfs_qm_dqattach(sc->ip);
- 	switch (error) {
- 	case -EFSBADCRC:
- 	case -EFSCORRUPTED:
-diff --git a/fs/xfs/scrub/rtbitmap.c b/fs/xfs/scrub/rtbitmap.c
-index 008ddb599e132..7a64489fe9c54 100644
---- a/fs/xfs/scrub/rtbitmap.c
-+++ b/fs/xfs/scrub/rtbitmap.c
-@@ -32,6 +32,10 @@ xchk_setup_rtbitmap(
- 	if (error)
- 		return error;
- 
-+	error = xchk_ino_dqattach(sc);
-+	if (error)
-+		return error;
-+
- 	xchk_ilock(sc, XFS_ILOCK_EXCL | XFS_ILOCK_RTBITMAP);
- 	return 0;
- }
-diff --git a/fs/xfs/scrub/rtsummary.c b/fs/xfs/scrub/rtsummary.c
-index 437ed9acbb273..55d79050e6734 100644
---- a/fs/xfs/scrub/rtsummary.c
-+++ b/fs/xfs/scrub/rtsummary.c
-@@ -63,6 +63,10 @@ xchk_setup_rtsummary(
- 	if (error)
- 		return error;
- 
-+	error = xchk_ino_dqattach(sc);
-+	if (error)
-+		return error;
-+
- 	/*
- 	 * Locking order requires us to take the rtbitmap first.  We must be
- 	 * careful to unlock it ourselves when we are done with the rtbitmap
-
+> -Dave.
+> -- 
+> Dave Chinner
+> david@fromorbit.com
