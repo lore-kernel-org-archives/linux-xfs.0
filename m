@@ -2,142 +2,138 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2A774E80A93
-	for <linux-xfs@archiver.kernel.org>; Wed, 27 Sep 2023 06:38:58 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 027EEE80A93
+	for <linux-xfs@archiver.kernel.org>; Wed, 27 Sep 2023 06:39:08 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229679AbjI0Gi4 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 27 Sep 2023 02:38:56 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45244 "EHLO
+        id S229531AbjI0GjI (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 27 Sep 2023 02:39:08 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36794 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229584AbjI0Giz (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 27 Sep 2023 02:38:55 -0400
-Received: from mail-lf1-x134.google.com (mail-lf1-x134.google.com [IPv6:2a00:1450:4864:20::134])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 66616D6
-        for <linux-xfs@vger.kernel.org>; Tue, 26 Sep 2023 23:38:54 -0700 (PDT)
-Received: by mail-lf1-x134.google.com with SMTP id 2adb3069b0e04-50325ce89e9so17215809e87.0
-        for <linux-xfs@vger.kernel.org>; Tue, 26 Sep 2023 23:38:54 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1695796732; x=1696401532; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:from:to:cc:subject:date:message-id:reply-to;
-        bh=7S/If62RagWdI1zZN3s+xfmELEUla/KNPXRhI8NzCiA=;
-        b=g0fXx0kbhYBxg1m0TvBJv0YvFxHxyIeOjtw0MgKp5ftc89ghjFKbG32Q9SEf1vI6j7
-         5GDSVryufTqFivBXcVZsh7EEXOVa8KIoCpDnfmBwFaHf4eted3iz0UbkgM6pslQ7Src3
-         n3Pa1elm0B53+AsTGuEmN6QjdMIUrYBr+GEgK0+MW5NeszihAwnGTvM6esxvw0IO87WP
-         5/Dok3B27wZ/dg+mRLfidtS85WGNJDdXud3zUYhSTa9kDhBtNObUxVPeCIjVxogeOUN3
-         bOnEGPeercrcJidFtfFRFCRLccev0gPaHaJlUXAwvnjf7A3GTbW4JR29EijCIX6bgO78
-         8c3w==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1695796732; x=1696401532;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:x-gm-message-state:from:to:cc:subject:date:message-id
-         :reply-to;
-        bh=7S/If62RagWdI1zZN3s+xfmELEUla/KNPXRhI8NzCiA=;
-        b=psBIxzizwEG7YywCk9q54hqV0FDVa1WscCsxFeVbeX+DDPTsOByVGUIPXZQAWRYeC+
-         gFclV412nA7ZRgn9mlEoxD75Pctxub2enOz1vVrr+kiNkibBSvS/3QghwLIbeOqQzbhH
-         exsfVcZfsUwZTy/SeietWxuPptTl7UpfNYBmCAWO6SNjavZwMdvFZR3Ce4+0iImWNkF0
-         jZNW6DjFhP+qz9xWlvgYNca5FGv+xOmPOnci0OcYQjliK70NOKZrIJEvZIpRzPAdaHoe
-         a9CjzTVeEZlhm882wUKv2NQb6+tQTi18eMaQl0ggtggpqqsXo19zgz6A8Lniv0PLgodN
-         caBw==
-X-Gm-Message-State: AOJu0YxHqgegBpPYYdXjWGRP/ivyl4bWHSOdksizQUiqMRQ3AqRUFg5C
-        ioJD/p6NWs2qv41+WOJtFO6WdLo8aiI=
-X-Google-Smtp-Source: AGHT+IFb4YayGfH2iinlcq6Qqz5npXfCDsHSU+GWzk7dQSxyws2u2ROzMj9WiLiM9qNzjkccS+IxAw==
-X-Received: by 2002:a19:674a:0:b0:500:d4d9:25b5 with SMTP id e10-20020a19674a000000b00500d4d925b5mr736744lfj.56.1695796732210;
-        Tue, 26 Sep 2023 23:38:52 -0700 (PDT)
-Received: from krnowak-ms-ubuntu.fritz.box ([45.135.60.1])
-        by smtp.gmail.com with ESMTPSA id o5-20020a50c905000000b0053448f23b33sm414725edh.93.2023.09.26.23.38.50
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 26 Sep 2023 23:38:51 -0700 (PDT)
-From:   Krzesimir Nowak <qdlacz@gmail.com>
-X-Google-Original-From: Krzesimir Nowak <knowak@microsoft.com>
-To:     linux-xfs@vger.kernel.org
-Cc:     Krzesimir Nowak <knowak@microsoft.com>
-Subject: [PATCH] libfrog: drop build host crc32 selftest
-Date:   Wed, 27 Sep 2023 08:38:47 +0200
-Message-Id: <20230927063847.81000-1-knowak@microsoft.com>
-X-Mailer: git-send-email 2.25.1
+        with ESMTP id S229478AbjI0GjH (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 27 Sep 2023 02:39:07 -0400
+Received: from esa2.hc1455-7.c3s2.iphmx.com (esa2.hc1455-7.c3s2.iphmx.com [207.54.90.48])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A999EA3
+        for <linux-xfs@vger.kernel.org>; Tue, 26 Sep 2023 23:39:05 -0700 (PDT)
+X-IronPort-AV: E=McAfee;i="6600,9927,10845"; a="133799289"
+X-IronPort-AV: E=Sophos;i="6.03,179,1694703600"; 
+   d="scan'208";a="133799289"
+Received: from unknown (HELO yto-r3.gw.nic.fujitsu.com) ([218.44.52.219])
+  by esa2.hc1455-7.c3s2.iphmx.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 27 Sep 2023 15:39:03 +0900
+Received: from yto-m1.gw.nic.fujitsu.com (yto-nat-yto-m1.gw.nic.fujitsu.com [192.168.83.64])
+        by yto-r3.gw.nic.fujitsu.com (Postfix) with ESMTP id 049F9E8525
+        for <linux-xfs@vger.kernel.org>; Wed, 27 Sep 2023 15:39:01 +0900 (JST)
+Received: from kws-ab3.gw.nic.fujitsu.com (kws-ab3.gw.nic.fujitsu.com [192.51.206.21])
+        by yto-m1.gw.nic.fujitsu.com (Postfix) with ESMTP id 4121ECFBC3
+        for <linux-xfs@vger.kernel.org>; Wed, 27 Sep 2023 15:39:00 +0900 (JST)
+Received: from edo.cn.fujitsu.com (edo.cn.fujitsu.com [10.167.33.5])
+        by kws-ab3.gw.nic.fujitsu.com (Postfix) with ESMTP id CB44B200501B0
+        for <linux-xfs@vger.kernel.org>; Wed, 27 Sep 2023 15:38:59 +0900 (JST)
+Received: from [192.168.50.5] (unknown [10.167.234.230])
+        by edo.cn.fujitsu.com (Postfix) with ESMTP id 025491A0085;
+        Wed, 27 Sep 2023 14:38:58 +0800 (CST)
+Message-ID: <bc29af15-ae63-407d-8ca0-186c976acce7@fujitsu.com>
+Date:   Wed, 27 Sep 2023 14:38:58 +0800
 MIME-Version: 1.0
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH] xfs: drop experimental warning for FSDAX
+From:   Shiyang Ruan <ruansy.fnst@fujitsu.com>
+To:     Chandan Babu R <chandanbabu@kernel.org>,
+        "Darrick J. Wong" <djwong@kernel.org>,
+        Dave Chinner <david@fromorbit.com>,
+        Andrew Morton <akpm@linux-foundation.org>
+Cc:     linux-xfs@vger.kernel.org, nvdimm@lists.linux.dev,
+        dan.j.williams@intel.com
+References: <20230915063854.1784918-1-ruansy.fnst@fujitsu.com>
+ <86167409-aa7f-4db4-8335-3f290d507f14@fujitsu.com>
+ <20230926145519.GE11439@frogsfrogsfrogs>
+ <ZROC8hEabAGS7orb@dread.disaster.area>
+ <20230927014632.GE11456@frogsfrogsfrogs>
+ <87fs306zs1.fsf@debian-BULLSEYE-live-builder-AMD64>
+ <5c064cbd-13a3-4d55-9881-0a079476d865@fujitsu.com>
+In-Reply-To: <5c064cbd-13a3-4d55-9881-0a079476d865@fujitsu.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 8bit
+X-TM-AS-GCONF: 00
+X-TM-AS-Product-Ver: IMSS-9.1.0.1417-9.0.0.1002-27900.005
+X-TM-AS-User-Approved-Sender: Yes
+X-TMASE-Version: IMSS-9.1.0.1417-9.0.1002-27900.005
+X-TMASE-Result: 10--12.536600-10.000000
+X-TMASE-MatchedRID: 6Yvl3or3fgqPvrMjLFD6eHchRkqzj/bEC/ExpXrHizy5kqGQ38oKZjya
+        5RyZT3SuGLyzmhOFRR1UdjhO4CbFI3WyP3H7wTYlxvp0tuDMx3kQhNjZQYyI3N9RlPzeVuQQqxc
+        e4As9TzooUuy27qkKYsttSogzyLqm38rWKQkiws61PiMh4ZF39coioCrSMgeKtwi3bXRtaAg8uU
+        Oyc6CId7ZL+//Kmaih87XizC8jrNGeTALXPNvL0oL5ja7E+OhykLrDv6wzGo8CGfvnVpx+2xhBv
+        WgZlX+8585VzGMOFzABi3kqJOK62b+/RSFMoL2cxEHRux+uk8h+ICquNi0WJLWqEa3+mgunhH0y
+        J8k7g5ftWK88CUPdX6Ma4kn01jEOftwZ3X11IV0=
+X-TMASE-SNAP-Result: 1.821001.0001-0-1-22:0,33:0,34:0-0
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-CRC selftests running on a build host were useful long time ago, when
-CRC support was added to the on-disk support. Now it's purpose is
-replaced by fstests. Also mkfs.xfs and xfs_repair have their own
-selftests.
 
-On top of that, it fails to build when crosscompiling and would be
-useless anyway.
 
-Signed-off-by: Krzesimir Nowak <knowak@microsoft.com>
----
- libfrog/Makefile | 14 ++------------
- libfrog/crc32.c  | 21 ---------------------
- 2 files changed, 2 insertions(+), 33 deletions(-)
+在 2023/9/27 13:17, Shiyang Ruan 写道:
+> 
+> 
+> 在 2023/9/27 11:38, Chandan Babu R 写道:
+>> On Tue, Sep 26, 2023 at 06:46:32 PM -0700, Darrick J. Wong wrote:
+>>> On Wed, Sep 27, 2023 at 11:18:42AM +1000, Dave Chinner wrote:
+>>>> On Tue, Sep 26, 2023 at 07:55:19AM -0700, Darrick J. Wong wrote:
+>>>>> On Thu, Sep 21, 2023 at 04:33:04PM +0800, Shiyang Ruan wrote:
+>>>>>> Hi,
+>>>>>>
+>>>>>> Any comments?
+>>>>>
+>>>>> I notice that xfs/55[0-2] still fail on my fakepmem machine:
+>>>>>
+>>>>> --- /tmp/fstests/tests/xfs/550.out    2023-09-23 09:40:47.839521305 
+>>>>> -0700
+>>>>> +++ /var/tmp/fstests/xfs/550.out.bad    2023-09-24 
+>>>>> 20:00:23.400000000 -0700
+>>>>> @@ -3,7 +3,6 @@ Format and mount
+>>>>>   Create the original files
+>>>>>   Inject memory failure (1 page)
+>>>>>   Inject poison...
+>>>>> -Process is killed by signal: 7
+>>>>>   Inject memory failure (2 pages)
+>>>>>   Inject poison...
+>>>>> -Process is killed by signal: 7
+>>>>> +Memory failure didn't kill the process
+>>>>>
+>>>>> (yes, rmap is enabled)
+>>>>
+>>>> Yes, I see the same failures, too. I've just been ignoring them
+>>>> because I thought that all the memory failure code was still not
+>>>> complete....
+>>>
+>>> Oh, I bet we were supposed to have merged this
+>>>
+>>> https://lore.kernel.org/linux-xfs/20230828065744.1446462-1-ruansy.fnst@fujitsu.com/
 
-diff --git a/libfrog/Makefile b/libfrog/Makefile
-index f292afe3..8cde97d4 100644
---- a/libfrog/Makefile
-+++ b/libfrog/Makefile
-@@ -57,9 +57,9 @@ ifeq ($(HAVE_GETMNTENT),yes)
- LCFLAGS += -DHAVE_GETMNTENT
- endif
- 
--LDIRT = gen_crc32table crc32table.h crc32selftest
-+LDIRT = gen_crc32table crc32table.h
- 
--default: crc32selftest ltdepend $(LTLIBRARY)
-+default: ltdepend $(LTLIBRARY)
- 
- crc32table.h: gen_crc32table.c crc32defs.h
- 	@echo "    [CC]     gen_crc32table"
-@@ -67,16 +67,6 @@ crc32table.h: gen_crc32table.c crc32defs.h
- 	@echo "    [GENERATE] $@"
- 	$(Q) ./gen_crc32table > crc32table.h
- 
--# The selftest binary will return an error if it fails. This is made a
--# dependency of the build process so that we refuse to build the tools on broken
--# systems/architectures. Hence we make sure that xfsprogs will never use a
--# busted CRC calculation at build time and hence avoid putting bad CRCs down on
--# disk.
--crc32selftest: gen_crc32table.c crc32table.h crc32.c crc32defs.h randbytes.c
--	@echo "    [TEST]    CRC32"
--	$(Q) $(BUILD_CC) $(BUILD_CFLAGS) -D CRC32_SELFTEST=1 randbytes.c crc32.c -o $@
--	$(Q) ./$@
--
- include $(BUILDRULES)
- 
- install install-dev: default
-diff --git a/libfrog/crc32.c b/libfrog/crc32.c
-index 2499615d..d07e5371 100644
---- a/libfrog/crc32.c
-+++ b/libfrog/crc32.c
-@@ -186,24 +186,3 @@ u32 __pure crc32c_le(u32 crc, unsigned char const *p, size_t len)
- 			(const u32 (*)[256])crc32ctable_le, CRC32C_POLY_LE);
- }
- #endif
--
--
--#ifdef CRC32_SELFTEST
--# include "crc32cselftest.h"
--
--/*
-- * make sure we always return 0 for a successful test run, and non-zero for a
-- * failed run. The build infrastructure is looking for this information to
-- * determine whether to allow the build to proceed.
-- */
--int main(int argc, char **argv)
--{
--	int errors;
--
--	printf("CRC_LE_BITS = %d\n", CRC_LE_BITS);
--
--	errors = crc32c_test(0);
--
--	return errors != 0;
--}
--#endif /* CRC32_SELFTEST */
--- 
-2.25.1
+FYI, this one is in Andrew's mm-unstable tree:
 
+https://git.kernel.org/pub/scm/linux/kernel/git/akpm/mm.git/commit/?h=mm-unstable&id=ff048e3e2d167927634a45f4f424338411a1c4e6
+
+
+--
+Thanks,
+Ruan.
+
+>>>
+>>> to complete the pmem media failure handling code.  Should we (by which I
+>>> mostly mean Shiyang) ask Chandan to merge these two patches for 6.7?
+>>>
+>>
+>> I can add this patch into XFS tree for 6.7. But I will need Acks from 
+>> Andrew
+>> Morton and Dan Williams.
+> 
+> Thanks!  And this patch[1] fixes these 3 cases (xfs/55[0-2]).  Please 
+> add this one as well.
+> 
+> [1]: 
+> https://lore.kernel.org/linux-xfs/20230913102942.601271-1-ruansy.fnst@fujitsu.com
+> 
+> -- 
+> Ruan.
+> 
+>>
