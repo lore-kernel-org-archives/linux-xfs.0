@@ -2,268 +2,167 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 56BC9E82CA5
-	for <linux-xfs@archiver.kernel.org>; Wed, 27 Sep 2023 15:51:57 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 24104E82CB9
+	for <linux-xfs@archiver.kernel.org>; Wed, 27 Sep 2023 16:21:38 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232861AbjI0Pv4 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 27 Sep 2023 11:51:56 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38754 "EHLO
+        id S231370AbjI0QVg (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 27 Sep 2023 12:21:36 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47384 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232894AbjI0Pvi (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 27 Sep 2023 11:51:38 -0400
+        with ESMTP id S229901AbjI0QVe (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 27 Sep 2023 12:21:34 -0400
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 57E508697;
-        Wed, 27 Sep 2023 08:41:08 -0700 (PDT)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 4CE25C433C8;
-        Wed, 27 Sep 2023 15:40:47 +0000 (UTC)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4E702DD;
+        Wed, 27 Sep 2023 09:21:31 -0700 (PDT)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id AF3E3C433C7;
+        Wed, 27 Sep 2023 16:21:21 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1695829247;
-        bh=aF93GdhhV1COeqCylc+ipsiYAn1fVgsAgFGh8I21JAU=;
+        s=k20201202; t=1695831690;
+        bh=5fVqTod0fsU3D85/NgpH5eX11yWtVW2s8jme29QI3SA=;
         h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=FCgPYfQzhrFVwCFlu7Rt3zZKj2PDNs2shFLcEP6uTse0Y6lwizwi+YEtxv4oZfuOf
-         AfhqbfmRM5jIRmVJYdZujZYnHpUURrcOfLG2gF5VnKqCkGH7Ar/pntImx8uX8Uapvs
-         NsnE8mCxzWLGIRDicXOmX5YbUP36/5JwYQCgI42liDONo07WlwcapP04EDfh7S9uHT
-         KhdI5SaaR6ZMqzfIJIOdgm+zRdHDDI8m4iod1+VxQ690AuqNH03GMWrO14jQRCfME5
-         TQW70odaKHpKc/H/goJLUXZ4jm+oTjSaPUq6zisvCQBqWcssi57UmD9pNDQu8b7f2P
-         VkKNzCmBbi68Q==
-Date:   Wed, 27 Sep 2023 08:40:46 -0700
-From:   "Darrick J. Wong" <djwong@kernel.org>
+        b=K+SdxwDZhx8uxbb5abeHgPolVgmwSiIBL6/AzX/eEpmg7s5Jd1TwEPpueT17Z+y1i
+         r/3aJFhGZoIRaqB+ADboLRaAQZpJm6SMvyfu5jpdUX9fmjLLqHrtdJHSnoHaBHBoNB
+         1Ras0NDOeGzjZ5rjoNJ7hj3RFSgjPFHQeOCu0doiR1ZFlmc7Dtn7+Tg4yFYE5HRxY7
+         FflbgLOEB1zCas3wjtrhbqXfzlZd6DZqKcBXDoRDLeETsNHRLxD2cXgjOH7guvx0ma
+         AufPlRnLwdi+pMqoWiBGk6SGa+Snjtz53w/pXkwTjOc2fDnSaUxFN105snuKm+T14u
+         FBsBAdYo6oMFA==
+Date:   Wed, 27 Sep 2023 18:21:19 +0200
+From:   Christian Brauner <brauner@kernel.org>
 To:     Jan Kara <jack@suse.cz>
-Cc:     Christian Brauner <brauner@kernel.org>,
-        linux-fsdevel@vger.kernel.org, linux-block@vger.kernel.org,
+Cc:     linux-fsdevel@vger.kernel.org, linux-block@vger.kernel.org,
         Christoph Hellwig <hch@infradead.org>,
-        linux-xfs@vger.kernel.org, Christoph Hellwig <hch@lst.de>,
-        Dave Chinner <dchinner@redhat.com>
-Subject: Re: [PATCH 28/29] xfs: Convert to bdev_open_by_path()
-Message-ID: <20230927154046.GH11414@frogsfrogsfrogs>
+        Alasdair Kergon <agk@redhat.com>,
+        Andrew Morton <akpm@linux-foundation.org>,
+        Anna Schumaker <anna@kernel.org>, Chao Yu <chao@kernel.org>,
+        Christian Borntraeger <borntraeger@linux.ibm.com>,
+        "Darrick J. Wong" <djwong@kernel.org>,
+        Dave Kleikamp <shaggy@kernel.org>,
+        David Sterba <dsterba@suse.com>, dm-devel@redhat.com,
+        drbd-dev@lists.linbit.com, Gao Xiang <xiang@kernel.org>,
+        Jack Wang <jinpu.wang@ionos.com>,
+        Jaegeuk Kim <jaegeuk@kernel.org>,
+        jfs-discussion@lists.sourceforge.net,
+        Joern Engel <joern@lazybastard.org>,
+        Joseph Qi <joseph.qi@linux.alibaba.com>,
+        Kent Overstreet <kent.overstreet@gmail.com>,
+        linux-bcache@vger.kernel.org, linux-btrfs@vger.kernel.org,
+        linux-erofs@lists.ozlabs.org, linux-ext4@vger.kernel.org,
+        linux-f2fs-devel@lists.sourceforge.net, linux-mm@kvack.org,
+        linux-mtd@lists.infradead.org, linux-nfs@vger.kernel.org,
+        linux-nilfs@vger.kernel.org, linux-nvme@lists.infradead.org,
+        linux-pm@vger.kernel.org, linux-raid@vger.kernel.org,
+        linux-s390@vger.kernel.org, linux-scsi@vger.kernel.org,
+        linux-xfs@vger.kernel.org,
+        "Md. Haris Iqbal" <haris.iqbal@ionos.com>,
+        Mike Snitzer <snitzer@kernel.org>,
+        Minchan Kim <minchan@kernel.org>, ocfs2-devel@oss.oracle.com,
+        reiserfs-devel@vger.kernel.org,
+        Sergey Senozhatsky <senozhatsky@chromium.org>,
+        Song Liu <song@kernel.org>,
+        Sven Schnelle <svens@linux.ibm.com>,
+        target-devel@vger.kernel.org, Ted Tso <tytso@mit.edu>,
+        Trond Myklebust <trond.myklebust@hammerspace.com>,
+        xen-devel@lists.xenproject.org
+Subject: Re: [PATCH v4 0/29] block: Make blkdev_get_by_*() return handle
+Message-ID: <20230927-prahlen-reintreten-93706074e58d@brauner>
 References: <20230818123232.2269-1-jack@suse.cz>
- <20230927093442.25915-28-jack@suse.cz>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=utf-8
 Content-Disposition: inline
-In-Reply-To: <20230927093442.25915-28-jack@suse.cz>
+In-Reply-To: <20230818123232.2269-1-jack@suse.cz>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Wed, Sep 27, 2023 at 11:34:34AM +0200, Jan Kara wrote:
-> Convert xfs to use bdev_open_by_path() and pass the handle around.
+On Wed, 27 Sep 2023 11:34:07 +0200, Jan Kara wrote:
+> Create struct bdev_handle that contains all parameters that need to be
+> passed to blkdev_put() and provide bdev_open_* functions that return
+> this structure instead of plain bdev pointer. This will eventually allow
+> us to pass one more argument to blkdev_put() (renamed to bdev_release())
+> without too much hassle.
 > 
-> CC: "Darrick J. Wong" <djwong@kernel.org>
-> CC: linux-xfs@vger.kernel.org
-> Acked-by: Christoph Hellwig <hch@lst.de>
-> Reviewed-by: Dave Chinner <dchinner@redhat.com>
-> Reviewed-by: Christian Brauner <brauner@kernel.org>
-> Signed-off-by: Jan Kara <jack@suse.cz>
-
-Looks like a pretty straightforward conversion, so:
-
-For the block parts,
-Acked-by: Darrick J. Wong <djwong@kernel.org>
-
-For this patch:
-Reviewed-by: Darrick J. Wong <djwong@kernel.org>
-
---D
-
-> ---
->  fs/xfs/xfs_buf.c   | 22 ++++++++++------------
->  fs/xfs/xfs_buf.h   |  3 ++-
->  fs/xfs/xfs_super.c | 42 ++++++++++++++++++++++++------------------
->  3 files changed, 36 insertions(+), 31 deletions(-)
 > 
-> diff --git a/fs/xfs/xfs_buf.c b/fs/xfs/xfs_buf.c
-> index c1ece4a08ff4..003e157241da 100644
-> --- a/fs/xfs/xfs_buf.c
-> +++ b/fs/xfs/xfs_buf.c
-> @@ -1945,8 +1945,6 @@ void
->  xfs_free_buftarg(
->  	struct xfs_buftarg	*btp)
->  {
-> -	struct block_device	*bdev = btp->bt_bdev;
-> -
->  	unregister_shrinker(&btp->bt_shrinker);
->  	ASSERT(percpu_counter_sum(&btp->bt_io_count) == 0);
->  	percpu_counter_destroy(&btp->bt_io_count);
-> @@ -1954,8 +1952,8 @@ xfs_free_buftarg(
->  
->  	fs_put_dax(btp->bt_daxdev, btp->bt_mount);
->  	/* the main block device is closed by kill_block_super */
-> -	if (bdev != btp->bt_mount->m_super->s_bdev)
-> -		blkdev_put(bdev, btp->bt_mount->m_super);
-> +	if (btp->bt_bdev != btp->bt_mount->m_super->s_bdev)
-> +		bdev_release(btp->bt_bdev_handle);
->  
->  	kmem_free(btp);
->  }
-> @@ -1990,16 +1988,15 @@ xfs_setsize_buftarg(
->   */
->  STATIC int
->  xfs_setsize_buftarg_early(
-> -	xfs_buftarg_t		*btp,
-> -	struct block_device	*bdev)
-> +	xfs_buftarg_t		*btp)
->  {
-> -	return xfs_setsize_buftarg(btp, bdev_logical_block_size(bdev));
-> +	return xfs_setsize_buftarg(btp, bdev_logical_block_size(btp->bt_bdev));
->  }
->  
->  struct xfs_buftarg *
->  xfs_alloc_buftarg(
->  	struct xfs_mount	*mp,
-> -	struct block_device	*bdev)
-> +	struct bdev_handle	*bdev_handle)
->  {
->  	xfs_buftarg_t		*btp;
->  	const struct dax_holder_operations *ops = NULL;
-> @@ -2010,9 +2007,10 @@ xfs_alloc_buftarg(
->  	btp = kmem_zalloc(sizeof(*btp), KM_NOFS);
->  
->  	btp->bt_mount = mp;
-> -	btp->bt_dev =  bdev->bd_dev;
-> -	btp->bt_bdev = bdev;
-> -	btp->bt_daxdev = fs_dax_get_by_bdev(bdev, &btp->bt_dax_part_off,
-> +	btp->bt_bdev_handle = bdev_handle;
-> +	btp->bt_dev = bdev_handle->bdev->bd_dev;
-> +	btp->bt_bdev = bdev_handle->bdev;
-> +	btp->bt_daxdev = fs_dax_get_by_bdev(btp->bt_bdev, &btp->bt_dax_part_off,
->  					    mp, ops);
->  
->  	/*
-> @@ -2022,7 +2020,7 @@ xfs_alloc_buftarg(
->  	ratelimit_state_init(&btp->bt_ioerror_rl, 30 * HZ,
->  			     DEFAULT_RATELIMIT_BURST);
->  
-> -	if (xfs_setsize_buftarg_early(btp, bdev))
-> +	if (xfs_setsize_buftarg_early(btp))
->  		goto error_free;
->  
->  	if (list_lru_init(&btp->bt_lru))
-> diff --git a/fs/xfs/xfs_buf.h b/fs/xfs/xfs_buf.h
-> index df8f47953bb4..ada9d310b7d3 100644
-> --- a/fs/xfs/xfs_buf.h
-> +++ b/fs/xfs/xfs_buf.h
-> @@ -98,6 +98,7 @@ typedef unsigned int xfs_buf_flags_t;
->   */
->  typedef struct xfs_buftarg {
->  	dev_t			bt_dev;
-> +	struct bdev_handle	*bt_bdev_handle;
->  	struct block_device	*bt_bdev;
->  	struct dax_device	*bt_daxdev;
->  	u64			bt_dax_part_off;
-> @@ -364,7 +365,7 @@ xfs_buf_update_cksum(struct xfs_buf *bp, unsigned long cksum_offset)
->   *	Handling of buftargs.
->   */
->  struct xfs_buftarg *xfs_alloc_buftarg(struct xfs_mount *mp,
-> -		struct block_device *bdev);
-> +		struct bdev_handle *bdev_handle);
->  extern void xfs_free_buftarg(struct xfs_buftarg *);
->  extern void xfs_buftarg_wait(struct xfs_buftarg *);
->  extern void xfs_buftarg_drain(struct xfs_buftarg *);
-> diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
-> index 819a3568b28f..f0ae07828153 100644
-> --- a/fs/xfs/xfs_super.c
-> +++ b/fs/xfs/xfs_super.c
-> @@ -361,14 +361,15 @@ STATIC int
->  xfs_blkdev_get(
->  	xfs_mount_t		*mp,
->  	const char		*name,
-> -	struct block_device	**bdevp)
-> +	struct bdev_handle	**handlep)
->  {
->  	int			error = 0;
->  
-> -	*bdevp = blkdev_get_by_path(name, BLK_OPEN_READ | BLK_OPEN_WRITE,
-> -				    mp->m_super, &fs_holder_ops);
-> -	if (IS_ERR(*bdevp)) {
-> -		error = PTR_ERR(*bdevp);
-> +	*handlep = bdev_open_by_path(name, BLK_OPEN_READ | BLK_OPEN_WRITE,
-> +				     mp->m_super, &fs_holder_ops);
-> +	if (IS_ERR(*handlep)) {
-> +		error = PTR_ERR(*handlep);
-> +		*handlep = NULL;
->  		xfs_warn(mp, "Invalid device [%s], error=%d", name, error);
->  	}
->  
-> @@ -433,7 +434,7 @@ xfs_open_devices(
->  {
->  	struct super_block	*sb = mp->m_super;
->  	struct block_device	*ddev = sb->s_bdev;
-> -	struct block_device	*logdev = NULL, *rtdev = NULL;
-> +	struct bdev_handle	*logdev_handle = NULL, *rtdev_handle = NULL;
->  	int			error;
->  
->  	/*
-> @@ -446,17 +447,19 @@ xfs_open_devices(
->  	 * Open real time and log devices - order is important.
->  	 */
->  	if (mp->m_logname) {
-> -		error = xfs_blkdev_get(mp, mp->m_logname, &logdev);
-> +		error = xfs_blkdev_get(mp, mp->m_logname, &logdev_handle);
->  		if (error)
->  			goto out_relock;
->  	}
->  
->  	if (mp->m_rtname) {
-> -		error = xfs_blkdev_get(mp, mp->m_rtname, &rtdev);
-> +		error = xfs_blkdev_get(mp, mp->m_rtname, &rtdev_handle);
->  		if (error)
->  			goto out_close_logdev;
->  
-> -		if (rtdev == ddev || rtdev == logdev) {
-> +		if (rtdev_handle->bdev == ddev ||
-> +		    (logdev_handle &&
-> +		     rtdev_handle->bdev == logdev_handle->bdev)) {
->  			xfs_warn(mp,
->  	"Cannot mount filesystem with identical rtdev and ddev/logdev.");
->  			error = -EINVAL;
-> @@ -468,22 +471,25 @@ xfs_open_devices(
->  	 * Setup xfs_mount buffer target pointers
->  	 */
->  	error = -ENOMEM;
-> -	mp->m_ddev_targp = xfs_alloc_buftarg(mp, ddev);
-> +	mp->m_ddev_targp = xfs_alloc_buftarg(mp, sb->s_bdev_handle);
->  	if (!mp->m_ddev_targp)
->  		goto out_close_rtdev;
->  
-> -	if (rtdev) {
-> -		mp->m_rtdev_targp = xfs_alloc_buftarg(mp, rtdev);
-> +	if (rtdev_handle) {
-> +		mp->m_rtdev_targp = xfs_alloc_buftarg(mp, rtdev_handle);
->  		if (!mp->m_rtdev_targp)
->  			goto out_free_ddev_targ;
->  	}
->  
-> -	if (logdev && logdev != ddev) {
-> -		mp->m_logdev_targp = xfs_alloc_buftarg(mp, logdev);
-> +	if (logdev_handle && logdev_handle->bdev != ddev) {
-> +		mp->m_logdev_targp = xfs_alloc_buftarg(mp, logdev_handle);
->  		if (!mp->m_logdev_targp)
->  			goto out_free_rtdev_targ;
->  	} else {
->  		mp->m_logdev_targp = mp->m_ddev_targp;
-> +		/* Handle won't be used, drop it */
-> +		if (logdev_handle)
-> +			bdev_release(logdev_handle);
->  	}
->  
->  	error = 0;
-> @@ -497,11 +503,11 @@ xfs_open_devices(
->   out_free_ddev_targ:
->  	xfs_free_buftarg(mp->m_ddev_targp);
->   out_close_rtdev:
-> -	 if (rtdev)
-> -		 blkdev_put(rtdev, sb);
-> +	 if (rtdev_handle)
-> +		bdev_release(rtdev_handle);
->   out_close_logdev:
-> -	if (logdev && logdev != ddev)
-> -		blkdev_put(logdev, sb);
-> +	if (logdev_handle)
-> +		bdev_release(logdev_handle);
->  	goto out_relock;
->  }
->  
-> -- 
-> 2.35.3
-> 
+> [...]
+
+> to ease review / testing. Christian, can you pull the patches to your tree
+> to get some exposure in linux-next as well? Thanks!
+
+Yep. So I did it slighly differently. I pulled in the btrfs prereqs and
+then applied your series on top of it so we get all the Link: tags right.
+I'm running tests right now. Please double-check.
+
+---
+
+Applied to the vfs.super branch of the vfs/vfs.git tree.
+Patches in the vfs.super branch should appear in linux-next soon.
+
+Please report any outstanding bugs that were missed during review in a
+new review to the original patch series allowing us to drop it.
+
+It's encouraged to provide Acked-bys and Reviewed-bys even though the
+patch has now been applied. If possible patch trailers will be updated.
+
+Note that commit hashes shown below are subject to change due to rebase,
+trailer updates or similar. If in doubt, please check the listed branch.
+
+tree:   https://git.kernel.org/pub/scm/linux/kernel/git/vfs/vfs.git
+branch: vfs.super
+
+[01/29] block: Provide bdev_open_* functions
+       https://git.kernel.org/vfs/vfs/c/b7c828aa0b3c
+[02/29] block: Use bdev_open_by_dev() in blkdev_open()
+        https://git.kernel.org/vfs/vfs/c/d4e36f27b45a
+[03/29] block: Use bdev_open_by_dev() in disk_scan_partitions() and blkdev_bszset()
+        https://git.kernel.org/vfs/vfs/c/5f9bd6764c7a
+[04/29] drdb: Convert to use bdev_open_by_path()
+        https://git.kernel.org/vfs/vfs/c/0220ca8e443d
+[05/29] pktcdvd: Convert to bdev_open_by_dev()
+        https://git.kernel.org/vfs/vfs/c/7af10b889789
+[06/29] rnbd-srv: Convert to use bdev_open_by_path()
+        https://git.kernel.org/vfs/vfs/c/3d27892a4be7
+[07/29] xen/blkback: Convert to bdev_open_by_dev()
+        https://git.kernel.org/vfs/vfs/c/26afb0ed10b3
+[08/29] zram: Convert to use bdev_open_by_dev()
+        https://git.kernel.org/vfs/vfs/c/efc8e3f4c6dc
+[09/29] bcache: Convert to bdev_open_by_path()
+        https://git.kernel.org/vfs/vfs/c/dc893f51d24a
+[10/29] dm: Convert to bdev_open_by_dev()
+        https://git.kernel.org/vfs/vfs/c/80c2267c6d07
+[11/29] md: Convert to bdev_open_by_dev()
+        https://git.kernel.org/vfs/vfs/c/15db36126ca6
+[12/29] mtd: block2mtd: Convert to bdev_open_by_dev/path()
+        https://git.kernel.org/vfs/vfs/c/4c27234bf3ce
+[13/29] nvmet: Convert to bdev_open_by_path()
+        https://git.kernel.org/vfs/vfs/c/70cffddcc300
+[14/29] s390/dasd: Convert to bdev_open_by_path()
+        https://git.kernel.org/vfs/vfs/c/5581d03457f8
+[15/29] scsi: target: Convert to bdev_open_by_path()
+        https://git.kernel.org/vfs/vfs/c/43de7d844d47
+[16/29] PM: hibernate: Convert to bdev_open_by_dev()
+        https://git.kernel.org/vfs/vfs/c/105ea4a2fd18
+[17/29] PM: hibernate: Drop unused snapshot_test argument
+        https://git.kernel.org/vfs/vfs/c/b589a66e3688
+[18/29] mm/swap: Convert to use bdev_open_by_dev()
+        https://git.kernel.org/vfs/vfs/c/615af8e29233
+[19/29] fs: Convert to bdev_open_by_dev()
+        https://git.kernel.org/vfs/vfs/c/5173192bcfe6
+[20/29] btrfs: Convert to bdev_open_by_path()
+        https://git.kernel.org/vfs/vfs/c/8cf64782764f
+[21/29] erofs: Convert to use bdev_open_by_path()
+        https://git.kernel.org/vfs/vfs/c/4d41880bf249
+[22/29] ext4: Convert to bdev_open_by_dev()
+        https://git.kernel.org/vfs/vfs/c/f7507612395e
+[23/29] f2fs: Convert to bdev_open_by_dev/path()
+        https://git.kernel.org/vfs/vfs/c/d9ff8e3b6498
+[24/29] jfs: Convert to bdev_open_by_dev()
+        https://git.kernel.org/vfs/vfs/c/459dc6376338
+[25/29] nfs/blocklayout: Convert to use bdev_open_by_dev/path()
+        https://git.kernel.org/vfs/vfs/c/5b1df9a40929
+[26/29] ocfs2: Convert to use bdev_open_by_dev()
+        https://git.kernel.org/vfs/vfs/c/b6b95acbd943
+[27/29] reiserfs: Convert to bdev_open_by_dev/path()
+        https://git.kernel.org/vfs/vfs/c/7e3615ff6119
+[28/29] xfs: Convert to bdev_open_by_path()
+        https://git.kernel.org/vfs/vfs/c/176ccb99e207
+[29/29] block: Remove blkdev_get_by_*() functions
+        https://git.kernel.org/vfs/vfs/c/953863a5a2ff
