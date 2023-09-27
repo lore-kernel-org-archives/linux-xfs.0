@@ -2,73 +2,141 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 65041E810B2
-	for <linux-xfs@archiver.kernel.org>; Wed, 27 Sep 2023 09:39:06 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E9AD8E810C2
+	for <linux-xfs@archiver.kernel.org>; Wed, 27 Sep 2023 10:26:38 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229803AbjI0JjF (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 27 Sep 2023 05:39:05 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51188 "EHLO
+        id S230518AbjI0K0h (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 27 Sep 2023 06:26:37 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35444 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231258AbjI0Jit (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 27 Sep 2023 05:38:49 -0400
+        with ESMTP id S229648AbjI0K0g (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 27 Sep 2023 06:26:36 -0400
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3ADDD1B5;
-        Wed, 27 Sep 2023 02:38:47 -0700 (PDT)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 4C2DCC433CA;
-        Wed, 27 Sep 2023 09:38:46 +0000 (UTC)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4ADB510E;
+        Wed, 27 Sep 2023 03:26:35 -0700 (PDT)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 456BDC433CC;
+        Wed, 27 Sep 2023 10:26:33 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1695807526;
-        bh=FnB6r/TsNbhHrX8rrhR5Zfuc6bPQcmN7sYf13qX6zAo=;
-        h=From:To:Cc:Subject:Date:From;
-        b=pvoWndKPQyRQhtv2ne50BlwCUVi+VjZ3SgbyczPYQ46MBEoVc8/c2vrY/ILxojACR
-         Vq603JK5K9pnX+n+9OGoPfQ6EBGumndefPmkkNAIlinuAYY87vclpvL6igPaRC1Rni
-         t/pUZtzFiTbGOsU9L94JPA6ByoTfIFcTrW2tKpGD9J7TqO+/UVyXpx6HARwgPyep3N
-         hAylKCov73gFl28DkzwIQijRiXpM1mqm7uDTlQqaPWHoxm9Xn5coL8TpoJPqlcCXl0
-         xcOv29QcAHE3V+MAinS93eoEPEy3vJ4kjDtOmNk75nV1ajwwMI6wO50+XNa0LVP3jU
-         MjPFHgi3Z/GCQ==
-User-agent: mu4e 1.8.10; emacs 27.1
-From:   Chandan Babu R <chandanbabu@kernel.org>
-To:     chandanbabu@kernel.org
-Cc:     dchinner@redhat.com, djwong@kernel.org,
-        linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org
-Subject: [ANNOUNCE] xfs-linux: for-next updated to 59c71548cf10
-Date:   Wed, 27 Sep 2023 15:06:59 +0530
-Message-ID: <87ttrg7y70.fsf@debian-BULLSEYE-live-builder-AMD64>
+        s=k20201202; t=1695810394;
+        bh=qRxlBSqDzr7yeWwJNC65BN+ZowrBPiHgdaWqhPek5Zs=;
+        h=Subject:From:To:Cc:Date:In-Reply-To:References:From;
+        b=GK9pIsMJBCVbcnQvYIdzYN7DIOo7huUoxLXsdxBkvLgYcoVkBveaC6AxF0Y3B3Q9m
+         MHrYMMhuIgJKFEb/00jk/U2kwHxT6d+kbNgxL79K8nLLA+CA8qh5WKoL925itv+6Db
+         SoYvNPCzuSBZlosnCDC0vDjMimRo1kov6h8Na7eyy/c3Y5Fi4b9SjQlErp0weDgYh2
+         JsUnowhXCjeBGVirSbINOY9WypjehZNp9UvmUN3FVnsVT1dZAOb0344f0+JcHjARgN
+         O7D4FiHSciPCbj1yrnto/pxqerWZ9SFtkeJ3J6N+Mu+vYH1ExMQPZxbI6rpuDvEHL6
+         VafB6sAcT2pQA==
+Message-ID: <0f0c9bd9436d8ccf57365a0627b6905e1fa199e1.camel@kernel.org>
+Subject: Re: [PATCH v8 0/5] fs: multigrain timestamps for XFS's change_cookie
+From:   Jeff Layton <jlayton@kernel.org>
+To:     Dave Chinner <david@fromorbit.com>
+Cc:     Amir Goldstein <amir73il@gmail.com>,
+        Alexander Viro <viro@zeniv.linux.org.uk>,
+        Christian Brauner <brauner@kernel.org>,
+        Chuck Lever <chuck.lever@oracle.com>,
+        Neil Brown <neilb@suse.de>,
+        Olga Kornievskaia <kolga@netapp.com>,
+        Dai Ngo <Dai.Ngo@oracle.com>, Tom Talpey <tom@talpey.com>,
+        Chandan Babu R <chandan.babu@oracle.com>,
+        "Darrick J. Wong" <djwong@kernel.org>, Jan Kara <jack@suse.cz>,
+        Linus Torvalds <torvalds@linux-foundation.org>,
+        Kent Overstreet <kent.overstreet@linux.dev>,
+        linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-nfs@vger.kernel.org, linux-xfs@vger.kernel.org
+Date:   Wed, 27 Sep 2023 06:26:31 -0400
+In-Reply-To: <ZRNqSvHwkmQoynOc@dread.disaster.area>
+References: <20230922-ctime-v8-0-45f0c236ede1@kernel.org>
+         <CAOQ4uxiNfPoPiX0AERywqjaBH30MHQPxaZepnKeyEjJgTv8hYg@mail.gmail.com>
+         <5e3b8a365160344f1188ff13afb0a26103121f99.camel@kernel.org>
+         <CAOQ4uxjrt6ca4VDvPAL7USr6_SspCv0rkRkMJ4_W2S6vzV738g@mail.gmail.com>
+         <ZRC1pjwKRzLiD6I3@dread.disaster.area>
+         <77d33282068035a3b42ace946b1be57457d2b60b.camel@kernel.org>
+         <ZRIKj0E8P46kerqa@dread.disaster.area>
+         <54e79ca9adfd52a8d39e158bc246173768a0aa0d.camel@kernel.org>
+         <ZRNqSvHwkmQoynOc@dread.disaster.area>
+Content-Type: text/plain; charset="ISO-8859-15"
+Content-Transfer-Encoding: quoted-printable
+User-Agent: Evolution 3.48.4 (3.48.4-1.fc38) 
 MIME-Version: 1.0
-Content-Type: text/plain
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Hi folks,
+On Wed, 2023-09-27 at 09:33 +1000, Dave Chinner wrote:
+> On Tue, Sep 26, 2023 at 07:31:55AM -0400, Jeff Layton wrote:
+> > On Tue, 2023-09-26 at 08:32 +1000, Dave Chinner wrote:
+> > > We also must not lose sight of the fact that the lazytime mount
+> > > option makes atime updates on XFS behave exactly as the nfsd/NFS
+> > > client application wants. That is, XFS will do in-memory atime
+> > > updates unless the atime update also sets S_VERSION to explicitly
+> > > bump the i_version counter if required. That leads to another
+> > > potential nfsd specific solution without requiring filesystems to
+> > > change on disk formats: the nfsd explicitly asks operations for lazy
+> > > atime updates...
+> > >=20
+> >=20
+> > Not exactly. The problem with XFS's i_version is that it also bumps it
+> > on atime updates. lazytime reduces the number of atime updates to
+> > ~1/day. To be exactly what nfsd wants, you'd need to make that 0.
+>=20
+> As long as there are future modifications going to those files,
+> lazytime completely elides the visibility of atime updates as they
+> get silently aggregated into future modifications and so there are
+> 0 i_version changes as a resutl of pure atime updates in those cases.
+>=20
+> If there are no future modifications, then just like relatime, there
+> is a timestamp update every 24hrs. That's no big deal, nobody is
+> complaining about this being a problem.
+>=20
 
-The for-next branch of the xfs-linux repository at:
+Right. The main issue here is that (with relatime) we'll still end up
+with a cache invalidation once every 24 hours for any r/o files that
+have been accessed. It's not a _huge_ problem on most workloads; it's
+just not ideal.
 
-	https://git.kernel.org/pub/scm/fs/xfs/xfs-linux.git
+> It's the "persistent atime update after modification" heuristic
+> implemented by relatime that is causing all the problems here. If
+> that behaviour is elided on the server side, then most of the client
+> side invalidation problems with these workloads go away.
+>=20
+> IOWs, nfsd needs direct control over how atime updates should be
+> treated by the VFS/filesystem (i.e. as pure in-memory updates)
+> rather than leaving it to some heuristic that may do the exact
+> opposite of what the nfsd application needs.
+>
+> That's the point I was making: we have emerging requirements for
+> per-operation timestamp update behaviour control with io_uring and
+> other non-blocking applications. The nfsd application also has
+> specific semantics it wants the VFS/filesystem to implement
+> (non-persistent atime unless something else changes)....
+>=20
+> My point is that we've now failed a couple of times now to implement
+> what NFSD requires via trying to change VFS and/or filesystem
+> infrastructure to provide i_version or ctime semantics the nfsd
+> requires. That's a fairly good sign that we might not be approaching
+> this problem from the right direction, and so doubling down and
+> considering changing the timestamp infrastructure from the ground up
+> just to solve a relatively niche, filesystem specific issue doesn't
+> seem like the best approach.
+>=20
+> OTOH, having the application actually tell the timestamp updates
+> exactly what semantics it needs (non blocking, persistent vs in
+> memory, etc) will allow the VFS and filesystems can do the right
+> thing for the application without having to worry about general
+> heuristics that sometimes do exactly the wrong thing....
+>=20
 
-has just been updated.
+I'm a little unclear on exactly what you're proposing here, but I think
+that's overstating what's needed. nfsd's needs are pretty simple: it
+wants a change attribute that changes any time the ctime would change.
 
-Patches often get missed, so please check if your outstanding patches
-were in this update. If they have not been in this update, please
-resubmit them to linux-xfs@vger.kernel.org so they can be picked up in
-the next update.
+btrfs, ext4 and tmpfs have this. xfs does not because its change
+attribute changes when the atime changes as well. With the right mount
+options, that problem can be mitigated to some degree, but it's still
+not ideal.
 
-The new head of the for-next branch is commit:
-
-59c71548cf10 Merge tag 'fix-fix-iunlink-6.6_2023-09-25' of https://git.kernel.org/pub/scm/linux/kernel/git/djwong/xfs-linux into xfs-6.6-fixesB
-
-2 new commits:
-
-Chandan Babu R (1):
-      [59c71548cf10] Merge tag 'fix-fix-iunlink-6.6_2023-09-25' of https://git.kernel.org/pub/scm/linux/kernel/git/djwong/xfs-linux into xfs-6.6-fixesB
-
-Darrick J. Wong (1):
-      [537c013b140d] xfs: fix reloading entire unlinked bucket lists
-
-Code Diffstat:
-
- fs/xfs/xfs_export.c | 16 ++++++++++++----
- fs/xfs/xfs_inode.c  | 48 +++++++++++++++++++++++++++++++++++-------------
- fs/xfs/xfs_itable.c |  2 ++
- fs/xfs/xfs_qm.c     | 15 ++++++++++++---
- 4 files changed, 61 insertions(+), 20 deletions(-)
+We have a couple of options: try to make the ctime behave the way we
+need, or just implement a proper change attribute in xfs (which involves
+revving the on-disk format).
+--=20
+Jeff Layton <jlayton@kernel.org>
