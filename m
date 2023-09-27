@@ -2,80 +2,134 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9C9F9E810D9
-	for <linux-xfs@archiver.kernel.org>; Wed, 27 Sep 2023 12:30:37 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 560B8E80AB7
+	for <linux-xfs@archiver.kernel.org>; Wed, 27 Sep 2023 14:20:24 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230109AbjI0Mah (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 27 Sep 2023 08:30:37 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37854 "EHLO
+        id S232218AbjI0OUW (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 27 Sep 2023 10:20:22 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37958 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229880AbjI0Mag (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 27 Sep 2023 08:30:36 -0400
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C01FEE6;
-        Wed, 27 Sep 2023 05:30:34 -0700 (PDT)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id E15B0C433C7;
-        Wed, 27 Sep 2023 12:30:33 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1695817834;
-        bh=unuz/ZkoOU/fFz50dgZgbKbNNxMqoaxZaY2nWVd7Lzo=;
-        h=References:From:To:Cc:Subject:Date:In-reply-to:From;
-        b=oo7sfn3i5ZQq9Ou63bFiW5jNRtEYLc1iwIfxZuUOH8ku0F1Q8eftqP8iOQmo30VkT
-         6caTFGtFe2gckMnrxUUR/KKRXyN9NUI9vMIhIcShdAQVoZ9kRZuSEHuQtsMRUPrYH/
-         rc2f4o114sMtHbLktCjtAqsfj2SO+38V6U60PMPh3fEOeG4x3iTQai3B4fZfQam7Ji
-         RBGBYnYZ541JP95C3xxEFTnvCc362enn9UCfBLt+3ufdIOD95Fc3wZTl9+unLMaQiX
-         NNXm28Jx74nppwaXO9cEcn8NKKkNk2GJKTZDz2OdEJ9LCIeJ4EKUpenBVbTdpdJmT4
-         b6lSGIRfPZZLg==
-References: <20230918071905.296081-1-hanchunchao@inspur.com>
- <ZQoMqI/QGPWEpkEi@rh> <ZQoPaXNAwtu4wl02@casper.infradead.org>
-User-agent: mu4e 1.8.10; emacs 27.1
-From:   Chandan Babu R <chandanbabu@kernel.org>
-To:     corbet@lwn.net
-Cc:     Dave Chinner <dchinner@redhat.com>,
-        Charles Han <hanchunchao@inspur.com>, djwong@kernel.org,
-        allison.henderson@oracle.com, bhelgaas@google.com,
-        linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-xfs@vger.kernel.org, Matthew Wilcox <willy@infradead.org>
-Subject: Re: [PATCH] Documentation: xfs: Remove repeated word in comments
-Date:   Wed, 27 Sep 2023 17:57:01 +0530
-In-reply-to: <ZQoPaXNAwtu4wl02@casper.infradead.org>
-Message-ID: <8734yz3ijc.fsf@debian-BULLSEYE-live-builder-AMD64>
+        with ESMTP id S232216AbjI0OTq (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 27 Sep 2023 10:19:46 -0400
+Received: from mail-lj1-x236.google.com (mail-lj1-x236.google.com [IPv6:2a00:1450:4864:20::236])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A17F7CD2
+        for <linux-xfs@vger.kernel.org>; Wed, 27 Sep 2023 07:19:40 -0700 (PDT)
+Received: by mail-lj1-x236.google.com with SMTP id 38308e7fff4ca-2bfe9447645so40486311fa.0
+        for <linux-xfs@vger.kernel.org>; Wed, 27 Sep 2023 07:19:40 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=kernel-dk.20230601.gappssmtp.com; s=20230601; t=1695824379; x=1696429179; darn=vger.kernel.org;
+        h=content-transfer-encoding:in-reply-to:content-language:references
+         :cc:to:subject:from:user-agent:mime-version:date:message-id:from:to
+         :cc:subject:date:message-id:reply-to;
+        bh=Wwk46okUDVQfnnelgDDAXJI2PyNHcNwKe3ka13udWbU=;
+        b=DeI+ndmzygXiV26g14+sM5/i8LsgL9CgDy9VB19Br8mLYRZAuIXT5fRRQQG6dlR8uL
+         ZHHEpTz9ZokFgwqp34n75yS1PY5jIPS2kExh12XhknOQ2eKCYOv28dsCXeJAXJsi1HEl
+         F2Zx2jmfkSiekVnLkJ+WFP/RjHCF0P4hSSv/TEmiFoZUevCIhKJiTrNv3PuTvlSLSujz
+         Wf0VyalzJuC9m/i5NNQ2Jq1nDpP2QrA8a1dJThFB6+d4PeMeHZ2KUcdfKMEpuuI5ak06
+         ZG9/SXQPZ7P5UXbdQF7zqfmdxHWvYx4R5uZ/etWrlX8CR5WPQ2foeStaY5DOJOnP6vcl
+         LLCw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1695824379; x=1696429179;
+        h=content-transfer-encoding:in-reply-to:content-language:references
+         :cc:to:subject:from:user-agent:mime-version:date:message-id
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=Wwk46okUDVQfnnelgDDAXJI2PyNHcNwKe3ka13udWbU=;
+        b=ndpCYvGav4eLaiiGETKpmZ7KxrduIoyEj7PGtmfgFGk25KlngwQBRxGag1xvSvGJkN
+         ER7NlPpKJtJx1LttLXmH9n/XsK1xoGvMaiY4Q4bawQBgsUcEaus6e/KTjCfM2Sr5KP9d
+         N9ef1D1eS1BXWWsMNQu6T/d8eUHt2Lslo+0x7Q0vdCKghF3YvNcjUwsVKFBTYvjmRt6k
+         1LYmW7+dQVkLCJ6vsXazy75hrJ9gem6Ih6+t6ZVLCHR3XS66JMDWXWlZW+BWyiYTWU6S
+         8bGgI5juIEDvW6mU0qYXXzl+aCIV27Jh0xrzBuKcMKO2XDkqw3nlnj6fF/+/Qjc8Y3Mx
+         Iu5A==
+X-Gm-Message-State: AOJu0YxlYVd1ty+62ZCWYCG6krPG6HegmG7nsxvs2ereHlpp4tDIJUtL
+        2QAQXQ8JSFbceAJN43L7MVuDXA==
+X-Google-Smtp-Source: AGHT+IExVCqrFIxKzo43T8FMa/9T5rz6/xdccYRyI4cqxFk27k3RqgKqbk6x0v1Y5TMyg8NtKFdEkg==
+X-Received: by 2002:a05:651c:3cf:b0:2b6:cd7f:5ea8 with SMTP id f15-20020a05651c03cf00b002b6cd7f5ea8mr1801740ljp.1.1695824378667;
+        Wed, 27 Sep 2023 07:19:38 -0700 (PDT)
+Received: from [172.20.13.88] ([45.147.210.162])
+        by smtp.gmail.com with ESMTPSA id mh2-20020a170906eb8200b00992b2c55c67sm9370253ejb.156.2023.09.27.07.19.36
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Wed, 27 Sep 2023 07:19:37 -0700 (PDT)
+Message-ID: <9cc59d88-4b77-4e56-ae54-737baca1d435@kernel.dk>
+Date:   Wed, 27 Sep 2023 08:19:36 -0600
 MIME-Version: 1.0
-Content-Type: text/plain
+User-Agent: Mozilla Thunderbird
+From:   Jens Axboe <axboe@kernel.dk>
+Subject: Re: [PATCH v4 0/29] block: Make blkdev_get_by_*() return handle
+To:     Jan Kara <jack@suse.cz>
+Cc:     Christian Brauner <brauner@kernel.org>,
+        linux-fsdevel@vger.kernel.org, linux-block@vger.kernel.org,
+        Christoph Hellwig <hch@infradead.org>, Jan Kara <jack@suse.cz>,
+        Alasdair Kergon <agk@redhat.com>,
+        Andrew Morton <akpm@linux-foundation.org>,
+        Anna Schumaker <anna@kernel.org>, Chao Yu <chao@kernel.org>,
+        Christian Borntraeger <borntraeger@linux.ibm.com>,
+        "Darrick J. Wong" <djwong@kernel.org>,
+        Dave Kleikamp <shaggy@kernel.org>,
+        David Sterba <dsterba@suse.com>, dm-devel@redhat.com,
+        drbd-dev@lists.linbit.com, Gao Xiang <xiang@kernel.org>,
+        Jack Wang <jinpu.wang@ionos.com>,
+        Jaegeuk Kim <jaegeuk@kernel.org>,
+        jfs-discussion@lists.sourceforge.net,
+        Joern Engel <joern@lazybastard.org>,
+        Joseph Qi <joseph.qi@linux.alibaba.com>,
+        Kent Overstreet <kent.overstreet@gmail.com>,
+        linux-bcache@vger.kernel.org, linux-btrfs@vger.kernel.org,
+        linux-erofs@lists.ozlabs.org, linux-ext4@vger.kernel.org,
+        linux-f2fs-devel@lists.sourceforge.net, linux-mm@kvack.org,
+        linux-mtd@lists.infradead.org, linux-nfs@vger.kernel.org,
+        linux-nilfs@vger.kernel.org, linux-nvme@lists.infradead.org,
+        linux-pm@vger.kernel.org, linux-raid@vger.kernel.org,
+        linux-s390@vger.kernel.org, linux-scsi@vger.kernel.org,
+        linux-xfs@vger.kernel.org,
+        "Md. Haris Iqbal" <haris.iqbal@ionos.com>,
+        Mike Snitzer <snitzer@kernel.org>,
+        Minchan Kim <minchan@kernel.org>, ocfs2-devel@oss.oracle.com,
+        reiserfs-devel@vger.kernel.org,
+        Sergey Senozhatsky <senozhatsky@chromium.org>,
+        Song Liu <song@kernel.org>,
+        Sven Schnelle <svens@linux.ibm.com>,
+        target-devel@vger.kernel.org, Ted Tso <tytso@mit.edu>,
+        Trond Myklebust <trond.myklebust@hammerspace.com>,
+        xen-devel@lists.xenproject.org
+References: <20230818123232.2269-1-jack@suse.cz>
+Content-Language: en-US
+In-Reply-To: <20230818123232.2269-1-jack@suse.cz>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Tue, Sep 19, 2023 at 10:15:21 PM +0100, Matthew Wilcox wrote:
-> On Wed, Sep 20, 2023 at 07:03:36AM +1000, Dave Chinner wrote:
->> [cc linux-xfs@vger.kernel.org]
->> 
->> Hi Charles,
->> 
->> For future reference, can you CC the XFS list on XFS documentation
->> changes please?  That's much preferable to sending patches to random
->> developers and hoping they notice it....
->> 
->> On Mon, Sep 18, 2023 at 03:19:05PM +0800, Charles Han wrote:
->> > Remove the repeated word "the" in comments.
->> > 
->> > Signed-off-by: Charles Han <hanchunchao@inspur.com>
->> > ---
->> >  Documentation/filesystems/xfs-online-fsck-design.rst | 2 +-
->> >  1 file changed, 1 insertion(+), 1 deletion(-)
->> > 
->> > diff --git a/Documentation/filesystems/xfs-online-fsck-design.rst b/Documentation/filesystems/xfs-online-fsck-design.rst
+On Wed, Sep 27, 2023 at 3:34?AM Jan Kara <jack@suse.cz> wrote:
 >
-> To be fair, this new file isn't listed in MAINTAINERS, so
-> scripts/get_maintainer.pl doesn't know about it.  May I
-> suggest the attached patch?
+> Hello,
 >
-> [2. text/plain; 0001-XFS-Update-MAINTAINERS-to-catch-all-XFS-documentatio.patch]...
+> this is a v3 of the patch series which implements the idea of blkdev_get_by_*()
 
-Hi Jonathan,
+v4?
 
-I am planning to apply these two patches to xfs-linux's for-next branch and
-later send them to Linus. Please let me know if you have any objections.
+> calls returning bdev_handle which is then passed to blkdev_put() [1]. This
+> makes the get and put calls for bdevs more obviously matching and allows us to
+> propagate context from get to put without having to modify all the users
+> (again!). In particular I need to propagate used open flags to blkdev_put() to
+> be able count writeable opens and add support for blocking writes to mounted
+> block devices. I'll send that series separately.
+>
+> The series is based on Btrfs tree's for-next branch [2] as of today as the
+> series depends on Christoph's changes to btrfs device handling.  Patches have
+> passed some reasonable testing - I've tested block changes, md, dm, bcache,
+> xfs, btrfs, ext4, swap. More testing or review is always welcome. Thanks! I've
+> pushed out the full branch to:
+>
+> git://git.kernel.org/pub/scm/linux/kernel/git/jack/linux-fs.git bdev_handle
+>
+> to ease review / testing. Christian, can you pull the patches to your tree
+> to get some exposure in linux-next as well? Thanks!
+
+For the block bits:
+
+Acked-by: Jens Axboe <axboe@kernel.dk>
 
 -- 
-Chandan
+Jens Axboe
+
