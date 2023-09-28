@@ -2,229 +2,237 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 75B29E743C3
-	for <linux-xfs@archiver.kernel.org>; Thu, 28 Sep 2023 21:04:41 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id DA470E743C2
+	for <linux-xfs@archiver.kernel.org>; Thu, 28 Sep 2023 21:28:01 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232220AbjI1VEk (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 28 Sep 2023 17:04:40 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59086 "EHLO
+        id S232484AbjI1V2B (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 28 Sep 2023 17:28:01 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38646 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232215AbjI1VEj (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 28 Sep 2023 17:04:39 -0400
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 07FB01AD;
-        Thu, 28 Sep 2023 14:04:37 -0700 (PDT)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id EFA80C433C8;
-        Thu, 28 Sep 2023 21:04:36 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1695935077;
-        bh=M/5ZU8g6yA4315it+eEcyz6qGTDOsNSnU7hBp/ukGEI=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=GifZoq+S91dlVSa8ba0LZTxOnoK6itojp7KAx0aHws8HEpKAazauz/F7V6ey4j4aZ
-         ReTk2p58whVPBqxUi1p8nECtD32BcYK73OW0ypmbynywHszkqFvjSs9Oanu2jEsaJf
-         G2yVpCNxUtxC8A1bekl8OOXosCFSPGeKVbuU8aa2DjyYdH093YRAdDshO9jwS33at2
-         oxSPfIWR3UiZOcRFOkd9hnM9jS7+/E7fgt2pcbQ0kh3te4uvyOrY27twx+VsJBFGTG
-         /48cAHA4N/1KsXPkSE+TxA7p91cxibX7Ttw+GQgRBcX8caNe3WmJLWqoObJ0VsYqM2
-         hLjyiaOnF9dVg==
-Date:   Thu, 28 Sep 2023 14:04:36 -0700
-From:   "Darrick J. Wong" <djwong@kernel.org>
-To:     Zach O'Keefe <zokeefe@google.com>
-Cc:     Ryan Roberts <ryan.roberts@arm.com>,
-        Bagas Sanjaya <bagasdotme@gmail.com>,
-        Hugh Dickins <hughd@google.com>,
-        David Hildenbrand <david@redhat.com>,
-        Matthew Wilcox <willy@infradead.org>,
+        with ESMTP id S232547AbjI1V15 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 28 Sep 2023 17:27:57 -0400
+Received: from outgoing.mit.edu (outgoing-auth-1.mit.edu [18.9.28.11])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5096A1A1
+        for <linux-xfs@vger.kernel.org>; Thu, 28 Sep 2023 14:27:55 -0700 (PDT)
+Received: from cwcc.thunk.org (pool-173-48-111-87.bstnma.fios.verizon.net [173.48.111.87])
+        (authenticated bits=0)
+        (User authenticated as tytso@ATHENA.MIT.EDU)
+        by outgoing.mit.edu (8.14.7/8.12.4) with ESMTP id 38SLQvsp021536
+        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+        Thu, 28 Sep 2023 17:26:58 -0400
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=mit.edu; s=outgoing;
+        t=1695936425; bh=w4hql40FuyyfsTNK9D530X9ExV2y5b7TU7/1a0HHsnU=;
+        h=Date:From:Subject:Message-ID:MIME-Version:Content-Type;
+        b=NGPOVv6aP7Wgx4/k9ruqGjDYWmjUQVAfEL5fppG6yE2RNxUM6uiyoWrXBZfGmZyL2
+         gb1zEZjWcSSCFd+NWg1/BYhZ5jeEptXNin1ZAM6seg38Angccj8YOPtyzxOx/hDFrb
+         Q+ePr/t98/fHq2BcSzJCThnFTNb50fVmlIrGfb3oMvB11ToZpH+p8R2mhaDk4/44dl
+         uEHGVh6Q6Ih5iyFuN8+PasXijpXT1PXJm+5Rkla8PX5Glna1OAsFe3wre6CQl62oa4
+         RAr1Z2b44rKF067M11yaRPI56z2wMDur4vLyEnjrhgmaYzW5D9XQ8I+PJlbP887wDq
+         NXSNNWLPWiTbQ==
+Received: by cwcc.thunk.org (Postfix, from userid 15806)
+        id 06AD715C0266; Thu, 28 Sep 2023 17:26:57 -0400 (EDT)
+Date:   Thu, 28 Sep 2023 17:26:56 -0400
+From:   "Theodore Ts'o" <tytso@mit.edu>
+To:     Jeff Layton <jlayton@kernel.org>
+Cc:     "Darrick J. Wong" <djwong@kernel.org>,
+        Arnd Bergmann <arnd@arndb.de>,
+        Alexander Viro <viro@zeniv.linux.org.uk>,
+        Christian Brauner <brauner@kernel.org>,
+        Linus Torvalds <torvalds@linux-foundation.org>,
+        David Sterba <dsterba@suse.cz>,
+        Amir Goldstein <amir73il@gmail.com>,
+        "Eric W. Biederman" <ebiederm@xmission.com>,
+        Kees Cook <keescook@chromium.org>, Jeremy Kerr <jk@ozlabs.org>,
+        Michael Ellerman <mpe@ellerman.id.au>,
+        Nicholas Piggin <npiggin@gmail.com>,
+        Christophe Leroy <christophe.leroy@csgroup.eu>,
+        Heiko Carstens <hca@linux.ibm.com>,
+        Vasily Gorbik <gor@linux.ibm.com>,
+        Alexander Gordeev <agordeev@linux.ibm.com>,
+        Christian Borntraeger <borntraeger@linux.ibm.com>,
+        Sven Schnelle <svens@linux.ibm.com>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        Arve =?iso-8859-1?B?SGr4bm5lduVn?= <arve@android.com>,
+        Todd Kjos <tkjos@android.com>,
+        Martijn Coenen <maco@android.com>,
+        Joel Fernandes <joel@joelfernandes.org>,
+        Carlos Llamas <cmllamas@google.com>,
+        Suren Baghdasaryan <surenb@google.com>,
+        Mattia Dongili <malattia@linux.it>,
+        Dennis Dalessandro <dennis.dalessandro@cornelisnetworks.com>,
+        Jason Gunthorpe <jgg@ziepe.ca>,
+        Leon Romanovsky <leon@kernel.org>,
+        Brad Warrum <bwarrum@linux.ibm.com>,
+        Ritu Agarwal <rituagar@linux.ibm.com>,
+        Hans de Goede <hdegoede@redhat.com>,
+        Ilpo =?iso-8859-1?Q?J=E4rvinen?= <ilpo.jarvinen@linux.intel.com>,
+        Mark Gross <markgross@kernel.org>,
+        Jiri Slaby <jirislaby@kernel.org>,
+        Eric Van Hensbergen <ericvh@kernel.org>,
+        Latchesar Ionkov <lucho@ionkov.net>,
+        Dominique Martinet <asmadeus@codewreck.org>,
+        Christian Schoenebeck <linux_oss@crudebyte.com>,
+        David Sterba <dsterba@suse.com>,
+        David Howells <dhowells@redhat.com>,
+        Marc Dionne <marc.dionne@auristor.com>,
+        Ian Kent <raven@themaw.net>,
+        Luis de Bethencourt <luisbg@kernel.org>,
+        Salah Triki <salah.triki@gmail.com>,
+        "Tigran A. Aivazian" <aivazian.tigran@gmail.com>,
+        Chris Mason <clm@fb.com>, Josef Bacik <josef@toxicpanda.com>,
+        Xiubo Li <xiubli@redhat.com>,
+        Ilya Dryomov <idryomov@gmail.com>,
+        Jan Harkes <jaharkes@cs.cmu.edu>, coda@cs.cmu.edu,
+        Joel Becker <jlbec@evilplan.org>,
+        Christoph Hellwig <hch@lst.de>,
+        Nicolas Pitre <nico@fluxnic.net>,
+        "Rafael J . Wysocki" <rafael@kernel.org>,
+        Ard Biesheuvel <ardb@kernel.org>, Gao Xiang <xiang@kernel.org>,
+        Chao Yu <chao@kernel.org>,
+        Yue Hu <huyue2@gl0jj8bn.sched.sma.tdnsstic1.cn>,
+        Jeffle Xu <jefflexu@linux.alibaba.com>,
+        Namjae Jeon <linkinjeon@kernel.org>,
+        Sungjong Seo <sj1557.seo@samsung.com>,
+        Jan Kara <jack@suse.com>,
+        Andreas Dilger <adilger.kernel@dilger.ca>,
+        Jaegeuk Kim <jaegeuk@kernel.org>,
+        OGAWA Hirofumi <hirofumi@mail.parknet.co.jp>,
+        Christoph Hellwig <hch@infradead.org>,
+        Miklos Szeredi <miklos@szeredi.hu>,
+        Bob Peterson <rpeterso@redhat.com>,
+        Andreas Gruenbacher <agruenba@redhat.com>,
+        Richard Weinberger <richard@nod.at>,
+        Anton Ivanov <anton.ivanov@cambridgegreys.com>,
+        Johannes Berg <johannes@sipsolutions.net>,
+        Mikulas Patocka <mikulas@artax.karlin.mff.cuni.cz>,
+        Mike Kravetz <mike.kravetz@oracle.com>,
+        Muchun Song <muchun.song@linux.dev>, Jan Kara <jack@suse.cz>,
+        David Woodhouse <dwmw2@infradead.org>,
+        Dave Kleikamp <shaggy@kernel.org>, Tejun Heo <tj@kernel.org>,
+        Trond Myklebust <trond.myklebust@hammerspace.com>,
+        Anna Schumaker <anna@kernel.org>,
+        Chuck Lever <chuck.lever@oracle.com>,
+        Neil Brown <neilb@suse.de>,
+        Olga Kornievskaia <kolga@netapp.com>,
+        Dai Ngo <Dai.Ngo@oracle.com>, Tom Talpey <tom@talpey.com>,
+        Ryusuke Konishi <konishi.ryusuke@gmail.com>,
+        Anton Altaparmakov <anton@tuxera.com>,
+        Konstantin Komarov <almaz.alexandrovich@paragon-software.com>,
+        Mark Fasheh <mark@fasheh.com>,
+        Joseph Qi <joseph.qi@linux.alibaba.com>,
+        Bob Copeland <me@bobcopeland.com>,
+        Mike Marshall <hubcap@omnibond.com>,
+        Martin Brandenburg <martin@omnibond.com>,
+        Luis Chamberlain <mcgrof@kernel.org>,
+        Iurii Zaikin <yzaikin@google.com>,
+        Tony Luck <tony.luck@intel.com>,
+        "Guilherme G. Piccoli" <gpiccoli@igalia.com>,
+        Anders Larsen <al@alarsen.net>,
+        Steve French <sfrench@samba.org>,
+        Paulo Alcantara <pc@manguebit.com>,
+        Ronnie Sahlberg <lsahlber@redhat.com>,
+        Shyam Prasad N <sprasad@microsoft.com>,
+        Sergey Senozhatsky <senozhatsky@chromium.org>,
+        Phillip Lougher <phillip@squashfs.org.uk>,
+        Steven Rostedt <rostedt@goodmis.org>,
+        Masami Hiramatsu <mhiramat@kernel.org>,
+        Evgeniy Dushistov <dushistov@mail.ru>,
         Chandan Babu R <chandan.babu@oracle.com>,
-        Linux Memory Management List <linux-mm@kvack.org>,
-        Linux XFS <linux-xfs@vger.kernel.org>,
-        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-        Yu Zhao <yuzhao@google.com>
-Subject: Re: BUG: MADV_COLLAPSE doesn't work for XFS files]
-Message-ID: <20230928210436.GG11456@frogsfrogsfrogs>
-References: <4d6c9b19-cdbb-4a00-9a40-5ed5c36332e5@arm.com>
- <ZRVbV6yJ-zFzRoas@debian.me>
- <54e5accf-1a56-495a-a4f5-d57504bc2fc8@arm.com>
- <CAAa6QmRbDbEamFgEDbgVhwKOf1GHNa90COuyz29BmduOAjbmyA@mail.gmail.com>
+        Damien Le Moal <dlemoal@kernel.org>,
+        Naohiro Aota <naohiro.aota@wdc.com>,
+        Johannes Thumshirn <jth@kernel.org>,
+        Alexei Starovoitov <ast@kernel.org>,
+        Daniel Borkmann <daniel@iogearbox.net>,
+        Andrii Nakryiko <andrii@kernel.org>,
+        Martin KaFai Lau <martin.lau@linux.dev>,
+        Song Liu <song@kernel.org>,
+        Yonghong Song <yonghong.song@linux.dev>,
+        John Fastabend <john.fastabend@gmail.com>,
+        KP Singh <kpsingh@kernel.org>,
+        Stanislav Fomichev <sdf@google.com>,
+        Hao Luo <haoluo@google.com>, Jiri Olsa <jolsa@kernel.org>,
+        Hugh Dickins <hughd@google.com>,
+        Andrew Morton <akpm@linux-foundation.org>,
+        "David S . Miller" <davem@davemloft.net>,
+        Eric Dumazet <edumazet@google.com>,
+        Jakub Kicinski <kuba@kernel.org>,
+        Paolo Abeni <pabeni@redhat.com>,
+        John Johansen <john.johansen@canonical.com>,
+        Paul Moore <paul@paul-moore.com>,
+        James Morris <jmorris@namei.org>,
+        "Serge E. Hallyn" <serge@hallyn.com>,
+        Stephen Smalley <stephen.smalley.work@gmail.com>,
+        Eric Paris <eparis@parisplace.org>,
+        linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-mm@kvack.org, linuxppc-dev@lists.ozlabs.org,
+        linux-s390@vger.kernel.org, platform-driver-x86@vger.kernel.org,
+        linux-rdma@vger.kernel.org, linux-serial@vger.kernel.org,
+        linux-usb@vger.kernel.org, v9fs@lists.linux.dev,
+        linux-afs@lists.infradead.org, autofs@vger.kernel.org,
+        linux-btrfs@vger.kernel.org, ceph-devel@vger.kernel.org,
+        codalist@telemann.coda.cs.cmu.edu, linux-efi@vger.kernel.org,
+        linux-erofs@lists.ozlabs.org, linux-ext4@vger.kernel.org,
+        linux-f2fs-devel@lists.sourceforge.net, gfs2@lists.linux.dev,
+        linux-um@lists.infradead.org, linux-mtd@lists.infradead.org,
+        jfs-discussion@lists.sourceforge.net, linux-nfs@vger.kernel.org,
+        linux-nilfs@vger.kernel.org, linux-ntfs-dev@lists.sourceforge.net,
+        ntfs3@lists.linux.dev, ocfs2-devel@lists.linux.dev,
+        linux-karma-devel@lists.sourceforge.net, devel@lists.orangefs.org,
+        linux-unionfs@vger.kernel.org, linux-hardening@vger.kernel.org,
+        reiserfs-devel@vger.kernel.org, linux-cifs@vger.kernel.org,
+        samba-technical@lists.samba.org,
+        linux-trace-kernel@vger.kernel.org, linux-xfs@vger.kernel.org,
+        bpf@vger.kernel.org, Netdev <netdev@vger.kernel.org>,
+        apparmor@lists.ubuntu.com, linux-security-module@vger.kernel.org,
+        selinux@vger.kernel.org
+Subject: Re: [PATCH 86/87] fs: switch timespec64 fields in inode to discrete
+ integers
+Message-ID: <20230928212656.GC189345@mit.edu>
+References: <20230928110554.34758-1-jlayton@kernel.org>
+ <20230928110554.34758-2-jlayton@kernel.org>
+ <6020d6e7-b187-4abb-bf38-dc09d8bd0f6d@app.fastmail.com>
+ <af047e4a1c6947c59d4a13d4ae221c784a5386b4.camel@kernel.org>
+ <20230928171943.GK11439@frogsfrogsfrogs>
+ <6a6f37d16b55a3003af3f3dbb7778a367f68cd8d.camel@kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <CAAa6QmRbDbEamFgEDbgVhwKOf1GHNa90COuyz29BmduOAjbmyA@mail.gmail.com>
+In-Reply-To: <6a6f37d16b55a3003af3f3dbb7778a367f68cd8d.camel@kernel.org>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Thu, Sep 28, 2023 at 12:43:57PM -0700, Zach O'Keefe wrote:
-> Hey Ryan,
+On Thu, Sep 28, 2023 at 01:40:55PM -0400, Jeff Layton wrote:
 > 
-> Thanks for bringing this up.
+> Correct. We'd lose some fidelity in currently stored timestamps, but as
+> Linus and Ted pointed out, anything below ~100ns granularity is
+> effectively just noise, as that's the floor overhead for calling into
+> the kernel. It's hard to argue that any application needs that sort of
+> timestamp resolution, at least with contemporary hardware. 
 > 
-> On Thu, Sep 28, 2023 at 4:59 AM Ryan Roberts <ryan.roberts@arm.com> wrote:
-> >
-> > On 28/09/2023 11:54, Bagas Sanjaya wrote:
-> > > On Thu, Sep 28, 2023 at 10:55:17AM +0100, Ryan Roberts wrote:
-> > >> Hi all,
-> > >>
-> > >> I've just noticed that when applied to a file mapping for a file on xfs, MADV_COLLAPSE returns EINVAL. The same test case works fine if the file is on ext4.
-> > >>
-> > >> I think the root cause is that the implementation bails out if it finds a (non-PMD-sized) large folio in the page cache for any part of the file covered by the region. XFS does readahead into large folios so we hit this issue. See khugepaged.h:collapse_file():
-> > >>
-> > >>              if (PageTransCompound(page)) {
-> > >>                      struct page *head = compound_head(page);
-> > >>
-> > >>                      result = compound_order(head) == HPAGE_PMD_ORDER &&
-> > >>                                      head->index == start
-> > >>                                      /* Maybe PMD-mapped */
-> > >>                                      ? SCAN_PTE_MAPPED_HUGEPAGE
-> > >>                                      : SCAN_PAGE_COMPOUND;
-> > >>                      goto out_unlock;
-> > >>              }
-> > >
-> 
-> Ya, non-PMD-sized THPs were just barely visible in my peripherals when
-> writing this, and I'm still woefully behind on your work on them now
-> (sorry!).
-> 
-> I'd like to eventually make collapse (not just MADV_COLLAPSE, but
-> khugepaged too) support arbitrary-sized large folios in general, but
-> I'm very pressed for time right now. I think M. Wilcox is also
-> interested in this, given he left the TODO to support it :P
+> Doing that would mean that tests that store specific values in the
+> atime/mtime and expect to be able to fetch exactly that value back would
+> break though, so we'd have to be OK with that if we want to try it. The
+> good news is that it's relatively easy to experiment with new ways to
+> store timestamps with these wrappers in place.
 
-Is the point of MADV_COLLAPSE to replace base pages with PMD-sized pages
-in the pagecache for faster lookups?  Or merely to replace them with
-something larger, even if it's not PMD sized?
+The reason why we store 1ns granularity in ext4's on-disk format (and
+accept that we only support times only a couple of centuries into the
+future, as opposed shooting for an on-disk format good for several
+millennia :-), was in case there was userspace that might try to store
+a very fine-grained timestamp and want to be able to get it back
+bit-for-bit identical.
 
-As of 6.6, XFS asks for folios of size min(read/readahead/write_len,
-ondisk_mapping_length), so in theory the folio size should roughly
-follow the access patterns.  If the goal is merely larger folios, then
-we are done here and can move on to some other part of the collapse.
+For example, what if someone was trying to implement some kind of
+steganographic scheme where they going store a secret message (or more
+likely, a 256-bit AES key) in the nanosecond fields of the file's
+{c,m,a,cr}time timestamps, "hiding in plain sight".  Not that I think
+that we have to support something like that, since the field is for
+*timestamps* not cryptographic bits, so if we break someone who is
+doing that, do we care?
 
-OTOH if the goal is TLB savings, then I suppose you'd actually /want/ to
-select a large (but not PMD) folio for collapsing into a PMD sized
-folio, right?
+I don't think anyone will complain about breaking the userspace API
+--- especially since if, say, the CIA was using this for their spies'
+drop boxes, they probably wouldn't want to admit it.  :-)
 
-e.g.
-
-	if (PageTransCompound(page)) {
-		struct page *head = compound_head(page);
-
-		if (head->index != start) {
-			/* not sure what _COMPOUND means here... */
-			result = SCAN_PAGE_COMPOUND;
-			goto out_unlock;
-		}
-
-		if (compound_order(head) == HPAGE_PMD_ORDER) {
-			result = SCAN_PTE_MAPPED_HUGEPAGE;
-			goto out_unlock;
-		}
-
-		/* result is still SCAN_SUCCEED, keep going */
-	}
-
-I /think/ that would work?  If the largefolio is dirty or not fully
-uptodate then collapse won't touch it; and I think fs/iomap handles this
-in a compatible way because it won't mark the folio uptodate until all
-the blocks have been read, and it marks the folio dirty if any of the
-blocks are dirty.
-
-(says me, who doesn't really understand this part of the code.)
-
---D
-
-> Thank you for the reproducer though! I haven't run it, but I'll
-> probably come back here to steal it when the time comes.
-> 
-> > > I don't see any hint to -EINVAL above. Am I missing something?
-> >
-> > The SCAN_PAGE_COMPOUND result ends up back at madvise_collapse() where it
-> > eventually gets converted to -EINVAL by madvise_collapse_errno().
-> >
-> > >
-> > >>
-> > >> I'm not sure if this is already a known issue? I don't have time to work on a fix for this right now, so thought I would highlight it at least. I might get around to it at some point in the future if nobody else tackles it.
-> 
-> My guess is Q1 2024 is when I'd be able to look into this, at the
-> current level of urgency. It doesn't sound like it's blocking anything
-> for your work right now -- lmk if that changes though!
-> 
-> Thanks,
-> Zach
-> 
-> 
-> 
-> > >>
-> > >> Thanks,
-> > >> Ryan
-> > >>
-> > >>
-> > >> Test case I've been using:
-> > >>
-> > >> -->8--
-> > >>
-> > >> #include <stdio.h>
-> > >> #include <stdlib.h>
-> > >> #include <sys/mman.h>
-> > >> #include <sys/types.h>
-> > >> #include <sys/stat.h>
-> > >> #include <fcntl.h>
-> > >> #include <unistd.h>
-> > >>
-> > >> #ifndef MADV_COLLAPSE
-> > >> #define MADV_COLLAPSE                25
-> > >> #endif
-> > >>
-> > >> #define handle_error(msg)    do { perror(msg); exit(EXIT_FAILURE); } while (0)
-> > >>
-> > >> #define SZ_1K                        1024
-> > >> #define SZ_1M                        (SZ_1K * SZ_1K)
-> > >> #define ALIGN(val, align)    (((val) + ((align) - 1)) & ~((align) - 1))
-> > >>
-> > >> #if 1
-> > >> // ext4
-> > >> #define DATA_FILE            "/home/ubuntu/data.txt"
-> > >> #else
-> > >> // xfs
-> > >> #define DATA_FILE            "/boot/data.txt"
-> > >> #endif
-> > >>
-> > >> int main(void)
-> > >> {
-> > >>      int fd;
-> > >>      char *mem;
-> > >>      int ret;
-> > >>
-> > >>      fd = open(DATA_FILE, O_RDONLY);
-> > >>      if (fd == -1)
-> > >>              handle_error("open");
-> > >>
-> > >>      mem = mmap(NULL, SZ_1M * 4, PROT_READ | PROT_EXEC, MAP_PRIVATE, fd, 0);
-> > >>      close(fd);
-> > >>      if (mem == MAP_FAILED)
-> > >>              handle_error("mmap");
-> > >>
-> > >>      printf("1: pid=%d, mem=%p\n", getpid(), mem);
-> > >>      getchar();
-> > >>
-> > >>      mem = (char *)ALIGN((unsigned long)mem, SZ_1M * 2);
-> > >>      ret = madvise(mem, SZ_1M * 2, MADV_COLLAPSE);
-> > >>      if (ret)
-> > >>              handle_error("madvise");
-> > >>
-> > >>      printf("2: pid=%d, mem=%p\n", getpid(), mem);
-> > >>      getchar();
-> > >>
-> > >>      return 0;
-> > >> }
-> > >>
-> > >> -->8--
-> > >>
-> > >
-> > > Confused...
-> >
-> > This is a user space test case that shows the problem; data.txt needs to be at
-> > least 4MB and on a mounted ext4 and xfs filesystem. By toggling the '#if 1' to
-> > 0, you can see the different behaviours for ext4 and xfs -
-> > handle_error("madvise") fires with EINVAL in the xfs case. The getchar()s are
-> > leftovers from me looking at the smaps file.
-> >
+       	    	     	      	      	    - Ted
