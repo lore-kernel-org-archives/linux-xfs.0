@@ -2,79 +2,75 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6F7C3E743C8
-	for <linux-xfs@archiver.kernel.org>; Thu, 28 Sep 2023 22:44:50 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 66E5BE743C9
+	for <linux-xfs@archiver.kernel.org>; Thu, 28 Sep 2023 22:44:53 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230325AbjI1Wou (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 28 Sep 2023 18:44:50 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57254 "EHLO
+        id S231446AbjI1Wox (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 28 Sep 2023 18:44:53 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57270 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229478AbjI1Wot (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 28 Sep 2023 18:44:49 -0400
-Received: from mail-pf1-x433.google.com (mail-pf1-x433.google.com [IPv6:2607:f8b0:4864:20::433])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8614C180
-        for <linux-xfs@vger.kernel.org>; Thu, 28 Sep 2023 15:44:48 -0700 (PDT)
-Received: by mail-pf1-x433.google.com with SMTP id d2e1a72fcca58-692d2e8c003so35640b3a.1
-        for <linux-xfs@vger.kernel.org>; Thu, 28 Sep 2023 15:44:48 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=fromorbit-com.20230601.gappssmtp.com; s=20230601; t=1695941088; x=1696545888; darn=vger.kernel.org;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
-        bh=woapVQlEUE+hfmrPjf/vANLkqwMvK9Wk7ysvsQvDHpQ=;
-        b=ZL2ab0cXUEFK6TdwFv6KkKd9zEQ/8gTJIRX8dvNfpZtgjQwzEEewo4ulSh03XOoRoP
-         vU01moJ5p1ZErkBsfiXkCtxBzRy6tWSKYCvM0CDslUB4qD+tDGq44v0Y0M1EVw7WHLd0
-         xRzHcgtXqfPkBvbsRwUTeKcA+F2HORSYm6I0HwB7XAVK96fJxCJp6ixOwf9kZg+ba/aq
-         dWpa40B/pftm8GHC/F/QdNJsCQxBhiAMdTSDHNcCu0qD/+KqeMoHap6TIfm5icuN70E9
-         anyKQosgHHBmselE0vvc7ffGF6AMsD3VuApE2raT3IuBLodkY9X1Sew/vErk1IZ5DyiO
-         Pruw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1695941088; x=1696545888;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=woapVQlEUE+hfmrPjf/vANLkqwMvK9Wk7ysvsQvDHpQ=;
-        b=hiv1ik8JghA+AvP83xwEzvUptSmQcz6R+ZlEZlRb8bREdWY7vw5UzKywo0CkClPDru
-         oJg/0Y536e7noMiAU/wID1Yqa9xqC5pfdhuCyno1X4XyS24/P0Kezh264Ot52h89ontK
-         RezxWw00a9VMR4hYvvgcYsHNI2OLQlGkOphOTU/DkQAkaFxIzniAXZO7CfK8TWPq7w35
-         yjQSf5LR00FAecfytj+hs9+Os7WXYGpr6ASIuiwPfHS7I88/3XwZvV5/7/g1WCih9bd9
-         sblt+A/r4yR+0EvxhhCzZMZJ2ZsD20cBQ/1Hdyyqk8KLVrqA6tJMnkJPxXCIA0IsubhF
-         1aFg==
-X-Gm-Message-State: AOJu0YxL16sdFA0Fut9o0pZYeiQ9QhtEFm9G0l3DQKsQnXEbEAay4q55
-        smpD5A09GNDXIvB/EU15RCwUbRBTVQGyW2noNPQ=
-X-Google-Smtp-Source: AGHT+IG1yKh++DLAvDLapt3uKt3onowhWrQjE3T4Nk94+ZBeCfPsUOpHxOcHO3uuMBC+kpr7JBYq/w==
-X-Received: by 2002:a05:6a20:1604:b0:161:f7c3:29c2 with SMTP id l4-20020a056a20160400b00161f7c329c2mr3613640pzj.11.1695941087985;
-        Thu, 28 Sep 2023 15:44:47 -0700 (PDT)
-Received: from dread.disaster.area (pa49-180-20-59.pa.nsw.optusnet.com.au. [49.180.20.59])
-        by smtp.gmail.com with ESMTPSA id u25-20020a63a919000000b0057ab7d42a4dsm13110833pge.86.2023.09.28.15.44.47
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 28 Sep 2023 15:44:47 -0700 (PDT)
-Received: from dave by dread.disaster.area with local (Exim 4.96)
-        (envelope-from <david@fromorbit.com>)
-        id 1qlzkR-006tyF-1j;
-        Fri, 29 Sep 2023 08:44:43 +1000
-Date:   Fri, 29 Sep 2023 08:44:43 +1000
-From:   Dave Chinner <david@fromorbit.com>
-To:     bugzilla-daemon@kernel.org
-Cc:     linux-xfs@vger.kernel.org
-Subject: Re: [Bug 217572] Initial blocked tasks causing deterioration over
- hours until (nearly) complete system lockup and data loss with PostgreSQL 13
-Message-ID: <ZRYB26fsNaau3/df@dread.disaster.area>
+        with ESMTP id S229478AbjI1Wox (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 28 Sep 2023 18:44:53 -0400
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0C6A8180
+        for <linux-xfs@vger.kernel.org>; Thu, 28 Sep 2023 15:44:52 -0700 (PDT)
+Received: by smtp.kernel.org (Postfix) with ESMTPS id 93ADCC43397
+        for <linux-xfs@vger.kernel.org>; Thu, 28 Sep 2023 22:44:51 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1695941091;
+        bh=LL4Uaze6b3PMvcQ3GgVhp0U08k0NCMCliuZDqfoY4kI=;
+        h=From:To:Subject:Date:In-Reply-To:References:From;
+        b=bhom8LgKcEytNvy3GpEME+UZmw/agfrrRkex7f0PjDe+fx1XcRyzSc+GFDOt2mj8k
+         iQ5Kct/nfB5e8dEkLUsKi8/RvFS1tAyv+hPdzWOvJD6BZGac2JbvBtq1Q41zMYx263
+         7vqqcfNueNOYdn2tRi47A5qGbyjF4pj1y4FqZRFsnahrVe7s1AkEe/krcEqpdBvRKh
+         WusjB6mkr/quXTYRftaFcX7nSUHJHUSqwLsiEIIKi1/IDW7F0GActtVCS0RTtHU+dh
+         5LNBxReE0pau8O7weTZjx3lqDSUu/UwvzYzfwyQNT1ptUBtyrUvrdu3xV4mw7elEyp
+         EWZC1ns+SzK7w==
+Received: by aws-us-west-2-korg-bugzilla-1.web.codeaurora.org (Postfix, from userid 48)
+        id 83BE0C53BCD; Thu, 28 Sep 2023 22:44:51 +0000 (UTC)
+From:   bugzilla-daemon@kernel.org
+To:     linux-xfs@vger.kernel.org
+Subject: [Bug 217572] Initial blocked tasks causing deterioration over hours
+ until (nearly) complete system lockup and data loss with PostgreSQL 13
+Date:   Thu, 28 Sep 2023 22:44:51 +0000
+X-Bugzilla-Reason: None
+X-Bugzilla-Type: changed
+X-Bugzilla-Watch-Reason: AssignedTo filesystem_xfs@kernel-bugs.kernel.org
+X-Bugzilla-Product: File System
+X-Bugzilla-Component: XFS
+X-Bugzilla-Version: 2.5
+X-Bugzilla-Keywords: 
+X-Bugzilla-Severity: high
+X-Bugzilla-Who: david@fromorbit.com
+X-Bugzilla-Status: NEW
+X-Bugzilla-Resolution: 
+X-Bugzilla-Priority: P3
+X-Bugzilla-Assigned-To: filesystem_xfs@kernel-bugs.kernel.org
+X-Bugzilla-Flags: 
+X-Bugzilla-Changed-Fields: 
+Message-ID: <bug-217572-201763-DStX702R4y@https.bugzilla.kernel.org/>
+In-Reply-To: <bug-217572-201763@https.bugzilla.kernel.org/>
 References: <bug-217572-201763@https.bugzilla.kernel.org/>
- <bug-217572-201763-z2qkmBIoaL@https.bugzilla.kernel.org/>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
+X-Bugzilla-URL: https://bugzilla.kernel.org/
+Auto-Submitted: auto-generated
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <bug-217572-201763-z2qkmBIoaL@https.bugzilla.kernel.org/>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
+https://bugzilla.kernel.org/show_bug.cgi?id=3D217572
+
+--- Comment #12 from Dave Chinner (david@fromorbit.com) ---
 On Thu, Sep 28, 2023 at 12:39:05PM +0000, bugzilla-daemon@kernel.org wrote:
-> https://bugzilla.kernel.org/show_bug.cgi?id=217572
-> 
+> https://bugzilla.kernel.org/show_bug.cgi?id=3D217572
+>=20
 > --- Comment #10 from Christian Theune (ct@flyingcircus.io) ---
-> @Dave I've seen this a second time now today. It also ended up being a copy
-> statement with postgresql and I'm going to take a consistent snapshot of the
+> @Dave I've seen this a second time now today. It also ended up being a co=
+py
+> statement with postgresql and I'm going to take a consistent snapshot of =
+the
 > full disk right now.
 
 Have you tried seeing if commit cbc02854331e ("XArray: Do not return
@@ -88,6 +84,9 @@ be looking at in-memory page cache state that is being tripped over
 first....
 
 -Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+
+--=20
+You may reply to this email to add a comment.
+
+You are receiving this mail because:
+You are watching the assignee of the bug.=
