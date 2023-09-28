@@ -2,118 +2,226 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 611DAE732F7
-	for <linux-xfs@archiver.kernel.org>; Thu, 28 Sep 2023 17:01:03 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 11072CE7B1A
+	for <linux-xfs@archiver.kernel.org>; Thu, 28 Sep 2023 17:06:30 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231285AbjI1RBC (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 28 Sep 2023 13:01:02 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33818 "EHLO
+        id S231953AbjI1RG3 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 28 Sep 2023 13:06:29 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42016 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231778AbjI1RBC (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 28 Sep 2023 13:01:02 -0400
+        with ESMTP id S231285AbjI1RGV (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 28 Sep 2023 13:06:21 -0400
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 358CA99
-        for <linux-xfs@vger.kernel.org>; Thu, 28 Sep 2023 10:01:01 -0700 (PDT)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id CC147C433C8;
-        Thu, 28 Sep 2023 17:01:00 +0000 (UTC)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A8D16193;
+        Thu, 28 Sep 2023 10:06:19 -0700 (PDT)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id B9B31C433C8;
+        Thu, 28 Sep 2023 17:06:04 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1695920460;
-        bh=C7Lfadnpr4n/YntpxUQDdf4XmNjZ7fNE5sRm0zDNvFY=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=QXqrf05/YemuCVQaUTnm8J6NaDm025y/UMz3wu1hKTPeJuvl67Ztkdf0rD+87x9XP
-         VAAEKBZ6lQx+esQjALVdj6pZIiNXIy7eQQZgCjKNHGEr49dXjsvFooMztnPM+oTDU8
-         k8W8kPxkcVt2Cx3ak4UwL+NDjTwqCBGalztKgqtL+IkF07RyKNA0683wlvD7BQnOg2
-         twq8BueJZK+7NtYSAPBC3O5lEs4a9KNXfK5RQ77XJJMPL5bIGcIp8VZXNJY3mvEMHZ
-         I/9GeIUMVn/dRgnWwLvjzZjl4XzhcVI3VaKN8YS13H5dbu+k+wk+ZDwjRYGH9HNi2m
-         iGDBOnW0XJUSA==
-Date:   Thu, 28 Sep 2023 10:01:00 -0700
-From:   "Darrick J. Wong" <djwong@kernel.org>
-To:     Dave Chinner <david@fromorbit.com>
-Cc:     linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 1/1] xfs: make xchk_iget safer in the presence of corrupt
- inode btrees
-Message-ID: <20230928170100.GI11439@frogsfrogsfrogs>
-References: <169577058799.3312834.4066903607681044261.stgit@frogsfrogsfrogs>
- <169577058815.3312834.1762190757505617356.stgit@frogsfrogsfrogs>
- <ZRUVL2okuLfNC6U1@dread.disaster.area>
+        s=k20201202; t=1695920779;
+        bh=DNM/VlOuUT51G0bnMvXw+94sqfHee3c68K5vLwQuau4=;
+        h=Subject:From:To:Cc:Date:In-Reply-To:References:From;
+        b=T1EG9wCsmdavqbCDgZQmRYDY2hTjqQ8HvqU7HakqZRoba0+m8x7Xb0PPxNH54fTbK
+         gxOvKBrhR/NUHAqOFYLgQFvCS4fbqqpdpyJ0meCz+VJBZB5WwUDXaofxixCnDwGA2b
+         xVhvTR3lvjwhcUNCr4cL+zM4prum42dBj/EqssN3wQ5xwZohTtnO5wenm4djJ5rTsg
+         au+O/I2DWLjGqSGQ9+pJFDrXNkgJ5uSZlH8zfxoOHymWjEqjSumVZbYplcXqZfm3+f
+         KDfZ0aAr31be94G8szYCClaMWLFdZEYGpG76Y3w4tHoT3E7mgxWznMj5HFQTi8O+xa
+         SaKUjb/2UX2Ww==
+Message-ID: <af047e4a1c6947c59d4a13d4ae221c784a5386b4.camel@kernel.org>
+Subject: Re: [PATCH 86/87] fs: switch timespec64 fields in inode to discrete
+ integers
+From:   Jeff Layton <jlayton@kernel.org>
+To:     Arnd Bergmann <arnd@arndb.de>,
+        Alexander Viro <viro@zeniv.linux.org.uk>,
+        Christian Brauner <brauner@kernel.org>,
+        Linus Torvalds <torvalds@linux-foundation.org>,
+        David Sterba <dsterba@suse.cz>,
+        Amir Goldstein <amir73il@gmail.com>,
+        Theodore Ts'o <tytso@mit.edu>,
+        "Eric W. Biederman" <ebiederm@xmission.com>,
+        Kees Cook <keescook@chromium.org>, Jeremy Kerr <jk@ozlabs.org>,
+        Michael Ellerman <mpe@ellerman.id.au>,
+        Nicholas Piggin <npiggin@gmail.com>,
+        Christophe Leroy <christophe.leroy@csgroup.eu>,
+        Heiko Carstens <hca@linux.ibm.com>,
+        Vasily Gorbik <gor@linux.ibm.com>,
+        Alexander Gordeev <agordeev@linux.ibm.com>,
+        Christian Borntraeger <borntraeger@linux.ibm.com>,
+        Sven Schnelle <svens@linux.ibm.com>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        Arve =?ISO-8859-1?Q?Hj=F8nnev=E5g?= <arve@android.com>,
+        Todd Kjos <tkjos@android.com>,
+        Martijn Coenen <maco@android.com>,
+        Joel Fernandes <joel@joelfernandes.org>,
+        Carlos Llamas <cmllamas@google.com>,
+        Suren Baghdasaryan <surenb@google.com>,
+        Mattia Dongili <malattia@linux.it>,
+        Dennis Dalessandro <dennis.dalessandro@cornelisnetworks.com>,
+        Jason Gunthorpe <jgg@ziepe.ca>,
+        Leon Romanovsky <leon@kernel.org>,
+        Brad Warrum <bwarrum@linux.ibm.com>,
+        Ritu Agarwal <rituagar@linux.ibm.com>,
+        Hans de Goede <hdegoede@redhat.com>,
+        Ilpo =?ISO-8859-1?Q?J=E4rvinen?= <ilpo.jarvinen@linux.intel.com>,
+        Mark Gross <markgross@kernel.org>,
+        Jiri Slaby <jirislaby@kernel.org>,
+        Eric Van Hensbergen <ericvh@kernel.org>,
+        Latchesar Ionkov <lucho@ionkov.net>,
+        Dominique Martinet <asmadeus@codewreck.org>,
+        Christian Schoenebeck <linux_oss@crudebyte.com>,
+        David Sterba <dsterba@suse.com>,
+        David Howells <dhowells@redhat.com>,
+        Marc Dionne <marc.dionne@auristor.com>,
+        Ian Kent <raven@themaw.net>,
+        Luis de Bethencourt <luisbg@kernel.org>,
+        Salah Triki <salah.triki@gmail.com>,
+        "Tigran A. Aivazian" <aivazian.tigran@gmail.com>,
+        Chris Mason <clm@fb.com>, Josef Bacik <josef@toxicpanda.com>,
+        Xiubo Li <xiubli@redhat.com>,
+        Ilya Dryomov <idryomov@gmail.com>,
+        Jan Harkes <jaharkes@cs.cmu.edu>, coda@cs.cmu.edu,
+        Joel Becker <jlbec@evilplan.org>,
+        Christoph Hellwig <hch@lst.de>,
+        Nicolas Pitre <nico@fluxnic.net>,
+        "Rafael J . Wysocki" <rafael@kernel.org>,
+        Ard Biesheuvel <ardb@kernel.org>, Gao Xiang <xiang@kernel.org>,
+        Chao Yu <chao@kernel.org>, Yue Hu <huyue2@coolpad.com>,
+        Jeffle Xu <jefflexu@linux.alibaba.com>,
+        Namjae Jeon <linkinjeon@kernel.org>,
+        Sungjong Seo <sj1557.seo@samsung.com>,
+        Jan Kara <jack@suse.com>,
+        Andreas Dilger <adilger.kernel@dilger.ca>,
+        Jaegeuk Kim <jaegeuk@kernel.org>,
+        OGAWA Hirofumi <hirofumi@mail.parknet.co.jp>,
+        Christoph Hellwig <hch@infradead.org>,
+        Miklos Szeredi <miklos@szeredi.hu>,
+        Bob Peterson <rpeterso@redhat.com>,
+        Andreas Gruenbacher <agruenba@redhat.com>,
+        Richard Weinberger <richard@nod.at>,
+        Anton Ivanov <anton.ivanov@cambridgegreys.com>,
+        Johannes Berg <johannes@sipsolutions.net>,
+        Mikulas Patocka <mikulas@artax.karlin.mff.cuni.cz>,
+        Mike Kravetz <mike.kravetz@oracle.com>,
+        Muchun Song <muchun.song@linux.dev>, Jan Kara <jack@suse.cz>,
+        David Woodhouse <dwmw2@infradead.org>,
+        Dave Kleikamp <shaggy@kernel.org>, Tejun Heo <tj@kernel.org>,
+        Trond Myklebust <trond.myklebust@hammerspace.com>,
+        Anna Schumaker <anna@kernel.org>,
+        Chuck Lever <chuck.lever@oracle.com>,
+        Neil Brown <neilb@suse.de>,
+        Olga Kornievskaia <kolga@netapp.com>,
+        Dai Ngo <Dai.Ngo@oracle.com>, Tom Talpey <tom@talpey.com>,
+        Ryusuke Konishi <konishi.ryusuke@gmail.com>,
+        Anton Altaparmakov <anton@tuxera.com>,
+        Konstantin Komarov <almaz.alexandrovich@paragon-software.com>,
+        Mark Fasheh <mark@fasheh.com>,
+        Joseph Qi <joseph.qi@linux.alibaba.com>,
+        Bob Copeland <me@bobcopeland.com>,
+        Mike Marshall <hubcap@omnibond.com>,
+        Martin Brandenburg <martin@omnibond.com>,
+        Luis Chamberlain <mcgrof@kernel.org>,
+        Iurii Zaikin <yzaikin@google.com>,
+        Tony Luck <tony.luck@intel.com>,
+        "Guilherme G. Piccoli" <gpiccoli@igalia.com>,
+        Anders Larsen <al@alarsen.net>,
+        Steve French <sfrench@samba.org>,
+        Paulo Alcantara <pc@manguebit.com>,
+        Ronnie Sahlberg <lsahlber@redhat.com>,
+        Shyam Prasad N <sprasad@microsoft.com>,
+        Sergey Senozhatsky <senozhatsky@chromium.org>,
+        Phillip Lougher <phillip@squashfs.org.uk>,
+        Steven Rostedt <rostedt@goodmis.org>,
+        Masami Hiramatsu <mhiramat@kernel.org>,
+        Evgeniy Dushistov <dushistov@mail.ru>,
+        Chandan Babu R <chandan.babu@oracle.com>,
+        "Darrick J. Wong" <djwong@kernel.org>,
+        Damien Le Moal <dlemoal@kernel.org>,
+        Naohiro Aota <naohiro.aota@wdc.com>,
+        Johannes Thumshirn <jth@kernel.org>,
+        Alexei Starovoitov <ast@kernel.org>,
+        Daniel Borkmann <daniel@iogearbox.net>,
+        Andrii Nakryiko <andrii@kernel.org>,
+        Martin KaFai Lau <martin.lau@linux.dev>,
+        Song Liu <song@kernel.org>,
+        Yonghong Song <yonghong.song@linux.dev>,
+        John Fastabend <john.fastabend@gmail.com>,
+        KP Singh <kpsingh@kernel.org>,
+        Stanislav Fomichev <sdf@google.com>,
+        Hao Luo <haoluo@google.com>, Jiri Olsa <jolsa@kernel.org>,
+        Hugh Dickins <hughd@google.com>,
+        Andrew Morton <akpm@linux-foundation.org>,
+        "David S . Miller" <davem@davemloft.net>,
+        Eric Dumazet <edumazet@google.com>,
+        Jakub Kicinski <kuba@kernel.org>,
+        Paolo Abeni <pabeni@redhat.com>,
+        John Johansen <john.johansen@canonical.com>,
+        Paul Moore <paul@paul-moore.com>,
+        James Morris <jmorris@namei.org>,
+        "Serge E. Hallyn" <serge@hallyn.com>,
+        Stephen Smalley <stephen.smalley.work@gmail.com>,
+        Eric Paris <eparis@parisplace.org>
+Cc:     linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-mm@kvack.org, linuxppc-dev@lists.ozlabs.org,
+        linux-s390@vger.kernel.org, platform-driver-x86@vger.kernel.org,
+        linux-rdma@vger.kernel.org, linux-serial@vger.kernel.org,
+        linux-usb@vger.kernel.org, v9fs@lists.linux.dev,
+        linux-afs@lists.infradead.org, autofs@vger.kernel.org,
+        linux-btrfs@vger.kernel.org, ceph-devel@vger.kernel.org,
+        codalist@coda.cs.cmu.edu, linux-efi@vger.kernel.org,
+        linux-erofs@lists.ozlabs.org, linux-ext4@vger.kernel.org,
+        linux-f2fs-devel@lists.sourceforge.net, gfs2@lists.linux.dev,
+        linux-um@lists.infradead.org, linux-mtd@lists.infradead.org,
+        jfs-discussion@lists.sourceforge.net, linux-nfs@vger.kernel.org,
+        linux-nilfs@vger.kernel.org, linux-ntfs-dev@lists.sourceforge.net,
+        ntfs3@lists.linux.dev, ocfs2-devel@lists.linux.dev,
+        linux-karma-devel@lists.sourceforge.net, devel@lists.orangefs.org,
+        linux-unionfs@vger.kernel.org, linux-hardening@vger.kernel.org,
+        reiserfs-devel@vger.kernel.org, linux-cifs@vger.kernel.org,
+        samba-technical@lists.samba.org,
+        linux-trace-kernel@vger.kernel.org, linux-xfs@vger.kernel.org,
+        bpf@vger.kernel.org, Netdev <netdev@vger.kernel.org>,
+        apparmor@lists.ubuntu.com, linux-security-module@vger.kernel.org,
+        selinux@vger.kernel.org
+Date:   Thu, 28 Sep 2023 13:06:03 -0400
+In-Reply-To: <6020d6e7-b187-4abb-bf38-dc09d8bd0f6d@app.fastmail.com>
+References: <20230928110554.34758-1-jlayton@kernel.org>
+         <20230928110554.34758-2-jlayton@kernel.org>
+         <6020d6e7-b187-4abb-bf38-dc09d8bd0f6d@app.fastmail.com>
+Content-Type: text/plain; charset="ISO-8859-15"
+Content-Transfer-Encoding: quoted-printable
+User-Agent: Evolution 3.48.4 (3.48.4-1.fc38) 
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <ZRUVL2okuLfNC6U1@dread.disaster.area>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Thu, Sep 28, 2023 at 03:54:55PM +1000, Dave Chinner wrote:
-> On Tue, Sep 26, 2023 at 04:31:07PM -0700, Darrick J. Wong wrote:
-> > From: Darrick J. Wong <djwong@kernel.org>
-> > 
-> > When scrub is trying to iget na inode, ensure that it won't end up
-> > deadlocked on a cycle in the inode btree by using an empty transaction
-> > to store all the buffers.
-> > 
-> > Signed-off-by: Darrick J. Wong <djwong@kernel.org>
-> > ---
-> >  fs/xfs/scrub/common.c |    6 ++++--
-> >  fs/xfs/scrub/common.h |   19 +++++++++++++++++++
-> >  fs/xfs/scrub/inode.c  |    4 ++--
-> >  3 files changed, 25 insertions(+), 4 deletions(-)
-> 
-> Looks reasonable.
-> 
-> Reviewed-by: Dave Chinner <dchinner@redhat.com>
-> 
-> Further question on loops in btrees because I can't remember if this
-> case is handled: if the loop goes round and round the same level,
-> how is that detected? i.e. how do we avoid recursion count overflows
-> if we keep walking over the same sibling block pattern?
+On Thu, 2023-09-28 at 11:48 -0400, Arnd Bergmann wrote:
+> On Thu, Sep 28, 2023, at 07:05, Jeff Layton wrote:
+> > This shaves 8 bytes off struct inode, according to pahole.
+> >=20
+> > Signed-off-by: Jeff Layton <jlayton@kernel.org>
+>=20
+> FWIW, this is similar to the approach that Deepa suggested
+> back in 2016:
+>=20
+> https://lore.kernel.org/lkml/1452144972-15802-3-git-send-email-deepa.kern=
+el@gmail.com/
+>=20
+> It was NaKed at the time because of the added complexity,
+> though it would have been much easier to do it then,
+> as we had to touch all the timespec references anyway.
+>=20
+> The approach still seems ok to me, but I'm not sure it's worth
+> doing it now if we didn't do it then.
+>=20
 
-I think regular btree walks are partially vulnerable to loops in a btree
-level.  A while back, you patched the self-referential case of a block
-that points back to itself, but there isn't any robust checking of
-loops such as:
+I remember seeing those patches go by. I don't remember that change
+being NaK'ed, but I wasn't paying close attention at the time=20
 
-A -> B -> A
+Looking at it objectively now, I think it's worth it to recover 8 bytes
+per inode and open a 4 byte hole that Amir can use to grow the
+i_fsnotify_mask. We might even able to shave off another 12 bytes
+eventually if we can move to a single 64-bit word per timestamp.=20
 
-Loops involving blocks from multiple levels are caught by checking
-whether the btree block level matches what we were expecting given the
-direction of travel.
-
-AFAICT nobody's systematically fixed the problem for btree users that
-don't attach a transaction to the cursor.  Without a transaction there's
-no central place to collect locked buffers, so the buffer cache will try
-to re-lock a buffer that the caller already locked.  We've partially
-fixed this for GETFSMAP, but I think we're still missing that when
-reading the bmbt into memory and for looking things up in dir/attr
-btrees.
-
-Scrub, however, protects itself from loops in the btree structure.  The
-tree walking in scrub/btree.c finds sibling blocks by looking at the
-next pointer in the parent level.  Each block's sibling pointers are
-easily checked, so it'll notice things like:
-
-     A
- /   |    \
-B -> C -+  D
-^-------+
-
-When we load C, xchk_btree_block_check_sibling will notice that
-C.rightsib doesn't point at D.  It'll set the CORRUPT flag, and return
-from the btree walk.
-
-Scrub will also notice corruption like:
-     A
- /   |   \
-B    C    B
-
-by computing the keyspace covered by the records in each block and
-compares that to corresponding key in the parent.  It also checks that
-the records of each level are in increasing order.  Just in case B and
-C are both filled with the same record.
-
---D
-
-> -Dave.
-> -- 
-> Dave Chinner
-> david@fromorbit.com
+It is a lot of churn though.
+--=20
+Jeff Layton <jlayton@kernel.org>
