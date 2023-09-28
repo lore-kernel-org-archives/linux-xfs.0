@@ -2,76 +2,82 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3D8D3E732CA
-	for <linux-xfs@archiver.kernel.org>; Thu, 28 Sep 2023 13:06:17 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 64961E732E2
+	for <linux-xfs@archiver.kernel.org>; Thu, 28 Sep 2023 15:04:20 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232633AbjI1NGR (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 28 Sep 2023 09:06:17 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59750 "EHLO
+        id S231482AbjI1PET (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 28 Sep 2023 11:04:19 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45464 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232605AbjI1NGQ (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 28 Sep 2023 09:06:16 -0400
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 31D141A2
-        for <linux-xfs@vger.kernel.org>; Thu, 28 Sep 2023 06:06:14 -0700 (PDT)
-Received: by smtp.kernel.org (Postfix) with ESMTPS id CDBDAC43391
-        for <linux-xfs@vger.kernel.org>; Thu, 28 Sep 2023 13:06:13 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1695906373;
-        bh=34rF1x0pA3zUDAOJmyobIWtKm+I+XiOyjk+pCa2nhvI=;
-        h=From:To:Subject:Date:In-Reply-To:References:From;
-        b=meHIxyYnehvEm7h5HEawJddobE+weE8G9AQCdQCx9PEoqIn4y5Zuldc1JupkepuIc
-         OLevOanVVyOcK5l6IKWYqjo8R6ak89RxtRJVi7n1cf63BxMFX9TPdGu4ek2Dkxxg0W
-         vDhpB6YBrq93WGkCLHhzctmQtmhIYv0BzrR5Q2HqhGgjNpmEOZ5x1mujno5I0RIDGX
-         2gM4QuPxF048iE3FN4eOaUiWy05O2w/Dx3lfKHti0G2NBENxiQIQg6O+bdDVlHVeUl
-         wXvNTgIsa0AVW3i0xH9DTCrX8EoJfgXw6HKj1+J5nJB83yup4JaV16esepiw4AtYX9
-         5OV6TnSsI+1lA==
-Received: by aws-us-west-2-korg-bugzilla-1.web.codeaurora.org (Postfix, from userid 48)
-        id B29F6C53BCD; Thu, 28 Sep 2023 13:06:13 +0000 (UTC)
-From:   bugzilla-daemon@kernel.org
-To:     linux-xfs@vger.kernel.org
-Subject: [Bug 217572] Initial blocked tasks causing deterioration over hours
- until (nearly) complete system lockup and data loss with PostgreSQL 13
-Date:   Thu, 28 Sep 2023 13:06:13 +0000
-X-Bugzilla-Reason: None
-X-Bugzilla-Type: changed
-X-Bugzilla-Watch-Reason: AssignedTo filesystem_xfs@kernel-bugs.kernel.org
-X-Bugzilla-Product: File System
-X-Bugzilla-Component: XFS
-X-Bugzilla-Version: 2.5
-X-Bugzilla-Keywords: 
-X-Bugzilla-Severity: high
-X-Bugzilla-Who: ct@flyingcircus.io
-X-Bugzilla-Status: NEW
-X-Bugzilla-Resolution: 
-X-Bugzilla-Priority: P3
-X-Bugzilla-Assigned-To: filesystem_xfs@kernel-bugs.kernel.org
-X-Bugzilla-Flags: 
-X-Bugzilla-Changed-Fields: 
-Message-ID: <bug-217572-201763-LLIaQBGbPY@https.bugzilla.kernel.org/>
-In-Reply-To: <bug-217572-201763@https.bugzilla.kernel.org/>
-References: <bug-217572-201763@https.bugzilla.kernel.org/>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
-X-Bugzilla-URL: https://bugzilla.kernel.org/
-Auto-Submitted: auto-generated
+        with ESMTP id S231450AbjI1PEP (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 28 Sep 2023 11:04:15 -0400
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id EF84EF9
+        for <linux-xfs@vger.kernel.org>; Thu, 28 Sep 2023 08:03:29 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1695913409;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=4bUPrdIKvWj+SjiVEtURjGS7hdKH8izlAOVqPCBjbUo=;
+        b=cR7eBCj95ZqIMgQpC3LyDM0H651XEtmiGm5+ntxfnXYM+24mP0O7bMhtE5+ZUzlguTZ931
+        ngFid+H25IgKR+/+sAqxo9criYLeINlgWNvOoGNppcC1met3vnIhbxm+aN0/4nl7PkBYzM
+        jn0U0M90E1xqXtJ78jBWTOFDtd2SpUM=
+Received: from mimecast-mx02.redhat.com (mimecast-mx02.redhat.com
+ [66.187.233.88]) by relay.mimecast.com with ESMTP with STARTTLS
+ (version=TLSv1.2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ us-mta-401-LyjH_8K-MK-Uh8CbeOwP3Q-1; Thu, 28 Sep 2023 11:03:23 -0400
+X-MC-Unique: LyjH_8K-MK-Uh8CbeOwP3Q-1
+Received: from smtp.corp.redhat.com (int-mx01.intmail.prod.int.rdu2.redhat.com [10.11.54.1])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by mimecast-mx02.redhat.com (Postfix) with ESMTPS id F3155811E88;
+        Thu, 28 Sep 2023 15:03:22 +0000 (UTC)
+Received: from redhat.com (unknown [10.22.10.86])
+        by smtp.corp.redhat.com (Postfix) with ESMTPS id AE27940C2064;
+        Thu, 28 Sep 2023 15:03:22 +0000 (UTC)
+Date:   Thu, 28 Sep 2023 10:03:21 -0500
+From:   Bill O'Donnell <bodonnel@redhat.com>
+To:     Geert Uytterhoeven <geert+renesas@glider.be>
+Cc:     "Darrick J . Wong" <djwong@kernel.org>, linux-xfs@vger.kernel.org,
+        linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH] iomap: Spelling s/preceeding/preceding/g
+Message-ID: <ZRWVuQc7Fl+RKUeW@redhat.com>
+References: <46f1ca7817b5febb90c0f1f9881a1c2397b827d0.1695903391.git.geert+renesas@glider.be>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <46f1ca7817b5febb90c0f1f9881a1c2397b827d0.1695903391.git.geert+renesas@glider.be>
+X-Scanned-By: MIMEDefang 3.1 on 10.11.54.1
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-https://bugzilla.kernel.org/show_bug.cgi?id=3D217572
+On Thu, Sep 28, 2023 at 02:17:18PM +0200, Geert Uytterhoeven wrote:
+> Fix a misspelling of "preceding".
+> 
+> Signed-off-by: Geert Uytterhoeven <geert+renesas@glider.be>
 
---- Comment #11 from Christian Theune (ct@flyingcircus.io) ---
-Ok, so the issue didn't directly appear again after a reboot, but the
-PostgreSQL needed vacuuming (and luckily didn't looks data again).
+Reviewed-by: Bill O'Donnell <bodonnel@redhat.com>
 
-I can provoke some issues in the machine when booted, but they might be
-after-effects in the filesystem due to the suspected memory bug dave mentio=
-ned.
+> ---
+>  fs/iomap/buffered-io.c | 2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
+> 
+> diff --git a/fs/iomap/buffered-io.c b/fs/iomap/buffered-io.c
+> index 644479ccefbd0f18..5db54ca29a35acf3 100644
+> --- a/fs/iomap/buffered-io.c
+> +++ b/fs/iomap/buffered-io.c
+> @@ -1049,7 +1049,7 @@ static int iomap_write_delalloc_punch(struct inode *inode, struct folio *folio,
+>  
+>  /*
+>   * Scan the data range passed to us for dirty page cache folios. If we find a
+> - * dirty folio, punch out the preceeding range and update the offset from which
+> + * dirty folio, punch out the preceding range and update the offset from which
+>   * the next punch will start from.
+>   *
+>   * We can punch out storage reservations under clean pages because they either
+> -- 
+> 2.34.1
+> 
 
---=20
-You may reply to this email to add a comment.
-
-You are receiving this mail because:
-You are watching the assignee of the bug.=
