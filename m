@@ -2,73 +2,72 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3239AE732E7
-	for <linux-xfs@archiver.kernel.org>; Thu, 28 Sep 2023 16:20:57 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8A169E732EB
+	for <linux-xfs@archiver.kernel.org>; Thu, 28 Sep 2023 16:30:54 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229980AbjI1QU4 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 28 Sep 2023 12:20:56 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35888 "EHLO
+        id S231437AbjI1Qax (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 28 Sep 2023 12:30:53 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47376 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230207AbjI1QU4 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 28 Sep 2023 12:20:56 -0400
+        with ESMTP id S231397AbjI1Qaw (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 28 Sep 2023 12:30:52 -0400
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 19479199
-        for <linux-xfs@vger.kernel.org>; Thu, 28 Sep 2023 09:20:54 -0700 (PDT)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 72C70C433C7;
-        Thu, 28 Sep 2023 16:20:53 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=linux-foundation.org;
-        s=korg; t=1695918053;
-        bh=b8KrCK0soT7X2GAuI5kG6h0cUleOYImq7T8FFAo8dDs=;
-        h=Date:From:To:Cc:Subject:In-Reply-To:References:From;
-        b=WQW+wqWouOGXss62UTQNcFimygb7b/vRWrl4U6dEdCCxNus1A48Dq+Y3W4KSrsAWe
-         Zq9kI5k6ugqUhTRV1yUtgoABtZwp0q9Vod9FBt6N4c7oUq740H4u0FIpA1vdutB7GF
-         Gh7/sxrzlEGmokHruiOE0SxnBD2fkOujhNUnvDIE=
-Date:   Thu, 28 Sep 2023 09:20:52 -0700
-From:   Andrew Morton <akpm@linux-foundation.org>
-To:     Shiyang Ruan <ruansy.fnst@fujitsu.com>
-Cc:     Chandan Babu R <chandanbabu@kernel.org>,
-        "Darrick J. Wong" <djwong@kernel.org>,
-        Dave Chinner <david@fromorbit.com>, linux-xfs@vger.kernel.org,
-        nvdimm@lists.linux.dev, dan.j.williams@intel.com
-Subject: Re: [PATCH] xfs: drop experimental warning for FSDAX
-Message-Id: <20230928092052.9775e59262c102dc382513ef@linux-foundation.org>
-In-Reply-To: <9c3cbc0c-7135-4006-ad4a-2abce0a556b0@fujitsu.com>
-References: <20230915063854.1784918-1-ruansy.fnst@fujitsu.com>
-        <86167409-aa7f-4db4-8335-3f290d507f14@fujitsu.com>
-        <20230926145519.GE11439@frogsfrogsfrogs>
-        <ZROC8hEabAGS7orb@dread.disaster.area>
-        <20230927014632.GE11456@frogsfrogsfrogs>
-        <87fs306zs1.fsf@debian-BULLSEYE-live-builder-AMD64>
-        <5c064cbd-13a3-4d55-9881-0a079476d865@fujitsu.com>
-        <bc29af15-ae63-407d-8ca0-186c976acce7@fujitsu.com>
-        <87y1gs83yq.fsf@debian-BULLSEYE-live-builder-AMD64>
-        <20230927083034.90bd6336229dd00af601e0ef@linux-foundation.org>
-        <9c3cbc0c-7135-4006-ad4a-2abce0a556b0@fujitsu.com>
-X-Mailer: Sylpheed 3.8.0beta1 (GTK+ 2.24.33; x86_64-pc-linux-gnu)
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8E8AC1A8;
+        Thu, 28 Sep 2023 09:30:50 -0700 (PDT)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 29238C433C7;
+        Thu, 28 Sep 2023 16:30:50 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1695918650;
+        bh=1ekqDyl7lHDdlq8/HskoVf76rK2FPc0mVQF0NCvk5Ro=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=bwVVii8zRE31KxqZmoIkS05nUAtTg8bJNMmnZP8QdWx1qXQ9TAk5Xpt15FAfxXCBI
+         9vKW9AgLcjTKWYZtQgpJfnfXVP3Dm+iEBYBXGIWz41fXqlMqx7/rDWRzZmv5q5ySU/
+         8XvWQ/U+PqJXEM7ojp662CnGtipEe4Ws0LOS40QHMZF4kpXX4ikxXhQ8xFvU5JIBh1
+         4mF+WqUu4iJaeRbG5FP+mFCZrKJYhaGFDA3btQvUVa7ozosv7sHJ3gRTvXnWBGVgg/
+         gDDfrmXn8sm1jS1rmAqrfG4ogX8GRX0u5EUrPWodZ7yLno6IvuEi7cpEB6L44yBC1j
+         X+cOV1jc10Fsw==
+Date:   Thu, 28 Sep 2023 09:30:49 -0700
+From:   "Darrick J. Wong" <djwong@kernel.org>
+To:     Geert Uytterhoeven <geert+renesas@glider.be>
+Cc:     linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Subject: Re: [PATCH] iomap: Spelling s/preceeding/preceding/g
+Message-ID: <20230928163049.GH11439@frogsfrogsfrogs>
+References: <46f1ca7817b5febb90c0f1f9881a1c2397b827d0.1695903391.git.geert+renesas@glider.be>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <46f1ca7817b5febb90c0f1f9881a1c2397b827d0.1695903391.git.geert+renesas@glider.be>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Thu, 28 Sep 2023 16:44:00 +0800 Shiyang Ruan <ruansy.fnst@fujitsu.com> wrote:
-
-> But please pick the following patch[1] as well, which fixes failures of 
-> xfs55[0-2] cases.
+On Thu, Sep 28, 2023 at 02:17:18PM +0200, Geert Uytterhoeven wrote:
+> Fix a misspelling of "preceding".
 > 
-> [1] 
-> https://lore.kernel.org/linux-xfs/20230913102942.601271-1-ruansy.fnst@fujitsu.com
+> Signed-off-by: Geert Uytterhoeven <geert+renesas@glider.be>
 
-I guess I can take that xfs patch, as it fixes a DAX patch.  I hope the xfs team
-are watching.
+Reviewed-by: Darrick J. Wong <djwong@kernel.org>
 
-But
+--D
 
-a) I'm not subscribed to linux-xfs and
-
-b) the changelog fails to describe the userspace-visible effects of
-   the bug, so I (and others) are unable to determine which kernel
-   versions should be patched.
-
-Please update that changelog and resend?
+> ---
+>  fs/iomap/buffered-io.c | 2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
+> 
+> diff --git a/fs/iomap/buffered-io.c b/fs/iomap/buffered-io.c
+> index 644479ccefbd0f18..5db54ca29a35acf3 100644
+> --- a/fs/iomap/buffered-io.c
+> +++ b/fs/iomap/buffered-io.c
+> @@ -1049,7 +1049,7 @@ static int iomap_write_delalloc_punch(struct inode *inode, struct folio *folio,
+>  
+>  /*
+>   * Scan the data range passed to us for dirty page cache folios. If we find a
+> - * dirty folio, punch out the preceeding range and update the offset from which
+> + * dirty folio, punch out the preceding range and update the offset from which
+>   * the next punch will start from.
+>   *
+>   * We can punch out storage reservations under clean pages because they either
+> -- 
+> 2.34.1
+> 
