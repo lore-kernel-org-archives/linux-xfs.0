@@ -2,97 +2,61 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E7D28CE7AFB
-	for <linux-xfs@archiver.kernel.org>; Thu, 28 Sep 2023 05:55:02 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 04E0CCE7B08
+	for <linux-xfs@archiver.kernel.org>; Thu, 28 Sep 2023 07:41:35 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229445AbjI1FzC (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 28 Sep 2023 01:55:02 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40014 "EHLO
+        id S230384AbjI1Hlc (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 28 Sep 2023 03:41:32 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59368 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229453AbjI1FzB (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 28 Sep 2023 01:55:01 -0400
-Received: from mail-pg1-x536.google.com (mail-pg1-x536.google.com [IPv6:2607:f8b0:4864:20::536])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D96F111F
-        for <linux-xfs@vger.kernel.org>; Wed, 27 Sep 2023 22:54:59 -0700 (PDT)
-Received: by mail-pg1-x536.google.com with SMTP id 41be03b00d2f7-51b4ef5378bso9520514a12.1
-        for <linux-xfs@vger.kernel.org>; Wed, 27 Sep 2023 22:54:59 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=fromorbit-com.20230601.gappssmtp.com; s=20230601; t=1695880499; x=1696485299; darn=vger.kernel.org;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
-        bh=peEjof8I54c7Dpvx6SkdzH4T8u9Nokq1m4sEsps0BMM=;
-        b=IwEEubnU4zZbVMp3MxArPqppMkPrePkjXRL7ivliQ3rUA6Jk1UasBM/2M8BrUTjZgi
-         e2TgCfZtcoMiQuZqh7rMVcXf5F1AgSmJgKNX865ZaAmaubg7Kd1lCZp7u7DOiSLhBbGK
-         XYgJB5jfIqI8TWMekQqCFaU9TjOdK9sivf5TO04sodlONe6AwX7NBHe4ZJrZA2r1+Li2
-         ixSFpYxTXjCxxcjPslbbZRd95FOQtzVdwz9fGsJR6BV0dTB3jTaAaYcGSeHJVkHr7LFy
-         VDLvR7yqYW3R0tdnuqQN8qPH3zY24zYg+wVNdsCenr3JKNDhs4oF9Kh6ZOn65wshsFpt
-         BnOQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1695880499; x=1696485299;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=peEjof8I54c7Dpvx6SkdzH4T8u9Nokq1m4sEsps0BMM=;
-        b=IUsxCm4T7NzYuas5jbT4mYHgPjT+DHeth2awdRQQgndFiSe6V9hidvCBKYcxgJE9Kl
-         K259d5vymQk1vljzLp9oLC/VCna7RN3TwokjfxFpkzR0TgJ0yEGeRZ46608W+ZItGE9h
-         VNmJJRMUY3fpWsJG9IXuIxhjDxKwqLRDrX5KYUUVtBLuZnjmmhqJieNwxlYFMTf20ocx
-         Y+RhnOQkiHTYaKirrQo7CR84yXvucfGQHJ3D9W+xZ3nshCXcbQywFqjBFr7f7EeFMTC2
-         xRjBXCqvpcAUsEHh1BxpfKOJ4CEzlSlW0E2oXUaTyT8Gv8ZFblKKCogZ/B9eWNsGjJ7/
-         lDxQ==
-X-Gm-Message-State: AOJu0YyCkz4u8OdIRlwx5JbOB3aI9gROIZujnk5kqdZS2s6SaTaqcLWy
-        +5ed3YwaLVNCeX11j7qDd1rXFA==
-X-Google-Smtp-Source: AGHT+IH1bXgyIeX5IhVpxrLJBFjOc74lgMFmfQOSuSdlQ5Gu0q8UkgTqH3NLCaaLqAa3vH3kvnzZoA==
-X-Received: by 2002:a17:90b:383:b0:26d:416a:b027 with SMTP id ga3-20020a17090b038300b0026d416ab027mr273196pjb.31.1695880499192;
-        Wed, 27 Sep 2023 22:54:59 -0700 (PDT)
-Received: from dread.disaster.area (pa49-180-20-59.pa.nsw.optusnet.com.au. [49.180.20.59])
-        by smtp.gmail.com with ESMTPSA id az14-20020a17090b028e00b002777001ee76sm5229426pjb.18.2023.09.27.22.54.58
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 27 Sep 2023 22:54:58 -0700 (PDT)
-Received: from dave by dread.disaster.area with local (Exim 4.96)
-        (envelope-from <david@fromorbit.com>)
-        id 1qljzD-006afR-1q;
-        Thu, 28 Sep 2023 15:54:55 +1000
-Date:   Thu, 28 Sep 2023 15:54:55 +1000
-From:   Dave Chinner <david@fromorbit.com>
-To:     "Darrick J. Wong" <djwong@kernel.org>
-Cc:     linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 1/1] xfs: make xchk_iget safer in the presence of corrupt
- inode btrees
-Message-ID: <ZRUVL2okuLfNC6U1@dread.disaster.area>
-References: <169577058799.3312834.4066903607681044261.stgit@frogsfrogsfrogs>
- <169577058815.3312834.1762190757505617356.stgit@frogsfrogsfrogs>
+        with ESMTP id S230394AbjI1Hlb (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 28 Sep 2023 03:41:31 -0400
+Received: from mail.bizcodes.pl (mail.bizcodes.pl [151.80.57.56])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id BF87E9F
+        for <linux-xfs@vger.kernel.org>; Thu, 28 Sep 2023 00:41:29 -0700 (PDT)
+Received: by mail.bizcodes.pl (Postfix, from userid 1002)
+        id 6E842A3DD1; Thu, 28 Sep 2023 07:41:06 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=bizcodes.pl; s=mail;
+        t=1695886888; bh=5QPMt7jNntM5ZbstM20BWsHIeLbmRE8lVU4Iu89IleQ=;
+        h=Date:From:To:Subject:From;
+        b=DGC8ztjspyOy2CQ9pP/pKYyI6/rSmd5NUsxw5PGZyiid1tBfnJm0ACdzQyPYI4NNO
+         +OsCRYP0vqs5gKxAz0+0qc0X4UqjqTsVGuymDsa79wQ6hWWt3cITSLHSBYG0/gtAd+
+         GNrCrqMkte/p2PT0jQ21PDgXkMiwCEt0PlT+DAMeR5aYPl7Ix4cLDBHcF4muPaVskT
+         +tnizrDrOz6lVbddvamd/ZQRxJ6WG1dY1+g9c50/0L9FTQrI4dcugX8LPcWF9cEJU1
+         561pKyeT97WS0ffAT/8tAOB7pgmWlkciuu5GAObIfzmjRMNGM4NIPbK58mdrdUbl82
+         VWZk5EQRW+J5g==
+Received: by mail.bizcodes.pl for <linux-xfs@vger.kernel.org>; Thu, 28 Sep 2023 07:40:51 GMT
+Message-ID: <20230928064500-0.1.bz.1gqvy.0.jdiabvinah@bizcodes.pl>
+Date:   Thu, 28 Sep 2023 07:40:51 GMT
+From:   "Marcin Chruszcz" <marcin.chruszcz@bizcodes.pl>
+To:     <linux-xfs@vger.kernel.org>
+Subject: Prezentacja
+X-Mailer: mail.bizcodes.pl
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <169577058815.3312834.1762190757505617356.stgit@frogsfrogsfrogs>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Tue, Sep 26, 2023 at 04:31:07PM -0700, Darrick J. Wong wrote:
-> From: Darrick J. Wong <djwong@kernel.org>
-> 
-> When scrub is trying to iget na inode, ensure that it won't end up
-> deadlocked on a cycle in the inode btree by using an empty transaction
-> to store all the buffers.
-> 
-> Signed-off-by: Darrick J. Wong <djwong@kernel.org>
-> ---
->  fs/xfs/scrub/common.c |    6 ++++--
->  fs/xfs/scrub/common.h |   19 +++++++++++++++++++
->  fs/xfs/scrub/inode.c  |    4 ++--
->  3 files changed, 25 insertions(+), 4 deletions(-)
+Dzie=C5=84 dobry!
 
-Looks reasonable.
+Czy m=C3=B3g=C5=82bym przedstawi=C4=87 rozwi=C4=85zanie, kt=C3=B3re umo=C5=
+=BCliwia monitoring ka=C5=BCdego auta w czasie rzeczywistym w tym jego po=
+zycj=C4=99, zu=C5=BCycie paliwa i przebieg?
 
-Reviewed-by: Dave Chinner <dchinner@redhat.com>
+Dodatkowo nasze narz=C4=99dzie minimalizuje koszty utrzymania samochod=C3=
+=B3w, skraca czas przejazd=C3=B3w, a tak=C5=BCe tworzenie planu tras czy =
+dostaw.
 
-Further question on loops in btrees because I can't remember if this
-case is handled: if the loop goes round and round the same level,
-how is that detected? i.e. how do we avoid recursion count overflows
-if we keep walking over the same sibling block pattern?
+Z naszej wiedzy i do=C5=9Bwiadczenia korzysta ju=C5=BC ponad 49 tys. Klie=
+nt=C3=B3w. Monitorujemy 809 000 pojazd=C3=B3w na ca=C5=82ym =C5=9Bwiecie,=
+ co jest nasz=C4=85 najlepsz=C4=85 wizyt=C3=B3wk=C4=85.
 
--Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+Bardzo prosz=C4=99 o e-maila zwrotnego, je=C5=9Bli mogliby=C5=9Bmy wsp=C3=
+=B3lnie om=C3=B3wi=C4=87 potencja=C5=82 wykorzystania takiego rozwi=C4=85=
+zania w Pa=C5=84stwa firmie.
+
+
+Pozdrawiam
+Marcin Chruszcz
