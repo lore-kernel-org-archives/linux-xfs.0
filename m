@@ -2,111 +2,77 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6EC28E71D3F
-	for <linux-xfs@archiver.kernel.org>; Fri, 29 Sep 2023 14:36:46 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id EEF1DE71D40
+	for <linux-xfs@archiver.kernel.org>; Fri, 29 Sep 2023 14:58:29 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233685AbjI2Ogp (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 29 Sep 2023 10:36:45 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59184 "EHLO
+        id S232878AbjI2O63 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 29 Sep 2023 10:58:29 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38326 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233930AbjI2Ogc (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 29 Sep 2023 10:36:32 -0400
-Received: from sandeen.net (sandeen.net [63.231.237.45])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id AD0411722
-        for <linux-xfs@vger.kernel.org>; Fri, 29 Sep 2023 07:35:19 -0700 (PDT)
-Received: from [10.0.0.71] (liberator.sandeen.net [10.0.0.71])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
-        (No client certificate requested)
-        by sandeen.net (Postfix) with ESMTPSA id 7C70F4872F3;
-        Fri, 29 Sep 2023 09:35:18 -0500 (CDT)
-DKIM-Filter: OpenDKIM Filter v2.11.0 sandeen.net 7C70F4872F3
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=sandeen.net;
-        s=default; t=1695998118;
-        bh=g+ZA5v/kXk6nIq5L12ZmS8LPLX/T1PyBeGkzKBXRkqc=;
-        h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
-        b=MOELGM6bCkJP2a0dttGByCcgDjDtc+JOYgmZ3V+gOb+9Zz3qel5BeSzozR3uYM4Gd
-         /Zd8p2ZdkQevflkyvJY0OxKLKiDW9vZkRoAw1lkhuEGMuSD37oDmUyACISCuQ0mq/D
-         8WUwYs8L+eOfJB0dbMT469C0vBsyUkhH08dig0KXvvKYrtuqDVe2yPgqvTQUZw6Y+z
-         gaQ5Rm/qwOFdTSkHP3kK8XNhFqjmjvDXofw0508Z3/sAWWnbWxOfJMualkrr5Jkwea
-         5WX15RK7n8s4MdOn0YLbI0kVoqAnEuidFBCMyKMalZ7O3YzPa+3Cde4c5f9e7qzric
-         UkyY/ndhxE8qg==
-Message-ID: <4c985608-39f6-1a6e-ec95-42d7c3581d8d@sandeen.net>
-Date:   Fri, 29 Sep 2023 09:35:17 -0500
+        with ESMTP id S230104AbjI2O63 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 29 Sep 2023 10:58:29 -0400
+Received: from mail-pl1-f174.google.com (mail-pl1-f174.google.com [209.85.214.174])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id AAB53F9;
+        Fri, 29 Sep 2023 07:58:27 -0700 (PDT)
+Received: by mail-pl1-f174.google.com with SMTP id d9443c01a7336-1c5cd27b1acso127971645ad.2;
+        Fri, 29 Sep 2023 07:58:27 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1695999507; x=1696604307;
+        h=content-transfer-encoding:in-reply-to:from:references:cc:to
+         :content-language:subject:user-agent:mime-version:date:message-id
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=za8EzqdYzUyppdLLpiPtivTza7p59Ioizqu+gaqUd3g=;
+        b=HyJH0ZshpIwmE49aHtyK7gu7yM2ZaBkZLMQz+RIRYMDvSVzNr7n63vKPgYO7442bT4
+         pnmp1au4L+29l4my+hIXh+zUvw9Cv9E1z2f/ISc1LKBsQcztgSlJGm7Qs5S2WsTUHPEJ
+         EiCFeO0AF2B/nMaeLKOThgwp0nUN2dJzUqWvYNfYvIUOmm95HOprvn4CD1rU8PZwHtlG
+         nX5ULskx9Vt936XKDDqvR5wVAx8YTR0un8cYS2dT/DllRTYnZGyoB3Hn9k5z+YMa6gLO
+         GzvWQyYKQ5b5tusu4Vd6rPLHiV75A6WJKMmLxrEeSwvhHo9fT2M3Iloy0FVaO3wFYmKG
+         SfKA==
+X-Gm-Message-State: AOJu0Yy7mA8aBSOAiOr7smIK50eOxPSuFVyRu7Imyc3NRYiIzyrFJOIx
+        KaZD3xxz0g+NY3njH2ifAi0=
+X-Google-Smtp-Source: AGHT+IG5sgVITHE7nR5diwLXn/2VF45vvGKMJi6rof6uCdXanJ/bkpRzf92xSKeM2Bi/n6Pno9YC+w==
+X-Received: by 2002:a17:902:d34b:b0:1bb:9b29:20d9 with SMTP id l11-20020a170902d34b00b001bb9b2920d9mr4928956plk.20.1695999506875;
+        Fri, 29 Sep 2023 07:58:26 -0700 (PDT)
+Received: from [192.168.51.14] (c-73-231-117-72.hsd1.ca.comcast.net. [73.231.117.72])
+        by smtp.gmail.com with ESMTPSA id iy3-20020a170903130300b001b9d335223csm13018814plb.26.2023.09.29.07.58.24
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Fri, 29 Sep 2023 07:58:26 -0700 (PDT)
+Message-ID: <378f6c3b-5c4d-4df8-ae1e-e8abb9ee47a3@acm.org>
+Date:   Fri, 29 Sep 2023 07:58:23 -0700
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:102.0)
- Gecko/20100101 Thunderbird/102.15.1
-Subject: Re: [PATCH] xfs: drop experimental warning for FSDAX
-To:     Chandan Babu R <chandanbabu@kernel.org>,
-        Andrew Morton <akpm@linux-foundation.org>
-Cc:     Shiyang Ruan <ruansy.fnst@fujitsu.com>,
-        "Darrick J. Wong" <djwong@kernel.org>,
-        Dave Chinner <david@fromorbit.com>, linux-xfs@vger.kernel.org,
-        nvdimm@lists.linux.dev, dan.j.williams@intel.com
-References: <20230915063854.1784918-1-ruansy.fnst@fujitsu.com>
- <86167409-aa7f-4db4-8335-3f290d507f14@fujitsu.com>
- <20230926145519.GE11439@frogsfrogsfrogs>
- <ZROC8hEabAGS7orb@dread.disaster.area>
- <20230927014632.GE11456@frogsfrogsfrogs>
- <87fs306zs1.fsf@debian-BULLSEYE-live-builder-AMD64>
- <5c064cbd-13a3-4d55-9881-0a079476d865@fujitsu.com>
- <bc29af15-ae63-407d-8ca0-186c976acce7@fujitsu.com>
- <87y1gs83yq.fsf@debian-BULLSEYE-live-builder-AMD64>
- <20230927083034.90bd6336229dd00af601e0ef@linux-foundation.org>
- <9c3cbc0c-7135-4006-ad4a-2abce0a556b0@fujitsu.com>
- <20230928092052.9775e59262c102dc382513ef@linux-foundation.org>
- <87msx5f4a8.fsf@debian-BULLSEYE-live-builder-AMD64>
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH 00/21] block atomic writes
 Content-Language: en-US
-From:   Eric Sandeen <sandeen@sandeen.net>
-In-Reply-To: <87msx5f4a8.fsf@debian-BULLSEYE-live-builder-AMD64>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 8bit
+To:     John Garry <john.g.garry@oracle.com>, axboe@kernel.dk,
+        kbusch@kernel.org, hch@lst.de, sagi@grimberg.me,
+        jejb@linux.ibm.com, martin.petersen@oracle.com, djwong@kernel.org,
+        viro@zeniv.linux.org.uk, brauner@kernel.org,
+        chandan.babu@oracle.com, dchinner@redhat.com
+Cc:     linux-block@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-nvme@lists.infradead.org, linux-xfs@vger.kernel.org,
+        linux-fsdevel@vger.kernel.org, tytso@mit.edu, jbongio@google.com,
+        linux-api@vger.kernel.org
+References: <20230929102726.2985188-1-john.g.garry@oracle.com>
+From:   Bart Van Assche <bvanassche@acm.org>
+In-Reply-To: <20230929102726.2985188-1-john.g.garry@oracle.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On 9/29/23 9:17 AM, Chandan Babu R wrote:
-> On Thu, Sep 28, 2023 at 09:20:52 AM -0700, Andrew Morton wrote:
->> On Thu, 28 Sep 2023 16:44:00 +0800 Shiyang Ruan <ruansy.fnst@fujitsu.com> wrote:
->>
->>> But please pick the following patch[1] as well, which fixes failures of 
->>> xfs55[0-2] cases.
->>>
->>> [1] 
->>> https://lore.kernel.org/linux-xfs/20230913102942.601271-1-ruansy.fnst@fujitsu.com
->>
->> I guess I can take that xfs patch, as it fixes a DAX patch.  I hope the xfs team
->> are watching.
->>
->> But
->>
->> a) I'm not subscribed to linux-xfs and
->>
->> b) the changelog fails to describe the userspace-visible effects of
->>    the bug, so I (and others) are unable to determine which kernel
->>    versions should be patched.
->>
->> Please update that changelog and resend?
-> 
-> I will apply "xfs: correct calculation for agend and blockcount" patch to
-> xfs-linux Git tree and include it for the next v6.6 pull request to Linus.
-> 
-> At the outset, It looks like I can pick "mm, pmem, xfs: Introduce
-> MF_MEM_PRE_REMOVE for unbind"
-> (i.e. https://lore.kernel.org/linux-xfs/20230928103227.250550-1-ruansy.fnst@fujitsu.com/T/#u)
-> patch for v6.7 as well. But that will require your Ack. Please let me know
-> your opinion.
-> 
-> Also, I will pick "xfs: drop experimental warning for FSDAX" patch for v6.7.
+On 9/29/23 03:27, John Garry wrote:
+> The atomic writes feature requires dedicated HW support, like
+> SCSI WRITE_ATOMIC_16 command.
 
-While I hate to drag it out even longer, it seems slightly optimistic to
-drop experimental at the same time as the "last" fix, in case it's not
-really the last fix.
-
-But I don't have super strong feelings about it, and I would be happy to
-finally see experimental go away. So if those who are more tuned into
-the details are comfortable with that 6.7 plan, I'll defer to them on
-the question.
+This is not correct. Log-structured filesystems can implement atomic
+writes without support for atomic writes in the block device(s) used
+by the filesystem. See also the F2FS_IOC_*_ATOMIC_WRITE ioctls. This
+being said, I hope that atomic write support will be added in the
+block layer and also that a single interface will be supported by all
+filesystems.
 
 Thanks,
--Eric
+
+Bart.
 
