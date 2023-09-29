@@ -2,430 +2,238 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5440CCE7B1F
-	for <linux-xfs@archiver.kernel.org>; Fri, 29 Sep 2023 09:55:05 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4C897E732D0
+	for <linux-xfs@archiver.kernel.org>; Fri, 29 Sep 2023 10:15:57 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232746AbjI2JzE (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 29 Sep 2023 05:55:04 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40196 "EHLO
+        id S232732AbjI2KP4 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 29 Sep 2023 06:15:56 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53324 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232874AbjI2JzB (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 29 Sep 2023 05:55:01 -0400
-Received: from mx0b-00069f02.pphosted.com (mx0b-00069f02.pphosted.com [205.220.177.32])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 457F21A4
-        for <linux-xfs@vger.kernel.org>; Fri, 29 Sep 2023 02:54:59 -0700 (PDT)
-Received: from pps.filterd (m0246632.ppops.net [127.0.0.1])
-        by mx0b-00069f02.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 38SK8wVk013176;
-        Fri, 29 Sep 2023 09:54:55 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=from : to : cc :
- subject : date : message-id : in-reply-to : references :
- content-transfer-encoding : content-type : mime-version;
- s=corp-2023-03-30; bh=0EXGAwtJi+K8NzvaNF8jSTvf7tBf9mrTNKhAfRmctNU=;
- b=vrR+pKBEusQWYrhtgSREVzJ7sSdbtmubUbU0Jms/0D7xGkk0ZVN8NebwwprBCLDp1UN/
- wm8ZuZsKHJxkvifhv0CRDOMudTJjICRWsGzhSXdk27cXmYzp/6H+4CJ369yiEveWZIgB
- TEI0KBazOIhC3l2OSdU7DkQ3hZTboyJ+GlCDC47dQTFimdJjL1QzvJFwE723i86Inlhq
- yGhBfmvk2+jCACdHIxifIH3aSaRFJ2AqN6DVLP6MJ+mrQoUivr0BRAmpeMLCOq5H2UuV
- QqqyPPSwl0JRwU8EZxE+LsTNcN70R9DXrfmklLYc/PCMvSkqKugSdGxOxKPHPXWMnzyM sA== 
-Received: from phxpaimrmta01.imrmtpd1.prodappphxaev1.oraclevcn.com (phxpaimrmta01.appoci.oracle.com [138.1.114.2])
-        by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 3t9qmupceh-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Fri, 29 Sep 2023 09:54:55 +0000
-Received: from pps.filterd (phxpaimrmta01.imrmtpd1.prodappphxaev1.oraclevcn.com [127.0.0.1])
-        by phxpaimrmta01.imrmtpd1.prodappphxaev1.oraclevcn.com (8.17.1.19/8.17.1.19) with ESMTP id 38T80Vob008498;
-        Fri, 29 Sep 2023 09:54:25 GMT
-Received: from nam04-mw2-obe.outbound.protection.outlook.com (mail-mw2nam04lp2176.outbound.protection.outlook.com [104.47.73.176])
-        by phxpaimrmta01.imrmtpd1.prodappphxaev1.oraclevcn.com (PPS) with ESMTPS id 3t9pfb6wvq-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Fri, 29 Sep 2023 09:54:25 +0000
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=cD7HBm+eT/fSUTV1l6aUVdWlfryTUvcuqgUCfelu1PFUhioha+hFVwKOsK7hbcCA3ZygrxuYDX82FfPGVNmSLvfan8+OZAyGrvPaBcn62RAFuyqEqZFNOY3z3jC8rw5RHYK0+rkYhrcXcD6K+w0cHxlmTay535yUsNTrYPv99ziRS1iLCZiNmI5zbhJYfAlxn0NE+4St+7WoU7t9iWHcWb88wZIiooEygvO9yfbMIOZ+SOWklNjSpsZo/47Rhe8e3XoAZUaEJawm73SlOiSYd47hr2mT7XTCuMarSzuqhzNhD1nfKF04KUSLz5y3DBR/BUvfUnqexOb1OxFpHy5LUg==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector9901;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=0EXGAwtJi+K8NzvaNF8jSTvf7tBf9mrTNKhAfRmctNU=;
- b=LASvJsdj2AQtwQaqrfzepMJdelPOaQD5+Lic0oBJkbDR4WJci6Inv5eNTBfeN10cQoQi0n5Pa/5rhlEdvLocYBireXUhCqtYjfCRo40Ys1jdmgLZjdVrazMZ2ObWeQU50r7qDrmzI31sY1XG2ZqTbqXt8Q9cB5Wq1b8eJSy7XVWbFiVhK3P1wiNz3blexmZHNE0YPEWTScSVh+O5oquOgTdwZVXuyNd9x02YlNgBxBIq5lgqqP9zXyMsPlwEnHmeJBWBycfgbU0NmgDWm7JogDlzmKiqND7Fls3rIoIG4FtLx33ICF57LclMjM6i0yKarcDfZeolHtb0c4/bB7suSg==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=oracle.com; dmarc=pass action=none header.from=oracle.com;
- dkim=pass header.d=oracle.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
- d=oracle.onmicrosoft.com; s=selector2-oracle-onmicrosoft-com;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=0EXGAwtJi+K8NzvaNF8jSTvf7tBf9mrTNKhAfRmctNU=;
- b=t5DfyOBm2dyr4RSLCleYsUiqF19pkZmL1uPGyKZMpEOLeC9w678UcpcIlAVr3clZU4wBMGOJgjj08Y7TDGnmbZ7RLEC/omQ3jEInoXog3JWGb6KWjEdwMusUJCZe4U4XZ0hHbIaStaxkzXtvs84Ja4Iyf7onMFtn6IiQ4ir6Q5c=
-Received: from DM6PR10MB4313.namprd10.prod.outlook.com (2603:10b6:5:212::20)
- by SJ0PR10MB5742.namprd10.prod.outlook.com (2603:10b6:a03:3ed::20) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.6838.21; Fri, 29 Sep
- 2023 09:54:23 +0000
-Received: from DM6PR10MB4313.namprd10.prod.outlook.com
- ([fe80::ebfd:c49c:6b8:6fce]) by DM6PR10MB4313.namprd10.prod.outlook.com
- ([fe80::ebfd:c49c:6b8:6fce%7]) with mapi id 15.20.6813.027; Fri, 29 Sep 2023
- 09:54:23 +0000
-From:   John Garry <john.g.garry@oracle.com>
-To:     djwong@kernel.org, linux-xfs@vger.kernel.org, david@fromorbit.com,
-        chandanbabu@kernel.org, cem@kernel.org
-Cc:     martin.petersen@oracle.com, John Garry <john.g.garry@oracle.com>
-Subject: [PATCH 7/7] mkfs: enable the new force-align feature
-Date:   Fri, 29 Sep 2023 09:53:42 +0000
-Message-Id: <20230929095342.2976587-8-john.g.garry@oracle.com>
-X-Mailer: git-send-email 2.31.1
-In-Reply-To: <20230929095342.2976587-1-john.g.garry@oracle.com>
-References: <20230929095342.2976587-1-john.g.garry@oracle.com>
-Content-Transfer-Encoding: 8bit
-Content-Type: text/plain
-X-ClientProxiedBy: PH0PR07CA0104.namprd07.prod.outlook.com
- (2603:10b6:510:4::19) To DM6PR10MB4313.namprd10.prod.outlook.com
- (2603:10b6:5:212::20)
+        with ESMTP id S232818AbjI2KPr (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 29 Sep 2023 06:15:47 -0400
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0043DC0
+        for <linux-xfs@vger.kernel.org>; Fri, 29 Sep 2023 03:15:02 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1695982502;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=Y+YLg6Czk6dgkt/tgnfnHZXULlWBelzg6ldun7brdvc=;
+        b=GVPzQSIjiLj3txiZTJsPTGYjiVcEwAJ+4e7+Hs6EZuwBols/m5m8yVMojKlZ9b/QyhhDe3
+        SJfu+4lAX5JzHJyMW9aqfe88q2/eBpvhKjhvaNy7H6jFLJDPZtWsXck9neyDkvczWGyQJH
+        HcPqaP4890ofTVN7Ed2XnPiPtzfQYl0=
+Received: from mail-pf1-f198.google.com (mail-pf1-f198.google.com
+ [209.85.210.198]) by relay.mimecast.com with ESMTP with STARTTLS
+ (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
+ us-mta-593-thmZag_FM7WANhabvV39cw-1; Fri, 29 Sep 2023 06:11:45 -0400
+X-MC-Unique: thmZag_FM7WANhabvV39cw-1
+Received: by mail-pf1-f198.google.com with SMTP id d2e1a72fcca58-690d0ec72e2so19294391b3a.0
+        for <linux-xfs@vger.kernel.org>; Fri, 29 Sep 2023 03:11:45 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1695982305; x=1696587105;
+        h=in-reply-to:from:references:cc:to:content-language:subject
+         :user-agent:mime-version:date:message-id:x-gm-message-state:from:to
+         :cc:subject:date:message-id:reply-to;
+        bh=Y+YLg6Czk6dgkt/tgnfnHZXULlWBelzg6ldun7brdvc=;
+        b=hUlJM1Mtns5TEO5pLYE1ekC4j6c7GipyHTUGyICdoan1b/AczeT/wyuX1YU5oBiD9x
+         eEnReGgXwmpbkLdta0z6jDdQsvSF+XJtMz0YbVBQMIDedW2VVnrZ23dWunFvxA7tB3Ja
+         XX0P8X0A4pSWDq7mIkTCKawKKN/k6mFk9jP1FFBF8RLDP1iBKZLKqY0T7SNimGPRI3Xc
+         x3iuIqCl0BNF4RwacKj8X0Fw7j6CDwqDIWfWGXRyui9VWVcvfuQ5r5BTr5Q3gq9A0J96
+         lEIqxUWOlwcCVe+hLS3ar9IYFmuydrTCvSThC3D1XjJdjgIWtDaFfJGuRqfvR3bHRl7b
+         ihoA==
+X-Gm-Message-State: AOJu0YzK3RmGfn8dkIU7kVcppokphvpJs2HJJ1LtawqTHAl32w0pQ5/U
+        ESMHST6Uyet6stPD4bSIabeqLBHicB5aYxA1idLMPoSsDEavbTz0FW4HOyEKtKgi00xBPUO6U6h
+        IN2V6yOG5hAriRjqtN5Ni
+X-Received: by 2002:a05:6a20:100a:b0:15e:921d:19c5 with SMTP id gs10-20020a056a20100a00b0015e921d19c5mr3237417pzc.54.1695982304768;
+        Fri, 29 Sep 2023 03:11:44 -0700 (PDT)
+X-Google-Smtp-Source: AGHT+IF6PkfjrmkpYGlYj7z6rsWAfRDW4wjaxIopf6vSedWZMgKA8Z9qWd5RHgGqE1i0FX0mIYyROA==
+X-Received: by 2002:a05:6a20:100a:b0:15e:921d:19c5 with SMTP id gs10-20020a056a20100a00b0015e921d19c5mr3237399pzc.54.1695982304320;
+        Fri, 29 Sep 2023 03:11:44 -0700 (PDT)
+Received: from ?IPV6:2001:8003:e5b0:9f00:dbbc:1945:6e65:ec5? ([2001:8003:e5b0:9f00:dbbc:1945:6e65:ec5])
+        by smtp.gmail.com with ESMTPSA id i16-20020a17090332d000b001c6189ce950sm10068213plr.188.2023.09.29.03.11.39
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Fri, 29 Sep 2023 03:11:43 -0700 (PDT)
+Content-Type: multipart/mixed; boundary="------------NVL90zIkYN4W03Myqjnk9mJs"
+Message-ID: <81872248-bd11-9a8c-e34b-6637f8bc88e5@redhat.com>
+Date:   Fri, 29 Sep 2023 20:11:37 +1000
 MIME-Version: 1.0
-X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: DM6PR10MB4313:EE_|SJ0PR10MB5742:EE_
-X-MS-Office365-Filtering-Correlation-Id: 511b04bf-c3dc-4e65-93bf-08dbc0d20f0f
-X-MS-Exchange-SenderADCheck: 1
-X-MS-Exchange-AntiSpam-Relay: 0
-X-Microsoft-Antispam: BCL:0;
-X-Microsoft-Antispam-Message-Info: M1litEo6m7xnZkQ/Wfg47XGaJob5vgz7H5tWROu0xdb7W5dSp6SZ2/uGUT1YGMtUXnJFysz34C4CwUOrTlzaRVwKiNWo4T4TCqZrAIFCwq0em1Zm74e/MtTCXAGhtiuzghkmOFUl9u5oLNRMw72NJN4LSL1qk3xKI2qn+fuhb0smmwXgRk3MnXjeMFFurdsVuSqqqZmxK2RF2uQESstiaNyvRH8y7Z71SiDoCEJhEJzj9XDJLNkJn55YBGm/ooscOj8Xph01Rk+J7spgvOJDMN3+mo/y0qljQsSxU1m1Hy8CvnhHTBU8i66hGRogHULuWJH2SrV2y/TgP+uPdrElq/GxB4f93TwE1rn80qc6LMYyZSoud/oV1603Jb+o/rjfiBOke1g6DswNV4hqA52qcQ307NlxNQE5Kjw1BeFLgb3Yy4HCfJ767gnYPGlpxta5C9UWCerY7GBQI4mtlPMPp9Lq3R6irEeUKuIBOZdwisQT/HmOd2JcLCmRJKdz+tp8G/PZSPUm7yOVFnBBaP5di9W8bcGkMkDFDXN6EWY0IqPqKKW/5IL/qfTdPbwyXrgiOC6mZqs836pWlC8C+jcLmrZdCY2v2V7IiudSG5/bBio=
-X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:DM6PR10MB4313.namprd10.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230031)(396003)(136003)(376002)(366004)(39860400002)(346002)(230922051799003)(451199024)(1800799009)(186009)(64100799003)(2616005)(5660300002)(107886003)(4326008)(8936002)(8676002)(6512007)(41300700001)(26005)(6506007)(1076003)(83380400001)(38100700002)(6666004)(478600001)(316002)(66946007)(66556008)(66476007)(36756003)(86362001)(103116003)(2906002)(6486002)(21314003);DIR:OUT;SFP:1101;
-X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0: =?us-ascii?Q?rvMMr0yzmDrcUBfHif68JxJokxBXekzAians4Rf4pZrpL2BV6+DTypmBiqUy?=
- =?us-ascii?Q?Gbf/szVfk76AXvfcszaBw4mAbKx9/x0N6MBgpSE0F7BbrMvp41Ie46CBMd9y?=
- =?us-ascii?Q?kkwsOyxvc0qNvKDvU2grJJ0x8NBrwGnKCHEX8H3X2knRHypnXcn1RZIZxPE+?=
- =?us-ascii?Q?FD0D3Mq1Ym3WjQNJjW0suH/fpx+uS/XIj4SohqQk+tT5Iv4FrF2wP3pqfaSF?=
- =?us-ascii?Q?pUOd5C0jUBHn489ewUY0puBAGPVilgyrgUUllpy2mSF0TpjpSeRzOIf/MGAV?=
- =?us-ascii?Q?LWqDA7URCK/x/8dDcjpjZD8H/U0kD3oBuvBjDKehnyM1O73v6DG1nSebTya1?=
- =?us-ascii?Q?0AbeG5gYllCf9ECbgT6DK59bWVg5tzu9DCk+TPUHAazUX0DoTlNt8Odz7LsV?=
- =?us-ascii?Q?Kh2hmJrgl0YCwhc2nfpD8j3TbYwiApTIlmYG/sQGmYcXXRnuTwef+Yi/trTX?=
- =?us-ascii?Q?0CwOVE/ddF65OvS1xsm0JWRhmkCahAKfrnjlNnW6G6PtlinAS5X/H0PEaEL/?=
- =?us-ascii?Q?useBX9lSlce70PjiQV/cwF0Vg9AfQw3BkEc+n88cfV1U6SmaHXkmqh95cacD?=
- =?us-ascii?Q?wBbYSGSvn3TD+TJo7HP9C8+NK1jv/K4LVAfjzgsJx+WIzhwSoBlMRAT68DFo?=
- =?us-ascii?Q?XmbMUKElNSLuUCmnprW7SCTka5MTkZ0pkQMUckRiItugh4ayCx/QVHHUQxSl?=
- =?us-ascii?Q?c3MLeSEA4JFQsxDaEclhZbhNpW75HiEdwWrU3Jw/MVQlMQB1eRxnaRI/4oy8?=
- =?us-ascii?Q?gIpAgcuNSfNGURtx79RfFphb/yOw+Y20OTYFDoFFTE6aLaw+HR805FWCGERl?=
- =?us-ascii?Q?FwE7vbKUO0nWeT/icR3B6wes5TIWbMsP70AE3/gycDGSQh0isjCMB7goaYuo?=
- =?us-ascii?Q?WgiA3T1jmFw5dWFZcEGnbO2fXHfbcD+UD0p5B/lpenq5aFl1MtSsA8DjKsXv?=
- =?us-ascii?Q?swITCKnRsf5A//cpYw+OUpBTOXjC1JWQZzbBD6WOuvT3uVIKagvSiPbT4pqn?=
- =?us-ascii?Q?y8jhs7EArkfQp8Oee/vfHCZrk4iFA7Zq+nHbHAHT7xXRe6SG53yEcFkcrkLd?=
- =?us-ascii?Q?xf92ZK3gdOyC7efjxMXfOXs+pFyNR2ZhppMlz3PhPpoxA+XzyTo+aZimGMNK?=
- =?us-ascii?Q?ZQepIoiVixsvU9hN8sDHXgtYqUhVQm615AqSYZQYpl9fKPYsXd/UGbcoHTaj?=
- =?us-ascii?Q?3SjQGtfmMAo8FpA5MK9QwLNuZ15akAektBuOmM9iCnNRQ5/wf0ZW+P9IoMaW?=
- =?us-ascii?Q?SSj8huaAbu91+j/rmLjVAcaD5NaQQ4cecLCtt4qCGsXLciDxqXi0gBaGCLNj?=
- =?us-ascii?Q?IrigtbM7t/YCS4ISJKWT9QBma6CM4/BWzRqrZ+tqMrI/xw+tFvoHW6VqykWL?=
- =?us-ascii?Q?gcVie27tVMuOpnTvnGf6Rhx1aSJop2pd9nlc8NZTdLI8l4Tan77xSYrNsfqZ?=
- =?us-ascii?Q?I3dJ2e57dtzqoJmedQEMeNsN1B2HfbG6ZWUC1hLPpamryxVGa/nZW9n8cWMc?=
- =?us-ascii?Q?x8pnF/J32aSoZGdoxsnkCK2p4e2Br36XUx0EC7nLt2cbSRwPNKpoxL3Yq286?=
- =?us-ascii?Q?xNzgJDQkwW3/Qgch74DSwasV5Rje69hUQ8sewj5MvDGCmhSI8yT7BPv0BmDA?=
- =?us-ascii?Q?bw=3D=3D?=
-X-MS-Exchange-AntiSpam-ExternalHop-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-ExternalHop-MessageData-0: /SRwafBA6wGy7oaVZGdDZzRHqySuME61vi23IVP21GhbDwek3hrrTOdSKYLKqlWT1/YXq6jB1S/tfJjDWVqxzUVO9qVr4GUdo0iukegvdEgSrKysYHpbZv5PptqdNzH28iZmo7nBpKnGVuqfOk1U7+8gkhMSU/gyvSL6JcFmgIL4sZ71tM/aAMFyWmtom63BG7ofDWDTPZ7BLe4Kq1iBczBInBwu7N0tFXSsSzHgENw5zu8NwbUhCsdQ+dwM9Am3boJkHoerfkbivltn3UFNJFlfF8rK/+bydo3jJhSfZSTkrqCwBbUFRESNGwfqLcfoCG6320AIiyClddQpIqDQZej23MqNS3q7aeYcDmL3B1DghCWjhWGcevi21ZiKWCrinFlFpRkdVn9X9/2E7suaF9WF/XoXauEk/RVJ7exS86fLlh2lB/qkOFeZTGIJree9Eq4gg2VO5BlHL5+E7RcozgLGePF5/hlZ0cVFGRT8BWUeGGzEuV2Ut+7LNM9nrxQVm12lYkIWXCmPHuONWHe7NWHAuxiKNIo4Q2+UsfEzcxp+sJa6kPjfSYACI82DZWEhO1SDiP3sAv6zLG7Yt6O/nGHyEmfZihKWau4ODZhhdyevAT2i4pZVSi/Cc2TUC+/OgQ3mNA+k9OjgTYslkvuTRPNvp2L26JJ6gFWf6B8MicP1piKrfDCERduHJ9l08zveG6WUZqqgNfX+PR4lOQyjyOvPOHPnLtb9hFGsuqHr1XW/OBpHNNRJTmMaldYfwUEq4yh32Orx95wirr6orDd1t6doU37OOv/rI93cVg74WkoWk8Y/WPIHA94n00M5ceZZrvZB7L0Z5rXi3sfW5o8sCA==
-X-OriginatorOrg: oracle.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 511b04bf-c3dc-4e65-93bf-08dbc0d20f0f
-X-MS-Exchange-CrossTenant-AuthSource: DM6PR10MB4313.namprd10.prod.outlook.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 29 Sep 2023 09:54:23.2866
- (UTC)
-X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
-X-MS-Exchange-CrossTenant-Id: 4e2c6054-71cb-48f1-bd6c-3a9705aca71b
-X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: z3UsIfnDNZCAB0SzflXGkKQxWA0JOwhwRBNohTGbo9c7OnFSZTX3MDxIh/uyC7tZPuD3kMsP6p1ZUk/BsAwArA==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: SJ0PR10MB5742
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.267,Aquarius:18.0.980,Hydra:6.0.619,FMLib:17.11.176.26
- definitions=2023-09-29_07,2023-09-28_03,2023-05-22_02
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 spamscore=0 suspectscore=0 phishscore=0
- mlxscore=0 malwarescore=0 mlxlogscore=999 bulkscore=0 adultscore=0
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2309180000
- definitions=main-2309290085
-X-Proofpoint-GUID: IJf6ADORO9m11xzeoi-z16k-7MCvJ5-D
-X-Proofpoint-ORIG-GUID: IJf6ADORO9m11xzeoi-z16k-7MCvJ5-D
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
+ Thunderbird/102.12.0
+Subject: Re: Endless calls to xas_split_alloc() due to corrupted xarray entry
+Content-Language: en-US
+To:     Zhenyu Zhang <zhenyzha@redhat.com>,
+        "Darrick J. Wong" <djwong@kernel.org>
+Cc:     Bagas Sanjaya <bagasdotme@gmail.com>,
+        Linux XFS <linux-xfs@vger.kernel.org>,
+        Linux Filesystems Development <linux-fsdevel@vger.kernel.org>,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+        Shaoqin Huang <shahuang@redhat.com>,
+        Matthew Wilcox <willy@infradead.org>,
+        Chandan Babu R <chandan.babu@oracle.com>,
+        Andrew Morton <akpm@linux-foundation.org>,
+        Linus Torvalds <torvalds@linux-foundation.org>
+References: <CAJFLiB+J4mKGDOppp=1moMe2aNqeJhM9F2cD4KPTXoM6nzb5RA@mail.gmail.com>
+ <ZRFbIJH47RkQuDid@debian.me> <20230925151236.GB11456@frogsfrogsfrogs>
+ <CAJFLiBKQPOMmUPTAe-jHpPjLEx+X2ZNUKD20qXh4+0Ay+napDw@mail.gmail.com>
+From:   Gavin Shan <gshan@redhat.com>
+In-Reply-To: <CAJFLiBKQPOMmUPTAe-jHpPjLEx+X2ZNUKD20qXh4+0Ay+napDw@mail.gmail.com>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-From: "Darrick J. Wong" <djwong@kernel.org>
+This is a multi-part message in MIME format.
+--------------NVL90zIkYN4W03Myqjnk9mJs
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 
-Make it so that we can create filesystems with the forcealign feature
-turned on.
+Hi Zhenyu & Darrick,
 
-Signed-off-by: Darrick J. Wong <djwong@kernel.org>
-#jpg: set .forcealign = true in SB
-Signed-off-by: John Garry <john.g.garry@oracle.com>
----
- libxfs/xfs_format.h    |   3 +-
- man/man8/mkfs.xfs.8.in |  14 +++++
- mkfs/xfs_mkfs.c        | 127 +++++++++++++++++++++++++++++++++++++++--
- 3 files changed, 139 insertions(+), 5 deletions(-)
+On 9/26/23 17:49, Zhenyu Zhang wrote:
+> 
+> The issue gets fixed in rc3. However, it seems not caused by commit
+> 6d2779ecaeb56f9 because I can't reproduce the issue with rc3 and
+> the commit revert. I'm running 'git bisect' to nail it down. Hopefully,
+> I can identify the problematic commit soon.
+> 
 
-diff --git a/libxfs/xfs_format.h b/libxfs/xfs_format.h
-index d718b73f48ca..afb843b14074 100644
---- a/libxfs/xfs_format.h
-+++ b/libxfs/xfs_format.h
-@@ -358,7 +358,8 @@ xfs_sb_has_compat_feature(
- 		(XFS_SB_FEAT_RO_COMPAT_FINOBT | \
- 		 XFS_SB_FEAT_RO_COMPAT_RMAPBT | \
- 		 XFS_SB_FEAT_RO_COMPAT_REFLINK| \
--		 XFS_SB_FEAT_RO_COMPAT_INOBTCNT)
-+		 XFS_SB_FEAT_RO_COMPAT_INOBTCNT | \
-+		 XFS_SB_FEAT_RO_COMPAT_FORCEALIGN)
- #define XFS_SB_FEAT_RO_COMPAT_UNKNOWN	~XFS_SB_FEAT_RO_COMPAT_ALL
- static inline bool
- xfs_sb_has_ro_compat_feature(
-diff --git a/man/man8/mkfs.xfs.8.in b/man/man8/mkfs.xfs.8.in
-index 9742482dcee9..b86ee4794206 100644
---- a/man/man8/mkfs.xfs.8.in
-+++ b/man/man8/mkfs.xfs.8.in
-@@ -657,6 +657,20 @@ Extend maximum values of inode data and attr fork extent counters from 2^31 -
- omitted, 1 is assumed. This feature is disabled by default. This feature is
- only available for filesystems formatted with -m crc=1.
- .TP
-+.BI forcealign[= value]
-+If
-+.B value
-+is 1, mark the root directory so that all file data extent allocations will be
-+aligned to the extent size hint.
-+These allocations will be mapped into the file range at offsets that are
-+aligned to the extent size hint.
-+The
-+.B extszinherit
-+option must be specified.
-+The
-+.B cowextsize
-+option must not be specified.
-+This feature is only available for filesystems formatted with -m crc=1.
- .RE
- .PP
- .PD 0
-diff --git a/mkfs/xfs_mkfs.c b/mkfs/xfs_mkfs.c
-index bffe0b7ea8b0..292d0cbad31a 100644
---- a/mkfs/xfs_mkfs.c
-+++ b/mkfs/xfs_mkfs.c
-@@ -90,6 +90,7 @@ enum {
- 	I_PROJID32BIT,
- 	I_SPINODES,
- 	I_NREXT64,
-+	I_FORCEALIGN,
- 	I_MAX_OPTS,
- };
- 
-@@ -467,6 +468,7 @@ static struct opt_params iopts = {
- 		[I_PROJID32BIT] = "projid32bit",
- 		[I_SPINODES] = "sparse",
- 		[I_NREXT64] = "nrext64",
-+		[I_FORCEALIGN] = "forcealign",
- 		[I_MAX_OPTS] = NULL,
- 	},
- 	.subopt_params = {
-@@ -521,7 +523,13 @@ static struct opt_params iopts = {
- 		  .minval = 0,
- 		  .maxval = 1,
- 		  .defaultval = 1,
--		}
-+		},
-+		{ .index = I_FORCEALIGN,
-+		  .conflicts = { { NULL, LAST_CONFLICT } },
-+		  .minval = 0,
-+		  .maxval = 1,
-+		  .defaultval = 1,
-+		},
- 	},
- };
- 
-@@ -874,6 +882,7 @@ struct sb_feat_args {
- 	bool	nodalign;
- 	bool	nortalign;
- 	bool	nrext64;
-+	bool	forcealign;		/* XFS_SB_FEAT_RO_COMPAT_FORCEALIGN */
- };
- 
- struct cli_params {
-@@ -1008,7 +1017,8 @@ usage( void )
- 			    sectsize=num,extsize=num\n\
- /* force overwrite */	[-f]\n\
- /* inode size */	[-i perblock=n|size=num,maxpct=n,attr=0|1|2,\n\
--			    projid32bit=0|1,sparse=0|1,nrext64=0|1]\n\
-+			    projid32bit=0|1,sparse=0|1,nrext64=0|1],\n\
-+			    forcealign=0|1\n\
- /* no discard */	[-K]\n\
- /* log subvol */	[-l agnum=n,internal,size=num,logdev=xxx,version=n\n\
- 			    sunit=value|su=num,sectsize=num,lazy-count=0|1]\n\
-@@ -1674,6 +1684,17 @@ inode_opts_parser(
- 	case I_NREXT64:
- 		cli->sb_feat.nrext64 = getnum(value, opts, subopt);
- 		break;
-+	case I_FORCEALIGN:
-+		long long	val = getnum(value, opts, subopt);
-+
-+		if (val == 1) {
-+			cli->sb_feat.forcealign = true;
-+			cli->fsx.fsx_xflags |= FS_XFLAG_FORCEALIGN;
-+		} else {
-+			cli->sb_feat.forcealign = false;
-+			cli->fsx.fsx_xflags &= ~FS_XFLAG_FORCEALIGN;
-+		}
-+		break;
- 	default:
- 		return -EINVAL;
- 	}
-@@ -2329,6 +2350,13 @@ _("64 bit extent count not supported without CRC support\n"));
- 			usage();
- 		}
- 		cli->sb_feat.nrext64 = false;
-+
-+		if (cli->sb_feat.forcealign) {
-+			fprintf(stderr,
-+_("forced file data alignment not supported without CRC support\n"));
-+			usage();
-+		}
-+		cli->sb_feat.forcealign = false;
- 	}
- 
- 	if (!cli->sb_feat.finobt) {
-@@ -2363,6 +2391,13 @@ _("cowextsize not supported without reflink support\n"));
- 		usage();
- 	}
- 
-+	if ((cli->fsx.fsx_xflags & FS_XFLAG_FORCEALIGN) &&
-+	    (cli->fsx.fsx_cowextsize > 0 || cli->fsx.fsx_extsize == 0)) {
-+		fprintf(stderr,
-+_("forcealign requires a nonzero extent size hint and no cow extent size hint\n"));
-+		usage();
-+	}
-+
- 	/*
- 	 * Copy features across to config structure now.
- 	 */
-@@ -2612,6 +2647,34 @@ _("illegal CoW extent size hint %lld, must be less than %u.\n"),
- 	}
- }
- 
-+/* Validate the incoming forcealign flag. */
-+static void
-+validate_forcealign(
-+	struct xfs_mount	*mp,
-+	struct cli_params	*cli)
-+{
-+	if (!(cli->fsx.fsx_xflags & FS_XFLAG_FORCEALIGN))
-+		return;
-+
-+	if (cli->fsx.fsx_cowextsize != 0) {
-+		fprintf(stderr,
-+_("cannot set CoW extent size hint when forcealign is set.\n"));
-+		usage();
-+	}
-+
-+	if (cli->fsx.fsx_extsize == 0) {
-+		fprintf(stderr,
-+_("cannot set forcealign without an extent size hint.\n"));
-+		usage();
-+	}
-+
-+	if (cli->fsx.fsx_xflags & (FS_XFLAG_REALTIME | FS_XFLAG_RTINHERIT)) {
-+		fprintf(stderr,
-+_("cannot set forcealign and realtime flags.\n"));
-+		usage();
-+	}
-+}
-+
- /* Complain if this filesystem is not a supported configuration. */
- static void
- validate_supported(
-@@ -3155,11 +3218,63 @@ _("agsize (%s) not a multiple of fs blk size (%d)\n"),
-  */
- static void
- align_ag_geometry(
--	struct mkfs_params	*cfg)
-+	struct mkfs_params	*cfg,
-+	struct cli_params	*cli)
- {
- 	uint64_t	tmp_agsize;
- 	int		dsunit = cfg->dsunit;
- 
-+	/*
-+	 * If the sysadmin wants to force all file data space mappings to be
-+	 * aligned to the extszinherit value, then we need the AGs to be
-+	 * aligned to the same value.  Skip these checks if the extent size
-+	 * hint is zero; the extszinherit validation will fail the format
-+	 * later.
-+	 */
-+	if (cli->sb_feat.forcealign && cli->fsx.fsx_extsize != 0) {
-+		/* Perfect alignment; we're done. */
-+		if (cfg->agsize % cli->fsx.fsx_extsize == 0)
-+			goto validate;
-+
-+		/*
-+		 * Round up to file extent size boundary.  Make sure that
-+		 * agsize is still larger than XFS_AG_MIN_BLOCKS(blocklog).
-+		 */
-+		tmp_agsize = ((cfg->agsize + cli->fsx.fsx_extsize - 1) /
-+				cli->fsx.fsx_extsize) * cli->fsx.fsx_extsize;
-+
-+		/*
-+		 * Round down to file extent size boundary if rounding up
-+		 * created an AG size that is larger than the AG max.
-+		 */
-+		if (tmp_agsize > XFS_AG_MAX_BLOCKS(cfg->blocklog))
-+			tmp_agsize = (cfg->agsize / cli->fsx.fsx_extsize) *
-+							cli->fsx.fsx_extsize;
-+
-+		if (tmp_agsize < XFS_AG_MIN_BLOCKS(cfg->blocklog) &&
-+		    tmp_agsize > XFS_AG_MAX_BLOCKS(cfg->blocklog)) {
-+			/*
-+			 * Set the agsize to the invalid value so the following
-+			 * validation of the ag will fail and print a nice error
-+			 * and exit.
-+			 */
-+			cfg->agsize = tmp_agsize;
-+			goto validate;
-+		}
-+
-+		/* Update geometry to be file extent size aligned */
-+		cfg->agsize = tmp_agsize;
-+		if (!cli_opt_set(&dopts, D_AGCOUNT))
-+			cfg->agcount = cfg->dblocks / cfg->agsize +
-+					(cfg->dblocks % cfg->agsize != 0);
-+
-+		if (cli_opt_set(&dopts, D_AGSIZE))
-+			fprintf(stderr,
-+_("agsize rounded to %lld, extszhint = %d\n"),
-+				(long long)cfg->agsize, cli->fsx.fsx_extsize);
-+		goto validate;
-+	}
-+
- 	if (!dsunit)
- 		goto validate;
- 
-@@ -3380,6 +3495,8 @@ sb_set_features(
- 		sbp->sb_features_ro_compat |= XFS_SB_FEAT_RO_COMPAT_REFLINK;
- 	if (fp->inobtcnt)
- 		sbp->sb_features_ro_compat |= XFS_SB_FEAT_RO_COMPAT_INOBTCNT;
-+	if (fp->forcealign)
-+		sbp->sb_features_ro_compat |= XFS_SB_FEAT_RO_COMPAT_FORCEALIGN;
- 	if (fp->bigtime)
- 		sbp->sb_features_incompat |= XFS_SB_FEAT_INCOMPAT_BIGTIME;
- 
-@@ -4184,6 +4301,7 @@ main(
- 			.nortalign = false,
- 			.bigtime = true,
- 			.nrext64 = false,
-+			.forcealign = true,
- 			/*
- 			 * When we decide to enable a new feature by default,
- 			 * please remember to update the mkfs conf files.
-@@ -4334,7 +4452,7 @@ main(
- 	 * aligns to device geometry correctly.
- 	 */
- 	calculate_initial_ag_geometry(&cfg, &cli);
--	align_ag_geometry(&cfg);
-+	align_ag_geometry(&cfg, &cli);
- 
- 	calculate_imaxpct(&cfg, &cli);
- 
-@@ -4357,6 +4475,7 @@ main(
- 	/* Validate the extent size hints now that @mp is fully set up. */
- 	validate_extsize_hint(mp, &cli);
- 	validate_cowextsize_hint(mp, &cli);
-+	validate_forcealign(mp, &cli);
- 
- 	validate_supported(mp, &cli);
- 
--- 
-2.34.1
+The issue is still existing in rc3. I can even reproduce it with a program
+running inside a virtual machine, where a 1GB private VMA mapped on xfs file
+"/tmp/test_data" and it's populated via madvisde(buf, 1GB, MADV_POPULATE_WRITE).
+The idea is to mimic QEMU's behavior. Note that the test program is put into
+a memory cgroup so that memory claim happens due to the memory size limits.
+
+I'm attaching the test program and script.
+
+guest# uname -r
+6.6.0-rc3
+guest# lscpu
+Architecture:           aarch64
+   CPU op-mode(s):       32-bit, 64-bit
+   Byte Order:           Little Endian
+CPU(s):                 48
+   On-line CPU(s) list:  0-47
+    :
+guest# cat /proc/1/smaps | grep KernelPage | head -n 1
+KernelPageSize:       64 kB
+
+
+[  485.002792] WARNING: CPU: 39 PID: 2370 at lib/xarray.c:1010 xas_split_alloc+0xf8/0x128
+[  485.003389] Modules linked in: nft_fib_inet nft_fib_ipv4 nft_fib_ipv6 nft_fib nft_reject_inet nf_reject_ipv4 nf_reject_ipv6 nft_reject nft_ct nft_chain_nat nf_nat nf_conntrack nf_defrag_ipv6 nf_defrag_ipv4 rfkill ip_set nf_tables nfnetlink vfat fat virtio_balloon drm fuse xfs libcrc32c crct10dif_ce ghash_ce sha2_ce virtio_net net_failover sha256_arm64 virtio_blk failover sha1_ce virtio_console virtio_mmio
+[  485.006058] CPU: 39 PID: 2370 Comm: test Kdump: loaded Tainted: G        W          6.6.0-rc3-gavin+ #3
+[  485.006763] Hardware name: QEMU KVM Virtual Machine, BIOS edk2-20230524-3.el9 05/24/2023
+[  485.007365] pstate: 80400005 (Nzcv daif +PAN -UAO -TCO -DIT -SSBS BTYPE=--)
+[  485.007887] pc : xas_split_alloc+0xf8/0x128
+[  485.008205] lr : __filemap_add_folio+0x33c/0x4e0
+[  485.008550] sp : ffff80008e6af4f0
+[  485.008802] x29: ffff80008e6af4f0 x28: ffffcc3538ea8d00 x27: 0000000000000001
+[  485.009347] x26: 0000000000000001 x25: ffffffffffffc005 x24: 0000000000000000
+[  485.009878] x23: ffff80008e6af5a0 x22: 000008c0b0001d01 x21: 0000000000000000
+[  485.010411] x20: ffffffc001fb8bc0 x19: 000000000000000d x18: 0000000000000014
+[  485.010948] x17: 00000000e8438802 x16: 00000000831d1d75 x15: ffffcc3538465968
+[  485.011487] x14: ffffcc3538465380 x13: ffffcc353812668c x12: ffffcc3538126584
+[  485.012019] x11: ffffcc353811160c x10: ffffcc3538e01054 x9 : ffffcc3538dfc1bc
+[  485.012557] x8 : ffff80008e6af4f0 x7 : ffff0000e0b706d8 x6 : ffff80008e6af4f0
+[  485.013089] x5 : 0000000000000002 x4 : 0000000000000000 x3 : 0000000000012c40
+[  485.013614] x2 : 000000000000000d x1 : 000000000000000c x0 : 0000000000000000
+[  485.014139] Call trace:
+[  485.014321]  xas_split_alloc+0xf8/0x128
+[  485.014613]  __filemap_add_folio+0x33c/0x4e0
+[  485.014934]  filemap_add_folio+0x48/0xd0
+[  485.015227]  page_cache_ra_unbounded+0xf0/0x1f0
+[  485.015573]  page_cache_ra_order+0x8c/0x310
+[  485.015889]  filemap_fault+0x67c/0xaa8
+[  485.016167]  __xfs_filemap_fault+0x60/0x3c0 [xfs]
+[  485.016588]  xfs_filemap_fault+0x54/0x68 [xfs]
+[  485.016981]  __do_fault+0x40/0x210
+[  485.017233]  do_cow_fault+0xf0/0x300
+[  485.017496]  do_pte_missing+0x140/0x238
+[  485.017782]  handle_pte_fault+0x100/0x160
+[  485.018076]  __handle_mm_fault+0x100/0x310
+[  485.018385]  handle_mm_fault+0x6c/0x270
+[  485.018676]  faultin_page+0x70/0x128
+[  485.018948]  __get_user_pages+0xc8/0x2d8
+[  485.019252]  faultin_vma_page_range+0x64/0x98
+[  485.019576]  madvise_populate+0xb4/0x1f8
+[  485.019870]  madvise_vma_behavior+0x208/0x6a0
+[  485.020195]  do_madvise.part.0+0x150/0x430
+[  485.020501]  __arm64_sys_madvise+0x64/0x78
+[  485.020806]  invoke_syscall.constprop.0+0x7c/0xd0
+[  485.021163]  do_el0_svc+0xb4/0xd0
+[  485.021413]  el0_svc+0x50/0x228
+[  485.021646]  el0t_64_sync_handler+0x134/0x150
+[  485.021972]  el0t_64_sync+0x17c/0x180
+
+After this, the warning messages won't be raised any more after the clean page
+caches are dropped by the following command. The test program either completes
+or runs into OOM killer.
+
+guest# echo 1 > /proc/sys/vm/drop_caches
+
+[...]
+
+Thanks,
+Gavin
+--------------NVL90zIkYN4W03Myqjnk9mJs
+Content-Type: application/x-shellscript; name="test.sh"
+Content-Disposition: attachment; filename="test.sh"
+Content-Transfer-Encoding: base64
+
+IyEvYmluL3NoCgpjZ3JvdXBfcGF0aD0iL3N5cy9mcy9jZ3JvdXAvdGVzdCIKCmlmIFsgISAt
+ZiAvdG1wL3Rlc3RfZGF0YSBdOyB0aGVuCiAgIGVjaG8gIkNyZWF0aW5nIC90bXAvdGVzdF9k
+YXRhIgogICBkZCBpZj0vZGV2L3plcm8gb2Y9L3RtcC90ZXN0X2RhdGEgYnM9MUcgY291bnQ9
+MgpmaQoKaWYgWyAhIC1kICR7Y2dyb3VwX3BhdGh9IF07IHRoZW4KICAgbWtkaXIgJHtjZ3Jv
+dXBfcGF0aH0KZmkKCmVjaG8gMTE1Mk0gPiAke2Nncm91cF9wYXRofS9tZW1vcnkubWF4CmVj
+aG8gMTAyNE0gPiAke2Nncm91cF9wYXRofS9tZW1vcnkuaGlnaAplY2hvIDc2OE0gPiAke2Nn
+cm91cF9wYXRofS9tZW1vcnkubG93CmVjaG8gMCA+ICR7Y2dyb3VwX3BhdGh9L21lbW9yeS5t
+aW4KZWNobyAwID4gJHtjZ3JvdXBfcGF0aH0vbWVtb3J5LnN3YXAubWF4CmVjaG8gMCA+ICR7
+Y2dyb3VwX3BhdGh9L21lbW9yeS5zd2FwLmhpZ2gKZWNobyAwID4gJHtjZ3JvdXBfcGF0aH0v
+bWVtb3J5Lnpzd2FwLm1heCAKCmVjaG8gMSA+IC9wcm9jL3N5cy92bS9kcm9wX2NhY2hlcwpl
+Y2hvICQkID4gL3N5cy9mcy9jZ3JvdXAvdGVzdC9jZ3JvdXAucHJvY3MKLi90ZXN0IGJyZWFr
+LW9uLWVhY2gtc3RlcAoK
+--------------NVL90zIkYN4W03Myqjnk9mJs
+Content-Type: text/x-csrc; charset=UTF-8; name="test.c"
+Content-Disposition: attachment; filename="test.c"
+Content-Transfer-Encoding: base64
+
+Ly8gU1BEWC1MaWNlbnNlLUlkZW50aWZpZXI6IEdQTC0yLjAtb3ItbGF0ZXIKLyoKICogQ29w
+eXJpZ2h0IChDKSAyMDIzICBSZWQgSGF0LCBJbmMuCiAqCiAqIEF1dGhvcjogR2F2aW4gU2hh
+biA8Z3NoYW5AcmVkaGF0LmNvbT4KICoKICogQXR0ZW1wdCB0byByZXByb2R1Y2UgdGhlIHhm
+cyBpc3N1ZSB0aGF0IFpoZW55dSBvYnNlcnZlZC4KICogVGhlIGlkZWEgaXMgdG8gbWltaWMg
+UUVNVSdzIGJlaGF2aW9yIHRvIGhhdmUgcHJpdmF0ZQogKiBtbWFwJ2VkIFZNQSBvbiB4ZnMg
+ZmlsZSAoL3RtcC90ZXN0X2RhdGEpLiBUaGUgcHJvZ3JhbQogKiBzaG91bGQgYmUgcHV0IGlu
+dG8gY2dyb3VwIHdoZXJlIHRoZSBtZW1vcnkgbGltaXQgaXMgc2V0LAogKiBzbyB0aGF0IG1l
+bW9yeSBjbGFpbSBpcyBlbmZvcmNlZC4KICovCiNpbmNsdWRlIDxzdGRpby5oPgojaW5jbHVk
+ZSA8c3RkbGliLmg+CiNpbmNsdWRlIDx1bmlzdGQuaD4KI2luY2x1ZGUgPHN0cmluZy5oPgoj
+aW5jbHVkZSA8ZmNudGwuaD4KI2luY2x1ZGUgPGVycm5vLmg+CiNpbmNsdWRlIDxzeXMvc3lz
+Y2FsbC5oPgojaW5jbHVkZSA8c3lzL21tYW4uaD4KCiNkZWZpbmUgVEVTVF9GSUxFTkFNRQki
+L3RtcC90ZXN0X2RhdGEiCiNkZWZpbmUgVEVTVF9NRU1fU0laRQkweDQwMDAwMDAwCgpzdGF0
+aWMgdm9pZCBob2xkKGludCBhcmdjLCBjb25zdCBjaGFyICpkZXNjKQp7CglpbnQgb3B0OwoK
+CWlmIChhcmdjIDw9IDEpCgkJcmV0dXJuOwoKCWZwcmludGYoc3Rkb3V0LCAiJXNcbiIsIGRl
+c2MpOwoJc2NhbmYoIiVjIiwgJm9wdCk7Cn0KCQppbnQgbWFpbihpbnQgYXJnYywgY2hhciAq
+KmFyZ3YpCnsKCWludCBmZCA9IDA7Cgl2b2lkICpidWYgPSAodm9pZCAqKS0xLCAqcDsKCWlu
+dCBwZ3NpemUgPSBnZXRwYWdlc2l6ZSgpOwoJaW50IHJldDsKCglmZCA9IG9wZW4oVEVTVF9G
+SUxFTkFNRSwgT19SRFdSKTsKCWlmIChmZCA8IDApIHsKCQlmcHJpbnRmKHN0ZGVyciwgIlVu
+YWJsZSB0byBvcGVuIDwlcz5cbiIsIFRFU1RfRklMRU5BTUUpOwoJCXJldHVybiAtRUlPOwoJ
+fQoKCWhvbGQoYXJnYywgIlByZXNzIGFueSBrZXkgdG8gbW1hcC4uLlxuIik7CglidWYgPSBt
+bWFwKE5VTEwsIFRFU1RfTUVNX1NJWkUsIFBST1RfUkVBRCB8IFBST1RfV1JJVEUsCgkJICAg
+TUFQX1BSSVZBVEUsIGZkLCAwKTsKCWlmIChidWYgPT0gKHZvaWQgKiktMSkgewoJCWZwcmlu
+dGYoc3RkZXJyLCAiVW5hYmxlIHRvIG1tYXAgPCVzPlxuIiwgVEVTVF9GSUxFTkFNRSk7CgkJ
+Z290byBjbGVhbnVwOwoJfQoKCWZwcmludGYoc3Rkb3V0LCAibW1hcCdlZCBhdCAweCVwXG4i
+LCBidWYpOwoJcmV0ID0gbWFkdmlzZShidWYsIFRFU1RfTUVNX1NJWkUsIE1BRFZfSFVHRVBB
+R0UpOwogICAgICAgIGlmIChyZXQpIHsKCQlmcHJpbnRmKHN0ZGVyciwgIlVuYWJsZSB0byBt
+YWR2aXNlKE1BRFZfSFVHRVBBR0UpXG4iKTsKCQlnb3RvIGNsZWFudXA7Cgl9CgogICAgICAg
+IGhvbGQoYXJnYywgIlByZXNzIGFueSBrZXkgdG8gcG9wdWxhdGUuLi4iKTsKICAgICAgICBm
+cHJpbnRmKHN0ZG91dCwgIlBvcHVsYXRlIGFyZWEgYXQgMHglbHgsIHNpemU9MHgleFxuIiwK
+ICAgICAgICAgICAgICAgICh1bnNpZ25lZCBsb25nKWJ1ZiwgVEVTVF9NRU1fU0laRSk7Cgly
+ZXQgPSBtYWR2aXNlKGJ1ZiwgVEVTVF9NRU1fU0laRSwgTUFEVl9QT1BVTEFURV9XUklURSk7
+CglpZiAocmV0KSB7CgkJZnByaW50ZihzdGRlcnIsICJVbmFibGUgdG8gbWFkdmlzZShNQURW
+X1BPUFVMQVRFX1dSSVRFKVxuIik7CgkJZ290byBjbGVhbnVwOwoJfQoJCmNsZWFudXA6Cglo
+b2xkKGFyZ2MsICJQcmVzcyBhbnkga2V5IHRvIG11bm1hcC4uLiIpOwoJaWYgKGJ1ZiAhPSAo
+dm9pZCAqKS0xKQoJCW11bm1hcChidWYsIFRFU1RfTUVNX1NJWkUpOwoJaG9sZChhcmdjLCAi
+UHJlc3MgYW55IGtleSB0byBjbG9zZS4uLiIpOwoJaWYgKGZkID4gMCkKCQljbG9zZShmZCk7
+CgoJaG9sZChhcmdjLCAiUHJlc3MgYW55IGtleSB0byBleGl0Li4uIik7CglyZXR1cm4gMDsK
+fQo=
+
+--------------NVL90zIkYN4W03Myqjnk9mJs--
 
