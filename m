@@ -2,72 +2,63 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A2819E7734B
-	for <linux-xfs@archiver.kernel.org>; Fri, 29 Sep 2023 22:49:27 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id BBD99E7734B
+	for <linux-xfs@archiver.kernel.org>; Fri, 29 Sep 2023 23:59:13 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233885AbjI2Wt1 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 29 Sep 2023 18:49:27 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40652 "EHLO
+        id S233921AbjI2X7N (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 29 Sep 2023 19:59:13 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35916 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229508AbjI2Wt0 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 29 Sep 2023 18:49:26 -0400
+        with ESMTP id S233915AbjI2X7M (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 29 Sep 2023 19:59:12 -0400
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 807ECDD;
-        Fri, 29 Sep 2023 15:49:24 -0700 (PDT)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id B57E9C433C8;
-        Fri, 29 Sep 2023 22:49:23 +0000 (UTC)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2C057F9;
+        Fri, 29 Sep 2023 16:59:11 -0700 (PDT)
+Received: by smtp.kernel.org (Postfix) with ESMTPS id C93EFC433C8;
+        Fri, 29 Sep 2023 23:59:10 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1696027764;
-        bh=Ufhqxo3yas1XlwZ8/C+WysTlrYXwdeYXTChlz66gL/0=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=RqmEBvELKiKJrPdmj27E6wWm3wbgoGhbztCnJy3K8fbCsufv51Lo9qUuXj8sTFb4C
-         zU3wRai4oALXDco5xkF66XgYStzG6E7Va5LNHKv2nVFCtNMduKicVQ7BzAu6Gg3pLo
-         DyVc3WaIDXXS3CqCCT0fschckPSyFzmlt/dbLDBIpO+CvPw8eAtrVBCEpTUG6UJ+bE
-         sM6pS/HdnnAFfJXBhYTF3VU7HubdFFtuXEKr8TIhEZZpMR0qJOHhOjaM14WcTCkW8u
-         3/kp7PQcfopDGxKohL2jgFUOHFzUYt/CpLGVJQYxOo+j5L/uayzxWPWpO76hsI2ut3
-         Ym9Y7/TXMwICw==
-Date:   Fri, 29 Sep 2023 22:49:22 +0000
-From:   Eric Biggers <ebiggers@kernel.org>
-To:     John Garry <john.g.garry@oracle.com>
-Cc:     axboe@kernel.dk, kbusch@kernel.org, hch@lst.de, sagi@grimberg.me,
-        jejb@linux.ibm.com, martin.petersen@oracle.com, djwong@kernel.org,
-        viro@zeniv.linux.org.uk, brauner@kernel.org,
-        chandan.babu@oracle.com, dchinner@redhat.com,
-        linux-block@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-nvme@lists.infradead.org, linux-xfs@vger.kernel.org,
-        linux-fsdevel@vger.kernel.org, tytso@mit.edu, jbongio@google.com,
-        linux-api@vger.kernel.org,
-        Prasad Singamsetty <prasad.singamsetty@oracle.com>
-Subject: Re: [PATCH 03/21] fs/bdev: Add atomic write support info to statx
-Message-ID: <20230929224922.GB11839@google.com>
-References: <20230929102726.2985188-1-john.g.garry@oracle.com>
- <20230929102726.2985188-4-john.g.garry@oracle.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20230929102726.2985188-4-john.g.garry@oracle.com>
+        s=k20201202; t=1696031950;
+        bh=TYbXjTD4yLDMrr6JJPR3DJllrIYPE/nqoYqCeJb+CMM=;
+        h=Subject:From:In-Reply-To:References:Date:To:Cc:From;
+        b=QJmGFTFFZZ4d3a6jQLV86Q6CCRo7mqi4tobo6wDfJRC0Sm7VdLJi/1gno/kCD3Oow
+         K8PSF6R9TuLnBSEZMx8XOGWXaQPWsOlnZF5+GPv7nBnd3L4ipP9YnDSdFgo8GcPF/s
+         0V9whGQydQCXPGGYuYRzwcnNFTDCvd4MGRI3XDV3a7TLsaEh9RC6O19hraRvhsYxtC
+         Pk2QWkE9q2g2MMlFARgikKD+ExJV2LTQavOCx9qnamiwXVkY+nVwa0YTRVoZ8mpZ4u
+         dmF9pmGoqDB9MJTvODVa0oiENlxLOL7KQ24sUdBt99JsDzA9nZQjpxHZMgXJ5wZeL+
+         v2xf/Rpv/z2oQ==
+Received: from aws-us-west-2-korg-oddjob-1.ci.codeaurora.org (localhost.localdomain [127.0.0.1])
+        by aws-us-west-2-korg-oddjob-1.ci.codeaurora.org (Postfix) with ESMTP id A63A5C395C5;
+        Fri, 29 Sep 2023 23:59:10 +0000 (UTC)
+Subject: Re: [GIT PULL] xfs: bug fixes for 6.6
+From:   pr-tracker-bot@kernel.org
+In-Reply-To: <87r0mhf4rs.fsf@debian-BULLSEYE-live-builder-AMD64>
+References: <87r0mhf4rs.fsf@debian-BULLSEYE-live-builder-AMD64>
+X-PR-Tracked-List-Id: <linux-fsdevel.vger.kernel.org>
+X-PR-Tracked-Message-Id: <87r0mhf4rs.fsf@debian-BULLSEYE-live-builder-AMD64>
+X-PR-Tracked-Remote: https://git.kernel.org/pub/scm/fs/xfs/xfs-linux.git tags/xfs-6.6-fixes-2
+X-PR-Tracked-Commit-Id: 59c71548cf1090bf42e0b0d1bc375d83d6efed3a
+X-PR-Merge-Tree: torvalds/linux.git
+X-PR-Merge-Refname: refs/heads/master
+X-PR-Merge-Commit-Id: 10c0b6ba25a71d14f80586f6a795dbc47f5c6731
+Message-Id: <169603195066.31385.17895430149826350683.pr-tracker-bot@kernel.org>
+Date:   Fri, 29 Sep 2023 23:59:10 +0000
+To:     Chandan Babu R <chandanbabu@kernel.org>
+Cc:     torvalds@linux-foundation.org, dchinner@redhat.com,
+        djwong@kernel.org, linux-fsdevel@vger.kernel.org,
+        linux-xfs@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Fri, Sep 29, 2023 at 10:27:08AM +0000, John Garry wrote:
-> diff --git a/include/uapi/linux/stat.h b/include/uapi/linux/stat.h
-> index 7cab2c65d3d7..c99d7cac2aa6 100644
-> --- a/include/uapi/linux/stat.h
-> +++ b/include/uapi/linux/stat.h
-> @@ -127,7 +127,10 @@ struct statx {
->  	__u32	stx_dio_mem_align;	/* Memory buffer alignment for direct I/O */
->  	__u32	stx_dio_offset_align;	/* File offset alignment for direct I/O */
->  	/* 0xa0 */
-> -	__u64	__spare3[12];	/* Spare space for future expansion */
-> +	__u32	stx_atomic_write_unit_max;
-> +	__u32	stx_atomic_write_unit_min;
+The pull request you sent on Fri, 29 Sep 2023 19:09:34 +0530:
 
-Maybe min first and then max?  That seems a bit more natural, and a lot of the
-code you've written handle them in that order.
+> https://git.kernel.org/pub/scm/fs/xfs/xfs-linux.git tags/xfs-6.6-fixes-2
 
-> +#define STATX_ATTR_WRITE_ATOMIC		0x00400000 /* File supports atomic write operations */
+has been merged into torvalds/linux.git:
+https://git.kernel.org/torvalds/c/10c0b6ba25a71d14f80586f6a795dbc47f5c6731
 
-How would this differ from stx_atomic_write_unit_min != 0?
+Thank you!
 
-- Eric
+-- 
+Deet-doot-dot, I am a bot.
+https://korg.docs.kernel.org/prtracker.html
