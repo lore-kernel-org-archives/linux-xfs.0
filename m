@@ -2,122 +2,207 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B7B77E80ABE
-	for <linux-xfs@archiver.kernel.org>; Fri, 29 Sep 2023 11:56:45 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5B47CE71D21
+	for <linux-xfs@archiver.kernel.org>; Fri, 29 Sep 2023 12:33:10 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233097AbjI2L4p (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 29 Sep 2023 07:56:45 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35632 "EHLO
+        id S233085AbjI2MdK (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 29 Sep 2023 08:33:10 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36954 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229508AbjI2L4p (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 29 Sep 2023 07:56:45 -0400
-Received: from esa6.hc1455-7.c3s2.iphmx.com (esa6.hc1455-7.c3s2.iphmx.com [68.232.139.139])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E70141AE
-        for <linux-xfs@vger.kernel.org>; Fri, 29 Sep 2023 04:56:41 -0700 (PDT)
-X-IronPort-AV: E=McAfee;i="6600,9927,10847"; a="135574552"
-X-IronPort-AV: E=Sophos;i="6.03,187,1694703600"; 
-   d="scan'208";a="135574552"
-Received: from unknown (HELO oym-r3.gw.nic.fujitsu.com) ([210.162.30.91])
-  by esa6.hc1455-7.c3s2.iphmx.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 29 Sep 2023 20:56:40 +0900
-Received: from oym-m1.gw.nic.fujitsu.com (oym-nat-oym-m1.gw.nic.fujitsu.com [192.168.87.58])
-        by oym-r3.gw.nic.fujitsu.com (Postfix) with ESMTP id 4BB96CA1E4
-        for <linux-xfs@vger.kernel.org>; Fri, 29 Sep 2023 20:56:37 +0900 (JST)
-Received: from kws-ab3.gw.nic.fujitsu.com (kws-ab3.gw.nic.fujitsu.com [192.51.206.21])
-        by oym-m1.gw.nic.fujitsu.com (Postfix) with ESMTP id 78CAAD88BF
-        for <linux-xfs@vger.kernel.org>; Fri, 29 Sep 2023 20:56:36 +0900 (JST)
-Received: from edo.cn.fujitsu.com (edo.cn.fujitsu.com [10.167.33.5])
-        by kws-ab3.gw.nic.fujitsu.com (Postfix) with ESMTP id 1D7AB200501B9
-        for <linux-xfs@vger.kernel.org>; Fri, 29 Sep 2023 20:56:36 +0900 (JST)
-Received: from [10.193.128.127] (unknown [10.193.128.127])
-        by edo.cn.fujitsu.com (Postfix) with ESMTP id 30CC21A0070;
-        Fri, 29 Sep 2023 19:56:35 +0800 (CST)
-Message-ID: <99279735-2d17-405f-bade-9501a296d817@fujitsu.com>
-Date:   Fri, 29 Sep 2023 19:56:34 +0800
+        with ESMTP id S232977AbjI2MdJ (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 29 Sep 2023 08:33:09 -0400
+Received: from foss.arm.com (foss.arm.com [217.140.110.172])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 4C42D1AE;
+        Fri, 29 Sep 2023 05:33:06 -0700 (PDT)
+Received: from usa-sjc-imap-foss1.foss.arm.com (unknown [10.121.207.14])
+        by usa-sjc-mx-foss1.foss.arm.com (Postfix) with ESMTP id 3EA7D1FB;
+        Fri, 29 Sep 2023 05:33:44 -0700 (PDT)
+Received: from [10.57.66.194] (unknown [10.57.66.194])
+        by usa-sjc-imap-foss1.foss.arm.com (Postfix) with ESMTPSA id 6960C3F59C;
+        Fri, 29 Sep 2023 05:33:04 -0700 (PDT)
+Message-ID: <a140fb29-3b76-46b8-b7e8-0e89351ddfbd@arm.com>
+Date:   Fri, 29 Sep 2023 13:33:03 +0100
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH] xfs: drop experimental warning for FSDAX
-To:     "Darrick J. Wong" <djwong@kernel.org>,
-        Andrew Morton <akpm@linux-foundation.org>
-Cc:     Chandan Babu R <chandanbabu@kernel.org>,
-        Dave Chinner <david@fromorbit.com>, linux-xfs@vger.kernel.org,
-        nvdimm@lists.linux.dev, dan.j.williams@intel.com
-References: <20230926145519.GE11439@frogsfrogsfrogs>
- <ZROC8hEabAGS7orb@dread.disaster.area>
- <20230927014632.GE11456@frogsfrogsfrogs>
- <87fs306zs1.fsf@debian-BULLSEYE-live-builder-AMD64>
- <5c064cbd-13a3-4d55-9881-0a079476d865@fujitsu.com>
- <bc29af15-ae63-407d-8ca0-186c976acce7@fujitsu.com>
- <87y1gs83yq.fsf@debian-BULLSEYE-live-builder-AMD64>
- <20230927083034.90bd6336229dd00af601e0ef@linux-foundation.org>
- <9c3cbc0c-7135-4006-ad4a-2abce0a556b0@fujitsu.com>
- <20230928092052.9775e59262c102dc382513ef@linux-foundation.org>
- <20230928171339.GJ11439@frogsfrogsfrogs>
-From:   Shiyang Ruan <ruansy.fnst@fujitsu.com>
-In-Reply-To: <20230928171339.GJ11439@frogsfrogsfrogs>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Subject: Re: BUG: MADV_COLLAPSE doesn't work for XFS files
+To:     Zach O'Keefe <zokeefe@google.com>
+Cc:     Bagas Sanjaya <bagasdotme@gmail.com>,
+        Hugh Dickins <hughd@google.com>,
+        David Hildenbrand <david@redhat.com>,
+        Matthew Wilcox <willy@infradead.org>,
+        Chandan Babu R <chandan.babu@oracle.com>,
+        "Darrick J. Wong" <djwong@kernel.org>,
+        Linux Memory Management List <linux-mm@kvack.org>,
+        Linux XFS <linux-xfs@vger.kernel.org>,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+        Yu Zhao <yuzhao@google.com>
+References: <4d6c9b19-cdbb-4a00-9a40-5ed5c36332e5@arm.com>
+ <ZRVbV6yJ-zFzRoas@debian.me> <54e5accf-1a56-495a-a4f5-d57504bc2fc8@arm.com>
+ <CAAa6QmRbDbEamFgEDbgVhwKOf1GHNa90COuyz29BmduOAjbmyA@mail.gmail.com>
+Content-Language: en-GB
+From:   Ryan Roberts <ryan.roberts@arm.com>
+In-Reply-To: <CAAa6QmRbDbEamFgEDbgVhwKOf1GHNa90COuyz29BmduOAjbmyA@mail.gmail.com>
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
-X-TM-AS-GCONF: 00
-X-TM-AS-Product-Ver: IMSS-9.1.0.1417-9.0.0.1002-27904.007
-X-TM-AS-User-Approved-Sender: Yes
-X-TMASE-Version: IMSS-9.1.0.1417-9.0.1002-27904.007
-X-TMASE-Result: 10--17.421700-10.000000
-X-TMASE-MatchedRID: x/EPlNU2vY2PvrMjLFD6eHchRkqzj/bEC/ExpXrHizy5kqGQ38oKZiyB
-        2QdJzFQxeiSRL6ccGm3mcwRo1T9FBN/K1ikJIsLOqug9vIA2WOASyA2F3XSGIlAoBBK61Bhcvgm
-        lXW4uT/zxkhLcCNMvjtYrdGPWjovvJuJYwkshsMH97643XzR7lynQV+sTq2oQJQLqWrKg0L0uJa
-        PbC+kbrOEqPm4A28Dgf2U0hnakSY8V97lIy2qxCEEOfoWOrvuOdmWMDQajOiKBAXl9LkPp6eGm/
-        D7ygt+qkPI1/ZdqoS0VGyRifsbM+5piU2kgoGALdo0n+JPFcJp9LQinZ4QefGWCfbzydb0gzhYg
-        VA8TZw63ApS8cfJcZd0H8LFZNFG7bkV4e2xSge4WrCb08VKGnT+Fto5OAEga8z92JPerioPbPEZ
-        EldmKFcWFcyN1Agmm
-X-TMASE-SNAP-Result: 1.821001.0001-0-1-22:0,33:0,34:0-0
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-
-
-在 2023/9/29 1:13, Darrick J. Wong 写道:
-> On Thu, Sep 28, 2023 at 09:20:52AM -0700, Andrew Morton wrote:
->> On Thu, 28 Sep 2023 16:44:00 +0800 Shiyang Ruan <ruansy.fnst@fujitsu.com> wrote:
+On 28/09/2023 20:43, Zach O'Keefe wrote:
+> Hey Ryan,
+> 
+> Thanks for bringing this up.
+> 
+> On Thu, Sep 28, 2023 at 4:59 AM Ryan Roberts <ryan.roberts@arm.com> wrote:
 >>
->>> But please pick the following patch[1] as well, which fixes failures of
->>> xfs55[0-2] cases.
+>> On 28/09/2023 11:54, Bagas Sanjaya wrote:
+>>> On Thu, Sep 28, 2023 at 10:55:17AM +0100, Ryan Roberts wrote:
+>>>> Hi all,
+>>>>
+>>>> I've just noticed that when applied to a file mapping for a file on xfs, MADV_COLLAPSE returns EINVAL. The same test case works fine if the file is on ext4.
+>>>>
+>>>> I think the root cause is that the implementation bails out if it finds a (non-PMD-sized) large folio in the page cache for any part of the file covered by the region. XFS does readahead into large folios so we hit this issue. See khugepaged.h:collapse_file():
+>>>>
+>>>>              if (PageTransCompound(page)) {
+>>>>                      struct page *head = compound_head(page);
+>>>>
+>>>>                      result = compound_order(head) == HPAGE_PMD_ORDER &&
+>>>>                                      head->index == start
+>>>>                                      /* Maybe PMD-mapped */
+>>>>                                      ? SCAN_PTE_MAPPED_HUGEPAGE
+>>>>                                      : SCAN_PAGE_COMPOUND;
+>>>>                      goto out_unlock;
+>>>>              }
 >>>
->>> [1]
->>> https://lore.kernel.org/linux-xfs/20230913102942.601271-1-ruansy.fnst@fujitsu.com
->>
->> I guess I can take that xfs patch, as it fixes a DAX patch.  I hope the xfs team
->> are watching.
->>
->> But
->>
->> a) I'm not subscribed to linux-xfs and
->>
->> b) the changelog fails to describe the userspace-visible effects of
->>     the bug, so I (and others) are unable to determine which kernel
->>     versions should be patched.
->>
->> Please update that changelog and resend?
 > 
-> That's a purely xfs patch anyways.  The correct maintainer is Chandan,
-> not Andrew.
-> 
-> /me notes that post-reorg, patch authors need to ask the release manager
-> (Chandan) directly to merge their patches after they've gone through
-> review.  Pull requests of signed tags are encouraged strongly.
-> 
-> Shiyang, could you please send Chandan pull requests with /all/ the
-> relevant pmem patches incorporated?  I think that's one PR for the
-> "xfs: correct calculation for agend and blockcount" for 6.6; and a
-> second PR with all the non-bugfix stuff (PRE_REMOVE and whatnot) for
-> 6.7.
+> Ya, non-PMD-sized THPs were just barely visible in my peripherals when
+> writing this, and I'm still woefully behind on your work on them now
+> (sorry!).
 
-OK.  Though I don't know how to send the PR by email, I have sent a list 
-of the patches and added description for each one.
+Nothing to apologise for!
+
+Although, this issue has no relation to the work I've been doing for anonymous large folios; It shows up for large _file_ folios. And it looks like the kernel was capable of doing large file folios for XFS before the collapse implementation went in, so I guess this behavior has always been the case:
+
+git rev-list --no-walk=sorted --pretty=oneline \
+	793917d997df2e432f3e9ac126e4482d68256d01 \
+	6795801366da0cd3d99e27c37f020a8f16714886 \
+	8549a26308f945bddb39391643eb102da026f0ef \
+	e6687b89225ee9c817e6dcbadc873f6a4691e5c2 \
+	7d8faaf155454f8798ec56404faca29a82689c77
+
+7d8faaf155454f8798ec56404faca29a82689c77 mm/madvise: introduce MADV_COLLAPSE sync hugepage collapse
+793917d997df2e432f3e9ac126e4482d68256d01 mm/readahead: Add large folio readahead
+6795801366da0cd3d99e27c37f020a8f16714886 xfs: Support large folios
+
+So first, XFS supported it, then readahead actually started allocating large folios, then MADV_COLLAPSE came along.
 
 
---
-Thanks,
-Ruan.
+> 
+> I'd like to eventually make collapse (not just MADV_COLLAPSE, but
+> khugepaged too) support arbitrary-sized large folios in general, but
+> I'm very pressed for time right now. I think M. Wilcox is also
+> interested in this, given he left the TODO to support it :P
+
+Yes, I think this could be a useful capability. I'm currently investigating use of MADV_COLLAPSE as a work-around to get executable sections into large folios for file systems that don't natively support them (ext4 mainly). On arm64, having executable memory in 64K folios means we can make better use of the iTLB and improve performance.
 
 > 
-> --D
+> Thank you for the reproducer though! I haven't run it, but I'll
+> probably come back here to steal it when the time comes.
+> 
+>>> I don't see any hint to -EINVAL above. Am I missing something?
+>>
+>> The SCAN_PAGE_COMPOUND result ends up back at madvise_collapse() where it
+>> eventually gets converted to -EINVAL by madvise_collapse_errno().
+>>
+>>>
+>>>>
+>>>> I'm not sure if this is already a known issue? I don't have time to work on a fix for this right now, so thought I would highlight it at least. I might get around to it at some point in the future if nobody else tackles it.
+> 
+> My guess is Q1 2024 is when I'd be able to look into this, at the
+> current level of urgency. It doesn't sound like it's blocking anything
+> for your work right now -- lmk if that changes though!
+
+No - its not a blocker for me. I just wanted to highlight the issue.
+
+> 
+> Thanks,
+> Zach
+> 
+> 
+> 
+>>>>
+>>>> Thanks,
+>>>> Ryan
+>>>>
+>>>>
+>>>> Test case I've been using:
+>>>>
+>>>> -->8--
+>>>>
+>>>> #include <stdio.h>
+>>>> #include <stdlib.h>
+>>>> #include <sys/mman.h>
+>>>> #include <sys/types.h>
+>>>> #include <sys/stat.h>
+>>>> #include <fcntl.h>
+>>>> #include <unistd.h>
+>>>>
+>>>> #ifndef MADV_COLLAPSE
+>>>> #define MADV_COLLAPSE                25
+>>>> #endif
+>>>>
+>>>> #define handle_error(msg)    do { perror(msg); exit(EXIT_FAILURE); } while (0)
+>>>>
+>>>> #define SZ_1K                        1024
+>>>> #define SZ_1M                        (SZ_1K * SZ_1K)
+>>>> #define ALIGN(val, align)    (((val) + ((align) - 1)) & ~((align) - 1))
+>>>>
+>>>> #if 1
+>>>> // ext4
+>>>> #define DATA_FILE            "/home/ubuntu/data.txt"
+>>>> #else
+>>>> // xfs
+>>>> #define DATA_FILE            "/boot/data.txt"
+>>>> #endif
+>>>>
+>>>> int main(void)
+>>>> {
+>>>>      int fd;
+>>>>      char *mem;
+>>>>      int ret;
+>>>>
+>>>>      fd = open(DATA_FILE, O_RDONLY);
+>>>>      if (fd == -1)
+>>>>              handle_error("open");
+>>>>
+>>>>      mem = mmap(NULL, SZ_1M * 4, PROT_READ | PROT_EXEC, MAP_PRIVATE, fd, 0);
+>>>>      close(fd);
+>>>>      if (mem == MAP_FAILED)
+>>>>              handle_error("mmap");
+>>>>
+>>>>      printf("1: pid=%d, mem=%p\n", getpid(), mem);
+>>>>      getchar();
+>>>>
+>>>>      mem = (char *)ALIGN((unsigned long)mem, SZ_1M * 2);
+>>>>      ret = madvise(mem, SZ_1M * 2, MADV_COLLAPSE);
+>>>>      if (ret)
+>>>>              handle_error("madvise");
+>>>>
+>>>>      printf("2: pid=%d, mem=%p\n", getpid(), mem);
+>>>>      getchar();
+>>>>
+>>>>      return 0;
+>>>> }
+>>>>
+>>>> -->8--
+>>>>
+>>>
+>>> Confused...
+>>
+>> This is a user space test case that shows the problem; data.txt needs to be at
+>> least 4MB and on a mounted ext4 and xfs filesystem. By toggling the '#if 1' to
+>> 0, you can see the different behaviours for ext4 and xfs -
+>> handle_error("madvise") fires with EINVAL in the xfs case. The getchar()s are
+>> leftovers from me looking at the smaps file.
+>>
+
