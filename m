@@ -2,95 +2,81 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9DEB7E728CA
-	for <linux-xfs@archiver.kernel.org>; Fri, 29 Sep 2023 17:29:50 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 303D9E728D3
+	for <linux-xfs@archiver.kernel.org>; Fri, 29 Sep 2023 17:51:51 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233781AbjI2R3u (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 29 Sep 2023 13:29:50 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47772 "EHLO
+        id S233450AbjI2Rvu (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 29 Sep 2023 13:51:50 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48298 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233786AbjI2R3f (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 29 Sep 2023 13:29:35 -0400
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 80C241B0;
-        Fri, 29 Sep 2023 10:27:18 -0700 (PDT)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 0D1BFC433C8;
-        Fri, 29 Sep 2023 17:27:17 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1696008437;
-        bh=35N55BDhmAWN17ijS2nNlMHKq/WXJG+pPd+OBo72eDY=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=NtKNUS8vr2Pzpm02rW9RE0e1nk+wxR+UmTGF9WQZmkQrd4MVlgFlysSes2206J8PY
-         6vPlpD4LtRi8whNzWyqs+we6q8q5rCFkGkdCImCz36mq5b0dzxLPV33jdzEwcNdsMi
-         OgDfbXcKWe4i49sJMCzweA6Rw08foRASYZZfxQ4Knt/ZyR8LTUrpVkyRTY8oIL037F
-         wbWxyoEi4xR5pbnI01s47hjwKNEhqycV1cGioN8VexNN88pIMfG8imz+tI4dSOPITA
-         ZLxC2nVw/vizuOEBBzDwAlX8Xc4IowTTTJqgpB8qOamkpGZEWhGJDztb7UWhYveJ0L
-         X5OraSErdOSQw==
-Date:   Fri, 29 Sep 2023 10:27:16 -0700
-From:   "Darrick J. Wong" <djwong@kernel.org>
-To:     Zorro Lang <zlang@redhat.com>
-Cc:     linux-xfs@vger.kernel.org, fstests@vger.kernel.org
-Subject: Re: [PATCH 1/1] xfs/270: update commit id for _fixed_by tag.
-Message-ID: <20230929172716.GA21283@frogsfrogsfrogs>
-References: <169567817047.2269889.16262169848413312221.stgit@frogsfrogsfrogs>
- <169567817607.2269889.5897696336492740125.stgit@frogsfrogsfrogs>
- <20230929052259.7umlz236g3o4su6r@dell-per750-06-vm-08.rhts.eng.pek2.redhat.com>
+        with ESMTP id S233313AbjI2Rvt (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 29 Sep 2023 13:51:49 -0400
+Received: from mail-pf1-f170.google.com (mail-pf1-f170.google.com [209.85.210.170])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7E69C1B0;
+        Fri, 29 Sep 2023 10:51:47 -0700 (PDT)
+Received: by mail-pf1-f170.google.com with SMTP id d2e1a72fcca58-68bed2c786eso11747107b3a.0;
+        Fri, 29 Sep 2023 10:51:47 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1696009907; x=1696614707;
+        h=content-transfer-encoding:in-reply-to:from:references:cc:to
+         :content-language:subject:user-agent:mime-version:date:message-id
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=J2/eTj4ZTeW96Njy5Yu8y4iGoVQL5PWTi4ftqXgho1g=;
+        b=QUxaK+xX2mybE4Jo8Y7ulUTnBoN+v47Fj5sH1LWxj2kR+QzDeDkI+zjQF9rXoswxkY
+         baZNOkWT3ewYzpsgmb7fHRwauT5kvXZW3d/BoL2KOLS5zuDIayAKzte200Xvd9YVfeAv
+         CAVc+QNk62vfB/YLvC8cpOEy9L7kakOLWHe/S+ZpzubB1aWRm58Zo9KiO9QzauLginp6
+         Xwr9ae3f6CZlqM1akmuzu6P69bYVy55HCMW1z/7SB8mds9YhqJYNzMBfI91RKQG3WXI4
+         lGSSJogUSt4LZ0PbQVwENFhMuNroibNA86fH8uWhrA0NfrZTV9OTpM/gHhL7iUaqL9nb
+         O4IQ==
+X-Gm-Message-State: AOJu0YwpMMzy4Vp6z4LplMGggDEWsFGhosNfgh69qCLf19FIV0BFtdlQ
+        GB2Dqfp13dvfnDoE6udRLWM=
+X-Google-Smtp-Source: AGHT+IGOOjLnU6w2a9/rCpNU/gUfKj+HX8K9T3Khoyfb1oo9lzEzxrnEv7Kr7MNDQD94unm8RFU33Q==
+X-Received: by 2002:a05:6a20:548f:b0:161:28e0:9abd with SMTP id i15-20020a056a20548f00b0016128e09abdmr5716860pzk.16.1696009906659;
+        Fri, 29 Sep 2023 10:51:46 -0700 (PDT)
+Received: from [192.168.51.14] (c-73-231-117-72.hsd1.ca.comcast.net. [73.231.117.72])
+        by smtp.gmail.com with ESMTPSA id h4-20020a170902eec400b001c73d829fb0sm2953239plb.32.2023.09.29.10.51.44
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Fri, 29 Sep 2023 10:51:46 -0700 (PDT)
+Message-ID: <17ee1669-5830-4ead-888d-a6a4624b638a@acm.org>
+Date:   Fri, 29 Sep 2023 10:51:43 -0700
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20230929052259.7umlz236g3o4su6r@dell-per750-06-vm-08.rhts.eng.pek2.redhat.com>
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH 10/21] block: Add fops atomic write support
+Content-Language: en-US
+To:     John Garry <john.g.garry@oracle.com>, axboe@kernel.dk,
+        kbusch@kernel.org, hch@lst.de, sagi@grimberg.me,
+        jejb@linux.ibm.com, martin.petersen@oracle.com, djwong@kernel.org,
+        viro@zeniv.linux.org.uk, brauner@kernel.org,
+        chandan.babu@oracle.com, dchinner@redhat.com
+Cc:     linux-block@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-nvme@lists.infradead.org, linux-xfs@vger.kernel.org,
+        linux-fsdevel@vger.kernel.org, tytso@mit.edu, jbongio@google.com,
+        linux-api@vger.kernel.org
+References: <20230929102726.2985188-1-john.g.garry@oracle.com>
+ <20230929102726.2985188-11-john.g.garry@oracle.com>
+From:   Bart Van Assche <bvanassche@acm.org>
+In-Reply-To: <20230929102726.2985188-11-john.g.garry@oracle.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Fri, Sep 29, 2023 at 01:22:59PM +0800, Zorro Lang wrote:
-> On Mon, Sep 25, 2023 at 02:42:56PM -0700, Darrick J. Wong wrote:
-> > From: Darrick J. Wong <djwong@kernel.org>
-> > 
-> > Update the commit id in the _fixed_by tag now that we've merged the
-> > kernel fix.
-> > 
-> > Signed-off-by: Darrick J. Wong <djwong@kernel.org>
-> > ---
-> >  tests/xfs/270 |    2 +-
-> >  1 file changed, 1 insertion(+), 1 deletion(-)
-> > 
-> > 
-> > diff --git a/tests/xfs/270 b/tests/xfs/270
-> > index 7d4e1f6a87..4e4f767dc1 100755
-> > --- a/tests/xfs/270
-> > +++ b/tests/xfs/270
-> > @@ -17,7 +17,7 @@ _begin_fstest auto quick mount
-> >  
-> >  # real QA test starts here
-> >  _supported_fs xfs
-> > -_fixed_by_kernel_commit xxxxxxxxxxxx \
-> > +_fixed_by_kernel_commit 74ad4693b647 \
-> >  	"xfs: fix log recovery when unknown rocompat bits are set"
-> 
-> This patch is good to me, but we have more xfs cases have fixed commit which
-> have been merged:
-> 
-> $ grep -rsni xxxxxxxx tests/xfs|grep _fixed
-> tests/xfs/600:23:_fixed_by_git_commit kernel XXXXXXXXXXXXX \
-> tests/xfs/557:21:_fixed_by_kernel_commit XXXXXXXXXXXX \
-> tests/xfs/270:20:_fixed_by_kernel_commit xxxxxxxxxxxx \
-> 
-> xfs/600: cfa2df68b7ce xfs: fix an agbno overflow in __xfs_getfsmap_datadev
-> xfs/557: 817644fa4525 xfs: get root inode correctly at bulkstat
-> 
-> Do you want to fix them in one patch, or you hope to merge this
-> patch at first?
+On 9/29/23 03:27, John Garry wrote:
+> +	if (pos % atomic_write_unit_min_bytes)
+> +		return false;
+> +	if (iov_iter_count(iter) % atomic_write_unit_min_bytes)
+> +		return false;
+> +	if (!is_power_of_2(iov_iter_count(iter)))
+> +		return false;
+[ ... ]
+> +	if (pos % iov_iter_count(iter))
+> +		return false;
 
-Eh, I'll just resubmit with all three.
+Where do these rules come from? Is there any standard that requires
+any of the above?
 
---D
+Thanks,
 
-> Thanks,
-> Zorro
-> 
-> 
-> >  # skip fs check because superblock contains unknown ro-compat features
-> >  _require_scratch_nocheck
-> > 
-> 
+Bart.
+
