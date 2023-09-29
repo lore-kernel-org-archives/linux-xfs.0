@@ -2,82 +2,91 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 33016E71D3F
-	for <linux-xfs@archiver.kernel.org>; Fri, 29 Sep 2023 14:11:42 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C0D94E71D3D
+	for <linux-xfs@archiver.kernel.org>; Fri, 29 Sep 2023 14:22:17 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233149AbjI2OLm (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 29 Sep 2023 10:11:42 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42780 "EHLO
+        id S233436AbjI2OWR (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 29 Sep 2023 10:22:17 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57642 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233119AbjI2OLl (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 29 Sep 2023 10:11:41 -0400
+        with ESMTP id S233293AbjI2OWN (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 29 Sep 2023 10:22:13 -0400
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3A7ED1AC;
-        Fri, 29 Sep 2023 07:11:39 -0700 (PDT)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 5DF00C433C8;
-        Fri, 29 Sep 2023 14:11:38 +0000 (UTC)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E193B1AC
+        for <linux-xfs@vger.kernel.org>; Fri, 29 Sep 2023 07:22:11 -0700 (PDT)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 1357DC433C7;
+        Fri, 29 Sep 2023 14:22:11 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1695996698;
-        bh=ioZPd5s3zd75qIAlXJzl7L3yYfnePsy7+vDy4XLFg/8=;
-        h=From:To:Cc:Subject:Date:From;
-        b=mljtrZxswKaDVgC5n/YPppHk6ricDJEZdBIMHyjp0x80CofGASVGoM4F6Kw8Zv4QK
-         zzdDJe35/duT+JV9Ii/S8yjQRNReomqt1GjI2Taiabv0dXSC3Gy8M7YEUo8v14ew1f
-         CDgYnjDQVutFoXpXOdI9iqu8dhz6VQUuR+xqxW0sg+ONgDpOzb+VtKwvcSs+zmFEP8
-         GV9NkJF+Y2xvsoHomsl1R9Gi92IhpHMJShh2liXs8jf9ToDZEFPJyDJhywKBAn8kwg
-         B8xus/AOUyA09Hj5+nPf0ypQg0i8pFRjxF2RTKmvCrSby4r+d1FB1nVaiKbJ50lQoe
-         hrQuISSJ3OeNw==
+        s=k20201202; t=1695997331;
+        bh=ALDhPabcaxYCJi2SBSN5TBBz4A8vX5TsDjVKMZrqKHI=;
+        h=References:From:To:Cc:Subject:Date:In-reply-to:From;
+        b=sYi/614TzvOztdvAvktP7VMP18Z9yVg9t2v1ar+a+L/ojDo/EmMa8/afbzOW1GnQ1
+         6rHJD3L+3OR+t1tMGHxkeitFucJo3/dlqOdnFh1L4ybd+72LSazIzd8Lmh6LRqeRSW
+         y6SQf+O4L2fOtbSW14tyR1BL7FYikmqKbkms4aHLUJZRw3w/IF60OqU8OpracUioJt
+         Wf31/E3m3cPQ2d/CytWs2y9yilukGSvHgp1jK1XCiauMb5kaD8KGOcs8KoF3Bf5pVc
+         7valCMjebEKhgWvK1znV+gZDYYWj0WM9rk24lOGn4OWHw+4CTybZBGnK8yqxcPSh9L
+         KwLbuDCib8ibA==
+References: <20230915063854.1784918-1-ruansy.fnst@fujitsu.com>
+ <86167409-aa7f-4db4-8335-3f290d507f14@fujitsu.com>
+ <20230926145519.GE11439@frogsfrogsfrogs>
+ <ZROC8hEabAGS7orb@dread.disaster.area>
+ <20230927014632.GE11456@frogsfrogsfrogs>
+ <87fs306zs1.fsf@debian-BULLSEYE-live-builder-AMD64>
+ <5c064cbd-13a3-4d55-9881-0a079476d865@fujitsu.com>
+ <bc29af15-ae63-407d-8ca0-186c976acce7@fujitsu.com>
+ <87y1gs83yq.fsf@debian-BULLSEYE-live-builder-AMD64>
+ <20230927083034.90bd6336229dd00af601e0ef@linux-foundation.org>
+ <9c3cbc0c-7135-4006-ad4a-2abce0a556b0@fujitsu.com>
+ <20230928092052.9775e59262c102dc382513ef@linux-foundation.org>
 User-agent: mu4e 1.8.10; emacs 27.1
 From:   Chandan Babu R <chandanbabu@kernel.org>
-To:     torvalds@linux-foundation.org
-Cc:     dchinner@redhat.com, djwong@kernel.org,
-        linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org
-Subject: [GIT PULL] xfs: bug fixes for 6.6
-Date:   Fri, 29 Sep 2023 19:09:34 +0530
-Message-ID: <87r0mhf4rs.fsf@debian-BULLSEYE-live-builder-AMD64>
+To:     Andrew Morton <akpm@linux-foundation.org>
+Cc:     Shiyang Ruan <ruansy.fnst@fujitsu.com>,
+        "Darrick J. Wong" <djwong@kernel.org>,
+        Dave Chinner <david@fromorbit.com>, linux-xfs@vger.kernel.org,
+        nvdimm@lists.linux.dev, dan.j.williams@intel.com
+Subject: Re: [PATCH] xfs: drop experimental warning for FSDAX
+Date:   Fri, 29 Sep 2023 19:47:07 +0530
+In-reply-to: <20230928092052.9775e59262c102dc382513ef@linux-foundation.org>
+Message-ID: <87msx5f4a8.fsf@debian-BULLSEYE-live-builder-AMD64>
 MIME-Version: 1.0
 Content-Type: text/plain
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Hi Linus,
+On Thu, Sep 28, 2023 at 09:20:52 AM -0700, Andrew Morton wrote:
+> On Thu, 28 Sep 2023 16:44:00 +0800 Shiyang Ruan <ruansy.fnst@fujitsu.com> wrote:
+>
+>> But please pick the following patch[1] as well, which fixes failures of 
+>> xfs55[0-2] cases.
+>> 
+>> [1] 
+>> https://lore.kernel.org/linux-xfs/20230913102942.601271-1-ruansy.fnst@fujitsu.com
+>
+> I guess I can take that xfs patch, as it fixes a DAX patch.  I hope the xfs team
+> are watching.
+>
+> But
+>
+> a) I'm not subscribed to linux-xfs and
+>
+> b) the changelog fails to describe the userspace-visible effects of
+>    the bug, so I (and others) are unable to determine which kernel
+>    versions should be patched.
+>
+> Please update that changelog and resend?
 
-Please pull this branch with changes for xfs for 6.6-rc4. The changes are
-limited to only bug fixes whose summary is provided below.
+I will apply "xfs: correct calculation for agend and blockcount" patch to
+xfs-linux Git tree and include it for the next v6.6 pull request to Linus.
 
-I did a test-merge with the main upstream branch as of a few minutes ago and
-didn't see any conflicts.  Please let me know if you encounter any problems.
+At the outset, It looks like I can pick "mm, pmem, xfs: Introduce
+MF_MEM_PRE_REMOVE for unbind"
+(i.e. https://lore.kernel.org/linux-xfs/20230928103227.250550-1-ruansy.fnst@fujitsu.com/T/#u)
+patch for v6.7 as well. But that will require your Ack. Please let me know
+your opinion.
 
-The following changes since commit 6465e260f48790807eef06b583b38ca9789b6072:
+Also, I will pick "xfs: drop experimental warning for FSDAX" patch for v6.7.
 
-  Linux 6.6-rc3 (2023-09-24 14:31:13 -0700)
-
-are available in the Git repository at:
-
-  https://git.kernel.org/pub/scm/fs/xfs/xfs-linux.git tags/xfs-6.6-fixes-2
-
-for you to fetch changes up to 59c71548cf1090bf42e0b0d1bc375d83d6efed3a:
-
-  Merge tag 'fix-fix-iunlink-6.6_2023-09-25' of https://git.kernel.org/pub/scm/linux/kernel/git/djwong/xfs-linux into xfs-6.6-fixesB (2023-09-25 21:19:33 +0530)
-
-----------------------------------------------------------------
-Bug fixes for 6.6-rc4:
-
-* Include modifications made to commit "xfs: load uncached unlinked inodes
-  into memory on demand" (Commit ID: 68b957f64fca1930164bfc6d6d379acdccd547d7)
-  which address review comments provided by Dave Chinner.
-
-Signed-off-by: Chandan Babu R <chandanbabu@kernel.org>
-
-----------------------------------------------------------------
-Chandan Babu R (1):
-      Merge tag 'fix-fix-iunlink-6.6_2023-09-25' of https://git.kernel.org/pub/scm/linux/kernel/git/djwong/xfs-linux into xfs-6.6-fixesB
-
-Darrick J. Wong (1):
-      xfs: fix reloading entire unlinked bucket lists
-
- fs/xfs/xfs_export.c | 16 ++++++++++++----
- fs/xfs/xfs_inode.c  | 48 +++++++++++++++++++++++++++++++++++-------------
- fs/xfs/xfs_itable.c |  2 ++
- fs/xfs/xfs_qm.c     | 15 ++++++++++++---
- 4 files changed, 61 insertions(+), 20 deletions(-)
+-- 
+Chandan
