@@ -2,150 +2,72 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8F181E77343
-	for <linux-xfs@archiver.kernel.org>; Fri, 29 Sep 2023 22:18:31 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A2819E7734B
+	for <linux-xfs@archiver.kernel.org>; Fri, 29 Sep 2023 22:49:27 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233044AbjI2WS0 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 29 Sep 2023 18:18:26 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56496 "EHLO
+        id S233885AbjI2Wt1 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 29 Sep 2023 18:49:27 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40652 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232748AbjI2WSZ (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 29 Sep 2023 18:18:25 -0400
-Received: from casper.infradead.org (casper.infradead.org [IPv6:2001:8b0:10b:1236::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 26DEFF1;
-        Fri, 29 Sep 2023 15:18:22 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=infradead.org; s=casper.20170209; h=Content-Type:MIME-Version:Message-ID:
-        Subject:Cc:To:From:Date:Sender:Reply-To:Content-Transfer-Encoding:Content-ID:
-        Content-Description:In-Reply-To:References;
-        bh=5h2xE6T+5GfK6exvWu3eqMMYxFUREOKXwg7T5rQ9HiQ=; b=Gz3gxPiPJ52wFmuUPkadh/NzID
-        A4pj5GEvQccYqBfRwmPbIxu+Xl229pFA7dFr7pQx9HOboY8Uoob8eKzzt225RgfweW6lUkqzr6/Qx
-        Fi8/J8EFth36278AM61hn2L4+mkYKeI5h1zNJaw9bl0UKouARQvQKlS9cLB7D4ndp9oq3ItMcTW8i
-        lzWRoo9rFGwD34wtiWOVVTQ50KLstCwtn0vAngeGxYCHkKoWtgqFb49eQIgxFnDFfGfcPJHgI6bZb
-        vxp2xKVLem7fj1Kf0A5CKjhOk+02lKhN9F6GTDrWC1swKFVl5IIUi92TVcfw1dAGckpFy93yzhdDr
-        V/CIvr9w==;
-Received: from willy by casper.infradead.org with local (Exim 4.94.2 #2 (Red Hat Linux))
-        id 1qmLoS-00BGB4-0T; Fri, 29 Sep 2023 22:18:20 +0000
-Date:   Fri, 29 Sep 2023 23:18:19 +0100
-From:   Matthew Wilcox <willy@infradead.org>
-To:     linux-xfs@vger.kernel.org
-Cc:     linux-fsdevel@vger.kernel.org, linux-mm@kvack.org
-Subject: Removal of KM_NOFS
-Message-ID: <ZRdNK39vc4TuR7g8@casper.infradead.org>
+        with ESMTP id S229508AbjI2Wt0 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 29 Sep 2023 18:49:26 -0400
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 807ECDD;
+        Fri, 29 Sep 2023 15:49:24 -0700 (PDT)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id B57E9C433C8;
+        Fri, 29 Sep 2023 22:49:23 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1696027764;
+        bh=Ufhqxo3yas1XlwZ8/C+WysTlrYXwdeYXTChlz66gL/0=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=RqmEBvELKiKJrPdmj27E6wWm3wbgoGhbztCnJy3K8fbCsufv51Lo9qUuXj8sTFb4C
+         zU3wRai4oALXDco5xkF66XgYStzG6E7Va5LNHKv2nVFCtNMduKicVQ7BzAu6Gg3pLo
+         DyVc3WaIDXXS3CqCCT0fschckPSyFzmlt/dbLDBIpO+CvPw8eAtrVBCEpTUG6UJ+bE
+         sM6pS/HdnnAFfJXBhYTF3VU7HubdFFtuXEKr8TIhEZZpMR0qJOHhOjaM14WcTCkW8u
+         3/kp7PQcfopDGxKohL2jgFUOHFzUYt/CpLGVJQYxOo+j5L/uayzxWPWpO76hsI2ut3
+         Ym9Y7/TXMwICw==
+Date:   Fri, 29 Sep 2023 22:49:22 +0000
+From:   Eric Biggers <ebiggers@kernel.org>
+To:     John Garry <john.g.garry@oracle.com>
+Cc:     axboe@kernel.dk, kbusch@kernel.org, hch@lst.de, sagi@grimberg.me,
+        jejb@linux.ibm.com, martin.petersen@oracle.com, djwong@kernel.org,
+        viro@zeniv.linux.org.uk, brauner@kernel.org,
+        chandan.babu@oracle.com, dchinner@redhat.com,
+        linux-block@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-nvme@lists.infradead.org, linux-xfs@vger.kernel.org,
+        linux-fsdevel@vger.kernel.org, tytso@mit.edu, jbongio@google.com,
+        linux-api@vger.kernel.org,
+        Prasad Singamsetty <prasad.singamsetty@oracle.com>
+Subject: Re: [PATCH 03/21] fs/bdev: Add atomic write support info to statx
+Message-ID: <20230929224922.GB11839@google.com>
+References: <20230929102726.2985188-1-john.g.garry@oracle.com>
+ <20230929102726.2985188-4-john.g.garry@oracle.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
+In-Reply-To: <20230929102726.2985188-4-john.g.garry@oracle.com>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-I had a long plane ride yesterday, and I started on "Removing GFP_NOFS".
-TLDR: I don't know enough about XFS to do this first step.  There are
-various options and none of them are "obviously" the right thing to do.
+On Fri, Sep 29, 2023 at 10:27:08AM +0000, John Garry wrote:
+> diff --git a/include/uapi/linux/stat.h b/include/uapi/linux/stat.h
+> index 7cab2c65d3d7..c99d7cac2aa6 100644
+> --- a/include/uapi/linux/stat.h
+> +++ b/include/uapi/linux/stat.h
+> @@ -127,7 +127,10 @@ struct statx {
+>  	__u32	stx_dio_mem_align;	/* Memory buffer alignment for direct I/O */
+>  	__u32	stx_dio_offset_align;	/* File offset alignment for direct I/O */
+>  	/* 0xa0 */
+> -	__u64	__spare3[12];	/* Spare space for future expansion */
+> +	__u32	stx_atomic_write_unit_max;
+> +	__u32	stx_atomic_write_unit_min;
 
-The overall intent is to get rid of the __GFP_FS flag entirely; make
-GFP_NOFS the same as GFP_KERNEL (and a later patch could rename all
-the uses of GFP_NOFS to GFP_KERNEL).  That is, the only way to prevent
-the memory allocator from entering fs reclaim would be by calling
-memalloc_nofs_save().
+Maybe min first and then max?  That seems a bit more natural, and a lot of the
+code you've written handle them in that order.
 
-XFS already calls memalloc_nofs_save() when starting a transaction.
-This is almost certainly the right thing to do; many things which
-could be freed through fs reclaim would need to start a transaction,
-and we don't want to do a nested transaction.  But it turns out there
-are several places that can't enter fs reclaim for other reasons.
+> +#define STATX_ATTR_WRITE_ATOMIC		0x00400000 /* File supports atomic write operations */
 
-Having boldly just removed __GFP_FS, I encountered problems (ie
-lockdep got chatty) in XFS and now I don't think I know enough to
-take on the prerequisite project of removing KM_NOFS.  While this is
-obviously _possible_ (simply add calls to memalloc_nofs_save() and
-memalloc_nofs_restore() around calls currently marked as KM_NOFS),
-that's not really how the scoped API is supposed to be used.  Instead,
-one is supposed to improve the understandability of the code by marking
-the sections where, say, a lock is taken as now being unsafe to enter
-fs reclaim because that lock is held.
+How would this differ from stx_atomic_write_unit_min != 0?
 
-The first one I got a bug report from was generic/270.  We take
-dqp->q_qlock in fs reclaim, and there are code paths which take
-dqp->q_qlock, then allocate memory.  There's a rather nasty extra
-step where we take the dqp->q_qlock, then wait on a workqueue which is
-going to call xlog_cil_push_work() which does the memory allocation.
-Lockdep spots this transitive dependency, but we don't know to transfer
-the nofs setting from the caller to the workqueue.
-
-OK, fine, just add the memalloc_nofs_save() at the beginning of
-xlog_cil_push_work() and restore it at the three exits; problem solved
-in a moderately hacky way; but it's better than before since the KM_NOFS
-calls are now safe to remove from the CIL machinery.  There are two ways
-to solve this properly; one is to transfer the nofs setting from caller
-to work queue, and also set the nofs setting whenever we take the dqlock.
-The other would be to trylock (and back out properly if held) if we're
-called in the reclaim path.  I don't know how hard that would be.
-
-Skipping the second and third ones, the fourth one I've encountered
-looks like this: xfs_buf_get_map() is allocating memory.  call path:
-
-kmem_alloc+0x6f/0x170
-xfs_buf_get_map+0x761/0x1140
-xfs_buf_read_map+0x38/0x250
-xfs_trans_read_buf_map+0x19c/0x520
-xfs_btree_read_buf_block.constprop.0+0x7a/0xb0
-xfs_btree_lookup_get_block+0x82/0x140
-xfs_btree_lookup+0xaf/0x490
-xfs_refcount_lookup_le+0x6a/0xd0
-xfs_refcount_find_shared+0x6c/0x420
-xfs_reflink_find_shared+0x67/0xa0
-xfs_reflink_trim_around_shared+0xd7/0x1a0
-xfs_bmap_trim_cow+0x3a/0x40
-xfs_buffered_write_iomap_begin+0x2ce/0xbf0
-
-That potentially deadlocks against
-
--> #0 (&xfs_nondir_ilock_class#3){++++}-{3:3}:
-       __lock_acquire+0x148e/0x26d0
-       lock_acquire+0xb8/0x280
-       down_write_nested+0x3f/0xe0
-       xfs_ilock+0xe3/0x260
-       xfs_icwalk_ag+0x68c/0xa50
-       xfs_icwalk+0x3e/0xa0
-       xfs_reclaim_inodes_nr+0x7c/0xa0
-       xfs_fs_free_cached_objects+0x14/0x20
-       super_cache_scan+0x17d/0x1c0
-       do_shrink_slab+0x16a/0x680
-       shrink_slab+0x52a/0x8a0
-       shrink_node+0x308/0x7a0
-       balance_pgdat+0x28d/0x710
-
-Annoyingly, lockdep doesn't tell me which acquisition of
-fs_nondir_ilock_class#3 the first backtrace did.
-
-We could pop the nofs setting anywhere in this call chain, but _really_
-what we should be doing is calling memalloc_nofs_save() when we take
-the xfs_nondir_ilock_class#3.  But ... there are a lot of places we
-take the ilock, and it's kind of a big deal to add memalloc_nofs_save()
-calls to all of them.  And then I looked at _why_ we take the lock, and
-it's kind of stupid; we're just waiting for other callers to free it.
-ie xfs_reclaim_inode() does:
-
-       if (!xfs_ilock_nowait(ip, XFS_ILOCK_EXCL))
-                goto out;
-...
-        xfs_iunlock(ip, XFS_ILOCK_EXCL);
-...
-        if (!radix_tree_delete(&pag->pag_ici_root,
-                                XFS_INO_TO_AGINO(ip->i_mount, ino)))
-...
-        xfs_ilock(ip, XFS_ILOCK_EXCL);
-
-ie we did the trylock, and it succeeded.  We know we don't have the
-lock in process context.  It feels like we could legitimately use
-xfs_lock_inumorder() to use a different locking class to do this wait.
-
-
-But all of this has shown me how complex this project is.  I have
-no desire to send patches for review that are "obviously wrong" (to
-someone with more extensive knowledge of XFS) and just suck up reviewer
-bandwidth for a cleanup that is, perhaps, of limited value.  If someone
-more junior wants to take this on as a project to learn more about XFS,
-I'll happily help where I can, but I think my time is perhaps better
-spent on other projects for now.
+- Eric
