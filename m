@@ -2,64 +2,96 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 89530E7737E
-	for <linux-xfs@archiver.kernel.org>; Sat, 30 Sep 2023 18:12:14 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 20FDDE748E7
+	for <linux-xfs@archiver.kernel.org>; Sat, 30 Sep 2023 20:35:41 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234685AbjI3SMO (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Sat, 30 Sep 2023 14:12:14 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54650 "EHLO
+        id S231197AbjI3Ufl (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Sat, 30 Sep 2023 16:35:41 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41740 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230505AbjI3SMO (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sat, 30 Sep 2023 14:12:14 -0400
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 83CC4D3;
-        Sat, 30 Sep 2023 11:12:12 -0700 (PDT)
-Received: by smtp.kernel.org (Postfix) with ESMTPS id 23359C433C8;
-        Sat, 30 Sep 2023 18:12:12 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1696097532;
-        bh=JJ3oQifbW5sx/P3UYD8gI1EK0o1jNk3ydEV+uGNjRo8=;
-        h=Subject:From:In-Reply-To:References:Date:To:Cc:From;
-        b=rmSYFwTnHTlAu0nMIzhFaHj9YI5b6yadrv65qZBAFleqF5mgdTxAvsYtN6PMwJCfa
-         dhDaITqHp9sFvRMQyMAomqONWex4K185FEMCqzKLNVWYbO84ReSzrnKqGWdaIJuYT4
-         e2dY0ybfB+ZeG5oLeBQC0/R3a2dp09OoUJ4y94cZD6GDDox1Qpdsk4xCTtkTh2biGB
-         svpWLXg4Ju23tS6sOy8ZBtBKyfX2l0f8zS0NHE+ldQWuFoMLvihS7kZUPu0deg2ebV
-         sNhd/5Cnm8TwN0YYJFItoKEg/4eQWnhQy9RuTC5/D8hAZVkcdR/Sa+8a+nYdSrHZVh
-         IwFjiPmJIrlPw==
-Received: from aws-us-west-2-korg-oddjob-1.ci.codeaurora.org (localhost.localdomain [127.0.0.1])
-        by aws-us-west-2-korg-oddjob-1.ci.codeaurora.org (Postfix) with ESMTP id 0D8FEC395C5;
-        Sat, 30 Sep 2023 18:12:12 +0000 (UTC)
-Subject: Re: [GIT PULL] iomap: bug fixes for 6.6-rc4
-From:   pr-tracker-bot@kernel.org
-In-Reply-To: <169608776189.1016505.15445601632237284088.stg-ugh@frogsfrogsfrogs>
-References: <169608776189.1016505.15445601632237284088.stg-ugh@frogsfrogsfrogs>
-X-PR-Tracked-List-Id: <linux-xfs.vger.kernel.org>
-X-PR-Tracked-Message-Id: <169608776189.1016505.15445601632237284088.stg-ugh@frogsfrogsfrogs>
-X-PR-Tracked-Remote: https://git.kernel.org/pub/scm/linux/kernel/git/djwong/xfs-linux.git iomap-6.6-fixes-4
-X-PR-Tracked-Commit-Id: 684f7e6d28e8087502fc8efdb6c9fe82400479dd
-X-PR-Merge-Tree: torvalds/linux.git
-X-PR-Merge-Refname: refs/heads/master
-X-PR-Merge-Commit-Id: 25d48d570eeda62cf71e5b9cdad76a37b833f408
-Message-Id: <169609753204.20440.10468431838239730592.pr-tracker-bot@kernel.org>
-Date:   Sat, 30 Sep 2023 18:12:12 +0000
-To:     "Darrick J. Wong" <djwong@kernel.org>
-Cc:     djwong@kernel.org, torvalds@linux-foundation.org,
-        bodonnel@redhat.com, geert+renesas@glider.be, hch@lst.de,
-        linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org,
-        syzbot+1fa947e7f09e136925b8@syzkaller.appspotmail.com
+        with ESMTP id S229535AbjI3Ufk (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sat, 30 Sep 2023 16:35:40 -0400
+Received: from mail-ot1-x343.google.com (mail-ot1-x343.google.com [IPv6:2607:f8b0:4864:20::343])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0E22FCA
+        for <linux-xfs@vger.kernel.org>; Sat, 30 Sep 2023 13:35:39 -0700 (PDT)
+Received: by mail-ot1-x343.google.com with SMTP id 46e09a7af769-6c62cb79b02so2018940a34.2
+        for <linux-xfs@vger.kernel.org>; Sat, 30 Sep 2023 13:35:39 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=chromium.org; s=google; t=1696106138; x=1696710938; darn=vger.kernel.org;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
+        bh=q9xYfZBQImKsyGrauSkx40CmvbMShT//GSfSxiyP5zE=;
+        b=Ye1YXWGhPBAEgxH8F7NwQJfHX5pchAHb9kgSKo+qBWuvEkdXpVJPqa7RpnmHnCef0w
+         6ApazzzAQJ29LS1KLjHDUU1Yoozz8lvzbwj+VdNf8TkWvjh0B6z/3NMZeSaaFCRDH9im
+         ts+YC8WjjISa8Rg46ZbZJWa277QGHiZdrUX+4=
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1696106138; x=1696710938;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=q9xYfZBQImKsyGrauSkx40CmvbMShT//GSfSxiyP5zE=;
+        b=bUZoqQo6iDGZhiHF1PRSilZkK9X7jpPXDihdbXgDoZbclrKdpFLiCu+nUR65ex+R2p
+         nVmGoST1MgFmIN6zXf8I77ZBjsZ8ICuy3ELOPG7DH6/2p8FUXfzWDzbNv6mrnOQuUn8w
+         MzVP93GGC3xEDnxiihmRmg3HzU/85zi2PXoqRB7iSHXGATNQK2f5/yS0OcR44ww+NEdt
+         t8U91eo4jST4OaAdZnCinHAQU8mR9k/GGTFX5VKqBH8DftVBnwjtBfIGf3Dnl/BVTZy7
+         TEH2EbFcx/GOLn/OQs+rqi+kCsYyR+fKHkicDzf33e+dZgJf6rC8KbdRouoWENGYbW+5
+         z8rg==
+X-Gm-Message-State: AOJu0YwGy06roJK5b1dmYSudhpC+Zz2Dyk4/cYQ62WfVERhCy/av0u+f
+        tDXNgB3JLyAMrLKOGHu5Cmf3AQ==
+X-Google-Smtp-Source: AGHT+IES6FCR6Oc6pFQSlN7yRWa0cm//27qrbGfY1PvU67WmpoTEAmenT310bfviix1NiTa1MWHqJQ==
+X-Received: by 2002:a05:6358:718b:b0:143:7a89:a8e8 with SMTP id t11-20020a056358718b00b001437a89a8e8mr8441521rwt.10.1696106138275;
+        Sat, 30 Sep 2023 13:35:38 -0700 (PDT)
+Received: from www.outflux.net (198-0-35-241-static.hfc.comcastbusiness.net. [198.0.35.241])
+        by smtp.gmail.com with ESMTPSA id t14-20020a056a0021ce00b0068bc461b68fsm16653273pfj.204.2023.09.30.13.35.37
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Sat, 30 Sep 2023 13:35:37 -0700 (PDT)
+Date:   Sat, 30 Sep 2023 13:35:32 -0700
+From:   Kees Cook <keescook@chromium.org>
+To:     syzbot <syzbot+510dcbdc6befa1e6b2f6@syzkaller.appspotmail.com>
+Cc:     chandan.babu@oracle.com, david@fromorbit.com, djwong@kernel.org,
+        ebiggers@kernel.org, hch@lst.de, linux-fsdevel@vger.kernel.org,
+        linux-kernel@vger.kernel.org, linux-xfs@vger.kernel.org,
+        mukattreyee@gmail.com, syzkaller-bugs@googlegroups.com
+Subject: Re: [syzbot] [xfs?] UBSAN: array-index-out-of-bounds in
+ xfs_attr3_leaf_add_work
+Message-ID: <202309301334.FA4D7752@keescook>
+References: <0000000000001c8edb05fe518644@google.com>
+ <0000000000003c16100606974653@google.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <0000000000003c16100606974653@google.com>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-The pull request you sent on Sat, 30 Sep 2023 08:31:14 -0700:
+On Sat, Sep 30, 2023 at 10:57:28AM -0700, syzbot wrote:
+> syzbot suspects this issue was fixed by commit:
+> 
+> commit a49bbce58ea90b14d4cb1d00681023a8606955f2
+> Author: Darrick J. Wong <djwong@kernel.org>
+> Date:   Mon Jul 10 16:12:20 2023 +0000
+> 
+>     xfs: convert flex-array declarations in xfs attr leaf blocks
+> 
+> bisection log:  https://syzkaller.appspot.com/x/bisect.txt?x=12eef28a680000
+> start commit:   f8566aa4f176 Merge tag 'x86-urgent-2023-07-01' of git://gi..
+> git tree:       upstream
+> kernel config:  https://syzkaller.appspot.com/x/.config?x=3f27fb02fc20d955
+> dashboard link: https://syzkaller.appspot.com/bug?extid=510dcbdc6befa1e6b2f6
+> syz repro:      https://syzkaller.appspot.com/x/repro.syz?x=1652938f280000
+> C reproducer:   https://syzkaller.appspot.com/x/repro.c?x=14c10c40a80000
+> 
+> If the result looks correct, please mark the issue as fixed by replying with:
 
-> https://git.kernel.org/pub/scm/linux/kernel/git/djwong/xfs-linux.git iomap-6.6-fixes-4
+Yup, that tracks. :)
 
-has been merged into torvalds/linux.git:
-https://git.kernel.org/torvalds/c/25d48d570eeda62cf71e5b9cdad76a37b833f408
+#syz fix: xfs: convert flex-array declarations in xfs attr leaf blocks
 
-Thank you!
+-Kees
+
+> 
+> For information about bisection process see: https://goo.gl/tpsmEJ#bisection
 
 -- 
-Deet-doot-dot, I am a bot.
-https://korg.docs.kernel.org/prtracker.html
+Kees Cook
