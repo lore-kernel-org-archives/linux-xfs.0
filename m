@@ -2,85 +2,73 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id EA461E7737C
-	for <linux-xfs@archiver.kernel.org>; Sat, 30 Sep 2023 17:23:08 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8F631E7737D
+	for <linux-xfs@archiver.kernel.org>; Sat, 30 Sep 2023 17:57:31 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232221AbjI3RXJ (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Sat, 30 Sep 2023 13:23:09 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50486 "EHLO
+        id S234684AbjI3R5b (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Sat, 30 Sep 2023 13:57:31 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48158 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S234650AbjI3RXH (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sat, 30 Sep 2023 13:23:07 -0400
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3B801FA;
-        Sat, 30 Sep 2023 10:23:06 -0700 (PDT)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id D8AECC433C7;
-        Sat, 30 Sep 2023 17:23:05 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1696094585;
-        bh=YlNSRETzZewgQmIzaK8O1JfDxjoccXt4+6tSmiu/+ys=;
-        h=Date:From:To:Cc:Subject:From;
-        b=WCUvhw2mOr/yxGbRvCorUaUYgo+dLGu4JKsnIhkziwEgMT9ZTmKg+CGz+ONRguUQG
-         NjMctE6y3VsIfTW+O+U2ZgTZ4s+ZU1G9VHTUXK4ZXyLA56k/9N/3zWi42Z6j/jWhsK
-         uypGIhDtw1be7v35J/kif8KSXtt9MhKEVef/VynsGcGMhV9j7npU2H7SsUh0p0vMz8
-         pxt3f/wYgU1nw/RQg4o0O8Cjq5eH4CotUd7MvnNfwqbWvmQhKUE0tYdEiDi7y0TLfp
-         9U4B8MAhsNYjTs/OkeQG+mDqhP8ahqqozIt24k2Evx2YOwlcG3PhPeu22nqYNz7xtP
-         73CZwLwRtdEHg==
-Date:   Sat, 30 Sep 2023 10:23:05 -0700
-From:   "Darrick J. Wong" <djwong@kernel.org>
-To:     djwong@kernel.org, torvalds@linux-foundation.org
-Cc:     bodonnel@redhat.com, geert+renesas@glider.be, hch@lst.de,
-        linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org,
-        syzbot+1fa947e7f09e136925b8@syzkaller.appspotmail.com
-Subject: [GIT PULL v2] iomap: bug fixes for 6.6-rc4
-Message-ID: <169609450381.1111146.9387085958711753844.stg-ugh@frogsfrogsfrogs>
+        with ESMTP id S234703AbjI3R5a (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sat, 30 Sep 2023 13:57:30 -0400
+Received: from mail-oa1-f69.google.com (mail-oa1-f69.google.com [209.85.160.69])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 16848E1
+        for <linux-xfs@vger.kernel.org>; Sat, 30 Sep 2023 10:57:29 -0700 (PDT)
+Received: by mail-oa1-f69.google.com with SMTP id 586e51a60fabf-1d66b019a27so31764733fac.0
+        for <linux-xfs@vger.kernel.org>; Sat, 30 Sep 2023 10:57:29 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1696096648; x=1696701448;
+        h=to:from:subject:message-id:in-reply-to:date:mime-version
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=x3Gp6kmS+fykC4M2bQvmNXWwpBIaXxl++sWiM3iH1lM=;
+        b=TXuFLyaPzGJnyb44pV/tMrsGVq4tFK2RASNpbaDyPgAjGOw64MaJ68PRxtoiSDuSph
+         dnEjOp1pEEgpIQpU01Vnw1xSB5YpZ2pvtIOIqfLYlCNdz89W8Zp0bcq5dHJm+uwKUFll
+         SLCMrBG8zjGEdYJuw1wGNFwUx6SffVZV/HMBFA1kblOg0LyrUO7dcPzQdm7uALZiPdKO
+         2LsgcKKN7gMuqtMuzQFbfGnsUCvOeMMJd6pzxU2f9/KFuxFsBRiBG9DMevcSN0jO4abs
+         9E+ehwMyCGhxyzG03+b580UAwEjCgtZRxOoAD6kYu9D3MvOPI1rleNJzo1Lrx1VouubB
+         /nMg==
+X-Gm-Message-State: AOJu0Yx5LldhbklPfHCZNqgaQA/XPWOGBPn9QfAOdeSPCTPR6XAK3M0/
+        YqwWxnZAYrDaTaxya51/XwQxS1oo5m5pSmvjbTCe/TqsrcqL
+X-Google-Smtp-Source: AGHT+IE18cqh4JXNl6uQxBP/a23swgy+FwpamgscMAObJ9M7l5hmBxY2Rxui2X8zH1T9Z/3YkdWmpxVHSllM5OftvTuZR+eXBiKI
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
+X-Received: by 2002:a05:6870:c342:b0:1d5:a24a:c33 with SMTP id
+ e2-20020a056870c34200b001d5a24a0c33mr2785411oak.8.1696096648433; Sat, 30 Sep
+ 2023 10:57:28 -0700 (PDT)
+Date:   Sat, 30 Sep 2023 10:57:28 -0700
+In-Reply-To: <0000000000001c8edb05fe518644@google.com>
+X-Google-Appengine-App-Id: s~syzkaller
+X-Google-Appengine-App-Id-Alias: syzkaller
+Message-ID: <0000000000003c16100606974653@google.com>
+Subject: Re: [syzbot] [xfs?] UBSAN: array-index-out-of-bounds in xfs_attr3_leaf_add_work
+From:   syzbot <syzbot+510dcbdc6befa1e6b2f6@syzkaller.appspotmail.com>
+To:     chandan.babu@oracle.com, david@fromorbit.com, djwong@kernel.org,
+        ebiggers@kernel.org, hch@lst.de, keescook@chromium.org,
+        linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-xfs@vger.kernel.org, mukattreyee@gmail.com,
+        syzkaller-bugs@googlegroups.com
+Content-Type: text/plain; charset="UTF-8"
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Hi Linus,
+syzbot suspects this issue was fixed by commit:
 
-Please pull this branch with changes for iomap for 6.6-rc4.
+commit a49bbce58ea90b14d4cb1d00681023a8606955f2
+Author: Darrick J. Wong <djwong@kernel.org>
+Date:   Mon Jul 10 16:12:20 2023 +0000
 
-As usual, I did a test-merge with the main upstream branch as of a few
-minutes ago, and didn't see any conflicts.  Please let me know if you
-encounter any more problems.
+    xfs: convert flex-array declarations in xfs attr leaf blocks
 
-This time with the /correct/ git repo. :(
+bisection log:  https://syzkaller.appspot.com/x/bisect.txt?x=12eef28a680000
+start commit:   f8566aa4f176 Merge tag 'x86-urgent-2023-07-01' of git://gi..
+git tree:       upstream
+kernel config:  https://syzkaller.appspot.com/x/.config?x=3f27fb02fc20d955
+dashboard link: https://syzkaller.appspot.com/bug?extid=510dcbdc6befa1e6b2f6
+syz repro:      https://syzkaller.appspot.com/x/repro.syz?x=1652938f280000
+C reproducer:   https://syzkaller.appspot.com/x/repro.c?x=14c10c40a80000
 
---D
+If the result looks correct, please mark the issue as fixed by replying with:
 
-The following changes since commit a5f31a5028d1e88e97c3b6cdc3e3bf2da085e232:
+#syz fix: xfs: convert flex-array declarations in xfs attr leaf blocks
 
-iomap: convert iomap_unshare_iter to use large folios (2023-09-19 09:05:35 -0700)
-
-are available in the Git repository at:
-
-https://git.kernel.org/pub/scm/fs/xfs/xfs-linux.git tags/iomap-6.6-fixes-4
-
-for you to fetch changes up to 684f7e6d28e8087502fc8efdb6c9fe82400479dd:
-
-iomap: Spelling s/preceeding/preceding/g (2023-09-28 09:26:58 -0700)
-
-----------------------------------------------------------------
-Bug fixes for 6.6-rc4:
-
-* Handle a race between writing and shrinking block devices by
-returning EIO.
-* Fix a typo in a comment.
-
-Signed-off-by: Darrick J. Wong <djwong@kernel.org>
-
-----------------------------------------------------------------
-Christoph Hellwig (1):
-iomap: add a workaround for racy i_size updates on block devices
-
-Geert Uytterhoeven (1):
-iomap: Spelling s/preceeding/preceding/g
-
-fs/buffer.c            | 11 ++++++++++-
-fs/iomap/buffered-io.c |  2 +-
-2 files changed, 11 insertions(+), 2 deletions(-)
+For information about bisection process see: https://goo.gl/tpsmEJ#bisection
