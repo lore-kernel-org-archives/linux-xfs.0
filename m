@@ -2,73 +2,83 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8F631E7737D
-	for <linux-xfs@archiver.kernel.org>; Sat, 30 Sep 2023 17:57:31 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id BA784E7737E
+	for <linux-xfs@archiver.kernel.org>; Sat, 30 Sep 2023 18:04:11 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234684AbjI3R5b (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Sat, 30 Sep 2023 13:57:31 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48158 "EHLO
+        id S234568AbjI3SEM (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Sat, 30 Sep 2023 14:04:12 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46022 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S234703AbjI3R5a (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sat, 30 Sep 2023 13:57:30 -0400
-Received: from mail-oa1-f69.google.com (mail-oa1-f69.google.com [209.85.160.69])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 16848E1
-        for <linux-xfs@vger.kernel.org>; Sat, 30 Sep 2023 10:57:29 -0700 (PDT)
-Received: by mail-oa1-f69.google.com with SMTP id 586e51a60fabf-1d66b019a27so31764733fac.0
-        for <linux-xfs@vger.kernel.org>; Sat, 30 Sep 2023 10:57:29 -0700 (PDT)
+        with ESMTP id S230505AbjI3SEL (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sat, 30 Sep 2023 14:04:11 -0400
+Received: from mail-ej1-x635.google.com (mail-ej1-x635.google.com [IPv6:2a00:1450:4864:20::635])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0DFA5E1
+        for <linux-xfs@vger.kernel.org>; Sat, 30 Sep 2023 11:04:08 -0700 (PDT)
+Received: by mail-ej1-x635.google.com with SMTP id a640c23a62f3a-9b2cee55056so386040466b.3
+        for <linux-xfs@vger.kernel.org>; Sat, 30 Sep 2023 11:04:07 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=linux-foundation.org; s=google; t=1696097046; x=1696701846; darn=vger.kernel.org;
+        h=cc:to:subject:message-id:date:from:in-reply-to:references
+         :mime-version:from:to:cc:subject:date:message-id:reply-to;
+        bh=GUrGw+oIpm434a0jwZAXwfA3uceDoUYkG3/g20/aCBk=;
+        b=X/272eClGGTRzQnvxueso+cc9Qghp5geSpz4eV6flvNDaSYHZN+LNutPISU5QQMDia
+         Dirgvr2nNGOmLhjlgS1MGOvF1ZlZsBMqWR/g5JldFQf6ELbvtXSYwHn2sv+ySK6KaDcm
+         oXeBI+IQhVqIEwKMyxqtZgfAsb8SnNdUyLzFI=
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1696096648; x=1696701448;
-        h=to:from:subject:message-id:in-reply-to:date:mime-version
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=x3Gp6kmS+fykC4M2bQvmNXWwpBIaXxl++sWiM3iH1lM=;
-        b=TXuFLyaPzGJnyb44pV/tMrsGVq4tFK2RASNpbaDyPgAjGOw64MaJ68PRxtoiSDuSph
-         dnEjOp1pEEgpIQpU01Vnw1xSB5YpZ2pvtIOIqfLYlCNdz89W8Zp0bcq5dHJm+uwKUFll
-         SLCMrBG8zjGEdYJuw1wGNFwUx6SffVZV/HMBFA1kblOg0LyrUO7dcPzQdm7uALZiPdKO
-         2LsgcKKN7gMuqtMuzQFbfGnsUCvOeMMJd6pzxU2f9/KFuxFsBRiBG9DMevcSN0jO4abs
-         9E+ehwMyCGhxyzG03+b580UAwEjCgtZRxOoAD6kYu9D3MvOPI1rleNJzo1Lrx1VouubB
-         /nMg==
-X-Gm-Message-State: AOJu0Yx5LldhbklPfHCZNqgaQA/XPWOGBPn9QfAOdeSPCTPR6XAK3M0/
-        YqwWxnZAYrDaTaxya51/XwQxS1oo5m5pSmvjbTCe/TqsrcqL
-X-Google-Smtp-Source: AGHT+IE18cqh4JXNl6uQxBP/a23swgy+FwpamgscMAObJ9M7l5hmBxY2Rxui2X8zH1T9Z/3YkdWmpxVHSllM5OftvTuZR+eXBiKI
+        d=1e100.net; s=20230601; t=1696097046; x=1696701846;
+        h=cc:to:subject:message-id:date:from:in-reply-to:references
+         :mime-version:x-gm-message-state:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=GUrGw+oIpm434a0jwZAXwfA3uceDoUYkG3/g20/aCBk=;
+        b=DWXEFlTXsQCwi4MBTWiJTwITsErFVWL84TJDllG2OHsr7B32sp/2Ulb0Ia1Kyhfe6z
+         hktQayGhjAVMlffeEdRzphi7s7oqrgijQmLWNN5/Dt+MqoQRpucCRVinA3dAgJJYigvm
+         nDbaqsjy6IxnwnHWmZ046kGq/myt36yy3PyD72L2ZHcSFS7lv6TTUqpJb39ldKy42TTJ
+         /1i5ySDcEX7g78hTDC8Uto2izwPfLTY0WXQwPVbIfSM32Z0+mnf8ceISNhrTsd2syiCp
+         ZEscShoRuoieSGxoT2ccEcdILavfJQUIyVYuUdnF/S5LwViV8C8MGRBGwwTqnAHbDg21
+         5Gjg==
+X-Gm-Message-State: AOJu0Yz1zTd94ie9OBc8bBtx3NlPAUVuNM3lDnqWa3GZ4/jToZiV7K33
+        q/UUC2ADISHG4pw9fbzNjsA34QcKRrG4Qb15Zn8MWQ==
+X-Google-Smtp-Source: AGHT+IGOKx/EZK00HkTzMsXJr9JpXODpHY+jTGEjhCPRhvS2FaB7KS0fR1CJbwW1tMqSNuKzir/Ppw==
+X-Received: by 2002:a17:906:5e:b0:9b2:d78c:afe9 with SMTP id 30-20020a170906005e00b009b2d78cafe9mr4011763ejg.49.1696097046329;
+        Sat, 30 Sep 2023 11:04:06 -0700 (PDT)
+Received: from mail-wm1-f47.google.com (mail-wm1-f47.google.com. [209.85.128.47])
+        by smtp.gmail.com with ESMTPSA id gq23-20020a170906e25700b009ad75d318ffsm14479008ejb.17.2023.09.30.11.04.05
+        for <linux-xfs@vger.kernel.org>
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Sat, 30 Sep 2023 11:04:05 -0700 (PDT)
+Received: by mail-wm1-f47.google.com with SMTP id 5b1f17b1804b1-406609df1a6so14102105e9.3
+        for <linux-xfs@vger.kernel.org>; Sat, 30 Sep 2023 11:04:05 -0700 (PDT)
+X-Received: by 2002:adf:f507:0:b0:323:2d06:9dbb with SMTP id
+ q7-20020adff507000000b003232d069dbbmr6329330wro.12.1696097045037; Sat, 30 Sep
+ 2023 11:04:05 -0700 (PDT)
 MIME-Version: 1.0
-X-Received: by 2002:a05:6870:c342:b0:1d5:a24a:c33 with SMTP id
- e2-20020a056870c34200b001d5a24a0c33mr2785411oak.8.1696096648433; Sat, 30 Sep
- 2023 10:57:28 -0700 (PDT)
-Date:   Sat, 30 Sep 2023 10:57:28 -0700
-In-Reply-To: <0000000000001c8edb05fe518644@google.com>
-X-Google-Appengine-App-Id: s~syzkaller
-X-Google-Appengine-App-Id-Alias: syzkaller
-Message-ID: <0000000000003c16100606974653@google.com>
-Subject: Re: [syzbot] [xfs?] UBSAN: array-index-out-of-bounds in xfs_attr3_leaf_add_work
-From:   syzbot <syzbot+510dcbdc6befa1e6b2f6@syzkaller.appspotmail.com>
-To:     chandan.babu@oracle.com, david@fromorbit.com, djwong@kernel.org,
-        ebiggers@kernel.org, hch@lst.de, keescook@chromium.org,
-        linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-xfs@vger.kernel.org, mukattreyee@gmail.com,
-        syzkaller-bugs@googlegroups.com
+References: <169608776189.1016505.15445601632237284088.stg-ugh@frogsfrogsfrogs>
+ <CAHk-=wjHA1d1kGhnzfXw7BsLuR93CPizeFzN0sNJruWsqvqzTQ@mail.gmail.com> <20230930172129.GA21298@frogsfrogsfrogs>
+In-Reply-To: <20230930172129.GA21298@frogsfrogsfrogs>
+From:   Linus Torvalds <torvalds@linux-foundation.org>
+Date:   Sat, 30 Sep 2023 11:03:47 -0700
+X-Gmail-Original-Message-ID: <CAHk-=whu=nfBvBn3JG9pBVdgV=tTpCLh=iDdBfsgNsEY6w4KwQ@mail.gmail.com>
+Message-ID: <CAHk-=whu=nfBvBn3JG9pBVdgV=tTpCLh=iDdBfsgNsEY6w4KwQ@mail.gmail.com>
+Subject: Re: [GIT PULL] iomap: bug fixes for 6.6-rc4
+To:     "Darrick J. Wong" <djwong@kernel.org>
+Cc:     bodonnel@redhat.com, geert+renesas@glider.be, hch@lst.de,
+        linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org,
+        syzbot+1fa947e7f09e136925b8@syzkaller.appspotmail.com
 Content-Type: text/plain; charset="UTF-8"
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-syzbot suspects this issue was fixed by commit:
+On Sat, 30 Sept 2023 at 10:21, Darrick J. Wong <djwong@kernel.org> wrote:
+>
+> Doh, wrong repo.  I'm kinda surprised that git request-pull didn't
+> complain about that.
 
-commit a49bbce58ea90b14d4cb1d00681023a8606955f2
-Author: Darrick J. Wong <djwong@kernel.org>
-Date:   Mon Jul 10 16:12:20 2023 +0000
+I suspect it did complain, but that one-liner is admittedly much too
+easy to overlook when everything else looks sane.
 
-    xfs: convert flex-array declarations in xfs attr leaf blocks
+> Will send a new one.
 
-bisection log:  https://syzkaller.appspot.com/x/bisect.txt?x=12eef28a680000
-start commit:   f8566aa4f176 Merge tag 'x86-urgent-2023-07-01' of git://gi..
-git tree:       upstream
-kernel config:  https://syzkaller.appspot.com/x/.config?x=3f27fb02fc20d955
-dashboard link: https://syzkaller.appspot.com/bug?extid=510dcbdc6befa1e6b2f6
-syz repro:      https://syzkaller.appspot.com/x/repro.syz?x=1652938f280000
-C reproducer:   https://syzkaller.appspot.com/x/repro.c?x=14c10c40a80000
+Thanks, pulled.
 
-If the result looks correct, please mark the issue as fixed by replying with:
-
-#syz fix: xfs: convert flex-array declarations in xfs attr leaf blocks
-
-For information about bisection process see: https://goo.gl/tpsmEJ#bisection
+             Linus
