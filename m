@@ -2,42 +2,67 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4BD6AE748EE
-	for <linux-xfs@archiver.kernel.org>; Sun,  1 Oct 2023 16:26:20 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2000EE7849B
+	for <linux-xfs@archiver.kernel.org>; Sun,  1 Oct 2023 22:38:08 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235200AbjJAQ0U (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Sun, 1 Oct 2023 12:26:20 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35342 "EHLO
+        id S234245AbjJAWiI (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Sun, 1 Oct 2023 18:38:08 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49094 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S235093AbjJAQ0T (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sun, 1 Oct 2023 12:26:19 -0400
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 01A70DA;
-        Sun,  1 Oct 2023 09:26:16 -0700 (PDT)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 79D21C433C7;
-        Sun,  1 Oct 2023 16:26:16 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1696177576;
-        bh=tpF9oW6uXrI1uQ/czlwOjgaOwA8x2HCHKzxIse4EjMU=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=UdLTnws8mSnvTDwVGT280xwupoG0AfxZLH1pa0DojU8fkfwyXSjkJI59OK4p78/xo
-         XCFYOwVO6r3subXaNWimsQp7wrsapQsnoofKymQQ2N/Eo4Ucj6VXZx7N6nMj62QZDR
-         PRA3c5vwIoLLqeWjqzx9df19gwomul0ZdboQtObtbtlefx5b1lbq1qhxDD/nwoM9iu
-         9k5ScDN9Id7hxp/mYN2sue7teYGtIBvXUF/oSaiOmJkn+fEm3s2KKqZpyciP8InW2s
-         cQZhXPGXEFKCYa6BRl4Q4VYob5KeHRYKQsqUJGpjiThS0C492zKUmn2Wv42cl2iq85
-         tBbuhFR8+3PGg==
-Date:   Sun, 1 Oct 2023 09:26:15 -0700
-From:   "Darrick J. Wong" <djwong@kernel.org>
+        with ESMTP id S234027AbjJAWiI (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sun, 1 Oct 2023 18:38:08 -0400
+Received: from mail-pg1-x534.google.com (mail-pg1-x534.google.com [IPv6:2607:f8b0:4864:20::534])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5012ACE
+        for <linux-xfs@vger.kernel.org>; Sun,  1 Oct 2023 15:38:05 -0700 (PDT)
+Received: by mail-pg1-x534.google.com with SMTP id 41be03b00d2f7-577fb90bb76so8704195a12.2
+        for <linux-xfs@vger.kernel.org>; Sun, 01 Oct 2023 15:38:05 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=fromorbit-com.20230601.gappssmtp.com; s=20230601; t=1696199885; x=1696804685; darn=vger.kernel.org;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
+        bh=33/aTyyQaSBPQRJLH+G7VmXLrBqd7SSr9ClqecbFlkw=;
+        b=Xmt6Nd3G5V9xTtHlUklxkgrnZ3I37bKyOjAqsTtuPvCiJY72T2ALMgd4n/7dw7/YY5
+         nvMFI/As+pYHa1VqMAaOoQs+CRS5Qaz3bgegiI3WsNgGY0FQKuUht3jHRkh5yHhLBkkX
+         pBqb9r9A6jo/iPq34U+JcAPN0FxTHZcrDDNqikMxQWj6vAWCtcKrNuVgdEmTz8gAs1fV
+         qYDbuoqI6HyhQ/NJ8Xl6jbR+88jNQanEdEWIztAOQZUHfrJIa6U71s/sudu4paDJmEoZ
+         Rw9OB83UsquJY0KKAyyZxPOLGvG0UJ6L5xmvzqnStEBUe6T5bJ9e9xshEoypB9ERFYnD
+         n0ig==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1696199885; x=1696804685;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=33/aTyyQaSBPQRJLH+G7VmXLrBqd7SSr9ClqecbFlkw=;
+        b=Jdw/w83kOUie7zmXWdnDmdpNLcHFp5R1sUH/l+4QsoaVV/G7VwUIHalDbPBDO4Cb9J
+         XrFJs4Eh63DIPa9D1ZEtmfni30IBPdo/bwZe6iGo6KqzzGCypo69uZEXjGlIWsHbILOp
+         IOTQticY4TtmVJF8BjuYlE+595baMRQkztZbp32GpICtkCfprhqxak3YKqzhHRdbht5A
+         NlhTzxNKWGIU81FdqsifBdAkRdiyXLLaMEuxtNlk294pSlz42WQFZllmJN5Pbdc0ncO3
+         D41oJ2JJmD3RFY2VtVwFQVuH0bos4cFLRMfzyqgMTGAxEcha2FrtGcjLzGbQIYr9jE66
+         jgqg==
+X-Gm-Message-State: AOJu0YyxVdNX9AmRdbGcxnFGNRQPvOkqcztCR7UEZdYbE81N/0q07qZh
+        kBvgE3NNvI8rGmBf/XezQnbwdw==
+X-Google-Smtp-Source: AGHT+IEPNDmJlYBnKRJkMqorQBxfTle5K4Et4feITxPrFrpzEg7FRMTgtzw/IqrHe45lWNn+Ew340Q==
+X-Received: by 2002:a05:6a00:9a8:b0:690:cae9:714d with SMTP id u40-20020a056a0009a800b00690cae9714dmr9793046pfg.13.1696199884695;
+        Sun, 01 Oct 2023 15:38:04 -0700 (PDT)
+Received: from dread.disaster.area (pa49-180-20-59.pa.nsw.optusnet.com.au. [49.180.20.59])
+        by smtp.gmail.com with ESMTPSA id q26-20020a62ae1a000000b006875a366acfsm18446309pff.8.2023.10.01.15.38.03
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Sun, 01 Oct 2023 15:38:03 -0700 (PDT)
+Received: from dave by dread.disaster.area with local (Exim 4.96)
+        (envelope-from <david@fromorbit.com>)
+        id 1qn54a-008DIa-22;
+        Mon, 02 Oct 2023 09:38:00 +1100
+Date:   Mon, 2 Oct 2023 09:38:00 +1100
+From:   Dave Chinner <david@fromorbit.com>
 To:     Matthew Wilcox <willy@infradead.org>
 Cc:     linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
         linux-mm@kvack.org
 Subject: Re: Removal of KM_NOFS
-Message-ID: <20231001162615.GC21298@frogsfrogsfrogs>
+Message-ID: <ZRn0yFmKa2JWaTNL@dread.disaster.area>
 References: <ZRdNK39vc4TuR7g8@casper.infradead.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
+Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
 In-Reply-To: <ZRdNK39vc4TuR7g8@casper.infradead.org>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
@@ -69,48 +94,16 @@ On Fri, Sep 29, 2023 at 11:18:19PM +0100, Matthew Wilcox wrote:
 > one is supposed to improve the understandability of the code by marking
 > the sections where, say, a lock is taken as now being unsafe to enter
 > fs reclaim because that lock is held.
-> 
-> The first one I got a bug report from was generic/270.  We take
-> dqp->q_qlock in fs reclaim, and there are code paths which take
-> dqp->q_qlock, then allocate memory.  There's a rather nasty extra
-> step where we take the dqp->q_qlock, then wait on a workqueue which is
-> going to call xlog_cil_push_work() which does the memory allocation.
-> Lockdep spots this transitive dependency, but we don't know to transfer
-> the nofs setting from the caller to the workqueue.
-> 
-> OK, fine, just add the memalloc_nofs_save() at the beginning of
-> xlog_cil_push_work() and restore it at the three exits; problem solved
-> in a moderately hacky way; but it's better than before since the KM_NOFS
-> calls are now safe to remove from the CIL machinery.  There are two ways
-> to solve this properly; one is to transfer the nofs setting from caller
-> to work queue, and also set the nofs setting whenever we take the dqlock.
-> The other would be to trylock (and back out properly if held) if we're
-> called in the reclaim path.  I don't know how hard that would be.
-> 
-> Skipping the second and third ones, the fourth one I've encountered
-> looks like this: xfs_buf_get_map() is allocating memory.  call path:
-> 
-> kmem_alloc+0x6f/0x170
-> xfs_buf_get_map+0x761/0x1140
-> xfs_buf_read_map+0x38/0x250
-> xfs_trans_read_buf_map+0x19c/0x520
-> xfs_btree_read_buf_block.constprop.0+0x7a/0xb0
-> xfs_btree_lookup_get_block+0x82/0x140
-> xfs_btree_lookup+0xaf/0x490
-> xfs_refcount_lookup_le+0x6a/0xd0
-> xfs_refcount_find_shared+0x6c/0x420
 
-5¢ reply: eventually we're going to have to wrap all of these
-non-updating btree block accesses with an empty transaction to avoid
-livelocking on cycles (intentional or otherwise).  That'll wrap
-/everything/ in NOFS context, which will solve this problem at a cost of
-more NOFS allocations...
+Here's the problem. We have used KM_NOFS in the past just to shut up
+lockdep false positives. In many cases, it is perfectly safe to take
+the lock in both task context and in reclaim context and it will not
+deadlock because the task context has an active reference on the
+inode and so it cannot be locked in both task and reclaim context
+at the same time.
 
-> xfs_reflink_find_shared+0x67/0xa0
-> xfs_reflink_trim_around_shared+0xd7/0x1a0
-> xfs_bmap_trim_cow+0x3a/0x40
-> xfs_buffered_write_iomap_begin+0x2ce/0xbf0
-> 
+i.e. This path:
+
 > That potentially deadlocks against
 > 
 > -> #0 (&xfs_nondir_ilock_class#3){++++}-{3:3}:
@@ -127,21 +120,51 @@ more NOFS allocations...
 >        shrink_slab+0x52a/0x8a0
 >        shrink_node+0x308/0x7a0
 >        balance_pgdat+0x28d/0x710
-> 
-> Annoyingly, lockdep doesn't tell me which acquisition of
-> fs_nondir_ilock_class#3 the first backtrace did.
-> 
+
+can only be reached when the inode has been removed from the VFS
+cache and has been marked as XFS_IRECLAIM and so all new lookups on
+that inode will fail until the inode has been RCU freed.
+
+Hence anything that does a GFP_KERNEL allocation whilst holding an
+inode lock can have lockdep complain about deadlocks against
+locking the inode in the reclaim path.
+
+More recently, __GFP_NOLOCKDEP was added to allow us to annotate
+these allocation points that historically have used KM_NOFS to
+shut up lockdep false positives. However, no effort has been made to go
+back and find all the KM_NOFS sites that should be converted to
+__GFP_NOLOCKDEP.
+
+I suspect that most of the remaining uses of KM_NOFS are going to
+fall into this category; certainly anything to do with reading
+inodes into memory and populating extent lists (most of the KM_NOFS
+uses) from non-modifying lookup paths (e.g. open(O_RDONLY), read(),
+etc) can trigger this lockdep false positive if they don't use
+KM_NOFS or __GFP_NOLOCKDEP...
+
 > We could pop the nofs setting anywhere in this call chain, but _really_
 > what we should be doing is calling memalloc_nofs_save() when we take
 > the xfs_nondir_ilock_class#3.  But ... there are a lot of places we
-
-...and since the ILOCK is taken after allocating a transaction, the
-thread will already be in NOFS context.  No need to make the lock
-debugging even more complicated...
-
 > take the ilock, and it's kind of a big deal to add memalloc_nofs_save()
 > calls to all of them.  And then I looked at _why_ we take the lock, and
 > it's kind of stupid; we're just waiting for other callers to free it.
+
+It's purpose has been to serialising against racing lockless inode
+lockups from the inode writeback and inode freeing code (i.e.
+unlink) that walks all the inodes in an on-disc cluster. That might
+have grabbed the inode between the flush checks and the deletion
+from the index. This is old code (dates back to before we had
+lockless RCU lookups) but we've reworked how inode clusters do
+writeback and how those lockless lookups work a couple of times
+since they were introduced.
+
+In general, though, we've treated this relcaim code as "if it ain't
+broke, don't fix it", so we haven't removed that final ILOCK because
+maybe we've missed some subtle interaction that still requires it. I
+think we may have been overly cautious, but I'll need to look at the
+lockless lookup code again in a bit more detail before I form a
+solid opinion on that..
+
 > ie xfs_reclaim_inode() does:
 > 
 >        if (!xfs_ilock_nowait(ip, XFS_ILOCK_EXCL))
@@ -157,24 +180,30 @@ debugging even more complicated...
 > ie we did the trylock, and it succeeded.  We know we don't have the
 > lock in process context.  It feels like we could legitimately use
 > xfs_lock_inumorder() to use a different locking class to do this wait.
-> 
-> 
-> But all of this has shown me how complex this project is.  I have
 
-...and wrapping everything in transactions isn't a simple project
-either.  Every btree cursor allocation would now require the caller to
-supply a transaction.  Worse are are things like xfs_bmapi_read that
-lack the tp argument but can call xfs_iread_extents, and whatever mess
-is going on in the dquot alloc paths.
+Unfortunately for us, this used to be only one of many lock points
+that caused these lockdep issues - anywhere we took an inode lock in
+the reclaim path (i.e. superblock shrinker context) could fire a
+lockdep false positive Lockdep just doesn't understand reference
+counted life cycle contexts.
 
-I tried prototyping this and realized that it's more work than I thought
-it would be. :/
+Yes, we do have subclasses for inode locking, and we used to even
+re-initialise the entire node lockdep map context when the inode
+entered reclaim context to avoid false positives. However, with the
+scope of all the different places in inode reclaim context that
+could lock th einode, the only way to reliably avoid these reclaim
+false positives was to sprinkle KM_NOFS around allocation sites
+which could be run from both GFP_KERNEL and GFP_NOFS contexts with
+an inode locked.
 
---D
+That said, now that most of the inode work needed in memory reclaim
+context has been taken completely out of the shrinker context (i.e.
+the per-cpu background inodegc workqueues). Hence that final
+ILOCK in xfs_reclaim_inode() is likely the only place that remains
+where this ILOCK false positive can trigger, so maybe it's a simpler
+problem to fix than it once was....
 
-> no desire to send patches for review that are "obviously wrong" (to
-> someone with more extensive knowledge of XFS) and just suck up reviewer
-> bandwidth for a cleanup that is, perhaps, of limited value.  If someone
-> more junior wants to take this on as a project to learn more about XFS,
-> I'll happily help where I can, but I think my time is perhaps better
-> spent on other projects for now.
+-Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
