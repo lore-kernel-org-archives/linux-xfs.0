@@ -2,96 +2,139 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 20FDDE748E7
-	for <linux-xfs@archiver.kernel.org>; Sat, 30 Sep 2023 20:35:41 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 323B5E748F1
+	for <linux-xfs@archiver.kernel.org>; Sun,  1 Oct 2023 01:44:19 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231197AbjI3Ufl (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Sat, 30 Sep 2023 16:35:41 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41740 "EHLO
+        id S229591AbjJABoT (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Sat, 30 Sep 2023 21:44:19 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35066 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229535AbjI3Ufk (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sat, 30 Sep 2023 16:35:40 -0400
-Received: from mail-ot1-x343.google.com (mail-ot1-x343.google.com [IPv6:2607:f8b0:4864:20::343])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0E22FCA
-        for <linux-xfs@vger.kernel.org>; Sat, 30 Sep 2023 13:35:39 -0700 (PDT)
-Received: by mail-ot1-x343.google.com with SMTP id 46e09a7af769-6c62cb79b02so2018940a34.2
-        for <linux-xfs@vger.kernel.org>; Sat, 30 Sep 2023 13:35:39 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=chromium.org; s=google; t=1696106138; x=1696710938; darn=vger.kernel.org;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
-        bh=q9xYfZBQImKsyGrauSkx40CmvbMShT//GSfSxiyP5zE=;
-        b=Ye1YXWGhPBAEgxH8F7NwQJfHX5pchAHb9kgSKo+qBWuvEkdXpVJPqa7RpnmHnCef0w
-         6ApazzzAQJ29LS1KLjHDUU1Yoozz8lvzbwj+VdNf8TkWvjh0B6z/3NMZeSaaFCRDH9im
-         ts+YC8WjjISa8Rg46ZbZJWa277QGHiZdrUX+4=
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1696106138; x=1696710938;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=q9xYfZBQImKsyGrauSkx40CmvbMShT//GSfSxiyP5zE=;
-        b=bUZoqQo6iDGZhiHF1PRSilZkK9X7jpPXDihdbXgDoZbclrKdpFLiCu+nUR65ex+R2p
-         nVmGoST1MgFmIN6zXf8I77ZBjsZ8ICuy3ELOPG7DH6/2p8FUXfzWDzbNv6mrnOQuUn8w
-         MzVP93GGC3xEDnxiihmRmg3HzU/85zi2PXoqRB7iSHXGATNQK2f5/yS0OcR44ww+NEdt
-         t8U91eo4jST4OaAdZnCinHAQU8mR9k/GGTFX5VKqBH8DftVBnwjtBfIGf3Dnl/BVTZy7
-         TEH2EbFcx/GOLn/OQs+rqi+kCsYyR+fKHkicDzf33e+dZgJf6rC8KbdRouoWENGYbW+5
-         z8rg==
-X-Gm-Message-State: AOJu0YwGy06roJK5b1dmYSudhpC+Zz2Dyk4/cYQ62WfVERhCy/av0u+f
-        tDXNgB3JLyAMrLKOGHu5Cmf3AQ==
-X-Google-Smtp-Source: AGHT+IES6FCR6Oc6pFQSlN7yRWa0cm//27qrbGfY1PvU67WmpoTEAmenT310bfviix1NiTa1MWHqJQ==
-X-Received: by 2002:a05:6358:718b:b0:143:7a89:a8e8 with SMTP id t11-20020a056358718b00b001437a89a8e8mr8441521rwt.10.1696106138275;
-        Sat, 30 Sep 2023 13:35:38 -0700 (PDT)
-Received: from www.outflux.net (198-0-35-241-static.hfc.comcastbusiness.net. [198.0.35.241])
-        by smtp.gmail.com with ESMTPSA id t14-20020a056a0021ce00b0068bc461b68fsm16653273pfj.204.2023.09.30.13.35.37
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Sat, 30 Sep 2023 13:35:37 -0700 (PDT)
-Date:   Sat, 30 Sep 2023 13:35:32 -0700
-From:   Kees Cook <keescook@chromium.org>
-To:     syzbot <syzbot+510dcbdc6befa1e6b2f6@syzkaller.appspotmail.com>
-Cc:     chandan.babu@oracle.com, david@fromorbit.com, djwong@kernel.org,
-        ebiggers@kernel.org, hch@lst.de, linux-fsdevel@vger.kernel.org,
-        linux-kernel@vger.kernel.org, linux-xfs@vger.kernel.org,
-        mukattreyee@gmail.com, syzkaller-bugs@googlegroups.com
-Subject: Re: [syzbot] [xfs?] UBSAN: array-index-out-of-bounds in
- xfs_attr3_leaf_add_work
-Message-ID: <202309301334.FA4D7752@keescook>
-References: <0000000000001c8edb05fe518644@google.com>
- <0000000000003c16100606974653@google.com>
+        with ESMTP id S231989AbjJABoT (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sat, 30 Sep 2023 21:44:19 -0400
+Received: from mgamail.intel.com (mgamail.intel.com [192.55.52.151])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C45FCD3;
+        Sat, 30 Sep 2023 18:44:16 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1696124656; x=1727660656;
+  h=date:from:to:cc:subject:message-id:references:
+   mime-version:in-reply-to;
+  bh=rufpvWuPso4MC3Gr1PDC2UlAGt/OUfuMBlXcYFtgG94=;
+  b=WJSnLtJNF3HZBoxwJUxKjHcg/+oP7H3QmtiyeDz0cnA4iv0Pzt37GZEK
+   r20aOZehGW+jw6nKm37R4SroKb2m+HIwtqcaAJNoS/iUo6rG027h/n+NU
+   HRObmaQb325qCzkUfJm5QdLrYNj5Ld54hqn3LCzsc7B9t1sb/bRUkfqEp
+   iW4DnySI+t5IbzLBv8I0Tj2yw5n3b0rQud+M80HClF7y3AXcNQPd+GXa8
+   qqBRXcednC6kyrqpIL43aHkIglR07iN0GdvOXtvyFAMfrJeTTkiIHt4TH
+   7KsIP20ea4xhVI/AOVbYYmmwVqx+AX0FLuqJS3gXfNVUmG7DfZkJNSOGD
+   g==;
+X-IronPort-AV: E=McAfee;i="6600,9927,10849"; a="362749427"
+X-IronPort-AV: E=Sophos;i="6.03,191,1694761200"; 
+   d="scan'208";a="362749427"
+Received: from orsmga006.jf.intel.com ([10.7.209.51])
+  by fmsmga107.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 30 Sep 2023 18:44:16 -0700
+X-ExtLoop1: 1
+X-IronPort-AV: E=McAfee;i="6600,9927,10849"; a="726926433"
+X-IronPort-AV: E=Sophos;i="6.03,191,1694761200"; 
+   d="scan'208";a="726926433"
+Received: from lkp-server02.sh.intel.com (HELO c3b01524d57c) ([10.239.97.151])
+  by orsmga006.jf.intel.com with ESMTP; 30 Sep 2023 18:44:12 -0700
+Received: from kbuild by c3b01524d57c with local (Exim 4.96)
+        (envelope-from <lkp@intel.com>)
+        id 1qmlVA-0004eZ-2u;
+        Sun, 01 Oct 2023 01:44:09 +0000
+Date:   Sun, 1 Oct 2023 09:43:41 +0800
+From:   kernel test robot <lkp@intel.com>
+To:     Shiyang Ruan <ruansy.fnst@fujitsu.com>,
+        linux-fsdevel@vger.kernel.org, nvdimm@lists.linux.dev,
+        linux-xfs@vger.kernel.org, linux-mm@kvack.org
+Cc:     llvm@lists.linux.dev, oe-kbuild-all@lists.linux.dev,
+        dan.j.williams@intel.com, willy@infradead.org, jack@suse.cz,
+        akpm@linux-foundation.org, djwong@kernel.org, mcgrof@kernel.org,
+        chandanbabu@kernel.org
+Subject: Re: [PATCH v15] mm, pmem, xfs: Introduce MF_MEM_PRE_REMOVE for unbind
+Message-ID: <202310010955.feI4HCwZ-lkp@intel.com>
+References: <20230928103227.250550-1-ruansy.fnst@fujitsu.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <0000000000003c16100606974653@google.com>
+In-Reply-To: <20230928103227.250550-1-ruansy.fnst@fujitsu.com>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Sat, Sep 30, 2023 at 10:57:28AM -0700, syzbot wrote:
-> syzbot suspects this issue was fixed by commit:
-> 
-> commit a49bbce58ea90b14d4cb1d00681023a8606955f2
-> Author: Darrick J. Wong <djwong@kernel.org>
-> Date:   Mon Jul 10 16:12:20 2023 +0000
-> 
->     xfs: convert flex-array declarations in xfs attr leaf blocks
-> 
-> bisection log:  https://syzkaller.appspot.com/x/bisect.txt?x=12eef28a680000
-> start commit:   f8566aa4f176 Merge tag 'x86-urgent-2023-07-01' of git://gi..
-> git tree:       upstream
-> kernel config:  https://syzkaller.appspot.com/x/.config?x=3f27fb02fc20d955
-> dashboard link: https://syzkaller.appspot.com/bug?extid=510dcbdc6befa1e6b2f6
-> syz repro:      https://syzkaller.appspot.com/x/repro.syz?x=1652938f280000
-> C reproducer:   https://syzkaller.appspot.com/x/repro.c?x=14c10c40a80000
-> 
-> If the result looks correct, please mark the issue as fixed by replying with:
+Hi Shiyang,
 
-Yup, that tracks. :)
+kernel test robot noticed the following build errors:
 
-#syz fix: xfs: convert flex-array declarations in xfs attr leaf blocks
 
--Kees
 
-> 
-> For information about bisection process see: https://goo.gl/tpsmEJ#bisection
+url:    https://github.com/intel-lab-lkp/linux/commits/UPDATE-20230928-183310/Shiyang-Ruan/xfs-fix-the-calculation-for-end-and-length/20230629-161913
+base:   the 2th patch of https://lore.kernel.org/r/20230629081651.253626-3-ruansy.fnst%40fujitsu.com
+patch link:    https://lore.kernel.org/r/20230928103227.250550-1-ruansy.fnst%40fujitsu.com
+patch subject: [PATCH v15] mm, pmem, xfs: Introduce MF_MEM_PRE_REMOVE for unbind
+config: x86_64-rhel-8.3-rust (https://download.01.org/0day-ci/archive/20231001/202310010955.feI4HCwZ-lkp@intel.com/config)
+compiler: clang version 15.0.7 (https://github.com/llvm/llvm-project.git 8dfdcc7b7bf66834a761bd8de445840ef68e4d1a)
+reproduce (this is a W=1 build): (https://download.01.org/0day-ci/archive/20231001/202310010955.feI4HCwZ-lkp@intel.com/reproduce)
+
+If you fix the issue in a separate patch/commit (i.e. not just a new version of
+the same patch/commit), kindly add following tags
+| Reported-by: kernel test robot <lkp@intel.com>
+| Closes: https://lore.kernel.org/oe-kbuild-all/202310010955.feI4HCwZ-lkp@intel.com/
+
+All errors (new ones prefixed by >>):
+
+>> fs/xfs/xfs_notify_failure.c:127:27: error: use of undeclared identifier 'FREEZE_HOLDER_KERNEL'
+           error = freeze_super(sb, FREEZE_HOLDER_KERNEL);
+                                    ^
+   fs/xfs/xfs_notify_failure.c:143:26: error: use of undeclared identifier 'FREEZE_HOLDER_KERNEL'
+                   error = thaw_super(sb, FREEZE_HOLDER_KERNEL);
+                                          ^
+>> fs/xfs/xfs_notify_failure.c:153:17: error: use of undeclared identifier 'FREEZE_HOLDER_USERSPACE'
+           thaw_super(sb, FREEZE_HOLDER_USERSPACE);
+                          ^
+   3 errors generated.
+
+
+vim +/FREEZE_HOLDER_KERNEL +127 fs/xfs/xfs_notify_failure.c
+
+   119	
+   120	static int
+   121	xfs_dax_notify_failure_freeze(
+   122		struct xfs_mount	*mp)
+   123	{
+   124		struct super_block	*sb = mp->m_super;
+   125		int			error;
+   126	
+ > 127		error = freeze_super(sb, FREEZE_HOLDER_KERNEL);
+   128		if (error)
+   129			xfs_emerg(mp, "already frozen by kernel, err=%d", error);
+   130	
+   131		return error;
+   132	}
+   133	
+   134	static void
+   135	xfs_dax_notify_failure_thaw(
+   136		struct xfs_mount	*mp,
+   137		bool			kernel_frozen)
+   138	{
+   139		struct super_block	*sb = mp->m_super;
+   140		int			error;
+   141	
+   142		if (kernel_frozen) {
+   143			error = thaw_super(sb, FREEZE_HOLDER_KERNEL);
+   144			if (error)
+   145				xfs_emerg(mp, "still frozen after notify failure, err=%d",
+   146					error);
+   147		}
+   148	
+   149		/*
+   150		 * Also thaw userspace call anyway because the device is about to be
+   151		 * removed immediately.
+   152		 */
+ > 153		thaw_super(sb, FREEZE_HOLDER_USERSPACE);
+   154	}
+   155	
 
 -- 
-Kees Cook
+0-DAY CI Kernel Test Service
+https://github.com/intel/lkp-tests/wiki
