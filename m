@@ -2,95 +2,94 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id BC12AE748E9
-	for <linux-xfs@archiver.kernel.org>; Sun,  1 Oct 2023 13:23:38 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1BDA0E748EE
+	for <linux-xfs@archiver.kernel.org>; Sun,  1 Oct 2023 16:18:53 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234982AbjJANXj (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Sun, 1 Oct 2023 09:23:39 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46052 "EHLO
+        id S235183AbjJAQSx (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Sun, 1 Oct 2023 12:18:53 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41326 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S234979AbjJANXi (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sun, 1 Oct 2023 09:23:38 -0400
-Received: from mail-oi1-f169.google.com (mail-oi1-f169.google.com [209.85.167.169])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 70CAE8E;
-        Sun,  1 Oct 2023 06:23:36 -0700 (PDT)
-Received: by mail-oi1-f169.google.com with SMTP id 5614622812f47-3af609c4dfeso2944548b6e.1;
-        Sun, 01 Oct 2023 06:23:36 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1696166615; x=1696771415;
-        h=content-transfer-encoding:in-reply-to:from:references:cc:to
-         :content-language:subject:user-agent:mime-version:date:message-id
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=xVJSYZtpL0YLa+wcSpHtc+qG+rdtMGRB99f0WwrMd40=;
-        b=l8gK/xLbmU3VcpswqtVQ4osnKA3PiOgCmngkGdgGvW42lc3FPAoee0wkwEUE/i9hR3
-         9a9Fj0T9jBo1x9YS3TJ/62OSIqjzO9Z617M0bHZw21IUwRAuTp5qty0WKg1zgxz8+u04
-         eUV5mdQc3Tn/HrZzM7p1qYk38OeI1Lcqmwrfc2QJzy1Y0hVXjoT7GfR1wG9JpQTga1cH
-         nfpzAcj7gk7kWmRMLiF8Fr2Vd5EQUSt6W/3RSJ8VggbtOtZL7aa+1RKwmJeX3r+qFALy
-         OIZa1enx/FJueIi4Arsdy7hTPBm2grlt3kIqwQpFYVy5Z20RisCoEDM/hrodMBmd8WtU
-         YmzA==
-X-Gm-Message-State: AOJu0YwlZR5/xURFcSL7Sps60/xL7XfhhisCqbdIr+UnD22ISDmGGjHV
-        UAbFcBBFdrd+UxnV+7EYGgY=
-X-Google-Smtp-Source: AGHT+IG5r59Stw18eP45GGvts3KKKs7AnR8jZu7o46ucmeUjXt+CrOjIYIY866yaw9ZKQjAGZmJ61Q==
-X-Received: by 2002:aca:220e:0:b0:3a1:bfda:c6d2 with SMTP id b14-20020aca220e000000b003a1bfdac6d2mr9142795oic.11.1696166615513;
-        Sun, 01 Oct 2023 06:23:35 -0700 (PDT)
-Received: from ?IPV6:2601:647:4d7e:54f3:667:4981:ffa1:7be1? ([2601:647:4d7e:54f3:667:4981:ffa1:7be1])
-        by smtp.gmail.com with ESMTPSA id d4-20020a170903230400b001c20c608373sm20148814plh.296.2023.10.01.06.23.32
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Sun, 01 Oct 2023 06:23:34 -0700 (PDT)
-Message-ID: <b9c266d2-d5d6-4294-9a95-764641e295b4@acm.org>
-Date:   Sun, 1 Oct 2023 06:23:31 -0700
+        with ESMTP id S235093AbjJAQSx (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sun, 1 Oct 2023 12:18:53 -0400
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4229A91;
+        Sun,  1 Oct 2023 09:18:51 -0700 (PDT)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id BF1C4C433C7;
+        Sun,  1 Oct 2023 16:18:50 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1696177130;
+        bh=IJqi20NX4A+8cl63oTYPC78bMfzYE+wujX5yM3GVGE8=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=YiAIOkII+No95P1D8rRQWljSNLcoio4W+UrsWF+9SnDhIzOSgeAqQ/mhfluo1QWCW
+         lUv1fcut3xe9aNakp8vw8X4Su/fvmbXJ1EmobZB7tUPLSx7ahQGKmy6KLssOgxlHzp
+         c8sKk/KO4hMDaAlgFMpfHF88pb6Bq5R7ITx9zuajdOgC5iCLohgPhiGRcI/JDq12no
+         DkxhdY2Yw1+a8052mmhF3WIk73l1RLKSE1Wf5+fo3hiWLZsUlu+1pyz7wuZSq55Pfs
+         kGRWI+wQEn5eXXddjTago2XRycci8UCNWucv4ELr+TaKe+c2Om1Fhg/Q90bxEaDG+v
+         cVtNgMaJ9xT0Q==
+Date:   Sun, 1 Oct 2023 09:18:50 -0700
+From:   "Darrick J. Wong" <djwong@kernel.org>
+To:     Wedson Almeida Filho <wedsonaf@gmail.com>
+Cc:     Alexander Viro <viro@zeniv.linux.org.uk>,
+        Christian Brauner <brauner@kernel.org>,
+        linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org,
+        Wedson Almeida Filho <walmeida@microsoft.com>,
+        linux-xfs@vger.kernel.org
+Subject: Re: [PATCH 26/29] xfs: move xfs_xattr_handlers to .rodata
+Message-ID: <20231001161850.GB21298@frogsfrogsfrogs>
+References: <20230930050033.41174-1-wedsonaf@gmail.com>
+ <20230930050033.41174-27-wedsonaf@gmail.com>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH 03/21] fs/bdev: Add atomic write support info to statx
-Content-Language: en-US
-To:     Eric Biggers <ebiggers@kernel.org>,
-        John Garry <john.g.garry@oracle.com>
-Cc:     axboe@kernel.dk, kbusch@kernel.org, hch@lst.de, sagi@grimberg.me,
-        jejb@linux.ibm.com, martin.petersen@oracle.com, djwong@kernel.org,
-        viro@zeniv.linux.org.uk, brauner@kernel.org,
-        chandan.babu@oracle.com, dchinner@redhat.com,
-        linux-block@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-nvme@lists.infradead.org, linux-xfs@vger.kernel.org,
-        linux-fsdevel@vger.kernel.org, tytso@mit.edu, jbongio@google.com,
-        linux-api@vger.kernel.org,
-        Prasad Singamsetty <prasad.singamsetty@oracle.com>
-References: <20230929102726.2985188-1-john.g.garry@oracle.com>
- <20230929102726.2985188-4-john.g.garry@oracle.com>
- <20230929224922.GB11839@google.com>
-From:   Bart Van Assche <bvanassche@acm.org>
-In-Reply-To: <20230929224922.GB11839@google.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20230930050033.41174-27-wedsonaf@gmail.com>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On 9/29/23 15:49, Eric Biggers wrote:
-> On Fri, Sep 29, 2023 at 10:27:08AM +0000, John Garry wrote:
->> diff --git a/include/uapi/linux/stat.h b/include/uapi/linux/stat.h
->> index 7cab2c65d3d7..c99d7cac2aa6 100644
->> --- a/include/uapi/linux/stat.h
->> +++ b/include/uapi/linux/stat.h
->> @@ -127,7 +127,10 @@ struct statx {
->>   	__u32	stx_dio_mem_align;	/* Memory buffer alignment for direct I/O */
->>   	__u32	stx_dio_offset_align;	/* File offset alignment for direct I/O */
->>   	/* 0xa0 */
->> -	__u64	__spare3[12];	/* Spare space for future expansion */
->> +	__u32	stx_atomic_write_unit_max;
->> +	__u32	stx_atomic_write_unit_min;
+On Sat, Sep 30, 2023 at 02:00:30AM -0300, Wedson Almeida Filho wrote:
+> From: Wedson Almeida Filho <walmeida@microsoft.com>
 > 
-> Maybe min first and then max?  That seems a bit more natural, and a lot of the
-> code you've written handle them in that order.
+> This makes it harder for accidental or malicious changes to
+> xfs_xattr_handlers at runtime.
 > 
->> +#define STATX_ATTR_WRITE_ATOMIC		0x00400000 /* File supports atomic write operations */
+> Cc: "Darrick J. Wong" <djwong@kernel.org>
+> Cc: linux-xfs@vger.kernel.org
+> Signed-off-by: Wedson Almeida Filho <walmeida@microsoft.com>
+
+Reviewed-by: Darrick J. Wong <djwong@kernel.org>
+
+--D
+
+> ---
+>  fs/xfs/xfs_xattr.c | 2 +-
+>  fs/xfs/xfs_xattr.h | 2 +-
+>  2 files changed, 2 insertions(+), 2 deletions(-)
 > 
-> How would this differ from stx_atomic_write_unit_min != 0?
-
-Is it even possible that stx_atomic_write_unit_min == 0? My understanding
-is that all Linux filesystems rely on the assumption that writing a single
-logical block either succeeds or does not happen, even if a power failure
-occurs between writing and reading a logical block.
-
-Thanks,
-
-Bart.
+> diff --git a/fs/xfs/xfs_xattr.c b/fs/xfs/xfs_xattr.c
+> index 43e5c219aaed..77418bcd6f3a 100644
+> --- a/fs/xfs/xfs_xattr.c
+> +++ b/fs/xfs/xfs_xattr.c
+> @@ -175,7 +175,7 @@ static const struct xattr_handler xfs_xattr_security_handler = {
+>  	.set	= xfs_xattr_set,
+>  };
+>  
+> -const struct xattr_handler *xfs_xattr_handlers[] = {
+> +const struct xattr_handler * const xfs_xattr_handlers[] = {
+>  	&xfs_xattr_user_handler,
+>  	&xfs_xattr_trusted_handler,
+>  	&xfs_xattr_security_handler,
+> diff --git a/fs/xfs/xfs_xattr.h b/fs/xfs/xfs_xattr.h
+> index 2b09133b1b9b..cec766cad26c 100644
+> --- a/fs/xfs/xfs_xattr.h
+> +++ b/fs/xfs/xfs_xattr.h
+> @@ -8,6 +8,6 @@
+>  
+>  int xfs_attr_change(struct xfs_da_args *args);
+>  
+> -extern const struct xattr_handler *xfs_xattr_handlers[];
+> +extern const struct xattr_handler * const xfs_xattr_handlers[];
+>  
+>  #endif /* __XFS_XATTR_H__ */
+> -- 
+> 2.34.1
+> 
