@@ -2,151 +2,97 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 401F8E784AC
-	for <linux-xfs@archiver.kernel.org>; Mon,  2 Oct 2023 12:42:01 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id BC848E7490C
+	for <linux-xfs@archiver.kernel.org>; Mon,  2 Oct 2023 18:39:12 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S236662AbjJBMmC (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 2 Oct 2023 08:42:02 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44016 "EHLO
+        id S238792AbjJBSjN (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 2 Oct 2023 14:39:13 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36900 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231138AbjJBMmB (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 2 Oct 2023 08:42:01 -0400
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id F3E29A6
-        for <linux-xfs@vger.kernel.org>; Mon,  2 Oct 2023 05:41:58 -0700 (PDT)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 08F59C433C7;
-        Mon,  2 Oct 2023 12:41:57 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1696250518;
-        bh=zuUfd+8TMR3+fWuYWxk1LHVHTCdM75d/xuG3AqMTpow=;
-        h=References:From:To:Cc:Subject:Date:In-reply-to:From;
-        b=b9Fd5Ps33xWaDQsNi0jC+LdGavVoNK1Zym0jPfv0X1q9AXKz/1IxHxksDRH06KPpZ
-         tm5q1ztBTEzdb8lNxAdIrQjZ/axnnJyhO3Q+Ph/bE0K8ZtO7W5i2/nzDT5MUnCuODl
-         PNAhCyz9FaxqUYqcB/4V9+qE8GHdlIYlIzJiS31MgU6UyUbN6/5ngprQscsQkTVQcy
-         P8Nn4Il33Dg0u8grfQbralN7rzXAMQdzTSV4XcOKbL51iXSvuevqtr8PQEf8Llpm2H
-         SiLK45VbSqvPdl0P8oyVFofmk8Q5kDoHBn1O6qG2ceFiNlWNkhL96qGsF/Kf+kZMvI
-         /4RQCqVmhzqDg==
-References: <20230927014632.GE11456@frogsfrogsfrogs>
- <87fs306zs1.fsf@debian-BULLSEYE-live-builder-AMD64>
- <5c064cbd-13a3-4d55-9881-0a079476d865@fujitsu.com>
- <bc29af15-ae63-407d-8ca0-186c976acce7@fujitsu.com>
- <87y1gs83yq.fsf@debian-BULLSEYE-live-builder-AMD64>
- <20230927083034.90bd6336229dd00af601e0ef@linux-foundation.org>
- <9c3cbc0c-7135-4006-ad4a-2abce0a556b0@fujitsu.com>
- <20230928092052.9775e59262c102dc382513ef@linux-foundation.org>
- <20230928171339.GJ11439@frogsfrogsfrogs>
- <99279735-2d17-405f-bade-9501a296d817@fujitsu.com>
- <651718a6a6e2c_c558e2943e@dwillia2-xfh.jf.intel.com.notmuch>
- <ec2de0b9-c07d-468a-bd15-49e83cba1ad9@fujitsu.com>
-User-agent: mu4e 1.8.10; emacs 27.1
-From:   Chandan Babu R <chandanbabu@kernel.org>
-To:     "Darrick J. Wong" <djwong@kernel.org>,
-        Dave Chinner <david@fromorbit.com>
-Cc:     Shiyang Ruan <ruansy.fnst@fujitsu.com>,
-        Dan Williams <dan.j.williams@intel.com>,
-        Andrew Morton <akpm@linux-foundation.org>,
-        linux-xfs@vger.kernel.org, nvdimm@lists.linux.dev
-Subject: Re: [PATCH] xfs: drop experimental warning for FSDAX
-Date:   Mon, 02 Oct 2023 18:09:56 +0530
-In-reply-to: <ec2de0b9-c07d-468a-bd15-49e83cba1ad9@fujitsu.com>
-Message-ID: <87y1gltcvg.fsf@debian-BULLSEYE-live-builder-AMD64>
+        with ESMTP id S229686AbjJBSjM (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 2 Oct 2023 14:39:12 -0400
+Received: from mail-yw1-f179.google.com (mail-yw1-f179.google.com [209.85.128.179])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A3813DC;
+        Mon,  2 Oct 2023 11:39:05 -0700 (PDT)
+Received: by mail-yw1-f179.google.com with SMTP id 00721157ae682-59f4f80d084so1163257b3.1;
+        Mon, 02 Oct 2023 11:39:05 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1696271945; x=1696876745;
+        h=content-transfer-encoding:in-reply-to:from:references:cc:to
+         :content-language:subject:user-agent:mime-version:date:message-id
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=Gc60tErHmFLa/ojhrllX+rIN4q7yH7L/FhjXgxWfjlA=;
+        b=mMjFzSpYzwwHQFuni+3y7KwwVF9g8Ug9ala3LCcVo395Doop45T1R0ThNnxCvQQTIp
+         fGaiH9G8ZPgA+kew6QfgxfRU5wKttiwT/YBLtc122oS72PCuv3W0FZQMd40pgKygu5Yj
+         oxXWn+irwMT0vus+qlh8vckzi9w9dy8QL1ER2eoV1LKOjhnqSU72NskpN1scawKaNolO
+         vq6EA5+28nYnVSw29+sXePEFSS8WafHjxVRi3h7BI1FrjKeL9O4jkV3KS7Bt67eI04aK
+         YhUknHFRWHwJEh766Vdl4kBCszvHgd98xkxkvkMfC+IfYDgOXTYcaBmyxpW+VVj1cmSA
+         mPRQ==
+X-Gm-Message-State: AOJu0YzjkkRvKGjUYJWhwrqx6zEkOFXM3F/7NEU4IburZkELBZYT9gQ9
+        AxUaK8p98JTvvoVv0JK+2QQ=
+X-Google-Smtp-Source: AGHT+IESVNBLm8WCa7rBouLG5qA3ZmN61xUw/sb/SYnK4ixQ5LUHtH5fDdM+JtbnGYgfpHa7GLtSKA==
+X-Received: by 2002:a25:c748:0:b0:ced:6134:7606 with SMTP id w69-20020a25c748000000b00ced61347606mr10978974ybe.30.1696271944617;
+        Mon, 02 Oct 2023 11:39:04 -0700 (PDT)
+Received: from ?IPV6:2620:15c:211:201:6ad7:f663:5f97:db57? ([2620:15c:211:201:6ad7:f663:5f97:db57])
+        by smtp.gmail.com with ESMTPSA id o9-20020a639a09000000b0056c2f1a2f6bsm19484421pge.41.2023.10.02.11.39.02
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Mon, 02 Oct 2023 11:39:03 -0700 (PDT)
+Message-ID: <2c929105-7c7f-43c5-a105-42d1813d0e29@acm.org>
+Date:   Mon, 2 Oct 2023 11:39:00 -0700
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH 03/21] fs/bdev: Add atomic write support info to statx
+Content-Language: en-US
+To:     John Garry <john.g.garry@oracle.com>,
+        Eric Biggers <ebiggers@kernel.org>
+Cc:     axboe@kernel.dk, kbusch@kernel.org, hch@lst.de, sagi@grimberg.me,
+        jejb@linux.ibm.com, martin.petersen@oracle.com, djwong@kernel.org,
+        viro@zeniv.linux.org.uk, brauner@kernel.org,
+        chandan.babu@oracle.com, dchinner@redhat.com,
+        linux-block@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-nvme@lists.infradead.org, linux-xfs@vger.kernel.org,
+        linux-fsdevel@vger.kernel.org, tytso@mit.edu, jbongio@google.com,
+        linux-api@vger.kernel.org,
+        Prasad Singamsetty <prasad.singamsetty@oracle.com>
+References: <20230929102726.2985188-1-john.g.garry@oracle.com>
+ <20230929102726.2985188-4-john.g.garry@oracle.com>
+ <20230929224922.GB11839@google.com>
+ <b9c266d2-d5d6-4294-9a95-764641e295b4@acm.org>
+ <d3a8b9b0-b24c-a002-e77d-56380ee785a5@oracle.com>
+From:   Bart Van Assche <bvanassche@acm.org>
+In-Reply-To: <d3a8b9b0-b24c-a002-e77d-56380ee785a5@oracle.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Mon, Oct 02, 2023 at 08:15:57 PM +0800, Shiyang Ruan wrote:
-> =E5=9C=A8 2023/9/30 2:34, Dan Williams =E5=86=99=E9=81=93:
->> Shiyang Ruan wrote:
->>>
->>>
->>> =E5=9C=A8 2023/9/29 1:13, Darrick J. Wong =E5=86=99=E9=81=93:
->>>> On Thu, Sep 28, 2023 at 09:20:52AM -0700, Andrew Morton wrote:
->>>>> On Thu, 28 Sep 2023 16:44:00 +0800 Shiyang Ruan <ruansy.fnst@fujitsu.=
-com> wrote:
->>>>>
->>>>>> But please pick the following patch[1] as well, which fixes failures=
- of
->>>>>> xfs55[0-2] cases.
->>>>>>
->>>>>> [1]
->>>>>> https://lore.kernel.org/linux-xfs/20230913102942.601271-1-ruansy.fns=
-t@fujitsu.com
->>>>>
->>>>> I guess I can take that xfs patch, as it fixes a DAX patch.  I hope t=
-he xfs team
->>>>> are watching.
->>>>>
->>>>> But
->>>>>
->>>>> a) I'm not subscribed to linux-xfs and
->>>>>
->>>>> b) the changelog fails to describe the userspace-visible effects of
->>>>>      the bug, so I (and others) are unable to determine which kernel
->>>>>      versions should be patched.
->>>>>
->>>>> Please update that changelog and resend?
->>>>
->>>> That's a purely xfs patch anyways.  The correct maintainer is Chandan,
->>>> not Andrew.
->>>>
->>>> /me notes that post-reorg, patch authors need to ask the release manag=
-er
->>>> (Chandan) directly to merge their patches after they've gone through
->>>> review.  Pull requests of signed tags are encouraged strongly.
->>>>
->>>> Shiyang, could you please send Chandan pull requests with /all/ the
->>>> relevant pmem patches incorporated?  I think that's one PR for the
->>>> "xfs: correct calculation for agend and blockcount" for 6.6; and a
->>>> second PR with all the non-bugfix stuff (PRE_REMOVE and whatnot) for
->>>> 6.7.
->>>
->>> OK.  Though I don't know how to send the PR by email, I have sent a list
->>> of the patches and added description for each one.
->> If you want I can create a signed pull request from a git.kernel.org
->> tree.
->> Where is that list of patches? I see v15 of preremove.
->
-> Sorry, I sent the list below to Chandan, didn't cc the maillist
-> because it's just a rough list rather than a PR:
->
->
-> 1. subject: [v3]  xfs: correct calculation for agend and blockcount
->    url:
->    https://lore.kernel.org/linux-xfs/20230913102942.601271-1-ruansy.fnst@=
-fujitsu.com/
->    note:    This one is a fix patch for commit: 5cf32f63b0f4 ("xfs:
->    fix the calculation for "end" and "length"").
->             It can solve the fail of xfs/55[0-2]: the programs
->             accessing the DAX file may not be notified as expected,
->            because the length always 1 block less than actual.  Then
->           this patch fixes this.
->
->
-> 2. subject: [v15] mm, pmem, xfs: Introduce MF_MEM_PRE_REMOVE for unbind
->    url:
->    https://lore.kernel.org/linux-xfs/20230928103227.250550-1-ruansy.fnst@=
-fujitsu.com/T/#u
->    note:    This is a feature patch.  It handles the pre-remove event
->    of DAX device, by notifying kernel/user space before actually
->   removing.
->             It has been picked by Andrew in his
->             mm-hotfixes-unstable. I am not sure whether you or he will
->            merge this one.
->
->
-> 3. subject: [v1]  xfs: drop experimental warning for FSDAX
->    url:
->    https://lore.kernel.org/linux-xfs/20230915063854.1784918-1-ruansy.fnst=
-@fujitsu.com/
->    note:    With the patches mentioned above, I did a lot of tests,
->    including xfstests and blackbox tests, the FSDAX function looks
->   good now.  So I think the experimental warning could be dropped.
+On 10/2/23 02:51, John Garry wrote:
+> On 01/10/2023 14:23, Bart Van Assche wrote:
+>> Is it even possible that stx_atomic_write_unit_min == 0? My 
+>> understanding is that all Linux filesystems rely on the assumption 
+>> that writing a single logical block either succeeds or does not 
+>> happen, even if a power failure occurs between writing and reading 
+>> a logical block.
+> 
+> Maybe they do rely on this, but is it particularly interesting?
+> 
+> BTW, I would not like to provide assurances that every storage media 
+> produced writes logical blocks atomically.
 
-Darrick/Dave, Could you please review the above patch and let us know if you
-have any objections?
+Neither the SCSI SBC standard nor the NVMe standard defines a "minimum
+atomic write unit". So why to introduce something in the Linux kernel
+that is not defined in common storage standards?
 
---=20
-Chandan
+I propose to leave out stx_atomic_write_unit_min from
+struct statx and also to leave out atomic_write_unit_min_sectors from
+struct queue_limits. My opinion is that we should not support block
+devices in the Linux kernel that do not write logical blocks atomically.
+Block devices that do not write logical blocks atomically are not
+compatible with Linux kernel journaling filesystems. Additionally, I'm
+not sure it's even possible to write a journaling filesystem for such 
+block devices.
+
+Thanks,
+
+Bart.
