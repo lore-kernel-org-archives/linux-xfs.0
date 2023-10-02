@@ -2,208 +2,200 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2000EE7849B
-	for <linux-xfs@archiver.kernel.org>; Sun,  1 Oct 2023 22:38:08 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5A1C6E784B3
+	for <linux-xfs@archiver.kernel.org>; Mon,  2 Oct 2023 07:57:41 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234245AbjJAWiI (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Sun, 1 Oct 2023 18:38:08 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49094 "EHLO
+        id S235808AbjJBH5k (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 2 Oct 2023 03:57:40 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42866 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S234027AbjJAWiI (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sun, 1 Oct 2023 18:38:08 -0400
-Received: from mail-pg1-x534.google.com (mail-pg1-x534.google.com [IPv6:2607:f8b0:4864:20::534])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5012ACE
-        for <linux-xfs@vger.kernel.org>; Sun,  1 Oct 2023 15:38:05 -0700 (PDT)
-Received: by mail-pg1-x534.google.com with SMTP id 41be03b00d2f7-577fb90bb76so8704195a12.2
-        for <linux-xfs@vger.kernel.org>; Sun, 01 Oct 2023 15:38:05 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=fromorbit-com.20230601.gappssmtp.com; s=20230601; t=1696199885; x=1696804685; darn=vger.kernel.org;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
-        bh=33/aTyyQaSBPQRJLH+G7VmXLrBqd7SSr9ClqecbFlkw=;
-        b=Xmt6Nd3G5V9xTtHlUklxkgrnZ3I37bKyOjAqsTtuPvCiJY72T2ALMgd4n/7dw7/YY5
-         nvMFI/As+pYHa1VqMAaOoQs+CRS5Qaz3bgegiI3WsNgGY0FQKuUht3jHRkh5yHhLBkkX
-         pBqb9r9A6jo/iPq34U+JcAPN0FxTHZcrDDNqikMxQWj6vAWCtcKrNuVgdEmTz8gAs1fV
-         qYDbuoqI6HyhQ/NJ8Xl6jbR+88jNQanEdEWIztAOQZUHfrJIa6U71s/sudu4paDJmEoZ
-         Rw9OB83UsquJY0KKAyyZxPOLGvG0UJ6L5xmvzqnStEBUe6T5bJ9e9xshEoypB9ERFYnD
-         n0ig==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1696199885; x=1696804685;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=33/aTyyQaSBPQRJLH+G7VmXLrBqd7SSr9ClqecbFlkw=;
-        b=Jdw/w83kOUie7zmXWdnDmdpNLcHFp5R1sUH/l+4QsoaVV/G7VwUIHalDbPBDO4Cb9J
-         XrFJs4Eh63DIPa9D1ZEtmfni30IBPdo/bwZe6iGo6KqzzGCypo69uZEXjGlIWsHbILOp
-         IOTQticY4TtmVJF8BjuYlE+595baMRQkztZbp32GpICtkCfprhqxak3YKqzhHRdbht5A
-         NlhTzxNKWGIU81FdqsifBdAkRdiyXLLaMEuxtNlk294pSlz42WQFZllmJN5Pbdc0ncO3
-         D41oJ2JJmD3RFY2VtVwFQVuH0bos4cFLRMfzyqgMTGAxEcha2FrtGcjLzGbQIYr9jE66
-         jgqg==
-X-Gm-Message-State: AOJu0YyxVdNX9AmRdbGcxnFGNRQPvOkqcztCR7UEZdYbE81N/0q07qZh
-        kBvgE3NNvI8rGmBf/XezQnbwdw==
-X-Google-Smtp-Source: AGHT+IEPNDmJlYBnKRJkMqorQBxfTle5K4Et4feITxPrFrpzEg7FRMTgtzw/IqrHe45lWNn+Ew340Q==
-X-Received: by 2002:a05:6a00:9a8:b0:690:cae9:714d with SMTP id u40-20020a056a0009a800b00690cae9714dmr9793046pfg.13.1696199884695;
-        Sun, 01 Oct 2023 15:38:04 -0700 (PDT)
-Received: from dread.disaster.area (pa49-180-20-59.pa.nsw.optusnet.com.au. [49.180.20.59])
-        by smtp.gmail.com with ESMTPSA id q26-20020a62ae1a000000b006875a366acfsm18446309pff.8.2023.10.01.15.38.03
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Sun, 01 Oct 2023 15:38:03 -0700 (PDT)
-Received: from dave by dread.disaster.area with local (Exim 4.96)
-        (envelope-from <david@fromorbit.com>)
-        id 1qn54a-008DIa-22;
-        Mon, 02 Oct 2023 09:38:00 +1100
-Date:   Mon, 2 Oct 2023 09:38:00 +1100
-From:   Dave Chinner <david@fromorbit.com>
-To:     Matthew Wilcox <willy@infradead.org>
-Cc:     linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
-        linux-mm@kvack.org
-Subject: Re: Removal of KM_NOFS
-Message-ID: <ZRn0yFmKa2JWaTNL@dread.disaster.area>
-References: <ZRdNK39vc4TuR7g8@casper.infradead.org>
+        with ESMTP id S229712AbjJBH5h (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 2 Oct 2023 03:57:37 -0400
+Received: from smtp-out2.suse.de (smtp-out2.suse.de [IPv6:2001:67c:2178:6::1d])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1E755BC;
+        Mon,  2 Oct 2023 00:57:34 -0700 (PDT)
+Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
+        (No client certificate requested)
+        by smtp-out2.suse.de (Postfix) with ESMTPS id AB8121F459;
+        Mon,  2 Oct 2023 07:57:32 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.cz; s=susede2_rsa;
+        t=1696233452; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+         mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=HRtvvsbDRmaIGA2qlEwuFNnN4SG9to1RwhMyTnDS1Ek=;
+        b=AelUG9FSlQyUcQTA9I9qRJmPzMA6mvk2OLx4Qv2PacqmgU2FkeI54uQfwuwk8GDISDrHf1
+        K6okkr5Yua+jK8r2TTOukY7745vay4e4z1caiTsHAigkH18O5VWdMY9s+0PKMe8/Ta1ITc
+        H4lySULw9TgNQsjwAFd513U/tj8Iifc=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.cz;
+        s=susede2_ed25519; t=1696233452;
+        h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+         mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=HRtvvsbDRmaIGA2qlEwuFNnN4SG9to1RwhMyTnDS1Ek=;
+        b=4yX5F6ZD5YaXQ1SgLuHClpbWfxc1xKg7esoSW59wSh/oO7HSeTROmd590v4TgEevJu81R5
+        RAceDQWhH8NjA0AQ==
+Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
+        (No client certificate requested)
+        by imap2.suse-dmz.suse.de (Postfix) with ESMTPS id 83FA513434;
+        Mon,  2 Oct 2023 07:57:32 +0000 (UTC)
+Received: from dovecot-director2.suse.de ([192.168.254.65])
+        by imap2.suse-dmz.suse.de with ESMTPSA
+        id JLsgIOx3GmUuEgAAMHmgww
+        (envelope-from <jack@suse.cz>); Mon, 02 Oct 2023 07:57:32 +0000
+Received: by quack3.suse.cz (Postfix, from userid 1000)
+        id 27D44A07C9; Mon,  2 Oct 2023 09:57:32 +0200 (CEST)
+Date:   Mon, 2 Oct 2023 09:57:32 +0200
+From:   Jan Kara <jack@suse.cz>
+To:     Christian Brauner <brauner@kernel.org>
+Cc:     Jan Kara <jack@suse.cz>, linux-fsdevel@vger.kernel.org,
+        linux-block@vger.kernel.org, Christoph Hellwig <hch@infradead.org>,
+        Alasdair Kergon <agk@redhat.com>,
+        Andrew Morton <akpm@linux-foundation.org>,
+        Anna Schumaker <anna@kernel.org>, Chao Yu <chao@kernel.org>,
+        Christian Borntraeger <borntraeger@linux.ibm.com>,
+        "Darrick J. Wong" <djwong@kernel.org>,
+        Dave Kleikamp <shaggy@kernel.org>,
+        David Sterba <dsterba@suse.com>, dm-devel@redhat.com,
+        drbd-dev@lists.linbit.com, Gao Xiang <xiang@kernel.org>,
+        Jack Wang <jinpu.wang@ionos.com>,
+        Jaegeuk Kim <jaegeuk@kernel.org>,
+        jfs-discussion@lists.sourceforge.net,
+        Joern Engel <joern@lazybastard.org>,
+        Joseph Qi <joseph.qi@linux.alibaba.com>,
+        Kent Overstreet <kent.overstreet@gmail.com>,
+        linux-bcache@vger.kernel.org, linux-btrfs@vger.kernel.org,
+        linux-erofs@lists.ozlabs.org, linux-ext4@vger.kernel.org,
+        linux-f2fs-devel@lists.sourceforge.net, linux-mm@kvack.org,
+        linux-mtd@lists.infradead.org, linux-nfs@vger.kernel.org,
+        linux-nilfs@vger.kernel.org, linux-nvme@lists.infradead.org,
+        linux-pm@vger.kernel.org, linux-raid@vger.kernel.org,
+        linux-s390@vger.kernel.org, linux-scsi@vger.kernel.org,
+        linux-xfs@vger.kernel.org,
+        "Md. Haris Iqbal" <haris.iqbal@ionos.com>,
+        Mike Snitzer <snitzer@kernel.org>,
+        Minchan Kim <minchan@kernel.org>, ocfs2-devel@oss.oracle.com,
+        reiserfs-devel@vger.kernel.org,
+        Sergey Senozhatsky <senozhatsky@chromium.org>,
+        Song Liu <song@kernel.org>,
+        Sven Schnelle <svens@linux.ibm.com>,
+        target-devel@vger.kernel.org, Ted Tso <tytso@mit.edu>,
+        Trond Myklebust <trond.myklebust@hammerspace.com>,
+        xen-devel@lists.xenproject.org
+Subject: Re: [PATCH v4 0/29] block: Make blkdev_get_by_*() return handle
+Message-ID: <20231002075732.4c5oslpabrmw3niz@quack3>
+References: <20230818123232.2269-1-jack@suse.cz>
+ <20230927-prahlen-reintreten-93706074e58d@brauner>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <ZRdNK39vc4TuR7g8@casper.infradead.org>
+In-Reply-To: <20230927-prahlen-reintreten-93706074e58d@brauner>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Fri, Sep 29, 2023 at 11:18:19PM +0100, Matthew Wilcox wrote:
-> I had a long plane ride yesterday, and I started on "Removing GFP_NOFS".
-> TLDR: I don't know enough about XFS to do this first step.  There are
-> various options and none of them are "obviously" the right thing to do.
+On Wed 27-09-23 18:21:19, Christian Brauner wrote:
+> On Wed, 27 Sep 2023 11:34:07 +0200, Jan Kara wrote:
+> > Create struct bdev_handle that contains all parameters that need to be
+> > passed to blkdev_put() and provide bdev_open_* functions that return
+> > this structure instead of plain bdev pointer. This will eventually allow
+> > us to pass one more argument to blkdev_put() (renamed to bdev_release())
+> > without too much hassle.
+> > 
+> > 
+> > [...]
 > 
-> The overall intent is to get rid of the __GFP_FS flag entirely; make
-> GFP_NOFS the same as GFP_KERNEL (and a later patch could rename all
-> the uses of GFP_NOFS to GFP_KERNEL).  That is, the only way to prevent
-> the memory allocator from entering fs reclaim would be by calling
-> memalloc_nofs_save().
+> > to ease review / testing. Christian, can you pull the patches to your tree
+> > to get some exposure in linux-next as well? Thanks!
 > 
-> XFS already calls memalloc_nofs_save() when starting a transaction.
-> This is almost certainly the right thing to do; many things which
-> could be freed through fs reclaim would need to start a transaction,
-> and we don't want to do a nested transaction.  But it turns out there
-> are several places that can't enter fs reclaim for other reasons.
+> Yep. So I did it slighly differently. I pulled in the btrfs prereqs and
+> then applied your series on top of it so we get all the Link: tags right.
+> I'm running tests right now. Please double-check.
+
+Thanks for picking patches up! I've checked the branch and it looks good to
+me. 
+
+								Honza
+
 > 
-> Having boldly just removed __GFP_FS, I encountered problems (ie
-> lockdep got chatty) in XFS and now I don't think I know enough to
-> take on the prerequisite project of removing KM_NOFS.  While this is
-> obviously _possible_ (simply add calls to memalloc_nofs_save() and
-> memalloc_nofs_restore() around calls currently marked as KM_NOFS),
-> that's not really how the scoped API is supposed to be used.  Instead,
-> one is supposed to improve the understandability of the code by marking
-> the sections where, say, a lock is taken as now being unsafe to enter
-> fs reclaim because that lock is held.
-
-Here's the problem. We have used KM_NOFS in the past just to shut up
-lockdep false positives. In many cases, it is perfectly safe to take
-the lock in both task context and in reclaim context and it will not
-deadlock because the task context has an active reference on the
-inode and so it cannot be locked in both task and reclaim context
-at the same time.
-
-i.e. This path:
-
-> That potentially deadlocks against
+> ---
 > 
-> -> #0 (&xfs_nondir_ilock_class#3){++++}-{3:3}:
->        __lock_acquire+0x148e/0x26d0
->        lock_acquire+0xb8/0x280
->        down_write_nested+0x3f/0xe0
->        xfs_ilock+0xe3/0x260
->        xfs_icwalk_ag+0x68c/0xa50
->        xfs_icwalk+0x3e/0xa0
->        xfs_reclaim_inodes_nr+0x7c/0xa0
->        xfs_fs_free_cached_objects+0x14/0x20
->        super_cache_scan+0x17d/0x1c0
->        do_shrink_slab+0x16a/0x680
->        shrink_slab+0x52a/0x8a0
->        shrink_node+0x308/0x7a0
->        balance_pgdat+0x28d/0x710
-
-can only be reached when the inode has been removed from the VFS
-cache and has been marked as XFS_IRECLAIM and so all new lookups on
-that inode will fail until the inode has been RCU freed.
-
-Hence anything that does a GFP_KERNEL allocation whilst holding an
-inode lock can have lockdep complain about deadlocks against
-locking the inode in the reclaim path.
-
-More recently, __GFP_NOLOCKDEP was added to allow us to annotate
-these allocation points that historically have used KM_NOFS to
-shut up lockdep false positives. However, no effort has been made to go
-back and find all the KM_NOFS sites that should be converted to
-__GFP_NOLOCKDEP.
-
-I suspect that most of the remaining uses of KM_NOFS are going to
-fall into this category; certainly anything to do with reading
-inodes into memory and populating extent lists (most of the KM_NOFS
-uses) from non-modifying lookup paths (e.g. open(O_RDONLY), read(),
-etc) can trigger this lockdep false positive if they don't use
-KM_NOFS or __GFP_NOLOCKDEP...
-
-> We could pop the nofs setting anywhere in this call chain, but _really_
-> what we should be doing is calling memalloc_nofs_save() when we take
-> the xfs_nondir_ilock_class#3.  But ... there are a lot of places we
-> take the ilock, and it's kind of a big deal to add memalloc_nofs_save()
-> calls to all of them.  And then I looked at _why_ we take the lock, and
-> it's kind of stupid; we're just waiting for other callers to free it.
-
-It's purpose has been to serialising against racing lockless inode
-lockups from the inode writeback and inode freeing code (i.e.
-unlink) that walks all the inodes in an on-disc cluster. That might
-have grabbed the inode between the flush checks and the deletion
-from the index. This is old code (dates back to before we had
-lockless RCU lookups) but we've reworked how inode clusters do
-writeback and how those lockless lookups work a couple of times
-since they were introduced.
-
-In general, though, we've treated this relcaim code as "if it ain't
-broke, don't fix it", so we haven't removed that final ILOCK because
-maybe we've missed some subtle interaction that still requires it. I
-think we may have been overly cautious, but I'll need to look at the
-lockless lookup code again in a bit more detail before I form a
-solid opinion on that..
-
-> ie xfs_reclaim_inode() does:
+> Applied to the vfs.super branch of the vfs/vfs.git tree.
+> Patches in the vfs.super branch should appear in linux-next soon.
 > 
->        if (!xfs_ilock_nowait(ip, XFS_ILOCK_EXCL))
->                 goto out;
-> ...
->         xfs_iunlock(ip, XFS_ILOCK_EXCL);
-> ...
->         if (!radix_tree_delete(&pag->pag_ici_root,
->                                 XFS_INO_TO_AGINO(ip->i_mount, ino)))
-> ...
->         xfs_ilock(ip, XFS_ILOCK_EXCL);
+> Please report any outstanding bugs that were missed during review in a
+> new review to the original patch series allowing us to drop it.
 > 
-> ie we did the trylock, and it succeeded.  We know we don't have the
-> lock in process context.  It feels like we could legitimately use
-> xfs_lock_inumorder() to use a different locking class to do this wait.
-
-Unfortunately for us, this used to be only one of many lock points
-that caused these lockdep issues - anywhere we took an inode lock in
-the reclaim path (i.e. superblock shrinker context) could fire a
-lockdep false positive Lockdep just doesn't understand reference
-counted life cycle contexts.
-
-Yes, we do have subclasses for inode locking, and we used to even
-re-initialise the entire node lockdep map context when the inode
-entered reclaim context to avoid false positives. However, with the
-scope of all the different places in inode reclaim context that
-could lock th einode, the only way to reliably avoid these reclaim
-false positives was to sprinkle KM_NOFS around allocation sites
-which could be run from both GFP_KERNEL and GFP_NOFS contexts with
-an inode locked.
-
-That said, now that most of the inode work needed in memory reclaim
-context has been taken completely out of the shrinker context (i.e.
-the per-cpu background inodegc workqueues). Hence that final
-ILOCK in xfs_reclaim_inode() is likely the only place that remains
-where this ILOCK false positive can trigger, so maybe it's a simpler
-problem to fix than it once was....
-
--Dave.
+> It's encouraged to provide Acked-bys and Reviewed-bys even though the
+> patch has now been applied. If possible patch trailers will be updated.
+> 
+> Note that commit hashes shown below are subject to change due to rebase,
+> trailer updates or similar. If in doubt, please check the listed branch.
+> 
+> tree:   https://git.kernel.org/pub/scm/linux/kernel/git/vfs/vfs.git
+> branch: vfs.super
+> 
+> [01/29] block: Provide bdev_open_* functions
+>        https://git.kernel.org/vfs/vfs/c/b7c828aa0b3c
+> [02/29] block: Use bdev_open_by_dev() in blkdev_open()
+>         https://git.kernel.org/vfs/vfs/c/d4e36f27b45a
+> [03/29] block: Use bdev_open_by_dev() in disk_scan_partitions() and blkdev_bszset()
+>         https://git.kernel.org/vfs/vfs/c/5f9bd6764c7a
+> [04/29] drdb: Convert to use bdev_open_by_path()
+>         https://git.kernel.org/vfs/vfs/c/0220ca8e443d
+> [05/29] pktcdvd: Convert to bdev_open_by_dev()
+>         https://git.kernel.org/vfs/vfs/c/7af10b889789
+> [06/29] rnbd-srv: Convert to use bdev_open_by_path()
+>         https://git.kernel.org/vfs/vfs/c/3d27892a4be7
+> [07/29] xen/blkback: Convert to bdev_open_by_dev()
+>         https://git.kernel.org/vfs/vfs/c/26afb0ed10b3
+> [08/29] zram: Convert to use bdev_open_by_dev()
+>         https://git.kernel.org/vfs/vfs/c/efc8e3f4c6dc
+> [09/29] bcache: Convert to bdev_open_by_path()
+>         https://git.kernel.org/vfs/vfs/c/dc893f51d24a
+> [10/29] dm: Convert to bdev_open_by_dev()
+>         https://git.kernel.org/vfs/vfs/c/80c2267c6d07
+> [11/29] md: Convert to bdev_open_by_dev()
+>         https://git.kernel.org/vfs/vfs/c/15db36126ca6
+> [12/29] mtd: block2mtd: Convert to bdev_open_by_dev/path()
+>         https://git.kernel.org/vfs/vfs/c/4c27234bf3ce
+> [13/29] nvmet: Convert to bdev_open_by_path()
+>         https://git.kernel.org/vfs/vfs/c/70cffddcc300
+> [14/29] s390/dasd: Convert to bdev_open_by_path()
+>         https://git.kernel.org/vfs/vfs/c/5581d03457f8
+> [15/29] scsi: target: Convert to bdev_open_by_path()
+>         https://git.kernel.org/vfs/vfs/c/43de7d844d47
+> [16/29] PM: hibernate: Convert to bdev_open_by_dev()
+>         https://git.kernel.org/vfs/vfs/c/105ea4a2fd18
+> [17/29] PM: hibernate: Drop unused snapshot_test argument
+>         https://git.kernel.org/vfs/vfs/c/b589a66e3688
+> [18/29] mm/swap: Convert to use bdev_open_by_dev()
+>         https://git.kernel.org/vfs/vfs/c/615af8e29233
+> [19/29] fs: Convert to bdev_open_by_dev()
+>         https://git.kernel.org/vfs/vfs/c/5173192bcfe6
+> [20/29] btrfs: Convert to bdev_open_by_path()
+>         https://git.kernel.org/vfs/vfs/c/8cf64782764f
+> [21/29] erofs: Convert to use bdev_open_by_path()
+>         https://git.kernel.org/vfs/vfs/c/4d41880bf249
+> [22/29] ext4: Convert to bdev_open_by_dev()
+>         https://git.kernel.org/vfs/vfs/c/f7507612395e
+> [23/29] f2fs: Convert to bdev_open_by_dev/path()
+>         https://git.kernel.org/vfs/vfs/c/d9ff8e3b6498
+> [24/29] jfs: Convert to bdev_open_by_dev()
+>         https://git.kernel.org/vfs/vfs/c/459dc6376338
+> [25/29] nfs/blocklayout: Convert to use bdev_open_by_dev/path()
+>         https://git.kernel.org/vfs/vfs/c/5b1df9a40929
+> [26/29] ocfs2: Convert to use bdev_open_by_dev()
+>         https://git.kernel.org/vfs/vfs/c/b6b95acbd943
+> [27/29] reiserfs: Convert to bdev_open_by_dev/path()
+>         https://git.kernel.org/vfs/vfs/c/7e3615ff6119
+> [28/29] xfs: Convert to bdev_open_by_path()
+>         https://git.kernel.org/vfs/vfs/c/176ccb99e207
+> [29/29] block: Remove blkdev_get_by_*() functions
+>         https://git.kernel.org/vfs/vfs/c/953863a5a2ff
 -- 
-Dave Chinner
-david@fromorbit.com
+Jan Kara <jack@suse.com>
+SUSE Labs, CR
