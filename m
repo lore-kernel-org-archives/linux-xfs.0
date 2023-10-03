@@ -2,111 +2,147 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E0E48E7AD7F
-	for <linux-xfs@archiver.kernel.org>; Tue,  3 Oct 2023 16:56:12 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 225B8E748FA
+	for <linux-xfs@archiver.kernel.org>; Tue,  3 Oct 2023 17:33:21 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S240554AbjJCQ4M (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 3 Oct 2023 12:56:12 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59354 "EHLO
+        id S230420AbjJCRdW (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 3 Oct 2023 13:33:22 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38340 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S240538AbjJCQ4C (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 3 Oct 2023 12:56:02 -0400
-Received: from mail-pl1-f177.google.com (mail-pl1-f177.google.com [209.85.214.177])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 461431B9;
-        Tue,  3 Oct 2023 09:55:44 -0700 (PDT)
-Received: by mail-pl1-f177.google.com with SMTP id d9443c01a7336-1c60cec8041so8245445ad.3;
-        Tue, 03 Oct 2023 09:55:44 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1696352143; x=1696956943;
-        h=content-transfer-encoding:in-reply-to:from:references:cc:to
-         :content-language:subject:user-agent:mime-version:date:message-id
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=/OTDR5NyHbb5QfDMSXNmt2Tc0LOejPzxDMttSZkL2/8=;
-        b=WnnfO7+aeMjMYVsL9+tl0f+FVNbYr0lkeWaff6duPro/NnGxvZwDDnKZc7OEZD6V49
-         Esd1l8CbORy4KX1EvAevdXtx6zvZhdjsYuIkFt2ilApQcXo9EFCfzw6mFBzAm/3ibSxU
-         ywF+XIfY/xSI7uLR9a+pZDqHHGVgDTpzPqpU/wBYthqYTIV361qvSgLtd1EWrW/6ZwXi
-         bojGkE1AzEqXysDm7OPEaKwBL5QQNl51GT2mCuESv3mfagNY7RPeJNFl6F8Oss83vtlx
-         OOSFpDADfnzM6jhQpaY/87v18Erw4a2ya5+CRPV9Uc2HC+U1qpQH7ACcIa4Hp2WbS1PD
-         JWKg==
-X-Gm-Message-State: AOJu0YzqCwHu2g44Yphp90kHix7zGTeOqT46KYvGkEHcEXv/OMCiNFNa
-        pmeYbJeTW1eLuXu0ZZM8pnI=
-X-Google-Smtp-Source: AGHT+IHkImNltSCEcrQL09yiA54GtSP4oWfRcumNXnmrqYOlKYAw0cgN14lN/1BxGiHV1bJDHfZauw==
-X-Received: by 2002:a17:902:a415:b0:1c7:443d:7412 with SMTP id p21-20020a170902a41500b001c7443d7412mr174904plq.26.1696352143218;
-        Tue, 03 Oct 2023 09:55:43 -0700 (PDT)
-Received: from ?IPV6:2620:15c:211:201:fc96:5ba7:a6f5:b187? ([2620:15c:211:201:fc96:5ba7:a6f5:b187])
-        by smtp.gmail.com with ESMTPSA id j4-20020a170902c3c400b001c5de42c185sm1801070plj.253.2023.10.03.09.55.41
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Tue, 03 Oct 2023 09:55:42 -0700 (PDT)
-Message-ID: <db6a950b-1308-4ca1-9f75-6275118bdcf5@acm.org>
-Date:   Tue, 3 Oct 2023 09:55:40 -0700
+        with ESMTP id S230245AbjJCRdW (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 3 Oct 2023 13:33:22 -0400
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D595D9B;
+        Tue,  3 Oct 2023 10:33:18 -0700 (PDT)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 6FA5EC433C8;
+        Tue,  3 Oct 2023 17:33:18 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1696354398;
+        bh=PQdnMeXAjhP6tZYTGv5AYxPws/vb5p3nfnwhAt47/LU=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=ouq0LTrVu61iySOqqm5O2auMfuCrpnUMDz9gfuaA3YzXByVnHzjMoMIApl3dONpTO
+         W8dOdmyW96N/R42rrfidj8sOpOtldjHDEA6XDyvuKvQRq9deU9Tcc7cKLd9BA4XuA7
+         wDr2K1lliZUCWKXSuUXs7K8Gxr1dhZep8x3pJ5RHlWwxZFPnqCSxfWnp/JCE0j13eu
+         UbXOrofDQ/Gy4+OFhkoqaGKLvgzzvDmr+73Wod0Xn9YgK0zusJ7c0YgfehKCD00z8/
+         zDhrwXPsEYdaOpehEEXZNDlt8x9j5aeAurk02qyD5NihJrOMo5BIjKyARzIBNuIYsT
+         np1ETV0mpw/4Q==
+Date:   Tue, 3 Oct 2023 10:33:17 -0700
+From:   "Darrick J. Wong" <djwong@kernel.org>
+To:     Dave Chinner <david@fromorbit.com>
+Cc:     cheng.lin130@zte.com.cn, linux-xfs@vger.kernel.org,
+        linux-kernel@vger.kernel.org, jiang.yong5@zte.com.cn,
+        wang.liang82@zte.com.cn, liu.dong3@zte.com.cn
+Subject: Re: [PATCH v3] xfs: introduce protection for drop nlink
+Message-ID: <20231003173317.GI21298@frogsfrogsfrogs>
+References: <ZQqI5KNgghI5iFrC@dread.disaster.area>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH 10/21] block: Add fops atomic write support
-Content-Language: en-US
-To:     "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc:     John Garry <john.g.garry@oracle.com>, axboe@kernel.dk,
-        kbusch@kernel.org, hch@lst.de, sagi@grimberg.me,
-        jejb@linux.ibm.com, djwong@kernel.org, viro@zeniv.linux.org.uk,
-        brauner@kernel.org, chandan.babu@oracle.com, dchinner@redhat.com,
-        linux-block@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-nvme@lists.infradead.org, linux-xfs@vger.kernel.org,
-        linux-fsdevel@vger.kernel.org, tytso@mit.edu, jbongio@google.com,
-        linux-api@vger.kernel.org
-References: <20230929102726.2985188-1-john.g.garry@oracle.com>
- <20230929102726.2985188-11-john.g.garry@oracle.com>
- <17ee1669-5830-4ead-888d-a6a4624b638a@acm.org>
- <5d26fa3b-ec34-bc39-ecfe-4616a04977ca@oracle.com>
- <b7a6f380-c6fa-45e0-b727-ba804c6684e4@acm.org>
- <yq1lecktuoo.fsf@ca-mkp.ca.oracle.com>
-From:   Bart Van Assche <bvanassche@acm.org>
-In-Reply-To: <yq1lecktuoo.fsf@ca-mkp.ca.oracle.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <ZQqI5KNgghI5iFrC@dread.disaster.area>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On 10/2/23 17:48, Martin K. Petersen wrote:
+On Wed, Sep 20, 2023 at 03:53:40PM +1000, Dave Chinner wrote:
+> On Mon, Sep 18, 2023 at 08:33:35PM -0700, Darrick J. Wong wrote:
+> > On Mon, Sep 18, 2023 at 03:48:38PM +1000, Dave Chinner wrote:
+> > > It is only when we are trying to modify something that corruption
+> > > becomes a problem with fatal consequences. Once we've made a
+> > > modification, the in-memory state is different to the on-disk state
+> > > and whilst we are in that state any corruption we discover becomes
+> > > fatal. That is because there is no way to reconcile the changes
+> > > we've already made in memory with what is on-disk - we don't know
+> > > that the in-memory changes are good because we tripped over
+> > > corruption, and so we must not propagate bad in-memory state and
+> > > metadata to disk over the top of what may be still be uncorrupted
+> > > metadata on disk.
+> > 
+> > It'd be a massive effort, but wouldn't it be fun if one could attach
+> > defer ops to a transaction that updated incore state on commit but
+> > otherwise never appeared on disk?
+> >
+> > Let me cogitate on that during part 2 of vacation...
 > 
-> Bart,
+> Sure, I'm interested to see what you might come up with.
 > 
->> Are there any SCSI devices that we care about that report an ATOMIC
->> TRANSFER LENGTH GRANULARITY that is larger than a single logical
->> block?
+> My thoughts on rollback of dirty transactions come from a different
+> perspective.
 > 
-> Yes.
+> Conceptually being able to roll back individual transactions isn't
+> that difficult. All it takes is a bit more memory and CPU - when we
+> join the item to the transaction we take a copy of the item we are
+> about to modify.
 > 
-> Note that code path used inside a storage device to guarantee atomicity
-> of an entire I/O may be substantially different from the code path which
-> only offers an incremental guarantee at a single logical or physical
-> block level (to the extent that those guarantees are offered at all but
-> that's a different kettle of fish).
+> If we then cancel a dirty transaction, we then roll back all the
+> dirty items to their original state before we unlock them.  This
+> works fine for all the on-disk stuff we track in log items.
 > 
->> I'm wondering whether we really have to support such devices.
+> I have vague thoughts about how this could potentially be tied into
+> the shadow buffers we already use for keeping a delta copy of all
+> the committed in-memory changes in the CIL that we haven't yet
+> committed to the journal - that's actually the entire delta between
+> what is on disk and what we've changed prior to the current
+> transaction we are cancelling.
 > 
-> Yes.
+> Hence, in theory, a rollback for a dirty log item is simply "read it
+> from disk again, copy the CIL shadow buffer delta into it".
 
-Hi Martin,
+<nod> That's more or less the same as what I was thinking.
 
-I'm still wondering whether we really should support storage devices
-that report an ATOMIC TRANSFER LENGTH GRANULARITY that is larger than
-the logical block size. Is my understanding correct that the NVMe
-specification makes it mandatory to support single logical block atomic
-writes since the smallest value that can be reported as the AWUN 
-parameter is one logical block because this parameter is a 0's based
-value? Is my understanding correct that SCSI devices that report an 
-ATOMIC TRANSFER LENGTH GRANULARITY that is larger than the logical block
-size are not able to support the NVMe protocol?
+> However, the complexity comes with trying to roll back associated
+> in-memory state changes that we don't track as log items.  e.g.
+> incore extent list changes, in memory inode flag state (e.g.
+> XFS_ISTALE), etc. that's where all the hard problems to solve lie, I
+> think.
 
- From the NVMe specification section about the identify controller 
-response: "Atomic Write Unit Normal (AWUN): This field indicates the 
-size of the write operation guaranteed to be written atomically to the 
-NVM across all namespaces with any supported namespace format during 
-normal operation. This field is specified in logical blocks and is a 0’s 
-based value."
+Yeah.  I was thinking that each of those incore state changes could be
+implemented as a defer_ops that have NOP ->create_intent and
+->create_done functions.  The ->finish_item would actually update the
+incore structure.  This would be a very large project, and I'm not sure
+that it wouldn't be easier to snapshot the xfs_inode fields themselves,
+similar to how inode log items snapshot xfs_dinode fields.
 
-Thanks,
+(Snapshotting probably doesn't work for the more complex incore
+inode structures.)
 
-Bart.
+Kent has been wrangling with this problem for a while in bcachefs and I
+think he's actually gotten the rollbacks to work more or less correctly.
+He told me that it was a significant restructuring of his codebase even
+though *everything* is tracked in btrees and the cursor abstraction
+there is more robust than xfs.
 
+> Another problem is how do we rollback from the middle of an intent
+> (defer ops) chain? We have to complete that chain for things to end
+> up consistent on disk, so we can't just cancel the current
+> transaction and say we are done and everything is clean.  Maybe
+> that's what you are thinking of here - each chain has an "undo"
+> intent chain that can roll back all the changes already made?
 
+Yes.  Every time we call ->finish_item on a log intent item, we also log
+a new intent item that undoes whatever that step did.  These items we'll
+call "log undo intent" items, and put them on a separate list, e.g.
+tp->t_undoops.  If the chain completes successfully then the last step
+is to abort everything on t_undoops to release all that memory.
+
+If the chain does not succeed, then we'd abort the intents on t_dfops,
+splice t_undoops onto t_dfops, and call xfs_defer_finish to write the
+log undo intent items to disk and finish them.  If /that/ fails then we
+have to shutdown.
+
+I think this also means that buffer updates that are logged from a
+->finish_item function should not be cancelled per above, since the undo
+intent item will take care of that.  That would be easy if btree updates
+made by an efi/cui/rui items used ordered buffers instead of logging
+them directly like we do now.
+
+For bui items, I think we'd need ordered buffers for bmbt updates and
+snapshotting inode items for the inode updates themselves.
+
+--D
+
+> Cheers,
+> 
+> Dave.
+> -- 
+> Dave Chinner
+> david@fromorbit.com
