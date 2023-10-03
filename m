@@ -2,147 +2,146 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 225B8E748FA
-	for <linux-xfs@archiver.kernel.org>; Tue,  3 Oct 2023 17:33:21 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 64BBBE8FDC0
+	for <linux-xfs@archiver.kernel.org>; Tue,  3 Oct 2023 23:16:02 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230420AbjJCRdW (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 3 Oct 2023 13:33:22 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38340 "EHLO
+        id S231504AbjJCXQD (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 3 Oct 2023 19:16:03 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49100 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230245AbjJCRdW (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 3 Oct 2023 13:33:22 -0400
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D595D9B;
-        Tue,  3 Oct 2023 10:33:18 -0700 (PDT)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 6FA5EC433C8;
-        Tue,  3 Oct 2023 17:33:18 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1696354398;
-        bh=PQdnMeXAjhP6tZYTGv5AYxPws/vb5p3nfnwhAt47/LU=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=ouq0LTrVu61iySOqqm5O2auMfuCrpnUMDz9gfuaA3YzXByVnHzjMoMIApl3dONpTO
-         W8dOdmyW96N/R42rrfidj8sOpOtldjHDEA6XDyvuKvQRq9deU9Tcc7cKLd9BA4XuA7
-         wDr2K1lliZUCWKXSuUXs7K8Gxr1dhZep8x3pJ5RHlWwxZFPnqCSxfWnp/JCE0j13eu
-         UbXOrofDQ/Gy4+OFhkoqaGKLvgzzvDmr+73Wod0Xn9YgK0zusJ7c0YgfehKCD00z8/
-         zDhrwXPsEYdaOpehEEXZNDlt8x9j5aeAurk02qyD5NihJrOMo5BIjKyARzIBNuIYsT
-         np1ETV0mpw/4Q==
-Date:   Tue, 3 Oct 2023 10:33:17 -0700
-From:   "Darrick J. Wong" <djwong@kernel.org>
-To:     Dave Chinner <david@fromorbit.com>
-Cc:     cheng.lin130@zte.com.cn, linux-xfs@vger.kernel.org,
-        linux-kernel@vger.kernel.org, jiang.yong5@zte.com.cn,
-        wang.liang82@zte.com.cn, liu.dong3@zte.com.cn
-Subject: Re: [PATCH v3] xfs: introduce protection for drop nlink
-Message-ID: <20231003173317.GI21298@frogsfrogsfrogs>
-References: <ZQqI5KNgghI5iFrC@dread.disaster.area>
+        with ESMTP id S232568AbjJCXQB (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 3 Oct 2023 19:16:01 -0400
+Received: from mail-pl1-x62c.google.com (mail-pl1-x62c.google.com [IPv6:2607:f8b0:4864:20::62c])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id ABCC4A6
+        for <linux-xfs@vger.kernel.org>; Tue,  3 Oct 2023 16:15:57 -0700 (PDT)
+Received: by mail-pl1-x62c.google.com with SMTP id d9443c01a7336-1c5bf7871dcso11930475ad.1
+        for <linux-xfs@vger.kernel.org>; Tue, 03 Oct 2023 16:15:57 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=fromorbit-com.20230601.gappssmtp.com; s=20230601; t=1696374957; x=1696979757; darn=vger.kernel.org;
+        h=content-disposition:mime-version:message-id:subject:cc:to:from:date
+         :from:to:cc:subject:date:message-id:reply-to;
+        bh=5rokGTjJfgEdROuwYwV4PfiTYbXXrRCNCYQgZjymxJY=;
+        b=m2syeaI6ZuggPTVY1YSlQEMxTPOKDsq9LmnK0QRHWMybSv2D0adx7xuf8wY2TaV3LX
+         Gyo95vWUjAyDm7o5GFqXNr2zeleS6X6GNJeLhBDNEc0bz4CMHlUqrsExcrwf4RJis+Mm
+         4ZQE4qde++Qyz39g/+MA/l5jvq8O5anwT0zs3vOpQ6o17BWTyLyXg4UyNnwVwPNduYUm
+         f2huEE4uqowc6D9XNPYkk5P1/6ENLK241tUNLCAG2eKpKnItRoIi2c8pxsj3spRN+US7
+         v+H0RX1DIGf1LIbb+MSKrwCSj4WC0y6aFGvQiSUdyxvpKDrBrxRIo7XmcyuGuTiFW9Z2
+         4ztg==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1696374957; x=1696979757;
+        h=content-disposition:mime-version:message-id:subject:cc:to:from:date
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=5rokGTjJfgEdROuwYwV4PfiTYbXXrRCNCYQgZjymxJY=;
+        b=OemJbJMqAkNaWIsY2f/5Gcw1Z4ic/aNRapQWTsZpo4AbP8I8ZPlW8mLDZRbzVGKAU+
+         iNtJFqjX7CUiQ1KIZ4XktZiyZpcvLH/EJX34QY3iR2dpHfIft15XEKkWSEQmWom0xLeR
+         CnfxHs79mnepE4Bw6+dSpZa3Iop75ONTRkeMPV470c+W6xuDIpAizrITXrLauZtT+h2f
+         ZMzfCVOybxJ3fkuMC6WhQ8fKg/1Gwewj9N/kLbwz5z21lNCDGiCutxKWpF1t3ijLFQTG
+         Aei+XupxUSnhkASjsJtoTGZZu+/QjM5BBvkW/h538zZohWvdAYoBXSrfZAHf2XKDY2zV
+         a4Qw==
+X-Gm-Message-State: AOJu0YyqEaFM4Jdj2mOo8YL3kTHvG5HbBkiU3CBRVoq4c3E27/44siN4
+        Xwi3jcUxAYtIV9b68VdGZc3ExWO+WoW781HbRns=
+X-Google-Smtp-Source: AGHT+IHYLfNxyX4NczKutNgvbFWzl6+1cNeIPittYrBA/TMiB8lPUAluIDMlSd1xvM+HSE2HEbSEfg==
+X-Received: by 2002:a17:903:22cd:b0:1bf:3c10:1d70 with SMTP id y13-20020a17090322cd00b001bf3c101d70mr1195685plg.6.1696374957064;
+        Tue, 03 Oct 2023 16:15:57 -0700 (PDT)
+Received: from dread.disaster.area (pa49-180-20-59.pa.nsw.optusnet.com.au. [49.180.20.59])
+        by smtp.gmail.com with ESMTPSA id jj9-20020a170903048900b001c44dbc92a2sm2165623plb.184.2023.10.03.16.15.56
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Tue, 03 Oct 2023 16:15:56 -0700 (PDT)
+Received: from dave by dread.disaster.area with local (Exim 4.96)
+        (envelope-from <david@fromorbit.com>)
+        id 1qnocM-0096Cd-0c;
+        Wed, 04 Oct 2023 10:15:54 +1100
+Date:   Wed, 4 Oct 2023 10:15:54 +1100
+From:   Dave Chinner <david@fromorbit.com>
+To:     Chandan Babu R <chandanbabu@kernel.org>
+Cc:     linux-xfs@vger.kernel.org
+Subject: [GIT PULL] xfs: use busy extents for fstrim
+Message-ID: <ZRygqkCkbH32I+x9@dread.disaster.area>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <ZQqI5KNgghI5iFrC@dread.disaster.area>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Wed, Sep 20, 2023 at 03:53:40PM +1000, Dave Chinner wrote:
-> On Mon, Sep 18, 2023 at 08:33:35PM -0700, Darrick J. Wong wrote:
-> > On Mon, Sep 18, 2023 at 03:48:38PM +1000, Dave Chinner wrote:
-> > > It is only when we are trying to modify something that corruption
-> > > becomes a problem with fatal consequences. Once we've made a
-> > > modification, the in-memory state is different to the on-disk state
-> > > and whilst we are in that state any corruption we discover becomes
-> > > fatal. That is because there is no way to reconcile the changes
-> > > we've already made in memory with what is on-disk - we don't know
-> > > that the in-memory changes are good because we tripped over
-> > > corruption, and so we must not propagate bad in-memory state and
-> > > metadata to disk over the top of what may be still be uncorrupted
-> > > metadata on disk.
-> > 
-> > It'd be a massive effort, but wouldn't it be fun if one could attach
-> > defer ops to a transaction that updated incore state on commit but
-> > otherwise never appeared on disk?
-> >
-> > Let me cogitate on that during part 2 of vacation...
-> 
-> Sure, I'm interested to see what you might come up with.
-> 
-> My thoughts on rollback of dirty transactions come from a different
-> perspective.
-> 
-> Conceptually being able to roll back individual transactions isn't
-> that difficult. All it takes is a bit more memory and CPU - when we
-> join the item to the transaction we take a copy of the item we are
-> about to modify.
-> 
-> If we then cancel a dirty transaction, we then roll back all the
-> dirty items to their original state before we unlock them.  This
-> works fine for all the on-disk stuff we track in log items.
-> 
-> I have vague thoughts about how this could potentially be tied into
-> the shadow buffers we already use for keeping a delta copy of all
-> the committed in-memory changes in the CIL that we haven't yet
-> committed to the journal - that's actually the entire delta between
-> what is on disk and what we've changed prior to the current
-> transaction we are cancelling.
-> 
-> Hence, in theory, a rollback for a dirty log item is simply "read it
-> from disk again, copy the CIL shadow buffer delta into it".
+Hi Chandan,
 
-<nod> That's more or less the same as what I was thinking.
+Can you please pull the changes to fstrim behaviour from the signed
+tag below? This has been rebased on 6.6-rc4 so should merge cleanly
+into a current tree.
 
-> However, the complexity comes with trying to roll back associated
-> in-memory state changes that we don't track as log items.  e.g.
-> incore extent list changes, in memory inode flag state (e.g.
-> XFS_ISTALE), etc. that's where all the hard problems to solve lie, I
-> think.
+Thanks,
 
-Yeah.  I was thinking that each of those incore state changes could be
-implemented as a defer_ops that have NOP ->create_intent and
-->create_done functions.  The ->finish_item would actually update the
-incore structure.  This would be a very large project, and I'm not sure
-that it wouldn't be easier to snapshot the xfs_inode fields themselves,
-similar to how inode log items snapshot xfs_dinode fields.
+Dave.
 
-(Snapshotting probably doesn't work for the more complex incore
-inode structures.)
+----------------------------------------------------------------
+The following changes since commit 8a749fd1a8720d4619c91c8b6e7528c0a355c0aa:
 
-Kent has been wrangling with this problem for a while in bcachefs and I
-think he's actually gotten the rollbacks to work more or less correctly.
-He told me that it was a significant restructuring of his codebase even
-though *everything* is tracked in btrees and the cursor abstraction
-there is more robust than xfs.
+  Linux 6.6-rc4 (2023-10-01 14:15:13 -0700)
 
-> Another problem is how do we rollback from the middle of an intent
-> (defer ops) chain? We have to complete that chain for things to end
-> up consistent on disk, so we can't just cancel the current
-> transaction and say we are done and everything is clean.  Maybe
-> that's what you are thinking of here - each chain has an "undo"
-> intent chain that can roll back all the changes already made?
+are available in the Git repository at:
 
-Yes.  Every time we call ->finish_item on a log intent item, we also log
-a new intent item that undoes whatever that step did.  These items we'll
-call "log undo intent" items, and put them on a separate list, e.g.
-tp->t_undoops.  If the chain completes successfully then the last step
-is to abort everything on t_undoops to release all that memory.
+  git://git.kernel.org/pub/scm/linux/kernel/git/dgc/linux-xfs tags/xfs-fstrim-busy-tag
 
-If the chain does not succeed, then we'd abort the intents on t_dfops,
-splice t_undoops onto t_dfops, and call xfs_defer_finish to write the
-log undo intent items to disk and finish them.  If /that/ fails then we
-have to shutdown.
+for you to fetch changes up to e78a40b851712b422d7d4ae345f25511d47a9a38:
 
-I think this also means that buffer updates that are logged from a
-->finish_item function should not be cancelled per above, since the undo
-intent item will take care of that.  That would be easy if btree updates
-made by an efi/cui/rui items used ordered buffers instead of logging
-them directly like we do now.
+  xfs: abort fstrim if kernel is suspending (2023-10-04 09:25:04 +1100)
 
-For bui items, I think we'd need ordered buffers for bmbt updates and
-snapshotting inode items for the inode updates themselves.
+----------------------------------------------------------------
+xfs: reduce AGF hold times during fstrim operations
 
---D
+A recent log space overflow and recovery failure was root caused to
+a long running truncate blocking on the AGF and ending up pinning
+the tail of the log. The filesystem then hung, the machine was
+rebooted, and log recoery then refused to run because there wasn't
+enough space in the log for EFI transaction reservation.
 
-> Cheers,
-> 
-> Dave.
-> -- 
-> Dave Chinner
-> david@fromorbit.com
+The reason the long running truncate got blocked on the AGF for so
+long was that an fstrim was being run. THe underlying block device
+was large and very slow (10TB ceph rbd volume) and so discarding all
+the free space in the AG took a really long time.
+
+The current fstrim implementation holds the AGF across the entire
+operations - both the freee space scan and the issuing of all the
+discards. The discards are synchronous and single depth, so if there
+are millions of free spaces, we hold the AGF lock across millions of
+discard operations.
+
+It doesn't really need to be said that this is a Bad Thing.
+
+This series reworks the fstrim discard path to use the same
+mechanisms as online discard. This allows discards to be issued
+asynchronously without holding the AGF locked, enabling higher
+discard queue depths (much faster on fast devices) and only
+requiring the AGF lock to be held whilst we are scanning free space.
+
+To do this, we make use of busy extents - we lock the AGF, mark all
+the extents we want to discard as "busy under discard" so that
+nothing will be allowed to allocate them, and then drop the AGF
+lock. We then issue discards on the gathered busy extents and on
+discard completion remove them from the busy list.
+
+This results in AGF lock holds times for fstrim dropping to a few
+milliseconds each batch of free extents we scan, and so the hours
+long hold times that can currently occur on large, slow, badly
+fragmented device no longer occur.
+
+Signed-off-by: Dave Chinner <dchinner@redhat.com>
+
+----------------------------------------------------------------
+Dave Chinner (3):
+      xfs: move log discard work to xfs_discard.c
+      xfs: reduce AGF hold times during fstrim operations
+      xfs: abort fstrim if kernel is suspending
+
+ fs/xfs/xfs_discard.c     | 266 ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++-------
+ fs/xfs/xfs_discard.h     |   6 +-
+ fs/xfs/xfs_extent_busy.c |  34 ++++++++--
+ fs/xfs/xfs_extent_busy.h |  24 ++++++-
+ fs/xfs/xfs_log_cil.c     |  93 ++++-----------------------
+ fs/xfs/xfs_log_priv.h    |   5 +-
+ 6 files changed, 311 insertions(+), 117 deletions(-)
+
+-- 
+Dave Chinner
+david@fromorbit.com
