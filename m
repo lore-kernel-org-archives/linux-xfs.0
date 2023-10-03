@@ -2,74 +2,105 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E5B12E75451
-	for <linux-xfs@archiver.kernel.org>; Tue,  3 Oct 2023 11:51:10 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 93BF2E7544F
+	for <linux-xfs@archiver.kernel.org>; Tue,  3 Oct 2023 11:58:23 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231770AbjJCLvL (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 3 Oct 2023 07:51:11 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60354 "EHLO
+        id S231849AbjJCL6Y (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 3 Oct 2023 07:58:24 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37944 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231849AbjJCLvL (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 3 Oct 2023 07:51:11 -0400
+        with ESMTP id S240317AbjJCLPu (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 3 Oct 2023 07:15:50 -0400
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A0095A3
-        for <linux-xfs@vger.kernel.org>; Tue,  3 Oct 2023 04:51:08 -0700 (PDT)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 1CCB7C433C7;
-        Tue,  3 Oct 2023 11:51:06 +0000 (UTC)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B3540CC8
+        for <linux-xfs@vger.kernel.org>; Tue,  3 Oct 2023 04:15:32 -0700 (PDT)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 0688EC433C8;
+        Tue,  3 Oct 2023 11:15:30 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1696333867;
-        bh=612PEr6dhfiiXad21E3wJ6MsRRhhhqfgNpta+RkHdEE=;
+        s=k20201202; t=1696331732;
+        bh=x68g4dzkKb6zTc6vIixMy8Zl5fHLoD9iqTFjCmphKuA=;
         h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=cuAfxgIR1h6e7kOdwfzp2Fxo2LmsdSZ5Pv3uJeAznISvkfp/mzjk9EEz5dmFregdQ
-         K4aEnxOt+YtcxehInTO/iNl5ahWVdy9jPF2O6f3ddktJCuZJfxbzDpOiVCCIs7NV1M
-         ZR4mgBNVVA72KR//fji0Vehbwa5OFdLE3rtEppaIyHj8c6ouY17uE+WE6vhVqEp/BJ
-         aEYsbnsnxSW93uRkScXzQpzFqVb7lrHIUYruvBeGTwPeFVQ8lwUuaynVf41AeZhOXl
-         vigRRtPt0gR+BiBubf7SFa07yMjtSZG3TfwQFYuR2HF0ttDQBPSuT9Sw26hV0/nwDX
-         erw5g7rR3VxmQ==
-Date:   Tue, 3 Oct 2023 13:51:04 +0200
+        b=ug7k0gfDAzyo8E+owaWiu+vSa7wHml+bT7pPHRG+RU8cyB9/Cd8YA8wVxjflWvjsg
+         8AslYBCn86zp8T+VMuRk5ohl6VJZeMOw4V54EeeTrYsBjAfXY6AYIUh+ueAt1rAkS6
+         E7AVH7xE/sZJQHgaOKG7e8R5vVRHZhi8Ok0VNSTuQZSUqNdKAzUyjXfZsQVtmgM1f3
+         Rf6LpL4JzcUzlBnuTrFpkmsRHl/FpaL76R32Pw8T8gWXBrhAeTIckWry+CTJ+OcXND
+         epdTSjDx97Vnd+XE9Pfcet2Lh7WbGKjDk3bn8dTkMGrBAQV7RcYPbJ1UeMhcagEKvw
+         Mwf6HZS4tKLnQ==
+Date:   Tue, 3 Oct 2023 13:15:27 +0200
 From:   Carlos Maiolino <cem@kernel.org>
 To:     "Darrick J. Wong" <djwong@kernel.org>
-Cc:     linux-xfs@vger.kernel.org
-Subject: Re: [PATCHSET 0/3] xfsprogs: adjust defaults for 6.6 LTS kernels
-Message-ID: <20231003115104.3mvybiaezk6pdzpx@andromeda>
-References: <yYhBoMPNLxCHrIeX3b1PpvoBD6ldkuAl-kVPhaeM0nsUAoKVIpIGK4-HTmZFhRcMbLo2FutpL7v8k5fNiynxjg==@protonmail.internalid>
- <169567915945.2320343.12838353246024459529.stgit@frogsfrogsfrogs>
+Cc:     Krzesimir Nowak <qdlacz@gmail.com>, linux-xfs@vger.kernel.org,
+        Krzesimir Nowak <knowak@microsoft.com>
+Subject: Re: [PATCH 1/1] libfrog: Fix cross-compilation issue with randbytes
+Message-ID: <20231003111527.nkn3p2gpamfd5leh@andromeda>
+References: <20230926071432.51866-1-knowak@microsoft.com>
+ <20230926071432.51866-2-knowak@microsoft.com>
+ <snPbvVemO-KACiVV0MsnX0uHqamLCj_w6t-8_yyeSjozjPfI6TuWV4XCSBFPaP-H6MJSAzfhAGlyAl3PmwkzZA==@protonmail.internalid>
+ <20230926144100.GD11439@frogsfrogsfrogs>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <169567915945.2320343.12838353246024459529.stgit@frogsfrogsfrogs>
+In-Reply-To: <20230926144100.GD11439@frogsfrogsfrogs>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Mon, Sep 25, 2023 at 02:59:19PM -0700, Darrick J. Wong wrote:
-> Hi all,
+On Tue, Sep 26, 2023 at 07:41:00AM -0700, Darrick J. Wong wrote:
+> On Tue, Sep 26, 2023 at 09:14:32AM +0200, Krzesimir Nowak wrote:
+> > randbytes.c was mostly split off from crc32.c and, like crc32.c, is
+> > used for selftests, which are run on the build host. As such it should
+> > not include platform_defs.h which in turn includes urcu.h from
+> > userspace-rcu library, because the build host might not have the
+> > library installed.
 > 
-> This series enables reverse mapping and 64-bit extent counts by default.
-> These features are stable enough now, and with online fsck finished,
-> there's a compelling reason to start enabling it on customer systems.
+> Why not get rid of the build host crc32c selftest?  It's not that useful
+> for cross-compiling and nowadays mkfs.xfs and xfs_repair have their own
+> builtin selftests.  Anyone messing with xfsprogs should be running
+> fstests (in addition to the maintainers) so I don't really see the point
+> of running crc32cselftest on the *build* host.
 > 
-> If you're going to start using this code, I strongly recommend pulling
-> from my git trees, which are linked below.
-> 
-> This has been running on the djcloud for months with no problems.  Enjoy!
-> Comments and questions are, as always, welcome.
-> 
+> (Carlos: any thoughts on this?)
 
-For the series:
-Reviewed-by: Carlos Maiolino <cmaiolino@redhat.com>
+/me back from holidays...
+
+Yeah, sounds reasonable, IMO crc32selftest can go.
 
 Carlos
 
+> 
 > --D
 > 
-> xfsprogs git tree:
-> https://git.kernel.org/cgit/linux/kernel/git/djwong/xfsprogs-dev.git/log/?h=lts-6.6-stuff
-> ---
->  man/man8/mkfs.xfs.8.in |   11 ++++++-----
->  mkfs/Makefile          |    3 ++-
->  mkfs/lts_6.6.conf      |   14 ++++++++++++++
->  mkfs/xfs_mkfs.c        |    4 ++--
->  4 files changed, 24 insertions(+), 8 deletions(-)
->  create mode 100644 mkfs/lts_6.6.conf
-> 
+> > Signed-off-by: Krzesimir Nowak <knowak@microsoft.com>
+> > ---
+> >  libfrog/randbytes.c | 1 -
+> >  libfrog/randbytes.h | 2 ++
+> >  2 files changed, 2 insertions(+), 1 deletion(-)
+> >
+> > diff --git a/libfrog/randbytes.c b/libfrog/randbytes.c
+> > index f22da0d3..2023b601 100644
+> > --- a/libfrog/randbytes.c
+> > +++ b/libfrog/randbytes.c
+> > @@ -6,7 +6,6 @@
+> >   *
+> >   * This is the buffer of random bytes used for self tests.
+> >   */
+> > -#include "platform_defs.h"
+> >  #include "libfrog/randbytes.h"
+> >
+> >  /* 4096 random bytes */
+> > diff --git a/libfrog/randbytes.h b/libfrog/randbytes.h
+> > index 00fd7c4c..fddea9c7 100644
+> > --- a/libfrog/randbytes.h
+> > +++ b/libfrog/randbytes.h
+> > @@ -6,6 +6,8 @@
+> >  #ifndef __LIBFROG_RANDBYTES_H__
+> >  #define __LIBFROG_RANDBYTES_H__
+> >
+> > +#include <stdint.h>
+> > +
+> >  extern uint8_t randbytes_test_buf[];
+> >
+> >  #endif /* __LIBFROG_RANDBYTES_H__ */
+> > --
+> > 2.25.1
+> >
