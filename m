@@ -2,110 +2,121 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 82CE0E7C4E2
-	for <linux-xfs@archiver.kernel.org>; Wed,  4 Oct 2023 17:34:20 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 536ACE7C4E7
+	for <linux-xfs@archiver.kernel.org>; Wed,  4 Oct 2023 17:50:44 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233907AbjJDReV (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 4 Oct 2023 13:34:21 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48526 "EHLO
+        id S233541AbjJDRup (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 4 Oct 2023 13:50:45 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59466 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233721AbjJDReU (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 4 Oct 2023 13:34:20 -0400
-Received: from mail-pl1-f170.google.com (mail-pl1-f170.google.com [209.85.214.170])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id EA171A6;
-        Wed,  4 Oct 2023 10:34:16 -0700 (PDT)
-Received: by mail-pl1-f170.google.com with SMTP id d9443c01a7336-1c63164a2b6so9710405ad.0;
-        Wed, 04 Oct 2023 10:34:16 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1696440856; x=1697045656;
-        h=content-transfer-encoding:in-reply-to:from:references:cc:to
-         :content-language:subject:user-agent:mime-version:date:message-id
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=A+/9fMvIMylBk0tUbkGNvHwmLNtY7jK7qI7VPa1SYvo=;
-        b=kO0PWT5No7NlODxM63GhW7VUuyO89xEdHizAXlK+4KHh880crBurt3wcMndUKeqRTg
-         cwFuIZum5VQ11J9iIRMGoyE7VBadrFVYbGHI5HFJ5jRwjg/1PSjuFVitxe6osjG424ES
-         O1wo3WRSAr+hs0BGeakrA9EG/MOGp130rEEE7eraLidDqKBVK9PdZVBUlAPffJdtbwz3
-         r8W1MvCZ/XEZSdtBpRftKhaV7eMuW+IljlUYu4YWTuy+osXc1QhEuDD7Tvex9VoT6Tb/
-         yQj8TQlNY0w4eorwcS52ln4z57slUSuCM9yLZPKaaTUlMZCZrtBn515PscBtOgT2/ygR
-         etvQ==
-X-Gm-Message-State: AOJu0YxPlAE8R6YCYS2Nczjmk9A+QQz3ns7qdgRqyhu+NbRBnyrrljz7
-        r4PAv4lK056Xh8yhOi1shRQ=
-X-Google-Smtp-Source: AGHT+IG8R+DlyiiEVWC+68KptejH+cGLh+ypDyuFaNYiG/lvbHPG9T3lVvSCSBbHEXdRAJ132q1v4Q==
-X-Received: by 2002:a17:902:d4c4:b0:1c5:e207:836e with SMTP id o4-20020a170902d4c400b001c5e207836emr444422plg.26.1696440856149;
-        Wed, 04 Oct 2023 10:34:16 -0700 (PDT)
-Received: from ?IPV6:2620:15c:211:201:969d:167a:787c:a6c7? ([2620:15c:211:201:969d:167a:787c:a6c7])
-        by smtp.gmail.com with ESMTPSA id i1-20020a17090332c100b001bbb25dd3a7sm3978166plr.187.2023.10.04.10.34.14
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Wed, 04 Oct 2023 10:34:15 -0700 (PDT)
-Message-ID: <e6c7b33c-38ba-402b-abdc-b783d4402402@acm.org>
-Date:   Wed, 4 Oct 2023 10:34:13 -0700
+        with ESMTP id S243655AbjJDRup (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 4 Oct 2023 13:50:45 -0400
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A1757AD
+        for <linux-xfs@vger.kernel.org>; Wed,  4 Oct 2023 10:50:41 -0700 (PDT)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 24510C433CB;
+        Wed,  4 Oct 2023 17:50:41 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1696441841;
+        bh=pLQpBXeVK2ircCWRtxyQOyLjvhj8dNRHvI2AEQ54oHg=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=dVMb0EXY1lY1rvyXbHorrs7h6+u8kuaBToRh64qqPXDX5sffx3v83NACHlWF3tmxz
+         Kh5QI+qthzoo9DQRBp+rk1CjAnltK25MeBohIX/zVn21pAXAxy5K4Dic5G7NMsX57i
+         mLbCpcwxUQhI+nELQ6fkVrovFWTq3wyURq146NBh9DIwKdnmGpd87LlJcDSL5T7FQO
+         Y8QWVN793qlTH4UBSg6WczKe3PpZt+PCV1OGzLiGNPPrlixHWg95FGDZNa5cwMeuA/
+         TNldZrhmkiO75Kvx+0pqArpg6WzzyF3KhqKoj8nawEBxCrM71JkuqB3iRNDomm7AcF
+         5eiwlYYl0AlxQ==
+Date:   Wed, 4 Oct 2023 10:50:40 -0700
+From:   "Darrick J. Wong" <djwong@kernel.org>
+To:     Dan Williams <dan.j.williams@intel.com>
+Cc:     Eric Sandeen <sandeen@sandeen.net>,
+        Chandan Babu R <chandanbabu@kernel.org>,
+        Andrew Morton <akpm@linux-foundation.org>,
+        Shiyang Ruan <ruansy.fnst@fujitsu.com>,
+        Dave Chinner <david@fromorbit.com>, linux-xfs@vger.kernel.org,
+        nvdimm@lists.linux.dev
+Subject: Re: [PATCH] xfs: drop experimental warning for FSDAX
+Message-ID: <20231004175040.GJ21298@frogsfrogsfrogs>
+References: <87fs306zs1.fsf@debian-BULLSEYE-live-builder-AMD64>
+ <5c064cbd-13a3-4d55-9881-0a079476d865@fujitsu.com>
+ <bc29af15-ae63-407d-8ca0-186c976acce7@fujitsu.com>
+ <87y1gs83yq.fsf@debian-BULLSEYE-live-builder-AMD64>
+ <20230927083034.90bd6336229dd00af601e0ef@linux-foundation.org>
+ <9c3cbc0c-7135-4006-ad4a-2abce0a556b0@fujitsu.com>
+ <20230928092052.9775e59262c102dc382513ef@linux-foundation.org>
+ <87msx5f4a8.fsf@debian-BULLSEYE-live-builder-AMD64>
+ <4c985608-39f6-1a6e-ec95-42d7c3581d8d@sandeen.net>
+ <65171732329c4_c558e2946a@dwillia2-xfh.jf.intel.com.notmuch>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH 10/21] block: Add fops atomic write support
-Content-Language: en-US
-To:     John Garry <john.g.garry@oracle.com>, axboe@kernel.dk,
-        kbusch@kernel.org, hch@lst.de, sagi@grimberg.me,
-        jejb@linux.ibm.com, martin.petersen@oracle.com, djwong@kernel.org,
-        viro@zeniv.linux.org.uk, brauner@kernel.org,
-        chandan.babu@oracle.com, dchinner@redhat.com
-Cc:     linux-block@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-nvme@lists.infradead.org, linux-xfs@vger.kernel.org,
-        linux-fsdevel@vger.kernel.org, tytso@mit.edu, jbongio@google.com,
-        linux-api@vger.kernel.org
-References: <20230929102726.2985188-1-john.g.garry@oracle.com>
- <20230929102726.2985188-11-john.g.garry@oracle.com>
- <17ee1669-5830-4ead-888d-a6a4624b638a@acm.org>
- <5d26fa3b-ec34-bc39-ecfe-4616a04977ca@oracle.com>
- <b7a6f380-c6fa-45e0-b727-ba804c6684e4@acm.org>
- <1adeff8e-e2fe-7dc3-283e-4979f9bd6adc@oracle.com>
- <8e2f4aeb-e00e-453a-9658-b1c4ae352084@acm.org>
- <d981dea1-9851-6511-d101-22ea8d7fd31e@oracle.com>
-From:   Bart Van Assche <bvanassche@acm.org>
-In-Reply-To: <d981dea1-9851-6511-d101-22ea8d7fd31e@oracle.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
 Content-Transfer-Encoding: 8bit
+In-Reply-To: <65171732329c4_c558e2946a@dwillia2-xfh.jf.intel.com.notmuch>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On 10/4/23 02:14, John Garry wrote:
-> On 03/10/2023 17:45, Bart Van Assche wrote:
->> On 10/3/23 01:37, John Garry wrote:
->>> I don't think that is_power_of_2(write length) is specific to XFS.
->>
->> I think this is specific to XFS. Can you show me the F2FS code that 
->> restricts the length of an atomic write to a power of two? I haven't 
->> found it. The only power-of-two check that I found in F2FS is the 
->> following (maybe I overlooked something):
->>
->> $ git grep -nH is_power fs/f2fs
->> fs/f2fs/super.c:3914:    if (!is_power_of_2(zone_sectors)) {
+On Fri, Sep 29, 2023 at 11:28:02AM -0700, Dan Williams wrote:
+> Eric Sandeen wrote:
+> > On 9/29/23 9:17 AM, Chandan Babu R wrote:
+> > > On Thu, Sep 28, 2023 at 09:20:52 AM -0700, Andrew Morton wrote:
+> > >> On Thu, 28 Sep 2023 16:44:00 +0800 Shiyang Ruan <ruansy.fnst@fujitsu.com> wrote:
+> > >>
+> > >>> But please pick the following patch[1] as well, which fixes failures of 
+> > >>> xfs55[0-2] cases.
+> > >>>
+> > >>> [1] 
+> > >>> https://lore.kernel.org/linux-xfs/20230913102942.601271-1-ruansy.fnst@fujitsu.com
+> > >>
+> > >> I guess I can take that xfs patch, as it fixes a DAX patch.  I hope the xfs team
+> > >> are watching.
+> > >>
+> > >> But
+> > >>
+> > >> a) I'm not subscribed to linux-xfs and
+> > >>
+> > >> b) the changelog fails to describe the userspace-visible effects of
+> > >>    the bug, so I (and others) are unable to determine which kernel
+> > >>    versions should be patched.
+> > >>
+> > >> Please update that changelog and resend?
+> > > 
+> > > I will apply "xfs: correct calculation for agend and blockcount" patch to
+> > > xfs-linux Git tree and include it for the next v6.6 pull request to Linus.
+> > > 
+> > > At the outset, It looks like I can pick "mm, pmem, xfs: Introduce
+> > > MF_MEM_PRE_REMOVE for unbind"
+> > > (i.e. https://lore.kernel.org/linux-xfs/20230928103227.250550-1-ruansy.fnst@fujitsu.com/T/#u)
+> > > patch for v6.7 as well. But that will require your Ack. Please let me know
+> > > your opinion.
+> > > 
+> > > Also, I will pick "xfs: drop experimental warning for FSDAX" patch for v6.7.
+> > 
+> > While I hate to drag it out even longer, it seems slightly optimistic to
+> > drop experimental at the same time as the "last" fix, in case it's not
+> > really the last fix.
+> > 
+> > But I don't have super strong feelings about it, and I would be happy to
+> > finally see experimental go away. So if those who are more tuned into
+> > the details are comfortable with that 6.7 plan, I'll defer to them on
+> > the question.
 > 
-> Any usecases which we know of requires a power-of-2 block size.
+> The main blockage of "experimental" was the inability to specify
+> dax+reflink, and the concern that resolving that conflict would end up
+> breaking MAP_SYNC semantics or some other regression.
 > 
-> Do you know of a requirement for other sizes? Or are you concerned that 
-> it is unnecessarily restrictive?
+> The dax_notify_failure() work has resolved that conflict without
+> regressing semantics.
 > 
-> We have to deal with HW features like atomic write boundary and FS 
-> restrictions like extent and stripe alignment transparent, which are 
-> almost always powers-of-2, so naturally we would want to work with 
-> powers-of-2 for atomic write sizes.
-> 
-> The power-of-2 stuff could be dropped if that is what people want. 
-> However we still want to provide a set of rules to the user to make 
-> those HW and FS features mentioned transparent to the user.
+> Ultimately this is an XFS filesystem maintainer decision, but my
+> perspective is that v6.7-rc1 starts the clock on experimental going away
+> and if the bug reports stay quiet that state can persist into
+> v6.7-final.  If new reports crop up, revert the experimental removal and
+> try again for v6.8.
 
-Hi John,
+I'm ok with this.  Let's merge the PRE_REMOVE patch (and the arithematic
+fix) for 6.7-rc1.  If nobody screams during 6.7, send a patch to Linus
+removing EXPERIMENTAL after (say) 6.7-rc8.  DAX will no longer be
+experimental for the 2024 LTS.
 
-My concern is that the power-of-2 requirements are only needed for
-traditional filesystems and not for log-structured filesystems (BTRFS,
-F2FS, BCACHEFS).
-
-What I'd like to see is that each filesystem declares its atomic write
-requirements (in struct address_space_operations?) and that
-blkdev_atomic_write_valid() checks the filesystem-specific atomic write
-requirements.
-
-Thanks,
-
-Bart.
+--D
