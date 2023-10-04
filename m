@@ -2,741 +2,340 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 388ABE8FDBF
-	for <linux-xfs@archiver.kernel.org>; Wed,  4 Oct 2023 00:19:57 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 280C4E8FDC3
+	for <linux-xfs@archiver.kernel.org>; Wed,  4 Oct 2023 01:16:31 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S238126AbjJDAT5 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 3 Oct 2023 20:19:57 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59886 "EHLO
+        id S232430AbjJDBQc (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 3 Oct 2023 21:16:32 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58228 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232552AbjJDAT5 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 3 Oct 2023 20:19:57 -0400
-Received: from mail-pg1-x531.google.com (mail-pg1-x531.google.com [IPv6:2607:f8b0:4864:20::531])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D64C1AF
-        for <linux-xfs@vger.kernel.org>; Tue,  3 Oct 2023 17:19:51 -0700 (PDT)
-Received: by mail-pg1-x531.google.com with SMTP id 41be03b00d2f7-584a761b301so1070360a12.3
-        for <linux-xfs@vger.kernel.org>; Tue, 03 Oct 2023 17:19:51 -0700 (PDT)
+        with ESMTP id S232262AbjJDBQb (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 3 Oct 2023 21:16:31 -0400
+Received: from mail-pj1-x1030.google.com (mail-pj1-x1030.google.com [IPv6:2607:f8b0:4864:20::1030])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3FCC7AB
+        for <linux-xfs@vger.kernel.org>; Tue,  3 Oct 2023 18:16:28 -0700 (PDT)
+Received: by mail-pj1-x1030.google.com with SMTP id 98e67ed59e1d1-277550774e5so1050844a91.3
+        for <linux-xfs@vger.kernel.org>; Tue, 03 Oct 2023 18:16:28 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=fromorbit-com.20230601.gappssmtp.com; s=20230601; t=1696378791; x=1696983591; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=uu328fxBcBYqKT7aAM0FyKfXboClLkDuzWqmLPJ8l0w=;
-        b=z6LU5Li1AoqcutP0AhcbB0GUrWhhZ71/8c0KyF51Xz9S6M9I/aFvqfAL0fjTQtZLbD
-         wbt2REyF5HpADSzAcXp3IyQyHMIu3FEAFJYMd/n9z2nEvsIzJ6ZbtJT0JQ7BcD01jyTn
-         G1snbA76oADDUyUeFopKFlH89t8s0MMN1pq8rPXhAhTy0YbkT1xyFKhQC4ZYbNTTcwKg
-         BI8jvb+JX4GyZ3JAiU9whj4VzTKy5D3G4JTTMKAeIZW6CoRHcUGhPTdfPZg3JJQIw0BX
-         v2ZoOXFM8WJm3NjRmREBt+jdPWP8vn+RrvKG08hVZazUtvADXVU7FI6MfdUbIcPkCqDW
-         8QAw==
+        d=fromorbit-com.20230601.gappssmtp.com; s=20230601; t=1696382188; x=1696986988; darn=vger.kernel.org;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
+        bh=27OUlXqVAY5pph8VgkHut5jt4z0+Lj/b+tomTvgAza4=;
+        b=QthoRRAX1baBx3h8rgX8Bw+0FWLigoJo7DUnxOe8B8MEIyrb06X5OX699/5nX02v3l
+         WS4jjFjnGXObRCM4vjeoiySxa7JNxnN0Cz9O/PRrI4U8CPpHbNkryhS/Dxr5+pYrm973
+         wA8j++f6kbITTUKETCGkYfbdu1ECHLJkTD/akDftkuLh6Gd4jRVnnbofGTK3vgP9q+vF
+         /TPXXWnvwVcT/g9H8LI7JdEUKncDZQUc80d1NU6ZHu+1FHNh0iosVf5btk+Nt77RGF96
+         qUUSrOrCmlAj1RsmykVACkKEGdByybTBtBPBTVQIhCcROLX6FWAXHkTBX79sqI/Th+S9
+         wpOA==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1696378791; x=1696983591;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=uu328fxBcBYqKT7aAM0FyKfXboClLkDuzWqmLPJ8l0w=;
-        b=Yb9u9tnlL8avbgLPj4AV/GgRkgSdws5wLVHKGKkMwctWIhnsYvX5Ev77rIEK853IQx
-         DDitgKHuz+jKa8COhaU7khta0K/4sHiBu7J70vBNhWnLwIoO8BrkUtCSLJvW13bOlL/M
-         IokkpkIKwB3Lq5rXYs62ZH+oFq86YEsOK13RGIOc7mBXQtdMpn7Y4/X7WtKgdy73JSrC
-         hSFyQB2BZqLAuH9Dc04yy6nw5c9zbI9y1u+M6mwZra2GtObQ6dl813eJahgDQgGDGJNM
-         +QMRzFMO73YIUqYPAg3VLQXFrRroH/79sr4sJNdi6+B4DCeu9sL/KeGSwD01t5y0VbJe
-         rnIg==
-X-Gm-Message-State: AOJu0Yxzs9OoIBudCMCNJOBWHamVN8ohDF9PvYRsdNKOdlXEhm4Aek0b
-        NZ2S7dagVTQi6GoMA8uFdml7QCWRX2UPdOST4w8=
-X-Google-Smtp-Source: AGHT+IFmbVXRHVZs7m2MXykoyWvswOK+sZWQTVchY9GBpllh28vZsy6YdbIjnE5BsL/5YpqEDHtsRw==
-X-Received: by 2002:a05:6a20:4420:b0:153:dff0:c998 with SMTP id ce32-20020a056a20442000b00153dff0c998mr1261685pzb.6.1696378791114;
-        Tue, 03 Oct 2023 17:19:51 -0700 (PDT)
+        d=1e100.net; s=20230601; t=1696382188; x=1696986988;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=27OUlXqVAY5pph8VgkHut5jt4z0+Lj/b+tomTvgAza4=;
+        b=HfXmhcPuUzJoTbp34IkT3cUcIVHaKXDSnouEXqazUj+0JV99O6zP/PXlQsiEsLuR3P
+         weoPMbXpPwsuXvwmy4X3JVCYv96slPR944nNamauXdiAYbjeCl850fjlsHkP5+xGGcx5
+         /iRt19djcjtu5LwX2RIW82J8GokO3YMNfie4uHyqgFeGnEKHaMta+56zFXNAD4lrw6OI
+         b2oFdTAvVixK9hqe9u+8ypZINgbUrKJFqnFqcb5FnM7AjOZbLHTbjL2/RDd5L7g7yWgf
+         ID8UK/PseVcVpd1CVOrkwy14B3KbxY16uyHP4PeFADclMbEkQnZ1jkcB5JomEW1qdf5A
+         bHSg==
+X-Gm-Message-State: AOJu0Yw9MtE5Q4/pN2Vb69N0AwUAJoLt4WXlQmdg3g/x66XuxwCRMmW0
+        zQheFTtJbzYsjXkJVCacbeVGUw==
+X-Google-Smtp-Source: AGHT+IGAZMmhmKfxlRSU/a8+EGUxGlR0SLNCds5QUJ8ZXzl8PknPnruiTA+IGWcxcfozw3Ji0pNl7Q==
+X-Received: by 2002:a17:90b:4ad2:b0:269:2682:11fb with SMTP id mh18-20020a17090b4ad200b00269268211fbmr964608pjb.8.1696382187364;
+        Tue, 03 Oct 2023 18:16:27 -0700 (PDT)
 Received: from dread.disaster.area (pa49-180-20-59.pa.nsw.optusnet.com.au. [49.180.20.59])
-        by smtp.gmail.com with ESMTPSA id 12-20020a170902ee4c00b001c3ea6073e0sm2217749plo.37.2023.10.03.17.19.48
+        by smtp.gmail.com with ESMTPSA id x18-20020a17090aa39200b002609cadc56esm228044pjp.11.2023.10.03.18.16.26
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 03 Oct 2023 17:19:49 -0700 (PDT)
-Received: from [192.168.253.23] (helo=devoid.disaster.area)
-        by dread.disaster.area with esmtp (Exim 4.96)
-        (envelope-from <dave@fromorbit.com>)
-        id 1qnpcA-0097NY-18;
-        Wed, 04 Oct 2023 11:19:46 +1100
-Received: from dave by devoid.disaster.area with local (Exim 4.97-RC0)
-        (envelope-from <dave@devoid.disaster.area>)
-        id 1qnpcA-00000001Tre-0F1R;
-        Wed, 04 Oct 2023 11:19:46 +1100
+        Tue, 03 Oct 2023 18:16:26 -0700 (PDT)
+Received: from dave by dread.disaster.area with local (Exim 4.96)
+        (envelope-from <david@fromorbit.com>)
+        id 1qnqUx-0098Sr-2u;
+        Wed, 04 Oct 2023 12:16:23 +1100
+Date:   Wed, 4 Oct 2023 12:16:23 +1100
 From:   Dave Chinner <david@fromorbit.com>
-To:     linux-xfs@vger.kernel.org
-Cc:     john.g.garry@oracle.com
-Subject: [PATCH 9/9] xfs: return -ENOSPC rather than NULLFSBLOCK from allocation functions
-Date:   Wed,  4 Oct 2023 11:19:43 +1100
-Message-Id: <20231004001943.349265-10-david@fromorbit.com>
-X-Mailer: git-send-email 2.40.1
-In-Reply-To: <20231004001943.349265-1-david@fromorbit.com>
-References: <20231004001943.349265-1-david@fromorbit.com>
+To:     "Darrick J. Wong" <djwong@kernel.org>
+Cc:     John Garry <john.g.garry@oracle.com>, axboe@kernel.dk,
+        kbusch@kernel.org, hch@lst.de, sagi@grimberg.me,
+        jejb@linux.ibm.com, martin.petersen@oracle.com,
+        viro@zeniv.linux.org.uk, brauner@kernel.org,
+        chandan.babu@oracle.com, dchinner@redhat.com,
+        linux-block@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-nvme@lists.infradead.org, linux-xfs@vger.kernel.org,
+        linux-fsdevel@vger.kernel.org, tytso@mit.edu, jbongio@google.com,
+        linux-api@vger.kernel.org
+Subject: Re: [PATCH 16/21] fs: iomap: Atomic write support
+Message-ID: <ZRy850C0sceCsf1k@dread.disaster.area>
+References: <20230929102726.2985188-1-john.g.garry@oracle.com>
+ <20230929102726.2985188-17-john.g.garry@oracle.com>
+ <ZRuXd/iG1kyeFQDh@dread.disaster.area>
+ <20231003164749.GH21298@frogsfrogsfrogs>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20231003164749.GH21298@frogsfrogsfrogs>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-From: Dave Chinner <dchinner@redhat.com>
+On Tue, Oct 03, 2023 at 09:47:49AM -0700, Darrick J. Wong wrote:
+> On Tue, Oct 03, 2023 at 03:24:23PM +1100, Dave Chinner wrote:
+> > On Fri, Sep 29, 2023 at 10:27:21AM +0000, John Garry wrote:
+> > > Add flag IOMAP_ATOMIC_WRITE to indicate to the FS that an atomic write
+> > > bio is being created and all the rules there need to be followed.
+> > > 
+> > > It is the task of the FS iomap iter callbacks to ensure that the mapping
+> > > created adheres to those rules, like size is power-of-2, is at a
+> > > naturally-aligned offset, etc.
+> > 
+> > The mapping being returned by the filesystem can span a much greater
+> > range than the actual IO needs - the iomap itself is not guaranteed
+> > to be aligned to anything in particular, but the IO location within
+> > that map can still conform to atomic IO constraints. See how
+> > iomap_sector() calculates the actual LBA address of the IO from
+> > the iomap and the current file position the IO is being done at.
+> > 
+> > hence I think saying "the filesysetm should make sure all IO
+> > alignment adheres to atomic IO rules is probably wrong. The iomap
+> > layer doesn't care what the filesystem does, all it cares about is
+> > whether the IO can be done given the extent map that was returned to
+> > it.
+> > 
+> > Indeed, iomap_dio_bio_iter() is doing all these alignment checks for
+> > normal DIO reads and writes which must be logical block sized
+> > aligned. i.e. this check:
+> > 
+> >         if ((pos | length) & (bdev_logical_block_size(iomap->bdev) - 1) ||
+> >             !bdev_iter_is_aligned(iomap->bdev, dio->submit.iter))
+> >                 return -EINVAL;
+> > 
+> > Hence I think that atomic IO units, which are similarly defined by
+> > the bdev, should be checked at the iomap layer, too. e.g, by
+> > following up with:
+> > 
+> > 	if ((dio->iocb->ki_flags & IOCB_ATOMIC) &&
+> > 	    ((pos | length) & (bdev_atomic_unit_min(iomap->bdev) - 1) ||
+> > 	     !bdev_iter_is_atomic_aligned(iomap->bdev, dio->submit.iter))
+> > 		return -EINVAL;
+> > 
+> > At this point, filesystems don't really need to know anything about
+> > atomic IO - if they've allocated a large contiguous extent (e.g. via
+> > fallocate()), then RWF_ATOMIC will just work for the cases where the
+> > block device supports it...
+> > 
+> > This then means that stuff like XFS extent size hints only need to
+> > check when the hint is set that it is aligned to the underlying
+> > device atomic IO constraints. Then when it sees the IOMAP_ATOMIC
+> > modifier, it can fail allocation if it can't get extent size hint
+> > aligned allocation.
+> > 
+> > IOWs, I'm starting to think this doesn't need any change to the
+> > on-disk format for XFS - it can be driven entirely through two
+> > dynamic mechanisms:
+> > 
+> > 1. (IOMAP_WRITE | IOMAP_ATOMIC) requests from the direct IO layer
+> > which causes mapping/allocation to fail if it can't allocate (or
+> > map) atomic IO compatible extents for the IO.
+> > 
+> > 2. FALLOC_FL_ATOMIC preallocation flag modifier to tell fallocate()
+> > to force alignment of all preallocated extents to atomic IO
+> > constraints.
+> 
+> Ugh, let's not relitigate problems that you (Dave) and I have already
+> solved.
+> 
+> Back in 2018, our internal proto-users of pmem asked for aligned
+> allocations so they could use PMD mappings to reduce TLB pressure.  At
+> the time, you and I talked on IRC about whether that should be done via
+> fallocate flag or setting extszinherit+sunit at mkfs time.  We decided
+> against adding fallocate flags because linux-api bikeshed hell.
 
-The core allocation routines may fail due to an ENOSPC condition.
-However, they do not report that via an ENOSPC error, they report it
-via a "allocation succeeded" return value but with a allocated block
-of NULLFSBLOCK.
+Ok, but I don't see how I'm supposed to correlate a discussion from
+5 years ago on a different topic with this one. I can only comment
+on what I see in front of me. And what is in front of me is
+something that doesn't need on-disk changes to implement....
 
-This behaviour recently lead to a data corruption bug where failure
-to allocate a block was not caught correctly - the failure was
-treated as a success and an uninitialised fsblock was used for a
-data write instead.  This would have been avoided if we returned
-ENOSPC for ENOSPC conditions, but we don't so bad things happened.
+> Ever since, we've been shipping UEK with a mkfs.xmem scripts that
+> automates computing the mkfs.xfs geometry CLI options.  It works,
+> mostly, except for the unaligned allocations that one gets when the free
+> space gets fragmented.  The xfsprogs side of the forcealign patchset
+> moves most of the mkfs.xmem cli option setting logic into mkfs itself,
+> and the kernel side shuts off the lowspace allocator to fix the
+> fragmentation problem.
+> 
+> I'd rather fix the remaining quirks and not reinvent solved solutions,
+> as popular as that is in programming circles.
+> 
+> Why is mandatory allocation alignment for atomic writes different?
+> Forcealign solves the problem for NVME/SCSI AWU and pmem PMD in the same
+> way with the same control knobs for sysadmins.  I don't want to have
+> totally separate playbooks for accomplishing nearly the same things.
 
-Make sure we don't have a repeat of this situation by changing the
-API to explicitly return ENOSPC when we fail to allocate. If we fail
-to capture this correctly, it will lead to failures being noticed
-either by ENOSPC escaping to userspace or by causing filesystem
-shutdowns when allocations failure where they really shouldn't.
+Which is fair enough, but that's not the context under which this
+has been presented.
 
-Signed-off-by: Dave Chinner <dchinner@redhat.com>
----
- fs/xfs/libxfs/xfs_alloc.c          |  73 +++++++------------
- fs/xfs/libxfs/xfs_bmap.c           | 112 +++++++++++------------------
- fs/xfs/libxfs/xfs_bmap_btree.c     |  19 +++--
- fs/xfs/libxfs/xfs_ialloc.c         |  26 ++++---
- fs/xfs/libxfs/xfs_ialloc_btree.c   |   8 +--
- fs/xfs/libxfs/xfs_refcount_btree.c |   8 +--
- 6 files changed, 98 insertions(+), 148 deletions(-)
+Can we please get the forced-align stuff separated from atomic write
+support - the atomic write requirements completely overwhelms small
+amount of change needed to support physical file offset
+alignment....
 
-diff --git a/fs/xfs/libxfs/xfs_alloc.c b/fs/xfs/libxfs/xfs_alloc.c
-index 27c62f303488..13fda27fabcb 100644
---- a/fs/xfs/libxfs/xfs_alloc.c
-+++ b/fs/xfs/libxfs/xfs_alloc.c
-@@ -1157,9 +1157,9 @@ xfs_alloc_ag_vextent_small(
- 	 * Can't do the allocation, give up.
- 	 */
- 	if (flen < args->minlen) {
--		args->agbno = NULLAGBLOCK;
- 		trace_xfs_alloc_small_notenough(args);
--		flen = 0;
-+		error = -ENOSPC;
-+		goto error;
- 	}
- 	*fbnop = fbno;
- 	*flenp = flen;
-@@ -1279,9 +1279,8 @@ xfs_alloc_ag_vextent_exact(
- not_found:
- 	/* Didn't find it, return null. */
- 	xfs_btree_del_cursor(bno_cur, XFS_BTREE_NOERROR);
--	args->agbno = NULLAGBLOCK;
- 	trace_xfs_alloc_exact_notfound(args);
--	return 0;
-+	return -ENOSPC;
- 
- error0:
- 	xfs_btree_del_cursor(bno_cur, XFS_BTREE_ERROR);
-@@ -1630,7 +1629,7 @@ xfs_alloc_ag_vextent_near(
- 			goto restart;
- 		}
- 		trace_xfs_alloc_size_neither(args);
--		args->agbno = NULLAGBLOCK;
-+		error = -ENOSPC;
- 		goto out;
- 	}
- 
-@@ -1882,8 +1881,7 @@ xfs_alloc_ag_vextent_size(
- out_nominleft:
- 	xfs_btree_del_cursor(cnt_cur, XFS_BTREE_NOERROR);
- 	trace_xfs_alloc_size_nominleft(args);
--	args->agbno = NULLAGBLOCK;
--	return 0;
-+	return -ENOSPC;
- }
- 
- /*
-@@ -2742,16 +2740,15 @@ xfs_alloc_fix_freelist(
- 
- 		/* Allocate as many blocks as possible at once. */
- 		error = xfs_alloc_ag_vextent_size(&targs, alloc_flags);
--		if (error)
--			goto out_agflbp_relse;
- 
--		/*
--		 * Stop if we run out.  Won't happen if callers are obeying
--		 * the restrictions correctly.  Can happen for free calls
--		 * on a completely full ag.
--		 */
--		if (targs.agbno == NULLAGBLOCK) {
--			if (alloc_flags & XFS_ALLOC_FLAG_FREEING)
-+		if (error) {
-+			/*
-+			 * Stop if we run out.  Won't happen if callers are
-+			 * obeying the restrictions correctly.  Can happen for
-+			 * free calls on a completely full ag.
-+			 */
-+			if (error == -ENOSPC &&
-+			    (alloc_flags & XFS_ALLOC_FLAG_FREEING))
- 				break;
- 			goto out_agflbp_relse;
- 		}
-@@ -3324,14 +3321,12 @@ xfs_alloc_vextent_prepare_ag(
- 		trace_xfs_alloc_vextent_nofix(args);
- 		if (need_pag)
- 			xfs_perag_put(args->pag);
--		args->agbno = NULLAGBLOCK;
- 		return error;
- 	}
- 	if (!args->agbp) {
- 		/* cannot allocate in this AG at all */
- 		trace_xfs_alloc_vextent_noagbp(args);
--		args->agbno = NULLAGBLOCK;
--		return 0;
-+		return -ENOSPC;
- 	}
- 	args->wasfromfl = 0;
- 	return 0;
-@@ -3375,14 +3370,7 @@ xfs_alloc_vextent_finish(
- 	     args->agno > minimum_agno))
- 		args->tp->t_highest_agno = args->agno;
- 
--	/*
--	 * If the allocation failed with an error or we had an ENOSPC result,
--	 * preserve the returned error whilst also marking the allocation result
--	 * as "no extent allocated". This ensures that callers that fail to
--	 * capture the error will still treat it as a failed allocation.
--	 */
--	if (alloc_error || args->agbno == NULLAGBLOCK) {
--		args->fsbno = NULLFSBLOCK;
-+	if (alloc_error) {
- 		error = alloc_error;
- 		goto out_drop_perag;
- 	}
-@@ -3452,11 +3440,8 @@ xfs_alloc_vextent_this_ag(
- 	trace_xfs_alloc_vextent_this_ag(args);
- 
- 	error = xfs_alloc_vextent_check_args(args, agno, 0, &minimum_agno);
--	if (error) {
--		if (error == -ENOSPC)
--			return 0;
-+	if (error)
- 		return error;
--	}
- 
- 	error = xfs_alloc_vextent_prepare_ag(args, alloc_flags);
- 	if (!error && args->agbp)
-@@ -3503,7 +3488,7 @@ xfs_alloc_vextent_iterate_ags(
- 			mp->m_sb.sb_agcount, agno, args->pag) {
- 		args->agno = agno;
- 		error = xfs_alloc_vextent_prepare_ag(args, alloc_flags);
--		if (error)
-+		if (error && error != -ENOSPC)
- 			break;
- 		if (!args->agbp) {
- 			trace_xfs_alloc_vextent_loopfailed(args);
-@@ -3523,13 +3508,13 @@ xfs_alloc_vextent_iterate_ags(
- 		}
- 		break;
- 	}
--	if (error) {
-+	if (error && error != -ENOSPC) {
- 		xfs_perag_rele(args->pag);
- 		args->pag = NULL;
- 		return error;
- 	}
- 	if (args->agbp)
--		return 0;
-+		return error;
- 
- 	/*
- 	 * We didn't find an AG we can alloation from. If we were given
-@@ -3544,7 +3529,7 @@ xfs_alloc_vextent_iterate_ags(
- 
- 	ASSERT(args->pag == NULL);
- 	trace_xfs_alloc_vextent_allfailed(args);
--	return 0;
-+	return -ENOSPC;
- }
- 
- /*
-@@ -3580,11 +3565,8 @@ xfs_alloc_vextent_start_ag(
- 	target_agbno = XFS_FSB_TO_AGBNO(mp, target);
- 	error = xfs_alloc_vextent_check_args(args, target_agno, target_agbno,
- 			&minimum_agno);
--	if (error) {
--		if (error == -ENOSPC)
--			return 0;
-+	if (error)
- 		return error;
--	}
- 
- 	if ((args->datatype & XFS_ALLOC_INITIAL_USER_DATA) &&
- 	    xfs_is_inode32(mp)) {
-@@ -3637,11 +3619,8 @@ xfs_alloc_vextent_first_ag(
- 	target_agbno = XFS_FSB_TO_AGBNO(mp, target);
- 	error = xfs_alloc_vextent_check_args(args, target_agno, target_agbno,
- 			&minimum_agno);
--	if (error) {
--		if (error == -ENOSPC)
--			return 0;
-+	if (error)
- 		return error;
--	}
- 
- 	target_agno = max(minimum_agno, target_agno);
- 	error = xfs_alloc_vextent_iterate_ags(args, minimum_agno, target_agno,
-@@ -3669,11 +3648,8 @@ xfs_alloc_vextent_bno(
- 
- 	error = xfs_alloc_vextent_check_args(args, args->agno, args->agbno,
- 			&minimum_agno);
--	if (error) {
--		if (error == -ENOSPC)
--			return 0;
-+	if (error)
- 		return error;
--	}
- 
- 	error = xfs_alloc_vextent_prepare_ag(args, 0);
- 	if (!error && args->agbp) {
-@@ -3688,7 +3664,8 @@ xfs_alloc_vextent_bno(
- 
- /*
-  * Allocate at the exact block target or fail. Caller is expected to hold a
-- * perag reference in args->pag.
-+ * perag reference in args->pag. If the exact block required cannot be
-+ * allocated, this will return -ENOSPC.
-  */
- int
- xfs_alloc_vextent_exact_bno(
-diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
-index c1e2c0707e20..00cebf9eb682 100644
---- a/fs/xfs/libxfs/xfs_bmap.c
-+++ b/fs/xfs/libxfs/xfs_bmap.c
-@@ -659,14 +659,6 @@ xfs_bmap_extents_to_btree(
- 	if (error)
- 		goto out_root_realloc;
- 
--	/*
--	 * Allocation can't fail, the space was reserved.
--	 */
--	if (WARN_ON_ONCE(args.fsbno == NULLFSBLOCK)) {
--		error = -ENOSPC;
--		goto out_root_realloc;
--	}
--
- 	cur->bc_ino.allocated++;
- 	ip->i_nblocks++;
- 	xfs_trans_mod_dquot_byino(tp, ip, XFS_TRANS_DQ_BCOUNT, 1L);
-@@ -724,6 +716,8 @@ xfs_bmap_extents_to_btree(
- 	ASSERT(ifp->if_broot == NULL);
- 	xfs_btree_del_cursor(cur, XFS_BTREE_ERROR);
- 
-+	/* Allocation shouldn't fail with -ENOSPC because space was reserved. */
-+	WARN_ON_ONCE(error == -ENOSPC);
- 	return error;
- }
- 
-@@ -808,8 +802,6 @@ xfs_bmap_local_to_extents(
- 	if (error)
- 		goto done;
- 
--	/* Can't fail, the space was reserved. */
--	ASSERT(args.fsbno != NULLFSBLOCK);
- 	ASSERT(args.len == 1);
- 	error = xfs_trans_get_buf(tp, args.mp->m_ddev_targp,
- 			XFS_FSB_TO_DADDR(args.mp, args.fsbno),
-@@ -849,6 +841,9 @@ xfs_bmap_local_to_extents(
- 
- done:
- 	*logflagsp = flags;
-+
-+	/* Allocation shouldn't fail with -ENOSPC because space was reserved. */
-+	ASSERT(error != -ENOSPC);
- 	return error;
- }
- 
-@@ -3435,11 +3430,8 @@ xfs_bmap_exact_minlen_extent_alloc(
- 
- 	ASSERT(ap->length);
- 
--	if (ap->minlen != 1) {
--		ap->blkno = NULLFSBLOCK;
--		ap->length = 0;
--		return 0;
--	}
-+	if (ap->minlen != 1)
-+		return -ENOSPC;
- 
- 	orig_offset = ap->offset;
- 	orig_length = ap->length;
-@@ -3474,14 +3466,7 @@ xfs_bmap_exact_minlen_extent_alloc(
- 	if (error)
- 		return error;
- 
--	if (args.fsbno != NULLFSBLOCK) {
--		xfs_bmap_process_allocated_extent(ap, &args, orig_offset,
--			orig_length);
--	} else {
--		ap->blkno = NULLFSBLOCK;
--		ap->length = 0;
--	}
--
-+	xfs_bmap_process_allocated_extent(ap, &args, orig_offset, orig_length);
- 	return 0;
- }
- #else
-@@ -3520,17 +3505,14 @@ xfs_bmap_exact_minlen_extent_alloc(
- 		args->minalignslop = 0;
- 
- 	error = xfs_alloc_vextent_exact_bno(args, ap->blkno);
--	if (error)
--		return error;
--
--	if (args->fsbno != NULLFSBLOCK)
--		return 0;
--	/*
--	 * Exact allocation failed. Reset to try an aligned allocation
--	 * according to the original allocation specification.
--	 */
--	args->minlen = nextminlen;
--	return 0;
-+	if (error == -ENOSPC) {
-+		/*
-+		 * Exact allocation failed. Reset to try an aligned allocation
-+		 * according to the original allocation specification.
-+		 */
-+		args->minlen = nextminlen;
-+	}
-+	return error;
- }
- 
- static int
-@@ -3557,19 +3539,15 @@ xfs_bmap_btalloc_aligned(
- 	args->minalignslop = 0;
- 
- 	error = xfs_alloc_vextent_near_bno(args, ap->blkno);
--	if (error)
--		return error;
--
--	if (args->fsbno != NULLFSBLOCK)
--		return 0;
--
--	/*
--	 * Allocation failed, so turn return the allocation args to their
--	 * original non-aligned state so the caller can proceed on allocation
--	 * failure as if this function was never called.
--	 */
--	args->alignment = 1;
--	return 0;
-+	if (error == -ENOSPC) {
-+		/*
-+		 * Allocation failed, so turn return the allocation args to
-+		 * their original non-aligned state so the caller can proceed on
-+		 * allocation failure as if this function was never called.
-+		 */
-+		args->alignment = 1;
-+	}
-+	return error;
- }
- 
- /*
-@@ -3594,17 +3572,15 @@ xfs_bmap_btalloc_low_space(
- 	if (args->minlen > ap->minlen) {
- 		args->minlen = ap->minlen;
- 		error = xfs_alloc_vextent_start_ag(args, ap->blkno);
--		if (error || args->fsbno != NULLFSBLOCK)
-+		if (error != -ENOSPC)
- 			return error;
- 	}
- 
- 	/* Last ditch attempt before failure is declared. */
- 	args->total = ap->minlen;
- 	error = xfs_alloc_vextent_first_ag(args, 0);
--	if (error)
--		return error;
- 	ap->tp->t_flags |= XFS_TRANS_LOWMODE;
--	return 0;
-+	return error;
- }
- 
- static int
-@@ -3633,17 +3609,18 @@ xfs_bmap_btalloc_filestreams(
- 		goto out_low_space;
- 	}
- 
-+	error = -ENOSPC;
- 	args->minlen = xfs_bmap_select_minlen(ap, args, blen);
- 	if (ap->aeof && ap->offset)
- 		error = xfs_bmap_btalloc_at_eof(ap, args, blen, stripe_align);
- 
--	if (error || args->fsbno != NULLFSBLOCK)
-+	if (error != -ENOSPC)
- 		goto out_low_space;
- 
- 	if (ap->aeof)
- 		error = xfs_bmap_btalloc_aligned(ap, args, blen, stripe_align);
- 
--	if (!error && args->fsbno == NULLFSBLOCK)
-+	if (error == -ENOSPC)
- 		error = xfs_alloc_vextent_near_bno(args, ap->blkno);
- 
- out_low_space:
-@@ -3656,7 +3633,7 @@ xfs_bmap_btalloc_filestreams(
- 	 */
- 	xfs_perag_rele(args->pag);
- 	args->pag = NULL;
--	if (error || args->fsbno != NULLFSBLOCK)
-+	if (error != -ENOSPC)
- 		return error;
- 
- 	return xfs_bmap_btalloc_low_space(ap, args);
-@@ -3705,10 +3682,11 @@ xfs_bmap_btalloc_best_length(
- 		return error;
- 	ASSERT(args->pag);
- 
-+	error = -ENOSPC;
- 	if (ap->aeof && ap->offset)
- 		error = xfs_bmap_btalloc_at_eof(ap, args, blen, stripe_align);
- 
--	if (error || args->fsbno != NULLFSBLOCK)
-+	if (error != -ENOSPC)
- 		goto out_perag_rele;
- 
- 
-@@ -3726,12 +3704,12 @@ xfs_bmap_btalloc_best_length(
- out_perag_rele:
- 	xfs_perag_rele(args->pag);
- 	args->pag = NULL;
--	if (error || args->fsbno != NULLFSBLOCK)
-+	if (error != -ENOSPC)
- 		return error;
- 
- 	/* attempt unaligned allocation */
- 	error = xfs_alloc_vextent_start_ag(args, ap->blkno);
--	if (error || args->fsbno != NULLFSBLOCK)
-+	if (error != -ENOSPC)
- 		return error;
- 
- 	return xfs_bmap_btalloc_low_space(ap, args);
-@@ -3773,17 +3751,10 @@ xfs_bmap_btalloc(
- 		error = xfs_bmap_btalloc_filestreams(ap, &args, stripe_align);
- 	else
- 		error = xfs_bmap_btalloc_best_length(ap, &args, stripe_align);
--	if (error)
--		return error;
--
--	if (args.fsbno != NULLFSBLOCK) {
-+	if (!error)
- 		xfs_bmap_process_allocated_extent(ap, &args, orig_offset,
- 			orig_length);
--	} else {
--		ap->blkno = NULLFSBLOCK;
--		ap->length = 0;
--	}
--	return 0;
-+	return error;
- }
- 
- /* Trim extent to fit a logical block range. */
-@@ -4189,7 +4160,7 @@ xfs_bmapi_allocate(
- 	} else {
- 		error = xfs_bmap_alloc_userdata(bma);
- 	}
--	if (error || bma->blkno == NULLFSBLOCK)
-+	if (error)
- 		return error;
- 
- 	if (bma->flags & XFS_BMAPI_ZERO) {
-@@ -4497,10 +4468,10 @@ xfs_bmapi_write(
- 			ASSERT(len > 0);
- 			ASSERT(bma.length > 0);
- 			error = xfs_bmapi_allocate(&bma);
-+			if (error == -ENOSPC)
-+				break;
- 			if (error)
- 				goto error0;
--			if (bma.blkno == NULLFSBLOCK)
--				break;
- 
- 			/*
- 			 * If this is a CoW allocation, record the data in
-@@ -4656,9 +4627,6 @@ xfs_bmapi_convert_delalloc(
- 	if (error)
- 		goto out_finish;
- 
--	error = -ENOSPC;
--	if (WARN_ON_ONCE(bma.blkno == NULLFSBLOCK))
--		goto out_finish;
- 	error = -EFSCORRUPTED;
- 	if (WARN_ON_ONCE(!xfs_valid_startblock(ip, bma.got.br_startblock)))
- 		goto out_finish;
-diff --git a/fs/xfs/libxfs/xfs_bmap_btree.c b/fs/xfs/libxfs/xfs_bmap_btree.c
-index bf3f1b36fdd2..c1f6d0a7d960 100644
---- a/fs/xfs/libxfs/xfs_bmap_btree.c
-+++ b/fs/xfs/libxfs/xfs_bmap_btree.c
-@@ -225,25 +225,24 @@ xfs_bmbt_alloc_block(
- 					cur->bc_ino.whichfork);
- 
- 	error = xfs_alloc_vextent_start_ag(&args, be64_to_cpu(start->l));
--	if (error)
--		return error;
--
--	if (args.fsbno == NULLFSBLOCK && args.minleft) {
-+	if (error == -ENOSPC && args.minleft) {
- 		/*
--		 * Could not find an AG with enough free space to satisfy
--		 * a full btree split.  Try again and if
--		 * successful activate the lowspace algorithm.
-+		 * Could not find an AG with enough free space to satisfy a full
-+		 * btree split.  Try again and then activate the lowspace
-+		 * algorithm.
- 		 */
- 		args.minleft = 0;
- 		error = xfs_alloc_vextent_start_ag(&args, 0);
--		if (error)
--			return error;
- 		cur->bc_tp->t_flags |= XFS_TRANS_LOWMODE;
- 	}
--	if (WARN_ON_ONCE(args.fsbno == NULLFSBLOCK)) {
-+
-+	/* This allocation really should not fail. */
-+	if (WARN_ON_ONCE(error == -ENOSPC)) {
- 		*stat = 0;
- 		return 0;
- 	}
-+	if (error)
-+		return error;
- 
- 	ASSERT(args.len == 1);
- 	cur->bc_ino.allocated++;
-diff --git a/fs/xfs/libxfs/xfs_ialloc.c b/fs/xfs/libxfs/xfs_ialloc.c
-index b83e54c70906..96ccf01a3a74 100644
---- a/fs/xfs/libxfs/xfs_ialloc.c
-+++ b/fs/xfs/libxfs/xfs_ialloc.c
-@@ -686,6 +686,7 @@ xfs_ialloc_ag_alloc(
- 		     igeo->ialloc_blks;
- 	if (do_sparse)
- 		goto sparse_alloc;
-+	error = -ENOSPC;
- 	if (likely(newino != NULLAGINO &&
- 		  (args.agbno < be32_to_cpu(agi->agi_length)))) {
- 		args.prod = 1;
-@@ -711,7 +712,7 @@ xfs_ialloc_ag_alloc(
- 		error = xfs_alloc_vextent_exact_bno(&args,
- 				XFS_AGB_TO_FSB(args.mp, pag->pag_agno,
- 						args.agbno));
--		if (error)
-+		if (error && error != -ENOSPC)
- 			return error;
- 
- 		/*
-@@ -727,7 +728,7 @@ xfs_ialloc_ag_alloc(
- 		args.minalignslop = 0;
- 	}
- 
--	if (unlikely(args.fsbno == NULLFSBLOCK)) {
-+	if (error == -ENOSPC) {
- 		/*
- 		 * Set the alignment for the allocation.
- 		 * If stripe alignment is turned on then align at stripe unit
-@@ -754,7 +755,7 @@ xfs_ialloc_ag_alloc(
- 		error = xfs_alloc_vextent_near_bno(&args,
- 				XFS_AGB_TO_FSB(args.mp, pag->pag_agno,
- 						be32_to_cpu(agi->agi_root)));
--		if (error)
-+		if (error && error != -ENOSPC)
- 			return error;
- 	}
- 
-@@ -762,12 +763,12 @@ xfs_ialloc_ag_alloc(
- 	 * If stripe alignment is turned on, then try again with cluster
- 	 * alignment.
- 	 */
--	if (isaligned && args.fsbno == NULLFSBLOCK) {
-+	if (error == -ENOSPC && isaligned) {
- 		args.alignment = igeo->cluster_align;
- 		error = xfs_alloc_vextent_near_bno(&args,
- 				XFS_AGB_TO_FSB(args.mp, pag->pag_agno,
- 						be32_to_cpu(agi->agi_root)));
--		if (error)
-+		if (error && error != -ENOSPC)
- 			return error;
- 	}
- 
-@@ -775,9 +776,9 @@ xfs_ialloc_ag_alloc(
- 	 * Finally, try a sparse allocation if the filesystem supports it and
- 	 * the sparse allocation length is smaller than a full chunk.
- 	 */
--	if (xfs_has_sparseinodes(args.mp) &&
--	    igeo->ialloc_min_blks < igeo->ialloc_blks &&
--	    args.fsbno == NULLFSBLOCK) {
-+	if (error == -ENOSPC &&
-+	    xfs_has_sparseinodes(args.mp) &&
-+	    igeo->ialloc_min_blks < igeo->ialloc_blks) {
- sparse_alloc:
- 		args.alignment = args.mp->m_sb.sb_spino_align;
- 		args.prod = 1;
-@@ -803,7 +804,7 @@ xfs_ialloc_ag_alloc(
- 		error = xfs_alloc_vextent_near_bno(&args,
- 				XFS_AGB_TO_FSB(args.mp, pag->pag_agno,
- 						be32_to_cpu(agi->agi_root)));
--		if (error)
-+		if (error && error != -ENOSPC)
- 			return error;
- 
- 		newlen = XFS_AGB_TO_AGINO(args.mp, args.len);
-@@ -811,7 +812,12 @@ xfs_ialloc_ag_alloc(
- 		allocmask = (1 << (newlen / XFS_INODES_PER_HOLEMASK_BIT)) - 1;
- 	}
- 
--	if (args.fsbno == NULLFSBLOCK)
-+	/*
-+	 * There really is not available space for inode allocation in this AG,
-+	 * so return a -EAGAIN error to the caller to tell it to try a different
-+	 * AG.
-+	 */
-+	if (error == -ENOSPC)
- 		return -EAGAIN;
- 
- 	ASSERT(args.len == args.minlen);
-diff --git a/fs/xfs/libxfs/xfs_ialloc_btree.c b/fs/xfs/libxfs/xfs_ialloc_btree.c
-index 9258f01c0015..cbc4413042f2 100644
---- a/fs/xfs/libxfs/xfs_ialloc_btree.c
-+++ b/fs/xfs/libxfs/xfs_ialloc_btree.c
-@@ -112,13 +112,13 @@ __xfs_inobt_alloc_block(
- 
- 	error = xfs_alloc_vextent_near_bno(&args,
- 			XFS_AGB_TO_FSB(args.mp, args.pag->pag_agno, sbno));
--	if (error)
--		return error;
--
--	if (args.fsbno == NULLFSBLOCK) {
-+	if (error == -ENOSPC) {
- 		*stat = 0;
- 		return 0;
- 	}
-+	if (error)
-+		return error;
-+
- 	ASSERT(args.len == 1);
- 
- 	new->s = cpu_to_be32(XFS_FSB_TO_AGBNO(args.mp, args.fsbno));
-diff --git a/fs/xfs/libxfs/xfs_refcount_btree.c b/fs/xfs/libxfs/xfs_refcount_btree.c
-index 5c3987d8dc24..d5fbdd4e25b6 100644
---- a/fs/xfs/libxfs/xfs_refcount_btree.c
-+++ b/fs/xfs/libxfs/xfs_refcount_btree.c
-@@ -75,14 +75,14 @@ xfs_refcountbt_alloc_block(
- 	error = xfs_alloc_vextent_near_bno(&args,
- 			XFS_AGB_TO_FSB(args.mp, args.pag->pag_agno,
- 					xfs_refc_block(args.mp)));
-+	if (error == -ENOSPC) {
-+		*stat = 0;
-+		return 0;
-+	}
- 	if (error)
- 		goto out_error;
- 	trace_xfs_refcountbt_alloc_block(cur->bc_mp, cur->bc_ag.pag->pag_agno,
- 			args.agbno, 1);
--	if (args.fsbno == NULLFSBLOCK) {
--		*stat = 0;
--		return 0;
--	}
- 	ASSERT(args.agno == cur->bc_ag.pag->pag_agno);
- 	ASSERT(args.len == 1);
- 
+> I don't like encoding hardware details in the fallocate uapi either.
+> That implies adding FALLOC_FL_HUGEPAGE for pmem, and possibly
+> FALLOC_FL_{SUNIT,SWIDTH} for users with RAIDs.
+
+No, that's reading way too much into it. FALLOC_FL_ATOMIC would mean
+"ensure preallocation is valid for RWF_ATOMIC based IO contrainsts",
+nothing more, nothing less. This isn't -hardware specific-, it's
+simply a flag to tell the filesystem to align file offsets to
+physical storage constraints so the allocated space works works
+appropriately for a specific IO API.
+
+IOWs, it is little different from the FALLOC_FL_NOHIDE_STALE flag
+for modifying fallocate() behaviour...
+
+> > This doesn't require extent size hints at all. The filesystem can
+> > query the bdev at mount time, store the min/max atomic write sizes,
+> > and then use them for all requests that have _ATOMIC modifiers set
+> > on them.
+> > 
+> > With iomap doing the same "get the atomic constraints from the bdev"
+> > style lookups for per-IO file offset and size checking, I don't
+> > think we actually need extent size hints or an on-disk flag to force
+> > extent size hint alignment.
+> > 
+> > That doesn't mean extent size hints can't be used - it just means
+> > that extent size hints have to be constrained to being aligned to
+> > atomic IOs (e.g. extent size hint must be an integer multiple of the
+> > max atomic IO size). This then acts as a modifier for _ATOMIC
+> > context allocations, much like it is a modifier for normal
+> > allocations now.
+> 
+> (One behavior change that comes with FORCEALIGN is that without it,
+> extent size hints affect only the alignment of the file range mappings.
+> With FORCEALIGN, the space allocation itself *and* the mapping are
+> aligned.)
+> 
+> The one big downside of FORCEALIGN is that the extent size hint can
+> become misaligned with the AWU (or pagetable) geometry if the fs is
+> moved to a different computing environment.  I prefer not to couple the
+> interface to the hardware because that leaves open the possibility for
+> users to discover more use cases.
+
+Sure, but this isn't really a "forced" alignment. This is a feature
+that is providing "file offset is physically aligned to an
+underlying hardware address space" instead of doing the normal thing
+of abstracting file data away from the physical layout of the
+storage.
+
+If we can have user APIs that say "file data should be physically
+aligned to storage" then we don't need on-disk flags to implement
+this. Extent size hints could still be used to indicate the required
+alignment, but we could also pull it straight from the hardware if
+those aren't set. AFAICT only fallocate() and pwritev2() need these
+flags for IO, but we could add a fadvise() command to set it on a
+struct file, if mmap()/madvise is told to use hugepages we can use
+PMD alignment rather than storage hardware alignment, etc.
+
+IOWs actually having APIs that simply say "use physical offset
+alignment" without actually saying exactly which hardware alignment
+they want allows the filesystem to dynamically select the optimal
+alignment for the given application use case rather than requiring
+the admin to set up specific configuration at mkfs time....
+
+
+
+> > > 
+> > > Signed-off-by: John Garry <john.g.garry@oracle.com>
+> > > ---
+> > >  fs/iomap/direct-io.c  | 26 ++++++++++++++++++++++++--
+> > >  fs/iomap/trace.h      |  3 ++-
+> > >  include/linux/iomap.h |  1 +
+> > >  3 files changed, 27 insertions(+), 3 deletions(-)
+> > > 
+> > > diff --git a/fs/iomap/direct-io.c b/fs/iomap/direct-io.c
+> > > index bcd3f8cf5ea4..6ef25e26f1a1 100644
+> > > --- a/fs/iomap/direct-io.c
+> > > +++ b/fs/iomap/direct-io.c
+> > > @@ -275,10 +275,11 @@ static inline blk_opf_t iomap_dio_bio_opflags(struct iomap_dio *dio,
+> > >  static loff_t iomap_dio_bio_iter(const struct iomap_iter *iter,
+> > >  		struct iomap_dio *dio)
+> > >  {
+> > > +	bool atomic_write = iter->flags & IOMAP_ATOMIC_WRITE;
+> > >  	const struct iomap *iomap = &iter->iomap;
+> > >  	struct inode *inode = iter->inode;
+> > >  	unsigned int fs_block_size = i_blocksize(inode), pad;
+> > > -	loff_t length = iomap_length(iter);
+> > > +	const loff_t length = iomap_length(iter);
+> > >  	loff_t pos = iter->pos;
+> > >  	blk_opf_t bio_opf;
+> > >  	struct bio *bio;
+> > > @@ -292,6 +293,13 @@ static loff_t iomap_dio_bio_iter(const struct iomap_iter *iter,
+> > >  	    !bdev_iter_is_aligned(iomap->bdev, dio->submit.iter))
+> > >  		return -EINVAL;
+> > >  
+> > > +	if (atomic_write && !iocb_is_dsync(dio->iocb)) {
+> > > +		if (iomap->flags & IOMAP_F_DIRTY)
+> > > +			return -EIO;
+> > > +		if (iomap->type != IOMAP_MAPPED)
+> > > +			return -EIO;
+> > > +	}
+> > 
+> > How do we get here without space having been allocated for the
+> > write?
+> > 
+> > Perhaps what this is trying to do is make RWF_ATOMIC only be valid
+> > into written space? I mean, this will fail with preallocated space
+> > (IOMAP_UNWRITTEN) even though we still have exactly the RWF_ATOMIC
+> > all-or-nothing behaviour guaranteed after a crash because of journal
+> > recovery behaviour. i.e. if the unwritten conversion gets written to
+> > the journal, the data will be there. If it isn't written to the
+> > journal, then the space remains unwritten and there's no data across
+> > that entire range....
+> > 
+> > So I'm not really sure that either of these checks are valid or why
+> > they are actually needed....
+> 
+> This requires O_DSYNC (or RWF_DSYNC) for atomic writes to unwritten or
+> COW space.
+
+COW, maybe - I haven't thought that far through it. 
+
+However, for unwritten extents we just don't need O_DSYNC to
+guarantee all or nothing writes. The application still has to use
+fdatasync() to determine if the IO succeeded, but the actual IO and
+unwritten conversion transaction ordering guarantee the
+"all-or-nothing" behaviour of a RWF_ATOMIC write that is not using
+O_DSYNC.
+
+i.e.  It just doesn't matter when the conversion transaction hits
+the journal. If it doesn't hit the journal before the crash, the
+write never happened. If it does hit the journal, then the cache
+flush before the journal write ensures all the data from the
+RWF_ATOMIC write is present on disk before the unwritten conversion
+hits the journal.
+
+> We want failures in forcing the log transactions for the
+> endio processing to be reported to the pwrite caller as EIO, right?
+
+A failure to force the log will result in a filesystem shutdown. It
+doesn't matter if that happens during IO completion or sometime
+before or during the fdatasync() call the application would still
+need to use to guarantee data integrity.
+
+RWF_ATOMIC implies FUA semantics, right? i.e. if the RWF_ATOMIC
+write is a pure overwrite, there are no journal or cache flushes
+needed to complete the write. If so, batching up all the metadata
+updates between data integrity checkpoints can still make
+performance much better.  If the filesystem flushes the journal
+itself, it's no different from an application crash recovery
+perspective to using RWF_DSYNC|RWF_ATOMIC and failing in the middle
+of a multi-IO update....
+
+Hence I just don't see why RWF_ATOMIC requires O_DSYNC semantics at
+all; all RWF_ATOMIC provides is larger "non-tearing" IO granularity
+and this doesn't change filesystem data integrity semantics at all.
+
+-Dave.
 -- 
-2.40.1
-
+Dave Chinner
+david@fromorbit.com
