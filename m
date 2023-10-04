@@ -2,68 +2,68 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A108CE8FDC7
-	for <linux-xfs@archiver.kernel.org>; Wed,  4 Oct 2023 00:19:54 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6AAD7E8FDC2
+	for <linux-xfs@archiver.kernel.org>; Wed,  4 Oct 2023 00:19:55 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232300AbjJDAT4 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        id S232394AbjJDAT4 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
         Tue, 3 Oct 2023 20:19:56 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59876 "EHLO
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59884 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232394AbjJDATz (ORCPT
+        with ESMTP id S232552AbjJDATz (ORCPT
         <rfc822;linux-xfs@vger.kernel.org>); Tue, 3 Oct 2023 20:19:55 -0400
-Received: from mail-pj1-x1030.google.com (mail-pj1-x1030.google.com [IPv6:2607:f8b0:4864:20::1030])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7533C8E
-        for <linux-xfs@vger.kernel.org>; Tue,  3 Oct 2023 17:19:51 -0700 (PDT)
-Received: by mail-pj1-x1030.google.com with SMTP id 98e67ed59e1d1-2774f6943b1so1145726a91.0
-        for <linux-xfs@vger.kernel.org>; Tue, 03 Oct 2023 17:19:51 -0700 (PDT)
+Received: from mail-oo1-xc31.google.com (mail-oo1-xc31.google.com [IPv6:2607:f8b0:4864:20::c31])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 279E99B
+        for <linux-xfs@vger.kernel.org>; Tue,  3 Oct 2023 17:19:52 -0700 (PDT)
+Received: by mail-oo1-xc31.google.com with SMTP id 006d021491bc7-57bca5b9b0aso881650eaf.3
+        for <linux-xfs@vger.kernel.org>; Tue, 03 Oct 2023 17:19:52 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=fromorbit-com.20230601.gappssmtp.com; s=20230601; t=1696378791; x=1696983591; darn=vger.kernel.org;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:from:to:cc:subject:date
          :message-id:reply-to;
-        bh=67pte+ybmkSTNBJ3mvuTyj3R1AK0jwg+8CMXUhT6XKE=;
-        b=HxM/eGv/v4wHIUG8JY3H5hEOfiaNToJikCPFWxNWjlNsdAhrDNl4kH9wP/p17q9wNi
-         dTJS/KUnFloGiwZGwJI7dHz5PjJ7fqO7XFrExRZ4C24DSdawVPpFBMw9Sc7PFvrCLnKH
-         5NBEkK727bJj9yB3tebMuNi1nkUnb25t/+LnqyeI86DzCYocc1sdm5ePf6Z9HuZuUKbT
-         ajpIx5BZUJaZenTCZ6fNEbThUShon8tp9WqdYUmNlpSN3xHx7hqEr2+APMBzVqSk3+DS
-         57Wf/jyYijygY67ERHI92NtXl7GTiIIyjrPdeSt6Lvk6UayNFuUzG3HkwxsLTHk+Tsjm
-         AvsQ==
+        bh=3vuDpmOAJdGbtAKQnd/e01XgnfdE7mIeD/QyJn7O+9g=;
+        b=eZMobt7zEMjQgu0yjjn/j0bnCrlfnG+RuvJF/7aj0p8TEsX15tY9Asbs358OakMQc1
+         uFoMeX1UE5cARXvLNC0BB6LOhc5RdoL5L85Ek3lGgTGyYDwLOTqEEkfHJ597k04XCXEP
+         qF6QtuQSljY0oR4T731Qgk7kSOWhFOHcpmTQ2sCDwOwkNAs6OnxLhsybS87BZ2f5ZEp4
+         Xme0o6VxPjl1T9T89Az3TBpiqhOsV7tpLRRnv4YqFIPT5d0k60OuJmYhbUt67wjy2Tmj
+         2ccq19iny59ZGqHsMo6+Og0lodLd8HULgLSafyOf4NZ0SvDbPZw39x0v3Jt4+cPyuyEc
+         qhJA==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20230601; t=1696378791; x=1696983591;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:x-gm-message-state:from:to:cc
          :subject:date:message-id:reply-to;
-        bh=67pte+ybmkSTNBJ3mvuTyj3R1AK0jwg+8CMXUhT6XKE=;
-        b=rqXRT1glDXyw92C3m5OCMQIwwGpQ9p7I8PVNylRT+1/zRQsp4i3JBfVqB7D7fP6HdN
-         OaQA2NpBY5PVUkbS+MnaxyKv7uY/kMqJNQXlpTKYaM8OII6HOolvxE+klzQw4xiD6vlz
-         NLXylipoHLsy9zcg+NQECJvBwsNST4KXvjowpFnmuGYL7rpClJqRCZ/JUcY4LkULckff
-         KD6keclJkh/oXEYf8A87hqJ7ebwpiuliBs3JBNjNsA8VFB7WfDqvQkbe2ioIg4kbBpI2
-         1Yldkq9h2g/8LooqhxLdUVIKVPX08riZlnqRKjnZBW2wcGsEsy9CrxI4KY07HRukAcEX
-         pXmg==
-X-Gm-Message-State: AOJu0YyH4E5L1r71y+/e7nPI/jYI46VUXxSc3V39ZB5v1vyvJL2y+JOV
-        4CAYCVKykMUHy0sKc9pkQgRQJCF3Vyi8km3PHrI=
-X-Google-Smtp-Source: AGHT+IE/g2Kf38wXYzkT6hafFOhXqjGsmRqmCotE8kgkRS3XSCR1n40jWMDhpOi8ce9yNzR1hQjUdg==
-X-Received: by 2002:a17:90a:b114:b0:25b:c454:a366 with SMTP id z20-20020a17090ab11400b0025bc454a366mr878142pjq.5.1696378790848;
-        Tue, 03 Oct 2023 17:19:50 -0700 (PDT)
+        bh=3vuDpmOAJdGbtAKQnd/e01XgnfdE7mIeD/QyJn7O+9g=;
+        b=IGL8CWOOPlj7wgPqFuCM9XjyxyxRW8qiOmaiC8xRSBHVhLYAoPGe1J3QHa73I36oEC
+         DjWu0JLFzlVTEg3Fnn8Qp9jZLfg/sMS7IwldKSt+7amStK3gRdFWwdrBY5IkYjyqYP77
+         vI+GgvxyES/JGC0VvwI6lYDROmDNLJyCowUcuZbOb3WebvcQ7OrV7m4+J5qqoihU7Mx1
+         aeJtwuyJuZlEuMqGUXfElibDHUu4waT8VlPY7VoMEJmSPGGkSNsEOZXbq4WvVLQgnnPs
+         xdahyZsp4zxrypbzVZizKDQHhUOb7mjGtAB35gpOcHxx9Vp03ovAZc/nBd8nIubsv/5u
+         MhXw==
+X-Gm-Message-State: AOJu0YxLrim8/hSxIIorYt1B1i8pFHa37JXwsqjxoRmmOL8o/eptgscI
+        KuEnAZDuyluLZNpQ3G8AKLM56pS6dsNGon4BgYo=
+X-Google-Smtp-Source: AGHT+IE0/JAeQDG/BAkWJR6xKpymO/89VsG0vMlv37LdOqovmw7BO3SxsSTmtLyRiY+xlezWj4ns0Q==
+X-Received: by 2002:a05:6358:341a:b0:13c:dc2e:3548 with SMTP id h26-20020a056358341a00b0013cdc2e3548mr1000194rwd.28.1696378791388;
+        Tue, 03 Oct 2023 17:19:51 -0700 (PDT)
 Received: from dread.disaster.area (pa49-180-20-59.pa.nsw.optusnet.com.au. [49.180.20.59])
-        by smtp.gmail.com with ESMTPSA id iq21-20020a17090afb5500b0027b0bfa3be1sm42312pjb.11.2023.10.03.17.19.48
+        by smtp.gmail.com with ESMTPSA id 14-20020a17090a19ce00b00277371fd346sm205304pjj.30.2023.10.03.17.19.49
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 03 Oct 2023 17:19:49 -0700 (PDT)
+        Tue, 03 Oct 2023 17:19:50 -0700 (PDT)
 Received: from [192.168.253.23] (helo=devoid.disaster.area)
         by dread.disaster.area with esmtp (Exim 4.96)
         (envelope-from <dave@fromorbit.com>)
-        id 1qnpcA-0097NA-09;
+        id 1qnpcA-0097NM-0U;
         Wed, 04 Oct 2023 11:19:45 +1100
 Received: from dave by devoid.disaster.area with local (Exim 4.97-RC0)
         (envelope-from <dave@devoid.disaster.area>)
-        id 1qnpc9-00000001TrD-3IBg;
+        id 1qnpc9-00000001TrP-3f0u;
         Wed, 04 Oct 2023 11:19:45 +1100
 From:   Dave Chinner <david@fromorbit.com>
 To:     linux-xfs@vger.kernel.org
 Cc:     john.g.garry@oracle.com
-Subject: [PATCH 4/9] xfs: push the perag outwards in initial allocation
-Date:   Wed,  4 Oct 2023 11:19:38 +1100
-Message-Id: <20231004001943.349265-5-david@fromorbit.com>
+Subject: [PATCH 6/9] xfs: use agno/agbno in xfs_alloc_vextent functions
+Date:   Wed,  4 Oct 2023 11:19:40 +1100
+Message-Id: <20231004001943.349265-7-david@fromorbit.com>
 X-Mailer: git-send-email 2.40.1
 In-Reply-To: <20231004001943.349265-1-david@fromorbit.com>
 References: <20231004001943.349265-1-david@fromorbit.com>
@@ -75,226 +75,170 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: Dave Chinner <dchinner@redhat.com>
 
-In xfs_bmap_btalloc_best_length(), we first select the best length
-to allocate by scanning all the AGs to check free space and
-contiguous extents. From this, we effectively select a target AG,
-but we don't take a perag reference anywhere. We only take a perag
-reference when we actually go to do an allocation. This means we
-end up calling xfs_bmap_btalloc_at_eof() from different places, one
-with a perag reference and one without, and so it has to manage
-grabbing the perag reference if necessary.
-
-We should be grabbing this perag reference when we determine the
-first AG with a suitable extent in it in
-xfs_bmap_btalloc_select_lengths(), rather than determining that
-there is some AG tha has a suitable contiguous extent in it and then
-trying maxlen allocations from  the start AG and failing until we
-finally hit the AG that has that maxlen extent in it.
-
-We also need to pass the stripe alignment blocks needed to
-xfs_bmap_btalloc_select_lengths() so that this is taken into account
-when we scan the AGs for an appropriate contiguous extent size.
-
-At this point, we want the near and exact block allocation
-algorithms to take the AG they operate in from args->pag rather than
-from the the target block number. The high level callers have
-already all selected an AG and grabbed a perag, so the "agno"
-portion of the target is no longer relevant and may, in fact, be
-stale. i.e. the caller should set up args->pag to points to the AG
-that we want to allocate from so that we don't end up in the
-situation where the target fsbno points to a different AG and we
-attempt an allocation on a AG that we don't hold a perag reference
-to.
+We're moving away from using xfs_fsblock_t to define allocation
+targets, and instead we are using {agno,agbno} tuples instead. This
+will allow us to eventually move everything to {perag,agbno}. But
+before we get there, we need to split the fsblock into {agno,agbno}
+and convert the code to use those first.
 
 Signed-off-by: Dave Chinner <dchinner@redhat.com>
 ---
- fs/xfs/libxfs/xfs_bmap.c | 96 ++++++++++++++++++++++++++--------------
- 1 file changed, 62 insertions(+), 34 deletions(-)
+ fs/xfs/libxfs/xfs_alloc.c | 57 +++++++++++++++++++++------------------
+ 1 file changed, 31 insertions(+), 26 deletions(-)
 
-diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
-index ee1c1415c67a..3c250c89f42e 100644
---- a/fs/xfs/libxfs/xfs_bmap.c
-+++ b/fs/xfs/libxfs/xfs_bmap.c
-@@ -3224,10 +3224,26 @@ xfs_bmap_select_minlen(
- 	return args->maxlen;
- }
- 
-+/*
-+ * Find the first AG with sufficient contiguous free space to allocate the
-+ * entire extent and return with a reference held to that perag in args->pag.
-+ * This takes into account stripe alignment rounding for the extent as well, so
-+ * we don't end selecting an AG that gets rejected multiple times trying to do
-+ * aligned allocation in AGs that don't quite have enough contiguous free space
-+ * for aligned allocation to succed.
-+ *
-+ * If no maxlen contiguous extent can be found, just grab the perag for the AG
-+ * that matches the target (startag) and let the allocation routines iterate to
-+ * find the best candidate themselves.
-+ *
-+ * This function also sets the minimum and maximum lengths acceptable for
-+ * optimal allocation in this context.
-+ */
+diff --git a/fs/xfs/libxfs/xfs_alloc.c b/fs/xfs/libxfs/xfs_alloc.c
+index 3069194527dd..289b54911b05 100644
+--- a/fs/xfs/libxfs/xfs_alloc.c
++++ b/fs/xfs/libxfs/xfs_alloc.c
+@@ -3249,7 +3249,8 @@ xfs_alloc_read_agf(
  static int
- xfs_bmap_btalloc_select_lengths(
- 	struct xfs_bmalloca	*ap,
+ xfs_alloc_vextent_check_args(
  	struct xfs_alloc_arg	*args,
-+	int			stripe_align,
- 	xfs_extlen_t		*blen)
+-	xfs_fsblock_t		target,
++	xfs_agnumber_t		target_agno,
++	xfs_agblock_t		target_agbno,
+ 	xfs_agnumber_t		*minimum_agno)
  {
  	struct xfs_mount	*mp = args->mp;
-@@ -3235,26 +3251,24 @@ xfs_bmap_btalloc_select_lengths(
- 	xfs_agnumber_t		agno, startag;
- 	xfs_agnumber_t		max_blen_agno;
- 	xfs_extlen_t		max_blen = 0;
--	int			error = 0;
--
--	if (ap->tp->t_flags & XFS_TRANS_LOWMODE) {
--		args->total = ap->minlen;
--		args->minlen = ap->minlen;
--		return 0;
--	}
+@@ -3277,14 +3278,14 @@ xfs_alloc_vextent_check_args(
+ 	ASSERT(args->alignment > 0);
+ 	ASSERT(args->resv != XFS_AG_RESV_AGFL);
  
-+	ASSERT(args->pag == NULL);
- 	args->total = ap->total;
-+
- 	startag = XFS_FSB_TO_AGNO(mp, ap->blkno);
- 	if (startag == NULLAGNUMBER)
- 		startag = 0;
+-	ASSERT(XFS_FSB_TO_AGNO(mp, target) < mp->m_sb.sb_agcount);
+-	ASSERT(XFS_FSB_TO_AGBNO(mp, target) < agsize);
++	ASSERT(target_agno < mp->m_sb.sb_agcount);
++	ASSERT(target_agbno < agsize);
+ 	ASSERT(args->minlen <= args->maxlen);
+ 	ASSERT(args->minlen <= agsize);
+ 	ASSERT(args->mod < args->prod);
  
- 	*blen = 0;
-+	max_blen_agno = startag;
- 	for_each_perag_wrap(mp, startag, agno, pag) {
--		error = xfs_bmap_longest_free_extent(pag, args->tp, blen);
--		if (error && error != -EAGAIN)
--			break;
--		error = 0;
--		if (*blen >= args->maxlen) {
-+		int error = xfs_bmap_longest_free_extent(pag, args->tp, blen);
-+
-+		if (error && error != -EAGAIN) {
-+			xfs_perag_rele(pag);
-+			return error;
-+		}
-+		if (*blen >= args->maxlen + stripe_align) {
- 			/*
- 			 * We are going to target a different AG than the
- 			 * incoming target, so we need to reset the target and
-@@ -3264,6 +3278,7 @@ xfs_bmap_btalloc_select_lengths(
- 				ap->blkno = XFS_AGB_TO_FSB(mp, agno, 0);
- 				ap->aeof = false;
- 			}
-+			args->pag = pag;
- 			break;
- 		}
- 		if (*blen > max_blen) {
-@@ -3271,19 +3286,19 @@ xfs_bmap_btalloc_select_lengths(
- 			max_blen_agno = agno;
- 		}
- 	}
--	if (pag)
--		xfs_perag_rele(pag);
- 
--	if (max_blen > *blen) {
-+	if (max_blen >= *blen) {
-+		ASSERT(args->pag == NULL);
- 		if (max_blen_agno != startag) {
- 			ap->blkno = XFS_AGB_TO_FSB(mp, max_blen_agno, 0);
- 			ap->aeof = false;
- 		}
- 		*blen = max_blen;
-+		args->pag = xfs_perag_grab(mp, max_blen_agno);
- 	}
- 
- 	args->minlen = xfs_bmap_select_minlen(ap, args, *blen);
--	return error;
-+	return 0;
- }
- 
- /* Update all inode and quota accounting for the allocation we just did. */
-@@ -3485,8 +3500,6 @@ xfs_bmap_exact_minlen_extent_alloc(
- 	xfs_extlen_t		blen,
- 	int			stripe_align)
+-	if (XFS_FSB_TO_AGNO(mp, target) >= mp->m_sb.sb_agcount ||
+-	    XFS_FSB_TO_AGBNO(mp, target) >= agsize ||
++	if (target_agno >= mp->m_sb.sb_agcount ||
++	    target_agbno >= agsize ||
+ 	    args->minlen > args->maxlen || args->minlen > agsize ||
+ 	    args->mod >= args->prod) {
+ 		trace_xfs_alloc_vextent_badargs(args);
+@@ -3438,7 +3439,6 @@ xfs_alloc_vextent_this_ag(
+ 	struct xfs_alloc_arg	*args,
+ 	xfs_agnumber_t		agno)
  {
 -	struct xfs_mount	*mp = args->mp;
--	struct xfs_perag        *caller_pag = args->pag;
- 	xfs_extlen_t		nextminlen = 0;
+ 	xfs_agnumber_t		minimum_agno;
+ 	uint32_t		alloc_flags = 0;
  	int			error;
+@@ -3451,8 +3451,7 @@ xfs_alloc_vextent_this_ag(
  
-@@ -3506,13 +3519,7 @@ xfs_bmap_exact_minlen_extent_alloc(
- 	else
- 		args->minalignslop = 0;
+ 	trace_xfs_alloc_vextent_this_ag(args);
  
--	if (!caller_pag)
--		args->pag = xfs_perag_get(mp, XFS_FSB_TO_AGNO(mp, ap->blkno));
- 	error = xfs_alloc_vextent_exact_bno(args, ap->blkno);
--	if (!caller_pag) {
--		xfs_perag_put(args->pag);
--		args->pag = NULL;
--	}
- 	if (error)
- 		return error;
+-	error = xfs_alloc_vextent_check_args(args, XFS_AGB_TO_FSB(mp, agno, 0),
+-			&minimum_agno);
++	error = xfs_alloc_vextent_check_args(args, agno, 0, &minimum_agno);
+ 	if (error) {
+ 		if (error == -ENOSPC)
+ 			return 0;
+@@ -3563,7 +3562,8 @@ xfs_alloc_vextent_start_ag(
+ {
+ 	struct xfs_mount	*mp = args->mp;
+ 	xfs_agnumber_t		minimum_agno;
+-	xfs_agnumber_t		start_agno;
++	xfs_agnumber_t		target_agno;
++	xfs_agblock_t		target_agbno;
+ 	xfs_agnumber_t		rotorstep = xfs_rotorstep;
+ 	bool			bump_rotor = false;
+ 	uint32_t		alloc_flags = XFS_ALLOC_FLAG_TRYLOCK;
+@@ -3576,7 +3576,10 @@ xfs_alloc_vextent_start_ag(
  
-@@ -3677,6 +3684,17 @@ xfs_bmap_btalloc_best_length(
- 	ap->blkno = XFS_INO_TO_FSB(args->mp, ap->ip->i_ino);
- 	xfs_bmap_adjacent(ap);
+ 	trace_xfs_alloc_vextent_start_ag(args);
  
-+	/*
-+	 * If we are in low space mode, then optimal allocation will fail so
-+	 * prepare for minimal allocation and run the low space algorithm
-+	 * immediately.
-+	 */
-+	if (ap->tp->t_flags & XFS_TRANS_LOWMODE) {
-+		args->minlen = ap->minlen;
-+		ASSERT(args->fsbno == NULLFSBLOCK);
-+		return xfs_bmap_btalloc_low_space(ap, args);
-+	}
-+
- 	/*
- 	 * We only use stripe alignment for EOF allocations. Hence if it isn't
- 	 * an EOF allocation, clear the stripe alignment. This allows us to
-@@ -3692,22 +3710,32 @@ xfs_bmap_btalloc_best_length(
- 	 * the request.  If one isn't found, then adjust the minimum allocation
- 	 * size to the largest space found.
- 	 */
--	error = xfs_bmap_btalloc_select_lengths(ap, args, &blen);
-+	error = xfs_bmap_btalloc_select_lengths(ap, args, stripe_align, &blen);
- 	if (error)
- 		return error;
-+	ASSERT(args->pag);
- 
--	/*
--	 * Don't attempt optimal EOF allocation if previous allocations barely
--	 * succeeded due to being near ENOSPC. It is highly unlikely we'll get
--	 * optimal or even aligned allocations in this case, so don't waste time
--	 * trying.
--	 */
--	if (ap->aeof && ap->offset && !(ap->tp->t_flags & XFS_TRANS_LOWMODE)) {
-+	if (ap->aeof && ap->offset) {
- 		error = xfs_bmap_btalloc_at_eof(ap, args, blen, stripe_align);
--		if (error || args->fsbno != NULLFSBLOCK)
--			return error;
+-	error = xfs_alloc_vextent_check_args(args, target, &minimum_agno);
++	target_agno = XFS_FSB_TO_AGNO(mp, target);
++	target_agbno = XFS_FSB_TO_AGBNO(mp, target);
++	error = xfs_alloc_vextent_check_args(args, target_agno, target_agbno,
++			&minimum_agno);
+ 	if (error) {
+ 		if (error == -ENOSPC)
+ 			return 0;
+@@ -3591,12 +3594,11 @@ xfs_alloc_vextent_start_ag(
+ 		bump_rotor = 1;
  	}
  
-+	/*
-+	 * We are now done with the perag reference for the optimal allocation
-+	 * association provided by xfs_bmap_btalloc_select_lengths(). Release it
-+	 * now as we've either succeeded, had a fatal error or we are out of
-+	 * space and need to do a full filesystem scan for free space which will
-+	 * take it's own references.
-+	 *
-+	 * XXX: now that xfs_bmap_btalloc_select_lengths() selects an AG with
-+	 * enough contiguous free space in it for an aligned allocation, we
-+	 * can change the aligned allocation at EOF to just be a single AG
-+	 * allocation.
-+	 */
-+	xfs_perag_rele(args->pag);
-+	args->pag = NULL;
-+	if (error || args->fsbno != NULLFSBLOCK)
-+		return error;
-+
- 	/* attempt aligned allocation for new EOF extents */
- 	if (stripe_align)
- 		error = xfs_bmap_btalloc_aligned(ap, args, blen, stripe_align,
+-	start_agno = max(minimum_agno, XFS_FSB_TO_AGNO(mp, target));
+-	error = xfs_alloc_vextent_iterate_ags(args, minimum_agno, start_agno,
+-			XFS_FSB_TO_AGBNO(mp, target), alloc_flags);
+-
++	target_agno = max(minimum_agno, target_agno);
++	error = xfs_alloc_vextent_iterate_ags(args, minimum_agno, target_agno,
++			target_agbno, alloc_flags);
+ 	if (bump_rotor) {
+-		if (args->agno == start_agno)
++		if (args->agno == target_agno)
+ 			mp->m_agfrotor = (mp->m_agfrotor + 1) %
+ 				(mp->m_sb.sb_agcount * rotorstep);
+ 		else
+@@ -3619,7 +3621,8 @@ xfs_alloc_vextent_first_ag(
+  {
+ 	struct xfs_mount	*mp = args->mp;
+ 	xfs_agnumber_t		minimum_agno;
+-	xfs_agnumber_t		start_agno;
++	xfs_agnumber_t		target_agno;
++	xfs_agblock_t		target_agbno;
+ 	uint32_t		alloc_flags = XFS_ALLOC_FLAG_TRYLOCK;
+ 	int			error;
+ 
+@@ -3630,16 +3633,19 @@ xfs_alloc_vextent_first_ag(
+ 
+ 	trace_xfs_alloc_vextent_first_ag(args);
+ 
+-	error = xfs_alloc_vextent_check_args(args, target, &minimum_agno);
++	target_agno = XFS_FSB_TO_AGNO(mp, target);
++	target_agbno = XFS_FSB_TO_AGBNO(mp, target);
++	error = xfs_alloc_vextent_check_args(args, target_agno, target_agbno,
++			&minimum_agno);
+ 	if (error) {
+ 		if (error == -ENOSPC)
+ 			return 0;
+ 		return error;
+ 	}
+ 
+-	start_agno = max(minimum_agno, XFS_FSB_TO_AGNO(mp, target));
+-	error = xfs_alloc_vextent_iterate_ags(args, minimum_agno, start_agno,
+-			XFS_FSB_TO_AGBNO(mp, target), alloc_flags);
++	target_agno = max(minimum_agno, target_agno);
++	error = xfs_alloc_vextent_iterate_ags(args, minimum_agno, target_agno,
++			target_agbno, alloc_flags);
+ 	return xfs_alloc_vextent_finish(args, minimum_agno, error, true);
+ }
+ 
+@@ -3656,15 +3662,13 @@ xfs_alloc_vextent_exact_bno(
+ 	xfs_agnumber_t		minimum_agno;
+ 	int			error;
+ 
+-	ASSERT(args->pag != NULL);
+-	ASSERT(args->pag->pag_agno == XFS_FSB_TO_AGNO(mp, target));
+-
+-	args->agno = XFS_FSB_TO_AGNO(mp, target);
++	args->agno = args->pag->pag_agno;
+ 	args->agbno = XFS_FSB_TO_AGBNO(mp, target);
+ 
+ 	trace_xfs_alloc_vextent_exact_bno(args);
+ 
+-	error = xfs_alloc_vextent_check_args(args, target, &minimum_agno);
++	error = xfs_alloc_vextent_check_args(args, args->agno, args->agbno,
++			&minimum_agno);
+ 	if (error) {
+ 		if (error == -ENOSPC)
+ 			return 0;
+@@ -3703,7 +3707,8 @@ xfs_alloc_vextent_near_bno(
+ 
+ 	trace_xfs_alloc_vextent_near_bno(args);
+ 
+-	error = xfs_alloc_vextent_check_args(args, target, &minimum_agno);
++	error = xfs_alloc_vextent_check_args(args, args->agno, args->agbno,
++			&minimum_agno);
+ 	if (error) {
+ 		if (error == -ENOSPC)
+ 			return 0;
 -- 
 2.40.1
 
