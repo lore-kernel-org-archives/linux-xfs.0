@@ -2,113 +2,77 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9159FE92737
-	for <linux-xfs@archiver.kernel.org>; Thu,  5 Oct 2023 14:43:23 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id CB00BE92706
+	for <linux-xfs@archiver.kernel.org>; Thu,  5 Oct 2023 14:45:25 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S237727AbjJEOnU (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 5 Oct 2023 10:43:20 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38950 "EHLO
+        id S238884AbjJEOnz (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 5 Oct 2023 10:43:55 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47040 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S234797AbjJEOhw (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 5 Oct 2023 10:37:52 -0400
+        with ESMTP id S239146AbjJEOlv (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 5 Oct 2023 10:41:51 -0400
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id DCA1047883
-        for <linux-xfs@vger.kernel.org>; Thu,  5 Oct 2023 07:02:59 -0700 (PDT)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 33FA6C3279C;
-        Thu,  5 Oct 2023 12:45:14 +0000 (UTC)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id EA31587236;
+        Thu,  5 Oct 2023 07:17:36 -0700 (PDT)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 6763CC43395;
+        Thu,  5 Oct 2023 05:59:28 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1696509916;
-        bh=D2DTYMgh0RO67Xy0HPAXJ9Ru/RHiX/XQ4FolxCT4N4I=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=e4IjdZ+JH6RXGozFQN6HeKgYEaF63eVjMFFUngpJgSnf9dyQRcqim/C8BqRxgQNah
-         OOhFxe5CKBtOB54IjCkVkz8z/WzMyISNPzs5OLfl7Pl5x2fuz2Pt4G7RmvofBqUNLZ
-         Bb163CWxRknvbEsZcrTDjr5Wx30RcxPNrOyMLgx9HVqxniE3kVQejYjfD3Be58mBsN
-         ABZeDjJHdmgCl5Y9nEz+33p0q1ZigcayUnehI1S98c6VUiq2LhWnE3GdjWH3hKfmFp
-         vaO893nanUqTaMsG0Ht9jrPIuCJW1l/1x/4rY1Sc9kIIQGbPLChh487vOlgxXPTh9P
-         1QPbZxZCVz+sQ==
-Date:   Thu, 5 Oct 2023 14:45:12 +0200
-From:   Carlos Maiolino <cem@kernel.org>
-To:     "Darrick J. Wong" <djwong@kernel.org>
-Cc:     Anthony Iliopoulos <ailiop@suse.com>, linux-xfs@vger.kernel.org
-Subject: Re: [PATCH v1.1 6/6] libxfs: fix atomic64_t detection on x86 32-bit
- architectures
-Message-ID: <20231005124512.lwnvra7nwcsnuw5t@andromeda>
-References: <169454757570.3539425.3597048437340386509.stgit@frogsfrogsfrogs>
- <169454761010.3539425.13599600178844641233.stgit@frogsfrogsfrogs>
- <ub8kRv81g-HpbM3_wrwF0n1yJgSTxGCDW2TMp03cXXpwUZJKxqNkjYscvho3WpTodI-grFYtPtvGS05-moG1PQ==@protonmail.internalid>
- <20230912194751.GB3415652@frogsfrogsfrogs>
+        s=k20201202; t=1696485568;
+        bh=cCSCNZZslM+gfgDhLOiPNVMp1LbblmbMJUQl9x8MlBc=;
+        h=From:To:Cc:Subject:Date:From;
+        b=k97I2ThurWMNxl9tkFgNSEFVWw/8wjVdJOAUHDEFD+aqJCrtqKzzqniW2vCn6jYrP
+         THg1m/QDlNN46G+FI0EYV1PbWPr+NdgyP5LtRyolbE3WvGfwubSjKVEIaO76wQkKVh
+         dOzQTTXEyHezP7ndyccnw+QDOdDn4SOlvGkeZeCIsG8BizEJaRwRIJfA7mfGAiTqw6
+         b1zstobsa+XZz/i76RXfOV7zcXMDrT1e5BAC+UCKZyoGu1czf3lOi6fomKmhf2Wxot
+         W8m+mkNC9yef8FEa6YwBNp/r5vrqLMNq6LoNmYWdhyAnY1LgKs5KtMsBblevpIDrdU
+         bid6C4c44bR6w==
+User-agent: mu4e 1.8.10; emacs 27.1
+From:   Chandan Babu R <chandanbabu@kernel.org>
+To:     chandanbabu@kernel.org
+Cc:     dchinner@redhat.com, djwong@kernel.org,
+        linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org
+Subject: [ANNOUNCE] xfs-linux: for-next updated to 4e69f490d211
+Date:   Thu, 05 Oct 2023 11:27:35 +0530
+Message-ID: <87h6n5624j.fsf@debian-BULLSEYE-live-builder-AMD64>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20230912194751.GB3415652@frogsfrogsfrogs>
+Content-Type: text/plain
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Tue, Sep 12, 2023 at 12:47:51PM -0700, Darrick J. Wong wrote:
-> From: Darrick J. Wong <djwong@kernel.org>
-> 
-> xfsprogs during compilation tries to detect if liburcu supports atomic
-> 64-bit ops on the platform it is being compiled on, and if not it falls
-> back to using pthread mutex locks.
-> 
-> The detection logic for that fallback relies on _uatomic_link_error()
-> which is a link-time trick used by liburcu that will cause compilation
-> errors on archs that lack the required support. That only works for the
-> generic liburcu code though, and it is not implemented for the
-> x86-specific code.
-> 
-> In practice this means that when xfsprogs is compiled on 32-bit x86
-> archs will successfully link to liburcu for atomic ops, but liburcu does
-> not support atomic64_t on those archs. It indicates this during runtime
-> by generating an illegal instruction that aborts execution, and thus
-> causes various xfsprogs utils to be segfaulting.
-> 
-> Fix this by requiring that unsigned longs are at least 64 bits in size,
-> which /usually/ means that 64-bit atomic counters are supported.  We
-> can't simply execute the liburcu atomic64_t detection code during
-> configure instead of only relying on the linker error because that
-> doesn't work for cross-compiled packages.
-> 
-> Fixes: 7448af588a2e ("libxfs: fix atomic64_t poorly for 32-bit architectures")
-> Reported-by: Anthony Iliopoulos <ailiop@suse.com>
-> Signed-off-by: Darrick J. Wong <djwong@kernel.org>
-> ---
-> v1.1: This time with correct commit message.
-> ---
+Hi folks,
 
-Reviewed-by: Carlos Maiolino <cmaiolino@redhat.com>
-Carlos
+The for-next branch of the xfs-linux repository at:
 
->  m4/package_urcu.m4 |    9 ++++++++-
->  1 file changed, 8 insertions(+), 1 deletion(-)
-> 
-> diff --git a/m4/package_urcu.m4 b/m4/package_urcu.m4
-> index ef116e0cda7..4bb2b886f06 100644
-> --- a/m4/package_urcu.m4
-> +++ b/m4/package_urcu.m4
-> @@ -26,7 +26,11 @@ rcu_init();
->  #
->  # Make sure that calling uatomic_inc on a 64-bit integer doesn't cause a link
->  # error on _uatomic_link_error, which is how liburcu signals that it doesn't
-> -# support atomic operations on 64-bit data types.
-> +# support atomic operations on 64-bit data types for its generic
-> +# implementation (which relies on compiler builtins). For certain archs
-> +# where liburcu carries its own implementation (such as x86_32), it
-> +# signals lack of support during runtime by emitting an illegal
-> +# instruction, so we also need to check CAA_BITS_PER_LONG to detect that.
->  #
->  AC_DEFUN([AC_HAVE_LIBURCU_ATOMIC64],
->    [ AC_MSG_CHECKING([for atomic64_t support in liburcu])
-> @@ -34,8 +38,11 @@ AC_DEFUN([AC_HAVE_LIBURCU_ATOMIC64],
->      [	AC_LANG_PROGRAM([[
->  #define _GNU_SOURCE
->  #include <urcu.h>
-> +#define BUILD_BUG_ON(condition) ((void)sizeof(char[1 - 2*!!(condition)]))
->  	]], [[
->  long long f = 3;
-> +
-> +BUILD_BUG_ON(CAA_BITS_PER_LONG < 64);
->  uatomic_inc(&f);
->  	]])
->      ], have_liburcu_atomic64=yes
+	https://git.kernel.org/pub/scm/fs/xfs/xfs-linux.git
+
+has just been updated.
+
+Patches often get missed, so please check if your outstanding patches
+were in this update. If they have not been in this update, please
+resubmit them to linux-xfs@vger.kernel.org so they can be picked up in
+the next update.
+
+The new head of the for-next branch is commit:
+
+4e69f490d211 Merge tag 'xfs-fstrim-busy-tag' of git://git.kernel.org/pub/scm/linux/kernel/git/dgc/linux-xfs into xfs-6.6-fixesC
+
+4 new commits:
+
+Chandan Babu R (1):
+      [4e69f490d211] Merge tag 'xfs-fstrim-busy-tag' of git://git.kernel.org/pub/scm/linux/kernel/git/dgc/linux-xfs into xfs-6.6-fixesC
+
+Dave Chinner (3):
+      [428c4435b063] xfs: move log discard work to xfs_discard.c
+      [89cfa899608f] xfs: reduce AGF hold times during fstrim operations
+      [e78a40b85171] xfs: abort fstrim if kernel is suspending
+
+Code Diffstat:
+
+ fs/xfs/xfs_discard.c     | 266 ++++++++++++++++++++++++++++++++++++++++++-----
+ fs/xfs/xfs_discard.h     |   6 +-
+ fs/xfs/xfs_extent_busy.c |  34 ++++--
+ fs/xfs/xfs_extent_busy.h |  24 ++++-
+ fs/xfs/xfs_log_cil.c     |  93 +++--------------
+ fs/xfs/xfs_log_priv.h    |   5 +-
+ 6 files changed, 311 insertions(+), 117 deletions(-)
