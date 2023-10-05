@@ -2,86 +2,113 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4A56DE92707
-	for <linux-xfs@archiver.kernel.org>; Thu,  5 Oct 2023 14:38:25 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9159FE92737
+	for <linux-xfs@archiver.kernel.org>; Thu,  5 Oct 2023 14:43:23 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233160AbjJEOiX (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 5 Oct 2023 10:38:23 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38946 "EHLO
+        id S237727AbjJEOnU (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 5 Oct 2023 10:43:20 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38950 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S235901AbjJEOfx (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 5 Oct 2023 10:35:53 -0400
+        with ESMTP id S234797AbjJEOhw (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 5 Oct 2023 10:37:52 -0400
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9BCC6158FA
-        for <linux-xfs@vger.kernel.org>; Thu,  5 Oct 2023 06:57:54 -0700 (PDT)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 94B07C3279A;
-        Thu,  5 Oct 2023 12:37:34 +0000 (UTC)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id DCA1047883
+        for <linux-xfs@vger.kernel.org>; Thu,  5 Oct 2023 07:02:59 -0700 (PDT)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 33FA6C3279C;
+        Thu,  5 Oct 2023 12:45:14 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1696509455;
-        bh=T5jOg8kM3KY40hMhaZWhJyH1j5s2diQbBvPMMbNu9qQ=;
+        s=k20201202; t=1696509916;
+        bh=D2DTYMgh0RO67Xy0HPAXJ9Ru/RHiX/XQ4FolxCT4N4I=;
         h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=YP5SRJsDivpnrfnEa57e08CKvh2ZrRb2qlSB0I20vPlRdNutSgQ/6AeoKjbEMStCo
-         kofRSbm6FpUEN3supblF9gy79f6AlJZ2v/8WyTzNatRdIIcxOLVXT+5NyHPc37T6ZS
-         M/EDjBPZtapMHqpgvv2MDnAU7YwRWe6Ywn2hzWncCeTFvUwlzaZvAJ+v1blo6yAAGy
-         Q7BowaUfmk+CrdUXDnGda/7aQr4RhLGkRiuOsyMnwjTu4W8BHrX+t0s3A9cISWDvdc
-         7p9hx3LymTgIyYAKuWwDpeW4pk6z3TUvZskyw/+qpZssEV90TErVg7A/QuM1ee8KPZ
-         Idksmehxhh0NA==
-Date:   Thu, 5 Oct 2023 14:37:31 +0200
+        b=e4IjdZ+JH6RXGozFQN6HeKgYEaF63eVjMFFUngpJgSnf9dyQRcqim/C8BqRxgQNah
+         OOhFxe5CKBtOB54IjCkVkz8z/WzMyISNPzs5OLfl7Pl5x2fuz2Pt4G7RmvofBqUNLZ
+         Bb163CWxRknvbEsZcrTDjr5Wx30RcxPNrOyMLgx9HVqxniE3kVQejYjfD3Be58mBsN
+         ABZeDjJHdmgCl5Y9nEz+33p0q1ZigcayUnehI1S98c6VUiq2LhWnE3GdjWH3hKfmFp
+         vaO893nanUqTaMsG0Ht9jrPIuCJW1l/1x/4rY1Sc9kIIQGbPLChh487vOlgxXPTh9P
+         1QPbZxZCVz+sQ==
+Date:   Thu, 5 Oct 2023 14:45:12 +0200
 From:   Carlos Maiolino <cem@kernel.org>
 To:     "Darrick J. Wong" <djwong@kernel.org>
-Cc:     linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 5/6] xfs_repair: set aformat and anextents correctly when
- clearing the attr fork
-Message-ID: <20231005123731.re3luz7nsyigkcmq@andromeda>
+Cc:     Anthony Iliopoulos <ailiop@suse.com>, linux-xfs@vger.kernel.org
+Subject: Re: [PATCH v1.1 6/6] libxfs: fix atomic64_t detection on x86 32-bit
+ architectures
+Message-ID: <20231005124512.lwnvra7nwcsnuw5t@andromeda>
 References: <169454757570.3539425.3597048437340386509.stgit@frogsfrogsfrogs>
- <w3T3skdhB6ig90SVQ8Q4MioBjk9lUH2K6uvsYLKKEgAf89O2SctP_G3ECpSBT-EI2W4cKWp3xmv-Mo-AaD3IyA==@protonmail.internalid>
- <169454760445.3539425.1849980383287926875.stgit@frogsfrogsfrogs>
+ <169454761010.3539425.13599600178844641233.stgit@frogsfrogsfrogs>
+ <ub8kRv81g-HpbM3_wrwF0n1yJgSTxGCDW2TMp03cXXpwUZJKxqNkjYscvho3WpTodI-grFYtPtvGS05-moG1PQ==@protonmail.internalid>
+ <20230912194751.GB3415652@frogsfrogsfrogs>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <169454760445.3539425.1849980383287926875.stgit@frogsfrogsfrogs>
+In-Reply-To: <20230912194751.GB3415652@frogsfrogsfrogs>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Tue, Sep 12, 2023 at 12:40:04PM -0700, Darrick J. Wong wrote:
+On Tue, Sep 12, 2023 at 12:47:51PM -0700, Darrick J. Wong wrote:
 > From: Darrick J. Wong <djwong@kernel.org>
 > 
-> Ever since commit b42db0860e130 ("xfs: enhance dinode verifier"), we've
-> required that inodes with zero di_forkoff must also have di_aformat ==
-> EXTENTS and di_naextents == 0.  clear_dinode_attr actually does this,
-> but then both callers inexplicably set di_format = LOCAL.  That in turn
-> causes a verifier failure the next time the xattrs of that file are
-> read by the kernel.  Get rid of the bogus field write.
+> xfsprogs during compilation tries to detect if liburcu supports atomic
+> 64-bit ops on the platform it is being compiled on, and if not it falls
+> back to using pthread mutex locks.
 > 
+> The detection logic for that fallback relies on _uatomic_link_error()
+> which is a link-time trick used by liburcu that will cause compilation
+> errors on archs that lack the required support. That only works for the
+> generic liburcu code though, and it is not implemented for the
+> x86-specific code.
+> 
+> In practice this means that when xfsprogs is compiled on 32-bit x86
+> archs will successfully link to liburcu for atomic ops, but liburcu does
+> not support atomic64_t on those archs. It indicates this during runtime
+> by generating an illegal instruction that aborts execution, and thus
+> causes various xfsprogs utils to be segfaulting.
+> 
+> Fix this by requiring that unsigned longs are at least 64 bits in size,
+> which /usually/ means that 64-bit atomic counters are supported.  We
+> can't simply execute the liburcu atomic64_t detection code during
+> configure instead of only relying on the linker error because that
+> doesn't work for cross-compiled packages.
+> 
+> Fixes: 7448af588a2e ("libxfs: fix atomic64_t poorly for 32-bit architectures")
+> Reported-by: Anthony Iliopoulos <ailiop@suse.com>
 > Signed-off-by: Darrick J. Wong <djwong@kernel.org>
+> ---
+> v1.1: This time with correct commit message.
+> ---
 
 Reviewed-by: Carlos Maiolino <cmaiolino@redhat.com>
 Carlos
 
-> ---
->  repair/dinode.c |    2 --
->  1 file changed, 2 deletions(-)
+>  m4/package_urcu.m4 |    9 ++++++++-
+>  1 file changed, 8 insertions(+), 1 deletion(-)
 > 
-> 
-> diff --git a/repair/dinode.c b/repair/dinode.c
-> index e534a01b500..c10dd1fa322 100644
-> --- a/repair/dinode.c
-> +++ b/repair/dinode.c
-> @@ -2078,7 +2078,6 @@ process_inode_attr_fork(
->  		if (!no_modify)  {
->  			do_warn(_(", clearing attr fork\n"));
->  			*dirty += clear_dinode_attr(mp, dino, lino);
-> -			dino->di_aformat = XFS_DINODE_FMT_LOCAL;
->  			ASSERT(*dirty > 0);
->  		} else  {
->  			do_warn(_(", would clear attr fork\n"));
-> @@ -2135,7 +2134,6 @@ process_inode_attr_fork(
->  			/* clear attributes if not done already */
->  			if (!no_modify)  {
->  				*dirty += clear_dinode_attr(mp, dino, lino);
-> -				dino->di_aformat = XFS_DINODE_FMT_LOCAL;
->  			} else  {
->  				do_warn(_("would clear attr fork\n"));
->  			}
-> 
+> diff --git a/m4/package_urcu.m4 b/m4/package_urcu.m4
+> index ef116e0cda7..4bb2b886f06 100644
+> --- a/m4/package_urcu.m4
+> +++ b/m4/package_urcu.m4
+> @@ -26,7 +26,11 @@ rcu_init();
+>  #
+>  # Make sure that calling uatomic_inc on a 64-bit integer doesn't cause a link
+>  # error on _uatomic_link_error, which is how liburcu signals that it doesn't
+> -# support atomic operations on 64-bit data types.
+> +# support atomic operations on 64-bit data types for its generic
+> +# implementation (which relies on compiler builtins). For certain archs
+> +# where liburcu carries its own implementation (such as x86_32), it
+> +# signals lack of support during runtime by emitting an illegal
+> +# instruction, so we also need to check CAA_BITS_PER_LONG to detect that.
+>  #
+>  AC_DEFUN([AC_HAVE_LIBURCU_ATOMIC64],
+>    [ AC_MSG_CHECKING([for atomic64_t support in liburcu])
+> @@ -34,8 +38,11 @@ AC_DEFUN([AC_HAVE_LIBURCU_ATOMIC64],
+>      [	AC_LANG_PROGRAM([[
+>  #define _GNU_SOURCE
+>  #include <urcu.h>
+> +#define BUILD_BUG_ON(condition) ((void)sizeof(char[1 - 2*!!(condition)]))
+>  	]], [[
+>  long long f = 3;
+> +
+> +BUILD_BUG_ON(CAA_BITS_PER_LONG < 64);
+>  uatomic_inc(&f);
+>  	]])
+>      ], have_liburcu_atomic64=yes
