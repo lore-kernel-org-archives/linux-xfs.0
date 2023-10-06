@@ -2,144 +2,99 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 80BD0E92FF1
-	for <linux-xfs@archiver.kernel.org>; Fri,  6 Oct 2023 07:25:05 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6B5B7E81E1E
+	for <linux-xfs@archiver.kernel.org>; Fri,  6 Oct 2023 17:22:18 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230246AbjJFHZE (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 6 Oct 2023 03:25:04 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40640 "EHLO
+        id S233035AbjJFRWQ (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 6 Oct 2023 13:22:16 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33900 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230232AbjJFHZE (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 6 Oct 2023 03:25:04 -0400
-Received: from mail-oo1-xc32.google.com (mail-oo1-xc32.google.com [IPv6:2607:f8b0:4864:20::c32])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id AD07CCA
-        for <linux-xfs@vger.kernel.org>; Fri,  6 Oct 2023 00:25:02 -0700 (PDT)
-Received: by mail-oo1-xc32.google.com with SMTP id 006d021491bc7-57bab4e9e1aso1095719eaf.3
-        for <linux-xfs@vger.kernel.org>; Fri, 06 Oct 2023 00:25:02 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1696577102; x=1697181902; darn=vger.kernel.org;
-        h=cc:to:subject:message-id:date:from:in-reply-to:references
-         :mime-version:from:to:cc:subject:date:message-id:reply-to;
-        bh=eg+2GRW0aRszkDMex8YRwQkNSe/hWapRtD78Z3O2tBk=;
-        b=OrJBCa+SZif9H9FmuFp8HRSK5vgijvFJl7i2AtJ9Gq2sHMjXdCinNJj2XHpfKhhxu+
-         N462eNAqh3Kxli+sVG3c6djhooSv+NRtTbs0y/m4lW9xAhWmO68HrLv7Ogbwjo8l3W5c
-         chK85lAbX/giPNxpyw0IxspL6ANO4QT/j45kgYslKRy1B9QXC4y6h7RF4mg1kRk/tpsa
-         dzyIzsB85g1Za5xsUrbutOWWaeLj23s9FCd39MFAJfqobUowUdrXfhR+F/l997MU4DIq
-         bPDY3SlrUw5ZpvD6hcUCR+FRSK6ylJbc/s4W9TEKrBus0lNMJmmjU9mWLkEwY+ap2ruk
-         aV3w==
+        with ESMTP id S233011AbjJFRWO (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 6 Oct 2023 13:22:14 -0400
+Received: from mail-pf1-f173.google.com (mail-pf1-f173.google.com [209.85.210.173])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D321DFB;
+        Fri,  6 Oct 2023 10:22:12 -0700 (PDT)
+Received: by mail-pf1-f173.google.com with SMTP id d2e1a72fcca58-68bed2c786eso2040948b3a.0;
+        Fri, 06 Oct 2023 10:22:12 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1696577102; x=1697181902;
-        h=cc:to:subject:message-id:date:from:in-reply-to:references
-         :mime-version:x-gm-message-state:from:to:cc:subject:date:message-id
-         :reply-to;
-        bh=eg+2GRW0aRszkDMex8YRwQkNSe/hWapRtD78Z3O2tBk=;
-        b=PIuN91ZQFCuIME2oSApjRfOuPqsabPLhm4VlKH89IPrYUQfdJzydeTXN/OZ7BnarX8
-         OcqQ9Afw9mydSZsP7YuKdRtWRkF+qwBZ0jwvT36G5KvN7Sbef9uwvbXLFyw92OrDhwKV
-         hlsxZ8QnmwX8Q1KbMWv2mmBKLoOGCU/mujIiCA3F5JwAGB2GmtUchESXkDmHQcXe6iR4
-         3zkOF67QYP37hHAyQn1dn4u35B2Qp540IUmpAAKkTLj1YB4XUIJRC7lSChxi/5Xpntd4
-         kDeQQ5r0B6kLIziRNNLTVn7y5ni7nk8DTwniJGwZmdlvIsrrfb7pc06PaflcK1kgXOT2
-         U+bw==
-X-Gm-Message-State: AOJu0Yyy1CyZokG3xaZCN9f39qCdaLAiQV5eyC4hgxkg0LjGz2o/5L0w
-        JnYJoYTbcAonEwmtrDDcgfQUsykxrit4qPLSa/4=
-X-Google-Smtp-Source: AGHT+IFU3JS2o8b2qGDSbf/XHZccFTf3o5u0DkxEyewpWpcLANyScKEh/jQQtDcnnYnzC+lxCytOfYpOq1+qm+zTtlY=
-X-Received: by 2002:a05:6358:4414:b0:145:6fdf:9c86 with SMTP id
- z20-20020a056358441400b001456fdf9c86mr6418666rwc.13.1696577101712; Fri, 06
- Oct 2023 00:25:01 -0700 (PDT)
+        d=1e100.net; s=20230601; t=1696612932; x=1697217732;
+        h=content-transfer-encoding:in-reply-to:from:references:cc:to
+         :content-language:subject:user-agent:mime-version:date:message-id
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=UEjTiQOqZq/tiyoM37CeUZKubVviy0Hfhp5dRvbPE0c=;
+        b=YsNctJ0/shhjWo097m9U0+Axz93l4J8ST/Kf8XoiTiRB3dg1Vnna5RVXyySMpcjyfx
+         mGN2Ml1p9qPflgFDEDeH9sAqTyFp4+AzWGhl4kUGC3L9icHYEYQB7WnYRnBLNXR0FOnm
+         W5nIa6bVRuHecrHmavjx9azWy8TXSA75mJ7FwVrINtW0GfEz6IVVzXsRYgihvLITmm+m
+         8YyuamQcLUngN8XoG7XlSAwruJC8xwx3PDZtdYMaQ91sAgm0WZ6syqlya61aWiqw7e+5
+         9Y/95fbENTwSRe9geoSPOXhq7prhwKuzts7xYofCYgBvhQNw51uRXeLsGDXmqL7QIauq
+         NC0w==
+X-Gm-Message-State: AOJu0YwwhP/Ngd9CyNIYC7TI1+B4xEx+vhpH4t29MdZ8I2DEzYe888J6
+        6iHb6CT6kZq0p4Vu+4CvSko=
+X-Google-Smtp-Source: AGHT+IERDatMvRwiT/bQ534S3NzSEl+A3niSuO3D+OTniQoBISPNSqc1StabEZo+erszyh/gqRzPcg==
+X-Received: by 2002:a05:6a20:12d6:b0:153:4ea6:d127 with SMTP id v22-20020a056a2012d600b001534ea6d127mr10425406pzg.18.1696612931891;
+        Fri, 06 Oct 2023 10:22:11 -0700 (PDT)
+Received: from ?IPV6:2620:15c:211:201:ebdb:ae30:148c:2f33? ([2620:15c:211:201:ebdb:ae30:148c:2f33])
+        by smtp.gmail.com with ESMTPSA id q17-20020a62e111000000b0069327d0b491sm1719291pfh.195.2023.10.06.10.22.09
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Fri, 06 Oct 2023 10:22:10 -0700 (PDT)
+Message-ID: <2bb2a4d0-4f1f-45f1-9196-f5d0d8ee1878@acm.org>
+Date:   Fri, 6 Oct 2023 10:22:08 -0700
 MIME-Version: 1.0
-References: <CAO8sHc=UYg7SFh8DWYq6wRet2CW2P8tNr-pWRNJ2wN=+_qW17g@mail.gmail.com>
- <ZR8qWqksNx1kNhvi@dread.disaster.area> <20231006042250.GP21298@frogsfrogsfrogs>
- <ZR+OtcVIsVrJeqMO@dread.disaster.area> <20231006050451.GQ21298@frogsfrogsfrogs>
-In-Reply-To: <20231006050451.GQ21298@frogsfrogsfrogs>
-From:   Daan De Meyer <daan.j.demeyer@gmail.com>
-Date:   Fri, 6 Oct 2023 09:24:50 +0200
-Message-ID: <CAO8sHcmEXj4tVnLADGxX_k3nWGGVRiQueAkMVLMkAKBpPSMSGg@mail.gmail.com>
-Subject: Re: mkfs.xfs with --protofile does not copy extended attributes into
- the generated filesystem
-To:     "Darrick J. Wong" <djwong@kernel.org>
-Cc:     Dave Chinner <david@fromorbit.com>, linux-xfs@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH 10/21] block: Add fops atomic write support
+Content-Language: en-US
+To:     Dave Chinner <david@fromorbit.com>
+Cc:     "Martin K. Petersen" <martin.petersen@oracle.com>,
+        John Garry <john.g.garry@oracle.com>, axboe@kernel.dk,
+        kbusch@kernel.org, hch@lst.de, sagi@grimberg.me,
+        jejb@linux.ibm.com, djwong@kernel.org, viro@zeniv.linux.org.uk,
+        brauner@kernel.org, chandan.babu@oracle.com, dchinner@redhat.com,
+        linux-block@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-nvme@lists.infradead.org, linux-xfs@vger.kernel.org,
+        linux-fsdevel@vger.kernel.org, tytso@mit.edu, jbongio@google.com,
+        linux-api@vger.kernel.org
+References: <5d26fa3b-ec34-bc39-ecfe-4616a04977ca@oracle.com>
+ <b7a6f380-c6fa-45e0-b727-ba804c6684e4@acm.org>
+ <yq1lecktuoo.fsf@ca-mkp.ca.oracle.com>
+ <db6a950b-1308-4ca1-9f75-6275118bdcf5@acm.org>
+ <yq1h6n7rume.fsf@ca-mkp.ca.oracle.com>
+ <34c08488-a288-45f9-a28f-a514a408541d@acm.org>
+ <yq1ttr6qoqp.fsf@ca-mkp.ca.oracle.com>
+ <a2077ddf-9a8f-4101-aeb9-605d6dee3c6e@acm.org>
+ <ZR86Z1OcO52a4BtH@dread.disaster.area>
+ <d976868a-d32c-43d1-b5da-ebbc4c8de468@acm.org>
+ <ZR+NiYIuKzEilkW3@dread.disaster.area>
+From:   Bart Van Assche <bvanassche@acm.org>
+In-Reply-To: <ZR+NiYIuKzEilkW3@dread.disaster.area>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Fri, Oct 06, 2023 at 03:36:05PM +1100, Dave Chinner wrote:
-> On Thu, Oct 05, 2023 at 09:22:50PM -0700, Darrick J. Wong wrote:
-> > On Fri, Oct 06, 2023 at 08:27:54AM +1100, Dave Chinner wrote:
-> > > On Thu, Oct 05, 2023 at 10:37:34AM +0200, Daan De Meyer wrote:
-> > > > Hi,
-> > > >
-> > > > It seems using --protofile ignores any extended attributes set on
-> > > > source files. I would like to generate an XFS filesystem using
-> > > > --protofile where extended attributes are copied from the source files
-> > > > into the generated filesystem. Any way to make this happen with
-> > > > --protofile?
-> > >
-> > > mkfs.xfs doesn't have a '--protofile' option. It has a '-p <file>'
-> > > option for specifying a protofile - is that what you mean?
-> >
-> > While we're on the topic, would it also be useful to have a -p switch
-> > that would copy the fsxattr options as well?
->
-> If protofile support is going to be extended then supporting
-> everything that can be read/set through generic kernel interfaces
-> would be appropriate...
->
-> But I'm not convinced that we should extend protofile support
-> because mounting the filesytsem and running rsync, xfs_restore, etc
-> can already do all this stuffi with no development work necessary...
+On 10/5/23 21:31, Dave Chinner wrote:
+> Then I don't see what your concern is.
+> 
+> Single sector writes are guaranteed atomic and have been for as long 
+> as I've worked in this game. OTOH, multi-sector writes are not 
+> guaranteed to be atomic - they can get torn on sector boundaries, but
+> the individual sectors within that write are guaranteed to be 
+> all-or-nothing.
+> 
+> Any hardware device that does not guarantee single sector write 
+> atomicity (i.e. tears in the middle of a sector) is, by definition, 
+> broken. And we all know that broken hardware means nothing in the 
+> storage stack works as it should, so I just don't see what point you 
+> are trying to make...
 
-> rsync doesn't support copying the fsxattr data (though it does support
-> extended attributes), and iirc xfsdump can only do entire filesystems,
-> right?
+Do you agree that the above implies that it is not useful in patch 01/21
+of this series to track atomic_write_unit_min_bytes in the block layer
+nor to export this information to user space? The above implies that
+this parameter will always be equal to the logical block size. Writes to
+a single physical block happen atomically. If there are multiple logical
+blocks per physical block, the block device must serialize 
+read/modify/write cycles internally.
 
-Additionally, when populating the filesystem in a regular file, to mount it
-we need loop devices and we need to be root. Both of which we want to
-avoid. So having an option to do this without mounting the filesystem like
-ext4 and btrfs have would be very useful. It doesn't have to be via '-p', I'm
-fine with a -d or --rootdir option like the ones that ext4 and btrfs
-have as well.
+Thanks,
 
-Cheers,
-
-Daan
-
-On Fri, 6 Oct 2023 at 07:04, Darrick J. Wong <djwong@kernel.org> wrote:
->
-> On Fri, Oct 06, 2023 at 03:36:05PM +1100, Dave Chinner wrote:
-> > On Thu, Oct 05, 2023 at 09:22:50PM -0700, Darrick J. Wong wrote:
-> > > On Fri, Oct 06, 2023 at 08:27:54AM +1100, Dave Chinner wrote:
-> > > > On Thu, Oct 05, 2023 at 10:37:34AM +0200, Daan De Meyer wrote:
-> > > > > Hi,
-> > > > >
-> > > > > It seems using --protofile ignores any extended attributes set on
-> > > > > source files. I would like to generate an XFS filesystem using
-> > > > > --protofile where extended attributes are copied from the source files
-> > > > > into the generated filesystem. Any way to make this happen with
-> > > > > --protofile?
-> > > >
-> > > > mkfs.xfs doesn't have a '--protofile' option. It has a '-p <file>'
-> > > > option for specifying a protofile - is that what you mean?
-> > >
-> > > While we're on the topic, would it also be useful to have a -p switch
-> > > that would copy the fsxattr options as well?
-> >
-> > If protofile support is going to be extended then supporting
-> > everything that can be read/set through generic kernel interfaces
-> > would be appropriate...
-> >
-> > But I'm not convinced that we should extend protofile support
-> > because mounting the filesytsem and running rsync, xfs_restore, etc
-> > can already do all this stuffi with no development work necessary...
->
-> rsync doesn't support copying the fsxattr data (though it does support
-> extended attributes), and iirc xfsdump can only do entire filesystems,
-> right?
->
-> --D
->
-> > Cheers,
-> >
-> > Dave.
-> > --
-> > Dave Chinner
-> > david@fromorbit.com
+Bart.
