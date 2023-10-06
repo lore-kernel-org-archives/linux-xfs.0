@@ -2,146 +2,102 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 53331E92FDF
-	for <linux-xfs@archiver.kernel.org>; Fri,  6 Oct 2023 04:32:11 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9D3A2E92FCD
+	for <linux-xfs@archiver.kernel.org>; Fri,  6 Oct 2023 04:36:12 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230032AbjJFEcJ (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 6 Oct 2023 00:32:09 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37836 "EHLO
+        id S230048AbjJFEgL (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 6 Oct 2023 00:36:11 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42774 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230100AbjJFEbo (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 6 Oct 2023 00:31:44 -0400
-Received: from mail-pf1-x435.google.com (mail-pf1-x435.google.com [IPv6:2607:f8b0:4864:20::435])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6E3CCDE
-        for <linux-xfs@vger.kernel.org>; Thu,  5 Oct 2023 21:31:09 -0700 (PDT)
-Received: by mail-pf1-x435.google.com with SMTP id d2e1a72fcca58-6934202b8bdso1464551b3a.1
-        for <linux-xfs@vger.kernel.org>; Thu, 05 Oct 2023 21:31:09 -0700 (PDT)
+        with ESMTP id S230042AbjJFEgK (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 6 Oct 2023 00:36:10 -0400
+Received: from mail-pl1-x62e.google.com (mail-pl1-x62e.google.com [IPv6:2607:f8b0:4864:20::62e])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 796A3F1
+        for <linux-xfs@vger.kernel.org>; Thu,  5 Oct 2023 21:36:09 -0700 (PDT)
+Received: by mail-pl1-x62e.google.com with SMTP id d9443c01a7336-1c62d61dc96so12701765ad.0
+        for <linux-xfs@vger.kernel.org>; Thu, 05 Oct 2023 21:36:09 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=fromorbit-com.20230601.gappssmtp.com; s=20230601; t=1696566669; x=1697171469; darn=vger.kernel.org;
+        d=fromorbit-com.20230601.gappssmtp.com; s=20230601; t=1696566969; x=1697171769; darn=vger.kernel.org;
         h=in-reply-to:content-disposition:mime-version:references:message-id
          :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
-        bh=ix+sRq4XQRGJaHRfH6WXpO9zrY7MmqagNFx/9Jnm3Cw=;
-        b=1PXrH8VZnOblzuDC7aK/UG4BmUJT3RX2BSU2ovDIkmCEzmSbK9W2unlSLAt7RVfROA
-         uk+A/E6ugLaxfW9A2XIFg3J2HEDzr8n6c2Aa17kn39z2vmedi082//EAkpShgfYAUSJl
-         CydbxSDIB30+eGO0Da0ibs7g3KHtjrVZ8dQlY6dePodntI+1kNfJzL8U+iwhniC76fiX
-         nwLztdRyyquTTwympjC0U8E4NJzkL/eB4XgzU43c6iiM3jtyBdZbOtRnfFmSAALGh7Sl
-         aHvsMcP1x2wCPpxJ2lCLWZJ+qCTipRNUe8kEQnftAMToDeSR9VUp2Pqq89J2n5vMqJCC
-         fDuA==
+        bh=epVD+O3eK3Sh02vYhEYZBr/dPfg5N7O+BozopjtpKCQ=;
+        b=yOmxBU/7x4MvHgP5tKcvlkGH0QFmI4Cs2Owzw3yHfej7Xq0Bj+gCgvZVpgPysKz0Xp
+         elBlYHrSslEOHUdje7DoMvxBhzK+YDpqusotDfTbiRg/5RgaJzTFytNC9vYIPtqJYUsU
+         Bmwe4nIw5ny9ri7NQh7GKgdczkBwQKuEZ7cazOlK+e2kdLP4bu4WOnbNY7Md176xGg0/
+         UIm2uV0mD5HK3i8nHRs5fBxTfyPXroiQew433/czxhpTS4UzRvPETBcVNEiBVY3/1zck
+         t0MDOqzyE5H7kVQi0/7F9CDAeIZ1hieg7pV9sO1c/xyCzsNF1j0dc5ctKpDNuowzXQjz
+         dxSQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1696566669; x=1697171469;
+        d=1e100.net; s=20230601; t=1696566969; x=1697171769;
         h=in-reply-to:content-disposition:mime-version:references:message-id
          :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
          :message-id:reply-to;
-        bh=ix+sRq4XQRGJaHRfH6WXpO9zrY7MmqagNFx/9Jnm3Cw=;
-        b=dpu19PPCfMWJ4BsXoMgWYKnvBW/tYlOYdlsBEvMowy9SSCaSxmypplGLg6nqyyORWM
-         Ed/C37TdcxEVZMOAA9VFCSj9U6iwAAuQEDxR7q1fH+Og7Bxx4SkqT6iXAn2oufdHofTi
-         zIEQ13+72o2YUyVyZc432QTeGww2PBPVUqxT4YXGzDW7kG0t5LLW91/IIOfpESOHtPnG
-         edjHuol6eJ+fn48fAtT9f6KkawZNzTLHdJOv98bGxFfSZglR3/vDGQyCiHtHC2hDLlNX
-         83oGdkawvmNnyBY3tyvyoMb8oyMTB3gvJmIOTk75UsQNsOwK2nBGRNXqo76vU4L5ET+n
-         TtcA==
-X-Gm-Message-State: AOJu0YzeU1ZKmIFX0XEIzXNWhbTVRCFFa3XkQK1BK6Gmd73U97HesC3N
-        o1f9P7XxFCqxHMqy7FvGyfyhEg==
-X-Google-Smtp-Source: AGHT+IHgkUMxgn1iEBVFJVYZt/afT8PIq1pP/h8RwAD8SFXjlpezcSfR4j9zUmA+wytXxYHwxrQQQg==
-X-Received: by 2002:a05:6a20:1447:b0:14e:3daf:fdb9 with SMTP id a7-20020a056a20144700b0014e3daffdb9mr8351717pzi.22.1696566668815;
-        Thu, 05 Oct 2023 21:31:08 -0700 (PDT)
+        bh=epVD+O3eK3Sh02vYhEYZBr/dPfg5N7O+BozopjtpKCQ=;
+        b=FEv4aj5Wb4MMX9IWwUn+KvRzfpOSn8odIRQjy0fyk6QdLqN2OvAVpjdms536r4TXyg
+         z5sjomiRDBmbzIyYVr5Wgm9hPPbEDg0SAlWGd8ga6NPZPlvwTkrlNaC8qmXcqnm5Kv6p
+         5ByFq6EfgY4awXXTQHGblbuGs/GYr0HxJUHnFlShBjjnEdqjqwC66bvmu2elBhe/18Ru
+         qONAKy+o6jJ4PLm+G3aptZCg3VCixhrZYPxsqajPqK5bPi/0VxxPhtS9mAd7DCPnNvQ9
+         bEUAMLvHJxQegYCU+nIupQel2/ZsmO+oxtqp7nFZjrARHwg8qbsvuegfbjNPqtTkFO4E
+         /iqg==
+X-Gm-Message-State: AOJu0YwekcfKG7XfytnxQw8DC7AEUsadILeMBcnIfHqFMT7hH/LvE1Vo
+        vob+gh29ef5N91GzdVYYQBlGAg==
+X-Google-Smtp-Source: AGHT+IF4CgdMwn2K1XihHTYdBud2UfL8L6xkmrOqvGPBf+/ahoJakhghwxlIyVTFT526IoVL83VLtg==
+X-Received: by 2002:a17:903:1c9:b0:1c5:f110:efa0 with SMTP id e9-20020a17090301c900b001c5f110efa0mr8258009plh.30.1696566968874;
+        Thu, 05 Oct 2023 21:36:08 -0700 (PDT)
 Received: from dread.disaster.area (pa49-180-20-59.pa.nsw.optusnet.com.au. [49.180.20.59])
-        by smtp.gmail.com with ESMTPSA id v9-20020a62a509000000b0069029a3196dsm427960pfm.184.2023.10.05.21.31.08
+        by smtp.gmail.com with ESMTPSA id u18-20020a170902e5d200b001c6052152fdsm2665945plf.50.2023.10.05.21.36.08
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 05 Oct 2023 21:31:08 -0700 (PDT)
+        Thu, 05 Oct 2023 21:36:08 -0700 (PDT)
 Received: from dave by dread.disaster.area with local (Exim 4.96)
         (envelope-from <david@fromorbit.com>)
-        id 1qocUT-00A4Ul-1m;
-        Fri, 06 Oct 2023 15:31:05 +1100
-Date:   Fri, 6 Oct 2023 15:31:05 +1100
+        id 1qocZJ-00A4YN-3A;
+        Fri, 06 Oct 2023 15:36:05 +1100
+Date:   Fri, 6 Oct 2023 15:36:05 +1100
 From:   Dave Chinner <david@fromorbit.com>
-To:     Bart Van Assche <bvanassche@acm.org>
-Cc:     "Martin K. Petersen" <martin.petersen@oracle.com>,
-        John Garry <john.g.garry@oracle.com>, axboe@kernel.dk,
-        kbusch@kernel.org, hch@lst.de, sagi@grimberg.me,
-        jejb@linux.ibm.com, djwong@kernel.org, viro@zeniv.linux.org.uk,
-        brauner@kernel.org, chandan.babu@oracle.com, dchinner@redhat.com,
-        linux-block@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-nvme@lists.infradead.org, linux-xfs@vger.kernel.org,
-        linux-fsdevel@vger.kernel.org, tytso@mit.edu, jbongio@google.com,
-        linux-api@vger.kernel.org
-Subject: Re: [PATCH 10/21] block: Add fops atomic write support
-Message-ID: <ZR+NiYIuKzEilkW3@dread.disaster.area>
-References: <5d26fa3b-ec34-bc39-ecfe-4616a04977ca@oracle.com>
- <b7a6f380-c6fa-45e0-b727-ba804c6684e4@acm.org>
- <yq1lecktuoo.fsf@ca-mkp.ca.oracle.com>
- <db6a950b-1308-4ca1-9f75-6275118bdcf5@acm.org>
- <yq1h6n7rume.fsf@ca-mkp.ca.oracle.com>
- <34c08488-a288-45f9-a28f-a514a408541d@acm.org>
- <yq1ttr6qoqp.fsf@ca-mkp.ca.oracle.com>
- <a2077ddf-9a8f-4101-aeb9-605d6dee3c6e@acm.org>
- <ZR86Z1OcO52a4BtH@dread.disaster.area>
- <d976868a-d32c-43d1-b5da-ebbc4c8de468@acm.org>
+To:     "Darrick J. Wong" <djwong@kernel.org>
+Cc:     Daan De Meyer <daan.j.demeyer@gmail.com>, linux-xfs@vger.kernel.org
+Subject: Re: mkfs.xfs with --protofile does not copy extended attributes into
+ the generated filesystem
+Message-ID: <ZR+OtcVIsVrJeqMO@dread.disaster.area>
+References: <CAO8sHc=UYg7SFh8DWYq6wRet2CW2P8tNr-pWRNJ2wN=+_qW17g@mail.gmail.com>
+ <ZR8qWqksNx1kNhvi@dread.disaster.area>
+ <20231006042250.GP21298@frogsfrogsfrogs>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <d976868a-d32c-43d1-b5da-ebbc4c8de468@acm.org>
+In-Reply-To: <20231006042250.GP21298@frogsfrogsfrogs>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Thu, Oct 05, 2023 at 03:58:38PM -0700, Bart Van Assche wrote:
-> On 10/5/23 15:36, Dave Chinner wrote:
-> > $ lspci |grep -i nvme
-> > 03:00.0 Non-Volatile memory controller: Samsung Electronics Co Ltd NVMe SSD Controller SM981/PM981/PM983
-> > 06:00.0 Non-Volatile memory controller: Samsung Electronics Co Ltd NVMe SSD Controller SM981/PM981/PM983
-> > $ cat /sys/block/nvme*n1/queue/write_cache
-> > write back
-> > write back
-> > $
+On Thu, Oct 05, 2023 at 09:22:50PM -0700, Darrick J. Wong wrote:
+> On Fri, Oct 06, 2023 at 08:27:54AM +1100, Dave Chinner wrote:
+> > On Thu, Oct 05, 2023 at 10:37:34AM +0200, Daan De Meyer wrote:
+> > > Hi,
+> > > 
+> > > It seems using --protofile ignores any extended attributes set on
+> > > source files. I would like to generate an XFS filesystem using
+> > > --protofile where extended attributes are copied from the source files
+> > > into the generated filesystem. Any way to make this happen with
+> > > --protofile?
 > > 
-> > That they have volatile writeback caches....
+> > mkfs.xfs doesn't have a '--protofile' option. It has a '-p <file>'
+> > option for specifying a protofile - is that what you mean?
 > 
-> It seems like what I wrote has been misunderstood completely. With
-> "handling a power failure cleanly" I meant that power cycling a block device
-> does not result in read errors nor in reading data that has never been written.
+> While we're on the topic, would it also be useful to have a -p switch
+> that would copy the fsxattr options as well?
 
-Then I don't see what your concern is. 
+If protofile support is going to be extended then supporting
+everything that can be read/set through generic kernel interfaces
+would be appropriate...
 
-Single sector writes are guaranteed atomic and have been for as long
-as I've worked in this game. OTOH, multi-sector writes are not
-guaranteed to be atomic - they can get torn on sector boundaries,
-but the individual sectors within that write are guaranteed to be
-all-or-nothing. 
+But I'm not convinced that we should extend protofile support
+because mounting the filesytsem and running rsync, xfs_restore, etc
+can already do all this stuffi with no development work necessary...
 
-Any hardware device that does not guarantee single sector write
-atomicity (i.e. tears in the middle of a sector) is, by definition,
-broken. And we all know that broken hardware means nothing in the
-storage stack works as it should, so I just don't see what point you
-are trying to make...
+Cheers,
 
-> Although it is hard to find information about this topic, here is what I found
-> online:
-> * About certain SSDs with power loss protection:
->   https://us.transcend-info.com/embedded/technology/power-loss-protection-plp
-> * About another class of SSDs with power loss protection:
->   https://www.kingston.com/en/blog/servers-and-data-centers/ssd-power-loss-protection
-> * About yet another class of SSDs with power loss protection:
->   https://phisonblog.com/avoiding-ssd-data-loss-with-phisons-power-loss-protection-2/
-
-Yup, devices that behave as if they have non-volatile write caches.
-Such devices have been around for more than 30 years, they operate
-the same as devices without caches at all.
-
-> So far I haven't found any information about hard disks and power failure
-> handling. What I found is that most current hard disks protect data with ECC.
-> The ECC mechanism should provide good protection against reading data that
-> has never been written.  If a power failure occurs while a hard disk is writing
-> a physical block, can this result in a read error after power is restored? If
-> so, is this behavior allowed by storage standards?
-
-If a power fail results in read errors from the storage media being
-reported to the OS instead of the data that was present in the
-sector before the power failure, then the device is broken. If there
-is no data in the region being read because it has never been
-written, then it should return zeros (no data) rather than stale
-data or a media read error.
-
--Dave.
+Dave.
 -- 
 Dave Chinner
 david@fromorbit.com
