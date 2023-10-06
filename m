@@ -2,146 +2,251 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1F025E81E1E
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7D756E92FE0
 	for <linux-xfs@archiver.kernel.org>; Fri,  6 Oct 2023 18:53:14 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233252AbjJFSxM (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 6 Oct 2023 14:53:12 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43542 "EHLO
+        id S233126AbjJFSxN (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 6 Oct 2023 14:53:13 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54804 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233272AbjJFSxL (ORCPT
+        with ESMTP id S233273AbjJFSxL (ORCPT
         <rfc822;linux-xfs@vger.kernel.org>); Fri, 6 Oct 2023 14:53:11 -0400
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B0D83CA
-        for <linux-xfs@vger.kernel.org>; Fri,  6 Oct 2023 11:52:24 -0700 (PDT)
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id CA23EBE
+        for <linux-xfs@vger.kernel.org>; Fri,  6 Oct 2023 11:52:22 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1696618343;
+        s=mimecast20190719; t=1696618341;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:cc:mime-version:mime-version:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=DaHECssEKXoW7hu/fYmfrh3doxCibaAyOF7u4qbdM4E=;
-        b=Bj2HIQJwkidOzL+qAVqipVvGrKq6V85hRBDBWyMg87S0H0X7fNliZNaUsspFd/OhBLV2Bu
-        28l4JCvxr8J3qLB0CbTKFUoI06hx2b6S8tUxmQVrfKlUrr0bJMojjiri8i9dFtEsrjVaDA
-        bgKKZHBTvNOE/nScMHNl/93b9Irn1Os=
-Received: from mail-ej1-f70.google.com (mail-ej1-f70.google.com
- [209.85.218.70]) by relay.mimecast.com with ESMTP with STARTTLS
+         content-transfer-encoding:content-transfer-encoding;
+        bh=U77XNGLnwWULayVswMfWLL1i4TVIjIjk+JqAucVdUWw=;
+        b=BFz8I6+iJzC93vAz0NyK1ELpVeLiP0Oj5onBVf/zcx4J9Itw3xOayihP0CmhN6ytNJXr+W
+        lFu6ykapXb1gLPMvMSx+F7ou7LwybOaFk3oef/cg0byeivYy0LJ+K1vjcyfX55Wd5GzOcn
+        6QaKojHoAIvq4TAwyW/YhOVtPfQDVmI=
+Received: from mail-ej1-f71.google.com (mail-ej1-f71.google.com
+ [209.85.218.71]) by relay.mimecast.com with ESMTP with STARTTLS
  (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
- us-mta-680-e8GRssidO52sWI12CemTYA-1; Fri, 06 Oct 2023 14:52:22 -0400
-X-MC-Unique: e8GRssidO52sWI12CemTYA-1
-Received: by mail-ej1-f70.google.com with SMTP id a640c23a62f3a-9b822f5c156so208778966b.3
-        for <linux-xfs@vger.kernel.org>; Fri, 06 Oct 2023 11:52:22 -0700 (PDT)
+ us-mta-459-w9_oHocSMgy8R8vJfjH82g-1; Fri, 06 Oct 2023 14:52:20 -0400
+X-MC-Unique: w9_oHocSMgy8R8vJfjH82g-1
+Received: by mail-ej1-f71.google.com with SMTP id a640c23a62f3a-997c891a88dso209099866b.3
+        for <linux-xfs@vger.kernel.org>; Fri, 06 Oct 2023 11:52:20 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1696618341; x=1697223141;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=DaHECssEKXoW7hu/fYmfrh3doxCibaAyOF7u4qbdM4E=;
-        b=NjZXG0B+f7xfiDVuJTK3VADLsMd20HlvxRxv6l6IlVC5eUrzfLDblGcLJSXoiIK2f1
-         d6vzxunkNyuKLBcd4sDiwZoLj8ixbPXlVahFNsBGFMhfsflr+XTmCSxvD05JrbK+O2N4
-         HrNqtSc+VCaPCDNY7kZOIioEJt0jAMbsNZvxgkAs10sJCnHLKrWrLDeGeC5iiN5WAL6t
-         ECf+q2DxKZyW6LPtnjQFf6/a0iTO9O1iVk3Fstysif+68Z3+olyTjhA2FYA1PMI47LkE
-         QbbZHhuZn+RZb8iL97r+O62ozDgk9zWUhAs5AlNhQZWknXFSBU2gmOQAGI14GX/m9kpd
-         DPxw==
-X-Gm-Message-State: AOJu0YyOtua+9vlEXJlUC7dCc9FHpLskhhZ75BorY29RaJenQaVzXlUM
-        rypbo+dGsnEZzt7xi9aJ5QLoDR1tldyNrK5gsXeAX3HhSvRulzQKEiqsbXd4adlMwTFuWdIdmqm
-        U0sHp6U3DBcTXspiygGh4WHohJAbbaTS+vq+bO1lt7pHdX6/tieERd08lj9pzRxVB/h+cy/vyNI
-        ntcks=
-X-Received: by 2002:a17:906:74ce:b0:9ba:2a5:75c5 with SMTP id z14-20020a17090674ce00b009ba02a575c5mr2163790ejl.75.1696618341103;
-        Fri, 06 Oct 2023 11:52:21 -0700 (PDT)
-X-Google-Smtp-Source: AGHT+IFUGUCsuEIbPh9jWoEdfWB/Qb0RFrl18MRQsei0qGzW+4gIMWfP6mWpY/zlfNnJBryOxNnj4Q==
-X-Received: by 2002:a17:906:74ce:b0:9ba:2a5:75c5 with SMTP id z14-20020a17090674ce00b009ba02a575c5mr2163772ejl.75.1696618340817;
-        Fri, 06 Oct 2023 11:52:20 -0700 (PDT)
+        d=1e100.net; s=20230601; t=1696618339; x=1697223139;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-message-state:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=U77XNGLnwWULayVswMfWLL1i4TVIjIjk+JqAucVdUWw=;
+        b=tFp5W/wcPFFvzTrtsRnomFyxLGS76k7KdQVsx+Ou8AOX+6YyCLnE+7YHkrfehC91yc
+         gpikAGd1X3V9xoOmiIS+gXXQ0tHqZQTkswpynZW8SiycZBdS06w8mVpWZzhMtm8gTLlt
+         Nxl/1CcjNAZxZJmu81zRm8ir3hvwSaf+/DqK9HKHr6BmU8NU3Rd/WciczUOgrCB+9aoy
+         tf8BP6gTXh6+bBax/+iRNk4hlEUPkfzeSKb2QuUnB17ifT0bYxbbdwfOuEoRBbIepa05
+         XQt5KXoobnKuHNo0EtRIwKHA8qC4L//cAYCPGQR2x9ZWMP+pVbTBJx0+EA+S+KAynlC7
+         hBCg==
+X-Gm-Message-State: AOJu0YwjKvYRPjqFTEKL1bhcRo2pZ5vxCNtFyOPTRtiKXImzm7x9lSY8
+        dkub5fx0r4zeTnasSpol8eViMB8MF0pJTuxVrTXCbyZrHiJkJv3hAr0loqZbqtSjbC6fmSUlCOA
+        OOHMr2BsjWBurDFzth3efQ3NLEOIHBML9m4Wou7+BqWoOciPDiJJeudzMYz7DQMD6hatPG7Elq5
+        qvKz4=
+X-Received: by 2002:a17:906:5390:b0:9a1:bd53:b23 with SMTP id g16-20020a170906539000b009a1bd530b23mr7607751ejo.14.1696618338876;
+        Fri, 06 Oct 2023 11:52:18 -0700 (PDT)
+X-Google-Smtp-Source: AGHT+IFr+lyJbmFO9Qb1EBTA3K24arha6c82QRaS65GtE8tQEUkgnBiujkf/7vxyNkWZTLCPeJW9iQ==
+X-Received: by 2002:a17:906:5390:b0:9a1:bd53:b23 with SMTP id g16-20020a170906539000b009a1bd530b23mr7607729ejo.14.1696618338427;
+        Fri, 06 Oct 2023 11:52:18 -0700 (PDT)
 Received: from localhost.localdomain ([109.183.6.197])
-        by smtp.gmail.com with ESMTPSA id os5-20020a170906af6500b009b947f81c4asm3304741ejb.155.2023.10.06.11.52.20
+        by smtp.gmail.com with ESMTPSA id os5-20020a170906af6500b009b947f81c4asm3304741ejb.155.2023.10.06.11.52.17
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 06 Oct 2023 11:52:20 -0700 (PDT)
+        Fri, 06 Oct 2023 11:52:18 -0700 (PDT)
 From:   Andrey Albershteyn <aalbersh@redhat.com>
 To:     linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
         fsverity@lists.linux.dev
 Cc:     djwong@kernel.org, ebiggers@kernel.org, david@fromorbit.com,
-        dchinner@redhat.com,
-        Allison Henderson <allison.henderson@oracle.com>
-Subject: [PATCH v3 03/28] xfs: define parent pointer xattr format
-Date:   Fri,  6 Oct 2023 20:48:57 +0200
-Message-Id: <20231006184922.252188-4-aalbersh@redhat.com>
+        dchinner@redhat.com, Andrey Albershteyn <aalbersh@redhat.com>
+Subject: [PATCH v3 00/28] fs-verity support for XFS
+Date:   Fri,  6 Oct 2023 20:48:54 +0200
+Message-Id: <20231006184922.252188-1-aalbersh@redhat.com>
 X-Mailer: git-send-email 2.40.1
-In-Reply-To: <20231006184922.252188-1-aalbersh@redhat.com>
-References: <20231006184922.252188-1-aalbersh@redhat.com>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-From: Allison Henderson <allison.henderson@oracle.com>
+Hi all,
 
-We need to define the parent pointer attribute format before we start
-adding support for it into all the code that needs to use it. The EA
-format we will use encodes the following information:
+Quite a long time passed by from v2 but this is v3 of fs-verity
+support in XFS.
 
-        name={parent inode #, parent inode generation, dirent offset}
-        value={dirent filename}
+This patchset introduces fs-verity [6] support in XFS. This
+implementation uses extended attributes to store fs-verity
+metadata. The Merkle tree blocks are stored in the remote extended
+attributes. The names are offsets into the tree.
 
-The inode/gen gives all the information we need to reliably identify the
-parent without requiring child->parent lock ordering, and allows
-userspace to do pathname component level reconstruction without the
-kernel ever needing to verify the parent itself as part of ioctl calls.
+A few key points of this patchset:
+- fs-verity works with Merkle tree blocks instead of PAGE references
+  from filesystem
+- Filesystem can supply bio_set and submit_io() to iomap for read
+  path
+- In XFS, fs-verity metadata is stored in extended attributes
+- Verification happens in iomap's read IO path (offloaded to
+  workqueue)
+- New global XFS workqueue for verification processing
+- Direct path and DAX are disabled for inodes with fs-verity
+- Inodes with fs-verity have new on-disk diflag
+- xfs_attr_get() can return a buffer with an extended attribute
+- Each extended attribute has exactly one Merkle tree block
+- xfs_buf with Merkle tree block allocates double memory and has
+  duplicate of the extended attribute data with leaf headers and
+  without
+- xfs_buf tracks verified status of merkle tree block
 
-By using the dirent offset in the EA name, we have a method of knowing
-the exact parent pointer EA we need to modify/remove in rename/unlink
-without an unbound EA name search.
+The patchset consist of five parts:
+- [1..4]: Patches from Parent Pointer patchset which add binary
+          xattr names with a few deps
+- [5]: Patch which adds FS_XFLAG_VERITY to make verity exposed as
+  extended attribute flag
+- [9..10]: Improvements to core fs-verity - mainly switch to blocks
+  management instead of pages
+- [11..12]: Allow filesystem to provide submit_io() and bio_set in
+  read path
+- [12..28]: Integration of fs-verity to xfs
 
-By keeping the dirent name in the value, we have enough information to
-be able to validate and reconstruct damaged directory trees. While the
-diroffset of a filename alone is not unique enough to identify the
-child, the {diroffset,filename,child_inode} tuple is sufficient. That
-is, if the diroffset gets reused and points to a different filename, we
-can detect that from the contents of EA. If a link of the same name is
-created, then we can check whether it points at the same inode as the
-parent EA we current have.
+Testing:
+The patchset is tested with xfstests -g all (with exceptions) on
+xfs_1k, xfs_4k, xfs_1k_quota, xfs_4k_quota, ext4_4k, and
+ext4_4k_quota. With KMEMLEAK and KASAN enabled. Also, xfs_1k and
+xfs_4k on a 64k pages.
 
-Signed-off-by: Dave Chinner <dchinner@redhat.com>
-Signed-off-by: Allison Henderson <allison.henderson@oracle.com>
-Reviewed-by: Darrick J. Wong <djwong@kernel.org>
----
- fs/xfs/libxfs/xfs_da_format.h | 25 +++++++++++++++++++++++++
- 1 file changed, 25 insertions(+)
+Changes from V2:
+- FS_XFLAG_VERITY extended attribute flag
+- Change fs-verity to use Merkle tree blocks instead of expecting
+  PAGE references from filesystem
+- Change approach in iomap to filesystem provided bio_set and
+  submit_io instead of just callouts to filesystem
+- Add possibility for xfs_buf allocate more space for fs-verity
+  extended attributes
+- Make xfs_attr module to copy fs-verity blocks inside the xfs_buf,
+  so XFS can get data without leaf headers
+- Add Merkle tree removal for error path
+- Makae scrub aware of new dinode flag
+Changes from V1:
+- Added parent pointer patches for easier testing
+- Many issues and refactoring points fixed from the V1 review
+- Adjusted for recent changes in fs-verity core (folios, non-4k)
+- Dropped disabling of large folios
+- Completely new fsverity patches (fix, callout, log_blocksize)
+- Change approach to verification in iomap to the same one as in
+  write path. Callouts to fs instead of direct fs-verity use.
+- New XFS workqueue for post read folio verification
+- xfs_attr_get() can return underlying xfs_buf
+- xfs_bufs are marked with XBF_VERITY_CHECKED to track verified
+  blocks
 
-diff --git a/fs/xfs/libxfs/xfs_da_format.h b/fs/xfs/libxfs/xfs_da_format.h
-index fca622d43a38..307c8cdb6f10 100644
---- a/fs/xfs/libxfs/xfs_da_format.h
-+++ b/fs/xfs/libxfs/xfs_da_format.h
-@@ -862,4 +862,29 @@ static inline unsigned int xfs_dir2_dirblock_bytes(struct xfs_sb *sbp)
- xfs_failaddr_t xfs_da3_blkinfo_verify(struct xfs_buf *bp,
- 				      struct xfs_da3_blkinfo *hdr3);
- 
-+/*
-+ * Parent pointer attribute format definition
-+ *
-+ * EA name encodes the parent inode number, generation and the offset of
-+ * the dirent that points to the child inode. The EA value contains the
-+ * same name as the dirent in the parent directory.
-+ */
-+struct xfs_parent_name_rec {
-+	__be64  p_ino;
-+	__be32  p_gen;
-+	__be32  p_diroffset;
-+};
-+
-+/*
-+ * incore version of the above, also contains name pointers so callers
-+ * can pass/obtain all the parent pointer information in a single structure
-+ */
-+struct xfs_parent_name_irec {
-+	xfs_ino_t		p_ino;
-+	uint32_t		p_gen;
-+	xfs_dir2_dataptr_t	p_diroffset;
-+	const char		*p_name;
-+	uint8_t			p_namelen;
-+};
-+
- #endif /* __XFS_DA_FORMAT_H__ */
+kernel:
+[1]: https://github.com/alberand/linux/tree/fsverity-v3
+
+xfsprogs:
+[2]: https://github.com/alberand/xfsprogs/tree/fsverity-v3
+
+xfstests:
+[3]: https://github.com/alberand/xfstests/tree/fsverity-v3
+
+v1:
+[4]: https://lore.kernel.org/linux-xfs/20221213172935.680971-1-aalbersh@redhat.com/
+
+v2:
+[5]: https://lore.kernel.org/linux-xfs/20230404145319.2057051-1-aalbersh@redhat.com/
+
+fs-verity:
+[6]: https://www.kernel.org/doc/html/latest/filesystems/fsverity.html
+
+Thanks,
+Andrey
+
+Allison Henderson (4):
+  xfs: Add new name to attri/d
+  xfs: add parent pointer support to attribute code
+  xfs: define parent pointer xattr format
+  xfs: Add xfs_verify_pptr
+
+Andrey Albershteyn (24):
+  fs: add FS_XFLAG_VERITY for fs-verity sealed inodes
+  fsverity: add drop_page() callout
+  fsverity: always use bitmap to track verified status
+  fsverity: pass Merkle tree block size to ->read_merkle_tree_page()
+  fsverity: pass log_blocksize to end_enable_verity()
+  fsverity: operate with Merkle tree blocks instead of pages
+  iomap: pass readpage operation to read path
+  iomap: allow filesystem to implement read path verification
+  xfs: add XBF_VERITY_CHECKED xfs_buf flag
+  xfs: add XFS_DA_OP_BUFFER to make xfs_attr_get() return buffer
+  xfs: introduce workqueue for post read IO work
+  xfs: add bio_set and submit_io for ioend post-processing
+  xfs: add attribute type for fs-verity
+  xfs: make xfs_buf_get() to take XBF_* flags
+  xfs: add XBF_DOUBLE_ALLOC to increase size of the buffer
+  xfs: add fs-verity ro-compat flag
+  xfs: add inode on-disk VERITY flag
+  xfs: initialize fs-verity on file open and cleanup on inode
+    destruction
+  xfs: don't allow to enable DAX on fs-verity sealsed inode
+  xfs: disable direct read path for fs-verity sealed files
+  xfs: add fs-verity support
+  xfs: make scrub aware of verity dinode flag
+  xfs: add fs-verity ioctls
+  xfs: enable ro-compat fs-verity flag
+
+ Documentation/filesystems/fsverity.rst |   9 +
+ fs/btrfs/verity.c                      |   7 +-
+ fs/erofs/data.c                        |   4 +-
+ fs/ext4/verity.c                       |   6 +-
+ fs/f2fs/verity.c                       |   6 +-
+ fs/gfs2/aops.c                         |   4 +-
+ fs/ioctl.c                             |   4 +
+ fs/iomap/buffered-io.c                 |  53 ++++-
+ fs/verity/enable.c                     |   6 +-
+ fs/verity/fsverity_private.h           |   1 -
+ fs/verity/open.c                       |  64 +++---
+ fs/verity/read_metadata.c              |  40 ++--
+ fs/verity/verify.c                     | 126 +++---------
+ fs/xfs/Makefile                        |   1 +
+ fs/xfs/libxfs/xfs_attr.c               |  81 +++++++-
+ fs/xfs/libxfs/xfs_attr.h               |   7 +-
+ fs/xfs/libxfs/xfs_attr_leaf.c          |  24 ++-
+ fs/xfs/libxfs/xfs_attr_remote.c        |  40 +++-
+ fs/xfs/libxfs/xfs_da_btree.h           |   7 +-
+ fs/xfs/libxfs/xfs_da_format.h          |  62 +++++-
+ fs/xfs/libxfs/xfs_format.h             |  14 +-
+ fs/xfs/libxfs/xfs_log_format.h         |   8 +-
+ fs/xfs/libxfs/xfs_sb.c                 |   4 +-
+ fs/xfs/scrub/attr.c                    |   4 +-
+ fs/xfs/xfs_aops.c                      |  84 +++++++-
+ fs/xfs/xfs_aops.h                      |   2 +
+ fs/xfs/xfs_attr_item.c                 | 142 +++++++++++---
+ fs/xfs/xfs_attr_item.h                 |   1 +
+ fs/xfs/xfs_attr_list.c                 |  17 +-
+ fs/xfs/xfs_buf.c                       |   7 +-
+ fs/xfs/xfs_buf.h                       |  21 +-
+ fs/xfs/xfs_file.c                      |  22 ++-
+ fs/xfs/xfs_inode.c                     |   2 +
+ fs/xfs/xfs_inode.h                     |   3 +-
+ fs/xfs/xfs_ioctl.c                     |  22 +++
+ fs/xfs/xfs_iomap.c                     |   3 +
+ fs/xfs/xfs_iops.c                      |   4 +
+ fs/xfs/xfs_linux.h                     |   1 +
+ fs/xfs/xfs_mount.h                     |   3 +
+ fs/xfs/xfs_ondisk.h                    |   4 +
+ fs/xfs/xfs_super.c                     |  28 ++-
+ fs/xfs/xfs_trace.h                     |   1 +
+ fs/xfs/xfs_verity.c                    | 257 +++++++++++++++++++++++++
+ fs/xfs/xfs_verity.h                    |  37 ++++
+ fs/xfs/xfs_xattr.c                     |   9 +
+ fs/zonefs/file.c                       |   4 +-
+ include/linux/fsverity.h               | 129 ++++++++++++-
+ include/linux/iomap.h                  |  36 +++-
+ include/uapi/linux/fs.h                |   1 +
+ 49 files changed, 1170 insertions(+), 252 deletions(-)
+ create mode 100644 fs/xfs/xfs_verity.c
+ create mode 100644 fs/xfs/xfs_verity.h
+
 -- 
 2.40.1
 
