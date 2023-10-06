@@ -2,151 +2,157 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5C79EE92FE6
-	for <linux-xfs@archiver.kernel.org>; Fri,  6 Oct 2023 05:27:39 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 031B9E92FE7
+	for <linux-xfs@archiver.kernel.org>; Fri,  6 Oct 2023 05:55:10 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230017AbjJFF1i (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 6 Oct 2023 01:27:38 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60572 "EHLO
+        id S230111AbjJFFzJ (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 6 Oct 2023 01:55:09 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46620 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229876AbjJFF1h (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 6 Oct 2023 01:27:37 -0400
+        with ESMTP id S230017AbjJFFzJ (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 6 Oct 2023 01:55:09 -0400
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A1C46B6
-        for <linux-xfs@vger.kernel.org>; Thu,  5 Oct 2023 22:27:36 -0700 (PDT)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 2AA83C433C8;
-        Fri,  6 Oct 2023 05:27:36 +0000 (UTC)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id CF616BF
+        for <linux-xfs@vger.kernel.org>; Thu,  5 Oct 2023 22:55:07 -0700 (PDT)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 558A3C433C7;
+        Fri,  6 Oct 2023 05:55:07 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1696570056;
-        bh=9tr9T8231jvrHgALXhfFCMY7IiiWK10Y/jYmAscEqLE=;
+        s=k20201202; t=1696571707;
+        bh=iDvVPjoALKcM02j36kxYwWpTPgOcKC58vEIHmdImRnE=;
         h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=EAJybesK6DEl7jmkLGSf9k1ERDdpqAzLIkU8/UPQf1v3+4pmVug0SSlHfPv6gy9Zc
-         V8GVtpqmuxVdp2ZbAxzUcgZjdWihC4pfznaq6K0b/sLChHRaIb1460RDUYcgfQdSCM
-         X9m7aYESOnOZ03hpSajwLqAPjUH4Bnx95j3E0UA9i865S7zeNBNH/YVs7s5wcZtCNa
-         9PVgaXA9G3BtDn7qER85H0I4j4T+pTArCraeaAfaiGgWYBtUIs57lMysgCj7mhT1B+
-         5XpZ/KH9ZeP9XucejJ/zvI9WukdRsM4a5gH6S8NttLmqav8JBQwc3OS+EQPiU9BRCC
-         KKSTlRo7oVaJw==
-Date:   Thu, 5 Oct 2023 22:27:35 -0700
+        b=Gkk3KiF3qtaih55CIv6EDE+AYcTyjJYZQB9Yd/xB7wI4O2Uje1LwJwf51hO0qyMjD
+         bhZxZXK6cNUGQ8vkGoSq1OjvSdtfAi9riRgSrCsCAumL21bazeL16OcvqrGYht/oBG
+         9kk9R1DbOBOf9zRxsfxtvBxRVReY9RHX9aXrG6i04QaBhJusXKdxKiERfB36xORrLj
+         vd6bXfmmGStWXRgXlXOWXtDx7wnOOSTvKgX/WH1YV1rl1U6Jcy292DPF9M5GpZC50E
+         FgGIVr+5STR9D5016bJ7uBeAcyGLnDTnw2oqQYpegMYUREHL/prdzm+3E8KPUjE/65
+         K9KVC62qjpxpw==
+Date:   Thu, 5 Oct 2023 22:55:06 -0700
 From:   "Darrick J. Wong" <djwong@kernel.org>
 To:     Dave Chinner <david@fromorbit.com>
 Cc:     linux-xfs@vger.kernel.org, john.g.garry@oracle.com
-Subject: Re: [PATCH 2/9] xfs: contiguous EOF allocation across AGs
-Message-ID: <20231006052735.GT21298@frogsfrogsfrogs>
+Subject: Re: [PATCH 5/9] xfs: aligned EOF allocations don't need to scan AGs
+ anymore
+Message-ID: <20231006055506.GU21298@frogsfrogsfrogs>
 References: <20231004001943.349265-1-david@fromorbit.com>
- <20231004001943.349265-3-david@fromorbit.com>
+ <20231004001943.349265-6-david@fromorbit.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20231004001943.349265-3-david@fromorbit.com>
+In-Reply-To: <20231004001943.349265-6-david@fromorbit.com>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Wed, Oct 04, 2023 at 11:19:36AM +1100, Dave Chinner wrote:
+On Wed, Oct 04, 2023 at 11:19:39AM +1100, Dave Chinner wrote:
 > From: Dave Chinner <dchinner@redhat.com>
 > 
-> Currently when we allocate at EOF, we set the initial target to the
-> location of the inode. Then we call xfs_bmap_adjacent(), which sees
-> that we are doing an EOF extension, so it moves the target to the
-> last block of the previous extent. This may be in a different AG to
-> the inode.
-> 
-> When we then go to select the AG with the best free length, the AG
-> at the target block might not have sufficient free space for the
-> full allocation, so we may select a different AG. We then do an
-> exact BNO allocation with the original target (EOF block), which
-> reverts back to attempting an allocation in an AG that doesn't have
-> sufficient contiguous free space available.
-> 
-> This generally leads to allocation failure, and then we fall back to
-> scanning the AGs for one that the allocation will succeed in. This
-> scan also results in contended AGS being skipped, so we have no idea
-> what AG we are going to end up allocating in. For sequential writes,
-> this results in random extents being located in random places in
-> non-target AGs.
-> 
-> We want to guarantee that we can allocate in the AG that we have
-> selected as having the "best contiguous free space" efficiently,
-> so if we select a different AG, we should move the allocation target
-> and skip the exact EOF allocation as we know it will not succeed.
-> i.e. we should start with aligned allocation immediately, knowing it
-> will likely succeed.
+> Now that contiguous free space selection takes into account stripe
+> alignment, we no longer need to do an "all AGs" allocation scan in
+> the case the initial AG doesn't have enough contiguous free space
+> for a stripe aligned allocation. This cleans up
+> xfs_bmap_btalloc_aligned() the same for both filestreams and the
+> normal btree allocation code.
 > 
 > Signed-off-by: Dave Chinner <dchinner@redhat.com>
-
-Sounds good to me.
-Reviewed-by: Darrick J. Wong <djwong@kernel.org>
-
---D
-
 > ---
->  fs/xfs/libxfs/xfs_bmap.c | 32 ++++++++++++++++++++++++++------
->  1 file changed, 26 insertions(+), 6 deletions(-)
+>  fs/xfs/libxfs/xfs_bmap.c | 40 +++++++++++++---------------------------
+>  1 file changed, 13 insertions(+), 27 deletions(-)
 > 
 > diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
-> index e14671414afb..e64ba7e2d13d 100644
+> index 3c250c89f42e..c1e2c0707e20 100644
 > --- a/fs/xfs/libxfs/xfs_bmap.c
 > +++ b/fs/xfs/libxfs/xfs_bmap.c
-> @@ -3252,8 +3252,18 @@ xfs_bmap_btalloc_select_lengths(
->  		if (error && error != -EAGAIN)
->  			break;
->  		error = 0;
-> -		if (*blen >= args->maxlen)
-> +		if (*blen >= args->maxlen) {
-> +			/*
-> +			 * We are going to target a different AG than the
-> +			 * incoming target, so we need to reset the target and
-> +			 * skip exact EOF allocation attempts.
-> +			 */
-> +			if (agno != startag) {
-> +				ap->blkno = XFS_AGB_TO_FSB(mp, agno, 0);
-> +				ap->aeof = false;
-> +			}
->  			break;
-> +		}
->  	}
->  	if (pag)
->  		xfs_perag_rele(pag);
-> @@ -3514,10 +3524,10 @@ xfs_bmap_btalloc_aligned(
+> @@ -3538,10 +3538,8 @@ xfs_bmap_btalloc_aligned(
+>  	struct xfs_bmalloca	*ap,
+>  	struct xfs_alloc_arg	*args,
+>  	xfs_extlen_t		blen,
+> -	int			stripe_align,
+> -	bool			ag_only)
+> +	int			stripe_align)
+>  {
+> -	struct xfs_perag        *caller_pag = args->pag;
 >  	int			error;
 >  
 >  	/*
-> -	 * If we failed an exact EOF allocation already, stripe
-> -	 * alignment will have already been taken into account in
-> -	 * args->minlen. Hence we only adjust minlen to try to preserve
-> -	 * alignment if no slop has been reserved for alignment
-> +	 * If we failed an exact EOF allocation already, stripe alignment will
-> +	 * have already been taken into account in args->minlen. Hence we only
-> +	 * adjust minlen to try to preserve alignment if no slop has been
-> +	 * reserved for alignment
->  	 */
->  	if (args->minalignslop == 0) {
->  		if (blen > stripe_align &&
-> @@ -3653,6 +3663,16 @@ xfs_bmap_btalloc_best_length(
->  	ap->blkno = XFS_INO_TO_FSB(args->mp, ap->ip->i_ino);
->  	xfs_bmap_adjacent(ap);
+> @@ -3558,14 +3556,7 @@ xfs_bmap_btalloc_aligned(
+>  	args->alignment = stripe_align;
+>  	args->minalignslop = 0;
 >  
-> +	/*
-> +	 * We only use stripe alignment for EOF allocations. Hence if it isn't
-> +	 * an EOF allocation, clear the stripe alignment. This allows us to
-> +	 * skip exact block EOF allocation yet still do stripe aligned
-> +	 * allocation if we select a different AG to the
-> +	 * exact target block due to a lack of contiguous free space.
-> +	 */
-> +	if (!ap->aeof)
-> +		stripe_align = 0;
+> -	if (ag_only) {
+> -		error = xfs_alloc_vextent_near_bno(args, ap->blkno);
+> -	} else {
+> -		args->pag = NULL;
+> -		error = xfs_alloc_vextent_start_ag(args, ap->blkno);
+> -		ASSERT(args->pag == NULL);
+> -		args->pag = caller_pag;
+> -	}
+> +	error = xfs_alloc_vextent_near_bno(args, ap->blkno);
+>  	if (error)
+>  		return error;
+>  
+> @@ -3650,8 +3641,7 @@ xfs_bmap_btalloc_filestreams(
+>  		goto out_low_space;
+>  
+>  	if (ap->aeof)
+> -		error = xfs_bmap_btalloc_aligned(ap, args, blen, stripe_align,
+> -				true);
+> +		error = xfs_bmap_btalloc_aligned(ap, args, blen, stripe_align);
+>  
+>  	if (!error && args->fsbno == NULLFSBLOCK)
+>  		error = xfs_alloc_vextent_near_bno(args, ap->blkno);
+> @@ -3715,9 +3705,16 @@ xfs_bmap_btalloc_best_length(
+>  		return error;
+>  	ASSERT(args->pag);
+>  
+> -	if (ap->aeof && ap->offset) {
+> +	if (ap->aeof && ap->offset)
+>  		error = xfs_bmap_btalloc_at_eof(ap, args, blen, stripe_align);
+> -	}
 > +
->  	/*
->  	 * Search for an allocation group with a single extent large enough for
->  	 * the request.  If one isn't found, then adjust the minimum allocation
-> @@ -3675,7 +3695,7 @@ xfs_bmap_btalloc_best_length(
->  	}
->  
->  	/* attempt aligned allocation for new EOF extents */
-> -	if (ap->aeof)
+> +	if (error || args->fsbno != NULLFSBLOCK)
+> +		goto out_perag_rele;
+> +
+> +
+
+Double blank lines here.  With that fixed,
+Reviewed-by: Darrick J. Wong <djwong@kernel.org>
+
+I like the simplifications going on here.
+
+--D
+
+
+> +	/* attempt aligned allocation for new EOF extents */
 > +	if (stripe_align)
->  		error = xfs_bmap_btalloc_aligned(ap, args, blen, stripe_align,
->  				false);
+> +		error = xfs_bmap_btalloc_aligned(ap, args, blen, stripe_align);
+>  
+>  	/*
+>  	 * We are now done with the perag reference for the optimal allocation
+> @@ -3725,24 +3722,13 @@ xfs_bmap_btalloc_best_length(
+>  	 * now as we've either succeeded, had a fatal error or we are out of
+>  	 * space and need to do a full filesystem scan for free space which will
+>  	 * take it's own references.
+> -	 *
+> -	 * XXX: now that xfs_bmap_btalloc_select_lengths() selects an AG with
+> -	 * enough contiguous free space in it for an aligned allocation, we
+> -	 * can change the aligned allocation at EOF to just be a single AG
+> -	 * allocation.
+>  	 */
+> +out_perag_rele:
+>  	xfs_perag_rele(args->pag);
+>  	args->pag = NULL;
+>  	if (error || args->fsbno != NULLFSBLOCK)
+>  		return error;
+>  
+> -	/* attempt aligned allocation for new EOF extents */
+> -	if (stripe_align)
+> -		error = xfs_bmap_btalloc_aligned(ap, args, blen, stripe_align,
+> -				false);
+> -	if (error || args->fsbno != NULLFSBLOCK)
+> -		return error;
+> -
+>  	/* attempt unaligned allocation */
+>  	error = xfs_alloc_vextent_start_ag(args, ap->blkno);
 >  	if (error || args->fsbno != NULLFSBLOCK)
 > -- 
 > 2.40.1
