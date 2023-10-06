@@ -2,104 +2,70 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 55425E92FCE
-	for <linux-xfs@archiver.kernel.org>; Thu,  5 Oct 2023 23:08:46 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id AD3D5E92FDD
+	for <linux-xfs@archiver.kernel.org>; Fri,  6 Oct 2023 04:22:53 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229580AbjJEXIO (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 5 Oct 2023 19:08:14 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39728 "EHLO
+        id S229876AbjJFEWw (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 6 Oct 2023 00:22:52 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47752 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229584AbjJEXFw (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 5 Oct 2023 19:05:52 -0400
-Received: from mail-pl1-f169.google.com (mail-pl1-f169.google.com [209.85.214.169])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id F060C18D;
-        Thu,  5 Oct 2023 15:58:42 -0700 (PDT)
-Received: by mail-pl1-f169.google.com with SMTP id d9443c01a7336-1c5c91bece9so12667845ad.3;
-        Thu, 05 Oct 2023 15:58:42 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1696546722; x=1697151522;
-        h=content-transfer-encoding:in-reply-to:from:references:cc:to
-         :content-language:subject:user-agent:mime-version:date:message-id
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=Ltrto+rjiXQu6CZ+tQzK6opfBYwCjT8QDYR8jfh7uis=;
-        b=O7DASNSznlTd5ejToG7zZxT0IN65h5T8Uh1E7nOD4KR3FSTFiKp5uU0Klez9Eofr9S
-         RUwEZRW+TnRzEJBgkjn52VWF4fl1wydVjaYeJtI5wZq8CLoY4/CwtmN2r5niieEJ7FVK
-         Oa48bzGPTGd9Ir8SPA21xlelOjhxI1pu0NkrEiWXcdNm9Ad5CNjTx0qFzQ1XQITVFL4O
-         +gvlsu5qz8Zln17rfS9W7BdUol9y20ikB2sMNlqa75ZHYXInhp9t6+xUa5uD+HhF+d/5
-         UlVTcsTutcDLmNFcm9eh731zopuJ+c9I90dcdCvUNTZ9zdIdtRWnbRE7o41jgsK8h0nb
-         fbiw==
-X-Gm-Message-State: AOJu0Yzi0rLi9lue2JnwHKT1HEOiqXI/mvVVO6es2brMnUzeCewWBJJ1
-        feaVLmWZO3DMDF20j/hzyo8=
-X-Google-Smtp-Source: AGHT+IG0/9Wn5G/tnzM5vE5E/JIG1ER4pe53NdB/BX3Y8VlltjOu9i9A0D7Ui0Qfz98C4QopBOrp7w==
-X-Received: by 2002:a17:902:6ac4:b0:1c6:d34:5279 with SMTP id i4-20020a1709026ac400b001c60d345279mr6265144plt.13.1696546722102;
-        Thu, 05 Oct 2023 15:58:42 -0700 (PDT)
-Received: from [192.168.51.14] (c-73-231-117-72.hsd1.ca.comcast.net. [73.231.117.72])
-        by smtp.gmail.com with ESMTPSA id 6-20020a170902c24600b001b89a6164desm2316513plg.118.2023.10.05.15.58.39
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Thu, 05 Oct 2023 15:58:41 -0700 (PDT)
-Message-ID: <d976868a-d32c-43d1-b5da-ebbc4c8de468@acm.org>
-Date:   Thu, 5 Oct 2023 15:58:38 -0700
-MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH 10/21] block: Add fops atomic write support
-Content-Language: en-US
+        with ESMTP id S229815AbjJFEWv (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 6 Oct 2023 00:22:51 -0400
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 53D2CDB
+        for <linux-xfs@vger.kernel.org>; Thu,  5 Oct 2023 21:22:51 -0700 (PDT)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id DAABEC433C7;
+        Fri,  6 Oct 2023 04:22:50 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1696566170;
+        bh=iGS73n1Tw2X4DxkFY7QRdg196AhpMkyo3BRidcdMXCM=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=i18RsW692XXDVCcFMJIOAfAuxXgL8VSnccyBm12FwxWkmezuEjhvd3QynmWgDetkB
+         iB6UZ6yXU9fSFicf6J46YBl2mM+qGSos1ytsm06TxzVWkcyPnRgj1j20fNOOty0moM
+         bD5lM7SpSlVCrQmmcaUzM6Br3GMI8sMZcXpiukUBNcMursBG5RPc95S9pqqTmegxlU
+         qHvzjGIk7P+WloUrNcJ19jzSCrekQHUpKBl+LQXyKBuz3LlZdti41n/e43XOI8rG+l
+         wXymAlMazd9F+l1IdupwOqmMarUoMksrhMIyPy03PU9bNiq290Kn4SSmZsj+hlIp3O
+         nubcYidt4ySXg==
+Date:   Thu, 5 Oct 2023 21:22:50 -0700
+From:   "Darrick J. Wong" <djwong@kernel.org>
 To:     Dave Chinner <david@fromorbit.com>
-Cc:     "Martin K. Petersen" <martin.petersen@oracle.com>,
-        John Garry <john.g.garry@oracle.com>, axboe@kernel.dk,
-        kbusch@kernel.org, hch@lst.de, sagi@grimberg.me,
-        jejb@linux.ibm.com, djwong@kernel.org, viro@zeniv.linux.org.uk,
-        brauner@kernel.org, chandan.babu@oracle.com, dchinner@redhat.com,
-        linux-block@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-nvme@lists.infradead.org, linux-xfs@vger.kernel.org,
-        linux-fsdevel@vger.kernel.org, tytso@mit.edu, jbongio@google.com,
-        linux-api@vger.kernel.org
-References: <20230929102726.2985188-11-john.g.garry@oracle.com>
- <17ee1669-5830-4ead-888d-a6a4624b638a@acm.org>
- <5d26fa3b-ec34-bc39-ecfe-4616a04977ca@oracle.com>
- <b7a6f380-c6fa-45e0-b727-ba804c6684e4@acm.org>
- <yq1lecktuoo.fsf@ca-mkp.ca.oracle.com>
- <db6a950b-1308-4ca1-9f75-6275118bdcf5@acm.org>
- <yq1h6n7rume.fsf@ca-mkp.ca.oracle.com>
- <34c08488-a288-45f9-a28f-a514a408541d@acm.org>
- <yq1ttr6qoqp.fsf@ca-mkp.ca.oracle.com>
- <a2077ddf-9a8f-4101-aeb9-605d6dee3c6e@acm.org>
- <ZR86Z1OcO52a4BtH@dread.disaster.area>
-From:   Bart Van Assche <bvanassche@acm.org>
-In-Reply-To: <ZR86Z1OcO52a4BtH@dread.disaster.area>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Cc:     Daan De Meyer <daan.j.demeyer@gmail.com>, linux-xfs@vger.kernel.org
+Subject: Re: mkfs.xfs with --protofile does not copy extended attributes into
+ the generated filesystem
+Message-ID: <20231006042250.GP21298@frogsfrogsfrogs>
+References: <CAO8sHc=UYg7SFh8DWYq6wRet2CW2P8tNr-pWRNJ2wN=+_qW17g@mail.gmail.com>
+ <ZR8qWqksNx1kNhvi@dread.disaster.area>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <ZR8qWqksNx1kNhvi@dread.disaster.area>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On 10/5/23 15:36, Dave Chinner wrote:
-> $ lspci |grep -i nvme
-> 03:00.0 Non-Volatile memory controller: Samsung Electronics Co Ltd NVMe SSD Controller SM981/PM981/PM983
-> 06:00.0 Non-Volatile memory controller: Samsung Electronics Co Ltd NVMe SSD Controller SM981/PM981/PM983
-> $ cat /sys/block/nvme*n1/queue/write_cache
-> write back
-> write back
-> $
+On Fri, Oct 06, 2023 at 08:27:54AM +1100, Dave Chinner wrote:
+> On Thu, Oct 05, 2023 at 10:37:34AM +0200, Daan De Meyer wrote:
+> > Hi,
+> > 
+> > It seems using --protofile ignores any extended attributes set on
+> > source files. I would like to generate an XFS filesystem using
+> > --protofile where extended attributes are copied from the source files
+> > into the generated filesystem. Any way to make this happen with
+> > --protofile?
 > 
-> That they have volatile writeback caches....
+> mkfs.xfs doesn't have a '--protofile' option. It has a '-p <file>'
+> option for specifying a protofile - is that what you mean?
 
-It seems like what I wrote has been misunderstood completely. With
-"handling a power failure cleanly" I meant that power cycling a block device
-does not result in read errors nor in reading data that has never been written.
-Although it is hard to find information about this topic, here is what I found
-online:
-* About certain SSDs with power loss protection:
-   https://us.transcend-info.com/embedded/technology/power-loss-protection-plp
-* About another class of SSDs with power loss protection:
-   https://www.kingston.com/en/blog/servers-and-data-centers/ssd-power-loss-protection
-* About yet another class of SSDs with power loss protection:
-   https://phisonblog.com/avoiding-ssd-data-loss-with-phisons-power-loss-protection-2/
+While we're on the topic, would it also be useful to have a -p switch
+that would copy the fsxattr options as well?
 
-So far I haven't found any information about hard disks and power failure
-handling. What I found is that most current hard disks protect data with ECC.
-The ECC mechanism should provide good protection against reading data that
-has never been written. If a power failure occurs while a hard disk is writing
-a physical block, can this result in a read error after power is restored? If
-so, is this behavior allowed by storage standards?
+--D
 
-Bart.
+> Regardless, there is no xattr support in mkfs/proto.c at all - it's
+> never been supported, and I don't recall anyone ever asking for it.
+> Hence it would have to be implemented from scratch if you need it.
+> 
+> -Dave.
+> -- 
+> Dave Chinner
+> david@fromorbit.com
