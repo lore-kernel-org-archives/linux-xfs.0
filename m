@@ -2,94 +2,85 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 78D0BE9413F
-	for <linux-xfs@archiver.kernel.org>; Sat,  7 Oct 2023 04:03:53 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B2355E95A61
+	for <linux-xfs@archiver.kernel.org>; Sat,  7 Oct 2023 16:08:16 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1343520AbjJGEDv (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Sat, 7 Oct 2023 00:03:51 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58518 "EHLO
+        id S1344037AbjJGQIP (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Sat, 7 Oct 2023 12:08:15 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55988 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1343492AbjJGEDu (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sat, 7 Oct 2023 00:03:50 -0400
-Received: from mgamail.intel.com (mgamail.intel.com [134.134.136.31])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 92B8FBD;
-        Fri,  6 Oct 2023 21:03:48 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1696651428; x=1728187428;
-  h=date:from:to:cc:subject:message-id:references:
-   mime-version:in-reply-to;
-  bh=ezcRfoedZbn+gXeuHPcqeG7E3BDTeiDXih6BWqHt5yc=;
-  b=DhZAKzd5cKxde0NNZfps0eKahfP7au0M5iopTSJ2oteMOoaFxipkqKXd
-   zvagjnxINtwTbOAZBGOj3I2g/vG3phUrRnxGNwpKFvYCf/Um/OEc9yDPk
-   cQ2F6ET1QLID0x+VLj6FRZzGffzU7v7VrutcMMOtxHtFCnAnqxzOeDavE
-   FCqxPeZUfAvB1Ncd25DWMeuA/A+VVK2wLDIkUqZ6D1uRrzWbqDIVv8RPc
-   LA0Q8rN91m3ORfMt4caKZUEqKuonQ2SnFg5kEFGE5w4mnT8EXatqLbkpc
-   lg6k5aR9ZYYyy9qqZm93XUtpxxL8/NEr1ZPaysHjiwNQ0aFGFGtsgyt47
-   Q==;
-X-IronPort-AV: E=McAfee;i="6600,9927,10855"; a="448085899"
-X-IronPort-AV: E=Sophos;i="6.03,204,1694761200"; 
-   d="scan'208";a="448085899"
-Received: from fmsmga008.fm.intel.com ([10.253.24.58])
-  by orsmga104.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 06 Oct 2023 21:03:47 -0700
-X-ExtLoop1: 1
-X-IronPort-AV: E=McAfee;i="6600,9927,10855"; a="818235848"
-X-IronPort-AV: E=Sophos;i="6.03,204,1694761200"; 
-   d="scan'208";a="818235848"
-Received: from lkp-server01.sh.intel.com (HELO 8a3a91ad4240) ([10.239.97.150])
-  by fmsmga008.fm.intel.com with ESMTP; 06 Oct 2023 21:03:45 -0700
-Received: from kbuild by 8a3a91ad4240 with local (Exim 4.96)
-        (envelope-from <lkp@intel.com>)
-        id 1qoyXW-0003wj-1L;
-        Sat, 07 Oct 2023 04:03:42 +0000
-Date:   Sat, 7 Oct 2023 12:02:55 +0800
-From:   kernel test robot <lkp@intel.com>
-To:     Andrey Albershteyn <aalbersh@redhat.com>,
-        linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
-        fsverity@lists.linux.dev
-Cc:     oe-kbuild-all@lists.linux.dev, djwong@kernel.org,
-        ebiggers@kernel.org, david@fromorbit.com, dchinner@redhat.com,
-        Andrey Albershteyn <aalbersh@redhat.com>
-Subject: Re: [PATCH v3 10/28] fsverity: operate with Merkle tree blocks
- instead of pages
-Message-ID: <202310071152.hVd0qEeD-lkp@intel.com>
-References: <20231006184922.252188-11-aalbersh@redhat.com>
+        with ESMTP id S1343992AbjJGQIO (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sat, 7 Oct 2023 12:08:14 -0400
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id EFA6CBD;
+        Sat,  7 Oct 2023 09:08:13 -0700 (PDT)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 038AFC433C7;
+        Sat,  7 Oct 2023 16:08:13 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1696694893;
+        bh=+cyM696m/k2jTAtUrb5GLyUHGjPZa2mGC4WL25ylQ1M=;
+        h=From:To:Cc:Subject:Date:From;
+        b=PgA/q1P+pmAkZpgECx8Y+iSEiEhiPGRFz8V2Xhb9oWtPTB1+UJP13PUpHhUyvMvVH
+         HpqjVUQXnUISxXSwcyU1SLHs/EW2wZlPeDS+CQdWnvY0Oy5w/f9XjKdAw1N1ew7/DY
+         ppfHnXQ8UmO2xRPQY2Z3GnvconsI5OGL1R52dyShbbsz2RaiWsNxbAjAtJVdvkW0fm
+         rj0YwpSG8I2gfDrDiFBhkaFEY6AJIf+NjnYaDIv+Ic+iYkbJil6u5TmaxXWDxBq1Y0
+         Ow94z89oTD8YpPozN81NA6BcBYK5YQnUK/HK0lUFA9sbgZWn1WoNHmXDUlAWdctVrz
+         AHQZDLTqGj20g==
+User-agent: mu4e 1.8.10; emacs 27.1
+From:   Chandan Babu R <chandanbabu@kernel.org>
+To:     torvalds@linux-foundation.org
+Cc:     dchinner@redhat.com, djwong@kernel.org,
+        linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org
+Subject: [GIT PULL] xfs: bug fixes for 6.6
+Date:   Sat, 07 Oct 2023 21:32:15 +0530
+Message-ID: <877cnyiff9.fsf@debian-BULLSEYE-live-builder-AMD64>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20231006184922.252188-11-aalbersh@redhat.com>
+Content-Type: text/plain
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Hi Andrey,
+Hi Linus,
 
-kernel test robot noticed the following build errors:
+Please pull this branch with changes for xfs for 6.6-rc5. The changes are
+limited to only bug fixes whose summary is provided below.
 
-[auto build test ERROR on xfs-linux/for-next]
-[also build test ERROR on kdave/for-next tytso-ext4/dev jaegeuk-f2fs/dev-test jaegeuk-f2fs/dev linus/master v6.6-rc4 next-20231006]
-[If your patch is applied to the wrong git tree, kindly drop us a note.
-And when submitting patch, we suggest to use '--base' as documented in
-https://git-scm.com/docs/git-format-patch#_base_tree_information]
+I did a test-merge with the main upstream branch as of a few minutes ago and
+didn't see any conflicts.  Please let me know if you encounter any problems.
 
-url:    https://github.com/intel-lab-lkp/linux/commits/Andrey-Albershteyn/xfs-Add-new-name-to-attri-d/20231007-025742
-base:   https://git.kernel.org/pub/scm/fs/xfs/xfs-linux.git for-next
-patch link:    https://lore.kernel.org/r/20231006184922.252188-11-aalbersh%40redhat.com
-patch subject: [PATCH v3 10/28] fsverity: operate with Merkle tree blocks instead of pages
-config: powerpc-randconfig-003-20231007 (https://download.01.org/0day-ci/archive/20231007/202310071152.hVd0qEeD-lkp@intel.com/config)
-compiler: powerpc-linux-gcc (GCC) 13.2.0
-reproduce (this is a W=1 build): (https://download.01.org/0day-ci/archive/20231007/202310071152.hVd0qEeD-lkp@intel.com/reproduce)
+The following changes since commit 8a749fd1a8720d4619c91c8b6e7528c0a355c0aa:
 
-If you fix the issue in a separate patch/commit (i.e. not just a new version of
-the same patch/commit), kindly add following tags
-| Reported-by: kernel test robot <lkp@intel.com>
-| Closes: https://lore.kernel.org/oe-kbuild-all/202310071152.hVd0qEeD-lkp@intel.com/
+  Linux 6.6-rc4 (2023-10-01 14:15:13 -0700)
 
-All errors (new ones prefixed by >>):
+are available in the Git repository at:
 
-   powerpc-linux-ld: fs/verity/read_metadata.o: in function `fsverity_read_merkle_tree':
->> read_metadata.c:(.text.fsverity_read_merkle_tree+0xa0): undefined reference to `__umoddi3'
+  https://git.kernel.org/pub/scm/fs/xfs/xfs-linux.git tags/xfs-6.6-fixes-3
 
--- 
-0-DAY CI Kernel Test Service
-https://github.com/intel/lkp-tests/wiki
+for you to fetch changes up to 4e69f490d211ce4e11db60c05c0fcd0ac2f8e61e:
+
+  Merge tag 'xfs-fstrim-busy-tag' of git://git.kernel.org/pub/scm/linux/kernel/git/dgc/linux-xfs into xfs-6.6-fixesC (2023-10-04 08:21:15 +0530)
+
+----------------------------------------------------------------
+Bug fixes for 6.6-rc5:
+
+* Prevent filesystem hang when executing fstrim operations on large and slow
+  storage.
+
+Signed-off-by: Chandan Babu R <chandanbabu@kernel.org>
+
+----------------------------------------------------------------
+Chandan Babu R (1):
+      Merge tag 'xfs-fstrim-busy-tag' of git://git.kernel.org/pub/scm/linux/kernel/git/dgc/linux-xfs into xfs-6.6-fixesC
+
+Dave Chinner (3):
+      xfs: move log discard work to xfs_discard.c
+      xfs: reduce AGF hold times during fstrim operations
+      xfs: abort fstrim if kernel is suspending
+
+ fs/xfs/xfs_discard.c     | 266 ++++++++++++++++++++++++++++++++++++++++++-----
+ fs/xfs/xfs_discard.h     |   6 +-
+ fs/xfs/xfs_extent_busy.c |  34 ++++--
+ fs/xfs/xfs_extent_busy.h |  24 ++++-
+ fs/xfs/xfs_log_cil.c     |  93 +++--------------
+ fs/xfs/xfs_log_priv.h    |   5 +-
+ 6 files changed, 311 insertions(+), 117 deletions(-)
