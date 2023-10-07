@@ -2,271 +2,222 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5E7A4E94139
-	for <linux-xfs@archiver.kernel.org>; Sat,  7 Oct 2023 00:55:34 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 84604E9413D
+	for <linux-xfs@archiver.kernel.org>; Sat,  7 Oct 2023 01:21:47 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233976AbjJGAzd (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 6 Oct 2023 20:55:33 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34640 "EHLO
+        id S233993AbjJGBVq (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 6 Oct 2023 21:21:46 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37420 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233957AbjJGAzc (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 6 Oct 2023 20:55:32 -0400
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id CE1F8E4
-        for <linux-xfs@vger.kernel.org>; Fri,  6 Oct 2023 17:55:30 -0700 (PDT)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 4D0C1C433C8;
-        Sat,  7 Oct 2023 00:55:30 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1696640130;
-        bh=iDqUDU6sYDFbF/bIhcTX+3+oeA+Ga75fw7MMaQ7Vlkc=;
-        h=Date:From:To:Subject:References:In-Reply-To:From;
-        b=hwCft+/VapsIJYml3ID3mQCwvPSWrCNTSr2M7HJ6Hiidc78nBAh+AAqwtN8DdTBYz
-         AYxxh6SoPdftUD0jPkAyE1wPT7pcIUbJ62/j9e5w2vuVGKsWlx6MJ+NoNLRETMiifz
-         +YyTslTb0KaaqubLdGX3Phh7iOjJl2j5WaEHSxdb6A8UjEmVuIOWeRQieE8rvkbmF9
-         9wSftQlyKSbtkl8u5+Ffk6mqqlhH99Z/zFhKJ5guFjK977KN+R5K18BZPiH1ptLCoE
-         RThdNw4jTjIJ91MLzCtkut6qBwkmEWxkleMDJ5EffUYROpvqkOlmInXuJ+2ROZL3ms
-         FGNW4noluIkug==
-Date:   Fri, 6 Oct 2023 17:55:29 -0700
-From:   "Darrick J. Wong" <djwong@kernel.org>
-To:     linux-xfs@vger.kernel.org, Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH v27.1 4/7] xfs: automatic freeing of freshly allocated
- unwritten space
-Message-ID: <20231007005529.GA21298@frogsfrogsfrogs>
-References: <20231007005220.GZ21298@frogsfrogsfrogs>
+        with ESMTP id S234006AbjJGBVo (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 6 Oct 2023 21:21:44 -0400
+Received: from mx0a-00069f02.pphosted.com (mx0a-00069f02.pphosted.com [205.220.165.32])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C24C9B6;
+        Fri,  6 Oct 2023 18:21:43 -0700 (PDT)
+Received: from pps.filterd (m0246617.ppops.net [127.0.0.1])
+        by mx0b-00069f02.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 396LOv1K027285;
+        Sat, 7 Oct 2023 01:21:10 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=to : cc : subject :
+ from : message-id : references : date : in-reply-to : content-type :
+ mime-version; s=corp-2023-03-30;
+ bh=rIK8PNthw7jR8VfP37/YuoEu1vfIO3oTGBCGhd8uCMc=;
+ b=RrIjdUoTiIAbg24w+fDQRi71HxNRBUMOc1yzHg9/8mU7jO7nSRJCv27CU0bGjOzIx36d
+ MDHj5jneNVUIoNt+kJ2l8xyQhj8sP3rDkxg4wzd+s9tZBaXG5hz8B7iuBHnChVBxC8FI
+ 63QFuhDQZPZQVJ2WofjYPJx9aW/zMhWWfqnIPmSSFQVH3aS/CzMi7vo5WDpdCgCwvIWg
+ kXi+uywmS7g3pLrCygH4BwjDvqGkDJ+20NE4s4mCKyylfZNGKeYiK1jw5LCch6HtxvUs
+ D1OfXgzynCnwWQPAXcCthzv/hDgbCiPZo+CccKlMASPrbRL7GynH4SpnIy+ELALRSznB Xw== 
+Received: from iadpaimrmta02.imrmtpd1.prodappiadaev1.oraclevcn.com (iadpaimrmta02.appoci.oracle.com [147.154.18.20])
+        by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 3tec7vmuxw-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Sat, 07 Oct 2023 01:21:10 +0000
+Received: from pps.filterd (iadpaimrmta02.imrmtpd1.prodappiadaev1.oraclevcn.com [127.0.0.1])
+        by iadpaimrmta02.imrmtpd1.prodappiadaev1.oraclevcn.com (8.17.1.19/8.17.1.19) with ESMTP id 396M6WxK002848;
+        Sat, 7 Oct 2023 01:21:09 GMT
+Received: from nam12-dm6-obe.outbound.protection.outlook.com (mail-dm6nam12lp2174.outbound.protection.outlook.com [104.47.59.174])
+        by iadpaimrmta02.imrmtpd1.prodappiadaev1.oraclevcn.com (PPS) with ESMTPS id 3tea4bb5h3-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Sat, 07 Oct 2023 01:21:09 +0000
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
+ b=a4UW1DoNF0pUmsfEcAm5UWN65hB43RF4UtoEQROhT8q/BREvDBqc7eB/tlnw1WAkYA6LDEJJRjWpH1CQdu60ICdgvz8aOXgMfhDtBxKbZ8wt2xFEwC0wVFEw1gPMwysJA403V5wGkXjWXtgmqnnnCbgXnS3+MUhkRPYAOWE+EJjmt7oeHZTakpwI0u00nEJe8qbDwqAjYKvH9JTsQTi1k4oXmpCGBdqHVSRGKyEpzG6U1Il8Z7yM6HYnwXLVuCObg7GckfiHiqvRlC4nINfIGzsQE4iWMfNiLdIsGycLO094u1EDABVPnMVYcWvFeRYoNsH+bkDtO7bp0xKADpiJNA==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector9901;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=rIK8PNthw7jR8VfP37/YuoEu1vfIO3oTGBCGhd8uCMc=;
+ b=UWrU0exc83aqmd9s4VDU/ER4A93YumWu1IhRNmN+piZcCH0Ah19KAwkGFoMHXGRDrfZWa2w371Y8dPtG2w3sESDq+SmBxN0+ZhdDbz1RtO9k/jW+87jTRAv+w7JaVOm4y9GOMctmUGt+/aZuOzfAY8a48Euvwq/7UGN/N+KxQhpvzT5Xl50tt4mO1aepwRQuRXTdgxHRURpkbyeexb6GbJoSHQPzSUAVkdDgOiLcsNSXmDbUUQz+mQ23u9ZSWHT+R9wDHL2hyoneDFwfSY9BL7ZAVerwMsZk3gXD/BSj//kmmc/uZryV1OmE3hMNsBXS4LVYiWR7pTDL/JYVGHiaJA==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=oracle.com; dmarc=pass action=none header.from=oracle.com;
+ dkim=pass header.d=oracle.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+ d=oracle.onmicrosoft.com; s=selector2-oracle-onmicrosoft-com;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=rIK8PNthw7jR8VfP37/YuoEu1vfIO3oTGBCGhd8uCMc=;
+ b=VAJExmUWQpzVHhZX3pF48REFQwEfEzPTYMuzJ2FLcnYb3b2vJND0YFKrX1KImNl0SsPRt3/ggjpq4W5K3AoosidBrFa58uqE9hVOdEbkyWFcVLQOHaCmkm5XmsGV5Q/RvmqEyNLXrO2oXGdf/t2oJJiNy6rTQ0KuOT/AP8Jg+Xc=
+Received: from PH0PR10MB4759.namprd10.prod.outlook.com (2603:10b6:510:3d::12)
+ by CO1PR10MB4723.namprd10.prod.outlook.com (2603:10b6:303:9c::20) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.6838.26; Sat, 7 Oct
+ 2023 01:21:05 +0000
+Received: from PH0PR10MB4759.namprd10.prod.outlook.com
+ ([fe80::1ae3:44f0:f5b:2383]) by PH0PR10MB4759.namprd10.prod.outlook.com
+ ([fe80::1ae3:44f0:f5b:2383%4]) with mapi id 15.20.6838.033; Sat, 7 Oct 2023
+ 01:21:05 +0000
+To:     Bart Van Assche <bvanassche@acm.org>
+Cc:     Dave Chinner <david@fromorbit.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        John Garry <john.g.garry@oracle.com>, axboe@kernel.dk,
+        kbusch@kernel.org, hch@lst.de, sagi@grimberg.me,
+        jejb@linux.ibm.com, djwong@kernel.org, viro@zeniv.linux.org.uk,
+        brauner@kernel.org, chandan.babu@oracle.com, dchinner@redhat.com,
+        linux-block@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-nvme@lists.infradead.org, linux-xfs@vger.kernel.org,
+        linux-fsdevel@vger.kernel.org, tytso@mit.edu, jbongio@google.com,
+        linux-api@vger.kernel.org
+Subject: Re: [PATCH 10/21] block: Add fops atomic write support
+From:   "Martin K. Petersen" <martin.petersen@oracle.com>
+Organization: Oracle Corporation
+Message-ID: <yq1v8bjpaz5.fsf@ca-mkp.ca.oracle.com>
+References: <5d26fa3b-ec34-bc39-ecfe-4616a04977ca@oracle.com>
+        <b7a6f380-c6fa-45e0-b727-ba804c6684e4@acm.org>
+        <yq1lecktuoo.fsf@ca-mkp.ca.oracle.com>
+        <db6a950b-1308-4ca1-9f75-6275118bdcf5@acm.org>
+        <yq1h6n7rume.fsf@ca-mkp.ca.oracle.com>
+        <34c08488-a288-45f9-a28f-a514a408541d@acm.org>
+        <yq1ttr6qoqp.fsf@ca-mkp.ca.oracle.com>
+        <a2077ddf-9a8f-4101-aeb9-605d6dee3c6e@acm.org>
+        <ZR86Z1OcO52a4BtH@dread.disaster.area>
+        <d976868a-d32c-43d1-b5da-ebbc4c8de468@acm.org>
+        <ZR+NiYIuKzEilkW3@dread.disaster.area>
+        <2bb2a4d0-4f1f-45f1-9196-f5d0d8ee1878@acm.org>
+Date:   Fri, 06 Oct 2023 21:21:01 -0400
+In-Reply-To: <2bb2a4d0-4f1f-45f1-9196-f5d0d8ee1878@acm.org> (Bart Van Assche's
+        message of "Fri, 6 Oct 2023 10:22:08 -0700")
+Content-Type: text/plain
+X-ClientProxiedBy: BY3PR05CA0028.namprd05.prod.outlook.com
+ (2603:10b6:a03:254::33) To PH0PR10MB4759.namprd10.prod.outlook.com
+ (2603:10b6:510:3d::12)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20231007005220.GZ21298@frogsfrogsfrogs>
+X-MS-PublicTrafficType: Email
+X-MS-TrafficTypeDiagnostic: PH0PR10MB4759:EE_|CO1PR10MB4723:EE_
+X-MS-Office365-Filtering-Correlation-Id: be72003f-dd07-4637-16f4-08dbc6d3ad15
+X-MS-Exchange-SenderADCheck: 1
+X-MS-Exchange-AntiSpam-Relay: 0
+X-Microsoft-Antispam: BCL:0;
+X-Microsoft-Antispam-Message-Info: vZafzDzlPaH3JtINiokgetvNu4064tpGO/utw7w8CYlANt5H5BJTqLJ3SUFSNCw2gmdngKnEaSFeyZ9uDENZ7phejCrb5Sl69Rpd420RkfsOpAhTIqHPwREieRjxnffwhln4vzXeks0P8DYUGl65nsCnVaek+kiYjxG6sAl8A7udVp3P6ow/nDF4j6As+FMrkcyV17znLl6Aq7Se5ZK8d1s+XHJALb5bnGd3/gDKcnE9LLLBS5b1uiv7M+hNwBPnHsHrxZffKSojKSRN6lTe25BVAMUDoQcRSjiDbQtrQHsgKugclYDi8epEgEhDNEfm4/4o7pIJd/1pbcR/JtLa4Ur2Vzmta+ic8r5JSOFqgPYmvirehmLtrNi7HV9nC0FCQRbAPu58LVEoQc5f4RfNNH+mhUtG43WypCsRKOe0OhW0yAHq4o5URpkXpKDPFPSCE19Fk5EdnDcYYv2i+e/9y7tOsgS8+as/BtNizLNq1lH7kbh651a3LjRU1mMCcsD9Tpw2PoWFwINkSjT9ThDCMadrHdui6hLGacX/ztExRBB/LrrXjLk6tcoMS7peU481
+X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:PH0PR10MB4759.namprd10.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230031)(376002)(396003)(136003)(39860400002)(346002)(366004)(230922051799003)(451199024)(1800799009)(186009)(64100799003)(6512007)(6506007)(6486002)(478600001)(36916002)(83380400001)(5660300002)(6666004)(38100700002)(86362001)(6916009)(2906002)(4326008)(26005)(54906003)(8936002)(41300700001)(8676002)(66556008)(66946007)(316002)(7416002)(66476007);DIR:OUT;SFP:1101;
+X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-MessageData-0: =?us-ascii?Q?Lr1Fzinal5iFPnKt0k8/VGcG7fdIHJcuzrw/VIT41AMu9cSPFSp984OYPJwt?=
+ =?us-ascii?Q?1AIRyQlekBfMarznW+JCBZ6MOsEQlxkBzauhx/r9An0pSmr/arW9Lf5PEfOB?=
+ =?us-ascii?Q?Ghkma/+hfTzKJJYtYvws+ClQtOc/CjTsEN9HtXBZxngVjfi26/NYI62YuOkd?=
+ =?us-ascii?Q?1lJW/maj6hgysnuGNVlhos6yYsbbE0yxPf0284S7yADG655o1WsyTgZIsQtw?=
+ =?us-ascii?Q?XBeIGBHBGEYigCCZlnp8Jr7njT3EKI9EovYsm8dsrZDKjzFz5Uu/62nCFZRx?=
+ =?us-ascii?Q?hdRSJaBCHZCE1QMM6LRnxGIXJr4WYWgvM4Bl12VeejJJTjft2ETTzSefeFii?=
+ =?us-ascii?Q?k0ATJxlmo8iKemfcyzzgDqs/lxjrWiJVMH7aGepMnlizNhJP2fUjA63lHgjS?=
+ =?us-ascii?Q?77hIX3TmtHGP1X6JMVSbkaKyxkggrU27exnBfwACCl42oaeQTO8MKE5Ur/55?=
+ =?us-ascii?Q?dpUiS5gZJirUhJnNAHTSwo1kLtw/L31+2IP53FtKthYs1F13F5MBKfPO1T2o?=
+ =?us-ascii?Q?fjxdy3GhRkFe2xZI9Hvn+Wbjpl5lOAQnJ5VsHM0l/pZfwcXr10MDDHA7VBWH?=
+ =?us-ascii?Q?o1fU25ptJUkMcJFgS2oTOdZoco124YS26wWRO+wYlm/lSXqIuQHursh+YLXc?=
+ =?us-ascii?Q?cZ4j8W3ZBjATV9yc7RHFtTn8/ZO5QcZCW1YrO+acDhkQv2vUGs0FgnAc5Pqb?=
+ =?us-ascii?Q?yCj2yz4hbsnfeYwAXhrf9Rio46FIR0sdkabCEpHpnWqCeloxvB1pNnBIDQ82?=
+ =?us-ascii?Q?6Fqrg73AjZayR2eSXf5DUqwNNjLxAf/kNLf1TteL8/PnzF+4SWKcFcb8Ps8Q?=
+ =?us-ascii?Q?gjnp9KAWDMlqDjDjll4boHOhtrDLXh0WQoy9SoMrswvqrPoHuePGVpQZLy8H?=
+ =?us-ascii?Q?IwXA8s90bCq4382RZRMOY6xQep+XmoHqcaiV3xMnbpr+JfdYXLlMCAXcSZjU?=
+ =?us-ascii?Q?n5GIzFaREpIe1flB5oGQfCtehW5xZN72M2schix7e5xKs+pKmL5tzKYqr2QR?=
+ =?us-ascii?Q?PWgWwlIPMRuxxhXa6DHTIAXpowjgi9tACpc29taIYWs1mpK4wxn8wpkwmHkt?=
+ =?us-ascii?Q?QQvlVPaNhPvsWUbsbgbIsxdImIYgg62FdeiTIRrh93Gh/lLcuSQRmjkiqpXl?=
+ =?us-ascii?Q?TA5z/uyPxzl/6DwtrpDtn3mxLlrUL3yg0OZbzbmqUssUyz+u9KXMhY+eu3up?=
+ =?us-ascii?Q?k/1bpccZSE/xWcn1GQkhfAfPr7vD/qKMBKnWinzT3mfdJPFfKOqC/QY32d0a?=
+ =?us-ascii?Q?EM0gyYwSx6Ga14N6vant5Gye4AAZbSQCKu7zhTzzTiu51KfFBGV6N+rLbcv+?=
+ =?us-ascii?Q?jEVpFzcmAmqTdUT8Xtg1st9zpCudJCWo0vPvovkgLI5nI7iq9f9sXIfvwMxU?=
+ =?us-ascii?Q?GGnKV2JKHylhb4jAe8RXBThqRlyu+IcYp8JDdW5/Ru4e3BmJ4cIRF/6hH6L8?=
+ =?us-ascii?Q?aJkARqw1iEXWXLVTXv709hMo8EsNHFOYBdsEHDygt+GLoicjdoC8AN9F4m+6?=
+ =?us-ascii?Q?qDB/ARoEBmLeGYuzU1TbS9+FYpGupLt6MSzhO3jEay4w5PCl9O99WYKHMW3Q?=
+ =?us-ascii?Q?Y+IA3tTk8WpiFMgRKg90/GsoRSYg0f7/XDZ2X5IoEge8jrGSP/mJGL+m4ulM?=
+ =?us-ascii?Q?uA=3D=3D?=
+X-MS-Exchange-AntiSpam-ExternalHop-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-ExternalHop-MessageData-0: =?us-ascii?Q?+OBehmAcD3hA0p6MrHUCW3AZ2LCo5Tp3fgtvINqyEbtwMfpxVS+gsof1xqnh?=
+ =?us-ascii?Q?Nq89ipDlg6IG5kCzxi58hLSlTv8ICrZee120oFIug6ADLNCiLaOwX+lzqGyI?=
+ =?us-ascii?Q?wuZi2dp6KS2LCp02NZ1/jMFtoxSoE+DS8vooQHxOB1qoORCMjyt3W2v7IfhT?=
+ =?us-ascii?Q?aoPuDkaZrSLcpgabudBGLCztZpsa+/hQQQegTpkeZ8n3/bcBhZnU+lHX0FbR?=
+ =?us-ascii?Q?mhLYzEqrgJi1xAlb51qPCIzSAQi78ItudLePpw6Gxdmn5AvPRFt9562N8Vg/?=
+ =?us-ascii?Q?gcVUi6eShZAoaoglU5XayBG5z1Gl/CCbc5InXryvhvumvOgP1tor9vXa35ZQ?=
+ =?us-ascii?Q?g7BV4LlzCpsTDUtaOm7olw2n3cswJlVSSsNJXL2qXQN+SesTm0l6vDx67+ER?=
+ =?us-ascii?Q?uP85KwGSt7mF9648FxuL+f8JrQK6jB/23Xh3d/phM9Q/ZN/Ux2/G6c/MLorw?=
+ =?us-ascii?Q?nT4Ck28exiAyCk7TXWDzk7js6odG0oVxwc94tRtpxqKBe5Kq+sIRFGm0ZXi1?=
+ =?us-ascii?Q?FmdveVWQhoGr0OHB/GMIqW8w1/+TZQJCAJnaSP5ryyYZ4fRZCf2sosHuKF5u?=
+ =?us-ascii?Q?HPAglldVpgvrbcE/MVSxbeuUOnmbP08y8fPFk5CTrI2ADN0Q79mT142vVMGr?=
+ =?us-ascii?Q?qvZQRDKQADOndznIrO/hQNRyUAn+khK+D3g3AjBu+BdY+c1whKu9Ivztapqw?=
+ =?us-ascii?Q?a+joY5x3yuhTMUo3BPirYbOfuatx4m5M5aNGqywHX9+Oj0QzwtunziPknQQ2?=
+ =?us-ascii?Q?aGbeJSN9v4QZhCGqwSBbfREuB3D3bSYK5UTVJI3T8JWik7XAqH6nZc8eY33G?=
+ =?us-ascii?Q?9kGLXLe0d7fwMKKFBV4C2i3zoC8t4yvhOKa5v0Zvlr6NdzV023ahREf90LSJ?=
+ =?us-ascii?Q?OoC+hqISdKwgWjD3ijQXO06zRIBwdZ2Qv9/hVfAH+/J87rijz6yxqHAirJy3?=
+ =?us-ascii?Q?fjyrJUmSgHA0EXTMxh4VrS8JznAKI444671SvIpcKwNsXhJkBtv1VileTsBP?=
+ =?us-ascii?Q?0IvFHgpn3PcWcHFPyyTm4E/CkHhPDgvcIQ+x3AuaTEjJjch06BNHASOxHjPM?=
+ =?us-ascii?Q?8tToa8RTY2TlCEIoYqafhZZYMBHChZoEPoA/t1pmIPcNGunY4UfMGORTNaWm?=
+ =?us-ascii?Q?pZR6/n2sQ2R78VVQ3cKawm3SIiPD0A+y3g=3D=3D?=
+X-OriginatorOrg: oracle.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: be72003f-dd07-4637-16f4-08dbc6d3ad15
+X-MS-Exchange-CrossTenant-AuthSource: PH0PR10MB4759.namprd10.prod.outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 07 Oct 2023 01:21:04.8857
+ (UTC)
+X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
+X-MS-Exchange-CrossTenant-Id: 4e2c6054-71cb-48f1-bd6c-3a9705aca71b
+X-MS-Exchange-CrossTenant-MailboxType: HOSTED
+X-MS-Exchange-CrossTenant-UserPrincipalName: J03RGdSiODHXBtst2jGEjYyyniq3+PMuvUmsW+uH3AoSoyzvk77OzwutfFd0a+1XRBRMGF951KGXxijG4fYGrmpQj1Ze8ewoCOoqOCgXNbE=
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: CO1PR10MB4723
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.267,Aquarius:18.0.980,Hydra:6.0.619,FMLib:17.11.176.26
+ definitions=2023-10-06_15,2023-10-06_01,2023-05-22_02
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 adultscore=0 mlxlogscore=999 mlxscore=0
+ spamscore=0 malwarescore=0 suspectscore=0 phishscore=0 bulkscore=0
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2309180000
+ definitions=main-2310070009
+X-Proofpoint-ORIG-GUID: xfE5TN4amzWvVkkR4AN_Bgag1VWsvMg-
+X-Proofpoint-GUID: xfE5TN4amzWvVkkR4AN_Bgag1VWsvMg-
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Wellllp I guess I fail at email yet again!
 
-This should have been a reply to this email:
-https://lore.kernel.org/linux-xfs/20231006051251.GR21298@frogsfrogsfrogs/T/#u
+Bart,
 
-But apparently I forgot or was tired or removed the In-Reply-To header.
+> The above implies that this parameter will always be equal to the
+> logical block size.
 
---D
+It does not. Being able to write each individual block in an I/O without
+tearing does not imply that a device can write two blocks as a single
+atomic operation.
 
-On Fri, Oct 06, 2023 at 05:52:20PM -0700, Darrick J. Wong wrote:
-> From: Darrick J. Wong <djwong@kernel.org>
-> 
-> As mentioned in the previous commit, online repair wants to allocate
-> space to write out a new metadata structure, and it also wants to hedge
-> against system crashes during repairs by logging (and later cancelling)
-> EFIs to free the space if we crash before committing the new data
-> structure.
-> 
-> Therefore, create a trio of functions to schedule automatic reaping of
-> freshly allocated unwritten space.  xfs_alloc_schedule_autoreap creates
-> a paused EFI representing the space we just allocated.  Once the
-> allocations are made and the autoreaps scheduled, we can start writing
-> to disk.
-> 
-> If the writes succeed, xfs_alloc_cancel_autoreap marks the EFI work
-> items as stale and unpauses the pending deferred work item.  Assuming
-> that's done in the same transaction that commits the new structure into
-> the filesystem, we guarantee that either the new object is fully
-> visible, or that all the space gets reclaimed.
-> 
-> If the writes succeed but only part of an extent was used, repair must
-> call the same _cancel_autoreap function to kill the first EFI and then
-> log a new EFI to free the unused space.  The first EFI is already
-> committed, so it cannot be changed.
-> 
-> For full extents that aren't used, xfs_alloc_commit_autoreap will
-> unpause the EFI, which results in the space being freed during the next
-> _defer_finish cycle.
-> 
-> Signed-off-by: Darrick J. Wong <djwong@kernel.org>
-> ---
-> v27.1: naming and comment tweaks per dave
-> ---
->  fs/xfs/libxfs/xfs_alloc.c |  104 +++++++++++++++++++++++++++++++++++++++++++--
->  fs/xfs/libxfs/xfs_alloc.h |   12 +++++
->  fs/xfs/xfs_extfree_item.c |   10 +++-
->  3 files changed, 118 insertions(+), 8 deletions(-)
-> 
-> diff --git a/fs/xfs/libxfs/xfs_alloc.c b/fs/xfs/libxfs/xfs_alloc.c
-> index 295d11a27f632..8456b5588d14b 100644
-> --- a/fs/xfs/libxfs/xfs_alloc.c
-> +++ b/fs/xfs/libxfs/xfs_alloc.c
-> @@ -2501,14 +2501,15 @@ xfs_defer_agfl_block(
->   * Add the extent to the list of extents to be free at transaction end.
->   * The list is maintained sorted (by block number).
->   */
-> -int
-> -xfs_free_extent_later(
-> +static int
-> +xfs_defer_extent_free(
->  	struct xfs_trans		*tp,
->  	xfs_fsblock_t			bno,
->  	xfs_filblks_t			len,
->  	const struct xfs_owner_info	*oinfo,
->  	enum xfs_ag_resv_type		type,
-> -	bool				skip_discard)
-> +	bool				skip_discard,
-> +	struct xfs_defer_pending	**dfpp)
->  {
->  	struct xfs_extent_free_item	*xefi;
->  	struct xfs_mount		*mp = tp->t_mountp;
-> @@ -2556,10 +2557,105 @@ xfs_free_extent_later(
->  			XFS_FSB_TO_AGBNO(tp->t_mountp, bno), len);
->  
->  	xfs_extent_free_get_group(mp, xefi);
-> -	xfs_defer_add(tp, XFS_DEFER_OPS_TYPE_FREE, &xefi->xefi_list);
-> +	*dfpp = xfs_defer_add(tp, XFS_DEFER_OPS_TYPE_FREE, &xefi->xefi_list);
->  	return 0;
->  }
->  
-> +int
-> +xfs_free_extent_later(
-> +	struct xfs_trans		*tp,
-> +	xfs_fsblock_t			bno,
-> +	xfs_filblks_t			len,
-> +	const struct xfs_owner_info	*oinfo,
-> +	enum xfs_ag_resv_type		type,
-> +	bool				skip_discard)
-> +{
-> +	struct xfs_defer_pending	*dontcare = NULL;
-> +
-> +	return xfs_defer_extent_free(tp, bno, len, oinfo, type, skip_discard,
-> +			&dontcare);
-> +}
-> +
-> +/*
-> + * Set up automatic freeing of unwritten space in the filesystem.
-> + *
-> + * This function attached a paused deferred extent free item to the
-> + * transaction.  Pausing means that the EFI will be logged in the next
-> + * transaction commit, but the pending EFI will not be finished until the
-> + * pending item is unpaused.
-> + *
-> + * If the system goes down after the EFI has been persisted to the log but
-> + * before the pending item is unpaused, log recovery will find the EFI, fail to
-> + * find the EFD, and free the space.
-> + *
-> + * If the pending item is unpaused, the next transaction commit will log an EFD
-> + * without freeing the space.
-> + *
-> + * Caller must ensure that the tp, fsbno, len, oinfo, and resv flags of the
-> + * @args structure are set to the relevant values.
-> + */
-> +int
-> +xfs_alloc_schedule_autoreap(
-> +	const struct xfs_alloc_arg	*args,
-> +	bool				skip_discard,
-> +	struct xfs_alloc_autoreap	*aarp)
-> +{
-> +	int				error;
-> +
-> +	error = xfs_defer_extent_free(args->tp, args->fsbno, args->len,
-> +			&args->oinfo, args->resv, skip_discard, &aarp->dfp);
-> +	if (error)
-> +		return error;
-> +
-> +	xfs_defer_item_pause(args->tp, aarp->dfp);
-> +	return 0;
-> +}
-> +
-> +/*
-> + * Cancel automatic freeing of unwritten space in the filesystem.
-> + *
-> + * Earlier, we created a paused deferred extent free item and attached it to
-> + * this transaction so that we could automatically roll back a new space
-> + * allocation if the system went down.  Now we want to cancel the paused work
-> + * item by marking the EFI stale so we don't actually free the space, unpausing
-> + * the pending item and logging an EFD.
-> + *
-> + * The caller generally should have already mapped the space into the ondisk
-> + * filesystem.  If the reserved space was partially used, the caller must call
-> + * xfs_free_extent_later to create a new EFI to free the unused space.
-> + */
-> +void
-> +xfs_alloc_cancel_autoreap(
-> +	struct xfs_trans		*tp,
-> +	struct xfs_alloc_autoreap	*aarp)
-> +{
-> +	struct xfs_defer_pending	*dfp = aarp->dfp;
-> +	struct xfs_extent_free_item	*xefi;
-> +
-> +	if (!dfp)
-> +		return;
-> +
-> +	list_for_each_entry(xefi, &dfp->dfp_work, xefi_list)
-> +		xefi->xefi_flags |= XFS_EFI_CANCELLED;
-> +
-> +	xfs_defer_item_unpause(tp, dfp);
-> +}
-> +
-> +/*
-> + * Commit automatic freeing of unwritten space in the filesystem.
-> + *
-> + * This unpauses an earlier _schedule_autoreap and commits to freeing the
-> + * allocated space.  Call this if none of the reserved space was used.
-> + */
-> +void
-> +xfs_alloc_commit_autoreap(
-> +	struct xfs_trans		*tp,
-> +	struct xfs_alloc_autoreap	*aarp)
-> +{
-> +	if (aarp->dfp)
-> +		xfs_defer_item_unpause(tp, aarp->dfp);
-> +}
-> +
->  #ifdef DEBUG
->  /*
->   * Check if an AGF has a free extent record whose length is equal to
-> diff --git a/fs/xfs/libxfs/xfs_alloc.h b/fs/xfs/libxfs/xfs_alloc.h
-> index 6b95d1d8a8537..851cafbd64494 100644
-> --- a/fs/xfs/libxfs/xfs_alloc.h
-> +++ b/fs/xfs/libxfs/xfs_alloc.h
-> @@ -255,6 +255,18 @@ void xfs_extent_free_get_group(struct xfs_mount *mp,
->  #define XFS_EFI_SKIP_DISCARD	(1U << 0) /* don't issue discard */
->  #define XFS_EFI_ATTR_FORK	(1U << 1) /* freeing attr fork block */
->  #define XFS_EFI_BMBT_BLOCK	(1U << 2) /* freeing bmap btree block */
-> +#define XFS_EFI_CANCELLED	(1U << 3) /* dont actually free the space */
-> +
-> +struct xfs_alloc_autoreap {
-> +	struct xfs_defer_pending	*dfp;
-> +};
-> +
-> +int xfs_alloc_schedule_autoreap(const struct xfs_alloc_arg *args,
-> +		bool skip_discard, struct xfs_alloc_autoreap *aarp);
-> +void xfs_alloc_cancel_autoreap(struct xfs_trans *tp,
-> +		struct xfs_alloc_autoreap *aarp);
-> +void xfs_alloc_commit_autoreap(struct xfs_trans *tp,
-> +		struct xfs_alloc_autoreap *aarp);
->  
->  extern struct kmem_cache	*xfs_extfree_item_cache;
->  
-> diff --git a/fs/xfs/xfs_extfree_item.c b/fs/xfs/xfs_extfree_item.c
-> index 9e7b58f3566c0..4af5b3b338b19 100644
-> --- a/fs/xfs/xfs_extfree_item.c
-> +++ b/fs/xfs/xfs_extfree_item.c
-> @@ -381,7 +381,7 @@ xfs_trans_free_extent(
->  	uint				next_extent;
->  	xfs_agblock_t			agbno = XFS_FSB_TO_AGBNO(mp,
->  							xefi->xefi_startblock);
-> -	int				error;
-> +	int				error = 0;
->  
->  	oinfo.oi_owner = xefi->xefi_owner;
->  	if (xefi->xefi_flags & XFS_EFI_ATTR_FORK)
-> @@ -392,9 +392,11 @@ xfs_trans_free_extent(
->  	trace_xfs_bmap_free_deferred(tp->t_mountp, xefi->xefi_pag->pag_agno, 0,
->  			agbno, xefi->xefi_blockcount);
->  
-> -	error = __xfs_free_extent(tp, xefi->xefi_pag, agbno,
-> -			xefi->xefi_blockcount, &oinfo, xefi->xefi_agresv,
-> -			xefi->xefi_flags & XFS_EFI_SKIP_DISCARD);
-> +	if (!(xefi->xefi_flags & XFS_EFI_CANCELLED))
-> +		error = __xfs_free_extent(tp, xefi->xefi_pag, agbno,
-> +				xefi->xefi_blockcount, &oinfo,
-> +				xefi->xefi_agresv,
-> +				xefi->xefi_flags & XFS_EFI_SKIP_DISCARD);
->  
->  	/*
->  	 * Mark the transaction dirty, even on error. This ensures the
+> Writes to a single physical block happen atomically. If there are
+> multiple logical blocks per physical block, the block device must
+> serialize read/modify/write cycles internally.
+
+This is what SBC has to say:
+
+"If any write command that is not an atomic write command, does not
+complete successfully (e.g., the command completed with CHECK CONDITION
+status, or the command was being processed at the time of a power loss
+or an incorrect demount of a removable medium), then any data in the
+logical blocks referenced by the LBAs specified by that command is
+indeterminate."
+
+SBC defines "atomic write command" like this:
+
+"An atomic write command performs one or more atomic write operations.
+ The following write commands are atomic write commands:
+
+ a) WRITE ATOMIC (16) (see 5.48); and
+ b) WRITE ATOMIC (32) (see 5.49)."
+
+You will note that none of the regular WRITE commands appear in that
+list.
+
+Now, in practice we obviously rely heavily on the fact that most devices
+are implemented in a sane fashion which doesn't mess up individual
+logical blocks on power fail. But the spec does not guarantee this; it
+is device implementation dependent. And again, we have seen both hard
+disk drives and SSDs that cause collateral damage to an entire physical
+block when power is lost at the wrong time.
+
+-- 
+Martin K. Petersen	Oracle Linux Engineering
