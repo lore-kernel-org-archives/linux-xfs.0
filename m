@@ -2,76 +2,108 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 09C28E95A67
-	for <linux-xfs@archiver.kernel.org>; Sun,  8 Oct 2023 21:05:40 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 75B1CE95A8E
+	for <linux-xfs@archiver.kernel.org>; Sun,  8 Oct 2023 21:21:39 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229688AbjJHVFj (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Sun, 8 Oct 2023 17:05:39 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54842 "EHLO
+        id S229706AbjJHVVi (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Sun, 8 Oct 2023 17:21:38 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56872 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229635AbjJHVFi (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sun, 8 Oct 2023 17:05:38 -0400
-Received: from casper.infradead.org (casper.infradead.org [IPv6:2001:8b0:10b:1236::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 442A7B6;
-        Sun,  8 Oct 2023 14:05:35 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=infradead.org; s=casper.20170209; h=In-Reply-To:Content-Type:MIME-Version:
-        References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
-        Content-Transfer-Encoding:Content-ID:Content-Description;
-        bh=uZ6fRJpfdZ02bjnVpPGf7vgCC45VnPxsA0G8Tp1ZP8w=; b=modRTFHngoZgMNIpdoKNI8Xi3i
-        1xPnPtKOiLrYfgswU01yZiXdqDCP4FvGOLtsKzoT5hVs2MuEj/3sBvxgLFCCRBYI+brDec62Z3WnM
-        OLVQx/uFF0HUcCWzxgZsUGVPSRoIMp+QxHaG0LC32F99y8fRj8LWTcW5ROHCS8tzqTNxJUnAHY2+5
-        1UEgC7Nqyh8wvdxRREjmGSCua168vsa7oQopUXTI++4gW96NdFhsYy9Ekn+hQf26ANxqCMic/XmEZ
-        LB3x94IzGdpPFfBieT/P4hIxX5eNSRIJROOvpQCdF/x1i5W86erIdxCWK9f9kLYcuyXO5Lt+2o2tj
-        AqTxam6A==;
-Received: from willy by casper.infradead.org with local (Exim 4.94.2 #2 (Red Hat Linux))
-        id 1qpaxm-00Bw97-7g; Sun, 08 Oct 2023 21:05:22 +0000
-Date:   Sun, 8 Oct 2023 22:05:22 +0100
-From:   Matthew Wilcox <willy@infradead.org>
-To:     Mateusz Guzik <mjguzik@gmail.com>
+        with ESMTP id S229635AbjJHVVh (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sun, 8 Oct 2023 17:21:37 -0400
+Received: from mail-ot1-x32f.google.com (mail-ot1-x32f.google.com [IPv6:2607:f8b0:4864:20::32f])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E5771AC;
+        Sun,  8 Oct 2023 14:21:35 -0700 (PDT)
+Received: by mail-ot1-x32f.google.com with SMTP id 46e09a7af769-6c63117a659so2205272a34.0;
+        Sun, 08 Oct 2023 14:21:35 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20230601; t=1696800095; x=1697404895; darn=vger.kernel.org;
+        h=cc:to:subject:message-id:date:from:references:in-reply-to
+         :mime-version:from:to:cc:subject:date:message-id:reply-to;
+        bh=7tFkgfW4cZbNG3g5YvrO+dBVaVKzGdwwIuQTmQTY0jc=;
+        b=J2T6ECoZ2NQ6jQK317KDWj5GB1bRHagjHXju3Uj80aoxQ08+3krVPYJzsZFRDdKhgH
+         brYhhqc2WkItqIha8tre4HCmBJo1LxFGvXpv8Ge9A5AkQ4gnbah8TbLX7MFMH0Nd/0fg
+         0ucF7qCpbqZrQw3F/Z1pxfNaGnjWDFDeDzYfrgcFgVG9w5/ZvS9EAssP9hDYiEr3aSmD
+         b6Cb8Bv3uMTULzBBXoowJyrlftVRdvQDWvGIajZ00xTjdoOyKPRayTKZ/njjW1UjIVIn
+         XaL9M9xZxz12Mx8cexXc5XpeRm05Fbf8aEQgnpJbGH2DcDEec8EvxhDyTUkQ5ENlLPDw
+         gOZQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1696800095; x=1697404895;
+        h=cc:to:subject:message-id:date:from:references:in-reply-to
+         :mime-version:x-gm-message-state:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=7tFkgfW4cZbNG3g5YvrO+dBVaVKzGdwwIuQTmQTY0jc=;
+        b=GHFJCMhnhaveJrU479uVF93+QnRC8BAbHmPNwhdgrMVp1U9DTl1gX6OoQDR8PTWmkU
+         V6RPNbCg3Ybb0hzaFlLHoaK6xVN/V7USZMEH87n0fXIcoKAm7n3POxJ4vPClmjgthynn
+         47AegXE+duNJf62P+Hv0k5ouLmUJvkWO+3dccLhiXpEDR/n533zppl3zHsgZPwSF3o9p
+         dGgyR9baANU1nYau4X08GemM0c201Xy2pAIy78j3QHpVSUfNBqEX7GGb4sLobRWppbsB
+         cwHLpjK1W3LI6Blzb31JLzp7Ks7Sz9kZ2mMnP6+qEbQNDhfDgnNXOxWh8g29P8nx/hIr
+         4NrQ==
+X-Gm-Message-State: AOJu0YwhYshEUex9WpuZfY4KCGV3HCIbyAdceqWiemrJhAAFwOYHuJtv
+        2tnTtqhEiBsrfXArlHPLwSQioW2mxOl4QJzkl44=
+X-Google-Smtp-Source: AGHT+IG2X00Izsq8yJBHpE/SbCtPB2p4GnsaqwRMKU+ZKdCHKskj69ge6judSTj8+aIg/9Lz64Olraz14Kpd2Ju2OVY=
+X-Received: by 2002:a9d:6d0d:0:b0:6c4:6aef:cd58 with SMTP id
+ o13-20020a9d6d0d000000b006c46aefcd58mr12438764otp.8.1696800095162; Sun, 08
+ Oct 2023 14:21:35 -0700 (PDT)
+MIME-Version: 1.0
+Received: by 2002:ac9:5786:0:b0:4f0:1250:dd51 with HTTP; Sun, 8 Oct 2023
+ 14:21:34 -0700 (PDT)
+In-Reply-To: <ZSMZkuJGgHyyqDWP@casper.infradead.org>
+References: <20231007203543.1377452-1-willy@infradead.org> <20231007203543.1377452-6-willy@infradead.org>
+ <CAGudoHEg7oWG8CuyivWRsWLZZtw51oY0=PjLPRzFZDDZf=kzGg@mail.gmail.com> <ZSMZkuJGgHyyqDWP@casper.infradead.org>
+From:   Mateusz Guzik <mjguzik@gmail.com>
+Date:   Sun, 8 Oct 2023 23:21:34 +0200
+Message-ID: <CAGudoHGVa2qjkOB25whVquRtgUN7sJtEuqUGDoVe_18RdYwSTw@mail.gmail.com>
+Subject: Re: [PATCH v2 5/5] fs: Add inode_assert_locked() and inode_assert_locked_excl()
+To:     Matthew Wilcox <willy@infradead.org>
 Cc:     Peter Zijlstra <peterz@infradead.org>,
         Ingo Molnar <mingo@redhat.com>, Will Deacon <will@kernel.org>,
         Waiman Long <longman@redhat.com>, linux-kernel@vger.kernel.org,
         linux-mm@kvack.org, Chandan Babu R <chandan.babu@oracle.com>,
-        "Darrick J . Wong" <djwong@kernel.org>, linux-xfs@vger.kernel.org
-Subject: Re: [PATCH v2 5/5] fs: Add inode_assert_locked() and
- inode_assert_locked_excl()
-Message-ID: <ZSMZkuJGgHyyqDWP@casper.infradead.org>
-References: <20231007203543.1377452-1-willy@infradead.org>
- <20231007203543.1377452-6-willy@infradead.org>
- <CAGudoHEg7oWG8CuyivWRsWLZZtw51oY0=PjLPRzFZDDZf=kzGg@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <CAGudoHEg7oWG8CuyivWRsWLZZtw51oY0=PjLPRzFZDDZf=kzGg@mail.gmail.com>
+        "Darrick J . Wong" <djwong@kernel.org>,
+        linux-xfs <linux-xfs@vger.kernel.org>,
+        linux-fsdevel <linux-fsdevel@vger.kernel.org>,
+        Christian Brauner <brauner@kernel.org>
+Content-Type: text/plain; charset="UTF-8"
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Sun, Oct 08, 2023 at 10:26:40PM +0200, Mateusz Guzik wrote:
-> On 10/7/23, Matthew Wilcox (Oracle) <willy@infradead.org> wrote:
-> > +static inline void inode_assert_locked_excl(const struct inode *inode)
-> > +{
-> > +	rwsem_assert_held_write(&inode->i_rwsem);
-> > +}
-> > +
-> >  static inline void inode_lock_nested(struct inode *inode, unsigned
-> > subclass)
-> >  {
-> >  	down_write_nested(&inode->i_rwsem, subclass);
-> 
-> Why "excl" instead of "write"? Apart from looking weird, it is
-> inconsistent with "prior art" in the file: i_mmap_assert_write_locked.
+On 10/8/23, Matthew Wilcox <willy@infradead.org> wrote:
+> On Sun, Oct 08, 2023 at 10:26:40PM +0200, Mateusz Guzik wrote:
+>> On 10/7/23, Matthew Wilcox (Oracle) <willy@infradead.org> wrote:
+>> > +static inline void inode_assert_locked_excl(const struct inode *inode)
+>> > +{
+>> > +	rwsem_assert_held_write(&inode->i_rwsem);
+>> > +}
+>> > +
+>> >  static inline void inode_lock_nested(struct inode *inode, unsigned
+>> > subclass)
+>> >  {
+>> >  	down_write_nested(&inode->i_rwsem, subclass);
+>>
+>> Why "excl" instead of "write"? Apart from looking weird, it is
+>> inconsistent with "prior art" in the file: i_mmap_assert_write_locked.
+>
+> Yes, but that pairs with i_mmap_lock_write() / i_mmap_lock_read().
+>
+> The problem is that we have inode_lock() / inode_lock_shared()
+> inode_assert_locked_read/write doesn't make sense with them.  But
+> inode_assert_locked() doesn't make sense as the assertion for
+> inode_lock() because you'd expect it to assert whether the inode lock
+> is held at all.  So I went with inode_assert_locked_excl().
+>
+> I wouldn't mind if we converted all the inode_lock()/shared to
+> inode_lock_read() / inode_lock_write(), and then added
+> inode_assert_read_locked() / inode_assert_write_locked().  That's
+> a bit of a bigger job than I want to take on today.
+>
 
-Yes, but that pairs with i_mmap_lock_write() / i_mmap_lock_read().
+I agree it is rather messy and I'm not going to spend time arguing as
+it is not my call anyway.
 
-The problem is that we have inode_lock() / inode_lock_shared()
-inode_assert_locked_read/write doesn't make sense with them.  But
-inode_assert_locked() doesn't make sense as the assertion for
-inode_lock() because you'd expect it to assert whether the inode lock
-is held at all.  So I went with inode_assert_locked_excl().
+Speaking of that, I just noticed the vfs folk are not CC'ed, which I'm
+rectifying with this e-mail.
 
-I wouldn't mind if we converted all the inode_lock()/shared to
-inode_lock_read() / inode_lock_write(), and then added
-inode_assert_read_locked() / inode_assert_write_locked().  That's
-a bit of a bigger job than I want to take on today.
+-- 
+Mateusz Guzik <mjguzik gmail.com>
