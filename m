@@ -2,36 +2,38 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9584BCD611C
-	for <linux-xfs@archiver.kernel.org>; Mon,  9 Oct 2023 18:25:49 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D8ED7CD611C
+	for <linux-xfs@archiver.kernel.org>; Mon,  9 Oct 2023 18:25:54 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230326AbjJISZs (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 9 Oct 2023 14:25:48 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50098 "EHLO
+        id S234559AbjJISZy (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 9 Oct 2023 14:25:54 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50164 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233096AbjJISZr (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 9 Oct 2023 14:25:47 -0400
+        with ESMTP id S233096AbjJISZx (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 9 Oct 2023 14:25:53 -0400
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 50EC3A3
-        for <linux-xfs@vger.kernel.org>; Mon,  9 Oct 2023 11:25:46 -0700 (PDT)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id E78BDC433C7;
-        Mon,  9 Oct 2023 18:25:45 +0000 (UTC)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1418CA3
+        for <linux-xfs@vger.kernel.org>; Mon,  9 Oct 2023 11:25:52 -0700 (PDT)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id A84E1C433C7;
+        Mon,  9 Oct 2023 18:25:51 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1696875946;
-        bh=jIBrvPzmIO9UjKTrV3O9GxN75hpA93YUVBHyWgwzPyI=;
-        h=Subject:From:To:Cc:Date:From;
-        b=f7Yasxki34b92vVyzXt5UAHsvrB04L3wosuUm0wOGE6JxoNPhJKeXj87ABsl7XJi2
-         rbYuLoHCvp8AqvVns+sZqYRoAhn83hrjXW7lm5MKBm1YgjXrF/oz14ZEIEm0TpBMry
-         twGdobXAy3kMtU1DrA8Uv7psAnluPf54OGEpbHnY+4P4B4RRPBjW/bwFJsW4vP2lk3
-         Z21ehccI8qoORzrEik7NBkvzq/CNvEwQrRYwcsH+bzMX1NiQIaa8wLvLnxre9wljjS
-         g2R+TAgOXbw3vGyxSKVjTfJfpaifFk/+ozVxWF5x6DCvrsboEdiP1hEi8vJcQbPY/V
-         Hasr9qe93Mrtw==
-Subject: [PATCHSET 0/2] xfs: bug fixes for 6.6
+        s=k20201202; t=1696875951;
+        bh=cGEblf3IjJexfH78lMOYVVWVFRsnelBaCzH3o6rc39o=;
+        h=Subject:From:To:Cc:Date:In-Reply-To:References:From;
+        b=YoMmhQPI9wNpxjzgaWn4yJBmL+gil3jXfU4il8J3mI1XDc79RNM1hIPoKd/2i+S4m
+         z7tiAD+4eHukuD3o0cGX7hMEWwr6j97doisiaFtuGlApXArEl9cvb1pfZ/IYiBIzkW
+         WtT7b9c3ttlV7Dbs/6NIVK17gU9G9uCYYH8G9V+DUVrj62i0Pz5nOLyxGibHnbhrlC
+         nTBU/ZqenuMlSLca39wfJ56y2AcjYgrcFNVDQ8mEry60dkZc54SIEcf4vrv7CNDbHa
+         JJ+RtYMR9Bapm8OwNyPIPf4iuqPnJkF3iHyhHx4bAy+dpABAT8biBDZc0gINqOk+pr
+         HzTX2c3F2A69A==
+Subject: [PATCH 1/2] xfs: adjust the incore perag block_count when shrinking
 From:   "Darrick J. Wong" <djwong@kernel.org>
 To:     djwong@kernel.org
 Cc:     linux-xfs@vger.kernel.org
-Date:   Mon, 09 Oct 2023 11:25:45 -0700
-Message-ID: <169687594536.3969352.5780413854846204650.stgit@frogsfrogsfrogs>
+Date:   Mon, 09 Oct 2023 11:25:51 -0700
+Message-ID: <169687595108.3969352.10885468926344975772.stgit@frogsfrogsfrogs>
+In-Reply-To: <169687594536.3969352.5780413854846204650.stgit@frogsfrogsfrogs>
+References: <169687594536.3969352.5780413854846204650.stgit@frogsfrogsfrogs>
 User-Agent: StGit/0.19
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
@@ -40,22 +42,33 @@ Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Hi all,
+From: Darrick J. Wong <djwong@kernel.org>
 
-Bug fixes for XFS for 6.6.
+If we reduce the number of blocks in an AG, we must update the incore
+geometry values as well.
 
-If you're going to start using this code, I strongly recommend pulling
-from my git trees, which are linked below.
-
-This has been running on the djcloud for months with no problems.  Enjoy!
-Comments and questions are, as always, welcome.
-
---D
-
-kernel git tree:
-https://git.kernel.org/cgit/linux/kernel/git/djwong/xfs-linux.git/log/?h=xfs-6.6-fixes
+Fixes: 0800169e3e2c9 ("xfs: Pre-calculate per-AG agbno geometry")
+Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 ---
- fs/xfs/libxfs/xfs_ag.c   |    6 ++++++
- fs/xfs/xfs_extent_busy.c |    3 ++-
- 2 files changed, 8 insertions(+), 1 deletion(-)
+ fs/xfs/libxfs/xfs_ag.c |    6 ++++++
+ 1 file changed, 6 insertions(+)
+
+
+diff --git a/fs/xfs/libxfs/xfs_ag.c b/fs/xfs/libxfs/xfs_ag.c
+index e9cc481b4ddff..f9f4d694640d0 100644
+--- a/fs/xfs/libxfs/xfs_ag.c
++++ b/fs/xfs/libxfs/xfs_ag.c
+@@ -1001,6 +1001,12 @@ xfs_ag_shrink_space(
+ 		error = -ENOSPC;
+ 		goto resv_init_out;
+ 	}
++
++	/* Update perag geometry */
++	pag->block_count -= delta;
++	__xfs_agino_range(pag->pag_mount, pag->block_count, &pag->agino_min,
++				&pag->agino_max);
++
+ 	xfs_ialloc_log_agi(*tpp, agibp, XFS_AGI_LENGTH);
+ 	xfs_alloc_log_agf(*tpp, agfbp, XFS_AGF_LENGTH);
+ 	return 0;
 
