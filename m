@@ -2,38 +2,37 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3D149CD611E
-	for <linux-xfs@archiver.kernel.org>; Mon,  9 Oct 2023 18:18:43 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6CCF1CD611E
+	for <linux-xfs@archiver.kernel.org>; Mon,  9 Oct 2023 18:18:49 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1377521AbjJISSm (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 9 Oct 2023 14:18:42 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59278 "EHLO
+        id S1377527AbjJISSs (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 9 Oct 2023 14:18:48 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59544 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1377414AbjJISSl (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 9 Oct 2023 14:18:41 -0400
+        with ESMTP id S1377414AbjJISSr (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 9 Oct 2023 14:18:47 -0400
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A721C9D;
-        Mon,  9 Oct 2023 11:18:40 -0700 (PDT)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 49D93C433C8;
-        Mon,  9 Oct 2023 18:18:40 +0000 (UTC)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4AC129C;
+        Mon,  9 Oct 2023 11:18:46 -0700 (PDT)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id DF9C6C433C8;
+        Mon,  9 Oct 2023 18:18:45 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1696875520;
-        bh=y0CE5gzTW8YBWCZOVa8nFbGS99x7KYBXAW9Lb1amYi8=;
+        s=k20201202; t=1696875525;
+        bh=K/c+McSS3nf2yAEe8IPp5EbzoFv3mm15ig0GRn7RYbU=;
         h=Subject:From:To:Cc:Date:In-Reply-To:References:From;
-        b=tndI3fitj/Ye73d+rYXfF84upha6NG5uOE9toLwSlu8xKiVPviiBUsRTLDn+scp6Q
-         ZINh/KEogHFIznx2IeS+rzHdCoBLmXR9+tuNNrC1yN8OiuRG4riye+wtAY+uzZkKdn
-         QEriWi/fBNjygKb6tYnv25UECLHHA44WCgpvbA4vVysIryIQ6rg1OrAF6viYjOgpTl
-         1qVv36+soM4Hyd7XAs6gUH54rCyH4erWbvQJqKsRobYbVbNaxAszasEt3KPZTvj0eq
-         ZIkqjwZPr9c81qUuHjKtaJTwaRCYnF9Y3GHyOTCPLApPnvlgd84AfQ0T+Y0+b80JA6
-         bcwi+QiRCmt7A==
-Subject: [PATCH 2/3] generic/465: only complain about stale disk contents when
- racing directio
+        b=EQtR4O01Q8llKNCloz1Ngbh+Qu8FCCpMf+zbwi+lL8TLB9KXysm3BFan1uctTpXJy
+         EbKVNH0d6hdGRxZnM0kcJDugHaRI1chcB6/w/Tk4fepqY+E+F6p9vrqUdwfHGuGtO2
+         05tHQRbagm/s03XegAEAGV39UCtoRiUaYXd2qNc8ED43EFkCKirEf5Ms3TmJzYembe
+         USirJvYiAgEAZsn8J2OIVE8bQJ/Wl8UEQt9Mw5BHAw305atDVL/PpPnvWEQqPiud4y
+         kDawO1YEJjp+JlspJo2pYTvtLL1y4QadNEjJM7JmVbNi1aW9QAWIMVM/3tr2Yxl/Nf
+         Q/CJA29YSEFvg==
+Subject: [PATCH 3/3] generic/269,xfs/051: don't drop fsstress failures to
+ stdout
 From:   "Darrick J. Wong" <djwong@kernel.org>
 To:     djwong@kernel.org, zlang@redhat.com
-Cc:     tytso@mit.edu, jack@suse.cz, linux-xfs@vger.kernel.org,
-        fstests@vger.kernel.org, guan@eryu.me
-Date:   Mon, 09 Oct 2023 11:18:39 -0700
-Message-ID: <169687551965.3948976.15125603449708923383.stgit@frogsfrogsfrogs>
+Cc:     linux-xfs@vger.kernel.org, fstests@vger.kernel.org, guan@eryu.me
+Date:   Mon, 09 Oct 2023 11:18:45 -0700
+Message-ID: <169687552545.3948976.16961989033707045098.stgit@frogsfrogsfrogs>
 In-Reply-To: <169687550821.3948976.6892161616008393594.stgit@frogsfrogsfrogs>
 References: <169687550821.3948976.6892161616008393594.stgit@frogsfrogsfrogs>
 User-Agent: StGit/0.19
@@ -46,74 +45,46 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-This test does a strange thing with directio -- it races a reader thread
-with an appending aio writer thread and checks that the reader thread
-only ever sees a (probably short) buffer containing the same contents
-that are being read.
+Prior to commit f55e46d629, these two tests would run fsstress until it
+hit a failure -- ENOSPC in the case of generic/269, and EIO in the case
+of xfs/051.  These errors are expected, which was why stderr was also
+redirected to /dev/null.  Commit f55e46d629 removed the stderr
+redirection, which has resulted in a 100% failure rate.
 
-However, this has never worked correctly on XFS, which supports
-concurrent readers and writers for directio.  Say you already have a
-file with a single written mapping A:
+Fix this regression by pushing stderr stream to $seqres.full.
 
-AAAAAAAAAA
-0        EOF
-
-Then one thread initiates an aligned appending write:
-
-AAAAAAAAAA---------
-0        EOF      new_EOF
-
-However, the free space is fragmented, so the file range maps to
-multiple extents b and c (lowercase means unwritten here):
-
-AAAAAAAAAAbbbbccccc
-0        EOF      new_EOF
-
-This implies separate bios for b and c.  Both bios are issued, but c
-completes first.  The ioend for c will extend i_size all the way to
-new_EOF.  Extent b is still marked unwritten because it hasn't completed
-yet.
-
-Next, the test reader slips in and tries to read the range between the
-old EOF and the new EOF.  The file looks like this now:
-
-AAAAAAAAAAbbbbCCCCC
-0        EOF      new_EOF
-
-So the reader sees "bbbbCCCCC" in the mapping, and the buffer returned
-contains a range of zeroes followed by whatever was written to C.
-
-For pagecache IO I would say that i_size should not be extended until
-the extending write is fully complete, but the pagecache also
-coordinates access so that reads and writes cannot conflict.
-
-However, this is directio.  Reads and writes to the storage device can
-be issued and acknowledged in any order.  I asked Ted and Jan about this
-point, and they echoed that for directio it's expected that application
-software must coordinate access themselves.
-
-In other words, the only thing that the reader can check here is that
-the filesystem is not returning stale disk contents.  Amend the test so
-that null bytes in the reader buffer are acceptable.
-
-Cc: tytso@mit.edu, jack@suse.cz
+Fixes: f55e46d629 ("fstests: redirect fsstress' stdout to $seqres.full instead of /dev/null")
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 ---
- .../aio-dio-append-write-read-race.c               |    2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ tests/generic/269 |    2 +-
+ tests/xfs/051     |    2 +-
+ 2 files changed, 2 insertions(+), 2 deletions(-)
 
 
-diff --git a/src/aio-dio-regress/aio-dio-append-write-read-race.c b/src/aio-dio-regress/aio-dio-append-write-read-race.c
-index 911f27230b..d9f8982f00 100644
---- a/src/aio-dio-regress/aio-dio-append-write-read-race.c
-+++ b/src/aio-dio-regress/aio-dio-append-write-read-race.c
-@@ -191,7 +191,7 @@ int main(int argc, char *argv[])
- 		}
+diff --git a/tests/generic/269 b/tests/generic/269
+index b852f6bf7e..b7cdecd94f 100755
+--- a/tests/generic/269
++++ b/tests/generic/269
+@@ -23,7 +23,7 @@ _workout()
+ 	out=$SCRATCH_MNT/fsstress.$$
+ 	args=`_scale_fsstress_args -p128 -n999999999 -f setattr=1 $FSSTRESS_AVOID -d $out`
+ 	echo "fsstress $args" >> $seqres.full
+-	$FSSTRESS_PROG $args >> $seqres.full &
++	$FSSTRESS_PROG $args &>> $seqres.full &
+ 	pid=$!
+ 	echo "Run dd writers in parallel"
+ 	for ((i=0; i < num_iterations; i++))
+diff --git a/tests/xfs/051 b/tests/xfs/051
+index 1c6709648d..aca867c940 100755
+--- a/tests/xfs/051
++++ b/tests/xfs/051
+@@ -38,7 +38,7 @@ _scratch_mount
  
- 		for (j = 0; j < rdata.read_sz; j++) {
--			if (rdata.buf[j] != 'a') {
-+			if (rdata.buf[j] != 'a' && rdata.buf[j] != 0) {
- 				fail("encounter an error: "
- 					"block %d offset %d, content %x\n",
- 					i, j, rbuf[j]);
+ # Start a workload and shutdown the fs. The subsequent mount will require log
+ # recovery.
+-$FSSTRESS_PROG -n 9999 -p 2 -w -d $SCRATCH_MNT >> $seqres.full &
++$FSSTRESS_PROG -n 9999 -p 2 -w -d $SCRATCH_MNT &>> $seqres.full &
+ sleep 5
+ _scratch_shutdown -f
+ $KILLALL_PROG -q $FSSTRESS_PROG
 
