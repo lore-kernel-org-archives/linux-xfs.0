@@ -2,37 +2,38 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 89D0DCD611D
-	for <linux-xfs@archiver.kernel.org>; Mon,  9 Oct 2023 18:18:37 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3D149CD611E
+	for <linux-xfs@archiver.kernel.org>; Mon,  9 Oct 2023 18:18:43 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1377520AbjJISSg (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 9 Oct 2023 14:18:36 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59260 "EHLO
+        id S1377521AbjJISSm (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 9 Oct 2023 14:18:42 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59278 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1377414AbjJISSg (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 9 Oct 2023 14:18:36 -0400
+        with ESMTP id S1377414AbjJISSl (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 9 Oct 2023 14:18:41 -0400
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D93239C;
-        Mon,  9 Oct 2023 11:18:34 -0700 (PDT)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 7A89AC433C7;
-        Mon,  9 Oct 2023 18:18:34 +0000 (UTC)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A721C9D;
+        Mon,  9 Oct 2023 11:18:40 -0700 (PDT)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 49D93C433C8;
+        Mon,  9 Oct 2023 18:18:40 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1696875514;
-        bh=1typOJlHDpbYjmnrNjpM9Dma+2lUr2HvGcbHAT8kdNI=;
+        s=k20201202; t=1696875520;
+        bh=y0CE5gzTW8YBWCZOVa8nFbGS99x7KYBXAW9Lb1amYi8=;
         h=Subject:From:To:Cc:Date:In-Reply-To:References:From;
-        b=uOvhc/JkrD36JT1uym6acxUtg16QQAfsn0b6bDlxTyAvpmNOVv7JH+jeoEcYrQU2E
-         dITZwJfGHGH8n8FeNtpipFN/I/SlaL2lRw3dOHEcq5/qcbKnKxc50Rns47vhwtJwUR
-         iePTHFsBf+g300/vActH6XegoJWtAuAog3hndsIda3dAX5Q4AnTwZwy0vXLOYVqkzi
-         bdMO4TH1Iy0+xkNugzN6WCxEb+F0yYeQM8ryIlWFnO4ZGaifTGIos4Mu2/IQmQsNR4
-         N1H9qapLH9CpkB0Uzwvhu4dHmN41Bw6VeMhRcD7omcpnCDnj9ViLVRlB+B4pCSKArU
-         Grj7+68+tL4yQ==
-Subject: [PATCH 1/3] xfs/178: don't fail when SCRATCH_DEV contains random xfs
- superblocks
+        b=tndI3fitj/Ye73d+rYXfF84upha6NG5uOE9toLwSlu8xKiVPviiBUsRTLDn+scp6Q
+         ZINh/KEogHFIznx2IeS+rzHdCoBLmXR9+tuNNrC1yN8OiuRG4riye+wtAY+uzZkKdn
+         QEriWi/fBNjygKb6tYnv25UECLHHA44WCgpvbA4vVysIryIQ6rg1OrAF6viYjOgpTl
+         1qVv36+soM4Hyd7XAs6gUH54rCyH4erWbvQJqKsRobYbVbNaxAszasEt3KPZTvj0eq
+         ZIkqjwZPr9c81qUuHjKtaJTwaRCYnF9Y3GHyOTCPLApPnvlgd84AfQ0T+Y0+b80JA6
+         bcwi+QiRCmt7A==
+Subject: [PATCH 2/3] generic/465: only complain about stale disk contents when
+ racing directio
 From:   "Darrick J. Wong" <djwong@kernel.org>
 To:     djwong@kernel.org, zlang@redhat.com
-Cc:     linux-xfs@vger.kernel.org, fstests@vger.kernel.org, guan@eryu.me
-Date:   Mon, 09 Oct 2023 11:18:33 -0700
-Message-ID: <169687551395.3948976.8425812597156927952.stgit@frogsfrogsfrogs>
+Cc:     tytso@mit.edu, jack@suse.cz, linux-xfs@vger.kernel.org,
+        fstests@vger.kernel.org, guan@eryu.me
+Date:   Mon, 09 Oct 2023 11:18:39 -0700
+Message-ID: <169687551965.3948976.15125603449708923383.stgit@frogsfrogsfrogs>
 In-Reply-To: <169687550821.3948976.6892161616008393594.stgit@frogsfrogsfrogs>
 References: <169687550821.3948976.6892161616008393594.stgit@frogsfrogsfrogs>
 User-Agent: StGit/0.19
@@ -45,113 +46,74 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-When I added an fstests config for "RAID" striping (aka MKFS_OPTIONS='-d
-su=128k,sw=4'), I suddenly started seeing this test fail sporadically
-with:
+This test does a strange thing with directio -- it races a reader thread
+with an appending aio writer thread and checks that the reader thread
+only ever sees a (probably short) buffer containing the same contents
+that are being read.
 
---- /tmp/fstests/tests/xfs/178.out	2023-07-11 12:18:21.714970364 -0700
-+++ /var/tmp/fstests/xfs/178.out.bad	2023-07-25 22:05:39.756000000 -0700
-@@ -10,6 +10,20 @@ bad primary superblock - bad magic numbe
+However, this has never worked correctly on XFS, which supports
+concurrent readers and writers for directio.  Say you already have a
+file with a single written mapping A:
 
- attempting to find secondary superblock...
- found candidate secondary superblock...
-+unable to verify superblock, continuing...
-+found candidate secondary superblock...
-+error reading superblock 1 -- seek to offset 584115421184 failed
-+unable to verify superblock, continuing...
-+found candidate secondary superblock...
-+error reading superblock 1 -- seek to offset 584115421184 failed
-+unable to verify superblock, continuing...
-+found candidate secondary superblock...
-+error reading superblock 1 -- seek to offset 584115421184 failed
-+unable to verify superblock, continuing...
-+found candidate secondary superblock...
-+error reading superblock 1 -- seek to offset 584115421184 failed
-+unable to verify superblock, continuing...
-+found candidate secondary superblock...
-+error reading superblock 1 -- seek to offset 584115421184 failed
-+unable to verify superblock, continuing...
-+found candidate secondary superblock...
-+error reading superblock 1 -- seek to offset 584115421184 failed
-+unable to verify superblock, continuing...
-+found candidate secondary superblock...
- verified secondary superblock...
- writing modified primary superblock
- sb root inode INO inconsistent with calculated value INO
+AAAAAAAAAA
+0        EOF
 
-Eventually I tracked this down to a mis-interaction between the test,
-xfs_repair, and the storage device.
+Then one thread initiates an aligned appending write:
 
-The storage advertises SCSI UNMAP support, but it is of the variety
-where the UNMAP command returns immediately but takes its time to unmap
-in the background.  Subsequent rereads are allowed to return stale
-contents, per DISCARD semantics.
+AAAAAAAAAA---------
+0        EOF      new_EOF
 
-When the fstests cloud is not busy, the old contents disappear in a few
-seconds.  However, at peak utilization, there are ~75 VMs running, and
-the storage backend can take several minutes to commit these background
-requests.
+However, the free space is fragmented, so the file range maps to
+multiple extents b and c (lowercase means unwritten here):
 
-When we zero the primary super and start xfs_repair on SCRATCH_DEV, it
-will walk the device looking for secondary supers.  Most of the time it
-finds the actual AG 1 secondary super, but sometimes it finds ghosts
-from previous formats.  When that happens, xfs_repair will talk quite a
-bit about those failed secondaries, even if it eventually finds an
-acceptable secondary sb and completes the repair.
+AAAAAAAAAAbbbbccccc
+0        EOF      new_EOF
 
-Filter out the messages about secondary supers.
+This implies separate bios for b and c.  Both bios are issued, but c
+completes first.  The ioend for c will extend i_size all the way to
+new_EOF.  Extent b is still marked unwritten because it hasn't completed
+yet.
 
+Next, the test reader slips in and tries to read the range between the
+old EOF and the new EOF.  The file looks like this now:
+
+AAAAAAAAAAbbbbCCCCC
+0        EOF      new_EOF
+
+So the reader sees "bbbbCCCCC" in the mapping, and the buffer returned
+contains a range of zeroes followed by whatever was written to C.
+
+For pagecache IO I would say that i_size should not be extended until
+the extending write is fully complete, but the pagecache also
+coordinates access so that reads and writes cannot conflict.
+
+However, this is directio.  Reads and writes to the storage device can
+be issued and acknowledged in any order.  I asked Ted and Jan about this
+point, and they echoed that for directio it's expected that application
+software must coordinate access themselves.
+
+In other words, the only thing that the reader can check here is that
+the filesystem is not returning stale disk contents.  Amend the test so
+that null bytes in the reader buffer are acceptable.
+
+Cc: tytso@mit.edu, jack@suse.cz
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 ---
- tests/xfs/178     |    9 ++++++++-
- tests/xfs/178.out |    2 --
- 2 files changed, 8 insertions(+), 3 deletions(-)
+ .../aio-dio-append-write-read-race.c               |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
 
-diff --git a/tests/xfs/178 b/tests/xfs/178
-index a65197cde3..fee1e92bf3 100755
---- a/tests/xfs/178
-+++ b/tests/xfs/178
-@@ -10,13 +10,20 @@
- . ./common/preamble
- _begin_fstest mkfs other auto
+diff --git a/src/aio-dio-regress/aio-dio-append-write-read-race.c b/src/aio-dio-regress/aio-dio-append-write-read-race.c
+index 911f27230b..d9f8982f00 100644
+--- a/src/aio-dio-regress/aio-dio-append-write-read-race.c
++++ b/src/aio-dio-regress/aio-dio-append-write-read-race.c
+@@ -191,7 +191,7 @@ int main(int argc, char *argv[])
+ 		}
  
-+filter_repair() {
-+	_filter_repair | sed \
-+		-e '/unable to verify superblock, continuing/d' \
-+		-e '/found candidate secondary superblock/d' \
-+		-e '/error reading superblock.*-- seek to offset/d'
-+}
-+
- # dd the 1st sector then repair
- _dd_repair_check()
- {
- 	#dd first sector
- 	dd if=/dev/zero of=$1 bs=$2 count=1 2>&1 | _filter_dd
- 	#xfs_repair
--	_scratch_xfs_repair 2>&1 | _filter_repair
-+	_scratch_xfs_repair 2>&1 | filter_repair
- 	#check repair
- 	if _check_scratch_fs; then
-         	echo "repair passed"
-diff --git a/tests/xfs/178.out b/tests/xfs/178.out
-index 0bebe553eb..711e90cc26 100644
---- a/tests/xfs/178.out
-+++ b/tests/xfs/178.out
-@@ -9,7 +9,6 @@ Phase 1 - find and verify superblock...
- bad primary superblock - bad magic number !!!
- 
- attempting to find secondary superblock...
--found candidate secondary superblock...
- verified secondary superblock...
- writing modified primary superblock
- sb root inode INO inconsistent with calculated value INO
-@@ -45,7 +44,6 @@ Phase 1 - find and verify superblock...
- bad primary superblock - bad magic number !!!
- 
- attempting to find secondary superblock...
--found candidate secondary superblock...
- verified secondary superblock...
- writing modified primary superblock
- sb root inode INO inconsistent with calculated value INO
+ 		for (j = 0; j < rdata.read_sz; j++) {
+-			if (rdata.buf[j] != 'a') {
++			if (rdata.buf[j] != 'a' && rdata.buf[j] != 0) {
+ 				fail("encounter an error: "
+ 					"block %d offset %d, content %x\n",
+ 					i, j, rbuf[j]);
 
