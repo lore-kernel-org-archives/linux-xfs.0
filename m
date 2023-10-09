@@ -2,36 +2,36 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D8ED7CD611C
-	for <linux-xfs@archiver.kernel.org>; Mon,  9 Oct 2023 18:25:54 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 19B49CD611D
+	for <linux-xfs@archiver.kernel.org>; Mon,  9 Oct 2023 18:26:02 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234559AbjJISZy (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 9 Oct 2023 14:25:54 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50164 "EHLO
+        id S1346633AbjJIS0A (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 9 Oct 2023 14:26:00 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57056 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233096AbjJISZx (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 9 Oct 2023 14:25:53 -0400
+        with ESMTP id S1345624AbjJISZ7 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 9 Oct 2023 14:25:59 -0400
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1418CA3
-        for <linux-xfs@vger.kernel.org>; Mon,  9 Oct 2023 11:25:52 -0700 (PDT)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id A84E1C433C7;
-        Mon,  9 Oct 2023 18:25:51 +0000 (UTC)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C4CD49C
+        for <linux-xfs@vger.kernel.org>; Mon,  9 Oct 2023 11:25:57 -0700 (PDT)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 62C49C433C8;
+        Mon,  9 Oct 2023 18:25:57 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1696875951;
-        bh=cGEblf3IjJexfH78lMOYVVWVFRsnelBaCzH3o6rc39o=;
+        s=k20201202; t=1696875957;
+        bh=G4ETXAZYfVcp4kfCTkPw8H22ONYTeaQWCHo8lQyOeKs=;
         h=Subject:From:To:Cc:Date:In-Reply-To:References:From;
-        b=YoMmhQPI9wNpxjzgaWn4yJBmL+gil3jXfU4il8J3mI1XDc79RNM1hIPoKd/2i+S4m
-         z7tiAD+4eHukuD3o0cGX7hMEWwr6j97doisiaFtuGlApXArEl9cvb1pfZ/IYiBIzkW
-         WtT7b9c3ttlV7Dbs/6NIVK17gU9G9uCYYH8G9V+DUVrj62i0Pz5nOLyxGibHnbhrlC
-         nTBU/ZqenuMlSLca39wfJ56y2AcjYgrcFNVDQ8mEry60dkZc54SIEcf4vrv7CNDbHa
-         JJ+RtYMR9Bapm8OwNyPIPf4iuqPnJkF3iHyhHx4bAy+dpABAT8biBDZc0gINqOk+pr
-         HzTX2c3F2A69A==
-Subject: [PATCH 1/2] xfs: adjust the incore perag block_count when shrinking
+        b=eE37JCxIyNUlWmGkKJECZ8Km0xSwIfF2sWeHD8CvGFuBtJjLxoQ05T8OywsNrRTlt
+         U40oYkOoGesHYxFstKR/OVNp2B3dK9iYKD7TIJSISYbc1Uysoq5C1KmsC/SKamsb7r
+         ZvfXNhig3T+KJxKxb3gl7w88GQ9JDH3otT7W3kbYF0Os020TqDZAPNgsCsezq3/vzm
+         de2P6DGu8CGXEM4NOG4N3WEY0KU3a5MKxoC8YQbKPZffDSLAtGBXEzQcOft/Vhtidx
+         mNw1Ax0KpK6zfMzkASl/MFBdxlX02dHsXkmPNy/RuTPm50+e0hHJBMvzpRGrlvWYmH
+         YDW/9fDT9DZsQ==
+Subject: [PATCH 2/2] xfs: process free extents to busy list in FIFO order
 From:   "Darrick J. Wong" <djwong@kernel.org>
 To:     djwong@kernel.org
 Cc:     linux-xfs@vger.kernel.org
-Date:   Mon, 09 Oct 2023 11:25:51 -0700
-Message-ID: <169687595108.3969352.10885468926344975772.stgit@frogsfrogsfrogs>
+Date:   Mon, 09 Oct 2023 11:25:56 -0700
+Message-ID: <169687595684.3969352.13337782664797983922.stgit@frogsfrogsfrogs>
 In-Reply-To: <169687594536.3969352.5780413854846204650.stgit@frogsfrogsfrogs>
 References: <169687594536.3969352.5780413854846204650.stgit@frogsfrogsfrogs>
 User-Agent: StGit/0.19
@@ -44,31 +44,34 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-If we reduce the number of blocks in an AG, we must update the incore
-geometry values as well.
+When we're adding extents to the busy discard list, add them to the tail
+of the list so that we get FIFO order.  For FITRIM commands, this means
+that we send discard bios sorted in order from longest to shortest, like
+we did before commit 89cfa899608fc.
 
-Fixes: 0800169e3e2c9 ("xfs: Pre-calculate per-AG agbno geometry")
+For transactions that are freeing extents, this puts them in the
+transaction's busy list in FIFO order as well, which shouldn't make any
+noticeable difference.
+
+Fixes: 89cfa899608fc ("xfs: reduce AGF hold times during fstrim operations")
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 ---
- fs/xfs/libxfs/xfs_ag.c |    6 ++++++
- 1 file changed, 6 insertions(+)
+ fs/xfs/xfs_extent_busy.c |    3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
 
 
-diff --git a/fs/xfs/libxfs/xfs_ag.c b/fs/xfs/libxfs/xfs_ag.c
-index e9cc481b4ddff..f9f4d694640d0 100644
---- a/fs/xfs/libxfs/xfs_ag.c
-+++ b/fs/xfs/libxfs/xfs_ag.c
-@@ -1001,6 +1001,12 @@ xfs_ag_shrink_space(
- 		error = -ENOSPC;
- 		goto resv_init_out;
- 	}
-+
-+	/* Update perag geometry */
-+	pag->block_count -= delta;
-+	__xfs_agino_range(pag->pag_mount, pag->block_count, &pag->agino_min,
-+				&pag->agino_max);
-+
- 	xfs_ialloc_log_agi(*tpp, agibp, XFS_AGI_LENGTH);
- 	xfs_alloc_log_agf(*tpp, agfbp, XFS_AGF_LENGTH);
- 	return 0;
+diff --git a/fs/xfs/xfs_extent_busy.c b/fs/xfs/xfs_extent_busy.c
+index 746814815b1da..9ecfdcdc752f7 100644
+--- a/fs/xfs/xfs_extent_busy.c
++++ b/fs/xfs/xfs_extent_busy.c
+@@ -62,7 +62,8 @@ xfs_extent_busy_insert_list(
+ 	rb_link_node(&new->rb_node, parent, rbp);
+ 	rb_insert_color(&new->rb_node, &pag->pagb_tree);
+ 
+-	list_add(&new->list, busy_list);
++	/* always process discard lists in fifo order */
++	list_add_tail(&new->list, busy_list);
+ 	spin_unlock(&pag->pagb_lock);
+ }
+ 
 
