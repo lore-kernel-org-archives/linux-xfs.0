@@ -2,235 +2,78 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A6C6BE95A8E
-	for <linux-xfs@archiver.kernel.org>; Mon,  9 Oct 2023 14:14:23 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 03E31E95A9F
+	for <linux-xfs@archiver.kernel.org>; Mon,  9 Oct 2023 15:37:57 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1376983AbjJIOOX (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 9 Oct 2023 10:14:23 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43486 "EHLO
+        id S1377607AbjJIPhz (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 9 Oct 2023 11:37:55 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41936 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1376998AbjJIOOW (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 9 Oct 2023 10:14:22 -0400
-Received: from esa8.hc1455-7.c3s2.iphmx.com (esa8.hc1455-7.c3s2.iphmx.com [139.138.61.253])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E3EA39D
-        for <linux-xfs@vger.kernel.org>; Mon,  9 Oct 2023 07:14:19 -0700 (PDT)
-X-IronPort-AV: E=McAfee;i="6600,9927,10858"; a="123362705"
-X-IronPort-AV: E=Sophos;i="6.03,210,1694703600"; 
-   d="scan'208";a="123362705"
-Received: from unknown (HELO yto-r3.gw.nic.fujitsu.com) ([218.44.52.219])
-  by esa8.hc1455-7.c3s2.iphmx.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 09 Oct 2023 23:14:17 +0900
-Received: from yto-m2.gw.nic.fujitsu.com (yto-nat-yto-m2.gw.nic.fujitsu.com [192.168.83.65])
-        by yto-r3.gw.nic.fujitsu.com (Postfix) with ESMTP id 72D6FD500B
-        for <linux-xfs@vger.kernel.org>; Mon,  9 Oct 2023 23:14:15 +0900 (JST)
-Received: from kws-ab3.gw.nic.fujitsu.com (kws-ab3.gw.nic.fujitsu.com [192.51.206.21])
-        by yto-m2.gw.nic.fujitsu.com (Postfix) with ESMTP id B857ED5E98
-        for <linux-xfs@vger.kernel.org>; Mon,  9 Oct 2023 23:14:14 +0900 (JST)
-Received: from edo.cn.fujitsu.com (edo.cn.fujitsu.com [10.167.33.5])
-        by kws-ab3.gw.nic.fujitsu.com (Postfix) with ESMTP id 4F6D620077822
-        for <linux-xfs@vger.kernel.org>; Mon,  9 Oct 2023 23:14:14 +0900 (JST)
-Received: from [10.193.128.127] (unknown [10.193.128.127])
-        by edo.cn.fujitsu.com (Postfix) with ESMTP id 687B11A006F;
-        Mon,  9 Oct 2023 22:14:13 +0800 (CST)
-Message-ID: <28613f6e-2ed2-4c9a-81e3-3dcfdbba867c@fujitsu.com>
-Date:   Mon, 9 Oct 2023 22:14:12 +0800
+        with ESMTP id S1377685AbjJIPhm (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 9 Oct 2023 11:37:42 -0400
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1764C11A
+        for <linux-xfs@vger.kernel.org>; Mon,  9 Oct 2023 08:37:08 -0700 (PDT)
+Received: by smtp.kernel.org (Postfix) with ESMTPS id A36B0C433CC
+        for <linux-xfs@vger.kernel.org>; Mon,  9 Oct 2023 15:37:07 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1696865827;
+        bh=b0ls1iq4eU8kiLxfoOu9Cr77zw4F96xM5zhwxUAXKQw=;
+        h=From:To:Subject:Date:In-Reply-To:References:From;
+        b=rx0gKMNhX0cjL8/rzHfDh1fJrevudJk8d1bFkEHUmFwhGR3hfX1Z8u8HAIHwNjBW9
+         J6kyp83m3bg62mF9cUh7ChizkjE7ip/VQ8HSpekm1D2g+11ArJeFcVBKVqQvcVqY3D
+         LLpZo+DXlHRUmRq+rtY7qnbVIEewJUbjAUsvQp0hTQbKagfaKBKqSaoqq1HXM8bQGk
+         Dbd07+P7XkdC5o3wkxL3VwVqabHpiLIPp5Vj46BtzqueLOSq2YwhkpS1pS3u6d6MBV
+         WkcSTtbJG4TdgeljpUdH3mCg7uBb0g8KLkBXiOcIZYZyrSaRF3RX+n70aqr4t3Snre
+         d3Ff9Ghtkq4sA==
+Received: by aws-us-west-2-korg-bugzilla-1.web.codeaurora.org (Postfix, from userid 48)
+        id 8DAE0C53BD4; Mon,  9 Oct 2023 15:37:07 +0000 (UTC)
+From:   bugzilla-daemon@kernel.org
+To:     linux-xfs@vger.kernel.org
+Subject: [Bug 205833] fsfreeze blocks close(fd) on xfs sometimes
+Date:   Mon, 09 Oct 2023 15:37:06 +0000
+X-Bugzilla-Reason: None
+X-Bugzilla-Type: changed
+X-Bugzilla-Watch-Reason: AssignedTo filesystem_xfs@kernel-bugs.kernel.org
+X-Bugzilla-Product: File System
+X-Bugzilla-Component: XFS
+X-Bugzilla-Version: 2.5
+X-Bugzilla-Keywords: 
+X-Bugzilla-Severity: normal
+X-Bugzilla-Who: socketpair@gmail.com
+X-Bugzilla-Status: NEW
+X-Bugzilla-Resolution: 
+X-Bugzilla-Priority: P1
+X-Bugzilla-Assigned-To: filesystem_xfs@kernel-bugs.kernel.org
+X-Bugzilla-Flags: 
+X-Bugzilla-Changed-Fields: cc
+Message-ID: <bug-205833-201763-gRWgxmYuFQ@https.bugzilla.kernel.org/>
+In-Reply-To: <bug-205833-201763@https.bugzilla.kernel.org/>
+References: <bug-205833-201763@https.bugzilla.kernel.org/>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
+X-Bugzilla-URL: https://bugzilla.kernel.org/
+Auto-Submitted: auto-generated
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH] xfs: drop experimental warning for FSDAX
-To:     "Darrick J. Wong" <djwong@kernel.org>
-Cc:     Chandan Babu R <chandanbabu@kernel.org>,
-        Dave Chinner <david@fromorbit.com>,
-        Dan Williams <dan.j.williams@intel.com>,
-        Andrew Morton <akpm@linux-foundation.org>,
-        linux-xfs@vger.kernel.org, nvdimm@lists.linux.dev
-References: <20230927083034.90bd6336229dd00af601e0ef@linux-foundation.org>
- <9c3cbc0c-7135-4006-ad4a-2abce0a556b0@fujitsu.com>
- <20230928092052.9775e59262c102dc382513ef@linux-foundation.org>
- <20230928171339.GJ11439@frogsfrogsfrogs>
- <99279735-2d17-405f-bade-9501a296d817@fujitsu.com>
- <651718a6a6e2c_c558e2943e@dwillia2-xfh.jf.intel.com.notmuch>
- <ec2de0b9-c07d-468a-bd15-49e83cba1ad9@fujitsu.com>
- <87y1gltcvg.fsf@debian-BULLSEYE-live-builder-AMD64>
- <20231005000809.GN21298@frogsfrogsfrogs>
- <ce9ef1dc-d62b-466d-882f-d7bf4350582d@fujitsu.com>
- <20231005160530.GO21298@frogsfrogsfrogs>
-From:   Shiyang Ruan <ruansy.fnst@fujitsu.com>
-In-Reply-To: <20231005160530.GO21298@frogsfrogsfrogs>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 8bit
-X-TM-AS-GCONF: 00
-X-TM-AS-Product-Ver: IMSS-9.1.0.1417-9.0.0.1002-27926.000
-X-TM-AS-User-Approved-Sender: Yes
-X-TMASE-Version: IMSS-9.1.0.1417-9.0.1002-27926.000
-X-TMASE-Result: 10--20.194600-10.000000
-X-TMASE-MatchedRID: OnXFgg5KIq2PvrMjLFD6eHchRkqzj/bEC/ExpXrHizxBqLOmHiM3w0mb
-        /vjP+wrh2cyrLyFNhjuc49Bvf+9vIl0ieHN50/kHrMZ+BqQt2NpN8rmPQRlvK1cZNuxCoduS2Z5
-        d2c6tpnZa0onndjAYYqcgvYcxG5Wh+BMgIVTipNsSEYfcJF0pRdG3Y6ijqBt3+B3C2Zz0Z1PhDo
-        h7wbP2f4psmNGAE/ypCRGaYCZT14bIRZRfI7CCoWzBijri5+RV8FHp8LCpZ7T5V4X/65Dwb7rmv
-        hde36c4lxPsRwiY5LxXuQ2wIHEaxLgSigd+50baQQ5+hY6u+45UENBIMyKD0XdjuSlUpauf8Ybk
-        9kzPEWih9xN1JciTvfMW54P2B2td1s1AHJ9E8eBdhZyafgPiq1yyC78hAU/OVz8J52OVy+RkG4E
-        tozBz384b571oAikeD4bdesxcMzc2sw58eWE/moh/ebSxR/HnICcCYi/y4c1QKAQSutQYXKMWPo
-        W8GZ6ysyA6wHYa3r6ws8u7I5eHt8hjol69azi+PMcAlOC0qrCBs03RHrzjM02tQtIC9BxRduZRu
-        RKwoPYheBVUjnjCL6kaGaJDwIN8/ssiKhSj/JlOKksNozKUfd7kIcn/7F/gc1FU910PIkuUg5UD
-        6AlF0ieub+CUi/LYnagtny7ZPcS/WXZS/HqJ2sC4UUZr4lSFAsMBg/gBdVHudjnWXAurTyAHAop
-        Ed76vLbuc+vq+h7p3MIrRs3M5CQx/cP20O8DrCJAo+QkBlr4piKVQz03z1A==
-X-TMASE-SNAP-Result: 1.821001.0001-0-1-22:0,33:0,34:0-0
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
+https://bugzilla.kernel.org/show_bug.cgi?id=3D205833
 
+=D0=9A=D0=BE=D1=80=D0=B5=D0=BD=D0=B1=D0=B5=D1=80=D0=B3 =D0=9C=D0=B0=D1=80=
+=D0=BA (socketpair@gmail.com) changed:
 
-在 2023/10/6 0:05, Darrick J. Wong 写道:
-> On Thu, Oct 05, 2023 at 04:53:12PM +0800, Shiyang Ruan wrote:
->>
->>
->> 在 2023/10/5 8:08, Darrick J. Wong 写道:
->>>>>
->>>>> Sorry, I sent the list below to Chandan, didn't cc the maillist
->>>>> because it's just a rough list rather than a PR:
->>>>>
->>>>>
->>>>> 1. subject: [v3]  xfs: correct calculation for agend and blockcount
->>>>>      url:
->>>>>      https://lore.kernel.org/linux-xfs/20230913102942.601271-1-ruansy.fnst@fujitsu.com/
->>>>>      note:    This one is a fix patch for commit: 5cf32f63b0f4 ("xfs:
->>>>>      fix the calculation for "end" and "length"").
->>>>>               It can solve the fail of xfs/55[0-2]: the programs
->>>>>               accessing the DAX file may not be notified as expected,
->>>>>              because the length always 1 block less than actual.  Then
->>>>>             this patch fixes this.
->>>>>
->>>>>
->>>>> 2. subject: [v15] mm, pmem, xfs: Introduce MF_MEM_PRE_REMOVE for unbind
->>>>>      url:
->>>>>      https://lore.kernel.org/linux-xfs/20230928103227.250550-1-ruansy.fnst@fujitsu.com/T/#u
->>>>>      note:    This is a feature patch.  It handles the pre-remove event
->>>>>      of DAX device, by notifying kernel/user space before actually
->>>>>     removing.
->>>>>               It has been picked by Andrew in his
->>>>>               mm-hotfixes-unstable. I am not sure whether you or he will
->>>>>              merge this one.
->>>>>
->>>>>
->>>>> 3. subject: [v1]  xfs: drop experimental warning for FSDAX
->>>>>      url:
->>>>>      https://lore.kernel.org/linux-xfs/20230915063854.1784918-1-ruansy.fnst@fujitsu.com/
->>>>>      note:    With the patches mentioned above, I did a lot of tests,
->>>>>      including xfstests and blackbox tests, the FSDAX function looks
->>>>>     good now.  So I think the experimental warning could be dropped.
->>>>
->>>> Darrick/Dave, Could you please review the above patch and let us know if you
->>>> have any objections?
->>>
->>> The first two patches are ok.  The third one ... well I was about to say
->>> ok but then this happened with generic/269 on a 6.6-rc4 kernel and those
->>> two patches applied:
->>
->> Hi Darrick,
->>
->> Thanks for testing.  I just tested this case (generic/269) on v6.6-rc4 with
->> my 3 patches again, but it didn't fail.  Such WARNING message didn't show in
->> dmesg too.
->>
->> My local.config is shown as below:
->> [nodax_reflink]
->> export FSTYP=xfs
->> export TEST_DEV=/dev/pmem0
->> export TEST_DIR=/mnt/test
->> export SCRATCH_DEV=/dev/pmem1
->> export SCRATCH_MNT=/mnt/scratch
->> export MKFS_OPTIONS="-m reflink=1,rmapbt=1"
->>
->> [dax_reflink]
->> export FSTYP=xfs
->> export TEST_DEV=/dev/pmem0
->> export TEST_DIR=/mnt/test
->> export SCRATCH_DEV=/dev/pmem1
->> export SCRATCH_MNT=/mnt/scratch
->> export MKFS_OPTIONS="-m reflink=1,rmapbt=1"
->> export MOUNT_OPTIONS="-o dax"
->> export TEST_FS_MOUNT_OPTS="-o dax"
->>
->> And tools version are:
->>   - xfstests (v2023.09.03)
-> 
-> Same here.
-> 
->>   - xfsprogs (v6.4.0)
-> 
-> I have a newer branch, though it only contains resyncs with newer kernel
-> versions and bugfixes.
-> 
->> Could you show me more info (such as kernel config, local.config) ?  So that
->> I can find out what exactly is going wrong.
-> 
-> The full xml output from fstests is here:
-> 
-> https://djwong.org/fstests/output/.fa9f295c6a2dd4426aa26b4d74e8e0299ad2307507547d5444c157f0e883df92/.2e718425eda716ad848ae05dfab82a670af351f314e26b3cb658a929331bf2eb/result.xml
-> 
-> I think the key difference between your setup and mine is that
-> MKFS_OPTIONS includes '-d daxinherit=1' and MOUNT_OPTIONS do not include
-> -o dax.  That shouldn't make any difference, though.
-> 
-> Also: In the weeks leading up to me adding the PREREMOVE patches a
-> couple of days ago, no test (generic/269 or otherwise) hit that ASSERT.
-> I'm wondering if that means that the preremove code isn't shooting down
-> a page mapping or something?
-> 
-> Grepping through the result.xml reveals:
-> 
-> $ grep -E '(generic.269|xfs.55[012])' /tmp/result.xml
-> 563:    <testcase classname="xfstests.global" name="xfs/550" time="2">
-> 910:    <testcase classname="xfstests.global" name="xfs/552" time="2">
-> 1685:   <testcase classname="xfstests.global" name="generic/269" time="23">
-> 1686:           <failure message="_check_dmesg: something found in dmesg (see /var/tmp/fstests/generic/269.dmesg)" type="TestFail"/>
-> 1689:[ 6046.844058] run fstests generic/269 at 2023-10-04 15:26:57
-> 2977:   <testcase classname="xfstests.global" name="xfs/551" time="2">
-> 
-> So it's possible that 550 or 552 messed this up for us. :/
-> 
-> See attached kconfig.
+           What    |Removed                     |Added
+----------------------------------------------------------------------------
+                 CC|                            |socketpair@gmail.com
 
-Thanks for the info.  I tried to make my environment same as yours, but 
-still couldn't reproduce the fail.  I also let xfs/550 & xfs/552 ran 
-before generic/269.
+--- Comment #5 from =D0=9A=D0=BE=D1=80=D0=B5=D0=BD=D0=B1=D0=B5=D1=80=D0=B3 =
+=D0=9C=D0=B0=D1=80=D0=BA (socketpair@gmail.com) ---
+https://bugzilla.redhat.com/show_bug.cgi?id=3D1474726 the same bug
 
-[root@f38 xfst]# ./check -s nodax_reflink -r xfs/550 xfs/552 generic/269
-SECTION       -- nodax_reflink
-FSTYP         -- xfs (debug)
-PLATFORM      -- Linux/x86_64 f38 6.6.0-rc4 #365 SMP PREEMPT_DYNAMIC Sun 
-Oct  8 15:19:36 CST 2023
-MKFS_OPTIONS  -- -f -m reflink=1,rmapbt=1 -d daxinherit=1 /dev/pmem1
-MOUNT_OPTIONS -- -o usrquota,grpquota,prjquota, /dev/pmem1 /mnt/scratch
+--=20
+You may reply to this email to add a comment.
 
-xfs/550 2s ...  2s
-xfs/552 2s ...  1s
-generic/269 22s ...  23s
-Ran: xfs/550 xfs/552 generic/269
-Passed all 3 tests
-
-SECTION       -- nodax_reflink
-=========================
-Ran: xfs/550 xfs/552 generic/269
-Passed all 3 tests
-
-
-And xfs/269 is testing fsstress & dd on a scratch device at the same 
-time.  It won't reach the PREREMOVE code or xfs' notify failure code.
-
-I'd like to know what your git tree looks like, is it *v6.6-rc4 + my 
-patches only* ?  Does it contain other patches?
-
-
---
-Thanks,
-Ruan.
-
-> 
-> --D
-> 
->>
->>
->> --
->> Thanks,
->> Ruan.
+You are receiving this mail because:
+You are watching the assignee of the bug.=
