@@ -2,36 +2,62 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D0888CD6137
-	for <linux-xfs@archiver.kernel.org>; Mon,  9 Oct 2023 21:18:19 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E7E98CD613C
+	for <linux-xfs@archiver.kernel.org>; Mon,  9 Oct 2023 21:39:19 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1378284AbjJIVSS (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 9 Oct 2023 17:18:18 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38382 "EHLO
+        id S1378717AbjJIVjT (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 9 Oct 2023 17:39:19 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35136 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1378722AbjJIVSI (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 9 Oct 2023 17:18:08 -0400
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 98B621BE3
-        for <linux-xfs@vger.kernel.org>; Mon,  9 Oct 2023 14:17:16 -0700 (PDT)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 04469C433C8;
-        Mon,  9 Oct 2023 21:17:15 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1696886236;
-        bh=P3KiM8/0lPjQi4ed1Eo583KVgGcAqulGQzxagyQ3Dco=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=fexeVqR9Lzq4nB0ZNgYWn06MFNkBz+wN7HiWfRDwQtmrYiKKYsO+4sqg1EDqYuZZO
-         IYHs8gebHIZU7/L7k6KtqADbVr4Ze5Tpat1uZKXsMC9XiLuM2WhQyrx1i0jHab8jyd
-         szRAbUNuFNjH9M+rcaOmcTBuU0poaGbNk74X0BzyQXqX0EmMG1JyTpOJsMePbEoDZl
-         GOZVCVq9o2eorOVRfFMIyNjAql71if4z+hVnArsD11jnxfGEPZQipWu2cvFIQlX3Pw
-         D81fa8ijQ8nbrX4e7V7t406Zhd6mxBOUwnkjo5eGDBkV83QEFbdqViM12uyh4EfqEM
-         94hqMCen040YQ==
-Date:   Mon, 9 Oct 2023 14:17:15 -0700
-From:   "Darrick J. Wong" <djwong@kernel.org>
+        with ESMTP id S1378298AbjJIVjS (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 9 Oct 2023 17:39:18 -0400
+Received: from mail-pg1-x52b.google.com (mail-pg1-x52b.google.com [IPv6:2607:f8b0:4864:20::52b])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 582179D
+        for <linux-xfs@vger.kernel.org>; Mon,  9 Oct 2023 14:39:17 -0700 (PDT)
+Received: by mail-pg1-x52b.google.com with SMTP id 41be03b00d2f7-5809d5fe7f7so3284837a12.3
+        for <linux-xfs@vger.kernel.org>; Mon, 09 Oct 2023 14:39:17 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=fromorbit-com.20230601.gappssmtp.com; s=20230601; t=1696887557; x=1697492357; darn=vger.kernel.org;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
+        bh=TitE2Gfc6ijQhJCqqQhMSXftXFdI0hKP8a41rhK98j4=;
+        b=YxTpHbJXKtHgvS59cjtLpM3+kW9+mTuyIddqGuAeJkTk3ukHI/hfrKXAdkaD5EYh0j
+         /cl58+k42hiPRyF7BP+gHsd4elqxolgcJ5MF3fEM4CtwZCKKhE6QrY3wFBN2Grejplzs
+         xj3LTC1D7iM9GdJS7DFuzOtHHvXWok6DmXv5eo6tHlOfB/XZO8hJW9gmjHpY+QI0lQNA
+         C8cesSWBB0zeiDbDl/68Rl1SDOBoFUGKnL3kS9S5DNBaDdEU30Q8UZK2sny9+h3xUIO9
+         J7HZDz9Qz4gdCfFwl6Mt5dLc0RpNqq5xyWCdVjdeBaeHXV/u2d8RYMtiO1lL1rur8jJD
+         sZfA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1696887557; x=1697492357;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=TitE2Gfc6ijQhJCqqQhMSXftXFdI0hKP8a41rhK98j4=;
+        b=QNzr+NkMtUiwX+DCG9a+jDKGL0geQ12ARTBn/PUgv7x73LCo3HHgSEDga8yGQFCBF0
+         A75WoyfH8EGU0gX5W4ufxbD+iD9KdhJgl6nfyusFS7CswTynz+ANFZ2XFYP2vIdyPQuo
+         /I/Ffyu+jrJHffGPKCAqSgHI4XD886u1b8uhKoG3TqWn/YHfIKx4zzR4jCtwHWf2A9nC
+         1k1LncmKgClOLSiLHPgpOEWINO8K2mYiTri0bojmtZBb0ZdS9+s0k2n41G+UwiJPdpUy
+         3buvroOQApp1BF+LBclY5/bAL65LnqIpWzNLWgHlwQvFXTKd5svIsyygde4PHvE/P3K4
+         v89Q==
+X-Gm-Message-State: AOJu0YzK9sWdsY2TjaHl7nZ6YCD3y+tZVJNsGyiYjZtzk7gVBOkTrHSQ
+        cjw9FQlquRmNVSsIJTFb89Cs1i6++rTFo0Z9HOs=
+X-Google-Smtp-Source: AGHT+IEcZqEdBt+/ipBjNsYccY4mq35OP0JwlfHFqw/ccG6Nzzo+gLpQkA7NqbJANwa6m0ewBIMY4w==
+X-Received: by 2002:a05:6a20:5647:b0:153:919e:18ce with SMTP id is7-20020a056a20564700b00153919e18cemr13358117pzc.48.1696887556531;
+        Mon, 09 Oct 2023 14:39:16 -0700 (PDT)
+Received: from dread.disaster.area (pa49-180-20-59.pa.nsw.optusnet.com.au. [49.180.20.59])
+        by smtp.gmail.com with ESMTPSA id y7-20020a17090322c700b001c726147a46sm10095160plg.234.2023.10.09.14.39.15
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Mon, 09 Oct 2023 14:39:16 -0700 (PDT)
+Received: from dave by dread.disaster.area with local (Exim 4.96)
+        (envelope-from <david@fromorbit.com>)
+        id 1qpxy5-00Bh69-07;
+        Tue, 10 Oct 2023 08:39:13 +1100
+Date:   Tue, 10 Oct 2023 08:39:13 +1100
+From:   Dave Chinner <david@fromorbit.com>
 To:     Catherine Hoang <catherine.hoang@oracle.com>
 Cc:     linux-xfs@vger.kernel.org
 Subject: Re: [PATCH v2] xfs: allow read IO and FICLONE to run concurrently
-Message-ID: <20231009211715.GE21298@frogsfrogsfrogs>
+Message-ID: <ZSRzAVdTMeL4CcjM@dread.disaster.area>
 References: <20231009205936.38644-1-catherine.hoang@oracle.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
@@ -54,6 +80,11 @@ On Mon, Oct 09, 2023 at 01:59:36PM -0700, Catherine Hoang wrote:
 >  fs/xfs/xfs_reflink.c | 19 +++++++++++++++++++
 >  fs/xfs/xfs_reflink.h |  2 ++
 >  4 files changed, 64 insertions(+), 6 deletions(-)
+
+This has turned out pretty nice and simple :)
+
+I have a couple of suggestions to improve it further, though.
+
 > 
 > diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
 > index 203700278ddb..5bfb2013366f 100644
@@ -83,28 +114,12 @@ On Mon, Oct 09, 2023 at 01:59:36PM -0700, Catherine Hoang wrote:
 > +	if (iolock == XFS_IOLOCK_EXCL && !xfs_iflags_test(ip, XFS_IREMAPPING)) {
 >  		xfs_ilock_demote(ip, XFS_IOLOCK_EXCL);
 >  		iolock = XFS_IOLOCK_SHARED;
-
-If we hold IOLOCK_EXCL on an aligned write and we think we can demote
-the lock to IOLOCK_SHARED, why do we need to test IREMAPPING?
-
-The direct writer holds IOLOCK_EXCL, so there cannot be any remapping
-operations in progress on this file at all.
-
-OTOH if there are remapping operations holding the IOLOCK in any mode,
-then there cannot be any direct writers holding IOLOCK_EXCL.
-
-There can't be any xfs_file_dio_write_aligned threads holding
-IOLOCK_SHARED racing with reflink because either the direct writer sees
-IREMAPPING and has to drop IOLOCK_SHARED to get IOLOCK_EXCL; or the
-direct write is proceeding while holding IOLOCK_SHARED, which prevents
-reflink from starting up.
-
-So, uh, what is the IREMAPPING test here protecting against?
-
-(Did I miss some other conflict between reflink and the dio count?
-That's entirely possible...)
-
 >  	}
+
+This is unnecessary. If we already have the IOLOCK_EXCL, then a
+remapping cannot be in progress and hence that flag should never be
+set here.
+
 > @@ -622,6 +631,14 @@ xfs_file_dio_write_unaligned(
 >  	if (ret)
 >  		return ret;
@@ -116,6 +131,36 @@ That's entirely possible...)
 > +		if (ret)
 > +			return ret;
 > +	}
+
+Rather than duplicating this, I'm wondering if we should just put
+this in a wrapper - xfs_ilock_iocb_for_write(), which does:
+
+static int
+xfs_ilock_iocb_for_write(
+	struct kiocb	*iocb,
+	int		*lock_mode)
+{
+	struct xfs_inode *ip = XFS_I(file_inode(iocb->ki_filp));
+
+	do {
+		ret = xfs_ilock_iocb(iocb, *lock_mode);
+		if (ret)
+			return ret;
+		if (*lock_mode == XFS_IOLOCK_EXCL)
+			return 0;
+		if (!xfs_iflags_test(ip, XFS_IREMAPPING))
+			return 0;
+		xfs_iunlock(ip, *lock_mode);
+		*lock_mode = XFS_IOLOCK_EXCL;
+	} while (1);
+	/* notreached */
+	return -EAGAIN;
+}
+
+And then we can call it from the buffered and DAX write paths, too,
+so that all the write IO paths use the same locking and will handle
+this case automatically if they are converted to use shared locking.
+
 > +
 >  	/*
 >  	 * We can't properly handle unaligned direct I/O to reflink files yet,
@@ -127,6 +172,11 @@ That's entirely possible...)
 > -	xfs_iunlock2_io_mmap(src, dest);
 > +	xfs_iflags_clear(src, XFS_IREMAPPING);
 > +	xfs_reflink_unlock(src, dest);
+
+Make that xfs_iunlock2_remapping(), and move the clearing of the
+remapping bit inside it.
+
+
 >  	if (ret)
 >  		trace_xfs_reflink_remap_range_error(dest, ret, _RET_IP_);
 >  	return remapped > 0 ? remapped : ret;
@@ -167,9 +217,54 @@ That's entirely possible...)
 >  					&xfs_page_mkwrite_iomap_ops);
 > -			xfs_iunlock(XFS_I(inode), XFS_MMAPLOCK_SHARED);
 > +			xfs_iunlock(XFS_I(inode), mmaplock);
->  		} else {
->  			ret = filemap_fault(vmf);
->  		}
+
+This would be better done as:
+
+	lock_mode = 0;
+	if (IS_DAX(inode) || write_fault)
+		lock_mode = xfs_ilock_for_write_fault(XFS_I(inode));
+
+	if (IS_DAX(inode)) {
+		pfn_t pfn;
+
+		ret = xfs_dax_fault(vmf, order, write_fault, &pfn);
+		if (ret & VM_FAULT_NEEDDSYNC)
+			ret = dax_finish_sync_fault(vmf, order, pfn);
+	} else if (write_fault) {
+		ret = iomap_page_mkwrite(vmf, &xfs_page_mkwrite_iomap_ops);
+	} else {
+		ret = filemap_fault(vmf);
+	}
+
+	if (lock_mode)
+		xfs_iunlock(XFS_I(inode), lock_mode);
+....
+
+
+and
+
+static int
+xfs_ilock_for_write_fault(
+	struct xfs_inode	*ip)
+{
+	int			lock_mode = XFS_MMAPLOCK_SHARED;
+
+	do {
+		xfs_ilock(ip, lock_mode);
+		if (!xfs_iflags_test(ip, XFS_IREMAPPING))
+			return lock_mode;
+		if (lock_mode == XFS_MMAPLOCK_EXCL)
+			return lock_mode;
+		xfs_iunlock(ip, lock_mode);
+		lock_mode = XFS_MMAPLOCK_SHARED;
+	} while (1);
+	/* notreached */
+	return 0;
+}
+
+This separates out the locking from the processing of the fault
+quite nicely....
+
 > diff --git a/fs/xfs/xfs_inode.h b/fs/xfs/xfs_inode.h
 > index 0c5bdb91152e..3046ddfa2358 100644
 > --- a/fs/xfs/xfs_inode.h
@@ -210,13 +305,6 @@ That's entirely possible...)
 >  }
 > +
 > +/* Unlock both inodes after the reflink completes. */
-
-This comment should be more specific about what it unlocks:
-
-/* Drop the MMAPLOCK and the IOLOCK after a remap completes. */
-
---D
-
 > +void
 > +xfs_reflink_unlock(
 > +	struct xfs_inode	*ip1,
@@ -230,17 +318,11 @@ This comment should be more specific about what it unlocks:
 > +		inode_unlock_shared(VFS_I(ip1));
 > +	inode_unlock(VFS_I(ip2));
 > +}
-> diff --git a/fs/xfs/xfs_reflink.h b/fs/xfs/xfs_reflink.h
-> index 65c5dfe17ecf..89f4d2a2f52e 100644
-> --- a/fs/xfs/xfs_reflink.h
-> +++ b/fs/xfs/xfs_reflink.h
-> @@ -53,4 +53,6 @@ extern int xfs_reflink_remap_blocks(struct xfs_inode *src, loff_t pos_in,
->  extern int xfs_reflink_update_dest(struct xfs_inode *dest, xfs_off_t newlen,
->  		xfs_extlen_t cowextsize, unsigned int remap_flags);
->  
-> +void xfs_reflink_unlock(struct xfs_inode *ip1, struct xfs_inode *ip2);
-> +
->  #endif /* __XFS_REFLINK_H */
-> -- 
-> 2.34.1
-> 
+
+That should go with all the other inode locking functions in
+xfs_inode.c.
+
+-Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
