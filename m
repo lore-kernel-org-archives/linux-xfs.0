@@ -2,55 +2,71 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 29DB5CD68ED
-	for <linux-xfs@archiver.kernel.org>; Tue, 10 Oct 2023 06:57:34 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A8F9FCD68F5
+	for <linux-xfs@archiver.kernel.org>; Tue, 10 Oct 2023 07:01:42 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1442346AbjJJG5d (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 10 Oct 2023 02:57:33 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41270 "EHLO
+        id S1442352AbjJJHBl (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 10 Oct 2023 03:01:41 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48924 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1442330AbjJJG5d (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 10 Oct 2023 02:57:33 -0400
+        with ESMTP id S1442267AbjJJHBk (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 10 Oct 2023 03:01:40 -0400
 Received: from bombadil.infradead.org (bombadil.infradead.org [IPv6:2607:7c80:54:3::133])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4291D99;
-        Mon,  9 Oct 2023 23:57:32 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7B4CF99;
+        Tue, 10 Oct 2023 00:01:38 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
         d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Type:MIME-Version
         :References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
         Content-Transfer-Encoding:Content-ID:Content-Description;
-        bh=N9lyzBuGVFsluWswLnugelQJSaPXpLcK/NSvWYovKbM=; b=aXzxtZMjpR1hc2S/g4dNCWmaUG
-        hgXjDjz9IVZkWN75AZBV7PDW470NonaVTsLok/Qzg8k5yjO+dyKtGIKt32FBfskvAgYUqkYoWM2IJ
-        08o8uKXx5ulsVmYu+7gBdGUT/dvsfDVFHKd/Tm9HIxYXinr/CXtflaR7tvvRgBoV5oWM0H2w1Z83p
-        OgS9f0pri7x0Eq7GNcVXis5cM3selvpgRnQjsqNYvC1+u0CUBTlplx4rbetzvVc9hi2kCHr3/3uBq
-        RPQ3zOe8vENF2h+c6F+PWwE6aPoTFuLinigJeDtT9FqYsUZNAiRklOte/ghEVJft20HzwC2x1DiIn
-        zE7RR65Q==;
+        bh=bI/vJl5ULJZr3ilKxFJWstI+fkyfacC5qyu4Nha56e8=; b=hZyC1bZ33GltcX7CCa2ZSkJWi+
+        Rv0Rtm4poGcty1nCCUjPMItWznXW9OAM/CRkuZ+AezB2KzLFqn5/eOTe2z3u+Vkq1eLfXq8AeG8JW
+        SjLCTQV0wQJMR/vVKeX7y1xzzIhS44Uu7XRey217WHgrnWpwiQhU/zCwTleY43Zvt1WVTYRbGZRzJ
+        49WpyDQFt9xFfEr1yzZ93JEk6i4j16SpnlX8tH6mZ6AkCRv8ROX9xKYDMBIrRg2CnY/Z4obgw/LWV
+        nJWZCHVUplR9m8EeA3JW/yT513gvgv05gUZGzDT1xUaUhrf9XLgcCMzGJCW7MCK8scc2OEI3bAe1B
+        spzshVVw==;
 Received: from hch by bombadil.infradead.org with local (Exim 4.96 #2 (Red Hat Linux))
-        id 1qq6gJ-00CeK8-2r;
-        Tue, 10 Oct 2023 06:57:27 +0000
-Date:   Mon, 9 Oct 2023 23:57:27 -0700
+        id 1qq6kH-00Cf4m-1r;
+        Tue, 10 Oct 2023 07:01:33 +0000
+Date:   Tue, 10 Oct 2023 00:01:33 -0700
 From:   Christoph Hellwig <hch@infradead.org>
-To:     cheng.lin130@zte.com.cn
-Cc:     david@fromorbit.com, djwong@kernel.org, linux-xfs@vger.kernel.org,
-        linux-kernel@vger.kernel.org, jiang.yong5@zte.com.cn,
-        wang.liang82@zte.com.cn, liu.dong3@zte.com.cn
-Subject: Re: [PATCH v6] xfs: introduce protection for drop nlink
-Message-ID: <ZST117zXotVPXGEQ@infradead.org>
-References: <202310101009011817522@zte.com.cn>
+To:     "Darrick J. Wong" <djwong@kernel.org>
+Cc:     zlang@redhat.com, linux-xfs@vger.kernel.org,
+        fstests@vger.kernel.org, guan@eryu.me, linux-block@vger.kernel.org,
+        linux-scsi@vger.kernel.org
+Subject: Re: [PATCH 1/3] xfs/178: don't fail when SCRATCH_DEV contains random
+ xfs superblocks
+Message-ID: <ZST2zRvtMrU0KlkN@infradead.org>
+References: <169687550821.3948976.6892161616008393594.stgit@frogsfrogsfrogs>
+ <169687551395.3948976.8425812597156927952.stgit@frogsfrogsfrogs>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <202310101009011817522@zte.com.cn>
+In-Reply-To: <169687551395.3948976.8425812597156927952.stgit@frogsfrogsfrogs>
 X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Tue, Oct 10, 2023 at 10:09:01AM +0800, cheng.lin130@zte.com.cn wrote:
-> From: Cheng Lin <cheng.lin130@zte.com.cn>
+On Mon, Oct 09, 2023 at 11:18:33AM -0700, Darrick J. Wong wrote:
+> The storage advertises SCSI UNMAP support, but it is of the variety
+> where the UNMAP command returns immediately but takes its time to unmap
+> in the background.  Subsequent rereads are allowed to return stale
+> contents, per DISCARD semantics.
 > 
-> When abnormal drop_nlink are detected on the inode,
-> return error, to avoid corruption propagation.
+> When the fstests cloud is not busy, the old contents disappear in a few
+> seconds.  However, at peak utilization, there are ~75 VMs running, and
+> the storage backend can take several minutes to commit these background
+> requests.
 
-I know this has been through a few cycles, but wouldn't it be useful
-to have at least a little description here how that case could happen?
+Umm, that is not valid behavior fo SCSI UNMAP or any other command
+that Linux discard maps to.  All of them can do one of the two options
+on a per-block basis:
+
+ - return the unmap pattern (usually but not always 0) for any read
+   following the unmap/trim/discard
+ - always return the previous pattern until it is overwritten or
+   discarded again
+
+Changing the pattern some time after unmap is a grave bug, and we need
+to blacklist the device.
 
