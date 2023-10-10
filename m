@@ -2,66 +2,55 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 38DEFCD68ED
-	for <linux-xfs@archiver.kernel.org>; Tue, 10 Oct 2023 06:56:35 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 29DB5CD68ED
+	for <linux-xfs@archiver.kernel.org>; Tue, 10 Oct 2023 06:57:34 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1442278AbjJJG4e (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 10 Oct 2023 02:56:34 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39762 "EHLO
+        id S1442346AbjJJG5d (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 10 Oct 2023 02:57:33 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41270 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1442233AbjJJG4d (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 10 Oct 2023 02:56:33 -0400
+        with ESMTP id S1442330AbjJJG5d (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 10 Oct 2023 02:57:33 -0400
 Received: from bombadil.infradead.org (bombadil.infradead.org [IPv6:2607:7c80:54:3::133])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8778B99
-        for <linux-xfs@vger.kernel.org>; Mon,  9 Oct 2023 23:56:32 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4291D99;
+        Mon,  9 Oct 2023 23:57:32 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
         d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Type:MIME-Version
         :References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
         Content-Transfer-Encoding:Content-ID:Content-Description;
-        bh=eG4tAcWegEHKEhDVs2lFPET+PmKiQG/Kq+cq3mGmo20=; b=pYcPCiUXG/HpME1/0lKJ1b2zXT
-        T6a9jNlzCocRl/+NjeD+Dq4h5tA1MUsg1o1cjyuIhgzxW6GH5XMDKU7TUCYbBSxfxP0KCsSloyZfI
-        VSizego8EOrzVPlj/+gu63GGWDc1Ay8SkbXJphYq8tWBXY43lSvJFvMdeWsQxGioFjoe4q1RWnkBk
-        LVgjNe3M162lzDgbUq7phB32zgzeTvJdsRGGu2F1QKHWaWY0qzNFtO9ieCTaDblnL5yZWez01N1NA
-        tTWexQEjp8spXy+dR6npkzQJhSVp3TMDbLDkeDpri/CZFhLQ0GSu8PhzGCOJ5DfzxwzO+fGDBpJ5n
-        PluMgUrQ==;
+        bh=N9lyzBuGVFsluWswLnugelQJSaPXpLcK/NSvWYovKbM=; b=aXzxtZMjpR1hc2S/g4dNCWmaUG
+        hgXjDjz9IVZkWN75AZBV7PDW470NonaVTsLok/Qzg8k5yjO+dyKtGIKt32FBfskvAgYUqkYoWM2IJ
+        08o8uKXx5ulsVmYu+7gBdGUT/dvsfDVFHKd/Tm9HIxYXinr/CXtflaR7tvvRgBoV5oWM0H2w1Z83p
+        OgS9f0pri7x0Eq7GNcVXis5cM3selvpgRnQjsqNYvC1+u0CUBTlplx4rbetzvVc9hi2kCHr3/3uBq
+        RPQ3zOe8vENF2h+c6F+PWwE6aPoTFuLinigJeDtT9FqYsUZNAiRklOte/ghEVJft20HzwC2x1DiIn
+        zE7RR65Q==;
 Received: from hch by bombadil.infradead.org with local (Exim 4.96 #2 (Red Hat Linux))
-        id 1qq6fQ-00CeC3-1P;
-        Tue, 10 Oct 2023 06:56:32 +0000
-Date:   Mon, 9 Oct 2023 23:56:32 -0700
+        id 1qq6gJ-00CeK8-2r;
+        Tue, 10 Oct 2023 06:57:27 +0000
+Date:   Mon, 9 Oct 2023 23:57:27 -0700
 From:   Christoph Hellwig <hch@infradead.org>
-To:     "Darrick J. Wong" <djwong@kernel.org>
-Cc:     linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 2/2] xfs: process free extents to busy list in FIFO order
-Message-ID: <ZST1oEZlh6/UAQwS@infradead.org>
-References: <169687594536.3969352.5780413854846204650.stgit@frogsfrogsfrogs>
- <169687595684.3969352.13337782664797983922.stgit@frogsfrogsfrogs>
+To:     cheng.lin130@zte.com.cn
+Cc:     david@fromorbit.com, djwong@kernel.org, linux-xfs@vger.kernel.org,
+        linux-kernel@vger.kernel.org, jiang.yong5@zte.com.cn,
+        wang.liang82@zte.com.cn, liu.dong3@zte.com.cn
+Subject: Re: [PATCH v6] xfs: introduce protection for drop nlink
+Message-ID: <ZST117zXotVPXGEQ@infradead.org>
+References: <202310101009011817522@zte.com.cn>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <169687595684.3969352.13337782664797983922.stgit@frogsfrogsfrogs>
+In-Reply-To: <202310101009011817522@zte.com.cn>
 X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Mon, Oct 09, 2023 at 11:25:56AM -0700, Darrick J. Wong wrote:
-> From: Darrick J. Wong <djwong@kernel.org>
+On Tue, Oct 10, 2023 at 10:09:01AM +0800, cheng.lin130@zte.com.cn wrote:
+> From: Cheng Lin <cheng.lin130@zte.com.cn>
 > 
-> When we're adding extents to the busy discard list, add them to the tail
-> of the list so that we get FIFO order.  For FITRIM commands, this means
-> that we send discard bios sorted in order from longest to shortest, like
-> we did before commit 89cfa899608fc.
-> 
-> For transactions that are freeing extents, this puts them in the
-> transaction's busy list in FIFO order as well, which shouldn't make any
-> noticeable difference.
-> 
-> Fixes: 89cfa899608fc ("xfs: reduce AGF hold times during fstrim operations")
-> Signed-off-by: Darrick J. Wong <djwong@kernel.org>
+> When abnormal drop_nlink are detected on the inode,
+> return error, to avoid corruption propagation.
 
-Does this actually fix an observed issue, or just restor the previous
-behavior?
+I know this has been through a few cycles, but wouldn't it be useful
+to have at least a little description here how that case could happen?
 
-Eitherway the change make sense:
-
-Reviewed-by: Christoph Hellwig <hch@lst.de>
