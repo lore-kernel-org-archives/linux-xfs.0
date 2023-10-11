@@ -2,88 +2,113 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CC7F7CD6E7B
-	for <linux-xfs@archiver.kernel.org>; Wed, 11 Oct 2023 14:37:51 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id ED537CD98EB
+	for <linux-xfs@archiver.kernel.org>; Wed, 11 Oct 2023 15:49:41 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232597AbjJKOhv (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 11 Oct 2023 10:37:51 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46822 "EHLO
+        id S1346776AbjJKPtl (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 11 Oct 2023 11:49:41 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49536 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232389AbjJKOhu (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 11 Oct 2023 10:37:50 -0400
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E2C0290
-        for <linux-xfs@vger.kernel.org>; Wed, 11 Oct 2023 07:37:06 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1697035026;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=34baUARs91EkkCBFmzlWLNU8Iitqc+tKVHHJesgsXbs=;
-        b=VTdgOqVKy2Xx7lxMktrxWkJ+GXYqmSqBX3ROIPzPmZ3tSlbwxWrTR0+VvCjdroZ/a9FpY7
-        qOloTNnvfdRjM8A6CwyYGK8mXR6gGF5fnWjKfQNwVcVa6ztXBmrT2BMudPttVeoB6k5g79
-        XdHoql9hePFsV9LNuYuBoB51cbjRFRg=
-Received: from mail-ej1-f71.google.com (mail-ej1-f71.google.com
- [209.85.218.71]) by relay.mimecast.com with ESMTP with STARTTLS
- (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
- us-mta-320-ZdHE0TeVN7e-At50G-WP4g-1; Wed, 11 Oct 2023 10:37:04 -0400
-X-MC-Unique: ZdHE0TeVN7e-At50G-WP4g-1
-Received: by mail-ej1-f71.google.com with SMTP id a640c23a62f3a-9bd7c682b33so69704166b.3
-        for <linux-xfs@vger.kernel.org>; Wed, 11 Oct 2023 07:37:04 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1697035023; x=1697639823;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=34baUARs91EkkCBFmzlWLNU8Iitqc+tKVHHJesgsXbs=;
-        b=fg8x5WN5ZiDf/HzF5kROt5e+dUy0VI/Emxl6HbeIDsub8MS4tC77oI5t5jQpCRK0j/
-         +K/facGL2ADuY7+JGVN6dF4xLuPj2w77Kn8bWjHxQyf7ixOCNhLhet+HZmfdGKxMcrSm
-         +/HrnzDBTcziT7LIbNYv6ZLkPYCUhcQBUuqzxQ4XBiKQp5rvscjH7OqpvfbWvgiHtLKB
-         Dnm+UINiHj/2TxMq7mwfKWx/VUr7oF1jMkEJLjUX3J7WX2JHK6Hekhkgnszm77YZSlMc
-         MnjdpC950AeZUrDvYA7HsCZPTQPeanDiHmufeywF9uqHjEXryrfCvdoUghiX49rZ3zfj
-         Vyew==
-X-Gm-Message-State: AOJu0Yxf6fiPsg/tKYyqSpVu/HAMk+btGBI8Qlehe2s1gBwaiuU3l87w
-        UzjVx4c1qRFAErvbDGrACWszahLUFdt4/5wU7bss3PzYnBbo9abTlzL3Vms1ivPepAUdQ+6Qw7v
-        FdrqsmJKIyNpz6w3aOMs=
-X-Received: by 2002:a17:906:4c9:b0:9a6:572f:597f with SMTP id g9-20020a17090604c900b009a6572f597fmr17398648eja.38.1697035023441;
-        Wed, 11 Oct 2023 07:37:03 -0700 (PDT)
-X-Google-Smtp-Source: AGHT+IFPo2YB484LHLqni0xArxuSgEFDfsRNtQl070YQebW8HyUaykksPcIpxZzOOF+gbR7567Puiw==
-X-Received: by 2002:a17:906:4c9:b0:9a6:572f:597f with SMTP id g9-20020a17090604c900b009a6572f597fmr17398636eja.38.1697035023119;
-        Wed, 11 Oct 2023 07:37:03 -0700 (PDT)
-Received: from thinky ([109.183.6.197])
-        by smtp.gmail.com with ESMTPSA id dx8-20020a170906a84800b0099cbfee34e3sm9819150ejb.196.2023.10.11.07.37.02
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 11 Oct 2023 07:37:02 -0700 (PDT)
-Date:   Wed, 11 Oct 2023 16:37:02 +0200
-From:   Andrey Albershteyn <aalbersh@redhat.com>
-To:     "Darrick J. Wong" <djwong@kernel.org>
-Cc:     linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
-        fsverity@lists.linux.dev, ebiggers@kernel.org, david@fromorbit.com,
-        dchinner@redhat.com
-Subject: Re: [PATCH v3 26/28] xfs: make scrub aware of verity dinode flag
-Message-ID: <6o4zaqtxsyetq2cfaxuxfpkxf55tazafoen7plhjywetei6h6q@xnzapk24io6e>
-References: <20231006184922.252188-1-aalbersh@redhat.com>
- <20231006184922.252188-27-aalbersh@redhat.com>
- <20231011010641.GI21298@frogsfrogsfrogs>
+        with ESMTP id S235070AbjJKPtk (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 11 Oct 2023 11:49:40 -0400
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 40DF0B6;
+        Wed, 11 Oct 2023 08:49:39 -0700 (PDT)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id D78F6C433CA;
+        Wed, 11 Oct 2023 15:49:38 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1697039378;
+        bh=XXRDRwSUqwJbcwzOjXaGJFweowuIRcYTDxSXcJxyu2s=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=SVa9pwNpg3W88IKEA33vm2tCyp5HYpsSDXbTjVhSkJxK2vbi9AVdHeNX0pLjuTgxb
+         QpNTq2xKWcCIUW0/qQJrM9EWL/CHusnnHa5Zf2g0S6WkTFJJFnTL8PYP5gGgmD+3l5
+         NXIpInmQMnrRif6G8IpDdytanjGNxY+Hgt+4Jx4QBOokSex1hN9Ny8qRGq5uRPyh13
+         UTr7/jeQm6zbPgDdkHxrqVzWMpvZXm/echKXkNpHzp34X6vQ0BJT++SWK9hA6NYtAw
+         OQ4SpKbGRGd5Hvk5G2tPC2xBDkp4Hq5dknA5vnk5SRZ5PbHnBVUbF5zHzUkGsgCFhW
+         MSsAMkvazLsaw==
+Date:   Wed, 11 Oct 2023 08:49:38 -0700
+From:   "Darrick J. Wong" <djwong@kernel.org>
+To:     Jeff Layton <jlayton@kernel.org>
+Cc:     Chandan Babu R <chandan.babu@oracle.com>,
+        Chuck Lever <chuck.lever@oracle.com>,
+        linux-nfs@vger.kernel.org, linux-xfs@vger.kernel.org,
+        linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org,
+        brauner@kernel.org
+Subject: Re: [PATCH] xfs: reinstate the old i_version counter as
+ STATX_CHANGE_COOKIE
+Message-ID: <20231011154938.GL21298@frogsfrogsfrogs>
+References: <20230929-xfs-iversion-v1-1-38587d7b5a52@kernel.org>
+ <b4136500fe6c49ee689dba139ce25824684719f2.camel@kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20231011010641.GI21298@frogsfrogsfrogs>
+In-Reply-To: <b4136500fe6c49ee689dba139ce25824684719f2.camel@kernel.org>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On 2023-10-10 18:06:41, Darrick J. Wong wrote:
-> On Fri, Oct 06, 2023 at 08:49:20PM +0200, Andrey Albershteyn wrote:
-> > fs-verity adds new inode flag which causes scrub to fail as it is
-> > not yet known.
+On Wed, Oct 11, 2023 at 09:09:38AM -0400, Jeff Layton wrote:
+> On Fri, 2023-09-29 at 14:43 -0400, Jeff Layton wrote:
+> > The handling of STATX_CHANGE_COOKIE was moved into generic_fillattr in
+> > commit 0d72b92883c6 (fs: pass the request_mask to generic_fillattr), but
+> > we didn't account for the fact that xfs doesn't call generic_fillattr at
+> > all.
 > > 
-> > Signed-off-by: Andrey Albershteyn <aalbersh@redhat.com>
+> > Make XFS report its i_version as the STATX_CHANGE_COOKIE.
+> > 
+> > Fixes: 0d72b92883c6 (fs: pass the request_mask to generic_fillattr)
+> > Signed-off-by: Jeff Layton <jlayton@kernel.org>
+> > ---
+> > I had hoped to fix this in a better way with the multigrain patches, but
+> > it's taking longer than expected (if it even pans out at this point).
+> > 
+> > Until then, make sure we use XFS's i_version as the STATX_CHANGE_COOKIE,
+> > even if it's bumped due to atime updates. Too many invalidations is
+> > preferable to not enough.
+> > ---
+> >  fs/xfs/xfs_iops.c | 5 +++++
+> >  1 file changed, 5 insertions(+)
+> > 
+> > diff --git a/fs/xfs/xfs_iops.c b/fs/xfs/xfs_iops.c
+> > index 1c1e6171209d..2b3b05c28e9e 100644
+> > --- a/fs/xfs/xfs_iops.c
+> > +++ b/fs/xfs/xfs_iops.c
+> > @@ -584,6 +584,11 @@ xfs_vn_getattr(
+> >  		}
+> >  	}
+> >  
+> > +	if ((request_mask & STATX_CHANGE_COOKIE) && IS_I_VERSION(inode)) {
+> > +		stat->change_cookie = inode_query_iversion(inode);
+> > +		stat->result_mask |= STATX_CHANGE_COOKIE;
+> > +	}
+> > +
+> >  	/*
+> >  	 * Note: If you add another clause to set an attribute flag, please
+> >  	 * update attributes_mask below.
+> > 
+> > ---
+> > base-commit: df964ce9ef9fea10cf131bf6bad8658fde7956f6
+> > change-id: 20230929-xfs-iversion-819fa2c18591
+> > 
+> > Best regards,
 > 
-> Reviewed-by: Darrick J. Wong <djwong@kernel.org>
+> Ping?
+> 
+> This patch is needed in v6.6 to prevent a regression when serving XFS
+> via NFSD. I'd prefer this go in via the xfs tree, but let me know if
+> you need me to get this merged this via a different one.
 
-Thanks!
+Oh!   Right, this is needed because the "hide a state in the high bit of
+tv_nsec" stuff got reverted in -rc3, correct?  So now nfsd needs some
+way to know that something changed in the file, and better to have too
+many client invalidations than not enough?  And I guess bumping
+i_version will keep nfsd sane for now?
 
--- 
-- Andrey
+If the answers are [yes, yes, yes] then:
+Reviewed-by: Darrick J. Wong <djwong@kernel.org>
 
+--D
+
+> Thanks,
+> -- 
+> Jeff Layton <jlayton@kernel.org>
