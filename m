@@ -2,36 +2,37 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 747E2CDB470
-	for <linux-xfs@archiver.kernel.org>; Wed, 11 Oct 2023 18:05:48 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 66FD0CDB475
+	for <linux-xfs@archiver.kernel.org>; Wed, 11 Oct 2023 18:06:03 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234887AbjJKSFr (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 11 Oct 2023 14:05:47 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36604 "EHLO
+        id S234700AbjJKSGB (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 11 Oct 2023 14:06:01 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34962 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S235049AbjJKSFq (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 11 Oct 2023 14:05:46 -0400
+        with ESMTP id S1346207AbjJKSGA (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 11 Oct 2023 14:06:00 -0400
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5482B93
-        for <linux-xfs@vger.kernel.org>; Wed, 11 Oct 2023 11:05:44 -0700 (PDT)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 3E8AAC433C8;
-        Wed, 11 Oct 2023 18:05:43 +0000 (UTC)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5A84A94
+        for <linux-xfs@vger.kernel.org>; Wed, 11 Oct 2023 11:05:59 -0700 (PDT)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id EE29CC433C7;
+        Wed, 11 Oct 2023 18:05:58 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1697047543;
-        bh=wn7y1rE2HpAkRzhNVQmhbUQJcog2OgfSTHV2Gq38DJE=;
+        s=k20201202; t=1697047559;
+        bh=UJD/AnAy5k43DrNyqfYi8yNVnFGlcXcIOABov2HOYME=;
         h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-        b=rXOmGic9RKnELpRuXCzgkRSgHt5KpicRvqoChYtwYgI0VdBDP/m4kwd3vD5bqIh20
-         DXgi96oEyr1e4Y1HMZYwvwVlk17JquKkgGbwW59ODyXhjPwQ3rvPbztnhPM4VnB8YM
-         vsHsV7X3P/vjRtTn8ZQwg5Zs75JPVmyLGcAZ1wjnB5RZalO1NMo5i196SMS4VFU2Ze
-         fIIqZsUXl/I74nA7PRnH5tj1npH24FIThzK56LUcFHAGQp/2nYKRMMgFvzCpArHwIk
-         8FkxabHzU4+qT3d32/Sx/kmyhHYOWBQajQrzWUouhXonhAiuU65EZMt4TVu67aDKKc
-         X20v5doOWWw1Q==
-Date:   Wed, 11 Oct 2023 11:05:42 -0700
-Subject: [PATCH 5/7] xfs: convert do_div calls to xfs_rtb_to_rtx helper calls
+        b=jkCZXMCHmNNPVFtvV+xrzr6g4wcO7X4t4h9uTC7GAVFExARz8UVK7An6c/6aNhf6g
+         TYyRNscHzELjy4oiJDq1Uzg6YX3X9CxIGhi93P5DtV86dBpSV+7ZJLWP0uPkaIicjL
+         VXLymcTYAzbdZq+yd+eHHVSAWkAFVZ6E2ewuH7YCEWSGX1r4+QNt1huQYzIcvkXXQV
+         Zh/V6wFq9ck4y9O9jy3XaYobIo0ZZ6JFXsCVSP2KCOOQcfCw95+bFysUdBQ2MSkO36
+         JQ/bXSDU5yRjKXSHZh11CGwRK2nvCY5XYcV044MzmMOfq4ujYMfY6vTj7PKLcPEb72
+         +IfaY98DfCAIA==
+Date:   Wed, 11 Oct 2023 11:05:58 -0700
+Subject: [PATCH 6/7] xfs: create rt extent rounding helpers for realtime
+ extent blocks
 From:   "Darrick J. Wong" <djwong@kernel.org>
 To:     djwong@kernel.org
 Cc:     linux-xfs@vger.kernel.org, osandov@osandov.com, hch@lst.de
-Message-ID: <169704721255.1773611.7719978115841778913.stgit@frogsfrogsfrogs>
+Message-ID: <169704721269.1773611.8447535257561725790.stgit@frogsfrogsfrogs>
 In-Reply-To: <169704721170.1773611.12311239321983752854.stgit@frogsfrogsfrogs>
 References: <169704721170.1773611.12311239321983752854.stgit@frogsfrogsfrogs>
 User-Agent: StGit/0.19
@@ -44,136 +45,108 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-Convert these calls to use the helpers, and clean up all these places
-where the same variable can have different units depending on where it
-is in the function.
+Create a pair of functions to round rtblock numbers up or down to the
+nearest rt extent.
 
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 ---
- fs/xfs/libxfs/xfs_bmap.c |    8 ++------
- fs/xfs/scrub/rtbitmap.c  |   14 +++++---------
- fs/xfs/xfs_bmap_util.c   |   10 ++++------
- fs/xfs/xfs_fsmap.c       |    8 ++++----
- fs/xfs/xfs_rtalloc.c     |    3 +--
- 5 files changed, 16 insertions(+), 27 deletions(-)
+ fs/xfs/libxfs/xfs_rtbitmap.h |   18 ++++++++++++++++++
+ fs/xfs/xfs_bmap_util.c       |    8 +++-----
+ fs/xfs/xfs_rtalloc.c         |    4 ++--
+ fs/xfs/xfs_xchgrange.c       |    4 ++--
+ 4 files changed, 25 insertions(+), 9 deletions(-)
 
 
-diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
-index 463174af94333..d322fd5116179 100644
---- a/fs/xfs/libxfs/xfs_bmap.c
-+++ b/fs/xfs/libxfs/xfs_bmap.c
-@@ -4883,12 +4883,8 @@ xfs_bmap_del_extent_delay(
- 	ASSERT(got->br_startoff <= del->br_startoff);
- 	ASSERT(got_endoff >= del_endoff);
+diff --git a/fs/xfs/libxfs/xfs_rtbitmap.h b/fs/xfs/libxfs/xfs_rtbitmap.h
+index bdd4858a794c2..bc51d3bfc7c45 100644
+--- a/fs/xfs/libxfs/xfs_rtbitmap.h
++++ b/fs/xfs/libxfs/xfs_rtbitmap.h
+@@ -56,6 +56,24 @@ xfs_rtb_to_rtxt(
+ 	return div_u64(rtbno, mp->m_sb.sb_rextsize);
+ }
  
--	if (isrt) {
--		uint64_t rtexts = XFS_FSB_TO_B(mp, del->br_blockcount);
--
--		do_div(rtexts, mp->m_sb.sb_rextsize);
--		xfs_mod_frextents(mp, rtexts);
--	}
-+	if (isrt)
-+		xfs_mod_frextents(mp, xfs_rtb_to_rtxt(mp, del->br_blockcount));
- 
- 	/*
- 	 * Update the inode delalloc counter now and wait to update the
-diff --git a/fs/xfs/scrub/rtbitmap.c b/fs/xfs/scrub/rtbitmap.c
-index 01bc5119d612c..a785fb5f317dd 100644
---- a/fs/xfs/scrub/rtbitmap.c
-+++ b/fs/xfs/scrub/rtbitmap.c
-@@ -140,26 +140,22 @@ xchk_rtbitmap(
- void
- xchk_xref_is_used_rt_space(
- 	struct xfs_scrub	*sc,
--	xfs_rtblock_t		fsbno,
-+	xfs_rtblock_t		rtbno,
- 	xfs_extlen_t		len)
- {
- 	xfs_rtxnum_t		startext;
- 	xfs_rtxnum_t		endext;
--	xfs_rtxlen_t		extcount;
- 	bool			is_free;
- 	int			error;
- 
- 	if (xchk_skip_xref(sc->sm))
- 		return;
- 
--	startext = fsbno;
--	endext = fsbno + len - 1;
--	do_div(startext, sc->mp->m_sb.sb_rextsize);
--	do_div(endext, sc->mp->m_sb.sb_rextsize);
--	extcount = endext - startext + 1;
-+	startext = xfs_rtb_to_rtxt(sc->mp, rtbno);
-+	endext = xfs_rtb_to_rtxt(sc->mp, rtbno + len - 1);
- 	xfs_ilock(sc->mp->m_rbmip, XFS_ILOCK_SHARED | XFS_ILOCK_RTBITMAP);
--	error = xfs_rtalloc_extent_is_free(sc->mp, sc->tp, startext, extcount,
--			&is_free);
-+	error = xfs_rtalloc_extent_is_free(sc->mp, sc->tp, startext,
-+			endext - startext + 1, &is_free);
- 	if (!xchk_should_check_xref(sc, &error, NULL))
- 		goto out_unlock;
- 	if (is_free)
++/* Round this rtblock up to the nearest rt extent size. */
++static inline xfs_rtblock_t
++xfs_rtb_roundup_rtx(
++	struct xfs_mount	*mp,
++	xfs_rtblock_t		rtbno)
++{
++	return roundup_64(rtbno, mp->m_sb.sb_rextsize);
++}
++
++/* Round this rtblock down to the nearest rt extent size. */
++static inline xfs_rtblock_t
++xfs_rtb_rounddown_rtx(
++	struct xfs_mount	*mp,
++	xfs_rtblock_t		rtbno)
++{
++	return rounddown_64(rtbno, mp->m_sb.sb_rextsize);
++}
++
+ /*
+  * Functions for walking free space rtextents in the realtime bitmap.
+  */
 diff --git a/fs/xfs/xfs_bmap_util.c b/fs/xfs/xfs_bmap_util.c
-index c246f25aaad55..8f1e16e49dab2 100644
+index 8f1e16e49dab2..b17332b84812e 100644
 --- a/fs/xfs/xfs_bmap_util.c
 +++ b/fs/xfs/xfs_bmap_util.c
-@@ -157,14 +157,12 @@ xfs_bmap_rtalloc(
- 	 * Realtime allocation, done through xfs_rtallocate_extent.
+@@ -685,7 +685,7 @@ xfs_can_free_eofblocks(
  	 */
- 	if (ignore_locality)
--		ap->blkno = 0;
-+		rtx = 0;
- 	else
--		do_div(ap->blkno, mp->m_sb.sb_rextsize);
--	rtx = ap->blkno;
--	ap->length = ralen;
-+		rtx = xfs_rtb_to_rtxt(mp, ap->blkno);
- 	raminlen = max_t(xfs_rtxlen_t, 1, xfs_extlen_to_rtxlen(mp, minlen));
--	error = xfs_rtallocate_extent(ap->tp, ap->blkno, raminlen, ap->length,
--			&ralen, ap->wasdel, prod, &rtx);
-+	error = xfs_rtallocate_extent(ap->tp, rtx, raminlen, ralen, &ralen,
-+			ap->wasdel, prod, &rtx);
- 	if (error)
- 		return error;
+ 	end_fsb = XFS_B_TO_FSB(mp, (xfs_ufsize_t)XFS_ISIZE(ip));
+ 	if (XFS_IS_REALTIME_INODE(ip) && mp->m_sb.sb_rextsize > 1)
+-		end_fsb = roundup_64(end_fsb, mp->m_sb.sb_rextsize);
++		end_fsb = xfs_rtb_roundup_rtx(mp, end_fsb);
+ 	last_fsb = XFS_B_TO_FSB(mp, mp->m_super->s_maxbytes);
+ 	if (last_fsb <= end_fsb)
+ 		return false;
+@@ -984,10 +984,8 @@ xfs_free_file_space(
  
-diff --git a/fs/xfs/xfs_fsmap.c b/fs/xfs/xfs_fsmap.c
-index 1a187bc9da3de..32aefaf7d6684 100644
---- a/fs/xfs/xfs_fsmap.c
-+++ b/fs/xfs/xfs_fsmap.c
-@@ -512,6 +512,7 @@ xfs_getfsmap_rtdev_rtbitmap(
- 	xfs_rtblock_t			start_rtb;
- 	xfs_rtblock_t			end_rtb;
- 	uint64_t			eofs;
-+	xfs_extlen_t			mod;
- 	int				error;
+ 	/* We can only free complete realtime extents. */
+ 	if (xfs_inode_has_bigrtextents(ip)) {
+-		startoffset_fsb = roundup_64(startoffset_fsb,
+-					     mp->m_sb.sb_rextsize);
+-		endoffset_fsb = rounddown_64(endoffset_fsb,
+-					     mp->m_sb.sb_rextsize);
++		startoffset_fsb = xfs_rtb_roundup_rtx(mp, startoffset_fsb);
++		endoffset_fsb = xfs_rtb_rounddown_rtx(mp, endoffset_fsb);
+ 	}
  
- 	eofs = XFS_FSB_TO_BB(mp, xfs_rtx_to_rtb(mp, mp->m_sb.sb_rextents));
-@@ -539,10 +540,9 @@ xfs_getfsmap_rtdev_rtbitmap(
- 	 * Set up query parameters to return free rtextents covering the range
- 	 * we want.
- 	 */
--	alow.ar_startext = start_rtb;
--	ahigh.ar_startext = end_rtb;
--	do_div(alow.ar_startext, mp->m_sb.sb_rextsize);
--	if (do_div(ahigh.ar_startext, mp->m_sb.sb_rextsize))
-+	alow.ar_startext = xfs_rtb_to_rtxt(mp, start_rtb);
-+	ahigh.ar_startext = xfs_rtb_to_rtx(mp, end_rtb, &mod);
-+	if (mod)
- 		ahigh.ar_startext++;
- 	error = xfs_rtalloc_query_range(mp, tp, &alow, &ahigh,
- 			xfs_getfsmap_rtdev_rtbitmap_helper, info);
+ 	/*
 diff --git a/fs/xfs/xfs_rtalloc.c b/fs/xfs/xfs_rtalloc.c
-index d3a5112f21156..8db8f957a683b 100644
+index 8db8f957a683b..e62ca51b995ba 100644
 --- a/fs/xfs/xfs_rtalloc.c
 +++ b/fs/xfs/xfs_rtalloc.c
-@@ -1056,8 +1056,7 @@ xfs_growfs_rt(
- 		nrblocks_step = (bmbno + 1) * NBBY * nsbp->sb_blocksize *
- 				nsbp->sb_rextsize;
- 		nsbp->sb_rblocks = min(nrblocks, nrblocks_step);
--		nsbp->sb_rextents = nsbp->sb_rblocks;
--		do_div(nsbp->sb_rextents, nsbp->sb_rextsize);
-+		nsbp->sb_rextents = xfs_rtb_to_rtxt(nmp, nsbp->sb_rblocks);
- 		ASSERT(nsbp->sb_rextents != 0);
- 		nsbp->sb_rextslog = xfs_highbit32(nsbp->sb_rextents);
- 		nrsumlevels = nmp->m_rsumlevels = nsbp->sb_rextslog + 1;
+@@ -1633,8 +1633,8 @@ xfs_rtfile_convert_unwritten(
+ 	if (mp->m_sb.sb_rextsize == 1)
+ 		return 0;
+ 
+-	off = rounddown_64(XFS_B_TO_FSBT(mp, pos), mp->m_sb.sb_rextsize);
+-	endoff = roundup_64(XFS_B_TO_FSB(mp, pos + len), mp->m_sb.sb_rextsize);
++	off = xfs_rtb_rounddown_rtx(mp, XFS_B_TO_FSBT(mp, pos));
++	endoff = xfs_rtb_roundup_rtx(mp, XFS_B_TO_FSB(mp, pos + len));
+ 
+ 	trace_xfs_rtfile_convert_unwritten(ip, pos, len);
+ 
+diff --git a/fs/xfs/xfs_xchgrange.c b/fs/xfs/xfs_xchgrange.c
+index befa915089ce6..a4a352e027c97 100644
+--- a/fs/xfs/xfs_xchgrange.c
++++ b/fs/xfs/xfs_xchgrange.c
+@@ -28,6 +28,7 @@
+ #include "xfs_icache.h"
+ #include "xfs_log.h"
+ #include "xfs_rtalloc.h"
++#include "xfs_rtbitmap.h"
+ #include <linux/fsnotify.h>
+ 
+ /*
+@@ -1236,8 +1237,7 @@ xfs_xchg_range(
+ 	 * offsets and length in @fxr are safe to round up.
+ 	 */
+ 	if (XFS_IS_REALTIME_INODE(ip2))
+-		req.blockcount = roundup_64(req.blockcount,
+-					    mp->m_sb.sb_rextsize);
++		req.blockcount = xfs_rtb_roundup_rtx(mp, req.blockcount);
+ 
+ 	error = xfs_xchg_range_estimate(&req);
+ 	if (error)
 
