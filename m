@@ -2,98 +2,133 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D7C0BCD98C8
-	for <linux-xfs@archiver.kernel.org>; Wed, 11 Oct 2023 04:05:50 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 75BFBCD98C7
+	for <linux-xfs@archiver.kernel.org>; Wed, 11 Oct 2023 05:16:33 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1344777AbjJKEFt (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 11 Oct 2023 00:05:49 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48622 "EHLO
+        id S229821AbjJKFQc (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 11 Oct 2023 01:16:32 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53220 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1344687AbjJKEFs (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 11 Oct 2023 00:05:48 -0400
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id CE7088F
-        for <linux-xfs@vger.kernel.org>; Tue, 10 Oct 2023 21:05:46 -0700 (PDT)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 27349C433C8;
-        Wed, 11 Oct 2023 04:05:46 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1696997146;
-        bh=1JQP12Rvs/L7oR0sDRqcZzvxymBN3sh9uR3BEuj025o=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=YfNjOtR6nd0yyagEXkt7xRhy4l38kptv6SPKpNrLadp7GIdIuHTUTP8jdTGFJ9mJn
-         6VPey3PLAgJs3FFY5+ZH7PJyWU/xntlp3oGqw5tjgKH8JcefVb8blb7mruciB8s8tG
-         iRr+6fzH82d3SwYvy588qsTfyngYvesIRRLcKJCJekcAMugyFdwYS8im3o8hnD9nbH
-         NLn64OhGlqkuuriOSALE8eXsHGSQ577V2eeJfHkZxeJqu5L37XmdYZ5uWAFz6ei2aZ
-         RGPA/kNabIqlwdXqxtKVV5SRaULZ7e+7ifDMqZWjhxmUh4bfzWI5MJpkJ7Ud3i1PgX
-         T5L5eM2RaqJww==
-Date:   Tue, 10 Oct 2023 21:05:44 -0700
-From:   Eric Biggers <ebiggers@kernel.org>
-To:     Andrey Albershteyn <aalbersh@redhat.com>
-Cc:     linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
-        fsverity@lists.linux.dev, djwong@kernel.org, david@fromorbit.com,
-        dchinner@redhat.com
-Subject: Re: [PATCH v3 05/28] fs: add FS_XFLAG_VERITY for fs-verity sealed
- inodes
-Message-ID: <20231011040544.GF1185@sol.localdomain>
-References: <20231006184922.252188-1-aalbersh@redhat.com>
- <20231006184922.252188-6-aalbersh@redhat.com>
+        with ESMTP id S229815AbjJKFQc (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 11 Oct 2023 01:16:32 -0400
+Received: from bombadil.infradead.org (bombadil.infradead.org [IPv6:2607:7c80:54:3::133])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1B38898
+        for <linux-xfs@vger.kernel.org>; Tue, 10 Oct 2023 22:16:31 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=infradead.org; s=bombadil.20210309; h=Content-Transfer-Encoding:
+        MIME-Version:Message-Id:Date:Subject:Cc:To:From:Sender:Reply-To:Content-Type:
+        Content-ID:Content-Description:In-Reply-To:References;
+        bh=ZEzBLVcxgX1mweOY7frJGUSg2TKXbpU4ptU6h3NVd0k=; b=qnUlRm3Yt9JttSvgFHi5lChtoU
+        hAIuSZ8/TZm7vwW39yGVoDJtkMR/JVZXHwclXgFkedQoX6xd5K73XGOg7dpTJZhxpiRhti+c9reJg
+        ua5ePhVEDngVjweGpd+8KFE+TtSxBUtWI5ENNzCLEBF6KVzFr2Lk0CvfoYhQeGxzHSbKiPw4gchvr
+        fasjr8eixucLdj6WXn0aULIMCsKeYKrR/dysegLajIdpn8Ci6BFDU4/KNfOB9BYwafqOUpDco3vU/
+        23KSlJ7Ik9fB/VEnJJfjL4Vun0BHwjwlVTlH0k9wI2Vz9sEGKycIjoTz0TblJpbMUO4nC+9zEtMFM
+        HybbellQ==;
+Received: from 2a02-8389-2341-5b80-39d3-4735-9a3c-88d8.cable.dynamic.v6.surfer.at ([2a02:8389:2341:5b80:39d3:4735:9a3c:88d8] helo=localhost)
+        by bombadil.infradead.org with esmtpsa (Exim 4.96 #2 (Red Hat Linux))
+        id 1qqRaA-00Epc2-22;
+        Wed, 11 Oct 2023 05:16:30 +0000
+From:   Christoph Hellwig <hch@lst.de>
+To:     linux-xfs@vger.kernel.org
+Cc:     djwong@kernel.org
+Subject: [PATCH v2] xfs: handle nimaps=0 from xfs_bmapi_write in xfs_alloc_file_space
+Date:   Wed, 11 Oct 2023 07:16:26 +0200
+Message-Id: <20231011051626.498678-1-hch@lst.de>
+X-Mailer: git-send-email 2.39.2
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20231006184922.252188-6-aalbersh@redhat.com>
+Content-Transfer-Encoding: 8bit
+X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Fri, Oct 06, 2023 at 08:48:59PM +0200, Andrey Albershteyn wrote:
-> Add extended file attribute FS_XFLAG_VERITY for inodes sealed with
-> fs-verity.
-> 
-> Signed-off-by: Andrey Albershteyn <aalbersh@redhat.com>
-> ---
->  Documentation/filesystems/fsverity.rst | 9 +++++++++
->  include/uapi/linux/fs.h                | 1 +
->  2 files changed, 10 insertions(+)
-> 
-> diff --git a/Documentation/filesystems/fsverity.rst b/Documentation/filesystems/fsverity.rst
-> index 13e4b18e5dbb..af889512c6ac 100644
-> --- a/Documentation/filesystems/fsverity.rst
-> +++ b/Documentation/filesystems/fsverity.rst
-> @@ -326,6 +326,15 @@ the file has fs-verity enabled.  This can perform better than
->  FS_IOC_GETFLAGS and FS_IOC_MEASURE_VERITY because it doesn't require
->  opening the file, and opening verity files can be expensive.
->  
-> +Extended file attributes
-> +------------------------
-> +
-> +For fs-verity sealed files the FS_XFLAG_VERITY extended file
-> +attribute is set. The attribute can be observed via lsattr.
-> +
-> +    [root@vm:~]# lsattr /mnt/test/foo
-> +    --------------------V- /mnt/test/foo
-> +
+If xfs_bmapi_write finds a delalloc extent at the requested range, it
+tries to convert the entire delalloc extent to a real allocation.
 
-There's currently nowhere in the documentation or code that uses the phrase
-"fs-verity sealed file".  It's instead called a verity file, or a file that has
-fs-verity enabled.  I suggest we try to avoid inconsistent terminology.
+But if the allocator cannot find a single free extent large enough to
+cover the start block of the requested range, xfs_bmapi_write will
+return 0 but leave *nimaps set to 0.
 
-Also, it should be mentioned which kernel versions this works on.
+In that case we simply need to keep looping with the same startoffset_fsb
+so that one of the following allocations will eventually reach the
+requested range.
 
-See for example what the statx section of the documentation says just above the
-new section that you're adding:
+Note that this could affect any caller of xfs_bmapi_write that covers
+an existing delayed allocation.  As far as I can tell we do not have
+any other such caller, though - the regular writeback path uses
+xfs_bmapi_convert_delalloc to convert delayed allocations to real ones,
+and direct I/O invalidates the page cache first.
 
-    Since Linux v5.5, the statx() system call sets STATX_ATTR_VERITY if
-    the file has fs-verity enabled.
+Signed-off-by: Christoph Hellwig <hch@lst.de>
+---
 
-Also, is FS_XFLAG_VERITY going to work on all filesystems?  The existing ways to
-query the verity flag work on all filesystems.  Hopefully any new API will too.
+Changes since v1:
+ - update comments and the commit log
 
-Also, "Extended file attributes" is easily confused with, well, extended file
-attributes (xattrs).  It should be made clear that this is talking about the
-FS_IOC_FSGETXATTR ioctl, not real xattrs.
+ fs/xfs/xfs_bmap_util.c | 24 +++++++++++++-----------
+ 1 file changed, 13 insertions(+), 11 deletions(-)
 
-Also, it should be made clear that FS_XFLAG_VERITY cannot be set using
-FS_IOC_FSSETXATTR.  See e.g. how the existing documentation says that
-FS_IOC_GETFLAGS can get FS_VERITY_FL but FS_IOC_SETFLAGS cannot set it.
+diff --git a/fs/xfs/xfs_bmap_util.c b/fs/xfs/xfs_bmap_util.c
+index d85580b101ad8a..2458be8532c7aa 100644
+--- a/fs/xfs/xfs_bmap_util.c
++++ b/fs/xfs/xfs_bmap_util.c
+@@ -814,12 +814,10 @@ xfs_alloc_file_space(
+ {
+ 	xfs_mount_t		*mp = ip->i_mount;
+ 	xfs_off_t		count;
+-	xfs_filblks_t		allocated_fsb;
+ 	xfs_filblks_t		allocatesize_fsb;
+ 	xfs_extlen_t		extsz, temp;
+ 	xfs_fileoff_t		startoffset_fsb;
+ 	xfs_fileoff_t		endoffset_fsb;
+-	int			nimaps;
+ 	int			rt;
+ 	xfs_trans_t		*tp;
+ 	xfs_bmbt_irec_t		imaps[1], *imapp;
+@@ -842,7 +840,6 @@ xfs_alloc_file_space(
+ 
+ 	count = len;
+ 	imapp = &imaps[0];
+-	nimaps = 1;
+ 	startoffset_fsb	= XFS_B_TO_FSBT(mp, offset);
+ 	endoffset_fsb = XFS_B_TO_FSB(mp, offset + count);
+ 	allocatesize_fsb = endoffset_fsb - startoffset_fsb;
+@@ -853,6 +850,7 @@ xfs_alloc_file_space(
+ 	while (allocatesize_fsb && !error) {
+ 		xfs_fileoff_t	s, e;
+ 		unsigned int	dblocks, rblocks, resblks;
++		int		nimaps = 1;
+ 
+ 		/*
+ 		 * Determine space reservations for data/realtime.
+@@ -918,15 +916,19 @@ xfs_alloc_file_space(
+ 		if (error)
+ 			break;
+ 
+-		allocated_fsb = imapp->br_blockcount;
+-
+-		if (nimaps == 0) {
+-			error = -ENOSPC;
+-			break;
++		/*
++		 * If the allocator cannot find a single free extent large
++		 * enough to cover the start block of the requested range,
++		 * xfs_bmapi_write will return 0 but leave *nimaps set to 0.
++		 *
++		 * In that case we simply need to keep looping with the same
++		 * startoffset_fsb so that one of the following allocations
++		 * will eventually reach the requested range.
++		 */
++		if (nimaps) {
++			startoffset_fsb += imapp->br_blockcount;
++			allocatesize_fsb -= imapp->br_blockcount;
+ 		}
+-
+-		startoffset_fsb += allocated_fsb;
+-		allocatesize_fsb -= allocated_fsb;
+ 	}
+ 
+ 	return error;
+-- 
+2.39.2
 
-- Eric
