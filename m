@@ -2,270 +2,277 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E739ACD8CAE
-	for <linux-xfs@archiver.kernel.org>; Tue, 10 Oct 2023 17:51:23 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8E711CD98D9
+	for <linux-xfs@archiver.kernel.org>; Wed, 11 Oct 2023 01:01:47 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233820AbjJJRvX (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 10 Oct 2023 13:51:23 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35476 "EHLO
+        id S1344341AbjJKBBq (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 10 Oct 2023 21:01:46 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35188 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233939AbjJJRvW (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 10 Oct 2023 13:51:22 -0400
+        with ESMTP id S1343612AbjJKBBq (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 10 Oct 2023 21:01:46 -0400
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id ED0FC99
-        for <linux-xfs@vger.kernel.org>; Tue, 10 Oct 2023 10:51:20 -0700 (PDT)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 82758C433C7;
-        Tue, 10 Oct 2023 17:51:20 +0000 (UTC)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 94DE98F
+        for <linux-xfs@vger.kernel.org>; Tue, 10 Oct 2023 18:01:44 -0700 (PDT)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 2BF31C433C8;
+        Wed, 11 Oct 2023 01:01:44 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1696960280;
-        bh=uE/KA3/xwyb4Z/BNdd2QZJTz3oALBz6gA7/EzGFkeLY=;
+        s=k20201202; t=1696986104;
+        bh=pQX/H1/6m6Xdzj3lx8DHkqGsf2jJR7suqDH1hBEaBLE=;
         h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=ZlYl3imq6eHQDrYC5PMugfQ4TMG+jmibRRwNsJpm6XcNIxxcBBPCktbCkfYeI65nN
-         qLdiMIAtmfzfk1VTsJMIkep0WOtwQywy7N/bdTJ3Bxdvk9teyl3ymzSK4R6NDv+BXA
-         nxbUzVVqepVMibCXFzK3XWuifmRR7J5Yi79JEcOFjXtPBa++LDHbigBYpKlkAW6J2s
-         m8KNUEsS4QDH8eCSAu3nU1GlWqBXizAV85ZOQ/FvaUPjgEbiVyslwiklmU8YUorofa
-         H42Ps4swpIS3vN2xtcYT9GyiAAFQ1RsNZSahYrASI3j4L6trLXlgxfEQeHgjydlYNn
-         bs91cTASHnDnw==
-Date:   Tue, 10 Oct 2023 10:51:19 -0700
+        b=fOnf8n4sbzrxiJX7HaFtLt9CNwqRouyTjtEIbXagMuUSjZOUpxvA/2ZBHtYk3t+Es
+         Dr3B8CH5Bl28TyCzDL+i4z1Lu4nD4u3AYuv6q6Wbo1PPe1onG3UJNaon1W5U2QVt6h
+         tFu7p99jHRU4YhKmL82uYPlw7ZU3i50ng9WDZRbmMXyAUArC+C0ULRQRo8aU42lqFT
+         GMpYQI+2uAImrVGS3aF1ylABTdmi/cOnW8v/NhEJb8JQUw3WLJ6rX2dHMO8IKtAXTa
+         lbdx9UFQ8LtV/Yf7Cm6V1K/kMp8qBqO53B9DMq95nhS0fL5XXIh1Y7nB3wgPrVMpH9
+         TDj8/tEFLL6CQ==
+Date:   Tue, 10 Oct 2023 18:01:43 -0700
 From:   "Darrick J. Wong" <djwong@kernel.org>
-To:     Shiyang Ruan <ruansy.fnst@fujitsu.com>
-Cc:     Chandan Babu R <chandanbabu@kernel.org>,
-        Dave Chinner <david@fromorbit.com>,
-        Dan Williams <dan.j.williams@intel.com>,
-        Andrew Morton <akpm@linux-foundation.org>,
-        linux-xfs@vger.kernel.org, nvdimm@lists.linux.dev
-Subject: Re: [PATCH] xfs: drop experimental warning for FSDAX
-Message-ID: <20231010175119.GG21298@frogsfrogsfrogs>
-References: <99279735-2d17-405f-bade-9501a296d817@fujitsu.com>
- <651718a6a6e2c_c558e2943e@dwillia2-xfh.jf.intel.com.notmuch>
- <ec2de0b9-c07d-468a-bd15-49e83cba1ad9@fujitsu.com>
- <87y1gltcvg.fsf@debian-BULLSEYE-live-builder-AMD64>
- <20231005000809.GN21298@frogsfrogsfrogs>
- <ce9ef1dc-d62b-466d-882f-d7bf4350582d@fujitsu.com>
- <20231005160530.GO21298@frogsfrogsfrogs>
- <28613f6e-2ed2-4c9a-81e3-3dcfdbba867c@fujitsu.com>
- <20231009164721.GC21298@frogsfrogsfrogs>
- <019bc83b-7f94-476b-95cb-280f1045057d@fujitsu.com>
+To:     Andrey Albershteyn <aalbersh@redhat.com>
+Cc:     linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
+        fsverity@lists.linux.dev, ebiggers@kernel.org, david@fromorbit.com,
+        dchinner@redhat.com,
+        Allison Henderson <allison.henderson@oracle.com>
+Subject: Re: [PATCH v3 04/28] xfs: Add xfs_verify_pptr
+Message-ID: <20231011010143.GH21298@frogsfrogsfrogs>
+References: <20231006184922.252188-1-aalbersh@redhat.com>
+ <20231006184922.252188-5-aalbersh@redhat.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <019bc83b-7f94-476b-95cb-280f1045057d@fujitsu.com>
+In-Reply-To: <20231006184922.252188-5-aalbersh@redhat.com>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Tue, Oct 10, 2023 at 11:53:02AM +0800, Shiyang Ruan wrote:
+On Fri, Oct 06, 2023 at 08:48:58PM +0200, Andrey Albershteyn wrote:
+> From: Allison Henderson <allison.henderson@oracle.com>
 > 
+> Attribute names of parent pointers are not strings.  So we need to modify
+> attr_namecheck to verify parent pointer records when the XFS_ATTR_PARENT flag is
+> set.
 > 
-> 在 2023/10/10 0:47, Darrick J. Wong 写道:
-> > On Mon, Oct 09, 2023 at 10:14:12PM +0800, Shiyang Ruan wrote:
-> > > 
-> > > 
-> > > 在 2023/10/6 0:05, Darrick J. Wong 写道:
-> > > > On Thu, Oct 05, 2023 at 04:53:12PM +0800, Shiyang Ruan wrote:
-> > > > > 
-> > > > > 
-> > > > > 在 2023/10/5 8:08, Darrick J. Wong 写道:
-> > > > > > > > 
-> > > > > > > > Sorry, I sent the list below to Chandan, didn't cc the maillist
-> > > > > > > > because it's just a rough list rather than a PR:
-> > > > > > > > 
-> > > > > > > > 
-> > > > > > > > 1. subject: [v3]  xfs: correct calculation for agend and blockcount
-> > > > > > > >       url:
-> > > > > > > >       https://lore.kernel.org/linux-xfs/20230913102942.601271-1-ruansy.fnst@fujitsu.com/
-> > > > > > > >       note:    This one is a fix patch for commit: 5cf32f63b0f4 ("xfs:
-> > > > > > > >       fix the calculation for "end" and "length"").
-> > > > > > > >                It can solve the fail of xfs/55[0-2]: the programs
-> > > > > > > >                accessing the DAX file may not be notified as expected,
-> > > > > > > >               because the length always 1 block less than actual.  Then
-> > > > > > > >              this patch fixes this.
-> > > > > > > > 
-> > > > > > > > 
-> > > > > > > > 2. subject: [v15] mm, pmem, xfs: Introduce MF_MEM_PRE_REMOVE for unbind
-> > > > > > > >       url:
-> > > > > > > >       https://lore.kernel.org/linux-xfs/20230928103227.250550-1-ruansy.fnst@fujitsu.com/T/#u
-> > > > > > > >       note:    This is a feature patch.  It handles the pre-remove event
-> > > > > > > >       of DAX device, by notifying kernel/user space before actually
-> > > > > > > >      removing.
-> > > > > > > >                It has been picked by Andrew in his
-> > > > > > > >                mm-hotfixes-unstable. I am not sure whether you or he will
-> > > > > > > >               merge this one.
-> > > > > > > > 
-> > > > > > > > 
-> > > > > > > > 3. subject: [v1]  xfs: drop experimental warning for FSDAX
-> > > > > > > >       url:
-> > > > > > > >       https://lore.kernel.org/linux-xfs/20230915063854.1784918-1-ruansy.fnst@fujitsu.com/
-> > > > > > > >       note:    With the patches mentioned above, I did a lot of tests,
-> > > > > > > >       including xfstests and blackbox tests, the FSDAX function looks
-> > > > > > > >      good now.  So I think the experimental warning could be dropped.
-> > > > > > > 
-> > > > > > > Darrick/Dave, Could you please review the above patch and let us know if you
-> > > > > > > have any objections?
-> > > > > > 
-> > > > > > The first two patches are ok.  The third one ... well I was about to say
-> > > > > > ok but then this happened with generic/269 on a 6.6-rc4 kernel and those
-> > > > > > two patches applied:
-> > > > > 
-> > > > > Hi Darrick,
-> > > > > 
-> > > > > Thanks for testing.  I just tested this case (generic/269) on v6.6-rc4 with
-> > > > > my 3 patches again, but it didn't fail.  Such WARNING message didn't show in
-> > > > > dmesg too.
-> > > > > 
-> > > > > My local.config is shown as below:
-> > > > > [nodax_reflink]
-> > > > > export FSTYP=xfs
-> > > > > export TEST_DEV=/dev/pmem0
-> > > > > export TEST_DIR=/mnt/test
-> > > > > export SCRATCH_DEV=/dev/pmem1
-> > > > > export SCRATCH_MNT=/mnt/scratch
-> > > > > export MKFS_OPTIONS="-m reflink=1,rmapbt=1"
-> > > > > 
-> > > > > [dax_reflink]
-> > > > > export FSTYP=xfs
-> > > > > export TEST_DEV=/dev/pmem0
-> > > > > export TEST_DIR=/mnt/test
-> > > > > export SCRATCH_DEV=/dev/pmem1
-> > > > > export SCRATCH_MNT=/mnt/scratch
-> > > > > export MKFS_OPTIONS="-m reflink=1,rmapbt=1"
-> > > > > export MOUNT_OPTIONS="-o dax"
-> > > > > export TEST_FS_MOUNT_OPTS="-o dax"
-> > > > > 
-> > > > > And tools version are:
-> > > > >    - xfstests (v2023.09.03)
-> > > > 
-> > > > Same here.
-> > > > 
-> > > > >    - xfsprogs (v6.4.0)
-> > > > 
-> > > > I have a newer branch, though it only contains resyncs with newer kernel
-> > > > versions and bugfixes.
-> > > > 
-> > > > > Could you show me more info (such as kernel config, local.config) ?  So that
-> > > > > I can find out what exactly is going wrong.
-> > > > 
-> > > > The full xml output from fstests is here:
-> > > > 
-> > > > https://djwong.org/fstests/output/.fa9f295c6a2dd4426aa26b4d74e8e0299ad2307507547d5444c157f0e883df92/.2e718425eda716ad848ae05dfab82a670af351f314e26b3cb658a929331bf2eb/result.xml
-> > > > 
-> > > > I think the key difference between your setup and mine is that
-> > > > MKFS_OPTIONS includes '-d daxinherit=1' and MOUNT_OPTIONS do not include
-> > > > -o dax.  That shouldn't make any difference, though.
-> 
-> A little strange thing I found:
-> According to the result.xml, the MKFS_OPTIONS didn't include -m rmapbt=1:
->     <property name="MKFS_OPTIONS" value=" -d daxinherit=1,"/>
-> mkfs.xfs will turn on reflink by default, but won't turn on rmapbt. Then
-> xfs/55[0-2] should be "not run" because they have
-> _require_xfs_scratch_rmapbt.
+> Signed-off-by: Allison Henderson <allison.henderson@oracle.com>
+> Reviewed-by: Darrick J. Wong <djwong@kernel.org>
 
-Oh.  Yeah.  mkfs is from the xfsprogs for-next branch, with 6.6 kernel
-libxfs stuff backported, as well as the defaults changed to turn on
-rmapbt by default.  Sorry about that omission.
+Hi Andrey,
 
-> Also, this alert message didn't show in my tests:
-> [ 6047.876110] XFS (pmem1): xlog_verify_grant_tail: space >
-> BBTOB(tail_blocks)
-> But I don't think it is related.
+Could you take a look at the latest revision of the parent pointers
+patchset, please?  Your version and mine have drifted very far apart
+over the summer...
 
-Probably not.  FWIW the simulated pmem is a ~9.8GB tmpfs file that's
-passed through to qemu via the libvirt xml stuff that sets up pmem.
-If your pmem is larger (or real pmem!) then you likely get a bigger log
-and hence lower chance of that message.
-
-> > > > 
-> > > > Also: In the weeks leading up to me adding the PREREMOVE patches a
-> > > > couple of days ago, no test (generic/269 or otherwise) hit that ASSERT.
-> 
-> Has it failed again since this time?  If so, please sent me the result.xml
-> because it is needed for analyze.  Thank you~
-
-Nope.  Last night's run was clean.
-
-> > > > I'm wondering if that means that the preremove code isn't shooting down
-> > > > a page mapping or something?
-> > > > 
-> > > > Grepping through the result.xml reveals:
-> > > > 
-> > > > $ grep -E '(generic.269|xfs.55[012])' /tmp/result.xml
-> > > > 563:    <testcase classname="xfstests.global" name="xfs/550" time="2">
-> > > > 910:    <testcase classname="xfstests.global" name="xfs/552" time="2">
-> > > > 1685:   <testcase classname="xfstests.global" name="generic/269" time="23">
-> > > > 1686:           <failure message="_check_dmesg: something found in dmesg (see /var/tmp/fstests/generic/269.dmesg)" type="TestFail"/>
-> > > > 1689:[ 6046.844058] run fstests generic/269 at 2023-10-04 15:26:57
-> > > > 2977:   <testcase classname="xfstests.global" name="xfs/551" time="2">
-> > > > 
-> > > > So it's possible that 550 or 552 messed this up for us. :/
-> > > > 
-> > > > See attached kconfig.
-> > > 
-> > > Thanks for the info.  I tried to make my environment same as yours, but
-> > > still couldn't reproduce the fail.  I also let xfs/550 & xfs/552 ran before
-> > > generic/269.
-> > > 
-> > > [root@f38 xfst]# ./check -s nodax_reflink -r xfs/550 xfs/552 generic/269
-> > > SECTION       -- nodax_reflink
-> > > FSTYP         -- xfs (debug)
-> > > PLATFORM      -- Linux/x86_64 f38 6.6.0-rc4 #365 SMP PREEMPT_DYNAMIC Sun Oct
-> > > 8 15:19:36 CST 2023
-> > > MKFS_OPTIONS  -- -f -m reflink=1,rmapbt=1 -d daxinherit=1 /dev/pmem1
-> > > MOUNT_OPTIONS -- -o usrquota,grpquota,prjquota, /dev/pmem1 /mnt/scratch
-> > > 
-> > > xfs/550 2s ...  2s
-> > > xfs/552 2s ...  1s
-> > > generic/269 22s ...  23s
-> > > Ran: xfs/550 xfs/552 generic/269
-> > > Passed all 3 tests
-> > > 
-> > > SECTION       -- nodax_reflink
-> > > =========================
-> > > Ran: xfs/550 xfs/552 generic/269
-> > > Passed all 3 tests
-> > > 
-> > > 
-> > > And xfs/269 is testing fsstress & dd on a scratch device at the same time.
-> > > It won't reach the PREREMOVE code or xfs' notify failure code.
-
-Hmm.  I'm theorizing that generic/269 was merely tripping over some
-pmem page that has corrupted state.
-
-> > > I'd like to know what your git tree looks like, is it *v6.6-rc4 + my patches
-> > > only* ?  Does it contain other patches?
-> > 
-> > No other patches, aside from turning on selected W=123e warnings.
-> 
-> I don't know what does this mean: "selected W=123e warnings".  How could I
-> turn on this config?
-
-$ make vmlinux W=123e
-
-You probably don't want the 'e' part since that'll fail the build on
-any warning.  The actual warnings turned on by levels 1-3 vary depending
-on the compiler (gcc 12.3.0 here).
+https://git.kernel.org/pub/scm/linux/kernel/git/djwong/xfs-linux.git/log/?h=pptrs-fsck
 
 --D
 
+> ---
+>  fs/xfs/libxfs/xfs_attr.c      | 47 ++++++++++++++++++++++++++++++++---
+>  fs/xfs/libxfs/xfs_attr.h      |  3 ++-
+>  fs/xfs/libxfs/xfs_da_format.h |  8 ++++++
+>  fs/xfs/scrub/attr.c           |  2 +-
+>  fs/xfs/xfs_attr_item.c        | 11 +++++---
+>  fs/xfs/xfs_attr_list.c        | 17 +++++++++----
+>  6 files changed, 74 insertions(+), 14 deletions(-)
 > 
+> diff --git a/fs/xfs/libxfs/xfs_attr.c b/fs/xfs/libxfs/xfs_attr.c
+> index 101823772bf9..711022742e34 100644
+> --- a/fs/xfs/libxfs/xfs_attr.c
+> +++ b/fs/xfs/libxfs/xfs_attr.c
+> @@ -1577,9 +1577,33 @@ xfs_attr_node_get(
+>  	return error;
+>  }
+>  
+> -/* Returns true if the attribute entry name is valid. */
+> -bool
+> -xfs_attr_namecheck(
+> +/*
+> + * Verify parent pointer attribute is valid.
+> + * Return true on success or false on failure
+> + */
+> +STATIC bool
+> +xfs_verify_pptr(
+> +	struct xfs_mount			*mp,
+> +	const struct xfs_parent_name_rec	*rec)
+> +{
+> +	xfs_ino_t				p_ino;
+> +	xfs_dir2_dataptr_t			p_diroffset;
+> +
+> +	p_ino = be64_to_cpu(rec->p_ino);
+> +	p_diroffset = be32_to_cpu(rec->p_diroffset);
+> +
+> +	if (!xfs_verify_ino(mp, p_ino))
+> +		return false;
+> +
+> +	if (p_diroffset > XFS_DIR2_MAX_DATAPTR)
+> +		return false;
+> +
+> +	return true;
+> +}
+> +
+> +/* Returns true if the string attribute entry name is valid. */
+> +static bool
+> +xfs_str_attr_namecheck(
+>  	const void	*name,
+>  	size_t		length)
+>  {
+> @@ -1594,6 +1618,23 @@ xfs_attr_namecheck(
+>  	return !memchr(name, 0, length);
+>  }
+>  
+> +/* Returns true if the attribute entry name is valid. */
+> +bool
+> +xfs_attr_namecheck(
+> +	struct xfs_mount	*mp,
+> +	const void		*name,
+> +	size_t			length,
+> +	int			flags)
+> +{
+> +	if (flags & XFS_ATTR_PARENT) {
+> +		if (length != sizeof(struct xfs_parent_name_rec))
+> +			return false;
+> +		return xfs_verify_pptr(mp, (struct xfs_parent_name_rec *)name);
+> +	}
+> +
+> +	return xfs_str_attr_namecheck(name, length);
+> +}
+> +
+>  int __init
+>  xfs_attr_intent_init_cache(void)
+>  {
+> diff --git a/fs/xfs/libxfs/xfs_attr.h b/fs/xfs/libxfs/xfs_attr.h
+> index 3e81f3f48560..b79dae788cfb 100644
+> --- a/fs/xfs/libxfs/xfs_attr.h
+> +++ b/fs/xfs/libxfs/xfs_attr.h
+> @@ -547,7 +547,8 @@ int xfs_attr_get(struct xfs_da_args *args);
+>  int xfs_attr_set(struct xfs_da_args *args);
+>  int xfs_attr_set_iter(struct xfs_attr_intent *attr);
+>  int xfs_attr_remove_iter(struct xfs_attr_intent *attr);
+> -bool xfs_attr_namecheck(const void *name, size_t length);
+> +bool xfs_attr_namecheck(struct xfs_mount *mp, const void *name, size_t length,
+> +			int flags);
+>  int xfs_attr_calc_size(struct xfs_da_args *args, int *local);
+>  void xfs_init_attr_trans(struct xfs_da_args *args, struct xfs_trans_res *tres,
+>  			 unsigned int *total);
+> diff --git a/fs/xfs/libxfs/xfs_da_format.h b/fs/xfs/libxfs/xfs_da_format.h
+> index 307c8cdb6f10..6deefe03207f 100644
+> --- a/fs/xfs/libxfs/xfs_da_format.h
+> +++ b/fs/xfs/libxfs/xfs_da_format.h
+> @@ -741,6 +741,14 @@ xfs_attr3_leaf_name(xfs_attr_leafblock_t *leafp, int idx)
+>  	return &((char *)leafp)[be16_to_cpu(entries[idx].nameidx)];
+>  }
+>  
+> +static inline int
+> +xfs_attr3_leaf_flags(xfs_attr_leafblock_t *leafp, int idx)
+> +{
+> +	struct xfs_attr_leaf_entry *entries = xfs_attr3_leaf_entryp(leafp);
+> +
+> +	return entries[idx].flags;
+> +}
+> +
+>  static inline xfs_attr_leaf_name_remote_t *
+>  xfs_attr3_leaf_name_remote(xfs_attr_leafblock_t *leafp, int idx)
+>  {
+> diff --git a/fs/xfs/scrub/attr.c b/fs/xfs/scrub/attr.c
+> index 8bc6aa274fa6..f35144704395 100644
+> --- a/fs/xfs/scrub/attr.c
+> +++ b/fs/xfs/scrub/attr.c
+> @@ -195,7 +195,7 @@ xchk_xattr_listent(
+>  	}
+>  
+>  	/* Does this name make sense? */
+> -	if (!xfs_attr_namecheck(name, namelen)) {
+> +	if (!xfs_attr_namecheck(sx->sc->mp, name, namelen, flags)) {
+>  		xchk_fblock_set_corrupt(sx->sc, XFS_ATTR_FORK, args.blkno);
+>  		goto fail_xref;
+>  	}
+> diff --git a/fs/xfs/xfs_attr_item.c b/fs/xfs/xfs_attr_item.c
+> index 97ee9d89b5b8..63393216159f 100644
+> --- a/fs/xfs/xfs_attr_item.c
+> +++ b/fs/xfs/xfs_attr_item.c
+> @@ -593,7 +593,8 @@ xfs_attri_item_recover(
+>  	 */
+>  	attrp = &attrip->attri_format;
+>  	if (!xfs_attri_validate(mp, attrp) ||
+> -	    !xfs_attr_namecheck(nv->name.i_addr, nv->name.i_len))
+> +	    !xfs_attr_namecheck(mp, nv->name.i_addr, nv->name.i_len,
+> +				attrp->alfi_attr_filter))
+>  		return -EFSCORRUPTED;
+>  
+>  	error = xlog_recover_iget(mp,  attrp->alfi_ino, &ip);
+> @@ -805,7 +806,8 @@ xlog_recover_attri_commit_pass2(
+>  	}
+>  
+>  	attr_name = item->ri_buf[i].i_addr;
+> -	if (!xfs_attr_namecheck(attr_name, attri_formatp->alfi_name_len)) {
+> +	if (!xfs_attr_namecheck(mp, attr_name, attri_formatp->alfi_name_len,
+> +				attri_formatp->alfi_attr_filter)) {
+>  		XFS_CORRUPTION_ERROR(__func__, XFS_ERRLEVEL_LOW, mp,
+>  				item->ri_buf[i].i_addr, item->ri_buf[i].i_len);
+>  		return -EFSCORRUPTED;
+> @@ -823,8 +825,9 @@ xlog_recover_attri_commit_pass2(
+>  		}
+>  
+>  		attr_nname = item->ri_buf[i].i_addr;
+> -		if (!xfs_attr_namecheck(attr_nname,
+> -				attri_formatp->alfi_nname_len)) {
+> +		if (!xfs_attr_namecheck(mp, attr_nname,
+> +				attri_formatp->alfi_nname_len,
+> +				attri_formatp->alfi_attr_filter)) {
+>  			XFS_CORRUPTION_ERROR(__func__, XFS_ERRLEVEL_LOW, mp,
+>  					item->ri_buf[i].i_addr,
+>  					item->ri_buf[i].i_len);
+> diff --git a/fs/xfs/xfs_attr_list.c b/fs/xfs/xfs_attr_list.c
+> index 99bbbe1a0e44..a51f7f13a352 100644
+> --- a/fs/xfs/xfs_attr_list.c
+> +++ b/fs/xfs/xfs_attr_list.c
+> @@ -58,9 +58,13 @@ xfs_attr_shortform_list(
+>  	struct xfs_attr_sf_sort		*sbuf, *sbp;
+>  	struct xfs_attr_shortform	*sf;
+>  	struct xfs_attr_sf_entry	*sfe;
+> +	struct xfs_mount		*mp;
+>  	int				sbsize, nsbuf, count, i;
+>  	int				error = 0;
+>  
+> +	ASSERT(context != NULL);
+> +	ASSERT(dp != NULL);
+> +	mp = dp->i_mount;
+>  	sf = (struct xfs_attr_shortform *)dp->i_af.if_u1.if_data;
+>  	ASSERT(sf != NULL);
+>  	if (!sf->hdr.count)
+> @@ -82,8 +86,9 @@ xfs_attr_shortform_list(
+>  	     (dp->i_af.if_bytes + sf->hdr.count * 16) < context->bufsize)) {
+>  		for (i = 0, sfe = &sf->list[0]; i < sf->hdr.count; i++) {
+>  			if (XFS_IS_CORRUPT(context->dp->i_mount,
+> -					   !xfs_attr_namecheck(sfe->nameval,
+> -							       sfe->namelen)))
+> +					   !xfs_attr_namecheck(mp, sfe->nameval,
+> +							       sfe->namelen,
+> +							       sfe->flags)))
+>  				return -EFSCORRUPTED;
+>  			context->put_listent(context,
+>  					     sfe->flags,
+> @@ -174,8 +179,9 @@ xfs_attr_shortform_list(
+>  			cursor->offset = 0;
+>  		}
+>  		if (XFS_IS_CORRUPT(context->dp->i_mount,
+> -				   !xfs_attr_namecheck(sbp->name,
+> -						       sbp->namelen))) {
+> +				   !xfs_attr_namecheck(mp, sbp->name,
+> +						       sbp->namelen,
+> +						       sbp->flags))) {
+>  			error = -EFSCORRUPTED;
+>  			goto out;
+>  		}
+> @@ -465,7 +471,8 @@ xfs_attr3_leaf_list_int(
+>  		}
+>  
+>  		if (XFS_IS_CORRUPT(context->dp->i_mount,
+> -				   !xfs_attr_namecheck(name, namelen)))
+> +				   !xfs_attr_namecheck(mp, name, namelen,
+> +						       entry->flags)))
+>  			return -EFSCORRUPTED;
+>  		context->put_listent(context, entry->flags,
+>  					      name, namelen, valuelen);
+> -- 
+> 2.40.1
 > 
-> --
-> Thanks,
-> Ruan.
-> 
-> > 
-> > --D
-> > 
-> > > 
-> > > --
-> > > Thanks,
-> > > Ruan.
-> > > 
-> > > > 
-> > > > --D
-> > > > 
-> > > > > 
-> > > > > 
-> > > > > --
-> > > > > Thanks,
-> > > > > Ruan.
