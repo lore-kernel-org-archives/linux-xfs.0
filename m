@@ -2,122 +2,183 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id F39F9CDB47D
-	for <linux-xfs@archiver.kernel.org>; Wed, 11 Oct 2023 19:12:03 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 33458CDB47E
+	for <linux-xfs@archiver.kernel.org>; Wed, 11 Oct 2023 20:09:42 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233170AbjJKTMD (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 11 Oct 2023 15:12:03 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52946 "EHLO
+        id S233279AbjJKUJl (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 11 Oct 2023 16:09:41 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52758 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232224AbjJKTMD (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 11 Oct 2023 15:12:03 -0400
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A34598F;
-        Wed, 11 Oct 2023 12:12:01 -0700 (PDT)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 42383C433C7;
-        Wed, 11 Oct 2023 19:12:01 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1697051521;
-        bh=It2LkzgcfBOst3Wh1aN+gatu/fkADJhMweGlc+NHALo=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=Jl0E2PjdjeYZKN2MtbJugaZFPdz1gVb9M8/mUf7FTUOljrlilqjgJ3290JLNNH+HM
-         ngKoDfORErP1av+MAmOHOUgTQzOkbvxWnCcmQEs2m/gDCBpu5hSHYlwOA6YHTIjbVm
-         o0xxEsJVYt3JOYOYNxVqWHIo67BkwQ6F+pfLYnbgAb1Q51oWUAfUi9voF6kjVIeeYU
-         ldlfvPiIimOfIDq4ug9Yh19SXYlqzBk7AjAF+TwvnDMk2dQ6ih8O4s/EInSXbuw3mv
-         4IyiMMXEIXYzE9Hie20sHLDp3NNuwil1/26+OJRA+O3jaaMkF53MA1bk/gpeZ3VTOi
-         p1fHUdFXDvxTg==
-Date:   Wed, 11 Oct 2023 12:12:00 -0700
-From:   "Darrick J. Wong" <djwong@kernel.org>
-To:     Jeff Layton <jlayton@kernel.org>
-Cc:     Chandan Babu R <chandan.babu@oracle.com>,
-        Chuck Lever <chuck.lever@oracle.com>,
-        linux-nfs@vger.kernel.org, linux-xfs@vger.kernel.org,
-        linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org,
-        brauner@kernel.org
-Subject: Re: [PATCH] xfs: reinstate the old i_version counter as
- STATX_CHANGE_COOKIE
-Message-ID: <20231011191200.GA21277@frogsfrogsfrogs>
-References: <20230929-xfs-iversion-v1-1-38587d7b5a52@kernel.org>
- <b4136500fe6c49ee689dba139ce25824684719f2.camel@kernel.org>
- <20231011154938.GL21298@frogsfrogsfrogs>
- <e0599593fcff0eca5c8287b8d09631b5fcb3a7e4.camel@kernel.org>
+        with ESMTP id S233271AbjJKUJj (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 11 Oct 2023 16:09:39 -0400
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A0D0AAF
+        for <linux-xfs@vger.kernel.org>; Wed, 11 Oct 2023 13:08:52 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1697054931;
+        h=from:from:reply-to:reply-to:subject:subject:date:date:
+         message-id:message-id:to:to:cc:mime-version:mime-version:
+         content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=p07uv3VfqNYCu8gzNdk+z9OvzVunBM6VHOWnlS3vvR8=;
+        b=cABg7sy4EFo0O+2R1F7DOBqwoXiN2NVYmEPiDyfVsgNaYgTXeEEVkaUQ+uyCMBfvK/WN/O
+        /U4+QzW/eIR7apqqGW+o6UdoL3Mee5LbNDHVCGYM+q84Ld1kg0ow+WRuCOmpGKAqfEvWNm
+        KmJB61hj2BaBi8MuePyfn7a9m04/Sc0=
+Received: from mail-il1-f200.google.com (mail-il1-f200.google.com
+ [209.85.166.200]) by relay.mimecast.com with ESMTP with STARTTLS
+ (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
+ us-mta-267-ll-sF0P9OsmowmimOBid0A-1; Wed, 11 Oct 2023 16:08:50 -0400
+X-MC-Unique: ll-sF0P9OsmowmimOBid0A-1
+Received: by mail-il1-f200.google.com with SMTP id e9e14a558f8ab-35742684eb0so994835ab.2
+        for <linux-xfs@vger.kernel.org>; Wed, 11 Oct 2023 13:08:49 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1697054929; x=1697659729;
+        h=content-transfer-encoding:in-reply-to:from:references:to
+         :content-language:subject:reply-to:user-agent:mime-version:date
+         :message-id:x-gm-message-state:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=p07uv3VfqNYCu8gzNdk+z9OvzVunBM6VHOWnlS3vvR8=;
+        b=vtrrJnuIJhwgpNXdCrKI489j6mc3LHLqYpIqO9nq55OdlXmeCcNlTsjHcomFlwhwK/
+         w1LrMQ1tuzQr8XfKRk0oiBv4j7BNgNPXneC31Kmnau0Rrsvo5XMK4utYBnzrP5GPLPFQ
+         s4iHZZTPZtDra1an2GotVlM3G7BoAm31TMLHtYGG5bciqgEDvPFv3yb2IUY3D57NuLe0
+         2w1qHXa+u8dOgNVg5nv4dw6Bd3za23+KTd3cnaedkh63J9apfqk23xlE2TDxGIQPsPRH
+         0UPx8TX9xvE7mfrd3tBp/OJpDXHOsdXcyAQbraJUUiTxHculehdIxo5qevyTxNwhRVwJ
+         x/zQ==
+X-Gm-Message-State: AOJu0Yy4jm/W7Fqb7Gig2lu/oMhffnwfaaPR7j/YkoxQ5tBBdMpKUDyQ
+        GL1Bmr5s+YWG73OnjL3no5nw5Le3eef+hkWOdORiGE/Bz6JPsdXh/1q+4p6shtoXwX9/+fI3r9t
+        947BA8L08LgmM3oq6qHts
+X-Received: by 2002:a92:d7cd:0:b0:34d:ee65:a8ca with SMTP id g13-20020a92d7cd000000b0034dee65a8camr22322873ilq.24.1697054929256;
+        Wed, 11 Oct 2023 13:08:49 -0700 (PDT)
+X-Google-Smtp-Source: AGHT+IEScCl6dk6MW+sVsBATxD3aPd21WlgR6b1Sm1y5VHtOWvNl8NWVimaRaZ8X/Huat+iSeWbBqA==
+X-Received: by 2002:a92:d7cd:0:b0:34d:ee65:a8ca with SMTP id g13-20020a92d7cd000000b0034dee65a8camr22322866ilq.24.1697054928974;
+        Wed, 11 Oct 2023 13:08:48 -0700 (PDT)
+Received: from [10.0.0.71] (sandeen.net. [63.231.237.45])
+        by smtp.gmail.com with ESMTPSA id o9-20020a92d389000000b003574d091a7esm168325ilo.49.2023.10.11.13.08.47
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Wed, 11 Oct 2023 13:08:48 -0700 (PDT)
+Message-ID: <d211669e-96c9-6bd1-1578-574d6aa9812e@redhat.com>
+Date:   Wed, 11 Oct 2023 15:08:47 -0500
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <e0599593fcff0eca5c8287b8d09631b5fcb3a7e4.camel@kernel.org>
+User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:102.0)
+ Gecko/20100101 Thunderbird/102.15.1
+Reply-To: sandeen@redhat.com
+Subject: Re: xfsprogs: bug feedback
+Content-Language: en-US
+To:     Nagisa BIOS <nagisa_bios@protonmail.com>,
+        "linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>
+References: <UhgwTYrnwqvjARAbTicViFlwB7jumckp2WZwXoXAiKefRHO9XU46pADFybp14c1BTMWt8s4Ht0FY7aQq6QShFS7GUiScn1lwqo5Ytw0lUDo=@protonmail.com>
+From:   Eric Sandeen <esandeen@redhat.com>
+In-Reply-To: <UhgwTYrnwqvjARAbTicViFlwB7jumckp2WZwXoXAiKefRHO9XU46pADFybp14c1BTMWt8s4Ht0FY7aQq6QShFS7GUiScn1lwqo5Ytw0lUDo=@protonmail.com>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Wed, Oct 11, 2023 at 11:51:08AM -0400, Jeff Layton wrote:
-> On Wed, 2023-10-11 at 08:49 -0700, Darrick J. Wong wrote:
-> > On Wed, Oct 11, 2023 at 09:09:38AM -0400, Jeff Layton wrote:
-> > > On Fri, 2023-09-29 at 14:43 -0400, Jeff Layton wrote:
-> > > > The handling of STATX_CHANGE_COOKIE was moved into generic_fillattr in
-> > > > commit 0d72b92883c6 (fs: pass the request_mask to generic_fillattr), but
-> > > > we didn't account for the fact that xfs doesn't call generic_fillattr at
-> > > > all.
-> > > > 
-> > > > Make XFS report its i_version as the STATX_CHANGE_COOKIE.
-> > > > 
-> > > > Fixes: 0d72b92883c6 (fs: pass the request_mask to generic_fillattr)
-> > > > Signed-off-by: Jeff Layton <jlayton@kernel.org>
-> > > > ---
-> > > > I had hoped to fix this in a better way with the multigrain patches, but
-> > > > it's taking longer than expected (if it even pans out at this point).
-> > > > 
-> > > > Until then, make sure we use XFS's i_version as the STATX_CHANGE_COOKIE,
-> > > > even if it's bumped due to atime updates. Too many invalidations is
-> > > > preferable to not enough.
-> > > > ---
-> > > >  fs/xfs/xfs_iops.c | 5 +++++
-> > > >  1 file changed, 5 insertions(+)
-> > > > 
-> > > > diff --git a/fs/xfs/xfs_iops.c b/fs/xfs/xfs_iops.c
-> > > > index 1c1e6171209d..2b3b05c28e9e 100644
-> > > > --- a/fs/xfs/xfs_iops.c
-> > > > +++ b/fs/xfs/xfs_iops.c
-> > > > @@ -584,6 +584,11 @@ xfs_vn_getattr(
-> > > >  		}
-> > > >  	}
-> > > >  
-> > > > +	if ((request_mask & STATX_CHANGE_COOKIE) && IS_I_VERSION(inode)) {
-> > > > +		stat->change_cookie = inode_query_iversion(inode);
-> > > > +		stat->result_mask |= STATX_CHANGE_COOKIE;
-> > > > +	}
-> > > > +
-> > > >  	/*
-> > > >  	 * Note: If you add another clause to set an attribute flag, please
-> > > >  	 * update attributes_mask below.
-> > > > 
-> > > > ---
-> > > > base-commit: df964ce9ef9fea10cf131bf6bad8658fde7956f6
-> > > > change-id: 20230929-xfs-iversion-819fa2c18591
-> > > > 
-> > > > Best regards,
-> > > 
-> > > Ping?
-> > > 
-> > > This patch is needed in v6.6 to prevent a regression when serving XFS
-> > > via NFSD. I'd prefer this go in via the xfs tree, but let me know if
-> > > you need me to get this merged this via a different one.
-> > 
-> > Oh!   Right, this is needed because the "hide a state in the high bit of
-> > tv_nsec" stuff got reverted in -rc3, correct?  So now nfsd needs some
-> > way to know that something changed in the file, and better to have too
-> > many client invalidations than not enough?  And I guess bumping
-> > i_version will keep nfsd sane for now?
-> > 
-> > If the answers are [yes, yes, yes] then:
-> > Reviewed-by: Darrick J. Wong <djwong@kernel.org>
+On 10/11/23 1:07 PM, Nagisa BIOS wrote:
+> Hi,
 > 
-> Yes, yes, and yes. Can you guys shepherd this into mainline?
-
-Chandan, can you queue this (and the other xfs fixes I sent) for -rc6?
-
---D
-
-> Thanks for the R-b!
-> -- 
-> Jeff Layton <jlayton@kernel.org>
+> I found that if the xfs_fsr program defrag the large files, it may cause errors.
 > 
+> My recommend is, do not defrag the large files if the available disk space is not enough.
+
+The only slight problem I really see here is that the "full filesystem
+defrag" mode keeps trying and failing on the same file - a 21G file, on
+a filesystem with only 15G free.
+
+(xfs_fsr works by allocating new space, and moving data if the new space
+is less fragmented than the original, then swapping extents from the new
+inode to the old, and vice versa. If you're trying to defrag a file
+which is larger than your available free space, it will fail.)
+
+While full-filesystem defrag is rarely recommended, it might be nice to
+not loop like this, and perhaps someone can look into that behavior.
+
+On the other hand, the default is to keep trying for 2 hours and/or 10
+passes, so perhaps this is working as designed. There are several
+reasons a file might fail to be defragged, so stopping on failure may
+not be desired.
+
+-Eric
+
+> Computer Setup (My Mini PC):
+> 1135G7 CPU Mini PC
+> 8GB DDR4 DRAM
+> 500GB NVMe SSD
+>  200GB NTFS Partition: Windows 11
+>  200GB NTFS Partition
+>  75GB  XFS Partition: Ubuntu (GNOME) 22.04
+> 
+> Pastebin:
+> 
+> ubuntu@minipc:~$ xfs_fsr -V
+> xfs_fsr version 5.13.0
+> 
+> # nvme0n1p6 is XFS filesystem
+> ubuntu@minipc:~$ sudo df -h
+> Filesystem      Size   Used   Avail   Use%    Mounted
+> tmpfs           772M   2.3M    770M     1%    /run
+> /dev/nvme0n1p6   74G    55G    19G     75%    /
+> tmpfs           3.8G      0    3.8G     0%    /dev/shm
+> tmpfs           5.0M   4.0K    5.0M     1%    /run/lock
+> tmpfs           3.8G      0    3.8G     0%    /run/qemu
+> /dev/nvme0n1p1  256M    90M    167M    35%    /boot/efi
+> tmpfs           772M   120K    772M     1%    /run/user/1000
+> 
+> # win10.qcow2 file size is 21GB
+> ubuntu@minipc:~$ sudo ls -hs /var/lib/libvirt/images
+> total 26G
+> 2.5G debian12-1.qcow2   1.7G debian12-2.qcow2   34M win10-1.qcow2   34M win10-2.qcow2
+> 21G win10.qcow2   595M win2003-1.qcow2   502M win2003.qcow2
+> 
+> # Loop and stuck
+> ubuntu@minipc:~$ sudo xfs_fsr
+> xfs_fsr -m /proc/mountfs -t 7200 -f /var/tmp/.fsrlast_xfs ...
+> / start inode=151308975
+> / start inode=0
+> XFS_IOC_SWAPEXT failed: ino=117672225: Invalid argument
+> insufficient freespace for: ino=117681809: size=21608017920: ignoring
+> / start inode=0
+> XFS_IOC_SWAPEXT failed: ino=117672225: Invalid argument
+> insufficient freespace for: ino=117681809: size=21608017920: ignoring
+> / start inode=0
+> XFS_IOC_SWAPEXT failed: ino=117672225: Invalid argument
+> insufficient freespace for: ino=117681809: size=21608017920: ignoring
+> / start inode=0
+> XFS_IOC_SWAPEXT failed: ino=117672225: Invalid argument
+> insufficient freespace for: ino=117681809: size=21608017920: ignoring
+> / start inode=0
+> XFS_IOC_SWAPEXT failed: ino=117672225: Invalid argument
+> insufficient freespace for: ino=117681809: size=21608017920: ignoring
+> 
+> Pastebin (another Debian KVM):
+> 
+> # vda1 is XFS filesystem
+> debian@kvm:~$ sudo df -h
+> Filesystem      Size   Used   Avail   Use%    Mounted
+> udev            440M      0    448M     0%    /dev
+> tmpfs            94M   656K     94M     1%    /run
+> /dev/vda1       9.3G   1.4G    7.9G    15%    /
+> tmpfs           470M      0    470M     0%    /dev/shm
+> tmpfs           5.0M      0    5.0M     0%    /run/lock
+> /dev/vda2       121M   5.9M    115M     5%    /boot/efi
+> tmpfs            94M      0     94M     0%    /run/user/1000
+> 
+> # Normal case
+> debian@kvm:~$ sudo xfs_fsr
+> xfs_fsr -m /proc/mountfs -t 7200 -f /var/tmp/.fsrlast_xfs ...
+> / start inode=0
+> / start inode=0
+> / start inode=0
+> / start inode=0
+> / start inode=0
+> / start inode=0
+> / start inode=0
+> / start inode=0
+> / start inode=0
+> / start inode=0
+> Completed all 10 passes
+> 
+> 
+
