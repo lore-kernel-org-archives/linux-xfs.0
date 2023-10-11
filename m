@@ -2,310 +2,261 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id BB633CDB473
-	for <linux-xfs@archiver.kernel.org>; Wed, 11 Oct 2023 18:08:22 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 65C7ECDB475
+	for <linux-xfs@archiver.kernel.org>; Wed, 11 Oct 2023 18:31:21 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233055AbjJKSIW (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 11 Oct 2023 14:08:22 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60266 "EHLO
+        id S233213AbjJKSbU (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 11 Oct 2023 14:31:20 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46238 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232678AbjJKSIV (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 11 Oct 2023 14:08:21 -0400
+        with ESMTP id S232983AbjJKSbT (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 11 Oct 2023 14:31:19 -0400
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4D3F193
-        for <linux-xfs@vger.kernel.org>; Wed, 11 Oct 2023 11:08:20 -0700 (PDT)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id E353DC433C7;
-        Wed, 11 Oct 2023 18:08:19 +0000 (UTC)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 18EE39D
+        for <linux-xfs@vger.kernel.org>; Wed, 11 Oct 2023 11:31:18 -0700 (PDT)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id A9A6CC433C8;
+        Wed, 11 Oct 2023 18:31:17 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1697047700;
-        bh=+cMqO5feD7msWM50FQQ0V26cD2WqJ8UO1Q9O4UdpiCs=;
-        h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-        b=YnltxS4qXyVAuoBdrR2JcdZ+DY6szib8PXS2XB7NYRSJnPbUUGD3yJR2XTCEHr34E
-         gw2U6yfjWTawncEeZ2BXLlyajweRJ3+33cpXgGSLeL2tjw9dRLiVps0EXzTUktIMNK
-         0uWWoQldberVtMF/BopHGWSdRjLo4pQOWjMpEkuxRnwcTD8e8dRfPxK0CUgMrx9eYc
-         7Pj8/G/fUqaMSUEC5ocD7VsrKfBQ2t08MTU0tvfmkJ2phKRjIa/bw4AuXfX2niOQVz
-         fPizBIxKKjWIN13OfJzbvhlVBVacTcaB+A9rgqs0BkavDvjlRRGMoLr+Jtpv579+Rp
-         OqmTZix2q8LHw==
-Date:   Wed, 11 Oct 2023 11:08:19 -0700
-Subject: [PATCH 8/8] xfs: use accessor functions for summary info words
+        s=k20201202; t=1697049077;
+        bh=xywoNZHTIjOgSEZpS/CJ26pYFuxLplcZpEbx9VCc2zs=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=mao3dMGvCIY6d2pVkTU6DcoBcoSF+GmWoSYR8NEYEdxlwiS8sI5eQKadRFTmuf1DJ
+         3nsR8vfo2RLiB19tdotmy4nJFS468VWkYiA/tR0p63DUwMvWU/JIZ5lA7UteDl7oqf
+         cgFJmzeE0f/CqpgRaMiDcTsuOFTaVRFX+KkPeS7uVJlJPJ8jNmzHQKGRoV6j9lU0dt
+         wOSL1k/gaPwnX3MARLKrliFZtHVM3yGBZP+0H1p3nKab8fPbSFwhljpz4CvFEC8dHC
+         X4zQ/gahxXJcSYTd0Y3rlyuG+sUeEDW5w/c42qqJIDGcfvw4WZO90QNXyIIhQAfpPB
+         ksTtA3PZGP1iA==
+Date:   Wed, 11 Oct 2023 11:31:17 -0700
 From:   "Darrick J. Wong" <djwong@kernel.org>
-To:     djwong@kernel.org
-Cc:     linux-xfs@vger.kernel.org, osandov@osandov.com, hch@lst.de
-Message-ID: <169704721750.1773834.4264847386675407220.stgit@frogsfrogsfrogs>
-In-Reply-To: <169704721623.1773834.8031427054893583456.stgit@frogsfrogsfrogs>
-References: <169704721623.1773834.8031427054893583456.stgit@frogsfrogsfrogs>
-User-Agent: StGit/0.19
+To:     Andrey Albershteyn <aalbersh@redhat.com>
+Cc:     linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
+        fsverity@lists.linux.dev, ebiggers@kernel.org, david@fromorbit.com,
+        dchinner@redhat.com
+Subject: Re: [PATCH v3 11/28] iomap: pass readpage operation to read path
+Message-ID: <20231011183117.GN21298@frogsfrogsfrogs>
+References: <20231006184922.252188-1-aalbersh@redhat.com>
+ <20231006184922.252188-12-aalbersh@redhat.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20231006184922.252188-12-aalbersh@redhat.com>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-From: Darrick J. Wong <djwong@kernel.org>
+On Fri, Oct 06, 2023 at 08:49:05PM +0200, Andrey Albershteyn wrote:
+> Preparation for allowing filesystems to provide bio_set and
+> ->submit_io() for read path. This will allow fs to do an additional
+> processing of ioend on ioend completion.
+> 
+> Make iomap_read_end_io() exportable, so, it can be called back from
+> filesystem callout after verification is done.
+> 
+> Signed-off-by: Andrey Albershteyn <aalbersh@redhat.com>
+> ---
+>  fs/erofs/data.c        |  4 ++--
+>  fs/gfs2/aops.c         |  4 ++--
+>  fs/iomap/buffered-io.c | 13 ++++++++++---
+>  fs/xfs/xfs_aops.c      |  4 ++--
+>  fs/zonefs/file.c       |  4 ++--
+>  include/linux/iomap.h  | 21 +++++++++++++++++++--
+>  6 files changed, 37 insertions(+), 13 deletions(-)
+> 
+> diff --git a/fs/erofs/data.c b/fs/erofs/data.c
+> index 0c2c99c58b5e..3f5482d6cedb 100644
+> --- a/fs/erofs/data.c
+> +++ b/fs/erofs/data.c
+> @@ -357,12 +357,12 @@ int erofs_fiemap(struct inode *inode, struct fiemap_extent_info *fieinfo,
+>   */
+>  static int erofs_read_folio(struct file *file, struct folio *folio)
+>  {
+> -	return iomap_read_folio(folio, &erofs_iomap_ops);
+> +	return iomap_read_folio(folio, &erofs_iomap_ops, NULL);
+>  }
+>  
+>  static void erofs_readahead(struct readahead_control *rac)
+>  {
+> -	return iomap_readahead(rac, &erofs_iomap_ops);
+> +	return iomap_readahead(rac, &erofs_iomap_ops, NULL);
+>  }
+>  
+>  static sector_t erofs_bmap(struct address_space *mapping, sector_t block)
+> diff --git a/fs/gfs2/aops.c b/fs/gfs2/aops.c
+> index c26d48355cc2..9c09ff75e586 100644
+> --- a/fs/gfs2/aops.c
+> +++ b/fs/gfs2/aops.c
+> @@ -456,7 +456,7 @@ static int gfs2_read_folio(struct file *file, struct folio *folio)
+>  
+>  	if (!gfs2_is_jdata(ip) ||
+>  	    (i_blocksize(inode) == PAGE_SIZE && !folio_buffers(folio))) {
+> -		error = iomap_read_folio(folio, &gfs2_iomap_ops);
+> +		error = iomap_read_folio(folio, &gfs2_iomap_ops, NULL);
+>  	} else if (gfs2_is_stuffed(ip)) {
+>  		error = stuffed_readpage(ip, &folio->page);
+>  		folio_unlock(folio);
+> @@ -534,7 +534,7 @@ static void gfs2_readahead(struct readahead_control *rac)
+>  	else if (gfs2_is_jdata(ip))
+>  		mpage_readahead(rac, gfs2_block_map);
+>  	else
+> -		iomap_readahead(rac, &gfs2_iomap_ops);
+> +		iomap_readahead(rac, &gfs2_iomap_ops, NULL);
+>  }
+>  
+>  /**
+> diff --git a/fs/iomap/buffered-io.c b/fs/iomap/buffered-io.c
+> index 644479ccefbd..ca78c7f62527 100644
+> --- a/fs/iomap/buffered-io.c
+> +++ b/fs/iomap/buffered-io.c
+> @@ -264,7 +264,7 @@ static void iomap_finish_folio_read(struct folio *folio, size_t offset,
+>  		folio_unlock(folio);
+>  }
+>  
+> -static void iomap_read_end_io(struct bio *bio)
+> +void iomap_read_end_io(struct bio *bio)
+>  {
+>  	int error = blk_status_to_errno(bio->bi_status);
+>  	struct folio_iter fi;
+> @@ -273,12 +273,14 @@ static void iomap_read_end_io(struct bio *bio)
+>  		iomap_finish_folio_read(fi.folio, fi.offset, fi.length, error);
+>  	bio_put(bio);
+>  }
+> +EXPORT_SYMBOL_GPL(iomap_read_end_io);
+>  
+>  struct iomap_readpage_ctx {
+>  	struct folio		*cur_folio;
+>  	bool			cur_folio_in_bio;
+>  	struct bio		*bio;
+>  	struct readahead_control *rac;
+> +	const struct iomap_readpage_ops *ops;
+>  };
+>  
+>  /**
+> @@ -402,7 +404,8 @@ static loff_t iomap_readpage_iter(const struct iomap_iter *iter,
+>  	return pos - orig_pos + plen;
+>  }
+>  
+> -int iomap_read_folio(struct folio *folio, const struct iomap_ops *ops)
+> +int iomap_read_folio(struct folio *folio, const struct iomap_ops *ops,
+> +		const struct iomap_readpage_ops *readpage_ops)
+>  {
+>  	struct iomap_iter iter = {
+>  		.inode		= folio->mapping->host,
+> @@ -411,6 +414,7 @@ int iomap_read_folio(struct folio *folio, const struct iomap_ops *ops)
+>  	};
+>  	struct iomap_readpage_ctx ctx = {
+>  		.cur_folio	= folio,
+> +		.ops		= readpage_ops,
+>  	};
+>  	int ret;
+>  
+> @@ -468,6 +472,7 @@ static loff_t iomap_readahead_iter(const struct iomap_iter *iter,
+>   * iomap_readahead - Attempt to read pages from a file.
+>   * @rac: Describes the pages to be read.
+>   * @ops: The operations vector for the filesystem.
+> + * @readpage_ops: Filesystem supplied folio processiong operation
+>   *
+>   * This function is for filesystems to call to implement their readahead
+>   * address_space operation.
+> @@ -479,7 +484,8 @@ static loff_t iomap_readahead_iter(const struct iomap_iter *iter,
+>   * function is called with memalloc_nofs set, so allocations will not cause
+>   * the filesystem to be reentered.
+>   */
+> -void iomap_readahead(struct readahead_control *rac, const struct iomap_ops *ops)
+> +void iomap_readahead(struct readahead_control *rac, const struct iomap_ops *ops,
+> +		const struct iomap_readpage_ops *readpage_ops)
+>  {
+>  	struct iomap_iter iter = {
+>  		.inode	= rac->mapping->host,
+> @@ -488,6 +494,7 @@ void iomap_readahead(struct readahead_control *rac, const struct iomap_ops *ops)
+>  	};
+>  	struct iomap_readpage_ctx ctx = {
+>  		.rac	= rac,
+> +		.ops	= readpage_ops,
+>  	};
+>  
+>  	trace_iomap_readahead(rac->mapping->host, readahead_count(rac));
+> diff --git a/fs/xfs/xfs_aops.c b/fs/xfs/xfs_aops.c
+> index 465d7630bb21..b413a2dbcc18 100644
+> --- a/fs/xfs/xfs_aops.c
+> +++ b/fs/xfs/xfs_aops.c
+> @@ -553,14 +553,14 @@ xfs_vm_read_folio(
+>  	struct file		*unused,
+>  	struct folio		*folio)
+>  {
+> -	return iomap_read_folio(folio, &xfs_read_iomap_ops);
+> +	return iomap_read_folio(folio, &xfs_read_iomap_ops, NULL);
+>  }
+>  
+>  STATIC void
+>  xfs_vm_readahead(
+>  	struct readahead_control	*rac)
+>  {
+> -	iomap_readahead(rac, &xfs_read_iomap_ops);
+> +	iomap_readahead(rac, &xfs_read_iomap_ops, NULL);
+>  }
+>  
+>  static int
+> diff --git a/fs/zonefs/file.c b/fs/zonefs/file.c
+> index b2c9b35df8f7..29428c012150 100644
+> --- a/fs/zonefs/file.c
+> +++ b/fs/zonefs/file.c
+> @@ -112,12 +112,12 @@ static const struct iomap_ops zonefs_write_iomap_ops = {
+>  
+>  static int zonefs_read_folio(struct file *unused, struct folio *folio)
+>  {
+> -	return iomap_read_folio(folio, &zonefs_read_iomap_ops);
+> +	return iomap_read_folio(folio, &zonefs_read_iomap_ops, NULL);
+>  }
+>  
+>  static void zonefs_readahead(struct readahead_control *rac)
+>  {
+> -	iomap_readahead(rac, &zonefs_read_iomap_ops);
+> +	iomap_readahead(rac, &zonefs_read_iomap_ops, NULL);
+>  }
+>  
+>  /*
+> diff --git a/include/linux/iomap.h b/include/linux/iomap.h
+> index 96dd0acbba44..3565c449f3c9 100644
+> --- a/include/linux/iomap.h
+> +++ b/include/linux/iomap.h
+> @@ -262,8 +262,25 @@ int iomap_file_buffered_write_punch_delalloc(struct inode *inode,
+>  		struct iomap *iomap, loff_t pos, loff_t length, ssize_t written,
+>  		int (*punch)(struct inode *inode, loff_t pos, loff_t length));
+>  
+> -int iomap_read_folio(struct folio *folio, const struct iomap_ops *ops);
+> -void iomap_readahead(struct readahead_control *, const struct iomap_ops *ops);
+> +struct iomap_readpage_ops {
+> +	/*
+> +	 * Filesystems wishing to attach private information to a direct io bio
+> +	 * must provide a ->submit_io method that attaches the additional
+> +	 * information to the bio and changes the ->bi_end_io callback to a
+> +	 * custom function.  This function should, at a minimum, perform any
+> +	 * relevant post-processing of the bio and end with a call to
+> +	 * iomap_read_end_io.
+> +	 */
+> +	void (*submit_io)(const struct iomap_iter *iter, struct bio *bio,
+> +			loff_t file_offset);
+> +	struct bio_set *bio_set;
 
-Create get and set functions for rtsummary words so that we can redefine
-the ondisk format with a specific endianness.  Note that this requires
-the definition of a distinct type for ondisk summary info words so that
-the compiler can perform proper typechecking.
+Needs a comment to mention that iomap will allocate bios from @bio_set
+if non-null; or its own internal bioset if null.
 
-Signed-off-by: Darrick J. Wong <djwong@kernel.org>
----
- fs/xfs/libxfs/xfs_format.h   |    8 ++++++++
- fs/xfs/libxfs/xfs_rtbitmap.c |   27 ++++++++++++++++++++++-----
- fs/xfs/libxfs/xfs_rtbitmap.h |   10 +++++++---
- fs/xfs/scrub/rtsummary.c     |   22 ++++++++++++----------
- fs/xfs/scrub/rtsummary.h     |    2 +-
- fs/xfs/scrub/trace.c         |    1 +
- fs/xfs/scrub/trace.h         |    4 ++--
- fs/xfs/xfs_ondisk.h          |    1 +
- 8 files changed, 54 insertions(+), 21 deletions(-)
+> +};
 
+It's odd that this patch adds this ops structure but doesn't actually
+start using it until the next patch.
 
-diff --git a/fs/xfs/libxfs/xfs_format.h b/fs/xfs/libxfs/xfs_format.h
-index 8e880ec217396..a4ef175409ef3 100644
---- a/fs/xfs/libxfs/xfs_format.h
-+++ b/fs/xfs/libxfs/xfs_format.h
-@@ -736,6 +736,14 @@ union xfs_rtword_ondisk {
- 	__u32		raw;
- };
- 
-+/*
-+ * Realtime summary counts are accessed by the word, which is currently
-+ * stored in host-endian format.
-+ */
-+union xfs_suminfo_ondisk {
-+	__u32		raw;
-+};
-+
- /*
-  * XFS Timestamps
-  * ==============
-diff --git a/fs/xfs/libxfs/xfs_rtbitmap.c b/fs/xfs/libxfs/xfs_rtbitmap.c
-index be5c793da46c9..b74261abd2385 100644
---- a/fs/xfs/libxfs/xfs_rtbitmap.c
-+++ b/fs/xfs/libxfs/xfs_rtbitmap.c
-@@ -466,6 +466,23 @@ xfs_rtfind_forw(
- 	return 0;
- }
- 
-+inline xfs_suminfo_t
-+xfs_suminfo_get(
-+	struct xfs_mount	*mp,
-+	union xfs_suminfo_ondisk *infoptr)
-+{
-+	return infoptr->raw;
-+}
-+
-+inline void
-+xfs_suminfo_add(
-+	struct xfs_mount	*mp,
-+	union xfs_suminfo_ondisk *infoptr,
-+	int			delta)
-+{
-+	infoptr->raw += delta;
-+}
-+
- /*
-  * Read and/or modify the summary information for a given extent size,
-  * bitmap block combination.
-@@ -490,7 +507,7 @@ xfs_rtmodify_summary_int(
- 	int		error;		/* error value */
- 	xfs_fileoff_t	sb;		/* summary fsblock */
- 	xfs_rtsumoff_t	so;		/* index into the summary file */
--	xfs_suminfo_t	*sp;		/* pointer to returned data */
-+	union xfs_suminfo_ondisk *sp;		/* pointer to returned data */
- 	unsigned int	infoword;
- 
- 	/*
-@@ -533,17 +550,17 @@ xfs_rtmodify_summary_int(
- 	if (delta) {
- 		uint first = (uint)((char *)sp - (char *)bp->b_addr);
- 
--		*sp += delta;
-+		xfs_suminfo_add(mp, sp, delta);
- 		if (mp->m_rsum_cache) {
--			if (*sp == 0 && log == mp->m_rsum_cache[bbno])
-+			if (sp->raw == 0 && log == mp->m_rsum_cache[bbno])
- 				mp->m_rsum_cache[bbno]++;
--			if (*sp != 0 && log < mp->m_rsum_cache[bbno])
-+			if (sp->raw != 0 && log < mp->m_rsum_cache[bbno])
- 				mp->m_rsum_cache[bbno] = log;
- 		}
- 		xfs_trans_log_buf(tp, bp, first, first + sizeof(*sp) - 1);
- 	}
- 	if (sum)
--		*sum = *sp;
-+		*sum = xfs_suminfo_get(mp, sp);
- 	return 0;
- }
- 
-diff --git a/fs/xfs/libxfs/xfs_rtbitmap.h b/fs/xfs/libxfs/xfs_rtbitmap.h
-index a66357cf002be..749c8e3ec4cbb 100644
---- a/fs/xfs/libxfs/xfs_rtbitmap.h
-+++ b/fs/xfs/libxfs/xfs_rtbitmap.h
-@@ -181,18 +181,18 @@ xfs_rtsumoffs_to_infoword(
- }
- 
- /* Return a pointer to a summary info word within a rt summary block buffer. */
--static inline xfs_suminfo_t *
-+static inline union xfs_suminfo_ondisk *
- xfs_rsumbuf_infoptr(
- 	void			*buf,
- 	unsigned int		infoword)
- {
--	xfs_suminfo_t		*infop = buf;
-+	union xfs_suminfo_ondisk *infop = buf;
- 
- 	return &infop[infoword];
- }
- 
- /* Return a pointer to a summary info word within a rt summary block. */
--static inline xfs_suminfo_t *
-+static inline union xfs_suminfo_ondisk *
- xfs_rsumblock_infoptr(
- 	struct xfs_buf		*bp,
- 	unsigned int		infoword)
-@@ -275,6 +275,10 @@ xfs_filblks_t xfs_rtsummary_blockcount(struct xfs_mount *mp,
- 		unsigned int rsumlevels, xfs_extlen_t rbmblocks);
- unsigned long long xfs_rtsummary_wordcount(struct xfs_mount *mp,
- 		unsigned int rsumlevels, xfs_extlen_t rbmblocks);
-+xfs_suminfo_t xfs_suminfo_get(struct xfs_mount *mp,
-+		union xfs_suminfo_ondisk *infoptr);
-+void xfs_suminfo_add(struct xfs_mount *mp, union xfs_suminfo_ondisk *infoptr,
-+		int delta);
- #else /* CONFIG_XFS_RT */
- # define xfs_rtfree_extent(t,b,l)			(-ENOSYS)
- # define xfs_rtfree_blocks(t,rb,rl)			(-ENOSYS)
-diff --git a/fs/xfs/scrub/rtsummary.c b/fs/xfs/scrub/rtsummary.c
-index 3fcf7de9f685f..e8b0f57b9bb10 100644
---- a/fs/xfs/scrub/rtsummary.c
-+++ b/fs/xfs/scrub/rtsummary.c
-@@ -97,9 +97,10 @@ static inline int
- xfsum_load(
- 	struct xfs_scrub	*sc,
- 	xfs_rtsumoff_t		sumoff,
--	xfs_suminfo_t		*info)
-+	union xfs_suminfo_ondisk *rawinfo)
- {
--	return xfile_obj_load(sc->xfile, info, sizeof(xfs_suminfo_t),
-+	return xfile_obj_load(sc->xfile, rawinfo,
-+			sizeof(union xfs_suminfo_ondisk),
- 			sumoff << XFS_WORDLOG);
- }
- 
-@@ -107,9 +108,10 @@ static inline int
- xfsum_store(
- 	struct xfs_scrub	*sc,
- 	xfs_rtsumoff_t		sumoff,
--	const xfs_suminfo_t	info)
-+	const union xfs_suminfo_ondisk rawinfo)
- {
--	return xfile_obj_store(sc->xfile, &info, sizeof(xfs_suminfo_t),
-+	return xfile_obj_store(sc->xfile, &rawinfo,
-+			sizeof(union xfs_suminfo_ondisk),
- 			sumoff << XFS_WORDLOG);
- }
- 
-@@ -117,10 +119,10 @@ inline int
- xfsum_copyout(
- 	struct xfs_scrub	*sc,
- 	xfs_rtsumoff_t		sumoff,
--	xfs_suminfo_t		*info,
-+	union xfs_suminfo_ondisk *rawinfo,
- 	unsigned int		nr_words)
- {
--	return xfile_obj_load(sc->xfile, info, nr_words << XFS_WORDLOG,
-+	return xfile_obj_load(sc->xfile, rawinfo, nr_words << XFS_WORDLOG,
- 			sumoff << XFS_WORDLOG);
- }
- 
-@@ -138,7 +140,7 @@ xchk_rtsum_record_free(
- 	xfs_filblks_t			rtlen;
- 	xfs_rtsumoff_t			offs;
- 	unsigned int			lenlog;
--	xfs_suminfo_t			v = 0;
-+	union xfs_suminfo_ondisk	v;
- 	int				error = 0;
- 
- 	if (xchk_should_terminate(sc, &error))
-@@ -162,9 +164,9 @@ xchk_rtsum_record_free(
- 	if (error)
- 		return error;
- 
--	v++;
-+	xfs_suminfo_add(mp, &v, 1);
- 	trace_xchk_rtsum_record_free(mp, rec->ar_startext, rec->ar_extcount,
--			lenlog, offs, v);
-+			lenlog, offs, &v);
- 
- 	return xfsum_store(sc, offs, v);
- }
-@@ -199,7 +201,7 @@ xchk_rtsum_compare(
- 	int			nmap;
- 
- 	for (off = 0; off < XFS_B_TO_FSB(mp, mp->m_rsumsize); off++) {
--		xfs_suminfo_t	*ondisk_info;
-+		union xfs_suminfo_ondisk *ondisk_info;
- 		int		error = 0;
- 
- 		if (xchk_should_terminate(sc, &error))
-diff --git a/fs/xfs/scrub/rtsummary.h b/fs/xfs/scrub/rtsummary.h
-index 7a69474293bf1..f456bf952bc06 100644
---- a/fs/xfs/scrub/rtsummary.h
-+++ b/fs/xfs/scrub/rtsummary.h
-@@ -9,6 +9,6 @@
- typedef unsigned int xfs_rtsumoff_t;
- 
- int xfsum_copyout(struct xfs_scrub *sc, xfs_rtsumoff_t sumoff,
--		xfs_suminfo_t *info, unsigned int nr_words);
-+		union xfs_suminfo_ondisk *info, unsigned int nr_words);
- 
- #endif /* __XFS_SCRUB_RTSUMMARY_H__ */
-diff --git a/fs/xfs/scrub/trace.c b/fs/xfs/scrub/trace.c
-index e4da5831c6a3c..0a7408699bc85 100644
---- a/fs/xfs/scrub/trace.c
-+++ b/fs/xfs/scrub/trace.c
-@@ -21,6 +21,7 @@
- #include "xfs_rmap.h"
- #include "xfs_parent.h"
- #include "xfs_imeta.h"
-+#include "xfs_rtbitmap.h"
- #include "scrub/scrub.h"
- #include "scrub/xfile.h"
- #include "scrub/xfarray.h"
-diff --git a/fs/xfs/scrub/trace.h b/fs/xfs/scrub/trace.h
-index 5fc3e07d85ebd..0326f4138c8ca 100644
---- a/fs/xfs/scrub/trace.h
-+++ b/fs/xfs/scrub/trace.h
-@@ -1262,7 +1262,7 @@ TRACE_EVENT(xfarray_sort_stats,
- TRACE_EVENT(xchk_rtsum_record_free,
- 	TP_PROTO(struct xfs_mount *mp, xfs_rtxnum_t start,
- 		 xfs_rtbxlen_t len, unsigned int log, loff_t pos,
--		 xfs_suminfo_t v),
-+		 union xfs_suminfo_ondisk *v),
- 	TP_ARGS(mp, start, len, log, pos, v),
- 	TP_STRUCT__entry(
- 		__field(dev_t, dev)
-@@ -1280,7 +1280,7 @@ TRACE_EVENT(xchk_rtsum_record_free,
- 		__entry->len = len;
- 		__entry->log = log;
- 		__entry->pos = pos;
--		__entry->v = v;
-+		__entry->v = xfs_suminfo_get(mp, v);
- 	),
- 	TP_printk("dev %d:%d rtdev %d:%d rtx 0x%llx rtxcount 0x%llx log %u rsumpos 0x%llx sumcount %u",
- 		  MAJOR(__entry->dev), MINOR(__entry->dev),
-diff --git a/fs/xfs/xfs_ondisk.h b/fs/xfs/xfs_ondisk.h
-index efdba05f90aed..652b9b71a9052 100644
---- a/fs/xfs/xfs_ondisk.h
-+++ b/fs/xfs/xfs_ondisk.h
-@@ -74,6 +74,7 @@ xfs_check_ondisk_structs(void)
- 
- 	/* realtime structures */
- 	XFS_CHECK_STRUCT_SIZE(union xfs_rtword_ondisk,		4);
-+	XFS_CHECK_STRUCT_SIZE(union xfs_suminfo_ondisk,		4);
- 
- 	/*
- 	 * m68k has problems with xfs_attr_leaf_name_remote_t, but we pad it to
+--D
 
+> +
+> +void iomap_read_end_io(struct bio *bio);
+> +int iomap_read_folio(struct folio *folio, const struct iomap_ops *ops,
+> +		const struct iomap_readpage_ops *readpage_ops);
+> +void iomap_readahead(struct readahead_control *, const struct iomap_ops *ops,
+> +		const struct iomap_readpage_ops *readpage_ops);
+>  bool iomap_is_partially_uptodate(struct folio *, size_t from, size_t count);
+>  struct folio *iomap_get_folio(struct iomap_iter *iter, loff_t pos, size_t len);
+>  bool iomap_release_folio(struct folio *folio, gfp_t gfp_flags);
+> -- 
+> 2.40.1
+> 
