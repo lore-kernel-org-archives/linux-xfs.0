@@ -2,154 +2,189 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 65B64CDB482
-	for <linux-xfs@archiver.kernel.org>; Wed, 11 Oct 2023 20:53:58 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7372BCDB47E
+	for <linux-xfs@archiver.kernel.org>; Wed, 11 Oct 2023 21:08:29 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233487AbjJKUx5 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 11 Oct 2023 16:53:57 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53172 "EHLO
+        id S233133AbjJKVI3 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 11 Oct 2023 17:08:29 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33854 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1376384AbjJKUxx (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 11 Oct 2023 16:53:53 -0400
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7C8BB90
-        for <linux-xfs@vger.kernel.org>; Wed, 11 Oct 2023 13:53:06 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1697057585;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:mime-version:mime-version:
-         content-transfer-encoding:content-transfer-encoding;
-        bh=lOppXXoOOt9V3G+yuBJ4lEufGMzhjqgbwBj73RGJmf0=;
-        b=OQbECEwkcaoebcHDvZdXayVgUS4RZpfIcqJqBag6p21SzCJkFVCcc53OV1JDO1nxLiYjO+
-        U7i9g7/pQ/Ps1hv8lE7Zc6lkYYE9TeKxdBTqhTH57Laczmje9/oJ3SBnvNYAbrKqFImwPx
-        TQelBwIcO6OADrzDoEPziIzfku/V5bU=
-Received: from mail-ej1-f71.google.com (mail-ej1-f71.google.com
- [209.85.218.71]) by relay.mimecast.com with ESMTP with STARTTLS
- (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
- us-mta-388-CXDpGQLkMGyBPrETzlpC7A-1; Wed, 11 Oct 2023 16:52:57 -0400
-X-MC-Unique: CXDpGQLkMGyBPrETzlpC7A-1
-Received: by mail-ej1-f71.google.com with SMTP id a640c23a62f3a-9b2e030e4caso148171966b.1
-        for <linux-xfs@vger.kernel.org>; Wed, 11 Oct 2023 13:52:57 -0700 (PDT)
+        with ESMTP id S231912AbjJKVI2 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 11 Oct 2023 17:08:28 -0400
+Received: from mail-pl1-x62a.google.com (mail-pl1-x62a.google.com [IPv6:2607:f8b0:4864:20::62a])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 80557A9
+        for <linux-xfs@vger.kernel.org>; Wed, 11 Oct 2023 14:08:24 -0700 (PDT)
+Received: by mail-pl1-x62a.google.com with SMTP id d9443c01a7336-1c9b95943beso2416965ad.1
+        for <linux-xfs@vger.kernel.org>; Wed, 11 Oct 2023 14:08:24 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=fromorbit-com.20230601.gappssmtp.com; s=20230601; t=1697058504; x=1697663304; darn=vger.kernel.org;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
+        bh=v7R1roJ751hIf+3hBWRUh4FPKj0adoze6R+eV6UScxw=;
+        b=FL41fwqvm1CdmXzwvAJ7hytg+m9Wqe5SDz/n53K7Ks6twwLURb86JXVCh2rXZY2QOy
+         U6TSS2Tx1mMUqPC3qdaTZb33cLGZh4fUOhMirWUpyy68knV/FhWRAccCDUjSlX/oiPUM
+         polJwywIe+rVb2Kf2ImbtYNxbWLmcG3MP0RDsV/6s3BpC3X/5tlRVJFm+q5liUk0wakT
+         FtSgpPFmoF3Eec/CFiFJ9nswAdbT0QQaardr5oWYh3seFR0pQY2fJGYWGonjGaseMSW0
+         evn7z80elN1FrnP1PIzaQMR5gReGRoCC4K9VhJHLwfu/pCIziHs31D16qafRSalL3WwP
+         UwvQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1697057576; x=1697662376;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:to
-         :from:x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=lOppXXoOOt9V3G+yuBJ4lEufGMzhjqgbwBj73RGJmf0=;
-        b=AGc9Yc/iMZH2i4gFqFHLcGsMaZxUGYWCphb4Gcq9xMJYwM75kwIAuEccKrLHEhT/25
-         eSxHBOVarYReMDxED54LnYWn66pJ4rsXDyd5tApcdIhVhCfFHNQfsF551+4xvXLoZ60w
-         WZe+CaqkYINJWMfqDlN9LUrQPTFroSoIr6TPCPvlggtupL9b9k+Q+ft0G3FRGWDXviAv
-         nvNWhZt2JWERfXAl9tmgSlWdZS9IxKWTNCfUg+E6Fbiua4kMuLuFb0iVmkKHVMJWkwEK
-         zIGTdZc+/FLfmbHRwOCdR7f8S6+M1tENR/m4DUfLQLOo8BhEFP9hCqUsaSy+d1O7gPW/
-         ynOA==
-X-Gm-Message-State: AOJu0YyUPr4O6eh16kqIOMnvJ2Pa0O5fZwK/0X3vI/Br/I9jZSiC4Lqa
-        Af5AQz4zwJVRM3JU40dH0cel3EDImW386/yKNJQXq82WKjBCdvxNcdDOmA9A7oIz3ux5nZ6q/SK
-        hjZn7yOI2gSafnXH1xJXkEpS5Ija4s0/Agt17ajashgeORGwKMEvGteVsZcLHwLktSSC1vtVZIv
-        4Svk0=
-X-Received: by 2002:a17:907:9491:b0:9a5:962c:cb6c with SMTP id dm17-20020a170907949100b009a5962ccb6cmr18436671ejc.31.1697057576338;
-        Wed, 11 Oct 2023 13:52:56 -0700 (PDT)
-X-Google-Smtp-Source: AGHT+IGrwJ9PENZPzOKAzY65D36OC5EfmZdzcYmx4aaeaehICf4kszJ0DNZZWI8vl5ZbCLsfQAAtEg==
-X-Received: by 2002:a17:907:9491:b0:9a5:962c:cb6c with SMTP id dm17-20020a170907949100b009a5962ccb6cmr18436656ejc.31.1697057575985;
-        Wed, 11 Oct 2023 13:52:55 -0700 (PDT)
-Received: from fedora.redhat.com (gw19-pha-stl-mmo-2.avonet.cz. [131.117.213.218])
-        by smtp.gmail.com with ESMTPSA id i11-20020a170906a28b00b009737b8d47b6sm10146087ejz.203.2023.10.11.13.52.55
-        for <linux-xfs@vger.kernel.org>
+        d=1e100.net; s=20230601; t=1697058504; x=1697663304;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=v7R1roJ751hIf+3hBWRUh4FPKj0adoze6R+eV6UScxw=;
+        b=hHp34zjb3jqCvQ2Ze1xZwCgOPjiX6EGoC4yJD2fkVoB9ifHXA+3KX+sN/MdnfsE9T5
+         fjXzxihBRAGIg1qg2Y0YnvsCRzXwEbcK5+Xo9yQkbYTF/Zyhn9R4ijDPZNnCf2+w7dD7
+         W/5dbwBCWp8CPIYnA+m3GG737kDK6KNeVliB3gYYOfpVPdpdcwigJSrmZnh6Ia4XV5yC
+         EcpAwkGs4g/fTIsPbSxmwYuDmp9w0bEdMJ+xUyUAWFoKO4dY6POsFh+f5225+Neo5osL
+         MWFcVslAu/+in9wKFxYUvznGsEEkvHxpF2JogY5LalHIQuRjZenEiv9qcPQYMjwxOg4C
+         Xh9Q==
+X-Gm-Message-State: AOJu0Yxdt1ucqfpRuxk4B0sYzsV3tvnWSVXJktnRKu/kkwg4rOGe4qB0
+        UIN+SD0cICHoFHreEZ/Dn11U4Q==
+X-Google-Smtp-Source: AGHT+IHoahnVOxrLmE0HFU8FljQX+3tC1IPn3XD3GHou+vM+SGN/HU0ZouOunzrnKo7Ct+914NXs7g==
+X-Received: by 2002:a17:903:2282:b0:1c5:a49e:7aa with SMTP id b2-20020a170903228200b001c5a49e07aamr28888847plh.27.1697058503754;
+        Wed, 11 Oct 2023 14:08:23 -0700 (PDT)
+Received: from dread.disaster.area (pa49-180-20-59.pa.nsw.optusnet.com.au. [49.180.20.59])
+        by smtp.gmail.com with ESMTPSA id z15-20020a1709027e8f00b001bdeb6bdfbasm291564pla.241.2023.10.11.14.08.22
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 11 Oct 2023 13:52:55 -0700 (PDT)
-From:   Pavel Reichl <preichl@redhat.com>
-To:     linux-xfs@vger.kernel.org
-Subject: [PATCH] xfs_quota: fix missing mount point warning
-Date:   Wed, 11 Oct 2023 22:50:54 +0200
-Message-ID: <20231011205054.115937-1-preichl@redhat.com>
-X-Mailer: git-send-email 2.41.0
+        Wed, 11 Oct 2023 14:08:23 -0700 (PDT)
+Received: from dave by dread.disaster.area with local (Exim 4.96)
+        (envelope-from <david@fromorbit.com>)
+        id 1qqgRI-00CYwN-15;
+        Thu, 12 Oct 2023 08:08:20 +1100
+Date:   Thu, 12 Oct 2023 08:08:20 +1100
+From:   Dave Chinner <david@fromorbit.com>
+To:     "Darrick J. Wong" <djwong@kernel.org>
+Cc:     Christoph Hellwig <hch@infradead.org>, cheng.lin130@zte.com.cn,
+        linux-xfs@vger.kernel.org, jiang.yong5@zte.com.cn,
+        wang.liang82@zte.com.cn, liu.dong3@zte.com.cn
+Subject: Re: [PATCH] xfs: pin inodes that would otherwise overflow link count
+Message-ID: <ZScOxEP5V/fQNDW8@dread.disaster.area>
+References: <20231011203350.GY21298@frogsfrogsfrogs>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20231011203350.GY21298@frogsfrogsfrogs>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-When user have mounted an XFS volume, and defined project in
-/etc/projects file that points to a directory on a different volume,
-then:
-	`xfs_quota -xc "report -a" $path_to_mounted_volume'
+On Wed, Oct 11, 2023 at 01:33:50PM -0700, Darrick J. Wong wrote:
+> From: Darrick J. Wong <djwong@kernel.org>
+> 
+> The VFS inc_nlink function does not explicitly check for integer
+> overflows in the i_nlink field.  Instead, it checks the link count
+> against s_max_links in the vfs_{link,create,rename} functions.  XFS
+> sets the maximum link count to 2.1 billion, so integer overflows should
+> not be a problem.
+> 
+> However.  It's possible that online repair could find that a file has
+> more than four billion links, particularly if the link count got
 
-complains with:
-	"xfs_quota: cannot find mount point for path \
-`directory_from_projects': Invalid argument"
+I don't think we should be attempting to fix that online - if we've
+really found an inode with 4 billion links then something else has
+gone wrong during repair because we shouldn't get there in the first
+place.
 
-unlike `xfs_quota -xc "report -a"' which works as expected and no
-warning is printed.
+IOWs, we should be preventing a link count overflow at the time 
+that the link count is being added and returning -EMLINK errors to
+that operation. This prevents overflow, and so if repair does find
+more than 2.1 billion links to the inode, there's clearly something
+else very wrong (either in repair or a bug in the filesystem that
+has leaked many, many link counts).
 
-This is happening because in the 1st call we pass to xfs_quota command
-the $path_to_mounted_volume argument which says to xfs_quota not to
-look for all mounted volumes on the system, but use only those passed
-to the command and ignore all others (This behavior is intended as an
-optimization for systems with huge number of mounted volumes). After
-that, while projects are initialized, the project's directories on
-other volumes are obviously not in searched subset of volumes and
-warning is printed.
+huh.
 
-I propose to fix this behavior by conditioning the printing of warning
-only if all mounted volumes are searched.
+We set sb->s_max_links = XFS_MAXLINKS, but nowhere does the VFS
+enforce that, nor does any XFS code. The lack of checking or
+enforcement of filesystem max link count anywhere is ... not ideal.
 
-Signed-off-by: Pavel Reichl <preichl@redhat.com>
----
- libfrog/paths.c | 18 +++++++++++-------
- 1 file changed, 11 insertions(+), 7 deletions(-)
+Regardless, I don't think fixing nlink overflow cases should be done
+online. A couple of billion links to a single inode takes a
+*long* time to create and even longer to validate (and take a -lot-
+of memory).  Hence I think we should just punt "more than 2.1
+billion links" to the offline repair, because online repair can't do
+anything to actually find whatever caused the overflow in the
+first place, nor can it actually fix it - it should never have
+happened in the first place....
 
-diff --git a/libfrog/paths.c b/libfrog/paths.c
-index abb29a237..d8c42163a 100644
---- a/libfrog/paths.c
-+++ b/libfrog/paths.c
-@@ -457,7 +457,8 @@ fs_table_insert_mount(
- 
- static int
- fs_table_initialise_projects(
--	char		*project)
-+	char		*project,
-+	bool		all_mps_initialised)
- {
- 	fs_project_path_t *path;
- 	fs_path_t	*fs;
-@@ -473,8 +474,10 @@ fs_table_initialise_projects(
- 			continue;
- 		fs = fs_mount_point_from_path(path->pp_pathname);
- 		if (!fs) {
--			fprintf(stderr, _("%s: cannot find mount point for path `%s': %s\n"),
--					progname, path->pp_pathname, strerror(errno));
-+			if (all_mps_initialised)
-+				fprintf(stderr,
-+	_("%s: cannot find mount point for path `%s': %s\n"), progname,
-+					path->pp_pathname, strerror(errno));
- 			continue;
- 		}
- 		(void) fs_table_insert(path->pp_pathname, path->pp_prid,
-@@ -495,11 +498,12 @@ fs_table_initialise_projects(
- 
- static void
- fs_table_insert_project(
--	char		*project)
-+	char		*project,
-+	bool		all_mps_initialised)
- {
- 	int		error;
- 
--	error = fs_table_initialise_projects(project);
-+	error = fs_table_initialise_projects(project, all_mps_initialised);
- 	if (error)
- 		fprintf(stderr, _("%s: cannot setup path for project %s: %s\n"),
- 			progname, project, strerror(error));
-@@ -532,9 +536,9 @@ fs_table_initialise(
- 	}
- 	if (project_count) {
- 		for (i = 0; i < project_count; i++)
--			fs_table_insert_project(projects[i]);
-+			fs_table_insert_project(projects[i], mount_count == 0);
- 	} else {
--		error = fs_table_initialise_projects(NULL);
-+		error = fs_table_initialise_projects(NULL, mount_count == 0);
- 		if (error)
- 			goto out_error;
- 	}
+> corrupted while creating hardlinks to the file.  The di_nlinkv2 field is
+> not large enough to store a value larger than 2^32, so we ought to
+> define a magic pin value of ~0U which means that the inode never gets
+> deleted.  This will prevent a UAF error if the repair finds this
+> situation and users begin deleting links to the file.
+
+I think that's fine as a defence against implementation bugs, but I
+don't think that it really makes any real difference to the "repair
+might find an overflow" case...
+
+> 
+> Signed-off-by: Darrick J. Wong <djwong@kernel.org>
+> ---
+>  fs/xfs/libxfs/xfs_format.h |    6 ++++++
+>  fs/xfs/scrub/nlinks.c      |    8 ++++----
+>  fs/xfs/scrub/repair.c      |   12 ++++++------
+>  fs/xfs/xfs_inode.c         |   28 +++++++++++++++++++++++-----
+>  4 files changed, 39 insertions(+), 15 deletions(-)
+> 
+> diff --git a/fs/xfs/libxfs/xfs_format.h b/fs/xfs/libxfs/xfs_format.h
+> index 6409dd22530f2..320522b887bb3 100644
+> --- a/fs/xfs/libxfs/xfs_format.h
+> +++ b/fs/xfs/libxfs/xfs_format.h
+> @@ -896,6 +896,12 @@ static inline uint xfs_dinode_size(int version)
+>   */
+>  #define	XFS_MAXLINK		((1U << 31) - 1U)
+>  
+> +/*
+> + * Any file that hits the maximum ondisk link count should be pinned to avoid
+> + * a use-after-free situation.
+> + */
+> +#define XFS_NLINK_PINNED	(~0U)
+> +
+>  /*
+>   * Values for di_format
+>   *
+> diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
+> index 4db2c2a6538d6..30604e11182c4 100644
+> --- a/fs/xfs/xfs_inode.c
+> +++ b/fs/xfs/xfs_inode.c
+> @@ -910,15 +910,25 @@ xfs_init_new_inode(
+>   */
+>  static int			/* error */
+>  xfs_droplink(
+> -	xfs_trans_t *tp,
+> -	xfs_inode_t *ip)
+> +	struct xfs_trans	*tp,
+> +	struct xfs_inode	*ip)
+>  {
+> +	struct inode		*inode = VFS_I(ip);
+> +
+>  	xfs_trans_ichgtime(tp, ip, XFS_ICHGTIME_CHG);
+>  
+> -	drop_nlink(VFS_I(ip));
+> +	if (inode->i_nlink == 0) {
+> +		xfs_info_ratelimited(tp->t_mountp,
+> + "Inode 0x%llx link count dropped below zero.  Pinning link count.",
+> +				ip->i_ino);
+> +		set_nlink(inode, XFS_NLINK_PINNED);
+> +	}
+> +	if (inode->i_nlink != XFS_NLINK_PINNED)
+> +		drop_nlink(inode);
+> +
+>  	xfs_trans_log_inode(tp, ip, XFS_ILOG_CORE);
+
+I think the di_nlink field now needs to be checked by verifiers to
+ensure the value is in the range of:
+
+	(0 <= di_nlink <= XFS_MAXLINKS || di_nlink == XFS_NLINK_PINNED)
+
+And we need to ensure that in xfs_bumplink() - or earlier (top avoid
+dirty xaction cancle shutdowns) - that adding a count to di_nlink is
+not going to exceed XFS_MAXLINKS....
+
+Cheers,
+
+Dave.
 -- 
-2.41.0
-
+Dave Chinner
+david@fromorbit.com
