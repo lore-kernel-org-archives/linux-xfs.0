@@ -2,36 +2,37 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C0724CDB470
-	for <linux-xfs@archiver.kernel.org>; Wed, 11 Oct 2023 18:07:51 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 13A5ACDB470
+	for <linux-xfs@archiver.kernel.org>; Wed, 11 Oct 2023 18:08:07 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230234AbjJKSHv (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 11 Oct 2023 14:07:51 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54874 "EHLO
+        id S233052AbjJKSIG (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 11 Oct 2023 14:08:06 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56634 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232891AbjJKSHu (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 11 Oct 2023 14:07:50 -0400
+        with ESMTP id S232554AbjJKSIF (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 11 Oct 2023 14:08:05 -0400
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id F0BC79D
-        for <linux-xfs@vger.kernel.org>; Wed, 11 Oct 2023 11:07:48 -0700 (PDT)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 8CA9BC433C8;
-        Wed, 11 Oct 2023 18:07:48 +0000 (UTC)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9DE3F93
+        for <linux-xfs@vger.kernel.org>; Wed, 11 Oct 2023 11:08:04 -0700 (PDT)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 3E83BC433C8;
+        Wed, 11 Oct 2023 18:08:04 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1697047668;
-        bh=qLTdLXQPpVDUI7gHgXCEkqPq9Uf6jMkrQmLwSq7cpfk=;
+        s=k20201202; t=1697047684;
+        bh=LaNhfRXKS2ioFnsBobt0+wEUePAVusLRq6mseeaqmVs=;
         h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-        b=Kx257vGwgq6ubwE7N5eND+hoJlWiJmdzjhR3y47trVccibYWnnsGNzEwJia/yYh2X
-         olsyrgS2cJ2knv7tuNOid8iij/fgzYbknWZiarxwiJHbphWhr2fTM3uAkIFvsPiKvt
-         RAAyMbpyQ5pGuQd/ZZnK9Tpg3AdNcxn6e2tIXzV4rTBuzVuMbwXvFfI3kezKnKl6Ut
-         QuGWQO7zWuna94D0WrdwGQEUmcszwvP8p5xyOJ4mWB8PBhqobQpvZDAtkE05qlhFv3
-         AIUeBc1OVqMLPZjwnC4UAZ535tTibXqwfUcF7vAVu7d3MD23iypoOY5+YCYlT0Q7+S
-         kHO+t8aW+Y8Qg==
-Date:   Wed, 11 Oct 2023 11:07:48 -0700
-Subject: [PATCH 6/8] xfs: use accessor functions for bitmap words
+        b=hfryiDaduczRLt3whAxwgfCehWgeG5TBxNRDI8ts1MJvkzEHWFuXFeicsrmPe3Qra
+         9aA5nlYbgEfWotJh4WTEVLNh9hmAabMB/F6TI3brszG7b4JRLVG1FMw/IE0DxnVwfB
+         5CruhCyqAf7xa1Al+uOJOC55WKDKDpPEstX9f2DT0VrWFTN8IGSHFHqBzT+jgarZ3w
+         pUXBnF9uTauzCkCyVxVwXlzLZ3o2cgjQherVLbn0BpSWi0QYP2SqpZXKjoAsxXX33x
+         HgnAJYousPEnNTwMnOQ637OO3EWHlh/A0x9MAuabG6aUje51z7WFqqUB008icvXeWy
+         3pip5sf/URdKg==
+Date:   Wed, 11 Oct 2023 11:08:03 -0700
+Subject: [PATCH 7/8] xfs: create helpers for rtsummary block/wordcount
+ computations
 From:   "Darrick J. Wong" <djwong@kernel.org>
 To:     djwong@kernel.org
 Cc:     linux-xfs@vger.kernel.org, osandov@osandov.com, hch@lst.de
-Message-ID: <169704721721.1773834.17403646854103787383.stgit@frogsfrogsfrogs>
+Message-ID: <169704721736.1773834.4052037252966105617.stgit@frogsfrogsfrogs>
 In-Reply-To: <169704721623.1773834.8031427054893583456.stgit@frogsfrogsfrogs>
 References: <169704721623.1773834.8031427054893583456.stgit@frogsfrogsfrogs>
 User-Agent: StGit/0.19
@@ -44,339 +45,151 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-Create get and set functions for rtbitmap words so that we can redefine
-the ondisk format with a specific endianness.  Note that this requires
-the definition of a distinct type for ondisk rtbitmap words so that the
-compiler can perform proper typechecking as we go back and forth.
-
-In the upcoming rtgroups feature, we're going to fix the problem that
-rtwords are written in host endian order, which means we'll need the
-distinct rtword/rtword_raw types.
+Create helper functions that compute the number of blocks or words
+necessary to store the rt summary file.
 
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 ---
- fs/xfs/libxfs/xfs_format.h   |    8 ++++
- fs/xfs/libxfs/xfs_rtbitmap.c |   78 +++++++++++++++++++++++++++++++-----------
- fs/xfs/libxfs/xfs_rtbitmap.h |   10 ++++-
- fs/xfs/xfs_ondisk.h          |    3 ++
- 4 files changed, 75 insertions(+), 24 deletions(-)
+ fs/xfs/libxfs/xfs_rtbitmap.c |   29 +++++++++++++++++++++++++++++
+ fs/xfs/libxfs/xfs_rtbitmap.h |    7 +++++++
+ fs/xfs/scrub/rtsummary.c     |    5 ++++-
+ fs/xfs/xfs_rtalloc.c         |   17 +++++++----------
+ 4 files changed, 47 insertions(+), 11 deletions(-)
 
 
-diff --git a/fs/xfs/libxfs/xfs_format.h b/fs/xfs/libxfs/xfs_format.h
-index 1254834ab5c9e..8e880ec217396 100644
---- a/fs/xfs/libxfs/xfs_format.h
-+++ b/fs/xfs/libxfs/xfs_format.h
-@@ -728,6 +728,14 @@ struct xfs_agfl {
- 	    ASSERT(xfs_daddr_to_agno(mp, d) == \
- 		   xfs_daddr_to_agno(mp, (d) + (len) - 1)))
- 
-+/*
-+ * Realtime bitmap information is accessed by the word, which is currently
-+ * stored in host-endian format.
-+ */
-+union xfs_rtword_ondisk {
-+	__u32		raw;
-+};
-+
- /*
-  * XFS Timestamps
-  * ==============
 diff --git a/fs/xfs/libxfs/xfs_rtbitmap.c b/fs/xfs/libxfs/xfs_rtbitmap.c
-index 2a453f0215ee0..b2b1a1aec3422 100644
+index b2b1a1aec3422..be5c793da46c9 100644
 --- a/fs/xfs/libxfs/xfs_rtbitmap.c
 +++ b/fs/xfs/libxfs/xfs_rtbitmap.c
-@@ -94,6 +94,25 @@ xfs_rtbuf_get(
- 	return 0;
+@@ -1205,3 +1205,32 @@ xfs_rtbitmap_wordcount(
+ 	blocks = xfs_rtbitmap_blockcount(mp, rtextents);
+ 	return XFS_FSB_TO_B(mp, blocks) >> XFS_WORDLOG;
  }
- 
-+/* Convert an ondisk bitmap word to its incore representation. */
-+inline xfs_rtword_t
-+xfs_rtbitmap_getword(
++
++/* Compute the number of rtsummary blocks needed to track the given rt space. */
++xfs_filblks_t
++xfs_rtsummary_blockcount(
 +	struct xfs_mount	*mp,
-+	union xfs_rtword_ondisk	*wordptr)
++	unsigned int		rsumlevels,
++	xfs_extlen_t		rbmblocks)
 +{
-+	return wordptr->raw;
++	unsigned long long	rsumwords;
++
++	rsumwords = (unsigned long long)rsumlevels * rbmblocks;
++	return XFS_B_TO_FSB(mp, rsumwords << XFS_WORDLOG);
 +}
 +
-+/* Set an ondisk bitmap word from an incore representation. */
-+inline void
-+xfs_rtbitmap_setword(
++/*
++ * Compute the number of rtsummary info words needed to populate every block of
++ * a summary file that is large enough to track the given rt space.
++ */
++unsigned long long
++xfs_rtsummary_wordcount(
 +	struct xfs_mount	*mp,
-+	union xfs_rtword_ondisk	*wordptr,
-+	xfs_rtword_t		incore)
++	unsigned int		rsumlevels,
++	xfs_extlen_t		rbmblocks)
 +{
-+	wordptr->raw = incore;
-+}
++	xfs_filblks_t		blocks;
 +
- /*
-  * Searching backward from start to limit, find the first block whose
-  * allocated/free state is different from start's.
-@@ -106,7 +125,7 @@ xfs_rtfind_back(
- 	xfs_rtxnum_t	limit,		/* last rtext to look at */
- 	xfs_rtxnum_t	*rtx)		/* out: start rtext found */
- {
--	xfs_rtword_t	*b;		/* current word in buffer */
-+	union xfs_rtword_ondisk *b;		/* current word in buffer */
- 	int		bit;		/* bit number in the word */
- 	xfs_fileoff_t	block;		/* bitmap block number */
- 	struct xfs_buf	*bp;		/* buf for the block */
-@@ -117,6 +136,7 @@ xfs_rtfind_back(
- 	xfs_rtword_t	mask;		/* mask of relevant bits for value */
- 	xfs_rtword_t	want;		/* mask for "good" values */
- 	xfs_rtword_t	wdiff;		/* difference from wanted value */
-+	xfs_rtword_t	incore;
- 	int		word;		/* word number in the buffer */
- 
- 	/*
-@@ -139,7 +159,8 @@ xfs_rtfind_back(
- 	 * Compute match value, based on the bit at start: if 1 (free)
- 	 * then all-ones, else all-zeroes.
- 	 */
--	want = (*b & ((xfs_rtword_t)1 << bit)) ? -1 : 0;
-+	incore = xfs_rtbitmap_getword(mp, b);
-+	want = (incore & ((xfs_rtword_t)1 << bit)) ? -1 : 0;
- 	/*
- 	 * If the starting position is not word-aligned, deal with the
- 	 * partial word.
-@@ -156,7 +177,7 @@ xfs_rtfind_back(
- 		 * Calculate the difference between the value there
- 		 * and what we're looking for.
- 		 */
--		if ((wdiff = (*b ^ want) & mask)) {
-+		if ((wdiff = (incore ^ want) & mask)) {
- 			/*
- 			 * Different.  Mark where we are and return.
- 			 */
-@@ -202,7 +223,8 @@ xfs_rtfind_back(
- 		/*
- 		 * Compute difference between actual and desired value.
- 		 */
--		if ((wdiff = *b ^ want)) {
-+		incore = xfs_rtbitmap_getword(mp, b);
-+		if ((wdiff = incore ^ want)) {
- 			/*
- 			 * Different, mark where we are and return.
- 			 */
-@@ -249,7 +271,8 @@ xfs_rtfind_back(
- 		/*
- 		 * Compute difference between actual and desired value.
- 		 */
--		if ((wdiff = (*b ^ want) & mask)) {
-+		incore = xfs_rtbitmap_getword(mp, b);
-+		if ((wdiff = (incore ^ want) & mask)) {
- 			/*
- 			 * Different, mark where we are and return.
- 			 */
-@@ -280,7 +303,7 @@ xfs_rtfind_forw(
- 	xfs_rtxnum_t	limit,		/* last rtext to look at */
- 	xfs_rtxnum_t	*rtx)		/* out: start rtext found */
- {
--	xfs_rtword_t	*b;		/* current word in buffer */
-+	union xfs_rtword_ondisk *b;		/* current word in buffer */
- 	int		bit;		/* bit number in the word */
- 	xfs_fileoff_t	block;		/* bitmap block number */
- 	struct xfs_buf	*bp;		/* buf for the block */
-@@ -291,6 +314,7 @@ xfs_rtfind_forw(
- 	xfs_rtword_t	mask;		/* mask of relevant bits for value */
- 	xfs_rtword_t	want;		/* mask for "good" values */
- 	xfs_rtword_t	wdiff;		/* difference from wanted value */
-+	xfs_rtword_t	incore;
- 	int		word;		/* word number in the buffer */
- 
- 	/*
-@@ -313,7 +337,8 @@ xfs_rtfind_forw(
- 	 * Compute match value, based on the bit at start: if 1 (free)
- 	 * then all-ones, else all-zeroes.
- 	 */
--	want = (*b & ((xfs_rtword_t)1 << bit)) ? -1 : 0;
-+	incore = xfs_rtbitmap_getword(mp, b);
-+	want = (incore & ((xfs_rtword_t)1 << bit)) ? -1 : 0;
- 	/*
- 	 * If the starting position is not word-aligned, deal with the
- 	 * partial word.
-@@ -329,7 +354,7 @@ xfs_rtfind_forw(
- 		 * Calculate the difference between the value there
- 		 * and what we're looking for.
- 		 */
--		if ((wdiff = (*b ^ want) & mask)) {
-+		if ((wdiff = (incore ^ want) & mask)) {
- 			/*
- 			 * Different.  Mark where we are and return.
- 			 */
-@@ -375,7 +400,8 @@ xfs_rtfind_forw(
- 		/*
- 		 * Compute difference between actual and desired value.
- 		 */
--		if ((wdiff = *b ^ want)) {
-+		incore = xfs_rtbitmap_getword(mp, b);
-+		if ((wdiff = incore ^ want)) {
- 			/*
- 			 * Different, mark where we are and return.
- 			 */
-@@ -420,7 +446,8 @@ xfs_rtfind_forw(
- 		/*
- 		 * Compute difference between actual and desired value.
- 		 */
--		if ((wdiff = (*b ^ want) & mask)) {
-+		incore = xfs_rtbitmap_getword(mp, b);
-+		if ((wdiff = (incore ^ want) & mask)) {
- 			/*
- 			 * Different, mark where we are and return.
- 			 */
-@@ -546,15 +573,16 @@ xfs_rtmodify_range(
- 	xfs_rtxlen_t	len,		/* length of extent to modify */
- 	int		val)		/* 1 for free, 0 for allocated */
- {
--	xfs_rtword_t	*b;		/* current word in buffer */
-+	union xfs_rtword_ondisk *b;		/* current word in buffer */
- 	int		bit;		/* bit number in the word */
- 	xfs_fileoff_t	block;		/* bitmap block number */
- 	struct xfs_buf	*bp;		/* buf for the block */
- 	int		error;		/* error value */
--	xfs_rtword_t	*first;		/* first used word in the buffer */
-+	union xfs_rtword_ondisk *first;		/* first used word in the buffer */
- 	int		i;		/* current bit number rel. to start */
- 	int		lastbit;	/* last useful bit in word */
- 	xfs_rtword_t	mask;		/* mask o frelevant bits for value */
-+	xfs_rtword_t	incore;
- 	int		word;		/* word number in the buffer */
- 
- 	/*
-@@ -592,10 +620,12 @@ xfs_rtmodify_range(
- 		/*
- 		 * Set/clear the active bits.
- 		 */
-+		incore = xfs_rtbitmap_getword(mp, b);
- 		if (val)
--			*b |= mask;
-+			incore |= mask;
- 		else
--			*b &= ~mask;
-+			incore &= ~mask;
-+		xfs_rtbitmap_setword(mp, b, incore);
- 		i = lastbit - bit;
- 		/*
- 		 * Go on to the next block if that's where the next word is
-@@ -636,7 +666,7 @@ xfs_rtmodify_range(
- 		/*
- 		 * Set the word value correctly.
- 		 */
--		*b = val;
-+		xfs_rtbitmap_setword(mp, b, val);
- 		i += XFS_NBWORD;
- 		/*
- 		 * Go on to the next block if that's where the next word is
-@@ -676,10 +706,12 @@ xfs_rtmodify_range(
- 		/*
- 		 * Set/clear the active bits.
- 		 */
-+		incore = xfs_rtbitmap_getword(mp, b);
- 		if (val)
--			*b |= mask;
-+			incore |= mask;
- 		else
--			*b &= ~mask;
-+			incore &= ~mask;
-+		xfs_rtbitmap_setword(mp, b, incore);
- 		b++;
- 	}
- 	/*
-@@ -782,7 +814,7 @@ xfs_rtcheck_range(
- 	xfs_rtxnum_t	*new,		/* out: first rtext not matching */
- 	int		*stat)		/* out: 1 for matches, 0 for not */
- {
--	xfs_rtword_t	*b;		/* current word in buffer */
-+	union xfs_rtword_ondisk *b;		/* current word in buffer */
- 	int		bit;		/* bit number in the word */
- 	xfs_fileoff_t	block;		/* bitmap block number */
- 	struct xfs_buf	*bp;		/* buf for the block */
-@@ -791,6 +823,7 @@ xfs_rtcheck_range(
- 	xfs_rtxnum_t	lastbit;	/* last useful bit in word */
- 	xfs_rtword_t	mask;		/* mask of relevant bits for value */
- 	xfs_rtword_t	wdiff;		/* difference from wanted value */
-+	xfs_rtword_t	incore;
- 	int		word;		/* word number in the buffer */
- 
- 	/*
-@@ -831,7 +864,8 @@ xfs_rtcheck_range(
- 		/*
- 		 * Compute difference between actual and desired value.
- 		 */
--		if ((wdiff = (*b ^ val) & mask)) {
-+		incore = xfs_rtbitmap_getword(mp, b);
-+		if ((wdiff = (incore ^ val) & mask)) {
- 			/*
- 			 * Different, compute first wrong bit and return.
- 			 */
-@@ -878,7 +912,8 @@ xfs_rtcheck_range(
- 		/*
- 		 * Compute difference between actual and desired value.
- 		 */
--		if ((wdiff = *b ^ val)) {
-+		incore = xfs_rtbitmap_getword(mp, b);
-+		if ((wdiff = incore ^ val)) {
- 			/*
- 			 * Different, compute first wrong bit and return.
- 			 */
-@@ -924,7 +959,8 @@ xfs_rtcheck_range(
- 		/*
- 		 * Compute difference between actual and desired value.
- 		 */
--		if ((wdiff = (*b ^ val) & mask)) {
-+		incore = xfs_rtbitmap_getword(mp, b);
-+		if ((wdiff = (incore ^ val) & mask)) {
- 			/*
- 			 * Different, compute first wrong bit and return.
- 			 */
++	blocks = xfs_rtsummary_blockcount(mp, rsumlevels, rbmblocks);
++	return XFS_FSB_TO_B(mp, blocks) >> XFS_WORDLOG;
++}
 diff --git a/fs/xfs/libxfs/xfs_rtbitmap.h b/fs/xfs/libxfs/xfs_rtbitmap.h
-index 308ce814a908a..0a3c6299af8e2 100644
+index 0a3c6299af8e2..a66357cf002be 100644
 --- a/fs/xfs/libxfs/xfs_rtbitmap.h
 +++ b/fs/xfs/libxfs/xfs_rtbitmap.h
-@@ -122,18 +122,18 @@ xfs_rbmblock_to_rtx(
- }
- 
- /* Return a pointer to a bitmap word within a rt bitmap block buffer. */
--static inline xfs_rtword_t *
-+static inline union xfs_rtword_ondisk *
- xfs_rbmbuf_wordptr(
- 	void			*buf,
- 	unsigned int		rbmword)
- {
--	xfs_rtword_t		*wordp = buf;
-+	union xfs_rtword_ondisk	*wordp = buf;
- 
- 	return &wordp[rbmword];
- }
- 
- /* Return a pointer to a bitmap word within a rt bitmap block. */
--static inline xfs_rtword_t *
-+static inline union xfs_rtword_ondisk *
- xfs_rbmblock_wordptr(
- 	struct xfs_buf		*bp,
- 	unsigned int		rbmword)
-@@ -266,6 +266,10 @@ xfs_filblks_t xfs_rtbitmap_blockcount(struct xfs_mount *mp, xfs_rtbxlen_t
- 		rtextents);
- unsigned long long xfs_rtbitmap_wordcount(struct xfs_mount *mp,
- 		xfs_rtbxlen_t rtextents);
-+xfs_rtword_t xfs_rtbitmap_getword(struct xfs_mount *mp,
-+		union xfs_rtword_ondisk *wordptr);
-+void xfs_rtbitmap_setword(struct xfs_mount *mp,
-+		union xfs_rtword_ondisk *wordptr, xfs_rtword_t incore);
+@@ -270,6 +270,11 @@ xfs_rtword_t xfs_rtbitmap_getword(struct xfs_mount *mp,
+ 		union xfs_rtword_ondisk *wordptr);
+ void xfs_rtbitmap_setword(struct xfs_mount *mp,
+ 		union xfs_rtword_ondisk *wordptr, xfs_rtword_t incore);
++
++xfs_filblks_t xfs_rtsummary_blockcount(struct xfs_mount *mp,
++		unsigned int rsumlevels, xfs_extlen_t rbmblocks);
++unsigned long long xfs_rtsummary_wordcount(struct xfs_mount *mp,
++		unsigned int rsumlevels, xfs_extlen_t rbmblocks);
  #else /* CONFIG_XFS_RT */
  # define xfs_rtfree_extent(t,b,l)			(-ENOSYS)
  # define xfs_rtfree_blocks(t,rb,rl)			(-ENOSYS)
-diff --git a/fs/xfs/xfs_ondisk.h b/fs/xfs/xfs_ondisk.h
-index 2bbad8bfc6293..efdba05f90aed 100644
---- a/fs/xfs/xfs_ondisk.h
-+++ b/fs/xfs/xfs_ondisk.h
-@@ -72,6 +72,9 @@ xfs_check_ondisk_structs(void)
- 	XFS_CHECK_STRUCT_SIZE(xfs_attr_leaf_map_t,		4);
- 	XFS_CHECK_STRUCT_SIZE(xfs_attr_leaf_name_local_t,	4);
+@@ -284,6 +289,8 @@ xfs_rtbitmap_blockcount(struct xfs_mount *mp, xfs_rtbxlen_t rtextents)
+ 	return 0;
+ }
+ # define xfs_rtbitmap_wordcount(mp, r)			(0)
++# define xfs_rtsummary_blockcount(mp, l, b)		(0)
++# define xfs_rtsummary_wordcount(mp, l, b)		(0)
+ #endif /* CONFIG_XFS_RT */
  
-+	/* realtime structures */
-+	XFS_CHECK_STRUCT_SIZE(union xfs_rtword_ondisk,		4);
-+
+ #endif /* __XFS_RTBITMAP_H__ */
+diff --git a/fs/xfs/scrub/rtsummary.c b/fs/xfs/scrub/rtsummary.c
+index 29cd26b7779d1..3fcf7de9f685f 100644
+--- a/fs/xfs/scrub/rtsummary.c
++++ b/fs/xfs/scrub/rtsummary.c
+@@ -41,6 +41,7 @@ xchk_setup_rtsummary(
+ 	struct xfs_mount	*mp = sc->mp;
+ 	char			*descr;
+ 	size_t			bufsize = mp->m_sb.sb_blocksize;
++	unsigned int		wordcnt;
+ 	unsigned int		resblks = 0;
+ 	int			error;
+ 
+@@ -54,8 +55,10 @@ xchk_setup_rtsummary(
+ 	 * Create an xfile to construct a new rtsummary file.  The xfile allows
+ 	 * us to avoid pinning kernel memory for this purpose.
+ 	 */
++	wordcnt = xfs_rtsummary_wordcount(mp, mp->m_rsumlevels,
++			mp->m_sb.sb_rbmblocks);
+ 	descr = xchk_xfile_descr(sc, "realtime summary file");
+-	error = xfile_create(descr, mp->m_rsumsize, &sc->xfile);
++	error = xfile_create(descr, wordcnt << XFS_WORDLOG, &sc->xfile);
+ 	kfree(descr);
+ 	if (error)
+ 		return error;
+diff --git a/fs/xfs/xfs_rtalloc.c b/fs/xfs/xfs_rtalloc.c
+index 32e3ac40e28f7..2e7857a528408 100644
+--- a/fs/xfs/xfs_rtalloc.c
++++ b/fs/xfs/xfs_rtalloc.c
+@@ -999,8 +999,7 @@ xfs_growfs_rt(
+ 	nrbmblocks = xfs_rtbitmap_blockcount(mp, nrextents);
+ 	nrextslog = xfs_highbit32(nrextents);
+ 	nrsumlevels = nrextslog + 1;
+-	nrsumsize = (uint)sizeof(xfs_suminfo_t) * nrsumlevels * nrbmblocks;
+-	nrsumblocks = XFS_B_TO_FSB(mp, nrsumsize);
++	nrsumblocks = xfs_rtsummary_blockcount(mp, nrsumlevels, nrbmblocks);
+ 	nrsumsize = XFS_FSB_TO_B(mp, nrsumblocks);
  	/*
- 	 * m68k has problems with xfs_attr_leaf_name_remote_t, but we pad it to
- 	 * 4 bytes anyway so it's not obviously a problem.  Hence for the moment
+ 	 * New summary size can't be more than half the size of
+@@ -1061,10 +1060,8 @@ xfs_growfs_rt(
+ 		ASSERT(nsbp->sb_rextents != 0);
+ 		nsbp->sb_rextslog = xfs_highbit32(nsbp->sb_rextents);
+ 		nrsumlevels = nmp->m_rsumlevels = nsbp->sb_rextslog + 1;
+-		nrsumsize =
+-			(uint)sizeof(xfs_suminfo_t) * nrsumlevels *
+-			nsbp->sb_rbmblocks;
+-		nrsumblocks = XFS_B_TO_FSB(mp, nrsumsize);
++		nrsumblocks = xfs_rtsummary_blockcount(mp, nrsumlevels,
++				nsbp->sb_rbmblocks);
+ 		nmp->m_rsumsize = nrsumsize = XFS_FSB_TO_B(mp, nrsumblocks);
+ 		/*
+ 		 * Start a transaction, get the log reservation.
+@@ -1270,6 +1267,7 @@ xfs_rtmount_init(
+ 	struct xfs_buf		*bp;	/* buffer for last block of subvolume */
+ 	struct xfs_sb		*sbp;	/* filesystem superblock copy in mount */
+ 	xfs_daddr_t		d;	/* address of last block of subvolume */
++	unsigned int		rsumblocks;
+ 	int			error;
+ 
+ 	sbp = &mp->m_sb;
+@@ -1281,10 +1279,9 @@ xfs_rtmount_init(
+ 		return -ENODEV;
+ 	}
+ 	mp->m_rsumlevels = sbp->sb_rextslog + 1;
+-	mp->m_rsumsize =
+-		(uint)sizeof(xfs_suminfo_t) * mp->m_rsumlevels *
+-		sbp->sb_rbmblocks;
+-	mp->m_rsumsize = roundup(mp->m_rsumsize, sbp->sb_blocksize);
++	rsumblocks = xfs_rtsummary_blockcount(mp, mp->m_rsumlevels,
++			mp->m_sb.sb_rbmblocks);
++	mp->m_rsumsize = XFS_FSB_TO_B(mp, rsumblocks);
+ 	mp->m_rbmip = mp->m_rsumip = NULL;
+ 	/*
+ 	 * Check that the realtime section is an ok size.
 
