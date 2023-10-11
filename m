@@ -2,255 +2,170 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3AAAFCDB475
-	for <linux-xfs@archiver.kernel.org>; Wed, 11 Oct 2023 18:47:14 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B381CCDB475
+	for <linux-xfs@archiver.kernel.org>; Wed, 11 Oct 2023 18:48:39 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232496AbjJKSrN (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 11 Oct 2023 14:47:13 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37262 "EHLO
+        id S232743AbjJKSsj (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 11 Oct 2023 14:48:39 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36828 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233027AbjJKSrN (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 11 Oct 2023 14:47:13 -0400
+        with ESMTP id S232519AbjJKSsi (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 11 Oct 2023 14:48:38 -0400
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D6698B7
-        for <linux-xfs@vger.kernel.org>; Wed, 11 Oct 2023 11:47:09 -0700 (PDT)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 72C4FC433C8;
-        Wed, 11 Oct 2023 18:47:09 +0000 (UTC)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 823B993
+        for <linux-xfs@vger.kernel.org>; Wed, 11 Oct 2023 11:48:37 -0700 (PDT)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 1FA2AC433C8;
+        Wed, 11 Oct 2023 18:48:37 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1697050029;
-        bh=n/iTOOI8M9sdxw8tpDCKVbuwmoL7GWdiRySmoGXwni4=;
+        s=k20201202; t=1697050117;
+        bh=jbbfJiF62YBYzMD/pdwAlQvbc8jryuoyLG9lrd9hXAk=;
         h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=QV5ZDLqEZ0D3QDDDkDO2SuOUviP5ER8zfJJCzKNLTwOpUJLzh2DnRVr6m1pfn8FYU
-         sCVoVcVjK3vUtdAi6Tss83sydJUtqUsYLKl0XDMIT+ICUGkHqK3qxbXIeYxwBkDdoq
-         3i2KQ2VZqb9J9IMKOZJIyAiK1ZklsaazaPBtX4jFFU+iBj9x5DHrhBa7iaj6/52KoC
-         u/e4X3wc3onFzV8X/Acaq7gZ5XuGpOoUYSr7vkcVUbWUrsDVcJjI+Z67XLc55DxZGH
-         M4/wLbBtOvhs4xLLLo4geAVq8R4sn1lRbISej+ffp9kR7TGsrLbwoimjpp1xR4LMFg
-         Igx6k85mU9IuA==
-Date:   Wed, 11 Oct 2023 11:47:09 -0700
+        b=BmvM1TrK3oFqA63mewqBXYw1vtbL/dH4zd88ElOSON47K9Sc5Ir7fOvTP/pOeMQe+
+         LoSLKygV63WMpmEhVFKjOtNYyi1gqgtBtoh+g887d1Leca/IU4vbkvkXD9p4pjKzAn
+         9HJPEDzF3JgaKiN73JJy+jYKYGaV8ORne/o7PMr4I6gBJSZ/1s0gSrj1oINq8BrYpJ
+         5Ai7qaK6kR5IsrhrZTmSHyDH9kHOgQW8iyyNqCUYsY3WXGRq8Am+sJTzLq19Dxmkuf
+         OEiPjDft2vubQ2tGxwEcqqLbQTQPF7kWT32eNcKBmTWJYJzs6pFyAAIFWE6tKzPtPg
+         VKORKQbI3CoDg==
+Date:   Wed, 11 Oct 2023 11:48:36 -0700
 From:   "Darrick J. Wong" <djwong@kernel.org>
 To:     Andrey Albershteyn <aalbersh@redhat.com>
 Cc:     linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
         fsverity@lists.linux.dev, ebiggers@kernel.org, david@fromorbit.com,
         dchinner@redhat.com
-Subject: Re: [PATCH v3 16/28] xfs: add bio_set and submit_io for ioend
- post-processing
-Message-ID: <20231011184709.GP21298@frogsfrogsfrogs>
+Subject: Re: [PATCH v3 17/28] xfs: add attribute type for fs-verity
+Message-ID: <20231011184836.GQ21298@frogsfrogsfrogs>
 References: <20231006184922.252188-1-aalbersh@redhat.com>
- <20231006184922.252188-17-aalbersh@redhat.com>
+ <20231006184922.252188-18-aalbersh@redhat.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20231006184922.252188-17-aalbersh@redhat.com>
+In-Reply-To: <20231006184922.252188-18-aalbersh@redhat.com>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Fri, Oct 06, 2023 at 08:49:10PM +0200, Andrey Albershteyn wrote:
-> The read IO path provides callout for configuring ioend. This allows
-> filesystem to add verification of completed BIOs. One of such tasks
-> is verification against fs-verity tree when pages were read. iomap
-> allows using custom bio_set with submit_bio() to add ioend
-> processing. The xfs_prepare_read_ioend() configures bio->bi_end_io
-> which places verification task in the workqueue. The task does
-> fs-verity verification and then call back to the iomap to finish IO.
-> 
-> This patch adds callouts implementation to verify pages with
-> fs-verity. Also implements folio operation .verify_folio for direct
-> folio verification by fs-verity.
+On Fri, Oct 06, 2023 at 08:49:11PM +0200, Andrey Albershteyn wrote:
+> The Merkle tree blocks and descriptor are stored in the extended
+> attributes of the inode. Add new attribute type for fs-verity
+> metadata. Add XFS_ATTR_INTERNAL_MASK to skip parent pointer and
+> fs-verity attributes as those are only for internal use. While we're
+> at it add a few comments in relevant places that internally visible
+> attributes are not suppose to be handled via interface defined in
+> xfs_xattr.c.
 > 
 > Signed-off-by: Andrey Albershteyn <aalbersh@redhat.com>
 > ---
->  fs/xfs/xfs_aops.c  | 84 ++++++++++++++++++++++++++++++++++++++++++++--
->  fs/xfs/xfs_aops.h  |  2 ++
->  fs/xfs/xfs_linux.h |  1 +
->  fs/xfs/xfs_super.c |  9 ++++-
->  4 files changed, 93 insertions(+), 3 deletions(-)
+>  fs/xfs/libxfs/xfs_da_format.h  | 10 +++++++++-
+>  fs/xfs/libxfs/xfs_log_format.h |  1 +
+>  fs/xfs/xfs_ioctl.c             |  5 +++++
+>  fs/xfs/xfs_trace.h             |  1 +
+>  fs/xfs/xfs_xattr.c             |  9 +++++++++
+>  5 files changed, 25 insertions(+), 1 deletion(-)
 > 
-> diff --git a/fs/xfs/xfs_aops.c b/fs/xfs/xfs_aops.c
-> index b413a2dbcc18..fceb0c3de61f 100644
-> --- a/fs/xfs/xfs_aops.c
-> +++ b/fs/xfs/xfs_aops.c
-> @@ -26,6 +26,8 @@ struct xfs_writepage_ctx {
->  	unsigned int		cow_seq;
->  };
->  
-> +static struct bio_set xfs_read_ioend_bioset;
+> diff --git a/fs/xfs/libxfs/xfs_da_format.h b/fs/xfs/libxfs/xfs_da_format.h
+> index 6deefe03207f..b56bdae83563 100644
+> --- a/fs/xfs/libxfs/xfs_da_format.h
+> +++ b/fs/xfs/libxfs/xfs_da_format.h
+> @@ -699,14 +699,22 @@ struct xfs_attr3_leafblock {
+>  #define	XFS_ATTR_ROOT_BIT	1	/* limit access to trusted attrs */
+>  #define	XFS_ATTR_SECURE_BIT	2	/* limit access to secure attrs */
+>  #define	XFS_ATTR_PARENT_BIT	3	/* parent pointer attrs */
+> +#define	XFS_ATTR_VERITY_BIT	4	/* verity merkle tree and descriptor */
+>  #define	XFS_ATTR_INCOMPLETE_BIT	7	/* attr in middle of create/delete */
+>  #define XFS_ATTR_LOCAL		(1u << XFS_ATTR_LOCAL_BIT)
+>  #define XFS_ATTR_ROOT		(1u << XFS_ATTR_ROOT_BIT)
+>  #define XFS_ATTR_SECURE		(1u << XFS_ATTR_SECURE_BIT)
+>  #define XFS_ATTR_PARENT		(1u << XFS_ATTR_PARENT_BIT)
+> +#define XFS_ATTR_VERITY		(1u << XFS_ATTR_VERITY_BIT)
+>  #define XFS_ATTR_INCOMPLETE	(1u << XFS_ATTR_INCOMPLETE_BIT)
+>  #define XFS_ATTR_NSP_ONDISK_MASK \
+> -			(XFS_ATTR_ROOT | XFS_ATTR_SECURE | XFS_ATTR_PARENT)
+> +			(XFS_ATTR_ROOT | XFS_ATTR_SECURE | XFS_ATTR_PARENT | \
+> +			 XFS_ATTR_VERITY)
 > +
->  static inline struct xfs_writepage_ctx *
->  XFS_WPC(struct iomap_writepage_ctx *ctx)
+> +/*
+> + * Internal attributes not exposed to the user
+> + */
+> +#define XFS_ATTR_INTERNAL_MASK (XFS_ATTR_PARENT | XFS_ATTR_VERITY)
+>  
+>  /*
+>   * Alignment for namelist and valuelist entries (since they are mixed
+> diff --git a/fs/xfs/libxfs/xfs_log_format.h b/fs/xfs/libxfs/xfs_log_format.h
+> index 0bc1749fb7bb..c42cc58cd152 100644
+> --- a/fs/xfs/libxfs/xfs_log_format.h
+> +++ b/fs/xfs/libxfs/xfs_log_format.h
+> @@ -975,6 +975,7 @@ struct xfs_icreate_log {
+>  #define XFS_ATTRI_FILTER_MASK		(XFS_ATTR_ROOT | \
+>  					 XFS_ATTR_SECURE | \
+>  					 XFS_ATTR_PARENT | \
+> +					 XFS_ATTR_VERITY | \
+>  					 XFS_ATTR_INCOMPLETE)
+>  
+>  /*
+> diff --git a/fs/xfs/xfs_ioctl.c b/fs/xfs/xfs_ioctl.c
+> index 55bb01173cde..3d6d680b6cf3 100644
+> --- a/fs/xfs/xfs_ioctl.c
+> +++ b/fs/xfs/xfs_ioctl.c
+> @@ -351,6 +351,11 @@ static unsigned int
+>  xfs_attr_filter(
+>  	u32			ioc_flags)
 >  {
-> @@ -548,19 +550,97 @@ xfs_vm_bmap(
->  	return iomap_bmap(mapping, block, &xfs_read_iomap_ops);
->  }
->  
-> +static void
-> +xfs_read_work_end_io(
-> +	struct work_struct *work)
-> +{
-> +	struct iomap_read_ioend *ioend =
-> +		container_of(work, struct iomap_read_ioend, work);
-> +	struct bio *bio = &ioend->read_inline_bio;
-> +
-> +	fsverity_verify_bio(bio);
-> +	iomap_read_end_io(bio);
 > +	/*
-> +	 * The iomap_read_ioend has been freed by bio_put() in
-> +	 * iomap_read_end_io()
+> +	 * Only externally visible attributes should be specified here.
+> +	 * Internally used attributes (such as parent pointers or fs-verity)
+> +	 * should not be exposed to userspace.
 > +	 */
-> +}
-> +
-> +static void
-> +xfs_read_end_io(
-> +	struct bio *bio)
-> +{
-> +	struct iomap_read_ioend *ioend =
-> +		container_of(bio, struct iomap_read_ioend, read_inline_bio);
-> +	struct xfs_inode	*ip = XFS_I(ioend->io_inode);
-> +
-> +	WARN_ON_ONCE(!queue_work(ip->i_mount->m_postread_workqueue,
-> +					&ioend->work));
+>  	if (ioc_flags & XFS_IOC_ATTR_ROOT)
+>  		return XFS_ATTR_ROOT;
+>  	if (ioc_flags & XFS_IOC_ATTR_SECURE)
+> diff --git a/fs/xfs/xfs_trace.h b/fs/xfs/xfs_trace.h
+> index 3926cf7f2a6e..3696709907bf 100644
+> --- a/fs/xfs/xfs_trace.h
+> +++ b/fs/xfs/xfs_trace.h
+> @@ -82,6 +82,7 @@ struct xfs_perag;
+>  #define XFS_ATTR_FILTER_FLAGS \
+>  	{ XFS_ATTR_ROOT,	"ROOT" }, \
+>  	{ XFS_ATTR_SECURE,	"SECURE" }, \
+> +	{ XFS_ATTR_VERITY,	"VERITY" }, \
+>  	{ XFS_ATTR_INCOMPLETE,	"INCOMPLETE" }
+>  
+>  DECLARE_EVENT_CLASS(xfs_attr_list_class,
+> diff --git a/fs/xfs/xfs_xattr.c b/fs/xfs/xfs_xattr.c
+> index a3975f325f4e..56f7f4122fcb 100644
+> --- a/fs/xfs/xfs_xattr.c
+> +++ b/fs/xfs/xfs_xattr.c
+> @@ -20,6 +20,12 @@
+>  
+>  #include <linux/posix_acl_xattr.h>
+>  
+> +/*
+> + * This file defines interface to work with externally visible extended
+> + * attributes, such as those in system or security namespaces. This interface
 
-If queue_work fails we should EIO the read.
+"...such as those in user, system, or security namespaces."
 
-> +}
-> +
-> +static int
-> +xfs_verify_folio(
-> +	struct folio	*folio,
-> +	loff_t		pos,
-> +	unsigned int	len)
-> +{
-> +	if (fsverity_verify_blocks(folio, len, pos))
-> +		return 0;
-> +	return -EFSCORRUPTED;
-> +}
-> +
-> +int
-> +xfs_init_iomap_bioset(void)
-
-Probably should be marked __init, right?
-
-> +{
-> +	return bioset_init(&xfs_read_ioend_bioset,
-> +			   4 * (PAGE_SIZE / SECTOR_SIZE),
-> +			   offsetof(struct iomap_read_ioend, read_inline_bio),
-> +			   BIOSET_NEED_BVECS);
-
-Also, there's nothing specific to XFS in this bioset, is there?
-Shouldn't this be in fs/iomap/buffered-io.c and not XFS?
-
-> +}
-> +
-> +void
-> +xfs_free_iomap_bioset(void)
-> +{
-> +	bioset_exit(&xfs_read_ioend_bioset);
-> +}
-> +
-> +static void
-> +xfs_submit_read_bio(
-> +	const struct iomap_iter *iter,
-> +	struct bio *bio,
-> +	loff_t file_offset)
-> +{
-> +	struct iomap_read_ioend *ioend;
-> +
-> +	ioend = container_of(bio, struct iomap_read_ioend, read_inline_bio);
-> +	ioend->io_inode = iter->inode;
-> +	if (fsverity_active(ioend->io_inode)) {
-> +		INIT_WORK(&ioend->work, &xfs_read_work_end_io);
-> +		ioend->read_inline_bio.bi_end_io = &xfs_read_end_io;
-> +	}
-> +
-> +	submit_bio(bio);
-> +}
-> +
-> +static const struct iomap_readpage_ops xfs_readpage_ops = {
-> +	.verify_folio		= &xfs_verify_folio,
-> +	.submit_io		= &xfs_submit_read_bio,
-> +	.bio_set		= &xfs_read_ioend_bioset,
-> +};
-> +
->  STATIC int
->  xfs_vm_read_folio(
->  	struct file		*unused,
->  	struct folio		*folio)
->  {
-> -	return iomap_read_folio(folio, &xfs_read_iomap_ops, NULL);
-> +	return iomap_read_folio(folio, &xfs_read_iomap_ops, &xfs_readpage_ops);
-
-Leave the ops parameter as NULL for non-verity filesystems to avoid the
-overhead of indirect calls.  Work data partitions aren't going to enable
-verity.
+With that fixed,
+Reviewed-by: Darrick J. Wong <djwong@kernel.org>
 
 --D
 
->  }
->  
->  STATIC void
->  xfs_vm_readahead(
->  	struct readahead_control	*rac)
->  {
-> -	iomap_readahead(rac, &xfs_read_iomap_ops, NULL);
-> +	iomap_readahead(rac, &xfs_read_iomap_ops, &xfs_readpage_ops);
->  }
->  
->  static int
-> diff --git a/fs/xfs/xfs_aops.h b/fs/xfs/xfs_aops.h
-> index e0bd68419764..fa7c512b2717 100644
-> --- a/fs/xfs/xfs_aops.h
-> +++ b/fs/xfs/xfs_aops.h
-> @@ -10,5 +10,7 @@ extern const struct address_space_operations xfs_address_space_operations;
->  extern const struct address_space_operations xfs_dax_aops;
->  
->  int	xfs_setfilesize(struct xfs_inode *ip, xfs_off_t offset, size_t size);
-> +int	xfs_init_iomap_bioset(void);
-> +void	xfs_free_iomap_bioset(void);
->  
->  #endif /* __XFS_AOPS_H__ */
-> diff --git a/fs/xfs/xfs_linux.h b/fs/xfs/xfs_linux.h
-> index e9d317a3dafe..ee213c6dfcaf 100644
-> --- a/fs/xfs/xfs_linux.h
-> +++ b/fs/xfs/xfs_linux.h
-> @@ -64,6 +64,7 @@ typedef __u32			xfs_nlink_t;
->  #include <linux/xattr.h>
->  #include <linux/mnt_idmapping.h>
->  #include <linux/debugfs.h>
-> +#include <linux/fsverity.h>
->  
->  #include <asm/page.h>
->  #include <asm/div64.h>
-> diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
-> index 5e1ec5978176..3cdb642961f4 100644
-> --- a/fs/xfs/xfs_super.c
-> +++ b/fs/xfs/xfs_super.c
-> @@ -2375,11 +2375,17 @@ init_xfs_fs(void)
->  	if (error)
->  		goto out_remove_dbg_kobj;
->  
-> -	error = register_filesystem(&xfs_fs_type);
-> +	error = xfs_init_iomap_bioset();
->  	if (error)
->  		goto out_qm_exit;
+
+> + * should not be used for internally used attributes (consider xfs_attr.c).
+> + */
 > +
-> +	error = register_filesystem(&xfs_fs_type);
-> +	if (error)
-> +		goto out_iomap_bioset;
->  	return 0;
+>  /*
+>   * Get permission to use log-assisted atomic exchange of file extents.
+>   *
+> @@ -241,6 +247,9 @@ xfs_xattr_put_listent(
 >  
-> + out_iomap_bioset:
-> +	xfs_free_iomap_bioset();
->   out_qm_exit:
->  	xfs_qm_exit();
->   out_remove_dbg_kobj:
-> @@ -2412,6 +2418,7 @@ init_xfs_fs(void)
->  STATIC void __exit
->  exit_xfs_fs(void)
->  {
-> +	xfs_free_iomap_bioset();
->  	xfs_qm_exit();
->  	unregister_filesystem(&xfs_fs_type);
->  #ifdef DEBUG
+>  	ASSERT(context->count >= 0);
+>  
+> +	if (flags & XFS_ATTR_INTERNAL_MASK)
+> +		return;
+> +
+>  	if (flags & XFS_ATTR_ROOT) {
+>  #ifdef CONFIG_XFS_POSIX_ACL
+>  		if (namelen == SGI_ACL_FILE_SIZE &&
 > -- 
 > 2.40.1
 > 
