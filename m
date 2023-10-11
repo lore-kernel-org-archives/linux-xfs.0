@@ -2,170 +2,128 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B381CCDB475
-	for <linux-xfs@archiver.kernel.org>; Wed, 11 Oct 2023 18:48:39 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id EDDA1CDB47B
+	for <linux-xfs@archiver.kernel.org>; Wed, 11 Oct 2023 18:54:47 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232743AbjJKSsj (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 11 Oct 2023 14:48:39 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36828 "EHLO
+        id S233101AbjJKSyr (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 11 Oct 2023 14:54:47 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49566 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232519AbjJKSsi (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 11 Oct 2023 14:48:38 -0400
+        with ESMTP id S232519AbjJKSyq (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 11 Oct 2023 14:54:46 -0400
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 823B993
-        for <linux-xfs@vger.kernel.org>; Wed, 11 Oct 2023 11:48:37 -0700 (PDT)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 1FA2AC433C8;
-        Wed, 11 Oct 2023 18:48:37 +0000 (UTC)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6873194
+        for <linux-xfs@vger.kernel.org>; Wed, 11 Oct 2023 11:54:45 -0700 (PDT)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 06310C433C7;
+        Wed, 11 Oct 2023 18:54:44 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1697050117;
-        bh=jbbfJiF62YBYzMD/pdwAlQvbc8jryuoyLG9lrd9hXAk=;
+        s=k20201202; t=1697050485;
+        bh=IRnLspIiHI6Z3V+0zGgODvbCLnTlM66rVD5cXwnNSQU=;
         h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=BmvM1TrK3oFqA63mewqBXYw1vtbL/dH4zd88ElOSON47K9Sc5Ir7fOvTP/pOeMQe+
-         LoSLKygV63WMpmEhVFKjOtNYyi1gqgtBtoh+g887d1Leca/IU4vbkvkXD9p4pjKzAn
-         9HJPEDzF3JgaKiN73JJy+jYKYGaV8ORne/o7PMr4I6gBJSZ/1s0gSrj1oINq8BrYpJ
-         5Ai7qaK6kR5IsrhrZTmSHyDH9kHOgQW8iyyNqCUYsY3WXGRq8Am+sJTzLq19Dxmkuf
-         OEiPjDft2vubQ2tGxwEcqqLbQTQPF7kWT32eNcKBmTWJYJzs6pFyAAIFWE6tKzPtPg
-         VKORKQbI3CoDg==
-Date:   Wed, 11 Oct 2023 11:48:36 -0700
+        b=FPA13b9XZ5QdIP6U4CajdMCLEnYuz/0YnH32YEYUE7V0s2MUJ31KAj5bpaLusclMy
+         Q3JovSh5b0GgAFuswwpMt5uVFabQLhH5Os8Vfus5pLIE6uLu8HvXGmXz+6D12o+sY/
+         8UmoOxDgpC+anFkgNE7iunCSMYCOQ6SgZPjug04tmBRcJEIPNx5chAbjSIcyZxvN6E
+         ighOMDEblRP12Z4fH2E/vWcBZBQM9p/+q1aGR3pQdS29K3pcLostr33ih9JUSymeq/
+         gE8gSOGcSXPy7euDJm+ZN5M8B+GQeU5iS5HkVk5xznNmZOmFW6ThAbBI3hltJUFQmi
+         es4+zSW+oAZ0Q==
+Date:   Wed, 11 Oct 2023 11:54:44 -0700
 From:   "Darrick J. Wong" <djwong@kernel.org>
 To:     Andrey Albershteyn <aalbersh@redhat.com>
 Cc:     linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
         fsverity@lists.linux.dev, ebiggers@kernel.org, david@fromorbit.com,
         dchinner@redhat.com
-Subject: Re: [PATCH v3 17/28] xfs: add attribute type for fs-verity
-Message-ID: <20231011184836.GQ21298@frogsfrogsfrogs>
+Subject: Re: [PATCH v3 13/28] xfs: add XBF_VERITY_CHECKED xfs_buf flag
+Message-ID: <20231011185444.GR21298@frogsfrogsfrogs>
 References: <20231006184922.252188-1-aalbersh@redhat.com>
- <20231006184922.252188-18-aalbersh@redhat.com>
+ <20231006184922.252188-14-aalbersh@redhat.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20231006184922.252188-18-aalbersh@redhat.com>
+In-Reply-To: <20231006184922.252188-14-aalbersh@redhat.com>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Fri, Oct 06, 2023 at 08:49:11PM +0200, Andrey Albershteyn wrote:
-> The Merkle tree blocks and descriptor are stored in the extended
-> attributes of the inode. Add new attribute type for fs-verity
-> metadata. Add XFS_ATTR_INTERNAL_MASK to skip parent pointer and
-> fs-verity attributes as those are only for internal use. While we're
-> at it add a few comments in relevant places that internally visible
-> attributes are not suppose to be handled via interface defined in
-> xfs_xattr.c.
+On Fri, Oct 06, 2023 at 08:49:07PM +0200, Andrey Albershteyn wrote:
+> One of essential ideas of fs-verity is that pages which are already
+> verified won't need to be re-verified if they still in page cache.
 > 
-> Signed-off-by: Andrey Albershteyn <aalbersh@redhat.com>
-> ---
->  fs/xfs/libxfs/xfs_da_format.h  | 10 +++++++++-
->  fs/xfs/libxfs/xfs_log_format.h |  1 +
->  fs/xfs/xfs_ioctl.c             |  5 +++++
->  fs/xfs/xfs_trace.h             |  1 +
->  fs/xfs/xfs_xattr.c             |  9 +++++++++
->  5 files changed, 25 insertions(+), 1 deletion(-)
+> XFS will store Merkle tree blocks in extended attributes. Each
+> attribute has one Merkle tree block. When read extended attribute
+> data is put into xfs_buf.
 > 
-> diff --git a/fs/xfs/libxfs/xfs_da_format.h b/fs/xfs/libxfs/xfs_da_format.h
-> index 6deefe03207f..b56bdae83563 100644
-> --- a/fs/xfs/libxfs/xfs_da_format.h
-> +++ b/fs/xfs/libxfs/xfs_da_format.h
-> @@ -699,14 +699,22 @@ struct xfs_attr3_leafblock {
->  #define	XFS_ATTR_ROOT_BIT	1	/* limit access to trusted attrs */
->  #define	XFS_ATTR_SECURE_BIT	2	/* limit access to secure attrs */
->  #define	XFS_ATTR_PARENT_BIT	3	/* parent pointer attrs */
-> +#define	XFS_ATTR_VERITY_BIT	4	/* verity merkle tree and descriptor */
->  #define	XFS_ATTR_INCOMPLETE_BIT	7	/* attr in middle of create/delete */
->  #define XFS_ATTR_LOCAL		(1u << XFS_ATTR_LOCAL_BIT)
->  #define XFS_ATTR_ROOT		(1u << XFS_ATTR_ROOT_BIT)
->  #define XFS_ATTR_SECURE		(1u << XFS_ATTR_SECURE_BIT)
->  #define XFS_ATTR_PARENT		(1u << XFS_ATTR_PARENT_BIT)
-> +#define XFS_ATTR_VERITY		(1u << XFS_ATTR_VERITY_BIT)
->  #define XFS_ATTR_INCOMPLETE	(1u << XFS_ATTR_INCOMPLETE_BIT)
->  #define XFS_ATTR_NSP_ONDISK_MASK \
-> -			(XFS_ATTR_ROOT | XFS_ATTR_SECURE | XFS_ATTR_PARENT)
-> +			(XFS_ATTR_ROOT | XFS_ATTR_SECURE | XFS_ATTR_PARENT | \
-> +			 XFS_ATTR_VERITY)
-> +
-> +/*
-> + * Internal attributes not exposed to the user
-> + */
-> +#define XFS_ATTR_INTERNAL_MASK (XFS_ATTR_PARENT | XFS_ATTR_VERITY)
->  
->  /*
->   * Alignment for namelist and valuelist entries (since they are mixed
-> diff --git a/fs/xfs/libxfs/xfs_log_format.h b/fs/xfs/libxfs/xfs_log_format.h
-> index 0bc1749fb7bb..c42cc58cd152 100644
-> --- a/fs/xfs/libxfs/xfs_log_format.h
-> +++ b/fs/xfs/libxfs/xfs_log_format.h
-> @@ -975,6 +975,7 @@ struct xfs_icreate_log {
->  #define XFS_ATTRI_FILTER_MASK		(XFS_ATTR_ROOT | \
->  					 XFS_ATTR_SECURE | \
->  					 XFS_ATTR_PARENT | \
-> +					 XFS_ATTR_VERITY | \
->  					 XFS_ATTR_INCOMPLETE)
->  
->  /*
-> diff --git a/fs/xfs/xfs_ioctl.c b/fs/xfs/xfs_ioctl.c
-> index 55bb01173cde..3d6d680b6cf3 100644
-> --- a/fs/xfs/xfs_ioctl.c
-> +++ b/fs/xfs/xfs_ioctl.c
-> @@ -351,6 +351,11 @@ static unsigned int
->  xfs_attr_filter(
->  	u32			ioc_flags)
->  {
-> +	/*
-> +	 * Only externally visible attributes should be specified here.
-> +	 * Internally used attributes (such as parent pointers or fs-verity)
-> +	 * should not be exposed to userspace.
-> +	 */
->  	if (ioc_flags & XFS_IOC_ATTR_ROOT)
->  		return XFS_ATTR_ROOT;
->  	if (ioc_flags & XFS_IOC_ATTR_SECURE)
-> diff --git a/fs/xfs/xfs_trace.h b/fs/xfs/xfs_trace.h
-> index 3926cf7f2a6e..3696709907bf 100644
-> --- a/fs/xfs/xfs_trace.h
-> +++ b/fs/xfs/xfs_trace.h
-> @@ -82,6 +82,7 @@ struct xfs_perag;
->  #define XFS_ATTR_FILTER_FLAGS \
->  	{ XFS_ATTR_ROOT,	"ROOT" }, \
->  	{ XFS_ATTR_SECURE,	"SECURE" }, \
-> +	{ XFS_ATTR_VERITY,	"VERITY" }, \
->  	{ XFS_ATTR_INCOMPLETE,	"INCOMPLETE" }
->  
->  DECLARE_EVENT_CLASS(xfs_attr_list_class,
-> diff --git a/fs/xfs/xfs_xattr.c b/fs/xfs/xfs_xattr.c
-> index a3975f325f4e..56f7f4122fcb 100644
-> --- a/fs/xfs/xfs_xattr.c
-> +++ b/fs/xfs/xfs_xattr.c
-> @@ -20,6 +20,12 @@
->  
->  #include <linux/posix_acl_xattr.h>
->  
-> +/*
-> + * This file defines interface to work with externally visible extended
-> + * attributes, such as those in system or security namespaces. This interface
+> The data in the buffer is not aligned with xfs_buf pages and we
+> don't have a reference to these pages. Moreover, these pages are
+> released when value is copied out in xfs_attr code. In other words,
+> we can not directly mark underlying xfs_buf's pages as verified.
 
-"...such as those in user, system, or security namespaces."
+/me wonders why the fs/verity code itself doesn't track which parts of
+the merkle tree have been verified.
 
-With that fixed,
-Reviewed-by: Darrick J. Wong <djwong@kernel.org>
+> One way to track that these pages were verified is to mark xattr's
+> buffer as verified instead. If buffer is evicted the incore
+> XBF_VERITY_CHECKED flag is lost. When the xattr is read again
+> xfs_attr_get() returns new buffer without the flag. The xfs_buf's
+> flag is then used to tell fs-verity if it's new page or cached one.
+> 
+> The meaning of the flag is that value of the extended attribute in
+> the buffer is verified.
+
+Can there be multiple blocks from distant parts of the merkle tree
+stored in a single xattr leaf block?  I'm imagining the case where
+merkle tree blocks are 4K each, but the fs block size is 64k.
+
+(Or: what is the relationship between merkle tree blocks and fs
+blocksize?  Are they always the same, or can they differ?)
+
+Or, is there some guarantee that merkle tree blocks will always be
+stored as remote xattrs?
+
+I'm worrying about the case where an xfs_buf might contain 2 merkle tree
+blocks, we set XBF_VERITY_CHECKED having checked *one* of them but then
+forget to check any other verity blobs that might be in the same buffer.
 
 --D
 
-
-> + * should not be used for internally used attributes (consider xfs_attr.c).
-> + */
-> +
->  /*
->   * Get permission to use log-assisted atomic exchange of file extents.
->   *
-> @@ -241,6 +247,9 @@ xfs_xattr_put_listent(
+> Note that, the underlying pages have PageChecked() == false (the way
+> fs-verity identifies verified pages).
+> 
+> The flag is being used later to SetPageChecked() on pages handed to
+> the fs-verity.
+> 
+> Signed-off-by: Andrey Albershteyn <aalbersh@redhat.com>
+> ---
+>  fs/xfs/xfs_buf.h | 17 +++++++++--------
+>  1 file changed, 9 insertions(+), 8 deletions(-)
+> 
+> diff --git a/fs/xfs/xfs_buf.h b/fs/xfs/xfs_buf.h
+> index df8f47953bb4..d0fadb6d4b59 100644
+> --- a/fs/xfs/xfs_buf.h
+> +++ b/fs/xfs/xfs_buf.h
+> @@ -24,14 +24,15 @@ struct xfs_buf;
 >  
->  	ASSERT(context->count >= 0);
+>  #define XFS_BUF_DADDR_NULL	((xfs_daddr_t) (-1LL))
 >  
-> +	if (flags & XFS_ATTR_INTERNAL_MASK)
-> +		return;
-> +
->  	if (flags & XFS_ATTR_ROOT) {
->  #ifdef CONFIG_XFS_POSIX_ACL
->  		if (namelen == SGI_ACL_FILE_SIZE &&
+> -#define XBF_READ	 (1u << 0) /* buffer intended for reading from device */
+> -#define XBF_WRITE	 (1u << 1) /* buffer intended for writing to device */
+> -#define XBF_READ_AHEAD	 (1u << 2) /* asynchronous read-ahead */
+> -#define XBF_NO_IOACCT	 (1u << 3) /* bypass I/O accounting (non-LRU bufs) */
+> -#define XBF_ASYNC	 (1u << 4) /* initiator will not wait for completion */
+> -#define XBF_DONE	 (1u << 5) /* all pages in the buffer uptodate */
+> -#define XBF_STALE	 (1u << 6) /* buffer has been staled, do not find it */
+> -#define XBF_WRITE_FAIL	 (1u << 7) /* async writes have failed on this buffer */
+> +#define XBF_READ		(1u << 0) /* buffer intended for reading from device */
+> +#define XBF_WRITE		(1u << 1) /* buffer intended for writing to device */
+> +#define XBF_READ_AHEAD		(1u << 2) /* asynchronous read-ahead */
+> +#define XBF_NO_IOACCT		(1u << 3) /* bypass I/O accounting (non-LRU bufs) */
+> +#define XBF_ASYNC		(1u << 4) /* initiator will not wait for completion */
+> +#define XBF_DONE		(1u << 5) /* all pages in the buffer uptodate */
+> +#define XBF_STALE		(1u << 6) /* buffer has been staled, do not find it */
+> +#define XBF_WRITE_FAIL		(1u << 7) /* async writes have failed on this buffer */
+> +#define XBF_VERITY_CHECKED	(1u << 8) /* buffer was verified by fs-verity*/
+>  
+>  /* buffer type flags for write callbacks */
+>  #define _XBF_INODES	 (1u << 16)/* inode buffer */
 > -- 
 > 2.40.1
 > 
