@@ -2,105 +2,143 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7B621CD6E5A
-	for <linux-xfs@archiver.kernel.org>; Wed, 11 Oct 2023 11:18:37 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2A88FCD6E5C
+	for <linux-xfs@archiver.kernel.org>; Wed, 11 Oct 2023 11:35:02 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234851AbjJKLSg (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 11 Oct 2023 07:18:36 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47440 "EHLO
+        id S234821AbjJKLfB (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 11 Oct 2023 07:35:01 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45136 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S234864AbjJKLSb (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 11 Oct 2023 07:18:31 -0400
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 99670E9
-        for <linux-xfs@vger.kernel.org>; Wed, 11 Oct 2023 04:17:41 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1697023060;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=Zlo0/ziFMNgNYF1FEOPe0SVTb/Xnel6cZPY+1Ns248c=;
-        b=YMqpUlEaN8q69LP2ABFX/e5f19hcocs1bKjddXJdKprwmc2oyui9kDdn9cOrWyLifDcm6v
-        8TeiB2Hr2SNgZ4d0gWqpDuoe/exmMZLgoY+ywIdHXd5uY9J8lK0fNQj85IIuJikGANISQ1
-        33TwR9hyKyPFHzPQJoAysA+SN6xHmh0=
-Received: from mail-ed1-f71.google.com (mail-ed1-f71.google.com
- [209.85.208.71]) by relay.mimecast.com with ESMTP with STARTTLS
- (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
- us-mta-649-zrNvpdpCPP2SsWleryD1TA-1; Wed, 11 Oct 2023 07:17:39 -0400
-X-MC-Unique: zrNvpdpCPP2SsWleryD1TA-1
-Received: by mail-ed1-f71.google.com with SMTP id 4fb4d7f45d1cf-537efd62f36so5396529a12.2
-        for <linux-xfs@vger.kernel.org>; Wed, 11 Oct 2023 04:17:39 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1697023058; x=1697627858;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
+        with ESMTP id S234813AbjJKLfA (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 11 Oct 2023 07:35:00 -0400
+Received: from mail-lf1-x131.google.com (mail-lf1-x131.google.com [IPv6:2a00:1450:4864:20::131])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3DB8BC0
+        for <linux-xfs@vger.kernel.org>; Wed, 11 Oct 2023 04:34:59 -0700 (PDT)
+Received: by mail-lf1-x131.google.com with SMTP id 2adb3069b0e04-5068dab8c00so5651137e87.0
+        for <linux-xfs@vger.kernel.org>; Wed, 11 Oct 2023 04:34:59 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20230601; t=1697024097; x=1697628897; darn=vger.kernel.org;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:from:to:cc:subject:date
          :message-id:reply-to;
-        bh=Zlo0/ziFMNgNYF1FEOPe0SVTb/Xnel6cZPY+1Ns248c=;
-        b=TppXlstM7CpIH7tlv2ScMP8a0kcxb1Lj/h38HLTT2HQ9j3DkW37HoRaBOduhocrWON
-         cE+WAz8TArN1sUYHaCj++nUCKtAuiiVhjnZMcD9bQy5tDp8mHjYFSfDcrMyEtgvywnO6
-         viDTRApgI4XUVCzeQSXA2S5k4cHcISZkbnxYDBZrXDh9UU7TjVh5+I6OFYOsJzZQhgJ9
-         Db7hALl1B9MqCkd/mDeRiOiuBQkUUlMF9G596ZnafGKq5IOwXLOTOgOr7XGHJBZKFVM3
-         40f32gCVjqvJWLm5P9N/hLD8QrzoCWdpG4ExbTGI3lECx0XrJGccw1+W8/V1m22XVS/J
-         40hw==
-X-Gm-Message-State: AOJu0YzjhObSX4HpsgI7O6duWwKMc8x0DWLcwu8k7nhNKmc1Lirgk4l/
-        /EX7BtgxC3/4o5eDNHiDUgnzIWtigMs1gZPspd4TyE8/AiGtXBBlQLBVP7fsOUxkE/pbpmmsEF7
-        NXBkevrn2ZBr+ZkPdTrhaVasOI3U=
-X-Received: by 2002:aa7:c549:0:b0:531:1241:3e98 with SMTP id s9-20020aa7c549000000b0053112413e98mr18033176edr.9.1697023057997;
-        Wed, 11 Oct 2023 04:17:37 -0700 (PDT)
-X-Google-Smtp-Source: AGHT+IHZZ+YnNUe9yjYU4VsUgPkzYbFo3mygztYN0VRUFnAXJzd2X2vpYfGz2QCoVKm8w94kwwpTtA==
-X-Received: by 2002:aa7:c549:0:b0:531:1241:3e98 with SMTP id s9-20020aa7c549000000b0053112413e98mr18033170edr.9.1697023057687;
-        Wed, 11 Oct 2023 04:17:37 -0700 (PDT)
-Received: from thinky ([109.183.6.197])
-        by smtp.gmail.com with ESMTPSA id cy7-20020a0564021c8700b0053de19620b9sm462255edb.2.2023.10.11.04.17.36
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 11 Oct 2023 04:17:37 -0700 (PDT)
-Date:   Wed, 11 Oct 2023 13:17:36 +0200
-From:   Andrey Albershteyn <aalbersh@redhat.com>
-To:     Eric Biggers <ebiggers@kernel.org>
-Cc:     linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
-        fsverity@lists.linux.dev, djwong@kernel.org, david@fromorbit.com,
-        dchinner@redhat.com
-Subject: Re: [PATCH v3 09/28] fsverity: pass log_blocksize to
- end_enable_verity()
-Message-ID: <bwwev42i7ahrbdl4kvl7sc27zwrg7btmwf2j5h2grxp25mxxpl@4loq5hqs43gv>
-References: <20231006184922.252188-1-aalbersh@redhat.com>
- <20231006184922.252188-10-aalbersh@redhat.com>
- <20231011031906.GD1185@sol.localdomain>
+        bh=ULRVQUOrjIrYRk7mloXiNFxxy5U4rnHl2YSt/sL/c3U=;
+        b=C8d/9zzZRu/dBlokDIaHf9gCbsS4JDiP3+yRivXrIFNi1pE1sMv8qDNkO2+bFCSb48
+         I19ZRRmJ4vsdOdsP+JuZ6IUWLdpJm5uVaA8hnx05ZexYYZLWPeAIztrW8d0mSeFpU0qh
+         fWhEZD/KbcvZoxgAkgiizQ9qQ24/uAeqiFfWnGp1cmEDvlJx+ZsBYZiUugqIBvp/c26+
+         CQam0YW7sGsftwGlw7Kn07/Sm9LeobP+Llbg5K0hUrVkcq8TIsGiAy1rpAczDsw6Deto
+         uaE5OiAqOg37lNpsAGa4Syiz9AHj1jAO21Mw92DzvlgOd0ir4osMzX3OErHoVmTu203o
+         irwA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1697024097; x=1697628897;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=ULRVQUOrjIrYRk7mloXiNFxxy5U4rnHl2YSt/sL/c3U=;
+        b=ialEUbALe0XsuqJYSI3+l5yWd7ytGI19ouE0POR7dwEQZy3Re8VOmamsAslZ1RjuQh
+         Dz92Yue4y0g3FRM4r9zg4bxmSF8vNLwD8EDkwy//SqK65HG/Z1nScSWGi+v6Uvi1eehW
+         6ueWo4WoMR3jfEqrWJAJ01QhxobYAlQukWgoo/+4U3qm5UEO7zFBKF6qkEybuc2RImaf
+         giRTKj7J+O4WyNaXDlIZ+SNogXsxGWOjHzgsmY93rkzezkH7rpDRRLXFN7lrHv/f/D/K
+         gGlpYZMWzrdgSt6IBxBr5iiuX95sWLmjSjsFDkN/f8awbyAViUYmrDGdlLKUOWiDLfkk
+         hJmg==
+X-Gm-Message-State: AOJu0Ywo/xogi3/49BPv4Bgnt8XjjCTe1lonvXUky/bgH5C/lrTaStY3
+        WLsSOIhdtWhzuuwTEEXHTL1K+c1Jtx0MMbNYTCM=
+X-Google-Smtp-Source: AGHT+IH4mZxixl9k0Y4Xk4R8wOWufThKHdVaoEY86TjLBIsbxUj+QndY+sqPnjchG7AkBnoGoNvaUrX+DqB0v5cHb40=
+X-Received: by 2002:a05:6512:3c2:b0:4fe:15b5:a5f9 with SMTP id
+ w2-20020a05651203c200b004fe15b5a5f9mr13233570lfp.54.1697024097132; Wed, 11
+ Oct 2023 04:34:57 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20231011031906.GD1185@sol.localdomain>
+References: <20230926071432.51866-1-knowak@microsoft.com> <20230926071432.51866-2-knowak@microsoft.com>
+ <snPbvVemO-KACiVV0MsnX0uHqamLCj_w6t-8_yyeSjozjPfI6TuWV4XCSBFPaP-H6MJSAzfhAGlyAl3PmwkzZA==@protonmail.internalid>
+ <20230926144100.GD11439@frogsfrogsfrogs> <20231003111527.nkn3p2gpamfd5leh@andromeda>
+In-Reply-To: <20231003111527.nkn3p2gpamfd5leh@andromeda>
+From:   Krzesimir Nowak <qdlacz@gmail.com>
+Date:   Wed, 11 Oct 2023 13:34:45 +0200
+Message-ID: <CANoGTXCQpQRztAZuXOipCkPXC4oJCb1Vn0sQO_EyjMW1Jno=aw@mail.gmail.com>
+Subject: Re: [PATCH 1/1] libfrog: Fix cross-compilation issue with randbytes
+To:     Carlos Maiolino <cem@kernel.org>
+Cc:     "Darrick J. Wong" <djwong@kernel.org>, linux-xfs@vger.kernel.org,
+        Krzesimir Nowak <knowak@microsoft.com>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On 2023-10-10 20:19:06, Eric Biggers wrote:
-> On Fri, Oct 06, 2023 at 08:49:03PM +0200, Andrey Albershteyn wrote:
-> > diff --git a/include/linux/fsverity.h b/include/linux/fsverity.h
-> > index 252b2668894c..cac012d4c86a 100644
-> > --- a/include/linux/fsverity.h
-> > +++ b/include/linux/fsverity.h
-> > @@ -51,6 +51,7 @@ struct fsverity_operations {
-> >  	 * @desc: the verity descriptor to write, or NULL on failure
-> >  	 * @desc_size: size of verity descriptor, or 0 on failure
-> >  	 * @merkle_tree_size: total bytes the Merkle tree took up
-> > +	 * @log_blocksize: log size of the Merkle tree block
-> >  	 *
-> >  	 * If desc == NULL, then enabling verity failed and the filesystem only
-> >  	 * must do any necessary cleanups.  Else, it must also store the given
-> > @@ -65,7 +66,8 @@ struct fsverity_operations {
-> >  	 * Return: 0 on success, -errno on failure
-> >  	 */
-> >  	int (*end_enable_verity)(struct file *filp, const void *desc,
-> > -				 size_t desc_size, u64 merkle_tree_size);
-> > +				 size_t desc_size, u64 merkle_tree_size,
-> > +				 u8 log_blocksize);
-> 
-> Maybe just pass the block_size itself instead of log2(block_size)?
+wt., 3 pa=C5=BA 2023 o 13:15 Carlos Maiolino <cem@kernel.org> napisa=C5=82(=
+a):
+>
+> On Tue, Sep 26, 2023 at 07:41:00AM -0700, Darrick J. Wong wrote:
+> > On Tue, Sep 26, 2023 at 09:14:32AM +0200, Krzesimir Nowak wrote:
+> > > randbytes.c was mostly split off from crc32.c and, like crc32.c, is
+> > > used for selftests, which are run on the build host. As such it shoul=
+d
+> > > not include platform_defs.h which in turn includes urcu.h from
+> > > userspace-rcu library, because the build host might not have the
+> > > library installed.
+> >
+> > Why not get rid of the build host crc32c selftest?  It's not that usefu=
+l
+> > for cross-compiling and nowadays mkfs.xfs and xfs_repair have their own
+> > builtin selftests.  Anyone messing with xfsprogs should be running
+> > fstests (in addition to the maintainers) so I don't really see the poin=
+t
+> > of running crc32cselftest on the *build* host.
+> >
+> > (Carlos: any thoughts on this?)
+>
+> /me back from holidays...
+>
+> Yeah, sounds reasonable, IMO crc32selftest can go.
 
-XFS will still do `index << log2(block_size)` to get block's offset.
-So, not sure if there's any difference.
+Hi,
 
--- 
-- Andrey
+There's a follow-up patch that I have sent - it drops the crc32 selftest:
 
+https://marc.info/?l=3Dlinux-xfs&m=3D169590021227419&w=3D2
+
+Not sure if there is anything else I should do. If so, please let me
+know. Thanks!
+
+Cheers,
+Krzesimir
+
+>
+> Carlos
+>
+> >
+> > --D
+> >
+> > > Signed-off-by: Krzesimir Nowak <knowak@microsoft.com>
+> > > ---
+> > >  libfrog/randbytes.c | 1 -
+> > >  libfrog/randbytes.h | 2 ++
+> > >  2 files changed, 2 insertions(+), 1 deletion(-)
+> > >
+> > > diff --git a/libfrog/randbytes.c b/libfrog/randbytes.c
+> > > index f22da0d3..2023b601 100644
+> > > --- a/libfrog/randbytes.c
+> > > +++ b/libfrog/randbytes.c
+> > > @@ -6,7 +6,6 @@
+> > >   *
+> > >   * This is the buffer of random bytes used for self tests.
+> > >   */
+> > > -#include "platform_defs.h"
+> > >  #include "libfrog/randbytes.h"
+> > >
+> > >  /* 4096 random bytes */
+> > > diff --git a/libfrog/randbytes.h b/libfrog/randbytes.h
+> > > index 00fd7c4c..fddea9c7 100644
+> > > --- a/libfrog/randbytes.h
+> > > +++ b/libfrog/randbytes.h
+> > > @@ -6,6 +6,8 @@
+> > >  #ifndef __LIBFROG_RANDBYTES_H__
+> > >  #define __LIBFROG_RANDBYTES_H__
+> > >
+> > > +#include <stdint.h>
+> > > +
+> > >  extern uint8_t randbytes_test_buf[];
+> > >
+> > >  #endif /* __LIBFROG_RANDBYTES_H__ */
+> > > --
+> > > 2.25.1
+> > >
