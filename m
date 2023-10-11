@@ -2,143 +2,131 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2A88FCD6E5C
-	for <linux-xfs@archiver.kernel.org>; Wed, 11 Oct 2023 11:35:02 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id EDE26CD6E64
+	for <linux-xfs@archiver.kernel.org>; Wed, 11 Oct 2023 13:04:55 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234821AbjJKLfB (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 11 Oct 2023 07:35:01 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45136 "EHLO
+        id S232244AbjJKNEz (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 11 Oct 2023 09:04:55 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54564 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S234813AbjJKLfA (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 11 Oct 2023 07:35:00 -0400
-Received: from mail-lf1-x131.google.com (mail-lf1-x131.google.com [IPv6:2a00:1450:4864:20::131])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3DB8BC0
-        for <linux-xfs@vger.kernel.org>; Wed, 11 Oct 2023 04:34:59 -0700 (PDT)
-Received: by mail-lf1-x131.google.com with SMTP id 2adb3069b0e04-5068dab8c00so5651137e87.0
-        for <linux-xfs@vger.kernel.org>; Wed, 11 Oct 2023 04:34:59 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1697024097; x=1697628897; darn=vger.kernel.org;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=ULRVQUOrjIrYRk7mloXiNFxxy5U4rnHl2YSt/sL/c3U=;
-        b=C8d/9zzZRu/dBlokDIaHf9gCbsS4JDiP3+yRivXrIFNi1pE1sMv8qDNkO2+bFCSb48
-         I19ZRRmJ4vsdOdsP+JuZ6IUWLdpJm5uVaA8hnx05ZexYYZLWPeAIztrW8d0mSeFpU0qh
-         fWhEZD/KbcvZoxgAkgiizQ9qQ24/uAeqiFfWnGp1cmEDvlJx+ZsBYZiUugqIBvp/c26+
-         CQam0YW7sGsftwGlw7Kn07/Sm9LeobP+Llbg5K0hUrVkcq8TIsGiAy1rpAczDsw6Deto
-         uaE5OiAqOg37lNpsAGa4Syiz9AHj1jAO21Mw92DzvlgOd0ir4osMzX3OErHoVmTu203o
-         irwA==
+        with ESMTP id S232193AbjJKNEy (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 11 Oct 2023 09:04:54 -0400
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id CF85EA7
+        for <linux-xfs@vger.kernel.org>; Wed, 11 Oct 2023 06:04:09 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1697029449;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=vcjxFApevYb82qtuqxNQX9mHDiHm2BlEhPt3ZccGP80=;
+        b=SwB8C4AEqvJDJg0oRtV/mzDnyXA70+bU+l4vvPIW+oH3qUlTmziYG/4B+AnCCb6n28c5Xe
+        h1uXYU6cnzLF4b/QY30fWjCQzPvdNDsSLQ0iSsrI1g0IPhuUHmcXtCIY95/3ezwomKxLDd
+        bMkWdLPqOInwBKPL1LTO9Jwz9zlJ0rA=
+Received: from mail-ed1-f72.google.com (mail-ed1-f72.google.com
+ [209.85.208.72]) by relay.mimecast.com with ESMTP with STARTTLS
+ (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
+ us-mta-554-nNnc68KOOB6jfT3oic2MOA-1; Wed, 11 Oct 2023 09:03:57 -0400
+X-MC-Unique: nNnc68KOOB6jfT3oic2MOA-1
+Received: by mail-ed1-f72.google.com with SMTP id 4fb4d7f45d1cf-53a7cb6ee43so1113382a12.0
+        for <linux-xfs@vger.kernel.org>; Wed, 11 Oct 2023 06:03:57 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1697024097; x=1697628897;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=ULRVQUOrjIrYRk7mloXiNFxxy5U4rnHl2YSt/sL/c3U=;
-        b=ialEUbALe0XsuqJYSI3+l5yWd7ytGI19ouE0POR7dwEQZy3Re8VOmamsAslZ1RjuQh
-         Dz92Yue4y0g3FRM4r9zg4bxmSF8vNLwD8EDkwy//SqK65HG/Z1nScSWGi+v6Uvi1eehW
-         6ueWo4WoMR3jfEqrWJAJ01QhxobYAlQukWgoo/+4U3qm5UEO7zFBKF6qkEybuc2RImaf
-         giRTKj7J+O4WyNaXDlIZ+SNogXsxGWOjHzgsmY93rkzezkH7rpDRRLXFN7lrHv/f/D/K
-         gGlpYZMWzrdgSt6IBxBr5iiuX95sWLmjSjsFDkN/f8awbyAViUYmrDGdlLKUOWiDLfkk
-         hJmg==
-X-Gm-Message-State: AOJu0Ywo/xogi3/49BPv4Bgnt8XjjCTe1lonvXUky/bgH5C/lrTaStY3
-        WLsSOIhdtWhzuuwTEEXHTL1K+c1Jtx0MMbNYTCM=
-X-Google-Smtp-Source: AGHT+IH4mZxixl9k0Y4Xk4R8wOWufThKHdVaoEY86TjLBIsbxUj+QndY+sqPnjchG7AkBnoGoNvaUrX+DqB0v5cHb40=
-X-Received: by 2002:a05:6512:3c2:b0:4fe:15b5:a5f9 with SMTP id
- w2-20020a05651203c200b004fe15b5a5f9mr13233570lfp.54.1697024097132; Wed, 11
- Oct 2023 04:34:57 -0700 (PDT)
+        d=1e100.net; s=20230601; t=1697029437; x=1697634237;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=vcjxFApevYb82qtuqxNQX9mHDiHm2BlEhPt3ZccGP80=;
+        b=UoLAKLv9VE5A0HjZLckJ+0+gQiKkV/YLBlO8CdV0yVIv7l2q53UBoLyLjNaZxN6cz8
+         8YlmuTJQ1dGrPGpEoBota8jxKrDQe0a4hvSpcQRycUePt0cRRz0HZF6qHSP1QjwGG2PN
+         CJoNtsmctI2Y2+hUKWem9ZseBbLvwvJWJTwcaMymdDdQ2wNMWvs7tLJmq6D3lGtf73TB
+         pIO6rbl8yk1xE1r8+KIfKIgaZzJQBmTebm1sNGSuoar7k/9lcMn1fyaOfO75IE3noQBh
+         KFhXvi4j55y6GVh11E8S2BpSCrH7yRhn7N3I2dndAPTt0MRuYqyV+qUNh9W1tf6F4wY+
+         U6LQ==
+X-Gm-Message-State: AOJu0YwFfSdVA2FBb8LPm81HCsXGuNoNAQJbaK75Z5IZ/wZZf5OLIMF0
+        g5O3JKr/vSIHE4AtDOnsqM30JabL0feNPCy+3VjMoONWkRmcXW+BjhPsyMxRlXox5dZPI5J9LN6
+        97bEoAw5YFTBCM/C/YJI=
+X-Received: by 2002:a05:6402:22a2:b0:52f:86a1:3861 with SMTP id cx2-20020a05640222a200b0052f86a13861mr16163326edb.7.1697029436841;
+        Wed, 11 Oct 2023 06:03:56 -0700 (PDT)
+X-Google-Smtp-Source: AGHT+IFZEvueQYrwAAq5x464YyQHDNKA6a56GKCk88BLyTHffcIh2aUnXX9p1BjNOaOf1lgPTbG4wg==
+X-Received: by 2002:a05:6402:22a2:b0:52f:86a1:3861 with SMTP id cx2-20020a05640222a200b0052f86a13861mr16163315edb.7.1697029436539;
+        Wed, 11 Oct 2023 06:03:56 -0700 (PDT)
+Received: from thinky ([109.183.6.197])
+        by smtp.gmail.com with ESMTPSA id cw2-20020a056402228200b0053dea07b669sm467377edb.87.2023.10.11.06.03.55
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Wed, 11 Oct 2023 06:03:56 -0700 (PDT)
+Date:   Wed, 11 Oct 2023 15:03:55 +0200
+From:   Andrey Albershteyn <aalbersh@redhat.com>
+To:     Eric Biggers <ebiggers@kernel.org>
+Cc:     linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
+        fsverity@lists.linux.dev, djwong@kernel.org, david@fromorbit.com,
+        dchinner@redhat.com
+Subject: Re: [PATCH v3 07/28] fsverity: always use bitmap to track verified
+ status
+Message-ID: <q75t2etmyq2zjskkquikatp4yg7k2yoyt4oab4grhlg7yu4wyi@6eax4ysvavyk>
+References: <20231006184922.252188-1-aalbersh@redhat.com>
+ <20231006184922.252188-8-aalbersh@redhat.com>
+ <20231011031543.GB1185@sol.localdomain>
 MIME-Version: 1.0
-References: <20230926071432.51866-1-knowak@microsoft.com> <20230926071432.51866-2-knowak@microsoft.com>
- <snPbvVemO-KACiVV0MsnX0uHqamLCj_w6t-8_yyeSjozjPfI6TuWV4XCSBFPaP-H6MJSAzfhAGlyAl3PmwkzZA==@protonmail.internalid>
- <20230926144100.GD11439@frogsfrogsfrogs> <20231003111527.nkn3p2gpamfd5leh@andromeda>
-In-Reply-To: <20231003111527.nkn3p2gpamfd5leh@andromeda>
-From:   Krzesimir Nowak <qdlacz@gmail.com>
-Date:   Wed, 11 Oct 2023 13:34:45 +0200
-Message-ID: <CANoGTXCQpQRztAZuXOipCkPXC4oJCb1Vn0sQO_EyjMW1Jno=aw@mail.gmail.com>
-Subject: Re: [PATCH 1/1] libfrog: Fix cross-compilation issue with randbytes
-To:     Carlos Maiolino <cem@kernel.org>
-Cc:     "Darrick J. Wong" <djwong@kernel.org>, linux-xfs@vger.kernel.org,
-        Krzesimir Nowak <knowak@microsoft.com>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20231011031543.GB1185@sol.localdomain>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-wt., 3 pa=C5=BA 2023 o 13:15 Carlos Maiolino <cem@kernel.org> napisa=C5=82(=
-a):
->
-> On Tue, Sep 26, 2023 at 07:41:00AM -0700, Darrick J. Wong wrote:
-> > On Tue, Sep 26, 2023 at 09:14:32AM +0200, Krzesimir Nowak wrote:
-> > > randbytes.c was mostly split off from crc32.c and, like crc32.c, is
-> > > used for selftests, which are run on the build host. As such it shoul=
-d
-> > > not include platform_defs.h which in turn includes urcu.h from
-> > > userspace-rcu library, because the build host might not have the
-> > > library installed.
-> >
-> > Why not get rid of the build host crc32c selftest?  It's not that usefu=
-l
-> > for cross-compiling and nowadays mkfs.xfs and xfs_repair have their own
-> > builtin selftests.  Anyone messing with xfsprogs should be running
-> > fstests (in addition to the maintainers) so I don't really see the poin=
-t
-> > of running crc32cselftest on the *build* host.
-> >
-> > (Carlos: any thoughts on this?)
->
-> /me back from holidays...
->
-> Yeah, sounds reasonable, IMO crc32selftest can go.
+On 2023-10-10 20:15:43, Eric Biggers wrote:
+> On Fri, Oct 06, 2023 at 08:49:01PM +0200, Andrey Albershteyn wrote:
+> > The bitmap is used to track verified status of the Merkle tree
+> > blocks which are smaller than a PAGE. Blocks which fits exactly in a
+> > page - use PageChecked() for tracking "verified" status.
+> > 
+> > This patch switches to always use bitmap to track verified status.
+> > This is needed to move fs-verity away from page management and work
+> > only with Merkle tree blocks.
+> 
+> How complicated would it be to keep supporting using the page bit when
+> merkle_tree_block_size == page_size and the filesystem supports it?  It's an
+> efficient solution, so it would be a shame to lose it.  Also it doesn't have the
+> max file size limit that the bitmap has.
 
-Hi,
+Well, I think it's possible but my motivation was to step away from
+page manipulation as much as possible with intent to not affect other
+filesystems too much. I can probably add handling of this case to
+fsverity_read_merkle_tree_block() but fs/verity still will create
+bitmap and have a limit. The other way is basically revert changes
+done in patch 09, then, it probably will be quite a mix of page/block
+handling in fs/verity/verify.c
 
-There's a follow-up patch that I have sent - it drops the crc32 selftest:
+> > Also, this patch removes spinlock. The lock was used to reset bits
+> > in bitmap belonging to one page. This patch works only with one
+> > Merkle tree block and won't reset other blocks status.
+> 
+> The spinlock is needed when there are multiple Merkle tree blocks per page and
+> the filesystem is using the page-based caching.  So I don't think you can remove
+> it.  Can you elaborate on why you feel it can be removed?
 
-https://marc.info/?l=3Dlinux-xfs&m=3D169590021227419&w=3D2
+With this patch is_hash_block_verified() doesn't reset bits for
+blocks belonging to the same page. Even if page is re-instantiated
+only one block is checked in this case. So, when other blocks are
+checked they are reset.
 
-Not sure if there is anything else I should do. If so, please let me
-know. Thanks!
+	if (block_cached)
+		return test_bit(hblock_idx, vi->hash_block_verified);
 
-Cheers,
-Krzesimir
+> > -	if (PageChecked(hpage)) {
+> > -		/*
+> > -		 * A read memory barrier is needed here to give ACQUIRE
+> > -		 * semantics to the above PageChecked() test.
+> > -		 */
+> > -		smp_rmb();
+> > +	if (block_cached)
+> >  		return test_bit(hblock_idx, vi->hash_block_verified);
+> 
+> It's not clear what block_cached is supposed to mean here.
 
->
-> Carlos
->
-> >
-> > --D
-> >
-> > > Signed-off-by: Krzesimir Nowak <knowak@microsoft.com>
-> > > ---
-> > >  libfrog/randbytes.c | 1 -
-> > >  libfrog/randbytes.h | 2 ++
-> > >  2 files changed, 2 insertions(+), 1 deletion(-)
-> > >
-> > > diff --git a/libfrog/randbytes.c b/libfrog/randbytes.c
-> > > index f22da0d3..2023b601 100644
-> > > --- a/libfrog/randbytes.c
-> > > +++ b/libfrog/randbytes.c
-> > > @@ -6,7 +6,6 @@
-> > >   *
-> > >   * This is the buffer of random bytes used for self tests.
-> > >   */
-> > > -#include "platform_defs.h"
-> > >  #include "libfrog/randbytes.h"
-> > >
-> > >  /* 4096 random bytes */
-> > > diff --git a/libfrog/randbytes.h b/libfrog/randbytes.h
-> > > index 00fd7c4c..fddea9c7 100644
-> > > --- a/libfrog/randbytes.h
-> > > +++ b/libfrog/randbytes.h
-> > > @@ -6,6 +6,8 @@
-> > >  #ifndef __LIBFROG_RANDBYTES_H__
-> > >  #define __LIBFROG_RANDBYTES_H__
-> > >
-> > > +#include <stdint.h>
-> > > +
-> > >  extern uint8_t randbytes_test_buf[];
-> > >
-> > >  #endif /* __LIBFROG_RANDBYTES_H__ */
-> > > --
-> > > 2.25.1
-> > >
+If block was re-instantiated or was in cache. I can try to come up
+with better name.
+
+-- 
+- Andrey
+
