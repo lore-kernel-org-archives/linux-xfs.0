@@ -2,70 +2,151 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id BDD24CDB46E
-	for <linux-xfs@archiver.kernel.org>; Thu, 12 Oct 2023 15:07:16 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E0EDBC46CA1
+	for <linux-xfs@archiver.kernel.org>; Thu, 12 Oct 2023 15:09:26 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233039AbjJLPHQ (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 12 Oct 2023 11:07:16 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36768 "EHLO
+        id S1379065AbjJLPJZ (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 12 Oct 2023 11:09:25 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36406 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232712AbjJLPHP (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 12 Oct 2023 11:07:15 -0400
-Received: from bombadil.infradead.org (bombadil.infradead.org [IPv6:2607:7c80:54:3::133])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 23E9A90
-        for <linux-xfs@vger.kernel.org>; Thu, 12 Oct 2023 08:07:14 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Type:MIME-Version
-        :References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
-        Content-Transfer-Encoding:Content-ID:Content-Description;
-        bh=g75qOUtlM2UxdqGnT+sgTAeAKCMXu4QiHMG9BPg1AHk=; b=GNGwFoLwbecaUV4uMaDAYD47zw
-        w4iD85V6MZebmNjcEBkaFTNx/+YeBfHVziWZfr5bwFG7Q6mEfvbqQ4a5BkLP/A9l5JnjzUPJWduhw
-        Hh01WTOi/0BIT4aY82+DGHf5zrXfXF63cUr5Pz+uds6wA+CKKOcUoWzYngJU+OficW3gKa1WdVo6P
-        CJiRHoPXgvhtT9nu74jWV/UP3JKkhErSE+D2nM2zKXx1Mgcvvh3HSgVHtJMmuOMQvKdRbOByIIJ1u
-        kMePic1BQjtJ16+ZjJNZaz++N0bgh95PXY33c7Bt2kVXX92VvUrEtCYp4Ttr11ZG/8sYEIZfe0qGG
-        OXg+DRZg==;
-Received: from hch by bombadil.infradead.org with local (Exim 4.96 #2 (Red Hat Linux))
-        id 1qqxHM-001FZr-18;
-        Thu, 12 Oct 2023 15:07:12 +0000
-Date:   Thu, 12 Oct 2023 08:07:12 -0700
-From:   Christoph Hellwig <hch@infradead.org>
-To:     "Darrick J. Wong" <djwong@kernel.org>
-Cc:     Christoph Hellwig <hch@infradead.org>,
-        Catherine Hoang <catherine.hoang@oracle.com>,
-        linux-xfs@vger.kernel.org
-Subject: Re: [PATCH v3] xfs: allow read IO and FICLONE to run concurrently
-Message-ID: <ZSgLoD0NWRH0bCGE@infradead.org>
-References: <20231012010845.64286-1-catherine.hoang@oracle.com>
- <ZSevmga8j3dNl34J@infradead.org>
- <20231012150231.GE21298@frogsfrogsfrogs>
+        with ESMTP id S1379226AbjJLPJZ (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 12 Oct 2023 11:09:25 -0400
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5669BBE;
+        Thu, 12 Oct 2023 08:09:23 -0700 (PDT)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id EBFB0C433C9;
+        Thu, 12 Oct 2023 15:09:22 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1697123363;
+        bh=c4xm7Xc8WSKFZ0+YzvQLIYbytuX3ANs0TCSoY6sm7+w=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=S4vP6jVARqZ3/Hni1JUa/1D0lQBeETtVkNgQoBaZjwylvBi6ZQqk600uOumF3GSMX
+         Rt6I220NYp5IcPxc/Nmxr5glvDfCnY8zp8r5i09365w/E9R6TJVgKWc04QmX35JF+L
+         LIRb8MHtOIG+jpkiWKI1oPRLatQNGNxGsiZbimK8tTt/VScSvamue3QIncwOnBgi09
+         OdJlp0bmtOumpAfnYsJ4756PvditV5uWXtyyeDEjKdlZpaYZtZkkAstrZ1G/bs8awa
+         63cA8VJlZiwcWSZqsieGbjeF7CQd3mtDBLavcunC/0yeC+Ko9ZtwAZqppEVDNYWaQg
+         Xj1vGS4rsr7/Q==
+Date:   Thu, 12 Oct 2023 08:09:22 -0700
+From:   "Darrick J. Wong" <djwong@kernel.org>
+To:     zlang@redhat.com, Christoph Hellwig <hch@infradead.org>
+Cc:     linux-xfs@vger.kernel.org, fstests@vger.kernel.org, guan@eryu.me
+Subject: [PATCH v2 1/3] xfs/178: don't fail when SCRATCH_DEV contains random
+ xfs superblocks
+Message-ID: <20231012150922.GF21298@frogsfrogsfrogs>
+References: <169687550821.3948976.6892161616008393594.stgit@frogsfrogsfrogs>
+ <169687551395.3948976.8425812597156927952.stgit@frogsfrogsfrogs>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20231012150231.GE21298@frogsfrogsfrogs>
-X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
+In-Reply-To: <169687551395.3948976.8425812597156927952.stgit@frogsfrogsfrogs>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Thu, Oct 12, 2023 at 08:02:31AM -0700, Darrick J. Wong wrote:
-> Catherine started with this,
-> https://lore.kernel.org/linux-xfs/8911B94D-DD29-4D6E-B5BC-32EAF1866245@oracle.com/
-> 
-> and the rest of us whittled it down to the single patch you see here.
-> Sections 1-2 are still relevant; S3 was the path not taken.
+From: Darrick J. Wong <djwong@kernel.org>
 
-I'd still take the core of that into the actual commit message.  This
-part, maybe slightly rewored:
+When I added an fstests config for "RAID" striping (aka MKFS_OPTIONS='-d
+su=128k,sw=4'), I suddenly started seeing this test fail sporadically
+with:
 
-"One of our VM cluster management products needs to snapshot KVM image
-files so that they can be restored in case of failure. Snapshotting is
-done by redirecting VM disk writes to a sidecar file and using reflink
-on the disk image, specifically the FICLONE ioctl as used by
-"cp --reflink". Reflink locks the source and destination files while it
-operates, which means that reads from the main vm disk image are blocked,
-causing the vm to stall. When an image file is heavily fragmented, the
-copy process could take several minutes. Some of the vm image files have
-50-100 million extent records, and duplicating that much metadata locks
-the file for 30 minutes or more. Having activities suspended for such
-a long time in a cluster node could result in node eviction."
+--- /tmp/fstests/tests/xfs/178.out	2023-07-11 12:18:21.714970364 -0700
++++ /var/tmp/fstests/xfs/178.out.bad	2023-07-25 22:05:39.756000000 -0700
+@@ -10,6 +10,20 @@ bad primary superblock - bad magic numbe
 
+ attempting to find secondary superblock...
+ found candidate secondary superblock...
++unable to verify superblock, continuing...
++found candidate secondary superblock...
++error reading superblock 1 -- seek to offset 584115421184 failed
++unable to verify superblock, continuing...
++found candidate secondary superblock...
++error reading superblock 1 -- seek to offset 584115421184 failed
++unable to verify superblock, continuing...
++found candidate secondary superblock...
++error reading superblock 1 -- seek to offset 584115421184 failed
++unable to verify superblock, continuing...
++found candidate secondary superblock...
++error reading superblock 1 -- seek to offset 584115421184 failed
++unable to verify superblock, continuing...
++found candidate secondary superblock...
++error reading superblock 1 -- seek to offset 584115421184 failed
++unable to verify superblock, continuing...
++found candidate secondary superblock...
++error reading superblock 1 -- seek to offset 584115421184 failed
++unable to verify superblock, continuing...
++found candidate secondary superblock...
+ verified secondary superblock...
+ writing modified primary superblock
+ sb root inode INO inconsistent with calculated value INO
+
+Eventually I tracked this down to a mis-interaction between the test,
+xfs_repair, and the storage device.
+
+If the device doesn't support discard, _scratch_mkfs won't zero the
+entire disk to remove old dead superblocks that might have been written
+by previous tests.  After we shatter the primary super, the xfs_repair
+scanning code can still trip over those old supers when it goes looking
+for secondary supers.
+
+Most of the time it finds the actual AG 1 secondary super, but sometimes
+it finds ghosts from previous formats.  When that happens, xfs_repair
+will talk quite a bit about those failed secondaries, even if it
+eventually finds an acceptable secondary sb and completes the repair.
+
+Filter out the messages about secondary supers.
+
+Signed-off-by: Darrick J. Wong <djwong@kernel.org>
+---
+v2: fix commit message to identify the problem in fstests, drop the
+irrelevant mumbbling about SCSI UNMAP
+---
+ tests/xfs/178     |    9 ++++++++-
+ tests/xfs/178.out |    2 --
+ 2 files changed, 8 insertions(+), 3 deletions(-)
+
+diff --git a/tests/xfs/178 b/tests/xfs/178
+index a65197cde3..fee1e92bf3 100755
+--- a/tests/xfs/178
++++ b/tests/xfs/178
+@@ -10,13 +10,20 @@
+ . ./common/preamble
+ _begin_fstest mkfs other auto
+ 
++filter_repair() {
++	_filter_repair | sed \
++		-e '/unable to verify superblock, continuing/d' \
++		-e '/found candidate secondary superblock/d' \
++		-e '/error reading superblock.*-- seek to offset/d'
++}
++
+ # dd the 1st sector then repair
+ _dd_repair_check()
+ {
+ 	#dd first sector
+ 	dd if=/dev/zero of=$1 bs=$2 count=1 2>&1 | _filter_dd
+ 	#xfs_repair
+-	_scratch_xfs_repair 2>&1 | _filter_repair
++	_scratch_xfs_repair 2>&1 | filter_repair
+ 	#check repair
+ 	if _check_scratch_fs; then
+         	echo "repair passed"
+diff --git a/tests/xfs/178.out b/tests/xfs/178.out
+index 0bebe553eb..711e90cc26 100644
+--- a/tests/xfs/178.out
++++ b/tests/xfs/178.out
+@@ -9,7 +9,6 @@ Phase 1 - find and verify superblock...
+ bad primary superblock - bad magic number !!!
+ 
+ attempting to find secondary superblock...
+-found candidate secondary superblock...
+ verified secondary superblock...
+ writing modified primary superblock
+ sb root inode INO inconsistent with calculated value INO
+@@ -45,7 +44,6 @@ Phase 1 - find and verify superblock...
+ bad primary superblock - bad magic number !!!
+ 
+ attempting to find secondary superblock...
+-found candidate secondary superblock...
+ verified secondary superblock...
+ writing modified primary superblock
+ sb root inode INO inconsistent with calculated value INO
