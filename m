@@ -2,54 +2,135 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 49A25CDB474
-	for <linux-xfs@archiver.kernel.org>; Tue, 17 Oct 2023 04:20:21 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id CDA08CDB474
+	for <linux-xfs@archiver.kernel.org>; Tue, 17 Oct 2023 04:58:38 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229666AbjJQEUT (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 17 Oct 2023 00:20:19 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53706 "EHLO
+        id S230343AbjJQE6i (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 17 Oct 2023 00:58:38 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36264 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S234376AbjJQEF5 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 17 Oct 2023 00:05:57 -0400
-Received: from verein.lst.de (verein.lst.de [213.95.11.211])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 16FF88E
-        for <linux-xfs@vger.kernel.org>; Mon, 16 Oct 2023 21:05:55 -0700 (PDT)
-Received: by verein.lst.de (Postfix, from userid 2407)
-        id A5A6467373; Tue, 17 Oct 2023 06:05:52 +0200 (CEST)
-Date:   Tue, 17 Oct 2023 06:05:52 +0200
-From:   Christoph Hellwig <hch@lst.de>
+        with ESMTP id S229666AbjJQE6h (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 17 Oct 2023 00:58:37 -0400
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 52A618F
+        for <linux-xfs@vger.kernel.org>; Mon, 16 Oct 2023 21:58:36 -0700 (PDT)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id AF989C433C8;
+        Tue, 17 Oct 2023 04:58:35 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1697518715;
+        bh=LT82CcEfgjH509sP2t7HICsjcgQCpwi07/cHZno/Uyo=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=vR2QFenTto8Cc4l9v6dxOhop5hvyh5y1SnHGFGyBm3iNOCd5alCKL708cWjfQfrd+
+         S2CndunoNWnu+ymLa4mI/CjNgrPI5iTYRBkcOd+1E0iw4OUp4ytFW8i+EIV+F17A9a
+         4AtmddcFBPJ1zm7DhR2F5IQR+dZaoh2rycQ3aLCmlBSDygnjTobYxXxVI0yzGpiSO8
+         ejMfj4OMJ0mAKl6QPyY+Zf9TUZBbUHhSoWd92ZYYVOrB6jPTPM6i3e9EBu8yk1yxex
+         HsdqNYvfOkLVHWH55y5oyZadF4Wd05679u4xfkV6nF0n5R2Wgg+kzr7G4ba+8GvwJL
+         nVDk/nugKrwOA==
+Date:   Mon, 16 Oct 2023 21:58:34 -0700
+From:   Eric Biggers <ebiggers@kernel.org>
 To:     "Darrick J. Wong" <djwong@kernel.org>
-Cc:     Christoph Hellwig <hch@lst.de>, linux-xfs@vger.kernel.org,
-        osandov@osandov.com
-Subject: Re: [PATCHSET RFC v1.0 0/7] xfs: clean up realtime type usage
-Message-ID: <20231017040552.GA6025@lst.de>
-References: <20231011175711.GM21298@frogsfrogsfrogs> <169704720721.1773388.10798471315209727198.stgit@frogsfrogsfrogs> <20231012050527.GJ1637@lst.de> <20231012223000.GR21298@frogsfrogsfrogs> <20231013042434.GB5562@lst.de> <20231017004831.GD11402@frogsfrogsfrogs>
+Cc:     Andrey Albershteyn <aalbersh@redhat.com>,
+        linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
+        fsverity@lists.linux.dev, david@fromorbit.com, dchinner@redhat.com
+Subject: Re: [PATCH v3 07/28] fsverity: always use bitmap to track verified
+ status
+Message-ID: <20231017045834.GC1907@sol.localdomain>
+References: <20231006184922.252188-1-aalbersh@redhat.com>
+ <20231006184922.252188-8-aalbersh@redhat.com>
+ <20231011031543.GB1185@sol.localdomain>
+ <q75t2etmyq2zjskkquikatp4yg7k2yoyt4oab4grhlg7yu4wyi@6eax4ysvavyk>
+ <20231012072746.GA2100@sol.localdomain>
+ <20231013031209.GS21298@frogsfrogsfrogs>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20231017004831.GD11402@frogsfrogsfrogs>
-User-Agent: Mutt/1.5.17 (2007-11-01)
+In-Reply-To: <20231013031209.GS21298@frogsfrogsfrogs>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Mon, Oct 16, 2023 at 05:48:31PM -0700, Darrick J. Wong wrote:
-> We can do it crappily in C with __bitwise and letting the static checker
-> bots go wild.  Some day when someone rewrites the entire codebase in
-> Rust (HA!) then we'll be able to do:
+On Thu, Oct 12, 2023 at 08:12:09PM -0700, Darrick J. Wong wrote:
+> Hi Eric,
 > 
-> struct xfs_fsblock_t(u64);
-> struct xfs_agblock_t(u32);
+> [Please excuse my ignorance, this is only the third time I've dived
+> into fsverity.]
 > 
-> and (to the extent that I understand Rust) the Rust compiler will
-> complain about stuffing xfs_agblock_t into an xfs_fsblock_t without a
-> proper conversion.
+> On Thu, Oct 12, 2023 at 12:27:46AM -0700, Eric Biggers wrote:
+> > On Wed, Oct 11, 2023 at 03:03:55PM +0200, Andrey Albershteyn wrote:
+> > > > How complicated would it be to keep supporting using the page bit when
+> > > > merkle_tree_block_size == page_size and the filesystem supports it?  It's an
+> > > > efficient solution, so it would be a shame to lose it.  Also it doesn't have the
+> > > > max file size limit that the bitmap has.
+> 
+> How complex would it be to get rid of the bitmap entirely, and validate
+> all the verity tree blocks within a page all at once instead of
+> individual blocks within a page?
+> 
+> Assuming willy isn't grinding his axe to get rid of PGchecked,
+> obviously. ;)
 
-You can do the struct in C already.  Linux actually does it for PTE
-types optionally.  It's just a real pain in the butt if your regularly
-do arithmetics on it, which we do for the various block/size/offset
-types.
+See what I wrote earlier at
+https://lore.kernel.org/linux-xfs/Y5ltzp6yeMo1oDSk@sol.localdomain.
+Basically it would increase the worst-case latency by a lot.
 
 > 
-> --D
----end quoted text---
+> > > Well, I think it's possible but my motivation was to step away from
+> > > page manipulation as much as possible with intent to not affect other
+> > > filesystems too much. I can probably add handling of this case to
+> > > fsverity_read_merkle_tree_block() but fs/verity still will create
+> > > bitmap and have a limit. The other way is basically revert changes
+> > > done in patch 09, then, it probably will be quite a mix of page/block
+> > > handling in fs/verity/verify.c
+> > 
+> > The page-based caching still has to be supported anyway, since that's what the
+> > other filesystems that support fsverity use, and it seems you don't plan to
+> > change that.
+> 
+> I frankly have been asking myself why /this/ patchset adds so much extra
+> code and flags and whatnot to XFS and fs/verity.  From what I can tell,
+> the xfs buffer cache has been extended to allocate double the memory so
+> that xattr contents can be shadowed.  getxattr for merkle tree contents
+> then pins the buffer, shadows the contents, and hands both back to the
+> caller (aka xfs_read_merkle_tree_block).   The shadow memory is then
+> handed to fs/verity to do its magic; following that, fsverity releases
+> the reference and we can eventually drop the xfs_buf reference.
+> 
+> But this seems way overcomplicated to me.  ->read_merkle_tree_page hands
+> us a pgoff_t and a suggestion for page readahead, and wants us to return
+> an uptodate locked page, right?
+> 
+> Why can't xfs allocate a page, walk the requested range to fill the page
+> with merkle tree blocks that were written to the xattr structure (or
+> zero the page contents if there is no xattr), and hand that page to
+> fsverity?  (It helps to provide the merkle tree block size to
+> xfs_read_merkle_tree_page, thanks for adding that).
+
+Earlier versions of this patchset did that.  But, it's only really feasible if
+the pages are actually cached.  Otherwise it's very inefficient and can result
+in random ENOMEM.
+
+> Assuming fsverity also wants some caching, we could augment the
+> xfs_inode to point to a separate address_space for cached merkle tree
+> pages, and then xfs_read_merkle_tree_page can use __filemap_get_folio to
+> find uptodate cached pages, or instantiate one and make it uptodate.
+> Even better, we can pretty easily use multipage folios for this, though
+> AFAICT the fs/verity code isn't yet up to handling that.
+> 
+> The only thing I can't quite figure out is how to get memory reclaim to
+> scan the extra address_space when it wants to try to reclaim pages.
+> That part ext4 and f2fs got for free because they stuffed the merkle
+> tree in the posteof space.
+> 
+> But wouldn't that solve /all/ the plumbing problems without scattering
+> bits of new code and flags into the xfs buffer cache, the extended
+> attributes code, and elsewhere?  And then xfs would not need to burn up
+> vmap space to allocate 8K memory blocks just to provide 4k merkel tree
+> blocks to fs/verity.
+> 
+> That's just my 2 cents from spending a couple of hours hypothesizing how
+> I would fill out the fsverity_operations.
+
+That might work.  I'm not sure about the details though, e.g. can mapping->host
+point to the file's inode or would it need to be a fake one.
+
+- Eric
