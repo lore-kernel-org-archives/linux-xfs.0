@@ -2,102 +2,142 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0F0E5CDB465
-	for <linux-xfs@archiver.kernel.org>; Mon, 16 Oct 2023 17:19:54 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1E825CDB465
+	for <linux-xfs@archiver.kernel.org>; Tue, 17 Oct 2023 00:37:42 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229666AbjJPRTx (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 16 Oct 2023 13:19:53 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39326 "EHLO
+        id S232873AbjJQAhl (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 16 Oct 2023 20:37:41 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36552 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232570AbjJPRTw (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 16 Oct 2023 13:19:52 -0400
-Received: from mail-pg1-x52d.google.com (mail-pg1-x52d.google.com [IPv6:2607:f8b0:4864:20::52d])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 110C183
-        for <linux-xfs@vger.kernel.org>; Mon, 16 Oct 2023 10:19:50 -0700 (PDT)
-Received: by mail-pg1-x52d.google.com with SMTP id 41be03b00d2f7-517ab9a4a13so3551312a12.1
-        for <linux-xfs@vger.kernel.org>; Mon, 16 Oct 2023 10:19:50 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=osandov-com.20230601.gappssmtp.com; s=20230601; t=1697476789; x=1698081589; darn=vger.kernel.org;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
-        bh=rQrFuxaIw8iRMp1TIq+xfxrfOhw3vg/1KFWpdDCWf5o=;
-        b=jtC11j2H6GxWWCZi3MEDYcuxg3P6GxAhzsSjrBrrqDzxXUy5dlq872r7SHxL8GaJpo
-         MEb1zufioI9e53TWkDkMtIqz5nv8eYY/Tt5mVh1Pgm5lOPhv9QcB735jX+h/D15IaM2X
-         IO2uTZKLJdzRYX0hmnDE37Rl9aGsZh4nme9l75xebXSu6prAHv/sb03QzQWlU9YC/emk
-         fHyF6WnCKQU45RrJtupIZzvoUYtoM4ZI9k1rKdX9/n5xqRs6PKfLbkldkbL3nKEwuB0+
-         vvCFh/BAnpFAkspujCslU7hK0zPhdwvW+WzjfMAR/lumC3OKAmYrSqFDfj836CMwkIdm
-         Vqfw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1697476789; x=1698081589;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=rQrFuxaIw8iRMp1TIq+xfxrfOhw3vg/1KFWpdDCWf5o=;
-        b=IcvnfAIsKpAjhfqA7bXgMmpJUjwssBxZkvS9fVoN1YxyGgZA60mjyFtpJ7ba3Mjtip
-         pXqZOez8zA43XPqhpYB8CDevQ48XaMrO7dAkLddn6pR+eO+FCsFQb6HtYcLR7gk2YIOM
-         bemWUiFSf8aia3/G96XiO4SpZvX/MG5yt6GVeRx3BzU5pEVrZ61CopBj+BY6VJE5axZ1
-         KWMAdzWA+QHUV0lmvX9iLzG6TNXM6dvx7+lmsWZ+PM5Jsw0IS3W5/v7zpQnzsVPrVAtc
-         t6TWj85noHLz2JuWrM+CMDnBPq2CQYIEDyBE6UQtMeCymjPjsPe+YKcryqmtaj8CkHIw
-         LF+w==
-X-Gm-Message-State: AOJu0YzmfuHSaYvEx1JsPgFSNV80uxZ+S/YNb2xjX+sNvxyNVimo8ebS
-        PpGut1q1j6CfPjMzMNIwwOx4Kg==
-X-Google-Smtp-Source: AGHT+IGC6RdK50glETjk9KHmiK5zTcDEJmnnOmpaD4F8oBj2akKkxj4nEANzWU9cKS0Oayh4IaDxQQ==
-X-Received: by 2002:a05:6a20:d403:b0:15e:ab6:6e24 with SMTP id il3-20020a056a20d40300b0015e0ab66e24mr31623369pzb.27.1697476789469;
-        Mon, 16 Oct 2023 10:19:49 -0700 (PDT)
-Received: from telecaster ([2620:10d:c090:500::5:6282])
-        by smtp.gmail.com with ESMTPSA id m9-20020a654c89000000b005af69a358ccsm4139684pgt.77.2023.10.16.10.19.48
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 16 Oct 2023 10:19:49 -0700 (PDT)
-Date:   Mon, 16 Oct 2023 10:19:47 -0700
-From:   Omar Sandoval <osandov@osandov.com>
-To:     "Darrick J. Wong" <djwong@kernel.org>
-Cc:     Christoph Hellwig <hch@lst.de>, linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 7/7] xfs: use shifting and masking when converting rt
- extents, if possible
-Message-ID: <ZS1ws+S+R9anbrdg@telecaster>
-References: <169704721170.1773611.12311239321983752854.stgit@frogsfrogsfrogs>
- <169704721284.1773611.1915589661676489.stgit@frogsfrogsfrogs>
- <20231012052511.GF2184@lst.de>
- <20231012181908.GK21298@frogsfrogsfrogs>
+        with ESMTP id S234284AbjJQAhl (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 16 Oct 2023 20:37:41 -0400
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id DA07DAB
+        for <linux-xfs@vger.kernel.org>; Mon, 16 Oct 2023 17:37:38 -0700 (PDT)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 5CD8AC433C7;
+        Tue, 17 Oct 2023 00:37:38 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1697503058;
+        bh=mVH4iKxzqLK+Sdyd8foGLfi02uoNB0UYovG/VyfU+6U=;
+        h=Date:From:To:Cc:Subject:From;
+        b=VgnbbnN60+3lZ4S4DYcWzFwi0yCLF1KIulQFWME1bzWgAjBP6TH5GiTisklcqbkf1
+         CJfyFLBh+o6dFZRbxheUOoPkArWFdmBKZPTh3OWwa0qwHooUWXAnLmQ4q6e71KG+Fi
+         hxCuB6Up/Hz2Ht4TVPXDVpczOr5iiRtG7lkac+JjobCBNS8CY5zCE9t8St/PgqvG4G
+         HaCfZxSS/6onVqxtFE2WOhjGK7ncHBn5bxLKuHGVU9pMeMj5PN8bxB8mAsxmiJDyUr
+         N4irT6lG8EzHEWhKAzo/nK7PwmoquUCt1x49bc9IqotY9VCrTs8S0eVhU5R+rbrP4n
+         H+FKmJSigrTKQ==
+Date:   Mon, 16 Oct 2023 17:37:37 -0700
+From:   "Darrick J. Wong" <djwong@kernel.org>
+To:     djwong@kernel.org
+Cc:     dchinner@redhat.com, hch@lst.de, linux-xfs@vger.kernel.org,
+        osandov@fb.com, osandov@osandov.com
+Subject: [RFC] xfs-linux: realtime work branch rtalloc-speedups-6.7 updated
+ to 8468dc886e05
+Message-ID: <169750284502.2885534.2271041380117759971.stg-ugh@frogsfrogsfrogs>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20231012181908.GK21298@frogsfrogsfrogs>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Thu, Oct 12, 2023 at 11:19:08AM -0700, Darrick J. Wong wrote:
-> On Thu, Oct 12, 2023 at 07:25:11AM +0200, Christoph Hellwig wrote:
-> > On Wed, Oct 11, 2023 at 11:06:14AM -0700, Darrick J. Wong wrote:
-> > > From: Darrick J. Wong <djwong@kernel.org>
-> > > 
-> > > Avoid the costs of integer division (32-bit and 64-bit) if the realtime
-> > > extent size is a power of two.
-> > 
-> > Looks good:
-> > 
-> > Reviewed-by: Christoph Hellwig <hch@lst.de>
-> > 
-> > Do you have any data on how common non-power of two rtext sizes are?
-> > Might it be worth to add unlikely annotations?
-> 
-> I don't really know about the historical uses.  There might be old
-> filesystems out there with a non-power-of-2 raid stripe size that are
-> set up for full stripe allocations for speed.
-> 
-> We (oracle) are interested in using rt for PMD allocations on pmem/cxl
-> devices and atomic writes on scsi/nvme devices.  Both of those cases
-> will only ever use powers of 2.
-> 
-> I'll add some if-test annotations and we'll see if anyone notices. ;)
-> 
-> --D
+Hi folks,
 
-We are using 1044KB realtime extents (blocksize = 4096, rextsize = 261)
-for our blob storage system. It's a goofy number, but IIRC it was chosen
-because their most common blob sizes were single-digit multiples of a
-megabyte, and they wanted a large-ish (~1MB) realtime extent size to
-reduce external fragmentation, but they also wanted to store a bit of
-extra metadata without requiring an extra realtime extent and blowing up
-internal fragmentation.
+I've created a work branch for all of our realtime cleanups and
+optimizations in the rtalloc-speedups-6.7 branch of the xfs-linux
+repository at:
+
+https://git.kernel.org/pub/scm/linux/kernel/git/djwong/xfs-linux.git
+
+I started by rebasing last week's rt cleanups patchsets against 6.6-rc6
+TOT instead of djwong-dev, then I added Dave's xfs_rtalloc_args cleanup,
+and then added Omar's rt allocator speedups.  This branch HAS NOT BEEN
+TESTED YET, but it's a starting point.
+
+The new head of the rtalloc-speedups-6.7 branch is commit:
+
+8468dc886e05 xfs: don't look for end of extent further than necessary in xfs_rtallocate_extent_near()
+
+36 new commits:
+
+Darrick J. Wong (28):
+[6e271069a8e8] xfs: make xchk_iget safer in the presence of corrupt inode btrees
+[a4f05ca8e957] xfs: bump max fsgeom struct version
+[29c024027344] xfs: hoist freeing of rt data fork extent mappings
+[13b454578ad3] xfs: prevent rt growfs when quota is enabled
+[d37145ff1fc1] xfs: rt stubs should return negative errnos when rt disabled
+[6f9b2269640b] xfs: fix units conversion error in xfs_bmap_del_extent_delay
+[f50b658838a6] xfs: make sure maxlen is still congruent with prod when rounding down
+[615077bc8c1d] xfs: move the xfs_rtbitmap.c declarations to xfs_rtbitmap.h
+[0c1cb7c1da51] xfs: convert xfs_extlen_t to xfs_rtxlen_t in the rt allocator
+[f3a29a7ef69c] xfs: convert rt bitmap/summary block numbers to xfs_fileoff_t
+[fe06f373a0c0] xfs: convert rt bitmap extent lengths to xfs_rtbxlen_t
+[044f35063aae] xfs: rename xfs_verify_rtext to xfs_verify_rtbext
+[d77a09d2f1cd] xfs: convert rt extent numbers to xfs_rtxnum_t
+[62403a6a8347] xfs: create a helper to convert rtextents to rtblocks
+[cdcf7ec7066f] xfs: create a helper to compute leftovers of realtime extents
+[7554cfeea00b] xfs: create a helper to convert extlen to rtextlen
+[289f997d7525] xfs: create helpers to convert rt block numbers to rt extent numbers
+[903b8250c1b2] xfs: convert do_div calls to xfs_rtb_to_rtx helper calls
+[2bc367366fa4] xfs: create rt extent rounding helpers for realtime extent blocks
+[f60b96941aa2] xfs: use shifting and masking when converting rt extents, if possible
+[a024d18f3b34] xfs: convert the rtbitmap block and bit macros to static inline functions
+[8808f43be672] xfs: remove XFS_BLOCKWSIZE and XFS_BLOCKWMASK macros
+[02c6a803ba9d] xfs: convert open-coded xfs_rtword_t pointer accesses to helper
+[3f58eecd512d] xfs: convert rt summary macros to helpers
+[38a9bd42e14a] xfs: create helpers for rtbitmap block/wordcount computations
+[d498cbd3e248] xfs: use accessor functions for bitmap words
+[bf1339d40051] xfs: create helpers for rtsummary block/wordcount computations
+[73550154f276] xfs: use accessor functions for summary info words
+
+Dave Chinner (1):
+[eae4934139cc] xfs: consolidate realtime allocation arguments
+
+Omar Sandoval (6):
+[a0bdaa6acd56] xfs: cache last bitmap block in realtime allocator
+[0e7cd2d75d12] xfs: invert the realtime summary cache
+[1670d971eaa0] xfs: return maximum free size from xfs_rtany_summary()
+[14c0296bc6a1] xfs: limit maxlen based on available space in xfs_rtallocate_extent_near()
+[9a2f547ec4be] xfs: don't try redundant allocations in xfs_rtallocate_extent_near()
+[8468dc886e05] xfs: don't look for end of extent further than necessary in xfs_rtallocate_extent_near()
+
+Shiyang Ruan (1):
+[ea9b00e231ae] mm, pmem, xfs: Introduce MF_MEM_PRE_REMOVE for unbind
+
+Code Diffstat:
+
+drivers/dax/super.c            |   3 +-
+fs/xfs/libxfs/xfs_bmap.c       |  45 +--
+fs/xfs/libxfs/xfs_format.h     |  34 +-
+fs/xfs/libxfs/xfs_rtbitmap.c   | 733 +++++++++++++++++++++++++----------------
+fs/xfs/libxfs/xfs_rtbitmap.h   | 326 ++++++++++++++++++
+fs/xfs/libxfs/xfs_sb.c         |   2 +
+fs/xfs/libxfs/xfs_sb.h         |   2 +-
+fs/xfs/libxfs/xfs_trans_resv.c |  10 +-
+fs/xfs/libxfs/xfs_types.c      |   4 +-
+fs/xfs/libxfs/xfs_types.h      |  10 +-
+fs/xfs/scrub/bmap.c            |   2 +-
+fs/xfs/scrub/common.c          |   6 +-
+fs/xfs/scrub/common.h          |  19 ++
+fs/xfs/scrub/fscounters.c      |   2 +-
+fs/xfs/scrub/inode.c           |   7 +-
+fs/xfs/scrub/rtbitmap.c        |  28 +-
+fs/xfs/scrub/rtsummary.c       |  57 ++--
+fs/xfs/scrub/trace.c           |   1 +
+fs/xfs/scrub/trace.h           |   9 +-
+fs/xfs/xfs_bmap_util.c         |  50 ++-
+fs/xfs/xfs_fsmap.c             |  15 +-
+fs/xfs/xfs_inode_item.c        |   3 +-
+fs/xfs/xfs_ioctl.c             |   5 +-
+fs/xfs/xfs_linux.h             |  12 +
+fs/xfs/xfs_mount.h             |   8 +-
+fs/xfs/xfs_notify_failure.c    | 108 +++++-
+fs/xfs/xfs_ondisk.h            |   4 +
+fs/xfs/xfs_rtalloc.c           | 602 +++++++++++++++++----------------
+fs/xfs/xfs_rtalloc.h           |  94 +-----
+fs/xfs/xfs_super.c             |   3 +-
+fs/xfs/xfs_trans.c             |   7 +-
+include/linux/mm.h             |   1 +
+mm/memory-failure.c            |  21 +-
+33 files changed, 1391 insertions(+), 842 deletions(-)
+create mode 100644 fs/xfs/libxfs/xfs_rtbitmap.h
