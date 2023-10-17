@@ -2,37 +2,38 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0CE4ACDB474
-	for <linux-xfs@archiver.kernel.org>; Tue, 17 Oct 2023 15:50:18 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D53F1CDB482
+	for <linux-xfs@archiver.kernel.org>; Tue, 17 Oct 2023 15:50:35 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1344145AbjJQPuR (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 17 Oct 2023 11:50:17 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59372 "EHLO
+        id S235003AbjJQPuf (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 17 Oct 2023 11:50:35 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49328 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1343995AbjJQPuO (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 17 Oct 2023 11:50:14 -0400
+        with ESMTP id S235082AbjJQPua (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 17 Oct 2023 11:50:30 -0400
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1D42BB0
-        for <linux-xfs@vger.kernel.org>; Tue, 17 Oct 2023 08:50:13 -0700 (PDT)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id AFA39C43140;
-        Tue, 17 Oct 2023 15:50:12 +0000 (UTC)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D9AAEB0
+        for <linux-xfs@vger.kernel.org>; Tue, 17 Oct 2023 08:50:28 -0700 (PDT)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 81261C433CA;
+        Tue, 17 Oct 2023 15:50:28 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1697557812;
-        bh=K8bi/uWXgVyGd8zFwG/nMcOaN+Gn4FBymmj+iYbycWU=;
+        s=k20201202; t=1697557828;
+        bh=NF/6SB7CibgfspvNWwstARi7Z+Si7NkDzSMjTkNBpLQ=;
         h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-        b=Hb3yx1oBys81VZCxM1DQ+hB6UEspdDWat/RteZMt/s+QNbh6lJosvUJJS6546IYDO
-         jDQhMGCmUKCDOyr0nVP0o/Znl8DW6f1zabtgy5TzZEptZ54utnlaaPdxmpONwpMzsR
-         UC/ez0R6RcVh/v6DaNZnajDDFpFan38kkVq56Muj0S/WGs6L09C2iwD7O8TwXoPaiL
-         73DdadFHuTiSGy7sI1VG5VbrCXr0bbUrnwHshAALGvHWkVvp560YMTRagas/7eKMso
-         iRASeG9XWKrUe7i83qGqIS8cCwhG+NPNme0J2le65CCSIY1Kep//CYu4LmH3HqMCe6
-         /Y0721vsynVjA==
-Date:   Tue, 17 Oct 2023 08:50:12 -0700
-Subject: [PATCH 1/7] xfs: create a helper to convert rtextents to rtblocks
+        b=TMmOfg1VURho6eBPkOVa2id/Mve/hPiwuZWn8Y+CmFnO7swXMC+j4VW9lB9NAD6Nr
+         7nXlxwblBHwU/q8E5Ep9fQ/EqNcYv8Ar3YLwKyN69XRUInfX5wONMdlTmNHxh1pWJh
+         wWlibpU+cF66BJQaSUXCcM4hoqNR4PB6KkYvz0kzV/8bei0R7lXdwhVVYsEOfBL1g6
+         z/j+SKHWGJ10qp2ikL9d6eQ+z0jYsIOT2GkCJS940799hqwxrdABG8G1PyHPJ2h/24
+         FlbmBuE+8zKDioNbBlj1ynZA2qbwhDuTsQjn4xHkaMowCtEt7dOFhnsvciNHK8zLH5
+         XQe0Ic5GFY/nA==
+Date:   Tue, 17 Oct 2023 08:50:27 -0700
+Subject: [PATCH 2/7] xfs: create a helper to compute leftovers of realtime
+ extents
 From:   "Darrick J. Wong" <djwong@kernel.org>
 To:     djwong@kernel.org
 Cc:     Christoph Hellwig <hch@lst.de>, osandov@fb.com,
         linux-xfs@vger.kernel.org, hch@lst.de
-Message-ID: <169755741741.3165781.14411234656942899333.stgit@frogsfrogsfrogs>
+Message-ID: <169755741757.3165781.17462185762294040685.stgit@frogsfrogsfrogs>
 In-Reply-To: <169755741717.3165781.12142780069035126128.stgit@frogsfrogsfrogs>
 References: <169755741717.3165781.12142780069035126128.stgit@frogsfrogsfrogs>
 User-Agent: StGit/0.19
@@ -45,165 +46,146 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-Create a helper to convert a realtime extent to a realtime block.  Later
-on we'll change the helper to use bit shifts when possible.
+Create a helper to compute the misalignment between a file extent
+(xfs_extlen_t) and a realtime extent.
 
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 Reviewed-by: Christoph Hellwig <hch@lst.de>
 ---
- fs/xfs/libxfs/xfs_rtbitmap.h |   16 ++++++++++++++++
- fs/xfs/scrub/rtbitmap.c      |    4 ++--
- fs/xfs/scrub/rtsummary.c     |    4 ++--
- fs/xfs/xfs_bmap_util.c       |    9 +++++----
- fs/xfs/xfs_fsmap.c           |    6 +++---
- fs/xfs/xfs_super.c           |    3 ++-
- 6 files changed, 30 insertions(+), 12 deletions(-)
+ fs/xfs/libxfs/xfs_bmap.c     |    4 ++--
+ fs/xfs/libxfs/xfs_rtbitmap.h |    9 +++++++++
+ fs/xfs/scrub/inode.c         |    3 ++-
+ fs/xfs/xfs_bmap_util.c       |    2 +-
+ fs/xfs/xfs_inode_item.c      |    3 ++-
+ fs/xfs/xfs_ioctl.c           |    5 +++--
+ 6 files changed, 19 insertions(+), 7 deletions(-)
 
 
+diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
+index 4e7de4f2fd7a..19203699b992 100644
+--- a/fs/xfs/libxfs/xfs_bmap.c
++++ b/fs/xfs/libxfs/xfs_bmap.c
+@@ -2989,7 +2989,7 @@ xfs_bmap_extsize_align(
+ 	 * If realtime, and the result isn't a multiple of the realtime
+ 	 * extent size we need to remove blocks until it is.
+ 	 */
+-	if (rt && (temp = (align_alen % mp->m_sb.sb_rextsize))) {
++	if (rt && (temp = xfs_extlen_to_rtxmod(mp, align_alen))) {
+ 		/*
+ 		 * We're not covering the original request, or
+ 		 * we won't be able to once we fix the length.
+@@ -3016,7 +3016,7 @@ xfs_bmap_extsize_align(
+ 		else {
+ 			align_alen -= orig_off - align_off;
+ 			align_off = orig_off;
+-			align_alen -= align_alen % mp->m_sb.sb_rextsize;
++			align_alen -= xfs_extlen_to_rtxmod(mp, align_alen);
+ 		}
+ 		/*
+ 		 * Result doesn't cover the request, fail it.
 diff --git a/fs/xfs/libxfs/xfs_rtbitmap.h b/fs/xfs/libxfs/xfs_rtbitmap.h
-index 5e2afb7fea0e..099ea8902aaa 100644
+index 099ea8902aaa..b6a4c46bddc0 100644
 --- a/fs/xfs/libxfs/xfs_rtbitmap.h
 +++ b/fs/xfs/libxfs/xfs_rtbitmap.h
-@@ -6,6 +6,22 @@
- #ifndef __XFS_RTBITMAP_H__
- #define	__XFS_RTBITMAP_H__
+@@ -22,6 +22,15 @@ xfs_rtxlen_to_extlen(
+ 	return rtxlen * mp->m_sb.sb_rextsize;
+ }
  
-+static inline xfs_rtblock_t
-+xfs_rtx_to_rtb(
++/* Compute the misalignment between an extent length and a realtime extent .*/
++static inline unsigned int
++xfs_extlen_to_rtxmod(
 +	struct xfs_mount	*mp,
-+	xfs_rtxnum_t		rtx)
++	xfs_extlen_t		len)
 +{
-+	return rtx * mp->m_sb.sb_rextsize;
-+}
-+
-+static inline xfs_extlen_t
-+xfs_rtxlen_to_extlen(
-+	struct xfs_mount	*mp,
-+	xfs_rtxlen_t		rtxlen)
-+{
-+	return rtxlen * mp->m_sb.sb_rextsize;
++	return len % mp->m_sb.sb_rextsize;
 +}
 +
  /*
   * Functions for walking free space rtextents in the realtime bitmap.
   */
-diff --git a/fs/xfs/scrub/rtbitmap.c b/fs/xfs/scrub/rtbitmap.c
-index bea5a2b75a06..584a2b8badac 100644
---- a/fs/xfs/scrub/rtbitmap.c
-+++ b/fs/xfs/scrub/rtbitmap.c
-@@ -50,8 +50,8 @@ xchk_rtbitmap_rec(
- 	xfs_rtblock_t		startblock;
- 	xfs_filblks_t		blockcount;
+diff --git a/fs/xfs/scrub/inode.c b/fs/xfs/scrub/inode.c
+index 59d7912fb75f..889f556bc98f 100644
+--- a/fs/xfs/scrub/inode.c
++++ b/fs/xfs/scrub/inode.c
+@@ -20,6 +20,7 @@
+ #include "xfs_reflink.h"
+ #include "xfs_rmap.h"
+ #include "xfs_bmap_util.h"
++#include "xfs_rtbitmap.h"
+ #include "scrub/scrub.h"
+ #include "scrub/common.h"
+ #include "scrub/btree.h"
+@@ -225,7 +226,7 @@ xchk_inode_extsize(
+ 	 */
+ 	if ((flags & XFS_DIFLAG_RTINHERIT) &&
+ 	    (flags & XFS_DIFLAG_EXTSZINHERIT) &&
+-	    value % sc->mp->m_sb.sb_rextsize > 0)
++	    xfs_extlen_to_rtxmod(sc->mp, value) > 0)
+ 		xchk_ino_set_warning(sc, ino);
+ }
  
--	startblock = rec->ar_startext * mp->m_sb.sb_rextsize;
--	blockcount = rec->ar_extcount * mp->m_sb.sb_rextsize;
-+	startblock = xfs_rtx_to_rtb(mp, rec->ar_startext);
-+	blockcount = xfs_rtx_to_rtb(mp, rec->ar_extcount);
- 
- 	if (!xfs_verify_rtbext(mp, startblock, blockcount))
- 		xchk_fblock_set_corrupt(sc, XFS_DATA_FORK, 0);
-diff --git a/fs/xfs/scrub/rtsummary.c b/fs/xfs/scrub/rtsummary.c
-index d998f0c378a4..d363286e8b72 100644
---- a/fs/xfs/scrub/rtsummary.c
-+++ b/fs/xfs/scrub/rtsummary.c
-@@ -134,8 +134,8 @@ xchk_rtsum_record_free(
- 	lenlog = XFS_RTBLOCKLOG(rec->ar_extcount);
- 	offs = XFS_SUMOFFS(mp, lenlog, rbmoff);
- 
--	rtbno = rec->ar_startext * mp->m_sb.sb_rextsize;
--	rtlen = rec->ar_extcount * mp->m_sb.sb_rextsize;
-+	rtbno = xfs_rtx_to_rtb(mp, rec->ar_startext);
-+	rtlen = xfs_rtx_to_rtb(mp, rec->ar_extcount);
- 
- 	if (!xfs_verify_rtbext(mp, rtbno, rtlen)) {
- 		xchk_ino_xref_set_corrupt(sc, mp->m_rbmip->i_ino);
 diff --git a/fs/xfs/xfs_bmap_util.c b/fs/xfs/xfs_bmap_util.c
-index 557330281ae3..2d747084c199 100644
+index 2d747084c199..8895184ff90a 100644
 --- a/fs/xfs/xfs_bmap_util.c
 +++ b/fs/xfs/xfs_bmap_util.c
-@@ -28,6 +28,7 @@
- #include "xfs_icache.h"
- #include "xfs_iomap.h"
- #include "xfs_reflink.h"
-+#include "xfs_rtbitmap.h"
- 
- /* Kernel only BMAP related definitions and functions */
- 
-@@ -125,7 +126,7 @@ xfs_bmap_rtalloc(
- 	 * XFS_BMBT_MAX_EXTLEN), we don't hear about that number, and can't
- 	 * adjust the starting point to match it.
- 	 */
--	if (ralen * mp->m_sb.sb_rextsize >= XFS_MAX_BMBT_EXTLEN)
-+	if (xfs_rtxlen_to_extlen(mp, ralen) >= XFS_MAX_BMBT_EXTLEN)
- 		ralen = XFS_MAX_BMBT_EXTLEN / mp->m_sb.sb_rextsize;
+@@ -97,7 +97,7 @@ xfs_bmap_rtalloc(
+ 	if (error)
+ 		return error;
+ 	ASSERT(ap->length);
+-	ASSERT(ap->length % mp->m_sb.sb_rextsize == 0);
++	ASSERT(xfs_extlen_to_rtxmod(mp, ap->length) == 0);
  
  	/*
-@@ -147,7 +148,7 @@ xfs_bmap_rtalloc(
- 		error = xfs_rtpick_extent(mp, ap->tp, ralen, &rtx);
- 		if (error)
- 			return error;
--		ap->blkno = rtx * mp->m_sb.sb_rextsize;
-+		ap->blkno = xfs_rtx_to_rtb(mp, rtx);
- 	} else {
- 		ap->blkno = 0;
- 	}
-@@ -170,8 +171,8 @@ xfs_bmap_rtalloc(
- 		return error;
- 
- 	if (rtx != NULLRTEXTNO) {
--		ap->blkno = rtx * mp->m_sb.sb_rextsize;
--		ap->length = ralen * mp->m_sb.sb_rextsize;
-+		ap->blkno = xfs_rtx_to_rtb(mp, rtx);
-+		ap->length = xfs_rtxlen_to_extlen(mp, ralen);
- 		ap->ip->i_nblocks += ap->length;
- 		xfs_trans_log_inode(ap->tp, ap->ip, XFS_ILOG_CORE);
- 		if (ap->wasdel)
-diff --git a/fs/xfs/xfs_fsmap.c b/fs/xfs/xfs_fsmap.c
-index 8982c5d6cbd0..1a187bc9da3d 100644
---- a/fs/xfs/xfs_fsmap.c
-+++ b/fs/xfs/xfs_fsmap.c
-@@ -483,11 +483,11 @@ xfs_getfsmap_rtdev_rtbitmap_helper(
- 	xfs_rtblock_t			rtbno;
- 	xfs_daddr_t			rec_daddr, len_daddr;
- 
--	rtbno = rec->ar_startext * mp->m_sb.sb_rextsize;
-+	rtbno = xfs_rtx_to_rtb(mp, rec->ar_startext);
- 	rec_daddr = XFS_FSB_TO_BB(mp, rtbno);
- 	irec.rm_startblock = rtbno;
- 
--	rtbno = rec->ar_extcount * mp->m_sb.sb_rextsize;
-+	rtbno = xfs_rtx_to_rtb(mp, rec->ar_extcount);
- 	len_daddr = XFS_FSB_TO_BB(mp, rtbno);
- 	irec.rm_blockcount = rtbno;
- 
-@@ -514,7 +514,7 @@ xfs_getfsmap_rtdev_rtbitmap(
- 	uint64_t			eofs;
- 	int				error;
- 
--	eofs = XFS_FSB_TO_BB(mp, mp->m_sb.sb_rextents * mp->m_sb.sb_rextsize);
-+	eofs = XFS_FSB_TO_BB(mp, xfs_rtx_to_rtb(mp, mp->m_sb.sb_rextents));
- 	if (keys[0].fmr_physical >= eofs)
- 		return 0;
- 	start_rtb = XFS_BB_TO_FSBT(mp,
-diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
-index 819a3568b28f..991a31089dc7 100644
---- a/fs/xfs/xfs_super.c
-+++ b/fs/xfs/xfs_super.c
-@@ -42,6 +42,7 @@
- #include "xfs_xattr.h"
- #include "xfs_iunlink_item.h"
- #include "xfs_dahash_test.h"
+ 	 * If we shifted the file offset downward to satisfy an extent size
+diff --git a/fs/xfs/xfs_inode_item.c b/fs/xfs/xfs_inode_item.c
+index 127b2410eb20..3183d0b03e0b 100644
+--- a/fs/xfs/xfs_inode_item.c
++++ b/fs/xfs/xfs_inode_item.c
+@@ -19,6 +19,7 @@
+ #include "xfs_log.h"
+ #include "xfs_log_priv.h"
+ #include "xfs_error.h"
 +#include "xfs_rtbitmap.h"
- #include "scrub/stats.h"
  
- #include <linux/magic.h>
-@@ -890,7 +891,7 @@ xfs_fs_statfs(
+ #include <linux/iversion.h>
  
- 		statp->f_blocks = sbp->sb_rblocks;
- 		freertx = percpu_counter_sum_positive(&mp->m_frextents);
--		statp->f_bavail = statp->f_bfree = freertx * sbp->sb_rextsize;
-+		statp->f_bavail = statp->f_bfree = xfs_rtx_to_rtb(mp, freertx);
+@@ -107,7 +108,7 @@ xfs_inode_item_precommit(
+ 	 */
+ 	if ((ip->i_diflags & XFS_DIFLAG_RTINHERIT) &&
+ 	    (ip->i_diflags & XFS_DIFLAG_EXTSZINHERIT) &&
+-	    (ip->i_extsize % ip->i_mount->m_sb.sb_rextsize) > 0) {
++	    xfs_extlen_to_rtxmod(ip->i_mount, ip->i_extsize) > 0) {
+ 		ip->i_diflags &= ~(XFS_DIFLAG_EXTSIZE |
+ 				   XFS_DIFLAG_EXTSZINHERIT);
+ 		ip->i_extsize = 0;
+diff --git a/fs/xfs/xfs_ioctl.c b/fs/xfs/xfs_ioctl.c
+index 55bb01173cde..a82470e027f7 100644
+--- a/fs/xfs/xfs_ioctl.c
++++ b/fs/xfs/xfs_ioctl.c
+@@ -38,6 +38,7 @@
+ #include "xfs_reflink.h"
+ #include "xfs_ioctl.h"
+ #include "xfs_xattr.h"
++#include "xfs_rtbitmap.h"
+ 
+ #include <linux/mount.h>
+ #include <linux/namei.h>
+@@ -1004,7 +1005,7 @@ xfs_fill_fsxattr(
+ 		 * later.
+ 		 */
+ 		if ((ip->i_diflags & XFS_DIFLAG_RTINHERIT) &&
+-		    ip->i_extsize % mp->m_sb.sb_rextsize > 0) {
++		    xfs_extlen_to_rtxmod(mp, ip->i_extsize) > 0) {
+ 			fa->fsx_xflags &= ~(FS_XFLAG_EXTSIZE |
+ 					    FS_XFLAG_EXTSZINHERIT);
+ 			fa->fsx_extsize = 0;
+@@ -1130,7 +1131,7 @@ xfs_ioctl_setattr_xflags(
+ 	/* If realtime flag is set then must have realtime device */
+ 	if (fa->fsx_xflags & FS_XFLAG_REALTIME) {
+ 		if (mp->m_sb.sb_rblocks == 0 || mp->m_sb.sb_rextsize == 0 ||
+-		    (ip->i_extsize % mp->m_sb.sb_rextsize))
++		    xfs_extlen_to_rtxmod(mp, ip->i_extsize))
+ 			return -EINVAL;
  	}
  
- 	return 0;
 
