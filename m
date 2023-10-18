@@ -2,223 +2,209 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 205CACDB482
-	for <linux-xfs@archiver.kernel.org>; Wed, 18 Oct 2023 17:39:59 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id CC9C0C41513
+	for <linux-xfs@archiver.kernel.org>; Wed, 18 Oct 2023 17:41:35 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230421AbjJRRj6 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 18 Oct 2023 13:39:58 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55868 "EHLO
+        id S230462AbjJRRle (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 18 Oct 2023 13:41:34 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35692 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229930AbjJRRj4 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 18 Oct 2023 13:39:56 -0400
-Received: from mail-pl1-x635.google.com (mail-pl1-x635.google.com [IPv6:2607:f8b0:4864:20::635])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 533C49F;
-        Wed, 18 Oct 2023 10:39:54 -0700 (PDT)
-Received: by mail-pl1-x635.google.com with SMTP id d9443c01a7336-1c0ecb9a075so49224015ad.2;
-        Wed, 18 Oct 2023 10:39:54 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1697650793; x=1698255593; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:from:to:cc:subject:date:message-id:reply-to;
-        bh=kObTCpttwRGsJXO+T/tcZq3nvHyuvs5borClzJUYcjo=;
-        b=dWIf6iniYVw3XJfX/yp/P6hOR7aPqCoeFu3vF9uP7VNPd15mFAb1jOInTXfwo/Nc0m
-         1g8EKpE40ADCv2v1adI9w02fSb9Qb7xqBxA3egCM10kg6l0mf8DeSY/o2amYAuKnKesq
-         cwqP0QSViSnIBVkS5mTnHLF4yuSf3DMtzWoxpLhYlFZH8hgV0AI9CPNOVT0e+fhebP6f
-         eo4CkiNumNzAT0Y18RhZeHKpMlrN6JdhbfEbym6p/18Zza5o717BZXmVY86TQCjlwDIc
-         4cFfY/SBWCeO1frNcz/dl829NKG+HJn+IDgY8NgzoTxwehEc7d19pk5FUBTmioJHOHyi
-         88Fg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1697650793; x=1698255593;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:x-gm-message-state:from:to:cc:subject:date:message-id
-         :reply-to;
-        bh=kObTCpttwRGsJXO+T/tcZq3nvHyuvs5borClzJUYcjo=;
-        b=ITdvvow71rBck52pQNw2AWX9R9ScWUZrQhhQoubUZhEmILTvt5WFOvN4ljv1Q2sVtS
-         Qyte6/C0iKgTOEfXiEcjl/Ncy/O2Zo5TmNpX9eXbzucm2AJ10zn468fIIbIZo2L2d/J/
-         U95+6Esa8nINr0800MCCD/H/9DO1uXXDNS3U8uIk9mRr5afKm/z39ske8Xjjo2CyjJTn
-         wy4HrOognrNtlGqtFB3weV6pi4Wia6LcbpXYseb1cBmn7h4enZHFQHtXETrMW1dMLKEO
-         2cKFUTdFEumFNDfHkQgFWk+F1gAXDQUojkxQnDWwux7PzYxMTny51tKfGxSKCdJGAr+A
-         AdgA==
-X-Gm-Message-State: AOJu0YyaRqqN/tmQwom9ecwK962f7C+DyyCXRJ6o/x1iUP04jyJC99fu
-        /Rb2kapa4PkmKvgWYLVjjXQ+P8LdN3qNVA==
-X-Google-Smtp-Source: AGHT+IHGWc3brrKeq8m+T2qjYBp+b6NRfd6rMxT7Raa+KkypH9RsWP/08hvWVqAEmGdZAAzRgwqF2Q==
-X-Received: by 2002:a17:903:120f:b0:1bc:e6a:205f with SMTP id l15-20020a170903120f00b001bc0e6a205fmr47574plh.20.1697650793330;
-        Wed, 18 Oct 2023 10:39:53 -0700 (PDT)
-Received: from lrumancik.svl.corp.google.com ([2620:15c:2a3:200:c7ee:164e:dc3a:6a45])
-        by smtp.gmail.com with ESMTPSA id h1-20020a170902eec100b001ca4c20003dsm205866plb.69.2023.10.18.10.39.52
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 18 Oct 2023 10:39:52 -0700 (PDT)
-From:   Leah Rumancik <leah.rumancik@gmail.com>
-To:     stable@vger.kernel.org
-Cc:     linux-xfs@vger.kernel.org, amir73il@gmail.com,
-        chandan.babu@oracle.com, "Darrick J. Wong" <djwong@kernel.org>,
-        Ian Kent <raven@themaw.net>,
-        Dave Chinner <dchinner@redhat.com>,
-        Chandan Babu R <chandanbabu@kernel.org>,
-        Leah Rumancik <leah.rumancik@gmail.com>
-Subject: [PATCH 5.15] xfs: don't expose internal symlink metadata buffers to the vfs
-Date:   Wed, 18 Oct 2023 10:39:45 -0700
-Message-ID: <20231018173945.2858151-1-leah.rumancik@gmail.com>
-X-Mailer: git-send-email 2.42.0.655.g421f12c284-goog
+        with ESMTP id S229998AbjJRRld (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 18 Oct 2023 13:41:33 -0400
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 16E45116;
+        Wed, 18 Oct 2023 10:41:32 -0700 (PDT)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 76D2FC433C8;
+        Wed, 18 Oct 2023 17:41:29 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1697650891;
+        bh=kOWxubIvgkUuX1LHF9Uvd3PXOcCevsiFIHXsUMPyfII=;
+        h=From:Subject:Date:To:Cc:From;
+        b=HmbULKUSdAVTYh0NKXFEKevWhFCUwYFMuL4ZE6MnHrMRc//1huWLlflMoK0S8D7HT
+         RpsmiCca/5mXfeyTb19e8+kl8UJFzEghrdotH3KvXYHZLUsXcKKlbUVfvdQyMx62z6
+         34Xsrh7WT/00XDtz5t6InI84zeLOx7tPeu8rJA9Rwn1Zx9HeCyi0I3fC4LOiYur/fE
+         JDN4Vyc3XcT+ERm/aUw1zN6TI4Le3vB5HM60CU8WN2sV4b/rcSCzdsY2aZvIqYa99Z
+         sjX65S2Oku9xYqAVYGzUC0sAqceFqJ82GaotgiDmurcJyHeCgtRQvu9Ale3NAijBbP
+         rOv1uoNIL4Tnw==
+From:   Jeff Layton <jlayton@kernel.org>
+Subject: [PATCH RFC 0/9] fs: multigrain timestamps (redux)
+Date:   Wed, 18 Oct 2023 13:41:07 -0400
+Message-Id: <20231018-mgtime-v1-0-4a7a97b1f482@kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
+X-B4-Tracking: v=1; b=H4sIALMYMGUC/6tWKk4tykwtVrJSqFYqSi3LLM7MzwNyDHUUlJIzE
+ vPSU3UzU4B8JSMDI2NDA0Mz3dz0kszcVN20VOPURHPTZLM0U0sloOKCotS0zAqwQdFKQW7OSrG
+ 1tQAHBm97XQAAAA==
+To:     Linus Torvalds <torvalds@linux-foundation.org>,
+        Alexander Viro <viro@zeniv.linux.org.uk>,
+        Christian Brauner <brauner@kernel.org>,
+        John Stultz <jstultz@google.com>,
+        Thomas Gleixner <tglx@linutronix.de>,
+        Stephen Boyd <sboyd@kernel.org>,
+        Chandan Babu R <chandan.babu@oracle.com>,
+        "Darrick J. Wong" <djwong@kernel.org>,
+        Dave Chinner <david@fromorbit.com>,
+        Theodore Ts'o <tytso@mit.edu>,
+        Andreas Dilger <adilger.kernel@dilger.ca>,
+        Chris Mason <clm@fb.com>, Josef Bacik <josef@toxicpanda.com>,
+        David Sterba <dsterba@suse.com>,
+        Hugh Dickins <hughd@google.com>,
+        Andrew Morton <akpm@linux-foundation.org>,
+        Amir Goldstein <amir73il@gmail.com>, Jan Kara <jack@suse.de>,
+        David Howells <dhowells@redhat.com>
+Cc:     linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-xfs@vger.kernel.org, linux-ext4@vger.kernel.org,
+        linux-btrfs@vger.kernel.org, linux-mm@kvack.org,
+        linux-nfs@vger.kernel.org, Jeff Layton <jlayton@kernel.org>
+X-Mailer: b4 0.12.3
+X-Developer-Signature: v=1; a=openpgp-sha256; l=5629; i=jlayton@kernel.org;
+ h=from:subject:message-id; bh=kOWxubIvgkUuX1LHF9Uvd3PXOcCevsiFIHXsUMPyfII=;
+ b=owEBbQKS/ZANAwAIAQAOaEEZVoIVAcsmYgBlMBjAuucpyDoopVPNBPSV5kIUK51y3+JkIuJbJ
+ MfA0arDDZaJAjMEAAEIAB0WIQRLwNeyRHGyoYTq9dMADmhBGVaCFQUCZTAYwAAKCRAADmhBGVaC
+ FRcGD/4gWTfDUlUYR99pZVwm1+RHd3+PX9zlbEqYbvDvs6/aA8B9q7koy4wlyncLKHzM5nrgYHf
+ rFzENOpzsSadkGkDajVLKfFaQ7akLUv8uZiji9WsSoT+e1AyWZj0DskG0JKmYteynPzh30YyJL0
+ KHzsJ7pfrumiZBtdXtMJAa8Skoueq0gWV/7oshhybg6JEOMLOQ+4ANJDMsIfpb6+sHdFitMACRF
+ q4gKZPjsX7FZIx1dd0SQdMlRjw4An+JYEwgjP3bkdy7XTjz6sW5sitQstxEDS/JaxZ6XIIL7xqB
+ OO/Jkxmo5/vSa05/4RVeplhTkAh1uV5n4LuWsjuh+Q8bON7Zv4VKdYJP8r9WBL/5zQwCPpHM2SO
+ c5eE9cT+BmXGcJIzAw52UsXAbp0LO+gYHlR+G7q+I5GEVg2+g6LFRoxL0+OpYvIWcycfYQps5NH
+ XnbuDRwrAVg96y3GpdKaOGuEzu1Sm5CLNXS0jYorIwAossaz50WdaaVRJxMjPRinrp+sP8fv7+l
+ h2X/0Yla61mKX6fZZArxV7sA9uEGbMcZPQcXRw5DW7EhjKh1QbyGwF46sawjrX93/UoxFvWEHso
+ iVcm5rVdVOTBwEy9iFhY241oVCW3E7NtCZ/SNf/hiaRQFTl/Sn7Q3aluI/ogOfLPa0eG+eRYdo8
+ H373khRmD98lzxQ==
+X-Developer-Key: i=jlayton@kernel.org; a=openpgp;
+ fpr=4BC0D7B24471B2A184EAF5D3000E684119568215
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-From: "Darrick J. Wong" <djwong@kernel.org>
+The VFS always uses coarse-grained timestamps when updating the
+ctime and mtime after a change. This has the benefit of allowing
+filesystems to optimize away a lot metadata updates, down to around 1
+per jiffy, even when a file is under heavy writes.
 
-[ Upstream commit 7b7820b83f230036fc48c3e7fb280c48c58adebf ]
+Unfortunately, this coarseness has always been an issue when we're
+exporting via NFSv3, which relies on timestamps to validate caches. A
+lot of changes can happen in a jiffy, so timestamps aren't sufficient to
+help the client decide to invalidate the cache.
 
-Ian Kent reported that for inline symlinks, it's possible for
-vfs_readlink to hang on to the target buffer returned by
-_vn_get_link_inline long after it's been freed by xfs inode reclaim.
-This is a layering violation -- we should never expose XFS internals to
-the VFS.
+Even with NFSv4, a lot of exported filesystems don't properly support a
+change attribute and are subject to the same problems with timestamp
+granularity. Other applications have similar issues with timestamps (e.g
+backup applications).
 
-When the symlink has a remote target, we allocate a separate buffer,
-copy the internal information, and let the VFS manage the new buffer's
-lifetime.  Let's adapt the inline code paths to do this too.  It's
-less efficient, but fixes the layering violation and avoids the need to
-adapt the if_data lifetime to rcu rules.  Clearly I don't care about
-readlink benchmarks.
+If we were to always use fine-grained timestamps, that would improve the
+situation, but that becomes rather expensive, as the underlying
+filesystem would have to log a lot more metadata updates.
 
-As a side note, this fixes the minor locking violation where we can
-access the inode data fork without taking any locks; proper locking (and
-eliminating the possibility of having to switch inode_operations on a
-live inode) is essential to online repair coordinating repairs
-correctly.
+What we need is a way to only use fine-grained timestamps when they are
+being actively queried. The idea is to use an unused bit in the ctime's
+tv_nsec field to mark when the mtime or ctime has been queried via
+getattr. Once that has been marked, the next m/ctime update will use a
+fine-grained timestamp.
 
-Reported-by: Ian Kent <raven@themaw.net>
-Signed-off-by: Darrick J. Wong <djwong@kernel.org>
-Reviewed-by: Dave Chinner <dchinner@redhat.com>
-Tested-by: Chandan Babu R <chandanbabu@kernel.org>
-Acked-by: Leah Rumancik <leah.rumancik@gmail.com>
+The original merge of multigrain timestamps for v6.6 had to be reverted,
+as a file with a coarse-grained timestamp could incorrectly appear to be
+modified before a file with a fine-grained timestamp, when that wasn't
+the case.
+
+This revision solves that problem by making it so that when a
+fine-grained timespec64 is handed out, that that value becomes the floor
+for further coarse-grained timespec64 fetches. This requires new
+timekeeper interfaces with a potential downside: when a file is
+stamped with a fine-grained timestamp, it has to (briefly) take the
+global timekeeper spinlock.
+
+Because of that, this set takes greater pains to avoid issuing new
+fine-grained timestamps when possible. A fine-grained timestamp is now
+only required if the current mtime or ctime have been fetched for a
+getattr, and the next coarse-grained tick has not happened yet. For any
+other case, a coarse-grained timestamp is fine, and that is done using
+the seqcount.
+
+In order to get some hard numbers about how often the lock would be
+taken, I've added a couple of percpu counters and a debugfs file for
+tracking both types of multigrain timekeeper fetches.
+
+With this, I did a kdevops fstests run on xfs (CRC mode). I ran "make
+fstests-baseline" and then immediately grabbed the counter values, and
+calcuated the percentage:
+
+$ time make fstests-baseline
+real    324m17.337s
+user    27m23.213s
+sys     2m40.313s
+
+fine            3059498
+coarse          383848171
+pct fine        .79075661
+
+Next I did a kdevops fstests run with NFS. One server serving 3 clients
+(v4.2, v4.0 and v3). Again, timed "make fstests-baseline" and then
+grabbed the multigrain counters from the NFS server:
+
+$ time make fstests-baseline
+real    181m57.585s
+user    16m8.266s
+sys     1m45.864s
+
+fine            8137657
+coarse          44726007
+pct fine        15.393668
+
+We can't run as many tests on nfs as xfs, so the run is shorter. nfsd is
+a very getattr-heavy workload, and the clients aggressively coalesce
+writes, so this is probably something of a pessimal case for number of
+fine-grained timestamps over time.
+
+At this point I'm mainly wondering whether (briefly) taking the
+timekeeper spinlock in this codepath is unreasonable. It does very
+little work under it, so I'm hoping the impact would be unmeasurable for
+most workloads.
+
+Side Q: what's the best tool for measuring spinlock contention? It'd be
+interesting to see how often (and how long) we end up spinning on this
+lock under different workloads.
+
+Note that some of the patches in the series are virtually identical to
+the ones before. I stripped the prior Reviewed-by/Acked-by tags though
+since the underlying infrastructure has changed a bit.
+
+Comments and suggestions welcome.
+
+Signed-off-by: Jeff Layton <jlayton@kernel.org>
 ---
- fs/xfs/xfs_iops.c    | 34 +---------------------------------
- fs/xfs/xfs_symlink.c | 29 +++++++++++++++++++----------
- 2 files changed, 20 insertions(+), 43 deletions(-)
+Jeff Layton (9):
+      fs: switch timespec64 fields in inode to discrete integers
+      timekeeping: new interfaces for multigrain timestamp handing
+      timekeeping: add new debugfs file to count multigrain timestamps
+      fs: add infrastructure for multigrain timestamps
+      fs: have setattr_copy handle multigrain timestamps appropriately
+      xfs: switch to multigrain timestamps
+      ext4: switch to multigrain timestamps
+      btrfs: convert to multigrain timestamps
+      tmpfs: add support for multigrain timestamps
 
-diff --git a/fs/xfs/xfs_iops.c b/fs/xfs/xfs_iops.c
-index 1eb71275e5b0..8696d6551200 100644
---- a/fs/xfs/xfs_iops.c
-+++ b/fs/xfs/xfs_iops.c
-@@ -511,27 +511,6 @@ xfs_vn_get_link(
- 	return ERR_PTR(error);
- }
- 
--STATIC const char *
--xfs_vn_get_link_inline(
--	struct dentry		*dentry,
--	struct inode		*inode,
--	struct delayed_call	*done)
--{
--	struct xfs_inode	*ip = XFS_I(inode);
--	char			*link;
--
--	ASSERT(ip->i_df.if_format == XFS_DINODE_FMT_LOCAL);
--
--	/*
--	 * The VFS crashes on a NULL pointer, so return -EFSCORRUPTED if
--	 * if_data is junk.
--	 */
--	link = ip->i_df.if_u1.if_data;
--	if (XFS_IS_CORRUPT(ip->i_mount, !link))
--		return ERR_PTR(-EFSCORRUPTED);
--	return link;
--}
--
- static uint32_t
- xfs_stat_blksize(
- 	struct xfs_inode	*ip)
-@@ -1200,14 +1179,6 @@ static const struct inode_operations xfs_symlink_inode_operations = {
- 	.update_time		= xfs_vn_update_time,
- };
- 
--static const struct inode_operations xfs_inline_symlink_inode_operations = {
--	.get_link		= xfs_vn_get_link_inline,
--	.getattr		= xfs_vn_getattr,
--	.setattr		= xfs_vn_setattr,
--	.listxattr		= xfs_vn_listxattr,
--	.update_time		= xfs_vn_update_time,
--};
--
- /* Figure out if this file actually supports DAX. */
- static bool
- xfs_inode_supports_dax(
-@@ -1358,10 +1329,7 @@ xfs_setup_iops(
- 		inode->i_fop = &xfs_dir_file_operations;
- 		break;
- 	case S_IFLNK:
--		if (ip->i_df.if_format == XFS_DINODE_FMT_LOCAL)
--			inode->i_op = &xfs_inline_symlink_inode_operations;
--		else
--			inode->i_op = &xfs_symlink_inode_operations;
-+		inode->i_op = &xfs_symlink_inode_operations;
- 		break;
- 	default:
- 		inode->i_op = &xfs_inode_operations;
-diff --git a/fs/xfs/xfs_symlink.c b/fs/xfs/xfs_symlink.c
-index a31d2e5d0321..affbedf78160 100644
---- a/fs/xfs/xfs_symlink.c
-+++ b/fs/xfs/xfs_symlink.c
-@@ -22,6 +22,7 @@
- #include "xfs_trace.h"
- #include "xfs_trans.h"
- #include "xfs_ialloc.h"
-+#include "xfs_error.h"
- 
- /* ----- Kernel only functions below ----- */
- int
-@@ -96,17 +97,15 @@ xfs_readlink_bmap_ilocked(
- 
- int
- xfs_readlink(
--	struct xfs_inode *ip,
--	char		*link)
-+	struct xfs_inode	*ip,
-+	char			*link)
- {
--	struct xfs_mount *mp = ip->i_mount;
--	xfs_fsize_t	pathlen;
--	int		error = 0;
-+	struct xfs_mount	*mp = ip->i_mount;
-+	xfs_fsize_t		pathlen;
-+	int			error = -EFSCORRUPTED;
- 
- 	trace_xfs_readlink(ip);
- 
--	ASSERT(ip->i_df.if_format != XFS_DINODE_FMT_LOCAL);
--
- 	if (xfs_is_shutdown(mp))
- 		return -EIO;
- 
-@@ -121,12 +120,22 @@ xfs_readlink(
- 			 __func__, (unsigned long long) ip->i_ino,
- 			 (long long) pathlen);
- 		ASSERT(0);
--		error = -EFSCORRUPTED;
- 		goto out;
- 	}
- 
--
--	error = xfs_readlink_bmap_ilocked(ip, link);
-+	if (ip->i_df.if_format == XFS_DINODE_FMT_LOCAL) {
-+		/*
-+		 * The VFS crashes on a NULL pointer, so return -EFSCORRUPTED
-+		 * if if_data is junk.
-+		 */
-+		if (XFS_IS_CORRUPT(ip->i_mount, !ip->i_df.if_u1.if_data))
-+			goto out;
-+
-+		memcpy(link, ip->i_df.if_u1.if_data, pathlen + 1);
-+		error = 0;
-+	} else {
-+		error = xfs_readlink_bmap_ilocked(ip, link);
-+	}
- 
-  out:
- 	xfs_iunlock(ip, XFS_ILOCK_SHARED);
+ fs/attr.c                           |  52 ++++++++++++++--
+ fs/btrfs/file.c                     |  25 ++------
+ fs/btrfs/super.c                    |   5 +-
+ fs/ext4/super.c                     |   2 +-
+ fs/inode.c                          |  70 ++++++++++++++++++++-
+ fs/stat.c                           |  41 ++++++++++++-
+ fs/xfs/libxfs/xfs_trans_inode.c     |   6 +-
+ fs/xfs/xfs_iops.c                   |  10 +--
+ fs/xfs/xfs_super.c                  |   2 +-
+ include/linux/fs.h                  |  85 ++++++++++++++++++--------
+ include/linux/timekeeper_internal.h |   2 +
+ include/linux/timekeeping.h         |   4 ++
+ kernel/time/timekeeping.c           | 117 ++++++++++++++++++++++++++++++++++++
+ mm/shmem.c                          |   2 +-
+ 14 files changed, 352 insertions(+), 71 deletions(-)
+---
+base-commit: 12cd44023651666bd44baa36a5c999698890debb
+change-id: 20231016-mgtime-fe3ea75c6f59
+
+Best regards,
 -- 
-2.42.0.655.g421f12c284-goog
+Jeff Layton <jlayton@kernel.org>
 
