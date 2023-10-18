@@ -2,38 +2,38 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D628ECDB485
-	for <linux-xfs@archiver.kernel.org>; Wed, 18 Oct 2023 17:41:53 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3B40ECDB486
+	for <linux-xfs@archiver.kernel.org>; Wed, 18 Oct 2023 17:41:54 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231453AbjJRRlq (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 18 Oct 2023 13:41:46 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39370 "EHLO
+        id S231414AbjJRRlp (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 18 Oct 2023 13:41:45 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39280 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231293AbjJRRlo (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 18 Oct 2023 13:41:44 -0400
+        with ESMTP id S231215AbjJRRlh (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 18 Oct 2023 13:41:37 -0400
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 75A02120;
-        Wed, 18 Oct 2023 10:41:39 -0700 (PDT)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id E1BBFC433D9;
-        Wed, 18 Oct 2023 17:41:36 +0000 (UTC)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8EDED11C;
+        Wed, 18 Oct 2023 10:41:34 -0700 (PDT)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id F0865C433CD;
+        Wed, 18 Oct 2023 17:41:31 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1697650899;
-        bh=oV0lFdI7Yn7QJ5JE87c+C5HW+Uto4gEIDr/OnGVhofo=;
+        s=k20201202; t=1697650894;
+        bh=jWmZ1Ravl5cu/wOo4Bog6k1d+CwyPST2G6rAUV4ZYAc=;
         h=From:Date:Subject:References:In-Reply-To:To:Cc:From;
-        b=GcpsqU3PkpNElzrRNZAh3XTjk9L9FU1ZFKJ0Nuy36O4dTnIGzGvLmzqNHSEPu56yj
-         fwpfkupeILBixno66h7UwaC+ESWCL5Mn9+PHSEDIe/d39R2QJtMWQdIk9dtKO+8mBv
-         fs9yJoR0RLy47E5axLbnbDIwRRY/K92Ahi/zp/JiYqTrHQqZBsRgMsLEMiI58WmFY7
-         CPOULDJXAtNvZY2Y4tUNSA5fdezHHf+X+L8uPAgCasaFp2dpwPzXlw41p5JMyEMgSF
-         V8IDjIp+cpdNbLf2y+84w2Z35QTu7OAnQl+JskaMxc+mKp7GxaRqPDtAUViX1j0jwi
-         1qYxkdVgrYioQ==
+        b=vHqr3PeTFpDRNPF3idVxxCdnb1iVi0NE8DkKoUZrVcZEfyflEgmWCoz3c30QBIYgV
+         QHUjC6yzrdbgCryMrV/z8AraieOhCmp5ydSy1Jlqy/frfz3I7YSKlgI5kDCw9W9L0G
+         6wdcPzpynxo6jrP6c7EPrU4xUvOBBF8acqKT80+bwKIiWoG+0FKGZn2rspmzYEp5Uw
+         yczqNkmwK3PiefZQP5RsLlEHZJRaSQCGu1OYDHgU58+Yl+kixzJq6GJmgUYJk5WB9q
+         jGypQFbK++CbII2WD5VXoDWHRSnbQ9wKs9T6uoUfg0c1QygVUa4DSDyJFGF5QUtR0X
+         akQ1ufOzxnSZQ==
 From:   Jeff Layton <jlayton@kernel.org>
-Date:   Wed, 18 Oct 2023 13:41:10 -0400
-Subject: [PATCH RFC 3/9] timekeeping: add new debugfs file to count
- multigrain timestamps
+Date:   Wed, 18 Oct 2023 13:41:08 -0400
+Subject: [PATCH RFC 1/9] fs: switch timespec64 fields in inode to discrete
+ integers
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
-Message-Id: <20231018-mgtime-v1-3-4a7a97b1f482@kernel.org>
+Message-Id: <20231018-mgtime-v1-1-4a7a97b1f482@kernel.org>
 References: <20231018-mgtime-v1-0-4a7a97b1f482@kernel.org>
 In-Reply-To: <20231018-mgtime-v1-0-4a7a97b1f482@kernel.org>
 To:     Linus Torvalds <torvalds@linux-foundation.org>,
@@ -58,108 +58,184 @@ Cc:     linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org,
         linux-btrfs@vger.kernel.org, linux-mm@kvack.org,
         linux-nfs@vger.kernel.org, Jeff Layton <jlayton@kernel.org>
 X-Mailer: b4 0.12.3
-X-Developer-Signature: v=1; a=openpgp-sha256; l=2249; i=jlayton@kernel.org;
- h=from:subject:message-id; bh=oV0lFdI7Yn7QJ5JE87c+C5HW+Uto4gEIDr/OnGVhofo=;
- b=owEBbQKS/ZANAwAIAQAOaEEZVoIVAcsmYgBlMBjIZJAEh2EvSWsTRIXNUoSp+/gPrdnrW38DM
- 8NdE4JkFmWJAjMEAAEIAB0WIQRLwNeyRHGyoYTq9dMADmhBGVaCFQUCZTAYyAAKCRAADmhBGVaC
- FYbiD/0ZFfWVcuSGUPgSgemJY2MzGuMffXnd/jkl+/NHQ1nlRsWS01DWyVwdWucUQasEC1H0rdI
- 5uXOT2GcTX/68+GO+2tqvb1JlhSnujcLZm1Lg456xiDlllxlwIhZ9tZrlYVCOrYuP8jEqXYvjZU
- V+pX3XjE/kpytbDpv4jBNXvd33alsrO1+bznAl0pM2sOm/dVXZQSQ8NYrpztvxjJk5qNLqUPS7Z
- U77qUZBIXUm2mQR8NpLwL471ld2/NmDB4pWDRjvCl9+E9LUaKW68g5iDdMrP1FYZEgo5nuBug26
- G9gk1+WG8MzsHsYFl6ELLbS2zBVqoMtrdqt568EogG7jT0bV9ZMQdIYySUOXW4QYfw8xmG5gMep
- x76CG8p1DUeFingRztj1TLljnTJOBjvvu6/y4uHysrrk48R5ZJgW10j9GNfzFxlmWLjzROb5uq1
- DrLstWJYcyyzYThiFx6ceWhtadCHD8oOozKVH0QwA2Iz6TUjCXq4wmT/TUthsNQ64iTwZKIscuS
- i8Te9fkr7v+sjrBd7L3KROqoW+H82LEsMIQaJGP7fXOLTpmGndcbF9RRWYs3TY48ha1YUBvq1tG
- mr5XAlH/ldtbzv9DCdGsn+zCmXwMuFoPEEiGSzhQzKBi1Xi62s7eCGftf2cmFcAvZBqTr8ByLyl
- avNZl9vDKp3Z4KQ==
+X-Developer-Signature: v=1; a=openpgp-sha256; l=4674; i=jlayton@kernel.org;
+ h=from:subject:message-id; bh=jWmZ1Ravl5cu/wOo4Bog6k1d+CwyPST2G6rAUV4ZYAc=;
+ b=owEBbQKS/ZANAwAIAQAOaEEZVoIVAcsmYgBlMBjIMZMk9hA0a0rbXtgzOBS8+JUCWebR2P/8J
+ wgnb+onjoOJAjMEAAEIAB0WIQRLwNeyRHGyoYTq9dMADmhBGVaCFQUCZTAYyAAKCRAADmhBGVaC
+ FRN4D/4hg/46V/lM9F5UuttDEfFBixG4KR0EymQEurGFApb4lySZ+KxbxVkqAm7IyL+FGAaylWc
+ HWdk3vSQOpB0wg/2wS4ymKQcXH85SVmR/9XEb7cwkGmGji5l1IRuyksbprbUJUoYrd74o3VwZ2J
+ FGfFODjJ1z2g8QOi+FPBhSrHSMPe6a+6t1RhTll6jSfUaLC5mT72UQKVTqezrCk3c7BrDg7wF8W
+ P3sKppsD3IboBFnqLbTs+9FMukgmOdVC5ot278zCccIfSVSTWJov4PuYGZGg2sxnKJHL00sXNzC
+ UpTPwBA06FEZnVVSubHR+v91WVQ9P8C7VgWnpAkNm0CuuoNGtBmtvA7dEM95ePdvysiYdTNgfbL
+ lw9ll9YwoDxfKsgg8rC6dm6qHAEDZ4d2yBpi2ytPeV6cosMnf7ABN6v1L7saN4C9DAj43QdvZ0L
+ NI9Sf0xSeBKtgKlsAkaKw1vFv9SxFWOvRLr06pyTa7aogQymJeKR714W1uy52Hb7lXCTSQGiDqt
+ LBOBs244/a4JkQg0YfaivbgWS4haeHjH/Tc/YCT7wc6YGa+dUSQIviYyiczEXqT1Xvim3WEL+vK
+ QXaNIVewLajwOQrViIMfh0wl3NievUibTIxrqaKsoZH9/zvSBivCwxyjO+SU5bOzzJvjm6OM1Zz
+ MO1qldTLt22SnAw==
 X-Developer-Key: i=jlayton@kernel.org; a=openpgp;
  fpr=4BC0D7B24471B2A184EAF5D3000E684119568215
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Add two percpu counters for tracking multigrain timestamps -- one for
-coarse-grained timestamps and one for fine-grained ones. Add a new
-debugfs file for summing them and outputting the result.
+This shaves 8 bytes off struct inode with a garden-variety Fedora
+Kconfig, but it moves the i_lock into the previous cacheline, away from
+the fields it protects. To remedy that, move the i_generation just after
+the nanosecond fields, which moves the 4 byte hole down next to
+i_fsnotify_mask.
 
+Suggested-by: Linus Torvalds <torvalds@linux-foundation.org>
+Suggested-by: Amir Goldstein <amir73il@gmail.com>
 Signed-off-by: Jeff Layton <jlayton@kernel.org>
 ---
- kernel/time/timekeeping.c | 37 +++++++++++++++++++++++++++++++++++++
- 1 file changed, 37 insertions(+)
+ include/linux/fs.h | 56 +++++++++++++++++++++++++++++++-----------------------
+ 1 file changed, 32 insertions(+), 24 deletions(-)
 
-diff --git a/kernel/time/timekeeping.c b/kernel/time/timekeeping.c
-index 7c20c98b1ea8..c843838cb643 100644
---- a/kernel/time/timekeeping.c
-+++ b/kernel/time/timekeeping.c
-@@ -24,6 +24,8 @@
- #include <linux/compiler.h>
- #include <linux/audit.h>
- #include <linux/random.h>
-+#include <linux/seq_file.h>
-+#include <linux/debugfs.h>
+diff --git a/include/linux/fs.h b/include/linux/fs.h
+index cc29518517f7..78786c1c32fd 100644
+--- a/include/linux/fs.h
++++ b/include/linux/fs.h
+@@ -671,9 +671,13 @@ struct inode {
+ 	};
+ 	dev_t			i_rdev;
+ 	loff_t			i_size;
+-	struct timespec64	__i_atime;
+-	struct timespec64	__i_mtime;
+-	struct timespec64	__i_ctime; /* use inode_*_ctime accessors! */
++	time64_t		i_atime_sec;
++	time64_t		i_mtime_sec;
++	time64_t		i_ctime_sec;
++	u32			i_atime_nsec;
++	u32			i_mtime_nsec;
++	u32			i_ctime_nsec;
++	u32			i_generation;
+ 	spinlock_t		i_lock;	/* i_blocks, i_bytes, maybe i_size */
+ 	unsigned short          i_bytes;
+ 	u8			i_blkbits;
+@@ -730,10 +734,10 @@ struct inode {
+ 		unsigned		i_dir_seq;
+ 	};
  
- #include "tick-internal.h"
- #include "ntp_internal.h"
-@@ -59,6 +61,9 @@ static struct {
+-	__u32			i_generation;
  
- static struct timekeeper shadow_timekeeper;
+ #ifdef CONFIG_FSNOTIFY
+ 	__u32			i_fsnotify_mask; /* all events this inode cares about */
++	/* 32bit hole reserved for expanding i_fsnotify_mask to 64bit */
+ 	struct fsnotify_mark_connector __rcu	*i_fsnotify_marks;
+ #endif
  
-+struct percpu_counter mg_fine_ts;
-+struct percpu_counter mg_coarse_ts;
-+
- /* flag for if timekeeping is suspended */
- int __read_mostly timekeeping_suspended;
+@@ -1513,23 +1517,27 @@ struct timespec64 inode_set_ctime_current(struct inode *inode);
  
-@@ -2326,6 +2331,7 @@ void ktime_get_mg_fine_ts64(struct timespec64 *ts)
- 
- 	ts->tv_nsec = 0;
- 	timespec64_add_ns(ts, nsecs);
-+	percpu_counter_inc(&mg_fine_ts);
+ static inline time64_t inode_get_atime_sec(const struct inode *inode)
+ {
+-	return inode->__i_atime.tv_sec;
++	return inode->i_atime_sec;
  }
  
- /**
-@@ -2361,6 +2367,7 @@ void ktime_get_mg_coarse_ts64(struct timespec64 *ts)
- 		ts->tv_nsec = 0;
- 		timespec64_add_ns(ts, nsec);
- 	}
-+	percpu_counter_inc(&mg_coarse_ts);
+ static inline long inode_get_atime_nsec(const struct inode *inode)
+ {
+-	return inode->__i_atime.tv_nsec;
++	return inode->i_atime_nsec;
  }
  
- /*
-@@ -2581,3 +2588,33 @@ void hardpps(const struct timespec64 *phase_ts, const struct timespec64 *raw_ts)
+ static inline struct timespec64 inode_get_atime(const struct inode *inode)
+ {
+-	return inode->__i_atime;
++	struct timespec64 ts = { .tv_sec  = inode_get_atime_sec(inode),
++				 .tv_nsec = inode_get_atime_nsec(inode) };
++
++	return ts;
  }
- EXPORT_SYMBOL(hardpps);
- #endif /* CONFIG_NTP_PPS */
+ 
+ static inline struct timespec64 inode_set_atime_to_ts(struct inode *inode,
+ 						      struct timespec64 ts)
+ {
+-	inode->__i_atime = ts;
++	inode->i_atime_sec = ts.tv_sec;
++	inode->i_atime_nsec = ts.tv_nsec;
+ 	return ts;
+ }
+ 
+@@ -1538,28 +1546,32 @@ static inline struct timespec64 inode_set_atime(struct inode *inode,
+ {
+ 	struct timespec64 ts = { .tv_sec  = sec,
+ 				 .tv_nsec = nsec };
 +
-+static int fgts_show(struct seq_file *s, void *p)
-+{
-+	u64 fine = percpu_counter_sum(&mg_fine_ts);
-+	u64 coarse = percpu_counter_sum(&mg_coarse_ts);
+ 	return inode_set_atime_to_ts(inode, ts);
+ }
+ 
+ static inline time64_t inode_get_mtime_sec(const struct inode *inode)
+ {
+-	return inode->__i_mtime.tv_sec;
++	return inode->i_mtime_sec;
+ }
+ 
+ static inline long inode_get_mtime_nsec(const struct inode *inode)
+ {
+-	return inode->__i_mtime.tv_nsec;
++	return inode->i_mtime_nsec;
+ }
+ 
+ static inline struct timespec64 inode_get_mtime(const struct inode *inode)
+ {
+-	return inode->__i_mtime;
++	struct timespec64 ts = { .tv_sec  = inode_get_mtime_sec(inode),
++				 .tv_nsec = inode_get_mtime_nsec(inode) };
++	return ts;
+ }
+ 
+ static inline struct timespec64 inode_set_mtime_to_ts(struct inode *inode,
+ 						      struct timespec64 ts)
+ {
+-	inode->__i_mtime = ts;
++	inode->i_mtime_sec = ts.tv_sec;
++	inode->i_mtime_nsec = ts.tv_nsec;
+ 	return ts;
+ }
+ 
+@@ -1573,34 +1585,30 @@ static inline struct timespec64 inode_set_mtime(struct inode *inode,
+ 
+ static inline time64_t inode_get_ctime_sec(const struct inode *inode)
+ {
+-	return inode->__i_ctime.tv_sec;
++	return inode->i_ctime_sec;
+ }
+ 
+ static inline long inode_get_ctime_nsec(const struct inode *inode)
+ {
+-	return inode->__i_ctime.tv_nsec;
++	return inode->i_ctime_nsec;
+ }
+ 
+ static inline struct timespec64 inode_get_ctime(const struct inode *inode)
+ {
+-	return inode->__i_ctime;
++	struct timespec64 ts = { .tv_sec  = inode_get_ctime_sec(inode),
++				 .tv_nsec = inode_get_ctime_nsec(inode) };
 +
-+	seq_printf(s, "%llu %llu\n", fine, coarse);
-+	return 0;
-+}
-+
-+DEFINE_SHOW_ATTRIBUTE(fgts);
-+
-+static int __init tk_debugfs_init(void)
-+{
-+	int ret = percpu_counter_init(&mg_fine_ts, 0, GFP_KERNEL);
-+
-+	if (ret)
-+		return ret;
-+
-+	ret = percpu_counter_init(&mg_coarse_ts, 0, GFP_KERNEL);
-+	if (ret) {
-+		percpu_counter_destroy(&mg_fine_ts);
-+		return ret;
-+	}
-+
-+	debugfs_create_file("multigrain_timestamps", S_IFREG | S_IRUGO,
-+				NULL, NULL, &fgts_fops);
-+	return 0;
-+}
-+late_initcall(tk_debugfs_init);
++	return ts;
+ }
+ 
+ static inline struct timespec64 inode_set_ctime_to_ts(struct inode *inode,
+ 						      struct timespec64 ts)
+ {
+-	inode->__i_ctime = ts;
++	inode->i_ctime_sec = ts.tv_sec;
++	inode->i_ctime_nsec = ts.tv_nsec;
+ 	return ts;
+ }
+ 
+-/**
+- * inode_set_ctime - set the ctime in the inode
+- * @inode: inode in which to set the ctime
+- * @sec: tv_sec value to set
+- * @nsec: tv_nsec value to set
+- *
+- * Set the ctime in @inode to { @sec, @nsec }
+- */
+ static inline struct timespec64 inode_set_ctime(struct inode *inode,
+ 						time64_t sec, long nsec)
+ {
 
 -- 
 2.41.0
