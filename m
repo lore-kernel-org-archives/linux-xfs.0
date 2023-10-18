@@ -2,91 +2,187 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id EAB1ECDB482
-	for <linux-xfs@archiver.kernel.org>; Wed, 18 Oct 2023 19:19:23 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 63791C46CA1
+	for <linux-xfs@archiver.kernel.org>; Wed, 18 Oct 2023 20:47:46 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231194AbjJRTTX (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 18 Oct 2023 15:19:23 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33708 "EHLO
+        id S232129AbjJRUrq (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 18 Oct 2023 16:47:46 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56208 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230421AbjJRTTX (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 18 Oct 2023 15:19:23 -0400
-Received: from mgamail.intel.com (mgamail.intel.com [192.55.52.120])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A2DFD120;
-        Wed, 18 Oct 2023 12:19:20 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1697656760; x=1729192760;
-  h=date:from:to:cc:subject:message-id:references:
-   mime-version:in-reply-to;
-  bh=iGPJbyS6joPU8I9o2PYhfnt2iIQTBwStBxb7SO7ASug=;
-  b=Pz5L8CSieakdmJjKSIhGO4DyqDgVsdLNScv/j7bRe32OJ1pNLxEIBXoX
-   7PpkobClHwoopLvZoizCI1NH6eCO/aKPiI3w71XXMx09KKTvIY49E43oK
-   +ViZArB1VmjxhU/OiBtJntj5yWuS7pHXHImUSAZWtUvJy3jRSaCkpjGIe
-   o6TXwAjuF+/Jj9hoNbMxJYGAIaStKlSNWRJK05XUZNhO7EjjBG5f/lDS0
-   vrHKY02qhFsHvr3aEE96+pceV3NbvOhhgQ8iQDFZPKQabqlGnMknbR78m
-   2Y0N9wCOdj4MtA+W7acIxvJK81RTh1fmLFxa5gZgpBHEkVx/GNLNCWAZw
-   A==;
-X-IronPort-AV: E=McAfee;i="6600,9927,10867"; a="384966120"
-X-IronPort-AV: E=Sophos;i="6.03,235,1694761200"; 
-   d="scan'208";a="384966120"
-Received: from orsmga005.jf.intel.com ([10.7.209.41])
-  by fmsmga104.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 18 Oct 2023 12:19:20 -0700
-X-ExtLoop1: 1
-X-IronPort-AV: E=McAfee;i="6600,9927,10867"; a="930314505"
-X-IronPort-AV: E=Sophos;i="6.03,235,1694761200"; 
-   d="scan'208";a="930314505"
-Received: from lkp-server01.sh.intel.com (HELO 8917679a5d3e) ([10.239.97.150])
-  by orsmga005.jf.intel.com with ESMTP; 18 Oct 2023 12:19:18 -0700
-Received: from kbuild by 8917679a5d3e with local (Exim 4.96)
-        (envelope-from <lkp@intel.com>)
-        id 1qtC4Z-0000tA-2Y;
-        Wed, 18 Oct 2023 19:19:15 +0000
-Date:   Thu, 19 Oct 2023 03:18:46 +0800
-From:   kernel test robot <lkp@intel.com>
-To:     Andrey Albershteyn <aalbersh@redhat.com>,
-        linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
-        fsverity@lists.linux.dev
-Cc:     oe-kbuild-all@lists.linux.dev, djwong@kernel.org,
-        ebiggers@kernel.org, david@fromorbit.com, dchinner@redhat.com,
-        Andrey Albershteyn <aalbersh@redhat.com>
-Subject: Re: [PATCH v3 25/28] xfs: add fs-verity support
-Message-ID: <202310190201.brxlwE23-lkp@intel.com>
-References: <20231006184922.252188-26-aalbersh@redhat.com>
+        with ESMTP id S232216AbjJRUrn (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 18 Oct 2023 16:47:43 -0400
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 39705FE;
+        Wed, 18 Oct 2023 13:47:41 -0700 (PDT)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 8AB2EC433C8;
+        Wed, 18 Oct 2023 20:47:38 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1697662060;
+        bh=ur7fcft+INev6z8sCndtms845O1A1/aPF0TIAWbDkS0=;
+        h=Subject:From:To:Cc:Date:In-Reply-To:References:From;
+        b=fr/C19MvlG9QXl+vWS+SXplZgTRgBQJ3oLvKh1kARFT7tBHh79vH1tQShLD9PgLut
+         yPZrIF6BgYRMGKSa+4ap23iDicA29QlHgzuc9wqzo0Nftd/kvOQdbsaY6bOG1qheYd
+         Y9a+XBPDNkWWvKeE21tf85ThZM1Yvzaxd6qJkorN/EjBNO6hEAj1453J1cA1zPxRg8
+         d73AoURNDxaS06VsO2r0Ebq1GKLSGcS8s+x9s7VDua0bPXIME2bPgCmGsdgY5GC1n0
+         728Bvsyu5URh5eysAXOVYsTdp1fk/mIc49hpShHVLnYnU22T1HYUNgKffNe2HDOjRA
+         oYHiZjfKG+3KQ==
+Message-ID: <d6162230b83359d3ed1ee706cc1cb6eacfb12a4f.camel@kernel.org>
+Subject: Re: [PATCH RFC 2/9] timekeeping: new interfaces for multigrain
+ timestamp handing
+From:   Jeff Layton <jlayton@kernel.org>
+To:     Linus Torvalds <torvalds@linux-foundation.org>
+Cc:     Alexander Viro <viro@zeniv.linux.org.uk>,
+        Christian Brauner <brauner@kernel.org>,
+        John Stultz <jstultz@google.com>,
+        Thomas Gleixner <tglx@linutronix.de>,
+        Stephen Boyd <sboyd@kernel.org>,
+        Chandan Babu R <chandan.babu@oracle.com>,
+        "Darrick J. Wong" <djwong@kernel.org>,
+        Dave Chinner <david@fromorbit.com>,
+        Theodore Ts'o <tytso@mit.edu>,
+        Andreas Dilger <adilger.kernel@dilger.ca>,
+        Chris Mason <clm@fb.com>, Josef Bacik <josef@toxicpanda.com>,
+        David Sterba <dsterba@suse.com>,
+        Hugh Dickins <hughd@google.com>,
+        Andrew Morton <akpm@linux-foundation.org>,
+        Amir Goldstein <amir73il@gmail.com>, Jan Kara <jack@suse.de>,
+        David Howells <dhowells@redhat.com>,
+        linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-xfs@vger.kernel.org, linux-ext4@vger.kernel.org,
+        linux-btrfs@vger.kernel.org, linux-mm@kvack.org,
+        linux-nfs@vger.kernel.org
+Date:   Wed, 18 Oct 2023 16:47:37 -0400
+In-Reply-To: <CAHk-=wixObEhBXM22JDopRdt7Z=tGGuizq66g4RnUmG9toA2DA@mail.gmail.com>
+References: <20231018-mgtime-v1-0-4a7a97b1f482@kernel.org>
+         <20231018-mgtime-v1-2-4a7a97b1f482@kernel.org>
+         <CAHk-=wixObEhBXM22JDopRdt7Z=tGGuizq66g4RnUmG9toA2DA@mail.gmail.com>
+Content-Type: text/plain; charset="ISO-8859-15"
+Content-Transfer-Encoding: quoted-printable
+User-Agent: Evolution 3.48.4 (3.48.4-1.fc38) 
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20231006184922.252188-26-aalbersh@redhat.com>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Hi Andrey,
+On Wed, 2023-10-18 at 12:18 -0700, Linus Torvalds wrote:
+> On Wed, 18 Oct 2023 at 10:41, Jeff Layton <jlayton@kernel.org> wrote:
+> >=20
+> > One way to prevent this is to ensure that when we stamp a file with a
+> > fine-grained timestamp, that we use that value to establish a floor for
+> > any later timestamp update.
+>=20
+> I'm very leery of this.
+>=20
+> I don't like how it's using a global time - and a global fine-grained
+> offset - when different filesystems will very naturally have different
+> granularities. I also don't like how it's no using that global lock.
+>=20
+> Yes, yes, since the use of this all is then gated by the 'is_mgtime()'
+> thing, any filesystem with big granularities will presumably never set
+> FS_MGTIME in the first time, and that hides the worst pointless cases.
+> But it still feels iffy to me.
+>=20
 
-kernel test robot noticed the following build warnings:
+Thanks for taking a look!
 
-[auto build test WARNING on xfs-linux/for-next]
-[also build test WARNING on kdave/for-next tytso-ext4/dev jaegeuk-f2fs/dev-test jaegeuk-f2fs/dev linus/master v6.6-rc6 next-20231018]
-[If your patch is applied to the wrong git tree, kindly drop us a note.
-And when submitting patch, we suggest to use '--base' as documented in
-https://git-scm.com/docs/git-format-patch#_base_tree_information]
+I'm not too crazy about the global lock either, but the global fine
+grained value ensures that when we have mtime changes that occur across
+filesystems that they appear to be in the correct order.
 
-url:    https://github.com/intel-lab-lkp/linux/commits/Andrey-Albershteyn/xfs-Add-new-name-to-attri-d/20231007-025742
-base:   https://git.kernel.org/pub/scm/fs/xfs/xfs-linux.git for-next
-patch link:    https://lore.kernel.org/r/20231006184922.252188-26-aalbersh%40redhat.com
-patch subject: [PATCH v3 25/28] xfs: add fs-verity support
-config: i386-randconfig-063-20231018 (https://download.01.org/0day-ci/archive/20231019/202310190201.brxlwE23-lkp@intel.com/config)
-compiler: gcc-11 (Debian 11.3.0-12) 11.3.0
-reproduce (this is a W=1 build): (https://download.01.org/0day-ci/archive/20231019/202310190201.brxlwE23-lkp@intel.com/reproduce)
+We could (hypothetically) track an offset per superblock or something,
+but then you could see out-of-order timestamps in inodes across
+different filesystems (even of the same type). I think it'd better not
+to do that if we can get away with it.
 
-If you fix the issue in a separate patch/commit (i.e. not just a new version of
-the same patch/commit), kindly add following tags
-| Reported-by: kernel test robot <lkp@intel.com>
-| Closes: https://lore.kernel.org/oe-kbuild-all/202310190201.brxlwE23-lkp@intel.com/
 
-sparse warnings: (new ones prefixed by >>)
->> fs/xfs/xfs_verity.c:165:1: sparse: sparse: symbol 'xfs_read_merkle_tree_block' was not declared. Should it be static?
+> Also, the whole current_ctime() logic seems wrong. Later (in 4/9), you do=
+ this:
+>=20
+>  static struct timespec64 current_ctime(struct inode *inode)
+>  {
+>         if (is_mgtime(inode))
+>                 return current_mgtime(inode);
+>=20
+> and current_mgtime() does
+>=20
+>         if (nsec & I_CTIME_QUERIED) {
+>                 ktime_get_real_ts64(&now);
+>                 return timestamp_truncate(now, inode);
+>         }
+>=20
+> so once the code has set I_CTIME_QUERIED, it will now use the
+> expensive fine-grained time - even when it makes no sense.
+>=20
+> As far as I can tell, there is *never* a reason to get the
+> fine-grained time if the old inode ctime is already sufficiently far
+> away.
+>=20
+> IOW, my gut feel is that all this logic should always not only be
+> guarded by FS_MGTIME (like you do seem to do), *and* by "has anybody
+> even queried this time" - it should *also* always be guarded by "if I
+> get the coarse-grained time, is that sufficient?"
+>=20
+> So I think the current_ctime() logic should be something along the lines =
+of
+>=20
+>     static struct timespec64 current_ctime(struct inode *inode)
+>     {
+>         struct timespec64 ts64 =3D current_time(inode);
+>         unsigned long old_ctime_sec =3D inode->i_ctime_sec;
+>         unsigned int old_ctime_nsec =3D inode->i_ctime_nsec;
+>=20
+>         if (ts64.tv_sec !=3D old_ctime_sec)
+>                 return ts64;
+>=20
+>         /*
+>          * No need to check is_mgtime(inode) - the I_CTIME_QUERIED
+>          * flag is only set for mgtime filesystems
+>          */
+>         if (!(old_ctime_nsec & I_CTIME_QUERIED))
+>                 return ts64;
+>         old_ctime_nsec &=3D ~I_CTIME_QUERIED;
+>         if (ts64.tv_nsec > old_ctime_nsec + inode->i_sb->s_time_gran)
+>                 return ts64;
+>=20
 
--- 
-0-DAY CI Kernel Test Service
-https://github.com/intel/lkp-tests/wiki
+Does that really do what you expect here? current_time will return a
+value that has already been through timestamp_truncate. Regardless, I
+don't think this function makes as big a difference as you might think.
+
+>
+>         /* Ok, only *now* do we do a finegrained value */
+>         ktime_get_real_ts64(&ts64);
+>         return timestamp_truncate(ts64);
+>     }
+>=20
+> or whatever. Make it *very* clear that the finegrained timestamp is
+> the absolute last option, after we have checked that the regular one
+> isn't possible.
+
+current_mgtime is calling ktime_get_real_ts64, which is an existing
+interface that does not take the global spinlock and won't advance the
+global offset. That call should be quite cheap.
+
+The reason we can use that call here is because current_ctime and
+current_mgtime are only called from  inode_needs_update_time, which is
+only called to check whether we need to get write access to the
+inode.=A0What we do is look at the current clock and see whether the
+timestamps would perceivably change if we were to do the update right
+then.
+
+If so, we get write access and then call inode_set_ctime_current(). That
+will fetch its own timestamps and reevaluate what sort of update to do.
+That's the only place that fetches an expensive fine-grained timestamp
+that advances the offset.
+
+So, I think this set already is only getting the expensive fine-grained
+timestamps as a last resort.
+
+This is probably an indicator that I need to document this code better
+though. It may also be a good idea to reorganize
+inode_needs_update_time, current_ctime and current_mgtime for better
+clarity.
+
+Many thanks for the comments!
+--=20
+Jeff Layton <jlayton@kernel.org>
