@@ -2,55 +2,74 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CCF86CDB47E
-	for <linux-xfs@archiver.kernel.org>; Wed, 18 Oct 2023 08:58:49 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id CF0C0CDB47E
+	for <linux-xfs@archiver.kernel.org>; Wed, 18 Oct 2023 12:22:25 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229461AbjJRI6t (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 18 Oct 2023 04:58:49 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41098 "EHLO
+        id S229462AbjJRMWZ (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 18 Oct 2023 08:22:25 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47340 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229441AbjJRI6t (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 18 Oct 2023 04:58:49 -0400
-X-Greylist: delayed 590 seconds by postgrey-1.37 at lindbergh.monkeyblade.net; Wed, 18 Oct 2023 01:58:47 PDT
-Received: from mail.salesoptimize.pl (mail.salesoptimize.pl [195.231.64.117])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8FCEAC6
-        for <linux-xfs@vger.kernel.org>; Wed, 18 Oct 2023 01:58:47 -0700 (PDT)
-Received: by mail.salesoptimize.pl (Postfix, from userid 1002)
-        id B02C3853B3; Wed, 18 Oct 2023 10:45:51 +0200 (CEST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=salesoptimize.pl;
-        s=mail; t=1697618822;
-        bh=0RBr9VZWoVDHl4huLrLyFadxMoVuqc/Wg5mabCfPKaM=;
-        h=Date:From:To:Subject:From;
-        b=Vu3C1ayyR+C0mk6IdVQBHSVXOb6ETfLFXdT0N85CsH8hZND8aB6xjPK20gjQhpi1G
-         psaSyBNjA9RtQSRXdI0g8pTAhdNoPurgvTZkqSbkAAHW2M3HkaVJ+XsBYMrYds/QFt
-         OoKDLw89xdBDm3XKL4jib2iLXYItGqgwHGXpOlMTQWq+FXFJA3Kx1MVNuI/srjVvdw
-         AF47vukA6BM8fDGpmajcJn5WhaEvmOyLx9geHpYAcHoew005Uj+mcppuGOwVBFPUm6
-         AsUbV0KwywTHvYDuvdCEVQQSQbVAxEbaSC9c1fJ+IVp4Dvj2iha3lvvinmUpA1uzc6
-         xNANXsGewpxwQ==
-Received: by mail.salesoptimize.pl for <linux-xfs@vger.kernel.org>; Wed, 18 Oct 2023 08:45:24 GMT
-Message-ID: <20231018100410-0.1.r.4iek.0.1drucbeeb9@salesoptimize.pl>
-Date:   Wed, 18 Oct 2023 08:45:24 GMT
-From:   "Jerzy Maciejewski" <jerzy.maciejewski@salesoptimize.pl>
-To:     <linux-xfs@vger.kernel.org>
-Subject: Zapytanie ofertowe 
-X-Mailer: mail.salesoptimize.pl
+        with ESMTP id S229441AbjJRMWZ (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 18 Oct 2023 08:22:25 -0400
+Received: from verein.lst.de (verein.lst.de [213.95.11.211])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8AB5198;
+        Wed, 18 Oct 2023 05:22:23 -0700 (PDT)
+Received: by verein.lst.de (Postfix, from userid 2407)
+        id 56BE467373; Wed, 18 Oct 2023 14:22:20 +0200 (CEST)
+Date:   Wed, 18 Oct 2023 14:22:20 +0200
+From:   Christoph Hellwig <hch@lst.de>
+To:     Jan Stancek <jstancek@redhat.com>
+Cc:     djwong@kernel.org, willy@infradead.org, hch@lst.de,
+        linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
+        linux-kernel@vger.kernel.org, viro@zeniv.linux.org.uk
+Subject: Re: [PATCH] iomap: fix short copy in iomap_write_iter()
+Message-ID: <20231018122220.GB10751@lst.de>
+References: <8762e91a210f4cc5713fce05fe5906c18513bd0a.1697617238.git.jstancek@redhat.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <8762e91a210f4cc5713fce05fe5906c18513bd0a.1697617238.git.jstancek@redhat.com>
+User-Agent: Mutt/1.5.17 (2007-11-01)
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Dzie=C5=84 dobry,
+On Wed, Oct 18, 2023 at 10:24:20AM +0200, Jan Stancek wrote:
+> Make next iteration retry with amount of bytes we managed to copy.
 
-Pozwoli=C5=82em sobie na kontakt, poniewa=C5=BC jestem zainteresowany wer=
-yfikacj=C4=85 mo=C5=BCliwo=C5=9Bci nawi=C4=85zania wsp=C3=B3=C5=82pracy.
+The observation and logic fix look good.  But I wonder if simply
+using a goto instead of the extra variable would be a tad cleaner?
+Something like this?
 
-Wspieramy firmy w pozyskiwaniu nowych klient=C3=B3w biznesowych.
-
-Czy mo=C5=BCemy porozmawia=C4=87 w celu przedstawienia szczeg=C3=B3=C5=82=
-owych informacji?=20
-
-
-Pozdrawiam serdecznie
-Jerzy Maciejewski
+---
+diff --git a/fs/iomap/buffered-io.c b/fs/iomap/buffered-io.c
+index 061f3d14c12001..2d491590795aa4 100644
+--- a/fs/iomap/buffered-io.c
++++ b/fs/iomap/buffered-io.c
+@@ -881,8 +881,10 @@ static loff_t iomap_write_iter(struct iomap_iter *iter, struct iov_iter *i)
+ 		size_t bytes;		/* Bytes to write to folio */
+ 		size_t copied;		/* Bytes copied from user */
+ 
++		bytes = iov_iter_count(i);
++retry:
+ 		offset = pos & (chunk - 1);
+-		bytes = min(chunk - offset, iov_iter_count(i));
++		bytes = min(chunk - offset, bytes);
+ 		status = balance_dirty_pages_ratelimited_flags(mapping,
+ 							       bdp_flags);
+ 		if (unlikely(status))
+@@ -933,10 +935,12 @@ static loff_t iomap_write_iter(struct iomap_iter *iter, struct iov_iter *i)
+ 			 * halfway through, might be a race with munmap,
+ 			 * might be severe memory pressure.
+ 			 */
+-			if (copied)
+-				bytes = copied;
+ 			if (chunk > PAGE_SIZE)
+ 				chunk /= 2;
++			if (copied) {
++				bytes = copied;
++				goto retry;
++			}
+ 		} else {
+ 			pos += status;
+ 			written += status;
