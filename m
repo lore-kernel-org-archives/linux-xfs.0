@@ -2,38 +2,37 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A1AE8CDB486
-	for <linux-xfs@archiver.kernel.org>; Wed, 18 Oct 2023 17:41:47 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D25B1CDB488
+	for <linux-xfs@archiver.kernel.org>; Wed, 18 Oct 2023 17:41:48 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231615AbjJRRlr (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 18 Oct 2023 13:41:47 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39338 "EHLO
+        id S231686AbjJRRls (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 18 Oct 2023 13:41:48 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39324 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231266AbjJRRli (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 18 Oct 2023 13:41:38 -0400
+        with ESMTP id S231375AbjJRRlp (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 18 Oct 2023 13:41:45 -0400
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0512A115;
-        Wed, 18 Oct 2023 10:41:37 -0700 (PDT)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 6BDD8C433C9;
-        Wed, 18 Oct 2023 17:41:34 +0000 (UTC)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3ED47126;
+        Wed, 18 Oct 2023 10:41:42 -0700 (PDT)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 5ABF6C43391;
+        Wed, 18 Oct 2023 17:41:39 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1697650896;
-        bh=l0xHAIUUN2BOMaLZLaXQNle/CdEVUPvjoRJwRfogB3k=;
+        s=k20201202; t=1697650901;
+        bh=jEQ7N0OK0MX2jE1ssAAhSIOQltyOCrGAcxWFJvttHxI=;
         h=From:Date:Subject:References:In-Reply-To:To:Cc:From;
-        b=LUqQBlq5SbTTxc8Kx4I5i/jnPXcg/nEx9UsQqT9B+eDje7FSiAkGbhYGwQRlQFBq5
-         qVEbFGoYB6HtCUqP3zUIt+ld6j6Qti0Vb6h7iw3F8f44xPv78xT8mBKrr/YGDlufQ9
-         tndvU4bWohBgShTn/iB4jplkLEklhbyiqF8FTwc8sM4T1UzsplSeCJur567WQZbXkF
-         F3VaIwe+XEc1jHV5/4BFZD6UVt0Ts9otCsK7RVipp0nXKmd8N0NrfkdWxQulPKu5wY
-         MC9cv5D2gqFsKKlnLdO+j02QzxS5+ftCkhlMxWxW+z9Nwcgi51mkMCUSSoD22g8q1W
-         bjWwbHPGI2/yg==
+        b=d4h0E+xhad+RgIDC/LYSUsIa5OZJ5j1VZUh8b0oRqYs1DhOGl3OteEmsDq5DE6dvU
+         4jODdH3GMFjFbOdeqzYGxevfpeSYNelEI/oGfYi8x2K6pLMy8V3EXZ1hB7QP6aJU9S
+         DrxIEYOBoLxt+1DaqjAop+cCWxOYoyu0fZw7zUkI0gEjQocsdNCKrwU1uM3eYnxlDK
+         641zLCYrSN0dRbHy4sq9Biel5ccarDl1Dc/8YnpT8l0a2/E0OmT+0u2PLNfdDkg2k2
+         hp4P7RsmukdlDjpa0Jpk+rnM3W5E/PVmgXY4MBR7VJiI584Pt1HOL/R2mdMa8S5GML
+         BUotD8r6fTcRA==
 From:   Jeff Layton <jlayton@kernel.org>
-Date:   Wed, 18 Oct 2023 13:41:09 -0400
-Subject: [PATCH RFC 2/9] timekeeping: new interfaces for multigrain
- timestamp handing
+Date:   Wed, 18 Oct 2023 13:41:11 -0400
+Subject: [PATCH RFC 4/9] fs: add infrastructure for multigrain timestamps
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
-Message-Id: <20231018-mgtime-v1-2-4a7a97b1f482@kernel.org>
+Message-Id: <20231018-mgtime-v1-4-4a7a97b1f482@kernel.org>
 References: <20231018-mgtime-v1-0-4a7a97b1f482@kernel.org>
 In-Reply-To: <20231018-mgtime-v1-0-4a7a97b1f482@kernel.org>
 To:     Linus Torvalds <torvalds@linux-foundation.org>,
@@ -58,209 +57,298 @@ Cc:     linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org,
         linux-btrfs@vger.kernel.org, linux-mm@kvack.org,
         linux-nfs@vger.kernel.org, Jeff Layton <jlayton@kernel.org>
 X-Mailer: b4 0.12.3
-X-Developer-Signature: v=1; a=openpgp-sha256; l=6981; i=jlayton@kernel.org;
- h=from:subject:message-id; bh=l0xHAIUUN2BOMaLZLaXQNle/CdEVUPvjoRJwRfogB3k=;
- b=owEBbQKS/ZANAwAIAQAOaEEZVoIVAcsmYgBlMBjI+0b0/ffAFY3zqBSBgVUVHdNbNXYnmuLk7
- 4JnuUitV2OJAjMEAAEIAB0WIQRLwNeyRHGyoYTq9dMADmhBGVaCFQUCZTAYyAAKCRAADmhBGVaC
- FQx3EACBnusFhJaHiDBDntSYskmOtKC9J0xUZA3qU6cq1/bt0CXSpLwV13odEIY6OqqXNUiFOeg
- zPsedjKHT90OgQ9De85Z2zj3ZP2Ne5Pl1IT58xW7uMWIdkIJpJ0CQAO6Ah2MYsDGPZgWIVN5ehL
- C2FXIHhVCvw0ZpRu96Vcou1wkA+eZuY1ODNnY1Y2It1eKv8HXIeCa6GKqz1YABH/YWpPrF2K4FD
- FHvvrN04Me65L/xgLUZWs/c9IuR+IkZrM3vzaUBRr2X+JYyj0EsyCiXnStSs5vSeDaJXWdceykW
- 9td0tzdxB7Q4yGflpOYRwR+awAiWHytZ0pBmzjS/KO33Z8GCtb4Lmt8sIQDddhjn6sPSiO4+CdT
- pNxkoE9t1KfhEo9ekAhh4WmOcx4HoES1scAKLKN9boy8Ycb+5zSVRj7kVyO3htCXW+4wKBWtRCW
- tWuN5BDRlluKCBx+7/SVs7BgZOm2FVaN/8mdYyMr3ysA/3zjaUy3yMdsl0WtJirPH6tiByo5VpS
- 9/68nBxm1oKiI1czGW4mWPuYXe1KWsPLLPKl/c60N/UK2KykHaxDCJIyLh6VSthY/pULGM4XwXq
- 2JZAYsJOXw/W6f4tmwd1vQ0f2q4ue8FZJV9TLHDbpUUxncalFo2hfgqU5SCX2MttvcncAi33zDG
- rifmicacYuiP+yg==
+X-Developer-Signature: v=1; a=openpgp-sha256; l=10393; i=jlayton@kernel.org;
+ h=from:subject:message-id; bh=jEQ7N0OK0MX2jE1ssAAhSIOQltyOCrGAcxWFJvttHxI=;
+ b=owEBbQKS/ZANAwAIAQAOaEEZVoIVAcsmYgBlMBjIl9JU6MnYsWK33IXzvvdM2nG21olQKhWVr
+ 9guhKbXSFmJAjMEAAEIAB0WIQRLwNeyRHGyoYTq9dMADmhBGVaCFQUCZTAYyAAKCRAADmhBGVaC
+ Fe00EADW88E+J8cw2JT7UsKSwGT9CpnCWkU+Dzs9iIt4AzRJOr48bdUPGk4Ci+js9zF2WLiSpn8
+ UkapvZkI2z6IhNHLGQwx8/ZTn7wb1Y0YfjThgUw+zvTuGokLT3+U+ccgN3P4QsXmRGRfr44YvPb
+ rqPyYGUuAAlqPU3m7MHwdsADhTP6QsuYNnNK1ZY0QDXVmeIhRhN+ZfLlsIczGcCbJInULdtNqpk
+ LkgcxIoHrR+KqWHi3rZS3fTfhPkQJB9ATKXVRFpWvNmb8TtL+BNIR3+iMnWAnftkFnTonf/BlUo
+ 72UZBpjrU2Gx0zA01/N8U3pxr906ekp8OVvqk1OOJpBTuFyj4yeeyx85rasqXPJ/4P5oPgASoFO
+ PcKSx5ioMrR+lJso/6OmKXP0NRkNdK7hhoA0yVMGi7ZLCprvATXv5yGbMlg7q+TOWrvT5MWJz6w
+ XvrIsIGKmm5kkG38tmuHL/O5rapUOnU1upDpq5oGEcBiSiSwxq2bAbxzpuIx0sKV5JUTAXREGRO
+ 2ctfeFTOg5uYEDzueAYA0U2Kqk2g2dFHc/DCI9SPZdDu9V8edLa/mgjRRk0OCNU6qxaDMK9G958
+ KooCxqNGtSsv1+cCNBxLI4zK210ifbeC5pkkqxVAplXfwRKG5DBkQkpWhenyKFfdsLiro1zBt/I
+ oOC2cuZgMmPyzSA==
 X-Developer-Key: i=jlayton@kernel.org; a=openpgp;
  fpr=4BC0D7B24471B2A184EAF5D3000E684119568215
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Multigrain timestamps allow VFS to request fine-grained timestamps when
-there has been recent interest in the file's attributes. Unfortunately,
-the coarse-grained timestamps can lag the fine-grained ones. A file
-stamped with a coarse-grained timestamp after one with a fine-grained
-one can appear to have been modified in reverse order. This is
-problematic for programs like "make" or "rsync" which depend on being
-able to compare timestamps between two different inodes.
+The VFS always uses coarse-grained timestamps when updating the ctime
+and mtime after a change. This has the benefit of allowing filesystems
+to optimize away a lot metadata updates, down to around 1 per jiffy,
+even when a file is under heavy writes.
 
-One way to prevent this is to ensure that when we stamp a file with a
-fine-grained timestamp, that we use that value to establish a floor for
-any later timestamp update.
+Unfortunately, this has always been an issue when we're exporting via
+NFSv3, which relies on timestamps to validate caches. A lot of changes
+can happen in a jiffy, so timestamps aren't sufficient to help the
+client decide to invalidate the cache. Even with NFSv4, a lot of
+exported filesystems don't properly support a change attribute and are
+subject to the same problems with timestamp granularity. Other
+applications have similar issues with timestamps (e.g backup
+applications).
 
-Add a new mg_nsec field to the timekeeper structure for tracking the
-nsec value of the most recent multigrain timestamp, along with two new
-helper functions for fetching coarse and fine grained timestamps. When
-getting a fine-grained timestamp update the mg_nsec with the value that
-was fetched via timekeeping_get_ns.
+If we were to always use fine-grained timestamps, that would improve the
+situation, but that becomes rather expensive, as the underlying
+filesystem would have to log a lot more metadata updates.
 
-When fetching a coarse-grained timestamp, set the mg_nsec to
-TK_MG_NSEC_IGNORE. When fetching a coarse-grained time for a multigrain
-timestamp, apply the mg_nsec value if it's not set to TK_MG_NSEC_IGNORE.
+What we need is a way to only use fine-grained timestamps when they are
+being actively queried.
+
+POSIX generally mandates that when the the mtime changes, the ctime must
+also change. The kernel always stores normalized ctime values, so only
+the first 30 bits of the tv_nsec field are ever used.
+
+Use the 31st bit of the ctime tv_nsec field to indicate that something
+has queried the inode for the mtime or ctime. When this flag is set,
+on the next mtime or ctime update, the kernel will fetch a fine-grained
+timestamp instead of the usual coarse-grained one.
+
+Filesytems can opt into this behavior by setting the FS_MGTIME flag in
+the fstype. Filesystems that don't set this flag will continue to use
+coarse-grained timestamps.
+
+Later patches will convert individual filesystems to use the new
+infrastructure.
 
 Signed-off-by: Jeff Layton <jlayton@kernel.org>
 ---
- include/linux/timekeeper_internal.h |  2 +
- include/linux/timekeeping.h         |  4 ++
- kernel/time/timekeeping.c           | 80 +++++++++++++++++++++++++++++++++++++
- 3 files changed, 86 insertions(+)
+ fs/inode.c         | 70 +++++++++++++++++++++++++++++++++++++++++++++++++++---
+ fs/stat.c          | 41 ++++++++++++++++++++++++++++++--
+ include/linux/fs.h | 31 +++++++++++++++++++++++-
+ 3 files changed, 136 insertions(+), 6 deletions(-)
 
-diff --git a/include/linux/timekeeper_internal.h b/include/linux/timekeeper_internal.h
-index 84ff2844df2a..6583b06e7d08 100644
---- a/include/linux/timekeeper_internal.h
-+++ b/include/linux/timekeeper_internal.h
-@@ -55,6 +55,7 @@ struct tk_read_base {
-  * @tai_offset:		The current UTC to TAI offset in seconds
-  * @clock_was_set_seq:	The sequence number of clock was set events
-  * @cs_was_changed_seq:	The sequence number of clocksource change events
-+ * @mg_nsec:		Nanosecond delta for multigrain timestamps
-  * @next_leap_ktime:	CLOCK_MONOTONIC time value of a pending leap-second
-  * @raw_sec:		CLOCK_MONOTONIC_RAW  time in seconds
-  * @monotonic_to_boot:	CLOCK_MONOTONIC to CLOCK_BOOTTIME offset
-@@ -110,6 +111,7 @@ struct timekeeper {
- 	u64			xtime_interval;
- 	s64			xtime_remainder;
- 	u64			raw_interval;
-+	u64			mg_nsec;
- 	/* The ntp_tick_length() value currently being used.
- 	 * This cached copy ensures we consistently apply the tick
- 	 * length for an entire tick, as ntp_tick_length may change
-diff --git a/include/linux/timekeeping.h b/include/linux/timekeeping.h
-index fe1e467ba046..5dc0ad619d42 100644
---- a/include/linux/timekeeping.h
-+++ b/include/linux/timekeeping.h
-@@ -44,6 +44,10 @@ extern void ktime_get_real_ts64(struct timespec64 *tv);
- extern void ktime_get_coarse_ts64(struct timespec64 *ts);
- extern void ktime_get_coarse_real_ts64(struct timespec64 *ts);
- 
-+/* multigrain timestamp support */
-+void ktime_get_mg_fine_ts64(struct timespec64 *ts);
-+void ktime_get_mg_coarse_ts64(struct timespec64 *ts);
-+
- void getboottime64(struct timespec64 *ts);
- 
- /*
-diff --git a/kernel/time/timekeeping.c b/kernel/time/timekeeping.c
-index 266d02809dbb..7c20c98b1ea8 100644
---- a/kernel/time/timekeeping.c
-+++ b/kernel/time/timekeeping.c
-@@ -33,6 +33,9 @@
- #define TK_MIRROR		(1 << 1)
- #define TK_CLOCK_WAS_SET	(1 << 2)
- 
-+/* When mg_nsec is set to this, ignore it */
-+#define TK_MG_NSEC_IGNORE	(~(0ULL))
-+
- enum timekeeping_adv_mode {
- 	/* Update timekeeper when a tick has passed */
- 	TK_ADV_TICK,
-@@ -139,6 +142,7 @@ static void tk_set_xtime(struct timekeeper *tk, const struct timespec64 *ts)
- {
- 	tk->xtime_sec = ts->tv_sec;
- 	tk->tkr_mono.xtime_nsec = (u64)ts->tv_nsec << tk->tkr_mono.shift;
-+	tk->mg_nsec = TK_MG_NSEC_IGNORE;
+diff --git a/fs/inode.c b/fs/inode.c
+index 0612ad9c0227..83c3378053bc 100644
+--- a/fs/inode.c
++++ b/fs/inode.c
+@@ -2108,10 +2108,40 @@ int file_remove_privs(struct file *file)
  }
- 
- static void tk_xtime_add(struct timekeeper *tk, const struct timespec64 *ts)
-@@ -146,6 +150,7 @@ static void tk_xtime_add(struct timekeeper *tk, const struct timespec64 *ts)
- 	tk->xtime_sec += ts->tv_sec;
- 	tk->tkr_mono.xtime_nsec += (u64)ts->tv_nsec << tk->tkr_mono.shift;
- 	tk_normalize_xtime(tk);
-+	tk->mg_nsec = TK_MG_NSEC_IGNORE;
- }
- 
- static void tk_set_wall_to_mono(struct timekeeper *tk, struct timespec64 wtm)
-@@ -1664,6 +1669,7 @@ void __init timekeeping_init(void)
- 	tk_setup_internals(tk, clock);
- 
- 	tk_set_xtime(tk, &wall_time);
-+	tk->mg_nsec = TK_MG_NSEC_IGNORE;
- 	tk->raw_sec = 0;
- 
- 	tk_set_wall_to_mono(tk, wall_to_mono);
-@@ -2283,6 +2289,80 @@ void ktime_get_coarse_ts64(struct timespec64 *ts)
- }
- EXPORT_SYMBOL(ktime_get_coarse_ts64);
+ EXPORT_SYMBOL(file_remove_privs);
  
 +/**
-+ * ktime_get_mg_fine_ts64 - Returns a fine-grained time of day in a timespec64
-+ * @ts: pointer to the timespec64 to be set
++ * current_mgtime - Return FS time (possibly fine-grained)
++ * @inode: inode.
 + *
-+ * Multigrain filesystems use a scheme where they use coarse-grained
-+ * timestamps most of the time, but will use a fine-grained timestamp
-+ * if the previous timestamp was queried and the coarse-grained clock
-+ * hasn't ticked yet.
-+ *
-+ * For this case, the caller is requesting a fine-grained timestamp,
-+ * so we must update the sliding mg_nsec value before returning it. This
-+ * ensures that any coarse-grained timestamp updates that occur after
-+ * this won't appear to have occurred before.
-+ *
-+ * Fills in @ts with the current fine-grained time of day, suitable for
-+ * a file timestamp.
++ * Return the current time truncated to the time granularity supported by
++ * the fs, as suitable for a mtime or ctime update. If the ctime is flagged
++ * as having been QUERIED, get the most current fine-grained timestamp
++ * (without advancing the coarse-grained mgtime), otherwise get the
++ * latest coarse multigrain timestamp.
 + */
-+void ktime_get_mg_fine_ts64(struct timespec64 *ts)
++static struct timespec64 current_mgtime(struct inode *inode)
 +{
-+	struct timekeeper *tk = &tk_core.timekeeper;
-+	unsigned long flags;
-+	u32 nsecs;
++	struct timespec64 now;
++	atomic_t *pnsec = (atomic_t *)&inode->i_ctime_nsec;
++	u32 nsec = atomic_read(pnsec);
 +
-+	WARN_ON(timekeeping_suspended);
-+
-+	raw_spin_lock_irqsave(&timekeeper_lock, flags);
-+	write_seqcount_begin(&tk_core.seq);
-+
-+	ts->tv_sec = tk->xtime_sec;
-+	nsecs = timekeeping_get_ns(&tk->tkr_mono);
-+	tk->mg_nsec = nsecs;
-+
-+	write_seqcount_end(&tk_core.seq);
-+	raw_spin_unlock_irqrestore(&timekeeper_lock, flags);
-+
-+	ts->tv_nsec = 0;
-+	timespec64_add_ns(ts, nsecs);
-+}
-+
-+/**
-+ * ktime_get_mg_coarse_ts64 - Returns a coarse-grained time of day in a timespec64
-+ * @ts: pointer to the timespec64 to be set
-+ *
-+ * Multigrain filesystems use a scheme where they use coarse-grained
-+ * timestamps most of the time, but will use a fine-grained timestamp
-+ * if the previous timestamp was queried and the coarse-grained clock
-+ * hasn't ticked yet.
-+ *
-+ * For this case, the caller is requesting a coarse-grained timestamp,
-+ * which will always be equal to or later than the latest fine-grained
-+ * timestamp that has been handed out.
-+ *
-+ * Fills in @ts with the current coarse-grained time of day, suitable
-+ * for a file timestamp.
-+ */
-+void ktime_get_mg_coarse_ts64(struct timespec64 *ts)
-+{
-+	struct timekeeper *tk = &tk_core.timekeeper;
-+	unsigned int seq;
-+	u64 nsec;
-+
-+	do {
-+		seq = read_seqcount_begin(&tk_core.seq);
-+
-+		*ts = tk_xtime(tk);
-+		nsec = tk->mg_nsec;
-+	} while (read_seqcount_retry(&tk_core.seq, seq));
-+
-+	if (nsec != TK_MG_NSEC_IGNORE) {
-+		ts->tv_nsec = 0;
-+		timespec64_add_ns(ts, nsec);
++	if (nsec & I_CTIME_QUERIED) {
++		ktime_get_real_ts64(&now);
++		return timestamp_truncate(now, inode);
 +	}
++	return current_time(inode);
 +}
 +
- /*
-  * Must hold jiffies_lock
-  */
++static struct timespec64 current_ctime(struct inode *inode)
++{
++	if (is_mgtime(inode))
++		return current_mgtime(inode);
++	return current_time(inode);
++}
++
+ static int inode_needs_update_time(struct inode *inode)
+ {
+ 	int sync_it = 0;
+-	struct timespec64 now = current_time(inode);
++	struct timespec64 now = current_ctime(inode);
+ 	struct timespec64 ts;
+ 
+ 	/* First try to exhaust all avenues to not sync */
+@@ -2529,7 +2559,7 @@ struct timespec64 current_time(struct inode *inode)
+ {
+ 	struct timespec64 now;
+ 
+-	ktime_get_coarse_real_ts64(&now);
++	ktime_get_mg_coarse_ts64(&now);
+ 	return timestamp_truncate(now, inode);
+ }
+ EXPORT_SYMBOL(current_time);
+@@ -2544,8 +2574,42 @@ EXPORT_SYMBOL(current_time);
+ struct timespec64 inode_set_ctime_current(struct inode *inode)
+ {
+ 	struct timespec64 now = current_time(inode);
++	struct timespec64 ctime;
++	bool queried;
++	int tscomp;
++
++	/* Just copy it into place if it's not multigrain */
++	if (!is_mgtime(inode)) {
++		inode_set_ctime_to_ts(inode, now);
++		return now;
++	}
++
++	ctime.tv_sec = inode_get_ctime_sec(inode);
++	ctime.tv_nsec = READ_ONCE(inode->i_ctime_nsec);
++	queried = ctime.tv_nsec & I_CTIME_QUERIED;
++
++	tscomp = timespec64_compare(&ctime, &now);
+ 
+-	inode_set_ctime(inode, now.tv_sec, now.tv_nsec);
++	/*
++	 * We can use a coarse-grained timestamp if no one has queried for it,
++	 * or coarse time is already later than the existing ctime.
++	 */
++	if (!queried || tscomp < 0) {
++		/*
++		 * Ctime updates are usually protected by the inode_lock, but
++		 * we can still race with someone setting the QUERIED flag.
++		 * Try to swap the new nsec value into place. If it's changed
++		 * in the interim, then just go with a fine-grained timestamp.
++		 */
++		if (cmpxchg(&inode->i_ctime_nsec, ctime.tv_nsec,
++			    now.tv_nsec) != ctime.tv_nsec)
++			goto fine_grained;
++		inode->i_ctime_sec = now.tv_sec;
++		return now;
++	}
++fine_grained:
++	ktime_get_mg_fine_ts64(&now);
++	inode_set_ctime_to_ts(inode, timestamp_truncate(now, inode));
+ 	return now;
+ }
+ EXPORT_SYMBOL(inode_set_ctime_current);
+diff --git a/fs/stat.c b/fs/stat.c
+index 24bb0209e459..02d8857bac9f 100644
+--- a/fs/stat.c
++++ b/fs/stat.c
+@@ -26,6 +26,37 @@
+ #include "internal.h"
+ #include "mount.h"
+ 
++/**
++ * fill_mg_cmtime - Fill in the mtime and ctime and flag ctime as QUERIED
++ * @stat: where to store the resulting values
++ * @request_mask: STATX_* values requested
++ * @inode: inode from which to grab the c/mtime
++ *
++ * Given @inode, grab the ctime and mtime out if it and store the result
++ * in @stat. When fetching the value, flag it as queried so the next write
++ * will use a fine-grained timestamp.
++ */
++void fill_mg_cmtime(struct kstat *stat, u32 request_mask, struct inode *inode)
++{
++	atomic_t *pnsec = (atomic_t *)&inode->i_ctime_nsec;
++
++	/* If neither time was requested, then don't report them */
++	if (!(request_mask & (STATX_CTIME|STATX_MTIME))) {
++		stat->result_mask &= ~(STATX_CTIME|STATX_MTIME);
++		return;
++	}
++
++	stat->mtime = inode_get_mtime(inode);
++	stat->ctime.tv_sec = inode_get_ctime_sec(inode);
++	/*
++	 * Atomically set the QUERIED flag and fetch the new value with
++	 * the flag masked off.
++	 */
++	stat->ctime.tv_nsec = atomic_fetch_or(I_CTIME_QUERIED, pnsec) &
++					~I_CTIME_QUERIED;
++}
++EXPORT_SYMBOL(fill_mg_cmtime);
++
+ /**
+  * generic_fillattr - Fill in the basic attributes from the inode struct
+  * @idmap:		idmap of the mount the inode was found from
+@@ -58,8 +89,14 @@ void generic_fillattr(struct mnt_idmap *idmap, u32 request_mask,
+ 	stat->rdev = inode->i_rdev;
+ 	stat->size = i_size_read(inode);
+ 	stat->atime = inode_get_atime(inode);
+-	stat->mtime = inode_get_mtime(inode);
+-	stat->ctime = inode_get_ctime(inode);
++
++	if (is_mgtime(inode)) {
++		fill_mg_cmtime(stat, request_mask, inode);
++	} else {
++		stat->mtime = inode_get_mtime(inode);
++		stat->ctime = inode_get_ctime(inode);
++	}
++
+ 	stat->blksize = i_blocksize(inode);
+ 	stat->blocks = inode->i_blocks;
+ 
+diff --git a/include/linux/fs.h b/include/linux/fs.h
+index 78786c1c32fd..c9823ec0da65 100644
+--- a/include/linux/fs.h
++++ b/include/linux/fs.h
+@@ -1515,6 +1515,22 @@ static inline bool fsuidgid_has_mapping(struct super_block *sb,
+ struct timespec64 current_time(struct inode *inode);
+ struct timespec64 inode_set_ctime_current(struct inode *inode);
+ 
++/*
++ * Multigrain timestamps
++ *
++ * Conditionally use fine-grained ctime and mtime timestamps when there
++ * are users actively observing them via getattr. The primary use-case
++ * for this is NFS clients that use the ctime to distinguish between
++ * different states of the file, and that are often fooled by multiple
++ * operations that occur in the same coarse-grained timer tick.
++ *
++ * The kernel always keeps normalized struct timespec64 values in the ctime,
++ * which means that only the first 30 bits of the value are used. Use the
++ * 31st bit of the ctime's tv_nsec field as a flag to indicate that the value
++ * has been queried since it was last updated.
++ */
++#define I_CTIME_QUERIED		(1L<<30)
++
+ static inline time64_t inode_get_atime_sec(const struct inode *inode)
+ {
+ 	return inode->i_atime_sec;
+@@ -1590,7 +1606,7 @@ static inline time64_t inode_get_ctime_sec(const struct inode *inode)
+ 
+ static inline long inode_get_ctime_nsec(const struct inode *inode)
+ {
+-	return inode->i_ctime_nsec;
++	return inode->i_ctime_nsec & ~I_CTIME_QUERIED;
+ }
+ 
+ static inline struct timespec64 inode_get_ctime(const struct inode *inode)
+@@ -2372,6 +2388,7 @@ struct file_system_type {
+ #define FS_USERNS_MOUNT		8	/* Can be mounted by userns root */
+ #define FS_DISALLOW_NOTIFY_PERM	16	/* Disable fanotify permission events */
+ #define FS_ALLOW_IDMAP         32      /* FS has been updated to handle vfs idmappings. */
++#define FS_MGTIME		64	/* FS uses multigrain timestamps */
+ #define FS_RENAME_DOES_D_MOVE	32768	/* FS will handle d_move() during rename() internally. */
+ 	int (*init_fs_context)(struct fs_context *);
+ 	const struct fs_parameter_spec *parameters;
+@@ -2395,6 +2412,17 @@ struct file_system_type {
+ 
+ #define MODULE_ALIAS_FS(NAME) MODULE_ALIAS("fs-" NAME)
+ 
++/**
++ * is_mgtime: is this inode using multigrain timestamps
++ * @inode: inode to test for multigrain timestamps
++ *
++ * Return true if the inode uses multigrain timestamps, false otherwise.
++ */
++static inline bool is_mgtime(const struct inode *inode)
++{
++	return inode->i_sb->s_type->fs_flags & FS_MGTIME;
++}
++
+ extern struct dentry *mount_bdev(struct file_system_type *fs_type,
+ 	int flags, const char *dev_name, void *data,
+ 	int (*fill_super)(struct super_block *, void *, int));
+@@ -3080,6 +3108,7 @@ extern void page_put_link(void *);
+ extern int page_symlink(struct inode *inode, const char *symname, int len);
+ extern const struct inode_operations page_symlink_inode_operations;
+ extern void kfree_link(void *);
++void fill_mg_cmtime(struct kstat *stat, u32 request_mask, struct inode *inode);
+ void generic_fillattr(struct mnt_idmap *, u32, struct inode *, struct kstat *);
+ void generic_fill_statx_attr(struct inode *inode, struct kstat *stat);
+ extern int vfs_getattr_nosec(const struct path *, struct kstat *, u32, unsigned int);
 
 -- 
 2.41.0
