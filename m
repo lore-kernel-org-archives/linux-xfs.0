@@ -2,514 +2,132 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 65E9BCDB465
-	for <linux-xfs@archiver.kernel.org>; Thu, 19 Oct 2023 20:09:18 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id CD0C6C00A98
+	for <linux-xfs@archiver.kernel.org>; Thu, 19 Oct 2023 22:00:51 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230270AbjJSUJS (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 19 Oct 2023 16:09:18 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56058 "EHLO
+        id S235567AbjJSWAu (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 19 Oct 2023 18:00:50 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42538 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229892AbjJSUJR (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 19 Oct 2023 16:09:17 -0400
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id DC6DD116
-        for <linux-xfs@vger.kernel.org>; Thu, 19 Oct 2023 13:09:14 -0700 (PDT)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 74C3FC433C7;
-        Thu, 19 Oct 2023 20:09:14 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1697746154;
-        bh=df3MuC2p43Yj8/Se1wUKMo3AEWDnyQGM4oB0Yr7bIFA=;
-        h=Date:From:To:Cc:Subject:From;
-        b=j5ixAGNndsLebDW+cBpsiEQeTa3UgM0Jf8nCGchPTD1YPWtBkAYqQQhvm9+rUMONq
-         4NUX7zzbsd3ja1q8RCtio+3d7tyTG6TB0XFC+Vio3JIPsz4awh8vnWVNSDM89p0Vdp
-         2/fLR82DkNrhK2Jx6hP2lovfRYrdeEMETOmqSGMZYwUB1Aoo30DIOVGgk2XYxfMRzN
-         TMTOwXXfcGrDo8fxJ+ojnKfrMuMRUtgzwlspXFSByKsC9ogj9qicZ7EEJeu/CdJWZX
-         uwfiAsnPp9Pxxnj4DM4yMz3AdLXQkL2p5r8smxOIJl2qs5XjhuXXmQHZGM8u31G3l4
-         Wfrt8cCX6D7Ew==
-Date:   Thu, 19 Oct 2023 13:09:13 -0700
-From:   "Darrick J. Wong" <djwong@kernel.org>
-To:     Christoph Hellwig <hch@infradead.org>
-Cc:     Catherine Hoang <catherine.hoang@oracle.com>,
-        linux-xfs@vger.kernel.org
-Subject: [RFC PATCH] generic: test reads racing with slow reflink operations
-Message-ID: <20231019200913.GO3195650@frogsfrogsfrogs>
+        with ESMTP id S235556AbjJSWAt (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 19 Oct 2023 18:00:49 -0400
+Received: from galois.linutronix.de (Galois.linutronix.de [193.142.43.55])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4D683115;
+        Thu, 19 Oct 2023 15:00:46 -0700 (PDT)
+From:   Thomas Gleixner <tglx@linutronix.de>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linutronix.de;
+        s=2020; t=1697752844;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to; bh=o2kQGRnjkpW8NV5UEGIjy6i2Lw5zLDk1wI9xtQ0It5Y=;
+        b=OFtLhVmdGAGajfdsQU77o4un/tVAdYcM7cfwt20W9su0nN9zUiglcL5C4pDEb4q88MJzLO
+        x5HDKpnT1/1lsSU8vKySCq1RLS7VJye3ei4+VMtw0uCD0w7qgUgZRlBSUcaicBnbHq4OQM
+        mqC4nMnW3ootEGH3Z7j1ETk8ZUrXdgmgAMC4DzuoxhllzQY4nnoXxM5gbzdAXXNXSWD5Sa
+        lHnIfI/VC1YvapORPfXS8oxP8OeBmd70rwTvUJoTfYU3S+x3sfwVydywAwIgsgZgP0p9N5
+        3FVR3vXv1ON8t+fn6QllxjFsOKixj4rzsRVi/dN/W6MmEfKFJhO4iRcGMvCxFA==
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=linutronix.de;
+        s=2020e; t=1697752844;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to; bh=o2kQGRnjkpW8NV5UEGIjy6i2Lw5zLDk1wI9xtQ0It5Y=;
+        b=WY4r1ywqpIX7pjSgKhtd/YMTG9q7nuDraudwOpgvLzXDgf0mNyLuwtbpuWmgdtYAMHYJV3
+        PfofEjkkaGKIMBCg==
+To:     Jeff Layton <jlayton@kernel.org>,
+        Linus Torvalds <torvalds@linux-foundation.org>,
+        Alexander Viro <viro@zeniv.linux.org.uk>,
+        Christian Brauner <brauner@kernel.org>,
+        John Stultz <jstultz@google.com>,
+        Stephen Boyd <sboyd@kernel.org>,
+        Chandan Babu R <chandan.babu@oracle.com>,
+        "Darrick J. Wong" <djwong@kernel.org>,
+        Dave Chinner <david@fromorbit.com>,
+        Theodore Ts'o <tytso@mit.edu>,
+        Andreas Dilger <adilger.kernel@dilger.ca>,
+        Chris Mason <clm@fb.com>, Josef Bacik <josef@toxicpanda.com>,
+        David Sterba <dsterba@suse.com>,
+        Hugh Dickins <hughd@google.com>,
+        Andrew Morton <akpm@linux-foundation.org>,
+        Amir Goldstein <amir73il@gmail.com>, Jan Kara <jack@suse.de>,
+        David Howells <dhowells@redhat.com>
+Cc:     linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-xfs@vger.kernel.org, linux-ext4@vger.kernel.org,
+        linux-btrfs@vger.kernel.org, linux-mm@kvack.org,
+        linux-nfs@vger.kernel.org, Jeff Layton <jlayton@kernel.org>
+Subject: Re: [PATCH RFC 2/9] timekeeping: new interfaces for multigrain
+ timestamp handing
+In-Reply-To: <20231018-mgtime-v1-2-4a7a97b1f482@kernel.org>
+Date:   Fri, 20 Oct 2023 00:00:43 +0200
+Message-ID: <87o7gu2rxw.ffs@tglx>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
+Content-Type: text/plain
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-From: Darrick J. Wong <djwong@kernel.org>
+Jeff!
 
-XFS has a rather slow reflink operation.  While a reflink operation is
-running, other programs cannot read the contents of the source file,
-which is causing latency spikes.  Catherine Hoang wrote a patch to
-permit reads, since the source file contents do  not change.  This is a
-functionality test for that patch.
+On Wed, Oct 18 2023 at 13:41, Jeff Layton wrote:
+> +void ktime_get_mg_fine_ts64(struct timespec64 *ts)
+> +{
+> +	struct timekeeper *tk = &tk_core.timekeeper;
+> +	unsigned long flags;
+> +	u32 nsecs;
+> +
+> +	WARN_ON(timekeeping_suspended);
+> +
+> +	raw_spin_lock_irqsave(&timekeeper_lock, flags);
+> +	write_seqcount_begin(&tk_core.seq);
 
-Signed-off-by: Darrick J. Wong <djwong@kernel.org>
----
- src/Makefile              |    2 
- src/t_reflink_read_race.c |  343 +++++++++++++++++++++++++++++++++++++++++++++
- tests/generic/1953        |   74 ++++++++++
- tests/generic/1953.out    |    6 +
- 4 files changed, 424 insertions(+), 1 deletion(-)
- create mode 100644 src/t_reflink_read_race.c
- create mode 100755 tests/generic/1953
- create mode 100644 tests/generic/1953.out
+Depending on the usage scenario, this will end up as a scalability issue
+which affects _all_ of timekeeping.
 
-diff --git a/src/Makefile b/src/Makefile
-index 72c8a13007..b5e2b84dae 100644
---- a/src/Makefile
-+++ b/src/Makefile
-@@ -33,7 +33,7 @@ LINUX_TARGETS = xfsctl bstat t_mtab getdevicesize preallo_rw_pattern_reader \
- 	attr_replace_test swapon mkswap t_attr_corruption t_open_tmpfiles \
- 	fscrypt-crypt-util bulkstat_null_ocount splice-test chprojid_fail \
- 	detached_mounts_propagation ext4_resize t_readdir_3 splice2pipe \
--	uuid_ioctl usemem_and_swapoff
-+	uuid_ioctl usemem_and_swapoff t_reflink_read_race
- 
- EXTRA_EXECS = dmerror fill2attr fill2fs fill2fs_check scaleread.sh \
- 	      btrfs_crc32c_forged_name.py popdir.pl popattr.py \
-diff --git a/src/t_reflink_read_race.c b/src/t_reflink_read_race.c
-new file mode 100644
-index 0000000000..acf8f8f73c
---- /dev/null
-+++ b/src/t_reflink_read_race.c
-@@ -0,0 +1,343 @@
-+// SPDX-License-Identifier: GPL-2.0
-+/*
-+ * Race reads with reflink to see if reads continue while we're cloning.
-+ * Copyright 2023 Oracle.  All rights reserved.
-+ */
-+#include <sys/types.h>
-+#include <sys/stat.h>
-+#include <sys/ioctl.h>
-+#include <linux/fs.h>
-+#include <time.h>
-+#include <stdlib.h>
-+#include <unistd.h>
-+#include <signal.h>
-+#include <fcntl.h>
-+#include <pthread.h>
-+#include <stdio.h>
-+#include <errno.h>
-+#include <string.h>
-+
-+#ifndef FICLONE
-+# define FICLONE	_IOW(0x94, 9, int)
-+#endif
-+
-+static pid_t mypid;
-+
-+static FILE *outcome_fp;
-+
-+/* Significant timestamps.  Initialized to zero */
-+static double program_start, clone_start, clone_end;
-+
-+/* Coordinates access to timestamps */
-+static pthread_mutex_t lock = PTHREAD_MUTEX_INITIALIZER;
-+
-+struct readinfo {
-+	int fd;
-+	unsigned int blocksize;
-+	char *descr;
-+};
-+
-+struct cloneinfo {
-+	int src_fd, dst_fd;
-+};
-+
-+#define MSEC_PER_SEC	1000
-+#define NSEC_PER_MSEC	1000000
-+
-+/*
-+ * Assume that it shouldn't take longer than 100ms for the FICLONE ioctl to
-+ * enter the kernel and take locks on an uncontended file.  This is also the
-+ * required CLOCK_MONOTONIC granularity.
-+ */
-+#define EARLIEST_READ_MS	(MSEC_PER_SEC / 10)
-+
-+/*
-+ * We want to be reasonably sure that the FICLONE takes long enough that any
-+ * read initiated after clone operation locked the source file could have
-+ * completed a disk IO before the clone finishes.  Therefore, we require that
-+ * the clone operation must take at least 4x the maximum setup time.
-+ */
-+#define MINIMUM_CLONE_MS	(EARLIEST_READ_MS * 5)
-+
-+static double timespec_to_msec(const struct timespec *ts)
-+{
-+	return (ts->tv_sec * (double)MSEC_PER_SEC) +
-+	       (ts->tv_nsec / (double)NSEC_PER_MSEC);
-+}
-+
-+static void sleep_ms(unsigned int len)
-+{
-+	struct timespec time = {
-+		.tv_nsec = len * NSEC_PER_MSEC,
-+	};
-+
-+	nanosleep(&time, NULL);
-+}
-+
-+static void outcome(const char *str)
-+{
-+	fprintf(outcome_fp, "%s\n", str);
-+	fflush(outcome_fp);
-+}
-+
-+static void *reader_fn(void *arg)
-+{
-+	struct timespec now;
-+	struct readinfo *ri = arg;
-+	char *buf = malloc(ri->blocksize);
-+	loff_t pos = 0;
-+	ssize_t copied;
-+	int ret;
-+
-+	if (!buf) {
-+		perror("alloc buffer");
-+		goto kill_error;
-+	}
-+
-+	/* Wait for the FICLONE to start */
-+	pthread_mutex_lock(&lock);
-+	while (clone_start < program_start) {
-+		pthread_mutex_unlock(&lock);
-+#ifdef DEBUG
-+		printf("%s read waiting for clone to start; cs=%.2f ps=%.2f\n",
-+				ri->descr, clone_start, program_start);
-+		fflush(stdout);
-+#endif
-+		sleep_ms(1);
-+		pthread_mutex_lock(&lock);
-+	}
-+	pthread_mutex_unlock(&lock);
-+	sleep_ms(EARLIEST_READ_MS);
-+
-+	/* Read from the file... */
-+	while ((copied = read(ri->fd, buf, ri->blocksize)) > 0) {
-+		double read_completion;
-+
-+		ret = clock_gettime(CLOCK_MONOTONIC, &now);
-+		if (ret) {
-+			perror("clock_gettime");
-+			goto kill_error;
-+		}
-+		read_completion = timespec_to_msec(&now);
-+
-+		/*
-+		 * If clone_end is still zero, the FICLONE is still running.
-+		 * If the read completion occurred a safe duration after the
-+		 * start of the ioctl, then report that as an early read
-+		 * completion.
-+		 */
-+		pthread_mutex_lock(&lock);
-+		if (clone_end < program_start &&
-+		    read_completion > clone_start + EARLIEST_READ_MS) {
-+			pthread_mutex_unlock(&lock);
-+
-+			/* clone still running... */
-+			printf("finished %s read early at %.2fms\n",
-+					ri->descr,
-+					read_completion - program_start);
-+			fflush(stdout);
-+			outcome("finished read early");
-+			goto kill_done;
-+		}
-+		pthread_mutex_unlock(&lock);
-+
-+		sleep_ms(1);
-+		pos += copied;
-+	}
-+	if (copied < 0) {
-+		perror("read");
-+		goto kill_error;
-+	}
-+
-+	return NULL;
-+kill_error:
-+	outcome("reader error");
-+kill_done:
-+	kill(mypid, SIGTERM);
-+	return NULL;
-+}
-+
-+static void *clone_fn(void *arg)
-+{
-+	struct timespec now;
-+	struct cloneinfo *ci = arg;
-+	int ret;
-+
-+	/* Record the approximate start time of this thread */
-+	ret = clock_gettime(CLOCK_MONOTONIC, &now);
-+	if (ret) {
-+		perror("clock_gettime clone start");
-+		goto kill_error;
-+	}
-+	pthread_mutex_lock(&lock);
-+	clone_start = timespec_to_msec(&now);
-+	pthread_mutex_unlock(&lock);
-+
-+	printf("started clone at %.2fms\n", clone_start - program_start);
-+	fflush(stdout);
-+
-+	/* Kernel call, only killable with a fatal signal */
-+	ret = ioctl(ci->dst_fd, FICLONE, ci->src_fd);
-+	if (ret) {
-+		perror("FICLONE");
-+		goto kill_error;
-+	}
-+
-+	/* If the ioctl completes, note the completion time */
-+	ret = clock_gettime(CLOCK_MONOTONIC, &now);
-+	if (ret) {
-+		perror("clock_gettime clone end");
-+		goto kill_error;
-+	}
-+
-+	pthread_mutex_lock(&lock);
-+	clone_end = timespec_to_msec(&now);
-+	pthread_mutex_unlock(&lock);
-+
-+	printf("finished clone at %.2fms\n",
-+			clone_end - program_start);
-+	fflush(stdout);
-+
-+	/* Complain if we didn't take long enough to clone. */
-+	if (clone_end < clone_start + MINIMUM_CLONE_MS) {
-+		printf("clone did not take enough time (%.2fms)\n",
-+				clone_end - clone_start);
-+		fflush(stdout);
-+		outcome("clone too fast");
-+		goto kill_done;
-+	}
-+
-+	outcome("clone finished before any reads");
-+	goto kill_done;
-+
-+kill_error:
-+	outcome("clone error");
-+kill_done:
-+	kill(mypid, SIGTERM);
-+	return NULL;
-+}
-+
-+int main(int argc, char *argv[])
-+{
-+	struct cloneinfo ci;
-+	struct readinfo bufio = { .descr = "buffered" };
-+	struct readinfo directio = { .descr = "directio" };
-+	struct timespec now;
-+	pthread_t clone_thread, bufio_thread, directio_thread;
-+	double clockres;
-+	int ret;
-+
-+	if (argc != 4) {
-+		printf("Usage: %s src_file dst_file outcome_file\n", argv[0]);
-+		return 1;
-+	}
-+
-+	mypid = getpid();
-+
-+	/* Check for sufficient clock precision. */
-+	ret = clock_getres(CLOCK_MONOTONIC, &now);
-+	if (ret) {
-+		perror("clock_getres MONOTONIC");
-+		return 2;
-+	}
-+	printf("CLOCK_MONOTONIC resolution: %llus %luns\n",
-+			(unsigned long long)now.tv_sec,
-+			(unsigned long)now.tv_nsec);
-+	fflush(stdout);
-+
-+	clockres = timespec_to_msec(&now);
-+	if (clockres > EARLIEST_READ_MS) {
-+		fprintf(stderr, "insufficient CLOCK_MONOTONIC resolution\n");
-+		return 2;
-+	}
-+
-+	/*
-+	 * Measure program start time since the MONOTONIC time base is not
-+	 * all that well defined.
-+	 */
-+	ret = clock_gettime(CLOCK_MONOTONIC, &now);
-+	if (ret) {
-+		perror("clock_gettime MONOTONIC");
-+		return 2;
-+	}
-+	if (now.tv_sec == 0 && now.tv_nsec == 0) {
-+		fprintf(stderr, "Uhoh, start time is zero?!\n");
-+		return 2;
-+	}
-+	program_start = timespec_to_msec(&now);
-+
-+	outcome_fp = fopen(argv[3], "w");
-+	if (!outcome_fp) {
-+		perror(argv[3]);
-+		return 2;
-+	}
-+
-+	/* Open separate fds for each thread */
-+	ci.src_fd = open(argv[1], O_RDONLY);
-+	if (ci.src_fd < 0) {
-+		perror(argv[1]);
-+		return 2;
-+	}
-+
-+	ci.dst_fd = open(argv[2], O_RDWR | O_CREAT, 0600);
-+	if (ci.dst_fd < 0) {
-+		perror(argv[2]);
-+		return 2;
-+	}
-+
-+	bufio.fd = open(argv[1], O_RDONLY);
-+	if (bufio.fd < 0) {
-+		perror(argv[1]);
-+		return 2;
-+	}
-+	bufio.blocksize = 37;
-+
-+	directio.fd = open(argv[1], O_RDONLY | O_DIRECT);
-+	if (directio.fd < 0) {
-+		perror(argv[1]);
-+		return 2;
-+	}
-+	directio.blocksize = 512;
-+
-+	/* Start threads */
-+	ret = pthread_create(&clone_thread, NULL, clone_fn, &ci);
-+	if (ret) {
-+		fprintf(stderr, "create clone thread: %s\n", strerror(ret));
-+		return 2;
-+	}
-+
-+	ret = pthread_create(&bufio_thread, NULL, reader_fn, &bufio);
-+	if (ret) {
-+		fprintf(stderr, "create bufio thread: %s\n", strerror(ret));
-+		return 2;
-+	}
-+
-+	ret = pthread_create(&directio_thread, NULL, reader_fn, &directio);
-+	if (ret) {
-+		fprintf(stderr, "create directio thread: %s\n", strerror(ret));
-+		return 2;
-+	}
-+
-+	/* Wait for threads */
-+	ret = pthread_join(clone_thread, NULL);
-+	if (ret) {
-+		fprintf(stderr, "join clone thread: %s\n", strerror(ret));
-+		return 2;
-+	}
-+
-+	ret = pthread_join(bufio_thread, NULL);
-+	if (ret) {
-+		fprintf(stderr, "join bufio thread: %s\n", strerror(ret));
-+		return 2;
-+	}
-+
-+	ret = pthread_join(directio_thread, NULL);
-+	if (ret) {
-+		fprintf(stderr, "join directio thread: %s\n", strerror(ret));
-+		return 2;
-+	}
-+
-+	printf("Program should have killed itself?\n");
-+	outcome("program failed to end early");
-+	return 0;
-+}
-diff --git a/tests/generic/1953 b/tests/generic/1953
-new file mode 100755
-index 0000000000..058538e6fe
---- /dev/null
-+++ b/tests/generic/1953
-@@ -0,0 +1,74 @@
-+#! /bin/bash
-+# SPDX-License-Identifier: GPL-2.0
-+# Copyright (c) 2023, Oracle and/or its affiliates.  All Rights Reserved.
-+#
-+# FS QA Test No. 1953
-+#
-+# Race file reads with a very slow reflink operation to see if the reads
-+# actually complete while the reflink is ongoing.  This is a functionality
-+# test for XFS commit f3ba4762fa56 "xfs: allow read IO and FICLONE to run
-+# concurrently".
-+#
-+. ./common/preamble
-+_begin_fstest auto clone punch
-+
-+# Import common functions.
-+. ./common/filter
-+. ./common/attr
-+. ./common/reflink
-+
-+# real QA test starts here
-+_require_scratch_reflink
-+_require_cp_reflink
-+_require_xfs_io_command "fpunch"
-+_require_test_program "punch-alternating"
-+_require_test_program "t_reflink_read_race"
-+
-+rm -f "$seqres.full"
-+
-+echo "Format and mount"
-+_scratch_mkfs > "$seqres.full" 2>&1
-+_scratch_mount >> "$seqres.full" 2>&1
-+
-+testdir="$SCRATCH_MNT/test-$seq"
-+mkdir "$testdir"
-+
-+calc_space() {
-+	blocks_needed=$(( 2 ** (fnr + 1) ))
-+	space_needed=$((blocks_needed * blksz * 5 / 4))
-+}
-+
-+# Figure out the number of blocks that we need to get the reflink runtime above
-+# 1 seconds
-+echo "Create a many-block file"
-+for ((fnr = 1; fnr < 40; fnr++)); do
-+	free_blocks=$(stat -f -c '%a' "$testdir")
-+	blksz=$(_get_file_block_size "$testdir")
-+	space_avail=$((free_blocks * blksz))
-+	calc_space
-+	test $space_needed -gt $space_avail && \
-+		_notrun "Insufficient space for stress test; would only create $blocks_needed extents."
-+
-+	off=$(( (2 ** fnr) * blksz))
-+	$XFS_IO_PROG -f -c "pwrite -S 0x61 -b 4194304 $off $off" "$testdir/file1" >> "$seqres.full"
-+	"$here/src/punch-alternating" "$testdir/file1" >> "$seqres.full"
-+
-+	timeout 1s cp --reflink=always "$testdir/file1" "$testdir/garbage" || break
-+done
-+echo "fnr=$fnr" >> $seqres.full
-+
-+echo "Reflink the big file"
-+$here/src/t_reflink_read_race "$testdir/file1" "$testdir/file2" \
-+	"$testdir/outcome" &>> $seqres.full
-+
-+if [ ! -e "$testdir/outcome" ]; then
-+	echo "Could not set up program"
-+elif grep -q "finished read early" "$testdir/outcome"; then
-+	echo "test completed successfully"
-+else
-+	cat "$testdir/outcome"
-+fi
-+
-+# success, all done
-+status=0
-+exit
-diff --git a/tests/generic/1953.out b/tests/generic/1953.out
-new file mode 100644
-index 0000000000..8eaacb7ff0
---- /dev/null
-+++ b/tests/generic/1953.out
-@@ -0,0 +1,6 @@
-+QA output created by 1953
-+Format and mount
-+Create a many-block file
-+Reflink the big file
-+Terminated
-+test completed successfully
+The usage of timekeeper_lock and the sequence count has been carefully
+crafted to be as non-contended as possible. We went a great length to
+optimize that because the ktime_get*() functions are really hotpath all
+over the place.
+
+Exposing such an interface which wreckages that is a recipe for disaster
+down the road. It might be a non-issue today, but once we hit the
+bottleneck of that global lock, we are up the creek without a
+paddle. Well not really, but all we can do then is fall back to
+ktime_get_real(). So let me ask the obvious question:
+
+     Why don't we do that right away?
+
+Many moons ago when we added ktime_get_real_coarse() the main reason was
+that reading the time from the underlying hardware was insanely
+expensive.
+
+Many moons later this is not true anymore, except for the stupid case
+where the BIOS wreckaged the TSC, but that's a hopeless case for
+performance no matter what. Optimizing for that would be beyond stupid.
+
+I'm well aware that ktime_get_real_coarse() is still faster than
+ktime_get_real() in micro-benchmarks, i.e. 5ns vs. 15ns on the four
+years old laptop I'm writing this.
+
+Many moons ago it was in the ballpark of 40ns vs. 5us due to TSC being
+useless and even TSC read was way more expensive (factor 8-10x IIRC) in
+comparison. That really mattered for FS, but does todays overhead still
+make a difference in the real FS use case scenario?
+
+I'm not in the position of running meaningful FS benchmarks to analyze
+that, but I think the delta between ktime_get_real_coarse() and
+ktime_get_real() on contemporary hardware is small enough that it
+justifies this question.
+
+The point is that both functions have pretty much the same D-cache
+pattern because they access the same data in the very same
+cacheline. The only difference is the actual TSC read and the extra
+conversion, but that's it. The TSC read has been massively optimized by
+the CPU vendors. I know that the ARM64 counter has been optimized too,
+though I have no idea about PPC64 and S390, but I would be truly
+surprised if they didn't optimize the hell out of it because time read
+is really used heavily both in kernel and user space.
+
+Does anyone have numbers on contemporary hardware to shed some light on
+that in the context of FS and the problem at hand?
+
+Thanks,
+
+        tglx
