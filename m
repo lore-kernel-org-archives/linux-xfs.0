@@ -2,38 +2,39 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 99A22CDB465
-	for <linux-xfs@archiver.kernel.org>; Thu, 19 Oct 2023 16:30:13 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9DB46CDB483
+	for <linux-xfs@archiver.kernel.org>; Thu, 19 Oct 2023 16:30:30 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232123AbjJSQaN (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 19 Oct 2023 12:30:13 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39314 "EHLO
+        id S232935AbjJSQaa (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 19 Oct 2023 12:30:30 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58340 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231837AbjJSQaM (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 19 Oct 2023 12:30:12 -0400
+        with ESMTP id S232879AbjJSQa2 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 19 Oct 2023 12:30:28 -0400
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2B78811D
-        for <linux-xfs@vger.kernel.org>; Thu, 19 Oct 2023 09:30:10 -0700 (PDT)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id C7D75C433C8;
-        Thu, 19 Oct 2023 16:30:09 +0000 (UTC)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id CD7EA11D
+        for <linux-xfs@vger.kernel.org>; Thu, 19 Oct 2023 09:30:25 -0700 (PDT)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 7521BC433C8;
+        Thu, 19 Oct 2023 16:30:25 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1697733009;
-        bh=qEl8dy0NWO606fpPfCIiWFIdCN8Kj5Ua3qqCpUbiNzY=;
+        s=k20201202; t=1697733025;
+        bh=6vv3xVqJpajTXx3S+iwxB0KeYu60hx+uePFok+0jkao=;
         h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-        b=eCMc6NzFzgxZW7yaiV4EpWZWQU8zOLPwBJ9QWrwx4RX9A8mnUOi1SvsyXiTNmTsAD
-         nNdZCFwbZoZLYWIKqPe3pWkxCu/K3Hkkjfz9A00bd7/eBfwve9BQqR5wO1+VhHV/ou
-         025bXnnIjG1E1HQKU7y6LxrOG3Ct3iAyGvPAmUtH8VGagWBJhffO0X/I4TNOXDxT79
-         dTu+m2qV0sjcAKBKuL4Tcb2vfo1RAsGnnexs4IlgBW06YNc+RxEvU1/Avg3C3CF/IO
-         pnJDPADiOvl3swYKL5WlAbxGa/UZP76RzCs8bx3nKNPlpIHmY7lMNZiK0G2+rhlURR
-         YVNKkqbW24t8w==
-Date:   Thu, 19 Oct 2023 09:30:09 -0700
-Subject: [PATCH 6/9] xfs: return maximum free size from xfs_rtany_summary()
+        b=JGaqM6GDbqdDLynqpA402nkGmwkCZkbaaF9Ll3mgvLQEvigytHel6JUppjaVyAPjk
+         7lMFrbFzPNKBU56qk0NpLDBp3Nw3nnhl8Ecm97E1P4nUio7ODRXEcJF/8QuEMVxtaM
+         kVXlcAOo6+3we6hm6Sc4dkzoZkM4c74j2GEyBe8qm7xL90EFd8OYxhHGTagEpceCii
+         uXWlQ0rD8DtfXaNAsyWgyG2lDGsfIKWrwqOPln+h8uqsY38b3zUS+fIGalMKi+5PgT
+         joARsNy0unjH9K1dMynw61TsosQvmU+OtVygnE6Q8dFCZBCoDohMsbX+CDVEF8Mx+t
+         DKTw+oCnFEttQ==
+Date:   Thu, 19 Oct 2023 09:30:25 -0700
+Subject: [PATCH 7/9] xfs: limit maxlen based on available space in
+ xfs_rtallocate_extent_near()
 From:   "Darrick J. Wong" <djwong@kernel.org>
 To:     djwong@kernel.org
 Cc:     Omar Sandoval <osandov@fb.com>, Christoph Hellwig <hch@lst.de>,
         linux-xfs@vger.kernel.org, osandov@osandov.com, osandov@fb.com,
         hch@lst.de
-Message-ID: <169773211816.225862.16807245833883101795.stgit@frogsfrogsfrogs>
+Message-ID: <169773211832.225862.8392993672373111972.stgit@frogsfrogsfrogs>
 In-Reply-To: <169773211712.225862.9408784830071081083.stgit@frogsfrogsfrogs>
 References: <169773211712.225862.9408784830071081083.stgit@frogsfrogsfrogs>
 User-Agent: StGit/0.19
@@ -46,101 +47,67 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: Omar Sandoval <osandov@fb.com>
 
-Instead of only returning whether there is any free space, return the
-maximum size, which is fast thanks to the previous commit. This will be
-used by two upcoming optimizations.
+xfs_rtallocate_extent_near() calls xfs_rtallocate_extent_block() with
+the minlen and maxlen that were passed to it.
+xfs_rtallocate_extent_block() then scans the bitmap block looking for a
+free range of size maxlen. If there is none, it has to scan the whole
+bitmap block before returning the largest range of at least size minlen.
+For a fragmented realtime device and a large allocation request, it's
+almost certain that this will have to search the whole bitmap block,
+leading to high CPU usage.
 
-Reviewed-by: Darrick J. Wong <djwong@kernel.org>
+However, the realtime summary tells us the maximum size available in the
+bitmap block. We can limit the search in xfs_rtallocate_extent_block()
+to that size and often stop before scanning the whole bitmap block.
+
 Signed-off-by: Omar Sandoval <osandov@fb.com>
+Reviewed-by: Darrick J. Wong <djwong@kernel.org>
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 Reviewed-by: Christoph Hellwig <hch@lst.de>
 ---
- fs/xfs/xfs_rtalloc.c |   18 +++++++++---------
- 1 file changed, 9 insertions(+), 9 deletions(-)
+ fs/xfs/xfs_rtalloc.c |    9 ++++++---
+ 1 file changed, 6 insertions(+), 3 deletions(-)
 
 
 diff --git a/fs/xfs/xfs_rtalloc.c b/fs/xfs/xfs_rtalloc.c
-index 6bde64584a37..c774a4ccdd15 100644
+index c774a4ccdd15..3aa9634a9e76 100644
 --- a/fs/xfs/xfs_rtalloc.c
 +++ b/fs/xfs/xfs_rtalloc.c
-@@ -47,7 +47,7 @@ xfs_rtany_summary(
- 	int			low,	/* low log2 extent size */
- 	int			high,	/* high log2 extent size */
- 	xfs_fileoff_t		bbno,	/* bitmap block number */
--	int			*stat)	/* out: any good extents here? */
-+	int			*maxlog) /* out: max log2 extent size free */
- {
- 	struct xfs_mount	*mp = args->mp;
- 	int			error;
-@@ -58,7 +58,7 @@ xfs_rtany_summary(
- 	if (mp->m_rsum_cache) {
- 		high = min(high, mp->m_rsum_cache[bbno] - 1);
- 		if (low > high) {
--			*stat = 0;
-+			*maxlog = -1;
- 			return 0;
- 		}
- 	}
-@@ -78,14 +78,14 @@ xfs_rtany_summary(
- 		 * If there are any, return success.
- 		 */
- 		if (sum) {
--			*stat = 1;
-+			*maxlog = log;
- 			goto out;
- 		}
- 	}
- 	/*
- 	 * Found nothing, return failure.
- 	 */
--	*stat = 0;
-+	*maxlog = -1;
- out:
- 	/* There were no extents at levels > log. */
- 	if (mp->m_rsum_cache && log + 1 < mp->m_rsum_cache[bbno])
-@@ -434,7 +434,7 @@ xfs_rtallocate_extent_near(
- 	xfs_rtxnum_t		*rtx)	/* out: start rtext allocated */
- {
- 	struct xfs_mount	*mp = args->mp;
--	int			any;	/* any useful extents from summary */
-+	int			maxlog;	/* max useful extent from summary */
- 	xfs_fileoff_t		bbno;	/* bitmap block number */
- 	int			error;
- 	int			i;	/* bitmap block offset (loop control) */
-@@ -488,7 +488,7 @@ xfs_rtallocate_extent_near(
- 		 * starting in this bitmap block.
- 		 */
- 		error = xfs_rtany_summary(args, log2len, mp->m_rsumlevels - 1,
--				bbno + i, &any);
-+				bbno + i, &maxlog);
- 		if (error) {
- 			return error;
- 		}
-@@ -496,7 +496,7 @@ xfs_rtallocate_extent_near(
- 		 * If there are any useful extents starting here, try
+@@ -497,6 +497,9 @@ xfs_rtallocate_extent_near(
  		 * allocating one.
  		 */
--		if (any) {
-+		if (maxlog >= 0) {
+ 		if (maxlog >= 0) {
++			xfs_extlen_t maxavail =
++				min_t(xfs_rtblock_t, maxlen,
++				      (1ULL << (maxlog + 1)) - 1);
  			/*
  			 * On the positive side of the starting location.
  			 */
-@@ -537,7 +537,7 @@ xfs_rtallocate_extent_near(
- 					error = xfs_rtany_summary(args,
- 							log2len,
- 							mp->m_rsumlevels - 1,
--							bbno + j, &any);
-+							bbno + j, &maxlog);
- 					if (error) {
- 						return error;
- 					}
-@@ -549,7 +549,7 @@ xfs_rtallocate_extent_near(
- 					 * extent given, we've already tried
- 					 * that allocation, don't do it again.
- 					 */
--					if (any)
-+					if (maxlog >= 0)
+@@ -506,7 +509,7 @@ xfs_rtallocate_extent_near(
+ 				 * this block.
+ 				 */
+ 				error = xfs_rtallocate_extent_block(args,
+-						bbno + i, minlen, maxlen, len,
++						bbno + i, minlen, maxavail, len,
+ 						&n, prod, &r);
+ 				if (error) {
+ 					return error;
+@@ -553,7 +556,7 @@ xfs_rtallocate_extent_near(
  						continue;
  					error = xfs_rtallocate_extent_block(args,
  							bbno + j, minlen,
+-							maxlen, len, &n, prod,
++							maxavail, len, &n, prod,
+ 							&r);
+ 					if (error) {
+ 						return error;
+@@ -575,7 +578,7 @@ xfs_rtallocate_extent_near(
+ 				 * that we found.
+ 				 */
+ 				error = xfs_rtallocate_extent_block(args,
+-						bbno + i, minlen, maxlen, len,
++						bbno + i, minlen, maxavail, len,
+ 						&n, prod, &r);
+ 				if (error) {
+ 					return error;
 
