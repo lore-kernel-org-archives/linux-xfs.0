@@ -2,40 +2,40 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A94C6CDB465
-	for <linux-xfs@archiver.kernel.org>; Thu, 19 Oct 2023 16:27:36 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4430BCDB465
+	for <linux-xfs@archiver.kernel.org>; Thu, 19 Oct 2023 16:27:51 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232919AbjJSQ1g (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 19 Oct 2023 12:27:36 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40088 "EHLO
+        id S232788AbjJSQ1v (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 19 Oct 2023 12:27:51 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40232 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232860AbjJSQ1f (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 19 Oct 2023 12:27:35 -0400
+        with ESMTP id S232326AbjJSQ1u (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 19 Oct 2023 12:27:50 -0400
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 47784119
-        for <linux-xfs@vger.kernel.org>; Thu, 19 Oct 2023 09:27:33 -0700 (PDT)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id E3CE2C433C7;
-        Thu, 19 Oct 2023 16:27:32 +0000 (UTC)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E431E9B
+        for <linux-xfs@vger.kernel.org>; Thu, 19 Oct 2023 09:27:48 -0700 (PDT)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 7FE60C433C7;
+        Thu, 19 Oct 2023 16:27:48 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1697732852;
-        bh=qE92AgKNlZHQAQiRFFzLPvPH05hbH11E5cwjJxNRPsM=;
+        s=k20201202; t=1697732868;
+        bh=08TJHzLuUOzzl9OgRG2l3Z8gyNBfMpzQ9+1ff4aht3k=;
         h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-        b=s2shBtPvZekUNL2jm3vCcT17RmIpor8InQWamexLzSnDepUeXXLyGAMdffWcHcRvJ
-         zBeryZrJH9w+5ZlLijEuCWEbaECFxOkeCM3bnI45+V7MthkAT0Ovo2eBbnEi00bZn8
-         AO6OLMyGiz8HOcWUwV/mKd2WHv88VREpw6Zgt2HkNGV1222snjLDUH73hYeu9gWCXU
-         w8YJrPVPp2VGfbgR6hd8LU1x/CS/IUioFTHk4ntzSWovKWqAMTb4fv0vhBgqIkZqiK
-         gIOBzNlICTEBSQwxeJlxERU1g73IdZuFRNCpx4pxQX+8Jh2ppLvScKDW5iXSEvm73p
-         lhfdkto1m2/gg==
-Date:   Thu, 19 Oct 2023 09:27:32 -0700
-Subject: [PATCH 5/5] xfs: create helpers for rtbitmap block/wordcount
- computations
+        b=bSWMtMt+YPyEkZOJqA/9OgqyOTxOSMiYUVv/z5mNCPuwfquCAhyVg5oQIzcOG5EOO
+         32NfVLJptgjzvSzwqvZhNehncw11JOdlAzXl3BRd/lq+diwZvksU93o+1/fg8egk+b
+         oaKT7sDKAR4tE190r+FtU4e0fDol4ckFHKGue8pLG5tt6bAdrbyzJsMhbB85algbA/
+         n/D/aSDmvUlPcv6pClo5/1SqFkfBy/okQnvrx5j/1Kw+i4MfTnQ021uNmzJoDDz4fj
+         ZaS59uuwH31JQ+J4ZMm/CJ3uvNI7jsKXE4x+PPTG5RimCHnMIQMJ+mgr1m6v6bJ6l7
+         uIageMutmXBcQ==
+Date:   Thu, 19 Oct 2023 09:27:48 -0700
+Subject: [PATCH 1/4] xfs: create a helper to handle logging parts of rt
+ bitmap/summary blocks
 From:   "Darrick J. Wong" <djwong@kernel.org>
 To:     djwong@kernel.org
-Cc:     Christoph Hellwig <hch@lst.de>, linux-xfs@vger.kernel.org,
-        osandov@fb.com, hch@lst.de
-Message-ID: <169773211046.225536.5937847006570613860.stgit@frogsfrogsfrogs>
-In-Reply-To: <169773210961.225536.12900854938759335651.stgit@frogsfrogsfrogs>
-References: <169773210961.225536.12900854938759335651.stgit@frogsfrogsfrogs>
+Cc:     Christoph Hellwig <hch@lst.de>, Christoph Hellwig <hch@lst.de>,
+        linux-xfs@vger.kernel.org, osandov@fb.com, hch@lst.de
+Message-ID: <169773211358.225711.13859802342332594222.stgit@frogsfrogsfrogs>
+In-Reply-To: <169773211338.225711.17480890063747608115.stgit@frogsfrogsfrogs>
+References: <169773211338.225711.17480890063747608115.stgit@frogsfrogsfrogs>
 User-Agent: StGit/0.19
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
@@ -46,137 +46,160 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-Create helper functions that compute the number of blocks or words
-necessary to store the rt bitmap.
+Create an explicit helper function to log parts of rt bitmap and summary
+blocks.  While we're at it, fix an off-by-one error in two of the
+rtbitmap logging calls that led to unnecessarily large log items but was
+otherwise benign.
 
+Note that the upcoming rtgroups patchset will add block headers to the
+rtbitmap and rtsummary files.  The helpers in this and the next few
+patches take a less than direct route through xfs_rbmblock_wordptr and
+xfs_rsumblock_infoptr to avoid helper churn in that patchset.
+
+Suggested-by: Christoph Hellwig <hch@lst.de>
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 Reviewed-by: Christoph Hellwig <hch@lst.de>
 ---
- fs/xfs/libxfs/xfs_rtbitmap.c   |   27 +++++++++++++++++++++++++++
- fs/xfs/libxfs/xfs_rtbitmap.h   |   12 ++++++++++++
- fs/xfs/libxfs/xfs_trans_resv.c |    9 +++++----
- fs/xfs/scrub/rtsummary.c       |    7 +++----
- fs/xfs/xfs_rtalloc.c           |    2 +-
- 5 files changed, 48 insertions(+), 9 deletions(-)
+ fs/xfs/libxfs/xfs_rtbitmap.c |   55 +++++++++++++++++++++++++++++++-----------
+ 1 file changed, 40 insertions(+), 15 deletions(-)
 
 
 diff --git a/fs/xfs/libxfs/xfs_rtbitmap.c b/fs/xfs/libxfs/xfs_rtbitmap.c
-index efa084de58c2..aefa2b0747a5 100644
+index aefa2b0747a5..4f096348d4b2 100644
 --- a/fs/xfs/libxfs/xfs_rtbitmap.c
 +++ b/fs/xfs/libxfs/xfs_rtbitmap.c
-@@ -1135,3 +1135,30 @@ xfs_rtalloc_extent_is_free(
- 	*is_free = matches;
+@@ -432,6 +432,21 @@ xfs_rtfind_forw(
  	return 0;
  }
-+
-+/*
-+ * Compute the number of rtbitmap blocks needed to track the given number of rt
-+ * extents.
-+ */
-+xfs_filblks_t
-+xfs_rtbitmap_blockcount(
-+	struct xfs_mount	*mp,
-+	xfs_rtbxlen_t		rtextents)
-+{
-+	return howmany_64(rtextents, NBBY * mp->m_sb.sb_blocksize);
-+}
-+
-+/*
-+ * Compute the number of rtbitmap words needed to populate every block of a
-+ * bitmap that is large enough to track the given number of rt extents.
-+ */
-+unsigned long long
-+xfs_rtbitmap_wordcount(
-+	struct xfs_mount	*mp,
-+	xfs_rtbxlen_t		rtextents)
-+{
-+	xfs_filblks_t		blocks;
-+
-+	blocks = xfs_rtbitmap_blockcount(mp, rtextents);
-+	return XFS_FSB_TO_B(mp, blocks) >> XFS_WORDLOG;
-+}
-diff --git a/fs/xfs/libxfs/xfs_rtbitmap.h b/fs/xfs/libxfs/xfs_rtbitmap.h
-index 79ade6d2361b..01eabb9b5516 100644
---- a/fs/xfs/libxfs/xfs_rtbitmap.h
-+++ b/fs/xfs/libxfs/xfs_rtbitmap.h
-@@ -280,6 +280,11 @@ xfs_rtfree_extent(
- /* Same as above, but in units of rt blocks. */
- int xfs_rtfree_blocks(struct xfs_trans *tp, xfs_fsblock_t rtbno,
- 		xfs_filblks_t rtlen);
-+
-+xfs_filblks_t xfs_rtbitmap_blockcount(struct xfs_mount *mp, xfs_rtbxlen_t
-+		rtextents);
-+unsigned long long xfs_rtbitmap_wordcount(struct xfs_mount *mp,
-+		xfs_rtbxlen_t rtextents);
- #else /* CONFIG_XFS_RT */
- # define xfs_rtfree_extent(t,b,l)			(-ENOSYS)
- # define xfs_rtfree_blocks(t,rb,rl)			(-ENOSYS)
-@@ -287,6 +292,13 @@ int xfs_rtfree_blocks(struct xfs_trans *tp, xfs_fsblock_t rtbno,
- # define xfs_rtalloc_query_all(m,t,f,p)			(-ENOSYS)
- # define xfs_rtbuf_get(m,t,b,i,p)			(-ENOSYS)
- # define xfs_rtalloc_extent_is_free(m,t,s,l,i)		(-ENOSYS)
-+static inline xfs_filblks_t
-+xfs_rtbitmap_blockcount(struct xfs_mount *mp, xfs_rtbxlen_t rtextents)
-+{
-+	/* shut up gcc */
-+	return 0;
-+}
-+# define xfs_rtbitmap_wordcount(mp, r)			(0)
- #endif /* CONFIG_XFS_RT */
  
- #endif /* __XFS_RTBITMAP_H__ */
-diff --git a/fs/xfs/libxfs/xfs_trans_resv.c b/fs/xfs/libxfs/xfs_trans_resv.c
-index 4629f10d2f67..6cd45e8c118d 100644
---- a/fs/xfs/libxfs/xfs_trans_resv.c
-+++ b/fs/xfs/libxfs/xfs_trans_resv.c
-@@ -218,11 +218,12 @@ xfs_rtalloc_block_count(
- 	struct xfs_mount	*mp,
- 	unsigned int		num_ops)
- {
--	unsigned int		blksz = XFS_FSB_TO_B(mp, 1);
--	unsigned int		rtbmp_bytes;
-+	unsigned int		rtbmp_blocks;
-+	xfs_rtxlen_t		rtxlen;
- 
--	rtbmp_bytes = xfs_extlen_to_rtxlen(mp, XFS_MAX_BMBT_EXTLEN) / NBBY;
--	return (howmany(rtbmp_bytes, blksz) + 1) * num_ops;
-+	rtxlen = xfs_extlen_to_rtxlen(mp, XFS_MAX_BMBT_EXTLEN);
-+	rtbmp_blocks = xfs_rtbitmap_blockcount(mp, rtxlen);
-+	return (rtbmp_blocks + 1) * num_ops;
++/* Log rtsummary counter at @infoword. */
++static inline void
++xfs_trans_log_rtsummary(
++	struct xfs_trans	*tp,
++	struct xfs_buf		*bp,
++	unsigned int		infoword)
++{
++	size_t			first, last;
++
++	first = (void *)xfs_rsumblock_infoptr(bp, infoword) - bp->b_addr;
++	last = first + sizeof(xfs_suminfo_t) - 1;
++
++	xfs_trans_log_buf(tp, bp, first, last);
++}
++
+ /*
+  * Read and/or modify the summary information for a given extent size,
+  * bitmap block combination.
+@@ -497,8 +512,6 @@ xfs_rtmodify_summary_int(
+ 	infoword = xfs_rtsumoffs_to_infoword(mp, so);
+ 	sp = xfs_rsumblock_infoptr(bp, infoword);
+ 	if (delta) {
+-		uint first = (uint)((char *)sp - (char *)bp->b_addr);
+-
+ 		*sp += delta;
+ 		if (mp->m_rsum_cache) {
+ 			if (*sp == 0 && log == mp->m_rsum_cache[bbno])
+@@ -506,7 +519,7 @@ xfs_rtmodify_summary_int(
+ 			if (*sp != 0 && log < mp->m_rsum_cache[bbno])
+ 				mp->m_rsum_cache[bbno] = log;
+ 		}
+-		xfs_trans_log_buf(tp, bp, first, first + sizeof(*sp) - 1);
++		xfs_trans_log_rtsummary(tp, bp, infoword);
+ 	}
+ 	if (sum)
+ 		*sum = *sp;
+@@ -527,6 +540,22 @@ xfs_rtmodify_summary(
+ 					delta, rbpp, rsb, NULL);
  }
  
++/* Log rtbitmap block from the word @from to the byte before @next. */
++static inline void
++xfs_trans_log_rtbitmap(
++	struct xfs_trans	*tp,
++	struct xfs_buf		*bp,
++	unsigned int		from,
++	unsigned int		next)
++{
++	size_t			first, last;
++
++	first = (void *)xfs_rbmblock_wordptr(bp, from) - bp->b_addr;
++	last = ((void *)xfs_rbmblock_wordptr(bp, next) - 1) - bp->b_addr;
++
++	xfs_trans_log_buf(tp, bp, first, last);
++}
++
  /*
-diff --git a/fs/xfs/scrub/rtsummary.c b/fs/xfs/scrub/rtsummary.c
-index 3c8a6cc33800..0971d002d906 100644
---- a/fs/xfs/scrub/rtsummary.c
-+++ b/fs/xfs/scrub/rtsummary.c
-@@ -160,12 +160,11 @@ xchk_rtsum_compute(
- 	struct xfs_scrub	*sc)
- {
- 	struct xfs_mount	*mp = sc->mp;
--	unsigned long long	rtbmp_bytes;
-+	unsigned long long	rtbmp_blocks;
+  * Set the given range of bitmap bits to the given value.
+  * Do whatever I/O and logging is required.
+@@ -548,6 +577,7 @@ xfs_rtmodify_range(
+ 	int		i;		/* current bit number rel. to start */
+ 	int		lastbit;	/* last useful bit in word */
+ 	xfs_rtword_t	mask;		/* mask o frelevant bits for value */
++	unsigned int	firstword;	/* first word used in the buffer */
+ 	unsigned int	word;		/* word number in the buffer */
  
- 	/* If the bitmap size doesn't match the computed size, bail. */
--	rtbmp_bytes = howmany_64(mp->m_sb.sb_rextents, NBBY);
--	if (roundup_64(rtbmp_bytes, mp->m_sb.sb_blocksize) !=
--			mp->m_rbmip->i_disk_size)
-+	rtbmp_blocks = xfs_rtbitmap_blockcount(mp, mp->m_sb.sb_rextents);
-+	if (XFS_FSB_TO_B(mp, rtbmp_blocks) != mp->m_rbmip->i_disk_size)
- 		return -EFSCORRUPTED;
- 
- 	return xfs_rtalloc_query_all(sc->mp, sc->tp, xchk_rtsum_record_free,
-diff --git a/fs/xfs/xfs_rtalloc.c b/fs/xfs/xfs_rtalloc.c
-index fdfb22baa6da..8e041df12640 100644
---- a/fs/xfs/xfs_rtalloc.c
-+++ b/fs/xfs/xfs_rtalloc.c
-@@ -998,7 +998,7 @@ xfs_growfs_rt(
+ 	/*
+@@ -565,7 +595,7 @@ xfs_rtmodify_range(
+ 	/*
+ 	 * Compute the starting word's address, and starting bit.
  	 */
- 	nrextents = nrblocks;
- 	do_div(nrextents, in->extsize);
--	nrbmblocks = howmany_64(nrextents, NBBY * sbp->sb_blocksize);
-+	nrbmblocks = xfs_rtbitmap_blockcount(mp, nrextents);
- 	nrextslog = xfs_highbit32(nrextents);
- 	nrsumlevels = nrextslog + 1;
- 	nrsumsize = (uint)sizeof(xfs_suminfo_t) * nrsumlevels * nrbmblocks;
+-	word = xfs_rtx_to_rbmword(mp, start);
++	firstword = word = xfs_rtx_to_rbmword(mp, start);
+ 	first = b = xfs_rbmblock_wordptr(bp, word);
+ 	bit = (int)(start & (XFS_NBWORD - 1));
+ 	/*
+@@ -599,15 +629,13 @@ xfs_rtmodify_range(
+ 			 * Log the changed part of this block.
+ 			 * Get the next one.
+ 			 */
+-			xfs_trans_log_buf(tp, bp,
+-				(uint)((char *)first - (char *)bp->b_addr),
+-				(uint)((char *)b - (char *)bp->b_addr));
++			xfs_trans_log_rtbitmap(tp, bp, firstword, word);
+ 			error = xfs_rtbuf_get(mp, tp, ++block, 0, &bp);
+ 			if (error) {
+ 				return error;
+ 			}
+ 
+-			word = 0;
++			firstword = word = 0;
+ 			first = b = xfs_rbmblock_wordptr(bp, word);
+ 		} else {
+ 			/*
+@@ -640,15 +668,13 @@ xfs_rtmodify_range(
+ 			 * Log the changed part of this block.
+ 			 * Get the next one.
+ 			 */
+-			xfs_trans_log_buf(tp, bp,
+-				(uint)((char *)first - (char *)bp->b_addr),
+-				(uint)((char *)b - (char *)bp->b_addr));
++			xfs_trans_log_rtbitmap(tp, bp, firstword, word);
+ 			error = xfs_rtbuf_get(mp, tp, ++block, 0, &bp);
+ 			if (error) {
+ 				return error;
+ 			}
+ 
+-			word = 0;
++			firstword = word = 0;
+ 			first = b = xfs_rbmblock_wordptr(bp, word);
+ 		} else {
+ 			/*
+@@ -673,15 +699,14 @@ xfs_rtmodify_range(
+ 			*b |= mask;
+ 		else
+ 			*b &= ~mask;
++		word++;
+ 		b++;
+ 	}
+ 	/*
+ 	 * Log any remaining changed bytes.
+ 	 */
+ 	if (b > first)
+-		xfs_trans_log_buf(tp, bp,
+-			(uint)((char *)first - (char *)bp->b_addr),
+-			(uint)((char *)b - (char *)bp->b_addr - 1));
++		xfs_trans_log_rtbitmap(tp, bp, firstword, word);
+ 	return 0;
+ }
+ 
 
