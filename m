@@ -2,108 +2,87 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id ECB5DC004C0
-	for <linux-xfs@archiver.kernel.org>; Fri, 20 Oct 2023 21:05:11 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B4599C001DF
+	for <linux-xfs@archiver.kernel.org>; Fri, 20 Oct 2023 22:17:19 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229983AbjJTVFK (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 20 Oct 2023 17:05:10 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60100 "EHLO
+        id S229910AbjJTWRT (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 20 Oct 2023 18:17:19 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37582 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229555AbjJTVFJ (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 20 Oct 2023 17:05:09 -0400
+        with ESMTP id S229659AbjJTWRT (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 20 Oct 2023 18:17:19 -0400
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D9EB7D60;
-        Fri, 20 Oct 2023 14:05:07 -0700 (PDT)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 4056BC433C7;
-        Fri, 20 Oct 2023 21:05:05 +0000 (UTC)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7D8D81A3
+        for <linux-xfs@vger.kernel.org>; Fri, 20 Oct 2023 15:17:17 -0700 (PDT)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id F086DC433C8;
+        Fri, 20 Oct 2023 22:17:16 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1697835907;
-        bh=Elxhk2Dpng0QYormybPqQvqGrljIJdvhIjHnQugf8Aw=;
-        h=Subject:From:To:Cc:Date:In-Reply-To:References:From;
-        b=CxRn5Wen+tHmFyOjC5cErUb4FjXC/5aXJGY8YCKssgsr8mHrQ6FS4MqWkmUwlKa6O
-         njiflYbjExbJJ4hmFju1xJi01RSXH4oemQqyQNGsTjbV2jEbsCLpu0+CEzMhSS+kPH
-         qLHZGbGZ8re9P6Mgpk/IcJ+27RzSwckdZHUhZxagACHPGeIYfBcWITdudsTDqALdUx
-         t9SSVavuWrkfW5vhC/g9L5WemB+jWjWlxzfHH6aYJ2P8WmEgK7zAe1adYDuOtMOzR1
-         XwX2fAnz3V3D2eIBCalnWQDUdtWsh4JzFqOf3ISEKtU+d7C9zwH90UOwNXGOhznsYN
-         Cmm9MoAgXB2qA==
-Message-ID: <301d4acd4dd208239c00cec196d1c26c6bcf1a91.camel@kernel.org>
-Subject: Re: [PATCH RFC 2/9] timekeeping: new interfaces for multigrain
- timestamp handing
-From:   Jeff Layton <jlayton@kernel.org>
-To:     Linus Torvalds <torvalds@linux-foundation.org>
-Cc:     Dave Chinner <david@fromorbit.com>,
-        Kent Overstreet <kent.overstreet@linux.dev>,
-        Christian Brauner <brauner@kernel.org>,
-        Alexander Viro <viro@zeniv.linux.org.uk>,
-        John Stultz <jstultz@google.com>,
-        Thomas Gleixner <tglx@linutronix.de>,
-        Stephen Boyd <sboyd@kernel.org>,
-        Chandan Babu R <chandan.babu@oracle.com>,
-        "Darrick J. Wong" <djwong@kernel.org>,
-        Theodore Ts'o <tytso@mit.edu>,
-        Andreas Dilger <adilger.kernel@dilger.ca>,
-        Chris Mason <clm@fb.com>, Josef Bacik <josef@toxicpanda.com>,
-        David Sterba <dsterba@suse.com>,
-        Hugh Dickins <hughd@google.com>,
-        Andrew Morton <akpm@linux-foundation.org>,
-        Amir Goldstein <amir73il@gmail.com>, Jan Kara <jack@suse.de>,
-        David Howells <dhowells@redhat.com>,
-        linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-xfs@vger.kernel.org, linux-ext4@vger.kernel.org,
-        linux-btrfs@vger.kernel.org, linux-mm@kvack.org,
-        linux-nfs@vger.kernel.org
-Date:   Fri, 20 Oct 2023 17:05:03 -0400
-In-Reply-To: <CAHk-=wjma9_TSwXosG7GBXQaZ465VH1t4a4iQ8J=PFpE=4bhVA@mail.gmail.com>
-References: <20231018-mgtime-v1-0-4a7a97b1f482@kernel.org>
-         <20231018-mgtime-v1-2-4a7a97b1f482@kernel.org>
-         <CAHk-=wixObEhBXM22JDopRdt7Z=tGGuizq66g4RnUmG9toA2DA@mail.gmail.com>
-         <d6162230b83359d3ed1ee706cc1cb6eacfb12a4f.camel@kernel.org>
-         <CAHk-=wiKJgOg_3z21Sy9bu+3i_34S86r8fd6ngvJpZDwa-ww8Q@mail.gmail.com>
-         <5f96e69d438ab96099bb67d16b77583c99911caa.camel@kernel.org>
-         <20231019-fluor-skifahren-ec74ceb6c63e@brauner>
-         <0a1a847af4372e62000b259e992850527f587205.camel@kernel.org>
-         <ZTGncMVw19QVJzI6@dread.disaster.area>
-         <eb3b9e71ee9c6d8e228b0927dec3ac9177b06ec6.camel@kernel.org>
-         <CAHk-=wjma9_TSwXosG7GBXQaZ465VH1t4a4iQ8J=PFpE=4bhVA@mail.gmail.com>
-Content-Type: text/plain; charset="ISO-8859-15"
-Content-Transfer-Encoding: quoted-printable
-User-Agent: Evolution 3.48.4 (3.48.4-1.fc38) 
+        s=k20201202; t=1697840237;
+        bh=JKl+P5Qi4IdWVojejnBlMaol0q5x2e8wLBSYvdupL3U=;
+        h=Date:From:To:Cc:Subject:From;
+        b=UuQPDjvI7lktSy3VC1uCKqpw2dQQJ3fTmfgo4bsH4u3G5GMFPm5c58IOrnDYhLMGy
+         dV3EJIzFxqNVH2V+2VXe2jd8mTQispqR3b55KLvjhzBBbEYd4j4tPkozMG7u226+E4
+         ssIL6N/MGzd9aF0JxFaEavQ7D6GQjSf99yJR6pBdwIE7gX33P3HFwdAhAaBxj9ARM8
+         GTzk+rT9QphPKhHXdiBNHMJ318kzeFRViq9oYU9e9bd8+sLytL8sTnTPVkpxGY2TLS
+         Kk74lokhTGCCXAJXwmpXLgTfZ60Rw772wAVHXCyOGmUn5+CLd5g+eLZi9yA0l2lJ/g
+         Hv8FJz312+IiA==
+Date:   Fri, 20 Oct 2023 15:17:16 -0700
+From:   "Darrick J. Wong" <djwong@kernel.org>
+To:     chandanbabu@kernel.org, djwong@kernel.org
+Cc:     hch@lst.de, linux-xfs@vger.kernel.org
+Subject: [GIT PULL 1/6] xfs: minor bugfixes for rt stuff
+Message-ID: <169781767899.780878.4787533489808115469.stg-ugh@frogsfrogsfrogs>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Fri, 2023-10-20 at 13:06 -0700, Linus Torvalds wrote:
-> On Fri, 20 Oct 2023 at 05:12, Jeff Layton <jlayton@kernel.org> wrote:.
-> >=20
-> > I'd _really_ like to see a proper change counter added before it's
-> > merged, or at least space in the on-disk inode reserved for one until w=
-e
-> > can get it plumbed in.
->=20
-> Hmm. Can we not perhaps just do an in-memory change counter, and try
-> to initialize it to a random value when instantiating an inode? Do we
-> even *require* on-disk format changes?
->=20
-> So on reboot, the inode would count as "changed" as far any remote
-> user is concerned. It would flush client caches, but isn't that what
-> you'd want anyway? I'd hate to waste lots of memory, but maybe people
-> would be ok with just a 32-bit random value. And if not...
->=20
-> But I actually came into this whole discussion purely through the
-> inode timestamp side, so I may *entirely* miss what the change counter
-> requirements for NFSd actually are. If it needs to be stable across
-> reboots, my idea is clearly complete garbage.
->=20
-> You can now all jump on me and point out my severe intellectual
-> limitations. Please use small words when you do ;)
->=20
+Hi Chandan,
 
-Much like inode timestamps, we do depend on the change attribute
-persisting across reboots. Having to invalidate all of your cached data
-just because the server rebooted is particularly awful. That usually
-results in the server being hammered with reads from all of the clients
-at once, soon after rebooting.
+Please pull this branch with changes for xfs for 6.7-rc1.
 
---=20
-Jeff Layton <jlayton@kernel.org>
+As usual, I did a test-merge with the main upstream branch as of a few
+minutes ago, and didn't see any conflicts.  Please let me know if you
+encounter any problems.
+
+--D
+
+The following changes since commit 58720809f52779dc0f08e53e54b014209d13eebb:
+
+Linux 6.6-rc6 (2023-10-15 13:34:39 -0700)
+
+are available in the Git repository at:
+
+https://git.kernel.org/pub/scm/linux/kernel/git/djwong/xfs-linux.git tags/realtime-fixes-6.7_2023-10-19
+
+for you to fetch changes up to c2988eb5cff75c02bc57e02c323154aa08f55b78:
+
+xfs: rt stubs should return negative errnos when rt disabled (2023-10-17 16:22:40 -0700)
+
+----------------------------------------------------------------
+xfs: minor bugfixes for rt stuff [v1.1]
+
+This is a preparatory patchset that fixes a few miscellaneous bugs
+before we start in on larger cleanups of realtime units usage.
+
+v1.1: various cleanups suggested by hch
+
+With a bit of luck, this should all go splendidly.
+
+Signed-off-by: Darrick J. Wong <djwong@kernel.org>
+
+----------------------------------------------------------------
+Darrick J. Wong (4):
+xfs: bump max fsgeom struct version
+xfs: hoist freeing of rt data fork extent mappings
+xfs: prevent rt growfs when quota is enabled
+xfs: rt stubs should return negative errnos when rt disabled
+
+fs/xfs/libxfs/xfs_bmap.c     | 19 +++----------------
+fs/xfs/libxfs/xfs_rtbitmap.c | 33 +++++++++++++++++++++++++++++++++
+fs/xfs/libxfs/xfs_sb.h       |  2 +-
+fs/xfs/xfs_rtalloc.c         |  2 +-
+fs/xfs/xfs_rtalloc.h         | 27 ++++++++++++++++-----------
+5 files changed, 54 insertions(+), 29 deletions(-)
