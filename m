@@ -2,169 +2,61 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 091A9C00A98
-	for <linux-xfs@archiver.kernel.org>; Thu, 19 Oct 2023 22:41:18 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6C732CDB47E
+	for <linux-xfs@archiver.kernel.org>; Fri, 20 Oct 2023 06:06:49 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1346650AbjJSWlQ (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 19 Oct 2023 18:41:16 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58110 "EHLO
+        id S1346966AbjJTGGs (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 20 Oct 2023 02:06:48 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58366 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233286AbjJSWlP (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 19 Oct 2023 18:41:15 -0400
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 88482FA;
-        Thu, 19 Oct 2023 15:41:13 -0700 (PDT)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id DBA01C433C7;
-        Thu, 19 Oct 2023 22:41:10 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1697755273;
-        bh=QrXcJSvkmaQhGlxDlCzTaTqOEgDsZKKUGEg6yjmzxzg=;
-        h=Subject:From:To:Cc:Date:In-Reply-To:References:From;
-        b=tr1q75UNywUIX/G6rnqagELNuFJwsL6pDbS6FlXWZlik9RgUeQusLFYc5diqKK9ql
-         mPjhMDQEuo8T1/QLme8z+3R0ZkNkPifdGSSwtsihpkHyjk8zrZ4bs4nfZMqb+RYomH
-         XCkUotEhvIKc70pvPqo7Hn7c9pK+iaGc8QakV7aEv9AkvvYxFRdoJPJC08VvICsx7O
-         wI8hLrYDRlOYjC4B7ldOO0oIL1GWcH7h16/zWoqPqjyZPVhwwvj37JF480Bx7XLNLq
-         eMckjH8mw2HavbZ1wfJqhXhq/euFpxU2lvg6uyIVp1VQNmfOE2UgS+b6AWTZyRGyjS
-         FrUgtEfZHaF+w==
-Message-ID: <69b627f565d6ca92182b7100cd1178a28646eef0.camel@kernel.org>
-Subject: Re: [PATCH RFC 2/9] timekeeping: new interfaces for multigrain
- timestamp handing
-From:   Jeff Layton <jlayton@kernel.org>
-To:     Thomas Gleixner <tglx@linutronix.de>,
-        Linus Torvalds <torvalds@linux-foundation.org>,
-        Alexander Viro <viro@zeniv.linux.org.uk>,
-        Christian Brauner <brauner@kernel.org>,
-        John Stultz <jstultz@google.com>,
-        Stephen Boyd <sboyd@kernel.org>,
-        Chandan Babu R <chandan.babu@oracle.com>,
-        "Darrick J. Wong" <djwong@kernel.org>,
-        Dave Chinner <david@fromorbit.com>,
-        Theodore Ts'o <tytso@mit.edu>,
-        Andreas Dilger <adilger.kernel@dilger.ca>,
-        Chris Mason <clm@fb.com>, Josef Bacik <josef@toxicpanda.com>,
-        David Sterba <dsterba@suse.com>,
-        Hugh Dickins <hughd@google.com>,
-        Andrew Morton <akpm@linux-foundation.org>,
-        Amir Goldstein <amir73il@gmail.com>, Jan Kara <jack@suse.de>,
-        David Howells <dhowells@redhat.com>
-Cc:     linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-xfs@vger.kernel.org, linux-ext4@vger.kernel.org,
-        linux-btrfs@vger.kernel.org, linux-mm@kvack.org,
-        linux-nfs@vger.kernel.org
-Date:   Thu, 19 Oct 2023 18:41:09 -0400
-In-Reply-To: <87o7gu2rxw.ffs@tglx>
-References: <87o7gu2rxw.ffs@tglx>
-Content-Type: text/plain; charset="ISO-8859-15"
-Content-Transfer-Encoding: quoted-printable
-User-Agent: Evolution 3.48.4 (3.48.4-1.fc38) 
+        with ESMTP id S1345092AbjJTGGr (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 20 Oct 2023 02:06:47 -0400
+Received: from bombadil.infradead.org (bombadil.infradead.org [IPv6:2607:7c80:54:3::133])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C7120D57
+        for <linux-xfs@vger.kernel.org>; Thu, 19 Oct 2023 23:06:44 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Type:MIME-Version
+        :References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
+        Content-Transfer-Encoding:Content-ID:Content-Description;
+        bh=4oKucAi5fQX7IQ941fOusn//G5zdgdm8xyP5bVXvod4=; b=r7upKHfLFxfIMwyQNKrhLJXLFZ
+        EEmtdQgNQhpMjRcCZAHbewnSzpo/DxpAXydIrU/CfjwovQkYXN+mFlDq2gO51EbtAdId2VoftfgEa
+        zct7a/kG24RGv9Gh2LKxK+gBOFvG92K2eq4sqsf0r6SKzlSBDdKiWbw5CGghLuQtCHC5zOU04RW06
+        sZ1tGJkhs75/38vOrF2k/kxwvNp9dzhoPQB0A4EIX22otFdQV1LQAwizqhInx9QIWiBrSBLmR11+m
+        NYMue9AkZBxU2EVyPSZlHupLQVKXfwXY6Uyd55NA/HoW+zypm4qiFHRW+/2UYYBXy7E14UCL5keei
+        tJIkKqiQ==;
+Received: from hch by bombadil.infradead.org with local (Exim 4.96 #2 (Red Hat Linux))
+        id 1qtieh-001Ih8-01;
+        Fri, 20 Oct 2023 06:06:43 +0000
+Date:   Thu, 19 Oct 2023 23:06:42 -0700
+From:   Christoph Hellwig <hch@infradead.org>
+To:     "Darrick J. Wong" <djwong@kernel.org>
+Cc:     Christoph Hellwig <hch@infradead.org>,
+        Catherine Hoang <catherine.hoang@oracle.com>,
+        linux-xfs@vger.kernel.org
+Subject: Re: [PATCH v4] xfs: allow read IO and FICLONE to run concurrently
+Message-ID: <ZTIY8jE9vK6A0FE3@infradead.org>
+References: <20231017201208.18127-1-catherine.hoang@oracle.com>
+ <ZS92TizgnKHdBtDb@infradead.org>
+ <20231019200411.GN3195650@frogsfrogsfrogs>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20231019200411.GN3195650@frogsfrogsfrogs>
+X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Fri, 2023-10-20 at 00:00 +0200, Thomas Gleixner wrote:
-> Jeff!
->=20
-> On Wed, Oct 18 2023 at 13:41, Jeff Layton wrote:
-> > +void ktime_get_mg_fine_ts64(struct timespec64 *ts)
-> > +{
-> > +	struct timekeeper *tk =3D &tk_core.timekeeper;
-> > +	unsigned long flags;
-> > +	u32 nsecs;
-> > +
-> > +	WARN_ON(timekeeping_suspended);
-> > +
-> > +	raw_spin_lock_irqsave(&timekeeper_lock, flags);
-> > +	write_seqcount_begin(&tk_core.seq);
->=20
-> Depending on the usage scenario, this will end up as a scalability issue
-> which affects _all_ of timekeeping.
->=20
-> The usage of timekeeper_lock and the sequence count has been carefully
-> crafted to be as non-contended as possible. We went a great length to
-> optimize that because the ktime_get*() functions are really hotpath all
-> over the place.
->=20
+On Thu, Oct 19, 2023 at 01:04:11PM -0700, Darrick J. Wong wrote:
+> Well... the stupid answer is that I augmented generic/176 to try to race
+> buffered and direct reads with cloning a million extents and print out
+> when the racing reads completed.  On an unpatched kernel, the reads
+> don't complete until the reflink does:
 
-> Exposing such an interface which wreckages that is a recipe for disaster
-> down the road. It might be a non-issue today, but once we hit the
-> bottleneck of that global lock, we are up the creek without a
-> paddle.
->=20
+> So as you can see, reads from the reflink source file no longer
+> experience a giant latency spike.  I also wrote an fstest to check this
+> behavior; I'll attach it as a separate reply.
 
-Thanks for taking the explanation, Thomas. That's understandable, and
-that was my main worry with this set. I'll look at doing this another
-way given your feedback. I just started by plumbing this into the
-timekeeping code since that seemed like the most obvious place to do it.
+Nice.  I guess write latency doesn't really matter for this use
+case?
 
-I think it's probably still possible to do this by caching the values
-returned by the timekeeper at the vfs layer, but there seems to be some
-reticence to the basic idea that I don't quite understand yet.
-
-> Well not really, but all we can do then is fall back to
-> ktime_get_real(). So let me ask the obvious question:
->=20
->      Why don't we do that right away?
->=20
-> Many moons ago when we added ktime_get_real_coarse() the main reason was
-> that reading the time from the underlying hardware was insanely
-> expensive.
->=20
-> Many moons later this is not true anymore, except for the stupid case
-> where the BIOS wreckaged the TSC, but that's a hopeless case for
-> performance no matter what. Optimizing for that would be beyond stupid.
->=20
-> I'm well aware that ktime_get_real_coarse() is still faster than
-> ktime_get_real() in micro-benchmarks, i.e. 5ns vs. 15ns on the four
-> years old laptop I'm writing this.
->=20
-> Many moons ago it was in the ballpark of 40ns vs. 5us due to TSC being
-> useless and even TSC read was way more expensive (factor 8-10x IIRC) in
-> comparison. That really mattered for FS, but does todays overhead still
-> make a difference in the real FS use case scenario?
->=20
-> I'm not in the position of running meaningful FS benchmarks to analyze
-> that, but I think the delta between ktime_get_real_coarse() and
-> ktime_get_real() on contemporary hardware is small enough that it
-> justifies this question.
->=20
-> The point is that both functions have pretty much the same D-cache
-> pattern because they access the same data in the very same
-> cacheline. The only difference is the actual TSC read and the extra
-> conversion, but that's it. The TSC read has been massively optimized by
-> the CPU vendors. I know that the ARM64 counter has been optimized too,
-> though I have no idea about PPC64 and S390, but I would be truly
-> surprised if they didn't optimize the hell out of it because time read
-> is really used heavily both in kernel and user space.
->=20
-> Does anyone have numbers on contemporary hardware to shed some light on
-> that in the context of FS and the problem at hand?
-
-That was sort of my suspicion and it's good to have confirmation that
-fetching a fine-grained timespec64 from the timekeeper is cheap. It
-looked that way when I was poking around in there, but I wasn't sure
-whether it was always the case.
-
-It turns out however that the main benefit of using a coarse-grained
-timestamp is that it allows the file system to skip a lot of inode
-metadata updates.
-
-The way it works today is that when we go to update the timestamp on an
-inode, we check whether they have made any visible change, and we dirty
-the inode metadata if so. This means that we only really update the
-inode on disk once per jiffy or so when an inode is under heavy writes.
-
-The idea with this set is to only use fine-grained timestamps when
-someone is actively fetching them via getattr. When the mtime or ctime
-is viewed via getattr, we mark the inode and then the following
-timestamp update will get a fine-grained timestamp (unless the coarse-
-grained clock has already ticked).
-
-That allows us to keep the number of inode updates down to a bare
-minimum, but still allows an observer to always see a change in the
-timestamp when there have been changes to the inode.
-
-Thanks again for the review! For the next iteration I (probably) won't
-need to touch the timekeeper.
---=20
-Jeff Layton <jlayton@kernel.org>
