@@ -2,91 +2,63 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id EDB06C004C0
-	for <linux-xfs@archiver.kernel.org>; Sat, 21 Oct 2023 16:47:02 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id CD337C004C0
+	for <linux-xfs@archiver.kernel.org>; Sat, 21 Oct 2023 17:57:10 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231594AbjJUQrC (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Sat, 21 Oct 2023 12:47:02 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33238 "EHLO
+        id S232018AbjJUR5J (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Sat, 21 Oct 2023 13:57:09 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56138 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231722AbjJUQrB (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sat, 21 Oct 2023 12:47:01 -0400
-Received: from mail-ed1-x52f.google.com (mail-ed1-x52f.google.com [IPv6:2a00:1450:4864:20::52f])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D9127E0
-        for <linux-xfs@vger.kernel.org>; Sat, 21 Oct 2023 09:46:56 -0700 (PDT)
-Received: by mail-ed1-x52f.google.com with SMTP id 4fb4d7f45d1cf-53f6ccea1eeso2727379a12.3
-        for <linux-xfs@vger.kernel.org>; Sat, 21 Oct 2023 09:46:56 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=linux-foundation.org; s=google; t=1697906815; x=1698511615; darn=vger.kernel.org;
-        h=cc:to:subject:message-id:date:from:in-reply-to:references
-         :mime-version:from:to:cc:subject:date:message-id:reply-to;
-        bh=OSjTUcgTd18PHEYhijTK/4fWY0j7UY3vKA/ggDHvC6g=;
-        b=dTP1n71rDU+s5s6eyJqPOKZoGZfY4RQ2vNq3HbB9Clx/2szD6ZFQUohgW+DjkXQWB8
-         dfFTVK9ABw8nuX2Lz3X6mHrR5G/XCQs4D4lTXs0794SplLsfgkj+D77t2OoHPn8ccUE/
-         mEgIka471CJLyB0rv+T0y2bbfblpVKj4NmHZE=
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1697906815; x=1698511615;
-        h=cc:to:subject:message-id:date:from:in-reply-to:references
-         :mime-version:x-gm-message-state:from:to:cc:subject:date:message-id
-         :reply-to;
-        bh=OSjTUcgTd18PHEYhijTK/4fWY0j7UY3vKA/ggDHvC6g=;
-        b=OlU3C55Z+J8LLWcpltKyfqdksvMJ/wU8LpteS1TryQvkpzrFuYQ/AwLFye8buRmtPy
-         /SgE4OANRaCseCAqB9pZn459gevoi5LW6Co5kJOt6CG9COAspovGwHCvjENKJA98nCTi
-         8DfqvlC70rHMfhVbM12eBJiXntN+apJsrHPnoiVL/REqKkxQMeYsRWpGUbdQV8BrYNYl
-         eHSlwtpVKnU940325fmYhcaNpzdkNwbGGMGUP8tbuIbbzFTTn4Iz8uVUe9iDAjUu1Dmd
-         XqD0LobD1PTnMXi2lix8V0UiRIUHEmbjTMzqFtlrw0sDFpV43sKTsal0Ce1b/ZQXowMn
-         dyJQ==
-X-Gm-Message-State: AOJu0YyFgM3TrsYfLyaEdvPIna4ZJF8+HJZxhyxqxtj8Lau98rnIUp7X
-        jDnWAFotYaLcM0f5tXK704C+Z5QVjsqD3PFT/eIc+9rQ
-X-Google-Smtp-Source: AGHT+IGNq9XSzqbaO/7E4iKpyLS0nY+p/m5RzqWpBn+1tKKYwY1l0tjsB5wOJBv2Kc5bNLBEjeB/xA==
-X-Received: by 2002:a05:6402:274e:b0:53e:3b8f:8a58 with SMTP id z14-20020a056402274e00b0053e3b8f8a58mr4452344edd.11.1697906815187;
-        Sat, 21 Oct 2023 09:46:55 -0700 (PDT)
-Received: from mail-ed1-f54.google.com (mail-ed1-f54.google.com. [209.85.208.54])
-        by smtp.gmail.com with ESMTPSA id dk18-20020a0564021d9200b005402c456892sm130420edb.33.2023.10.21.09.46.54
-        for <linux-xfs@vger.kernel.org>
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Sat, 21 Oct 2023 09:46:54 -0700 (PDT)
-Received: by mail-ed1-f54.google.com with SMTP id 4fb4d7f45d1cf-53e2dc8fa02so2734773a12.2
-        for <linux-xfs@vger.kernel.org>; Sat, 21 Oct 2023 09:46:54 -0700 (PDT)
-X-Received: by 2002:a50:c30a:0:b0:53d:b2c8:6783 with SMTP id
- a10-20020a50c30a000000b0053db2c86783mr3094776edb.14.1697906813973; Sat, 21
- Oct 2023 09:46:53 -0700 (PDT)
-MIME-Version: 1.0
-References: <169786962623.1265253.5321166241579915281.stg-ugh@frogsfrogsfrogs>
-In-Reply-To: <169786962623.1265253.5321166241579915281.stg-ugh@frogsfrogsfrogs>
-From:   Linus Torvalds <torvalds@linux-foundation.org>
-Date:   Sat, 21 Oct 2023 09:46:35 -0700
-X-Gmail-Original-Message-ID: <CAHk-=whNsCXwidLvx8u_JBH91=Z5EFw9FVj57HQ51P7uWs4yGQ@mail.gmail.com>
-Message-ID: <CAHk-=whNsCXwidLvx8u_JBH91=Z5EFw9FVj57HQ51P7uWs4yGQ@mail.gmail.com>
+        with ESMTP id S232026AbjJUR5I (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sat, 21 Oct 2023 13:57:08 -0400
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0134BD41
+        for <linux-xfs@vger.kernel.org>; Sat, 21 Oct 2023 10:57:06 -0700 (PDT)
+Received: by smtp.kernel.org (Postfix) with ESMTPS id CD99DC433C8;
+        Sat, 21 Oct 2023 17:57:06 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1697911026;
+        bh=pFrOkwxTre0sOV+Eoz+9LtgVNs6Suir0YHRmZXpiw8E=;
+        h=Subject:From:In-Reply-To:References:Date:To:Cc:From;
+        b=gC4Z2N5DQZLNcvgn+TCi+7wVHnaVWKWlLKMxG0g4VZEbbbHLirdU8hMJ3t/Mvvl9q
+         PQL7prRbT+tgFzYCMcR0qqv6+yg6X3pFy18X30ochMAsfZ9lFjMbuxLDVkxUtRGkaK
+         3j8IENdoKZWihRLSdCv2V31dkaQD8Ca+LPz8JjtQwUxSAM96JQ8wAZ355NfrOiYWUx
+         2fIeug+n5TRe4mo7N3wnMdDWLaTSck6b8I90Hm89t8rQnm+wBYHyE+o8Eap9W7QnKI
+         bGaMJxTa+NrdhJipix9ybcrg41uqwxUJUr+grltcIvjneM4B8MaLv64Uxy5XWgGPNo
+         jXcAN83MKbHag==
+Received: from aws-us-west-2-korg-oddjob-1.ci.codeaurora.org (localhost.localdomain [127.0.0.1])
+        by aws-us-west-2-korg-oddjob-1.ci.codeaurora.org (Postfix) with ESMTP id AFE7EC04DD9;
+        Sat, 21 Oct 2023 17:57:06 +0000 (UTC)
 Subject: Re: [GIT PULL] iomap: bug fixes for 6.6-rc7
+From:   pr-tracker-bot@kernel.org
+In-Reply-To: <169786962623.1265253.5321166241579915281.stg-ugh@frogsfrogsfrogs>
+References: <169786962623.1265253.5321166241579915281.stg-ugh@frogsfrogsfrogs>
+X-PR-Tracked-List-Id: <linux-xfs.vger.kernel.org>
+X-PR-Tracked-Message-Id: <169786962623.1265253.5321166241579915281.stg-ugh@frogsfrogsfrogs>
+X-PR-Tracked-Remote: https://git.kernel.org/pub/scm/linux/kernel/git/djwong/xfs-linux.git iomap-6.6-fixes-5
+X-PR-Tracked-Commit-Id: 3ac974796e5d94509b85a403449132ea660127c2
+X-PR-Merge-Tree: torvalds/linux.git
+X-PR-Merge-Refname: refs/heads/master
+X-PR-Merge-Commit-Id: 5722119f674d81eb88d51463ece8096855d94cc0
+Message-Id: <169791102670.24251.2347842521338954833.pr-tracker-bot@kernel.org>
+Date:   Sat, 21 Oct 2023 17:57:06 +0000
 To:     "Darrick J. Wong" <djwong@kernel.org>
-Cc:     hch@lst.de, jstancek@redhat.com, linux-fsdevel@vger.kernel.org,
+Cc:     djwong@kernel.org, torvalds@linux-foundation.org, hch@lst.de,
+        jstancek@redhat.com, linux-fsdevel@vger.kernel.org,
         linux-xfs@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Fri, 20 Oct 2023 at 23:27, Darrick J. Wong <djwong@kernel.org> wrote:
->
-> Please pull this branch with changes for iomap for 6.6-rc7.
->
-> As usual, I did a test-merge with the main upstream branch as of a few
-> minutes ago, and didn't see any conflicts.  Please let me know if you
-> encounter any problems.
-
-.. and as usual, the branch you point to does not actually exist.
-
-Because you *again* pointed to the wrong tree.
-
-This time I remembered what the mistake was last time, and picked out
-the right tree by hand, but *please* just fix your completely broken
-scripts or workflow.
+The pull request you sent on Fri, 20 Oct 2023 23:27:44 -0700:
 
 > https://git.kernel.org/pub/scm/linux/kernel/git/djwong/xfs-linux.git iomap-6.6-fixes-5
 
-No.
+has been merged into torvalds/linux.git:
+https://git.kernel.org/torvalds/c/5722119f674d81eb88d51463ece8096855d94cc0
 
-It's pub/scm/fs/xfs/xfs-linux, once again.
+Thank you!
 
-                 Linus
+-- 
+Deet-doot-dot, I am a bot.
+https://korg.docs.kernel.org/prtracker.html
