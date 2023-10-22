@@ -2,231 +2,97 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 127B1C25B44
-	for <linux-xfs@archiver.kernel.org>; Sun, 22 Oct 2023 22:17:13 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id ED6A7CDB474
+	for <linux-xfs@archiver.kernel.org>; Sun, 22 Oct 2023 22:20:36 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232804AbjJVWRM (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Sun, 22 Oct 2023 18:17:12 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55728 "EHLO
+        id S232817AbjJVWUg (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Sun, 22 Oct 2023 18:20:36 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33078 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232723AbjJVWRM (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sun, 22 Oct 2023 18:17:12 -0400
-Received: from mail-pg1-x529.google.com (mail-pg1-x529.google.com [IPv6:2607:f8b0:4864:20::529])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C8E30F2
-        for <linux-xfs@vger.kernel.org>; Sun, 22 Oct 2023 15:17:08 -0700 (PDT)
-Received: by mail-pg1-x529.google.com with SMTP id 41be03b00d2f7-578b407045bso2017701a12.0
-        for <linux-xfs@vger.kernel.org>; Sun, 22 Oct 2023 15:17:08 -0700 (PDT)
+        with ESMTP id S229452AbjJVWUg (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sun, 22 Oct 2023 18:20:36 -0400
+Received: from mail-pj1-x1030.google.com (mail-pj1-x1030.google.com [IPv6:2607:f8b0:4864:20::1030])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 96D4899
+        for <linux-xfs@vger.kernel.org>; Sun, 22 Oct 2023 15:20:34 -0700 (PDT)
+Received: by mail-pj1-x1030.google.com with SMTP id 98e67ed59e1d1-27e0c1222d1so1601228a91.0
+        for <linux-xfs@vger.kernel.org>; Sun, 22 Oct 2023 15:20:34 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=fromorbit-com.20230601.gappssmtp.com; s=20230601; t=1698013028; x=1698617828; darn=vger.kernel.org;
+        d=fromorbit-com.20230601.gappssmtp.com; s=20230601; t=1698013234; x=1698618034; darn=vger.kernel.org;
         h=in-reply-to:content-disposition:mime-version:references:message-id
          :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
-        bh=N5qQrL2DwxfK/+XEnN2k2KNh9W8QIN/h2ok2w3SXfSA=;
-        b=SH+0HitWPrAVN0WUuf87jRHL1QGNn428VZwVUXzYDIcuzzkegANabhB1cKVfNGFBkg
-         sZniBP+Jee9hZW5Nwzo1U8qENJ7ikh8sJAsOzDnslfj5lA/LvIOgvo9f15U3r0STuUCf
-         mHIJgeQ57wG/PuF6mjwF/yT3GUnIyf/AvJf/sMTkVsccc5FT+0mk7XA5IiORmtBU5Zej
-         UlFyiR6D4vgW8EPsC85GHuHRrFpDn2RNhQ179EViZWQc/Au/Cbk5VeRxWUIUuv9Cuq/i
-         5EhF5pzMG6rIqrwg/+GBgZZtOSf9PHTgfXNZguRzGKZgXv7+U/yWk5plWVs+GLDNygkz
-         RKyQ==
+        bh=fq82fkzY9Ugv+oVtQWs3uIE1A3LjaqePvETUqg46TDs=;
+        b=Xt8e2arWMW4VaXtb4ZT1um97AT3g/lF692y2mINYr++2lUyPh3yqipOtgFlk9MroFX
+         FYEiHpl+1nqkpT/AecPMHGoGtvk/ybnibGkysUrW949SzJYXXD3U9iJoF8djyZE4XM9M
+         y1TXtNBd+kF3inHDt+cNlvJIiiUQ+DtEzgw4lP9tN6cWMKEvP3/PhgV2Uoo3gC8tN4/B
+         yeTJEfV6E9QqsMOJiQNoN0Un3M7j7BpmFQQXmwpvuvcrt6v1uKoz03s1o41sXg7aMyev
+         KGHGYrsCaSbRX9u4hfL1t+skzUtNHZ1AkBSc66LO3M+h8jvd8dAve2b4hXYKpv/DcM7d
+         HNQA==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1698013028; x=1698617828;
+        d=1e100.net; s=20230601; t=1698013234; x=1698618034;
         h=in-reply-to:content-disposition:mime-version:references:message-id
          :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
          :message-id:reply-to;
-        bh=N5qQrL2DwxfK/+XEnN2k2KNh9W8QIN/h2ok2w3SXfSA=;
-        b=JxgcXaIJ82fjFR7bp3r3Le7mbn+cg+QQ79R/28W4voEPOY+NHDJoOtEMVpX4WelGPv
-         xwg5MrbXebrOC+p5Yrkgwbih0+anlNlUN17/MjJ5ZtvWMGkxU42Dd61dc0Bb4WY8KK3C
-         QeyThDyZHZd3fHE7ahDAbS7RbiC6x6RoP16IjThAKUG5RYKgffIWSqbXfqK4znAUvG/P
-         SMhyfn+MTo8+1E++wQckjyjvD20kKkP0oF1TnFlRmkt/hwV1Akh/+ImEKnHCpRNCHLIj
-         Of6VDUIVe9937u9VA+DikVf4C8bwTGbsZjQGw9g3mQ5bfSN15PvS8FaUIX7btrX8/kFg
-         n0Ow==
-X-Gm-Message-State: AOJu0YxV6FNmZ6ALt70PbNmB3r6fXcFQWO9oPIfvUlo/xVZSHFWyfXWq
-        5QcYViNt3TXTyNDr/WZOixcKKg==
-X-Google-Smtp-Source: AGHT+IHfrxpNDhrr8nxge8J1PnrlKWhoGEGeQp+3Fb8nhCoq3diC1hyvVYj6bL9aNKHIKZ200bYlJQ==
-X-Received: by 2002:a17:902:e844:b0:1c6:25c3:13d3 with SMTP id t4-20020a170902e84400b001c625c313d3mr8502730plg.6.1698013027990;
-        Sun, 22 Oct 2023 15:17:07 -0700 (PDT)
+        bh=fq82fkzY9Ugv+oVtQWs3uIE1A3LjaqePvETUqg46TDs=;
+        b=MYY0JwMkp6cyafhZtZ7vpwUU1rZlYgxz4SMmym0Nl2iYtnVsg/Q7U6ls/od6graCxc
+         btFq/5w/T60MVS9f2cUu2E/Hp7eWVh+iY5g+S1n0UxCi8RBkcJ++chMAMfLLRDLa6VyJ
+         g/2I2Vt/Wli+ga5aIykKpWsJwVeQEeaBXvhWGUBMHbWAbmk7TlGfpM/DqMrELZ6SvP0P
+         B91zUCrqsILuHJTlsN6WXbnGIcYGjVHg7d6qkXBLU4ogpWQhi8M503ntGc0bcqbx58F7
+         p6rVeMzo2CWAzCsrR6/mCmyvpoUTqU3LqOomSyfGgIxCyeiuXRAOoqxuexwWKZrgtTPI
+         5FPw==
+X-Gm-Message-State: AOJu0YxVtNsG3jE1u8i2at/RsMTEy4yLaxIxkmySw+ychgNAWRfE4xoO
+        AVMD/4VQg1Jny8pPYoETpKHdVfGgvwv2Dp6Pxow=
+X-Google-Smtp-Source: AGHT+IHo4RIbEclbzN90/boejRVUiBnr2fUNx5KrWX3BfeHdRvLBvN6QaKOAxpvgDav2WJJLFPsVJg==
+X-Received: by 2002:a17:90b:608:b0:27d:44ce:cf7a with SMTP id gb8-20020a17090b060800b0027d44cecf7amr5904802pjb.5.1698013234061;
+        Sun, 22 Oct 2023 15:20:34 -0700 (PDT)
 Received: from dread.disaster.area (pa49-180-20-59.pa.nsw.optusnet.com.au. [49.180.20.59])
-        by smtp.gmail.com with ESMTPSA id i13-20020a170902eb4d00b001c3e732b8dbsm4858229pli.168.2023.10.22.15.17.06
+        by smtp.gmail.com with ESMTPSA id j11-20020a17090aeb0b00b00262ca945cecsm6296029pjz.54.2023.10.22.15.20.33
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Sun, 22 Oct 2023 15:17:07 -0700 (PDT)
+        Sun, 22 Oct 2023 15:20:33 -0700 (PDT)
 Received: from dave by dread.disaster.area with local (Exim 4.96)
         (envelope-from <david@fromorbit.com>)
-        id 1qugkp-002cGd-32;
-        Mon, 23 Oct 2023 09:17:03 +1100
-Date:   Mon, 23 Oct 2023 09:17:03 +1100
+        id 1qugoB-002cIr-0L;
+        Mon, 23 Oct 2023 09:20:31 +1100
+Date:   Mon, 23 Oct 2023 09:20:31 +1100
 From:   Dave Chinner <david@fromorbit.com>
-To:     Jeff Layton <jlayton@kernel.org>
-Cc:     Kent Overstreet <kent.overstreet@linux.dev>,
-        Christian Brauner <brauner@kernel.org>,
-        Linus Torvalds <torvalds@linux-foundation.org>,
-        Alexander Viro <viro@zeniv.linux.org.uk>,
-        John Stultz <jstultz@google.com>,
-        Thomas Gleixner <tglx@linutronix.de>,
-        Stephen Boyd <sboyd@kernel.org>,
-        Chandan Babu R <chandan.babu@oracle.com>,
-        "Darrick J. Wong" <djwong@kernel.org>,
-        Theodore Ts'o <tytso@mit.edu>,
-        Andreas Dilger <adilger.kernel@dilger.ca>,
-        Chris Mason <clm@fb.com>, Josef Bacik <josef@toxicpanda.com>,
-        David Sterba <dsterba@suse.com>,
-        Hugh Dickins <hughd@google.com>,
-        Andrew Morton <akpm@linux-foundation.org>,
-        Amir Goldstein <amir73il@gmail.com>, Jan Kara <jack@suse.de>,
-        David Howells <dhowells@redhat.com>,
-        linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-xfs@vger.kernel.org, linux-ext4@vger.kernel.org,
-        linux-btrfs@vger.kernel.org, linux-mm@kvack.org,
-        linux-nfs@vger.kernel.org
-Subject: Re: [PATCH RFC 2/9] timekeeping: new interfaces for multigrain
- timestamp handing
-Message-ID: <ZTWfX3CqPy9yCddQ@dread.disaster.area>
-References: <20231018-mgtime-v1-0-4a7a97b1f482@kernel.org>
- <20231018-mgtime-v1-2-4a7a97b1f482@kernel.org>
- <CAHk-=wixObEhBXM22JDopRdt7Z=tGGuizq66g4RnUmG9toA2DA@mail.gmail.com>
- <d6162230b83359d3ed1ee706cc1cb6eacfb12a4f.camel@kernel.org>
- <CAHk-=wiKJgOg_3z21Sy9bu+3i_34S86r8fd6ngvJpZDwa-ww8Q@mail.gmail.com>
- <5f96e69d438ab96099bb67d16b77583c99911caa.camel@kernel.org>
- <20231019-fluor-skifahren-ec74ceb6c63e@brauner>
- <0a1a847af4372e62000b259e992850527f587205.camel@kernel.org>
- <ZTGncMVw19QVJzI6@dread.disaster.area>
- <eb3b9e71ee9c6d8e228b0927dec3ac9177b06ec6.camel@kernel.org>
+To:     "Darrick J. Wong" <djwong@kernel.org>
+Cc:     Christoph Hellwig <hch@infradead.org>,
+        Catherine Hoang <catherine.hoang@oracle.com>,
+        linux-xfs@vger.kernel.org
+Subject: Re: [RFC PATCH] generic: test reads racing with slow reflink
+ operations
+Message-ID: <ZTWgLzODbEIDHuKv@dread.disaster.area>
+References: <20231019200913.GO3195650@frogsfrogsfrogs>
+ <ZTIZrT7ZcWQHypEG@infradead.org>
+ <20231020152248.GQ3195650@frogsfrogsfrogs>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <eb3b9e71ee9c6d8e228b0927dec3ac9177b06ec6.camel@kernel.org>
+In-Reply-To: <20231020152248.GQ3195650@frogsfrogsfrogs>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Fri, Oct 20, 2023 at 08:12:45AM -0400, Jeff Layton wrote:
-> On Fri, 2023-10-20 at 09:02 +1100, Dave Chinner wrote:
-> > On Thu, Oct 19, 2023 at 07:28:48AM -0400, Jeff Layton wrote:
-> > > On Thu, 2023-10-19 at 11:29 +0200, Christian Brauner wrote:
-> > > > > Back to your earlier point though:
-> > > > > 
-> > > > > Is a global offset really a non-starter? I can see about doing something
-> > > > > per-superblock, but ktime_get_mg_coarse_ts64 should be roughly as cheap
-> > > > > as ktime_get_coarse_ts64. I don't see the downside there for the non-
-> > > > > multigrain filesystems to call that.
-> > > > 
-> > > > I have to say that this doesn't excite me. This whole thing feels a bit
-> > > > hackish. I think that a change version is the way more sane way to go.
-> > > > 
-> > > 
-> > > What is it about this set that feels so much more hackish to you? Most
-> > > of this set is pretty similar to what we had to revert. Is it just the
-> > > timekeeper changes? Why do you feel those are a problem?
-> > > 
-> > > > > 
-> > > > > On another note: maybe I need to put this behind a Kconfig option
-> > > > > initially too?
-> > > > 
-> > > > So can we for a second consider not introducing fine-grained timestamps
-> > > > at all. We let NFSv3 live with the cache problem it's been living with
-> > > > forever.
-> > > > 
-> > > > And for NFSv4 we actually do introduce a proper i_version for all
-> > > > filesystems that matter to it.
-> > > > 
-> > > > What filesystems exactly don't expose a proper i_version and what does
-> > > > prevent them from adding one or fixing it?
-> > > 
-> > > Certainly we can drop this series altogether if that's the consensus.
-> > > 
-> > > The main exportable filesystem that doesn't have a suitable change
-> > > counter now is XFS. Fixing it will require an on-disk format change to
-> > > accommodate a new version counter that doesn't increment on atime
-> > > updates. This is something the XFS folks were specifically looking to
-> > > avoid, but maybe that's the simpler option.
+On Fri, Oct 20, 2023 at 08:22:48AM -0700, Darrick J. Wong wrote:
+> On Thu, Oct 19, 2023 at 11:09:49PM -0700, Christoph Hellwig wrote:
+> > On Thu, Oct 19, 2023 at 01:09:13PM -0700, Darrick J. Wong wrote:
+> > > permit reads, since the source file contents do  not change.  This is a
 > > 
-> > And now we have travelled the full circle.
+> > duplicate white space before "not"
+> 
+> Fixed.
+> 
+> > > +#ifndef FICLONE
+> > > +# define FICLONE	_IOW(0x94, 9, int)
+> > > +#endif
 > > 
+> > Can't we assume system headers with FICLONE by now?
 > 
-> LOL, yes!
-> 
-> > The problem NFS has with atime updates on XFS is a result of
-> > the default behaviour of relatime - it *always* forces a persistent
-> > atime update after mtime has changed. Hence a read-after-write
-> > operation will trigger an atime update because atime is older than
-> > mtime. This is what causes XFS to run a transaction (i.e. a
-> > persistent atime update) and that bumps iversion.
-> > 
-> 
-> Those particular atime updates are not a problem. If we're updating the
-> mtime and ctime anyway, then bumping the change attribute is OK.
-> 
-> The problem is that relatime _also_ does an on-disk update once a day
-> for just an atime update. On XFS, this means that the change attribute
-> also gets bumped and the clients invalidate their caches all at once.
-> 
-> That doesn't sound like a big problem at first, but what if you're
-> sharing a multi-gigabyte r/o file between multiple clients? This sort of
-> thing is fairly common on render-farm workloads, and all of your clients
-> will end up invalidating their caches once once a day if you're serving
-> from XFS.
+> That depends on the long tail of RHEL7.  But you're right, it has been
+> years now, I'll just kill this hunk and see who complains. :)
 
-So we have noatime inode and mount options for such specialised
-workloads that cannot tolerate cached ever being invalidated, yes?
+*cough*
 
-> > lazytime does not behave this way - it delays all persistent
-> > timestamp updates until the next persistent change or until the
-> > lazytime aggregation period expires (24 hours). Hence with lazytime,
-> > read-after-write operations do not trigger a persistent atime
-> > update, and so XFS does not run a transaction to update atime. Hence
-> > i_version does not get bumped, and NFS behaves as expected.
-> > 
-> 
-> Similar problem here. Once a day, NFS clients will invalidate the cache
-> on any static content served from XFS.
-
-Lazytime has /proc/sys/vm/dirtytime_expire_seconds to change the
-interval that triggers persistent time changes. That could easily be
-configured to be longer than a day for workloads that care about
-this sort of thing. Indeed, we could just set up timestamps that NFS
-says "do not make persistent" to only be persisted when the inode is
-removed from server memory rather than be timed out by background
-writeback....
-
------
-
-All I'm suggesting is that rather than using mount options for
-noatime-like behaviour for NFSD accesses, we actually have the nfsd
-accesses say "we'd like pure atime updates without iversion, please".
-
-Keep in mind that XFS does actually try to avoid bumping i_version
-on pure timestamp updates - we carved that out a long time ago (see
-the difference in XFS_ILOG_CORE vs XFS_ILOG_TIMESTAMP in
-xfs_vn_update_time() and xfs_trans_log_inode()) so that we could
-optimise fdatasync() to ignore timestamp updates that occur as a
-result of pure data overwrites.
-
-Hence XFS only bumps i_version for pure timestamp updates if the
-iversion queried flag is set. IOWs, XFS it is actually doing exactly
-what the VFS iversion implementation is telling it to do with
-timestamp updates for non-core inode metadata updates.
-
-That's the fundamental issue here: nfsd has set VFS state that tells
-the filesystem to "bump iversion on next persistent inode change",
-but the nfsd then runs operations that can change non-critical
-persistent inode state in "query-only" operations. It then expects
-filesystems to know that it should ignore the iversion queried state
-within this context.  However, without external behavioural control
-flags, filesystems cannot know that an isolated metadata update has
-context specific iversion behavioural constraints.
-
-Hence fixing this is purely a VFS/nfsd i_version implementation
-problem - if the nfsd is running a querying operation, it should
-tell the filesystem that it should ignore iversion query state. If
-nothing the application level cache cares about is being changed
-during the query operation, it should tell the filesystem to ignore
-iversion query state because it is likely the nfsd query itself will
-set it (or have already set it itself in the case of compound
-operations).
-
-This does not need XFS on-disk format changes to fix. This does not
-need changes to timestamp infrastructure to fix. We just need the
-nfsd application to tell us that we should ignore the vfs i_version
-query state when we update non-core inode metadata within query
-operation contexts.
+Just add an autoconf rule, yes?
 
 -Dave.
 -- 
