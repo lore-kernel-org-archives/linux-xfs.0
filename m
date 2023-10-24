@@ -2,149 +2,395 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E8FF1C25B47
-	for <linux-xfs@archiver.kernel.org>; Tue, 24 Oct 2023 04:11:04 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8ECF6C00A8F
+	for <linux-xfs@archiver.kernel.org>; Tue, 24 Oct 2023 06:00:33 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232229AbjJXELD (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 24 Oct 2023 00:11:03 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35398 "EHLO
+        id S232335AbjJXGAd (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 24 Oct 2023 02:00:33 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57166 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231985AbjJXEK7 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 24 Oct 2023 00:10:59 -0400
-Received: from mail-ej1-x634.google.com (mail-ej1-x634.google.com [IPv6:2a00:1450:4864:20::634])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9C4D8E9
-        for <linux-xfs@vger.kernel.org>; Mon, 23 Oct 2023 21:10:55 -0700 (PDT)
-Received: by mail-ej1-x634.google.com with SMTP id a640c23a62f3a-9c603e235d1so611427366b.3
-        for <linux-xfs@vger.kernel.org>; Mon, 23 Oct 2023 21:10:55 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=linux-foundation.org; s=google; t=1698120654; x=1698725454; darn=vger.kernel.org;
-        h=cc:to:subject:message-id:date:from:in-reply-to:references
-         :mime-version:from:to:cc:subject:date:message-id:reply-to;
-        bh=R/DnLkXKcbtHeIdj2lNteiEcRFjQW0/FCeNT137Lkzs=;
-        b=Aw95fEiSWtFcR8obn3vjO/5M5aj1EuPgR5uJJkCqlvJnxOXShvYCdyhamojVfrIQpi
-         XDba13gNYmYGH0jiEeB8bDWs8chBIA8q/RfnAUFtqd+zRDiwEnVk235aoAUB8uQBnUNo
-         +/9a+5m38Q6YGXKdQ3OdZcrhH1ryorDounMfE=
+        with ESMTP id S232213AbjJXGAc (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 24 Oct 2023 02:00:32 -0400
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8CD2812C
+        for <linux-xfs@vger.kernel.org>; Mon, 23 Oct 2023 22:59:42 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1698127181;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=P4NmH9he3yHuRKquIzMKODyCp1Cr5Mjh6VfGFbzNsFE=;
+        b=JnASBMJhRJ91A00LQeX7KYbZQ4RhmA/5Mx5lYH4iFjKXqOaqKfIqSZAzE5zW1L8zNa746y
+        XqoRDRT+28FYc4EsykawwWWVjXfX/5fLorVdz6dQuR52ICTRB597GyioC2rcOOGcFezTJi
+        yLnKHd6VYAlL4ej6ZL3oJQuKqFrt1UM=
+Received: from mail-qk1-f198.google.com (mail-qk1-f198.google.com
+ [209.85.222.198]) by relay.mimecast.com with ESMTP with STARTTLS
+ (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
+ us-mta-625-96AY7Ws8M7mA0dvxFBOVwg-1; Tue, 24 Oct 2023 01:59:35 -0400
+X-MC-Unique: 96AY7Ws8M7mA0dvxFBOVwg-1
+Received: by mail-qk1-f198.google.com with SMTP id af79cd13be357-778b3526240so469625185a.1
+        for <linux-xfs@vger.kernel.org>; Mon, 23 Oct 2023 22:59:35 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1698120654; x=1698725454;
-        h=cc:to:subject:message-id:date:from:in-reply-to:references
-         :mime-version:x-gm-message-state:from:to:cc:subject:date:message-id
-         :reply-to;
-        bh=R/DnLkXKcbtHeIdj2lNteiEcRFjQW0/FCeNT137Lkzs=;
-        b=E/MTEfsbbh+D2UXRCuZ7Jum9R14EcqPrFJSOLf0GTYjf5UwubxDWNCbk1OBea34asC
-         K5bZwnLToY8geg5cz+lWnxjCd6SRWLf5JSAtQ8hK1txUDOMj7UPOyc9H6h7aJO7ftzsr
-         5Tt1Ka6lsxv/dT+OSgKF3nxgIkfgTPZhd/reiesIq0i5XlEhdKGszKG0VnS1r3RQfaMx
-         o1yV6yoysu+zocRsSTU1yPlqU3Z/FjAdAkSPfvVnUAG3IZOa4M/t0fcRO1T0jHJOpvBJ
-         SsMjB30j+KFpttZXQvyuztZKNnl2dvISKRO88r46YpSg7qcmz2BkPd5DkskUVQ9WKG93
-         5geg==
-X-Gm-Message-State: AOJu0YweOUVMLCcWD9amCTqWpBdqtxTM87YYydllpV/Lxi+CxSN5imb+
-        sAlOcj67zRhLenrNP2vtzcrpIJhlpfLmyEOCGnmXZ1nN
-X-Google-Smtp-Source: AGHT+IHGaSRZmXyMwhyBUXYWsSYGbqyKWhrOY8sRWLYv2hboLwTSaFLc+HgmP5ZPT5rwL2ma0HqPiQ==
-X-Received: by 2002:a17:906:6a22:b0:9be:d15e:8ca2 with SMTP id qw34-20020a1709066a2200b009bed15e8ca2mr6622947ejc.39.1698120653959;
-        Mon, 23 Oct 2023 21:10:53 -0700 (PDT)
-Received: from mail-ej1-f44.google.com (mail-ej1-f44.google.com. [209.85.218.44])
-        by smtp.gmail.com with ESMTPSA id f25-20020a170906561900b009920e9a3a73sm7617010ejq.115.2023.10.23.21.10.53
-        for <linux-xfs@vger.kernel.org>
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Mon, 23 Oct 2023 21:10:53 -0700 (PDT)
-Received: by mail-ej1-f44.google.com with SMTP id a640c23a62f3a-9c603e235d1so611426366b.3
-        for <linux-xfs@vger.kernel.org>; Mon, 23 Oct 2023 21:10:53 -0700 (PDT)
-X-Received: by 2002:a05:6402:274e:b0:53e:8e09:524d with SMTP id
- z14-20020a056402274e00b0053e8e09524dmr2329463edd.5.1698120632873; Mon, 23 Oct
- 2023 21:10:32 -0700 (PDT)
+        d=1e100.net; s=20230601; t=1698127174; x=1698731974;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=P4NmH9he3yHuRKquIzMKODyCp1Cr5Mjh6VfGFbzNsFE=;
+        b=by2bLxK/MocMRMXrNBENh+KWpCfgO9JihebTB/Y76Yj1Jj4t4lXbHwQFrHN3EXRQnJ
+         xoGLvA4f5F7a6gNdYMw0kb8n5dDNUDSI+ukHuqM87AgXX4MdNcU3Ki4P0mPo0EW3pkX5
+         3BcYysu8ELdsLQTnk7mppxPZiqvxqiqHapBCBDDhzKcSjaEAP1HGAP0jhwKPDdmrDGRA
+         5nZsrsnPhG5zHy8kyMg4mR2G/qyX8QLzl0kZHu0F3Cb8Xd3atdV3NConThGGZIr/oxOb
+         /uAMgKDHCOMV5KgINIkHyEonpDyjnNbtzs4viMghryloLZvjyx713q7+mR2HU/2QYhd9
+         T0VA==
+X-Gm-Message-State: AOJu0YxKkLgEakUOgy2cEVtOOrVhy5872XKSUSQAGlEQ4Uv87s3msg+x
+        WSMYL++2HFyFarbHvLkaJZFYAFOdz7Ddf+7wBLmNeA+gZeqvh+5d0t7qAqTaoU/AjwlUQy2U6e4
+        NniOtDrGxsIYs1IfH9p9jCC8ZLYFDK645fA==
+X-Received: by 2002:a05:620a:3951:b0:775:cf5f:8a81 with SMTP id qs17-20020a05620a395100b00775cf5f8a81mr13251667qkn.62.1698127174274;
+        Mon, 23 Oct 2023 22:59:34 -0700 (PDT)
+X-Google-Smtp-Source: AGHT+IGYI6BkDpUIKbF9z8sTlIugmnFVItgcyDriOoHib1xk1g1IGGtNa8kLQZbcl/SQn+2cDhoOhg==
+X-Received: by 2002:a05:620a:3951:b0:775:cf5f:8a81 with SMTP id qs17-20020a05620a395100b00775cf5f8a81mr13251657qkn.62.1698127173875;
+        Mon, 23 Oct 2023 22:59:33 -0700 (PDT)
+Received: from dell-per750-06-vm-08.rhts.eng.pek2.redhat.com ([43.228.180.230])
+        by smtp.gmail.com with ESMTPSA id c26-20020a056a00009a00b006be2f94e92asm7008483pfj.84.2023.10.23.22.59.32
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Mon, 23 Oct 2023 22:59:33 -0700 (PDT)
+Date:   Tue, 24 Oct 2023 13:59:30 +0800
+From:   Zorro Lang <zlang@redhat.com>
+To:     "Darrick J. Wong" <djwong@kernel.org>
+Cc:     linux-xfs@vger.kernel.org, fstests@vger.kernel.org
+Subject: Re: [PATCH] generic/251: check min and max length and minlen for
+ FSTRIM
+Message-ID: <20231024055930.3tjuevh6nee6lfo3@dell-per750-06-vm-08.rhts.eng.pek2.redhat.com>
+References: <20231019143627.GD11391@frogsfrogsfrogs>
+ <20231021131448.jjayss67pq5ztjdy@dell-per750-06-vm-08.rhts.eng.pek2.redhat.com>
+ <20231021230024.GT3195650@frogsfrogsfrogs>
+ <20231022061834.2km47c7vmhp5uen2@dell-per750-06-vm-08.rhts.eng.pek2.redhat.com>
+ <20231023044647.GE11391@frogsfrogsfrogs>
+ <20231023131652.37xfq73zwyozvbbn@dell-per750-06-vm-08.rhts.eng.pek2.redhat.com>
+ <20231023174954.GH11391@frogsfrogsfrogs>
 MIME-Version: 1.0
-References: <CAHk-=wiKJgOg_3z21Sy9bu+3i_34S86r8fd6ngvJpZDwa-ww8Q@mail.gmail.com>
- <5f96e69d438ab96099bb67d16b77583c99911caa.camel@kernel.org>
- <20231019-fluor-skifahren-ec74ceb6c63e@brauner> <0a1a847af4372e62000b259e992850527f587205.camel@kernel.org>
- <ZTGncMVw19QVJzI6@dread.disaster.area> <eb3b9e71ee9c6d8e228b0927dec3ac9177b06ec6.camel@kernel.org>
- <ZTWfX3CqPy9yCddQ@dread.disaster.area> <61b32a4093948ae1ae8603688793f07de764430f.camel@kernel.org>
- <ZTcBI2xaZz1GdMjX@dread.disaster.area> <CAHk-=whphyjjLwDcEthOOFXXfgwGrtrMnW2iyjdQioV6YSMEPw@mail.gmail.com>
- <ZTc8tClCRkfX3kD7@dread.disaster.area>
-In-Reply-To: <ZTc8tClCRkfX3kD7@dread.disaster.area>
-From:   Linus Torvalds <torvalds@linux-foundation.org>
-Date:   Mon, 23 Oct 2023 18:10:15 -1000
-X-Gmail-Original-Message-ID: <CAHk-=wjUWM8VVJxUYb=XfqvrS38ACS8RxK2ac9qGp9FDT=USkw@mail.gmail.com>
-Message-ID: <CAHk-=wjUWM8VVJxUYb=XfqvrS38ACS8RxK2ac9qGp9FDT=USkw@mail.gmail.com>
-Subject: Re: [PATCH RFC 2/9] timekeeping: new interfaces for multigrain
- timestamp handing
-To:     Dave Chinner <david@fromorbit.com>
-Cc:     Jeff Layton <jlayton@kernel.org>,
-        Kent Overstreet <kent.overstreet@linux.dev>,
-        Christian Brauner <brauner@kernel.org>,
-        Alexander Viro <viro@zeniv.linux.org.uk>,
-        John Stultz <jstultz@google.com>,
-        Thomas Gleixner <tglx@linutronix.de>,
-        Stephen Boyd <sboyd@kernel.org>,
-        Chandan Babu R <chandan.babu@oracle.com>,
-        "Darrick J. Wong" <djwong@kernel.org>,
-        "Theodore Ts'o" <tytso@mit.edu>,
-        Andreas Dilger <adilger.kernel@dilger.ca>,
-        Chris Mason <clm@fb.com>, Josef Bacik <josef@toxicpanda.com>,
-        David Sterba <dsterba@suse.com>,
-        Hugh Dickins <hughd@google.com>,
-        Andrew Morton <akpm@linux-foundation.org>,
-        Amir Goldstein <amir73il@gmail.com>, Jan Kara <jack@suse.de>,
-        David Howells <dhowells@redhat.com>,
-        linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-xfs@vger.kernel.org, linux-ext4@vger.kernel.org,
-        linux-btrfs@vger.kernel.org, linux-mm@kvack.org,
-        linux-nfs@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20231023174954.GH11391@frogsfrogsfrogs>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Mon, 23 Oct 2023 at 17:40, Dave Chinner <david@fromorbit.com> wrote:
-> >
-> > Maybe we don't even need a mode, and could just decide that atime
-> > updates aren't i_version updates at all?
->
-> We do that already - in memory atime updates don't bump i_version at
-> all. The issue is the rare persistent atime update requests that
-> still happen - they are the ones that trigger an i_version bump on
-> XFS, and one of the relatime heuristics tickle this specific issue.
+On Mon, Oct 23, 2023 at 10:49:54AM -0700, Darrick J. Wong wrote:
+> On Mon, Oct 23, 2023 at 09:16:52PM +0800, Zorro Lang wrote:
+> > On Sun, Oct 22, 2023 at 09:46:47PM -0700, Darrick J. Wong wrote:
+> > > On Sun, Oct 22, 2023 at 02:18:34PM +0800, Zorro Lang wrote:
+> > > > On Sat, Oct 21, 2023 at 04:00:24PM -0700, Darrick J. Wong wrote:
+> > > > > On Sat, Oct 21, 2023 at 09:14:48PM +0800, Zorro Lang wrote:
+> > > > > > On Thu, Oct 19, 2023 at 07:36:27AM -0700, Darrick J. Wong wrote:
+> > > > > > > From: Darrick J. Wong <djwong@kernel.org>
+> > > > > > > 
+> > > > > > > Every now and then, this test fails with the following output when
+> > > > > > > running against my development tree when configured with an 8k fs block
+> > > > > > > size:
+> > > > > > > 
+> > > > > > > --- a/tests/generic/251.out	2023-07-11 12:18:21.624971186 -0700
+> > > > > > > +++ b/tests/generic/251.out.bad	2023-10-15 20:54:44.636000000 -0700
+> > > > > > > @@ -1,2 +1,4677 @@
+> > > > > > >  QA output created by 251
+> > > > > > >  Running the test: done.
+> > > > > > > +fstrim: /opt: FITRIM ioctl failed: Invalid argument
+> > > > > > > +fstrim: /opt: FITRIM ioctl failed: Invalid argument
+> > > > > > > ...
+> > > > > > > +fstrim: /opt: FITRIM ioctl failed: Invalid argument
+> > > > > > > 
+> > > > > > > Dumping the exact fstrim command lines to seqres.full produces this at
+> > > > > > > the end:
+> > > > > > > 
+> > > > > > > /usr/sbin/fstrim -m 32544k -o 30247k -l 4k /opt
+> > > > > > > /usr/sbin/fstrim -m 32544k -o 30251k -l 4k /opt
+> > > > > > > ...
+> > > > > > > /usr/sbin/fstrim -m 32544k -o 30255k -l 4k /opt
+> > > > > > > 
+> > > > > > > The count of failure messages is the same as the count as the "-l 4k"
+> > > > > > > fstrim invocations.  Since this is an 8k-block filesystem, the -l
+> > > > > > > parameter is clearly incorrect.  The test computes random -m and -l
+> > > > > > > options.
+> > > > > > > 
+> > > > > > > Therefore, create helper functions to guess at the minimum and maximum
+> > > > > > > length and minlen parameters that can be used with the fstrim program.
+> > > > > > > In the inner loop of the test, make sure that our choices for -m and -l
+> > > > > > > fall within those constraints.
+> > > > > > > 
+> > > > > > > Signed-off-by: Darrick J. Wong <djwong@kernel.org>
+> > > > > > > ---
+> > > > > > 
+> > > > > > Hi Darrick, with this patch I 100% hit below failure (on default 4k xfs
+> > > > > > and ext4):
+> > > > > > 
+> > > > > > # ./check generic/251
+> > > > > > FSTYP         -- xfs (debug)
+> > > > > > PLATFORM      -- Linux/x86_64 hp-dl380pg8-01 6.6.0-rc6-mainline+ #7 SMP PREEMPT_DYNAMIC Thu Oct 19 22:34:28 CST 2023
+> > > > > > MKFS_OPTIONS  -- -f /dev/loop0
+> > > > > > MOUNT_OPTIONS -- -o context=system_u:object_r:root_t:s0 /dev/loop0 /mnt/scratch
+> > > > > > 
+> > > > > > generic/251 260s ... [failed, exit status 1]- output mismatch (see /root/git/xfstests/results//generic/251.out.bad)
+> > > > > >     --- tests/generic/251.out   2022-04-29 23:07:23.263498297 +0800
+> > > > > >     +++ /root/git/xfstests/results//generic/251.out.bad 2023-10-21 21:02:37.687088360 +0800
+> > > > > >     @@ -1,2 +1,5 @@
+> > > > > >      QA output created by 251
+> > > > > >      Running the test: done.
+> > > > > >     +5834a5835
+> > > > > >     +> aa60581221897d3d7dd60458e1cca2fa  ./results/generic/251.full
+> > > > > >     +!!!Checksums has changed - Filesystem possibly corrupted!!!\n
+> > > > > >     ...
+> > > > > >     (Run 'diff -u /root/git/xfstests/tests/generic/251.out /root/git/xfstests/results//generic/251.out.bad'  to see the entire diff)
+> > > > > 
+> > > > > Huh.  I don't see that on ext4 on my machine.  Can you send me all your
+> > > > 
+> > > > The failure on ext4:
+> > > > 
+> > > > # ./check generic/251
+> > > > FSTYP         -- ext4
+> > > > PLATFORM      -- Linux/x86_64 hp-dl380pg8-01 6.6.0-rc6-mainline+ #7 SMP PREEMPT_DYNAMIC Thu Oct 19 22:34:28 CST 2023
+> > > > MKFS_OPTIONS  -- -F /dev/loop0
+> > > > MOUNT_OPTIONS -- -o acl,user_xattr -o context=system_u:object_r:root_t:s0 /dev/loop0 /mnt/scratch
+> > > > 
+> > > > generic/251 249s ... [failed, exit status 1]- output mismatch (see /root/git/xfstests/results//generic/251.out.bad)
+> > > >     --- tests/generic/251.out   2022-04-29 23:07:23.263498297 +0800
+> > > >     +++ /root/git/xfstests/results//generic/251.out.bad 2023-10-22 14:17:07.248059405 +0800
+> > > >     @@ -1,2 +1,5 @@
+> > > >      QA output created by 251
+> > > >      Running the test: done.
+> > > >     +5838a5839
+> > > >     +> aa60581221897d3d7dd60458e1cca2fa  ./results/generic/251.full
+> > > >     +!!!Checksums has changed - Filesystem possibly corrupted!!!\n
+> > > >     ...
+> > > >     (Run 'diff -u /root/git/xfstests/tests/generic/251.out /root/git/xfstests/results//generic/251.out.bad'  to see the entire diff)
+> > > > Ran: generic/251
+> > > > Failures: generic/251
+> > > > Failed 1 of 1 tests
+> > > > 
+> > > > > /root/git/xfstests/results//generic/251* files so that I can have a
+> > > > > look?
+> > > > 
+> > > > Sure, thanks! There're .full and .out.bad files:
+> > > > 
+> > > > # cat results/generic/251.full 
+> > > > MINLEN max=100000 min=2
+> > > > LENGTH max=100000 min=4
+> > > > # cat results/generic/251.out.bad 
+> > > > QA output created by 251
+> > > > Running the test: done.
+> > > > 5833a5834
+> > > > > aa60581221897d3d7dd60458e1cca2fa  ./results/generic/251.full
+> > > > !!!Checksums has changed - Filesystem possibly corrupted!!!\n
+> 
+> Hang on, why is $seqres.full being included in the generic/251 integrity
+> checks?
+> 
+> *OH* it's this piece that runs before we start the fstrim loop:
+> 
+> 	content=$here
+> 	(
+> 	cd $content
+> 	find -P . -xdev -type f -print0 | xargs -0 md5sum | sort -o
+> 	$tmp/content.sums
+> 	)
 
-Yes, yes, but that's what I kind of allude to - maybe people still
-want the on-disk atime updates, but do they actually want the
-i_version updates just because they want more aggressive atime
-updates?
+Err... generic/251 is an old case, was written 12 years ago. It trys to do
 
-> > Or maybe i_version can update, but callers of getattr() could have two
-> > bits for that STATX_CHANGE_COOKIE, one for "I care about atime" and
-> > one for others, and we'd pass that down to inode_query_version, and
-> > we'd have a I_VERSION_QUERIED and a I_VERSION_QUERIED_STRICT, and the
-> > "I care about atime" case ould set the strict one.
->
-> This makes correct behaviour reliant on the applicaiton using the
-> query mechanism correctly. I have my doubts that userspace
-> developers will be able to understand the subtle difference between
-> the two options and always choose correctly....
+  content=$here
+  cp -axT $content/ $SCRATCH_MNT/$p/
 
-I don't think we _have_ a user space interface.
+to use the whole xfstests/* as testing data. I doubt that's recommended.
+How about we run fsstress a while, to get a fixed original data directory,
+then copy it to test. Likes we did in generic/560.
 
-At least the STATX_CHANGE_COOKIE bit isn't exposed to user space at
-all. Not in the uapi headers, but not even in xstat():
+Any better ides? If you think it's good, and would like to wait. I can make
+this change at first. Then you make a rebase and send this patch again.
 
-        /* STATX_CHANGE_COOKIE is kernel-only for now */
-        tmp.stx_mask = stat->result_mask & ~STATX_CHANGE_COOKIE;
+Thanks,
+Zorro
 
-So the *only* users of STATX_CHANGE_COOKIE seem to be entirely
-in-kernel, unless there is something I'm missing where somebody uses
-i_version through some other interface (random ioctl?).
+> 
+> If you don't explicitly set RESULT_BASE before running fstests, you get
+> the default setting of:
+> 
+> 	export RESULT_BASE="$here/results/"
+> 
+> Hence $seqres.full is really $here/results/generic/251.full.  Logging
+> the MINLEN/LENGTH settings to $seqres.full changes the contents of the
+> file, which changes the contents of the directory tree that we
+> repeatedly copy into $SCRATCH_MNT while racing with FSTRIM.  That's the
+> cause of the "Checksums has changed" message.
+> 
+> The checksums differ because the logging messages I added now result in
+> the test changing the outcome of the test by observing it.  I never
+> noticed because my test setup sets RESULT_BASE to a NFS server so that I
+> always get /something/ to look at, even if the node crashes.
+> 
+> Not sure what you want to do about this, because this is a subtle bug
+> for test authors to fall into.  I guess a mitigation could be to _notrun
+> if $seqres.full is under $here but ... yeughck.
+> 
+> Thoughts?
+> 
+> --D
+> 
+> > > > 
+> > > > The SCRATCH_DEV is loop0, its info as below:
+> > > > # xfs_info /dev/loop0
+> > > > meta-data=/dev/loop0             isize=512    agcount=4, agsize=720896 blks
+> > > >          =                       sectsz=512   attr=2, projid32bit=1
+> > > >          =                       crc=1        finobt=1, sparse=1, rmapbt=0
+> > > >          =                       reflink=1    bigtime=1 inobtcount=1 nrext64=0
+> > > > data     =                       bsize=4096   blocks=2883584, imaxpct=25
+> > > >          =                       sunit=0      swidth=0 blks
+> > > > naming   =version 2              bsize=4096   ascii-ci=0, ftype=1
+> > > > log      =internal log           bsize=4096   blocks=16384, version=2
+> > > >          =                       sectsz=512   sunit=0 blks, lazy-count=1
+> > > > realtime =none                   extsz=4096   blocks=0, rtextents=0
+> > > 
+> > > Huh.  What filesystem contains the file that /dev/loop0 points to?
+> > 
+> > A xfs, but with multi-stripes:
+> > 
+> > # xfs_info /
+> > meta-data=/dev/mapper/fedora_hp--dl380pg8--01-root isize=512    agcount=16, agsize=8192000 blks
+> >          =                       sectsz=512   attr=2, projid32bit=1
+> >          =                       crc=1        finobt=1, sparse=1, rmapbt=0
+> >          =                       reflink=1    bigtime=1 inobtcount=1 nrext64=0
+> > data     =                       bsize=4096   blocks=131072000, imaxpct=25
+> >          =                       sunit=64     swidth=64 blks
+> > naming   =version 2              bsize=4096   ascii-ci=0, ftype=1
+> > log      =internal log           bsize=4096   blocks=64000, version=2
+> >          =                       sectsz=512   sunit=64 blks, lazy-count=1
+> > realtime =none                   extsz=4096   blocks=0, rtextents=0
+> > 
+> > > 
+> > > --D
+> > > 
+> > > > More other information:
+> > > > # rpm -qf /usr/sbin/fstrim
+> > > > util-linux-2.39.2-1.fc40.x86_64
+> > > > # uname -r
+> > > > 6.6.0-rc6-mainline+
+> > > > # rpm -q xfsprogs
+> > > > xfsprogs-6.4.0-1.fc39.x86_64
+> > > > 
+> > > > Thanks,
+> > > > Zorro
+> > > > 
+> > > > > 
+> > > > > --D
+> > > > > 
+> > > > > > Ran: generic/251
+> > > > > > Failures: generic/251
+> > > > > > Failed 1 of 1 tests
+> > > > > > 
+> > > > > > And test passed without this patch.
+> > > > > > 
+> > > > > > # ./check generic/251
+> > > > > > FSTYP         -- xfs (debug)
+> > > > > > PLATFORM      -- Linux/x86_64 hp-dl380pg8-01 6.6.0-rc6-mainline+ #7 SMP PREEMPT_DYNAMIC Thu Oct 19 22:34:28 CST 2023
+> > > > > > MKFS_OPTIONS  -- -f /dev/loop0
+> > > > > > MOUNT_OPTIONS -- -o context=system_u:object_r:root_t:s0 /dev/loop0 /mnt/scratch
+> > > > > > 
+> > > > > > generic/251 260s ...  249s
+> > > > > > Ran: generic/251
+> > > > > > Passed all 1 tests
+> > > > > > 
+> > > > > > Thanks,
+> > > > > > Zorro
+> > > > > > 
+> > > > > > >  tests/generic/251 |   59 ++++++++++++++++++++++++++++++++++++++++++++++-------
+> > > > > > >  1 file changed, 51 insertions(+), 8 deletions(-)
+> > > > > > > 
+> > > > > > > diff --git a/tests/generic/251 b/tests/generic/251
+> > > > > > > index 8ee74980cc..40cfd7c381 100755
+> > > > > > > --- a/tests/generic/251
+> > > > > > > +++ b/tests/generic/251
+> > > > > > > @@ -53,14 +53,46 @@ _fail()
+> > > > > > >  	kill $mypid 2> /dev/null
+> > > > > > >  }
+> > > > > > >  
+> > > > > > > -_guess_max_minlen()
+> > > > > > > +# Set FSTRIM_{MIN,MAX}_MINLEN to the lower and upper bounds of the -m(inlen)
+> > > > > > > +# parameter to fstrim on the scratch filesystem.
+> > > > > > > +set_minlen_constraints()
+> > > > > > >  {
+> > > > > > > -	mmlen=100000
+> > > > > > > -	while [ $mmlen -gt 1 ]; do
+> > > > > > > +	local mmlen
+> > > > > > > +
+> > > > > > > +	for ((mmlen = 100000; mmlen > 0; mmlen /= 2)); do
+> > > > > > >  		$FSTRIM_PROG -l $(($mmlen*2))k -m ${mmlen}k $SCRATCH_MNT &> /dev/null && break
+> > > > > > > -		mmlen=$(($mmlen/2))
+> > > > > > >  	done
+> > > > > > > -	echo $mmlen
+> > > > > > > +	test $mmlen -gt 0 || \
+> > > > > > > +		_notrun "could not determine maximum FSTRIM minlen param"
+> > > > > > > +	FSTRIM_MAX_MINLEN=$mmlen
+> > > > > > > +
+> > > > > > > +	for ((mmlen = 1; mmlen < FSTRIM_MAX_MINLEN; mmlen *= 2)); do
+> > > > > > > +		$FSTRIM_PROG -l $(($mmlen*2))k -m ${mmlen}k $SCRATCH_MNT &> /dev/null && break
+> > > > > > > +	done
+> > > > > > > +	test $mmlen -le $FSTRIM_MAX_MINLEN || \
+> > > > > > > +		_notrun "could not determine minimum FSTRIM minlen param"
+> > > > > > > +	FSTRIM_MIN_MINLEN=$mmlen
+> > > > > > > +}
+> > > > > > > +
+> > > > > > > +# Set FSTRIM_{MIN,MAX}_LEN to the lower and upper bounds of the -l(ength)
+> > > > > > > +# parameter to fstrim on the scratch filesystem.
+> > > > > > > +set_length_constraints()
+> > > > > > > +{
+> > > > > > > +	local mmlen
+> > > > > > > +
+> > > > > > > +	for ((mmlen = 100000; mmlen > 0; mmlen /= 2)); do
+> > > > > > > +		$FSTRIM_PROG -l ${mmlen}k $SCRATCH_MNT &> /dev/null && break
+> > > > > > > +	done
+> > > > > > > +	test $mmlen -gt 0 || \
+> > > > > > > +		_notrun "could not determine maximum FSTRIM length param"
+> > > > > > > +	FSTRIM_MAX_LEN=$mmlen
+> > > > > > > +
+> > > > > > > +	for ((mmlen = 1; mmlen < FSTRIM_MAX_LEN; mmlen *= 2)); do
+> > > > > > > +		$FSTRIM_PROG -l ${mmlen}k $SCRATCH_MNT &> /dev/null && break
+> > > > > > > +	done
+> > > > > > > +	test $mmlen -le $FSTRIM_MAX_LEN || \
+> > > > > > > +		_notrun "could not determine minimum FSTRIM length param"
+> > > > > > > +	FSTRIM_MIN_LEN=$mmlen
+> > > > > > >  }
+> > > > > > >  
+> > > > > > >  ##
+> > > > > > > @@ -70,13 +102,24 @@ _guess_max_minlen()
+> > > > > > >  ##
+> > > > > > >  fstrim_loop()
+> > > > > > >  {
+> > > > > > > +	set_minlen_constraints
+> > > > > > > +	set_length_constraints
+> > > > > > > +	echo "MINLEN max=$FSTRIM_MAX_MINLEN min=$FSTRIM_MIN_MINLEN" >> $seqres.full
+> > > > > > > +	echo "LENGTH max=$FSTRIM_MAX_LEN min=$FSTRIM_MIN_LEN" >> $seqres.full
+> > > > > > > +
+> > > > > > >  	trap "_destroy_fstrim; exit \$status" 2 15
+> > > > > > >  	fsize=$(_discard_max_offset_kb "$SCRATCH_MNT" "$SCRATCH_DEV")
+> > > > > > > -	mmlen=$(_guess_max_minlen)
+> > > > > > >  
+> > > > > > >  	while true ; do
+> > > > > > > -		step=$((RANDOM*$RANDOM+4))
+> > > > > > > -		minlen=$(((RANDOM*($RANDOM%2+1))%$mmlen))
+> > > > > > > +		while true; do
+> > > > > > > +			step=$((RANDOM*$RANDOM+4))
+> > > > > > > +			test "$step" -ge "$FSTRIM_MIN_LEN" && break
+> > > > > > > +		done
+> > > > > > > +		while true; do
+> > > > > > > +			minlen=$(( (RANDOM * (RANDOM % 2 + 1)) % FSTRIM_MAX_MINLEN ))
+> > > > > > > +			test "$minlen" -ge "$FSTRIM_MIN_MINLEN" && break
+> > > > > > > +		done
+> > > > > > > +
+> > > > > > >  		start=$RANDOM
+> > > > > > >  		if [ $((RANDOM%10)) -gt 7 ]; then
+> > > > > > >  			$FSTRIM_PROG $SCRATCH_MNT &
+> > > > > > > 
+> > > > > > 
+> > > > > 
+> > > > 
+> > > 
+> > 
+> 
 
-End result: splitting STATX_CHANGE_COOKIE into a "I don't care about
-atime" and a "give me all change events" shouldn't possibly break
-anything that I can see.
-
-The only other uses of inode_query_iversion() seem to be the explicit
-directory optimizations (ie the "I'm caching the offset and don't want
-to re-check that it's valid unless required, so give me the inode
-version for the directory as a way to decide if I need to re-check"
-thing).
-
-And those *definitely* don't want i_version updates on any atime updates.
-
-There might be some other use of inode_query_iversion() that I missed,
-of course.  But from a quick look, it really looks to me like we can
-relax our i_version updates.
-
-              Linus
