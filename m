@@ -2,121 +2,84 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DBF6CC00A8F
-	for <linux-xfs@archiver.kernel.org>; Tue, 24 Oct 2023 11:10:23 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 36D85C07545
+	for <linux-xfs@archiver.kernel.org>; Tue, 24 Oct 2023 11:43:11 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229634AbjJXLKX (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 24 Oct 2023 07:10:23 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60722 "EHLO
+        id S230221AbjJXLnL (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 24 Oct 2023 07:43:11 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34536 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229625AbjJXLKW (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 24 Oct 2023 07:10:22 -0400
-Received: from smtp-out1.suse.de (smtp-out1.suse.de [195.135.220.28])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E1F56D7F;
-        Tue, 24 Oct 2023 04:10:16 -0700 (PDT)
-Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
-        (No client certificate requested)
-        by smtp-out1.suse.de (Postfix) with ESMTPS id 8D36921B8B;
-        Tue, 24 Oct 2023 11:10:15 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.cz; s=susede2_rsa;
-        t=1698145815; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=7GNlnvsY+DYZUeQFr2rzYE4qXsApeBSmjyzIRlCaWx0=;
-        b=AdYr1z2/jHeJpL4z4hGxWiB7//ZUIxp2jgoOHeqSVfXKkVcJ7kqcsfhYzqi72WfnNzip3v
-        UZJx0QROGCCMwG3hUh2TE7K50ZzsqlxQQ249fRhPqTN5xcEO1R9/XXfWIbqzV9qfCm+8iN
-        UQfZVyj0AIXBalggihFi3iu6xhRLMm4=
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.cz;
-        s=susede2_ed25519; t=1698145815;
-        h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=7GNlnvsY+DYZUeQFr2rzYE4qXsApeBSmjyzIRlCaWx0=;
-        b=upfptmnJVvkV+Biac6KUb3cLwMsJzIcVLVwasmaBvvzuA3gdF+2uJV1j9Ns+HPe3S+AAzA
-        +JQJrDcWnq3u8EDQ==
-Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
-        (No client certificate requested)
-        by imap2.suse-dmz.suse.de (Postfix) with ESMTPS id 7B1151391C;
-        Tue, 24 Oct 2023 11:10:15 +0000 (UTC)
-Received: from dovecot-director2.suse.de ([192.168.254.65])
-        by imap2.suse-dmz.suse.de with ESMTPSA
-        id Kgz4HRemN2W7PAAAMHmgww
-        (envelope-from <jack@suse.cz>); Tue, 24 Oct 2023 11:10:15 +0000
-Received: by quack3.suse.cz (Postfix, from userid 1000)
-        id 0942CA05BC; Tue, 24 Oct 2023 13:10:15 +0200 (CEST)
-Date:   Tue, 24 Oct 2023 13:10:15 +0200
-From:   Jan Kara <jack@suse.cz>
-To:     Aleksandr Nogikh <nogikh@google.com>
-Cc:     Jan Kara <jack@suse.cz>, Eric Biggers <ebiggers@kernel.org>,
-        linux-fsdevel@vger.kernel.org, linux-block@vger.kernel.org,
-        Christoph Hellwig <hch@infradead.org>,
-        Christian Brauner <brauner@kernel.org>,
-        Jens Axboe <axboe@kernel.dk>, Kees Cook <keescook@google.com>,
-        Ted Tso <tytso@mit.edu>,
-        syzkaller <syzkaller@googlegroups.com>,
-        Alexander Popov <alex.popov@linux.com>,
-        linux-xfs@vger.kernel.org, linux-btrfs@vger.kernel.org,
-        Dmitry Vyukov <dvyukov@google.com>
-Subject: Re: [PATCH 1/6] block: Add config option to not allow writing to
- mounted devices
-Message-ID: <20231024111015.k4sbjpw5fa46k6il@quack3>
-References: <20230704122727.17096-1-jack@suse.cz>
- <20230704125702.23180-1-jack@suse.cz>
- <20230822053523.GA8949@sol.localdomain>
- <20230822101154.7udsf4tdwtns2prj@quack3>
- <CANp29Y6uBuSzLXuCMGzVNZjT+xFqV4dtWKWb7GR7Opx__Diuzg@mail.gmail.com>
+        with ESMTP id S229578AbjJXLnK (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 24 Oct 2023 07:43:10 -0400
+Received: from casper.infradead.org (casper.infradead.org [IPv6:2001:8b0:10b:1236::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6FE02D68;
+        Tue, 24 Oct 2023 04:43:08 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=infradead.org; s=casper.20170209; h=In-Reply-To:Content-Type:MIME-Version:
+        References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
+        Content-Transfer-Encoding:Content-ID:Content-Description;
+        bh=z5InAU3dhYmLQJgjZgQwPjcxPbv7IHwMP+7wG4gigZ0=; b=UgQerN9XarNuuQe0jfv3B7kfni
+        wI9Sgck27dnIA2Rg6K3xZYaN+65+8jLyJHMgBLDO6MVVDg7G+RlyMBfa3qMpJ3qsG3M55636UjZEV
+        SRIPjMAoDFqnUMP67j/Se4Y2bg/jneFgeLDLUH6LtfYPfpqVRQJxys0ME8tQKT57mmicl3ZTxdVZP
+        nT5VUk0w+lAO4wQptKQ+l1WMx19DFYdVOT5Rtp/mFME0eq4C3/0jOpYjBh36bLV/idaREcAslZGGH
+        WrHR98V8UbzCcvRYUK6/ywpAqrklMz0TUTnGSX2whIMdCRgBN8KXm+6KWFTUqK0tHi45D+k7qbpF5
+        jE8u81Bg==;
+Received: from willy by casper.infradead.org with local (Exim 4.94.2 #2 (Red Hat Linux))
+        id 1qvFoN-002Ga9-W3; Tue, 24 Oct 2023 11:43:04 +0000
+Date:   Tue, 24 Oct 2023 12:43:03 +0100
+From:   Matthew Wilcox <willy@infradead.org>
+To:     Christoph Hellwig <hch@lst.de>
+Cc:     Jens Axboe <axboe@kernel.dk>, Ilya Dryomov <idryomov@gmail.com>,
+        Andrew Morton <akpm@linux-foundation.org>,
+        linux-block@vger.kernel.org, linux-fsdevel@vger.kernel.org,
+        linux-xfs@vger.kernel.org, linux-mm@kvack.org
+Subject: Re: [PATCH 1/3] filemap: add a per-mapping stable writes flag
+Message-ID: <ZTetxytPcOyZTr1A@casper.infradead.org>
+References: <20231024064416.897956-1-hch@lst.de>
+ <20231024064416.897956-2-hch@lst.de>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <CANp29Y6uBuSzLXuCMGzVNZjT+xFqV4dtWKWb7GR7Opx__Diuzg@mail.gmail.com>
-Authentication-Results: smtp-out1.suse.de;
-        none
-X-Spamd-Result: default: False [-5.10 / 50.00];
-         ARC_NA(0.00)[];
-         RCVD_VIA_SMTP_AUTH(0.00)[];
-         FROM_HAS_DN(0.00)[];
-         TO_DN_SOME(0.00)[];
-         TO_MATCH_ENVRCPT_ALL(0.00)[];
-         NEURAL_HAM_LONG(-3.00)[-1.000];
-         MIME_GOOD(-0.10)[text/plain];
-         DKIM_SIGNED(0.00)[suse.cz:s=susede2_rsa,suse.cz:s=susede2_ed25519];
-         NEURAL_HAM_SHORT(-1.00)[-1.000];
-         RCPT_COUNT_TWELVE(0.00)[15];
-         FROM_EQ_ENVFROM(0.00)[];
-         MIME_TRACE(0.00)[0:+];
-         MID_RHS_NOT_FQDN(0.50)[];
-         RCVD_COUNT_TWO(0.00)[2];
-         RCVD_TLS_ALL(0.00)[];
-         BAYES_HAM(-1.50)[91.72%]
+In-Reply-To: <20231024064416.897956-2-hch@lst.de>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Hi!
-
-On Thu 19-10-23 11:16:55, Aleksandr Nogikh wrote:
-> Thank you for the series!
+On Tue, Oct 24, 2023 at 08:44:14AM +0200, Christoph Hellwig wrote:
+> folio_wait_stable waits for writeback to finish before modifying the
+> contents of a folio again, e.g. to support check summing of the data
+> in the block integrity code.
 > 
-> Have you already had a chance to push an updated version of it?
-> I tried to search LKML, but didn't find anything.
+> Currently this behavior is controlled by the SB_I_STABLE_WRITES flag
+> on the super_block, which means it is uniform for the entire file system.
+> This is wrong for the block device pseudofs which is shared by all
+> block devices, or file systems that can use multiple devices like XFS
+> witht the RT subvolume or btrfs (although btrfs currently reimplements
+> folio_wait_stable anyway).
 > 
-> Or did you decide to put it off until later?
+> Add a per-address_space AS_STABLE_WRITES flag to control the behavior
+> in a more fine grained way.  The existing SB_I_STABLE_WRITES is kept
+> to initialize AS_STABLE_WRITES to the existing default which covers
+> most cases.
+> 
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
 
-So there is preliminary series sitting in VFS tree that changes how block
-devices are open. There are some conflicts with btrfs tree and bcachefs
-merge that complicate all this (plus there was quite some churn in VFS
-itself due to changing rules how block devices are open) so I didn't push
-out the series that actually forbids opening of mounted block devices
-because that would cause a "merge from hell" issues. I plan to push out the
-remaining patches once the merge window closes and all the dependencies are
-hopefully in a stable state. Maybe I can push out the series earlier based
-on linux-next so that people can have a look at the current state.
+Reviewed-by: Matthew Wilcox (Oracle) <willy@infradead.org>
 
-								Honza
--- 
-Jan Kara <jack@suse.com>
-SUSE Labs, CR
+> +++ b/mm/page-writeback.c
+> @@ -3110,7 +3110,7 @@ EXPORT_SYMBOL_GPL(folio_wait_writeback_killable);
+>   */
+>  void folio_wait_stable(struct folio *folio)
+>  {
+> -	if (folio_inode(folio)->i_sb->s_iflags & SB_I_STABLE_WRITES)
+> +	if (mapping_stable_writes(folio_mapping(folio)))
+>  		folio_wait_writeback(folio);
+
+What I really like about this is that we've gone from
+
+	folio->mapping->host->i_sb->s_iflags
+to
+	folio->mapping->flags
+
+which saves us two pointer dereferences.  Sure, probably cached, but
+maybe not, and cache misses are expensive.
