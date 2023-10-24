@@ -2,69 +2,145 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 284C6C25B6F
-	for <linux-xfs@archiver.kernel.org>; Tue, 24 Oct 2023 16:25:43 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 345FFC25B6B
+	for <linux-xfs@archiver.kernel.org>; Tue, 24 Oct 2023 18:40:14 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1343829AbjJXQZn (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 24 Oct 2023 12:25:43 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38576 "EHLO
+        id S1344129AbjJXSkN (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 24 Oct 2023 14:40:13 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37310 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1343850AbjJXQZm (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 24 Oct 2023 12:25:42 -0400
+        with ESMTP id S234866AbjJXSkM (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 24 Oct 2023 14:40:12 -0400
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E5F02118
-        for <linux-xfs@vger.kernel.org>; Tue, 24 Oct 2023 09:25:39 -0700 (PDT)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 78387C433C8;
-        Tue, 24 Oct 2023 16:25:39 +0000 (UTC)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9A7C89F;
+        Tue, 24 Oct 2023 11:40:10 -0700 (PDT)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id E8B1AC433C7;
+        Tue, 24 Oct 2023 18:40:07 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1698164739;
-        bh=NK2Gl1/Y+7I4bxvao1w4hDW6pbEbGgTFz9UWw6icm1g=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=t3mZT77pQPqXF8PhcFr2mohfAnRySp9EoMWSbY4ob7Y+PJXOirEsX76LOjcTBCJtR
-         ERDWPW539AXL8AymmAsKZlbyylXpMPS94yL7+TEpGH2vhkmCxlgvJibefO3W6zxLsh
-         JglMXkhprZaqDQ6S4eX24qOXEUvFinyJLkorEdEhayzSxV3FdgoyBsFIK790yEI6oc
-         sLwwKu7Byn7v7/5+XzC9CqPerbMwS6vrAZ6J2xdsuxbbNVq2d4BbPNhf+kwgBHS7BN
-         s2pnHV6wVbFMq2rXshZqbo36iCrJGZ55Wz9l22SWm0AqtEU1BgqjbSKhCY//nhcAFC
-         cPXPc6ff9MV3g==
-Date:   Tue, 24 Oct 2023 09:25:38 -0700
-From:   "Darrick J. Wong" <djwong@kernel.org>
-To:     Christoph Hellwig <hch@infradead.org>
-Cc:     Dave Chinner <david@fromorbit.com>, linux-xfs@vger.kernel.org,
-        john.g.garry@oracle.com
-Subject: Re: [PATCH 3/9] xfs: select the AG with the largest contiguous space
-Message-ID: <20231024162538.GB3195650@frogsfrogsfrogs>
-References: <20231004001943.349265-1-david@fromorbit.com>
- <20231004001943.349265-4-david@fromorbit.com>
- <ZR6F6oFbgOgjeWuT@infradead.org>
+        s=k20201202; t=1698172810;
+        bh=Xe0wF7mgvmZCFWwP7fcGH+Eub1oED/IAnnGG5PkQ1xU=;
+        h=Subject:From:To:Cc:Date:In-Reply-To:References:From;
+        b=aR5dfj2B+9L9WTja+3SyJ8WB9QMgZo4R+vxoFDhQoAUL1rtUOh+Oh5Q8DQmdfVTO4
+         yGp5tE/69QdXH5HxMqJHG7wcibIkHLtTyOezwvPMxpAm86wk65poIE/uewxy/Ie6v3
+         hSHpwvYzQ6e9UEWsvO3SaWQYijZfMxf09CUdubjLB4ttXC80RueJZB863KJ470NSzB
+         NMRpUvxtODKii5ufHHS1e4VgM9qMeTvQltU7KO0D7dMhAnpxAiASNlUi/neKfJiDK+
+         xe5dn9XSPdXwMQCwnpFDi/Iua7ZyggSyeH4EgK4Vnte8CUNiPzFVJE4c5FjHvkEK1O
+         cyliPAfxW2aoA==
+Message-ID: <d539804a2a73ad70265c5fa599ecd663cd235843.camel@kernel.org>
+Subject: Re: [PATCH RFC 2/9] timekeeping: new interfaces for multigrain
+ timestamp handing
+From:   Jeff Layton <jlayton@kernel.org>
+To:     Amir Goldstein <amir73il@gmail.com>,
+        Dave Chinner <david@fromorbit.com>
+Cc:     Linus Torvalds <torvalds@linux-foundation.org>,
+        Kent Overstreet <kent.overstreet@linux.dev>,
+        Christian Brauner <brauner@kernel.org>,
+        Alexander Viro <viro@zeniv.linux.org.uk>,
+        John Stultz <jstultz@google.com>,
+        Thomas Gleixner <tglx@linutronix.de>,
+        Stephen Boyd <sboyd@kernel.org>,
+        Chandan Babu R <chandan.babu@oracle.com>,
+        "Darrick J. Wong" <djwong@kernel.org>,
+        Theodore Ts'o <tytso@mit.edu>,
+        Andreas Dilger <adilger.kernel@dilger.ca>,
+        Chris Mason <clm@fb.com>, Josef Bacik <josef@toxicpanda.com>,
+        David Sterba <dsterba@suse.com>,
+        Hugh Dickins <hughd@google.com>,
+        Andrew Morton <akpm@linux-foundation.org>,
+        Jan Kara <jack@suse.de>, David Howells <dhowells@redhat.com>,
+        linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-xfs@vger.kernel.org, linux-ext4@vger.kernel.org,
+        linux-btrfs@vger.kernel.org, linux-mm@kvack.org,
+        linux-nfs@vger.kernel.org
+Date:   Tue, 24 Oct 2023 14:40:06 -0400
+In-Reply-To: <CAOQ4uxhJGkZrUdUJ72vjRuLec0g8VqgRXRH=x7W9ogMU6rBxcQ@mail.gmail.com>
+References: <CAHk-=wiKJgOg_3z21Sy9bu+3i_34S86r8fd6ngvJpZDwa-ww8Q@mail.gmail.com>
+         <5f96e69d438ab96099bb67d16b77583c99911caa.camel@kernel.org>
+         <20231019-fluor-skifahren-ec74ceb6c63e@brauner>
+         <0a1a847af4372e62000b259e992850527f587205.camel@kernel.org>
+         <ZTGncMVw19QVJzI6@dread.disaster.area>
+         <eb3b9e71ee9c6d8e228b0927dec3ac9177b06ec6.camel@kernel.org>
+         <ZTWfX3CqPy9yCddQ@dread.disaster.area>
+         <61b32a4093948ae1ae8603688793f07de764430f.camel@kernel.org>
+         <ZTcBI2xaZz1GdMjX@dread.disaster.area>
+         <CAHk-=whphyjjLwDcEthOOFXXfgwGrtrMnW2iyjdQioV6YSMEPw@mail.gmail.com>
+         <ZTc8tClCRkfX3kD7@dread.disaster.area>
+         <CAOQ4uxhJGkZrUdUJ72vjRuLec0g8VqgRXRH=x7W9ogMU6rBxcQ@mail.gmail.com>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
+User-Agent: Evolution 3.48.4 (3.48.4-1.fc38) 
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <ZR6F6oFbgOgjeWuT@infradead.org>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Thu, Oct 05, 2023 at 02:46:18AM -0700, Christoph Hellwig wrote:
-> On Wed, Oct 04, 2023 at 11:19:37AM +1100, Dave Chinner wrote:
-> > +	if (max_blen > *blen) {
-> > +		if (max_blen_agno != startag) {
-> > +			ap->blkno = XFS_AGB_TO_FSB(mp, max_blen_agno, 0);
-> > +			ap->aeof = false;
-> > +		}
-> > +		*blen = max_blen;
-> > +	}
-> 
-> A comment explaining that we at least want the longest freespace
-> if no perfect match is available here would be useful to future
-> readers.
+On Tue, 2023-10-24 at 10:08 +0300, Amir Goldstein wrote:
+> On Tue, Oct 24, 2023 at 6:40=E2=80=AFAM Dave Chinner <david@fromorbit.com=
+> wrote:
+> >=20
+> > On Mon, Oct 23, 2023 at 02:18:12PM -1000, Linus Torvalds wrote:
+> > > On Mon, 23 Oct 2023 at 13:26, Dave Chinner <david@fromorbit.com> wrot=
+e:
+> > > >=20
+> > > > The problem is the first read request after a modification has been
+> > > > made. That is causing relatime to see mtime > atime and triggering
+> > > > an atime update. XFS sees this, does an atime update, and in
+> > > > committing that persistent inode metadata update, it calls
+> > > > inode_maybe_inc_iversion(force =3D false) to check if an iversion
+> > > > update is necessary. The VFS sees I_VERSION_QUERIED, and so it bump=
+s
+> > > > i_version and tells XFS to persist it.
+> > >=20
+> > > Could we perhaps just have a mode where we don't increment i_version
+> > > for just atime updates?
+> > >=20
+> > > Maybe we don't even need a mode, and could just decide that atime
+> > > updates aren't i_version updates at all?
+> >=20
+> > We do that already - in memory atime updates don't bump i_version at
+> > all. The issue is the rare persistent atime update requests that
+> > still happen - they are the ones that trigger an i_version bump on
+> > XFS, and one of the relatime heuristics tickle this specific issue.
+> >=20
+> > If we push the problematic persistent atime updates to be in-memory
+> > updates only, then the whole problem with i_version goes away....
+> >=20
+> > > Yes, yes, it's obviously technically a "inode modification", but does
+> > > anybody actually *want* atime updates with no actual other changes to
+> > > be version events?
+> >=20
+> > Well, yes, there was. That's why we defined i_version in the on disk
+> > format this way well over a decade ago. It was part of some deep
+> > dark magical HSM beans that allowed the application to combine
+> > multiple scans for different inode metadata changes into a single
+> > pass. atime changes was one of the things it needed to know about
+> > for tiering and space scavenging purposes....
+> >=20
+>=20
+> But if this is such an ancient mystical program, why do we have to
+> keep this XFS behavior in the present?
+> BTW, is this the same HSM whose DMAPI ioctls were deprecated
+> a few years back?
+>=20
+> I mean, I understand that you do not want to change the behavior of
+> i_version update without an opt-in config or mount option - let the distr=
+o
+> make that choice.
+> But calling this an "on-disk format change" is a very long stretch.
+>=20
+> Does xfs_repair guarantee that changes of atime, or any inode changes
+> for that matter, update i_version? No, it does not.
+> So IMO, "atime does not update i_version" is not an "on-disk format chang=
+e",
+> it is a runtime behavior change, just like lazytime is.
+>=20
 
-With Christoph's request for an extra comment added,
-Reviewed-by: Darrick J. Wong <djwong@kernel.org>
+This would certainly be my preference. I don't want to break any
+existing users though.
 
---D
+Perhaps this ought to be a mkfs option? Existing XFS filesystems could
+still behave with the legacy behavior, but we could make mkfs.xfs build
+filesystems by default that work like NFS requires.
 
-> 
-> Otherwise looks good:
-> 
-> Reviewed-by: Christoph Hellwig <hch@lst.de>
-> 
+--=20
+Jeff Layton <jlayton@kernel.org>
