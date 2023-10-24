@@ -2,130 +2,180 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5A1ABC25B6C
-	for <linux-xfs@archiver.kernel.org>; Tue, 24 Oct 2023 00:18:59 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3D4DCC00A8F
+	for <linux-xfs@archiver.kernel.org>; Tue, 24 Oct 2023 00:44:21 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231285AbjJXAS7 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 23 Oct 2023 20:18:59 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52316 "EHLO
+        id S229955AbjJXAoV (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 23 Oct 2023 20:44:21 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37030 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231658AbjJXASz (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 23 Oct 2023 20:18:55 -0400
-Received: from mail-lj1-x229.google.com (mail-lj1-x229.google.com [IPv6:2a00:1450:4864:20::229])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5206AD6E
-        for <linux-xfs@vger.kernel.org>; Mon, 23 Oct 2023 17:18:53 -0700 (PDT)
-Received: by mail-lj1-x229.google.com with SMTP id 38308e7fff4ca-2c5039d4e88so59798031fa.3
-        for <linux-xfs@vger.kernel.org>; Mon, 23 Oct 2023 17:18:53 -0700 (PDT)
+        with ESMTP id S229679AbjJXAoU (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 23 Oct 2023 20:44:20 -0400
+Received: from mail-pf1-x42e.google.com (mail-pf1-x42e.google.com [IPv6:2607:f8b0:4864:20::42e])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 83BD0A6
+        for <linux-xfs@vger.kernel.org>; Mon, 23 Oct 2023 17:44:18 -0700 (PDT)
+Received: by mail-pf1-x42e.google.com with SMTP id d2e1a72fcca58-6be1bc5aa1cso3801781b3a.3
+        for <linux-xfs@vger.kernel.org>; Mon, 23 Oct 2023 17:44:18 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=linux-foundation.org; s=google; t=1698106731; x=1698711531; darn=vger.kernel.org;
-        h=cc:to:subject:message-id:date:from:in-reply-to:references
-         :mime-version:from:to:cc:subject:date:message-id:reply-to;
-        bh=iY8F6Fplz1VZOzDrso9gBBR3Wotc9sRtBic5aJbz6WE=;
-        b=NFkz4IY8yN89v12HPfLxH+qlwrs2qNUsUulQ5ZRSJHMsg3pU5tq9gXsABmSrkxlrZd
-         +cRzmR+NOKzFXMaXPlivzyfHFXat73apu1eFNdnDXH/Jv4LOkb2G1Qk1OMkR5mP7BlgM
-         pFm3IGzM7xd1KOPF2yN8/pws6EU2LMbNoCyFE=
+        d=gmail.com; s=20230601; t=1698108258; x=1698713058; darn=vger.kernel.org;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
+        bh=F0U5pGPQ62oscUUbIrM8NGIAF+5fGkmeROTXCHiYwgw=;
+        b=fo5gmFEZVbeFJKUGmJHYSIB+aQACI3uIqpzo8xAK36ri7sJZK2cmPbMnsc9GLdYS2V
+         mQ1qZFgLEvzUSA6rolpBhAAVjZ8j+qvgM6IO0jPeICbfz2S+F2BLMYt3wUn+ihO7JF89
+         1Td7A24cWFQE7l+3HF3zDwI6ruOTHdD2EpdGIkIv/ubpSkKR6KzTSp1odtVg58j+Qk6J
+         f5pYOHZTow2wZyVZk0fQ97Gs/FDuHN/GzuR444NtbgfQNd7MKVAEfvjG+WulLfd2R4Xp
+         owiomW7PQX5dyjVX7RkxQCNzw+aUEvl8WsezLYSzxbswpVeB3lUfAramRU57OPrywrZ4
+         wMEA==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1698106731; x=1698711531;
-        h=cc:to:subject:message-id:date:from:in-reply-to:references
-         :mime-version:x-gm-message-state:from:to:cc:subject:date:message-id
-         :reply-to;
-        bh=iY8F6Fplz1VZOzDrso9gBBR3Wotc9sRtBic5aJbz6WE=;
-        b=Ir77PvTT+/VLeUnAEHvul0BNRZmY1gDmMGye33oOhVhprvZ2/BOhJsR/EQyOWYYppn
-         OwLP4XrHdHa0tLbq2M9BwFFfdf45GykI5ZwsQ2yQADsMWgfYbGLCMM4kzxnYTnCcUlp7
-         cndXZKnfw5ncUKs5M8UIM4wOFkY6SM04U3BLgpf+7Oc6r8S5rFOPbMls5reTgGKqjoZy
-         v/qqMsy9Yq8AlZTH77aoloP53Nb1rUhzyd8tPZVT5EE9DaKmxYYRiEc1OTjo0XaC5rWY
-         AQhNKfDUJX0eeMIWo+UtW8lqs80aPj/YjQDf1G2zFFhYcX1q2jiTovtFFkqpwKZ4Xi25
-         0OMA==
-X-Gm-Message-State: AOJu0YzHZjcwDgLhBkFTFaL1PyHb9/Lc1A/8ID/kjNEn6uGRhdyIAwWh
-        YgxXeMNpIiJ6CRlYHOlH7dhWkNLCal2kO0VF/M/d0NoM
-X-Google-Smtp-Source: AGHT+IG4P0D16V1Bis/TaHO7ClSosYk2IVW645oUNWwuqviCpsLDVi/rF07QUzor32I/2VjiURKRVQ==
-X-Received: by 2002:a19:5e1c:0:b0:503:1aae:eca0 with SMTP id s28-20020a195e1c000000b005031aaeeca0mr7482883lfb.44.1698106731362;
-        Mon, 23 Oct 2023 17:18:51 -0700 (PDT)
-Received: from mail-ed1-f47.google.com (mail-ed1-f47.google.com. [209.85.208.47])
-        by smtp.gmail.com with ESMTPSA id t20-20020a50ab54000000b00533e915923asm7183299edc.49.2023.10.23.17.18.50
-        for <linux-xfs@vger.kernel.org>
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Mon, 23 Oct 2023 17:18:50 -0700 (PDT)
-Received: by mail-ed1-f47.google.com with SMTP id 4fb4d7f45d1cf-53de8fc1ad8so5716613a12.0
-        for <linux-xfs@vger.kernel.org>; Mon, 23 Oct 2023 17:18:50 -0700 (PDT)
-X-Received: by 2002:a50:d795:0:b0:53e:467c:33f1 with SMTP id
- w21-20020a50d795000000b0053e467c33f1mr8315209edi.8.1698106710154; Mon, 23 Oct
- 2023 17:18:30 -0700 (PDT)
+        d=1e100.net; s=20230601; t=1698108258; x=1698713058;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=F0U5pGPQ62oscUUbIrM8NGIAF+5fGkmeROTXCHiYwgw=;
+        b=tiWKwB0iSuQZaoz1sD4jqcRAWtVS6tQzkM9Plsn6X/ODbR58QTqUw6lW6KefA3O7/n
+         6R96ELLZ9ya5G5IOjdry7HMmBAtJRkUoo+hNZxgaCNOKpKwt25hKelta3nYLxEGREyy9
+         AQr+QkDkWv/Hnwl33/2uzVm30aC1b13TizI9La4m0A4OOTwqBQPeynhexPauJRedeV4g
+         1N6q9QTJ+E3wB2j9qvnAxImOKp6b2cjZ4fGf69qfdPyH+Iez9tcSRzBJIhYSpwJzXUoK
+         XzBCO5qE00WS9njUBh0dwFQR6wc2ItO7lLOq9SxkY9ik4C8w9rYy58WZq0fWwxryf2GZ
+         ZUrw==
+X-Gm-Message-State: AOJu0Yz1tcT0vTL0PaaSj6DaX+Hl8FX9wui3cCXiG+AZhaKxbjW7mQOU
+        VHjerAS3iEoXNLyByDzb8E43y2zdEpk=
+X-Google-Smtp-Source: AGHT+IG94ybaaQQvecmRcJYa2uO0J12doF6ikEh9ASwYg8mIxOK8VJWvFM4YIpfxn6zKgEHiRm+98Q==
+X-Received: by 2002:a05:6a00:b4f:b0:6be:2081:f66d with SMTP id p15-20020a056a000b4f00b006be2081f66dmr12790443pfo.27.1698108257695;
+        Mon, 23 Oct 2023 17:44:17 -0700 (PDT)
+Received: from google.com ([2601:647:4701:18d0:f2d8:27c4:da5a:4e3d])
+        by smtp.gmail.com with ESMTPSA id h185-20020a6253c2000000b00692cb1224casm7044285pfb.183.2023.10.23.17.44.16
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Mon, 23 Oct 2023 17:44:17 -0700 (PDT)
+Date:   Mon, 23 Oct 2023 17:44:14 -0700
+From:   Leah Rumancik <leah.rumancik@gmail.com>
+To:     "Darrick J. Wong" <djwong@kernel.org>
+Cc:     linux-xfs@vger.kernel.org
+Subject: Re: [PATCH] xfs: up(ic_sema) if flushing data device fails
+Message-ID: <ZTcTXnVVTX747zqP@google.com>
+References: <20231023181410.844000-1-leah.rumancik@gmail.com>
+ <20231023212221.GV3195650@frogsfrogsfrogs>
 MIME-Version: 1.0
-References: <CAHk-=wixObEhBXM22JDopRdt7Z=tGGuizq66g4RnUmG9toA2DA@mail.gmail.com>
- <d6162230b83359d3ed1ee706cc1cb6eacfb12a4f.camel@kernel.org>
- <CAHk-=wiKJgOg_3z21Sy9bu+3i_34S86r8fd6ngvJpZDwa-ww8Q@mail.gmail.com>
- <5f96e69d438ab96099bb67d16b77583c99911caa.camel@kernel.org>
- <20231019-fluor-skifahren-ec74ceb6c63e@brauner> <0a1a847af4372e62000b259e992850527f587205.camel@kernel.org>
- <ZTGncMVw19QVJzI6@dread.disaster.area> <eb3b9e71ee9c6d8e228b0927dec3ac9177b06ec6.camel@kernel.org>
- <ZTWfX3CqPy9yCddQ@dread.disaster.area> <61b32a4093948ae1ae8603688793f07de764430f.camel@kernel.org>
- <ZTcBI2xaZz1GdMjX@dread.disaster.area>
-In-Reply-To: <ZTcBI2xaZz1GdMjX@dread.disaster.area>
-From:   Linus Torvalds <torvalds@linux-foundation.org>
-Date:   Mon, 23 Oct 2023 14:18:12 -1000
-X-Gmail-Original-Message-ID: <CAHk-=whphyjjLwDcEthOOFXXfgwGrtrMnW2iyjdQioV6YSMEPw@mail.gmail.com>
-Message-ID: <CAHk-=whphyjjLwDcEthOOFXXfgwGrtrMnW2iyjdQioV6YSMEPw@mail.gmail.com>
-Subject: Re: [PATCH RFC 2/9] timekeeping: new interfaces for multigrain
- timestamp handing
-To:     Dave Chinner <david@fromorbit.com>
-Cc:     Jeff Layton <jlayton@kernel.org>,
-        Kent Overstreet <kent.overstreet@linux.dev>,
-        Christian Brauner <brauner@kernel.org>,
-        Alexander Viro <viro@zeniv.linux.org.uk>,
-        John Stultz <jstultz@google.com>,
-        Thomas Gleixner <tglx@linutronix.de>,
-        Stephen Boyd <sboyd@kernel.org>,
-        Chandan Babu R <chandan.babu@oracle.com>,
-        "Darrick J. Wong" <djwong@kernel.org>,
-        "Theodore Ts'o" <tytso@mit.edu>,
-        Andreas Dilger <adilger.kernel@dilger.ca>,
-        Chris Mason <clm@fb.com>, Josef Bacik <josef@toxicpanda.com>,
-        David Sterba <dsterba@suse.com>,
-        Hugh Dickins <hughd@google.com>,
-        Andrew Morton <akpm@linux-foundation.org>,
-        Amir Goldstein <amir73il@gmail.com>, Jan Kara <jack@suse.de>,
-        David Howells <dhowells@redhat.com>,
-        linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-xfs@vger.kernel.org, linux-ext4@vger.kernel.org,
-        linux-btrfs@vger.kernel.org, linux-mm@kvack.org,
-        linux-nfs@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20231023212221.GV3195650@frogsfrogsfrogs>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Mon, 23 Oct 2023 at 13:26, Dave Chinner <david@fromorbit.com> wrote:
->
-> The problem is the first read request after a modification has been
-> made. That is causing relatime to see mtime > atime and triggering
-> an atime update. XFS sees this, does an atime update, and in
-> committing that persistent inode metadata update, it calls
-> inode_maybe_inc_iversion(force = false) to check if an iversion
-> update is necessary. The VFS sees I_VERSION_QUERIED, and so it bumps
-> i_version and tells XFS to persist it.
+On Mon, Oct 23, 2023 at 02:22:21PM -0700, Darrick J. Wong wrote:
+> On Mon, Oct 23, 2023 at 11:14:10AM -0700, Leah Rumancik wrote:
+> > We flush the data device cache before we issue external log IO. Since
+> > 7d839e325af2, we check the return value of the flush, and if the flush
+> > failed, we shut down the log immediately and return. However, the
+> > iclog->ic_sema is left in a decremented state so let's add an up().
+> > Prior to this patch, xfs/438 would fail consistently when running with
+> > an external log device:
+> > 
+> > sync
+> >   -> xfs_log_force
+> >   -> xlog_write_iclog
+> >       -> down(&iclog->ic_sema)
+> >       -> blkdev_issue_flush (fail causes us to intiate shutdown)
+> >           -> xlog_force_shutdown
+> >           -> return
+> > 
+> > unmount
+> >   -> xfs_log_umount
+> >       -> xlog_wait_iclog_completion
+> >           -> down(&iclog->ic_sema) --------> HANG
+> > 
+> > There is a second early return / shutdown. Add an up() there as well.
+> 
+> Ow.  Yes, I think it's correct that both of those error returns need to
+> drop ic_sema since we don't submit_bio, so there is no xlog_ioend_work
+> to do it for us.
+> 
+> > Fixes: 7d839e325af2 ("xfs: check return codes when flushing block devices")
+> 
+> Hmm.  This bug was introduced in b5d721eaae47e ("xfs: external logs need
+> to flush data device"), not 7d839.  That said, this patch only applies
+> cleanly to 7d839e325af2.
+> 
+> b5d721 was introduced in 5.14 and 7d839 came in via 6.0, so ... this is
+> where I would have spat out:
+> 
+> Fixes: 7d839e325af2 ("xfs: check return codes when flushing block devices")
+> Actually-Fixes: b5d721eaae47e ("xfs: external logs need to flush data device")
 
-Could we perhaps just have a mode where we don't increment i_version
-for just atime updates?
+I'm not sure I follow. Before 7d839e325af2, we didn't return if there
+was an issue with the flush so there wasn't an issue with ic_sema. 7d839e325af2
+was a fix for eef983ffeae7 though. Do you try to keep fixes tags
+associated with the original commit as opposed to fixes of fixes?
 
-Maybe we don't even need a mode, and could just decide that atime
-updates aren't i_version updates at all?
+> 
+> > Signed-off-by: Leah Rumancik <leah.rumancik@gmail.com>
+> > ---
+> > 
+> > Notes:
+> >     Tested auto group for xfs/4k and xfs/logdev configs with no regressions
+> >     seen.
+> > 
+> >  fs/xfs/xfs_log.c | 2 ++
+> >  1 file changed, 2 insertions(+)
+> > 
+> > diff --git a/fs/xfs/xfs_log.c b/fs/xfs/xfs_log.c
+> > index 51c100c86177..b4a8105299c2 100644
+> > --- a/fs/xfs/xfs_log.c
+> > +++ b/fs/xfs/xfs_log.c
+> > @@ -1926,6 +1926,7 @@ xlog_write_iclog(
+> >  		 */
+> >  		if (log->l_targ != log->l_mp->m_ddev_targp &&
+> >  		    blkdev_issue_flush(log->l_mp->m_ddev_targp->bt_bdev)) {
+> > +			up(&iclog->ic_sema);
+> >  			xlog_force_shutdown(log, SHUTDOWN_LOG_IO_ERROR);
+> >  			return;
+> >  		}
+> > @@ -1936,6 +1937,7 @@ xlog_write_iclog(
+> >  	iclog->ic_flags &= ~(XLOG_ICL_NEED_FLUSH | XLOG_ICL_NEED_FUA);
+> >  
+> >  	if (xlog_map_iclog_data(&iclog->ic_bio, iclog->ic_data, count)) {
+> > +		up(&iclog->ic_sema);
+> >  		xlog_force_shutdown(log, SHUTDOWN_LOG_IO_ERROR);
+> 
+> I wonder if these two should both become a cleanup clause at the end?
 
-Yes, yes, it's obviously technically a "inode modification", but does
-anybody actually *want* atime updates with no actual other changes to
-be version events?
+Sure, that sounds good, I'll create a new version.
 
-Or maybe i_version can update, but callers of getattr() could have two
-bits for that STATX_CHANGE_COOKIE, one for "I care about atime" and
-one for others, and we'd pass that down to inode_query_version, and
-we'd have a I_VERSION_QUERIED and a I_VERSION_QUERIED_STRICT, and the
-"I care about atime" case ould set the strict one.
-
-Then inode_maybe_inc_iversion() could - for atome updates - skip the
-version update *unless* it sees that I_VERSION_QUERIED_STRICT bit.
-
-Does that sound sane to people?
-
-Because it does sound completely insane to me to say "inode changed"
-and have a cache invalidation just for an atime update.
-
-              Linus
+Thanks for the review! :)
+- Leah
+> 
+> 		if (log->l_targ != log->l_mp->m_ddev_targp &&
+> 		    blkdev_issue_flush(log->l_mp->m_ddev_targp->bt_bdev))
+> 			goto shutdown;
+> 
+> ...
+> 
+> 	if (xlog_map_iclog_data(&iclog->ic_bio, iclog->ic_data, count))
+> 		goto shutdown;
+> 
+> ...
+> 
+> 	submit_bio(&iclog->ic_bio);
+> 	return;
+> 
+> shutdown:
+> 	up(&iclog->ic_sema);
+> 	xlog_force_shutdown(log, SHUTDOWN_LOG_IO_ERROR);
+> }
+> 
+> Seeing as we've screwed this up twice now and not a whole lot of people
+> actually use external logs, and somehow I've never seen this on my test
+> fleet.
+> 
+> Anyway the code change looks correct so modulo the stylistic thing,
+> Reviewed-by: Darrick J. Wong <djwong@kernel.org>
+> 
+> --D
+> 
+> >  		return;
+> >  	}
+> > -- 
+> > 2.42.0.758.gaed0368e0e-goog
+> > 
