@@ -2,61 +2,121 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 93F31C07545
-	for <linux-xfs@archiver.kernel.org>; Tue, 24 Oct 2023 07:33:07 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id DBF6CC00A8F
+	for <linux-xfs@archiver.kernel.org>; Tue, 24 Oct 2023 11:10:23 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232832AbjJXHdH (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 24 Oct 2023 03:33:07 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60782 "EHLO
+        id S229634AbjJXLKX (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 24 Oct 2023 07:10:23 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60722 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232420AbjJXHdG (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 24 Oct 2023 03:33:06 -0400
-Received: from mail.bizcodes.pl (mail.bizcodes.pl [151.80.57.56])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 84EB9B7
-        for <linux-xfs@vger.kernel.org>; Tue, 24 Oct 2023 00:33:04 -0700 (PDT)
-Received: by mail.bizcodes.pl (Postfix, from userid 1002)
-        id BE787A395C; Tue, 24 Oct 2023 07:31:38 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=bizcodes.pl; s=mail;
-        t=1698132742; bh=5QPMt7jNntM5ZbstM20BWsHIeLbmRE8lVU4Iu89IleQ=;
-        h=Date:From:To:Subject:From;
-        b=aQEXDmNtoUj509Io4XKD+8DDWK6UcqhrPSCDebS3omW/YYvaF9As4Hd+bhn1xsxNB
-         ecou+7PYdL9Yd/e6W1gLoQEBr/LPC8YeWsDNzFaWP3pkqVyHIOwSrJPqA6dwMw2PoT
-         2sMyM/QF7A+fdljRBq6AjDSIfTk5cEZw5iYymvyRM6GABOKf6fUGONXQe1se7Q+P7n
-         HfkTd4hYeymjiFaqH+ZhnFM5kdJGIHXFmdRE77ZMqxAkmHHsc/AntgUSZFCLcXsmp+
-         ubAhc3JSGI94gN1+wa9veowFVOHfbZ+14cD3zFuar1c6JEc9RVLN9CQdGZ6dC8cVj3
-         4jzBASNncQ1Gg==
-Received: by mail.bizcodes.pl for <linux-xfs@vger.kernel.org>; Tue, 24 Oct 2023 07:31:08 GMT
-Message-ID: <20231024064500-0.1.ch.1kowl.0.rni83y0nul@bizcodes.pl>
-Date:   Tue, 24 Oct 2023 07:31:08 GMT
-From:   "Marcin Chruszcz" <marcin.chruszcz@bizcodes.pl>
-To:     <linux-xfs@vger.kernel.org>
-Subject: Prezentacja
-X-Mailer: mail.bizcodes.pl
+        with ESMTP id S229625AbjJXLKW (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 24 Oct 2023 07:10:22 -0400
+Received: from smtp-out1.suse.de (smtp-out1.suse.de [195.135.220.28])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E1F56D7F;
+        Tue, 24 Oct 2023 04:10:16 -0700 (PDT)
+Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
+        (No client certificate requested)
+        by smtp-out1.suse.de (Postfix) with ESMTPS id 8D36921B8B;
+        Tue, 24 Oct 2023 11:10:15 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.cz; s=susede2_rsa;
+        t=1698145815; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+         mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=7GNlnvsY+DYZUeQFr2rzYE4qXsApeBSmjyzIRlCaWx0=;
+        b=AdYr1z2/jHeJpL4z4hGxWiB7//ZUIxp2jgoOHeqSVfXKkVcJ7kqcsfhYzqi72WfnNzip3v
+        UZJx0QROGCCMwG3hUh2TE7K50ZzsqlxQQ249fRhPqTN5xcEO1R9/XXfWIbqzV9qfCm+8iN
+        UQfZVyj0AIXBalggihFi3iu6xhRLMm4=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.cz;
+        s=susede2_ed25519; t=1698145815;
+        h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+         mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=7GNlnvsY+DYZUeQFr2rzYE4qXsApeBSmjyzIRlCaWx0=;
+        b=upfptmnJVvkV+Biac6KUb3cLwMsJzIcVLVwasmaBvvzuA3gdF+2uJV1j9Ns+HPe3S+AAzA
+        +JQJrDcWnq3u8EDQ==
+Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
+        (No client certificate requested)
+        by imap2.suse-dmz.suse.de (Postfix) with ESMTPS id 7B1151391C;
+        Tue, 24 Oct 2023 11:10:15 +0000 (UTC)
+Received: from dovecot-director2.suse.de ([192.168.254.65])
+        by imap2.suse-dmz.suse.de with ESMTPSA
+        id Kgz4HRemN2W7PAAAMHmgww
+        (envelope-from <jack@suse.cz>); Tue, 24 Oct 2023 11:10:15 +0000
+Received: by quack3.suse.cz (Postfix, from userid 1000)
+        id 0942CA05BC; Tue, 24 Oct 2023 13:10:15 +0200 (CEST)
+Date:   Tue, 24 Oct 2023 13:10:15 +0200
+From:   Jan Kara <jack@suse.cz>
+To:     Aleksandr Nogikh <nogikh@google.com>
+Cc:     Jan Kara <jack@suse.cz>, Eric Biggers <ebiggers@kernel.org>,
+        linux-fsdevel@vger.kernel.org, linux-block@vger.kernel.org,
+        Christoph Hellwig <hch@infradead.org>,
+        Christian Brauner <brauner@kernel.org>,
+        Jens Axboe <axboe@kernel.dk>, Kees Cook <keescook@google.com>,
+        Ted Tso <tytso@mit.edu>,
+        syzkaller <syzkaller@googlegroups.com>,
+        Alexander Popov <alex.popov@linux.com>,
+        linux-xfs@vger.kernel.org, linux-btrfs@vger.kernel.org,
+        Dmitry Vyukov <dvyukov@google.com>
+Subject: Re: [PATCH 1/6] block: Add config option to not allow writing to
+ mounted devices
+Message-ID: <20231024111015.k4sbjpw5fa46k6il@quack3>
+References: <20230704122727.17096-1-jack@suse.cz>
+ <20230704125702.23180-1-jack@suse.cz>
+ <20230822053523.GA8949@sol.localdomain>
+ <20230822101154.7udsf4tdwtns2prj@quack3>
+ <CANp29Y6uBuSzLXuCMGzVNZjT+xFqV4dtWKWb7GR7Opx__Diuzg@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <CANp29Y6uBuSzLXuCMGzVNZjT+xFqV4dtWKWb7GR7Opx__Diuzg@mail.gmail.com>
+Authentication-Results: smtp-out1.suse.de;
+        none
+X-Spamd-Result: default: False [-5.10 / 50.00];
+         ARC_NA(0.00)[];
+         RCVD_VIA_SMTP_AUTH(0.00)[];
+         FROM_HAS_DN(0.00)[];
+         TO_DN_SOME(0.00)[];
+         TO_MATCH_ENVRCPT_ALL(0.00)[];
+         NEURAL_HAM_LONG(-3.00)[-1.000];
+         MIME_GOOD(-0.10)[text/plain];
+         DKIM_SIGNED(0.00)[suse.cz:s=susede2_rsa,suse.cz:s=susede2_ed25519];
+         NEURAL_HAM_SHORT(-1.00)[-1.000];
+         RCPT_COUNT_TWELVE(0.00)[15];
+         FROM_EQ_ENVFROM(0.00)[];
+         MIME_TRACE(0.00)[0:+];
+         MID_RHS_NOT_FQDN(0.50)[];
+         RCVD_COUNT_TWO(0.00)[2];
+         RCVD_TLS_ALL(0.00)[];
+         BAYES_HAM(-1.50)[91.72%]
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Dzie=C5=84 dobry!
+Hi!
 
-Czy m=C3=B3g=C5=82bym przedstawi=C4=87 rozwi=C4=85zanie, kt=C3=B3re umo=C5=
-=BCliwia monitoring ka=C5=BCdego auta w czasie rzeczywistym w tym jego po=
-zycj=C4=99, zu=C5=BCycie paliwa i przebieg?
+On Thu 19-10-23 11:16:55, Aleksandr Nogikh wrote:
+> Thank you for the series!
+> 
+> Have you already had a chance to push an updated version of it?
+> I tried to search LKML, but didn't find anything.
+> 
+> Or did you decide to put it off until later?
 
-Dodatkowo nasze narz=C4=99dzie minimalizuje koszty utrzymania samochod=C3=
-=B3w, skraca czas przejazd=C3=B3w, a tak=C5=BCe tworzenie planu tras czy =
-dostaw.
+So there is preliminary series sitting in VFS tree that changes how block
+devices are open. There are some conflicts with btrfs tree and bcachefs
+merge that complicate all this (plus there was quite some churn in VFS
+itself due to changing rules how block devices are open) so I didn't push
+out the series that actually forbids opening of mounted block devices
+because that would cause a "merge from hell" issues. I plan to push out the
+remaining patches once the merge window closes and all the dependencies are
+hopefully in a stable state. Maybe I can push out the series earlier based
+on linux-next so that people can have a look at the current state.
 
-Z naszej wiedzy i do=C5=9Bwiadczenia korzysta ju=C5=BC ponad 49 tys. Klie=
-nt=C3=B3w. Monitorujemy 809 000 pojazd=C3=B3w na ca=C5=82ym =C5=9Bwiecie,=
- co jest nasz=C4=85 najlepsz=C4=85 wizyt=C3=B3wk=C4=85.
-
-Bardzo prosz=C4=99 o e-maila zwrotnego, je=C5=9Bli mogliby=C5=9Bmy wsp=C3=
-=B3lnie om=C3=B3wi=C4=87 potencja=C5=82 wykorzystania takiego rozwi=C4=85=
-zania w Pa=C5=84stwa firmie.
-
-
-Pozdrawiam
-Marcin Chruszcz
+								Honza
+-- 
+Jan Kara <jack@suse.com>
+SUSE Labs, CR
