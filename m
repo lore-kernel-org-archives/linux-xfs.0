@@ -2,118 +2,147 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 61B46C25B6F
-	for <linux-xfs@archiver.kernel.org>; Tue, 24 Oct 2023 06:44:32 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A5CDBC25B48
+	for <linux-xfs@archiver.kernel.org>; Tue, 24 Oct 2023 07:08:44 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232657AbjJXGob (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 24 Oct 2023 02:44:31 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47802 "EHLO
+        id S232503AbjJXHIn (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 24 Oct 2023 03:08:43 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49962 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232589AbjJXGob (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 24 Oct 2023 02:44:31 -0400
-Received: from bombadil.infradead.org (bombadil.infradead.org [IPv6:2607:7c80:54:3::133])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A3F59F9;
-        Mon, 23 Oct 2023 23:44:29 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=infradead.org; s=bombadil.20210309; h=Content-Transfer-Encoding:
-        MIME-Version:References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:Sender
-        :Reply-To:Content-Type:Content-ID:Content-Description;
-        bh=NA1ivap7QBb2ywFQh6pxpUiR9qrIreFL3p9thcCX5KE=; b=WXv3G4pj+cmxjDwS9VwZasOwnp
-        1hLehJhbtZnmElQUJCmR+P3FjyKhS/nTjVKLpsB6P0jWSCnAB4BON2xeSMI/+B5cnR2VEHbkxlgX0
-        DZ0i5zFldcuKMtoGSbOPBxZTNmHdw2VyhvTFFAa2V+J4oUmvxqP0qUU0/q371gD2YUV73Bls8pvch
-        n70IWoUvyxzJRBlwzSLrJd9/b20nb3ruLdqVgImeTgKfnVeasyKxgylLKGqVEXulotOKls22J6QRQ
-        2JA4QylhiyKiC/bPSAowPFWjBsVjaRvEJiebLXd75fbwCsaAtCFqEHaGe9rrvR9KQyjA+tzjNZM48
-        RTlesNng==;
-Received: from 2a02-8389-2341-5b80-39d3-4735-9a3c-88d8.cable.dynamic.v6.surfer.at ([2a02:8389:2341:5b80:39d3:4735:9a3c:88d8] helo=localhost)
-        by bombadil.infradead.org with esmtpsa (Exim 4.96 #2 (Red Hat Linux))
-        id 1qvB9Q-0090Se-0H;
-        Tue, 24 Oct 2023 06:44:28 +0000
-From:   Christoph Hellwig <hch@lst.de>
-To:     Jens Axboe <axboe@kernel.dk>, Matthew Wilcox <willy@infradead.org>
-Cc:     Ilya Dryomov <idryomov@gmail.com>,
-        Andrew Morton <akpm@linux-foundation.org>,
-        linux-block@vger.kernel.org, linux-fsdevel@vger.kernel.org,
-        linux-xfs@vger.kernel.org, linux-mm@kvack.org
-Subject: [PATCH 3/3] xfs: respect the stable writes flag on the RT device
-Date:   Tue, 24 Oct 2023 08:44:16 +0200
-Message-Id: <20231024064416.897956-4-hch@lst.de>
-X-Mailer: git-send-email 2.39.2
-In-Reply-To: <20231024064416.897956-1-hch@lst.de>
-References: <20231024064416.897956-1-hch@lst.de>
+        with ESMTP id S232398AbjJXHIm (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 24 Oct 2023 03:08:42 -0400
+Received: from mail-qv1-xf30.google.com (mail-qv1-xf30.google.com [IPv6:2607:f8b0:4864:20::f30])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 60402118;
+        Tue, 24 Oct 2023 00:08:40 -0700 (PDT)
+Received: by mail-qv1-xf30.google.com with SMTP id 6a1803df08f44-66d0ea3e5b8so28240466d6.0;
+        Tue, 24 Oct 2023 00:08:40 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20230601; t=1698131319; x=1698736119; darn=vger.kernel.org;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=SqdvkUsqWd4zu3IEIRbwUNktCPDbd/gk6A5nLT4VIeM=;
+        b=FkuzKWGPgKu23f7MQ6y7O95S5s8tdJxnEbTm32ctOfOzqfZw7wYlQ2m+cQebQCvLmI
+         QdA81shifDt2PODrds6dL+fS7CXobtOJCrjpR6bG7dbnqTbba20b86rafCdcSTgR/Yyi
+         KzSHzflOfAjLM2oAOpuInTpgoRIjN73+gB70dH5KP1MKe/mVp8Smo8dLW+Vl/yJcO+tw
+         x3qxY8+uEOiMj50y9K1UEbNMMdyd7u0+YttX0ItYMBsV9yKRN/Tkedh1b/9VeZK5b99n
+         He/6UcX91drwZ24+2yQtdX/e1Wv5PULL+1PepPdkeFoREss0CjJrH3ThxhlylPut3C+j
+         ZTVw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1698131319; x=1698736119;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=SqdvkUsqWd4zu3IEIRbwUNktCPDbd/gk6A5nLT4VIeM=;
+        b=NkEpQjSoPD02q96gAuiLXCwVsdB03WrXXvWt/qHtUYGeWVvS2Bam1So3U1/5ingnnE
+         MViCUCkh/KACYZodogDDXXtIEdxr793RkFpEi3WIjMAlKGagpq7br7iFApD14Htz4wbC
+         sIgT0eZJbNtXprhehOU/aZOnCuKyCESJpLETvndw5OUtg/lodN0SXWO0J+3UyzSyEfzJ
+         jicRp82Ox19E+35RtfgT+ke9gdjMJLDvzrwpNxs69o84ZsudXimUaGyH8XWuIyMTe6Fq
+         piwtM24i5NI39wmAuYESGr0FRvb1sE7RqGRbe6gM1DRz5vOJ4pqqozKNRwsTq7jtvHTm
+         TOOQ==
+X-Gm-Message-State: AOJu0YyG7MvE0y3hL5cdKABpm48QPrTnT6hVCTG2qoAOdUeNh3TSJg2n
+        dVnZM2byIrYgctYY8om2S5gHu0XtNmHRZBrpzp4=
+X-Google-Smtp-Source: AGHT+IE3cbJpQKZFd6RGOof+Net59golChwN9iI+4rus52ve4TnU6zTtzWsEuc24BZZmeNAApernLLkRejdVGhlj2/w=
+X-Received: by 2002:a05:6214:224c:b0:658:7441:ff1b with SMTP id
+ c12-20020a056214224c00b006587441ff1bmr14513785qvc.45.1698131319478; Tue, 24
+ Oct 2023 00:08:39 -0700 (PDT)
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
+References: <CAHk-=wiKJgOg_3z21Sy9bu+3i_34S86r8fd6ngvJpZDwa-ww8Q@mail.gmail.com>
+ <5f96e69d438ab96099bb67d16b77583c99911caa.camel@kernel.org>
+ <20231019-fluor-skifahren-ec74ceb6c63e@brauner> <0a1a847af4372e62000b259e992850527f587205.camel@kernel.org>
+ <ZTGncMVw19QVJzI6@dread.disaster.area> <eb3b9e71ee9c6d8e228b0927dec3ac9177b06ec6.camel@kernel.org>
+ <ZTWfX3CqPy9yCddQ@dread.disaster.area> <61b32a4093948ae1ae8603688793f07de764430f.camel@kernel.org>
+ <ZTcBI2xaZz1GdMjX@dread.disaster.area> <CAHk-=whphyjjLwDcEthOOFXXfgwGrtrMnW2iyjdQioV6YSMEPw@mail.gmail.com>
+ <ZTc8tClCRkfX3kD7@dread.disaster.area>
+In-Reply-To: <ZTc8tClCRkfX3kD7@dread.disaster.area>
+From:   Amir Goldstein <amir73il@gmail.com>
+Date:   Tue, 24 Oct 2023 10:08:28 +0300
+Message-ID: <CAOQ4uxhJGkZrUdUJ72vjRuLec0g8VqgRXRH=x7W9ogMU6rBxcQ@mail.gmail.com>
+Subject: Re: [PATCH RFC 2/9] timekeeping: new interfaces for multigrain
+ timestamp handing
+To:     Dave Chinner <david@fromorbit.com>
+Cc:     Linus Torvalds <torvalds@linux-foundation.org>,
+        Jeff Layton <jlayton@kernel.org>,
+        Kent Overstreet <kent.overstreet@linux.dev>,
+        Christian Brauner <brauner@kernel.org>,
+        Alexander Viro <viro@zeniv.linux.org.uk>,
+        John Stultz <jstultz@google.com>,
+        Thomas Gleixner <tglx@linutronix.de>,
+        Stephen Boyd <sboyd@kernel.org>,
+        Chandan Babu R <chandan.babu@oracle.com>,
+        "Darrick J. Wong" <djwong@kernel.org>,
+        "Theodore Ts'o" <tytso@mit.edu>,
+        Andreas Dilger <adilger.kernel@dilger.ca>,
+        Chris Mason <clm@fb.com>, Josef Bacik <josef@toxicpanda.com>,
+        David Sterba <dsterba@suse.com>,
+        Hugh Dickins <hughd@google.com>,
+        Andrew Morton <akpm@linux-foundation.org>,
+        Jan Kara <jack@suse.de>, David Howells <dhowells@redhat.com>,
+        linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-xfs@vger.kernel.org, linux-ext4@vger.kernel.org,
+        linux-btrfs@vger.kernel.org, linux-mm@kvack.org,
+        linux-nfs@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Update the per-folio stable writes flag dependening on which device an
-inode resides on.
+On Tue, Oct 24, 2023 at 6:40=E2=80=AFAM Dave Chinner <david@fromorbit.com> =
+wrote:
+>
+> On Mon, Oct 23, 2023 at 02:18:12PM -1000, Linus Torvalds wrote:
+> > On Mon, 23 Oct 2023 at 13:26, Dave Chinner <david@fromorbit.com> wrote:
+> > >
+> > > The problem is the first read request after a modification has been
+> > > made. That is causing relatime to see mtime > atime and triggering
+> > > an atime update. XFS sees this, does an atime update, and in
+> > > committing that persistent inode metadata update, it calls
+> > > inode_maybe_inc_iversion(force =3D false) to check if an iversion
+> > > update is necessary. The VFS sees I_VERSION_QUERIED, and so it bumps
+> > > i_version and tells XFS to persist it.
+> >
+> > Could we perhaps just have a mode where we don't increment i_version
+> > for just atime updates?
+> >
+> > Maybe we don't even need a mode, and could just decide that atime
+> > updates aren't i_version updates at all?
+>
+> We do that already - in memory atime updates don't bump i_version at
+> all. The issue is the rare persistent atime update requests that
+> still happen - they are the ones that trigger an i_version bump on
+> XFS, and one of the relatime heuristics tickle this specific issue.
+>
+> If we push the problematic persistent atime updates to be in-memory
+> updates only, then the whole problem with i_version goes away....
+>
+> > Yes, yes, it's obviously technically a "inode modification", but does
+> > anybody actually *want* atime updates with no actual other changes to
+> > be version events?
+>
+> Well, yes, there was. That's why we defined i_version in the on disk
+> format this way well over a decade ago. It was part of some deep
+> dark magical HSM beans that allowed the application to combine
+> multiple scans for different inode metadata changes into a single
+> pass. atime changes was one of the things it needed to know about
+> for tiering and space scavenging purposes....
+>
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
----
- fs/xfs/xfs_inode.h | 8 ++++++++
- fs/xfs/xfs_ioctl.c | 9 +++++++++
- fs/xfs/xfs_iops.c  | 7 +++++++
- 3 files changed, 24 insertions(+)
+But if this is such an ancient mystical program, why do we have to
+keep this XFS behavior in the present?
+BTW, is this the same HSM whose DMAPI ioctls were deprecated
+a few years back?
 
-diff --git a/fs/xfs/xfs_inode.h b/fs/xfs/xfs_inode.h
-index 0c5bdb91152e1c..682959c8f78cb0 100644
---- a/fs/xfs/xfs_inode.h
-+++ b/fs/xfs/xfs_inode.h
-@@ -561,6 +561,14 @@ extern void xfs_setup_inode(struct xfs_inode *ip);
- extern void xfs_setup_iops(struct xfs_inode *ip);
- extern void xfs_diflags_to_iflags(struct xfs_inode *ip, bool init);
- 
-+static inline void xfs_update_stable_writes(struct xfs_inode *ip)
-+{
-+	if (bdev_stable_writes(xfs_inode_buftarg(ip)->bt_bdev))
-+		mapping_set_stable_writes(VFS_I(ip)->i_mapping);
-+	else
-+		mapping_clear_stable_writes(VFS_I(ip)->i_mapping);
-+}
-+
- /*
-  * When setting up a newly allocated inode, we need to call
-  * xfs_finish_inode_setup() once the inode is fully instantiated at
-diff --git a/fs/xfs/xfs_ioctl.c b/fs/xfs/xfs_ioctl.c
-index 55bb01173cde8c..67bf613b3c86bc 100644
---- a/fs/xfs/xfs_ioctl.c
-+++ b/fs/xfs/xfs_ioctl.c
-@@ -1147,6 +1147,15 @@ xfs_ioctl_setattr_xflags(
- 	ip->i_diflags2 = i_flags2;
- 
- 	xfs_diflags_to_iflags(ip, false);
-+
-+	/*
-+	 * Make the stable writes flag match that of the device the inode
-+	 * resides on when flipping the RT flag.
-+	 */
-+	if (S_ISREG(VFS_I(ip)->i_mode) &&
-+	    XFS_IS_REALTIME_INODE(ip) != (fa->fsx_xflags & FS_XFLAG_REALTIME))
-+		xfs_update_stable_writes(ip);
-+
- 	xfs_trans_ichgtime(tp, ip, XFS_ICHGTIME_CHG);
- 	xfs_trans_log_inode(tp, ip, XFS_ILOG_CORE);
- 	XFS_STATS_INC(mp, xs_ig_attrchg);
-diff --git a/fs/xfs/xfs_iops.c b/fs/xfs/xfs_iops.c
-index 2b3b05c28e9e48..b8ec045708c318 100644
---- a/fs/xfs/xfs_iops.c
-+++ b/fs/xfs/xfs_iops.c
-@@ -1298,6 +1298,13 @@ xfs_setup_inode(
- 	gfp_mask = mapping_gfp_mask(inode->i_mapping);
- 	mapping_set_gfp_mask(inode->i_mapping, (gfp_mask & ~(__GFP_FS)));
- 
-+	/*
-+	 * For real-time inodes update the stable write flags to that of the RT
-+	 * device instead of the data device.
-+	 */
-+	if (S_ISREG(inode->i_mode) && XFS_IS_REALTIME_INODE(ip))
-+		xfs_update_stable_writes(ip);
-+
- 	/*
- 	 * If there is no attribute fork no ACL can exist on this inode,
- 	 * and it can't have any file capabilities attached to it either.
--- 
-2.39.2
+I mean, I understand that you do not want to change the behavior of
+i_version update without an opt-in config or mount option - let the distro
+make that choice.
+But calling this an "on-disk format change" is a very long stretch.
 
+Does xfs_repair guarantee that changes of atime, or any inode changes
+for that matter, update i_version? No, it does not.
+So IMO, "atime does not update i_version" is not an "on-disk format change"=
+,
+it is a runtime behavior change, just like lazytime is.
+
+Thanks,
+Amir.
