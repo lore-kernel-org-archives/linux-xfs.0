@@ -2,117 +2,107 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 288C4C25B47
-	for <linux-xfs@archiver.kernel.org>; Wed, 25 Oct 2023 14:10:55 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 99B5EC0032E
+	for <linux-xfs@archiver.kernel.org>; Wed, 25 Oct 2023 14:39:48 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1344816AbjJYOKy (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 25 Oct 2023 10:10:54 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50210 "EHLO
+        id S235035AbjJYOjr (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 25 Oct 2023 10:39:47 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42228 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1344884AbjJYOKx (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 25 Oct 2023 10:10:53 -0400
-Received: from bombadil.infradead.org (bombadil.infradead.org [IPv6:2607:7c80:54:3::133])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 98B28193;
-        Wed, 25 Oct 2023 07:10:48 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=infradead.org; s=bombadil.20210309; h=Content-Transfer-Encoding:
-        MIME-Version:References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:Sender
-        :Reply-To:Content-Type:Content-ID:Content-Description;
-        bh=jujzRHkRyr+wEL+M5CNsHITMDxSDVwIofgMIOfpKOzo=; b=RouRtqdbgT1VUyFZLCwnq9twGz
-        5f3XS5x4NLWzTcuzopnzsaPpcu6W3ywN5LX3wU1N2A+oblEZd77vb2YdzipXhTthiYHHWn9dNruCp
-        8OXiQ+/zpGQoraat6lPZMj1fJnfM4WdFt2TKqP9UGwKRl+nku76aXjNf1oh1QXEzD5WYR8TOmuPQq
-        XTRU/M5I9Lv0Dhw/958Duwa+GKVy3Z32pasiOK7PJ9z3BbzO1vKBwIhPXvSwXzb17DnuaiRORMXaG
-        /Ak/oi+QQ0xWzQXRye2Az5Tqu27fU4Knqv0b2yDEsuzyEvf6lcCApVDhbUwa5Nt7SZbQ6KflbQU2a
-        mbI+lmww==;
-Received: from 2a02-8389-2341-5b80-39d3-4735-9a3c-88d8.cable.dynamic.v6.surfer.at ([2a02:8389:2341:5b80:39d3:4735:9a3c:88d8] helo=localhost)
-        by bombadil.infradead.org with esmtpsa (Exim 4.96 #2 (Red Hat Linux))
-        id 1qvear-00CTy1-0A;
-        Wed, 25 Oct 2023 14:10:45 +0000
-From:   Christoph Hellwig <hch@lst.de>
-To:     Jens Axboe <axboe@kernel.dk>, Matthew Wilcox <willy@infradead.org>
-Cc:     Ilya Dryomov <idryomov@gmail.com>,
+        with ESMTP id S235048AbjJYOjp (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 25 Oct 2023 10:39:45 -0400
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1E34E13D;
+        Wed, 25 Oct 2023 07:39:44 -0700 (PDT)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id A7FF1C433C8;
+        Wed, 25 Oct 2023 14:39:43 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1698244783;
+        bh=GE2SFdyv9cPI+wHMUMYdDQNMKbpwQ523nL6lEiQznvg=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=tJPfWDt5LZA47V0pmiuWNNY47E4t0Gnh2UML/j2/DIfaOGcHADX2EI5MFca7JN8ED
+         NlIuKBDP1WGLPhmCChLc6qeSCTxTfqHqTg5JnmyoitNXt6Gja3fZctIK4/dqwWnXOG
+         IOsFoT9KyJeWCH0bU8LInPxBSllbbVtMIe8lL8Kdk502z1ru73+joKMxZ3APnbKtcF
+         cynXwXatUIU262lfXGHF4dqV68yZoxQ2/T8I+vXyz27PaYligoUnuERoOoJlGvan4x
+         UR6qIEARwgK7IPd88MfZbCknCU63QF652j2+CP0cTfb9466ocde8Pup7buLV3k24N+
+         PAuE/Z7LNUK0g==
+Date:   Wed, 25 Oct 2023 07:39:43 -0700
+From:   "Darrick J. Wong" <djwong@kernel.org>
+To:     Christoph Hellwig <hch@lst.de>
+Cc:     Jens Axboe <axboe@kernel.dk>, Matthew Wilcox <willy@infradead.org>,
+        Ilya Dryomov <idryomov@gmail.com>,
         Andrew Morton <akpm@linux-foundation.org>,
         linux-block@vger.kernel.org, linux-fsdevel@vger.kernel.org,
         linux-xfs@vger.kernel.org, linux-mm@kvack.org
-Subject: [PATCH 4/4] xfs: respect the stable writes flag on the RT device
-Date:   Wed, 25 Oct 2023 16:10:20 +0200
-Message-Id: <20231025141020.192413-5-hch@lst.de>
-X-Mailer: git-send-email 2.39.2
-In-Reply-To: <20231025141020.192413-1-hch@lst.de>
+Subject: Re: [PATCH 3/4] xfs: clean up FS_XFLAG_REALTIME handling in
+ xfs_ioctl_setattr_xflags
+Message-ID: <20231025143943.GC3195650@frogsfrogsfrogs>
 References: <20231025141020.192413-1-hch@lst.de>
+ <20231025141020.192413-4-hch@lst.de>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20231025141020.192413-4-hch@lst.de>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Update the per-folio stable writes flag dependening on which device an
-inode resides on.
+On Wed, Oct 25, 2023 at 04:10:19PM +0200, Christoph Hellwig wrote:
+> Introduce a local boolean variable if FS_XFLAG_REALTIME to make the
+> checks for it more obvious, and de-densify a few of the conditionals
+> using it to make them more readable while at it.
+> 
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
----
- fs/xfs/xfs_inode.h | 8 ++++++++
- fs/xfs/xfs_ioctl.c | 8 ++++++++
- fs/xfs/xfs_iops.c  | 7 +++++++
- 3 files changed, 23 insertions(+)
+Looks ok,
+Reviewed-by: Darrick J. Wong <djwong@kernel.org>
 
-diff --git a/fs/xfs/xfs_inode.h b/fs/xfs/xfs_inode.h
-index 0c5bdb91152e1c..682959c8f78cb0 100644
---- a/fs/xfs/xfs_inode.h
-+++ b/fs/xfs/xfs_inode.h
-@@ -561,6 +561,14 @@ extern void xfs_setup_inode(struct xfs_inode *ip);
- extern void xfs_setup_iops(struct xfs_inode *ip);
- extern void xfs_diflags_to_iflags(struct xfs_inode *ip, bool init);
- 
-+static inline void xfs_update_stable_writes(struct xfs_inode *ip)
-+{
-+	if (bdev_stable_writes(xfs_inode_buftarg(ip)->bt_bdev))
-+		mapping_set_stable_writes(VFS_I(ip)->i_mapping);
-+	else
-+		mapping_clear_stable_writes(VFS_I(ip)->i_mapping);
-+}
-+
- /*
-  * When setting up a newly allocated inode, we need to call
-  * xfs_finish_inode_setup() once the inode is fully instantiated at
-diff --git a/fs/xfs/xfs_ioctl.c b/fs/xfs/xfs_ioctl.c
-index be69e7be713e5c..535f6d38cdb540 100644
---- a/fs/xfs/xfs_ioctl.c
-+++ b/fs/xfs/xfs_ioctl.c
-@@ -1149,6 +1149,14 @@ xfs_ioctl_setattr_xflags(
- 	ip->i_diflags2 = i_flags2;
- 
- 	xfs_diflags_to_iflags(ip, false);
-+
-+	/*
-+	 * Make the stable writes flag match that of the device the inode
-+	 * resides on when flipping the RT flag.
-+	 */
-+	if (rtflag != XFS_IS_REALTIME_INODE(ip) && S_ISREG(VFS_I(ip)->i_mode))
-+		xfs_update_stable_writes(ip);
-+
- 	xfs_trans_ichgtime(tp, ip, XFS_ICHGTIME_CHG);
- 	xfs_trans_log_inode(tp, ip, XFS_ILOG_CORE);
- 	XFS_STATS_INC(mp, xs_ig_attrchg);
-diff --git a/fs/xfs/xfs_iops.c b/fs/xfs/xfs_iops.c
-index 2b3b05c28e9e48..b8ec045708c318 100644
---- a/fs/xfs/xfs_iops.c
-+++ b/fs/xfs/xfs_iops.c
-@@ -1298,6 +1298,13 @@ xfs_setup_inode(
- 	gfp_mask = mapping_gfp_mask(inode->i_mapping);
- 	mapping_set_gfp_mask(inode->i_mapping, (gfp_mask & ~(__GFP_FS)));
- 
-+	/*
-+	 * For real-time inodes update the stable write flags to that of the RT
-+	 * device instead of the data device.
-+	 */
-+	if (S_ISREG(inode->i_mode) && XFS_IS_REALTIME_INODE(ip))
-+		xfs_update_stable_writes(ip);
-+
- 	/*
- 	 * If there is no attribute fork no ACL can exist on this inode,
- 	 * and it can't have any file capabilities attached to it either.
--- 
-2.39.2
+--D
 
+> ---
+>  fs/xfs/xfs_ioctl.c | 22 ++++++++++++----------
+>  1 file changed, 12 insertions(+), 10 deletions(-)
+> 
+> diff --git a/fs/xfs/xfs_ioctl.c b/fs/xfs/xfs_ioctl.c
+> index 55bb01173cde8c..be69e7be713e5c 100644
+> --- a/fs/xfs/xfs_ioctl.c
+> +++ b/fs/xfs/xfs_ioctl.c
+> @@ -1120,23 +1120,25 @@ xfs_ioctl_setattr_xflags(
+>  	struct fileattr		*fa)
+>  {
+>  	struct xfs_mount	*mp = ip->i_mount;
+> +	bool			rtflag = (fa->fsx_xflags & FS_XFLAG_REALTIME);
+>  	uint64_t		i_flags2;
+>  
+> -	/* Can't change realtime flag if any extents are allocated. */
+> -	if ((ip->i_df.if_nextents || ip->i_delayed_blks) &&
+> -	    XFS_IS_REALTIME_INODE(ip) != (fa->fsx_xflags & FS_XFLAG_REALTIME))
+> -		return -EINVAL;
+> +	if (rtflag != XFS_IS_REALTIME_INODE(ip)) {
+> +		/* Can't change realtime flag if any extents are allocated. */
+> +		if (ip->i_df.if_nextents || ip->i_delayed_blks)
+> +			return -EINVAL;
+> +	}
+>  
+> -	/* If realtime flag is set then must have realtime device */
+> -	if (fa->fsx_xflags & FS_XFLAG_REALTIME) {
+> +	if (rtflag) {
+> +		/* If realtime flag is set then must have realtime device */
+>  		if (mp->m_sb.sb_rblocks == 0 || mp->m_sb.sb_rextsize == 0 ||
+>  		    (ip->i_extsize % mp->m_sb.sb_rextsize))
+>  			return -EINVAL;
+> -	}
+>  
+> -	/* Clear reflink if we are actually able to set the rt flag. */
+> -	if ((fa->fsx_xflags & FS_XFLAG_REALTIME) && xfs_is_reflink_inode(ip))
+> -		ip->i_diflags2 &= ~XFS_DIFLAG2_REFLINK;
+> +		/* Clear reflink if we are actually able to set the rt flag. */
+> +		if (xfs_is_reflink_inode(ip))
+> +			ip->i_diflags2 &= ~XFS_DIFLAG2_REFLINK;
+> +	}
+>  
+>  	/* diflags2 only valid for v3 inodes. */
+>  	i_flags2 = xfs_flags2diflags2(ip, fa->fsx_xflags);
+> -- 
+> 2.39.2
+> 
