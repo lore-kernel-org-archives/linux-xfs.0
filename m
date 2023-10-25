@@ -2,267 +2,139 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5EDEDC07545
-	for <linux-xfs@archiver.kernel.org>; Wed, 25 Oct 2023 12:25:45 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A94DEC25B47
+	for <linux-xfs@archiver.kernel.org>; Wed, 25 Oct 2023 14:10:45 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1343906AbjJYMZp (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 25 Oct 2023 08:25:45 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58180 "EHLO
+        id S1344845AbjJYOKp (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 25 Oct 2023 10:10:45 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47624 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1343791AbjJYMZo (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 25 Oct 2023 08:25:44 -0400
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 36DD419A;
-        Wed, 25 Oct 2023 05:25:40 -0700 (PDT)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 4DCB4C433C7;
-        Wed, 25 Oct 2023 12:25:37 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1698236739;
-        bh=CPfbQfAM1itjWCIx0nw3DPeg3BGsp7SHrr2xBrG+Ips=;
-        h=Subject:From:To:Cc:Date:In-Reply-To:References:From;
-        b=ch094CrQN1hvWHJzxzq0IS9uCUYQiHYjKqCOkuwf4HlKsyJ2HZiCCxOkwAmYD4odl
-         qU39q/+5YQ9Jr14/taFrQ3L4M5PsQ4Hz+zO8fS2DDSTRPt3CEZ6KwdhSiyQLCVeOiH
-         RF9LRyGj9F9mr+PRazMgZ2g3+yBA+1FPMyTHo+wZGsBzOyZF2KhuTUFy+8BruFeIvn
-         Dne7XJuj38EA0kEHqAtmp0iW40c2AYLb5ZTPsxoUu1lsZHmzbAOOw+A8gBvPbArZFG
-         QJPDTq++2IQoHaUqYhyEMeZQku3OZ+hmiHdNkYVCjm2Xe309kQXDCFT4E5ZaojbH29
-         3Ye+PQ3PI6l7w==
-Message-ID: <2ef9ac6180e47bc9cc8edef20648a000367c4ed2.camel@kernel.org>
-Subject: Re: [PATCH RFC 2/9] timekeeping: new interfaces for multigrain
- timestamp handing
-From:   Jeff Layton <jlayton@kernel.org>
-To:     Dave Chinner <david@fromorbit.com>
-Cc:     Amir Goldstein <amir73il@gmail.com>,
-        Linus Torvalds <torvalds@linux-foundation.org>,
-        Kent Overstreet <kent.overstreet@linux.dev>,
-        Christian Brauner <brauner@kernel.org>,
-        Alexander Viro <viro@zeniv.linux.org.uk>,
-        John Stultz <jstultz@google.com>,
-        Thomas Gleixner <tglx@linutronix.de>,
-        Stephen Boyd <sboyd@kernel.org>,
-        Chandan Babu R <chandan.babu@oracle.com>,
-        "Darrick J. Wong" <djwong@kernel.org>,
-        Theodore Ts'o <tytso@mit.edu>,
-        Andreas Dilger <adilger.kernel@dilger.ca>,
-        Chris Mason <clm@fb.com>, Josef Bacik <josef@toxicpanda.com>,
-        David Sterba <dsterba@suse.com>,
-        Hugh Dickins <hughd@google.com>,
+        with ESMTP id S235083AbjJYOKo (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 25 Oct 2023 10:10:44 -0400
+Received: from bombadil.infradead.org (bombadil.infradead.org [IPv6:2607:7c80:54:3::133])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4636C18B;
+        Wed, 25 Oct 2023 07:10:36 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=infradead.org; s=bombadil.20210309; h=Content-Transfer-Encoding:
+        MIME-Version:References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:Sender
+        :Reply-To:Content-Type:Content-ID:Content-Description;
+        bh=xXpAs87vXAa9NcBEUc0wVOYAyOZDx4ei3lj0IRgnDRM=; b=kjmYQYUXdwr23Na3Fs85kvexm3
+        tKafXooWcQ+nC1AYT81ALSCMPJQR1IxvgYrd9qXM+tmSkjdQEyKwqtzdO/Rh8OxjRl9dZnqw+iHzK
+        lz6ZYNJPwUISI38kJGEDyJ+fd2T4cuCaDbcMWZFGZG/nhWNKhN5Lmmx9UHt/uuCBVBBQZ4VhgTwCy
+        ZF8IqLEMn5OUDYhEXtH9j5e4F8nhz+zqvspVy/I/TQfhff41N4CxOdZ4yJtrhUsx6Q0SCa+1Z8p1t
+        1ICFXCt1HDWvaUE5GgJET3XdEzt3obj589ysFIjHVjgO9reBbkpYPXn9S2XmIc7excThupGm07EMF
+        v1QPnScg==;
+Received: from 2a02-8389-2341-5b80-39d3-4735-9a3c-88d8.cable.dynamic.v6.surfer.at ([2a02:8389:2341:5b80:39d3:4735:9a3c:88d8] helo=localhost)
+        by bombadil.infradead.org with esmtpsa (Exim 4.96 #2 (Red Hat Linux))
+        id 1qveag-00CTws-0x;
+        Wed, 25 Oct 2023 14:10:34 +0000
+From:   Christoph Hellwig <hch@lst.de>
+To:     Jens Axboe <axboe@kernel.dk>, Matthew Wilcox <willy@infradead.org>
+Cc:     Ilya Dryomov <idryomov@gmail.com>,
         Andrew Morton <akpm@linux-foundation.org>,
-        Jan Kara <jack@suse.de>, David Howells <dhowells@redhat.com>,
-        linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-xfs@vger.kernel.org, linux-ext4@vger.kernel.org,
-        linux-btrfs@vger.kernel.org, linux-mm@kvack.org,
-        linux-nfs@vger.kernel.org
-Date:   Wed, 25 Oct 2023 08:25:35 -0400
-In-Reply-To: <ZTjMRRqmlJ+fTys2@dread.disaster.area>
-References: <0a1a847af4372e62000b259e992850527f587205.camel@kernel.org>
-         <ZTGncMVw19QVJzI6@dread.disaster.area>
-         <eb3b9e71ee9c6d8e228b0927dec3ac9177b06ec6.camel@kernel.org>
-         <ZTWfX3CqPy9yCddQ@dread.disaster.area>
-         <61b32a4093948ae1ae8603688793f07de764430f.camel@kernel.org>
-         <ZTcBI2xaZz1GdMjX@dread.disaster.area>
-         <CAHk-=whphyjjLwDcEthOOFXXfgwGrtrMnW2iyjdQioV6YSMEPw@mail.gmail.com>
-         <ZTc8tClCRkfX3kD7@dread.disaster.area>
-         <CAOQ4uxhJGkZrUdUJ72vjRuLec0g8VqgRXRH=x7W9ogMU6rBxcQ@mail.gmail.com>
-         <d539804a2a73ad70265c5fa599ecd663cd235843.camel@kernel.org>
-         <ZTjMRRqmlJ+fTys2@dread.disaster.area>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
-User-Agent: Evolution 3.48.4 (3.48.4-1.fc38) 
+        linux-block@vger.kernel.org, linux-fsdevel@vger.kernel.org,
+        linux-xfs@vger.kernel.org, linux-mm@kvack.org,
+        "Darrick J . Wong" <djwong@kernel.org>
+Subject: [PATCH 1/4] filemap: add a per-mapping stable writes flag
+Date:   Wed, 25 Oct 2023 16:10:17 +0200
+Message-Id: <20231025141020.192413-2-hch@lst.de>
+X-Mailer: git-send-email 2.39.2
+In-Reply-To: <20231025141020.192413-1-hch@lst.de>
+References: <20231025141020.192413-1-hch@lst.de>
 MIME-Version: 1.0
+Content-Transfer-Encoding: 8bit
+X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Wed, 2023-10-25 at 19:05 +1100, Dave Chinner wrote:
-> On Tue, Oct 24, 2023 at 02:40:06PM -0400, Jeff Layton wrote:
-> > On Tue, 2023-10-24 at 10:08 +0300, Amir Goldstein wrote:
-> > > On Tue, Oct 24, 2023 at 6:40=E2=80=AFAM Dave Chinner <david@fromorbit=
-.com> wrote:
-> > > >=20
-> > > > On Mon, Oct 23, 2023 at 02:18:12PM -1000, Linus Torvalds wrote:
-> > > > > On Mon, 23 Oct 2023 at 13:26, Dave Chinner <david@fromorbit.com> =
-wrote:
-> > > > > >=20
-> > > > > > The problem is the first read request after a modification has =
-been
-> > > > > > made. That is causing relatime to see mtime > atime and trigger=
-ing
-> > > > > > an atime update. XFS sees this, does an atime update, and in
-> > > > > > committing that persistent inode metadata update, it calls
-> > > > > > inode_maybe_inc_iversion(force =3D false) to check if an iversi=
-on
-> > > > > > update is necessary. The VFS sees I_VERSION_QUERIED, and so it =
-bumps
-> > > > > > i_version and tells XFS to persist it.
-> > > > >=20
-> > > > > Could we perhaps just have a mode where we don't increment i_vers=
-ion
-> > > > > for just atime updates?
-> > > > >=20
-> > > > > Maybe we don't even need a mode, and could just decide that atime
-> > > > > updates aren't i_version updates at all?
-> > > >=20
-> > > > We do that already - in memory atime updates don't bump i_version a=
-t
-> > > > all. The issue is the rare persistent atime update requests that
-> > > > still happen - they are the ones that trigger an i_version bump on
-> > > > XFS, and one of the relatime heuristics tickle this specific issue.
-> > > >=20
-> > > > If we push the problematic persistent atime updates to be in-memory
-> > > > updates only, then the whole problem with i_version goes away....
-> > > >=20
-> > > > > Yes, yes, it's obviously technically a "inode modification", but =
-does
-> > > > > anybody actually *want* atime updates with no actual other change=
-s to
-> > > > > be version events?
-> > > >=20
-> > > > Well, yes, there was. That's why we defined i_version in the on dis=
-k
-> > > > format this way well over a decade ago. It was part of some deep
-> > > > dark magical HSM beans that allowed the application to combine
-> > > > multiple scans for different inode metadata changes into a single
-> > > > pass. atime changes was one of the things it needed to know about
-> > > > for tiering and space scavenging purposes....
-> > > >=20
-> > >=20
-> > > But if this is such an ancient mystical program, why do we have to
-> > > keep this XFS behavior in the present?
-> > > BTW, is this the same HSM whose DMAPI ioctls were deprecated
-> > > a few years back?
->=20
-> Drop the attitude, Amir.
->=20
-> That "ancient mystical program" is this:
->=20
-> https://buy.hpe.com/us/en/enterprise-solutions/high-performance-computing=
--solutions/high-performance-computing-storage-solutions/hpc-storage-solutio=
-ns/hpe-data-management-framework-7/p/1010144088
->=20
-> Yup, that product is backed by a proprietary descendent of the Irix
-> XFS code base XFS that is DMAPI enabled and still in use today. It's
-> called HPE XFS these days....
->=20
-> > > I mean, I understand that you do not want to change the behavior of
-> > > i_version update without an opt-in config or mount option - let the d=
-istro
-> > > make that choice.
-> > > But calling this an "on-disk format change" is a very long stretch.
->=20
-> Telling the person who created, defined and implemented the on disk
-> format that they don't know what constitutes a change of that
-> on-disk format seems kinda Dunning-Kruger to me....
->=20
-> There are *lots* of ways that di_changecount is now incompatible
-> with the VFS change counter. That's now defined as "i_version should
-> only change when [cm]time is changed".
->=20
-> di_changecount is defined to be a count of the number of changes
-> made to the attributes of the inode.  It's not just atime at issue
-> here - we bump di_changecount when make any inode change, including
-> background work that does not otherwise change timestamps. e.g.
-> allocation at writeback time, unwritten extent conversion, on-disk
-> EOF extension at IO completion, removal of speculative
-> pre-allocation beyond EOF, etc.
->=20
-> IOWs, di_changecount was never defined as a linux "i_version"
-> counter, regardless of the fact we originally we able to implement
-> i_version with it - all extra bumps to di_changecount were not
-> important to the users of i_version for about a decade.
->=20
-> Unfortunately, the new i_version definition is very much
-> incompatible with the existing di_changecount definition and that's
-> the underlying problem here. i.e. the problem is not that we bump
-> i_version on atime, it's that di_changecount is now completely
-> incompatible with the new i_version change semantics.
->=20
-> To implement the new i_version semantics exactly, we need to add a
-> new field to the inode to hold this information.
-> If we change the on disk format like this, then the atime
-> problems go away because the new field would not get updated on
-> atime updates. We'd still be bumping di_changecount on atime
-> updates, though, because that's what is required by the on-disk
-> format.
->=20
-> I'm really trying to avoid changing the on-disk format unless it
-> is absolutely necessary. If we can get the in-memory timestamp
-> updates to avoid tripping di_changecount updates then the atime
-> problems go away.
->=20
-> If we can get [cm]time sufficiently fine grained that we don't need
-> i_version, then we can turn off i_version in XFS and di_changecount
-> ends up being entirely internal. That's what was attempted with
-> generic multi-grain timestamps, but that hasn't worked.
->=20
-> Another options is for XFS to play it's own internal tricks with
-> [cm]time granularity and turn off i_version. e.g. limit external
-> timestamp visibility to 1us and use the remaining dozen bits of the
-> ns field to hold a change counter for updates within a single coarse
-> timer tick. This guarantees the timestamp changes within a coarse
-> tick for the purposes of change detection, but we don't expose those
-> bits to applications so applications that compare timestamps across
-> inodes won't get things back to front like was happening with the
-> multi-grain timestamps....
->=20
-> Another option is to work around the visible symptoms of the
-> semantic mismatch between i_version and di_changecount. The only
-> visible symptom we currently know about is the atime vs i_version
-> issue.  If people are happy for us to simply ignore VFS atime
-> guidelines (i.e. ignore realtime/lazytime) and do completely our own
-> stuff with timestamp update deferal, then that also solve the
-> immediate issues.
->=20
-> > > Does xfs_repair guarantee that changes of atime, or any inode changes
-> > > for that matter, update i_version? No, it does not.
-> > > So IMO, "atime does not update i_version" is not an "on-disk format c=
-hange",
-> > > it is a runtime behavior change, just like lazytime is.
-> >=20
-> > This would certainly be my preference. I don't want to break any
-> > existing users though.
->=20
-> That's why I'm trying to get some kind of consensus on what
-> rules and/or atime configurations people are happy for me to break
-> to make it look to users like there's a viable working change
-> attribute being supplied by XFS without needing to change the on
-> disk format.
->=20
+folio_wait_stable waits for writeback to finish before modifying the
+contents of a folio again, e.g. to support check summing of the data
+in the block integrity code.
 
-I agree that the only bone of contention is whether to count atime
-updates against the change attribute. I think we have consensus that all
-in-kernel users do _not_ want atime updates counted against the change
-attribute. The only real question is these "legacy" users of
-di_changecount.
+Currently this behavior is controlled by the SB_I_STABLE_WRITES flag
+on the super_block, which means it is uniform for the entire file system.
+This is wrong for the block device pseudofs which is shared by all
+block devices, or file systems that can use multiple devices like XFS
+witht the RT subvolume or btrfs (although btrfs currently reimplements
+folio_wait_stable anyway).
 
-> > Perhaps this ought to be a mkfs option? Existing XFS filesystems could
-> > still behave with the legacy behavior, but we could make mkfs.xfs build
-> > filesystems by default that work like NFS requires.
->=20
-> If we require mkfs to set a flag to change behaviour, then we're
-> talking about making an explicit on-disk format change to select the
-> optional behaviour. That's precisely what I want to avoid.
->=20
+Add a per-address_space AS_STABLE_WRITES flag to control the behavior
+in a more fine grained way.  The existing SB_I_STABLE_WRITES is kept
+to initialize AS_STABLE_WRITES to the existing default which covers
+most cases.
 
-Right. The on-disk di_changecount would have a (subtly) different
-meaning at that point.
+Signed-off-by: Christoph Hellwig <hch@lst.de>
+Reviewed-by: Matthew Wilcox (Oracle) <willy@infradead.org>
+Reviewed-by: Darrick J. Wong <djwong@kernel.org>
+Tested-by: Ilya Dryomov <idryomov@gmail.com>
+---
+ fs/inode.c              |  2 ++
+ include/linux/pagemap.h | 17 +++++++++++++++++
+ mm/page-writeback.c     |  2 +-
+ 3 files changed, 20 insertions(+), 1 deletion(-)
 
-It's not a change that requires drastic retooling though. If we were to
-do this, we wouldn't need to grow the on-disk inode. Booting to an older
-kernel would cause the behavior to revert. That's sub-optimal, but not
-fatal.
+diff --git a/fs/inode.c b/fs/inode.c
+index 84bc3c76e5ccb5..ae1a6410b53d7e 100644
+--- a/fs/inode.c
++++ b/fs/inode.c
+@@ -215,6 +215,8 @@ int inode_init_always(struct super_block *sb, struct inode *inode)
+ 	lockdep_set_class_and_name(&mapping->invalidate_lock,
+ 				   &sb->s_type->invalidate_lock_key,
+ 				   "mapping.invalidate_lock");
++	if (sb->s_iflags & SB_I_STABLE_WRITES)
++		mapping_set_stable_writes(mapping);
+ 	inode->i_private = NULL;
+ 	inode->i_mapping = mapping;
+ 	INIT_HLIST_HEAD(&inode->i_dentry);	/* buggered by rcu freeing */
+diff --git a/include/linux/pagemap.h b/include/linux/pagemap.h
+index 351c3b7f93a14e..8c9608b217b000 100644
+--- a/include/linux/pagemap.h
++++ b/include/linux/pagemap.h
+@@ -204,6 +204,8 @@ enum mapping_flags {
+ 	AS_NO_WRITEBACK_TAGS = 5,
+ 	AS_LARGE_FOLIO_SUPPORT = 6,
+ 	AS_RELEASE_ALWAYS,	/* Call ->release_folio(), even if no private data */
++	AS_STABLE_WRITES,	/* must wait for writeback before modifying
++				   folio contents */
+ };
+ 
+ /**
+@@ -289,6 +291,21 @@ static inline void mapping_clear_release_always(struct address_space *mapping)
+ 	clear_bit(AS_RELEASE_ALWAYS, &mapping->flags);
+ }
+ 
++static inline bool mapping_stable_writes(const struct address_space *mapping)
++{
++	return test_bit(AS_STABLE_WRITES, &mapping->flags);
++}
++
++static inline void mapping_set_stable_writes(struct address_space *mapping)
++{
++	set_bit(AS_STABLE_WRITES, &mapping->flags);
++}
++
++static inline void mapping_clear_stable_writes(struct address_space *mapping)
++{
++	clear_bit(AS_STABLE_WRITES, &mapping->flags);
++}
++
+ static inline gfp_t mapping_gfp_mask(struct address_space * mapping)
+ {
+ 	return mapping->gfp_mask;
+diff --git a/mm/page-writeback.c b/mm/page-writeback.c
+index b8d3d7040a506a..4656534b8f5cc6 100644
+--- a/mm/page-writeback.c
++++ b/mm/page-writeback.c
+@@ -3110,7 +3110,7 @@ EXPORT_SYMBOL_GPL(folio_wait_writeback_killable);
+  */
+ void folio_wait_stable(struct folio *folio)
+ {
+-	if (folio_inode(folio)->i_sb->s_iflags & SB_I_STABLE_WRITES)
++	if (mapping_stable_writes(folio_mapping(folio)))
+ 		folio_wait_writeback(folio);
+ }
+ EXPORT_SYMBOL_GPL(folio_wait_stable);
+-- 
+2.39.2
 
-What I don't quite understand is how these tools are accessing
-di_changecount?
-
-XFS only accesses the di_changecount to propagate the value to and from
-the i_version, and there is nothing besides NFSD and IMA that queries
-the i_version value in-kernel. So, this must be done via some sort of
-userland tool that is directly accessing the block device (or some 3rd
-party kernel module).
-
-In earlier discussions you alluded to some repair and/or analysis tools
-that depended on this counter. I took a quick look in xfsprogs, but I
-didn't see anything there. Is there a library or something that these
-tools use to get at this value?
---=20
-Jeff Layton <jlayton@kernel.org>
