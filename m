@@ -2,42 +2,41 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0BBB2C0032E
-	for <linux-xfs@archiver.kernel.org>; Wed, 25 Oct 2023 14:10:49 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A167BC25B6F
+	for <linux-xfs@archiver.kernel.org>; Wed, 25 Oct 2023 14:10:50 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1344875AbjJYOKr (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 25 Oct 2023 10:10:47 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47728 "EHLO
+        id S1344840AbjJYOKs (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 25 Oct 2023 10:10:48 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50114 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1344827AbjJYOKq (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 25 Oct 2023 10:10:46 -0400
+        with ESMTP id S1344843AbjJYOKr (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 25 Oct 2023 10:10:47 -0400
 Received: from bombadil.infradead.org (bombadil.infradead.org [IPv6:2607:7c80:54:3::133])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D3BDA193;
-        Wed, 25 Oct 2023 07:10:40 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 62057186;
+        Wed, 25 Oct 2023 07:10:43 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
         d=infradead.org; s=bombadil.20210309; h=Content-Transfer-Encoding:
         MIME-Version:References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:Sender
         :Reply-To:Content-Type:Content-ID:Content-Description;
-        bh=eQkFS0CPXyYdJjvcxwO874+N6FHj6qkC07nIc5KQ7Fc=; b=NkupXjjQ3bzL5mbyZ8icwT06pw
-        ektizSCeFbKc39Orvb0x8fTzJ1oLB74rAYmYPqIbjS+fyCfCbMOy66EZxYkrekM6Cn6PghALK5LJ6
-        JtRDjTtq62PUPTC4s0HvcuM8KPOjeaSXWnNsbMThbqD9AKBUqzTUu7vJdIzrmxjJupxwgJAPXfiYk
-        txfYJX8o7U5BHxwpLEcz4Se3hhRRYMrzEGaqL+b+tpoGOqW82ZVGsfn8vbkhhWPmS/lCmtBU/nVGK
-        LKh8pkdcKzEaIruwf0QCn5HY8bWUuuTuz3kDbTflXeYwIRyujn0pcmEWGrPxaNsxJeeH1EWYwXsAu
-        WyHCdRVQ==;
+        bh=ovjCiQ06cAyDAs81spcaUYTd/nSmVBQIeOWPuhdd988=; b=bOq9qDAdLVem3461ZjZwKrf7J0
+        ie8y1IIJOvq+Net1QLGYjOrIPKk7b7qSgyGOFC3BzE4AvPwZpcfz1Lo/zVQqgU8lwncWb1zyvegGO
+        NnvWFUyhTTe0AvKQ7mHIOmnyhQprw64lBF25W0zs4w2Qeav9hiL53q/YFg7weqRSOZdUKEMMHK40z
+        av+U0KLUWM14T2YVfYxprlWhcnWUuXzkRtdz+LQi9G42qsvu9Lg3IS3TZj90ddWF/84j6YKKcL6xt
+        u5fUlBav/GqycUN1UeR9N03Y7Npgq/LJ6mq0FZQoaNjazSeCHQJQ7hinxbRQ6RCb5QlRhQQB2wroS
+        yk61/hfw==;
 Received: from 2a02-8389-2341-5b80-39d3-4735-9a3c-88d8.cable.dynamic.v6.surfer.at ([2a02:8389:2341:5b80:39d3:4735:9a3c:88d8] helo=localhost)
         by bombadil.infradead.org with esmtpsa (Exim 4.96 #2 (Red Hat Linux))
-        id 1qveak-00CTxA-04;
-        Wed, 25 Oct 2023 14:10:38 +0000
+        id 1qvean-00CTxW-1t;
+        Wed, 25 Oct 2023 14:10:42 +0000
 From:   Christoph Hellwig <hch@lst.de>
 To:     Jens Axboe <axboe@kernel.dk>, Matthew Wilcox <willy@infradead.org>
 Cc:     Ilya Dryomov <idryomov@gmail.com>,
         Andrew Morton <akpm@linux-foundation.org>,
         linux-block@vger.kernel.org, linux-fsdevel@vger.kernel.org,
-        linux-xfs@vger.kernel.org, linux-mm@kvack.org,
-        "Darrick J . Wong" <djwong@kernel.org>
-Subject: [PATCH 2/4] block: update the stable_writes flag in bdev_add
-Date:   Wed, 25 Oct 2023 16:10:18 +0200
-Message-Id: <20231025141020.192413-3-hch@lst.de>
+        linux-xfs@vger.kernel.org, linux-mm@kvack.org
+Subject: [PATCH 3/4] xfs: clean up FS_XFLAG_REALTIME handling in xfs_ioctl_setattr_xflags
+Date:   Wed, 25 Oct 2023 16:10:19 +0200
+Message-Id: <20231025141020.192413-4-hch@lst.de>
 X-Mailer: git-send-email 2.39.2
 In-Reply-To: <20231025141020.192413-1-hch@lst.de>
 References: <20231025141020.192413-1-hch@lst.de>
@@ -48,37 +47,55 @@ Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Propagate the per-queue stable_write flags into each bdev inode in bdev_add.
-This makes sure devices that require stable writes have it set for I/O
-on the block device node as well.
+Introduce a local boolean variable if FS_XFLAG_REALTIME to make the
+checks for it more obvious, and de-densify a few of the conditionals
+using it to make them more readable while at it.
 
-Note that this doesn't cover the case of a flag changing on a live device
-yet.  We should handle that as well, but I plan to cover it as part of a
-more general rework of how changing runtime paramters on block devices
-works.
-
-Fixes: 1cb039f3dc16 ("bdi: replace BDI_CAP_STABLE_WRITES with a queue and a sb flag")
-Reported-by: Ilya Dryomov <idryomov@gmail.com>
 Signed-off-by: Christoph Hellwig <hch@lst.de>
-Reviewed-by: Darrick J. Wong <djwong@kernel.org>
-Tested-by: Ilya Dryomov <idryomov@gmail.com>
 ---
- block/bdev.c | 2 ++
- 1 file changed, 2 insertions(+)
+ fs/xfs/xfs_ioctl.c | 22 ++++++++++++----------
+ 1 file changed, 12 insertions(+), 10 deletions(-)
 
-diff --git a/block/bdev.c b/block/bdev.c
-index f3b13aa1b7d428..04dba25b0019eb 100644
---- a/block/bdev.c
-+++ b/block/bdev.c
-@@ -425,6 +425,8 @@ void bdev_set_nr_sectors(struct block_device *bdev, sector_t sectors)
- 
- void bdev_add(struct block_device *bdev, dev_t dev)
+diff --git a/fs/xfs/xfs_ioctl.c b/fs/xfs/xfs_ioctl.c
+index 55bb01173cde8c..be69e7be713e5c 100644
+--- a/fs/xfs/xfs_ioctl.c
++++ b/fs/xfs/xfs_ioctl.c
+@@ -1120,23 +1120,25 @@ xfs_ioctl_setattr_xflags(
+ 	struct fileattr		*fa)
  {
-+	if (bdev_stable_writes(bdev))
-+		mapping_set_stable_writes(bdev->bd_inode->i_mapping);
- 	bdev->bd_dev = dev;
- 	bdev->bd_inode->i_rdev = dev;
- 	bdev->bd_inode->i_ino = dev;
+ 	struct xfs_mount	*mp = ip->i_mount;
++	bool			rtflag = (fa->fsx_xflags & FS_XFLAG_REALTIME);
+ 	uint64_t		i_flags2;
+ 
+-	/* Can't change realtime flag if any extents are allocated. */
+-	if ((ip->i_df.if_nextents || ip->i_delayed_blks) &&
+-	    XFS_IS_REALTIME_INODE(ip) != (fa->fsx_xflags & FS_XFLAG_REALTIME))
+-		return -EINVAL;
++	if (rtflag != XFS_IS_REALTIME_INODE(ip)) {
++		/* Can't change realtime flag if any extents are allocated. */
++		if (ip->i_df.if_nextents || ip->i_delayed_blks)
++			return -EINVAL;
++	}
+ 
+-	/* If realtime flag is set then must have realtime device */
+-	if (fa->fsx_xflags & FS_XFLAG_REALTIME) {
++	if (rtflag) {
++		/* If realtime flag is set then must have realtime device */
+ 		if (mp->m_sb.sb_rblocks == 0 || mp->m_sb.sb_rextsize == 0 ||
+ 		    (ip->i_extsize % mp->m_sb.sb_rextsize))
+ 			return -EINVAL;
+-	}
+ 
+-	/* Clear reflink if we are actually able to set the rt flag. */
+-	if ((fa->fsx_xflags & FS_XFLAG_REALTIME) && xfs_is_reflink_inode(ip))
+-		ip->i_diflags2 &= ~XFS_DIFLAG2_REFLINK;
++		/* Clear reflink if we are actually able to set the rt flag. */
++		if (xfs_is_reflink_inode(ip))
++			ip->i_diflags2 &= ~XFS_DIFLAG2_REFLINK;
++	}
+ 
+ 	/* diflags2 only valid for v3 inodes. */
+ 	i_flags2 = xfs_flags2diflags2(ip, fa->fsx_xflags);
 -- 
 2.39.2
 
