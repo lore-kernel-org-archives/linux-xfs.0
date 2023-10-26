@@ -2,175 +2,161 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9B9ADC25B6B
-	for <linux-xfs@archiver.kernel.org>; Thu, 26 Oct 2023 05:43:16 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7CB59C25B6B
+	for <linux-xfs@archiver.kernel.org>; Thu, 26 Oct 2023 11:54:39 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230478AbjJZFnQ (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 26 Oct 2023 01:43:16 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44958 "EHLO
+        id S229642AbjJZLyi (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 26 Oct 2023 07:54:38 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40698 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229554AbjJZFnP (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 26 Oct 2023 01:43:15 -0400
-Received: from mail-qv1-xf2e.google.com (mail-qv1-xf2e.google.com [IPv6:2607:f8b0:4864:20::f2e])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 88C8A115;
-        Wed, 25 Oct 2023 22:43:12 -0700 (PDT)
-Received: by mail-qv1-xf2e.google.com with SMTP id 6a1803df08f44-66d17fd450aso13689756d6.1;
-        Wed, 25 Oct 2023 22:43:12 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1698298991; x=1698903791; darn=vger.kernel.org;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=D0wskKT4pWU48/4FUK3iMC6E9ayAZ0MFNFM/wSMas+E=;
-        b=EAa/BcYsnp7JMmmWLqeDiBuZKUR8iCzgz6lJRfU3FPBERY/yJ97BxxvxBiYeJLpLxV
-         8d65Fr1rip2LIo6dXGnHPK/TVzNNuVAyG4X7O+NbfhBXkl8FfqzSB+bSdjxfdg8el7Qg
-         twN9miUJNnTKlJXgVL2NEZDIHCFKYg20ifK740u0laWxKzJjzeEOSmWBeTpD6W58jHhj
-         /Z+fe8J1Js0mYQYFWBYWsfqKT6N2DafKzKp2pqQa+DXUcxSpAZm0Bm7opamexc/rpC1T
-         414U8roJ7U3gX0Fc+ko2NV1WKtAhuJqInUyA+UtVA2TmEtycnth+bsAqedSY0yHxEP71
-         RmhA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1698298991; x=1698903791;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=D0wskKT4pWU48/4FUK3iMC6E9ayAZ0MFNFM/wSMas+E=;
-        b=eEmbMQNik1I2c54Q5TKJdpEpYH8LZhg+23v3l/knJpIr/Lp2EUdwchgtYhXXVX5cR2
-         sTSsOoFaYqXZsF+PA1zlFRwh4GVspgjXJpY4m51j+33MeE39WnwN7d9zpvqvkGMlBPb0
-         6Y4jSMHUzE4wQREA6HFxvEQ54bQdunHcLgmIzg5+2c2oFHse7VXD/EgOJ3SIVpzdRuwe
-         Gtc1QOcXIeb5oksIol91xS9UJ2P2LGp0s4iRqxTFOTrgFc/b3KQ+kj7XP5HQihWMgnRw
-         CA7Amxf+On7X0HQB8ZDGgo0ViSCWV5NNong5rZKTOkapSSn5jiTcKz7gNEAp14jWl6ZG
-         vcWg==
-X-Gm-Message-State: AOJu0YwkcnbGVVBkAWBj/GTNZKtkdF9bPeVpgdYa5abct+Y+NfppBYio
-        KOLByHuaFsvrgvRQ6YMzas1hSZtugUwMnWlBPKU=
-X-Google-Smtp-Source: AGHT+IFtQlJkyk/SemAvlLy18H81rmH3bjGyS6GSbs3XB/X6xHM1ikIcbtxNFkrSUvjSK3z+n/Qk1ZPsdGmCwdu5uo4=
-X-Received: by 2002:a05:6214:242b:b0:66d:9987:68f9 with SMTP id
- gy11-20020a056214242b00b0066d998768f9mr2382116qvb.15.1698298991118; Wed, 25
- Oct 2023 22:43:11 -0700 (PDT)
+        with ESMTP id S231173AbjJZLyh (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 26 Oct 2023 07:54:37 -0400
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1B8B31A7
+        for <linux-xfs@vger.kernel.org>; Thu, 26 Oct 2023 04:54:35 -0700 (PDT)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id A3C9AC433C7;
+        Thu, 26 Oct 2023 11:54:32 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1698321274;
+        bh=/0yeRlS29S23wJWxAga0nWxcvrHDF71U5m5WaI48rpc=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=pG0pRbKCZ3YvwjMVF2A2WzIPh9echoveCovZUDNElC/ewWC+iFgZyCgW6W+PV5fLZ
+         9Vt3rOIHcpKF/rBaMgnkVY5UvmGUbWAl6K31wRGFNjFVsasJEPprK0jpqr8Ag9UqaK
+         NHeV+B5bJfcYx+CRvS7IYh/bALKQqqK29/3bpDjdOBYQJ4oE4o96sA8HHLMPcoOiCe
+         M+O5GyiSLa23KQAn8Pw7JHpfN/uPPobMEESPELwoNyS7IsSMKTi/mPbQEkRiKPMjSm
+         U7miEiuztjkcDrHikj8QqcjfTgIDA64c5k+bVCZ/3lZVtHD2DjtbCqHaaQ7Y7trxgv
+         F3lycBRtHs8Zw==
+Date:   Thu, 26 Oct 2023 13:54:29 +0200
+From:   Christian Brauner <brauner@kernel.org>
+To:     "Darrick J. Wong" <djwong@kernel.org>
+Cc:     Linus Torvalds <torvalds@linux-foundation.org>,
+        Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+        Shirley Ma <shirley.ma@oracle.com>, hch@lst.de,
+        jstancek@redhat.com, linux-fsdevel@vger.kernel.org,
+        linux-xfs@vger.kernel.org
+Subject: Re: [GIT PULL] iomap: bug fixes for 6.6-rc7
+Message-ID: <20231026-gehofft-vorfreude-a5079bff7373@brauner>
+References: <169786962623.1265253.5321166241579915281.stg-ugh@frogsfrogsfrogs>
+ <CAHk-=whNsCXwidLvx8u_JBH91=Z5EFw9FVj57HQ51P7uWs4yGQ@mail.gmail.com>
+ <20231023223810.GW3195650@frogsfrogsfrogs>
+ <20231024-flora-gerodet-8ec178f87fe9@brauner>
+ <20231026031325.GH3195650@frogsfrogsfrogs>
 MIME-Version: 1.0
-References: <eb3b9e71ee9c6d8e228b0927dec3ac9177b06ec6.camel@kernel.org>
- <ZTWfX3CqPy9yCddQ@dread.disaster.area> <61b32a4093948ae1ae8603688793f07de764430f.camel@kernel.org>
- <ZTcBI2xaZz1GdMjX@dread.disaster.area> <CAHk-=whphyjjLwDcEthOOFXXfgwGrtrMnW2iyjdQioV6YSMEPw@mail.gmail.com>
- <ZTc8tClCRkfX3kD7@dread.disaster.area> <CAOQ4uxhJGkZrUdUJ72vjRuLec0g8VqgRXRH=x7W9ogMU6rBxcQ@mail.gmail.com>
- <d539804a2a73ad70265c5fa599ecd663cd235843.camel@kernel.org>
- <ZTjMRRqmlJ+fTys2@dread.disaster.area> <2ef9ac6180e47bc9cc8edef20648a000367c4ed2.camel@kernel.org>
- <ZTnNCytHLGoJY9ds@dread.disaster.area>
-In-Reply-To: <ZTnNCytHLGoJY9ds@dread.disaster.area>
-From:   Amir Goldstein <amir73il@gmail.com>
-Date:   Thu, 26 Oct 2023 08:42:59 +0300
-Message-ID: <CAOQ4uxjJdpPQAUfSf1EVWu-wxtmU63X=cwgoNHrhY-Ls5KWo5g@mail.gmail.com>
-Subject: Re: [PATCH RFC 2/9] timekeeping: new interfaces for multigrain
- timestamp handing
-To:     Dave Chinner <david@fromorbit.com>
-Cc:     Jeff Layton <jlayton@kernel.org>,
-        Linus Torvalds <torvalds@linux-foundation.org>,
-        Kent Overstreet <kent.overstreet@linux.dev>,
-        Christian Brauner <brauner@kernel.org>,
-        Alexander Viro <viro@zeniv.linux.org.uk>,
-        John Stultz <jstultz@google.com>,
-        Thomas Gleixner <tglx@linutronix.de>,
-        Stephen Boyd <sboyd@kernel.org>,
-        Chandan Babu R <chandan.babu@oracle.com>,
-        "Darrick J. Wong" <djwong@kernel.org>,
-        "Theodore Ts'o" <tytso@mit.edu>,
-        Andreas Dilger <adilger.kernel@dilger.ca>,
-        Chris Mason <clm@fb.com>, Josef Bacik <josef@toxicpanda.com>,
-        David Sterba <dsterba@suse.com>,
-        Hugh Dickins <hughd@google.com>,
-        Andrew Morton <akpm@linux-foundation.org>,
-        Jan Kara <jack@suse.de>, David Howells <dhowells@redhat.com>,
-        linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-xfs@vger.kernel.org, linux-ext4@vger.kernel.org,
-        linux-btrfs@vger.kernel.org, linux-mm@kvack.org,
-        linux-nfs@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+In-Reply-To: <20231026031325.GH3195650@frogsfrogsfrogs>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Thu, Oct 26, 2023 at 5:21=E2=80=AFAM Dave Chinner <david@fromorbit.com> =
-wrote:
->
-> On Wed, Oct 25, 2023 at 08:25:35AM -0400, Jeff Layton wrote:
-> > On Wed, 2023-10-25 at 19:05 +1100, Dave Chinner wrote:
-> > > On Tue, Oct 24, 2023 at 02:40:06PM -0400, Jeff Layton wrote:
-> > > > On Tue, 2023-10-24 at 10:08 +0300, Amir Goldstein wrote:
-> > > > > On Tue, Oct 24, 2023 at 6:40=E2=80=AFAM Dave Chinner <david@fromo=
-rbit.com> wrote:
-> > > > > >
-> > > > > > On Mon, Oct 23, 2023 at 02:18:12PM -1000, Linus Torvalds wrote:
-> > > > > > > On Mon, 23 Oct 2023 at 13:26, Dave Chinner <david@fromorbit.c=
-om> wrote:
-> > > > > Does xfs_repair guarantee that changes of atime, or any inode cha=
-nges
-> > > > > for that matter, update i_version? No, it does not.
-> > > > > So IMO, "atime does not update i_version" is not an "on-disk form=
-at change",
-> > > > > it is a runtime behavior change, just like lazytime is.
-> > > >
-> > > > This would certainly be my preference. I don't want to break any
-> > > > existing users though.
-> > >
-> > > That's why I'm trying to get some kind of consensus on what
-> > > rules and/or atime configurations people are happy for me to break
-> > > to make it look to users like there's a viable working change
-> > > attribute being supplied by XFS without needing to change the on
-> > > disk format.
-> > >
-> >
-> > I agree that the only bone of contention is whether to count atime
-> > updates against the change attribute. I think we have consensus that al=
-l
-> > in-kernel users do _not_ want atime updates counted against the change
-> > attribute. The only real question is these "legacy" users of
-> > di_changecount.
->
-> Please stop refering to "legacy users" of di_changecount. Whether
-> there are users or not is irrelevant - it is defined by the current
-> on-disk format specification, and as such there may be applications
-> we do not know about making use of the current behaviour.
->
-> It's like a linux syscall - we can't remove them because there may
-> be some user we don't know about still using that old syscall. We
-> simply don't make changes that can potentially break user
-> applications like that.
->
-> The on disk format is the same - there is software out that we don't
-> know about that expects a certain behaviour based on the
-> specification. We don't break the on disk format by making silent
-> behavioural changes - we require a feature flag to indicate
-> behaviour has changed so that applications can take appropriate
-> actions with stuff they don't understand.
->
-> The example for this is the BIGTIME timestamp format change. The on
-> disk inode structure is physically unchanged, but the contents of
-> the timestamp fields are encoded very differently. Sure, the older
-> kernels can read the timestamp data without any sort of problem
-> occurring, except for the fact the timestamps now appear to be
-> completely corrupted.
->
-> Changing the meaning of ithe contents of di_changecount is no
-> different. It might look OK and nothing crashes, but nothing can be
-> inferred from the value in the field because we don't know how it
-> has been modified.
->
+On Wed, Oct 25, 2023 at 08:13:25PM -0700, Darrick J. Wong wrote:
+> On Tue, Oct 24, 2023 at 01:47:17PM +0200, Christian Brauner wrote:
+> > On Mon, Oct 23, 2023 at 03:38:10PM -0700, Darrick J. Wong wrote:
+> > > On Sat, Oct 21, 2023 at 09:46:35AM -0700, Linus Torvalds wrote:
+> > > > On Fri, 20 Oct 2023 at 23:27, Darrick J. Wong <djwong@kernel.org> wrote:
+> > > > >
+> > > > > Please pull this branch with changes for iomap for 6.6-rc7.
+> > > > >
+> > > > > As usual, I did a test-merge with the main upstream branch as of a few
+> > > > > minutes ago, and didn't see any conflicts.  Please let me know if you
+> > > > > encounter any problems.
+> > > > 
+> > > > .. and as usual, the branch you point to does not actually exist.
+> > > > 
+> > > > Because you *again* pointed to the wrong tree.
+> > > > 
+> > > > This time I remembered what the mistake was last time, and picked out
+> > > > the right tree by hand, but *please* just fix your completely broken
+> > > > scripts or workflow.
+> > > > 
+> > > > > https://git.kernel.org/pub/scm/linux/kernel/git/djwong/xfs-linux.git iomap-6.6-fixes-5
+> > > > 
+> > > > No.
+> > > > 
+> > > > It's pub/scm/fs/xfs/xfs-linux, once again.
+> > > 
+> > > Sorry about that.  After reviewing the output of git request-pull, I
+> > > have learned that if you provide a $url argument that does not point to
+> > > a repo containing $start, it will print a warning to stderr and emit a
+> > > garbage pull request to stdout anyway.  No --force required or anything.
+> > > Piping stdout to mutt without checking the return code is therefore a
+> > > bad idea.
+> > > 
+> > > I have now updated my wrapper script to buffer the entire pull request
+> > > contents and check the return value before proceeding.
+> > > 
+> > > It is a poor workman who blames his tools, so I declare publicly that
+> > > you have an idiot for a maintainer.
+> > > 
+> > > Christian: Do you have the bandwidth to take over fs/iomap/?
+> > 
+> > If this helps you I will take iomap over but only if you and Christoph
+> > stay around as main reviewers.
+> 
+> I can't speak for Christoph, but I am very much willing to continue
+> developing patches for fs/iomap, running the QA farm to make sure it's
+> working properly, and reviewing everyone else's patches.  Same as I do
+> now.
+> 
+> What I would like to concentrate on in the future are:
+> 
+> (a) improving documentation and cleanups that other fs maintainers have
+>     been asking for and I haven't had time to work on
+> 
+> (b) helping interested fs maintainers port their fs to iomap for better
+>     performance
+> 
+> (c) figuring out how to integrate smoothly with things like fsverity and
+>     fscrypt
+> 
+> (d) not stepping on *your* toes every time you want to change something
+>     in the vfs only to have it collide with iomap changes that you
+>     didn't see
+> 
+> Similar to what we just did with XFS, I propose breaking up the iomap
+> Maintainer role into pieces that are more manageable by a single person.
 
-I don't agree that this change is the same as BIGTIME change,
-but it is a good queue to ask:
-BIGTIME has an on-disk feature bit in super block that can be set on an
-existing filesystem (and not cleared?).
-BIGTIME also has an on-disk inode flag to specify the format in which a
-specific inode timestampts are stored.
+Sounds good.
 
-If we were to change the xfs on-disk to change the *meaning* (not the
-format that the counter is stored) of di_changecount, would the feature
-flag need be RO_COMPAT?
-Would this require a per-inode on-disk flag that declares the meaning
-of di_changecount on that specific inode?
+> As RM, all you'd have to do is integrate reviewed patches and pull
+> requests into one of your work branches.  That gives you final say over
+> what goes in and how it goes in, instead of letting branches collide in
+> for-next without warning.
+> 
+> You can still forward on the review requests and bug reports to me.
 
-Neither of those changes is going to be very hard to do btw.
-Following the footsteps of the BIGTIME conversion, but without the
-need for an actual format convertors.
+Ok, cool.
 
-Thanks,
-Amir.
+> That part isn't changing.  I've enjoyed working with you and hope
+> that'll continue well into the future. :)
+
+Thanks. That's good to hear and right back at you.
+
+> 
+> > There's not much point in me pretending I
+> > can meaningfully review fs/iomap/ and I don't have the bandwith even if
+> > I could. So not without clear reviewers.
+> 
+> I hope the above assuades your concerns/fears!
+
+Yes.
+
+> 
+> > But, - and I'm sorry if I may overstep bounds a little bit - I think
+> > this self-castigation is really unwarranted. And we all very much know
+> > that you definitely aren't an idiot. And personally I think we shouldn't
+> > give the impression that we expect this sort of repentance when we make
+> > mistakes.
+> > 
+> > In other words, if the sole reason you're proposing this is an
+> > objectively false belief then I would suggest to reconsider.
+> 
+> Quite the opposite, these are changes that I've been wanting to make for
+> months. :)
+
+In that case I would propose you send a patch to Linus for MAINTAINERS
+updating the tree and the entries for iomap. I believe it's customary
+for the current maintainer to do this.
+
+Thanks!
+Christian
