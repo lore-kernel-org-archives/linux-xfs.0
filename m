@@ -2,180 +2,259 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 76A19C0032E
-	for <linux-xfs@archiver.kernel.org>; Thu, 26 Oct 2023 00:41:11 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E384AC25B6B
+	for <linux-xfs@archiver.kernel.org>; Thu, 26 Oct 2023 02:21:08 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230227AbjJZAlL (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 25 Oct 2023 20:41:11 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50452 "EHLO
+        id S233183AbjJZCVI (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 25 Oct 2023 22:21:08 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49264 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229877AbjJZAlK (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 25 Oct 2023 20:41:10 -0400
-Received: from mail-oa1-x2f.google.com (mail-oa1-x2f.google.com [IPv6:2001:4860:4864:20::2f])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id AA986DC
-        for <linux-xfs@vger.kernel.org>; Wed, 25 Oct 2023 17:41:08 -0700 (PDT)
-Received: by mail-oa1-x2f.google.com with SMTP id 586e51a60fabf-1dd71c0a41fso197156fac.2
-        for <linux-xfs@vger.kernel.org>; Wed, 25 Oct 2023 17:41:08 -0700 (PDT)
+        with ESMTP id S229816AbjJZCVH (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 25 Oct 2023 22:21:07 -0400
+Received: from mail-pl1-x62b.google.com (mail-pl1-x62b.google.com [IPv6:2607:f8b0:4864:20::62b])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B7BEB181
+        for <linux-xfs@vger.kernel.org>; Wed, 25 Oct 2023 19:21:03 -0700 (PDT)
+Received: by mail-pl1-x62b.google.com with SMTP id d9443c01a7336-1caad0bcc95so2751405ad.0
+        for <linux-xfs@vger.kernel.org>; Wed, 25 Oct 2023 19:21:03 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=fromorbit-com.20230601.gappssmtp.com; s=20230601; t=1698280868; x=1698885668; darn=vger.kernel.org;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
-        bh=GU2EF68TAyDnaqti8zYiMcurK2LAR5C/7QwilGDojM8=;
-        b=zQoeyjti+F3sgMM9+Ww7bD72MsYzJwLCYYDniSIAcGlOrJqt+90BMpczQ1ZYH4vqtt
-         Mg30Nk6RtOKs7P5uaoRl/QKUh1CBwQD4+KMBzbxYKkSiPlPkou2D7kWRcDF6HAMQGCDT
-         Pf7SrxJN8hUtstbGlVBrJCWL79GuaSDfWf5dV0/r23cxh72CO9+nG2q02AfTeEJwodYj
-         pLRTMasGX4ukOf6z9ZFBbGKvmamJWnbSc9ZHVSgtw314M/sBB32nfvuSIA7MQWSwWmAT
-         pZGa1GKYgF2Ghk9iQlTqhVLFv4ck+SIYf980rTAnCnJ9RtirwvDwtgmT9CwvMBvq6cyX
-         u7iQ==
+        d=fromorbit-com.20230601.gappssmtp.com; s=20230601; t=1698286863; x=1698891663; darn=vger.kernel.org;
+        h=in-reply-to:content-transfer-encoding:content-disposition
+         :mime-version:references:message-id:subject:cc:to:from:date:from:to
+         :cc:subject:date:message-id:reply-to;
+        bh=Xrnay9mlxBDi5+JAm8W67O95cADbTIj+Nxe1S7DfUFg=;
+        b=rJt/PWOpcuUnXefRCM9NvIiNYqc1vUs1mkmKkAO7o0Zn+isCfMyxPLXgMU/wvUfZ0B
+         yOwtoFe4kMMYfDdCk+4H2zxMRdygbCLAyuMDIJ8pQpuNJ0FT7dEb5RGwqd7uicbLE/r9
+         XECnymaC1EMFTqK0wIZaWtV2vDq6AKoTBgW0c67oe1QWC5pIArTUa6hHXj1udXsV6pka
+         wn0JzVtExosVk4yPsOUGgDK5wk+A1u7TptXILWuzTkVcJe34+Hg0ExJL+26b8Dvr+2Yc
+         /LtxUXFJs7BeFOF1fnoP+DwuJylu8Vde8tFFGWEY/hDdG78P40Dzc4wS0Hz4+bMF4sqp
+         JX/Q==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1698280868; x=1698885668;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=GU2EF68TAyDnaqti8zYiMcurK2LAR5C/7QwilGDojM8=;
-        b=XTJlNy8cbfaNVCOyJId07hwclWjpkkDITKmEUf4FUBwY8V0UwY5GQxwhA0oM0VtgKd
-         4cfUJ8ixOGnCMKSfQ+IMV8y3EurnYafGvC6pO2RK9jpJQfP6GyRuo0OnZv547/UUuBl5
-         mFBQWGMqM1uyUJh+O8WurCynxhMbSmGD7WevlQ+41FvZlzUZkrs8Ys7XwhXRk3mGxX+D
-         5S+VkIa4LadBh25iLIKN5e+HrLtDSvGTFWr+tHmaZxKWITfSh3dj7E+VKvFA3KgbIxev
-         GJXM4oouhlZAVIHmyZyGxwWrgPVIYeLJxxgcJWZSrI8ke075k+Ckp79i7L+4/OUjHnfE
-         vJyg==
-X-Gm-Message-State: AOJu0YwDZeaHP31pQSi0zmJKPoF62SZnALeEPb8oA+hYBTVc9bC5foHW
-        S5JLy9S/appPLYt8jsbjPbrezA==
-X-Google-Smtp-Source: AGHT+IGDM6X9sIztF9mLFV8npw1yzLBcZFnDy/PMfbcv1LomzYn2cQJiEe9lpDKR8tNLRFzdLuobAQ==
-X-Received: by 2002:a05:6871:4391:b0:1bb:a227:7008 with SMTP id lv17-20020a056871439100b001bba2277008mr20729738oab.3.1698280867767;
-        Wed, 25 Oct 2023 17:41:07 -0700 (PDT)
+        d=1e100.net; s=20230601; t=1698286863; x=1698891663;
+        h=in-reply-to:content-transfer-encoding:content-disposition
+         :mime-version:references:message-id:subject:cc:to:from:date
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=Xrnay9mlxBDi5+JAm8W67O95cADbTIj+Nxe1S7DfUFg=;
+        b=DUVlSjMiZGfM4rcWk/pXbQ6NgFrDiAqwTC6iYxXzcUuudM0HCQ66n/bI+3QwqorSPL
+         PLQFWi0ZK421OU8+0pWU0hOFjR1sHCYF14bwJahhbA6KHv6DCYxZEdzQDO1HFhl4uUJX
+         3tOD/j5UbNNCOeFQezMZz+1h2LFI4J4r8WVVG0J9qDQaSsgqRLJu9iLcISbXAlKRcpvz
+         x36bMavWt7Xo5+MTBq9f1AY/GRnikpyXSSMNkyL4AECO3O0eMGfG6rWDCnHeRlK3FTHv
+         Fsb4auxEzDJeCacHSrQf7SxI8EBrt/IMjDGImq3ja46M/B8IJVIj3ufDB8uLoluEscgO
+         4r2A==
+X-Gm-Message-State: AOJu0YzXnthZ/ucQ1j6aHTB/y0S89lublATtWcZMGvRgdFO4lUgROch0
+        IV9Cx8Nwc0NQ35drw/ID5Pm3pA==
+X-Google-Smtp-Source: AGHT+IE06BTmUGMs8YvxNH17BGVD0kMYPaJ3MGauK+ZjbnsW4Q6x7ClR+WERiO8EnBH/bQwSXsioEg==
+X-Received: by 2002:a17:903:26c6:b0:1ca:79b7:2fd2 with SMTP id jg6-20020a17090326c600b001ca79b72fd2mr14728336plb.19.1698286862973;
+        Wed, 25 Oct 2023 19:21:02 -0700 (PDT)
 Received: from dread.disaster.area (pa49-180-20-59.pa.nsw.optusnet.com.au. [49.180.20.59])
-        by smtp.gmail.com with ESMTPSA id m4-20020a63ed44000000b005b8f3293bf2sm2856250pgk.88.2023.10.25.17.41.06
+        by smtp.gmail.com with ESMTPSA id jh10-20020a170903328a00b001c736370245sm9853319plb.54.2023.10.25.19.21.02
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 25 Oct 2023 17:41:06 -0700 (PDT)
+        Wed, 25 Oct 2023 19:21:02 -0700 (PDT)
 Received: from dave by dread.disaster.area with local (Exim 4.96)
         (envelope-from <david@fromorbit.com>)
-        id 1qvoQp-003xxO-2w;
-        Thu, 26 Oct 2023 11:41:03 +1100
-Date:   Thu, 26 Oct 2023 11:41:03 +1100
+        id 1qvpzX-003ziY-2M;
+        Thu, 26 Oct 2023 13:20:59 +1100
+Date:   Thu, 26 Oct 2023 13:20:59 +1100
 From:   Dave Chinner <david@fromorbit.com>
-To:     Leah Rumancik <leah.rumancik@gmail.com>
-Cc:     linux-xfs@vger.kernel.org, djwong@kernel.org
-Subject: Re: [PATCH v2] xfs: up(ic_sema) if flushing data device fails
-Message-ID: <ZTm1n2I3bif0h4er@dread.disaster.area>
-References: <20231025225848.3437904-1-leah.rumancik@gmail.com>
+To:     Jeff Layton <jlayton@kernel.org>
+Cc:     Amir Goldstein <amir73il@gmail.com>,
+        Linus Torvalds <torvalds@linux-foundation.org>,
+        Kent Overstreet <kent.overstreet@linux.dev>,
+        Christian Brauner <brauner@kernel.org>,
+        Alexander Viro <viro@zeniv.linux.org.uk>,
+        John Stultz <jstultz@google.com>,
+        Thomas Gleixner <tglx@linutronix.de>,
+        Stephen Boyd <sboyd@kernel.org>,
+        Chandan Babu R <chandan.babu@oracle.com>,
+        "Darrick J. Wong" <djwong@kernel.org>,
+        Theodore Ts'o <tytso@mit.edu>,
+        Andreas Dilger <adilger.kernel@dilger.ca>,
+        Chris Mason <clm@fb.com>, Josef Bacik <josef@toxicpanda.com>,
+        David Sterba <dsterba@suse.com>,
+        Hugh Dickins <hughd@google.com>,
+        Andrew Morton <akpm@linux-foundation.org>,
+        Jan Kara <jack@suse.de>, David Howells <dhowells@redhat.com>,
+        linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-xfs@vger.kernel.org, linux-ext4@vger.kernel.org,
+        linux-btrfs@vger.kernel.org, linux-mm@kvack.org,
+        linux-nfs@vger.kernel.org
+Subject: Re: [PATCH RFC 2/9] timekeeping: new interfaces for multigrain
+ timestamp handing
+Message-ID: <ZTnNCytHLGoJY9ds@dread.disaster.area>
+References: <eb3b9e71ee9c6d8e228b0927dec3ac9177b06ec6.camel@kernel.org>
+ <ZTWfX3CqPy9yCddQ@dread.disaster.area>
+ <61b32a4093948ae1ae8603688793f07de764430f.camel@kernel.org>
+ <ZTcBI2xaZz1GdMjX@dread.disaster.area>
+ <CAHk-=whphyjjLwDcEthOOFXXfgwGrtrMnW2iyjdQioV6YSMEPw@mail.gmail.com>
+ <ZTc8tClCRkfX3kD7@dread.disaster.area>
+ <CAOQ4uxhJGkZrUdUJ72vjRuLec0g8VqgRXRH=x7W9ogMU6rBxcQ@mail.gmail.com>
+ <d539804a2a73ad70265c5fa599ecd663cd235843.camel@kernel.org>
+ <ZTjMRRqmlJ+fTys2@dread.disaster.area>
+ <2ef9ac6180e47bc9cc8edef20648a000367c4ed2.camel@kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=utf-8
 Content-Disposition: inline
-In-Reply-To: <20231025225848.3437904-1-leah.rumancik@gmail.com>
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <2ef9ac6180e47bc9cc8edef20648a000367c4ed2.camel@kernel.org>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Wed, Oct 25, 2023 at 03:58:48PM -0700, Leah Rumancik wrote:
-> We flush the data device cache before we issue external log IO. If
-> the flush fails, we shut down the log immediately and return. However,
-> the iclog->ic_sema is left in a decremented state so let's add an up().
-> Prior to this patch, xfs/438 would fail consistently when running with
-> an external log device:
+On Wed, Oct 25, 2023 at 08:25:35AM -0400, Jeff Layton wrote:
+> On Wed, 2023-10-25 at 19:05 +1100, Dave Chinner wrote:
+> > On Tue, Oct 24, 2023 at 02:40:06PM -0400, Jeff Layton wrote:
+> > > On Tue, 2023-10-24 at 10:08 +0300, Amir Goldstein wrote:
+> > > > On Tue, Oct 24, 2023 at 6:40 AM Dave Chinner <david@fromorbit.com> wrote:
+> > > > > 
+> > > > > On Mon, Oct 23, 2023 at 02:18:12PM -1000, Linus Torvalds wrote:
+> > > > > > On Mon, 23 Oct 2023 at 13:26, Dave Chinner <david@fromorbit.com> wrote:
+> > > > Does xfs_repair guarantee that changes of atime, or any inode changes
+> > > > for that matter, update i_version? No, it does not.
+> > > > So IMO, "atime does not update i_version" is not an "on-disk format change",
+> > > > it is a runtime behavior change, just like lazytime is.
+> > > 
+> > > This would certainly be my preference. I don't want to break any
+> > > existing users though.
+> > 
+> > That's why I'm trying to get some kind of consensus on what
+> > rules and/or atime configurations people are happy for me to break
+> > to make it look to users like there's a viable working change
+> > attribute being supplied by XFS without needing to change the on
+> > disk format.
+> > 
 > 
-> sync
->   -> xfs_log_force
->   -> xlog_write_iclog
->       -> down(&iclog->ic_sema)
->       -> blkdev_issue_flush (fail causes us to intiate shutdown)
->           -> xlog_force_shutdown
->           -> return
-> 
-> unmount
->   -> xfs_log_umount
->       -> xlog_wait_iclog_completion
->           -> down(&iclog->ic_sema) --------> HANG
-> 
-> There is a second early return / shutdown. Make sure the up() happens
-> for it as well.
-> 
-> Fixes: b5d721eaae47 ("xfs: external logs need to flush data device")
-> Fixes: 842a42d126b4 ("xfs: shutdown on failure to add page to log bio")
-> Fixes: 7d839e325af2 ("xfs: check return codes when flushing block devices")
-> Signed-off-by: Leah Rumancik <leah.rumancik@gmail.com>
-> Reviewed-by: Darrick J. Wong <djwong@kernel.org>
-> ---
-> 
-> Notes:
->     v1->v2:
->      - use goto instead of multiple returns
->      - add Fixes tags
-> 
->  fs/xfs/xfs_log.c | 17 +++++++++--------
->  1 file changed, 9 insertions(+), 8 deletions(-)
-> 
-> diff --git a/fs/xfs/xfs_log.c b/fs/xfs/xfs_log.c
-> index 51c100c86177..8ae923e00eb6 100644
-> --- a/fs/xfs/xfs_log.c
-> +++ b/fs/xfs/xfs_log.c
-> @@ -1925,20 +1925,17 @@ xlog_write_iclog(
->  		 * avoid shutdown re-entering this path and erroring out again.
->  		 */
->  		if (log->l_targ != log->l_mp->m_ddev_targp &&
-> -		    blkdev_issue_flush(log->l_mp->m_ddev_targp->bt_bdev)) {
-> -			xlog_force_shutdown(log, SHUTDOWN_LOG_IO_ERROR);
-> -			return;
-> -		}
-> +		    blkdev_issue_flush(log->l_mp->m_ddev_targp->bt_bdev))
-> +			goto shutdown;
->  	}
->  	if (iclog->ic_flags & XLOG_ICL_NEED_FUA)
->  		iclog->ic_bio.bi_opf |= REQ_FUA;
->  
->  	iclog->ic_flags &= ~(XLOG_ICL_NEED_FLUSH | XLOG_ICL_NEED_FUA);
->  
-> -	if (xlog_map_iclog_data(&iclog->ic_bio, iclog->ic_data, count)) {
-> -		xlog_force_shutdown(log, SHUTDOWN_LOG_IO_ERROR);
-> -		return;
-> -	}
-> +	if (xlog_map_iclog_data(&iclog->ic_bio, iclog->ic_data, count))
-> +		goto shutdown;
-> +
->  	if (is_vmalloc_addr(iclog->ic_data))
->  		flush_kernel_vmap_range(iclog->ic_data, count);
->  
-> @@ -1959,6 +1956,10 @@ xlog_write_iclog(
->  	}
->  
->  	submit_bio(&iclog->ic_bio);
-> +	return;
-> +shutdown:
-> +	up(&iclog->ic_sema);
-> +	xlog_force_shutdown(log, SHUTDOWN_LOG_IO_ERROR);
+> I agree that the only bone of contention is whether to count atime
+> updates against the change attribute. I think we have consensus that all
+> in-kernel users do _not_ want atime updates counted against the change
+> attribute. The only real question is these "legacy" users of
+> di_changecount.
 
-Hmmmm. So we'll leave an unreferenced, unlocked iclog in a SYNCING
-state where something else can access it, then hope that the
-shutdown gets to it first and that it cleans it all up? That doesn't
-seem completely safe to me.
+Please stop refering to "legacy users" of di_changecount. Whether
+there are users or not is irrelevant - it is defined by the current
+on-disk format specification, and as such there may be applications
+we do not know about making use of the current behaviour.
 
-At entry to this function, if the log is already shut down, it runs
-xlog_state_done_syncing() to force the iclog and it's attached state
-to be cleaned up before dropping the lock and returning.
+It's like a linux syscall - we can't remove them because there may
+be some user we don't know about still using that old syscall. We
+simply don't make changes that can potentially break user
+applications like that.
 
-If I look at xlog_ioend_work(), if it gets an error it does the
-shutdown, then calls xlog_state_done_syncing() to clean up the iclog
-and attached state, then drops the lock.
+The on disk format is the same - there is software out that we don't
+know about that expects a certain behaviour based on the
+specification. We don't break the on disk format by making silent
+behavioural changes - we require a feature flag to indicate
+behaviour has changed so that applications can take appropriate
+actions with stuff they don't understand.
 
-Hence it appears to me that the error handling for a fatal errors in
-IO submission should match the io completion error handling. i.e the
-error stack for this function should look like this:
+The example for this is the BIGTIME timestamp format change. The on
+disk inode structure is physically unchanged, but the contents of
+the timestamp fields are encoded very differently. Sure, the older
+kernels can read the timestamp data without any sort of problem
+occurring, except for the fact the timestamps now appear to be
+completely corrupted.
 
-....
-	if (xlog_is_shutdown(log))
-		goto out_done_sync;
-....
-	if (error)
-		goto out_do_shutdown;
-....
-out_do_shutdown:
-	xlog_force_shutdown(log, SHUTDOWN_LOG_IO_ERROR);
-out_done_sync:
-	xlog_state_done_syncing(iclog);
-	up(&iclog->ic_sema);
-}
+Changing the meaning of ithe contents of di_changecount is no
+different. It might look OK and nothing crashes, but nothing can be
+inferred from the value in the field because we don't know how it
+has been modified.
 
-Thoughts?
+Hence we can't just change the meaning, encoding or behaviour of an
+on disk field that would result in existing kernels and applications
+doing the wrong thing with that field (either read or write) without
+adding a feature flag to indicate what behaviour that field should
+have.
+
+> > > Perhaps this ought to be a mkfs option? Existing XFS filesystems could
+> > > still behave with the legacy behavior, but we could make mkfs.xfs build
+> > > filesystems by default that work like NFS requires.
+> > 
+> > If we require mkfs to set a flag to change behaviour, then we're
+> > talking about making an explicit on-disk format change to select the
+> > optional behaviour. That's precisely what I want to avoid.
+> > 
+> 
+> Right. The on-disk di_changecount would have a (subtly) different
+> meaning at that point.
+> 
+> It's not a change that requires drastic retooling though. If we were to
+> do this, we wouldn't need to grow the on-disk inode. Booting to an older
+> kernel would cause the behavior to revert. That's sub-optimal, but not
+> fatal.
+
+See above: redefining the contents, behaviour or encoding of an on
+disk field is a change of the on-disk format specification.
+
+The rules for on disk format changes that we work to were set in
+place long before I started working on XFS.  They are sane, well
+thought out rules that have stood the test of time and massive new
+feature introductions (CRCs, reflink, rmap, etc). And they only work
+because we don't allow anyone to bend them for convenience, short
+cuts or expediting their pet project.
+
+> What I don't quite understand is how these tools are accessing
+> di_changecount?
+
+As I keep saying: this is largely irrelevant to the problem at hand.
+
+> XFS only accesses the di_changecount to propagate the value to and from
+> the i_version,
+
+Yes.  XFS has a strong separation between on-disk structures and
+in-memory values, and i_version is simply the in-memory field we use
+to store the current di_changecount value.  We force bump i_version
+every time we modify the inode core regardless of whether anyone has
+queried i_version because that's what di_changecount requires. i.e.
+the filesystem controls the contents of i_version, not the VFS.
+
+Now that NFS is using a proper abstraction (i.e. vfs_statx()) to get
+the change cookie, we really don't need to expose di_changecount in
+i_version at all - we could simply copy an internal di_changecount
+value into the statx cookie field in xfs_vn_getattr() and there
+would be almost no change of behaviour from the perspective of NFS
+and IMA at all.
+
+> and there is nothing besides NFSD and IMA that queries
+> the i_version value in-kernel. So, this must be done via some sort of
+> userland tool that is directly accessing the block device (or some 3rd
+> party kernel module).
+
+Yup, both of those sort of applications exist. e.g. the DMAPI kernel
+module allows direct access to inode metadata through a custom
+bulkstat formatter implementation - it returns different information
+comapred to the standard XFS one in the upstream kernel.
+
+> In earlier discussions you alluded to some repair and/or analysis tools
+> that depended on this counter.
+
+Yes, and one of those "tools" is *me*.
+
+I frequently look at the di_changecount when doing forensic and/or
+failure analysis on filesystem corpses.  SOE analysis, relative
+modification activity, etc all give insight into what happened to
+the filesystem to get it into the state it is currently in, and
+di_changecount provides information no other metadata in the inode
+contains.
+
+> I took a quick look in xfsprogs, but I
+> didn't see anything there. Is there a library or something that these
+> tools use to get at this value?
+
+xfs_db is the tool I use for this, such as:
+
+$ sudo xfs_db -c "sb 0" -c "a rootino" -c "p v3.change_count" /dev/mapper/fast
+v3.change_count = 35
+$
+
+The root inode in this filesystem has a change count of 35. The root
+inode has 32 dirents in it, which means that no entries have ever
+been removed or renamed. This sort of insight into the past history
+of inode metadata is largely impossible to get any other way, and
+it's been the difference between understanding failure and having no
+clue more than once.
+
+Most block device parsing applications simply write their own
+decoder that walks the on-disk format. That's pretty trivial to do,
+developers can get all the information needed to do this from the
+on-disk format specification documentation we keep on kernel.org...
 
 -Dave.
 -- 
