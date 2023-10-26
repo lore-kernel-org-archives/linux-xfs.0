@@ -2,138 +2,172 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id EC678C25B6B
-	for <linux-xfs@archiver.kernel.org>; Thu, 26 Oct 2023 20:20:45 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 72EF8C25B48
+	for <linux-xfs@archiver.kernel.org>; Thu, 26 Oct 2023 20:56:50 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232143AbjJZUUp (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 26 Oct 2023 16:20:45 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43632 "EHLO
+        id S232090AbjJZU4u (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 26 Oct 2023 16:56:50 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47716 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232088AbjJZUUp (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 26 Oct 2023 16:20:45 -0400
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4F1C31B3
-        for <linux-xfs@vger.kernel.org>; Thu, 26 Oct 2023 13:20:42 -0700 (PDT)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id F31BEC433C8;
-        Thu, 26 Oct 2023 20:20:40 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1698351641;
-        bh=zOdtDCBSmQ6ZQaOBoH3IJv9cabODLDqmm/UfYkqbgc0=;
-        h=Subject:From:To:Cc:Date:In-Reply-To:References:From;
-        b=c8kYNmZmN6zlXBPZRWaAAHIuZXxu735QcBB/KS6l3uPQBFke4BBIvEdmSZrroPdBK
-         wjV601x84/YvZXnCGShdUEPyEfIHt+dgliReMFd9BcwBYikfTFERrNe9Th1Y4yIyZm
-         xH5Z42UKjY+P9sSFgNzqOJ6KtSKcH9vBRmTW3IMlemzeM3U4zJcKk4Dvvo2d3UQGrZ
-         XOGrxla+aMbv6AJakIZSqTJgUw6+GkSlMirp7u//hEdsB0PuK1GP84HxFFXNCoU+7S
-         b/71PnGn8a/oWhzDGqO/NvmzJhN4H+YpMv8efJoAvzTm/DTNUu+axND4L/lv1Nivr5
-         h70KQL827V88g==
-Message-ID: <f8145c661e18cd6a74095cc8ee952855cbfe65b9.camel@kernel.org>
-Subject: Re: [GIT PULL] iomap: bug fixes for 6.6-rc7
-From:   Jeff Layton <jlayton@kernel.org>
-To:     Linus Torvalds <torvalds@linux-foundation.org>,
-        "Darrick J. Wong" <djwong@kernel.org>
-Cc:     Christian Brauner <brauner@kernel.org>,
-        Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-        Shirley Ma <shirley.ma@oracle.com>, hch@lst.de,
-        jstancek@redhat.com, linux-fsdevel@vger.kernel.org,
-        linux-xfs@vger.kernel.org
-Date:   Thu, 26 Oct 2023 16:20:39 -0400
-In-Reply-To: <CAHk-=whQHBdJTr9noNuRwMtFrWepMHhnq6EtcAypegi5aUkQnQ@mail.gmail.com>
-References: <169786962623.1265253.5321166241579915281.stg-ugh@frogsfrogsfrogs>
-         <CAHk-=whNsCXwidLvx8u_JBH91=Z5EFw9FVj57HQ51P7uWs4yGQ@mail.gmail.com>
-         <20231023223810.GW3195650@frogsfrogsfrogs>
-         <20231024-flora-gerodet-8ec178f87fe9@brauner>
-         <20231026031325.GH3195650@frogsfrogsfrogs>
-         <CAHk-=whQHBdJTr9noNuRwMtFrWepMHhnq6EtcAypegi5aUkQnQ@mail.gmail.com>
-Content-Type: text/plain; charset="ISO-8859-15"
-Content-Transfer-Encoding: quoted-printable
-User-Agent: Evolution 3.48.4 (3.48.4-1.fc38) 
+        with ESMTP id S232063AbjJZU4t (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 26 Oct 2023 16:56:49 -0400
+Received: from mail-pf1-x435.google.com (mail-pf1-x435.google.com [IPv6:2607:f8b0:4864:20::435])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3137B1A6
+        for <linux-xfs@vger.kernel.org>; Thu, 26 Oct 2023 13:56:47 -0700 (PDT)
+Received: by mail-pf1-x435.google.com with SMTP id d2e1a72fcca58-6ba54c3ed97so1353039b3a.2
+        for <linux-xfs@vger.kernel.org>; Thu, 26 Oct 2023 13:56:47 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=fromorbit-com.20230601.gappssmtp.com; s=20230601; t=1698353806; x=1698958606; darn=vger.kernel.org;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
+        bh=gE/K/t6oxF6zzwM//B8mKU5vSnn+ShbpVEcTx2ZgAs8=;
+        b=SPXIt4OILl3I2QytiVaiz+PE5FmdyY8E8je8zojkNsNBhb7jTxbSTIXyrT3A0t1IMA
+         MmV53kFRee/nqXmQ3roMncqjZlGIRldDickHspwP/Rl1KBCJPzzqrVIgylPUlEj/D+u8
+         D1uxCtg7scuAcHAokYLOh0bVY3fisc++L5NWMWRa42P4MFLcGgEM1WtDKGNpIS8ZlOjm
+         15NC8dTr8UxyuRWNI1XBlDYm0PVA5DPMUUPLQz/2cRVKwrEUQcka+auwfH1VM78kEncu
+         dU6haM2mgBLaLawceLhX3ihlY7iMlfVk65EXu1sFQwjDL6jftn/6pm4Qm5b+pZ17Poio
+         tE1g==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1698353806; x=1698958606;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=gE/K/t6oxF6zzwM//B8mKU5vSnn+ShbpVEcTx2ZgAs8=;
+        b=GPqMM7IyhWtFk6h9b/vhwQ/06BYjYo3QqDxcdaKMoaegE6MhzsFhnT8u4vFx5Uf0XX
+         +I7jOxo6w8ZwmG1pR5iG5Uxz7mtOffM12e3d2Dy7jIxNKo6WqVyiYSRD4m0uvIau+Fc8
+         wVhnOpxmrn4dGYj8xvNfnHIpiCWecxNpH5Yn47XwjSMlo7c9gvdcT6pjUL0Hd6+iK1uG
+         R486H3epdfXvjnsD/LCR09KPzmKn6nGTwuP0zZeoPf8YDsiq8TEZN804rjiVC+eWJu6A
+         sIxqUjCD/CtvRHz63rUI+Ynhl1L+gjWaArEP0r8V9m7VgyyBHSN6uxGBUwCaY7pOwsDt
+         n/gQ==
+X-Gm-Message-State: AOJu0YwwUYBNPuTk52ZPkmGXPdl1ce7aR8UT4TUAOy5ERhC7VF01pM7U
+        UdbxA0tCKUKiiSZxi0EsbsRqUQ==
+X-Google-Smtp-Source: AGHT+IHdqxpJeHPUAzRTuuiYWAwRQ3kMf7EcZJUcT05NSVcq4HrH5ZRjXJ7GOOTsA1I34X26Nygy1g==
+X-Received: by 2002:a05:6a00:10ca:b0:6bd:4ab7:5f69 with SMTP id d10-20020a056a0010ca00b006bd4ab75f69mr717496pfu.12.1698353806607;
+        Thu, 26 Oct 2023 13:56:46 -0700 (PDT)
+Received: from dread.disaster.area (pa49-180-20-59.pa.nsw.optusnet.com.au. [49.180.20.59])
+        by smtp.gmail.com with ESMTPSA id x39-20020a056a000be700b00694f14a784bsm26120pfu.52.2023.10.26.13.56.46
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Thu, 26 Oct 2023 13:56:46 -0700 (PDT)
+Received: from dave by dread.disaster.area with local (Exim 4.96)
+        (envelope-from <david@fromorbit.com>)
+        id 1qw7PH-004KjW-1z;
+        Fri, 27 Oct 2023 07:56:43 +1100
+Date:   Fri, 27 Oct 2023 07:56:43 +1100
+From:   Dave Chinner <david@fromorbit.com>
+To:     "Darrick J. Wong" <djwong@kernel.org>
+Cc:     Omar Sandoval <osandov@osandov.com>, linux-xfs@vger.kernel.org,
+        kernel-team@fb.com
+Subject: Re: [PATCH] xfs: fix internal error from AGFL exhaustion
+Message-ID: <ZTrSiwF7OAq0hJHn@dread.disaster.area>
+References: <013168d2de9d25c56fe45ad75e9257cf9664f2d6.1698190191.git.osandov@fb.com>
+ <ZTibBf0ef5PMcJiH@dread.disaster.area>
+ <ZTikH67goprXtn1+@telecaster>
+ <20231025155046.GF3195650@frogsfrogsfrogs>
+ <ZTl0dH7kztlRNFe/@telecaster>
+ <20231025223909.GG3195650@frogsfrogsfrogs>
+ <ZTmmw7jDuEeBFbd3@dread.disaster.area>
+ <20231026032102.GI3195650@frogsfrogsfrogs>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20231026032102.GI3195650@frogsfrogsfrogs>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Thu, 2023-10-26 at 08:10 -1000, Linus Torvalds wrote:
-> On Wed, 25 Oct 2023 at 17:13, Darrick J. Wong <djwong@kernel.org> wrote:
-> >=20
-> > Similar to what we just did with XFS, I propose breaking up the iomap
-> > Maintainer role into pieces that are more manageable by a single person=
-.
-> > As RM, all you'd have to do is integrate reviewed patches and pull
-> > requests into one of your work branches.  That gives you final say over
-> > what goes in and how it goes in, instead of letting branches collide in
-> > for-next without warning.
->=20
-> I _think_ what you are saying is that you'd like to avoid being both a
-> maintainer and a developer.
->=20
-> Now, I'm probably hugely biased and going by personal experience, but
-> I do think that doing double duty is the worst of both worlds, and
-> pointlessly stressful.
->=20
-> As a maintainer, you have to worry about the big picture (things like
-> release timing, even if it's just a "is this a fix for this release,
-> or should it get queued for the next one") but also code-related
-> things like "we have two different things going on, let's sort them
-> out separately". Christian had that kind of issue just a couple of
-> days ago with the btrfs tree.
->=20
-> But then, as a developer, those are distractions and just add stress
-> and worry, and distract from whatever you're working on. As a
-> developer, the last thing you want to worry about is something else
-> than the actual technical issue you're trying to solve.
->=20
-> And obviously, there's a lot of overlap. A maintainer needs to be
-> _able_ to be a developer just to make good choices. And the whole
-> "maintainer vs developer" doesn't have to be two different people,
-> somebody might shift from one to the other simply because maybe they
-> enjoy both roles. Just not at the same time, all the time, having both
-> things putting different stress on you.
->=20
-> You can *kind* of see the difference in our git tree if you do
->=20
->     git rev-list --count --author=3DXYZ --no-merges --since=3D1.year HEAD
->=20
-> to see "code authorship" (aka developer), vs
->=20
->     git rev-list --count --committer=3DXYZ --since=3D1.year HEAD
->=20
-> which shows some kind of approximation of "maintainership". Obviously
-> there is overlap (potentially a lot of it) and the above isn't some
-> absolute thing, but you can see some patterns.
->=20
-> I personally wish we had more people who are maintainers _without_
-> having to worry too much about developing new code.  One of the issues
-> that keeps coming up is that companies don't always seem to appreciate
-> maintainership (which is a bit strange - the same companies may then
-> _love_ appreciateing managers, which is something very different but
-> has some of the same flavour to it).
->=20
-> And btw, I don't want to make that "I wish we had more maintainers" be
-> a value judgement. It's not that maintainers are somehow more
-> important than developers. I just think they are two fairly different
-> roles, and I think one person doing both puts unnecessary stress on
-> that person.
->=20
+On Wed, Oct 25, 2023 at 08:21:02PM -0700, Darrick J. Wong wrote:
+> On Thu, Oct 26, 2023 at 10:37:39AM +1100, Dave Chinner wrote:
+> > On Wed, Oct 25, 2023 at 03:39:09PM -0700, Darrick J. Wong wrote:
+> > > On Wed, Oct 25, 2023 at 01:03:00PM -0700, Omar Sandoval wrote:
+> > > > On Wed, Oct 25, 2023 at 08:50:46AM -0700, Darrick J. Wong wrote:
+> > > > > The absolute maximum height of a free space btree is 7 blocks, according
+> > > > > to xfs_db:
+> > > > > 
+> > > > > # xfs_db /dev/sda -c 'btheight -w absmax all'
+> > > > > bnobt: 7
+> > > > > cntbt: 7
+> > > > > inobt: 6
+> > > > > finobt: 6
+> > > > > bmapbt: 14
+> > > > > refcountbt: 6
+> > > > > rmapbt: 10
+> > > > > 
+> > > > > The smallest AGFL is 62 records long (V4 fs, 512b blocks) so I don't
+> > > > > think it's /that/ drastic.  For a filesystem with rmapbt (V5, 1k blocks)
+> > > > > that minimum jumps to 121 blocks.
+> > 
+> > Yup. keep in mind this comment in xfs_alloc_fix_freelist():
+> > 
+> > 	 * XXX (dgc): When we have lots of free space, does this buy us
+> >          * anything other than extra overhead when we need to put more blocks
+> >          * back on the free list? Maybe we should only do this when space is
+> >          * getting low or the AGFL is more than half full?
+> > 
+> > IOWs, I've previously mused about keeping the AGFL much fuller than
+> > the absolute minimum. There doesn't seem to be any real gain to
+> > keeping it at just the minimum size when we are nowhere near ENOSPC,
+> > it just means we are doing lots of management operations like
+> > reducing it immediately after a transaction that has released blocks
+> > to the freelist, then only to have to extend it again when we do an
+> > operation that consumes blocks from the free list.
+> > 
+> > i.e. should we add also hysteresis to limit the number of AGFL
+> > size manipulations we need to do in mixed workloads? i.e. we don't free
+> > blocks from the AGFL until it might get overfilled by an operation
+> > (i.e. max size - max merge free blocks) or we are nearing ENOSPC,
+> > and we don't fill till we are at the minimum. In either case, the
+> > target for empty or fill operations is "half full"...
+> 
+> Hmm.   What if we kept the AGFL completely full?
 
-Personally, I wouldn't want to give up doing development work
-altogether.=A0I don't mind doing some maintainership duties, and helping
-out other maintainers where I can, but maintainership takes a lot more
-time than most people realize. You're sort of obligated to review
-everything that comes across your plate.
+It can't be kept that way - we have to have space to store blocks
+that are released by tree merges. i.e. like a tree split requires a
+minimum number blocks in the free list for it to succeed, a tree
+merge needs a minimum number of free slots in the AGFL for it to
+succeed.
 
-I know Trond and Anna have been successful alternating the handling of
-pull requests and linux-next. I think it makes a lot of sense to have
-maintainership teams, at least for larger subsystems. We sort of have
-them informally now, but maybe we should be aiming to have a group of
-people who are all nominally maintainers on larger subsystems. They can
-then rotate between themselves on some schedule (every year? or every 5
-releases? Whatever works...).
+> On that 512b-fsblock V4 filesystem, that'd use up 128 blocks instead of 7
+> blocks.  128 blocks == 64K per AG.
+> 
+> On a 64K-fsblock V5 filesystem, that'd use up 16370 64K blocks per AG, or
+> ~1GB per AG.  Ok, that might be too much.
+> 
+> On a 4K-fsblock V5 fs, that's 1010 4K blocks per AG, or ~4MB per AG.
+> 
+> A gigabyte is a bit ridiculous, but what if we always did the maximum
+> bnobt/cntbt/rmapbt height instead of current_height + 1?
 
-That provides some extra incentive for other team members to help out
-with reviews, and it may make it simpler for someone else to step in
-when the current maintainer needs to step away.
+Yes, largely full AGFLs all the time doesn't make a whole lot of
+sense, but just a max height reservation still doesn't cover the
+case exposed by this fix. It would need to be 2 * max height
+to cover the double split case we are talking about here.
 
-It does rely on a high degree of trust between team members, but most of
-us seem to get along.
---=20
-Jeff Layton <jlayton@kernel.org>
+Also, if we change from the current height to always use the
+maximum, it re-introduces a bunch of ENOSPC issues resulting from
+overcommitting user data space. That is, we must ensure that global
+free space does not exhaust the free space that we need to refill
+the AGFLs to enable an extent free at ENOSPC to proceed. i.e.
+the mp->m_alloc_set_aside value (i.e. XFS_ALLOCBT_AGFL_RESERVE)
+needs to reflect the fact this would change the minimum AGFL fill at
+ENOSPC.
+
+Further, changing to max reservation for the minimum fill fails to
+recognoise that at ENOSPC, the free space trees are empty and so
+will never split, and so a large minimum AGFL fill is completely
+unnecessary - at most all we need is to have enough blocks in the
+AGFL for the single level root split to occur (i.e. 2 blocks per
+free space btree). That's waht the current XFS_ALLOCBT_AGFL_RESERVE
+value is set to.
+
+So, really, I don't see moving away from the variable minimum
+reservation we currently have is a good idea. Adding a bit of
+hysteresis to the AGFL fill/drain operations doesn't require
+changing the min fill requirements, just picking a sensible target
+above the current minimum fill...
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
