@@ -2,110 +2,135 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 51C31C25B67
-	for <linux-xfs@archiver.kernel.org>; Thu, 26 Oct 2023 14:08:48 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 73776C25B48
+	for <linux-xfs@archiver.kernel.org>; Thu, 26 Oct 2023 18:10:25 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235040AbjJZOIs (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 26 Oct 2023 10:08:48 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40998 "EHLO
+        id S230152AbjJZSKY (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 26 Oct 2023 14:10:24 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50226 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S234902AbjJZOIr (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 26 Oct 2023 10:08:47 -0400
-Received: from mout-p-101.mailbox.org (mout-p-101.mailbox.org [80.241.56.151])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id AC68F1B6;
-        Thu, 26 Oct 2023 07:08:44 -0700 (PDT)
-Received: from smtp102.mailbox.org (smtp102.mailbox.org [10.196.197.102])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
-        (No client certificate requested)
-        by mout-p-101.mailbox.org (Postfix) with ESMTPS id 4SGSMC5Gj0z9sWp;
-        Thu, 26 Oct 2023 16:08:39 +0200 (CEST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=pankajraghav.com;
-        s=MBO0001; t=1698329319;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:
-         content-transfer-encoding:content-transfer-encoding;
-        bh=5R4EGfShOD0w/jE9kidAs7NQbrorkJlAAUpuwmTA4wg=;
-        b=QKW4VmSPz3yGmbngc15+Gg3LaoO684U1RfeUaYWkeDhU/B9grB/oC7Z4ukq6wcF0tc4Znc
-        tR11V9zazJ5gON7GIh8HE6XrzPLWUyrlp+DfhL5/LbInCUav9+XaeUuviApBaqJSAr0QUx
-        wDXYyfmUKGXMCrDvysrboc4NkVSnAIlI4joZBsCyruAhvT3iQ/LM9vBBPk/1N4WpqneY3i
-        9vE6Cq+SOVg/XTKX7Lv+NEx59lX1fT6JsCrvqUuuu1yetQbXLfFqVyXroUiRbX0jDluXsJ
-        BBgvL45EUNdxilXjiQY718Xo6ygT/OVtpEImmq4GxVn9U54OIOL3AEVHaTKgMw==
-From:   Pankaj Raghav <kernel@pankajraghav.com>
-To:     linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org
-Cc:     willy@infradead.org, djwong@kernel.org, mcgrof@kernel.org,
-        hch@lst.de, da.gomez@samsung.com, gost.dev@samsung.com,
-        david@fromorbit.com, Pankaj Raghav <p.raghav@samsung.com>
-Subject: [PATCH] iomap: fix iomap_dio_zero() for fs bs > system page size
-Date:   Thu, 26 Oct 2023 16:08:32 +0200
-Message-Id: <20231026140832.1089824-1-kernel@pankajraghav.com>
+        with ESMTP id S230078AbjJZSKX (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 26 Oct 2023 14:10:23 -0400
+Received: from mail-ej1-x631.google.com (mail-ej1-x631.google.com [IPv6:2a00:1450:4864:20::631])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3AA189C
+        for <linux-xfs@vger.kernel.org>; Thu, 26 Oct 2023 11:10:21 -0700 (PDT)
+Received: by mail-ej1-x631.google.com with SMTP id a640c23a62f3a-9adb9fa7200so250406366b.0
+        for <linux-xfs@vger.kernel.org>; Thu, 26 Oct 2023 11:10:21 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=linux-foundation.org; s=google; t=1698343819; x=1698948619; darn=vger.kernel.org;
+        h=cc:to:subject:message-id:date:from:in-reply-to:references
+         :mime-version:from:to:cc:subject:date:message-id:reply-to;
+        bh=vTbt9gqKKxXYaVH3DBnhOUVSf9jjJse6rxhifrnnjZk=;
+        b=XOscnmogPVD18uaSCG5AznLkn6dvylNHpXDFbAqepN7PtAgiFB0BR/pJPlnOP1RKLM
+         xlFzOMVO5V60UxiBa6jxzclbRepjqungsZKvUD6rNPIdXWPXBQz4kqXUnfrPVG7fgXFY
+         8kiidtkfC0oW8+dpg6YrzToH75P43tkWZl6KI=
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1698343819; x=1698948619;
+        h=cc:to:subject:message-id:date:from:in-reply-to:references
+         :mime-version:x-gm-message-state:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=vTbt9gqKKxXYaVH3DBnhOUVSf9jjJse6rxhifrnnjZk=;
+        b=NO8rXg4VCIKfYJrPaxsM8gG8prMd/FiGkHCJtELt7FJ2CfygkSFyqyuBIAjdNO9Vkk
+         qCNfk5hH85x3n9FAl3k+GEIfXazxpJrVBq7m7fekujT16ZWHNgI/Jfg8xMQ13vB28ok0
+         wizyWOGyNVDPkXK7zxDzgO7NNM68eK7dEnJ5jHZB98rvrfvx4LtWFhtTTkH28/PssfGS
+         3KoESpHjaFvkO+l9bPGSZFF4lqx1C/QqMwB+LbChDvu31ha7luU5dyacZKbn5Ln9vgMA
+         w1a/6uxpI85RsMZNP5Uv7rjp0pLPMvNwkt3Ys31qZykf8mNEebymWd4z0R2UV6j9+j5E
+         SE7Q==
+X-Gm-Message-State: AOJu0YzVMUSqlQD2CFFhqMK8jqtd3MU513d1Jyrsm0uimIQvBEqhPnB6
+        xr3PqxXSqsqciNcqtcR2+WeombKVlvgfU9DlBrVlqA==
+X-Google-Smtp-Source: AGHT+IHItlDMRvBRRCYDqNYGDb01GlTtWYfcQsJwOUZy4smsy2PWzHypX4hAUrGgDLbJAdV0LIkDOA==
+X-Received: by 2002:a17:907:2da3:b0:9c3:97d7:2c67 with SMTP id gt35-20020a1709072da300b009c397d72c67mr512563ejc.25.1698343819539;
+        Thu, 26 Oct 2023 11:10:19 -0700 (PDT)
+Received: from mail-ed1-f48.google.com (mail-ed1-f48.google.com. [209.85.208.48])
+        by smtp.gmail.com with ESMTPSA id m11-20020a170906234b00b00988e953a586sm11987329eja.61.2023.10.26.11.10.18
+        for <linux-xfs@vger.kernel.org>
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Thu, 26 Oct 2023 11:10:18 -0700 (PDT)
+Received: by mail-ed1-f48.google.com with SMTP id 4fb4d7f45d1cf-53fc7c67a41so4934040a12.0
+        for <linux-xfs@vger.kernel.org>; Thu, 26 Oct 2023 11:10:18 -0700 (PDT)
+X-Received: by 2002:aa7:c758:0:b0:541:342b:2469 with SMTP id
+ c24-20020aa7c758000000b00541342b2469mr1010574eds.1.1698343818276; Thu, 26 Oct
+ 2023 11:10:18 -0700 (PDT)
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+References: <169786962623.1265253.5321166241579915281.stg-ugh@frogsfrogsfrogs>
+ <CAHk-=whNsCXwidLvx8u_JBH91=Z5EFw9FVj57HQ51P7uWs4yGQ@mail.gmail.com>
+ <20231023223810.GW3195650@frogsfrogsfrogs> <20231024-flora-gerodet-8ec178f87fe9@brauner>
+ <20231026031325.GH3195650@frogsfrogsfrogs>
+In-Reply-To: <20231026031325.GH3195650@frogsfrogsfrogs>
+From:   Linus Torvalds <torvalds@linux-foundation.org>
+Date:   Thu, 26 Oct 2023 08:10:01 -1000
+X-Gmail-Original-Message-ID: <CAHk-=whQHBdJTr9noNuRwMtFrWepMHhnq6EtcAypegi5aUkQnQ@mail.gmail.com>
+Message-ID: <CAHk-=whQHBdJTr9noNuRwMtFrWepMHhnq6EtcAypegi5aUkQnQ@mail.gmail.com>
+Subject: Re: [GIT PULL] iomap: bug fixes for 6.6-rc7
+To:     "Darrick J. Wong" <djwong@kernel.org>
+Cc:     Christian Brauner <brauner@kernel.org>,
+        Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+        Shirley Ma <shirley.ma@oracle.com>, hch@lst.de,
+        jstancek@redhat.com, linux-fsdevel@vger.kernel.org,
+        linux-xfs@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-From: Pankaj Raghav <p.raghav@samsung.com>
+On Wed, 25 Oct 2023 at 17:13, Darrick J. Wong <djwong@kernel.org> wrote:
+>
+> Similar to what we just did with XFS, I propose breaking up the iomap
+> Maintainer role into pieces that are more manageable by a single person.
+> As RM, all you'd have to do is integrate reviewed patches and pull
+> requests into one of your work branches.  That gives you final say over
+> what goes in and how it goes in, instead of letting branches collide in
+> for-next without warning.
 
-iomap_dio_zero() will pad a fs block with zeroes if the direct IO size
-< fs block size. iomap_dio_zero() has an implicit assumption that fs block
-size < page_size. This is true for most filesystems at the moment.
+I _think_ what you are saying is that you'd like to avoid being both a
+maintainer and a developer.
 
-If the block size > page size (Large block sizes)[1], this will send the
-contents of the page next to zero page(as len > PAGE_SIZE) to the
-underlying block device, causing FS corruption.
+Now, I'm probably hugely biased and going by personal experience, but
+I do think that doing double duty is the worst of both worlds, and
+pointlessly stressful.
 
-iomap is a generic infrastructure and it should not make any assumptions
-about the fs block size and the page size of the system.
+As a maintainer, you have to worry about the big picture (things like
+release timing, even if it's just a "is this a fix for this release,
+or should it get queued for the next one") but also code-related
+things like "we have two different things going on, let's sort them
+out separately". Christian had that kind of issue just a couple of
+days ago with the btrfs tree.
 
-Fixes: db074436f421 ("iomap: move the direct IO code into a separate file")
-Signed-off-by: Pankaj Raghav <p.raghav@samsung.com>
+But then, as a developer, those are distractions and just add stress
+and worry, and distract from whatever you're working on. As a
+developer, the last thing you want to worry about is something else
+than the actual technical issue you're trying to solve.
 
-[1] https://lore.kernel.org/lkml/20230915183848.1018717-1-kernel@pankajraghav.com/
----
-I had initially planned on sending this as a part of LBS patches but I                                                                                                                                                                                                                                                  
-think this can go as a standalone patch as it is a generic fix to iomap.                                                                                                                                                                                                                                                
-                                                                                                                                                                                                                                                                                                                        
-@Dave chinner This fixes the corruption issue you were seeing in                                                                                                                                                                                                                                                        
-generic/091 for bs=64k in [2]                                                                                                                                                                                                                                                                                           
-                                                                                                                                                                                                                                                                                                                        
-[2] https://lore.kernel.org/lkml/ZQfbHloBUpDh+zCg@dread.disaster.area/
+And obviously, there's a lot of overlap. A maintainer needs to be
+_able_ to be a developer just to make good choices. And the whole
+"maintainer vs developer" doesn't have to be two different people,
+somebody might shift from one to the other simply because maybe they
+enjoy both roles. Just not at the same time, all the time, having both
+things putting different stress on you.
 
- fs/iomap/direct-io.c | 13 +++++++++++--
- 1 file changed, 11 insertions(+), 2 deletions(-)
+You can *kind* of see the difference in our git tree if you do
 
-diff --git a/fs/iomap/direct-io.c b/fs/iomap/direct-io.c
-index bcd3f8cf5ea4..04f6c5548136 100644
---- a/fs/iomap/direct-io.c
-+++ b/fs/iomap/direct-io.c
-@@ -239,14 +239,23 @@ static void iomap_dio_zero(const struct iomap_iter *iter, struct iomap_dio *dio,
- 	struct page *page = ZERO_PAGE(0);
- 	struct bio *bio;
- 
--	bio = iomap_dio_alloc_bio(iter, dio, 1, REQ_OP_WRITE | REQ_SYNC | REQ_IDLE);
-+	WARN_ON_ONCE(len > (BIO_MAX_VECS * PAGE_SIZE));
-+
-+	bio = iomap_dio_alloc_bio(iter, dio, BIO_MAX_VECS,
-+				  REQ_OP_WRITE | REQ_SYNC | REQ_IDLE);
- 	fscrypt_set_bio_crypt_ctx(bio, inode, pos >> inode->i_blkbits,
- 				  GFP_KERNEL);
-+
- 	bio->bi_iter.bi_sector = iomap_sector(&iter->iomap, pos);
- 	bio->bi_private = dio;
- 	bio->bi_end_io = iomap_dio_bio_end_io;
- 
--	__bio_add_page(bio, page, len, 0);
-+	while (len) {
-+		unsigned int io_len = min_t(unsigned int, len, PAGE_SIZE);
-+
-+		__bio_add_page(bio, page, io_len, 0);
-+		len -= io_len;
-+	}
- 	iomap_dio_submit_bio(iter, dio, bio, pos);
- }
- 
+    git rev-list --count --author=XYZ --no-merges --since=1.year HEAD
 
-base-commit: 05d3ef8bba77c1b5f98d941d8b2d4aeab8118ef1
--- 
-2.40.1
+to see "code authorship" (aka developer), vs
 
+    git rev-list --count --committer=XYZ --since=1.year HEAD
+
+which shows some kind of approximation of "maintainership". Obviously
+there is overlap (potentially a lot of it) and the above isn't some
+absolute thing, but you can see some patterns.
+
+I personally wish we had more people who are maintainers _without_
+having to worry too much about developing new code.  One of the issues
+that keeps coming up is that companies don't always seem to appreciate
+maintainership (which is a bit strange - the same companies may then
+_love_ appreciateing managers, which is something very different but
+has some of the same flavour to it).
+
+And btw, I don't want to make that "I wish we had more maintainers" be
+a value judgement. It's not that maintainers are somehow more
+important than developers. I just think they are two fairly different
+roles, and I think one person doing both puts unnecessary stress on
+that person.
+
+             Linus
