@@ -2,145 +2,121 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4EC35C25B47
-	for <linux-xfs@archiver.kernel.org>; Fri, 27 Oct 2023 07:53:30 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 137C2C25B47
+	for <linux-xfs@archiver.kernel.org>; Fri, 27 Oct 2023 08:03:41 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230523AbjJ0Hxa (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 27 Oct 2023 03:53:30 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41104 "EHLO
+        id S229604AbjJ0IDk (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 27 Oct 2023 04:03:40 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58894 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231624AbjJ0Hx3 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 27 Oct 2023 03:53:29 -0400
+        with ESMTP id S235076AbjJ0IDZ (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 27 Oct 2023 04:03:25 -0400
 Received: from mailout2.w1.samsung.com (mailout2.w1.samsung.com [210.118.77.12])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1B9EC1B1
-        for <linux-xfs@vger.kernel.org>; Fri, 27 Oct 2023 00:53:26 -0700 (PDT)
-Received: from eucas1p1.samsung.com (unknown [182.198.249.206])
-        by mailout2.w1.samsung.com (KnoxPortal) with ESMTP id 20231027075322euoutp02e8d5826d21d078bf983ee8e42f680f04~R555yHaQH3082530825euoutp02f
-        for <linux-xfs@vger.kernel.org>; Fri, 27 Oct 2023 07:53:22 +0000 (GMT)
-DKIM-Filter: OpenDKIM Filter v2.11.0 mailout2.w1.samsung.com 20231027075322euoutp02e8d5826d21d078bf983ee8e42f680f04~R555yHaQH3082530825euoutp02f
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 36F2B196
+        for <linux-xfs@vger.kernel.org>; Fri, 27 Oct 2023 01:03:22 -0700 (PDT)
+Received: from eucas1p2.samsung.com (unknown [182.198.249.207])
+        by mailout2.w1.samsung.com (KnoxPortal) with ESMTP id 20231027080318euoutp02bedff40f5c91af589b566fcb44d0a555~R6ClFyPmw0794807948euoutp02T
+        for <linux-xfs@vger.kernel.org>; Fri, 27 Oct 2023 08:03:18 +0000 (GMT)
+DKIM-Filter: OpenDKIM Filter v2.11.0 mailout2.w1.samsung.com 20231027080318euoutp02bedff40f5c91af589b566fcb44d0a555~R6ClFyPmw0794807948euoutp02T
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=samsung.com;
-        s=mail20170921; t=1698393202;
-        bh=PxERn5YTThx5iF3PbxacxOMVyXeEpWzKixGsUs4v23M=;
+        s=mail20170921; t=1698393798;
+        bh=rLBM49fPnnkhTpGrCYa4ODHPS3Vstui8y7gu0ZH/pzc=;
         h=Date:Subject:To:CC:From:In-Reply-To:References:From;
-        b=OO0vl7UZn1WwoP0K3/bSJ9tHKFQOdKnjRcnOzZiU/GjnXW59x3nIhCpAAOkdmusJt
-         g34SSG8qGwpXYrSG6tBdVn1kTIXvsCwYVOgKCSLHsdEMa87Hx6ZnyfnnRs61NpE01x
-         tBmFPC7lhTUtXgPN3nh9+kHwrXSyBJbnbrVdG8lo=
-Received: from eusmges1new.samsung.com (unknown [203.254.199.242]) by
+        b=NfmdLziJ6nV/4bCuilyYvw/XBhtD1Q/b7QEkbMqdWdjy8/CPrfN4R5ho6QVHy2oo8
+         PPx1wCCmu9aQX9DXzVQTNY5wW8pTSPGVMjlBzQyj4LhULNWMhSUExffE+JIXzaFmsc
+         vCZjXDqRzMgq4orGIg7wBskUtJGDyFcEG5/nwgPQ=
+Received: from eusmges3new.samsung.com (unknown [203.254.199.245]) by
         eucas1p1.samsung.com (KnoxPortal) with ESMTP id
-        20231027075321eucas1p13570248a0a6cd38d2edf8a1dda482e76~R555dQvlz0418704187eucas1p1e;
-        Fri, 27 Oct 2023 07:53:21 +0000 (GMT)
+        20231027080318eucas1p1c415a2ded01a158bb723589c92ad19b3~R6Ckym9Uy0196401964eucas1p10;
+        Fri, 27 Oct 2023 08:03:18 +0000 (GMT)
 Received: from eucas1p2.samsung.com ( [182.198.249.207]) by
-        eusmges1new.samsung.com (EUCPMTA) with SMTP id 9C.92.42423.17C6B356; Fri, 27
-        Oct 2023 08:53:21 +0100 (BST)
-Received: from eusmtrp1.samsung.com (unknown [182.198.249.138]) by
+        eusmges3new.samsung.com (EUCPMTA) with SMTP id 0B.B8.37758.6CE6B356; Fri, 27
+        Oct 2023 09:03:18 +0100 (BST)
+Received: from eusmtrp2.samsung.com (unknown [182.198.249.139]) by
         eucas1p2.samsung.com (KnoxPortal) with ESMTPA id
-        20231027075321eucas1p2b46640bdcbaaab0436f5c2c1ebaa2911~R555CiDom2548125481eucas1p2Z;
-        Fri, 27 Oct 2023 07:53:21 +0000 (GMT)
+        20231027080317eucas1p2b582202e5e56cb78fbaaa79022977995~R6CkYdZqe3072830728eucas1p2-;
+        Fri, 27 Oct 2023 08:03:17 +0000 (GMT)
 Received: from eusmgms1.samsung.com (unknown [182.198.249.179]) by
-        eusmtrp1.samsung.com (KnoxPortal) with ESMTP id
-        20231027075321eusmtrp1f741c38e82f5b4c828647e7908841b40~R555Bg4GB1938619386eusmtrp1s;
-        Fri, 27 Oct 2023 07:53:21 +0000 (GMT)
-X-AuditID: cbfec7f2-a51ff7000002a5b7-2e-653b6c719197
-Received: from eusmtip1.samsung.com ( [203.254.199.221]) by
-        eusmgms1.samsung.com (EUCPMTA) with SMTP id 28.AA.10549.17C6B356; Fri, 27
-        Oct 2023 08:53:21 +0100 (BST)
+        eusmtrp2.samsung.com (KnoxPortal) with ESMTP id
+        20231027080317eusmtrp2af8cb688393866b29c77f1bb64b6b507~R6CkXn_iN2544125441eusmtrp25;
+        Fri, 27 Oct 2023 08:03:17 +0000 (GMT)
+X-AuditID: cbfec7f5-7ffff7000002937e-b8-653b6ec673fd
+Received: from eusmtip2.samsung.com ( [203.254.199.222]) by
+        eusmgms1.samsung.com (EUCPMTA) with SMTP id D6.AC.10549.5CE6B356; Fri, 27
+        Oct 2023 09:03:17 +0100 (BST)
 Received: from CAMSVWEXC02.scsc.local (unknown [106.1.227.72]) by
-        eusmtip1.samsung.com (KnoxPortal) with ESMTPA id
-        20231027075321eusmtip17c64741ae6a95bb33c3dde69d4aef601~R5541MSio1368813688eusmtip1o;
-        Fri, 27 Oct 2023 07:53:21 +0000 (GMT)
+        eusmtip2.samsung.com (KnoxPortal) with ESMTPA id
+        20231027080317eusmtip2728a6edf2da46567b4ed06bb821726c8~R6CkN0vc52284722847eusmtip2c;
+        Fri, 27 Oct 2023 08:03:17 +0000 (GMT)
 Received: from [106.110.32.65] (106.110.32.65) by CAMSVWEXC02.scsc.local
         (2002:6a01:e348::6a01:e348) with Microsoft SMTP Server (TLS) id 15.0.1497.2;
-        Fri, 27 Oct 2023 08:53:20 +0100
-Message-ID: <7ad225ac-721f-4c99-8d99-c90992609267@samsung.com>
-Date:   Fri, 27 Oct 2023 09:53:19 +0200
+        Fri, 27 Oct 2023 09:03:16 +0100
+Message-ID: <1e7e9810-9b06-48c4-aec8-d4817cca9d17@samsung.com>
+Date:   Fri, 27 Oct 2023 10:03:15 +0200
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
 Subject: Re: [PATCH] iomap: fix iomap_dio_zero() for fs bs > system page
  size
-To:     Dave Chinner <david@fromorbit.com>,
+Content-Language: en-US
+To:     Christoph Hellwig <hch@lst.de>,
         Pankaj Raghav <kernel@pankajraghav.com>
 CC:     <linux-xfs@vger.kernel.org>, <linux-fsdevel@vger.kernel.org>,
         <willy@infradead.org>, <djwong@kernel.org>, <mcgrof@kernel.org>,
-        <hch@lst.de>, <da.gomez@samsung.com>, <gost.dev@samsung.com>
-Content-Language: en-US
+        <da.gomez@samsung.com>, <gost.dev@samsung.com>,
+        <david@fromorbit.com>
 From:   Pankaj Raghav <p.raghav@samsung.com>
-In-Reply-To: <ZTrjv11yeQPaC6hO@dread.disaster.area>
+In-Reply-To: <20231027051847.GA7885@lst.de>
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
 X-Originating-IP: [106.110.32.65]
 X-ClientProxiedBy: CAMSVWEXC01.scsc.local (2002:6a01:e347::6a01:e347) To
         CAMSVWEXC02.scsc.local (2002:6a01:e348::6a01:e348)
-X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFlrGKsWRmVeSWpSXmKPExsWy7djP87qFOdapBk82G1psOXaP0eLyEz6L
-        lauPMlmcefmZxWLP3pMsFrv+7GC3uDHhKaPF7x9z2Bw4PE4tkvDYvELLY9OqTjaP3Tcb2DzO
-        rnT0+LxJLoAtissmJTUnsyy1SN8ugStj2ZZNLAUn+CpmLX/O1MC4nbuLkZNDQsBE4sTZlYxd
-        jFwcQgIrGCVOHfjLAuF8YZRYumQblPOZUeLs3rssMC2LN31jgkgsZ5T4s+4PK1zV3w1tbBDO
-        TkaJeytPsYK08ArYSaw48YkZxGYRUJWYO72fGSIuKHFy5hOwsaIC8hL3b81gB7GFBfwljsw9
-        wQRiiwgESjy5fwTsQmaBw4wSc57fBytiFhCXuPVkPlARBwebgJZEYydYmFPAWGLZpttQJZoS
-        rdt/Q9nyEtvfzmGGeEFRYtLN96wQdq3EqS23wN6REOjnlDj0/zXUny4SN/qboWxhiVfHt7BD
-        2DISpyf3QMWrJZ7e+M0M0dzCKNG/cz0byEESAtYSfWdyIExHia4tlhAmn8SNt4IQ5/BJTNo2
-        nXkCo+ospJCYheSxWUg+mIXkgwWMLKsYxVNLi3PTU4sN81LL9YoTc4tL89L1kvNzNzECk9Lp
-        f8c/7WCc++qj3iFGJg7GQ4wSHMxKIryRPhapQrwpiZVVqUX58UWlOanFhxilOViUxHlVU+RT
-        hQTSE0tSs1NTC1KLYLJMHJxSDUxc/4OYP1gZ3vnGniffyySR/V7b7edzZ440X+OHh8vN5Jb7
-        Kkx5JtCb/OqwwLs7Wx/57WH7JrrQmV+czVJWafEW8W1KH97p/9G9WlGiXxX5gfUyX9Mmafuu
-        y+sStGpl3hQJNj2az3buy2WGbZ3crzRuhWxcanym4f5J8fwqZZ7XjGvW88qLM2zecfFo/ez3
-        b1KMeP7NunL7WfRkza+OZjMt9HfdZuRYL3jc8onYb4XWhV/51wuaF0pvqrx+e+vhB38k8/W7
-        n63deNR+9oRtqd976iwjtoadzVV8zfvzscRzng6dB09Xnws8FxkqIf3/wopo7hXnHTYfvc+1
-        9szzm2vZSxv4uhSCo1vlegW3JRgpsRRnJBpqMRcVJwIADon9h7kDAAA=
-X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFrrDIsWRmVeSWpSXmKPExsVy+t/xu7qFOdapBv3LBS22HLvHaHH5CZ/F
+X-Brightmail-Tracker: H4sIAAAAAAAAA02Se0hTYRjG+845np2tZqep7TUraSmU0coudMKI7i0yKrtR2GW2kw51ypaZ
+        RTFDBe2+8rbUyspcRYZpzqykkTNtWlHSJpZBaiWZyFJny8rtrPC/53vf5/e97/PxUbioxGsS
+        pVQdZNUqeZyEFBAPzEMvZ5tVYezcExleTIX5A2LedHgzhtt1GGP5aieYR48bCObhLyOPsZ7r
+        RIzTUUAuo2SNxSC7XxoiK7+VScpqbFpS1mRYLrOXT91E7hIsUbBxykOses7SfYIYx91GLHGQ
+        d7iySYu0yEBmIT4F9AKo+tHk1iK6FIElb1cWEozoHwg+61p43MGOQOfM5f0j3rzTE1zjJoLc
+        01/w/64zBQ4PUo3APDCMXIiQXgo5pkLCpQk6GGwNLSRXnwAN+R3uuh8dCO2tee4RPvRGeFb4
+        HHNpnBZDa8dlt/al18OnvnrkGoDTFgTpg29HAIoi6RBIzXSzfHoWXGzO8rAzIb3KyeN0IFT1
+        FOBchGmgs/V6cfoYNFa0Yq47gT7Jh4/DdoxrrIL+70Uekw9011d48k+GP9WXPZ6j0Gl14hyc
+        huBsdRnpWgjoMDhjieM8yyHjrIHgyt5g7ZnA7eMNuge5+DkUrB/1FPpRkfWjIuhHRbiCiFtI
+        zCZp4qNZzXwVmyzVyOM1Sapo6f6E+HI08pVe/K7vN6LS7j6pCWEUMiGgcImvcGc4w4qECnnK
+        EVadsFedFMdqTCiAIiRiYbAikBXR0fKDbCzLJrLqf12M4k/SYuhUW+v2ddV2f005ORx+r+vu
+        5s19headAf4WQq/44C02zQsqKlgf8OTR64VjNu5Pr72Rvc845GtQKz8KpFERXjXzf/bS0Ldo
+        +sBTVXiR1djrYxSUBVyNWpGK7QjT5fgl5m8bePLMb8NepUOC2+ZmOy4OiyrNycWbdsiGOmfU
+        FtetDXofwy8ZfLk4p6imaqsWL/s2ZoF0S9v4UHHp1ninfqxQoTbWznN8bXmV0hA1bqVy9fE1
+        xj2R7bJrPeMdq2zXJ1bWJcqzFdauyAt1sc0lSUcHI7A8U+X1yEttAxkhd86rnufNyWetqa93
+        p8S2N2f+PtAxvfbOlLQVr+BLd1ro1WRKQmhi5KEhuFoj/wsgetSDuQMAAA==
+X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFrrDIsWRmVeSWpSXmKPExsVy+t/xe7pH86xTDZqb1Sy2HLvHaHH5CZ/F
         ytVHmSzOvPzMYrFn70kWi11/drBb3JjwlNHi9485bA4cHqcWSXhsXqHlsWlVJ5vH7psNbB5n
         Vzp6fN4kF8AWpWdTlF9akqqQkV9cYqsUbWhhpGdoaaFnZGKpZ2hsHmtlZKqkb2eTkpqTWZZa
-        pG+XoJexbMsmloITfBWzlj9namDczt3FyMkhIWAisXjTN6YuRi4OIYGljBLn/z1ghUjISGz8
-        chXKFpb4c62LDaLoI6NE759rLBDOTkaJJ88/M4FU8QrYSaw48YkZxGYRUJWYO72fGSIuKHFy
-        5hMWEFtUQF7i/q0Z7CC2sICvxJ6Jd8BsEYFAiSf3jzCCDGUWOMwoMef5fXaIDbsZJQ5PWMMG
-        UsUsIC5x68l8oG0cHGwCWhKNnWDNnALGEss23WaHKNGUaN3+G8qWl9j+dg4zxAuKEpNuvod6
-        p1bi899njBMYRWchuW8Wkg2zkIyahWTUAkaWVYwiqaXFuem5xYZ6xYm5xaV56XrJ+bmbGIHR
-        vO3Yz807GOe9+qh3iJGJg/EQowQHs5IIb6SPRaoQb0piZVVqUX58UWlOavEhRlNgIE1klhJN
-        zgemk7ySeEMzA1NDEzNLA1NLM2MlcV7Pgo5EIYH0xJLU7NTUgtQimD4mDk6pBqaSY2JxfWof
-        ZqoY//w1nUVfmHf6jelP7dbMyzd9EfBWclG/7Pfu2c8euoQcZ7oSVVCwtim3YbWnw3Uhw3ll
-        Zfed9naGx6TbMR3ZsPvj4Q/aPSa9+/mSV2W9m3+HIUBzS9IE0xOfgnjtxAuvHLF3c1SwWLyp
-        03AbYz7/C+k9PduS/qf7TdPv3nM0/9en35K/QlL29ms/eRJs22Mf4DA5m/sZm9+ES4m6gfMr
-        3NfVLY7b//cM/9n1nqdOcP2yTH0mGrFSTPzC56mT2V5NmHsooW7u5MwZl1aV1L3zMn+83PmT
-        0lSd/zd/rJr30lHYc0kr7wQ2FzEvTZWcpHmiz/Yt13MyaZ0en3x/zdvbh9aa7MlUYinOSDTU
-        Yi4qTgQAacO6zG8DAAA=
-X-CMS-MailID: 20231027075321eucas1p2b46640bdcbaaab0436f5c2c1ebaa2911
+        pG+XoJfxY90ppoLv7BVbzzYwNjCuZOti5OSQEDCRuHx9FksXIxeHkMBSRoltm38wQiRkJDZ+
+        ucoKYQtL/LnWxQZR9JFRovPLLEYIZyejRN+x0+wgVbwCdhLTDs1lAbFZBFQlbp68ygYRF5Q4
+        OfMJWFxUQF7i/q0ZYPXCAr4SeybeAbOZBcQlbj2ZzwRiiwh4Szz+eBxsAbPAGUaJ1u9X2CG2
+        bWaUuDp7P3MXIwcHm4CWRGMnWDOngLbElHNdTBCDNCVat/+GGiovsf3tHGaIFxQlJt18D/VO
+        rcTnv88YJzCKzkJy3ywkd8xCMmoWklELGFlWMYqklhbnpucWG+oVJ+YWl+al6yXn525iBEbz
+        tmM/N+9gnPfqo94hRiYOxkOMEhzMSiK8kT4WqUK8KYmVValF+fFFpTmpxYcYTYGBNJFZSjQ5
+        H5hO8kriDc0MTA1NzCwNTC3NjJXEeT0LOhKFBNITS1KzU1MLUotg+pg4OKUamNT7kuce2J1m
+        cq0wKcO0921V0JRrySXOtkdX7k+7uNvz4f3whjPqvZrGN43ONvxc/Ur6n2bOQUdfxf1LX095
+        lKK6YH+E/dw6qxOi4cdNnjsFOpc/WSxnlrzbIebQxgCbab4tLSfe6Kz/fqdZxEWiYUX6yr+L
+        8v/bs7JKL5y1WyF/trbGqXWi8htq5FtNzkXMjQmoS9Re+ejZ1Pi691NlTh2y+r/7YVOC9IW+
+        uqg+odmGgtUN/MwXP912Pfmj6pQG++OeTVWB/Snv7Tdd3/ZxSkXXh8ID0n26//LfmMxinPng
+        vpiUXVHTC6ninvC7l6/ZByzmfCu81WSXfM69be8Z/t9X8TlzS6ygMveJ0nNNISWW4oxEQy3m
+        ouJEAHC+RQRvAwAA
+X-CMS-MailID: 20231027080317eucas1p2b582202e5e56cb78fbaaa79022977995
 X-Msg-Generator: CA
-X-RootMTR: 20231026221014eucas1p1b3513d4b9e978232491c3350bc868974
+X-RootMTR: 20231027051855eucas1p2e465ca6afc8d45dc0529f0798b8dd669
 X-EPHeader: CA
 CMS-TYPE: 201P
-X-CMS-RootMailID: 20231026221014eucas1p1b3513d4b9e978232491c3350bc868974
+X-CMS-RootMailID: 20231027051855eucas1p2e465ca6afc8d45dc0529f0798b8dd669
 References: <20231026140832.1089824-1-kernel@pankajraghav.com>
-        <CGME20231026221014eucas1p1b3513d4b9e978232491c3350bc868974@eucas1p1.samsung.com>
-        <ZTrjv11yeQPaC6hO@dread.disaster.area>
+        <CGME20231027051855eucas1p2e465ca6afc8d45dc0529f0798b8dd669@eucas1p2.samsung.com>
+        <20231027051847.GA7885@lst.de>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
->> -	bio = iomap_dio_alloc_bio(iter, dio, 1, REQ_OP_WRITE | REQ_SYNC | REQ_IDLE);
->> +	WARN_ON_ONCE(len > (BIO_MAX_VECS * PAGE_SIZE));
-> 
-> How can that happen here? Max fsb size will be 64kB for the
-> foreseeable future, the bio can hold 256 pages so it will have a
-> minimum size capability of 1MB.
-> 
-
-I just added it as a pathological check. This will not trigger
-anytime in the near future.
-
-> FWIW, as a general observation, I think this is the wrong place to
-> be checking that a filesystem block is larger than can be fit in a
-> single bio. There's going to be problems all over the place if we
-> can't do fsb sized IO in a single bio. i.e. I think this sort of
-> validation should be performed during filesystem mount, not
-> sporadically checked with WARN_ON() checks in random places in the
-> IO path...
-> 
-
-I agree that it should be a check at a higher level.
-
-As iomap can be used by any filesystem, the check on FSB limitation
-should be a part iomap right? I don't see any explicit document/comment
-that states the iomap limitations on FSB, etc.
-
+On 27/10/2023 07:18, Christoph Hellwig wrote:
 >>  
 >> -	__bio_add_page(bio, page, len, 0);
 >> +	while (len) {
@@ -149,16 +125,19 @@ that states the iomap limitations on FSB, etc.
 >> +		__bio_add_page(bio, page, io_len, 0);
 >> +		len -= io_len;
 >> +	}
->>  	iomap_dio_submit_bio(iter, dio, bio, pos);
 > 
-> /me wonders if we should have a set of ZERO_FOLIO()s that contain a
-> folio of each possible size. Then we just pull the ZERO_FOLIO of the
-> correct size and use __bio_add_folio(). i.e. no need for
-> looping over the bio to repeatedly add the ZERO_PAGE, etc, and the
-> code is then identical for all cases of page size vs FSB size.
-> 
+> Maybe out of self-interest, but shouldn't we replace ZERO_PAGE with a
+> sufficiently larger ZERO_FOLIO?  Right now I have a case where I have
+> to have a zero padding of up to MAX_PAGECACHE_ORDER minus block size,
+> so having a MAX_PAGECACHE_ORDER folio would have been really helpful
+> for me, but I suspect there are many other such cases as well.
 
-I was exactly looking for ZERO_FOLIOs. Instead of having a ZERO_PAGE, can
-we reserve a ZERO_HUGE_PAGE so that it can be used directly by
-bio_add_folio_nofail()?
+I think that would definitely be useful.
 
+I also noticed this pattern in fscrypt_zeroout_range_inline_crypt().
+Probably there are more places which could use a ZERO_FOLIO directly
+instead of iterating with ZERO_PAGE.
+
+Chinner also had a similar comment. It would be nice if we can reserve
+a zero huge page that is the size of MAX_PAGECACHE_ORDER and add it as
+one folio to the bio.
