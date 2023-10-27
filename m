@@ -2,143 +2,122 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3C06EC25B48
-	for <linux-xfs@archiver.kernel.org>; Fri, 27 Oct 2023 18:46:15 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B1BBBC25B47
+	for <linux-xfs@archiver.kernel.org>; Fri, 27 Oct 2023 22:07:40 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232339AbjJ0SqP (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 27 Oct 2023 14:46:15 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57802 "EHLO
+        id S232520AbjJ0WHl (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 27 Oct 2023 18:07:41 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60380 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232353AbjJ0SqO (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 27 Oct 2023 14:46:14 -0400
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C4710196
-        for <linux-xfs@vger.kernel.org>; Fri, 27 Oct 2023 11:46:11 -0700 (PDT)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 3952AC433C7;
-        Fri, 27 Oct 2023 18:46:09 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1698432371;
-        bh=cTVhvKwFv7f70NItbRYb8qf7N9BSevmPLGCbpfnoi5I=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=XESBeEDOyBvXP89LvNCJztLsCMP4GqyewspPvIEW9YDiSCyeTcX8whnhYiXX3N0+4
-         6ImRtZrFTKFqYZOTIIncTR/PLhdNmUqF5jNuvMp8+xAb/7Kc42fpL4sv0UBE9F1fAa
-         Ufd3SO2RvLbpJmFjNuZSimPXUH5wb5mLgMtADsU8gtAqc00zqWdxTrR/oAy9S+5J2Y
-         Gefh5JscaA+g39geoO6/0Fqiy3nznTFFjbE65k69G63PG8ayBiOytxdhScXOIRq4Ew
-         oW4WPMtSprZrhrSUYio+kHXcFGD4PZPl+0Q7ZVthAsDL0HTU4KEwOShEgUfeixrp6r
-         3SziP216wvLKQ==
-Date:   Fri, 27 Oct 2023 20:46:05 +0200
-From:   Christian Brauner <brauner@kernel.org>
-To:     Linus Torvalds <torvalds@linux-foundation.org>
-Cc:     "Darrick J. Wong" <djwong@kernel.org>,
-        Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-        Shirley Ma <shirley.ma@oracle.com>, hch@lst.de,
-        jstancek@redhat.com, linux-fsdevel@vger.kernel.org,
-        linux-xfs@vger.kernel.org
-Subject: Re: [GIT PULL] iomap: bug fixes for 6.6-rc7
-Message-ID: <20231027-gestiegen-saftig-2e636d251efa@brauner>
-References: <169786962623.1265253.5321166241579915281.stg-ugh@frogsfrogsfrogs>
- <CAHk-=whNsCXwidLvx8u_JBH91=Z5EFw9FVj57HQ51P7uWs4yGQ@mail.gmail.com>
- <20231023223810.GW3195650@frogsfrogsfrogs>
- <20231024-flora-gerodet-8ec178f87fe9@brauner>
- <20231026031325.GH3195650@frogsfrogsfrogs>
- <CAHk-=whQHBdJTr9noNuRwMtFrWepMHhnq6EtcAypegi5aUkQnQ@mail.gmail.com>
+        with ESMTP id S232134AbjJ0WHj (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 27 Oct 2023 18:07:39 -0400
+Received: from mail-pl1-x635.google.com (mail-pl1-x635.google.com [IPv6:2607:f8b0:4864:20::635])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 420151BE
+        for <linux-xfs@vger.kernel.org>; Fri, 27 Oct 2023 15:07:37 -0700 (PDT)
+Received: by mail-pl1-x635.google.com with SMTP id d9443c01a7336-1c9d407bb15so23311705ad.0
+        for <linux-xfs@vger.kernel.org>; Fri, 27 Oct 2023 15:07:37 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=fromorbit-com.20230601.gappssmtp.com; s=20230601; t=1698444457; x=1699049257; darn=vger.kernel.org;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
+        bh=QSkhrI7nWDk/cd0VRIx08JbYbMRlcEfhCG/4HMHEAVE=;
+        b=0vGQNZSfx3SLQNe3af/Sw4CKFZNYocReUuRjJorWbgMaaMqckwaEYaA4YwskUZePu8
+         r2cYGBwgz4WR3aDN8z/Ah14j1xU3EzU41AvPQzWE7PKAy4R2MXErH3H+bb95qxVF1EOk
+         jy0CchZDonOmq6bwkr82NuObQEeTcs6qgnjOSil6L5qdU+oz8aMqZmRGQ++oFmgAUwwN
+         x7OHSA/jpyiyx/zz2nLRVAR9xeyAR20sxX3N1QRaSNPG8Q7jkCZTp/tA8yyrjGUPAkdX
+         uflsA+RPjXQ9Md3SJU/KVBxiovq/pEdsdXjXeGImX4tc3eLpZBUzGbo371Ag1ExB3hat
+         ILCg==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1698444457; x=1699049257;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=QSkhrI7nWDk/cd0VRIx08JbYbMRlcEfhCG/4HMHEAVE=;
+        b=A9aepA30okXWB1urbZWFxr6HcwMDklKjzIrO7eVnlOSjBtwYD6ionaRQBT3QUVx0lR
+         bqlhnK8dpslSAFK7RQWm9QGRQ7edwg0/QiZs6PRqZ1BfBVPGE8lk2AWQReayG7faDaF0
+         yUBnPaaNCJTPNE2FI5c5BdK8KG0Syb8b9WR+xtPiHUjwJ13HFpNIiRosFTxJgPks0Kpg
+         CowT9A+M2x1HMpWBNeoL6ucl76Ht1fyRfzOBhV7KhXgInAUfb3CcR/NW8H5bZv6phP/9
+         XYOcmTp1B8YeNUYI9S8nC390xBfO3+vv3bxwpAAQOlqBZXhh1tEuC5/z9lkSUbPj0l1N
+         v08w==
+X-Gm-Message-State: AOJu0Yy1sCxb8R63NtJfXCon7izfiS265v33aRsJGHla6OvVqXHkOOCm
+        tLItDbMcOgou9/lRReibu/Qoyg==
+X-Google-Smtp-Source: AGHT+IEIp/M/QisxI0STJIMWbEY6wYIGSWm6KUjg8x+a/LvX7GZIFq4xR4ecaDu0a7xWONNWBYAJrw==
+X-Received: by 2002:a17:902:6b07:b0:1ca:8b74:17ff with SMTP id o7-20020a1709026b0700b001ca8b7417ffmr3757646plk.26.1698444456437;
+        Fri, 27 Oct 2023 15:07:36 -0700 (PDT)
+Received: from dread.disaster.area (pa49-180-20-59.pa.nsw.optusnet.com.au. [49.180.20.59])
+        by smtp.gmail.com with ESMTPSA id c12-20020a170902724c00b001b8b2b95068sm2020996pll.204.2023.10.27.15.07.35
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Fri, 27 Oct 2023 15:07:35 -0700 (PDT)
+Received: from dave by dread.disaster.area with local (Exim 4.96)
+        (envelope-from <david@fromorbit.com>)
+        id 1qwUzM-004n7S-2s;
+        Sat, 28 Oct 2023 09:07:32 +1100
+Date:   Sat, 28 Oct 2023 09:07:32 +1100
+From:   Dave Chinner <david@fromorbit.com>
+To:     Pankaj Raghav <p.raghav@samsung.com>
+Cc:     Pankaj Raghav <kernel@pankajraghav.com>, linux-xfs@vger.kernel.org,
+        linux-fsdevel@vger.kernel.org, willy@infradead.org,
+        djwong@kernel.org, mcgrof@kernel.org, hch@lst.de,
+        da.gomez@samsung.com, gost.dev@samsung.com
+Subject: Re: [PATCH] iomap: fix iomap_dio_zero() for fs bs > system page size
+Message-ID: <ZTw0pBFKaIJs2zFl@dread.disaster.area>
+References: <20231026140832.1089824-1-kernel@pankajraghav.com>
+ <CGME20231026221014eucas1p1b3513d4b9e978232491c3350bc868974@eucas1p1.samsung.com>
+ <ZTrjv11yeQPaC6hO@dread.disaster.area>
+ <7ad225ac-721f-4c99-8d99-c90992609267@samsung.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <CAHk-=whQHBdJTr9noNuRwMtFrWepMHhnq6EtcAypegi5aUkQnQ@mail.gmail.com>
+In-Reply-To: <7ad225ac-721f-4c99-8d99-c90992609267@samsung.com>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Thu, Oct 26, 2023 at 08:10:01AM -1000, Linus Torvalds wrote:
-> On Wed, 25 Oct 2023 at 17:13, Darrick J. Wong <djwong@kernel.org> wrote:
-> >
-> > Similar to what we just did with XFS, I propose breaking up the iomap
-> > Maintainer role into pieces that are more manageable by a single person.
-> > As RM, all you'd have to do is integrate reviewed patches and pull
-> > requests into one of your work branches.  That gives you final say over
-> > what goes in and how it goes in, instead of letting branches collide in
-> > for-next without warning.
+On Fri, Oct 27, 2023 at 09:53:19AM +0200, Pankaj Raghav wrote:
+> >> -	bio = iomap_dio_alloc_bio(iter, dio, 1, REQ_OP_WRITE | REQ_SYNC | REQ_IDLE);
+> >> +	WARN_ON_ONCE(len > (BIO_MAX_VECS * PAGE_SIZE));
+> > 
+> > How can that happen here? Max fsb size will be 64kB for the
+> > foreseeable future, the bio can hold 256 pages so it will have a
+> > minimum size capability of 1MB.
+> > 
 > 
-> I _think_ what you are saying is that you'd like to avoid being both a
-> maintainer and a developer.
-> 
-> Now, I'm probably hugely biased and going by personal experience, but
-> I do think that doing double duty is the worst of both worlds, and
-> pointlessly stressful.
-> 
-> As a maintainer, you have to worry about the big picture (things like
-> release timing, even if it's just a "is this a fix for this release,
-> or should it get queued for the next one") but also code-related
-> things like "we have two different things going on, let's sort them
-> out separately". Christian had that kind of issue just a couple of
-> days ago with the btrfs tree.
-> 
-> But then, as a developer, those are distractions and just add stress
-> and worry, and distract from whatever you're working on. As a
-> developer, the last thing you want to worry about is something else
-> than the actual technical issue you're trying to solve.
-> 
-> And obviously, there's a lot of overlap. A maintainer needs to be
-> _able_ to be a developer just to make good choices. And the whole
-> "maintainer vs developer" doesn't have to be two different people,
-> somebody might shift from one to the other simply because maybe they
-> enjoy both roles. Just not at the same time, all the time, having both
-> things putting different stress on you.
-> 
-> You can *kind* of see the difference in our git tree if you do
-> 
->     git rev-list --count --author=XYZ --no-merges --since=1.year HEAD
-> 
-> to see "code authorship" (aka developer), vs
-> 
->     git rev-list --count --committer=XYZ --since=1.year HEAD
-> 
-> which shows some kind of approximation of "maintainership". Obviously
-> there is overlap (potentially a lot of it) and the above isn't some
-> absolute thing, but you can see some patterns.
-> 
-> I personally wish we had more people who are maintainers _without_
-> having to worry too much about developing new code.  One of the issues
-> that keeps coming up is that companies don't always seem to appreciate
-> maintainership (which is a bit strange - the same companies may then
-> _love_ appreciateing managers, which is something very different but
-> has some of the same flavour to it).
-> 
-> And btw, I don't want to make that "I wish we had more maintainers" be
-> a value judgement. It's not that maintainers are somehow more
-> important than developers. I just think they are two fairly different
-> roles, and I think one person doing both puts unnecessary stress on
-> that person.
+> I just added it as a pathological check. This will not trigger
+> anytime in the near future.
 
-I think most of us enjoy both. Personally, I always try to carve out
-time where I can work on stuff that I find interesting. It helps to stay
-sane and it helps with providing good reviews. It also helps being
-reminded how easy it is to code up bugs.
+Yeah, exactly my point - it should never happen, it's a fundamental
+developer stuff-up bug, not a runtime bug, and so shouldn't be
+checked at runtime on every bio....
 
-When there's an interesting series that morphes into larger subsystem
-massaging that's always great because that's a chance to collaborate and
-different people can take on different parts. And it usually means one
-does get a few patches in as well.
+> > FWIW, as a general observation, I think this is the wrong place to
+> > be checking that a filesystem block is larger than can be fit in a
+> > single bio. There's going to be problems all over the place if we
+> > can't do fsb sized IO in a single bio. i.e. I think this sort of
+> > validation should be performed during filesystem mount, not
+> > sporadically checked with WARN_ON() checks in random places in the
+> > IO path...
+> > 
+> 
+> I agree that it should be a check at a higher level.
+> 
+> As iomap can be used by any filesystem, the check on FSB limitation
+> should be a part iomap right? I don't see any explicit document/comment
+> that states the iomap limitations on FSB, etc.
 
-In a smaller subsystem it's probably ok to be main developer, reviewer,
-and developer at the same time. But in a busy subsystem that trias isn't
-sustainable. Let alone scaling that to multiple subsystems. 
+No, it should be part of the filesystem that *uses the bio
+infrastrucure*.
 
-One of the critical parts is review. Good reviews are often insanely
-expensive and they are very much a factor in burning people out. If one
-only ever reviews and the load never ends that's going to fsck with you
-in the long run.
+We already do that with the page cache - filesystems check at mount
+time that the FSB is <= PAGE_SIZE and reject the mount if this check
+fails because the page cache simply cannot handle this situation.
 
-A reviewer must be technically great, have design, context,
-maintainability, and wider context and future of the subsystem in mind,
-and not be afraid to have code changed or removed that they wrote (That
-last part really matters.), and also be ok with being publicly wrong in
-front of a whole bunch of smart people (Which I want to stress is
-absolutely fine and almost unavoidable.).
+This is no different: if we are going to allow FSB > PAGE_SIZE, then
+we need to ensure somewhere, even as a BUILD_BUG_ON(), that the max
+support FSB the filesystem has is smaller than what we can pack in a
+bio.
 
-But once you have a couple of good reviewers in a subsystem that you can
-really rely on that if they give an ack/rvb it's solid enough (not
-necessarily bug free even) that's really good. It not just takes away
-pressure it also means that it's possible for other
-reviewers/maintainers to go develop stuff themselves.
+-Dave.
+
+-- 
+Dave Chinner
+david@fromorbit.com
