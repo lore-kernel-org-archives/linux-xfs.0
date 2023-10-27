@@ -2,105 +2,108 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 65CA3C25B48
-	for <linux-xfs@archiver.kernel.org>; Fri, 27 Oct 2023 22:59:41 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8203EC25B47
+	for <linux-xfs@archiver.kernel.org>; Fri, 27 Oct 2023 23:11:46 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232520AbjJ0W7l (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 27 Oct 2023 18:59:41 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60028 "EHLO
+        id S232812AbjJ0XLq (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 27 Oct 2023 19:11:46 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57162 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230451AbjJ0W7l (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 27 Oct 2023 18:59:41 -0400
-Received: from casper.infradead.org (casper.infradead.org [IPv6:2001:8b0:10b:1236::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C2E68E1;
-        Fri, 27 Oct 2023 15:59:38 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=infradead.org; s=casper.20170209; h=In-Reply-To:Content-Type:MIME-Version:
-        References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
-        Content-Transfer-Encoding:Content-ID:Content-Description;
-        bh=/b31X85rDY3RIAtoyt6o3DXcSD7ZeMjynMbPhM+cnGQ=; b=lYDpW1SKj5uC6mVUeaKjMvd7l+
-        O2uDbXCwWRBFgef8yRgN23C+/gEhziodyFziOJ6oaP51KwkdopCYKxrCZIXhMJSef6YiZa+WL4m66
-        7we11LFnmiy4hYC1YBJr/r/zhDDqoclfIlH9iKO63rMkCMYx/jt0XX5KOXV0suYvrR+x5OfWpX4Hx
-        7mVGhxCdKqX81DnpH961r/KgbJayguHM8ujAfDCcGlZblSz9KyQXbgSW6uRnGNyJdxQVIAsG6/Esr
-        BFZE/10Ys6gbPX84wBBluD7UHF2EAKI7gGHyut7f0wEeDRL8GlvlrGhCuBzbuJaRtREwiX5z70qJf
-        MlpZxUpQ==;
-Received: from willy by casper.infradead.org with local (Exim 4.94.2 #2 (Red Hat Linux))
-        id 1qwVnd-0061oB-Bk; Fri, 27 Oct 2023 22:59:29 +0000
-Date:   Fri, 27 Oct 2023 23:59:29 +0100
-From:   Matthew Wilcox <willy@infradead.org>
-To:     Pankaj Raghav <p.raghav@samsung.com>
-Cc:     Christoph Hellwig <hch@lst.de>,
-        Pankaj Raghav <kernel@pankajraghav.com>,
-        linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
-        djwong@kernel.org, mcgrof@kernel.org, da.gomez@samsung.com,
-        gost.dev@samsung.com, david@fromorbit.com
-Subject: Re: [PATCH] iomap: fix iomap_dio_zero() for fs bs > system page size
-Message-ID: <ZTxA0TRYivu/vSsA@casper.infradead.org>
-References: <20231026140832.1089824-1-kernel@pankajraghav.com>
- <CGME20231027051855eucas1p2e465ca6afc8d45dc0529f0798b8dd669@eucas1p2.samsung.com>
- <20231027051847.GA7885@lst.de>
- <1e7e9810-9b06-48c4-aec8-d4817cca9d17@samsung.com>
- <ZTuVVSD1FnQ7qPG5@casper.infradead.org>
- <3d65652f-04c7-4240-9969-ba2d3869dbbf@samsung.com>
+        with ESMTP id S230451AbjJ0XLq (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 27 Oct 2023 19:11:46 -0400
+Received: from mail-pf1-x42c.google.com (mail-pf1-x42c.google.com [IPv6:2607:f8b0:4864:20::42c])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B319B1AC
+        for <linux-xfs@vger.kernel.org>; Fri, 27 Oct 2023 16:11:43 -0700 (PDT)
+Received: by mail-pf1-x42c.google.com with SMTP id d2e1a72fcca58-6b77ab73c6fso1887880b3a.1
+        for <linux-xfs@vger.kernel.org>; Fri, 27 Oct 2023 16:11:43 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20230601; t=1698448303; x=1699053103; darn=vger.kernel.org;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
+        bh=ejs8dtCJvZZG2EjYMdD3cKIzcmIuqMP36dRKJPKZMwM=;
+        b=eKayqfVkuGUg/vwEi0AkcIsH+zMTVlKAoawDO3T+bZomsEWX5OPXrrdfBiUGkP/9ne
+         f/wbDK+iUmr2vdZz7EASw2qmPtVKJxwtjwlCoYJiDslRuCn0kT91Kigej5gpoCNEgT9X
+         0eMUtG689kyZqS+FT/2T37WLQ9ulPlnCpRlwFB2Tx9jsQTX5Jv/uC0yQBkxbOO6aLBKm
+         1/+mf0o9/NBm5uq+Q9WHzrjHwsGBh6L+7OoD1UYlKLFkiZL0pKOb7rKhYpTtsLxRdjXo
+         AQ3PUMF8+92k8lVFESgfx5yug8cW/8WsrJHE0FiiEuupZoAFyPkdAeN/4jEB3AU0tAMC
+         /y4A==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1698448303; x=1699053103;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=ejs8dtCJvZZG2EjYMdD3cKIzcmIuqMP36dRKJPKZMwM=;
+        b=pYZfM4jKjiXpzoc5SYo/dfqNg2axdOM2tVAgg0V0VHo5p0TxJDZ7IkEKTBi+fUuFsB
+         HOmcwT1A04LcGu4t0gVHjGx11HV221C1OdYt/lTSiUQINWIzpJ6DRq2pV+oCdJp/LcqS
+         ekSdQmNbTsOXYFedsIdw7lCQ46E78COmKQKUomsqYY7RtT00awe3nOfrJb9Sax9zeYTV
+         jE6Dk7+776lJ0ra9Xfx/+RqtvBZIAv6Y3FcQNHVp0vcBFYCW7PHPbO2FWgZF/B7WzcD5
+         y9XwwWTE7bbloQiXx+7NJC0wotNQcDIzkGT8dJIiR+mqjx+hkBNX+TxnnElYoPO3PzUb
+         bVqQ==
+X-Gm-Message-State: AOJu0YxjQgrY/J0lfNAOmW6BGjcdmqKF4RTc11ow1jywLPPPGOWyutmC
+        x0NcoyCFiSbvzJT54cVv0aM=
+X-Google-Smtp-Source: AGHT+IEuqZ5QCPcWlbMoZZt/5OrZ0fxwiquEPU/2bC1NphCBM2mhO1zOZOQMSakFlEyV1zro4HmJyg==
+X-Received: by 2002:a05:6a00:148c:b0:693:43b5:aaf3 with SMTP id v12-20020a056a00148c00b0069343b5aaf3mr5254096pfu.13.1698448303002;
+        Fri, 27 Oct 2023 16:11:43 -0700 (PDT)
+Received: from google.com ([2601:647:4701:18d0:55d7:6231:beb9:158b])
+        by smtp.gmail.com with ESMTPSA id c22-20020aa78816000000b0068790c41ca2sm1897663pfo.27.2023.10.27.16.11.42
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Fri, 27 Oct 2023 16:11:42 -0700 (PDT)
+Date:   Fri, 27 Oct 2023 16:11:40 -0700
+From:   Leah Rumancik <leah.rumancik@gmail.com>
+To:     Dave Chinner <david@fromorbit.com>
+Cc:     linux-xfs@vger.kernel.org, djwong@kernel.org
+Subject: Re: [PATCH v2] xfs: up(ic_sema) if flushing data device fails
+Message-ID: <ZTxDrGmO_J2r7xQK@google.com>
+References: <20231025225848.3437904-1-leah.rumancik@gmail.com>
+ <ZTm1n2I3bif0h4er@dread.disaster.area>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <3d65652f-04c7-4240-9969-ba2d3869dbbf@samsung.com>
+In-Reply-To: <ZTm1n2I3bif0h4er@dread.disaster.area>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Fri, Oct 27, 2023 at 05:41:10PM +0200, Pankaj Raghav wrote:
-> On 27/10/2023 12:47, Matthew Wilcox wrote:
-> > On Fri, Oct 27, 2023 at 10:03:15AM +0200, Pankaj Raghav wrote:
-> >> I also noticed this pattern in fscrypt_zeroout_range_inline_crypt().
-> >> Probably there are more places which could use a ZERO_FOLIO directly
-> >> instead of iterating with ZERO_PAGE.
-> >>
-> >> Chinner also had a similar comment. It would be nice if we can reserve
-> >> a zero huge page that is the size of MAX_PAGECACHE_ORDER and add it as
-> >> one folio to the bio.
-> > 
-> > i'm on holiday atm.  start looking at mm_get_huge_zero_page()
+On Thu, Oct 26, 2023 at 11:41:03AM +1100, Dave Chinner wrote:
+> Hmmmm. So we'll leave an unreferenced, unlocked iclog in a SYNCING
+> state where something else can access it, then hope that the
+> shutdown gets to it first and that it cleans it all up? That doesn't
+> seem completely safe to me.
 > 
-> Thanks for the pointer. I made a rough version of how it might
-> look like if I use that API:
-
-useful thing to do.  i think this shows we need a new folio api wrapping
-it.  happy to do that when i'm back, or you can have a crack at it.
-
-your point about it possibly failing is correct.  so i think we need an
-api which definitely returns a folio, but it might be of arbitrary
-order.
-
->         bio->bi_iter.bi_sector = iomap_sector(&iter->iomap, pos);
->         bio->bi_private = dio;
->         bio->bi_end_io = iomap_dio_bio_end_io;
+> At entry to this function, if the log is already shut down, it runs
+> xlog_state_done_syncing() to force the iclog and it's attached state
+> to be cleaned up before dropping the lock and returning.
 > 
-> -       __bio_add_page(bio, page, len, 0);
-> +       if (!fallback) {
-> +               bio_add_folio_nofail(bio, page_folio(page), len, 0);
-> +       } else {
-> +               while (len) {
-> +                       unsigned int io_len =
-> +                               min_t(unsigned int, len, PAGE_SIZE);
-> +
-> +                       __bio_add_page(bio, page, io_len, 0);
-> +                       len -= io_len;
-> +               }
-> +       }
-> +
->         iomap_dio_submit_bio(iter, dio, bio, pos);
+> If I look at xlog_ioend_work(), if it gets an error it does the
+> shutdown, then calls xlog_state_done_syncing() to clean up the iclog
+> and attached state, then drops the lock.
+> 
+> Hence it appears to me that the error handling for a fatal errors in
+> IO submission should match the io completion error handling. i.e the
+> error stack for this function should look like this:
+> 
+> ....
+> 	if (xlog_is_shutdown(log))
+> 		goto out_done_sync;
+> ....
+> 	if (error)
+> 		goto out_do_shutdown;
+> ....
+> out_do_shutdown:
+> 	xlog_force_shutdown(log, SHUTDOWN_LOG_IO_ERROR);
+> out_done_sync:
+> 	xlog_state_done_syncing(iclog);
+> 	up(&iclog->ic_sema);
+> }
+> 
+> Thoughts?
+Sure, that makes sense to me and will make things more consistent. I'll
+send out a new version. Thanks for the review!
 
-then this can look something like:
+- Leah
 
-	while (len) {
-		size_t size = min(len, folio_size(folio));
-
-		__bio_add_folio(bio, folio, size, 0);
-		len -= size;
-	}
-
-> PS: Enjoy your holidays :)
-
-cheers ;-)
+> 
+> -Dave.
+> -- 
+> Dave Chinner
+> david@fromorbit.com
