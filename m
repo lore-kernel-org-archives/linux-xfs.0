@@ -2,437 +2,89 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 15F2CC4332F
-	for <linux-xfs@archiver.kernel.org>; Sat, 28 Oct 2023 21:16:34 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1189EC25B48
+	for <linux-xfs@archiver.kernel.org>; Fri, 27 Oct 2023 16:36:11 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230229AbjJ1VQc (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Sat, 28 Oct 2023 17:16:32 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44602 "EHLO
+        id S231674AbjJ0QgK (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 27 Oct 2023 12:36:10 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37862 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230110AbjJ1VQ3 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sat, 28 Oct 2023 17:16:29 -0400
-Received: from mailout2.w1.samsung.com (mailout2.w1.samsung.com [210.118.77.12])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 67343D4A
-        for <linux-xfs@vger.kernel.org>; Sat, 28 Oct 2023 14:15:57 -0700 (PDT)
-Received: from eucas1p2.samsung.com (unknown [182.198.249.207])
-        by mailout2.w1.samsung.com (KnoxPortal) with ESMTP id 20231028211555euoutp02019bf1f496fbb96bbbce1063fa0534da~SYf6bKiGu0890208902euoutp02L
-        for <linux-xfs@vger.kernel.org>; Sat, 28 Oct 2023 21:15:55 +0000 (GMT)
-DKIM-Filter: OpenDKIM Filter v2.11.0 mailout2.w1.samsung.com 20231028211555euoutp02019bf1f496fbb96bbbce1063fa0534da~SYf6bKiGu0890208902euoutp02L
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=samsung.com;
-        s=mail20170921; t=1698527755;
-        bh=vhkx9nEW1P7cUV8Zzx9SlNlxAL82sC2JgyqBVsGy9MY=;
-        h=From:To:CC:Subject:Date:In-Reply-To:References:From;
-        b=Hmi+lFYmkHisLsZG4VbgvaPvoiedms0z5nZdt23VzeCaQ4zTch+cDcnZoKOkjZexm
-         /vTxBQ0PS0S7S/vCmV+ontWsu8i0kpVGRzZBNKgTjMHBvhGggt2MHcoh0c1JqnGkqq
-         ARbkmZY90/TNfseuHtaw6TXdEUBbIaXDncT5gR60=
-Received: from eusmges3new.samsung.com (unknown [203.254.199.245]) by
-        eucas1p2.samsung.com (KnoxPortal) with ESMTP id
-        20231028211555eucas1p2394b404cd93491ee5bf44a270047b733~SYf6NFJBV1224812248eucas1p2I;
-        Sat, 28 Oct 2023 21:15:55 +0000 (GMT)
-Received: from eucas1p2.samsung.com ( [182.198.249.207]) by
-        eusmges3new.samsung.com (EUCPMTA) with SMTP id 9F.57.37758.B0A7D356; Sat, 28
-        Oct 2023 22:15:55 +0100 (BST)
-Received: from eusmtrp2.samsung.com (unknown [182.198.249.139]) by
-        eucas1p1.samsung.com (KnoxPortal) with ESMTPA id
-        20231028211553eucas1p1a93637df6c46692531894e26023920d5~SYf441zj70616106161eucas1p1Z;
-        Sat, 28 Oct 2023 21:15:53 +0000 (GMT)
-Received: from eusmgms2.samsung.com (unknown [182.198.249.180]) by
-        eusmtrp2.samsung.com (KnoxPortal) with ESMTP id
-        20231028211553eusmtrp28117a3ed7ca27591a873d3f9be3ed510~SYf44SkDt1141411414eusmtrp2i;
-        Sat, 28 Oct 2023 21:15:53 +0000 (GMT)
-X-AuditID: cbfec7f5-815ff7000002937e-10-653d7a0b230b
-Received: from eusmtip2.samsung.com ( [203.254.199.222]) by
-        eusmgms2.samsung.com (EUCPMTA) with SMTP id A1.01.25043.90A7D356; Sat, 28
-        Oct 2023 22:15:53 +0100 (BST)
-Received: from CAMSVWEXC02.scsc.local (unknown [106.1.227.72]) by
-        eusmtip2.samsung.com (KnoxPortal) with ESMTPA id
-        20231028211553eusmtip2ab1bab33fda116438d8bc7115d2b0f8e~SYf4oIwLJ1182011820eusmtip2q;
-        Sat, 28 Oct 2023 21:15:53 +0000 (GMT)
-Received: from CAMSVWEXC02.scsc.local (2002:6a01:e348::6a01:e348) by
-        CAMSVWEXC02.scsc.local (2002:6a01:e348::6a01:e348) with Microsoft SMTP
-        Server (TLS) id 15.0.1497.2; Sat, 28 Oct 2023 22:15:53 +0100
-Received: from CAMSVWEXC02.scsc.local ([::1]) by CAMSVWEXC02.scsc.local
-        ([fe80::3c08:6c51:fa0a:6384%13]) with mapi id 15.00.1497.012; Sat, 28 Oct
-        2023 22:15:53 +0100
-From:   Daniel Gomez <da.gomez@samsung.com>
-To:     "minchan@kernel.org" <minchan@kernel.org>,
-        "senozhatsky@chromium.org" <senozhatsky@chromium.org>,
-        "axboe@kernel.dk" <axboe@kernel.dk>,
-        "djwong@kernel.org" <djwong@kernel.org>,
-        "willy@infradead.org" <willy@infradead.org>,
-        "hughd@google.com" <hughd@google.com>,
-        "akpm@linux-foundation.org" <akpm@linux-foundation.org>,
-        "mcgrof@kernel.org" <mcgrof@kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>,
-        "linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>,
-        "linux-fsdevel@vger.kernel.org" <linux-fsdevel@vger.kernel.org>,
-        "linux-mm@kvack.org" <linux-mm@kvack.org>
-CC:     "gost.dev@samsung.com" <gost.dev@samsung.com>,
-        Pankaj Raghav <p.raghav@samsung.com>,
-        Daniel Gomez <da.gomez@samsung.com>
-Subject: [RFC PATCH 11/11] shmem: add per-block uptodate tracking
-Thread-Topic: [RFC PATCH 11/11] shmem: add per-block uptodate tracking
-Thread-Index: AQHaCePuWb31sxRneEm07VKavHLDZg==
-Date:   Sat, 28 Oct 2023 21:15:52 +0000
-Message-ID: <20231028211518.3424020-12-da.gomez@samsung.com>
-In-Reply-To: <20231028211518.3424020-1-da.gomez@samsung.com>
-Accept-Language: en-US, en-GB
-Content-Language: en-US
-X-MS-Has-Attach: 
-X-MS-TNEF-Correlator: 
-x-ms-exchange-messagesentrepresentingtype: 1
-x-ms-exchange-transport-fromentityheader: Hosted
-x-originating-ip: [106.110.32.103]
-Content-Type: text/plain; charset="iso-8859-1"
-Content-Transfer-Encoding: quoted-printable
+        with ESMTP id S232322AbjJ0QgJ (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 27 Oct 2023 12:36:09 -0400
+Received: from buxtehude.debian.org (buxtehude.debian.org [IPv6:2607:f8f0:614:1::1274:39])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9D91E11B
+        for <linux-xfs@vger.kernel.org>; Fri, 27 Oct 2023 09:36:06 -0700 (PDT)
+Received: from debbugs by buxtehude.debian.org with local (Exim 4.94.2)
+        (envelope-from <debbugs@buxtehude.debian.org>)
+        id 1qwPob-003RuD-9c; Fri, 27 Oct 2023 16:36:05 +0000
+X-Loop: owner@bugs.debian.org
+Subject: Bug#1054644: xfsprogs-udeb: causes D-I to fail, reporting errors about missing partition devices
+Reply-To: "Darrick J. Wong" <djwong@kernel.org>, 1054644@bugs.debian.org
+X-Loop: owner@bugs.debian.org
+X-Debian-PR-Message: followup 1054644
+X-Debian-PR-Package: xfsprogs-udeb
+X-Debian-PR-Keywords: 
+References: <169839498168.1174073.11485737048739628391.reportbug@nimble.hk.hands.com> <169839498168.1174073.11485737048739628391.reportbug@nimble.hk.hands.com> <871qdgccs5.fsf@nimble.hk.hands.com> <169839498168.1174073.11485737048739628391.reportbug@nimble.hk.hands.com> <20231027154505.GL3195650@frogsfrogsfrogs> <ZTvjFZPn7KH6euyT@technoir> <169839498168.1174073.11485737048739628391.reportbug@nimble.hk.hands.com>
+X-Debian-PR-Source: xfsprogs
+Received: via spool by 1054644-submit@bugs.debian.org id=B1054644.1698424438821519
+          (code B ref 1054644); Fri, 27 Oct 2023 16:36:04 +0000
+Received: (at 1054644) by bugs.debian.org; 27 Oct 2023 16:33:58 +0000
+Received: from ams.source.kernel.org ([145.40.68.75]:39312)
+        by buxtehude.debian.org with esmtps (TLS1.3:ECDHE_X25519__RSA_PSS_RSAE_SHA256__AES_256_GCM:256)
+        (Exim 4.94.2)
+        (envelope-from <djwong@kernel.org>)
+        id 1qwPmX-003Rdp-4C
+        for 1054644@bugs.debian.org; Fri, 27 Oct 2023 16:33:58 +0000
+Received: from smtp.kernel.org (transwarp.subspace.kernel.org [100.75.92.58])
+        by ams.source.kernel.org (Postfix) with ESMTP id 78D45B80757;
+        Fri, 27 Oct 2023 16:25:43 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id C68D7C433C7;
+        Fri, 27 Oct 2023 16:25:42 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1698423942;
+        bh=yeTCktgiC1c3C9CFKDBVrf9xgiAItVOWTL2Pnh7GJbE=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=avPuNmDscP591IOK11StL6L/OHFBLZIAD1O32a51fGGVnIyL291fgeCM54HGdQudQ
+         kCnylXT2WwMlsOznrhuy/lvL0+FU4l4QwjxIi+wrzjKfuJL5MxgqPoMt9xKFe/ogHQ
+         xqU/nY3pJ8QR7EkFAeN8nrYyhiUHBssOSeTCbPX/RpQSLzHG/WLeOuPLVgjao/6u/V
+         hgf6lMoIODpit2NO9YaG3JRveT3J7HCBWvHHFx+n17OQeJKQwkbRtmYst87FJQMziL
+         rC+iSHR+Dil9DqmeARkfP1Z/AVh7eiTHi7Zzh03dIm/wYo3lh1fG/0wP/Z5eGnnhcN
+         4/iMo7yOuv4Bg==
+Date:   Fri, 27 Oct 2023 09:25:42 -0700
+From:   "Darrick J. Wong" <djwong@kernel.org>
+To:     Anthony Iliopoulos <ailiop@suse.com>
+Cc:     1054644@bugs.debian.org, Philip Hands <phil@hands.com>
+Message-ID: <20231027162542.GI11424@frogsfrogsfrogs>
 MIME-Version: 1.0
-X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFjrNKsWRmVeSWpSXmKPExsWy7djP87rcVbapBmfWC1nMWb+GzWL13X42
-        i8tP+Cyefupjsdh7S9tiz96TLBaXd81hs7i35j+rxa4/O9gtbkx4ymix7Ot7dovdGxexWfz+
-        MYfNgddjdsNFFo8Fm0o9Nq/Q8rh8ttRj06pONo9Nnyaxe5yY8ZvF4/MmuQCOKC6blNSczLLU
-        In27BK6Mw3f6mAtOelQ86drA0sB4zLqLkZNDQsBE4ury1exdjFwcQgIrGCUerZrOBOF8YZTY
-        sH8NG4TzmVGibfUpZpiWZ7vfMEMkljNKbG9qYYKrOnXzEdSwM4wST/ddZgdpERJYySjRsVoR
-        xGYT0JTYd3ITWJGIwGxWicOLOxhBEswCdRJrns1iAbGFBRwljj95BRYXEXCTmN3Sxgph60lc
-        XrkdbCiLgKrEyw872UBsXgEbiW1/D4PFOYHs+9+2g8UZBWQlHq38xQ4xX1zi1pP5TBA/CEos
-        mr0H6h8xiX+7HrJB2DoSZ68/YYSwDSS2Lt3HAmErSfzpWAh1p57EjalT2CBsbYllC18zQ9wg
-        KHFy5hMWkMckBP5xSrz4cBNqgYvEqs87oAYJS7w6voUdwpaR+L9zPtMERu1ZSO6bhWTHLCQ7
-        ZiHZsYCRZRWjeGppcW56arFxXmq5XnFibnFpXrpecn7uJkZgejv97/jXHYwrXn3UO8TIxMF4
-        iFGCg1lJhJfZ0SZViDclsbIqtSg/vqg0J7X4EKM0B4uSOK9qinyqkEB6YklqdmpqQWoRTJaJ
-        g1OqgUng8j/lnYXZ1UWJa+zn628q6ZS49+Y+y9T5ySabLx7Q2Zm2n39u0uuHi7Yf+m25qy3w
-        6l1D1Xvtj3Scef2zBTUkduoJ21zbXfP5D/903RUNvu/fhjEbus8QlfU+f+J/gqiJ7ZaA5j1P
-        PaIi3HcZSxwpujP18NwVPVfqPZY+3bHk9DTn3mJZUbsduSeKXx1w88lZJ/zCyVScv+Cm4Lkb
-        k45JGXGs265cM6GRWUTxv1198o4arnNq6rJLg/W22DWEiNz8YsF1kld26iSG/xfULRYm3Ppd
-        WOt7aK8qn7o5x5X8rSHdHyUyNgpVftCNtfp7PYrjpPS7rE3ZbWHbumVYi96vNJ7HvcOYd+/T
-        noY0UyWW4oxEQy3mouJEACbzI/neAwAA
-X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFjrCKsWRmVeSWpSXmKPExsVy+t/xe7qcVbapBvN/G1jMWb+GzWL13X42
-        i8tP+Cyefupjsdh7S9tiz96TLBaXd81hs7i35j+rxa4/O9gtbkx4ymix7Ot7dovdGxexWfz+
-        MYfNgddjdsNFFo8Fm0o9Nq/Q8rh8ttRj06pONo9Nnyaxe5yY8ZvF4/MmuQCOKD2bovzSklSF
-        jPziElulaEMLIz1DSws9IxNLPUNj81grI1MlfTublNSczLLUIn27BL2Mw3f6mAtOelQ86drA
-        0sB4zLqLkZNDQsBE4tnuN8wgtpDAUkaJ7++EIOIyEhu/XGWFsIUl/lzrYoOo+cgocfoHZxcj
-        F5B9hlHi4scH7BDOSkaJq7tXMoJUsQloSuw7uQksISIwm1Xi8OIOsASzQJ3EmmezWEBsYQFH
-        ieNPXoHFRQTcJGa3tLFC2HoSl1duZwexWQRUJV5+2Am2mlfARmLb38NAcQ6gbbkS/W2ZIGFO
-        oPD9b9vBShgFZCUerfzFDrFKXOLWk/lMEB8ISCzZc54ZwhaVePn4H9RnOhJnrz9hhLANJLYu
-        3ccCYStJ/OlYCHWynsSNqVPYIGxtiWULXzNDnCMocXLmE5YJjNKzkKybhaRlFpKWWUhaFjCy
-        rGIUSS0tzk3PLTbSK07MLS7NS9dLzs/dxAhMTtuO/dyyg3Hlq496hxiZOBgPMUpwMCuJ8DI7
-        2qQK8aYkVlalFuXHF5XmpBYfYjQFBtFEZinR5HxgeswriTc0MzA1NDGzNDC1NDNWEuf1LOhI
-        FBJITyxJzU5NLUgtgulj4uCUamAK8Su9t4A1dfL8zhPeLTrCNgEbXsyONbGd+tjGQCXox5HS
-        3rLggsakCS0Lb5R/8/w6v9qoWV59ZpHhI5PKzex/s4N2LgzfKCTwtXmeu++O+NKS+rTs/xNe
-        fCx2vZt1/MbtC/dVzD/KHvzYxihx+XiuvkDISXWGvHjGd8fP++3pealQ5nbry3GpXIHmBQVb
-        +e28FPN3Trm8YXJg2PpLr+aKvHbbLndBrS7/WkzNr0O3q1d1XrFQPPBX4vJEEYlrSQ8XyXk6
-        S7/ftyamem7b6TStFa02djtyb7rxKfxm8HzxRVFVPkG7be/Odbq3ZjPveaGa/uKs8j3FkxP3
-        mN+alyPDVFdftLSha/eDRJOLy8uUWIozEg21mIuKEwGITef91wMAAA==
-X-CMS-MailID: 20231028211553eucas1p1a93637df6c46692531894e26023920d5
-X-Msg-Generator: CA
-X-RootMTR: 20231028211553eucas1p1a93637df6c46692531894e26023920d5
-X-EPHeader: CA
-CMS-TYPE: 201P
-X-CMS-RootMailID: 20231028211553eucas1p1a93637df6c46692531894e26023920d5
-References: <20230919135536.2165715-1-da.gomez@samsung.com>
-        <20231028211518.3424020-1-da.gomez@samsung.com>
-        <CGME20231028211553eucas1p1a93637df6c46692531894e26023920d5@eucas1p1.samsung.com>
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <ZTvjFZPn7KH6euyT@technoir>
+X-Greylist: delayed 487 seconds by postgrey-1.36 at buxtehude; Fri, 27 Oct 2023 16:33:56 UTC
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Current work in progress due to fsx regression (check below).
+On Fri, Oct 27, 2023 at 06:19:33PM +0200, Anthony Iliopoulos wrote:
+> On Fri, Oct 27, 2023 at 08:45:05AM -0700, Darrick J. Wong wrote:
+> > 
+> > mkfs.xfs in xfsprogs 6.5 turned on both the large extent counts and
+> > reverse mapping btree features by default.  My guess is that grub hasn't
+> > caught up with those changes to the ondisk format yet.
+> > 
+> > Ah, yeah, upstream grub hasn't picked up large extent counts (internally
+> > called nrext64) yet.
+> > https://git.savannah.gnu.org/cgit/grub.git/tree/grub-core/fs/xfs.c#n83
+> 
+> Yeap it is due to nrext64, I've submitted a patch to grub (should have
+> cc'ed linux-xfs..)
+> 
+> https://lore.kernel.org/grub-devel/20231026095339.31802-1-ailiop@suse.com/
 
-Based on iomap per-block dirty and uptodate state track, add support
-for shmem_folio_state struct to track uptodate per-block when a folio is
-larger than a block. In shmem, this is when large folios is used, as one
-block is equal to one page in this context.
+FWIW the patch turning on nrext64 by default was intended for xfsprogs
+6.6, but the maintainer decided to merge it early.  No complaints here,
+but that was a little sooner than I had intended.
 
-Add support for invalidate_folio, release_folio and is_partially_uptodate
-address space operations. The first two are needed to be able to free
-the new shmem_folio_state struct. The last callback is required for
-large folios when enabling per-block tracking.
+--D
 
-This was spotted when running fstests for tmpfs and regress on
-generic/285 and generic/436 tests [1] with large folios support in the
-fallocate path without having per-block uptodate tracking.
-
-[1] tests:
-generic/285: src/seek_sanity_test/test09()
-generic/436: src/seek_sanity_test/test13()
-
-How to reproduce:
-
-```sh
-mkdir -p /mnt/test-tmpfs
-./src/seek_sanity_test -s 9 -e 9 /mnt/test-tmpfs/file
-./src/seek_sanity_test -s 13 -e 13 /mnt/test-tmpfs/file
-umount /mnt/test-tmpfs
-```
-
-After per-block uptodate support is added, fsx regresion is found when
-running the following:
-
-```sh
-mkdir -p /mnt/test-tmpfs
-mount -t tmpfs -o size=3D1G -o noswap tmpfs /mnt/test-tmpfs
-/root/xfstests-dev/ltp/fsx /mnt/test-tmpfs/file -d -N 1200 -X
-umount /mnt/test-tmpfs
-```
-
-Signed-off-by: Daniel Gomez <da.gomez@samsung.com>
----
- mm/shmem.c | 169 +++++++++++++++++++++++++++++++++++++++++++++++++----
- 1 file changed, 159 insertions(+), 10 deletions(-)
-
-diff --git a/mm/shmem.c b/mm/shmem.c
-index eb314927be78..fa67594495d5 100644
---- a/mm/shmem.c
-+++ b/mm/shmem.c
-@@ -132,6 +132,94 @@ struct shmem_options {
- #define SHMEM_SEEN_QUOTA 32
- };
-
-+/*
-+ * Structure allocated for each folio to track per-block uptodate state.
-+ *
-+ * Like buffered-io shmem_folio_state struct but only for uptodate.
-+ */
-+struct shmem_folio_state {
-+	spinlock_t state_lock;
-+	unsigned long state[];
-+};
-+
-+static inline bool sfs_is_fully_uptodate(struct folio *folio,
-+					 struct shmem_folio_state *sfs)
-+{
-+	struct inode *inode =3D folio->mapping->host;
-+
-+	return bitmap_full(sfs->state, i_blocks_per_folio(inode, folio));
-+}
-+
-+static inline bool sfs_block_is_uptodate(struct shmem_folio_state *sfs,
-+					 unsigned int block)
-+{
-+	return test_bit(block, sfs->state);
-+}
-+
-+static void sfs_set_range_uptodate(struct folio *folio,
-+				   struct shmem_folio_state *sfs, size_t off,
-+				   size_t len)
-+{
-+	struct inode *inode =3D folio->mapping->host;
-+	unsigned int first_blk =3D off >> inode->i_blkbits;
-+	unsigned int last_blk =3D (off + len - 1) >> inode->i_blkbits;
-+	unsigned int nr_blks =3D last_blk - first_blk + 1;
-+	unsigned long flags;
-+
-+	spin_lock_irqsave(&sfs->state_lock, flags);
-+	bitmap_set(sfs->state, first_blk, nr_blks);
-+	if (sfs_is_fully_uptodate(folio, sfs))
-+		folio_mark_uptodate(folio);
-+	spin_unlock_irqrestore(&sfs->state_lock, flags);
-+}
-+
-+static void shmem_set_range_uptodate(struct folio *folio, size_t off,
-+				     size_t len)
-+{
-+	struct shmem_folio_state *sfs =3D folio->private;
-+
-+	if (sfs)
-+		sfs_set_range_uptodate(folio, sfs, off, len);
-+	else
-+		folio_mark_uptodate(folio);
-+}
-+
-+static struct shmem_folio_state *sfs_alloc(struct inode *inode,
-+					   struct folio *folio, gfp_t gfp)
-+{
-+	struct shmem_folio_state *sfs =3D folio->private;
-+	unsigned int nr_blocks =3D i_blocks_per_folio(inode, folio);
-+
-+	if (sfs || nr_blocks <=3D 1)
-+		return sfs;
-+
-+	/*
-+	 * sfs->state tracks uptodate flag when the block size is smaller
-+	 * than the folio size.
-+	 */
-+	sfs =3D kzalloc(struct_size(sfs, state, BITS_TO_LONGS(nr_blocks)), gfp);
-+	if (!sfs)
-+		return sfs;
-+
-+	spin_lock_init(&sfs->state_lock);
-+	if (folio_test_uptodate(folio))
-+		bitmap_set(sfs->state, 0, nr_blocks);
-+	folio_attach_private(folio, sfs);
-+
-+	return sfs;
-+}
-+
-+static void sfs_free(struct folio *folio)
-+{
-+	struct shmem_folio_state *sfs =3D folio_detach_private(folio);
-+
-+	if (!sfs)
-+		return;
-+	WARN_ON_ONCE(sfs_is_fully_uptodate(folio, sfs) !=3D
-+		     folio_test_uptodate(folio));
-+	kfree(sfs);
-+}
-+
- #ifdef CONFIG_TMPFS
- static unsigned long shmem_default_max_blocks(void)
- {
-@@ -1495,7 +1583,7 @@ static int shmem_writepage(struct page *page, struct =
-writeback_control *wbc)
- 		}
- 		folio_zero_range(folio, 0, folio_size(folio));
- 		flush_dcache_folio(folio);
--		folio_mark_uptodate(folio);
-+		shmem_set_range_uptodate(folio, 0, folio_size(folio));
- 	}
-
- 	swap =3D folio_alloc_swap(folio);
-@@ -1676,6 +1764,7 @@ static struct folio *shmem_alloc_and_add_folio(gfp_t =
-gfp,
- 	struct shmem_inode_info *info =3D SHMEM_I(inode);
- 	unsigned int order =3D shmem_mapping_size_order(mapping, index, len,
- 						      SHMEM_SB(inode->i_sb));
-+	struct shmem_folio_state *sfs;
- 	struct folio *folio;
- 	long pages;
- 	int error;
-@@ -1755,6 +1844,10 @@ static struct folio *shmem_alloc_and_add_folio(gfp_t=
- gfp,
- 		}
- 	}
-
-+	sfs =3D sfs_alloc(inode, folio, gfp);
-+	if (!sfs && i_blocks_per_folio(inode, folio) > 1)
-+		goto unlock;
-+
- 	trace_mm_shmem_add_to_page_cache(folio);
- 	shmem_recalc_inode(inode, pages, 0);
- 	folio_add_lru(folio);
-@@ -1818,7 +1911,7 @@ static int shmem_replace_folio(struct folio **foliop,=
- gfp_t gfp,
-
- 	__folio_set_locked(new);
- 	__folio_set_swapbacked(new);
--	folio_mark_uptodate(new);
-+	shmem_set_range_uptodate(new, 0, folio_size(new));
- 	new->swap =3D entry;
- 	folio_set_swapcache(new);
-
-@@ -2146,7 +2239,7 @@ static int shmem_get_folio_gfp(struct inode *inode, p=
-goff_t index,
- 		for (i =3D 0; i < n; i++)
- 			clear_highpage(folio_page(folio, i));
- 		flush_dcache_folio(folio);
--		folio_mark_uptodate(folio);
-+		shmem_set_range_uptodate(folio, 0, folio_size(folio));
- 	}
-
- 	/* Perhaps the file has been truncated since we checked */
-@@ -2788,13 +2881,18 @@ shmem_write_end(struct file *file, struct address_s=
-pace *mapping,
- 	if (pos + copied > inode->i_size)
- 		i_size_write(inode, pos + copied);
-
-+	if (unlikely(copied < len && !folio_test_uptodate(folio)))
-+		return 0;
-+
- 	if (!folio_test_uptodate(folio)) {
--		if (copied < folio_size(folio)) {
--			size_t from =3D offset_in_folio(folio, pos);
--			folio_zero_segments(folio, 0, from,
--					from + copied, folio_size(folio));
--		}
--		folio_mark_uptodate(folio);
-+		size_t from =3D offset_in_folio(folio, pos);
-+		if (!folio_test_large(folio) && copied < folio_size(folio))
-+			folio_zero_segments(folio, 0, from, from + copied,
-+					    folio_size(folio));
-+		if (folio_test_large(folio) && copied < PAGE_SIZE)
-+			folio_zero_segments(folio, from, from, from + copied,
-+					    folio_size(folio));
-+		shmem_set_range_uptodate(folio, from, len);
- 	}
- 	folio_mark_dirty(folio);
- 	folio_unlock(folio);
-@@ -2803,6 +2901,54 @@ shmem_write_end(struct file *file, struct address_sp=
-ace *mapping,
- 	return copied;
- }
-
-+void shmem_invalidate_folio(struct folio *folio, size_t offset, size_t len=
-)
-+{
-+	/*
-+	 * If we're invalidating the entire folio, clear the dirty state
-+	 * from it and release it to avoid unnecessary buildup of the LRU.
-+	 */
-+	if (offset =3D=3D 0 && len =3D=3D folio_size(folio)) {
-+		WARN_ON_ONCE(folio_test_writeback(folio));
-+		folio_cancel_dirty(folio);
-+		sfs_free(folio);
-+	}
-+}
-+
-+bool shmem_release_folio(struct folio *folio, gfp_t gfp_flags)
-+{
-+	sfs_free(folio);
-+	return true;
-+}
-+
-+/*
-+ * shmem_is_partially_uptodate checks whether blocks within a folio are
-+ * uptodate or not.
-+ *
-+ * Returns true if all blocks which correspond to the specified part
-+ * of the folio are uptodate.
-+ */
-+bool shmem_is_partially_uptodate(struct folio *folio, size_t from, size_t =
-count)
-+{
-+	struct shmem_folio_state *sfs =3D folio->private;
-+	struct inode *inode =3D folio->mapping->host;
-+	unsigned first, last, i;
-+
-+	if (!sfs)
-+		return false;
-+
-+	/* Caller's range may extend past the end of this folio */
-+	count =3D min(folio_size(folio) - from, count);
-+
-+	/* First and last blocks in range within folio */
-+	first =3D from >> inode->i_blkbits;
-+	last =3D (from + count - 1) >> inode->i_blkbits;
-+
-+	for (i =3D first; i <=3D last; i++)
-+		if (!sfs_block_is_uptodate(sfs, i))
-+			return false;
-+	return true;
-+}
-+
- static ssize_t shmem_file_read_iter(struct kiocb *iocb, struct iov_iter *t=
-o)
- {
- 	struct file *file =3D iocb->ki_filp;
-@@ -3554,7 +3700,7 @@ static int shmem_symlink(struct mnt_idmap *idmap, str=
-uct inode *dir,
- 		inode->i_mapping->a_ops =3D &shmem_aops;
- 		inode->i_op =3D &shmem_symlink_inode_operations;
- 		memcpy(folio_address(folio), symname, len);
--		folio_mark_uptodate(folio);
-+		shmem_set_range_uptodate(folio, 0, folio_size(folio));
- 		folio_mark_dirty(folio);
- 		folio_unlock(folio);
- 		folio_put(folio);
-@@ -4524,6 +4670,9 @@ const struct address_space_operations shmem_aops =3D =
-{
- #ifdef CONFIG_MIGRATION
- 	.migrate_folio	=3D migrate_folio,
- #endif
-+	.invalidate_folio =3D shmem_invalidate_folio,
-+	.release_folio	=3D shmem_release_folio,
-+	.is_partially_uptodate =3D shmem_is_partially_uptodate,
- 	.error_remove_page =3D shmem_error_remove_page,
- };
- EXPORT_SYMBOL(shmem_aops);
---
-2.39.2
+> Regards,
+> Anthony
