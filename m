@@ -2,107 +2,131 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A4A78C25B67
-	for <linux-xfs@archiver.kernel.org>; Fri, 27 Oct 2023 12:06:15 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id DB196C25B6E
+	for <linux-xfs@archiver.kernel.org>; Fri, 27 Oct 2023 12:10:33 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1345789AbjJ0MGP (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 27 Oct 2023 08:06:15 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56276 "EHLO
+        id S1345802AbjJ0MKd (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 27 Oct 2023 08:10:33 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52062 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1345686AbjJ0MGO (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 27 Oct 2023 08:06:14 -0400
-Received: from mail-pl1-x631.google.com (mail-pl1-x631.google.com [IPv6:2607:f8b0:4864:20::631])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0C220C0
-        for <linux-xfs@vger.kernel.org>; Fri, 27 Oct 2023 05:06:13 -0700 (PDT)
-Received: by mail-pl1-x631.google.com with SMTP id d9443c01a7336-1cc209561c3so90515ad.0
-        for <linux-xfs@vger.kernel.org>; Fri, 27 Oct 2023 05:06:13 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20230601; t=1698408372; x=1699013172; darn=vger.kernel.org;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=MQHQ463K822d0eu3lSUzX50hYKP6nmOhDBx20ObjtTc=;
-        b=I2oYKKgAC1sTJYcIs5n2w/uDCwCmxUcLpbJVQBcv31qrGHWyQ45G8uWgU0EpzwU65i
-         /aktVLo94NjG1Ceq+VaSXNAWK2kxF92RUlFOuV4ljVloYQsWeRDwNMRIMrWEV051HUYV
-         GS7SSB+Es8bwa2ttJgjDDopbgmqvC20qTKAn50Vb1XujZyYA1QaTXfdoGdE6183ARW4k
-         Zsi1eGiP2T7JLgzTh0VW+cSb/+dhiV0+RuHyciakgJ10Fk3KeXtvDAk/jYarg4bG3roK
-         Lxbvv5oBH/azAgWljC3DBSVf/qOVt/vD9aJPwp9P/3TgQHxxYqrt2M81nXh9OKh5ofI7
-         wbDA==
+        with ESMTP id S1345761AbjJ0MKd (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 27 Oct 2023 08:10:33 -0400
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 10D2B192
+        for <linux-xfs@vger.kernel.org>; Fri, 27 Oct 2023 05:09:41 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1698408581;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=PIsSQcxBWH4imPJLQcWr1rbAXRjTfWDiFKroo0jDRbo=;
+        b=FDRcxUE0hDZde4Zmk9z8IycXU9ltIM8okwtees8Du2P8c5hI5mVWzsDgi/tL5O2iZx9OTB
+        xZRWUW9+2UfEUGXlOFuctaGR+HEqPT5PNOnfpbJHpPYqMompE6mh0fwUTxC3N/zQki4Wrf
+        q8uIZEDnK4tgjUwNvlHXHnGMpvwER8o=
+Received: from mail-pl1-f200.google.com (mail-pl1-f200.google.com
+ [209.85.214.200]) by relay.mimecast.com with ESMTP with STARTTLS
+ (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
+ us-mta-500-ZVFPtJqfOXqsY0IaIz_E1w-1; Fri, 27 Oct 2023 08:09:39 -0400
+X-MC-Unique: ZVFPtJqfOXqsY0IaIz_E1w-1
+Received: by mail-pl1-f200.google.com with SMTP id d9443c01a7336-1cc274dbbc6so3046105ad.2
+        for <linux-xfs@vger.kernel.org>; Fri, 27 Oct 2023 05:09:39 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1698408372; x=1699013172;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=MQHQ463K822d0eu3lSUzX50hYKP6nmOhDBx20ObjtTc=;
-        b=MPfkUQZlx4GG6EqRL6y9XzTD+L5oGXyQJ4S+pYIJWflWSc4EJD4x2VVg1ZkSoE3Dy+
-         xzotCF3Igxd934NAg6h63etdzL1ySqLGERDOWV56jIqhyO4ErKVsYoJpQhrXnm6lwBJV
-         qhjDBkdHzu25vrtFZUsfd3GDIbyo4cdMxp66tg+RpOYQXOmWU1xeJqZA57pFHTHtYNRi
-         7ncAsLf+wLCztCCb+nVmit6/h8fdflVZCo2C6JaxmU9y+rKw4gT1Mnz2v6BTzs0TN5XZ
-         MTEzEeqXbGIfgI5Q0OOTXFFp3b4CT1CF3HEf3ZDuGI2Xn+0+hisVAj7E3G1N2irFXcdV
-         dkug==
-X-Gm-Message-State: AOJu0YyXN8cS7M+oIZhDekH6Js4k+rDMoJk8xMFCajiu8iXDH29csAsb
-        J+6s3LFH3AhBynd/LgwvpiTBhI+jLuGO9iFHyNHViA==
-X-Google-Smtp-Source: AGHT+IHaExLG43RBJIionRW/c9b84KpmLdtS6fNiD0MK5F1uxefsg3PebOwhWetdV53Pmmf6YDEOuPH/Hzj0pzzd92E=
-X-Received: by 2002:a17:902:ea0e:b0:1ca:209c:d7b9 with SMTP id
- s14-20020a170902ea0e00b001ca209cd7b9mr217852plg.2.1698408372181; Fri, 27 Oct
- 2023 05:06:12 -0700 (PDT)
+        d=1e100.net; s=20230601; t=1698408578; x=1699013378;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=PIsSQcxBWH4imPJLQcWr1rbAXRjTfWDiFKroo0jDRbo=;
+        b=J9oLvpJgDlKV0fw/k1IQhQ6aZVdrEEGMQkSD7tXb6Q2mPoNbc4p/7wXGK7mS33FfLH
+         uHBySdpRKHQMXZvHf/9hontXS19Nyq+1XohySGOZZDXMUqS976QbDeOBkKprbBy7UNze
+         GBpJexbx2Pmt5tdeOP88vVS2cQNiuRnaLzpffVHow6jYyoRAMk19k92QTNAc9LIx+GBi
+         ppoPT0vn9tQI1ZyWLiZWhTT1oOX7TP3CVkvwPGyaSTzwDLawIQfwpw3WPz+9qsqaNadX
+         /nOiBknZ2fn7Ly935Ktn7h3xcHvpx6+hP+OcKjKKnV0nqofhWBL16+q8/hM1qU6gH7GE
+         R3gA==
+X-Gm-Message-State: AOJu0Yw/e/UhpYgzYrzWeMjsH8fbJJKwiWTbH9gM3+VUYTslu6ueRqu5
+        QIYOdZU2H9+lzJyvny7UXQKZ+fyLl43qK6MJ2xmAD/vFFdKF22yBkJSlpMJ55Zpig87O17wdhwy
+        4RyETwyHNSutkA8IUSLmT
+X-Received: by 2002:a17:902:da83:b0:1c9:cf1e:f907 with SMTP id j3-20020a170902da8300b001c9cf1ef907mr2917006plx.57.1698408578431;
+        Fri, 27 Oct 2023 05:09:38 -0700 (PDT)
+X-Google-Smtp-Source: AGHT+IHJvG3G40HrjsdZ6GuUlPRLgU+AOYMIoAwBUNsoWNOlJ/JAYX/j/7zcy8egLqN+1tDZBwW9LA==
+X-Received: by 2002:a17:902:da83:b0:1c9:cf1e:f907 with SMTP id j3-20020a170902da8300b001c9cf1ef907mr2916989plx.57.1698408578090;
+        Fri, 27 Oct 2023 05:09:38 -0700 (PDT)
+Received: from dell-per750-06-vm-08.rhts.eng.pek2.redhat.com ([43.228.180.230])
+        by smtp.gmail.com with ESMTPSA id jw4-20020a170903278400b001c61e628e9dsm1413114plb.77.2023.10.27.05.09.36
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Fri, 27 Oct 2023 05:09:37 -0700 (PDT)
+Date:   Fri, 27 Oct 2023 20:09:34 +0800
+From:   Zorro Lang <zlang@redhat.com>
+To:     "Darrick J. Wong" <djwong@kernel.org>
+Cc:     linux-xfs@vger.kernel.org, fstests@vger.kernel.org
+Subject: Re: [PATCH 1/2] generic/251: don't snapshot $here during a test
+Message-ID: <20231027120934.hs2d7d265rv3l5i4@dell-per750-06-vm-08.rhts.eng.pek2.redhat.com>
+References: <20231026031202.GM11391@frogsfrogsfrogs>
 MIME-Version: 1.0
-References: <20230704122727.17096-1-jack@suse.cz> <20230704125702.23180-1-jack@suse.cz>
- <20230822053523.GA8949@sol.localdomain> <20230822101154.7udsf4tdwtns2prj@quack3>
- <CANp29Y6uBuSzLXuCMGzVNZjT+xFqV4dtWKWb7GR7Opx__Diuzg@mail.gmail.com> <20231024111015.k4sbjpw5fa46k6il@quack3>
-In-Reply-To: <20231024111015.k4sbjpw5fa46k6il@quack3>
-From:   Aleksandr Nogikh <nogikh@google.com>
-Date:   Fri, 27 Oct 2023 14:06:00 +0200
-Message-ID: <CANp29Y7kB5rYqmig3bmzGkCc9CVZk9d=LVEPx9_Z+binfwzqEw@mail.gmail.com>
-Subject: Re: [PATCH 1/6] block: Add config option to not allow writing to
- mounted devices
-To:     Jan Kara <jack@suse.cz>
-Cc:     Eric Biggers <ebiggers@kernel.org>, linux-fsdevel@vger.kernel.org,
-        linux-block@vger.kernel.org, Christoph Hellwig <hch@infradead.org>,
-        Christian Brauner <brauner@kernel.org>,
-        Jens Axboe <axboe@kernel.dk>, Kees Cook <keescook@google.com>,
-        Ted Tso <tytso@mit.edu>,
-        syzkaller <syzkaller@googlegroups.com>,
-        Alexander Popov <alex.popov@linux.com>,
-        linux-xfs@vger.kernel.org, linux-btrfs@vger.kernel.org,
-        Dmitry Vyukov <dvyukov@google.com>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20231026031202.GM11391@frogsfrogsfrogs>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-I see, thanks for sharing the details!
+On Wed, Oct 25, 2023 at 08:12:02PM -0700, Darrick J. Wong wrote:
+> From: Darrick J. Wong <djwong@kernel.org>
+> 
+> Zorro complained that the next patch caused him a regression:
+> 
+> generic/251 249s ... [failed, exit status 1]- output mismatch (see /root/git/xfstests/results//generic/251.out.bad)
+>     --- tests/generic/251.out   2022-04-29 23:07:23.263498297 +0800
+>     +++ /root/git/xfstests/results//generic/251.out.bad 2023-10-22 14:17:07.248059405 +0800
+>     @@ -1,2 +1,5 @@
+>      QA output created by 251
+>      Running the test: done.
+>     +5838a5839
+>     +> aa60581221897d3d7dd60458e1cca2fa  ./results/generic/251.full
+>     +!!!Checksums has changed - Filesystem possibly corrupted!!!\n
+>     ...
+>     (Run 'diff -u /root/git/xfstests/tests/generic/251.out /root/git/xfstests/results//generic/251.out.bad'  to see the entire diff)
+> Ran: generic/251
+> Failures: generic/251
+> Failed 1 of 1 tests
+> 
+> The next patch writes some debugging information into $seqres.full,
+> which is a file underneat $RESULT_BASE.  If the test operator does not
+> set RESULT_BASE, it will be set to a subdir of $here by default.  Since
+> this test also snapshots the contents of $here before starting its loop,
+> any logging to $seqres.full on such a system will cause the post-copy
+> checksum to fail due to a mismatch.
+> 
+> Fix all this by copying $here to $SCRATCH_DEV and checksumming the copy
+> before the FITRIM stress test begins to avoid problems with $seqres.full.
+> 
+> Signed-off-by: Darrick J. Wong <djwong@kernel.org>
+> ---
 
-We'll set CONFIG_BLK_DEV_WRITE_MOUNTED=3Dn on syzbot once the series is
-in linux-next.
+Thanks, it works for me.
 
-On Tue, Oct 24, 2023 at 1:10=E2=80=AFPM Jan Kara <jack@suse.cz> wrote:
->
-> Hi!
->
-> On Thu 19-10-23 11:16:55, Aleksandr Nogikh wrote:
-> > Thank you for the series!
-> >
-> > Have you already had a chance to push an updated version of it?
-> > I tried to search LKML, but didn't find anything.
-> >
-> > Or did you decide to put it off until later?
->
-> So there is preliminary series sitting in VFS tree that changes how block
-> devices are open. There are some conflicts with btrfs tree and bcachefs
-> merge that complicate all this (plus there was quite some churn in VFS
-> itself due to changing rules how block devices are open) so I didn't push
-> out the series that actually forbids opening of mounted block devices
-> because that would cause a "merge from hell" issues. I plan to push out t=
-he
-> remaining patches once the merge window closes and all the dependencies a=
-re
-> hopefully in a stable state. Maybe I can push out the series earlier base=
-d
-> on linux-next so that people can have a look at the current state.
->
->                                                                 Honza
-> --
-> Jan Kara <jack@suse.com>
-> SUSE Labs, CR
+Reviewed-by: Zorro Lang <zlang@redhat.com>
+
+>  tests/generic/251 |    8 +++++++-
+>  1 file changed, 7 insertions(+), 1 deletion(-)
+> 
+> diff --git a/tests/generic/251 b/tests/generic/251
+> index 8ee74980cc..3b807df5fa 100755
+> --- a/tests/generic/251
+> +++ b/tests/generic/251
+> @@ -130,7 +130,13 @@ function run_process() {
+>  }
+>  
+>  nproc=20
+> -content=$here
+> +
+> +# Copy $here to the scratch fs and make coipes of the replica.  The fstests
+> +# output (and hence $seqres.full) could be in $here, so we need to snapshot
+> +# $here before computing file checksums.
+> +content=$SCRATCH_MNT/orig
+> +mkdir -p $content
+> +cp -axT $here/ $content/
+>  
+>  mkdir -p $tmp
+>  
+> 
+
