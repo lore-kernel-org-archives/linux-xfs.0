@@ -2,204 +2,143 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 52DB6C25B67
-	for <linux-xfs@archiver.kernel.org>; Fri, 27 Oct 2023 12:13:09 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3C06EC25B48
+	for <linux-xfs@archiver.kernel.org>; Fri, 27 Oct 2023 18:46:15 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1345833AbjJ0MNJ (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 27 Oct 2023 08:13:09 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34276 "EHLO
+        id S232339AbjJ0SqP (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 27 Oct 2023 14:46:15 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57802 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1345821AbjJ0MNI (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 27 Oct 2023 08:13:08 -0400
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2DC36FA
-        for <linux-xfs@vger.kernel.org>; Fri, 27 Oct 2023 05:12:20 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1698408739;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=IEwc0iQ4pSE/rlekn9XbXAZ8/ahtlLiOxNrUUzFEgrc=;
-        b=XcQvmxJeGBxLR2XFMJ15j0sUqtMTR9rsZbBRoEvnIX8fqs7SLAaXfTWes4lvKHKcU+yJCU
-        C37ZvO2DOG13JdWOsk9ZLI/QqSypEJLfktcN2BkpG/IardjBXdJIwcQ51AydW0KOv78If3
-        FGxTo5qOKZjOxeMyztjvss0VeYiJgZ0=
-Received: from mail-pj1-f69.google.com (mail-pj1-f69.google.com
- [209.85.216.69]) by relay.mimecast.com with ESMTP with STARTTLS
- (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
- us-mta-327-cuLOpa23PXelCE2_heBowg-1; Fri, 27 Oct 2023 08:12:18 -0400
-X-MC-Unique: cuLOpa23PXelCE2_heBowg-1
-Received: by mail-pj1-f69.google.com with SMTP id 98e67ed59e1d1-27d10ef87caso1746911a91.0
-        for <linux-xfs@vger.kernel.org>; Fri, 27 Oct 2023 05:12:17 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1698408737; x=1699013537;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=IEwc0iQ4pSE/rlekn9XbXAZ8/ahtlLiOxNrUUzFEgrc=;
-        b=I0X9zGqwud79nWnVfLcTGTSrncsoWamfkJlp9hsO9CBUkoEvenpWcqgFh3LGbN2F9l
-         p4rKww5KbBgfOfYnd79vmIUK6RYX2xw5Exoyy/hBtxz7DBDtY2hCIT3Y/nbjTwaOhfKL
-         SSSSw3WekCx8zV5bsbDOSt/Vutx5A5Pz8ZChMgOx88m43Qir6s1ruhwvrfHn8SilG8qj
-         Moy1oFl/FfWSzu0Hqbh7V5YmB/F6FLmx7TNZOG7sQE3LI8Hix5qJcqUVWd9xwfQTWAGv
-         YrpTcdhtjDYSQ12JVtCZyEe6F2RI53jc8wmgGqtCAj1waArO7bmr25O0wlJ4iJYIBrFe
-         QG9A==
-X-Gm-Message-State: AOJu0YyRfzi3ie4OcffY806VCjEH41R3QOZO57BWJFTQweOsYPQ8CxdI
-        rmJcT4P3W5AxB6u54n7aH6rUqmmofRuMfaE3p2UTjSPb4vUsVIBgZ7Cy5DWZEQXQwNjFgPMp4a6
-        R5QkEx0iCylXRETU5CHPqlZHZSYiu6YptIQ==
-X-Received: by 2002:a17:90b:3449:b0:27d:6404:bffc with SMTP id lj9-20020a17090b344900b0027d6404bffcmr2468227pjb.1.1698408736793;
-        Fri, 27 Oct 2023 05:12:16 -0700 (PDT)
-X-Google-Smtp-Source: AGHT+IFnmJvyKLQqRC6R+lgMvh61v0/+AF5n3nPLESoPQXBqN0Cw7av0O1CKuifc/3W8GcPFIG+gDA==
-X-Received: by 2002:a17:90b:3449:b0:27d:6404:bffc with SMTP id lj9-20020a17090b344900b0027d6404bffcmr2468212pjb.1.1698408736457;
-        Fri, 27 Oct 2023 05:12:16 -0700 (PDT)
-Received: from dell-per750-06-vm-08.rhts.eng.pek2.redhat.com ([43.228.180.230])
-        by smtp.gmail.com with ESMTPSA id 28-20020a17090a1a5c00b0026f39c90111sm224799pjl.20.2023.10.27.05.12.15
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 27 Oct 2023 05:12:16 -0700 (PDT)
-Date:   Fri, 27 Oct 2023 20:12:13 +0800
-From:   Zorro Lang <zlang@redhat.com>
-To:     "Darrick J. Wong" <djwong@kernel.org>
-Cc:     linux-xfs@vger.kernel.org, fstests@vger.kernel.org
-Subject: Re: [PATCH 2/2] generic/251: check min and max length and minlen for
- FSTRIM
-Message-ID: <20231027121213.jmwsf2aa3kzdkgxy@dell-per750-06-vm-08.rhts.eng.pek2.redhat.com>
-References: <20231026031202.GM11391@frogsfrogsfrogs>
- <20231026032151.GJ3195650@frogsfrogsfrogs>
+        with ESMTP id S232353AbjJ0SqO (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 27 Oct 2023 14:46:14 -0400
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C4710196
+        for <linux-xfs@vger.kernel.org>; Fri, 27 Oct 2023 11:46:11 -0700 (PDT)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 3952AC433C7;
+        Fri, 27 Oct 2023 18:46:09 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1698432371;
+        bh=cTVhvKwFv7f70NItbRYb8qf7N9BSevmPLGCbpfnoi5I=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=XESBeEDOyBvXP89LvNCJztLsCMP4GqyewspPvIEW9YDiSCyeTcX8whnhYiXX3N0+4
+         6ImRtZrFTKFqYZOTIIncTR/PLhdNmUqF5jNuvMp8+xAb/7Kc42fpL4sv0UBE9F1fAa
+         Ufd3SO2RvLbpJmFjNuZSimPXUH5wb5mLgMtADsU8gtAqc00zqWdxTrR/oAy9S+5J2Y
+         Gefh5JscaA+g39geoO6/0Fqiy3nznTFFjbE65k69G63PG8ayBiOytxdhScXOIRq4Ew
+         oW4WPMtSprZrhrSUYio+kHXcFGD4PZPl+0Q7ZVthAsDL0HTU4KEwOShEgUfeixrp6r
+         3SziP216wvLKQ==
+Date:   Fri, 27 Oct 2023 20:46:05 +0200
+From:   Christian Brauner <brauner@kernel.org>
+To:     Linus Torvalds <torvalds@linux-foundation.org>
+Cc:     "Darrick J. Wong" <djwong@kernel.org>,
+        Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+        Shirley Ma <shirley.ma@oracle.com>, hch@lst.de,
+        jstancek@redhat.com, linux-fsdevel@vger.kernel.org,
+        linux-xfs@vger.kernel.org
+Subject: Re: [GIT PULL] iomap: bug fixes for 6.6-rc7
+Message-ID: <20231027-gestiegen-saftig-2e636d251efa@brauner>
+References: <169786962623.1265253.5321166241579915281.stg-ugh@frogsfrogsfrogs>
+ <CAHk-=whNsCXwidLvx8u_JBH91=Z5EFw9FVj57HQ51P7uWs4yGQ@mail.gmail.com>
+ <20231023223810.GW3195650@frogsfrogsfrogs>
+ <20231024-flora-gerodet-8ec178f87fe9@brauner>
+ <20231026031325.GH3195650@frogsfrogsfrogs>
+ <CAHk-=whQHBdJTr9noNuRwMtFrWepMHhnq6EtcAypegi5aUkQnQ@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=utf-8
 Content-Disposition: inline
-In-Reply-To: <20231026032151.GJ3195650@frogsfrogsfrogs>
+In-Reply-To: <CAHk-=whQHBdJTr9noNuRwMtFrWepMHhnq6EtcAypegi5aUkQnQ@mail.gmail.com>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Wed, Oct 25, 2023 at 08:21:51PM -0700, Darrick J. Wong wrote:
-> From: Darrick J. Wong <djwong@kernel.org>
+On Thu, Oct 26, 2023 at 08:10:01AM -1000, Linus Torvalds wrote:
+> On Wed, 25 Oct 2023 at 17:13, Darrick J. Wong <djwong@kernel.org> wrote:
+> >
+> > Similar to what we just did with XFS, I propose breaking up the iomap
+> > Maintainer role into pieces that are more manageable by a single person.
+> > As RM, all you'd have to do is integrate reviewed patches and pull
+> > requests into one of your work branches.  That gives you final say over
+> > what goes in and how it goes in, instead of letting branches collide in
+> > for-next without warning.
 > 
-> Every now and then, this test fails with the following output when
-> running against my development tree when configured with an 8k fs block
-> size:
+> I _think_ what you are saying is that you'd like to avoid being both a
+> maintainer and a developer.
 > 
-> --- a/tests/generic/251.out	2023-07-11 12:18:21.624971186 -0700
-> +++ b/tests/generic/251.out.bad	2023-10-15 20:54:44.636000000 -0700
-> @@ -1,2 +1,4677 @@
->  QA output created by 251
->  Running the test: done.
-> +fstrim: /opt: FITRIM ioctl failed: Invalid argument
-> +fstrim: /opt: FITRIM ioctl failed: Invalid argument
-> ...
-> +fstrim: /opt: FITRIM ioctl failed: Invalid argument
+> Now, I'm probably hugely biased and going by personal experience, but
+> I do think that doing double duty is the worst of both worlds, and
+> pointlessly stressful.
 > 
-> Dumping the exact fstrim command lines to seqres.full produces this at
-> the end:
+> As a maintainer, you have to worry about the big picture (things like
+> release timing, even if it's just a "is this a fix for this release,
+> or should it get queued for the next one") but also code-related
+> things like "we have two different things going on, let's sort them
+> out separately". Christian had that kind of issue just a couple of
+> days ago with the btrfs tree.
 > 
-> /usr/sbin/fstrim -m 32544k -o 30247k -l 4k /opt
-> /usr/sbin/fstrim -m 32544k -o 30251k -l 4k /opt
-> ...
-> /usr/sbin/fstrim -m 32544k -o 30255k -l 4k /opt
+> But then, as a developer, those are distractions and just add stress
+> and worry, and distract from whatever you're working on. As a
+> developer, the last thing you want to worry about is something else
+> than the actual technical issue you're trying to solve.
 > 
-> The count of failure messages is the same as the count as the "-l 4k"
-> fstrim invocations.  Since this is an 8k-block filesystem, the -l
-> parameter is clearly incorrect.  The test computes random -m and -l
-> options.
+> And obviously, there's a lot of overlap. A maintainer needs to be
+> _able_ to be a developer just to make good choices. And the whole
+> "maintainer vs developer" doesn't have to be two different people,
+> somebody might shift from one to the other simply because maybe they
+> enjoy both roles. Just not at the same time, all the time, having both
+> things putting different stress on you.
 > 
-> Therefore, create helper functions to guess at the minimum and maximum
-> length and minlen parameters that can be used with the fstrim program.
-> In the inner loop of the test, make sure that our choices for -m and -l
-> fall within those constraints.
+> You can *kind* of see the difference in our git tree if you do
 > 
-> Signed-off-by: Darrick J. Wong <djwong@kernel.org>
-> ---
+>     git rev-list --count --author=XYZ --no-merges --since=1.year HEAD
+> 
+> to see "code authorship" (aka developer), vs
+> 
+>     git rev-list --count --committer=XYZ --since=1.year HEAD
+> 
+> which shows some kind of approximation of "maintainership". Obviously
+> there is overlap (potentially a lot of it) and the above isn't some
+> absolute thing, but you can see some patterns.
+> 
+> I personally wish we had more people who are maintainers _without_
+> having to worry too much about developing new code.  One of the issues
+> that keeps coming up is that companies don't always seem to appreciate
+> maintainership (which is a bit strange - the same companies may then
+> _love_ appreciateing managers, which is something very different but
+> has some of the same flavour to it).
+> 
+> And btw, I don't want to make that "I wish we had more maintainers" be
+> a value judgement. It's not that maintainers are somehow more
+> important than developers. I just think they are two fairly different
+> roles, and I think one person doing both puts unnecessary stress on
+> that person.
 
-Good to me, although I need to add some spaces to those lines with "+", to
-merge it successfully :)
+I think most of us enjoy both. Personally, I always try to carve out
+time where I can work on stuff that I find interesting. It helps to stay
+sane and it helps with providing good reviews. It also helps being
+reminded how easy it is to code up bugs.
 
-Reviewed-by: Zorro Lang <zlang@redhat.com>
+When there's an interesting series that morphes into larger subsystem
+massaging that's always great because that's a chance to collaborate and
+different people can take on different parts. And it usually means one
+does get a few patches in as well.
 
->  tests/generic/251 |   59 ++++++++++++++++++++++++++++++++++++++++++++++-------
->  1 file changed, 51 insertions(+), 8 deletions(-)
-> 
-> diff --git a/tests/generic/251 b/tests/generic/251
-> index 3b807df5fa..b7a15f9189 100755
-> --- a/tests/generic/251
-> +++ b/tests/generic/251
-> @@ -53,14 +53,46 @@ _fail()
->  	kill $mypid 2> /dev/null
->  }
->  
-> -_guess_max_minlen()
-> +# Set FSTRIM_{MIN,MAX}_MINLEN to the lower and upper bounds of the -m(inlen)
-> +# parameter to fstrim on the scratch filesystem.
-> +set_minlen_constraints()
->  {
-> -	mmlen=100000
-> -	while [ $mmlen -gt 1 ]; do
-> +	local mmlen
-> +
-> +	for ((mmlen = 100000; mmlen > 0; mmlen /= 2)); do
->  		$FSTRIM_PROG -l $(($mmlen*2))k -m ${mmlen}k $SCRATCH_MNT &> /dev/null && break
-> -		mmlen=$(($mmlen/2))
->  	done
-> -	echo $mmlen
-> +	test $mmlen -gt 0 || \
-> +		_notrun "could not determine maximum FSTRIM minlen param"
-> +	FSTRIM_MAX_MINLEN=$mmlen
-> +
-> +	for ((mmlen = 1; mmlen < FSTRIM_MAX_MINLEN; mmlen *= 2)); do
-> +		$FSTRIM_PROG -l $(($mmlen*2))k -m ${mmlen}k $SCRATCH_MNT &> /dev/null && break
-> +	done
-> +	test $mmlen -le $FSTRIM_MAX_MINLEN || \
-> +		_notrun "could not determine minimum FSTRIM minlen param"
-> +	FSTRIM_MIN_MINLEN=$mmlen
-> +}
-> +
-> +# Set FSTRIM_{MIN,MAX}_LEN to the lower and upper bounds of the -l(ength)
-> +# parameter to fstrim on the scratch filesystem.
-> +set_length_constraints()
-> +{
-> +	local mmlen
-> +
-> +	for ((mmlen = 100000; mmlen > 0; mmlen /= 2)); do
-> +		$FSTRIM_PROG -l ${mmlen}k $SCRATCH_MNT &> /dev/null && break
-> +	done
-> +	test $mmlen -gt 0 || \
-> +		_notrun "could not determine maximum FSTRIM length param"
-> +	FSTRIM_MAX_LEN=$mmlen
-> +
-> +	for ((mmlen = 1; mmlen < FSTRIM_MAX_LEN; mmlen *= 2)); do
-> +		$FSTRIM_PROG -l ${mmlen}k $SCRATCH_MNT &> /dev/null && break
-> +	done
-> +	test $mmlen -le $FSTRIM_MAX_LEN || \
-> +		_notrun "could not determine minimum FSTRIM length param"
-> +	FSTRIM_MIN_LEN=$mmlen
->  }
->  
->  ##
-> @@ -70,13 +102,24 @@ _guess_max_minlen()
->  ##
->  fstrim_loop()
->  {
-> +	set_minlen_constraints
-> +	set_length_constraints
-> +	echo "MINLEN max=$FSTRIM_MAX_MINLEN min=$FSTRIM_MIN_MINLEN" >> $seqres.full
-> +	echo "LENGTH max=$FSTRIM_MAX_LEN min=$FSTRIM_MIN_LEN" >> $seqres.full
-> +
->  	trap "_destroy_fstrim; exit \$status" 2 15
->  	fsize=$(_discard_max_offset_kb "$SCRATCH_MNT" "$SCRATCH_DEV")
-> -	mmlen=$(_guess_max_minlen)
->  
->  	while true ; do
-> -		step=$((RANDOM*$RANDOM+4))
-> -		minlen=$(((RANDOM*($RANDOM%2+1))%$mmlen))
-> +		while true; do
-> +			step=$((RANDOM*$RANDOM+4))
-> +			test "$step" -ge "$FSTRIM_MIN_LEN" && break
-> +		done
-> +		while true; do
-> +			minlen=$(( (RANDOM * (RANDOM % 2 + 1)) % FSTRIM_MAX_MINLEN ))
-> +			test "$minlen" -ge "$FSTRIM_MIN_MINLEN" && break
-> +		done
-> +
->  		start=$RANDOM
->  		if [ $((RANDOM%10)) -gt 7 ]; then
->  			$FSTRIM_PROG $SCRATCH_MNT &
-> 
+In a smaller subsystem it's probably ok to be main developer, reviewer,
+and developer at the same time. But in a busy subsystem that trias isn't
+sustainable. Let alone scaling that to multiple subsystems. 
 
+One of the critical parts is review. Good reviews are often insanely
+expensive and they are very much a factor in burning people out. If one
+only ever reviews and the load never ends that's going to fsck with you
+in the long run.
+
+A reviewer must be technically great, have design, context,
+maintainability, and wider context and future of the subsystem in mind,
+and not be afraid to have code changed or removed that they wrote (That
+last part really matters.), and also be ok with being publicly wrong in
+front of a whole bunch of smart people (Which I want to stress is
+absolutely fine and almost unavoidable.).
+
+But once you have a couple of good reviewers in a subsystem that you can
+really rely on that if they give an ack/rvb it's solid enough (not
+necessarily bug free even) that's really good. It not just takes away
+pressure it also means that it's possible for other
+reviewers/maintainers to go develop stuff themselves.
