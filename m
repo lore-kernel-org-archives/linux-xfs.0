@@ -2,85 +2,71 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id BD9B3C25B6F
-	for <linux-xfs@archiver.kernel.org>; Fri, 27 Oct 2023 22:30:08 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9DDFEC25B47
+	for <linux-xfs@archiver.kernel.org>; Fri, 27 Oct 2023 22:42:06 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232520AbjJ0WaI (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 27 Oct 2023 18:30:08 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47620 "EHLO
+        id S232770AbjJ0WmG (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 27 Oct 2023 18:42:06 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52768 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229712AbjJ0WaI (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 27 Oct 2023 18:30:08 -0400
+        with ESMTP id S230451AbjJ0WmG (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 27 Oct 2023 18:42:06 -0400
 Received: from buxtehude.debian.org (buxtehude.debian.org [IPv6:2607:f8f0:614:1::1274:39])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 96D5C9C
-        for <linux-xfs@vger.kernel.org>; Fri, 27 Oct 2023 15:30:05 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 92AE9AF
+        for <linux-xfs@vger.kernel.org>; Fri, 27 Oct 2023 15:42:04 -0700 (PDT)
 Received: from debbugs by buxtehude.debian.org with local (Exim 4.94.2)
         (envelope-from <debbugs@buxtehude.debian.org>)
-        id 1qwVL9-0049Fh-0l; Fri, 27 Oct 2023 22:30:03 +0000
+        id 1qwVWl-004AbG-43; Fri, 27 Oct 2023 22:42:03 +0000
 X-Loop: owner@bugs.debian.org
 Subject: Bug#1054644: xfsprogs-udeb: causes D-I to fail, reporting errors about missing partition devices
-Reply-To: Philip Hands <phil@hands.com>, 1054644@bugs.debian.org
+Reply-To: Bastian Germann <bage@debian.org>, 1054644@bugs.debian.org
 X-Loop: owner@bugs.debian.org
 X-Debian-PR-Message: followup 1054644
 X-Debian-PR-Package: xfsprogs-udeb
 X-Debian-PR-Keywords: 
-References: <169839498168.1174073.11485737048739628391.reportbug@nimble.hk.hands.com> <169839498168.1174073.11485737048739628391.reportbug@nimble.hk.hands.com> <871qdgccs5.fsf@nimble.hk.hands.com> <169839498168.1174073.11485737048739628391.reportbug@nimble.hk.hands.com> <20231027154505.GL3195650@frogsfrogsfrogs> <ZTvjFZPn7KH6euyT@technoir> <169839498168.1174073.11485737048739628391.reportbug@nimble.hk.hands.com>
+References: <169839498168.1174073.11485737048739628391.reportbug@nimble.hk.hands.com> <169839498168.1174073.11485737048739628391.reportbug@nimble.hk.hands.com> <871qdgccs5.fsf@nimble.hk.hands.com> <169839498168.1174073.11485737048739628391.reportbug@nimble.hk.hands.com> <20231027154505.GL3195650@frogsfrogsfrogs> <ZTvjFZPn7KH6euyT@technoir> <169839498168.1174073.11485737048739628391.reportbug@nimble.hk.hands.com> <87v8arbt0s.fsf@nimble.hk.hands.com> <169839498168.1174073.11485737048739628391.reportbug@nimble.hk.hands.com>
 X-Debian-PR-Source: xfsprogs
-Received: via spool by 1054644-submit@bugs.debian.org id=B1054644.1698445660987278
-          (code B ref 1054644); Fri, 27 Oct 2023 22:30:01 +0000
-Received: (at 1054644) by bugs.debian.org; 27 Oct 2023 22:27:40 +0000
-Received: from free.hands.com ([78.129.164.123]:51400)
-        by buxtehude.debian.org with esmtps (TLS1.3:ECDHE_X25519__RSA_PSS_RSAE_SHA256__AES_256_GCM:256)
+Received: via spool by 1054644-submit@bugs.debian.org id=B1054644.1698446291992022
+          (code B ref 1054644); Fri, 27 Oct 2023 22:42:02 +0000
+Received: (at 1054644) by bugs.debian.org; 27 Oct 2023 22:38:11 +0000
+Received: from stravinsky.debian.org ([2001:41b8:202:deb::311:108]:34292)
+        from C=NA,ST=NA,L=Ankh Morpork,O=Debian SMTP,OU=Debian SMTP CA,CN=stravinsky.debian.org,EMAIL=hostmaster@stravinsky.debian.org (verified)
+        by buxtehude.debian.org with esmtps (TLS1.3:ECDHE_SECP256R1__RSA_PSS_RSAE_SHA256__AES_256_GCM:256)
         (Exim 4.94.2)
-        (envelope-from <phil@hands.com>)
-        id 1qwVIq-0048pC-2A
-        for 1054644@bugs.debian.org; Fri, 27 Oct 2023 22:27:40 +0000
-Received: from nimble.hk.hands.com (p5b08cc82.dip0.t-ipconnect.de [91.8.204.130])
-        by free.hands.com (Postfix) with ESMTPSA id C74B02A75F
-        for <1054644@bugs.debian.org>; Fri, 27 Oct 2023 23:27:31 +0100 (BST)
-DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple; d=hands.com;
-        s=202202.hands; t=1698445651;
-        bh=S+G2YouMyJ7txLLHlwGrrdStyAHHQzNLOQiwN1/5FUs=;
-        h=From:To:Subject:In-Reply-To:References:Date:From;
-        b=Fb8E7Ne5kjuWSnqdpMaKQFaMNs2sY6sf7iQEvsjidqzerZffglTcgzUlKR4Fhs17Q
-         R3eCAJ/aksulp/W3ICgkE8R3DIoCrG4hrb998Ql2KUewLJIgDCjAhPSmThrGxXnCAS
-         4xfbLdvZ5UdUKOlT35tdPNqgP+yXGWB3mKpPuPBw13P9hWNdKcQk8jgONSmI9WAfwo
-         RQ2lHT9ZrPR6EmNehyUpeQrxlpn5Feog5yAusd0wr4JkaqKYfkjfciblKl1OPvAFH6
-         +412WXGaN94Zwxtw3nJSQBBvw6XUhTUGVdCndKHH9TK8+3el/7nn+lU1Wyp0aPgDSK
-         M3q7vPHebgvPg==
-Received: from phil (uid 1000)
-        (envelope-from phil@hands.com)
-        id 10e829
-        by nimble.hk.hands.com (DragonFly Mail Agent v0.13 on nimble);
-        Sat, 28 Oct 2023 00:27:31 +0200
-From:   Philip Hands <phil@hands.com>
-To:     Anthony Iliopoulos <ailiop@suse.com>,
-        "Darrick J. Wong" <djwong@kernel.org>, 1054644@bugs.debian.org
-In-Reply-To: <ZTvjFZPn7KH6euyT@technoir>
-Date:   Sat, 28 Oct 2023 00:27:31 +0200
-Message-ID: <87v8arbt0s.fsf@nimble.hk.hands.com>
+        (envelope-from <bage@debian.org>)
+        id 1qwVT1-004A4A-7k
+        for 1054644@bugs.debian.org; Fri, 27 Oct 2023 22:38:11 +0000
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=debian.org;
+        s=smtpauto.stravinsky; h=X-Debian-User:Content-Transfer-Encoding:Content-Type
+        :In-Reply-To:From:References:To:Subject:MIME-Version:Date:Message-ID:Reply-To
+        :Cc:Content-ID:Content-Description;
+        bh=xAzWcjwi1b/FodsCEc+MGFBAb1DnPSh7W7sSwgmJJbk=; b=hdP4kMZLQvN+KlO4jCfQDGlTGV
+        cuSLro/8qdgAmtRCtEDbcTOJdLnZiRIER4YaAFDQ/gHIl5MmZVKu6pQgLP6HMNdXKLo1/jI7pUbLa
+        KkhSuFq/JRe31B3CcyGDlfTx6L8eF7nfI14gCcj091qx+y4I/fje/d62v7MtIEU/QlMwlo/jJV7+7
+        R2nkRwyjo/6zRgoJUI7XRhNdu+k6iOZKvfVMdKZYxNYoASSeOBu2S3wM/nbLYDbK12P5s7qjmHqYr
+        GXBg3ks02+L69BWxfrS/9k2Ng+ypYX6k/fbmGc0w/UOJ/YuxmtMgIxJ0ZZ6QvnU+FQ7YDaDUv1trE
+        1AJ8+ARA==;
+Received: from authenticated user
+        by stravinsky.debian.org with esmtpsa (TLS1.3:ECDHE_X25519__RSA_PSS_RSAE_SHA256__AES_128_GCM:128)
+        (Exim 4.94.2)
+        (envelope-from <bage@debian.org>)
+        id 1qwVSz-000bzR-4l
+        for 1054644@bugs.debian.org; Fri, 27 Oct 2023 22:38:09 +0000
+Message-ID: <08691503-1a3a-4149-82b8-749e0606159b@debian.org>
+Date:   Sat, 28 Oct 2023 00:38:07 +0200
 MIME-Version: 1.0
-Content-Type: text/plain
+User-Agent: Mozilla Thunderbird
+Content-Language: de-DE
+To:     1054644@bugs.debian.org
+From:   Bastian Germann <bage@debian.org>
+In-Reply-To: <87v8arbt0s.fsf@nimble.hk.hands.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
+X-Debian-User: bage
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Anthony Iliopoulos <ailiop@suse.com> writes:
-...
-> Yeap it is due to nrext64, I've submitted a patch to grub (should have
-> cc'ed linux-xfs..)
->
-> https://lore.kernel.org/grub-devel/20231026095339.31802-1-ailiop@suse.com/
+Control: reassign -1 grub2
 
-That certainly seems to fix this bug.
-
-I tested it by applying that patch to grub, and then getting that
-version of grub installed into the target just after the initial attempt
-to run grub had failed, which then allows a retry of the grub install
-step to succeed.
-
-Also, with the patched version: `grub-probe -d /dev/vda1` produces 'xfs'
-
-Cheers, Phil.
--- 
-Philip Hands -- https://hands.com/~phil
+Please consider applying the identified patch so that debian installer does not break installing on XFS.
