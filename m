@@ -2,133 +2,159 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5A8D0C0032E
-	for <linux-xfs@archiver.kernel.org>; Sat, 28 Oct 2023 17:21:08 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 18FD7C4332F
+	for <linux-xfs@archiver.kernel.org>; Sat, 28 Oct 2023 19:57:56 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229448AbjJ1RVI (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Sat, 28 Oct 2023 13:21:08 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43908 "EHLO
+        id S229448AbjJ1T5z (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Sat, 28 Oct 2023 15:57:55 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34756 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229449AbjJ1RVH (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sat, 28 Oct 2023 13:21:07 -0400
-Received: from mailout1.w1.samsung.com (mailout1.w1.samsung.com [210.118.77.11])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4C429E1
-        for <linux-xfs@vger.kernel.org>; Sat, 28 Oct 2023 10:21:03 -0700 (PDT)
-Received: from eucas1p2.samsung.com (unknown [182.198.249.207])
-        by mailout1.w1.samsung.com (KnoxPortal) with ESMTP id 20231028172100euoutp01bfe8ae7d466f23475538b33fe1eff235~SVSzx9xf22358923589euoutp01E
-        for <linux-xfs@vger.kernel.org>; Sat, 28 Oct 2023 17:21:00 +0000 (GMT)
-DKIM-Filter: OpenDKIM Filter v2.11.0 mailout1.w1.samsung.com 20231028172100euoutp01bfe8ae7d466f23475538b33fe1eff235~SVSzx9xf22358923589euoutp01E
+        with ESMTP id S229446AbjJ1T5y (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sat, 28 Oct 2023 15:57:54 -0400
+Received: from mailout2.w1.samsung.com (mailout2.w1.samsung.com [210.118.77.12])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id CB0BA94
+        for <linux-xfs@vger.kernel.org>; Sat, 28 Oct 2023 12:57:51 -0700 (PDT)
+Received: from eucas1p1.samsung.com (unknown [182.198.249.206])
+        by mailout2.w1.samsung.com (KnoxPortal) with ESMTP id 20231028195750euoutp02504dd73035f4a072f293f10c645562ea~SXbuvxJf61486514865euoutp025
+        for <linux-xfs@vger.kernel.org>; Sat, 28 Oct 2023 19:57:50 +0000 (GMT)
+DKIM-Filter: OpenDKIM Filter v2.11.0 mailout2.w1.samsung.com 20231028195750euoutp02504dd73035f4a072f293f10c645562ea~SXbuvxJf61486514865euoutp025
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=samsung.com;
-        s=mail20170921; t=1698513661;
-        bh=Z1TI/4Osy7GbGpdJl9V2+WVThZcu4H/02A+56IpW2EE=;
-        h=Date:Subject:To:CC:From:In-Reply-To:References:From;
-        b=lM3UvSGkYCBxfCdKxNfc4lDZZ2+zHR61WUMSFQ5tdsNiAYnqMTX4m4Sw9Lc9qNBB8
-         zT729xvzZcbtkm5vhA4tlxAh4SpfP9jlJ9kzoeHDHlz4gghUnYcGON/ov56jiFDQ4R
-         Atjf6xVb5vWxafJ+7d2un3MNJklMxHAivOAnxNyw=
-Received: from eusmges1new.samsung.com (unknown [203.254.199.242]) by
+        s=mail20170921; t=1698523070;
+        bh=5EC2GyHdoSWSoe3c/2nJMUdY1tku6rieIVa6/lIJ/BQ=;
+        h=Date:From:Subject:To:CC:In-Reply-To:References:From;
+        b=lZMpb5Xu1LfSdf9En4ySrO5wK9vL49zluGDTWl/gXjTjTpC5xJhxT11me4OG/OgWc
+         JnpCdHJSgRn1LqF5diwa1pjTK+9ISSJkIiRbM+nwfYKs45hylHgiaavQ9dtC7RlqJ4
+         8SwV+0NIhsaAt5BFIceb3nr7BOC9P5wdp3d/tJV0=
+Received: from eusmges3new.samsung.com (unknown [203.254.199.245]) by
         eucas1p2.samsung.com (KnoxPortal) with ESMTP id
-        20231028172100eucas1p2796ada9bc8f229bc834e933c6bae7fb6~SVSy-p_RZ2698826988eucas1p2K;
-        Sat, 28 Oct 2023 17:21:00 +0000 (GMT)
-Received: from eucas1p1.samsung.com ( [182.198.249.206]) by
-        eusmges1new.samsung.com (EUCPMTA) with SMTP id 36.68.42423.BF24D356; Sat, 28
-        Oct 2023 18:21:00 +0100 (BST)
+        20231028195749eucas1p2f7f599f0ed441262393c43b657e5f767~SXbt37FOY0723707237eucas1p27;
+        Sat, 28 Oct 2023 19:57:49 +0000 (GMT)
+Received: from eucas1p2.samsung.com ( [182.198.249.207]) by
+        eusmges3new.samsung.com (EUCPMTA) with SMTP id 3E.54.37758.DB76D356; Sat, 28
+        Oct 2023 20:57:49 +0100 (BST)
 Received: from eusmtrp1.samsung.com (unknown [182.198.249.138]) by
         eucas1p2.samsung.com (KnoxPortal) with ESMTPA id
-        20231028172059eucas1p23eb0efe3a674ae2cf16cdcd394bae058~SVSyg2krm2696326963eucas1p2H;
-        Sat, 28 Oct 2023 17:20:59 +0000 (GMT)
+        20231028195748eucas1p22df6026b95e2e669b383f279b57b6b31~SXbtIY4Vn0724407244eucas1p2F;
+        Sat, 28 Oct 2023 19:57:48 +0000 (GMT)
 Received: from eusmgms2.samsung.com (unknown [182.198.249.180]) by
         eusmtrp1.samsung.com (KnoxPortal) with ESMTP id
-        20231028172059eusmtrp1f231668fbe18e7bb5ec2db5329f5244f~SVSygKyyB2883828838eusmtrp1m;
-        Sat, 28 Oct 2023 17:20:59 +0000 (GMT)
-X-AuditID: cbfec7f2-a3bff7000002a5b7-54-653d42fb4521
-Received: from eusmtip1.samsung.com ( [203.254.199.221]) by
-        eusmgms2.samsung.com (EUCPMTA) with SMTP id 73.9F.25043.BF24D356; Sat, 28
-        Oct 2023 18:20:59 +0100 (BST)
+        20231028195748eusmtrp1768e80f955ca47d612c11de232e7e364~SXbtH11Ob1398113981eusmtrp1U;
+        Sat, 28 Oct 2023 19:57:48 +0000 (GMT)
+X-AuditID: cbfec7f5-815ff7000002937e-77-653d67bd162b
+Received: from eusmtip2.samsung.com ( [203.254.199.222]) by
+        eusmgms2.samsung.com (EUCPMTA) with SMTP id 5A.90.25043.CB76D356; Sat, 28
+        Oct 2023 20:57:48 +0100 (BST)
 Received: from CAMSVWEXC02.scsc.local (unknown [106.1.227.72]) by
-        eusmtip1.samsung.com (KnoxPortal) with ESMTPA id
-        20231028172059eusmtip1cf9b8a24266cdd588f6fb1903b064aa8~SVSyUTl1F1481114811eusmtip18;
-        Sat, 28 Oct 2023 17:20:59 +0000 (GMT)
+        eusmtip2.samsung.com (KnoxPortal) with ESMTPA id
+        20231028195748eusmtip20218d1bd702bb549332f11cdce88a70a~SXbs8kt-G1450514505eusmtip2R;
+        Sat, 28 Oct 2023 19:57:48 +0000 (GMT)
 Received: from [192.168.1.64] (106.210.248.118) by CAMSVWEXC02.scsc.local
         (2002:6a01:e348::6a01:e348) with Microsoft SMTP Server (TLS) id 15.0.1497.2;
-        Sat, 28 Oct 2023 18:20:58 +0100
-Message-ID: <5e0d5a3b-199e-40aa-b4b8-847819cc1329@samsung.com>
-Date:   Sat, 28 Oct 2023 19:20:57 +0200
+        Sat, 28 Oct 2023 20:57:46 +0100
+Message-ID: <76c72990-cc1c-49ed-bbb6-145a518ad652@samsung.com>
+Date:   Sat, 28 Oct 2023 21:57:45 +0200
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
+From:   Pankaj Raghav <p.raghav@samsung.com>
 Subject: Re: [PATCH] iomap: fix iomap_dio_zero() for fs bs > system page
  size
-To:     Dave Chinner <david@fromorbit.com>,
-        Pankaj Raghav <kernel@pankajraghav.com>
-CC:     <linux-xfs@vger.kernel.org>, <linux-fsdevel@vger.kernel.org>,
-        <willy@infradead.org>, <djwong@kernel.org>, <mcgrof@kernel.org>,
-        <hch@lst.de>, <da.gomez@samsung.com>, <gost.dev@samsung.com>
+To:     Matthew Wilcox <willy@infradead.org>
+CC:     Christoph Hellwig <hch@lst.de>,
+        Pankaj Raghav <kernel@pankajraghav.com>,
+        <linux-xfs@vger.kernel.org>, <linux-fsdevel@vger.kernel.org>,
+        <djwong@kernel.org>, <mcgrof@kernel.org>, <da.gomez@samsung.com>,
+        <gost.dev@samsung.com>, <david@fromorbit.com>
 Content-Language: en-US
-From:   Pankaj Raghav <p.raghav@samsung.com>
-In-Reply-To: <ZTw1X3YdOmBmM+hQ@dread.disaster.area>
+In-Reply-To: <ZTxA0TRYivu/vSsA@casper.infradead.org>
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
 X-Originating-IP: [106.210.248.118]
 X-ClientProxiedBy: CAMSVWEXC01.scsc.local (2002:6a01:e347::6a01:e347) To
         CAMSVWEXC02.scsc.local (2002:6a01:e348::6a01:e348)
-X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFlrGKsWRmVeSWpSXmKPExsWy7djPc7p/nGxTDTbvZrTYcuweo8XlJ3wW
-        K1cfZbI48/Izi8WevSdZLHb92cFucWPCU0aL3z/msDlweJxaJOGxeYWWx6ZVnWweu282sHmc
-        Xeno8XmTXABbFJdNSmpOZllqkb5dAlfG3a3n2QuOs1Z8a/nB2MC4nKWLkYNDQsBEYt5/wy5G
-        Lg4hgRWMErvb/rJAOF8YJRZ/XM0K4XxmlJj59ghzFyMnWMeZuzuZIBLLGSW2dtxngav68GE3
-        lLOLUeLrlpVMIC28AnYSi9ccYwOxWQRUJaYdbmGGiAtKnJz5hAXEFhWQl7h/awY7iC0s4C9x
-        ZO4JsF4RgUCJJ/ePMIIMZRY4zCgx5/l9sCJmAXGJW0/mM4F8wSagJdHYCRbmFDCW+NpxjAWi
-        RFOidftvqHJ5ie1v50C9oCxx6skDVgi7VuLUlltg70gIdHNKTNx7ByrhItF/A+JoCQFhiVfH
-        t7BD2DISpyf3sEDY1RJPb/xmhmhuYZTo37meDRKs1hJ9Z3Igahwl/t75CA1tPokbbwUh7uGT
-        mLRtOvMERtVZSEExC8lns5C8MAvJCwsYWVYxiqeWFuempxYb5qWW6xUn5haX5qXrJefnbmIE
-        JqXT/45/2sE499VHvUOMTByMhxglOJiVRHiZHW1ShXhTEiurUovy44tKc1KLDzFKc7AoifOq
-        psinCgmkJ5akZqemFqQWwWSZODilGpi6L9Q/uDhr/9wfharPf0zrFNbZ7Gw05dfRT+xMNqt9
-        H6vvV0q8L8bJ026pVHPLrlAr9vf3ibN/7dqwpD3i3IxvT9tEvXp4t6y4Unvw/Dr+kgtHf3kt
-        n397i67S2/Qn7lYRlvO/d0YIzNI6sP7lh6TCYAvWno7pcz8qfFvgsqFXpCzSS/mBRQU7z58O
-        a4XIa3yiQVHROmq1oXvztu0MqV7YUnh6U/t019SNE5+sTRJ48JR7AfOpvHqFo0/7e9+3BdlL
-        F3InnXPwE8udnrCEV9HYulmNk2HWkz9V8XUVCYwXXsrc0F3Vcz5e0CRv8+3X07r/xh00/bHj
-        zvkjPz2Xl1/9aKDMytVbmCx8wHd13H4lluKMREMt5qLiRAAXGtAluQMAAA==
-X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFrrNIsWRmVeSWpSXmKPExsVy+t/xu7q/nWxTDf5tU7DYcuweo8XlJ3wW
-        K1cfZbI48/Izi8WevSdZLHb92cFucWPCU0aL3z/msDlweJxaJOGxeYWWx6ZVnWweu282sHmc
-        Xeno8XmTXABblJ5NUX5pSapCRn5xia1StKGFkZ6hpYWekYmlnqGxeayVkamSvp1NSmpOZllq
-        kb5dgl7G3a3n2QuOs1Z8a/nB2MC4nKWLkZNDQsBE4szdnUxdjFwcQgJLGSVO733DBpGQkdj4
-        5SorhC0s8edaF1hcSOAjo8T/kzkQDbsYJT79OcgOkuAVsJNYvOYYWBGLgKrEtMMtzBBxQYmT
-        M5+AbRMVkJe4f2sGWL2wgK/Enol3wGwRgUCJJ/ePMIIMZRY4zCgx5/l9dogNuxklVq+7wQRS
-        xSwgLnHryXwgm4ODTUBLorETrJlTwFjia8cxFogSTYnW7b/ZIWx5ie1v5zBDfKAscerJA6hv
-        aiU+/33GOIFRdBaS+2Yh2TALyahZSEYtYGRZxSiSWlqcm55bbKRXnJhbXJqXrpecn7uJERjL
-        24793LKDceWrj3qHGJk4GA8xSnAwK4nwMjvapArxpiRWVqUW5ccXleakFh9iNAUG0kRmKdHk
-        fGAyySuJNzQzMDU0MbM0MLU0M1YS5/Us6EgUEkhPLEnNTk0tSC2C6WPi4JRqYFqRPNdyY0jK
-        /xeuG6p6PlrMZX/lWHJAaL7pxTXBlVnv7Y/z13xWvHy4rqbF5fCK0tAkrqSWBQ2tHlleihm7
-        1u/P8VX+73fufNSnlHpu8xx726eML1c68qp7fTC490Jwgk2xe4z/G1l/CwGLhA7jgkV7lvl1
-        XLBndbnD9yz7+yevyzEmcrqm/O27ImZf2vv2yOXA+m1fFXrL5thqBB6fINqxrCb0Z39W0uFS
-        jlvfQ7Qaol49ORnT0MDg+11j5TrHL5f/Pnp6LWhO0zXLF1ErjX5XLxQ3stlUtXzOioS3fJsr
-        0wu/frrEMf94akMF+/qTlUnH33bq7wk/H/H6YKaReuwaM5dXf2Y3VupwlTKeU2Ipzkg01GIu
-        Kk4EAFV8kepuAwAA
-X-CMS-MailID: 20231028172059eucas1p23eb0efe3a674ae2cf16cdcd394bae058
+X-Brightmail-Tracker: H4sIAAAAAAAAA02Sf0yMcRzH932e55577qZ6ulifCVHaaJVf2W4r5YY5zBFj1MRV33Wnn+5c
+        lLGTziqUVLucdIm5Liwq4rrYknInYxqu8ytkdJgfyXCYrgfrv9fn/Xl/nr3f3z0MKTrFm8go
+        M7djVaY8PYgWUpe6vt8Jb09dgGe36WlxS9dTJO4d8Babz9wgxD2DQ5TY2m6jxJafl/lix+FX
+        SOz+Vk0vZKT2OpA214dKmxqKaGlbn5aW3jZLpENNU1bT8cLoFJyuzMGqWTFbhArTt0YyWyvY
+        ea2+nKdFg3QxEjDARsLvu1ZeMRIyIrYeQX+XjuaGLwiumO8R3DCE4PTnQ8S/k7ImB/KwiDUh
+        OFge99/UYymguMGC4LzuHN/j8mJjoMpoHFkwDMWGwLHKAE72BdvRAcrDE9hAeOas4nssNBsK
+        e4tGL/3YVdB5/CbhkcezM+Bdy1zP10lWS8DzQifp8ZCsPzgHjKPZBCPZavILaE6fCbpWN5/j
+        QGh9X01y+YPBPtDP43g32FucoyWBPSCAUw1FiFsshr6awr/sB67uFj7Hk+BW+UGK413wyuEm
+        ueMCBKVXGmlPUmCjoKQnnfNIYH+pmeJkb3C89+XyeMORS3ryMAoxjHkJw5g6hjEVDGMq1CKq
+        AfljjTojFavnZeIdEWp5hlqTmRqRnJXRhEZ+pFu/u4cvo3rXp4gORDCoAwFDBo33IiXRWOSV
+        Is/Nw6qszSpNOlZ3oACGCvL3CkkJxCI2Vb4dp2GcjVX/tgQjmKglYq/H7VLIc+y5e0yF4VVh
+        W5Kji19CneDrxixT6dfY+SvZzz4Ox457jVGV8k9vwnOefPywJP/+CRlPWWkNKVGk2Vandbnc
+        uKykrj3S17hvU/da3WTZhUjb0mkMfnvk8QmJISzF/SzBJy0e71dIfgVP1QWEvzbFVNkbJPrk
+        h87plt5tK42tOx3KTpX+R3D+IjLuQV7tqkfrZYujkgjZ/cTu7239rnEritYt601Iak44qxz+
+        +FDoYx6sSJq1oW4O4zLvjbmqf2cTbnXkvnyzfM2LzpJaWZJ7ikZQkcdbWxj2ZOvR4ZNLeg5Y
+        sn9prT+fShIrl0cTa8q8NdbZF+/2xVrY0iBKrZDPCSVVavkf9JyT9bcDAAA=
+X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFrrJIsWRmVeSWpSXmKPExsVy+t/xe7p70m1TDa62iFhsOXaP0eLyEz6L
+        lauPMlmcefmZxWLP3pMsFrv+7GC3uDHhKaPF7x9z2Bw4PE4tkvDYvELLY9OqTjaP3Tcb2DzO
+        rnT0+LxJLoAtSs+mKL+0JFUhI7+4xFYp2tDCSM/Q0kLPyMRSz9DYPNbKyFRJ384mJTUnsyy1
+        SN8uQS9j+Y/1zAUNnBX7V0xmbWB8ydbFyMkhIWAiMXHTDUYQW0hgKaPE6U4RiLiMxMYvV1kh
+        bGGJP9e6gOq5gGo+Mkp8/nSCEcLZxShxec4esEm8AnYSM+bPZ+li5OBgEVCVmD1VGiIsKHFy
+        5hMWEFtUQF7i/q0Z7CAlbAJaEo2d7CBhYQFfiT0T74CFRQQ0JN5sMQKZzizQwCTxsOMWM9Re
+        Joklf3aCHcosIC5x68l8JhCbE+iBeU0tbBBxTYnW7b/ZIWx5ie1v5zBDPKAscerJA6hnaiU+
+        /33GOIFRdBaS82YhGTsLyahZSEYtYGRZxSiSWlqcm55bbKRXnJhbXJqXrpecn7uJERjH2479
+        3LKDceWrj3qHGJk4GA8xSnAwK4nwMjvapArxpiRWVqUW5ccXleakFh9iNAUG0URmKdHkfGAi
+        ySuJNzQzMDU0MbM0MLU0M1YS5/Us6EgUEkhPLEnNTk0tSC2C6WPi4JRqYFqsdnbbdMMbtTU/
+        byvKTl1h2rQ+e+uWJc39MYK6m3J3ztdvmety3+jt35ueNh2Tf5tsnOet4uP6XEeRpfj+1Qdh
+        aTNOc2h82P93R2YUw79Tega3G07VPanVz78etSf4Y6Pmgujav+Yy0aezGTUEZK5U/z3R2JB1
+        Nai3+0rh6vfpcw6/a7+7Q0nF7v7m/4dFn69xd9qlMftNm08Xr9a/D60pVg7Pdx48yHdNKDyh
+        rcFHRdpRQibhmeznLJ5f2X/TjAOV/5R3rTT8X7paPGrpHsfuW9P/56zUXjm5/k56xq9T71ou
+        FJ2ffKIrpX7t9A3xd787XTu6RKur3lXkLfsvRral5c1Vyzku/v1jrbth1z4lluKMREMt5qLi
+        RADFsi59bAMAAA==
+X-CMS-MailID: 20231028195748eucas1p22df6026b95e2e669b383f279b57b6b31
 X-Msg-Generator: CA
-X-RootMTR: 20231027221047eucas1p15c503b4fe4f4f1799a3f85ab00490010
+X-RootMTR: 20231027051855eucas1p2e465ca6afc8d45dc0529f0798b8dd669
 X-EPHeader: CA
 CMS-TYPE: 201P
-X-CMS-RootMailID: 20231027221047eucas1p15c503b4fe4f4f1799a3f85ab00490010
+X-CMS-RootMailID: 20231027051855eucas1p2e465ca6afc8d45dc0529f0798b8dd669
 References: <20231026140832.1089824-1-kernel@pankajraghav.com>
-        <CGME20231027221047eucas1p15c503b4fe4f4f1799a3f85ab00490010@eucas1p1.samsung.com>
-        <ZTw1X3YdOmBmM+hQ@dread.disaster.area>
+        <CGME20231027051855eucas1p2e465ca6afc8d45dc0529f0798b8dd669@eucas1p2.samsung.com>
+        <20231027051847.GA7885@lst.de>
+        <1e7e9810-9b06-48c4-aec8-d4817cca9d17@samsung.com>
+        <ZTuVVSD1FnQ7qPG5@casper.infradead.org>
+        <3d65652f-04c7-4240-9969-ba2d3869dbbf@samsung.com>
+        <ZTxA0TRYivu/vSsA@casper.infradead.org>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
->> Fixes: db074436f421 ("iomap: move the direct IO code into a separate file")
+>> Thanks for the pointer. I made a rough version of how it might
+>> look like if I use that API:
 > 
-> I forgot to mention - this fixes tag is completely bogus. That's
-> just a commit that moves the code from one file to another and
-> there's no actual functional change at all.
+> useful thing to do.  i think this shows we need a new folio api wrapping
+> it.  happy to do that when i'm back, or you can have a crack at it.
 > 
-> Further, this isn't a change that "fixes" a bug or regression - it
-> is a change to support new functionality that doesnt' yet exist
-> upstream, and so there is no bug in the existing kernels for it to
-> fix....
+A folio wrapping for mm_get_huge_zero_page()?
 
-I agree. I will remove the Fixes tag.
+I tried to look for all the callers of mm_get_huge_zero_page() and I don't
+see them doing the folio <-> page dance. Of course, if we end up using
+mm_get_huge_zero_page() in iomap, then getting making a folio API might be
+worth it!
 
-I added it as iomap infra does not explicitly tell it does not
-support the LBS usecase. But I agree that it is a change to support
-a new feature, and it shouldn't go as a fix.
+> your point about it possibly failing is correct.  so i think we need an
+> api which definitely returns a folio, but it might be of arbitrary
+> order.
+> 
+That will be really nice, given that many parts of the kernel might
+use that API to get away with iterating with ZERO_PAGE().
 
+>> +
+>>         iomap_dio_submit_bio(iter, dio, bio, pos);
+> 
+> then this can look something like:
+> 
+> 	while (len) {
+> 		size_t size = min(len, folio_size(folio));
+> 
+> 		__bio_add_folio(bio, folio, size, 0);
+> 		len -= size;
+> 	}
+>
+
+Ah, this looks good!
+
+>> PS: Enjoy your holidays :)
+> 
+> cheers ;-)
