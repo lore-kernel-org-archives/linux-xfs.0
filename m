@@ -2,147 +2,133 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 16223C0032E
-	for <linux-xfs@archiver.kernel.org>; Sat, 28 Oct 2023 16:58:07 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5A8D0C0032E
+	for <linux-xfs@archiver.kernel.org>; Sat, 28 Oct 2023 17:21:08 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229448AbjJ1Q6H (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Sat, 28 Oct 2023 12:58:07 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34060 "EHLO
+        id S229448AbjJ1RVI (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Sat, 28 Oct 2023 13:21:08 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43908 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229446AbjJ1Q6F (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sat, 28 Oct 2023 12:58:05 -0400
+        with ESMTP id S229449AbjJ1RVH (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sat, 28 Oct 2023 13:21:07 -0400
 Received: from mailout1.w1.samsung.com (mailout1.w1.samsung.com [210.118.77.11])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4A2A5D3
-        for <linux-xfs@vger.kernel.org>; Sat, 28 Oct 2023 09:58:02 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4C429E1
+        for <linux-xfs@vger.kernel.org>; Sat, 28 Oct 2023 10:21:03 -0700 (PDT)
 Received: from eucas1p2.samsung.com (unknown [182.198.249.207])
-        by mailout1.w1.samsung.com (KnoxPortal) with ESMTP id 20231028165759euoutp01cd9b1047c9ba9a4437d387e1519aea4f~SU_tRUwBO3182031820euoutp010
-        for <linux-xfs@vger.kernel.org>; Sat, 28 Oct 2023 16:57:59 +0000 (GMT)
-DKIM-Filter: OpenDKIM Filter v2.11.0 mailout1.w1.samsung.com 20231028165759euoutp01cd9b1047c9ba9a4437d387e1519aea4f~SU_tRUwBO3182031820euoutp010
+        by mailout1.w1.samsung.com (KnoxPortal) with ESMTP id 20231028172100euoutp01bfe8ae7d466f23475538b33fe1eff235~SVSzx9xf22358923589euoutp01E
+        for <linux-xfs@vger.kernel.org>; Sat, 28 Oct 2023 17:21:00 +0000 (GMT)
+DKIM-Filter: OpenDKIM Filter v2.11.0 mailout1.w1.samsung.com 20231028172100euoutp01bfe8ae7d466f23475538b33fe1eff235~SVSzx9xf22358923589euoutp01E
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=samsung.com;
-        s=mail20170921; t=1698512279;
-        bh=G263tCHuDjJWOrwK6rEkPLZvqg9BXIQH5T/9FBnMH6E=;
+        s=mail20170921; t=1698513661;
+        bh=Z1TI/4Osy7GbGpdJl9V2+WVThZcu4H/02A+56IpW2EE=;
         h=Date:Subject:To:CC:From:In-Reply-To:References:From;
-        b=Zocf1mPDBLhG3gdgDail1+1Z52J6+grvuiHKQqiGOjlV/BmTuF8z2HF43j/RfVGSk
-         k5KX0z4vGR9RhuhLuCkytRXwDmPYSR5veAC1av/wO4rMkv20FHUruEB84+YdXYnXW+
-         URhGy3kxHbeQTku6e9id8c1fMTDxtdXEdsCAKeBU=
+        b=lM3UvSGkYCBxfCdKxNfc4lDZZ2+zHR61WUMSFQ5tdsNiAYnqMTX4m4Sw9Lc9qNBB8
+         zT729xvzZcbtkm5vhA4tlxAh4SpfP9jlJ9kzoeHDHlz4gghUnYcGON/ov56jiFDQ4R
+         Atjf6xVb5vWxafJ+7d2un3MNJklMxHAivOAnxNyw=
 Received: from eusmges1new.samsung.com (unknown [203.254.199.242]) by
         eucas1p2.samsung.com (KnoxPortal) with ESMTP id
-        20231028165759eucas1p28f9e44a256911712dfde00b4fc25782e~SU_s5Pv423067730677eucas1p2a;
-        Sat, 28 Oct 2023 16:57:59 +0000 (GMT)
+        20231028172100eucas1p2796ada9bc8f229bc834e933c6bae7fb6~SVSy-p_RZ2698826988eucas1p2K;
+        Sat, 28 Oct 2023 17:21:00 +0000 (GMT)
 Received: from eucas1p1.samsung.com ( [182.198.249.206]) by
-        eusmges1new.samsung.com (EUCPMTA) with SMTP id 05.77.42423.79D3D356; Sat, 28
-        Oct 2023 17:57:59 +0100 (BST)
+        eusmges1new.samsung.com (EUCPMTA) with SMTP id 36.68.42423.BF24D356; Sat, 28
+        Oct 2023 18:21:00 +0100 (BST)
 Received: from eusmtrp1.samsung.com (unknown [182.198.249.138]) by
         eucas1p2.samsung.com (KnoxPortal) with ESMTPA id
-        20231028165758eucas1p2348332c8a754013fcb3e378c7ac8e5a7~SU_sDjzy23067330673eucas1p2S;
-        Sat, 28 Oct 2023 16:57:58 +0000 (GMT)
+        20231028172059eucas1p23eb0efe3a674ae2cf16cdcd394bae058~SVSyg2krm2696326963eucas1p2H;
+        Sat, 28 Oct 2023 17:20:59 +0000 (GMT)
 Received: from eusmgms2.samsung.com (unknown [182.198.249.180]) by
         eusmtrp1.samsung.com (KnoxPortal) with ESMTP id
-        20231028165758eusmtrp1516a860d449c05fefcb3a461e4b4d671~SU_sDAKzY1424814248eusmtrp1m;
-        Sat, 28 Oct 2023 16:57:58 +0000 (GMT)
-X-AuditID: cbfec7f2-a51ff7000002a5b7-4f-653d3d97707c
-Received: from eusmtip2.samsung.com ( [203.254.199.222]) by
-        eusmgms2.samsung.com (EUCPMTA) with SMTP id 88.5F.25043.69D3D356; Sat, 28
-        Oct 2023 17:57:58 +0100 (BST)
+        20231028172059eusmtrp1f231668fbe18e7bb5ec2db5329f5244f~SVSygKyyB2883828838eusmtrp1m;
+        Sat, 28 Oct 2023 17:20:59 +0000 (GMT)
+X-AuditID: cbfec7f2-a3bff7000002a5b7-54-653d42fb4521
+Received: from eusmtip1.samsung.com ( [203.254.199.221]) by
+        eusmgms2.samsung.com (EUCPMTA) with SMTP id 73.9F.25043.BF24D356; Sat, 28
+        Oct 2023 18:20:59 +0100 (BST)
 Received: from CAMSVWEXC02.scsc.local (unknown [106.1.227.72]) by
-        eusmtip2.samsung.com (KnoxPortal) with ESMTPA id
-        20231028165758eusmtip2883361337e9b28a56538d2314cb482f7~SU_r4vCDv0609306093eusmtip2h;
-        Sat, 28 Oct 2023 16:57:58 +0000 (GMT)
+        eusmtip1.samsung.com (KnoxPortal) with ESMTPA id
+        20231028172059eusmtip1cf9b8a24266cdd588f6fb1903b064aa8~SVSyUTl1F1481114811eusmtip18;
+        Sat, 28 Oct 2023 17:20:59 +0000 (GMT)
 Received: from [192.168.1.64] (106.210.248.118) by CAMSVWEXC02.scsc.local
         (2002:6a01:e348::6a01:e348) with Microsoft SMTP Server (TLS) id 15.0.1497.2;
-        Sat, 28 Oct 2023 17:57:56 +0100
-Message-ID: <c7d07c6d-97a7-4ad1-bb74-d9a1a67613e8@samsung.com>
-Date:   Sat, 28 Oct 2023 18:57:56 +0200
+        Sat, 28 Oct 2023 18:20:58 +0100
+Message-ID: <5e0d5a3b-199e-40aa-b4b8-847819cc1329@samsung.com>
+Date:   Sat, 28 Oct 2023 19:20:57 +0200
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
 Subject: Re: [PATCH] iomap: fix iomap_dio_zero() for fs bs > system page
  size
-To:     Hannes Reinecke <hare@suse.de>,
-        Matthew Wilcox <willy@infradead.org>
-CC:     Christoph Hellwig <hch@lst.de>,
-        Pankaj Raghav <kernel@pankajraghav.com>,
-        <linux-xfs@vger.kernel.org>, <linux-fsdevel@vger.kernel.org>,
-        <djwong@kernel.org>, <mcgrof@kernel.org>, <da.gomez@samsung.com>,
-        <gost.dev@samsung.com>, <david@fromorbit.com>
+To:     Dave Chinner <david@fromorbit.com>,
+        Pankaj Raghav <kernel@pankajraghav.com>
+CC:     <linux-xfs@vger.kernel.org>, <linux-fsdevel@vger.kernel.org>,
+        <willy@infradead.org>, <djwong@kernel.org>, <mcgrof@kernel.org>,
+        <hch@lst.de>, <da.gomez@samsung.com>, <gost.dev@samsung.com>
 Content-Language: en-US
 From:   Pankaj Raghav <p.raghav@samsung.com>
-In-Reply-To: <3ce86ed7-2514-4d60-99b0-5029bcfb2126@suse.de>
+In-Reply-To: <ZTw1X3YdOmBmM+hQ@dread.disaster.area>
 Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 8bit
+Content-Transfer-Encoding: 7bit
 X-Originating-IP: [106.210.248.118]
 X-ClientProxiedBy: CAMSVWEXC01.scsc.local (2002:6a01:e347::6a01:e347) To
         CAMSVWEXC02.scsc.local (2002:6a01:e348::6a01:e348)
-X-Brightmail-Tracker: H4sIAAAAAAAAA02SaUwTURSF82am7RRTMhS0N6ISUaJiBIwaBwUjUXTwh0tijMG1gQlFS9EO
-        dY0GxY1NBdRqbVmqIqBiLBTZJAa1lIK44FJQQU0xkUis4gIURcqo4d937zv33XNeHolLSwXj
-        yXhVEqtWyZX+Qg+iwtLfMksbHs6G/LwmosstHYhudXjStcZsjC6+9gCjmz/2EnTtnUaCrh6s
-        FNH2012IdvXphYvFjM0ITFlRIGMqSRUyNW3JQuZhcQRT1rSf6TVNWi2K9giLZZXxu1h18KKt
-        Hgq91kbsuEDu+fCyQ5CM3gnTkJgEai6Y896gNORBSqkiBMV5gzhffENQdcKC8UUvAkfRDfRv
-        xGht/au6iqBn6Ifov8pg/DBysZSqRlDXPc/NEmoRnHltEbiZoALAef0izve9oPGCg3DzWMoP
-        OtvPi9zsTa2C+wYr5mYfioGTz62EewFOJWPw7kT7yDBOyaDdkTcsIkkhFQiHUkVuFFMLoW9A
-        zCtmwNHbLhHPfpBi5tcCNQVsjrcCng+Arbx9JCVQOWLI1xf+FS2FdL0N49kbuhvKRTxPgKac
-        DILn/dBld+H88BEEp6puCt0mYNjEyWYlr4mAY6eKCb7tCfYeL96PJ2RXaPHTKEA36iV0o4Lp
-        RkXQjYqQj4gSJGM1XEIcy81WsbuDOHkCp1HFBcUkJpjQ8Jdq+t3wtRIZur8E1SOMRPUISNzf
-        R4JHhLFSSax87z5WnbhFrVGyXD3yJQl/mSQg1o+VUnHyJHY7y+5g1f9OMVI8PhkLrnqjyRcM
-        RU7t2RirvTy5LWvw2aaulNqr5SuWV7qyh3Rer0rTJK8vL7sSxTxJTNc7OuQHvgaXFSy4f8sU
-        +R5xS1eKjXP7EgxRiswW+B72aUnD5ryqgpiZbxfkmr+nfp5mqGk7F2les7UCnCoTcfjXgO9a
-        ld6+L8uRvwEfg5tyb2Zsz9SmK9XWiRmMvf9Rn0wpu9vQuVMdINsYXD3vY81BONg6JzQ3SXEp
-        J9o35Iqm2TX9KHHeEue5OIu7uGl+jPWxOSe0jtxW8ir0hXNWZtQaV+DTs52TQhrp6HtbuhRt
-        tqTj48KcNPSzPYcIjakxWlPEpKwvCH+xrmxiS7OzcMCf4BTy2YG4mpP/AWsG8DbBAwAA
-X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFnrCIsWRmVeSWpSXmKPExsVy+t/xe7rTbG1TDVo381lsOXaP0eLyEz6L
-        PYsmMVmsXH2UyeLMy88sFnv2nmSx2PVnB7vFjQlPGS1+/5jD5sDpcWqRhMfmFVoem1Z1snns
-        vtnA5nF2paPH5tPVHp83yQWwR+nZFOWXlqQqZOQXl9gqRRtaGOkZWlroGZlY6hkam8daGZkq
-        6dvZpKTmZJalFunbJehlzJl+iqVgJkfFs+v3WBsYH7J1MXJySAiYSCw6cZm5i5GLQ0hgKaPE
-        rlUnoBIyEhu/XGWFsIUl/lzrYoMo+sgocfrYbihnF6PEqRlfwKp4Bewkptw5BmazCKhKfFgz
-        mxkiLihxcuYTFhBbVEBe4v6tGewgtrCAr8SeiXfAbBEBD4m+qydYQIYyCzQwSTzsuAV10w8m
-        ibdzV4JVMQuIS9x6Mp+pi5GDg01AS6Kxkx3E5BSwlvjxixOiQlOidftvqGp5ieatEDdICChL
-        nHryAOqbWonPf58xTmAUnYXkvFlIFsxCMmoWklELGFlWMYqklhbnpucWG+kVJ+YWl+al6yXn
-        525iBEb3tmM/t+xgXPnqo94hRiYOxkOMEhzMSiK8zI42qUK8KYmVValF+fFFpTmpxYcYTYFh
-        NJFZSjQ5H5he8kriDc0MTA1NzCwNTC3NjJXEeT0LOhKFBNITS1KzU1MLUotg+pg4OKUamLJO
-        szrEljYbqRTZuThmxxq6b/AteNh9PGqGSN+qmfJBJo9mRW3eevaJ0sxpP0XqFPku85Se9bsg
-        znbYPdN10UEzEwexgvQXZWdaTh/fd9l3pUV9/OHiMOurAqlF96x+TT+ySG59p4dfVjDX3975
-        bo25a9eWtD5jZXf97LiIScPc9fzd9WE3CkJCuUv5Mp/3v9E1VAwvyTsikrcual6U/e6shbNX
-        nZr1PTj+OR97nzG/SOHWx5LlZ4497ulgzNlY68fZkp+6SPrJ359JxR48TnLCt6IPaRYoP74x
-        LdunQ0z38T2XU5vPS5/ouv/gytm70qefrEs1vefYZL/q+qGV0TPkoj23P+LUu2NXee2yEktx
-        RqKhFnNRcSIAnmFIrHcDAAA=
-X-CMS-MailID: 20231028165758eucas1p2348332c8a754013fcb3e378c7ac8e5a7
+X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFlrGKsWRmVeSWpSXmKPExsWy7djPc7p/nGxTDTbvZrTYcuweo8XlJ3wW
+        K1cfZbI48/Izi8WevSdZLHb92cFucWPCU0aL3z/msDlweJxaJOGxeYWWx6ZVnWweu282sHmc
+        Xeno8XmTXABbFJdNSmpOZllqkb5dAlfG3a3n2QuOs1Z8a/nB2MC4nKWLkYNDQsBEYt5/wy5G
+        Lg4hgRWMErvb/rJAOF8YJRZ/XM0K4XxmlJj59ghzFyMnWMeZuzuZIBLLGSW2dtxngav68GE3
+        lLOLUeLrlpVMIC28AnYSi9ccYwOxWQRUJaYdbmGGiAtKnJz5hAXEFhWQl7h/awY7iC0s4C9x
+        ZO4JsF4RgUCJJ/ePMIIMZRY4zCgx5/l9sCJmAXGJW0/mM4F8wSagJdHYCRbmFDCW+NpxjAWi
+        RFOidftvqHJ5ie1v50C9oCxx6skDVgi7VuLUlltg70gIdHNKTNx7ByrhItF/A+JoCQFhiVfH
+        t7BD2DISpyf3sEDY1RJPb/xmhmhuYZTo37meDRKs1hJ9Z3Igahwl/t75CA1tPokbbwUh7uGT
+        mLRtOvMERtVZSEExC8lns5C8MAvJCwsYWVYxiqeWFuempxYb5qWW6xUn5haX5qXrJefnbmIE
+        JqXT/45/2sE499VHvUOMTByMhxglOJiVRHiZHW1ShXhTEiurUovy44tKc1KLDzFKc7AoifOq
+        psinCgmkJ5akZqemFqQWwWSZODilGpi6L9Q/uDhr/9wfharPf0zrFNbZ7Gw05dfRT+xMNqt9
+        H6vvV0q8L8bJ026pVHPLrlAr9vf3ibN/7dqwpD3i3IxvT9tEvXp4t6y4Unvw/Dr+kgtHf3kt
+        n397i67S2/Qn7lYRlvO/d0YIzNI6sP7lh6TCYAvWno7pcz8qfFvgsqFXpCzSS/mBRQU7z58O
+        a4XIa3yiQVHROmq1oXvztu0MqV7YUnh6U/t019SNE5+sTRJ48JR7AfOpvHqFo0/7e9+3BdlL
+        F3InnXPwE8udnrCEV9HYulmNk2HWkz9V8XUVCYwXXsrc0F3Vcz5e0CRv8+3X07r/xh00/bHj
+        zvkjPz2Xl1/9aKDMytVbmCx8wHd13H4lluKMREMt5qLiRAAXGtAluQMAAA==
+X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFrrNIsWRmVeSWpSXmKPExsVy+t/xu7q/nWxTDf5tU7DYcuweo8XlJ3wW
+        K1cfZbI48/Izi8WevSdZLHb92cFucWPCU0aL3z/msDlweJxaJOGxeYWWx6ZVnWweu282sHmc
+        Xeno8XmTXABblJ5NUX5pSapCRn5xia1StKGFkZ6hpYWekYmlnqGxeayVkamSvp1NSmpOZllq
+        kb5dgl7G3a3n2QuOs1Z8a/nB2MC4nKWLkZNDQsBE4szdnUxdjFwcQgJLGSVO733DBpGQkdj4
+        5SorhC0s8edaF1hcSOAjo8T/kzkQDbsYJT79OcgOkuAVsJNYvOYYWBGLgKrEtMMtzBBxQYmT
+        M5+AbRMVkJe4f2sGWL2wgK/Enol3wGwRgUCJJ/ePMIIMZRY4zCgx5/l9dogNuxklVq+7wQRS
+        xSwgLnHryXwgm4ODTUBLorETrJlTwFjia8cxFogSTYnW7b/ZIWx5ie1v5zBDfKAscerJA6hv
+        aiU+/33GOIFRdBaS+2Yh2TALyahZSEYtYGRZxSiSWlqcm55bbKRXnJhbXJqXrpecn7uJERjL
+        24793LKDceWrj3qHGJk4GA8xSnAwK4nwMjvapArxpiRWVqUW5ccXleakFh9iNAUG0kRmKdHk
+        fGAyySuJNzQzMDU0MbM0MLU0M1YS5/Us6EgUEkhPLEnNTk0tSC2C6WPi4JRqYFqRPNdyY0jK
+        /xeuG6p6PlrMZX/lWHJAaL7pxTXBlVnv7Y/z13xWvHy4rqbF5fCK0tAkrqSWBQ2tHlleihm7
+        1u/P8VX+73fufNSnlHpu8xx726eML1c68qp7fTC490Jwgk2xe4z/G1l/CwGLhA7jgkV7lvl1
+        XLBndbnD9yz7+yevyzEmcrqm/O27ImZf2vv2yOXA+m1fFXrL5thqBB6fINqxrCb0Z39W0uFS
+        jlvfQ7Qaol49ORnT0MDg+11j5TrHL5f/Pnp6LWhO0zXLF1ErjX5XLxQ3stlUtXzOioS3fJsr
+        0wu/frrEMf94akMF+/qTlUnH33bq7wk/H/H6YKaReuwaM5dXf2Y3VupwlTKeU2Ipzkg01GIu
+        Kk4EAFV8kepuAwAA
+X-CMS-MailID: 20231028172059eucas1p23eb0efe3a674ae2cf16cdcd394bae058
 X-Msg-Generator: CA
-X-RootMTR: 20231027051855eucas1p2e465ca6afc8d45dc0529f0798b8dd669
+X-RootMTR: 20231027221047eucas1p15c503b4fe4f4f1799a3f85ab00490010
 X-EPHeader: CA
 CMS-TYPE: 201P
-X-CMS-RootMailID: 20231027051855eucas1p2e465ca6afc8d45dc0529f0798b8dd669
+X-CMS-RootMailID: 20231027221047eucas1p15c503b4fe4f4f1799a3f85ab00490010
 References: <20231026140832.1089824-1-kernel@pankajraghav.com>
-        <CGME20231027051855eucas1p2e465ca6afc8d45dc0529f0798b8dd669@eucas1p2.samsung.com>
-        <20231027051847.GA7885@lst.de>
-        <1e7e9810-9b06-48c4-aec8-d4817cca9d17@samsung.com>
-        <ZTuVVSD1FnQ7qPG5@casper.infradead.org>
-        <3d65652f-04c7-4240-9969-ba2d3869dbbf@samsung.com>
-        <3ce86ed7-2514-4d60-99b0-5029bcfb2126@suse.de>
+        <CGME20231027221047eucas1p15c503b4fe4f4f1799a3f85ab00490010@eucas1p1.samsung.com>
+        <ZTw1X3YdOmBmM+hQ@dread.disaster.area>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
->> -       bio = iomap_dio_alloc_bio(iter, dio, 1, REQ_OP_WRITE | REQ_SYNC | REQ_IDLE);
->> +       if (len > PAGE_SIZE) {
->> +               page = mm_get_huge_zero_page(current->mm);
->> +               if (likely(page))
->> +                       huge_page = true;
->> +       }
->> +
->> +       if (!huge_page)
->> +               page = ZERO_PAGE(0);
->> +
->> +       fallback = ((len > PAGE_SIZE) && !huge_page);
->> +
-> That is pointless.
-> Bios can handle pages larger than PAGE_SIZE.
+>> Fixes: db074436f421 ("iomap: move the direct IO code into a separate file")
+> 
+> I forgot to mention - this fixes tag is completely bogus. That's
+> just a commit that moves the code from one file to another and
+> there's no actual functional change at all.
+> 
+> Further, this isn't a change that "fixes" a bug or regression - it
+> is a change to support new functionality that doesnt' yet exist
+> upstream, and so there is no bug in the existing kernels for it to
+> fix....
 
-Yes, I know BIOs can handle large pages. But the point here is if we fail
-to allocate a huge zero page that can cover the complete large FSB ( > page size),
-then we need to use the statically allocated ZERO_PAGE (see the original patch)
-for multiple offsets covering the range.
+I agree. I will remove the Fixes tag.
 
-Unless we have an API that can return a zero folio with arbitrary order(see also the
-reply from Willy), we can't use a bio with one vec for LBS support.
+I added it as iomap infra does not explicitly tell it does not
+support the LBS usecase. But I agree that it is a change to support
+a new feature, and it shouldn't go as a fix.
 
---
-Pankaj
