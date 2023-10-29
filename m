@@ -2,65 +2,63 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6C17AC4332F
-	for <linux-xfs@archiver.kernel.org>; Sun, 29 Oct 2023 04:12:26 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 76B3FC4167B
+	for <linux-xfs@archiver.kernel.org>; Sun, 29 Oct 2023 04:34:34 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229450AbjJ2EM0 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Sun, 29 Oct 2023 00:12:26 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39426 "EHLO
+        id S229486AbjJ2Eec (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Sun, 29 Oct 2023 00:34:32 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59198 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229446AbjJ2EMY (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sun, 29 Oct 2023 00:12:24 -0400
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 74949CA
-        for <linux-xfs@vger.kernel.org>; Sat, 28 Oct 2023 21:11:33 -0700 (PDT)
+        with ESMTP id S229446AbjJ2Eeb (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sun, 29 Oct 2023 00:34:31 -0400
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 192B6CC
+        for <linux-xfs@vger.kernel.org>; Sat, 28 Oct 2023 21:33:42 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1698552692;
+        s=mimecast20190719; t=1698554021;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:cc:mime-version:mime-version:content-type:content-type;
-        bh=fsQ76kSpxpgkXQwD2Of978hkohjeDbuaKTUVPxc3kFk=;
-        b=SVkbTP9MM8ariXzBKmVVHwCImm8CZ9jcNzqCYzXc6x3OwaMiY48v6zXIDLJUh4qwFbjyAG
-        FbJ/sc17tdTDc/RtiadLqADwJ85Qx2ji/2bpk7kv6tPlT3izLRIZBVpRRjBUBtZc6m1URp
-        dhxG8mX27VF15qlWIHDB3BVfpB2ALn4=
-Received: from mail-pf1-f198.google.com (mail-pf1-f198.google.com
- [209.85.210.198]) by relay.mimecast.com with ESMTP with STARTTLS
+        bh=q8CT93+rru+20f6T5oB+ApoGuNtHvCDC6nTLTCfDNa4=;
+        b=QD/ICWmCVEWY85Kr650ZSRRdsLgvYm//E2xD/ALKNIvcFoFdPzYA2LBHFlmZ1K76UXwJrp
+        RPpaKv9q1QHLqIIgISObN1shfKH0kNmqS0aiFW8ym54PPdXAQOHPJo9z1hotmnV/35vXRM
+        J0glIZCvI6CvKg2dXaHCsZlGG3eKytY=
+Received: from mail-pj1-f71.google.com (mail-pj1-f71.google.com
+ [209.85.216.71]) by relay.mimecast.com with ESMTP with STARTTLS
  (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
- us-mta-692-wI_U02i_OoGIcJsYsbLxjg-1; Sun, 29 Oct 2023 00:11:30 -0400
-X-MC-Unique: wI_U02i_OoGIcJsYsbLxjg-1
-Received: by mail-pf1-f198.google.com with SMTP id d2e1a72fcca58-6b2018a11e2so3409097b3a.2
-        for <linux-xfs@vger.kernel.org>; Sat, 28 Oct 2023 21:11:30 -0700 (PDT)
+ us-mta-359-0Y8JrHPEOR-KQTKFXb0F9A-1; Sun, 29 Oct 2023 00:33:39 -0400
+X-MC-Unique: 0Y8JrHPEOR-KQTKFXb0F9A-1
+Received: by mail-pj1-f71.google.com with SMTP id 98e67ed59e1d1-27756e0e4d8so3361892a91.3
+        for <linux-xfs@vger.kernel.org>; Sat, 28 Oct 2023 21:33:39 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1698552689; x=1699157489;
+        d=1e100.net; s=20230601; t=1698554018; x=1699158818;
         h=content-disposition:mime-version:message-id:subject:cc:to:from:date
          :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=fsQ76kSpxpgkXQwD2Of978hkohjeDbuaKTUVPxc3kFk=;
-        b=JmAd61/egJW0LSXVIxmTRUbTDBWybRXGgD4bace9uTFz49ZDd0eCsCpReQnkd0foPD
-         rEYIausMsAtKnqKNMdmd1hVqISlDPIM/otP6m8HAq0BAsSy4oYcnR/pbJASl2fDtwpkG
-         lwLLU8a4qlYhb3RqUeAXKMI7DyJXQ7hskeTxGf5seY3kOpB3zlDlj/mBBCHJPGop0CeW
-         zGloMOuHsK2nY/2kDjuGBXy+qwQiYJsGcN+WfNHOVtENsTs5o7YCSO2MhmuaSlXzLztK
-         q298dlerHoC44EE/ljO3xmK969sr1S1MNGtdMgXaxURHNxNPckPiG3opRWS0DB4ZAxbl
-         mHGQ==
-X-Gm-Message-State: AOJu0YwHLpU2CntoBdXoJiOESQaaj44AJKCBUJQBA0NP8ilF4+QiFxXD
-        ScKnZfKTroDd0taC5r4QgrN3eE0cYcAMwQoLuvQ985f6rh7yM1RGq7wwnO3E7EhG1ITJc/Ts3KH
-        fS9s1tbOb0TIjjz/HgnI04a2PN9NUNFILhzj0jRJIwMhG9WCO/MP+QReSFriW5//2iyz0UXvegx
-        6Mg0sY8w==
-X-Received: by 2002:a05:6a20:cea4:b0:17d:d70f:a2c3 with SMTP id if36-20020a056a20cea400b0017dd70fa2c3mr7701846pzb.20.1698552688683;
-        Sat, 28 Oct 2023 21:11:28 -0700 (PDT)
-X-Google-Smtp-Source: AGHT+IEbl+6pHo9yMUOhoSA4wABmsyCeh/JcrHEFaT/o+/7/TnBbEo8tz1RdKTODIEhUq2LbdyuJzQ==
-X-Received: by 2002:a05:6a20:cea4:b0:17d:d70f:a2c3 with SMTP id if36-20020a056a20cea400b0017dd70fa2c3mr7701824pzb.20.1698552688015;
-        Sat, 28 Oct 2023 21:11:28 -0700 (PDT)
+        bh=q8CT93+rru+20f6T5oB+ApoGuNtHvCDC6nTLTCfDNa4=;
+        b=L/wCT+0obqHNENvDhQWbEojloO50AZtZUPXB3gHISMzzGO4qh/FHJIXIH4YpKugRef
+         s1Oqba32EZyfe1dlAJ4Da45VkWCxlt+kZVu1StpjGRQ5VwQnYPU978xNszGTPm+O/7Bz
+         XYpvKg3uSE4CZ4byTbOeZi3dKeGzlEWs6d3HDGeLe4/7iVdECfYatHNhAbl8ZFSimVhO
+         2o/PMaKDwhJd4POhXoRGMSfDDlnMgM0RCdnFmMeauDQ19+L6ATcC5T1+etfPblq+Uyri
+         hhepdZp6VW1V1pmnn/uT7Rd+msQIi0UOz/ibxCwBzYe3zX6BaEQMIB5Ddh76P8LFBTY8
+         /BvQ==
+X-Gm-Message-State: AOJu0YylqD7f56N3pxm+K8BRzu8zT7rx2sYkvThJPoylOMIvazoSRM5S
+        Zp5nwj732qVneBwk/AVfEBfl7tPfmGXDkuCVAn/00YXA40hLyd9h2KRcxGecgvkphBGBjWoxRiV
+        1ClDnjHvPbUBB/CGjqt8Uq9kN+yrFX/ES1XraT9jwnDmNnO09ez9RelTgXfefJTtoU55heyW2PB
+        eohEfnBA==
+X-Received: by 2002:a17:90a:88a:b0:27e:22b:dce5 with SMTP id v10-20020a17090a088a00b0027e022bdce5mr5311106pjc.27.1698554017969;
+        Sat, 28 Oct 2023 21:33:37 -0700 (PDT)
+X-Google-Smtp-Source: AGHT+IE6pVp5LZuo6jC83UrHiRYEEDyOAluQov5owhMqYr5IkYiX8ebfTB/+FjBJYw7SdfTsFVP2vQ==
+X-Received: by 2002:a17:90a:88a:b0:27e:22b:dce5 with SMTP id v10-20020a17090a088a00b0027e022bdce5mr5311096pjc.27.1698554017401;
+        Sat, 28 Oct 2023 21:33:37 -0700 (PDT)
 Received: from dell-per750-06-vm-08.rhts.eng.pek2.redhat.com ([43.228.180.230])
-        by smtp.gmail.com with ESMTPSA id a3-20020a17090a740300b00263cca08d95sm1665340pjg.55.2023.10.28.21.11.26
+        by smtp.gmail.com with ESMTPSA id gg18-20020a17090b0a1200b002800ea6caacsm3232373pjb.1.2023.10.28.21.33.35
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Sat, 28 Oct 2023 21:11:27 -0700 (PDT)
-Date:   Sun, 29 Oct 2023 12:11:22 +0800
+        Sat, 28 Oct 2023 21:33:37 -0700 (PDT)
+Date:   Sun, 29 Oct 2023 12:33:33 +0800
 From:   Zorro Lang <zlang@redhat.com>
 To:     linux-xfs@vger.kernel.org
-Cc:     fstests@vger.kernel.org
-Subject: [Bug report][fstests generic/047] Internal error !(flags &
- XFS_DABUF_MAP_HOLE_OK) at line 2572 of file fs/xfs/libxfs/xfs_da_btree.c.
-  Caller xfs_dabuf_map.constprop.0+0x26c/0x368 [xfs]
-Message-ID: <20231029041122.bx2k7wwm7otebjd5@dell-per750-06-vm-08.rhts.eng.pek2.redhat.com>
+Cc:     linux-s390@vger.kernel.org, fstests@vger.kernel.org
+Subject: [Bug report] More xfs courruption issue found on s390x
+Message-ID: <20231029043333.v6wkqsorxdk2dbch@dell-per750-06-vm-08.rhts.eng.pek2.redhat.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
@@ -68,18 +66,22 @@ Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Hi xfs list,
+Hi xfs folks,
 
-Recently I always hit xfs corruption by running fstests generic/047 [1], and
-it show more failures in dmesg[2], e.g:
+Besides https://lore.kernel.org/linux-xfs/20231029041122.bx2k7wwm7otebjd5@dell-per750-06-vm-08.rhts.eng.pek2.redhat.com/T/#u ,
 
-  XFS (loop1): Internal error !(flags & XFS_DABUF_MAP_HOLE_OK) at line 2572 of file fs/xfs/libxfs/xfs_da_btree.c.  Caller xfs_dabuf_map.constprop.0+0x26c/0x368 [xfs]
+I always hit another failure on s390x too, by running generic/039 or generic/065 [1]:
 
-The .full output lots of curruption messages [3].
+  XFS: Assertion failed: ip->i_nblocks == 0, file: fs/xfs/xfs_inode.c, line: 2359
 
-Currently I only hit this issue on s390x, haven't hit it on x86_64 or ppc64le
-or aarch64. The mkfs option isn't related, even on overlayfs (base on xfs)
-still hit this issue.
+More details as dmesg output [2] and .full output [3].
+
+And ... more other kind of failure likes [3]:
+  XFS: Assertion failed: error != -ENOENT, file: fs/xfs/xfs_trans.c, line: 1310
+
+All these falures are on s390x only... and more xfs corruption failure by running
+fstests on s390x. I don't know if it's a s390x issue or a xfs issue on big endian
+machine (s390x), so cc s390x list.
 
 I tested on mainline linux 6.6.0-rc7+, the HEAD commit is:
 
@@ -89,9 +91,9 @@ Date:   Thu Oct 26 20:42:02 2023 -1000
 
     Merge tag 'drm-fixes-2023-10-27' of git://anongit.freedesktop.org/drm/drm
 
+
 Thanks,
 Zorro
-
 
 [1]
 FSTYP         -- xfs (debug)
@@ -99,237 +101,85 @@ PLATFORM      -- Linux/s390x s390x-kvm-091 6.6.0-rc7+ #1 SMP Fri Oct 27 08:58:03
 MKFS_OPTIONS  -- -f -m crc=1,finobt=1,rmapbt=0,reflink=1,bigtime=1,inobtcount=1 /dev/loop1
 MOUNT_OPTIONS -- -o context=system_u:object_r:root_t:s0 /dev/loop1 /mnt/fstests/SCRATCH_DIR
 
-generic/047       _check_xfs_filesystem: filesystem on /dev/loop1 failed scrub
-(see /var/lib/xfstests/results//generic/047.full for details)
-_check_xfs_filesystem: filesystem on /dev/loop1 is inconsistent (r)
-(see /var/lib/xfstests/results//generic/047.full for details)
-_check_dmesg: something found in dmesg (see /var/lib/xfstests/results//generic/047.dmesg)
-- output mismatch (see /var/lib/xfstests/results//generic/047.out.bad)
-    --- tests/generic/047.out	2023-10-27 09:04:38.145351816 -0400
-    +++ /var/lib/xfstests/results//generic/047.out.bad	2023-10-27 09:08:12.475381462 -0400
-    @@ -1 +1,1000 @@
-     QA output created by 047
-    +file /mnt/fstests/SCRATCH_DIR/1 missing - fsync failed
-    +file /mnt/fstests/SCRATCH_DIR/2 missing - fsync failed
-    +file /mnt/fstests/SCRATCH_DIR/3 missing - fsync failed
-    +file /mnt/fstests/SCRATCH_DIR/4 missing - fsync failed
-    +file /mnt/fstests/SCRATCH_DIR/5 missing - fsync failed
-    +file /mnt/fstests/SCRATCH_DIR/6 missing - fsync failed
+generic/065       _check_xfs_filesystem: filesystem on /dev/loop1 is inconsistent (r)
+(see /var/lib/xfstests/results//generic/065.full for details)
+_check_dmesg: something found in dmesg (see /var/lib/xfstests/results//generic/065.dmesg)
+- output mismatch (see /var/lib/xfstests/results//generic/065.out.bad)
+    --- tests/generic/065.out	2023-10-27 09:04:38.185351816 -0400
+    +++ /var/lib/xfstests/results//generic/065.out.bad	2023-10-27 09:09:12.145421405 -0400
+    @@ -4,11 +4,11 @@
+     wrote 65536/65536 bytes at offset 0
+     XXX Bytes, X ops; XX:XX:XX.X (XXX YYY/sec and XXX ops/sec)
+     File 'foo' content after log replay:
+    -0000000 aa aa aa aa aa aa aa aa aa aa aa aa aa aa aa aa
+    +0000000 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+     *
+     0020000
     ...
-    (Run 'diff -u /var/lib/xfstests/tests/generic/047.out /var/lib/xfstests/results//generic/047.out.bad'  to see the entire diff)
-Ran: generic/047
-Failures: generic/047
+    (Run 'diff -u /var/lib/xfstests/tests/generic/065.out /var/lib/xfstests/results//generic/065.out.bad'  to see the entire diff)
+Ran: generic/065
+Failures: generic/065
 Failed 1 of 1 tests
 
-
-
 [2]
-[  376.468885] run fstests generic/047 at 2023-10-27 09:08:07
- [  376.675751] XFS (loop1): Mounting V5 Filesystem 716c9687-ee74-4c12-b6ad-a0b513194f2b
- [  376.677088] XFS (loop1): Ending clean mount
- [  376.678189] XFS (loop1): User initiated shutdown received.
- [  376.678194] XFS (loop1): Metadata I/O Error (0x4) detected at xfs_fs_goingdown+0x5a/0xf8 [xfs] (fs/xfs/xfs_fsops.c:492).  Shutting down filesystem.
- [  376.678409] XFS (loop1): Please unmount the filesystem and rectify the problem(s)
- [  376.679423] XFS (loop1): Unmounting Filesystem 716c9687-ee74-4c12-b6ad-a0b513194f2b
- [  376.714910] XFS (loop1): Mounting V5 Filesystem 40196bb2-39f4-4c32-83ef-567f42216699
- [  376.716353] XFS (loop1): Ending clean mount
- [  380.375878] XFS (loop1): User initiated shutdown received.
- [  380.375888] XFS (loop1): Log I/O Error (0x6) detected at xfs_fs_goingdown+0xb4/0xf8 [xfs] (fs/xfs/xfs_fsops.c:495).  Shutting down filesystem.
- [  380.376101] XFS (loop1): Please unmount the filesystem and rectify the problem(s)
- [  380.380373] XFS (loop1): Unmounting Filesystem 40196bb2-39f4-4c32-83ef-567f42216699
- [  380.383835] XFS (loop1): Mounting V5 Filesystem 40196bb2-39f4-4c32-83ef-567f42216699
- [  380.397086] XFS (loop1): Starting recovery (logdev: internal)
- [  380.465934] XFS (loop1): Ending recovery (logdev: internal)
- [  380.467409] XFS (loop1): Unmounting Filesystem 40196bb2-39f4-4c32-83ef-567f42216699
- [  380.475431] XFS (loop1): Mounting V5 Filesystem 40196bb2-39f4-4c32-83ef-567f42216699
- [  380.477235] XFS (loop1): Ending clean mount
- [  380.477500] XFS (loop1): Internal error !(flags & XFS_DABUF_MAP_HOLE_OK) at line 2572 of file fs/xfs/libxfs/xfs_da_btree.c.  Caller xfs_dabuf_map.constprop.0+0x26c/0x368 [xfs]
- [  380.477636] CPU: 0 PID: 337362 Comm: 047 Kdump: loaded Tainted: G        W          6.6.0-rc7+ #1
- [  380.477639] Hardware name: IBM 3931 LA1 400 (KVM/Linux)
- [  380.477641] Call Trace:
- [  380.477642]  [<0000000032d71372>] dump_stack_lvl+0x62/0x80 
- [  380.477648]  [<000003ff7ff96c00>] xfs_corruption_error+0x70/0xa0 [xfs] 
- [  380.477762]  [<000003ff7ff551ce>] xfs_dabuf_map.constprop.0+0x2a6/0x368 [xfs] 
- [  380.477871]  [<000003ff7ff5773e>] xfs_da_read_buf+0x6e/0x128 [xfs] 
- [  380.477977]  [<000003ff7ff57838>] xfs_da3_node_read+0x40/0x78 [xfs] 
- [  380.478085]  [<000003ff7ff58c7a>] xfs_da3_node_lookup_int+0x82/0x558 [xfs] 
- [  380.478193]  [<000003ff7ff68d6e>] xfs_dir2_node_lookup+0x3e/0x140 [xfs] 
- [  380.478302]  [<000003ff7ff5cfd2>] xfs_dir_lookup+0x1ea/0x218 [xfs] 
- [  380.478410]  [<000003ff7fface40>] xfs_lookup+0x60/0x108 [xfs] 
- [  380.478525]  [<000003ff7ffa9d42>] xfs_vn_lookup+0x62/0x98 [xfs] 
- [  380.478641]  [<0000000032738cfa>] __lookup_slow+0x9a/0x148 
- [  380.478647]  [<000000003273dc86>] walk_component+0x126/0x1b8 
- [  380.478650]  [<000000003273e948>] path_lookupat+0x88/0x1e8 
- [  380.478653]  [<000000003273f66a>] filename_lookup+0xaa/0x198 
- [  380.478656]  [<00000000327306d0>] vfs_statx+0x90/0x160 
- [  380.478659]  [<0000000032730a1e>] vfs_fstatat+0x86/0xe8 
- [  380.478661]  [<0000000032730c98>] __do_sys_newfstatat+0x28/0x48 
- [  380.478663]  [<0000000032d97060>] __do_syscall+0x1d0/0x1f8 
- [  380.478668]  [<0000000032da7040>] system_call+0x70/0x98 
- [  380.478672] XFS (loop1): Corruption detected. Unmount and run xfs_repair
- [  380.478674] XFS (loop1): xfs_dabuf_map: bno 8388608 inode 128
- [  380.478676] XFS (loop1): [00] br_startoff 8388608 br_startblock -2 br_blockcount 1 br_state 0
- [  380.478711] XFS (loop1): Internal error !(flags & XFS_DABUF_MAP_HOLE_OK) at line 2572 of file fs/xfs/libxfs/xfs_da_btree.c.  Caller xfs_dabuf_map.constprop.0+0x26c/0x368 [xfs]
- [  380.478818] CPU: 0 PID: 337362 Comm: 047 Kdump: loaded Tainted: G        W          6.6.0-rc7+ #1
- [  380.478820] Hardware name: IBM 3931 LA1 400 (KVM/Linux)
- [  380.478821] Call Trace:
- [  380.478822]  [<0000000032d71372>] dump_stack_lvl+0x62/0x80 
- [  380.478825]  [<000003ff7ff96c00>] xfs_corruption_error+0x70/0xa0 [xfs] 
- [  380.478939]  [<000003ff7ff551ce>] xfs_dabuf_map.constprop.0+0x2a6/0x368 [xfs] 
- [  380.479047]  [<000003ff7ff5773e>] xfs_da_read_buf+0x6e/0x128 [xfs] 
- [  380.479155]  [<000003ff7ff57838>] xfs_da3_node_read+0x40/0x78 [xfs] 
- [  380.479263]  [<000003ff7ff58c7a>] xfs_da3_node_lookup_int+0x82/0x558 [xfs] 
- [  380.479370]  [<000003ff7ff68d6e>] xfs_dir2_node_lookup+0x3e/0x140 [xfs] 
- [  380.479480]  [<000003ff7ff5cfd2>] xfs_dir_lookup+0x1ea/0x218 [xfs] 
- [  380.479594]  [<000003ff7fface40>] xfs_lookup+0x60/0x108 [xfs] 
- [  380.479710]  [<000003ff7ffa9d42>] xfs_vn_lookup+0x62/0x98 [xfs] 
- [  380.479826]  [<0000000032738cfa>] __lookup_slow+0x9a/0x148 
- [  380.479829]  [<000000003273dc86>] walk_component+0x126/0x1b8 
- [  380.479832]  [<000000003273e948>] path_lookupat+0x88/0x1e8 
- [  380.479835]  [<000000003273f66a>] filename_lookup+0xaa/0x198 
- [  380.479837]  [<00000000327306d0>] vfs_statx+0x90/0x160 
- [  380.479840]  [<0000000032730a1e>] vfs_fstatat+0x86/0xe8 
- [  380.479842]  [<0000000032730c98>] __do_sys_newfstatat+0x28/0x48 
- [  380.479844]  [<0000000032d97060>] __do_syscall+0x1d0/0x1f8 
- [  380.479847]  [<0000000032da7040>] system_call+0x70/0x98 
- [  380.479850] XFS (loop1): Corruption detected. Unmount and run xfs_repair
- [  380.479852] XFS (loop1): xfs_dabuf_map: bno 8388608 inode 128
- [  380.479887] XFS (loop1): [00] br_startoff 8388608 br_startblock -2 br_blockcount 1 br_state 0
- [  380.479912] XFS (loop1): Internal error !(flags & XFS_DABUF_MAP_HOLE_OK) at line 2572 of file fs/xfs/libxfs/xfs_da_btree.c.  Caller xfs_dabuf_map.constprop.0+0x26c/0x368 [xfs]
- [  380.480022] CPU: 0 PID: 337362 Comm: 047 Kdump: loaded Tainted: G        W          6.6.0-rc7+ #1
- [  380.480024] Hardware name: IBM 3931 LA1 400 (KVM/Linux)
- [  380.480026] Call Trace:
- [  380.480026]  [<0000000032d71372>] dump_stack_lvl+0x62/0x80 
- [  380.480029]  [<000003ff7ff96c00>] xfs_corruption_error+0x70/0xa0 [xfs] 
- [  380.480143]  [<000003ff7ff551ce>] xfs_dabuf_map.constprop.0+0x2a6/0x368 [xfs] 
- [  380.480253]  [<000003ff7ff5773e>] xfs_da_read_buf+0x6e/0x128 [xfs] 
- [  380.480360]  [<000003ff7ff57838>] xfs_da3_node_read+0x40/0x78 [xfs] 
- [  380.480467]  [<000003ff7ff58c7a>] xfs_da3_node_lookup_int+0x82/0x558 [xfs] 
- [  380.480576]  [<000003ff7ff68d6e>] xfs_dir2_node_lookup+0x3e/0x140 [xfs] 
- [  380.480683]  [<000003ff7ff5cfd2>] xfs_dir_lookup+0x1ea/0x218 [xfs] 
- [  380.480791]  [<000003ff7fface40>] xfs_lookup+0x60/0x108 [xfs] 
- [  380.480907]  [<000003ff7ffa9d42>] xfs_vn_lookup+0x62/0x98 [xfs] 
- [  380.481021]  [<0000000032738cfa>] __lookup_slow+0x9a/0x148 
- [  380.481024]  [<000000003273dc86>] walk_component+0x126/0x1b8 
- [  380.481027]  [<000000003273e948>] path_lookupat+0x88/0x1e8 
- [  380.481030]  [<000000003273f66a>] filename_lookup+0xaa/0x198 
- [  380.481033]  [<00000000327306d0>] vfs_statx+0x90/0x160 
- [  380.481036]  [<0000000032730a1e>] vfs_fstatat+0x86/0xe8 
- [  380.481038]  [<0000000032730c98>] __do_sys_newfstatat+0x28/0x48 
- [  380.481040]  [<0000000032d97060>] __do_syscall+0x1d0/0x1f8 
- [  380.481043]  [<0000000032da7040>] system_call+0x70/0x98 
- [  380.481051] XFS (loop1): Corruption detected. Unmount and run xfs_repair
- [  380.481053] XFS (loop1): xfs_dabuf_map: bno 8388608 inode 128
- [  380.481054] XFS (loop1): [00] br_startoff 8388608 br_startblock -2 br_blockcount 1 br_state 0
- [  380.481080] XFS (loop1): Internal error !(flags & XFS_DABUF_MAP_HOLE_OK) at line 2572 of file fs/xfs/libxfs/xfs_da_btree.c.  Caller xfs_dabuf_map.constprop.0+0x26c/0x368 [xfs]
- [  380.481189] CPU: 0 PID: 337362 Comm: 047 Kdump: loaded Tainted: G        W          6.6.0-rc7+ #1
- [  380.481191] Hardware name: IBM 3931 LA1 400 (KVM/Linux)
- [  380.481192] Call Trace:
- [  380.481193]  [<0000000032d71372>] dump_stack_lvl+0x62/0x80 
- [  380.481195]  [<000003ff7ff96c00>] xfs_corruption_error+0x70/0xa0 [xfs] 
- [  380.481310]  [<000003ff7ff551ce>] xfs_dabuf_map.constprop.0+0x2a6/0x368 [xfs] 
- [  380.481418]  [<000003ff7ff5773e>] xfs_da_read_buf+0x6e/0x128 [xfs] 
- [  380.481526]  [<000003ff7ff57838>] xfs_da3_node_read+0x40/0x78 [xfs] 
- [  380.481635]  [<000003ff7ff58c7a>] xfs_da3_node_lookup_int+0x82/0x558 [xfs] 
- [  380.481743]  [<000003ff7ff68d6e>] xfs_dir2_node_lookup+0x3e/0x140 [xfs] 
- [  380.481854]  [<000003ff7ff5cfd2>] xfs_dir_lookup+0x1ea/0x218 [xfs] 
- [  380.481961]  [<000003ff7fface40>] xfs_lookup+0x60/0x108 [xfs] 
- [  380.482076]  [<000003ff7ffa9d42>] xfs_vn_lookup+0x62/0x98 [xfs] 
- [  380.482191]  [<0000000032738cfa>] __lookup_slow+0x9a/0x148 
- [  380.482194]  [<000000003273dc86>] walk_component+0x126/0x1b8 
- [  380.482197]  [<000000003273e948>] path_lookupat+0x88/0x1e8 
- [  380.482200]  [<000000003273f66a>] filename_lookup+0xaa/0x198 
- [  380.482203]  [<00000000327306d0>] vfs_statx+0x90/0x160 
- [  380.482205]  [<0000000032730a1e>] vfs_fstatat+0x86/0xe8 
- [  380.482207]  [<0000000032730c98>] __do_sys_newfstatat+0x28/0x48 
- [  380.482209]  [<0000000032d97060>] __do_syscall+0x1d0/0x1f8 
- [  380.482212]  [<0000000032da7040>] system_call+0x70/0x98 
- [  380.482215] XFS (loop1): Corruption detected. Unmount and run xfs_repair
- [  380.482216] XFS (loop1): xfs_dabuf_map: bno 8388608 inode 128
- [  380.482218] XFS (loop1): [00] br_startoff 8388608 br_startblock -2 br_blockcount 1 br_state 0
- [  380.482242] XFS (loop1): Internal error !(flags & XFS_DABUF_MAP_HOLE_OK) at line 2572 of file fs/xfs/libxfs/xfs_da_btree.c.  Caller xfs_dabuf_map.constprop.0+0x26c/0x368 [xfs]
- [  380.482362] CPU: 0 PID: 337362 Comm: 047 Kdump: loaded Tainted: G        W          6.6.0-rc7+ #1
- [  380.482364] Hardware name: IBM 3931 LA1 400 (KVM/Linux)
- [  380.482365] Call Trace:
- [  380.482366]  [<0000000032d71372>] dump_stack_lvl+0x62/0x80 
- [  380.482368]  [<000003ff7ff96c00>] xfs_corruption_error+0x70/0xa0 [xfs] 
- [  380.482483]  [<000003ff7ff551ce>] xfs_dabuf_map.constprop.0+0x2a6/0x368 [xfs] 
- [  380.482591]  [<000003ff7ff5773e>] xfs_da_read_buf+0x6e/0x128 [xfs] 
- [  380.482696]  [<000003ff7ff57838>] xfs_da3_node_read+0x40/0x78 [xfs] 
- [  380.482804]  [<000003ff7ff58c7a>] xfs_da3_node_lookup_int+0x82/0x558 [xfs] 
- [  380.482910]  [<000003ff7ff68d6e>] xfs_dir2_node_lookup+0x3e/0x140 [xfs] 
- [  380.483020]  [<000003ff7ff5cfd2>] xfs_dir_lookup+0x1ea/0x218 [xfs] 
- [  380.483128]  [<000003ff7fface40>] xfs_lookup+0x60/0x108 [xfs] 
- [  380.483241]  [<000003ff7ffa9d42>] xfs_vn_lookup+0x62/0x98 [xfs] 
- [  380.483356]  [<0000000032738cfa>] __lookup_slow+0x9a/0x148 
- [  380.483359]  [<000000003273dc86>] walk_component+0x126/0x1b8 
- [  380.483362]  [<000000003273e948>] path_lookupat+0x88/0x1e8 
- [  380.483365]  [<000000003273f66a>] filename_lookup+0xaa/0x198 
- [  380.483368]  [<00000000327306d0>] vfs_statx+0x90/0x160 
- [  380.483370]  [<0000000032730a1e>] vfs_fstatat+0x86/0xe8 
- [  380.483372]  [<0000000032730c98>] __do_sys_newfstatat+0x28/0x48 
- [  380.483374]  [<0000000032d97060>] __do_syscall+0x1d0/0x1f8 
- [  380.483377]  [<0000000032da7040>] system_call+0x70/0x98 
- [  380.483380] XFS (loop1): Corruption detected. Unmount and run xfs_repair
- [  380.483382] XFS (loop1): xfs_dabuf_map: bno 8388608 inode 128
- [  380.483383] XFS (loop1): [00] br_startoff 8388608 br_startblock -2 br_blockcount 1 br_state 0
- ...
- ...
- [  381.349174] XFS (loop1): Corruption detected. Unmount and run xfs_repair
-[  381.349175] XFS (loop1): xfs_dabuf_map: bno 8388608 inode 128
-[  381.349177] XFS (loop1): [00] br_startoff 8388608 br_startblock -2 br_blockcount 1 br_state 0
-[  381.350972] XFS (loop1): Internal error !(flags & XFS_DABUF_MAP_HOLE_OK) at line 2572 of file fs/xfs/libxfs/xfs_da_btree.c.  Caller xfs_dabuf_map.constprop.0+0x26c/0x368 [xfs]
-[  381.351085] CPU: 1 PID: 339644 Comm: xfs_scrub Kdump: loaded Tainted: G        W          6.6.0-rc7+ #1
-[  381.351088] Hardware name: IBM 3931 LA1 400 (KVM/Linux)
-[  381.351090] Call Trace:
-[  381.351091]  [<0000000032d71372>] dump_stack_lvl+0x62/0x80 
-[  381.351093]  [<000003ff7ff96c00>] xfs_corruption_error+0x70/0xa0 [xfs] 
-[  381.351191]  [<000003ff7ff551ce>] xfs_dabuf_map.constprop.0+0x2a6/0x368 [xfs] 
-[  381.351283]  [<000003ff7ff5773e>] xfs_da_read_buf+0x6e/0x128 [xfs] 
-[  381.351375]  [<000003ff7ff57838>] xfs_da3_node_read+0x40/0x78 [xfs] 
-[  381.351467]  [<000003ff7ff58c7a>] xfs_da3_node_lookup_int+0x82/0x558 [xfs] 
-[  381.351558]  [<000003ff7ff68d6e>] xfs_dir2_node_lookup+0x3e/0x140 [xfs] 
-[  381.351651]  [<000003ff80008436>] xchk_dir_lookup+0x13e/0x1e0 [xfs] 
-[  381.351745]  [<000003ff800078c2>] xchk_parent+0x82/0x168 [xfs] 
-[  381.351840]  [<000003ff8000aa1a>] xfs_scrub_metadata+0x1c2/0x420 [xfs] 
-[  381.351938]  [<000003ff7ffa3876>] xfs_ioc_scrub_metadata+0x5e/0xb0 [xfs] 
-[  381.352035]  [<000003ff7ffa5d92>] xfs_file_ioctl+0x672/0x9f8 [xfs] 
-[  381.352133]  [<0000000032744c9e>] __s390x_sys_ioctl+0xbe/0x100 
-[  381.352135]  [<0000000032d97060>] __do_syscall+0x1d0/0x1f8 
-[  381.352138]  [<0000000032da7040>] system_call+0x70/0x98 
-[  381.352141] XFS (loop1): Corruption detected. Unmount and run xfs_repair
-[  381.352143] XFS (loop1): xfs_dabuf_map: bno 8388608 inode 128
-[  381.352174] XFS (loop1): [00] br_startoff 8388608 br_startblock -2 br_blockcount 1 br_state 0
-[  381.418153] XFS (loop1): Unmounting Filesystem 40196bb2-39f4-4c32-83ef-567f42216699
+[  440.713107] run fstests generic/065 at 2023-10-27 09:09:11
+[  440.971883] XFS (dm-3): Mounting V5 Filesystem 6d36b06f-6fbd-4a9f-925c-c49582f14078
+[  440.972968] XFS (dm-3): Ending clean mount
+[  441.037265] XFS (dm-3): Unmounting Filesystem 6d36b06f-6fbd-4a9f-925c-c49582f14078
+[  441.045980] XFS (dm-3): Mounting V5 Filesystem 6d36b06f-6fbd-4a9f-925c-c49582f14078
+[  441.046947] XFS (dm-3): Starting recovery (logdev: internal)
+[  441.047283] XFS (dm-3): Ending recovery (logdev: internal)
+[  441.055894] XFS: Assertion failed: ip->i_nblocks == 0, file: fs/xfs/xfs_inode.c, line: 2359
+[  441.055920] ------------[ cut here ]------------
+[  441.055921] WARNING: CPU: 3 PID: 212189 at fs/xfs/xfs_message.c:104 assfail+0x4e/0x68 [xfs]
+[  441.056180] Modules linked in: dm_flakey tls loop lcs ctcm fsm qeth ccwgroup zfcp qdio scsi_transport_fc dasd_fba_mod dasd_eckd_mod dasd_mod rfkill sunrpc vfio_ccw mdev zcrypt_cex4 vfio_iommu_type1 vfio drm fuse i2c_core drm_panel_orientation_quirks xfs libcrc32c ghash_s390 prng aes_s390 virtio_net des_s390 sha3_512_s390 net_failover failover sha3_256_s390 virtio_blk dm_mirror dm_region_hash dm_log dm_mod pkey zcrypt
+[  441.056210] CPU: 3 PID: 212189 Comm: kworker/3:5 Kdump: loaded Tainted: G        W          6.6.0-rc7+ #1
+[  441.056213] Hardware name: IBM 3931 LA1 400 (KVM/Linux)
+[  441.056215] Workqueue: xfs-inodegc/dm-3 xfs_inodegc_worker [xfs]
+[  441.056312] Krnl PSW : 0704c00180000000 000003ff7ffb36d2 (assfail+0x52/0x68 [xfs])
+[  441.056410]            R:0 T:1 IO:1 EX:1 Key:0 M:1 W:0 P:0 AS:3 CC:0 PM:0 RI:0 EA:3
+[  441.056413] Krnl GPRS: c000000100000021 000003ff8001d9a0 ffffffffffffffea 000000000000000a
+[  441.056415]            00000380048aba90 0000000000000000 000003ff801272ba 0000000088f81488
+[  441.056417]            00000000d6301708 000000008cb5d000 00000001c459c800 00000001c459c800
+[  441.056419]            0000000081de3600 0000000000000000 000003ff7ffb36c0 00000380048abb38
+[  441.056426] Krnl Code: 000003ff7ffb36c6: 95001010		cli	16(%r1),0
+                          000003ff7ffb36ca: a774000a		brc	7,000003ff7ffb36de
+                         #000003ff7ffb36ce: af000000		mc	0,0
+                         >000003ff7ffb36d2: eb6ff0a80004	lmg	%r6,%r15,168(%r15)
+                          000003ff7ffb36d8: 07fe		bcr	15,%r14
+                          000003ff7ffb36da: 47000700		bc	0,1792
+                          000003ff7ffb36de: af000000		mc	0,0
+                          000003ff7ffb36e2: 0707		bcr	0,%r7
+[  441.056439] Call Trace:
+[  441.056440]  [<000003ff7ffb36d2>] assfail+0x52/0x68 [xfs] 
+[  441.056537] ([<000003ff7ffb36c0>] assfail+0x40/0x68 [xfs])
+[  441.056635]  [<000003ff7ffaf3ca>] xfs_ifree+0x42a/0x478 [xfs] 
+[  441.056737]  [<000003ff7ffaf4c8>] xfs_inactive_ifree+0xb0/0x210 [xfs] 
+[  441.056815]  [<000003ff7ffaf7aa>] xfs_inactive+0x182/0x2e0 [xfs] 
+[  441.056899]  [<000003ff7ffa1f0c>] xfs_inodegc_worker+0xf4/0x1c8 [xfs] 
+[  441.056983]  [<000000003242f8f0>] process_one_work+0x1b8/0x408 
+[  441.056989]  [<000000003242fe40>] worker_thread+0x300/0x460 
+[  441.056992]  [<000000003243a758>] kthread+0x120/0x128 
+[  441.056995]  [<00000000323b6fcc>] __ret_from_fork+0x3c/0x58 
+[  441.056997]  [<0000000032da7072>] ret_from_fork+0xa/0x30 
+[  441.057003] Last Breaking-Event-Address:
+[  441.057004]  [<000003ff7ffb351c>] xfs_printk_level+0xac/0xd8 [xfs]
+[  441.057095] ---[ end trace 0000000000000000 ]---
+[  441.060319] XFS (dm-3): Unmounting Filesystem 6d36b06f-6fbd-4a9f-925c-c49582f14078
+[  441.109229] XFS (loop0): Unmounting Filesystem 1eef4fa0-3548-491e-a877-16ca42a411b6
 
 [3]
-_check_xfs_filesystem: filesystem on /dev/loop1 failed scrub
-*** xfs_scrub -v -d -n output ***
-EXPERIMENTAL xfs_scrub program in use! Use at your own risk!
-Phase 1: Find filesystem geometry.
-/mnt/fstests/SCRATCH_DIR: using 2 threads to scrub.
-Phase 2: Check internal metadata.
-Info: AG 1 superblock: Optimization is possible. (scrub.c line 212)
-Info: AG 2 superblock: Optimization is possible. (scrub.c line 212)
-Info: AG 3 superblock: Optimization is possible. (scrub.c line 212)
-Phase 3: Scan all inodes.
-Corruption: inode 128 (0/128) inode record: Repairs are required. (scrub.c line 196)
-Corruption: inode 128 (0/128) parent pointer: Repairs are required. (scrub.c line 196)
-Corruption: inode 131 (0/131) inode record: Repairs are required. (scrub.c line 196)
-...
-Corruption: inode 58300 (0/58300) inode record: Repairs are required. (scrub.c line 196)
-Corruption: inode 58301 (0/58301) inode record: Repairs are required. (scrub.c line 196)
-Corruption: inode 58302 (0/58302) inode record: Repairs are required. (scrub.c line 196)
-Corruption: inode 58303 (0/58303) inode record: Repairs are required. (scrub.c line 196)
-Phase 5: Check directory tree.
-Info: /mnt/fstests/SCRATCH_DIR: Filesystem has errors, skipping connectivity checks. (phase5.c line 393)
-Phase 7: Check summary counters.
-198.9MiB data used;  1.0K inodes used.
-95.9MiB data found; 1.0K inodes found.
-1.0K inodes counted; 1.0K inodes checked.
-/mnt/fstests/SCRATCH_DIR: corruptions found: 1001
-/mnt/fstests/SCRATCH_DIR: Re-run xfs_scrub without -n.
-*** end xfs_scrub output
+meta-data=/dev/loop1             isize=512    agcount=4, agsize=655360 blks
+         =                       sectsz=512   attr=2, projid32bit=1
+         =                       crc=1        finobt=1, sparse=1, rmapbt=0
+         =                       reflink=1    bigtime=1 inobtcount=1 nrext64=1
+data     =                       bsize=4096   blocks=2621440, imaxpct=25
+         =                       sunit=0      swidth=0 blks
+naming   =version 2              bsize=4096   ascii-ci=0, ftype=1
+log      =internal log           bsize=4096   blocks=16384, version=2
+         =                       sectsz=512   sunit=0 blks, lazy-count=1
+realtime =none                   extsz=4096   blocks=0, rtextents=0
+Discarding blocks...Done.
 _check_xfs_filesystem: filesystem on /dev/loop1 is inconsistent (r)
 *** xfs_repair -n output ***
 Phase 1 - find and verify superblock...
@@ -341,56 +191,24 @@ Phase 3 - for each AG...
         - scan (but don't clear) agi unlinked lists...
         - process known inodes and perform inode discovery...
         - agno = 0
-bad nblocks 9 for inode 128, would reset to 0
-no . entry for directory 128
-no .. entry for root directory 128
-problem with directory contents in inode 128
-would clear root inode 128
-bad nblocks 8 for inode 131, would reset to 0
-bad nblocks 8 for inode 132, would reset to 0
-bad nblocks 8 for inode 133, would reset to 0
-...
-bad nblocks 8 for inode 62438, would reset to 0
-bad nblocks 8 for inode 62439, would reset to 0
-bad nblocks 8 for inode 62440, would reset to 0
-bad nblocks 8 for inode 62441, would reset to 0
+bad nblocks 16 for inode 133, would reset to 0
         - agno = 1
         - agno = 2
         - agno = 3
         - process newly discovered inodes...
 Phase 4 - check for duplicate blocks...
         - setting up duplicate extent list...
-root inode would be lost
         - check for inodes claiming duplicate blocks...
         - agno = 0
-        - agno = 1
-bad nblocks 9 for inode 128, would reset to 0
         - agno = 2
+        - agno = 1
+bad nblocks 16 for inode 133, would reset to 0
         - agno = 3
-no . entry for directory 128
-no .. entry for root directory 128
-problem with directory contents in inode 128
-would clear root inode 128
-bad nblocks 8 for inode 131, would reset to 0
-bad nblocks 8 for inode 132, would reset to 0
-bad nblocks 8 for inode 133, would reset to 0
-...
-bad nblocks 8 for inode 62439, would reset to 0
-bad nblocks 8 for inode 62440, would reset to 0
-bad nblocks 8 for inode 62441, would reset to 0
 No modify flag set, skipping phase 5
 Phase 6 - check inode connectivity...
-would reinitialize root directory
         - traversing filesystem ...
         - traversal finished ...
         - moving disconnected inodes to lost+found ...
-disconnected inode 131, would move to lost+found
-disconnected inode 132, would move to lost+found
-disconnected inode 133, would move to lost+found
-...
-disconnected inode 62439, would move to lost+found
-disconnected inode 62440, would move to lost+found
-disconnected inode 62441, would move to lost+found
 Phase 7 - verify link counts...
 No modify flag set, skipping filesystem flush and exiting.
 *** end xfs_repair output
@@ -422,4 +240,73 @@ ramfs on /run/credentials/systemd-tmpfiles-setup.service type ramfs (ro,nosuid,n
 sunrpc on /var/lib/nfs/rpc_pipefs type rpc_pipefs (rw,relatime)
 tmpfs on /run/user/0 type tmpfs (rw,nosuid,nodev,relatime,seclabel,size=796184k,nr_inodes=199046,mode=700,inode64)
 *** end mount output
+
+[3]
+[ 3078.795314] run fstests generic/506 at 2023-10-27 09:53:09
+[ 3079.005423] XFS (loop1): Mounting V5 Filesystem c94f4c60-e4fd-4fec-b130-e245b3880061
+[ 3079.006596] XFS (loop1): Ending clean mount
+[ 3079.007556] XFS (loop1): User initiated shutdown received.
+[ 3079.007565] XFS (loop1): Metadata I/O Error (0x4) detected at xfs_fs_goingdown+0x5a/0xf8 [xfs] (fs/xfs/xfs_fsops.c:492).  Shutting down filesystem.
+[ 3079.007769] XFS (loop1): Please unmount the filesystem and rectify the problem(s)
+[ 3079.008944] XFS (loop1): Unmounting Filesystem c94f4c60-e4fd-4fec-b130-e245b3880061
+[ 3079.031168] XFS (loop1): Mounting V5 Filesystem ba7c075d-3018-49c9-a17d-0689c02892e2
+[ 3079.032478] XFS (loop1): Ending clean mount
+[ 3079.032515] XFS (loop1): Quotacheck needed: Please wait.
+[ 3079.036144] XFS (loop1): Quotacheck: Done.
+[ 3079.040399] XFS (loop1): Unmounting Filesystem ba7c075d-3018-49c9-a17d-0689c02892e2
+[ 3079.044961] XFS (loop1): Mounting V5 Filesystem ba7c075d-3018-49c9-a17d-0689c02892e2
+[ 3079.045808] XFS (loop1): Ending clean mount
+[ 3079.055991] XFS (loop1): User initiated shutdown received.
+[ 3079.055994] XFS (loop1): Log I/O Error (0x6) detected at xfs_fs_goingdown+0xb4/0xf8 [xfs] (fs/xfs/xfs_fsops.c:495).  Shutting down filesystem.
+[ 3079.056076] XFS (loop1): Please unmount the filesystem and rectify the problem(s)
+[ 3079.099382] XFS (loop1): Unmounting Filesystem ba7c075d-3018-49c9-a17d-0689c02892e2
+[ 3079.102254] XFS (loop1): Mounting V5 Filesystem ba7c075d-3018-49c9-a17d-0689c02892e2
+[ 3079.103055] XFS (loop1): Starting recovery (logdev: internal)
+[ 3079.103217] XFS (loop1): Ending recovery (logdev: internal)
+[ 3079.106775] XFS (loop1): Unmounting Filesystem ba7c075d-3018-49c9-a17d-0689c02892e2
+[ 3079.113727] XFS (loop1): Mounting V5 Filesystem ba7c075d-3018-49c9-a17d-0689c02892e2
+[ 3079.114471] XFS (loop1): Ending clean mount
+[ 3079.115334] XFS: Assertion failed: error != -ENOENT, file: fs/xfs/xfs_trans.c, line: 1310
+[ 3079.115372] ------------[ cut here ]------------
+[ 3079.115374] WARNING: CPU: 1 PID: 2035839 at fs/xfs/xfs_message.c:104 assfail+0x4e/0x68 [xfs]
+[ 3079.115495] Modules linked in: dm_log_writes dm_thin_pool dm_persistent_data dm_bio_prison sd_mod t10_pi sg dm_snapshot dm_bufio ext4 mbcache jbd2 dm_flakey tls loop lcs ctcm fsm qeth ccwgroup zfcp qdio scsi_transport_fc dasd_fba_mod dasd_eckd_mod dasd_mod rfkill sunrpc vfio_ccw mdev zcrypt_cex4 vfio_iommu_type1 vfio drm fuse i2c_core drm_panel_orientation_quirks xfs libcrc32c ghash_s390 prng aes_s390 virtio_net des_s390 sha3_512_s390 net_failover failover sha3_256_s390 virtio_blk dm_mirror dm_region_hash dm_log dm_mod pkey zcrypt [last unloaded: scsi_debug]
+[ 3079.115532] CPU: 1 PID: 2035839 Comm: touch Kdump: loaded Tainted: G        W          6.6.0-rc7+ #1
+[ 3079.115534] Hardware name: IBM 3931 LA1 400 (KVM/Linux)
+[ 3079.115536] Krnl PSW : 0704c00180000000 000003ff7ffb36d2 (assfail+0x52/0x68 [xfs])
+[ 3079.115625]            R:0 T:1 IO:1 EX:1 Key:0 M:1 W:0 P:0 AS:3 CC:0 PM:0 RI:0 EA:3
+[ 3079.115627] Krnl GPRS: c000000100000021 000003ff8001d9a0 ffffffffffffffea 000000000000000a
+[ 3079.115629]            0000038006d0f928 0000000000000000 000003ff80129d40 000000008f254398
+[ 3079.115630]            0000038006d0fb20 000000008f254000 00000380fffffffe 00000000a12a8400
+[ 3079.115632]            000003ff8762ef68 0000000000000000 000003ff7ffb36c0 0000038006d0f9d0
+[ 3079.115638] Krnl Code: 000003ff7ffb36c6: 95001010		cli	16(%r1),0
+                          000003ff7ffb36ca: a774000a		brc	7,000003ff7ffb36de
+                         #000003ff7ffb36ce: af000000		mc	0,0
+                         >000003ff7ffb36d2: eb6ff0a80004	lmg	%r6,%r15,168(%r15)
+                          000003ff7ffb36d8: 07fe		bcr	15,%r14
+                          000003ff7ffb36da: 47000700		bc	0,1792
+                          000003ff7ffb36de: af000000		mc	0,0
+                          000003ff7ffb36e2: 0707		bcr	0,%r7
+[ 3079.115648] Call Trace:
+[ 3079.115649]  [<000003ff7ffb36d2>] assfail+0x52/0x68 [xfs] 
+[ 3079.115727] ([<000003ff7ffb36c0>] assfail+0x40/0x68 [xfs])
+[ 3079.115803]  [<000003ff7ffc0c34>] xfs_trans_alloc_ichange+0x274/0x318 [xfs] 
+[ 3079.115880]  [<000003ff7ffa9058>] xfs_setattr_nonsize+0xa0/0x478 [xfs] 
+[ 3079.115966]  [<00000000327530ce>] notify_change+0x38e/0x530 
+[ 3079.115972]  [<0000000032776fee>] vfs_utimes+0x12e/0x268 
+[ 3079.115976]  [<000000003277740e>] do_utimes+0x6e/0xb0 
+[ 3079.115980]  [<00000000327779de>] __s390x_sys_utimensat+0x86/0xc0 
+[ 3079.115983]  [<0000000032d97060>] __do_syscall+0x1d0/0x1f8 
+[ 3079.115988]  [<0000000032da7040>] system_call+0x70/0x98 
+[ 3079.115992] Last Breaking-Event-Address:
+[ 3079.115993]  [<000003ff7ffb351c>] xfs_printk_level+0xac/0xd8 [xfs]
+[ 3079.116070] ---[ end trace 0000000000000000 ]---
+[ 3079.127976] XFS (loop1): User initiated shutdown received.
+[ 3079.127983] XFS (loop1): Log I/O Error (0x6) detected at xfs_fs_goingdown+0xb4/0xf8 [xfs] (fs/xfs/xfs_fsops.c:495).  Shutting down filesystem.
+[ 3079.128127] XFS (loop1): Please unmount the filesystem and rectify the problem(s)
+[ 3079.179362] XFS (loop1): Unmounting Filesystem ba7c075d-3018-49c9-a17d-0689c02892e2
+[ 3079.182441] XFS (loop1): Mounting V5 Filesystem ba7c075d-3018-49c9-a17d-0689c02892e2
+[ 3079.183327] XFS (loop1): Starting recovery (logdev: internal)
+[ 3079.183464] XFS (loop1): Ending recovery (logdev: internal)
+[ 3079.186928] XFS (loop1): Unmounting Filesystem ba7c075d-3018-49c9-a17d-0689c02892e2
+[ 3079.198937] XFS (loop0): Unmounting Filesystem 1eef4fa0-3548-491e-a877-16ca42a411b6
 
