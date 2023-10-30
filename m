@@ -2,175 +2,199 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D9761C4332F
-	for <linux-xfs@archiver.kernel.org>; Mon, 30 Oct 2023 21:00:22 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4509AC4167D
+	for <linux-xfs@archiver.kernel.org>; Mon, 30 Oct 2023 22:37:20 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229498AbjJ3VAX (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 30 Oct 2023 17:00:23 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59316 "EHLO
+        id S232216AbjJ3WhT (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 30 Oct 2023 18:37:19 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51622 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231267AbjJ3VAW (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 30 Oct 2023 17:00:22 -0400
-Received: from mail-pf1-x432.google.com (mail-pf1-x432.google.com [IPv6:2607:f8b0:4864:20::432])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 47818102
-        for <linux-xfs@vger.kernel.org>; Mon, 30 Oct 2023 14:00:19 -0700 (PDT)
-Received: by mail-pf1-x432.google.com with SMTP id d2e1a72fcca58-6b497c8575aso5016202b3a.1
-        for <linux-xfs@vger.kernel.org>; Mon, 30 Oct 2023 14:00:19 -0700 (PDT)
+        with ESMTP id S232183AbjJ3WhS (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 30 Oct 2023 18:37:18 -0400
+Received: from mail-pf1-x42f.google.com (mail-pf1-x42f.google.com [IPv6:2607:f8b0:4864:20::42f])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0C90F10D
+        for <linux-xfs@vger.kernel.org>; Mon, 30 Oct 2023 15:37:15 -0700 (PDT)
+Received: by mail-pf1-x42f.google.com with SMTP id d2e1a72fcca58-6b5af4662b7so4438629b3a.3
+        for <linux-xfs@vger.kernel.org>; Mon, 30 Oct 2023 15:37:14 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=osandov-com.20230601.gappssmtp.com; s=20230601; t=1698699619; x=1699304419; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=VkqLsiO75F22f/osxi9L6166dfWADIgNNrDHsxZaCTg=;
-        b=N87oWbU8L36Fo9eEKSraISt8Sa7X/ElpwupYqZQl7thPSlVcuhZimTqxuFgsb5eBAX
-         orzTrlstxhSbSyYf1EovYDR22CUh1uy0rMaYSZxrW8L5E4lswyAeEODv7q0yn8kOCWbc
-         oYTiWu3BJSzegZtrwJ9j9ky5yDRJ23eaLP/eUEGzWOQ/PxGr1zbu8FkzEpgbgRL29ICb
-         mKmbKRSc4zXCfvNo40uxW4jqjfbAavcv7q/S0p/mMGSHaHtnZjGcN1gfkQAaFAz7n9r4
-         sdOHfri/g3pjKGY2AiXmR0O4XIo+jRHyymve4xa5NngUMHJydbVS9+YVhYtCD6jV/nXR
-         +0Fw==
+        d=fromorbit-com.20230601.gappssmtp.com; s=20230601; t=1698705434; x=1699310234; darn=vger.kernel.org;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
+        bh=s3l/lL5wYf4n3GthHM0NoG2tR/ievkKXd51rX7QyzCg=;
+        b=YZJJRKmpYSheU+R2mseNAMbeGSdPJLFe40wCupbHYAd3o4QvZNI/n7SGn2r5cooFgq
+         2TEcO78mRTQJBTq7k2LqUtVvJres5aMQhj3nULXOrrdnw3Gj9/WT+z7z2ABtzED7KsbV
+         ekC9YAJYeG7FVFi/CvzzPWQPOAWd7xX/xs+NjEVXTta0c+tu9fOv2E6WvTvGDYo0G3A3
+         nk/n2nXjoAIwMY394rKnbmnbD9xeR0wGUW/4HzwyTv9RhbV1nF/lk2rhXLia5gW1lDor
+         Xwl91GIsakdFQ/xOsemb/k2wPINm34d+665mfEqcz2YTJlkO8PHNhrdA0s286qBDrOO7
+         /l3Q==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1698699619; x=1699304419;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=VkqLsiO75F22f/osxi9L6166dfWADIgNNrDHsxZaCTg=;
-        b=vxODcd/gMoj4pN6FldxhqCGdaIdBH1XB/JLs8+0Xw3mD1LXYlcJT5Uz6c2VYoJ7r4T
-         W379mfVavew5ljKgHtEu8Kybe/O6q1ixbBXsc4hImpuyZVkU71qdCJjq2hGXfP+AOQb1
-         RIYm3PK5UpUiX/i54yIxUrWJ2eXdhf7tCsTEvIAuceEZE+Vd6QkpjHop6/7gT8tgGPXo
-         p8CaC72uw4wDLdBacg0om/Wov5v0dutw9rpQTW8ucNFMsFfKcaqvI4MDdB+NNrXnaKyu
-         FGPV65pnT23Y7xQnwFRhI2Ax5LqDEeu9oDnnq27X9+YAPSNdEuMOKVa/QQ4gRgho5HWc
-         S5yA==
-X-Gm-Message-State: AOJu0YyJsc/Lav6Rh22NAFKy1F6uT+cZnllo726DNQBYURYLBgtDkbEk
-        JtIk33J1kx9+wDcOWzzChcXTSw==
-X-Google-Smtp-Source: AGHT+IEbZGog1VKPye4Q71ygqJUfOWQ6Bh67TMCXFae9acZltQHBSzYedU2eCWNo/auz6R81uitlew==
-X-Received: by 2002:a05:6a00:15d4:b0:6be:2803:9c92 with SMTP id o20-20020a056a0015d400b006be28039c92mr13256581pfu.32.1698699618429;
-        Mon, 30 Oct 2023 14:00:18 -0700 (PDT)
-Received: from telecaster.thefacebook.com ([2620:10d:c090:500::4:49f])
-        by smtp.gmail.com with ESMTPSA id n26-20020aa78a5a000000b0068ff0a633fdsm6307115pfa.131.2023.10.30.14.00.17
+        d=1e100.net; s=20230601; t=1698705434; x=1699310234;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=s3l/lL5wYf4n3GthHM0NoG2tR/ievkKXd51rX7QyzCg=;
+        b=sLI7YpQltIGcAgmgxJMAKaWRv1eQmvytFdHqou2MZQjYhaqA9d5HLk07FEdPobtECU
+         yWySPai4N7Fp1+9YnYYCu3KAWaBjqVBjCIdXPZXiXS2H2KxJ6DfW2nA6LvYr86x2yIYU
+         8rehG5WAPh2HkcsUOcNPKre/ZrFtPF5uP0TxzJqRuu0g6F9BKw589BlweUm3DzcbBjBR
+         D6Ngrp7b6uQw8m/ykETn6aJL7FN4bYTx/HPmHG8ZHoxNus+rAjvfrQZ21gpwhRF7GytQ
+         MI1/6TgYfslKBg72z2uR/Tb/XwBgEn0DbZwuClwLanoMH9xXplL0cqsolYIiQuW7yu62
+         4LLQ==
+X-Gm-Message-State: AOJu0YxyGSwy7vJjk+EOBwm8vrq2oov55UZOEIZX+/w0juhTohtyWbdK
+        QcKRon94s8AhZPncAtvEKGEkMw==
+X-Google-Smtp-Source: AGHT+IH220teegvrDu5BQvWXj+pfKEIBe9mpI/qNDn7XBuC5Q1LlqBFVtPwA3Li0K8x18IiaaOOLaQ==
+X-Received: by 2002:a05:6a21:6da1:b0:175:7085:ba18 with SMTP id wl33-20020a056a216da100b001757085ba18mr9996599pzb.58.1698705434041;
+        Mon, 30 Oct 2023 15:37:14 -0700 (PDT)
+Received: from dread.disaster.area (pa49-180-20-59.pa.nsw.optusnet.com.au. [49.180.20.59])
+        by smtp.gmail.com with ESMTPSA id p11-20020a17090a2d8b00b002774d7e2fefsm2932pjd.36.2023.10.30.15.37.13
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 30 Oct 2023 14:00:17 -0700 (PDT)
-From:   Omar Sandoval <osandov@osandov.com>
-To:     fstests@vger.kernel.org, linux-xfs@vger.kernel.org
-Cc:     kernel-team@fb.com, "Darrick J . Wong" <djwong@kernel.org>,
-        Dave Chinner <dchinner@redhat.com>
-Subject: [PATCH fstests v2] xfs: test refilling AGFL after lots of btree splits
-Date:   Mon, 30 Oct 2023 14:00:15 -0700
-Message-ID: <fe622bff22bca23648ed1154faeadce3ed51ad3b.1698699498.git.osandov@osandov.com>
-X-Mailer: git-send-email 2.41.0
-In-Reply-To: <68cd85697855f686529829a2825b044913148caf.1698699188.git.osandov@fb.com>
-References: <68cd85697855f686529829a2825b044913148caf.1698699188.git.osandov@fb.com>
+        Mon, 30 Oct 2023 15:37:13 -0700 (PDT)
+Received: from dave by dread.disaster.area with local (Exim 4.96)
+        (envelope-from <david@fromorbit.com>)
+        id 1qxasg-0066We-2r;
+        Tue, 31 Oct 2023 09:37:10 +1100
+Date:   Tue, 31 Oct 2023 09:37:10 +1100
+From:   Dave Chinner <david@fromorbit.com>
+To:     Jeff Layton <jlayton@kernel.org>
+Cc:     Amir Goldstein <amir73il@gmail.com>,
+        Linus Torvalds <torvalds@linux-foundation.org>,
+        Kent Overstreet <kent.overstreet@linux.dev>,
+        Christian Brauner <brauner@kernel.org>,
+        Alexander Viro <viro@zeniv.linux.org.uk>,
+        John Stultz <jstultz@google.com>,
+        Thomas Gleixner <tglx@linutronix.de>,
+        Stephen Boyd <sboyd@kernel.org>,
+        Chandan Babu R <chandan.babu@oracle.com>,
+        "Darrick J. Wong" <djwong@kernel.org>,
+        Theodore Ts'o <tytso@mit.edu>,
+        Andreas Dilger <adilger.kernel@dilger.ca>,
+        Chris Mason <clm@fb.com>, Josef Bacik <josef@toxicpanda.com>,
+        David Sterba <dsterba@suse.com>,
+        Hugh Dickins <hughd@google.com>,
+        Andrew Morton <akpm@linux-foundation.org>,
+        Jan Kara <jack@suse.de>, David Howells <dhowells@redhat.com>,
+        linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-xfs@vger.kernel.org, linux-ext4@vger.kernel.org,
+        linux-btrfs@vger.kernel.org, linux-mm@kvack.org,
+        linux-nfs@vger.kernel.org
+Subject: Re: [PATCH RFC 2/9] timekeeping: new interfaces for multigrain
+ timestamp handing
+Message-ID: <ZUAwFkAizH1PrIZp@dread.disaster.area>
+References: <61b32a4093948ae1ae8603688793f07de764430f.camel@kernel.org>
+ <ZTcBI2xaZz1GdMjX@dread.disaster.area>
+ <CAHk-=whphyjjLwDcEthOOFXXfgwGrtrMnW2iyjdQioV6YSMEPw@mail.gmail.com>
+ <ZTc8tClCRkfX3kD7@dread.disaster.area>
+ <CAOQ4uxhJGkZrUdUJ72vjRuLec0g8VqgRXRH=x7W9ogMU6rBxcQ@mail.gmail.com>
+ <d539804a2a73ad70265c5fa599ecd663cd235843.camel@kernel.org>
+ <ZTjMRRqmlJ+fTys2@dread.disaster.area>
+ <2ef9ac6180e47bc9cc8edef20648a000367c4ed2.camel@kernel.org>
+ <ZTnNCytHLGoJY9ds@dread.disaster.area>
+ <6df5ea54463526a3d898ed2bd8a005166caa9381.camel@kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <6df5ea54463526a3d898ed2bd8a005166caa9381.camel@kernel.org>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-This is a regression test for patch "xfs: fix internal error from AGFL
-exhaustion"), which is not yet merged. Without the fix, it will fail
-with a "Structure needs cleaning" error.
+On Fri, Oct 27, 2023 at 06:35:58AM -0400, Jeff Layton wrote:
+> On Thu, 2023-10-26 at 13:20 +1100, Dave Chinner wrote:
+> > On Wed, Oct 25, 2023 at 08:25:35AM -0400, Jeff Layton wrote:
+> > > On Wed, 2023-10-25 at 19:05 +1100, Dave Chinner wrote:
+> > > > On Tue, Oct 24, 2023 at 02:40:06PM -0400, Jeff Layton wrote:
+> > > In earlier discussions you alluded to some repair and/or analysis tools
+> > > that depended on this counter.
+> > 
+> > Yes, and one of those "tools" is *me*.
+> > 
+> > I frequently look at the di_changecount when doing forensic and/or
+> > failure analysis on filesystem corpses.  SOE analysis, relative
+> > modification activity, etc all give insight into what happened to
+> > the filesystem to get it into the state it is currently in, and
+> > di_changecount provides information no other metadata in the inode
+> > contains.
+> > 
+> > > I took a quick look in xfsprogs, but I
+> > > didn't see anything there. Is there a library or something that these
+> > > tools use to get at this value?
+> > 
+> > xfs_db is the tool I use for this, such as:
+> > 
+> > $ sudo xfs_db -c "sb 0" -c "a rootino" -c "p v3.change_count" /dev/mapper/fast
+> > v3.change_count = 35
+> > $
+> > 
+> > The root inode in this filesystem has a change count of 35. The root
+> > inode has 32 dirents in it, which means that no entries have ever
+> > been removed or renamed. This sort of insight into the past history
+> > of inode metadata is largely impossible to get any other way, and
+> > it's been the difference between understanding failure and having no
+> > clue more than once.
+> > 
+> > Most block device parsing applications simply write their own
+> > decoder that walks the on-disk format. That's pretty trivial to do,
+> > developers can get all the information needed to do this from the
+> > on-disk format specification documentation we keep on kernel.org...
+> > 
+> 
+> Fair enough. I'm not here to tell you that you guys that you need to
+> change how di_changecount works. If it's too valuable to keep it
+> counting atime-only updates, then so be it.
+> 
+> If that's the case however, and given that the multigrain timestamp work
+> is effectively dead, then I don't see an alternative to growing the on-
+> disk inode. Do you?
 
-Signed-off-by: Omar Sandoval <osandov@osandov.com>
----
-Changes since v1 [1]:
+Yes, I do see alternatives. That's what I've been trying
+(unsuccessfully) to describe and get consensus on. I feel like I'm
+being ignored and rail-roaded here, because nobody is even
+acknowledging that I'm proposing alternatives and keeps insisting
+that the only solution is a change of on-disk format.
 
-- Fixed to check whether mkfs.xfs supports -m rmapbt.
-- Changed bare $XFS_DB calls to _scratch_xfs_db.
-- Expanded comment about what happens without the fix.
+So, I'll summarise the situation *yet again* in the hope that this
+time I won't get people arguing about atime vs i-version and what
+constitutes an on-disk format change because that goes nowhere and
+does nothing to determine which solution might be acceptible.
 
-I didn't add a check for whether everything ended up in AG 0, because it
-wasn't clear to me what to do in that case. We could skip the test, but
-it also doesn't hurt to run it anyways.
+The basic situation is this:
 
-1: https://lore.kernel.org/linux-xfs/c7be2fe66a297316b934ddd3a1368b14f39a9f22.1698190540.git.osandov@osandov.com/
+If XFS can ignore relatime or lazytime persistent updates for given
+situations, then *we don't need to make periodic on-disk updates of
+atime*. This makes the whole problem of "persistent atime update bumps
+i_version" go away because then we *aren't making persistent atime
+updates* except when some other persistent modification that bumps
+[cm]time occurs.
 
- tests/xfs/601     | 68 +++++++++++++++++++++++++++++++++++++++++++++++
- tests/xfs/601.out |  2 ++
- 2 files changed, 70 insertions(+)
- create mode 100755 tests/xfs/601
- create mode 100644 tests/xfs/601.out
+But I don't want to do this unconditionally - for systems not
+running anything that samples i_version we want relatime/lazytime
+to behave as they are supposed to and do periodic persistent updates
+as per normal. Principle of least surprise and all that jazz.
 
-diff --git a/tests/xfs/601 b/tests/xfs/601
-new file mode 100755
-index 00000000..68df6ac0
---- /dev/null
-+++ b/tests/xfs/601
-@@ -0,0 +1,68 @@
-+#! /bin/bash
-+# SPDX-License-Identifier: GPL-2.0
-+# Copyright (c) Meta Platforms, Inc. and affiliates.
-+#
-+# FS QA Test 601
-+#
-+# Regression test for patch "xfs: fix internal error from AGFL exhaustion".
-+#
-+. ./common/preamble
-+_begin_fstest auto prealloc punch
-+
-+. ./common/filter
-+
-+_supported_fs xfs
-+_require_scratch
-+_require_test_program punch-alternating
-+_fixed_by_kernel_commit XXXXXXXXXXXX "xfs: fix internal error from AGFL exhaustion"
-+
-+# Disable the rmapbt so we only need to worry about splitting the bnobt and
-+# cntbt at the same time.
-+opts=
-+if $MKFS_XFS_PROG |& grep -q rmapbt; then
-+	opts="-m rmapbt=0"
-+fi
-+_scratch_mkfs $opts | _filter_mkfs > /dev/null 2> "$tmp.mkfs"
-+. "$tmp.mkfs"
-+_scratch_mount
-+
-+alloc_block_len=$((_fs_has_crcs ? 56 : 16))
-+allocbt_leaf_maxrecs=$(((dbsize - alloc_block_len) / 8))
-+allocbt_node_maxrecs=$(((dbsize - alloc_block_len) / 12))
-+
-+# Create a big file with a size such that the punches below create the exact
-+# free extents we want.
-+num_holes=$((allocbt_leaf_maxrecs * allocbt_node_maxrecs - 1))
-+$XFS_IO_PROG -c "falloc 0 $((9 * dbsize + num_holes * dbsize * 2))" -f "$SCRATCH_MNT/big"
-+
-+# Fill in any small free extents in AG 0. After this, there should be only one,
-+# large free extent.
-+_scratch_unmount
-+mapfile -t gaps < <(_scratch_xfs_db -c 'agf 0' -c 'addr cntroot' -c btdump |
-+	$SED_PROG -rn 's/^[0-9]+:\[[0-9]+,([0-9]+)\].*/\1/p' |
-+	tac | tail -n +2)
-+_scratch_mount
-+for gap_i in "${!gaps[@]}"; do
-+	gap=${gaps[$gap_i]}
-+	$XFS_IO_PROG -c "falloc 0 $((gap * dbsize))" -f "$SCRATCH_MNT/gap$gap_i"
-+done
-+
-+# Create enough free space records to make the bnobt and cntbt both full,
-+# 2-level trees, plus one more record to make them split all the way to the
-+# root and become 3-level trees. After this, there is a 7-block free extent in
-+# the rightmost leaf of the cntbt, and all of the leaves of the cntbt other
-+# than the rightmost two are full. Without the fix, the free list is also
-+# empty.
-+$XFS_IO_PROG -c "fpunch $dbsize $((7 * dbsize))" "$SCRATCH_MNT/big"
-+"$here/src/punch-alternating" -o 9 "$SCRATCH_MNT/big"
-+
-+# Do an arbitrary operation that refills the free list. Without the fix, this
-+# will allocate 6 blocks from the 7-block free extent in the rightmost leaf of
-+# the cntbt, then try to insert the remaining 1 block free extent in the
-+# leftmost leaf of the cntbt. But that leaf is full, so this tries to split the
-+# leaf and fails because the free list is empty, returning EFSCORRUPTED.
-+$XFS_IO_PROG -c "fpunch 0 $dbsize" "$SCRATCH_MNT/big"
-+
-+echo "Silence is golden"
-+status=0
-+exit
-diff --git a/tests/xfs/601.out b/tests/xfs/601.out
-new file mode 100644
-index 00000000..0d70c3e5
---- /dev/null
-+++ b/tests/xfs/601.out
-@@ -0,0 +1,2 @@
-+QA output created by 601
-+Silence is golden
+So we really need an indication for inodes that we should enable this
+mode for the inode. I have asked if we can have per-operation
+context flag to trigger this given the needs for io_uring to have
+context flags for timestamp updates to be added. 
+
+I have asked if we can have an inode flag set by the VFS or
+application code for this. e.g. a flag set by nfsd whenever it accesses a
+given inode.
+
+I have asked if this inode flag can just be triggered if we ever see
+I_VERSION_QUERIED set or statx is used to retrieve a change cookie,
+and whether this is a reliable mechanism for setting such a flag.
+
+I have suggested mechanisms for using masked off bits of timestamps
+to encode sub-timestamp granularity change counts and keep them
+invisible to userspace and then not using i_version at all for XFS.
+This avoids all the problems that the multi-grain timestamp
+infrastructure exposed due to variable granularity of user visible
+timestamps and ordering across inodes with different granularity.
+This is potentially a general solution, too.
+
+So, yeah, there are *lots* of ways we can solve this problem without
+needing to change on-disk formats.
+
+-Dave.
 -- 
-2.41.0
-
+Dave Chinner
+david@fromorbit.com
