@@ -2,167 +2,175 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DE465C4332F
-	for <linux-xfs@archiver.kernel.org>; Mon, 30 Oct 2023 21:00:18 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D9761C4332F
+	for <linux-xfs@archiver.kernel.org>; Mon, 30 Oct 2023 21:00:22 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230051AbjJ3VAT (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 30 Oct 2023 17:00:19 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59270 "EHLO
+        id S229498AbjJ3VAX (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 30 Oct 2023 17:00:23 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59316 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229498AbjJ3VAS (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 30 Oct 2023 17:00:18 -0400
-Received: from mail-pl1-x62c.google.com (mail-pl1-x62c.google.com [IPv6:2607:f8b0:4864:20::62c])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 07484E1
-        for <linux-xfs@vger.kernel.org>; Mon, 30 Oct 2023 14:00:16 -0700 (PDT)
-Received: by mail-pl1-x62c.google.com with SMTP id d9443c01a7336-1cc394f4cdfso12987655ad.0
-        for <linux-xfs@vger.kernel.org>; Mon, 30 Oct 2023 14:00:16 -0700 (PDT)
+        with ESMTP id S231267AbjJ3VAW (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 30 Oct 2023 17:00:22 -0400
+Received: from mail-pf1-x432.google.com (mail-pf1-x432.google.com [IPv6:2607:f8b0:4864:20::432])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 47818102
+        for <linux-xfs@vger.kernel.org>; Mon, 30 Oct 2023 14:00:19 -0700 (PDT)
+Received: by mail-pf1-x432.google.com with SMTP id d2e1a72fcca58-6b497c8575aso5016202b3a.1
+        for <linux-xfs@vger.kernel.org>; Mon, 30 Oct 2023 14:00:19 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=osandov-com.20230601.gappssmtp.com; s=20230601; t=1698699615; x=1699304415; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:from:to:cc:subject:date:message-id:reply-to;
-        bh=2Z3wPKwpvaT4TNMgb9jdr7QW/sfxwpkVZxLgfN5BY4M=;
-        b=so1JsiX4C4v9x/1tulHXUOzghOa1SqoRjQLW7/lKKRy4FW9at8CUKmNUIY71lRZLpz
-         SJQ/OrDLnOlNgMIzrP51YKBGE9ONghFH+hAV/00TAz605SArzHonLsi+B5qpBzkVvFKW
-         V2PZt42jIqvxq1AblFw0YRXqyUkpasMw73nC0T4lfQaSHH4DUi5J5jjtSWA4ut3ch5By
-         5t0Nqgib1SzUoq4FFUc9JtgiC82muVD30cxIawyYAaPvKRepvozu+4GBZgvrkQyRCoW7
-         Bs436LTCbi6jNQZDrMFS0RlO5lbWxkXcH6cDiDIWht8zSjORWgsE95RTpW6+IYPh9y0k
-         hVQg==
+        d=osandov-com.20230601.gappssmtp.com; s=20230601; t=1698699619; x=1699304419; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:references:in-reply-to
+         :message-id:date:subject:cc:to:from:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=VkqLsiO75F22f/osxi9L6166dfWADIgNNrDHsxZaCTg=;
+        b=N87oWbU8L36Fo9eEKSraISt8Sa7X/ElpwupYqZQl7thPSlVcuhZimTqxuFgsb5eBAX
+         orzTrlstxhSbSyYf1EovYDR22CUh1uy0rMaYSZxrW8L5E4lswyAeEODv7q0yn8kOCWbc
+         oYTiWu3BJSzegZtrwJ9j9ky5yDRJ23eaLP/eUEGzWOQ/PxGr1zbu8FkzEpgbgRL29ICb
+         mKmbKRSc4zXCfvNo40uxW4jqjfbAavcv7q/S0p/mMGSHaHtnZjGcN1gfkQAaFAz7n9r4
+         sdOHfri/g3pjKGY2AiXmR0O4XIo+jRHyymve4xa5NngUMHJydbVS9+YVhYtCD6jV/nXR
+         +0Fw==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1698699615; x=1699304415;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:x-gm-message-state:from:to:cc:subject:date:message-id
-         :reply-to;
-        bh=2Z3wPKwpvaT4TNMgb9jdr7QW/sfxwpkVZxLgfN5BY4M=;
-        b=Sr4R4/oq60dyhUex74iX7w0O7gZ2J1bfAHo0eSTDOMb1knCY68k5JNr9YQL1yw8PEp
-         uMkw9ozeIDb+DelOMnerMJL4VA8o1M17LLyGqrxzTPtBHyIHQIF5HZ3STQnniyRSnl0f
-         avsLvXpfj+5CGgSQhRDzaRZt4pTWI6PYSZ1LGCOFQxqmoVwgcrXvEUr6n6dXCCY9j1yH
-         KPTKFfqg3BguvvlVwE+Gc3O6EyEuIxE5qG21IIOjwq85DceY5/hpM40jT2T1Hj9Pa9SG
-         sSZN6kf/uIn3v2JwFo8GBRojfEwMy+kr/dc1t6OeLZbjnf9+FmQ3p4JVnAzuZ9ORGWv5
-         WDrw==
-X-Gm-Message-State: AOJu0Yx0b7djsrlA9ETILxTM5eCWvL8H69EEqHtifAQ7ITW3celGIGd6
-        6CB9AYU/PmA4Vlpbn3qkkhptGLf1LH3dYxTGafQ=
-X-Google-Smtp-Source: AGHT+IFo2oYacMWMoK/mC0AdKNooX3zqTWB3wEkpYtBA8zS1+KXhsOAcpHXzTGQcv94e9iUQrwh5kQ==
-X-Received: by 2002:a17:902:f28b:b0:1ca:8169:e853 with SMTP id k11-20020a170902f28b00b001ca8169e853mr7524062plc.4.1698699614842;
-        Mon, 30 Oct 2023 14:00:14 -0700 (PDT)
+        d=1e100.net; s=20230601; t=1698699619; x=1699304419;
+        h=content-transfer-encoding:mime-version:references:in-reply-to
+         :message-id:date:subject:cc:to:from:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=VkqLsiO75F22f/osxi9L6166dfWADIgNNrDHsxZaCTg=;
+        b=vxODcd/gMoj4pN6FldxhqCGdaIdBH1XB/JLs8+0Xw3mD1LXYlcJT5Uz6c2VYoJ7r4T
+         W379mfVavew5ljKgHtEu8Kybe/O6q1ixbBXsc4hImpuyZVkU71qdCJjq2hGXfP+AOQb1
+         RIYm3PK5UpUiX/i54yIxUrWJ2eXdhf7tCsTEvIAuceEZE+Vd6QkpjHop6/7gT8tgGPXo
+         p8CaC72uw4wDLdBacg0om/Wov5v0dutw9rpQTW8ucNFMsFfKcaqvI4MDdB+NNrXnaKyu
+         FGPV65pnT23Y7xQnwFRhI2Ax5LqDEeu9oDnnq27X9+YAPSNdEuMOKVa/QQ4gRgho5HWc
+         S5yA==
+X-Gm-Message-State: AOJu0YyJsc/Lav6Rh22NAFKy1F6uT+cZnllo726DNQBYURYLBgtDkbEk
+        JtIk33J1kx9+wDcOWzzChcXTSw==
+X-Google-Smtp-Source: AGHT+IEbZGog1VKPye4Q71ygqJUfOWQ6Bh67TMCXFae9acZltQHBSzYedU2eCWNo/auz6R81uitlew==
+X-Received: by 2002:a05:6a00:15d4:b0:6be:2803:9c92 with SMTP id o20-20020a056a0015d400b006be28039c92mr13256581pfu.32.1698699618429;
+        Mon, 30 Oct 2023 14:00:18 -0700 (PDT)
 Received: from telecaster.thefacebook.com ([2620:10d:c090:500::4:49f])
-        by smtp.gmail.com with ESMTPSA id s9-20020a170902ea0900b001cc5d23275csm953323plg.200.2023.10.30.14.00.13
+        by smtp.gmail.com with ESMTPSA id n26-20020aa78a5a000000b0068ff0a633fdsm6307115pfa.131.2023.10.30.14.00.17
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 30 Oct 2023 14:00:14 -0700 (PDT)
+        Mon, 30 Oct 2023 14:00:17 -0700 (PDT)
 From:   Omar Sandoval <osandov@osandov.com>
-To:     linux-xfs@vger.kernel.org
+To:     fstests@vger.kernel.org, linux-xfs@vger.kernel.org
 Cc:     kernel-team@fb.com, "Darrick J . Wong" <djwong@kernel.org>,
         Dave Chinner <dchinner@redhat.com>
-Subject: [PATCH v2] xfs: fix internal error from AGFL exhaustion
-Date:   Mon, 30 Oct 2023 14:00:02 -0700
-Message-ID: <68cd85697855f686529829a2825b044913148caf.1698699188.git.osandov@fb.com>
+Subject: [PATCH fstests v2] xfs: test refilling AGFL after lots of btree splits
+Date:   Mon, 30 Oct 2023 14:00:15 -0700
+Message-ID: <fe622bff22bca23648ed1154faeadce3ed51ad3b.1698699498.git.osandov@osandov.com>
 X-Mailer: git-send-email 2.41.0
+In-Reply-To: <68cd85697855f686529829a2825b044913148caf.1698699188.git.osandov@fb.com>
+References: <68cd85697855f686529829a2825b044913148caf.1698699188.git.osandov@fb.com>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-From: Omar Sandoval <osandov@fb.com>
+This is a regression test for patch "xfs: fix internal error from AGFL
+exhaustion"), which is not yet merged. Without the fix, it will fail
+with a "Structure needs cleaning" error.
 
-We've been seeing XFS errors like the following:
-
-XFS: Internal error i != 1 at line 3526 of file fs/xfs/libxfs/xfs_btree.c.  Caller xfs_btree_insert+0x1ec/0x280
-...
-Call Trace:
- xfs_corruption_error+0x94/0xa0
- xfs_btree_insert+0x221/0x280
- xfs_alloc_fixup_trees+0x104/0x3e0
- xfs_alloc_ag_vextent_size+0x667/0x820
- xfs_alloc_fix_freelist+0x5d9/0x750
- xfs_free_extent_fix_freelist+0x65/0xa0
- __xfs_free_extent+0x57/0x180
-...
-
-This is the XFS_IS_CORRUPT() check in xfs_btree_insert() when
-xfs_btree_insrec() fails.
-
-After converting this into a panic and dissecting the core dump, I found
-that xfs_btree_insrec() is failing because it's trying to split a leaf
-node in the cntbt when the AG free list is empty. In particular, it's
-failing to get a block from the AGFL _while trying to refill the AGFL_.
-
-If a single operation splits every level of the bnobt and the cntbt (and
-the rmapbt if it is enabled) at once, the free list will be empty. Then,
-when the next operation tries to refill the free list, it allocates
-space. If the allocation does not use a full extent, it will need to
-insert records for the remaining space in the bnobt and cntbt. And if
-those new records go in full leaves, the leaves (and potentially more
-nodes up to the old root) need to be split.
-
-Fix it by accounting for the additional splits that may be required to
-refill the free list in the calculation for the minimum free list size.
-
-P.S. As far as I can tell, this bug has existed for a long time -- maybe
-back to xfs-history commit afdf80ae7405 ("Add XFS_AG_MAXLEVELS macros
-...") in April 1994! It requires a very unlucky sequence of events, and
-in fact we didn't hit it until a particular sparse mmap workload updated
-from 5.12 to 5.19. But this bug existed in 5.12, so it must've been
-exposed by some other change in allocation or writeback patterns. It's
-also much less likely to be hit with the rmapbt enabled, since that
-increases the minimum free list size and is unlikely to split at the
-same time as the bnobt and cntbt.
-
-Signed-off-by: Omar Sandoval <osandov@fb.com>
+Signed-off-by: Omar Sandoval <osandov@osandov.com>
 ---
 Changes since v1 [1]:
 
-- Updated calculation to account for internal nodes that may also need
-  to be split.
-- Updated comments and commit message accordingly.
+- Fixed to check whether mkfs.xfs supports -m rmapbt.
+- Changed bare $XFS_DB calls to _scratch_xfs_db.
+- Expanded comment about what happens without the fix.
 
-1: https://lore.kernel.org/linux-xfs/ZTrSiwF7OAq0hJHn@dread.disaster.area/T/
+I didn't add a check for whether everything ended up in AG 0, because it
+wasn't clear to me what to do in that case. We could skip the test, but
+it also doesn't hurt to run it anyways.
 
- fs/xfs/libxfs/xfs_alloc.c | 25 ++++++++++++++++++++++---
- 1 file changed, 22 insertions(+), 3 deletions(-)
+1: https://lore.kernel.org/linux-xfs/c7be2fe66a297316b934ddd3a1368b14f39a9f22.1698190540.git.osandov@osandov.com/
 
-diff --git a/fs/xfs/libxfs/xfs_alloc.c b/fs/xfs/libxfs/xfs_alloc.c
-index 3069194527dd..3949c6ad0cce 100644
---- a/fs/xfs/libxfs/xfs_alloc.c
-+++ b/fs/xfs/libxfs/xfs_alloc.c
-@@ -2275,16 +2275,35 @@ xfs_alloc_min_freelist(
- 
- 	ASSERT(mp->m_alloc_maxlevels > 0);
- 
-+	/*
-+	 * For a btree shorter than the maximum height, the worst case is that
-+	 * every level gets split and a new level is added, then while inserting
-+	 * another entry to refill the AGFL, every level under the old root gets
-+	 * split again. This is:
-+	 *
-+	 *   (current height + 1) + (current height - 1)
-+	 * = (new height)         + (new height - 2)
-+	 * = 2 * new height - 2
-+	 *
-+	 * For a btree of maximum height, the worst case is that every level
-+	 * under the root gets split, then while inserting another entry to
-+	 * refill the AGFL, every level under the root gets split again. This is
-+	 * also:
-+	 *
-+	 *   2 * (new_height - 1)
-+	 * = 2 * new height - 2
-+	 */
+ tests/xfs/601     | 68 +++++++++++++++++++++++++++++++++++++++++++++++
+ tests/xfs/601.out |  2 ++
+ 2 files changed, 70 insertions(+)
+ create mode 100755 tests/xfs/601
+ create mode 100644 tests/xfs/601.out
+
+diff --git a/tests/xfs/601 b/tests/xfs/601
+new file mode 100755
+index 00000000..68df6ac0
+--- /dev/null
++++ b/tests/xfs/601
+@@ -0,0 +1,68 @@
++#! /bin/bash
++# SPDX-License-Identifier: GPL-2.0
++# Copyright (c) Meta Platforms, Inc. and affiliates.
++#
++# FS QA Test 601
++#
++# Regression test for patch "xfs: fix internal error from AGFL exhaustion".
++#
++. ./common/preamble
++_begin_fstest auto prealloc punch
 +
- 	/* space needed by-bno freespace btree */
- 	min_free = min_t(unsigned int, levels[XFS_BTNUM_BNOi] + 1,
--				       mp->m_alloc_maxlevels);
-+				       mp->m_alloc_maxlevels) * 2 - 2;
- 	/* space needed by-size freespace btree */
- 	min_free += min_t(unsigned int, levels[XFS_BTNUM_CNTi] + 1,
--				       mp->m_alloc_maxlevels);
-+				       mp->m_alloc_maxlevels) * 2 - 2;
- 	/* space needed reverse mapping used space btree */
- 	if (xfs_has_rmapbt(mp))
- 		min_free += min_t(unsigned int, levels[XFS_BTNUM_RMAPi] + 1,
--						mp->m_rmap_maxlevels);
-+						mp->m_rmap_maxlevels) * 2 - 2;
- 
- 	return min_free;
- }
++. ./common/filter
++
++_supported_fs xfs
++_require_scratch
++_require_test_program punch-alternating
++_fixed_by_kernel_commit XXXXXXXXXXXX "xfs: fix internal error from AGFL exhaustion"
++
++# Disable the rmapbt so we only need to worry about splitting the bnobt and
++# cntbt at the same time.
++opts=
++if $MKFS_XFS_PROG |& grep -q rmapbt; then
++	opts="-m rmapbt=0"
++fi
++_scratch_mkfs $opts | _filter_mkfs > /dev/null 2> "$tmp.mkfs"
++. "$tmp.mkfs"
++_scratch_mount
++
++alloc_block_len=$((_fs_has_crcs ? 56 : 16))
++allocbt_leaf_maxrecs=$(((dbsize - alloc_block_len) / 8))
++allocbt_node_maxrecs=$(((dbsize - alloc_block_len) / 12))
++
++# Create a big file with a size such that the punches below create the exact
++# free extents we want.
++num_holes=$((allocbt_leaf_maxrecs * allocbt_node_maxrecs - 1))
++$XFS_IO_PROG -c "falloc 0 $((9 * dbsize + num_holes * dbsize * 2))" -f "$SCRATCH_MNT/big"
++
++# Fill in any small free extents in AG 0. After this, there should be only one,
++# large free extent.
++_scratch_unmount
++mapfile -t gaps < <(_scratch_xfs_db -c 'agf 0' -c 'addr cntroot' -c btdump |
++	$SED_PROG -rn 's/^[0-9]+:\[[0-9]+,([0-9]+)\].*/\1/p' |
++	tac | tail -n +2)
++_scratch_mount
++for gap_i in "${!gaps[@]}"; do
++	gap=${gaps[$gap_i]}
++	$XFS_IO_PROG -c "falloc 0 $((gap * dbsize))" -f "$SCRATCH_MNT/gap$gap_i"
++done
++
++# Create enough free space records to make the bnobt and cntbt both full,
++# 2-level trees, plus one more record to make them split all the way to the
++# root and become 3-level trees. After this, there is a 7-block free extent in
++# the rightmost leaf of the cntbt, and all of the leaves of the cntbt other
++# than the rightmost two are full. Without the fix, the free list is also
++# empty.
++$XFS_IO_PROG -c "fpunch $dbsize $((7 * dbsize))" "$SCRATCH_MNT/big"
++"$here/src/punch-alternating" -o 9 "$SCRATCH_MNT/big"
++
++# Do an arbitrary operation that refills the free list. Without the fix, this
++# will allocate 6 blocks from the 7-block free extent in the rightmost leaf of
++# the cntbt, then try to insert the remaining 1 block free extent in the
++# leftmost leaf of the cntbt. But that leaf is full, so this tries to split the
++# leaf and fails because the free list is empty, returning EFSCORRUPTED.
++$XFS_IO_PROG -c "fpunch 0 $dbsize" "$SCRATCH_MNT/big"
++
++echo "Silence is golden"
++status=0
++exit
+diff --git a/tests/xfs/601.out b/tests/xfs/601.out
+new file mode 100644
+index 00000000..0d70c3e5
+--- /dev/null
++++ b/tests/xfs/601.out
+@@ -0,0 +1,2 @@
++QA output created by 601
++Silence is golden
 -- 
 2.41.0
 
