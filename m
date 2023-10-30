@@ -2,164 +2,90 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 637FAC4332F
-	for <linux-xfs@archiver.kernel.org>; Mon, 30 Oct 2023 05:48:46 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C7748C4332F
+	for <linux-xfs@archiver.kernel.org>; Mon, 30 Oct 2023 07:50:55 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230488AbjJ3Fsq (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 30 Oct 2023 01:48:46 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50080 "EHLO
+        id S231690AbjJ3Hu4 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 30 Oct 2023 03:50:56 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33228 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229829AbjJ3Fsq (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 30 Oct 2023 01:48:46 -0400
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id DAE2BBD
-        for <linux-xfs@vger.kernel.org>; Sun, 29 Oct 2023 22:48:43 -0700 (PDT)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id F175AC433C7;
-        Mon, 30 Oct 2023 05:48:42 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1698644923;
-        bh=mZcbWdyCAl0Q4TKuX6N13d1SYTzKqVvO0OX4SUagAOM=;
-        h=From:To:Cc:Subject:Date:From;
-        b=fkq8yJUcZAeOKxV/o3XCUvz/IL7LJ/0pQsqZvANby9ZTH3w/FOkco7av0tUtJ4/ub
-         1w5JDeYyWUV0AzRrlRDIjwLddHxKU0tFMqpKRkLhpU2/Xmc7ccTnUSEtBowonqL0NA
-         d5OmytxcNaDYzs7dQ0SgflpuXBTmVb4Kgvf2SvSsU11W/qOFpDlc2ouGTfkRcgkbFt
-         8xuFedbG2OFotR7xsCDPCNb2Sb/ncWRfpOUIyPQCzUiQtrDnm8XRzevbZIEvmw4HqU
-         W5U1arafBW9JWnePc3jjwvRWpvqPDJ9PE96kynLWrLBt8V6GY8zDxdwyyhqLw4VaoC
-         H1slbR2zBEQPA==
-User-agent: mu4e 1.8.10; emacs 27.1
-From:   Chandan Babu R <chandanbabu@kernel.org>
-To:     chandanbabu@kernel.org
-Cc:     catherine.hoang@oracle.com, cheng.lin130@zte.com.cn,
-        dan.j.williams@intel.com, dchinner@redhat.com, djwong@kernel.org,
-        hch@lst.de, linux-fsdevel@vger.kernel.org,
-        linux-xfs@vger.kernel.org, osandov@fb.com, ruansy.fnst@fujitsu.com
-Subject: [ANNOUNCE] xfs-linux: for-next updated to 22c2699cb068
-Date:   Mon, 30 Oct 2023 11:16:37 +0530
-Message-ID: <87fs1s3bk6.fsf@debian-BULLSEYE-live-builder-AMD64>
+        with ESMTP id S231945AbjJ3Huz (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 30 Oct 2023 03:50:55 -0400
+X-Greylist: delayed 465 seconds by postgrey-1.37 at lindbergh.monkeyblade.net; Mon, 30 Oct 2023 00:50:52 PDT
+Received: from guitar.compbio.ucsf.edu (guitar.compbio.ucsf.edu [169.230.79.19])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7BB1BDA
+        for <linux-xfs@vger.kernel.org>; Mon, 30 Oct 2023 00:50:52 -0700 (PDT)
+X-Virus-Scanned: amavisd-new at guitar.compbio.ucsf.edu
+Received: from ouray (hal2.cgl.ucsf.edu [169.230.25.10])
+        by guitar.compbio.ucsf.edu (Postfix) with ESMTPSA id 9D1CBB021924
+        for <linux-xfs@vger.kernel.org>; Mon, 30 Oct 2023 00:43:06 -0700 (PDT)
+Authentication-Results: guitar.compbio.ucsf.edu; arc=none smtp.remote-ip=169.230.25.10
+ARC-Seal: i=1; a=rsa-sha256; d=salilab.org; s=arc; t=1698651786; cv=none; b=TEQ/k06FiOQ1HyvYZjskjMOfIVsWN4j84rb/c7Lg2gxZTDxJO6rR1NUPS1eq+O66hA0qWdsNXsQ7UKQI6xEFJ5XlzcVCJbofAEZ9K3w7qd3ObcjvIRmJQVKbdgaUgodrb1SPSQPYjUPYTTiCyMFv8hbzDioqorRmlenrrmME1/g=
+ARC-Message-Signature: i=1; a=rsa-sha256; d=salilab.org; s=arc; t=1698651786;
+        c=relaxed/simple; bh=gONhFudogJLX+YSpf9Av6Ocd2fMYnjoVnrRAesP8hCs=;
+        h=DKIM-Signature:Date:From:To:Subject:Message-ID:MIME-Version; b=EqU/Acoq+/oXvAjgKXdPHlNjvLecC7YZq/FPpiK05d6MfepCqmHIdgj4lFhfIBh0o98Sn4g59pP4k9ipIdax7SR6PN5kY9C4ma3dj1Fs98oZd5woOx45XRV7SLlgTKDhR2MbH4oudyPaWxfSKv5d6dYihlJkKWX3cgWcitdRGbc=
+ARC-Authentication-Results: i=1; guitar.compbio.ucsf.edu
+DKIM-Filter: OpenDKIM Filter v2.11.0 guitar.compbio.ucsf.edu 9D1CBB021924
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=salilab.org;
+        s=default; t=1698651786;
+        bh=cbAz7aRn/HrZSQnkINsjvep/8e+HrcfMgy7K9FvY/kQ=;
+        h=Date:From:To:Subject:From;
+        b=wvhyow6UmfyXHxXwy88h7fnfAwwm/WOMebhkxlBMqR4IscZ6uWAXU16Ht5+qm22hn
+         gRtgMktjZPhnX5tB1h4u0a8cliHHH+kNmOK6xqnVLdcy5FHZ1r/iPDZrXT8WTg7Gra
+         uqGAAOvueNTx4+d6TOQ4U6IeWmqo4ymC45MXMyyU=
+Date:   Mon, 30 Oct 2023 00:43:06 -0700 (PDT)
+From:   Joshua Baker-LePain <jlb@salilab.org>
+X-X-Sender: jlb@ouray
+To:     linux-xfs@vger.kernel.org
+Subject: Looking for consultant for crashed FS
+Message-ID: <baad4400-aa5a-deb3-0f5f-be61bc56e4a4@salilab.org>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; format=flowed; charset=US-ASCII
+X-Greylist: Sender succeeded SMTP AUTH, not delayed by milter-greylist-4.6.4 (guitar.compbio.ucsf.edu [0.0.0.0]); Mon, 30 Oct 2023 00:43:06 -0700 (PDT)
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Hi folks,
+Hi there.  We have a large BeeGFS system here, and our metadata targets 
+use XFS.  The metadata targets run on top of software RAID1 mirrors, and 
+BeeGFS mirrors each target across two servers.  Our base OS is CentOS-7 
+(up to date).  On Friday, the primary FS of a metadata pair crashed.  We 
+successfully failed over to the secondary.  Just a few minutes later, 
+though, that FS crashed with the same error message.  We've been 
+attempting recovery.  If you are or know a consultant skilled in XFS, 
+please have them contact me.  Thank you so much.
 
-The for-next branch of the xfs-linux repository at:
+For reference, the error message we got was this:
 
-	https://git.kernel.org/pub/scm/fs/xfs/xfs-linux.git
+[14074823.591265] XFS (md125): Internal error XFS_WANT_CORRUPTED_GOTO at line 3305 of file fs/xfs/libxfs/xfs_btree.c.  Caller xfs_inobt_insert_rec+0x1f/0x30 [xfs]
+[14074823.606436] CPU: 43 PID: 173948 Comm: Worker34 Kdump: loaded Not tainted 3.10.0-1160.90.1.el7.x86_64 #1
+[14074823.616581] Hardware name: Supermicro Super Server/X11DDW-L, BIOS 3.1 04/30/2019
+[14074823.624695] Call Trace:
+[14074823.627781]  [<ffffffffa4bb1bec>] dump_stack+0x19/0x1f
+[14074823.633655]  [<ffffffffc073ebaf>] xfs_error_report+0x3f/0x50 [xfs]
+[14074823.640550]  [<ffffffffc07290cf>] ? xfs_inobt_insert_rec+0x1f/0x30 [xfs]
+[14074823.647933]  [<ffffffffc0716723>] xfs_btree_insert+0x1e3/0x1f0 [xfs]
+[14074823.654992]  [<ffffffffc07290cf>] xfs_inobt_insert_rec+0x1f/0x30 [xfs]
+[14074823.662175]  [<ffffffffc072c003>] xfs_difree_finobt+0xb3/0x200 [xfs]
+[14074823.669215]  [<ffffffffc072c273>] xfs_difree+0x123/0x1d0 [xfs]
+[14074823.675690]  [<ffffffffc0750c23>] xfs_ifree+0x83/0x150 [xfs]
+[14074823.681989]  [<ffffffffc0750db8>] xfs_inactive_ifree+0xc8/0x230 [xfs]
+[14074823.689087]  [<ffffffffc0750fab>] xfs_inactive+0x8b/0x140 [xfs]
+[14074823.695688]  [<ffffffffc0758805>] xfs_fs_destroy_inode+0x95/0x190 [xfs]
+[14074823.702976]  [<ffffffffa467aa4b>] destroy_inode+0x3b/0x70
+[14074823.709067]  [<ffffffffa467ab95>] evict+0x115/0x180
+[14074823.714583]  [<ffffffffa467af6c>] iput+0xfc/0x190
+[14074823.719925]  [<ffffffffa466e8f6>] do_unlinkat+0x1b6/0x2e0
+[14074823.726024]  [<ffffffffa4680c84>] ? mntput+0x24/0x40
+[14074823.731660]  [<ffffffffa466fa16>] SyS_unlink+0x16/0x20
+[14074823.737456]  [<ffffffffa4bc539a>] system_call_fastpath+0x25/0x2a
+[14074823.744130] XFS (md125): xfs_inactive_ifree: xfs_ifree returned error -117
+[14074823.751684] XFS (md125): xfs_do_force_shutdown(0x1) called from line 1756 of file fs/xfs/xfs_inode.c.  Return address = ffffffffc0750e43
+[14074823.795025] XFS (md125): I/O Error Detected. Shutting down filesystem
+[14074823.802300] XFS (md125): Please umount the filesystem and rectify the problem(s)
 
-has just been updated.
 
-Patches often get missed, so please check if your outstanding patches
-were in this update. If they have not been in this update, please
-resubmit them to linux-xfs@vger.kernel.org so they can be picked up in
-the next update.
-
-The new head of the for-next branch is commit:
-
-22c2699cb068 mm, pmem, xfs: Introduce MF_MEM_PRE_REMOVE for unbind
-
-47 new commits:
-
-Catherine Hoang (1):
-      [14a537983b22] xfs: allow read IO and FICLONE to run concurrently
-
-Chandan Babu R (6):
-      [d0e85e79d680] Merge tag 'realtime-fixes-6.7_2023-10-19' of https://git.kernel.org/pub/scm/linux/kernel/git/djwong/xfs-linux into xfs-6.7-mergeA
-      [3ef52c010973] Merge tag 'clean-up-realtime-units-6.7_2023-10-19' of https://git.kernel.org/pub/scm/linux/kernel/git/djwong/xfs-linux into xfs-6.7-mergeA
-      [9d4ca5afa604] Merge tag 'refactor-rt-unit-conversions-6.7_2023-10-19' of https://git.kernel.org/pub/scm/linux/kernel/git/djwong/xfs-linux into xfs-6.7-mergeA
-      [035e32f7524d] Merge tag 'refactor-rtbitmap-macros-6.7_2023-10-19' of https://git.kernel.org/pub/scm/linux/kernel/git/djwong/xfs-linux into xfs-6.7-mergeA
-      [830b4abfe2de] Merge tag 'refactor-rtbitmap-accessors-6.7_2023-10-19' of https://git.kernel.org/pub/scm/linux/kernel/git/djwong/xfs-linux into xfs-6.7-mergeA
-      [9fa8753aa1f1] Merge tag 'rtalloc-speedups-6.7_2023-10-19' of https://git.kernel.org/pub/scm/linux/kernel/git/djwong/xfs-linux into xfs-6.7-mergeA
-
-Cheng Lin (1):
-      [2b99e410b28f] xfs: introduce protection for drop nlink
-
-Christoph Hellwig (1):
-      [35dc55b9e80c] xfs: handle nimaps=0 from xfs_bmapi_write in xfs_alloc_file_space
-
-Darrick J. Wong (30):
-      [948806280594] xfs: bump max fsgeom struct version
-      [6c664484337b] xfs: hoist freeing of rt data fork extent mappings
-      [b73494fa9a30] xfs: prevent rt growfs when quota is enabled
-      [c2988eb5cff7] xfs: rt stubs should return negative errnos when rt disabled
-      [ddd98076d5c0] xfs: fix units conversion error in xfs_bmap_del_extent_delay
-      [f6a2dae2a1f5] xfs: make sure maxlen is still congruent with prod when rounding down
-      [13928113fc5b] xfs: move the xfs_rtbitmap.c declarations to xfs_rtbitmap.h
-      [a684c538bc14] xfs: convert xfs_extlen_t to xfs_rtxlen_t in the rt allocator
-      [fa5a38723086] xfs: create a helper to convert rtextents to rtblocks
-      [03f4de332e2e] xfs: convert rt bitmap/summary block numbers to xfs_fileoff_t
-      [68db60bf01c1] xfs: create a helper to compute leftovers of realtime extents
-      [f29c3e745dc2] xfs: convert rt bitmap extent lengths to xfs_rtbxlen_t
-      [2c2b981b737a] xfs: create a helper to convert extlen to rtextlen
-      [3d2b6d034f0f] xfs: rename xfs_verify_rtext to xfs_verify_rtbext
-      [5dc3a80d46a4] xfs: create helpers to convert rt block numbers to rt extent numbers
-      [2d5f216b77e3] xfs: convert rt extent numbers to xfs_rtxnum_t
-      [055641248f64] xfs: convert do_div calls to xfs_rtb_to_rtx helper calls
-      [5f57f7309d9a] xfs: create rt extent rounding helpers for realtime extent blocks
-      [90d98a6ada1d] xfs: convert the rtbitmap block and bit macros to static inline functions
-      [ef5a83b7e597] xfs: use shifting and masking when converting rt extents, if possible
-      [add3cddaea50] xfs: remove XFS_BLOCKWSIZE and XFS_BLOCKWMASK macros
-      [a9948626849c] xfs: convert open-coded xfs_rtword_t pointer accesses to helper
-      [097b4b7b64ef] xfs: convert rt summary macros to helpers
-      [312d61021b89] xfs: create a helper to handle logging parts of rt bitmap/summary blocks
-      [d0448fe76ac1] xfs: create helpers for rtbitmap block/wordcount computations
-      [97e993830a1c] xfs: use accessor functions for bitmap words
-      [bd85af280de6] xfs: create helpers for rtsummary block/wordcount computations
-      [663b8db7b025] xfs: use accessor functions for summary info words
-      [5b1d0ae9753f] xfs: simplify xfs_rtbuf_get calling conventions
-      [e2cf427c9149] xfs: simplify rt bitmap/summary block accessor functions
-
-Dave Chinner (1):
-      [41f33d82cfd3] xfs: consolidate realtime allocation arguments
-
-Omar Sandoval (6):
-      [e94b53ff699c] xfs: cache last bitmap block in realtime allocator
-      [e23aaf450de7] xfs: invert the realtime summary cache
-      [1b5d63963f98] xfs: return maximum free size from xfs_rtany_summary()
-      [ec5857bf0763] xfs: limit maxlen based on available space in xfs_rtallocate_extent_near()
-      [85fa2c774397] xfs: don't try redundant allocations in xfs_rtallocate_extent_near()
-      [e0f7422f54b0] xfs: don't look for end of extent further than necessary in xfs_rtallocate_extent_near()
-
-Shiyang Ruan (1):
-      [22c2699cb068] mm, pmem, xfs: Introduce MF_MEM_PRE_REMOVE for unbind
-
-Code Diffstat:
-
- drivers/dax/super.c            |   3 +-
- fs/xfs/libxfs/xfs_bmap.c       |  45 +++----
- fs/xfs/libxfs/xfs_format.h     |  34 ++---
- fs/xfs/libxfs/xfs_rtbitmap.c   | 803 ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++-----------------------------------------------------
- fs/xfs/libxfs/xfs_rtbitmap.h   | 383 ++++++++++++++++++++++++++++++++++++++++++++++++++++++++
- fs/xfs/libxfs/xfs_sb.c         |   2 +
- fs/xfs/libxfs/xfs_sb.h         |   2 +-
- fs/xfs/libxfs/xfs_trans_resv.c |  10 +-
- fs/xfs/libxfs/xfs_types.c      |   4 +-
- fs/xfs/libxfs/xfs_types.h      |  10 +-
- fs/xfs/scrub/bmap.c            |   2 +-
- fs/xfs/scrub/fscounters.c      |   2 +-
- fs/xfs/scrub/inode.c           |   3 +-
- fs/xfs/scrub/rtbitmap.c        |  28 ++---
- fs/xfs/scrub/rtsummary.c       |  72 ++++++-----
- fs/xfs/scrub/trace.c           |   1 +
- fs/xfs/scrub/trace.h           |  15 +--
- fs/xfs/xfs_bmap_util.c         |  74 +++++------
- fs/xfs/xfs_file.c              |  63 ++++++++--
- fs/xfs/xfs_fsmap.c             |  15 +--
- fs/xfs/xfs_inode.c             |  24 ++++
- fs/xfs/xfs_inode.h             |   9 ++
- fs/xfs/xfs_inode_item.c        |   3 +-
- fs/xfs/xfs_ioctl.c             |   5 +-
- fs/xfs/xfs_linux.h             |  12 ++
- fs/xfs/xfs_mount.h             |   8 +-
- fs/xfs/xfs_notify_failure.c    | 108 +++++++++++++++-
- fs/xfs/xfs_ondisk.h            |   4 +
- fs/xfs/xfs_reflink.c           |   4 +
- fs/xfs/xfs_rtalloc.c           | 626 +++++++++++++++++++++++++++++++++++++++++++++----------------------------------------------
- fs/xfs/xfs_rtalloc.h           |  94 ++------------
- fs/xfs/xfs_super.c             |   3 +-
- fs/xfs/xfs_trans.c             |   7 +-
- include/linux/mm.h             |   1 +
- mm/memory-failure.c            |  21 +++-
- 35 files changed, 1547 insertions(+), 953 deletions(-)
- create mode 100644 fs/xfs/libxfs/xfs_rtbitmap.h
+-- 
+Joshua Baker-LePain
+Wynton Cluster Sysadmin
+UCSF
