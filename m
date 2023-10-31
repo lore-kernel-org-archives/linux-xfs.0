@@ -2,48 +2,131 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7619BC4332F
-	for <linux-xfs@archiver.kernel.org>; Tue, 31 Oct 2023 17:15:05 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 34CC7C41535
+	for <linux-xfs@archiver.kernel.org>; Tue, 31 Oct 2023 19:49:11 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234547AbjJaRPF (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 31 Oct 2023 13:15:05 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48968 "EHLO
+        id S235049AbjJaTtL (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 31 Oct 2023 15:49:11 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38562 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S235927AbjJaRPE (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 31 Oct 2023 13:15:04 -0400
-Received: from verein.lst.de (verein.lst.de [213.95.11.211])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7A356F7
-        for <linux-xfs@vger.kernel.org>; Tue, 31 Oct 2023 10:15:02 -0700 (PDT)
-Received: by verein.lst.de (Postfix, from userid 2407)
-        id 6409667373; Tue, 31 Oct 2023 18:14:59 +0100 (CET)
-Date:   Tue, 31 Oct 2023 18:14:59 +0100
-From:   Christoph Hellwig <hch@lst.de>
-To:     "Darrick J. Wong" <djwong@kernel.org>
-Cc:     Christoph Hellwig <hch@lst.de>, linux-xfs@vger.kernel.org
-Subject: Re: [PATCH, realtime-rmap branch] xfs: lock the RT bitmap inode in
- xfs_efi_item_recover
-Message-ID: <20231031171459.GB31580@lst.de>
-References: <20231031095038.1559309-1-hch@lst.de> <20231031165330.GC1041814@frogsfrogsfrogs>
+        with ESMTP id S234972AbjJaTtL (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 31 Oct 2023 15:49:11 -0400
+X-Greylist: delayed 361 seconds by postgrey-1.37 at lindbergh.monkeyblade.net; Tue, 31 Oct 2023 12:49:08 PDT
+Received: from mail.stoffel.org (mail.stoffel.org [172.104.24.175])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7C4BE83;
+        Tue, 31 Oct 2023 12:49:08 -0700 (PDT)
+Received: from quad.stoffel.org (097-095-183-072.res.spectrum.com [97.95.183.72])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+        (No client certificate requested)
+        by mail.stoffel.org (Postfix) with ESMTPSA id 5EB591E12B;
+        Tue, 31 Oct 2023 15:43:05 -0400 (EDT)
+Received: by quad.stoffel.org (Postfix, from userid 1000)
+        id 80C85A8B01; Tue, 31 Oct 2023 15:43:04 -0400 (EDT)
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20231031165330.GC1041814@frogsfrogsfrogs>
-User-Agent: Mutt/1.5.17 (2007-11-01)
+Content-Transfer-Encoding: 7bit
+Message-ID: <25921.22728.501691.76305@quad.stoffel.home>
+Date:   Tue, 31 Oct 2023 15:43:04 -0400
+From:   "John Stoffel" <john@stoffel.org>
+To:     Jeff Layton <jlayton@kernel.org>
+Cc:     Dave Chinner <david@fromorbit.com>,
+        Linus Torvalds <torvalds@linux-foundation.org>,
+        Amir Goldstein <amir73il@gmail.com>,
+        Kent Overstreet <kent.overstreet@linux.dev>,
+        Christian Brauner <brauner@kernel.org>,
+        Alexander Viro <viro@zeniv.linux.org.uk>,
+        John Stultz <jstultz@google.com>,
+        Thomas Gleixner <tglx@linutronix.de>,
+        Stephen Boyd <sboyd@kernel.org>,
+        Chandan Babu R <chandan.babu@oracle.com>,
+        "Darrick J. Wong" <djwong@kernel.org>,
+        Theodore Ts'o <tytso@mit.edu>,
+        Andreas Dilger <adilger.kernel@dilger.ca>,
+        Chris Mason <clm@fb.com>, Josef Bacik <josef@toxicpanda.com>,
+        David Sterba <dsterba@suse.com>,
+        Hugh Dickins <hughd@google.com>,
+        Andrew Morton <akpm@linux-foundation.org>,
+        Jan Kara <jack@suse.de>, David Howells <dhowells@redhat.com>,
+        linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-xfs@vger.kernel.org, linux-ext4@vger.kernel.org,
+        linux-btrfs@vger.kernel.org, linux-mm@kvack.org,
+        linux-nfs@vger.kernel.org
+Subject: Re: [PATCH RFC 2/9] timekeeping: new interfaces for multigrain
+ timestamp handing
+In-Reply-To: <b4c04efdde3bc7d107d0bdc68e100a94942aca3c.camel@kernel.org>
+References: <CAHk-=whphyjjLwDcEthOOFXXfgwGrtrMnW2iyjdQioV6YSMEPw@mail.gmail.com>
+        <ZTc8tClCRkfX3kD7@dread.disaster.area>
+        <CAOQ4uxhJGkZrUdUJ72vjRuLec0g8VqgRXRH=x7W9ogMU6rBxcQ@mail.gmail.com>
+        <d539804a2a73ad70265c5fa599ecd663cd235843.camel@kernel.org>
+        <ZTjMRRqmlJ+fTys2@dread.disaster.area>
+        <2ef9ac6180e47bc9cc8edef20648a000367c4ed2.camel@kernel.org>
+        <ZTnNCytHLGoJY9ds@dread.disaster.area>
+        <6df5ea54463526a3d898ed2bd8a005166caa9381.camel@kernel.org>
+        <ZUAwFkAizH1PrIZp@dread.disaster.area>
+        <CAHk-=wg4jyTxO8WWUc1quqSETGaVsPHh8UeFUROYNwU-fEbkJg@mail.gmail.com>
+        <ZUBbj8XsA6uW8ZDK@dread.disaster.area>
+        <b4c04efdde3bc7d107d0bdc68e100a94942aca3c.camel@kernel.org>
+X-Mailer: VM 8.2.0b under 27.1 (x86_64-pc-linux-gnu)
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Tue, Oct 31, 2023 at 09:53:30AM -0700, Darrick J. Wong wrote:
-> >  		if (!requeue_only) {
-> >  			xfs_extent_free_get_group(mp, &fake);
-> > +			if (xfs_efi_is_realtime(&fake))
-> > +				xfs_rtbitmap_lock(tp, mp);
-> 
-> Curious, I thought that patch "xfs: support logging EFIs for realtime
-> extents" already locked the rt bitmap?
+>>>>> "Jeff" == Jeff Layton <jlayton@kernel.org> writes:
 
-> So that by the time we get to this part of the loop, the rtbitmap will
-> be locked already?
+> On Tue, 2023-10-31 at 12:42 +1100, Dave Chinner wrote:
+>> On Mon, Oct 30, 2023 at 01:11:56PM -1000, Linus Torvalds wrote:
+>> > On Mon, 30 Oct 2023 at 12:37, Dave Chinner <david@fromorbit.com> wrote:
+>> > > 
+>> > > If XFS can ignore relatime or lazytime persistent updates for given
+>> > > situations, then *we don't need to make periodic on-disk updates of
+>> > > atime*. This makes the whole problem of "persistent atime update bumps
+>> > > i_version" go away because then we *aren't making persistent atime
+>> > > updates* except when some other persistent modification that bumps
+>> > > [cm]time occurs.
+>> > 
+>> > Well, I think this should be split into two independent questions:
+>> > 
+>> >  (a) are relatime or lazytime atime updates persistent if nothing else changes?
+>> 
+>> They only become persistent after 24 hours or, in the case of
+>> relatime, immediately persistent if mtime < atime (i.e. read after a
+>> modification). Those are the only times that the VFS triggers
+>> persistent writeback of atime, and it's the latter case (mtime <
+>> atime) that is the specific trigger that exposed the problem with
+>> atime bumping i_version in the first place.
+>> 
+>> >  (b) do atime updates _ever_ update i_version *regardless* of relatime
+>> > or lazytime?
+>> > 
+>> > and honestly, I think the best answer to (b) would be that "no,
+>> > i_version should simply not change for atime updates". And I think
+>> > that answer is what it is because no user of i_version seems to want
+>> > it.
+>> 
+>> As I keep repeating: Repeatedly stating that "atime should not bump
+>> i_version" does not address the questions I'm asking *at all*.
+>> 
+>> > Now, the reason it's a single question for you is that apparently for
+>> > XFS, the only thing that matters is "inode was written to disk" and
+>> > that "di_changecount" value is thus related to the persistence of
+>> > atime updates, but splitting di_changecount out to be a separate thing
+>> > from i_version seems to be on the table, so I think those two things
+>> > really could be independent issues.
+>> 
+>> Wrong way around - we'd have to split i_version out from
+>> di_changecount. It's i_version that has changed semantics, not
+>> di_changecount, and di_changecount behaviour must remain unchanged.
+>> 
 
-Yes.  Indeed that problem was caused by my hacked tree.  Feel free to
-discard this message.
+> I have to take issue with your characterization of this. The
+> requirements for NFS's change counter have not changed. Clearly there
+> was a breakdown in communications when it was first implemented in Linux
+> that caused atime updates to get counted in the i_version value, but
+> that was never intentional and never by design.
+
+This has been bugging me, but all the references to NFS really mean
+NFSv4.1 or newer, correct?  I can't see how any of this affects NFSv3
+at all, and that's probably the still dominant form of NFS, right?  
+
+John
