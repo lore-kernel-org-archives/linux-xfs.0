@@ -2,131 +2,160 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 34CC7C41535
-	for <linux-xfs@archiver.kernel.org>; Tue, 31 Oct 2023 19:49:11 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 527EFC4332F
+	for <linux-xfs@archiver.kernel.org>; Tue, 31 Oct 2023 21:24:06 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235049AbjJaTtL (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 31 Oct 2023 15:49:11 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38562 "EHLO
+        id S231896AbjJaVYG (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 31 Oct 2023 17:24:06 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38658 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S234972AbjJaTtL (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 31 Oct 2023 15:49:11 -0400
-X-Greylist: delayed 361 seconds by postgrey-1.37 at lindbergh.monkeyblade.net; Tue, 31 Oct 2023 12:49:08 PDT
-Received: from mail.stoffel.org (mail.stoffel.org [172.104.24.175])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7C4BE83;
-        Tue, 31 Oct 2023 12:49:08 -0700 (PDT)
-Received: from quad.stoffel.org (097-095-183-072.res.spectrum.com [97.95.183.72])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-        (No client certificate requested)
-        by mail.stoffel.org (Postfix) with ESMTPSA id 5EB591E12B;
-        Tue, 31 Oct 2023 15:43:05 -0400 (EDT)
-Received: by quad.stoffel.org (Postfix, from userid 1000)
-        id 80C85A8B01; Tue, 31 Oct 2023 15:43:04 -0400 (EDT)
+        with ESMTP id S229649AbjJaVYG (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 31 Oct 2023 17:24:06 -0400
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 99E36B9
+        for <linux-xfs@vger.kernel.org>; Tue, 31 Oct 2023 14:24:03 -0700 (PDT)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 3CEAAC433C8;
+        Tue, 31 Oct 2023 21:24:03 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1698787443;
+        bh=yG0llj7B9GeXoCpO0cfyCJwVNpkXJehxqfb24+EQQkk=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=NAfFKZgcW/xCDDeJeaJBNbpdonPzwuWtaHi8k81xgk1xA9g7klJYdbP0vJ6TMNuiU
+         KPaZF8EuSH+sc86VXvF1qeeTUfs754rJCl1COCYwHCICVlYcyCYFvNzKxRo+EdL3ql
+         NdcczPzHgYw5y+my+5s7ZIZ/QKfbGJWu4tJauOnMYE38dStUXCbbHvh0uK0jJ2hw5A
+         WFGhFf221iUgq/2s+9HBrevAtlVzAcBHdlisZRrRuv9yIbU1joN3a1Zvjy8dIbW+Ns
+         07hk0b/s4rKrQdKTM19B99V3bbjXnTNSHVeP8YY+7PPJHw1L0obzXd2r6QZMVaF9a1
+         jKDRC6B7Hrn6g==
+Date:   Tue, 31 Oct 2023 14:24:00 -0700
+From:   "Darrick J. Wong" <djwong@kernel.org>
+To:     Omar Sandoval <osandov@osandov.com>
+Cc:     linux-xfs@vger.kernel.org, kernel-team@fb.com,
+        Dave Chinner <dchinner@redhat.com>
+Subject: Re: [PATCH v2] xfs: fix internal error from AGFL exhaustion
+Message-ID: <20231031212400.GA1205143@frogsfrogsfrogs>
+References: <68cd85697855f686529829a2825b044913148caf.1698699188.git.osandov@fb.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
-Message-ID: <25921.22728.501691.76305@quad.stoffel.home>
-Date:   Tue, 31 Oct 2023 15:43:04 -0400
-From:   "John Stoffel" <john@stoffel.org>
-To:     Jeff Layton <jlayton@kernel.org>
-Cc:     Dave Chinner <david@fromorbit.com>,
-        Linus Torvalds <torvalds@linux-foundation.org>,
-        Amir Goldstein <amir73il@gmail.com>,
-        Kent Overstreet <kent.overstreet@linux.dev>,
-        Christian Brauner <brauner@kernel.org>,
-        Alexander Viro <viro@zeniv.linux.org.uk>,
-        John Stultz <jstultz@google.com>,
-        Thomas Gleixner <tglx@linutronix.de>,
-        Stephen Boyd <sboyd@kernel.org>,
-        Chandan Babu R <chandan.babu@oracle.com>,
-        "Darrick J. Wong" <djwong@kernel.org>,
-        Theodore Ts'o <tytso@mit.edu>,
-        Andreas Dilger <adilger.kernel@dilger.ca>,
-        Chris Mason <clm@fb.com>, Josef Bacik <josef@toxicpanda.com>,
-        David Sterba <dsterba@suse.com>,
-        Hugh Dickins <hughd@google.com>,
-        Andrew Morton <akpm@linux-foundation.org>,
-        Jan Kara <jack@suse.de>, David Howells <dhowells@redhat.com>,
-        linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-xfs@vger.kernel.org, linux-ext4@vger.kernel.org,
-        linux-btrfs@vger.kernel.org, linux-mm@kvack.org,
-        linux-nfs@vger.kernel.org
-Subject: Re: [PATCH RFC 2/9] timekeeping: new interfaces for multigrain
- timestamp handing
-In-Reply-To: <b4c04efdde3bc7d107d0bdc68e100a94942aca3c.camel@kernel.org>
-References: <CAHk-=whphyjjLwDcEthOOFXXfgwGrtrMnW2iyjdQioV6YSMEPw@mail.gmail.com>
-        <ZTc8tClCRkfX3kD7@dread.disaster.area>
-        <CAOQ4uxhJGkZrUdUJ72vjRuLec0g8VqgRXRH=x7W9ogMU6rBxcQ@mail.gmail.com>
-        <d539804a2a73ad70265c5fa599ecd663cd235843.camel@kernel.org>
-        <ZTjMRRqmlJ+fTys2@dread.disaster.area>
-        <2ef9ac6180e47bc9cc8edef20648a000367c4ed2.camel@kernel.org>
-        <ZTnNCytHLGoJY9ds@dread.disaster.area>
-        <6df5ea54463526a3d898ed2bd8a005166caa9381.camel@kernel.org>
-        <ZUAwFkAizH1PrIZp@dread.disaster.area>
-        <CAHk-=wg4jyTxO8WWUc1quqSETGaVsPHh8UeFUROYNwU-fEbkJg@mail.gmail.com>
-        <ZUBbj8XsA6uW8ZDK@dread.disaster.area>
-        <b4c04efdde3bc7d107d0bdc68e100a94942aca3c.camel@kernel.org>
-X-Mailer: VM 8.2.0b under 27.1 (x86_64-pc-linux-gnu)
+Content-Disposition: inline
+In-Reply-To: <68cd85697855f686529829a2825b044913148caf.1698699188.git.osandov@fb.com>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
->>>>> "Jeff" == Jeff Layton <jlayton@kernel.org> writes:
+On Mon, Oct 30, 2023 at 02:00:02PM -0700, Omar Sandoval wrote:
+> From: Omar Sandoval <osandov@fb.com>
+> 
+> We've been seeing XFS errors like the following:
+> 
+> XFS: Internal error i != 1 at line 3526 of file fs/xfs/libxfs/xfs_btree.c.  Caller xfs_btree_insert+0x1ec/0x280
+> ...
+> Call Trace:
+>  xfs_corruption_error+0x94/0xa0
+>  xfs_btree_insert+0x221/0x280
+>  xfs_alloc_fixup_trees+0x104/0x3e0
+>  xfs_alloc_ag_vextent_size+0x667/0x820
+>  xfs_alloc_fix_freelist+0x5d9/0x750
+>  xfs_free_extent_fix_freelist+0x65/0xa0
+>  __xfs_free_extent+0x57/0x180
+> ...
+> 
+> This is the XFS_IS_CORRUPT() check in xfs_btree_insert() when
+> xfs_btree_insrec() fails.
+> 
+> After converting this into a panic and dissecting the core dump, I found
+> that xfs_btree_insrec() is failing because it's trying to split a leaf
+> node in the cntbt when the AG free list is empty. In particular, it's
+> failing to get a block from the AGFL _while trying to refill the AGFL_.
+> 
+> If a single operation splits every level of the bnobt and the cntbt (and
+> the rmapbt if it is enabled) at once, the free list will be empty. Then,
+> when the next operation tries to refill the free list, it allocates
+> space. If the allocation does not use a full extent, it will need to
+> insert records for the remaining space in the bnobt and cntbt. And if
+> those new records go in full leaves, the leaves (and potentially more
+> nodes up to the old root) need to be split.
+> 
+> Fix it by accounting for the additional splits that may be required to
+> refill the free list in the calculation for the minimum free list size.
+> 
+> P.S. As far as I can tell, this bug has existed for a long time -- maybe
+> back to xfs-history commit afdf80ae7405 ("Add XFS_AG_MAXLEVELS macros
+> ...") in April 1994! It requires a very unlucky sequence of events, and
+> in fact we didn't hit it until a particular sparse mmap workload updated
+> from 5.12 to 5.19. But this bug existed in 5.12, so it must've been
+> exposed by some other change in allocation or writeback patterns. It's
+> also much less likely to be hit with the rmapbt enabled, since that
+> increases the minimum free list size and is unlikely to split at the
+> same time as the bnobt and cntbt.
+> 
+> Signed-off-by: Omar Sandoval <osandov@fb.com>
+> ---
+> Changes since v1 [1]:
+> 
+> - Updated calculation to account for internal nodes that may also need
+>   to be split.
+> - Updated comments and commit message accordingly.
+> 
+> 1: https://lore.kernel.org/linux-xfs/ZTrSiwF7OAq0hJHn@dread.disaster.area/T/
+> 
+>  fs/xfs/libxfs/xfs_alloc.c | 25 ++++++++++++++++++++++---
+>  1 file changed, 22 insertions(+), 3 deletions(-)
+> 
+> diff --git a/fs/xfs/libxfs/xfs_alloc.c b/fs/xfs/libxfs/xfs_alloc.c
+> index 3069194527dd..3949c6ad0cce 100644
+> --- a/fs/xfs/libxfs/xfs_alloc.c
+> +++ b/fs/xfs/libxfs/xfs_alloc.c
+> @@ -2275,16 +2275,35 @@ xfs_alloc_min_freelist(
+>  
+>  	ASSERT(mp->m_alloc_maxlevels > 0);
+>  
+> +	/*
+> +	 * For a btree shorter than the maximum height, the worst case is that
+> +	 * every level gets split and a new level is added, then while inserting
+> +	 * another entry to refill the AGFL, every level under the old root gets
+> +	 * split again. This is:
+> +	 *
+> +	 *   (current height + 1) + (current height - 1)
 
-> On Tue, 2023-10-31 at 12:42 +1100, Dave Chinner wrote:
->> On Mon, Oct 30, 2023 at 01:11:56PM -1000, Linus Torvalds wrote:
->> > On Mon, 30 Oct 2023 at 12:37, Dave Chinner <david@fromorbit.com> wrote:
->> > > 
->> > > If XFS can ignore relatime or lazytime persistent updates for given
->> > > situations, then *we don't need to make periodic on-disk updates of
->> > > atime*. This makes the whole problem of "persistent atime update bumps
->> > > i_version" go away because then we *aren't making persistent atime
->> > > updates* except when some other persistent modification that bumps
->> > > [cm]time occurs.
->> > 
->> > Well, I think this should be split into two independent questions:
->> > 
->> >  (a) are relatime or lazytime atime updates persistent if nothing else changes?
->> 
->> They only become persistent after 24 hours or, in the case of
->> relatime, immediately persistent if mtime < atime (i.e. read after a
->> modification). Those are the only times that the VFS triggers
->> persistent writeback of atime, and it's the latter case (mtime <
->> atime) that is the specific trigger that exposed the problem with
->> atime bumping i_version in the first place.
->> 
->> >  (b) do atime updates _ever_ update i_version *regardless* of relatime
->> > or lazytime?
->> > 
->> > and honestly, I think the best answer to (b) would be that "no,
->> > i_version should simply not change for atime updates". And I think
->> > that answer is what it is because no user of i_version seems to want
->> > it.
->> 
->> As I keep repeating: Repeatedly stating that "atime should not bump
->> i_version" does not address the questions I'm asking *at all*.
->> 
->> > Now, the reason it's a single question for you is that apparently for
->> > XFS, the only thing that matters is "inode was written to disk" and
->> > that "di_changecount" value is thus related to the persistence of
->> > atime updates, but splitting di_changecount out to be a separate thing
->> > from i_version seems to be on the table, so I think those two things
->> > really could be independent issues.
->> 
->> Wrong way around - we'd have to split i_version out from
->> di_changecount. It's i_version that has changed semantics, not
->> di_changecount, and di_changecount behaviour must remain unchanged.
->> 
+Could you make this comment define this relationship more explicitly?
 
-> I have to take issue with your characterization of this. The
-> requirements for NFS's change counter have not changed. Clearly there
-> was a breakdown in communications when it was first implemented in Linux
-> that caused atime updates to get counted in the i_version value, but
-> that was never intentional and never by design.
+	 *   (full height split reservation) + (AGFL refill split height)
+	 *   (current height + 1) + (current height - 1)
 
-This has been bugging me, but all the references to NFS really mean
-NFSv4.1 or newer, correct?  I can't see how any of this affects NFSv3
-at all, and that's probably the still dominant form of NFS, right?  
+With that added,
+Reviewed-by: Darrick J. Wong <djwong@kernel.org>
 
-John
+--D
+
+
+> +	 * = (new height)         + (new height - 2)
+> +	 * = 2 * new height - 2
+> +	 *
+> +	 * For a btree of maximum height, the worst case is that every level
+> +	 * under the root gets split, then while inserting another entry to
+> +	 * refill the AGFL, every level under the root gets split again. This is
+> +	 * also:
+> +	 *
+> +	 *   2 * (new_height - 1)
+> +	 * = 2 * new height - 2
+> +	 */
+> +
+>  	/* space needed by-bno freespace btree */
+>  	min_free = min_t(unsigned int, levels[XFS_BTNUM_BNOi] + 1,
+> -				       mp->m_alloc_maxlevels);
+> +				       mp->m_alloc_maxlevels) * 2 - 2;
+>  	/* space needed by-size freespace btree */
+>  	min_free += min_t(unsigned int, levels[XFS_BTNUM_CNTi] + 1,
+> -				       mp->m_alloc_maxlevels);
+> +				       mp->m_alloc_maxlevels) * 2 - 2;
+>  	/* space needed reverse mapping used space btree */
+>  	if (xfs_has_rmapbt(mp))
+>  		min_free += min_t(unsigned int, levels[XFS_BTNUM_RMAPi] + 1,
+> -						mp->m_rmap_maxlevels);
+> +						mp->m_rmap_maxlevels) * 2 - 2;
+>  
+>  	return min_free;
+>  }
+> -- 
+> 2.41.0
+> 
