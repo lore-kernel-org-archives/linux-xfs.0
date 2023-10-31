@@ -2,65 +2,215 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B6BBBC4332F
-	for <linux-xfs@archiver.kernel.org>; Tue, 31 Oct 2023 10:53:34 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 10BEAC4167D
+	for <linux-xfs@archiver.kernel.org>; Tue, 31 Oct 2023 11:05:01 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1343983AbjJaKxe (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 31 Oct 2023 06:53:34 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40022 "EHLO
+        id S1343776AbjJaLFB (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 31 Oct 2023 07:05:01 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58092 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1344003AbjJaKxe (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 31 Oct 2023 06:53:34 -0400
+        with ESMTP id S233770AbjJaLFA (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 31 Oct 2023 07:05:00 -0400
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1CF63BB
-        for <linux-xfs@vger.kernel.org>; Tue, 31 Oct 2023 03:53:32 -0700 (PDT)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 12426C433C8;
-        Tue, 31 Oct 2023 10:53:31 +0000 (UTC)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 15E0EE4;
+        Tue, 31 Oct 2023 04:04:58 -0700 (PDT)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 7655DC433C8;
+        Tue, 31 Oct 2023 11:04:55 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1698749611;
-        bh=gxTIuIEVQCXZGKQMzAchM7xFhsen1RbIdvVz+ZT7aqE=;
-        h=References:From:To:Cc:Subject:Date:In-reply-to:From;
-        b=VuZzEIEhzzRIQELD9FQG9asmlBB3IDjFnbxcEdOt1il6gn/MqAVoYX9eg8VREj2BA
-         KmSeMiJI5yTRpBhlApBJjWgDUkwBOStolXhyV/WopXKJmLr7xF939ZkQpW9Mm1aFoh
-         FRsQWPbSVlONWs/DOtF3uKl2vW1IBvw3lnaRpYtivl4jA3+qJZnLPsVwVh1NtAH9iy
-         zv3sJRhcNQyORUur6PM3Vidiw/auZXxdRcQTEMnjtL3qcZoe+eh/NaMa2ZlsB6epVB
-         vVUDFdQaHfGuS8sh0KdOKbr5OCYcX2m53llfTgTxzyA9trxBecQ8fC5WeloB5miWMc
-         wyygOGDgOQ5IQ==
-References: <87fs1s3bk6.fsf@debian-BULLSEYE-live-builder-AMD64>
- <20231031090242.GA25889@lst.de>
-User-agent: mu4e 1.8.10; emacs 27.1
-From:   Chandan Babu R <chandanbabu@kernel.org>
-To:     Christoph Hellwig <hch@lst.de>
-Cc:     catherine.hoang@oracle.com, cheng.lin130@zte.com.cn,
-        dan.j.williams@intel.com, dchinner@redhat.com, djwong@kernel.org,
-        linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org,
-        osandov@fb.com, ruansy.fnst@fujitsu.com
-Subject: Re: [ANNOUNCE] xfs-linux: for-next updated to 22c2699cb068
-Date:   Tue, 31 Oct 2023 16:17:35 +0530
-In-reply-to: <20231031090242.GA25889@lst.de>
-Message-ID: <87a5rzjc5z.fsf@debian-BULLSEYE-live-builder-AMD64>
+        s=k20201202; t=1698750297;
+        bh=seof9F/T3buCREfnRaM8n/SGCO7U8Q7G81Pbh+MqLSc=;
+        h=Subject:From:To:Cc:Date:In-Reply-To:References:From;
+        b=B0/jmFqpkWT9SLBYRDZGYIX/pJjNs4MsJ8bvvsaA4U4aW11phg5v1ZDR7id8JsNUd
+         zw7wKFBCoOozkUMgXREp3NScaoG75PhGVvyT0DRWC4CndqXfatxmQYN7afSYzvYzxl
+         Ew7aofGgt6KnA+bRoHMQRacfMT4SYz6jJClpQc4An/W3pqbp0PvDWQ0UFMhO3l6/uK
+         KlW1kzDr8H8qNnylIjSfelxj+IdLb9WebVPPRYxrpln//fJ9fD57xi8zLr4p9dCDnG
+         V9CUqL2LTaeMvAOIBUYTnePoIIgDRfOTBSgaPm/0Vsr0resDDxv6fsqVKLu0+aoWQe
+         uU5kVJIfA5VRg==
+Message-ID: <d5965ba7ed012433a9914ba38a6046f2ddb015ac.camel@kernel.org>
+Subject: Re: [PATCH RFC 2/9] timekeeping: new interfaces for multigrain
+ timestamp handing
+From:   Jeff Layton <jlayton@kernel.org>
+To:     Dave Chinner <david@fromorbit.com>
+Cc:     Amir Goldstein <amir73il@gmail.com>,
+        Linus Torvalds <torvalds@linux-foundation.org>,
+        Kent Overstreet <kent.overstreet@linux.dev>,
+        Christian Brauner <brauner@kernel.org>,
+        Alexander Viro <viro@zeniv.linux.org.uk>,
+        John Stultz <jstultz@google.com>,
+        Thomas Gleixner <tglx@linutronix.de>,
+        Stephen Boyd <sboyd@kernel.org>,
+        Chandan Babu R <chandan.babu@oracle.com>,
+        "Darrick J. Wong" <djwong@kernel.org>,
+        Theodore Ts'o <tytso@mit.edu>,
+        Andreas Dilger <adilger.kernel@dilger.ca>,
+        Chris Mason <clm@fb.com>, Josef Bacik <josef@toxicpanda.com>,
+        David Sterba <dsterba@suse.com>,
+        Hugh Dickins <hughd@google.com>,
+        Andrew Morton <akpm@linux-foundation.org>,
+        Jan Kara <jack@suse.de>, David Howells <dhowells@redhat.com>,
+        linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-xfs@vger.kernel.org, linux-ext4@vger.kernel.org,
+        linux-btrfs@vger.kernel.org, linux-mm@kvack.org,
+        linux-nfs@vger.kernel.org
+Date:   Tue, 31 Oct 2023 07:04:53 -0400
+In-Reply-To: <ZUAwFkAizH1PrIZp@dread.disaster.area>
+References: <61b32a4093948ae1ae8603688793f07de764430f.camel@kernel.org>
+         <ZTcBI2xaZz1GdMjX@dread.disaster.area>
+         <CAHk-=whphyjjLwDcEthOOFXXfgwGrtrMnW2iyjdQioV6YSMEPw@mail.gmail.com>
+         <ZTc8tClCRkfX3kD7@dread.disaster.area>
+         <CAOQ4uxhJGkZrUdUJ72vjRuLec0g8VqgRXRH=x7W9ogMU6rBxcQ@mail.gmail.com>
+         <d539804a2a73ad70265c5fa599ecd663cd235843.camel@kernel.org>
+         <ZTjMRRqmlJ+fTys2@dread.disaster.area>
+         <2ef9ac6180e47bc9cc8edef20648a000367c4ed2.camel@kernel.org>
+         <ZTnNCytHLGoJY9ds@dread.disaster.area>
+         <6df5ea54463526a3d898ed2bd8a005166caa9381.camel@kernel.org>
+         <ZUAwFkAizH1PrIZp@dread.disaster.area>
+Content-Type: text/plain; charset="ISO-8859-15"
+Content-Transfer-Encoding: quoted-printable
+User-Agent: Evolution 3.48.4 (3.48.4-1.fc38) 
 MIME-Version: 1.0
-Content-Type: text/plain
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Tue, Oct 31, 2023 at 10:02:42 AM +0100, Christoph Hellwig wrote:
-> Can you also pick up:
->
-> "xfs: only remap the written blocks in xfs_reflink_end_cow_extent"
->
-> ?
+On Tue, 2023-10-31 at 09:37 +1100, Dave Chinner wrote:
+> On Fri, Oct 27, 2023 at 06:35:58AM -0400, Jeff Layton wrote:
+> > On Thu, 2023-10-26 at 13:20 +1100, Dave Chinner wrote:
+> > > On Wed, Oct 25, 2023 at 08:25:35AM -0400, Jeff Layton wrote:
+> > > > On Wed, 2023-10-25 at 19:05 +1100, Dave Chinner wrote:
+> > > > > On Tue, Oct 24, 2023 at 02:40:06PM -0400, Jeff Layton wrote:
+> > > > In earlier discussions you alluded to some repair and/or analysis t=
+ools
+> > > > that depended on this counter.
+> > >=20
+> > > Yes, and one of those "tools" is *me*.
+> > >=20
+> > > I frequently look at the di_changecount when doing forensic and/or
+> > > failure analysis on filesystem corpses.  SOE analysis, relative
+> > > modification activity, etc all give insight into what happened to
+> > > the filesystem to get it into the state it is currently in, and
+> > > di_changecount provides information no other metadata in the inode
+> > > contains.
+> > >=20
+> > > > I took a quick look in xfsprogs, but I
+> > > > didn't see anything there. Is there a library or something that the=
+se
+> > > > tools use to get at this value?
+> > >=20
+> > > xfs_db is the tool I use for this, such as:
+> > >=20
+> > > $ sudo xfs_db -c "sb 0" -c "a rootino" -c "p v3.change_count" /dev/ma=
+pper/fast
+> > > v3.change_count =3D 35
+> > > $
+> > >=20
+> > > The root inode in this filesystem has a change count of 35. The root
+> > > inode has 32 dirents in it, which means that no entries have ever
+> > > been removed or renamed. This sort of insight into the past history
+> > > of inode metadata is largely impossible to get any other way, and
+> > > it's been the difference between understanding failure and having no
+> > > clue more than once.
+> > >=20
+> > > Most block device parsing applications simply write their own
+> > > decoder that walks the on-disk format. That's pretty trivial to do,
+> > > developers can get all the information needed to do this from the
+> > > on-disk format specification documentation we keep on kernel.org...
+> > >=20
+> >=20
+> > Fair enough. I'm not here to tell you that you guys that you need to
+> > change how di_changecount works. If it's too valuable to keep it
+> > counting atime-only updates, then so be it.
+> >=20
+> > If that's the case however, and given that the multigrain timestamp wor=
+k
+> > is effectively dead, then I don't see an alternative to growing the on-
+> > disk inode. Do you?
+>=20
+> Yes, I do see alternatives. That's what I've been trying
+> (unsuccessfully) to describe and get consensus on. I feel like I'm
+> being ignored and rail-roaded here, because nobody is even
+> acknowledging that I'm proposing alternatives and keeps insisting
+> that the only solution is a change of on-disk format.
+>=20
+> So, I'll summarise the situation *yet again* in the hope that this
+> time I won't get people arguing about atime vs i-version and what
+> constitutes an on-disk format change because that goes nowhere and
+> does nothing to determine which solution might be acceptible.
+>=20
+> The basic situation is this:
+>=20
+> If XFS can ignore relatime or lazytime persistent updates for given
+> situations, then *we don't need to make periodic on-disk updates of
+> atime*. This makes the whole problem of "persistent atime update bumps
+> i_version" go away because then we *aren't making persistent atime
+> updates* except when some other persistent modification that bumps
+> [cm]time occurs.
+>=20
+> But I don't want to do this unconditionally - for systems not
+> running anything that samples i_version we want relatime/lazytime
+> to behave as they are supposed to and do periodic persistent updates
+> as per normal. Principle of least surprise and all that jazz.
+>=20
+> So we really need an indication for inodes that we should enable this
+> mode for the inode. I have asked if we can have per-operation
+> context flag to trigger this given the needs for io_uring to have
+> context flags for timestamp updates to be added.=20
+>=20
+> I have asked if we can have an inode flag set by the VFS or
+> application code for this. e.g. a flag set by nfsd whenever it accesses a
+> given inode.
+>=20
+> I have asked if this inode flag can just be triggered if we ever see
+> I_VERSION_QUERIED set or statx is used to retrieve a change cookie,
+> and whether this is a reliable mechanism for setting such a flag.
+>=20
 
-Sorry, I missed the above patch. I will add it as part of fixes for 6.7-rc1.
+Ok, so to make sure I understand what you're proposing:
 
->
-> Also this seems to a bit of a mix of fixes for 6.7 and big stuff that
-> is too late for the merge window.
+This would be a new inode flag that would be set in conjunction with
+I_VERSION_QUERIED (but presumably is never cleared)? When XFS sees this
+flag set, it would skip sending the atime to disk.
 
-I ended up doing two rounds of testing since I had to execute the tests the
-second time after dropping the "xfs: up(ic_sema) if flushing data device
-fails" patch. I hope to send the pull request by end of Wednesday.
+Given that you want to avoid on-disk changes, I assume this flag will
+not be stored on disk. What happens after the NFS server reboots?
 
--- 
-Chandan
+Consider:
+
+1/ NFS server queries for the i_version and we set the
+I_NO_ATIME_UPDATES_ON_DISK flag (or whatever) in conjunction with
+I_VERSION_QUERIED. Some atime updates occur and the i_version isn't
+bumped (as you'd expect).
+
+2/ The server then reboots.
+
+3/ Server comes back up, and some local task issues a read against the
+inode. I_NO_ATIME_UPDATES_ON_DISK never had a chance to be set after the
+reboot, so that atime update ends up incrementing the i_version counter.
+
+4/ client cache invalidation occurs even though there was no write to
+the file
+
+This might reduce some of the spurious i_version bumps, but I don't see
+how it can eliminate them entirely.
+
+> I have suggested mechanisms for using masked off bits of timestamps
+> to encode sub-timestamp granularity change counts and keep them
+> invisible to userspace and then not using i_version at all for XFS.
+> This avoids all the problems that the multi-grain timestamp
+> infrastructure exposed due to variable granularity of user visible
+> timestamps and ordering across inodes with different granularity.
+> This is potentially a general solution, too.
+>=20
+
+I don't really understand this at all, but trying to do anything with
+fine-grained timestamps will just run into a lot of the same problems we
+hit with the multigrain work. If you still see this as a path forward,
+maybe you can describe it more detail?
+
+
+> So, yeah, there are *lots* of ways we can solve this problem without
+> needing to change on-disk formats.
+>=20
+
+--=20
+Jeff Layton <jlayton@kernel.org>
