@@ -2,123 +2,100 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0528FC41535
-	for <linux-xfs@archiver.kernel.org>; Wed,  1 Nov 2023 10:16:57 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 96472C4332F
+	for <linux-xfs@archiver.kernel.org>; Wed,  1 Nov 2023 11:30:54 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233631AbjKAKQ5 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 1 Nov 2023 06:16:57 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54782 "EHLO
+        id S235225AbjKALaz (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 1 Nov 2023 07:30:55 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45890 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233397AbjKAKQ4 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 1 Nov 2023 06:16:56 -0400
-Received: from smtp-out1.suse.de (smtp-out1.suse.de [195.135.220.28])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0C15C102;
-        Wed,  1 Nov 2023 03:16:51 -0700 (PDT)
-Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
-        (No client certificate requested)
-        by smtp-out1.suse.de (Postfix) with ESMTPS id 80D4E21A62;
-        Wed,  1 Nov 2023 10:16:49 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.cz; s=susede2_rsa;
-        t=1698833809; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=CFpkczKLmbO7DBmC+KuusmYf1M81/8uEj5OEO9u0an8=;
-        b=cIDBQeCeT6F/rRtPtuWsaxhbXCw/Oy8Nd3TyqIdVXqkKWHuejYiCFHWbJG36hEldNK/gE3
-        PmAIxp18ujdwD778pBZ/fbbmaGxjbOGZeg065cemuCDzPnGNMI05uyPZkJArv7AoMBGwNW
-        DccVThknuJ0/4feaYznjvdWoDckhhmY=
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.cz;
-        s=susede2_ed25519; t=1698833809;
-        h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=CFpkczKLmbO7DBmC+KuusmYf1M81/8uEj5OEO9u0an8=;
-        b=mvEEW889xoYvMMVwNIK0/VQCeU1UNx7tGnXGVlAFU0jWGpNvK1Hq0sOak6HpTutwkrFEmF
-        VSu8elpoFbhhjyDA==
-Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
-        (No client certificate requested)
-        by imap2.suse-dmz.suse.de (Postfix) with ESMTPS id 6E0F51348D;
-        Wed,  1 Nov 2023 10:16:49 +0000 (UTC)
-Received: from dovecot-director2.suse.de ([192.168.254.65])
-        by imap2.suse-dmz.suse.de with ESMTPSA
-        id +FrRGpElQmX8GwAAMHmgww
-        (envelope-from <jack@suse.cz>); Wed, 01 Nov 2023 10:16:49 +0000
-Received: by quack3.suse.cz (Postfix, from userid 1000)
-        id EF5D5A06E3; Wed,  1 Nov 2023 11:16:48 +0100 (CET)
-Date:   Wed, 1 Nov 2023 11:16:48 +0100
-From:   Jan Kara <jack@suse.cz>
-To:     Dave Chinner <david@fromorbit.com>
-Cc:     Jeff Layton <jlayton@kernel.org>,
-        Amir Goldstein <amir73il@gmail.com>,
-        Linus Torvalds <torvalds@linux-foundation.org>,
-        Kent Overstreet <kent.overstreet@linux.dev>,
-        Christian Brauner <brauner@kernel.org>,
-        Alexander Viro <viro@zeniv.linux.org.uk>,
-        John Stultz <jstultz@google.com>,
-        Thomas Gleixner <tglx@linutronix.de>,
-        Stephen Boyd <sboyd@kernel.org>,
-        Chandan Babu R <chandan.babu@oracle.com>,
-        "Darrick J. Wong" <djwong@kernel.org>,
-        Theodore Ts'o <tytso@mit.edu>,
-        Andreas Dilger <adilger.kernel@dilger.ca>,
-        Chris Mason <clm@fb.com>, Josef Bacik <josef@toxicpanda.com>,
-        David Sterba <dsterba@suse.com>,
-        Hugh Dickins <hughd@google.com>,
-        Andrew Morton <akpm@linux-foundation.org>,
-        Jan Kara <jack@suse.de>, David Howells <dhowells@redhat.com>,
-        linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-xfs@vger.kernel.org, linux-ext4@vger.kernel.org,
-        linux-btrfs@vger.kernel.org, linux-mm@kvack.org,
-        linux-nfs@vger.kernel.org
-Subject: Re: [PATCH RFC 2/9] timekeeping: new interfaces for multigrain
- timestamp handing
-Message-ID: <20231101101648.zjloqo5su6bbxzff@quack3>
-References: <ZTjMRRqmlJ+fTys2@dread.disaster.area>
- <2ef9ac6180e47bc9cc8edef20648a000367c4ed2.camel@kernel.org>
- <ZTnNCytHLGoJY9ds@dread.disaster.area>
- <6df5ea54463526a3d898ed2bd8a005166caa9381.camel@kernel.org>
- <ZUAwFkAizH1PrIZp@dread.disaster.area>
- <CAHk-=wg4jyTxO8WWUc1quqSETGaVsPHh8UeFUROYNwU-fEbkJg@mail.gmail.com>
- <ZUBbj8XsA6uW8ZDK@dread.disaster.area>
- <CAOQ4uxgSRw26J+MPK-zhysZX9wBkXFRNx+n1bwnQwykCJ1=F4Q@mail.gmail.com>
- <3d6a4c21626e6bbb86761a6d39e0fafaf30a4a4d.camel@kernel.org>
- <ZUF4NTxQXpkJADxf@dread.disaster.area>
+        with ESMTP id S235207AbjKALay (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 1 Nov 2023 07:30:54 -0400
+Received: from esa9.hc1455-7.c3s2.iphmx.com (esa9.hc1455-7.c3s2.iphmx.com [139.138.36.223])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9AF43121;
+        Wed,  1 Nov 2023 04:30:51 -0700 (PDT)
+X-IronPort-AV: E=McAfee;i="6600,9927,10880"; a="126581274"
+X-IronPort-AV: E=Sophos;i="6.03,268,1694703600"; 
+   d="scan'208";a="126581274"
+Received: from unknown (HELO yto-r1.gw.nic.fujitsu.com) ([218.44.52.217])
+  by esa9.hc1455-7.c3s2.iphmx.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 01 Nov 2023 20:30:49 +0900
+Received: from yto-m1.gw.nic.fujitsu.com (yto-nat-yto-m1.gw.nic.fujitsu.com [192.168.83.64])
+        by yto-r1.gw.nic.fujitsu.com (Postfix) with ESMTP id E7ECDD9DA9;
+        Wed,  1 Nov 2023 20:30:46 +0900 (JST)
+Received: from kws-ab3.gw.nic.fujitsu.com (kws-ab3.gw.nic.fujitsu.com [192.51.206.21])
+        by yto-m1.gw.nic.fujitsu.com (Postfix) with ESMTP id 39C19CFA5A;
+        Wed,  1 Nov 2023 20:30:46 +0900 (JST)
+Received: from edo.cn.fujitsu.com (edo.cn.fujitsu.com [10.167.33.5])
+        by kws-ab3.gw.nic.fujitsu.com (Postfix) with ESMTP id A83FB20077827;
+        Wed,  1 Nov 2023 20:30:45 +0900 (JST)
+Received: from [192.168.50.5] (unknown [10.167.226.34])
+        by edo.cn.fujitsu.com (Postfix) with ESMTP id 3C78C1A006F;
+        Wed,  1 Nov 2023 19:30:44 +0800 (CST)
+Message-ID: <88e9bc61-ac74-4503-a29a-d4f8dba841c1@fujitsu.com>
+Date:   Wed, 1 Nov 2023 19:30:43 +0800
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <ZUF4NTxQXpkJADxf@dread.disaster.area>
+User-Agent: Mozilla Thunderbird
+Subject: Re: [ANNOUNCE] xfs-linux: for-next updated to 22c2699cb068
+To:     Chandan Babu R <chandanbabu@kernel.org>
+Cc:     Christoph Hellwig <hch@lst.de>, catherine.hoang@oracle.com,
+        cheng.lin130@zte.com.cn, dan.j.williams@intel.com,
+        dchinner@redhat.com, linux-fsdevel@vger.kernel.org,
+        linux-xfs@vger.kernel.org, osandov@fb.com,
+        "Darrick J. Wong" <djwong@kernel.org>
+References: <87fs1s3bk6.fsf@debian-BULLSEYE-live-builder-AMD64>
+ <20231031090242.GA25889@lst.de> <20231031164359.GA1041814@frogsfrogsfrogs>
+ <875y2mk9fo.fsf@debian-BULLSEYE-live-builder-AMD64>
+From:   Shiyang Ruan <ruansy.fnst@fujitsu.com>
+In-Reply-To: <875y2mk9fo.fsf@debian-BULLSEYE-live-builder-AMD64>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 8bit
+X-TM-AS-GCONF: 00
+X-TM-AS-Product-Ver: IMSS-9.1.0.1417-9.0.0.1002-27970.007
+X-TM-AS-User-Approved-Sender: Yes
+X-TMASE-Version: IMSS-9.1.0.1417-9.0.1002-27970.007
+X-TMASE-Result: 10--12.676000-10.000000
+X-TMASE-MatchedRID: mafpUJSAc1CPvrMjLFD6eHchRkqzj/bEC/ExpXrHizxBqLOmHiM3w/tl
+        NRuGlPT/GApc67FGFgwxeHwgHyVfP9MMbVgJKQCJatGCGdi/nWoxXH/dlhvLv8v8BP3RkorXVhY
+        Zjy1spv54uAitfy71buI0KIuLJPBCh2Em++ruuH+OtWfhyZ77DithirXYhZk5Uqcf/uZ2V1ijxY
+        yRBa/qJQYnglAWdCYb9BIhiTDfOc3YoM82yqmFMvoLR4+zsDTtD12T7q2dIUtO7oA8A9JhHuM6H
+        GE5OQFKwFdBRkLAn2brh8DF2dbkaQ==
+X-TMASE-SNAP-Result: 1.821001.0001-0-1-22:0,33:0,34:0-0
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Wed 01-11-23 08:57:09, Dave Chinner wrote:
-> 5. When-ever the inode is persisted, the timestamp is copied to the
-> on-disk structure and the current change counter is folded in.
-> 
-> 	This means the on-disk structure always contains the latest
-> 	change attribute that has been persisted, just like we
-> 	currently do with i_version now.
-> 
-> 6. When-ever we read the inode off disk, we split the change counter
-> from the timestamp and update the appropriate internal structures
-> with this information.
-> 
-> 	This ensures that the VFS and userspace never see the change
-> 	counter implementation in the inode timestamps.
 
-OK, but is this compatible with the current XFS behavior? AFAICS currently
-XFS sets sb->s_time_gran to 1 so timestamps currently stored on disk will
-have some mostly random garbage in low bits of the ctime. Now if you look
-at such inode with a kernel using this new scheme, stat(2) will report
-ctime with low bits zeroed-out so if the ctime fetched in the old kernel was
-stored in some external database and compared to the newly fetched ctime, it
-will appear that ctime has gone backwards... Maybe we don't care but it is
-a user visible change that can potentially confuse something.
 
-								Honza
--- 
-Jan Kara <jack@suse.com>
-SUSE Labs, CR
+在 2023/11/1 1:02, Chandan Babu R 写道:
+> On Tue, Oct 31, 2023 at 09:43:59 AM -0700, Darrick J. Wong wrote:
+>> On Tue, Oct 31, 2023 at 10:02:42AM +0100, Christoph Hellwig wrote:
+>>> Can you also pick up:
+>>>
+>>> "xfs: only remap the written blocks in xfs_reflink_end_cow_extent"
+>>>
+>>> ?
+>>>
+>>> Also this seems to a bit of a mix of fixes for 6.7 and big stuff that
+>>> is too late for the merge window.
+>>
+>> If by 'big stuff' you mean the MF_MEM_PRE_REMOVE patch, then yes, I
+>> agree that it's too late to be changing code outside xfs.  Bumping that
+>> to 6.8 will disappoint Shiyang, regrettably.
+>>
+> 
+> I am sorry Shiyang, I will have to postpone your "mm, pmem, xfs: Introduce
+> MF_MEM_PRE_REMOVE for unbind" patch for v6.8. The delay was my
+> mistake. Apologies once again.
+
+Never mind~  Then we'll have more time to test it, make sure the 
+functionality is good.
+
+
+--
+Thanks,
+Ruan.
+
+> 
+> I have updated xfs-linux's for-next branch and I will be sending an
+> announcement shortly.
+> 
