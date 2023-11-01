@@ -2,142 +2,166 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 35E53C4167D
-	for <linux-xfs@archiver.kernel.org>; Wed,  1 Nov 2023 11:38:58 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5A418C4332F
+	for <linux-xfs@archiver.kernel.org>; Wed,  1 Nov 2023 14:59:04 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235288AbjKALi6 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 1 Nov 2023 07:38:58 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39620 "EHLO
+        id S232269AbjKAO7E (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 1 Nov 2023 10:59:04 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44802 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S235212AbjKALi5 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 1 Nov 2023 07:38:57 -0400
-Received: from mail-yw1-x112c.google.com (mail-yw1-x112c.google.com [IPv6:2607:f8b0:4864:20::112c])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 415F0F7;
-        Wed,  1 Nov 2023 04:38:55 -0700 (PDT)
-Received: by mail-yw1-x112c.google.com with SMTP id 00721157ae682-5a7afd45199so68560487b3.0;
-        Wed, 01 Nov 2023 04:38:55 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1698838734; x=1699443534; darn=vger.kernel.org;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=m59jZyxH1gZ4IkJNBzdNka8KVbsaoVT0nyeW9BoP3MY=;
-        b=AbceKytzbEm1fI6aJYaC1xgszi8ZaazKEewzYxEeIa1ryBQcvsQOrXMWoRCCtA1pZ9
-         xsRT6HfikEC13gutV14GgKFexrHw2ErdRcXEw++19GFKFn/iXSFPWGwtpeKOuMLORAzi
-         ImKVLOFcGgiDOvJXQ32c1gkFN1dQQzDLOsMu3J+UnF7O3wv8vr1GwiMK8t7yGT2YAA/1
-         x2fXufvwli5f4k3NfrLLRrTf0Uy6j+9QGZYKKngmgwzcwK8BEG6HM+qRZ01lphBr1EwC
-         L6OAQEEoL8mSAmPJ2a/3hyHMhcOyEbVTQRf1qzR64eVYw2+n0hcBKelPoQZiXZ9yrGdB
-         KLSw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1698838734; x=1699443534;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=m59jZyxH1gZ4IkJNBzdNka8KVbsaoVT0nyeW9BoP3MY=;
-        b=LHuLGLA8sPOhw2N+B3J0HXaBHCsw8MH1HJbkNQinAYvMIvK0Wztp2A7OnjDfd0G3/e
-         oGQvx+++BBKadAQXF0fEQ25qFn2uaR7E7oUdXrQYLGCEErqZiRQZbCJcORCsaHFsWrrj
-         j99x9CRlXGGDPjEZqUnracHP9iMiDaOWAq9VKYEmzKwaqqqfeFphMFowsJPbOSldYyPe
-         C5vaRYCvi55jtgMei4TBIrEh28xNEcpB7t7EqFt4/zwMrGf39NER4jhZgbbQfjSFKqEr
-         AmBf/XONrEgGmHYQGnyK1qYKX+WpGl6QJ2P8624oiDB6rZqpcw8oKjomIPn2xcpwZynr
-         g9Cw==
-X-Gm-Message-State: AOJu0Yy4kgZCJ7nwc78gR/YwxCT+a6wRIpxzf3doDasep0DvBKOXx73Q
-        DW0nuY+B5+tVKC+2dwiz2pcj5VLL2R3g3K2bTmM=
-X-Google-Smtp-Source: AGHT+IGPiQGs2flMchmrpUm3exXHwdHaIxqaR1nEgkE1E5+9YOWUy0Mc758PsX3a/8WhBl38xRZWvkoZHjkiwWqRbg8=
-X-Received: by 2002:a81:ae09:0:b0:5a7:dad7:61dd with SMTP id
- m9-20020a81ae09000000b005a7dad761ddmr15318204ywh.20.1698838734410; Wed, 01
- Nov 2023 04:38:54 -0700 (PDT)
+        with ESMTP id S231996AbjKAO7E (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 1 Nov 2023 10:59:04 -0400
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9F861FD
+        for <linux-xfs@vger.kernel.org>; Wed,  1 Nov 2023 07:59:01 -0700 (PDT)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 514B9C433C9;
+        Wed,  1 Nov 2023 14:59:00 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1698850741;
+        bh=CLfAo2Lr7gi5Q2v2wgj5rYBLOwXN8vxzAnUtKpyKbyY=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=LZlFe2H9M2kvsDNEiQwWcVwdMeticWhYGUbzvUM47Pak08KwA/+CTHlt1x22mssXt
+         Blq4LS41OSlTwEZ/wkR0070pXfPWJzDW088z8x7SlWs0zLAvGeSW0iumexNCXyVwnE
+         1DaloRGXvWfDDUHDiIgbjZ6NZUwXezGN3+cyE3QQDFJb2bOHQ9JaQdEFo9PgXelbZe
+         s4a0Gy0KvI+1U/x13CuhHgrN+8pir4EpQQYorKgZ1MZqnoIEn7gzfPwHpyJWNXJTKk
+         OQamSZfEj69s64+YB2wuTrNSD+dEiCJzEX4SVODIpyywnHXaf5ISKwzsYTkuAnyBmW
+         OY9OydV7yPxuQ==
+Date:   Wed, 1 Nov 2023 15:58:57 +0100
+From:   Carlos Maiolino <cem@kernel.org>
+To:     "Darrick J. Wong" <djwong@kernel.org>
+Cc:     Chandan Babu R <chandan.babu@oracle.com>, linux-xfs@vger.kernel.org
+Subject: Re: [PATCH V3 00/23] Metadump v2
+Message-ID: <ianvoh4ppvbem45brsimplhax32fdxnoylkc2xb6ra3wgyayln@qyzf5efdafvy>
+References: <20230724043527.238600-1-chandan.babu@oracle.com>
+ <zmMVayUsY-ViHdrS7GDAq2msR-u204qc5ppr-jOuQx-t7sh0Oid5kE7EC8WVhiqS02t6miNb3rjHZBknZUd-Kw==@protonmail.internalid>
+ <20231031164640.GB1041814@frogsfrogsfrogs>
 MIME-Version: 1.0
-References: <ZTjMRRqmlJ+fTys2@dread.disaster.area> <2ef9ac6180e47bc9cc8edef20648a000367c4ed2.camel@kernel.org>
- <ZTnNCytHLGoJY9ds@dread.disaster.area> <6df5ea54463526a3d898ed2bd8a005166caa9381.camel@kernel.org>
- <ZUAwFkAizH1PrIZp@dread.disaster.area> <CAHk-=wg4jyTxO8WWUc1quqSETGaVsPHh8UeFUROYNwU-fEbkJg@mail.gmail.com>
- <ZUBbj8XsA6uW8ZDK@dread.disaster.area> <CAOQ4uxgSRw26J+MPK-zhysZX9wBkXFRNx+n1bwnQwykCJ1=F4Q@mail.gmail.com>
- <3d6a4c21626e6bbb86761a6d39e0fafaf30a4a4d.camel@kernel.org>
- <ZUF4NTxQXpkJADxf@dread.disaster.area> <20231101101648.zjloqo5su6bbxzff@quack3>
-In-Reply-To: <20231101101648.zjloqo5su6bbxzff@quack3>
-From:   Amir Goldstein <amir73il@gmail.com>
-Date:   Wed, 1 Nov 2023 13:38:41 +0200
-Message-ID: <CAOQ4uxgGxtErFEcSdxoFDnZZ1XfmVKn2LT1dQcJqhNj5_rnC6A@mail.gmail.com>
-Subject: Re: [PATCH RFC 2/9] timekeeping: new interfaces for multigrain
- timestamp handing
-To:     Jan Kara <jack@suse.cz>
-Cc:     Dave Chinner <david@fromorbit.com>,
-        Jeff Layton <jlayton@kernel.org>,
-        Linus Torvalds <torvalds@linux-foundation.org>,
-        Kent Overstreet <kent.overstreet@linux.dev>,
-        Christian Brauner <brauner@kernel.org>,
-        Alexander Viro <viro@zeniv.linux.org.uk>,
-        John Stultz <jstultz@google.com>,
-        Thomas Gleixner <tglx@linutronix.de>,
-        Stephen Boyd <sboyd@kernel.org>,
-        Chandan Babu R <chandan.babu@oracle.com>,
-        "Darrick J. Wong" <djwong@kernel.org>,
-        "Theodore Ts'o" <tytso@mit.edu>,
-        Andreas Dilger <adilger.kernel@dilger.ca>,
-        Chris Mason <clm@fb.com>, Josef Bacik <josef@toxicpanda.com>,
-        David Sterba <dsterba@suse.com>,
-        Hugh Dickins <hughd@google.com>,
-        Andrew Morton <akpm@linux-foundation.org>,
-        Jan Kara <jack@suse.de>, David Howells <dhowells@redhat.com>,
-        linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-xfs@vger.kernel.org, linux-ext4@vger.kernel.org,
-        linux-btrfs@vger.kernel.org, linux-mm@kvack.org,
-        linux-nfs@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20231031164640.GB1041814@frogsfrogsfrogs>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Wed, Nov 1, 2023 at 12:16=E2=80=AFPM Jan Kara <jack@suse.cz> wrote:
->
-> On Wed 01-11-23 08:57:09, Dave Chinner wrote:
-> > 5. When-ever the inode is persisted, the timestamp is copied to the
-> > on-disk structure and the current change counter is folded in.
+On Tue, Oct 31, 2023 at 09:46:40AM -0700, Darrick J. Wong wrote:
+> On Mon, Jul 24, 2023 at 10:05:04AM +0530, Chandan Babu R wrote:
+> > Hi all,
 > >
-> >       This means the on-disk structure always contains the latest
-> >       change attribute that has been persisted, just like we
-> >       currently do with i_version now.
+> > This patch series extends metadump/mdrestore tools to be able to dump
+> > and restore contents of an external log device. It also adds the
+> > ability to copy larger blocks (e.g. 4096 bytes instead of 512 bytes)
+> > into the metadump file. These objectives are accomplished by
+> > introducing a new metadump file format.
+> 
+> Gentle maintainer ping: Carlos, do you have any thoughts about this
+> series?  The only unaddressed review comment was <cough> me asking for
+> code golf around patch 18 or so.  Do you (or anyone else) see any
+> problems that I've not spotted?
+
+Hi, it's been a while, but I looked into this series before, and I was mostly ok
+with it, I was actually waiting for a follow-up patch addressing your comments
+on patch 19, regarding mdrestore ops definition. My emails have been a bit funky
+recently, did I miss a new version of this series?
+
+Carlos
+
+> 
+> --D
+> 
 > >
-> > 6. When-ever we read the inode off disk, we split the change counter
-> > from the timestamp and update the appropriate internal structures
-> > with this information.
+> > I have tested the patchset by extending metadump/mdrestore tests in
+> > fstests to cover the newly introduced metadump v2 format. The tests
+> > can be found at
+> > https://github.com/chandanr/xfstests/commits/metadump-v2.
 > >
-> >       This ensures that the VFS and userspace never see the change
-> >       counter implementation in the inode timestamps.
->
-> OK, but is this compatible with the current XFS behavior? AFAICS currentl=
-y
-> XFS sets sb->s_time_gran to 1 so timestamps currently stored on disk will
-> have some mostly random garbage in low bits of the ctime. Now if you look
-> at such inode with a kernel using this new scheme, stat(2) will report
-> ctime with low bits zeroed-out so if the ctime fetched in the old kernel =
-was
-> stored in some external database and compared to the newly fetched ctime,=
- it
-> will appear that ctime has gone backwards... Maybe we don't care but it i=
-s
-> a user visible change that can potentially confuse something.
-
-See xfs_inode_has_bigtime() and auto-upgrade of inode format in
-xfs_inode_item_precommit().
-
-In the case of BIGTIME inode format, admin needs to opt-in to
-BIGTIME format conversion by setting an INCOMPAT_BIGTIME
-sb feature flag.
-
-I imagine that something similar (inode flag + sb flag) would need
-to be done for the versioned-timestamp, but I think that in that case,
-the feature flag could be RO_COMPAT - there is no harm in exposing
-made-up nsec lower bits if fs would be mounted read-only on an old
-kernel, is there?
-
-The same RO_COMPAT feature flag could also be used to determine
-s_time_gran, because IIUC, s_time_gran for timestamp updates
-is uniform across all inodes.
-
-I know that Dave said he wants to avoid changing on-disk format,
-but I am hoping that this well defined and backward compat with
-lazy upgrade, on-disk format change may be acceptable?
-
-Thanks,
-Amir.
+> > The patch series can also be obtained from
+> > https://github.com/chandanr/xfsprogs-dev/commits/metadump-v2.
+> >
+> > Darrick, Please note that I have removed your RVB from "metadump: Add
+> > support for passing version option" patch. copy_log() and metadump_f()
+> > were invoking set_log_cur() for both "internal log" and "external
+> > log". In the V3 patchset, I have modified the copy_log() function to,
+> > 1. Invoke set_log_cur() when the filesystem has an external log.
+> > 2. Invoke set_cur() when the filesystem has an internal log.
+> >
+> > Changelog:
+> > V2 -> V3:
+> >   1. Document the meanings of metadump v2's ondisk flags.
+> >   2. Rename metadump_ops->end_write() to metadump_ops->finish_dump().
+> >   3. Pass a pointer to the newly introduced "union mdrestore_headers"
+> >      to callbacks in "struct mdrestore_ops" instead of a pointer to
+> >      "void".
+> >   4. Use set_log_cur() only when metadump has to be read from an
+> >      external log device.
+> >   5. Verify that primary superblock read from metadump file was indeed
+> >      read from the data device.
+> >   6. Fix indentation issues.
+> >
+> > V1 -> V2:
+> >   1. Introduce the new incompat flag XFS_MD2_INCOMPAT_EXTERNALLOG to
+> >      indicate that the metadump file contains data obtained from an
+> >      external log.
+> >   2. Interpret bits 54 and 55 of xfs_meta_extent.xme_addr as a counter
+> >      such that 00 maps to the data device and 01 maps to the log
+> >      device.
+> >   3. Define the new function set_log_cur() to read from
+> >      internal/external log device. This allows us to continue using
+> >      TYP_LOG to read from both internal and external log.
+> >   4. In order to support reading metadump from a pipe, mdrestore now
+> >      reads the first four bytes of the header to determine the
+> >      metadump version rather than reading the entire header in a
+> >      single call to fread().
+> >   5. Add an ASCII diagram to describe metadump v2's ondisk layout in
+> >      xfs_metadump.h.
+> >   6. Update metadump's man page to indicate that metadump in v2 format
+> >      is generated by default if the filesystem has an external log and
+> >      the metadump version to use is not explicitly mentioned on the
+> >      command line.
+> >   7. Remove '_metadump' suffix from function pointer names in "struct
+> >      metadump_ops".
+> >   8. Use xfs_daddr_t type for declaring variables containing disk
+> >      offset value.
+> >   9. Use bool type rather than int for variables holding a boolean
+> >      value.
+> >   11. Remove unnecessary whitespace.
+> >
+> >
+> > Chandan Babu R (23):
+> >   metadump: Use boolean values true/false instead of 1/0
+> >   mdrestore: Fix logic used to check if target device is large enough
+> >   metadump: Declare boolean variables with bool type
+> >   metadump: Define and use struct metadump
+> >   metadump: Add initialization and release functions
+> >   metadump: Postpone invocation of init_metadump()
+> >   metadump: Introduce struct metadump_ops
+> >   metadump: Introduce metadump v1 operations
+> >   metadump: Rename XFS_MD_MAGIC to XFS_MD_MAGIC_V1
+> >   metadump: Define metadump v2 ondisk format structures and macros
+> >   metadump: Define metadump ops for v2 format
+> >   xfs_db: Add support to read from external log device
+> >   metadump: Add support for passing version option
+> >   mdrestore: Declare boolean variables with bool type
+> >   mdrestore: Define and use struct mdrestore
+> >   mdrestore: Detect metadump v1 magic before reading the header
+> >   mdrestore: Add open_device(), read_header() and show_info() functions
+> >   mdrestore: Introduce struct mdrestore_ops
+> >   mdrestore: Replace metadump header pointer argument with a union
+> >     pointer
+> >   mdrestore: Introduce mdrestore v1 operations
+> >   mdrestore: Extract target device size verification into a function
+> >   mdrestore: Define mdrestore ops for v2 format
+> >   mdrestore: Add support for passing log device as an argument
+> >
+> >  db/io.c                   |  56 ++-
+> >  db/io.h                   |   2 +
+> >  db/metadump.c             | 777 ++++++++++++++++++++++++--------------
+> >  db/xfs_metadump.sh        |   3 +-
+> >  include/xfs_metadump.h    |  70 +++-
+> >  man/man8/xfs_mdrestore.8  |   8 +
+> >  man/man8/xfs_metadump.8   |  14 +
+> >  mdrestore/xfs_mdrestore.c | 497 ++++++++++++++++++------
+> >  8 files changed, 1014 insertions(+), 413 deletions(-)
+> >
+> > --
+> > 2.39.1
+> >
