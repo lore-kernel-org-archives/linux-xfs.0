@@ -2,177 +2,455 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 32F46C4332F
-	for <linux-xfs@archiver.kernel.org>; Wed,  1 Nov 2023 16:41:54 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8FFC3C4332F
+	for <linux-xfs@archiver.kernel.org>; Wed,  1 Nov 2023 17:21:07 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232538AbjKAQly (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 1 Nov 2023 12:41:54 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51760 "EHLO
+        id S1344752AbjKARVI (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 1 Nov 2023 13:21:08 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52846 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231233AbjKAQly (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 1 Nov 2023 12:41:54 -0400
-Received: from mail-pj1-x1031.google.com (mail-pj1-x1031.google.com [IPv6:2607:f8b0:4864:20::1031])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C84C3119
-        for <linux-xfs@vger.kernel.org>; Wed,  1 Nov 2023 09:41:50 -0700 (PDT)
-Received: by mail-pj1-x1031.google.com with SMTP id 98e67ed59e1d1-2809fb0027cso18067a91.2
-        for <linux-xfs@vger.kernel.org>; Wed, 01 Nov 2023 09:41:50 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=osandov-com.20230601.gappssmtp.com; s=20230601; t=1698856910; x=1699461710; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:from:to:cc:subject:date:message-id:reply-to;
-        bh=+HQu4Or3ihYEZWL6Sbg8MV4PBpkSeSfJ+coTzqGyWIg=;
-        b=TqVtAn1oXUkQ6bMIW9Aq4JlQueAh3VtTbxjX6l+2iNfy0PEeGlOh0GKUL+2j2/gbmo
-         psedec+ACM7OsUS4P/NPDMhH0zWCQCHAqcEMsM9HU+sg6GFBu5IvYKUBMju/oLgy+dWZ
-         1Fn/LJzi6XVLw6yUgfaSMFKKPo8yedz6X2c0VtdObwxNhie9CQgX7b4X1rm0A4DiugZ5
-         qNK64r6o4OVZdpBnTgyI5tfbNCdF4Y7+qlapyLhl7PJrIOcycYZw2+CBab6owUEf+mGV
-         /q6wjP0LQ2/9jB87p/Xd+6U1WqT4R/9lFz50vxOPVHC+QwX+h12QqUBzUZ+FXhwNsQwC
-         5y7w==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1698856910; x=1699461710;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:x-gm-message-state:from:to:cc:subject:date:message-id
-         :reply-to;
-        bh=+HQu4Or3ihYEZWL6Sbg8MV4PBpkSeSfJ+coTzqGyWIg=;
-        b=pUrDvYeASPnfEpk3KYAfeIw4aTu5ffNe0edOHR4sgyTRrTXG/pQGJTGDJuvUAfXXbE
-         wDzN+1VHV7sUAUBVOQ2rttN8+LzZTqxu18yjigKdHhQ6dVxTyNIrtWpmjqlK1iVn4Gev
-         Zzc4+1qrY40Oyk02S5OR5RDYNvtOQK2O29zgat67lFxZqGDXzyPhhwOviR3HSwKqXdcG
-         fYzlg9Ku4BcgnsAGRlHCYyx9hUkSH0OszUds43gZMNRBwcId0ot85VVsJcVAu2TwjqUd
-         xNghjqOZaWJkkbBiKaiUEh6v0RwCcuFIVz2otJFJygGVCJ6VEoGnObI4vkJwAM88dfY5
-         KqQw==
-X-Gm-Message-State: AOJu0YxxK9KCf3VzrVKbVPb2PpAHYH3z9z/1oGklUahl8+WAsBMZmGLj
-        JP33P6Y0YltobvIRErFIzP9XaNBlfC+vXqjIMdzHTA==
-X-Google-Smtp-Source: AGHT+IEs7Rerd4yq15tCHSeKB4PQDjPHN7VoyG+py4ZfRx+PDPSz4WHfc5sxH51hqS7WjnOnvLzStg==
-X-Received: by 2002:a17:90a:3484:b0:27d:310a:b20e with SMTP id p4-20020a17090a348400b0027d310ab20emr12845228pjb.0.1698856909747;
-        Wed, 01 Nov 2023 09:41:49 -0700 (PDT)
-Received: from telecaster.hsd1.wa.comcast.net ([2601:602:a300:3bc0::7aaf])
-        by smtp.gmail.com with ESMTPSA id gv5-20020a17090b11c500b0027d12b1e29dsm1064233pjb.25.2023.11.01.09.41.49
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 01 Nov 2023 09:41:49 -0700 (PDT)
-From:   Omar Sandoval <osandov@osandov.com>
-To:     linux-xfs@vger.kernel.org
-Cc:     kernel-team@fb.com, "Darrick J . Wong" <djwong@kernel.org>,
-        Dave Chinner <dchinner@redhat.com>
-Subject: [PATCH v3] xfs: fix internal error from AGFL exhaustion
-Date:   Wed,  1 Nov 2023 09:41:45 -0700
-Message-ID: <3533095d43eaf6231df628362664d4b1e91354e9.1698856601.git.osandov@fb.com>
-X-Mailer: git-send-email 2.41.0
+        with ESMTP id S1344693AbjKARVH (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 1 Nov 2023 13:21:07 -0400
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 34A2D124
+        for <linux-xfs@vger.kernel.org>; Wed,  1 Nov 2023 10:20:55 -0700 (PDT)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id A7DA4C433C7;
+        Wed,  1 Nov 2023 17:20:54 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1698859254;
+        bh=IDoqLbrDJfSw2TxMg5HATbMM9CL3he89gJS2pdfSQ94=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=hpf0RRQQfq2pJrl1JA1yaGMuockE6t4TOcbAJunHs5LUAs8RYxdN5aZeVDJqLARiF
+         hrh8lQ9feRm5sY1B9wDIdoqA/Lp+C5olbQ6woFnEmnxERT4YZhaUb/Lr+vJY6XdtCU
+         yrU6x/L736Z+Tn3ngVnAk/LwQ3b+2lWojgMCPlPH/i+l9vaVj9eyxWdOZ0wsJS4xoY
+         +BWNjjP+ZZsom1/ovR0yQomXA2IirE4LNxJTNUpX01rgcvuds2E8+HHzoYph/1Xapg
+         P9Fy9OjO5iFYYo3FZC4z6NQZHEh2FtP2j0A3XzZW4ZL5Ps5EjXHgsPrrM2O9Irv6TZ
+         VAFWSFuBdBdwQ==
+Date:   Wed, 1 Nov 2023 10:20:54 -0700
+From:   "Darrick J. Wong" <djwong@kernel.org>
+To:     zlang@redhat.com
+Cc:     linux-xfs@vger.kernel.org, fstests@vger.kernel.org, guan@eryu.me,
+        david@fromorbit.com
+Subject: Re: [PATCH 1/1] xfs: test unlinked inode list repair on demand
+Message-ID: <20231101172054.GD1205143@frogsfrogsfrogs>
+References: <169687552892.3949084.287369396167434290.stgit@frogsfrogsfrogs>
+ <169687553453.3949084.14532709239423528329.stgit@frogsfrogsfrogs>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <169687553453.3949084.14532709239423528329.stgit@frogsfrogsfrogs>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-From: Omar Sandoval <osandov@fb.com>
+On Mon, Oct 09, 2023 at 11:18:54AM -0700, Darrick J. Wong wrote:
+> From: Darrick J. Wong <djwong@kernel.org>
+> 
+> Create a test to exercise recovery of unlinked inodes on a clean
+> filesystem.  This was definitely possible on old kernels that on an ro
+> mount would clean the log without processing the iunlink list.
+> 
+> Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 
-We've been seeing XFS errors like the following:
+Ping?  The kernel fixes and the xfs_db commands have both been merged
+upstream, could we please merge this functional test of the new unlinked
+inode cleanup code in the kernel XFS driver?
 
-XFS: Internal error i != 1 at line 3526 of file fs/xfs/libxfs/xfs_btree.c.  Caller xfs_btree_insert+0x1ec/0x280
-...
-Call Trace:
- xfs_corruption_error+0x94/0xa0
- xfs_btree_insert+0x221/0x280
- xfs_alloc_fixup_trees+0x104/0x3e0
- xfs_alloc_ag_vextent_size+0x667/0x820
- xfs_alloc_fix_freelist+0x5d9/0x750
- xfs_free_extent_fix_freelist+0x65/0xa0
- __xfs_free_extent+0x57/0x180
-...
+--D
 
-This is the XFS_IS_CORRUPT() check in xfs_btree_insert() when
-xfs_btree_insrec() fails.
-
-After converting this into a panic and dissecting the core dump, I found
-that xfs_btree_insrec() is failing because it's trying to split a leaf
-node in the cntbt when the AG free list is empty. In particular, it's
-failing to get a block from the AGFL _while trying to refill the AGFL_.
-
-If a single operation splits every level of the bnobt and the cntbt (and
-the rmapbt if it is enabled) at once, the free list will be empty. Then,
-when the next operation tries to refill the free list, it allocates
-space. If the allocation does not use a full extent, it will need to
-insert records for the remaining space in the bnobt and cntbt. And if
-those new records go in full leaves, the leaves (and potentially more
-nodes up to the old root) need to be split.
-
-Fix it by accounting for the additional splits that may be required to
-refill the free list in the calculation for the minimum free list size.
-
-P.S. As far as I can tell, this bug has existed for a long time -- maybe
-back to xfs-history commit afdf80ae7405 ("Add XFS_AG_MAXLEVELS macros
-...") in April 1994! It requires a very unlucky sequence of events, and
-in fact we didn't hit it until a particular sparse mmap workload updated
-from 5.12 to 5.19. But this bug existed in 5.12, so it must've been
-exposed by some other change in allocation or writeback patterns. It's
-also much less likely to be hit with the rmapbt enabled, since that
-increases the minimum free list size and is unlikely to split at the
-same time as the bnobt and cntbt.
-
-Reviewed-by: Darrick J. Wong <djwong@kernel.org>
-Reviewed-by: Dave Chinner <dchinner@redhat.com>
-Signed-off-by: Omar Sandoval <osandov@fb.com>
----
-Changes since v2 [1]:
-
-- Clarified comment.
-- Added Darrick and Dave's reviewed-bys.
-
-Changes since v1 [2]:
-
-- Updated calculation to account for internal nodes that may also need
-  to be split.
-- Updated comments and commit message accordingly.
-
-1: https://lore.kernel.org/linux-xfs/68cd85697855f686529829a2825b044913148caf.1698699188.git.osandov@fb.com/T/#u
-2: https://lore.kernel.org/linux-xfs/ZTrSiwF7OAq0hJHn@dread.disaster.area/T/
-
- fs/xfs/libxfs/xfs_alloc.c | 27 ++++++++++++++++++++++++---
- 1 file changed, 24 insertions(+), 3 deletions(-)
-
-diff --git a/fs/xfs/libxfs/xfs_alloc.c b/fs/xfs/libxfs/xfs_alloc.c
-index 3069194527dd..100ab5931b31 100644
---- a/fs/xfs/libxfs/xfs_alloc.c
-+++ b/fs/xfs/libxfs/xfs_alloc.c
-@@ -2275,16 +2275,37 @@ xfs_alloc_min_freelist(
- 
- 	ASSERT(mp->m_alloc_maxlevels > 0);
- 
-+	/*
-+	 * For a btree shorter than the maximum height, the worst case is that
-+	 * every level gets split and a new level is added, then while inserting
-+	 * another entry to refill the AGFL, every level under the old root gets
-+	 * split again. This is:
-+	 *
-+	 *   (full height split reservation) + (AGFL refill split height)
-+	 * = (current height + 1) + (current height - 1)
-+	 * = (new height) + (new height - 2)
-+	 * = 2 * new height - 2
-+	 *
-+	 * For a btree of maximum height, the worst case is that every level
-+	 * under the root gets split, then while inserting another entry to
-+	 * refill the AGFL, every level under the root gets split again. This is
-+	 * also:
-+	 *
-+	 *   2 * (current height - 1)
-+	 * = 2 * (new height - 1)
-+	 * = 2 * new height - 2
-+	 */
-+
- 	/* space needed by-bno freespace btree */
- 	min_free = min_t(unsigned int, levels[XFS_BTNUM_BNOi] + 1,
--				       mp->m_alloc_maxlevels);
-+				       mp->m_alloc_maxlevels) * 2 - 2;
- 	/* space needed by-size freespace btree */
- 	min_free += min_t(unsigned int, levels[XFS_BTNUM_CNTi] + 1,
--				       mp->m_alloc_maxlevels);
-+				       mp->m_alloc_maxlevels) * 2 - 2;
- 	/* space needed reverse mapping used space btree */
- 	if (xfs_has_rmapbt(mp))
- 		min_free += min_t(unsigned int, levels[XFS_BTNUM_RMAPi] + 1,
--						mp->m_rmap_maxlevels);
-+						mp->m_rmap_maxlevels) * 2 - 2;
- 
- 	return min_free;
- }
--- 
-2.41.0
-
+> ---
+>  common/rc          |    4 +
+>  tests/xfs/1872     |  113 +++++++++++++++++++++++++++
+>  tests/xfs/1872.out |    5 +
+>  tests/xfs/1873     |  217 ++++++++++++++++++++++++++++++++++++++++++++++++++++
+>  tests/xfs/1873.out |    6 +
+>  5 files changed, 344 insertions(+), 1 deletion(-)
+>  create mode 100755 tests/xfs/1872
+>  create mode 100644 tests/xfs/1872.out
+>  create mode 100755 tests/xfs/1873
+>  create mode 100644 tests/xfs/1873.out
+> 
+> 
+> diff --git a/common/rc b/common/rc
+> index 259a1ffb09..20d3e61c4e 100644
+> --- a/common/rc
+> +++ b/common/rc
+> @@ -2668,9 +2668,11 @@ _require_xfs_io_command()
+>  		param_checked="$pwrite_opts $param"
+>  		;;
+>  	"scrub"|"repair")
+> -		testio=`$XFS_IO_PROG -x -c "$command probe" $TEST_DIR 2>&1`
+> +		test -z "$param" && param="probe"
+> +		testio=`$XFS_IO_PROG -x -c "$command $param" $TEST_DIR 2>&1`
+>  		echo $testio | grep -q "Inappropriate ioctl" && \
+>  			_notrun "xfs_io $command support is missing"
+> +		param_checked="$param"
+>  		;;
+>  	"startupdate"|"commitupdate"|"cancelupdate")
+>  		$XFS_IO_PROG -f -c 'pwrite -S 0x58 0 128k -b 128k' $testfile > /dev/null
+> diff --git a/tests/xfs/1872 b/tests/xfs/1872
+> new file mode 100755
+> index 0000000000..3720a3d184
+> --- /dev/null
+> +++ b/tests/xfs/1872
+> @@ -0,0 +1,113 @@
+> +#! /bin/bash
+> +# SPDX-License-Identifier: GPL-2.0
+> +# Copyright (c) 2023 Oracle.  All Rights Reserved.
+> +#
+> +# FS QA Test No. 1872
+> +#
+> +# Test using runtime code to fix unlinked inodes on a clean filesystem that
+> +# never got cleaned up.
+> +#
+> +. ./common/preamble
+> +_begin_fstest auto quick unlink
+> +
+> +# Import common functions.
+> +source ./common/filter
+> +source ./common/fuzzy
+> +source ./common/quota
+> +
+> +# real QA test starts here
+> +
+> +# Modify as appropriate.
+> +_supported_fs generic
+> +_require_xfs_db_command iunlink
+> +_require_scratch_nocheck	# we'll run repair ourselves
+> +
+> +# From the AGI definition
+> +XFS_AGI_UNLINKED_BUCKETS=64
+> +
+> +# Try to make each iunlink bucket have this many inodes in it.
+> +IUNLINK_BUCKETLEN=5
+> +
+> +# XXX Forcibly disable quota since quotacheck will break this test
+> +orig_mount_options="$MOUNT_OPTIONS"
+> +_qmount_option 'noquota'
+> +
+> +format_scratch() {
+> +	_scratch_mkfs -d agcount=1 | _filter_mkfs 2> "${tmp}.mkfs" >> $seqres.full
+> +	source "${tmp}.mkfs"
+> +	test "${agcount}" -eq 1 || _notrun "test requires 1 AG for error injection"
+> +
+> +	local nr_iunlinks="$((IUNLINK_BUCKETLEN * XFS_AGI_UNLINKED_BUCKETS))"
+> +	readarray -t BADINODES < <(_scratch_xfs_db -x -c "iunlink -n $nr_iunlinks" | awk '{print $4}')
+> +}
+> +
+> +__repair_check_scratch() {
+> +	_scratch_xfs_repair -o force_geometry -n 2>&1 | \
+> +		tee -a $seqres.full | \
+> +		grep -E '(disconnected inode.*would move|next_unlinked in inode|unlinked bucket.*is.*in ag)'
+> +	return "${PIPESTATUS[0]}"
+> +}
+> +
+> +exercise_scratch() {
+> +	# Create a bunch of files...
+> +	declare -A inums
+> +	for ((i = 0; i < (XFS_AGI_UNLINKED_BUCKETS * 2); i++)); do
+> +		touch "${SCRATCH_MNT}/${i}" || break
+> +		inums["${i}"]="$(stat -c %i "${SCRATCH_MNT}/${i}")"
+> +	done
+> +
+> +	# ...then delete them to exercise the unlinked buckets
+> +	for ((i = 0; i < (XFS_AGI_UNLINKED_BUCKETS * 2); i++)); do
+> +		if ! rm -f "${SCRATCH_MNT}/${i}"; then
+> +			echo "rm failed on inum ${inums[$i]}"
+> +			break
+> +		fi
+> +	done
+> +}
+> +
+> +# Offline repair should not find anything
+> +final_check_scratch() {
+> +	__repair_check_scratch
+> +	res=$?
+> +	if [ $res -eq 2 ]; then
+> +		echo "scratch fs went offline?"
+> +		_scratch_mount
+> +		_scratch_unmount
+> +		__repair_check_scratch
+> +	fi
+> +	test "$res" -ne 0 && echo "repair returned $res?"
+> +}
+> +
+> +echo "+ Part 0: See if runtime can recover the unlinked list" | tee -a $seqres.full
+> +format_scratch
+> +_kernlog "part 0"
+> +_scratch_mount
+> +exercise_scratch
+> +_scratch_unmount
+> +final_check_scratch
+> +
+> +echo "+ Part 1: See if bulkstat can recover the unlinked list" | tee -a $seqres.full
+> +format_scratch
+> +_kernlog "part 1"
+> +_scratch_mount
+> +$XFS_IO_PROG -c 'bulkstat' $SCRATCH_MNT > /dev/null
+> +exercise_scratch
+> +_scratch_unmount
+> +final_check_scratch
+> +
+> +echo "+ Part 2: See if quotacheck can recover the unlinked list" | tee -a $seqres.full
+> +if [ -f /proc/fs/xfs/xqmstat ]; then
+> +	MOUNT_OPTIONS="$orig_mount_options"
+> +	_qmount_option 'quota'
+> +	format_scratch
+> +	_kernlog "part 2"
+> +	_scratch_mount
+> +	exercise_scratch
+> +	_scratch_unmount
+> +	final_check_scratch
+> +fi
+> +
+> +# success, all done
+> +echo Silence is golden
+> +status=0
+> +exit
+> diff --git a/tests/xfs/1872.out b/tests/xfs/1872.out
+> new file mode 100644
+> index 0000000000..248f0e2416
+> --- /dev/null
+> +++ b/tests/xfs/1872.out
+> @@ -0,0 +1,5 @@
+> +QA output created by 1872
+> ++ Part 0: See if runtime can recover the unlinked list
+> ++ Part 1: See if bulkstat can recover the unlinked list
+> ++ Part 2: See if quotacheck can recover the unlinked list
+> +Silence is golden
+> diff --git a/tests/xfs/1873 b/tests/xfs/1873
+> new file mode 100755
+> index 0000000000..4712dee7ab
+> --- /dev/null
+> +++ b/tests/xfs/1873
+> @@ -0,0 +1,217 @@
+> +#! /bin/bash
+> +# SPDX-License-Identifier: GPL-2.0
+> +# Copyright (c) 2023 Oracle.  All Rights Reserved.
+> +#
+> +# FS QA Test No. 1873
+> +#
+> +# Functional test of using online repair to fix unlinked inodes on a clean
+> +# filesystem that never got cleaned up.
+> +#
+> +. ./common/preamble
+> +_begin_fstest auto online_repair
+> +
+> +# Import common functions.
+> +source ./common/filter
+> +source ./common/fuzzy
+> +source ./common/quota
+> +
+> +# real QA test starts here
+> +
+> +# Modify as appropriate.
+> +_supported_fs generic
+> +_require_xfs_db_command iunlink
+> +# The iunlink bucket repair code wasn't added to the AGI repair code
+> +# until after the directory repair code was merged
+> +_require_xfs_io_command repair -R directory
+> +_require_scratch_nocheck	# repair doesn't like single-AG fs
+> +
+> +# From the AGI definition
+> +XFS_AGI_UNLINKED_BUCKETS=64
+> +
+> +# Try to make each iunlink bucket have this many inodes in it.
+> +IUNLINK_BUCKETLEN=5
+> +
+> +# XXX Forcibly disable quota since quotacheck will break this test
+> +_qmount_option 'noquota'
+> +
+> +format_scratch() {
+> +	_scratch_mkfs -d agcount=1 | _filter_mkfs 2> "${tmp}.mkfs" >> $seqres.full
+> +	source "${tmp}.mkfs"
+> +	test "${agcount}" -eq 1 || _notrun "test requires 1 AG for error injection"
+> +
+> +	local nr_iunlinks="$((IUNLINK_BUCKETLEN * XFS_AGI_UNLINKED_BUCKETS))"
+> +	readarray -t BADINODES < <(_scratch_xfs_db -x -c "iunlink -n $nr_iunlinks" | awk '{print $4}')
+> +}
+> +
+> +__repair_check_scratch() {
+> +	_scratch_xfs_repair -o force_geometry -n 2>&1 | \
+> +		tee -a $seqres.full | \
+> +		grep -E '(disconnected inode.*would move|next_unlinked in inode|unlinked bucket.*is.*in ag)'
+> +	return "${PIPESTATUS[0]}"
+> +}
+> +
+> +corrupt_scratch() {
+> +	# How far into the iunlink bucket chain do we target inodes for corruption?
+> +	# 1 = target the inode pointed to by the AGI
+> +	# 3 = middle of bucket list
+> +	# 5 = last element in bucket
+> +	local corruption_bucket_depth="$1"
+> +	if ((corruption_bucket_depth < 1 || corruption_bucket_depth > IUNLINK_BUCKETLEN)); then
+> +		echo "${corruption_bucket_depth}: Value must be between 1 and ${IUNLINK_BUCKETLEN}."
+> +		return 1
+> +	fi
+> +
+> +	# Index of the inode numbers within BADINODES
+> +	local bad_ino1_idx=$(( (IUNLINK_BUCKETLEN - corruption_bucket_depth) * XFS_AGI_UNLINKED_BUCKETS))
+> +	local bad_ino2_idx=$((bad_ino1_idx + 1))
+> +
+> +	# Inode numbers to target
+> +	local bad_ino1="${BADINODES[bad_ino1_idx]}"
+> +	local bad_ino2="${BADINODES[bad_ino2_idx]}"
+> +	printf "bad: 0x%x 0x%x\n" "${bad_ino1}" "${bad_ino2}" | _tee_kernlog >> $seqres.full
+> +
+> +	# Bucket within AGI 0's iunlinked array.
+> +	local ino1_bucket="$((bad_ino1 % XFS_AGI_UNLINKED_BUCKETS))"
+> +	local ino2_bucket="$((bad_ino2 % XFS_AGI_UNLINKED_BUCKETS))"
+> +
+> +	# The first bad inode stays on the unlinked list but gets a nonzero
+> +	# nlink; the second bad inode is removed from the unlinked list but
+> +	# keeps its zero nlink
+> +	_scratch_xfs_db -x \
+> +		-c "inode ${bad_ino1}" -c "write -d core.nlinkv2 5555" \
+> +		-c "agi 0" -c "fuzz -d unlinked[${ino2_bucket}] ones" -c "print unlinked" >> $seqres.full
+> +
+> +	local iwatch=()
+> +	local idx
+> +
+> +	# Make a list of the adjacent iunlink bucket inodes for the first inode
+> +	# that we targeted.
+> +	if [ "${corruption_bucket_depth}" -gt 1 ]; then
+> +		# Previous ino in bucket
+> +		idx=$(( (IUNLINK_BUCKETLEN - corruption_bucket_depth + 1) * XFS_AGI_UNLINKED_BUCKETS))
+> +		iwatch+=("${BADINODES[idx]}")
+> +	fi
+> +	iwatch+=("${bad_ino1}")
+> +	if [ "$((corruption_bucket_depth + 1))" -lt "${IUNLINK_BUCKETLEN}" ]; then
+> +		# Next ino in bucket
+> +		idx=$(( (IUNLINK_BUCKETLEN - corruption_bucket_depth - 1) * XFS_AGI_UNLINKED_BUCKETS))
+> +		iwatch+=("${BADINODES[idx]}")
+> +	fi
+> +
+> +	# Make a list of the adjacent iunlink bucket inodes for the second
+> +	# inode that we targeted.
+> +	if [ "${corruption_bucket_depth}" -gt 1 ]; then
+> +		# Previous ino in bucket
+> +		idx=$(( (IUNLINK_BUCKETLEN - corruption_bucket_depth + 1) * XFS_AGI_UNLINKED_BUCKETS))
+> +		iwatch+=("${BADINODES[idx + 1]}")
+> +	fi
+> +	iwatch+=("${bad_ino2}")
+> +	if [ "$((corruption_bucket_depth + 1))" -lt "${IUNLINK_BUCKETLEN}" ]; then
+> +		# Next ino in bucket
+> +		idx=$(( (IUNLINK_BUCKETLEN - corruption_bucket_depth - 1) * XFS_AGI_UNLINKED_BUCKETS))
+> +		iwatch+=("${BADINODES[idx + 1]}")
+> +	fi
+> +
+> +	# Construct a grep string for tracepoints.
+> +	GREP_STR="(xrep_attempt|xrep_done|bucket ${ino1_bucket} |bucket ${ino2_bucket} |bucket ${fuzz_bucket} "
+> +	GREP_STR="(xrep_attempt|xrep_done|bucket ${ino1_bucket} |bucket ${ino2_bucket} "
+> +	for ino in "${iwatch[@]}"; do
+> +		f="$(printf "|ino 0x%x" "${ino}")"
+> +		GREP_STR="${GREP_STR}${f}"
+> +	done
+> +	GREP_STR="${GREP_STR})"
+> +	echo "grep -E \"${GREP_STR}\"" >> $seqres.full
+> +
+> +	# Dump everything we did to to the full file.
+> +	local db_dump=(-c 'agi 0' -c 'print unlinked')
+> +	db_dump+=(-c 'addr root' -c 'print')
+> +	test "${ino1_bucket}" -gt 0 && \
+> +		db_dump+=(-c "dump_iunlinked -a 0 -b $((ino1_bucket - 1))")
+> +	db_dump+=(-c "dump_iunlinked -a 0 -b ${ino1_bucket}")
+> +	db_dump+=(-c "dump_iunlinked -a 0 -b ${ino2_bucket}")
+> +	test "${ino2_bucket}" -lt 63 && \
+> +		db_dump+=(-c "dump_iunlinked -a 0 -b $((ino2_bucket + 1))")
+> +	db_dump+=(-c "inode $bad_ino1" -c 'print core.nlinkv2 v3.inumber next_unlinked')
+> +	db_dump+=(-c "inode $bad_ino2" -c 'print core.nlinkv2 v3.inumber next_unlinked')
+> +	_scratch_xfs_db "${db_dump[@]}" >> $seqres.full
+> +
+> +	# Test run of repair to make sure we find disconnected inodes
+> +	__repair_check_scratch | \
+> +		sed -e 's/disconnected inode \([0-9]*\)/disconnected inode XXXXXX/g' \
+> +		    -e 's/next_unlinked in inode \([0-9]*\)/next_unlinked in inode XXXXXX/g' \
+> +		    -e 's/unlinked bucket \([0-9]*\) is \([0-9]*\) in ag \([0-9]*\) .inode=\([0-9]*\)/unlinked bucket YY is XXXXXX in ag Z (inode=AAAAAA/g' | \
+> +		uniq -c >> $seqres.full
+> +	res=${PIPESTATUS[0]}
+> +	test "$res" -ne 0 || echo "repair returned $res after corruption?"
+> +}
+> +
+> +exercise_scratch() {
+> +	# Create a bunch of files...
+> +	declare -A inums
+> +	for ((i = 0; i < (XFS_AGI_UNLINKED_BUCKETS * 2); i++)); do
+> +		touch "${SCRATCH_MNT}/${i}" || break
+> +		inums["${i}"]="$(stat -c %i "${SCRATCH_MNT}/${i}")"
+> +	done
+> +
+> +	# ...then delete them to exercise the unlinked buckets
+> +	for ((i = 0; i < (XFS_AGI_UNLINKED_BUCKETS * 2); i++)); do
+> +		if ! rm -f "${SCRATCH_MNT}/${i}"; then
+> +			echo "rm failed on inum ${inums[$i]}"
+> +			break
+> +		fi
+> +	done
+> +}
+> +
+> +# Offline repair should not find anything
+> +final_check_scratch() {
+> +	__repair_check_scratch
+> +	res=$?
+> +	if [ $res -eq 2 ]; then
+> +		echo "scratch fs went offline?"
+> +		_scratch_mount
+> +		_scratch_unmount
+> +		__repair_check_scratch
+> +	fi
+> +	test "$res" -ne 0 && echo "repair returned $res?"
+> +}
+> +
+> +echo "+ Part 1: See if scrub can recover the unlinked list" | tee -a $seqres.full
+> +format_scratch
+> +_kernlog "no bad inodes"
+> +_scratch_mount
+> +_scratch_scrub >> $seqres.full
+> +exercise_scratch
+> +_scratch_unmount
+> +final_check_scratch
+> +
+> +echo "+ Part 2: Corrupt the first inode in the bucket" | tee -a $seqres.full
+> +format_scratch
+> +corrupt_scratch 1
+> +_scratch_mount
+> +_scratch_scrub >> $seqres.full
+> +exercise_scratch
+> +_scratch_unmount
+> +final_check_scratch
+> +
+> +echo "+ Part 3: Corrupt the middle inode in the bucket" | tee -a $seqres.full
+> +format_scratch
+> +corrupt_scratch 3
+> +_scratch_mount
+> +_scratch_scrub >> $seqres.full
+> +exercise_scratch
+> +_scratch_unmount
+> +final_check_scratch
+> +
+> +echo "+ Part 4: Corrupt the last inode in the bucket" | tee -a $seqres.full
+> +format_scratch
+> +corrupt_scratch 5
+> +_scratch_mount
+> +_scratch_scrub >> $seqres.full
+> +exercise_scratch
+> +_scratch_unmount
+> +final_check_scratch
+> +
+> +# success, all done
+> +echo Silence is golden
+> +status=0
+> +exit
+> diff --git a/tests/xfs/1873.out b/tests/xfs/1873.out
+> new file mode 100644
+> index 0000000000..0e36bd2304
+> --- /dev/null
+> +++ b/tests/xfs/1873.out
+> @@ -0,0 +1,6 @@
+> +QA output created by 1873
+> ++ Part 1: See if scrub can recover the unlinked list
+> ++ Part 2: Corrupt the first inode in the bucket
+> ++ Part 3: Corrupt the middle inode in the bucket
+> ++ Part 4: Corrupt the last inode in the bucket
+> +Silence is golden
+> 
