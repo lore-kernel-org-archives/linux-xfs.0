@@ -2,137 +2,195 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A3BF7C4167B
-	for <linux-xfs@archiver.kernel.org>; Wed,  1 Nov 2023 19:01:45 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E00CBC4332F
+	for <linux-xfs@archiver.kernel.org>; Wed,  1 Nov 2023 20:10:56 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232442AbjKATBq (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 1 Nov 2023 15:01:46 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44688 "EHLO
+        id S1348041AbjKAUK5 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 1 Nov 2023 16:10:57 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42476 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232643AbjKATBo (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 1 Nov 2023 15:01:44 -0400
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 73D7311B
-        for <linux-xfs@vger.kernel.org>; Wed,  1 Nov 2023 12:00:57 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1698865256;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=VV/0JSb4ahQ+qDeA+yAiFldg8WZK/uiwiHB5Saqdh+M=;
-        b=Q5R7/OuvTeG40Y+sR28iglCNWkc+673AMnqKC1U6aigtqctkyPcAs/qf6K15VL/9l0l3Z9
-        Wpyv17TDoaJWGkPmadMy6V8ZSUCz5PMCFb8pFAa0dIHMDfZV5zXw8UPNxWwuBleiqNjeLd
-        zU5whYVXlXrYST3LaswEoii4l16j+dA=
-Received: from mimecast-mx02.redhat.com (mimecast-mx02.redhat.com
- [66.187.233.88]) by relay.mimecast.com with ESMTP with STARTTLS
- (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
- us-mta-590-Y8YF_Nq8N7W0wYIgKZ9icA-1; Wed, 01 Nov 2023 15:00:48 -0400
-X-MC-Unique: Y8YF_Nq8N7W0wYIgKZ9icA-1
-Received: from smtp.corp.redhat.com (int-mx05.intmail.prod.int.rdu2.redhat.com [10.11.54.5])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-        (No client certificate requested)
-        by mimecast-mx02.redhat.com (Postfix) with ESMTPS id F0CB98314FA;
-        Wed,  1 Nov 2023 19:00:47 +0000 (UTC)
-Received: from bfoster (unknown [10.22.16.88])
-        by smtp.corp.redhat.com (Postfix) with ESMTPS id 17CA410F52;
-        Wed,  1 Nov 2023 19:00:47 +0000 (UTC)
-Date:   Wed, 1 Nov 2023 15:01:22 -0400
-From:   Brian Foster <bfoster@redhat.com>
-To:     Jan Kara <jack@suse.cz>
-Cc:     Christian Brauner <brauner@kernel.org>,
-        linux-fsdevel@vger.kernel.org, linux-block@vger.kernel.org,
-        Jens Axboe <axboe@kernel.dk>,
-        Christoph Hellwig <hch@infradead.org>,
-        Kees Cook <keescook@google.com>,
-        syzkaller <syzkaller@googlegroups.com>,
-        Alexander Popov <alex.popov@linux.com>,
-        linux-xfs@vger.kernel.org, Dmitry Vyukov <dvyukov@google.com>,
-        Kent Overstreet <kent.overstreet@linux.dev>,
-        linux-bcachefs@vger.kernel.org
-Subject: Re: [PATCH 1/7] bcachefs: Convert to bdev_open_by_path()
-Message-ID: <ZUKggpzckTAKkyMl@bfoster>
-References: <20231101173542.23597-1-jack@suse.cz>
- <20231101174325.10596-1-jack@suse.cz>
+        with ESMTP id S1348030AbjKAUKx (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 1 Nov 2023 16:10:53 -0400
+Received: from mail-ej1-x62d.google.com (mail-ej1-x62d.google.com [IPv6:2a00:1450:4864:20::62d])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3877D182
+        for <linux-xfs@vger.kernel.org>; Wed,  1 Nov 2023 13:10:44 -0700 (PDT)
+Received: by mail-ej1-x62d.google.com with SMTP id a640c23a62f3a-9d8d3b65a67so26589666b.2
+        for <linux-xfs@vger.kernel.org>; Wed, 01 Nov 2023 13:10:44 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=linux-foundation.org; s=google; t=1698869442; x=1699474242; darn=vger.kernel.org;
+        h=cc:to:subject:message-id:date:from:in-reply-to:references
+         :mime-version:from:to:cc:subject:date:message-id:reply-to;
+        bh=NBWFFWWFL2IpGLUFcCc1X6zcQFWEtkQQEaX3iixgj/k=;
+        b=eEC+GiJknA0S5Es6p5CQG0GZyR/eub3F1epX4zUDhuH4b3dL+xwx3QRhDPdCV6S7Ul
+         GqCDJ0LK/gdIPN5XTXvnJhXnubRFZQe+rMnqnMFg4/SZ/9oZyh3jgoC+CIwiWQHOxxNO
+         htWXG1/Rrl5nAdly38+44GqGy7/sdTsEU6+TI=
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1698869442; x=1699474242;
+        h=cc:to:subject:message-id:date:from:in-reply-to:references
+         :mime-version:x-gm-message-state:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=NBWFFWWFL2IpGLUFcCc1X6zcQFWEtkQQEaX3iixgj/k=;
+        b=wy1ENHybIbHL+u8J51Z3hfhc2akqSgJGZGAHdSK4tLl6D65Q2DYXJKekd5S6dOS2sU
+         vr3pX1d9v2TL4flH1pqyc3Gwlw05PgVc1ztxqH5+gaIfHxPRh3kedKBM6pn2qrgaW1vF
+         bGLbIBf0kAxMZIX/whbgjLEsUykawiSRZibgC0SrtlQT44Ad8NrJEe1ieu3SzCG6Wimq
+         rGAAmYsz+vUzJB5xB2SxBQ0xU54+RXHEmLPYAoZCaOrxj0uiDjWhdHTNKWtLbL37SXfP
+         05dn6w5K68N6K0pbr1bC9gz38tUuRQ5MQRe2MNCLl2UQL9kZqHxKhUo7xmVWsqCNyoZt
+         edUQ==
+X-Gm-Message-State: AOJu0YyDIxnSqHPOx/al4W2JTEfzjO+AHX3xQPtDqIW3FzoyIa5o4oG9
+        xTQipN3TylJJ69v5Cpit8XFUcJj146vhglm6/miUbg==
+X-Google-Smtp-Source: AGHT+IHVlS62CzluDej/Ghp9kgFXfRODJs24YWTn9Lr0aX3ikKYfHZq1hwX/53M3i67j8JliXYwOOA==
+X-Received: by 2002:a17:907:1b11:b0:9d3:ccf0:7617 with SMTP id mp17-20020a1709071b1100b009d3ccf07617mr3705550ejc.44.1698869442417;
+        Wed, 01 Nov 2023 13:10:42 -0700 (PDT)
+Received: from mail-wm1-f46.google.com (mail-wm1-f46.google.com. [209.85.128.46])
+        by smtp.gmail.com with ESMTPSA id ks1-20020a170906f84100b009a19701e7b5sm319110ejb.96.2023.11.01.13.10.42
+        for <linux-xfs@vger.kernel.org>
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Wed, 01 Nov 2023 13:10:42 -0700 (PDT)
+Received: by mail-wm1-f46.google.com with SMTP id 5b1f17b1804b1-40853c639abso1445695e9.0
+        for <linux-xfs@vger.kernel.org>; Wed, 01 Nov 2023 13:10:42 -0700 (PDT)
+X-Received: by 2002:a17:907:25c6:b0:9b2:82d2:a2db with SMTP id
+ ae6-20020a17090725c600b009b282d2a2dbmr2496156ejc.28.1698869421474; Wed, 01
+ Nov 2023 13:10:21 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20231101174325.10596-1-jack@suse.cz>
-X-Scanned-By: MIMEDefang 3.4.1 on 10.11.54.5
+References: <ZTjMRRqmlJ+fTys2@dread.disaster.area> <2ef9ac6180e47bc9cc8edef20648a000367c4ed2.camel@kernel.org>
+ <ZTnNCytHLGoJY9ds@dread.disaster.area> <6df5ea54463526a3d898ed2bd8a005166caa9381.camel@kernel.org>
+ <ZUAwFkAizH1PrIZp@dread.disaster.area> <CAHk-=wg4jyTxO8WWUc1quqSETGaVsPHh8UeFUROYNwU-fEbkJg@mail.gmail.com>
+ <ZUBbj8XsA6uW8ZDK@dread.disaster.area> <CAOQ4uxgSRw26J+MPK-zhysZX9wBkXFRNx+n1bwnQwykCJ1=F4Q@mail.gmail.com>
+ <3d6a4c21626e6bbb86761a6d39e0fafaf30a4a4d.camel@kernel.org>
+ <ZUF4NTxQXpkJADxf@dread.disaster.area> <20231101101648.zjloqo5su6bbxzff@quack3>
+In-Reply-To: <20231101101648.zjloqo5su6bbxzff@quack3>
+From:   Linus Torvalds <torvalds@linux-foundation.org>
+Date:   Wed, 1 Nov 2023 10:10:03 -1000
+X-Gmail-Original-Message-ID: <CAHk-=wj6wy6tNUQm6EtgxfE_J229y1DthpCguqQfTej71yiJXw@mail.gmail.com>
+Message-ID: <CAHk-=wj6wy6tNUQm6EtgxfE_J229y1DthpCguqQfTej71yiJXw@mail.gmail.com>
+Subject: Re: [PATCH RFC 2/9] timekeeping: new interfaces for multigrain
+ timestamp handing
+To:     Jan Kara <jack@suse.cz>
+Cc:     Dave Chinner <david@fromorbit.com>,
+        Jeff Layton <jlayton@kernel.org>,
+        Amir Goldstein <amir73il@gmail.com>,
+        Kent Overstreet <kent.overstreet@linux.dev>,
+        Christian Brauner <brauner@kernel.org>,
+        Alexander Viro <viro@zeniv.linux.org.uk>,
+        John Stultz <jstultz@google.com>,
+        Thomas Gleixner <tglx@linutronix.de>,
+        Stephen Boyd <sboyd@kernel.org>,
+        Chandan Babu R <chandan.babu@oracle.com>,
+        "Darrick J. Wong" <djwong@kernel.org>,
+        "Theodore Ts'o" <tytso@mit.edu>,
+        Andreas Dilger <adilger.kernel@dilger.ca>,
+        Chris Mason <clm@fb.com>, Josef Bacik <josef@toxicpanda.com>,
+        David Sterba <dsterba@suse.com>,
+        Hugh Dickins <hughd@google.com>,
+        Andrew Morton <akpm@linux-foundation.org>,
+        Jan Kara <jack@suse.de>, David Howells <dhowells@redhat.com>,
+        linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-xfs@vger.kernel.org, linux-ext4@vger.kernel.org,
+        linux-btrfs@vger.kernel.org, linux-mm@kvack.org,
+        linux-nfs@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Wed, Nov 01, 2023 at 06:43:06PM +0100, Jan Kara wrote:
-> Convert bcachefs to use bdev_open_by_path() and pass the handle around.
-> 
-> CC: Kent Overstreet <kent.overstreet@linux.dev>
-> CC: Brian Foster <bfoster@redhat.com>
-> CC: linux-bcachefs@vger.kernel.org
-> Signed-off-by: Jan Kara <jack@suse.cz>
-> ---
->  fs/bcachefs/super-io.c    | 19 ++++++++++---------
->  fs/bcachefs/super_types.h |  1 +
->  2 files changed, 11 insertions(+), 9 deletions(-)
-> 
-> diff --git a/fs/bcachefs/super-io.c b/fs/bcachefs/super-io.c
-> index 332d41e1c0a3..01a32c41a540 100644
-> --- a/fs/bcachefs/super-io.c
-> +++ b/fs/bcachefs/super-io.c
-...
-> @@ -685,21 +685,22 @@ int bch2_read_super(const char *path, struct bch_opts *opts,
->  	if (!opt_get(*opts, nochanges))
->  		sb->mode |= BLK_OPEN_WRITE;
->  
-> -	sb->bdev = blkdev_get_by_path(path, sb->mode, sb->holder, &bch2_sb_handle_bdev_ops);
-> -	if (IS_ERR(sb->bdev) &&
-> -	    PTR_ERR(sb->bdev) == -EACCES &&
-> +	sb->bdev_handle = bdev_open_by_path(path, sb->mode, sb->holder, &bch2_sb_handle_bdev_ops);
-> +	if (IS_ERR(sb->bdev_handle) &&
-> +	    PTR_ERR(sb->bdev_handle) == -EACCES &&
->  	    opt_get(*opts, read_only)) {
->  		sb->mode &= ~BLK_OPEN_WRITE;
->  
-> -		sb->bdev = blkdev_get_by_path(path, sb->mode, sb->holder, &bch2_sb_handle_bdev_ops);
-> -		if (!IS_ERR(sb->bdev))
-> +		sb->bdev_handle = bdev_open_by_path(path, sb->mode, sb->holder, &bch2_sb_handle_bdev_ops);
-> +		if (!IS_ERR(sb->bdev_handle))
->  			opt_set(*opts, nochanges, true);
->  	}
->  
-> -	if (IS_ERR(sb->bdev)) {
-> -		ret = PTR_ERR(sb->bdev);
-> +	if (IS_ERR(sb->bdev_handle)) {
-> +		ret = PTR_ERR(sb->bdev_handle);
->  		goto out;
->  	}
-> +	sb->bdev = sb->bdev_handle->bdev;
->  
->  	ret = bch2_sb_realloc(sb, 0);
->  	if (ret) {
+On Wed, 1 Nov 2023 at 00:16, Jan Kara <jack@suse.cz> wrote:
+>
+> OK, but is this compatible with the current XFS behavior? AFAICS currently
+> XFS sets sb->s_time_gran to 1 so timestamps currently stored on disk will
+> have some mostly random garbage in low bits of the ctime.
 
-Hi Jan,
+I really *really* don't think we can use ctime as a "i_version"
+replacement. The whole fine-granularity patches were well-intentioned,
+but I do think they were broken.
 
-This all seems reasonable to me, but should bcachefs use sb_open_mode()
-somewhere in here to involve use of the restrict writes flag in the
-first place? It looks like bcachefs sort of open codes bits of
-mount_bdev() so it isn't clear the flag would be used anywhere...
+Note that we can't use ctime as a "i_version" replacement for other
+reasons too - you have filesystems like FAT - which people do want to
+export - that have a single-second (or is it 2s?) granularity in
+reality, even though they report a 1ns value in s_time_gran.
 
-Brian
+But here's a suggestion that people may hate, but that might just work
+in practice:
 
-> diff --git a/fs/bcachefs/super_types.h b/fs/bcachefs/super_types.h
-> index 78d6138db62d..b77d8897c9fa 100644
-> --- a/fs/bcachefs/super_types.h
-> +++ b/fs/bcachefs/super_types.h
-> @@ -4,6 +4,7 @@
->  
->  struct bch_sb_handle {
->  	struct bch_sb		*sb;
-> +	struct bdev_handle	*bdev_handle;
->  	struct block_device	*bdev;
->  	struct bio		*bio;
->  	void			*holder;
-> -- 
-> 2.35.3
-> 
+ - get rid of i_version entirely
 
+ - use the "known good" part of ctime as the upper bits of the change
+counter (and by "known good" I mean tv_sec - or possibly even "tv_sec
+/ 2" if that dim FAT memory of mine is right)
+
+ - make the rule be that ctime is *never* updated for atime updates
+(maybe that's already true, I didn't check - maybe it needs a new
+mount flag for nfsd)
+
+ - have a per-inode in-memory and vfs-internal (entirely invisible to
+filesystems) "ctime modification counter" that is *NOT* a timestamp,
+and is *NOT* i_version
+
+ - make the rule be that the "ctime modification counter" is always
+zero, *EXCEPT* if
+    (a) I_VERSION_QUERIED is set
+   AND
+    (b) the ctime modification doesn't modify the "known good" part of ctime
+
+so how the "statx change cookie" ends up being "high bits tv_sec of
+ctime, low bits ctime modification cookie", and the end result of that
+is:
+
+ - if all the reads happen after the last write (common case), then
+the low bits will be zero, because I_VERSION_QUERIED wasn't set when
+ctime was modified
+
+ - if you do a write *after* a modification, the ctime cookie is
+guaranteed to change, because either the known good (sec/2sec) part of
+ctime is new, *or* the counter gets updated
+
+ - if the nfs server reboots, the in-memory counter will be cleared
+again, and so the change cookie will cause client cache invalidations,
+but *only* for those "ctime changed in the same second _after_
+somebody did a read".
+
+ - any long-time caches of files that don't get modified are all fine,
+because they will have those low bits zero and depend on just the
+stable part of ctime that works across filesystems. So there should be
+no nasty thundering herd issues on long-lived caches on lots of
+clients if the server reboots, or atime updates every 24 hours or
+anything like that.
+
+and note that *NONE* of this requires any filesystem involvement
+(except for the rule of "no atime changes ever impact ctime", which
+may or may not already be true).
+
+The filesystem does *not* know about that modification counter,
+there's no new on-disk stable information.
+
+It's entirely possible that I'm missing something obvious, but the
+above sounds to me like the only time you'd have stale invalidations
+is really the (unusual) case of having writes after cached reads, and
+then a reboot.
+
+We'd get rid of "inode_maybe_inc_iversion()" entirely, and instead
+replace it with logic in inode_set_ctime_current() that basically does
+
+ - if the stable part of ctime changes, clear the new 32-bit counter
+
+ - if I_VERSION_QUERIED isn't set, clear the new 32-bit counter
+
+ - otherwise, increment the new 32-bit counter
+
+and then the STATX_CHANGE_COOKIE code basically just returns
+
+   (stable part of ctime << 32) + new 32-bit counter
+
+(and again, the "stable part of ctime" is either just tv_sec, or it's
+"tv_sec >> 1" or whatever).
+
+The above does not expose *any* changes to timestamps to users, and
+should work across a wide variety of filesystems, without requiring
+any special code from the filesystem itself.
+
+And now please all jump on me and say "No, Linus, that won't work, because XYZ".
+
+Because it is *entirely* possible that I missed something truly
+fundamental, and the above is completely broken for some obvious
+reason that I just didn't think of.
+
+             Linus
