@@ -2,173 +2,137 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E0A29C4167B
-	for <linux-xfs@archiver.kernel.org>; Wed,  1 Nov 2023 18:03:05 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A3BF7C4167B
+	for <linux-xfs@archiver.kernel.org>; Wed,  1 Nov 2023 19:01:45 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1344864AbjKASDG (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 1 Nov 2023 14:03:06 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39382 "EHLO
+        id S232442AbjKATBq (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 1 Nov 2023 15:01:46 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44688 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1344867AbjKASDD (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 1 Nov 2023 14:03:03 -0400
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B95C0186
-        for <linux-xfs@vger.kernel.org>; Wed,  1 Nov 2023 11:02:56 -0700 (PDT)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 5F298C433C8;
-        Wed,  1 Nov 2023 18:02:56 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1698861776;
-        bh=RyLOhHIFOYS/ge/uRnE3CH65G0eF8rCeov5X6ARQnec=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=TgdqX2G2SRqoKtBjCvG78jc2zn/D7JZbe+3O75e2YqP5WSxKLreTHgHL26RZ/uY0N
-         dGU2igSjY4Ndksv67udLqwXuPUwsdDyvxlTOiHZeSk/YlR8t6273PHRALf7BEO9uS+
-         lvlvnNUUb/m3CwunVXdL9bhsSs/j6G6KRrUR+dm1rUwQlGgz/8O1mWjCA2ZtYRgMd5
-         Sn6xPOltWOkurk4+MgWF4Lu7SHeex5YDas1KrRfx0tPtmaCrv1BXrU508ZmhGrihh2
-         UcaXiCFwdXnJMNAPZTcG3HRXrUsviLY+ZOtTFfTfPb7a9kuuX8ULA+YEOp4bi4Kj4h
-         N6l6M9KeF8nTw==
-Date:   Wed, 1 Nov 2023 11:02:55 -0700
-From:   "Darrick J. Wong" <djwong@kernel.org>
-To:     Carlos Maiolino <cem@kernel.org>
-Cc:     Chandan Babu R <chandan.babu@oracle.com>, linux-xfs@vger.kernel.org
-Subject: Re: [PATCH V3 00/23] Metadump v2
-Message-ID: <20231101180255.GE1205143@frogsfrogsfrogs>
-References: <20230724043527.238600-1-chandan.babu@oracle.com>
- <zmMVayUsY-ViHdrS7GDAq2msR-u204qc5ppr-jOuQx-t7sh0Oid5kE7EC8WVhiqS02t6miNb3rjHZBknZUd-Kw==@protonmail.internalid>
- <20231031164640.GB1041814@frogsfrogsfrogs>
- <ianvoh4ppvbem45brsimplhax32fdxnoylkc2xb6ra3wgyayln@qyzf5efdafvy>
+        with ESMTP id S232643AbjKATBo (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 1 Nov 2023 15:01:44 -0400
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 73D7311B
+        for <linux-xfs@vger.kernel.org>; Wed,  1 Nov 2023 12:00:57 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1698865256;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=VV/0JSb4ahQ+qDeA+yAiFldg8WZK/uiwiHB5Saqdh+M=;
+        b=Q5R7/OuvTeG40Y+sR28iglCNWkc+673AMnqKC1U6aigtqctkyPcAs/qf6K15VL/9l0l3Z9
+        Wpyv17TDoaJWGkPmadMy6V8ZSUCz5PMCFb8pFAa0dIHMDfZV5zXw8UPNxWwuBleiqNjeLd
+        zU5whYVXlXrYST3LaswEoii4l16j+dA=
+Received: from mimecast-mx02.redhat.com (mimecast-mx02.redhat.com
+ [66.187.233.88]) by relay.mimecast.com with ESMTP with STARTTLS
+ (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
+ us-mta-590-Y8YF_Nq8N7W0wYIgKZ9icA-1; Wed, 01 Nov 2023 15:00:48 -0400
+X-MC-Unique: Y8YF_Nq8N7W0wYIgKZ9icA-1
+Received: from smtp.corp.redhat.com (int-mx05.intmail.prod.int.rdu2.redhat.com [10.11.54.5])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+        (No client certificate requested)
+        by mimecast-mx02.redhat.com (Postfix) with ESMTPS id F0CB98314FA;
+        Wed,  1 Nov 2023 19:00:47 +0000 (UTC)
+Received: from bfoster (unknown [10.22.16.88])
+        by smtp.corp.redhat.com (Postfix) with ESMTPS id 17CA410F52;
+        Wed,  1 Nov 2023 19:00:47 +0000 (UTC)
+Date:   Wed, 1 Nov 2023 15:01:22 -0400
+From:   Brian Foster <bfoster@redhat.com>
+To:     Jan Kara <jack@suse.cz>
+Cc:     Christian Brauner <brauner@kernel.org>,
+        linux-fsdevel@vger.kernel.org, linux-block@vger.kernel.org,
+        Jens Axboe <axboe@kernel.dk>,
+        Christoph Hellwig <hch@infradead.org>,
+        Kees Cook <keescook@google.com>,
+        syzkaller <syzkaller@googlegroups.com>,
+        Alexander Popov <alex.popov@linux.com>,
+        linux-xfs@vger.kernel.org, Dmitry Vyukov <dvyukov@google.com>,
+        Kent Overstreet <kent.overstreet@linux.dev>,
+        linux-bcachefs@vger.kernel.org
+Subject: Re: [PATCH 1/7] bcachefs: Convert to bdev_open_by_path()
+Message-ID: <ZUKggpzckTAKkyMl@bfoster>
+References: <20231101173542.23597-1-jack@suse.cz>
+ <20231101174325.10596-1-jack@suse.cz>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <ianvoh4ppvbem45brsimplhax32fdxnoylkc2xb6ra3wgyayln@qyzf5efdafvy>
+In-Reply-To: <20231101174325.10596-1-jack@suse.cz>
+X-Scanned-By: MIMEDefang 3.4.1 on 10.11.54.5
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Wed, Nov 01, 2023 at 03:58:57PM +0100, Carlos Maiolino wrote:
-> On Tue, Oct 31, 2023 at 09:46:40AM -0700, Darrick J. Wong wrote:
-> > On Mon, Jul 24, 2023 at 10:05:04AM +0530, Chandan Babu R wrote:
-> > > Hi all,
-> > >
-> > > This patch series extends metadump/mdrestore tools to be able to dump
-> > > and restore contents of an external log device. It also adds the
-> > > ability to copy larger blocks (e.g. 4096 bytes instead of 512 bytes)
-> > > into the metadump file. These objectives are accomplished by
-> > > introducing a new metadump file format.
-> > 
-> > Gentle maintainer ping: Carlos, do you have any thoughts about this
-> > series?  The only unaddressed review comment was <cough> me asking for
-> > code golf around patch 18 or so.  Do you (or anyone else) see any
-> > problems that I've not spotted?
+On Wed, Nov 01, 2023 at 06:43:06PM +0100, Jan Kara wrote:
+> Convert bcachefs to use bdev_open_by_path() and pass the handle around.
 > 
-> Hi, it's been a while, but I looked into this series before, and I was mostly ok
-> with it, I was actually waiting for a follow-up patch addressing your comments
-> on patch 19, regarding mdrestore ops definition. My emails have been a bit funky
-> recently, did I miss a new version of this series?
-
-AFAIK there hasn't been a new revision; this was a "hey it's been a few
-months, are we all on the same page still?" inquiry. :)
-
---D
-
-> Carlos
+> CC: Kent Overstreet <kent.overstreet@linux.dev>
+> CC: Brian Foster <bfoster@redhat.com>
+> CC: linux-bcachefs@vger.kernel.org
+> Signed-off-by: Jan Kara <jack@suse.cz>
+> ---
+>  fs/bcachefs/super-io.c    | 19 ++++++++++---------
+>  fs/bcachefs/super_types.h |  1 +
+>  2 files changed, 11 insertions(+), 9 deletions(-)
 > 
-> > 
-> > --D
-> > 
-> > >
-> > > I have tested the patchset by extending metadump/mdrestore tests in
-> > > fstests to cover the newly introduced metadump v2 format. The tests
-> > > can be found at
-> > > https://github.com/chandanr/xfstests/commits/metadump-v2.
-> > >
-> > > The patch series can also be obtained from
-> > > https://github.com/chandanr/xfsprogs-dev/commits/metadump-v2.
-> > >
-> > > Darrick, Please note that I have removed your RVB from "metadump: Add
-> > > support for passing version option" patch. copy_log() and metadump_f()
-> > > were invoking set_log_cur() for both "internal log" and "external
-> > > log". In the V3 patchset, I have modified the copy_log() function to,
-> > > 1. Invoke set_log_cur() when the filesystem has an external log.
-> > > 2. Invoke set_cur() when the filesystem has an internal log.
-> > >
-> > > Changelog:
-> > > V2 -> V3:
-> > >   1. Document the meanings of metadump v2's ondisk flags.
-> > >   2. Rename metadump_ops->end_write() to metadump_ops->finish_dump().
-> > >   3. Pass a pointer to the newly introduced "union mdrestore_headers"
-> > >      to callbacks in "struct mdrestore_ops" instead of a pointer to
-> > >      "void".
-> > >   4. Use set_log_cur() only when metadump has to be read from an
-> > >      external log device.
-> > >   5. Verify that primary superblock read from metadump file was indeed
-> > >      read from the data device.
-> > >   6. Fix indentation issues.
-> > >
-> > > V1 -> V2:
-> > >   1. Introduce the new incompat flag XFS_MD2_INCOMPAT_EXTERNALLOG to
-> > >      indicate that the metadump file contains data obtained from an
-> > >      external log.
-> > >   2. Interpret bits 54 and 55 of xfs_meta_extent.xme_addr as a counter
-> > >      such that 00 maps to the data device and 01 maps to the log
-> > >      device.
-> > >   3. Define the new function set_log_cur() to read from
-> > >      internal/external log device. This allows us to continue using
-> > >      TYP_LOG to read from both internal and external log.
-> > >   4. In order to support reading metadump from a pipe, mdrestore now
-> > >      reads the first four bytes of the header to determine the
-> > >      metadump version rather than reading the entire header in a
-> > >      single call to fread().
-> > >   5. Add an ASCII diagram to describe metadump v2's ondisk layout in
-> > >      xfs_metadump.h.
-> > >   6. Update metadump's man page to indicate that metadump in v2 format
-> > >      is generated by default if the filesystem has an external log and
-> > >      the metadump version to use is not explicitly mentioned on the
-> > >      command line.
-> > >   7. Remove '_metadump' suffix from function pointer names in "struct
-> > >      metadump_ops".
-> > >   8. Use xfs_daddr_t type for declaring variables containing disk
-> > >      offset value.
-> > >   9. Use bool type rather than int for variables holding a boolean
-> > >      value.
-> > >   11. Remove unnecessary whitespace.
-> > >
-> > >
-> > > Chandan Babu R (23):
-> > >   metadump: Use boolean values true/false instead of 1/0
-> > >   mdrestore: Fix logic used to check if target device is large enough
-> > >   metadump: Declare boolean variables with bool type
-> > >   metadump: Define and use struct metadump
-> > >   metadump: Add initialization and release functions
-> > >   metadump: Postpone invocation of init_metadump()
-> > >   metadump: Introduce struct metadump_ops
-> > >   metadump: Introduce metadump v1 operations
-> > >   metadump: Rename XFS_MD_MAGIC to XFS_MD_MAGIC_V1
-> > >   metadump: Define metadump v2 ondisk format structures and macros
-> > >   metadump: Define metadump ops for v2 format
-> > >   xfs_db: Add support to read from external log device
-> > >   metadump: Add support for passing version option
-> > >   mdrestore: Declare boolean variables with bool type
-> > >   mdrestore: Define and use struct mdrestore
-> > >   mdrestore: Detect metadump v1 magic before reading the header
-> > >   mdrestore: Add open_device(), read_header() and show_info() functions
-> > >   mdrestore: Introduce struct mdrestore_ops
-> > >   mdrestore: Replace metadump header pointer argument with a union
-> > >     pointer
-> > >   mdrestore: Introduce mdrestore v1 operations
-> > >   mdrestore: Extract target device size verification into a function
-> > >   mdrestore: Define mdrestore ops for v2 format
-> > >   mdrestore: Add support for passing log device as an argument
-> > >
-> > >  db/io.c                   |  56 ++-
-> > >  db/io.h                   |   2 +
-> > >  db/metadump.c             | 777 ++++++++++++++++++++++++--------------
-> > >  db/xfs_metadump.sh        |   3 +-
-> > >  include/xfs_metadump.h    |  70 +++-
-> > >  man/man8/xfs_mdrestore.8  |   8 +
-> > >  man/man8/xfs_metadump.8   |  14 +
-> > >  mdrestore/xfs_mdrestore.c | 497 ++++++++++++++++++------
-> > >  8 files changed, 1014 insertions(+), 413 deletions(-)
-> > >
-> > > --
-> > > 2.39.1
-> > >
+> diff --git a/fs/bcachefs/super-io.c b/fs/bcachefs/super-io.c
+> index 332d41e1c0a3..01a32c41a540 100644
+> --- a/fs/bcachefs/super-io.c
+> +++ b/fs/bcachefs/super-io.c
+...
+> @@ -685,21 +685,22 @@ int bch2_read_super(const char *path, struct bch_opts *opts,
+>  	if (!opt_get(*opts, nochanges))
+>  		sb->mode |= BLK_OPEN_WRITE;
+>  
+> -	sb->bdev = blkdev_get_by_path(path, sb->mode, sb->holder, &bch2_sb_handle_bdev_ops);
+> -	if (IS_ERR(sb->bdev) &&
+> -	    PTR_ERR(sb->bdev) == -EACCES &&
+> +	sb->bdev_handle = bdev_open_by_path(path, sb->mode, sb->holder, &bch2_sb_handle_bdev_ops);
+> +	if (IS_ERR(sb->bdev_handle) &&
+> +	    PTR_ERR(sb->bdev_handle) == -EACCES &&
+>  	    opt_get(*opts, read_only)) {
+>  		sb->mode &= ~BLK_OPEN_WRITE;
+>  
+> -		sb->bdev = blkdev_get_by_path(path, sb->mode, sb->holder, &bch2_sb_handle_bdev_ops);
+> -		if (!IS_ERR(sb->bdev))
+> +		sb->bdev_handle = bdev_open_by_path(path, sb->mode, sb->holder, &bch2_sb_handle_bdev_ops);
+> +		if (!IS_ERR(sb->bdev_handle))
+>  			opt_set(*opts, nochanges, true);
+>  	}
+>  
+> -	if (IS_ERR(sb->bdev)) {
+> -		ret = PTR_ERR(sb->bdev);
+> +	if (IS_ERR(sb->bdev_handle)) {
+> +		ret = PTR_ERR(sb->bdev_handle);
+>  		goto out;
+>  	}
+> +	sb->bdev = sb->bdev_handle->bdev;
+>  
+>  	ret = bch2_sb_realloc(sb, 0);
+>  	if (ret) {
+
+Hi Jan,
+
+This all seems reasonable to me, but should bcachefs use sb_open_mode()
+somewhere in here to involve use of the restrict writes flag in the
+first place? It looks like bcachefs sort of open codes bits of
+mount_bdev() so it isn't clear the flag would be used anywhere...
+
+Brian
+
+> diff --git a/fs/bcachefs/super_types.h b/fs/bcachefs/super_types.h
+> index 78d6138db62d..b77d8897c9fa 100644
+> --- a/fs/bcachefs/super_types.h
+> +++ b/fs/bcachefs/super_types.h
+> @@ -4,6 +4,7 @@
+>  
+>  struct bch_sb_handle {
+>  	struct bch_sb		*sb;
+> +	struct bdev_handle	*bdev_handle;
+>  	struct block_device	*bdev;
+>  	struct bio		*bio;
+>  	void			*holder;
+> -- 
+> 2.35.3
+> 
+
