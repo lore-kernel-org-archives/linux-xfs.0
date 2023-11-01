@@ -2,100 +2,142 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 96472C4332F
-	for <linux-xfs@archiver.kernel.org>; Wed,  1 Nov 2023 11:30:54 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 35E53C4167D
+	for <linux-xfs@archiver.kernel.org>; Wed,  1 Nov 2023 11:38:58 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235225AbjKALaz (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 1 Nov 2023 07:30:55 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45890 "EHLO
+        id S235288AbjKALi6 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 1 Nov 2023 07:38:58 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39620 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S235207AbjKALay (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 1 Nov 2023 07:30:54 -0400
-Received: from esa9.hc1455-7.c3s2.iphmx.com (esa9.hc1455-7.c3s2.iphmx.com [139.138.36.223])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9AF43121;
-        Wed,  1 Nov 2023 04:30:51 -0700 (PDT)
-X-IronPort-AV: E=McAfee;i="6600,9927,10880"; a="126581274"
-X-IronPort-AV: E=Sophos;i="6.03,268,1694703600"; 
-   d="scan'208";a="126581274"
-Received: from unknown (HELO yto-r1.gw.nic.fujitsu.com) ([218.44.52.217])
-  by esa9.hc1455-7.c3s2.iphmx.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 01 Nov 2023 20:30:49 +0900
-Received: from yto-m1.gw.nic.fujitsu.com (yto-nat-yto-m1.gw.nic.fujitsu.com [192.168.83.64])
-        by yto-r1.gw.nic.fujitsu.com (Postfix) with ESMTP id E7ECDD9DA9;
-        Wed,  1 Nov 2023 20:30:46 +0900 (JST)
-Received: from kws-ab3.gw.nic.fujitsu.com (kws-ab3.gw.nic.fujitsu.com [192.51.206.21])
-        by yto-m1.gw.nic.fujitsu.com (Postfix) with ESMTP id 39C19CFA5A;
-        Wed,  1 Nov 2023 20:30:46 +0900 (JST)
-Received: from edo.cn.fujitsu.com (edo.cn.fujitsu.com [10.167.33.5])
-        by kws-ab3.gw.nic.fujitsu.com (Postfix) with ESMTP id A83FB20077827;
-        Wed,  1 Nov 2023 20:30:45 +0900 (JST)
-Received: from [192.168.50.5] (unknown [10.167.226.34])
-        by edo.cn.fujitsu.com (Postfix) with ESMTP id 3C78C1A006F;
-        Wed,  1 Nov 2023 19:30:44 +0800 (CST)
-Message-ID: <88e9bc61-ac74-4503-a29a-d4f8dba841c1@fujitsu.com>
-Date:   Wed, 1 Nov 2023 19:30:43 +0800
+        with ESMTP id S235212AbjKALi5 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 1 Nov 2023 07:38:57 -0400
+Received: from mail-yw1-x112c.google.com (mail-yw1-x112c.google.com [IPv6:2607:f8b0:4864:20::112c])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 415F0F7;
+        Wed,  1 Nov 2023 04:38:55 -0700 (PDT)
+Received: by mail-yw1-x112c.google.com with SMTP id 00721157ae682-5a7afd45199so68560487b3.0;
+        Wed, 01 Nov 2023 04:38:55 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20230601; t=1698838734; x=1699443534; darn=vger.kernel.org;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=m59jZyxH1gZ4IkJNBzdNka8KVbsaoVT0nyeW9BoP3MY=;
+        b=AbceKytzbEm1fI6aJYaC1xgszi8ZaazKEewzYxEeIa1ryBQcvsQOrXMWoRCCtA1pZ9
+         xsRT6HfikEC13gutV14GgKFexrHw2ErdRcXEw++19GFKFn/iXSFPWGwtpeKOuMLORAzi
+         ImKVLOFcGgiDOvJXQ32c1gkFN1dQQzDLOsMu3J+UnF7O3wv8vr1GwiMK8t7yGT2YAA/1
+         x2fXufvwli5f4k3NfrLLRrTf0Uy6j+9QGZYKKngmgwzcwK8BEG6HM+qRZ01lphBr1EwC
+         L6OAQEEoL8mSAmPJ2a/3hyHMhcOyEbVTQRf1qzR64eVYw2+n0hcBKelPoQZiXZ9yrGdB
+         KLSw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1698838734; x=1699443534;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=m59jZyxH1gZ4IkJNBzdNka8KVbsaoVT0nyeW9BoP3MY=;
+        b=LHuLGLA8sPOhw2N+B3J0HXaBHCsw8MH1HJbkNQinAYvMIvK0Wztp2A7OnjDfd0G3/e
+         oGQvx+++BBKadAQXF0fEQ25qFn2uaR7E7oUdXrQYLGCEErqZiRQZbCJcORCsaHFsWrrj
+         j99x9CRlXGGDPjEZqUnracHP9iMiDaOWAq9VKYEmzKwaqqqfeFphMFowsJPbOSldYyPe
+         C5vaRYCvi55jtgMei4TBIrEh28xNEcpB7t7EqFt4/zwMrGf39NER4jhZgbbQfjSFKqEr
+         AmBf/XONrEgGmHYQGnyK1qYKX+WpGl6QJ2P8624oiDB6rZqpcw8oKjomIPn2xcpwZynr
+         g9Cw==
+X-Gm-Message-State: AOJu0Yy4kgZCJ7nwc78gR/YwxCT+a6wRIpxzf3doDasep0DvBKOXx73Q
+        DW0nuY+B5+tVKC+2dwiz2pcj5VLL2R3g3K2bTmM=
+X-Google-Smtp-Source: AGHT+IGPiQGs2flMchmrpUm3exXHwdHaIxqaR1nEgkE1E5+9YOWUy0Mc758PsX3a/8WhBl38xRZWvkoZHjkiwWqRbg8=
+X-Received: by 2002:a81:ae09:0:b0:5a7:dad7:61dd with SMTP id
+ m9-20020a81ae09000000b005a7dad761ddmr15318204ywh.20.1698838734410; Wed, 01
+ Nov 2023 04:38:54 -0700 (PDT)
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [ANNOUNCE] xfs-linux: for-next updated to 22c2699cb068
-To:     Chandan Babu R <chandanbabu@kernel.org>
-Cc:     Christoph Hellwig <hch@lst.de>, catherine.hoang@oracle.com,
-        cheng.lin130@zte.com.cn, dan.j.williams@intel.com,
-        dchinner@redhat.com, linux-fsdevel@vger.kernel.org,
-        linux-xfs@vger.kernel.org, osandov@fb.com,
-        "Darrick J. Wong" <djwong@kernel.org>
-References: <87fs1s3bk6.fsf@debian-BULLSEYE-live-builder-AMD64>
- <20231031090242.GA25889@lst.de> <20231031164359.GA1041814@frogsfrogsfrogs>
- <875y2mk9fo.fsf@debian-BULLSEYE-live-builder-AMD64>
-From:   Shiyang Ruan <ruansy.fnst@fujitsu.com>
-In-Reply-To: <875y2mk9fo.fsf@debian-BULLSEYE-live-builder-AMD64>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 8bit
-X-TM-AS-GCONF: 00
-X-TM-AS-Product-Ver: IMSS-9.1.0.1417-9.0.0.1002-27970.007
-X-TM-AS-User-Approved-Sender: Yes
-X-TMASE-Version: IMSS-9.1.0.1417-9.0.1002-27970.007
-X-TMASE-Result: 10--12.676000-10.000000
-X-TMASE-MatchedRID: mafpUJSAc1CPvrMjLFD6eHchRkqzj/bEC/ExpXrHizxBqLOmHiM3w/tl
-        NRuGlPT/GApc67FGFgwxeHwgHyVfP9MMbVgJKQCJatGCGdi/nWoxXH/dlhvLv8v8BP3RkorXVhY
-        Zjy1spv54uAitfy71buI0KIuLJPBCh2Em++ruuH+OtWfhyZ77DithirXYhZk5Uqcf/uZ2V1ijxY
-        yRBa/qJQYnglAWdCYb9BIhiTDfOc3YoM82yqmFMvoLR4+zsDTtD12T7q2dIUtO7oA8A9JhHuM6H
-        GE5OQFKwFdBRkLAn2brh8DF2dbkaQ==
-X-TMASE-SNAP-Result: 1.821001.0001-0-1-22:0,33:0,34:0-0
+References: <ZTjMRRqmlJ+fTys2@dread.disaster.area> <2ef9ac6180e47bc9cc8edef20648a000367c4ed2.camel@kernel.org>
+ <ZTnNCytHLGoJY9ds@dread.disaster.area> <6df5ea54463526a3d898ed2bd8a005166caa9381.camel@kernel.org>
+ <ZUAwFkAizH1PrIZp@dread.disaster.area> <CAHk-=wg4jyTxO8WWUc1quqSETGaVsPHh8UeFUROYNwU-fEbkJg@mail.gmail.com>
+ <ZUBbj8XsA6uW8ZDK@dread.disaster.area> <CAOQ4uxgSRw26J+MPK-zhysZX9wBkXFRNx+n1bwnQwykCJ1=F4Q@mail.gmail.com>
+ <3d6a4c21626e6bbb86761a6d39e0fafaf30a4a4d.camel@kernel.org>
+ <ZUF4NTxQXpkJADxf@dread.disaster.area> <20231101101648.zjloqo5su6bbxzff@quack3>
+In-Reply-To: <20231101101648.zjloqo5su6bbxzff@quack3>
+From:   Amir Goldstein <amir73il@gmail.com>
+Date:   Wed, 1 Nov 2023 13:38:41 +0200
+Message-ID: <CAOQ4uxgGxtErFEcSdxoFDnZZ1XfmVKn2LT1dQcJqhNj5_rnC6A@mail.gmail.com>
+Subject: Re: [PATCH RFC 2/9] timekeeping: new interfaces for multigrain
+ timestamp handing
+To:     Jan Kara <jack@suse.cz>
+Cc:     Dave Chinner <david@fromorbit.com>,
+        Jeff Layton <jlayton@kernel.org>,
+        Linus Torvalds <torvalds@linux-foundation.org>,
+        Kent Overstreet <kent.overstreet@linux.dev>,
+        Christian Brauner <brauner@kernel.org>,
+        Alexander Viro <viro@zeniv.linux.org.uk>,
+        John Stultz <jstultz@google.com>,
+        Thomas Gleixner <tglx@linutronix.de>,
+        Stephen Boyd <sboyd@kernel.org>,
+        Chandan Babu R <chandan.babu@oracle.com>,
+        "Darrick J. Wong" <djwong@kernel.org>,
+        "Theodore Ts'o" <tytso@mit.edu>,
+        Andreas Dilger <adilger.kernel@dilger.ca>,
+        Chris Mason <clm@fb.com>, Josef Bacik <josef@toxicpanda.com>,
+        David Sterba <dsterba@suse.com>,
+        Hugh Dickins <hughd@google.com>,
+        Andrew Morton <akpm@linux-foundation.org>,
+        Jan Kara <jack@suse.de>, David Howells <dhowells@redhat.com>,
+        linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-xfs@vger.kernel.org, linux-ext4@vger.kernel.org,
+        linux-btrfs@vger.kernel.org, linux-mm@kvack.org,
+        linux-nfs@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
+On Wed, Nov 1, 2023 at 12:16=E2=80=AFPM Jan Kara <jack@suse.cz> wrote:
+>
+> On Wed 01-11-23 08:57:09, Dave Chinner wrote:
+> > 5. When-ever the inode is persisted, the timestamp is copied to the
+> > on-disk structure and the current change counter is folded in.
+> >
+> >       This means the on-disk structure always contains the latest
+> >       change attribute that has been persisted, just like we
+> >       currently do with i_version now.
+> >
+> > 6. When-ever we read the inode off disk, we split the change counter
+> > from the timestamp and update the appropriate internal structures
+> > with this information.
+> >
+> >       This ensures that the VFS and userspace never see the change
+> >       counter implementation in the inode timestamps.
+>
+> OK, but is this compatible with the current XFS behavior? AFAICS currentl=
+y
+> XFS sets sb->s_time_gran to 1 so timestamps currently stored on disk will
+> have some mostly random garbage in low bits of the ctime. Now if you look
+> at such inode with a kernel using this new scheme, stat(2) will report
+> ctime with low bits zeroed-out so if the ctime fetched in the old kernel =
+was
+> stored in some external database and compared to the newly fetched ctime,=
+ it
+> will appear that ctime has gone backwards... Maybe we don't care but it i=
+s
+> a user visible change that can potentially confuse something.
 
+See xfs_inode_has_bigtime() and auto-upgrade of inode format in
+xfs_inode_item_precommit().
 
-在 2023/11/1 1:02, Chandan Babu R 写道:
-> On Tue, Oct 31, 2023 at 09:43:59 AM -0700, Darrick J. Wong wrote:
->> On Tue, Oct 31, 2023 at 10:02:42AM +0100, Christoph Hellwig wrote:
->>> Can you also pick up:
->>>
->>> "xfs: only remap the written blocks in xfs_reflink_end_cow_extent"
->>>
->>> ?
->>>
->>> Also this seems to a bit of a mix of fixes for 6.7 and big stuff that
->>> is too late for the merge window.
->>
->> If by 'big stuff' you mean the MF_MEM_PRE_REMOVE patch, then yes, I
->> agree that it's too late to be changing code outside xfs.  Bumping that
->> to 6.8 will disappoint Shiyang, regrettably.
->>
-> 
-> I am sorry Shiyang, I will have to postpone your "mm, pmem, xfs: Introduce
-> MF_MEM_PRE_REMOVE for unbind" patch for v6.8. The delay was my
-> mistake. Apologies once again.
+In the case of BIGTIME inode format, admin needs to opt-in to
+BIGTIME format conversion by setting an INCOMPAT_BIGTIME
+sb feature flag.
 
-Never mind~  Then we'll have more time to test it, make sure the 
-functionality is good.
+I imagine that something similar (inode flag + sb flag) would need
+to be done for the versioned-timestamp, but I think that in that case,
+the feature flag could be RO_COMPAT - there is no harm in exposing
+made-up nsec lower bits if fs would be mounted read-only on an old
+kernel, is there?
 
+The same RO_COMPAT feature flag could also be used to determine
+s_time_gran, because IIUC, s_time_gran for timestamp updates
+is uniform across all inodes.
 
---
+I know that Dave said he wants to avoid changing on-disk format,
+but I am hoping that this well defined and backward compat with
+lazy upgrade, on-disk format change may be acceptable?
+
 Thanks,
-Ruan.
-
-> 
-> I have updated xfs-linux's for-next branch and I will be sending an
-> announcement shortly.
-> 
+Amir.
