@@ -2,166 +2,183 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5A418C4332F
-	for <linux-xfs@archiver.kernel.org>; Wed,  1 Nov 2023 14:59:04 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id AB0AAC4332F
+	for <linux-xfs@archiver.kernel.org>; Wed,  1 Nov 2023 15:56:34 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232269AbjKAO7E (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 1 Nov 2023 10:59:04 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44802 "EHLO
+        id S230505AbjKAP4f (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 1 Nov 2023 11:56:35 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54400 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231996AbjKAO7E (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 1 Nov 2023 10:59:04 -0400
+        with ESMTP id S230074AbjKAP4e (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 1 Nov 2023 11:56:34 -0400
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9F861FD
-        for <linux-xfs@vger.kernel.org>; Wed,  1 Nov 2023 07:59:01 -0700 (PDT)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 514B9C433C9;
-        Wed,  1 Nov 2023 14:59:00 +0000 (UTC)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8499DFD
+        for <linux-xfs@vger.kernel.org>; Wed,  1 Nov 2023 08:56:31 -0700 (PDT)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 2134FC433C7;
+        Wed,  1 Nov 2023 15:56:31 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1698850741;
-        bh=CLfAo2Lr7gi5Q2v2wgj5rYBLOwXN8vxzAnUtKpyKbyY=;
+        s=k20201202; t=1698854191;
+        bh=c4n/vEZxDQFsSAUHcCGgfZci5Znchi38ghKExBUOwSE=;
         h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=LZlFe2H9M2kvsDNEiQwWcVwdMeticWhYGUbzvUM47Pak08KwA/+CTHlt1x22mssXt
-         Blq4LS41OSlTwEZ/wkR0070pXfPWJzDW088z8x7SlWs0zLAvGeSW0iumexNCXyVwnE
-         1DaloRGXvWfDDUHDiIgbjZ6NZUwXezGN3+cyE3QQDFJb2bOHQ9JaQdEFo9PgXelbZe
-         s4a0Gy0KvI+1U/x13CuhHgrN+8pir4EpQQYorKgZ1MZqnoIEn7gzfPwHpyJWNXJTKk
-         OQamSZfEj69s64+YB2wuTrNSD+dEiCJzEX4SVODIpyywnHXaf5ISKwzsYTkuAnyBmW
-         OY9OydV7yPxuQ==
-Date:   Wed, 1 Nov 2023 15:58:57 +0100
-From:   Carlos Maiolino <cem@kernel.org>
-To:     "Darrick J. Wong" <djwong@kernel.org>
-Cc:     Chandan Babu R <chandan.babu@oracle.com>, linux-xfs@vger.kernel.org
-Subject: Re: [PATCH V3 00/23] Metadump v2
-Message-ID: <ianvoh4ppvbem45brsimplhax32fdxnoylkc2xb6ra3wgyayln@qyzf5efdafvy>
-References: <20230724043527.238600-1-chandan.babu@oracle.com>
- <zmMVayUsY-ViHdrS7GDAq2msR-u204qc5ppr-jOuQx-t7sh0Oid5kE7EC8WVhiqS02t6miNb3rjHZBknZUd-Kw==@protonmail.internalid>
- <20231031164640.GB1041814@frogsfrogsfrogs>
+        b=BBeiGr8yoNKN7SiiEX7aV/r+UkJJbNH4yrkN4XBV7xq8X2RBtjihfKW4QMQCtJ2w9
+         VBpj7E2BZ1ZJrlIvwT882Bf7TYogHYoPYSCkTzB04Gs9PbxzrkPXusfwBhzvkiVS4q
+         BFckSXR1bSsraRYIRzDzKB7bim94LxL3bjKayIlvS1Jw0d1hAlwHm6WCsXm0uGNUV1
+         epMfzymCp9P1ajDz8XcnmDB8ZX379ytSeYey+mCMOGBJ4a7Daf11T7pxL5OnDxv4k3
+         obzoC7ZTbWYqjeUrdZY60Mr9QjEHNQmJCW6AjC8C3/tMtP2zaLQu5X2HPmXZ/mk0Hf
+         C8GGYNT9hd8lg==
+Date:   Wed, 1 Nov 2023 08:56:30 -0700
+From:   "Darrick J. Wong" <djwong@kernel.org>
+To:     Zorro Lang <zlang@redhat.com>
+Cc:     Omar Sandoval <osandov@osandov.com>, fstests@vger.kernel.org,
+        linux-xfs@vger.kernel.org, kernel-team@fb.com
+Subject: Re: [PATCH fstests v2] xfs: test refilling AGFL after lots of btree
+ splits
+Message-ID: <20231101155630.GA1203404@frogsfrogsfrogs>
+References: <68cd85697855f686529829a2825b044913148caf.1698699188.git.osandov@fb.com>
+ <fe622bff22bca23648ed1154faeadce3ed51ad3b.1698699498.git.osandov@osandov.com>
+ <20231101064543.uruh3ljicwnedw7x@dell-per750-06-vm-08.rhts.eng.pek2.redhat.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20231031164640.GB1041814@frogsfrogsfrogs>
+In-Reply-To: <20231101064543.uruh3ljicwnedw7x@dell-per750-06-vm-08.rhts.eng.pek2.redhat.com>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Tue, Oct 31, 2023 at 09:46:40AM -0700, Darrick J. Wong wrote:
-> On Mon, Jul 24, 2023 at 10:05:04AM +0530, Chandan Babu R wrote:
-> > Hi all,
-> >
-> > This patch series extends metadump/mdrestore tools to be able to dump
-> > and restore contents of an external log device. It also adds the
-> > ability to copy larger blocks (e.g. 4096 bytes instead of 512 bytes)
-> > into the metadump file. These objectives are accomplished by
-> > introducing a new metadump file format.
+On Wed, Nov 01, 2023 at 02:45:43PM +0800, Zorro Lang wrote:
+> On Mon, Oct 30, 2023 at 02:00:15PM -0700, Omar Sandoval wrote:
+> > This is a regression test for patch "xfs: fix internal error from AGFL
+> > exhaustion"), which is not yet merged. Without the fix, it will fail
+> > with a "Structure needs cleaning" error.
+> > 
+> > Signed-off-by: Omar Sandoval <osandov@osandov.com>
+> > ---
+> > Changes since v1 [1]:
+> > 
+> > - Fixed to check whether mkfs.xfs supports -m rmapbt.
+> > - Changed bare $XFS_DB calls to _scratch_xfs_db.
+> > - Expanded comment about what happens without the fix.
+> > 
+> > I didn't add a check for whether everything ended up in AG 0, because it
+> > wasn't clear to me what to do in that case. We could skip the test, but
+> > it also doesn't hurt to run it anyways.
+> > 
+> > 1: https://lore.kernel.org/linux-xfs/c7be2fe66a297316b934ddd3a1368b14f39a9f22.1698190540.git.osandov@osandov.com/
+> > 
+> >  tests/xfs/601     | 68 +++++++++++++++++++++++++++++++++++++++++++++++
+> >  tests/xfs/601.out |  2 ++
 > 
-> Gentle maintainer ping: Carlos, do you have any thoughts about this
-> series?  The only unaddressed review comment was <cough> me asking for
-> code golf around patch 18 or so.  Do you (or anyone else) see any
-> problems that I've not spotted?
-
-Hi, it's been a while, but I looked into this series before, and I was mostly ok
-with it, I was actually waiting for a follow-up patch addressing your comments
-on patch 19, regarding mdrestore ops definition. My emails have been a bit funky
-recently, did I miss a new version of this series?
-
-Carlos
-
+> The xfs/601 has been taken by:
+>   39f88c55 ("generic: test FALLOC_FL_UNSHARE when pagecache is not loaded")
 > 
-> --D
+> I'll change this case to another number.
 > 
-> >
-> > I have tested the patchset by extending metadump/mdrestore tests in
-> > fstests to cover the newly introduced metadump v2 format. The tests
-> > can be found at
-> > https://github.com/chandanr/xfstests/commits/metadump-v2.
-> >
-> > The patch series can also be obtained from
-> > https://github.com/chandanr/xfsprogs-dev/commits/metadump-v2.
-> >
-> > Darrick, Please note that I have removed your RVB from "metadump: Add
-> > support for passing version option" patch. copy_log() and metadump_f()
-> > were invoking set_log_cur() for both "internal log" and "external
-> > log". In the V3 patchset, I have modified the copy_log() function to,
-> > 1. Invoke set_log_cur() when the filesystem has an external log.
-> > 2. Invoke set_cur() when the filesystem has an internal log.
-> >
-> > Changelog:
-> > V2 -> V3:
-> >   1. Document the meanings of metadump v2's ondisk flags.
-> >   2. Rename metadump_ops->end_write() to metadump_ops->finish_dump().
-> >   3. Pass a pointer to the newly introduced "union mdrestore_headers"
-> >      to callbacks in "struct mdrestore_ops" instead of a pointer to
-> >      "void".
-> >   4. Use set_log_cur() only when metadump has to be read from an
-> >      external log device.
-> >   5. Verify that primary superblock read from metadump file was indeed
-> >      read from the data device.
-> >   6. Fix indentation issues.
-> >
-> > V1 -> V2:
-> >   1. Introduce the new incompat flag XFS_MD2_INCOMPAT_EXTERNALLOG to
-> >      indicate that the metadump file contains data obtained from an
-> >      external log.
-> >   2. Interpret bits 54 and 55 of xfs_meta_extent.xme_addr as a counter
-> >      such that 00 maps to the data device and 01 maps to the log
-> >      device.
-> >   3. Define the new function set_log_cur() to read from
-> >      internal/external log device. This allows us to continue using
-> >      TYP_LOG to read from both internal and external log.
-> >   4. In order to support reading metadump from a pipe, mdrestore now
-> >      reads the first four bytes of the header to determine the
-> >      metadump version rather than reading the entire header in a
-> >      single call to fread().
-> >   5. Add an ASCII diagram to describe metadump v2's ondisk layout in
-> >      xfs_metadump.h.
-> >   6. Update metadump's man page to indicate that metadump in v2 format
-> >      is generated by default if the filesystem has an external log and
-> >      the metadump version to use is not explicitly mentioned on the
-> >      command line.
-> >   7. Remove '_metadump' suffix from function pointer names in "struct
-> >      metadump_ops".
-> >   8. Use xfs_daddr_t type for declaring variables containing disk
-> >      offset value.
-> >   9. Use bool type rather than int for variables holding a boolean
-> >      value.
-> >   11. Remove unnecessary whitespace.
-> >
-> >
-> > Chandan Babu R (23):
-> >   metadump: Use boolean values true/false instead of 1/0
-> >   mdrestore: Fix logic used to check if target device is large enough
-> >   metadump: Declare boolean variables with bool type
-> >   metadump: Define and use struct metadump
-> >   metadump: Add initialization and release functions
-> >   metadump: Postpone invocation of init_metadump()
-> >   metadump: Introduce struct metadump_ops
-> >   metadump: Introduce metadump v1 operations
-> >   metadump: Rename XFS_MD_MAGIC to XFS_MD_MAGIC_V1
-> >   metadump: Define metadump v2 ondisk format structures and macros
-> >   metadump: Define metadump ops for v2 format
-> >   xfs_db: Add support to read from external log device
-> >   metadump: Add support for passing version option
-> >   mdrestore: Declare boolean variables with bool type
-> >   mdrestore: Define and use struct mdrestore
-> >   mdrestore: Detect metadump v1 magic before reading the header
-> >   mdrestore: Add open_device(), read_header() and show_info() functions
-> >   mdrestore: Introduce struct mdrestore_ops
-> >   mdrestore: Replace metadump header pointer argument with a union
-> >     pointer
-> >   mdrestore: Introduce mdrestore v1 operations
-> >   mdrestore: Extract target device size verification into a function
-> >   mdrestore: Define mdrestore ops for v2 format
-> >   mdrestore: Add support for passing log device as an argument
-> >
-> >  db/io.c                   |  56 ++-
-> >  db/io.h                   |   2 +
-> >  db/metadump.c             | 777 ++++++++++++++++++++++++--------------
-> >  db/xfs_metadump.sh        |   3 +-
-> >  include/xfs_metadump.h    |  70 +++-
-> >  man/man8/xfs_mdrestore.8  |   8 +
-> >  man/man8/xfs_metadump.8   |  14 +
-> >  mdrestore/xfs_mdrestore.c | 497 ++++++++++++++++++------
-> >  8 files changed, 1014 insertions(+), 413 deletions(-)
-> >
-> > --
-> > 2.39.1
-> >
+> ...
+> Hi Darrick, I just noticed that commit has "generic", but that's a case in
+> tests/xfs, and there's not "_supported_fs xfs" in xfs/601. Do you want to
+> move it to be a generic case?
+
+Yes, the existing xfs/601 regression test (kernel commit 35d30c9cf127)
+can become a generic test; and then this one can take its place.
+
+--D
+
+> >  2 files changed, 70 insertions(+)
+> >  create mode 100755 tests/xfs/601
+> >  create mode 100644 tests/xfs/601.out
+> > 
+> > diff --git a/tests/xfs/601 b/tests/xfs/601
+> > new file mode 100755
+> > index 00000000..68df6ac0
+> > --- /dev/null
+> > +++ b/tests/xfs/601
+> > @@ -0,0 +1,68 @@
+> > +#! /bin/bash
+> > +# SPDX-License-Identifier: GPL-2.0
+> > +# Copyright (c) Meta Platforms, Inc. and affiliates.
+> > +#
+> > +# FS QA Test 601
+> > +#
+> > +# Regression test for patch "xfs: fix internal error from AGFL exhaustion".
+> > +#
+> > +. ./common/preamble
+> > +_begin_fstest auto prealloc punch
+> > +
+> > +. ./common/filter
+> > +
+> > +_supported_fs xfs
+> > +_require_scratch
+> 
+> _require_xfs_io_command "fpunch" ?
+> 
+> I can help to add that, others look good to me.
+> 
+> Reviewed-by: Zorro Lang <zlang@redhat.com>
+> 
+> > +_require_test_program punch-alternating
+> > +_fixed_by_kernel_commit XXXXXXXXXXXX "xfs: fix internal error from AGFL exhaustion"
+> > +
+> > +# Disable the rmapbt so we only need to worry about splitting the bnobt and
+> > +# cntbt at the same time.
+> > +opts=
+> > +if $MKFS_XFS_PROG |& grep -q rmapbt; then
+> > +	opts="-m rmapbt=0"
+> > +fi
+> > +_scratch_mkfs $opts | _filter_mkfs > /dev/null 2> "$tmp.mkfs"
+> > +. "$tmp.mkfs"
+> > +_scratch_mount
+> > +
+> > +alloc_block_len=$((_fs_has_crcs ? 56 : 16))
+> > +allocbt_leaf_maxrecs=$(((dbsize - alloc_block_len) / 8))
+> > +allocbt_node_maxrecs=$(((dbsize - alloc_block_len) / 12))
+> > +
+> > +# Create a big file with a size such that the punches below create the exact
+> > +# free extents we want.
+> > +num_holes=$((allocbt_leaf_maxrecs * allocbt_node_maxrecs - 1))
+> > +$XFS_IO_PROG -c "falloc 0 $((9 * dbsize + num_holes * dbsize * 2))" -f "$SCRATCH_MNT/big"
+> > +
+> > +# Fill in any small free extents in AG 0. After this, there should be only one,
+> > +# large free extent.
+> > +_scratch_unmount
+> > +mapfile -t gaps < <(_scratch_xfs_db -c 'agf 0' -c 'addr cntroot' -c btdump |
+> > +	$SED_PROG -rn 's/^[0-9]+:\[[0-9]+,([0-9]+)\].*/\1/p' |
+> > +	tac | tail -n +2)
+> > +_scratch_mount
+> > +for gap_i in "${!gaps[@]}"; do
+> > +	gap=${gaps[$gap_i]}
+> > +	$XFS_IO_PROG -c "falloc 0 $((gap * dbsize))" -f "$SCRATCH_MNT/gap$gap_i"
+> > +done
+> > +
+> > +# Create enough free space records to make the bnobt and cntbt both full,
+> > +# 2-level trees, plus one more record to make them split all the way to the
+> > +# root and become 3-level trees. After this, there is a 7-block free extent in
+> > +# the rightmost leaf of the cntbt, and all of the leaves of the cntbt other
+> > +# than the rightmost two are full. Without the fix, the free list is also
+> > +# empty.
+> > +$XFS_IO_PROG -c "fpunch $dbsize $((7 * dbsize))" "$SCRATCH_MNT/big"
+> > +"$here/src/punch-alternating" -o 9 "$SCRATCH_MNT/big"
+> > +
+> > +# Do an arbitrary operation that refills the free list. Without the fix, this
+> > +# will allocate 6 blocks from the 7-block free extent in the rightmost leaf of
+> > +# the cntbt, then try to insert the remaining 1 block free extent in the
+> > +# leftmost leaf of the cntbt. But that leaf is full, so this tries to split the
+> > +# leaf and fails because the free list is empty, returning EFSCORRUPTED.
+> > +$XFS_IO_PROG -c "fpunch 0 $dbsize" "$SCRATCH_MNT/big"
+> > +
+> > +echo "Silence is golden"
+> > +status=0
+> > +exit
+> > diff --git a/tests/xfs/601.out b/tests/xfs/601.out
+> > new file mode 100644
+> > index 00000000..0d70c3e5
+> > --- /dev/null
+> > +++ b/tests/xfs/601.out
+> > @@ -0,0 +1,2 @@
+> > +QA output created by 601
+> > +Silence is golden
+> > -- 
+> > 2.41.0
+> > 
+> > 
+> 
+> 
