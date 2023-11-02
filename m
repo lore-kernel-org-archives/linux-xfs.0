@@ -2,140 +2,487 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E54FDC4332F
-	for <linux-xfs@archiver.kernel.org>; Thu,  2 Nov 2023 21:47:09 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C709CC4167B
+	for <linux-xfs@archiver.kernel.org>; Thu,  2 Nov 2023 22:18:22 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229865AbjKBVrK (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 2 Nov 2023 17:47:10 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38818 "EHLO
+        id S229741AbjKBWSX (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 2 Nov 2023 18:18:23 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60226 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229448AbjKBVrJ (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 2 Nov 2023 17:47:09 -0400
-Received: from mail-pj1-x1035.google.com (mail-pj1-x1035.google.com [IPv6:2607:f8b0:4864:20::1035])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2CA6918C
-        for <linux-xfs@vger.kernel.org>; Thu,  2 Nov 2023 14:47:07 -0700 (PDT)
-Received: by mail-pj1-x1035.google.com with SMTP id 98e67ed59e1d1-280137f1a1bso1312011a91.1
-        for <linux-xfs@vger.kernel.org>; Thu, 02 Nov 2023 14:47:07 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=fromorbit-com.20230601.gappssmtp.com; s=20230601; t=1698961626; x=1699566426; darn=vger.kernel.org;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
-        bh=ux/uQy4XxXsV3Ii3hbDJzbYfbA13OqRj3f23Guj+kpc=;
-        b=dh6DFVxTtcGedRbOl/44qlNW+Bg43Cjt1WwLbxzjLPxAOOkZsaJpsBvurHTWIEhUgR
-         62yFrqldmDTjLB+fYnxz9DVrdDLjbKMj0R9rvyZjWVpcTv8xw03f+KXeqti0mx40K4CZ
-         W0Eg3paj2Iz3RSXni7RFfT+wGWAC61yZO7QBB+vILhE+GFgBhGp1/620yuzvuSrR7dXn
-         GQCrkAqxE7szcmapZyr7vmFQsBnwyQdbBAofVh/WVZySzUxbA5or6RXqcMSCWWeej2cm
-         xD8S7wZySsEEaSS5a2SNIKibjCq4EUX+M99c3ZK8Dy1WvFRU3QKqy/ZuuVtseN6ooaI5
-         mk1A==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1698961626; x=1699566426;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=ux/uQy4XxXsV3Ii3hbDJzbYfbA13OqRj3f23Guj+kpc=;
-        b=qcc4kJ9TmirHWN6qnYY6XfyoSD7cs3g24psqdWMePn1lmchOPr51fWc70bNlgmfXge
-         aL2IVBXr5SkDviGhYvqkbnbxBotKA5ThbO/CuqMSN1a5S2gsPKQ7qJbFqTie/95+53qj
-         eShoeiVJv0gKNAIaTPqdh4o1OTZCq7EYL6Dm0KjCNmh1FO9KsSdQSpOu98/hWHS7XvhK
-         XfXBjlHhO/hZvAJiZRVPvQowKCiM8bPc7PivHgQys/wEoDju7Uw2YP98f983wcvjtr2F
-         lavD6agp6Fd/r//U+Z/6E8So3ANe5EvJXzPyr1cNWDKS8WQxLLdKOzULDGpZ4RiiPeAs
-         2Qtw==
-X-Gm-Message-State: AOJu0YzfM5iK8cdTxV0DqBq+TZsoOXTuQBV3Dal2+mHtTs6zNQB+ivdH
-        Cg4/Ra5uHv4mg7VRjjyV4s2ToQ==
-X-Google-Smtp-Source: AGHT+IH9h6fSDDz86oGwrKF11yIcFqab+Ly+9UfJBbmyoqeLxQV65LtuLujk/BsUF9NKidQ7w7yjQA==
-X-Received: by 2002:a17:90b:1189:b0:27d:3ecb:3cbb with SMTP id gk9-20020a17090b118900b0027d3ecb3cbbmr17484676pjb.37.1698961626601;
-        Thu, 02 Nov 2023 14:47:06 -0700 (PDT)
-Received: from dread.disaster.area (pa49-180-20-59.pa.nsw.optusnet.com.au. [49.180.20.59])
-        by smtp.gmail.com with ESMTPSA id k20-20020a170902ba9400b001c9c97beb9csm177566pls.71.2023.11.02.14.47.06
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 02 Nov 2023 14:47:06 -0700 (PDT)
-Received: from dave by dread.disaster.area with local (Exim 4.96)
-        (envelope-from <david@fromorbit.com>)
-        id 1qyfWp-007Osh-1M;
-        Fri, 03 Nov 2023 08:47:03 +1100
-Date:   Fri, 3 Nov 2023 08:47:03 +1100
-From:   Dave Chinner <david@fromorbit.com>
-To:     "Darrick J. Wong" <djwong@kernel.org>
-Cc:     Alexander Puchmayr <alexander.puchmayr@linznet.at>,
-        linux-xfs@vger.kernel.org
-Subject: Re: xfsdump does not support reflink copied files properly
-Message-ID: <ZUQY1/DjREXQbgDb@dread.disaster.area>
-References: <2644025.VLH7GnMWUR@zeus>
- <20231102163953.GF1205143@frogsfrogsfrogs>
+        with ESMTP id S229628AbjKBWSX (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 2 Nov 2023 18:18:23 -0400
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 84DE0F0
+        for <linux-xfs@vger.kernel.org>; Thu,  2 Nov 2023 15:18:19 -0700 (PDT)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 0CBF7C433C7;
+        Thu,  2 Nov 2023 22:18:19 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1698963499;
+        bh=bo9fjadylFxMcHJgXiGCVqwCaB6RDL2BZpD9bu5FKjY=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=RbPGQRwRoAzjYP3Seuu3aWJgOxbLyX3UErJFDQnQsI5amKVF3VfmwSfRJdZuhF/AF
+         glf/ZxTOYBH9o4WClv6OnVqFwFCcscmxd3LT/MKB9efEQqsIr0/0IKumnfP4fe7dze
+         +oxL4M27dmDVcEGEifdWoDo/WhmY0f4DmiuFkO2t1y8z2rlH8h6CAr+OVlVPzYu377
+         r2oex3BPzhJUjNFX9wdij5cYojhClREJ00PpXRfOCNefhH+yFp102wPV2tNycrI4LR
+         Xf3RGj3KV21F/01Qti7SmEPBQT8POgLsC+9P8UfOQ3voI8AILDbI2345cK+H7IEbKr
+         +MUASuXSiyYuQ==
+Date:   Thu, 2 Nov 2023 15:18:18 -0700
+From:   "Darrick J. Wong" <djwong@kernel.org>
+To:     Zorro Lang <zlang@redhat.com>
+Cc:     linux-xfs@vger.kernel.org, fstests@vger.kernel.org
+Subject: Re: [PATCH 1/1] xfs: test unlinked inode list repair on demand
+Message-ID: <20231102221818.GC1758611@frogsfrogsfrogs>
+References: <169687552892.3949084.287369396167434290.stgit@frogsfrogsfrogs>
+ <169687553453.3949084.14532709239423528329.stgit@frogsfrogsfrogs>
+ <20231101172054.GD1205143@frogsfrogsfrogs>
+ <20231102201231.xhjhzeah7lb7vm45@dell-per750-06-vm-08.rhts.eng.pek2.redhat.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20231102163953.GF1205143@frogsfrogsfrogs>
+In-Reply-To: <20231102201231.xhjhzeah7lb7vm45@dell-per750-06-vm-08.rhts.eng.pek2.redhat.com>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Thu, Nov 02, 2023 at 09:39:53AM -0700, Darrick J. Wong wrote:
-> On Thu, Nov 02, 2023 at 01:42:54PM +0100, Alexander Puchmayr wrote:
-> > Hi there,
+On Fri, Nov 03, 2023 at 04:12:31AM +0800, Zorro Lang wrote:
+> On Wed, Nov 01, 2023 at 10:20:54AM -0700, Darrick J. Wong wrote:
+> > On Mon, Oct 09, 2023 at 11:18:54AM -0700, Darrick J. Wong wrote:
+> > > From: Darrick J. Wong <djwong@kernel.org>
+> > > 
+> > > Create a test to exercise recovery of unlinked inodes on a clean
+> > > filesystem.  This was definitely possible on old kernels that on an ro
+> > > mount would clean the log without processing the iunlink list.
+> > > 
+> > > Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 > > 
-> > I just encountered a problem when trying to use xfsdump on a filesystem with 
-> > lots of reflink copied vm disk images, yielding a dump file much larger than 
-> > expected and which I also was unable to restore from (target disk full). I 
-> > created a gentoo bug item under https://bugs.gentoo.org/916704 and I got 
-> > advised to report it here as well.
+> > Ping?  The kernel fixes and the xfs_db commands have both been merged
+> > upstream, could we please merge this functional test of the new unlinked
+> > inode cleanup code in the kernel XFS driver?
+> 
+> Sure Darrick. I'll try to merge it in next fstests release.
+> 
+> The x/1872 missed the _kernlog(), I think it's a Darrick specific common
+> helper :)
+
+D'oh!  Yeah, that's part of ... oh, I guess I never sent /that/ series.
+The actual commit is here:
+https://git.kernel.org/pub/scm/linux/kernel/git/djwong/xfstests-dev.git/commit/?h=djwong-wtf&id=ca8940e822d83574772f6c953dcadb8c12b9b2b1
+
+> The x/1873 need the xfs_io repair -R, I'm using the lastest xfsprogs
+> for-next branch. Where can I get the -R support ?
+
+D'oh!  repair -R is in the series that Carlos said he'd pick up for
+xfsprogs 6.6:
+https://lore.kernel.org/linux-xfs/20231003113334.zi7p7c77pqvesmfb@andromeda/
+
+Ok, I'll put this one back to sleep until xfsprogs catches up.  Or
+maybe next week.
+
+(FWIW I pushed djwong-wtf of all three branches last night.)
+
+--D
+
+> Thanks,
+> Zorro
+> 
 > > 
-> > Copy from the bug report:
+> > --D
 > > 
-> > sys-fs/xfsdump-3.1.12 seems to copy reflink copied files as ordinary files, 
-> > resulting in a way too big dump file. Restoring from such a dump yields likely 
-> > a out-of-diskspace condition. 
+> > > ---
+> > >  common/rc          |    4 +
+> > >  tests/xfs/1872     |  113 +++++++++++++++++++++++++++
+> > >  tests/xfs/1872.out |    5 +
+> > >  tests/xfs/1873     |  217 ++++++++++++++++++++++++++++++++++++++++++++++++++++
+> > >  tests/xfs/1873.out |    6 +
+> > >  5 files changed, 344 insertions(+), 1 deletion(-)
+> > >  create mode 100755 tests/xfs/1872
+> > >  create mode 100644 tests/xfs/1872.out
+> > >  create mode 100755 tests/xfs/1873
+> > >  create mode 100644 tests/xfs/1873.out
+> > > 
+> > > 
+> > > diff --git a/common/rc b/common/rc
+> > > index 259a1ffb09..20d3e61c4e 100644
+> > > --- a/common/rc
+> > > +++ b/common/rc
+> > > @@ -2668,9 +2668,11 @@ _require_xfs_io_command()
+> > >  		param_checked="$pwrite_opts $param"
+> > >  		;;
+> > >  	"scrub"|"repair")
+> > > -		testio=`$XFS_IO_PROG -x -c "$command probe" $TEST_DIR 2>&1`
+> > > +		test -z "$param" && param="probe"
+> > > +		testio=`$XFS_IO_PROG -x -c "$command $param" $TEST_DIR 2>&1`
+> > >  		echo $testio | grep -q "Inappropriate ioctl" && \
+> > >  			_notrun "xfs_io $command support is missing"
+> > > +		param_checked="$param"
+> > >  		;;
+> > >  	"startupdate"|"commitupdate"|"cancelupdate")
+> > >  		$XFS_IO_PROG -f -c 'pwrite -S 0x58 0 128k -b 128k' $testfile > /dev/null
+> > > diff --git a/tests/xfs/1872 b/tests/xfs/1872
+> > > new file mode 100755
+> > > index 0000000000..3720a3d184
+> > > --- /dev/null
+> > > +++ b/tests/xfs/1872
+> > > @@ -0,0 +1,113 @@
+> > > +#! /bin/bash
+> > > +# SPDX-License-Identifier: GPL-2.0
+> > > +# Copyright (c) 2023 Oracle.  All Rights Reserved.
+> > > +#
+> > > +# FS QA Test No. 1872
+> > > +#
+> > > +# Test using runtime code to fix unlinked inodes on a clean filesystem that
+> > > +# never got cleaned up.
+> > > +#
+> > > +. ./common/preamble
+> > > +_begin_fstest auto quick unlink
+> > > +
+> > > +# Import common functions.
+> > > +source ./common/filter
+> > > +source ./common/fuzzy
+> > > +source ./common/quota
+> > > +
+> > > +# real QA test starts here
+> > > +
+> > > +# Modify as appropriate.
+> > > +_supported_fs generic
+> > > +_require_xfs_db_command iunlink
+> > > +_require_scratch_nocheck	# we'll run repair ourselves
+> > > +
+> > > +# From the AGI definition
+> > > +XFS_AGI_UNLINKED_BUCKETS=64
+> > > +
+> > > +# Try to make each iunlink bucket have this many inodes in it.
+> > > +IUNLINK_BUCKETLEN=5
+> > > +
+> > > +# XXX Forcibly disable quota since quotacheck will break this test
+> > > +orig_mount_options="$MOUNT_OPTIONS"
+> > > +_qmount_option 'noquota'
+> > > +
+> > > +format_scratch() {
+> > > +	_scratch_mkfs -d agcount=1 | _filter_mkfs 2> "${tmp}.mkfs" >> $seqres.full
+> > > +	source "${tmp}.mkfs"
+> > > +	test "${agcount}" -eq 1 || _notrun "test requires 1 AG for error injection"
+> > > +
+> > > +	local nr_iunlinks="$((IUNLINK_BUCKETLEN * XFS_AGI_UNLINKED_BUCKETS))"
+> > > +	readarray -t BADINODES < <(_scratch_xfs_db -x -c "iunlink -n $nr_iunlinks" | awk '{print $4}')
+> > > +}
+> > > +
+> > > +__repair_check_scratch() {
+> > > +	_scratch_xfs_repair -o force_geometry -n 2>&1 | \
+> > > +		tee -a $seqres.full | \
+> > > +		grep -E '(disconnected inode.*would move|next_unlinked in inode|unlinked bucket.*is.*in ag)'
+> > > +	return "${PIPESTATUS[0]}"
+> > > +}
+> > > +
+> > > +exercise_scratch() {
+> > > +	# Create a bunch of files...
+> > > +	declare -A inums
+> > > +	for ((i = 0; i < (XFS_AGI_UNLINKED_BUCKETS * 2); i++)); do
+> > > +		touch "${SCRATCH_MNT}/${i}" || break
+> > > +		inums["${i}"]="$(stat -c %i "${SCRATCH_MNT}/${i}")"
+> > > +	done
+> > > +
+> > > +	# ...then delete them to exercise the unlinked buckets
+> > > +	for ((i = 0; i < (XFS_AGI_UNLINKED_BUCKETS * 2); i++)); do
+> > > +		if ! rm -f "${SCRATCH_MNT}/${i}"; then
+> > > +			echo "rm failed on inum ${inums[$i]}"
+> > > +			break
+> > > +		fi
+> > > +	done
+> > > +}
+> > > +
+> > > +# Offline repair should not find anything
+> > > +final_check_scratch() {
+> > > +	__repair_check_scratch
+> > > +	res=$?
+> > > +	if [ $res -eq 2 ]; then
+> > > +		echo "scratch fs went offline?"
+> > > +		_scratch_mount
+> > > +		_scratch_unmount
+> > > +		__repair_check_scratch
+> > > +	fi
+> > > +	test "$res" -ne 0 && echo "repair returned $res?"
+> > > +}
+> > > +
+> > > +echo "+ Part 0: See if runtime can recover the unlinked list" | tee -a $seqres.full
+> > > +format_scratch
+> > > +_kernlog "part 0"
+> > > +_scratch_mount
+> > > +exercise_scratch
+> > > +_scratch_unmount
+> > > +final_check_scratch
+> > > +
+> > > +echo "+ Part 1: See if bulkstat can recover the unlinked list" | tee -a $seqres.full
+> > > +format_scratch
+> > > +_kernlog "part 1"
+> > > +_scratch_mount
+> > > +$XFS_IO_PROG -c 'bulkstat' $SCRATCH_MNT > /dev/null
+> > > +exercise_scratch
+> > > +_scratch_unmount
+> > > +final_check_scratch
+> > > +
+> > > +echo "+ Part 2: See if quotacheck can recover the unlinked list" | tee -a $seqres.full
+> > > +if [ -f /proc/fs/xfs/xqmstat ]; then
+> > > +	MOUNT_OPTIONS="$orig_mount_options"
+> > > +	_qmount_option 'quota'
+> > > +	format_scratch
+> > > +	_kernlog "part 2"
+> > > +	_scratch_mount
+> > > +	exercise_scratch
+> > > +	_scratch_unmount
+> > > +	final_check_scratch
+> > > +fi
+> > > +
+> > > +# success, all done
+> > > +echo Silence is golden
+> > > +status=0
+> > > +exit
+> > > diff --git a/tests/xfs/1872.out b/tests/xfs/1872.out
+> > > new file mode 100644
+> > > index 0000000000..248f0e2416
+> > > --- /dev/null
+> > > +++ b/tests/xfs/1872.out
+> > > @@ -0,0 +1,5 @@
+> > > +QA output created by 1872
+> > > ++ Part 0: See if runtime can recover the unlinked list
+> > > ++ Part 1: See if bulkstat can recover the unlinked list
+> > > ++ Part 2: See if quotacheck can recover the unlinked list
+> > > +Silence is golden
+> > > diff --git a/tests/xfs/1873 b/tests/xfs/1873
+> > > new file mode 100755
+> > > index 0000000000..4712dee7ab
+> > > --- /dev/null
+> > > +++ b/tests/xfs/1873
+> > > @@ -0,0 +1,217 @@
+> > > +#! /bin/bash
+> > > +# SPDX-License-Identifier: GPL-2.0
+> > > +# Copyright (c) 2023 Oracle.  All Rights Reserved.
+> > > +#
+> > > +# FS QA Test No. 1873
+> > > +#
+> > > +# Functional test of using online repair to fix unlinked inodes on a clean
+> > > +# filesystem that never got cleaned up.
+> > > +#
+> > > +. ./common/preamble
+> > > +_begin_fstest auto online_repair
+> > > +
+> > > +# Import common functions.
+> > > +source ./common/filter
+> > > +source ./common/fuzzy
+> > > +source ./common/quota
+> > > +
+> > > +# real QA test starts here
+> > > +
+> > > +# Modify as appropriate.
+> > > +_supported_fs generic
+> > > +_require_xfs_db_command iunlink
+> > > +# The iunlink bucket repair code wasn't added to the AGI repair code
+> > > +# until after the directory repair code was merged
+> > > +_require_xfs_io_command repair -R directory
+> > > +_require_scratch_nocheck	# repair doesn't like single-AG fs
+> > > +
+> > > +# From the AGI definition
+> > > +XFS_AGI_UNLINKED_BUCKETS=64
+> > > +
+> > > +# Try to make each iunlink bucket have this many inodes in it.
+> > > +IUNLINK_BUCKETLEN=5
+> > > +
+> > > +# XXX Forcibly disable quota since quotacheck will break this test
+> > > +_qmount_option 'noquota'
+> > > +
+> > > +format_scratch() {
+> > > +	_scratch_mkfs -d agcount=1 | _filter_mkfs 2> "${tmp}.mkfs" >> $seqres.full
+> > > +	source "${tmp}.mkfs"
+> > > +	test "${agcount}" -eq 1 || _notrun "test requires 1 AG for error injection"
+> > > +
+> > > +	local nr_iunlinks="$((IUNLINK_BUCKETLEN * XFS_AGI_UNLINKED_BUCKETS))"
+> > > +	readarray -t BADINODES < <(_scratch_xfs_db -x -c "iunlink -n $nr_iunlinks" | awk '{print $4}')
+> > > +}
+> > > +
+> > > +__repair_check_scratch() {
+> > > +	_scratch_xfs_repair -o force_geometry -n 2>&1 | \
+> > > +		tee -a $seqres.full | \
+> > > +		grep -E '(disconnected inode.*would move|next_unlinked in inode|unlinked bucket.*is.*in ag)'
+> > > +	return "${PIPESTATUS[0]}"
+> > > +}
+> > > +
+> > > +corrupt_scratch() {
+> > > +	# How far into the iunlink bucket chain do we target inodes for corruption?
+> > > +	# 1 = target the inode pointed to by the AGI
+> > > +	# 3 = middle of bucket list
+> > > +	# 5 = last element in bucket
+> > > +	local corruption_bucket_depth="$1"
+> > > +	if ((corruption_bucket_depth < 1 || corruption_bucket_depth > IUNLINK_BUCKETLEN)); then
+> > > +		echo "${corruption_bucket_depth}: Value must be between 1 and ${IUNLINK_BUCKETLEN}."
+> > > +		return 1
+> > > +	fi
+> > > +
+> > > +	# Index of the inode numbers within BADINODES
+> > > +	local bad_ino1_idx=$(( (IUNLINK_BUCKETLEN - corruption_bucket_depth) * XFS_AGI_UNLINKED_BUCKETS))
+> > > +	local bad_ino2_idx=$((bad_ino1_idx + 1))
+> > > +
+> > > +	# Inode numbers to target
+> > > +	local bad_ino1="${BADINODES[bad_ino1_idx]}"
+> > > +	local bad_ino2="${BADINODES[bad_ino2_idx]}"
+> > > +	printf "bad: 0x%x 0x%x\n" "${bad_ino1}" "${bad_ino2}" | _tee_kernlog >> $seqres.full
+> > > +
+> > > +	# Bucket within AGI 0's iunlinked array.
+> > > +	local ino1_bucket="$((bad_ino1 % XFS_AGI_UNLINKED_BUCKETS))"
+> > > +	local ino2_bucket="$((bad_ino2 % XFS_AGI_UNLINKED_BUCKETS))"
+> > > +
+> > > +	# The first bad inode stays on the unlinked list but gets a nonzero
+> > > +	# nlink; the second bad inode is removed from the unlinked list but
+> > > +	# keeps its zero nlink
+> > > +	_scratch_xfs_db -x \
+> > > +		-c "inode ${bad_ino1}" -c "write -d core.nlinkv2 5555" \
+> > > +		-c "agi 0" -c "fuzz -d unlinked[${ino2_bucket}] ones" -c "print unlinked" >> $seqres.full
+> > > +
+> > > +	local iwatch=()
+> > > +	local idx
+> > > +
+> > > +	# Make a list of the adjacent iunlink bucket inodes for the first inode
+> > > +	# that we targeted.
+> > > +	if [ "${corruption_bucket_depth}" -gt 1 ]; then
+> > > +		# Previous ino in bucket
+> > > +		idx=$(( (IUNLINK_BUCKETLEN - corruption_bucket_depth + 1) * XFS_AGI_UNLINKED_BUCKETS))
+> > > +		iwatch+=("${BADINODES[idx]}")
+> > > +	fi
+> > > +	iwatch+=("${bad_ino1}")
+> > > +	if [ "$((corruption_bucket_depth + 1))" -lt "${IUNLINK_BUCKETLEN}" ]; then
+> > > +		# Next ino in bucket
+> > > +		idx=$(( (IUNLINK_BUCKETLEN - corruption_bucket_depth - 1) * XFS_AGI_UNLINKED_BUCKETS))
+> > > +		iwatch+=("${BADINODES[idx]}")
+> > > +	fi
+> > > +
+> > > +	# Make a list of the adjacent iunlink bucket inodes for the second
+> > > +	# inode that we targeted.
+> > > +	if [ "${corruption_bucket_depth}" -gt 1 ]; then
+> > > +		# Previous ino in bucket
+> > > +		idx=$(( (IUNLINK_BUCKETLEN - corruption_bucket_depth + 1) * XFS_AGI_UNLINKED_BUCKETS))
+> > > +		iwatch+=("${BADINODES[idx + 1]}")
+> > > +	fi
+> > > +	iwatch+=("${bad_ino2}")
+> > > +	if [ "$((corruption_bucket_depth + 1))" -lt "${IUNLINK_BUCKETLEN}" ]; then
+> > > +		# Next ino in bucket
+> > > +		idx=$(( (IUNLINK_BUCKETLEN - corruption_bucket_depth - 1) * XFS_AGI_UNLINKED_BUCKETS))
+> > > +		iwatch+=("${BADINODES[idx + 1]}")
+> > > +	fi
+> > > +
+> > > +	# Construct a grep string for tracepoints.
+> > > +	GREP_STR="(xrep_attempt|xrep_done|bucket ${ino1_bucket} |bucket ${ino2_bucket} |bucket ${fuzz_bucket} "
+> > > +	GREP_STR="(xrep_attempt|xrep_done|bucket ${ino1_bucket} |bucket ${ino2_bucket} "
+> > > +	for ino in "${iwatch[@]}"; do
+> > > +		f="$(printf "|ino 0x%x" "${ino}")"
+> > > +		GREP_STR="${GREP_STR}${f}"
+> > > +	done
+> > > +	GREP_STR="${GREP_STR})"
+> > > +	echo "grep -E \"${GREP_STR}\"" >> $seqres.full
+> > > +
+> > > +	# Dump everything we did to to the full file.
+> > > +	local db_dump=(-c 'agi 0' -c 'print unlinked')
+> > > +	db_dump+=(-c 'addr root' -c 'print')
+> > > +	test "${ino1_bucket}" -gt 0 && \
+> > > +		db_dump+=(-c "dump_iunlinked -a 0 -b $((ino1_bucket - 1))")
+> > > +	db_dump+=(-c "dump_iunlinked -a 0 -b ${ino1_bucket}")
+> > > +	db_dump+=(-c "dump_iunlinked -a 0 -b ${ino2_bucket}")
+> > > +	test "${ino2_bucket}" -lt 63 && \
+> > > +		db_dump+=(-c "dump_iunlinked -a 0 -b $((ino2_bucket + 1))")
+> > > +	db_dump+=(-c "inode $bad_ino1" -c 'print core.nlinkv2 v3.inumber next_unlinked')
+> > > +	db_dump+=(-c "inode $bad_ino2" -c 'print core.nlinkv2 v3.inumber next_unlinked')
+> > > +	_scratch_xfs_db "${db_dump[@]}" >> $seqres.full
+> > > +
+> > > +	# Test run of repair to make sure we find disconnected inodes
+> > > +	__repair_check_scratch | \
+> > > +		sed -e 's/disconnected inode \([0-9]*\)/disconnected inode XXXXXX/g' \
+> > > +		    -e 's/next_unlinked in inode \([0-9]*\)/next_unlinked in inode XXXXXX/g' \
+> > > +		    -e 's/unlinked bucket \([0-9]*\) is \([0-9]*\) in ag \([0-9]*\) .inode=\([0-9]*\)/unlinked bucket YY is XXXXXX in ag Z (inode=AAAAAA/g' | \
+> > > +		uniq -c >> $seqres.full
+> > > +	res=${PIPESTATUS[0]}
+> > > +	test "$res" -ne 0 || echo "repair returned $res after corruption?"
+> > > +}
+> > > +
+> > > +exercise_scratch() {
+> > > +	# Create a bunch of files...
+> > > +	declare -A inums
+> > > +	for ((i = 0; i < (XFS_AGI_UNLINKED_BUCKETS * 2); i++)); do
+> > > +		touch "${SCRATCH_MNT}/${i}" || break
+> > > +		inums["${i}"]="$(stat -c %i "${SCRATCH_MNT}/${i}")"
+> > > +	done
+> > > +
+> > > +	# ...then delete them to exercise the unlinked buckets
+> > > +	for ((i = 0; i < (XFS_AGI_UNLINKED_BUCKETS * 2); i++)); do
+> > > +		if ! rm -f "${SCRATCH_MNT}/${i}"; then
+> > > +			echo "rm failed on inum ${inums[$i]}"
+> > > +			break
+> > > +		fi
+> > > +	done
+> > > +}
+> > > +
+> > > +# Offline repair should not find anything
+> > > +final_check_scratch() {
+> > > +	__repair_check_scratch
+> > > +	res=$?
+> > > +	if [ $res -eq 2 ]; then
+> > > +		echo "scratch fs went offline?"
+> > > +		_scratch_mount
+> > > +		_scratch_unmount
+> > > +		__repair_check_scratch
+> > > +	fi
+> > > +	test "$res" -ne 0 && echo "repair returned $res?"
+> > > +}
+> > > +
+> > > +echo "+ Part 1: See if scrub can recover the unlinked list" | tee -a $seqres.full
+> > > +format_scratch
+> > > +_kernlog "no bad inodes"
+> > > +_scratch_mount
+> > > +_scratch_scrub >> $seqres.full
+> > > +exercise_scratch
+> > > +_scratch_unmount
+> > > +final_check_scratch
+> > > +
+> > > +echo "+ Part 2: Corrupt the first inode in the bucket" | tee -a $seqres.full
+> > > +format_scratch
+> > > +corrupt_scratch 1
+> > > +_scratch_mount
+> > > +_scratch_scrub >> $seqres.full
+> > > +exercise_scratch
+> > > +_scratch_unmount
+> > > +final_check_scratch
+> > > +
+> > > +echo "+ Part 3: Corrupt the middle inode in the bucket" | tee -a $seqres.full
+> > > +format_scratch
+> > > +corrupt_scratch 3
+> > > +_scratch_mount
+> > > +_scratch_scrub >> $seqres.full
+> > > +exercise_scratch
+> > > +_scratch_unmount
+> > > +final_check_scratch
+> > > +
+> > > +echo "+ Part 4: Corrupt the last inode in the bucket" | tee -a $seqres.full
+> > > +format_scratch
+> > > +corrupt_scratch 5
+> > > +_scratch_mount
+> > > +_scratch_scrub >> $seqres.full
+> > > +exercise_scratch
+> > > +_scratch_unmount
+> > > +final_check_scratch
+> > > +
+> > > +# success, all done
+> > > +echo Silence is golden
+> > > +status=0
+> > > +exit
+> > > diff --git a/tests/xfs/1873.out b/tests/xfs/1873.out
+> > > new file mode 100644
+> > > index 0000000000..0e36bd2304
+> > > --- /dev/null
+> > > +++ b/tests/xfs/1873.out
+> > > @@ -0,0 +1,6 @@
+> > > +QA output created by 1873
+> > > ++ Part 1: See if scrub can recover the unlinked list
+> > > ++ Part 2: Corrupt the first inode in the bucket
+> > > ++ Part 3: Corrupt the middle inode in the bucket
+> > > ++ Part 4: Corrupt the last inode in the bucket
+> > > +Silence is golden
+> > > 
+> > 
 > 
-> Correct, xfsdump (and tar, and rsync...) does not know how to preserve
-> the sharing factor of a particular space extent.  All of those tools
-> walk the inodes on a filesystem, open them, and read() out the data.
-> 
-> Although there are ways to find out which file(s) own a piece of disk
-> space, each of those tools would most likely require a thorough redesign
-> to the dump file format to allow pointing to shared blocks elsewhere in
-> the dump file.
-
-I don't think that is the case. Like XFS, xfsdump encodes user data
-it backs up in extent records, and it has different types of
-extents. It currently understands "data" and "hole" extents as
-returned by XFS_IOC_GETBMAPX, so we could extend that to encode
-"shared" extents that point to an offset and length in a different
-inode.
-
-Yes, this means during the scan we have to record all shared extents
-with their underlying block number, then after the scan we need to
-resolve that to the single copy we are going to keep ias a normal
-data extent in the dump (i.e. the first to be restored) Then we
-convert all the others to the new shared extent type that points at
-the {ino, off, len} that contains the actual data in the dump.
-
-Now all restore needs to do is run FICLONERANGE when it comes across
-a shared extent - it's got all the info it needs in the dump to
-recreated the shared extent. We can use restore side ordering to
-guarantee that the data we need to clone is already on disk (e.g.
-delay extent clones until after all the normal data has been
-restored) so that all the shared extents we restore end up with the
-correct data in them.
-
-Yes, this means we need to bump the dump format version number to
-support shared extents, but overall it's not a major revision of the
-format or major surgery to the code base.  It doesn't require kernel
-or even XFS expertise to implement - it's all userspace stuff and
-fairly straight forward - it just requires time, resources and
-commitment.
-
-> Regardless, nobody's submitted code to do any of those things.  Patches
-> welcome.
-
-Yup, that is the biggest issue - there's always more things to do
-that we have people to do them.
-
-> > It may be used as a denial-of-service tool which can be used by an ordinary 
-> 
-> Please do not file a  ^^^^^^^^^^^^^^^^^ CVE for this.
-
-/me sighs
-
--Dave.
--- 
-Dave Chinner
-david@fromorbit.com
