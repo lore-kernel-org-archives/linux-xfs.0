@@ -2,135 +2,140 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 05EEAC4332F
-	for <linux-xfs@archiver.kernel.org>; Thu,  2 Nov 2023 20:59:15 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E54FDC4332F
+	for <linux-xfs@archiver.kernel.org>; Thu,  2 Nov 2023 21:47:09 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233774AbjKBU7P (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 2 Nov 2023 16:59:15 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38682 "EHLO
+        id S229865AbjKBVrK (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 2 Nov 2023 17:47:10 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38818 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S234446AbjKBU7O (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 2 Nov 2023 16:59:14 -0400
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3911019D
-        for <linux-xfs@vger.kernel.org>; Thu,  2 Nov 2023 13:59:11 -0700 (PDT)
-Received: by smtp.kernel.org (Postfix) with ESMTPS id BBA43C433CC
-        for <linux-xfs@vger.kernel.org>; Thu,  2 Nov 2023 20:59:10 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1698958750;
-        bh=Aa3xHuGNKmMg/0iumSNj6Ixq93l3uqtydOg0mQjnXzg=;
-        h=From:To:Subject:Date:In-Reply-To:References:From;
-        b=aq1BSkFdQXCUC586hgSCWkghaX7dlUJrDOUDV/7yTIrtqWIh5h0i71eVN0emt0wgY
-         DPKrm+yQsG4qid3PU89UDoh1ObRTIkN3kXtjAafEEjyuubTs5yVwyijixuoUxifRLa
-         9Jycgwyoa1l4xcJ9pSNP7x0vt5oJzXEgl6MnEbVgxbHwkCQuUwZ+CERWMG/1JL9qMN
-         8mrPZnE6I95xbBdR9h17TjwsUq7fxQUZC5coAurcJdaqkQqntG9cfHHKjnRAMpybGV
-         hADI+21WjRpxShxTpl4Qs1/jZLzGLBPwUDnYKfix29Ef5djPo/U1q0Mk4TanYsudG6
-         rb15cYXHNwWmw==
-Received: by aws-us-west-2-korg-bugzilla-1.web.codeaurora.org (Postfix, from userid 48)
-        id AB5C6C53BD1; Thu,  2 Nov 2023 20:59:10 +0000 (UTC)
-From:   bugzilla-daemon@kernel.org
-To:     linux-xfs@vger.kernel.org
-Subject: [Bug 217572] Initial blocked tasks causing deterioration over hours
- until (nearly) complete system lockup and data loss with PostgreSQL 13
-Date:   Thu, 02 Nov 2023 20:59:09 +0000
-X-Bugzilla-Reason: None
-X-Bugzilla-Type: changed
-X-Bugzilla-Watch-Reason: AssignedTo filesystem_xfs@kernel-bugs.kernel.org
-X-Bugzilla-Product: Memory Management
-X-Bugzilla-Component: Other
-X-Bugzilla-Version: 2.5
-X-Bugzilla-Keywords: 
-X-Bugzilla-Severity: high
-X-Bugzilla-Who: david@fromorbit.com
-X-Bugzilla-Status: NEW
-X-Bugzilla-Resolution: 
-X-Bugzilla-Priority: P3
-X-Bugzilla-Assigned-To: filesystem_xfs@kernel-bugs.kernel.org
-X-Bugzilla-Flags: 
-X-Bugzilla-Changed-Fields: 
-Message-ID: <bug-217572-201763-7aKPmPiF6l@https.bugzilla.kernel.org/>
-In-Reply-To: <bug-217572-201763@https.bugzilla.kernel.org/>
-References: <bug-217572-201763@https.bugzilla.kernel.org/>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
-X-Bugzilla-URL: https://bugzilla.kernel.org/
-Auto-Submitted: auto-generated
+        with ESMTP id S229448AbjKBVrJ (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 2 Nov 2023 17:47:09 -0400
+Received: from mail-pj1-x1035.google.com (mail-pj1-x1035.google.com [IPv6:2607:f8b0:4864:20::1035])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2CA6918C
+        for <linux-xfs@vger.kernel.org>; Thu,  2 Nov 2023 14:47:07 -0700 (PDT)
+Received: by mail-pj1-x1035.google.com with SMTP id 98e67ed59e1d1-280137f1a1bso1312011a91.1
+        for <linux-xfs@vger.kernel.org>; Thu, 02 Nov 2023 14:47:07 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=fromorbit-com.20230601.gappssmtp.com; s=20230601; t=1698961626; x=1699566426; darn=vger.kernel.org;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
+        bh=ux/uQy4XxXsV3Ii3hbDJzbYfbA13OqRj3f23Guj+kpc=;
+        b=dh6DFVxTtcGedRbOl/44qlNW+Bg43Cjt1WwLbxzjLPxAOOkZsaJpsBvurHTWIEhUgR
+         62yFrqldmDTjLB+fYnxz9DVrdDLjbKMj0R9rvyZjWVpcTv8xw03f+KXeqti0mx40K4CZ
+         W0Eg3paj2Iz3RSXni7RFfT+wGWAC61yZO7QBB+vILhE+GFgBhGp1/620yuzvuSrR7dXn
+         GQCrkAqxE7szcmapZyr7vmFQsBnwyQdbBAofVh/WVZySzUxbA5or6RXqcMSCWWeej2cm
+         xD8S7wZySsEEaSS5a2SNIKibjCq4EUX+M99c3ZK8Dy1WvFRU3QKqy/ZuuVtseN6ooaI5
+         mk1A==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1698961626; x=1699566426;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=ux/uQy4XxXsV3Ii3hbDJzbYfbA13OqRj3f23Guj+kpc=;
+        b=qcc4kJ9TmirHWN6qnYY6XfyoSD7cs3g24psqdWMePn1lmchOPr51fWc70bNlgmfXge
+         aL2IVBXr5SkDviGhYvqkbnbxBotKA5ThbO/CuqMSN1a5S2gsPKQ7qJbFqTie/95+53qj
+         eShoeiVJv0gKNAIaTPqdh4o1OTZCq7EYL6Dm0KjCNmh1FO9KsSdQSpOu98/hWHS7XvhK
+         XfXBjlHhO/hZvAJiZRVPvQowKCiM8bPc7PivHgQys/wEoDju7Uw2YP98f983wcvjtr2F
+         lavD6agp6Fd/r//U+Z/6E8So3ANe5EvJXzPyr1cNWDKS8WQxLLdKOzULDGpZ4RiiPeAs
+         2Qtw==
+X-Gm-Message-State: AOJu0YzfM5iK8cdTxV0DqBq+TZsoOXTuQBV3Dal2+mHtTs6zNQB+ivdH
+        Cg4/Ra5uHv4mg7VRjjyV4s2ToQ==
+X-Google-Smtp-Source: AGHT+IH9h6fSDDz86oGwrKF11yIcFqab+Ly+9UfJBbmyoqeLxQV65LtuLujk/BsUF9NKidQ7w7yjQA==
+X-Received: by 2002:a17:90b:1189:b0:27d:3ecb:3cbb with SMTP id gk9-20020a17090b118900b0027d3ecb3cbbmr17484676pjb.37.1698961626601;
+        Thu, 02 Nov 2023 14:47:06 -0700 (PDT)
+Received: from dread.disaster.area (pa49-180-20-59.pa.nsw.optusnet.com.au. [49.180.20.59])
+        by smtp.gmail.com with ESMTPSA id k20-20020a170902ba9400b001c9c97beb9csm177566pls.71.2023.11.02.14.47.06
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Thu, 02 Nov 2023 14:47:06 -0700 (PDT)
+Received: from dave by dread.disaster.area with local (Exim 4.96)
+        (envelope-from <david@fromorbit.com>)
+        id 1qyfWp-007Osh-1M;
+        Fri, 03 Nov 2023 08:47:03 +1100
+Date:   Fri, 3 Nov 2023 08:47:03 +1100
+From:   Dave Chinner <david@fromorbit.com>
+To:     "Darrick J. Wong" <djwong@kernel.org>
+Cc:     Alexander Puchmayr <alexander.puchmayr@linznet.at>,
+        linux-xfs@vger.kernel.org
+Subject: Re: xfsdump does not support reflink copied files properly
+Message-ID: <ZUQY1/DjREXQbgDb@dread.disaster.area>
+References: <2644025.VLH7GnMWUR@zeus>
+ <20231102163953.GF1205143@frogsfrogsfrogs>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20231102163953.GF1205143@frogsfrogsfrogs>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-https://bugzilla.kernel.org/show_bug.cgi?id=3D217572
+On Thu, Nov 02, 2023 at 09:39:53AM -0700, Darrick J. Wong wrote:
+> On Thu, Nov 02, 2023 at 01:42:54PM +0100, Alexander Puchmayr wrote:
+> > Hi there,
+> > 
+> > I just encountered a problem when trying to use xfsdump on a filesystem with 
+> > lots of reflink copied vm disk images, yielding a dump file much larger than 
+> > expected and which I also was unable to restore from (target disk full). I 
+> > created a gentoo bug item under https://bugs.gentoo.org/916704 and I got 
+> > advised to report it here as well.
+> > 
+> > Copy from the bug report:
+> > 
+> > sys-fs/xfsdump-3.1.12 seems to copy reflink copied files as ordinary files, 
+> > resulting in a way too big dump file. Restoring from such a dump yields likely 
+> > a out-of-diskspace condition. 
+> 
+> Correct, xfsdump (and tar, and rsync...) does not know how to preserve
+> the sharing factor of a particular space extent.  All of those tools
+> walk the inodes on a filesystem, open them, and read() out the data.
+> 
+> Although there are ways to find out which file(s) own a piece of disk
+> space, each of those tools would most likely require a thorough redesign
+> to the dump file format to allow pointing to shared blocks elsewhere in
+> the dump file.
 
---- Comment #21 from Dave Chinner (david@fromorbit.com) ---
-On Thu, Nov 02, 2023 at 03:27:58PM +0000, bugzilla-daemon@kernel.org wrote:
-> https://bugzilla.kernel.org/show_bug.cgi?id=3D217572
->=20
-> --- Comment #18 from Christian Theune (ct@flyingcircus.io) ---
-> We've updated a while ago and our fleet is not seeing improved results.
-> They've
-> actually seemed to have gotten worse according to the number of alerts we=
-'ve
-> seen.=20
+I don't think that is the case. Like XFS, xfsdump encodes user data
+it backs up in extent records, and it has different types of
+extents. It currently understands "data" and "hole" extents as
+returned by XFS_IOC_GETBMAPX, so we could extend that to encode
+"shared" extents that point to an offset and length in a different
+inode.
 
-This is still an unreproducable, unfixed bug in upstream kernels.
-There is no known reproducer, so actually triggering it and hence
-performing RCA is extremely difficult at this point in time. We don't
-really even know what workload triggers it.
+Yes, this means during the scan we have to record all shared extents
+with their underlying block number, then after the scan we need to
+resolve that to the single copy we are going to keep ias a normal
+data extent in the dump (i.e. the first to be restored) Then we
+convert all the others to the new shared extent type that points at
+the {ino, off, len} that contains the actual data in the dump.
 
-> We've had a multitude of crashes in the last weeks with the following
-> statistics:
->=20
-> 6.1.31 - 2 affected machines
-> 6.1.35 - 1 affected machine
-> 6.1.37 - 1 affected machine
-> 6.1.51 - 5 affected machines
-> 6.1.55 - 2 affected machines
-> 6.1.57 - 2 affected machines
+Now all restore needs to do is run FICLONERANGE when it comes across
+a shared extent - it's got all the info it needs in the dump to
+recreated the shared extent. We can use restore side ordering to
+guarantee that the data we need to clone is already on disk (e.g.
+delay extent clones until after all the normal data has been
+restored) so that all the shared extents we restore end up with the
+correct data in them.
 
-Do these machines have ECC memory?
+Yes, this means we need to bump the dump format version number to
+support shared extents, but overall it's not a major revision of the
+format or major surgery to the code base.  It doesn't require kernel
+or even XFS expertise to implement - it's all userspace stuff and
+fairly straight forward - it just requires time, resources and
+commitment.
 
-> Here's the more detailed behaviour of one of the machines with 6.1.57.
->=20
-> $ uptime
->  16:10:23  up 13 days 19:00,  1 user,  load average: 3.21, 1.24, 0.57
+> Regardless, nobody's submitted code to do any of those things.  Patches
+> welcome.
 
-Yeah, that's the problem - such a rare, one off issue that we don't
-really even know where to begin looking. :(
+Yup, that is the biggest issue - there's always more things to do
+that we have people to do them.
 
-Given you seem to have a workload that occasionally triggers it,
-could you try to craft a reproducer workload that does stuff similar
-to your production workload and see if you can find out something
-that makes this easier to trigger?
+> > It may be used as a denial-of-service tool which can be used by an ordinary 
+> 
+> Please do not file a  ^^^^^^^^^^^^^^^^^ CVE for this.
 
-> $ uname -a
-> Linux ts00 6.1.57 #1-NixOS SMP PREEMPT_DYNAMIC Tue Oct 10 20:00:46 UTC 20=
-23
-> x86_64 GNU/Linux
->=20
-> And here' the stall:
-....
-> [654042.645101]  <TASK>
-> [654042.645353]  ? asm_sysvec_apic_timer_interrupt+0x16/0x20
-> [654042.645956]  ? xas_descend+0x22/0x90
-> [654042.646366]  xas_load+0x30/0x40
-> [654042.646738]  filemap_get_read_batch+0x16e/0x250
-> [654042.647253]  filemap_get_pages+0xa9/0x630
-> [654042.647714]  filemap_read+0xd2/0x340
-> [654042.648124]  ? __mod_memcg_lruvec_state+0x6e/0xd0
-> [654042.648670]  xfs_file_buffered_read+0x4f/0xd0 [xfs]
+/me sighs
 
-This implies you are using memcg to constrain memory footprint of
-the applications? Are these workloads running in memcgs that
-experience random memcg OOM conditions? Or maybe the failure
-correlates with global OOM conditions triggering memcg reclaim?
-
-Cheers,
-
-Dave.
-
---=20
-You may reply to this email to add a comment.
-
-You are receiving this mail because:
-You are watching the assignee of the bug.=
+-Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
