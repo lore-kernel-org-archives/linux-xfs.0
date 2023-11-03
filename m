@@ -2,220 +2,140 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 12D86C4332F
-	for <linux-xfs@archiver.kernel.org>; Fri,  3 Nov 2023 08:36:03 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5D4E1C4332F
+	for <linux-xfs@archiver.kernel.org>; Fri,  3 Nov 2023 12:52:38 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1346472AbjKCIgC (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 3 Nov 2023 04:36:02 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55520 "EHLO
+        id S229940AbjKCMwj (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 3 Nov 2023 08:52:39 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59732 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1346327AbjKCIgB (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 3 Nov 2023 04:36:01 -0400
+        with ESMTP id S229488AbjKCMwi (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 3 Nov 2023 08:52:38 -0400
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 006F1D4F;
-        Fri,  3 Nov 2023 01:35:58 -0700 (PDT)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 58EE4C433C9;
-        Fri,  3 Nov 2023 08:35:56 +0000 (UTC)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 07C60FB
+        for <linux-xfs@vger.kernel.org>; Fri,  3 Nov 2023 05:52:36 -0700 (PDT)
+Received: by smtp.kernel.org (Postfix) with ESMTPS id A6189C433C8
+        for <linux-xfs@vger.kernel.org>; Fri,  3 Nov 2023 12:52:35 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1699000558;
-        bh=bL3/XR0afbcOcBlFvRELYzuinqi5DuIrCTttoQfkQTE=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=srOSwTMchEyswcXZbZFADfX+zKTF0hyn8QDqaxrfaPD/+WcyntiKLEuyt/TAtRjGU
-         iLjngPQQIzbnVXA/BCGQ667f2791VWrrz+F9qGgn4dQNZu9YeShjZ3duNIvUCU0L0Y
-         cAXHRfaomEC11pMUf6aRoqgmw5Kb+diTl8GvLmKaU+xU7zF1+xrfDLdBQU7gXKBapj
-         aDL2ujI9XsjyGjtbrDXNycezH5QyVho4wdGmpdxHSlRDT1eVGC051TSEp3ud94YwN0
-         7lKNqoiZtpGkHmPQO4iIOCzUCe6OhiSqoWMig8bqTHZ4xcg+/aRGTn6xNCE+4opTqT
-         amF3e1BGfCr3A==
-Date:   Fri, 3 Nov 2023 09:35:53 +0100
-From:   Christian Brauner <brauner@kernel.org>
-To:     Christoph Hellwig <hch@lst.de>
-Cc:     Chandan Babu R <chandanbabu@kernel.org>, Jan Kara <jack@suse.cz>,
-        "Darrick J. Wong" <djwong@kernel.org>, viro@zeniv.linux.org.uk,
-        axboe@kernel.dk, linux-block@vger.kernel.org,
-        linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org,
-        dchinner@fromorbit.com
-Subject: Re: [BUG REPORT] next-20231102: generic/311 fails on XFS with
- external log
-Message-ID: <20231103-igelstachel-signal-2503859a730a@brauner>
-References: <87bkccnwxc.fsf@debian-BULLSEYE-live-builder-AMD64>
- <20231102-teich-absender-47a27e86e78f@brauner>
- <20231103081405.GC16854@lst.de>
+        s=k20201202; t=1699015955;
+        bh=/sOO+DN6SCQOGwxFSNpw/wPDf0+m9CO2WuCIcoHnhwM=;
+        h=From:To:Subject:Date:In-Reply-To:References:From;
+        b=jkGJG8VR4I9HNR6V7IaeuNuXNqI6x4Xybiz+f3947oXO7U9yyOHQpLJjeccFh3hjU
+         83fj0LTgz8sDb8v2IKeh7ZhTbkZ5KwjwI+mYFmQbXYXjh/adfDsmKjtbG/QU5jSyBV
+         qoEZU9p9kf1IP2tALjSNVnQY+V6Q0vByOYeui6IyG79Vp3xCJVHcT6Y6vuSGK//e26
+         LTUfaEXCiv/f5Yygby4ZhJIVOoOwOgrOoO8srJoLNQcxnuNC5SM7SCOJICG+bX+yrd
+         LuQpC7kf0QYXUEFxs9ljezbZiST+0+wPjy3iwOSaO+zB4kdfQXNcAIVM7IXHu68Pxb
+         Km16VvQQhxPPg==
+Received: by aws-us-west-2-korg-bugzilla-1.web.codeaurora.org (Postfix, from userid 48)
+        id 96515C4332E; Fri,  3 Nov 2023 12:52:35 +0000 (UTC)
+From:   bugzilla-daemon@kernel.org
+To:     linux-xfs@vger.kernel.org
+Subject: [Bug 217572] Initial blocked tasks causing deterioration over hours
+ until (nearly) complete system lockup and data loss with PostgreSQL 13
+Date:   Fri, 03 Nov 2023 12:52:34 +0000
+X-Bugzilla-Reason: None
+X-Bugzilla-Type: changed
+X-Bugzilla-Watch-Reason: AssignedTo filesystem_xfs@kernel-bugs.kernel.org
+X-Bugzilla-Product: Memory Management
+X-Bugzilla-Component: Other
+X-Bugzilla-Version: 2.5
+X-Bugzilla-Keywords: 
+X-Bugzilla-Severity: high
+X-Bugzilla-Who: ct@flyingcircus.io
+X-Bugzilla-Status: NEW
+X-Bugzilla-Resolution: 
+X-Bugzilla-Priority: P3
+X-Bugzilla-Assigned-To: filesystem_xfs@kernel-bugs.kernel.org
+X-Bugzilla-Flags: 
+X-Bugzilla-Changed-Fields: 
+Message-ID: <bug-217572-201763-daAbZgHO91@https.bugzilla.kernel.org/>
+In-Reply-To: <bug-217572-201763@https.bugzilla.kernel.org/>
+References: <bug-217572-201763@https.bugzilla.kernel.org/>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
+X-Bugzilla-URL: https://bugzilla.kernel.org/
+Auto-Submitted: auto-generated
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-In-Reply-To: <20231103081405.GC16854@lst.de>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Fri, Nov 03, 2023 at 09:14:05AM +0100, Christoph Hellwig wrote:
-> On Thu, Nov 02, 2023 at 03:54:48PM +0100, Christian Brauner wrote:
-> > So you'll see EBUSY because the superblock was already frozen when the
-> > main block device was frozen. I was somewhat expecting that we may run
-> > into such issues.
-> > 
-> > I think we just need to figure out what we want to do in cases the
-> > superblock is frozen via multiple devices. It would probably be correct
-> > to keep it frozen as long as any of the devices is frozen?
-> 
-> As dave pointed out I think we need to bring back / keep the freeze
-> count.
+https://bugzilla.kernel.org/show_bug.cgi?id=3D217572
 
-The freeze count never want away. IOW, for each block device we still
-have bd_fsfreeze_count otherwise we couldn't nest per-block device. What
-we need is a freeze counter in sb_writers so we can nest superblock
-freezes. IOW, we need to count the number of block devices that
-requested/caused the superblock to be frozen. I think we're all in
-agreement though. All of our suggestions should be the same.
-I'm currently testing:
+--- Comment #22 from Christian Theune (ct@flyingcircus.io) ---
+(In reply to Dave Chinner from comment #21)
+>=20
+> This is still an unreproducable, unfixed bug in upstream kernels.
+> There is no known reproducer, so actually triggering it and hence
+> performing RCA is extremely difficult at this point in time. We don't
+> really even know what workload triggers it.
 
-From c1849037227e5801f0b5e8acfa05aa5d90f4c9e4 Mon Sep 17 00:00:00 2001
-From: Christian Brauner <brauner@kernel.org>
-Date: Fri, 3 Nov 2023 08:38:49 +0100
-Subject: [PATCH] [DRAFT] fs: handle freezing from multiple devices
+It seems IO-pressure related and we've seen it multiple times with various
+PostgreSQL activities.
 
-Signed-off-by: Christian Brauner <brauner@kernel.org>
----
- fs/super.c         | 44 +++++++++++++++++++++++++++++++++++++++-----
- include/linux/fs.h |  2 ++
- 2 files changed, 41 insertions(+), 5 deletions(-)
+I've planned time for next week to analyze this further and trying to help
+establishing a reproducer.
 
-diff --git a/fs/super.c b/fs/super.c
-index 176c55abd9de..882c79366c70 100644
---- a/fs/super.c
-+++ b/fs/super.c
-@@ -1476,9 +1476,11 @@ static int fs_bdev_freeze(struct block_device *bdev)
- 		return -EINVAL;
- 
- 	if (sb->s_op->freeze_super)
--		error = sb->s_op->freeze_super(sb, FREEZE_HOLDER_USERSPACE);
-+		error = sb->s_op->freeze_super(sb,
-+				FREEZE_HOLDER_BLOCK | FREEZE_HOLDER_USERSPACE);
- 	else
--		error = freeze_super(sb, FREEZE_HOLDER_USERSPACE);
-+		error = freeze_super(sb,
-+				FREEZE_HOLDER_BLOCK | FREEZE_HOLDER_USERSPACE);
- 	if (!error)
- 		error = sync_blockdev(bdev);
- 	deactivate_super(sb);
-@@ -1497,9 +1499,11 @@ static int fs_bdev_thaw(struct block_device *bdev)
- 		return -EINVAL;
- 
- 	if (sb->s_op->thaw_super)
--		error = sb->s_op->thaw_super(sb, FREEZE_HOLDER_USERSPACE);
-+		error = sb->s_op->thaw_super(sb,
-+				FREEZE_HOLDER_BLOCK | FREEZE_HOLDER_USERSPACE);
- 	else
--		error = thaw_super(sb, FREEZE_HOLDER_USERSPACE);
-+		error = thaw_super(sb,
-+				FREEZE_HOLDER_BLOCK | FREEZE_HOLDER_USERSPACE);
- 	deactivate_super(sb);
- 	return error;
- }
-@@ -1923,6 +1927,7 @@ static int wait_for_partially_frozen(struct super_block *sb)
-  * @who should be:
-  * * %FREEZE_HOLDER_USERSPACE if userspace wants to freeze the fs;
-  * * %FREEZE_HOLDER_KERNEL if the kernel wants to freeze the fs.
-+ * * %FREEZE_HOLDER_BLOCK if freeze originated from the block layer.
-  *
-  * The @who argument distinguishes between the kernel and userspace trying to
-  * freeze the filesystem.  Although there cannot be multiple kernel freezes or
-@@ -1958,18 +1963,33 @@ static int wait_for_partially_frozen(struct super_block *sb)
- int freeze_super(struct super_block *sb, enum freeze_holder who)
- {
- 	int ret;
-+	bool bdev_initiated;
- 
- 	if (!super_lock_excl(sb)) {
- 		WARN_ON_ONCE("Dying superblock while freezing!");
- 		return -EINVAL;
- 	}
- 	atomic_inc(&sb->s_active);
-+	bdev_initiated = (who & FREEZE_HOLDER_BLOCK);
-+	who &= ~FREEZE_HOLDER_BLOCK;
- 
- retry:
- 	if (sb->s_writers.frozen == SB_FREEZE_COMPLETE) {
-+		ret = -EBUSY;
-+
-+		/*
-+		 * This is a freeze request from another block device
-+		 * associated with the same superblock.
-+		 */
-+		if (bdev_initiated) {
-+			sb->s_writers.bdev_count++;
-+			pr_info("Freeze initiated from %d block devices\n", sb->s_writers.bdev_count);
-+			ret = 0;
-+		}
-+
- 		if (sb->s_writers.freeze_holders & who) {
- 			deactivate_locked_super(sb);
--			return -EBUSY;
-+			return ret;
- 		}
- 
- 		WARN_ON(sb->s_writers.freeze_holders == 0);
-@@ -2002,6 +2022,8 @@ int freeze_super(struct super_block *sb, enum freeze_holder who)
- 		/* Nothing to do really... */
- 		sb->s_writers.freeze_holders |= who;
- 		sb->s_writers.frozen = SB_FREEZE_COMPLETE;
-+		if (bdev_initiated)
-+			sb->s_writers.bdev_count++;
- 		wake_up_var(&sb->s_writers.frozen);
- 		super_unlock_excl(sb);
- 		return 0;
-@@ -2052,6 +2074,8 @@ int freeze_super(struct super_block *sb, enum freeze_holder who)
- 	 */
- 	sb->s_writers.freeze_holders |= who;
- 	sb->s_writers.frozen = SB_FREEZE_COMPLETE;
-+	if (bdev_initiated)
-+		sb->s_writers.bdev_count++;
- 	wake_up_var(&sb->s_writers.frozen);
- 	lockdep_sb_freeze_release(sb);
- 	super_unlock_excl(sb);
-@@ -2068,12 +2092,22 @@ EXPORT_SYMBOL(freeze_super);
- static int thaw_super_locked(struct super_block *sb, enum freeze_holder who)
- {
- 	int error = -EINVAL;
-+	bool bdev_initiated = (who & FREEZE_HOLDER_BLOCK);
-+	who &= ~FREEZE_HOLDER_BLOCK;
- 
- 	if (sb->s_writers.frozen != SB_FREEZE_COMPLETE)
- 		goto out_unlock;
- 	if (!(sb->s_writers.freeze_holders & who))
- 		goto out_unlock;
- 
-+	if (bdev_initiated)
-+		sb->s_writers.bdev_count--;
-+	if (sb->s_writers.bdev_count) {
-+		pr_info("Filesystems held frozen by %d block devices\n", sb->s_writers.bdev_count);
-+		error = 0;
-+		goto out_unlock;
-+	}
-+
- 	/*
- 	 * Freeze is shared with someone else.  Release our hold and drop the
- 	 * active ref that freeze_super assigned to the freezer.
-diff --git a/include/linux/fs.h b/include/linux/fs.h
-index 63ff88d20e46..edc9c071c199 100644
---- a/include/linux/fs.h
-+++ b/include/linux/fs.h
-@@ -1186,6 +1186,7 @@ enum {
- struct sb_writers {
- 	unsigned short			frozen;		/* Is sb frozen? */
- 	unsigned short			freeze_holders;	/* Who froze fs? */
-+	int				bdev_count;
- 	struct percpu_rw_semaphore	rw_sem[SB_FREEZE_LEVELS];
- };
- 
-@@ -2054,6 +2055,7 @@ extern loff_t vfs_dedupe_file_range_one(struct file *src_file, loff_t src_pos,
- enum freeze_holder {
- 	FREEZE_HOLDER_KERNEL	= (1U << 0),
- 	FREEZE_HOLDER_USERSPACE	= (1U << 1),
-+	FREEZE_HOLDER_BLOCK	= (1U << 2),
- };
- 
- struct super_operations {
--- 
-2.34.1
+> > We've had a multitude of crashes in the last weeks with the following
+> > statistics:
+> >=20
+> > 6.1.31 - 2 affected machines
+> > 6.1.35 - 1 affected machine
+> > 6.1.37 - 1 affected machine
+> > 6.1.51 - 5 affected machines
+> > 6.1.55 - 2 affected machines
+> > 6.1.57 - 2 affected machines
+>=20
+> Do these machines have ECC memory?
 
+The physical hosts do. The affected systems are all Qemu/KVM virtual machin=
+es,
+though.
+
+> > Here's the more detailed behaviour of one of the machines with 6.1.57.
+> >=20
+> > $ uptime
+> >  16:10:23  up 13 days 19:00,  1 user,  load average: 3.21, 1.24, 0.57
+>=20
+> Yeah, that's the problem - such a rare, one off issue that we don't
+> really even know where to begin looking. :(
+>=20
+> Given you seem to have a workload that occasionally triggers it,
+> could you try to craft a reproducer workload that does stuff similar
+> to your production workload and see if you can find out something
+> that makes this easier to trigger?
+
+Yup. I'm prioritizing this for the next weeks.
+
+
+> This implies you are using memcg to constrain memory footprint of
+> the applications? Are these workloads running in memcgs that
+> experience random memcg OOM conditions? Or maybe the failure
+> correlates with global OOM conditions triggering memcg reclaim?
+
+I'll have to read up on what memcg is and whether we're doing anything with=
+ it
+on purpose. At the moment I think this is just whatever we're getting from =
+our
+baseline environment with kernel or distro defaults.=20
+
+How do I notice a memcg OOM? I've always tried to correlate all kernel log
+messages and haven't seen any other tracebacks than the ones I posted.
+
+Global (so I guess a "regular") OOM wasn't involved in any case so far.
+
+I can try digging deeper into system VM statistics. We're running
+telegraf/prometheus and have a relatively exhaustive number of system varia=
+bles
+we're monitoring on all systems. Anything specific I could look for?
+
+>=20
+> Cheers,
+>=20
+> Dave.
+
+--=20
+You may reply to this email to add a comment.
+
+You are receiving this mail because:
+You are watching the assignee of the bug.=
