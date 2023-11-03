@@ -2,192 +2,169 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4C2CBC4332F
-	for <linux-xfs@archiver.kernel.org>; Fri,  3 Nov 2023 20:38:17 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2F9E5C4332F
+	for <linux-xfs@archiver.kernel.org>; Fri,  3 Nov 2023 23:13:18 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229464AbjKCUiS (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 3 Nov 2023 16:38:18 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60218 "EHLO
+        id S231266AbjKCXNT (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 3 Nov 2023 19:13:19 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50792 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229436AbjKCUiR (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 3 Nov 2023 16:38:17 -0400
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 648E8A2
-        for <linux-xfs@vger.kernel.org>; Fri,  3 Nov 2023 13:38:15 -0700 (PDT)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id E3D50C433C8;
-        Fri,  3 Nov 2023 20:38:14 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1699043895;
-        bh=w9Rgm7oRi/eGCRawfiJmmWmroQDvWmBGRNFHQb2zVA8=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=mIdaH8w0dFSuxQoogU42FPPRX6KDhrC7HUMw341zaGH8BYo8s0APbOZW5nnEbRCbI
-         ClKB5F+pyF2f9hif2AzoV6fvGUAJ8fBJLnP/+1wfFjFi/nZHIZekCpefs/MlEVhatN
-         O5JlvwFE6vywzAKIfEHU1ksNCIaibu/zA33qie82fwd7lDG87dxNv8iU1sj9K1zz4N
-         CBatcm/ZJ/EyI4Zs7CJ0uemfaMzbuXPxjtXOxaPJXh6mXNiBml2yU2e4LCgbnNnwFm
-         WKuGxhmsQQ4tyzXGF9BTTj7JmNioRewMJC0C+2/uCsAuCZ3ct0Hu6cKjq2MoqEHpb+
-         7UB30qU00jpww==
-Date:   Fri, 3 Nov 2023 13:38:13 -0700
-From:   "Darrick J. Wong" <djwong@kernel.org>
-To:     Christoph Hellwig <hch@lst.de>
-Cc:     linux-xfs@vger.kernel.org
-Subject: Re: [PATCH] db: fix unsigned char related warnings
-Message-ID: <20231103203813.GG1205143@frogsfrogsfrogs>
-References: <20231103160210.548636-1-hch@lst.de>
+        with ESMTP id S231183AbjKCXNS (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 3 Nov 2023 19:13:18 -0400
+Received: from mailout1.w1.samsung.com (mailout1.w1.samsung.com [210.118.77.11])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7DB9BD5A
+        for <linux-xfs@vger.kernel.org>; Fri,  3 Nov 2023 16:13:13 -0700 (PDT)
+Received: from eucas1p2.samsung.com (unknown [182.198.249.207])
+        by mailout1.w1.samsung.com (KnoxPortal) with ESMTP id 20231103231301euoutp01a094ed6754503d30dfa5666dd9f62207~UP93pXuAM0539705397euoutp01O
+        for <linux-xfs@vger.kernel.org>; Fri,  3 Nov 2023 23:13:01 +0000 (GMT)
+DKIM-Filter: OpenDKIM Filter v2.11.0 mailout1.w1.samsung.com 20231103231301euoutp01a094ed6754503d30dfa5666dd9f62207~UP93pXuAM0539705397euoutp01O
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=samsung.com;
+        s=mail20170921; t=1699053181;
+        bh=oHsO3OHKphhNYc2KKcSi9BXbYPXz/A7ETlyML/Q/00I=;
+        h=From:To:CC:Subject:Date:In-Reply-To:References:From;
+        b=LYEp8QYzPDwiyxo0vJcR59grQQPKZw/jJGYxkBRhA1+xpmy1hXxufOiNL4gCdRgD1
+         baYL7KT4WACekSJU8eKAZUKlMSzZXdaMfjFIh/1eRzN6rxECFT4MjS44DLRRnLDAkk
+         79Fz/sGs8mH+Nb/lyRW47yIBA8MgRI6dHi4XOfPk=
+Received: from eusmges1new.samsung.com (unknown [203.254.199.242]) by
+        eucas1p1.samsung.com (KnoxPortal) with ESMTP id
+        20231103231301eucas1p192942ceb0cb6ebb63aee326a6f959e2d~UP92_LwPe0263002630eucas1p1C;
+        Fri,  3 Nov 2023 23:13:01 +0000 (GMT)
+Received: from eucas1p2.samsung.com ( [182.198.249.207]) by
+        eusmges1new.samsung.com (EUCPMTA) with SMTP id A5.2B.42423.C7E75456; Fri,  3
+        Nov 2023 23:13:00 +0000 (GMT)
+Received: from eusmtrp2.samsung.com (unknown [182.198.249.139]) by
+        eucas1p1.samsung.com (KnoxPortal) with ESMTPA id
+        20231103231259eucas1p18e529693e4b47b5e0623271bf319a25f~UP915_fmj2687926879eucas1p1Z;
+        Fri,  3 Nov 2023 23:12:59 +0000 (GMT)
+Received: from eusmgms1.samsung.com (unknown [182.198.249.179]) by
+        eusmtrp2.samsung.com (KnoxPortal) with ESMTP id
+        20231103231259eusmtrp22251fecfaf13e569c815d97a704cbb52~UP911BCNL1325313253eusmtrp2c;
+        Fri,  3 Nov 2023 23:12:59 +0000 (GMT)
+X-AuditID: cbfec7f2-a51ff7000002a5b7-2a-65457e7cccea
+Received: from eusmtip2.samsung.com ( [203.254.199.222]) by
+        eusmgms1.samsung.com (EUCPMTA) with SMTP id C8.69.10549.B7E75456; Fri,  3
+        Nov 2023 23:12:59 +0000 (GMT)
+Received: from CAMSVWEXC02.scsc.local (unknown [106.1.227.72]) by
+        eusmtip2.samsung.com (KnoxPortal) with ESMTPA id
+        20231103231259eusmtip2247fb3c78e71787af6a52bb65a4d74c0~UP91nknSd2294222942eusmtip2T;
+        Fri,  3 Nov 2023 23:12:59 +0000 (GMT)
+Received: from CAMSVWEXC02.scsc.local (2002:6a01:e348::6a01:e348) by
+        CAMSVWEXC02.scsc.local (2002:6a01:e348::6a01:e348) with Microsoft SMTP
+        Server (TLS) id 15.0.1497.2; Fri, 3 Nov 2023 23:12:58 +0000
+Received: from CAMSVWEXC02.scsc.local ([::1]) by CAMSVWEXC02.scsc.local
+        ([fe80::3c08:6c51:fa0a:6384%13]) with mapi id 15.00.1497.012; Fri, 3 Nov
+        2023 23:12:58 +0000
+From:   Daniel Gomez <da.gomez@samsung.com>
+To:     Matthew Wilcox <willy@infradead.org>
+CC:     "minchan@kernel.org" <minchan@kernel.org>,
+        "senozhatsky@chromium.org" <senozhatsky@chromium.org>,
+        "axboe@kernel.dk" <axboe@kernel.dk>,
+        "djwong@kernel.org" <djwong@kernel.org>,
+        "hughd@google.com" <hughd@google.com>,
+        "akpm@linux-foundation.org" <akpm@linux-foundation.org>,
+        "mcgrof@kernel.org" <mcgrof@kernel.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>,
+        "linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>,
+        "linux-fsdevel@vger.kernel.org" <linux-fsdevel@vger.kernel.org>,
+        "linux-mm@kvack.org" <linux-mm@kvack.org>,
+        "gost.dev@samsung.com" <gost.dev@samsung.com>,
+        Pankaj Raghav <p.raghav@samsung.com>
+Subject: Re: [RFC PATCH 01/11] XArray: add cmpxchg order test
+Thread-Topic: [RFC PATCH 01/11] XArray: add cmpxchg order test
+Thread-Index: AQHaCePk2/Onfe3eA0ia1dQGCoKrA7BhNHAAgAgOVAA=
+Date:   Fri, 3 Nov 2023 23:12:58 +0000
+Message-ID: <20231103231254.bytltpzsc2qojlbw@sarkhan>
+In-Reply-To: <ZT68dBiJKNLXLRZA@casper.infradead.org>
+Accept-Language: en-US, en-GB
+Content-Language: en-US
+X-MS-Has-Attach: 
+X-MS-TNEF-Correlator: 
+x-ms-exchange-messagesentrepresentingtype: 1
+x-ms-exchange-transport-fromentityheader: Hosted
+x-originating-ip: [106.110.32.103]
+Content-Type: text/plain; charset="us-ascii"
+Content-ID: <BE63A8201D5D3541A51BCEF17F33D0F1@scsc.local>
+Content-Transfer-Encoding: quoted-printable
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20231103160210.548636-1-hch@lst.de>
+X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFrrKKsWRmVeSWpSXmKPExsWy7djP87o1da6pBtNnW1nMWb+GzWL13X42
+        i8tP+Cyefupjsdh7S9tiz96TLBaXd81hs7i35j+rxa4/O9gtbkx4ymix7Ot7dovdGxexWfz+
+        MYfNgddjdsNFFo8Fm0o9Nq/Q8rh8ttRj06pONo9Nnyaxe5yY8ZvF4/MmuQCOKC6blNSczLLU
+        In27BK6MzUd3Mxac5anY13GcsYFxJVcXIyeHhICJxInn79i6GLk4hARWMErs3HedBcL5wijR
+        On8KE4TzmVHi9IJnLDAtzy/1MYLYQgLLGSXObGWCsIGKjn2Og2g4zShx99p9Jri5M+/sYwOp
+        YhPQlNh3chN7FyMHh4iAhsSbLUYgNcwCR1kllqzdBLZBWMBWYv3WOcwgtoiAncTDWy/ZIWwr
+        iVdfroPVsAioSLzY/hOshlfAVGLOtMVgNZxA1y3d/gnsIkYBWYlHK3+BxZkFxCVuPZnPBPGB
+        oMSi2XuYIWwxiX+7HrJB2DoSZ68/YYSwDSS2Lt0H9bGSxJ+OhYwQc3QkFuz+xAZhW0o0nPwM
+        FdeWWLbwNdQ9ghInZz4Bh6OEwFQuibVL50Etc5E4enA31BHCEq+Ob2GfwKgzC8l9s5DsmIVk
+        xywkO2Yh2bGAkXUVo3hqaXFuemqxYV5quV5xYm5xaV66XnJ+7iZGYMo7/e/4px2Mc1991DvE
+        yMTBeIhRgoNZSYTX0dslVYg3JbGyKrUoP76oNCe1+BCjNAeLkjivaop8qpBAemJJanZqakFq
+        EUyWiYNTqoFJe/1Fy0W1vvNvn9m0sGwBX8O6OKlXSb+bhBRXbS+r/nhon/n38A1qr2PWCq1w
+        eZuqWvJZVkc5+YTPWhuJW29FvPzu5ZWuUZ/7mn8Jr9wRjYfFfZpF7y8d61ycv1xqwS82xlVz
+        jncdVwnd28jsLML86kjEG8t/ouK1z2P1RduT7Hu8czIPHV/049J81uW+HaumKMYkLryRa5hl
+        XRY2WTX7Zvz6M/6X1/1o6blpXft3Y07ywstBt1bf+v00jvlIzIJ1c580/5K2O+Gw+XBbtoCu
+        3by/b489++N7XzzMb4pkRY7AlLNp0Ukv2kzTbY0Odl5TK4z89vTJrh3FJrPbPl2Rtd21s8N5
+        55sfMV3MPB5cSizFGYmGWsxFxYkAjGb8Z+gDAAA=
+X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFrrPKsWRmVeSWpSXmKPExsVy+t/xe7rVda6pBj1ztCzmrF/DZrH6bj+b
+        xeUnfBZPP/WxWOy9pW2xZ+9JFovLu+awWdxb85/VYtefHewWNyY8ZbRY9vU9u8XujYvYLH7/
+        mMPmwOsxu+Eii8eCTaUem1doeVw+W+qxaVUnm8emT5PYPU7M+M3i8XmTXABHlJ5NUX5pSapC
+        Rn5xia1StKGFkZ6hpYWekYmlnqGxeayVkamSvp1NSmpOZllqkb5dgl7G5qO7GQvO8lTs6zjO
+        2MC4kquLkZNDQsBE4vmlPsYuRi4OIYGljBInzsxjhEjISGz8cpUVwhaW+HOtiw2i6COjxPPJ
+        21kgnNOMErP/XYPKrGCU6J/+kR2khU1AU2LfyU1ANgeHiICGxJstRiA1zAJHWSWWrN3EAlIj
+        LGArsX7rHGYQW0TATuLhrZfsELaVxKsv18FqWARUJF5s/wlWwytgKjFn2mJ2iGVzmSTu/V4D
+        luAEemLp9k9MIDajgKzEo5W/wAYxC4hL3HoynwniBwGJJXvOM0PYohIvH/+D+k1H4uz1J1A/
+        G0hsXbqPBcJWkvjTsZARYo6OxILdn9ggbEuJhpOfoeLaEssWvoY6TlDi5MwnLBMYZWYhWT0L
+        SfssJO2zkLTPQtK+gJF1FaNIamlxbnpusaFecWJucWleul5yfu4mRmBK23bs5+YdjPNefdQ7
+        xMjEwXiIUYKDWUmE19HbJVWINyWxsiq1KD++qDQntfgQoykw8CYyS4km5wOTal5JvKGZgamh
+        iZmlgamlmbGSOK9nQUeikEB6YklqdmpqQWoRTB8TB6dUA1O6tFrHju1ue1rd91ewfJFm2DIr
+        SUL3Qctk7RUJ995WNb3ewfrr8O1eg/pEftWEjzqnNzUb3lVbJGAoeVv4yimVgs+tZWVb/299
+        uZVhIvOnDse8ZGmfZRMDG0PzL8+M0d9+89ix+SzvGUqjmK6efXHmynkP2XkCW97HBDh2Seuf
+        cv9o9Tn2/6xnZ5/X/Jv2Rscq+U2b4ZHlCxy3as/2MZp5V+HGXVMedpvPujeUilremL5k/HBH
+        aYbB/ijmMw6zI61Y3IMqWe5Gsr2M2sJQnXjEvGF52AG7Nyfs3ef9NeXdvG1DduusvZ2sUtfj
+        75Z6frBnenpb7Emiwdsz7Rb9J3st3v5b/jC7O2uZFrPo70dKLMUZiYZazEXFiQChzl1/8gMA
+        AA==
+X-CMS-MailID: 20231103231259eucas1p18e529693e4b47b5e0623271bf319a25f
+X-Msg-Generator: CA
+X-RootMTR: 20231028211538eucas1p186e33f92dbea7030f14f7f79aa1b8d54
+X-EPHeader: CA
+CMS-TYPE: 201P
+X-CMS-RootMailID: 20231028211538eucas1p186e33f92dbea7030f14f7f79aa1b8d54
+References: <20230919135536.2165715-1-da.gomez@samsung.com>
+        <20231028211518.3424020-1-da.gomez@samsung.com>
+        <CGME20231028211538eucas1p186e33f92dbea7030f14f7f79aa1b8d54@eucas1p1.samsung.com>
+        <20231028211518.3424020-2-da.gomez@samsung.com>
+        <ZT68dBiJKNLXLRZA@casper.infradead.org>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Fri, Nov 03, 2023 at 05:02:10PM +0100, Christoph Hellwig wrote:
-> Clean up the code in hash.c to use the normal char type for all
-> high-level code, only casting to uint8_t when calling into low-level
-> code.
-> 
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
+On Sun, Oct 29, 2023 at 08:11:32PM +0000, Matthew Wilcox wrote:
+> On Sat, Oct 28, 2023 at 09:15:35PM +0000, Daniel Gomez wrote:
+> > +static noinline void check_cmpxchg_order(struct xarray *xa)
+> > +{
+> > +	void *FIVE =3D xa_mk_value(5);
+> > +	unsigned int order =3D IS_ENABLED(CONFIG_XARRAY_MULTI) ? 15 : 1;
+>
+> ... have you tried this with CONFIG_XARRAY_MULTI deselected?
+> I suspect it will BUG() because orders greater than 0 are not allowed.
+>
+> > +	XA_BUG_ON(xa, !xa_empty(xa));
+> > +	XA_BUG_ON(xa, xa_store_index(xa, 5, GFP_KERNEL) !=3D NULL);
+> > +	XA_BUG_ON(xa, xa_insert(xa, 5, FIVE, GFP_KERNEL) !=3D -EBUSY);
+> > +	XA_BUG_ON(xa, xa_store_order(xa, 5, order, FIVE, GFP_KERNEL));
+> > +	XA_BUG_ON(xa, xa_get_order(xa, 5) !=3D order);
+> > +	XA_BUG_ON(xa, xa_get_order(xa, xa_to_value(FIVE)) !=3D order);
+> > +	old =3D xa_cmpxchg(xa, 5, FIVE, NULL, GFP_KERNEL);
+> > +	XA_BUG_ON(xa, old !=3D FIVE);
+> > +	XA_BUG_ON(xa, xa_get_order(xa, 5) !=3D 0);
+> > +	XA_BUG_ON(xa, xa_get_order(xa, xa_to_value(FIVE)) !=3D 0);
+> > +	XA_BUG_ON(xa, xa_get_order(xa, xa_to_value(old)) !=3D 0);
+> > +	XA_BUG_ON(xa, !xa_empty(xa));
+>
+> I'm not sure this is a great test.  It definitely does do what you claim
+> it will, but for example, it's possible that we might keep that
+> information for other orders.  So maybe we should have another entry at
+> (1 << order) that keeps the node around and could theoretically keep
+> the order information around for the now-NULL entry?
 
-The problem is deeper than just this, but we gotta start somewhere...
-
-Reviewed-by: Darrick J. Wong <djwong@kernel.org>
-
---D
-
-> ---
->  db/hash.c | 45 +++++++++++++++++++++++----------------------
->  1 file changed, 23 insertions(+), 22 deletions(-)
-> 
-> diff --git a/db/hash.c b/db/hash.c
-> index 716da88ba..05a94f249 100644
-> --- a/db/hash.c
-> +++ b/db/hash.c
-> @@ -65,16 +65,15 @@ hash_f(
->  	}
->  
->  	for (c = optind; c < argc; c++) {
-> -		if (use_dir2_hash) {
-> -			struct xfs_name	xname = {
-> -				.name	= (uint8_t *)argv[c],
-> -				.len	= strlen(argv[c]),
-> -			};
-> +		struct xfs_name	xname = {
-> +			.name	= (uint8_t *)argv[c],
-> +			.len	= strlen(argv[c]),
-> +		};
->  
-> +		if (use_dir2_hash)
->  			hashval = libxfs_dir2_hashname(mp, &xname);
-> -		} else {
-> -			hashval = libxfs_da_hashname(argv[c], strlen(argv[c]));
-> -		}
-> +		else
-> +			hashval = libxfs_da_hashname(xname.name, xname.len);
->  		dbprintf("0x%x\n", hashval);
->  	}
->  
-> @@ -103,7 +102,7 @@ struct name_dup {
->  	struct name_dup	*next;
->  	uint32_t	crc;
->  	uint8_t		namelen;
-> -	uint8_t		name[];
-> +	char		name[];
->  };
->  
->  static inline size_t
-> @@ -175,7 +174,7 @@ dup_table_free(
->  static struct name_dup *
->  dup_table_find(
->  	struct dup_table	*tab,
-> -	unsigned char		*name,
-> +	char			*name,
->  	size_t			namelen)
->  {
->  	struct name_dup		*ent;
-> @@ -197,7 +196,7 @@ dup_table_find(
->  static int
->  dup_table_store(
->  	struct dup_table	*tab,
-> -	unsigned char		*name,
-> +	char			*name,
->  	size_t			namelen)
->  {
->  	struct name_dup		*dup;
-> @@ -209,7 +208,7 @@ dup_table_store(
->  		int		ret;
->  
->  		do {
-> -			ret = find_alternate(namelen, name, seq++);
-> +			ret = find_alternate(namelen, (uint8_t *)name, seq++);
->  		} while (ret == 0);
->  		if (ret < 0)
->  			return EEXIST;
-> @@ -231,15 +230,15 @@ dup_table_store(
->  static int
->  collide_dirents(
->  	unsigned long		nr,
-> -	const unsigned char	*name,
-> +	char			*name,
->  	size_t			namelen,
->  	int			fd)
->  {
->  	struct xfs_name		dname = {
-> -		.name		= name,
-> +		.name		= (uint8_t *)name,
->  		.len		= namelen,
->  	};
-> -	unsigned char		direntname[MAXNAMELEN + 1];
-> +	char			direntname[MAXNAMELEN + 1];
->  	struct dup_table	*tab = NULL;
->  	xfs_dahash_t		old_hash;
->  	unsigned long		i;
-> @@ -268,10 +267,10 @@ collide_dirents(
->  			return error;
->  	}
->  
-> -	dname.name = direntname;
-> +	dname.name = (uint8_t *)direntname;
->  	for (i = 0; i < nr; i++) {
->  		strncpy(direntname, name, MAXNAMELEN);
-> -		obfuscate_name(old_hash, namelen, direntname, true);
-> +		obfuscate_name(old_hash, namelen, (uint8_t *)direntname, true);
->  		ASSERT(old_hash == libxfs_dir2_hashname(mp, &dname));
->  
->  		if (fd >= 0) {
-> @@ -297,17 +296,17 @@ collide_dirents(
->  static int
->  collide_xattrs(
->  	unsigned long		nr,
-> -	const unsigned char	*name,
-> +	char			*name,
->  	size_t			namelen,
->  	int			fd)
->  {
-> -	unsigned char		xattrname[MAXNAMELEN + 5];
-> +	char			xattrname[MAXNAMELEN + 5];
->  	struct dup_table	*tab = NULL;
->  	xfs_dahash_t		old_hash;
->  	unsigned long		i;
->  	int			error;
->  
-> -	old_hash = libxfs_da_hashname(name, namelen);
-> +	old_hash = libxfs_da_hashname((uint8_t *)name, namelen);
->  
->  	if (fd >= 0) {
->  		/*
-> @@ -330,8 +329,10 @@ collide_xattrs(
->  
->  	for (i = 0; i < nr; i++) {
->  		snprintf(xattrname, MAXNAMELEN + 5, "user.%s", name);
-> -		obfuscate_name(old_hash, namelen, xattrname + 5, false);
-> -		ASSERT(old_hash == libxfs_da_hashname(xattrname + 5, namelen));
-> +		obfuscate_name(old_hash, namelen, (uint8_t *)xattrname + 5,
-> +				false);
-> +		ASSERT(old_hash == libxfs_da_hashname((uint8_t *)xattrname + 5,
-> +				namelen));
->  
->  		if (fd >= 0) {
->  			error = fsetxattr(fd, xattrname, "1", 1, 0);
-> -- 
-> 2.39.2
-> 
+Thanks Matthew for the review. I'm sending a separate patch with the
+fixes and improvements on the XArray cmpxchg test.=
