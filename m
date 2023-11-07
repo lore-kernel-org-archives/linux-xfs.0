@@ -2,69 +2,64 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5EDBCC4332F
-	for <linux-xfs@archiver.kernel.org>; Tue,  7 Nov 2023 08:50:36 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 75B56C4332F
+	for <linux-xfs@archiver.kernel.org>; Tue,  7 Nov 2023 08:52:40 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229541AbjKGIug (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 7 Nov 2023 03:50:36 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44206 "EHLO
+        id S231303AbjKGIwk (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 7 Nov 2023 03:52:40 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35564 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229551AbjKGIuf (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 7 Nov 2023 03:50:35 -0500
+        with ESMTP id S229551AbjKGIwj (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 7 Nov 2023 03:52:39 -0500
 Received: from bombadil.infradead.org (bombadil.infradead.org [IPv6:2607:7c80:54:3::133])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 43025FA
-        for <linux-xfs@vger.kernel.org>; Tue,  7 Nov 2023 00:50:33 -0800 (PST)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D4BC9106
+        for <linux-xfs@vger.kernel.org>; Tue,  7 Nov 2023 00:52:33 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
         d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Type:MIME-Version
         :References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
         Content-Transfer-Encoding:Content-ID:Content-Description;
-        bh=OlAds72u5HHcmD58S+NbGo92CZEfzoPTYi3yzTAzyhs=; b=L5uYzmSzAFAwgbCKqzU9OXv1TQ
-        6AOf2CYrxLaN2Ks+UwU0/sV7moRxjUL7t6CQfmeC889EOULXDKYeboGfFF+T06fE5RhD63SlRn41x
-        i38aox//nR1dgt+oR6JjeouC2N9dOBfVWpn8IDiJeB/N3c3RxWIpJ9FCbyNmUng6+tQRl+rVq3Loi
-        Htg1YsuwSI44f1RRLb8oBHb6hFTmzqy/D/ZRhJ9HfSHLpZUCD+G+O9T2nnrKaCrDaAg6+6Wsz3x8u
-        iz9N4khKhx+adOALaMgm9F+SO/l8QL2aSRzgywSqaed1hhaYh4PyKbjhb6ASi5DCjrh9tsCKZd7Z2
-        MgQz3XRQ==;
+        bh=K7Mb7mSPjR7Mh1AP1BxZwm+H0AgzE5CgkwmsCpF9slk=; b=rWNX0qXAwoDEurXxRONVg9M3NV
+        Xm3k+kih98DZEJz1BbvyHIYSZwd0CVtuOBo1H7ASq7pueYaWLjZPUgCKKuSnF7ycht21iGyY7lS/L
+        xoo0KQJbQ1IKAbt4I2+5vre6uF/L1ATDhgXOLKByueSBCQtjtBYKZCIpHz0d1tp7dwvCwiawWY3Oq
+        dqcrlKEhMEQj3RGt83wMNhUxbm0WE9ID3VRAkCEcrSU5DX2dhc0ZSxxlOvhfNPSRHHqRPeBpyTMH7
+        DS93DLqXPKoO8tH5Fqgeg1yavdVuZqLQ5pQQTqoMFIb1brbtKayb9HABEHIMTb+S+N7TYHXYyjbD3
+        0vfD2K3g==;
 Received: from hch by bombadil.infradead.org with local (Exim 4.96 #2 (Red Hat Linux))
-        id 1r0Hn7-000rIU-0V;
-        Tue, 07 Nov 2023 08:50:33 +0000
-Date:   Tue, 7 Nov 2023 00:50:33 -0800
+        id 1r0Hp3-000rU2-2O;
+        Tue, 07 Nov 2023 08:52:33 +0000
+Date:   Tue, 7 Nov 2023 00:52:33 -0800
 From:   Christoph Hellwig <hch@infradead.org>
 To:     "Darrick J. Wong" <djwong@kernel.org>
 Cc:     cem@kernel.org, linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 2/5] xfs_scrub.service: reduce CPU usage to 60% when
- possible
-Message-ID: <ZUn6WQslIFg+0Vc4@infradead.org>
+Subject: Re: [PATCH 3/5] xfs_scrub: tighten up the security on the background
+ systemd service
+Message-ID: <ZUn60XdaxeY4+1I8@infradead.org>
 References: <168506074508.3746099.18021671464566915249.stgit@frogsfrogsfrogs>
- <168506074536.3746099.6775557055565988745.stgit@frogsfrogsfrogs>
+ <168506074549.3746099.6129822996056625257.stgit@frogsfrogsfrogs>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <168506074536.3746099.6775557055565988745.stgit@frogsfrogsfrogs>
+In-Reply-To: <168506074549.3746099.6129822996056625257.stgit@frogsfrogsfrogs>
 X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Thu, May 25, 2023 at 06:55:18PM -0700, Darrick J. Wong wrote:
+On Thu, May 25, 2023 at 06:55:34PM -0700, Darrick J. Wong wrote:
 > From: Darrick J. Wong <djwong@kernel.org>
 > 
-> Currently, the xfs_scrub background service is configured to use -b,
-> which means that the program runs completely serially.  However, even
-> using 100% of one CPU with idle priority may be enough to cause thermal
-> throttling and unwanted fan noise on smaller systems (e.g. laptops) with
-> fast IO systems.
+> Currently, xfs_scrub has to run with some elevated privileges.  Minimize
+> the risk of xfs_scrub escaping its service container or contaminating
+> the rest of the system by using systemd's sandboxing controls to
+> prohibit as much access as possible.
 > 
-> Let's try to avoid this (at least on systemd) by using cgroups to limit
-> the program's usage to 60% of one CPU and lowering the nice priority in
-> the scheduler.  What we /really/ want is to run steadily on an
-> efficiency core, but there doesn't seem to be a means to ask the
-> scheduler not to ramp up the CPU frequency for a particular task.
-> 
-> While we're at it, group the resource limit directives together.
+> The directives added by this patch were recommended by the command
+> 'systemd-analyze security xfs_scrub@.service' in systemd 249.
 
-Een 60% sounds like a lot to me, at least for systems that don't have
-a whole lot of cores.  Of course there really isn't any good single
-answer.  But this is probably a better default than the previous one,
-so:
+All the additional lockdowns look good:
 
 Reviewed-by: Christoph Hellwig <hch@lst.de>
+
+Maybe you can split the dynamic user change out as a small standalone
+fix, though?
+
