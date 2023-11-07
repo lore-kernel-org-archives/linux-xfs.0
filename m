@@ -2,90 +2,103 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2068DC41535
-	for <linux-xfs@archiver.kernel.org>; Tue,  7 Nov 2023 17:00:26 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id DE1ABC4332F
+	for <linux-xfs@archiver.kernel.org>; Tue,  7 Nov 2023 18:35:13 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234462AbjKGRA0 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 7 Nov 2023 12:00:26 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55806 "EHLO
+        id S229664AbjKGSfP (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 7 Nov 2023 13:35:15 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34208 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S234061AbjKGRAY (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 7 Nov 2023 12:00:24 -0500
+        with ESMTP id S229565AbjKGSfO (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 7 Nov 2023 13:35:14 -0500
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id F08C893
-        for <linux-xfs@vger.kernel.org>; Tue,  7 Nov 2023 09:00:22 -0800 (PST)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 8D68BC433C7;
-        Tue,  7 Nov 2023 17:00:22 +0000 (UTC)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 90E96125
+        for <linux-xfs@vger.kernel.org>; Tue,  7 Nov 2023 10:35:12 -0800 (PST)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 182C8C433C7;
+        Tue,  7 Nov 2023 18:35:12 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1699376422;
-        bh=kZ5ZR9oDEDplAutxKoJILzZ67UIowTGMj0kxr9eOKww=;
+        s=k20201202; t=1699382112;
+        bh=lAPlU4AXPc8mZmW3KLy3viwDgYoR2l6QsW9jEty32yY=;
         h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=PMgH5P+GXfq3iwE+x6oWGJs8pLrfBlWAWZc+Qh0dXClWvhNRgFQJngFZZb0Yt/4Q1
-         qT8tk9YybzsN8IgeXh0QEmXAgbZbdohlCrsnFVC8M2pp6eDcF5quCh8HnR7IIcWHPW
-         ycHWnbbGacFpv/AENnc5FHx0C/NdYcrNKElzpdMqOoho89wvroYsMx4Gs7gZSbfl1U
-         /+OhblFJ55Kq3ViyoSx0z0LKnhufZuU/QxNj075x4/mHcRp4zYvi3CDnwmnBKWlchA
-         l0QjOoOz1xi7zLpbCqXV+FTFke2tL73tzo9YAkfjpy0qcxrr8CrzgDxKPv5v7zV02c
-         SNIfvSP8ir+UA==
-Date:   Tue, 7 Nov 2023 09:00:21 -0800
+        b=W/WPRHOJnQcTy7MitLY9iUOq96cojbu0clivuat9rQNJ1j0qhGSs+oCMIzerDVVkM
+         eT1VzAAom1D4UC6HgZw7ZvHJdmqEBtAOOzmWwOYxzaKFu/T5d7qxtbgIYJtW6OXDtr
+         tQfbPBp7ZDVZwpEh608bg1ug3iM7PTdhJkUm8AAF+t8kWbLd+028+1KeRuqk25Kph4
+         zfxQJH94fAL3wlw5/aLEqAcVsPa4d6izaDUGuJJ8Za3E40f+gFKTVi+rzP47dCs5Yo
+         /H5SWaBPLXtxHq5Ot2Vm9Q/t2hXXuIoJARwbPIRt5qvMVJcL37N0Giy6kjaELZRbZI
+         pOBywz1jffn2A==
+Date:   Tue, 7 Nov 2023 10:35:11 -0800
 From:   "Darrick J. Wong" <djwong@kernel.org>
 To:     Christoph Hellwig <hch@infradead.org>
 Cc:     cem@kernel.org, linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 2/5] xfs_scrub.service: reduce CPU usage to 60% when
- possible
-Message-ID: <20231107170021.GM1205143@frogsfrogsfrogs>
+Subject: Re: [PATCH 1/5] xfs_scrub: allow auxiliary pathnames for sandboxing
+Message-ID: <20231107183511.GN1205143@frogsfrogsfrogs>
 References: <168506074508.3746099.18021671464566915249.stgit@frogsfrogsfrogs>
- <168506074536.3746099.6775557055565988745.stgit@frogsfrogsfrogs>
- <ZUn6WQslIFg+0Vc4@infradead.org>
+ <168506074522.3746099.11941443473290571582.stgit@frogsfrogsfrogs>
+ <ZUn55/68v2VfQHCX@infradead.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <ZUn6WQslIFg+0Vc4@infradead.org>
+In-Reply-To: <ZUn55/68v2VfQHCX@infradead.org>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Tue, Nov 07, 2023 at 12:50:33AM -0800, Christoph Hellwig wrote:
-> On Thu, May 25, 2023 at 06:55:18PM -0700, Darrick J. Wong wrote:
+On Tue, Nov 07, 2023 at 12:48:39AM -0800, Christoph Hellwig wrote:
+> On Thu, May 25, 2023 at 06:55:02PM -0700, Darrick J. Wong wrote:
 > > From: Darrick J. Wong <djwong@kernel.org>
 > > 
-> > Currently, the xfs_scrub background service is configured to use -b,
-> > which means that the program runs completely serially.  However, even
-> > using 100% of one CPU with idle priority may be enough to cause thermal
-> > throttling and unwanted fan noise on smaller systems (e.g. laptops) with
-> > fast IO systems.
-> > 
-> > Let's try to avoid this (at least on systemd) by using cgroups to limit
-> > the program's usage to 60% of one CPU and lowering the nice priority in
-> > the scheduler.  What we /really/ want is to run steadily on an
-> > efficiency core, but there doesn't seem to be a means to ask the
-> > scheduler not to ramp up the CPU frequency for a particular task.
-> > 
-> > While we're at it, group the resource limit directives together.
+> > In the next patch, we'll tighten up the security on the xfs_scrub
+> > service so that it can't escape.  However, sanboxing the service
+> > involves making the host filesystem as inaccessible as possible, with
+> > the filesystem to scrub bind mounted onto a known location within the
+> > sandbox.  Hence we need one path for reporting and a new -A argument to
+> > tell scrub what it should actually be trying to open.
 > 
-> Een 60% sounds like a lot to me, at least for systems that don't have
-> a whole lot of cores.  Of course there really isn't any good single
-> answer.  But this is probably a better default than the previous one,
-
-Agreed, CPUQuota is an overbroad knob.
-
-On my 40-core servers, 60% of one CPU is very feeble and scrubs could
-actually go faster.
-
-For laptops and NUCs, 60% was the figure I came up with by running
-xfs_scrub on all the laptops and NUCs I could find, and ratcheting down
-the cpu usage until just below the point where the fans would speed up
-and/or stuttering was no longer noticeable.
-
-I pulled out some ancient craptops for that one.  On a Pentium III 700
-with 256M of RAM and a slow PATA SSD the experience wasn't any more
-terrible than you'd expect from that era of machine.  That may become
-moot if Debian 13 drops support for bare metal i386.
-
-> so:
+> This confuses me a bit.  Let me try to see if I understood it correctly:
 > 
-> Reviewed-by: Christoph Hellwig <hch@lst.de>
+>  - currently xfs_scrub is called on the mount point, where the
+>    mount-point is the first non-optional argument
+> 
+> With this patch there is a new environment variable that tells it what
+> mount point to use, and only uses the one passed as the argument for
+> reporting messages.
+> 
+> If I understand this correctly I find the decision odd.  I can see
+> why you want to separate the two.  But I'd still expect the mount point
+> to operate on to be passed as the argument, with an override for the
+> reported messages.  And I'd expect the override passed as a normal
+> command line option and not an environment variable. 
 
-Thanks for the reviews!
+The reason why I bolted on the SERVICE_MOUNTPOINT= environment variable
+is to preserve procfs discoverability.  The bash translation of these
+systemd unit definitions for a scrub of /home is:
+
+  mount /home /tmp/scrub --bind
+  SERVICE_MODE=1 SERVICE_MOUNTPOINT=/tmp/scrub xfs_scrub -b /home
+
+And the top listing for that will look like:
+
+    PID USER      PR  NI %CPU  %MEM     TIME+ COMMAND
+  11804 xfs_scru+ 20  19 10.3   0.1   1:26.94 xfs_scrub -b /home
+
+(I omitted a few columns to narrow the top output.)
+
+Notice how the path that the program is allegedly scrubbing (despite all
+the private bind mount security mania) shows up in the ps listing, so
+it's easier to figure out what each process is doing.  The actual
+horrible details of the sandboxing are hidden in /proc/11804/environ
+
+So that's the reasoning behind the somewhat backwards phrasing.  As they
+say, "Permits many, money more!"
+
+For everyone else following at home -- the reason for bind mounting the
+actual mountpoint into a private mount tree at /tmp/scrub is (a) to
+make it so that the scrub process can only see a ro version of a subset
+of the filesystem tree; and (b) separate the mountpoint in the scrub
+process so that the sysadmin typing "umount /home" will see it disappear
+out of most process' mount trees without that affecting scrub.
+
+(I don't think xfs_scrub is going to go rogue and start reading users'
+credit card numbers out of /home, but why give it an easy opportunity?)
 
 --D
-
