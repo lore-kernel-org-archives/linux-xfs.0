@@ -2,65 +2,57 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 955F3C4332F
-	for <linux-xfs@archiver.kernel.org>; Tue,  7 Nov 2023 08:29:54 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2BD32C4332F
+	for <linux-xfs@archiver.kernel.org>; Tue,  7 Nov 2023 08:35:46 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233589AbjKGI3y (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 7 Nov 2023 03:29:54 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51520 "EHLO
+        id S231303AbjKGIfr (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 7 Nov 2023 03:35:47 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42376 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233559AbjKGI3y (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 7 Nov 2023 03:29:54 -0500
+        with ESMTP id S233559AbjKGIfp (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 7 Nov 2023 03:35:45 -0500
 Received: from bombadil.infradead.org (bombadil.infradead.org [IPv6:2607:7c80:54:3::133])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 331BABD;
-        Tue,  7 Nov 2023 00:29:51 -0800 (PST)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9261510A
+        for <linux-xfs@vger.kernel.org>; Tue,  7 Nov 2023 00:35:42 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
         d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Type:MIME-Version
         :References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
         Content-Transfer-Encoding:Content-ID:Content-Description;
-        bh=OiPmvoe5Y0ppJQaTILBG8RrVwwaBOmCYO/Hksb5Iuxw=; b=3/5DqS2xBXv2UAJwok0eU1vbmy
-        6Wgvb+wN7WOPVF/ZLGK16vbmjZUkGMNET2QnyHLT2bNYg3kQUNApCBCuzBb6sv+JRhNJsfLThT43B
-        bpWP8eMkiLUuQfXdeIz6vMHFfidHrg1tcmfR+TJbkYzsSCstOJyLhswI0Tp8qpReB0nGU3iLQ3rGG
-        +K/D4PgkKFPbX9utiRo4b34e1gYvGAF1ETqUWAA98mE2jzBKhs+qXs+mHiXPyyjOynj2M7cKfXDwJ
-        LoKksdNHv+3e4QwMDM8pJVLxZLM+ckZhoEXTQMDx1UFRQPLU7Ki3CB8HlNCTLVH30w6/c8S+VdHj1
-        Gf7zsCpA==;
+        bh=FY5YpbTWdacUsQG1rs+er3s5QQoM48qRfWd94ZFWOVM=; b=HX4UFNESRTgEk47nQGDkv0+ePL
+        3cePEFPA+uxN7cuOlqHfbeG7w1UVJnUNQVHAUXIjZ5nLNVQkg4q0A14am4VNXnjOGq+fzCnL7h7Bt
+        xAYQAvrOwL2XlFMlYgVP2Yyey4sB5aR++zTo1o88yFWYBepDv7Cbi1p32L5ZnzZ/HxsJY3WsuJ78K
+        CRPf3OI7NfwmNGDYa/w413121dM29g/Su37V3mztQseKaJYaR08mbZiUOmpX5f88gJnvjv+MJWPzv
+        Sz7XBk0fP5TVMmyEw3dSaXABd08F5W+2mcT/To2dXxDu9UEfXrCwZ7EV0e950tmWc7sgAgcISpvKa
+        GOYh8Xyw==;
 Received: from hch by bombadil.infradead.org with local (Exim 4.96 #2 (Red Hat Linux))
-        id 1r0HT3-000owf-0z;
-        Tue, 07 Nov 2023 08:29:49 +0000
-Date:   Tue, 7 Nov 2023 00:29:49 -0800
+        id 1r0HYk-000pVB-1W;
+        Tue, 07 Nov 2023 08:35:42 +0000
+Date:   Tue, 7 Nov 2023 00:35:42 -0800
 From:   Christoph Hellwig <hch@infradead.org>
-To:     Dave Chinner <david@fromorbit.com>
-Cc:     Zorro Lang <zlang@redhat.com>, linux-xfs@vger.kernel.org,
-        fstests@vger.kernel.org, "Darrick J. Wong" <djwong@kernel.org>,
-        Carlos Maiolino <carlos@maiolino.me>
-Subject: Re: [Bug report][fstests generic/047] Internal error !(flags &
- XFS_DABUF_MAP_HOLE_OK) at line 2572 of file fs/xfs/libxfs/xfs_da_btree.c.
- Caller xfs_dabuf_map.constprop.0+0x26c/0x368 [xfs]
-Message-ID: <ZUn1fRNaxTgFhBqg@infradead.org>
-References: <20231029041122.bx2k7wwm7otebjd5@dell-per750-06-vm-08.rhts.eng.pek2.redhat.com>
- <ZUiECgUWZ/8HKi3k@dread.disaster.area>
- <20231106192627.ilvijcbpmp3l3wcz@dell-per750-06-vm-08.rhts.eng.pek2.redhat.com>
- <ZUlNroz8l5h1s1oF@dread.disaster.area>
+To:     "Darrick J. Wong" <djwong@kernel.org>
+Cc:     cem@kernel.org, linux-xfs@vger.kernel.org
+Subject: Re: [PATCH 1/5] debian: install scrub services with dh_installsystemd
+Message-ID: <ZUn23tAsaXnd8IS7@infradead.org>
+References: <168506073832.3745766.10929690168821459226.stgit@frogsfrogsfrogs>
+ <168506073846.3745766.1338318814898903856.stgit@frogsfrogsfrogs>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <ZUlNroz8l5h1s1oF@dread.disaster.area>
+In-Reply-To: <168506073846.3745766.1338318814898903856.stgit@frogsfrogsfrogs>
 X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Tue, Nov 07, 2023 at 07:33:50AM +1100, Dave Chinner wrote:
-> That's not good. Can you please determine if this is a zero-day bug
-> with the nrext64 feature? I think it was merged in 5.19, so if you
-> could try to reproduce it on a 5.18 and 5.19 kernels first, that
-> would be handy.
+On Thu, May 25, 2023 at 06:52:42PM -0700, Darrick J. Wong wrote:
+> From: Darrick J. Wong <djwong@kernel.org>
 > 
-> Also, from your s390 kernel build, can you get the pahole output
-> for the struct xfs_dinode both for a good kernel and a bad kernel?
+> Use dh_installsystemd to handle the installation and activation of the
+> scrub systemd services.  This requires bumping the compat version to 11.
+> Note that the services are /not/ activated on installation.
+> 
+> Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 
-Another interesting angle is that s390 is the only mainstream big
-endian platform left.  It might be interesting to also try to
-reproduce this in a ppc64be or sparc64 system if someone has one
-or a VM).
+Looks good:
 
+Reviewed-by: Christoph Hellwig <hch@lst.de>
