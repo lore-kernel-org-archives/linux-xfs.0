@@ -2,94 +2,111 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 32A7EC4167B
-	for <linux-xfs@archiver.kernel.org>; Tue,  7 Nov 2023 10:26:03 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C69A5C4332F
+	for <linux-xfs@archiver.kernel.org>; Tue,  7 Nov 2023 13:32:01 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229543AbjKGK0D (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 7 Nov 2023 05:26:03 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51806 "EHLO
+        id S233518AbjKGNcC (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 7 Nov 2023 08:32:02 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41926 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233755AbjKGK0D (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 7 Nov 2023 05:26:03 -0500
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 485D5F7
-        for <linux-xfs@vger.kernel.org>; Tue,  7 Nov 2023 02:26:00 -0800 (PST)
-Received: by smtp.kernel.org (Postfix) with ESMTPS id E6A30C4339A
-        for <linux-xfs@vger.kernel.org>; Tue,  7 Nov 2023 10:25:59 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1699352759;
-        bh=vcBcWTiNY/SXCwOx25LrBpJl+XUpjw2QJBE+HEH3wWk=;
-        h=From:To:Subject:Date:In-Reply-To:References:From;
-        b=k3wyDDA8qK8D7OTz6UBYSfc/h+k21nwIHdgMZpaOvRv8o2ASfZthnWxKRNAPnvH5k
-         2F0uuZM7Pqf5uA8d/JVGTtlbCwFR9SuZYX/WfT7tDuy/SazKQvDedJLC0HLKa5QTWm
-         xXNKAwjos9ulZFuibq0IlN4YYfvBKrmhpikZFQ3ab3P6pyx9kIVeIL8ZTU+gGAVTdJ
-         ao9YHoK+6Nmcx2KAaxjKtb41GP2BfN93nH07bItkI62QnLM7ec/B+1rsMzVn2Tmeyt
-         h9I30HVfWt3e0R5sbUckWOIJGIAxZbeYRLvZuM5l/gwcQPs3v2RBzEbGAxuT+mb3q6
-         LwKQcCh2x6WDA==
-Received: by aws-us-west-2-korg-bugzilla-1.web.codeaurora.org (Postfix, from userid 48)
-        id D6E4BC53BD0; Tue,  7 Nov 2023 10:25:59 +0000 (UTC)
-From:   bugzilla-daemon@kernel.org
-To:     linux-xfs@vger.kernel.org
-Subject: [Bug 217572] Initial blocked tasks causing deterioration over hours
- until (nearly) complete system lockup and data loss with PostgreSQL 13
-Date:   Tue, 07 Nov 2023 10:25:59 +0000
-X-Bugzilla-Reason: None
-X-Bugzilla-Type: changed
-X-Bugzilla-Watch-Reason: AssignedTo filesystem_xfs@kernel-bugs.kernel.org
-X-Bugzilla-Product: Memory Management
-X-Bugzilla-Component: Other
-X-Bugzilla-Version: 2.5
-X-Bugzilla-Keywords: 
-X-Bugzilla-Severity: high
-X-Bugzilla-Who: kernel@nmitconsulting.co.uk
-X-Bugzilla-Status: NEW
-X-Bugzilla-Resolution: 
-X-Bugzilla-Priority: P3
-X-Bugzilla-Assigned-To: filesystem_xfs@kernel-bugs.kernel.org
-X-Bugzilla-Flags: 
-X-Bugzilla-Changed-Fields: 
-Message-ID: <bug-217572-201763-H5AeazZTqF@https.bugzilla.kernel.org/>
-In-Reply-To: <bug-217572-201763@https.bugzilla.kernel.org/>
-References: <bug-217572-201763@https.bugzilla.kernel.org/>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
-X-Bugzilla-URL: https://bugzilla.kernel.org/
-Auto-Submitted: auto-generated
+        with ESMTP id S231833AbjKGNcC (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 7 Nov 2023 08:32:02 -0500
+Received: from dggsgout11.his.huawei.com (dggsgout11.his.huawei.com [45.249.212.51])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B440C8F
+        for <linux-xfs@vger.kernel.org>; Tue,  7 Nov 2023 05:31:57 -0800 (PST)
+Received: from mail.maildlp.com (unknown [172.19.163.235])
+        by dggsgout11.his.huawei.com (SkyGuard) with ESMTP id 4SPpzB2kPqz4f3lVn
+        for <linux-xfs@vger.kernel.org>; Tue,  7 Nov 2023 21:31:50 +0800 (CST)
+Received: from mail02.huawei.com (unknown [10.116.40.112])
+        by mail.maildlp.com (Postfix) with ESMTP id 228431A016D
+        for <linux-xfs@vger.kernel.org>; Tue,  7 Nov 2023 21:31:54 +0800 (CST)
+Received: from localhost (unknown [10.175.127.227])
+        by APP1 (Coremail) with SMTP id cCh0CgCnqxFAPEplqDAkAQ--.983S3;
+        Tue, 07 Nov 2023 21:31:45 +0800 (CST)
+Date:   Tue, 7 Nov 2023 21:36:07 +0800
+From:   Long Li <leo.lilong@huaweicloud.com>
+To:     Chandan Babu R <chandanbabu@kernel.org>
+Cc:     linux-xfs@vger.kernel.org, yi.zhang@huawei.com, houtao1@huawei.com,
+        yangerkun@huawei.com, djwong@kernel.org, david@fromorbit.com
+Subject: Re: [PATCH v3 0/3] xfs: fix two problem when recovery intents fails
+Message-ID: <20231107133607.GA560725@ceph-admin>
+References: <20230731124619.3925403-1-leo.lilong@huawei.com>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+In-Reply-To: <20230731124619.3925403-1-leo.lilong@huawei.com>
+X-CM-TRANSID: cCh0CgCnqxFAPEplqDAkAQ--.983S3
+X-Coremail-Antispam: 1UD129KBjvJXoW7Zr43Ww4fJF17JF4DKryDZFb_yoW8CryfpF
+        n3Kwn8ua9xGF18ZF43JFyjqa45tr4kAr4jkrs7Jr9rWay8Ary7WrWFvFyFvFyUurWSga13
+        Zr1kuw1rWa43JFDanT9S1TB71UUUUUUqnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+        9KBjDU0xBIdaVrnRJUUUgvb4IE77IF4wAFF20E14v26r4j6ryUM7CY07I20VC2zVCF04k2
+        6cxKx2IYs7xG6rWj6s0DM7CIcVAFz4kK6r1j6r18M28lY4IEw2IIxxk0rwA2F7IY1VAKz4
+        vEj48ve4kI8wA2z4x0Y4vE2Ix0cI8IcVAFwI0_tr0E3s1l84ACjcxK6xIIjxv20xvEc7Cj
+        xVAFwI0_GcCE3s1l84ACjcxK6I8E87Iv67AKxVW0oVCq3wA2z4x0Y4vEx4A2jsIEc7CjxV
+        AFwI0_GcCE3s1le2I262IYc4CY6c8Ij28IcVAaY2xG8wAqx4xG64xvF2IEw4CE5I8CrVC2
+        j2WlYx0E2Ix0cI8IcVAFwI0_Jr0_Jr4lYx0Ex4A2jsIE14v26r1j6r4UMcvjeVCFs4IE7x
+        kEbVWUJVW8JwACjcxG0xvEwIxGrwCF04k20xvY0x0EwIxGrwCFx2IqxVCFs4IE7xkEbVWU
+        JVW8JwC20s026c02F40E14v26r1j6r18MI8I3I0E7480Y4vE14v26r106r1rMI8E67AF67
+        kF1VAFwI0_JF0_Jw1lIxkGc2Ij64vIr41lIxAIcVC0I7IYx2IY67AKxVWUJVWUCwCI42IY
+        6xIIjxv20xvEc7CjxVAFwI0_Jr0_Gr1lIxAIcVCF04k26cxKx2IYs7xG6rW3Jr0E3s1lIx
+        AIcVC2z280aVAFwI0_Jr0_Gr1lIxAIcVC2z280aVCY1x0267AKxVWUJVW8JbIYCTnIWIev
+        Ja73UjIFyTuYvjxUrR6zUUUUU
+X-CM-SenderInfo: hohrhzxlor0w46kxt4xhlfz01xgou0bp/
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-https://bugzilla.kernel.org/show_bug.cgi?id=3D217572
+On Mon, Jul 31, 2023 at 08:46:16PM +0800, Long Li wrote:
+> This patch set fix two problem when recovery intents fails.
+> 
+> Patches 1-2 fix the possible problem that intent items not released.
+> When recovery intents, new intents items may be created during recovery
+> intents. if recovery fails, new intents items may be left in AIL or
+> leaks.
 
---- Comment #24 from KN (kernel@nmitconsulting.co.uk) ---
-Long time lurker here offering a potential workaround.
+Hi Chandan,
+	
+In this patchset, patches 1-2 [1][2] have already been reviewed by Darrick,
+and are not related to patch 3, is it possible to merge patches 1-2 in first?? 	
+Patch 3 seems still has a lot of work to do.
 
+[1] https://patchwork.kernel.org/project/xfs/patch/20230715063647.2094989-2-leo.lilong@huawei.com/
+[2] https://patchwork.kernel.org/project/xfs/patch/20230715063647.2094989-3-leo.lilong@huawei.com/
 
-We experienced near identical kernel issues as mentioned here with a comple=
-tely
-different setup. We saw the issue on our OKD cluster (4.12 and 4.13) runnin=
-g on
-Fedora CoreOS (37 and 38). We had ~70 nodes with a specific workload profil=
-e,
-and of these, anywhere between 1 and 5 would run into this issue each night=
- on
-our production cluster. These nodes were very IO intensive (druid
-middlemanager/ingest nodes) but not database related. The persistent volumes
-that were contributing the majority of the disk IO were configured as xfs. =
-We
-tried for weeks to reproduce this error but could not.
+Thanks,
+Long Li
 
-Whilst we have to accept this is a kernel bug and not an xfs bug, we *resol=
-ved*
-our issues by switching from xfs to ext4. Haven't had a single instance of =
-this
-error since we migrated our persistent volumes away from xfs.=20
+> 
+> Patch 3 fix a uaf problem, when recovery intents fails, intent items
+> may be freed before done item commited.
+> 
+> v3:
+>  - Modified as suggested by Dave, solves the UAF problem by correctly
+>  handling the reference counting of intents in patch 3
+> 
+> v2:
+>  - change xfs_defer_pending_abort to static in patch 1
+>  - rewrite commit message in patch 2-3
+>  - rename xfs_defer_ops_capture_free to xfs_defer_ops_capture_abort, and
+>  add xfs_defer_pending_abort to the start of xfs_defer_ops_capture_abort
+> 
+> 
+> Long Li (3):
+>   xfs: factor out xfs_defer_pending_abort
+>   xfs: abort intent items when recovery intents fail
+>   xfs: fix intent item uaf when recover intents fail
+> 
+>  fs/xfs/libxfs/xfs_defer.c  | 28 ++++++++++++++++++----------
+>  fs/xfs/libxfs/xfs_defer.h  |  2 +-
+>  fs/xfs/xfs_attr_item.c     |  1 +
+>  fs/xfs/xfs_bmap_item.c     |  1 +
+>  fs/xfs/xfs_extfree_item.c  |  1 +
+>  fs/xfs/xfs_log_recover.c   |  2 +-
+>  fs/xfs/xfs_refcount_item.c |  1 +
+>  fs/xfs/xfs_rmap_item.c     |  1 +
+>  8 files changed, 25 insertions(+), 12 deletions(-)
+> 
+> -- 
+> 2.31.1
+> 
 
-3 weeks and counting and not a single failure.
-
---=20
-You may reply to this email to add a comment.
-
-You are receiving this mail because:
-You are watching the assignee of the bug.=
