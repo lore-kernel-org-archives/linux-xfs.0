@@ -2,230 +2,204 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 34A81C4167D
-	for <linux-xfs@archiver.kernel.org>; Wed,  8 Nov 2023 22:05:59 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7B661C4332F
+	for <linux-xfs@archiver.kernel.org>; Wed,  8 Nov 2023 22:52:03 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229566AbjKHWGA (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 8 Nov 2023 17:06:00 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46238 "EHLO
+        id S229555AbjKHWwE (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 8 Nov 2023 17:52:04 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59780 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229506AbjKHWF7 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 8 Nov 2023 17:05:59 -0500
-Received: from mail-pf1-x432.google.com (mail-pf1-x432.google.com [IPv6:2607:f8b0:4864:20::432])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2C344258A
-        for <linux-xfs@vger.kernel.org>; Wed,  8 Nov 2023 14:05:57 -0800 (PST)
-Received: by mail-pf1-x432.google.com with SMTP id d2e1a72fcca58-6c431b91b2aso161385b3a.1
-        for <linux-xfs@vger.kernel.org>; Wed, 08 Nov 2023 14:05:57 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=fromorbit-com.20230601.gappssmtp.com; s=20230601; t=1699481156; x=1700085956; darn=vger.kernel.org;
-        h=in-reply-to:content-transfer-encoding:content-disposition
-         :mime-version:references:message-id:subject:cc:to:from:date:from:to
-         :cc:subject:date:message-id:reply-to;
-        bh=BPrWruA3spy+o1hpuI+ZXmsqMhnVwk9rXY+leRYr2R8=;
-        b=13lAb1vSiI/W2kR0t93Kro03cG5k15m07JmYZHfK6Rxkfkdq63BkjoEi8JGkjot430
-         eqbVAoHGZb8BAXfbiGcVtjdCdQVETCvq5zVME5EGs6ifo8z/d3tpprq7GcO844dnqOpf
-         K+VSg+C+U+hQgAeNB7nvs6Nu4Ymw3BmQt7x/RBnguYuDjrvYywWNuD2caXLNQTcaGta0
-         NKYJvVrIVOnM2XAuG16eKaTLg/NS2/1Lx6vr9qmMXj7zctz+F4InF0vYnRKBugykzjiY
-         +vo/mDPfg/1dd7BrWFvKX26WzU6NwHsYujpvrDwth9ZTCuaCuQu5Pzqh0XMDxUw7qS6a
-         bk/Q==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1699481156; x=1700085956;
-        h=in-reply-to:content-transfer-encoding:content-disposition
-         :mime-version:references:message-id:subject:cc:to:from:date
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=BPrWruA3spy+o1hpuI+ZXmsqMhnVwk9rXY+leRYr2R8=;
-        b=NXPddWcsfS4cf40PU0/Mh22v5Jhv4XcQe8hf7UH7IisC/YBdfZ9jJttHHxMDt4HYtW
-         mP6P50SmhExt7KszNvqVNhRw8imSg3YOL42c7Un8bf1EkfEt/Wmy4EwOoMaCYlRyMnVy
-         bxt7Cbo2dQPjraNin3PA0YA95502uGfD1K2894HSbRM6Jm3k+ZyT7pGuLXlINpKNxKVt
-         Frr9E+9KeQytLXkzJ1sLUT2lKN7B4Nc7Ae4hzVmdXzEkhjQFbNBNsTPVosxEVi0zINx3
-         /nXUHeaUNP0NNm3fOVOzBCjOmW73M6wK8BrDFHVlbUw6pLm1vXj1wV7yDGupegkOdPbp
-         kTnA==
-X-Gm-Message-State: AOJu0YxgXHudQCESFL62+cHKbh9zINh+tOaneC38gd2W7Tctwb4YEdpC
-        qg5vTV4a5EG2yGqfqZ/NaXLA5IwLNhIMQjSxrRA=
-X-Google-Smtp-Source: AGHT+IEJ4U+M+96QlZ7uIPViNJaRdGqkravFWgJLaYzKV0ZJpP6oBLhYWQ9kr/wza2LzjCN00GOjTQ==
-X-Received: by 2002:a05:6a20:9d8e:b0:181:2f76:f9f6 with SMTP id mu14-20020a056a209d8e00b001812f76f9f6mr3767249pzb.44.1699481156446;
-        Wed, 08 Nov 2023 14:05:56 -0800 (PST)
-Received: from dread.disaster.area (pa49-180-125-5.pa.nsw.optusnet.com.au. [49.180.125.5])
-        by smtp.gmail.com with ESMTPSA id h10-20020a170902f7ca00b001bb892a7a67sm2197786plw.1.2023.11.08.14.05.54
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 08 Nov 2023 14:05:55 -0800 (PST)
-Received: from dave by dread.disaster.area with local (Exim 4.96)
-        (envelope-from <david@fromorbit.com>)
-        id 1r0qgK-00A315-0D;
-        Thu, 09 Nov 2023 09:05:52 +1100
-Date:   Thu, 9 Nov 2023 09:05:52 +1100
-From:   Dave Chinner <david@fromorbit.com>
-To:     Per =?iso-8859-1?Q?F=F6rlin?= <Per.Forlin@axis.com>
-Cc:     "linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>
-Subject: Re: xfsprogs: repair: Higher memory consumption when disable prefetch
-Message-ID: <ZUwGQDBhtR4ZHtt+@dread.disaster.area>
-References: <DU0PR02MB9824633F6B7AA1090D3D02A9EFA8A@DU0PR02MB9824.eurprd02.prod.outlook.com>
+        with ESMTP id S229551AbjKHWwD (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 8 Nov 2023 17:52:03 -0500
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 89749212E
+        for <linux-xfs@vger.kernel.org>; Wed,  8 Nov 2023 14:52:01 -0800 (PST)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 185AEC433C7;
+        Wed,  8 Nov 2023 22:52:01 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1699483921;
+        bh=HEtmjQaJF0gpngzuMd7uAS6GdeVXsEyiEFttrNMCLZo=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=i+YoBAEFerirAURfyXz29Snkn78b6MV9g5HF5mNqO3mhbjpSa3K9ugS8HbLPOrKUu
+         EFEUsND0k8tEBjmhHl99oI1KEZgFhPver+cbAg/JwPUmLmKNag9Auw78yP1OndQZBV
+         Bs92t6zY7b5OxwF9nm7B4j908y+wKT+EfafkmebgfsvgaUeTDyO+Lzx+hYCafdoh1p
+         DkV4dhnObJIwh6fcIA1AWNXRqDBnBlxMFeKp7+xX2QbP68VojxrCmpwFdwq0sDy4Dd
+         T3cJ+YoVTNsFwkFR+58v0bXCJkZzdzwsmiFdy71UubyzT/pXq+xx2EeE/0x+jRsScL
+         zGan9Ds9/ATKg==
+Date:   Wed, 8 Nov 2023 14:52:00 -0800
+From:   "Darrick J. Wong" <djwong@kernel.org>
+To:     Linus Torvalds <torvalds@linux-foundation.org>
+Cc:     Chandan Babu R <chandanbabu@kernel.org>,
+        Jeff Layton <jlayton@kernel.org>,
+        Christian Brauner <brauner@kernel.org>,
+        catherine.hoang@oracle.com, cheng.lin130@zte.com.cn,
+        dchinner@redhat.com, hch@lst.de, linux-fsdevel@vger.kernel.org,
+        linux-xfs@vger.kernel.org, osandov@fb.com
+Subject: Re: [GIT PULL] xfs: new code for 6.7
+Message-ID: <20231108225200.GY1205143@frogsfrogsfrogs>
+References: <87fs1g1rac.fsf@debian-BULLSEYE-live-builder-AMD64>
+ <CAHk-=wj3oM3d-Hw2vvxys3KCZ9De+gBN7Gxr2jf96OTisL9udw@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <DU0PR02MB9824633F6B7AA1090D3D02A9EFA8A@DU0PR02MB9824.eurprd02.prod.outlook.com>
+In-Reply-To: <CAHk-=wj3oM3d-Hw2vvxys3KCZ9De+gBN7Gxr2jf96OTisL9udw@mail.gmail.com>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Wed, Nov 08, 2023 at 03:56:00PM +0000, Per Förlin wrote:
-> Hi Linux XFS community,
+On Wed, Nov 08, 2023 at 01:29:16PM -0800, Linus Torvalds wrote:
+> On Wed, 8 Nov 2023 at 02:19, Chandan Babu R <chandanbabu@kernel.org> wrote:
+> >
+> > I had performed a test merge with latest contents of torvalds/linux.git.
+> >
+> > This resulted in merge conflicts. The following diff should resolve the merge
+> > conflicts.
 > 
-> Please bare with me I'm new to XFS :)
+> Well, your merge conflict resolution is the same as my initial
+> mindless one, but then when I look closer at it, it turns out that
+> it's wrong.
 > 
-> I'm comparing how EXT4 and XFS behaves on systems with a relative
-> small RAM vs storage ratio. The current focus is on FS repair memory consumption.
+> It's wrong not because the merge itself would be wrong, but because
+> the conflict made me look at the original, and it turns out that
+> commit 75d1e312bbbd ("xfs: convert to new timestamp accessors") was
+> buggy.
 > 
-> I have been running some tests using the max_mem_specified option.
-> The "-m" (max_mem_specified) parameter does not guarantee success but it surely helps
-> to reduce the memory load, in comparison to EXT4 this is an improvement.
+> I'm actually surprised the compilers don't complain about it, because
+> the bug means that the new
 > 
-> My question concerns the relation between "-P" (disable prefetch) and "-m" (max_mem_specified).
+>         struct timespec64 ts;
 > 
-> There is a difference in xfs_repair memory consumption between the following commands
-> 1. xfs_repair -P -m 500
-> 2. xfs_repair -m 500
->
-> 1) Exceeds the max_mem_specified limit
-> 2) Stays below the max_mem_specified limit
-
-Purely co-incidental, IMO.
-
-As the man page says:
-
-	-m maxmem
-
-	      Specifies the approximate maximum amount of memory, in
-	      megabytes, to use for xfs_repair.  xfs_repair has its
-	      own  internal  block cache  which  will  scale  out
-	      up to the lesser of the process’s virtual address
-	      limit or about 75% of the system’s physical RAM.  This
-	      option overrides these limits.
-
-	      NOTE: These memory limits are only approximate and may
-	      use more than the specified limit.
-
-IOWs, behaviour is expected - the max_mem figure is just a starting
-point guideline, and it only affects the size of the IO cache that
-repair holds.  We still need lots of memory to index free space,
-used space, inodes, hold directory information, etc, so memory usage
-on any filesystem with enough metadata in it to fill the internal
-buffer cache will always go over this number....
-
-> I expected disabled prefetch to reduce the memory load but instead the result is the opposite.
-> The two commands 1) and 2) are being executed in the same system.
-
-> My speculation:
-> Does the prefetch facilitate and improve the calculation of the memory
-> consumption and make it more accurate?
-
-No, prefetching changes the way processing of the metadata occurs.
-It also vastly changes the way IO is done and the buffer cache is
-populated.
-
-e.g. prefetching looks at metadata density and issues
-large IOs if the density is high enough and then chops them up into
-individual metadata buffers in memory at prefetch IO completion.
-This avoids doing lots of small IOs, greatly improving IO throughput
-and keeping the processing pipeline busy.
-
-This comes at the cost of increased CPU overhead and non-buffer
-cache memory footprint, but for slow IO devices this can improve IO
-throughput (and hence repair times) by a factor of up to 100x. Have
-a look at the difference in IO patterns when you enable/disable
-prefetching...
-
-When prefetching is turned off, the processing issues individual IO
-itself and doesn't do density-based scan optimisation. In some cases
-this is faster (e.g. high speed SSDs) because it is more CPU
-efficient, but it results in different IO patterns and buffer access
-patterns.
-
-The end result is that buffers have a very different life time when
-prefetching is turned on compared to when it is off, and so there's
-a very different buffer cache memory footprint between the two
-options.
-
-> Here follows output with -P and without -P from the same system.
-> I have extracted the part the actually differs.
-> The full logs are available the bottom of this email.
+> temporary isn't actually initialized for the !XFS_DIFLAG_NEWRTBM case.
 > 
-> # -P -m 500 #
-> Phase 3 - for each AG...
-> ...
-> Active entries = 12336
-> Hash table size = 1549
-> Hits = 1
-> Misses = 224301
-> Hit ratio =  0.00
-> MRU 0 entries =  12335 ( 99%)
-> MRU 1 entries =      0 (  0%)
-> MRU 2 entries =      0 (  0%)
-> MRU 3 entries =      0 (  0%)
-> MRU 4 entries =      0 (  0%)
-> MRU 5 entries =      0 (  0%)
-> MRU 6 entries =      0 (  0%)
-> MRU 7 entries =      0 (  0%)
+> The code does
+> 
+>   xfs_rtpick_extent(..)
 
-Without prefetching, we have a single use for all buffers and the
-metadata accessed is 20x larger than the size of the buffer cache
-(220k vs 12k for the cache size).  This is just showing how the
-non-prefetch case is just streaming buffers through the cache in
-processing access order.
+Oh gosh.  Dave might have other things to say, but xfs_rtpick_extent is
+the sort of function that I hate with the power of 1,000 suns.
 
-i.e. The MRU list indicates that nothing is being kept for long
-periods or being accessed out of order as all buffers are on list 0
-(most recently used). i.e. nothing is aging out and which means
-buffers are being used and reclaimed in the same order they are
-being instantiated.  If anything was being accessed out of order, we
-would see buffers move down the aging lists....
+Back in 2.6.x it apparently did this:
 
-> # -m 500 #
-> Phase 3 - for each AG...
-> ...
-> Active entries = 12388
-> Hash table size = 1549
-> Hits = 220459
-> Misses = 235388
-> Hit ratio = 48.36
+	seqp = (__uint64_t *)&mp->m_rbmip->i_d.di_atime;
 
-And there's the difference - two accesses per buffer for the
-prefetch case. One for the IO dispatch to bring it into memory (the
-miss) and one for processing (the hit).
+At the time, xfs_inode.id.di_atime was a struct xfs_ictimestamp:
 
-> MRU 0 entries =      2 (  0%)
-> MRU 1 entries =      0 (  0%)
-> MRU 2 entries =   1362 ( 10%)
-> MRU 3 entries =     68 (  0%)
-> MRU 4 entries =     10 (  0%)
-> MRU 5 entries =   6097 ( 49%)
-> MRU 6 entries =   4752 ( 38%)
-> MRU 7 entries =     96 (  0%)
+typedef struct xfs_ictimestamp {
+	__int32_t	t_sec;		/* timestamp seconds */
+	__int32_t	t_nsec;		/* timestamp nanoseconds */
+} xfs_ictimestamp_t;
 
-And the MRU list shows how the buffer access are not uniform - we
-are seeing buffers of all different ages in the cache. This shows
-that buffers are being aged 5-6 times before they are getting used,
-which means the cache size is almost too small for prefetch to work
-effectively....
+So the rt allocator thinks its maintaining a u64 new file counter in the
+bitmap file's atime.  The lower 32bits ended up in t_sec, and the upper
+32bits ended up in t_nsec.
 
-Actually, the cache is too small - cache misses are significantly
-larger than cache hits, meaning some buffers are being fetched from
-disk twice because the prefetched buffers are aging out before the
-processing thread gets to them. Give xfs_repair ~5GB of RAM, and it
-should only need to do a single IO pass in phase 3 and then phase 4
-and 6 will hit the buffers in the cache and hence not need to do any
-IO at all...
+At some point (4.6?) the function started using the VFS i_atime field
+instead of the di_atime field.  On 32-bit systems the struct timespec
+was still a struct of two int32 values and everything kept working the
+way it always had.
 
-So to me, this is prefetch working as it should - it's bringing
-buffers into cache in the optimal IO pattern rather than the
-application level access pattern. The difference in memory footprint
-compared to no prefetching is largely co-incidental and really not
-something we are concerned about in any way...
+On 64-bit systems, tv_sec is 64-bits which means the sequence counter
+was only stored (incore, anyway) in tv_sec.  XFS truncates the upper
+32-bits when writing the inode to disk because (at the time) it didn't
+handle y2038.
 
-Cheers,
+IOWs, we broke the ondisk format in 2016 and nobody noticed.  Because
+the allocator calls xfs_highbit64 on the sequence counter, the only
+observable behavior change would be the starting location of a free
+space search for the first rt file allocation after an upgrade from 4.5
+to a newer kernel on a 64-bit machine.
 
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+(Or going back, obviously)
+
+But then in 4.18 or so, the VFS inode switched to timespec64, at which
+point /all/ of the 32-bit kernels "migrated" to storing the sequence
+counter in tv_sec and truncating it when it goes out to disk.
+
+Then in 5.10 we added y2038 support, so post-Covid filesystems truncate
+less of the sequence counter.  #winning
+
+>   ...
+>         struct timespec64 ts;
+>         ..
+>         if (!(mp->m_rbmip->i_diflags & XFS_DIFLAG_NEWRTBM)) {
+>                 mp->m_rbmip->i_diflags |= XFS_DIFLAG_NEWRTBM;
+>                 seq = 0;
+>         } else {
+>         ...
+>         ts.tv_sec = (time64_t)seq + 1;
+>         inode_set_atime_to_ts(VFS_I(mp->m_rbmip), ts);
+
+So... according to the pre-4.6 definition of the sequence counter this
+is wrong, but OTOH it's not inconsistent with what was there in 6.4.
+
+> and notice how 'ts.tv_nsec' is never initialized. So we'll set the
+> nsec part of the atime to random garbage.
+> 
+> Oh, I'm sure it doesn't really *matter*, but it's most certainly wrong.
+
+tv_nsec isn't explicitly initialized by rtpick_extent, but IIRC mkfs
+initializes the ondisk inode's tv_nsec field and the kernel reads that
+into the incore inode, so I dont't think it's leaking kernel memory
+contents.
+
+> I am not very happy about the whole crazy XFS model where people cast
+> the 'struct timespec64' pointer to an 'uint64_t' pointer, and then say
+> 'now it's a sequence number'. This is not the only place that
+> happened, ie we have similar disgusting code in at least
+> xfs_rtfree_extent() too.
+> 
+> That other place in xfs_rtfree_extent() didn't have this bug - it does
+> inode_get_atime() unconditionally and this keeps the nsec field as-is,
+> but that other place has the same really ugly code.
+> 
+> Doing that "cast struct timespec64 to an uint64_t' is not only ugly
+> and wrong, it's _stupid_. The only reason it works in the first place
+> is that 'struct timespec64' is
+> 
+>   struct timespec64 {
+>         time64_t        tv_sec;                 /* seconds */
+>         long            tv_nsec;                /* nanoseconds */
+>   };
+> 
+> so the first field is 'tv_sec', which is a 64-bit (signed) value.
+
+(yep)
+
+> So the cast is disgusting - and it's pointless. I don't know why it's
+> done that way. It would have been much cleaner to just use tv_sec, and
+> have a big comment about it being used as a sequence number here.
+> 
+> I _assume_ there's just a simple 32-bit history to this all, where at
+> one point it was a 32-bit tv_sec, and the cast basically used both
+> 32-bit fields as a 64-bit sequence number.  I get it. But it's most
+> definitely wrong now.
+
+I don't even think it was good C back whenever it was written, but I was
+probably in high school at that point. ;)
+
+> End result: I ended up fixing that bug and removing the bogus casts in
+> my merge. I *think* I got it right, but apologies in advance if I
+> screwed up. I only did visual inspection and build testing, no actual
+> real testing.
+
+My opinion is that you've kept your tree consistent with what the kernel
+has been doing for the last 5 years.  No comment about the s**tshow that
+went on before that.
+
+> Also, xfs people may obviously have other preferences for how to deal
+> with the whole "now using tv_sec in the VFS inode as a 64-bit sequence
+> number" thing, and maybe you prefer to then update my fix to this all.
+> But that horrid casts certainly wasn't the right way to do it.
+
+Yeah, I can work on that for the rt modernization patchset.
+
+> Put another way: please do give my merge a closer look, and decide
+> amongst yourself if you then want to deal with this some other way.
+
+Let's see what the other devs say.  Thank you for taking Chandan's pull
+request, by the way.
+
+--D
+
+> 
+>               Linus
