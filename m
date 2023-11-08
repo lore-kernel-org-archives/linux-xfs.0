@@ -2,109 +2,338 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 073BFC4332F
-	for <linux-xfs@archiver.kernel.org>; Wed,  8 Nov 2023 10:10:19 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id DAB25C4332F
+	for <linux-xfs@archiver.kernel.org>; Wed,  8 Nov 2023 10:19:14 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235406AbjKHKKT (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 8 Nov 2023 05:10:19 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49936 "EHLO
+        id S235492AbjKHKTP (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 8 Nov 2023 05:19:15 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60000 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233518AbjKHKKT (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 8 Nov 2023 05:10:19 -0500
-Received: from smtp-out1.suse.de (smtp-out1.suse.de [IPv6:2001:67c:2178:6::1c])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 03F451723;
-        Wed,  8 Nov 2023 02:10:16 -0800 (PST)
-Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
-        (No client certificate requested)
-        by smtp-out1.suse.de (Postfix) with ESMTPS id 98BEE21954;
-        Wed,  8 Nov 2023 10:10:15 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.cz; s=susede2_rsa;
-        t=1699438215; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=PA9sqEeboC7whR130nl0EbzEaZqeDorxcklkHqfQ4h8=;
-        b=2Iz6USKqni61NRdIuziCAfulicKzRRghwXKI8I100BXv9/5Jl/pTJt7mxfw3T+I8ZRpxOF
-        NVB63t+GdphtxpHmsoii3fxVJm1VRewiHmf2XlAsUFtCoeHTnwi2uovVWUPt4Z8mjosPJs
-        2jS6ERtZ/W8U4N+vzp8peIseujORy+g=
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.cz;
-        s=susede2_ed25519; t=1699438215;
-        h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=PA9sqEeboC7whR130nl0EbzEaZqeDorxcklkHqfQ4h8=;
-        b=nf4FVuiC8Q6sfSZPI+vB0VwAPk9NSLgBR8yWLl6yzhEc4uc+K0WvrGzCWWnifHvrySE7GI
-        +vitVfmVpnstuEAw==
-Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
-        (No client certificate requested)
-        by imap2.suse-dmz.suse.de (Postfix) with ESMTPS id 89A01133F5;
-        Wed,  8 Nov 2023 10:10:15 +0000 (UTC)
-Received: from dovecot-director2.suse.de ([192.168.254.65])
-        by imap2.suse-dmz.suse.de with ESMTPSA
-        id fROPIYdeS2UDZgAAMHmgww
-        (envelope-from <jack@suse.cz>); Wed, 08 Nov 2023 10:10:15 +0000
-Received: by quack3.suse.cz (Postfix, from userid 1000)
-        id 2435FA07C0; Wed,  8 Nov 2023 11:10:15 +0100 (CET)
-Date:   Wed, 8 Nov 2023 11:10:15 +0100
-From:   Jan Kara <jack@suse.cz>
-To:     Aleksandr Nogikh <nogikh@google.com>
-Cc:     Jan Kara <jack@suse.cz>, Eric Biggers <ebiggers@kernel.org>,
-        linux-fsdevel@vger.kernel.org, linux-block@vger.kernel.org,
-        Christoph Hellwig <hch@infradead.org>,
-        Christian Brauner <brauner@kernel.org>,
-        Jens Axboe <axboe@kernel.dk>, Kees Cook <keescook@google.com>,
-        Ted Tso <tytso@mit.edu>,
-        syzkaller <syzkaller@googlegroups.com>,
-        Alexander Popov <alex.popov@linux.com>,
-        linux-xfs@vger.kernel.org, linux-btrfs@vger.kernel.org,
-        Dmitry Vyukov <dvyukov@google.com>
-Subject: Re: [PATCH 1/6] block: Add config option to not allow writing to
- mounted devices
-Message-ID: <20231108101015.hj3w6a7sq5x7x2s4@quack3>
-References: <20230704122727.17096-1-jack@suse.cz>
- <20230704125702.23180-1-jack@suse.cz>
- <20230822053523.GA8949@sol.localdomain>
- <20230822101154.7udsf4tdwtns2prj@quack3>
- <CANp29Y6uBuSzLXuCMGzVNZjT+xFqV4dtWKWb7GR7Opx__Diuzg@mail.gmail.com>
- <20231024111015.k4sbjpw5fa46k6il@quack3>
+        with ESMTP id S231674AbjKHKTO (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 8 Nov 2023 05:19:14 -0500
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id F28631BB
+        for <linux-xfs@vger.kernel.org>; Wed,  8 Nov 2023 02:19:12 -0800 (PST)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id A247CC433C8;
+        Wed,  8 Nov 2023 10:19:11 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1699438752;
+        bh=Y/KrJVMORd6UY9eo+/z3E2ahVEEgtWXA4S1w71HjX6A=;
+        h=From:To:Cc:Subject:Date:From;
+        b=V/25LQDfmgS1/R+6++vnawPZLiksIVMWJ6rsp0MjwJxNcbnIeKBJUFEFrzGN22NGZ
+         3xOiJ80ydxz2tmxssj9YdRgmnzZeOHXACBhbui3ah9/CKAtOI0dd++GP31iHBas3t3
+         YccU2Jn/3JhKwIc3hGNMtB8yjBu7bY0LGoQGNWxRlc2Fpmuag9jiMu38s9qIkWsZpc
+         izVHhV/RBsIp9mgbm9kZuiDG4wVsvj1O6cC6XCpB9qvOuQIgn8FQzofyNNPHW29ETh
+         lA8Jsq+AK+EAKpdKDEKPj7VH0RT9KEp1sMBNtxLzkx48nglwr7gLNy6U5mLUH7Te5K
+         6CpMAuzq0Jlyw==
+User-agent: mu4e 1.8.10; emacs 27.1
+From:   Chandan Babu R <chandanbabu@kernel.org>
+To:     torvalds@linux-foundation.org, chandanbabu@kernel.org
+Cc:     catherine.hoang@oracle.com, cheng.lin130@zte.com.cn,
+        dchinner@redhat.com, djwong@kernel.org, hch@lst.de,
+        linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org,
+        osandov@fb.com
+Subject: [GIT PULL] xfs: new code for 6.7
+Date:   Wed, 08 Nov 2023 15:26:29 +0530
+Message-ID: <87fs1g1rac.fsf@debian-BULLSEYE-live-builder-AMD64>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20231024111015.k4sbjpw5fa46k6il@quack3>
+Content-Type: text/plain
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Hi!
+Hi Linus,
 
-On Tue 24-10-23 13:10:15, Jan Kara wrote:
-> On Thu 19-10-23 11:16:55, Aleksandr Nogikh wrote:
-> > Thank you for the series!
-> > 
-> > Have you already had a chance to push an updated version of it?
-> > I tried to search LKML, but didn't find anything.
-> > 
-> > Or did you decide to put it off until later?
-> 
-> So there is preliminary series sitting in VFS tree that changes how block
-> devices are open. There are some conflicts with btrfs tree and bcachefs
-> merge that complicate all this (plus there was quite some churn in VFS
-> itself due to changing rules how block devices are open) so I didn't push
-> out the series that actually forbids opening of mounted block devices
-> because that would cause a "merge from hell" issues. I plan to push out the
-> remaining patches once the merge window closes and all the dependencies are
-> hopefully in a stable state. Maybe I can push out the series earlier based
-> on linux-next so that people can have a look at the current state.
+Please pull this branch with changes for xfs for 6.7-rc1.
 
-So patches are now in VFS tree [1] so they should be in linux-next as well.
-You should be able to start using the config option for syzbot runs :)
+The important changes include,
+1. CPU usage optimizations for realtime allocator.
+2. Allowing read operations to continue while a FICLONE ioctl is being
+   serviced.
 
-								Honza
+The remaining changes are limited to bug fixes and code cleanups.
 
-[1] https://git.kernel.org/pub/scm/linux/kernel/git/vfs/vfs.git/log/?h=vfs.super
--- 
-Jan Kara <jack@suse.com>
-SUSE Labs, CR
+There was a delay in me pushing the changes to XFS' for-next branch and hence
+a delay in the code changes reaching the linux-next tree. The XFS changes
+reached linux-next on 31st of October. The delay was due to me having to drop
+a patch from the XFS tree and having to initiate execution of the test suite
+once again on October 26th. The complete test run requires around 4 days to
+complete.
+
+During a discussion, Darrick told me that in such scenarios he would limit
+testing to non-fuzz tests which take around 12 hours to complete.  Hence, in
+hindsight, I could have limited the time taken to execute tests after dropping
+the patch. I will make sure to update XFS' for-next branch well before the
+merge window period begins from next release onwards.
+
+The changes that are part of the current pull request are contained within XFS
+i.e. there are no patches which straddle across other subsystems. I have been
+executing fstests on linux-next for more than a week now. There were no new
+regressions found in XFS during the test run.
+
+I had performed a test merge with latest contents of torvalds/linux.git. i.e.
+
+305230142ae0637213bf6e04f6d9f10bbcb74af8
+Author:     Linus Torvalds <torvalds@linux-foundation.org>
+AuthorDate: Tue Nov 7 17:16:23 2023 -0800
+Commit:     Linus Torvalds <torvalds@linux-foundation.org>
+CommitDate: Tue Nov 7 17:16:23 2023 -0800
+Merge tag 'pm-6.7-rc1-2' of git://git.kernel.org/pub/scm/linux/kernel/git/rafael/linux-pm
+
+This resulted in merge conflicts. The following diff should resolve the merge
+conflicts.
+
+diff --cc fs/xfs/libxfs/xfs_rtbitmap.c
+index 396648acb5be,b332ab490a48..84e27b9987f8
+--- a/fs/xfs/libxfs/xfs_rtbitmap.c
++++ b/fs/xfs/libxfs/xfs_rtbitmap.c
+@@@ -960,19 -931,18 +931,19 @@@ xfs_rtcheck_alloc_range
+   * Free an extent in the realtime subvolume.  Length is expressed in
+   * realtime extents, as is the block number.
+   */
+- int					/* error */
++ int
+  xfs_rtfree_extent(
+- 	xfs_trans_t	*tp,		/* transaction pointer */
+- 	xfs_rtblock_t	bno,		/* starting block number to free */
+- 	xfs_extlen_t	len)		/* length of extent freed */
++ 	struct xfs_trans	*tp,	/* transaction pointer */
++ 	xfs_rtxnum_t		start,	/* starting rtext number to free */
++ 	xfs_rtxlen_t		len)	/* length of extent freed */
+  {
+- 	int		error;		/* error value */
+- 	xfs_mount_t	*mp;		/* file system mount structure */
+- 	xfs_fsblock_t	sb;		/* summary file block number */
+- 	struct xfs_buf	*sumbp = NULL;	/* summary file block buffer */
+- 	struct timespec64 atime;
+- 
+- 	mp = tp->t_mountp;
++ 	struct xfs_mount	*mp = tp->t_mountp;
++ 	struct xfs_rtalloc_args	args = {
++ 		.mp		= mp,
++ 		.tp		= tp,
++ 	};
++ 	int			error;
+++	struct timespec64	atime;
+  
+  	ASSERT(mp->m_rbmip->i_itemp != NULL);
+  	ASSERT(xfs_isilocked(mp->m_rbmip, XFS_ILOCK_EXCL));
+@@@ -1000,13 -970,46 +971,49 @@@
+  	    mp->m_sb.sb_rextents) {
+  		if (!(mp->m_rbmip->i_diflags & XFS_DIFLAG_NEWRTBM))
+  			mp->m_rbmip->i_diflags |= XFS_DIFLAG_NEWRTBM;
+ -		*(uint64_t *)&VFS_I(mp->m_rbmip)->i_atime = 0;
+ +
+ +		atime = inode_get_atime(VFS_I(mp->m_rbmip));
+ +		*((uint64_t *)&atime) = 0;
+ +		inode_set_atime_to_ts(VFS_I(mp->m_rbmip), atime);
+  		xfs_trans_log_inode(tp, mp->m_rbmip, XFS_ILOG_CORE);
+  	}
+- 	return 0;
++ 	error = 0;
++ out:
++ 	xfs_rtbuf_cache_relse(&args);
++ 	return error;
++ }
++ 
++ /*
++  * Free some blocks in the realtime subvolume.  rtbno and rtlen are in units of
++  * rt blocks, not rt extents; must be aligned to the rt extent size; and rtlen
++  * cannot exceed XFS_MAX_BMBT_EXTLEN.
++  */
++ int
++ xfs_rtfree_blocks(
++ 	struct xfs_trans	*tp,
++ 	xfs_fsblock_t		rtbno,
++ 	xfs_filblks_t		rtlen)
++ {
++ 	struct xfs_mount	*mp = tp->t_mountp;
++ 	xfs_rtxnum_t		start;
++ 	xfs_filblks_t		len;
++ 	xfs_extlen_t		mod;
++ 
++ 	ASSERT(rtlen <= XFS_MAX_BMBT_EXTLEN);
++ 
++ 	len = xfs_rtb_to_rtxrem(mp, rtlen, &mod);
++ 	if (mod) {
++ 		ASSERT(mod == 0);
++ 		return -EIO;
++ 	}
++ 
++ 	start = xfs_rtb_to_rtxrem(mp, rtbno, &mod);
++ 	if (mod) {
++ 		ASSERT(mod == 0);
++ 		return -EIO;
++ 	}
++ 
++ 	return xfs_rtfree_extent(tp, start, len);
+  }
+  
+  /* Find all the free records within a given range. */
+diff --cc fs/xfs/xfs_rtalloc.c
+index 2e1a4e5cd03d,ba66442910b1..0254c573086a
+--- a/fs/xfs/xfs_rtalloc.c
++++ b/fs/xfs/xfs_rtalloc.c
+@@@ -1420,16 -1414,16 +1414,16 @@@ xfs_rtunmount_inodes
+   */
+  int					/* error */
+  xfs_rtpick_extent(
+- 	xfs_mount_t		*mp,		/* file system mount point */
+- 	xfs_trans_t		*tp,		/* transaction pointer */
+- 	xfs_extlen_t		len,		/* allocation length (rtextents) */
+- 	xfs_rtblock_t		*pick)		/* result rt extent */
+- 	{
+- 	xfs_rtblock_t		b;		/* result block */
+- 	int			log2;		/* log of sequence number */
+- 	uint64_t		resid;		/* residual after log removed */
+- 	uint64_t		seq;		/* sequence number of file creation */
+- 	struct timespec64	ts;		/* temporary timespec64 storage */
+ -	xfs_mount_t	*mp,		/* file system mount point */
+ -	xfs_trans_t	*tp,		/* transaction pointer */
+ -	xfs_rtxlen_t	len,		/* allocation length (rtextents) */
+ -	xfs_rtxnum_t	*pick)		/* result rt extent */
+++	xfs_mount_t		*mp,	/* file system mount point */
+++	xfs_trans_t		*tp,	/* transaction pointer */
+++	xfs_rtxlen_t		len,	/* allocation length (rtextents) */
+++	xfs_rtxnum_t		*pick)	/* result rt extent */
++ {
+ -	xfs_rtxnum_t	b;		/* result rtext */
+ -	int		log2;		/* log of sequence number */
+ -	uint64_t	resid;		/* residual after log removed */
+ -	uint64_t	seq;		/* sequence number of file creation */
+ -	uint64_t	*seqp;		/* pointer to seqno in inode */
+++	xfs_rtxnum_t		b;	/* result rtext */
+++	int			log2;	/* log of sequence number */
+++	uint64_t		resid;	/* residual after log removed */
+++	uint64_t		seq;	/* sequence number of file creation */
+++	struct timespec64	ts;	/* temporary timespec64 storage */
+  
+  	ASSERT(xfs_isilocked(mp->m_rbmip, XFS_ILOCK_EXCL));
+
+Please let me know if you encounter any problems.
+
+The following changes since commit 05d3ef8bba77c1b5f98d941d8b2d4aeab8118ef1:
+
+  Linux 6.6-rc7 (2023-10-22 12:11:21 -1000)
+
+are available in the Git repository at:
+
+  https://git.kernel.org/pub/scm/fs/xfs/xfs-linux.git tags/xfs-6.7-merge-2
+
+for you to fetch changes up to 14a537983b228cb050ceca3a5b743d01315dc4aa:
+
+  xfs: allow read IO and FICLONE to run concurrently (2023-10-23 12:02:26 +0530)
+
+----------------------------------------------------------------
+New code for 6.7:
+
+  * Realtime device subsystem
+    - Cleanup usage of xfs_rtblock_t and xfs_fsblock_t data types.
+    - Replace open coded conversions between rt blocks and rt extents with
+      calls to static inline helpers.
+    - Replace open coded realtime geometry compuation and macros with helper
+      functions.
+    - CPU usage optimizations for realtime allocator.
+    - Misc. Bug fixes associated with Realtime device.
+  * Allow read operations to execute while an FICLONE ioctl is being serviced.
+  * Misc. bug fixes
+    - Alert user when xfs_droplink() encounters an inode with a link count of zero.
+    - Handle the case where the allocator could return zero extents when
+      servicing an fallocate request.
+
+Signed-off-by: Chandan Babu R <chandanbabu@kernel.org>
+
+----------------------------------------------------------------
+Catherine Hoang (1):
+      xfs: allow read IO and FICLONE to run concurrently
+
+Chandan Babu R (6):
+      Merge tag 'realtime-fixes-6.7_2023-10-19' of https://git.kernel.org/pub/scm/linux/kernel/git/djwong/xfs-linux into xfs-6.7-mergeA
+      Merge tag 'clean-up-realtime-units-6.7_2023-10-19' of https://git.kernel.org/pub/scm/linux/kernel/git/djwong/xfs-linux into xfs-6.7-mergeA
+      Merge tag 'refactor-rt-unit-conversions-6.7_2023-10-19' of https://git.kernel.org/pub/scm/linux/kernel/git/djwong/xfs-linux into xfs-6.7-mergeA
+      Merge tag 'refactor-rtbitmap-macros-6.7_2023-10-19' of https://git.kernel.org/pub/scm/linux/kernel/git/djwong/xfs-linux into xfs-6.7-mergeA
+      Merge tag 'refactor-rtbitmap-accessors-6.7_2023-10-19' of https://git.kernel.org/pub/scm/linux/kernel/git/djwong/xfs-linux into xfs-6.7-mergeA
+      Merge tag 'rtalloc-speedups-6.7_2023-10-19' of https://git.kernel.org/pub/scm/linux/kernel/git/djwong/xfs-linux into xfs-6.7-mergeA
+
+Cheng Lin (1):
+      xfs: introduce protection for drop nlink
+
+Christoph Hellwig (1):
+      xfs: handle nimaps=0 from xfs_bmapi_write in xfs_alloc_file_space
+
+Darrick J. Wong (30):
+      xfs: bump max fsgeom struct version
+      xfs: hoist freeing of rt data fork extent mappings
+      xfs: prevent rt growfs when quota is enabled
+      xfs: rt stubs should return negative errnos when rt disabled
+      xfs: fix units conversion error in xfs_bmap_del_extent_delay
+      xfs: make sure maxlen is still congruent with prod when rounding down
+      xfs: move the xfs_rtbitmap.c declarations to xfs_rtbitmap.h
+      xfs: convert xfs_extlen_t to xfs_rtxlen_t in the rt allocator
+      xfs: create a helper to convert rtextents to rtblocks
+      xfs: convert rt bitmap/summary block numbers to xfs_fileoff_t
+      xfs: create a helper to compute leftovers of realtime extents
+      xfs: convert rt bitmap extent lengths to xfs_rtbxlen_t
+      xfs: create a helper to convert extlen to rtextlen
+      xfs: rename xfs_verify_rtext to xfs_verify_rtbext
+      xfs: create helpers to convert rt block numbers to rt extent numbers
+      xfs: convert rt extent numbers to xfs_rtxnum_t
+      xfs: convert do_div calls to xfs_rtb_to_rtx helper calls
+      xfs: create rt extent rounding helpers for realtime extent blocks
+      xfs: convert the rtbitmap block and bit macros to static inline functions
+      xfs: use shifting and masking when converting rt extents, if possible
+      xfs: remove XFS_BLOCKWSIZE and XFS_BLOCKWMASK macros
+      xfs: convert open-coded xfs_rtword_t pointer accesses to helper
+      xfs: convert rt summary macros to helpers
+      xfs: create a helper to handle logging parts of rt bitmap/summary blocks
+      xfs: create helpers for rtbitmap block/wordcount computations
+      xfs: use accessor functions for bitmap words
+      xfs: create helpers for rtsummary block/wordcount computations
+      xfs: use accessor functions for summary info words
+      xfs: simplify xfs_rtbuf_get calling conventions
+      xfs: simplify rt bitmap/summary block accessor functions
+
+Dave Chinner (1):
+      xfs: consolidate realtime allocation arguments
+
+Omar Sandoval (6):
+      xfs: cache last bitmap block in realtime allocator
+      xfs: invert the realtime summary cache
+      xfs: return maximum free size from xfs_rtany_summary()
+      xfs: limit maxlen based on available space in xfs_rtallocate_extent_near()
+      xfs: don't try redundant allocations in xfs_rtallocate_extent_near()
+      xfs: don't look for end of extent further than necessary in xfs_rtallocate_extent_near()
+
+ fs/xfs/libxfs/xfs_bmap.c       |  45 +--
+ fs/xfs/libxfs/xfs_format.h     |  34 +-
+ fs/xfs/libxfs/xfs_rtbitmap.c   | 803 ++++++++++++++++++++++-------------------
+ fs/xfs/libxfs/xfs_rtbitmap.h   | 383 ++++++++++++++++++++
+ fs/xfs/libxfs/xfs_sb.c         |   2 +
+ fs/xfs/libxfs/xfs_sb.h         |   2 +-
+ fs/xfs/libxfs/xfs_trans_resv.c |  10 +-
+ fs/xfs/libxfs/xfs_types.c      |   4 +-
+ fs/xfs/libxfs/xfs_types.h      |  10 +-
+ fs/xfs/scrub/bmap.c            |   2 +-
+ fs/xfs/scrub/fscounters.c      |   2 +-
+ fs/xfs/scrub/inode.c           |   3 +-
+ fs/xfs/scrub/rtbitmap.c        |  28 +-
+ fs/xfs/scrub/rtsummary.c       |  72 ++--
+ fs/xfs/scrub/trace.c           |   1 +
+ fs/xfs/scrub/trace.h           |  15 +-
+ fs/xfs/xfs_bmap_util.c         |  74 ++--
+ fs/xfs/xfs_file.c              |  63 +++-
+ fs/xfs/xfs_fsmap.c             |  15 +-
+ fs/xfs/xfs_inode.c             |  24 ++
+ fs/xfs/xfs_inode.h             |   9 +
+ fs/xfs/xfs_inode_item.c        |   3 +-
+ fs/xfs/xfs_ioctl.c             |   5 +-
+ fs/xfs/xfs_linux.h             |  12 +
+ fs/xfs/xfs_mount.h             |   8 +-
+ fs/xfs/xfs_ondisk.h            |   4 +
+ fs/xfs/xfs_reflink.c           |   4 +
+ fs/xfs/xfs_rtalloc.c           | 626 ++++++++++++++++----------------
+ fs/xfs/xfs_rtalloc.h           |  94 +----
+ fs/xfs/xfs_super.c             |   3 +-
+ fs/xfs/xfs_trans.c             |   7 +-
+ 31 files changed, 1425 insertions(+), 942 deletions(-)
+ create mode 100644 fs/xfs/libxfs/xfs_rtbitmap.h
