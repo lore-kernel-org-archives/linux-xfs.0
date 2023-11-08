@@ -2,450 +2,230 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E6CDEC4332F
-	for <linux-xfs@archiver.kernel.org>; Wed,  8 Nov 2023 21:45:36 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 34A81C4167D
+	for <linux-xfs@archiver.kernel.org>; Wed,  8 Nov 2023 22:05:59 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231343AbjKHVpg (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 8 Nov 2023 16:45:36 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48816 "EHLO
+        id S229566AbjKHWGA (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 8 Nov 2023 17:06:00 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46238 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232231AbjKHVpf (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 8 Nov 2023 16:45:35 -0500
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 25B1C2588
-        for <linux-xfs@vger.kernel.org>; Wed,  8 Nov 2023 13:45:33 -0800 (PST)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id BE6D0C433CA;
-        Wed,  8 Nov 2023 21:45:32 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1699479932;
-        bh=F33F//RdyEZyHL7K95n55lewCyaFIckTwZQHlTIGNrM=;
-        h=Subject:From:To:Cc:Date:In-Reply-To:References:From;
-        b=obxszBknjAnCYPhdYf/YeaW7hbxbX6Mca52FrYc7c3kPso/92dQvrti6xKuDUcoaH
-         taHqY4ad4olr707PgDGF3tCCBUgNLLOUBae9K5GwpjlrHScZwWDdFgziP7XpmaiIBH
-         cJZEa5i+37xTuRqd7vVQ1LFj43/UdRNv6ddnMc8/oHN8DAMniyinsqxfI82+bdzz/F
-         9zhFB9lyoc1cxWs0GI33u7/qLCiZuAeqE5E+dtbl14AgE4/oWWNUJRUaS9LkRYcV8v
-         8U+jCTxLhZHhIItRsPiUKvo5h6wxQfYPkQ8w8UhLJbUiW+a4aQcIGJ4z0pKyO/09ZY
-         VgZidhZDCVu+Q==
-Subject: [PATCH 2/2] misc: update xfs_io swapext usage
-From:   "Darrick J. Wong" <djwong@kernel.org>
-To:     djwong@kernel.org, zlang@redhat.com
-Cc:     hch@lst.de, fstests@vger.kernel.org, linux-xfs@vger.kernel.org,
-        guan@eryu.me
-Date:   Wed, 08 Nov 2023 13:45:32 -0800
-Message-ID: <169947993229.220003.3606426023762574699.stgit@frogsfrogsfrogs>
-In-Reply-To: <169947992096.220003.8427995158013553083.stgit@frogsfrogsfrogs>
-References: <169947992096.220003.8427995158013553083.stgit@frogsfrogsfrogs>
-User-Agent: StGit/0.19
+        with ESMTP id S229506AbjKHWF7 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 8 Nov 2023 17:05:59 -0500
+Received: from mail-pf1-x432.google.com (mail-pf1-x432.google.com [IPv6:2607:f8b0:4864:20::432])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2C344258A
+        for <linux-xfs@vger.kernel.org>; Wed,  8 Nov 2023 14:05:57 -0800 (PST)
+Received: by mail-pf1-x432.google.com with SMTP id d2e1a72fcca58-6c431b91b2aso161385b3a.1
+        for <linux-xfs@vger.kernel.org>; Wed, 08 Nov 2023 14:05:57 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=fromorbit-com.20230601.gappssmtp.com; s=20230601; t=1699481156; x=1700085956; darn=vger.kernel.org;
+        h=in-reply-to:content-transfer-encoding:content-disposition
+         :mime-version:references:message-id:subject:cc:to:from:date:from:to
+         :cc:subject:date:message-id:reply-to;
+        bh=BPrWruA3spy+o1hpuI+ZXmsqMhnVwk9rXY+leRYr2R8=;
+        b=13lAb1vSiI/W2kR0t93Kro03cG5k15m07JmYZHfK6Rxkfkdq63BkjoEi8JGkjot430
+         eqbVAoHGZb8BAXfbiGcVtjdCdQVETCvq5zVME5EGs6ifo8z/d3tpprq7GcO844dnqOpf
+         K+VSg+C+U+hQgAeNB7nvs6Nu4Ymw3BmQt7x/RBnguYuDjrvYywWNuD2caXLNQTcaGta0
+         NKYJvVrIVOnM2XAuG16eKaTLg/NS2/1Lx6vr9qmMXj7zctz+F4InF0vYnRKBugykzjiY
+         +vo/mDPfg/1dd7BrWFvKX26WzU6NwHsYujpvrDwth9ZTCuaCuQu5Pzqh0XMDxUw7qS6a
+         bk/Q==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1699481156; x=1700085956;
+        h=in-reply-to:content-transfer-encoding:content-disposition
+         :mime-version:references:message-id:subject:cc:to:from:date
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=BPrWruA3spy+o1hpuI+ZXmsqMhnVwk9rXY+leRYr2R8=;
+        b=NXPddWcsfS4cf40PU0/Mh22v5Jhv4XcQe8hf7UH7IisC/YBdfZ9jJttHHxMDt4HYtW
+         mP6P50SmhExt7KszNvqVNhRw8imSg3YOL42c7Un8bf1EkfEt/Wmy4EwOoMaCYlRyMnVy
+         bxt7Cbo2dQPjraNin3PA0YA95502uGfD1K2894HSbRM6Jm3k+ZyT7pGuLXlINpKNxKVt
+         Frr9E+9KeQytLXkzJ1sLUT2lKN7B4Nc7Ae4hzVmdXzEkhjQFbNBNsTPVosxEVi0zINx3
+         /nXUHeaUNP0NNm3fOVOzBCjOmW73M6wK8BrDFHVlbUw6pLm1vXj1wV7yDGupegkOdPbp
+         kTnA==
+X-Gm-Message-State: AOJu0YxgXHudQCESFL62+cHKbh9zINh+tOaneC38gd2W7Tctwb4YEdpC
+        qg5vTV4a5EG2yGqfqZ/NaXLA5IwLNhIMQjSxrRA=
+X-Google-Smtp-Source: AGHT+IEJ4U+M+96QlZ7uIPViNJaRdGqkravFWgJLaYzKV0ZJpP6oBLhYWQ9kr/wza2LzjCN00GOjTQ==
+X-Received: by 2002:a05:6a20:9d8e:b0:181:2f76:f9f6 with SMTP id mu14-20020a056a209d8e00b001812f76f9f6mr3767249pzb.44.1699481156446;
+        Wed, 08 Nov 2023 14:05:56 -0800 (PST)
+Received: from dread.disaster.area (pa49-180-125-5.pa.nsw.optusnet.com.au. [49.180.125.5])
+        by smtp.gmail.com with ESMTPSA id h10-20020a170902f7ca00b001bb892a7a67sm2197786plw.1.2023.11.08.14.05.54
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Wed, 08 Nov 2023 14:05:55 -0800 (PST)
+Received: from dave by dread.disaster.area with local (Exim 4.96)
+        (envelope-from <david@fromorbit.com>)
+        id 1r0qgK-00A315-0D;
+        Thu, 09 Nov 2023 09:05:52 +1100
+Date:   Thu, 9 Nov 2023 09:05:52 +1100
+From:   Dave Chinner <david@fromorbit.com>
+To:     Per =?iso-8859-1?Q?F=F6rlin?= <Per.Forlin@axis.com>
+Cc:     "linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>
+Subject: Re: xfsprogs: repair: Higher memory consumption when disable prefetch
+Message-ID: <ZUwGQDBhtR4ZHtt+@dread.disaster.area>
+References: <DU0PR02MB9824633F6B7AA1090D3D02A9EFA8A@DU0PR02MB9824.eurprd02.prod.outlook.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <DU0PR02MB9824633F6B7AA1090D3D02A9EFA8A@DU0PR02MB9824.eurprd02.prod.outlook.com>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-From: Darrick J. Wong <djwong@kernel.org>
+On Wed, Nov 08, 2023 at 03:56:00PM +0000, Per Förlin wrote:
+> Hi Linux XFS community,
+> 
+> Please bare with me I'm new to XFS :)
+> 
+> I'm comparing how EXT4 and XFS behaves on systems with a relative
+> small RAM vs storage ratio. The current focus is on FS repair memory consumption.
+> 
+> I have been running some tests using the max_mem_specified option.
+> The "-m" (max_mem_specified) parameter does not guarantee success but it surely helps
+> to reduce the memory load, in comparison to EXT4 this is an improvement.
+> 
+> My question concerns the relation between "-P" (disable prefetch) and "-m" (max_mem_specified).
+> 
+> There is a difference in xfs_repair memory consumption between the following commands
+> 1. xfs_repair -P -m 500
+> 2. xfs_repair -m 500
+>
+> 1) Exceeds the max_mem_specified limit
+> 2) Stays below the max_mem_specified limit
 
-Since the new 'exchange range' functionality is no longer a VFS level
-concept, the xfs_io swapext -v options have changed.  Update fstests to
-reflect this new reality.
+Purely co-incidental, IMO.
 
-Signed-off-by: Darrick J. Wong <djwong@kernel.org>
----
- common/xfs        |    2 +-
- tests/generic/709 |    2 +-
- tests/generic/710 |    2 +-
- tests/generic/711 |    2 +-
- tests/generic/712 |    2 +-
- tests/generic/713 |    4 ++--
- tests/generic/714 |    4 ++--
- tests/generic/715 |    4 ++--
- tests/generic/716 |    2 +-
- tests/generic/717 |    2 +-
- tests/generic/718 |    2 +-
- tests/generic/719 |    2 +-
- tests/generic/720 |    2 +-
- tests/generic/722 |    4 ++--
- tests/generic/723 |    6 +++---
- tests/generic/724 |    4 ++--
- tests/generic/725 |    2 +-
- tests/generic/726 |    2 +-
- tests/generic/727 |    2 +-
- tests/xfs/789     |    2 +-
- tests/xfs/790     |    2 +-
- tests/xfs/791     |    4 ++--
- tests/xfs/792     |    2 +-
- 23 files changed, 31 insertions(+), 31 deletions(-)
+As the man page says:
 
+	-m maxmem
 
-diff --git a/common/xfs b/common/xfs
-index c7671f8f9d..f53b33fc54 100644
---- a/common/xfs
-+++ b/common/xfs
-@@ -1802,7 +1802,7 @@ _require_xfs_scratch_atomicswap()
- {
- 	_require_xfs_mkfs_atomicswap
- 	_require_scratch
--	_require_xfs_io_command swapext '-v vfs -a'
-+	_require_xfs_io_command swapext '-v exchrange -a'
- 	_scratch_mkfs -m reflink=1 > /dev/null
- 	_try_scratch_mount || \
- 		_notrun "atomicswap dependencies not supported by scratch filesystem type: $FSTYP"
-diff --git a/tests/generic/709 b/tests/generic/709
-index 3dbce2c287..4bd591b873 100755
---- a/tests/generic/709
-+++ b/tests/generic/709
-@@ -14,7 +14,7 @@ _begin_fstest auto quick fiexchange swapext quota
- . ./common/quota
- 
- # real QA test starts here
--_require_xfs_io_command swapext '-v vfs'
-+_require_xfs_io_command swapext '-v exchrange'
- _require_user
- _require_nobody
- _require_quota
-diff --git a/tests/generic/710 b/tests/generic/710
-index dc4a999a1d..c7fca05d4c 100755
---- a/tests/generic/710
-+++ b/tests/generic/710
-@@ -14,7 +14,7 @@ _begin_fstest auto quick fiexchange swapext quota
- . ./common/quota
- 
- # real QA test starts here
--_require_xfs_io_command swapext '-v vfs'
-+_require_xfs_io_command swapext '-v exchrange'
- _require_user
- _require_nobody
- _require_quota
-diff --git a/tests/generic/711 b/tests/generic/711
-index a24fe22665..f1318b30dd 100755
---- a/tests/generic/711
-+++ b/tests/generic/711
-@@ -21,7 +21,7 @@ _cleanup()
- . ./common/filter
- 
- # real QA test starts here
--_require_xfs_io_command swapext '-v vfs'
-+_require_xfs_io_command swapext '-v exchrange'
- _require_test
- 
- dir=$TEST_DIR/test-$seq
-diff --git a/tests/generic/712 b/tests/generic/712
-index 13008c5bc2..d4a705478e 100755
---- a/tests/generic/712
-+++ b/tests/generic/712
-@@ -21,7 +21,7 @@ _cleanup()
- 
- # real QA test starts here
- _require_test_program punch-alternating
--_require_xfs_io_command swapext '-v vfs'
-+_require_xfs_io_command swapext '-v exchrange'
- _require_test
- 
- dir=$TEST_DIR/test-$seq
-diff --git a/tests/generic/713 b/tests/generic/713
-index bf37cd99cf..9b742ee0cb 100755
---- a/tests/generic/713
-+++ b/tests/generic/713
-@@ -21,7 +21,7 @@ _cleanup()
- . ./common/reflink
- 
- # real QA test starts here
--_require_xfs_io_command swapext '-v vfs -s 64k -l 64k'
-+_require_xfs_io_command swapext '-v exchrange -s 64k -l 64k'
- _require_xfs_io_command "falloc"
- _require_test
- 
-@@ -36,7 +36,7 @@ filesnap() {
- 
- test_swapext_once() {
- 	filesnap "$1: before swapext" $dir/$3 $dir/$4
--	$XFS_IO_PROG -c "swapext -v vfs $2 $dir/$3" $dir/$4
-+	$XFS_IO_PROG -c "swapext -v exchrange $2 $dir/$3" $dir/$4
- 	filesnap "$1: after swapext" $dir/$3 $dir/$4
- 	_test_cycle_mount
- 	filesnap "$1: after cycling mount" $dir/$3 $dir/$4
-diff --git a/tests/generic/714 b/tests/generic/714
-index 190b6f2b2c..b48a4b7d31 100755
---- a/tests/generic/714
-+++ b/tests/generic/714
-@@ -22,7 +22,7 @@ _cleanup()
- . ./common/reflink
- 
- # real QA test starts here
--_require_xfs_io_command swapext '-v vfs'
-+_require_xfs_io_command swapext '-v exchrange'
- _require_xfs_io_command "falloc"
- _require_test_reflink
- 
-@@ -37,7 +37,7 @@ filesnap() {
- 
- test_swapext_once() {
- 	filesnap "$1: before swapext" $dir/$3 $dir/$4
--	$XFS_IO_PROG -c "swapext -v vfs $2 $dir/$3" $dir/$4
-+	$XFS_IO_PROG -c "swapext -v exchrange $2 $dir/$3" $dir/$4
- 	filesnap "$1: after swapext" $dir/$3 $dir/$4
- 	_test_cycle_mount
- 	filesnap "$1: after cycling mount" $dir/$3 $dir/$4
-diff --git a/tests/generic/715 b/tests/generic/715
-index 6005fb2d4e..595953dfcf 100755
---- a/tests/generic/715
-+++ b/tests/generic/715
-@@ -21,7 +21,7 @@ _cleanup()
- . ./common/reflink
- 
- # real QA test starts here
--_require_xfs_io_command swapext '-v vfs -s 64k -l 64k'
-+_require_xfs_io_command swapext '-v exchrange -s 64k -l 64k'
- _require_test
- 
- filesnap() {
-@@ -51,7 +51,7 @@ test_swapext_once() {
- 	_pwrite_byte 0x59 0 $((blksz * b_len)) $dir/b >> $seqres.full
- 	filesnap "$tag: before swapext" $dir/a $dir/b
- 
--	cmd="swapext -v vfs -s $((blksz * a_off)) -d $((blksz * b_off)) $len $dir/a"
-+	cmd="swapext -v exchrange -s $((blksz * a_off)) -d $((blksz * b_off)) $len $dir/a"
- 	echo "$cmd" >> $seqres.full
- 	$XFS_IO_PROG -c "$cmd" $dir/b
- 	filesnap "$tag: after swapext" $dir/a $dir/b
-diff --git a/tests/generic/716 b/tests/generic/716
-index 514a8b8365..25976ab898 100755
---- a/tests/generic/716
-+++ b/tests/generic/716
-@@ -24,7 +24,7 @@ _cleanup()
- . ./common/reflink
- 
- # real QA test starts here
--_require_xfs_io_command swapext '-v vfs'
-+_require_xfs_io_command swapext '-v exchrange'
- _require_xfs_io_command startupdate
- _require_test_reflink
- _require_test
-diff --git a/tests/generic/717 b/tests/generic/717
-index d1bd499e89..2c45e715f4 100755
---- a/tests/generic/717
-+++ b/tests/generic/717
-@@ -21,7 +21,7 @@ _cleanup()
- . ./common/reflink
- 
- # real QA test starts here
--_require_xfs_io_command swapext '-v vfs'
-+_require_xfs_io_command swapext '-v exchrange'
- _require_xfs_io_command startupdate
- _require_test
- _require_scratch
-diff --git a/tests/generic/718 b/tests/generic/718
-index dc99347fd7..f53d1840d0 100755
---- a/tests/generic/718
-+++ b/tests/generic/718
-@@ -21,7 +21,7 @@ _cleanup()
- . ./common/reflink
- 
- # real QA test starts here
--_require_xfs_io_command swapext '-v vfs'
-+_require_xfs_io_command swapext '-v exchrange'
- _require_test
- 
- dir=$TEST_DIR/test-$seq
-diff --git a/tests/generic/719 b/tests/generic/719
-index aeb42fb7e4..fe0b9d082e 100755
---- a/tests/generic/719
-+++ b/tests/generic/719
-@@ -23,7 +23,7 @@ _cleanup()
- . ./common/filter
- 
- # real QA test starts here
--_require_xfs_io_command swapext '-v vfs'
-+_require_xfs_io_command swapext '-v exchrange'
- _require_xfs_io_command startupdate '-e'
- _require_test
- 
-diff --git a/tests/generic/720 b/tests/generic/720
-index a5bcc55c38..4db69c6921 100755
---- a/tests/generic/720
-+++ b/tests/generic/720
-@@ -20,7 +20,7 @@ _cleanup()
- . ./common/filter
- 
- # real QA test starts here
--_require_xfs_io_command swapext '-v vfs'
-+_require_xfs_io_command swapext '-v exchrange'
- _require_test_program punch-alternating
- _require_test
- 
-diff --git a/tests/generic/722 b/tests/generic/722
-index 75dc0260e1..40eab9bbb3 100755
---- a/tests/generic/722
-+++ b/tests/generic/722
-@@ -23,7 +23,7 @@ _cleanup()
- 
- # real QA test starts here
- _require_test_program "punch-alternating"
--_require_xfs_io_command swapext '-v vfs -a'
-+_require_xfs_io_command swapext '-v exchrange -a'
- _require_scratch
- _require_scratch_shutdown
- 
-@@ -43,7 +43,7 @@ od -tx1 -Ad -c $SCRATCH_MNT/a > /tmp/a0
- od -tx1 -Ad -c $SCRATCH_MNT/b > /tmp/b0
- 
- echo swap >> $seqres.full
--$XFS_IO_PROG -c "swapext -v vfs -a -e -f -u $SCRATCH_MNT/a" $SCRATCH_MNT/b
-+$XFS_IO_PROG -c "swapext -v exchrange -a -e -f -u $SCRATCH_MNT/a" $SCRATCH_MNT/b
- _scratch_shutdown
- _scratch_cycle_mount
- 
-diff --git a/tests/generic/723 b/tests/generic/723
-index 5390f44269..b452de0208 100755
---- a/tests/generic/723
-+++ b/tests/generic/723
-@@ -22,7 +22,7 @@ _cleanup()
- 
- # real QA test starts here
- _require_test_program "punch-alternating"
--_require_xfs_io_command swapext '-v vfs'
-+_require_xfs_io_command swapext '-v exchrange'
- _require_scratch
- 
- _scratch_mkfs >> $seqres.full
-@@ -41,7 +41,7 @@ echo "md5 a: $old_a md5 b: $old_b" >> $seqres.full
- # Test swapext with the -n option, which will do all the input parameter
- # checking and return 0 without changing anything.
- echo dry run swap >> $seqres.full
--$XFS_IO_PROG -c "swapext -v vfs -n -f -u $SCRATCH_MNT/a" $SCRATCH_MNT/b
-+$XFS_IO_PROG -c "swapext -v exchrange -n -f -u $SCRATCH_MNT/a" $SCRATCH_MNT/b
- _scratch_cycle_mount
- 
- new_a=$(md5sum $SCRATCH_MNT/a | awk '{print $1}')
-@@ -54,7 +54,7 @@ test $old_b = $new_b || echo "scratch file B should not have swapped"
- # Do it again, but without the -n option, to prove that we can actually
- # swap the file contents.
- echo actual swap >> $seqres.full
--$XFS_IO_PROG -c "swapext -v vfs -f -u $SCRATCH_MNT/a" $SCRATCH_MNT/b
-+$XFS_IO_PROG -c "swapext -v exchrange -f -u $SCRATCH_MNT/a" $SCRATCH_MNT/b
- _scratch_cycle_mount
- 
- new_a=$(md5sum $SCRATCH_MNT/a | awk '{print $1}')
-diff --git a/tests/generic/724 b/tests/generic/724
-index 67e0dba446..12324fb156 100755
---- a/tests/generic/724
-+++ b/tests/generic/724
-@@ -22,7 +22,7 @@ _cleanup()
- . ./common/filter
- 
- # real QA test starts here
--_require_xfs_io_command swapext '-v vfs -a'
-+_require_xfs_io_command swapext '-v exchrange -a'
- _require_scratch
- 
- _scratch_mkfs >> $seqres.full
-@@ -42,7 +42,7 @@ md5sum $SCRATCH_MNT/b | _filter_scratch
- 
- # Test swapext.  -h means skip holes in /b, and -e means operate to EOF
- echo swap | tee -a $seqres.full
--$XFS_IO_PROG -c "swapext -v vfs -f -u -h -e -a $SCRATCH_MNT/b" $SCRATCH_MNT/a
-+$XFS_IO_PROG -c "swapext -v exchrange -f -u -h -e -a $SCRATCH_MNT/b" $SCRATCH_MNT/a
- _scratch_cycle_mount
- 
- md5sum $SCRATCH_MNT/a | _filter_scratch
-diff --git a/tests/generic/725 b/tests/generic/725
-index 9b68871486..bf60127b39 100755
---- a/tests/generic/725
-+++ b/tests/generic/725
-@@ -22,7 +22,7 @@ _cleanup()
- . ./common/filter
- 
- # real QA test starts here
--_require_xfs_io_command swapext '-v vfs -a'
-+_require_xfs_io_command swapext '-v exchrange -a'
- _require_xfs_io_command startupdate '-e'
- _require_scratch
- 
-diff --git a/tests/generic/726 b/tests/generic/726
-index f0d8df2e0d..4cf18bd0e5 100755
---- a/tests/generic/726
-+++ b/tests/generic/726
-@@ -25,7 +25,7 @@ _begin_fstest auto fiexchange swapext quick
- # Modify as appropriate.
- _supported_fs generic
- _require_user
--_require_xfs_io_command swapext '-v vfs -a'
-+_require_xfs_io_command swapext '-v exchrange -a'
- _require_xfs_io_command startupdate
- _require_scratch
- 
-diff --git a/tests/generic/727 b/tests/generic/727
-index 2cda49eada..af9612c967 100755
---- a/tests/generic/727
-+++ b/tests/generic/727
-@@ -28,7 +28,7 @@ _supported_fs generic
- _require_user
- _require_command "$GETCAP_PROG" getcap
- _require_command "$SETCAP_PROG" setcap
--_require_xfs_io_command swapext '-v vfs -a'
-+_require_xfs_io_command swapext '-v exchrange -a'
- _require_xfs_io_command startupdate
- _require_scratch
- _require_attrs security
-diff --git a/tests/xfs/789 b/tests/xfs/789
-index 9df91ac32f..b966c65119 100755
---- a/tests/xfs/789
-+++ b/tests/xfs/789
-@@ -21,7 +21,7 @@ _cleanup()
- 
- # real QA test starts here
- _supported_fs xfs
--_require_xfs_io_command swapext '-v vfs'
-+_require_xfs_io_command swapext '-v exchrange'
- _require_test
- 
- # We can't do any reasonable swapping if the files we're going to create are
-diff --git a/tests/xfs/790 b/tests/xfs/790
-index 2362d66dfc..db6ce741d7 100755
---- a/tests/xfs/790
-+++ b/tests/xfs/790
-@@ -24,7 +24,7 @@ _cleanup()
- 
- # real QA test starts here
- _supported_fs xfs
--_require_xfs_io_command swapext '-v vfs -a'
-+_require_xfs_io_command swapext '-v exchrange -a'
- _require_test_program "punch-alternating"
- _require_xfs_io_command startupdate
- _require_xfs_io_error_injection "bmap_finish_one"
-diff --git a/tests/xfs/791 b/tests/xfs/791
-index 4944c1517c..84e3bee9b9 100755
---- a/tests/xfs/791
-+++ b/tests/xfs/791
-@@ -25,7 +25,7 @@ _cleanup()
- 
- # real QA test starts here
- _supported_fs xfs
--_require_xfs_io_command swapext '-v vfs -a'
-+_require_xfs_io_command swapext '-v exchrange -a'
- _require_xfs_scratch_atomicswap
- _require_xfs_io_error_injection "bmap_finish_one"
- 
-@@ -48,7 +48,7 @@ md5sum $SCRATCH_MNT/b | _filter_scratch
- # Test swapext.  -h means skip holes in /b, and -e means operate to EOF
- echo swap | tee -a $seqres.full
- $XFS_IO_PROG -x -c 'inject bmap_finish_one' \
--	-c "swapext -v vfs -f -u -h -e -a $SCRATCH_MNT/b" $SCRATCH_MNT/a
-+	-c "swapext -v exchrange -f -u -h -e -a $SCRATCH_MNT/b" $SCRATCH_MNT/a
- _scratch_cycle_mount
- 
- md5sum $SCRATCH_MNT/a | _filter_scratch
-diff --git a/tests/xfs/792 b/tests/xfs/792
-index 4af084bf66..bfbfbce4aa 100755
---- a/tests/xfs/792
-+++ b/tests/xfs/792
-@@ -25,7 +25,7 @@ _cleanup()
- 
- # real QA test starts here
- _supported_fs xfs
--_require_xfs_io_command swapext '-v vfs -a'
-+_require_xfs_io_command swapext '-v exchrange -a'
- _require_xfs_io_command startupdate '-e'
- _require_xfs_scratch_atomicswap
- _require_xfs_io_error_injection "bmap_finish_one"
+	      Specifies the approximate maximum amount of memory, in
+	      megabytes, to use for xfs_repair.  xfs_repair has its
+	      own  internal  block cache  which  will  scale  out
+	      up to the lesser of the process’s virtual address
+	      limit or about 75% of the system’s physical RAM.  This
+	      option overrides these limits.
 
+	      NOTE: These memory limits are only approximate and may
+	      use more than the specified limit.
+
+IOWs, behaviour is expected - the max_mem figure is just a starting
+point guideline, and it only affects the size of the IO cache that
+repair holds.  We still need lots of memory to index free space,
+used space, inodes, hold directory information, etc, so memory usage
+on any filesystem with enough metadata in it to fill the internal
+buffer cache will always go over this number....
+
+> I expected disabled prefetch to reduce the memory load but instead the result is the opposite.
+> The two commands 1) and 2) are being executed in the same system.
+
+> My speculation:
+> Does the prefetch facilitate and improve the calculation of the memory
+> consumption and make it more accurate?
+
+No, prefetching changes the way processing of the metadata occurs.
+It also vastly changes the way IO is done and the buffer cache is
+populated.
+
+e.g. prefetching looks at metadata density and issues
+large IOs if the density is high enough and then chops them up into
+individual metadata buffers in memory at prefetch IO completion.
+This avoids doing lots of small IOs, greatly improving IO throughput
+and keeping the processing pipeline busy.
+
+This comes at the cost of increased CPU overhead and non-buffer
+cache memory footprint, but for slow IO devices this can improve IO
+throughput (and hence repair times) by a factor of up to 100x. Have
+a look at the difference in IO patterns when you enable/disable
+prefetching...
+
+When prefetching is turned off, the processing issues individual IO
+itself and doesn't do density-based scan optimisation. In some cases
+this is faster (e.g. high speed SSDs) because it is more CPU
+efficient, but it results in different IO patterns and buffer access
+patterns.
+
+The end result is that buffers have a very different life time when
+prefetching is turned on compared to when it is off, and so there's
+a very different buffer cache memory footprint between the two
+options.
+
+> Here follows output with -P and without -P from the same system.
+> I have extracted the part the actually differs.
+> The full logs are available the bottom of this email.
+> 
+> # -P -m 500 #
+> Phase 3 - for each AG...
+> ...
+> Active entries = 12336
+> Hash table size = 1549
+> Hits = 1
+> Misses = 224301
+> Hit ratio =  0.00
+> MRU 0 entries =  12335 ( 99%)
+> MRU 1 entries =      0 (  0%)
+> MRU 2 entries =      0 (  0%)
+> MRU 3 entries =      0 (  0%)
+> MRU 4 entries =      0 (  0%)
+> MRU 5 entries =      0 (  0%)
+> MRU 6 entries =      0 (  0%)
+> MRU 7 entries =      0 (  0%)
+
+Without prefetching, we have a single use for all buffers and the
+metadata accessed is 20x larger than the size of the buffer cache
+(220k vs 12k for the cache size).  This is just showing how the
+non-prefetch case is just streaming buffers through the cache in
+processing access order.
+
+i.e. The MRU list indicates that nothing is being kept for long
+periods or being accessed out of order as all buffers are on list 0
+(most recently used). i.e. nothing is aging out and which means
+buffers are being used and reclaimed in the same order they are
+being instantiated.  If anything was being accessed out of order, we
+would see buffers move down the aging lists....
+
+> # -m 500 #
+> Phase 3 - for each AG...
+> ...
+> Active entries = 12388
+> Hash table size = 1549
+> Hits = 220459
+> Misses = 235388
+> Hit ratio = 48.36
+
+And there's the difference - two accesses per buffer for the
+prefetch case. One for the IO dispatch to bring it into memory (the
+miss) and one for processing (the hit).
+
+> MRU 0 entries =      2 (  0%)
+> MRU 1 entries =      0 (  0%)
+> MRU 2 entries =   1362 ( 10%)
+> MRU 3 entries =     68 (  0%)
+> MRU 4 entries =     10 (  0%)
+> MRU 5 entries =   6097 ( 49%)
+> MRU 6 entries =   4752 ( 38%)
+> MRU 7 entries =     96 (  0%)
+
+And the MRU list shows how the buffer access are not uniform - we
+are seeing buffers of all different ages in the cache. This shows
+that buffers are being aged 5-6 times before they are getting used,
+which means the cache size is almost too small for prefetch to work
+effectively....
+
+Actually, the cache is too small - cache misses are significantly
+larger than cache hits, meaning some buffers are being fetched from
+disk twice because the prefetched buffers are aging out before the
+processing thread gets to them. Give xfs_repair ~5GB of RAM, and it
+should only need to do a single IO pass in phase 3 and then phase 4
+and 6 will hit the buffers in the cache and hence not need to do any
+IO at all...
+
+So to me, this is prefetch working as it should - it's bringing
+buffers into cache in the optimal IO pattern rather than the
+application level access pattern. The difference in memory footprint
+compared to no prefetching is largely co-incidental and really not
+something we are concerned about in any way...
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
