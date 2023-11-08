@@ -2,111 +2,86 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 652E6C4167D
-	for <linux-xfs@archiver.kernel.org>; Wed,  8 Nov 2023 23:06:09 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D8ABCC4332F
+	for <linux-xfs@archiver.kernel.org>; Wed,  8 Nov 2023 23:44:26 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229554AbjKHXGK (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 8 Nov 2023 18:06:10 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51280 "EHLO
+        id S229473AbjKHXo1 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 8 Nov 2023 18:44:27 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58412 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229551AbjKHXGJ (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 8 Nov 2023 18:06:09 -0500
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8CFB52599;
-        Wed,  8 Nov 2023 15:06:07 -0800 (PST)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id DDE81C433C8;
-        Wed,  8 Nov 2023 23:06:06 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=linux-foundation.org;
-        s=korg; t=1699484767;
-        bh=t8pBQSNPVR9LioM+HcvTKgJwQbCrujWjNwfm0VTaR5A=;
-        h=Date:From:To:Cc:Subject:In-Reply-To:References:From;
-        b=Kb4LDRBsnf32K7Vz06ikeb1CPOiJ1H15eXMnH9kxTJtY+bF3pXhcR2BSF6zYwQ9fK
-         mgsr+P98qJyhfHSMhotMocwnZnya8dqNepcltfzM8d5SSPm+BeIy3OSTsEhS64I852
-         xWfR27VQoZFdkB/pFGkyj8cEyQwskDqZcuVcGtAc=
-Date:   Wed, 8 Nov 2023 15:06:06 -0800
-From:   Andrew Morton <akpm@linux-foundation.org>
-To:     "Matthew Wilcox (Oracle)" <willy@infradead.org>
-Cc:     linux-ext4@vger.kernel.org, gfs2@lists.linux.dev,
-        linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org,
-        "Darrick J . Wong" <djwong@kernel.org>,
-        linux-erofs@lists.ozlabs.org, "Theodore Ts'o" <tytso@mit.edu>,
-        Andreas Dilger <adilger.kernel@dilger.ca>,
-        Andreas Gruenbacher <agruenba@redhat.com>
-Subject: Re: [PATCH 1/3] mm: Add folio_zero_tail() and use it in ext4
-Message-Id: <20231108150606.2ec3cafb290f757f0e4c92d8@linux-foundation.org>
-In-Reply-To: <20231107212643.3490372-2-willy@infradead.org>
-References: <20231107212643.3490372-1-willy@infradead.org>
-        <20231107212643.3490372-2-willy@infradead.org>
-X-Mailer: Sylpheed 3.8.0beta1 (GTK+ 2.24.33; x86_64-pc-linux-gnu)
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+        with ESMTP id S229846AbjKHXoZ (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 8 Nov 2023 18:44:25 -0500
+Received: from mail-oa1-f70.google.com (mail-oa1-f70.google.com [209.85.160.70])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A761B25A3
+        for <linux-xfs@vger.kernel.org>; Wed,  8 Nov 2023 15:44:23 -0800 (PST)
+Received: by mail-oa1-f70.google.com with SMTP id 586e51a60fabf-1ef4f8d26ecso222791fac.1
+        for <linux-xfs@vger.kernel.org>; Wed, 08 Nov 2023 15:44:23 -0800 (PST)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1699487062; x=1700091862;
+        h=to:from:subject:message-id:date:mime-version:x-gm-message-state
+         :from:to:cc:subject:date:message-id:reply-to;
+        bh=P3MIuqtOUaUUvCAVhPpwvBtF/xEEkEYNSxamyo/s0No=;
+        b=gg+wj50+nsm740RP2o01IhbF1KrqNGS2OCCN6wZ1/rK8+M33OX8pdqtEe5K5bIdEkt
+         9AyokqRHpEI1GWPgA5M+Afj11I5Bu9HqahZnn6TI2e80l2nGiPy10w764UN+bOVlEHt5
+         6jcYoRoJ9pwtlnThTLonpu26kkCpoad7VwRJfE4mdr9MfjcyGEI3s9DrWieQZyTxVxJp
+         fMjMVEjGdmzT77TTkfr9DQmeVIY+kdNFJlQI+5+Nwxtq+FglmZqxpBuezkbjfUqiHGtp
+         EDFpvOTIG9xHIY6g452d0q1OwmSbtnFWQe7Mfjx132iedYI95IkC5v7KhNjFxysNefVs
+         X/jw==
+X-Gm-Message-State: AOJu0Yz+kchqtvu1sObzYoAnqEQtTY9zJjBtRgoO/ll168+vtssDEz3x
+        +Un+MoZLsRTEs14tEg0qvjKQMDVD0j9is5CK5yuDD5m2befp
+X-Google-Smtp-Source: AGHT+IE8SL0QgK42yQHJpF+znFr95YwvVpwFgj3qIWqIqQTHf6Oa6yFQrYe/JeoxOBOFnyTXG5+w/BLWJ1YBiC0wbNqgbyMy10XI
+MIME-Version: 1.0
+X-Received: by 2002:a05:6871:296:b0:1e9:b0fa:de72 with SMTP id
+ i22-20020a056871029600b001e9b0fade72mr1214290oae.9.1699487062144; Wed, 08 Nov
+ 2023 15:44:22 -0800 (PST)
+Date:   Wed, 08 Nov 2023 15:44:22 -0800
+X-Google-Appengine-App-Id: s~syzkaller
+X-Google-Appengine-App-Id-Alias: syzkaller
+Message-ID: <000000000000a3bd1e0609acaa04@google.com>
+Subject: [syzbot] Monthly xfs report (Nov 2023)
+From:   syzbot <syzbot+list614ad8fd5d6c3f525723@syzkaller.appspotmail.com>
+To:     chandan.babu@oracle.com, linux-fsdevel@vger.kernel.org,
+        linux-kernel@vger.kernel.org, linux-xfs@vger.kernel.org,
+        syzkaller-bugs@googlegroups.com
+Content-Type: text/plain; charset="UTF-8"
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Tue,  7 Nov 2023 21:26:40 +0000 "Matthew Wilcox (Oracle)" <willy@infradead.org> wrote:
+Hello xfs maintainers/developers,
 
-> Instead of unmapping the folio after copying the data to it, then mapping
-> it again to zero the tail, provide folio_zero_tail() to zero the tail
-> of an already-mapped folio.
-> 
-> ...
->
-> --- a/include/linux/highmem.h
-> +++ b/include/linux/highmem.h
-> @@ -483,6 +483,44 @@ static inline void memcpy_to_folio(struct folio *folio, size_t offset,
->  	flush_dcache_folio(folio);
->  }
->  
-> +/**
-> + * folio_zero_tail - Zero the tail of a folio.
-> + * @folio: The folio to zero.
-> + * @kaddr: The address the folio is currently mapped to.
-> + * @offset: The byte offset in the folio to start zeroing at.
+This is a 31-day syzbot report for the xfs subsystem.
+All related reports/information can be found at:
+https://syzkaller.appspot.com/upstream/s/xfs
 
-That's the argument ordering I would expect.
+During the period, 0 new issues were detected and 0 were fixed.
+In total, 13 issues are still open and 18 have been fixed so far.
 
-> + * If you have already used kmap_local_folio() to map a folio, written
-> + * some data to it and now need to zero the end of the folio (and flush
-> + * the dcache), you can use this function.  If you do not have the
-> + * folio kmapped (eg the folio has been partially populated by DMA),
-> + * use folio_zero_range() or folio_zero_segment() instead.
-> + *
-> + * Return: An address which can be passed to kunmap_local().
-> + */
-> +static inline __must_check void *folio_zero_tail(struct folio *folio,
-> +		size_t offset, void *kaddr)
+Some of the still happening issues:
 
-While that is not.  addr,len is far more common that len,addr?
+Ref Crashes Repro Title
+<1> 8235    No    KMSAN: uninit-value in __crc32c_le_base (3)
+                  https://syzkaller.appspot.com/bug?extid=a6d6b8fffa294705dbd8
+<2> 291     Yes   KASAN: stack-out-of-bounds Read in xfs_buf_lock
+                  https://syzkaller.appspot.com/bug?extid=0bc698a422b5e4ac988c
+<3> 147     Yes   INFO: task hung in xfs_buf_item_unpin
+                  https://syzkaller.appspot.com/bug?extid=3f083e9e08b726fcfba2
+<4> 134     Yes   WARNING in print_bfs_bug (2)
+                  https://syzkaller.appspot.com/bug?extid=630f83b42d801d922b8b
+<5> 101     Yes   INFO: task hung in sync_inodes_sb (5)
+                  https://syzkaller.appspot.com/bug?extid=30476ec1b6dc84471133
+<6> 4       Yes   WARNING: Reset corrupted AGFL on AG NUM. NUM blocks leaked. Please unmount and run xfs_repair.
+                  https://syzkaller.appspot.com/bug?extid=9d0b0d54a8bd799f6ae4
 
-> +{
-> +	size_t len = folio_size(folio) - offset;
+---
+This report is generated by a bot. It may contain errors.
+See https://goo.gl/tpsmEJ for more information about syzbot.
+syzbot engineers can be reached at syzkaller@googlegroups.com.
 
-Calling it `remaining' would be more clear.
+To disable reminders for individual bugs, reply with the following command:
+#syz set <Ref> no-reminders
 
-> +
-> +	if (folio_test_highmem(folio)) {
-> +		size_t max = PAGE_SIZE - offset_in_page(offset);
-> +
-> +		while (len > max) {
+To change bug's subsystems, reply with:
+#syz set <Ref> subsystems: new-subsystem
 
-Shouldn't this be `while (len)'?  AFAICT this code can fail to clear
-the final page.
-
-> +			memset(kaddr, 0, max);
-> +			kunmap_local(kaddr);
-> +			len -= max;
-> +			offset += max;
-> +			max = PAGE_SIZE;
-> +			kaddr = kmap_local_folio(folio, offset);
-> +		}
-> +	}
-> +
-> +	memset(kaddr, 0, len);
-> +	flush_dcache_folio(folio);
-> +
-> +	return kaddr;
-> +}
-> +
-
+You may send multiple commands in a single email message.
