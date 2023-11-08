@@ -2,782 +2,129 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 700A7C4167D
-	for <linux-xfs@archiver.kernel.org>; Wed,  8 Nov 2023 05:38:24 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B1240C4332F
+	for <linux-xfs@archiver.kernel.org>; Wed,  8 Nov 2023 06:39:05 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234722AbjKHFiX (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 8 Nov 2023 00:38:23 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38518 "EHLO
+        id S229611AbjKHGjG (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 8 Nov 2023 01:39:06 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57528 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231769AbjKHFiW (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 8 Nov 2023 00:38:22 -0500
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 22D1C10C8
-        for <linux-xfs@vger.kernel.org>; Tue,  7 Nov 2023 21:38:20 -0800 (PST)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id B16D3C433C7;
-        Wed,  8 Nov 2023 05:38:19 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1699421899;
-        bh=BR7CntIuHqJ8jvZdv8prryMqRwYSrg0FDKGWnxPRL1k=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=jEOPiPWHjQBVuVBO5+aU3yR+XsBuw8vg1lGuw0MqhBrmV9aLRPLACS6XWvfUQAna4
-         Dl9n3/sFJr6yAUJzmJgCkxeToZ6yZrW/uKdkaUjjU88TzNch1hCLFvY9eBwDM7xRG6
-         dE+ibFGCg15PdG4Ekjdw8RvaTYxPk6Qqh8EW1jg/kSIm7RVPmCKALtX2z01ftI2p2C
-         nb23lSRvmXpsVXZQyh1CSEIxQqyiUCX8thhRE/2SYQGDtare//fEaAPOq9lLa2hLfv
-         Nk6EFgUXe068I3tjJugSo8RrMVvDvZJdXBZLdUI2xK6kPzHSHH2i8TZkxZ46j2EqzV
-         eSQhkLNSiaR2g==
-Date:   Tue, 7 Nov 2023 21:38:19 -0800
-From:   "Darrick J. Wong" <djwong@kernel.org>
-To:     Sam James <sam@gentoo.org>
-Cc:     linux-xfs@vger.kernel.org, Violet Purcell <vimproved@inventati.org>
-Subject: Re: [PATCH] Remove use of LFS64 interfaces
-Message-ID: <20231108053819.GR1205143@frogsfrogsfrogs>
-References: <20231105183939.1025279-1-sam@gentoo.org>
+        with ESMTP id S229449AbjKHGjF (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 8 Nov 2023 01:39:05 -0500
+Received: from mail-pj1-x1031.google.com (mail-pj1-x1031.google.com [IPv6:2607:f8b0:4864:20::1031])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 62B9D10C0
+        for <linux-xfs@vger.kernel.org>; Tue,  7 Nov 2023 22:39:03 -0800 (PST)
+Received: by mail-pj1-x1031.google.com with SMTP id 98e67ed59e1d1-28120aa1c24so1944554a91.0
+        for <linux-xfs@vger.kernel.org>; Tue, 07 Nov 2023 22:39:03 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=fromorbit-com.20230601.gappssmtp.com; s=20230601; t=1699425543; x=1700030343; darn=vger.kernel.org;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
+        bh=ulun+lAbrpCzT3jYibtLBhBSSSJOwuFULkmqLToMbfw=;
+        b=dWExTNyiHn2obDBmsIPY9OJSl43A6Y/gFsUs5fd34ACkPEg4D6SEwzYgmaUfZQL8UR
+         JgYrKwEz6WZPVrEGef5b4sdsgZBLSXkAaF0ehbpXJIzEMbsN4VfA9l+wIHwCTK58bEgW
+         DlBzQKkD16+m7jXMaDmm8BW/2IEnEPXc+wT6xmVKReD3V6IAVqYQy0/UAHryXaldUf3v
+         ZNtWWY2yP7FsrCTcEsxdKX+92NEdIT7nsXLmleD5rU7Wp0/F4e7PkA7FK6gFuvWHIZQh
+         jPtrqbR5e/vOn+5OmWhvwmQZyKJVckU45gxvA9eRzl10sxtCHMfuH7sY58AyVXpzYV+F
+         fN/w==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1699425543; x=1700030343;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=ulun+lAbrpCzT3jYibtLBhBSSSJOwuFULkmqLToMbfw=;
+        b=cr49PWFe5tNJ2KSERWkSHO995Y7J2vKqi/6Kosh13eHdB1gyJeyyii6CWzH/1axMFF
+         ldOGE0gkXqv/80eyzxxEnB6Mn16ingsWF0peYAokEugw5WwIPftlXIAIhAd3uL56dPik
+         RPaR4u2UEIJoV74nAHILoGckqge3lobX86FNvbuX9GFk9ElwB/Y8QahmRxHRZFt9XIlE
+         Hdkdp9kR+GEaLlmxfIhn7e+mQXkIoYXND8qKSIm5t5QH8qVTtr/uo9uK9SZfeg3LT41E
+         rLa7hiawBW/iZBHZZejtZRaY6wPVD2VglESUtmW5HpGwJDeHia3aB4h9OHNzXBqf1kXE
+         N3Uw==
+X-Gm-Message-State: AOJu0YzVMbxzJHn7bJF91aTox0bX9Bf28JeBhXCOJ+u3NHzvL8fkXJJj
+        0KjdTaOnP2VRUT4W+7+sDppFNQ==
+X-Google-Smtp-Source: AGHT+IFFXJRBYVp5XA8NqYmfcQEmH+2vIgwctQ/wSElrMSTmuOY4QZZ/bILqMsNl9Frv0O+fCXZPcg==
+X-Received: by 2002:a17:90b:3a89:b0:27d:2364:44f6 with SMTP id om9-20020a17090b3a8900b0027d236444f6mr933982pjb.6.1699425542754;
+        Tue, 07 Nov 2023 22:39:02 -0800 (PST)
+Received: from dread.disaster.area (pa49-180-125-5.pa.nsw.optusnet.com.au. [49.180.125.5])
+        by smtp.gmail.com with ESMTPSA id f3-20020a17090ace0300b00274b9dd8519sm850961pju.35.2023.11.07.22.39.02
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Tue, 07 Nov 2023 22:39:02 -0800 (PST)
+Received: from dave by dread.disaster.area with local (Exim 4.96)
+        (envelope-from <david@fromorbit.com>)
+        id 1r0cDL-009lJd-1M;
+        Wed, 08 Nov 2023 17:38:59 +1100
+Date:   Wed, 8 Nov 2023 17:38:59 +1100
+From:   Dave Chinner <david@fromorbit.com>
+To:     Zorro Lang <zlang@redhat.com>
+Cc:     linux-xfs@vger.kernel.org, fstests@vger.kernel.org,
+        "Darrick J. Wong" <djwong@kernel.org>,
+        Carlos Maiolino <carlos@maiolino.me>
+Subject: Re: [Bug report][fstests generic/047] Internal error !(flags &
+ XFS_DABUF_MAP_HOLE_OK) at line 2572 of file fs/xfs/libxfs/xfs_da_btree.c.
+ Caller xfs_dabuf_map.constprop.0+0x26c/0x368 [xfs]
+Message-ID: <ZUstA+1+IvHJ87eP@dread.disaster.area>
+References: <20231029041122.bx2k7wwm7otebjd5@dell-per750-06-vm-08.rhts.eng.pek2.redhat.com>
+ <ZUiECgUWZ/8HKi3k@dread.disaster.area>
+ <20231106192627.ilvijcbpmp3l3wcz@dell-per750-06-vm-08.rhts.eng.pek2.redhat.com>
+ <ZUlNroz8l5h1s1oF@dread.disaster.area>
+ <20231107080522.5lowalssbmi6lus3@dell-per750-06-vm-08.rhts.eng.pek2.redhat.com>
+ <ZUnxswEfoeZQhw5P@dread.disaster.area>
+ <20231107151314.angahkixgxsjwbot@dell-per750-06-vm-08.rhts.eng.pek2.redhat.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20231105183939.1025279-1-sam@gentoo.org>
+In-Reply-To: <20231107151314.angahkixgxsjwbot@dell-per750-06-vm-08.rhts.eng.pek2.redhat.com>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Sun, Nov 05, 2023 at 06:39:32PM +0000, Sam James wrote:
-> From: Violet Purcell <vimproved@inventati.org>
+On Tue, Nov 07, 2023 at 11:13:14PM +0800, Zorro Lang wrote:
+> On Tue, Nov 07, 2023 at 07:13:39PM +1100, Dave Chinner wrote:
+> > On Tue, Nov 07, 2023 at 04:05:22PM +0800, Zorro Lang wrote:
+> > > On Tue, Nov 07, 2023 at 07:33:50AM +1100, Dave Chinner wrote:
+> > > > On Tue, Nov 07, 2023 at 03:26:27AM +0800, Zorro Lang wrote:
+> > > > > Thanks for your reply :) I tried to do a kernel bisect long time, but
+> > > > > find nothing ... Then suddently, I found it's failed from a xfsprogs
+> > > > > change [1].
+> > > > > 
+> > > > > Although that's not the root cause of this bug (on s390x), it just
+> > > > > enabled "nrext64" by default, which I never tested on s390x before.
+> > > > > For now, we know this's an issue about this feature, and only on
+> > > > > s390x for now.
+> > > > 
+> > > > That's not good. Can you please determine if this is a zero-day bug
+> > > > with the nrext64 feature? I think it was merged in 5.19, so if you
+> > > > could try to reproduce it on a 5.18 and 5.19 kernels first, that
+> > > > would be handy.
+> > > 
+> > > Unfortunately, it's a bug be there nearly from beginning. The linux v5.19
+> > > can trigger this bug (with latest xfsprogs for-next branch):
+> > 
+> > Ok. Can you grab the pahole output for the xfs_dinode and
+> > xfs_log_dinode for s390 from both 5.18 and 5.19 kernel builds?
+> > (i.e. 'pahole fs/xfs/xfs_inode.o |less' and search for the two
+> > structures).
 > 
-> LFS64 interfaces are non-standard and are being removed in the upcoming musl
-> 1.2.5. Setting _FILE_OFFSET_BITS=64 (which is currently being done) makes all
-> interfaces on glibc 64-bit by default, so using the LFS64 interfaces is
-> redundant. This commit replaces all occurences of off64_t with off_t,
-> stat64 with stat, and fstat64 with fstat.
+> I can't find xfs_log_dinode in fs/xfs/xfs_inode.o, but I can find both structures
+> in fs/xfs/xfs_inode_item.o, so below output base on:
 > 
-> Bug: https://bugs.gentoo.org/907039
-> Signed-off-by: Violet Purcell <vimproved@inventati.org>
-> Signed-off-by: Sam James <sam@gentoo.org>
-
-This mostly looks ok, with one caveat: Should we be adding to the
-codebase a build sanity check such as:
-
-BUILD_BUG_ON(sizeof(off_t) < 8);
-
-To make sure that -D_FILE_OFFSET_BITS=64 actually does what we think it
-does?
-
-Also, should we start setting -D_TIME_BITS=64 to handle Y2038 problems
-on 32-bit systems?
-
---D
-
-> ---
->  copy/xfs_copy.c           |  2 +-
->  fsr/xfs_fsr.c             |  2 +-
->  io/bmap.c                 |  6 +++---
->  io/copy_file_range.c      |  4 ++--
->  io/cowextsize.c           |  6 +++---
->  io/fadvise.c              |  2 +-
->  io/fiemap.c               |  6 +++---
->  io/fsmap.c                |  6 +++---
->  io/io.h                   | 10 +++++-----
->  io/madvise.c              |  2 +-
->  io/mincore.c              |  2 +-
->  io/mmap.c                 | 13 +++++++------
->  io/pread.c                | 22 +++++++++++-----------
->  io/pwrite.c               | 20 ++++++++++----------
->  io/reflink.c              |  4 ++--
->  io/seek.c                 |  6 +++---
->  io/sendfile.c             |  6 +++---
->  io/stat.c                 |  2 +-
->  io/sync_file_range.c      |  2 +-
->  io/truncate.c             |  2 +-
->  libxfs/rdwr.c             |  8 ++++----
->  mdrestore/xfs_mdrestore.c |  2 +-
->  repair/prefetch.c         |  2 +-
->  scrub/spacemap.c          |  6 +++---
->  spaceman/freesp.c         |  4 ++--
->  spaceman/trim.c           |  2 +-
->  26 files changed, 75 insertions(+), 74 deletions(-)
+>   # pahole fs/xfs/xfs_inode_item.o
 > 
-> diff --git a/copy/xfs_copy.c b/copy/xfs_copy.c
-> index 79f65946..854fd7f4 100644
-> --- a/copy/xfs_copy.c
-> +++ b/copy/xfs_copy.c
-> @@ -888,7 +888,7 @@ main(int argc, char **argv)
->  			}
->  		} else  {
->  			char	*lb[XFS_MAX_SECTORSIZE] = { NULL };
-> -			off64_t	off;
-> +			off_t	off;
->  
->  			/* ensure device files are sufficiently large */
->  
-> diff --git a/fsr/xfs_fsr.c b/fsr/xfs_fsr.c
-> index ba02506d..12fffbd8 100644
-> --- a/fsr/xfs_fsr.c
-> +++ b/fsr/xfs_fsr.c
-> @@ -1148,7 +1148,7 @@ packfile(char *fname, char *tname, int fd,
->  	struct dioattr	dio;
->  	static xfs_swapext_t   sx;
->  	struct xfs_flock64  space;
-> -	off64_t 	cnt, pos;
-> +	off_t 	cnt, pos;
->  	void 		*fbuf = NULL;
->  	int 		ct, wc, wc_b4;
->  	char		ffname[SMBUFSZ];
-> diff --git a/io/bmap.c b/io/bmap.c
-> index 722a389b..6182e1c5 100644
-> --- a/io/bmap.c
-> +++ b/io/bmap.c
-> @@ -257,7 +257,7 @@ bmap_f(
->  #define	FLG_BSW		0000010	/* Not on begin of stripe width */
->  #define	FLG_ESW		0000001	/* Not on end   of stripe width */
->  		int	agno;
-> -		off64_t agoff, bbperag;
-> +		off_t agoff, bbperag;
->  		int	foff_w, boff_w, aoff_w, tot_w, agno_w;
->  		char	rbuf[32], bbuf[32], abuf[32];
->  		int	sunit, swidth;
-> @@ -267,8 +267,8 @@ bmap_f(
->  		if (is_rt)
->  			sunit = swidth = bbperag = 0;
->  		else {
-> -			bbperag = (off64_t)fsgeo.agblocks *
-> -				  (off64_t)fsgeo.blocksize / BBSIZE;
-> +			bbperag = (off_t)fsgeo.agblocks *
-> +				  (off_t)fsgeo.blocksize / BBSIZE;
->  			sunit = (fsgeo.sunit * fsgeo.blocksize) / BBSIZE;
->  			swidth = (fsgeo.swidth * fsgeo.blocksize) / BBSIZE;
->  		}
-> diff --git a/io/copy_file_range.c b/io/copy_file_range.c
-> index d154fa76..422e691a 100644
-> --- a/io/copy_file_range.c
-> +++ b/io/copy_file_range.c
-> @@ -54,7 +54,7 @@ copy_file_range_cmd(int fd, long long *src_off, long long *dst_off, size_t len)
->  	return 0;
->  }
->  
-> -static off64_t
-> +static off_t
->  copy_src_filesize(int fd)
->  {
->  	struct stat st;
-> @@ -154,7 +154,7 @@ copy_range_f(int argc, char **argv)
->  	}
->  
->  	if (!len_specified) {
-> -		off64_t	sz;
-> +		off_t	sz;
->  
->  		sz = copy_src_filesize(fd);
->  		if (sz < 0 || (unsigned long long)sz > SIZE_MAX) {
-> diff --git a/io/cowextsize.c b/io/cowextsize.c
-> index f6b134df..00e40c6f 100644
-> --- a/io/cowextsize.c
-> +++ b/io/cowextsize.c
-> @@ -50,10 +50,10 @@ static int
->  set_cowextsize(const char *path, int fd, long extsz)
->  {
->  	struct fsxattr	fsx;
-> -	struct stat64	stat;
-> +	struct stat	stat;
->  
-> -	if (fstat64(fd, &stat) < 0) {
-> -		perror("fstat64");
-> +	if (fstat(fd, &stat) < 0) {
-> +		perror("fstat");
->  		exitcode = 1;
->  		return 0;
->  	}
-> diff --git a/io/fadvise.c b/io/fadvise.c
-> index 60cc0f08..0966c41b 100644
-> --- a/io/fadvise.c
-> +++ b/io/fadvise.c
-> @@ -39,7 +39,7 @@ fadvise_f(
->  	int		argc,
->  	char		**argv)
->  {
-> -	off64_t		offset = 0, length = 0;
-> +	off_t		offset = 0, length = 0;
->  	int		c, range = 0, advise = POSIX_FADV_NORMAL;
->  
->  	while ((c = getopt(argc, argv, "dnrsw")) != EOF) {
-> diff --git a/io/fiemap.c b/io/fiemap.c
-> index f0c74dfe..b41f71bf 100644
-> --- a/io/fiemap.c
-> +++ b/io/fiemap.c
-> @@ -234,9 +234,9 @@ fiemap_f(
->  	int		tot_w = 5;	/* 5 since its just one number */
->  	int		flg_w = 5;
->  	__u64		last_logical = 0;	/* last extent offset handled */
-> -	off64_t		start_offset = 0;	/* mapping start */
-> -	off64_t		length = -1LL;		/* mapping length */
-> -	off64_t		range_end = -1LL;	/* mapping end*/
-> +	off_t		start_offset = 0;	/* mapping start */
-> +	off_t		length = -1LL;		/* mapping length */
-> +	off_t		range_end = -1LL;	/* mapping end*/
->  	size_t		fsblocksize, fssectsize;
->  	struct stat	st;
->  
-> diff --git a/io/fsmap.c b/io/fsmap.c
-> index 7db51847..bf119639 100644
-> --- a/io/fsmap.c
-> +++ b/io/fsmap.c
-> @@ -170,7 +170,7 @@ dump_map_verbose(
->  	unsigned long long	i;
->  	struct fsmap		*p;
->  	int			agno;
-> -	off64_t			agoff, bperag;
-> +	off_t			agoff, bperag;
->  	int			foff_w, boff_w, aoff_w, tot_w, agno_w, own_w;
->  	int			nr_w, dev_w;
->  	char			rbuf[40], bbuf[40], abuf[40], obuf[40];
-> @@ -183,8 +183,8 @@ dump_map_verbose(
->  	dev_w = 3;
->  	nr_w = 4;
->  	tot_w = MINTOT_WIDTH;
-> -	bperag = (off64_t)fsgeo->agblocks *
-> -		  (off64_t)fsgeo->blocksize;
-> +	bperag = (off_t)fsgeo->agblocks *
-> +		  (off_t)fsgeo->blocksize;
->  	sunit = (fsgeo->sunit * fsgeo->blocksize);
->  	swidth = (fsgeo->swidth * fsgeo->blocksize);
->  
-> diff --git a/io/io.h b/io/io.h
-> index fe474faf..68e5e487 100644
-> --- a/io/io.h
-> +++ b/io/io.h
-> @@ -53,7 +53,7 @@ extern int stat_f(int argc, char **argv);
->  typedef struct mmap_region {
->  	void		*addr;		/* address of start of mapping */
->  	size_t		length;		/* length of mapping */
-> -	off64_t		offset;		/* start offset into backing file */
-> +	off_t		offset;		/* start offset into backing file */
->  	int		prot;		/* protection mode of the mapping */
->  	int		flags;		/* MAP_* flags passed to mmap() */
->  	char		*name;		/* name of backing file */
-> @@ -63,13 +63,13 @@ extern mmap_region_t	*maptable;	/* mmap'd region array */
->  extern int		mapcount;	/* #entries in the mapping table */
->  extern mmap_region_t	*mapping;	/* active mapping table entry */
->  extern int maplist_f(void);
-> -extern void *check_mapping_range(mmap_region_t *, off64_t, size_t, int);
-> +extern void *check_mapping_range(mmap_region_t *, off_t, size_t, int);
->  
->  /*
->   * Various xfs_io helper routines/globals
->   */
->  
-> -extern off64_t		filesize(void);
-> +extern off_t		filesize(void);
->  extern int		openfile(char *, struct xfs_fsop_geom *, int, mode_t,
->  				 struct fs_path *);
->  extern int		addfile(char *, int , struct xfs_fsop_geom *, int,
-> @@ -84,9 +84,9 @@ extern size_t		io_buffersize;
->  extern int		vectors;
->  extern struct iovec	*iov;
->  extern int		alloc_buffer(size_t, int, unsigned int);
-> -extern int		read_buffer(int, off64_t, long long, long long *,
-> +extern int		read_buffer(int, off_t, long long, long long *,
->  					int, int);
-> -extern void		dump_buffer(off64_t, ssize_t);
-> +extern void		dump_buffer(off_t, ssize_t);
->  
->  extern void		attr_init(void);
->  extern void		bmap_init(void);
-> diff --git a/io/madvise.c b/io/madvise.c
-> index bde31539..6e9c5b12 100644
-> --- a/io/madvise.c
-> +++ b/io/madvise.c
-> @@ -39,7 +39,7 @@ madvise_f(
->  	int		argc,
->  	char		**argv)
->  {
-> -	off64_t		offset, llength;
-> +	off_t		offset, llength;
->  	size_t		length;
->  	void		*start;
->  	int		advise = MADV_NORMAL, c;
-> diff --git a/io/mincore.c b/io/mincore.c
-> index 67f1d6c4..24147ac2 100644
-> --- a/io/mincore.c
-> +++ b/io/mincore.c
-> @@ -17,7 +17,7 @@ mincore_f(
->  	int		argc,
->  	char		**argv)
->  {
-> -	off64_t		offset, llength;
-> +	off_t		offset, llength;
->  	size_t		length;
->  	size_t		blocksize, sectsize;
->  	void		*start;
-> diff --git a/io/mmap.c b/io/mmap.c
-> index 425957d4..7161ae8e 100644
-> --- a/io/mmap.c
-> +++ b/io/mmap.c
-> @@ -63,11 +63,11 @@ print_mapping(
->  void *
->  check_mapping_range(
->  	mmap_region_t	*map,
-> -	off64_t		offset,
-> +	off_t		offset,
->  	size_t		length,
->  	int		pagealign)
->  {
-> -	off64_t		relative;
-> +	off_t		relative;
->  
->  	if (offset < mapping->offset) {
->  		printf(_("offset (%lld) is before start of mapping (%lld)\n"),
-> @@ -155,7 +155,8 @@ mmap_f(
->  	int		argc,
->  	char		**argv)
->  {
-> -	off64_t		offset;
-> +	off_t		offset;
-> +
->  	ssize_t		length = 0, length2 = 0;
->  	void		*address = NULL;
->  	char		*filename;
-> @@ -308,7 +309,7 @@ msync_f(
->  	int		argc,
->  	char		**argv)
->  {
-> -	off64_t		offset;
-> +	off_t		offset;
->  	ssize_t		length;
->  	void		*start;
->  	int		c, flags = 0;
-> @@ -401,7 +402,7 @@ mread_f(
->  	int		argc,
->  	char		**argv)
->  {
-> -	off64_t		offset, tmp, dumpoffset, printoffset;
-> +	off_t		offset, tmp, dumpoffset, printoffset;
->  	ssize_t		length;
->  	size_t		dumplen, cnt = 0;
->  	char		*bp;
-> @@ -566,7 +567,7 @@ mwrite_f(
->  	int		argc,
->  	char		**argv)
->  {
-> -	off64_t		offset, tmp;
-> +	off_t		offset, tmp;
->  	ssize_t		length;
->  	void		*start;
->  	char		*sp;
-> diff --git a/io/pread.c b/io/pread.c
-> index 0f1d8b97..79990c6a 100644
-> --- a/io/pread.c
-> +++ b/io/pread.c
-> @@ -116,7 +116,7 @@ alloc_buffer(
->  static void
->  __dump_buffer(
->  	void		*buf,
-> -	off64_t		offset,
-> +	off_t		offset,
->  	ssize_t		len)
->  {
->  	int		i, j;
-> @@ -141,7 +141,7 @@ __dump_buffer(
->  
->  void
->  dump_buffer(
-> -	off64_t		offset,
-> +	off_t		offset,
->  	ssize_t		len)
->  {
->  	int		i, l;
-> @@ -164,7 +164,7 @@ dump_buffer(
->  static ssize_t
->  do_preadv(
->  	int		fd,
-> -	off64_t		offset,
-> +	off_t		offset,
->  	long long	count)
->  {
->  	int		vecs = 0;
-> @@ -199,7 +199,7 @@ do_preadv(
->  static ssize_t
->  do_pread(
->  	int		fd,
-> -	off64_t		offset,
-> +	off_t		offset,
->  	long long	count,
->  	size_t		buffer_size)
->  {
-> @@ -212,13 +212,13 @@ do_pread(
->  static int
->  read_random(
->  	int		fd,
-> -	off64_t		offset,
-> +	off_t		offset,
->  	long long	count,
->  	long long	*total,
->  	unsigned int	seed,
->  	int		eof)
->  {
-> -	off64_t		end, off, range;
-> +	off_t		end, off, range;
->  	ssize_t		bytes;
->  	int		ops = 0;
->  
-> @@ -259,12 +259,12 @@ read_random(
->  static int
->  read_backward(
->  	int		fd,
-> -	off64_t		*offset,
-> +	off_t		*offset,
->  	long long	*count,
->  	long long	*total,
->  	int		eof)
->  {
-> -	off64_t		end, off = *offset;
-> +	off_t		end, off = *offset;
->  	ssize_t		bytes = 0, bytes_requested;
->  	long long	cnt = *count;
->  	int		ops = 0;
-> @@ -319,7 +319,7 @@ read_backward(
->  static int
->  read_forward(
->  	int		fd,
-> -	off64_t		offset,
-> +	off_t		offset,
->  	long long	count,
->  	long long	*total,
->  	int		verbose,
-> @@ -353,7 +353,7 @@ read_forward(
->  int
->  read_buffer(
->  	int		fd,
-> -	off64_t		offset,
-> +	off_t		offset,
->  	long long	count,
->  	long long	*total,
->  	int		verbose,
-> @@ -368,7 +368,7 @@ pread_f(
->  	char		**argv)
->  {
->  	size_t		bsize;
-> -	off64_t		offset;
-> +	off_t		offset;
->  	unsigned int	zeed = 0;
->  	long long	count, total, tmp;
->  	size_t		fsblocksize, fssectsize;
-> diff --git a/io/pwrite.c b/io/pwrite.c
-> index 467bfa9f..8d134c56 100644
-> --- a/io/pwrite.c
-> +++ b/io/pwrite.c
-> @@ -54,7 +54,7 @@ pwrite_help(void)
->  static ssize_t
->  do_pwritev(
->  	int		fd,
-> -	off64_t		offset,
-> +	off_t		offset,
->  	long long	count,
->  	int		pwritev2_flags)
->  {
-> @@ -97,7 +97,7 @@ do_pwritev(
->  static ssize_t
->  do_pwrite(
->  	int		fd,
-> -	off64_t		offset,
-> +	off_t		offset,
->  	long long	count,
->  	size_t		buffer_size,
->  	int		pwritev2_flags)
-> @@ -110,13 +110,13 @@ do_pwrite(
->  
->  static int
->  write_random(
-> -	off64_t		offset,
-> +	off_t		offset,
->  	long long	count,
->  	unsigned int	seed,
->  	long long	*total,
->  	int 		pwritev2_flags)
->  {
-> -	off64_t		off, range;
-> +	off_t		off, range;
->  	ssize_t		bytes;
->  	int		ops = 0;
->  
-> @@ -155,12 +155,12 @@ write_random(
->  
->  static int
->  write_backward(
-> -	off64_t		offset,
-> +	off_t		offset,
->  	long long	*count,
->  	long long	*total,
->  	int		pwritev2_flags)
->  {
-> -	off64_t		end, off = offset;
-> +	off_t		end, off = offset;
->  	ssize_t		bytes = 0, bytes_requested;
->  	long long	cnt = *count;
->  	int		ops = 0;
-> @@ -214,11 +214,11 @@ write_backward(
->  
->  static int
->  write_buffer(
-> -	off64_t		offset,
-> +	off_t		offset,
->  	long long	count,
->  	size_t		bs,
->  	int		fd,
-> -	off64_t		skip,
-> +	off_t		skip,
->  	long long	*total,
->  	int		pwritev2_flags)
->  {
-> @@ -253,7 +253,7 @@ write_buffer(
->  
->  static int
->  write_once(
-> -	off64_t		offset,
-> +	off_t		offset,
->  	long long	count,
->  	long long	*total,
->  	int		pwritev2_flags)
-> @@ -275,7 +275,7 @@ pwrite_f(
->  	char		**argv)
->  {
->  	size_t		bsize;
-> -	off64_t		offset, skip = 0;
-> +	off_t		offset, skip = 0;
->  	long long	count, total, tmp;
->  	unsigned int	zeed = 0, seed = 0xcdcdcdcd;
->  	size_t		fsblocksize, fssectsize;
-> diff --git a/io/reflink.c b/io/reflink.c
-> index 8e4f3899..b6a3c05a 100644
-> --- a/io/reflink.c
-> +++ b/io/reflink.c
-> @@ -98,7 +98,7 @@ dedupe_f(
->  	int		argc,
->  	char		**argv)
->  {
-> -	off64_t		soffset, doffset;
-> +	off_t		soffset, doffset;
->  	long long	count, total;
->  	char		*infile;
->  	int		condensed, quiet_flag;
-> @@ -226,7 +226,7 @@ reflink_f(
->  	int		argc,
->  	char		**argv)
->  {
-> -	off64_t		soffset, doffset;
-> +	off_t		soffset, doffset;
->  	long long	count = 0, total;
->  	char		*infile = NULL;
->  	int		condensed, quiet_flag;
-> diff --git a/io/seek.c b/io/seek.c
-> index 6734ecb5..ffe7439c 100644
-> --- a/io/seek.c
-> +++ b/io/seek.c
-> @@ -63,8 +63,8 @@ static void
->  seek_output(
->  	int	startflag,
->  	char	*type,
-> -	off64_t	start,
-> -	off64_t	offset)
-> +	off_t	start,
-> +	off_t	offset)
->  {
->  	if (offset == -1) {
->  		if (errno == ENXIO) {
-> @@ -92,7 +92,7 @@ seek_f(
->  	int	argc,
->  	char	**argv)
->  {
-> -	off64_t		offset, start;
-> +	off_t		offset, start;
->  	size_t		fsblocksize, fssectsize;
->  	int		c;
->  	int		current;	/* specify data or hole */
-> diff --git a/io/sendfile.c b/io/sendfile.c
-> index a003bb55..2ce569c2 100644
-> --- a/io/sendfile.c
-> +++ b/io/sendfile.c
-> @@ -34,12 +34,12 @@ sendfile_help(void)
->  
->  static int
->  send_buffer(
-> -	off64_t		offset,
-> +	off_t		offset,
->  	size_t		count,
->  	int		fd,
->  	long long	*total)
->  {
-> -	off64_t		off = offset;
-> +	off_t		off = offset;
->  	ssize_t		bytes, bytes_remaining = count;
->  	int		ops = 0;
->  
-> @@ -66,7 +66,7 @@ sendfile_f(
->  	int		argc,
->  	char		**argv)
->  {
-> -	off64_t		offset = 0;
-> +	off_t		offset = 0;
->  	long long	count, total;
->  	size_t		blocksize, sectsize;
->  	struct timeval	t1, t2;
-> diff --git a/io/stat.c b/io/stat.c
-> index b57f9eef..e8f68dc3 100644
-> --- a/io/stat.c
-> +++ b/io/stat.c
-> @@ -21,7 +21,7 @@ static cmdinfo_t stat_cmd;
->  static cmdinfo_t statfs_cmd;
->  static cmdinfo_t statx_cmd;
->  
-> -off64_t
-> +off_t
->  filesize(void)
->  {
->  	struct stat	st;
-> diff --git a/io/sync_file_range.c b/io/sync_file_range.c
-> index 94285c22..2375a060 100644
-> --- a/io/sync_file_range.c
-> +++ b/io/sync_file_range.c
-> @@ -30,7 +30,7 @@ sync_range_f(
->  	int		argc,
->  	char		**argv)
->  {
-> -	off64_t		offset = 0, length = 0;
-> +	off_t		offset = 0, length = 0;
->  	int		c, sync_mode = 0;
->  	size_t		blocksize, sectsize;
->  
-> diff --git a/io/truncate.c b/io/truncate.c
-> index 1d049194..a74b6131 100644
-> --- a/io/truncate.c
-> +++ b/io/truncate.c
-> @@ -16,7 +16,7 @@ truncate_f(
->  	int		argc,
->  	char		**argv)
->  {
-> -	off64_t		offset;
-> +	off_t		offset;
->  	size_t		blocksize, sectsize;
->  
->  	init_cvtnum(&blocksize, &sectsize);
-> diff --git a/libxfs/rdwr.c b/libxfs/rdwr.c
-> index ccd1501a..4eba0094 100644
-> --- a/libxfs/rdwr.c
-> +++ b/libxfs/rdwr.c
-> @@ -576,7 +576,7 @@ libxfs_balloc(
->  
->  
->  static int
-> -__read_buf(int fd, void *buf, int len, off64_t offset, int flags)
-> +__read_buf(int fd, void *buf, int len, off_t offset, int flags)
->  {
->  	int	sts;
->  
-> @@ -639,7 +639,7 @@ libxfs_readbufr_map(struct xfs_buftarg *btp, struct xfs_buf *bp, int flags)
->  	fd = libxfs_device_to_fd(btp->bt_bdev);
->  	buf = bp->b_addr;
->  	for (i = 0; i < bp->b_nmaps; i++) {
-> -		off64_t	offset = LIBXFS_BBTOOFF64(bp->b_maps[i].bm_bn);
-> +		off_t	offset = LIBXFS_BBTOOFF64(bp->b_maps[i].bm_bn);
->  		int len = BBTOB(bp->b_maps[i].bm_len);
->  
->  		error = __read_buf(fd, buf, len, offset, flags);
-> @@ -798,7 +798,7 @@ err:
->  }
->  
->  static int
-> -__write_buf(int fd, void *buf, int len, off64_t offset, int flags)
-> +__write_buf(int fd, void *buf, int len, off_t offset, int flags)
->  {
->  	int	sts;
->  
-> @@ -864,7 +864,7 @@ libxfs_bwrite(
->  		void	*buf = bp->b_addr;
->  
->  		for (i = 0; i < bp->b_nmaps; i++) {
-> -			off64_t	offset = LIBXFS_BBTOOFF64(bp->b_maps[i].bm_bn);
-> +			off_t	offset = LIBXFS_BBTOOFF64(bp->b_maps[i].bm_bn);
->  			int len = BBTOB(bp->b_maps[i].bm_len);
->  
->  			bp->b_error = __write_buf(fd, buf, len, offset,
-> diff --git a/mdrestore/xfs_mdrestore.c b/mdrestore/xfs_mdrestore.c
-> index 7c1a66c4..bb54e382 100644
-> --- a/mdrestore/xfs_mdrestore.c
-> +++ b/mdrestore/xfs_mdrestore.c
-> @@ -116,7 +116,7 @@ perform_restore(
->  		/* ensure device is sufficiently large enough */
->  
->  		char		*lb[XFS_MAX_SECTORSIZE] = { NULL };
-> -		off64_t		off;
-> +		off_t		off;
->  
->  		off = sb.sb_dblocks * sb.sb_blocksize - sizeof(lb);
->  		if (pwrite(dst_fd, lb, sizeof(lb), off) < 0)
-> diff --git a/repair/prefetch.c b/repair/prefetch.c
-> index 017750e9..35b50134 100644
-> --- a/repair/prefetch.c
-> +++ b/repair/prefetch.c
-> @@ -475,7 +475,7 @@ pf_batch_read(
->  {
->  	struct xfs_buf		*bplist[MAX_BUFS];
->  	unsigned int		num;
-> -	off64_t			first_off, last_off, next_off;
-> +	off_t			first_off, last_off, next_off;
->  	int			len, size;
->  	int			i;
->  	int			inode_bufs;
-> diff --git a/scrub/spacemap.c b/scrub/spacemap.c
-> index 03440d3a..00bee179 100644
-> --- a/scrub/spacemap.c
-> +++ b/scrub/spacemap.c
-> @@ -97,11 +97,11 @@ scan_ag_rmaps(
->  	struct scrub_ctx	*ctx = (struct scrub_ctx *)wq->wq_ctx;
->  	struct scan_blocks	*sbx = arg;
->  	struct fsmap		keys[2];
-> -	off64_t			bperag;
-> +	off_t			bperag;
->  	int			ret;
->  
-> -	bperag = (off64_t)ctx->mnt.fsgeom.agblocks *
-> -		 (off64_t)ctx->mnt.fsgeom.blocksize;
-> +	bperag = (off_t)ctx->mnt.fsgeom.agblocks *
-> +		 (off_t)ctx->mnt.fsgeom.blocksize;
->  
->  	memset(keys, 0, sizeof(struct fsmap) * 2);
->  	keys->fmr_device = ctx->fsinfo.fs_datadev;
-> diff --git a/spaceman/freesp.c b/spaceman/freesp.c
-> index 70dcdb5c..f5177cb4 100644
-> --- a/spaceman/freesp.c
-> +++ b/spaceman/freesp.c
-> @@ -62,7 +62,7 @@ static void
->  addtohist(
->  	xfs_agnumber_t	agno,
->  	xfs_agblock_t	agbno,
-> -	off64_t		len)
-> +	off_t		len)
->  {
->  	long		i;
->  
-> @@ -152,7 +152,7 @@ scan_ag(
->  	struct fsmap		*l, *h;
->  	struct fsmap		*p;
->  	struct xfs_fd		*xfd = &file->xfd;
-> -	off64_t			aglen;
-> +	off_t			aglen;
->  	xfs_agblock_t		agbno;
->  	unsigned long long	freeblks = 0;
->  	unsigned long long	freeexts = 0;
-> diff --git a/spaceman/trim.c b/spaceman/trim.c
-> index e9ed47e4..727dd818 100644
-> --- a/spaceman/trim.c
-> +++ b/spaceman/trim.c
-> @@ -26,7 +26,7 @@ trim_f(
->  	struct xfs_fd		*xfd = &file->xfd;
->  	struct xfs_fsop_geom	*fsgeom = &xfd->fsgeom;
->  	xfs_agnumber_t		agno = 0;
-> -	off64_t			offset = 0;
-> +	off_t			offset = 0;
->  	ssize_t			length = 0;
->  	ssize_t			minlen = 0;
->  	int			aflag = 0;
-> -- 
-> 2.42.1
-> 
+> The output on v5.19 is [1], v5.18 output is [2], the diff of 5.18 and 5.19 is [3].
+
+Ok, so there's nothing wrong with the on-disk format definition or
+the journal format - they both lay out in exactly the right shape
+so I think at this point we need metadumps from the broken
+filesystems.
+
+Can you pick one of the failing tests and grab metadumps from
+the shutdown filesystem (i.e. before it is recovered) and then
+another from after it is recovered and the problem tripped over?
+
+I know I won't be able to replay the log on x86-64, but knowing what
+is in the journal vs what ends up being recovered will tell us
+where to look next.
+
+-Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
