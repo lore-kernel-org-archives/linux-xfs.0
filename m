@@ -2,175 +2,140 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A2D1BC4332F
-	for <linux-xfs@archiver.kernel.org>; Wed,  8 Nov 2023 03:40:24 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4AD6AC4332F
+	for <linux-xfs@archiver.kernel.org>; Wed,  8 Nov 2023 03:42:37 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229753AbjKHDkZ (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 7 Nov 2023 22:40:25 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43780 "EHLO
+        id S229873AbjKHDmi (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 7 Nov 2023 22:42:38 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37520 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229581AbjKHDkY (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 7 Nov 2023 22:40:24 -0500
+        with ESMTP id S229581AbjKHDmh (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 7 Nov 2023 22:42:37 -0500
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3E611101
-        for <linux-xfs@vger.kernel.org>; Tue,  7 Nov 2023 19:40:22 -0800 (PST)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id B1C30C433C7;
-        Wed,  8 Nov 2023 03:40:21 +0000 (UTC)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7413818C;
+        Tue,  7 Nov 2023 19:42:35 -0800 (PST)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id C4D38C433C7;
+        Wed,  8 Nov 2023 03:42:33 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1699414821;
-        bh=rm+GYAwf+IijF6lm17TN74jxXeZbEWD7tYXCO81Ymas=;
+        s=k20201202; t=1699414955;
+        bh=FHJSt6kZtXx4ILd8DGDkhSrjysEg2O+K9F8kVqG0aKU=;
         h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=QgR4qm97Go1cxNNXcxor9hwBEHm/OFNX74fZHwcBq2z0Ju8ijBKzoYQ6lVlbgVszF
-         zobe4DdkKyUOw7ncwYn2WFx5R/ZyqJeoJZ8lGXpLhirAHsdJLRaHGwneuNCcwrZsMS
-         v/n/DkzrQxF3MotGezk/0JwIZcCpizv63qXEss+NuQNLF98q80xrzjUJmkX/CESlfe
-         oPyASEEE7Tjhgptzof25dl9MRGXinkWdZwMg11/Yjs8Cm6c2hrZHw6okgR1i7V3tMc
-         jWO97T48TOAFNKJDnwFosfVwBhaoZTlB1fUxigNK2kJ4YqOJzHSvF6tpovVDUL6Em+
-         uHGlE0JW1Qovg==
-Date:   Tue, 7 Nov 2023 19:40:21 -0800
-From:   "Darrick J. Wong" <djwong@kernel.org>
-To:     Chandan Babu R <chandan.babu@oracle.com>
-Cc:     linux-xfs@vger.kernel.org, cem@kernel.org
-Subject: Re: [PATCH V1 2/2] metadump.asciidoc: Add description for metadump
- v2 ondisk format
-Message-ID: <20231108034021.GQ1205143@frogsfrogsfrogs>
-References: <20231106132158.183376-1-chandan.babu@oracle.com>
- <20231106132158.183376-3-chandan.babu@oracle.com>
+        b=iWEeWkK0SMRDXg+vLARaKDp4eY6YdEa64mOvnmuTXOWdMjYfWETtJUiPu3qY3Hysk
+         4LSEpc9dYfkzYX7g+al6cSuLAgDYpKHRP2mup9JRPb9e/5zjchsBgqWnDrbYowWf9o
+         JXJkdsYkju/REM9+kegMkELz/TLUR8XEO8gftnzeUcG4ZPPkXz4HlcwoiX57arxoOR
+         497OH+iqcR3VxDUMU3A+OR05jPgcI/pWScJ13aPmc7QdGcMKr+TCrdqSlbH3XAXWDw
+         +hlzM/DVqfzlLBER49uo8vk6c6avLr24JVCdZ+gCZ+w6p5P9GNfkudf47jMAr59Ou4
+         Ltd6ELYpy6t/w==
+Date:   Tue, 7 Nov 2023 19:42:31 -0800
+From:   Eric Biggers <ebiggers@kernel.org>
+To:     j.granados@samsung.com
+Cc:     Luis Chamberlain <mcgrof@kernel.org>, willy@infradead.org,
+        josh@joshtriplett.org, Kees Cook <keescook@chromium.org>,
+        David Howells <dhowells@redhat.com>,
+        Alexander Viro <viro@zeniv.linux.org.uk>,
+        Christian Brauner <brauner@kernel.org>,
+        Benjamin LaHaise <bcrl@kvack.org>,
+        Eric Biederman <ebiederm@xmission.com>,
+        Trond Myklebust <trond.myklebust@hammerspace.com>,
+        Anna Schumaker <anna@kernel.org>,
+        Chuck Lever <chuck.lever@oracle.com>,
+        Jeff Layton <jlayton@kernel.org>, Neil Brown <neilb@suse.de>,
+        Olga Kornievskaia <kolga@netapp.com>,
+        Dai Ngo <Dai.Ngo@oracle.com>, Tom Talpey <tom@talpey.com>,
+        Jan Kara <jack@suse.cz>, Amir Goldstein <amir73il@gmail.com>,
+        Matthew Bobrowski <repnop@google.com>,
+        Anton Altaparmakov <anton@tuxera.com>,
+        Namjae Jeon <linkinjeon@kernel.org>,
+        Mark Fasheh <mark@fasheh.com>,
+        Joel Becker <jlbec@evilplan.org>,
+        Joseph Qi <joseph.qi@linux.alibaba.com>,
+        Iurii Zaikin <yzaikin@google.com>,
+        "Theodore Y. Ts'o" <tytso@mit.edu>,
+        Chandan Babu R <chandan.babu@oracle.com>,
+        "Darrick J. Wong" <djwong@kernel.org>,
+        Jan Harkes <jaharkes@cs.cmu.edu>, coda@cs.cmu.edu,
+        linux-cachefs@redhat.com, linux-kernel@vger.kernel.org,
+        linux-fsdevel@vger.kernel.org, linux-aio@kvack.org,
+        linux-mm@kvack.org, linux-nfs@vger.kernel.org,
+        linux-ntfs-dev@lists.sourceforge.net, ocfs2-devel@lists.linux.dev,
+        fsverity@lists.linux.dev, linux-xfs@vger.kernel.org,
+        codalist@coda.cs.cmu.edu
+Subject: Re: [PATCH 2/4] aio: Remove the now superfluous sentinel elements
+ from ctl_table array
+Message-ID: <20231108034231.GB2482@sol.localdomain>
+References: <20231107-jag-sysctl_remove_empty_elem_fs-v1-0-7176632fea9f@samsung.com>
+ <20231107-jag-sysctl_remove_empty_elem_fs-v1-2-7176632fea9f@samsung.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20231106132158.183376-3-chandan.babu@oracle.com>
+In-Reply-To: <20231107-jag-sysctl_remove_empty_elem_fs-v1-2-7176632fea9f@samsung.com>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Mon, Nov 06, 2023 at 06:51:58PM +0530, Chandan Babu R wrote:
-> Metadump v2 is the new metadata dump format introduced in upstream
-> xfsprogs. This commit describes V2 format's ondisk structure.
-> 
-> Signed-off-by: Chandan Babu R <chandan.babu@oracle.com>
-> ---
->  .../metadump.asciidoc                         | 75 ++++++++++++++++++-
->  1 file changed, 74 insertions(+), 1 deletion(-)
-> 
-> diff --git a/design/XFS_Filesystem_Structure/metadump.asciidoc b/design/XFS_Filesystem_Structure/metadump.asciidoc
-> index 2f35b7e..782f194 100644
-> --- a/design/XFS_Filesystem_Structure/metadump.asciidoc
-> +++ b/design/XFS_Filesystem_Structure/metadump.asciidoc
-> @@ -13,7 +13,11 @@ must be the superblock from AG 0.  If the metadump has more blocks than
->  can be pointed to by the +xfs_metablock.mb_daddr+ area, the sequence
->  of +xfs_metablock+ followed by metadata blocks is repeated.
+On Tue, Nov 07, 2023 at 02:44:21PM +0100, Joel Granados via B4 Relay wrote:
+> [PATCH 2/4] aio: Remove the now superfluous sentinel elements from ctl_table array
+
+The commit prefix should be "fs:".
+
+> Remove sentinel elements ctl_table struct. Special attention was placed in
+> making sure that an empty directory for fs/verity was created when
+> CONFIG_FS_VERITY_BUILTIN_SIGNATURES is not defined. In this case we use the
+> register sysctl call that expects a size.
+[...]
+> diff --git a/fs/verity/fsverity_private.h b/fs/verity/fsverity_private.h
+> index d071a6e32581..8191bf7ad706 100644
+> --- a/fs/verity/fsverity_private.h
+> +++ b/fs/verity/fsverity_private.h
+> @@ -122,8 +122,8 @@ void __init fsverity_init_info_cache(void);
 >  
-> -.Metadata Dump Format
-> +Two metadump file formats are supported: +V1+ and +V2+. In addition to
-> +the features supported by the +V1+ format, the +V2+ format supports
-> +dumping data from an external log device.
-
-"...supports capturing data from an external log device."
-
-> +
-> +== Metadata Dump v1 Format
+>  /* signature.c */
 >  
->  [source, c]
->  ----
-> @@ -62,6 +66,75 @@ An array of disk addresses.  Each of the +mb_count+ blocks (of size +(1
->  << mb_blocklog+) following the +xfs_metablock+ should be written back to
->  the address pointed to by the corresponding +mb_daddr+ entry.
+> -#ifdef CONFIG_FS_VERITY_BUILTIN_SIGNATURES
+>  extern int fsverity_require_signatures;
+> +#ifdef CONFIG_FS_VERITY_BUILTIN_SIGNATURES
+>  int fsverity_verify_signature(const struct fsverity_info *vi,
+>  			      const u8 *signature, size_t sig_size);
 >  
-> +== Metadata Dump v2 Format
-> +
-> +A Metadump Dump in the V2 format begins with a header represented by
-> ++struct xfs_metadump_header+.
-> +[source, c]
-> +----
-> +struct xfs_metadump_header {
-> +        __be32          xmh_magic;
-> +        __be32          xmh_version;
-> +        __be32          xmh_compat_flags;
-> +	__be32          xmh_incompat_flags;
-
-   ^^^^^ spaces not tabs (yeah, I know...)
-
-> +        __be64          xmh_reserved;
-> +} __packed;
-> +----
-> +*xmh_magic*::
-> +The magic number, ``XMD2'' (0x584D4432)
-> +
-> +*xmh_version*::
-> +The version number, i.e. 2.
-> +
-> +*xmh_compat flags*::
-> +Compat flags describing a metadata dump.
-> +
-> +[options="header"]
-> +|=====
-> +| Flag				| Description
-> +| +XFS_MD2_COMPAT_OBFUSCATED+ |
-> +Directory entry and extended attribute names have been obscured and
-> +extended attribute values are zeroed to protect privacy.
-> +
-> +| +XFS_MD2_COMPAT_FULLBLOCKS+ |
-> +Full blocks have been dumped.
-
-"Full metadata blocks have been dumped.  Without this flag, unused areas
-of metadata blocks are zeroed."
-
-> +
-> +| +XFS_MD2_COMPAT_DIRTYLOG+ |
-> +Log was dirty.
-> +
-> +| +XFS_MD2_COMPAT_EXTERNALLOG+ |
-> +Metadata dump contains contents from an external log.
-> +|=====
-> +
-> +*xmh_incompat_flags*::
-> +Incompat flags describing a metadata dump. At present, this field must
-> +be set to zero.
-> +
-> +*xmh_reserved*::
-> +Reserved. Should be zero.
-> +
-> +The header is followed by an alternating sequence of +struct
-> +xfs_meta_extent+ and the contents from the corresponding variable
-> +length extent.
-> +
-> +[source, c]
-> +----
-> +struct xfs_meta_extent {
-> +	__be64 xme_addr;
-> +        __be32 xme_len;
-
-Inconsistent indenting here too.
-
-> +} __packed;
-> +----
-> +*xme_addr*::
-> +
-> +
-> +The lowest 54 bits are used to store 512 byte disk addresses of a
-> +metadata extent . The next 2 bits are used for indicating the device.
-
-                  ^ no space here.
-
-"The lower 54 bits are used to store the disk address of a metadata dump
-extent.  The next 2 bits..."
-
-> +. 00 - Data device
-> +. 01 - External log
-> +
-> +*xme_len*::
-> +Length of the Metadata in units of 512 byte blocks.
-
-"Length of the metadata dump extent in units of 512 byte blocks."
-
-(Hey, uh, who's the xfs documentation maintainer?  Is it still me?)
-
---D
-
-> +
->  == Dump Obfuscation
+> diff --git a/fs/verity/init.c b/fs/verity/init.c
+> index a29f062f6047..e31045dd4f6c 100644
+> --- a/fs/verity/init.c
+> +++ b/fs/verity/init.c
+> @@ -13,7 +13,6 @@
+>  static struct ctl_table_header *fsverity_sysctl_header;
 >  
->  Unless explicitly disabled, the +xfs_metadump+ tool obfuscates empty block
-> -- 
-> 2.39.1
-> 
+>  static struct ctl_table fsverity_sysctl_table[] = {
+> -#ifdef CONFIG_FS_VERITY_BUILTIN_SIGNATURES
+>  	{
+>  		.procname       = "require_signatures",
+>  		.data           = &fsverity_require_signatures,
+> @@ -23,14 +22,17 @@ static struct ctl_table fsverity_sysctl_table[] = {
+>  		.extra1         = SYSCTL_ZERO,
+>  		.extra2         = SYSCTL_ONE,
+>  	},
+> -#endif
+> -	{ }
+>  };
+>  
+>  static void __init fsverity_init_sysctl(void)
+>  {
+> +#ifdef CONFIG_FS_VERITY_BUILTIN_SIGNATURES
+>  	fsverity_sysctl_header = register_sysctl("fs/verity",
+>  						 fsverity_sysctl_table);
+> +#else
+> +	fsverity_sysctl_header = register_sysctl_sz("fs/verity",
+> +						 fsverity_sysctl_table, 0);
+> +#endif
+>  	if (!fsverity_sysctl_header)
+>  		panic("fsverity sysctl registration failed");
+
+This does not make sense, and it causes a build error when CONFIG_FS_VERITY=y
+and CONFIG_FS_VERITY_BUILTIN_SIGNATURES=n.
+
+I think all you need to do is delete the sentinel element, the same as
+everywhere else.  I just tested it, and it works fine.
+
+BTW, the comments for register_sysctl_sz() and __register_sysctl_table() are
+outdated, as they still say "A completely 0 filled entry terminates the table."
+
+- Eric
