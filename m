@@ -2,73 +2,54 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4B469C4332F
-	for <linux-xfs@archiver.kernel.org>; Thu,  9 Nov 2023 16:02:40 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4E004C4167D
+	for <linux-xfs@archiver.kernel.org>; Thu,  9 Nov 2023 16:03:54 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234298AbjKIQCl (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 9 Nov 2023 11:02:41 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36832 "EHLO
+        id S234513AbjKIQDz (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 9 Nov 2023 11:03:55 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51306 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229925AbjKIQCk (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 9 Nov 2023 11:02:40 -0500
-Received: from bombadil.infradead.org (bombadil.infradead.org [IPv6:2607:7c80:54:3::133])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id CEAC6270C
-        for <linux-xfs@vger.kernel.org>; Thu,  9 Nov 2023 08:02:38 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=infradead.org; s=bombadil.20210309; h=Content-Transfer-Encoding:
-        MIME-Version:Message-Id:Date:Subject:To:From:Sender:Reply-To:Cc:Content-Type:
-        Content-ID:Content-Description:In-Reply-To:References;
-        bh=vxEmhkCrloBY2wcx2bCLPSH3+BqqaEFxPl7KYIyAkcE=; b=Zh3cdE0lB/trvSqDaCrlcZyZsd
-        h74MIlEkxXrLcVEI6UneKs/K4GJK6DOjfvFPByQLLgYNFIloA+c6k/5sFsE4vmjFltEZMvCcLWbTA
-        hYrDz/Zfu+ZdK8dPFH1zNtvhlG+pMa2BtzObK7FgFAXyLxgnfW9Xe5BqtoCvHFxU2FG2Sm3zxoH3o
-        cY1yjCqJ7lRXNbdS4eOgPcZIfg5dU210vgkM73LdvaUu0Ni9ARNVuSXC5KwYpYF9j7uFfAnIwDlf6
-        7rHMW+ITSnZDGYtrKbIgOsZPwSLudHwQq3GJBwqO9tShzqFSURZugpwPDoid0AuddcSuT9yQB36Q/
-        OmQYKBNQ==;
-Received: from 2a02-8389-2341-5b80-39d3-4735-9a3c-88d8.cable.dynamic.v6.surfer.at ([2a02:8389:2341:5b80:39d3:4735:9a3c:88d8] helo=localhost)
-        by bombadil.infradead.org with esmtpsa (Exim 4.96 #2 (Red Hat Linux))
-        id 1r17UM-006g2v-0r
-        for linux-xfs@vger.kernel.org;
-        Thu, 09 Nov 2023 16:02:38 +0000
+        with ESMTP id S234728AbjKIPsq (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 9 Nov 2023 10:48:46 -0500
+Received: from verein.lst.de (verein.lst.de [213.95.11.211])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 957EF4EF2;
+        Thu,  9 Nov 2023 07:46:26 -0800 (PST)
+Received: by verein.lst.de (Postfix, from userid 2407)
+        id EB3BF68AA6; Thu,  9 Nov 2023 16:46:19 +0100 (CET)
+Date:   Thu, 9 Nov 2023 16:46:19 +0100
 From:   Christoph Hellwig <hch@lst.de>
-To:     linux-xfs@vger.kernel.org
-Subject: [PATCH] repair: fix the call to search_rt_dup_extent in scan_bmapbt
-Date:   Thu,  9 Nov 2023 17:02:33 +0100
-Message-Id: <20231109160233.703566-1-hch@lst.de>
-X-Mailer: git-send-email 2.39.2
+To:     Matthew Wilcox <willy@infradead.org>
+Cc:     Christoph Hellwig <hch@lst.de>,
+        John Garry <john.g.garry@oracle.com>, axboe@kernel.dk,
+        kbusch@kernel.org, sagi@grimberg.me, jejb@linux.ibm.com,
+        martin.petersen@oracle.com, djwong@kernel.org,
+        viro@zeniv.linux.org.uk, brauner@kernel.org,
+        chandan.babu@oracle.com, dchinner@redhat.com,
+        linux-block@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-nvme@lists.infradead.org, linux-xfs@vger.kernel.org,
+        linux-fsdevel@vger.kernel.org, tytso@mit.edu, jbongio@google.com,
+        linux-api@vger.kernel.org, Alan Adamson <alan.adamson@oracle.com>
+Subject: Re: [PATCH 21/21] nvme: Support atomic writes
+Message-ID: <20231109154619.GA3491@lst.de>
+References: <20230929102726.2985188-1-john.g.garry@oracle.com> <20230929102726.2985188-22-john.g.garry@oracle.com> <20231109153603.GA2188@lst.de> <ZUz98KriiLsM8oQd@casper.infradead.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <ZUz98KriiLsM8oQd@casper.infradead.org>
+User-Agent: Mutt/1.5.17 (2007-11-01)
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-search_rt_dup_extent expects an RT extent number and not a fsbno.
-Convert the units before the call.  Without this we are unlikely
-to ever found a legit duplicate extent on the RT subvolume because
-the search will always be off the end.
+On Thu, Nov 09, 2023 at 03:42:40PM +0000, Matthew Wilcox wrote:
+> That wasn't the model we had in mind.  In our thinking, it was fine to
+> send a write that crossed the atomic write limit, but the drive wouldn't
+> guarantee that it was atomic except at the atomic write boundary.
+> Eg with an AWUN of 16kB, you could send five 16kB writes, combine them
+> into a single 80kB write, and if the power failed midway through, the
+> drive would guarantee that it had written 0, 16kB, 32kB, 48kB, 64kB or
+> all 80kB.  Not necessarily in order; it might have written bytes 16-32kB,
+> 64-80kB and not the other three.
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
----
- repair/scan.c | 6 ++++--
- 1 file changed, 4 insertions(+), 2 deletions(-)
-
-diff --git a/repair/scan.c b/repair/scan.c
-index 27a33286a..7a0587615 100644
---- a/repair/scan.c
-+++ b/repair/scan.c
-@@ -402,8 +402,10 @@ _("bad state %d, inode %" PRIu64 " bmap block 0x%" PRIx64 "\n"),
- 					XFS_FSB_TO_AGBNO(mp, bno) + 1))
- 				return(1);
- 		} else  {
--			if (search_rt_dup_extent(mp, bno))
--				return(1);
-+			xfs_rtblock_t	ext = bno / mp->m_sb.sb_rextsize;
-+
-+			if (search_rt_dup_extent(mp, ext))
-+				return 1;
- 		}
- 	}
- 	(*tot)++;
--- 
-2.39.2
-
+I can see some use for that, but I'm really worried that debugging
+problems in the I/O merging and splitting will be absolute hell.
