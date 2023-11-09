@@ -2,73 +2,67 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E3F6EC4332F
-	for <linux-xfs@archiver.kernel.org>; Thu,  9 Nov 2023 07:40:33 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id DDB52C4332F
+	for <linux-xfs@archiver.kernel.org>; Thu,  9 Nov 2023 12:49:57 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233391AbjKIHke (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 9 Nov 2023 02:40:34 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50068 "EHLO
+        id S230055AbjKIMt7 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 9 Nov 2023 07:49:59 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55398 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233638AbjKIHkO (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 9 Nov 2023 02:40:14 -0500
+        with ESMTP id S230006AbjKIMt6 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 9 Nov 2023 07:49:58 -0500
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id F219A2D69
-        for <linux-xfs@vger.kernel.org>; Wed,  8 Nov 2023 23:39:46 -0800 (PST)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 5683BC433C8;
-        Thu,  9 Nov 2023 07:39:46 +0000 (UTC)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 82E2E210A
+        for <linux-xfs@vger.kernel.org>; Thu,  9 Nov 2023 04:49:56 -0800 (PST)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 96575C433C7;
+        Thu,  9 Nov 2023 12:49:55 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1699515586;
-        bh=VlSIsIgqyWIBkdurEt7sHqt+bxDyaPIL6Ehg14Nv8EE=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=l0iDPaVwOPkiUAMuAF76Caf6nQ2TSirlXjCU+GVDKr4ppi4lb3ovbJCcrhNkpEpJc
-         rAkadLtTwPdR3ODwh9m1DoiJpciTp7OUFwzhdr9HbRcLLqMoZQh7T+1I/XrGlJcP7d
-         YW9V+m/GvB08pZZKhf4rZvVvR2BHPD4/NvB/1a3+czxRDkR6+4w10y9dUIZ4i5QM87
-         ThFnfyH7hI9USvUK4S9ciFDSOAZiQ7JDaw2bmkuREZxjS1aF1JtBsn2WVHvCsljGoI
-         CCuTeoFZi6FFVF0kSvKe/b/k1LN0o6I6u6a7qW4nHC3WYkWSvFOWRO5Nxpi5gk2Eav
-         8h50eh6G9QU0w==
-Date:   Wed, 8 Nov 2023 23:39:45 -0800
-From:   "Darrick J. Wong" <djwong@kernel.org>
-To:     Christoph Hellwig <hch@lst.de>
-Cc:     Linus Torvalds <torvalds@linux-foundation.org>,
-        Chandan Babu R <chandanbabu@kernel.org>,
-        Jeff Layton <jlayton@kernel.org>,
-        Christian Brauner <brauner@kernel.org>,
-        catherine.hoang@oracle.com, cheng.lin130@zte.com.cn,
-        dchinner@redhat.com, linux-fsdevel@vger.kernel.org,
-        linux-xfs@vger.kernel.org, osandov@fb.com
-Subject: Re: [GIT PULL] xfs: new code for 6.7
-Message-ID: <20231109073945.GE1205143@frogsfrogsfrogs>
-References: <87fs1g1rac.fsf@debian-BULLSEYE-live-builder-AMD64>
- <CAHk-=wj3oM3d-Hw2vvxys3KCZ9De+gBN7Gxr2jf96OTisL9udw@mail.gmail.com>
- <20231108225200.GY1205143@frogsfrogsfrogs>
- <20231109045150.GB28458@lst.de>
+        s=k20201202; t=1699534196;
+        bh=1pZ3DNVFXVL9gVc/r6PoKA+oXpMcVK5rp+lnUX4ReAw=;
+        h=References:From:To:Cc:Subject:Date:In-reply-to:From;
+        b=cDYX9ydABot5ppPERyq8xE0H7qhEyDW4q7/Bwpdjx3Hk66PjqLeskS2LgF+fjuWt6
+         kyCaG6PN5Pnm62kQ1QQYgZmEON8F9p9ErOukhEmkephnQfu8GGv5wksdA9jfsRAeGR
+         pGZ+kFpPHo6QlY+Nqi9rJoUmn1eP/bjn++cPuyfLY7RzrnkWo17hfbeSGt/XxHD0RL
+         MkUlQwyACCfMLNThAxhZpu53bL7aL6CBG3RWMl0I7qENRUw3RbitbLaQYNKBmD+y0Z
+         zpJJUm0qyUjh9vetw9Uzna59NnEmApXlyVqEBvKWuvykdO/K0qVt2D/1lBS2K7MUke
+         N0FM5sLIgtdgQ==
+References: <20230731124619.3925403-1-leo.lilong@huawei.com>
+ <20231107133607.GA560725@ceph-admin>
+User-agent: mu4e 1.8.10; emacs 27.1
+From:   Chandan Babu R <chandanbabu@kernel.org>
+To:     Long Li <leo.lilong@huaweicloud.com>
+Cc:     linux-xfs@vger.kernel.org, yi.zhang@huawei.com, houtao1@huawei.com,
+        yangerkun@huawei.com, djwong@kernel.org, david@fromorbit.com
+Subject: Re: [PATCH v3 0/3] xfs: fix two problem when recovery intents fails
+Date:   Thu, 09 Nov 2023 18:18:48 +0530
+In-reply-to: <20231107133607.GA560725@ceph-admin>
+Message-ID: <87jzqr9jm8.fsf@debian-BULLSEYE-live-builder-AMD64>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20231109045150.GB28458@lst.de>
+Content-Type: text/plain
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Thu, Nov 09, 2023 at 05:51:50AM +0100, Christoph Hellwig wrote:
-> On Wed, Nov 08, 2023 at 02:52:00PM -0800, Darrick J. Wong wrote:
-> > > Also, xfs people may obviously have other preferences for how to deal
-> > > with the whole "now using tv_sec in the VFS inode as a 64-bit sequence
-> > > number" thing, and maybe you prefer to then update my fix to this all.
-> > > But that horrid casts certainly wasn't the right way to do it.
-> > 
-> > Yeah, I can work on that for the rt modernization patchset.
-> 
-> As someone who has just written some new code stealing this trick I
-> actually have a todo list item to make this less horrible as the cast
-> upset my stomache.  But shame on me for not actually noticing that it
-> is buggy as well (which honestly should be the standard assumption for
-> casts like this).
+On Tue, Nov 07, 2023 at 09:36:07 PM +0800, Long Li wrote:
+> On Mon, Jul 31, 2023 at 08:46:16PM +0800, Long Li wrote:
+>> This patch set fix two problem when recovery intents fails.
+>> 
+>> Patches 1-2 fix the possible problem that intent items not released.
+>> When recovery intents, new intents items may be created during recovery
+>> intents. if recovery fails, new intents items may be left in AIL or
+>> leaks.
+>
+> Hi Chandan,
+> 	
+> In this patchset, patches 1-2 [1][2] have already been reviewed by Darrick,
+> and are not related to patch 3, is it possible to merge patches 1-2 in first?? 	
+> Patch 3 seems still has a lot of work to do.
+>
+> [1] https://patchwork.kernel.org/project/xfs/patch/20230715063647.2094989-2-leo.lilong@huawei.com/
+> [2] https://patchwork.kernel.org/project/xfs/patch/20230715063647.2094989-3-leo.lilong@huawei.com/
+>
 
-Dave and I started looking at this too, and came up with: For rtgroups
-filesystems, what if rtpick simply rotored the rtgroups?  And what if we
-didn't bother persisting the rotor value, which would make this casting
-nightmare go away in the long run.  It's not like we persist the agi
-rotors.
+Sure, I will queue the first two patches for 6.7-rc2. Thanks for notifying me.
 
---D
+-- 
+Chandan
