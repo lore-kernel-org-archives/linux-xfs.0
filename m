@@ -2,68 +2,84 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 917B2C4332F
-	for <linux-xfs@archiver.kernel.org>; Thu,  9 Nov 2023 00:32:59 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D8C6FC4332F
+	for <linux-xfs@archiver.kernel.org>; Thu,  9 Nov 2023 00:50:25 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229473AbjKIAdA (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 8 Nov 2023 19:33:00 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58434 "EHLO
+        id S230439AbjKIAu1 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 8 Nov 2023 19:50:27 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36934 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229565AbjKIAc7 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 8 Nov 2023 19:32:59 -0500
+        with ESMTP id S229565AbjKIAu0 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 8 Nov 2023 19:50:26 -0500
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8F2EF268F
-        for <linux-xfs@vger.kernel.org>; Wed,  8 Nov 2023 16:32:57 -0800 (PST)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 025C3C433C8;
-        Thu,  9 Nov 2023 00:32:56 +0000 (UTC)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4CC471990
+        for <linux-xfs@vger.kernel.org>; Wed,  8 Nov 2023 16:50:24 -0800 (PST)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id DAAF3C433C8;
+        Thu,  9 Nov 2023 00:50:23 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1699489977;
-        bh=bfI2AqMi7I334jy8o/whK4gnJeGP27NZJzFjZ9ZL/vo=;
+        s=k20201202; t=1699491023;
+        bh=a1Zj7j8F68LiLGMlmISWvq4JS6TcNxNlSF2oJ1Dqa5k=;
         h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=MsAQY0zrk3mnM2zyXlzvMJheKztyNC6epkO1KAN+udHlg91DmkLTGz5Frt0s0Ovie
-         flAjgCiNb040UFuQMg03V7crkzbULb3FSpFYL/F01AkPcUgl7fnkn1qMQTQoYlXmEB
-         ciP2IRbD4Pbof7EVQu1gdiLXpYWzJjoL5X+KvdIsX45qaKXt2ff6FcQp3T/ITZ5xTe
-         WlwoKeJ8pe5LCYWzy7Ra4dhPhlo6aagsghPvxNAN0+HVAL2q5XFRbgwFGIyxpPI6Ce
-         o6NSJGYkuBSDOmERdg6iDf935VEI73buzu/fjReN0GusnPgAojdGwuQofeCZhPpPiP
-         5vplHmXEFfY1w==
-Date:   Wed, 8 Nov 2023 16:32:56 -0800
+        b=qPVS7JNNDfWiBl5NyLlWZdYNDnfUxgUpWKLQBsWwSXGw3uj/VX/75XgWy970fI/g6
+         nH8URicY7gzDKA2mqkNf0gvu7zpR1sJ9bWjfzK7CPOQNzeJiuesrKUeTjmUkxeZ4pN
+         XDZD6meh+zGeYwjQKsC4uVp1AD2SUiOIBhswjvi0MAh4jyuIVEYvZ0tO5fxxhzoynY
+         ryWhePsKye3OCIR4IRLkyy6IOCrZTTd9q3j3IlqknOEAJdvAHE2RQ8DeC1a19rQlwL
+         bDbvFYelVSjupaXeqZEHhhrl9BvAr7dtdkT9IPkJ4JikqQ4N+Tq+N2S1ANe2/3fLyA
+         Er2yLrCjBDQ2Q==
+Date:   Wed, 8 Nov 2023 16:50:23 -0800
 From:   "Darrick J. Wong" <djwong@kernel.org>
 To:     Christoph Hellwig <hch@infradead.org>
 Cc:     cem@kernel.org, linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 3/5] xfs_scrub: tighten up the security on the background
- systemd service
-Message-ID: <20231109003256.GA1205143@frogsfrogsfrogs>
+Subject: Re: [PATCH 1/5] xfs_scrub: allow auxiliary pathnames for sandboxing
+Message-ID: <20231109005023.GB1205143@frogsfrogsfrogs>
 References: <168506074508.3746099.18021671464566915249.stgit@frogsfrogsfrogs>
- <168506074549.3746099.6129822996056625257.stgit@frogsfrogsfrogs>
- <ZUn60XdaxeY4+1I8@infradead.org>
+ <168506074522.3746099.11941443473290571582.stgit@frogsfrogsfrogs>
+ <ZUn55/68v2VfQHCX@infradead.org>
+ <20231107183511.GN1205143@frogsfrogsfrogs>
+ <ZUs3Lex9NS55gXy3@infradead.org>
+ <20231108074406.GL1758611@frogsfrogsfrogs>
+ <ZUs9dh6Eft0rWrul@infradead.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <ZUn60XdaxeY4+1I8@infradead.org>
+In-Reply-To: <ZUs9dh6Eft0rWrul@infradead.org>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Tue, Nov 07, 2023 at 12:52:33AM -0800, Christoph Hellwig wrote:
-> On Thu, May 25, 2023 at 06:55:34PM -0700, Darrick J. Wong wrote:
-> > From: Darrick J. Wong <djwong@kernel.org>
+On Tue, Nov 07, 2023 at 11:49:10PM -0800, Christoph Hellwig wrote:
+> On Tue, Nov 07, 2023 at 11:44:06PM -0800, Darrick J. Wong wrote:
+> > > So if you make the pretty print mount point a new variable and pass
+> > > that first this would become say:
+> > > 
+> > > 	xfs_scrub -p /home -b /tmp/scrub
+> > > 
+> > > ad should still be fine.  OR am I missing something?
 > > 
-> > Currently, xfs_scrub has to run with some elevated privileges.  Minimize
-> > the risk of xfs_scrub escaping its service container or contaminating
-> > the rest of the system by using systemd's sandboxing controls to
-> > prohibit as much access as possible.
+> > Nope, you're not missing anything.  I could have implemented it as
+> > another CLI switch and gotten the same result.  The appearance of
+> > "/tmp/scrub" in comm is a bit ugly, but I'm not all that invested in
+> > avoiding that.
+> 
+> So I'd definitively prefer that.  With the existing option remaining
+> the one it operates on, and the new designating the pretty printing.
+> 
+> > > But scrub has by definition full access to the fs as it's scrubbing
+> > > that.  But I guess that access is in the kernel code, which we trust
+> > > more than the user space code?
 > > 
-> > The directives added by this patch were recommended by the command
-> > 'systemd-analyze security xfs_scrub@.service' in systemd 249.
+> > Yep.  Scrub runs with CAP_SYS_RAWIO, but I want to make it at least a
+> > little harder for people who specialize in weird ld exploits and the
+> > like. :)
 > 
-> All the additional lockdowns look good:
-> 
-> Reviewed-by: Christoph Hellwig <hch@lst.de>
-> 
-> Maybe you can split the dynamic user change out as a small standalone
-> fix, though?
+> Yes.  It's also good for the other reason you pointed out.
 
-I'll do that, and credit the person who asked us to do that.  Thanks for
-the review, systemd directives are overwhelming. :)
+LOL, and I even forgot that the original version of this patch actually
+did it with '-A /tmp/scrub/'.  Well, good on the commit message for
+reminding me of that.  So,
+
+	SERVICE_MODE=1 xfs_scrub -b -M /tmp/scrub/ /home/
+
+it is, then.
 
 --D
