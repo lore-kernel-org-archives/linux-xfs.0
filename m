@@ -2,170 +2,131 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D72EEC4167D
-	for <linux-xfs@archiver.kernel.org>; Thu,  9 Nov 2023 21:53:48 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5B92CC4332F
+	for <linux-xfs@archiver.kernel.org>; Thu,  9 Nov 2023 22:05:54 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230150AbjKIVxt (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 9 Nov 2023 16:53:49 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45052 "EHLO
+        id S230107AbjKIWFy (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 9 Nov 2023 17:05:54 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56692 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S234657AbjKIVxq (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 9 Nov 2023 16:53:46 -0500
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 13D894680
-        for <linux-xfs@vger.kernel.org>; Thu,  9 Nov 2023 13:52:52 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1699566771;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=Ooj0huzmXViB3IPA+8ZsWf/tvcP9vcxEUy2C65Cs8hg=;
-        b=I7njR+5VaSGAzjJKJG/tRQdCd+Vy6IlZzOaXnHS7TcA/N14Y6l0Iw/0U/5TrlowBXZcyDX
-        tvh0l4sxjL2sCegLJ4ikGAf20wlxJnLKwTmbf++ZFY4eCbfT12TvBe4eIcSvQGZFFpBel9
-        ntXSxo/riwSxOgiQCX/86jmq0fGyP1k=
-Received: from mail-pl1-f200.google.com (mail-pl1-f200.google.com
- [209.85.214.200]) by relay.mimecast.com with ESMTP with STARTTLS
- (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
- us-mta-428-pTM2j2tROty8AybJr9AAwA-1; Thu, 09 Nov 2023 16:52:50 -0500
-X-MC-Unique: pTM2j2tROty8AybJr9AAwA-1
-Received: by mail-pl1-f200.google.com with SMTP id d9443c01a7336-1cc5ac304e8so13433505ad.1
-        for <linux-xfs@vger.kernel.org>; Thu, 09 Nov 2023 13:52:49 -0800 (PST)
+        with ESMTP id S229629AbjKIWFy (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 9 Nov 2023 17:05:54 -0500
+Received: from mail-pg1-x535.google.com (mail-pg1-x535.google.com [IPv6:2607:f8b0:4864:20::535])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 30F2F3ABF
+        for <linux-xfs@vger.kernel.org>; Thu,  9 Nov 2023 14:05:52 -0800 (PST)
+Received: by mail-pg1-x535.google.com with SMTP id 41be03b00d2f7-5bd306f86a8so1140895a12.0
+        for <linux-xfs@vger.kernel.org>; Thu, 09 Nov 2023 14:05:52 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=fromorbit-com.20230601.gappssmtp.com; s=20230601; t=1699567551; x=1700172351; darn=vger.kernel.org;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
+        bh=YYzy64d1NITtT78icmadImLgpfBYJU9cucbwTdDu3zE=;
+        b=tM0yVDYO7Y+qXe6+kgkIzW4y8KluvVLudZp4aRCMuuLuDBYJ1av0432VoXL3Qt8G3C
+         RMHDIpA3ljQfvJc8AERN9tZ/7kR6ORlJf1c+AHuGNPHwuB6qzsdCPe57KDnGFGo/FIxW
+         eJ2Hq9ofcHlDAK8OLpTcgtcYsnjKeknIi6bZH5dU7nrzK5gj1D9NikvkRyEDuqSOwWxq
+         k21ux7C+lOLVJSOArSFLo6f4uKTznrmHmNAWlU5Yu1Wr8+JokKDKh0ACQzL/3eR27IA6
+         j4E+golEucHae292bcDnlxqKi6YBHRZZFiFu8QZJMeKbQcGgNafA4FbTA6A+kvvDmKMG
+         znlA==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1699566769; x=1700171569;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=Ooj0huzmXViB3IPA+8ZsWf/tvcP9vcxEUy2C65Cs8hg=;
-        b=euYVn9DSqH3aM49us1g0SZ2A2bhoCocqwI2GBydEo2D6vdU/44DGVTz3BpT4ebnzng
-         bAepFAImBy4EYYBoin4zxhJNhbYpIVAVWiO8S8PPi8w30IOL0uBogR/wOlcBZYlN5+ee
-         Ktv9JNEXu/6lIU+ZjDlxjGV7ktHiOkG4y1J3pTryicniQOQKtMuoohvVhqesh7Mo+hP7
-         C+LUPui4JGpLV8rGzjVOGzUIeWWZDODw75GudoYUmzYInNJF5Ed5QFwAFkfuPpgHuQvH
-         p6kY6cWzrMEbXNMgEe4GFUHdRLh202PFhxeBbYAhMFspJKm2P6f5G5ls9GaV7FrlqMhx
-         JUlw==
-X-Gm-Message-State: AOJu0Yy7AcJK3PdkmGhNGOTGrtzmgZxa8khSxxqJSXcb21Hrclb7rmga
-        sucCGLFxR7+t5uRKdY8cf4NyEvtjeQ6qFyFirTpdpuujyFVdx8i/2+jb8mPVSwfpbL1R3OQsAFp
-        ww7MHRZFhrkgseC0QtEDLZ23efndLr+xkhzc8
-X-Received: by 2002:a17:902:d2cf:b0:1cc:42b1:934b with SMTP id n15-20020a170902d2cf00b001cc42b1934bmr6973374plc.18.1699566769073;
-        Thu, 09 Nov 2023 13:52:49 -0800 (PST)
-X-Google-Smtp-Source: AGHT+IE2w5kiS+35bQf1w6M0QjE1cVW4EjHgMurxmQucKCpYNIosx46laiJfbx3QyQx2atURPUqY64X628qUAuI/IrU=
-X-Received: by 2002:a17:902:d2cf:b0:1cc:42b1:934b with SMTP id
- n15-20020a170902d2cf00b001cc42b1934bmr6973354plc.18.1699566768767; Thu, 09
- Nov 2023 13:52:48 -0800 (PST)
+        d=1e100.net; s=20230601; t=1699567551; x=1700172351;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=YYzy64d1NITtT78icmadImLgpfBYJU9cucbwTdDu3zE=;
+        b=cByUf1VnGsoNA9Urwkv73U2FZZRvniKnIgdTpcopcE5Y788wLZ5FE4q9+eRETIheNS
+         kz6/jbiWlbSMviIfaWmdsErzNXIIgZmHm1Mt7iRrMTziuYLgadm3AAjHwd8dBf29T1RN
+         JCyPmNMBH/Llg8fCfsCspdHeNZixqdjlbUh4K2nOAf1rVTq38Ac6bdsG91KBklHc+BJm
+         T6ahfVRvfv8KGFxajpMKqwqfEz550gQPaVzHLPFnJtrzOMGyBAo7ezaesY5hxVqWPlyn
+         h4C+Dh6ursilXkOR16YcPiydERrtmxHaizw8tV3WXM+rGXFWxpIjse7m6iv40MH43KsZ
+         h+Kg==
+X-Gm-Message-State: AOJu0YxN753Kn17d3uVK1/tcK++KJYJPRenWmv1I7VflrB+9w62LgiW/
+        MjHQKbeTzw/riqh5K7C53MSrPw==
+X-Google-Smtp-Source: AGHT+IG5YvRraybhEJbqF6C3jRMHU08k2oZwK/+NKj8+VF4oFdeBKPKcLUhXfc64ztrBxed94etEJQ==
+X-Received: by 2002:a05:6a20:440b:b0:185:aaf5:c034 with SMTP id ce11-20020a056a20440b00b00185aaf5c034mr304993pzb.60.1699567551628;
+        Thu, 09 Nov 2023 14:05:51 -0800 (PST)
+Received: from dread.disaster.area (pa49-180-125-5.pa.nsw.optusnet.com.au. [49.180.125.5])
+        by smtp.gmail.com with ESMTPSA id v10-20020a62c30a000000b00692cb1224casm11665474pfg.183.2023.11.09.14.05.50
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Thu, 09 Nov 2023 14:05:50 -0800 (PST)
+Received: from dave by dread.disaster.area with local (Exim 4.96)
+        (envelope-from <david@fromorbit.com>)
+        id 1r1D9o-00AUQz-03;
+        Fri, 10 Nov 2023 09:05:48 +1100
+Date:   Fri, 10 Nov 2023 09:05:48 +1100
+From:   Dave Chinner <david@fromorbit.com>
+To:     "Darrick J. Wong" <djwong@kernel.org>
+Cc:     Christoph Hellwig <hch@lst.de>,
+        Linus Torvalds <torvalds@linux-foundation.org>,
+        Chandan Babu R <chandanbabu@kernel.org>,
+        Jeff Layton <jlayton@kernel.org>,
+        Christian Brauner <brauner@kernel.org>,
+        catherine.hoang@oracle.com, cheng.lin130@zte.com.cn,
+        dchinner@redhat.com, linux-fsdevel@vger.kernel.org,
+        linux-xfs@vger.kernel.org, osandov@fb.com
+Subject: Re: [GIT PULL] xfs: new code for 6.7
+Message-ID: <ZU1XvBwugPhhQ93S@dread.disaster.area>
+References: <87fs1g1rac.fsf@debian-BULLSEYE-live-builder-AMD64>
+ <CAHk-=wj3oM3d-Hw2vvxys3KCZ9De+gBN7Gxr2jf96OTisL9udw@mail.gmail.com>
+ <20231108225200.GY1205143@frogsfrogsfrogs>
+ <20231109045150.GB28458@lst.de>
+ <20231109073945.GE1205143@frogsfrogsfrogs>
 MIME-Version: 1.0
-References: <20231107212643.3490372-1-willy@infradead.org> <20231107212643.3490372-4-willy@infradead.org>
-In-Reply-To: <20231107212643.3490372-4-willy@infradead.org>
-From:   Andreas Gruenbacher <agruenba@redhat.com>
-Date:   Thu, 9 Nov 2023 22:52:37 +0100
-Message-ID: <CAHc6FU6-a5Xf1Zesj0Y9udXLaxg5nnK5t9GPxA_b5PHNU8brvw@mail.gmail.com>
-Subject: Re: [PATCH 3/3] gfs2: Convert stuffed_readpage() to stuffed_read_folio()
-To:     "Matthew Wilcox (Oracle)" <willy@infradead.org>
-Cc:     Andrew Morton <akpm@linux-foundation.org>,
-        linux-ext4@vger.kernel.org, gfs2@lists.linux.dev,
-        linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org,
-        "Darrick J . Wong" <djwong@kernel.org>,
-        linux-erofs@lists.ozlabs.org, "Theodore Ts'o" <tytso@mit.edu>,
-        Andreas Dilger <adilger.kernel@dilger.ca>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20231109073945.GE1205143@frogsfrogsfrogs>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Tue, Nov 7, 2023 at 10:27=E2=80=AFPM Matthew Wilcox (Oracle)
-<willy@infradead.org> wrote:
-> Use folio_fill_tail() to implement the unstuffing and folio_end_read()
-> to simultaneously mark the folio uptodate and unlock it.  Unifies a
-> couple of code paths.
->
-> Signed-off-by: Matthew Wilcox (Oracle) <willy@infradead.org>
-> ---
->  fs/gfs2/aops.c | 37 +++++++++++++++++--------------------
->  1 file changed, 17 insertions(+), 20 deletions(-)
->
-> diff --git a/fs/gfs2/aops.c b/fs/gfs2/aops.c
-> index 9611bfceda4b..ba8742dc91f8 100644
-> --- a/fs/gfs2/aops.c
-> +++ b/fs/gfs2/aops.c
-> @@ -403,18 +403,18 @@ static int gfs2_jdata_writepages(struct address_spa=
-ce *mapping,
->  }
->
->  /**
-> - * stuffed_readpage - Fill in a Linux folio with stuffed file data
-> + * stuffed_read_folio - Fill in a Linux folio with stuffed file data
->   * @ip: the inode
->   * @folio: the folio
->   *
->   * Returns: errno
->   */
-> -static int stuffed_readpage(struct gfs2_inode *ip, struct folio *folio)
-> +static int stuffed_read_folio(struct gfs2_inode *ip, struct folio *folio=
-)
->  {
-> -       struct buffer_head *dibh;
-> -       size_t i_size =3D i_size_read(&ip->i_inode);
-> -       void *data;
-> -       int error;
-> +       struct buffer_head *dibh =3D NULL;
-> +       size_t dsize =3D i_size_read(&ip->i_inode);
-> +       void *from =3D NULL;
-> +       int error =3D 0;
->
->         /*
->          * Due to the order of unstuffing files and ->fault(), we can be
-> @@ -422,22 +422,20 @@ static int stuffed_readpage(struct gfs2_inode *ip, =
-struct folio *folio)
->          * so we need to supply one here. It doesn't happen often.
->          */
->         if (unlikely(folio->index)) {
-> -               folio_zero_range(folio, 0, folio_size(folio));
-> -               folio_mark_uptodate(folio);
-> -               return 0;
-> +               dsize =3D 0;
-> +       } else {
-> +               error =3D gfs2_meta_inode_buffer(ip, &dibh);
-> +               if (error)
-> +                       goto out;
-> +               from =3D dibh->b_data + sizeof(struct gfs2_dinode);
->         }
->
-> -       error =3D gfs2_meta_inode_buffer(ip, &dibh);
-> -       if (error)
-> -               return error;
-> -
-> -       data =3D dibh->b_data + sizeof(struct gfs2_dinode);
-> -       memcpy_to_folio(folio, 0, data, i_size);
-> -       folio_zero_range(folio, i_size, folio_size(folio) - i_size);
-> +       folio_fill_tail(folio, 0, from, dsize);
->         brelse(dibh);
-> -       folio_mark_uptodate(folio);
-> +out:
-> +       folio_end_read(folio, error =3D=3D 0);
->
-> -       return 0;
-> +       return error;
->  }
->
->  /**
-> @@ -456,8 +454,7 @@ static int gfs2_read_folio(struct file *file, struct =
-folio *folio)
->             (i_blocksize(inode) =3D=3D PAGE_SIZE && !folio_buffers(folio)=
-)) {
->                 error =3D iomap_read_folio(folio, &gfs2_iomap_ops);
->         } else if (gfs2_is_stuffed(ip)) {
-> -               error =3D stuffed_readpage(ip, folio);
-> -               folio_unlock(folio);
-> +               error =3D stuffed_read_folio(ip, folio);
->         } else {
->                 error =3D mpage_read_folio(folio, gfs2_block_map);
->         }
-> --
-> 2.42.0
->
+On Wed, Nov 08, 2023 at 11:39:45PM -0800, Darrick J. Wong wrote:
+> On Thu, Nov 09, 2023 at 05:51:50AM +0100, Christoph Hellwig wrote:
+> > On Wed, Nov 08, 2023 at 02:52:00PM -0800, Darrick J. Wong wrote:
+> > > > Also, xfs people may obviously have other preferences for how to deal
+> > > > with the whole "now using tv_sec in the VFS inode as a 64-bit sequence
+> > > > number" thing, and maybe you prefer to then update my fix to this all.
+> > > > But that horrid casts certainly wasn't the right way to do it.
+> > > 
+> > > Yeah, I can work on that for the rt modernization patchset.
+> > 
+> > As someone who has just written some new code stealing this trick I
+> > actually have a todo list item to make this less horrible as the cast
+> > upset my stomache.  But shame on me for not actually noticing that it
+> > is buggy as well (which honestly should be the standard assumption for
+> > casts like this).
+> 
+> Dave and I started looking at this too, and came up with: For rtgroups
+> filesystems, what if rtpick simply rotored the rtgroups?  And what if we
+> didn't bother persisting the rotor value, which would make this casting
+> nightmare go away in the long run.  It's not like we persist the agi
+> rotors.
 
-Reviewed-by: Andreas Gruenbacher <agruenba@redhat.com>
+I think we could replace it right now with an in-memory rotor like
+the mp->m_agfrotor. It really does not need to be persistent; the
+current sequence based algorithm devolves to sequential ascending
+block order allocation targets once the sequence number gets large
+enough.
 
-Thanks,
-Andreas
+Further, the (somewhat) deterministic extent distribution it is
+trying to acheive (i.e. even distribution across the rt dev) is
+really only acheivable in write-once workloads.  The moment we start
+freeing space on the rtdev, the free space is no longer uniform and
+does not match the pattern the sequence-based target iterates. Hence
+the layout the search target attempts to create is unacheivable and
+largely meaningless.
 
+IOWs, we may as well just use an in-memory sequence number or a
+random number to seed the allocation target; they will work just as
+well as what we have right now without the need for persistent
+sequence numbers.
+
+Also, I think that not updating the persistent sequence number is
+fine from a backwards compatibility perspective - older kernels will
+just use it as it does now and newer kernels will just ignore it...
+
+I say we just kill the whole sequence number in atime thing
+completely....
+
+-Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
