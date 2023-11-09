@@ -2,86 +2,84 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D8ABCC4332F
-	for <linux-xfs@archiver.kernel.org>; Wed,  8 Nov 2023 23:44:26 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6E1B0C4167B
+	for <linux-xfs@archiver.kernel.org>; Thu,  9 Nov 2023 00:12:30 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229473AbjKHXo1 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 8 Nov 2023 18:44:27 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58412 "EHLO
+        id S229566AbjKIAMb (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 8 Nov 2023 19:12:31 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33674 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229846AbjKHXoZ (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 8 Nov 2023 18:44:25 -0500
-Received: from mail-oa1-f70.google.com (mail-oa1-f70.google.com [209.85.160.70])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A761B25A3
-        for <linux-xfs@vger.kernel.org>; Wed,  8 Nov 2023 15:44:23 -0800 (PST)
-Received: by mail-oa1-f70.google.com with SMTP id 586e51a60fabf-1ef4f8d26ecso222791fac.1
-        for <linux-xfs@vger.kernel.org>; Wed, 08 Nov 2023 15:44:23 -0800 (PST)
+        with ESMTP id S229473AbjKIAMa (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 8 Nov 2023 19:12:30 -0500
+Received: from mail-lf1-x12c.google.com (mail-lf1-x12c.google.com [IPv6:2a00:1450:4864:20::12c])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8C0FC2594;
+        Wed,  8 Nov 2023 16:12:28 -0800 (PST)
+Received: by mail-lf1-x12c.google.com with SMTP id 2adb3069b0e04-507ad511315so409485e87.0;
+        Wed, 08 Nov 2023 16:12:28 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20230601; t=1699488747; x=1700093547; darn=vger.kernel.org;
+        h=cc:to:subject:message-id:date:from:in-reply-to:references
+         :mime-version:from:to:cc:subject:date:message-id:reply-to;
+        bh=oxRjndTtkJZetvfezkXF/2987ikg4wY/3660b2uWMtk=;
+        b=VdTxfrx41ziQy4Nz7BCYpyno8cfIsO7U76xciSyVgh5a8B23uNs3Go3k9HEj48SwVm
+         8NleB38sE2fmXdqAmEKcZR+acVFCpHJywyXXtHAdqZw+X9LgqVGI5qF2fLq5Y724uZku
+         fEujXwZT7I1vkZLNaYWk35UYWMHVyqvMZWywv5PTYU5RLSh90JKMQnSsV0XcRPufKrVC
+         YSYo6U1E3PdNWMoIjaCErkRR1ioaHFxgy+lY75T77C5lLZbU+G3i/IFBGUMHFy9a3t8c
+         8EJL7k2Z0ymCWZb8DqgE/7l0AmzStPa8vgszGR1TohOMWWAiY2V4WTfjJNgi92p0Tc6x
+         q7Cg==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1699487062; x=1700091862;
-        h=to:from:subject:message-id:date:mime-version:x-gm-message-state
-         :from:to:cc:subject:date:message-id:reply-to;
-        bh=P3MIuqtOUaUUvCAVhPpwvBtF/xEEkEYNSxamyo/s0No=;
-        b=gg+wj50+nsm740RP2o01IhbF1KrqNGS2OCCN6wZ1/rK8+M33OX8pdqtEe5K5bIdEkt
-         9AyokqRHpEI1GWPgA5M+Afj11I5Bu9HqahZnn6TI2e80l2nGiPy10w764UN+bOVlEHt5
-         6jcYoRoJ9pwtlnThTLonpu26kkCpoad7VwRJfE4mdr9MfjcyGEI3s9DrWieQZyTxVxJp
-         fMjMVEjGdmzT77TTkfr9DQmeVIY+kdNFJlQI+5+Nwxtq+FglmZqxpBuezkbjfUqiHGtp
-         EDFpvOTIG9xHIY6g452d0q1OwmSbtnFWQe7Mfjx132iedYI95IkC5v7KhNjFxysNefVs
-         X/jw==
-X-Gm-Message-State: AOJu0Yz+kchqtvu1sObzYoAnqEQtTY9zJjBtRgoO/ll168+vtssDEz3x
-        +Un+MoZLsRTEs14tEg0qvjKQMDVD0j9is5CK5yuDD5m2befp
-X-Google-Smtp-Source: AGHT+IE8SL0QgK42yQHJpF+znFr95YwvVpwFgj3qIWqIqQTHf6Oa6yFQrYe/JeoxOBOFnyTXG5+w/BLWJ1YBiC0wbNqgbyMy10XI
+        d=1e100.net; s=20230601; t=1699488747; x=1700093547;
+        h=cc:to:subject:message-id:date:from:in-reply-to:references
+         :mime-version:x-gm-message-state:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=oxRjndTtkJZetvfezkXF/2987ikg4wY/3660b2uWMtk=;
+        b=ZIJ0Z3/30m//Txqpj0+P+i43k0Rb9BJvYaRSE7Ml31CUFh5wxO8Id8TZbfnfeMsB3U
+         WsP27Ljl+gMeyHBdrh25hussO5g+w8cj66WeuCiZy9EwpFk8arj/o7EW6l5+CsvKEaxG
+         pE9PHPe6QR8AANjlb+uXCWEjLI8N5RHBIS1Eh3sylxACQB+8CjaIRWKazBO0bHOMP6Ov
+         9NkHqM5gXClAUqnqcW5Tlhm98nc2uV6rq9FeVJU+8Z3rGhfYFO9VvzoPPgDyhwDG8HAP
+         w1pyLD06nXunh0uswo4APjYqyByb42qZVMOYfO9CbaunYrvfGjN2Hmg+FR0Ksf9t2TuO
+         ubAw==
+X-Gm-Message-State: AOJu0Yw1H80Pn79WauonKupGxBfBXCWgvTEDJJ/a4fLavXcFWGfw5ZtK
+        qsIphDJri4yPl6sdoiBMDgH10VpTKO57Co2AIYjeMv1UphY=
+X-Google-Smtp-Source: AGHT+IGMym6s82sHBjvRZ1gVgP42jaL1JmjVcnC8voSpb7JFI9R5aRcHobWV5Dojv1Zry9WdFGNjuVaBWNGJSNkxkfg=
+X-Received: by 2002:a19:6713:0:b0:508:269d:1342 with SMTP id
+ b19-20020a196713000000b00508269d1342mr109419lfc.35.1699488746448; Wed, 08 Nov
+ 2023 16:12:26 -0800 (PST)
 MIME-Version: 1.0
-X-Received: by 2002:a05:6871:296:b0:1e9:b0fa:de72 with SMTP id
- i22-20020a056871029600b001e9b0fade72mr1214290oae.9.1699487062144; Wed, 08 Nov
- 2023 15:44:22 -0800 (PST)
-Date:   Wed, 08 Nov 2023 15:44:22 -0800
-X-Google-Appengine-App-Id: s~syzkaller
-X-Google-Appengine-App-Id-Alias: syzkaller
-Message-ID: <000000000000a3bd1e0609acaa04@google.com>
-Subject: [syzbot] Monthly xfs report (Nov 2023)
-From:   syzbot <syzbot+list614ad8fd5d6c3f525723@syzkaller.appspotmail.com>
-To:     chandan.babu@oracle.com, linux-fsdevel@vger.kernel.org,
-        linux-kernel@vger.kernel.org, linux-xfs@vger.kernel.org,
-        syzkaller-bugs@googlegroups.com
+References: <20231107212643.3490372-1-willy@infradead.org> <20231107212643.3490372-2-willy@infradead.org>
+ <20231108150606.2ec3cafb290f757f0e4c92d8@linux-foundation.org>
+In-Reply-To: <20231108150606.2ec3cafb290f757f0e4c92d8@linux-foundation.org>
+From:   =?UTF-8?Q?Andreas_Gr=C3=BCnbacher?= <andreas.gruenbacher@gmail.com>
+Date:   Thu, 9 Nov 2023 01:12:15 +0100
+Message-ID: <CAHpGcMLU9CeX=P=718Gp=oYNnfbft_Mh1Nhdx45qWXY0DAf6Mg@mail.gmail.com>
+Subject: Re: [PATCH 1/3] mm: Add folio_zero_tail() and use it in ext4
+To:     Andrew Morton <akpm@linux-foundation.org>
+Cc:     "Matthew Wilcox (Oracle)" <willy@infradead.org>,
+        linux-ext4 <linux-ext4@vger.kernel.org>, gfs2@lists.linux.dev,
+        Linux FS-devel Mailing List <linux-fsdevel@vger.kernel.org>,
+        linux-xfs <linux-xfs@vger.kernel.org>,
+        "Darrick J . Wong" <djwong@kernel.org>,
+        linux-erofs@lists.ozlabs.org, "Theodore Ts'o" <tytso@mit.edu>,
+        Andreas Dilger <adilger.kernel@dilger.ca>,
+        Andreas Gruenbacher <agruenba@redhat.com>
 Content-Type: text/plain; charset="UTF-8"
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Hello xfs maintainers/developers,
+Andrew,
 
-This is a 31-day syzbot report for the xfs subsystem.
-All related reports/information can be found at:
-https://syzkaller.appspot.com/upstream/s/xfs
+Andrew Morton <akpm@linux-foundation.org> schrieb am Do., 9. Nov. 2023, 00:06:
+> > +
+> > +     if (folio_test_highmem(folio)) {
+> > +             size_t max = PAGE_SIZE - offset_in_page(offset);
+> > +
+> > +             while (len > max) {
+>
+> Shouldn't this be `while (len)'?  AFAICT this code can fail to clear
+> the final page.
 
-During the period, 0 new issues were detected and 0 were fixed.
-In total, 13 issues are still open and 18 have been fixed so far.
+not sure what you're seeing there, but this looks fine to me.
 
-Some of the still happening issues:
-
-Ref Crashes Repro Title
-<1> 8235    No    KMSAN: uninit-value in __crc32c_le_base (3)
-                  https://syzkaller.appspot.com/bug?extid=a6d6b8fffa294705dbd8
-<2> 291     Yes   KASAN: stack-out-of-bounds Read in xfs_buf_lock
-                  https://syzkaller.appspot.com/bug?extid=0bc698a422b5e4ac988c
-<3> 147     Yes   INFO: task hung in xfs_buf_item_unpin
-                  https://syzkaller.appspot.com/bug?extid=3f083e9e08b726fcfba2
-<4> 134     Yes   WARNING in print_bfs_bug (2)
-                  https://syzkaller.appspot.com/bug?extid=630f83b42d801d922b8b
-<5> 101     Yes   INFO: task hung in sync_inodes_sb (5)
-                  https://syzkaller.appspot.com/bug?extid=30476ec1b6dc84471133
-<6> 4       Yes   WARNING: Reset corrupted AGFL on AG NUM. NUM blocks leaked. Please unmount and run xfs_repair.
-                  https://syzkaller.appspot.com/bug?extid=9d0b0d54a8bd799f6ae4
-
----
-This report is generated by a bot. It may contain errors.
-See https://goo.gl/tpsmEJ for more information about syzbot.
-syzbot engineers can be reached at syzkaller@googlegroups.com.
-
-To disable reminders for individual bugs, reply with the following command:
-#syz set <Ref> no-reminders
-
-To change bug's subsystems, reply with:
-#syz set <Ref> subsystems: new-subsystem
-
-You may send multiple commands in a single email message.
+Thanks,
+Andreas
