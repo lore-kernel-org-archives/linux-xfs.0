@@ -2,63 +2,63 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E5AC5C4332F
-	for <linux-xfs@archiver.kernel.org>; Thu,  9 Nov 2023 21:51:47 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D72EEC4167D
+	for <linux-xfs@archiver.kernel.org>; Thu,  9 Nov 2023 21:53:48 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1345307AbjKIVvs (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 9 Nov 2023 16:51:48 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33400 "EHLO
+        id S230150AbjKIVxt (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 9 Nov 2023 16:53:49 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45052 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S234659AbjKIVvn (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 9 Nov 2023 16:51:43 -0500
+        with ESMTP id S234657AbjKIVxq (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 9 Nov 2023 16:53:46 -0500
 Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 30537420B
-        for <linux-xfs@vger.kernel.org>; Thu,  9 Nov 2023 13:51:00 -0800 (PST)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 13D894680
+        for <linux-xfs@vger.kernel.org>; Thu,  9 Nov 2023 13:52:52 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1699566659;
+        s=mimecast20190719; t=1699566771;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:cc:mime-version:mime-version:content-type:content-type:
          content-transfer-encoding:content-transfer-encoding:
          in-reply-to:in-reply-to:references:references;
-        bh=SEe5Lm1QSY9l0OHsCk0EbXQqbDGAdhAs53cCOGquA04=;
-        b=X8QQJnCKtYJ/lmHZo204XsGeL7BQVhCtwfKESshqTCZT1t/paA0Aw+IP8L/UjYsblySvxO
-        BDg0/Ck1wxit9Z7N7PjUlLRLgB4ol1eaeA1LOOkxACOZJ4N+VoFft+ZSIagDhN21SOBfG2
-        CST8GPndm+gc1bRu3RWq/bL7JuXuGcg=
-Received: from mail-pl1-f199.google.com (mail-pl1-f199.google.com
- [209.85.214.199]) by relay.mimecast.com with ESMTP with STARTTLS
+        bh=Ooj0huzmXViB3IPA+8ZsWf/tvcP9vcxEUy2C65Cs8hg=;
+        b=I7njR+5VaSGAzjJKJG/tRQdCd+Vy6IlZzOaXnHS7TcA/N14Y6l0Iw/0U/5TrlowBXZcyDX
+        tvh0l4sxjL2sCegLJ4ikGAf20wlxJnLKwTmbf++ZFY4eCbfT12TvBe4eIcSvQGZFFpBel9
+        ntXSxo/riwSxOgiQCX/86jmq0fGyP1k=
+Received: from mail-pl1-f200.google.com (mail-pl1-f200.google.com
+ [209.85.214.200]) by relay.mimecast.com with ESMTP with STARTTLS
  (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
- us-mta-464--oBgulJUMPuTXLGirNOzpA-1; Thu, 09 Nov 2023 16:50:58 -0500
-X-MC-Unique: -oBgulJUMPuTXLGirNOzpA-1
-Received: by mail-pl1-f199.google.com with SMTP id d9443c01a7336-1cc4cab731dso14424765ad.1
-        for <linux-xfs@vger.kernel.org>; Thu, 09 Nov 2023 13:50:57 -0800 (PST)
+ us-mta-428-pTM2j2tROty8AybJr9AAwA-1; Thu, 09 Nov 2023 16:52:50 -0500
+X-MC-Unique: pTM2j2tROty8AybJr9AAwA-1
+Received: by mail-pl1-f200.google.com with SMTP id d9443c01a7336-1cc5ac304e8so13433505ad.1
+        for <linux-xfs@vger.kernel.org>; Thu, 09 Nov 2023 13:52:49 -0800 (PST)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1699566657; x=1700171457;
+        d=1e100.net; s=20230601; t=1699566769; x=1700171569;
         h=content-transfer-encoding:cc:to:subject:message-id:date:from
          :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
          :subject:date:message-id:reply-to;
-        bh=SEe5Lm1QSY9l0OHsCk0EbXQqbDGAdhAs53cCOGquA04=;
-        b=poVqCL4su+ZesTPK71KtDdOc0kZ2MOTgeieVkrC/6oHCDnjanomAGKa9SEtbV9Tgvi
-         CWQqoemd0vbNs/ttZ44vg26tJgKHohF0vO67dSxtdOL/xUPFEXykf20XYaTrXQSYESZ1
-         eHIPL7U5UlPAlzqk5enRFo0XnNwA/oQNff4hkq3kh6/Ilm7WgYOQLw6+GDyN+wTytxJx
-         HKYpi3I7cy+md1vyYkhuMDVag8Pr83FuVUrwb3ScLymXPwsf7ho52+fQgaYlwEcL0ERQ
-         RO3fWcRg2FwqOzH15RspzUFdnjFBwuNQIPwS5SLJhN+JK9tnShekYFqrFENHQbaSTqpc
-         leyQ==
-X-Gm-Message-State: AOJu0Yw/O4ksBnCSFqMxSmZ6qa2OZS5Xy2n9Sd3M0ACXYR2o28aSGk+u
-        77m7ZXnHqKYTzt1ODIxiVizrUvGOgY7xFq5afV+MvI1f1gHlf9SbTBDBZcWDBIumTh2uJZyGzIM
-        yj4Bxg358s2L8XO9/KhWOw+S2Z6GFf2T9K5b+
-X-Received: by 2002:a17:903:32c8:b0:1cc:4985:fc04 with SMTP id i8-20020a17090332c800b001cc4985fc04mr7490407plr.66.1699566657074;
-        Thu, 09 Nov 2023 13:50:57 -0800 (PST)
-X-Google-Smtp-Source: AGHT+IGyG4JtpfIMVQSiIgVG/wUB85vTa7ZYZB8EAxgeOBn9j0yJtEeYqTI6/TevKMgPEnNnnhq8hyhOkkpCwkjzLqg=
-X-Received: by 2002:a17:903:32c8:b0:1cc:4985:fc04 with SMTP id
- i8-20020a17090332c800b001cc4985fc04mr7490395plr.66.1699566656820; Thu, 09 Nov
- 2023 13:50:56 -0800 (PST)
+        bh=Ooj0huzmXViB3IPA+8ZsWf/tvcP9vcxEUy2C65Cs8hg=;
+        b=euYVn9DSqH3aM49us1g0SZ2A2bhoCocqwI2GBydEo2D6vdU/44DGVTz3BpT4ebnzng
+         bAepFAImBy4EYYBoin4zxhJNhbYpIVAVWiO8S8PPi8w30IOL0uBogR/wOlcBZYlN5+ee
+         Ktv9JNEXu/6lIU+ZjDlxjGV7ktHiOkG4y1J3pTryicniQOQKtMuoohvVhqesh7Mo+hP7
+         C+LUPui4JGpLV8rGzjVOGzUIeWWZDODw75GudoYUmzYInNJF5Ed5QFwAFkfuPpgHuQvH
+         p6kY6cWzrMEbXNMgEe4GFUHdRLh202PFhxeBbYAhMFspJKm2P6f5G5ls9GaV7FrlqMhx
+         JUlw==
+X-Gm-Message-State: AOJu0Yy7AcJK3PdkmGhNGOTGrtzmgZxa8khSxxqJSXcb21Hrclb7rmga
+        sucCGLFxR7+t5uRKdY8cf4NyEvtjeQ6qFyFirTpdpuujyFVdx8i/2+jb8mPVSwfpbL1R3OQsAFp
+        ww7MHRZFhrkgseC0QtEDLZ23efndLr+xkhzc8
+X-Received: by 2002:a17:902:d2cf:b0:1cc:42b1:934b with SMTP id n15-20020a170902d2cf00b001cc42b1934bmr6973374plc.18.1699566769073;
+        Thu, 09 Nov 2023 13:52:49 -0800 (PST)
+X-Google-Smtp-Source: AGHT+IE2w5kiS+35bQf1w6M0QjE1cVW4EjHgMurxmQucKCpYNIosx46laiJfbx3QyQx2atURPUqY64X628qUAuI/IrU=
+X-Received: by 2002:a17:902:d2cf:b0:1cc:42b1:934b with SMTP id
+ n15-20020a170902d2cf00b001cc42b1934bmr6973354plc.18.1699566768767; Thu, 09
+ Nov 2023 13:52:48 -0800 (PST)
 MIME-Version: 1.0
-References: <20231107212643.3490372-1-willy@infradead.org> <20231107212643.3490372-3-willy@infradead.org>
-In-Reply-To: <20231107212643.3490372-3-willy@infradead.org>
+References: <20231107212643.3490372-1-willy@infradead.org> <20231107212643.3490372-4-willy@infradead.org>
+In-Reply-To: <20231107212643.3490372-4-willy@infradead.org>
 From:   Andreas Gruenbacher <agruenba@redhat.com>
-Date:   Thu, 9 Nov 2023 22:50:45 +0100
-Message-ID: <CAHc6FU550j_AYgWz5JgRu84mw5HqrSwd+hYZiHVArnget3gb4w@mail.gmail.com>
-Subject: Re: [PATCH 2/3] mm: Add folio_fill_tail() and use it in iomap
+Date:   Thu, 9 Nov 2023 22:52:37 +0100
+Message-ID: <CAHc6FU6-a5Xf1Zesj0Y9udXLaxg5nnK5t9GPxA_b5PHNU8brvw@mail.gmail.com>
+Subject: Re: [PATCH 3/3] gfs2: Convert stuffed_readpage() to stuffed_read_folio()
 To:     "Matthew Wilcox (Oracle)" <willy@infradead.org>
 Cc:     Andrew Morton <akpm@linux-foundation.org>,
         linux-ext4@vger.kernel.org, gfs2@lists.linux.dev,
@@ -74,108 +74,92 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 
 On Tue, Nov 7, 2023 at 10:27=E2=80=AFPM Matthew Wilcox (Oracle)
 <willy@infradead.org> wrote:
-> The iomap code was limited to PAGE_SIZE bytes; generalise it to cover
-> an arbitrary-sized folio, and move it to be a common helper.
+> Use folio_fill_tail() to implement the unstuffing and folio_end_read()
+> to simultaneously mark the folio uptodate and unlock it.  Unifies a
+> couple of code paths.
 >
 > Signed-off-by: Matthew Wilcox (Oracle) <willy@infradead.org>
 > ---
->  fs/iomap/buffered-io.c  | 14 ++------------
->  include/linux/highmem.h | 38 ++++++++++++++++++++++++++++++++++++++
->  2 files changed, 40 insertions(+), 12 deletions(-)
+>  fs/gfs2/aops.c | 37 +++++++++++++++++--------------------
+>  1 file changed, 17 insertions(+), 20 deletions(-)
 >
-> diff --git a/fs/iomap/buffered-io.c b/fs/iomap/buffered-io.c
-> index f72df2babe56..093c4515b22a 100644
-> --- a/fs/iomap/buffered-io.c
-> +++ b/fs/iomap/buffered-io.c
-> @@ -305,28 +305,18 @@ static int iomap_read_inline_data(const struct ioma=
-p_iter *iter,
->  {
->         const struct iomap *iomap =3D iomap_iter_srcmap(iter);
->         size_t size =3D i_size_read(iter->inode) - iomap->offset;
-> -       size_t poff =3D offset_in_page(iomap->offset);
->         size_t offset =3D offset_in_folio(folio, iomap->offset);
-> -       void *addr;
->
->         if (folio_test_uptodate(folio))
->                 return 0;
->
-> -       if (WARN_ON_ONCE(size > PAGE_SIZE - poff))
-> -               return -EIO;
-> -       if (WARN_ON_ONCE(size > PAGE_SIZE -
-> -                        offset_in_page(iomap->inline_data)))
-> -               return -EIO;
->         if (WARN_ON_ONCE(size > iomap->length))
->                 return -EIO;
->         if (offset > 0)
->                 ifs_alloc(iter->inode, folio, iter->flags);
->
-> -       addr =3D kmap_local_folio(folio, offset);
-> -       memcpy(addr, iomap->inline_data, size);
-> -       memset(addr + size, 0, PAGE_SIZE - poff - size);
-> -       kunmap_local(addr);
-> -       iomap_set_range_uptodate(folio, offset, PAGE_SIZE - poff);
-> +       folio_fill_tail(folio, offset, iomap->inline_data, size);
-> +       iomap_set_range_uptodate(folio, offset, folio_size(folio) - offse=
-t);
->         return 0;
+> diff --git a/fs/gfs2/aops.c b/fs/gfs2/aops.c
+> index 9611bfceda4b..ba8742dc91f8 100644
+> --- a/fs/gfs2/aops.c
+> +++ b/fs/gfs2/aops.c
+> @@ -403,18 +403,18 @@ static int gfs2_jdata_writepages(struct address_spa=
+ce *mapping,
 >  }
 >
-> diff --git a/include/linux/highmem.h b/include/linux/highmem.h
-> index 1b81416196dd..0fbb60ffefc9 100644
-> --- a/include/linux/highmem.h
-> +++ b/include/linux/highmem.h
-> @@ -521,6 +521,44 @@ static inline __must_check void *folio_zero_tail(str=
-uct folio *folio,
->         return kaddr;
->  }
->
-> +/**
-> + * folio_fill_tail - Copy some data to a folio and pad with zeroes.
-> + * @folio: The destination folio.
-> + * @offset: The offset into @folio at which to start copying.
-> + * @from: The data to copy.
-> + * @len: How many bytes of data to copy.
-> + *
-> + * This function is most useful for filesystems which support inline dat=
-a.
-> + * When they want to copy data from the inode into the page cache, this
-> + * function does everything for them.  It supports large folios even on
-> + * HIGHMEM configurations.
-> + */
-> +static inline void folio_fill_tail(struct folio *folio, size_t offset,
-> +               const char *from, size_t len)
-> +{
-> +       char *to =3D kmap_local_folio(folio, offset);
-> +
-> +       VM_BUG_ON(offset + len > folio_size(folio));
-> +
-> +       if (folio_test_highmem(folio)) {
-> +               size_t max =3D PAGE_SIZE - offset_in_page(offset);
-> +
-> +               while (len > max) {
-> +                       memcpy(to, from, max);
-> +                       kunmap_local(to);
-> +                       len -=3D max;
-> +                       from +=3D max;
-> +                       offset +=3D max;
-> +                       max =3D PAGE_SIZE;
-> +                       to =3D kmap_local_folio(folio, offset);
-> +               }
-> +       }
-> +
-> +       memcpy(to, from, len);
-> +       to =3D folio_zero_tail(folio, offset, to);
-
-This needs to be:
-
-to =3D folio_zero_tail(folio, offset  + len, to + len);
-
-> +       kunmap_local(to);
-> +}
-> +
 >  /**
->   * memcpy_from_file_folio - Copy some bytes from a file folio.
->   * @to: The destination buffer.
+> - * stuffed_readpage - Fill in a Linux folio with stuffed file data
+> + * stuffed_read_folio - Fill in a Linux folio with stuffed file data
+>   * @ip: the inode
+>   * @folio: the folio
+>   *
+>   * Returns: errno
+>   */
+> -static int stuffed_readpage(struct gfs2_inode *ip, struct folio *folio)
+> +static int stuffed_read_folio(struct gfs2_inode *ip, struct folio *folio=
+)
+>  {
+> -       struct buffer_head *dibh;
+> -       size_t i_size =3D i_size_read(&ip->i_inode);
+> -       void *data;
+> -       int error;
+> +       struct buffer_head *dibh =3D NULL;
+> +       size_t dsize =3D i_size_read(&ip->i_inode);
+> +       void *from =3D NULL;
+> +       int error =3D 0;
+>
+>         /*
+>          * Due to the order of unstuffing files and ->fault(), we can be
+> @@ -422,22 +422,20 @@ static int stuffed_readpage(struct gfs2_inode *ip, =
+struct folio *folio)
+>          * so we need to supply one here. It doesn't happen often.
+>          */
+>         if (unlikely(folio->index)) {
+> -               folio_zero_range(folio, 0, folio_size(folio));
+> -               folio_mark_uptodate(folio);
+> -               return 0;
+> +               dsize =3D 0;
+> +       } else {
+> +               error =3D gfs2_meta_inode_buffer(ip, &dibh);
+> +               if (error)
+> +                       goto out;
+> +               from =3D dibh->b_data + sizeof(struct gfs2_dinode);
+>         }
+>
+> -       error =3D gfs2_meta_inode_buffer(ip, &dibh);
+> -       if (error)
+> -               return error;
+> -
+> -       data =3D dibh->b_data + sizeof(struct gfs2_dinode);
+> -       memcpy_to_folio(folio, 0, data, i_size);
+> -       folio_zero_range(folio, i_size, folio_size(folio) - i_size);
+> +       folio_fill_tail(folio, 0, from, dsize);
+>         brelse(dibh);
+> -       folio_mark_uptodate(folio);
+> +out:
+> +       folio_end_read(folio, error =3D=3D 0);
+>
+> -       return 0;
+> +       return error;
+>  }
+>
+>  /**
+> @@ -456,8 +454,7 @@ static int gfs2_read_folio(struct file *file, struct =
+folio *folio)
+>             (i_blocksize(inode) =3D=3D PAGE_SIZE && !folio_buffers(folio)=
+)) {
+>                 error =3D iomap_read_folio(folio, &gfs2_iomap_ops);
+>         } else if (gfs2_is_stuffed(ip)) {
+> -               error =3D stuffed_readpage(ip, folio);
+> -               folio_unlock(folio);
+> +               error =3D stuffed_read_folio(ip, folio);
+>         } else {
+>                 error =3D mpage_read_folio(folio, gfs2_block_map);
+>         }
 > --
 > 2.42.0
 >
