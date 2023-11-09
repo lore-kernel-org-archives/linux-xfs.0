@@ -2,21 +2,21 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1B478C4332F
-	for <linux-xfs@archiver.kernel.org>; Thu,  9 Nov 2023 15:24:20 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9281EC4332F
+	for <linux-xfs@archiver.kernel.org>; Thu,  9 Nov 2023 15:26:21 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234475AbjKIPYU (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 9 Nov 2023 10:24:20 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50166 "EHLO
+        id S234454AbjKIP0W (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 9 Nov 2023 10:26:22 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60436 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232294AbjKIPYU (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 9 Nov 2023 10:24:20 -0500
+        with ESMTP id S232294AbjKIP0W (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 9 Nov 2023 10:26:22 -0500
 Received: from verein.lst.de (verein.lst.de [213.95.11.211])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3921F30DC;
-        Thu,  9 Nov 2023 07:24:18 -0800 (PST)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id BBE03358C;
+        Thu,  9 Nov 2023 07:26:19 -0800 (PST)
 Received: by verein.lst.de (Postfix, from userid 2407)
-        id 40FE467373; Thu,  9 Nov 2023 16:24:13 +0100 (CET)
-Date:   Thu, 9 Nov 2023 16:24:12 +0100
+        id 67A9F67373; Thu,  9 Nov 2023 16:26:15 +0100 (CET)
+Date:   Thu, 9 Nov 2023 16:26:15 +0100
 From:   Christoph Hellwig <hch@lst.de>
 To:     John Garry <john.g.garry@oracle.com>
 Cc:     axboe@kernel.dk, kbusch@kernel.org, hch@lst.de, sagi@grimberg.me,
@@ -27,30 +27,35 @@ Cc:     axboe@kernel.dk, kbusch@kernel.org, hch@lst.de, sagi@grimberg.me,
         linux-nvme@lists.infradead.org, linux-xfs@vger.kernel.org,
         linux-fsdevel@vger.kernel.org, tytso@mit.edu, jbongio@google.com,
         linux-api@vger.kernel.org
-Subject: Re: [PATCH 12/21] fs: xfs: Introduce FORCEALIGN inode flag
-Message-ID: <20231109152412.GA1521@lst.de>
-References: <20230929102726.2985188-1-john.g.garry@oracle.com> <20230929102726.2985188-13-john.g.garry@oracle.com>
+Subject: Re: [PATCH 17/21] fs: xfs: iomap atomic write support
+Message-ID: <20231109152615.GB1521@lst.de>
+References: <20230929102726.2985188-1-john.g.garry@oracle.com> <20230929102726.2985188-18-john.g.garry@oracle.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20230929102726.2985188-13-john.g.garry@oracle.com>
+In-Reply-To: <20230929102726.2985188-18-john.g.garry@oracle.com>
 User-Agent: Mutt/1.5.17 (2007-11-01)
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Fri, Sep 29, 2023 at 10:27:17AM +0000, John Garry wrote:
-> From: "Darrick J. Wong" <djwong@kernel.org>
+On Fri, Sep 29, 2023 at 10:27:22AM +0000, John Garry wrote:
+> Ensure that when creating a mapping that we adhere to all the atomic
+> write rules.
 > 
-> Add a new inode flag to require that all file data extent mappings must
-> be aligned (both the file offset range and the allocated space itself)
-> to the extent size hint.  Having a separate COW extent size hint is no
-> longer allowed.
+> We check that the mapping covers the complete range of the write to ensure
+> that we'll be just creating a single mapping.
 > 
-> The goal here is to enable sysadmins and users to mandate that all space
-> mappings in a file must have a startoff/blockcount that are aligned to
-> (say) a 2MB alignment and that the startblock/blockcount will follow the
-> same alignment.
+> Currently minimum granularity is the FS block size, but it should be
+> possibly to support lower in future.
 
-This needs a good explanation of why someone would want this.
+I really dislike how this forces aligned allocations.  Aligned
+allocations are a nice optimization to offload some of the work
+to the storage hard/firmware, but we need to support it in general.
+And I think with out of place writes into the COW fork, and atomic
+transactions to swap it in we can do that pretty easily.
+
+That should also allow to get rid of the horrible forcealign mode,
+as we can still try align if possible and just fall back to the
+out of place writes.
 
