@@ -2,214 +2,325 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C00EDC4167B
-	for <linux-xfs@archiver.kernel.org>; Thu,  9 Nov 2023 19:09:24 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 66D65C4332F
+	for <linux-xfs@archiver.kernel.org>; Thu,  9 Nov 2023 19:52:36 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230185AbjKITJZ (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 9 Nov 2023 14:09:25 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46482 "EHLO
+        id S229613AbjKITwh (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 9 Nov 2023 14:52:37 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49218 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229838AbjKITJY (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 9 Nov 2023 14:09:24 -0500
-Received: from mx0a-00069f02.pphosted.com (mx0a-00069f02.pphosted.com [205.220.165.32])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6079030EB;
-        Thu,  9 Nov 2023 11:09:22 -0800 (PST)
-Received: from pps.filterd (m0333521.ppops.net [127.0.0.1])
-        by mx0b-00069f02.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 3A9IJibV023778;
-        Thu, 9 Nov 2023 19:08:50 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=message-id : date :
- subject : to : cc : references : from : in-reply-to : content-type :
- content-transfer-encoding : mime-version; s=corp-2023-03-30;
- bh=mcD54wNiWFRJgu00WvJOQa0GwVIyLgFyLvvYy1c5IgU=;
- b=3Dyp22wpCHxcKYaG5xwVtOlAYSdcLEc7ydSYDQEek+yWkZ4/SSDC9FKqQ0xQMwrSfasZ
- fN+aCLl0IDc7iwJqjTGrrahNgKPNbrekjSRq+Ml9qXEaZXoCHyhiklw3Zl8lRubbOZwC
- /0oM2I2o9TrOGX8rpPdr+0AOuDar2d50sPztEebYqAOFjjqPVac6TNmf63ACZ9M2jGG7
- H896RtC7xoNkboMyv/1+gotB2rtY6nb3OCsag5zRSCNkGYVN1qj4qRmOcXKLX4Dkf8vC
- 0obhyYJAbYqv6sR+6g4nS8IW8tEE0NJ4GrwXNUl4ioukE29JAxyaq9LNCSDP+2sL5PmV zw== 
-Received: from iadpaimrmta02.imrmtpd1.prodappiadaev1.oraclevcn.com (iadpaimrmta02.appoci.oracle.com [147.154.18.20])
-        by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 3u7w23mrdh-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Thu, 09 Nov 2023 19:08:50 +0000
-Received: from pps.filterd (iadpaimrmta02.imrmtpd1.prodappiadaev1.oraclevcn.com [127.0.0.1])
-        by iadpaimrmta02.imrmtpd1.prodappiadaev1.oraclevcn.com (8.17.1.19/8.17.1.19) with ESMTP id 3A9J737V000483;
-        Thu, 9 Nov 2023 19:08:48 GMT
-Received: from nam02-sn1-obe.outbound.protection.outlook.com (mail-sn1nam02lp2041.outbound.protection.outlook.com [104.47.57.41])
-        by iadpaimrmta02.imrmtpd1.prodappiadaev1.oraclevcn.com (PPS) with ESMTPS id 3u7w1yd56r-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Thu, 09 Nov 2023 19:08:48 +0000
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=YeM/venL54ig4i17J2eAB9j+VrAhsV9/e5WGc2fLtwYDgabxu6O4ON1BFLq4QAu9ypubg7hAMDMCvCtaKfKZtUeHL6LN4nR6XogG2diRqUvjka9M8sQsx3qS1qYJMcEwctKRWhNf/wTiHN2uqZjhqEO5FXBuWkKHmTGdYSXkfXHkvdACONOgGd11Swgxy0+Wcbjy799LW+g+JcVkbGSXYYI8veRmlcQtObNjXEI7Y/x+4wTHAkJEz94Xr+G2XuZiBXa/3oQTKEZMzMrOXOlfo/Q5OxS5xuQMdon1+IeDyZGfqZq9MRqoB16b6slANj/tAly7zZE5JI+bwHqwQhQZdw==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector9901;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=mcD54wNiWFRJgu00WvJOQa0GwVIyLgFyLvvYy1c5IgU=;
- b=ANqTnJfuXlVWLFv01tAHT09A4l9BSkEvoyhwvoo+FEr/DsM47tBw1CfcmLI1M/y9AievHsO3QnrJo9NEweMFJ21otPRsjLx3AhOz5JkFbTmuwb/Ln0GvFcLHviy8GPurfOB3tIi6s0ao1EK7VgmEJ/WtDE7437dmj8O1KiTjKFbRNBxnSeS8bogMKdmZYNCDnghnI6LX4jH7tobONeLj2U3YOXAvFcXjmmEiCaEzcel0r5v5zUzygtexWiKw8emxBCfXyf2cLZgsmpD9exeFTK0UzeehMxXDW1SX3IuefAZn2OV0UceuQpF1ZySABfAT0G4m8Gy66jTj1rw6sK1aOA==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=oracle.com; dmarc=pass action=none header.from=oracle.com;
- dkim=pass header.d=oracle.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
- d=oracle.onmicrosoft.com; s=selector2-oracle-onmicrosoft-com;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=mcD54wNiWFRJgu00WvJOQa0GwVIyLgFyLvvYy1c5IgU=;
- b=UY7odCo1ZAPo1eR4Orkw8vPLzAHr3z+QcugMHUrAN47TC8CMigG2PwXWQl0MMCyTWpapa2O+k0RcrRd8MVIKIHytf8yn6tw8UkiMqi4aHB5axtiWC6iliV7nEI0zfV3gRzvmNh0tq3T+T4rs3viZi5L97ZTW82ujZwrLyqL0P/Q=
-Received: from DM6PR10MB4313.namprd10.prod.outlook.com (2603:10b6:5:212::20)
- by DS0PR10MB7222.namprd10.prod.outlook.com (2603:10b6:8:f2::18) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.6977.19; Thu, 9 Nov
- 2023 19:08:46 +0000
-Received: from DM6PR10MB4313.namprd10.prod.outlook.com
- ([fe80::102a:f31:30c6:3187]) by DM6PR10MB4313.namprd10.prod.outlook.com
- ([fe80::102a:f31:30c6:3187%4]) with mapi id 15.20.6977.018; Thu, 9 Nov 2023
- 19:08:46 +0000
-Message-ID: <61b25fe8-22ae-c299-3225-ca835b337d41@oracle.com>
-Date:   Thu, 9 Nov 2023 19:08:40 +0000
-User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:102.0) Gecko/20100101
- Thunderbird/102.15.1
-Subject: Re: [PATCH 21/21] nvme: Support atomic writes
-To:     Christoph Hellwig <hch@lst.de>,
-        Matthew Wilcox <willy@infradead.org>
-Cc:     axboe@kernel.dk, kbusch@kernel.org, sagi@grimberg.me,
-        jejb@linux.ibm.com, martin.petersen@oracle.com, djwong@kernel.org,
-        viro@zeniv.linux.org.uk, brauner@kernel.org,
-        chandan.babu@oracle.com, dchinner@redhat.com,
-        linux-block@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-nvme@lists.infradead.org, linux-xfs@vger.kernel.org,
-        linux-fsdevel@vger.kernel.org, tytso@mit.edu, jbongio@google.com,
-        linux-api@vger.kernel.org, Alan Adamson <alan.adamson@oracle.com>
-References: <20230929102726.2985188-1-john.g.garry@oracle.com>
- <20230929102726.2985188-22-john.g.garry@oracle.com>
- <20231109153603.GA2188@lst.de> <ZUz98KriiLsM8oQd@casper.infradead.org>
- <20231109154619.GA3491@lst.de>
-Content-Language: en-US
-From:   John Garry <john.g.garry@oracle.com>
-Organization: Oracle Corporation
-In-Reply-To: <20231109154619.GA3491@lst.de>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
-X-ClientProxiedBy: LO2P265CA0222.GBRP265.PROD.OUTLOOK.COM
- (2603:10a6:600:b::18) To DM6PR10MB4313.namprd10.prod.outlook.com
- (2603:10b6:5:212::20)
+        with ESMTP id S230135AbjKITwg (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 9 Nov 2023 14:52:36 -0500
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4E8493C18
+        for <linux-xfs@vger.kernel.org>; Thu,  9 Nov 2023 11:52:34 -0800 (PST)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id D618DC433C8;
+        Thu,  9 Nov 2023 19:52:33 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1699559553;
+        bh=/K9EhNlUubLQg2ZjPSf0nwag78uSLeN63zZHB2oWBnU=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=W+JbM1vnqEe92ThB9ilDKGwTeAnV5yyHLzXZz5gHcLfQQm5Yz4PYsEfEJdd2yI6/Y
+         jk5/xbyLZb2KgsENQxuxs1pjaWdfj/XHVOk6+/9grEl/Rs6NGgzU9giv75AJUOxwoA
+         0mriozdNyUd7w9tdZB97x87ddlleUd5bB7eVTagNmumKL54QXu+hLDRN5UxwpjDnpO
+         aCnsNkJKRv0Nt8HcgYxpCWQV8sQrAnx3SzO+lrRCQGy0DQoXr5OgIgznL9NPzrbgcC
+         bEnpNb3C7+Ha5hm5BBFUY1DR6gfPvjuOEQI3xZ5voVcNQanw5He63HT0OXpf+vBNLE
+         dFeuWpr7mvhRw==
+Date:   Thu, 9 Nov 2023 11:52:33 -0800
+From:   "Darrick J. Wong" <djwong@kernel.org>
+To:     Christoph Hellwig <hch@lst.de>
+Cc:     linux-xfs@vger.kernel.org
+Subject: Re: [PATCH, RFC] libxfs: check the size of on-disk data structures
+Message-ID: <20231109195233.GH1205143@frogsfrogsfrogs>
+References: <20231108163316.493089-1-hch@lst.de>
 MIME-Version: 1.0
-X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: DM6PR10MB4313:EE_|DS0PR10MB7222:EE_
-X-MS-Office365-Filtering-Correlation-Id: a41e7a82-a6a9-4fe1-461b-08dbe1574c69
-X-MS-Exchange-SenderADCheck: 1
-X-MS-Exchange-AntiSpam-Relay: 0
-X-Microsoft-Antispam: BCL:0;
-X-Microsoft-Antispam-Message-Info: /Mlb+vU/EI2C97dWMECVgw/vek25ADxnn/vS4ZP1EnW8cxde/EkWdmrY5r2IumdKLqWvEVk67YZJkMFFER2N5rCyW8DGoFYpT1QT0bopGVyWUqDY8VfeRFHVhml3crkDq9LWBiLehtT/Wpcfk4O5N6n7wddLU4l85BPLRRYBUFaij9/ObSJEjaaXORQOX6sQF746cRt0y6WyXFUHVm1sIiZ2uIGZ01Ggk4YQDFYhQmYfBfm6L0qjddCGVt9vDBbTXMIBQzIgYFQn4MiPQ84a/cxIG3b6i9/rqdvdm3nha4R8ERvNp9B7gCbm8/wrjJn4tp4jkTVwtAQg6+rEmiXb+f0cJ/VnIRGJAHXWQYqn+W/SLsqoByLu80V5O4fCMfr+StCYgpYTFIdwb9FwWc6Q9isQRrksn4t/+6AV37X02ZGpCI56dgCa+836w6tPwUPokhyu6ZBoiVveuQVBEVEOegzcdeY2hxmb/WZlVXzT6SFQSXK8aalM0xCoHcOSHUkuEvdMwj4djn5XOZayfmQ80nDOSd64LikaPwf+7ZirH6p4epSM94yzv/fPX0uGtahoNc+FNogqgE6hE8iaSt/6tjG/UN6VCH52ZhUudiw3+M7xFF9qJHcFJSLnGvYScVcCKLErVdVi8fX4oXWoz9rFLw==
-X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:DM6PR10MB4313.namprd10.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230031)(376002)(136003)(396003)(366004)(346002)(39860400002)(230922051799003)(451199024)(64100799003)(1800799009)(186009)(31686004)(6512007)(36916002)(53546011)(478600001)(107886003)(6486002)(6666004)(6506007)(2616005)(36756003)(38100700002)(86362001)(31696002)(66476007)(66946007)(66556008)(41300700001)(83380400001)(2906002)(7416002)(26005)(5660300002)(316002)(4326008)(110136005)(8936002)(8676002)(43740500002)(45980500001);DIR:OUT;SFP:1101;
-X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0: =?utf-8?B?eWhjQzBOWXdDOWg4RFFkRDNORFB6cmdCWlEyQmU5OTVuc0NOTEYzWUxuOEhB?=
- =?utf-8?B?Q0pJWGNXKzZzZnNNYTcwWnl3QW1SemEyTjluUXk3b2xnYWtCbndQNVJra3NC?=
- =?utf-8?B?Y1h4TVhSZlFURDVpTkRQVmlnQ09yS2huQ3RoY0ZzR2RzUGFkU2tUTlA2aDFh?=
- =?utf-8?B?SU9ZUVZlOUwxU3VHczQzVDdCQkx3S3ZUdUdESFVPcHNqVnBKWE5XbS9zSGJM?=
- =?utf-8?B?SklHUHo1RkVzL2xQam5naER1SGFpOGpNVS8xdE9LNjU1RjhHeXlZaDZ0dFdO?=
- =?utf-8?B?ZVJ2TFpQY055UUNuY2h3VU4ySXVUNktkWGV1Wm1BWDRzd2VWcFBhdkxkYXpk?=
- =?utf-8?B?a2t6NTQrZUwwK3YzT2ZmdFkvb2RYNlNzL2kvNkxtLzkycERXUGZUZGdOVjZX?=
- =?utf-8?B?eTN4Nno5OFBoa214WmdzRWcybFdHNmZhYldMblI2L1dJSUVSV1M2THR1ajdR?=
- =?utf-8?B?SE5ZN2ZqODhhbzY0WnI4cjRHOEMzL2JRem42Y1BrVHJ0OVZTSjk2T0pHajVT?=
- =?utf-8?B?Q2dtMGxkRjRQaEhwSW1xNUtzNzcwS2NZRmFzbVFCc01IS2FGdEN3VUx3Z3ZY?=
- =?utf-8?B?bVN3ay9MV1M3QStMajFmMmk2WC9CODVnYjRqSGpsbDVNWUlocDBZZlBXeWdT?=
- =?utf-8?B?TUFBMWY3dTFGK2tCOWVqWk9PYVhCZHprNHN1ZmcrSHdKVXNtdWl5bVNuM3h6?=
- =?utf-8?B?SkZZckZpNEdiOXJYRmNZOWFpdm5zVi9LcldUclpvMFpqNFVwblRwNEs4eEZs?=
- =?utf-8?B?bjV4TTJPeTFja3N2NmYyMWlLMHRBcFF4SEFnRTFxaEZ5VVlDU3VVR2kyR3Yw?=
- =?utf-8?B?cFFnczJXeVUwRmhNMlY0Uk5HUFVTT2thbTFDRjBDUW94eCtXd1NCd0l6UWsy?=
- =?utf-8?B?SjJRenB5UHhtTmdaZTdmN2dLQWg2MmtZSHJWMWZvZkwrTEJuc0Z5QTlWcHVr?=
- =?utf-8?B?d1Z0M0tEQXNPeVpEWkxmd2JpL2JDYlIycHBQK2hEUmpjN3o1QXBYN1dCcjlv?=
- =?utf-8?B?WkNoMVoxZkk1UE5wV3Fia3JSNlhQc1hzam94eXNxdXc4c3VPWTh5dDBXTmE0?=
- =?utf-8?B?U2Q1Znk5Mlg5OVFIU2xFMUFFRnR0SWJ3Z251UXNGYTlHNDJvam8vajkzU05I?=
- =?utf-8?B?RENiZFpubDE0R0NVL3ZVNnFCU1dEM2prQW1yYm8wcTFuQzdXbm5Pc3pLbTZF?=
- =?utf-8?B?SGdlUWJyQzVYTFNJbW9BNUdQTnVDdXpQN2VIUUkzTUNxN0JnZ2FTWXJjWVVU?=
- =?utf-8?B?dnhkZDBCZjlycTh3bFBEU2N2NjJlbGltM1VBU2NxTTV3SldGWDBXSDZRZDNv?=
- =?utf-8?B?SlhjZlhrdmFpMVpXUUgwTFpTNS9VSTVmZVR1akVhWEd6ckQrVUJiUW8zeWxh?=
- =?utf-8?B?emtrL3pGUGJRMTNyaFpSb0RvdWF6SFlEdHgvV1FtRkZHRnpidmVEa0hpQTlr?=
- =?utf-8?B?b08wRFNidUhNUVR2WW1pM0t2eWpQczladk8xV1VlckxUWTRabTN5SXBabmR3?=
- =?utf-8?B?QVYyU3NNckQ5ajJ4MWhmTFVoRjdqbVd2V0JJUnVrWVp1WmdHMjAwQU42U2FF?=
- =?utf-8?B?NzZnV2JBaU53QW5mRXNBMFlUaUtWTWtSeGNpUUtnYU9pWFppeGpqTVNkQVFp?=
- =?utf-8?B?SHJUeFg0eGFwYy9rVFUxWDIxTWd4VHJrNTdWSi9INVhJem1hdUpnYkVpdGRp?=
- =?utf-8?B?QktFS0VIc1JyUEcwVlQraVdOQ3RjQVZMZkJ0SGl0cFUzdWVRSTRxMU9ZdjRT?=
- =?utf-8?B?SE1vVFNnS3dwVEVGbWlrRldaTFR5SUFLd1R1VkgwNUgwS0l1RHV1c1ZnQlRh?=
- =?utf-8?B?UkNjY2g2Y29Bc1NXZTJGMTJDaVV6Umdac05YUUkvQ1FpVVNEalpObVJ4bEZT?=
- =?utf-8?B?UWFkL0NUaWFPU1NlYlh0VE5NcE0yaVMwR3hqY2cxWGxCMUoxVCtUZGpwSDNI?=
- =?utf-8?B?QjZzOTd2VVNzbXBHNnI4czNiWHJ6bUlaVVhrWjNIZ3FOUjhMMEc0NFJUVjF5?=
- =?utf-8?B?TDN5VndvdkJWZ1lWSmYrVHh3Qld1eWs0S0p6LzJpWklTOFlNM2U0SmVTN1Yy?=
- =?utf-8?B?NEpmRU1Ec0lPVzlhMUpqZ2lscVVRYTZNMWZhN1FhaXhqVUFkbWljc2E4eFp4?=
- =?utf-8?Q?9s3HCQQCRWxgzr3VTfXffKbK/?=
-X-MS-Exchange-AntiSpam-ExternalHop-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-ExternalHop-MessageData-0: =?utf-8?B?ZW9HWGdDNHZQZk9Md05ONHhSWXR5a0JDNVoyNUU3M1ZibFdROGJYcEg3NnFG?=
- =?utf-8?B?eWhldWNwemFteFc4Q2w5VWRBTlh2VkMwTE1KckFRcXBGSG8yVGh2R3lFTWJE?=
- =?utf-8?B?OVpJd0NHcWhtRjU1YlFIVUlMUU5NQ3doa2VvV2Z4R2FHeFVCM0VIbmc4ZEN6?=
- =?utf-8?B?Q014eFg2enluemVIc0VzUTV0QUlUUkQybmZyVWRoTUd3UXlaWkFMVkFkYzBi?=
- =?utf-8?B?OXFTYzVqRWJ0UWU0MXV1WUFiclQrVWdVMTZZZmFSTzZlNnBIRGd2QVJYWksy?=
- =?utf-8?B?QmVnWURvc0NvU3UvcWI4S21QSENqSnBtSDRjeEJLcXJyeWpocUNiWnViNmFz?=
- =?utf-8?B?Z281b3VlZGZ3dUxMTmxSVEhFVldEVk1vNXJQeEdSNzJZejFTUUZFSUlYN2dF?=
- =?utf-8?B?QXh6ejdENWltaDRWZ1N2cmJhdGtqOXNkWWpRdm0xSTA2czd6U0pocW1nWnp3?=
- =?utf-8?B?akQvVUpRSnJ2SDJFQ0ZtY21pVk0yUVVZdWNPc21xOVd0QTNHMC8zNmdrbWtX?=
- =?utf-8?B?cnBoaTZyZG5WbGZyUnVvRDJiWnJ6M0FkdVJkSUlTdGliOHZTRENRaHRPSWhM?=
- =?utf-8?B?SDFuNzc1RGhjcE5Balkva0NDaEFPOElpM0FVTzF2QTJvblJ2MUZKMk5lZGRn?=
- =?utf-8?B?QXlBVStPQThMVmxaRGNBRVFGdGsxU3hvT1YyN2VyenVjM3JPWFp4eWVlMWh6?=
- =?utf-8?B?L21sU3dLM3VqT3VMWGJ0NVc4a2wzaURVaDdKLzFKc2pUdUpiWVIrUkM2UWow?=
- =?utf-8?B?b0Zna2IyVnVDendWNGNEOU5ScnoxTzZjUW15QzVBQTZNcVkwSjloSWNCQWIw?=
- =?utf-8?B?Z1hqWGNoWEl3RUptelJYcW1oWWlOcXFTNkV2TTlUdUltVTNsMjJxZmRBaFJm?=
- =?utf-8?B?MFk2K3VwVXNZMHN2MS9pYTk0U3E5TTk0VnhMeXhOV0V2cFpkaERwSWFGNnR5?=
- =?utf-8?B?YTNRVTB0S3U0Sml2akUxZ1JlRVBtd05qWGpWcXF4MUdwd2M5V1VSanMyRXRa?=
- =?utf-8?B?MnRReWdyK0h5TWNjdW9kUHcvYU04emR1VEtnR1A2b1FpcENzUmN3SXZiT1Zz?=
- =?utf-8?B?ZUNaZkRabXZRcFZYamR1OERvR0lyc2czS2xpTVhIZk9iajE3SkQ1NTM1cTNm?=
- =?utf-8?B?cnBITXlmREtsVE5qTkFXRzJ6SUNrN0h0N1pnM0tOVmV3NWk1T1V2QWhwUVIy?=
- =?utf-8?B?NUJ5OCtOdU4ralpSaGJ4RnZaZlU3bTZhSm5rMktVK3p4RVg0QXh0OXIwZ3F5?=
- =?utf-8?B?dHBDM0hoOW0xajdPZkZILys4TWZJeGc4eEJQRnlGb01lT3RXWmc4QkZYVi9P?=
- =?utf-8?B?ZVZjc1RaTlhOTVlOQ1ZWMEptWXYwcHZseHpaU1dWclc2ZGxGTFkzY1F4bHN0?=
- =?utf-8?B?TU1MbG00bm85ZHJQMC8xcEZGdm0zODc3VWNDWjhVWUFJWmpVc2FhYVZRRG9G?=
- =?utf-8?B?UXVYU1ExbForbjdBTk9LSmVYbnNWTS9WUmMxbzFLM2FzYnhuMGRDeGJBSWtu?=
- =?utf-8?Q?ewoFbm71Oa2UVnbNwjFtqX+Pe5l?=
-X-OriginatorOrg: oracle.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: a41e7a82-a6a9-4fe1-461b-08dbe1574c69
-X-MS-Exchange-CrossTenant-AuthSource: DM6PR10MB4313.namprd10.prod.outlook.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 09 Nov 2023 19:08:46.5862
- (UTC)
-X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
-X-MS-Exchange-CrossTenant-Id: 4e2c6054-71cb-48f1-bd6c-3a9705aca71b
-X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: T+/TQiZpBtwZWs8seapxlYDvFt8REb0ViKa18+hOxY0LOe5IJZnEe5XC6rRphdb3CLOLha8swILHS8M933l4NQ==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: DS0PR10MB7222
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.272,Aquarius:18.0.987,Hydra:6.0.619,FMLib:17.11.176.26
- definitions=2023-11-09_14,2023-11-09_01,2023-05-22_02
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 spamscore=0 malwarescore=0
- suspectscore=0 adultscore=0 bulkscore=0 mlxlogscore=999 phishscore=0
- mlxscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2311060000 definitions=main-2311090138
-X-Proofpoint-GUID: Du6umTe3sbVUQQ43zgYGKI-3_BMVcZBr
-X-Proofpoint-ORIG-GUID: Du6umTe3sbVUQQ43zgYGKI-3_BMVcZBr
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20231108163316.493089-1-hch@lst.de>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On 09/11/2023 15:46, Christoph Hellwig wrote:
-> On Thu, Nov 09, 2023 at 03:42:40PM +0000, Matthew Wilcox wrote:
->> That wasn't the model we had in mind.  In our thinking, it was fine to
->> send a write that crossed the atomic write limit, but the drive wouldn't
->> guarantee that it was atomic except at the atomic write boundary.
->> Eg with an AWUN of 16kB, you could send five 16kB writes, combine them
->> into a single 80kB write, and if the power failed midway through, the
->> drive would guarantee that it had written 0, 16kB, 32kB, 48kB, 64kB or
->> all 80kB.  Not necessarily in order; it might have written bytes 16-32kB,
->> 64-80kB and not the other three.
+On Wed, Nov 08, 2023 at 05:33:16PM +0100, Christoph Hellwig wrote:
+> Provide a dumb BUILD_BUG_ON_MSG and import the kernel xfs_ondisk.h file
+> so that libxfs_init can check the size of all relevant on-disk
+> structures.
+> 
+> This seems like a better way to verify the struct size in userspace
+> compared to the xfs/122 test in xfstests that needs constant updates.
+> 
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
+> ---
+> 
+> Note that xfs_ondisk.h should move to libxfs if this gets applied.
+> 
+>  include/xfs.h       |   4 +
+>  libxfs/init.c       |   7 ++
+>  libxfs/xfs_ondisk.h | 195 ++++++++++++++++++++++++++++++++++++++++++++
+>  3 files changed, 206 insertions(+)
+>  create mode 100644 libxfs/xfs_ondisk.h
+> 
+> diff --git a/include/xfs.h b/include/xfs.h
+> index e97158c8d..796af1f37 100644
+> --- a/include/xfs.h
+> +++ b/include/xfs.h
+> @@ -38,6 +38,10 @@ extern int xfs_assert_largefile[sizeof(off_t)-8];
+>  #define BUILD_BUG_ON(condition) ((void)sizeof(char[1 - 2*!!(condition)]))
+>  #endif
+>  
+> +#ifndef BUILD_BUG_ON_MSG
+> +#define BUILD_BUG_ON_MSG(a, b)	BUILD_BUG_ON(a)
 
-I didn't think that there are any atomic write guarantees at all if we 
-ever exceed AWUN or AWUPF or cross the atomic write boundary (if any).
+How difficult would it be to port the complex kernel macros that
+actually result in the message being emitted in the gcc error output?
 
-> I can see some use for that, but I'm really worried that debugging
-> problems in the I/O merging and splitting will be absolute hell.
+It's helpful that when the kernel build breaks, the robots will report
+exactly which field/struct/whatever tripped, which makes it easier to
+start figuring out where things went wrong on some weird architecture.
 
-Even if bios were merged for NVMe the total request length still should 
-not exceed AWUPF. However a check can be added to ensure this for a 
-submitted atomic write request.
+Next would be redefining BUILD_BUG_ON as
 
-As for splitting, it is not permitted for atomic writes and only a 
-single bio is permitted to be created per write. Are more integrity 
-checks required?
+#define BUILD_BUG_ON(c)	BUILD_BUG_ON_MSG(condition, condition)
 
-Thanks,
-John
+so that userspace build failures actually tell you what condition failed
+without you having to look in the source code.
+
+Otherwise I'm all for porting xfs_ondisk.h to xfsprogs.  IIRC I tried
+that a long time ago and Dave or someone said xfs/122 was the answer.
+
+--D
+
+> +#endif
+> +
+>  #define sizeof_field(TYPE, MEMBER) sizeof((((TYPE *)0)->MEMBER))
+>  
+>  #include <xfs/xfs_types.h>
+> diff --git a/libxfs/init.c b/libxfs/init.c
+> index ce6e62cde..aa37ef651 100644
+> --- a/libxfs/init.c
+> +++ b/libxfs/init.c
+> @@ -23,6 +23,11 @@
+>  #include "xfs_refcount_btree.h"
+>  #include "libfrog/platform.h"
+>  
+> +#include "xfs_format.h"
+> +#include "xfs_da_format.h"
+> +#include "xfs_log_format.h"
+> +#include "xfs_ondisk.h"
+> +
+>  #include "libxfs.h"		/* for now */
+>  
+>  #ifndef HAVE_LIBURCU_ATOMIC64
+> @@ -317,6 +322,8 @@ libxfs_init(libxfs_init_t *a)
+>  	int		rval = 0;
+>  	int		flags;
+>  
+> +	xfs_check_ondisk_structs();
+> +
+>  	dpath[0] = logpath[0] = rtpath[0] = '\0';
+>  	dname = a->dname;
+>  	logname = a->logname;
+> diff --git a/libxfs/xfs_ondisk.h b/libxfs/xfs_ondisk.h
+> new file mode 100644
+> index 000000000..c4cc99b70
+> --- /dev/null
+> +++ b/libxfs/xfs_ondisk.h
+> @@ -0,0 +1,195 @@
+> +// SPDX-License-Identifier: GPL-2.0
+> +/*
+> + * Copyright (c) 2016 Oracle.
+> + * All Rights Reserved.
+> + */
+> +#ifndef __XFS_ONDISK_H
+> +#define __XFS_ONDISK_H
+> +
+> +#define XFS_CHECK_STRUCT_SIZE(structname, size) \
+> +	BUILD_BUG_ON_MSG(sizeof(structname) != (size), "XFS: sizeof(" \
+> +		#structname ") is wrong, expected " #size)
+> +
+> +#define XFS_CHECK_OFFSET(structname, member, off) \
+> +	BUILD_BUG_ON_MSG(offsetof(structname, member) != (off), \
+> +		"XFS: offsetof(" #structname ", " #member ") is wrong, " \
+> +		"expected " #off)
+> +
+> +#define XFS_CHECK_VALUE(value, expected) \
+> +	BUILD_BUG_ON_MSG((value) != (expected), \
+> +		"XFS: value of " #value " is wrong, expected " #expected)
+> +
+> +static inline void __init
+> +xfs_check_ondisk_structs(void)
+> +{
+> +	/* ag/file structures */
+> +	XFS_CHECK_STRUCT_SIZE(struct xfs_acl,			4);
+> +	XFS_CHECK_STRUCT_SIZE(struct xfs_acl_entry,		12);
+> +	XFS_CHECK_STRUCT_SIZE(struct xfs_agf,			224);
+> +	XFS_CHECK_STRUCT_SIZE(struct xfs_agfl,			36);
+> +	XFS_CHECK_STRUCT_SIZE(struct xfs_agi,			344);
+> +	XFS_CHECK_STRUCT_SIZE(struct xfs_bmbt_key,		8);
+> +	XFS_CHECK_STRUCT_SIZE(struct xfs_bmbt_rec,		16);
+> +	XFS_CHECK_STRUCT_SIZE(struct xfs_bmdr_block,		4);
+> +	XFS_CHECK_STRUCT_SIZE(struct xfs_btree_block_shdr,	48);
+> +	XFS_CHECK_STRUCT_SIZE(struct xfs_btree_block_lhdr,	64);
+> +	XFS_CHECK_STRUCT_SIZE(struct xfs_btree_block,		72);
+> +	XFS_CHECK_STRUCT_SIZE(struct xfs_dinode,		176);
+> +	XFS_CHECK_STRUCT_SIZE(struct xfs_disk_dquot,		104);
+> +	XFS_CHECK_STRUCT_SIZE(struct xfs_dqblk,			136);
+> +	XFS_CHECK_STRUCT_SIZE(struct xfs_dsb,			264);
+> +	XFS_CHECK_STRUCT_SIZE(struct xfs_dsymlink_hdr,		56);
+> +	XFS_CHECK_STRUCT_SIZE(struct xfs_inobt_key,		4);
+> +	XFS_CHECK_STRUCT_SIZE(struct xfs_inobt_rec,		16);
+> +	XFS_CHECK_STRUCT_SIZE(struct xfs_refcount_key,		4);
+> +	XFS_CHECK_STRUCT_SIZE(struct xfs_refcount_rec,		12);
+> +	XFS_CHECK_STRUCT_SIZE(struct xfs_rmap_key,		20);
+> +	XFS_CHECK_STRUCT_SIZE(struct xfs_rmap_rec,		24);
+> +	XFS_CHECK_STRUCT_SIZE(xfs_timestamp_t,			8);
+> +	XFS_CHECK_STRUCT_SIZE(struct xfs_legacy_timestamp,	8);
+> +	XFS_CHECK_STRUCT_SIZE(xfs_alloc_key_t,			8);
+> +	XFS_CHECK_STRUCT_SIZE(xfs_alloc_ptr_t,			4);
+> +	XFS_CHECK_STRUCT_SIZE(xfs_alloc_rec_t,			8);
+> +	XFS_CHECK_STRUCT_SIZE(xfs_inobt_ptr_t,			4);
+> +	XFS_CHECK_STRUCT_SIZE(xfs_refcount_ptr_t,		4);
+> +	XFS_CHECK_STRUCT_SIZE(xfs_rmap_ptr_t,			4);
+> +
+> +	/* dir/attr trees */
+> +	XFS_CHECK_STRUCT_SIZE(struct xfs_attr3_leaf_hdr,	80);
+> +	XFS_CHECK_STRUCT_SIZE(struct xfs_attr3_leafblock,	80);
+> +	XFS_CHECK_STRUCT_SIZE(struct xfs_attr3_rmt_hdr,		56);
+> +	XFS_CHECK_STRUCT_SIZE(struct xfs_da3_blkinfo,		56);
+> +	XFS_CHECK_STRUCT_SIZE(struct xfs_da3_intnode,		64);
+> +	XFS_CHECK_STRUCT_SIZE(struct xfs_da3_node_hdr,		64);
+> +	XFS_CHECK_STRUCT_SIZE(struct xfs_dir3_blk_hdr,		48);
+> +	XFS_CHECK_STRUCT_SIZE(struct xfs_dir3_data_hdr,		64);
+> +	XFS_CHECK_STRUCT_SIZE(struct xfs_dir3_free,		64);
+> +	XFS_CHECK_STRUCT_SIZE(struct xfs_dir3_free_hdr,		64);
+> +	XFS_CHECK_STRUCT_SIZE(struct xfs_dir3_leaf,		64);
+> +	XFS_CHECK_STRUCT_SIZE(struct xfs_dir3_leaf_hdr,		64);
+> +	XFS_CHECK_STRUCT_SIZE(xfs_attr_leaf_entry_t,		8);
+> +	XFS_CHECK_STRUCT_SIZE(xfs_attr_leaf_hdr_t,		32);
+> +	XFS_CHECK_STRUCT_SIZE(xfs_attr_leaf_map_t,		4);
+> +	XFS_CHECK_STRUCT_SIZE(xfs_attr_leaf_name_local_t,	4);
+> +
+> +	/*
+> +	 * m68k has problems with xfs_attr_leaf_name_remote_t, but we pad it to
+> +	 * 4 bytes anyway so it's not obviously a problem.  Hence for the moment
+> +	 * we don't check this structure. This can be re-instated when the attr
+> +	 * definitions are updated to use c99 VLA definitions.
+> +	 *
+> +	XFS_CHECK_STRUCT_SIZE(xfs_attr_leaf_name_remote_t,	12);
+> +	 */
+> +
+> +	XFS_CHECK_OFFSET(xfs_attr_leaf_name_local_t, valuelen,	0);
+> +	XFS_CHECK_OFFSET(xfs_attr_leaf_name_local_t, namelen,	2);
+> +	XFS_CHECK_OFFSET(xfs_attr_leaf_name_local_t, nameval,	3);
+> +	XFS_CHECK_OFFSET(xfs_attr_leaf_name_remote_t, valueblk,	0);
+> +	XFS_CHECK_OFFSET(xfs_attr_leaf_name_remote_t, valuelen,	4);
+> +	XFS_CHECK_OFFSET(xfs_attr_leaf_name_remote_t, namelen,	8);
+> +	XFS_CHECK_OFFSET(xfs_attr_leaf_name_remote_t, name,	9);
+> +	XFS_CHECK_STRUCT_SIZE(xfs_attr_leafblock_t,		32);
+> +	XFS_CHECK_STRUCT_SIZE(struct xfs_attr_shortform,	4);
+> +	XFS_CHECK_OFFSET(struct xfs_attr_shortform, hdr.totsize, 0);
+> +	XFS_CHECK_OFFSET(struct xfs_attr_shortform, hdr.count,	 2);
+> +	XFS_CHECK_OFFSET(struct xfs_attr_shortform, list[0].namelen,	4);
+> +	XFS_CHECK_OFFSET(struct xfs_attr_shortform, list[0].valuelen,	5);
+> +	XFS_CHECK_OFFSET(struct xfs_attr_shortform, list[0].flags,	6);
+> +	XFS_CHECK_OFFSET(struct xfs_attr_shortform, list[0].nameval,	7);
+> +	XFS_CHECK_STRUCT_SIZE(xfs_da_blkinfo_t,			12);
+> +	XFS_CHECK_STRUCT_SIZE(xfs_da_intnode_t,			16);
+> +	XFS_CHECK_STRUCT_SIZE(xfs_da_node_entry_t,		8);
+> +	XFS_CHECK_STRUCT_SIZE(xfs_da_node_hdr_t,		16);
+> +	XFS_CHECK_STRUCT_SIZE(xfs_dir2_data_free_t,		4);
+> +	XFS_CHECK_STRUCT_SIZE(xfs_dir2_data_hdr_t,		16);
+> +	XFS_CHECK_OFFSET(xfs_dir2_data_unused_t, freetag,	0);
+> +	XFS_CHECK_OFFSET(xfs_dir2_data_unused_t, length,	2);
+> +	XFS_CHECK_STRUCT_SIZE(xfs_dir2_free_hdr_t,		16);
+> +	XFS_CHECK_STRUCT_SIZE(xfs_dir2_free_t,			16);
+> +	XFS_CHECK_STRUCT_SIZE(xfs_dir2_leaf_entry_t,		8);
+> +	XFS_CHECK_STRUCT_SIZE(xfs_dir2_leaf_hdr_t,		16);
+> +	XFS_CHECK_STRUCT_SIZE(xfs_dir2_leaf_t,			16);
+> +	XFS_CHECK_STRUCT_SIZE(xfs_dir2_leaf_tail_t,		4);
+> +	XFS_CHECK_STRUCT_SIZE(xfs_dir2_sf_entry_t,		3);
+> +	XFS_CHECK_OFFSET(xfs_dir2_sf_entry_t, namelen,		0);
+> +	XFS_CHECK_OFFSET(xfs_dir2_sf_entry_t, offset,		1);
+> +	XFS_CHECK_OFFSET(xfs_dir2_sf_entry_t, name,		3);
+> +	XFS_CHECK_STRUCT_SIZE(xfs_dir2_sf_hdr_t,		10);
+> +
+> +	/* log structures */
+> +	XFS_CHECK_STRUCT_SIZE(struct xfs_buf_log_format,	88);
+> +	XFS_CHECK_STRUCT_SIZE(struct xfs_dq_logformat,		24);
+> +	XFS_CHECK_STRUCT_SIZE(struct xfs_efd_log_format_32,	16);
+> +	XFS_CHECK_STRUCT_SIZE(struct xfs_efd_log_format_64,	16);
+> +	XFS_CHECK_STRUCT_SIZE(struct xfs_efi_log_format_32,	16);
+> +	XFS_CHECK_STRUCT_SIZE(struct xfs_efi_log_format_64,	16);
+> +	XFS_CHECK_STRUCT_SIZE(struct xfs_extent_32,		12);
+> +	XFS_CHECK_STRUCT_SIZE(struct xfs_extent_64,		16);
+> +	XFS_CHECK_STRUCT_SIZE(struct xfs_log_dinode,		176);
+> +	XFS_CHECK_STRUCT_SIZE(struct xfs_icreate_log,		28);
+> +	XFS_CHECK_STRUCT_SIZE(xfs_log_timestamp_t,		8);
+> +	XFS_CHECK_STRUCT_SIZE(struct xfs_log_legacy_timestamp,	8);
+> +	XFS_CHECK_STRUCT_SIZE(struct xfs_inode_log_format_32,	52);
+> +	XFS_CHECK_STRUCT_SIZE(struct xfs_inode_log_format,	56);
+> +	XFS_CHECK_STRUCT_SIZE(struct xfs_qoff_logformat,	20);
+> +	XFS_CHECK_STRUCT_SIZE(struct xfs_trans_header,		16);
+> +	XFS_CHECK_STRUCT_SIZE(struct xfs_attri_log_format,	40);
+> +	XFS_CHECK_STRUCT_SIZE(struct xfs_attrd_log_format,	16);
+> +	XFS_CHECK_STRUCT_SIZE(struct xfs_bui_log_format,	16);
+> +	XFS_CHECK_STRUCT_SIZE(struct xfs_bud_log_format,	16);
+> +	XFS_CHECK_STRUCT_SIZE(struct xfs_cui_log_format,	16);
+> +	XFS_CHECK_STRUCT_SIZE(struct xfs_cud_log_format,	16);
+> +	XFS_CHECK_STRUCT_SIZE(struct xfs_rui_log_format,	16);
+> +	XFS_CHECK_STRUCT_SIZE(struct xfs_rud_log_format,	16);
+> +	XFS_CHECK_STRUCT_SIZE(struct xfs_map_extent,		32);
+> +	XFS_CHECK_STRUCT_SIZE(struct xfs_phys_extent,		16);
+> +
+> +	XFS_CHECK_OFFSET(struct xfs_bui_log_format, bui_extents,	16);
+> +	XFS_CHECK_OFFSET(struct xfs_cui_log_format, cui_extents,	16);
+> +	XFS_CHECK_OFFSET(struct xfs_rui_log_format, rui_extents,	16);
+> +	XFS_CHECK_OFFSET(struct xfs_efi_log_format, efi_extents,	16);
+> +	XFS_CHECK_OFFSET(struct xfs_efi_log_format_32, efi_extents,	16);
+> +	XFS_CHECK_OFFSET(struct xfs_efi_log_format_64, efi_extents,	16);
+> +
+> +	/*
+> +	 * The v5 superblock format extended several v4 header structures with
+> +	 * additional data. While new fields are only accessible on v5
+> +	 * superblocks, it's important that the v5 structures place original v4
+> +	 * fields/headers in the correct location on-disk. For example, we must
+> +	 * be able to find magic values at the same location in certain blocks
+> +	 * regardless of superblock version.
+> +	 *
+> +	 * The following checks ensure that various v5 data structures place the
+> +	 * subset of v4 metadata associated with the same type of block at the
+> +	 * start of the on-disk block. If there is no data structure definition
+> +	 * for certain types of v4 blocks, traverse down to the first field of
+> +	 * common metadata (e.g., magic value) and make sure it is at offset
+> +	 * zero.
+> +	 */
+> +	XFS_CHECK_OFFSET(struct xfs_dir3_leaf, hdr.info.hdr,	0);
+> +	XFS_CHECK_OFFSET(struct xfs_da3_intnode, hdr.info.hdr,	0);
+> +	XFS_CHECK_OFFSET(struct xfs_dir3_data_hdr, hdr.magic,	0);
+> +	XFS_CHECK_OFFSET(struct xfs_dir3_free, hdr.hdr.magic,	0);
+> +	XFS_CHECK_OFFSET(struct xfs_attr3_leafblock, hdr.info.hdr, 0);
+> +
+> +	XFS_CHECK_STRUCT_SIZE(struct xfs_bulkstat,		192);
+> +	XFS_CHECK_STRUCT_SIZE(struct xfs_inumbers,		24);
+> +	XFS_CHECK_STRUCT_SIZE(struct xfs_bulkstat_req,		64);
+> +	XFS_CHECK_STRUCT_SIZE(struct xfs_inumbers_req,		64);
+> +
+> +	/*
+> +	 * Make sure the incore inode timestamp range corresponds to hand
+> +	 * converted values based on the ondisk format specification.
+> +	 */
+> +	XFS_CHECK_VALUE(XFS_BIGTIME_TIME_MIN - XFS_BIGTIME_EPOCH_OFFSET,
+> +			XFS_LEGACY_TIME_MIN);
+> +	XFS_CHECK_VALUE(XFS_BIGTIME_TIME_MAX - XFS_BIGTIME_EPOCH_OFFSET,
+> +			16299260424LL);
+> +
+> +	/* Do the same with the incore quota expiration range. */
+> +	XFS_CHECK_VALUE(XFS_DQ_BIGTIME_EXPIRY_MIN << XFS_DQ_BIGTIME_SHIFT, 4);
+> +	XFS_CHECK_VALUE(XFS_DQ_BIGTIME_EXPIRY_MAX << XFS_DQ_BIGTIME_SHIFT,
+> +			16299260424LL);
+> +}
+> +
+> +#endif /* __XFS_ONDISK_H */
+> -- 
+> 2.39.2
+> 
