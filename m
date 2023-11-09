@@ -2,63 +2,63 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6EF97C4332F
-	for <linux-xfs@archiver.kernel.org>; Thu,  9 Nov 2023 21:51:16 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E5AC5C4332F
+	for <linux-xfs@archiver.kernel.org>; Thu,  9 Nov 2023 21:51:47 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231508AbjKIVvR (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 9 Nov 2023 16:51:17 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47998 "EHLO
+        id S1345307AbjKIVvs (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 9 Nov 2023 16:51:48 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33400 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229630AbjKIVvQ (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 9 Nov 2023 16:51:16 -0500
+        with ESMTP id S234659AbjKIVvn (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 9 Nov 2023 16:51:43 -0500
 Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D69D2420F
-        for <linux-xfs@vger.kernel.org>; Thu,  9 Nov 2023 13:50:25 -0800 (PST)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 30537420B
+        for <linux-xfs@vger.kernel.org>; Thu,  9 Nov 2023 13:51:00 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1699566625;
+        s=mimecast20190719; t=1699566659;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:cc:mime-version:mime-version:content-type:content-type:
          content-transfer-encoding:content-transfer-encoding:
          in-reply-to:in-reply-to:references:references;
-        bh=2RfLDwoRp1AgagZ4sj107hwERh+DKKg2aeHYKEBXwEg=;
-        b=bNlJPYOeoIRKJfEI7UvzD+1Jeqgq72dAmoSAZI4LuF2SL5KhI4TnAErQCy3NFf4/7f1vsv
-        gPy70Dwg0nCJZ62YgWVevqolZO3dFLgddgro7zOzCLZTKb52YnukJ84x1MthjUv0SIVdl+
-        vadpAAgClr7VNIPmN1j8V7CyM3Qr0oE=
-Received: from mail-pl1-f198.google.com (mail-pl1-f198.google.com
- [209.85.214.198]) by relay.mimecast.com with ESMTP with STARTTLS
+        bh=SEe5Lm1QSY9l0OHsCk0EbXQqbDGAdhAs53cCOGquA04=;
+        b=X8QQJnCKtYJ/lmHZo204XsGeL7BQVhCtwfKESshqTCZT1t/paA0Aw+IP8L/UjYsblySvxO
+        BDg0/Ck1wxit9Z7N7PjUlLRLgB4ol1eaeA1LOOkxACOZJ4N+VoFft+ZSIagDhN21SOBfG2
+        CST8GPndm+gc1bRu3RWq/bL7JuXuGcg=
+Received: from mail-pl1-f199.google.com (mail-pl1-f199.google.com
+ [209.85.214.199]) by relay.mimecast.com with ESMTP with STARTTLS
  (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
- us-mta-580-KDXtnfI_OJurG3CN-hvMXA-1; Thu, 09 Nov 2023 16:50:21 -0500
-X-MC-Unique: KDXtnfI_OJurG3CN-hvMXA-1
-Received: by mail-pl1-f198.google.com with SMTP id d9443c01a7336-1cc323b2aa3so13180245ad.3
-        for <linux-xfs@vger.kernel.org>; Thu, 09 Nov 2023 13:50:21 -0800 (PST)
+ us-mta-464--oBgulJUMPuTXLGirNOzpA-1; Thu, 09 Nov 2023 16:50:58 -0500
+X-MC-Unique: -oBgulJUMPuTXLGirNOzpA-1
+Received: by mail-pl1-f199.google.com with SMTP id d9443c01a7336-1cc4cab731dso14424765ad.1
+        for <linux-xfs@vger.kernel.org>; Thu, 09 Nov 2023 13:50:57 -0800 (PST)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1699566620; x=1700171420;
+        d=1e100.net; s=20230601; t=1699566657; x=1700171457;
         h=content-transfer-encoding:cc:to:subject:message-id:date:from
          :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
          :subject:date:message-id:reply-to;
-        bh=2RfLDwoRp1AgagZ4sj107hwERh+DKKg2aeHYKEBXwEg=;
-        b=rjkp+siIOjul9caHHkkyFOXTwvs+mKXZqkDbizjbKw0QlcEmD60Ne4hVqzU/ShdqYE
-         m3kdthwQYNAoonntMFz7UNFXPgBVOIjHo0WCEdByWdmbcq0Y/XSKimKU7nmSjpkZqI4o
-         ZyQ7ADtAu9/Jlf8ipF5hMa/bWWXcDYmOf+Asg30PWAqQK7E+gtwlnyCepfS2rzFNhyX8
-         tqgfU3VCZTbxa65rojSl53scONNl4F9JLLk4shgbzYbWYPDs5FHNeD6JStWQOv4ZtBpp
-         M6IuyICIeaOdkjYXT4rYOEubWiBYWaKRP7SDHy8BzRuof+TxwdStgGKJh1jIi91C7srt
-         4IBw==
-X-Gm-Message-State: AOJu0Yy6JzWzGVE4JDOevfeMeTE3dwUoCEO8nyX6v5TQ6N82N+krTRRm
-        wpe+rJ/aMtTGFgiR9mB3NokGRHDkz9IqkIGI8JfmleVM1+c7oeMR5TSjOHQDppog8Bkfp5ynvaU
-        GhPTOPgzRiwuDY2NTnByQDqJHG5yoVXfVD57m
-X-Received: by 2002:a17:903:41ce:b0:1cc:5dd4:7ce5 with SMTP id u14-20020a17090341ce00b001cc5dd47ce5mr7796789ple.19.1699566620565;
-        Thu, 09 Nov 2023 13:50:20 -0800 (PST)
-X-Google-Smtp-Source: AGHT+IGXBc2hXk+C70TRLFN9EyxRa5fj9jL7XbLvgzaeG0AtHwvCIMfkAS4K9wOLN8chphWgrxWpDONaVxp+KNblyCM=
-X-Received: by 2002:a17:903:41ce:b0:1cc:5dd4:7ce5 with SMTP id
- u14-20020a17090341ce00b001cc5dd47ce5mr7796770ple.19.1699566620259; Thu, 09
- Nov 2023 13:50:20 -0800 (PST)
+        bh=SEe5Lm1QSY9l0OHsCk0EbXQqbDGAdhAs53cCOGquA04=;
+        b=poVqCL4su+ZesTPK71KtDdOc0kZ2MOTgeieVkrC/6oHCDnjanomAGKa9SEtbV9Tgvi
+         CWQqoemd0vbNs/ttZ44vg26tJgKHohF0vO67dSxtdOL/xUPFEXykf20XYaTrXQSYESZ1
+         eHIPL7U5UlPAlzqk5enRFo0XnNwA/oQNff4hkq3kh6/Ilm7WgYOQLw6+GDyN+wTytxJx
+         HKYpi3I7cy+md1vyYkhuMDVag8Pr83FuVUrwb3ScLymXPwsf7ho52+fQgaYlwEcL0ERQ
+         RO3fWcRg2FwqOzH15RspzUFdnjFBwuNQIPwS5SLJhN+JK9tnShekYFqrFENHQbaSTqpc
+         leyQ==
+X-Gm-Message-State: AOJu0Yw/O4ksBnCSFqMxSmZ6qa2OZS5Xy2n9Sd3M0ACXYR2o28aSGk+u
+        77m7ZXnHqKYTzt1ODIxiVizrUvGOgY7xFq5afV+MvI1f1gHlf9SbTBDBZcWDBIumTh2uJZyGzIM
+        yj4Bxg358s2L8XO9/KhWOw+S2Z6GFf2T9K5b+
+X-Received: by 2002:a17:903:32c8:b0:1cc:4985:fc04 with SMTP id i8-20020a17090332c800b001cc4985fc04mr7490407plr.66.1699566657074;
+        Thu, 09 Nov 2023 13:50:57 -0800 (PST)
+X-Google-Smtp-Source: AGHT+IGyG4JtpfIMVQSiIgVG/wUB85vTa7ZYZB8EAxgeOBn9j0yJtEeYqTI6/TevKMgPEnNnnhq8hyhOkkpCwkjzLqg=
+X-Received: by 2002:a17:903:32c8:b0:1cc:4985:fc04 with SMTP id
+ i8-20020a17090332c800b001cc4985fc04mr7490395plr.66.1699566656820; Thu, 09 Nov
+ 2023 13:50:56 -0800 (PST)
 MIME-Version: 1.0
-References: <20231107212643.3490372-1-willy@infradead.org> <20231107212643.3490372-2-willy@infradead.org>
-In-Reply-To: <20231107212643.3490372-2-willy@infradead.org>
+References: <20231107212643.3490372-1-willy@infradead.org> <20231107212643.3490372-3-willy@infradead.org>
+In-Reply-To: <20231107212643.3490372-3-willy@infradead.org>
 From:   Andreas Gruenbacher <agruenba@redhat.com>
-Date:   Thu, 9 Nov 2023 22:50:08 +0100
-Message-ID: <CAHc6FU54SzUm-0eF-GYX2B7w0xTWQ+N6nLx+0xAFshsWUdq2qA@mail.gmail.com>
-Subject: Re: [PATCH 1/3] mm: Add folio_zero_tail() and use it in ext4
+Date:   Thu, 9 Nov 2023 22:50:45 +0100
+Message-ID: <CAHc6FU550j_AYgWz5JgRu84mw5HqrSwd+hYZiHVArnget3gb4w@mail.gmail.com>
+Subject: Re: [PATCH 2/3] mm: Add folio_fill_tail() and use it in iomap
 To:     "Matthew Wilcox (Oracle)" <willy@infradead.org>
 Cc:     Andrew Morton <akpm@linux-foundation.org>,
         linux-ext4@vger.kernel.org, gfs2@lists.linux.dev,
@@ -72,88 +72,105 @@ Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Hi Willy,
-
 On Tue, Nov 7, 2023 at 10:27=E2=80=AFPM Matthew Wilcox (Oracle)
 <willy@infradead.org> wrote:
-> Instead of unmapping the folio after copying the data to it, then mapping
-> it again to zero the tail, provide folio_zero_tail() to zero the tail
-> of an already-mapped folio.
+> The iomap code was limited to PAGE_SIZE bytes; generalise it to cover
+> an arbitrary-sized folio, and move it to be a common helper.
 >
 > Signed-off-by: Matthew Wilcox (Oracle) <willy@infradead.org>
 > ---
->  fs/ext4/inline.c        |  3 +--
+>  fs/iomap/buffered-io.c  | 14 ++------------
 >  include/linux/highmem.h | 38 ++++++++++++++++++++++++++++++++++++++
->  2 files changed, 39 insertions(+), 2 deletions(-)
+>  2 files changed, 40 insertions(+), 12 deletions(-)
 >
-> diff --git a/fs/ext4/inline.c b/fs/ext4/inline.c
-> index 9a84a5f9fef4..d5bd1e3a5d36 100644
-> --- a/fs/ext4/inline.c
-> +++ b/fs/ext4/inline.c
-> @@ -502,9 +502,8 @@ static int ext4_read_inline_folio(struct inode *inode=
-, struct folio *folio)
->         BUG_ON(len > PAGE_SIZE);
->         kaddr =3D kmap_local_folio(folio, 0);
->         ret =3D ext4_read_inline_data(inode, kaddr, len, &iloc);
-> -       flush_dcache_folio(folio);
-> +       kaddr =3D folio_zero_tail(folio, len, kaddr + len);
->         kunmap_local(kaddr);
-> -       folio_zero_segment(folio, len, folio_size(folio));
->         folio_mark_uptodate(folio);
->         brelse(iloc.bh);
+> diff --git a/fs/iomap/buffered-io.c b/fs/iomap/buffered-io.c
+> index f72df2babe56..093c4515b22a 100644
+> --- a/fs/iomap/buffered-io.c
+> +++ b/fs/iomap/buffered-io.c
+> @@ -305,28 +305,18 @@ static int iomap_read_inline_data(const struct ioma=
+p_iter *iter,
+>  {
+>         const struct iomap *iomap =3D iomap_iter_srcmap(iter);
+>         size_t size =3D i_size_read(iter->inode) - iomap->offset;
+> -       size_t poff =3D offset_in_page(iomap->offset);
+>         size_t offset =3D offset_in_folio(folio, iomap->offset);
+> -       void *addr;
+>
+>         if (folio_test_uptodate(folio))
+>                 return 0;
+>
+> -       if (WARN_ON_ONCE(size > PAGE_SIZE - poff))
+> -               return -EIO;
+> -       if (WARN_ON_ONCE(size > PAGE_SIZE -
+> -                        offset_in_page(iomap->inline_data)))
+> -               return -EIO;
+>         if (WARN_ON_ONCE(size > iomap->length))
+>                 return -EIO;
+>         if (offset > 0)
+>                 ifs_alloc(iter->inode, folio, iter->flags);
+>
+> -       addr =3D kmap_local_folio(folio, offset);
+> -       memcpy(addr, iomap->inline_data, size);
+> -       memset(addr + size, 0, PAGE_SIZE - poff - size);
+> -       kunmap_local(addr);
+> -       iomap_set_range_uptodate(folio, offset, PAGE_SIZE - poff);
+> +       folio_fill_tail(folio, offset, iomap->inline_data, size);
+> +       iomap_set_range_uptodate(folio, offset, folio_size(folio) - offse=
+t);
+>         return 0;
+>  }
 >
 > diff --git a/include/linux/highmem.h b/include/linux/highmem.h
-> index 4cacc0e43b51..1b81416196dd 100644
+> index 1b81416196dd..0fbb60ffefc9 100644
 > --- a/include/linux/highmem.h
 > +++ b/include/linux/highmem.h
-> @@ -483,6 +483,44 @@ static inline void memcpy_to_folio(struct folio *fol=
-io, size_t offset,
->         flush_dcache_folio(folio);
+> @@ -521,6 +521,44 @@ static inline __must_check void *folio_zero_tail(str=
+uct folio *folio,
+>         return kaddr;
 >  }
 >
 > +/**
-> + * folio_zero_tail - Zero the tail of a folio.
-> + * @folio: The folio to zero.
-> + * @kaddr: The address the folio is currently mapped to.
-> + * @offset: The byte offset in the folio to start zeroing at.
+> + * folio_fill_tail - Copy some data to a folio and pad with zeroes.
+> + * @folio: The destination folio.
+> + * @offset: The offset into @folio at which to start copying.
+> + * @from: The data to copy.
+> + * @len: How many bytes of data to copy.
 > + *
-
-As Andrew has pointed out, the order of the arguments in the
-description doesn't match the order in the function definition. Other
-than that, this patch looks good, so
-
-Reviewed-by: Andreas Gruenbacher <agruenba@redhat.com>
-
-> + * If you have already used kmap_local_folio() to map a folio, written
-> + * some data to it and now need to zero the end of the folio (and flush
-> + * the dcache), you can use this function.  If you do not have the
-> + * folio kmapped (eg the folio has been partially populated by DMA),
-> + * use folio_zero_range() or folio_zero_segment() instead.
-> + *
-> + * Return: An address which can be passed to kunmap_local().
+> + * This function is most useful for filesystems which support inline dat=
+a.
+> + * When they want to copy data from the inode into the page cache, this
+> + * function does everything for them.  It supports large folios even on
+> + * HIGHMEM configurations.
 > + */
-> +static inline __must_check void *folio_zero_tail(struct folio *folio,
-> +               size_t offset, void *kaddr)
+> +static inline void folio_fill_tail(struct folio *folio, size_t offset,
+> +               const char *from, size_t len)
 > +{
-> +       size_t len =3D folio_size(folio) - offset;
+> +       char *to =3D kmap_local_folio(folio, offset);
+> +
+> +       VM_BUG_ON(offset + len > folio_size(folio));
 > +
 > +       if (folio_test_highmem(folio)) {
 > +               size_t max =3D PAGE_SIZE - offset_in_page(offset);
 > +
 > +               while (len > max) {
-> +                       memset(kaddr, 0, max);
-> +                       kunmap_local(kaddr);
+> +                       memcpy(to, from, max);
+> +                       kunmap_local(to);
 > +                       len -=3D max;
+> +                       from +=3D max;
 > +                       offset +=3D max;
 > +                       max =3D PAGE_SIZE;
-> +                       kaddr =3D kmap_local_folio(folio, offset);
+> +                       to =3D kmap_local_folio(folio, offset);
 > +               }
 > +       }
 > +
-> +       memset(kaddr, 0, len);
-> +       flush_dcache_folio(folio);
-> +
-> +       return kaddr;
+> +       memcpy(to, from, len);
+> +       to =3D folio_zero_tail(folio, offset, to);
+
+This needs to be:
+
+to =3D folio_zero_tail(folio, offset  + len, to + len);
+
+> +       kunmap_local(to);
 > +}
 > +
 >  /**
@@ -162,6 +179,8 @@ Reviewed-by: Andreas Gruenbacher <agruenba@redhat.com>
 > --
 > 2.42.0
 >
+
+Reviewed-by: Andreas Gruenbacher <agruenba@redhat.com>
 
 Thanks,
 Andreas
