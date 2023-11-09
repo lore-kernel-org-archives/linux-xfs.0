@@ -2,64 +2,49 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id EBD09C4167D
-	for <linux-xfs@archiver.kernel.org>; Thu,  9 Nov 2023 05:30:12 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9C2A4C4332F
+	for <linux-xfs@archiver.kernel.org>; Thu,  9 Nov 2023 05:37:00 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230303AbjKIFaN (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 9 Nov 2023 00:30:13 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46402 "EHLO
+        id S230439AbjKIFhB (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 9 Nov 2023 00:37:01 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57928 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229457AbjKIFaN (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 9 Nov 2023 00:30:13 -0500
+        with ESMTP id S229457AbjKIFhB (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 9 Nov 2023 00:37:01 -0500
 Received: from bombadil.infradead.org (bombadil.infradead.org [IPv6:2607:7c80:54:3::133])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 696B126A4;
-        Wed,  8 Nov 2023 21:30:11 -0800 (PST)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 032632699;
+        Wed,  8 Nov 2023 21:36:59 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Transfer-Encoding
-        :Content-Type:MIME-Version:References:Message-ID:Subject:Cc:To:From:Date:
-        Sender:Reply-To:Content-ID:Content-Description;
-        bh=EuOUjQnuRcQgv5Tv8L5wkxAXibpL7SxSr9JEBf1UCk8=; b=E5Y5L/SPURwspOvK1ryZxa2fOq
-        dWnNKyNVYbewgS8lY4yDp+c95zKpQ6sjqgX1I4qh2oRNclt++5iOm2u9jmKwJmhIwgaQAJbNTZaBn
-        Eliy2bJ0YKIv5LIJxQek3+j8QeS57oCzsA6P01cKt6zncsSWLqdcs/ZblZQKCFr2JVGhCAiuOCmZD
-        nsnBRd0q5ODxEav9REYTWbYGCEpB89atG+JrGOgyYQHhSnfyLMhh4mrzdI8HbnyR49vtdhRtkiCTL
-        Sy6qjWgXwpqpkt3hhylZyRxJzzst+EqR5+uJQOStwJ1oB0uSfyA9hKj63KDNP4fUF8NPyAHtwts4j
-        65ml0jLg==;
+        d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Type:MIME-Version
+        :References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
+        Content-Transfer-Encoding:Content-ID:Content-Description;
+        bh=M7NmYC/Iylm9myghHwqILim55SAUt9QrM+UZYk0eJlw=; b=ZjcC50Y+Auzx4opF6wit+qu5gh
+        sMJRFgZe4gzfLjN0FRiqXYBM5ZTcty5dYCfLg6z/zAOvAbV8n6d8FTdyIMQC3cL/JxkekB6Aafwv5
+        5z2w4aV9UR4b33HmhxZ7PJLHBwnBqN/8A0STpOOuWTsSAcaCoGt4PeJSsVZ0C6j4Y55FqXU5wRbNh
+        Q6Jdkp4B/marhFTTWyf3BG84RKInC66b1hN0FGz+LEmlZHzMBu8cSV3tcMN6ePnfokGDh6YpYjwCv
+        vBxOOY1gmQhCowPmps1GOgLH/ePy2/qybAdeMUWns9RxSfcPVldrcvvFF8pm/5jmp3qutBPU3j9X7
+        +v1fU6NA==;
 Received: from hch by bombadil.infradead.org with local (Exim 4.96 #2 (Red Hat Linux))
-        id 1r0xcJ-005KFO-0w;
-        Thu, 09 Nov 2023 05:30:11 +0000
-Date:   Wed, 8 Nov 2023 21:30:11 -0800
+        id 1r0xik-005Kg3-07;
+        Thu, 09 Nov 2023 05:36:50 +0000
+Date:   Wed, 8 Nov 2023 21:36:50 -0800
 From:   Christoph Hellwig <hch@infradead.org>
-To:     Luc Van Oostenryck <luc.vanoostenryck@gmail.com>
-Cc:     Christoph Hellwig <hch@infradead.org>,
-        linux-sparse@vger.kernel.org, linux-xfs@vger.kernel.org
-Subject: Re: sparse feature request: nocast integer types
-Message-ID: <ZUxuY13JnQ8IIFd1@infradead.org>
-References: <ZUxoJh7NlWw+uBlt@infradead.org>
- <CAMHZB6G_TZJ_uQGm5an0-bhG8wCxpEQrUCShen7O61Q9arAf+Q@mail.gmail.com>
+To:     "Darrick J. Wong" <djwong@kernel.org>
+Cc:     zlang@redhat.com, guan@eryu.me, david@fromorbit.com,
+        fstests@vger.kernel.org, linux-xfs@vger.kernel.org
+Subject: Re: [PATCH 1/2] common: make helpers for ttyprintk usage
+Message-ID: <ZUxv8qswCzGsSWEl@infradead.org>
+References: <169947894813.203694.3337426306300447087.stgit@frogsfrogsfrogs>
+ <169947895398.203694.7754932509810854745.stgit@frogsfrogsfrogs>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <CAMHZB6G_TZJ_uQGm5an0-bhG8wCxpEQrUCShen7O61Q9arAf+Q@mail.gmail.com>
+In-Reply-To: <169947895398.203694.7754932509810854745.stgit@frogsfrogsfrogs>
 X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Thu, Nov 09, 2023 at 06:21:05AM +0100, Luc Van Oostenryck wrote:
-> Such 'nocast' attribute already exists and seems to do more or less what
-> you would like:
-> See Sparse docs at https://sparse.docs.kernel.org/en/latest/annotations.html
-> :
-> nocast <https://sparse.docs.kernel.org/en/latest/annotations.html#nocast>
-> 
-> This attribute is similar to bitwise but in a much weaker form. It warns
-> about explicit or implicit casting to different types. However, it doesn’t
-> warn about the mixing with other types and it easily gets lost: you can add
-> plain integers to __nocast integer types and the result will be plain
-> integers.
+Looks good:
 
-Hmm, that's a little suboptimal.  But still a lot better than nothing.
-I'll see what I can do with them.
-
-Thanks a lot!
+Reviewed-by: Christoph Hellwig <hch@lst.de>
