@@ -2,84 +2,68 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6E1B0C4167B
-	for <linux-xfs@archiver.kernel.org>; Thu,  9 Nov 2023 00:12:30 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 917B2C4332F
+	for <linux-xfs@archiver.kernel.org>; Thu,  9 Nov 2023 00:32:59 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229566AbjKIAMb (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 8 Nov 2023 19:12:31 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33674 "EHLO
+        id S229473AbjKIAdA (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 8 Nov 2023 19:33:00 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58434 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229473AbjKIAMa (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 8 Nov 2023 19:12:30 -0500
-Received: from mail-lf1-x12c.google.com (mail-lf1-x12c.google.com [IPv6:2a00:1450:4864:20::12c])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8C0FC2594;
-        Wed,  8 Nov 2023 16:12:28 -0800 (PST)
-Received: by mail-lf1-x12c.google.com with SMTP id 2adb3069b0e04-507ad511315so409485e87.0;
-        Wed, 08 Nov 2023 16:12:28 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1699488747; x=1700093547; darn=vger.kernel.org;
-        h=cc:to:subject:message-id:date:from:in-reply-to:references
-         :mime-version:from:to:cc:subject:date:message-id:reply-to;
-        bh=oxRjndTtkJZetvfezkXF/2987ikg4wY/3660b2uWMtk=;
-        b=VdTxfrx41ziQy4Nz7BCYpyno8cfIsO7U76xciSyVgh5a8B23uNs3Go3k9HEj48SwVm
-         8NleB38sE2fmXdqAmEKcZR+acVFCpHJywyXXtHAdqZw+X9LgqVGI5qF2fLq5Y724uZku
-         fEujXwZT7I1vkZLNaYWk35UYWMHVyqvMZWywv5PTYU5RLSh90JKMQnSsV0XcRPufKrVC
-         YSYo6U1E3PdNWMoIjaCErkRR1ioaHFxgy+lY75T77C5lLZbU+G3i/IFBGUMHFy9a3t8c
-         8EJL7k2Z0ymCWZb8DqgE/7l0AmzStPa8vgszGR1TohOMWWAiY2V4WTfjJNgi92p0Tc6x
-         q7Cg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1699488747; x=1700093547;
-        h=cc:to:subject:message-id:date:from:in-reply-to:references
-         :mime-version:x-gm-message-state:from:to:cc:subject:date:message-id
-         :reply-to;
-        bh=oxRjndTtkJZetvfezkXF/2987ikg4wY/3660b2uWMtk=;
-        b=ZIJ0Z3/30m//Txqpj0+P+i43k0Rb9BJvYaRSE7Ml31CUFh5wxO8Id8TZbfnfeMsB3U
-         WsP27Ljl+gMeyHBdrh25hussO5g+w8cj66WeuCiZy9EwpFk8arj/o7EW6l5+CsvKEaxG
-         pE9PHPe6QR8AANjlb+uXCWEjLI8N5RHBIS1Eh3sylxACQB+8CjaIRWKazBO0bHOMP6Ov
-         9NkHqM5gXClAUqnqcW5Tlhm98nc2uV6rq9FeVJU+8Z3rGhfYFO9VvzoPPgDyhwDG8HAP
-         w1pyLD06nXunh0uswo4APjYqyByb42qZVMOYfO9CbaunYrvfGjN2Hmg+FR0Ksf9t2TuO
-         ubAw==
-X-Gm-Message-State: AOJu0Yw1H80Pn79WauonKupGxBfBXCWgvTEDJJ/a4fLavXcFWGfw5ZtK
-        qsIphDJri4yPl6sdoiBMDgH10VpTKO57Co2AIYjeMv1UphY=
-X-Google-Smtp-Source: AGHT+IGMym6s82sHBjvRZ1gVgP42jaL1JmjVcnC8voSpb7JFI9R5aRcHobWV5Dojv1Zry9WdFGNjuVaBWNGJSNkxkfg=
-X-Received: by 2002:a19:6713:0:b0:508:269d:1342 with SMTP id
- b19-20020a196713000000b00508269d1342mr109419lfc.35.1699488746448; Wed, 08 Nov
- 2023 16:12:26 -0800 (PST)
+        with ESMTP id S229565AbjKIAc7 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 8 Nov 2023 19:32:59 -0500
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8F2EF268F
+        for <linux-xfs@vger.kernel.org>; Wed,  8 Nov 2023 16:32:57 -0800 (PST)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 025C3C433C8;
+        Thu,  9 Nov 2023 00:32:56 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1699489977;
+        bh=bfI2AqMi7I334jy8o/whK4gnJeGP27NZJzFjZ9ZL/vo=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=MsAQY0zrk3mnM2zyXlzvMJheKztyNC6epkO1KAN+udHlg91DmkLTGz5Frt0s0Ovie
+         flAjgCiNb040UFuQMg03V7crkzbULb3FSpFYL/F01AkPcUgl7fnkn1qMQTQoYlXmEB
+         ciP2IRbD4Pbof7EVQu1gdiLXpYWzJjoL5X+KvdIsX45qaKXt2ff6FcQp3T/ITZ5xTe
+         WlwoKeJ8pe5LCYWzy7Ra4dhPhlo6aagsghPvxNAN0+HVAL2q5XFRbgwFGIyxpPI6Ce
+         o6NSJGYkuBSDOmERdg6iDf935VEI73buzu/fjReN0GusnPgAojdGwuQofeCZhPpPiP
+         5vplHmXEFfY1w==
+Date:   Wed, 8 Nov 2023 16:32:56 -0800
+From:   "Darrick J. Wong" <djwong@kernel.org>
+To:     Christoph Hellwig <hch@infradead.org>
+Cc:     cem@kernel.org, linux-xfs@vger.kernel.org
+Subject: Re: [PATCH 3/5] xfs_scrub: tighten up the security on the background
+ systemd service
+Message-ID: <20231109003256.GA1205143@frogsfrogsfrogs>
+References: <168506074508.3746099.18021671464566915249.stgit@frogsfrogsfrogs>
+ <168506074549.3746099.6129822996056625257.stgit@frogsfrogsfrogs>
+ <ZUn60XdaxeY4+1I8@infradead.org>
 MIME-Version: 1.0
-References: <20231107212643.3490372-1-willy@infradead.org> <20231107212643.3490372-2-willy@infradead.org>
- <20231108150606.2ec3cafb290f757f0e4c92d8@linux-foundation.org>
-In-Reply-To: <20231108150606.2ec3cafb290f757f0e4c92d8@linux-foundation.org>
-From:   =?UTF-8?Q?Andreas_Gr=C3=BCnbacher?= <andreas.gruenbacher@gmail.com>
-Date:   Thu, 9 Nov 2023 01:12:15 +0100
-Message-ID: <CAHpGcMLU9CeX=P=718Gp=oYNnfbft_Mh1Nhdx45qWXY0DAf6Mg@mail.gmail.com>
-Subject: Re: [PATCH 1/3] mm: Add folio_zero_tail() and use it in ext4
-To:     Andrew Morton <akpm@linux-foundation.org>
-Cc:     "Matthew Wilcox (Oracle)" <willy@infradead.org>,
-        linux-ext4 <linux-ext4@vger.kernel.org>, gfs2@lists.linux.dev,
-        Linux FS-devel Mailing List <linux-fsdevel@vger.kernel.org>,
-        linux-xfs <linux-xfs@vger.kernel.org>,
-        "Darrick J . Wong" <djwong@kernel.org>,
-        linux-erofs@lists.ozlabs.org, "Theodore Ts'o" <tytso@mit.edu>,
-        Andreas Dilger <adilger.kernel@dilger.ca>,
-        Andreas Gruenbacher <agruenba@redhat.com>
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <ZUn60XdaxeY4+1I8@infradead.org>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Andrew,
+On Tue, Nov 07, 2023 at 12:52:33AM -0800, Christoph Hellwig wrote:
+> On Thu, May 25, 2023 at 06:55:34PM -0700, Darrick J. Wong wrote:
+> > From: Darrick J. Wong <djwong@kernel.org>
+> > 
+> > Currently, xfs_scrub has to run with some elevated privileges.  Minimize
+> > the risk of xfs_scrub escaping its service container or contaminating
+> > the rest of the system by using systemd's sandboxing controls to
+> > prohibit as much access as possible.
+> > 
+> > The directives added by this patch were recommended by the command
+> > 'systemd-analyze security xfs_scrub@.service' in systemd 249.
+> 
+> All the additional lockdowns look good:
+> 
+> Reviewed-by: Christoph Hellwig <hch@lst.de>
+> 
+> Maybe you can split the dynamic user change out as a small standalone
+> fix, though?
 
-Andrew Morton <akpm@linux-foundation.org> schrieb am Do., 9. Nov. 2023, 00:06:
-> > +
-> > +     if (folio_test_highmem(folio)) {
-> > +             size_t max = PAGE_SIZE - offset_in_page(offset);
-> > +
-> > +             while (len > max) {
->
-> Shouldn't this be `while (len)'?  AFAICT this code can fail to clear
-> the final page.
+I'll do that, and credit the person who asked us to do that.  Thanks for
+the review, systemd directives are overwhelming. :)
 
-not sure what you're seeing there, but this looks fine to me.
-
-Thanks,
-Andreas
+--D
