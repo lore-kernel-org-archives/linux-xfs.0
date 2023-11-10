@@ -2,214 +2,300 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C2A4BC3DA6E
-	for <linux-xfs@archiver.kernel.org>; Fri, 10 Nov 2023 17:57:11 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 82E75C4332F
+	for <linux-xfs@archiver.kernel.org>; Fri, 10 Nov 2023 17:58:17 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229993AbjKJR4o (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 10 Nov 2023 12:56:44 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50964 "EHLO
+        id S229464AbjKJR6Q (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 10 Nov 2023 12:58:16 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59864 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S235676AbjKJR4D (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 10 Nov 2023 12:56:03 -0500
-Received: from mx0a-00069f02.pphosted.com (mx0a-00069f02.pphosted.com [205.220.165.32])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 26EF1A265;
-        Fri, 10 Nov 2023 00:45:17 -0800 (PST)
-Received: from pps.filterd (m0246629.ppops.net [127.0.0.1])
-        by mx0b-00069f02.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 3A9MZJW5016187;
-        Fri, 10 Nov 2023 08:44:55 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=message-id : date :
- subject : to : cc : references : from : in-reply-to : content-type :
- content-transfer-encoding : mime-version; s=corp-2023-03-30;
- bh=C6nMsQI74kuOH+iGeUJauLvQvefNCXdr8wQtN8/EEUk=;
- b=2vsan3Crngr9jkIhwIU85qfekQgIegwSh/jNPM/qFwlQeYyEKcY4AlMd2fqkXefzPXJj
- Tm9decxpIDNOFr9HBHMZWrurgsrzcoyX3pgLtrwq1ri98WAIvw+H5dORq6B58Lspfxcy
- +/kI2B3EyLlmMmd0foweeIQCcF3cnVlUaQ/L6r4LnZVB6qTRlDYk8HNvzeBRCly7Fv8l
- Ia8TIqfR+zNsmeN7dIFhS6w+d7WntSbYSFY03bilO66hJZxqlfYdiHvscx71h2vEiguL
- dsJZZoRlQsr6eGrS4NkXrDyEr3RzLumgLzLU8Bkv4IebvHgiBHexK+jOA9wSwQtsubjr kw== 
-Received: from phxpaimrmta01.imrmtpd1.prodappphxaev1.oraclevcn.com (phxpaimrmta01.appoci.oracle.com [138.1.114.2])
-        by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 3u7w26wqv9-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Fri, 10 Nov 2023 08:44:54 +0000
-Received: from pps.filterd (phxpaimrmta01.imrmtpd1.prodappphxaev1.oraclevcn.com [127.0.0.1])
-        by phxpaimrmta01.imrmtpd1.prodappphxaev1.oraclevcn.com (8.17.1.19/8.17.1.19) with ESMTP id 3AA76oau004090;
-        Fri, 10 Nov 2023 08:44:54 GMT
-Received: from nam12-bn8-obe.outbound.protection.outlook.com (mail-bn8nam12lp2168.outbound.protection.outlook.com [104.47.55.168])
-        by phxpaimrmta01.imrmtpd1.prodappphxaev1.oraclevcn.com (PPS) with ESMTPS id 3u7w20kw8y-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Fri, 10 Nov 2023 08:44:54 +0000
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=ZHpwcGF8xS/deKfYFU0vskJ20NlKieCUKa3AJy+5aM0Hnf4ac3/WB3pv0C5L/YutejRjZC/r+i4F89Oqu5M/mxGNx5mRQFWVFRryaJSU8qa243tp8529/lT66gvbnQ3MgO/1jPcqNYZfyVPHz5lnDA38iBIQTA4Ixj6FbtM+NvMLz4PA6zdHWWwhVMpfDBbRqAm8ntP/3M8nScSpzT2XnUB7wN4p+p0ZrKsGYRnxLL7xVM/tD6QUGEynoIRe6Of37PxnBh3lX9saD/Vp8WuW8gg34jqI325Zy4UjkZSzX4APVvzHD22aUIx/t5oMXTQLW34xiZYjxinwvXaxa1+aKg==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector9901;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=C6nMsQI74kuOH+iGeUJauLvQvefNCXdr8wQtN8/EEUk=;
- b=BesdPtXNjH/FQYrZsG+v5ww4xuPNwAeDrCh8RaW2G3hzl1eM5JxJtXuNwRt/58v5dmgysUpRpEe2JrxQdmJjjEOCIdtHogE13Krd2g//pZ2nA6GoDiko2Bo3Z6stjCrAfriQI0HLXLTn+QfwgJQFwW56J6Fg9sLU7N6prZYz8KLKq8pARq94ItpchHPpWXdYdk4CCvczK+EvEprk33B50ACCUTuLPR+GotP+wz5ew2nV7mXXZv1/g+3I/wiHZNITpay6esG/tvKt+OIYksQ11fQ2T3x5hO5OjiUocHdg8BurNiKDS57Jnms0VKdr82Xgs/c0q5gNKgDPNFqqTCQewA==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=oracle.com; dmarc=pass action=none header.from=oracle.com;
- dkim=pass header.d=oracle.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
- d=oracle.onmicrosoft.com; s=selector2-oracle-onmicrosoft-com;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=C6nMsQI74kuOH+iGeUJauLvQvefNCXdr8wQtN8/EEUk=;
- b=X+EyXlTRFL68HHyP8er9b34Gyv97No0G2v90mP2nUjVAG3Nib+Cy33RR/CqIVOprKgxZLppTBfGkgoxnfUH98sYkdbe51/j7Y4ptaKLXUSwZRsqdWTFU3BbJbonTrpOKaAE6i6Tzl9WHL0Gh4zYwM//6LrrUt8SleNuW51N98GY=
-Received: from DM6PR10MB4313.namprd10.prod.outlook.com (2603:10b6:5:212::20)
- by PH7PR10MB6226.namprd10.prod.outlook.com (2603:10b6:510:1f1::22) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.6954.28; Fri, 10 Nov
- 2023 08:44:51 +0000
-Received: from DM6PR10MB4313.namprd10.prod.outlook.com
- ([fe80::102a:f31:30c6:3187]) by DM6PR10MB4313.namprd10.prod.outlook.com
- ([fe80::102a:f31:30c6:3187%4]) with mapi id 15.20.6977.018; Fri, 10 Nov 2023
- 08:44:51 +0000
-Message-ID: <6801e4f2-4026-255c-0a43-a9decf73b200@oracle.com>
-Date:   Fri, 10 Nov 2023 08:44:45 +0000
-User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:102.0) Gecko/20100101
- Thunderbird/102.15.1
-Subject: Re: [PATCH 21/21] nvme: Support atomic writes
-To:     Christoph Hellwig <hch@lst.de>
-Cc:     Matthew Wilcox <willy@infradead.org>, axboe@kernel.dk,
-        kbusch@kernel.org, sagi@grimberg.me, jejb@linux.ibm.com,
-        martin.petersen@oracle.com, djwong@kernel.org,
-        viro@zeniv.linux.org.uk, brauner@kernel.org,
-        chandan.babu@oracle.com, dchinner@redhat.com,
-        linux-block@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-nvme@lists.infradead.org, linux-xfs@vger.kernel.org,
-        linux-fsdevel@vger.kernel.org, tytso@mit.edu, jbongio@google.com,
-        linux-api@vger.kernel.org, Alan Adamson <alan.adamson@oracle.com>
-References: <20230929102726.2985188-1-john.g.garry@oracle.com>
- <20230929102726.2985188-22-john.g.garry@oracle.com>
- <20231109153603.GA2188@lst.de> <ZUz98KriiLsM8oQd@casper.infradead.org>
- <20231109154619.GA3491@lst.de>
- <61b25fe8-22ae-c299-3225-ca835b337d41@oracle.com>
- <20231110062944.GC26516@lst.de>
-Content-Language: en-US
-From:   John Garry <john.g.garry@oracle.com>
-Organization: Oracle Corporation
-In-Reply-To: <20231110062944.GC26516@lst.de>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
-X-ClientProxiedBy: AM0PR02CA0133.eurprd02.prod.outlook.com
- (2603:10a6:20b:28c::30) To DM6PR10MB4313.namprd10.prod.outlook.com
- (2603:10b6:5:212::20)
+        with ESMTP id S234701AbjKJR40 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 10 Nov 2023 12:56:26 -0500
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2158939764
+        for <linux-xfs@vger.kernel.org>; Fri, 10 Nov 2023 06:40:32 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1699627231;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=YbY/ExOolu9c+QNO+25u+1iTHYBsG6uJEdRpQLfNoKw=;
+        b=eTXopygvO/TBUxRczEN8wc8fGAlSuAD7eqwnpPfBQCLdH7LrfN27iCwzJldZkruPZ1hHKp
+        LU/b6GSMqmmBxc9g6ISIh4H3fQF4lpstD0+NF3WfkCR/ggDKmxWnlhGx+fVtiMvF3NxISc
+        sk9xSF6TWKgMGtXGgTyzekAq0G1lYp8=
+Received: from mail-pl1-f197.google.com (mail-pl1-f197.google.com
+ [209.85.214.197]) by relay.mimecast.com with ESMTP with STARTTLS
+ (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
+ us-mta-78-flvIDmgLN0mSzlw-GzxaVg-1; Fri, 10 Nov 2023 09:40:29 -0500
+X-MC-Unique: flvIDmgLN0mSzlw-GzxaVg-1
+Received: by mail-pl1-f197.google.com with SMTP id d9443c01a7336-1cc56cc8139so21625755ad.0
+        for <linux-xfs@vger.kernel.org>; Fri, 10 Nov 2023 06:40:29 -0800 (PST)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1699627228; x=1700232028;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=YbY/ExOolu9c+QNO+25u+1iTHYBsG6uJEdRpQLfNoKw=;
+        b=rnWtiKH/56bKG0vip40qYc9SiX1ZnysV+PolBEviJMLkSxQkZ9q36zmAKMZXSFINcs
+         dIhogE+MEIT5ceLXjSgCH8ApesaqN+g+O4PBN7YPFCulK0FdaXAdkWP0/AxBgoJjHWwz
+         FTchxiFQKt5bHVqWetvYev0+b6/a+Uw/8RIMGLsu79vwZv4sLO0GNTKj1IJTmw7c0p2n
+         Rc0NcYVhT2efkKC3NpK5ih7pB2cJAC/lt7O4/sRIRvJP0vKpOISCPuKIaeLcHlMrzPZo
+         afOQbe/BeOGcFUohVUIJ4LJjU2veOJ9ztzY2tExVG00nvgVIZNX62EucPS2GRcSD1Zby
+         72Qw==
+X-Gm-Message-State: AOJu0YzszYQQjtgII8FwKtEfBJwfjgR96FiHKeO2uzxgRQxK4kXQZR+L
+        EgLsGbCUwjPE85a0c/1O/6w0huCv/ioDP3eujIrWFzo/W/Z0kL9CSWT2PDresGo1HNf6s7M+Hc7
+        e//RF79pN6qoZp9Ax3NP7
+X-Received: by 2002:a17:903:2281:b0:1cc:332f:9e4b with SMTP id b1-20020a170903228100b001cc332f9e4bmr3753185plh.1.1699627228555;
+        Fri, 10 Nov 2023 06:40:28 -0800 (PST)
+X-Google-Smtp-Source: AGHT+IH7HCLG+T2acY7pjZAAYvJ8tZDZXjXwF7QY+zo6+aNzSKnSqSRh62FYR0DZyajugNe1DUYyAQ==
+X-Received: by 2002:a17:903:2281:b0:1cc:332f:9e4b with SMTP id b1-20020a170903228100b001cc332f9e4bmr3753161plh.1.1699627228230;
+        Fri, 10 Nov 2023 06:40:28 -0800 (PST)
+Received: from dell-per750-06-vm-08.rhts.eng.pek2.redhat.com ([43.228.180.230])
+        by smtp.gmail.com with ESMTPSA id az10-20020a170902a58a00b001cc615e6850sm5430949plb.90.2023.11.10.06.40.26
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Fri, 10 Nov 2023 06:40:27 -0800 (PST)
+Date:   Fri, 10 Nov 2023 22:40:19 +0800
+From:   Zorro Lang <zlang@redhat.com>
+To:     "Darrick J. Wong" <djwong@kernel.org>
+Cc:     Christoph Hellwig <hch@lst.de>,
+        Catherine Hoang <catherine.hoang@oracle.com>,
+        fstests@vger.kernel.org, linux-xfs@vger.kernel.org
+Subject: Re: [PATCH 1/1] generic: test reads racing with slow reflink
+ operations
+Message-ID: <20231110144019.4uonhyfqk44owdzq@dell-per750-06-vm-08.rhts.eng.pek2.redhat.com>
+References: <169947896328.203781.17647180888752123384.stgit@frogsfrogsfrogs>
+ <169947896885.203781.13438458222742566484.stgit@frogsfrogsfrogs>
 MIME-Version: 1.0
-X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: DM6PR10MB4313:EE_|PH7PR10MB6226:EE_
-X-MS-Office365-Filtering-Correlation-Id: 2a91618d-7be4-431f-c8dc-08dbe1c94d97
-X-MS-Exchange-SenderADCheck: 1
-X-MS-Exchange-AntiSpam-Relay: 0
-X-Microsoft-Antispam: BCL:0;
-X-Microsoft-Antispam-Message-Info: e0RudUu148UYqeeQcpf9/UiNcl9JmK5i9eSkds+BRJlbfbBO5mWrD3Yn/Xp66GagShzprHLqabWKj7kujEJ0TpdcPyZ9f+hhteAvTxLuVfhkA7MENTVXjI8TXvieCSucTnrbeGbiwJR4ROgjR/aA876tSoHdsP+Oqr9fJ5bDz3HeS8H9guR8y12SmgS1uwgHLZEptUx8atkbIxHCid31OCyPYi3wyLGCsAYwY9P9XugPpGD7i5rE5gz9QmmqMauLM5fVaiHvfcPJ7FmJ/2LlJ6Skojv5r6yvyWRGOkdP2LG/+yA76XvPH7MTFZgs6usRJnJsQw3QzblWkpXPk2t41dG5d4o20aYeDnqYZcKY0BMJ+x/VD+u5AWJHlvfHkVk3ISH8EDIXKdowHh0uYNhvXVf9t+rZzycFNtp9NmaYJTdP8UhA4aWt5GGX5kGyFp8I7yeR8UcdOxr9uEW1QYNi2Ygx2PF/5RQM+HDGFBvstvNcJYvI1DBcmwo4GxUt9lF4pzWoiAMe/RTBi3oFx5rc4qq47VcLxbu/vbYD6nt1n2J/xrUzIy1bPwR9aEmI4sshbguJ6p7ILhUhLwH/N+Jcql/ubJfEzGMR5zGtmF+Ysp2UC/Rd8cqqGc6mw4IONxQvitLvGcPjhu5Gn6YJu5IkDA==
-X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:DM6PR10MB4313.namprd10.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230031)(366004)(396003)(39860400002)(136003)(376002)(346002)(230922051799003)(186009)(1800799009)(64100799003)(451199024)(316002)(36916002)(53546011)(5660300002)(478600001)(2616005)(6486002)(6666004)(83380400001)(26005)(2906002)(4744005)(66556008)(8936002)(66946007)(41300700001)(66476007)(7416002)(6916009)(4326008)(8676002)(54906003)(38100700002)(6506007)(36756003)(31696002)(86362001)(6512007)(107886003)(31686004)(43740500002)(45980500001);DIR:OUT;SFP:1101;
-X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0: =?utf-8?B?aVpmNFgzRCtqRXBlMGhlMFNHbVBwRVMvdFVsY053ZFlFaUZ3bk5GMVdmYUZP?=
- =?utf-8?B?WGFKcmptMXJyL2Q2RUlvZDhZbmRjZ0NhZS81UnN4R3dqeWhXRE1yYUF2MEQ0?=
- =?utf-8?B?aWJ6U1dMRElnWVBjNFFpSFdicHZ6cHBkYURQWW1SRlhYSHo3Q29kSDhFK21p?=
- =?utf-8?B?S2JmR2tTaGVzeEtTUnJpNFh3czJUdDdxTXhjQkhDVlYxc2MrWlFrNHVVK09h?=
- =?utf-8?B?Ly9kbmhnc0VsRXRaamNWVEtvRm44VGJNRm1sa0xGeDQvdVRIUDZYcDg3ZFBr?=
- =?utf-8?B?VUJkSUhsd0x6V1Q2RnhoZFp0RXBEYVJ5ZWhhak5xZmc4L0lzZ2ZyU2c1czU0?=
- =?utf-8?B?dEdBeS9EV0xJNWVSR25abEJrTXFUSXRmaWVtU3ZQOEtwVW5saDJEUENENUha?=
- =?utf-8?B?ODg4V3J5VXRpdVpKUU1MNTJKck9qa2J1aUE5VXVGbnRnRkV2K0ZWNW9GbVoz?=
- =?utf-8?B?cE5OdlFHUmxFZExaRnBWdkZuMTJGWUpIbHVVbU9BMURLNm95K2VXUzhjQWxS?=
- =?utf-8?B?N0JyeWE0d203QkVrTmR2N3J3RUcxWU80ZmFOUVFZUlZReFZpQmZUT2dxZlYx?=
- =?utf-8?B?NGY2enpJNHpUU1M5NGxaUFB6N05YazdEMEdyY2oxbmV2dXlwOW84akJ1c2Q2?=
- =?utf-8?B?L09meHlOeUM4elRiQ3JrdDJLQkJGQ01heXpPUTMwSTF1YS9kcmFpWXpIM2Nt?=
- =?utf-8?B?VUFjREhLSlVuYzd4NW5JYXpuYm95WS81Z0F4dFZ0RDdZb3drQW5MVHdxMHZG?=
- =?utf-8?B?ZVI5U3JlTFdrd1J1OS9YUktWTGNBbjE3NHNPWG96MjI3ZGZrVWp3WmV3OUtP?=
- =?utf-8?B?eXpMVnlyMFpLMkxEY29URXdJYmF4UW5QcDhZUXN1KzRLV2VMd2JJUlYrL1Rl?=
- =?utf-8?B?S2srTzI3NTdXd1JUU0JFTVZzM3Uya1JLcHB0VDVvZUJZUDNjSlo2RVRUelR2?=
- =?utf-8?B?K1lYb21TWWtwOHlqcXk4NXlrYzNnK1loUzJIMUJRNDd6MDFYVjY1eWJJVTY2?=
- =?utf-8?B?dXFkbXIwcS9ITjN4S2tmZit5NFR1S25iVFpNcEpOUFRhRFI2NlAxM1gzK2xj?=
- =?utf-8?B?TkhXeEY4Vjl4Yi9paHVyYzJHOUN1UnBnS0JDK25vTml2ZzlsUUJ4bmprbVF1?=
- =?utf-8?B?NmxGK3p5eERSVVNsMmhnK2ZmUGlvdm5hUmZiT1NGcFhBeFhHZXJxcDRMcEJH?=
- =?utf-8?B?WFdCK2Nnc2RjWGllR3FwL1BScFRiRWNvcUk1amVkWENxa2wwUDJ0bUthTzJB?=
- =?utf-8?B?M0o5RWVCc3A2WmR4b0MvZXF4MzJveXE1c3Y2UnlQc01qeTUzTmdEbFlERGJw?=
- =?utf-8?B?dEg2MTlFL05IRktpWEdWeEZXd1FnRWVwUCt6VS9QUFdVWHA3STFjNUpvdFJI?=
- =?utf-8?B?ZFA1ZlUrT0ZGa3I4R2toR2lOYkJ3SnpYa3RjdUpwbmtlODZDZm5NamV2QWxB?=
- =?utf-8?B?VU1OTkpIdnM0QUF3TUhrSG92NDVkR2MvbjBjOXFUK2Fxb2lQN3dtNG5yZDBl?=
- =?utf-8?B?QXJYTXdNdXhHMXF4UHBXY2htK3pCemp5dXQySVltejdTWU4wd0NvTWkvT2lF?=
- =?utf-8?B?aU0vd2RDME4wRlNJVEgra2MreXlOQk4wV2pJa0IwSVFmZ3RUV3ZiYnpSSEps?=
- =?utf-8?B?a3FyMWdndHBXU1kyTE42bWNXWnFCUlBuL1crU1IyZVppb0VHSXpaQnNtL2Qx?=
- =?utf-8?B?M2dmSVFqcUdLY0VuZDhjM3Q1YitaamNFSUs5RUFZdHNPZkNvbVZtZk5TUUll?=
- =?utf-8?B?dWpCUDN6anlxV1VhT2VJajFnMmRoNnVoWkxLRVJHY0RMUi9QbHUvc3Y3VmdB?=
- =?utf-8?B?d0xDdHJaYTJUSUVkSHQ2VjBKV1MxWVRrM3JTcGtWWHZwdEFsdE91dTRBSTk5?=
- =?utf-8?B?MnNWb2hHVFZZY09Jall6ZUczQnJneVg1TnE4QXF1Y0ZWZkNuVXBOVjJtRGkv?=
- =?utf-8?B?c1dTdksyM1hSelRJMXcwNkkvblpTWlRRVi9yWFI4amgwNzRBSFVIcHlPVGdv?=
- =?utf-8?B?N1VtSzJMUlhXUHEyNjFvREJvZnIwTVdYbmRQTGsyd054VDVWTjlBejJjS0RR?=
- =?utf-8?B?SThQUHk5UXNnRzlpdzdGUm5mVTNpWUVJMGUrQzcvSi8xdlY0SDJYalJXWWF4?=
- =?utf-8?Q?m97BJJHy1vEBGWkDHlAqFLTok?=
-X-MS-Exchange-AntiSpam-ExternalHop-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-ExternalHop-MessageData-0: =?utf-8?B?ZHZ4MHBEMGFGVFNwUWRzMVBjME5EWkRIYmFzRmFVekxub2VCQ2VFRHp4cVkz?=
- =?utf-8?B?QWtXaWhoVVYxRUVvemIxWUxER3F0bFFrc2NPelNOY3BhYWpOSFh4UEVXdE11?=
- =?utf-8?B?cjZVMDB0Uk9iNE9BcWd5QWk1WlAvcSs3Y1diS1FwSGczbWh5RzhSSlNITWlU?=
- =?utf-8?B?N213MmQxSk5oeGlJMU1yQzRDWUFxZXREQmFvMUNnM1Z1Ymk1eHFVMEFsN0pL?=
- =?utf-8?B?VWJkbnJ2NDdIWVJyU3FYbDd0aGpENVlsWGlPbERwaHI0UTNlNVYycGZmRGc5?=
- =?utf-8?B?SGVnQURuR3hhd2FUeHd0NUpqQzZGekpacGhOK1NFc29ncVJJYmVZQURjL3Jy?=
- =?utf-8?B?Vjc0bmphc092Nll4UWJSMmdBeXFuZllCbUFLaUNDeUdLaTFRN051OThlZDlh?=
- =?utf-8?B?Z1NDa2hLTnQvZjUxRXRVblFWOUxBWTZJakFqaEZ3K2FMaEVFQjZ2ekRRSmtY?=
- =?utf-8?B?MFV5SGVCd29hNjVSSE1GL1E1MUlxWWgxc1JhN1RyMEN1elNCbWVyK2o3UVR1?=
- =?utf-8?B?elpyTGo3VDVFNy9NbWYzaFd0NUduK1E3aFYrd2NrSWcvcHlka1g0THlUYjhy?=
- =?utf-8?B?SWwxQ0ZSU1VSVkJqOENoRWMrZTc1K3RMOTNyS0x2NGRSRDZjU0c4Tk9MNUJZ?=
- =?utf-8?B?MHBxcTBIZEJtamNObjl2dno3TVJqL2FIbHpVRE9iSStlYlV1UW9iMHpCTnZQ?=
- =?utf-8?B?YkhiS3Q0WGdYc3ZVUE9NOVJOWUZ2dFdHS2h3TTNxbEo2VlRsSEhJYmxVZGl3?=
- =?utf-8?B?dmYrazlMOGdEbUJTUXFyNmxHdG1kSjlJeWZvZFZweDd2QkpvZ09OcGVSdGpv?=
- =?utf-8?B?cjJJWGo1Rnp6cHl2ckl4Wlp4a25DeGdlNnREZ1dMbmZjaXVHRHUydzdNdG9k?=
- =?utf-8?B?RWNUY2FxeU9xN0xhS01hY09ZYSs3b3ZvZU9XUlN5a1hNZEl2L3A2RWJIZXAz?=
- =?utf-8?B?akxVYWI2VmJMR1pFdFJSOTFvbThuWkE2MmN0V3YxWEdGem41VUpkR21uOTlt?=
- =?utf-8?B?dlloVE1sVzRHUk8wUUQ1N3ZrOFZBdUxKS2dyMzUxazJ5Y0xiUmdYRy85U0hq?=
- =?utf-8?B?d2dNWlg5MGE3MkgwTW1lcXFHTXFoV2toSmh3U3RFbEZRZnhkYkVHSEQyUVVo?=
- =?utf-8?B?WHEwemRPeUo3UCsrUnFVelZubnI4aGVkalhyeXltR2RtSGZYVXA2VDUzVitQ?=
- =?utf-8?B?c1Z0bjFDRVlnRkhzNnZFWTBIZGtmczlOdlg0WW5rMFZKU3c4Q0swQ1YvbnU0?=
- =?utf-8?B?Sy9MNUhGNlRNS1JvZFNPQkR4U3pBbzRGY3ZuMzBNYWZlREVyeksrS1BubGcz?=
- =?utf-8?B?SVM0RkpreW5DK3JhNTBVYUlHQyswNFM4N2dENzArRlhjSkl6dGJhbC9sM3hh?=
- =?utf-8?B?RWlQRFA5SUh1THlyWjZYM2NpdEFhTU5oZ1BkU1J1bS9pZDFiemh2NFgvK3U1?=
- =?utf-8?B?NW1KcGQ4dXBjQVFZNHRyazcrZ2Irb2QrQmw1bWlyS3JDUS9nU0htOVJkaFNx?=
- =?utf-8?Q?CbYqXymvObc0ePldjVLDfJV6ReL?=
-X-OriginatorOrg: oracle.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 2a91618d-7be4-431f-c8dc-08dbe1c94d97
-X-MS-Exchange-CrossTenant-AuthSource: DM6PR10MB4313.namprd10.prod.outlook.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 10 Nov 2023 08:44:51.1833
- (UTC)
-X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
-X-MS-Exchange-CrossTenant-Id: 4e2c6054-71cb-48f1-bd6c-3a9705aca71b
-X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: YnxioWIhvLGU7/sizUH8RwmPhAdHSmk03310qvcP62bTA7mg2SEt1S9LLy3fvx44XuFmBYlpjWeSf+yJ3yrRgQ==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: PH7PR10MB6226
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.272,Aquarius:18.0.987,Hydra:6.0.619,FMLib:17.11.176.26
- definitions=2023-11-10_04,2023-11-09_01,2023-05-22_02
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 bulkscore=0 mlxlogscore=852 mlxscore=0
- adultscore=0 phishscore=0 suspectscore=0 spamscore=0 malwarescore=0
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2311060000
- definitions=main-2311100073
-X-Proofpoint-GUID: Gmvv2WTGR8HC9hJX3LYFaVeeCqblXb3J
-X-Proofpoint-ORIG-GUID: Gmvv2WTGR8HC9hJX3LYFaVeeCqblXb3J
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <169947896885.203781.13438458222742566484.stgit@frogsfrogsfrogs>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On 10/11/2023 06:29, Christoph Hellwig wrote:
-> Yes.
+On Wed, Nov 08, 2023 at 01:29:28PM -0800, Darrick J. Wong wrote:
+> From: Darrick J. Wong <djwong@kernel.org>
 > 
->> As for splitting, it is not permitted for atomic writes and only a single
->> bio is permitted to be created per write. Are more integrity checks
->> required?
-> I'm more worried about the problem where we accidentally add a split.
-> The whole bio merge/split path is convoluted and we had plenty of
-> bugs in the past by not looking at all the correct flags or opcodes.
+> XFS has a rather slow reflink operation.  While a reflink operation is
+> running, other programs cannot read the contents of the source file,
+> which is causing latency spikes.  Catherine Hoang wrote a patch to
+> permit reads, since the source file contents do not change.  This is a
+> functionality test for that patch.
+> 
+> Signed-off-by: Darrick J. Wong <djwong@kernel.org>
+> Reviewed-by: Christoph Hellwig <hch@lst.de>
+> Reviewed-by: Catherine Hoang <catherine.hoang@oracle.com>
+> ---
+>  configure.ac              |    1 
+>  include/builddefs.in      |    1 
+>  m4/package_libcdev.m4     |   12 ++
+>  src/Makefile              |    4 +
+>  src/t_reflink_read_race.c |  339 +++++++++++++++++++++++++++++++++++++++++++++
+>  tests/generic/1953        |   74 ++++++++++
+>  tests/generic/1953.out    |    6 +
+>  7 files changed, 437 insertions(+)
+>  create mode 100644 src/t_reflink_read_race.c
+>  create mode 100755 tests/generic/1953
+>  create mode 100644 tests/generic/1953.out
+> 
+> 
+> diff --git a/configure.ac b/configure.ac
+> index 4687d8a3c0..7333045330 100644
+> --- a/configure.ac
+> +++ b/configure.ac
+> @@ -71,6 +71,7 @@ AC_HAVE_BMV_OF_SHARED
+>  AC_HAVE_NFTW
+>  AC_HAVE_RLIMIT_NOFILE
+>  AC_HAVE_FIEXCHANGE
+> +AC_HAVE_FICLONE
+>  
+>  AC_CHECK_FUNCS([renameat2])
+>  AC_CHECK_FUNCS([reallocarray])
+> diff --git a/include/builddefs.in b/include/builddefs.in
+> index 969acf0da2..446350d5fc 100644
+> --- a/include/builddefs.in
+> +++ b/include/builddefs.in
+> @@ -73,6 +73,7 @@ HAVE_NFTW = @have_nftw@
+>  HAVE_BMV_OF_SHARED = @have_bmv_of_shared@
+>  HAVE_RLIMIT_NOFILE = @have_rlimit_nofile@
+>  HAVE_FIEXCHANGE = @have_fiexchange@
+> +HAVE_FICLONE = @have_ficlone@
+>  
+>  GCCFLAGS = -funsigned-char -fno-strict-aliasing -Wall
+>  
+> diff --git a/m4/package_libcdev.m4 b/m4/package_libcdev.m4
+> index 7f73104405..91eb64db21 100644
+> --- a/m4/package_libcdev.m4
+> +++ b/m4/package_libcdev.m4
+> @@ -173,4 +173,16 @@ AC_DEFUN([AC_HAVE_FIEXCHANGE],
+>      ]])],[have_fiexchange=yes
+>         AC_MSG_RESULT(yes)],[AC_MSG_RESULT(no)])
+>      AC_SUBST(have_fiexchange)
+> +
+> +# Check if we have FICLONE
+> +AC_DEFUN([AC_HAVE_FICLONE],
+> +  [ AC_MSG_CHECKING([for FICLONE])
+> +    AC_LINK_IFELSE([AC_LANG_PROGRAM([[
+> +#include <sys/ioctl.h>
+> +#include <linux/fs.h>
+> +    ]], [[
+> +	 ioctl(-1, FICLONE, -1);
+> +    ]])],[have_ficlone=yes
+> +       AC_MSG_RESULT(yes)],[AC_MSG_RESULT(no)])
+> +    AC_SUBST(have_ficlone)
 
-Yes, this is always a concern.
+I got below build error:
+  libtoolize: Consider adding '-I m4' to ACLOCAL_AMFLAGS in Makefile.am.
+  cp include/install-sh .
+  aclocal -I m4
+  /usr/bin/m4:m4/package_libcdev.m4:162: ERROR: end of file in string
+  autom4te: error: /usr/bin/m4 failed with exit status: 1
+  aclocal: error: autom4te failed with exit status: 1
+  make: *** [Makefile:66: configure] Error 1
 
-Some thoughts on things which could be done:
-- For no merging, ensure request length is a power-of-2 when enqueuing 
-to block driver. This is simple but not watertight.
-- Create a per-bio checksum when the bio is created for the atomic write 
-and ensure integrity when queuing to the block driver
-- a new block layer datapath which ensures no merging or splitting, but 
-this seems a bit OTT
+I think you missed a "])" at here, below "])" belong to last AC_DEFUN.
 
-BTW, on topic of splitting, that NVMe virt boundary is a pain and I hope 
-that we could ignore/avoid it for atomic writes.
+>    ])
+> diff --git a/src/Makefile b/src/Makefile
+> index 2815f919b2..49dd2f6c1e 100644
+> --- a/src/Makefile
+> +++ b/src/Makefile
+> @@ -94,6 +94,10 @@ ifeq ($(HAVE_SEEK_DATA), yes)
+>   endif
+>  endif
+>  
+> +ifeq ($(HAVE_FICLONE),yes)
+> +     TARGETS += t_reflink_read_race
+> +endif
+> +
+>  CFILES = $(TARGETS:=.c)
+>  LDIRT = $(TARGETS) fssum
+>  
+
+[snip]
+
+> diff --git a/tests/generic/1953 b/tests/generic/1953
+> new file mode 100755
+> index 0000000000..058538e6fe
+> --- /dev/null
+> +++ b/tests/generic/1953
+> @@ -0,0 +1,74 @@
+> +#! /bin/bash
+> +# SPDX-License-Identifier: GPL-2.0
+> +# Copyright (c) 2023, Oracle and/or its affiliates.  All Rights Reserved.
+> +#
+> +# FS QA Test No. 1953
+> +#
+> +# Race file reads with a very slow reflink operation to see if the reads
+> +# actually complete while the reflink is ongoing.  This is a functionality
+> +# test for XFS commit f3ba4762fa56 "xfs: allow read IO and FICLONE to run
+> +# concurrently".
+> +#
+> +. ./common/preamble
+> +_begin_fstest auto clone punch
+> +
+> +# Import common functions.
+> +. ./common/filter
+> +. ./common/attr
+> +. ./common/reflink
+> +
+> +# real QA test starts here
+> +_require_scratch_reflink
+> +_require_cp_reflink
+> +_require_xfs_io_command "fpunch"
+> +_require_test_program "punch-alternating"
+> +_require_test_program "t_reflink_read_race"
+> +
+> +rm -f "$seqres.full"
+> +
+> +echo "Format and mount"
+> +_scratch_mkfs > "$seqres.full" 2>&1
+> +_scratch_mount >> "$seqres.full" 2>&1
+> +
+> +testdir="$SCRATCH_MNT/test-$seq"
+> +mkdir "$testdir"
+> +
+> +calc_space() {
+> +	blocks_needed=$(( 2 ** (fnr + 1) ))
+> +	space_needed=$((blocks_needed * blksz * 5 / 4))
+> +}
+> +
+> +# Figure out the number of blocks that we need to get the reflink runtime above
+> +# 1 seconds
+> +echo "Create a many-block file"
+> +for ((fnr = 1; fnr < 40; fnr++)); do
+> +	free_blocks=$(stat -f -c '%a' "$testdir")
+> +	blksz=$(_get_file_block_size "$testdir")
+> +	space_avail=$((free_blocks * blksz))
+> +	calc_space
+> +	test $space_needed -gt $space_avail && \
+> +		_notrun "Insufficient space for stress test; would only create $blocks_needed extents."
+> +
+> +	off=$(( (2 ** fnr) * blksz))
+> +	$XFS_IO_PROG -f -c "pwrite -S 0x61 -b 4194304 $off $off" "$testdir/file1" >> "$seqres.full"
+> +	"$here/src/punch-alternating" "$testdir/file1" >> "$seqres.full"
+> +
+> +	timeout 1s cp --reflink=always "$testdir/file1" "$testdir/garbage" || break
+
+To make sure we have this program:
+  _require_command "$TIMEOUT_PROG" timeout
+then use $TIMEOUT_PROG at here.
+
+Others looks good to me, if it expects to get below failure on linux 6.6.0-rc6+.
+
+# ./check generic/1953
+FSTYP         -- xfs (debug)
+PLATFORM      -- Linux/x86_64 hp-dl380pg8-01 6.6.0-rc6-mainline+ #7 SMP PREEMPT_DYNAMIC Thu Oct 19 22:34:28 CST 2023
+MKFS_OPTIONS  -- -f /dev/loop0
+MOUNT_OPTIONS -- -o context=system_u:object_r:root_t:s0 /dev/loop0 /mnt/scratch
+
+generic/1953       - output mismatch (see /root/git/xfstests/results//generic/1953.out.bad)
+    --- tests/generic/1953.out  2023-11-10 22:22:12.379185281 +0800
+    +++ /root/git/xfstests/results//generic/1953.out.bad        2023-11-10 22:28:27.041801352 +0800
+    @@ -3,4 +3,4 @@
+     Create a many-block file
+     Reflink the big file
+     Terminated
+    -test completed successfully
+    +clone finished before any reads
+    ...
+    (Run 'diff -u /root/git/xfstests/tests/generic/1953.out /root/git/xfstests/results//generic/1953.out.bad'  to see the entire diff)
+Ran: generic/1953
+Failures: generic/1953
+Failed 1 of 1 tests
 
 Thanks,
-John
+Zorro
+
+> +done
+> +echo "fnr=$fnr" >> $seqres.full
+> +
+> +echo "Reflink the big file"
+> +$here/src/t_reflink_read_race "$testdir/file1" "$testdir/file2" \
+> +	"$testdir/outcome" &>> $seqres.full
+> +
+> +if [ ! -e "$testdir/outcome" ]; then
+> +	echo "Could not set up program"
+> +elif grep -q "finished read early" "$testdir/outcome"; then
+> +	echo "test completed successfully"
+> +else
+> +	cat "$testdir/outcome"
+> +fi
+> +
+> +# success, all done
+> +status=0
+> +exit
+> diff --git a/tests/generic/1953.out b/tests/generic/1953.out
+> new file mode 100644
+> index 0000000000..8eaacb7ff0
+> --- /dev/null
+> +++ b/tests/generic/1953.out
+> @@ -0,0 +1,6 @@
+> +QA output created by 1953
+> +Format and mount
+> +Create a many-block file
+> +Reflink the big file
+> +Terminated
+> +test completed successfully
+> 
+
