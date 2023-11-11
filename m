@@ -2,89 +2,113 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B6668C4332F
-	for <linux-xfs@archiver.kernel.org>; Sat, 11 Nov 2023 04:02:57 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E1F17C4167B
+	for <linux-xfs@archiver.kernel.org>; Sat, 11 Nov 2023 15:45:28 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230236AbjKKEC6 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 10 Nov 2023 23:02:58 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46812 "EHLO
+        id S231224AbjKKPp3 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Sat, 11 Nov 2023 10:45:29 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37010 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229709AbjKKEC5 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 10 Nov 2023 23:02:57 -0500
-Received: from out30-118.freemail.mail.aliyun.com (out30-118.freemail.mail.aliyun.com [115.124.30.118])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id CCF4D3868;
-        Fri, 10 Nov 2023 20:02:51 -0800 (PST)
-X-Alimail-AntiSpam: AC=PASS;BC=-1|-1;BR=01201311R481e4;CH=green;DM=||false|;DS=||;FP=0|-1|-1|-1|0|-1|-1|-1;HT=ay29a033018046060;MF=hsiangkao@linux.alibaba.com;NM=1;PH=DS;RN=11;SR=0;TI=SMTPD_---0Vw6AFnB_1699675368;
-Received: from 172.17.2.246(mailfrom:hsiangkao@linux.alibaba.com fp:SMTPD_---0Vw6AFnB_1699675368)
-          by smtp.aliyun-inc.com;
-          Sat, 11 Nov 2023 12:02:49 +0800
-Message-ID: <33d6a487-5913-fefd-2a45-d8d397e6f6ba@linux.alibaba.com>
-Date:   Sat, 11 Nov 2023 12:02:47 +0800
+        with ESMTP id S229797AbjKKPp2 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sat, 11 Nov 2023 10:45:28 -0500
+X-Greylist: delayed 348 seconds by postgrey-1.37 at lindbergh.monkeyblade.net; Sat, 11 Nov 2023 07:45:24 PST
+Received: from sandeen.net (sandeen.net [63.231.237.45])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 72B1D3AA6;
+        Sat, 11 Nov 2023 07:45:24 -0800 (PST)
+Received: from [10.0.0.71] (liberator.sandeen.net [10.0.0.71])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+        (No client certificate requested)
+        by sandeen.net (Postfix) with ESMTPSA id 9F63848C731;
+        Sat, 11 Nov 2023 09:39:35 -0600 (CST)
+DKIM-Filter: OpenDKIM Filter v2.11.0 sandeen.net 9F63848C731
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=sandeen.net;
+        s=default; t=1699717175;
+        bh=j0rUQNp7+k+JUcTe52x69W9xIhdzt2MRqrIL4QneJX0=;
+        h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
+        b=OvTVRBMfjxa++uidmOz6iUD7dDnUqru3TTBrtnVHRflOE89DAG3TjMXp8JHKlr2hn
+         3Ja+fWmr9J7HRhg3xidXuE7+eI5fgS/eT2eNFThpUyvm5vRprbcu09T6vFR+UsljxH
+         3RS5mhT7NyjmaIo78ScT1rslid5BtQ59IH8xaUBL2tIbIhHd3xvOxy8SfO5xWhiKE2
+         B6dafLiOsYc4VHzFwLL0Rh8kZf7y0hWocOgpDWqlhpJBdBXZYw6vrjMhHDhxOwb4sy
+         991ZbGcJR57ovMq3sDKB77tRr/SJxp1wLvGWVBuKvoxyVmmslFXdBJYnpUhce0fxHC
+         2Cl+sI/iJ7Xug==
+Message-ID: <b726a650-0568-4972-85cf-ea8858305c3b@sandeen.net>
+Date:   Sat, 11 Nov 2023 09:39:34 -0600
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:102.0)
- Gecko/20100101 Thunderbird/102.15.0
-Subject: Re: [PATCH 2/3] mm: Add folio_fill_tail() and use it in iomap
-To:     Matthew Wilcox <willy@infradead.org>,
-        Andreas Gruenbacher <agruenba@redhat.com>
-Cc:     linux-xfs@vger.kernel.org, Theodore Ts'o <tytso@mit.edu>,
-        "Darrick J . Wong" <djwong@kernel.org>, gfs2@lists.linux.dev,
-        Andreas Dilger <adilger.kernel@dilger.ca>,
-        linux-fsdevel@vger.kernel.org,
-        Andrew Morton <akpm@linux-foundation.org>,
-        linux-ext4@vger.kernel.org, linux-erofs@lists.ozlabs.org
-References: <20231107212643.3490372-1-willy@infradead.org>
- <20231107212643.3490372-3-willy@infradead.org>
- <CAHc6FU550j_AYgWz5JgRu84mw5HqrSwd+hYZiHVArnget3gb4w@mail.gmail.com>
- <ZU5jx2QeujE+868t@casper.infradead.org>
-From:   Gao Xiang <hsiangkao@linux.alibaba.com>
-In-Reply-To: <ZU5jx2QeujE+868t@casper.infradead.org>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 8bit
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH] xfs: Remove unused function
+Content-Language: en-US
+To:     "Darrick J. Wong" <djwong@kernel.org>,
+        Jiapeng Chong <jiapeng.chong@linux.alibaba.com>
+Cc:     Bill O'Donnell <bodonnel@redhat.com>, chandan.babu@oracle.com,
+        linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org,
+        Abaci Robot <abaci@linux.alibaba.com>
+References: <20231103073040.649-1-jiapeng.chong@linux.alibaba.com>
+ <ZUqPdhc4RQxL8TVB@redhat.com> <20231107204405.GP1205143@frogsfrogsfrogs>
+From:   Eric Sandeen <sandeen@sandeen.net>
+In-Reply-To: <20231107204405.GP1205143@frogsfrogsfrogs>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-
-
-On 2023/11/11 01:09, Matthew Wilcox wrote:
-> On Thu, Nov 09, 2023 at 10:50:45PM +0100, Andreas Gruenbacher wrote:
->> On Tue, Nov 7, 2023 at 10:27 PM Matthew Wilcox (Oracle)
->> <willy@infradead.org> wrote:
->>> +static inline void folio_fill_tail(struct folio *folio, size_t offset,
->>> +               const char *from, size_t len)
->>> +{
->>> +       char *to = kmap_local_folio(folio, offset);
->>> +
->>> +       VM_BUG_ON(offset + len > folio_size(folio));
->>> +
->>> +       if (folio_test_highmem(folio)) {
->>> +               size_t max = PAGE_SIZE - offset_in_page(offset);
->>> +
->>> +               while (len > max) {
->>> +                       memcpy(to, from, max);
->>> +                       kunmap_local(to);
->>> +                       len -= max;
->>> +                       from += max;
->>> +                       offset += max;
->>> +                       max = PAGE_SIZE;
->>> +                       to = kmap_local_folio(folio, offset);
->>> +               }
->>> +       }
->>> +
->>> +       memcpy(to, from, len);
->>> +       to = folio_zero_tail(folio, offset, to);
+On 11/7/23 2:44 PM, Darrick J. Wong wrote:
+> On Tue, Nov 07, 2023 at 01:26:46PM -0600, Bill O'Donnell wrote:
+>> On Fri, Nov 03, 2023 at 03:30:40PM +0800, Jiapeng Chong wrote:
+>>> The function are defined in the bitmap.c file, but not called
+>>> elsewhere, so delete the unused function.
+>>>
+>>> fs/xfs/scrub/bitmap.c:55:1: warning: unused function 'xbitmap_tree_iter_next'.
+>>>
+>>> Reported-by: Abaci Robot <abaci@linux.alibaba.com>
+>>> Closes: https://bugzilla.openanolis.cn/show_bug.cgi?id=7137
+>>> Signed-off-by: Jiapeng Chong <jiapeng.chong@linux.alibaba.com>
 >>
->> This needs to be:
->>
->> to = folio_zero_tail(folio, offset  + len, to + len);
+>> Makes sense.
+>> Reviewed-by: Bill O'Donnell <bodonnel@redhat.com>
 > 
-> Oh, wow, that was stupid of me.  I only ran an xfstests against ext4,
-> which doesn't exercise this code, not gfs2 or erofs.  Thanks for
-> fixing this up.
+> I disagree -- I added redundant forward declarations here so I wouldn't
+> have to go digging through the 150LOC definition of INTERVAL_TREE_DEFINE
+> to figure out what helper functions were actually being defined by the
+> macro.  They'll trigger compiler errors if the definition of
+> INTERVAL_TREE_DEFINE ever drifts away from my understanding of it at the
+> time I wrote the code.
 
-Assuming that is for the next cycle (no rush), I will also test
-this patch and feedback later since I'm now working on other
-stuffs.
+And the comment above those declarations say as much, but Jiapeng Chong seems to
+be getting a legitimate warning as a result, and AFAICT xbitmap_tree_iter_next
+really isn't used in the codebase. Maybe it's worth commenting it out or
+#ifdefing it, while leaving it around for reference as you intended?
 
-Thanks,
-Gao Xiang
+(I'm sympathetic to the macro-generated function hell, for sure.)
+
+-Eric
+
+> --D
+> 
+>>
+>>
+>>> ---
+>>>  fs/xfs/scrub/bitmap.c | 4 ----
+>>>  1 file changed, 4 deletions(-)
+>>>
+>>> diff --git a/fs/xfs/scrub/bitmap.c b/fs/xfs/scrub/bitmap.c
+>>> index e0c89a9a0ca0..ba4b18e40faa 100644
+>>> --- a/fs/xfs/scrub/bitmap.c
+>>> +++ b/fs/xfs/scrub/bitmap.c
+>>> @@ -48,10 +48,6 @@ static inline struct xbitmap_node *
+>>>  xbitmap_tree_iter_first(struct rb_root_cached *root, uint64_t start,
+>>>  			uint64_t last);
+>>>  
+>>> -static inline struct xbitmap_node *
+>>> -xbitmap_tree_iter_next(struct xbitmap_node *node, uint64_t start,
+>>> -		       uint64_t last);
+>>> -
+>>>  INTERVAL_TREE_DEFINE(struct xbitmap_node, bn_rbnode, uint64_t,
+>>>  		__bn_subtree_last, START, LAST, static inline, xbitmap_tree)
+>>>  
+>>> -- 
+>>> 2.20.1.7.g153144c
+>>>
+>>
+> 
+
