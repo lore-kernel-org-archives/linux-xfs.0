@@ -2,62 +2,62 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 938EDC074FD
-	for <linux-xfs@archiver.kernel.org>; Tue, 14 Nov 2023 01:53:57 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 75460C4167B
+	for <linux-xfs@archiver.kernel.org>; Tue, 14 Nov 2023 01:54:00 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231989AbjKNBx7 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 13 Nov 2023 20:53:59 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58128 "EHLO
+        id S232000AbjKNByB (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 13 Nov 2023 20:54:01 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58142 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231983AbjKNBx6 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 13 Nov 2023 20:53:58 -0500
-Received: from mail-pl1-x62d.google.com (mail-pl1-x62d.google.com [IPv6:2607:f8b0:4864:20::62d])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 140BAD44
-        for <linux-xfs@vger.kernel.org>; Mon, 13 Nov 2023 17:53:55 -0800 (PST)
-Received: by mail-pl1-x62d.google.com with SMTP id d9443c01a7336-1cc68c1fac2so45882485ad.0
-        for <linux-xfs@vger.kernel.org>; Mon, 13 Nov 2023 17:53:55 -0800 (PST)
+        with ESMTP id S231969AbjKNByA (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 13 Nov 2023 20:54:00 -0500
+Received: from mail-pl1-x635.google.com (mail-pl1-x635.google.com [IPv6:2607:f8b0:4864:20::635])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id BCF4AD44
+        for <linux-xfs@vger.kernel.org>; Mon, 13 Nov 2023 17:53:56 -0800 (PST)
+Received: by mail-pl1-x635.google.com with SMTP id d9443c01a7336-1cc37fb1310so38289785ad.1
+        for <linux-xfs@vger.kernel.org>; Mon, 13 Nov 2023 17:53:56 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1699926834; x=1700531634; darn=vger.kernel.org;
+        d=gmail.com; s=20230601; t=1699926836; x=1700531636; darn=vger.kernel.org;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:from:to:cc:subject:date
          :message-id:reply-to;
-        bh=bBeYMsYS9dTbIpPqHB0pGx1gW53aFcxx0jv/SHtFKug=;
-        b=JwgaorsIbWIZONOX1fidxA8yyE4AajPLTM7S2tzo4g9nl2J/Ora9UXZdAKTLj7Epam
-         fomB1R5WoHSR4rdZzlIlKqWMJI0pkEumyyswFtYYsEndwe1u7ZzyO4k57fRHOTEbOJu7
-         DVxXXqibuVbyK7pgsCnpwM+jIM9f+vcyW6Hgh2tEsfKWhkADMElz8w0egIu8PAkOG2E/
-         /lhrFdhNycd27DGMLtwd47amtWNCEE6eJGOcTDpWcjd33B3oz/XBsydMrpCUY3LWmUbE
-         5JxGTYnZW1239A5kTZ1CG/YMxhNT3BrsF/XuLhPWwwWkKLUAElbNjM8xNbF3JDPz9Z14
-         wCTA==
+        bh=3gwUolg5jbvLCo3qarJX+gsvTFh8u44kjgMnElXaHxw=;
+        b=UhrE3kxr5O99y/sjWrvDtGCgQbQFfjk9hcKblG4fE/1R18j5/JDzH1wQvA90M/mimD
+         vJGui5UCLhL2AIPDNUoBdBUnODIrugdTMnQYWsVS8ZiPjR8OZz8x9Y1dASDADRESmNVU
+         5DxJ5RLfNX1HjdEVmnRokoquamJLP13+MNDttF5xBX5O8PHc2R17OnC1ulQ+TrSMIzRn
+         YYlq62S5yTGW+gfOOMZlUwtfif5NlwPHe6gRML/r8gVdMigXIHzRHqhXNtbSRo65xDBj
+         rLKr2nd17DAczCQDd+iLDCjM/6C8WcPWH8YC/dF0mK/vFzasA/dCp8Gb0AHVXIAfisYW
+         x1UQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1699926834; x=1700531634;
+        d=1e100.net; s=20230601; t=1699926836; x=1700531636;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:x-gm-message-state:from:to:cc
          :subject:date:message-id:reply-to;
-        bh=bBeYMsYS9dTbIpPqHB0pGx1gW53aFcxx0jv/SHtFKug=;
-        b=KJZWkqxkhO3Wc3AA0NdugTtshVFViTU/t89Vb/TL757rV34768FkeP+NEh4/Uq8Upf
-         pxndNH4aOEWY08TqNzPSnd8/7Bq9gCu2kGTfmEziteKxzG12a6FgSkomnTpbIMn+xJvv
-         /BVUUAdZCH4nEKtU9J/yTZP6O41a7DQpZ7J7SQYLEtDFO3OfzVgW0nj0xnu3Ff8wRE0s
-         z3xcfc+uGcxjFgYuh4v8Ua4PLFO6GW4inCoOcQdXL6WcxFO6vmpmeAdsUT3ibaK9njAc
-         /oXGzSjZjyysFjV3MeC1copB3yKZSxN7SLA3e7AGB0UOR1Wtgy0Y1V9HIR1dg+XN/7wa
-         xFDg==
-X-Gm-Message-State: AOJu0Yxm6mq22kSXsFhyieYyJjxwYWuX5M9xfFv/CxEWZftGb0lPmcq6
-        rvGORdDuqREQA0Mus0EQaucYACO33RH3DA==
-X-Google-Smtp-Source: AGHT+IEOcgv3zsFMcSedXismyYxl+FSvVRICjFms3Sl6ht2zjv30sokBKjQXpZJv0HMbW0+aN5E28g==
-X-Received: by 2002:a17:902:7881:b0:1ce:33b2:a1e0 with SMTP id q1-20020a170902788100b001ce33b2a1e0mr1070437pll.33.1699926834321;
-        Mon, 13 Nov 2023 17:53:54 -0800 (PST)
+        bh=3gwUolg5jbvLCo3qarJX+gsvTFh8u44kjgMnElXaHxw=;
+        b=d2i+meeQSABWQjm0ErDnswAujpuPYPzSA91YV9O5Jrxf/5oeHOstsOy/sv+LNQAMu9
+         xNaiTSzhqSUXW/PPJBz3A5KbqUbDpm8NBVTty5Af3Z3OM5oOUHPUanLMJLjinW+kJJCb
+         1CaaBTaYhcInk+6XEvisq11JHECTJrUC35IUxDWDDl3CP3UyisQ7kBl1X0kMJSzeAlYa
+         QbPWf6FPl4g6JOdGEEKvUdX3kYSHr4PQer5haKkaGMAcBe18V3TaxZWdkEciR3FWF0Y6
+         7UM/tI3ChX6tZu7zkxChzVM/D8vjgeR53DVkMXKHsXgPytoo42zBTm9NmysU80LVodE9
+         Y4vg==
+X-Gm-Message-State: AOJu0YxXFMwN3jg6MWQdeWs7SQHiaLxZ5/JMREzmiKMdSC5F9Uahru5Z
+        FXjBMrvJqijW6+iT38jvhHR8d0NqFhAGKA==
+X-Google-Smtp-Source: AGHT+IH78lTuy2ZMfNp/JyuyouH0iYDA5IqtUoEKDUxEgsEPRLIQDPSW1Jr2LX8z11zebB7pDrG/dg==
+X-Received: by 2002:a17:902:db06:b0:1cc:3daa:d368 with SMTP id m6-20020a170902db0600b001cc3daad368mr1133880plx.65.1699926836068;
+        Mon, 13 Nov 2023 17:53:56 -0800 (PST)
 Received: from lrumancik.svl.corp.google.com ([2620:15c:2a3:200:d177:a8ad:804f:74f1])
-        by smtp.gmail.com with ESMTPSA id a17-20020a170902ecd100b001c9cb2fb8d8sm4668592plh.49.2023.11.13.17.53.53
+        by smtp.gmail.com with ESMTPSA id a17-20020a170902ecd100b001c9cb2fb8d8sm4668592plh.49.2023.11.13.17.53.55
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 13 Nov 2023 17:53:54 -0800 (PST)
+        Mon, 13 Nov 2023 17:53:55 -0800 (PST)
 From:   Leah Rumancik <leah.rumancik@gmail.com>
 To:     linux-xfs@vger.kernel.org
 Cc:     amir73il@gmail.com, chandan.babu@oracle.com, fred@cloudflare.com,
         "Darrick J. Wong" <djwong@kernel.org>,
         Dave Chinner <dchinner@redhat.com>,
         Leah Rumancik <leah.rumancik@gmail.com>
-Subject: [PATCH 5.15 CANDIDATE 08/17] xfs: don't leak memory when attr fork loading fails
-Date:   Mon, 13 Nov 2023 17:53:29 -0800
-Message-ID: <20231114015339.3922119-9-leah.rumancik@gmail.com>
+Subject: [PATCH 5.15 CANDIDATE 10/17] xfs: fix intermittent hang during quotacheck
+Date:   Mon, 13 Nov 2023 17:53:31 -0800
+Message-ID: <20231114015339.3922119-11-leah.rumancik@gmail.com>
 X-Mailer: git-send-email 2.43.0.rc0.421.g78406f8d94-goog
 In-Reply-To: <20231114015339.3922119-1-leah.rumancik@gmail.com>
 References: <20231114015339.3922119-1-leah.rumancik@gmail.com>
@@ -69,91 +69,86 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: "Darrick J. Wong" <djwong@kernel.org>
 
-[ Upstream commit c78c2d0903183a41beb90c56a923e30f90fa91b9 ]
+[ Upstream commit f0c2d7d2abca24d19831c99edea458704fac8087 ]
 
-I observed the following evidence of a memory leak while running xfs/399
-from the xfs fsck test suite (edited for brevity):
+Every now and then, I see the following hang during mount time
+quotacheck when running fstests.  Turning on KASAN seems to make it
+happen somewhat more frequently.  I've edited the backtrace for brevity.
 
-XFS (sde): Metadata corruption detected at xfs_attr_shortform_verify_struct.part.0+0x7b/0xb0 [xfs], inode 0x1172 attr fork
-XFS: Assertion failed: ip->i_af.if_u1.if_data == NULL, file: fs/xfs/libxfs/xfs_inode_fork.c, line: 315
+XFS (sdd): Quotacheck needed: Please wait.
+XFS: Assertion failed: bp->b_flags & _XBF_DELWRI_Q, file: fs/xfs/xfs_buf.c, line: 2411
 ------------[ cut here ]------------
-WARNING: CPU: 2 PID: 91635 at fs/xfs/xfs_message.c:104 assfail+0x46/0x4a [xfs]
-CPU: 2 PID: 91635 Comm: xfs_scrub Tainted: G        W         5.19.0-rc7-xfsx #rc7 6e6475eb29fd9dda3181f81b7ca7ff961d277a40
+WARNING: CPU: 0 PID: 1831409 at fs/xfs/xfs_message.c:104 assfail+0x46/0x4a [xfs]
+CPU: 0 PID: 1831409 Comm: mount Tainted: G        W         5.19.0-rc6-xfsx #rc6 09911566947b9f737b036b4af85e399e4b9aef64
 Hardware name: QEMU Standard PC (Q35 + ICH9, 2009), BIOS 1.15.0-1 04/01/2014
 RIP: 0010:assfail+0x46/0x4a [xfs]
+Code: a0 8f 41 a0 e8 45 fe ff ff 8a 1d 2c 36 10 00 80 fb 01 76 0f 0f b6 f3 48 c7 c7 c0 f0 4f a0 e8 10 f0 02 e1 80 e3 01 74 02 0f 0b <0f> 0b 5b c3 48 8d 45 10 48 89 e2 4c 89 e6 48 89 1c 24 48 89 44 24
+RSP: 0018:ffffc900078c7b30 EFLAGS: 00010246
+RAX: 0000000000000000 RBX: ffff8880099ac000 RCX: 000000007fffffff
+RDX: 0000000000000000 RSI: 0000000000000000 RDI: ffffffffa0418fa0
+RBP: ffff8880197bc1c0 R08: 0000000000000000 R09: 000000000000000a
+R10: 000000000000000a R11: f000000000000000 R12: ffffc900078c7d20
+R13: 00000000fffffff5 R14: ffffc900078c7d20 R15: 0000000000000000
+FS:  00007f0449903800(0000) GS:ffff88803ec00000(0000) knlGS:0000000000000000
+CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+CR2: 00005610ada631f0 CR3: 0000000014dd8002 CR4: 00000000001706f0
 Call Trace:
  <TASK>
- xfs_ifork_zap_attr+0x7c/0xb0
- xfs_iformat_attr_fork+0x86/0x110
- xfs_inode_from_disk+0x41d/0x480
- xfs_iget+0x389/0xd70
- xfs_bulkstat_one_int+0x5b/0x540
- xfs_bulkstat_iwalk+0x1e/0x30
- xfs_iwalk_ag_recs+0xd1/0x160
- xfs_iwalk_run_callbacks+0xb9/0x180
- xfs_iwalk_ag+0x1d8/0x2e0
- xfs_iwalk+0x141/0x220
- xfs_bulkstat+0x105/0x180
- xfs_ioc_bulkstat.constprop.0.isra.0+0xc5/0x130
- xfs_file_ioctl+0xa5f/0xef0
- __x64_sys_ioctl+0x82/0xa0
+ xfs_buf_delwri_pushbuf+0x150/0x160 [xfs 4561f5b32c9bfb874ec98d58d0719464e1f87368]
+ xfs_qm_flush_one+0xd6/0x130 [xfs 4561f5b32c9bfb874ec98d58d0719464e1f87368]
+ xfs_qm_dquot_walk.isra.0+0x109/0x1e0 [xfs 4561f5b32c9bfb874ec98d58d0719464e1f87368]
+ xfs_qm_quotacheck+0x319/0x490 [xfs 4561f5b32c9bfb874ec98d58d0719464e1f87368]
+ xfs_qm_mount_quotas+0x65/0x2c0 [xfs 4561f5b32c9bfb874ec98d58d0719464e1f87368]
+ xfs_mountfs+0x6b5/0xab0 [xfs 4561f5b32c9bfb874ec98d58d0719464e1f87368]
+ xfs_fs_fill_super+0x781/0x990 [xfs 4561f5b32c9bfb874ec98d58d0719464e1f87368]
+ get_tree_bdev+0x175/0x280
+ vfs_get_tree+0x1a/0x80
+ path_mount+0x6f5/0xaa0
+ __x64_sys_mount+0x103/0x140
  do_syscall_64+0x2b/0x80
  entry_SYSCALL_64_after_hwframe+0x46/0xb0
 
-This newly-added assertion checks that there aren't any incore data
-structures hanging off the incore fork when we're trying to reset its
-contents.  From the call trace, it is evident that iget was trying to
-construct an incore inode from the ondisk inode, but the attr fork
-verifier failed and we were trying to undo all the memory allocations
-that we had done earlier.
+I /think/ this can happen if xfs_qm_flush_one is racing with
+xfs_qm_dquot_isolate (i.e. dquot reclaim) when the second function has
+taken the dquot flush lock but xfs_qm_dqflush hasn't yet locked the
+dquot buffer, let alone queued it to the delwri list.  In this case,
+flush_one will fail to get the dquot flush lock, but it can lock the
+incore buffer, but xfs_buf_delwri_pushbuf will then trip over this
+ASSERT, which checks that the buffer isn't on a delwri list.  The hang
+results because the _delwri_submit_buffers ignores non DELWRI_Q buffers,
+which means that xfs_buf_iowait waits forever for an IO that has not yet
+been scheduled.
 
-The three assertions in xfs_ifork_zap_attr check that the caller has
-already called xfs_idestroy_fork, which clearly has not been done here.
-As the zap function then zeroes the pointers, we've effectively leaked
-the memory.
+AFAICT, a reasonable solution here is to detect a dquot buffer that is
+not on a DELWRI list, drop it, and return -EAGAIN to try the flush
+again.  It's not /that/ big of a deal if quotacheck writes the dquot
+buffer repeatedly before we even set QUOTA_CHKD.
 
-The shortest change would have been to insert an extra call to
-xfs_idestroy_fork, but it makes more sense to bundle the _idestroy_fork
-call into _zap_attr, since all other callsites call _idestroy_fork
-immediately prior to calling _zap_attr.  IOWs, it eliminates one way to
-fail.
-
-Note: This change only applies cleanly to 2ed5b09b3e8f, since we just
-reworked the attr fork lifetime.  However, I think this memory leak has
-existed since 0f45a1b20cd8, since the chain xfs_iformat_attr_fork ->
-xfs_iformat_local -> xfs_init_local_fork will allocate
-ifp->if_u1.if_data, but if xfs_ifork_verify_local_attr fails,
-xfs_iformat_attr_fork will free i_afp without freeing any of the stuff
-hanging off i_afp.  The solution for older kernels I think is to add the
-missing call to xfs_idestroy_fork just prior to calling kmem_cache_free.
-
-Found by fuzzing a.sfattr.hdr.totsize = lastbit in xfs/399.
-
-[ backport note: did not include refactoring of xfs_idestroy_fork into
-xfs_ifork_zap_attr, simply added the missing call as suggested in the
-commit for backports ]
-
-Fixes: 2ed5b09b3e8f ("xfs: make inode attribute forks a permanent part of struct xfs_inode")
-Probably-Fixes: 0f45a1b20cd8 ("xfs: improve local fork verification")
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 Reviewed-by: Dave Chinner <dchinner@redhat.com>
 Signed-off-by: Leah Rumancik <leah.rumancik@gmail.com>
 ---
- fs/xfs/libxfs/xfs_inode_fork.c | 1 +
- 1 file changed, 1 insertion(+)
+ fs/xfs/xfs_qm.c | 7 +++++++
+ 1 file changed, 7 insertions(+)
 
-diff --git a/fs/xfs/libxfs/xfs_inode_fork.c b/fs/xfs/libxfs/xfs_inode_fork.c
-index 20095233d7bc..c1f965af8432 100644
---- a/fs/xfs/libxfs/xfs_inode_fork.c
-+++ b/fs/xfs/libxfs/xfs_inode_fork.c
-@@ -330,6 +330,7 @@ xfs_iformat_attr_fork(
- 	}
+diff --git a/fs/xfs/xfs_qm.c b/fs/xfs/xfs_qm.c
+index 623244650a2f..792736e29a37 100644
+--- a/fs/xfs/xfs_qm.c
++++ b/fs/xfs/xfs_qm.c
+@@ -1244,6 +1244,13 @@ xfs_qm_flush_one(
+ 			error = -EINVAL;
+ 			goto out_unlock;
+ 		}
++
++		if (!(bp->b_flags & _XBF_DELWRI_Q)) {
++			error = -EAGAIN;
++			xfs_buf_relse(bp);
++			goto out_unlock;
++		}
++
+ 		xfs_buf_unlock(bp);
  
- 	if (error) {
-+		xfs_idestroy_fork(ip->i_afp);
- 		kmem_cache_free(xfs_ifork_zone, ip->i_afp);
- 		ip->i_afp = NULL;
- 	}
+ 		xfs_buf_delwri_pushbuf(bp, buffer_list);
 -- 
 2.43.0.rc0.421.g78406f8d94-goog
 
