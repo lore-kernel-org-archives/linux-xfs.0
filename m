@@ -2,569 +2,131 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A6DD4C4332F
-	for <linux-xfs@archiver.kernel.org>; Mon, 13 Nov 2023 17:08:44 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9DBB2C4332F
+	for <linux-xfs@archiver.kernel.org>; Tue, 14 Nov 2023 01:53:49 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230466AbjKMRIp (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 13 Nov 2023 12:08:45 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58080 "EHLO
+        id S231172AbjKNBxv (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 13 Nov 2023 20:53:51 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49432 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229873AbjKMRIp (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 13 Nov 2023 12:08:45 -0500
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id DE886D7A
-        for <linux-xfs@vger.kernel.org>; Mon, 13 Nov 2023 09:08:40 -0800 (PST)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 73CE3C433C7;
-        Mon, 13 Nov 2023 17:08:40 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1699895320;
-        bh=MWFG+8nKqD8bNzaxKA41t3odyv+Hc5vBMKIWpM86gic=;
-        h=Subject:From:To:Cc:Date:In-Reply-To:References:From;
-        b=Cdlt6sVi8M+FJo+DhH4kUZVNC+njBySiXn7lqG2hxUQtuPLQii0PQoRNYVFDvEqRv
-         aiGRVGTzJ/8m/N4GJ/xvoWxB8gU79lheGB8en+cOVwulP5rnGcD3bg2J6cEUF+JQ9O
-         DfFGalkjoeZXNleTM2FbDnxWzbTLqrcG4weWpmdL3aYfduOdQo8CQzYFINEEstefgr
-         2FnBKRQ+K9j4DlaeBaCpmdsmuwN4DmqGYry8/120U1FWrno4dzgM+NQEYtPnz4yI0e
-         yXz4b80+mXWdIuX8npM/nf6KSd+2mQnoWSGnnxc7bl20OxXeybzLn/UqQL3NgKl0h7
-         vehAaUqOorO5Q==
-Subject: [PATCH 1/1] generic: test reads racing with slow reflink operations
-From:   "Darrick J. Wong" <djwong@kernel.org>
-To:     zlang@redhat.com, djwong@kernel.org
-Cc:     Christoph Hellwig <hch@lst.de>,
-        Catherine Hoang <catherine.hoang@oracle.com>,
-        linux-xfs@vger.kernel.org, fstests@vger.kernel.org, guan@eryu.me
-Date:   Mon, 13 Nov 2023 09:08:39 -0800
-Message-ID: <169989531989.1034466.10430740786795917744.stgit@frogsfrogsfrogs>
-In-Reply-To: <169989531418.1034466.15629933501843921475.stgit@frogsfrogsfrogs>
-References: <169989531418.1034466.15629933501843921475.stgit@frogsfrogsfrogs>
-User-Agent: StGit/0.19
+        with ESMTP id S229580AbjKNBxu (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 13 Nov 2023 20:53:50 -0500
+Received: from mail-pl1-x62b.google.com (mail-pl1-x62b.google.com [IPv6:2607:f8b0:4864:20::62b])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7CFF7D43
+        for <linux-xfs@vger.kernel.org>; Mon, 13 Nov 2023 17:53:47 -0800 (PST)
+Received: by mail-pl1-x62b.google.com with SMTP id d9443c01a7336-1cc34c3420bso39053115ad.3
+        for <linux-xfs@vger.kernel.org>; Mon, 13 Nov 2023 17:53:47 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20230601; t=1699926826; x=1700531626; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to;
+        bh=vBkFTSdI2/KhkAv/PVvPGUlWdSIRmUeAPQB1bjlH7kU=;
+        b=SpjcwpMQJYDePBGeiVnTOw0J3fuiYfR6jSLvvMN5Q19vo245YIvTggtE3mq4goZVqM
+         IXsnP91WvrNR7tIdQQV3pCAU7rqkI56BUM4xIRG2o20K+A24w70fsCB3fVrzdKf8sGbl
+         fFHLxnbQ5WYSi9P+hPOgR1H583yPuoydUFoPT5LHmQoFoj713mlBckFciaLWReK9Ovq7
+         dO/UpdNrPeWSyrYepjU9ymNvKvaQhU2Q+D246jduxfBVVRc9fDMvdXka+y5YbrwEAASb
+         bubp6suvSXFxmGHMi0priwpMGzFTYQVCAsQebAPYvbNI+ou10YlkcPBlFcRMawRVv8xB
+         Ishw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1699926826; x=1700531626;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-message-state:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=vBkFTSdI2/KhkAv/PVvPGUlWdSIRmUeAPQB1bjlH7kU=;
+        b=J2B0bii9mVzjB86GSTGCoSvWtJMR3jGUvcGsH6GWtHoy8dhRCzgUfk0l2AcdF0123Y
+         4+tbkuL8ZyTBrkhrzY7zAu9kKzq7v7Is6DGin58TKW/b0zSV+cdNu0Abeb1YEJF1nwF8
+         VRNRazycR9bqQkaESgUnnvrcyuxmQSesaIJDzoThKVaEj8hDe1kRNHhLptREhcxlvBHq
+         s00ufUZJLRyMX9neNIzc9agI9kCOEseUY7ljMlaCc3Au/GDqQWpUnz/Qf2idt0Slq7zN
+         xIz5vxOyPpQNu2pUoRHG7o/jABXUJRRYDa2dLT0Y4lFvRpQk0peLBWfW7doLMi1XhQ2q
+         5BoA==
+X-Gm-Message-State: AOJu0YwzLQQ1t/LMz0y7+17Q3lpIJQqqKei82RbGW/V2YRXsF9iE1mc+
+        vVfa0Vv7a/volB0U7Ef72kBYGpuzeWw=
+X-Google-Smtp-Source: AGHT+IFIxupDdWyDLLWQmiNamPu+9xPrB7MlNAK/a1y2wmdJaTjA+/6Qlt+Y4HrsT+80kqPOf3sRYA==
+X-Received: by 2002:a17:903:2346:b0:1c9:9e33:3a7d with SMTP id c6-20020a170903234600b001c99e333a7dmr1261301plh.20.1699926826598;
+        Mon, 13 Nov 2023 17:53:46 -0800 (PST)
+Received: from lrumancik.svl.corp.google.com ([2620:15c:2a3:200:d177:a8ad:804f:74f1])
+        by smtp.gmail.com with ESMTPSA id a17-20020a170902ecd100b001c9cb2fb8d8sm4668592plh.49.2023.11.13.17.53.45
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Mon, 13 Nov 2023 17:53:46 -0800 (PST)
+From:   Leah Rumancik <leah.rumancik@gmail.com>
+To:     linux-xfs@vger.kernel.org
+Cc:     amir73il@gmail.com, chandan.babu@oracle.com, fred@cloudflare.com,
+        Leah Rumancik <leah.rumancik@gmail.com>
+Subject: [PATCH 5.15 CANDIDATE 00/17] 5.15 backports from 5.19..6.1
+Date:   Mon, 13 Nov 2023 17:53:21 -0800
+Message-ID: <20231114015339.3922119-1-leah.rumancik@gmail.com>
+X-Mailer: git-send-email 2.43.0.rc0.421.g78406f8d94-goog
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-From: Darrick J. Wong <djwong@kernel.org>
+Hello,
 
-XFS has a rather slow reflink operation.  While a reflink operation is
-running, other programs cannot read the contents of the source file,
-which is causing latency spikes.  Catherine Hoang wrote a patch to
-permit reads, since the source file contents do not change.  This is a
-functionality test for that patch.
+Here is the next set of fixes for 5.15. Tested on 10 configs x 30 runs
+with no regressions seen on these commits. Commit 7d839e325a "xfs: check
+return codes when flushing block devices" is in this range but was left
+out for now as it revealed a regression which exists upstream. I'll
+include it in a future set once its fix is accepted.
 
-Signed-off-by: Darrick J. Wong <djwong@kernel.org>
-Reviewed-by: Christoph Hellwig <hch@lst.de>
-Reviewed-by: Catherine Hoang <catherine.hoang@oracle.com>
----
- configure.ac              |    1 
- include/builddefs.in      |    1 
- m4/package_libcdev.m4     |   13 ++
- src/Makefile              |    4 +
- src/t_reflink_read_race.c |  339 +++++++++++++++++++++++++++++++++++++++++++++
- tests/generic/1953        |   75 ++++++++++
- tests/generic/1953.out    |    6 +
- 7 files changed, 439 insertions(+)
- create mode 100644 src/t_reflink_read_race.c
- create mode 100755 tests/generic/1953
- create mode 100644 tests/generic/1953.out
+- Leah
 
+Chandan Babu R (1):
+  xfs: Fix false ENOSPC when performing direct write on a delalloc
+    extent in cow fork
 
-diff --git a/configure.ac b/configure.ac
-index 4687d8a3c0..7333045330 100644
---- a/configure.ac
-+++ b/configure.ac
-@@ -71,6 +71,7 @@ AC_HAVE_BMV_OF_SHARED
- AC_HAVE_NFTW
- AC_HAVE_RLIMIT_NOFILE
- AC_HAVE_FIEXCHANGE
-+AC_HAVE_FICLONE
- 
- AC_CHECK_FUNCS([renameat2])
- AC_CHECK_FUNCS([reallocarray])
-diff --git a/include/builddefs.in b/include/builddefs.in
-index 969acf0da2..446350d5fc 100644
---- a/include/builddefs.in
-+++ b/include/builddefs.in
-@@ -73,6 +73,7 @@ HAVE_NFTW = @have_nftw@
- HAVE_BMV_OF_SHARED = @have_bmv_of_shared@
- HAVE_RLIMIT_NOFILE = @have_rlimit_nofile@
- HAVE_FIEXCHANGE = @have_fiexchange@
-+HAVE_FICLONE = @have_ficlone@
- 
- GCCFLAGS = -funsigned-char -fno-strict-aliasing -Wall
- 
-diff --git a/m4/package_libcdev.m4 b/m4/package_libcdev.m4
-index 7f73104405..0f4b8063f3 100644
---- a/m4/package_libcdev.m4
-+++ b/m4/package_libcdev.m4
-@@ -174,3 +174,16 @@ AC_DEFUN([AC_HAVE_FIEXCHANGE],
-        AC_MSG_RESULT(yes)],[AC_MSG_RESULT(no)])
-     AC_SUBST(have_fiexchange)
-   ])
-+
-+# Check if we have FICLONE
-+AC_DEFUN([AC_HAVE_FICLONE],
-+  [ AC_MSG_CHECKING([for FICLONE])
-+    AC_LINK_IFELSE([AC_LANG_PROGRAM([[
-+#include <sys/ioctl.h>
-+#include <linux/fs.h>
-+    ]], [[
-+	 ioctl(-1, FICLONE, -1);
-+    ]])],[have_ficlone=yes
-+       AC_MSG_RESULT(yes)],[AC_MSG_RESULT(no)])
-+    AC_SUBST(have_ficlone)
-+  ])
-diff --git a/src/Makefile b/src/Makefile
-index 2815f919b2..49dd2f6c1e 100644
---- a/src/Makefile
-+++ b/src/Makefile
-@@ -94,6 +94,10 @@ ifeq ($(HAVE_SEEK_DATA), yes)
-  endif
- endif
- 
-+ifeq ($(HAVE_FICLONE),yes)
-+     TARGETS += t_reflink_read_race
-+endif
-+
- CFILES = $(TARGETS:=.c)
- LDIRT = $(TARGETS) fssum
- 
-diff --git a/src/t_reflink_read_race.c b/src/t_reflink_read_race.c
-new file mode 100644
-index 0000000000..00c19d7c05
---- /dev/null
-+++ b/src/t_reflink_read_race.c
-@@ -0,0 +1,339 @@
-+// SPDX-License-Identifier: GPL-2.0
-+/*
-+ * Race reads with reflink to see if reads continue while we're cloning.
-+ * Copyright 2023 Oracle.  All rights reserved.
-+ */
-+#include <sys/types.h>
-+#include <sys/stat.h>
-+#include <sys/ioctl.h>
-+#include <linux/fs.h>
-+#include <time.h>
-+#include <stdlib.h>
-+#include <unistd.h>
-+#include <signal.h>
-+#include <fcntl.h>
-+#include <pthread.h>
-+#include <stdio.h>
-+#include <errno.h>
-+#include <string.h>
-+
-+static pid_t mypid;
-+
-+static FILE *outcome_fp;
-+
-+/* Significant timestamps.  Initialized to zero */
-+static double program_start, clone_start, clone_end;
-+
-+/* Coordinates access to timestamps */
-+static pthread_mutex_t lock = PTHREAD_MUTEX_INITIALIZER;
-+
-+struct readinfo {
-+	int fd;
-+	unsigned int blocksize;
-+	char *descr;
-+};
-+
-+struct cloneinfo {
-+	int src_fd, dst_fd;
-+};
-+
-+#define MSEC_PER_SEC	1000
-+#define NSEC_PER_MSEC	1000000
-+
-+/*
-+ * Assume that it shouldn't take longer than 100ms for the FICLONE ioctl to
-+ * enter the kernel and take locks on an uncontended file.  This is also the
-+ * required CLOCK_MONOTONIC granularity.
-+ */
-+#define EARLIEST_READ_MS	(MSEC_PER_SEC / 10)
-+
-+/*
-+ * We want to be reasonably sure that the FICLONE takes long enough that any
-+ * read initiated after clone operation locked the source file could have
-+ * completed a disk IO before the clone finishes.  Therefore, we require that
-+ * the clone operation must take at least 4x the maximum setup time.
-+ */
-+#define MINIMUM_CLONE_MS	(EARLIEST_READ_MS * 5)
-+
-+static double timespec_to_msec(const struct timespec *ts)
-+{
-+	return (ts->tv_sec * (double)MSEC_PER_SEC) +
-+	       (ts->tv_nsec / (double)NSEC_PER_MSEC);
-+}
-+
-+static void sleep_ms(unsigned int len)
-+{
-+	struct timespec time = {
-+		.tv_nsec = len * NSEC_PER_MSEC,
-+	};
-+
-+	nanosleep(&time, NULL);
-+}
-+
-+static void outcome(const char *str)
-+{
-+	fprintf(outcome_fp, "%s\n", str);
-+	fflush(outcome_fp);
-+}
-+
-+static void *reader_fn(void *arg)
-+{
-+	struct timespec now;
-+	struct readinfo *ri = arg;
-+	char *buf = malloc(ri->blocksize);
-+	loff_t pos = 0;
-+	ssize_t copied;
-+	int ret;
-+
-+	if (!buf) {
-+		perror("alloc buffer");
-+		goto kill_error;
-+	}
-+
-+	/* Wait for the FICLONE to start */
-+	pthread_mutex_lock(&lock);
-+	while (clone_start < program_start) {
-+		pthread_mutex_unlock(&lock);
-+#ifdef DEBUG
-+		printf("%s read waiting for clone to start; cs=%.2f ps=%.2f\n",
-+				ri->descr, clone_start, program_start);
-+		fflush(stdout);
-+#endif
-+		sleep_ms(1);
-+		pthread_mutex_lock(&lock);
-+	}
-+	pthread_mutex_unlock(&lock);
-+	sleep_ms(EARLIEST_READ_MS);
-+
-+	/* Read from the file... */
-+	while ((copied = read(ri->fd, buf, ri->blocksize)) > 0) {
-+		double read_completion;
-+
-+		ret = clock_gettime(CLOCK_MONOTONIC, &now);
-+		if (ret) {
-+			perror("clock_gettime");
-+			goto kill_error;
-+		}
-+		read_completion = timespec_to_msec(&now);
-+
-+		/*
-+		 * If clone_end is still zero, the FICLONE is still running.
-+		 * If the read completion occurred a safe duration after the
-+		 * start of the ioctl, then report that as an early read
-+		 * completion.
-+		 */
-+		pthread_mutex_lock(&lock);
-+		if (clone_end < program_start &&
-+		    read_completion > clone_start + EARLIEST_READ_MS) {
-+			pthread_mutex_unlock(&lock);
-+
-+			/* clone still running... */
-+			printf("finished %s read early at %.2fms\n",
-+					ri->descr,
-+					read_completion - program_start);
-+			fflush(stdout);
-+			outcome("finished read early");
-+			goto kill_done;
-+		}
-+		pthread_mutex_unlock(&lock);
-+
-+		sleep_ms(1);
-+		pos += copied;
-+	}
-+	if (copied < 0) {
-+		perror("read");
-+		goto kill_error;
-+	}
-+
-+	return NULL;
-+kill_error:
-+	outcome("reader error");
-+kill_done:
-+	kill(mypid, SIGTERM);
-+	return NULL;
-+}
-+
-+static void *clone_fn(void *arg)
-+{
-+	struct timespec now;
-+	struct cloneinfo *ci = arg;
-+	int ret;
-+
-+	/* Record the approximate start time of this thread */
-+	ret = clock_gettime(CLOCK_MONOTONIC, &now);
-+	if (ret) {
-+		perror("clock_gettime clone start");
-+		goto kill_error;
-+	}
-+	pthread_mutex_lock(&lock);
-+	clone_start = timespec_to_msec(&now);
-+	pthread_mutex_unlock(&lock);
-+
-+	printf("started clone at %.2fms\n", clone_start - program_start);
-+	fflush(stdout);
-+
-+	/* Kernel call, only killable with a fatal signal */
-+	ret = ioctl(ci->dst_fd, FICLONE, ci->src_fd);
-+	if (ret) {
-+		perror("FICLONE");
-+		goto kill_error;
-+	}
-+
-+	/* If the ioctl completes, note the completion time */
-+	ret = clock_gettime(CLOCK_MONOTONIC, &now);
-+	if (ret) {
-+		perror("clock_gettime clone end");
-+		goto kill_error;
-+	}
-+
-+	pthread_mutex_lock(&lock);
-+	clone_end = timespec_to_msec(&now);
-+	pthread_mutex_unlock(&lock);
-+
-+	printf("finished clone at %.2fms\n",
-+			clone_end - program_start);
-+	fflush(stdout);
-+
-+	/* Complain if we didn't take long enough to clone. */
-+	if (clone_end < clone_start + MINIMUM_CLONE_MS) {
-+		printf("clone did not take enough time (%.2fms)\n",
-+				clone_end - clone_start);
-+		fflush(stdout);
-+		outcome("clone too fast");
-+		goto kill_done;
-+	}
-+
-+	outcome("clone finished before any reads");
-+	goto kill_done;
-+
-+kill_error:
-+	outcome("clone error");
-+kill_done:
-+	kill(mypid, SIGTERM);
-+	return NULL;
-+}
-+
-+int main(int argc, char *argv[])
-+{
-+	struct cloneinfo ci;
-+	struct readinfo bufio = { .descr = "buffered" };
-+	struct readinfo directio = { .descr = "directio" };
-+	struct timespec now;
-+	pthread_t clone_thread, bufio_thread, directio_thread;
-+	double clockres;
-+	int ret;
-+
-+	if (argc != 4) {
-+		printf("Usage: %s src_file dst_file outcome_file\n", argv[0]);
-+		return 1;
-+	}
-+
-+	mypid = getpid();
-+
-+	/* Check for sufficient clock precision. */
-+	ret = clock_getres(CLOCK_MONOTONIC, &now);
-+	if (ret) {
-+		perror("clock_getres MONOTONIC");
-+		return 2;
-+	}
-+	printf("CLOCK_MONOTONIC resolution: %llus %luns\n",
-+			(unsigned long long)now.tv_sec,
-+			(unsigned long)now.tv_nsec);
-+	fflush(stdout);
-+
-+	clockres = timespec_to_msec(&now);
-+	if (clockres > EARLIEST_READ_MS) {
-+		fprintf(stderr, "insufficient CLOCK_MONOTONIC resolution\n");
-+		return 2;
-+	}
-+
-+	/*
-+	 * Measure program start time since the MONOTONIC time base is not
-+	 * all that well defined.
-+	 */
-+	ret = clock_gettime(CLOCK_MONOTONIC, &now);
-+	if (ret) {
-+		perror("clock_gettime MONOTONIC");
-+		return 2;
-+	}
-+	if (now.tv_sec == 0 && now.tv_nsec == 0) {
-+		fprintf(stderr, "Uhoh, start time is zero?!\n");
-+		return 2;
-+	}
-+	program_start = timespec_to_msec(&now);
-+
-+	outcome_fp = fopen(argv[3], "w");
-+	if (!outcome_fp) {
-+		perror(argv[3]);
-+		return 2;
-+	}
-+
-+	/* Open separate fds for each thread */
-+	ci.src_fd = open(argv[1], O_RDONLY);
-+	if (ci.src_fd < 0) {
-+		perror(argv[1]);
-+		return 2;
-+	}
-+
-+	ci.dst_fd = open(argv[2], O_RDWR | O_CREAT, 0600);
-+	if (ci.dst_fd < 0) {
-+		perror(argv[2]);
-+		return 2;
-+	}
-+
-+	bufio.fd = open(argv[1], O_RDONLY);
-+	if (bufio.fd < 0) {
-+		perror(argv[1]);
-+		return 2;
-+	}
-+	bufio.blocksize = 37;
-+
-+	directio.fd = open(argv[1], O_RDONLY | O_DIRECT);
-+	if (directio.fd < 0) {
-+		perror(argv[1]);
-+		return 2;
-+	}
-+	directio.blocksize = 512;
-+
-+	/* Start threads */
-+	ret = pthread_create(&clone_thread, NULL, clone_fn, &ci);
-+	if (ret) {
-+		fprintf(stderr, "create clone thread: %s\n", strerror(ret));
-+		return 2;
-+	}
-+
-+	ret = pthread_create(&bufio_thread, NULL, reader_fn, &bufio);
-+	if (ret) {
-+		fprintf(stderr, "create bufio thread: %s\n", strerror(ret));
-+		return 2;
-+	}
-+
-+	ret = pthread_create(&directio_thread, NULL, reader_fn, &directio);
-+	if (ret) {
-+		fprintf(stderr, "create directio thread: %s\n", strerror(ret));
-+		return 2;
-+	}
-+
-+	/* Wait for threads */
-+	ret = pthread_join(clone_thread, NULL);
-+	if (ret) {
-+		fprintf(stderr, "join clone thread: %s\n", strerror(ret));
-+		return 2;
-+	}
-+
-+	ret = pthread_join(bufio_thread, NULL);
-+	if (ret) {
-+		fprintf(stderr, "join bufio thread: %s\n", strerror(ret));
-+		return 2;
-+	}
-+
-+	ret = pthread_join(directio_thread, NULL);
-+	if (ret) {
-+		fprintf(stderr, "join directio thread: %s\n", strerror(ret));
-+		return 2;
-+	}
-+
-+	printf("Program should have killed itself?\n");
-+	outcome("program failed to end early");
-+	return 0;
-+}
-diff --git a/tests/generic/1953 b/tests/generic/1953
-new file mode 100755
-index 0000000000..c14de7060d
---- /dev/null
-+++ b/tests/generic/1953
-@@ -0,0 +1,75 @@
-+#! /bin/bash
-+# SPDX-License-Identifier: GPL-2.0
-+# Copyright (c) 2023, Oracle and/or its affiliates.  All Rights Reserved.
-+#
-+# FS QA Test No. 1953
-+#
-+# Race file reads with a very slow reflink operation to see if the reads
-+# actually complete while the reflink is ongoing.  This is a functionality
-+# test for XFS commit f3ba4762fa56 "xfs: allow read IO and FICLONE to run
-+# concurrently".
-+#
-+. ./common/preamble
-+_begin_fstest auto clone punch
-+
-+# Import common functions.
-+. ./common/filter
-+. ./common/attr
-+. ./common/reflink
-+
-+# real QA test starts here
-+_require_scratch_reflink
-+_require_cp_reflink
-+_require_xfs_io_command "fpunch"
-+_require_test_program "punch-alternating"
-+_require_test_program "t_reflink_read_race"
-+_require_command "$TIMEOUT_PROG" timeout
-+
-+rm -f "$seqres.full"
-+
-+echo "Format and mount"
-+_scratch_mkfs > "$seqres.full" 2>&1
-+_scratch_mount >> "$seqres.full" 2>&1
-+
-+testdir="$SCRATCH_MNT/test-$seq"
-+mkdir "$testdir"
-+
-+calc_space() {
-+	blocks_needed=$(( 2 ** (fnr + 1) ))
-+	space_needed=$((blocks_needed * blksz * 5 / 4))
-+}
-+
-+# Figure out the number of blocks that we need to get the reflink runtime above
-+# 1 seconds
-+echo "Create a many-block file"
-+for ((fnr = 1; fnr < 40; fnr++)); do
-+	free_blocks=$(stat -f -c '%a' "$testdir")
-+	blksz=$(_get_file_block_size "$testdir")
-+	space_avail=$((free_blocks * blksz))
-+	calc_space
-+	test $space_needed -gt $space_avail && \
-+		_notrun "Insufficient space for stress test; would only create $blocks_needed extents."
-+
-+	off=$(( (2 ** fnr) * blksz))
-+	$XFS_IO_PROG -f -c "pwrite -S 0x61 -b 4194304 $off $off" "$testdir/file1" >> "$seqres.full"
-+	"$here/src/punch-alternating" "$testdir/file1" >> "$seqres.full"
-+
-+	$TIMEOUT_PROG 1s cp --reflink=always "$testdir/file1" "$testdir/garbage" || break
-+done
-+echo "fnr=$fnr" >> $seqres.full
-+
-+echo "Reflink the big file"
-+$here/src/t_reflink_read_race "$testdir/file1" "$testdir/file2" \
-+	"$testdir/outcome" &>> $seqres.full
-+
-+if [ ! -e "$testdir/outcome" ]; then
-+	echo "Could not set up program"
-+elif grep -q "finished read early" "$testdir/outcome"; then
-+	echo "test completed successfully"
-+else
-+	cat "$testdir/outcome"
-+fi
-+
-+# success, all done
-+status=0
-+exit
-diff --git a/tests/generic/1953.out b/tests/generic/1953.out
-new file mode 100644
-index 0000000000..8eaacb7ff0
---- /dev/null
-+++ b/tests/generic/1953.out
-@@ -0,0 +1,6 @@
-+QA output created by 1953
-+Format and mount
-+Create a many-block file
-+Reflink the big file
-+Terminated
-+test completed successfully
+ChenXiaoSong (1):
+  xfs: fix NULL pointer dereference in xfs_getbmap()
+
+Darrick J. Wong (8):
+  xfs: refactor buffer cancellation table allocation
+  xfs: don't leak xfs_buf_cancel structures when recovery fails
+  xfs: convert buf_cancel_table allocation to kmalloc_array
+  xfs: prevent a UAF when log IO errors race with unmount
+  xfs: fix use-after-free in xattr node block inactivation
+  xfs: don't leak memory when attr fork loading fails
+  xfs: fix intermittent hang during quotacheck
+  xfs: avoid a UAF when log intent item recovery fails
+
+Gao Xiang (1):
+  xfs: add missing cmap->br_state = XFS_EXT_NORM update
+
+Guo Xuenan (1):
+  xfs: fix exception caused by unexpected illegal bestcount in leaf dir
+
+Kaixu Xia (1):
+  xfs: use invalidate_lock to check the state of mmap_lock
+
+Li Zetao (1):
+  xfs: Fix unreferenced object reported by kmemleak in xfs_sysfs_init()
+
+Zeng Heng (1):
+  xfs: fix memory leak in xfs_errortag_init
+
+Zhang Yi (1):
+  xfs: flush inode gc workqueue before clearing agi bucket
+
+hexiaole (1):
+  xfs: fix inode reservation space for removing transaction
+
+ fs/xfs/libxfs/xfs_dir2_leaf.c   |   9 +-
+ fs/xfs/libxfs/xfs_inode_fork.c  |   1 +
+ fs/xfs/libxfs/xfs_log_recover.h |  14 ++-
+ fs/xfs/libxfs/xfs_trans_resv.c  |   2 +-
+ fs/xfs/xfs_attr_inactive.c      |   8 +-
+ fs/xfs/xfs_bmap_util.c          |  17 +--
+ fs/xfs/xfs_buf_item_recover.c   |  66 +++++++++++
+ fs/xfs/xfs_error.c              |   9 +-
+ fs/xfs/xfs_inode.c              |   4 +-
+ fs/xfs/xfs_log.c                |   9 +-
+ fs/xfs/xfs_log_priv.h           |   3 -
+ fs/xfs/xfs_log_recover.c        |  44 +++----
+ fs/xfs/xfs_qm.c                 |   7 ++
+ fs/xfs/xfs_reflink.c            | 197 ++++++++++++++++++++++++++------
+ fs/xfs/xfs_sysfs.h              |   7 +-
+ 15 files changed, 307 insertions(+), 90 deletions(-)
+
+-- 
+2.43.0.rc0.421.g78406f8d94-goog
 
