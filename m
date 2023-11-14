@@ -2,62 +2,63 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A63CFC4167B
-	for <linux-xfs@archiver.kernel.org>; Tue, 14 Nov 2023 01:53:55 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 14FC9C4167D
+	for <linux-xfs@archiver.kernel.org>; Tue, 14 Nov 2023 01:53:57 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231970AbjKNBx4 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 13 Nov 2023 20:53:56 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58106 "EHLO
+        id S231985AbjKNBx6 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 13 Nov 2023 20:53:58 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58124 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231713AbjKNBxz (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 13 Nov 2023 20:53:55 -0500
-Received: from mail-pl1-x62f.google.com (mail-pl1-x62f.google.com [IPv6:2607:f8b0:4864:20::62f])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2FBC9D44
-        for <linux-xfs@vger.kernel.org>; Mon, 13 Nov 2023 17:53:52 -0800 (PST)
-Received: by mail-pl1-x62f.google.com with SMTP id d9443c01a7336-1cc938f9612so32893725ad.1
-        for <linux-xfs@vger.kernel.org>; Mon, 13 Nov 2023 17:53:52 -0800 (PST)
+        with ESMTP id S231969AbjKNBx5 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 13 Nov 2023 20:53:57 -0500
+Received: from mail-pg1-x52d.google.com (mail-pg1-x52d.google.com [IPv6:2607:f8b0:4864:20::52d])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 195D9D43
+        for <linux-xfs@vger.kernel.org>; Mon, 13 Nov 2023 17:53:54 -0800 (PST)
+Received: by mail-pg1-x52d.google.com with SMTP id 41be03b00d2f7-5c19a328797so1128603a12.3
+        for <linux-xfs@vger.kernel.org>; Mon, 13 Nov 2023 17:53:54 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1699926831; x=1700531631; darn=vger.kernel.org;
+        d=gmail.com; s=20230601; t=1699926833; x=1700531633; darn=vger.kernel.org;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:from:to:cc:subject:date
          :message-id:reply-to;
-        bh=TZ4/sHcptjfXgYs4wjxdLIXPGb/MxIb6ECUkbNFIOws=;
-        b=WKYzkDJq8rMhTdedpAFgUVFq4R/GJ92fiYCqSGkfnj52ebgTji9GD7+EdLVOblGzDa
-         CGIgzvPmdnlJVur4u6v7H3pcd3kfikgv0c8hMPpna14CqpABxgp5msYdkYxW0TMP4yom
-         qfXsrOrfFnA6xGuFQARo3kt+R44lNOPNbxLU4FFYRD13LJhutPkYwce4pLT5Rtt/YHuM
-         czHr/px0sVlx8zGPC8aEnfyU7bgg4G+NIQtsgaxddHUO43VO8fYqy3nmIlPGIwGm4R1i
-         kKM81I97EK7MF1NNtls0/d5Z1+DJnKikKoeZf65vCEIyDhMvAhrjKIVfnL6f87FmqO3I
-         mO1w==
+        bh=YS8Dp+7hh1oASlwguxu+0te537Whw1CvUWHKOgCqLJc=;
+        b=Z0k9IOD7HrkNqA95v9YwGI+ilJ7lFDQRzBoJQh4NdSFTGQDGWdfw4kyh6Y1N14xbkO
+         w26X7XGi/n2sl15DEELKh2fCnuwOuu8M7kX6mrj3gtdibXo6y054TWsBfSFKaXTeRTTu
+         ZqGieSgv5sP4tz/U2VsYo97mJ/hlfg+ka5jyX/BLnuf3cY4qfCfbJwcTukRZkAeL7e7o
+         8+RmsrqwhFMbzsyVgHEFUtAKQeAUVYYS6hbdZvNDkWNe2i52YyLo8uBxz/jycf5aIDGI
+         yTshmQ2vYhmCYDX8SUhgosh2hOK9Sv3Z0DjOalztLpq171FfoyTz8QQxQ/9N8YnwueQe
+         lnBg==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1699926831; x=1700531631;
+        d=1e100.net; s=20230601; t=1699926833; x=1700531633;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:x-gm-message-state:from:to:cc
          :subject:date:message-id:reply-to;
-        bh=TZ4/sHcptjfXgYs4wjxdLIXPGb/MxIb6ECUkbNFIOws=;
-        b=mWWUOIcCUsFrB1eLKiXXCkgNpTHR6/JW8yKXEjXoyDyCgwfYIEuCTOBAuJRtZliz9C
-         wqVWOLHo0o7VeHUUclYri2Vejw46+nG9lSodrVN2c3SYzAc7J3BjVWSL3ghfDTx/nN3Q
-         0a+GdwMAfptb1MMtorB4hloCU+rb2FMb9XLwNbwXm6SbUgfNVeIs8/KapYourNzgh46S
-         c+JrIDX8gxz0Gskub87Bl9QxubM1Ast4XBKwuPMi2P7ZpsUxo5CYY/JGQ147YVqcYzTI
-         wJ1VJI9+qtx13ZR/MYP3KqYcmFTARMA7XLXkDmWIkAW+PctFuepN3gDHNI1OVkjskNSk
-         NHRg==
-X-Gm-Message-State: AOJu0Yy0Y8X7snvVGkI+IZDy7/nXqYyrae1qGs+MJaQ6demNyIpJb787
-        4W57PmtuFfsJ9W1uZQsu6W9Fb2PAmFg8XQ==
-X-Google-Smtp-Source: AGHT+IHAWhqmop+gWUTz5/v+OTE2B9map4v57eNxipm42lZeYE3tJm7D/47LD6s0Rlcriq9VvqI0Rg==
-X-Received: by 2002:a17:902:7c8f:b0:1c0:bcbc:d64 with SMTP id y15-20020a1709027c8f00b001c0bcbc0d64mr910456pll.51.1699926831381;
-        Mon, 13 Nov 2023 17:53:51 -0800 (PST)
+        bh=YS8Dp+7hh1oASlwguxu+0te537Whw1CvUWHKOgCqLJc=;
+        b=AaNqBOGkQO6Kn6ZA85dsSfWIZu7+SzLGlDXlxjoTaYVNUzNsFlizHhyzIIpZeqS+Xu
+         Hs2yHCF/OMoYU9U+Sxlc2/Q0qfK9KpfPT8yDOdacxDg+ZcwTYNC42xnHPpBV4vStuahO
+         VwXcGD8UN+8M12c8aEYPraFWWfAiqFYBqFM3c0MNlx1ltxXIvQM9oNz8t8t10Syc+Rin
+         k2mFiQ1sxgyJ8npK847pcMxLRCYoPrEg//3qS//M6sSEiRJpzB7A+jaZMEcEqzAfVLd9
+         nmgJbTidb6ySIbUdgjFJEroeZTY+BjGqgzDI7FtNWlPIMuKh0h5oP+ILhn9/cDWiGVOV
+         cfgA==
+X-Gm-Message-State: AOJu0YyWchdtZrcE4P72Ymyqn+mHlT57G7C+qQ5hhOlsAxwOIksV92m5
+        6EYbf8eP2sUl2cOhdegcpDvzUyEo2gGmjA==
+X-Google-Smtp-Source: AGHT+IEEZiMsIVYQgHONwJz6Jc7quX4566Ir6MvSZc8GHx/f+dHGxdgIa5ySPHZEhgEBQsKcjLuCmA==
+X-Received: by 2002:a05:6a20:3c9f:b0:187:174b:cc78 with SMTP id b31-20020a056a203c9f00b00187174bcc78mr69194pzj.39.1699926833401;
+        Mon, 13 Nov 2023 17:53:53 -0800 (PST)
 Received: from lrumancik.svl.corp.google.com ([2620:15c:2a3:200:d177:a8ad:804f:74f1])
-        by smtp.gmail.com with ESMTPSA id a17-20020a170902ecd100b001c9cb2fb8d8sm4668592plh.49.2023.11.13.17.53.50
+        by smtp.gmail.com with ESMTPSA id a17-20020a170902ecd100b001c9cb2fb8d8sm4668592plh.49.2023.11.13.17.53.52
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 13 Nov 2023 17:53:51 -0800 (PST)
+        Mon, 13 Nov 2023 17:53:53 -0800 (PST)
 From:   Leah Rumancik <leah.rumancik@gmail.com>
 To:     linux-xfs@vger.kernel.org
 Cc:     amir73il@gmail.com, chandan.babu@oracle.com, fred@cloudflare.com,
-        "Darrick J. Wong" <djwong@kernel.org>,
+        "Darrick J. Wong" <djwong@kernel.org>, hch@lst.de,
+        kernel test robot <oliver.sang@intel.com>,
         Dave Chinner <dchinner@redhat.com>,
         Leah Rumancik <leah.rumancik@gmail.com>
-Subject: [PATCH 5.15 CANDIDATE 05/17] xfs: prevent a UAF when log IO errors race with unmount
-Date:   Mon, 13 Nov 2023 17:53:26 -0800
-Message-ID: <20231114015339.3922119-6-leah.rumancik@gmail.com>
+Subject: [PATCH 5.15 CANDIDATE 07/17] xfs: fix use-after-free in xattr node block inactivation
+Date:   Mon, 13 Nov 2023 17:53:28 -0800
+Message-ID: <20231114015339.3922119-8-leah.rumancik@gmail.com>
 X-Mailer: git-send-email 2.43.0.rc0.421.g78406f8d94-goog
 In-Reply-To: <20231114015339.3922119-1-leah.rumancik@gmail.com>
 References: <20231114015339.3922119-1-leah.rumancik@gmail.com>
@@ -69,154 +70,154 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: "Darrick J. Wong" <djwong@kernel.org>
 
-[ Upstream commit 7561cea5dbb97fecb952548a0fb74fb105bf4664 ]
+[ Upstream commit 95ff0363f3f6ae70c21a0f2b0603e54438e5988b ]
 
-KASAN reported the following use after free bug when running
-generic/475:
+The kernel build robot reported a UAF error while running xfs/433
+(edited somewhat for brevity):
 
- XFS (dm-0): Mounting V5 Filesystem
- XFS (dm-0): Starting recovery (logdev: internal)
- XFS (dm-0): Ending recovery (logdev: internal)
- Buffer I/O error on dev dm-0, logical block 20639616, async page read
- Buffer I/O error on dev dm-0, logical block 20639617, async page read
- XFS (dm-0): log I/O error -5
- XFS (dm-0): Filesystem has been shut down due to log error (0x2).
- XFS (dm-0): Unmounting Filesystem
- XFS (dm-0): Please unmount the filesystem and rectify the problem(s).
- ==================================================================
- BUG: KASAN: use-after-free in do_raw_spin_lock+0x246/0x270
- Read of size 4 at addr ffff888109dd84c4 by task 3:1H/136
+ BUG: KASAN: use-after-free in xfs_attr3_node_inactive (fs/xfs/xfs_attr_inactive.c:214) xfs
+ Read of size 4 at addr ffff88820ac2bd44 by task kworker/0:2/139
 
- CPU: 3 PID: 136 Comm: 3:1H Not tainted 5.19.0-rc4-xfsx #rc4 8e53ab5ad0fddeb31cee5e7063ff9c361915a9c4
- Hardware name: QEMU Standard PC (Q35 + ICH9, 2009), BIOS 1.15.0-1 04/01/2014
- Workqueue: xfs-log/dm-0 xlog_ioend_work [xfs]
+ CPU: 0 PID: 139 Comm: kworker/0:2 Tainted: G S                5.19.0-rc2-00004-g7cf2b0f9611b #1
+ Hardware name: Hewlett-Packard p6-1451cx/2ADA, BIOS 8.15 02/05/2013
+ Workqueue: xfs-inodegc/sdb4 xfs_inodegc_worker [xfs]
  Call Trace:
   <TASK>
-  dump_stack_lvl+0x34/0x44
-  print_report.cold+0x2b8/0x661
-  ? do_raw_spin_lock+0x246/0x270
-  kasan_report+0xab/0x120
-  ? do_raw_spin_lock+0x246/0x270
-  do_raw_spin_lock+0x246/0x270
-  ? rwlock_bug.part.0+0x90/0x90
-  xlog_force_shutdown+0xf6/0x370 [xfs 4ad76ae0d6add7e8183a553e624c31e9ed567318]
-  xlog_ioend_work+0x100/0x190 [xfs 4ad76ae0d6add7e8183a553e624c31e9ed567318]
-  process_one_work+0x672/0x1040
-  worker_thread+0x59b/0xec0
-  ? __kthread_parkme+0xc6/0x1f0
-  ? process_one_work+0x1040/0x1040
-  ? process_one_work+0x1040/0x1040
-  kthread+0x29e/0x340
-  ? kthread_complete_and_exit+0x20/0x20
-  ret_from_fork+0x1f/0x30
+ dump_stack_lvl (lib/dump_stack.c:107 (discriminator 1))
+ print_address_description+0x1f/0x200
+ print_report.cold (mm/kasan/report.c:430)
+ kasan_report (mm/kasan/report.c:162 mm/kasan/report.c:493)
+ xfs_attr3_node_inactive (fs/xfs/xfs_attr_inactive.c:214) xfs
+ xfs_attr3_root_inactive (fs/xfs/xfs_attr_inactive.c:296) xfs
+ xfs_attr_inactive (fs/xfs/xfs_attr_inactive.c:371) xfs
+ xfs_inactive (fs/xfs/xfs_inode.c:1781) xfs
+ xfs_inodegc_worker (fs/xfs/xfs_icache.c:1837 fs/xfs/xfs_icache.c:1860) xfs
+ process_one_work
+ worker_thread
+ kthread
+ ret_from_fork
   </TASK>
 
- Allocated by task 154099:
-  kasan_save_stack+0x1e/0x40
-  __kasan_kmalloc+0x81/0xa0
-  kmem_alloc+0x8d/0x2e0 [xfs]
-  xlog_cil_init+0x1f/0x540 [xfs]
-  xlog_alloc_log+0xd1e/0x1260 [xfs]
-  xfs_log_mount+0xba/0x640 [xfs]
-  xfs_mountfs+0xf2b/0x1d00 [xfs]
-  xfs_fs_fill_super+0x10af/0x1910 [xfs]
-  get_tree_bdev+0x383/0x670
-  vfs_get_tree+0x7d/0x240
-  path_mount+0xdb7/0x1890
-  __x64_sys_mount+0x1fa/0x270
-  do_syscall_64+0x2b/0x80
-  entry_SYSCALL_64_after_hwframe+0x46/0xb0
+ Allocated by task 139:
+ kasan_save_stack (mm/kasan/common.c:39)
+ __kasan_slab_alloc (mm/kasan/common.c:45 mm/kasan/common.c:436 mm/kasan/common.c:469)
+ kmem_cache_alloc (mm/slab.h:750 mm/slub.c:3214 mm/slub.c:3222 mm/slub.c:3229 mm/slub.c:3239)
+ _xfs_buf_alloc (include/linux/instrumented.h:86 include/linux/atomic/atomic-instrumented.h:41 fs/xfs/xfs_buf.c:232) xfs
+ xfs_buf_get_map (fs/xfs/xfs_buf.c:660) xfs
+ xfs_buf_read_map (fs/xfs/xfs_buf.c:777) xfs
+ xfs_trans_read_buf_map (fs/xfs/xfs_trans_buf.c:289) xfs
+ xfs_da_read_buf (fs/xfs/libxfs/xfs_da_btree.c:2652) xfs
+ xfs_da3_node_read (fs/xfs/libxfs/xfs_da_btree.c:392) xfs
+ xfs_attr3_root_inactive (fs/xfs/xfs_attr_inactive.c:272) xfs
+ xfs_attr_inactive (fs/xfs/xfs_attr_inactive.c:371) xfs
+ xfs_inactive (fs/xfs/xfs_inode.c:1781) xfs
+ xfs_inodegc_worker (fs/xfs/xfs_icache.c:1837 fs/xfs/xfs_icache.c:1860) xfs
+ process_one_work
+ worker_thread
+ kthread
+ ret_from_fork
 
- Freed by task 154151:
-  kasan_save_stack+0x1e/0x40
-  kasan_set_track+0x21/0x30
-  kasan_set_free_info+0x20/0x30
-  ____kasan_slab_free+0x110/0x190
-  slab_free_freelist_hook+0xab/0x180
-  kfree+0xbc/0x310
-  xlog_dealloc_log+0x1b/0x2b0 [xfs]
-  xfs_unmountfs+0x119/0x200 [xfs]
-  xfs_fs_put_super+0x6e/0x2e0 [xfs]
-  generic_shutdown_super+0x12b/0x3a0
-  kill_block_super+0x95/0xd0
-  deactivate_locked_super+0x80/0x130
-  cleanup_mnt+0x329/0x4d0
-  task_work_run+0xc5/0x160
-  exit_to_user_mode_prepare+0xd4/0xe0
-  syscall_exit_to_user_mode+0x1d/0x40
-  entry_SYSCALL_64_after_hwframe+0x46/0xb0
+ Freed by task 139:
+ kasan_save_stack (mm/kasan/common.c:39)
+ kasan_set_track (mm/kasan/common.c:45)
+ kasan_set_free_info (mm/kasan/generic.c:372)
+ __kasan_slab_free (mm/kasan/common.c:368 mm/kasan/common.c:328 mm/kasan/common.c:374)
+ kmem_cache_free (mm/slub.c:1753 mm/slub.c:3507 mm/slub.c:3524)
+ xfs_buf_rele (fs/xfs/xfs_buf.c:1040) xfs
+ xfs_attr3_node_inactive (fs/xfs/xfs_attr_inactive.c:210) xfs
+ xfs_attr3_root_inactive (fs/xfs/xfs_attr_inactive.c:296) xfs
+ xfs_attr_inactive (fs/xfs/xfs_attr_inactive.c:371) xfs
+ xfs_inactive (fs/xfs/xfs_inode.c:1781) xfs
+ xfs_inodegc_worker (fs/xfs/xfs_icache.c:1837 fs/xfs/xfs_icache.c:1860) xfs
+ process_one_work
+ worker_thread
+ kthread
+ ret_from_fork
 
-This appears to be a race between the unmount process, which frees the
-CIL and waits for in-flight iclog IO; and the iclog IO completion.  When
-generic/475 runs, it starts fsstress in the background, waits a few
-seconds, and substitutes a dm-error device to simulate a disk falling
-out of a machine.  If the fsstress encounters EIO on a pure data write,
-it will exit but the filesystem will still be online.
+I reproduced this for my own satisfaction, and got the same report,
+along with an extra morsel:
 
-The next thing the test does is unmount the filesystem, which tries to
-clean the log, free the CIL, and wait for iclog IO completion.  If an
-iclog was being written when the dm-error switch occurred, it can race
-with log unmounting as follows:
+ The buggy address belongs to the object at ffff88802103a800
+  which belongs to the cache xfs_buf of size 432
+ The buggy address is located 396 bytes inside of
+  432-byte region [ffff88802103a800, ffff88802103a9b0)
 
-Thread 1				Thread 2
+I tracked this code down to:
 
-					xfs_log_unmount
-					xfs_log_clean
-					xfs_log_quiesce
-xlog_ioend_work
-<observe error>
-xlog_force_shutdown
-test_and_set_bit(XLOG_IOERROR)
-					xfs_log_force
-					<log is shut down, nop>
-					xfs_log_umount_write
-					<log is shut down, nop>
-					xlog_dealloc_log
-					xlog_cil_destroy
-					<wait for iclogs>
-spin_lock(&log->l_cilp->xc_push_lock)
-<KABOOM>
+	error = xfs_trans_get_buf(*trans, mp->m_ddev_targp,
+			child_blkno,
+			XFS_FSB_TO_BB(mp, mp->m_attr_geo->fsbcount), 0,
+			&child_bp);
+	if (error)
+		return error;
+	error = bp->b_error;
 
-Therefore, free the CIL after waiting for the iclogs to complete.  I
-/think/ this race has existed for quite a few years now, though I don't
-remember the ~2014 era logging code well enough to know if it was a real
-threat then or if the actual race was exposed only more recently.
+That doesn't look right -- I think this should be dereferencing
+child_bp, not bp.  Looking through the codebase history, I think this
+was added by commit 2911edb653b9 ("xfs: remove the mappedbno argument to
+xfs_da_get_buf"), which replaced a call to xfs_da_get_buf with the
+current call to xfs_trans_get_buf.  Not sure why we trans_brelse'd @bp
+earlier in the function, but I'm guessing it's to avoid pinning too many
+buffers in memory while we inactivate the bottom of the attr tree.
+Hence we now have to get the buffer back.
 
-Fixes: ac983517ec59 ("xfs: don't sleep in xlog_cil_force_lsn on shutdown")
+I /think/ this was supposed to check child_bp->b_error and fail the rest
+of the invalidation if child_bp had experienced any kind of IO or
+corruption error.  I bet the xfs_da3_node_read earlier in the loop will
+catch most cases of incoming on-disk corruption which makes this check
+mostly moot unless someone corrupts the buffer and the AIL pushes it out
+to disk while the buffer's unlocked.
+
+In the first case we'll never get to the bad check, and in the second
+case the AIL will shut down the log, at which point there's no reason to
+check b_error.  Remove the check, and null out @bp to avoid this problem
+in the future.
+
+Cc: hch@lst.de
+Reported-by: kernel test robot <oliver.sang@intel.com>
+Fixes: 2911edb653b9 ("xfs: remove the mappedbno argument to xfs_da_get_buf")
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 Reviewed-by: Dave Chinner <dchinner@redhat.com>
+Reviewed-by: Christoph Hellwig <hch@lst.de>
 Signed-off-by: Leah Rumancik <leah.rumancik@gmail.com>
 ---
- fs/xfs/xfs_log.c | 9 +++++++--
- 1 file changed, 7 insertions(+), 2 deletions(-)
+ fs/xfs/xfs_attr_inactive.c | 8 +++-----
+ 1 file changed, 3 insertions(+), 5 deletions(-)
 
-diff --git a/fs/xfs/xfs_log.c b/fs/xfs/xfs_log.c
-index 0fb7d05ca308..eba295f666ac 100644
---- a/fs/xfs/xfs_log.c
-+++ b/fs/xfs/xfs_log.c
-@@ -2061,8 +2061,6 @@ xlog_dealloc_log(
- 	xlog_in_core_t	*iclog, *next_iclog;
- 	int		i;
- 
--	xlog_cil_destroy(log);
--
- 	/*
- 	 * Cycle all the iclogbuf locks to make sure all log IO completion
- 	 * is done before we tear down these buffers.
-@@ -2074,6 +2072,13 @@ xlog_dealloc_log(
- 		iclog = iclog->ic_next;
+diff --git a/fs/xfs/xfs_attr_inactive.c b/fs/xfs/xfs_attr_inactive.c
+index 2b5da6218977..2afa6d9a7f8f 100644
+--- a/fs/xfs/xfs_attr_inactive.c
++++ b/fs/xfs/xfs_attr_inactive.c
+@@ -158,6 +158,7 @@ xfs_attr3_node_inactive(
  	}
+ 	child_fsb = be32_to_cpu(ichdr.btree[0].before);
+ 	xfs_trans_brelse(*trans, bp);	/* no locks for later trans */
++	bp = NULL;
  
-+	/*
-+	 * Destroy the CIL after waiting for iclog IO completion because an
-+	 * iclog EIO error will try to shut down the log, which accesses the
-+	 * CIL to wake up the waiters.
-+	 */
-+	xlog_cil_destroy(log);
-+
- 	iclog = log->l_iclog;
- 	for (i = 0; i < log->l_iclog_bufs; i++) {
- 		next_iclog = iclog->ic_next;
+ 	/*
+ 	 * If this is the node level just above the leaves, simply loop
+@@ -211,12 +212,8 @@ xfs_attr3_node_inactive(
+ 				&child_bp);
+ 		if (error)
+ 			return error;
+-		error = bp->b_error;
+-		if (error) {
+-			xfs_trans_brelse(*trans, child_bp);
+-			return error;
+-		}
+ 		xfs_trans_binval(*trans, child_bp);
++		child_bp = NULL;
+ 
+ 		/*
+ 		 * If we're not done, re-read the parent to get the next
+@@ -233,6 +230,7 @@ xfs_attr3_node_inactive(
+ 						  bp->b_addr);
+ 			child_fsb = be32_to_cpu(phdr.btree[i + 1].before);
+ 			xfs_trans_brelse(*trans, bp);
++			bp = NULL;
+ 		}
+ 		/*
+ 		 * Atomically commit the whole invalidate stuff.
 -- 
 2.43.0.rc0.421.g78406f8d94-goog
 
