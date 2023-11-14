@@ -2,62 +2,63 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id BF7AFC4167B
-	for <linux-xfs@archiver.kernel.org>; Tue, 14 Nov 2023 01:54:03 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 17DB1C4167D
+	for <linux-xfs@archiver.kernel.org>; Tue, 14 Nov 2023 01:54:05 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232017AbjKNByF (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        id S231966AbjKNByF (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
         Mon, 13 Nov 2023 20:54:05 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43396 "EHLO
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43402 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232018AbjKNByE (ORCPT
+        with ESMTP id S231994AbjKNByE (ORCPT
         <rfc822;linux-xfs@vger.kernel.org>); Mon, 13 Nov 2023 20:54:04 -0500
-Received: from mail-pg1-x52e.google.com (mail-pg1-x52e.google.com [IPv6:2607:f8b0:4864:20::52e])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B30D7D43
-        for <linux-xfs@vger.kernel.org>; Mon, 13 Nov 2023 17:54:00 -0800 (PST)
-Received: by mail-pg1-x52e.google.com with SMTP id 41be03b00d2f7-5c19a328797so1128645a12.3
-        for <linux-xfs@vger.kernel.org>; Mon, 13 Nov 2023 17:54:00 -0800 (PST)
+Received: from mail-pl1-x62e.google.com (mail-pl1-x62e.google.com [IPv6:2607:f8b0:4864:20::62e])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9A0B6D45
+        for <linux-xfs@vger.kernel.org>; Mon, 13 Nov 2023 17:54:01 -0800 (PST)
+Received: by mail-pl1-x62e.google.com with SMTP id d9443c01a7336-1cc29f39e7aso32263975ad.0
+        for <linux-xfs@vger.kernel.org>; Mon, 13 Nov 2023 17:54:01 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1699926840; x=1700531640; darn=vger.kernel.org;
+        d=gmail.com; s=20230601; t=1699926841; x=1700531641; darn=vger.kernel.org;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:from:to:cc:subject:date
          :message-id:reply-to;
-        bh=IeNJFUYfbpQmri6PrATtJa01ZPb74ElHklhAToKqLME=;
-        b=NNdysbieDy1TtiikNzYG2cafs1Wenhhdx8wFl9m1PwfE5FjYm6NN8RGC3tMkc7xY5i
-         PdqCNUoavtYHNAQElPHkyFKhA6pTiXHwV0fe8doAooAEPp+JbgVotDL+yHMQOQes4JRy
-         DmUaFwv7JbarnYI9ooHhVyOBQ6HmvcSWU1PQENSAtOibXWCgyNfe6HeSQupkXQaD4OL7
-         piEavlD9Kp82v5zNpJHjCEDlyW969EKV2NzXkw9sIqooDOQ3iI3n2TUNQyEqdX8mMp1X
-         QFVQyAL2vIgcf2c88LMDU9pw41X0+UPxuMSY0OCgnCrFlWYrc1Mz7BuV1Ul6l4T5t837
-         5jHQ==
+        bh=UzdbB6rBdwY86jjPtAwWjvXgf/I3wbz5qWLRkhwvpE0=;
+        b=l2Gx6G+NP18Soo17htx4F3sMldz1gaFDO/hrry+MKpg8vDBifb/LnhCuVHqSOnNQBm
+         s779wzk3wVILXQnMRiwc3/26JryQd8i6O2FkSKIDNml+Mzf8NGFLQYN/6XI/OHFurdQe
+         3ilMkL1MFkH+8IyKAMsdXv2ThSnjhHjKnE6xyT9eaJ7+FnoE4JaKjanX0U8GkIuSJSCO
+         hls0zX1BJgc385JDBjoIMWjypN/At7mEni1fksDn2+8tP44VhXK8Clq5SdDf1qyumrJB
+         RgqbtIOjWhx06H8Ec6FCxrEvUF3Afq7acJuoWx/EkXiIQaCWu8UQv1umIWo4aN4ZMwCx
+         wEVA==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1699926840; x=1700531640;
+        d=1e100.net; s=20230601; t=1699926841; x=1700531641;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:x-gm-message-state:from:to:cc
          :subject:date:message-id:reply-to;
-        bh=IeNJFUYfbpQmri6PrATtJa01ZPb74ElHklhAToKqLME=;
-        b=gVEb+87OvPqsJMUk0C/oAIT/wi0CcyTCDe7rLfUxlM7cZMWytxVCGC5INNhygfY4py
-         nJKpSujHvXIPo7kjd4Mitbzl3OF6F6t60Hn1+aabF6Sk/YyBg8+YJkLXiOyqP69F9YMK
-         QONC6Rvr5IwADOpD50fs3kkyuFt0l/BouNShHPKmvJhj0QyUlumlYxFgU+3d6titZLnq
-         VyufCoOPofWVQlauzIrE/HfU/lCp3reugkiEBAWdjsvHQiaSJ1IyDw7MnOwiqUmhYJlr
-         3N5SDFp867byFVejY37955MOJPiMnKXMDqH8QJjlZndi2mRa/eFdThkhFbjuu83iqppY
-         4AzQ==
-X-Gm-Message-State: AOJu0YycPrmIhfOT5UyReXOjppASqxO6OMAM2pGo1U4A30F9ZfcixRyE
-        Mi+duWTo1WT9MadXAgCfjaXndVnMTMuMpA==
-X-Google-Smtp-Source: AGHT+IGh63qJekyTCVOVahepGvVnaMSf7XXy5J34r/qYadUfpiXottTRSPzjouQIaCWyN8h+5Php0w==
-X-Received: by 2002:a05:6a21:998d:b0:17b:cd83:6555 with SMTP id ve13-20020a056a21998d00b0017bcd836555mr7241783pzb.23.1699926839995;
-        Mon, 13 Nov 2023 17:53:59 -0800 (PST)
+        bh=UzdbB6rBdwY86jjPtAwWjvXgf/I3wbz5qWLRkhwvpE0=;
+        b=kfd5MiafrJPt4HommX7+7Ade+65VaO4RFUQgFnrA2CJ6eTADhrI4VY9FpfhTb/rSOD
+         3nczbUUTIPQQwKFloRVT508IA7yGRWFPcgPQOaVFGpcZTTmT9fCgHQHc8pIBuPWgPmd0
+         VoT4Ne6194AqyvfmO133VYTEswU4JucW7jxTG8UorBJ0pAOZiwom2xGGESb9N72brJeY
+         CR/fLKv2U2hAuG0W4EkiEmR1AaMswWA5DHfOu41V4uqfBUyekaDa5WW4t+aeFg+8SOrD
+         r7UsapfwxxJ07cdrsEJTG8mp0MBC5kcTXaFRLrw5zlu6G9w9h7QRQVVETEakcvg6FgHD
+         KBxw==
+X-Gm-Message-State: AOJu0Ywp9xY0atXQ370y1BDQTZeCfgOM+xfbd2TgHt5BDMfryIfCr8zK
+        zQkb1+nQwYL10lUe0Dkdd4eX3Nz4Sci7Yg==
+X-Google-Smtp-Source: AGHT+IH/wccOE27gNmr7j2Vgm4Tf3VX+fCHW9FQY8ChNdyDVG3+8uPF/d/kEdhZbS4MJBiYbDTxLGA==
+X-Received: by 2002:a17:902:e552:b0:1cc:2c45:757a with SMTP id n18-20020a170902e55200b001cc2c45757amr1168709plf.10.1699926840874;
+        Mon, 13 Nov 2023 17:54:00 -0800 (PST)
 Received: from lrumancik.svl.corp.google.com ([2620:15c:2a3:200:d177:a8ad:804f:74f1])
-        by smtp.gmail.com with ESMTPSA id a17-20020a170902ecd100b001c9cb2fb8d8sm4668592plh.49.2023.11.13.17.53.59
+        by smtp.gmail.com with ESMTPSA id a17-20020a170902ecd100b001c9cb2fb8d8sm4668592plh.49.2023.11.13.17.54.00
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 13 Nov 2023 17:53:59 -0800 (PST)
+        Mon, 13 Nov 2023 17:54:00 -0800 (PST)
 From:   Leah Rumancik <leah.rumancik@gmail.com>
 To:     linux-xfs@vger.kernel.org
 Cc:     amir73il@gmail.com, chandan.babu@oracle.com, fred@cloudflare.com,
-        "Darrick J. Wong" <djwong@kernel.org>,
-        Christoph Hellwig <hch@lst.de>,
+        Guo Xuenan <guoxuenan@huawei.com>,
+        Hou Tao <houtao1@huawei.com>,
+        "Darrick J . Wong" <djwong@kernel.org>,
         Leah Rumancik <leah.rumancik@gmail.com>
-Subject: [PATCH 5.15 CANDIDATE 14/17] xfs: avoid a UAF when log intent item recovery fails
-Date:   Mon, 13 Nov 2023 17:53:35 -0800
-Message-ID: <20231114015339.3922119-15-leah.rumancik@gmail.com>
+Subject: [PATCH 5.15 CANDIDATE 15/17] xfs: fix exception caused by unexpected illegal bestcount in leaf dir
+Date:   Mon, 13 Nov 2023 17:53:36 -0800
+Message-ID: <20231114015339.3922119-16-leah.rumancik@gmail.com>
 X-Mailer: git-send-email 2.43.0.rc0.421.g78406f8d94-goog
 In-Reply-To: <20231114015339.3922119-1-leah.rumancik@gmail.com>
 References: <20231114015339.3922119-1-leah.rumancik@gmail.com>
@@ -67,164 +68,155 @@ Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-From: "Darrick J. Wong" <djwong@kernel.org>
+From: Guo Xuenan <guoxuenan@huawei.com>
 
-[ Upstream commit 97cf79677ecb50a38517253ae2fd705849a7e51a ]
+[ Upstream commit 13cf24e00665c9751951a422756d975812b71173 ]
 
-KASAN reported a UAF bug when I was running xfs/235:
+For leaf dir, In most cases, there should be as many bestfree slots
+as the dir data blocks that can fit under i_size (except for [1]).
 
- BUG: KASAN: use-after-free in xlog_recover_process_intents+0xa77/0xae0 [xfs]
- Read of size 8 at addr ffff88804391b360 by task mount/5680
+Root cause is we don't examin the number bestfree slots, when the slots
+number less than dir data blocks, if we need to allocate new dir data
+block and update the bestfree array, we will use the dir block number as
+index to assign bestfree array, while we did not check the leaf buf
+boundary which may cause UAF or other memory access problem. This issue
+can also triggered with test cases xfs/473 from fstests.
 
- CPU: 2 PID: 5680 Comm: mount Not tainted 6.0.0-xfsx #6.0.0 77e7b52a4943a975441e5ac90a5ad7748b7867f6
- Hardware name: QEMU Standard PC (Q35 + ICH9, 2009), BIOS 1.15.0-1 04/01/2014
- Call Trace:
-  <TASK>
-  dump_stack_lvl+0x34/0x44
-  print_report.cold+0x2cc/0x682
-  kasan_report+0xa3/0x120
-  xlog_recover_process_intents+0xa77/0xae0 [xfs fb841c7180aad3f8359438576e27867f5795667e]
-  xlog_recover_finish+0x7d/0x970 [xfs fb841c7180aad3f8359438576e27867f5795667e]
-  xfs_log_mount_finish+0x2d7/0x5d0 [xfs fb841c7180aad3f8359438576e27867f5795667e]
-  xfs_mountfs+0x11d4/0x1d10 [xfs fb841c7180aad3f8359438576e27867f5795667e]
-  xfs_fs_fill_super+0x13d5/0x1a80 [xfs fb841c7180aad3f8359438576e27867f5795667e]
-  get_tree_bdev+0x3da/0x6e0
-  vfs_get_tree+0x7d/0x240
-  path_mount+0xdd3/0x17d0
-  __x64_sys_mount+0x1fa/0x270
-  do_syscall_64+0x2b/0x80
-  entry_SYSCALL_64_after_hwframe+0x46/0xb0
- RIP: 0033:0x7ff5bc069eae
- Code: 48 8b 0d 85 1f 0f 00 f7 d8 64 89 01 48 83 c8 ff c3 66 2e 0f 1f 84 00 00 00 00 00 90 f3 0f 1e fa 49 89 ca b8 a5 00 00 00 0f 05 <48> 3d 01 f0 ff ff 73 01 c3 48 8b 0d 52 1f 0f 00 f7 d8 64 89 01 48
- RSP: 002b:00007ffe433fd448 EFLAGS: 00000246 ORIG_RAX: 00000000000000a5
- RAX: ffffffffffffffda RBX: 0000000000000000 RCX: 00007ff5bc069eae
- RDX: 00005575d7213290 RSI: 00005575d72132d0 RDI: 00005575d72132b0
- RBP: 00005575d7212fd0 R08: 00005575d7213230 R09: 00005575d7213fe0
- R10: 0000000000000000 R11: 0000000000000246 R12: 0000000000000000
- R13: 00005575d7213290 R14: 00005575d72132b0 R15: 00005575d7212fd0
-  </TASK>
+According to Dave Chinner & Darrick's suggestion, adding buffer verifier
+to detect this abnormal situation in time.
+Simplify the testcase for fstest xfs/554 [1]
 
- Allocated by task 5680:
-  kasan_save_stack+0x1e/0x40
-  __kasan_slab_alloc+0x66/0x80
-  kmem_cache_alloc+0x152/0x320
-  xfs_rui_init+0x17a/0x1b0 [xfs]
-  xlog_recover_rui_commit_pass2+0xb9/0x2e0 [xfs]
-  xlog_recover_items_pass2+0xe9/0x220 [xfs]
-  xlog_recover_commit_trans+0x673/0x900 [xfs]
-  xlog_recovery_process_trans+0xbe/0x130 [xfs]
-  xlog_recover_process_data+0x103/0x2a0 [xfs]
-  xlog_do_recovery_pass+0x548/0xc60 [xfs]
-  xlog_do_log_recovery+0x62/0xc0 [xfs]
-  xlog_do_recover+0x73/0x480 [xfs]
-  xlog_recover+0x229/0x460 [xfs]
-  xfs_log_mount+0x284/0x640 [xfs]
-  xfs_mountfs+0xf8b/0x1d10 [xfs]
-  xfs_fs_fill_super+0x13d5/0x1a80 [xfs]
-  get_tree_bdev+0x3da/0x6e0
-  vfs_get_tree+0x7d/0x240
-  path_mount+0xdd3/0x17d0
-  __x64_sys_mount+0x1fa/0x270
-  do_syscall_64+0x2b/0x80
-  entry_SYSCALL_64_after_hwframe+0x46/0xb0
+The error log is shown as follows:
+==================================================================
+BUG: KASAN: use-after-free in xfs_dir2_leaf_addname+0x1995/0x1ac0
+Write of size 2 at addr ffff88810168b000 by task touch/1552
+CPU: 5 PID: 1552 Comm: touch Not tainted 6.0.0-rc3+ #101
+Hardware name: QEMU Standard PC (i440FX + PIIX, 1996), BIOS
+1.13.0-1ubuntu1.1 04/01/2014
+Call Trace:
+ <TASK>
+ dump_stack_lvl+0x4d/0x66
+ print_report.cold+0xf6/0x691
+ kasan_report+0xa8/0x120
+ xfs_dir2_leaf_addname+0x1995/0x1ac0
+ xfs_dir_createname+0x58c/0x7f0
+ xfs_create+0x7af/0x1010
+ xfs_generic_create+0x270/0x5e0
+ path_openat+0x270b/0x3450
+ do_filp_open+0x1cf/0x2b0
+ do_sys_openat2+0x46b/0x7a0
+ do_sys_open+0xb7/0x130
+ do_syscall_64+0x35/0x80
+ entry_SYSCALL_64_after_hwframe+0x63/0xcd
+RIP: 0033:0x7fe4d9e9312b
+Code: 25 00 00 41 00 3d 00 00 41 00 74 4b 64 8b 04 25 18 00 00 00 85 c0
+75 67 44 89 e2 48 89 ee bf 9c ff ff ff b8 01 01 00 00 0f 05 <48> 3d 00
+f0 ff ff 0f 87 91 00 00 00 48 8b 4c 24 28 64 48 33 0c 25
+RSP: 002b:00007ffda4c16c20 EFLAGS: 00000246 ORIG_RAX: 0000000000000101
+RAX: ffffffffffffffda RBX: 0000000000000001 RCX: 00007fe4d9e9312b
+RDX: 0000000000000941 RSI: 00007ffda4c17f33 RDI: 00000000ffffff9c
+RBP: 00007ffda4c17f33 R08: 0000000000000000 R09: 0000000000000000
+R10: 00000000000001b6 R11: 0000000000000246 R12: 0000000000000941
+R13: 00007fe4d9f631a4 R14: 00007ffda4c17f33 R15: 0000000000000000
+ </TASK>
 
- Freed by task 5680:
-  kasan_save_stack+0x1e/0x40
-  kasan_set_track+0x21/0x30
-  kasan_set_free_info+0x20/0x30
-  ____kasan_slab_free+0x144/0x1b0
-  slab_free_freelist_hook+0xab/0x180
-  kmem_cache_free+0x1f1/0x410
-  xfs_rud_item_release+0x33/0x80 [xfs]
-  xfs_trans_free_items+0xc3/0x220 [xfs]
-  xfs_trans_cancel+0x1fa/0x590 [xfs]
-  xfs_rui_item_recover+0x913/0xd60 [xfs]
-  xlog_recover_process_intents+0x24e/0xae0 [xfs]
-  xlog_recover_finish+0x7d/0x970 [xfs]
-  xfs_log_mount_finish+0x2d7/0x5d0 [xfs]
-  xfs_mountfs+0x11d4/0x1d10 [xfs]
-  xfs_fs_fill_super+0x13d5/0x1a80 [xfs]
-  get_tree_bdev+0x3da/0x6e0
-  vfs_get_tree+0x7d/0x240
-  path_mount+0xdd3/0x17d0
-  __x64_sys_mount+0x1fa/0x270
-  do_syscall_64+0x2b/0x80
-  entry_SYSCALL_64_after_hwframe+0x46/0xb0
+The buggy address belongs to the physical page:
+page:ffffea000405a2c0 refcount:0 mapcount:0 mapping:0000000000000000
+index:0x0 pfn:0x10168b
+flags: 0x2fffff80000000(node=0|zone=2|lastcpupid=0x1fffff)
+raw: 002fffff80000000 ffffea0004057788 ffffea000402dbc8 0000000000000000
+raw: 0000000000000000 0000000000170000 00000000ffffffff 0000000000000000
+page dumped because: kasan: bad access detected
 
- The buggy address belongs to the object at ffff88804391b300
-  which belongs to the cache xfs_rui_item of size 688
- The buggy address is located 96 bytes inside of
-  688-byte region [ffff88804391b300, ffff88804391b5b0)
+Memory state around the buggy address:
+ ffff88810168af00: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+ ffff88810168af80: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+>ffff88810168b000: ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff
+                   ^
+ ffff88810168b080: ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff
+ ffff88810168b100: ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff
+==================================================================
+Disabling lock debugging due to kernel taint
+00000000: 58 44 44 33 5b 53 35 c2 00 00 00 00 00 00 00 78
+XDD3[S5........x
+XFS (sdb): Internal error xfs_dir2_data_use_free at line 1200 of file
+fs/xfs/libxfs/xfs_dir2_data.c.  Caller
+xfs_dir2_data_use_free+0x28a/0xeb0
+CPU: 5 PID: 1552 Comm: touch Tainted: G    B              6.0.0-rc3+
+Hardware name: QEMU Standard PC (i440FX + PIIX, 1996), BIOS
+1.13.0-1ubuntu1.1 04/01/2014
+Call Trace:
+ <TASK>
+ dump_stack_lvl+0x4d/0x66
+ xfs_corruption_error+0x132/0x150
+ xfs_dir2_data_use_free+0x198/0xeb0
+ xfs_dir2_leaf_addname+0xa59/0x1ac0
+ xfs_dir_createname+0x58c/0x7f0
+ xfs_create+0x7af/0x1010
+ xfs_generic_create+0x270/0x5e0
+ path_openat+0x270b/0x3450
+ do_filp_open+0x1cf/0x2b0
+ do_sys_openat2+0x46b/0x7a0
+ do_sys_open+0xb7/0x130
+ do_syscall_64+0x35/0x80
+ entry_SYSCALL_64_after_hwframe+0x63/0xcd
+RIP: 0033:0x7fe4d9e9312b
+Code: 25 00 00 41 00 3d 00 00 41 00 74 4b 64 8b 04 25 18 00 00 00 85 c0
+75 67 44 89 e2 48 89 ee bf 9c ff ff ff b8 01 01 00 00 0f 05 <48> 3d 00
+f0 ff ff 0f 87 91 00 00 00 48 8b 4c 24 28 64 48 33 0c 25
+RSP: 002b:00007ffda4c16c20 EFLAGS: 00000246 ORIG_RAX: 0000000000000101
+RAX: ffffffffffffffda RBX: 0000000000000001 RCX: 00007fe4d9e9312b
+RDX: 0000000000000941 RSI: 00007ffda4c17f46 RDI: 00000000ffffff9c
+RBP: 00007ffda4c17f46 R08: 0000000000000000 R09: 0000000000000001
+R10: 00000000000001b6 R11: 0000000000000246 R12: 0000000000000941
+R13: 00007fe4d9f631a4 R14: 00007ffda4c17f46 R15: 0000000000000000
+ </TASK>
+XFS (sdb): Corruption detected. Unmount and run xfs_repair
 
- The buggy address belongs to the physical page:
- page:ffffea00010e4600 refcount:1 mapcount:0 mapping:0000000000000000 index:0xffff888043919320 pfn:0x43918
- head:ffffea00010e4600 order:2 compound_mapcount:0 compound_pincount:0
- flags: 0x4fff80000010200(slab|head|node=1|zone=1|lastcpupid=0xfff)
- raw: 04fff80000010200 0000000000000000 dead000000000122 ffff88807f0eadc0
- raw: ffff888043919320 0000000080140010 00000001ffffffff 0000000000000000
- page dumped because: kasan: bad access detected
-
- Memory state around the buggy address:
-  ffff88804391b200: fc fc fc fc fc fc fc fc fc fc fc fc fc fc fc fc
-  ffff88804391b280: fc fc fc fc fc fc fc fc fc fc fc fc fc fc fc fc
- >ffff88804391b300: fa fb fb fb fb fb fb fb fb fb fb fb fb fb fb fb
-                                                        ^
-  ffff88804391b380: fb fb fb fb fb fb fb fb fb fb fb fb fb fb fb fb
-  ffff88804391b400: fb fb fb fb fb fb fb fb fb fb fb fb fb fb fb fb
- ==================================================================
-
-The test fuzzes an rmap btree block and starts writer threads to induce
-a filesystem shutdown on the corrupt block.  When the filesystem is
-remounted, recovery will try to replay the committed rmap intent item,
-but the corruption problem causes the recovery transaction to fail.
-Cancelling the transaction frees the RUD, which frees the RUI that we
-recovered.
-
-When we return to xlog_recover_process_intents, @lip is now a dangling
-pointer, and we cannot use it to find the iop_recover method for the
-tracepoint.  Hence we must store the item ops before calling
-->iop_recover if we want to give it to the tracepoint so that the trace
-data will tell us exactly which intent item failed.
-
+[1] https://lore.kernel.org/all/20220928095355.2074025-1-guoxuenan@huawei.com/
+Reviewed-by: Hou Tao <houtao1@huawei.com>
+Signed-off-by: Guo Xuenan <guoxuenan@huawei.com>
+Reviewed-by: Darrick J. Wong <djwong@kernel.org>
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
-Reviewed-by: Christoph Hellwig <hch@lst.de>
 Signed-off-by: Leah Rumancik <leah.rumancik@gmail.com>
 ---
- fs/xfs/xfs_log_recover.c | 9 +++++++--
+ fs/xfs/libxfs/xfs_dir2_leaf.c | 9 +++++++--
  1 file changed, 7 insertions(+), 2 deletions(-)
 
-diff --git a/fs/xfs/xfs_log_recover.c b/fs/xfs/xfs_log_recover.c
-index 04961ebf16ea..3d844a250b71 100644
---- a/fs/xfs/xfs_log_recover.c
-+++ b/fs/xfs/xfs_log_recover.c
-@@ -2560,6 +2560,7 @@ xlog_recover_process_intents(
- 	for (lip = xfs_trans_ail_cursor_first(ailp, &cur, 0);
- 	     lip != NULL;
- 	     lip = xfs_trans_ail_cursor_next(ailp, &cur)) {
-+		const struct xfs_item_ops	*ops;
- 		/*
- 		 * We're done when we see something other than an intent.
- 		 * There should be no intents left in the AIL now.
-@@ -2584,13 +2585,17 @@ xlog_recover_process_intents(
- 		 * deferred ops, you /must/ attach them to the capture list in
- 		 * the recover routine or else those subsequent intents will be
- 		 * replayed in the wrong order!
-+		 *
-+		 * The recovery function can free the log item, so we must not
-+		 * access lip after it returns.
- 		 */
- 		spin_unlock(&ailp->ail_lock);
--		error = lip->li_ops->iop_recover(lip, &capture_list);
-+		ops = lip->li_ops;
-+		error = ops->iop_recover(lip, &capture_list);
- 		spin_lock(&ailp->ail_lock);
- 		if (error) {
- 			trace_xlog_intent_recovery_failed(log->l_mp, error,
--					lip->li_ops->iop_recover);
-+					ops->iop_recover);
- 			break;
+diff --git a/fs/xfs/libxfs/xfs_dir2_leaf.c b/fs/xfs/libxfs/xfs_dir2_leaf.c
+index d9b66306a9a7..cb9e950a911d 100644
+--- a/fs/xfs/libxfs/xfs_dir2_leaf.c
++++ b/fs/xfs/libxfs/xfs_dir2_leaf.c
+@@ -146,6 +146,8 @@ xfs_dir3_leaf_check_int(
+ 	xfs_dir2_leaf_tail_t		*ltp;
+ 	int				stale;
+ 	int				i;
++	bool				isleaf1 = (hdr->magic == XFS_DIR2_LEAF1_MAGIC ||
++						   hdr->magic == XFS_DIR3_LEAF1_MAGIC);
+ 
+ 	ltp = xfs_dir2_leaf_tail_p(geo, leaf);
+ 
+@@ -158,8 +160,7 @@ xfs_dir3_leaf_check_int(
+ 		return __this_address;
+ 
+ 	/* Leaves and bests don't overlap in leaf format. */
+-	if ((hdr->magic == XFS_DIR2_LEAF1_MAGIC ||
+-	     hdr->magic == XFS_DIR3_LEAF1_MAGIC) &&
++	if (isleaf1 &&
+ 	    (char *)&hdr->ents[hdr->count] > (char *)xfs_dir2_leaf_bests_p(ltp))
+ 		return __this_address;
+ 
+@@ -175,6 +176,10 @@ xfs_dir3_leaf_check_int(
  		}
+ 		if (hdr->ents[i].address == cpu_to_be32(XFS_DIR2_NULL_DATAPTR))
+ 			stale++;
++		if (isleaf1 && xfs_dir2_dataptr_to_db(geo,
++				be32_to_cpu(hdr->ents[i].address)) >=
++				be32_to_cpu(ltp->bestcount))
++			return __this_address;
  	}
+ 	if (hdr->stale != stale)
+ 		return __this_address;
 -- 
 2.43.0.rc0.421.g78406f8d94-goog
 
