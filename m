@@ -2,104 +2,87 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 53A59C54E5B
-	for <linux-xfs@archiver.kernel.org>; Tue, 14 Nov 2023 20:02:02 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3F36BC4332F
+	for <linux-xfs@archiver.kernel.org>; Tue, 14 Nov 2023 21:26:43 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232345AbjKNUCD (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 14 Nov 2023 15:02:03 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35484 "EHLO
+        id S232570AbjKNV0o (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 14 Nov 2023 16:26:44 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46328 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232277AbjKNUCD (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 14 Nov 2023 15:02:03 -0500
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E0656B7
-        for <linux-xfs@vger.kernel.org>; Tue, 14 Nov 2023 12:01:59 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1699992119;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:
-         content-transfer-encoding:content-transfer-encoding;
-        bh=kNLO6YqL2XQYNApYB4SvjQxGmPPiJvSTM0qf/sZLc5s=;
-        b=R8WD92J21iEu0BjXuZRgCrqri/CfunHvEpiugDZ4cjuTIFEk/8wSPeyjAmE0tMRxx0rRw9
-        EKURxbvRANPYJeih7kpMl7bUfSCpUNamtYVgRskgKM/HSvN7PxLwUtX90H7YjbNWYHsspg
-        cw/bDs/pUTIAFOE9i3AkcKFXYfrkAJI=
-Received: from mail-ed1-f72.google.com (mail-ed1-f72.google.com
- [209.85.208.72]) by relay.mimecast.com with ESMTP with STARTTLS
- (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
- us-mta-602-DSRDz_uiM1Si65xwjBTTFA-1; Tue, 14 Nov 2023 15:01:56 -0500
-X-MC-Unique: DSRDz_uiM1Si65xwjBTTFA-1
-Received: by mail-ed1-f72.google.com with SMTP id 4fb4d7f45d1cf-53df4385dccso4324120a12.0
-        for <linux-xfs@vger.kernel.org>; Tue, 14 Nov 2023 12:01:56 -0800 (PST)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1699992115; x=1700596915;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:x-gm-message-state:from:to:cc:subject:date:message-id
-         :reply-to;
-        bh=kNLO6YqL2XQYNApYB4SvjQxGmPPiJvSTM0qf/sZLc5s=;
-        b=nM7GMLB/0+qRSdGPTUhoIx8pGllygWOJ7aYXCaQMF+E5dPqV7O4L2NW5gsR8jLu18O
-         rKlk+PDyJR1Ib4p0fTGDjwY7vzzTpUgw6g3uwQ8NmriebuZ8HYcYiQM6Upffw6SwrZkm
-         uZZwnMAHQGp1JvH3m/ROPLvv1rZCSHiCHr3kVINbEKIne3X78uXgTb5K15DSuwhMyHIn
-         dtArUR9c3obma0Ed10rH2mxbFfNZyl6iob/V3lRLQ2CuKrhwKhP4qIuzXmVDA+dPSifj
-         RamWr7LlG+sxLRWjIKWER6Dk7EMAKiByyAInSyXl3jTaAbyBk/YMjUVZ1GpC3XsbUt6o
-         EYVA==
-X-Gm-Message-State: AOJu0Yxk+n3vbgfeeEU+TamnoORENa6B0C2f9b9b1ioSdEF704okhxZZ
-        ysBZmwbOXbaS1a+VlZ9ND2u4+4V2QqQJesh5dQSAPPv13y3k91GKG4I41ogvT+wKHi3s8a8EXgp
-        CPZ+YL8j45vhzmAFqI3T/GX8CefXY6ej3ESGQUVRxKVvg7pTiEfI3onT6wk6Fl88dn9KgGw1UIf
-        g1yRE=
-X-Received: by 2002:aa7:c84d:0:b0:53e:1388:cb2e with SMTP id g13-20020aa7c84d000000b0053e1388cb2emr7318495edt.35.1699992115104;
-        Tue, 14 Nov 2023 12:01:55 -0800 (PST)
-X-Google-Smtp-Source: AGHT+IGz0AfP1WXMnJgPFLAo5As2Pj3aB5faWoK7IVcHDb5X8m587HodqaYeZTmv1I/tIFPPjXedYA==
-X-Received: by 2002:aa7:c84d:0:b0:53e:1388:cb2e with SMTP id g13-20020aa7c84d000000b0053e1388cb2emr7318477edt.35.1699992114613;
-        Tue, 14 Nov 2023 12:01:54 -0800 (PST)
-Received: from thinky.redhat.com ([109.183.6.197])
-        by smtp.gmail.com with ESMTPSA id fd7-20020a056402388700b0053e07fe8d98sm5526277edb.79.2023.11.14.12.01.53
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 14 Nov 2023 12:01:53 -0800 (PST)
-From:   Andrey Albershteyn <aalbersh@redhat.com>
-To:     linux-xfs@vger.kernel.org
-Cc:     djwong@kernel.org, david@fromorbit.com,
-        Andrey Albershteyn <aalbersh@redhat.com>
-Subject: [PATCH] xfs: reset XFS_ATTR_INCOMPLETE filter on node removal
-Date:   Tue, 14 Nov 2023 21:01:17 +0100
-Message-Id: <20231114200116.164007-1-aalbersh@redhat.com>
-X-Mailer: git-send-email 2.40.1
+        with ESMTP id S234061AbjKNV0n (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 14 Nov 2023 16:26:43 -0500
+Received: from casper.infradead.org (casper.infradead.org [IPv6:2001:8b0:10b:1236::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A74BF9D;
+        Tue, 14 Nov 2023 13:26:40 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=infradead.org; s=casper.20170209; h=In-Reply-To:Content-Type:MIME-Version:
+        References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
+        Content-Transfer-Encoding:Content-ID:Content-Description;
+        bh=Y22DQC8Lsmp2Azl/1OW9hvIgtyMMXTeICc25wGhveAU=; b=sv3IZklUAfVpOdArpL3vBg5u4z
+        nU4X8iSmDNVmMH+vX5s2MRxtujH5Rc6XAZJRYfJSPrR6UaJzZhl+rz+wiLgBYyVt9h+2DfLtJDrm+
+        S8CERw9AGfh+nnfoatywmSz7OJWEjRkzud4TJlU0fH0Nhs+mQBGR+zh9q/OTHuabvuEWy+G6nJ9EP
+        oWNb6T5wYMEJnsWmOtK4flkmqzJX15sMuLKcZ2t1wsJuOFC2x0dxpfNPm1SGl0QxM+GvqxA8uyepQ
+        yM4ZQicSOLXD8zhDcla4X9ZvYv/ZVZlCya8kKpHwoC+AtyUUlXS1Bvzn+YR0ToksugZKO3pRKNrpx
+        r16DH0VQ==;
+Received: from willy by casper.infradead.org with local (Exim 4.94.2 #2 (Red Hat Linux))
+        id 1r30va-00AHdF-MR; Tue, 14 Nov 2023 21:26:34 +0000
+Date:   Tue, 14 Nov 2023 21:26:34 +0000
+From:   Matthew Wilcox <willy@infradead.org>
+To:     Waiman Long <longman@redhat.com>
+Cc:     Peter Zijlstra <peterz@infradead.org>,
+        Ingo Molnar <mingo@redhat.com>, Will Deacon <will@kernel.org>,
+        linux-kernel@vger.kernel.org, linux-mm@kvack.org,
+        Chandan Babu R <chandan.babu@oracle.com>,
+        "Darrick J . Wong" <djwong@kernel.org>, linux-xfs@vger.kernel.org,
+        Mateusz Guzik <mjguzik@gmail.com>
+Subject: Re: [PATCH v3 1/4] locking: Add rwsem_assert_held() and
+ rwsem_assert_held_write()
+Message-ID: <ZVPmCoLVXyShSrkN@casper.infradead.org>
+References: <20231110204119.3692023-1-willy@infradead.org>
+ <20231110204119.3692023-2-willy@infradead.org>
+ <52f481a3-bf4f-85ae-9ae6-10a23b48c7c5@redhat.com>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <52f481a3-bf4f-85ae-9ae6-10a23b48c7c5@redhat.com>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-In XFS_DAS_NODE_REMOVE_ATTR case, xfs_attr_mode_remove_attr() sets
-filter to XFS_ATTR_INCOMPLETE. The filter is then reset in
-xfs_attr_complete_op() if XFS_DA_OP_REPLACE operation is performed.
+On Fri, Nov 10, 2023 at 05:21:22PM -0500, Waiman Long wrote:
+> On 11/10/23 15:41, Matthew Wilcox (Oracle) wrote:
+> >   static inline int rwsem_is_locked(struct rw_semaphore *sem)
+> >   {
+> > -	return atomic_long_read(&sem->count) != 0;
+> > +	return atomic_long_read(&sem->count) != RWSEM_UNLOCKED_VALUE;
+> >   }
+> > -#define RWSEM_UNLOCKED_VALUE		0L
+> > -#define __RWSEM_COUNT_INIT(name)	.count = ATOMIC_LONG_INIT(RWSEM_UNLOCKED_VALUE)
+> > +static inline void rwsem_assert_held_nolockdep(const struct rw_semaphore *sem)
+> > +{
+> > +	WARN_ON(atomic_long_read(&sem->count) == RWSEM_UNLOCKED_VALUE);
+> > +}
+> That is not correct. You mean "!= RWSEM_UNLOCKED_VALUE". Right?
 
-The filter is not reset though if XFS just removes the attribute
-(args->value == NULL) with xfs_attr_defer_remove(). attr code goes
-to XFS_DAS_DONE state.
+Uhhh ... I always get confused between assert and BUG_ON being opposite
+polarity, but I think it's correct.
 
-Fix this by always resetting XFS_ATTR_INCOMPLETE filter. The replace
-operation already resets this filter in anyway and others are
-completed at this step hence don't need it.
+We are asserting that the rwsem is locked (either for read or write).
+That is, it is a bug if the rwsem is unlocked.
+So WARN_ON(sem->count == UNLOCKED_VALUE) is correct.  No?
 
-Signed-off-by: Andrey Albershteyn <aalbersh@redhat.com>
----
- fs/xfs/libxfs/xfs_attr.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+> There are some inconsistency in the use of WARN_ON() and BUG_ON() in the
+> assertions. For PREEMPT_RT, held_write is a BUG_ON. For non-PREEMPT_RT, held
+> is a BUG_ON. It is not clear why one is BUG_ON and other one is WARN_ON. Is
+> there a rationale for that?
 
-diff --git a/fs/xfs/libxfs/xfs_attr.c b/fs/xfs/libxfs/xfs_attr.c
-index e28d93d232de..79ff633ad63d 100644
---- a/fs/xfs/libxfs/xfs_attr.c
-+++ b/fs/xfs/libxfs/xfs_attr.c
-@@ -421,8 +421,8 @@ xfs_attr_complete_op(
- 	bool			do_replace = args->op_flags & XFS_DA_OP_REPLACE;
- 
- 	args->op_flags &= ~XFS_DA_OP_REPLACE;
-+	args->attr_filter &= ~XFS_ATTR_INCOMPLETE;
- 	if (do_replace) {
--		args->attr_filter &= ~XFS_ATTR_INCOMPLETE;
- 		return replace_state;
- 	}
- 	return XFS_DAS_DONE;
--- 
-2.40.1
+I'll fix that up.
+
+> BTW, we can actually check if the current process is the write-lock owner of
+> a rwsem, but not for a reader-owned rwsem.
+
+We actually don't want to do that.  See patches 3/4 where I explain how
+XFS takes the XFS_ILOCK for write, then passes control to a workqueue
+which asserts that the XFS_ILOCK is held for write.  The thread which
+took the rwsem for write waits for the workqueue and unlocks the rwsem.
 
