@@ -2,116 +2,115 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3DDA0C4332F
-	for <linux-xfs@archiver.kernel.org>; Tue, 14 Nov 2023 06:45:43 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9CA03C4167D
+	for <linux-xfs@archiver.kernel.org>; Tue, 14 Nov 2023 11:17:56 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231382AbjKNGpo (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 14 Nov 2023 01:45:44 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36502 "EHLO
+        id S230434AbjKNLR5 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 14 Nov 2023 06:17:57 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59202 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229596AbjKNGpn (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 14 Nov 2023 01:45:43 -0500
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 52DACD44
-        for <linux-xfs@vger.kernel.org>; Mon, 13 Nov 2023 22:45:40 -0800 (PST)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 7DC4BC433C7;
-        Tue, 14 Nov 2023 06:45:39 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1699944340;
-        bh=qJNmfLcn5ZZHD6+frjujuXUESqiSBcgGCXmWD3oHixQ=;
-        h=References:From:To:Cc:Subject:Date:In-reply-to:From;
-        b=lmwopxOnMDqTlp7viiKbcyIoeJuMlWuZm1+i3pe11qlQmJTPXwah1FRh+TxH7PYoD
-         B+EdtJ7hRwdjGI8Mno3CkPJj6FVySMCiWa8NhT0TMse1fm7JnvpWy0qwUKMf8nN73T
-         /CBZQHtAIKMY29NKfV70FnrSl5w9MAS2w5Y5vgGfbiBcOkkTICfRH659nSoh6Ia/0i
-         VKiQgUZu/PVPIJI7GXGJ32I7c6SZLvsZYR54v3XNiM+VZJOyIynDGOiTOe5VQUS3x6
-         r+iwd38eQ6gxy7fVsF8sLlHn5Nmma6IZcWL1XKshXb0rjzRG7T3FF5SrHN/GxHiGP8
-         nVpkiuux+CiWQ==
-References: <20231114015339.3922119-1-leah.rumancik@gmail.com>
-User-agent: mu4e 1.8.10; emacs 27.1
-From:   Chandan Babu R <chandanbabu@kernel.org>
-To:     Leah Rumancik <leah.rumancik@gmail.com>
-Cc:     linux-xfs@vger.kernel.org, amir73il@gmail.com, fred@cloudflare.com
-Subject: Re: [PATCH 5.15 CANDIDATE 00/17] 5.15 backports from 5.19..6.1
-Date:   Tue, 14 Nov 2023 12:13:49 +0530
-In-reply-to: <20231114015339.3922119-1-leah.rumancik@gmail.com>
-Message-ID: <87fs18j0j3.fsf@debian-BULLSEYE-live-builder-AMD64>
+        with ESMTP id S229861AbjKNLR5 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 14 Nov 2023 06:17:57 -0500
+Received: from mx0a-001b2d01.pphosted.com (mx0a-001b2d01.pphosted.com [148.163.156.1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 76C8912C;
+        Tue, 14 Nov 2023 03:17:53 -0800 (PST)
+Received: from pps.filterd (m0353729.ppops.net [127.0.0.1])
+        by mx0a-001b2d01.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 3AEAfniK015941;
+        Tue, 14 Nov 2023 11:17:39 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ibm.com; h=from : to : cc : subject
+ : date : message-id : in-reply-to : references : mime-version :
+ content-transfer-encoding; s=pp1;
+ bh=gWDSktdQe9krShHKNgxxHGGVW8Fgw0IN5fOXr76GNOw=;
+ b=kbKr8fZ3DpgMBvlcN2CoDn+cvOfYORnRXoFGJTcjqRp6poxC0AAHNsKd+HRFUkUvfU7B
+ b5KAKFVN3jLT90s5ikPYkKX8QkDHqr11HGvk5Opo3LMuZa+xt7BqPvBmDjZItT7WPRo7
+ HZkN44LI8Z6TFTI9zKCgfLMitKux/kYfHPfRcr7HhBK3bZcbvTcCgHqtgFB4/UJOizWJ
+ njXm9BJAhKop4M0lpktxi3Zyf+hsRsGa9HpFYZhd/WMhrVq0UYS3XeADrbuMgAElDVfg
+ KiiJAYzeq6pUDy3UKKSToaP1k7cVHYaHnoLKFsgvt61/OMiUY/SqgMI3Nx4ztIfG/X3J aQ== 
+Received: from pps.reinject (localhost [127.0.0.1])
+        by mx0a-001b2d01.pphosted.com (PPS) with ESMTPS id 3uc70rspej-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+        Tue, 14 Nov 2023 11:17:39 +0000
+Received: from m0353729.ppops.net (m0353729.ppops.net [127.0.0.1])
+        by pps.reinject (8.17.1.5/8.17.1.5) with ESMTP id 3AEAfpkP016353;
+        Tue, 14 Nov 2023 11:17:39 GMT
+Received: from ppma22.wdc07v.mail.ibm.com (5c.69.3da9.ip4.static.sl-reverse.com [169.61.105.92])
+        by mx0a-001b2d01.pphosted.com (PPS) with ESMTPS id 3uc70rspde-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+        Tue, 14 Nov 2023 11:17:39 +0000
+Received: from pps.filterd (ppma22.wdc07v.mail.ibm.com [127.0.0.1])
+        by ppma22.wdc07v.mail.ibm.com (8.17.1.19/8.17.1.19) with ESMTP id 3AE8R8VE014707;
+        Tue, 14 Nov 2023 11:17:37 GMT
+Received: from smtprelay04.fra02v.mail.ibm.com ([9.218.2.228])
+        by ppma22.wdc07v.mail.ibm.com (PPS) with ESMTPS id 3uamay7j75-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+        Tue, 14 Nov 2023 11:17:37 +0000
+Received: from smtpav05.fra02v.mail.ibm.com (smtpav05.fra02v.mail.ibm.com [10.20.54.104])
+        by smtprelay04.fra02v.mail.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 3AEBHZBm43975418
+        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Tue, 14 Nov 2023 11:17:35 GMT
+Received: from smtpav05.fra02v.mail.ibm.com (unknown [127.0.0.1])
+        by IMSVA (Postfix) with ESMTP id 915C420043;
+        Tue, 14 Nov 2023 11:17:35 +0000 (GMT)
+Received: from smtpav05.fra02v.mail.ibm.com (unknown [127.0.0.1])
+        by IMSVA (Postfix) with ESMTP id 55FCA20040;
+        Tue, 14 Nov 2023 11:17:35 +0000 (GMT)
+Received: from li-97e414cc-2e07-11b2-a85c-b6096b19d8a2.boeblingen.de.ibm.com (unknown [9.152.212.242])
+        by smtpav05.fra02v.mail.ibm.com (Postfix) with ESMTP;
+        Tue, 14 Nov 2023 11:17:35 +0000 (GMT)
+From:   edward6@linux.ibm.com
+To:     david@fromorbit.com
+Cc:     carlos@maiolino.me, djwong@kernel.org, fstests@vger.kernel.org,
+        linux-xfs@vger.kernel.org, zlang@redhat.com,
+        linux-s390@vger.kernel.org, Eduard Shishkin <edward6@linux.ibm.com>
+Subject: Re: [Bug report][fstests generic/047] Internal error !(flags & XFS_DABUF_MAP_HOLE_OK) at line 2572 of file fs/xfs/libxfs/xfs_da_btree.c. Caller xfs_dabuf_map.constprop.0+0x26c/0x368 [xfs]
+Date:   Tue, 14 Nov 2023 12:17:21 +0100
+Message-Id: <20231114111721.262282-1-edward6@linux.ibm.com>
+X-Mailer: git-send-email 2.39.3
+In-Reply-To: <ZU2PhTKqwNEbjK13@dread.disaster.area>
+References: <ZU2PhTKqwNEbjK13@dread.disaster.area>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Transfer-Encoding: 8bit
+X-TM-AS-GCONF: 00
+X-Proofpoint-GUID: 6bUWru1HMXC98peFWiS1aS9DdOeef1Iw
+X-Proofpoint-ORIG-GUID: Sr3_qyk0GbjHPZp9R1uxSATENGciedDy
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.272,Aquarius:18.0.987,Hydra:6.0.619,FMLib:17.11.176.26
+ definitions=2023-11-14_10,2023-11-09_01,2023-05-22_02
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 mlxlogscore=879
+ priorityscore=1501 bulkscore=0 spamscore=0 adultscore=0 clxscore=1011
+ suspectscore=0 phishscore=0 lowpriorityscore=0 impostorscore=0
+ malwarescore=0 mlxscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2311060000 definitions=main-2311140087
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Mon, Nov 13, 2023 at 05:53:21 PM -0800, Leah Rumancik wrote:
-> Hello,
->
-> Here is the next set of fixes for 5.15. Tested on 10 configs x 30 runs
-> with no regressions seen on these commits. Commit 7d839e325a "xfs: check
-> return codes when flushing block devices" is in this range but was left
-> out for now as it revealed a regression which exists upstream. I'll
-> include it in a future set once its fix is accepted.
->
-> - Leah
->
+From: Eduard Shishkin <edward6@linux.ibm.com>
 
-Looks good to me.
+[...]
 
-Acked-by: Chandan Babu R <chandanbabu@kernel.org>
-
-> Chandan Babu R (1):
->   xfs: Fix false ENOSPC when performing direct write on a delalloc
->     extent in cow fork
->
-> ChenXiaoSong (1):
->   xfs: fix NULL pointer dereference in xfs_getbmap()
->
-> Darrick J. Wong (8):
->   xfs: refactor buffer cancellation table allocation
->   xfs: don't leak xfs_buf_cancel structures when recovery fails
->   xfs: convert buf_cancel_table allocation to kmalloc_array
->   xfs: prevent a UAF when log IO errors race with unmount
->   xfs: fix use-after-free in xattr node block inactivation
->   xfs: don't leak memory when attr fork loading fails
->   xfs: fix intermittent hang during quotacheck
->   xfs: avoid a UAF when log intent item recovery fails
->
-> Gao Xiang (1):
->   xfs: add missing cmap->br_state = XFS_EXT_NORM update
->
-> Guo Xuenan (1):
->   xfs: fix exception caused by unexpected illegal bestcount in leaf dir
->
-> Kaixu Xia (1):
->   xfs: use invalidate_lock to check the state of mmap_lock
->
-> Li Zetao (1):
->   xfs: Fix unreferenced object reported by kmemleak in xfs_sysfs_init()
->
-> Zeng Heng (1):
->   xfs: fix memory leak in xfs_errortag_init
->
-> Zhang Yi (1):
->   xfs: flush inode gc workqueue before clearing agi bucket
->
-> hexiaole (1):
->   xfs: fix inode reservation space for removing transaction
->
->  fs/xfs/libxfs/xfs_dir2_leaf.c   |   9 +-
->  fs/xfs/libxfs/xfs_inode_fork.c  |   1 +
->  fs/xfs/libxfs/xfs_log_recover.h |  14 ++-
->  fs/xfs/libxfs/xfs_trans_resv.c  |   2 +-
->  fs/xfs/xfs_attr_inactive.c      |   8 +-
->  fs/xfs/xfs_bmap_util.c          |  17 +--
->  fs/xfs/xfs_buf_item_recover.c   |  66 +++++++++++
->  fs/xfs/xfs_error.c              |   9 +-
->  fs/xfs/xfs_inode.c              |   4 +-
->  fs/xfs/xfs_log.c                |   9 +-
->  fs/xfs/xfs_log_priv.h           |   3 -
->  fs/xfs/xfs_log_recover.c        |  44 +++----
->  fs/xfs/xfs_qm.c                 |   7 ++
->  fs/xfs/xfs_reflink.c            | 197 ++++++++++++++++++++++++++------
->  fs/xfs/xfs_sysfs.h              |   7 +-
->  15 files changed, 307 insertions(+), 90 deletions(-)
+> Can you test the patch below and see if it fixes the issue? Keep
+> the first verifier patch I sent, then apply the patch below. You can
+> drop the debug traceprintk patch - the patch below should fix it.
 
 
--- 
-Chandan
+Thanks for fixing it!
+Tested-by: Eduard Shishkin <edward6@linux.ibm.com>
+
+[...]
+
+> This manifests obviously on big endian platforms (e.g. s390) because
+> the log dinode is in host order and the overlap is the LSBs of the
+> extent count field. It is not noticed on little endian machines
+> because the overlap is at the MSB end of the extent count field and
+> we need to get more than 2^^48 extents in the inode before it
+> manifests. i.e. the heat death of the universe will occur before we
+> see the problem in little endian machines.
+
+
+This sounds too bold. I can easily imagine mountable images similar to
+filesystem meta-data dumps, but not generated by scanning real
+partitions, instead created by a special tool e.g. for debugging
+purposes. My point is that on little-endian architectures the
+manifestation of such a "sleeping" bug is a much more realistic event
+than it may seem at first glance.
