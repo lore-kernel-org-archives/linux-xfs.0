@@ -2,142 +2,109 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7FA5BC07545
-	for <linux-xfs@archiver.kernel.org>; Tue, 14 Nov 2023 23:46:10 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 62EEAC4167D
+	for <linux-xfs@archiver.kernel.org>; Wed, 15 Nov 2023 01:17:43 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229796AbjKNXqL (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 14 Nov 2023 18:46:11 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36912 "EHLO
+        id S229937AbjKOBRo (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 14 Nov 2023 20:17:44 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58000 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S234004AbjKNXqK (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 14 Nov 2023 18:46:10 -0500
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B1286DF
-        for <linux-xfs@vger.kernel.org>; Tue, 14 Nov 2023 15:46:07 -0800 (PST)
-Received: by smtp.kernel.org (Postfix) with ESMTPS id 58EECC433CD
-        for <linux-xfs@vger.kernel.org>; Tue, 14 Nov 2023 23:46:07 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1700005567;
-        bh=XZJWaBK0GAHndcRqtr+cgd/d7FTEC7bWlY/r7oh1JRM=;
-        h=From:To:Subject:Date:In-Reply-To:References:From;
-        b=rGo5nRNzQlvUoodkRlbQM5grIJBCkvWl3PNV02hReN+EGRaYmeNoSmU5QLt5TLzfh
-         EvGIqn57oiznCdYJwmv1B1y/Zzf6smsAhOosRUtGp29b//sTK2n//N/N4I0G7j1DQr
-         SG9kr7rnJLjMr9A3iDWTaHsH7aWg44HxZsi4f229Z/BO1d8rgjjKLjWQhLpvscRv/e
-         SvVd21Xddi7KNOTpUGhsDym5cyxoivSgLnHKu3VtQi7GCL9vhanvatQOwwVe3i2tTK
-         ykjqBM7J8g55c7UIIoQFShBI1Nmmf+i+7LOiBaPiqk/NIDksv1LFlMcZR0WOcw8QCR
-         HYHavXsq88D0w==
-Received: by aws-us-west-2-korg-bugzilla-1.web.codeaurora.org (Postfix, from userid 48)
-        id 46E30C53BD5; Tue, 14 Nov 2023 23:46:07 +0000 (UTC)
-From:   bugzilla-daemon@kernel.org
-To:     linux-xfs@vger.kernel.org
-Subject: [Bug 217769] XFS crash on mount on kernels >= 6.1
-Date:   Tue, 14 Nov 2023 23:46:06 +0000
-X-Bugzilla-Reason: None
-X-Bugzilla-Type: changed
-X-Bugzilla-Watch-Reason: AssignedTo filesystem_xfs@kernel-bugs.kernel.org
-X-Bugzilla-Product: File System
-X-Bugzilla-Component: XFS
-X-Bugzilla-Version: 2.5
-X-Bugzilla-Keywords: 
-X-Bugzilla-Severity: normal
-X-Bugzilla-Who: djwong@kernel.org
-X-Bugzilla-Status: NEW
-X-Bugzilla-Resolution: 
-X-Bugzilla-Priority: P3
-X-Bugzilla-Assigned-To: filesystem_xfs@kernel-bugs.kernel.org
-X-Bugzilla-Flags: 
-X-Bugzilla-Changed-Fields: 
-Message-ID: <bug-217769-201763-5gEVnJRFUZ@https.bugzilla.kernel.org/>
-In-Reply-To: <bug-217769-201763@https.bugzilla.kernel.org/>
-References: <bug-217769-201763@https.bugzilla.kernel.org/>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
-X-Bugzilla-URL: https://bugzilla.kernel.org/
-Auto-Submitted: auto-generated
+        with ESMTP id S234244AbjKOBRn (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 14 Nov 2023 20:17:43 -0500
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C0245E3
+        for <linux-xfs@vger.kernel.org>; Tue, 14 Nov 2023 17:17:40 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1700011059;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=G8zRe28oF6jtVP3vKDfHeNYaGoB5DzE0yyoVf8SF7rs=;
+        b=a25L+X7xJ6bq3xlA9S3mnA41B6WelCC/uUqrkDHgv+CmOOysoMzmfRMfAwDg12ZB6cEiPt
+        Vs5ninBNXidM2QGWk7tYXHs/6SdQ3xpjT2PXAcKFwzARxOFu3FBav4VeX61JXAcbBJirCe
+        Is/XgDvhjW+qmKUQVk8NSL0+gz8vDmA=
+Received: from mimecast-mx02.redhat.com (mx-ext.redhat.com [66.187.233.73])
+ by relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.3,
+ cipher=TLS_AES_256_GCM_SHA384) id us-mta-344-5l5pOwjsPTGj_r350op2hw-1; Tue,
+ 14 Nov 2023 20:17:34 -0500
+X-MC-Unique: 5l5pOwjsPTGj_r350op2hw-1
+Received: from smtp.corp.redhat.com (int-mx08.intmail.prod.int.rdu2.redhat.com [10.11.54.8])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+        (No client certificate requested)
+        by mimecast-mx02.redhat.com (Postfix) with ESMTPS id 83DFF3C000A9;
+        Wed, 15 Nov 2023 01:17:33 +0000 (UTC)
+Received: from [10.22.16.87] (unknown [10.22.16.87])
+        by smtp.corp.redhat.com (Postfix) with ESMTP id 02F94C15983;
+        Wed, 15 Nov 2023 01:17:32 +0000 (UTC)
+Message-ID: <72dced0f-6d49-4522-beeb-1a398d8f2557@redhat.com>
+Date:   Tue, 14 Nov 2023 20:17:32 -0500
 MIME-Version: 1.0
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v3 1/4] locking: Add rwsem_assert_held() and
+ rwsem_assert_held_write()
+Content-Language: en-US
+To:     Matthew Wilcox <willy@infradead.org>
+Cc:     Peter Zijlstra <peterz@infradead.org>,
+        Ingo Molnar <mingo@redhat.com>, Will Deacon <will@kernel.org>,
+        linux-kernel@vger.kernel.org, linux-mm@kvack.org,
+        Chandan Babu R <chandan.babu@oracle.com>,
+        "Darrick J . Wong" <djwong@kernel.org>, linux-xfs@vger.kernel.org,
+        Mateusz Guzik <mjguzik@gmail.com>
+References: <20231110204119.3692023-1-willy@infradead.org>
+ <20231110204119.3692023-2-willy@infradead.org>
+ <52f481a3-bf4f-85ae-9ae6-10a23b48c7c5@redhat.com>
+ <ZVPmCoLVXyShSrkN@casper.infradead.org>
+From:   Waiman Long <longman@redhat.com>
+In-Reply-To: <ZVPmCoLVXyShSrkN@casper.infradead.org>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
+X-Scanned-By: MIMEDefang 3.4.1 on 10.11.54.8
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-https://bugzilla.kernel.org/show_bug.cgi?id=3D217769
-
---- Comment #18 from Darrick J. Wong (djwong@kernel.org) ---
-On Tue, Nov 14, 2023 at 03:57:06PM +0000, bugzilla-daemon@kernel.org wrote:
-> https://bugzilla.kernel.org/show_bug.cgi?id=3D217769
->=20
-> Grant Millar (grant@cylo.net) changed:
->=20
->            What    |Removed                     |Added
-> -------------------------------------------------------------------------=
----
->                  CC|                            |grant@cylo.net
->=20
-> --- Comment #17 from Grant Millar (grant@cylo.net) ---
-> We're experiencing the same bug following a data migration to new servers.
->=20
-> The servers are all running a fresh install of Debian 12 with brand new
-> hardware.
->=20
-> So far in the past 3 days we've had 2 mounts fail with:
->=20
-> [28797.357684] XFS (sdn): Internal error xfs_trans_cancel at line 1097 of
-> file
-> fs/xfs/xfs_trans.c.  Caller xfs_rename+0x61a/0xea0 [xfs]
-> [28797.488475] XFS (sdn): Corruption of in-memory data (0x8) detected at
-> xfs_trans_cancel+0x146/0x150 [xfs] (fs/xfs/xfs_trans.c:1098).  Shutting d=
-own
-> filesystem.
-> [28797.488595] XFS (sdn): Please unmount the filesystem and rectify the
-> problem(s)
->=20
-> Both occurred in the same function on separate servers:
-> xfs_rename+0x61a/0xea0
->=20
-> Neither mounts are the root filesystem.
-
-This should be fixed in 6.6, could you try that and report back?
-
-(See "xfs: reload entire unlinked bucket lists")
-
---D
-
->=20
-> versionnum [0xbcf5+0x18a] =3D
+On 11/14/23 16:26, Matthew Wilcox wrote:
+> On Fri, Nov 10, 2023 at 05:21:22PM -0500, Waiman Long wrote:
+>> On 11/10/23 15:41, Matthew Wilcox (Oracle) wrote:
+>>>    static inline int rwsem_is_locked(struct rw_semaphore *sem)
+>>>    {
+>>> -	return atomic_long_read(&sem->count) != 0;
+>>> +	return atomic_long_read(&sem->count) != RWSEM_UNLOCKED_VALUE;
+>>>    }
+>>> -#define RWSEM_UNLOCKED_VALUE		0L
+>>> -#define __RWSEM_COUNT_INIT(name)	.count = ATOMIC_LONG_INIT(RWSEM_UNLOCKED_VALUE)
+>>> +static inline void rwsem_assert_held_nolockdep(const struct rw_semaphore *sem)
+>>> +{
+>>> +	WARN_ON(atomic_long_read(&sem->count) == RWSEM_UNLOCKED_VALUE);
+>>> +}
+>> That is not correct. You mean "!= RWSEM_UNLOCKED_VALUE". Right?
+> Uhhh ... I always get confused between assert and BUG_ON being opposite
+> polarity, but I think it's correct.
 >
-> V5,NLINK,DIRV2,ATTR,QUOTA,ALIGN,LOGV2,EXTFLG,SECTOR,MOREBITS,ATTR2,LAZYSB=
-COUNT,PROJID32BIT,CRC,FTYPE,FINOBT,SPARSE_INODES,REFLINK,INOBTCNT,BIGTIME
->=20
-> meta-data=3D/dev/sdk               isize=3D512    agcount=3D17, agsize=3D=
-268435455
-> blks
->          =3D                       sectsz=3D4096  attr=3D2, projid32bit=
-=3D1
->          =3D                       crc=3D1        finobt=3D1, sparse=3D1,=
- rmapbt=3D0
->          =3D                       reflink=3D1    bigtime=3D1 inobtcount=
-=3D1
->          nrext64=3D0
-> data     =3D                       bsize=3D4096   blocks=3D4394582016, im=
-axpct=3D50
->          =3D                       sunit=3D0      swidth=3D0 blks
-> naming   =3Dversion 2              bsize=3D4096   ascii-ci=3D0, ftype=3D1
-> log      =3Dinternal log           bsize=3D4096   blocks=3D521728, versio=
-n=3D2
->          =3D                       sectsz=3D4096  sunit=3D1 blks, lazy-co=
-unt=3D1
-> realtime =3Dnone                   extsz=3D4096   blocks=3D0, rtextents=
-=3D0
->=20
-> Please let me know if I can provide more information.
->=20
-> --=20
-> You may reply to this email to add a comment.
->=20
-> You are receiving this mail because:
-> You are watching the assignee of the bug.
+> We are asserting that the rwsem is locked (either for read or write).
+> That is, it is a bug if the rwsem is unlocked.
+> So WARN_ON(sem->count == UNLOCKED_VALUE) is correct.  No?
+You are right. I got confused too.
+>
+>> There are some inconsistency in the use of WARN_ON() and BUG_ON() in the
+>> assertions. For PREEMPT_RT, held_write is a BUG_ON. For non-PREEMPT_RT, held
+>> is a BUG_ON. It is not clear why one is BUG_ON and other one is WARN_ON. Is
+>> there a rationale for that?
+> I'll fix that up.
+The check for write lock ownership is accurate. OTOH, the locked check 
+can have false positive and so is less reliable.
+>
+>> BTW, we can actually check if the current process is the write-lock owner of
+>> a rwsem, but not for a reader-owned rwsem.
+> We actually don't want to do that.  See patches 3/4 where I explain how
+> XFS takes the XFS_ILOCK for write, then passes control to a workqueue
+> which asserts that the XFS_ILOCK is held for write.  The thread which
+> took the rwsem for write waits for the workqueue and unlocks the rwsem.
+>
+I see. Thanks for the explanation.
 
---=20
-You may reply to this email to add a comment.
+Cheers,
+Longman
 
-You are receiving this mail because:
-You are watching the assignee of the bug.=
