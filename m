@@ -2,40 +2,37 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 601B7C197A0
-	for <linux-xfs@archiver.kernel.org>; Thu, 16 Nov 2023 17:30:47 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9ED17C197A0
+	for <linux-xfs@archiver.kernel.org>; Thu, 16 Nov 2023 17:35:04 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229841AbjKPRas (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 16 Nov 2023 12:30:48 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53436 "EHLO
+        id S229468AbjKPRfG (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 16 Nov 2023 12:35:06 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47032 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229634AbjKPRas (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 16 Nov 2023 12:30:48 -0500
+        with ESMTP id S229464AbjKPRfF (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 16 Nov 2023 12:35:05 -0500
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0C8108F
-        for <linux-xfs@vger.kernel.org>; Thu, 16 Nov 2023 09:30:44 -0800 (PST)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id A0C3BC433C7;
-        Thu, 16 Nov 2023 17:30:43 +0000 (UTC)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 715E2182
+        for <linux-xfs@vger.kernel.org>; Thu, 16 Nov 2023 09:35:02 -0800 (PST)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 156DFC433C7;
+        Thu, 16 Nov 2023 17:35:02 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1700155843;
-        bh=c6h3F1+iBq6UxC0pzPEjyyv+a1kRHJyMRAdK5BpWepI=;
-        h=Subject:From:To:Cc:Date:In-Reply-To:References:From;
-        b=JCYGpbaArC8e4mUcu4h42ZJNALsZ2X9fW+6qLRdkVxEDXCVLxr7ggbEZmBGpnVoEY
-         kmNVADazd3e4WEYybh8Cchr51dOLqOTfR2Qq6fNCgMCCQ/R4KFgWRru6KJQikpawAJ
-         3pNxwFIZvK8iDXAd8QV8Xsl37FdESaeCNXhdnwpAzv9Cp57vL2NBqwEmbVaaPvz6HO
-         0xZXg3P44u5xVjhxBApb7lKODFpfF809Xl/O05Spf1Of3QEZKkBFMhdPfr9On+iIFA
-         xUMWGFbfVQyG6o/34veVnA9oJO+ClOxthVn0Tf8GJAeqJ9JM4tvPg0TDSFVjJe2rCm
-         mSmjYUuFHsa2Q==
-Subject: [PATCH 2/2] misc: update xfs_io swapext usage
+        s=k20201202; t=1700156102;
+        bh=qrWaayJJGVCZai72tHGWQJTr5bstQaiqIh3l3MjRD3M=;
+        h=Date:Subject:From:To:Cc:From;
+        b=ItxO6undMFjZiYpx8Ln2praY0Jk4O3Sue9t6dyi7y+T694VCJO5iIvS+0deFnr8+d
+         Guhyp8Uzop+vbMrIrOCxrWvISmjZc7eoe3FSi8Rl7vbjpNUq6IYQzeFVbH0/kfZRS6
+         Qvv6t/j/ukeMXyQUWjbelRHKl1XBHp9u0w7A0Vq4tBxKGUNNEE9njBlLXVkZDf918f
+         4/c9nc0PpYYzv619BRXcs9nCiYj5EWeFfDRUVgtdfcYqUz5dUHEX2hRPo+KRWLNuJF
+         sNBbXmpkTmm6ZLKB9arQtS1NSv9XkTc7vvwQilKajEww5EYbVRwnB1NGoEbjBHfsOc
+         GkTArtHYrTJKA==
+Date:   Thu, 16 Nov 2023 09:35:00 -0800
+Subject: [GIT PULL 1/3] fstests: reload entire iunlink lists
 From:   "Darrick J. Wong" <djwong@kernel.org>
-To:     zlang@redhat.com, djwong@kernel.org
-Cc:     Christoph Hellwig <hch@lst.de>, fstests@vger.kernel.org,
-        guan@eryu.me, linux-xfs@vger.kernel.org
-Date:   Thu, 16 Nov 2023 09:30:43 -0800
-Message-ID: <170015584315.3369423.5341890034455709088.stgit@frogsfrogsfrogs>
-In-Reply-To: <170015583180.3369423.8659956273233504193.stgit@frogsfrogsfrogs>
-References: <170015583180.3369423.8659956273233504193.stgit@frogsfrogsfrogs>
-User-Agent: StGit/0.19
+To:     djwong@kernel.org, zlang@redhat.com
+Cc:     david@fromorbit.com, fstests@vger.kernel.org, guan@eryu.me,
+        hch@lst.de, linux-xfs@vger.kernel.org
+Message-ID: <170015608586.3373797.8830890617259854780.stg-ugh@frogsfrogsfrogs>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
@@ -43,410 +40,75 @@ Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-From: Darrick J. Wong <djwong@kernel.org>
+Hi Zorro,
 
-Since the new 'exchange range' functionality is no longer a VFS level
-concept, the xfs_io swapext -v options have changed.  Update fstests to
-reflect this new reality.
+Please pull this branch with changes for fstests.
+
+As usual, I did a test-merge with the main upstream branch as of a few
+minutes ago, and didn't see any conflicts.  Please let me know if you
+encounter any problems.
+
+--D
+
+The following changes since commit 11914614784735c504f43b5b6baabaa713375984:
+
+fstests: generic/353 should accomodate other pwrite behaviors (2023-10-27 20:19:19 +0800)
+
+are available in the Git repository at:
+
+https://git.kernel.org/pub/scm/linux/kernel/git/djwong/xfstests-dev.git tags/fix-iunlink-list_2023-11-16
+
+for you to fetch changes up to 22ee90ae2da798d7462579aeb4b17d8b44671e9d:
+
+xfs: test unlinked inode list repair on demand (2023-11-16 09:11:57 -0800)
+
+----------------------------------------------------------------
+fstests: reload entire iunlink lists [v5]
+
+This is the second part of correcting XFS to reload the incore unlinked
+inode list from the ondisk contents.  Whereas part one tackled failures
+from regular filesystem calls, this part takes on the problem of needing
+to reload the entire incore unlinked inode list on account of somebody
+loading an inode that's in the /middle/ of an unlinked list.  This
+happens during quotacheck, bulkstat, or even opening a file by handle.
+
+In this case we don't know the length of the list that we're reloading,
+so we don't want to create a new unbounded memory load while holding
+resources locked.  Instead, we'll target UNTRUSTED iget calls to reload
+the entire bucket.
+
+Note that this changes the definition of the incore unlinked inode list
+slightly -- i_prev_unlinked == 0 now means "not on the incore list".
+
+v2: rebase to for-next, resend without changes
+v3: add necessary prerequisites
+v4: fix accidental commit to wrong patch
+v5: add more review tags
+
+This has been running on the djcloud for months with no problems.  Enjoy!
 
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
-Reviewed-by: Christoph Hellwig <hch@lst.de>
----
- common/xfs        |    2 +-
- tests/generic/709 |    2 +-
- tests/generic/710 |    2 +-
- tests/generic/711 |    2 +-
- tests/generic/712 |    2 +-
- tests/generic/713 |    4 ++--
- tests/generic/714 |    4 ++--
- tests/generic/715 |    4 ++--
- tests/generic/716 |    2 +-
- tests/generic/717 |    2 +-
- tests/generic/718 |    2 +-
- tests/generic/719 |    2 +-
- tests/generic/720 |    2 +-
- tests/generic/722 |    4 ++--
- tests/generic/723 |    6 +++---
- tests/generic/724 |    4 ++--
- tests/generic/725 |    2 +-
- tests/generic/726 |    2 +-
- tests/generic/727 |    2 +-
- tests/xfs/789     |    2 +-
- tests/xfs/790     |    2 +-
- tests/xfs/791     |    4 ++--
- tests/xfs/792     |    2 +-
- 23 files changed, 31 insertions(+), 31 deletions(-)
 
+----------------------------------------------------------------
+Darrick J. Wong (2):
+common: make helpers for ttyprintk usage
+xfs: test unlinked inode list repair on demand
 
-diff --git a/common/xfs b/common/xfs
-index c7671f8f9d..f53b33fc54 100644
---- a/common/xfs
-+++ b/common/xfs
-@@ -1802,7 +1802,7 @@ _require_xfs_scratch_atomicswap()
- {
- 	_require_xfs_mkfs_atomicswap
- 	_require_scratch
--	_require_xfs_io_command swapext '-v vfs -a'
-+	_require_xfs_io_command swapext '-v exchrange -a'
- 	_scratch_mkfs -m reflink=1 > /dev/null
- 	_try_scratch_mount || \
- 		_notrun "atomicswap dependencies not supported by scratch filesystem type: $FSTYP"
-diff --git a/tests/generic/709 b/tests/generic/709
-index 3dbce2c287..4bd591b873 100755
---- a/tests/generic/709
-+++ b/tests/generic/709
-@@ -14,7 +14,7 @@ _begin_fstest auto quick fiexchange swapext quota
- . ./common/quota
- 
- # real QA test starts here
--_require_xfs_io_command swapext '-v vfs'
-+_require_xfs_io_command swapext '-v exchrange'
- _require_user
- _require_nobody
- _require_quota
-diff --git a/tests/generic/710 b/tests/generic/710
-index dc4a999a1d..c7fca05d4c 100755
---- a/tests/generic/710
-+++ b/tests/generic/710
-@@ -14,7 +14,7 @@ _begin_fstest auto quick fiexchange swapext quota
- . ./common/quota
- 
- # real QA test starts here
--_require_xfs_io_command swapext '-v vfs'
-+_require_xfs_io_command swapext '-v exchrange'
- _require_user
- _require_nobody
- _require_quota
-diff --git a/tests/generic/711 b/tests/generic/711
-index a24fe22665..f1318b30dd 100755
---- a/tests/generic/711
-+++ b/tests/generic/711
-@@ -21,7 +21,7 @@ _cleanup()
- . ./common/filter
- 
- # real QA test starts here
--_require_xfs_io_command swapext '-v vfs'
-+_require_xfs_io_command swapext '-v exchrange'
- _require_test
- 
- dir=$TEST_DIR/test-$seq
-diff --git a/tests/generic/712 b/tests/generic/712
-index 13008c5bc2..d4a705478e 100755
---- a/tests/generic/712
-+++ b/tests/generic/712
-@@ -21,7 +21,7 @@ _cleanup()
- 
- # real QA test starts here
- _require_test_program punch-alternating
--_require_xfs_io_command swapext '-v vfs'
-+_require_xfs_io_command swapext '-v exchrange'
- _require_test
- 
- dir=$TEST_DIR/test-$seq
-diff --git a/tests/generic/713 b/tests/generic/713
-index bf37cd99cf..9b742ee0cb 100755
---- a/tests/generic/713
-+++ b/tests/generic/713
-@@ -21,7 +21,7 @@ _cleanup()
- . ./common/reflink
- 
- # real QA test starts here
--_require_xfs_io_command swapext '-v vfs -s 64k -l 64k'
-+_require_xfs_io_command swapext '-v exchrange -s 64k -l 64k'
- _require_xfs_io_command "falloc"
- _require_test
- 
-@@ -36,7 +36,7 @@ filesnap() {
- 
- test_swapext_once() {
- 	filesnap "$1: before swapext" $dir/$3 $dir/$4
--	$XFS_IO_PROG -c "swapext -v vfs $2 $dir/$3" $dir/$4
-+	$XFS_IO_PROG -c "swapext -v exchrange $2 $dir/$3" $dir/$4
- 	filesnap "$1: after swapext" $dir/$3 $dir/$4
- 	_test_cycle_mount
- 	filesnap "$1: after cycling mount" $dir/$3 $dir/$4
-diff --git a/tests/generic/714 b/tests/generic/714
-index 190b6f2b2c..b48a4b7d31 100755
---- a/tests/generic/714
-+++ b/tests/generic/714
-@@ -22,7 +22,7 @@ _cleanup()
- . ./common/reflink
- 
- # real QA test starts here
--_require_xfs_io_command swapext '-v vfs'
-+_require_xfs_io_command swapext '-v exchrange'
- _require_xfs_io_command "falloc"
- _require_test_reflink
- 
-@@ -37,7 +37,7 @@ filesnap() {
- 
- test_swapext_once() {
- 	filesnap "$1: before swapext" $dir/$3 $dir/$4
--	$XFS_IO_PROG -c "swapext -v vfs $2 $dir/$3" $dir/$4
-+	$XFS_IO_PROG -c "swapext -v exchrange $2 $dir/$3" $dir/$4
- 	filesnap "$1: after swapext" $dir/$3 $dir/$4
- 	_test_cycle_mount
- 	filesnap "$1: after cycling mount" $dir/$3 $dir/$4
-diff --git a/tests/generic/715 b/tests/generic/715
-index 6005fb2d4e..595953dfcf 100755
---- a/tests/generic/715
-+++ b/tests/generic/715
-@@ -21,7 +21,7 @@ _cleanup()
- . ./common/reflink
- 
- # real QA test starts here
--_require_xfs_io_command swapext '-v vfs -s 64k -l 64k'
-+_require_xfs_io_command swapext '-v exchrange -s 64k -l 64k'
- _require_test
- 
- filesnap() {
-@@ -51,7 +51,7 @@ test_swapext_once() {
- 	_pwrite_byte 0x59 0 $((blksz * b_len)) $dir/b >> $seqres.full
- 	filesnap "$tag: before swapext" $dir/a $dir/b
- 
--	cmd="swapext -v vfs -s $((blksz * a_off)) -d $((blksz * b_off)) $len $dir/a"
-+	cmd="swapext -v exchrange -s $((blksz * a_off)) -d $((blksz * b_off)) $len $dir/a"
- 	echo "$cmd" >> $seqres.full
- 	$XFS_IO_PROG -c "$cmd" $dir/b
- 	filesnap "$tag: after swapext" $dir/a $dir/b
-diff --git a/tests/generic/716 b/tests/generic/716
-index 514a8b8365..25976ab898 100755
---- a/tests/generic/716
-+++ b/tests/generic/716
-@@ -24,7 +24,7 @@ _cleanup()
- . ./common/reflink
- 
- # real QA test starts here
--_require_xfs_io_command swapext '-v vfs'
-+_require_xfs_io_command swapext '-v exchrange'
- _require_xfs_io_command startupdate
- _require_test_reflink
- _require_test
-diff --git a/tests/generic/717 b/tests/generic/717
-index d1bd499e89..2c45e715f4 100755
---- a/tests/generic/717
-+++ b/tests/generic/717
-@@ -21,7 +21,7 @@ _cleanup()
- . ./common/reflink
- 
- # real QA test starts here
--_require_xfs_io_command swapext '-v vfs'
-+_require_xfs_io_command swapext '-v exchrange'
- _require_xfs_io_command startupdate
- _require_test
- _require_scratch
-diff --git a/tests/generic/718 b/tests/generic/718
-index dc99347fd7..f53d1840d0 100755
---- a/tests/generic/718
-+++ b/tests/generic/718
-@@ -21,7 +21,7 @@ _cleanup()
- . ./common/reflink
- 
- # real QA test starts here
--_require_xfs_io_command swapext '-v vfs'
-+_require_xfs_io_command swapext '-v exchrange'
- _require_test
- 
- dir=$TEST_DIR/test-$seq
-diff --git a/tests/generic/719 b/tests/generic/719
-index aeb42fb7e4..fe0b9d082e 100755
---- a/tests/generic/719
-+++ b/tests/generic/719
-@@ -23,7 +23,7 @@ _cleanup()
- . ./common/filter
- 
- # real QA test starts here
--_require_xfs_io_command swapext '-v vfs'
-+_require_xfs_io_command swapext '-v exchrange'
- _require_xfs_io_command startupdate '-e'
- _require_test
- 
-diff --git a/tests/generic/720 b/tests/generic/720
-index a5bcc55c38..4db69c6921 100755
---- a/tests/generic/720
-+++ b/tests/generic/720
-@@ -20,7 +20,7 @@ _cleanup()
- . ./common/filter
- 
- # real QA test starts here
--_require_xfs_io_command swapext '-v vfs'
-+_require_xfs_io_command swapext '-v exchrange'
- _require_test_program punch-alternating
- _require_test
- 
-diff --git a/tests/generic/722 b/tests/generic/722
-index 75dc0260e1..40eab9bbb3 100755
---- a/tests/generic/722
-+++ b/tests/generic/722
-@@ -23,7 +23,7 @@ _cleanup()
- 
- # real QA test starts here
- _require_test_program "punch-alternating"
--_require_xfs_io_command swapext '-v vfs -a'
-+_require_xfs_io_command swapext '-v exchrange -a'
- _require_scratch
- _require_scratch_shutdown
- 
-@@ -43,7 +43,7 @@ od -tx1 -Ad -c $SCRATCH_MNT/a > /tmp/a0
- od -tx1 -Ad -c $SCRATCH_MNT/b > /tmp/b0
- 
- echo swap >> $seqres.full
--$XFS_IO_PROG -c "swapext -v vfs -a -e -f -u $SCRATCH_MNT/a" $SCRATCH_MNT/b
-+$XFS_IO_PROG -c "swapext -v exchrange -a -e -f -u $SCRATCH_MNT/a" $SCRATCH_MNT/b
- _scratch_shutdown
- _scratch_cycle_mount
- 
-diff --git a/tests/generic/723 b/tests/generic/723
-index 5390f44269..b452de0208 100755
---- a/tests/generic/723
-+++ b/tests/generic/723
-@@ -22,7 +22,7 @@ _cleanup()
- 
- # real QA test starts here
- _require_test_program "punch-alternating"
--_require_xfs_io_command swapext '-v vfs'
-+_require_xfs_io_command swapext '-v exchrange'
- _require_scratch
- 
- _scratch_mkfs >> $seqres.full
-@@ -41,7 +41,7 @@ echo "md5 a: $old_a md5 b: $old_b" >> $seqres.full
- # Test swapext with the -n option, which will do all the input parameter
- # checking and return 0 without changing anything.
- echo dry run swap >> $seqres.full
--$XFS_IO_PROG -c "swapext -v vfs -n -f -u $SCRATCH_MNT/a" $SCRATCH_MNT/b
-+$XFS_IO_PROG -c "swapext -v exchrange -n -f -u $SCRATCH_MNT/a" $SCRATCH_MNT/b
- _scratch_cycle_mount
- 
- new_a=$(md5sum $SCRATCH_MNT/a | awk '{print $1}')
-@@ -54,7 +54,7 @@ test $old_b = $new_b || echo "scratch file B should not have swapped"
- # Do it again, but without the -n option, to prove that we can actually
- # swap the file contents.
- echo actual swap >> $seqres.full
--$XFS_IO_PROG -c "swapext -v vfs -f -u $SCRATCH_MNT/a" $SCRATCH_MNT/b
-+$XFS_IO_PROG -c "swapext -v exchrange -f -u $SCRATCH_MNT/a" $SCRATCH_MNT/b
- _scratch_cycle_mount
- 
- new_a=$(md5sum $SCRATCH_MNT/a | awk '{print $1}')
-diff --git a/tests/generic/724 b/tests/generic/724
-index 67e0dba446..12324fb156 100755
---- a/tests/generic/724
-+++ b/tests/generic/724
-@@ -22,7 +22,7 @@ _cleanup()
- . ./common/filter
- 
- # real QA test starts here
--_require_xfs_io_command swapext '-v vfs -a'
-+_require_xfs_io_command swapext '-v exchrange -a'
- _require_scratch
- 
- _scratch_mkfs >> $seqres.full
-@@ -42,7 +42,7 @@ md5sum $SCRATCH_MNT/b | _filter_scratch
- 
- # Test swapext.  -h means skip holes in /b, and -e means operate to EOF
- echo swap | tee -a $seqres.full
--$XFS_IO_PROG -c "swapext -v vfs -f -u -h -e -a $SCRATCH_MNT/b" $SCRATCH_MNT/a
-+$XFS_IO_PROG -c "swapext -v exchrange -f -u -h -e -a $SCRATCH_MNT/b" $SCRATCH_MNT/a
- _scratch_cycle_mount
- 
- md5sum $SCRATCH_MNT/a | _filter_scratch
-diff --git a/tests/generic/725 b/tests/generic/725
-index 9b68871486..bf60127b39 100755
---- a/tests/generic/725
-+++ b/tests/generic/725
-@@ -22,7 +22,7 @@ _cleanup()
- . ./common/filter
- 
- # real QA test starts here
--_require_xfs_io_command swapext '-v vfs -a'
-+_require_xfs_io_command swapext '-v exchrange -a'
- _require_xfs_io_command startupdate '-e'
- _require_scratch
- 
-diff --git a/tests/generic/726 b/tests/generic/726
-index f0d8df2e0d..4cf18bd0e5 100755
---- a/tests/generic/726
-+++ b/tests/generic/726
-@@ -25,7 +25,7 @@ _begin_fstest auto fiexchange swapext quick
- # Modify as appropriate.
- _supported_fs generic
- _require_user
--_require_xfs_io_command swapext '-v vfs -a'
-+_require_xfs_io_command swapext '-v exchrange -a'
- _require_xfs_io_command startupdate
- _require_scratch
- 
-diff --git a/tests/generic/727 b/tests/generic/727
-index 2cda49eada..af9612c967 100755
---- a/tests/generic/727
-+++ b/tests/generic/727
-@@ -28,7 +28,7 @@ _supported_fs generic
- _require_user
- _require_command "$GETCAP_PROG" getcap
- _require_command "$SETCAP_PROG" setcap
--_require_xfs_io_command swapext '-v vfs -a'
-+_require_xfs_io_command swapext '-v exchrange -a'
- _require_xfs_io_command startupdate
- _require_scratch
- _require_attrs security
-diff --git a/tests/xfs/789 b/tests/xfs/789
-index 9df91ac32f..b966c65119 100755
---- a/tests/xfs/789
-+++ b/tests/xfs/789
-@@ -21,7 +21,7 @@ _cleanup()
- 
- # real QA test starts here
- _supported_fs xfs
--_require_xfs_io_command swapext '-v vfs'
-+_require_xfs_io_command swapext '-v exchrange'
- _require_test
- 
- # We can't do any reasonable swapping if the files we're going to create are
-diff --git a/tests/xfs/790 b/tests/xfs/790
-index 2362d66dfc..db6ce741d7 100755
---- a/tests/xfs/790
-+++ b/tests/xfs/790
-@@ -24,7 +24,7 @@ _cleanup()
- 
- # real QA test starts here
- _supported_fs xfs
--_require_xfs_io_command swapext '-v vfs -a'
-+_require_xfs_io_command swapext '-v exchrange -a'
- _require_test_program "punch-alternating"
- _require_xfs_io_command startupdate
- _require_xfs_io_error_injection "bmap_finish_one"
-diff --git a/tests/xfs/791 b/tests/xfs/791
-index 4944c1517c..84e3bee9b9 100755
---- a/tests/xfs/791
-+++ b/tests/xfs/791
-@@ -25,7 +25,7 @@ _cleanup()
- 
- # real QA test starts here
- _supported_fs xfs
--_require_xfs_io_command swapext '-v vfs -a'
-+_require_xfs_io_command swapext '-v exchrange -a'
- _require_xfs_scratch_atomicswap
- _require_xfs_io_error_injection "bmap_finish_one"
- 
-@@ -48,7 +48,7 @@ md5sum $SCRATCH_MNT/b | _filter_scratch
- # Test swapext.  -h means skip holes in /b, and -e means operate to EOF
- echo swap | tee -a $seqres.full
- $XFS_IO_PROG -x -c 'inject bmap_finish_one' \
--	-c "swapext -v vfs -f -u -h -e -a $SCRATCH_MNT/b" $SCRATCH_MNT/a
-+	-c "swapext -v exchrange -f -u -h -e -a $SCRATCH_MNT/b" $SCRATCH_MNT/a
- _scratch_cycle_mount
- 
- md5sum $SCRATCH_MNT/a | _filter_scratch
-diff --git a/tests/xfs/792 b/tests/xfs/792
-index 4af084bf66..bfbfbce4aa 100755
---- a/tests/xfs/792
-+++ b/tests/xfs/792
-@@ -25,7 +25,7 @@ _cleanup()
- 
- # real QA test starts here
- _supported_fs xfs
--_require_xfs_io_command swapext '-v vfs -a'
-+_require_xfs_io_command swapext '-v exchrange -a'
- _require_xfs_io_command startupdate '-e'
- _require_xfs_scratch_atomicswap
- _require_xfs_io_error_injection "bmap_finish_one"
+common/fuzzy       |   4 +-
+common/rc          |  36 ++++++++-
+tests/xfs/1872     | 111 +++++++++++++++++++++++++++
+tests/xfs/1872.out |   5 ++
+tests/xfs/1873     | 215 +++++++++++++++++++++++++++++++++++++++++++++++++++++
+tests/xfs/1873.out |   6 ++
+tests/xfs/329      |   4 +-
+tests/xfs/434      |   2 +-
+tests/xfs/435      |   2 +-
+tests/xfs/436      |   2 +-
+tests/xfs/444      |   2 +-
+tests/xfs/516      |   2 +-
+12 files changed, 381 insertions(+), 10 deletions(-)
+create mode 100755 tests/xfs/1872
+create mode 100644 tests/xfs/1872.out
+create mode 100755 tests/xfs/1873
+create mode 100644 tests/xfs/1873.out
 
