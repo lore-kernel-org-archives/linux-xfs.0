@@ -2,86 +2,203 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 09BCFC197A0
-	for <linux-xfs@archiver.kernel.org>; Fri, 17 Nov 2023 14:52:10 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7C2EAC072A2
+	for <linux-xfs@archiver.kernel.org>; Fri, 17 Nov 2023 22:07:37 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231358AbjKQOwL (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 17 Nov 2023 09:52:11 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43660 "EHLO
+        id S233067AbjKQWHj (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 17 Nov 2023 17:07:39 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36522 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232906AbjKQOwE (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 17 Nov 2023 09:52:04 -0500
-Received: from casper.infradead.org (casper.infradead.org [IPv6:2001:8b0:10b:1236::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 36F60D4B;
-        Fri, 17 Nov 2023 06:52:01 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=infradead.org; s=casper.20170209; h=Content-Transfer-Encoding:MIME-Version:
-        References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:Sender:Reply-To:
-        Content-Type:Content-ID:Content-Description;
-        bh=25QfWharHbMWrIl6caRn0CZ+MZ75oP4Z9qoseEg2zjc=; b=G81dPiQIHl0SfOKIPMZ8I9sw2V
-        d5ARoUWM1/yrnIdvjjTz4FsVu4uYDcbTLzSzH9bRwHDPxLfwbH/ILpx4RNS/G5aRerWYAFKNQa0oV
-        +3SrFGRIhq2VzyXgwrmZZKHOs50oadM/vEMDA5KZRzEySyyeS9Pt0/H+jP3ODZaK5NZnH/XcIZC+U
-        HWiWKF4SQx8ge+N3F+EDUFb9KgYvH/Z4E0pVcv0QrGrimiNp98ZrAKM+28ysPuxS7mlOvyv+eIcMj
-        kmgYY9P65vTsHGeZz3gSLjNBxHZcWLLJ3eRMZMCL+gfHEXD4THepQSNv0oPCJaAG0deVfJWPq+i2d
-        QnOeX+/g==;
-Received: from willy by casper.infradead.org with local (Exim 4.94.2 #2 (Red Hat Linux))
-        id 1r40C7-009ypz-Ry; Fri, 17 Nov 2023 14:51:43 +0000
-From:   "Matthew Wilcox (Oracle)" <willy@infradead.org>
-To:     Peter Zijlstra <peterz@infradead.org>,
-        Ingo Molnar <mingo@redhat.com>, Will Deacon <will@kernel.org>,
-        Waiman Long <longman@redhat.com>
-Cc:     "Matthew Wilcox (Oracle)" <willy@infradead.org>,
-        linux-kernel@vger.kernel.org, linux-mm@kvack.org,
-        Chandan Babu R <chandan.babu@oracle.com>,
-        "Darrick J . Wong" <djwong@kernel.org>, linux-xfs@vger.kernel.org,
-        Mateusz Guzik <mjguzik@gmail.com>
-Subject: [PATCH v4 2/4] mm: Use rwsem assertion macros for mmap_lock
-Date:   Fri, 17 Nov 2023 14:51:40 +0000
-Message-Id: <20231117145142.2378800-3-willy@infradead.org>
-X-Mailer: git-send-email 2.37.1
-In-Reply-To: <20231117145142.2378800-1-willy@infradead.org>
-References: <20231117145142.2378800-1-willy@infradead.org>
+        with ESMTP id S230379AbjKQWHi (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 17 Nov 2023 17:07:38 -0500
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id CE772D4D
+        for <linux-xfs@vger.kernel.org>; Fri, 17 Nov 2023 14:07:33 -0800 (PST)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 6656CC433C7;
+        Fri, 17 Nov 2023 22:07:33 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1700258853;
+        bh=V142oDvt3hPbZ3WiBahX/4bq2zQvzjIW7/+jyfXMVDo=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=FeWYFKoNHgAbWm7PW5sCnA3pn74U/f7V+qcAIwiGLvTXDoIdoE0UiYg3PG8vidDoa
+         rqmjXHAda1Mogwf9xRxV6mu0C5FhuX4DFZIbQJGRX58JG/Q+6niLVz8X1xb+AMN+VP
+         nHzSmx0xWkM/yRjVBDKt6Yy9zAemFD3EZ8dRSvLX0lksVTabfQYjToSDkVJ6mkRNIl
+         tIDI4lTGvwALPs6qyHqMQpf9URJRnF0wJFw/PXUn2P0ofYLpJ4lsii6lh/mIPMAquc
+         n9nbNULXhSZnzSBf+/Nxvu9/xToUAbT8D4twwJ4P3U5Xg90wPqT7hnUOOSv6pnvzJ+
+         u6yT7wqN9ywWw==
+Date:   Fri, 17 Nov 2023 14:07:32 -0800
+From:   "Darrick J. Wong" <djwong@kernel.org>
+To:     Zorro Lang <zlang@redhat.com>
+Cc:     Omar Sandoval <osandov@osandov.com>, fstests@vger.kernel.org,
+        linux-xfs@vger.kernel.org, kernel-team@fb.com
+Subject: Re: [PATCH fstests v2] xfs: test refilling AGFL after lots of btree
+ splits
+Message-ID: <20231117220732.GG36175@frogsfrogsfrogs>
+References: <68cd85697855f686529829a2825b044913148caf.1698699188.git.osandov@fb.com>
+ <fe622bff22bca23648ed1154faeadce3ed51ad3b.1698699498.git.osandov@osandov.com>
+ <20231101064543.uruh3ljicwnedw7x@dell-per750-06-vm-08.rhts.eng.pek2.redhat.com>
+ <20231101155630.GA1203404@frogsfrogsfrogs>
+ <20231117143232.jool55gt5zysmm55@dell-per750-06-vm-08.rhts.eng.pek2.redhat.com>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20231117143232.jool55gt5zysmm55@dell-per750-06-vm-08.rhts.eng.pek2.redhat.com>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-This slightly strengthens our write assertion when lockdep is disabled.
-It also downgrades us from BUG_ON to WARN_ON, but I think that's an
-improvement.  I don't think dumping the mm_struct was all that valuable;
-the call chain is what's important.
+On Fri, Nov 17, 2023 at 10:32:32PM +0800, Zorro Lang wrote:
+> On Wed, Nov 01, 2023 at 08:56:30AM -0700, Darrick J. Wong wrote:
+> > On Wed, Nov 01, 2023 at 02:45:43PM +0800, Zorro Lang wrote:
+> > > On Mon, Oct 30, 2023 at 02:00:15PM -0700, Omar Sandoval wrote:
+> > > > This is a regression test for patch "xfs: fix internal error from AGFL
+> > > > exhaustion"), which is not yet merged. Without the fix, it will fail
+> > > > with a "Structure needs cleaning" error.
+> > > > 
+> > > > Signed-off-by: Omar Sandoval <osandov@osandov.com>
+> > > > ---
+> > > > Changes since v1 [1]:
+> > > > 
+> > > > - Fixed to check whether mkfs.xfs supports -m rmapbt.
+> > > > - Changed bare $XFS_DB calls to _scratch_xfs_db.
+> > > > - Expanded comment about what happens without the fix.
+> > > > 
+> > > > I didn't add a check for whether everything ended up in AG 0, because it
+> > > > wasn't clear to me what to do in that case. We could skip the test, but
+> > > > it also doesn't hurt to run it anyways.
+> > > > 
+> > > > 1: https://lore.kernel.org/linux-xfs/c7be2fe66a297316b934ddd3a1368b14f39a9f22.1698190540.git.osandov@osandov.com/
+> > > > 
+> > > >  tests/xfs/601     | 68 +++++++++++++++++++++++++++++++++++++++++++++++
+> > > >  tests/xfs/601.out |  2 ++
+> > > 
+> > > The xfs/601 has been taken by:
+> > >   39f88c55 ("generic: test FALLOC_FL_UNSHARE when pagecache is not loaded")
+> > > 
+> > > I'll change this case to another number.
+> > > 
+> > > ...
+> > > Hi Darrick, I just noticed that commit has "generic", but that's a case in
+> > > tests/xfs, and there's not "_supported_fs xfs" in xfs/601. Do you want to
+> > > move it to be a generic case?
+> > 
+> > Yes, the existing xfs/601 regression test (kernel commit 35d30c9cf127)
+> > can become a generic test; and then this one can take its place.
+> 
+> If you need to move current xfs/601 to generic/, better to have another patch.
+> I'll merge this patch in xfs/ at first. Then you can do that moving in your next
+> "random fix" patchset, or I can send a patch to do that.
 
-Signed-off-by: Matthew Wilcox (Oracle) <willy@infradead.org>
----
- include/linux/mmap_lock.h | 10 ++++------
- 1 file changed, 4 insertions(+), 6 deletions(-)
+<shrug> I'll ./mvtest and send the resulting patch next week unless you
+beat me to it.
 
-diff --git a/include/linux/mmap_lock.h b/include/linux/mmap_lock.h
-index 8d38dcb6d044..de9dc20b01ba 100644
---- a/include/linux/mmap_lock.h
-+++ b/include/linux/mmap_lock.h
-@@ -60,16 +60,14 @@ static inline void __mmap_lock_trace_released(struct mm_struct *mm, bool write)
- 
- #endif /* CONFIG_TRACING */
- 
--static inline void mmap_assert_locked(struct mm_struct *mm)
-+static inline void mmap_assert_locked(const struct mm_struct *mm)
- {
--	lockdep_assert_held(&mm->mmap_lock);
--	VM_BUG_ON_MM(!rwsem_is_locked(&mm->mmap_lock), mm);
-+	rwsem_assert_held(&mm->mmap_lock);
- }
- 
--static inline void mmap_assert_write_locked(struct mm_struct *mm)
-+static inline void mmap_assert_write_locked(const struct mm_struct *mm)
- {
--	lockdep_assert_held_write(&mm->mmap_lock);
--	VM_BUG_ON_MM(!rwsem_is_locked(&mm->mmap_lock), mm);
-+	rwsem_assert_held_write(&mm->mmap_lock);
- }
- 
- #ifdef CONFIG_PER_VMA_LOCK
--- 
-2.42.0
+--D
 
+> Thanks,
+> Zorro
+> 
+> > 
+> > --D
+> > 
+> > > >  2 files changed, 70 insertions(+)
+> > > >  create mode 100755 tests/xfs/601
+> > > >  create mode 100644 tests/xfs/601.out
+> > > > 
+> > > > diff --git a/tests/xfs/601 b/tests/xfs/601
+> > > > new file mode 100755
+> > > > index 00000000..68df6ac0
+> > > > --- /dev/null
+> > > > +++ b/tests/xfs/601
+> > > > @@ -0,0 +1,68 @@
+> > > > +#! /bin/bash
+> > > > +# SPDX-License-Identifier: GPL-2.0
+> > > > +# Copyright (c) Meta Platforms, Inc. and affiliates.
+> > > > +#
+> > > > +# FS QA Test 601
+> > > > +#
+> > > > +# Regression test for patch "xfs: fix internal error from AGFL exhaustion".
+> > > > +#
+> > > > +. ./common/preamble
+> > > > +_begin_fstest auto prealloc punch
+> > > > +
+> > > > +. ./common/filter
+> > > > +
+> > > > +_supported_fs xfs
+> > > > +_require_scratch
+> > > 
+> > > _require_xfs_io_command "fpunch" ?
+> > > 
+> > > I can help to add that, others look good to me.
+> > > 
+> > > Reviewed-by: Zorro Lang <zlang@redhat.com>
+> > > 
+> > > > +_require_test_program punch-alternating
+> > > > +_fixed_by_kernel_commit XXXXXXXXXXXX "xfs: fix internal error from AGFL exhaustion"
+> > > > +
+> > > > +# Disable the rmapbt so we only need to worry about splitting the bnobt and
+> > > > +# cntbt at the same time.
+> > > > +opts=
+> > > > +if $MKFS_XFS_PROG |& grep -q rmapbt; then
+> > > > +	opts="-m rmapbt=0"
+> > > > +fi
+> > > > +_scratch_mkfs $opts | _filter_mkfs > /dev/null 2> "$tmp.mkfs"
+> > > > +. "$tmp.mkfs"
+> > > > +_scratch_mount
+> > > > +
+> > > > +alloc_block_len=$((_fs_has_crcs ? 56 : 16))
+> > > > +allocbt_leaf_maxrecs=$(((dbsize - alloc_block_len) / 8))
+> > > > +allocbt_node_maxrecs=$(((dbsize - alloc_block_len) / 12))
+> > > > +
+> > > > +# Create a big file with a size such that the punches below create the exact
+> > > > +# free extents we want.
+> > > > +num_holes=$((allocbt_leaf_maxrecs * allocbt_node_maxrecs - 1))
+> > > > +$XFS_IO_PROG -c "falloc 0 $((9 * dbsize + num_holes * dbsize * 2))" -f "$SCRATCH_MNT/big"
+> > > > +
+> > > > +# Fill in any small free extents in AG 0. After this, there should be only one,
+> > > > +# large free extent.
+> > > > +_scratch_unmount
+> > > > +mapfile -t gaps < <(_scratch_xfs_db -c 'agf 0' -c 'addr cntroot' -c btdump |
+> > > > +	$SED_PROG -rn 's/^[0-9]+:\[[0-9]+,([0-9]+)\].*/\1/p' |
+> > > > +	tac | tail -n +2)
+> > > > +_scratch_mount
+> > > > +for gap_i in "${!gaps[@]}"; do
+> > > > +	gap=${gaps[$gap_i]}
+> > > > +	$XFS_IO_PROG -c "falloc 0 $((gap * dbsize))" -f "$SCRATCH_MNT/gap$gap_i"
+> > > > +done
+> > > > +
+> > > > +# Create enough free space records to make the bnobt and cntbt both full,
+> > > > +# 2-level trees, plus one more record to make them split all the way to the
+> > > > +# root and become 3-level trees. After this, there is a 7-block free extent in
+> > > > +# the rightmost leaf of the cntbt, and all of the leaves of the cntbt other
+> > > > +# than the rightmost two are full. Without the fix, the free list is also
+> > > > +# empty.
+> > > > +$XFS_IO_PROG -c "fpunch $dbsize $((7 * dbsize))" "$SCRATCH_MNT/big"
+> > > > +"$here/src/punch-alternating" -o 9 "$SCRATCH_MNT/big"
+> > > > +
+> > > > +# Do an arbitrary operation that refills the free list. Without the fix, this
+> > > > +# will allocate 6 blocks from the 7-block free extent in the rightmost leaf of
+> > > > +# the cntbt, then try to insert the remaining 1 block free extent in the
+> > > > +# leftmost leaf of the cntbt. But that leaf is full, so this tries to split the
+> > > > +# leaf and fails because the free list is empty, returning EFSCORRUPTED.
+> > > > +$XFS_IO_PROG -c "fpunch 0 $dbsize" "$SCRATCH_MNT/big"
+> > > > +
+> > > > +echo "Silence is golden"
+> > > > +status=0
+> > > > +exit
+> > > > diff --git a/tests/xfs/601.out b/tests/xfs/601.out
+> > > > new file mode 100644
+> > > > index 00000000..0d70c3e5
+> > > > --- /dev/null
+> > > > +++ b/tests/xfs/601.out
+> > > > @@ -0,0 +1,2 @@
+> > > > +QA output created by 601
+> > > > +Silence is golden
+> > > > -- 
+> > > > 2.41.0
+> > > > 
+> > > > 
+> > > 
+> > > 
+> > 
+> 
+> 
