@@ -2,118 +2,97 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DB926C54E76
-	for <linux-xfs@archiver.kernel.org>; Thu, 16 Nov 2023 17:35:37 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 11C6FC5AD4C
+	for <linux-xfs@archiver.kernel.org>; Fri, 17 Nov 2023 01:50:55 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1345351AbjKPRfi (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 16 Nov 2023 12:35:38 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50564 "EHLO
+        id S1345647AbjKQBu4 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 16 Nov 2023 20:50:56 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53064 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1345347AbjKPRfh (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 16 Nov 2023 12:35:37 -0500
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B0EE1D49
-        for <linux-xfs@vger.kernel.org>; Thu, 16 Nov 2023 09:35:33 -0800 (PST)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 545FCC433C7;
-        Thu, 16 Nov 2023 17:35:33 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1700156133;
-        bh=sae3T8fTm7bGIlBN4+hIM9ppP7jdM4GaqK2tKSXoviM=;
-        h=Date:Subject:From:To:Cc:From;
-        b=ltEwIhywT9IZjVvZNGceNz37VZRNMM4F7eoOEZ7dzdbizsMptqTkn12gTphGAHUJL
-         +yajkrmm2YC8nHLixJ7rjjTffiy6CFeYUarH/7qAl5YxVRi0yvw2RoLwbhHqLKh7S6
-         7seKRo8wPbOXPWsx/k9dqIifB4c3t8jKWvPJvAE6qVOx6IdRqQd6PkNs6VoACvdOVM
-         DtJRwidR4biogIMmAwDWnsVuaTIbpRsMizleRgCGnXYEIN6bd7tM5x8S/kSuIzp/vW
-         v757LGz0uKFUji5ZB5K2Ww0IgywugjKtg9kqhhO7vy4rqNUmGJC+DYHDdkn8yg8Aom
-         2BsQTJvR5t2Jw==
-Date:   Thu, 16 Nov 2023 09:35:32 -0800
-Subject: [GIT PULL 3/3] fstests: FIEXCHANGE is now an XFS ioctl
-From:   "Darrick J. Wong" <djwong@kernel.org>
-To:     djwong@kernel.org, zlang@redhat.com
-Cc:     fstests@vger.kernel.org, guan@eryu.me, hch@lst.de,
-        linux-xfs@vger.kernel.org
-Message-ID: <170015608757.3373797.8063458881541595889.stg-ugh@frogsfrogsfrogs>
+        with ESMTP id S1345644AbjKQBuz (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 16 Nov 2023 20:50:55 -0500
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A9B2A195
+        for <linux-xfs@vger.kernel.org>; Thu, 16 Nov 2023 17:50:52 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1700185851;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=lGSuWJO7S6MXiDolxtjA6VeW24nPdThcsXKHEAmIP+w=;
+        b=WHEANKxgDZ6Z3J1Ph5A20k9ymvREDSQ00tUqtTu7kQJyCLl0gxe91MK4azTn0tfxIPe2NI
+        +VPl0d2itKfa57ETRBFdyBJJRM1b0NoKrgGrEeAHuz81iCx3QJzRQlkA3J0cicvcpNIJck
+        cv4rQp1VbxhESTScBXjOHfO/rZCV1oc=
+Received: from mimecast-mx02.redhat.com (mx-ext.redhat.com [66.187.233.73])
+ by relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.3,
+ cipher=TLS_AES_256_GCM_SHA384) id us-mta-491-ui6YRq4tMsWqkVFVbd65CQ-1; Thu,
+ 16 Nov 2023 20:50:46 -0500
+X-MC-Unique: ui6YRq4tMsWqkVFVbd65CQ-1
+Received: from smtp.corp.redhat.com (int-mx07.intmail.prod.int.rdu2.redhat.com [10.11.54.7])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+        (No client certificate requested)
+        by mimecast-mx02.redhat.com (Postfix) with ESMTPS id 225753803503;
+        Fri, 17 Nov 2023 01:50:46 +0000 (UTC)
+Received: from [10.22.8.82] (unknown [10.22.8.82])
+        by smtp.corp.redhat.com (Postfix) with ESMTP id 976A21C060AE;
+        Fri, 17 Nov 2023 01:50:45 +0000 (UTC)
+Message-ID: <767ce2df-6f9b-40a3-b40b-e9e7a593e3b2@redhat.com>
+Date:   Thu, 16 Nov 2023 20:50:45 -0500
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v3 1/4] locking: Add rwsem_assert_held() and
+ rwsem_assert_held_write()
+Content-Language: en-US
+To:     Matthew Wilcox <willy@infradead.org>
+Cc:     Peter Zijlstra <peterz@infradead.org>,
+        Ingo Molnar <mingo@redhat.com>, Will Deacon <will@kernel.org>,
+        linux-kernel@vger.kernel.org, linux-mm@kvack.org,
+        Chandan Babu R <chandan.babu@oracle.com>,
+        "Darrick J . Wong" <djwong@kernel.org>, linux-xfs@vger.kernel.org,
+        Mateusz Guzik <mjguzik@gmail.com>
+References: <20231110204119.3692023-1-willy@infradead.org>
+ <20231110204119.3692023-2-willy@infradead.org>
+ <52f481a3-bf4f-85ae-9ae6-10a23b48c7c5@redhat.com>
+ <ZVPmCoLVXyShSrkN@casper.infradead.org>
+ <72dced0f-6d49-4522-beeb-1a398d8f2557@redhat.com>
+ <ZVY/cAMFbkuKJF/Y@casper.infradead.org>
+From:   Waiman Long <longman@redhat.com>
+In-Reply-To: <ZVY/cAMFbkuKJF/Y@casper.infradead.org>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
+X-Scanned-By: MIMEDefang 3.4.1 on 10.11.54.7
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Hi Zorro,
 
-Please pull this branch with changes for fstests.
+On 11/16/23 11:12, Matthew Wilcox wrote:
+> On Tue, Nov 14, 2023 at 08:17:32PM -0500, Waiman Long wrote:
+>>>> There are some inconsistency in the use of WARN_ON() and BUG_ON() in the
+>>>> assertions. For PREEMPT_RT, held_write is a BUG_ON. For non-PREEMPT_RT, held
+>>>> is a BUG_ON. It is not clear why one is BUG_ON and other one is WARN_ON. Is
+>>>> there a rationale for that?
+>>> I'll fix that up.
+>> The check for write lock ownership is accurate. OTOH, the locked check can
+>> have false positive and so is less reliable.
+> When you say 'false positive', do you mean it might report the lock as
+> being held, when it actually isn't, or report the lock as not being held
+> when it actually is?  The differing polarities of assert and BUG_ON
+> make this confusing as usual.
+It means there may be no active lock owner even though the count isn't 
+zero. If there is one or more owners, the count will always be non-zero.
+>
+> Obviously, for an assert, we're OK with it reporting that the lock is
+> held when actually it's not.  The caller is expected to hold the lock,
+> so failing to trip the assert when the caller doesn't hold the lock
+> isn't great, but we can live with it.  OTOH, if the assert fires when
+> the caller does hold the lock, that is not tolerable.
 
-As usual, I did a test-merge with the main upstream branch as of a few
-minutes ago, and didn't see any conflicts.  Please let me know if you
-encounter any problems.
+The second case shouldn't happen. So the assert should be OK.
 
---D
+Cheers,
+Longman
 
-The following changes since commit dfaf19dd09b31088d5adfcdd888479301450a8c9:
-
-generic: test reads racing with slow reflink operations (2023-11-16 09:11:57 -0800)
-
-are available in the Git repository at:
-
-https://git.kernel.org/pub/scm/linux/kernel/git/djwong/xfstests-dev.git tags/private-fiexchange_2023-11-16
-
-for you to fetch changes up to 7053833541bd48b3260f2e6e208fe4d7daab5955:
-
-misc: update xfs_io swapext usage (2023-11-16 09:11:57 -0800)
-
-----------------------------------------------------------------
-fstests: FIEXCHANGE is now an XFS ioctl [v27.1]
-
-Minor amendments to the fstests code now that we've taken FIEXCHANGE
-private to XFS.
-
-v27.1: add hch review tags; rebase and maybe fix merge problems?
-
-This has been running on the djcloud for months with no problems.  Enjoy!
-
-Signed-off-by: Darrick J. Wong <djwong@kernel.org>
-
-----------------------------------------------------------------
-Darrick J. Wong (2):
-misc: privatize the FIEXCHANGE ioctl for now
-misc: update xfs_io swapext usage
-
-common/xfs            |  2 +-
-configure.ac          |  2 +-
-doc/group-names.txt   |  2 +-
-include/builddefs.in  |  2 +-
-ltp/Makefile          |  4 ++--
-ltp/fsstress.c        | 10 +++++-----
-ltp/fsx.c             | 20 ++++++++++----------
-m4/package_libcdev.m4 | 20 --------------------
-m4/package_xfslibs.m4 | 14 ++++++++++++++
-src/Makefile          |  4 ++++
-src/fiexchange.h      | 44 ++++++++++++++++++++++----------------------
-src/global.h          |  4 +---
-src/vfs/Makefile      |  4 ++++
-tests/generic/709     |  2 +-
-tests/generic/710     |  2 +-
-tests/generic/711     |  2 +-
-tests/generic/712     |  2 +-
-tests/generic/713     |  4 ++--
-tests/generic/714     |  4 ++--
-tests/generic/715     |  4 ++--
-tests/generic/716     |  2 +-
-tests/generic/717     |  2 +-
-tests/generic/718     |  2 +-
-tests/generic/719     |  2 +-
-tests/generic/720     |  2 +-
-tests/generic/722     |  4 ++--
-tests/generic/723     |  6 +++---
-tests/generic/724     |  6 +++---
-tests/generic/725     |  2 +-
-tests/generic/726     |  2 +-
-tests/generic/727     |  2 +-
-tests/xfs/122.out     |  1 +
-tests/xfs/789         |  2 +-
-tests/xfs/790         |  2 +-
-tests/xfs/791         |  6 +++---
-tests/xfs/792         |  2 +-
-36 files changed, 99 insertions(+), 98 deletions(-)
 
