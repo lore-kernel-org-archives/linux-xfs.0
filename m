@@ -2,203 +2,124 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7C2EAC072A2
-	for <linux-xfs@archiver.kernel.org>; Fri, 17 Nov 2023 22:07:37 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8D43CC54FB9
+	for <linux-xfs@archiver.kernel.org>; Fri, 17 Nov 2023 22:19:40 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233067AbjKQWHj (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 17 Nov 2023 17:07:39 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36522 "EHLO
+        id S231905AbjKQWTm (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 17 Nov 2023 17:19:42 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34338 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230379AbjKQWHi (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 17 Nov 2023 17:07:38 -0500
+        with ESMTP id S229823AbjKQWTl (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 17 Nov 2023 17:19:41 -0500
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id CE772D4D
-        for <linux-xfs@vger.kernel.org>; Fri, 17 Nov 2023 14:07:33 -0800 (PST)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 6656CC433C7;
-        Fri, 17 Nov 2023 22:07:33 +0000 (UTC)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 04F9DB8
+        for <linux-xfs@vger.kernel.org>; Fri, 17 Nov 2023 14:19:38 -0800 (PST)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 9106EC433C8;
+        Fri, 17 Nov 2023 22:19:37 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1700258853;
-        bh=V142oDvt3hPbZ3WiBahX/4bq2zQvzjIW7/+jyfXMVDo=;
+        s=k20201202; t=1700259577;
+        bh=jAGjw9mb66OQ2d28yda+DnddMWeuZ5oGuiwJ1auDhHo=;
         h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=FeWYFKoNHgAbWm7PW5sCnA3pn74U/f7V+qcAIwiGLvTXDoIdoE0UiYg3PG8vidDoa
-         rqmjXHAda1Mogwf9xRxV6mu0C5FhuX4DFZIbQJGRX58JG/Q+6niLVz8X1xb+AMN+VP
-         nHzSmx0xWkM/yRjVBDKt6Yy9zAemFD3EZ8dRSvLX0lksVTabfQYjToSDkVJ6mkRNIl
-         tIDI4lTGvwALPs6qyHqMQpf9URJRnF0wJFw/PXUn2P0ofYLpJ4lsii6lh/mIPMAquc
-         n9nbNULXhSZnzSBf+/Nxvu9/xToUAbT8D4twwJ4P3U5Xg90wPqT7hnUOOSv6pnvzJ+
-         u6yT7wqN9ywWw==
-Date:   Fri, 17 Nov 2023 14:07:32 -0800
+        b=cNvXn8zbtyfG0HIutW9nUvnvd3ucpyKXGbmjQIrREAY8j9dgGALNCFMlU8zWlJUkv
+         WHStPAbT4FOI5j6+G5KboFa3flktyOo7n32NqbJVK+VyLwtCIVnpv7acY/gpsVhNkd
+         1Dbn5S3spwRVLxU1dbcLm+W3zFXC1hWhkXSJHIyg7myzi1rcSswRQkwSnUnCONP68k
+         tUQ7WcF0E/Eim9lX/ohKVlR6CRJBcxwM38Usifc1/CnmPDJOV/Me92yz4IIgclfhRO
+         FqcMmFtfjmeNEXap734lfGRMuB/p8cIizJ0ayCtN3kEG8depaof3uC4iiNAoMYwKyH
+         Y/GXT2Gp8rODw==
+Date:   Fri, 17 Nov 2023 14:19:36 -0800
 From:   "Darrick J. Wong" <djwong@kernel.org>
-To:     Zorro Lang <zlang@redhat.com>
-Cc:     Omar Sandoval <osandov@osandov.com>, fstests@vger.kernel.org,
-        linux-xfs@vger.kernel.org, kernel-team@fb.com
-Subject: Re: [PATCH fstests v2] xfs: test refilling AGFL after lots of btree
- splits
-Message-ID: <20231117220732.GG36175@frogsfrogsfrogs>
-References: <68cd85697855f686529829a2825b044913148caf.1698699188.git.osandov@fb.com>
- <fe622bff22bca23648ed1154faeadce3ed51ad3b.1698699498.git.osandov@osandov.com>
- <20231101064543.uruh3ljicwnedw7x@dell-per750-06-vm-08.rhts.eng.pek2.redhat.com>
- <20231101155630.GA1203404@frogsfrogsfrogs>
- <20231117143232.jool55gt5zysmm55@dell-per750-06-vm-08.rhts.eng.pek2.redhat.com>
+To:     Dave Chinner <david@fromorbit.com>
+Cc:     linux-xfs@vger.kernel.org, zlang@redhat.com
+Subject: Re: [PATCH 1/2] xfs: inode recovery does not validate the recovered
+ inode
+Message-ID: <20231117221936.GB36190@frogsfrogsfrogs>
+References: <20231110044500.718022-1-david@fromorbit.com>
+ <20231110044500.718022-2-david@fromorbit.com>
+ <20231110192752.GJ1205143@frogsfrogsfrogs>
+ <ZU6VSymhrhgJUS8o@dread.disaster.area>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20231117143232.jool55gt5zysmm55@dell-per750-06-vm-08.rhts.eng.pek2.redhat.com>
+In-Reply-To: <ZU6VSymhrhgJUS8o@dread.disaster.area>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Fri, Nov 17, 2023 at 10:32:32PM +0800, Zorro Lang wrote:
-> On Wed, Nov 01, 2023 at 08:56:30AM -0700, Darrick J. Wong wrote:
-> > On Wed, Nov 01, 2023 at 02:45:43PM +0800, Zorro Lang wrote:
-> > > On Mon, Oct 30, 2023 at 02:00:15PM -0700, Omar Sandoval wrote:
-> > > > This is a regression test for patch "xfs: fix internal error from AGFL
-> > > > exhaustion"), which is not yet merged. Without the fix, it will fail
-> > > > with a "Structure needs cleaning" error.
-> > > > 
-> > > > Signed-off-by: Omar Sandoval <osandov@osandov.com>
-> > > > ---
-> > > > Changes since v1 [1]:
-> > > > 
-> > > > - Fixed to check whether mkfs.xfs supports -m rmapbt.
-> > > > - Changed bare $XFS_DB calls to _scratch_xfs_db.
-> > > > - Expanded comment about what happens without the fix.
-> > > > 
-> > > > I didn't add a check for whether everything ended up in AG 0, because it
-> > > > wasn't clear to me what to do in that case. We could skip the test, but
-> > > > it also doesn't hurt to run it anyways.
-> > > > 
-> > > > 1: https://lore.kernel.org/linux-xfs/c7be2fe66a297316b934ddd3a1368b14f39a9f22.1698190540.git.osandov@osandov.com/
-> > > > 
-> > > >  tests/xfs/601     | 68 +++++++++++++++++++++++++++++++++++++++++++++++
-> > > >  tests/xfs/601.out |  2 ++
+On Sat, Nov 11, 2023 at 07:40:43AM +1100, Dave Chinner wrote:
+> On Fri, Nov 10, 2023 at 11:27:52AM -0800, Darrick J. Wong wrote:
+> > On Fri, Nov 10, 2023 at 03:33:13PM +1100, Dave Chinner wrote:
+> > > From: Dave Chinner <dchinner@redhat.com>
 > > > 
-> > > The xfs/601 has been taken by:
-> > >   39f88c55 ("generic: test FALLOC_FL_UNSHARE when pagecache is not loaded")
+> > > Discovered when trying to track down a weird recovery corruption
+> > > issue that wasn't detected at recovery time.
 > > > 
-> > > I'll change this case to another number.
+> > > The specific corruption was a zero extent count field when big
+> > > extent counts are in use, and it turns out the dinode verifier
+> > > doesn't detect that specific corruption case, either. So fix it too.
 > > > 
-> > > ...
-> > > Hi Darrick, I just noticed that commit has "generic", but that's a case in
-> > > tests/xfs, and there's not "_supported_fs xfs" in xfs/601. Do you want to
-> > > move it to be a generic case?
+> > > Signed-off-by: Dave Chinner <dchinner@redhat.com>
+> > > ---
+> > >  fs/xfs/libxfs/xfs_inode_buf.c   |  3 +++
+> > >  fs/xfs/xfs_inode_item_recover.c | 14 +++++++++++++-
+> > >  2 files changed, 16 insertions(+), 1 deletion(-)
+> > > 
+> > > diff --git a/fs/xfs/libxfs/xfs_inode_buf.c b/fs/xfs/libxfs/xfs_inode_buf.c
+> > > index a35781577cad..0f970a0b3382 100644
+> > > --- a/fs/xfs/libxfs/xfs_inode_buf.c
+> > > +++ b/fs/xfs/libxfs/xfs_inode_buf.c
+> > > @@ -508,6 +508,9 @@ xfs_dinode_verify(
+> > >  	if (mode && nextents + naextents > nblocks)
+> > >  		return __this_address;
+> > >  
+> > > +	if (nextents + naextents == 0 && nblocks != 0)
+> > > +		return __this_address;
+> > > +
+> > >  	if (S_ISDIR(mode) && nextents > mp->m_dir_geo->max_extents)
+> > >  		return __this_address;
+> > >  
+> > > diff --git a/fs/xfs/xfs_inode_item_recover.c b/fs/xfs/xfs_inode_item_recover.c
+> > > index 6b09e2bf2d74..f4c31c2b60d5 100644
+> > > --- a/fs/xfs/xfs_inode_item_recover.c
+> > > +++ b/fs/xfs/xfs_inode_item_recover.c
+> > > @@ -286,6 +286,7 @@ xlog_recover_inode_commit_pass2(
+> > >  	struct xfs_log_dinode		*ldip;
+> > >  	uint				isize;
+> > >  	int				need_free = 0;
+> > > +	xfs_failaddr_t			fa;
+> > >  
+> > >  	if (item->ri_buf[0].i_len == sizeof(struct xfs_inode_log_format)) {
+> > >  		in_f = item->ri_buf[0].i_addr;
+> > > @@ -529,8 +530,19 @@ xlog_recover_inode_commit_pass2(
+> > >  	    (dip->di_mode != 0))
+> > >  		error = xfs_recover_inode_owner_change(mp, dip, in_f,
+> > >  						       buffer_list);
+> > > -	/* re-generate the checksum. */
+> > > +	/* re-generate the checksum and validate the recovered inode. */
+> > >  	xfs_dinode_calc_crc(log->l_mp, dip);
+> > > +	fa = xfs_dinode_verify(log->l_mp, in_f->ilf_ino, dip);
+> > > +	if (fa) {
 > > 
-> > Yes, the existing xfs/601 regression test (kernel commit 35d30c9cf127)
-> > can become a generic test; and then this one can take its place.
+> > Does xlog_recover_dquot_commit_pass2 need to call xfs_dquot_verify as
+> > well?
 > 
-> If you need to move current xfs/601 to generic/, better to have another patch.
-> I'll merge this patch in xfs/ at first. Then you can do that moving in your next
-> "random fix" patchset, or I can send a patch to do that.
+> Maybe - I haven't looked closely at that, and it depends what the
+> dquot buffer verifier does. If it's similar to the inode cluster
+> buffer verifier (i.e. only checks for dquots, doesn't verify the
+> dquots) then it should do the same thing. I don't have time to do
+> this right now because I'm OOO for the next week, so maybe you could
+> check this and send a patch for it?
 
-<shrug> I'll ./mvtest and send the resulting patch next week unless you
-beat me to it.
+I tossed on a patch to do this and after a couple of days of generic/388
+and generic/475 spinning I haven't noticed any failures.
 
 --D
 
-> Thanks,
-> Zorro
+> > This patch looks good though,
+> > Reviewed-by: Darrick J. Wong <djwong@kernel.org>
 > 
-> > 
-> > --D
-> > 
-> > > >  2 files changed, 70 insertions(+)
-> > > >  create mode 100755 tests/xfs/601
-> > > >  create mode 100644 tests/xfs/601.out
-> > > > 
-> > > > diff --git a/tests/xfs/601 b/tests/xfs/601
-> > > > new file mode 100755
-> > > > index 00000000..68df6ac0
-> > > > --- /dev/null
-> > > > +++ b/tests/xfs/601
-> > > > @@ -0,0 +1,68 @@
-> > > > +#! /bin/bash
-> > > > +# SPDX-License-Identifier: GPL-2.0
-> > > > +# Copyright (c) Meta Platforms, Inc. and affiliates.
-> > > > +#
-> > > > +# FS QA Test 601
-> > > > +#
-> > > > +# Regression test for patch "xfs: fix internal error from AGFL exhaustion".
-> > > > +#
-> > > > +. ./common/preamble
-> > > > +_begin_fstest auto prealloc punch
-> > > > +
-> > > > +. ./common/filter
-> > > > +
-> > > > +_supported_fs xfs
-> > > > +_require_scratch
-> > > 
-> > > _require_xfs_io_command "fpunch" ?
-> > > 
-> > > I can help to add that, others look good to me.
-> > > 
-> > > Reviewed-by: Zorro Lang <zlang@redhat.com>
-> > > 
-> > > > +_require_test_program punch-alternating
-> > > > +_fixed_by_kernel_commit XXXXXXXXXXXX "xfs: fix internal error from AGFL exhaustion"
-> > > > +
-> > > > +# Disable the rmapbt so we only need to worry about splitting the bnobt and
-> > > > +# cntbt at the same time.
-> > > > +opts=
-> > > > +if $MKFS_XFS_PROG |& grep -q rmapbt; then
-> > > > +	opts="-m rmapbt=0"
-> > > > +fi
-> > > > +_scratch_mkfs $opts | _filter_mkfs > /dev/null 2> "$tmp.mkfs"
-> > > > +. "$tmp.mkfs"
-> > > > +_scratch_mount
-> > > > +
-> > > > +alloc_block_len=$((_fs_has_crcs ? 56 : 16))
-> > > > +allocbt_leaf_maxrecs=$(((dbsize - alloc_block_len) / 8))
-> > > > +allocbt_node_maxrecs=$(((dbsize - alloc_block_len) / 12))
-> > > > +
-> > > > +# Create a big file with a size such that the punches below create the exact
-> > > > +# free extents we want.
-> > > > +num_holes=$((allocbt_leaf_maxrecs * allocbt_node_maxrecs - 1))
-> > > > +$XFS_IO_PROG -c "falloc 0 $((9 * dbsize + num_holes * dbsize * 2))" -f "$SCRATCH_MNT/big"
-> > > > +
-> > > > +# Fill in any small free extents in AG 0. After this, there should be only one,
-> > > > +# large free extent.
-> > > > +_scratch_unmount
-> > > > +mapfile -t gaps < <(_scratch_xfs_db -c 'agf 0' -c 'addr cntroot' -c btdump |
-> > > > +	$SED_PROG -rn 's/^[0-9]+:\[[0-9]+,([0-9]+)\].*/\1/p' |
-> > > > +	tac | tail -n +2)
-> > > > +_scratch_mount
-> > > > +for gap_i in "${!gaps[@]}"; do
-> > > > +	gap=${gaps[$gap_i]}
-> > > > +	$XFS_IO_PROG -c "falloc 0 $((gap * dbsize))" -f "$SCRATCH_MNT/gap$gap_i"
-> > > > +done
-> > > > +
-> > > > +# Create enough free space records to make the bnobt and cntbt both full,
-> > > > +# 2-level trees, plus one more record to make them split all the way to the
-> > > > +# root and become 3-level trees. After this, there is a 7-block free extent in
-> > > > +# the rightmost leaf of the cntbt, and all of the leaves of the cntbt other
-> > > > +# than the rightmost two are full. Without the fix, the free list is also
-> > > > +# empty.
-> > > > +$XFS_IO_PROG -c "fpunch $dbsize $((7 * dbsize))" "$SCRATCH_MNT/big"
-> > > > +"$here/src/punch-alternating" -o 9 "$SCRATCH_MNT/big"
-> > > > +
-> > > > +# Do an arbitrary operation that refills the free list. Without the fix, this
-> > > > +# will allocate 6 blocks from the 7-block free extent in the rightmost leaf of
-> > > > +# the cntbt, then try to insert the remaining 1 block free extent in the
-> > > > +# leftmost leaf of the cntbt. But that leaf is full, so this tries to split the
-> > > > +# leaf and fails because the free list is empty, returning EFSCORRUPTED.
-> > > > +$XFS_IO_PROG -c "fpunch 0 $dbsize" "$SCRATCH_MNT/big"
-> > > > +
-> > > > +echo "Silence is golden"
-> > > > +status=0
-> > > > +exit
-> > > > diff --git a/tests/xfs/601.out b/tests/xfs/601.out
-> > > > new file mode 100644
-> > > > index 00000000..0d70c3e5
-> > > > --- /dev/null
-> > > > +++ b/tests/xfs/601.out
-> > > > @@ -0,0 +1,2 @@
-> > > > +QA output created by 601
-> > > > +Silence is golden
-> > > > -- 
-> > > > 2.41.0
-> > > > 
-> > > > 
-> > > 
-> > > 
-> > 
+> Thanks!
 > 
-> 
+> -Dave.
+> -- 
+> Dave Chinner
+> david@fromorbit.com
