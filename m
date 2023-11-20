@@ -2,91 +2,72 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7A5F9C2BB3F
-	for <linux-xfs@archiver.kernel.org>; Mon, 20 Nov 2023 14:07:49 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0FB60C197A0
+	for <linux-xfs@archiver.kernel.org>; Mon, 20 Nov 2023 15:11:04 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232963AbjKTOHv (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 20 Nov 2023 09:07:51 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41162 "EHLO
+        id S233584AbjKTPLF (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 20 Nov 2023 10:11:05 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57002 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232148AbjKTOHu (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 20 Nov 2023 09:07:50 -0500
+        with ESMTP id S233356AbjKTPLE (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 20 Nov 2023 10:11:04 -0500
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 53442100
-        for <linux-xfs@vger.kernel.org>; Mon, 20 Nov 2023 06:07:47 -0800 (PST)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 61DF0C433C8;
-        Mon, 20 Nov 2023 14:07:44 +0000 (UTC)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 66458BE
+        for <linux-xfs@vger.kernel.org>; Mon, 20 Nov 2023 07:11:01 -0800 (PST)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id BFA93C433C9;
+        Mon, 20 Nov 2023 15:10:59 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1700489266;
-        bh=S8qMgQ1EMUfvTUZrcDS8da/H/870w/2xeU9rsXS2ds4=;
-        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=QSzhxryfS07MGtiYgKdA/KgvpJFBhySuqf49RrifpV8CtbmOpbCqJtDW4keAuKtJx
-         LpDr9JK6X7KHjMgFRsVyEn8IlsR+g0I90s7hNYxWqpp62eBumzAksnIMk/hZQV7Bhh
-         QRK+W/EQZTn8vzEb+USqMO98d1bKoOR5eeTho2jxFKHUTniP9QIEKL3YtPn9F/TQuR
-         fe/9oDTbrvwxGOKtGSzoz4CUhTteSf4cEpqXQsTlBGSO/r1wqBDQ56iWFpWvyCJPPA
-         1QysZD+ofQfaDMKoO2uD3CmW2hQYBkIkYSvkbIDE6AyUCz50ZGz+tnsWnw6EWtABuT
-         L+1f87OfP8/JQ==
-From:   Christian Brauner <brauner@kernel.org>
-To:     Christoph Hellwig <hch@lst.de>
-Cc:     Christian Brauner <brauner@kernel.org>,
-        Ilya Dryomov <idryomov@gmail.com>,
-        Andrew Morton <akpm@linux-foundation.org>,
-        linux-block@vger.kernel.org, linux-fsdevel@vger.kernel.org,
-        linux-xfs@vger.kernel.org, linux-mm@kvack.org,
-        Jens Axboe <axboe@kernel.dk>,
-        Matthew Wilcox <willy@infradead.org>
-Subject: Re: add and use a per-mapping stable writes flag v2
-Date:   Mon, 20 Nov 2023 15:07:01 +0100
-Message-ID: <20231120-unnachahmlich-dachwohnung-c5d469db965a@brauner>
-X-Mailer: git-send-email 2.42.0
-In-Reply-To: <20231025141020.192413-1-hch@lst.de>
-References: <20231025141020.192413-1-hch@lst.de>
+        s=k20201202; t=1700493061;
+        bh=kqbp2wQEUmnFWF9IEVPTu7Sei4oKZj14Ua3vPSnUqIE=;
+        h=From:To:Cc:Subject:Date:From;
+        b=VFxL+x5t8uRQ6dunpnULqy1tICW7ZXPpMrEOFlyk4QHODkbdOBEyFXfs9rSB1HU2e
+         dLX3z58wtbTE8nNsc1+h1M+V0uxTxXJ7JgrxDOPk2iLsPYG126T2w+/CtR8fyjkd+j
+         a8MgbikouzbtFNqFu/I0GqKGXx5I+La11A8ABdwAxJuUSjjyT87w+u8BURJRA5NA1/
+         vNZbJRV1d9pYUn6PPM3Nfx/16XxcTPVSxR4kfob+oI+kGkzkOJVmy+7eu7ZcHoRxXo
+         LUa39Mn2VFpnd+4tTJqEvRlzF1AX+XvsDB4sK7dfOCaIjxlPYFPU+f06fL/u/nEDdA
+         7TM5RrrFFr7bg==
+From:   cem@kernel.org
+To:     linux-xfs@vger.kernel.org
+Cc:     djwong@kernel.org, david@fromorbit.com, sandeen@sandeen.net
+Subject: [PATCH 1/2] libxf-apply: Ignore Merge commits
+Date:   Mon, 20 Nov 2023 16:10:46 +0100
+Message-ID: <20231120151056.710510-1-cem@kernel.org>
+X-Mailer: git-send-email 2.41.0
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-X-Developer-Signature: v=1; a=openpgp-sha256; l=1718; i=brauner@kernel.org; h=from:subject:message-id; bh=tN1Ke32NvKBFArsZFJBbxJjPjUX5X5jdMMtUAgN7p5o=; b=owGbwMvMwCU28Zj0gdSKO4sYT6slMaRGZ7DM95vs8sLQd/3VZRPV5T0b3xQwPI6ZmF/bEWoWu JvV58mpjlIWBjEuBlkxRRaHdpNwueU8FZuNMjVg5rAygQxh4OIUgImENzIyLJxlsur5rnRrCXXB T6INaxU2H9/qxxd+dPJ22Ted+mqsvYwM11+13XPNeLT4z6JtD3Tmy7p+P5XRz8WyuTrRraj7h4o pHwA=
-X-Developer-Key: i=brauner@kernel.org; a=openpgp; fpr=4880B8C9BD0E5106FC070F4F7B3C391EFEA93624
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Wed, 25 Oct 2023 16:10:16 +0200, Christoph Hellwig wrote:
-> A while ago Ilya pointer out that since commit 1cb039f3dc16 ("bdi:
-> replace BDI_CAP_STABLE_WRITES with a queue and a sb flag"), the stable
-> write flag on the queue wasn't used for writes to the block devices
-> nodes any more, and willy suggested fixing this by adding a stable write
-> flags on each address_space.  This series implements this fix, and also
-> fixes the stable write flag when the XFS RT device requires it, but the
-> main device doesn't (which is probably more a theoretical than a
-> practical problem).
-> 
-> [...]
+From: Carlos Maiolino <cem@kernel.org>
 
-Ok, I've picked this up now. Let me know if this needs to go through
-someone else.
+Merge commits in the kernel tree, only polutes the patch list to be
+imported into libxfs, explicitly ignore them.
 
+Signed-off-by: Carlos Maiolino <cem@kernel.org>
 ---
 
-Applied to the vfs.fixes branch of the vfs/vfs.git tree.
-Patches in the vfs.fixes branch should appear in linux-next soon.
+I'm considering here my own usecase, I never used merge commits, and sometimes
+they break the synchronization, so they make no good for me during libxfs-sync.
 
-Please report any outstanding bugs that were missed during review in a
-new review to the original patch series allowing us to drop it.
+ tools/libxfs-apply | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-It's encouraged to provide Acked-bys and Reviewed-bys even though the
-patch has now been applied. If possible patch trailers will be updated.
+diff --git a/tools/libxfs-apply b/tools/libxfs-apply
+index 097a695f9..aa2530f4d 100755
+--- a/tools/libxfs-apply
++++ b/tools/libxfs-apply
+@@ -445,8 +445,8 @@ fi
+ 
+ # grab and echo the list of commits for confirmation
+ echo "Commits to apply:"
+-commit_list=`git rev-list $hashr | tac`
+-git log --oneline $hashr |tac
++commit_list=`git rev-list --no-merges $hashr | tac`
++git log --oneline --no-merges $hashr |tac
+ read -r -p "Proceed [y|N]? " response
+ if [ -z "$response" -o "$response" != "y" ]; then
+ 	fail "Aborted!"
+-- 
+2.41.0
 
-Note that commit hashes shown below are subject to change due to rebase,
-trailer updates or similar. If in doubt, please check the listed branch.
-
-tree:   https://git.kernel.org/pub/scm/linux/kernel/git/vfs/vfs.git
-branch: vfs.fixes
-
-[1/4] filemap: add a per-mapping stable writes flag
-      https://git.kernel.org/vfs/vfs/c/cb293ec9f897
-[2/4] block: update the stable_writes flag in bdev_add
-      https://git.kernel.org/vfs/vfs/c/743958a2f50b
-[3/4] xfs: clean up FS_XFLAG_REALTIME handling in xfs_ioctl_setattr_xflags
-      https://git.kernel.org/vfs/vfs/c/f04f350d39eb
-[4/4] xfs: respect the stable writes flag on the RT device
-      https://git.kernel.org/vfs/vfs/c/60fc2887c158
