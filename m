@@ -2,85 +2,113 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 791C5C61D85
-	for <linux-xfs@archiver.kernel.org>; Tue, 21 Nov 2023 21:25:10 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 11044C61D85
+	for <linux-xfs@archiver.kernel.org>; Tue, 21 Nov 2023 23:37:49 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229498AbjKUVZM (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 21 Nov 2023 16:25:12 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54066 "EHLO
+        id S234600AbjKUXhu (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 21 Nov 2023 18:37:50 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56412 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229514AbjKUVZK (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 21 Nov 2023 16:25:10 -0500
-Received: from mail-pg1-x533.google.com (mail-pg1-x533.google.com [IPv6:2607:f8b0:4864:20::533])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C0E67DD
-        for <linux-xfs@vger.kernel.org>; Tue, 21 Nov 2023 13:25:05 -0800 (PST)
-Received: by mail-pg1-x533.google.com with SMTP id 41be03b00d2f7-5a9bc2ec556so3768616a12.0
-        for <linux-xfs@vger.kernel.org>; Tue, 21 Nov 2023 13:25:05 -0800 (PST)
+        with ESMTP id S229480AbjKUXht (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 21 Nov 2023 18:37:49 -0500
+Received: from mail-pf1-x434.google.com (mail-pf1-x434.google.com [IPv6:2607:f8b0:4864:20::434])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 48026199;
+        Tue, 21 Nov 2023 15:37:46 -0800 (PST)
+Received: by mail-pf1-x434.google.com with SMTP id d2e1a72fcca58-6c431b91b2aso5378678b3a.1;
+        Tue, 21 Nov 2023 15:37:46 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=fromorbit-com.20230601.gappssmtp.com; s=20230601; t=1700601905; x=1701206705; darn=vger.kernel.org;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
-        bh=J98HlUV5KlwcYiTod5JdOtOHbwusFVik73H7ba35F3c=;
-        b=Jv7KI2y1zIlhEuY5RY+U6F3H4+NHawqAGIcoXiso2w32QKFFncuviuJrZQX2vp/drR
-         kYFMCFHF8iTOlEi//++gsCt6idJgJejgd+ZwpfL+o6GAAL8q2RiYnjEuY5S4IQg6sLUe
-         tds38UlCSMY98q/S3p+NATBflSW2yX0WAhzlejwy1wPv11VC+dCUVM3hsSoYYwAuMIwm
-         aaDQy65iMIGxJ4c3rYRzE+9H37CSvPjLoTTPHBn7haLjvm019Hu+WbWWdxMUJlk2l50I
-         6K1UWdyIaCxMu6+90FnecrDS2aZltu81gFBs+aY6QpV82AtRXvwDXCZlx1SdTK4ffSer
-         YlyA==
+        d=gmail.com; s=20230601; t=1700609866; x=1701214666; darn=vger.kernel.org;
+        h=content-transfer-encoding:in-reply-to:from:references:cc:to
+         :content-language:subject:user-agent:mime-version:date:message-id
+         :from:to:cc:subject:date:message-id:reply-to;
+        bh=OBsM6IhveS+o7/r4qHHc1TgZJQzdQDusijV9f+awe9A=;
+        b=i+baoT7CVpQHwoxnw3QeUKOY2/8JslhpDRrWf+YUyqQQqIdtPC6mTWiD0Xat1R3Nzi
+         +JiBdsQLAVupy3IbFm5+41itKPn/RW3vl94xGYJd67DbjDMI2w/f3+UzPVL9eu8/gRl9
+         vH0cJ29LFSl85U5IQLE/O9jVXq3Pmk6lLrqR29ExLlXCKDduP27TXWJO91dNLM7kNDfY
+         BV9aDbBOb/P0CzA3IC20Phvq9GJGO9Sijtjxk9hSdiJnlzse4PDnUgCxXBJYXU8X81uC
+         alSE7MCeD2dz4XSMVavABUwFXkYBaIyNd+RxHaR65uiwMpXQdbkePz3knlM1LoAulCTG
+         2m4w==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1700601905; x=1701206705;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=J98HlUV5KlwcYiTod5JdOtOHbwusFVik73H7ba35F3c=;
-        b=toCfe3j9MlCMGUmhiweV0b8BnT6m7iyU5YbjcOeSTvK1HeH2v4+JwJduflzBiE5374
-         +wK+Y2fU7Ev++d8WnfZGS2/caXAYciaFkCUZQNhCA8yIVqiF5cnGURrZYJ4PgcsD0G+U
-         5JQH6KK4jjMQ6sl1tLhfS+5BHLyfuU0PgZ3rrTImnzulSiAkyiKGZVEeRrDQpsM2n0zq
-         J1Saw+OnevMPhIuIctN4shpw0TShXBgJ+Ir4eusKsdluzpppD6UkOCbObXm/cxjwmpLC
-         0/b/28P3UYd9ygSeaGiCQUo6sneaxd/XZZmaNXsR8oF+JpPVDyglfiG8ehKbYxMl5HiN
-         d9Eg==
-X-Gm-Message-State: AOJu0Yy/BdK9Vwmtwdw88naak5HxfOLamoNPVmiNle7bIxjkqLQWlo0e
-        4Vj2BelF4swtV61eQgK9VwIbNg==
-X-Google-Smtp-Source: AGHT+IHBk/g75B8eyx0c4CzaMrvWvgwsxxKgnD9ai3+OBa8Z6nMH+ItINn0eRFs7fCm5uBkCVSXyJQ==
-X-Received: by 2002:a17:903:228d:b0:1cf:591c:a8b1 with SMTP id b13-20020a170903228d00b001cf591ca8b1mr534848plh.15.1700601905187;
-        Tue, 21 Nov 2023 13:25:05 -0800 (PST)
-Received: from dread.disaster.area (pa49-180-125-5.pa.nsw.optusnet.com.au. [49.180.125.5])
-        by smtp.gmail.com with ESMTPSA id t1-20020a1709028c8100b001c452f827casm8345954plo.257.2023.11.21.13.25.04
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 21 Nov 2023 13:25:04 -0800 (PST)
-Received: from dave by dread.disaster.area with local (Exim 4.96)
-        (envelope-from <david@fromorbit.com>)
-        id 1r5YEw-00FjB9-11;
-        Wed, 22 Nov 2023 08:25:02 +1100
-Date:   Wed, 22 Nov 2023 08:25:02 +1100
-From:   Dave Chinner <david@fromorbit.com>
-To:     "Darrick J. Wong" <djwong@kernel.org>
-Cc:     chandanbabu@kernel.org, linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 2/2] xfs: dquot recovery does not validate the recovered
- dquot
-Message-ID: <ZV0gLtyxrbIsqBZx@dread.disaster.area>
-References: <170050509316.475996.582959032103929936.stgit@frogsfrogsfrogs>
- <170050510455.475996.9499832219704912265.stgit@frogsfrogsfrogs>
+        d=1e100.net; s=20230601; t=1700609866; x=1701214666;
+        h=content-transfer-encoding:in-reply-to:from:references:cc:to
+         :content-language:subject:user-agent:mime-version:date:message-id
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=OBsM6IhveS+o7/r4qHHc1TgZJQzdQDusijV9f+awe9A=;
+        b=N2A0fYrasSrh+HpS5NQVlMcw7NR56sW/ybQll/urQOMC7fUqxNLiNEmpGZFZPPjny1
+         BZ0c6TiAO43fNKB+5nRgprykHsoNKrtNozoVV8qa/DbkV5E/IbHJHWhCjZ/efj1nVmOq
+         Ond0mlTQhP6BA9UmOxS8zxvUVefbQ/vJDeUUzHGZ8zpw62c7VT+gIiR5YV7qOQFP73yX
+         HkDW/QSg+4up0QIBBPr9ddlrw1v157ZoP95BrO81VGsm9jSsDghCj6HIuv++v9Lib4wd
+         dLQSIBUDDN1eCHqt5KWITZOBnrE+IESnysZ/I4he2PQSa/UPy4UbFkJBbNvomA+OTlBR
+         x0mw==
+X-Gm-Message-State: AOJu0YwBlnt0Er2v6WZLJXJ7wmTDtX69EtswdypIiXJBf9AanJI8DmAi
+        1YJBKe109ir0I/mY4DaOxaU=
+X-Google-Smtp-Source: AGHT+IHylfg1T9X6BkuN5KOiJNcmxEeJ+UQfaRy0xEGLUcLwjosLbiBRBajuiM8h90cVFePNrmnm0g==
+X-Received: by 2002:a05:6a20:3944:b0:189:c852:562e with SMTP id r4-20020a056a20394400b00189c852562emr636458pzg.38.1700609865663;
+        Tue, 21 Nov 2023 15:37:45 -0800 (PST)
+Received: from [192.168.0.106] ([103.131.18.64])
+        by smtp.gmail.com with ESMTPSA id 5-20020a17090a19c500b0028098225450sm98849pjj.1.2023.11.21.15.37.41
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Tue, 21 Nov 2023 15:37:45 -0800 (PST)
+Message-ID: <a9abc5ec-f3cd-4a1a-81b9-a6900124d38b@gmail.com>
+Date:   Wed, 22 Nov 2023 06:37:39 +0700
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <170050510455.475996.9499832219704912265.stgit@frogsfrogsfrogs>
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH] Documentation: xfs: consolidate XFS docs into its own
+ subdirectory
+Content-Language: en-US
+To:     kernel test robot <lkp@intel.com>,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+        Linux Documentation <linux-doc@vger.kernel.org>,
+        Linux XFS <linux-xfs@vger.kernel.org>,
+        Linux Kernel Workflows <workflows@vger.kernel.org>
+Cc:     oe-kbuild-all@lists.linux.dev, Jonathan Corbet <corbet@lwn.net>,
+        Chandan Babu R <chandan.babu@oracle.com>,
+        "Darrick J. Wong" <djwong@kernel.org>,
+        Namjae Jeon <linkinjeon@kernel.org>,
+        Dave Chinner <dchinner@redhat.com>,
+        Steve French <stfrench@microsoft.com>,
+        "Matthew Wilcox (Oracle)" <willy@infradead.org>,
+        Allison Henderson <allison.henderson@oracle.com>,
+        Bjorn Helgaas <helgaas@kernel.org>,
+        Charles Han <hanchunchao@inspur.com>
+References: <20231121095658.28254-1-bagasdotme@gmail.com>
+ <202311220333.acL7LwXY-lkp@intel.com>
+From:   Bagas Sanjaya <bagasdotme@gmail.com>
+In-Reply-To: <202311220333.acL7LwXY-lkp@intel.com>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Mon, Nov 20, 2023 at 10:31:44AM -0800, Darrick J. Wong wrote:
-> From: Darrick J. Wong <djwong@kernel.org>
+On 11/22/23 03:04, kernel test robot wrote:
+> Hi Bagas,
 > 
-> When we're recovering ondisk quota records from the log, we need to
-> validate the recovered buffer contents before writing them to disk.
+> kernel test robot noticed the following build warnings:
 > 
-> Signed-off-by: Darrick J. Wong <djwong@kernel.org>
+> [auto build test WARNING on 98b1cc82c4affc16f5598d4fa14b1858671b2263]
+> 
+> url:    https://github.com/intel-lab-lkp/linux/commits/Bagas-Sanjaya/Documentation-xfs-consolidate-XFS-docs-into-its-own-subdirectory/20231121-180057
+> base:   98b1cc82c4affc16f5598d4fa14b1858671b2263
+> patch link:    https://lore.kernel.org/r/20231121095658.28254-1-bagasdotme%40gmail.com
+> patch subject: [PATCH] Documentation: xfs: consolidate XFS docs into its own subdirectory
+> reproduce: (https://download.01.org/0day-ci/archive/20231122/202311220333.acL7LwXY-lkp@intel.com/reproduce)
+> 
+> If you fix the issue in a separate patch/commit (i.e. not just a new version of
+> the same patch/commit), kindly add following tags
+> | Reported-by: kernel test robot <lkp@intel.com>
+> | Closes: https://lore.kernel.org/oe-kbuild-all/202311220333.acL7LwXY-lkp@intel.com/
+> 
+> All warnings (new ones prefixed by >>):
+> 
+>>> Warning: Documentation/filesystems/xfs/xfs-online-fsck-design.rst references a file that doesn't exist: Documentation/filesystems/xfs-self-describing-metadata.rst
+>>> Warning: MAINTAINERS references a file that doesn't exist: Documentation/filesystems/xfs-maintainer-entry-profile.rst
+>>> Warning: MAINTAINERS references a file that doesn't exist: Documentation/filesystems/xfs-*
+>>> MAINTAINERS:53207: WARNING: unknown document: ../filesystems/xfs-maintainer-entry-profile
+> 
 
-Yup, another verifier hole closed.
-
-Reviewed-by: Dave Chinner <dchinner@redhat.com>
+Oh dear, I didn't catch them when building locally. Will fix anyway.
 
 -- 
-Dave Chinner
-david@fromorbit.com
+An old man doll... just what I always wanted! - Clara
+
