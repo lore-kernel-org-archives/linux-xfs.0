@@ -2,100 +2,88 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 07459C61D96
-	for <linux-xfs@archiver.kernel.org>; Tue, 21 Nov 2023 20:05:21 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 681EAC61D85
+	for <linux-xfs@archiver.kernel.org>; Tue, 21 Nov 2023 21:22:01 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229514AbjKUUFX (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 21 Nov 2023 15:05:23 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56028 "EHLO
+        id S234799AbjKUVWD (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 21 Nov 2023 16:22:03 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37468 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229524AbjKUUFV (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 21 Nov 2023 15:05:21 -0500
-Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.8])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2DFE11A2;
-        Tue, 21 Nov 2023 12:05:17 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1700597117; x=1732133117;
-  h=date:from:to:cc:subject:message-id:references:
-   mime-version:in-reply-to;
-  bh=UCGmiu1nxzeNn+cEKPR0gIi35/992X5/vdcGhHlBNsM=;
-  b=kQLDQnTYg/OEBUl5BOXwzL6Ucey77hOaP5ke717dgAS1mCBDwm6ZMFf/
-   i+kGRxJSN+kr/BHKuzyZb/SduE9ri57oZ7c/tqxh7yOl5NGDJKmeEa/bI
-   yPOD6+oa5r6Bs/9fx/sFol0NHDGDFrxenh0EUejMtgFY2XlxU5t2Tp+w9
-   /YDYFS9JxW09o/OospAR6KU+vinTC0WEClYE6x/XOQoOkT09vs/AqtqJf
-   VWuJPmgVlYppiazlX4CAuKj+s58vWvyWe9Dnt18ZKfLXT5lnFGLrY8QVs
-   iBm2H5PQwGuXGaDZk/HdJ3QvMXZWhyenZbAcIQDthx/XlU9SHLEOvgzBk
-   A==;
-X-IronPort-AV: E=McAfee;i="6600,9927,10901"; a="5046569"
-X-IronPort-AV: E=Sophos;i="6.04,216,1695711600"; 
-   d="scan'208";a="5046569"
-Received: from orsmga001.jf.intel.com ([10.7.209.18])
-  by fmvoesa102.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 21 Nov 2023 12:05:17 -0800
-X-ExtLoop1: 1
-X-IronPort-AV: E=McAfee;i="6600,9927,10901"; a="801660239"
-X-IronPort-AV: E=Sophos;i="6.04,216,1695711600"; 
-   d="scan'208";a="801660239"
-Received: from lkp-server02.sh.intel.com (HELO b8de5498638e) ([10.239.97.151])
-  by orsmga001.jf.intel.com with ESMTP; 21 Nov 2023 12:05:12 -0800
-Received: from kbuild by b8de5498638e with local (Exim 4.96)
-        (envelope-from <lkp@intel.com>)
-        id 1r5Wzd-0008Cu-2v;
-        Tue, 21 Nov 2023 20:05:09 +0000
-Date:   Wed, 22 Nov 2023 04:04:48 +0800
-From:   kernel test robot <lkp@intel.com>
-To:     Bagas Sanjaya <bagasdotme@gmail.com>,
-        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-        Linux Documentation <linux-doc@vger.kernel.org>,
-        Linux XFS <linux-xfs@vger.kernel.org>,
-        Linux Kernel Workflows <workflows@vger.kernel.org>
-Cc:     oe-kbuild-all@lists.linux.dev, Jonathan Corbet <corbet@lwn.net>,
-        Chandan Babu R <chandan.babu@oracle.com>,
-        "Darrick J. Wong" <djwong@kernel.org>,
-        Bagas Sanjaya <bagasdotme@gmail.com>,
-        Namjae Jeon <linkinjeon@kernel.org>,
-        Dave Chinner <dchinner@redhat.com>,
-        Steve French <stfrench@microsoft.com>,
-        "Matthew Wilcox (Oracle)" <willy@infradead.org>,
-        Allison Henderson <allison.henderson@oracle.com>,
-        Bjorn Helgaas <helgaas@kernel.org>,
-        Charles Han <hanchunchao@inspur.com>
-Subject: Re: [PATCH] Documentation: xfs: consolidate XFS docs into its own
- subdirectory
-Message-ID: <202311220333.acL7LwXY-lkp@intel.com>
-References: <20231121095658.28254-1-bagasdotme@gmail.com>
+        with ESMTP id S234652AbjKUVVt (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 21 Nov 2023 16:21:49 -0500
+Received: from mail-pj1-x1033.google.com (mail-pj1-x1033.google.com [IPv6:2607:f8b0:4864:20::1033])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id BE7F31BE1
+        for <linux-xfs@vger.kernel.org>; Tue, 21 Nov 2023 13:21:20 -0800 (PST)
+Received: by mail-pj1-x1033.google.com with SMTP id 98e67ed59e1d1-27ff7fe7fbcso4689004a91.1
+        for <linux-xfs@vger.kernel.org>; Tue, 21 Nov 2023 13:21:20 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=fromorbit-com.20230601.gappssmtp.com; s=20230601; t=1700601680; x=1701206480; darn=vger.kernel.org;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
+        bh=IxuOhR39mBFuQZuchwvtqgVaUHlL9G67tC5DvCi1YTE=;
+        b=eu6POAvVZYgl1yJAIyrZPMpTD+adKMZwLcwzIaTrB6uu+6fwoaoC9Eb9c5BMyKMSRB
+         5kwapiADzVMHGasNO0LRPuJbBIbugKqSyOmAugx8z28nMmQTplKK6JJjNGV5HWz5lhC2
+         vW3yx+SV2NNOYFBkZL/W2k3pfyiYxR7eMDGB7vHOYdKB2mjWNa70yWWSfn/R+gXuqjfw
+         uvdMSay/5mTp3R0vRuyTeccORQmQfq2QyLqO1xxszgaWJp7aEY42H1xZ3XgKtvFNh3Vv
+         6W21FlBV9MQugWNrNTCr0zylc2Xzu3MkFEJm1etfKcf5chKqWDQ5M78Fah9hgHoYUVya
+         Fk2g==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1700601680; x=1701206480;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=IxuOhR39mBFuQZuchwvtqgVaUHlL9G67tC5DvCi1YTE=;
+        b=xMxQHaG6qJTKHZz4dCcV4y2D9X9g0I+oqlJxffwEKXeKVM1GsbYaUDpAZgrLrMxBRz
+         WqujecSsjqpebmWR1dMfERxU0gnliT/P5IHiSr5C+Rp07bB+yzWPKeLJkMV5Si+AA3pq
+         3s7k/hRY0jXWPSXnONbbwn4s8VJVcgjgFBorhrveEK05E7NcYeQct9nwc0d9HFqlxl2m
+         Wo/Z+yc4fiQ3143qnJYJPP6skBgNPwv8oQSmrVIsJZ6iYuM75RPW7bcdWpWVHIIwPRQg
+         nXkW6RzqjaBauo/pe9Xq3TGvKfKOP64Iho96f+r2oApkY6be3aNNCl317OpO5iz1xqnT
+         69cQ==
+X-Gm-Message-State: AOJu0YytsilComGIpvnNgIAly3WF6AKxgQcsvWhM9Vdzmi6sQS+mPFiF
+        XJdz1PE/9jGd+fB7IIgqzAb9Qw==
+X-Google-Smtp-Source: AGHT+IF5e+02NLRtayb+Xotj5d9pG4Vot1bxMiBkLzXL/fe5s6ebrXZ8A2LPI2Z+c6AcY+/Af/xpFg==
+X-Received: by 2002:a17:90b:38c9:b0:27d:3f0c:f087 with SMTP id nn9-20020a17090b38c900b0027d3f0cf087mr544672pjb.25.1700601680042;
+        Tue, 21 Nov 2023 13:21:20 -0800 (PST)
+Received: from dread.disaster.area (pa49-180-125-5.pa.nsw.optusnet.com.au. [49.180.125.5])
+        by smtp.gmail.com with ESMTPSA id 12-20020a17090a000c00b0028105e3c7d8sm10652680pja.0.2023.11.21.13.21.19
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Tue, 21 Nov 2023 13:21:19 -0800 (PST)
+Received: from dave by dread.disaster.area with local (Exim 4.96)
+        (envelope-from <david@fromorbit.com>)
+        id 1r5YBI-00Fj8C-24;
+        Wed, 22 Nov 2023 08:21:16 +1100
+Date:   Wed, 22 Nov 2023 08:21:16 +1100
+From:   Dave Chinner <david@fromorbit.com>
+To:     "Darrick J. Wong" <djwong@kernel.org>
+Cc:     chandanbabu@kernel.org, linux-xfs@vger.kernel.org
+Subject: Re: [PATCH 1/2] xfs: clean up dqblk extraction
+Message-ID: <ZV0fTCuv2ZNxtmvK@dread.disaster.area>
+References: <170050509316.475996.582959032103929936.stgit@frogsfrogsfrogs>
+ <170050509891.475996.3583155500177528277.stgit@frogsfrogsfrogs>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20231121095658.28254-1-bagasdotme@gmail.com>
+In-Reply-To: <170050509891.475996.3583155500177528277.stgit@frogsfrogsfrogs>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Hi Bagas,
+On Mon, Nov 20, 2023 at 10:31:38AM -0800, Darrick J. Wong wrote:
+> From: Darrick J. Wong <djwong@kernel.org>
+> 
+> Since the introduction of xfs_dqblk in V5, xfs really ought to find the
+> dqblk pointer from the dquot buffer, then compute the xfs_disk_dquot
+> pointer from the dqblk pointer.  Fix the open-coded xfs_buf_offset calls
+> and do the type checking in the correct order.
+> 
+> Note that this has made no practical difference since the start of the
+> xfs_disk_dquot is coincident with the start of the xfs_dqblk.
+> 
+> Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 
-kernel test robot noticed the following build warnings:
+Looks good.
 
-[auto build test WARNING on 98b1cc82c4affc16f5598d4fa14b1858671b2263]
-
-url:    https://github.com/intel-lab-lkp/linux/commits/Bagas-Sanjaya/Documentation-xfs-consolidate-XFS-docs-into-its-own-subdirectory/20231121-180057
-base:   98b1cc82c4affc16f5598d4fa14b1858671b2263
-patch link:    https://lore.kernel.org/r/20231121095658.28254-1-bagasdotme%40gmail.com
-patch subject: [PATCH] Documentation: xfs: consolidate XFS docs into its own subdirectory
-reproduce: (https://download.01.org/0day-ci/archive/20231122/202311220333.acL7LwXY-lkp@intel.com/reproduce)
-
-If you fix the issue in a separate patch/commit (i.e. not just a new version of
-the same patch/commit), kindly add following tags
-| Reported-by: kernel test robot <lkp@intel.com>
-| Closes: https://lore.kernel.org/oe-kbuild-all/202311220333.acL7LwXY-lkp@intel.com/
-
-All warnings (new ones prefixed by >>):
-
->> Warning: Documentation/filesystems/xfs/xfs-online-fsck-design.rst references a file that doesn't exist: Documentation/filesystems/xfs-self-describing-metadata.rst
->> Warning: MAINTAINERS references a file that doesn't exist: Documentation/filesystems/xfs-maintainer-entry-profile.rst
->> Warning: MAINTAINERS references a file that doesn't exist: Documentation/filesystems/xfs-*
->> MAINTAINERS:53207: WARNING: unknown document: ../filesystems/xfs-maintainer-entry-profile
-
+Reviewed-by: Dave Chinner <dchinner@redhat.com>
 -- 
-0-DAY CI Kernel Test Service
-https://github.com/intel/lkp-tests/wiki
+Dave Chinner
+david@fromorbit.com
