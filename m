@@ -2,36 +2,36 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3269FC61D97
-	for <linux-xfs@archiver.kernel.org>; Wed, 22 Nov 2023 23:06:58 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 192E1C61D97
+	for <linux-xfs@archiver.kernel.org>; Wed, 22 Nov 2023 23:07:04 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231623AbjKVXG7 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 22 Nov 2023 18:06:59 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48556 "EHLO
+        id S233574AbjKVXHF (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 22 Nov 2023 18:07:05 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54532 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229879AbjKVXG6 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 22 Nov 2023 18:06:58 -0500
+        with ESMTP id S229879AbjKVXHE (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 22 Nov 2023 18:07:04 -0500
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id DA821D8
-        for <linux-xfs@vger.kernel.org>; Wed, 22 Nov 2023 15:06:54 -0800 (PST)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 7B0C2C433C7;
-        Wed, 22 Nov 2023 23:06:54 +0000 (UTC)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9867910E
+        for <linux-xfs@vger.kernel.org>; Wed, 22 Nov 2023 15:07:00 -0800 (PST)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 31034C433C8;
+        Wed, 22 Nov 2023 23:07:00 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1700694414;
-        bh=XynHzj6h44ZdsvK8cBT1mwhwTjH+Rk63srZZ6LTyCzk=;
+        s=k20201202; t=1700694420;
+        bh=DYzmwUo3DJJMVUy0AY0F0qZ2TlTaf00KTyU2pPyU/FM=;
         h=Subject:From:To:Cc:Date:In-Reply-To:References:From;
-        b=mHYlPh4WYM9fyuEGFzXQJmMdkjBhstIAFD2DwASeufy0X4QQfBysvqpOE9tdfyidk
-         FMXYB1Lcq5LGboPrnopn0G1zfNUaJm5fgWhJynQhrpS/mCImq85rfOHnuWhFQ2N3LE
-         4GXVx91zKVFUh2ocxeMaPn4fPJ9+JvoaZMpVUO7roYCEeonVNuS4+sIpQH38bbTb6v
-         A9hWhoqzfKE2TidmaL/3mJir5fehJr6rZTr9rsrw4x1P4Uuyj2AMCTjnMDuez5JIAc
-         scDWBTVG/U9UM7cpSrxwFkgDYXQBWHb7Oq1nZPpsdaNhCqd7VGyxnC3sGeBw3h7K8L
-         YhyRoUjaAFZGA==
-Subject: [PATCH 1/9] libfrog: move 64-bit division wrappers to libfrog
+        b=I4hHaSEKO4Ak9dOQZjFUKrrUgh3UUx0b84EcXZW+rv72OQf0oIw2nghtpjo5MDKpR
+         fP4DVBFps+YZAF0yLkE9WdNQTTueA6gEXRyrNght5BcLjttmxZ5H2TbvAqJW+Ayani
+         J6Y1aSQQ267Yb+UCHQcWbx/Ue1tC/vUY2aQZuJO1WmzIECbobwoUFzQeEw6CV3sEz4
+         z6bzKl1ha2g+hNgEayKmf9sVc20Qn6ufvLVrnbabGjNizXvLI8l7nAW37GQUzJyOuA
+         /qWEvC/GOTD0gZEaJsYkw7bgo0AHyly7m29R7f/xWP/AJx1R+fCLmS4jO5Vt78mSnu
+         yYw57AEDtqiwA==
+Subject: [PATCH 2/9] libxfs: don't UAF a requeued EFI
 From:   "Darrick J. Wong" <djwong@kernel.org>
 To:     djwong@kernel.org, cem@kernel.org
 Cc:     linux-xfs@vger.kernel.org
-Date:   Wed, 22 Nov 2023 15:06:54 -0800
-Message-ID: <170069441404.1865809.15599372422489523965.stgit@frogsfrogsfrogs>
+Date:   Wed, 22 Nov 2023 15:06:59 -0800
+Message-ID: <170069441966.1865809.4282467818590298794.stgit@frogsfrogsfrogs>
 In-Reply-To: <170069440815.1865809.15572181471511196657.stgit@frogsfrogsfrogs>
 References: <170069440815.1865809.15572181471511196657.stgit@frogsfrogsfrogs>
 User-Agent: StGit/0.19
@@ -44,245 +44,44 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-We want to keep the rtgroup unit conversion functions as static inlines,
-so share the div64 functions via libfrog instead of libxfs_priv.h.
+In the kernel, commit 8ebbf262d4684 ("xfs: don't block in busy flushing
+when freeing extents") changed the allocator behavior such that AGFL
+fixing can return -EAGAIN in response to detection of a deadlock with
+the transaction busy extent list.  If this happens, we're supposed to
+requeue the EFI so that we can roll the transaction and try the item
+again.
+
+If a requeue happens, we should not free the xefi pointer in
+xfs_extent_free_finish_item or else the retry will walk off a dangling
+pointer.  There is no extent busy list in userspace so this should
+never happen, but let's fix the logic bomb anyway.
+
+We should have ported kernel commit 0853b5de42b47 ("xfs: allow extent
+free intents to be retried") to userspace, but neither Carlos nor I
+noticed this fine detail. :(
 
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 ---
- include/libxfs.h     |    1 +
- libfrog/Makefile     |    1 +
- libfrog/div64.h      |   96 ++++++++++++++++++++++++++++++++++++++++++++++++++
- libxfs/libxfs_priv.h |   77 +---------------------------------------
- 4 files changed, 99 insertions(+), 76 deletions(-)
- create mode 100644 libfrog/div64.h
+ libxfs/defer_item.c |    7 +++++++
+ 1 file changed, 7 insertions(+)
 
 
-diff --git a/include/libxfs.h b/include/libxfs.h
-index b28781d19d3..a6a5f66f28d 100644
---- a/include/libxfs.h
-+++ b/include/libxfs.h
-@@ -18,6 +18,7 @@
- #include "kmem.h"
- #include "libfrog/radix-tree.h"
- #include "libfrog/bitmask.h"
-+#include "libfrog/div64.h"
- #include "atomic.h"
- #include "spinlock.h"
+diff --git a/libxfs/defer_item.c b/libxfs/defer_item.c
+index 3f519252046..8731d1834be 100644
+--- a/libxfs/defer_item.c
++++ b/libxfs/defer_item.c
+@@ -115,6 +115,13 @@ xfs_extent_free_finish_item(
+ 	error = xfs_free_extent(tp, xefi->xefi_pag, agbno,
+ 			xefi->xefi_blockcount, &oinfo, XFS_AG_RESV_NONE);
  
-diff --git a/libfrog/Makefile b/libfrog/Makefile
-index 8cde97d418f..dcfd1fb8a93 100644
---- a/libfrog/Makefile
-+++ b/libfrog/Makefile
-@@ -41,6 +41,7 @@ crc32cselftest.h \
- crc32defs.h \
- crc32table.h \
- dahashselftest.h \
-+div64.h \
- fsgeom.h \
- logging.h \
- paths.h \
-diff --git a/libfrog/div64.h b/libfrog/div64.h
-new file mode 100644
-index 00000000000..673b01cbab3
---- /dev/null
-+++ b/libfrog/div64.h
-@@ -0,0 +1,96 @@
-+// SPDX-License-Identifier: GPL-2.0
-+/*
-+ * Copyright (c) 2000-2005 Silicon Graphics, Inc.
-+ * All Rights Reserved.
-+ */
-+#ifndef LIBFROG_DIV64_H_
-+#define LIBFROG_DIV64_H_
++	/*
++	 * Don't free the XEFI if we need a new transaction to complete
++	 * processing of it.
++	 */
++	if (error == -EAGAIN)
++		return error;
 +
-+static inline int __do_div(unsigned long long *n, unsigned base)
-+{
-+	int __res;
-+	__res = (int)(((unsigned long) *n) % (unsigned) base);
-+	*n = ((unsigned long) *n) / (unsigned) base;
-+	return __res;
-+}
-+
-+#define do_div(n,base)	(__do_div((unsigned long long *)&(n), (base)))
-+#define do_mod(a, b)		((a) % (b))
-+#define rol32(x,y)		(((x) << (y)) | ((x) >> (32 - (y))))
-+
-+/**
-+ * div_u64_rem - unsigned 64bit divide with 32bit divisor with remainder
-+ * @dividend: unsigned 64bit dividend
-+ * @divisor: unsigned 32bit divisor
-+ * @remainder: pointer to unsigned 32bit remainder
-+ *
-+ * Return: sets ``*remainder``, then returns dividend / divisor
-+ *
-+ * This is commonly provided by 32bit archs to provide an optimized 64bit
-+ * divide.
-+ */
-+static inline uint64_t
-+div_u64_rem(uint64_t dividend, uint32_t divisor, uint32_t *remainder)
-+{
-+	*remainder = dividend % divisor;
-+	return dividend / divisor;
-+}
-+
-+/**
-+ * div_u64 - unsigned 64bit divide with 32bit divisor
-+ * @dividend: unsigned 64bit dividend
-+ * @divisor: unsigned 32bit divisor
-+ *
-+ * This is the most common 64bit divide and should be used if possible,
-+ * as many 32bit archs can optimize this variant better than a full 64bit
-+ * divide.
-+ */
-+static inline uint64_t div_u64(uint64_t dividend, uint32_t divisor)
-+{
-+	uint32_t remainder;
-+	return div_u64_rem(dividend, divisor, &remainder);
-+}
-+
-+/**
-+ * div64_u64_rem - unsigned 64bit divide with 64bit divisor and remainder
-+ * @dividend: unsigned 64bit dividend
-+ * @divisor: unsigned 64bit divisor
-+ * @remainder: pointer to unsigned 64bit remainder
-+ *
-+ * Return: sets ``*remainder``, then returns dividend / divisor
-+ */
-+static inline uint64_t
-+div64_u64_rem(uint64_t dividend, uint64_t divisor, uint64_t *remainder)
-+{
-+	*remainder = dividend % divisor;
-+	return dividend / divisor;
-+}
-+
-+static inline uint64_t rounddown_64(uint64_t x, uint32_t y)
-+{
-+	do_div(x, y);
-+	return x * y;
-+}
-+
-+static inline bool isaligned_64(uint64_t x, uint32_t y)
-+{
-+	return do_div(x, y) == 0;
-+}
-+
-+static inline uint64_t
-+roundup_64(uint64_t x, uint32_t y)
-+{
-+	x += y - 1;
-+	do_div(x, y);
-+	return x * y;
-+}
-+
-+static inline uint64_t
-+howmany_64(uint64_t x, uint32_t y)
-+{
-+	x += y - 1;
-+	do_div(x, y);
-+	return x;
-+}
-+
-+#endif /* LIBFROG_DIV64_H_ */
-diff --git a/libxfs/libxfs_priv.h b/libxfs/libxfs_priv.h
-index 2729241bdaa..5a7decf970e 100644
---- a/libxfs/libxfs_priv.h
-+++ b/libxfs/libxfs_priv.h
-@@ -48,6 +48,7 @@
- #include "kmem.h"
- #include "libfrog/radix-tree.h"
- #include "libfrog/bitmask.h"
-+#include "libfrog/div64.h"
- #include "atomic.h"
- #include "spinlock.h"
- #include "linux-err.h"
-@@ -215,66 +216,6 @@ static inline bool WARN_ON(bool expr) {
- 	(inode)->i_version = (version);	\
- } while (0)
- 
--static inline int __do_div(unsigned long long *n, unsigned base)
--{
--	int __res;
--	__res = (int)(((unsigned long) *n) % (unsigned) base);
--	*n = ((unsigned long) *n) / (unsigned) base;
--	return __res;
--}
--
--#define do_div(n,base)	(__do_div((unsigned long long *)&(n), (base)))
--#define do_mod(a, b)		((a) % (b))
--#define rol32(x,y)		(((x) << (y)) | ((x) >> (32 - (y))))
--
--/**
-- * div_u64_rem - unsigned 64bit divide with 32bit divisor with remainder
-- * @dividend: unsigned 64bit dividend
-- * @divisor: unsigned 32bit divisor
-- * @remainder: pointer to unsigned 32bit remainder
-- *
-- * Return: sets ``*remainder``, then returns dividend / divisor
-- *
-- * This is commonly provided by 32bit archs to provide an optimized 64bit
-- * divide.
-- */
--static inline uint64_t
--div_u64_rem(uint64_t dividend, uint32_t divisor, uint32_t *remainder)
--{
--	*remainder = dividend % divisor;
--	return dividend / divisor;
--}
--
--/**
-- * div_u64 - unsigned 64bit divide with 32bit divisor
-- * @dividend: unsigned 64bit dividend
-- * @divisor: unsigned 32bit divisor
-- *
-- * This is the most common 64bit divide and should be used if possible,
-- * as many 32bit archs can optimize this variant better than a full 64bit
-- * divide.
-- */
--static inline uint64_t div_u64(uint64_t dividend, uint32_t divisor)
--{
--	uint32_t remainder;
--	return div_u64_rem(dividend, divisor, &remainder);
--}
--
--/**
-- * div64_u64_rem - unsigned 64bit divide with 64bit divisor and remainder
-- * @dividend: unsigned 64bit dividend
-- * @divisor: unsigned 64bit divisor
-- * @remainder: pointer to unsigned 64bit remainder
-- *
-- * Return: sets ``*remainder``, then returns dividend / divisor
-- */
--static inline uint64_t
--div64_u64_rem(uint64_t dividend, uint64_t divisor, uint64_t *remainder)
--{
--	*remainder = dividend % divisor;
--	return dividend / divisor;
--}
--
- #define min_t(type,x,y) \
- 	({ type __x = (x); type __y = (y); __x < __y ? __x: __y; })
- #define max_t(type,x,y) \
-@@ -380,22 +321,6 @@ roundup_pow_of_two(uint v)
- 	return 0;
- }
- 
--static inline uint64_t
--roundup_64(uint64_t x, uint32_t y)
--{
--	x += y - 1;
--	do_div(x, y);
--	return x * y;
--}
--
--static inline uint64_t
--howmany_64(uint64_t x, uint32_t y)
--{
--	x += y - 1;
--	do_div(x, y);
--	return x;
--}
--
- /* buffer management */
- #define XBF_TRYLOCK			0
- #define XBF_UNMAPPED			0
+ 	xfs_extent_free_put_group(xefi);
+ 	kmem_cache_free(xfs_extfree_item_cache, xefi);
+ 	return error;
 
