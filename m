@@ -2,36 +2,36 @@ Return-Path: <linux-xfs-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 192E1C61D97
-	for <linux-xfs@archiver.kernel.org>; Wed, 22 Nov 2023 23:07:04 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8B753C61D97
+	for <linux-xfs@archiver.kernel.org>; Wed, 22 Nov 2023 23:07:09 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233574AbjKVXHF (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 22 Nov 2023 18:07:05 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54532 "EHLO
+        id S229879AbjKVXHL (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 22 Nov 2023 18:07:11 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54574 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229879AbjKVXHE (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 22 Nov 2023 18:07:04 -0500
+        with ESMTP id S234558AbjKVXHK (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 22 Nov 2023 18:07:10 -0500
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9867910E
-        for <linux-xfs@vger.kernel.org>; Wed, 22 Nov 2023 15:07:00 -0800 (PST)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 31034C433C8;
-        Wed, 22 Nov 2023 23:07:00 +0000 (UTC)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3CCAB1AE
+        for <linux-xfs@vger.kernel.org>; Wed, 22 Nov 2023 15:07:06 -0800 (PST)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id C3857C433C8;
+        Wed, 22 Nov 2023 23:07:05 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1700694420;
-        bh=DYzmwUo3DJJMVUy0AY0F0qZ2TlTaf00KTyU2pPyU/FM=;
+        s=k20201202; t=1700694425;
+        bh=2yl6rq9YSI9sJXut4EB7KV7Qi6eRm6WvUSm1IemLCgI=;
         h=Subject:From:To:Cc:Date:In-Reply-To:References:From;
-        b=I4hHaSEKO4Ak9dOQZjFUKrrUgh3UUx0b84EcXZW+rv72OQf0oIw2nghtpjo5MDKpR
-         fP4DVBFps+YZAF0yLkE9WdNQTTueA6gEXRyrNght5BcLjttmxZ5H2TbvAqJW+Ayani
-         J6Y1aSQQ267Yb+UCHQcWbx/Ue1tC/vUY2aQZuJO1WmzIECbobwoUFzQeEw6CV3sEz4
-         z6bzKl1ha2g+hNgEayKmf9sVc20Qn6ufvLVrnbabGjNizXvLI8l7nAW37GQUzJyOuA
-         /qWEvC/GOTD0gZEaJsYkw7bgo0AHyly7m29R7f/xWP/AJx1R+fCLmS4jO5Vt78mSnu
-         yYw57AEDtqiwA==
-Subject: [PATCH 2/9] libxfs: don't UAF a requeued EFI
+        b=X+d1sqVeohlybLKoSEIXu4gzlWOhsazxmtF0OpU9WjGhr67lUAANvuCIid8In+NkF
+         J3TXapzpXmbqzPgPPSs4GkAYqFacGUJa5RU8QP8KL7xfdDRmnBhZD7f58xPy0uptNZ
+         5duanht5Nj7cZmskIcEblk2WhS0xm1+gY6qlVeM5s9RaLmBSBNDqOtgtWqJWgugBIL
+         JeeVMzTOXzaELoJYqtoql9+w9ROplrueIRK34u8woeL+DR+hIbOxzehPwRM3f9I6Hl
+         YRogZeI2f426RCHab6Glt52BV+sStW2obF14Ayp6ptMarqyAWLJ7+bzlJUTEex3btI
+         sItq0o9/sry9A==
+Subject: [PATCH 3/9] xfs_copy: actually do directio writes to block devices
 From:   "Darrick J. Wong" <djwong@kernel.org>
 To:     djwong@kernel.org, cem@kernel.org
 Cc:     linux-xfs@vger.kernel.org
-Date:   Wed, 22 Nov 2023 15:06:59 -0800
-Message-ID: <170069441966.1865809.4282467818590298794.stgit@frogsfrogsfrogs>
+Date:   Wed, 22 Nov 2023 15:07:05 -0800
+Message-ID: <170069442535.1865809.15981356020247666131.stgit@frogsfrogsfrogs>
 In-Reply-To: <170069440815.1865809.15572181471511196657.stgit@frogsfrogsfrogs>
 References: <170069440815.1865809.15572181471511196657.stgit@frogsfrogsfrogs>
 User-Agent: StGit/0.19
@@ -44,44 +44,54 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-In the kernel, commit 8ebbf262d4684 ("xfs: don't block in busy flushing
-when freeing extents") changed the allocator behavior such that AGFL
-fixing can return -EAGAIN in response to detection of a deadlock with
-the transaction busy extent list.  If this happens, we're supposed to
-requeue the EFI so that we can roll the transaction and try the item
-again.
-
-If a requeue happens, we should not free the xefi pointer in
-xfs_extent_free_finish_item or else the retry will walk off a dangling
-pointer.  There is no extent busy list in userspace so this should
-never happen, but let's fix the logic bomb anyway.
-
-We should have ported kernel commit 0853b5de42b47 ("xfs: allow extent
-free intents to be retried") to userspace, but neither Carlos nor I
-noticed this fine detail. :(
+Not sure why block device targets don't get O_DIRECT in !buffered mode,
+but it's misleading when the copy completes instantly only to stall
+forever due to fsync-on-close.  Adjust the "write last sector" code to
+allocate a properly aligned buffer.
 
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 ---
- libxfs/defer_item.c |    7 +++++++
- 1 file changed, 7 insertions(+)
+ copy/xfs_copy.c |   10 +++++++---
+ 1 file changed, 7 insertions(+), 3 deletions(-)
 
 
-diff --git a/libxfs/defer_item.c b/libxfs/defer_item.c
-index 3f519252046..8731d1834be 100644
---- a/libxfs/defer_item.c
-+++ b/libxfs/defer_item.c
-@@ -115,6 +115,13 @@ xfs_extent_free_finish_item(
- 	error = xfs_free_extent(tp, xefi->xefi_pag, agbno,
- 			xefi->xefi_blockcount, &oinfo, XFS_AG_RESV_NONE);
+diff --git a/copy/xfs_copy.c b/copy/xfs_copy.c
+index 79f65946709..26de6b2ee1c 100644
+--- a/copy/xfs_copy.c
++++ b/copy/xfs_copy.c
+@@ -854,6 +854,8 @@ main(int argc, char **argv)
+ 					progname, target[i].name, progname);
+ 				exit(1);
+ 			}
++			if (!buffered_output)
++				open_flags |= O_DIRECT;
+ 		}
  
-+	/*
-+	 * Don't free the XEFI if we need a new transaction to complete
-+	 * processing of it.
-+	 */
-+	if (error == -EAGAIN)
-+		return error;
-+
- 	xfs_extent_free_put_group(xefi);
- 	kmem_cache_free(xfs_extfree_item_cache, xefi);
- 	return error;
+ 		target[i].fd = open(target[i].name, open_flags, 0644);
+@@ -887,20 +889,22 @@ main(int argc, char **argv)
+ 				}
+ 			}
+ 		} else  {
+-			char	*lb[XFS_MAX_SECTORSIZE] = { NULL };
++			char	*lb = memalign(wbuf_align, XFS_MAX_SECTORSIZE);
+ 			off64_t	off;
+ 
+ 			/* ensure device files are sufficiently large */
++			memset(lb, 0, XFS_MAX_SECTORSIZE);
+ 
+ 			off = mp->m_sb.sb_dblocks * source_blocksize;
+-			off -= sizeof(lb);
+-			if (pwrite(target[i].fd, lb, sizeof(lb), off) < 0)  {
++			off -= XFS_MAX_SECTORSIZE;
++			if (pwrite(target[i].fd, lb, XFS_MAX_SECTORSIZE, off) < 0)  {
+ 				do_log(_("%s:  failed to write last block\n"),
+ 					progname);
+ 				do_log(_("\tIs target \"%s\" too small?\n"),
+ 					target[i].name);
+ 				die_perror();
+ 			}
++			free(lb);
+ 		}
+ 	}
+ 
 
