@@ -1,145 +1,73 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0161253B3
-	for <linux-xfs@vger.kernel.org>; Fri, 24 Nov 2023 09:16:33 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5D4C6171A4;
+	Fri, 24 Nov 2023 23:30:57 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="SoYUYKwC"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 52C2AC433C7;
-	Fri, 24 Nov 2023 09:16:33 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="IKB5kkOA"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id D1DFCC433C8;
+	Fri, 24 Nov 2023 23:30:56 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1700817393;
-	bh=4rsAAkxi3CfaH/XBQkhGguZZMM9qt5c3r7zISrY8X00=;
-	h=References:From:To:Cc:Subject:Date:In-reply-to:From;
-	b=SoYUYKwCOgP0pjWKEKjT6zlx6Va9kjapOxAl4EoPMTl52Sz8O6lZ66rq3m4Vu2ZRF
-	 vEtEU6aYnw6TapTY4hPPxZrhLabkPOKt3y1PHRNCSXmcsK8AQaPizjutmOGoUD32de
-	 jgENWi4KIpRuATyvoqZt/xYw0ZueDpi5c5KA3E/4bftGWyaGf60faJNGls4aRiprG7
-	 Jja4c+caTPJGfm6Xs6QaPgXAW9iCqJG6yIeLF6uOHOV+xyYt+gi/IRGA93iVEeg4E8
-	 FkdeSD0yVhaw7e9RX/b/6HS3Lh6bsGLGwxjnxBkqfVgQRB8Z891OClXcO0ydPL+kej
-	 8G/TOKIPq/+GA==
-References: <170069440815.1865809.15572181471511196657.stgit@frogsfrogsfrogs>
- <170069445938.1865809.2272471874760042809.stgit@frogsfrogsfrogs>
-User-agent: mu4e 1.8.10; emacs 27.1
-From: Chandan Babu R <chandanbabu@kernel.org>
-To: "Darrick J. Wong" <djwong@kernel.org>
-Cc: cem@kernel.org, linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 9/9] xfs_mdrestore: fix missed progress reporting
-Date: Fri, 24 Nov 2023 14:44:31 +0530
-In-reply-to: <170069445938.1865809.2272471874760042809.stgit@frogsfrogsfrogs>
-Message-ID: <874jhbwlxs.fsf@debian-BULLSEYE-live-builder-AMD64>
+	s=k20201202; t=1700868656;
+	bh=t45L2cR6WsMeQVkO+rF2xoZAYVELMmfW6YLlhdfc/LM=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=IKB5kkOA7/uoP3ChC1UFTfFRUQRkiABc1n6UBo9BEG5UmDUAslrr+82HANpQ8IvxS
+	 7p+Foq2BrpCLZ8onXEoC5N+RSQSZ7sf+KQh+0+qMTKXmCNCzt4DNue3KK7H3IkxDO5
+	 FbhBoOR5DdiRtKXEhQavJMCrEztbiwUZzp/RvBHYjPTvD8igZ45oKJreR8qPmkc0tA
+	 X/pq5M+3fdUZ5uAzpQ95GjI31yJzZT5/Bx3pO2fz0n68pbp+X8yZKfLASTl/3aP0Zp
+	 SLBqQ6wKPYzuidoorcp+fv+Gpaxn2o/6oLJWsYXqScF+kOLeWFwG1ShubWMXj7AAqy
+	 W9NnwimBvwUtQ==
+Date: Fri, 24 Nov 2023 15:30:56 -0800
+From: "Darrick J. Wong" <djwong@kernel.org>
+To: Dave Chinner <david@fromorbit.com>,
+	Chandan Babu R <chandanbabu@kernel.org>
+Cc: xfs <linux-xfs@vger.kernel.org>,
+	linux-fsdevel <linux-fsdevel@vger.kernel.org>,
+	Carlos Maiolino <cmaiolino@redhat.com>,
+	Catherine Hoang <catherine.hoang@oracle.com>
+Subject: [MEGAPATCHSET v28] xfs: online repair, second part of part 1
+Message-ID: <20231124233056.GH36190@frogsfrogsfrogs>
+References: <20230926231410.GF11439@frogsfrogsfrogs>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20230926231410.GF11439@frogsfrogsfrogs>
 
-On Wed, Nov 22, 2023 at 03:07:39 PM -0800, Darrick J. Wong wrote:
-> From: Darrick J. Wong <djwong@kernel.org>
->
-> Currently, the progress reporting only triggers when the number of bytes
-> read is exactly a multiple of a megabyte.  This isn't always guaranteed,
-> since AG headers can be 512 bytes in size.  Fix the algorithm by
-> recording the number of megabytes we've reported as being read, and emit
-> a new report any time the bytes_read count, once converted to megabytes,
-> doesn't match.
->
-> Fix the v2 code to emit one final status message in case the last
-> extent restored is more than a megabyte.
+Hi everyone,
 
-Looks good to me.
+I've rebased the online fsck development branches atop 6.7, applied the
+changes requested during the review of v27, and reworked the automatic
+space reaping code to avoid open-coding EFI log item handling, and
+cleaned up a few other things.
 
-Reviewed-by: Chandan Babu R <chandanbabu@kernel.org>
+In other words, I'm formally submitting part 1 for inclusion in 6.8.
 
-Thanks especially for fixing all the bugs in metadump & mdrestore.
+Just like the last several submissions, I would like people to focus the
+following:
 
->
-> Signed-off-by: Darrick J. Wong <djwong@kernel.org>
-> ---
->  mdrestore/xfs_mdrestore.c |   25 +++++++++++++++++++------
->  1 file changed, 19 insertions(+), 6 deletions(-)
->
->
-> diff --git a/mdrestore/xfs_mdrestore.c b/mdrestore/xfs_mdrestore.c
-> index 3f761e8fe8d..ab9a44d2118 100644
-> --- a/mdrestore/xfs_mdrestore.c
-> +++ b/mdrestore/xfs_mdrestore.c
-> @@ -7,6 +7,7 @@
->  #include "libxfs.h"
->  #include "xfs_metadump.h"
->  #include <libfrog/platform.h>
-> +#include "libfrog/div64.h"
->  
->  union mdrestore_headers {
->  	__be32				magic;
-> @@ -160,6 +161,7 @@ restore_v1(
->  	int			mb_count;
->  	xfs_sb_t		sb;
->  	int64_t			bytes_read;
-> +	int64_t			mb_read = 0;
->  
->  	block_size = 1 << h->v1.mb_blocklog;
->  	max_indices = (block_size - sizeof(xfs_metablock_t)) / sizeof(__be64);
-> @@ -208,9 +210,14 @@ restore_v1(
->  	bytes_read = 0;
->  
->  	for (;;) {
-> -		if (mdrestore.show_progress &&
-> -		    (bytes_read & ((1 << 20) - 1)) == 0)
-> -			print_progress("%lld MB read", bytes_read >> 20);
-> +		if (mdrestore.show_progress) {
-> +			int64_t		mb_now = bytes_read >> 20;
-> +
-> +			if (mb_now != mb_read) {
-> +				print_progress("%lld MB read", mb_now);
-> +				mb_read = mb_now;
-> +			}
-> +		}
->  
->  		for (cur_index = 0; cur_index < mb_count; cur_index++) {
->  			if (pwrite(ddev_fd, &block_buffer[cur_index <<
-> @@ -240,6 +247,9 @@ restore_v1(
->  		bytes_read += block_size + (mb_count << h->v1.mb_blocklog);
->  	}
->  
-> +	if (mdrestore.show_progress && bytes_read > (mb_read << 20))
-> +		print_progress("%lld MB read", howmany_64(bytes_read, 1U << 20));
-> +
->  	if (mdrestore.progress_since_warning)
->  		putchar('\n');
->  
-> @@ -340,6 +350,7 @@ restore_v2(
->  	struct xfs_sb		sb;
->  	struct xfs_meta_extent	xme;
->  	char			*block_buffer;
-> +	int64_t			mb_read = 0;
->  	int64_t			bytes_read;
->  	uint64_t		offset;
->  	int			len;
-> @@ -416,16 +427,18 @@ restore_v2(
->  		bytes_read += len;
->  
->  		if (mdrestore.show_progress) {
-> -			static int64_t mb_read;
-> -			int64_t mb_now = bytes_read >> 20;
-> +			int64_t	mb_now = bytes_read >> 20;
->  
->  			if (mb_now != mb_read) {
-> -				print_progress("%lld MB read", mb_now);
-> +				print_progress("%lld mb read", mb_now);
->  				mb_read = mb_now;
->  			}
->  		}
->  	} while (1);
->  
-> +	if (mdrestore.show_progress && bytes_read > (mb_read << 20))
-> +		print_progress("%lld mb read", howmany_64(bytes_read, 1U << 20));
-> +
->  	if (mdrestore.progress_since_warning)
->  		putchar('\n');
->  
+- Are the major subsystems sufficiently documented that you could figure
+  out what the code does?
 
+- Do you see any problems that are severe enough to cause long term
+  support hassles? (e.g. bad API design, writing weird metadata to disk)
 
--- 
-Chandan
+- Can you spot mis-interactions between the subsystems?
+
+- What were my blind spots in devising this feature?
+
+- Are there missing pieces that you'd like to help build?
+
+- Can I just merge all of this?
+
+The one thing that is /not/ in scope for this review are requests for
+more refactoring of existing subsystems.  I'm still running QA round the
+clock.  To spare vger, I'm only sending a few patchsets this time.  I
+will of course stress test the new mailing infrastructure on 31 Dec with
+a full posting, like I always do.
+
+--D
