@@ -1,28 +1,28 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2484A3BB2A
-	for <linux-xfs@vger.kernel.org>; Fri, 24 Nov 2023 23:47:26 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B94FF2C86B
+	for <linux-xfs@vger.kernel.org>; Fri, 24 Nov 2023 23:47:41 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="CU/pqnJT"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id DDFBDC433C7;
-	Fri, 24 Nov 2023 23:47:25 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="pmJ+yqPI"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 876BBC433C8;
+	Fri, 24 Nov 2023 23:47:41 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1700869646;
-	bh=52DvklFKcgEtkwn1pwM6+uDHPgg4a0/MoCGkIT3zOrs=;
+	s=k20201202; t=1700869661;
+	bh=QirfhiiShyfDAlWtK6sUT02ifUECfWECDkA6S5t5gbc=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=CU/pqnJTzJ4TlAMumJhjUjNmpknnLzxoYmrf+qEkZiI/ThLJeMUeWXvEZQvFKvxqU
-	 VEcefJXk0QItdj0eNrxWuBKcJzkSNR4WV5JnLm2gfjbrwyGLLjdFQ3u29Uy6XPPJHr
-	 KK08ByMPetVU77SntD8lazZ196GvBagqbgB7s9ld3pH8FQIbNniPN1KR7Zj/jlrmqb
-	 42K6IzYb6+DWWKaJdFpQ7qcGqDZ+swMQL20QS7TISZWdJdlZfGOY11EytY/gi++qer
-	 WlQmZBn4GhSSJkbZFlXbQKEwihdOdjlDHaaJmBLooLH5ayv9LFkXh8qPPFF3EzGwQW
-	 p2wbJbEVse3PQ==
-Date: Fri, 24 Nov 2023 15:47:25 -0800
-Subject: [PATCH 2/7] xfs: allow pausing of pending deferred work items
+	b=pmJ+yqPIkE0wACkB2OvX6oSQdMg4deTORzke2JfHFlpdrhswfL8yubRuunJs5Ia7M
+	 bMFEJTebtONoKDVtdjnDj67Rq9EEHprhWKUvx6zWkuiZRYSAG/uaapnZZ6mDIcSZj1
+	 87OtAr9BumGlw4EaWflm6jLDur8RM1xplZShbPf9L5SPuN3hYsV410lKfGnkJTtmZV
+	 +2FpE+u52DVfXtktn+zHGXEmCj7UG34hT34z3E+WFURUkIlg1vKiCvGnqys/LLD2F0
+	 Qv5DsygoPBMlpmZ7pEAajzelAuVcy86r48lu84i9pKBT4ECcnnzLNYW7ixmDOvFDJZ
+	 vYxihd7JlhL6w==
+Date: Fri, 24 Nov 2023 15:47:41 -0800
+Subject: [PATCH 3/7] xfs: remove __xfs_free_extent_later
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: djwong@kernel.org
 Cc: Dave Chinner <dchinner@redhat.com>, linux-xfs@vger.kernel.org
-Message-ID: <170086926160.2768790.13588639927943819972.stgit@frogsfrogsfrogs>
+Message-ID: <170086926175.2768790.12526519062399034942.stgit@frogsfrogsfrogs>
 In-Reply-To: <170086926113.2768790.10021834422326302654.stgit@frogsfrogsfrogs>
 References: <170086926113.2768790.10021834422326302654.stgit@frogsfrogsfrogs>
 User-Agent: StGit/0.19
@@ -37,330 +37,239 @@ Content-Transfer-Encoding: 7bit
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-Traditionally, all pending deferred work attached to a transaction is
-finished when one of the xfs_defer_finish* functions is called.
-However, online repair wants to be able to allocate space for a new data
-structure, format a new metadata structure into the allocated space, and
-commit that into the filesystem.
-
-As a hedge against system crashes during repairs, we also want to log
-some EFI items for the allocated space speculatively, and cancel them if
-we elect to commit the new data structure.
-
-Therefore, introduce the idea of pausing a pending deferred work item.
-Log intent items are still created for paused items and relogged as
-necessary.  However, paused items are pushed onto a side list before we
-start calling ->finish_item, and the whole list is reattach to the
-transaction afterwards.  New work items are never attached to paused
-pending items.
-
-Modify xfs_defer_cancel to clean up pending deferred work items holding
-a log intent item but not a log intent done item, since that is now
-possible.
+xfs_free_extent_later is a trivial helper, so remove it to reduce the
+amount of thinking required to understand the deferred freeing
+interface.  This will make it easier to introduce automatic reaping of
+speculative allocations in the next patch.
 
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 Reviewed-by: Dave Chinner <dchinner@redhat.com>
 ---
- fs/xfs/libxfs/xfs_defer.c |   98 +++++++++++++++++++++++++++++++++++++++------
- fs/xfs/libxfs/xfs_defer.h |   17 +++++++-
- fs/xfs/xfs_trace.h        |   13 +++++-
- 3 files changed, 112 insertions(+), 16 deletions(-)
+ fs/xfs/libxfs/xfs_ag.c             |    2 +-
+ fs/xfs/libxfs/xfs_alloc.c          |    2 +-
+ fs/xfs/libxfs/xfs_alloc.h          |   14 +-------------
+ fs/xfs/libxfs/xfs_bmap.c           |    4 ++--
+ fs/xfs/libxfs/xfs_bmap_btree.c     |    2 +-
+ fs/xfs/libxfs/xfs_ialloc.c         |    5 +++--
+ fs/xfs/libxfs/xfs_ialloc_btree.c   |    2 +-
+ fs/xfs/libxfs/xfs_refcount.c       |    6 +++---
+ fs/xfs/libxfs/xfs_refcount_btree.c |    2 +-
+ fs/xfs/scrub/reap.c                |    2 +-
+ fs/xfs/xfs_extfree_item.c          |    2 +-
+ fs/xfs/xfs_reflink.c               |    2 +-
+ 12 files changed, 17 insertions(+), 28 deletions(-)
 
 
-diff --git a/fs/xfs/libxfs/xfs_defer.c b/fs/xfs/libxfs/xfs_defer.c
-index 6c283b30ea054..6604eb50058ba 100644
---- a/fs/xfs/libxfs/xfs_defer.c
-+++ b/fs/xfs/libxfs/xfs_defer.c
-@@ -417,7 +417,7 @@ xfs_defer_cancel_list(
-  * done item to release the intent item; and then log a new intent item.
-  * The caller should provide a fresh transaction and roll it after we're done.
+diff --git a/fs/xfs/libxfs/xfs_ag.c b/fs/xfs/libxfs/xfs_ag.c
+index f9f4d694640d0..f62ff125a50ac 100644
+--- a/fs/xfs/libxfs/xfs_ag.c
++++ b/fs/xfs/libxfs/xfs_ag.c
+@@ -984,7 +984,7 @@ xfs_ag_shrink_space(
+ 		if (err2 != -ENOSPC)
+ 			goto resv_err;
+ 
+-		err2 = __xfs_free_extent_later(*tpp, args.fsbno, delta, NULL,
++		err2 = xfs_free_extent_later(*tpp, args.fsbno, delta, NULL,
+ 				XFS_AG_RESV_NONE, true);
+ 		if (err2)
+ 			goto resv_err;
+diff --git a/fs/xfs/libxfs/xfs_alloc.c b/fs/xfs/libxfs/xfs_alloc.c
+index 100ab5931b313..c35224ad9428a 100644
+--- a/fs/xfs/libxfs/xfs_alloc.c
++++ b/fs/xfs/libxfs/xfs_alloc.c
+@@ -2523,7 +2523,7 @@ xfs_defer_agfl_block(
+  * The list is maintained sorted (by block number).
   */
--static int
-+static void
- xfs_defer_relog(
- 	struct xfs_trans		**tpp,
- 	struct list_head		*dfops)
-@@ -458,10 +458,6 @@ xfs_defer_relog(
- 		XFS_STATS_INC((*tpp)->t_mountp, defer_relog);
- 		dfp->dfp_intent = xfs_trans_item_relog(dfp->dfp_intent, *tpp);
- 	}
--
--	if ((*tpp)->t_flags & XFS_TRANS_DIRTY)
--		return xfs_defer_trans_roll(tpp);
--	return 0;
- }
- 
- /*
-@@ -517,6 +513,24 @@ xfs_defer_finish_one(
- 	return error;
- }
- 
-+/* Move all paused deferred work from @tp to @paused_list. */
-+static void
-+xfs_defer_isolate_paused(
-+	struct xfs_trans		*tp,
-+	struct list_head		*paused_list)
-+{
-+	struct xfs_defer_pending	*dfp;
-+	struct xfs_defer_pending	*pli;
-+
-+	list_for_each_entry_safe(dfp, pli, &tp->t_dfops, dfp_list) {
-+		if (!(dfp->dfp_flags & XFS_DEFER_PAUSED))
-+			continue;
-+
-+		list_move_tail(&dfp->dfp_list, paused_list);
-+		trace_xfs_defer_isolate_paused(tp->t_mountp, dfp);
-+	}
-+}
-+
- /*
-  * Finish all the pending work.  This involves logging intent items for
-  * any work items that wandered in since the last transaction roll (if
-@@ -532,6 +546,7 @@ xfs_defer_finish_noroll(
- 	struct xfs_defer_pending	*dfp = NULL;
- 	int				error = 0;
- 	LIST_HEAD(dop_pending);
-+	LIST_HEAD(dop_paused);
- 
- 	ASSERT((*tp)->t_flags & XFS_TRANS_PERM_LOG_RES);
- 
-@@ -550,6 +565,8 @@ xfs_defer_finish_noroll(
- 		 */
- 		int has_intents = xfs_defer_create_intents(*tp);
- 
-+		xfs_defer_isolate_paused(*tp, &dop_paused);
-+
- 		list_splice_init(&(*tp)->t_dfops, &dop_pending);
- 
- 		if (has_intents < 0) {
-@@ -562,22 +579,33 @@ xfs_defer_finish_noroll(
- 				goto out_shutdown;
- 
- 			/* Relog intent items to keep the log moving. */
--			error = xfs_defer_relog(tp, &dop_pending);
--			if (error)
--				goto out_shutdown;
-+			xfs_defer_relog(tp, &dop_pending);
-+			xfs_defer_relog(tp, &dop_paused);
-+
-+			if ((*tp)->t_flags & XFS_TRANS_DIRTY) {
-+				error = xfs_defer_trans_roll(tp);
-+				if (error)
-+					goto out_shutdown;
-+			}
- 		}
- 
--		dfp = list_first_entry(&dop_pending, struct xfs_defer_pending,
--				       dfp_list);
-+		dfp = list_first_entry_or_null(&dop_pending,
-+				struct xfs_defer_pending, dfp_list);
-+		if (!dfp)
-+			break;
- 		error = xfs_defer_finish_one(*tp, dfp);
- 		if (error && error != -EAGAIN)
- 			goto out_shutdown;
- 	}
- 
-+	/* Requeue the paused items in the outgoing transaction. */
-+	list_splice_tail_init(&dop_paused, &(*tp)->t_dfops);
-+
- 	trace_xfs_defer_finish_done(*tp, _RET_IP_);
- 	return 0;
- 
- out_shutdown:
-+	list_splice_tail_init(&dop_paused, &dop_pending);
- 	xfs_defer_trans_abort(*tp, &dop_pending);
- 	xfs_force_shutdown((*tp)->t_mountp, SHUTDOWN_CORRUPT_INCORE);
- 	trace_xfs_defer_finish_error(*tp, error);
-@@ -590,6 +618,9 @@ int
- xfs_defer_finish(
- 	struct xfs_trans	**tp)
- {
-+#ifdef DEBUG
-+	struct xfs_defer_pending *dfp;
-+#endif
- 	int			error;
- 
- 	/*
-@@ -609,7 +640,10 @@ xfs_defer_finish(
- 	}
- 
- 	/* Reset LOWMODE now that we've finished all the dfops. */
--	ASSERT(list_empty(&(*tp)->t_dfops));
-+#ifdef DEBUG
-+	list_for_each_entry(dfp, &(*tp)->t_dfops, dfp_list)
-+		ASSERT(dfp->dfp_flags & XFS_DEFER_PAUSED);
-+#endif
- 	(*tp)->t_flags &= ~XFS_TRANS_LOWMODE;
- 	return 0;
- }
-@@ -621,6 +655,7 @@ xfs_defer_cancel(
- 	struct xfs_mount	*mp = tp->t_mountp;
- 
- 	trace_xfs_defer_cancel(tp, _RET_IP_);
-+	xfs_defer_trans_abort(tp, &tp->t_dfops);
- 	xfs_defer_cancel_list(mp, &tp->t_dfops);
- }
- 
-@@ -651,6 +686,10 @@ xfs_defer_try_append(
- 	if (dfp->dfp_intent)
- 		return NULL;
- 
-+	/* Paused items cannot absorb more work */
-+	if (dfp->dfp_flags & XFS_DEFER_PAUSED)
-+		return NULL;
-+
- 	/* Already full? */
- 	if (ops->max_items && dfp->dfp_count >= ops->max_items)
- 		return NULL;
-@@ -659,7 +698,7 @@ xfs_defer_try_append(
- }
- 
- /* Add an item for later deferred processing. */
--void
-+struct xfs_defer_pending *
- xfs_defer_add(
+ int
+-__xfs_free_extent_later(
++xfs_free_extent_later(
  	struct xfs_trans		*tp,
- 	enum xfs_defer_ops_type		type,
-@@ -687,6 +726,8 @@ xfs_defer_add(
- 	list_add_tail(li, &dfp->dfp_work);
- 	trace_xfs_defer_add_item(tp->t_mountp, dfp, li);
- 	dfp->dfp_count++;
-+
-+	return dfp;
+ 	xfs_fsblock_t			bno,
+ 	xfs_filblks_t			len,
+diff --git a/fs/xfs/libxfs/xfs_alloc.h b/fs/xfs/libxfs/xfs_alloc.h
+index 6bb8d295c321d..6b95d1d8a8537 100644
+--- a/fs/xfs/libxfs/xfs_alloc.h
++++ b/fs/xfs/libxfs/xfs_alloc.h
+@@ -231,7 +231,7 @@ xfs_buf_to_agfl_bno(
+ 	return bp->b_addr;
  }
  
- /*
-@@ -962,3 +1003,36 @@ xfs_defer_destroy_item_caches(void)
- 	xfs_rmap_intent_destroy_cache();
- 	xfs_defer_destroy_cache();
+-int __xfs_free_extent_later(struct xfs_trans *tp, xfs_fsblock_t bno,
++int xfs_free_extent_later(struct xfs_trans *tp, xfs_fsblock_t bno,
+ 		xfs_filblks_t len, const struct xfs_owner_info *oinfo,
+ 		enum xfs_ag_resv_type type, bool skip_discard);
+ 
+@@ -256,18 +256,6 @@ void xfs_extent_free_get_group(struct xfs_mount *mp,
+ #define XFS_EFI_ATTR_FORK	(1U << 1) /* freeing attr fork block */
+ #define XFS_EFI_BMBT_BLOCK	(1U << 2) /* freeing bmap btree block */
+ 
+-static inline int
+-xfs_free_extent_later(
+-	struct xfs_trans		*tp,
+-	xfs_fsblock_t			bno,
+-	xfs_filblks_t			len,
+-	const struct xfs_owner_info	*oinfo,
+-	enum xfs_ag_resv_type		type)
+-{
+-	return __xfs_free_extent_later(tp, bno, len, oinfo, type, false);
+-}
+-
+-
+ extern struct kmem_cache	*xfs_extfree_item_cache;
+ 
+ int __init xfs_extfree_intent_init_cache(void);
+diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
+index be62acffad6cc..68be1dd4f0f26 100644
+--- a/fs/xfs/libxfs/xfs_bmap.c
++++ b/fs/xfs/libxfs/xfs_bmap.c
+@@ -575,7 +575,7 @@ xfs_bmap_btree_to_extents(
+ 
+ 	xfs_rmap_ino_bmbt_owner(&oinfo, ip->i_ino, whichfork);
+ 	error = xfs_free_extent_later(cur->bc_tp, cbno, 1, &oinfo,
+-			XFS_AG_RESV_NONE);
++			XFS_AG_RESV_NONE, false);
+ 	if (error)
+ 		return error;
+ 
+@@ -5218,7 +5218,7 @@ xfs_bmap_del_extent_real(
+ 		if (xfs_is_reflink_inode(ip) && whichfork == XFS_DATA_FORK) {
+ 			xfs_refcount_decrease_extent(tp, del);
+ 		} else {
+-			error = __xfs_free_extent_later(tp, del->br_startblock,
++			error = xfs_free_extent_later(tp, del->br_startblock,
+ 					del->br_blockcount, NULL,
+ 					XFS_AG_RESV_NONE,
+ 					((bflags & XFS_BMAPI_NODISCARD) ||
+diff --git a/fs/xfs/libxfs/xfs_bmap_btree.c b/fs/xfs/libxfs/xfs_bmap_btree.c
+index bf3f1b36fdd23..8360256cff168 100644
+--- a/fs/xfs/libxfs/xfs_bmap_btree.c
++++ b/fs/xfs/libxfs/xfs_bmap_btree.c
+@@ -272,7 +272,7 @@ xfs_bmbt_free_block(
+ 
+ 	xfs_rmap_ino_bmbt_owner(&oinfo, ip->i_ino, cur->bc_ino.whichfork);
+ 	error = xfs_free_extent_later(cur->bc_tp, fsbno, 1, &oinfo,
+-			XFS_AG_RESV_NONE);
++			XFS_AG_RESV_NONE, false);
+ 	if (error)
+ 		return error;
+ 
+diff --git a/fs/xfs/libxfs/xfs_ialloc.c b/fs/xfs/libxfs/xfs_ialloc.c
+index b83e54c709069..d61d03e5b853b 100644
+--- a/fs/xfs/libxfs/xfs_ialloc.c
++++ b/fs/xfs/libxfs/xfs_ialloc.c
+@@ -1854,7 +1854,7 @@ xfs_difree_inode_chunk(
+ 		return xfs_free_extent_later(tp,
+ 				XFS_AGB_TO_FSB(mp, agno, sagbno),
+ 				M_IGEO(mp)->ialloc_blks, &XFS_RMAP_OINFO_INODES,
+-				XFS_AG_RESV_NONE);
++				XFS_AG_RESV_NONE, false);
+ 	}
+ 
+ 	/* holemask is only 16-bits (fits in an unsigned long) */
+@@ -1900,7 +1900,8 @@ xfs_difree_inode_chunk(
+ 		ASSERT(contigblk % mp->m_sb.sb_spino_align == 0);
+ 		error = xfs_free_extent_later(tp,
+ 				XFS_AGB_TO_FSB(mp, agno, agbno), contigblk,
+-				&XFS_RMAP_OINFO_INODES, XFS_AG_RESV_NONE);
++				&XFS_RMAP_OINFO_INODES, XFS_AG_RESV_NONE,
++				false);
+ 		if (error)
+ 			return error;
+ 
+diff --git a/fs/xfs/libxfs/xfs_ialloc_btree.c b/fs/xfs/libxfs/xfs_ialloc_btree.c
+index 9258f01c0015e..42a5e1f227a05 100644
+--- a/fs/xfs/libxfs/xfs_ialloc_btree.c
++++ b/fs/xfs/libxfs/xfs_ialloc_btree.c
+@@ -161,7 +161,7 @@ __xfs_inobt_free_block(
+ 	xfs_inobt_mod_blockcount(cur, -1);
+ 	fsbno = XFS_DADDR_TO_FSB(cur->bc_mp, xfs_buf_daddr(bp));
+ 	return xfs_free_extent_later(cur->bc_tp, fsbno, 1,
+-			&XFS_RMAP_OINFO_INOBT, resv);
++			&XFS_RMAP_OINFO_INOBT, resv, false);
  }
-+
-+/*
-+ * Mark a deferred work item so that it will be requeued indefinitely without
-+ * being finished.  Caller must ensure there are no data dependencies on this
-+ * work item in the meantime.
-+ */
-+void
-+xfs_defer_item_pause(
-+	struct xfs_trans		*tp,
-+	struct xfs_defer_pending	*dfp)
-+{
-+	ASSERT(!(dfp->dfp_flags & XFS_DEFER_PAUSED));
-+
-+	dfp->dfp_flags |= XFS_DEFER_PAUSED;
-+
-+	trace_xfs_defer_item_pause(tp->t_mountp, dfp);
-+}
-+
-+/*
-+ * Release a paused deferred work item so that it will be finished during the
-+ * next transaction roll.
-+ */
-+void
-+xfs_defer_item_unpause(
-+	struct xfs_trans		*tp,
-+	struct xfs_defer_pending	*dfp)
-+{
-+	ASSERT(dfp->dfp_flags & XFS_DEFER_PAUSED);
-+
-+	dfp->dfp_flags &= ~XFS_DEFER_PAUSED;
-+
-+	trace_xfs_defer_item_unpause(tp->t_mountp, dfp);
-+}
-diff --git a/fs/xfs/libxfs/xfs_defer.h b/fs/xfs/libxfs/xfs_defer.h
-index 8788ad5f6a731..094ff9062b251 100644
---- a/fs/xfs/libxfs/xfs_defer.h
-+++ b/fs/xfs/libxfs/xfs_defer.h
-@@ -34,11 +34,24 @@ struct xfs_defer_pending {
- 	struct xfs_log_item		*dfp_intent;	/* log intent item */
- 	struct xfs_log_item		*dfp_done;	/* log done item */
- 	unsigned int			dfp_count;	/* # extent items */
-+	unsigned int			dfp_flags;
- 	enum xfs_defer_ops_type		dfp_type;
- };
  
--void xfs_defer_add(struct xfs_trans *tp, enum xfs_defer_ops_type type,
--		struct list_head *h);
-+/*
-+ * Create a log intent item for this deferred item, but don't actually finish
-+ * the work.  Caller must clear this before the final transaction commit.
-+ */
-+#define XFS_DEFER_PAUSED	(1U << 0)
-+
-+#define XFS_DEFER_PENDING_STRINGS \
-+	{ XFS_DEFER_PAUSED,	"paused" }
-+
-+void xfs_defer_item_pause(struct xfs_trans *tp, struct xfs_defer_pending *dfp);
-+void xfs_defer_item_unpause(struct xfs_trans *tp, struct xfs_defer_pending *dfp);
-+
-+struct xfs_defer_pending *xfs_defer_add(struct xfs_trans *tp,
-+		enum xfs_defer_ops_type type, struct list_head *h);
- int xfs_defer_finish_noroll(struct xfs_trans **tp);
- int xfs_defer_finish(struct xfs_trans **tp);
- void xfs_defer_cancel(struct xfs_trans *);
-diff --git a/fs/xfs/xfs_trace.h b/fs/xfs/xfs_trace.h
-index 3926cf7f2a6ed..514095b6ba2bd 100644
---- a/fs/xfs/xfs_trace.h
-+++ b/fs/xfs/xfs_trace.h
-@@ -2551,6 +2551,7 @@ DECLARE_EVENT_CLASS(xfs_defer_pending_class,
- 		__field(dev_t, dev)
- 		__field(int, type)
- 		__field(void *, intent)
-+		__field(unsigned int, flags)
- 		__field(char, committed)
- 		__field(int, nr)
- 	),
-@@ -2558,13 +2559,15 @@ DECLARE_EVENT_CLASS(xfs_defer_pending_class,
- 		__entry->dev = mp ? mp->m_super->s_dev : 0;
- 		__entry->type = dfp->dfp_type;
- 		__entry->intent = dfp->dfp_intent;
-+		__entry->flags = dfp->dfp_flags;
- 		__entry->committed = dfp->dfp_done != NULL;
- 		__entry->nr = dfp->dfp_count;
- 	),
--	TP_printk("dev %d:%d optype %d intent %p committed %d nr %d",
-+	TP_printk("dev %d:%d optype %d intent %p flags %s committed %d nr %d",
- 		  MAJOR(__entry->dev), MINOR(__entry->dev),
- 		  __entry->type,
- 		  __entry->intent,
-+		  __print_flags(__entry->flags, "|", XFS_DEFER_PENDING_STRINGS),
- 		  __entry->committed,
- 		  __entry->nr)
- )
-@@ -2675,6 +2678,9 @@ DEFINE_DEFER_PENDING_EVENT(xfs_defer_cancel_list);
- DEFINE_DEFER_PENDING_EVENT(xfs_defer_pending_finish);
- DEFINE_DEFER_PENDING_EVENT(xfs_defer_pending_abort);
- DEFINE_DEFER_PENDING_EVENT(xfs_defer_relog_intent);
-+DEFINE_DEFER_PENDING_EVENT(xfs_defer_isolate_paused);
-+DEFINE_DEFER_PENDING_EVENT(xfs_defer_item_pause);
-+DEFINE_DEFER_PENDING_EVENT(xfs_defer_item_unpause);
+ STATIC int
+diff --git a/fs/xfs/libxfs/xfs_refcount.c b/fs/xfs/libxfs/xfs_refcount.c
+index 646b3fa362ad0..3702b4a071100 100644
+--- a/fs/xfs/libxfs/xfs_refcount.c
++++ b/fs/xfs/libxfs/xfs_refcount.c
+@@ -1153,7 +1153,7 @@ xfs_refcount_adjust_extents(
+ 						tmp.rc_startblock);
+ 				error = xfs_free_extent_later(cur->bc_tp, fsbno,
+ 						  tmp.rc_blockcount, NULL,
+-						  XFS_AG_RESV_NONE);
++						  XFS_AG_RESV_NONE, false);
+ 				if (error)
+ 					goto out_error;
+ 			}
+@@ -1215,7 +1215,7 @@ xfs_refcount_adjust_extents(
+ 					ext.rc_startblock);
+ 			error = xfs_free_extent_later(cur->bc_tp, fsbno,
+ 					ext.rc_blockcount, NULL,
+-					XFS_AG_RESV_NONE);
++					XFS_AG_RESV_NONE, false);
+ 			if (error)
+ 				goto out_error;
+ 		}
+@@ -1985,7 +1985,7 @@ xfs_refcount_recover_cow_leftovers(
+ 		/* Free the block. */
+ 		error = xfs_free_extent_later(tp, fsb,
+ 				rr->rr_rrec.rc_blockcount, NULL,
+-				XFS_AG_RESV_NONE);
++				XFS_AG_RESV_NONE, false);
+ 		if (error)
+ 			goto out_trans;
  
- #define DEFINE_BMAP_FREE_DEFERRED_EVENT DEFINE_PHYS_EXTENT_DEFERRED_EVENT
- DEFINE_BMAP_FREE_DEFERRED_EVENT(xfs_bmap_free_defer);
-@@ -2692,6 +2698,7 @@ DECLARE_EVENT_CLASS(xfs_defer_pending_item_class,
- 		__field(void *, intent)
- 		__field(void *, item)
- 		__field(char, committed)
-+		__field(unsigned int, flags)
- 		__field(int, nr)
- 	),
- 	TP_fast_assign(
-@@ -2700,13 +2707,15 @@ DECLARE_EVENT_CLASS(xfs_defer_pending_item_class,
- 		__entry->intent = dfp->dfp_intent;
- 		__entry->item = item;
- 		__entry->committed = dfp->dfp_done != NULL;
-+		__entry->flags = dfp->dfp_flags;
- 		__entry->nr = dfp->dfp_count;
- 	),
--	TP_printk("dev %d:%d optype %d intent %p item %p committed %d nr %d",
-+	TP_printk("dev %d:%d optype %d intent %p item %p flags %s committed %d nr %d",
- 		  MAJOR(__entry->dev), MINOR(__entry->dev),
- 		  __entry->type,
- 		  __entry->intent,
- 		  __entry->item,
-+		  __print_flags(__entry->flags, "|", XFS_DEFER_PENDING_STRINGS),
- 		  __entry->committed,
- 		  __entry->nr)
- )
+diff --git a/fs/xfs/libxfs/xfs_refcount_btree.c b/fs/xfs/libxfs/xfs_refcount_btree.c
+index 5c3987d8dc242..3fa795e2488dd 100644
+--- a/fs/xfs/libxfs/xfs_refcount_btree.c
++++ b/fs/xfs/libxfs/xfs_refcount_btree.c
+@@ -112,7 +112,7 @@ xfs_refcountbt_free_block(
+ 	be32_add_cpu(&agf->agf_refcount_blocks, -1);
+ 	xfs_alloc_log_agf(cur->bc_tp, agbp, XFS_AGF_REFCOUNT_BLOCKS);
+ 	return xfs_free_extent_later(cur->bc_tp, fsbno, 1,
+-			&XFS_RMAP_OINFO_REFC, XFS_AG_RESV_METADATA);
++			&XFS_RMAP_OINFO_REFC, XFS_AG_RESV_METADATA, false);
+ }
+ 
+ STATIC int
+diff --git a/fs/xfs/scrub/reap.c b/fs/xfs/scrub/reap.c
+index 86a62420e02c6..78c9f2085db46 100644
+--- a/fs/xfs/scrub/reap.c
++++ b/fs/xfs/scrub/reap.c
+@@ -410,7 +410,7 @@ xreap_agextent_iter(
+ 	 * Use deferred frees to get rid of the old btree blocks to try to
+ 	 * minimize the window in which we could crash and lose the old blocks.
+ 	 */
+-	error = __xfs_free_extent_later(sc->tp, fsbno, *aglenp, rs->oinfo,
++	error = xfs_free_extent_later(sc->tp, fsbno, *aglenp, rs->oinfo,
+ 			rs->resv, true);
+ 	if (error)
+ 		return error;
+diff --git a/fs/xfs/xfs_extfree_item.c b/fs/xfs/xfs_extfree_item.c
+index 3fa8789820ad9..9e7b58f3566c0 100644
+--- a/fs/xfs/xfs_extfree_item.c
++++ b/fs/xfs/xfs_extfree_item.c
+@@ -717,7 +717,7 @@ xfs_efi_item_recover(
+ 			error = xfs_free_extent_later(tp, fake.xefi_startblock,
+ 					fake.xefi_blockcount,
+ 					&XFS_RMAP_OINFO_ANY_OWNER,
+-					fake.xefi_agresv);
++					fake.xefi_agresv, false);
+ 			if (!error) {
+ 				requeue_only = true;
+ 				continue;
+diff --git a/fs/xfs/xfs_reflink.c b/fs/xfs/xfs_reflink.c
+index e5b62dc284664..d5ca8bcae65b6 100644
+--- a/fs/xfs/xfs_reflink.c
++++ b/fs/xfs/xfs_reflink.c
+@@ -618,7 +618,7 @@ xfs_reflink_cancel_cow_blocks(
+ 
+ 			error = xfs_free_extent_later(*tpp, del.br_startblock,
+ 					del.br_blockcount, NULL,
+-					XFS_AG_RESV_NONE);
++					XFS_AG_RESV_NONE, false);
+ 			if (error)
+ 				break;
+ 
 
