@@ -1,77 +1,58 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E7878171A4;
-	Fri, 24 Nov 2023 23:39:40 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 16BC63C49E
+	for <linux-xfs@vger.kernel.org>; Fri, 24 Nov 2023 23:44:49 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="a5JyKpeT"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 5FC53C433CB;
-	Fri, 24 Nov 2023 23:39:40 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="TLLCYKPC"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 7A577C433C7;
+	Fri, 24 Nov 2023 23:44:49 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1700869180;
-	bh=Ogn+845qTwOUzabVqp8uPRtIkUvstrvt/X810JTWhnY=;
-	h=Date:From:To:Cc:Subject:From;
-	b=a5JyKpeTGvT2JsZr9HrVNpH/eu+1Tj/rtSpPUwBiRZf7/UGyozMtd+fH9cbvhKIyU
-	 TkUExCE1/5FD8b9rUeQUWkrEDBrSbIbY7IebHj/IfOEikIyLx7yrTdTG9oXneX9EMl
-	 S3/c0AWKqDHjiZ+YCmmDzZsl2MMqG9y/aL3ilVEXgPrcChw+k/vQBAdRYT58GHwZE3
-	 bW2uWaxeuIWnJ+ksFvdrwsbtlSRqhsxC/ONRPsdHXeDvD3FDFtoSLyVkR8ibVrZkJP
-	 w7qUrOrG1aYFv2fqezXKSrbQF7WXvyveJl63QIQ4n8mFzpuo32RNA/3Y+5GVWluITa
-	 FOL57VWuejzng==
-Date: Fri, 24 Nov 2023 15:39:40 -0800
+	s=k20201202; t=1700869489;
+	bh=XXRy0e300CAKX1SOyETG8VaZs5z6X5p75n8LgsJ97Ns=;
+	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
+	b=TLLCYKPCAGxRFpampRYtdWhC5UX0JEBMFDc5e2sWGCxSgsgNRda8g3lvH6WXBAhnd
+	 ry7wuGrsrdldKKsfscHRufO/n3gA9rIu5vM2mTKq6v/Psn3COP1a79hLAzB8ua/ha3
+	 Ien/GB1nZ6+D8L/1flFHGv0DxVejEUOBrhlB+S+M2Ji03m+g+KdazHVUM4ouf9R9Kc
+	 tmobEQbfDWSRGh1APKkvqz9Qak0tQltboXU3Kk0eDvWp/BGLBjU9wdttn6ZFAJnHcC
+	 CZPplO/R61mBKwKdZTKzHVHO0+50ujINJTSzAu9rvZRVmg2iHZkrUkpQn71S+RrjKy
+	 KyG8uIzjBv3LQ==
+Date: Fri, 24 Nov 2023 15:44:49 -0800
+Subject: [PATCHSET v28.0 0/1] xfs: prevent livelocks in xchk_iget
 From: "Darrick J. Wong" <djwong@kernel.org>
-To: Dave Chinner <david@fromorbit.com>,
-	Chandan Babu R <chandanbabu@kernel.org>
-Cc: xfs <linux-xfs@vger.kernel.org>,
-	linux-fsdevel <linux-fsdevel@vger.kernel.org>,
-	Carlos Maiolino <cmaiolino@redhat.com>,
-	Catherine Hoang <catherine.hoang@oracle.com>
-Subject: [MEGAPATCHSET v28] xfs: online repair, second part of part 1
-Message-ID: <20231124233940.GK36190@frogsfrogsfrogs>
+To: djwong@kernel.org
+Cc: Dave Chinner <dchinner@redhat.com>, linux-xfs@vger.kernel.org
+Message-ID: <170086925757.2768713.18061984370448871279.stgit@frogsfrogsfrogs>
+In-Reply-To: <20231124233940.GK36190@frogsfrogsfrogs>
+References: <20231124233940.GK36190@frogsfrogsfrogs>
+User-Agent: StGit/0.19
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
 
-Hi everyone,
+Hi all,
 
-[this time not as a reply to v27]
+Prevent scrub from live locking in xchk_iget if there's a cycle in the
+inobt by allocating an empty transaction.
 
-[[this time really not as a reply to v27]]
+If you're going to start using this code, I strongly recommend pulling
+from my git trees, which are linked below.
 
-[[[***** email, this way is insane]]]
-
-I've rebased the online fsck development branches atop 6.7, applied the
-changes requested during the review of v27, and reworked the automatic
-space reaping code to avoid open-coding EFI log item handling, and
-cleaned up a few other things.
-
-In other words, I'm formally submitting part 1 for inclusion in 6.8.
-
-Just like the last several submissions, I would like people to focus the
-following:
-
-- Are the major subsystems sufficiently documented that you could figure
-  out what the code does?
-
-- Do you see any problems that are severe enough to cause long term
-  support hassles? (e.g. bad API design, writing weird metadata to disk)
-
-- Can you spot mis-interactions between the subsystems?
-
-- What were my blind spots in devising this feature?
-
-- Are there missing pieces that you'd like to help build?
-
-- Can I just merge all of this?
-
-The one thing that is /not/ in scope for this review are requests for
-more refactoring of existing subsystems.  I'm still running QA round the
-clock.  To spare vger, I'm only sending a few patchsets this time.  I
-will of course stress test the new mailing infrastructure on 31 Dec with
-a full posting, like I always do.
+This has been running on the djcloud for months with no problems.  Enjoy!
+Comments and questions are, as always, welcome.
 
 --D
+
+kernel git tree:
+https://git.kernel.org/cgit/linux/kernel/git/djwong/xfs-linux.git/log/?h=scrub-livelock-prevention
+---
+ fs/xfs/scrub/common.c |    6 ++++--
+ fs/xfs/scrub/common.h |   19 +++++++++++++++++++
+ fs/xfs/scrub/inode.c  |    4 ++--
+ 3 files changed, 25 insertions(+), 4 deletions(-)
+
