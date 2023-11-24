@@ -1,28 +1,28 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DF6563C49E
-	for <linux-xfs@vger.kernel.org>; Fri, 24 Nov 2023 23:45:20 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8C0502C86B
+	for <linux-xfs@vger.kernel.org>; Fri, 24 Nov 2023 23:45:36 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="PitT0+J9"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id A197EC433C8;
-	Fri, 24 Nov 2023 23:45:20 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="rvP5CpPQ"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 5CFBFC433C7;
+	Fri, 24 Nov 2023 23:45:36 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1700869520;
-	bh=Qg5GmLJZRijMf7hOs+fd9D6OiRNWXlqSWN8daSw0+bs=;
+	s=k20201202; t=1700869536;
+	bh=7SDbdUT1+NHb0Aw4FN4i7yz+e5SDarFOk/fpbWYP/ik=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=PitT0+J910A/tnJxgHbwf5zx9/sKc2ImRFXNlu/2kOnjxFGStcseLF9SFXlVHSS1S
-	 ekYwi/mjl1b6zQBHHQOexi1+fy1dl4fPc9iznGD5HrjY1gwi7oxP6O4Wjq6K8V0kTd
-	 iQxWQj9xX2ghbqlsrY6BBWpg7BMO28jQCHiwJgGPJHRrx4W/W3aTe2WrQJosJmtHNR
-	 T5qp9jUwJpA1BenhIgLyA2qBT3m/Zng7uMml6c/J7wz61Yc7XtDOFQkgdJnLp0YQ5r
-	 kyrHxc5DEeXDsmr4xNkdRJFMSu9icdhMGNvE05m2MYMpz6zE5BaroiaTRE5zRy3PHs
-	 4EaIRGMh8c97Q==
-Date: Fri, 24 Nov 2023 15:45:20 -0800
-Subject: [PATCHSET v28.0 0/4] xfs: prepare repair for bulk loading
+	b=rvP5CpPQUQlimQk3ub26F/ZUsDlWoiPKijfX9CxBoGrwMDYm6W6+CC9p32qNZ+KbL
+	 9jDZVhn/nc6EB3+8zzTKlTBNAfgQHuInRnoCzBgHGU3HR3DTxeGmTLd2c3aCiDAoDR
+	 eihDvzs0Muk7mOGpT2dUdqBCmQed6GVCTUQzkt47XT+TTdI9apTcJpNzHJJf9t7GIQ
+	 tLLV0qUX21lzTmc1IPzmq6Ga+AKCihtVN79FQfvL3wYmoD+yORim0Tsq/N0vrQt/x9
+	 cWTRg6VGQl0T+Vb/zT/xewvl3MK3kwmrT3CozJkFyINs/cf8F5AK4sDgKiPvewM8Bc
+	 BiD7v9s1zhaKw==
+Date: Fri, 24 Nov 2023 15:45:35 -0800
+Subject: [PATCHSET v28.0 0/5] xfs: online repair of AG btrees
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: djwong@kernel.org
-Cc: linux-xfs@vger.kernel.org
-Message-ID: <170086926569.2770816.7549813820649168963.stgit@frogsfrogsfrogs>
+Cc: Dave Chinner <dchinner@redhat.com>, linux-xfs@vger.kernel.org
+Message-ID: <170086926983.2770967.13303859275299344660.stgit@frogsfrogsfrogs>
 In-Reply-To: <20231124233940.GK36190@frogsfrogsfrogs>
 References: <20231124233940.GK36190@frogsfrogsfrogs>
 User-Agent: StGit/0.19
@@ -37,21 +37,12 @@ Content-Transfer-Encoding: 7bit
 
 Hi all,
 
-Before we start merging the online repair functions, let's improve the
-bulk loading code a bit.  First, we need to fix a misinteraction between
-the AIL and the btree bulkloader wherein the delwri at the end of the
-bulk load fails to queue a buffer for writeback if it happens to be on
-the AIL list.
-
-Second, we introduce a defer ops barrier object so that the process of
-reaping blocks after a repair cannot queue more than two extents per EFI
-log item.  This increases our exposure to leaking blocks if the system
-goes down during a reap, but also should prevent transaction overflows,
-which result in the system going down.
-
-Third, we change the bulkloader itself to copy multiple records into a
-block if possible, and add some debugging knobs so that developers can
-control the slack factors, just like they can do for xfs_repair.
+Now that we've spent a lot of time reworking common code in online fsck,
+we're ready to start rebuilding the AG space btrees.  This series
+implements repair functions for the free space, inode, and refcount
+btrees.  Rebuilding the reverse mapping btree is much more intense and
+is left for a subsequent patchset.  The fstests counterpart of this
+patchset implements stress testing of repair.
 
 If you're going to start using this code, I strongly recommend pulling
 from my git trees, which are linked below.
@@ -62,20 +53,50 @@ Comments and questions are, as always, welcome.
 --D
 
 kernel git tree:
-https://git.kernel.org/cgit/linux/kernel/git/djwong/xfs-linux.git/log/?h=repair-prep-for-bulk-loading
+https://git.kernel.org/cgit/linux/kernel/git/djwong/xfs-linux.git/log/?h=repair-ag-btrees
 
 xfsprogs git tree:
-https://git.kernel.org/cgit/linux/kernel/git/djwong/xfsprogs-dev.git/log/?h=repair-prep-for-bulk-loading
+https://git.kernel.org/cgit/linux/kernel/git/djwong/xfsprogs-dev.git/log/?h=repair-ag-btrees
+
+fstests git tree:
+https://git.kernel.org/cgit/linux/kernel/git/djwong/xfstests-dev.git/log/?h=repair-ag-btrees
 ---
- fs/xfs/libxfs/xfs_btree.c         |    2 +
- fs/xfs/libxfs/xfs_btree.h         |    3 ++
- fs/xfs/libxfs/xfs_btree_staging.c |   67 +++++++++++++++++++++++++------------
- fs/xfs/libxfs/xfs_btree_staging.h |   25 +++++++++++---
- fs/xfs/scrub/newbt.c              |   11 ++++--
- fs/xfs/xfs_buf.c                  |   47 ++++++++++++++++++++++++--
- fs/xfs/xfs_buf.h                  |    1 +
- fs/xfs/xfs_globals.c              |   12 +++++++
- fs/xfs/xfs_sysctl.h               |    2 +
- fs/xfs/xfs_sysfs.c                |   54 ++++++++++++++++++++++++++++++
- 10 files changed, 189 insertions(+), 35 deletions(-)
+ fs/xfs/Makefile                    |    3 
+ fs/xfs/libxfs/xfs_ag.h             |   10 
+ fs/xfs/libxfs/xfs_ag_resv.c        |    2 
+ fs/xfs/libxfs/xfs_alloc.c          |   18 -
+ fs/xfs/libxfs/xfs_alloc.h          |    2 
+ fs/xfs/libxfs/xfs_alloc_btree.c    |   13 -
+ fs/xfs/libxfs/xfs_btree.c          |   26 +
+ fs/xfs/libxfs/xfs_btree.h          |    2 
+ fs/xfs/libxfs/xfs_ialloc.c         |   41 +-
+ fs/xfs/libxfs/xfs_ialloc.h         |    3 
+ fs/xfs/libxfs/xfs_refcount.c       |   18 -
+ fs/xfs/libxfs/xfs_refcount.h       |    2 
+ fs/xfs/libxfs/xfs_refcount_btree.c |   13 -
+ fs/xfs/libxfs/xfs_types.h          |    7 
+ fs/xfs/scrub/agheader_repair.c     |   18 -
+ fs/xfs/scrub/alloc.c               |   16 +
+ fs/xfs/scrub/alloc_repair.c        |  914 ++++++++++++++++++++++++++++++++++++
+ fs/xfs/scrub/bitmap.c              |  404 +++++++++++++---
+ fs/xfs/scrub/bitmap.h              |   70 ++-
+ fs/xfs/scrub/common.c              |    1 
+ fs/xfs/scrub/common.h              |   19 +
+ fs/xfs/scrub/ialloc_repair.c       |  874 ++++++++++++++++++++++++++++++++++
+ fs/xfs/scrub/newbt.c               |   48 ++
+ fs/xfs/scrub/newbt.h               |    6 
+ fs/xfs/scrub/reap.c                |    5 
+ fs/xfs/scrub/refcount_repair.c     |  793 +++++++++++++++++++++++++++++++
+ fs/xfs/scrub/repair.c              |  128 +++++
+ fs/xfs/scrub/repair.h              |   43 ++
+ fs/xfs/scrub/scrub.c               |   22 +
+ fs/xfs/scrub/scrub.h               |    9 
+ fs/xfs/scrub/trace.h               |  112 +++-
+ fs/xfs/scrub/xfarray.h             |   22 +
+ fs/xfs/xfs_extent_busy.c           |   13 +
+ fs/xfs/xfs_extent_busy.h           |    2 
+ 34 files changed, 3493 insertions(+), 186 deletions(-)
+ create mode 100644 fs/xfs/scrub/alloc_repair.c
+ create mode 100644 fs/xfs/scrub/ialloc_repair.c
+ create mode 100644 fs/xfs/scrub/refcount_repair.c
 
