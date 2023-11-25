@@ -1,70 +1,55 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 90C60F9FE;
-	Sat, 25 Nov 2023 12:54:32 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 81BD720305;
+	Sat, 25 Nov 2023 17:13:15 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="lv4LMBic"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 6A1F7C433C8;
-	Sat, 25 Nov 2023 12:54:31 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="KAR15COC"
+Received: by smtp.kernel.org (Postfix) with ESMTPS id F03E2C433C9;
+	Sat, 25 Nov 2023 17:13:14 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1700916872;
-	bh=uwj+d7fEshZ9lZUyeodAsoUi2dZtB5p35AStykoLwvY=;
-	h=From:To:Cc:Subject:Date:From;
-	b=lv4LMBiczF1SzjGowPH4a3QDtOETx9/UMuFfIP26iWQNdGq2jFm/uimNnkfvD/gDO
-	 HziGMOK75vJK2VhlsqOMn4AhPm548Yb6gQDNlPbJcqYCKVt5+eCav73F1zyuHJjt9M
-	 w+XrtNfD6XsA+aa5yliV/dYXRFThxMrjKt18dhC0Fs70TNfaUMaKog+t6HH2iIaeK1
-	 7JUI27J9fmmgwcLxOLyWf4nv21DRYaRcxVBbhgq/VclooWPuVbeopz1ccNs4ecMALg
-	 QLY10ueVQEtVYDIIedndBHcGQdSDUV+pBPopWfxpXiEVwB156m6msRrZzjzhs3y/nX
-	 QBn48jWLb12pw==
-User-agent: mu4e 1.8.10; emacs 27.1
-From: Chandan Babu R <chandanbabu@kernel.org>
-To: torvalds@linux-foundation.org
-Cc: chandanbabu@kernel.org,djwong@kernel.org,hch@lst.de,linux-fsdevel@vger.kernel.org,linux-xfs@vger.kernel.org
-Subject: [GIT PULL] xfs: new code for 6.7
-Date: Sat, 25 Nov 2023 18:17:49 +0530
-Message-ID: <87fs0um1rw.fsf@debian-BULLSEYE-live-builder-AMD64>
+	s=k20201202; t=1700932395;
+	bh=xFKxYEeeMm35OvSpt7MHWJFkdy0CYP5cNDUvH54nJso=;
+	h=Subject:From:In-Reply-To:References:Date:To:Cc:From;
+	b=KAR15COC5AjkrqLul+wA4MRLXIe3siDgUrjUi+VxFR15SKCH66ozXPuiDsukwI0eR
+	 PLGLBIKBu+VjcqZIKa4pvGzwHNRlheoGjseLdizJwuo+G+wogmKpTOXpw4BxrZKfj/
+	 4CwH5zFoLeeOOAe12vDoAlYHziqzZWWayksZlIWStio0ZIr/xPmB7YaFJPYkXovj0S
+	 8T58EOx7fHYLY133j+Va2tyQU4Pm8S+Eaq4z1G0SWxK0ZPpsJBnxB+paS9NvIjj/Ug
+	 00pEr6qSzfFUABCYEPp26wSBDPliX1Zv9wmeO4ARMsdRIxXHXKC3Hx7P45+8GTWNrc
+	 J4O4TOIExvuPg==
+Received: from aws-us-west-2-korg-oddjob-1.ci.codeaurora.org (localhost.localdomain [127.0.0.1])
+	by aws-us-west-2-korg-oddjob-1.ci.codeaurora.org (Postfix) with ESMTP id D86DDEAA95E;
+	Sat, 25 Nov 2023 17:13:14 +0000 (UTC)
+Subject: Re: [GIT PULL] xfs: new code for 6.7
+From: pr-tracker-bot@kernel.org
+In-Reply-To: <87fs0um1rw.fsf@debian-BULLSEYE-live-builder-AMD64>
+References: <87fs0um1rw.fsf@debian-BULLSEYE-live-builder-AMD64>
+X-PR-Tracked-List-Id: <linux-fsdevel.vger.kernel.org>
+X-PR-Tracked-Message-Id: <87fs0um1rw.fsf@debian-BULLSEYE-live-builder-AMD64>
+X-PR-Tracked-Remote: https://git.kernel.org/pub/scm/fs/xfs/xfs-linux.git tags/xfs-6.7-fixes-3
+X-PR-Tracked-Commit-Id: 9c235dfc3d3f901fe22acb20f2ab37ff39f2ce02
+X-PR-Merge-Tree: torvalds/linux.git
+X-PR-Merge-Refname: refs/heads/master
+X-PR-Merge-Commit-Id: b46ae77f67874918c540feb1e37a63308b2c9290
+Message-Id: <170093239487.710.6463474129665620526.pr-tracker-bot@kernel.org>
+Date: Sat, 25 Nov 2023 17:13:14 +0000
+To: Chandan Babu R <chandanbabu@kernel.org>
+Cc: torvalds@linux-foundation.org, chandanbabu@kernel.org, djwong@kernel.org, hch@lst.de, linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-Content-Type: text/plain
 
-Hi Linus,
+The pull request you sent on Sat, 25 Nov 2023 18:17:49 +0530:
 
-Please pull this branch with changes for xfs for 6.7-rc3. XFS now validates
-quota records recovered from the log before writing them to the disk.
+> https://git.kernel.org/pub/scm/fs/xfs/xfs-linux.git tags/xfs-6.7-fixes-3
 
-I did a test-merge with the main upstream branch as of a few minutes ago and
-didn't see any conflicts.  Please let me know if you encounter any problems.
+has been merged into torvalds/linux.git:
+https://git.kernel.org/torvalds/c/b46ae77f67874918c540feb1e37a63308b2c9290
 
-The following changes since commit 98b1cc82c4affc16f5598d4fa14b1858671b2263:
+Thank you!
 
-  Linux 6.7-rc2 (2023-11-19 15:02:14 -0800)
-
-are available in the Git repository at:
-
-  https://git.kernel.org/pub/scm/fs/xfs/xfs-linux.git tags/xfs-6.7-fixes-3
-
-for you to fetch changes up to 9c235dfc3d3f901fe22acb20f2ab37ff39f2ce02:
-
-  xfs: dquot recovery does not validate the recovered dquot (2023-11-22 23:39:36 +0530)
-
-----------------------------------------------------------------
-Code changes for 6.7-rc2:
-
- * Validate quota records recovered from the log before writing them to the
-   disk.
-
-Signed-off-by: Chandan Babu R <chandanbabu@kernel.org>
-
-----------------------------------------------------------------
-Darrick J. Wong (2):
-      xfs: clean up dqblk extraction
-      xfs: dquot recovery does not validate the recovered dquot
-
- fs/xfs/xfs_dquot.c              |  5 +++--
- fs/xfs/xfs_dquot_item_recover.c | 21 ++++++++++++++++++---
- 2 files changed, 21 insertions(+), 5 deletions(-)
+-- 
+Deet-doot-dot, I am a bot.
+https://korg.docs.kernel.org/prtracker.html
