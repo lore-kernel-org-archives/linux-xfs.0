@@ -1,41 +1,150 @@
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="slCy+hh0"
-Received: from bombadil.infradead.org (bombadil.infradead.org [IPv6:2607:7c80:54:3::133])
-	by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 45BEEDD
-	for <linux-xfs@vger.kernel.org>; Sun, 26 Nov 2023 05:15:23 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-	d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Type:MIME-Version
-	:References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
-	Content-Transfer-Encoding:Content-ID:Content-Description;
-	bh=M7NmYC/Iylm9myghHwqILim55SAUt9QrM+UZYk0eJlw=; b=slCy+hh09vJAY0Zf/iM03+DnFJ
-	im6VEIikWLbHNU0FZNnLx1otMlDvb9cj5CiaLqjKx1OCXOB7zzlrKWFOQtuIQz8eWgG2njhWGzV4s
-	YWSrTIXyg9NMgKIYtWt3wj2OmjWGj3f5MX/mdJWirEzCAB4BbyDUxT4L/di3x4KZb3RQ4OeLfNh4G
-	LwhXpFyPYi1FnoT1Nwl7xYds8bh1aoMUBJDZAQ0S240LY8dlQqShueadGPYYx1doGE1ZjwLWYpBID
-	1ydptwAF+9QcAbDmmSzry7a8y2HyCfBg84ZPG4mzxvceE1oqRO77iGTiiKj1ESMtu7Wsvvcyjl6QL
-	Wn258BpQ==;
-Received: from hch by bombadil.infradead.org with local (Exim 4.96 #2 (Red Hat Linux))
-	id 1r7Eyn-00BKqX-2G;
-	Sun, 26 Nov 2023 13:15:21 +0000
-Date: Sun, 26 Nov 2023 05:15:21 -0800
-From: Christoph Hellwig <hch@infradead.org>
-To: "Darrick J. Wong" <djwong@kernel.org>
-Cc: Dave Chinner <dchinner@redhat.com>, linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 6/7] xfs: log EFIs for all btree blocks being used to
- stage a btree
-Message-ID: <ZWNE6Wi/ZqeW3ESf@infradead.org>
-References: <170086926113.2768790.10021834422326302654.stgit@frogsfrogsfrogs>
- <170086926222.2768790.3545458743634941117.stgit@frogsfrogsfrogs>
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="ed5Zyh0j"
+Received: from mail-pl1-x632.google.com (mail-pl1-x632.google.com [IPv6:2607:f8b0:4864:20::632])
+	by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6EA16127;
+	Sun, 26 Nov 2023 19:47:17 -0800 (PST)
+Received: by mail-pl1-x632.google.com with SMTP id d9443c01a7336-1cfaaa79766so17367325ad.3;
+        Sun, 26 Nov 2023 19:47:17 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20230601; t=1701056836; x=1701661636; darn=vger.kernel.org;
+        h=in-reply-to:subject:cc:to:from:message-id:date:from:to:cc:subject
+         :date:message-id:reply-to;
+        bh=RZ6BuCZCsznk2mCgUhldWvedcdSYmlICdH/YifDTnOs=;
+        b=ed5Zyh0jhTZAladHaS27YFftewQv6J33vBzmbvirSc0yEAH7gwpu6U/9aDDCb0pzmB
+         CqcKRgTyM5EuSxANGPxvc0YT78wpN/guydzQhC64EPfgLzUYEQnRINE7WRcRa8JQCP7Z
+         H/r2Kky5Pm89N8tltCh8JcFAK/wHrxGA8+fwHB7Rok1QBmjAKo9fzg2bUa9YxK48NHhH
+         251UVCuq58qn7U0CwrGFcigUohIDZnZNhT546jnpSyrWiLXlk2dKaUUkns+Bs53yCYXg
+         YqHMAgRfEDzZpQoEQDfY5YBKYHaj+fVbWH6Mtoep4x2ofbtPiX2K6mrxbiuOuRFuaT54
+         dHxQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1701056836; x=1701661636;
+        h=in-reply-to:subject:cc:to:from:message-id:date:x-gm-message-state
+         :from:to:cc:subject:date:message-id:reply-to;
+        bh=RZ6BuCZCsznk2mCgUhldWvedcdSYmlICdH/YifDTnOs=;
+        b=S8JT+d87lF/YqIoEyd2pMnlU4J5sRf1p6ImDpXIxOcr2MkCwsvVyx5Vwn7SkuxMynK
+         B76DrAtbbV7WiOagvm0fWx8s1jRtG2mJUYdRWt3ugSQ80NwDSPCO2PHXV6QGrheLEQUe
+         2KNtbjimvdlN9y66BaUZ7wD7FGY4caGg876o/e6K3EPaW4D1l8aqm/rX/Nl92Y3NcChk
+         7NlP5mZoKSoz+5QPjuRikjr9UChnUdvej6C+87obNcQS8tod+7qtA+2LlQHM+iQqglWe
+         ofd30eGF2b0oVZrKK5ScEKSEB9BUZp0DSrB/kvY3/cS2SnZBPnxDVqQzGNQsIAvmwKQm
+         4SUw==
+X-Gm-Message-State: AOJu0Yyg6Lat4Ks0lxj6U8qdIkohVcRe9hTVZctWuMjyvR55ib7Ke37U
+	8Z71GZ7LkDUjriHpYusjIfQUr+oZAl8=
+X-Google-Smtp-Source: AGHT+IH5OMs5yatJ9OW6GyeU6lhnxC73MUtYz/WNmbbq/i58BP7tfhhM2xqCMJSHS722ijdG20OStQ==
+X-Received: by 2002:a17:902:ec8f:b0:1cf:d9c7:3b1c with SMTP id x15-20020a170902ec8f00b001cfd9c73b1cmr18526plg.45.1701056835830;
+        Sun, 26 Nov 2023 19:47:15 -0800 (PST)
+Received: from dw-tp ([49.205.218.89])
+        by smtp.gmail.com with ESMTPSA id a5-20020a170902ee8500b001cf8a4882absm7147835pld.196.2023.11.26.19.47.13
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Sun, 26 Nov 2023 19:47:15 -0800 (PST)
+Date: Mon, 27 Nov 2023 09:17:07 +0530
+Message-Id: <87edgbsvr8.fsf@doe.com>
+From: Ritesh Harjani (IBM) <ritesh.list@gmail.com>
+To: Christoph Hellwig <hch@lst.de>, Christian Brauner <brauner@kernel.org>
+Cc: "Darrick J. Wong" <djwong@kernel.org>, Chandan Babu R <chandan.babu@oracle.com>, Zhang Yi <yi.zhang@huaweicloud.com>, linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org
+Subject: Re: [PATCH 01/13] iomap: clear the per-folio dirty bits on all writeback failures
+In-Reply-To: <20231126124720.1249310-2-hch@lst.de>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <170086926222.2768790.3545458743634941117.stgit@frogsfrogsfrogs>
-X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 
-Looks good:
+Christoph Hellwig <hch@lst.de> writes:
 
-Reviewed-by: Christoph Hellwig <hch@lst.de>
+> write_cache_pages always clear the page dirty bit before calling into the
+> file systems, and leaves folios with a writeback failure without the
+> dirty bit after return.  We also clear the per-block writeback bits for
+
+you mean per-block dirty bits, right?
+
+> writeback failures unless no I/O has submitted, which will leave the
+> folio in an inconsistent state where it doesn't have the folio dirty,
+> but one or more per-block dirty bits.  This seems to be due the place
+> where the iomap_clear_range_dirty call was inserted into the existing
+> not very clearly structured code when adding per-block dirty bit support
+> and not actually intentional.  Switch to always clearing the dirty on
+> writeback failure.
+>
+> Fixes: 4ce02c679722 ("iomap: Add per-block dirty state tracking to improve performance")
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
+> ---
+
+Thanks for catching it. Small nit.
+
+>  fs/iomap/buffered-io.c | 10 ++++++----
+>  1 file changed, 6 insertions(+), 4 deletions(-)
+>
+> diff --git a/fs/iomap/buffered-io.c b/fs/iomap/buffered-io.c
+> index f72df2babe561a..98d52feb220f0a 100644
+> --- a/fs/iomap/buffered-io.c
+> +++ b/fs/iomap/buffered-io.c
+> @@ -1849,10 +1849,6 @@ iomap_writepage_map(struct iomap_writepage_ctx *wpc,
+>  		 */
+
+		/*
+		 * Let the filesystem know what portion of the current page
+		 * failed to map. If the page hasn't been added to ioend, it
+		 * won't be affected by I/O completion and we must unlock it
+		 * now.
+		 */
+The comment to unlock it now becomes stale here.
+
+>  		if (wpc->ops->discard_folio)
+>  			wpc->ops->discard_folio(folio, pos);
+> -		if (!count) {
+> -			folio_unlock(folio);
+> -			goto done;
+> -		}
+>  	}
+>  
+>  	/*
+> @@ -1861,6 +1857,12 @@ iomap_writepage_map(struct iomap_writepage_ctx *wpc,
+>  	 * all the dirty bits in the folio here.
+>  	 */
+>  	iomap_clear_range_dirty(folio, 0, folio_size(folio));
+
+Maybe why not move iomap_clear_range_dirty() before?
+
+diff --git a/fs/iomap/buffered-io.c b/fs/iomap/buffered-io.c
+index 200c26f95893..c875ba632dd8 100644
+--- a/fs/iomap/buffered-io.c
++++ b/fs/iomap/buffered-io.c
+@@ -1842,6 +1842,13 @@ iomap_writepage_map(struct iomap_writepage_ctx *wpc,
+        if (count)
+                wpc->ioend->io_folios++;
+
++       /*
++        * We can have dirty bits set past end of file in page_mkwrite path
++        * while mapping the last partial folio. Hence it's better to clear
++        * all the dirty bits in the folio here.
++        */
++       iomap_clear_range_dirty(folio, 0, folio_size(folio));
++
+        WARN_ON_ONCE(!wpc->ioend && !list_empty(&submit_list));
+        WARN_ON_ONCE(!folio_test_locked(folio));
+        WARN_ON_ONCE(folio_test_writeback(folio));
+@@ -1867,13 +1874,6 @@ iomap_writepage_map(struct iomap_writepage_ctx *wpc,
+                        goto done;
+                }
+        }
+-
+-       /*
+-        * We can have dirty bits set past end of file in page_mkwrite path
+-        * while mapping the last partial folio. Hence it's better to clear
+-        * all the dirty bits in the folio here.
+-        */
+-       iomap_clear_range_dirty(folio, 0, folio_size(folio));
+        folio_start_writeback(folio);
+        folio_unlock(folio);
+
+> +
+> +	if (error && !count) {
+> +		folio_unlock(folio);
+> +		goto done;
+> +	}
+> +
+>  	folio_start_writeback(folio);
+>  	folio_unlock(folio);
+>  
+
+-ritesh
