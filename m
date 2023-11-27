@@ -1,46 +1,119 @@
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="BADvIn5t"
-Received: from bombadil.infradead.org (bombadil.infradead.org [IPv6:2607:7c80:54:3::133])
-	by lindbergh.monkeyblade.net (Postfix) with ESMTPS id EA919B6
-	for <linux-xfs@vger.kernel.org>; Mon, 27 Nov 2023 08:40:19 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-	d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Type:MIME-Version
-	:References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
-	Content-Transfer-Encoding:Content-ID:Content-Description;
-	bh=t7YBjbGqLcKvKJ2WRoF/xCWIhPFamT1RN3nbWjyN2xY=; b=BADvIn5tUWe9G4Jl0RXRnBzpv5
-	BZPqqkTYov7yY+RCPqPzl+mjlq2PFh/tEZYSdO1skSr94q/tb1OBG9zpnVjWYmD8DkxoxmJzQYTUI
-	PAhFd1V5dLeuPKpbstAp4d5b+wfjKsLF7PT4xSE9Pdt2qco7xMW4PUEDThY7V2rscIkJ3NXldg/R4
-	MKsm1yq9W9BRL9gAHqgOdQ3Gslc0utLdazSacjAdHCnCcNLH0JdBX20R3RuoW62II+7iMj0u7gJes
-	9rWIabOTlk6J3D3PnlR7Ia3DwZqvwXCsyLPNe9Wnw/q+BAV/v9jAUQFdQvR3aofEHH2o2Ni6HK7FS
-	yU7KApVQ==;
-Received: from hch by bombadil.infradead.org with local (Exim 4.96 #2 (Red Hat Linux))
-	id 1r7eee-0031zG-0H;
-	Mon, 27 Nov 2023 16:40:16 +0000
-Date: Mon, 27 Nov 2023 08:40:16 -0800
-From: Christoph Hellwig <hch@infradead.org>
-To: Christoph Hellwig <hch@lst.de>
-Cc: Chandan Babu R <chandan.babu@oracle.com>,
-	"Darrick J. Wong" <djwong@kernel.org>, linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 2/4] xfs: clean up the XFS_IOC_FSCOUNTS handler
-Message-ID: <ZWTGcENXNIrYuDYo@infradead.org>
-References: <20231126130124.1251467-1-hch@lst.de>
- <20231126130124.1251467-3-hch@lst.de>
+	dkim=pass (1024-bit key) header.d=linux-foundation.org header.i=@linux-foundation.org header.b="ekc7rlBw"
+Received: from mail-ej1-x62a.google.com (mail-ej1-x62a.google.com [IPv6:2a00:1450:4864:20::62a])
+	by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E873E85
+	for <linux-xfs@vger.kernel.org>; Mon, 27 Nov 2023 09:26:23 -0800 (PST)
+Received: by mail-ej1-x62a.google.com with SMTP id a640c23a62f3a-a00b056ca38so604511766b.2
+        for <linux-xfs@vger.kernel.org>; Mon, 27 Nov 2023 09:26:23 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=linux-foundation.org; s=google; t=1701105982; x=1701710782; darn=vger.kernel.org;
+        h=cc:to:subject:message-id:date:from:in-reply-to:references
+         :mime-version:from:to:cc:subject:date:message-id:reply-to;
+        bh=TEU3+aCfiSmQFyVqBrrLYcYFe/sY4vb17c0SHE7wKwE=;
+        b=ekc7rlBwFJAJRDepiogJXDsoOH7hkwTYqduMwpRQsRHKfWSY1DjDWwIm8iGu3VxY/O
+         LTPg9nSBlM3g2Arh7fJKexaOjQAWHNkNkKNXHJhe22rys0iED93kSy5QvEZ2kI6dxm+P
+         IWdK/jxkrpqyf7TmVIffpcM4z29yBUbh+IvY4=
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1701105982; x=1701710782;
+        h=cc:to:subject:message-id:date:from:in-reply-to:references
+         :mime-version:x-gm-message-state:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=TEU3+aCfiSmQFyVqBrrLYcYFe/sY4vb17c0SHE7wKwE=;
+        b=SUNiJN3yjMT/Zyd56e8n8FZajWxW5NcesslRbgNcNyw2Axm/qQq6ak1bxjvOE/fv9l
+         w5BVAUBnMk8dGBzicFxE4xvSpVIC7DcZYeXzeI6usB2Od261yxKBQkLr9ww00yBTTjce
+         eJd2XBc/pKExG8iOLDX22iPGhvuNXNvhAMw6TEPH8MmXgQVVy6L/N4XMWyz3wTMoVoMu
+         KLXl51wRnfDYFtKnzgMlMm/Vh2EVLn9BBlAqay8SpBYoe3juDrgnsUJEZGHKXjKYN5nC
+         OJYX+nMppaDoGTrj8Sc500lew6gNF8pW3MhaAfOIzlYHUfNhoHQdGGWsPYCrqQJIb4Hu
+         yc2A==
+X-Gm-Message-State: AOJu0YyUq65a+aCkeUcMn5x0Q3o+qtB8o6eJjuP0uC4yv7EFOxZd/Wn0
+	yhkbxVrf2YUIEuDS3+pdmCKdk3dBFQ8HpCXunywWnA==
+X-Google-Smtp-Source: AGHT+IFDJQabIhM2hgRC+sfxBugZiQd7G3SgEvHbkeceiqo2FxM7JkpQobvBONntmhi2EHdVtTKGuw==
+X-Received: by 2002:a17:906:4e57:b0:a10:b4ce:278f with SMTP id g23-20020a1709064e5700b00a10b4ce278fmr2206523ejw.20.1701105982005;
+        Mon, 27 Nov 2023 09:26:22 -0800 (PST)
+Received: from mail-ed1-f49.google.com (mail-ed1-f49.google.com. [209.85.208.49])
+        by smtp.gmail.com with ESMTPSA id v11-20020a1709067d8b00b009dddec5a96fsm5958792ejo.170.2023.11.27.09.26.21
+        for <linux-xfs@vger.kernel.org>
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Mon, 27 Nov 2023 09:26:21 -0800 (PST)
+Received: by mail-ed1-f49.google.com with SMTP id 4fb4d7f45d1cf-5441ba3e53cso6163738a12.1
+        for <linux-xfs@vger.kernel.org>; Mon, 27 Nov 2023 09:26:21 -0800 (PST)
+X-Received: by 2002:a05:6402:2b85:b0:54b:8958:3a3c with SMTP id
+ fj5-20020a0564022b8500b0054b89583a3cmr1821041edb.29.1701105981089; Mon, 27
+ Nov 2023 09:26:21 -0800 (PST)
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20231126130124.1251467-3-hch@lst.de>
-X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
+References: <ZUxoJh7NlWw+uBlt@infradead.org> <3423b42d-fc11-4695-89cc-f1e2d625fa90@suswa.mountain>
+ <ZWS+LLCggp70Eav3@infradead.org>
+In-Reply-To: <ZWS+LLCggp70Eav3@infradead.org>
+From: Linus Torvalds <torvalds@linux-foundation.org>
+Date: Mon, 27 Nov 2023 09:26:03 -0800
+X-Gmail-Original-Message-ID: <CAHk-=whC6fX5U3kfG9zKxw+_G=n=Y0VJYZ-BBF7EQ1KZM2Zb2g@mail.gmail.com>
+Message-ID: <CAHk-=whC6fX5U3kfG9zKxw+_G=n=Y0VJYZ-BBF7EQ1KZM2Zb2g@mail.gmail.com>
+Subject: Re: sparse feature request: nocast integer types
+To: Christoph Hellwig <hch@infradead.org>
+Cc: Dan Carpenter <dan.carpenter@linaro.org>, linux-sparse@vger.kernel.org, 
+	linux-xfs@vger.kernel.org, smatch@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
 
-> +static int
-> +xfs_ioctl_fs_counts(
-> +	struct xfs_mount	*mp,
-> +	struct xfs_fsop_counts	*uarg)
+On Mon, 27 Nov 2023 at 08:50, Christoph Hellwig <hch@infradead.org> wrote:
+>
+> Yes, doing it without specific annotations seems like a pain.  I did a
+> little prototype with the existing sparse __nocast for one xfs type that
+> is not very heavily used, and it actually worked pretty good.
+>
+> The major painpoint is that 0 isn't treated special, but with that
+> fixed the amount of churn is mangable.
 
-FYI, the buildbot (rightly) complained about a missing __user
-annotation for sparse here.
+I would suggest trying to just treat "__bitwise" as the "nocast" type.
+And note that doing a
 
+   typedef uXX __bitwise new_integer_type;
+
+will make a *specific* new integer type that is only compatible with
+itself (so not other bitwise types).
+
+Of course, that only works if you are then willing to just use
+accessor functions when you actually want to do arithmetic on the
+values. If you use a *lot* of arithmetic - as opposed to just passing
+values around - it is too painful.
+
+> The next big thing is our stupid 64-bit divison helpers (do_div & co),
+> which require helpers to do that case. I'm actually kinda tempted to
+> propose that we drop 32-bit support for xfs to get rid of that and a
+> lot of other ugly things because of do_div.  That is unless we can
+> finally agree that the libgcc division helpes might not be great but
+> good enough that we don't want to inflict do_div on folks unless they
+> want to optize that case, which would be even better.
+>
+> Linus, any commens on that?
+
+Some architectures do that, but honestly, we've had *horrendous*
+numbers of cases where people did 64x64 divisions without ever
+realizing what they did. Having it cause compile failures on x86 -
+even if it silently works elsewhere - means that they do get caught
+fairly quickly.
+
+Just go to lore, and search for "__divdi3". You will find *tons* of
+kernel test robot reports for completely idiotic cases that then never
+get to me because of this.
+
+IOW, you may not see it in the resulting kernel, but the reason you
+don't see it is *exactly* because we require that do_div() dance for
+64-bit divides.
+
+The least one I see is literally from less than a week ago, when media
+code tried to do this:
+
+        i = v / (1LL << fraction_bits);
+
+without realizing that a signed 64-bit division is truly *horrendous* here.
+
+So you may never see this, but it's a *constant* churn, and we really
+are better for it.  It's not some historical artifact, it's a "the
+kernel test robot finds stuff weekly".
+
+                 Linus
