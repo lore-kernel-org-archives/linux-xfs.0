@@ -1,109 +1,79 @@
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="iF2geH0k"
-Received: from mail-wr1-x435.google.com (mail-wr1-x435.google.com [IPv6:2a00:1450:4864:20::435])
-	by lindbergh.monkeyblade.net (Postfix) with ESMTPS id DAE96AA
-	for <linux-xfs@vger.kernel.org>; Mon, 27 Nov 2023 04:51:10 -0800 (PST)
-Received: by mail-wr1-x435.google.com with SMTP id ffacd0b85a97d-332e58d4219so2282314f8f.0
-        for <linux-xfs@vger.kernel.org>; Mon, 27 Nov 2023 04:51:10 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=linaro.org; s=google; t=1701089469; x=1701694269; darn=vger.kernel.org;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
-        bh=lkEnJkQ+8Ev6iHNDxxp1hNcEh3zIdT+74ecMOxzL+Rc=;
-        b=iF2geH0kV9npsudi2Kpj/f5nlB3Tio+r06KazJSspbX7gAl0J1PF4JTicwwgrokSrQ
-         QuDtScJUZLCwrd+UwSZ4p5ZqrPg0AGrFaGcMU44puZXPD1TNDvdsA+CDMzXGApZJrINW
-         dWx0w8QRamEVeE3f8Jl/moT0B+3sRHwnhVhJbUrzIWw4qlIyijZz1d4P1RyI85ValrNb
-         OGe3q4Ktpe4M4eRYbKJS/5OgsOG7zF35hR6qf/3FYDuFr+b9P+FlN9jAHs9LxncNM4BU
-         2VPO/bPwWrXy2asc5yAjY4UDOYr98mtHQupP9fozGwaOdZ/zG8Q2JhJet6Fe+hB+6IX+
-         uPKg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1701089469; x=1701694269;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=lkEnJkQ+8Ev6iHNDxxp1hNcEh3zIdT+74ecMOxzL+Rc=;
-        b=DtTfFXsCzs7ehy8mN1hrYrYw03CUgZPNmsgNGd6oj/cBBPRa2nViPS/oNRvpIrQBd+
-         KUxwftUvNnV5gMIfhkuX57SAyCUHsnSAjnTIun1uAjrjccPxIdjfPo4X1IO29/GxSMIv
-         cU0cD6pXCssp+3Nws4x857NiTRH0xiQ8LYEwfV39pgAuP2uHYGKi7e8cL0ETgcAz6rY+
-         Hk/nIEK6iqRL+YFIj/RVNsePBHulZUF8M6rfA+9Ey+61oyleQ9mKvos4OmAyLaxmlNI2
-         ufwLBSOOn1y4Ray+QQRxPYQrTG0ir1M/abo6FC8s28jjj6/kMzasFsvT9yDoWUifH2ZP
-         PSsg==
-X-Gm-Message-State: AOJu0Yy1PuV2Ozl4+3bRyxJJ8F/+QxIW5b5o+CqD6l8X4ynzRhogJgyI
-	RDL2iV+7QMa0hkicqu+GGbOkxb/1lbcaiRV1NZI=
-X-Google-Smtp-Source: AGHT+IESTXcdj+cFasSB8O6jt39AbGsFvEEJSEIi1tOb8PnF7kDzxKBNbXijkusKpfYHALW6AWqHBg==
-X-Received: by 2002:a5d:4903:0:b0:332:e4fb:6b62 with SMTP id x3-20020a5d4903000000b00332e4fb6b62mr7426566wrq.39.1701089469383;
-        Mon, 27 Nov 2023 04:51:09 -0800 (PST)
-Received: from localhost ([102.36.222.112])
-        by smtp.gmail.com with ESMTPSA id dr22-20020a5d5f96000000b00333018c4b2asm2271798wrb.71.2023.11.27.04.51.07
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 27 Nov 2023 04:51:08 -0800 (PST)
-Date: Mon, 27 Nov 2023 15:51:05 +0300
-From: Dan Carpenter <dan.carpenter@linaro.org>
-To: Christoph Hellwig <hch@infradead.org>
-Cc: linux-sparse@vger.kernel.org, linux-xfs@vger.kernel.org,
-	smatch@vger.kernel.org
-Subject: Re: sparse feature request: nocast integer types
-Message-ID: <3423b42d-fc11-4695-89cc-f1e2d625fa90@suswa.mountain>
-References: <ZUxoJh7NlWw+uBlt@infradead.org>
+Authentication-Results: smtp.subspace.kernel.org; dkim=none
+Received: from dggsgout12.his.huawei.com (dggsgout12.his.huawei.com [45.249.212.56])
+	by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 169DC1B4;
+	Mon, 27 Nov 2023 04:53:27 -0800 (PST)
+Received: from mail.maildlp.com (unknown [172.19.163.235])
+	by dggsgout12.his.huawei.com (SkyGuard) with ESMTP id 4Sf59Z0gMNz4f3js3;
+	Mon, 27 Nov 2023 20:53:22 +0800 (CST)
+Received: from mail02.huawei.com (unknown [10.116.40.112])
+	by mail.maildlp.com (Postfix) with ESMTP id EAAAA1A08C3;
+	Mon, 27 Nov 2023 20:53:23 +0800 (CST)
+Received: from [10.174.176.34] (unknown [10.174.176.34])
+	by APP1 (Coremail) with SMTP id cCh0CgA3iA5CkWRl_EpWCA--.4504S3;
+	Mon, 27 Nov 2023 20:53:23 +0800 (CST)
+Subject: Re: [PATCH 09/13] iomap: don't chain bios
+To: Christoph Hellwig <hch@lst.de>, Christian Brauner <brauner@kernel.org>
+Cc: "Darrick J. Wong" <djwong@kernel.org>,
+ Chandan Babu R <chandan.babu@oracle.com>,
+ Ritesh Harjani <ritesh.list@gmail.com>, linux-xfs@vger.kernel.org,
+ linux-fsdevel@vger.kernel.org
+References: <20231126124720.1249310-1-hch@lst.de>
+ <20231126124720.1249310-10-hch@lst.de>
+From: Zhang Yi <yi.zhang@huaweicloud.com>
+Message-ID: <0f136350-3242-3e20-3b8a-56a39c66b001@huaweicloud.com>
+Date: Mon, 27 Nov 2023 20:53:22 +0800
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:78.0) Gecko/20100101
+ Thunderbird/78.12.0
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <ZUxoJh7NlWw+uBlt@infradead.org>
+In-Reply-To: <20231126124720.1249310-10-hch@lst.de>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
+X-CM-TRANSID:cCh0CgA3iA5CkWRl_EpWCA--.4504S3
+X-Coremail-Antispam: 1UD129KBjvdXoW7Gry3Cr48uF1fWr1DZr1UWrg_yoWkJrb_Wa
+	yfXF18Cw1DXaykZa17KFy7JrWkKrWUX3s5ZrnxJrs3X34rA3s8Zr95KrnI9r1Fq3Z5WF4S
+	g3W5W3yUZr42kjkaLaAFLSUrUUUUUb8apTn2vfkv8UJUUUU8Yxn0WfASr-VFAUDa7-sFnT
+	9fnUUIcSsGvfJTRUUUbzkYFVCjjxCrM7AC8VAFwI0_Gr0_Xr1l1xkIjI8I6I8E6xAIw20E
+	Y4v20xvaj40_Wr0E3s1l1IIY67AEw4v_Jr0_Jr4l8cAvFVAK0II2c7xJM28CjxkF64kEwV
+	A0rcxSw2x7M28EF7xvwVC0I7IYx2IY67AKxVW5JVW7JwA2z4x0Y4vE2Ix0cI8IcVCY1x02
+	67AKxVWxJVW8Jr1l84ACjcxK6I8E87Iv67AKxVW0oVCq3wA2z4x0Y4vEx4A2jsIEc7CjxV
+	AFwI0_GcCE3s1le2I262IYc4CY6c8Ij28IcVAaY2xG8wAqx4xG64xvF2IEw4CE5I8CrVC2
+	j2WlYx0E2Ix0cI8IcVAFwI0_Jr0_Jr4lYx0Ex4A2jsIE14v26r1j6r4UMcvjeVCFs4IE7x
+	kEbVWUJVW8JwACjcxG0xvEwIxGrwCYjI0SjxkI62AI1cAE67vIY487MxAIw28IcxkI7VAK
+	I48JMxC20s026xCaFVCjc4AY6r1j6r4UMI8I3I0E5I8CrVAFwI0_Jr0_Jr4lx2IqxVCjr7
+	xvwVAFwI0_JrI_JrWlx4CE17CEb7AF67AKxVWUAVWUtwCIc40Y0x0EwIxGrwCI42IY6xII
+	jxv20xvE14v26r1j6r1xMIIF0xvE2Ix0cI8IcVCY1x0267AKxVWUJVW8JwCI42IY6xAIw2
+	0EY4v20xvaj40_WFyUJVCq3wCI42IY6I8E87Iv67AKxVWUJVW8JwCI42IY6I8E87Iv6xkF
+	7I0E14v26r1j6r4UYxBIdaVFxhVjvjDU0xZFpf9x07UWE__UUUUU=
+X-CM-SenderInfo: d1lo6xhdqjqx5xdzvxpfor3voofrz/
 
-On Wed, Nov 08, 2023 at 09:03:34PM -0800, Christoph Hellwig wrote:
-> Hi dear spearse developers,
+Hi, Christoph.
+
+On 2023/11/26 20:47, Christoph Hellwig wrote:
+> Back in the days when a single bio could only be filled to the hardware
+> limits, and we scheduled a work item for each bio completion, chaining
+> multiple bios for a single ioend made a lot of sense to reduce the number
+> of completions.  But these days bios can be filled until we reach the
+> number of vectors or total size limit, which means we can always fit at
+> least 1 megabyte worth of data in the worst case, but usually a lot more
+> due to large folios.  The only thing bio chaining is buying us now is
+> to reduce the size of the allocation from an ioend with an embedded bio
+> into a plain bio, which is a 52 bytes differences on 64-bit systems.
 > 
-> in a lot of kernel code we have integer types that store offsets and
-> length in certain units (typically 512 byte disk "sectors", file systems
-> block sizes, and some weird variations of the same), and we had a fair
-> amount of bugs beause people get confused about which ones to use.
+> This is not worth the added complexity, so remove the bio chaining and
+> only use the bio embedded into the ioend.  This will help to simplify
+> further changes to the iomap writeback code.
 > 
-> I wonder if it is possible to add an attribute (say nocast) that works
-> similar to __attribute__((bitwise)) in that it disallows mixing this
-> type with other integer types, but unlike __attribute__((bitwise))
-> allows all the normal arithmetics on it?  That way we could annotate
-> all the normal conversion helpers with __force overrides and check
-> where people are otherwise mixing these types.
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
 
-I started writing something like this in Smatch for tying variables to
-a specific unit.
+A nice cleanup! I'm just a little curious about the writeback performance
+impact of this patch. Do you have any actual test data on xfs?
 
-https://github.com/error27/smatch/blob/master/smatch_units.c
+Thanks,
+Yi.
 
-But unfortunately, it doesn't actually work.  The problem is that once
-I said x is a byte, then if you have y = x then I would store that in
-the database.  If the first "x is a byte" assessment was wrong then the
-misinformation gets amplified times 100 and can't be purged without
-a mass delete.
-
-The second problem is that Smatch automatically determines that a struct
-foo->bar is a byte unit or whatever.  Which generally works, but
-sometimes fails catastrophically.  For example, it's not true to
-all the registers are used to store byte units.  But some code does
-store bytes there and now Smatch thinks the everything stored in
-registers is in bytes.
-
-My plan was to go through the false positives and manually edit out
-stuff like this.  The problem is that it's a lot of work and I haven't
-done it.  I did a similar thing for tracking user data and that works
-pretty decently these days.  So it's doable.
-
-I tend to avoid manual annotations, but here it could be good.  Manually
-annotating things would avoid the false positives (at the expense of
-missing bugs).
-
-I'd prefer an annotation that had the type of the unit built in.
-
-Creating an annotation like that is difficult because you have to
-coordinate with GCC and Clang etc.  In the mean time, I could just
-create a table in smatch which has stuff like:
-
-	{ "(struct foo)->member", &byte_units },
-
-regards,
-dan carpenter
