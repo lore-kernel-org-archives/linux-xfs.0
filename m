@@ -1,123 +1,109 @@
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="OqLFFtgk"
-Received: from mail-pf1-x435.google.com (mail-pf1-x435.google.com [IPv6:2607:f8b0:4864:20::435])
-	by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6401AE1;
-	Mon, 27 Nov 2023 01:54:55 -0800 (PST)
-Received: by mail-pf1-x435.google.com with SMTP id d2e1a72fcca58-6b20a48522fso3037549b3a.1;
-        Mon, 27 Nov 2023 01:54:55 -0800 (PST)
+	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="iF2geH0k"
+Received: from mail-wr1-x435.google.com (mail-wr1-x435.google.com [IPv6:2a00:1450:4864:20::435])
+	by lindbergh.monkeyblade.net (Postfix) with ESMTPS id DAE96AA
+	for <linux-xfs@vger.kernel.org>; Mon, 27 Nov 2023 04:51:10 -0800 (PST)
+Received: by mail-wr1-x435.google.com with SMTP id ffacd0b85a97d-332e58d4219so2282314f8f.0
+        for <linux-xfs@vger.kernel.org>; Mon, 27 Nov 2023 04:51:10 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1701078894; x=1701683694; darn=vger.kernel.org;
-        h=in-reply-to:subject:cc:to:from:message-id:date:from:to:cc:subject
-         :date:message-id:reply-to;
-        bh=5TzpQLD2R8M7hAu/TyXug/Z5uSqY3uH4C9snuUtPp9Y=;
-        b=OqLFFtgkx9mrvL1Jja/deIg8BpYqX6iIkhwAshCxvlbXhAKGcNK0eb9y8Stby2iOLx
-         ljCc8s+vl/ZtD5GU+sywRUiNj4Szw1oXJUsJLGJ1MyQdYxrXguSXsy0iYnEbfbQau0JQ
-         DJWAdz4y/v+iTgXgkRRfLsgGZXSvXe8dm6l9PHVQVTJc9fjPY13D07vkmPebDEsIb8Ae
-         NXZXpnvMMlcfudimwXkFjp+OZBh6u8/g78LmLSXZRA7e23/vjNlt7EbZGrMTtHteP8S6
-         la3kCNWfUxZVm+UYvl5hcds6hgBsDLDDPQSLL+nNJgYH/7bJEp1vLmJTEwlGLCIAUBgy
-         hzSQ==
+        d=linaro.org; s=google; t=1701089469; x=1701694269; darn=vger.kernel.org;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
+        bh=lkEnJkQ+8Ev6iHNDxxp1hNcEh3zIdT+74ecMOxzL+Rc=;
+        b=iF2geH0kV9npsudi2Kpj/f5nlB3Tio+r06KazJSspbX7gAl0J1PF4JTicwwgrokSrQ
+         QuDtScJUZLCwrd+UwSZ4p5ZqrPg0AGrFaGcMU44puZXPD1TNDvdsA+CDMzXGApZJrINW
+         dWx0w8QRamEVeE3f8Jl/moT0B+3sRHwnhVhJbUrzIWw4qlIyijZz1d4P1RyI85ValrNb
+         OGe3q4Ktpe4M4eRYbKJS/5OgsOG7zF35hR6qf/3FYDuFr+b9P+FlN9jAHs9LxncNM4BU
+         2VPO/bPwWrXy2asc5yAjY4UDOYr98mtHQupP9fozGwaOdZ/zG8Q2JhJet6Fe+hB+6IX+
+         uPKg==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1701078894; x=1701683694;
-        h=in-reply-to:subject:cc:to:from:message-id:date:x-gm-message-state
-         :from:to:cc:subject:date:message-id:reply-to;
-        bh=5TzpQLD2R8M7hAu/TyXug/Z5uSqY3uH4C9snuUtPp9Y=;
-        b=qJhLOdjt5HpiMjcXUPQVUoPXOQ0int8vceAiDx0HRGAmOrcf7Ibao/JPJDQvvoO7Bk
-         mtL9ES6K67VMV0zluwle7yGubfofWLnFktFVc2OoNSKbRCUqayD8gFw6YBMlfmY/wbdq
-         euB/rGb6reH0OPu47fHrR1gIvr29nmlx8z1NU7H3q4r+S4VF6AppWsLwZdC76hh5iV0h
-         tFCFeQ2g4y8/m1LhI0yuQfecHnQpWLWIN0Fp+fFXWC1Hcup5WDTjsOIW+nxng3JdjJ1q
-         ZXgKQwjtd1ArqKVhn44Psc7riWxrpwCeYDymcyqzIwJKxIwFvZLpFWZ7WxBvgZJ+Ks7C
-         ao+A==
-X-Gm-Message-State: AOJu0YwNBDuIPgqkde2tde2UIvS2tm+pZK6g4quZ/cYDgN3VqctyCuKa
-	ue5fmorOg6zNuAB7NcjWZ8unWBF508Y=
-X-Google-Smtp-Source: AGHT+IH0mz3BK0MKSjmo5CAK05QKAl5fsVDjekIVFK8CwW2Qg5Tmklg5KexyZMtjYl7OBzOJXbXlIw==
-X-Received: by 2002:a05:6a00:4c8f:b0:6c4:ac49:89a3 with SMTP id eb15-20020a056a004c8f00b006c4ac4989a3mr10639010pfb.14.1701078893791;
-        Mon, 27 Nov 2023 01:54:53 -0800 (PST)
-Received: from dw-tp ([49.205.218.89])
-        by smtp.gmail.com with ESMTPSA id n29-20020a056a000d5d00b006c4d2479c1asm6851067pfv.219.2023.11.27.01.54.51
+        d=1e100.net; s=20230601; t=1701089469; x=1701694269;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=lkEnJkQ+8Ev6iHNDxxp1hNcEh3zIdT+74ecMOxzL+Rc=;
+        b=DtTfFXsCzs7ehy8mN1hrYrYw03CUgZPNmsgNGd6oj/cBBPRa2nViPS/oNRvpIrQBd+
+         KUxwftUvNnV5gMIfhkuX57SAyCUHsnSAjnTIun1uAjrjccPxIdjfPo4X1IO29/GxSMIv
+         cU0cD6pXCssp+3Nws4x857NiTRH0xiQ8LYEwfV39pgAuP2uHYGKi7e8cL0ETgcAz6rY+
+         Hk/nIEK6iqRL+YFIj/RVNsePBHulZUF8M6rfA+9Ey+61oyleQ9mKvos4OmAyLaxmlNI2
+         ufwLBSOOn1y4Ray+QQRxPYQrTG0ir1M/abo6FC8s28jjj6/kMzasFsvT9yDoWUifH2ZP
+         PSsg==
+X-Gm-Message-State: AOJu0Yy1PuV2Ozl4+3bRyxJJ8F/+QxIW5b5o+CqD6l8X4ynzRhogJgyI
+	RDL2iV+7QMa0hkicqu+GGbOkxb/1lbcaiRV1NZI=
+X-Google-Smtp-Source: AGHT+IESTXcdj+cFasSB8O6jt39AbGsFvEEJSEIi1tOb8PnF7kDzxKBNbXijkusKpfYHALW6AWqHBg==
+X-Received: by 2002:a5d:4903:0:b0:332:e4fb:6b62 with SMTP id x3-20020a5d4903000000b00332e4fb6b62mr7426566wrq.39.1701089469383;
+        Mon, 27 Nov 2023 04:51:09 -0800 (PST)
+Received: from localhost ([102.36.222.112])
+        by smtp.gmail.com with ESMTPSA id dr22-20020a5d5f96000000b00333018c4b2asm2271798wrb.71.2023.11.27.04.51.07
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 27 Nov 2023 01:54:53 -0800 (PST)
-Date: Mon, 27 Nov 2023 15:24:49 +0530
-Message-Id: <87plzvr05y.fsf@doe.com>
-From: Ritesh Harjani (IBM) <ritesh.list@gmail.com>
-To: Christoph Hellwig <hch@lst.de>, Christian Brauner <brauner@kernel.org>
-Cc: "Darrick J. Wong" <djwong@kernel.org>, Chandan Babu R <chandan.babu@oracle.com>, Zhang Yi <yi.zhang@huaweicloud.com>, linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org
-Subject: Re: [PATCH 08/13] iomap: move the iomap_sector sector calculation out of iomap_add_to_ioend
-In-Reply-To: <20231126124720.1249310-9-hch@lst.de>
+        Mon, 27 Nov 2023 04:51:08 -0800 (PST)
+Date: Mon, 27 Nov 2023 15:51:05 +0300
+From: Dan Carpenter <dan.carpenter@linaro.org>
+To: Christoph Hellwig <hch@infradead.org>
+Cc: linux-sparse@vger.kernel.org, linux-xfs@vger.kernel.org,
+	smatch@vger.kernel.org
+Subject: Re: sparse feature request: nocast integer types
+Message-ID: <3423b42d-fc11-4695-89cc-f1e2d625fa90@suswa.mountain>
+References: <ZUxoJh7NlWw+uBlt@infradead.org>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <ZUxoJh7NlWw+uBlt@infradead.org>
 
-Christoph Hellwig <hch@lst.de> writes:
+On Wed, Nov 08, 2023 at 09:03:34PM -0800, Christoph Hellwig wrote:
+> Hi dear spearse developers,
+> 
+> in a lot of kernel code we have integer types that store offsets and
+> length in certain units (typically 512 byte disk "sectors", file systems
+> block sizes, and some weird variations of the same), and we had a fair
+> amount of bugs beause people get confused about which ones to use.
+> 
+> I wonder if it is possible to add an attribute (say nocast) that works
+> similar to __attribute__((bitwise)) in that it disallows mixing this
+> type with other integer types, but unlike __attribute__((bitwise))
+> allows all the normal arithmetics on it?  That way we could annotate
+> all the normal conversion helpers with __force overrides and check
+> where people are otherwise mixing these types.
 
-> The calculation in iomap_sector is pretty trivial and most of the time
-> iomap_add_to_ioend only callers either iomap_can_add_to_ioend or
-> iomap_alloc_ioend from a single invocation.
->
-> Calculate the sector in the two lower level functions and stop passing it
-> from iomap_add_to_ioend and update the iomap_alloc_ioend argument passing
-> order to match that of iomap_add_to_ioend.
->
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
-> ---
->  fs/iomap/buffered-io.c | 22 ++++++++++------------
->  1 file changed, 10 insertions(+), 12 deletions(-)
+I started writing something like this in Smatch for tying variables to
+a specific unit.
 
-Straight forward change. Looks good to me, please feel free to add - 
-(small nit below on naming style convention)
+https://github.com/error27/smatch/blob/master/smatch_units.c
 
-Reviewed-by: Ritesh Harjani (IBM) <ritesh.list@gmail.com>
+But unfortunately, it doesn't actually work.  The problem is that once
+I said x is a byte, then if you have y = x then I would store that in
+the database.  If the first "x is a byte" assessment was wrong then the
+misinformation gets amplified times 100 and can't be purged without
+a mass delete.
 
->
-> diff --git a/fs/iomap/buffered-io.c b/fs/iomap/buffered-io.c
-> index 7f86d2f90e3863..329e2c342f1c64 100644
-> --- a/fs/iomap/buffered-io.c
-> +++ b/fs/iomap/buffered-io.c
-> @@ -1666,9 +1666,8 @@ iomap_submit_ioend(struct iomap_writepage_ctx *wpc, struct iomap_ioend *ioend,
->  	return 0;
->  }
->  
-> -static struct iomap_ioend *
-> -iomap_alloc_ioend(struct inode *inode, struct iomap_writepage_ctx *wpc,
-> -		loff_t offset, sector_t sector, struct writeback_control *wbc)
-> +static struct iomap_ioend *iomap_alloc_ioend(struct iomap_writepage_ctx *wpc,
-> +		struct writeback_control *wbc, struct inode *inode, loff_t pos)
->  {
->  	struct iomap_ioend *ioend;
->  	struct bio *bio;
-> @@ -1676,7 +1675,7 @@ iomap_alloc_ioend(struct inode *inode, struct iomap_writepage_ctx *wpc,
->  	bio = bio_alloc_bioset(wpc->iomap.bdev, BIO_MAX_VECS,
->  			       REQ_OP_WRITE | wbc_to_write_flags(wbc),
->  			       GFP_NOFS, &iomap_ioend_bioset);
-> -	bio->bi_iter.bi_sector = sector;
-> +	bio->bi_iter.bi_sector = iomap_sector(&wpc->iomap, pos);
->  	wbc_init_bio(wbc, bio);
->  
->  	ioend = container_of(bio, struct iomap_ioend, io_inline_bio);
-> @@ -1685,9 +1684,9 @@ iomap_alloc_ioend(struct inode *inode, struct iomap_writepage_ctx *wpc,
->  	ioend->io_flags = wpc->iomap.flags;
->  	ioend->io_inode = inode;
->  	ioend->io_size = 0;
-> -	ioend->io_offset = offset;
-> +	ioend->io_offset = pos;
->  	ioend->io_bio = bio;
-> -	ioend->io_sector = sector;
-> +	ioend->io_sector = bio->bi_iter.bi_sector;
->  
->  	wpc->nr_folios = 0;
->  	return ioend;
-> @@ -1716,8 +1715,7 @@ iomap_chain_bio(struct bio *prev)
->  }
->  
->  static bool
-> -iomap_can_add_to_ioend(struct iomap_writepage_ctx *wpc, loff_t offset,
-> -		sector_t sector)
-> +iomap_can_add_to_ioend(struct iomap_writepage_ctx *wpc, loff_t offset)
+The second problem is that Smatch automatically determines that a struct
+foo->bar is a byte unit or whatever.  Which generally works, but
+sometimes fails catastrophically.  For example, it's not true to
+all the registers are used to store byte units.  But some code does
+store bytes there and now Smatch thinks the everything stored in
+registers is in bytes.
 
-Not sure which style you would like to keep in fs/iomap/.
-Should the function name be in the same line as "static bool" or in the next line?
-For previous function you made the function name definition in the same
-line. Or is the naming style irrelevant for fs/iomap/?
+My plan was to go through the false positives and manually edit out
+stuff like this.  The problem is that it's a lot of work and I haven't
+done it.  I did a similar thing for tracking user data and that works
+pretty decently these days.  So it's doable.
 
--ritesh
+I tend to avoid manual annotations, but here it could be good.  Manually
+annotating things would avoid the false positives (at the expense of
+missing bugs).
+
+I'd prefer an annotation that had the type of the unit built in.
+
+Creating an annotation like that is difficult because you have to
+coordinate with GCC and Clang etc.  In the mean time, I could just
+create a table in smatch which has stuff like:
+
+	{ "(struct foo)->member", &byte_units },
+
+regards,
+dan carpenter
