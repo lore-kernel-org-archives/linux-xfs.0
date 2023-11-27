@@ -1,48 +1,48 @@
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="jciNYYpa"
-Received: from mail-pl1-x630.google.com (mail-pl1-x630.google.com [IPv6:2607:f8b0:4864:20::630])
-	by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0253F12F;
-	Sun, 26 Nov 2023 21:01:37 -0800 (PST)
-Received: by mail-pl1-x630.google.com with SMTP id d9443c01a7336-1cfc2bcffc7so4952635ad.1;
-        Sun, 26 Nov 2023 21:01:36 -0800 (PST)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="B3k/sLxR"
+Received: from mail-oi1-x230.google.com (mail-oi1-x230.google.com [IPv6:2607:f8b0:4864:20::230])
+	by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8F557B5;
+	Sun, 26 Nov 2023 21:33:41 -0800 (PST)
+Received: by mail-oi1-x230.google.com with SMTP id 5614622812f47-3b842c1511fso2433259b6e.1;
+        Sun, 26 Nov 2023 21:33:41 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1701061296; x=1701666096; darn=vger.kernel.org;
+        d=gmail.com; s=20230601; t=1701063220; x=1701668020; darn=vger.kernel.org;
         h=in-reply-to:subject:cc:to:from:message-id:date:from:to:cc:subject
          :date:message-id:reply-to;
-        bh=0LGWhMOdJ9kEgvG9PE0ksbBVphAsskS0KLGQgZ0nnow=;
-        b=jciNYYpaVXZd0kXntc8SRgZ1qG4OeB16LlAAo/uhnbglAUZU0Oo5qfjEafAEv2O0Db
-         RXxVnTAg2xKV8Ya9jUNKM7P64FvAiaaweN8N5yzuY5BIFa1omKGjxvVSsd4jOZZymHBa
-         yuUVdPdR6cvEx4+jJh8xRLW0Tq108/vWq+G24T6rmX+ZxBePHyH+rMnWRZfYqi3ZjdFM
-         5YcJrWRoNcU58fxrOobsJx/SAMYoygUHNxoRfdUm3MekaNIiDPsmuRzJnHY3HIQv4PcJ
-         OYJzTMTfgzi3CAwKMHI8dcAhf1N7Ep+kovwLanDb09IZbbtC5ZTFHm+uk87gNPL0L2Rw
-         UmDw==
+        bh=/FD4q+YVmvTaZu+k/5gCWbJStI77UMa1v3g64Mxy4Ys=;
+        b=B3k/sLxRMBKJXzzDNehH5jEI2r2sWNwa4tySiE5TEE68anhUqGWWtGf/LKNgA+XQK5
+         F0upnZUi3brC7Eo9CS/p900RTRjRoB070j9FJ/lUWQER67ZcNwUTq6ZhydC/EE3QQanM
+         Qy4iSnAMhIsE3HFRFoHA7NbQmlBqlXRmmSyNDk/o4YdQbFe34aBYaeDPuhQ4WRbUuxiD
+         G1kgGHv9ciOovAzgozvegFeB43HAYlGbRbXhe823i+R8/4mg4z0mpJ+ALyDBaVb6zLmm
+         klZlKX9cvkJ1ZditWKxmg1V9G7ldm7CYM1+LDUuig+iq6hKOtk/TwjycGTnNmJft+ApH
+         lMPQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1701061296; x=1701666096;
+        d=1e100.net; s=20230601; t=1701063220; x=1701668020;
         h=in-reply-to:subject:cc:to:from:message-id:date:x-gm-message-state
          :from:to:cc:subject:date:message-id:reply-to;
-        bh=0LGWhMOdJ9kEgvG9PE0ksbBVphAsskS0KLGQgZ0nnow=;
-        b=hz9OlabZgKJuZbmi5r5GBfh3EO2npHoc7TAra6SZrjnhjRhLrXqgnnykidp39fwz/g
-         bvfUMcqN4VsGRXy0dAmea3pFpHI43qjJaIRiAE7t+DXzMUctvqJPFx1ozGBq8AvX9+MU
-         wzswn3LLRKuRJFCSnOyjo2Z3jsCn/lR6TXnJq9WnL9RnT6tIj/60N46GCnROmjYHyAkm
-         wkLmPN+X5N+KyZj63yxLtRSkttnHM8bNHe+Cp8jkCeU5WIM5kvvAL92laPQCH3T2NjmQ
-         Gi9Z6QciMf/oP7DP9WG4lvh6eTTLnmR0G2ki97B8tV+4IO6NgcR7PkLlaP2Ibjn74DFD
-         xTJA==
-X-Gm-Message-State: AOJu0YzR7zmFFvz/79DmhHYN4zZMpJOd9m+BAAWQOSP0+hPBI+Y82Y/2
-	8LujG7PX784QdQ82zxvbcOOiCydMf0g=
-X-Google-Smtp-Source: AGHT+IHKa4SduOKsqzkUj52RxHRbPhr9y4uhhDweSW+e9raPF4aSMXQq0BFFLMf/DhWzlfCDB7Uw2Q==
-X-Received: by 2002:a17:902:ed41:b0:1cf:cbec:ead5 with SMTP id y1-20020a170902ed4100b001cfcbecead5mr2370817plb.26.1701061295871;
-        Sun, 26 Nov 2023 21:01:35 -0800 (PST)
+        bh=/FD4q+YVmvTaZu+k/5gCWbJStI77UMa1v3g64Mxy4Ys=;
+        b=NFDmQ+CgpwXDPd1F/D1z+0izP9k4DGgIrmJeCnBGhzW4U5N2OCSv1pREy2mc9fhc7E
+         ZgO9vExQS/9bHQ8uYhmxvphDTT9d2YzWfMWquccUs6JBN37/qrHKBzNA0gfCXVTBZ4Ov
+         tid6iDnglNDA9yg/e8PTsbNn0nknX51unUJmrA6G0QTU9M354ajuyVNjUg2dkjjNW0T7
+         YU+0WP8lQnZye8nx1G0P4umQEh3lPojjE6UsGJToXGkA2MO6mE4AlcTSIUSLK9x4V1CZ
+         8A3LZiJkvZFF66hwk1CUGw6vfUqmhcDgYcVNBHcUsRZploWERPKNNDGBfQfJCA+BfySP
+         L3sA==
+X-Gm-Message-State: AOJu0YwE5+1XpQcMBy8YpbRTXhsZ7JhvSqdfhCbXt/2M/39vIvf+oT0D
+	HBbWbo48jy+/VAR/E5BuwKiFQlVhAB4=
+X-Google-Smtp-Source: AGHT+IGSoWL1BwvvlYVQB0+fIBvqo4vWXxhpCpl+FI65VPMgMMTQ5TA4O1ooaAlFwe+zp8M/3vspEQ==
+X-Received: by 2002:a05:6808:2026:b0:3b2:d8cb:8e14 with SMTP id q38-20020a056808202600b003b2d8cb8e14mr14805270oiw.28.1701063219888;
+        Sun, 26 Nov 2023 21:33:39 -0800 (PST)
 Received: from dw-tp ([49.205.218.89])
-        by smtp.gmail.com with ESMTPSA id o11-20020a170902d4cb00b001cc0e3a29a8sm5808541plg.89.2023.11.26.21.01.33
+        by smtp.gmail.com with ESMTPSA id r13-20020a63fc4d000000b005bd980cca56sm7035577pgk.29.2023.11.26.21.33.37
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Sun, 26 Nov 2023 21:01:35 -0800 (PST)
-Date: Mon, 27 Nov 2023 10:31:31 +0530
-Message-Id: <87bkbfssb8.fsf@doe.com>
+        Sun, 26 Nov 2023 21:33:39 -0800 (PST)
+Date: Mon, 27 Nov 2023 11:03:35 +0530
+Message-Id: <878r6jsqts.fsf@doe.com>
 From: Ritesh Harjani (IBM) <ritesh.list@gmail.com>
 To: Christoph Hellwig <hch@lst.de>, Christian Brauner <brauner@kernel.org>
 Cc: "Darrick J. Wong" <djwong@kernel.org>, Chandan Babu R <chandan.babu@oracle.com>, Zhang Yi <yi.zhang@huaweicloud.com>, linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org
-Subject: Re: [PATCH 02/13] iomap: treat inline data in iomap_writepage_map as an I/O error
-In-Reply-To: <20231126124720.1249310-3-hch@lst.de>
+Subject: Re: [PATCH 03/13] iomap: move the io_folios field out of struct iomap_ioend
+In-Reply-To: <20231126124720.1249310-4-hch@lst.de>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -51,45 +51,16 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 
 Christoph Hellwig <hch@lst.de> writes:
 
-> iomap_writepage_map aready warns about inline data, but then just ignores
-> it.  Treat it as an error and return -EIO.
+> The io_folios member in struct iomap_ioend counts the number of folios
+> added to an ioend.  It is only used at submission time and can thus be
+> moved to iomap_writepage_ctx instead.
 >
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
-> ---
->  fs/iomap/buffered-io.c | 6 ++++--
->  1 file changed, 4 insertions(+), 2 deletions(-)
 
-The code change looks very obvious. But sorry that I have some queries
-which I would like to clarify - 
+No objections there. We indeed used io_folios to limit the ioend bio
+chain lengths and we do this only at the submission time, which is where
+wpc is also used for.
 
-The dirty page we are trying to write can always belong to the dirty
-inode with inline data in it right? 
-So it is then the FS responsibility to un-inline the inode in the
-->map_blocks call is it?
+Looks good to me. Please feel free to add - 
 
-Looking at the gfs2 code, it might as well return iomap->type as
-IOMAP_INLINE for IOMAP_WRITE request in it's iomap_writeback_ops no?
-    iomap_writeback_ops -> gfs2_map_blocks -> __gfs2_iomap_get
+Reviewed-by: Ritesh Harjani (IBM) <ritesh.list@gmail.com>
 
->
-> diff --git a/fs/iomap/buffered-io.c b/fs/iomap/buffered-io.c
-> index 98d52feb220f0a..b1bcc43baf0caf 100644
-> --- a/fs/iomap/buffered-io.c
-> +++ b/fs/iomap/buffered-io.c
-> @@ -1818,8 +1818,10 @@ iomap_writepage_map(struct iomap_writepage_ctx *wpc,
->  		if (error)
->  			break;
->  		trace_iomap_writepage_map(inode, &wpc->iomap);
-> -		if (WARN_ON_ONCE(wpc->iomap.type == IOMAP_INLINE))
-> -			continue;
-> +		if (WARN_ON_ONCE(wpc->iomap.type == IOMAP_INLINE)) {
-> +			error = -EIO;
-> +			break;
-> +		}
->  		if (wpc->iomap.type == IOMAP_HOLE)
->  			continue;
->  		iomap_add_to_ioend(inode, pos, folio, ifs, wpc, wbc,
-> -- 
-> 2.39.2
-
--ritesh
