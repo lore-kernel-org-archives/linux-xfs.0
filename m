@@ -1,56 +1,32 @@
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+	(No client certificate requested)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A7044381CD
+	for <linux-xfs@vger.kernel.org>; Mon, 27 Nov 2023 21:55:34 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=toxicpanda-com.20230601.gappssmtp.com header.i=@toxicpanda-com.20230601.gappssmtp.com header.b="SMRlyHpC"
-Received: from mail-yw1-x112e.google.com (mail-yw1-x112e.google.com [IPv6:2607:f8b0:4864:20::112e])
-	by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 93073D5F
-	for <linux-xfs@vger.kernel.org>; Mon, 27 Nov 2023 11:20:40 -0800 (PST)
-Received: by mail-yw1-x112e.google.com with SMTP id 00721157ae682-5cfa65de9ecso17833827b3.2
-        for <linux-xfs@vger.kernel.org>; Mon, 27 Nov 2023 11:20:40 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=toxicpanda-com.20230601.gappssmtp.com; s=20230601; t=1701112840; x=1701717640; darn=vger.kernel.org;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
-        bh=7lz0VBUYkCA7Kx1NWqS2WZCJC35ADqSHV6LKDgLTHFw=;
-        b=SMRlyHpC8ue3IQGgrPRwHtmzGDf5v3tkNvcQRqLrZZhN7ZukTQrO5gtVG5e7qLIP0V
-         REwfs0RRDFzBuYuy0/lKkKN3WxOCW05XHV1ig+cd4fhYy+MbhxSTP9hnDSnJOzMWajaF
-         OP0w1eNKSWirYRL2yi6murGPMNjv3loqC6V6SRVLKkSQw90X00Ies0oYZR0TCkpQOPj8
-         3VGVN66gXegTUzTpgoGCVCZB+lBp6lXBdz5VfFBrogwBgW3ZYt5EaxEYbBL6WdefJVrc
-         gCqGMB/fhFn6ay9IGMPvb1sgwy0Id7dkjmZLDBDv1bTZLVNg3cGF0zqHCa1Y6YpZ4Imm
-         LsYw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1701112840; x=1701717640;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=7lz0VBUYkCA7Kx1NWqS2WZCJC35ADqSHV6LKDgLTHFw=;
-        b=EOKf+jIHUw40SwRNNksoVKDN37UQj3RiFEqlVb+D4TOhrfrOTkqLM1aHu/275/TBji
-         BfZvi3EKiBJn/tLkhFpe2WNL3GL1mnCSNcW1XtaZGPsj71enaLTahOVyIO+8muH6Zlnk
-         69lzovuZ1o+54hyNL0um8RzmstMuHCfxjooYNQgskotRu8T0wYcEEeXwQu3ZkG0zVPvD
-         XBLn4KE85TXLA7Tun5fE0IbmXUESwH5RCCaBG0Z33qwhdHa/16hlevdiyx+Itnlb/wW1
-         rCQRBCXveh42ElKc0BlZhPI7tWleAzFUZS2WQQMFhwzRtuwSGmiYG80ZO87Txhd6S+oK
-         S65Q==
-X-Gm-Message-State: AOJu0YxCVxUL7YryOZfYFGGyQ+Y4hC7YnQ45hI4EFoarkPmrcAfqDc8V
-	0n86k5bwmqOOBfPDO579qcai5g==
-X-Google-Smtp-Source: AGHT+IELblu/nAnT6NTNLrViyrHmj+e3xGCNtbgpJFm8DcMJWcjE9oe9hHN3sjisYl8PjN6YkRs4lQ==
-X-Received: by 2002:a25:ab82:0:b0:da0:3df5:29f5 with SMTP id v2-20020a25ab82000000b00da03df529f5mr11218973ybi.30.1701112839785;
-        Mon, 27 Nov 2023 11:20:39 -0800 (PST)
-Received: from localhost (076-182-020-124.res.spectrum.com. [76.182.20.124])
-        by smtp.gmail.com with ESMTPSA id g129-20020a252087000000b00d9ab86bdaffsm3246016ybg.12.2023.11.27.11.20.39
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 27 Nov 2023 11:20:39 -0800 (PST)
-Date: Mon, 27 Nov 2023 14:20:38 -0500
-From: Josef Bacik <josef@toxicpanda.com>
-To: Christoph Hellwig <hch@lst.de>
-Cc: Christian Brauner <brauner@kernel.org>,
-	"Darrick J. Wong" <djwong@kernel.org>,
-	Chandan Babu R <chandan.babu@oracle.com>,
-	Zhang Yi <yi.zhang@huaweicloud.com>,
-	Ritesh Harjani <ritesh.list@gmail.com>, linux-xfs@vger.kernel.org,
-	linux-fsdevel@vger.kernel.org
-Subject: Re: [PATCH 06/13] iomap: move all remaining per-folio logic into
- xfs_writepage_map
-Message-ID: <20231127192038.GI2366036@perftesting>
-References: <20231126124720.1249310-1-hch@lst.de>
- <20231126124720.1249310-7-hch@lst.de>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="l6SNa8ut"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 6E749C433C8;
+	Mon, 27 Nov 2023 21:55:34 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1701122134;
+	bh=Zi9NHuIQSzAvVjUEX8d2gd1WPIJbJ7eoLxtxwqIKSUw=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=l6SNa8utdPPie2dHg9nWYifBUROchi47nDiuwJUeOVDzgTRFVE09556vX8IL+v8iq
+	 ahGuqB6Babonql12+PXWhK54qBllbuddB0jeyXJekEi24yY0nvii8J9mLzxWS+Ld+x
+	 SDjDlxrBS5QVa4/PS0Jd+ym/W/CqNMnB69jzzQsLegi8GS8Q9GPGBfSSUyJxx/+IVv
+	 eQ9Pd7OmIELCgjDdiGHn3Tibg47RLCKZN0bPgTcspmk4PbljuECshezw5AXMV1DsAd
+	 +ikYOjQsSdvGv9rdVgkiuQfxEj0J5EWi15NayVfbhJD8FeA3JAQcD+CITGMp7QDeUc
+	 c4SXX9q6NbOkQ==
+Date: Mon, 27 Nov 2023 13:55:33 -0800
+From: "Darrick J. Wong" <djwong@kernel.org>
+To: Christoph Hellwig <hch@infradead.org>
+Cc: Dave Chinner <dchinner@redhat.com>, linux-xfs@vger.kernel.org
+Subject: Re: [PATCH 1/1] xfs: make xchk_iget safer in the presence of corrupt
+ inode btrees
+Message-ID: <20231127215533.GF2766956@frogsfrogsfrogs>
+References: <170086925757.2768713.18061984370448871279.stgit@frogsfrogsfrogs>
+ <170086925774.2768713.17299783083709212096.stgit@frogsfrogsfrogs>
+ <ZWF+1Qz7p7SwdqWB@infradead.org>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -59,9 +35,39 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20231126124720.1249310-7-hch@lst.de>
+In-Reply-To: <ZWF+1Qz7p7SwdqWB@infradead.org>
 
-The subject should read "iomap: move all remaining per-folio logic into
- iomap_writepage_map".  Thanks,
+On Fri, Nov 24, 2023 at 08:57:57PM -0800, Christoph Hellwig wrote:
+> On Fri, Nov 24, 2023 at 03:46:54PM -0800, Darrick J. Wong wrote:
+> > From: Darrick J. Wong <djwong@kernel.org>
+> > 
+> > When scrub is trying to iget an inode, ensure that it won't end up
+> > deadlocked on a cycle in the inode btree by using an empty transaction
+> > to store all the buffers.
+> 
+> My only concern here is how I'm suppsed to know when to use the _safe
+> version or not.
 
-Josef
+For xchk_iget_safe, I'll amend the comment to read:
+
+/*
+ * Safe version of (untrusted) xchk_iget that uses an empty transaction to
+ * avoid deadlocking on loops in the inobt.  This should only be used in a
+ * scrub or repair setup routine, and only prior to grabbing a transaction.
+ */
+
+and add a comment for xchk_iget that reads:
+
+/*
+ * Grab the inode at @inum.  The caller must have created a scrub transaction
+ * so that we can confirm the inumber by walking the inobt and not deadlock on
+ * a loop in the inobt.
+ */
+
+> Otherwise looks good:
+> 
+> Reviewed-by: Christoph Hellwig <hch@lst.de>
+
+Thanks!
+
+--D
