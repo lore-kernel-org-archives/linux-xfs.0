@@ -1,180 +1,221 @@
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+	(No client certificate requested)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7000C44361
+	for <linux-xfs@vger.kernel.org>; Tue, 28 Nov 2023 21:13:59 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b="R+ElWhJl"
-Received: from mail-pl1-x62b.google.com (mail-pl1-x62b.google.com [IPv6:2607:f8b0:4864:20::62b])
-	by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 20F572D5E
-	for <linux-xfs@vger.kernel.org>; Tue, 28 Nov 2023 13:08:42 -0800 (PST)
-Received: by mail-pl1-x62b.google.com with SMTP id d9443c01a7336-1cfbda041f3so28207805ad.2
-        for <linux-xfs@vger.kernel.org>; Tue, 28 Nov 2023 13:08:41 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=fromorbit-com.20230601.gappssmtp.com; s=20230601; t=1701205721; x=1701810521; darn=vger.kernel.org;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
-        bh=0maxqd6QUCXYfuuM92Wu4ssCdvyg3J3K+gOKQF5YwAg=;
-        b=R+ElWhJlqF9yDNUI7WxxEZIo4uwFygXlmFlO3Rfhn0iilkFZtXE47gRfDDmZq0kHny
-         vzO2/0+cHrV8d7TBfGrsOpNs7I/ZbwXxnHUMZH2G1ESXT3yCh1Dt8n0Smk+ZKrmNs0i5
-         mmAyJZ/D4iPizgWCqWq1nnQv9iQjzekGBMxTZtv4erLjBFKoqwAnzH3l0RBvAp431byp
-         JTTHKUowip2n/Hh/K7SH8x+sn9OFwAbT10V4IJUrtlo5P6LZ/63zQddeEo/7az2Wb8ru
-         pvqGyO4uDnGlRmy8+ERXQLv+gD2IsOigSFkihh5KR9TP5MYkwNTITh3MWKzfW5ym0QsD
-         dBxg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1701205721; x=1701810521;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=0maxqd6QUCXYfuuM92Wu4ssCdvyg3J3K+gOKQF5YwAg=;
-        b=RC9mT6xaas7qygWL0inIRuW9BORbRzZ4IZ8dDwSmp5G5fDyBZ/bXtcmmKLFpX1vsLS
-         q9mm6Spwnm50vYeg+EjApknzRG6jni+aGf+J2dCS1+Iw6UkLsaW7JuRQsrChxLSb4wH9
-         /lAEK/3mxhF49SfXxplLMb6e6CbQjud8PSuFJal94h8D1u6REf0fCL21d4/DENjH9toL
-         SeiCYu/2JeiVUiEw6C5/AA0J73jD/Nco/0tc/5N/9/ArzI5VbQg0MKY+ktZ7Ea1szWs+
-         cQjwC3GNAd8MrYFgG8jfgBr/KLzRP4c2l957/P7QEuQuYdciOo0EgFPMaWrLXpvDBuOB
-         ux6A==
-X-Gm-Message-State: AOJu0YyMdwWVOqORr/021OdgetG/xzin4JdemztXZzySHEVWgv+ufYNV
-	NsVVRZoPWijw+YxBBO+Knpddfw==
-X-Google-Smtp-Source: AGHT+IHn0Q6ZzPVmcfzv7nzaYBge1d1cok3N/3eRaEEqQM4wqplzs8UYbKQbZeR9iSR8LXd/zewMqg==
-X-Received: by 2002:a17:903:183:b0:1cf:6590:70 with SMTP id z3-20020a170903018300b001cf65900070mr21526921plg.23.1701205721403;
-        Tue, 28 Nov 2023 13:08:41 -0800 (PST)
-Received: from dread.disaster.area (pa49-180-125-5.pa.nsw.optusnet.com.au. [49.180.125.5])
-        by smtp.gmail.com with ESMTPSA id bf11-20020a170902b90b00b001cfb971edfbsm6613923plb.156.2023.11.28.13.08.40
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 28 Nov 2023 13:08:40 -0800 (PST)
-Received: from dave by dread.disaster.area with local (Exim 4.96)
-	(envelope-from <david@fromorbit.com>)
-	id 1r85Jt-001Dyy-34;
-	Wed, 29 Nov 2023 08:08:37 +1100
-Date: Wed, 29 Nov 2023 08:08:37 +1100
-From: Dave Chinner <david@fromorbit.com>
-To: Christoph Hellwig <hch@lst.de>
-Cc: "Darrick J. Wong" <djwong@kernel.org>, linux-xfs@vger.kernel.org,
-	Dave Chinner <dchinner@redhat.com>
-Subject: Re: XBF_DONE semantics
-Message-ID: <ZWZW1bb+ih16tU+5@dread.disaster.area>
-References: <20231128153808.GA19360@lst.de>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="bec43fKp"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id CC6B4C433C8;
+	Tue, 28 Nov 2023 21:13:58 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1701206038;
+	bh=WMsE3pJsXs+45E/gQH/p3334LfWKqEpOob+lcWfu60c=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=bec43fKpRsLje3lH2QArsPZ2Q/ZDgYeLQ9neNVD08MPB41wrp2RSMT28zUfpZ+EN0
+	 S1reixSnsqMaxc+FAhagg59iOJjb7nv6h0oKbNL1bhTIBFvPgFYFvA8VPr1n+HbxXW
+	 B0V43by5XbgtOJUdP+xscYKX3ynfJ29LZMmmAuQ33f5YLThg/siDDSeCgrlIZ+l270
+	 JQF123Wco60H2ZCyDA7ONImQ8L9SYDOsJEBCuz+gE8QW/9szu8AiWng4nFD5QhKOlJ
+	 +1a1bIIuTq6QjQ8xK/c8Qbegmg7RP0Q6d07CKLHVtYjPoPQ7xjF/buiuTJplpkqVWA
+	 Vgv3lKq5LoAVw==
+Date: Tue, 28 Nov 2023 13:13:58 -0800
+From: "Darrick J. Wong" <djwong@kernel.org>
+To: Christoph Hellwig <hch@infradead.org>
+Cc: Dave Chinner <dchinner@redhat.com>, linux-xfs@vger.kernel.org
+Subject: Re: [PATCH 3/5] xfs: repair free space btrees
+Message-ID: <20231128211358.GB4167244@frogsfrogsfrogs>
+References: <170086926983.2770967.13303859275299344660.stgit@frogsfrogsfrogs>
+ <170086927042.2770967.1697193414262580501.stgit@frogsfrogsfrogs>
+ <ZWYDASlIqLQvk9Wh@infradead.org>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=utf-8
 Content-Disposition: inline
-In-Reply-To: <20231128153808.GA19360@lst.de>
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <ZWYDASlIqLQvk9Wh@infradead.org>
 
-On Tue, Nov 28, 2023 at 04:38:08PM +0100, Christoph Hellwig wrote:
-> Hi Darrick,
+On Tue, Nov 28, 2023 at 07:10:57AM -0800, Christoph Hellwig wrote:
+> A highlevel question on how blocks are (re)used here.
 > 
-> while reviewing your online repair series I've noticed that the new
-> xfs_buf_delwri_queue_here helper sets XBF_DONE in addition to waiting
-> for the buffer to go off a delwri list, and that reminded me off an
-> assert I saw during my allocator experiments, where
-> xfs_trans_read_buf_map or xfs_buf_reverify trip on a buffer that doesn't
-> have XBF_DONE set because it comes from an ifree transaction (see
-> my current not fully thought out bandaid below).
+>  - xrep_abt_find_freespace accounts the old allocbt blocks as freespace
+>    per the comment, although as far as I understand  the code in
+>    xrep_abt_walk_rmap the allocbt blocks aren't actually added to the
+>    free_records xfarray, but recorded into the old_allocbt_blocks
+>    bitmap (btw, why are we using different data structures for them?)
 
-I'll come back to the bug later, because I know what it is and I
-just haven't had time to fix it yet. I'll address XBF_DONE first.
+The old free space btree blocks are tracked via old_allocbt_blocks so
+that we can reap the space after committing the new btree roots.
+Reaping cross-references the set regions in the bitmap against the
+rmapbt records so that we don't free crosslinked blocks.
 
-XBF_DONE means the data in the buffer is valid. It's equivalent to
-the uptodate bit in a folio. It has no other meaning.
+This is a big difference from xfs_repair, which constructs a free space
+map by walking the directory / bmbt trees and builds completely new
+indexes in the gaps.  It gets away with that because it's building
+all the space metadata in the AG, not just the free space btrees.
 
-> The way we currently set and check XBF_DONE seems a bit undefined.  The
-> one clear use case is that read uses it to see if a buffer was read in.
+The next question you might have is why there's old_allocbt_blocks and
+not_allocbt_blocks -- this is due to us using the AGFL to supply the
+bnobt, cntbt, and rmapbt's alloc_block routines.  Hence the blocks
+tracked by all four data structures are all RMAP_OWN_AG, and we have to
+do a bit of bitmap work to subtract the rmapbt and AGFL blocks from all
+the OWN_AG records to end up with the blocks that we think are owned by
+the free space btrees.
 
-Yes.
+>  - xrep_abt_reserve_space seems to allocate space for the new alloc
+>    btrees by popping the first entry of ->free_records until it has
+>    enough space.
 
-> But places that use buf_get and manually fill in data only use it in a
-> few cases. 
+Correct.
 
-Yes. the caller of buf_get always needs to set XBF_DONE if it is
-initialising a new buffer ready for it to be written. It should be
-done before the caller drops the buffer lock so that no other lookup
-can see the buffer in the state of "contains valid data but does not
-have XBF_DONE set".
+>  - what happens if the AG is so full and fragmented that we do not
+>    have space to create a second set of allocbts without tearing down
+>    the old ones first?
 
-Also, there are cases where we use buf_get but we don't care about
-the contents being initialised because we are invalidating
-the buffer and need the buffer+buf_log_item to log the invalidation
-to the journal.
+xrep_abt_reserve_space returns -ENOSPC, so we throw away all the incore
+records and throw the errno out to userspace.  Across all the btree
+rebuilding code, the block reservation step happens as the very last
+thing before we start writing btree blocks, so it's still possible to
+back out cleanly.
 
-In these cases we just don't care that the contents
-are valid, because xfs_trans_binval() calls xfs_buf_stale() to
-invalidate the contents and that removes the XBF_DONE flag. We do
-this in places like inode chunk removal to invalidate the cluster
-buffers to ensure they are written back after then chunk has been
-freed.
+> I've also got a whole bunch of nitpicks that mostly don't require an
+> immediate action and/or about existing code that just grows more users
+> here:
 
-.... and this brings us to the bug that you mentioned about an ifree
-transaction leaving an inode cluster buffer in cache without
-XBF_DONE set....
+Heh.
 
-The issue is xfs_inode_item_precommit() attaching inodes to the
-cluster buffer. In the old days before we delayed inode logging to
-the end of the ifree transaction, the order was:
+> > +int
+> > +xrep_allocbt(
+> > +	struct xfs_scrub	*sc)
+> > +{
+> > +	struct xrep_abt		*ra;
+> > +	struct xfs_mount	*mp = sc->mp;
+> > +	char			*descr;
+> > +	int			error;
+> > +
+> > +	/* We require the rmapbt to rebuild anything. */
+> > +	if (!xfs_has_rmapbt(mp))
+> > +		return -EOPNOTSUPP;
+> 
+> Shoudn't this be checked by the .has callback in struct xchk_meta_ops?
 
-xfs_ifree
-  xfs_difree(ip)
-    xfs_imap_to_bp()
-      xfs_trans_buf_read()
-    xfs_trans_brelse()
-  xfs_trans_log_inode(ip)
-  xfs_ifree_cluster(ip)
-    for each incore inode {
-      set XFS_ISTALE
-    }
-    for each cluster buffer {
-      xfs_trans_buf_get()
-      xfs_trans_binval()
-    }
-  xfs_trans_commit()
+No.  Checking doesn't require the rmapbt because all we do is walk the
+bnobt/cntbt records and cross-reference them with whatever metadata we
+can find.
 
-IOWs, the attachment of the inode to the cluster buffer in
-xfs_trans_log_inode() occurred before both the inode was marked
-XFS_ISTALE and the cluster buffer was marked XBF_STALE and XBF_DONE
-was removed from it. Hence the lookup in xfs_difree() always found a
-valid XBF_DONE buffer.
+A stronger check would scan the AG to build a second recordset of the
+free space and compare that against what's on disk.  However, that would
+be much slower, and Dave wanted scans to be fast because corruptions are
+supposed to be the edge case. :)
 
-With the fixes for AGF->AGI->inode cluster buffer locking order done
-a while back, we moved the processing that was done in
-xfs_trans_log_inode() to xfs_inode_item_precommit(), which is called
-from xfs_trans_commit(). This moved the xfs_imap_to_bp() call when
-logging th einode from before the cluster invalidation to after it.
+The weaker checking also means we can scrub old filesystems, even if we
+still require xfs_repair to fix them.
 
-The result is that imap_to_bp() now finds the inode cluster buffer
-in memory (as it should), but it has been marked stale (correctly!)
-and xfs_trans_buf_read_map() freaks out over that (again,
-correctly!).
+> > +	/* Set up enough storage to handle maximally fragmented free space. */
+> > +	descr = xchk_xfile_ag_descr(sc, "free space records");
+> > +	error = xfarray_create(descr, mp->m_sb.sb_agblocks / 2,
+> > +			sizeof(struct xfs_alloc_rec_incore),
+> > +			&ra->free_records);
+> > +	kfree(descr);
+> 
+> Commenting on a new user of old code here, but why doesn't
+> xfarray_create simply take a format string so that we don't need the
+> separate allocatiom and kasprintf here?
 
-The key to triggering this situation is that the inode cluster
-buffer needs to be written back between the unlink() syscall and the
-inactivation processing that frees the cluster buffer. Inode cluster
-buffer IO completion removes the inodes from the cluster buffer, so
-when they are next dirtied they need to be re-added. If this inode
-cluster buffer writeback coincides with the transaction removing of
-the last inode from an inode chunk and hence freeing the inode
-chunk, we end up with this stiuation occurring and assert failures
-in xfs_trans_read_buf_map().
+I didn't want to spend the brainpower to figure out how to make the
+macro and va_args crud work to support pushing both from xrep_allocbt ->
+xfarray_create -> xfile_create.  I don't know how to make that stuff
+nest short of adding a kas- variant of xfile_create.
 
-So, like I said: I know what the bug is, I worked it out from the
-one time one of my test machines tripped over it about 4 weeks ago,
-but I just haven't had the time since then to work out a fix.
+Seeing as we don't install xfiles into the file descriptor table anyway,
+the labels are only visible via ftrace, and not procfs.  I decided that
+cleanliness here wasn't a high enough priority.
 
-I suspect that we can check XFS_ISTALE in xfs_inode_item_precommit()
-and do something different, but I'd much prefer that the inode still
-gets added to the inode cluster buffer and cleaned up with all the
-other XFS_ISTALE indoes on the cluster buffer at journal commit
-completion time. Maybe we can pass a new flag to xfs_imap_to_bp() to
-say "stale buffer ok here" or something similar, because I really
-want the general case of xfs_trans_buf_read_map() to fail loudly if
-a buffer without XBF_DONE is returned....
+> > +	/*
+> > +	 * We must update sm_type temporarily so that the tree-to-tree cross
+> > +	 * reference checks will work in the correct direction, and also so
+> > +	 * that tracing will report correctly if there are more errors.
+> > +	 */
+> > +	sc->sm->sm_type = XFS_SCRUB_TYPE_BNOBT;
+> > +	error = xchk_bnobt(sc);
+> 
+> So xchk_bnobt is a tiny wrapper around xchk_allocbt, which is a small
+> wrapper around xchk_btree that basіally de-multiplex the argument
+> pass in by xchk_bnobt again.  This is existing code not newly added,
+> but the call chain looks a bit odd to me.
 
-> Do we need to define clear semantics for it?  Or maybe
-> replace with an XBF_READ_DONE flag for that main read use case and
-> then think what do do with the rest?
+Yeah.  I suppose one way to clean that up would be to export
+xchk_allocbt to the dispatch table in scrub.c instead of
+xchk_{bno,cnt}bt and figure out which btree we want from sm_type.
 
-To me, the semantics of XBF_DONE are pretty clear. Apart from fixing
-the bug you are seeing, I'm not sure that anything really needs to
-change....
+Way back when I was designing scrub I thought that repair would be
+separate for each btree type, but that turned out not to be the case.
+Hence the awkwardness in the call chains.
 
--Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+> > +/*
+> > + * Add an extent to the new btree reservation pool.  Callers are required to
+> > + * reap this reservation manually if the repair is cancelled.  @pag must be a
+> > + * passive reference.
+> > + */
+> > +int
+> > +xrep_newbt_add_extent(
+> > +	struct xrep_newbt	*xnr,
+> > +	struct xfs_perag	*pag,
+> > +	xfs_agblock_t		agbno,
+> > +	xfs_extlen_t		len)
+> > +{
+> > +	struct xfs_mount	*mp = xnr->sc->mp;
+> > +	struct xfs_alloc_arg	args = {
+> > +		.tp		= NULL, /* no autoreap */
+> > +		.oinfo		= xnr->oinfo,
+> > +		.fsbno		= XFS_AGB_TO_FSB(mp, pag->pag_agno, agbno),
+> > +		.len		= len,
+> > +		.resv		= xnr->resv,
+> > +	};
+> > +
+> > +	return xrep_newbt_add_blocks(xnr, pag, &args);
+> > +}
+> 
+> I don't quite understand what this helper adds, and the _blocks vs
+> _extent naming is a bit confusing.
+
+This wrapper simplifes the interface to xrep_newbt_add_blocks so that
+external callers don't have to know which magic values of xfs_alloc_arg
+are actually used by xrep_newbt_add_blocks and therefore need to be set.
+
+For all the other repair functions, they have to allocate space from the
+free space btree, so xrep_newbt_add_blocks is passed the full
+_alloc_args as returned by the allocator to xrep_newbt_alloc_ag_blocks.
+
+> > +#define for_each_xrep_newbt_reservation(xnr, resv, n)	\
+> > +	list_for_each_entry_safe((resv), (n), &(xnr)->resv_list, list)
+> 
+> I have to admit that I find the open code list_for_each_entry_safe
+> easier to follow than such wrappers.
+
+The funny part is that I don't even use it in newbt.c.  Maybe it's time
+to get rid of it.
+
+$ git grep for_each_xrep_newbt_reservation fs
+fs/xfs/scrub/alloc_repair.c:568:        for_each_xrep_newbt_reservation(&ra->new_bnobt, resv, n) {
+fs/xfs/scrub/alloc_repair.c:575:        for_each_xrep_newbt_reservation(&ra->new_bnobt, resv, n) {
+fs/xfs/scrub/newbt.h:60:#define for_each_xrep_newbt_reservation(xnr, resv, n)   \
+fs/xfs/scrub/rmap_repair.c:1126:        for_each_xrep_newbt_reservation(&rr->new_btree, resv, n) {
+
+> > +/* Initialize all the btree cursors for an AG repair. */
+> > +void
+> > +xrep_ag_btcur_init(
+> > +	struct xfs_scrub	*sc,
+> > +	struct xchk_ag		*sa)
+> > +{
+> 
+> As far as I can tell this basically sets up cursors for all the
+> btrees except the one that we want to repair, and the one that
+> goes along with for the alloc and ialloc pairs?  Maybe just spell
+> that out for clarity.
+
+Done.
+
+--D
