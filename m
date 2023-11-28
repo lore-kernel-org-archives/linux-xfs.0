@@ -1,34 +1,17 @@
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="VoWzEhCw"
-Received: from bombadil.infradead.org (bombadil.infradead.org [IPv6:2607:7c80:54:3::133])
-	by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6790110CA
-	for <linux-xfs@vger.kernel.org>; Tue, 28 Nov 2023 09:09:18 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-	d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Type:MIME-Version
-	:References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
-	Content-Transfer-Encoding:Content-ID:Content-Description;
-	bh=FU8n5YMzCbYfDxVHkzpRrA7kTxP/WmwL3/8i2fSt/dQ=; b=VoWzEhCwc2gC4WxsSmToo/mzgM
-	1ocFsE1aDwNx0WJEyPU5QRz5g4q2qzCNoWEUY4Z+7vdE7CSx2XRYMuq5aRS02uUbxzl90ARXAvB9C
-	n4YvtEKlXBT+/vrHnAAtiwHAziN+iOsX2Xq+xT+guHX2KPid9cx4mBdlJD7klOA0x4VZUXpBOxASQ
-	1kCdW4IEsyxs4cAvye0rcPWlJH9ocZDNRhtUoz+Cu0pJCE1WLL8YjNg2qGiVIOxQqj1DoR+ZuyEid
-	6/H8k3e/Lywva6rk4s7wMNv4ym+zo+l9kMl8ETzUZc17ksekhl7ZeLvWM1oj6Qaj6X9ESF5JnownO
-	HSpbWKNQ==;
-Received: from hch by bombadil.infradead.org with local (Exim 4.96 #2 (Red Hat Linux))
-	id 1r81aI-005tZt-0t;
-	Tue, 28 Nov 2023 17:09:18 +0000
-Date: Tue, 28 Nov 2023 09:09:18 -0800
-From: Christoph Hellwig <hch@infradead.org>
+Authentication-Results: smtp.subspace.kernel.org; dkim=none
+Received: from verein.lst.de (verein.lst.de [213.95.11.211])
+	by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7437910F6
+	for <linux-xfs@vger.kernel.org>; Tue, 28 Nov 2023 09:13:05 -0800 (PST)
+Received: by verein.lst.de (Postfix, from userid 2407)
+	id 314BB227A87; Tue, 28 Nov 2023 18:13:02 +0100 (CET)
+Date: Tue, 28 Nov 2023 18:13:01 +0100
+From: Christoph Hellwig <hch@lst.de>
 To: "Darrick J. Wong" <djwong@kernel.org>
-Cc: Christoph Hellwig <hch@infradead.org>, cem@kernel.org,
-	linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 2/9] libxfs: don't UAF a requeued EFI
-Message-ID: <ZWYevgmlkkzhJtOH@infradead.org>
-References: <170069440815.1865809.15572181471511196657.stgit@frogsfrogsfrogs>
- <170069441966.1865809.4282467818590298794.stgit@frogsfrogsfrogs>
- <ZV7zCVxzEnufP53Q@infradead.org>
- <20231127181024.GA2766956@frogsfrogsfrogs>
- <ZWV8izIb2XTOc9dJ@infradead.org>
- <20231128170121.GX2766956@frogsfrogsfrogs>
+Cc: Christoph Hellwig <hch@lst.de>, linux-xfs@vger.kernel.org,
+	Dave Chinner <dchinner@redhat.com>
+Subject: Re: XBF_DONE semantics
+Message-ID: <20231128171301.GA27293@lst.de>
+References: <20231128153808.GA19360@lst.de> <20231128165831.GW2766956@frogsfrogsfrogs>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -37,19 +20,44 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20231128170121.GX2766956@frogsfrogsfrogs>
-X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
+In-Reply-To: <20231128165831.GW2766956@frogsfrogsfrogs>
+User-Agent: Mutt/1.5.17 (2007-11-01)
 
-On Tue, Nov 28, 2023 at 09:01:21AM -0800, Darrick J. Wong wrote:
-> Oh!  You're talking about moving xfs_rmap_update_defer_type and the
-> functions it points to into xfs_rmap.c, then?
-
-Yes.
-
-> Hmm.  I just moved
-> ->iop_recover into xfs_defer_op_type, let me send an RFC for that.
+On Tue, Nov 28, 2023 at 08:58:31AM -0800, Darrick J. Wong wrote:
+> > The way we currently set and check XBF_DONE seems a bit undefined.  The
+> > one clear use case is that read uses it to see if a buffer was read in.
+> > But places that use buf_get and manually fill in data only use it in a
+> > few cases.  Do we need to define clear semantics for it?  Or maybe
+> > replace with an XBF_READ_DONE flag for that main read use case and
+> > then think what do do with the rest?
 > 
-> (You and I might have hit critical mass for log item cleanups... ;))
+> I thought XBF_DONE meant "contents have been read in from disk and
+> have passed/will pass verifiers"
 
-Yeah..
+That's what I though too.  But there's clearly code that treats it
+differently..
 
+> Dave and I wondered if xfs_inode_item_precommit should be grabbing the
+> buffer at all when ISTALE is set, since xfs_ifree_cluster should have
+> staled (and invalidated) the buffer after setting ISTALE.
+
+That does sound reasonable.
+
+> > +++ b/fs/xfs/xfs_trans_buf.c
+> > @@ -253,7 +253,6 @@ xfs_trans_read_buf_map(
+> >  		ASSERT(bp->b_transp == tp);
+> >  		ASSERT(bp->b_log_item != NULL);
+> >  		ASSERT(!bp->b_error);
+> > -		ASSERT(bp->b_flags & XBF_DONE);
+> 
+> I don't think this is the right thing to do here -- if the buffer is
+> attached to a transaction, it ought to be XBF_DONE.  I think every
+> transaction that calls _get_buf and rewrites the buffer contents will
+> set XBF_DONE via xfs_trans_dirty_buf, right?
+> 
+> Hmm.  Maybe I'm wrong -- a transaction could bjoin a buffer and then
+> call xfs_trans_read_buf_map before dirtying it.  That strikes me as a
+> suspicious thing to do, though.
+
+I suspect it's happening here somehow.  I can try to find some more
+time pinning it down.
