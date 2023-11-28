@@ -1,37 +1,37 @@
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="HcpUwaH9"
-Received: from mgamail.intel.com (mgamail.intel.com [192.55.52.93])
-	by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 63EAAD6;
-	Tue, 28 Nov 2023 03:20:15 -0800 (PST)
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="UxZhaiDK"
+Received: from mgamail.intel.com (mgamail.intel.com [192.55.52.120])
+	by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 53E8BD59;
+	Tue, 28 Nov 2023 04:09:53 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
   d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1701170415; x=1732706415;
+  t=1701173393; x=1732709393;
   h=date:from:to:cc:subject:message-id:references:
    mime-version:in-reply-to;
-  bh=qSaDzPStYpOmYXay6eUAmLjv4q2mpAbM97NA9jiSQlw=;
-  b=HcpUwaH94P4VmivoQgTJ+/ZNzBRDDIyHhp4Oz3i+tGRZ4NOKLDhefbZ1
-   hjcxmZ5/JxcIoXrzz3TtjTOlMwBZstC8t0CElTFFKjmjVQ95lgP4BFr6D
-   MzSM7VIAfeF2CjpEfeHzGGQU4EyKdaACwhyGsbhWsCMB8be8e6Sjwa9Ua
-   119TNsDrv6QYTfQ1j6QB8W66GzjvofpJrbw03gCGnvMw2GCgX2r25m4kc
-   WJH1MJetWiYU5V11DgQW4HUvWgL4YFp9Gv+SJtk3DnJ8SjaX0by1Au3gT
-   fZaHSOeT72OUGLcTLAlJME7JSCGW5XF8PSSPdR+cJ6/vmmvrgFAt2qILk
-   w==;
-X-IronPort-AV: E=McAfee;i="6600,9927,10907"; a="390055267"
+  bh=mtIu5f1hDVaKzrp3gZyRN6bomQimaf0cxFp5LllKoNg=;
+  b=UxZhaiDK4zs6A/BpUWP+RqLVQoFykZWA4dqfeUaxIBZGmbfwCTW81cx3
+   9f2Duj0JEEGUm7ddoTq4JaQ6e5RWXZYx4WeOMjyBx1FrfkPxsuYIE46dH
+   N+Gd+BLRAkzu2AanFwBXmcPq/e9xzF7kN7H/CNF2/S247tBL8kqtY48+S
+   Uk3e9deLVI7ABb0v02V6OtezUd/uZS1bYQ0BBDpACdQN06Zs4oSVJgP7O
+   ec6tkCY5ShnkXixO4egn2dqMg72zMafP2vdx95lNlL2w93R5m/ObJ9Flf
+   GN4MvGxNJRvrvdQq1P2VJaDZ2wqgN+a9KJIA70ocrTaVRDehtU2jLpG+x
+   g==;
+X-IronPort-AV: E=McAfee;i="6600,9927,10907"; a="391783864"
 X-IronPort-AV: E=Sophos;i="6.04,233,1695711600"; 
-   d="scan'208";a="390055267"
+   d="scan'208";a="391783864"
 Received: from fmsmga007.fm.intel.com ([10.253.24.52])
-  by fmsmga102.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 28 Nov 2023 03:19:46 -0800
+  by fmsmga104.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 28 Nov 2023 04:09:51 -0800
 X-ExtLoop1: 1
-X-IronPort-AV: E=McAfee;i="6600,9927,10907"; a="772274033"
+X-IronPort-AV: E=McAfee;i="6600,9927,10907"; a="772294330"
 X-IronPort-AV: E=Sophos;i="6.04,233,1695711600"; 
-   d="scan'208";a="772274033"
+   d="scan'208";a="772294330"
 Received: from lkp-server01.sh.intel.com (HELO d584ee6ebdcc) ([10.239.97.150])
-  by fmsmga007.fm.intel.com with ESMTP; 28 Nov 2023 03:19:40 -0800
+  by fmsmga007.fm.intel.com with ESMTP; 28 Nov 2023 04:09:47 -0800
 Received: from kbuild by d584ee6ebdcc with local (Exim 4.96)
 	(envelope-from <lkp@intel.com>)
-	id 1r7w7t-0007TE-39;
-	Tue, 28 Nov 2023 11:19:37 +0000
-Date: Tue, 28 Nov 2023 19:18:17 +0800
+	id 1r7wuP-0007Xk-0i;
+	Tue, 28 Nov 2023 12:09:45 +0000
+Date: Tue, 28 Nov 2023 20:08:36 +0800
 From: kernel test robot <lkp@intel.com>
 To: Jiachen Zhang <zhangjiachen.jaycee@bytedance.com>,
 	Chandan Babu R <chandan.babu@oracle.com>,
@@ -43,7 +43,7 @@ Cc: oe-kbuild-all@lists.linux.dev, Dave Chinner <dchinner@redhat.com>,
 	linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org,
 	xieyongji@bytedance.com, me@jcix.top
 Subject: Re: [PATCH 2/2] xfs: update dir3 leaf block metadata after swap
-Message-ID: <202311281800.GTI1cgFY-lkp@intel.com>
+Message-ID: <202311281904.r45MkLJq-lkp@intel.com>
 References: <20231128053202.29007-3-zhangjiachen.jaycee@bytedance.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
@@ -70,43 +70,30 @@ url:    https://github.com/intel-lab-lkp/linux/commits/Jiachen-Zhang/xfs-ensure-
 base:   https://git.kernel.org/pub/scm/fs/xfs/xfs-linux.git for-next
 patch link:    https://lore.kernel.org/r/20231128053202.29007-3-zhangjiachen.jaycee%40bytedance.com
 patch subject: [PATCH 2/2] xfs: update dir3 leaf block metadata after swap
-config: powerpc64-randconfig-r081-20231128 (https://download.01.org/0day-ci/archive/20231128/202311281800.GTI1cgFY-lkp@intel.com/config)
-compiler: powerpc64-linux-gcc (GCC) 13.2.0
-reproduce (this is a W=1 build): (https://download.01.org/0day-ci/archive/20231128/202311281800.GTI1cgFY-lkp@intel.com/reproduce)
+config: i386-randconfig-141-20231128 (https://download.01.org/0day-ci/archive/20231128/202311281904.r45MkLJq-lkp@intel.com/config)
+compiler: clang version 16.0.4 (https://github.com/llvm/llvm-project.git ae42196bc493ffe877a7e3dff8be32035dea4d07)
+reproduce (this is a W=1 build): (https://download.01.org/0day-ci/archive/20231128/202311281904.r45MkLJq-lkp@intel.com/reproduce)
 
 If you fix the issue in a separate patch/commit (i.e. not just a new version of
 the same patch/commit), kindly add following tags
 | Reported-by: kernel test robot <lkp@intel.com>
-| Closes: https://lore.kernel.org/oe-kbuild-all/202311281800.GTI1cgFY-lkp@intel.com/
+| Closes: https://lore.kernel.org/oe-kbuild-all/202311281904.r45MkLJq-lkp@intel.com/
 
 All errors (new ones prefixed by >>):
 
-   In file included from include/linux/byteorder/big_endian.h:5,
-                    from arch/powerpc/include/uapi/asm/byteorder.h:14,
-                    from arch/powerpc/include/asm/qspinlock_types.h:6,
-                    from arch/powerpc/include/asm/spinlock_types.h:10,
-                    from include/linux/spinlock_types_raw.h:7,
-                    from include/linux/ratelimit_types.h:7,
-                    from include/linux/printk.h:9,
-                    from include/asm-generic/bug.h:22,
-                    from arch/powerpc/include/asm/bug.h:116,
-                    from include/linux/bug.h:5,
-                    from include/linux/fortify-string.h:5,
-                    from include/linux/string.h:295,
-                    from include/linux/uuid.h:11,
-                    from fs/xfs/xfs_linux.h:10,
-                    from fs/xfs/xfs.h:22,
-                    from fs/xfs/libxfs/xfs_da_btree.c:7:
-   fs/xfs/libxfs/xfs_da_btree.c: In function 'xfs_da3_swap_lastblock':
->> fs/xfs/libxfs/xfs_da_btree.c:2330:50: error: 'struct xfs_buf' has no member named 'b_bn'
-    2330 |                 dap->blkno = cpu_to_be64(dead_buf->b_bn);
-         |                                                  ^~
-   include/uapi/linux/byteorder/big_endian.h:38:51: note: in definition of macro '__cpu_to_be64'
-      38 | #define __cpu_to_be64(x) ((__force __be64)(__u64)(x))
-         |                                                   ^
-   fs/xfs/libxfs/xfs_da_btree.c:2330:30: note: in expansion of macro 'cpu_to_be64'
-    2330 |                 dap->blkno = cpu_to_be64(dead_buf->b_bn);
-         |                              ^~~~~~~~~~~
+>> fs/xfs/libxfs/xfs_da_btree.c:2330:38: error: no member named 'b_bn' in 'struct xfs_buf'
+                   dap->blkno = cpu_to_be64(dead_buf->b_bn);
+                                            ~~~~~~~~  ^
+   include/linux/byteorder/generic.h:92:21: note: expanded from macro 'cpu_to_be64'
+   #define cpu_to_be64 __cpu_to_be64
+                       ^
+   include/uapi/linux/byteorder/little_endian.h:38:53: note: expanded from macro '__cpu_to_be64'
+   #define __cpu_to_be64(x) ((__force __be64)__swab64((x)))
+                                                       ^
+   include/uapi/linux/swab.h:128:54: note: expanded from macro '__swab64'
+   #define __swab64(x) (__u64)__builtin_bswap64((__u64)(x))
+                                                        ^
+   1 error generated.
 
 
 vim +2330 fs/xfs/libxfs/xfs_da_btree.c
