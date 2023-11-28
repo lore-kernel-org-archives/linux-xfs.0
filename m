@@ -1,39 +1,43 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E273B37D22
-	for <linux-xfs@vger.kernel.org>; Tue, 28 Nov 2023 16:29:23 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3AE825E0CE;
+	Tue, 28 Nov 2023 16:32:55 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="IRJlA/ah"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 5F6B0C433C7;
-	Tue, 28 Nov 2023 16:29:23 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="pz7PxjXP"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 99617C433C8;
+	Tue, 28 Nov 2023 16:32:55 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1701188963;
-	bh=sIfDB3k+KYyERGoUwnCBqm5HDGxlFAUPH4Qei1wkjhs=;
+	s=k20201202; t=1701189175;
+	bh=VqwYFsYHgSQ8CyCGvVqeYL2Kouihl83vwFCUUepGWfI=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=IRJlA/ahfz20AacKT1Y1Of4TQTFUwixgP9x+n+Zg8MxGoLrFbZzVTHlmzJngIXSlm
-	 KvLYlbeFcxtpgjYOd0ovo7GztyLiVOq5JXlC5Dd9H4ib7svMvynWpDVHQunFUsprXX
-	 y+JQek9omRrnQmyHDMu7fwOMPqOdqR2Ul9yPHyII2oMD6fQJapIdDj1ur79bGOuReh
-	 jGcfR1lIq7KAqSKRqVy/ENDogMR3xYmQ+i7Ulya2kJWRQfq0pquVD7mMLhjJRqtm0G
-	 20yTn3PpgX8vZ6vXdz8HUPGK9zlPiB0hApXFkEYbMLdDS5RzyMiwWtbO8zQ31nQ+yW
-	 Pg1g/c9WzmcQg==
-Date: Tue, 28 Nov 2023 08:29:21 -0800
+	b=pz7PxjXPGQGLsinMNEMBDkmAyuEpMnUG+Jm7gW6FcUO24AfwJb/D0iAk/OuIx4pU/
+	 qQf9myOFtKdJwc2uV/uuafK6fvgEd+95aiAqkGk2zNNav8o0Dwku9x65PpKbXXqwKA
+	 Ue2ZGVwKZVyXoc4E1TUfhPpgw9Fq/AOEAZHGoiYoRN3fAG2LA3cunU4yzAH3Xud74d
+	 nKRX6z0acKx0A+PI059ekv0O4P5R1ahYnQmr9fkj1yfxC3vs/s3ciLPXKQHalVcy5q
+	 DlkD1Y1ndCU+zThaemauUXEUNA1O2fQTBjvJ70WZ7+aCrkIXcFslM2Qo8rtrdutfq6
+	 zK1MrgY8MECYg==
+Date: Tue, 28 Nov 2023 08:32:55 -0800
 From: "Darrick J. Wong" <djwong@kernel.org>
-To: Jiachen Zhang <zhangjiachen.jaycee@bytedance.com>
-Cc: Christoph Hellwig <hch@infradead.org>,
+To: Bagas Sanjaya <bagasdotme@gmail.com>
+Cc: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	Linux Documentation <linux-doc@vger.kernel.org>,
+	Linux XFS <linux-xfs@vger.kernel.org>,
+	Linux Kernel Workflows <workflows@vger.kernel.org>,
+	Jonathan Corbet <corbet@lwn.net>,
 	Chandan Babu R <chandan.babu@oracle.com>,
+	Namjae Jeon <linkinjeon@kernel.org>,
 	Dave Chinner <dchinner@redhat.com>,
+	Steve French <stfrench@microsoft.com>,
+	"Matthew Wilcox (Oracle)" <willy@infradead.org>,
 	Allison Henderson <allison.henderson@oracle.com>,
-	Zhang Tianci <zhangtianci.1997@bytedance.com>,
-	Brian Foster <bfoster@redhat.com>, Ben Myers <bpm@sgi.com>,
-	linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org,
-	xieyongji@bytedance.com, me@jcix.top
-Subject: Re: [PATCH 2/2] xfs: update dir3 leaf block metadata after swap
-Message-ID: <20231128162921.GU2766956@frogsfrogsfrogs>
-References: <20231128053202.29007-1-zhangjiachen.jaycee@bytedance.com>
- <20231128053202.29007-3-zhangjiachen.jaycee@bytedance.com>
- <ZWWnQYo73yHnctvi@infradead.org>
- <39b76473-fe00-0f1b-62e3-ae349a9f80d3@bytedance.com>
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Charles Han <hanchunchao@inspur.com>,
+	Vegard Nossum <vegard.nossum@oracle.com>
+Subject: Re: [PATCH RESEND v2] Documentation: xfs: consolidate XFS docs into
+ its own subdirectory
+Message-ID: <20231128163255.GV2766956@frogsfrogsfrogs>
+References: <20231128124522.28499-1-bagasdotme@gmail.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -42,174 +46,175 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <39b76473-fe00-0f1b-62e3-ae349a9f80d3@bytedance.com>
+In-Reply-To: <20231128124522.28499-1-bagasdotme@gmail.com>
 
-On Tue, Nov 28, 2023 at 05:39:50PM +0800, Jiachen Zhang wrote:
-> On 2023/11/28 16:39, Christoph Hellwig wrote:
-> > On Tue, Nov 28, 2023 at 01:32:02PM +0800, Jiachen Zhang wrote:
-> > > From: Zhang Tianci <zhangtianci.1997@bytedance.com>
-> > > 
-> > > xfs_da3_swap_lastblock() copy the last block content to the dead block,
-> > > but do not update the metadata in it. We need update some metadata
-> > > for some kinds of type block, such as dir3 leafn block records its
-> > > blkno, we shall update it to the dead block blkno. Otherwise,
-> > > before write the xfs_buf to disk, the verify_write() will fail in
-> > > blk_hdr->blkno != xfs_buf->b_bn, then xfs will be shutdown.
-> > 
-> > Do you have a reproducer for this?  It would be very helpful to add it
-> > to xfstests.
+On Tue, Nov 28, 2023 at 07:45:22PM +0700, Bagas Sanjaya wrote:
+> XFS docs are currently in upper-level Documentation/filesystems.
+> Although these are currently 4 docs, they are already outstanding as
+> a group and can be moved to its own subdirectory.
 > 
-> Hi Christoph,
+> Consolidate them into Documentation/filesystems/xfs/.
 > 
-> Thanks for the review!
+> Signed-off-by: Bagas Sanjaya <bagasdotme@gmail.com>
+> ---
+> Changes since v1 [1]:
 > 
-> It's hard to reproduce the issue. Currently we can reproduce it with
-> some kernel code changes. We forcely reserve 0 t_blk_res for xfs_remove
-> on kernel version 4.19:
+>   * Also update references to old doc path to address kernel test robot
+>     warnings [2].
 > 
-> diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
-> index f2d06e1e4906..c8f84b95a0ec 100644
-> --- a/fs/xfs/xfs_inode.c
-> +++ b/fs/xfs/xfs_inode.c
-> @@ -2551,13 +2551,8 @@ xfs_remove(
->          * insert tries to happen, instead trimming the LAST
->          * block from the directory.
->          */
-> -       resblks = XFS_REMOVE_SPACE_RES(mp);
-> -       error = xfs_trans_alloc(mp, &M_RES(mp)->tr_remove, resblks, 0, 0,
-> &tp);
-> -       if (error == -ENOSPC) {
-> -               resblks = 0;
-> -               error = xfs_trans_alloc(mp, &M_RES(mp)->tr_remove, 0, 0, 0,
-> -                               &tp);
-> -       }
-> +       resblks = 0;
-> +       error = xfs_trans_alloc(mp, &M_RES(mp)->tr_remove, 0, 0, 0, &tp);
->         if (error) {
->                 ASSERT(error != -ENOSPC);
->                 goto std_return
+> [1]: https://lore.kernel.org/linux-doc/20231121095658.28254-1-bagasdotme@gmail.com/
+> [2]: https://lore.kernel.org/linux-doc/a9abc5ec-f3cd-4a1a-81b9-a6900124d38b@gmail.com/
 > 
-> 
-> After insmod the new modified xfs.ko, run the following scripts, and it
-> can reproduce the problem consistently on the final `umount mnt`:
-> 
-> fallocate -l 1G xfs.img
-> mkfs.xfs -f xfs.img
-> mkdir -p mnt
-> losetup /dev/loop0 xfs.img
-> mount -t xfs /dev/loop0 mnt
-> pushd mnt
-> mkdir dir3
-> prefix="a_"
-> for j in $(seq 0 13); do
->     for i in $(seq 0 2800); do
->             touch dir3/${prefix}_${i}_${j}
->     done
->     for i in $(seq 0 2500); do
->             rm -f dir3/${prefix}_${i}_${j}
->             if [ "$i" == "2094" ] && [ "$j" == "13" ]; then
->                     echo "should reproduce now, so break here!"
->                     break;
->             fi
->     done
-> done
-> popd
-> umount mnt
-> 
-> 
-> We are still trying to make a reproducer without any kernel changes. Do
-> you have any suggestions on this?
+>  Documentation/filesystems/index.rst                |  5 +----
+>  Documentation/filesystems/xfs/index.rst            | 14 ++++++++++++++
+>  .../{ => xfs}/xfs-delayed-logging-design.rst       |  0
+>  .../{ => xfs}/xfs-maintainer-entry-profile.rst     |  0
+>  .../{ => xfs}/xfs-online-fsck-design.rst           |  2 +-
+>  .../{ => xfs}/xfs-self-describing-metadata.rst     |  0
+>  .../maintainer/maintainer-entry-profile.rst        |  2 +-
+>  MAINTAINERS                                        |  4 ++--
+>  8 files changed, 19 insertions(+), 8 deletions(-)
+>  create mode 100644 Documentation/filesystems/xfs/index.rst
+>  rename Documentation/filesystems/{ => xfs}/xfs-delayed-logging-design.rst (100%)
+>  rename Documentation/filesystems/{ => xfs}/xfs-maintainer-entry-profile.rst (100%)
+>  rename Documentation/filesystems/{ => xfs}/xfs-online-fsck-design.rst (99%)
+>  rename Documentation/filesystems/{ => xfs}/xfs-self-describing-metadata.rst (100%)
 
-Add a debugging knob that calls xfs_da3_swap_lastblock without trying
-bunmapi, modify the script to activate the knob, then that can be turned
-into an fstest.
+I think the rst filename should drop the 'xfs-' prefix, e.g.
 
-> 
-> > 
-> > > 
-> > > We will get this warning:
-> > > 
-> > >    XFS (dm-0): Metadata corruption detected at xfs_dir3_leaf_verify+0xa8/0xe0 [xfs], xfs_dir3_leafn block 0x178
-> > >    XFS (dm-0): Unmount and run xfs_repair
-> > >    XFS (dm-0): First 128 bytes of corrupted metadata buffer:
-> > >    00000000e80f1917: 00 80 00 0b 00 80 00 07 3d ff 00 00 00 00 00 00  ........=.......
-> > >    000000009604c005: 00 00 00 00 00 00 01 a0 00 00 00 00 00 00 00 00  ................
-> > >    000000006b6fb2bf: e4 44 e3 97 b5 64 44 41 8b 84 60 0e 50 43 d9 bf  .D...dDA..`.PC..
-> > >    00000000678978a2: 00 00 00 00 00 00 00 83 01 73 00 93 00 00 00 00  .........s......
-> > >    00000000b28b247c: 99 29 1d 38 00 00 00 00 99 29 1d 40 00 00 00 00  .).8.....).@....
-> > >    000000002b2a662c: 99 29 1d 48 00 00 00 00 99 49 11 00 00 00 00 00  .).H.....I......
-> > >    00000000ea2ffbb8: 99 49 11 08 00 00 45 25 99 49 11 10 00 00 48 fe  .I....E%.I....H.
-> > >    0000000069e86440: 99 49 11 18 00 00 4c 6b 99 49 11 20 00 00 4d 97  .I....Lk.I. ..M.
-> > >    XFS (dm-0): xfs_do_force_shutdown(0x8) called from line 1423 of file fs/xfs/xfs_buf.c.  Return address = 00000000c0ff63c1
-> > >    XFS (dm-0): Corruption of in-memory data detected.  Shutting down filesystem
-> > >    XFS (dm-0): Please umount the filesystem and rectify the problem(s)
+	Documentation/filesystems/xfs/delayed-logging-design.rst
 
-Aha, that might explain the weird recovery failures that I've been
-seeing every now and then with my parent pointer recovery stress test.
+since that seems to be what most filesystems do:
 
-> > > 
-> > > >From the log above, we know xfs_buf->b_no is 0x178, but the block's hdr record
-> > > its blkno is 0x1a0.
-> > > 
-> > > Fixes: 24df33b45ecf ("xfs: add CRC checking to dir2 leaf blocks")
-> > > Signed-off-by: Zhang Tianci <zhangtianci.1997@bytedance.com>
-> > > ---
-> > >   fs/xfs/libxfs/xfs_da_btree.c | 12 +++++++++++-
-> > >   1 file changed, 11 insertions(+), 1 deletion(-)
-> > > 
-> > > diff --git a/fs/xfs/libxfs/xfs_da_btree.c b/fs/xfs/libxfs/xfs_da_btree.c
-> > > index e576560b46e9..35f70e4c6447 100644
-> > > --- a/fs/xfs/libxfs/xfs_da_btree.c
-> > > +++ b/fs/xfs/libxfs/xfs_da_btree.c
-> > > @@ -2318,8 +2318,18 @@ xfs_da3_swap_lastblock(
-> > >   	 * Copy the last block into the dead buffer and log it.
-> > >   	 */
-> > >   	memcpy(dead_buf->b_addr, last_buf->b_addr, args->geo->blksize);
-> > > -	xfs_trans_log_buf(tp, dead_buf, 0, args->geo->blksize - 1);
-> > >   	dead_info = dead_buf->b_addr;
-> > > +	/*
-> > > +	 * Update the moved block's blkno if it's a dir3 leaf block
-> > > +	 */
-> > > +	if (dead_info->magic == cpu_to_be16(XFS_DIR3_LEAF1_MAGIC) ||
-> > > +	    dead_info->magic == cpu_to_be16(XFS_DIR3_LEAFN_MAGIC) ||
-> > > +	    dead_info->magic == cpu_to_be16(XFS_ATTR3_LEAF_MAGIC)) {
-> > > +		struct xfs_da3_blkinfo *dap = (struct xfs_da3_blkinfo *)dead_info;
-> > > +
-> > > +		dap->blkno = cpu_to_be64(dead_buf->b_bn);
+Documentation/filesystems/caching/backend-api.rst
+Documentation/filesystems/caching/cachefiles.rst
+Documentation/filesystems/caching/fscache.rst
+Documentation/filesystems/caching/index.rst
+Documentation/filesystems/caching/netfs-api.rst
+Documentation/filesystems/cifs/cifsroot.rst
+Documentation/filesystems/cifs/index.rst
+Documentation/filesystems/cifs/ksmbd.rst
+Documentation/filesystems/ext4/about.rst
+Documentation/filesystems/ext4/allocators.rst
+Documentation/filesystems/ext4/attributes.rst
+<snip>
+Documentation/filesystems/ext4/special_inodes.rst
+Documentation/filesystems/ext4/super.rst
+Documentation/filesystems/ext4/verity.rst
+Documentation/filesystems/nfs/client-identifier.rst
+Documentation/filesystems/nfs/exporting.rst
+Documentation/filesystems/nfs/index.rst
+Documentation/filesystems/nfs/knfsd-stats.rst
+Documentation/filesystems/nfs/nfs41-server.rst
+Documentation/filesystems/nfs/pnfs.rst
+Documentation/filesystems/nfs/reexport.rst
+Documentation/filesystems/nfs/rpc-cache.rst
+Documentation/filesystems/nfs/rpc-server-gss.rst
+Documentation/filesystems/smb/cifsroot.rst
+Documentation/filesystems/smb/index.rst
+Documentation/filesystems/smb/ksmbd.rst
+Documentation/filesystems/spufs/index.rst
+Documentation/filesystems/spufs/spu_create.rst
+Documentation/filesystems/spufs/spufs.rst
+Documentation/filesystems/spufs/spu_run.rst
 
-	dap->blkno = cpu_to_be64(xfs_buf_daddr(dead_buf));
+> diff --git a/Documentation/filesystems/index.rst b/Documentation/filesystems/index.rst
+> index 09cade7eaefc8c..e18bc5ae3b35f8 100644
+> --- a/Documentation/filesystems/index.rst
+> +++ b/Documentation/filesystems/index.rst
+> @@ -121,8 +121,5 @@ Documentation for filesystem implementations.
+>     udf
+>     virtiofs
+>     vfat
+> -   xfs-delayed-logging-design
+> -   xfs-maintainer-entry-profile
+> -   xfs-self-describing-metadata
+> -   xfs-online-fsck-design
+> +   xfs/index
+>     zonefs
+> diff --git a/Documentation/filesystems/xfs/index.rst b/Documentation/filesystems/xfs/index.rst
+> new file mode 100644
+> index 00000000000000..ab66c57a5d18ea
+> --- /dev/null
+> +++ b/Documentation/filesystems/xfs/index.rst
+> @@ -0,0 +1,14 @@
+> +.. SPDX-License-Identifier: GPL-2.0
+> +
+> +============================
+> +XFS Filesystem Documentation
+> +============================
+> +
+> +.. toctree::
+> +   :maxdepth: 2
+> +   :numbered:
+> +
+> +   xfs-delayed-logging-design
+> +   xfs-maintainer-entry-profile
+> +   xfs-self-describing-metadata
+> +   xfs-online-fsck-design
+> diff --git a/Documentation/filesystems/xfs-delayed-logging-design.rst b/Documentation/filesystems/xfs/xfs-delayed-logging-design.rst
+> similarity index 100%
+> rename from Documentation/filesystems/xfs-delayed-logging-design.rst
+> rename to Documentation/filesystems/xfs/xfs-delayed-logging-design.rst
+> diff --git a/Documentation/filesystems/xfs-maintainer-entry-profile.rst b/Documentation/filesystems/xfs/xfs-maintainer-entry-profile.rst
+> similarity index 100%
+> rename from Documentation/filesystems/xfs-maintainer-entry-profile.rst
+> rename to Documentation/filesystems/xfs/xfs-maintainer-entry-profile.rst
+> diff --git a/Documentation/filesystems/xfs-online-fsck-design.rst b/Documentation/filesystems/xfs/xfs-online-fsck-design.rst
+> similarity index 99%
+> rename from Documentation/filesystems/xfs-online-fsck-design.rst
+> rename to Documentation/filesystems/xfs/xfs-online-fsck-design.rst
+> index a0678101a7d02d..352516feef6ffe 100644
+> --- a/Documentation/filesystems/xfs-online-fsck-design.rst
+> +++ b/Documentation/filesystems/xfs/xfs-online-fsck-design.rst
+> @@ -962,7 +962,7 @@ disk, but these buffer verifiers cannot provide any consistency checking
+>  between metadata structures.
+>  
+>  For more information, please see the documentation for
+> -Documentation/filesystems/xfs-self-describing-metadata.rst
+> +Documentation/filesystems/xfs/xfs-self-describing-metadata.rst
+>  
+>  Reverse Mapping
+>  ---------------
+> diff --git a/Documentation/filesystems/xfs-self-describing-metadata.rst b/Documentation/filesystems/xfs/xfs-self-describing-metadata.rst
+> similarity index 100%
+> rename from Documentation/filesystems/xfs-self-describing-metadata.rst
+> rename to Documentation/filesystems/xfs/xfs-self-describing-metadata.rst
+> diff --git a/Documentation/maintainer/maintainer-entry-profile.rst b/Documentation/maintainer/maintainer-entry-profile.rst
+> index 7ad4bfc2cc038a..18cee1edaecb6f 100644
+> --- a/Documentation/maintainer/maintainer-entry-profile.rst
+> +++ b/Documentation/maintainer/maintainer-entry-profile.rst
+> @@ -105,4 +105,4 @@ to do something different in the near future.
+>     ../driver-api/media/maintainer-entry-profile
+>     ../driver-api/vfio-pci-device-specific-driver-acceptance
+>     ../nvme/feature-and-quirk-policy
+> -   ../filesystems/xfs-maintainer-entry-profile
+> +   ../filesystems/xfs/xfs-maintainer-entry-profile
+> diff --git a/MAINTAINERS b/MAINTAINERS
+> index ea790149af7951..fd288ac57e19fb 100644
+> --- a/MAINTAINERS
+> +++ b/MAINTAINERS
+> @@ -23893,10 +23893,10 @@ S:	Supported
+>  W:	http://xfs.org/
+>  C:	irc://irc.oftc.net/xfs
+>  T:	git git://git.kernel.org/pub/scm/fs/xfs/xfs-linux.git
+> -P:	Documentation/filesystems/xfs-maintainer-entry-profile.rst
+> +P:	Documentation/filesystems/xfs/xfs-maintainer-entry-profile.rst
+>  F:	Documentation/ABI/testing/sysfs-fs-xfs
+>  F:	Documentation/admin-guide/xfs.rst
+> -F:	Documentation/filesystems/xfs-*
+> +F:	Documentation/filesystems/xfs/xfs-*
 
-(IOWs, please send patches against latest upstream, not 4.19.)
-
-((Code looks good to me too, compile errors and style notwithstanding.))
+Shouldn't this be "Documentation/filesystems/xfs/*" ?
 
 --D
 
-> > > +	}
-> > > +	xfs_trans_log_buf(tp, dead_buf, 0, args->geo->blksize - 1);
-> > 
-> > The fix here looks correct to me, but also a little ugly and ad-hoc.
-> > 
-> > At last we should be using container_of and not casts for getting from a
-> > xfs_da_blkinfo to a xfs_da3_blkinfo (even if there is bad precedence
-> > for the cast in existing code).
-> > 
+>  F:	fs/xfs/
+>  F:	include/uapi/linux/dqblk_xfs.h
+>  F:	include/uapi/linux/fsmap.h
 > 
-> Thanks, we will optimize the code in the next version of the patchset.
-> 
-> > But I think it would be useful to add a helper that stamps in the blkno
-> > in for a caller that only has as xfs_da_blkinfo but no xfs_da3_blkinfo
-> > and use in all the places that do it currently in an open coded fashion
-> > e.g. xfs_da3_root_join, xfs_da3_root_split, xfs_attr3_leaf_to_node.
-> > 
-> > That should probably be done on top of the small backportable fix.
-> > 
-> 
-> I think the idea to add helper is great, and we can do it after this
-> fixes patch is merged.
-> 
-> 
-> Thanks,
-> Jiachen
+> base-commit: 9c235dfc3d3f901fe22acb20f2ab37ff39f2ce02
+> -- 
+> An old man doll... just what I always wanted! - Clara
 > 
 > 
