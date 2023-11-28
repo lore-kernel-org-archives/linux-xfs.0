@@ -1,42 +1,43 @@
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=bytedance.com header.i=@bytedance.com header.b="fGfkLpjI"
-Received: from mail-pf1-x42c.google.com (mail-pf1-x42c.google.com [IPv6:2607:f8b0:4864:20::42c])
-	by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 85846C4
-	for <linux-xfs@vger.kernel.org>; Mon, 27 Nov 2023 21:34:14 -0800 (PST)
-Received: by mail-pf1-x42c.google.com with SMTP id d2e1a72fcca58-6bd32d1a040so5065203b3a.3
-        for <linux-xfs@vger.kernel.org>; Mon, 27 Nov 2023 21:34:14 -0800 (PST)
+	dkim=pass (2048-bit key) header.d=bytedance.com header.i=@bytedance.com header.b="bhZA9CJc"
+Received: from mail-pl1-x633.google.com (mail-pl1-x633.google.com [IPv6:2607:f8b0:4864:20::633])
+	by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 22540EA
+	for <linux-xfs@vger.kernel.org>; Mon, 27 Nov 2023 21:34:29 -0800 (PST)
+Received: by mail-pl1-x633.google.com with SMTP id d9443c01a7336-1cf7a8ab047so38874675ad.1
+        for <linux-xfs@vger.kernel.org>; Mon, 27 Nov 2023 21:34:29 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=bytedance.com; s=google; t=1701149654; x=1701754454; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:from:to:cc:subject:date:message-id:reply-to;
-        bh=yppdPakpPj/hSLJ9uZBVv46+PUQYqbzCgWp1lHeXxis=;
-        b=fGfkLpjItIfWDyLNc/yBvAmWdQFixpU3BXrR9zcmm3PnEtVMnK2QucsZtT0AK3dmtd
-         vZi0kdojw9PjqxAKUrLHTTNnxU0cQRp5pySKmft4XRoc+WG93GTSSfFy21jLysySEcvp
-         qRMJoEzEnoiVWJwVar+SZu5E+bymzHsWOhL/Wv+e0/iv0p0bjKjl9GgN8lrMuJEty2x+
-         EYkdql0EMDWOmgHD5r8uv5NCeHN7gylmQObm5euHBpgnAQHSlyQnP47qZmSGcE0ngVPP
-         TcnaZYYBO4C6GwccJJaCRb7rGSsKoTU9NkZYiBZDsh9Qw1tBfvW4k6bw7zggA82YxgRd
-         R5MQ==
+        d=bytedance.com; s=google; t=1701149668; x=1701754468; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:references:in-reply-to
+         :message-id:date:subject:cc:to:from:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=fxO33hgX7qudIID8yDsz8ucZ3gJV05i7WjPRt4ATm1c=;
+        b=bhZA9CJchPrKFiQfbQF+NRJRfXVXkcAFEkGxZ7UABAQ1cfDqDCZbSPOzurpSk+scPc
+         hQUC17nOc6sFrkYIFnANlXLljAnqoMLyZ8IsuHhUjz8zPTQaHuKgL6TfsGa948nxoA/s
+         IWgg84LIqYD3zvi9L+9R5nogMayy0c1PwNm2Sbqv1gUDpYi56dUnzwXklqp6iws57fxa
+         pmaFrp/fyFhjuKW5nt1F+GGhGqFA6rAx4hnIcczt1/k9XmUmHlJ3OAFTeQ09QlVailTJ
+         Gp3nZo7d9vmhhUOMLTPHlXkBzagXVGTmutvEPFDycrfxhdBZY2LFOwVklLP0LFDDrY3m
+         pelg==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1701149654; x=1701754454;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:x-gm-message-state:from:to:cc:subject:date:message-id
-         :reply-to;
-        bh=yppdPakpPj/hSLJ9uZBVv46+PUQYqbzCgWp1lHeXxis=;
-        b=LBi1YLvWUU3o7mlwhOAc0dThC0MlsLqTdBnnNOvhtZ74OdGN7FOqVneLfdJmh/eCwB
-         +FtuxfyQKu/1UKNhSmpMuVtbY15lJmazxfSDH9zhK60+WoGzGz5fo8Yr6gkO8VM5lwN7
-         mjR7882T6he4aPaehcTn4IWMJ7A046+0EnCVSTXW/vaN9YVxwwQOvHIgG8rjgUt7DLf4
-         mSHOd/R9hLtY/pLrssjEa2M7BbgQXEsVUfAUdJzh+uJ/C+7NdgLvmqqnv6UzRsagGy29
-         Kw7fcflTtun63MSl9hNsOCF/wvn1I5GA4DM9T6mXmZqHvLqITeZ95fTA8ciTTpiVmZs2
-         9qqQ==
-X-Gm-Message-State: AOJu0YyfLSK04pBqdZxgAWTBqVnFFXpMeoL0WVKA4+edYpUKLYfKkt37
-	9y7Eyl5AuV68YgX1lDZvonzCww==
-X-Google-Smtp-Source: AGHT+IGGEgtU/0QNfhR0VuWj+6MjlDH0aKxEm/b7PHGugXgt1r/1AySGlMTOGnp8qDgQ2pyVd5sWYg==
-X-Received: by 2002:a05:6a20:12d3:b0:18b:d3db:7048 with SMTP id v19-20020a056a2012d300b0018bd3db7048mr18160990pzg.23.1701149654057;
-        Mon, 27 Nov 2023 21:34:14 -0800 (PST)
+        d=1e100.net; s=20230601; t=1701149668; x=1701754468;
+        h=content-transfer-encoding:mime-version:references:in-reply-to
+         :message-id:date:subject:cc:to:from:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=fxO33hgX7qudIID8yDsz8ucZ3gJV05i7WjPRt4ATm1c=;
+        b=YG0gDLg3wo+v6C3lvQ+mwMdK15VEVleOmaZIIFQflBEWE/mbQ8zZ1mjT5CpAi0dy/i
+         KWVAxofp8WhtvdWXAjBiy+ZLh/7M/tOeIxnS1m190Z3FCheQAXIGwBSWn/Sc2nyZUWdE
+         lXN+zlfO66SptVxr5fE1pfC2cDhsba/w4C0hwUyv4jO4Pc+QOe9pb/BA0Mzy10euaUBC
+         /3Ntsycmczqb8dUpdUfzBAZ2pdGeybs7bTb6OCYY9DwGPWErJCGwmNLiSP6qPBBLErKv
+         4IOCz9bfUgasUW7rTVwMogwtzCVyL2ZzCog8QRIThGAsEyCMXOhsUKiOZ3cr+QIhAheQ
+         0aRg==
+X-Gm-Message-State: AOJu0YwWbwwuae57swhByfCcKaf4q7LXDLW1LmDT0Sb/gl5MQZTDiHq8
+	EXcMsriYeTM9LD0z0BgQ4IQ5Ow==
+X-Google-Smtp-Source: AGHT+IHAVwWhMA6v/POGZuJcshMw8zoXDI6R4vDpTtywy8ylzTugWHk11eEuOZ5m7x8RpjN2rWm3dQ==
+X-Received: by 2002:a17:902:b401:b0:1cf:9790:f243 with SMTP id x1-20020a170902b40100b001cf9790f243mr12596195plr.61.1701149668646;
+        Mon, 27 Nov 2023 21:34:28 -0800 (PST)
 Received: from localhost.localdomain ([61.213.176.14])
-        by smtp.gmail.com with ESMTPSA id u12-20020a17090341cc00b001cfb6bef8fesm5372899ple.186.2023.11.27.21.34.09
+        by smtp.gmail.com with ESMTPSA id u12-20020a17090341cc00b001cfb6bef8fesm5372899ple.186.2023.11.27.21.34.24
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 27 Nov 2023 21:34:13 -0800 (PST)
+        Mon, 27 Nov 2023 21:34:28 -0800 (PST)
 From: Jiachen Zhang <zhangjiachen.jaycee@bytedance.com>
 To: Chandan Babu R <chandan.babu@oracle.com>,
 	"Darrick J. Wong" <djwong@kernel.org>
@@ -50,10 +51,12 @@ Cc: Dave Chinner <dchinner@redhat.com>,
 	xieyongji@bytedance.com,
 	me@jcix.top,
 	Jiachen Zhang <zhangjiachen.jaycee@bytedance.com>
-Subject: [PATCH 0/2] Fixes for ENOSPC xfs_remove
-Date: Tue, 28 Nov 2023 13:32:00 +0800
-Message-Id: <20231128053202.29007-1-zhangjiachen.jaycee@bytedance.com>
+Subject: [PATCH 1/2] xfs: ensure tmp_logflags is initialized in xfs_bmap_del_extent_real
+Date: Tue, 28 Nov 2023 13:32:01 +0800
+Message-Id: <20231128053202.29007-2-zhangjiachen.jaycee@bytedance.com>
 X-Mailer: git-send-email 2.35.1
+In-Reply-To: <20231128053202.29007-1-zhangjiachen.jaycee@bytedance.com>
+References: <20231128053202.29007-1-zhangjiachen.jaycee@bytedance.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -62,30 +65,34 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-Hi,
+In the case of returning -ENOSPC, ensure tmp_logflags is initialized by 0.
+Otherwise the caller __xfs_bunmapi will set uninitialized illegal
+tmp_logflags value into xfs log, which might cause unpredictable error
+in the log recovery procedure.
 
-Recently, our use-case ran into 2 bugs in case doing xfs_remove when the
-disk space is in-pressure, which may cause xfs shutdown and kernel crash
-in the xfs log recovery procedure. Here are 2 patches to fix the problem.
+Fixes: 1b24b633aafe ("xfs: move some more code into xfs_bmap_del_extent_real")
+Signed-off-by: Jiachen Zhang <zhangjiachen.jaycee@bytedance.com>
+---
+ fs/xfs/libxfs/xfs_bmap.c | 6 ++++--
+ 1 file changed, 4 insertions(+), 2 deletions(-)
 
-The 1st patch fixes an uninitialized variable issue.
-
-The 2nd patch ensures the blkno in the xfs_buf is updated when doing
-xfs_da3_swap_lastblock().
-
-Thanks,
-Jiachen
-
-Jiachen Zhang (1):
-  xfs: ensure tmp_logflags is initialized in xfs_bmap_del_extent_real
-
-Zhang Tianci (1):
-  xfs: update dir3 leaf block metadata after swap
-
- fs/xfs/libxfs/xfs_bmap.c     |  6 ++++--
- fs/xfs/libxfs/xfs_da_btree.c | 12 +++++++++++-
- 2 files changed, 15 insertions(+), 3 deletions(-)
-
+diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
+index be62acffad6c..7cb395a38507 100644
+--- a/fs/xfs/libxfs/xfs_bmap.c
++++ b/fs/xfs/libxfs/xfs_bmap.c
+@@ -5048,8 +5048,10 @@ xfs_bmap_del_extent_real(
+ 	if (tp->t_blk_res == 0 &&
+ 	    ifp->if_format == XFS_DINODE_FMT_EXTENTS &&
+ 	    ifp->if_nextents >= XFS_IFORK_MAXEXT(ip, whichfork) &&
+-	    del->br_startoff > got.br_startoff && del_endoff < got_endoff)
+-		return -ENOSPC;
++	    del->br_startoff > got.br_startoff && del_endoff < got_endoff) {
++		error = -ENOSPC;
++		goto done;
++	}
+ 
+ 	flags = XFS_ILOG_CORE;
+ 	if (whichfork == XFS_DATA_FORK && XFS_IS_REALTIME_INODE(ip)) {
 -- 
 2.20.1
 
