@@ -1,43 +1,29 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3AE825E0CE;
-	Tue, 28 Nov 2023 16:32:55 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 934B937D36
+	for <linux-xfs@vger.kernel.org>; Tue, 28 Nov 2023 16:58:32 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="pz7PxjXP"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 99617C433C8;
-	Tue, 28 Nov 2023 16:32:55 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="P2a7kvZk"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id F1AE3C433C8;
+	Tue, 28 Nov 2023 16:58:31 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1701189175;
-	bh=VqwYFsYHgSQ8CyCGvVqeYL2Kouihl83vwFCUUepGWfI=;
+	s=k20201202; t=1701190712;
+	bh=yIG8WvL34oj3iPGlCjeIqUPEHKakDiTg67gFzAJTfEs=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=pz7PxjXPGQGLsinMNEMBDkmAyuEpMnUG+Jm7gW6FcUO24AfwJb/D0iAk/OuIx4pU/
-	 qQf9myOFtKdJwc2uV/uuafK6fvgEd+95aiAqkGk2zNNav8o0Dwku9x65PpKbXXqwKA
-	 Ue2ZGVwKZVyXoc4E1TUfhPpgw9Fq/AOEAZHGoiYoRN3fAG2LA3cunU4yzAH3Xud74d
-	 nKRX6z0acKx0A+PI059ekv0O4P5R1ahYnQmr9fkj1yfxC3vs/s3ciLPXKQHalVcy5q
-	 DlkD1Y1ndCU+zThaemauUXEUNA1O2fQTBjvJ70WZ7+aCrkIXcFslM2Qo8rtrdutfq6
-	 zK1MrgY8MECYg==
-Date: Tue, 28 Nov 2023 08:32:55 -0800
+	b=P2a7kvZk5jAlbi9whTCBV9iGvyuVKumtyc6vy3YaVrnlaBSL/9j1X/kIhfkFGGWWo
+	 5FJh0w6+sCGKKwXcZkr/QpgXahOcPfSF7Hsa4WIubHPNXjRlIDqY6FIbUcpSyFou4i
+	 pT4h2ThNBySgXKtlFPVCHqwfb9NpFeABr4G00lNI5ZU7DBJwSTG5s4yM3vPWqizZeI
+	 CDufzdUoyI+zdIaT2mx8ZuGuVgmtQ+nsAYIQgx1Rn5YvgdOn1fYbHUnYSys7c6MASh
+	 WjI6Ui3h+0fgs5Mps1htsAOybKjHSlQIz0PgmGq3bOfmbRtVJV7XQy8HuMWsVW68QT
+	 kC3OC+1H7+cvA==
+Date: Tue, 28 Nov 2023 08:58:31 -0800
 From: "Darrick J. Wong" <djwong@kernel.org>
-To: Bagas Sanjaya <bagasdotme@gmail.com>
-Cc: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	Linux Documentation <linux-doc@vger.kernel.org>,
-	Linux XFS <linux-xfs@vger.kernel.org>,
-	Linux Kernel Workflows <workflows@vger.kernel.org>,
-	Jonathan Corbet <corbet@lwn.net>,
-	Chandan Babu R <chandan.babu@oracle.com>,
-	Namjae Jeon <linkinjeon@kernel.org>,
-	Dave Chinner <dchinner@redhat.com>,
-	Steve French <stfrench@microsoft.com>,
-	"Matthew Wilcox (Oracle)" <willy@infradead.org>,
-	Allison Henderson <allison.henderson@oracle.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Charles Han <hanchunchao@inspur.com>,
-	Vegard Nossum <vegard.nossum@oracle.com>
-Subject: Re: [PATCH RESEND v2] Documentation: xfs: consolidate XFS docs into
- its own subdirectory
-Message-ID: <20231128163255.GV2766956@frogsfrogsfrogs>
-References: <20231128124522.28499-1-bagasdotme@gmail.com>
+To: Christoph Hellwig <hch@lst.de>
+Cc: linux-xfs@vger.kernel.org, Dave Chinner <dchinner@redhat.com>
+Subject: Re: XBF_DONE semantics
+Message-ID: <20231128165831.GW2766956@frogsfrogsfrogs>
+References: <20231128153808.GA19360@lst.de>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -46,175 +32,141 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20231128124522.28499-1-bagasdotme@gmail.com>
+In-Reply-To: <20231128153808.GA19360@lst.de>
 
-On Tue, Nov 28, 2023 at 07:45:22PM +0700, Bagas Sanjaya wrote:
-> XFS docs are currently in upper-level Documentation/filesystems.
-> Although these are currently 4 docs, they are already outstanding as
-> a group and can be moved to its own subdirectory.
+On Tue, Nov 28, 2023 at 04:38:08PM +0100, Christoph Hellwig wrote:
+> Hi Darrick,
 > 
-> Consolidate them into Documentation/filesystems/xfs/.
-> 
-> Signed-off-by: Bagas Sanjaya <bagasdotme@gmail.com>
+> while reviewing your online repair series I've noticed that the new
+> xfs_buf_delwri_queue_here helper sets XBF_DONE in addition to waiting
+> for the buffer to go off a delwri list, and that reminded me off an
+> assert I saw during my allocator experiments, where
+> xfs_trans_read_buf_map or xfs_buf_reverify trip on a buffer that doesn't
+> have XBF_DONE set because it comes from an ifree transaction (see
+> my current not fully thought out bandaid below).
+
+LOL, guess what I was looking at yesterday too! :)
+
+> The way we currently set and check XBF_DONE seems a bit undefined.  The
+> one clear use case is that read uses it to see if a buffer was read in.
+> But places that use buf_get and manually fill in data only use it in a
+> few cases.  Do we need to define clear semantics for it?  Or maybe
+> replace with an XBF_READ_DONE flag for that main read use case and
+> then think what do do with the rest?
+
+I thought XBF_DONE meant "contents have been read in from disk and
+have passed/will pass verifiers"
+
 > ---
-> Changes since v1 [1]:
+> From 80d148555ca261777ad728455a9a240e0007f54e Mon Sep 17 00:00:00 2001
+> From: Christoph Hellwig <hch@lst.de>
+> Date: Mon, 13 Nov 2023 12:02:15 -0500
+> Subject: xfs: remove the XBF_DONE asserts in xfs_buf_reverify and
+>  xfs_trans_read_buf_map
 > 
->   * Also update references to old doc path to address kernel test robot
->     warnings [2].
+> When xfs_trans_read_buf_map is called from xfs_inode_item_precommit
+> through xfs_imap_to_bp, we can find an inode buffer that doesn't have
+> XBF_DONE because xfs_ifree_cluster doesn't read the buffer but instead
+> just gets it before marking all buffers stale.
+
+Dave and I wondered if xfs_inode_item_precommit should be grabbing the
+buffer at all when ISTALE is set, since xfs_ifree_cluster should have
+staled (and invalidated) the buffer after setting ISTALE.
+
+I got bogged down in proving that correct because I got distracted by
+new shiny^W^W quota tests failing in -rc3 for some weird reason.
+
+> [  206.728129] ------------[ cut here ]------------
+> [  206.728573] WARNING: CPU: 0 PID: 6320 at fs/xfs/xfs_trans_buf.c:256 xfs_trans_read_buf_map+0x20
+> [  206.728971] Modules linked in:
+> [  206.729099] CPU: 0 PID: 6320 Comm: kworker/0:124 Not tainted 6.6.0+ #1598
+> [  206.729368] Hardware name: QEMU Standard PC (Q35 + ICH9, 2009), BIOS 1.16.2-debian-1.16.2-1 044
+> [  206.729744] Workqueue: xfs-inodegc/nvme1n1 xfs_inodegc_worker
+> [  206.729984] RIP: 0010:xfs_trans_read_buf_map+0x2ab/0x570
+> [  206.730295] Code: 0f 84 ae fe ff ff b9 4e 01 00 00 48 c7 c6 c8 62 0d 83 48 c7 c2 a5 15 ff 82 3d
+> [  206.731131] RSP: 0018:ffffc9000751fc38 EFLAGS: 00010246
+> [  206.731414] RAX: 0000000002110040 RBX: ffff88824c47dbd8 RCX: 0000000000000000
+> [  206.731748] RDX: ffff88824c47dc90 RSI: 0000000000000000 RDI: ffff8881705b46c0
+> [  206.732139] RBP: ffffc9000751fca8 R08: ffff888106416e00 R09: ffffc9000751fca8
+> [  206.732428] R10: ffff8881e09faa00 R11: ffff8881e09fb408 R12: 0000000000000001
+> [  206.732786] R13: ffff88810ddb2000 R14: ffffffff82b36660 R15: ffffc9000751fcf0
+> [  206.733092] FS:  0000000000000000(0000) GS:ffff888277c00000(0000) knlGS:0000000000000000
+> [  206.733460] CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+> [  206.733797] CR2: 00007f9833f399c0 CR3: 00000002113de000 CR4: 0000000000750ef0
+> [  206.734131] PKRU: 55555554
+> [  206.734320] Call Trace:
+> [  206.734438]  <TASK>
+> [  206.734537]  ? xfs_trans_read_buf_map+0x2ab/0x570
+> [  206.734824]  ? __warn+0x80/0x170
+> [  206.735051]  ? xfs_trans_read_buf_map+0x2ab/0x570
+> [  206.735342]  ? report_bug+0x18d/0x1c0
+> [  206.735533]  ? handle_bug+0x41/0x70
+> [  206.735679]  ? exc_invalid_op+0x17/0x60
+> [  206.735852]  ? asm_exc_invalid_op+0x1a/0x20
+> [  206.736054]  ? xfs_trans_read_buf_map+0x2ab/0x570
+> [  206.736262]  ? xfs_trans_read_buf_map+0x6b/0x570
+> [  206.736500]  xfs_imap_to_bp+0x60/0xc0
+> [  206.736668]  xfs_inode_item_precommit+0x172/0x2a0
+> [  206.736947]  ? xfs_iunlink_item_precommit+0xae/0x220
+> [  206.737191]  xfs_trans_run_precommits+0x60/0xc0
+> [  206.737460]  __xfs_trans_commit+0x67/0x3a0
+> [  206.737668]  xfs_inactive_ifree+0xfb/0x1f0
+> [  206.737889]  xfs_inactive+0x22f/0x420
+> [  206.738059]  xfs_inodegc_worker+0xa3/0x200
+> [  206.738227]  ? process_one_work+0x171/0x4a0
+> [  206.738450]  process_one_work+0x1d8/0x4a0
+> [  206.738651]  worker_thread+0x1ce/0x3b0
+> [  206.738864]  ? wq_sysfs_prep_attrs+0x90/0x90
+> [  206.739074]  kthread+0xf2/0x120
+> [  206.739216]  ? kthread_complete_and_exit+0x20/0x20
+> [  206.739482]  ret_from_fork+0x2c/0x40
+> [  206.739675]  ? kthread_complete_and_exit+0x20/0x20
+> [  206.740074]  ret_from_fork_asm+0x11/0x20
+> [  206.740402]  </TASK>
 > 
-> [1]: https://lore.kernel.org/linux-doc/20231121095658.28254-1-bagasdotme@gmail.com/
-> [2]: https://lore.kernel.org/linux-doc/a9abc5ec-f3cd-4a1a-81b9-a6900124d38b@gmail.com/
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
+> ---
+>  fs/xfs/xfs_buf.c       | 1 -
+>  fs/xfs/xfs_trans_buf.c | 1 -
+>  2 files changed, 2 deletions(-)
 > 
->  Documentation/filesystems/index.rst                |  5 +----
->  Documentation/filesystems/xfs/index.rst            | 14 ++++++++++++++
->  .../{ => xfs}/xfs-delayed-logging-design.rst       |  0
->  .../{ => xfs}/xfs-maintainer-entry-profile.rst     |  0
->  .../{ => xfs}/xfs-online-fsck-design.rst           |  2 +-
->  .../{ => xfs}/xfs-self-describing-metadata.rst     |  0
->  .../maintainer/maintainer-entry-profile.rst        |  2 +-
->  MAINTAINERS                                        |  4 ++--
->  8 files changed, 19 insertions(+), 8 deletions(-)
->  create mode 100644 Documentation/filesystems/xfs/index.rst
->  rename Documentation/filesystems/{ => xfs}/xfs-delayed-logging-design.rst (100%)
->  rename Documentation/filesystems/{ => xfs}/xfs-maintainer-entry-profile.rst (100%)
->  rename Documentation/filesystems/{ => xfs}/xfs-online-fsck-design.rst (99%)
->  rename Documentation/filesystems/{ => xfs}/xfs-self-describing-metadata.rst (100%)
-
-I think the rst filename should drop the 'xfs-' prefix, e.g.
-
-	Documentation/filesystems/xfs/delayed-logging-design.rst
-
-since that seems to be what most filesystems do:
-
-Documentation/filesystems/caching/backend-api.rst
-Documentation/filesystems/caching/cachefiles.rst
-Documentation/filesystems/caching/fscache.rst
-Documentation/filesystems/caching/index.rst
-Documentation/filesystems/caching/netfs-api.rst
-Documentation/filesystems/cifs/cifsroot.rst
-Documentation/filesystems/cifs/index.rst
-Documentation/filesystems/cifs/ksmbd.rst
-Documentation/filesystems/ext4/about.rst
-Documentation/filesystems/ext4/allocators.rst
-Documentation/filesystems/ext4/attributes.rst
-<snip>
-Documentation/filesystems/ext4/special_inodes.rst
-Documentation/filesystems/ext4/super.rst
-Documentation/filesystems/ext4/verity.rst
-Documentation/filesystems/nfs/client-identifier.rst
-Documentation/filesystems/nfs/exporting.rst
-Documentation/filesystems/nfs/index.rst
-Documentation/filesystems/nfs/knfsd-stats.rst
-Documentation/filesystems/nfs/nfs41-server.rst
-Documentation/filesystems/nfs/pnfs.rst
-Documentation/filesystems/nfs/reexport.rst
-Documentation/filesystems/nfs/rpc-cache.rst
-Documentation/filesystems/nfs/rpc-server-gss.rst
-Documentation/filesystems/smb/cifsroot.rst
-Documentation/filesystems/smb/index.rst
-Documentation/filesystems/smb/ksmbd.rst
-Documentation/filesystems/spufs/index.rst
-Documentation/filesystems/spufs/spu_create.rst
-Documentation/filesystems/spufs/spufs.rst
-Documentation/filesystems/spufs/spu_run.rst
-
-> diff --git a/Documentation/filesystems/index.rst b/Documentation/filesystems/index.rst
-> index 09cade7eaefc8c..e18bc5ae3b35f8 100644
-> --- a/Documentation/filesystems/index.rst
-> +++ b/Documentation/filesystems/index.rst
-> @@ -121,8 +121,5 @@ Documentation for filesystem implementations.
->     udf
->     virtiofs
->     vfat
-> -   xfs-delayed-logging-design
-> -   xfs-maintainer-entry-profile
-> -   xfs-self-describing-metadata
-> -   xfs-online-fsck-design
-> +   xfs/index
->     zonefs
-> diff --git a/Documentation/filesystems/xfs/index.rst b/Documentation/filesystems/xfs/index.rst
-> new file mode 100644
-> index 00000000000000..ab66c57a5d18ea
-> --- /dev/null
-> +++ b/Documentation/filesystems/xfs/index.rst
-> @@ -0,0 +1,14 @@
-> +.. SPDX-License-Identifier: GPL-2.0
-> +
-> +============================
-> +XFS Filesystem Documentation
-> +============================
-> +
-> +.. toctree::
-> +   :maxdepth: 2
-> +   :numbered:
-> +
-> +   xfs-delayed-logging-design
-> +   xfs-maintainer-entry-profile
-> +   xfs-self-describing-metadata
-> +   xfs-online-fsck-design
-> diff --git a/Documentation/filesystems/xfs-delayed-logging-design.rst b/Documentation/filesystems/xfs/xfs-delayed-logging-design.rst
-> similarity index 100%
-> rename from Documentation/filesystems/xfs-delayed-logging-design.rst
-> rename to Documentation/filesystems/xfs/xfs-delayed-logging-design.rst
-> diff --git a/Documentation/filesystems/xfs-maintainer-entry-profile.rst b/Documentation/filesystems/xfs/xfs-maintainer-entry-profile.rst
-> similarity index 100%
-> rename from Documentation/filesystems/xfs-maintainer-entry-profile.rst
-> rename to Documentation/filesystems/xfs/xfs-maintainer-entry-profile.rst
-> diff --git a/Documentation/filesystems/xfs-online-fsck-design.rst b/Documentation/filesystems/xfs/xfs-online-fsck-design.rst
-> similarity index 99%
-> rename from Documentation/filesystems/xfs-online-fsck-design.rst
-> rename to Documentation/filesystems/xfs/xfs-online-fsck-design.rst
-> index a0678101a7d02d..352516feef6ffe 100644
-> --- a/Documentation/filesystems/xfs-online-fsck-design.rst
-> +++ b/Documentation/filesystems/xfs/xfs-online-fsck-design.rst
-> @@ -962,7 +962,7 @@ disk, but these buffer verifiers cannot provide any consistency checking
->  between metadata structures.
+> diff --git a/fs/xfs/xfs_buf.c b/fs/xfs/xfs_buf.c
+> index 9bf79172efc824..4ff9f1b1abb698 100644
+> --- a/fs/xfs/xfs_buf.c
+> +++ b/fs/xfs/xfs_buf.c
+> @@ -863,7 +863,6 @@ xfs_buf_reverify(
+>  	struct xfs_buf		*bp,
+>  	const struct xfs_buf_ops *ops)
+>  {
+> -	ASSERT(bp->b_flags & XBF_DONE);
+>  	ASSERT(bp->b_error == 0);
 >  
->  For more information, please see the documentation for
-> -Documentation/filesystems/xfs-self-describing-metadata.rst
-> +Documentation/filesystems/xfs/xfs-self-describing-metadata.rst
->  
->  Reverse Mapping
->  ---------------
-> diff --git a/Documentation/filesystems/xfs-self-describing-metadata.rst b/Documentation/filesystems/xfs/xfs-self-describing-metadata.rst
-> similarity index 100%
-> rename from Documentation/filesystems/xfs-self-describing-metadata.rst
-> rename to Documentation/filesystems/xfs/xfs-self-describing-metadata.rst
-> diff --git a/Documentation/maintainer/maintainer-entry-profile.rst b/Documentation/maintainer/maintainer-entry-profile.rst
-> index 7ad4bfc2cc038a..18cee1edaecb6f 100644
-> --- a/Documentation/maintainer/maintainer-entry-profile.rst
-> +++ b/Documentation/maintainer/maintainer-entry-profile.rst
-> @@ -105,4 +105,4 @@ to do something different in the near future.
->     ../driver-api/media/maintainer-entry-profile
->     ../driver-api/vfio-pci-device-specific-driver-acceptance
->     ../nvme/feature-and-quirk-policy
-> -   ../filesystems/xfs-maintainer-entry-profile
-> +   ../filesystems/xfs/xfs-maintainer-entry-profile
-> diff --git a/MAINTAINERS b/MAINTAINERS
-> index ea790149af7951..fd288ac57e19fb 100644
-> --- a/MAINTAINERS
-> +++ b/MAINTAINERS
-> @@ -23893,10 +23893,10 @@ S:	Supported
->  W:	http://xfs.org/
->  C:	irc://irc.oftc.net/xfs
->  T:	git git://git.kernel.org/pub/scm/fs/xfs/xfs-linux.git
-> -P:	Documentation/filesystems/xfs-maintainer-entry-profile.rst
-> +P:	Documentation/filesystems/xfs/xfs-maintainer-entry-profile.rst
->  F:	Documentation/ABI/testing/sysfs-fs-xfs
->  F:	Documentation/admin-guide/xfs.rst
-> -F:	Documentation/filesystems/xfs-*
-> +F:	Documentation/filesystems/xfs/xfs-*
+>  	if (!ops || bp->b_ops)
+> diff --git a/fs/xfs/xfs_trans_buf.c b/fs/xfs/xfs_trans_buf.c
+> index 8e886ecfd69a3b..575922c64d4d3a 100644
+> --- a/fs/xfs/xfs_trans_buf.c
+> +++ b/fs/xfs/xfs_trans_buf.c
+> @@ -253,7 +253,6 @@ xfs_trans_read_buf_map(
+>  		ASSERT(bp->b_transp == tp);
+>  		ASSERT(bp->b_log_item != NULL);
+>  		ASSERT(!bp->b_error);
+> -		ASSERT(bp->b_flags & XBF_DONE);
 
-Shouldn't this be "Documentation/filesystems/xfs/*" ?
+I don't think this is the right thing to do here -- if the buffer is
+attached to a transaction, it ought to be XBF_DONE.  I think every
+transaction that calls _get_buf and rewrites the buffer contents will
+set XBF_DONE via xfs_trans_dirty_buf, right?
+
+Hmm.  Maybe I'm wrong -- a transaction could bjoin a buffer and then
+call xfs_trans_read_buf_map before dirtying it.  That strikes me as a
+suspicious thing to do, though.
 
 --D
 
->  F:	fs/xfs/
->  F:	include/uapi/linux/dqblk_xfs.h
->  F:	include/uapi/linux/fsmap.h
-> 
-> base-commit: 9c235dfc3d3f901fe22acb20f2ab37ff39f2ce02
+>  
+>  		/*
+>  		 * We never locked this buf ourselves, so we shouldn't
 > -- 
-> An old man doll... just what I always wanted! - Clara
+> 2.39.2
 > 
 > 
