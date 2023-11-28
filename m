@@ -1,217 +1,343 @@
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=bytedance.com header.i=@bytedance.com header.b="XcOGbW0y"
-Received: from mail-pf1-x434.google.com (mail-pf1-x434.google.com [IPv6:2607:f8b0:4864:20::434])
-	by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2999410D2
-	for <linux-xfs@vger.kernel.org>; Tue, 28 Nov 2023 01:39:57 -0800 (PST)
-Received: by mail-pf1-x434.google.com with SMTP id d2e1a72fcca58-6cbb71c3020so4388013b3a.1
-        for <linux-xfs@vger.kernel.org>; Tue, 28 Nov 2023 01:39:57 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=bytedance.com; s=google; t=1701164396; x=1701769196; darn=vger.kernel.org;
-        h=content-transfer-encoding:in-reply-to:from:references:cc:to:subject
-         :user-agent:mime-version:date:message-id:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=NeHZtBvmgEVffu6Pbw7kKyeRlzxbAWt8wPJwPKikjYc=;
-        b=XcOGbW0yUNa6NQzKhKsthBcPh1BVRTcyCSLcKbxE6pyPETkCYy8edpk6h0b8aM6EVO
-         ZrgfT64y/Bvfv3OchAOia+uZNVHhtvpx6a6JJhBP5sh9/idS9ckZkjGct/g5itKjLVwG
-         yw2a1fXDIUzZBst3gd7B/mABjbNOih5cvbmtMFpLksVOocDh8ARQfcPci8H+tpYja0y8
-         YQwcVA0S6tatLdVfjJgGjosxdKWTtmk1LKrvunKOaLChFIi/pwrXjfThmTMhqXJB9fW/
-         ZAVVheO6wyQQSVZ5hgdbKcFKd3zRHb1MEScXKkszYULHTwHPPype05LQdl4A/7eGMWxD
-         cwXg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1701164396; x=1701769196;
-        h=content-transfer-encoding:in-reply-to:from:references:cc:to:subject
-         :user-agent:mime-version:date:message-id:x-gm-message-state:from:to
-         :cc:subject:date:message-id:reply-to;
-        bh=NeHZtBvmgEVffu6Pbw7kKyeRlzxbAWt8wPJwPKikjYc=;
-        b=JpboyekfE50QQ7fL52i8Tj+8CfCr7Wh/kF2ENejaIev7cz+O5/MmrBqAqOO6Hot7Sa
-         vf9Q9uRfMhjPd5itm2pD5OACfnkJYbxrVLpjbF1OJjRN8hplFlw4+rOFLoZVg55u9W91
-         MxfUh8mbZ5Qyowd/OCKwnTgJkH0GX4OotbIyI+U+y6iFFyV2XG5AyJrRvEtQAN9HXzCF
-         njQRyT1bKwmQpJaWqjS59TmbYcR830lCTX7ecT0XalnY8TRbrSiAChhBTR9fZgWUt8EY
-         +5czmPM29hQ8R2shxs6qKVUa7WsI7+wuOUffc4LvOq+kV10iu0dXMR1voNE32i18j6aF
-         LGNw==
-X-Gm-Message-State: AOJu0YwcmZdWkz8q9iSSjM4lv/vHbAPfSSJU4MBX3+yCg04hTbIQLsaP
-	e02J7EcAD69p8bnyC6AWb+gLoQ==
-X-Google-Smtp-Source: AGHT+IGJiWG3nlRzwHHhr2F3nKKnI+nGhKfgVz18h5EOlX1qdv89D9Y38y/IAiHXXbT3QRYVqihiHg==
-X-Received: by 2002:a05:6a21:a5a0:b0:17a:4871:63fd with SMTP id gd32-20020a056a21a5a000b0017a487163fdmr24686577pzc.0.1701164396523;
-        Tue, 28 Nov 2023 01:39:56 -0800 (PST)
-Received: from [10.3.205.193] ([61.213.176.11])
-        by smtp.gmail.com with ESMTPSA id u26-20020a62ed1a000000b006cbcd08ed56sm8521050pfh.56.2023.11.28.01.39.52
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Tue, 28 Nov 2023 01:39:56 -0800 (PST)
-Message-ID: <39b76473-fe00-0f1b-62e3-ae349a9f80d3@bytedance.com>
-Date: Tue, 28 Nov 2023 17:39:50 +0800
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="HcpUwaH9"
+Received: from mgamail.intel.com (mgamail.intel.com [192.55.52.93])
+	by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 63EAAD6;
+	Tue, 28 Nov 2023 03:20:15 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1701170415; x=1732706415;
+  h=date:from:to:cc:subject:message-id:references:
+   mime-version:in-reply-to;
+  bh=qSaDzPStYpOmYXay6eUAmLjv4q2mpAbM97NA9jiSQlw=;
+  b=HcpUwaH94P4VmivoQgTJ+/ZNzBRDDIyHhp4Oz3i+tGRZ4NOKLDhefbZ1
+   hjcxmZ5/JxcIoXrzz3TtjTOlMwBZstC8t0CElTFFKjmjVQ95lgP4BFr6D
+   MzSM7VIAfeF2CjpEfeHzGGQU4EyKdaACwhyGsbhWsCMB8be8e6Sjwa9Ua
+   119TNsDrv6QYTfQ1j6QB8W66GzjvofpJrbw03gCGnvMw2GCgX2r25m4kc
+   WJH1MJetWiYU5V11DgQW4HUvWgL4YFp9Gv+SJtk3DnJ8SjaX0by1Au3gT
+   fZaHSOeT72OUGLcTLAlJME7JSCGW5XF8PSSPdR+cJ6/vmmvrgFAt2qILk
+   w==;
+X-IronPort-AV: E=McAfee;i="6600,9927,10907"; a="390055267"
+X-IronPort-AV: E=Sophos;i="6.04,233,1695711600"; 
+   d="scan'208";a="390055267"
+Received: from fmsmga007.fm.intel.com ([10.253.24.52])
+  by fmsmga102.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 28 Nov 2023 03:19:46 -0800
+X-ExtLoop1: 1
+X-IronPort-AV: E=McAfee;i="6600,9927,10907"; a="772274033"
+X-IronPort-AV: E=Sophos;i="6.04,233,1695711600"; 
+   d="scan'208";a="772274033"
+Received: from lkp-server01.sh.intel.com (HELO d584ee6ebdcc) ([10.239.97.150])
+  by fmsmga007.fm.intel.com with ESMTP; 28 Nov 2023 03:19:40 -0800
+Received: from kbuild by d584ee6ebdcc with local (Exim 4.96)
+	(envelope-from <lkp@intel.com>)
+	id 1r7w7t-0007TE-39;
+	Tue, 28 Nov 2023 11:19:37 +0000
+Date: Tue, 28 Nov 2023 19:18:17 +0800
+From: kernel test robot <lkp@intel.com>
+To: Jiachen Zhang <zhangjiachen.jaycee@bytedance.com>,
+	Chandan Babu R <chandan.babu@oracle.com>,
+	"Darrick J. Wong" <djwong@kernel.org>
+Cc: oe-kbuild-all@lists.linux.dev, Dave Chinner <dchinner@redhat.com>,
+	Allison Henderson <allison.henderson@oracle.com>,
+	Zhang Tianci <zhangtianci.1997@bytedance.com>,
+	Brian Foster <bfoster@redhat.com>, Ben Myers <bpm@sgi.com>,
+	linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org,
+	xieyongji@bytedance.com, me@jcix.top
+Subject: Re: [PATCH 2/2] xfs: update dir3 leaf block metadata after swap
+Message-ID: <202311281800.GTI1cgFY-lkp@intel.com>
+References: <20231128053202.29007-3-zhangjiachen.jaycee@bytedance.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:102.0)
- Gecko/20100101 Thunderbird/102.15.1
-Subject: [PATCH 2/2] xfs: update dir3 leaf block metadata after swap
-To: Christoph Hellwig <hch@infradead.org>
-Cc: Chandan Babu R <chandan.babu@oracle.com>,
- "Darrick J. Wong" <djwong@kernel.org>, Dave Chinner <dchinner@redhat.com>,
- Allison Henderson <allison.henderson@oracle.com>,
- Zhang Tianci <zhangtianci.1997@bytedance.com>,
- Brian Foster <bfoster@redhat.com>, Ben Myers <bpm@sgi.com>,
- linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org,
- xieyongji@bytedance.com, me@jcix.top
-References: <20231128053202.29007-1-zhangjiachen.jaycee@bytedance.com>
- <20231128053202.29007-3-zhangjiachen.jaycee@bytedance.com>
- <ZWWnQYo73yHnctvi@infradead.org>
-From: Jiachen Zhang <zhangjiachen.jaycee@bytedance.com>
-In-Reply-To: <ZWWnQYo73yHnctvi@infradead.org>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20231128053202.29007-3-zhangjiachen.jaycee@bytedance.com>
 
-On 2023/11/28 16:39, Christoph Hellwig wrote:
-> On Tue, Nov 28, 2023 at 01:32:02PM +0800, Jiachen Zhang wrote:
->> From: Zhang Tianci <zhangtianci.1997@bytedance.com>
->>
->> xfs_da3_swap_lastblock() copy the last block content to the dead block,
->> but do not update the metadata in it. We need update some metadata
->> for some kinds of type block, such as dir3 leafn block records its
->> blkno, we shall update it to the dead block blkno. Otherwise,
->> before write the xfs_buf to disk, the verify_write() will fail in
->> blk_hdr->blkno != xfs_buf->b_bn, then xfs will be shutdown.
-> 
-> Do you have a reproducer for this?  It would be very helpful to add it
-> to xfstests.
+Hi Jiachen,
 
-Hi Christoph,
+kernel test robot noticed the following build errors:
 
-Thanks for the review!
+[auto build test ERROR on xfs-linux/for-next]
+[also build test ERROR on linus/master v6.7-rc3 next-20231128]
+[cannot apply to djwong-xfs/djwong-devel]
+[If your patch is applied to the wrong git tree, kindly drop us a note.
+And when submitting patch, we suggest to use '--base' as documented in
+https://git-scm.com/docs/git-format-patch#_base_tree_information]
 
-It's hard to reproduce the issue. Currently we can reproduce it with
-some kernel code changes. We forcely reserve 0 t_blk_res for xfs_remove
-on kernel version 4.19:
+url:    https://github.com/intel-lab-lkp/linux/commits/Jiachen-Zhang/xfs-ensure-tmp_logflags-is-initialized-in-xfs_bmap_del_extent_real/20231128-135955
+base:   https://git.kernel.org/pub/scm/fs/xfs/xfs-linux.git for-next
+patch link:    https://lore.kernel.org/r/20231128053202.29007-3-zhangjiachen.jaycee%40bytedance.com
+patch subject: [PATCH 2/2] xfs: update dir3 leaf block metadata after swap
+config: powerpc64-randconfig-r081-20231128 (https://download.01.org/0day-ci/archive/20231128/202311281800.GTI1cgFY-lkp@intel.com/config)
+compiler: powerpc64-linux-gcc (GCC) 13.2.0
+reproduce (this is a W=1 build): (https://download.01.org/0day-ci/archive/20231128/202311281800.GTI1cgFY-lkp@intel.com/reproduce)
 
-diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
-index f2d06e1e4906..c8f84b95a0ec 100644
---- a/fs/xfs/xfs_inode.c
-+++ b/fs/xfs/xfs_inode.c
-@@ -2551,13 +2551,8 @@ xfs_remove(
-          * insert tries to happen, instead trimming the LAST
-          * block from the directory.
-          */
--       resblks = XFS_REMOVE_SPACE_RES(mp);
--       error = xfs_trans_alloc(mp, &M_RES(mp)->tr_remove, resblks, 0, 
-0, &tp);
--       if (error == -ENOSPC) {
--               resblks = 0;
--               error = xfs_trans_alloc(mp, &M_RES(mp)->tr_remove, 0, 0, 0,
--                               &tp);
--       }
-+       resblks = 0;
-+       error = xfs_trans_alloc(mp, &M_RES(mp)->tr_remove, 0, 0, 0, &tp);
-         if (error) {
-                 ASSERT(error != -ENOSPC);
-                 goto std_return
+If you fix the issue in a separate patch/commit (i.e. not just a new version of
+the same patch/commit), kindly add following tags
+| Reported-by: kernel test robot <lkp@intel.com>
+| Closes: https://lore.kernel.org/oe-kbuild-all/202311281800.GTI1cgFY-lkp@intel.com/
+
+All errors (new ones prefixed by >>):
+
+   In file included from include/linux/byteorder/big_endian.h:5,
+                    from arch/powerpc/include/uapi/asm/byteorder.h:14,
+                    from arch/powerpc/include/asm/qspinlock_types.h:6,
+                    from arch/powerpc/include/asm/spinlock_types.h:10,
+                    from include/linux/spinlock_types_raw.h:7,
+                    from include/linux/ratelimit_types.h:7,
+                    from include/linux/printk.h:9,
+                    from include/asm-generic/bug.h:22,
+                    from arch/powerpc/include/asm/bug.h:116,
+                    from include/linux/bug.h:5,
+                    from include/linux/fortify-string.h:5,
+                    from include/linux/string.h:295,
+                    from include/linux/uuid.h:11,
+                    from fs/xfs/xfs_linux.h:10,
+                    from fs/xfs/xfs.h:22,
+                    from fs/xfs/libxfs/xfs_da_btree.c:7:
+   fs/xfs/libxfs/xfs_da_btree.c: In function 'xfs_da3_swap_lastblock':
+>> fs/xfs/libxfs/xfs_da_btree.c:2330:50: error: 'struct xfs_buf' has no member named 'b_bn'
+    2330 |                 dap->blkno = cpu_to_be64(dead_buf->b_bn);
+         |                                                  ^~
+   include/uapi/linux/byteorder/big_endian.h:38:51: note: in definition of macro '__cpu_to_be64'
+      38 | #define __cpu_to_be64(x) ((__force __be64)(__u64)(x))
+         |                                                   ^
+   fs/xfs/libxfs/xfs_da_btree.c:2330:30: note: in expansion of macro 'cpu_to_be64'
+    2330 |                 dap->blkno = cpu_to_be64(dead_buf->b_bn);
+         |                              ^~~~~~~~~~~
 
 
-After insmod the new modified xfs.ko, run the following scripts, and it
-can reproduce the problem consistently on the final `umount mnt`:
+vim +2330 fs/xfs/libxfs/xfs_da_btree.c
 
-fallocate -l 1G xfs.img
-mkfs.xfs -f xfs.img
-mkdir -p mnt
-losetup /dev/loop0 xfs.img
-mount -t xfs /dev/loop0 mnt
-pushd mnt
-mkdir dir3
-prefix="a_"
-for j in $(seq 0 13); do
-     for i in $(seq 0 2800); do
-             touch dir3/${prefix}_${i}_${j}
-     done
-     for i in $(seq 0 2500); do
-             rm -f dir3/${prefix}_${i}_${j}
-             if [ "$i" == "2094" ] && [ "$j" == "13" ]; then
-                     echo "should reproduce now, so break here!"
-                     break;
-             fi
-     done
-done
-popd
-umount mnt
+  2254	
+  2255	/*
+  2256	 * Ick.  We need to always be able to remove a btree block, even
+  2257	 * if there's no space reservation because the filesystem is full.
+  2258	 * This is called if xfs_bunmapi on a btree block fails due to ENOSPC.
+  2259	 * It swaps the target block with the last block in the file.  The
+  2260	 * last block in the file can always be removed since it can't cause
+  2261	 * a bmap btree split to do that.
+  2262	 */
+  2263	STATIC int
+  2264	xfs_da3_swap_lastblock(
+  2265		struct xfs_da_args	*args,
+  2266		xfs_dablk_t		*dead_blknop,
+  2267		struct xfs_buf		**dead_bufp)
+  2268	{
+  2269		struct xfs_da_blkinfo	*dead_info;
+  2270		struct xfs_da_blkinfo	*sib_info;
+  2271		struct xfs_da_intnode	*par_node;
+  2272		struct xfs_da_intnode	*dead_node;
+  2273		struct xfs_dir2_leaf	*dead_leaf2;
+  2274		struct xfs_da_node_entry *btree;
+  2275		struct xfs_da3_icnode_hdr par_hdr;
+  2276		struct xfs_inode	*dp;
+  2277		struct xfs_trans	*tp;
+  2278		struct xfs_mount	*mp;
+  2279		struct xfs_buf		*dead_buf;
+  2280		struct xfs_buf		*last_buf;
+  2281		struct xfs_buf		*sib_buf;
+  2282		struct xfs_buf		*par_buf;
+  2283		xfs_dahash_t		dead_hash;
+  2284		xfs_fileoff_t		lastoff;
+  2285		xfs_dablk_t		dead_blkno;
+  2286		xfs_dablk_t		last_blkno;
+  2287		xfs_dablk_t		sib_blkno;
+  2288		xfs_dablk_t		par_blkno;
+  2289		int			error;
+  2290		int			w;
+  2291		int			entno;
+  2292		int			level;
+  2293		int			dead_level;
+  2294	
+  2295		trace_xfs_da_swap_lastblock(args);
+  2296	
+  2297		dead_buf = *dead_bufp;
+  2298		dead_blkno = *dead_blknop;
+  2299		tp = args->trans;
+  2300		dp = args->dp;
+  2301		w = args->whichfork;
+  2302		ASSERT(w == XFS_DATA_FORK);
+  2303		mp = dp->i_mount;
+  2304		lastoff = args->geo->freeblk;
+  2305		error = xfs_bmap_last_before(tp, dp, &lastoff, w);
+  2306		if (error)
+  2307			return error;
+  2308		if (XFS_IS_CORRUPT(mp, lastoff == 0))
+  2309			return -EFSCORRUPTED;
+  2310		/*
+  2311		 * Read the last block in the btree space.
+  2312		 */
+  2313		last_blkno = (xfs_dablk_t)lastoff - args->geo->fsbcount;
+  2314		error = xfs_da3_node_read(tp, dp, last_blkno, &last_buf, w);
+  2315		if (error)
+  2316			return error;
+  2317		/*
+  2318		 * Copy the last block into the dead buffer and log it.
+  2319		 */
+  2320		memcpy(dead_buf->b_addr, last_buf->b_addr, args->geo->blksize);
+  2321		dead_info = dead_buf->b_addr;
+  2322		/*
+  2323		 * Update the moved block's blkno if it's a dir3 leaf block
+  2324		 */
+  2325		if (dead_info->magic == cpu_to_be16(XFS_DIR3_LEAF1_MAGIC) ||
+  2326		    dead_info->magic == cpu_to_be16(XFS_DIR3_LEAFN_MAGIC) ||
+  2327		    dead_info->magic == cpu_to_be16(XFS_ATTR3_LEAF_MAGIC)) {
+  2328			struct xfs_da3_blkinfo *dap = (struct xfs_da3_blkinfo *)dead_info;
+  2329	
+> 2330			dap->blkno = cpu_to_be64(dead_buf->b_bn);
+  2331		}
+  2332		xfs_trans_log_buf(tp, dead_buf, 0, args->geo->blksize - 1);
+  2333		/*
+  2334		 * Get values from the moved block.
+  2335		 */
+  2336		if (dead_info->magic == cpu_to_be16(XFS_DIR2_LEAFN_MAGIC) ||
+  2337		    dead_info->magic == cpu_to_be16(XFS_DIR3_LEAFN_MAGIC)) {
+  2338			struct xfs_dir3_icleaf_hdr leafhdr;
+  2339			struct xfs_dir2_leaf_entry *ents;
+  2340	
+  2341			dead_leaf2 = (xfs_dir2_leaf_t *)dead_info;
+  2342			xfs_dir2_leaf_hdr_from_disk(dp->i_mount, &leafhdr,
+  2343						    dead_leaf2);
+  2344			ents = leafhdr.ents;
+  2345			dead_level = 0;
+  2346			dead_hash = be32_to_cpu(ents[leafhdr.count - 1].hashval);
+  2347		} else {
+  2348			struct xfs_da3_icnode_hdr deadhdr;
+  2349	
+  2350			dead_node = (xfs_da_intnode_t *)dead_info;
+  2351			xfs_da3_node_hdr_from_disk(dp->i_mount, &deadhdr, dead_node);
+  2352			btree = deadhdr.btree;
+  2353			dead_level = deadhdr.level;
+  2354			dead_hash = be32_to_cpu(btree[deadhdr.count - 1].hashval);
+  2355		}
+  2356		sib_buf = par_buf = NULL;
+  2357		/*
+  2358		 * If the moved block has a left sibling, fix up the pointers.
+  2359		 */
+  2360		if ((sib_blkno = be32_to_cpu(dead_info->back))) {
+  2361			error = xfs_da3_node_read(tp, dp, sib_blkno, &sib_buf, w);
+  2362			if (error)
+  2363				goto done;
+  2364			sib_info = sib_buf->b_addr;
+  2365			if (XFS_IS_CORRUPT(mp,
+  2366					   be32_to_cpu(sib_info->forw) != last_blkno ||
+  2367					   sib_info->magic != dead_info->magic)) {
+  2368				error = -EFSCORRUPTED;
+  2369				goto done;
+  2370			}
+  2371			sib_info->forw = cpu_to_be32(dead_blkno);
+  2372			xfs_trans_log_buf(tp, sib_buf,
+  2373				XFS_DA_LOGRANGE(sib_info, &sib_info->forw,
+  2374						sizeof(sib_info->forw)));
+  2375			sib_buf = NULL;
+  2376		}
+  2377		/*
+  2378		 * If the moved block has a right sibling, fix up the pointers.
+  2379		 */
+  2380		if ((sib_blkno = be32_to_cpu(dead_info->forw))) {
+  2381			error = xfs_da3_node_read(tp, dp, sib_blkno, &sib_buf, w);
+  2382			if (error)
+  2383				goto done;
+  2384			sib_info = sib_buf->b_addr;
+  2385			if (XFS_IS_CORRUPT(mp,
+  2386					   be32_to_cpu(sib_info->back) != last_blkno ||
+  2387					   sib_info->magic != dead_info->magic)) {
+  2388				error = -EFSCORRUPTED;
+  2389				goto done;
+  2390			}
+  2391			sib_info->back = cpu_to_be32(dead_blkno);
+  2392			xfs_trans_log_buf(tp, sib_buf,
+  2393				XFS_DA_LOGRANGE(sib_info, &sib_info->back,
+  2394						sizeof(sib_info->back)));
+  2395			sib_buf = NULL;
+  2396		}
+  2397		par_blkno = args->geo->leafblk;
+  2398		level = -1;
+  2399		/*
+  2400		 * Walk down the tree looking for the parent of the moved block.
+  2401		 */
+  2402		for (;;) {
+  2403			error = xfs_da3_node_read(tp, dp, par_blkno, &par_buf, w);
+  2404			if (error)
+  2405				goto done;
+  2406			par_node = par_buf->b_addr;
+  2407			xfs_da3_node_hdr_from_disk(dp->i_mount, &par_hdr, par_node);
+  2408			if (XFS_IS_CORRUPT(mp,
+  2409					   level >= 0 && level != par_hdr.level + 1)) {
+  2410				error = -EFSCORRUPTED;
+  2411				goto done;
+  2412			}
+  2413			level = par_hdr.level;
+  2414			btree = par_hdr.btree;
+  2415			for (entno = 0;
+  2416			     entno < par_hdr.count &&
+  2417			     be32_to_cpu(btree[entno].hashval) < dead_hash;
+  2418			     entno++)
+  2419				continue;
+  2420			if (XFS_IS_CORRUPT(mp, entno == par_hdr.count)) {
+  2421				error = -EFSCORRUPTED;
+  2422				goto done;
+  2423			}
+  2424			par_blkno = be32_to_cpu(btree[entno].before);
+  2425			if (level == dead_level + 1)
+  2426				break;
+  2427			xfs_trans_brelse(tp, par_buf);
+  2428			par_buf = NULL;
+  2429		}
+  2430		/*
+  2431		 * We're in the right parent block.
+  2432		 * Look for the right entry.
+  2433		 */
+  2434		for (;;) {
+  2435			for (;
+  2436			     entno < par_hdr.count &&
+  2437			     be32_to_cpu(btree[entno].before) != last_blkno;
+  2438			     entno++)
+  2439				continue;
+  2440			if (entno < par_hdr.count)
+  2441				break;
+  2442			par_blkno = par_hdr.forw;
+  2443			xfs_trans_brelse(tp, par_buf);
+  2444			par_buf = NULL;
+  2445			if (XFS_IS_CORRUPT(mp, par_blkno == 0)) {
+  2446				error = -EFSCORRUPTED;
+  2447				goto done;
+  2448			}
+  2449			error = xfs_da3_node_read(tp, dp, par_blkno, &par_buf, w);
+  2450			if (error)
+  2451				goto done;
+  2452			par_node = par_buf->b_addr;
+  2453			xfs_da3_node_hdr_from_disk(dp->i_mount, &par_hdr, par_node);
+  2454			if (XFS_IS_CORRUPT(mp, par_hdr.level != level)) {
+  2455				error = -EFSCORRUPTED;
+  2456				goto done;
+  2457			}
+  2458			btree = par_hdr.btree;
+  2459			entno = 0;
+  2460		}
+  2461		/*
+  2462		 * Update the parent entry pointing to the moved block.
+  2463		 */
+  2464		btree[entno].before = cpu_to_be32(dead_blkno);
+  2465		xfs_trans_log_buf(tp, par_buf,
+  2466			XFS_DA_LOGRANGE(par_node, &btree[entno].before,
+  2467					sizeof(btree[entno].before)));
+  2468		*dead_blknop = last_blkno;
+  2469		*dead_bufp = last_buf;
+  2470		return 0;
+  2471	done:
+  2472		if (par_buf)
+  2473			xfs_trans_brelse(tp, par_buf);
+  2474		if (sib_buf)
+  2475			xfs_trans_brelse(tp, sib_buf);
+  2476		xfs_trans_brelse(tp, last_buf);
+  2477		return error;
+  2478	}
+  2479	
 
-
-We are still trying to make a reproducer without any kernel changes. Do
-you have any suggestions on this?
-
-
-> 
->>
->> We will get this warning:
->>
->>    XFS (dm-0): Metadata corruption detected at xfs_dir3_leaf_verify+0xa8/0xe0 [xfs], xfs_dir3_leafn block 0x178
->>    XFS (dm-0): Unmount and run xfs_repair
->>    XFS (dm-0): First 128 bytes of corrupted metadata buffer:
->>    00000000e80f1917: 00 80 00 0b 00 80 00 07 3d ff 00 00 00 00 00 00  ........=.......
->>    000000009604c005: 00 00 00 00 00 00 01 a0 00 00 00 00 00 00 00 00  ................
->>    000000006b6fb2bf: e4 44 e3 97 b5 64 44 41 8b 84 60 0e 50 43 d9 bf  .D...dDA..`.PC..
->>    00000000678978a2: 00 00 00 00 00 00 00 83 01 73 00 93 00 00 00 00  .........s......
->>    00000000b28b247c: 99 29 1d 38 00 00 00 00 99 29 1d 40 00 00 00 00  .).8.....).@....
->>    000000002b2a662c: 99 29 1d 48 00 00 00 00 99 49 11 00 00 00 00 00  .).H.....I......
->>    00000000ea2ffbb8: 99 49 11 08 00 00 45 25 99 49 11 10 00 00 48 fe  .I....E%.I....H.
->>    0000000069e86440: 99 49 11 18 00 00 4c 6b 99 49 11 20 00 00 4d 97  .I....Lk.I. ..M.
->>    XFS (dm-0): xfs_do_force_shutdown(0x8) called from line 1423 of file fs/xfs/xfs_buf.c.  Return address = 00000000c0ff63c1
->>    XFS (dm-0): Corruption of in-memory data detected.  Shutting down filesystem
->>    XFS (dm-0): Please umount the filesystem and rectify the problem(s)
->>
->> >From the log above, we know xfs_buf->b_no is 0x178, but the block's hdr record
->> its blkno is 0x1a0.
->>
->> Fixes: 24df33b45ecf ("xfs: add CRC checking to dir2 leaf blocks")
->> Signed-off-by: Zhang Tianci <zhangtianci.1997@bytedance.com>
->> ---
->>   fs/xfs/libxfs/xfs_da_btree.c | 12 +++++++++++-
->>   1 file changed, 11 insertions(+), 1 deletion(-)
->>
->> diff --git a/fs/xfs/libxfs/xfs_da_btree.c b/fs/xfs/libxfs/xfs_da_btree.c
->> index e576560b46e9..35f70e4c6447 100644
->> --- a/fs/xfs/libxfs/xfs_da_btree.c
->> +++ b/fs/xfs/libxfs/xfs_da_btree.c
->> @@ -2318,8 +2318,18 @@ xfs_da3_swap_lastblock(
->>   	 * Copy the last block into the dead buffer and log it.
->>   	 */
->>   	memcpy(dead_buf->b_addr, last_buf->b_addr, args->geo->blksize);
->> -	xfs_trans_log_buf(tp, dead_buf, 0, args->geo->blksize - 1);
->>   	dead_info = dead_buf->b_addr;
->> +	/*
->> +	 * Update the moved block's blkno if it's a dir3 leaf block
->> +	 */
->> +	if (dead_info->magic == cpu_to_be16(XFS_DIR3_LEAF1_MAGIC) ||
->> +	    dead_info->magic == cpu_to_be16(XFS_DIR3_LEAFN_MAGIC) ||
->> +	    dead_info->magic == cpu_to_be16(XFS_ATTR3_LEAF_MAGIC)) {
->> +		struct xfs_da3_blkinfo *dap = (struct xfs_da3_blkinfo *)dead_info;
->> +
->> +		dap->blkno = cpu_to_be64(dead_buf->b_bn);
->> +	}
->> +	xfs_trans_log_buf(tp, dead_buf, 0, args->geo->blksize - 1);
-> 
-> The fix here looks correct to me, but also a little ugly and ad-hoc.
-> 
-> At last we should be using container_of and not casts for getting from a
-> xfs_da_blkinfo to a xfs_da3_blkinfo (even if there is bad precedence
-> for the cast in existing code).
-> 
-
-Thanks, we will optimize the code in the next version of the patchset.
-
-> But I think it would be useful to add a helper that stamps in the blkno
-> in for a caller that only has as xfs_da_blkinfo but no xfs_da3_blkinfo
-> and use in all the places that do it currently in an open coded fashion
-> e.g. xfs_da3_root_join, xfs_da3_root_split, xfs_attr3_leaf_to_node.
-> 
-> That should probably be done on top of the small backportable fix.
-> 
-
-I think the idea to add helper is great, and we can do it after this
-fixes patch is merged.
-
-
-Thanks,
-Jiachen
-
+-- 
+0-DAY CI Kernel Test Service
+https://github.com/intel/lkp-tests/wiki
