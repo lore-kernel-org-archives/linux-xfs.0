@@ -1,33 +1,34 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D17052209E
-	for <linux-xfs@vger.kernel.org>; Tue, 28 Nov 2023 17:01:22 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 42FAD4645C
+	for <linux-xfs@vger.kernel.org>; Tue, 28 Nov 2023 17:02:22 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="I2y38H8v"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 4F90EC433C7;
-	Tue, 28 Nov 2023 17:01:22 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="JF7xB8vj"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id AB6C8C433C7;
+	Tue, 28 Nov 2023 17:02:22 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1701190882;
-	bh=ZOkknGVGoeU6jzoxm9lhlFEl0ZNJd/Hm2UE+qemj384=;
+	s=k20201202; t=1701190942;
+	bh=EGG+/yGNEBeffnTkYSLPxRfCIm7q0lk95qG0+mzThqM=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=I2y38H8vooEaenwFmekZGktF75uYGtoFz5Sp0MfBNvAgkQlH1A+nsHWd6MQaJTMwv
-	 YoSe1Rrq1/fzmYN0lj9UFtMo+63NK7KHuRXjhM4gRSAIuycElr+lBRHAWVAQGLIBp1
-	 bUPGVmq1SMK0ndWRkyd1EB5ATJ8msYcEeu3WmeLepMtFscckOymTAU3RW0wJ++TV+2
-	 Qw6H3bMqzhavCPKIL580sTyGUk687RvnlbOwcDd1IztV8k79LlRP9w4yPaXAJOEhzb
-	 siHvMkTwcqAv6qNGoguy1Y8IyAUFwtaiUTtHKQTrVM4QQGaNylAw4di7FHvAjwohdL
-	 w5QoQzcbG9MzA==
-Date: Tue, 28 Nov 2023 09:01:21 -0800
+	b=JF7xB8vjII+zTEMN88HWUtD2pZbPl9feztTNHFg/jaclhDAOLFQooSdLhRrxLzKlH
+	 zrO1AVRdoGnOZOLN2RWVfQHwaaz4SJ6CUrwqLsaY66F5uyadx7NhM1KTiUT7Eg2jo5
+	 RW4qYzIPnLNnPVwGdUUEJc+KSWDIpOU7kppj0uDtfr3sgiH7scK9SujEv/6/clRcVm
+	 FRisxBgzcIjB0SAVuMOAOwwZYBQ3HrmLbCzjo4hJM99BxgXaQcXOA9yTPn1UvWrH5D
+	 nZyWTFc5Gpb/li33V6k0UUGS+jSZITTuiSYXk1kBpMJlP4/Bz0P0AYiSC4zX4queQR
+	 87HTxcZ9TYncg==
+Date: Tue, 28 Nov 2023 09:02:22 -0800
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: Christoph Hellwig <hch@infradead.org>
-Cc: cem@kernel.org, linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 2/9] libxfs: don't UAF a requeued EFI
-Message-ID: <20231128170121.GX2766956@frogsfrogsfrogs>
-References: <170069440815.1865809.15572181471511196657.stgit@frogsfrogsfrogs>
- <170069441966.1865809.4282467818590298794.stgit@frogsfrogsfrogs>
- <ZV7zCVxzEnufP53Q@infradead.org>
- <20231127181024.GA2766956@frogsfrogsfrogs>
- <ZWV8izIb2XTOc9dJ@infradead.org>
+Cc: Dave Chinner <dchinner@redhat.com>, linux-xfs@vger.kernel.org
+Subject: Re: [PATCH 5/7] xfs: implement block reservation accounting for
+ btrees we're staging
+Message-ID: <20231128170222.GY2766956@frogsfrogsfrogs>
+References: <170086926113.2768790.10021834422326302654.stgit@frogsfrogsfrogs>
+ <170086926207.2768790.3907390620269991796.stgit@frogsfrogsfrogs>
+ <ZWNEzd9aCQpKzpf9@infradead.org>
+ <20231127223451.GG2766956@frogsfrogsfrogs>
+ <ZWV9iC0HHYkJXh3r@infradead.org>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -36,27 +37,21 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <ZWV8izIb2XTOc9dJ@infradead.org>
+In-Reply-To: <ZWV9iC0HHYkJXh3r@infradead.org>
 
-On Mon, Nov 27, 2023 at 09:37:15PM -0800, Christoph Hellwig wrote:
-> On Mon, Nov 27, 2023 at 10:10:24AM -0800, Darrick J. Wong wrote:
-> > > It might be time to move this code into shared files?
+On Mon, Nov 27, 2023 at 09:41:28PM -0800, Christoph Hellwig wrote:
+> On Mon, Nov 27, 2023 at 02:34:51PM -0800, Darrick J. Wong wrote:
+> > That had a noticeable effect on performance straight after mounting
+> > because touching /any/ btree would result in splits.  IIRC Dave and I
+> > decided that repair should generate btree blocks that were 75% full
+> > unless space was tight.  We defined tight as ~10% free to avoid repair
+> > failures and settled on 3/32 to avoid div64.
 > > 
-> > I think Chandan started looking into what it would take to port the log
-> > code from the kernel into userspace.  Then xfs_trans_commit in userspace
-> > could actually write transactions to the log and write them back
-> > atomically; and xfs_repair could finally lose the -L switch.
+> > IOWs, we mostly pulled it out of thin air. ;)
 > 
-> While that does sound like a really good idea, it's now what I meant
-> here.  I think if we moved the actual defer ops instances out of the
-> _item.c files into libxfs, I think we could reuse them for the current
-> way of operating in userspace quite easily with strategic stubs for
-> some functionality.
+> Maybe throw a little comment about this in.
 
-Oh!  You're talking about moving xfs_rmap_update_defer_type and the
-functions it points to into xfs_rmap.c, then?  Hmm.  I just moved
-->iop_recover into xfs_defer_op_type, let me send an RFC for that.
-
-(You and I might have hit critical mass for log item cleanups... ;))
+Yeah, I'll paste the sordid history into the commit message when I
+change the code to use div_u64.
 
 --D
