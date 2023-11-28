@@ -1,450 +1,180 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 82F4E3D0DC
-	for <linux-xfs@vger.kernel.org>; Tue, 28 Nov 2023 20:27:10 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="f5mM9LVq"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 4FDC8C433C8;
-	Tue, 28 Nov 2023 20:27:10 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1701203230;
-	bh=3S/7G6+ShScD+LzmHp0IB3MZz4JiMbOwq9xuQfc1Cho=;
-	h=Subject:From:To:Cc:Date:In-Reply-To:References:From;
-	b=f5mM9LVq8kpIsn0US5kuVxRanrOqX1SrIDFbRcNC+WgKrDE7P5NI7PiuMLVm0hO9W
-	 p6TIIupCwTg5MvnOvPQWvysonQFolji1qwo3OWzgGVttKIsH05DApieKAOWTWvqjQD
-	 hpQYwhR4wzBb4PrOQocAv+dnegV0dz9KY7/0O//1iMmQsSVeVbavM9gqxv5YhpNotE
-	 gY/oVSmHM/mdeo3q/cXqDPLtSxOBVlwufPfrqQ7P1lSOlxdR1fCJpDl7uHpZLliC9x
-	 cmA3yIvSwcCubLZHn45CrS4GrokhhpGs0gNnAYufnEe3PfmKoy1HsObTe5LyCepDAu
-	 mdeedFTn6BwVw==
-Subject: [PATCH 7/7] xfs: move ->iop_recover to xfs_defer_op_type
-From: "Darrick J. Wong" <djwong@kernel.org>
-To: djwong@kernel.org, leo.lilong@huawei.com, chandanbabu@kernel.org,
- hch@lst.de
-Cc: linux-xfs@vger.kernel.org
-Date: Tue, 28 Nov 2023 12:27:08 -0800
-Message-ID: <170120322874.13206.13311055647910298715.stgit@frogsfrogsfrogs>
-In-Reply-To: <170120318847.13206.17051442307252477333.stgit@frogsfrogsfrogs>
-References: <170120318847.13206.17051442307252477333.stgit@frogsfrogsfrogs>
-User-Agent: StGit/0.19
+	dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b="R+ElWhJl"
+Received: from mail-pl1-x62b.google.com (mail-pl1-x62b.google.com [IPv6:2607:f8b0:4864:20::62b])
+	by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 20F572D5E
+	for <linux-xfs@vger.kernel.org>; Tue, 28 Nov 2023 13:08:42 -0800 (PST)
+Received: by mail-pl1-x62b.google.com with SMTP id d9443c01a7336-1cfbda041f3so28207805ad.2
+        for <linux-xfs@vger.kernel.org>; Tue, 28 Nov 2023 13:08:41 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=fromorbit-com.20230601.gappssmtp.com; s=20230601; t=1701205721; x=1701810521; darn=vger.kernel.org;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
+        bh=0maxqd6QUCXYfuuM92Wu4ssCdvyg3J3K+gOKQF5YwAg=;
+        b=R+ElWhJlqF9yDNUI7WxxEZIo4uwFygXlmFlO3Rfhn0iilkFZtXE47gRfDDmZq0kHny
+         vzO2/0+cHrV8d7TBfGrsOpNs7I/ZbwXxnHUMZH2G1ESXT3yCh1Dt8n0Smk+ZKrmNs0i5
+         mmAyJZ/D4iPizgWCqWq1nnQv9iQjzekGBMxTZtv4erLjBFKoqwAnzH3l0RBvAp431byp
+         JTTHKUowip2n/Hh/K7SH8x+sn9OFwAbT10V4IJUrtlo5P6LZ/63zQddeEo/7az2Wb8ru
+         pvqGyO4uDnGlRmy8+ERXQLv+gD2IsOigSFkihh5KR9TP5MYkwNTITh3MWKzfW5ym0QsD
+         dBxg==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1701205721; x=1701810521;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=0maxqd6QUCXYfuuM92Wu4ssCdvyg3J3K+gOKQF5YwAg=;
+        b=RC9mT6xaas7qygWL0inIRuW9BORbRzZ4IZ8dDwSmp5G5fDyBZ/bXtcmmKLFpX1vsLS
+         q9mm6Spwnm50vYeg+EjApknzRG6jni+aGf+J2dCS1+Iw6UkLsaW7JuRQsrChxLSb4wH9
+         /lAEK/3mxhF49SfXxplLMb6e6CbQjud8PSuFJal94h8D1u6REf0fCL21d4/DENjH9toL
+         SeiCYu/2JeiVUiEw6C5/AA0J73jD/Nco/0tc/5N/9/ArzI5VbQg0MKY+ktZ7Ea1szWs+
+         cQjwC3GNAd8MrYFgG8jfgBr/KLzRP4c2l957/P7QEuQuYdciOo0EgFPMaWrLXpvDBuOB
+         ux6A==
+X-Gm-Message-State: AOJu0YyMdwWVOqORr/021OdgetG/xzin4JdemztXZzySHEVWgv+ufYNV
+	NsVVRZoPWijw+YxBBO+Knpddfw==
+X-Google-Smtp-Source: AGHT+IHn0Q6ZzPVmcfzv7nzaYBge1d1cok3N/3eRaEEqQM4wqplzs8UYbKQbZeR9iSR8LXd/zewMqg==
+X-Received: by 2002:a17:903:183:b0:1cf:6590:70 with SMTP id z3-20020a170903018300b001cf65900070mr21526921plg.23.1701205721403;
+        Tue, 28 Nov 2023 13:08:41 -0800 (PST)
+Received: from dread.disaster.area (pa49-180-125-5.pa.nsw.optusnet.com.au. [49.180.125.5])
+        by smtp.gmail.com with ESMTPSA id bf11-20020a170902b90b00b001cfb971edfbsm6613923plb.156.2023.11.28.13.08.40
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Tue, 28 Nov 2023 13:08:40 -0800 (PST)
+Received: from dave by dread.disaster.area with local (Exim 4.96)
+	(envelope-from <david@fromorbit.com>)
+	id 1r85Jt-001Dyy-34;
+	Wed, 29 Nov 2023 08:08:37 +1100
+Date: Wed, 29 Nov 2023 08:08:37 +1100
+From: Dave Chinner <david@fromorbit.com>
+To: Christoph Hellwig <hch@lst.de>
+Cc: "Darrick J. Wong" <djwong@kernel.org>, linux-xfs@vger.kernel.org,
+	Dave Chinner <dchinner@redhat.com>
+Subject: Re: XBF_DONE semantics
+Message-ID: <ZWZW1bb+ih16tU+5@dread.disaster.area>
+References: <20231128153808.GA19360@lst.de>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20231128153808.GA19360@lst.de>
 
-From: Darrick J. Wong <djwong@kernel.org>
+On Tue, Nov 28, 2023 at 04:38:08PM +0100, Christoph Hellwig wrote:
+> Hi Darrick,
+> 
+> while reviewing your online repair series I've noticed that the new
+> xfs_buf_delwri_queue_here helper sets XBF_DONE in addition to waiting
+> for the buffer to go off a delwri list, and that reminded me off an
+> assert I saw during my allocator experiments, where
+> xfs_trans_read_buf_map or xfs_buf_reverify trip on a buffer that doesn't
+> have XBF_DONE set because it comes from an ifree transaction (see
+> my current not fully thought out bandaid below).
 
-Finish off the series by moving the intent item recovery function
-pointer to the xfs_defer_op_type struct, since this is really a deferred
-work function now.
+I'll come back to the bug later, because I know what it is and I
+just haven't had time to fix it yet. I'll address XBF_DONE first.
 
-Signed-off-by: Darrick J. Wong <djwong@kernel.org>
----
- fs/xfs/libxfs/xfs_defer.c       |   17 +++++++++++++++
- fs/xfs/libxfs/xfs_defer.h       |    4 ++++
- fs/xfs/libxfs/xfs_log_recover.h |    2 ++
- fs/xfs/xfs_attr_item.c          |    4 ++--
- fs/xfs/xfs_bmap_item.c          |   22 ++++++++++----------
- fs/xfs/xfs_extfree_item.c       |   43 ++++++++++++++++++++-------------------
- fs/xfs/xfs_log_recover.c        |    9 +++-----
- fs/xfs/xfs_refcount_item.c      |   24 +++++++++++-----------
- fs/xfs/xfs_rmap_item.c          |   24 +++++++++++-----------
- fs/xfs/xfs_trans.h              |    4 ----
- 10 files changed, 85 insertions(+), 68 deletions(-)
+XBF_DONE means the data in the buffer is valid. It's equivalent to
+the uptodate bit in a folio. It has no other meaning.
 
+> The way we currently set and check XBF_DONE seems a bit undefined.  The
+> one clear use case is that read uses it to see if a buffer was read in.
 
-diff --git a/fs/xfs/libxfs/xfs_defer.c b/fs/xfs/libxfs/xfs_defer.c
-index 7ad554dda0aa..2b805e6fd320 100644
---- a/fs/xfs/libxfs/xfs_defer.c
-+++ b/fs/xfs/libxfs/xfs_defer.c
-@@ -711,6 +711,23 @@ xfs_defer_cancel_recovery(
- 	xfs_defer_pending_cancel_work(mp, dfp);
- }
- 
-+/* Replay the deferred work item created from a recovered log intent item. */
-+int
-+xfs_defer_finish_recovery(
-+	struct xfs_mount		*mp,
-+	struct xfs_defer_pending	*dfp,
-+	struct list_head		*capture_list)
-+{
-+	const struct xfs_defer_op_type	*ops = defer_op_types[dfp->dfp_type];
-+	int				error;
-+
-+	error = ops->recover_work(dfp, capture_list);
-+	if (error)
-+		trace_xlog_intent_recovery_failed(mp, error,
-+				ops->recover_work);
-+	return error;
-+}
-+
- /*
-  * Move deferred ops from one transaction to another and reset the source to
-  * initial state. This is primarily used to carry state forward across
-diff --git a/fs/xfs/libxfs/xfs_defer.h b/fs/xfs/libxfs/xfs_defer.h
-index 49aaba364abc..d4800491f749 100644
---- a/fs/xfs/libxfs/xfs_defer.h
-+++ b/fs/xfs/libxfs/xfs_defer.h
-@@ -57,6 +57,8 @@ struct xfs_defer_op_type {
- 	void (*finish_cleanup)(struct xfs_trans *tp,
- 			struct xfs_btree_cur *state, int error);
- 	void (*cancel_item)(struct list_head *item);
-+	int (*recover_work)(struct xfs_defer_pending *dfp,
-+			    struct list_head *capture_list);
- 	unsigned int		max_items;
- };
- 
-@@ -130,6 +132,8 @@ struct xfs_defer_pending *xfs_defer_start_recovery(struct xfs_log_item *lip,
- 		enum xfs_defer_ops_type dfp_type);
- void xfs_defer_cancel_recovery(struct xfs_mount *mp,
- 		struct xfs_defer_pending *dfp);
-+int xfs_defer_finish_recovery(struct xfs_mount *mp,
-+		struct xfs_defer_pending *dfp, struct list_head *capture_list);
- 
- static inline void
- xfs_defer_recover_work_item(
-diff --git a/fs/xfs/libxfs/xfs_log_recover.h b/fs/xfs/libxfs/xfs_log_recover.h
-index 52162a17fc5e..c8e5d912895b 100644
---- a/fs/xfs/libxfs/xfs_log_recover.h
-+++ b/fs/xfs/libxfs/xfs_log_recover.h
-@@ -153,6 +153,8 @@ xlog_recover_resv(const struct xfs_trans_res *r)
- 	return ret;
- }
- 
-+struct xfs_defer_pending;
-+
- void xlog_recover_intent_item(struct xlog *log, struct xfs_log_item *lip,
- 		xfs_lsn_t lsn, unsigned int dfp_type);
- int xlog_recover_finish_intent(struct xfs_trans *tp,
-diff --git a/fs/xfs/xfs_attr_item.c b/fs/xfs/xfs_attr_item.c
-index 20a14ac13a51..b4b45d7333e3 100644
---- a/fs/xfs/xfs_attr_item.c
-+++ b/fs/xfs/xfs_attr_item.c
-@@ -606,7 +606,7 @@ xfs_attri_recover_work(
-  * delete the attr that it describes.
-  */
- STATIC int
--xfs_attri_item_recover(
-+xfs_attr_recover_work(
- 	struct xfs_defer_pending	*dfp,
- 	struct list_head		*capture_list)
- {
-@@ -822,6 +822,7 @@ const struct xfs_defer_op_type xfs_attr_defer_type = {
- 	.create_done	= xfs_attr_create_done,
- 	.finish_item	= xfs_attr_finish_item,
- 	.cancel_item	= xfs_attr_cancel_item,
-+	.recover_work	= xfs_attr_recover_work,
- };
- 
- /*
-@@ -858,7 +859,6 @@ static const struct xfs_item_ops xfs_attri_item_ops = {
- 	.iop_format	= xfs_attri_item_format,
- 	.iop_unpin	= xfs_attri_item_unpin,
- 	.iop_release    = xfs_attri_item_release,
--	.iop_recover	= xfs_attri_item_recover,
- 	.iop_match	= xfs_attri_item_match,
- 	.iop_relog	= xfs_attri_item_relog,
- };
-diff --git a/fs/xfs/xfs_bmap_item.c b/fs/xfs/xfs_bmap_item.c
-index 84381611be73..193166a81aa7 100644
---- a/fs/xfs/xfs_bmap_item.c
-+++ b/fs/xfs/xfs_bmap_item.c
-@@ -437,15 +437,6 @@ xfs_bmap_update_cancel_item(
- 	kmem_cache_free(xfs_bmap_intent_cache, bi);
- }
- 
--const struct xfs_defer_op_type xfs_bmap_update_defer_type = {
--	.max_items	= XFS_BUI_MAX_FAST_EXTENTS,
--	.create_intent	= xfs_bmap_update_create_intent,
--	.abort_intent	= xfs_bmap_update_abort_intent,
--	.create_done	= xfs_bmap_update_create_done,
--	.finish_item	= xfs_bmap_update_finish_item,
--	.cancel_item	= xfs_bmap_update_cancel_item,
--};
--
- /* Is this recovered BUI ok? */
- static inline bool
- xfs_bui_validate(
-@@ -509,7 +500,7 @@ xfs_bui_recover_work(
-  * We need to update some inode's bmbt.
-  */
- STATIC int
--xfs_bui_item_recover(
-+xfs_bmap_recover_work(
- 	struct xfs_defer_pending	*dfp,
- 	struct list_head		*capture_list)
- {
-@@ -588,6 +579,16 @@ xfs_bui_item_recover(
- 	return error;
- }
- 
-+const struct xfs_defer_op_type xfs_bmap_update_defer_type = {
-+	.max_items	= XFS_BUI_MAX_FAST_EXTENTS,
-+	.create_intent	= xfs_bmap_update_create_intent,
-+	.abort_intent	= xfs_bmap_update_abort_intent,
-+	.create_done	= xfs_bmap_update_create_done,
-+	.finish_item	= xfs_bmap_update_finish_item,
-+	.cancel_item	= xfs_bmap_update_cancel_item,
-+	.recover_work	= xfs_bmap_recover_work,
-+};
-+
- STATIC bool
- xfs_bui_item_match(
- 	struct xfs_log_item	*lip,
-@@ -628,7 +629,6 @@ static const struct xfs_item_ops xfs_bui_item_ops = {
- 	.iop_format	= xfs_bui_item_format,
- 	.iop_unpin	= xfs_bui_item_unpin,
- 	.iop_release	= xfs_bui_item_release,
--	.iop_recover	= xfs_bui_item_recover,
- 	.iop_match	= xfs_bui_item_match,
- 	.iop_relog	= xfs_bui_item_relog,
- };
-diff --git a/fs/xfs/xfs_extfree_item.c b/fs/xfs/xfs_extfree_item.c
-index 1ee24506415e..94eb2f726829 100644
---- a/fs/xfs/xfs_extfree_item.c
-+++ b/fs/xfs/xfs_extfree_item.c
-@@ -567,15 +567,6 @@ xfs_extent_free_cancel_item(
- 	kmem_cache_free(xfs_extfree_item_cache, xefi);
- }
- 
--const struct xfs_defer_op_type xfs_extent_free_defer_type = {
--	.max_items	= XFS_EFI_MAX_FAST_EXTENTS,
--	.create_intent	= xfs_extent_free_create_intent,
--	.abort_intent	= xfs_extent_free_abort_intent,
--	.create_done	= xfs_extent_free_create_done,
--	.finish_item	= xfs_extent_free_finish_item,
--	.cancel_item	= xfs_extent_free_cancel_item,
--};
--
- /*
-  * AGFL blocks are accounted differently in the reserve pools and are not
-  * inserted into the busy extent list.
-@@ -632,16 +623,6 @@ xfs_agfl_free_finish_item(
- 	return error;
- }
- 
--/* sub-type with special handling for AGFL deferred frees */
--const struct xfs_defer_op_type xfs_agfl_free_defer_type = {
--	.max_items	= XFS_EFI_MAX_FAST_EXTENTS,
--	.create_intent	= xfs_extent_free_create_intent,
--	.abort_intent	= xfs_extent_free_abort_intent,
--	.create_done	= xfs_extent_free_create_done,
--	.finish_item	= xfs_agfl_free_finish_item,
--	.cancel_item	= xfs_extent_free_cancel_item,
--};
--
- /* Is this recovered EFI ok? */
- static inline bool
- xfs_efi_validate_ext(
-@@ -676,7 +657,7 @@ xfs_efi_recover_work(
-  * the log.  We need to free the extents that it describes.
-  */
- STATIC int
--xfs_efi_item_recover(
-+xfs_extent_free_recover_work(
- 	struct xfs_defer_pending	*dfp,
- 	struct list_head		*capture_list)
- {
-@@ -725,6 +706,27 @@ xfs_efi_item_recover(
- 	return error;
- }
- 
-+const struct xfs_defer_op_type xfs_extent_free_defer_type = {
-+	.max_items	= XFS_EFI_MAX_FAST_EXTENTS,
-+	.create_intent	= xfs_extent_free_create_intent,
-+	.abort_intent	= xfs_extent_free_abort_intent,
-+	.create_done	= xfs_extent_free_create_done,
-+	.finish_item	= xfs_extent_free_finish_item,
-+	.cancel_item	= xfs_extent_free_cancel_item,
-+	.recover_work	= xfs_extent_free_recover_work,
-+};
-+
-+/* sub-type with special handling for AGFL deferred frees */
-+const struct xfs_defer_op_type xfs_agfl_free_defer_type = {
-+	.max_items	= XFS_EFI_MAX_FAST_EXTENTS,
-+	.create_intent	= xfs_extent_free_create_intent,
-+	.abort_intent	= xfs_extent_free_abort_intent,
-+	.create_done	= xfs_extent_free_create_done,
-+	.finish_item	= xfs_agfl_free_finish_item,
-+	.cancel_item	= xfs_extent_free_cancel_item,
-+	.recover_work	= xfs_extent_free_recover_work,
-+};
-+
- STATIC bool
- xfs_efi_item_match(
- 	struct xfs_log_item	*lip,
-@@ -767,7 +769,6 @@ static const struct xfs_item_ops xfs_efi_item_ops = {
- 	.iop_format	= xfs_efi_item_format,
- 	.iop_unpin	= xfs_efi_item_unpin,
- 	.iop_release	= xfs_efi_item_release,
--	.iop_recover	= xfs_efi_item_recover,
- 	.iop_match	= xfs_efi_item_match,
- 	.iop_relog	= xfs_efi_item_relog,
- };
-diff --git a/fs/xfs/xfs_log_recover.c b/fs/xfs/xfs_log_recover.c
-index 9bd2bdf42a84..7bd67e0400ee 100644
---- a/fs/xfs/xfs_log_recover.c
-+++ b/fs/xfs/xfs_log_recover.c
-@@ -2568,7 +2568,6 @@ xlog_recover_process_intents(
- 
- 	list_for_each_entry_safe(dfp, n, &log->l_dfops, dfp_list) {
- 		struct xfs_log_item	*lip = dfp->dfp_intent;
--		const struct xfs_item_ops *ops = lip->li_ops;
- 
- 		ASSERT(xlog_item_is_intent(lip));
- 
-@@ -2587,12 +2586,10 @@ xlog_recover_process_intents(
- 		 *
- 		 * The recovery function can free @dfp.
- 		 */
--		error = ops->iop_recover(dfp, &capture_list);
--		if (error) {
--			trace_xlog_intent_recovery_failed(log->l_mp, error,
--					ops->iop_recover);
-+		error = xfs_defer_finish_recovery(log->l_mp, dfp,
-+				&capture_list);
-+		if (error)
- 			break;
--		}
- 	}
- 	if (error)
- 		goto err;
-diff --git a/fs/xfs/xfs_refcount_item.c b/fs/xfs/xfs_refcount_item.c
-index a0e3a42555ec..494e2561420f 100644
---- a/fs/xfs/xfs_refcount_item.c
-+++ b/fs/xfs/xfs_refcount_item.c
-@@ -433,16 +433,6 @@ xfs_refcount_update_cancel_item(
- 	kmem_cache_free(xfs_refcount_intent_cache, ri);
- }
- 
--const struct xfs_defer_op_type xfs_refcount_update_defer_type = {
--	.max_items	= XFS_CUI_MAX_FAST_EXTENTS,
--	.create_intent	= xfs_refcount_update_create_intent,
--	.abort_intent	= xfs_refcount_update_abort_intent,
--	.create_done	= xfs_refcount_update_create_done,
--	.finish_item	= xfs_refcount_update_finish_item,
--	.finish_cleanup = xfs_refcount_finish_one_cleanup,
--	.cancel_item	= xfs_refcount_update_cancel_item,
--};
--
- /* Is this recovered CUI ok? */
- static inline bool
- xfs_cui_validate_phys(
-@@ -492,7 +482,7 @@ xfs_cui_recover_work(
-  * We need to update the refcountbt.
-  */
- STATIC int
--xfs_cui_item_recover(
-+xfs_refcount_recover_work(
- 	struct xfs_defer_pending	*dfp,
- 	struct list_head		*capture_list)
- {
-@@ -554,6 +544,17 @@ xfs_cui_item_recover(
- 	return error;
- }
- 
-+const struct xfs_defer_op_type xfs_refcount_update_defer_type = {
-+	.max_items	= XFS_CUI_MAX_FAST_EXTENTS,
-+	.create_intent	= xfs_refcount_update_create_intent,
-+	.abort_intent	= xfs_refcount_update_abort_intent,
-+	.create_done	= xfs_refcount_update_create_done,
-+	.finish_item	= xfs_refcount_update_finish_item,
-+	.finish_cleanup = xfs_refcount_finish_one_cleanup,
-+	.cancel_item	= xfs_refcount_update_cancel_item,
-+	.recover_work	= xfs_refcount_recover_work,
-+};
-+
- STATIC bool
- xfs_cui_item_match(
- 	struct xfs_log_item	*lip,
-@@ -594,7 +595,6 @@ static const struct xfs_item_ops xfs_cui_item_ops = {
- 	.iop_format	= xfs_cui_item_format,
- 	.iop_unpin	= xfs_cui_item_unpin,
- 	.iop_release	= xfs_cui_item_release,
--	.iop_recover	= xfs_cui_item_recover,
- 	.iop_match	= xfs_cui_item_match,
- 	.iop_relog	= xfs_cui_item_relog,
- };
-diff --git a/fs/xfs/xfs_rmap_item.c b/fs/xfs/xfs_rmap_item.c
-index 2c883ca8a545..75b71be845b7 100644
---- a/fs/xfs/xfs_rmap_item.c
-+++ b/fs/xfs/xfs_rmap_item.c
-@@ -452,16 +452,6 @@ xfs_rmap_update_cancel_item(
- 	kmem_cache_free(xfs_rmap_intent_cache, ri);
- }
- 
--const struct xfs_defer_op_type xfs_rmap_update_defer_type = {
--	.max_items	= XFS_RUI_MAX_FAST_EXTENTS,
--	.create_intent	= xfs_rmap_update_create_intent,
--	.abort_intent	= xfs_rmap_update_abort_intent,
--	.create_done	= xfs_rmap_update_create_done,
--	.finish_item	= xfs_rmap_update_finish_item,
--	.finish_cleanup = xfs_rmap_finish_one_cleanup,
--	.cancel_item	= xfs_rmap_update_cancel_item,
--};
--
- /* Is this recovered RUI ok? */
- static inline bool
- xfs_rui_validate_map(
-@@ -557,7 +547,7 @@ xfs_rui_recover_work(
-  * We need to update the rmapbt.
-  */
- STATIC int
--xfs_rui_item_recover(
-+xfs_rmap_recover_work(
- 	struct xfs_defer_pending	*dfp,
- 	struct list_head		*capture_list)
- {
-@@ -607,6 +597,17 @@ xfs_rui_item_recover(
- 	return error;
- }
- 
-+const struct xfs_defer_op_type xfs_rmap_update_defer_type = {
-+	.max_items	= XFS_RUI_MAX_FAST_EXTENTS,
-+	.create_intent	= xfs_rmap_update_create_intent,
-+	.abort_intent	= xfs_rmap_update_abort_intent,
-+	.create_done	= xfs_rmap_update_create_done,
-+	.finish_item	= xfs_rmap_update_finish_item,
-+	.finish_cleanup = xfs_rmap_finish_one_cleanup,
-+	.cancel_item	= xfs_rmap_update_cancel_item,
-+	.recover_work	= xfs_rmap_recover_work,
-+};
-+
- STATIC bool
- xfs_rui_item_match(
- 	struct xfs_log_item	*lip,
-@@ -647,7 +648,6 @@ static const struct xfs_item_ops xfs_rui_item_ops = {
- 	.iop_format	= xfs_rui_item_format,
- 	.iop_unpin	= xfs_rui_item_unpin,
- 	.iop_release	= xfs_rui_item_release,
--	.iop_recover	= xfs_rui_item_recover,
- 	.iop_match	= xfs_rui_item_match,
- 	.iop_relog	= xfs_rui_item_relog,
- };
-diff --git a/fs/xfs/xfs_trans.h b/fs/xfs/xfs_trans.h
-index 4e38357237c3..5fb018ad9fc0 100644
---- a/fs/xfs/xfs_trans.h
-+++ b/fs/xfs/xfs_trans.h
-@@ -66,8 +66,6 @@ struct xfs_log_item {
- 	{ (1u << XFS_LI_DIRTY),		"DIRTY" }, \
- 	{ (1u << XFS_LI_WHITEOUT),	"WHITEOUT" }
- 
--struct xfs_defer_pending;
--
- struct xfs_item_ops {
- 	unsigned flags;
- 	void (*iop_size)(struct xfs_log_item *, int *, int *);
-@@ -80,8 +78,6 @@ struct xfs_item_ops {
- 	xfs_lsn_t (*iop_committed)(struct xfs_log_item *, xfs_lsn_t);
- 	uint (*iop_push)(struct xfs_log_item *, struct list_head *);
- 	void (*iop_release)(struct xfs_log_item *);
--	int (*iop_recover)(struct xfs_defer_pending *dfp,
--			   struct list_head *capture_list);
- 	bool (*iop_match)(struct xfs_log_item *item, uint64_t id);
- 	struct xfs_log_item *(*iop_relog)(struct xfs_log_item *intent,
- 			struct xfs_trans *tp);
+Yes.
 
+> But places that use buf_get and manually fill in data only use it in a
+> few cases. 
+
+Yes. the caller of buf_get always needs to set XBF_DONE if it is
+initialising a new buffer ready for it to be written. It should be
+done before the caller drops the buffer lock so that no other lookup
+can see the buffer in the state of "contains valid data but does not
+have XBF_DONE set".
+
+Also, there are cases where we use buf_get but we don't care about
+the contents being initialised because we are invalidating
+the buffer and need the buffer+buf_log_item to log the invalidation
+to the journal.
+
+In these cases we just don't care that the contents
+are valid, because xfs_trans_binval() calls xfs_buf_stale() to
+invalidate the contents and that removes the XBF_DONE flag. We do
+this in places like inode chunk removal to invalidate the cluster
+buffers to ensure they are written back after then chunk has been
+freed.
+
+.... and this brings us to the bug that you mentioned about an ifree
+transaction leaving an inode cluster buffer in cache without
+XBF_DONE set....
+
+The issue is xfs_inode_item_precommit() attaching inodes to the
+cluster buffer. In the old days before we delayed inode logging to
+the end of the ifree transaction, the order was:
+
+xfs_ifree
+  xfs_difree(ip)
+    xfs_imap_to_bp()
+      xfs_trans_buf_read()
+    xfs_trans_brelse()
+  xfs_trans_log_inode(ip)
+  xfs_ifree_cluster(ip)
+    for each incore inode {
+      set XFS_ISTALE
+    }
+    for each cluster buffer {
+      xfs_trans_buf_get()
+      xfs_trans_binval()
+    }
+  xfs_trans_commit()
+
+IOWs, the attachment of the inode to the cluster buffer in
+xfs_trans_log_inode() occurred before both the inode was marked
+XFS_ISTALE and the cluster buffer was marked XBF_STALE and XBF_DONE
+was removed from it. Hence the lookup in xfs_difree() always found a
+valid XBF_DONE buffer.
+
+With the fixes for AGF->AGI->inode cluster buffer locking order done
+a while back, we moved the processing that was done in
+xfs_trans_log_inode() to xfs_inode_item_precommit(), which is called
+from xfs_trans_commit(). This moved the xfs_imap_to_bp() call when
+logging th einode from before the cluster invalidation to after it.
+
+The result is that imap_to_bp() now finds the inode cluster buffer
+in memory (as it should), but it has been marked stale (correctly!)
+and xfs_trans_buf_read_map() freaks out over that (again,
+correctly!).
+
+The key to triggering this situation is that the inode cluster
+buffer needs to be written back between the unlink() syscall and the
+inactivation processing that frees the cluster buffer. Inode cluster
+buffer IO completion removes the inodes from the cluster buffer, so
+when they are next dirtied they need to be re-added. If this inode
+cluster buffer writeback coincides with the transaction removing of
+the last inode from an inode chunk and hence freeing the inode
+chunk, we end up with this stiuation occurring and assert failures
+in xfs_trans_read_buf_map().
+
+So, like I said: I know what the bug is, I worked it out from the
+one time one of my test machines tripped over it about 4 weeks ago,
+but I just haven't had the time since then to work out a fix.
+
+I suspect that we can check XFS_ISTALE in xfs_inode_item_precommit()
+and do something different, but I'd much prefer that the inode still
+gets added to the inode cluster buffer and cleaned up with all the
+other XFS_ISTALE indoes on the cluster buffer at journal commit
+completion time. Maybe we can pass a new flag to xfs_imap_to_bp() to
+say "stale buffer ok here" or something similar, because I really
+want the general case of xfs_trans_buf_read_map() to fail loudly if
+a buffer without XBF_DONE is returned....
+
+> Do we need to define clear semantics for it?  Or maybe
+> replace with an XBF_READ_DONE flag for that main read use case and
+> then think what do do with the rest?
+
+To me, the semantics of XBF_DONE are pretty clear. Apart from fixing
+the bug you are seeing, I'm not sure that anything really needs to
+change....
+
+-Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
