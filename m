@@ -1,35 +1,34 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EC3984412
-	for <linux-xfs@vger.kernel.org>; Tue, 28 Nov 2023 17:07:35 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6ADE44412
+	for <linux-xfs@vger.kernel.org>; Tue, 28 Nov 2023 17:07:51 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="qvOlVz9a"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 77399C433C7;
-	Tue, 28 Nov 2023 17:07:35 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="YosUdrrz"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 3334EC433C8;
+	Tue, 28 Nov 2023 17:07:51 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1701191255;
-	bh=BeR4ShMPV+uabufTCle2lZICBOl9SNsReJ8ntNfuDHo=;
+	s=k20201202; t=1701191271;
+	bh=1nQ9+MMXkNPs/vWjAfbbZ+M6trBndFwp6itWz9R73I0=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=qvOlVz9aewc+i1+dW/kIQH9QDTBI2UxcFKrwNTGYeLnCNiAHHdZykBjh9/VIfnqBK
-	 h538woOwMLn2wqyiUi+CLPorkK57U6lOq2QtV+H+SR2klyFMCXFJmdH0ATYAkOGqR8
-	 HUd2dAykbVM/+Np/RD09Be09+xoo9CtLieVplawWYmCcMXT/J2IXrodxZPzoMsnNFN
-	 1XMcaOBmKowwayUWtKdKmP/LSYxUbfSpt6cirhWzUET2mAfJwVsxkq5H+DPh1eFmXp
-	 /FWK4rJyqcVPMSlAnoRKbBmBkJ8Y2TF3tHOG0LON99NnzVf2LdbRWbwa9288I4YAwM
-	 i2hUNA2gZ6zSQ==
-Date: Tue, 28 Nov 2023 09:07:34 -0800
+	b=YosUdrrz00o6+XkxALQ2WwmQCQTAcmU9oOfV+KAOt4JtBgGbt3Cv4Z/D5w8ADW8V8
+	 6nVCpGguLO0teE1D/pdemm/NF1gYG9u2I/9E9q9b1lKKVxgJeA0nbiPi/UVwURTeAq
+	 fogmbUV0giFm0Z6l0RG42l184/YRrZSDtqQM8po8x4zGoOPwpUzyNEdzYcHDle9PgA
+	 AdXBqyQQ3/O+yuNQYmZrCKhnLgihf2Ukh+2RS6nKfcma7YwM5B33IU8r00Vl3IGzvE
+	 0K8yO7/vrqQ+WM3deYKzjUmXZCH2KaqLqOojVdwfeNgG1K/qrtBsu6P9NveZDkqVPD
+	 CvMZvY9XzDvvQ==
+Date: Tue, 28 Nov 2023 09:07:50 -0800
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: Christoph Hellwig <hch@infradead.org>
 Cc: linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 1/4] xfs: force all buffers to be written during btree
- bulk load
-Message-ID: <20231128170734.GZ2766956@frogsfrogsfrogs>
+Subject: Re: [PATCH 2/4] xfs: add debug knobs to control btree bulk load
+ slack factors
+Message-ID: <20231128170750.GA2766956@frogsfrogsfrogs>
 References: <170086926569.2770816.7549813820649168963.stgit@frogsfrogsfrogs>
- <170086926593.2770816.5504104328549141972.stgit@frogsfrogsfrogs>
- <ZWGK6Ig752wdBvwF@infradead.org>
- <20231128015041.GO2766956@frogsfrogsfrogs>
- <ZWWTJGq1ldOm6inW@infradead.org>
- <ZWYEvqZHj4KX4wqj@infradead.org>
+ <170086926609.2770816.18279950636495716216.stgit@frogsfrogsfrogs>
+ <ZWGLH786QzH5KpUj@infradead.org>
+ <20231128014437.GN2766956@frogsfrogsfrogs>
+ <ZWV9zdT7aQxhMEAa@infradead.org>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -38,50 +37,23 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <ZWYEvqZHj4KX4wqj@infradead.org>
+In-Reply-To: <ZWV9zdT7aQxhMEAa@infradead.org>
 
-On Tue, Nov 28, 2023 at 07:18:22AM -0800, Christoph Hellwig wrote:
-> On Mon, Nov 27, 2023 at 11:13:40PM -0800, Christoph Hellwig wrote:
-> > > Every time I revisit this patch I wonder if DELWRI_Q is misnamed -- does
-> > > it mean "b_list is active"?  Or does it merely mean "another thread will
-> > > write this buffer via b_list if nobody gets there first"?  I think it's
-> > > the second, since it's easy enough to list_empty().
+On Mon, Nov 27, 2023 at 09:42:37PM -0800, Christoph Hellwig wrote:
+> On Mon, Nov 27, 2023 at 05:44:37PM -0800, Darrick J. Wong wrote:
+> > They're not generally useful for users, obviously.  For developers, it
+> > might be useful to construct btrees of various heights by crafting a
+> > filesystem with a certain number of records and then using repair+knobs
+> > to rebuild the index with a certain shape.
 > > 
-> > I think it is misnamed and not clearly defined, and we should probably
-> > fix that.  Note that least the current list_empty() usage isn't quite
-> > correct either without a lock held by the delwri list owner.  We at
-> > least need a list_empty_careful for a racey but still save check.
-> > 
-> > Thinking out loud I wonder if we can just kill XBF_DELWRI_Q entirely.
-> > Except for various asserts we mostly use it in reverse polarity, that is
-> > to cancel delwri writeout for stale buffers.  How about just skipping
-> > XBF_STALE buffers on the delwri list directly and not bother with
-> > DELWRI_Q?  With that we can then support multiple delwri lists that
-> > don't get into each others way using say an allocating xarray instead
-> > of the invase list and avoid this whole mess.
-> > 
-> > Let me try to prototype this..
+> > Practically speaking, you'd only ever do that for extreme stress
+> > testing.
 > 
-> Ok, I spent half the day prototyping this and it passes basic sanity
-> checks:
-> 
-> http://git.infradead.org/users/hch/misc.git/shortlog/refs/heads/xfs-multiple-delwri-lists
-> 
-> My conclusions from that is:
-> 
->  1) it works
->  2) I think it is the right to do
->  3) it needs a lot more work
->  4) we can't block the online repair work on it
-> 
-> so I guess we'll need to go with the approach in this patch for now,
-> maybe with a better commit log, and I'll look into finishing this work
-> some time in the future.
+> Please add this to the commit message.
 
-<nod> I think an xarray version of this would be less clunky than
-xfs_delwri_buf with three pointers.
-
-Also note Dave's comments on the v25 posting of this series:
-https://lore.kernel.org/linux-xfs/ZJJa7Cnni0mb%2F9sN@dread.disaster.area/
+Done.
 
 --D
+
+> 
+> 
