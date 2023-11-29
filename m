@@ -1,91 +1,102 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 009BB7475
-	for <linux-xfs@vger.kernel.org>; Wed, 29 Nov 2023 05:57:31 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="jU6p3WQh"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 7A94AC433C8;
-	Wed, 29 Nov 2023 05:57:31 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1701237451;
-	bh=hqziOGKq4tm8AmiNuS3DqD2FZn5MsjK03mU74P3pzT4=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=jU6p3WQhAfTirfakWbyORS20D+5/RnlnqZEzEqBA/tSzKVicN1e9edsdDBus6ADab
-	 FcObLYMW1KBJXqpeZxcFi8dL9ZD/ZjAdsCDCVkl9x9GM+JUXZo0DM71Gj0/NGoDt8E
-	 JeH64pjiu/trmLy1ADpFUGQ2dChhrWjqnSyBOMDXV5/Mu9ucxAtOl5SrBXletea7Dj
-	 MXE/U14ra8rUXuWtcnu1rm2yUbmjNKLCiSfh4FMQ9PYJqpbKiefss3se9VGQXQjn8b
-	 ViYPXMOeLwpIggkUsccJSc5NgTjufQNoAvfIPGYX3ls6iD03+X7coC3reHnviwHXt1
-	 tfcWKaBkh0UgA==
-Date: Tue, 28 Nov 2023 21:57:30 -0800
-From: "Darrick J. Wong" <djwong@kernel.org>
-To: Christoph Hellwig <hch@infradead.org>
-Cc: linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 4/4] xfs: constrain dirty buffers while formatting a
- staged btree
-Message-ID: <20231129055730.GS36211@frogsfrogsfrogs>
-References: <170086926569.2770816.7549813820649168963.stgit@frogsfrogsfrogs>
- <170086926640.2770816.12781452338907572006.stgit@frogsfrogsfrogs>
- <ZWGL4tBoNDoGND7F@infradead.org>
- <20231127225631.GI2766956@frogsfrogsfrogs>
- <20231128201133.GA4167244@frogsfrogsfrogs>
- <ZWbRK5SWtoW9sn1E@infradead.org>
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="q/aXva+3"
+Received: from bombadil.infradead.org (bombadil.infradead.org [IPv6:2607:7c80:54:3::133])
+	by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B2C2F1BD0
+	for <linux-xfs@vger.kernel.org>; Tue, 28 Nov 2023 22:02:42 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+	d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Transfer-Encoding
+	:Content-Type:MIME-Version:References:Message-ID:Subject:Cc:To:From:Date:
+	Sender:Reply-To:Content-ID:Content-Description;
+	bh=sZTeP+sW+489dJM4+0pM0hzs5ibB+jYUJzHy8dQ0mBI=; b=q/aXva+3fdtWUntJbOhGYhxXDh
+	1/md715Np0pwygRLbgRy9G0DZvbNQaTpGVI268woxHiIRnLhknT5XEZEUFRsKefDbZY3ZBCzJmDXG
+	JyOAOsm9a8U6nIjCJ8rffLbCWBfwKmEu168HEEejQXqM9K6RLkl4v3VzD/JPEDWsCOzFQETiYXnrF
+	/XJJbBjFp7lGWGxf5+FoAiOcleybJgfW3/mdLiqYQQU1A14fk3aC8LImtTBMbyw0as7HtGL9liWh4
+	HcBHq9JvYLk0aa+9xDZhD72ideOV7hM8MbaqUbBFJ/Utl0Nv8wEX1ETtQVL5spkDmPGKoeg7qn1ET
+	dt4BOX2w==;
+Received: from hch by bombadil.infradead.org with local (Exim 4.96 #2 (Red Hat Linux))
+	id 1r8Dek-0079KB-1c;
+	Wed, 29 Nov 2023 06:02:42 +0000
+Date: Tue, 28 Nov 2023 22:02:42 -0800
+From: Christoph Hellwig <hch@infradead.org>
+To: "Darrick J. Wong" <djwong@kernel.org>
+Cc: Christoph Hellwig <hch@infradead.org>, linux-xfs@vger.kernel.org
+Subject: Re: [PATCH 3/7] xfs: repair inode records
+Message-ID: <ZWbUAizpezw5fuZW@infradead.org>
+References: <170086927425.2771142.14267390365805527105.stgit@frogsfrogsfrogs>
+ <170086927488.2771142.16279946215209833817.stgit@frogsfrogsfrogs>
+ <ZWYek3C/x7pLqRFj@infradead.org>
+ <20231128230848.GD4167244@frogsfrogsfrogs>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=utf-8
 Content-Disposition: inline
-In-Reply-To: <ZWbRK5SWtoW9sn1E@infradead.org>
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <20231128230848.GD4167244@frogsfrogsfrogs>
+X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 
-On Tue, Nov 28, 2023 at 09:50:35PM -0800, Christoph Hellwig wrote:
-> On Tue, Nov 28, 2023 at 12:11:33PM -0800, Darrick J. Wong wrote:
-> > And now that I've dug further through my notes, I've realized that
-> > there's a better reason for this unexplained _get_buf -> _read_buf
-> > transition and the setting of XBF_DONE in _delwri_queue_here.
+On Tue, Nov 28, 2023 at 03:08:48PM -0800, Darrick J. Wong wrote:
 > > 
-> > This patch introduces the behavior that we flush the delwri list to disk
-> > every 256k.
+> > We set the reflink flag by default, because a later stage will clear
+> > it if there aren't any shared blocks, right?  Maybe add a comment to
+> > avoid any future confusion.
 > 
-> Where "the delwri list" is the one used for writing stage btrees I
-> think.
+> 	/*
+> 	 * For regular files on a reflink filesystem, set the REFLINK flag to
+> 	 * protect shared extents.  A later stage will actually check those
+> 	 * extents and clear the flag if possible.
+> 	 */
 
-Correct.
+Sounds good.
 
-> > Flushing the buffers releases them, which means that
-> > reclaim could free the buffer before xfs_btree_bload_node needs it again
-> > to build the next level up.
+> > Hmm, changing a symlink to actually point somewhere seems very
+> > surprising, but making it point to the current directory almost begs
+> > for userspace code to run in loops.
 > 
-> Oh, indeed.
+> How about '🤷'?  That's only four bytes.
 > 
-> > If that's the case, then _get_buf will get
-> > us a !DONE buffer with zeroes instead of reading the (freshly written)
-> > buffer back in from disk.  We'll then end up formatting garbage keys
-> > into the node block, which is bad.
-> 
-> Yeah.
-> 
-> > 		/*
-> > 		 * Read the lower-level block in case the buffer for it has
-> > 		 * been reclaimed.  LRU refs will be set on the block, which is
-> > 		 * desirable if the new btree commits.
-> > 		 */
-> > 		ret = xfs_btree_read_buf_block(cur, child_ptr, 0, &child_block,
-> > 				&child_bp);
+> Or maybe a question mark.
+
+Heh.  I guess question marks seems a bit better, but the general idea
+of having new names / different pointing locations show up in the
+name space scare me a little.  I wonder if something like the classic
+lost+found directory might be the right thing for anything we're not
+sure about as people know about it.
+
+> > > +	if (xfs_has_reflink(sc->mp)) {
+> > > +		; /* data fork blockcount can exceed physical storage */
 > > 
-> > The behavior of setting XBF_DONE in xfs_buf_delwri_queue_here is an
-> > optimization if _delwri_submit releases the buffer and it is /not/
-> > reclaimed.  In that case, xfs_btree_read_buf_block will find the buffer
-> > without the DONE flag set and reread the contents from disk, which is
-> > unnecessary.
+> > ... because we would be reflinking the same blocks into the same inode
+> > at different offsets over and over again ... ?
 > 
-> Yeah.  I still find it weird to set it in the delwri_submit_here helper,
-> but maybe that's a discussion for the other thread.
+> Yes.  That's not a terribly functional file, but users can do such
+> things if they want to pay for the cpu/metadata.
 
-D'Oh!  XBF_DONE exists in userspace too, because libxfs uses it.  Well
-then, the proper place for it is at the top of xfs_btree_bload_drop_buf.
-I'll go change that tomorrow.
+Yeah.  But maybe expand the comment a bit - having spent a fair amout
+of time with the reflink code this was obvious to me, but for someone
+new the above might be a bit too cryptic.
 
---D
+> > > +
+> > > +	if (i_uid_read(VFS_I(sc->ip)) == -1U) {
+> > 
+> > What is invalid about all-F uid/gid/projid?
+> 
+> I thought those were invalid, though apparently they're not now?
+> uidgid.h says:
+> 
+> static inline bool uid_valid(kuid_t uid)
+> {
+> 	return __kuid_val(uid) != (uid_t) -1;
+> }
+> 
+> Which is why I thought that it's not possible to have a uid of -1 on a
+> file.  Trying to set that uid on a file causes the kernel to reject the
+> value, but OTOH I can apparently create inodes with a -1 UID via
+> idmapping shenanigans.
+
+Heh.  Just wanted an explanation for the check.  So a commnt is fine,
+or finding a way to use the uid_valid and co helpers to make it
+self-explanatory.
