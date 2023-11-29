@@ -1,127 +1,196 @@
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b="1m7GaBJA"
-Received: from mail-pf1-x42e.google.com (mail-pf1-x42e.google.com [IPv6:2607:f8b0:4864:20::42e])
-	by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C006818D
-	for <linux-xfs@vger.kernel.org>; Wed, 29 Nov 2023 01:04:40 -0800 (PST)
-Received: by mail-pf1-x42e.google.com with SMTP id d2e1a72fcca58-6cbc8199a2aso5625735b3a.1
-        for <linux-xfs@vger.kernel.org>; Wed, 29 Nov 2023 01:04:40 -0800 (PST)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="GDuN3Gp4"
+Received: from mail-il1-x134.google.com (mail-il1-x134.google.com [IPv6:2607:f8b0:4864:20::134])
+	by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D02D6D4A;
+	Wed, 29 Nov 2023 04:40:04 -0800 (PST)
+Received: by mail-il1-x134.google.com with SMTP id e9e14a558f8ab-35ba5e00dc5so26617545ab.1;
+        Wed, 29 Nov 2023 04:40:04 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=fromorbit-com.20230601.gappssmtp.com; s=20230601; t=1701248680; x=1701853480; darn=vger.kernel.org;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
-        bh=IJkUwFni1tyd1Oj/0WIsU7esF/PDsZcmLt4NR+sDyhA=;
-        b=1m7GaBJAX/dBoRSQky6TREt+1U8mO1oI0WgxSpNuoJblzBB03cw5l5PT6qDgruRROw
-         m8v07aPBQEdJEZeSiukVl4MwJH2ZDL+SlcdDiUJekhCniVJz45y5CMY1Ul61pvwQ3C3q
-         ILs9TPFeFTcu8o8D+s+rfYvBsPcZM0LAocIG0qblC7cr6WCLQQSx9cIRxGn/aW5cLHmx
-         jl0ZzQfb78/kTspGnb2HtgVPwmQCDYlylKmQTYdUBeKckNs7SZFS/P2iFGwYt7JAWNgG
-         x+f/p7Jkq5zvTJ16ce7XqNmMjOIJXjKP/UETFhA6hakkF6g77YsuGKyprpsM+02HsN2K
-         Ju2w==
+        d=gmail.com; s=20230601; t=1701261604; x=1701866404; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to;
+        bh=J18qit5Z0iKKA8YjGWidpFR+jQCxMImqQq5so4h0DKY=;
+        b=GDuN3Gp4pYk6GIaBAiWPDT3I6IaV5CFdlYSyOL4mAKZ4Ioa0RV5NXtkFqUyWAbJeQ/
+         OzHSfhxNe7dursUc7Z2GgFEWhuuhm/+bucLeIT1kquIQ0k3x4bljPQog94DIIyQfrKVd
+         csZk6NtNzonEAMj3L+qvC9vR2ABtKFSEXH+DZh85aTPCyYDfOwaz8UvC8Hy6j7ZVNEBD
+         D2HwF4w4uznkxGVNpnNZm/DJu7KT1FlJGKAdV4mECmg1UOLjRKOpl2bw34+XPLaOeMr0
+         9RreN/bgocWNK1twyJIKZD57z5SqFgV78lTemFU7uIBKPDHKOEaCaZBtP7ngUAVsTL9u
+         kENg==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1701248680; x=1701853480;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=IJkUwFni1tyd1Oj/0WIsU7esF/PDsZcmLt4NR+sDyhA=;
-        b=IP/dO3it61Tt4hbp6J8lHPzIj+Hq7+PZ+94EMf1oqF8l8QJdgx86PeTUaLcrBrdZtI
-         cY+CalNuKMh8Oaiv1khDncBZz6fTLV+MUeu+AhE7xJ3uxSciqo9R0EBcVbn2s23hC97r
-         H+2ZNtEcoL5ZTO1kZOCaKcCNjMOshJZ+XordPoFQzQd3wDOkDxS2PZA6AINyRGVZ6Ix9
-         OXS+8CK0QfkGt+70SiCU+07dOHxhQPafwLG4FTC44l/8xdVwUa0vJJ84+D8smg5zdMPZ
-         Ed1yn0gKlRm36NhLbSJIfdHvgNmWuhzB3ZIN/mo1gMrdaFG3ds7HmQMcCiTPNEl8JWa0
-         x8rg==
-X-Gm-Message-State: AOJu0YwMqDRrxS5AXg2qIxkUGEScQplVaeqeFaH88rQ5w5nYqeLt483O
-	mstM15Wl8qWccpCUvLMxIgKTnQ==
-X-Google-Smtp-Source: AGHT+IHQ7A+ROUiPAUUtY1Bc1W2rd4y42lCFAgTt5oxHaM+7IKovLk3TNzT/G4os+71nI+Fk2jOC8Q==
-X-Received: by 2002:a05:6a20:728f:b0:18c:4b7:2da5 with SMTP id o15-20020a056a20728f00b0018c04b72da5mr17600536pzk.54.1701248680233;
-        Wed, 29 Nov 2023 01:04:40 -0800 (PST)
-Received: from dread.disaster.area (pa49-180-125-5.pa.nsw.optusnet.com.au. [49.180.125.5])
-        by smtp.gmail.com with ESMTPSA id y10-20020a170902b48a00b001cfb52ebffesm7939595plr.147.2023.11.29.01.04.39
+        d=1e100.net; s=20230601; t=1701261604; x=1701866404;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-message-state:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=J18qit5Z0iKKA8YjGWidpFR+jQCxMImqQq5so4h0DKY=;
+        b=gM18lNTMhKOCIy3MOGIybFjQYG/WUfDtvsZWWPi63L2GhZ31c8Y0iXCbvUuUKrFU2M
+         ZMk6IZcuuwP6gQqwvzveaGvj1UoZ97q6ltkYj6EI7o4YHC0xPiCDyemb84O2/gd3O8DR
+         nw+nSvd+08oV2gvlGYzvlJ70o5vqokIC/irfMNTkoaHcdVCAtItxTGZCc8u8FEN0HWL+
+         pUw67V9JRZgsdzQGif4C4isznVJmoj5iQOnC6gG6WjNAX0cLdXm4VZPqhHT/2rC3HoBk
+         +i9lvLy1nwtPH5t3GayA5xow2mwrihm+wCkUABMqN2TukfVllcQW5coXoA8oEk3/+6ia
+         1fgw==
+X-Gm-Message-State: AOJu0YzSqAdBjXQHMVY5EdGwPjY3E9Mx9mXRbdf7ubnp5MFyJM9hkb6p
+	OuTSIoeSVbQZsJRDZDRpkJOhCZRyHMP4Hg==
+X-Google-Smtp-Source: AGHT+IF0xGKiUv5adaCHraeo+BlX6sD+VFezOrMmpx26MCvs2HQABcSx70zfB3uEyTQ/TMJFpPg+2Q==
+X-Received: by 2002:a92:3f04:0:b0:35c:d2ed:d807 with SMTP id m4-20020a923f04000000b0035cd2edd807mr10705966ila.20.1701261604131;
+        Wed, 29 Nov 2023 04:40:04 -0800 (PST)
+Received: from archie.me ([103.131.18.64])
+        by smtp.gmail.com with ESMTPSA id s13-20020a62e70d000000b006cb8e394574sm10766056pfh.21.2023.11.29.04.40.02
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 29 Nov 2023 01:04:39 -0800 (PST)
-Received: from dave by dread.disaster.area with local (Exim 4.96)
-	(envelope-from <david@fromorbit.com>)
-	id 1r8GUn-001Req-1b;
-	Wed, 29 Nov 2023 20:04:37 +1100
-Date: Wed, 29 Nov 2023 20:04:37 +1100
-From: Dave Chinner <david@fromorbit.com>
-To: Jiachen Zhang <zhangjiachen.jaycee@bytedance.com>
-Cc: Chandan Babu R <chandan.babu@oracle.com>,
+        Wed, 29 Nov 2023 04:40:03 -0800 (PST)
+Received: by archie.me (Postfix, from userid 1000)
+	id D840610205C79; Wed, 29 Nov 2023 19:39:58 +0700 (WIB)
+From: Bagas Sanjaya <bagasdotme@gmail.com>
+To: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	Linux Documentation <linux-doc@vger.kernel.org>,
+	Linux XFS <linux-xfs@vger.kernel.org>,
+	Linux Kernel Workflows <workflows@vger.kernel.org>
+Cc: Jonathan Corbet <corbet@lwn.net>,
+	Chandan Babu R <chandan.babu@oracle.com>,
 	"Darrick J. Wong" <djwong@kernel.org>,
+	Namjae Jeon <linkinjeon@kernel.org>,
 	Dave Chinner <dchinner@redhat.com>,
+	Steve French <stfrench@microsoft.com>,
+	"Matthew Wilcox (Oracle)" <willy@infradead.org>,
 	Allison Henderson <allison.henderson@oracle.com>,
-	Zhang Tianci <zhangtianci.1997@bytedance.com>,
-	Brian Foster <bfoster@redhat.com>, Ben Myers <bpm@sgi.com>,
-	linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org,
-	xieyongji@bytedance.com, me@jcix.top,
-	Christoph Hellwig <hch@lst.de>
-Subject: Re: [PATCH v2 1/2] xfs: ensure logflagsp is initialized in
- xfs_bmap_del_extent_real
-Message-ID: <ZWb+pR7AvTY8VLRR@dread.disaster.area>
-References: <20231129075832.73600-1-zhangjiachen.jaycee@bytedance.com>
- <20231129075832.73600-2-zhangjiachen.jaycee@bytedance.com>
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Charles Han <hanchunchao@inspur.com>,
+	Vegard Nossum <vegard.nossum@oracle.com>,
+	Bagas Sanjaya <bagasdotme@gmail.com>
+Subject: [PATCH v3] Documentation: xfs: consolidate XFS docs into its own subdirectory
+Date: Wed, 29 Nov 2023 19:39:47 +0700
+Message-ID: <20231129123947.4706-1-bagasdotme@gmail.com>
+X-Mailer: git-send-email 2.43.0
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20231129075832.73600-2-zhangjiachen.jaycee@bytedance.com>
+X-Developer-Signature: v=1; a=openpgp-sha256; l=5565; i=bagasdotme@gmail.com; h=from:subject; bh=E7SCxviNqr8B4kMTD16DIR3yCkpEsH8yH+zCkY0neiA=; b=owGbwMvMwCX2bWenZ2ig32LG02pJDKnpBkZpzH4/7io/47/G/X3vFImSFPF/1xMbt/XkKQUa3 QjP5V7YUcrCIMbFICumyDIpka/p9C4jkQvtax1h5rAygQxh4OIUgImYPGb4X9i+4QLjKcHHH4xd Z5XLnOPb0b71zHOBW3ynTQ9Ml1D0ecjwz3BfaK/qDvuJL3I//busIu5VlzCf5YJqzT9TkbcMciJ 6bAA=
+X-Developer-Key: i=bagasdotme@gmail.com; a=openpgp; fpr=701B806FDCA5D3A58FFB8F7D7C276C64A5E44A1D
+Content-Transfer-Encoding: 8bit
 
-On Wed, Nov 29, 2023 at 03:58:31PM +0800, Jiachen Zhang wrote:
-> In the case of returning -ENOSPC, ensure logflagsp is initialized by 0.
-> Otherwise the caller __xfs_bunmapi will set uninitialized illegal
-> tmp_logflags value into xfs log, which might cause unpredictable error
-> in the log recovery procedure.
-> 
-> Also, remove the flags variable and set the *logflagsp directly, so that
-> the code should be more robust in the long run.
-> 
-> Fixes: 1b24b633aafe ("xfs: move some more code into xfs_bmap_del_extent_real")
-> Signed-off-by: Jiachen Zhang <zhangjiachen.jaycee@bytedance.com>
-> Reviewed-by: Christoph Hellwig <hch@lst.de>
-> ---
->  fs/xfs/libxfs/xfs_bmap.c | 26 ++++++++++++++------------
->  1 file changed, 14 insertions(+), 12 deletions(-)
-> 
-> diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
-> index be62acffad6c..9435bd6c950b 100644
-> --- a/fs/xfs/libxfs/xfs_bmap.c
-> +++ b/fs/xfs/libxfs/xfs_bmap.c
-> @@ -5010,7 +5010,6 @@ xfs_bmap_del_extent_real(
->  	xfs_fileoff_t		del_endoff;	/* first offset past del */
->  	int			do_fx;	/* free extent at end of routine */
->  	int			error;	/* error return value */
-> -	int			flags = 0;/* inode logging flags */
->  	struct xfs_bmbt_irec	got;	/* current extent entry */
->  	xfs_fileoff_t		got_endoff;	/* first offset past got */
->  	int			i;	/* temp state */
-> @@ -5023,6 +5022,8 @@ xfs_bmap_del_extent_real(
->  	uint32_t		state = xfs_bmap_fork_to_state(whichfork);
->  	struct xfs_bmbt_irec	old;
->  
-> +	*logflagsp = 0;
-> +
->  	mp = ip->i_mount;
->  	XFS_STATS_INC(mp, xs_del_exlist);
->  
-> @@ -5048,10 +5049,12 @@ xfs_bmap_del_extent_real(
->  	if (tp->t_blk_res == 0 &&
->  	    ifp->if_format == XFS_DINODE_FMT_EXTENTS &&
->  	    ifp->if_nextents >= XFS_IFORK_MAXEXT(ip, whichfork) &&
-> -	    del->br_startoff > got.br_startoff && del_endoff < got_endoff)
-> -		return -ENOSPC;
-> +	    del->br_startoff > got.br_startoff && del_endoff < got_endoff) {
-> +		error = -ENOSPC;
-> +		goto done;
-> +	}
+XFS docs are currently in upper-level Documentation/filesystems.
+Although these are currently 4 docs, they are already outstanding as
+a group and can be moved to its own subdirectory.
 
-Now that you've added initialisation of logflagsp, the need for the
-error stacking goto pattern goes away completely. Anywhere that has
-a "goto done" can be converted to a direct 'return error' call and
-the done label can be removed.
+Consolidate them into Documentation/filesystems/xfs/.
 
--Dave.
+Signed-off-by: Bagas Sanjaya <bagasdotme@gmail.com>
+---
+Changes since v2 [1]:
+
+  * Adjust MAINTAINERS pattern to include all docs in the subdirectory
+    by using wildcard.
+
+[1]: https://lore.kernel.org/linux-doc/20231128124522.28499-1-bagasdotme@gmail.com/
+
+ Documentation/filesystems/index.rst                |  5 +----
+ Documentation/filesystems/xfs/index.rst            | 14 ++++++++++++++
+ .../{ => xfs}/xfs-delayed-logging-design.rst       |  0
+ .../{ => xfs}/xfs-maintainer-entry-profile.rst     |  0
+ .../{ => xfs}/xfs-online-fsck-design.rst           |  2 +-
+ .../{ => xfs}/xfs-self-describing-metadata.rst     |  0
+ .../maintainer/maintainer-entry-profile.rst        |  2 +-
+ MAINTAINERS                                        |  4 ++--
+ 8 files changed, 19 insertions(+), 8 deletions(-)
+ create mode 100644 Documentation/filesystems/xfs/index.rst
+ rename Documentation/filesystems/{ => xfs}/xfs-delayed-logging-design.rst (100%)
+ rename Documentation/filesystems/{ => xfs}/xfs-maintainer-entry-profile.rst (100%)
+ rename Documentation/filesystems/{ => xfs}/xfs-online-fsck-design.rst (99%)
+ rename Documentation/filesystems/{ => xfs}/xfs-self-describing-metadata.rst (100%)
+
+diff --git a/Documentation/filesystems/index.rst b/Documentation/filesystems/index.rst
+index 09cade7eaefc8c..e18bc5ae3b35f8 100644
+--- a/Documentation/filesystems/index.rst
++++ b/Documentation/filesystems/index.rst
+@@ -121,8 +121,5 @@ Documentation for filesystem implementations.
+    udf
+    virtiofs
+    vfat
+-   xfs-delayed-logging-design
+-   xfs-maintainer-entry-profile
+-   xfs-self-describing-metadata
+-   xfs-online-fsck-design
++   xfs/index
+    zonefs
+diff --git a/Documentation/filesystems/xfs/index.rst b/Documentation/filesystems/xfs/index.rst
+new file mode 100644
+index 00000000000000..ab66c57a5d18ea
+--- /dev/null
++++ b/Documentation/filesystems/xfs/index.rst
+@@ -0,0 +1,14 @@
++.. SPDX-License-Identifier: GPL-2.0
++
++============================
++XFS Filesystem Documentation
++============================
++
++.. toctree::
++   :maxdepth: 2
++   :numbered:
++
++   xfs-delayed-logging-design
++   xfs-maintainer-entry-profile
++   xfs-self-describing-metadata
++   xfs-online-fsck-design
+diff --git a/Documentation/filesystems/xfs-delayed-logging-design.rst b/Documentation/filesystems/xfs/xfs-delayed-logging-design.rst
+similarity index 100%
+rename from Documentation/filesystems/xfs-delayed-logging-design.rst
+rename to Documentation/filesystems/xfs/xfs-delayed-logging-design.rst
+diff --git a/Documentation/filesystems/xfs-maintainer-entry-profile.rst b/Documentation/filesystems/xfs/xfs-maintainer-entry-profile.rst
+similarity index 100%
+rename from Documentation/filesystems/xfs-maintainer-entry-profile.rst
+rename to Documentation/filesystems/xfs/xfs-maintainer-entry-profile.rst
+diff --git a/Documentation/filesystems/xfs-online-fsck-design.rst b/Documentation/filesystems/xfs/xfs-online-fsck-design.rst
+similarity index 99%
+rename from Documentation/filesystems/xfs-online-fsck-design.rst
+rename to Documentation/filesystems/xfs/xfs-online-fsck-design.rst
+index a0678101a7d02d..352516feef6ffe 100644
+--- a/Documentation/filesystems/xfs-online-fsck-design.rst
++++ b/Documentation/filesystems/xfs/xfs-online-fsck-design.rst
+@@ -962,7 +962,7 @@ disk, but these buffer verifiers cannot provide any consistency checking
+ between metadata structures.
+ 
+ For more information, please see the documentation for
+-Documentation/filesystems/xfs-self-describing-metadata.rst
++Documentation/filesystems/xfs/xfs-self-describing-metadata.rst
+ 
+ Reverse Mapping
+ ---------------
+diff --git a/Documentation/filesystems/xfs-self-describing-metadata.rst b/Documentation/filesystems/xfs/xfs-self-describing-metadata.rst
+similarity index 100%
+rename from Documentation/filesystems/xfs-self-describing-metadata.rst
+rename to Documentation/filesystems/xfs/xfs-self-describing-metadata.rst
+diff --git a/Documentation/maintainer/maintainer-entry-profile.rst b/Documentation/maintainer/maintainer-entry-profile.rst
+index 7ad4bfc2cc038a..18cee1edaecb6f 100644
+--- a/Documentation/maintainer/maintainer-entry-profile.rst
++++ b/Documentation/maintainer/maintainer-entry-profile.rst
+@@ -105,4 +105,4 @@ to do something different in the near future.
+    ../driver-api/media/maintainer-entry-profile
+    ../driver-api/vfio-pci-device-specific-driver-acceptance
+    ../nvme/feature-and-quirk-policy
+-   ../filesystems/xfs-maintainer-entry-profile
++   ../filesystems/xfs/xfs-maintainer-entry-profile
+diff --git a/MAINTAINERS b/MAINTAINERS
+index ea790149af7951..5ad039cfe9c794 100644
+--- a/MAINTAINERS
++++ b/MAINTAINERS
+@@ -23893,10 +23893,10 @@ S:	Supported
+ W:	http://xfs.org/
+ C:	irc://irc.oftc.net/xfs
+ T:	git git://git.kernel.org/pub/scm/fs/xfs/xfs-linux.git
+-P:	Documentation/filesystems/xfs-maintainer-entry-profile.rst
++P:	Documentation/filesystems/xfs/xfs-maintainer-entry-profile.rst
+ F:	Documentation/ABI/testing/sysfs-fs-xfs
+ F:	Documentation/admin-guide/xfs.rst
+-F:	Documentation/filesystems/xfs-*
++F:	Documentation/filesystems/xfs/*
+ F:	fs/xfs/
+ F:	include/uapi/linux/dqblk_xfs.h
+ F:	include/uapi/linux/fsmap.h
+
+base-commit: 9c235dfc3d3f901fe22acb20f2ab37ff39f2ce02
 -- 
-Dave Chinner
-david@fromorbit.com
+An old man doll... just what I always wanted! - Clara
+
