@@ -1,32 +1,35 @@
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+	(No client certificate requested)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 009BB7475
+	for <linux-xfs@vger.kernel.org>; Wed, 29 Nov 2023 05:57:31 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="P3q8ckhb"
-Received: from bombadil.infradead.org (bombadil.infradead.org [IPv6:2607:7c80:54:3::133])
-	by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 28CCA10F4
-	for <linux-xfs@vger.kernel.org>; Tue, 28 Nov 2023 21:57:02 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-	d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Type:MIME-Version
-	:References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
-	Content-Transfer-Encoding:Content-ID:Content-Description;
-	bh=WdDJMqLXuQaCSeU1lJGikmIMpjYXsfcOU4nxS3tiP+s=; b=P3q8ckhbm3cGIak8w1aRwj6LQg
-	tG2yQcgGbJNZfLaMPB1PgugxODy0GWKumayyYEqrrVwLSIHSHV65SU6sbeal2eiQKbH8ibTRVloyI
-	5okqOVPRoeNvlMwJf9h15H5wHP2SWLpjpVrHpSdKIuLQdphRFs3cyL/WyP0et+/TAAlp3qZNY31h+
-	W0a/HxsCUWtObxMq9rcnRF7csqtfQo9+Ivr36w0bF+xyPbsuPOhsIdcP4CzXWUZTXSnlDlyVEOgfD
-	LjdxdIbPb2tx/Ykn5F5MCV31dV/5MQNQRrm99yqfrxNpEYCO4vRAp4kFXTF7PXBuyQcMapkt8SL0k
-	0TV60lRQ==;
-Received: from hch by bombadil.infradead.org with local (Exim 4.96 #2 (Red Hat Linux))
-	id 1r8DZD-0078ba-1H;
-	Wed, 29 Nov 2023 05:56:59 +0000
-Date: Tue, 28 Nov 2023 21:56:59 -0800
-From: Christoph Hellwig <hch@infradead.org>
-To: "Darrick J. Wong" <djwong@kernel.org>
-Cc: Christoph Hellwig <hch@infradead.org>,
-	Dave Chinner <dchinner@redhat.com>, linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 3/5] xfs: repair free space btrees
-Message-ID: <ZWbSq7591xG1I+SQ@infradead.org>
-References: <170086926983.2770967.13303859275299344660.stgit@frogsfrogsfrogs>
- <170086927042.2770967.1697193414262580501.stgit@frogsfrogsfrogs>
- <ZWYDASlIqLQvk9Wh@infradead.org>
- <20231128211358.GB4167244@frogsfrogsfrogs>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="jU6p3WQh"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 7A94AC433C8;
+	Wed, 29 Nov 2023 05:57:31 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1701237451;
+	bh=hqziOGKq4tm8AmiNuS3DqD2FZn5MsjK03mU74P3pzT4=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=jU6p3WQhAfTirfakWbyORS20D+5/RnlnqZEzEqBA/tSzKVicN1e9edsdDBus6ADab
+	 FcObLYMW1KBJXqpeZxcFi8dL9ZD/ZjAdsCDCVkl9x9GM+JUXZo0DM71Gj0/NGoDt8E
+	 JeH64pjiu/trmLy1ADpFUGQ2dChhrWjqnSyBOMDXV5/Mu9ucxAtOl5SrBXletea7Dj
+	 MXE/U14ra8rUXuWtcnu1rm2yUbmjNKLCiSfh4FMQ9PYJqpbKiefss3se9VGQXQjn8b
+	 ViYPXMOeLwpIggkUsccJSc5NgTjufQNoAvfIPGYX3ls6iD03+X7coC3reHnviwHXt1
+	 tfcWKaBkh0UgA==
+Date: Tue, 28 Nov 2023 21:57:30 -0800
+From: "Darrick J. Wong" <djwong@kernel.org>
+To: Christoph Hellwig <hch@infradead.org>
+Cc: linux-xfs@vger.kernel.org
+Subject: Re: [PATCH 4/4] xfs: constrain dirty buffers while formatting a
+ staged btree
+Message-ID: <20231129055730.GS36211@frogsfrogsfrogs>
+References: <170086926569.2770816.7549813820649168963.stgit@frogsfrogsfrogs>
+ <170086926640.2770816.12781452338907572006.stgit@frogsfrogsfrogs>
+ <ZWGL4tBoNDoGND7F@infradead.org>
+ <20231127225631.GI2766956@frogsfrogsfrogs>
+ <20231128201133.GA4167244@frogsfrogsfrogs>
+ <ZWbRK5SWtoW9sn1E@infradead.org>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -35,59 +38,54 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20231128211358.GB4167244@frogsfrogsfrogs>
-X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
+In-Reply-To: <ZWbRK5SWtoW9sn1E@infradead.org>
 
-On Tue, Nov 28, 2023 at 01:13:58PM -0800, Darrick J. Wong wrote:
-> >  - xrep_abt_find_freespace accounts the old allocbt blocks as freespace
-> >    per the comment, although as far as I understand  the code in
-> >    xrep_abt_walk_rmap the allocbt blocks aren't actually added to the
-> >    free_records xfarray, but recorded into the old_allocbt_blocks
-> >    bitmap (btw, why are we using different data structures for them?)
-> 
-> The old free space btree blocks are tracked via old_allocbt_blocks so
-> that we can reap the space after committing the new btree roots.
-
-Yes, I got that from the code.  But I'm a bit confused about the
-comment treating the old allocbt blocks as free space, while the code
-doesn't.  Or I guess the confusion is that we really have two slightly
-different notions of "free space":
-
-  1) the space we try to build the trees for
-  2) the space used as free space to us for the trees
-
-The old allocbt blocks are part of 1 but not of 2.
-
-> >  - what happens if the AG is so full and fragmented that we do not
-> >    have space to create a second set of allocbts without tearing down
-> >    the old ones first?
-> 
-> xrep_abt_reserve_space returns -ENOSPC, so we throw away all the incore
-> records and throw the errno out to userspace.  Across all the btree
-> rebuilding code, the block reservation step happens as the very last
-> thing before we start writing btree blocks, so it's still possible to
-> back out cleanly.
-
-But that means we can't repair the allocation btrees for this case.
-
-> > > +	/* We require the rmapbt to rebuild anything. */
-> > > +	if (!xfs_has_rmapbt(mp))
-> > > +		return -EOPNOTSUPP;
+On Tue, Nov 28, 2023 at 09:50:35PM -0800, Christoph Hellwig wrote:
+> On Tue, Nov 28, 2023 at 12:11:33PM -0800, Darrick J. Wong wrote:
+> > And now that I've dug further through my notes, I've realized that
+> > there's a better reason for this unexplained _get_buf -> _read_buf
+> > transition and the setting of XBF_DONE in _delwri_queue_here.
 > > 
-> > Shoudn't this be checked by the .has callback in struct xchk_meta_ops?
+> > This patch introduces the behavior that we flush the delwri list to disk
+> > every 256k.
 > 
-> No.  Checking doesn't require the rmapbt because all we do is walk the
-> bnobt/cntbt records and cross-reference them with whatever metadata we
-> can find.
+> Where "the delwri list" is the one used for writing stage btrees I
+> think.
 
-Oh, and .has applies to both checking and repairing.  Gt it.
+Correct.
 
-> This wrapper simplifes the interface to xrep_newbt_add_blocks so that
-> external callers don't have to know which magic values of xfs_alloc_arg
-> are actually used by xrep_newbt_add_blocks and therefore need to be set.
+> > Flushing the buffers releases them, which means that
+> > reclaim could free the buffer before xfs_btree_bload_node needs it again
+> > to build the next level up.
 > 
-> For all the other repair functions, they have to allocate space from the
-> free space btree, so xrep_newbt_add_blocks is passed the full
-> _alloc_args as returned by the allocator to xrep_newbt_alloc_ag_blocks.
+> Oh, indeed.
+> 
+> > If that's the case, then _get_buf will get
+> > us a !DONE buffer with zeroes instead of reading the (freshly written)
+> > buffer back in from disk.  We'll then end up formatting garbage keys
+> > into the node block, which is bad.
+> 
+> Yeah.
+> 
+> > 		/*
+> > 		 * Read the lower-level block in case the buffer for it has
+> > 		 * been reclaimed.  LRU refs will be set on the block, which is
+> > 		 * desirable if the new btree commits.
+> > 		 */
+> > 		ret = xfs_btree_read_buf_block(cur, child_ptr, 0, &child_block,
+> > 				&child_bp);
+> > 
+> > The behavior of setting XBF_DONE in xfs_buf_delwri_queue_here is an
+> > optimization if _delwri_submit releases the buffer and it is /not/
+> > reclaimed.  In that case, xfs_btree_read_buf_block will find the buffer
+> > without the DONE flag set and reread the contents from disk, which is
+> > unnecessary.
+> 
+> Yeah.  I still find it weird to set it in the delwri_submit_here helper,
+> but maybe that's a discussion for the other thread.
 
-Ok.  Maybe throw in a comment that it just is a convenience wrapper?
+D'Oh!  XBF_DONE exists in userspace too, because libxfs uses it.  Well
+then, the proper place for it is at the top of xfs_btree_bload_drop_buf.
+I'll go change that tomorrow.
+
+--D
