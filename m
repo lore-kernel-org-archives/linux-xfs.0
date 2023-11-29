@@ -1,33 +1,24 @@
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="LS2UwVrT"
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
-	by lindbergh.monkeyblade.net (Postfix) with ESMTPS id EEBA9B0
-	for <linux-xfs@vger.kernel.org>; Wed, 29 Nov 2023 06:49:36 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1701269376;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 in-reply-to:in-reply-to:references:references;
-	bh=eyLQTp+JLssTFO7PTCnsYpTGzUnGh3A+zjTA8FqixQ4=;
-	b=LS2UwVrTK0KaqhwHB6nKZddUuBc0rvZ4U43K7fHwC1UxXKdXOREKEABZ9B2K3JhP4A4kY3
-	Sg62umeL1wMQ1RSJZcNePbMefZ1GTfWGAgr1wv0CMGjULv+DM/qTAdMHH3Ceb3Q0UURcym
-	7y1Og+zWqcArMzW08jFBAo3gbtZzkbY=
-Received: from mimecast-mx02.redhat.com (mimecast-mx02.redhat.com
- [66.187.233.88]) by relay.mimecast.com with ESMTP with STARTTLS
- (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
- us-mta-641-WY2o3njJNzC_159Nb6RHdg-1; Wed, 29 Nov 2023 09:49:34 -0500
-X-MC-Unique: WY2o3njJNzC_159Nb6RHdg-1
-Received: from smtp.corp.redhat.com (int-mx08.intmail.prod.int.rdu2.redhat.com [10.11.54.8])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by mimecast-mx02.redhat.com (Postfix) with ESMTPS id DD99C185A782;
-	Wed, 29 Nov 2023 14:49:33 +0000 (UTC)
-Received: from redhat.com (unknown [10.2.17.161])
-	by smtp.corp.redhat.com (Postfix) with ESMTPS id 957D4C1596F;
-	Wed, 29 Nov 2023 14:49:32 +0000 (UTC)
-Date: Wed, 29 Nov 2023 08:49:31 -0600
-From: Bill O'Donnell <bodonnel@redhat.com>
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F0F9B14AB9;
+	Wed, 29 Nov 2023 16:07:40 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="rgidGJBx"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id BD3C7C433C7;
+	Wed, 29 Nov 2023 16:07:40 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1701274060;
+	bh=deUo5Xr6ZgSeyKob2mhhkZFoNdVfH9Jwuteag02Tzho=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=rgidGJBxvnjXp6S9i0BKR2lh2z8UX8KOEpWT6lHnx3fhPQhgRRQgsj0bFcWEPRpBr
+	 7Iyra9WzUy7I3o7QEwO3eWm9Zfz5hyaUVJSh3hf6tW+5cR1ieyGNBQR9QBLZlR0fyn
+	 3Kfd//ZajhV7FE5a4PyowLx7jYfDSPTm2MBenMqpcOidoATEMCFeZ9J4ulf6lC+RUK
+	 Tz9wgk9ALTasT3pA/+JTP7Q+ng1xvfaT0MzzPrS6+MgL1SNMt6z58DcahwwwUVGr3l
+	 E2Y2GD2+cG8Ohc6v0sglhQkdngviXmDUyGIqZG/drBbgmhd1DAjV0wU1V3SxW+36vT
+	 zmQm2DEfw6IEw==
+Date: Wed, 29 Nov 2023 08:07:40 -0800
+From: "Darrick J. Wong" <djwong@kernel.org>
 To: Bagas Sanjaya <bagasdotme@gmail.com>
 Cc: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
 	Linux Documentation <linux-doc@vger.kernel.org>,
@@ -35,7 +26,6 @@ Cc: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
 	Linux Kernel Workflows <workflows@vger.kernel.org>,
 	Jonathan Corbet <corbet@lwn.net>,
 	Chandan Babu R <chandan.babu@oracle.com>,
-	"Darrick J. Wong" <djwong@kernel.org>,
 	Namjae Jeon <linkinjeon@kernel.org>,
 	Dave Chinner <dchinner@redhat.com>,
 	Steve French <stfrench@microsoft.com>,
@@ -46,7 +36,7 @@ Cc: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
 	Vegard Nossum <vegard.nossum@oracle.com>
 Subject: Re: [PATCH v3] Documentation: xfs: consolidate XFS docs into its own
  subdirectory
-Message-ID: <ZWdPewywDy_3UutV@redhat.com>
+Message-ID: <20231129160740.GE361584@frogsfrogsfrogs>
 References: <20231129123947.4706-1-bagasdotme@gmail.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
@@ -57,7 +47,6 @@ MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
 In-Reply-To: <20231129123947.4706-1-bagasdotme@gmail.com>
-X-Scanned-By: MIMEDefang 3.4.1 on 10.11.54.8
 
 On Wed, Nov 29, 2023 at 07:39:47PM +0700, Bagas Sanjaya wrote:
 > XFS docs are currently in upper-level Documentation/filesystems.
@@ -68,8 +57,10 @@ On Wed, Nov 29, 2023 at 07:39:47PM +0700, Bagas Sanjaya wrote:
 > 
 > Signed-off-by: Bagas Sanjaya <bagasdotme@gmail.com>
 
-Looks good to me.
-Reviewed-by: Bill O'Donnell <bodonnel@redhat.com>
+Looks good!
+Reviewed-by: Darrick J. Wong <djwong@kernel.org>
+
+--D
 
 > ---
 > Changes since v2 [1]:
@@ -189,4 +180,3 @@ Reviewed-by: Bill O'Donnell <bodonnel@redhat.com>
 > An old man doll... just what I always wanted! - Clara
 > 
 > 
-
