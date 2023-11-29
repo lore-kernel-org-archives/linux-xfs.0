@@ -1,33 +1,32 @@
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="cC8AZTnR"
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="P3q8ckhb"
 Received: from bombadil.infradead.org (bombadil.infradead.org [IPv6:2607:7c80:54:3::133])
-	by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 04D291A3
-	for <linux-xfs@vger.kernel.org>; Tue, 28 Nov 2023 21:50:37 -0800 (PST)
+	by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 28CCA10F4
+	for <linux-xfs@vger.kernel.org>; Tue, 28 Nov 2023 21:57:02 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
 	d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Type:MIME-Version
 	:References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
 	Content-Transfer-Encoding:Content-ID:Content-Description;
-	bh=pKiVnKlwpbKmSJ7936iktUoAEEoPBbs4HehK8xfb1Xo=; b=cC8AZTnR68OYuWSBt+eyLFoDpo
-	bjxUHrPU/4QAtpMP886IczLmkqadkTnBLT4fr9D3aT2rPYWPcbdxHD27c4b0J7WbME+k4JB7+7Vta
-	t91DWCYWUlU6efttujQNWEHVShOzvSfmCiAAzIDNNnGXZxQY4B4tctvsUbzTKCzub409JUsthQedo
-	GNOR3ViJFFx/FHrdHcto0r1PTaQYFR85mCdQx3vfsiaosfdbd3vkcGlRdy596OTtEFIbcZm+KAbLl
-	dUGOkvfIDMOJImVCF1QQtOMEdNxFb6U6T23fkrt/bFxZaOPYfvjdo88TQIKID9xzRiBEp2kWWLNVO
-	mPFSoKeQ==;
+	bh=WdDJMqLXuQaCSeU1lJGikmIMpjYXsfcOU4nxS3tiP+s=; b=P3q8ckhbm3cGIak8w1aRwj6LQg
+	tG2yQcgGbJNZfLaMPB1PgugxODy0GWKumayyYEqrrVwLSIHSHV65SU6sbeal2eiQKbH8ibTRVloyI
+	5okqOVPRoeNvlMwJf9h15H5wHP2SWLpjpVrHpSdKIuLQdphRFs3cyL/WyP0et+/TAAlp3qZNY31h+
+	W0a/HxsCUWtObxMq9rcnRF7csqtfQo9+Ivr36w0bF+xyPbsuPOhsIdcP4CzXWUZTXSnlDlyVEOgfD
+	LjdxdIbPb2tx/Ykn5F5MCV31dV/5MQNQRrm99yqfrxNpEYCO4vRAp4kFXTF7PXBuyQcMapkt8SL0k
+	0TV60lRQ==;
 Received: from hch by bombadil.infradead.org with local (Exim 4.96 #2 (Red Hat Linux))
-	id 1r8DT1-0078Q8-2z;
-	Wed, 29 Nov 2023 05:50:35 +0000
-Date: Tue, 28 Nov 2023 21:50:35 -0800
+	id 1r8DZD-0078ba-1H;
+	Wed, 29 Nov 2023 05:56:59 +0000
+Date: Tue, 28 Nov 2023 21:56:59 -0800
 From: Christoph Hellwig <hch@infradead.org>
 To: "Darrick J. Wong" <djwong@kernel.org>
-Cc: Christoph Hellwig <hch@infradead.org>, linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 4/4] xfs: constrain dirty buffers while formatting a
- staged btree
-Message-ID: <ZWbRK5SWtoW9sn1E@infradead.org>
-References: <170086926569.2770816.7549813820649168963.stgit@frogsfrogsfrogs>
- <170086926640.2770816.12781452338907572006.stgit@frogsfrogsfrogs>
- <ZWGL4tBoNDoGND7F@infradead.org>
- <20231127225631.GI2766956@frogsfrogsfrogs>
- <20231128201133.GA4167244@frogsfrogsfrogs>
+Cc: Christoph Hellwig <hch@infradead.org>,
+	Dave Chinner <dchinner@redhat.com>, linux-xfs@vger.kernel.org
+Subject: Re: [PATCH 3/5] xfs: repair free space btrees
+Message-ID: <ZWbSq7591xG1I+SQ@infradead.org>
+References: <170086926983.2770967.13303859275299344660.stgit@frogsfrogsfrogs>
+ <170086927042.2770967.1697193414262580501.stgit@frogsfrogsfrogs>
+ <ZWYDASlIqLQvk9Wh@infradead.org>
+ <20231128211358.GB4167244@frogsfrogsfrogs>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -36,46 +35,59 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20231128201133.GA4167244@frogsfrogsfrogs>
+In-Reply-To: <20231128211358.GB4167244@frogsfrogsfrogs>
 X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 
-On Tue, Nov 28, 2023 at 12:11:33PM -0800, Darrick J. Wong wrote:
-> And now that I've dug further through my notes, I've realized that
-> there's a better reason for this unexplained _get_buf -> _read_buf
-> transition and the setting of XBF_DONE in _delwri_queue_here.
+On Tue, Nov 28, 2023 at 01:13:58PM -0800, Darrick J. Wong wrote:
+> >  - xrep_abt_find_freespace accounts the old allocbt blocks as freespace
+> >    per the comment, although as far as I understand  the code in
+> >    xrep_abt_walk_rmap the allocbt blocks aren't actually added to the
+> >    free_records xfarray, but recorded into the old_allocbt_blocks
+> >    bitmap (btw, why are we using different data structures for them?)
 > 
-> This patch introduces the behavior that we flush the delwri list to disk
-> every 256k.
+> The old free space btree blocks are tracked via old_allocbt_blocks so
+> that we can reap the space after committing the new btree roots.
 
-Where "the delwri list" is the one used for writing stage btrees I
-think.
+Yes, I got that from the code.  But I'm a bit confused about the
+comment treating the old allocbt blocks as free space, while the code
+doesn't.  Or I guess the confusion is that we really have two slightly
+different notions of "free space":
 
-> Flushing the buffers releases them, which means that
-> reclaim could free the buffer before xfs_btree_bload_node needs it again
-> to build the next level up.
+  1) the space we try to build the trees for
+  2) the space used as free space to us for the trees
 
-Oh, indeed.
+The old allocbt blocks are part of 1 but not of 2.
 
-> If that's the case, then _get_buf will get
-> us a !DONE buffer with zeroes instead of reading the (freshly written)
-> buffer back in from disk.  We'll then end up formatting garbage keys
-> into the node block, which is bad.
-
-Yeah.
-
-> 		/*
-> 		 * Read the lower-level block in case the buffer for it has
-> 		 * been reclaimed.  LRU refs will be set on the block, which is
-> 		 * desirable if the new btree commits.
-> 		 */
-> 		ret = xfs_btree_read_buf_block(cur, child_ptr, 0, &child_block,
-> 				&child_bp);
+> >  - what happens if the AG is so full and fragmented that we do not
+> >    have space to create a second set of allocbts without tearing down
+> >    the old ones first?
 > 
-> The behavior of setting XBF_DONE in xfs_buf_delwri_queue_here is an
-> optimization if _delwri_submit releases the buffer and it is /not/
-> reclaimed.  In that case, xfs_btree_read_buf_block will find the buffer
-> without the DONE flag set and reread the contents from disk, which is
-> unnecessary.
+> xrep_abt_reserve_space returns -ENOSPC, so we throw away all the incore
+> records and throw the errno out to userspace.  Across all the btree
+> rebuilding code, the block reservation step happens as the very last
+> thing before we start writing btree blocks, so it's still possible to
+> back out cleanly.
 
-Yeah.  I still find it weird to set it in the delwri_submit_here helper,
-but maybe that's a discussion for the other thread.
+But that means we can't repair the allocation btrees for this case.
+
+> > > +	/* We require the rmapbt to rebuild anything. */
+> > > +	if (!xfs_has_rmapbt(mp))
+> > > +		return -EOPNOTSUPP;
+> > 
+> > Shoudn't this be checked by the .has callback in struct xchk_meta_ops?
+> 
+> No.  Checking doesn't require the rmapbt because all we do is walk the
+> bnobt/cntbt records and cross-reference them with whatever metadata we
+> can find.
+
+Oh, and .has applies to both checking and repairing.  Gt it.
+
+> This wrapper simplifes the interface to xrep_newbt_add_blocks so that
+> external callers don't have to know which magic values of xfs_alloc_arg
+> are actually used by xrep_newbt_add_blocks and therefore need to be set.
+> 
+> For all the other repair functions, they have to allocate space from the
+> free space btree, so xrep_newbt_add_blocks is passed the full
+> _alloc_args as returned by the allocator to xrep_newbt_alloc_ag_blocks.
+
+Ok.  Maybe throw in a comment that it just is a convenience wrapper?
