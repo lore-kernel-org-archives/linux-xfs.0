@@ -1,129 +1,139 @@
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=bytedance.com header.i=@bytedance.com header.b="U4fxZJjr"
-Received: from mail-pg1-x52f.google.com (mail-pg1-x52f.google.com [IPv6:2607:f8b0:4864:20::52f])
-	by lindbergh.monkeyblade.net (Postfix) with ESMTPS id ED5781735
-	for <linux-xfs@vger.kernel.org>; Tue, 28 Nov 2023 23:59:46 -0800 (PST)
-Received: by mail-pg1-x52f.google.com with SMTP id 41be03b00d2f7-53fa455cd94so4272763a12.2
-        for <linux-xfs@vger.kernel.org>; Tue, 28 Nov 2023 23:59:46 -0800 (PST)
+	dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b="U2/PtluB"
+Received: from mail-oa1-x30.google.com (mail-oa1-x30.google.com [IPv6:2001:4860:4864:20::30])
+	by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E86B01735
+	for <linux-xfs@vger.kernel.org>; Wed, 29 Nov 2023 00:21:33 -0800 (PST)
+Received: by mail-oa1-x30.google.com with SMTP id 586e51a60fabf-1fa21f561a1so2040754fac.3
+        for <linux-xfs@vger.kernel.org>; Wed, 29 Nov 2023 00:21:33 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=bytedance.com; s=google; t=1701244786; x=1701849586; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=ZGwa/klWYWx3gVbFO7UV3sjDmi0cMp8GGfC8jWdaqOs=;
-        b=U4fxZJjrLknoM74F9M5SQZuwCbht/oZCeNcVFO/UDjyCFXMQKykI6sSpbuXLh8qpzS
-         17GlZkRmkQguChrXSjd3Bs+dPa/n3ZZTsFlykxwXvMxQ9F/nu7QAsWbDLIdA1KiVV0TO
-         KXKxM5xQ0uXs+2UGmvFvFP7ywILl9QWIRH1J4TVOXM4Z2Jbn9qMayUhlQIJ26B58yNeP
-         JmAQTz8P4eTyEDtxOWrZd27YKWYjMqJkZhmtBcGBRwJo5faoBKYwJ0Sizh13q177vE+L
-         W/72gQsZwBRSGbg0mmN5VRUp48zW/V+ZRhypeBeo9QrxDQvskk4xxBFXuAaBFD9lD/3R
-         0y1g==
+        d=fromorbit-com.20230601.gappssmtp.com; s=20230601; t=1701246093; x=1701850893; darn=vger.kernel.org;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
+        bh=swfU8TF0GzJsUCWnFgrLrmU8UHRbqYlkMBWEYbcAmZA=;
+        b=U2/PtluBWBX3uyj/XdIM5Bvi19SHVGLvyAA6I97YZjzGOWVrGCcqCJ/pgmI6aL2jil
+         E7g3x99hY1jqEq5w/g9M2dcjiNIPuKz65MY1D30Omq0i79f0zA9mmFjm8jjB1QQ5onv4
+         wodS9O+zvziNnqJ08KLspM4r23xAYdSdvadVngTX3LAHDP/kvzz1sYiFIHbMDyvgwLOB
+         MRGAZ6nDZfJg96zMmGZuhUpUJ8rHSQjEOp/4nM8ydHd+FBjT8FewoOAmaqOVTjWVHDa/
+         b7T+C0amdp9N1KqNBmJzJIDRwuK+dmU9sG09gY6S52lDwQpOqB99qVz/75yOEk/Mlr27
+         d4UA==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1701244786; x=1701849586;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=ZGwa/klWYWx3gVbFO7UV3sjDmi0cMp8GGfC8jWdaqOs=;
-        b=PdrVJMnqx6UC2ptSVA2J7uxnJOLsWutOqgbfgPqIInsBbPBn5e35YGtxu5D2LsNopL
-         VGEUVNdcZ/KpsxaafEs/uPFDpf+gkxXeJJ7375KlEy1t2ZX4iwIhY4wMlSkcWczgZBaU
-         5OBLF/UaHVRpET+1eNNNa9NxJivDV4iUxqdx3qpIfSburH0kY/Yf2Sckk994TykjJRdc
-         WMeA0RizWWTsF+aSyS+1af0+gWG43yhL/Yb+Y9tUOdFRpgajaO1M9troC+5mfBaD+/3t
-         79m3hXopuURXOAfprWtQ1a/ideFERq+juyg3yzwcj6If2eWxZlkTR5+1j8qW08S4P8vV
-         RTNQ==
-X-Gm-Message-State: AOJu0YzGHbCawNcaUIg8Ucg9XfaPlQe0c66B4Z+WnbgkYVFxEYibSN8j
-	MESQAx7qmDydxOshBoa0TgxOEA==
-X-Google-Smtp-Source: AGHT+IEW7RY6rW1xN0SZYk2KmfKRhGALSQC7dhZKn7nt9rZPJDObYoCq4CCKaltza5Ttsehw10eh9Q==
-X-Received: by 2002:a05:6a20:6a0e:b0:18b:8158:b115 with SMTP id p14-20020a056a206a0e00b0018b8158b115mr20395186pzk.56.1701244786219;
-        Tue, 28 Nov 2023 23:59:46 -0800 (PST)
-Received: from localhost.localdomain ([61.213.176.9])
-        by smtp.gmail.com with ESMTPSA id s17-20020a170902989100b001cfd0ddc5d3sm4979419plp.277.2023.11.28.23.59.41
+        d=1e100.net; s=20230601; t=1701246093; x=1701850893;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=swfU8TF0GzJsUCWnFgrLrmU8UHRbqYlkMBWEYbcAmZA=;
+        b=mcho906BKO+8bhXrQ0kpsq3oOO2d4Evui7v4QiVsAVoSC4oLle/VWP45g6g2ob2IWr
+         gqdps0xs8OfSbZvH0n3DXeQCxR6oF6VbBE2toVIl6FfWrRBQqZzH60cN4j/qEs81fTj2
+         I4zw5IQb09kjszPzUfLD8ZFFy5E6MHE2t4uv/P5YBXMRh5ziwtQW+iBvHSXXmXlZYq2O
+         ppgVnIUufH3UKOig9BiQkQ3K8dHYXGQZyu+3qnKv6fayAWNhKuELDFXH0FQ3c+hRSidO
+         tZonUaENiEqPLycWMq0XskxB2dAErp3815eO6tWuwfn8iBMjz2dW+QIREazNMCjnflz5
+         ebwQ==
+X-Gm-Message-State: AOJu0YxkcQjSD0niYDvIv945emMp9NxIcHcMApwjEIgUqNeStrHJLFxu
+	PZnLw8rR6jeIW6BtmRL+Gm7SKi+CLo/aBVokrlk=
+X-Google-Smtp-Source: AGHT+IGVKdsy0ika4FEQDbNAvl4JeOnKczlPT7ZcDKU2KMi4Krqapi4yKesSRbNtUW6R3V+gXEIEsA==
+X-Received: by 2002:a05:6870:5d92:b0:1f9:6962:b06c with SMTP id fu18-20020a0568705d9200b001f96962b06cmr23325760oab.53.1701246093214;
+        Wed, 29 Nov 2023 00:21:33 -0800 (PST)
+Received: from dread.disaster.area (pa49-180-125-5.pa.nsw.optusnet.com.au. [49.180.125.5])
+        by smtp.gmail.com with ESMTPSA id ei6-20020a056a0080c600b006cb95c0fff4sm17131pfb.71.2023.11.29.00.21.32
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 28 Nov 2023 23:59:45 -0800 (PST)
-From: Jiachen Zhang <zhangjiachen.jaycee@bytedance.com>
-To: Chandan Babu R <chandan.babu@oracle.com>,
-	"Darrick J. Wong" <djwong@kernel.org>
-Cc: Dave Chinner <dchinner@redhat.com>,
-	Allison Henderson <allison.henderson@oracle.com>,
-	Zhang Tianci <zhangtianci.1997@bytedance.com>,
-	Brian Foster <bfoster@redhat.com>,
-	Ben Myers <bpm@sgi.com>,
-	linux-xfs@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	xieyongji@bytedance.com,
-	me@jcix.top,
-	Dave Chinner <david@fromorbit.com>
-Subject: [PATCH v2 2/2] xfs: update dir3 leaf block metadata after swap
-Date: Wed, 29 Nov 2023 15:58:32 +0800
-Message-Id: <20231129075832.73600-3-zhangjiachen.jaycee@bytedance.com>
-X-Mailer: git-send-email 2.35.1
-In-Reply-To: <20231129075832.73600-1-zhangjiachen.jaycee@bytedance.com>
-References: <20231129075832.73600-1-zhangjiachen.jaycee@bytedance.com>
+        Wed, 29 Nov 2023 00:21:32 -0800 (PST)
+Received: from dave by dread.disaster.area with local (Exim 4.96)
+	(envelope-from <david@fromorbit.com>)
+	id 1r8Fp4-001Qhf-0C;
+	Wed, 29 Nov 2023 19:21:30 +1100
+Date: Wed, 29 Nov 2023 19:21:30 +1100
+From: Dave Chinner <david@fromorbit.com>
+To: Christoph Hellwig <hch@lst.de>
+Cc: "Darrick J. Wong" <djwong@kernel.org>, linux-xfs@vger.kernel.org,
+	Dave Chinner <dchinner@redhat.com>
+Subject: Re: XBF_DONE semantics
+Message-ID: <ZWb0ik2CJc7lxz8E@dread.disaster.area>
+References: <20231128153808.GA19360@lst.de>
+ <ZWZW1bb+ih16tU+5@dread.disaster.area>
+ <20231129061805.GA1987@lst.de>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20231129061805.GA1987@lst.de>
 
-From: Zhang Tianci <zhangtianci.1997@bytedance.com>
+On Wed, Nov 29, 2023 at 07:18:05AM +0100, Christoph Hellwig wrote:
+> On Wed, Nov 29, 2023 at 08:08:37AM +1100, Dave Chinner wrote:
+> > > But places that use buf_get and manually fill in data only use it in a
+> > > few cases. 
+> > 
+> > Yes. the caller of buf_get always needs to set XBF_DONE if it is
+> > initialising a new buffer ready for it to be written. It should be
+> > done before the caller drops the buffer lock so that no other lookup
+> > can see the buffer in the state of "contains valid data but does not
+> > have XBF_DONE set".
+> 
+> That makes sense, but we do have a whole bunch of weird things going
+> on as well:
+> 
+>  - xfs_buf_ioend_handle_error sets XBF_DONE when retrying or failing
 
-xfs_da3_swap_lastblock() copy the last block content to the dead block,
-but do not update the metadata in it. We need update some metadata
-for some kinds of type block, such as dir3 leafn block records its
-blkno, we shall update it to the dead block blkno. Otherwise,
-before write the xfs_buf to disk, the verify_write() will fail in
-blk_hdr->blkno != xfs_buf->b_bn, then xfs will be shutdown.
+Write path. It is expected that XBF_DONE is set prior to submitting
+the write, so this should be a no-op. It's probably detritus from
+the repeated factoring of the buf_ioend code over the years that
+we've never looked deeply into.
 
-We will get this warning:
+>  - xfs_buf_ioend sets XBF_DONE on successful write completion as well
 
-  XFS (dm-0): Metadata corruption detected at xfs_dir3_leaf_verify+0xa8/0xe0 [xfs], xfs_dir3_leafn block 0x178
-  XFS (dm-0): Unmount and run xfs_repair
-  XFS (dm-0): First 128 bytes of corrupted metadata buffer:
-  00000000e80f1917: 00 80 00 0b 00 80 00 07 3d ff 00 00 00 00 00 00  ........=.......
-  000000009604c005: 00 00 00 00 00 00 01 a0 00 00 00 00 00 00 00 00  ................
-  000000006b6fb2bf: e4 44 e3 97 b5 64 44 41 8b 84 60 0e 50 43 d9 bf  .D...dDA..`.PC..
-  00000000678978a2: 00 00 00 00 00 00 00 83 01 73 00 93 00 00 00 00  .........s......
-  00000000b28b247c: 99 29 1d 38 00 00 00 00 99 29 1d 40 00 00 00 00  .).8.....).@....
-  000000002b2a662c: 99 29 1d 48 00 00 00 00 99 49 11 00 00 00 00 00  .).H.....I......
-  00000000ea2ffbb8: 99 49 11 08 00 00 45 25 99 49 11 10 00 00 48 fe  .I....E%.I....H.
-  0000000069e86440: 99 49 11 18 00 00 4c 6b 99 49 11 20 00 00 4d 97  .I....Lk.I. ..M.
-  XFS (dm-0): xfs_do_force_shutdown(0x8) called from line 1423 of file fs/xfs/xfs_buf.c.  Return address = 00000000c0ff63c1
-  XFS (dm-0): Corruption of in-memory data detected.  Shutting down filesystem
-  XFS (dm-0): Please umount the filesystem and rectify the problem(s)
+Same. It's really only needed on read IO, but I'm guessing that
+somewhere along the line it was done for all IO and we've never
+stopped doing that.
 
-From the log above, we know xfs_buf->b_no is 0x178, but the block's hdr record
-its blkno is 0x1a0.
+>  - xfs_buf_ioend_fail drops XBF_DONE for any I/O failure
 
-Fixes: 24df33b45ecf ("xfs: add CRC checking to dir2 leaf blocks")
-Signed-off-by: Zhang Tianci <zhangtianci.1997@bytedance.com>
-Suggested-by: Dave Chinner <david@fromorbit.com>
----
- fs/xfs/libxfs/xfs_da_btree.c | 11 ++++++++++-
- 1 file changed, 10 insertions(+), 1 deletion(-)
+That's actually correct.
 
-diff --git a/fs/xfs/libxfs/xfs_da_btree.c b/fs/xfs/libxfs/xfs_da_btree.c
-index e576560b46e9..d11e6286e466 100644
---- a/fs/xfs/libxfs/xfs_da_btree.c
-+++ b/fs/xfs/libxfs/xfs_da_btree.c
-@@ -2318,8 +2318,17 @@ xfs_da3_swap_lastblock(
- 	 * Copy the last block into the dead buffer and log it.
- 	 */
- 	memcpy(dead_buf->b_addr, last_buf->b_addr, args->geo->blksize);
--	xfs_trans_log_buf(tp, dead_buf, 0, args->geo->blksize - 1);
- 	dead_info = dead_buf->b_addr;
-+	/*
-+	 * If xfs enable crc, the node/leaf block records its blkno, we
-+	 * must update it.
-+	 */
-+	if (xfs_has_crc(mp)) {
-+		struct xfs_da3_blkinfo *da3 = container_of(dead_info, struct xfs_da3_blkinfo, hdr);
-+
-+		da3->blkno = cpu_to_be64(xfs_buf_daddr(dead_buf));
-+	}
-+	xfs_trans_log_buf(tp, dead_buf, 0, args->geo->blksize - 1);
- 	/*
- 	 * Get values from the moved block.
- 	 */
+We're about to toss the buffer because we can't write it back. The
+very next function call is xfs_buf_stale(), which invalidates the
+buffer and it's contents. It should not have XBF_DONE and XBF_STALE
+set at the same time.
+
+It may be worthwhile to move the clearing of XBF_DONE to be inside
+xfs_buf_stale(), but I'd have to look at the rest of the code to see
+if that's the right thing to do or not.
+
+>  - xfs_do_force_shutdown sets XBF_DONE on the super block buffer on
+>    a foced shutdown
+
+No idea why that exists.  I'd have to go code spelunking to find out
+what it was needed for.
+
+>  - xfs_trans_get_buf_map sets XBF_DONE on a forced shutdown
+
+That code just looks broken. we're in the middle of a transaction
+doing a buffer read, we found a match and raced with a shutdown so
+we stale the buffer, mark it donei, bump the recursion count and
+return it without an error?
+
+A quick spelunk through history indicates stale vs undelay-write vs
+XFS_BUF_DONE was an inconsistent mess. We fixed all the stale vs
+done nastiness in the xfs_trans_buf_read() path, but missed this
+case in the get path.
+
+As it is, I'd say the way shutdown racing is handled here is broken
+and could be fixed by returning -EIO instead of the staled buffer.
+The buffer is already linked into the transaction, so the
+transaction cancel in response to the IO error will handle the
+buffer appropriately....
+
+> So there's definitively a bunch of weird things not fully in line
+> with the straight forward answer.
+
+No surprises there - this is a 30 year old code base. Nothing looks
+particularly problematic, though.
+
+Cheers,
+
+Dave.
 -- 
-2.20.1
-
+Dave Chinner
+david@fromorbit.com
