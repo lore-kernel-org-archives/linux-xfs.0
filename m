@@ -1,52 +1,51 @@
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b="ZhGZC36q"
-Received: from mail-pf1-x42b.google.com (mail-pf1-x42b.google.com [IPv6:2607:f8b0:4864:20::42b])
-	by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 577741BD5
-	for <linux-xfs@vger.kernel.org>; Wed, 29 Nov 2023 00:46:18 -0800 (PST)
-Received: by mail-pf1-x42b.google.com with SMTP id d2e1a72fcca58-6cb66fbc63dso525045b3a.0
-        for <linux-xfs@vger.kernel.org>; Wed, 29 Nov 2023 00:46:18 -0800 (PST)
+	dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b="U7tJR3QQ"
+Received: from mail-oa1-x2e.google.com (mail-oa1-x2e.google.com [IPv6:2001:4860:4864:20::2e])
+	by lindbergh.monkeyblade.net (Postfix) with ESMTPS id CE43419BC
+	for <linux-xfs@vger.kernel.org>; Wed, 29 Nov 2023 00:50:53 -0800 (PST)
+Received: by mail-oa1-x2e.google.com with SMTP id 586e51a60fabf-1fa21f561a1so2049192fac.3
+        for <linux-xfs@vger.kernel.org>; Wed, 29 Nov 2023 00:50:53 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=fromorbit-com.20230601.gappssmtp.com; s=20230601; t=1701247578; x=1701852378; darn=vger.kernel.org;
+        d=fromorbit-com.20230601.gappssmtp.com; s=20230601; t=1701247853; x=1701852653; darn=vger.kernel.org;
         h=in-reply-to:content-disposition:mime-version:references:message-id
          :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
-        bh=sZKM4U35noERGcY1ovETgfkyHKzxojpfXxj8pJoYn48=;
-        b=ZhGZC36qeM4t2enk4yUmEs22fambWvct/lno4TkeV9D4zfNadw3mXf0Bdvm5lDToSt
-         4S6NUyIOhQoabp+jQX7TUuqH9qUrjNmXg5jp70vAQKtLCWmmt3foXGCr13poI7Z64gKL
-         ROUcITOoL8DfFdRtsgDtLja+05DKv4u0Ofsvd46ilsYPRHFhw5dfvltIJtuvy77f8N2M
-         U8TgT0GUk9alKQiFa2tr1EZUcCD7clnCIHYjaLG+H9cMilUjVKUhap5ihZoH7ZZAcVqS
-         fGPrgrSoUC2lT14m4amukiHmpagxb3w4SgM7nc4/E+ylyY5dn9rigu8z6QBhxXZF/Biw
-         O+jQ==
+        bh=JYXSXkaMtC15qsDcPr/TTfVheSuOP1FzJ66FIQNOxts=;
+        b=U7tJR3QQmhRzC0U1jTzz+rCEt8e/QkKgxdNZ5mmbtLzJchlyR/OebRKUIkUoIfO7b2
+         d8yAeWKQsxxkAJu3zJZqTy05D+9XLvdl0h3GMfPzj6iHXUAMDiBF8HhWjXGiOT2Nuz8Z
+         lLuzBCesb62JLBYYH0gsk1GQVqJi/l8TMa/8bb1LK+noadPqcfmNQV2X68xPTdWfDWdJ
+         X3OhjY9LQaLF7rxMLNnFl7BPlrN0OilTiaHtK2hb13Gtq3MBjhDkwUUBWObnL7kHECUA
+         ED5fA14d/LFdkpKt7a89nl16+E6foiAr5bbweTqorxhVJ/cPrhoPUAG+1IpG305/+Lup
+         CX+g==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1701247578; x=1701852378;
+        d=1e100.net; s=20230601; t=1701247853; x=1701852653;
         h=in-reply-to:content-disposition:mime-version:references:message-id
          :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
          :message-id:reply-to;
-        bh=sZKM4U35noERGcY1ovETgfkyHKzxojpfXxj8pJoYn48=;
-        b=Bz5FeidX53o6+MDikUdL5S93n/sgoOSmBh1TrpUaCBW1Ul6WQA2fF8x8uGbfJsYYw+
-         rIYxyZ+vZn+e4QrNZ4xGg9AKBMQAMUpDpoRU+S/apLfvklqRj7Qx+VdMvT8S1io8JhRQ
-         mjG1nxtBxZUmfA5WdFpWgSR+fYTH89n8gFQYU0/sGNpUWJ5IZNuVEAPD2qr2BWs5jyhD
-         hbYxVSkND4B3d3SNwtBSvx7O1dVH4tA5tUqsod6nlg0E28Xh0Jy3XKb3BEz8apjZGQIH
-         XEUt+lz0wntPnNpGdNlpEydgS6a8F1FogkXT53T6d2TbuXFGUP2UlcnYT+yuYchgNJwz
-         rvog==
-X-Gm-Message-State: AOJu0YyxzX2iPzdkO57bNB7U3ZVKyUE25H0m0+6lF27Ve8kvEh2SbPtO
-	ZsHlId7GQh1d5Mf1eQ9QTzmc2g==
-X-Google-Smtp-Source: AGHT+IEc8wF1VGyhEynP5TlEMzVCySl8Mf/fizHtJzQpmr9TiVDAMdNmoXgl8vd9MiTBm388hpeplA==
-X-Received: by 2002:a05:6a00:3986:b0:6c3:415a:5c05 with SMTP id fi6-20020a056a00398600b006c3415a5c05mr25465361pfb.14.1701247577726;
-        Wed, 29 Nov 2023 00:46:17 -0800 (PST)
+        bh=JYXSXkaMtC15qsDcPr/TTfVheSuOP1FzJ66FIQNOxts=;
+        b=axNfKTmpodG70hJxBgefJGE0UdDlieTC4+/6A8jWjhn6yi9Dx/Eks2amgxPhhbeoc0
+         TfI6IPGZnZ7bUzVi2qkLb/NoX3qDd4BycCi1fpIoMAdk4qtSfWLuD69FMTHSou5nehiK
+         CJmG86YkhLi2OIDHC/Bb2BouQ/Naup/rcvI2cP/iCFdBvl4itQxC2xyqAIxiGOLGq2Uj
+         WUW9fE2234z935DiirdhYJMawioQ+NpptquqQntSL521uwEXwgAEubPzggfSiGhIRWYC
+         et19J2A5i5Jg9zOTn1KotW9koRCCuHUlbpm+yK0OiPpNSLAVws91szYPcg3jQXSDDLLq
+         xsVg==
+X-Gm-Message-State: AOJu0YzIPMh96YAHqNr0FkkHkXLiAar0zDFuPgadJroZsdlzWgT2AwyL
+	RviqjOAgLMfZSn0rIaah7GiZKw==
+X-Google-Smtp-Source: AGHT+IFlAixmOkdEDtxGfEJ9lx0Lw0rR4W/R4CexjDMnl8uFGG693OejX8yVG2qZwlv9TCQdJRYbOw==
+X-Received: by 2002:a05:6870:9d8d:b0:1f9:5699:e53c with SMTP id pv13-20020a0568709d8d00b001f95699e53cmr23027716oab.36.1701247853109;
+        Wed, 29 Nov 2023 00:50:53 -0800 (PST)
 Received: from dread.disaster.area (pa49-180-125-5.pa.nsw.optusnet.com.au. [49.180.125.5])
-        by smtp.gmail.com with ESMTPSA id fa21-20020a056a002d1500b006c33ae95898sm10221200pfb.78.2023.11.29.00.46.16
+        by smtp.gmail.com with ESMTPSA id hy13-20020a056a006a0d00b006cbb71186f7sm10357652pfb.29.2023.11.29.00.50.52
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 29 Nov 2023 00:46:17 -0800 (PST)
+        Wed, 29 Nov 2023 00:50:52 -0800 (PST)
 Received: from dave by dread.disaster.area with local (Exim 4.96)
 	(envelope-from <david@fromorbit.com>)
-	id 1r8GD0-001RDE-0s;
-	Wed, 29 Nov 2023 19:46:14 +1100
-Date: Wed, 29 Nov 2023 19:46:14 +1100
+	id 1r8GHS-001RGM-0j;
+	Wed, 29 Nov 2023 19:50:50 +1100
+Date: Wed, 29 Nov 2023 19:50:50 +1100
 From: Dave Chinner <david@fromorbit.com>
-To: Christoph Hellwig <hch@infradead.org>
+To: "Darrick J. Wong" <djwong@kernel.org>
 Cc: Jiachen Zhang <zhangjiachen.jaycee@bytedance.com>,
 	Chandan Babu R <chandan.babu@oracle.com>,
-	"Darrick J. Wong" <djwong@kernel.org>,
 	Dave Chinner <dchinner@redhat.com>,
 	Allison Henderson <allison.henderson@oracle.com>,
 	Zhang Tianci <zhangtianci.1997@bytedance.com>,
@@ -54,11 +53,11 @@ Cc: Jiachen Zhang <zhangjiachen.jaycee@bytedance.com>,
 	linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org,
 	xieyongji@bytedance.com, me@jcix.top
 Subject: Re: [PATCH 2/2] xfs: update dir3 leaf block metadata after swap
-Message-ID: <ZWb6VowUBY2eE5IA@dread.disaster.area>
+Message-ID: <ZWb7aiXDIC/BNl3L@dread.disaster.area>
 References: <20231128053202.29007-1-zhangjiachen.jaycee@bytedance.com>
  <20231128053202.29007-3-zhangjiachen.jaycee@bytedance.com>
  <ZWZ0qGWpBTW6Iynt@dread.disaster.area>
- <ZWbbYTKUYaGOo86O@infradead.org>
+ <20231129063433.GD361584@frogsfrogsfrogs>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -67,45 +66,75 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <ZWbbYTKUYaGOo86O@infradead.org>
+In-Reply-To: <20231129063433.GD361584@frogsfrogsfrogs>
 
-On Tue, Nov 28, 2023 at 10:34:09PM -0800, Christoph Hellwig wrote:
+On Tue, Nov 28, 2023 at 10:34:33PM -0800, Darrick J. Wong wrote:
 > On Wed, Nov 29, 2023 at 10:15:52AM +1100, Dave Chinner wrote:
+> > On Tue, Nov 28, 2023 at 01:32:02PM +0800, Jiachen Zhang wrote:
+> > > From: Zhang Tianci <zhangtianci.1997@bytedance.com>
+> > > 
+> > > xfs_da3_swap_lastblock() copy the last block content to the dead block,
+> > > but do not update the metadata in it. We need update some metadata
+> > > for some kinds of type block, such as dir3 leafn block records its
+> > > blkno, we shall update it to the dead block blkno. Otherwise,
+> > > before write the xfs_buf to disk, the verify_write() will fail in
+> > > blk_hdr->blkno != xfs_buf->b_bn, then xfs will be shutdown.
+> > > 
+> > > We will get this warning:
+> > > 
+> > >   XFS (dm-0): Metadata corruption detected at xfs_dir3_leaf_verify+0xa8/0xe0 [xfs], xfs_dir3_leafn block 0x178
+> > >   XFS (dm-0): Unmount and run xfs_repair
+> > >   XFS (dm-0): First 128 bytes of corrupted metadata buffer:
+> > >   00000000e80f1917: 00 80 00 0b 00 80 00 07 3d ff 00 00 00 00 00 00  ........=.......
+> > >   000000009604c005: 00 00 00 00 00 00 01 a0 00 00 00 00 00 00 00 00  ................
+> > >   000000006b6fb2bf: e4 44 e3 97 b5 64 44 41 8b 84 60 0e 50 43 d9 bf  .D...dDA..`.PC..
+> > >   00000000678978a2: 00 00 00 00 00 00 00 83 01 73 00 93 00 00 00 00  .........s......
+> > >   00000000b28b247c: 99 29 1d 38 00 00 00 00 99 29 1d 40 00 00 00 00  .).8.....).@....
+> > >   000000002b2a662c: 99 29 1d 48 00 00 00 00 99 49 11 00 00 00 00 00  .).H.....I......
+> > >   00000000ea2ffbb8: 99 49 11 08 00 00 45 25 99 49 11 10 00 00 48 fe  .I....E%.I....H.
+> > >   0000000069e86440: 99 49 11 18 00 00 4c 6b 99 49 11 20 00 00 4d 97  .I....Lk.I. ..M.
+> > >   XFS (dm-0): xfs_do_force_shutdown(0x8) called from line 1423 of file fs/xfs/xfs_buf.c.  Return address = 00000000c0ff63c1
+> > >   XFS (dm-0): Corruption of in-memory data detected.  Shutting down filesystem
+> > >   XFS (dm-0): Please umount the filesystem and rectify the problem(s)
+> > > 
+> > > From the log above, we know xfs_buf->b_no is 0x178, but the block's hdr record
+> > > its blkno is 0x1a0.
+> > > 
+> > > Fixes: 24df33b45ecf ("xfs: add CRC checking to dir2 leaf blocks")
+> > > Signed-off-by: Zhang Tianci <zhangtianci.1997@bytedance.com>
+> > > ---
+> > >  fs/xfs/libxfs/xfs_da_btree.c | 12 +++++++++++-
+> > >  1 file changed, 11 insertions(+), 1 deletion(-)
+> > > 
+> > > diff --git a/fs/xfs/libxfs/xfs_da_btree.c b/fs/xfs/libxfs/xfs_da_btree.c
+> > > index e576560b46e9..35f70e4c6447 100644
+> > > --- a/fs/xfs/libxfs/xfs_da_btree.c
+> > > +++ b/fs/xfs/libxfs/xfs_da_btree.c
+> > > @@ -2318,8 +2318,18 @@ xfs_da3_swap_lastblock(
+> > >  	 * Copy the last block into the dead buffer and log it.
+> > >  	 */
+> > >  	memcpy(dead_buf->b_addr, last_buf->b_addr, args->geo->blksize);
+> > > -	xfs_trans_log_buf(tp, dead_buf, 0, args->geo->blksize - 1);
+> > >  	dead_info = dead_buf->b_addr;
 > > > +	/*
 > > > +	 * Update the moved block's blkno if it's a dir3 leaf block
 > > > +	 */
 > > > +	if (dead_info->magic == cpu_to_be16(XFS_DIR3_LEAF1_MAGIC) ||
 > > > +	    dead_info->magic == cpu_to_be16(XFS_DIR3_LEAFN_MAGIC) ||
 > > > +	    dead_info->magic == cpu_to_be16(XFS_ATTR3_LEAF_MAGIC)) {
-> > 
-> > a.k.a.
-> > 
-> > 	if (xfs_has_crc(mp)) {
-> > 
-> > i.e. this is not specific to the buffer type being processed, it's
-> > specific to v4 vs v5 on-disk format. Hence it's a fs-feature check,
-> > not a block magic number check.
 > 
-> We have these magic based checks in quite a few places right now,
-> so I'm not surprised that Jiachen picked it up from there..
+> On second thought, does this code have to handle XFS_DA3_NODE_MAGIC as
+> well?
 
-Yes, but that doesn't mean the magic number check has been used
-correctly here.
+Yes, it does. The code to decode the block as a danode instead of
+leaf1/leafn block is a few lines further down.
 
-That is, we use the magic number check when the code has a
-conditional on the type of buffer being processed (i.e. what block
-type are we operating on? e.g. DANODE vs LEAFN as is checked a few
-lines further down in this code). When the conditional
-is "what on-disk format are we operating on?" such as when we are
-decoding headers or running verifiers, we use xfs_has_crc() because
-we can't trust magic numbers to be correct prior to validation.
+This code does not support ATTR_LEAF blocks, however.
+xfs_da_shrink_inode() will only try to swap blocks on the data fork,
+never on the attribute fork. That's largely a moot issue, though.
 
-Hence we use xfs_has_crc() to determine how to decode/encode/verify
-the structure header, not the magic number in the block.
+-Dave.
 
-Cheers,
-
-Dave.
 -- 
 Dave Chinner
 david@fromorbit.com
