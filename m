@@ -1,34 +1,44 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 683E23D8F;
-	Wed, 29 Nov 2023 05:14:39 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1BA5F6FCA;
+	Wed, 29 Nov 2023 05:24:00 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Bmxrjck3"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id A80F0C433C8;
-	Wed, 29 Nov 2023 05:14:39 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="XjkTUBkk"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 928D0C433C7;
+	Wed, 29 Nov 2023 05:24:00 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1701234879;
-	bh=3vskK8wdeN6V29tl59r57aLzkzTNpZbEqXqUX4c7m9k=;
+	s=k20201202; t=1701235440;
+	bh=0RjlCL8ZpHOp9jN53bdGFyIhRGuacuo/NihvRqf9ep8=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=Bmxrjck3oh+/eGkVx+LPT6K+j6AJ8SGIbVOACNtYzCazsGf5+QenvjMFJQUxBGMQE
-	 SJI5bT07l9ERLb8kllcrIT80jJRbNXk4rELRk0MGARc7QxnR4xQICKUNfW1+P3lORm
-	 iYxoSZDlBkFBsd6F1KbqBZFd8hV2r8jsHoS8AzNJEx088N538oSIHTegAnEycom6AU
-	 64pH1omlV8XqLZnf1m9Aj1Cdn7g5+FhpeI325KsFhDLI4kYpW1FV9qFGWGFnvamWag
-	 COuwtB/pw0iPYBcr48mF+//3rhm+sQUwwbMTKAyxHPnTOXXhUEb41IJdlHOOgCmdpy
-	 eEvuNQW/ElLZg==
-Date: Tue, 28 Nov 2023 21:14:39 -0800
+	b=XjkTUBkkvuiepU3/L/B7LqhGvH6OXLqvyWlSpZFV/AYQxim0dYpGTjbAFj6ZsqwaM
+	 FLDfKb2KpO18FJwoSHsZIjxWVHfdJHUd6l1Djmk/WvFyRfIKF3tdzV4N17LkWlwitl
+	 NtXM2ZN1l5FEU/tURcGsliHz8ThEokdX1t4UUIVaaWg7ZyxiubI9mpgkI2/8/DokDc
+	 +1PHXs2LXxiVsAodh8eI3gGJLf1hRxANAntFy3VCQqs8B/sAq9+yGWtqWBlot7r/ix
+	 y4Fm4IG515HvkMgIEVeGg10JKN0QOISOVDyPQJRA2bHZ82LPkBDVKjK6O0bgqpNCu1
+	 VUUxRhDooeqaA==
+Date: Tue, 28 Nov 2023 21:24:00 -0800
 From: "Darrick J. Wong" <djwong@kernel.org>
-To: Christoph Hellwig <hch@lst.de>
-Cc: Christian Brauner <brauner@kernel.org>,
+To: Bagas Sanjaya <bagasdotme@gmail.com>
+Cc: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	Linux Documentation <linux-doc@vger.kernel.org>,
+	Linux XFS <linux-xfs@vger.kernel.org>,
+	Linux Kernel Workflows <workflows@vger.kernel.org>,
+	Jonathan Corbet <corbet@lwn.net>,
 	Chandan Babu R <chandan.babu@oracle.com>,
-	Zhang Yi <yi.zhang@huaweicloud.com>,
-	Ritesh Harjani <ritesh.list@gmail.com>, linux-xfs@vger.kernel.org,
-	linux-fsdevel@vger.kernel.org
-Subject: Re: [PATCH 12/13] iomap: submit ioends immediately
-Message-ID: <20231129051439.GR4167244@frogsfrogsfrogs>
-References: <20231126124720.1249310-1-hch@lst.de>
- <20231126124720.1249310-13-hch@lst.de>
+	Namjae Jeon <linkinjeon@kernel.org>,
+	Dave Chinner <dchinner@redhat.com>,
+	Steve French <stfrench@microsoft.com>,
+	"Matthew Wilcox (Oracle)" <willy@infradead.org>,
+	Allison Henderson <allison.henderson@oracle.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Charles Han <hanchunchao@inspur.com>,
+	Vegard Nossum <vegard.nossum@oracle.com>
+Subject: Re: [PATCH RESEND v2] Documentation: xfs: consolidate XFS docs into
+ its own subdirectory
+Message-ID: <20231129052400.GS4167244@frogsfrogsfrogs>
+References: <20231128124522.28499-1-bagasdotme@gmail.com>
+ <20231128163255.GV2766956@frogsfrogsfrogs>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -37,296 +47,190 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20231126124720.1249310-13-hch@lst.de>
+In-Reply-To: <20231128163255.GV2766956@frogsfrogsfrogs>
 
-On Sun, Nov 26, 2023 at 01:47:19PM +0100, Christoph Hellwig wrote:
-> Currently the writeback code delays submitting fill ioends until we
-> reach the end of the folio.  The reason for that is that otherwise
-> the end I/O handler could clear the writeback bit before we've even
-> finished submitting all I/O for the folio.
+On Tue, Nov 28, 2023 at 08:32:55AM -0800, Darrick J. Wong wrote:
+> On Tue, Nov 28, 2023 at 07:45:22PM +0700, Bagas Sanjaya wrote:
+> > XFS docs are currently in upper-level Documentation/filesystems.
+> > Although these are currently 4 docs, they are already outstanding as
+> > a group and can be moved to its own subdirectory.
+> > 
+> > Consolidate them into Documentation/filesystems/xfs/.
+> > 
+> > Signed-off-by: Bagas Sanjaya <bagasdotme@gmail.com>
+> > ---
+> > Changes since v1 [1]:
+> > 
+> >   * Also update references to old doc path to address kernel test robot
+> >     warnings [2].
+> > 
+> > [1]: https://lore.kernel.org/linux-doc/20231121095658.28254-1-bagasdotme@gmail.com/
+> > [2]: https://lore.kernel.org/linux-doc/a9abc5ec-f3cd-4a1a-81b9-a6900124d38b@gmail.com/
+> > 
+> >  Documentation/filesystems/index.rst                |  5 +----
+> >  Documentation/filesystems/xfs/index.rst            | 14 ++++++++++++++
+> >  .../{ => xfs}/xfs-delayed-logging-design.rst       |  0
+> >  .../{ => xfs}/xfs-maintainer-entry-profile.rst     |  0
+> >  .../{ => xfs}/xfs-online-fsck-design.rst           |  2 +-
+> >  .../{ => xfs}/xfs-self-describing-metadata.rst     |  0
+> >  .../maintainer/maintainer-entry-profile.rst        |  2 +-
+> >  MAINTAINERS                                        |  4 ++--
+> >  8 files changed, 19 insertions(+), 8 deletions(-)
+> >  create mode 100644 Documentation/filesystems/xfs/index.rst
+> >  rename Documentation/filesystems/{ => xfs}/xfs-delayed-logging-design.rst (100%)
+> >  rename Documentation/filesystems/{ => xfs}/xfs-maintainer-entry-profile.rst (100%)
+> >  rename Documentation/filesystems/{ => xfs}/xfs-online-fsck-design.rst (99%)
+> >  rename Documentation/filesystems/{ => xfs}/xfs-self-describing-metadata.rst (100%)
 > 
-> Add a bias to ifs->write_bytes_pending while we are submitting I/O
-> for a folio so that it never reaches zero until all I/O is completed
-> to prevent the early writeback bit clearing, and remove the now
-> superfluous submit_list.
+> I think the rst filename should drop the 'xfs-' prefix, e.g.
 > 
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
+> 	Documentation/filesystems/xfs/delayed-logging-design.rst
+> 
+> since that seems to be what most filesystems do:
 
-Looks ok, we'll see what happens in the last patch...
-Reviewed-by: Darrick J. Wong <djwong@kernel.org>
+Actually, ignore this suggestion.  I forgot that I have vim paths
+trained on the Documentation/filesystems/ directory, which means I'll
+lose the ability to
+
+:f xfs-online-fsck-design.rst
+
+and pop it open.  Not that I expect many more filesystems to grow online
+fsck capabilities, but you get the point...
+
+> Documentation/filesystems/caching/backend-api.rst
+> Documentation/filesystems/caching/cachefiles.rst
+> Documentation/filesystems/caching/fscache.rst
+> Documentation/filesystems/caching/index.rst
+> Documentation/filesystems/caching/netfs-api.rst
+> Documentation/filesystems/cifs/cifsroot.rst
+> Documentation/filesystems/cifs/index.rst
+> Documentation/filesystems/cifs/ksmbd.rst
+> Documentation/filesystems/ext4/about.rst
+> Documentation/filesystems/ext4/allocators.rst
+> Documentation/filesystems/ext4/attributes.rst
+> <snip>
+> Documentation/filesystems/ext4/special_inodes.rst
+> Documentation/filesystems/ext4/super.rst
+> Documentation/filesystems/ext4/verity.rst
+> Documentation/filesystems/nfs/client-identifier.rst
+> Documentation/filesystems/nfs/exporting.rst
+> Documentation/filesystems/nfs/index.rst
+> Documentation/filesystems/nfs/knfsd-stats.rst
+> Documentation/filesystems/nfs/nfs41-server.rst
+> Documentation/filesystems/nfs/pnfs.rst
+> Documentation/filesystems/nfs/reexport.rst
+> Documentation/filesystems/nfs/rpc-cache.rst
+> Documentation/filesystems/nfs/rpc-server-gss.rst
+> Documentation/filesystems/smb/cifsroot.rst
+> Documentation/filesystems/smb/index.rst
+> Documentation/filesystems/smb/ksmbd.rst
+> Documentation/filesystems/spufs/index.rst
+> Documentation/filesystems/spufs/spu_create.rst
+> Documentation/filesystems/spufs/spufs.rst
+> Documentation/filesystems/spufs/spu_run.rst
+> 
+> > diff --git a/Documentation/filesystems/index.rst b/Documentation/filesystems/index.rst
+> > index 09cade7eaefc8c..e18bc5ae3b35f8 100644
+> > --- a/Documentation/filesystems/index.rst
+> > +++ b/Documentation/filesystems/index.rst
+> > @@ -121,8 +121,5 @@ Documentation for filesystem implementations.
+> >     udf
+> >     virtiofs
+> >     vfat
+> > -   xfs-delayed-logging-design
+> > -   xfs-maintainer-entry-profile
+> > -   xfs-self-describing-metadata
+> > -   xfs-online-fsck-design
+> > +   xfs/index
+> >     zonefs
+> > diff --git a/Documentation/filesystems/xfs/index.rst b/Documentation/filesystems/xfs/index.rst
+> > new file mode 100644
+> > index 00000000000000..ab66c57a5d18ea
+> > --- /dev/null
+> > +++ b/Documentation/filesystems/xfs/index.rst
+> > @@ -0,0 +1,14 @@
+> > +.. SPDX-License-Identifier: GPL-2.0
+> > +
+> > +============================
+> > +XFS Filesystem Documentation
+> > +============================
+> > +
+> > +.. toctree::
+> > +   :maxdepth: 2
+> > +   :numbered:
+> > +
+> > +   xfs-delayed-logging-design
+> > +   xfs-maintainer-entry-profile
+> > +   xfs-self-describing-metadata
+> > +   xfs-online-fsck-design
+> > diff --git a/Documentation/filesystems/xfs-delayed-logging-design.rst b/Documentation/filesystems/xfs/xfs-delayed-logging-design.rst
+> > similarity index 100%
+> > rename from Documentation/filesystems/xfs-delayed-logging-design.rst
+> > rename to Documentation/filesystems/xfs/xfs-delayed-logging-design.rst
+> > diff --git a/Documentation/filesystems/xfs-maintainer-entry-profile.rst b/Documentation/filesystems/xfs/xfs-maintainer-entry-profile.rst
+> > similarity index 100%
+> > rename from Documentation/filesystems/xfs-maintainer-entry-profile.rst
+> > rename to Documentation/filesystems/xfs/xfs-maintainer-entry-profile.rst
+> > diff --git a/Documentation/filesystems/xfs-online-fsck-design.rst b/Documentation/filesystems/xfs/xfs-online-fsck-design.rst
+> > similarity index 99%
+> > rename from Documentation/filesystems/xfs-online-fsck-design.rst
+> > rename to Documentation/filesystems/xfs/xfs-online-fsck-design.rst
+> > index a0678101a7d02d..352516feef6ffe 100644
+> > --- a/Documentation/filesystems/xfs-online-fsck-design.rst
+> > +++ b/Documentation/filesystems/xfs/xfs-online-fsck-design.rst
+> > @@ -962,7 +962,7 @@ disk, but these buffer verifiers cannot provide any consistency checking
+> >  between metadata structures.
+> >  
+> >  For more information, please see the documentation for
+> > -Documentation/filesystems/xfs-self-describing-metadata.rst
+> > +Documentation/filesystems/xfs/xfs-self-describing-metadata.rst
+> >  
+> >  Reverse Mapping
+> >  ---------------
+> > diff --git a/Documentation/filesystems/xfs-self-describing-metadata.rst b/Documentation/filesystems/xfs/xfs-self-describing-metadata.rst
+> > similarity index 100%
+> > rename from Documentation/filesystems/xfs-self-describing-metadata.rst
+> > rename to Documentation/filesystems/xfs/xfs-self-describing-metadata.rst
+> > diff --git a/Documentation/maintainer/maintainer-entry-profile.rst b/Documentation/maintainer/maintainer-entry-profile.rst
+> > index 7ad4bfc2cc038a..18cee1edaecb6f 100644
+> > --- a/Documentation/maintainer/maintainer-entry-profile.rst
+> > +++ b/Documentation/maintainer/maintainer-entry-profile.rst
+> > @@ -105,4 +105,4 @@ to do something different in the near future.
+> >     ../driver-api/media/maintainer-entry-profile
+> >     ../driver-api/vfio-pci-device-specific-driver-acceptance
+> >     ../nvme/feature-and-quirk-policy
+> > -   ../filesystems/xfs-maintainer-entry-profile
+> > +   ../filesystems/xfs/xfs-maintainer-entry-profile
+> > diff --git a/MAINTAINERS b/MAINTAINERS
+> > index ea790149af7951..fd288ac57e19fb 100644
+> > --- a/MAINTAINERS
+> > +++ b/MAINTAINERS
+> > @@ -23893,10 +23893,10 @@ S:	Supported
+> >  W:	http://xfs.org/
+> >  C:	irc://irc.oftc.net/xfs
+> >  T:	git git://git.kernel.org/pub/scm/fs/xfs/xfs-linux.git
+> > -P:	Documentation/filesystems/xfs-maintainer-entry-profile.rst
+> > +P:	Documentation/filesystems/xfs/xfs-maintainer-entry-profile.rst
+> >  F:	Documentation/ABI/testing/sysfs-fs-xfs
+> >  F:	Documentation/admin-guide/xfs.rst
+> > -F:	Documentation/filesystems/xfs-*
+> > +F:	Documentation/filesystems/xfs/xfs-*
+> 
+> Shouldn't this be "Documentation/filesystems/xfs/*" ?
+
+...though this suggestion remains standing.
 
 --D
 
-> ---
->  fs/iomap/buffered-io.c | 157 ++++++++++++++++++++---------------------
->  1 file changed, 75 insertions(+), 82 deletions(-)
+> --D
 > 
-> diff --git a/fs/iomap/buffered-io.c b/fs/iomap/buffered-io.c
-> index 9f223820f60d22..a01b0686e7c8a0 100644
-> --- a/fs/iomap/buffered-io.c
-> +++ b/fs/iomap/buffered-io.c
-> @@ -1620,30 +1620,34 @@ static void iomap_writepage_end_bio(struct bio *bio)
->   * Submit the final bio for an ioend.
->   *
->   * If @error is non-zero, it means that we have a situation where some part of
-> - * the submission process has failed after we've marked pages for writeback
-> - * and unlocked them.  In this situation, we need to fail the bio instead of
-> - * submitting it.  This typically only happens on a filesystem shutdown.
-> + * the submission process has failed after we've marked pages for writeback.
-> + * We cannot cancel ioend directly in that case, so call the bio end I/O handler
-> + * with the error status here to run the normal I/O completion handler to clear
-> + * the writeback bit and let the file system proess the errors.
->   */
-> -static int
-> -iomap_submit_ioend(struct iomap_writepage_ctx *wpc, struct iomap_ioend *ioend,
-> -		int error)
-> +static int iomap_submit_ioend(struct iomap_writepage_ctx *wpc, int error)
->  {
-> +	if (!wpc->ioend)
-> +		return error;
-> +
-> +	/*
-> +	 * Let the file systems prepare the I/O submission and hook in an I/O
-> +	 * comletion handler.  This also needs to happen in case after a
-> +	 * failure happened so that the file system end I/O handler gets called
-> +	 * to clean up.
-> +	 */
->  	if (wpc->ops->prepare_ioend)
-> -		error = wpc->ops->prepare_ioend(ioend, error);
-> +		error = wpc->ops->prepare_ioend(wpc->ioend, error);
-> +
->  	if (error) {
-> -		/*
-> -		 * If we're failing the IO now, just mark the ioend with an
-> -		 * error and finish it.  This will run IO completion immediately
-> -		 * as there is only one reference to the ioend at this point in
-> -		 * time.
-> -		 */
-> -		ioend->io_bio.bi_status = errno_to_blk_status(error);
-> -		bio_endio(&ioend->io_bio);
-> -		return error;
-> +		wpc->ioend->io_bio.bi_status = errno_to_blk_status(error);
-> +		bio_endio(&wpc->ioend->io_bio);
-> +	} else {
-> +		submit_bio(&wpc->ioend->io_bio);
->  	}
->  
-> -	submit_bio(&ioend->io_bio);
-> -	return 0;
-> +	wpc->ioend = NULL;
-> +	return error;
->  }
->  
->  static struct iomap_ioend *iomap_alloc_ioend(struct iomap_writepage_ctx *wpc,
-> @@ -1698,19 +1702,28 @@ iomap_can_add_to_ioend(struct iomap_writepage_ctx *wpc, loff_t offset)
->  /*
->   * Test to see if we have an existing ioend structure that we could append to
->   * first; otherwise finish off the current ioend and start another.
-> + *
-> + * If a new ioend is created and cached, the old ioend is submitted to the block
-> + * layer instantly.  Batching optimisations are provided by higher level block
-> + * plugging.
-> + *
-> + * At the end of a writeback pass, there will be a cached ioend remaining on the
-> + * writepage context that the caller will need to submit.
->   */
-> -static void iomap_add_to_ioend(struct iomap_writepage_ctx *wpc,
-> +static int iomap_add_to_ioend(struct iomap_writepage_ctx *wpc,
->  		struct writeback_control *wbc, struct folio *folio,
-> -		struct inode *inode, loff_t pos, struct list_head *iolist)
-> +		struct inode *inode, loff_t pos)
->  {
->  	struct iomap_folio_state *ifs = folio->private;
->  	unsigned len = i_blocksize(inode);
->  	size_t poff = offset_in_folio(folio, pos);
-> +	int error;
->  
->  	if (!wpc->ioend || !iomap_can_add_to_ioend(wpc, pos)) {
->  new_ioend:
-> -		if (wpc->ioend)
-> -			list_add(&wpc->ioend->io_list, iolist);
-> +		error = iomap_submit_ioend(wpc, 0);
-> +		if (error)
-> +			return error;
->  		wpc->ioend = iomap_alloc_ioend(wpc, wbc, inode, pos);
->  	}
->  
-> @@ -1721,12 +1734,12 @@ static void iomap_add_to_ioend(struct iomap_writepage_ctx *wpc,
->  		atomic_add(len, &ifs->write_bytes_pending);
->  	wpc->ioend->io_size += len;
->  	wbc_account_cgroup_owner(wbc, &folio->page, len);
-> +	return 0;
->  }
->  
->  static int iomap_writepage_map_blocks(struct iomap_writepage_ctx *wpc,
->  		struct writeback_control *wbc, struct folio *folio,
-> -		struct inode *inode, u64 pos, unsigned *count,
-> -		struct list_head *submit_list)
-> +		struct inode *inode, u64 pos, unsigned *count)
->  {
->  	int error;
->  
-> @@ -1743,7 +1756,7 @@ static int iomap_writepage_map_blocks(struct iomap_writepage_ctx *wpc,
->  	case IOMAP_HOLE:
->  		break;
->  	default:
-> -		iomap_add_to_ioend(wpc, wbc, folio, inode, pos, submit_list);
-> +		iomap_add_to_ioend(wpc, wbc, folio, inode, pos);
->  		(*count)++;
->  	}
->  
-> @@ -1820,35 +1833,21 @@ static bool iomap_writepage_handle_eof(struct folio *folio, struct inode *inode,
->  	return true;
->  }
->  
-> -/*
-> - * We implement an immediate ioend submission policy here to avoid needing to
-> - * chain multiple ioends and hence nest mempool allocations which can violate
-> - * the forward progress guarantees we need to provide. The current ioend we're
-> - * adding blocks to is cached in the writepage context, and if the new block
-> - * doesn't append to the cached ioend, it will create a new ioend and cache that
-> - * instead.
-> - *
-> - * If a new ioend is created and cached, the old ioend is returned and queued
-> - * locally for submission once the entire page is processed or an error has been
-> - * detected.  While ioends are submitted immediately after they are completed,
-> - * batching optimisations are provided by higher level block plugging.
-> - *
-> - * At the end of a writeback pass, there will be a cached ioend remaining on the
-> - * writepage context that the caller will need to submit.
-> - */
->  static int iomap_writepage_map(struct iomap_writepage_ctx *wpc,
->  		struct writeback_control *wbc, struct folio *folio)
->  {
->  	struct iomap_folio_state *ifs = folio->private;
->  	struct inode *inode = folio->mapping->host;
-> -	struct iomap_ioend *ioend, *next;
->  	unsigned len = i_blocksize(inode);
->  	unsigned nblocks = i_blocks_per_folio(inode, folio);
->  	u64 pos = folio_pos(folio);
->  	u64 end_pos = pos + folio_size(folio);
->  	unsigned count = 0;
->  	int error = 0, i;
-> -	LIST_HEAD(submit_list);
-> +
-> +	WARN_ON_ONCE(!folio_test_locked(folio));
-> +	WARN_ON_ONCE(folio_test_dirty(folio));
-> +	WARN_ON_ONCE(folio_test_writeback(folio));
->  
->  	trace_iomap_writepage(inode, pos, folio_size(folio));
->  
-> @@ -1858,12 +1857,27 @@ static int iomap_writepage_map(struct iomap_writepage_ctx *wpc,
->  	}
->  	WARN_ON_ONCE(end_pos <= pos);
->  
-> -	if (!ifs && nblocks > 1) {
-> -		ifs = ifs_alloc(inode, folio, 0);
-> -		iomap_set_range_dirty(folio, 0, end_pos - pos);
-> +	if (nblocks > 1) {
-> +		if (!ifs) {
-> +			ifs = ifs_alloc(inode, folio, 0);
-> +			iomap_set_range_dirty(folio, 0, end_pos - pos);
-> +		}
-> +
-> +		/*
-> +		 * Keep the I/O completion handler from clearing the writeback
-> +		 * bit until we have submitted all blocks by adding a bias to
-> +		 * ifs->write_bytes_pending, which is dropped after submitting
-> +		 * all blocks.
-> +		 */
-> +		WARN_ON_ONCE(atomic_read(&ifs->write_bytes_pending) != 0);
-> +		atomic_inc(&ifs->write_bytes_pending);
->  	}
->  
-> -	WARN_ON_ONCE(ifs && atomic_read(&ifs->write_bytes_pending) != 0);
-> +	/*
-> +	 * Set the writeback bit ASAP, as the I/O completion for the single
-> +	 * block per folio case happen hit as soon as we're submitting the bio.
-> +	 */
-> +	folio_start_writeback(folio);
->  
->  	/*
->  	 * Walk through the folio to find areas to write back. If we
-> @@ -1874,18 +1888,13 @@ static int iomap_writepage_map(struct iomap_writepage_ctx *wpc,
->  		if (ifs && !ifs_block_is_dirty(folio, ifs, i))
->  			continue;
->  		error = iomap_writepage_map_blocks(wpc, wbc, folio, inode, pos,
-> -				&count, &submit_list);
-> +				&count);
->  		if (error)
->  			break;
->  	}
->  	if (count)
->  		wpc->nr_folios++;
->  
-> -	WARN_ON_ONCE(!wpc->ioend && !list_empty(&submit_list));
-> -	WARN_ON_ONCE(!folio_test_locked(folio));
-> -	WARN_ON_ONCE(folio_test_writeback(folio));
-> -	WARN_ON_ONCE(folio_test_dirty(folio));
-> -
->  	/*
->  	 * We can have dirty bits set past end of file in page_mkwrite path
->  	 * while mapping the last partial folio. Hence it's better to clear
-> @@ -1893,35 +1902,21 @@ static int iomap_writepage_map(struct iomap_writepage_ctx *wpc,
->  	 */
->  	iomap_clear_range_dirty(folio, 0, folio_size(folio));
->  
-> -	if (error && !count) {
-> -		folio_unlock(folio);
-> -		goto done;
-> -	}
-> -
-> -	folio_start_writeback(folio);
-> -	folio_unlock(folio);
-> -
->  	/*
-> -	 * Preserve the original error if there was one; catch
-> -	 * submission errors here and propagate into subsequent ioend
-> -	 * submissions.
-> +	 * Usually the writeback bit is cleared by the I/O completion handler.
-> +	 * But we may end up either not actually writing any blocks, or (when
-> +	 * there are multiple blocks in a folio) all I/O might have finished
-> +	 * already at this point.  In that case we need to clear the writeback
-> +	 * bit ourselves right after unlocking the page.
->  	 */
-> -	list_for_each_entry_safe(ioend, next, &submit_list, io_list) {
-> -		int error2;
-> -
-> -		list_del_init(&ioend->io_list);
-> -		error2 = iomap_submit_ioend(wpc, ioend, error);
-> -		if (error2 && !error)
-> -			error = error2;
-> +	folio_unlock(folio);
-> +	if (ifs) {
-> +		if (atomic_dec_and_test(&ifs->write_bytes_pending))
-> +			folio_end_writeback(folio);
-> +	} else {
-> +		if (!count)
-> +			folio_end_writeback(folio);
->  	}
-> -
-> -	/*
-> -	 * We can end up here with no error and nothing to write only if we race
-> -	 * with a partial page truncate on a sub-page block sized filesystem.
-> -	 */
-> -	if (!count)
-> -		folio_end_writeback(folio);
-> -done:
->  	mapping_set_error(inode->i_mapping, error);
->  	return error;
->  }
-> @@ -1941,9 +1936,7 @@ iomap_writepages(struct address_space *mapping, struct writeback_control *wbc,
->  
->  	wpc->ops = ops;
->  	ret = write_cache_pages(mapping, wbc, iomap_do_writepage, wpc);
-> -	if (!wpc->ioend)
-> -		return ret;
-> -	return iomap_submit_ioend(wpc, wpc->ioend, ret);
-> +	return iomap_submit_ioend(wpc, ret);
->  }
->  EXPORT_SYMBOL_GPL(iomap_writepages);
->  
-> -- 
-> 2.39.2
-> 
+> >  F:	fs/xfs/
+> >  F:	include/uapi/linux/dqblk_xfs.h
+> >  F:	include/uapi/linux/fsmap.h
+> > 
+> > base-commit: 9c235dfc3d3f901fe22acb20f2ab37ff39f2ce02
+> > -- 
+> > An old man doll... just what I always wanted! - Clara
+> > 
+> > 
 > 
