@@ -1,122 +1,178 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A0E03101C6
-	for <linux-xfs@vger.kernel.org>; Wed, 29 Nov 2023 06:34:34 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="NoFywrii"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 15D5AC433C7;
-	Wed, 29 Nov 2023 06:34:34 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1701239674;
-	bh=gi+butBnjxFbdfipltyeJ8FK1caOXBc4/I7P659ZPfE=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=NoFywriiasU8itLSU9EpPZQ/kSoZlfUodkVhK0ezxHYU1qjnO7ONdm1WVcn0qzqmq
-	 ezxl9xTLIigFrWTlpl7ELkU2HSm7ZOjFDoEt69qE2WE1UQA8v/QpZkozfkKjf/Dc/e
-	 eTCEjpmHSO3h2Zd0Q0D0kF6zOVg1OCTXB8vppEPSR/jHFXijMHYTHGN+ftg2FIHf5J
-	 5KZ/xorJsEHKNBl5rdiqVD94/BWuoFPtaqttStoABr2Or7XTyaRUzrZjTHAxl9IoWd
-	 3s4MnEHtkxZF14X52rc0+3Uq91+AGWo1Ukie8vUPaxo8bQJxovocf+zb0wWTznT5ox
-	 gU+bIb0LvpJOQ==
-Date: Tue, 28 Nov 2023 22:34:33 -0800
-From: "Darrick J. Wong" <djwong@kernel.org>
-To: Dave Chinner <david@fromorbit.com>
-Cc: Jiachen Zhang <zhangjiachen.jaycee@bytedance.com>,
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="I9S1XxuX"
+Received: from mail-pj1-x102e.google.com (mail-pj1-x102e.google.com [IPv6:2607:f8b0:4864:20::102e])
+	by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 05F3610F4;
+	Tue, 28 Nov 2023 23:12:49 -0800 (PST)
+Received: by mail-pj1-x102e.google.com with SMTP id 98e67ed59e1d1-285f46e1cd4so1860513a91.1;
+        Tue, 28 Nov 2023 23:12:49 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20230601; t=1701241968; x=1701846768; darn=vger.kernel.org;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
+        bh=khXPSRzgdB+P5qMW7Yfo8kR2yxCphSgvlS03QencHrE=;
+        b=I9S1XxuXbsorlk7b4vYciu5DD243AiH6oYbUTFRn2RLBdcbqRdJUPZB4+qdteBT/0y
+         esISKmymL8ROikLAqb6Q7bVRY1riTE8Wfo/kKLKA6idWNfB3Iw5Lc60Vxg04r0KjJXoV
+         2nx0O6c1qXLHl13UmPkpW8sMonxXFM2yc24aS5SJrJF9O2La/Sv95YgPNGLJFtrIU8va
+         dmVkhtCEg89c421KMaqwOqPIqN8KGRwDHk8JN6COmWi5lXRm/bu43LNOnv90ZNheKtkt
+         nu1QbxevyHTGW56fRqd7cm0TkMU99YbUHfCtA/u0CkK/MkodSGorAxPlP7fc5OXhWjsJ
+         cLDA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1701241968; x=1701846768;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=khXPSRzgdB+P5qMW7Yfo8kR2yxCphSgvlS03QencHrE=;
+        b=V6/zNfrBmP5dFa17AYXsuZw2u+Cp9FKetOx81EGSBIVDF2WpO9p0xsFsVFXJJw9SQc
+         WIz+i9GDvM3Y5dIDe3+xWnc43nVlGFmQ45V73h2ux5qgDunsf3gCZqF9/63UNjl5PT6r
+         uEsaA5aYGKwaiBo/iqPwIadR1cTdtdYq8wIw8ji/fBRFnIhE6nxNGDH3wijnaosjdW4m
+         vP8uMqgGh3CnPrjZd0lwDnnolI82R5yIBcO7oO1OQs04hcl5rcQHyr6REeVfdg/lezPO
+         f9y3bUFSW51jf6cve/myzYieNnXT/0j4taC7uomTfx49CziTO6eZXwhxDWBIaSCQH7KQ
+         ZjAw==
+X-Gm-Message-State: AOJu0Yzb8zvmQT+UMpu5uWWRIS9RziFjXmTN3imrBkCf8kCce6Er4JGO
+	XrADk622DYZQkl6kzKK0MYg=
+X-Google-Smtp-Source: AGHT+IGYU+vcCLHGBjNmaSMH5vBeDivx8zWA+1KdLMs90vDtsTKrTOAMfB0N8kYmF4HoGyMC3TCikA==
+X-Received: by 2002:a17:90b:388d:b0:285:da91:69d9 with SMTP id mu13-20020a17090b388d00b00285da9169d9mr9002378pjb.9.1701241968369;
+        Tue, 28 Nov 2023 23:12:48 -0800 (PST)
+Received: from archie.me ([103.131.18.64])
+        by smtp.gmail.com with ESMTPSA id g8-20020a1709029f8800b001cf83962743sm9864131plq.250.2023.11.28.23.12.47
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Tue, 28 Nov 2023 23:12:47 -0800 (PST)
+Received: by archie.me (Postfix, from userid 1000)
+	id AF4A610205C74; Wed, 29 Nov 2023 14:12:45 +0700 (WIB)
+Date: Wed, 29 Nov 2023 14:12:45 +0700
+From: Bagas Sanjaya <bagasdotme@gmail.com>
+To: "Darrick J. Wong" <djwong@kernel.org>
+Cc: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	Linux Documentation <linux-doc@vger.kernel.org>,
+	Linux XFS <linux-xfs@vger.kernel.org>,
+	Linux Kernel Workflows <workflows@vger.kernel.org>,
+	Jonathan Corbet <corbet@lwn.net>,
 	Chandan Babu R <chandan.babu@oracle.com>,
+	Namjae Jeon <linkinjeon@kernel.org>,
 	Dave Chinner <dchinner@redhat.com>,
+	Steve French <stfrench@microsoft.com>,
+	"Matthew Wilcox (Oracle)" <willy@infradead.org>,
 	Allison Henderson <allison.henderson@oracle.com>,
-	Zhang Tianci <zhangtianci.1997@bytedance.com>,
-	Brian Foster <bfoster@redhat.com>, Ben Myers <bpm@sgi.com>,
-	linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org,
-	xieyongji@bytedance.com, me@jcix.top
-Subject: Re: [PATCH 2/2] xfs: update dir3 leaf block metadata after swap
-Message-ID: <20231129063433.GD361584@frogsfrogsfrogs>
-References: <20231128053202.29007-1-zhangjiachen.jaycee@bytedance.com>
- <20231128053202.29007-3-zhangjiachen.jaycee@bytedance.com>
- <ZWZ0qGWpBTW6Iynt@dread.disaster.area>
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Charles Han <hanchunchao@inspur.com>,
+	Vegard Nossum <vegard.nossum@oracle.com>
+Subject: Re: [PATCH RESEND v2] Documentation: xfs: consolidate XFS docs into
+ its own subdirectory
+Message-ID: <ZWbkbfjyDJS7jxDg@archie.me>
+References: <20231128124522.28499-1-bagasdotme@gmail.com>
+ <20231128163255.GV2766956@frogsfrogsfrogs>
+ <20231129052400.GS4167244@frogsfrogsfrogs>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: multipart/signed; micalg=pgp-sha512;
+	protocol="application/pgp-signature"; boundary="/eNx4OrSdA7OOxOK"
 Content-Disposition: inline
-In-Reply-To: <ZWZ0qGWpBTW6Iynt@dread.disaster.area>
+In-Reply-To: <20231129052400.GS4167244@frogsfrogsfrogs>
 
-On Wed, Nov 29, 2023 at 10:15:52AM +1100, Dave Chinner wrote:
-> On Tue, Nov 28, 2023 at 01:32:02PM +0800, Jiachen Zhang wrote:
-> > From: Zhang Tianci <zhangtianci.1997@bytedance.com>
-> > 
-> > xfs_da3_swap_lastblock() copy the last block content to the dead block,
-> > but do not update the metadata in it. We need update some metadata
-> > for some kinds of type block, such as dir3 leafn block records its
-> > blkno, we shall update it to the dead block blkno. Otherwise,
-> > before write the xfs_buf to disk, the verify_write() will fail in
-> > blk_hdr->blkno != xfs_buf->b_bn, then xfs will be shutdown.
-> > 
-> > We will get this warning:
-> > 
-> >   XFS (dm-0): Metadata corruption detected at xfs_dir3_leaf_verify+0xa8/0xe0 [xfs], xfs_dir3_leafn block 0x178
-> >   XFS (dm-0): Unmount and run xfs_repair
-> >   XFS (dm-0): First 128 bytes of corrupted metadata buffer:
-> >   00000000e80f1917: 00 80 00 0b 00 80 00 07 3d ff 00 00 00 00 00 00  ........=.......
-> >   000000009604c005: 00 00 00 00 00 00 01 a0 00 00 00 00 00 00 00 00  ................
-> >   000000006b6fb2bf: e4 44 e3 97 b5 64 44 41 8b 84 60 0e 50 43 d9 bf  .D...dDA..`.PC..
-> >   00000000678978a2: 00 00 00 00 00 00 00 83 01 73 00 93 00 00 00 00  .........s......
-> >   00000000b28b247c: 99 29 1d 38 00 00 00 00 99 29 1d 40 00 00 00 00  .).8.....).@....
-> >   000000002b2a662c: 99 29 1d 48 00 00 00 00 99 49 11 00 00 00 00 00  .).H.....I......
-> >   00000000ea2ffbb8: 99 49 11 08 00 00 45 25 99 49 11 10 00 00 48 fe  .I....E%.I....H.
-> >   0000000069e86440: 99 49 11 18 00 00 4c 6b 99 49 11 20 00 00 4d 97  .I....Lk.I. ..M.
-> >   XFS (dm-0): xfs_do_force_shutdown(0x8) called from line 1423 of file fs/xfs/xfs_buf.c.  Return address = 00000000c0ff63c1
-> >   XFS (dm-0): Corruption of in-memory data detected.  Shutting down filesystem
-> >   XFS (dm-0): Please umount the filesystem and rectify the problem(s)
-> > 
-> > From the log above, we know xfs_buf->b_no is 0x178, but the block's hdr record
-> > its blkno is 0x1a0.
-> > 
-> > Fixes: 24df33b45ecf ("xfs: add CRC checking to dir2 leaf blocks")
-> > Signed-off-by: Zhang Tianci <zhangtianci.1997@bytedance.com>
-> > ---
-> >  fs/xfs/libxfs/xfs_da_btree.c | 12 +++++++++++-
-> >  1 file changed, 11 insertions(+), 1 deletion(-)
-> > 
-> > diff --git a/fs/xfs/libxfs/xfs_da_btree.c b/fs/xfs/libxfs/xfs_da_btree.c
-> > index e576560b46e9..35f70e4c6447 100644
-> > --- a/fs/xfs/libxfs/xfs_da_btree.c
-> > +++ b/fs/xfs/libxfs/xfs_da_btree.c
-> > @@ -2318,8 +2318,18 @@ xfs_da3_swap_lastblock(
-> >  	 * Copy the last block into the dead buffer and log it.
-> >  	 */
-> >  	memcpy(dead_buf->b_addr, last_buf->b_addr, args->geo->blksize);
-> > -	xfs_trans_log_buf(tp, dead_buf, 0, args->geo->blksize - 1);
-> >  	dead_info = dead_buf->b_addr;
-> > +	/*
-> > +	 * Update the moved block's blkno if it's a dir3 leaf block
-> > +	 */
-> > +	if (dead_info->magic == cpu_to_be16(XFS_DIR3_LEAF1_MAGIC) ||
-> > +	    dead_info->magic == cpu_to_be16(XFS_DIR3_LEAFN_MAGIC) ||
-> > +	    dead_info->magic == cpu_to_be16(XFS_ATTR3_LEAF_MAGIC)) {
 
-On second thought, does this code have to handle XFS_DA3_NODE_MAGIC as
-well?
+--/eNx4OrSdA7OOxOK
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-> 
-> a.k.a.
-> 
-> 	if (xfs_has_crc(mp)) {
-> 
-> i.e. this is not specific to the buffer type being processed, it's
-> specific to v4 vs v5 on-disk format. Hence it's a fs-feature check,
-> not a block magic number check.
+On Tue, Nov 28, 2023 at 09:24:00PM -0800, Darrick J. Wong wrote:
+> On Tue, Nov 28, 2023 at 08:32:55AM -0800, Darrick J. Wong wrote:
+> > On Tue, Nov 28, 2023 at 07:45:22PM +0700, Bagas Sanjaya wrote:
+> > > XFS docs are currently in upper-level Documentation/filesystems.
+> > > Although these are currently 4 docs, they are already outstanding as
+> > > a group and can be moved to its own subdirectory.
+> > >=20
+> > > Consolidate them into Documentation/filesystems/xfs/.
+> > >=20
+> > > Signed-off-by: Bagas Sanjaya <bagasdotme@gmail.com>
+> > > ---
+> > > Changes since v1 [1]:
+> > >=20
+> > >   * Also update references to old doc path to address kernel test rob=
+ot
+> > >     warnings [2].
+> > >=20
+> > > [1]: https://lore.kernel.org/linux-doc/20231121095658.28254-1-bagasdo=
+tme@gmail.com/
+> > > [2]: https://lore.kernel.org/linux-doc/a9abc5ec-f3cd-4a1a-81b9-a69001=
+24d38b@gmail.com/
+> > >=20
+> > >  Documentation/filesystems/index.rst                |  5 +----
+> > >  Documentation/filesystems/xfs/index.rst            | 14 ++++++++++++=
+++
+> > >  .../{ =3D> xfs}/xfs-delayed-logging-design.rst       |  0
+> > >  .../{ =3D> xfs}/xfs-maintainer-entry-profile.rst     |  0
+> > >  .../{ =3D> xfs}/xfs-online-fsck-design.rst           |  2 +-
+> > >  .../{ =3D> xfs}/xfs-self-describing-metadata.rst     |  0
+> > >  .../maintainer/maintainer-entry-profile.rst        |  2 +-
+> > >  MAINTAINERS                                        |  4 ++--
+> > >  8 files changed, 19 insertions(+), 8 deletions(-)
+> > >  create mode 100644 Documentation/filesystems/xfs/index.rst
+> > >  rename Documentation/filesystems/{ =3D> xfs}/xfs-delayed-logging-des=
+ign.rst (100%)
+> > >  rename Documentation/filesystems/{ =3D> xfs}/xfs-maintainer-entry-pr=
+ofile.rst (100%)
+> > >  rename Documentation/filesystems/{ =3D> xfs}/xfs-online-fsck-design.=
+rst (99%)
+> > >  rename Documentation/filesystems/{ =3D> xfs}/xfs-self-describing-met=
+adata.rst (100%)
+> >=20
+> > I think the rst filename should drop the 'xfs-' prefix, e.g.
+> >=20
+> > 	Documentation/filesystems/xfs/delayed-logging-design.rst
+> >=20
+> > since that seems to be what most filesystems do:
+>=20
+> Actually, ignore this suggestion.  I forgot that I have vim paths
+> trained on the Documentation/filesystems/ directory, which means I'll
+> lose the ability to
+>=20
+> :f xfs-online-fsck-design.rst
+>=20
+> and pop it open.  Not that I expect many more filesystems to grow online
+> fsck capabilities, but you get the point...
 
-in which case Dave's comment is correct, yes?
+So is it OK to just move the the docs and keeping their basename intact (as=
+ I
+did here)?
 
---D
+> > > diff --git a/MAINTAINERS b/MAINTAINERS
+> > > index ea790149af7951..fd288ac57e19fb 100644
+> > > --- a/MAINTAINERS
+> > > +++ b/MAINTAINERS
+> > > @@ -23893,10 +23893,10 @@ S:	Supported
+> > >  W:	http://xfs.org/
+> > >  C:	irc://irc.oftc.net/xfs
+> > >  T:	git git://git.kernel.org/pub/scm/fs/xfs/xfs-linux.git
+> > > -P:	Documentation/filesystems/xfs-maintainer-entry-profile.rst
+> > > +P:	Documentation/filesystems/xfs/xfs-maintainer-entry-profile.rst
+> > >  F:	Documentation/ABI/testing/sysfs-fs-xfs
+> > >  F:	Documentation/admin-guide/xfs.rst
+> > > -F:	Documentation/filesystems/xfs-*
+> > > +F:	Documentation/filesystems/xfs/xfs-*
+> >=20
+> > Shouldn't this be "Documentation/filesystems/xfs/*" ?
+>=20
+> ...though this suggestion remains standing.
 
-> Cheers,
-> 
-> Dave.
-> -- 
-> Dave Chinner
-> david@fromorbit.com
-> 
+OK, will fix it up in v3.
+
+--=20
+An old man doll... just what I always wanted! - Clara
+
+--/eNx4OrSdA7OOxOK
+Content-Type: application/pgp-signature; name="signature.asc"
+
+-----BEGIN PGP SIGNATURE-----
+
+iHUEABYKAB0WIQSSYQ6Cy7oyFNCHrUH2uYlJVVFOowUCZWbkbQAKCRD2uYlJVVFO
+o757AQD9Ejtcv8+azDThzWPWiwdN8rQV3SamIEbhm6K4/76GngD/fxUlqtAWi9rD
+XNZI+P3xF/P1UWcrtV0NE0VOBuZzhgU=
+=Fq99
+-----END PGP SIGNATURE-----
+
+--/eNx4OrSdA7OOxOK--
