@@ -1,47 +1,47 @@
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b="0XbO+ZFN"
-Received: from mail-pf1-x42c.google.com (mail-pf1-x42c.google.com [IPv6:2607:f8b0:4864:20::42c])
-	by lindbergh.monkeyblade.net (Postfix) with ESMTPS id EAEF4111
-	for <linux-xfs@vger.kernel.org>; Wed, 29 Nov 2023 00:59:59 -0800 (PST)
-Received: by mail-pf1-x42c.google.com with SMTP id d2e1a72fcca58-6cda22140f2so1681689b3a.1
-        for <linux-xfs@vger.kernel.org>; Wed, 29 Nov 2023 00:59:59 -0800 (PST)
+	dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b="1m7GaBJA"
+Received: from mail-pf1-x42e.google.com (mail-pf1-x42e.google.com [IPv6:2607:f8b0:4864:20::42e])
+	by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C006818D
+	for <linux-xfs@vger.kernel.org>; Wed, 29 Nov 2023 01:04:40 -0800 (PST)
+Received: by mail-pf1-x42e.google.com with SMTP id d2e1a72fcca58-6cbc8199a2aso5625735b3a.1
+        for <linux-xfs@vger.kernel.org>; Wed, 29 Nov 2023 01:04:40 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=fromorbit-com.20230601.gappssmtp.com; s=20230601; t=1701248399; x=1701853199; darn=vger.kernel.org;
+        d=fromorbit-com.20230601.gappssmtp.com; s=20230601; t=1701248680; x=1701853480; darn=vger.kernel.org;
         h=in-reply-to:content-disposition:mime-version:references:message-id
          :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
-        bh=lM4/6bPxfuZqProEDtAoywGbydqp6bvtnJKh8H9AEJI=;
-        b=0XbO+ZFNvjBfcXxU7lnqtHhBBuZbQNZh6wyi05HSQWi5GDMJhhAPl/2svlJ2sp1Z+T
-         sKKe3Hohm1to0ifgFSNxTItGx93UoSqn3y1aRFLlzd0YSBXQcc8K9aaO5LIJNN9AH+9F
-         6v5VP3Tj4JwoYNHRxc9c9y92qrKODc6Ehx2i424jIzXESCD4DnNIPk4VBHkKpxnKMWC3
-         41uvx84A/nBkeM5qqpqIOE86cIz4SJIkm1iSLa0ZeiJyK6O1UeS/yz7M6MVyG43fINtM
-         XgSTIQlmwHsjqp/9I+YwXAhOUfHucZCcFeeQ6UesLfeECxvxUvjBZwlxtabM/yWhGyZo
-         W3KA==
+        bh=IJkUwFni1tyd1Oj/0WIsU7esF/PDsZcmLt4NR+sDyhA=;
+        b=1m7GaBJAX/dBoRSQky6TREt+1U8mO1oI0WgxSpNuoJblzBB03cw5l5PT6qDgruRROw
+         m8v07aPBQEdJEZeSiukVl4MwJH2ZDL+SlcdDiUJekhCniVJz45y5CMY1Ul61pvwQ3C3q
+         ILs9TPFeFTcu8o8D+s+rfYvBsPcZM0LAocIG0qblC7cr6WCLQQSx9cIRxGn/aW5cLHmx
+         jl0ZzQfb78/kTspGnb2HtgVPwmQCDYlylKmQTYdUBeKckNs7SZFS/P2iFGwYt7JAWNgG
+         x+f/p7Jkq5zvTJ16ce7XqNmMjOIJXjKP/UETFhA6hakkF6g77YsuGKyprpsM+02HsN2K
+         Ju2w==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1701248399; x=1701853199;
+        d=1e100.net; s=20230601; t=1701248680; x=1701853480;
         h=in-reply-to:content-disposition:mime-version:references:message-id
          :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
          :message-id:reply-to;
-        bh=lM4/6bPxfuZqProEDtAoywGbydqp6bvtnJKh8H9AEJI=;
-        b=c7tvq/D7Ubw/lAT9G6YZTz7ei8005OB9iu74TxyMntacwjYJOImO7S2QuoMR1L/jnB
-         aMprb5L/0PvDUEwnh1AoqVUaNmoYP3Ml9g2ZQVGv9HsP4CTvXow3OX/lss2lBm9aJyp2
-         vLRq4AfCr2gqqu3IwNAIopcKXf6Wwaevx2A8RPB+6TqOOV/+KyXX53lvb5hulJ4oVErT
-         Y/zovZvWG6j5YffR65IunXEQP4uRhEaXCCLA0PPH7JJq41kauRe3LXRPyx4siXZ391jG
-         NlJQVXuHOlBHzEEwHiF+LnP+aNzfY+8ho4QnCrNiJl4DxEpI/TehI4itMQNCAPT8Yxfg
-         wgpg==
-X-Gm-Message-State: AOJu0Yyin2ZIYuTul6m8zerNCeZwOMDMAwc7Zk/MXr/3Rm9bS/13pNav
-	mLQKrJPE7SlXCTURw5C+xbZXTg==
-X-Google-Smtp-Source: AGHT+IF5+UKBkNuqEW1VygjsHj4mijbjOJsqWXzU2xxnEfe6/0lcOCiwMlyx5JAJMb4qfZvnqvythw==
-X-Received: by 2002:a05:6a20:914b:b0:18c:548d:3d23 with SMTP id x11-20020a056a20914b00b0018c548d3d23mr16809715pzc.59.1701248399356;
-        Wed, 29 Nov 2023 00:59:59 -0800 (PST)
+        bh=IJkUwFni1tyd1Oj/0WIsU7esF/PDsZcmLt4NR+sDyhA=;
+        b=IP/dO3it61Tt4hbp6J8lHPzIj+Hq7+PZ+94EMf1oqF8l8QJdgx86PeTUaLcrBrdZtI
+         cY+CalNuKMh8Oaiv1khDncBZz6fTLV+MUeu+AhE7xJ3uxSciqo9R0EBcVbn2s23hC97r
+         H+2ZNtEcoL5ZTO1kZOCaKcCNjMOshJZ+XordPoFQzQd3wDOkDxS2PZA6AINyRGVZ6Ix9
+         OXS+8CK0QfkGt+70SiCU+07dOHxhQPafwLG4FTC44l/8xdVwUa0vJJ84+D8smg5zdMPZ
+         Ed1yn0gKlRm36NhLbSJIfdHvgNmWuhzB3ZIN/mo1gMrdaFG3ds7HmQMcCiTPNEl8JWa0
+         x8rg==
+X-Gm-Message-State: AOJu0YwMqDRrxS5AXg2qIxkUGEScQplVaeqeFaH88rQ5w5nYqeLt483O
+	mstM15Wl8qWccpCUvLMxIgKTnQ==
+X-Google-Smtp-Source: AGHT+IHQ7A+ROUiPAUUtY1Bc1W2rd4y42lCFAgTt5oxHaM+7IKovLk3TNzT/G4os+71nI+Fk2jOC8Q==
+X-Received: by 2002:a05:6a20:728f:b0:18c:4b7:2da5 with SMTP id o15-20020a056a20728f00b0018c04b72da5mr17600536pzk.54.1701248680233;
+        Wed, 29 Nov 2023 01:04:40 -0800 (PST)
 Received: from dread.disaster.area (pa49-180-125-5.pa.nsw.optusnet.com.au. [49.180.125.5])
-        by smtp.gmail.com with ESMTPSA id ji5-20020a170903324500b001cfad1a60cesm8859189plb.137.2023.11.29.00.59.58
+        by smtp.gmail.com with ESMTPSA id y10-20020a170902b48a00b001cfb52ebffesm7939595plr.147.2023.11.29.01.04.39
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 29 Nov 2023 00:59:59 -0800 (PST)
+        Wed, 29 Nov 2023 01:04:39 -0800 (PST)
 Received: from dave by dread.disaster.area with local (Exim 4.96)
 	(envelope-from <david@fromorbit.com>)
-	id 1r8GQG-001RbE-1Y;
-	Wed, 29 Nov 2023 19:59:56 +1100
-Date: Wed, 29 Nov 2023 19:59:56 +1100
+	id 1r8GUn-001Req-1b;
+	Wed, 29 Nov 2023 20:04:37 +1100
+Date: Wed, 29 Nov 2023 20:04:37 +1100
 From: Dave Chinner <david@fromorbit.com>
 To: Jiachen Zhang <zhangjiachen.jaycee@bytedance.com>
 Cc: Chandan Babu R <chandan.babu@oracle.com>,
@@ -51,11 +51,13 @@ Cc: Chandan Babu R <chandan.babu@oracle.com>,
 	Zhang Tianci <zhangtianci.1997@bytedance.com>,
 	Brian Foster <bfoster@redhat.com>, Ben Myers <bpm@sgi.com>,
 	linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org,
-	xieyongji@bytedance.com, me@jcix.top
-Subject: Re: [PATCH v2 2/2] xfs: update dir3 leaf block metadata after swap
-Message-ID: <ZWb9jMQSjbqqzrob@dread.disaster.area>
+	xieyongji@bytedance.com, me@jcix.top,
+	Christoph Hellwig <hch@lst.de>
+Subject: Re: [PATCH v2 1/2] xfs: ensure logflagsp is initialized in
+ xfs_bmap_del_extent_real
+Message-ID: <ZWb+pR7AvTY8VLRR@dread.disaster.area>
 References: <20231129075832.73600-1-zhangjiachen.jaycee@bytedance.com>
- <20231129075832.73600-3-zhangjiachen.jaycee@bytedance.com>
+ <20231129075832.73600-2-zhangjiachen.jaycee@bytedance.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -64,105 +66,62 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20231129075832.73600-3-zhangjiachen.jaycee@bytedance.com>
+In-Reply-To: <20231129075832.73600-2-zhangjiachen.jaycee@bytedance.com>
 
-On Wed, Nov 29, 2023 at 03:58:32PM +0800, Jiachen Zhang wrote:
-> From: Zhang Tianci <zhangtianci.1997@bytedance.com>
+On Wed, Nov 29, 2023 at 03:58:31PM +0800, Jiachen Zhang wrote:
+> In the case of returning -ENOSPC, ensure logflagsp is initialized by 0.
+> Otherwise the caller __xfs_bunmapi will set uninitialized illegal
+> tmp_logflags value into xfs log, which might cause unpredictable error
+> in the log recovery procedure.
 > 
-> xfs_da3_swap_lastblock() copy the last block content to the dead block,
-> but do not update the metadata in it. We need update some metadata
-> for some kinds of type block, such as dir3 leafn block records its
-> blkno, we shall update it to the dead block blkno. Otherwise,
-> before write the xfs_buf to disk, the verify_write() will fail in
-> blk_hdr->blkno != xfs_buf->b_bn, then xfs will be shutdown.
+> Also, remove the flags variable and set the *logflagsp directly, so that
+> the code should be more robust in the long run.
 > 
-> We will get this warning:
-> 
->   XFS (dm-0): Metadata corruption detected at xfs_dir3_leaf_verify+0xa8/0xe0 [xfs], xfs_dir3_leafn block 0x178
->   XFS (dm-0): Unmount and run xfs_repair
->   XFS (dm-0): First 128 bytes of corrupted metadata buffer:
->   00000000e80f1917: 00 80 00 0b 00 80 00 07 3d ff 00 00 00 00 00 00  ........=.......
->   000000009604c005: 00 00 00 00 00 00 01 a0 00 00 00 00 00 00 00 00  ................
->   000000006b6fb2bf: e4 44 e3 97 b5 64 44 41 8b 84 60 0e 50 43 d9 bf  .D...dDA..`.PC..
->   00000000678978a2: 00 00 00 00 00 00 00 83 01 73 00 93 00 00 00 00  .........s......
->   00000000b28b247c: 99 29 1d 38 00 00 00 00 99 29 1d 40 00 00 00 00  .).8.....).@....
->   000000002b2a662c: 99 29 1d 48 00 00 00 00 99 49 11 00 00 00 00 00  .).H.....I......
->   00000000ea2ffbb8: 99 49 11 08 00 00 45 25 99 49 11 10 00 00 48 fe  .I....E%.I....H.
->   0000000069e86440: 99 49 11 18 00 00 4c 6b 99 49 11 20 00 00 4d 97  .I....Lk.I. ..M.
->   XFS (dm-0): xfs_do_force_shutdown(0x8) called from line 1423 of file fs/xfs/xfs_buf.c.  Return address = 00000000c0ff63c1
->   XFS (dm-0): Corruption of in-memory data detected.  Shutting down filesystem
->   XFS (dm-0): Please umount the filesystem and rectify the problem(s)
-> 
-> From the log above, we know xfs_buf->b_no is 0x178, but the block's hdr record
-> its blkno is 0x1a0.
-> 
-> Fixes: 24df33b45ecf ("xfs: add CRC checking to dir2 leaf blocks")
-> Signed-off-by: Zhang Tianci <zhangtianci.1997@bytedance.com>
-> Suggested-by: Dave Chinner <david@fromorbit.com>
+> Fixes: 1b24b633aafe ("xfs: move some more code into xfs_bmap_del_extent_real")
+> Signed-off-by: Jiachen Zhang <zhangjiachen.jaycee@bytedance.com>
+> Reviewed-by: Christoph Hellwig <hch@lst.de>
 > ---
->  fs/xfs/libxfs/xfs_da_btree.c | 11 ++++++++++-
->  1 file changed, 10 insertions(+), 1 deletion(-)
+>  fs/xfs/libxfs/xfs_bmap.c | 26 ++++++++++++++------------
+>  1 file changed, 14 insertions(+), 12 deletions(-)
 > 
-> diff --git a/fs/xfs/libxfs/xfs_da_btree.c b/fs/xfs/libxfs/xfs_da_btree.c
-> index e576560b46e9..d11e6286e466 100644
-> --- a/fs/xfs/libxfs/xfs_da_btree.c
-> +++ b/fs/xfs/libxfs/xfs_da_btree.c
-> @@ -2318,8 +2318,17 @@ xfs_da3_swap_lastblock(
->  	 * Copy the last block into the dead buffer and log it.
->  	 */
->  	memcpy(dead_buf->b_addr, last_buf->b_addr, args->geo->blksize);
-> -	xfs_trans_log_buf(tp, dead_buf, 0, args->geo->blksize - 1);
->  	dead_info = dead_buf->b_addr;
-> +	/*
-> +	 * If xfs enable crc, the node/leaf block records its blkno, we
-> +	 * must update it.
-> +	 */
-
-I'd combine this comment into the comment 3 lines above.
-
-> +	if (xfs_has_crc(mp)) {
-> +		struct xfs_da3_blkinfo *da3 = container_of(dead_info, struct xfs_da3_blkinfo, hdr);
-
-Line length too long.
-
-And using container_of() is rather unique an unusual, and not done
-anywhere else in the code. dead_buf->b_addr is a void pointer,
-so no cast is necessary:
-
-		struct xfs_da3_blkinfo *da3 = dead_buf->b_addr;
-
-
+> diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
+> index be62acffad6c..9435bd6c950b 100644
+> --- a/fs/xfs/libxfs/xfs_bmap.c
+> +++ b/fs/xfs/libxfs/xfs_bmap.c
+> @@ -5010,7 +5010,6 @@ xfs_bmap_del_extent_real(
+>  	xfs_fileoff_t		del_endoff;	/* first offset past del */
+>  	int			do_fx;	/* free extent at end of routine */
+>  	int			error;	/* error return value */
+> -	int			flags = 0;/* inode logging flags */
+>  	struct xfs_bmbt_irec	got;	/* current extent entry */
+>  	xfs_fileoff_t		got_endoff;	/* first offset past got */
+>  	int			i;	/* temp state */
+> @@ -5023,6 +5022,8 @@ xfs_bmap_del_extent_real(
+>  	uint32_t		state = xfs_bmap_fork_to_state(whichfork);
+>  	struct xfs_bmbt_irec	old;
+>  
+> +	*logflagsp = 0;
 > +
-> +		da3->blkno = cpu_to_be64(xfs_buf_daddr(dead_buf));
+>  	mp = ip->i_mount;
+>  	XFS_STATS_INC(mp, xs_del_exlist);
+>  
+> @@ -5048,10 +5049,12 @@ xfs_bmap_del_extent_real(
+>  	if (tp->t_blk_res == 0 &&
+>  	    ifp->if_format == XFS_DINODE_FMT_EXTENTS &&
+>  	    ifp->if_nextents >= XFS_IFORK_MAXEXT(ip, whichfork) &&
+> -	    del->br_startoff > got.br_startoff && del_endoff < got_endoff)
+> -		return -ENOSPC;
+> +	    del->br_startoff > got.br_startoff && del_endoff < got_endoff) {
+> +		error = -ENOSPC;
+> +		goto done;
 > +	}
-> +	xfs_trans_log_buf(tp, dead_buf, 0, args->geo->blksize - 1);
->  	/*
->  	 * Get values from the moved block.
->  	 */
 
-And whitespace for readability before the next code block. IOWs:
+Now that you've added initialisation of logflagsp, the need for the
+error stacking goto pattern goes away completely. Anywhere that has
+a "goto done" can be converted to a direct 'return error' call and
+the done label can be removed.
 
-	/*
-	 * Copy the last block into the dead buffer, update the block info
-	 * header and log it.
-	 */
-	memcpy(dead_buf->b_addr, last_buf->b_addr, args->geo->blksize);
-	if (xfs_has_crc(mp)) {
-		struct xfs_da3_blkinfo *da3 = dead_buf->b_addr
-
-		da3->blkno = cpu_to_be64(xfs_buf_daddr(dead_buf));
-	}
-	xfs_trans_log_buf(tp, dead_buf, 0, args->geo->blksize - 1);
-	dead_info = dead_buf->b_addr;
-
-	/*
-	 * Get values from the moved block.
-	 */
-
-Cheers,
-
-Dave.
-
+-Dave.
 -- 
 Dave Chinner
 david@fromorbit.com
