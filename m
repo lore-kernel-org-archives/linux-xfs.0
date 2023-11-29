@@ -1,44 +1,34 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1BA5F6FCA;
-	Wed, 29 Nov 2023 05:24:00 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 588713FFE;
+	Wed, 29 Nov 2023 05:25:36 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="XjkTUBkk"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 928D0C433C7;
-	Wed, 29 Nov 2023 05:24:00 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="C4Ex4tgl"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id D116BC433C8;
+	Wed, 29 Nov 2023 05:25:35 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1701235440;
-	bh=0RjlCL8ZpHOp9jN53bdGFyIhRGuacuo/NihvRqf9ep8=;
+	s=k20201202; t=1701235535;
+	bh=XbZzfVtimLVO8rDiWWDKxSGKxNNhGJ3Y4ioHdJOnEhI=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=XjkTUBkkvuiepU3/L/B7LqhGvH6OXLqvyWlSpZFV/AYQxim0dYpGTjbAFj6ZsqwaM
-	 FLDfKb2KpO18FJwoSHsZIjxWVHfdJHUd6l1Djmk/WvFyRfIKF3tdzV4N17LkWlwitl
-	 NtXM2ZN1l5FEU/tURcGsliHz8ThEokdX1t4UUIVaaWg7ZyxiubI9mpgkI2/8/DokDc
-	 +1PHXs2LXxiVsAodh8eI3gGJLf1hRxANAntFy3VCQqs8B/sAq9+yGWtqWBlot7r/ix
-	 y4Fm4IG515HvkMgIEVeGg10JKN0QOISOVDyPQJRA2bHZ82LPkBDVKjK6O0bgqpNCu1
-	 VUUxRhDooeqaA==
-Date: Tue, 28 Nov 2023 21:24:00 -0800
+	b=C4Ex4tgln/a/Fhe3iOvB0HbEwysa+tihzlRbKlvsKH1IgMVdax4m1ho0K9/8gJZpL
+	 i6mFe9xBHjQlGaMlBwoxAkwZtbUbrdoL1i0nfPAJDkWQ5xfBm0gUc46m0rc8Mi7BkN
+	 uZZ93G9s5FTVhjyyTJmhGAiAWXXagRbVC28aaY+6wbp7W9hb7TwYAKRpiQGVIS0j1l
+	 ku9mI9JfxcAG52Or5Q21ioa8RBhcOT4wYSBDEXVrtG34sqInsfhrloFa8Y3D8buT4U
+	 swlJH4xoACfkdEM0ndkcmZapwGzgVnn3zHjfmmsFicivQopQ0GfF3XgIljS5Vtad/V
+	 qxK7SFpWYmtDA==
+Date: Tue, 28 Nov 2023 21:25:35 -0800
 From: "Darrick J. Wong" <djwong@kernel.org>
-To: Bagas Sanjaya <bagasdotme@gmail.com>
-Cc: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	Linux Documentation <linux-doc@vger.kernel.org>,
-	Linux XFS <linux-xfs@vger.kernel.org>,
-	Linux Kernel Workflows <workflows@vger.kernel.org>,
-	Jonathan Corbet <corbet@lwn.net>,
+To: Christoph Hellwig <hch@lst.de>
+Cc: Christian Brauner <brauner@kernel.org>,
 	Chandan Babu R <chandan.babu@oracle.com>,
-	Namjae Jeon <linkinjeon@kernel.org>,
-	Dave Chinner <dchinner@redhat.com>,
-	Steve French <stfrench@microsoft.com>,
-	"Matthew Wilcox (Oracle)" <willy@infradead.org>,
-	Allison Henderson <allison.henderson@oracle.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Charles Han <hanchunchao@inspur.com>,
-	Vegard Nossum <vegard.nossum@oracle.com>
-Subject: Re: [PATCH RESEND v2] Documentation: xfs: consolidate XFS docs into
- its own subdirectory
-Message-ID: <20231129052400.GS4167244@frogsfrogsfrogs>
-References: <20231128124522.28499-1-bagasdotme@gmail.com>
- <20231128163255.GV2766956@frogsfrogsfrogs>
+	Zhang Yi <yi.zhang@huaweicloud.com>,
+	Ritesh Harjani <ritesh.list@gmail.com>, linux-xfs@vger.kernel.org,
+	linux-fsdevel@vger.kernel.org
+Subject: Re: [PATCH 13/13] iomap: map multiple blocks at a time
+Message-ID: <20231129052535.GO36211@frogsfrogsfrogs>
+References: <20231126124720.1249310-1-hch@lst.de>
+ <20231126124720.1249310-14-hch@lst.de>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -47,190 +37,250 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20231128163255.GV2766956@frogsfrogsfrogs>
+In-Reply-To: <20231126124720.1249310-14-hch@lst.de>
 
-On Tue, Nov 28, 2023 at 08:32:55AM -0800, Darrick J. Wong wrote:
-> On Tue, Nov 28, 2023 at 07:45:22PM +0700, Bagas Sanjaya wrote:
-> > XFS docs are currently in upper-level Documentation/filesystems.
-> > Although these are currently 4 docs, they are already outstanding as
-> > a group and can be moved to its own subdirectory.
-> > 
-> > Consolidate them into Documentation/filesystems/xfs/.
-> > 
-> > Signed-off-by: Bagas Sanjaya <bagasdotme@gmail.com>
-> > ---
-> > Changes since v1 [1]:
-> > 
-> >   * Also update references to old doc path to address kernel test robot
-> >     warnings [2].
-> > 
-> > [1]: https://lore.kernel.org/linux-doc/20231121095658.28254-1-bagasdotme@gmail.com/
-> > [2]: https://lore.kernel.org/linux-doc/a9abc5ec-f3cd-4a1a-81b9-a6900124d38b@gmail.com/
-> > 
-> >  Documentation/filesystems/index.rst                |  5 +----
-> >  Documentation/filesystems/xfs/index.rst            | 14 ++++++++++++++
-> >  .../{ => xfs}/xfs-delayed-logging-design.rst       |  0
-> >  .../{ => xfs}/xfs-maintainer-entry-profile.rst     |  0
-> >  .../{ => xfs}/xfs-online-fsck-design.rst           |  2 +-
-> >  .../{ => xfs}/xfs-self-describing-metadata.rst     |  0
-> >  .../maintainer/maintainer-entry-profile.rst        |  2 +-
-> >  MAINTAINERS                                        |  4 ++--
-> >  8 files changed, 19 insertions(+), 8 deletions(-)
-> >  create mode 100644 Documentation/filesystems/xfs/index.rst
-> >  rename Documentation/filesystems/{ => xfs}/xfs-delayed-logging-design.rst (100%)
-> >  rename Documentation/filesystems/{ => xfs}/xfs-maintainer-entry-profile.rst (100%)
-> >  rename Documentation/filesystems/{ => xfs}/xfs-online-fsck-design.rst (99%)
-> >  rename Documentation/filesystems/{ => xfs}/xfs-self-describing-metadata.rst (100%)
+On Sun, Nov 26, 2023 at 01:47:20PM +0100, Christoph Hellwig wrote:
+> The ->map_blocks interface returns a valid range for writeback, but we
+> still call back into it for every block, which is a bit inefficient.
 > 
-> I think the rst filename should drop the 'xfs-' prefix, e.g.
+> Change xfs_writepage_map to use the valid range in the map until the end
+
+iomap_writepage_map?
+
+> of the folio or the dirty range inside the folio instead of calling back
+> into every block.
 > 
-> 	Documentation/filesystems/xfs/delayed-logging-design.rst
+> Note that the range is not used over folio boundaries as we need to be
+> able to check the mapping sequence count under the folio lock.
 > 
-> since that seems to be what most filesystems do:
-
-Actually, ignore this suggestion.  I forgot that I have vim paths
-trained on the Documentation/filesystems/ directory, which means I'll
-lose the ability to
-
-:f xfs-online-fsck-design.rst
-
-and pop it open.  Not that I expect many more filesystems to grow online
-fsck capabilities, but you get the point...
-
-> Documentation/filesystems/caching/backend-api.rst
-> Documentation/filesystems/caching/cachefiles.rst
-> Documentation/filesystems/caching/fscache.rst
-> Documentation/filesystems/caching/index.rst
-> Documentation/filesystems/caching/netfs-api.rst
-> Documentation/filesystems/cifs/cifsroot.rst
-> Documentation/filesystems/cifs/index.rst
-> Documentation/filesystems/cifs/ksmbd.rst
-> Documentation/filesystems/ext4/about.rst
-> Documentation/filesystems/ext4/allocators.rst
-> Documentation/filesystems/ext4/attributes.rst
-> <snip>
-> Documentation/filesystems/ext4/special_inodes.rst
-> Documentation/filesystems/ext4/super.rst
-> Documentation/filesystems/ext4/verity.rst
-> Documentation/filesystems/nfs/client-identifier.rst
-> Documentation/filesystems/nfs/exporting.rst
-> Documentation/filesystems/nfs/index.rst
-> Documentation/filesystems/nfs/knfsd-stats.rst
-> Documentation/filesystems/nfs/nfs41-server.rst
-> Documentation/filesystems/nfs/pnfs.rst
-> Documentation/filesystems/nfs/reexport.rst
-> Documentation/filesystems/nfs/rpc-cache.rst
-> Documentation/filesystems/nfs/rpc-server-gss.rst
-> Documentation/filesystems/smb/cifsroot.rst
-> Documentation/filesystems/smb/index.rst
-> Documentation/filesystems/smb/ksmbd.rst
-> Documentation/filesystems/spufs/index.rst
-> Documentation/filesystems/spufs/spu_create.rst
-> Documentation/filesystems/spufs/spufs.rst
-> Documentation/filesystems/spufs/spu_run.rst
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
+> ---
+>  fs/iomap/buffered-io.c | 113 ++++++++++++++++++++++++++++-------------
+>  include/linux/iomap.h  |   7 +++
+>  2 files changed, 86 insertions(+), 34 deletions(-)
 > 
-> > diff --git a/Documentation/filesystems/index.rst b/Documentation/filesystems/index.rst
-> > index 09cade7eaefc8c..e18bc5ae3b35f8 100644
-> > --- a/Documentation/filesystems/index.rst
-> > +++ b/Documentation/filesystems/index.rst
-> > @@ -121,8 +121,5 @@ Documentation for filesystem implementations.
-> >     udf
-> >     virtiofs
-> >     vfat
-> > -   xfs-delayed-logging-design
-> > -   xfs-maintainer-entry-profile
-> > -   xfs-self-describing-metadata
-> > -   xfs-online-fsck-design
-> > +   xfs/index
-> >     zonefs
-> > diff --git a/Documentation/filesystems/xfs/index.rst b/Documentation/filesystems/xfs/index.rst
-> > new file mode 100644
-> > index 00000000000000..ab66c57a5d18ea
-> > --- /dev/null
-> > +++ b/Documentation/filesystems/xfs/index.rst
-> > @@ -0,0 +1,14 @@
-> > +.. SPDX-License-Identifier: GPL-2.0
-> > +
-> > +============================
-> > +XFS Filesystem Documentation
-> > +============================
-> > +
-> > +.. toctree::
-> > +   :maxdepth: 2
-> > +   :numbered:
-> > +
-> > +   xfs-delayed-logging-design
-> > +   xfs-maintainer-entry-profile
-> > +   xfs-self-describing-metadata
-> > +   xfs-online-fsck-design
-> > diff --git a/Documentation/filesystems/xfs-delayed-logging-design.rst b/Documentation/filesystems/xfs/xfs-delayed-logging-design.rst
-> > similarity index 100%
-> > rename from Documentation/filesystems/xfs-delayed-logging-design.rst
-> > rename to Documentation/filesystems/xfs/xfs-delayed-logging-design.rst
-> > diff --git a/Documentation/filesystems/xfs-maintainer-entry-profile.rst b/Documentation/filesystems/xfs/xfs-maintainer-entry-profile.rst
-> > similarity index 100%
-> > rename from Documentation/filesystems/xfs-maintainer-entry-profile.rst
-> > rename to Documentation/filesystems/xfs/xfs-maintainer-entry-profile.rst
-> > diff --git a/Documentation/filesystems/xfs-online-fsck-design.rst b/Documentation/filesystems/xfs/xfs-online-fsck-design.rst
-> > similarity index 99%
-> > rename from Documentation/filesystems/xfs-online-fsck-design.rst
-> > rename to Documentation/filesystems/xfs/xfs-online-fsck-design.rst
-> > index a0678101a7d02d..352516feef6ffe 100644
-> > --- a/Documentation/filesystems/xfs-online-fsck-design.rst
-> > +++ b/Documentation/filesystems/xfs/xfs-online-fsck-design.rst
-> > @@ -962,7 +962,7 @@ disk, but these buffer verifiers cannot provide any consistency checking
-> >  between metadata structures.
-> >  
-> >  For more information, please see the documentation for
-> > -Documentation/filesystems/xfs-self-describing-metadata.rst
-> > +Documentation/filesystems/xfs/xfs-self-describing-metadata.rst
-> >  
-> >  Reverse Mapping
-> >  ---------------
-> > diff --git a/Documentation/filesystems/xfs-self-describing-metadata.rst b/Documentation/filesystems/xfs/xfs-self-describing-metadata.rst
-> > similarity index 100%
-> > rename from Documentation/filesystems/xfs-self-describing-metadata.rst
-> > rename to Documentation/filesystems/xfs/xfs-self-describing-metadata.rst
-> > diff --git a/Documentation/maintainer/maintainer-entry-profile.rst b/Documentation/maintainer/maintainer-entry-profile.rst
-> > index 7ad4bfc2cc038a..18cee1edaecb6f 100644
-> > --- a/Documentation/maintainer/maintainer-entry-profile.rst
-> > +++ b/Documentation/maintainer/maintainer-entry-profile.rst
-> > @@ -105,4 +105,4 @@ to do something different in the near future.
-> >     ../driver-api/media/maintainer-entry-profile
-> >     ../driver-api/vfio-pci-device-specific-driver-acceptance
-> >     ../nvme/feature-and-quirk-policy
-> > -   ../filesystems/xfs-maintainer-entry-profile
-> > +   ../filesystems/xfs/xfs-maintainer-entry-profile
-> > diff --git a/MAINTAINERS b/MAINTAINERS
-> > index ea790149af7951..fd288ac57e19fb 100644
-> > --- a/MAINTAINERS
-> > +++ b/MAINTAINERS
-> > @@ -23893,10 +23893,10 @@ S:	Supported
-> >  W:	http://xfs.org/
-> >  C:	irc://irc.oftc.net/xfs
-> >  T:	git git://git.kernel.org/pub/scm/fs/xfs/xfs-linux.git
-> > -P:	Documentation/filesystems/xfs-maintainer-entry-profile.rst
-> > +P:	Documentation/filesystems/xfs/xfs-maintainer-entry-profile.rst
-> >  F:	Documentation/ABI/testing/sysfs-fs-xfs
-> >  F:	Documentation/admin-guide/xfs.rst
-> > -F:	Documentation/filesystems/xfs-*
-> > +F:	Documentation/filesystems/xfs/xfs-*
-> 
-> Shouldn't this be "Documentation/filesystems/xfs/*" ?
+> diff --git a/fs/iomap/buffered-io.c b/fs/iomap/buffered-io.c
+> index a01b0686e7c8a0..a98cb38a71ebc8 100644
+> --- a/fs/iomap/buffered-io.c
+> +++ b/fs/iomap/buffered-io.c
+> @@ -1,7 +1,7 @@
+>  // SPDX-License-Identifier: GPL-2.0
+>  /*
+>   * Copyright (C) 2010 Red Hat, Inc.
+> - * Copyright (C) 2016-2019 Christoph Hellwig.
+> + * Copyright (C) 2016-2023 Christoph Hellwig.
+>   */
+>  #include <linux/module.h>
+>  #include <linux/compiler.h>
+> @@ -95,6 +95,42 @@ static inline bool ifs_block_is_dirty(struct folio *folio,
+>  	return test_bit(block + blks_per_folio, ifs->state);
+>  }
+>  
+> +static unsigned ifs_find_dirty_range(struct folio *folio,
+> +		struct iomap_folio_state *ifs, u64 *range_start, u64 range_end)
+> +{
+> +	struct inode *inode = folio->mapping->host;
+> +	unsigned start_blk =
+> +		offset_in_folio(folio, *range_start) >> inode->i_blkbits;
+> +	unsigned end_blk = min_not_zero(
+> +		offset_in_folio(folio, range_end) >> inode->i_blkbits,
+> +		i_blocks_per_folio(inode, folio));
+> +	unsigned nblks = 1;
+> +
+> +	while (!ifs_block_is_dirty(folio, ifs, start_blk))
+> +		if (++start_blk == end_blk)
+> +			return 0;
+> +
+> +	while (start_blk + nblks < end_blk &&
+> +	       ifs_block_is_dirty(folio, ifs, start_blk + nblks))
+> +		nblks++;
 
-...though this suggestion remains standing.
+I don't like ^^^ the single-space indentation of the loop body over the
+loop test expression because I almost missed that.  Extra braces for
+clarity, please?
+
+> +
+> +	*range_start = folio_pos(folio) + (start_blk << inode->i_blkbits);
+> +	return nblks << inode->i_blkbits;
+> +}
+> +
+> +static unsigned iomap_find_dirty_range(struct folio *folio, u64 *range_start,
+> +		u64 range_end)
+> +{
+> +	struct iomap_folio_state *ifs = folio->private;
+> +	
+
+   ^^^^^ extra whitespace?
+
+> +	if (*range_start >= range_end)
+> +		return 0;
+> +
+> +	if (ifs)
+> +		return ifs_find_dirty_range(folio, ifs, range_start, range_end);
+> +	return range_end - *range_start;
+> +}
+> +
+>  static void ifs_clear_range_dirty(struct folio *folio,
+>  		struct iomap_folio_state *ifs, size_t off, size_t len)
+>  {
+> @@ -1712,10 +1748,9 @@ iomap_can_add_to_ioend(struct iomap_writepage_ctx *wpc, loff_t offset)
+>   */
+>  static int iomap_add_to_ioend(struct iomap_writepage_ctx *wpc,
+>  		struct writeback_control *wbc, struct folio *folio,
+> -		struct inode *inode, loff_t pos)
+> +		struct inode *inode, loff_t pos, unsigned len)
+>  {
+>  	struct iomap_folio_state *ifs = folio->private;
+> -	unsigned len = i_blocksize(inode);
+>  	size_t poff = offset_in_folio(folio, pos);
+>  	int error;
+>  
+> @@ -1739,28 +1774,41 @@ static int iomap_add_to_ioend(struct iomap_writepage_ctx *wpc,
+>  
+>  static int iomap_writepage_map_blocks(struct iomap_writepage_ctx *wpc,
+>  		struct writeback_control *wbc, struct folio *folio,
+> -		struct inode *inode, u64 pos, unsigned *count)
+> +		struct inode *inode, u64 pos, unsigned dirty_len,
+> +		unsigned *count)
+>  {
+>  	int error;
+>  
+> -	error = wpc->ops->map_blocks(wpc, inode, pos);
+> -	if (error)
+> -		goto fail;
+> -	trace_iomap_writepage_map(inode, &wpc->iomap);
+> -
+> -	switch (wpc->iomap.type) {
+> -	case IOMAP_INLINE:
+> -		WARN_ON_ONCE(1);
+> -		error = -EIO;
+> -		break;
+> -	case IOMAP_HOLE:
+> -		break;
+> -	default:
+> -		iomap_add_to_ioend(wpc, wbc, folio, inode, pos);
+
+Hey wait, the previous patch missed the error return here!
+
+> -		(*count)++;
+> -	}
+> +	do {
+> +		unsigned map_len;
+> +
+> +		error = wpc->ops->map_blocks(wpc, inode, pos);
+> +		if (error)
+> +			break;
+> +		trace_iomap_writepage_map(inode, &wpc->iomap);
+> +
+> +		map_len = min_t(u64, dirty_len,
+> +			wpc->iomap.offset + wpc->iomap.length - pos);
+> +		WARN_ON_ONCE(!folio->private && map_len < dirty_len);
+> +
+> +		switch (wpc->iomap.type) {
+> +		case IOMAP_INLINE:
+> +			WARN_ON_ONCE(1);
+> +			error = -EIO;
+> +			break;
+> +		case IOMAP_HOLE:
+> +			break;
+> +		default:
+> +			error = iomap_add_to_ioend(wpc, wbc, folio, inode, pos,
+> +					map_len);
+> +			if (!error)
+> +				(*count)++;
+> +			break;
+> +		}
+> +		dirty_len -= map_len;
+> +		pos += map_len;
+> +	} while (dirty_len && !error);
+>  
+> -fail:
+>  	/*
+>  	 * We cannot cancel the ioend directly here on error.  We may have
+>  	 * already set other pages under writeback and hence we have to run I/O
+> @@ -1827,7 +1875,7 @@ static bool iomap_writepage_handle_eof(struct folio *folio, struct inode *inode,
+>  		 * beyond i_size.
+>  		 */
+>  		folio_zero_segment(folio, poff, folio_size(folio));
+> -		*end_pos = isize;
+> +		*end_pos = round_up(isize, i_blocksize(inode));
+>  	}
+>  
+>  	return true;
+> @@ -1838,12 +1886,11 @@ static int iomap_writepage_map(struct iomap_writepage_ctx *wpc,
+>  {
+>  	struct iomap_folio_state *ifs = folio->private;
+>  	struct inode *inode = folio->mapping->host;
+> -	unsigned len = i_blocksize(inode);
+> -	unsigned nblocks = i_blocks_per_folio(inode, folio);
+>  	u64 pos = folio_pos(folio);
+>  	u64 end_pos = pos + folio_size(folio);
+>  	unsigned count = 0;
+> -	int error = 0, i;
+> +	int error = 0;
+> +	u32 rlen;
+>  
+>  	WARN_ON_ONCE(!folio_test_locked(folio));
+>  	WARN_ON_ONCE(folio_test_dirty(folio));
+> @@ -1857,7 +1904,7 @@ static int iomap_writepage_map(struct iomap_writepage_ctx *wpc,
+>  	}
+>  	WARN_ON_ONCE(end_pos <= pos);
+>  
+> -	if (nblocks > 1) {
+> +	if (i_blocks_per_folio(inode, folio) > 1) {
+>  		if (!ifs) {
+>  			ifs = ifs_alloc(inode, folio, 0);
+>  			iomap_set_range_dirty(folio, 0, end_pos - pos);
+> @@ -1880,18 +1927,16 @@ static int iomap_writepage_map(struct iomap_writepage_ctx *wpc,
+>  	folio_start_writeback(folio);
+>  
+>  	/*
+> -	 * Walk through the folio to find areas to write back. If we
+> -	 * run off the end of the current map or find the current map
+> -	 * invalid, grab a new one.
+> +	 * Walk through the folio to find dirty areas to write back.
+>  	 */
+> -	for (i = 0; i < nblocks && pos < end_pos; i++, pos += len) {
+> -		if (ifs && !ifs_block_is_dirty(folio, ifs, i))
+> -			continue;
+> -		error = iomap_writepage_map_blocks(wpc, wbc, folio, inode, pos,
+> -				&count);
+> +	while ((rlen = iomap_find_dirty_range(folio, &pos, end_pos))) {
+> +		error = iomap_writepage_map_blocks(wpc, wbc, folio, inode,
+> +				pos, rlen, &count);
+>  		if (error)
+>  			break;
+> +		pos += rlen;
+>  	}
+> +
+>  	if (count)
+>  		wpc->nr_folios++;
+>  
+> diff --git a/include/linux/iomap.h b/include/linux/iomap.h
+> index b8d3b658ad2b03..49d93f53878565 100644
+> --- a/include/linux/iomap.h
+> +++ b/include/linux/iomap.h
+> @@ -309,6 +309,13 @@ struct iomap_writeback_ops {
+>  	/*
+>  	 * Required, maps the blocks so that writeback can be performed on
+>  	 * the range starting at offset.
+> +	 *
+> +	 * Can return arbitrarily large regions, but we need to call into it at
+> +	 * least once per folio to allow the file systems to synchronize with
+> +	 * the write path that could be invalidating mappings.
+
+Does xfs_map_blocks already return arbitrarily large regions?  I think
+it already does since I see it setting imap.br_blockcount in places.
 
 --D
 
-> --D
+> +	 *
+> +	 * An existing mapping from a previous call to this method can be reused
+> +	 * by the file system if it is still valid.
+>  	 */
+>  	int (*map_blocks)(struct iomap_writepage_ctx *wpc, struct inode *inode,
+>  				loff_t offset);
+> -- 
+> 2.39.2
 > 
-> >  F:	fs/xfs/
-> >  F:	include/uapi/linux/dqblk_xfs.h
-> >  F:	include/uapi/linux/fsmap.h
-> > 
-> > base-commit: 9c235dfc3d3f901fe22acb20f2ab37ff39f2ce02
-> > -- 
-> > An old man doll... just what I always wanted! - Clara
-> > 
-> > 
 > 
