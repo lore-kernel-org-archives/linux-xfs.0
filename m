@@ -1,22 +1,22 @@
 Authentication-Results: smtp.subspace.kernel.org; dkim=none
-Received: from szxga03-in.huawei.com (szxga03-in.huawei.com [45.249.212.189])
-	by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 36EB884
-	for <linux-xfs@vger.kernel.org>; Thu, 30 Nov 2023 04:02:39 -0800 (PST)
-Received: from kwepemi500009.china.huawei.com (unknown [172.30.72.53])
-	by szxga03-in.huawei.com (SkyGuard) with ESMTP id 4Sgvp02YzjzMnRS;
-	Thu, 30 Nov 2023 19:57:44 +0800 (CST)
+Received: from szxga02-in.huawei.com (szxga02-in.huawei.com [45.249.212.188])
+	by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 67C5DD6C
+	for <linux-xfs@vger.kernel.org>; Thu, 30 Nov 2023 05:09:26 -0800 (PST)
+Received: from kwepemi500009.china.huawei.com (unknown [172.30.72.56])
+	by szxga02-in.huawei.com (SkyGuard) with ESMTP id 4SgxMp3pkszWhpW;
+	Thu, 30 Nov 2023 21:08:38 +0800 (CST)
 Received: from localhost (10.175.127.227) by kwepemi500009.china.huawei.com
  (7.221.188.199) with Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2507.35; Thu, 30 Nov
- 2023 20:02:36 +0800
-Date: Thu, 30 Nov 2023 20:06:28 +0800
+ 2023 21:09:23 +0800
+Date: Thu, 30 Nov 2023 21:13:15 +0800
 From: Long Li <leo.lilong@huawei.com>
 To: "Darrick J. Wong" <djwong@kernel.org>
 CC: <linux-xfs@vger.kernel.org>, <chandanbabu@kernel.org>, <hch@lst.de>
-Subject: Re: [PATCHSET RFC 0/7] xfs: log intent item recovery should
- reconstruct defer work state
-Message-ID: <20231130120628.GA1599481@ceph-admin>
+Subject: Re: [PATCH 5/7] xfs: recreate work items when recovering intent items
+Message-ID: <20231130131315.GA1772751@ceph-admin>
 References: <170120318847.13206.17051442307252477333.stgit@frogsfrogsfrogs>
+ <170120321729.13206.3574213430456423200.stgit@frogsfrogsfrogs>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -25,199 +25,125 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Disposition: inline
-In-Reply-To: <170120318847.13206.17051442307252477333.stgit@frogsfrogsfrogs>
-X-ClientProxiedBy: dggems704-chm.china.huawei.com (10.3.19.181) To
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <170120321729.13206.3574213430456423200.stgit@frogsfrogsfrogs>
+X-ClientProxiedBy: dggems705-chm.china.huawei.com (10.3.19.182) To
  kwepemi500009.china.huawei.com (7.221.188.199)
 X-CFilter-Loop: Reflected
 
-On Tue, Nov 28, 2023 at 12:26:28PM -0800, Darrick J. Wong wrote:
-> Hi all,
+On Tue, Nov 28, 2023 at 12:26:57PM -0800, Darrick J. Wong wrote:
+> From: Darrick J. Wong <djwong@kernel.org>
 > 
-> Long Li reported a KASAN report from a UAF when intent recovery fails:
+> Recreate work items for each xfs_defer_pending object when we are
+> recovering intent items.
 > 
->  ==================================================================
->  BUG: KASAN: slab-use-after-free in xfs_cui_release+0xb7/0xc0
->  Read of size 4 at addr ffff888012575e60 by task kworker/u8:3/103
->  CPU: 3 PID: 103 Comm: kworker/u8:3 Not tainted 6.4.0-rc7-next-20230619-00003-g94543a53f9a4-dirty #166
->  Workqueue: xfs-cil/sda xlog_cil_push_work
->  Call Trace:
->   <TASK>
->   dump_stack_lvl+0x50/0x70
->   print_report+0xc2/0x600
->   kasan_report+0xb6/0xe0
->   xfs_cui_release+0xb7/0xc0
->   xfs_cud_item_release+0x3c/0x90
->   xfs_trans_committed_bulk+0x2d5/0x7f0
->   xlog_cil_committed+0xaba/0xf20
->   xlog_cil_push_work+0x1a60/0x2360
->   process_one_work+0x78e/0x1140
->   worker_thread+0x58b/0xf60
->   kthread+0x2cd/0x3c0
->   ret_from_fork+0x1f/0x30
->   </TASK>
+> Signed-off-by: Darrick J. Wong <djwong@kernel.org>
+> ---
+>  fs/xfs/libxfs/xfs_defer.h  |    9 ++++
+>  fs/xfs/xfs_attr_item.c     |   94 +++++++++++++++++++++----------------
+>  fs/xfs/xfs_bmap_item.c     |   56 ++++++++++++++--------
+>  fs/xfs/xfs_extfree_item.c  |   50 ++++++++++++-------
+>  fs/xfs/xfs_refcount_item.c |   61 +++++++++++-------------
+>  fs/xfs/xfs_rmap_item.c     |  113 ++++++++++++++++++++++++--------------------
+>  6 files changed, 221 insertions(+), 162 deletions(-)
 > 
->  Allocated by task 531:
->   kasan_save_stack+0x22/0x40
->   kasan_set_track+0x25/0x30
->   __kasan_slab_alloc+0x55/0x60
->   kmem_cache_alloc+0x195/0x5f0
->   xfs_cui_init+0x198/0x1d0
->   xlog_recover_cui_commit_pass2+0x133/0x5f0
->   xlog_recover_items_pass2+0x107/0x230
->   xlog_recover_commit_trans+0x3e7/0x9c0
->   xlog_recovery_process_trans+0x140/0x1d0
->   xlog_recover_process_ophdr+0x1a0/0x3d0
->   xlog_recover_process_data+0x108/0x2d0
->   xlog_recover_process+0x1f6/0x280
->   xlog_do_recovery_pass+0x609/0xdb0
->   xlog_do_log_recovery+0x84/0xe0
->   xlog_do_recover+0x7d/0x470
->   xlog_recover+0x25f/0x490
->   xfs_log_mount+0x2dd/0x6f0
->   xfs_mountfs+0x11ce/0x1e70
->   xfs_fs_fill_super+0x10ec/0x1b20
->   get_tree_bdev+0x3c8/0x730
->   vfs_get_tree+0x89/0x2c0
->   path_mount+0xecf/0x1800
->   do_mount+0xf3/0x110
->   __x64_sys_mount+0x154/0x1f0
->   do_syscall_64+0x39/0x80
->   entry_SYSCALL_64_after_hwframe+0x63/0xcd
 > 
->  Freed by task 531:
->   kasan_save_stack+0x22/0x40
->   kasan_set_track+0x25/0x30
->   kasan_save_free_info+0x2b/0x40
->   __kasan_slab_free+0x114/0x1b0
->   kmem_cache_free+0xf8/0x510
->   xfs_cui_item_free+0x95/0xb0
->   xfs_cui_release+0x86/0xc0
->   xlog_recover_cancel_intents.isra.0+0xf8/0x210
->   xlog_recover_finish+0x7e7/0x980
->   xfs_log_mount_finish+0x2bb/0x4a0
->   xfs_mountfs+0x14bf/0x1e70
->   xfs_fs_fill_super+0x10ec/0x1b20
->   get_tree_bdev+0x3c8/0x730
->   vfs_get_tree+0x89/0x2c0
->   path_mount+0xecf/0x1800
->   do_mount+0xf3/0x110
->   __x64_sys_mount+0x154/0x1f0
->   do_syscall_64+0x39/0x80
->   entry_SYSCALL_64_after_hwframe+0x63/0xcd
-> 
->  The buggy address belongs to the object at ffff888012575dc8
->   which belongs to the cache xfs_cui_item of size 432
->  The buggy address is located 152 bytes inside of
->   freed 432-byte region [ffff888012575dc8, ffff888012575f78)
-> 
->  The buggy address belongs to the physical page:
->  page:ffffea0000495d00 refcount:1 mapcount:0 mapping:0000000000000000 index:0xffff888012576208 pfn:0x12574
->  head:ffffea0000495d00 order:2 entire_mapcount:0 nr_pages_mapped:0 pincount:0
->  flags: 0x1fffff80010200(slab|head|node=0|zone=1|lastcpupid=0x1fffff)
->  page_type: 0xffffffff()
->  raw: 001fffff80010200 ffff888012092f40 ffff888014570150 ffff888014570150
->  raw: ffff888012576208 00000000001e0010 00000001ffffffff 0000000000000000
->  page dumped because: kasan: bad access detected
-> 
->  Memory state around the buggy address:
->   ffff888012575d00: fb fb fb fb fb fb fb fb fb fb fb fc fc fc fc fc
->   ffff888012575d80: fc fc fc fc fc fc fc fc fc fa fb fb fb fb fb fb
->  >ffff888012575e00: fb fb fb fb fb fb fb fb fb fb fb fb fb fb fb fb
->                                                         ^
->   ffff888012575e80: fb fb fb fb fb fb fb fb fb fb fb fb fb fb fb fb
->   ffff888012575f00: fb fb fb fb fb fb fb fb fb fb fb fb fb fb fb fc
->  ==================================================================
-> 
-> "If process intents fails, intent items left in AIL will be delete
-> from AIL and freed in error handling, even intent items that have been
-> recovered and created done items. After this, uaf will be triggered when
-> done item committed, because at this point the released intent item will
-> be accessed.
-> 
-> xlog_recover_finish                     xlog_cil_push_work
-> ----------------------------            ---------------------------
-> xlog_recover_process_intents
->   xfs_cui_item_recover//cui_refcount == 1
->     xfs_trans_get_cud
->     xfs_trans_commit
->       <add cud item to cil>
->   xfs_cui_item_recover
->     <error occurred and return>
-> xlog_recover_cancel_intents
->   xfs_cui_release     //cui_refcount == 0
->     xfs_cui_item_free //free cui
->   <release other intent items>
-> xlog_force_shutdown   //shutdown
->                                <...>
->                                         <push items in cil>
->                                         xlog_cil_committed
->                                           xfs_cud_item_release
->                                             xfs_cui_release // UAF
-> 
-> "Intent log items are created with a reference count of 2, one for the
-> creator, and one for the intent done object. Log recovery explicitly
-> drops the creator reference after it is inserted into the AIL, but it
-> then processes the log item as if it also owns the intent-done reference.
-> 
-> "The code in ->iop_recovery should assume that it passes the reference
-> to the done intent, we can remove the intent item from the AIL after
-> creating the done-intent, but if that code fails before creating the
-> done-intent then it needs to release the intent reference by log recovery
-> itself.
-> 
-> "That way when we go to cancel the intent, the only intents we find in
-> the AIL are the ones we know have not been processed yet and hence we
-> can safely drop both the creator and the intent done reference from
-> xlog_recover_cancel_intents().
-> 
-> "Hence if we remove the intent from the list of intents that need to
-> be recovered after we have done the initial recovery, we acheive two
-> things:
-> 
-> "1. the tail of the log can be moved forward with the commit of the
-> done intent or new intent to continue the operation, and
-> 
-> "2. We avoid the problem of trying to determine how many reference
-> counts we need to drop from intent recovery cancelling because we
-> never come across intents we've actually attempted recovery on."
-> 
-> Restated: The cause of the UAF is that xlog_recover_cancel_intents
-> thinks that it owns the refcount on any intent item in the AIL, and that
-> it's always safe to release these intent items.  This is not true after
-> the recovery function creates an log intent done item and points it at
-> the log intent item because releasing the done item always releases the
-> intent item.
-> 
-> The runtime defer ops code avoids all this by tracking both the log
-> intent and the intent done items, and releasing only the intent done
-> item if both have been created.  Long Li proposed fixing this by adding
-> state flags, but I have a more comprehensive fix.
-> 
-> First, observe that the latter half of the intent _recover functions are
-> nearly open-coded versions of the corresponding _finish_one function
-> that uses an onstack deferred work item to single-step through the item.
-> 
-> Second, notice that the recover function is not an exact match because
-> of the odd behavior that unfinished recovered work items are relogged
-> with separate log intent items instead of a single new log intent item,
-> which is what the defer ops machinery does.
-> 
-> Dave and I have long suspected that recovery should be reconstructing
-> the defer work state from what's in the recovered intent item.  Now we
-> finally have an excuse to refactor the code to do that.
-> 
-> This series starts by fixing a resource leak in LARP recovery.  We fix
-> the bug that Long Li reported by switching the intent recovery code to
-> construct chains of xfs_defer_pending objects and then using the defer
-> pending objects to track the intent/done item ownership.  Finally, we
-> clean up the code to reconstruct the exact incore state, which means we
-> can remove all the opencoded _recover code, which makes maintaining log
-> items much easier.
-> 
-
-Thanks for fixing this UAF issue, it really is a much more comprehensive fix,
-and makes the intent item recovery code much easier to maintain.
-
-Best Regards
-Long Li
+> diff --git a/fs/xfs/libxfs/xfs_defer.h b/fs/xfs/libxfs/xfs_defer.h
+> index 3c923a728323..ee1e76d3f7e8 100644
+> --- a/fs/xfs/libxfs/xfs_defer.h
+> +++ b/fs/xfs/libxfs/xfs_defer.h
+> @@ -130,6 +130,15 @@ struct xfs_defer_pending *xfs_defer_start_recovery(struct xfs_log_item *lip,
+>  void xfs_defer_cancel_recovery(struct xfs_mount *mp,
+>  		struct xfs_defer_pending *dfp);
+>  
+> +static inline void
+> +xfs_defer_recover_work_item(
+> +	struct xfs_defer_pending	*dfp,
+> +	struct list_head		*work)
+> +{
+> +	list_add_tail(work, &dfp->dfp_work);
+> +	dfp->dfp_count++;
+> +}
+> +
+>  int __init xfs_defer_init_item_caches(void);
+>  void xfs_defer_destroy_item_caches(void);
+>  
+> diff --git a/fs/xfs/xfs_attr_item.c b/fs/xfs/xfs_attr_item.c
+> index 82775e9537df..fbc88325848a 100644
+> --- a/fs/xfs/xfs_attr_item.c
+> +++ b/fs/xfs/xfs_attr_item.c
+> @@ -539,47 +539,22 @@ xfs_attri_validate(
+>  	return xfs_verify_ino(mp, attrp->alfi_ino);
+>  }
+>  
+> -/*
+> - * Process an attr intent item that was recovered from the log.  We need to
+> - * delete the attr that it describes.
+> - */
+> -STATIC int
+> -xfs_attri_item_recover(
+> +static inline struct xfs_attr_intent *
+> +xfs_attri_recover_work(
+> +	struct xfs_mount		*mp,
+>  	struct xfs_defer_pending	*dfp,
+> -	struct list_head		*capture_list)
+> +	struct xfs_attri_log_format	*attrp,
+> +	struct xfs_inode		*ip,
+> +	struct xfs_attri_log_nameval	*nv)
+>  {
+> -	struct xfs_log_item		*lip = dfp->dfp_intent;
+> -	struct xfs_attri_log_item	*attrip = ATTRI_ITEM(lip);
+>  	struct xfs_attr_intent		*attr;
+> -	struct xfs_mount		*mp = lip->li_log->l_mp;
+> -	struct xfs_inode		*ip;
+>  	struct xfs_da_args		*args;
+> -	struct xfs_trans		*tp;
+> -	struct xfs_trans_res		resv;
+> -	struct xfs_attri_log_format	*attrp;
+> -	struct xfs_attri_log_nameval	*nv = attrip->attri_nameval;
+> -	int				error;
+> -	int				total;
+> -	int				local;
+> -	struct xfs_attrd_log_item	*done_item = NULL;
+> -
+> -	/*
+> -	 * First check the validity of the attr described by the ATTRI.  If any
+> -	 * are bad, then assume that all are bad and just toss the ATTRI.
+> -	 */
+> -	attrp = &attrip->attri_format;
+> -	if (!xfs_attri_validate(mp, attrp) ||
+> -	    !xfs_attr_namecheck(nv->name.i_addr, nv->name.i_len))
+> -		return -EFSCORRUPTED;
+> -
+> -	error = xlog_recover_iget(mp,  attrp->alfi_ino, &ip);
+> -	if (error)
+> -		return error;
+>  
+>  	attr = kmem_zalloc(sizeof(struct xfs_attr_intent) +
+>  			   sizeof(struct xfs_da_args), KM_NOFS);
+>  	args = (struct xfs_da_args *)(attr + 1);
+>  
+> +	INIT_LIST_HEAD(&attr->xattri_list);
+>  	attr->xattri_da_args = args;
+>  	attr->xattri_op_flags = attrp->alfi_op_flags &
+>  						XFS_ATTRI_OP_FLAGS_TYPE_MASK;
+> @@ -607,6 +582,8 @@ xfs_attri_item_recover(
+>  	switch (attr->xattri_op_flags) {
+>  	case XFS_ATTRI_OP_FLAGS_SET:
+>  	case XFS_ATTRI_OP_FLAGS_REPLACE:
+> +		int			local;
+> +
+>  		args->value = nv->value.i_addr;
+>  		args->valuelen = nv->value.i_len;
+>  		args->total = xfs_attr_calc_size(args, &local);
  
+When I compile the kernel with this set of patches, I get the following error:
+
+fs/xfs/xfs_attr_item.c: In function ‘xfs_attri_recover_work’:                                            
+fs/xfs/xfs_attr_item.c:585:3: error: a label can only be part of a statement and a declaration is not a statement
+  585 |   int   local;                                                                                   
+      |   ^~~ 
+
+Thanks,
+Long Li
+
