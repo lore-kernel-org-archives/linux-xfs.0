@@ -1,149 +1,111 @@
-Authentication-Results: smtp.subspace.kernel.org; dkim=none
-Received: from szxga02-in.huawei.com (szxga02-in.huawei.com [45.249.212.188])
-	by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 67C5DD6C
-	for <linux-xfs@vger.kernel.org>; Thu, 30 Nov 2023 05:09:26 -0800 (PST)
-Received: from kwepemi500009.china.huawei.com (unknown [172.30.72.56])
-	by szxga02-in.huawei.com (SkyGuard) with ESMTP id 4SgxMp3pkszWhpW;
-	Thu, 30 Nov 2023 21:08:38 +0800 (CST)
-Received: from localhost (10.175.127.227) by kwepemi500009.china.huawei.com
- (7.221.188.199) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2507.35; Thu, 30 Nov
- 2023 21:09:23 +0800
-Date: Thu, 30 Nov 2023 21:13:15 +0800
-From: Long Li <leo.lilong@huawei.com>
-To: "Darrick J. Wong" <djwong@kernel.org>
-CC: <linux-xfs@vger.kernel.org>, <chandanbabu@kernel.org>, <hch@lst.de>
-Subject: Re: [PATCH 5/7] xfs: recreate work items when recovering intent items
-Message-ID: <20231130131315.GA1772751@ceph-admin>
-References: <170120318847.13206.17051442307252477333.stgit@frogsfrogsfrogs>
- <170120321729.13206.3574213430456423200.stgit@frogsfrogsfrogs>
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b="W0R0ufQR"
+Received: from mx0a-001b2d01.pphosted.com (mx0a-001b2d01.pphosted.com [148.163.156.1])
+	by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8829B170B;
+	Thu, 30 Nov 2023 05:53:36 -0800 (PST)
+Received: from pps.filterd (m0353729.ppops.net [127.0.0.1])
+	by mx0a-001b2d01.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 3AUDd9qW001806;
+	Thu, 30 Nov 2023 13:53:30 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ibm.com; h=from : to : cc : subject
+ : date : message-id : in-reply-to : references : mime-version :
+ content-transfer-encoding; s=pp1;
+ bh=dNu5Klycj9CTH42YxtPoVOXxFekkC+Q8QRK1Zv71CMw=;
+ b=W0R0ufQRr1h7eO4seILCjiyHBmegJXEd3o0i7/eDhacv8GcD2fbLv8GZ0g1UYQJJ9UU/
+ SqVvLD9B2uWEwauDzYdCGx+XzbpewXtPkOoawpAgiG+fv2BmEcsZiw/o8h/QfkPWAPfH
+ 7ItIEWKhqQ9vywNO8WVn8YLjIQMVha2NMRKJek3QyyucUjbI3pWyAeNffYTzIETGPR0r
+ PZLfYsKd2XwygwzGxCby/bs+kXWhEj4fWaEl2ny9eH/f0razqAIAiysd4YXov+tmmdCQ
+ Kvfwm14HKXRwMwiqAhbUXwZGNbme7EZosoV4A4Nf6nKWB2EUwsdlyCXbotAMYtVi2Tq5 QQ== 
+Received: from pps.reinject (localhost [127.0.0.1])
+	by mx0a-001b2d01.pphosted.com (PPS) with ESMTPS id 3upuc30mkr-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Thu, 30 Nov 2023 13:53:30 +0000
+Received: from m0353729.ppops.net (m0353729.ppops.net [127.0.0.1])
+	by pps.reinject (8.17.1.5/8.17.1.5) with ESMTP id 3AUDea4V004643;
+	Thu, 30 Nov 2023 13:53:29 GMT
+Received: from ppma13.dal12v.mail.ibm.com (dd.9e.1632.ip4.static.sl-reverse.com [50.22.158.221])
+	by mx0a-001b2d01.pphosted.com (PPS) with ESMTPS id 3upuc30mkb-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Thu, 30 Nov 2023 13:53:29 +0000
+Received: from pps.filterd (ppma13.dal12v.mail.ibm.com [127.0.0.1])
+	by ppma13.dal12v.mail.ibm.com (8.17.1.19/8.17.1.19) with ESMTP id 3AUDn9ju029475;
+	Thu, 30 Nov 2023 13:53:28 GMT
+Received: from smtprelay04.fra02v.mail.ibm.com ([9.218.2.228])
+	by ppma13.dal12v.mail.ibm.com (PPS) with ESMTPS id 3ukwfke1r8-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Thu, 30 Nov 2023 13:53:27 +0000
+Received: from smtpav01.fra02v.mail.ibm.com (smtpav01.fra02v.mail.ibm.com [10.20.54.100])
+	by smtprelay04.fra02v.mail.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 3AUDrOku42139910
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+	Thu, 30 Nov 2023 13:53:25 GMT
+Received: from smtpav01.fra02v.mail.ibm.com (unknown [127.0.0.1])
+	by IMSVA (Postfix) with ESMTP id DDDAB2004B;
+	Thu, 30 Nov 2023 13:53:24 +0000 (GMT)
+Received: from smtpav01.fra02v.mail.ibm.com (unknown [127.0.0.1])
+	by IMSVA (Postfix) with ESMTP id 45D4D20043;
+	Thu, 30 Nov 2023 13:53:22 +0000 (GMT)
+Received: from li-bb2b2a4c-3307-11b2-a85c-8fa5c3a69313.ibm.com.com (unknown [9.43.76.38])
+	by smtpav01.fra02v.mail.ibm.com (Postfix) with ESMTP;
+	Thu, 30 Nov 2023 13:53:22 +0000 (GMT)
+From: Ojaswin Mujoo <ojaswin@linux.ibm.com>
+To: linux-ext4@vger.kernel.org, "Theodore Ts'o" <tytso@mit.edu>
+Cc: Ritesh Harjani <ritesh.list@gmail.com>, linux-kernel@vger.kernel.org,
+        "Darrick J . Wong" <djwong@kernel.org>, linux-block@vger.kernel.org,
+        linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
+        John Garry <john.g.garry@oracle.com>, dchinner@redhat.com
+Subject: [RFC 1/7] iomap: Don't fall back to buffered write if the write is atomic
+Date: Thu, 30 Nov 2023 19:23:09 +0530
+Message-Id: <09ec4c88b565c85dee91eccf6e894a0c047d9e69.1701339358.git.ojaswin@linux.ibm.com>
+X-Mailer: git-send-email 2.39.3
+In-Reply-To: <cover.1701339358.git.ojaswin@linux.ibm.com>
+References: <cover.1701339358.git.ojaswin@linux.ibm.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Disposition: inline
 Content-Transfer-Encoding: 8bit
-In-Reply-To: <170120321729.13206.3574213430456423200.stgit@frogsfrogsfrogs>
-X-ClientProxiedBy: dggems705-chm.china.huawei.com (10.3.19.182) To
- kwepemi500009.china.huawei.com (7.221.188.199)
-X-CFilter-Loop: Reflected
+X-TM-AS-GCONF: 00
+X-Proofpoint-GUID: s7Ig9mp1nPeU4UDRadYI1W8VOuasZx2S
+X-Proofpoint-ORIG-GUID: -9Q93Ol6p1bj0dK9orlZJjs2_NSBq4RL
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.272,Aquarius:18.0.997,Hydra:6.0.619,FMLib:17.11.176.26
+ definitions=2023-11-30_12,2023-11-30_01,2023-05-22_02
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 lowpriorityscore=0
+ suspectscore=0 adultscore=0 clxscore=1015 impostorscore=0 phishscore=0
+ priorityscore=1501 bulkscore=0 mlxlogscore=822 spamscore=0 malwarescore=0
+ mlxscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2311060000 definitions=main-2311300102
 
-On Tue, Nov 28, 2023 at 12:26:57PM -0800, Darrick J. Wong wrote:
-> From: Darrick J. Wong <djwong@kernel.org>
-> 
-> Recreate work items for each xfs_defer_pending object when we are
-> recovering intent items.
-> 
-> Signed-off-by: Darrick J. Wong <djwong@kernel.org>
-> ---
->  fs/xfs/libxfs/xfs_defer.h  |    9 ++++
->  fs/xfs/xfs_attr_item.c     |   94 +++++++++++++++++++++----------------
->  fs/xfs/xfs_bmap_item.c     |   56 ++++++++++++++--------
->  fs/xfs/xfs_extfree_item.c  |   50 ++++++++++++-------
->  fs/xfs/xfs_refcount_item.c |   61 +++++++++++-------------
->  fs/xfs/xfs_rmap_item.c     |  113 ++++++++++++++++++++++++--------------------
->  6 files changed, 221 insertions(+), 162 deletions(-)
-> 
-> 
-> diff --git a/fs/xfs/libxfs/xfs_defer.h b/fs/xfs/libxfs/xfs_defer.h
-> index 3c923a728323..ee1e76d3f7e8 100644
-> --- a/fs/xfs/libxfs/xfs_defer.h
-> +++ b/fs/xfs/libxfs/xfs_defer.h
-> @@ -130,6 +130,15 @@ struct xfs_defer_pending *xfs_defer_start_recovery(struct xfs_log_item *lip,
->  void xfs_defer_cancel_recovery(struct xfs_mount *mp,
->  		struct xfs_defer_pending *dfp);
->  
-> +static inline void
-> +xfs_defer_recover_work_item(
-> +	struct xfs_defer_pending	*dfp,
-> +	struct list_head		*work)
-> +{
-> +	list_add_tail(work, &dfp->dfp_work);
-> +	dfp->dfp_count++;
-> +}
-> +
->  int __init xfs_defer_init_item_caches(void);
->  void xfs_defer_destroy_item_caches(void);
->  
-> diff --git a/fs/xfs/xfs_attr_item.c b/fs/xfs/xfs_attr_item.c
-> index 82775e9537df..fbc88325848a 100644
-> --- a/fs/xfs/xfs_attr_item.c
-> +++ b/fs/xfs/xfs_attr_item.c
-> @@ -539,47 +539,22 @@ xfs_attri_validate(
->  	return xfs_verify_ino(mp, attrp->alfi_ino);
->  }
->  
-> -/*
-> - * Process an attr intent item that was recovered from the log.  We need to
-> - * delete the attr that it describes.
-> - */
-> -STATIC int
-> -xfs_attri_item_recover(
-> +static inline struct xfs_attr_intent *
-> +xfs_attri_recover_work(
-> +	struct xfs_mount		*mp,
->  	struct xfs_defer_pending	*dfp,
-> -	struct list_head		*capture_list)
-> +	struct xfs_attri_log_format	*attrp,
-> +	struct xfs_inode		*ip,
-> +	struct xfs_attri_log_nameval	*nv)
->  {
-> -	struct xfs_log_item		*lip = dfp->dfp_intent;
-> -	struct xfs_attri_log_item	*attrip = ATTRI_ITEM(lip);
->  	struct xfs_attr_intent		*attr;
-> -	struct xfs_mount		*mp = lip->li_log->l_mp;
-> -	struct xfs_inode		*ip;
->  	struct xfs_da_args		*args;
-> -	struct xfs_trans		*tp;
-> -	struct xfs_trans_res		resv;
-> -	struct xfs_attri_log_format	*attrp;
-> -	struct xfs_attri_log_nameval	*nv = attrip->attri_nameval;
-> -	int				error;
-> -	int				total;
-> -	int				local;
-> -	struct xfs_attrd_log_item	*done_item = NULL;
-> -
-> -	/*
-> -	 * First check the validity of the attr described by the ATTRI.  If any
-> -	 * are bad, then assume that all are bad and just toss the ATTRI.
-> -	 */
-> -	attrp = &attrip->attri_format;
-> -	if (!xfs_attri_validate(mp, attrp) ||
-> -	    !xfs_attr_namecheck(nv->name.i_addr, nv->name.i_len))
-> -		return -EFSCORRUPTED;
-> -
-> -	error = xlog_recover_iget(mp,  attrp->alfi_ino, &ip);
-> -	if (error)
-> -		return error;
->  
->  	attr = kmem_zalloc(sizeof(struct xfs_attr_intent) +
->  			   sizeof(struct xfs_da_args), KM_NOFS);
->  	args = (struct xfs_da_args *)(attr + 1);
->  
-> +	INIT_LIST_HEAD(&attr->xattri_list);
->  	attr->xattri_da_args = args;
->  	attr->xattri_op_flags = attrp->alfi_op_flags &
->  						XFS_ATTRI_OP_FLAGS_TYPE_MASK;
-> @@ -607,6 +582,8 @@ xfs_attri_item_recover(
->  	switch (attr->xattri_op_flags) {
->  	case XFS_ATTRI_OP_FLAGS_SET:
->  	case XFS_ATTRI_OP_FLAGS_REPLACE:
-> +		int			local;
-> +
->  		args->value = nv->value.i_addr;
->  		args->valuelen = nv->value.i_len;
->  		args->total = xfs_attr_calc_size(args, &local);
- 
-When I compile the kernel with this set of patches, I get the following error:
+Currently, iomap only supports atomic writes for direct IOs and there is
+no guarantees that a buffered IO will be atomic. Hence, if the user has
+explicitly requested the direct write to be atomic and there's a
+failure, return -EIO instead of falling back to buffered IO.
 
-fs/xfs/xfs_attr_item.c: In function ‘xfs_attri_recover_work’:                                            
-fs/xfs/xfs_attr_item.c:585:3: error: a label can only be part of a statement and a declaration is not a statement
-  585 |   int   local;                                                                                   
-      |   ^~~ 
+Signed-off-by: Ojaswin Mujoo <ojaswin@linux.ibm.com>
+---
+ fs/iomap/direct-io.c | 8 +++++++-
+ 1 file changed, 7 insertions(+), 1 deletion(-)
 
-Thanks,
-Long Li
+diff --git a/fs/iomap/direct-io.c b/fs/iomap/direct-io.c
+index 6ef25e26f1a1..3e7cd9bc8f4d 100644
+--- a/fs/iomap/direct-io.c
++++ b/fs/iomap/direct-io.c
+@@ -662,7 +662,13 @@ __iomap_dio_rw(struct kiocb *iocb, struct iov_iter *iter,
+ 			if (ret != -EAGAIN) {
+ 				trace_iomap_dio_invalidate_fail(inode, iomi.pos,
+ 								iomi.len);
+-				ret = -ENOTBLK;
++				/*
++				 * if this write was supposed to be atomic,
++				 * return the err rather than trying to fall
++				 * back to buffered IO.
++				 */
++				if (!atomic_write)
++					ret = -ENOTBLK;
+ 			}
+ 			goto out_free_dio;
+ 		}
+-- 
+2.39.3
 
