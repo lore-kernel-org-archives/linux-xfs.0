@@ -1,35 +1,29 @@
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="DqpS05ny"
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="f3+gK1po"
 Received: from bombadil.infradead.org (bombadil.infradead.org [IPv6:2607:7c80:54:3::133])
-	by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E15BFC4
-	for <linux-xfs@vger.kernel.org>; Wed, 29 Nov 2023 20:33:22 -0800 (PST)
+	by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0CB6B10D4
+	for <linux-xfs@vger.kernel.org>; Wed, 29 Nov 2023 20:45:00 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
 	d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Type:MIME-Version
 	:References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
 	Content-Transfer-Encoding:Content-ID:Content-Description;
-	bh=L2J70v8SgjujB46QoicQpTzo9ktlEXnXUA3bWLj7UIM=; b=DqpS05ny50Pas5oQ3b8TEts1fX
-	DmpC0f9Tyt2+/DPlN5rcWT3UXx6w6QM6x5V06t2vyJcfJJyVWmdxPda5yN960UWXLH4DL/G2g3I1O
-	r1kQtUE0XCVtahj+idV/QeH9dYAzRKPaYdRqWsI9WzDz0CWoHeYnFia/WdhBHxKbKWYe8dZDGniwo
-	HNm/ckF26WqmxrsrhRcvLWICJ5kOssyAP8BevskY01ajHSMMgRiYNkFoRaR2yxeAXkzBw7KMcr6Jf
-	AbgfJ5Oi24SDc09Q2cI2RTsiurjQC4+/tIGMWfAScIhNYGnUl72k8T1aWjUj4VMQ3MMxaVIyf9Rl6
-	Eo+CIrkA==;
+	bh=zi9nHBxVkGMiLEWLSu+pw4kCrdsNfCXEkI8Je61acx4=; b=f3+gK1posDK7q5Uh2yyMJYakj9
+	Od3euPo620flr+zxI1g9ojN1QSoMW7wLzNhMMAOPUKzQTqexPK6ATkR5lbGtAQjB+iJK0BaWt94wL
+	IjMkHkcERTC0yF2NBcj0W+sozp5pFBGvY/2ZEYEqRaj6d+QyNgW754Vvb/pMLfTaTFiuJYd+7Hzd/
+	hLmyNONUkNfmwtJPGMdGUmCh4xA11Rhd8mS57lx6M+mm+X2vsmKooqextq95lUyrkXuwem3A+mkUC
+	acYmFppQT2PpNPudqkL9WVmjahSk6pa0aYlex62sGxbQg9JJcBEf0pwBIplJ1Xc/s9aVRQCXs3DQ3
+	cDyNZP/A==;
 Received: from hch by bombadil.infradead.org with local (Exim 4.96 #2 (Red Hat Linux))
-	id 1r8Yjq-009uZL-2T;
-	Thu, 30 Nov 2023 04:33:22 +0000
-Date: Wed, 29 Nov 2023 20:33:22 -0800
+	id 1r8Yv5-009vgu-31;
+	Thu, 30 Nov 2023 04:44:59 +0000
+Date: Wed, 29 Nov 2023 20:44:59 -0800
 From: Christoph Hellwig <hch@infradead.org>
 To: "Darrick J. Wong" <djwong@kernel.org>
-Cc: Christoph Hellwig <hch@infradead.org>, linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 1/4] xfs: force all buffers to be written during btree
- bulk load
-Message-ID: <ZWgQkqe3IefPU1SR@infradead.org>
-References: <170086926569.2770816.7549813820649168963.stgit@frogsfrogsfrogs>
- <170086926593.2770816.5504104328549141972.stgit@frogsfrogsfrogs>
- <ZWGK6Ig752wdBvwF@infradead.org>
- <20231128015041.GO2766956@frogsfrogsfrogs>
- <ZWWTJGq1ldOm6inW@infradead.org>
- <ZWYEvqZHj4KX4wqj@infradead.org>
- <20231128170734.GZ2766956@frogsfrogsfrogs>
+Cc: linux-xfs@vger.kernel.org
+Subject: Re: [PATCH 4/7] xfs: zap broken inode forks
+Message-ID: <ZWgTSyc4grcWG9L7@infradead.org>
+References: <170086927425.2771142.14267390365805527105.stgit@frogsfrogsfrogs>
+ <170086927504.2771142.15805044109521081838.stgit@frogsfrogsfrogs>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -38,19 +32,86 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20231128170734.GZ2766956@frogsfrogsfrogs>
+In-Reply-To: <170086927504.2771142.15805044109521081838.stgit@frogsfrogsfrogs>
 X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 
-On Tue, Nov 28, 2023 at 09:07:34AM -0800, Darrick J. Wong wrote:
-> > so I guess we'll need to go with the approach in this patch for now,
-> > maybe with a better commit log, and I'll look into finishing this work
-> > some time in the future.
-> 
-> <nod> I think an xarray version of this would be less clunky than
-> xfs_delwri_buf with three pointers.
+> +/* Verify the consistency of an inline attribute fork. */
+> +xfs_failaddr_t
+> +xfs_attr_shortform_verify(
+> +	struct xfs_inode		*ip)
+> +{
+> +	struct xfs_attr_shortform	*sfp;
+> +	struct xfs_ifork		*ifp;
+> +	int64_t				size;
+> +
+> +	ASSERT(ip->i_af.if_format == XFS_DINODE_FMT_LOCAL);
+> +	ifp = xfs_ifork_ptr(ip, XFS_ATTR_FORK);
+> +	sfp = (struct xfs_attr_shortform *)ifp->if_u1.if_data;
+> +	size = ifp->if_bytes;
+> +
+> +	return xfs_attr_shortform_verify_struct(sfp, size);
 
-It would, but xarray indices are unsigned longs, so we couldn't simply
-use the block number for it.  So unless we decided to give up on
-building XFS on 32-bit kernels (which would nice for other reasons)
-it would need something more complicated.
+Given that xfs_attr_shortform_verify only has a single caller in the
+kernel and no extra n in xfsprogs I'd just change the calling
+convention to pass the xfs_attr_shortform structure and size there
+and not bother with the wrapper.
+
+> +/* Check that an inode's extent does not have invalid flags or bad ranges. */
+> +xfs_failaddr_t
+> +xfs_bmap_validate_extent(
+> +	struct xfs_inode	*ip,
+> +	int			whichfork,
+> +	struct xfs_bmbt_irec	*irec)
+> +{
+> +	return xfs_bmap_validate_extent_raw(ip->i_mount,
+> +			XFS_IS_REALTIME_INODE(ip), whichfork, irec);
+> +}
+
+.. while this one has a bunch of caller so I expect it's actually
+somewhat useful.
+
+> +extern xfs_failaddr_t xfs_dir2_sf_verify_struct(struct xfs_mount *mp,
+> +		struct xfs_dir2_sf_hdr *sfp, int64_t size);
+
+It would be nice if we didn't add more pointless externs to function
+declarations in heders.
+
+> +xfs_failaddr_t
+> +xfs_dir2_sf_verify(
+> +	struct xfs_inode		*ip)
+> +{
+> +	struct xfs_mount		*mp = ip->i_mount;
+> +	struct xfs_ifork		*ifp = xfs_ifork_ptr(ip, XFS_DATA_FORK);
+> +	struct xfs_dir2_sf_hdr		*sfp;
+> +
+> +	ASSERT(ifp->if_format == XFS_DINODE_FMT_LOCAL);
+> +
+> +	sfp = (struct xfs_dir2_sf_hdr *)ifp->if_u1.if_data;
+> +	return xfs_dir2_sf_verify_struct(mp, sfp, ifp->if_bytes);
+> +}
+
+This one also only has a single caller in the kernel and user space
+combined, so I wou;dn't bother with the wrapper.
+
+> +xfs_failaddr_t
+> +xfs_symlink_shortform_verify(
+> +	struct xfs_inode	*ip)
+> +{
+> +	struct xfs_ifork	*ifp = xfs_ifork_ptr(ip, XFS_DATA_FORK);
+> +
+> +	ASSERT(ifp->if_format == XFS_DINODE_FMT_LOCAL);
+> +
+> +	return xfs_symlink_sf_verify_struct(ifp->if_u1.if_data, ifp->if_bytes);
+> +}
+
+Same here.
+
+Once past thes nitpicks the zapping functionality looks fine to me,
+but leaves me with a very high level question:
+
+As far as I can tell the inodes with the zapped fork(s) remains in it's
+normal place, and normaly accessible, and I think any read will return
+zeroes because i_size isn't reset.  Which would change the data seen
+by an application using it.  Don't we need to block access to it until
+it is fully repaired?
 
