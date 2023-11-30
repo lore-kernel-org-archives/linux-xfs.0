@@ -1,74 +1,107 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id ACA7E197
-	for <linux-xfs@vger.kernel.org>; Thu, 30 Nov 2023 00:10:47 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="nN9cotrx"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 1E187C433C8;
-	Thu, 30 Nov 2023 00:10:47 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1701303047;
-	bh=GKt4bTYIuJ85NgT2pCpRYgYQMlcAJ+vKGaEciM9iMS8=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=nN9cotrx4bt943b6yiYrDH8CJbFBHFkd/WMlUYpjPnlSSB9jnmsU63GxvBQUlr8Pe
-	 LA7ZShEhyA2D8rgybyLWSpCQwgW+BhX7Hh7xFVgygrxSFGmx/lqa8E8grSfew4PI/6
-	 27+Wx3LJJrjODUHaFdopDs6q8QxIzLxQNGZK4RLKsCh7Xl6x/z+wB3mYk4h3dbEw08
-	 3txoljzkTAuurgb/ecb3lIFhG4WMM00xvTRUFBbpIIzvxVCV9EzvFcOuOGix2i2S4N
-	 l+fpuoEBBwA8h0/JIU8yNZbXqPL0XSnhq78vM2tbARYpp+cZu4OZJ4cpgODXU+zzyg
-	 uxuuvLibESZlA==
-Date: Wed, 29 Nov 2023 16:10:46 -0800
-From: "Darrick J. Wong" <djwong@kernel.org>
-To: Christoph Hellwig <hch@infradead.org>
-Cc: linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 2/6] xfs: check rt summary file geometry more thoroughly
-Message-ID: <20231130001046.GG361584@frogsfrogsfrogs>
-References: <170086928333.2771542.10506226721850199807.stgit@frogsfrogsfrogs>
- <170086928377.2771542.14818456920992275639.stgit@frogsfrogsfrogs>
- <ZWXzvNHCV6QWeikg@infradead.org>
- <20231128233008.GF4167244@frogsfrogsfrogs>
- <ZWbUvcVIBROrHVOh@infradead.org>
- <20231129062155.GC361584@frogsfrogsfrogs>
- <ZWbY7a2ZB8LE0Prh@infradead.org>
+	dkim=pass (2048-bit key) header.d=bytedance.com header.i=@bytedance.com header.b="ei0btfjs"
+Received: from mail-pl1-x630.google.com (mail-pl1-x630.google.com [IPv6:2607:f8b0:4864:20::630])
+	by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 38E44D5C
+	for <linux-xfs@vger.kernel.org>; Wed, 29 Nov 2023 20:05:29 -0800 (PST)
+Received: by mail-pl1-x630.google.com with SMTP id d9443c01a7336-1cfd04a6e49so5109295ad.0
+        for <linux-xfs@vger.kernel.org>; Wed, 29 Nov 2023 20:05:29 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=bytedance.com; s=google; t=1701317129; x=1701921929; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to;
+        bh=W+yjpAu/Jsru6QG03RfnszV7SN1caXKKF6cUUXYNdao=;
+        b=ei0btfjs2A6YP0G5kO7A8C1/BKadMV3FHYjLiSzAshm60pfGk1n/PIQcQ6h+giScHW
+         ZrsqlmWTb25Xd+p1qwu3sGm/WxBg/LgJ3DC0DUZl2oKJPaeT2WXbKjGRxBUb756cP6Ry
+         QkIanKM6B8a9uyPIiypA1dswN/SP+DteGuKFyD7rjYJbe6GRdjGw/ZLXkqzhszleIWAl
+         ktvN0Fi0p9CSYvwJf/geL4xR+42EE+sugDv4ufqMR1rhq5qGBb6Tp7oqWYlWXNYBtoBN
+         qqDq1KvWpJsGbXyFf4DTClrN3DdhQjgW5HAxp8AoroPSe/Xp8/2+wpEROAwyMIv4xpri
+         JITA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1701317129; x=1701921929;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-message-state:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=W+yjpAu/Jsru6QG03RfnszV7SN1caXKKF6cUUXYNdao=;
+        b=L+WlBiwETsIQS5J+6Ae9UCiK5WxJW30n33tFHnWykbE1DNWX2ZMm2uMDoHuwuyF6pC
+         VlbBakGW8KdMd9RWWcXK6bRnwG3K+1zRbxlR7Qa8ueGi6/36szZoUrtqlGTAtV3V9eJ5
+         TGMgPgvwIl2IHHljSdpDXcf1HRoXkGtMB4b5Dq150+zhjPNDh0Zj/AHnXzM9lGKaB63J
+         vpbOTmyMqi5tEWCEx3XJXZszxEbFnjws0qlmmJ3JU+apgH/MinUXUrOouaK8U2D4F9Ja
+         WOEnJ5y/plX4eQlAhI9pNkmHcbU/KncArwil2ToZ6RG5xdHGmh8di3sXrInIhFcpzojX
+         9PjA==
+X-Gm-Message-State: AOJu0YyvgT4oi2oxGUZGCmQXrnR/Ti4eY9XsE/JRzg95H/OivaphWwqS
+	5ENFK0tk9CrbqzdF5DzjrOvoNg==
+X-Google-Smtp-Source: AGHT+IF2TPny1kU3pUpbWpuyFpMHloE4EU/UOBulaT2ThGwlIOchgef/BblJ7yPK0aci9EcXP1Nrvg==
+X-Received: by 2002:a17:903:249:b0:1cf:b4bb:9bdc with SMTP id j9-20020a170903024900b001cfb4bb9bdcmr23350613plh.9.1701317128695;
+        Wed, 29 Nov 2023 20:05:28 -0800 (PST)
+Received: from localhost.localdomain ([61.213.176.7])
+        by smtp.gmail.com with ESMTPSA id u6-20020a170903124600b001d01c970119sm174181plh.275.2023.11.29.20.05.24
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Wed, 29 Nov 2023 20:05:28 -0800 (PST)
+From: Jiachen Zhang <zhangjiachen.jaycee@bytedance.com>
+To: Chandan Babu R <chandan.babu@oracle.com>,
+	"Darrick J. Wong" <djwong@kernel.org>
+Cc: Dave Chinner <dchinner@redhat.com>,
+	Allison Henderson <allison.henderson@oracle.com>,
+	Zhang Tianci <zhangtianci.1997@bytedance.com>,
+	Brian Foster <bfoster@redhat.com>,
+	linux-xfs@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	xieyongji@bytedance.com,
+	me@jcix.top,
+	Jiachen Zhang <zhangjiachen.jaycee@bytedance.com>
+Subject: [PATCH v3 0/3] Fixes for ENOSPC xfs_remove
+Date: Thu, 30 Nov 2023 12:05:13 +0800
+Message-Id: <20231130040516.35677-1-zhangjiachen.jaycee@bytedance.com>
+X-Mailer: git-send-email 2.35.1
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <ZWbY7a2ZB8LE0Prh@infradead.org>
+Content-Transfer-Encoding: 8bit
 
-On Tue, Nov 28, 2023 at 10:23:41PM -0800, Christoph Hellwig wrote:
-> On Tue, Nov 28, 2023 at 10:21:55PM -0800, Darrick J. Wong wrote:
-> > On Tue, Nov 28, 2023 at 10:05:49PM -0800, Christoph Hellwig wrote:
-> > > On Tue, Nov 28, 2023 at 03:30:09PM -0800, Darrick J. Wong wrote:
-> > > > LOL so I just tried a 64k rt volume with a 1M rextsize and mkfs crashed.
-> > > > I guess I'll go sort out what's going on there...
-> > > 
-> > > I think we should just reject rt device size < rtextsize configs in
-> > > the kernel and all tools.
-> > 
-> > "But that could break old weirdass customer filesystems."
-> > 
-> > The design of rtgroups prohibits that, so we're ok going forward.
-> 
-> Well, as you just said it hasn't mounted for a long time, and really
-> this is a corner case that just doesn't make any sense.  I'd really
-> prefer to cleanly reject it, and if someone really complains with a good
-> reason we can revisit the decisions.  But I strongly doubt it's ever
-> going to happen.
+Hi,
 
-Oh, even better, Dave and I noticed today that if you format a 17G
-realtime volume (> 2^32 rt extents) then mkfs fails because there's an
-integer overflow:
+Recently, our use-case ran into 2 bugs in case doing xfs_remove when the
+disk space is in-pressure, which may cause xfs shutdown and kernel crash
+in the xfs log recovery procedure. Here are 2 patches to fix the
+problem, and a patch adding a helper to optimize the code structure.
 
-https://git.kernel.org/pub/scm/fs/xfs/xfsprogs-dev.git/tree/mkfs/xfs_mkfs.c#n3739
+The 1st patch fixes an uninitialized variable issue.
 
-Based on your observation that rt free space never exceeds the group
-length with rtgroups turned on, I'll tweak the sb_rextslog computation
-so that it's computed with (rgblocks / rextsize) instead of (rblocks /
-rextsize) which will fix that problem for future filesystems.
+The 2nd patch ensures the blkno in the xfs_buf is updated when doing
+xfs_da3_swap_lastblock().
 
---D
+The 3rd patch adds a xfs_buf copy helper to optimize the code structure.
+
+Changes of v2:
+- directly set the *logflagsp value to make the code more robust in the
+  1st commit,
+- check xfs's crc-feature rather than magic in the 2nd commit, and
+- fixed code style and rebased onto the master branch.
+
+Changes of v3:
+- fix code style, and
+- add a new patch which does xfs_buf memcpy in a helper.
+
+Thanks,
+Jiachen
+
+
+Jiachen Zhang (1):
+  xfs: ensure logflagsp is initialized in xfs_bmap_del_extent_real
+
+Zhang Tianci (2):
+  xfs: update dir3 leaf block metadata after swap
+  xfs: extract xfs_da_buf_copy() helper function
+
+ fs/xfs/libxfs/xfs_attr_leaf.c | 12 ++----
+ fs/xfs/libxfs/xfs_bmap.c      | 73 +++++++++++++++--------------------
+ fs/xfs/libxfs/xfs_da_btree.c  | 70 +++++++++++++++------------------
+ fs/xfs/libxfs/xfs_da_btree.h  |  2 +
+ 4 files changed, 69 insertions(+), 88 deletions(-)
+
+-- 
+2.20.1
+
