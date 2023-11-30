@@ -1,31 +1,32 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2DA7E5FEE2
-	for <linux-xfs@vger.kernel.org>; Thu, 30 Nov 2023 21:18:56 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 642875FEFB
+	for <linux-xfs@vger.kernel.org>; Thu, 30 Nov 2023 21:37:10 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="aqHKPQ2y"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 9C669C433C8;
-	Thu, 30 Nov 2023 21:18:56 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="NtqPBHJU"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id CCF3BC433C8;
+	Thu, 30 Nov 2023 21:37:09 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1701379136;
-	bh=PlA8OPR7O/ubBsdmf0NoFD4ULnJ8Go9cFwlAG0kNPS0=;
+	s=k20201202; t=1701380229;
+	bh=hoEpESyaUxC8iFQpNmMZk5NQTEk8Yoxtb/wn/7RxjKs=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=aqHKPQ2yM3ga7bgNQ54uaeWhHkdJvqRKgS5mTbnnVi4jFfQwrHolv3n9pRBq/hAPN
-	 QAwnhkns/5LLskibgAkXg6kpuUyQd50QFH3G+f8rBjNQGTowZc+NH+qQUB0fbVtL4U
-	 emB6aQieZhEUFqigESUkLqSYy/vVYtQ4sZWVqUzwLQrU+D89QTBGMcaqcenQ3RoL1G
-	 XmBnDZAv57q1FqU65NVjjibIu3gJUyemylgC3dGLyIvVS52aviVHlAKG2Pduotf4bF
-	 4UjdtF61Pt7rGmGGy3S/hk0UUSrFtVNWwNtZzSWVMC6cIzUT3tcv7i8Yqa7F9id76f
-	 RJHTyd7xQohxw==
-Date: Thu, 30 Nov 2023 13:18:56 -0800
+	b=NtqPBHJUqcEB9Kc+t51F41fSKjUCbcs5NRCVPG1FhzRI8YhNFKqnQibb1MQjgCgxl
+	 6l4yfACF5i/0J/P713QQibGpBYd7lKXT3g5ugOM/4V7gDIMW7ReFdUDhYk9m58SXQm
+	 orpO5wsqzZ4WK5CnkoiPIFdY2dFlPfINmwrCE5iwahemAKBNwoRACZzDQomnCXXw5B
+	 fErrYQyGobxKcOKxAlNsq79p9x0dajgHFUS4A7344/SY0C7QZRdjJipx8RFbyv8iWQ
+	 V3f6bXLuHNEMlyI4TXX1s1ruwKxxqgBUoFR3bHgaFkStU+n+Sts+VLl3WKbvBKuCbU
+	 sTkyDVRqcxtxw==
+Date: Thu, 30 Nov 2023 13:37:09 -0800
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: Christoph Hellwig <hch@infradead.org>
 Cc: linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 7/7] xfs: repair obviously broken inode modes
-Message-ID: <20231130211856.GO361584@frogsfrogsfrogs>
+Subject: Re: [PATCH 5/7] xfs: abort directory parent scrub scans if we
+ encounter a zapped directory
+Message-ID: <20231130213709.GP361584@frogsfrogsfrogs>
 References: <170086927425.2771142.14267390365805527105.stgit@frogsfrogsfrogs>
- <170086927551.2771142.12581005882564921107.stgit@frogsfrogsfrogs>
- <ZWgUYG+Hv/rO3upQ@infradead.org>
+ <170086927520.2771142.16263878151202910889.stgit@frogsfrogsfrogs>
+ <ZWgT5u9GwGC+R7Rm@infradead.org>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -34,28 +35,50 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <ZWgUYG+Hv/rO3upQ@infradead.org>
+In-Reply-To: <ZWgT5u9GwGC+R7Rm@infradead.org>
 
-On Wed, Nov 29, 2023 at 08:49:36PM -0800, Christoph Hellwig wrote:
-> On Fri, Nov 24, 2023 at 03:52:54PM -0800, Darrick J. Wong wrote:
+On Wed, Nov 29, 2023 at 08:47:34PM -0800, Christoph Hellwig wrote:
+> On Fri, Nov 24, 2023 at 03:52:23PM -0800, Darrick J. Wong wrote:
 > > From: Darrick J. Wong <djwong@kernel.org>
 > > 
-> > Building off the rmap scanner that we added in the previous patch, we
-> > can now find block 0 and try to use the information contained inside of
-> > it to guess the mode of an inode if it's totally improper.
+> > In the previous patch, we added some code to perform sufficient repairs
+> > to an ondisk inode record such that the inode cache would be willing to
+> > load the inode.
 > 
-> Maybe I'm missing something important, but I don't see why a normal
-> user couldn't construct a file that looks like an XFS directory, and
-> that's a perfectly fine thing to do?
+> This is now a few commits back.  My adjust this to be less specific.
+> 
+> > If the broken inode was a shortform directory, it will
+> > reset the directory to something plausible, which is to say an empty
+> > subdirectory of the root.  The telltale signs that something is
+> > seriously wrong is the broken link count.
+> > 
+> > Such directories look clean, but they shouldn't participate in a
+> > filesystem scan to find or confirm a directory parent pointer.  Create a
+> > predicate that identifies such directories and abort the scrub.
+> > 
+> > Found by fuzzing xfs/1554 with multithreaded xfs_scrub enabled and
+> > u3.bmx[0].startblock = zeroes.
+> 
+> This kind of ties into my comment on the previous comment, but needing
+> heuristics to find zapped inodes or inode forks just seems to be asking
+> for trouble.  I suspect we'll need proper on-disk flags to notice the
+> corrupted / half-rebuilt state.
 
-They could very well do that, and it might confuse the scanner.
-However, I'd like to draw your attention to xrep_dinode_mode, which will
-set the user/group to root with 0000 access mode.  That at least will
-keep unprivileged users from seeing the potentially weird file until the
-higher level repair functions can deal with it (or the sysadmin deletes
-it).
+Hmm.  A single "zapped" bit would be a good way to signal to
+xchk_dir_looks_zapped and xchk_bmap_want_check_rmaps that a file is
+probably broken.  Clearing that bit would be harder though -- userspace
+would have to call back into the kernel after checking all the metadata.
 
-Hmm.  That code really ought to zap the attr fork because there could be
-ACLs attached to the file.  Let me go do that.
+A simpler way might be to persist the entire per-inode sick state (both
+forks and the contents within, for three bits).  That would be more to
+track, but each scrubber could clear its corresponding sick-state bit.
+A bit further on in this series is a big patchset to set the sick state
+every time the hot paths encounter an EFSCORRUPTED.
+
+IO operations could check the sick state bit and fail out to userspace,
+which would solve the problem of keeping programs away from a partially
+fixed file.
+
+The ondisk state tracking like an entire project on its own.  Thoughts?
 
 --D
