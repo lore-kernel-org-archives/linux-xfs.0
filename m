@@ -1,36 +1,31 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 016ED387
-	for <linux-xfs@vger.kernel.org>; Fri,  1 Dec 2023 00:48:37 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B747410E6
+	for <linux-xfs@vger.kernel.org>; Fri,  1 Dec 2023 01:38:59 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="B34NecWm"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 76E2BC433C7;
-	Fri,  1 Dec 2023 00:48:37 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="AxuOUayo"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 32C1BC433C7;
+	Fri,  1 Dec 2023 01:38:59 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1701391717;
-	bh=X3BUXBkYtJpQwRLU1TU93lDeXDMkOvPhcnf4C78mwE4=;
+	s=k20201202; t=1701394739;
+	bh=v130UcrUJ1IBxwcyvxs0T1iJlmtN3ThcX4Wnq27YW7o=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=B34NecWmUeynFoxpCccTt6X0ePUEaVz/2L95Aj+VnddScKVn/x0F4wjvOMXnI2TTB
-	 FXX1VNB8ZcBQa01kvBfpJHTROGZFOdQXBDN6Kjm9rqBbfbGPbwtb5y81sntzf3JDaE
-	 kwrSkHGlolekoczeVKSUfM7owM6p1L1yeY1EBJvUpmaR2+cZ78fEa1ISTXEdtXl2V9
-	 GmTbNLpSLwy0i46h76+7YF7152eZVL3sjvXTx6Sikks1ZieN37ghoraiRU5NQA2XHM
-	 faUokYGOtzMd2bmf5ePKtZnmJvLuJSMhunnUkfJ7lGGlzipGWqvoflW+cLjHQCXmBg
-	 mzfoh4DDL6ocQ==
-Date: Thu, 30 Nov 2023 16:48:36 -0800
+	b=AxuOUayo2/3ODsJw4nJTyI8ppDOIU5EVRBo7j5IBlkYFA+HyKC0ywCO/Yg1zudnv7
+	 3TQP3z8jDdXazVJZ/swlYOLpFyojEhX5Z+NJKQFOAYKBvBPH/Qqgm+ci+1L1HH1gRG
+	 keQB9qm1AehKE8Jw2SyrU/UuAzIELO1trFel1R+p5pNs+fXbh7T+OAGBYAwcUh2yI9
+	 SsSA84oLES7ygoHgYM8iHU9SMedWAHWfPMvJb359dvydgDGV3USgqGnXDadPegoAam
+	 peYEg5Wl6x8DAPioRUx0Oz1idNN20QdCebd7qFYPHGV+1MGRQIzc+SquxTfowUcWcp
+	 x8Clf3nMemdaQ==
+Date: Thu, 30 Nov 2023 17:38:58 -0800
 From: "Darrick J. Wong" <djwong@kernel.org>
-To: Jiachen Zhang <zhangjiachen.jaycee@bytedance.com>
-Cc: Chandan Babu R <chandan.babu@oracle.com>,
-	Dave Chinner <dchinner@redhat.com>,
-	Allison Henderson <allison.henderson@oracle.com>,
-	Zhang Tianci <zhangtianci.1997@bytedance.com>,
-	Brian Foster <bfoster@redhat.com>, linux-xfs@vger.kernel.org,
-	linux-kernel@vger.kernel.org, xieyongji@bytedance.com, me@jcix.top,
-	Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH v3 2/3] xfs: update dir3 leaf block metadata after swap
-Message-ID: <20231201004836.GS361584@frogsfrogsfrogs>
-References: <20231130040516.35677-1-zhangjiachen.jaycee@bytedance.com>
- <20231130040516.35677-3-zhangjiachen.jaycee@bytedance.com>
+To: Christoph Hellwig <hch@infradead.org>
+Cc: linux-xfs@vger.kernel.org
+Subject: Re: [PATCH 2/5] xfs: repair inode fork block mapping data structures
+Message-ID: <20231201013858.GT361584@frogsfrogsfrogs>
+References: <170086927899.2771366.12096620230080096884.stgit@frogsfrogsfrogs>
+ <170086927942.2771366.11233494127863883983.stgit@frogsfrogsfrogs>
+ <ZWgYrIDVl992ZIsO@infradead.org>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -39,75 +34,76 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20231130040516.35677-3-zhangjiachen.jaycee@bytedance.com>
+In-Reply-To: <ZWgYrIDVl992ZIsO@infradead.org>
 
-On Thu, Nov 30, 2023 at 12:05:15PM +0800, Jiachen Zhang wrote:
-> From: Zhang Tianci <zhangtianci.1997@bytedance.com>
+On Wed, Nov 29, 2023 at 09:07:56PM -0800, Christoph Hellwig wrote:
+> On Fri, Nov 24, 2023 at 03:53:25PM -0800, Darrick J. Wong wrote:
+> > +static int
+> > +xrep_bmap_extent_cmp(
+> > +	const void			*a,
+> > +	const void			*b)
+> > +{
+> > +	xfs_fileoff_t			ao;
+> > +	xfs_fileoff_t			bo;
+> > +
+> > +	ao = xfs_bmbt_disk_get_startoff((struct xfs_bmbt_rec *)a);
+> > +	bo = xfs_bmbt_disk_get_startoff((struct xfs_bmbt_rec *)b);
 > 
-> xfs_da3_swap_lastblock() copy the last block content to the dead block,
-> but do not update the metadata in it. We need update some metadata
-> for some kinds of type block, such as dir3 leafn block records its
-> blkno, we shall update it to the dead block blkno. Otherwise,
-> before write the xfs_buf to disk, the verify_write() will fail in
-> blk_hdr->blkno != xfs_buf->b_bn, then xfs will be shutdown.
+> It would be nice if we could just have local variables for the
+> xfs_bmbt_recs and not need casts.  I guess for that
+> xfs_bmbt_disk_get_startoff would need to take a const argument?
 > 
-> We will get this warning:
-> 
->   XFS (dm-0): Metadata corruption detected at xfs_dir3_leaf_verify+0xa8/0xe0 [xfs], xfs_dir3_leafn block 0x178
->   XFS (dm-0): Unmount and run xfs_repair
->   XFS (dm-0): First 128 bytes of corrupted metadata buffer:
->   00000000e80f1917: 00 80 00 0b 00 80 00 07 3d ff 00 00 00 00 00 00  ........=.......
->   000000009604c005: 00 00 00 00 00 00 01 a0 00 00 00 00 00 00 00 00  ................
->   000000006b6fb2bf: e4 44 e3 97 b5 64 44 41 8b 84 60 0e 50 43 d9 bf  .D...dDA..`.PC..
->   00000000678978a2: 00 00 00 00 00 00 00 83 01 73 00 93 00 00 00 00  .........s......
->   00000000b28b247c: 99 29 1d 38 00 00 00 00 99 29 1d 40 00 00 00 00  .).8.....).@....
->   000000002b2a662c: 99 29 1d 48 00 00 00 00 99 49 11 00 00 00 00 00  .).H.....I......
->   00000000ea2ffbb8: 99 49 11 08 00 00 45 25 99 49 11 10 00 00 48 fe  .I....E%.I....H.
->   0000000069e86440: 99 49 11 18 00 00 4c 6b 99 49 11 20 00 00 4d 97  .I....Lk.I. ..M.
->   XFS (dm-0): xfs_do_force_shutdown(0x8) called from line 1423 of file fs/xfs/xfs_buf.c.  Return address = 00000000c0ff63c1
->   XFS (dm-0): Corruption of in-memory data detected.  Shutting down filesystem
->   XFS (dm-0): Please umount the filesystem and rectify the problem(s)
-> 
-> From the log above, we know xfs_buf->b_no is 0x178, but the block's hdr record
-> its blkno is 0x1a0.
-> 
-> Fixes: 24df33b45ecf ("xfs: add CRC checking to dir2 leaf blocks")
-> Signed-off-by: Zhang Tianci <zhangtianci.1997@bytedance.com>
-> Suggested-by: Dave Chinner <david@fromorbit.com>
+> Probably something for later.
 
-Looks fine to me,
-Reviewed-by: Darrick J. Wong <djwong@kernel.org>
+Oh!  Apparently xfs_bmbt_disk_get_startoff does take a const struct
+pointer now.
+
+> > +	if (whichfork == XFS_ATTR_FORK)
+> > +		return 0;
+> 
+> Nit: I'd probably just split the data fork specific validation
+> into a separate helper to keep things nicely organized.
+> 
+> > +	/*
+> > +	 * No need to waste time scanning for shared extents if the inode is
+> > +	 * already marked.
+> > +	 */
+> > +	if (whichfork == XFS_DATA_FORK && xfs_is_reflink_inode(sc->ip))
+> > +		rb->shared_extents = true;
+> 
+> The comment doesn't seem to match the code.
+
+Ooof, that state handling needs tightening up.  There are three states,
+really -- "irrelevant to this repair", "set the iflag", and "no idea, do
+a scan".  That first state is open-coded in _discover_shared, which is
+wasteful because that is decidable in xrep_bmap.
+
+> 
+> > +/*
+> > + * Try to reserve more blocks for a transaction.
+> > + *
+> > + * This is for callers that need to attach resources to a transaction, scan
+> > + * those resources to determine the space reservation requirements, and then
+> > + * modify the attached resources.  In other words, online repair.  This can
+> > + * fail due to ENOSPC, so the caller must be able to cancel the transaction
+> > + * without shutting down the fs.
+> > + */
+> > +int
+> > +xfs_trans_reserve_more(
+> > +	struct xfs_trans	*tp,
+> > +	unsigned int		blocks,
+> > +	unsigned int		rtextents)
+> 
+> This basically seems to duplicate xfs_trans_reserve except that it skips
+> the log reservation.  What about just allowing to pass a NULL resp
+> agument to xfs_trans_reserve to skip the log reservation and reuse the
+> code?
+
+Hmm.  Maybe not a NULL resp, but an empty one looks like it would work
+fine with less code duplication.
+
+> Otherwise this looks good to me.
+
+Cool!  Thanks for reviewing!
 
 --D
-
-> ---
->  fs/xfs/libxfs/xfs_da_btree.c | 8 ++++++++
->  1 file changed, 8 insertions(+)
-> 
-> diff --git a/fs/xfs/libxfs/xfs_da_btree.c b/fs/xfs/libxfs/xfs_da_btree.c
-> index e576560b46e9..f3f987a65bc1 100644
-> --- a/fs/xfs/libxfs/xfs_da_btree.c
-> +++ b/fs/xfs/libxfs/xfs_da_btree.c
-> @@ -2316,10 +2316,18 @@ xfs_da3_swap_lastblock(
->  		return error;
->  	/*
->  	 * Copy the last block into the dead buffer and log it.
-> +	 * If xfs enable crc, the node/leaf block records its blkno, we
-> +	 * must update it.
->  	 */
->  	memcpy(dead_buf->b_addr, last_buf->b_addr, args->geo->blksize);
-> +	if (xfs_has_crc(mp)) {
-> +		struct xfs_da3_blkinfo *da3 = dead_buf->b_addr;
-> +
-> +		da3->blkno = cpu_to_be64(xfs_buf_daddr(dead_buf));
-> +	}
->  	xfs_trans_log_buf(tp, dead_buf, 0, args->geo->blksize - 1);
->  	dead_info = dead_buf->b_addr;
-> +
->  	/*
->  	 * Get values from the moved block.
->  	 */
-> -- 
-> 2.20.1
-> 
-> 
