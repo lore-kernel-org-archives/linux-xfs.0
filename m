@@ -1,31 +1,31 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B747410E6
-	for <linux-xfs@vger.kernel.org>; Fri,  1 Dec 2023 01:38:59 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CEF195953F
+	for <linux-xfs@vger.kernel.org>; Fri,  1 Dec 2023 02:06:59 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="AxuOUayo"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 32C1BC433C7;
-	Fri,  1 Dec 2023 01:38:59 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="luhepQok"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 59AC9C433C9;
+	Fri,  1 Dec 2023 02:06:59 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1701394739;
-	bh=v130UcrUJ1IBxwcyvxs0T1iJlmtN3ThcX4Wnq27YW7o=;
+	s=k20201202; t=1701396419;
+	bh=Pns7hUPYVecepWmxyZMsgTbQJOR7a67uaXv/VL/mykA=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=AxuOUayo2/3ODsJw4nJTyI8ppDOIU5EVRBo7j5IBlkYFA+HyKC0ywCO/Yg1zudnv7
-	 3TQP3z8jDdXazVJZ/swlYOLpFyojEhX5Z+NJKQFOAYKBvBPH/Qqgm+ci+1L1HH1gRG
-	 keQB9qm1AehKE8Jw2SyrU/UuAzIELO1trFel1R+p5pNs+fXbh7T+OAGBYAwcUh2yI9
-	 SsSA84oLES7ygoHgYM8iHU9SMedWAHWfPMvJb359dvydgDGV3USgqGnXDadPegoAam
-	 peYEg5Wl6x8DAPioRUx0Oz1idNN20QdCebd7qFYPHGV+1MGRQIzc+SquxTfowUcWcp
-	 x8Clf3nMemdaQ==
-Date: Thu, 30 Nov 2023 17:38:58 -0800
+	b=luhepQokiVXUL7G43Uwt9YXq9rKL+w2Z1RXxWhKBACkD/0L9bj3+NzhLv/zwNsWK+
+	 1+B02vV8ceSoyw06kGIN6KBeo17cR2ZCNqR3duhmhBnOFOwSiUCZA5rD97vnoIy+m4
+	 JlVZKKMpNSVCs+pNiJL6tqs5ZjK9/XDvcPsN+1FKWjCCckHRji8ZV4m+nkeypRzC6w
+	 4caaxpxEn/EWViJKLBBeIA6dflxyhIfYnM6YBJm5QmaW8HWhG64gv8S83JhK2HXwF8
+	 kyZqyIW0Ko1EnfEULjcE64VEavRyfNX4RSFSHrO56t4fShg83UnxxZPQiVBmyKZoQo
+	 /02Amx3g0ps6Q==
+Date: Thu, 30 Nov 2023 18:06:58 -0800
 From: "Darrick J. Wong" <djwong@kernel.org>
-To: Christoph Hellwig <hch@infradead.org>
+To: Christoph Hellwig <hch@lst.de>
 Cc: linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 2/5] xfs: repair inode fork block mapping data structures
-Message-ID: <20231201013858.GT361584@frogsfrogsfrogs>
-References: <170086927899.2771366.12096620230080096884.stgit@frogsfrogsfrogs>
- <170086927942.2771366.11233494127863883983.stgit@frogsfrogsfrogs>
- <ZWgYrIDVl992ZIsO@infradead.org>
+Subject: Re: [PATCH, RFC] libxfs: check the size of on-disk data structures
+Message-ID: <20231201020658.GU361584@frogsfrogsfrogs>
+References: <20231108163316.493089-1-hch@lst.de>
+ <20231109195233.GH1205143@frogsfrogsfrogs>
+ <20231110050846.GA24953@lst.de>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -34,76 +34,37 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <ZWgYrIDVl992ZIsO@infradead.org>
+In-Reply-To: <20231110050846.GA24953@lst.de>
 
-On Wed, Nov 29, 2023 at 09:07:56PM -0800, Christoph Hellwig wrote:
-> On Fri, Nov 24, 2023 at 03:53:25PM -0800, Darrick J. Wong wrote:
-> > +static int
-> > +xrep_bmap_extent_cmp(
-> > +	const void			*a,
-> > +	const void			*b)
-> > +{
-> > +	xfs_fileoff_t			ao;
-> > +	xfs_fileoff_t			bo;
-> > +
-> > +	ao = xfs_bmbt_disk_get_startoff((struct xfs_bmbt_rec *)a);
-> > +	bo = xfs_bmbt_disk_get_startoff((struct xfs_bmbt_rec *)b);
+On Fri, Nov 10, 2023 at 06:08:46AM +0100, Christoph Hellwig wrote:
+> On Thu, Nov 09, 2023 at 11:52:33AM -0800, Darrick J. Wong wrote:
+> > > +#ifndef BUILD_BUG_ON_MSG
+> > > +#define BUILD_BUG_ON_MSG(a, b)	BUILD_BUG_ON(a)
+> > 
+> > How difficult would it be to port the complex kernel macros that
+> > actually result in the message being emitted in the gcc error output?
+> > 
+> > It's helpful that when the kernel build breaks, the robots will report
+> > exactly which field/struct/whatever tripped, which makes it easier to
+> > start figuring out where things went wrong on some weird architecture.
 > 
-> It would be nice if we could just have local variables for the
-> xfs_bmbt_recs and not need casts.  I guess for that
-> xfs_bmbt_disk_get_startoff would need to take a const argument?
+> I did try to pull the entire compile time assert machinery from
+> the kernels compiler_types.h in, especially as atomic.h already uses
+> a differnet part of it.  After it pulled in two more depdendencies
+> I gave up, but in principle it should be entirely doable.
 > 
-> Probably something for later.
-
-Oh!  Apparently xfs_bmbt_disk_get_startoff does take a const struct
-pointer now.
-
-> > +	if (whichfork == XFS_ATTR_FORK)
-> > +		return 0;
+> > Otherwise I'm all for porting xfs_ondisk.h to xfsprogs.  IIRC I tried
+> > that a long time ago and Dave or someone said xfs/122 was the answer.
 > 
-> Nit: I'd probably just split the data fork specific validation
-> into a separate helper to keep things nicely organized.
+> I'd much prefer to do it in C code and inside the libxfs we build.
+> If we can agree on that and on killing off xfs/122 I'll look into
+> porting the more complex compile time assert.
 > 
-> > +	/*
-> > +	 * No need to waste time scanning for shared extents if the inode is
-> > +	 * already marked.
-> > +	 */
-> > +	if (whichfork == XFS_DATA_FORK && xfs_is_reflink_inode(sc->ip))
-> > +		rb->shared_extents = true;
-> 
-> The comment doesn't seem to match the code.
+> The other option would be to switch to using static_assert from C11,
+> which doesn't allow a custom message, but at least the default message
+> isn't confusing as hell.
 
-Ooof, that state handling needs tightening up.  There are three states,
-really -- "irrelevant to this repair", "set the iflag", and "no idea, do
-a scan".  That first state is open-coded in _discover_shared, which is
-wasteful because that is decidable in xrep_bmap.
-
-> 
-> > +/*
-> > + * Try to reserve more blocks for a transaction.
-> > + *
-> > + * This is for callers that need to attach resources to a transaction, scan
-> > + * those resources to determine the space reservation requirements, and then
-> > + * modify the attached resources.  In other words, online repair.  This can
-> > + * fail due to ENOSPC, so the caller must be able to cancel the transaction
-> > + * without shutting down the fs.
-> > + */
-> > +int
-> > +xfs_trans_reserve_more(
-> > +	struct xfs_trans	*tp,
-> > +	unsigned int		blocks,
-> > +	unsigned int		rtextents)
-> 
-> This basically seems to duplicate xfs_trans_reserve except that it skips
-> the log reservation.  What about just allowing to pass a NULL resp
-> agument to xfs_trans_reserve to skip the log reservation and reuse the
-> code?
-
-Hmm.  Maybe not a NULL resp, but an empty one looks like it would work
-fine with less code duplication.
-
-> Otherwise this looks good to me.
-
-Cool!  Thanks for reviewing!
+I copy-pasta'd the whole mess from compiler_types.h and build_bug.h into
+include/xfs.h.  It works, but it might be kinda egregious though.
 
 --D
