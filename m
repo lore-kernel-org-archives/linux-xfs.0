@@ -1,28 +1,31 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 633B92FB3
-	for <linux-xfs@vger.kernel.org>; Sun,  3 Dec 2023 19:00:47 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0EABC2FB3
+	for <linux-xfs@vger.kernel.org>; Sun,  3 Dec 2023 19:00:52 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="KNxYreEG"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id D03AAC433C7;
-	Sun,  3 Dec 2023 19:00:46 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="bcdTxp3x"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 832FCC433C8;
+	Sun,  3 Dec 2023 19:00:52 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1701630046;
-	bh=fm9fP5gLxag7gI+22YJCFM2igyW8z/jzPeisfDXFBTk=;
-	h=Date:Subject:From:To:Cc:From;
-	b=KNxYreEGaSIDUaiSn0MlFs0WpX83LG1Etg+euXS/nRlYm9Ndsa7e++E77TlmUgSPU
-	 RNcayHrLiUoRLVH1OfkUq9/gH04OyzabWTwzD5Gmdx+pZYessQfuvc+zpBwHTadwUN
-	 CIH8+E5/wdT51rvZ8uXL0bqAXHcyp1CY6Z8HPp/N+6KxttmwAc3aK1crN9rBzU2kDm
-	 aO+XKtYIjGgB8mxK11KgKZ05izc/ZASPjXRLqyWgAW8DcU5W+N6zApQFLBq6tBpzop
-	 qepmDXOVZRAiTvOZfwJ6gykSTIFfqR9eR8S8WKPiuUVU4gDCgcg+4vh/6Yr0lPtdwY
-	 AnHAmFmNpopJA==
-Date: Sun, 03 Dec 2023 11:00:45 -0800
-Subject: [PATCHSET 0/3] xfs: fix realtime geometry integer overflows
+	s=k20201202; t=1701630052;
+	bh=PHtuiry7mdDZoTjtQB6Di+gRio2d6OjydQKXEip/K0k=;
+	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
+	b=bcdTxp3xSRl0q3h4M5Y/EqPXiIHfdj7dk+2dr+VJyR86OjgBsAoRhsyjqUkC1Wuk6
+	 tLmCjkGsikOV8+RpycNxX08MWmShd04nRElqSm0SxE6Ahum5eONvY6VZJOXkww8VRH
+	 +q8yXMzSIbq5lH7NuC6k73pKjeb8YAdKW03SgedYkd1PR6/r2YJ/MyseD7yeIbBoJ0
+	 QvhByLJiU+ouZfAse+IVqQbZKDsTIsy1Ik4Xq6J9lgpgnKFtfWROzcjEK8RINCRvuL
+	 lj43PZMnpSu8O1IuxWgZhO/h/Gp13UKuRBZNOTs7eqD22g4B3NmxIhAk3kHcBnQ7r7
+	 ysw7oplcwLG0g==
+Date: Sun, 03 Dec 2023 11:00:52 -0800
+Subject: [PATCH 1/8] xfs: don't leak recovered attri intent items
 From: "Darrick J. Wong" <djwong@kernel.org>
-To: djwong@kernel.org, chandanbabu@kernel.org, hch@lst.de
+To: djwong@kernel.org, chandanbabu@kernel.org, hch@lst.de,
+ leo.lilong@huawei.com
 Cc: linux-xfs@vger.kernel.org
-Message-ID: <170162990622.3038044.5313475096294285406.stgit@frogsfrogsfrogs>
+Message-ID: <170162989722.3037528.16617404995975433218.stgit@frogsfrogsfrogs>
+In-Reply-To: <170162989691.3037528.5056861908451814336.stgit@frogsfrogsfrogs>
+References: <170162989691.3037528.5056861908451814336.stgit@frogsfrogsfrogs>
 User-Agent: StGit/0.19
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
@@ -33,43 +36,55 @@ MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 
-Hi all,
+From: Darrick J. Wong <djwong@kernel.org>
 
-While reading through the realtime geometry support code in xfsprogs, I
-noticed a discrepancy between the sb_rextslog computation used when
-writing out the superblock during mkfs and the validation code used in
-xfs_repair.  This discrepancy would lead to system failure for a runt rt
-volume having more than 1 rt block but zero rt extents in length.  Most
-people aren't going to configure a 1M extent size for their 360k rt
-floppy disk volume, but I did!
+If recovery finds an xattr log intent item calling for the removal of an
+attribute and the file doesn't even have an attr fork, we know that the
+removal is trivially complete.  However, we can't just exit the recovery
+function without doing something about the recovered log intent item --
+it's still on the AIL, and not logging an attrd item means it stays
+there forever.
 
-In the process of studying that code, it occurred to me that there is a
-second bug in the computation -- the use of highbit32 for a 64-bit
-value means that the upper 32 bits are not considered in the search for
-a high bit.  This causes the creation of a realtime summary file that is
-the wrong length.  If rextents is a multiple of U32_MAX then this will
-appear to work fine because highbit32 returns -1 for an input of 0; but
-for all other cases the rt summary is undersized, leading to failures.
+This has likely not been seen in practice because few people use LARP
+and the runtime code won't log the attri for a no-attrfork removexattr
+operation.  But let's fix this anyway.
 
-Fix the first problem by standardizing the computation with a helper in
-libxfs; and the second problem by correcting the computation.  This will
-cause any existing rt volumes larger than 2^32 blocks to fail validation
-but they probably were already crashing anyway.
+Also we shouldn't really be testing the attr fork presence until we've
+taken the ILOCK, though this doesn't matter much in recovery, which is
+single threaded.
 
-If you're going to start using this code, I strongly recommend pulling
-from my git trees, which are linked below.
-
-This has been lightly tested with fstests.  Enjoy!
-Comments and questions are, as always, welcome.
-
---D
-
-kernel git tree:
-https://git.kernel.org/cgit/linux/kernel/git/djwong/xfs-linux.git/log/?h=fix-rtmount-overflows-6.7
+Fixes: fdaf1bb3cafc ("xfs: ATTR_REPLACE algorithm with LARP enabled needs rework")
+Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 ---
- fs/xfs/libxfs/xfs_rtbitmap.c |   12 ++++++++++++
- fs/xfs/libxfs/xfs_rtbitmap.h |   14 ++++++++++++++
- fs/xfs/libxfs/xfs_sb.c       |    6 ++++--
- fs/xfs/xfs_rtalloc.c         |    6 ++++--
- 4 files changed, 34 insertions(+), 4 deletions(-)
+ fs/xfs/xfs_attr_item.c |    9 +++++++--
+ 1 file changed, 7 insertions(+), 2 deletions(-)
+
+
+diff --git a/fs/xfs/xfs_attr_item.c b/fs/xfs/xfs_attr_item.c
+index 36fe2abb16e6..11e88a76a33c 100644
+--- a/fs/xfs/xfs_attr_item.c
++++ b/fs/xfs/xfs_attr_item.c
+@@ -329,6 +329,13 @@ xfs_xattri_finish_update(
+ 		goto out;
+ 	}
+ 
++	/* If an attr removal is trivially complete, we're done. */
++	if (attr->xattri_op_flags == XFS_ATTRI_OP_FLAGS_REMOVE &&
++	    !xfs_inode_hasattr(args->dp)) {
++		error = 0;
++		goto out;
++	}
++
+ 	error = xfs_attr_set_iter(attr);
+ 	if (!error && attr->xattri_dela_state != XFS_DAS_DONE)
+ 		error = -EAGAIN;
+@@ -608,8 +615,6 @@ xfs_attri_item_recover(
+ 			attr->xattri_dela_state = xfs_attr_init_add_state(args);
+ 		break;
+ 	case XFS_ATTRI_OP_FLAGS_REMOVE:
+-		if (!xfs_inode_hasattr(args->dp))
+-			goto out;
+ 		attr->xattri_dela_state = xfs_attr_init_remove_state(args);
+ 		break;
+ 	default:
 
