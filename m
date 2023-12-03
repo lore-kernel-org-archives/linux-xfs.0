@@ -1,28 +1,28 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 18F1617993
-	for <linux-xfs@vger.kernel.org>; Sun,  3 Dec 2023 19:05:35 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B7A391798F
+	for <linux-xfs@vger.kernel.org>; Sun,  3 Dec 2023 19:05:50 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="HqxTEoQv"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id E02A1C433C7;
-	Sun,  3 Dec 2023 19:05:34 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="hGaFdP1p"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 86A5AC433C7;
+	Sun,  3 Dec 2023 19:05:50 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1701630334;
-	bh=JTtxhVAdnC3MQflyjOUbEBLKzTXzqvonICzNFyzKWig=;
+	s=k20201202; t=1701630350;
+	bh=OuP5z3wdY+wCrZlFVskB7mXIrcj8p2pHKI9YpCMZNQE=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=HqxTEoQvpHKOZaU1WpLQmYXghASFeo9lW9EWoYw62Gzo7u1HPwDIMTdu9dzQhIUtU
-	 LlvBZ5T1esDQQzfxSxi6VB0ZBUyOOsHNUJ4+zq4F+RwV9ZHT8/pPDEP7/bytpTZBsP
-	 VwE62CZy+RC1gOsRppxc/yjo9m5QtxNVTu+tyzB2HVBivYKpJUmy5GX0wMO5kofkpr
-	 u+AFyzMn4N2ypcweJESVQUEk/p49IJYVwH37Ak41J9HgkmBRJVPu8+xjQwBAU9/FW3
-	 m9iNF0laAAYTC9wRx26xvvOX7a/1KYmjry07XpV2r47tZ5tecClp0x5EmX1tHiC8oD
-	 3G1w44fqbjDaQ==
-Date: Sun, 03 Dec 2023 11:05:34 -0800
-Subject: [PATCH 2/3] xfs: fix 32-bit truncation in xfs_compute_rextslog
+	b=hGaFdP1pYCCz/yPUCA5HdFNjAuH5+93qJXeTjDKmxsOknd4K16WDP/iG8bORjCtLJ
+	 C5u+n2SQ2Id8+TZsxz7//E+DgbSgdjaEIx3WmIVtCiyb/rSPKt0qH3bnZJ/L4bSlkw
+	 AOAJX4aNI3V0TMyLZMetBl1FEgTBglNzqS9gI+vwN+iRmzlL8tsx/l/JwNw6UtMpqU
+	 KpNC+zpHuqApTSf2Jj0E2dgdpLtM/o7s3PbFucOJuXSWSF4PUb1L7TkQhmNDrvE6ex
+	 FbfpnmEpqgVS4gQgN66sXh8EHjV81j+KjescjkgW1A5TGVw3I+3rQdcNfnIRHaO+ZE
+	 azlK2/YXT188A==
+Date: Sun, 03 Dec 2023 11:05:50 -0800
+Subject: [PATCH 3/3] xfs: don't allow overly small or large realtime volumes
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: djwong@kernel.org, chandanbabu@kernel.org, hch@lst.de
 Cc: linux-xfs@vger.kernel.org
-Message-ID: <170162990659.3038044.14647028784739611036.stgit@frogsfrogsfrogs>
+Message-ID: <170162990673.3038044.6698602496725473343.stgit@frogsfrogsfrogs>
 In-Reply-To: <170162990622.3038044.5313475096294285406.stgit@frogsfrogsfrogs>
 References: <170162990622.3038044.5313475096294285406.stgit@frogsfrogsfrogs>
 User-Agent: StGit/0.19
@@ -37,39 +37,73 @@ Content-Transfer-Encoding: 7bit
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-It's quite reasonable that some customer somewhere will want to
-configure a realtime volume with more than 2^32 extents.  If they try to
-do this, the highbit32() call will truncate the upper bits of the
-xfs_rtbxlen_t and produce the wrong value for rextslog.  This in turn
-causes the rsumlevels to be wrong, which results in a realtime summary
-file that is the wrong length.  Fix that.
+Don't allow realtime volumes that are less than one rt extent long.
+This has been broken across 4 LTS kernels with nobody noticing, so let's
+just disable it.
+
+Per the previous patch, I also observed integer overflows in calculating
+rextslog (the number of rt summary levels) when the rtextent count
+exceeds 2^32.  If you're lucky, this means that mkfs will fail to format
+the filesystem; if not, then the fs will go down due to corruption
+errors.  Prohibit those too; larger volume support will return with
+rtgroups.
 
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 ---
- fs/xfs/libxfs/xfs_rtbitmap.c |    6 +++---
- 1 file changed, 3 insertions(+), 3 deletions(-)
+ fs/xfs/libxfs/xfs_rtbitmap.h |   12 ++++++++++++
+ fs/xfs/libxfs/xfs_sb.c       |    3 ++-
+ fs/xfs/xfs_rtalloc.c         |    2 ++
+ 3 files changed, 16 insertions(+), 1 deletion(-)
 
 
-diff --git a/fs/xfs/libxfs/xfs_rtbitmap.c b/fs/xfs/libxfs/xfs_rtbitmap.c
-index 1c9fed76a356..0626909a2481 100644
---- a/fs/xfs/libxfs/xfs_rtbitmap.c
-+++ b/fs/xfs/libxfs/xfs_rtbitmap.c
-@@ -1132,14 +1132,14 @@ xfs_rtbitmap_blockcount(
+diff --git a/fs/xfs/libxfs/xfs_rtbitmap.h b/fs/xfs/libxfs/xfs_rtbitmap.h
+index 1610d0e4a04c..411de3b889ae 100644
+--- a/fs/xfs/libxfs/xfs_rtbitmap.h
++++ b/fs/xfs/libxfs/xfs_rtbitmap.h
+@@ -353,6 +353,18 @@ int xfs_rtfree_blocks(struct xfs_trans *tp, xfs_fsblock_t rtbno,
  
- /*
-  * Compute the maximum level number of the realtime summary file, as defined by
-- * mkfs.  The use of highbit32 on a 64-bit quantity is a historic artifact that
-- * prohibits correct use of rt volumes with more than 2^32 extents.
-+ * mkfs.  The historic use of highbit32 on a 64-bit quantity prohibited correct
-+ * use of rt volumes with more than 2^32 extents.
-  */
- uint8_t
- xfs_compute_rextslog(
- 	xfs_rtbxlen_t		rtextents)
- {
--	return rtextents ? xfs_highbit32(rtextents) : 0;
-+	return rtextents ? xfs_highbit64(rtextents) : 0;
- }
+ uint8_t xfs_compute_rextslog(xfs_rtbxlen_t rtextents);
  
- /*
++/* Do we support an rt volume having this number of rtextents? */
++static inline bool
++xfs_validate_rtextents(
++	xfs_rtbxlen_t		rtextents)
++{
++	/* No runt rt volumes */
++	if (rtextents == 0)
++		return false;
++
++	return true;
++}
++
+ xfs_filblks_t xfs_rtbitmap_blockcount(struct xfs_mount *mp, xfs_rtbxlen_t
+ 		rtextents);
+ unsigned long long xfs_rtbitmap_wordcount(struct xfs_mount *mp,
+diff --git a/fs/xfs/libxfs/xfs_sb.c b/fs/xfs/libxfs/xfs_sb.c
+index df12bf82ed18..4a9e8588f4c9 100644
+--- a/fs/xfs/libxfs/xfs_sb.c
++++ b/fs/xfs/libxfs/xfs_sb.c
+@@ -509,7 +509,8 @@ xfs_validate_sb_common(
+ 		rbmblocks = howmany_64(sbp->sb_rextents,
+ 				       NBBY * sbp->sb_blocksize);
+ 
+-		if (sbp->sb_rextents != rexts ||
++		if (!xfs_validate_rtextents(rexts) ||
++		    sbp->sb_rextents != rexts ||
+ 		    sbp->sb_rextslog != xfs_compute_rextslog(rexts) ||
+ 		    sbp->sb_rbmblocks != rbmblocks) {
+ 			xfs_notice(mp,
+diff --git a/fs/xfs/xfs_rtalloc.c b/fs/xfs/xfs_rtalloc.c
+index 7c5a50163d2d..8feb58c6241c 100644
+--- a/fs/xfs/xfs_rtalloc.c
++++ b/fs/xfs/xfs_rtalloc.c
+@@ -963,6 +963,8 @@ xfs_growfs_rt(
+ 	 */
+ 	nrextents = nrblocks;
+ 	do_div(nrextents, in->extsize);
++	if (!xfs_validate_rtextents(nrextents))
++		return -EINVAL;
+ 	nrbmblocks = xfs_rtbitmap_blockcount(mp, nrextents);
+ 	nrextslog = xfs_compute_rextslog(nrextents);
+ 	nrsumlevels = nrextslog + 1;
 
