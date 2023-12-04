@@ -1,30 +1,32 @@
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="pKzcV6ai"
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="K9EU1aWY"
 Received: from bombadil.infradead.org (bombadil.infradead.org [IPv6:2607:7c80:54:3::133])
-	by lindbergh.monkeyblade.net (Postfix) with ESMTPS id AE915DF
-	for <linux-xfs@vger.kernel.org>; Mon,  4 Dec 2023 09:41:02 -0800 (PST)
+	by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4987ED3
+	for <linux-xfs@vger.kernel.org>; Mon,  4 Dec 2023 09:41:05 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
 	d=infradead.org; s=bombadil.20210309; h=Content-Transfer-Encoding:
-	MIME-Version:Message-Id:Date:Subject:Cc:To:From:Sender:Reply-To:Content-Type:
-	Content-ID:Content-Description:In-Reply-To:References;
-	bh=lpT5OcQBhcO9sNINVU3ix7uAWm2lg8i7VBXUh3/isw0=; b=pKzcV6ais+AwmMt4VeFrnIvN/g
-	1x3uoJL0Q+NGeZjR2CKbfbPUDAAIx1oi6dX+YiTMMXMk3gAErrbXwi7hWbpgHj6l3OzEs6NZOZjcj
-	SlFLo8gTWQAe//KiWWTjzNaEy7PPNHhw+rA7Gjm6oywwxD0/wF0Ff2V78jvI/0alc/zM52R/cWvwx
-	g9xjE3gQZ/2ZzcDSiEZErPP/YGcpukAxcL6NKYhP9QqK6ErBhH3WVJtLro6EZFMUD1G4yb66sIB9+
-	jzlbk72hhtFh7LjERYImizMa45455XulTSpKFi/ovk8xM8DU/+hNrCACk1eC59s1lkrf7IDosxffq
-	Ri+3Plow==;
+	MIME-Version:References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:Sender
+	:Reply-To:Content-Type:Content-ID:Content-Description;
+	bh=DjBpB82NIPqIvdHEpIiFyUWmT0qyMF3gfTnYj/AJgCY=; b=K9EU1aWYUEfLne13XfZO6oXzzM
+	yYSVd1u9xfT0rjqoNSgqvsWUlZo9w1KO9AzMpFLv3V8skimYTh/kMnL/eNkQOy3qwYluaMU4d+P6g
+	hvC2kD6qB1fAdN7mSked5e1NeXFZXZz5wVYMdPHxahg1ivwQKzRNbiXj1Dk0cic6fxxCjYGQ/t9dQ
+	FvAF8uryRIY0JzTbyfU+DhGCLRhkASqR3mO/r+KFnUSv7LUkkGFpD9JRG+P7KBpvkttlBeqqRthRH
+	xDrPF59DO3Tv09i5KqN+wgSvSAXJ8P2zPiY5OHCK4ED9T+4pB3AqjXAQAeOsZ05Wb4MlH/inuX2vY
+	tiniEiYg==;
 Received: from 2a02-8389-2341-5b80-39d3-4735-9a3c-88d8.cable.dynamic.v6.surfer.at ([2a02:8389:2341:5b80:39d3:4735:9a3c:88d8] helo=localhost)
 	by bombadil.infradead.org with esmtpsa (Exim 4.96 #2 (Red Hat Linux))
-	id 1rACwG-005DhO-0s;
-	Mon, 04 Dec 2023 17:41:00 +0000
+	id 1rACwJ-005DiR-0o;
+	Mon, 04 Dec 2023 17:41:03 +0000
 From: Christoph Hellwig <hch@lst.de>
 To: Chandan Babu R <chandan.babu@oracle.com>
 Cc: "Darrick J. Wong" <djwong@kernel.org>,
 	linux-xfs@vger.kernel.org
-Subject: misc cleanups to the resblks interfaces v2
-Date: Mon,  4 Dec 2023 18:40:53 +0100
-Message-Id: <20231204174057.786932-1-hch@lst.de>
+Subject: [PATCH 1/4] xfs: clean up the XFS_IOC_{GS}ET_RESBLKS handler
+Date: Mon,  4 Dec 2023 18:40:54 +0100
+Message-Id: <20231204174057.786932-2-hch@lst.de>
 X-Mailer: git-send-email 2.39.2
+In-Reply-To: <20231204174057.786932-1-hch@lst.de>
+References: <20231204174057.786932-1-hch@lst.de>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -34,19 +36,123 @@ MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 
-Hi all,
+The XFS_IOC_GET_RESBLKS and XFS_IOC_SET_RESBLKS already share a fair
+amount of code, and will share even more soon.  Move the logic for both
+of them out of the main xfs_file_ioctl function into a
+xfs_ioctl_getset_resblocks helper to share the code and prepare for
+additional changes.
 
-this series has small cosmetics to the get/set reslks and fscounts
-interface.
+Signed-off-by: Christoph Hellwig <hch@lst.de>
+Reviewed-by: Darrick J. Wong <djwong@kernel.org>
+---
+ fs/xfs/xfs_ioctl.c | 87 +++++++++++++++++++++++-----------------------
+ 1 file changed, 43 insertions(+), 44 deletions(-)
 
-Changes since v1:
- - add a missing __user annotation
- - align the lines of a struct initialization
+diff --git a/fs/xfs/xfs_ioctl.c b/fs/xfs/xfs_ioctl.c
+index a82470e027f727..8faaf2ef67a7b8 100644
+--- a/fs/xfs/xfs_ioctl.c
++++ b/fs/xfs/xfs_ioctl.c
+@@ -1862,6 +1862,46 @@ xfs_fs_eofblocks_from_user(
+ 	return 0;
+ }
+ 
++static int
++xfs_ioctl_getset_resblocks(
++	struct file		*filp,
++	unsigned int		cmd,
++	void __user		*arg)
++{
++	struct xfs_mount	*mp = XFS_I(file_inode(filp))->i_mount;
++	struct xfs_fsop_resblks	fsop = { };
++	int			error;
++	uint64_t		in;
++
++	if (!capable(CAP_SYS_ADMIN))
++		return -EPERM;
++
++	if (cmd == XFS_IOC_SET_RESBLKS) {
++		if (xfs_is_readonly(mp))
++			return -EROFS;
++
++		if (copy_from_user(&fsop, arg, sizeof(fsop)))
++			return -EFAULT;
++
++		error = mnt_want_write_file(filp);
++		if (error)
++			return error;
++		in = fsop.resblks;
++		error = xfs_reserve_blocks(mp, &in, &fsop);
++		mnt_drop_write_file(filp);
++		if (error)
++			return error;
++	} else {
++		error = xfs_reserve_blocks(mp, NULL, &fsop);
++		if (error)
++			return error;
++	}
++
++	if (copy_to_user(arg, &fsop, sizeof(fsop)))
++		return -EFAULT;
++	return 0;
++}
++
+ /*
+  * These long-unused ioctls were removed from the official ioctl API in 5.17,
+  * but retain these definitions so that we can log warnings about them.
+@@ -2008,50 +2048,9 @@ xfs_file_ioctl(
+ 		return 0;
+ 	}
+ 
+-	case XFS_IOC_SET_RESBLKS: {
+-		xfs_fsop_resblks_t inout;
+-		uint64_t	   in;
+-
+-		if (!capable(CAP_SYS_ADMIN))
+-			return -EPERM;
+-
+-		if (xfs_is_readonly(mp))
+-			return -EROFS;
+-
+-		if (copy_from_user(&inout, arg, sizeof(inout)))
+-			return -EFAULT;
+-
+-		error = mnt_want_write_file(filp);
+-		if (error)
+-			return error;
+-
+-		/* input parameter is passed in resblks field of structure */
+-		in = inout.resblks;
+-		error = xfs_reserve_blocks(mp, &in, &inout);
+-		mnt_drop_write_file(filp);
+-		if (error)
+-			return error;
+-
+-		if (copy_to_user(arg, &inout, sizeof(inout)))
+-			return -EFAULT;
+-		return 0;
+-	}
+-
+-	case XFS_IOC_GET_RESBLKS: {
+-		xfs_fsop_resblks_t out;
+-
+-		if (!capable(CAP_SYS_ADMIN))
+-			return -EPERM;
+-
+-		error = xfs_reserve_blocks(mp, NULL, &out);
+-		if (error)
+-			return error;
+-
+-		if (copy_to_user(arg, &out, sizeof(out)))
+-			return -EFAULT;
+-
+-		return 0;
+-	}
++	case XFS_IOC_SET_RESBLKS:
++	case XFS_IOC_GET_RESBLKS:
++		return xfs_ioctl_getset_resblocks(filp, cmd, arg);
+ 
+ 	case XFS_IOC_FSGROWFSDATA: {
+ 		struct xfs_growfs_data in;
+-- 
+2.39.2
 
-Diffstat:
- xfs_fsops.c |   50 +-------------------------
- xfs_fsops.h |   14 +++----
- xfs_ioctl.c |  115 ++++++++++++++++++++++++++++++++----------------------------
- xfs_mount.c |    8 +---
- xfs_super.c |    6 +--
- 5 files changed, 75 insertions(+), 118 deletions(-)
