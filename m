@@ -1,15 +1,31 @@
-Received: from verein.lst.de (verein.lst.de [213.95.11.211])
-	by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E289392
-	for <linux-xfs@vger.kernel.org>; Sun,  3 Dec 2023 20:37:21 -0800 (PST)
-Received: by verein.lst.de (Postfix, from userid 2407)
-	id AFD3D227A8E; Mon,  4 Dec 2023 05:37:18 +0100 (CET)
-Date: Mon, 4 Dec 2023 05:37:18 +0100
-From: Christoph Hellwig <hch@lst.de>
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="x6k2fRWa"
+Received: from bombadil.infradead.org (bombadil.infradead.org [IPv6:2607:7c80:54:3::133])
+	by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 07DD695
+	for <linux-xfs@vger.kernel.org>; Sun,  3 Dec 2023 20:39:58 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+	d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Type:MIME-Version
+	:References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
+	Content-Transfer-Encoding:Content-ID:Content-Description;
+	bh=c3TDJYjCq+PSxvmhPnZXGO2rIfNqo6rz9WGkD1SpvT8=; b=x6k2fRWacUoYruj4neadTyL/Z2
+	aTpwp4kMKOZ34nug0Gmb7hoViRBzeLOtpeOXQ2JfIJuArpy/SNOrFdLZYykKuoRtNl5NGRDJU0Xxd
+	+jRD/WuAzxOgsGV+vIXOvsVoYq8XQH8L/8mkIw66x/+6mF14Wo62NHRyKngz9++2Hxn3/FeKXDHTg
+	UAf5u1CXaKKXtdfQ82dQIJoaOoJodQ8hLm0toDJNRW5+UyS+6hViuPsdBgvkJN40dqM+/mS4/dNDN
+	97gcx2ajMbpzQV7mzOIa0nImnZ/o0H9KNWszHsVRdmCetwkOp34wL5RWWq/TvxDKSOzUJQ1BY7GnP
+	eUGrsjNA==;
+Received: from hch by bombadil.infradead.org with local (Exim 4.96 #2 (Red Hat Linux))
+	id 1rA0kP-002zpz-2X;
+	Mon, 04 Dec 2023 04:39:57 +0000
+Date: Sun, 3 Dec 2023 20:39:57 -0800
+From: Christoph Hellwig <hch@infradead.org>
 To: "Darrick J. Wong" <djwong@kernel.org>
-Cc: Christoph Hellwig <hch@lst.de>, linux-xfs@vger.kernel.org
-Subject: Re: [PATCH, RFC] libxfs: check the size of on-disk data structures
-Message-ID: <20231204043718.GA25793@lst.de>
-References: <20231108163316.493089-1-hch@lst.de> <20231109195233.GH1205143@frogsfrogsfrogs> <20231110050846.GA24953@lst.de> <20231201020658.GU361584@frogsfrogsfrogs>
+Cc: Christoph Hellwig <hch@infradead.org>, linux-xfs@vger.kernel.org
+Subject: Re: [PATCH 4/7] xfs: zap broken inode forks
+Message-ID: <ZW1YHT4o0WI1F/3U@infradead.org>
+References: <170086927425.2771142.14267390365805527105.stgit@frogsfrogsfrogs>
+ <170086927504.2771142.15805044109521081838.stgit@frogsfrogsfrogs>
+ <ZWgTSyc4grcWG9L7@infradead.org>
+ <20231130210858.GN361584@frogsfrogsfrogs>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -18,39 +34,16 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20231201020658.GU361584@frogsfrogsfrogs>
-User-Agent: Mutt/1.5.17 (2007-11-01)
+In-Reply-To: <20231130210858.GN361584@frogsfrogsfrogs>
+X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 
-On Thu, Nov 30, 2023 at 06:06:58PM -0800, Darrick J. Wong wrote:
-> I copy-pasta'd the whole mess from compiler_types.h and build_bug.h into
-> include/xfs.h.  It works, but it might be kinda egregious though.
+On Thu, Nov 30, 2023 at 01:08:58PM -0800, Darrick J. Wong wrote:
+> So I think we can grab the inode in the same transaction as the inode
+> core repairs.  Nobody else should even be able to see that inode, so it
+> should be safe to grab i_rwsem before committing the transaction.  Even
+> if I have to use trylock in a loop to make lockdep happy.
 
-Oh.  I actually have a local patch to simply switch to static_assert
-as that completly relies on the compiler and gives better output.  I
-haven't even written a proper commit log, but this is it:
+Hmm, I though more of an inode flag that makes access to the inode
+outside of the scrubbe return -EIO.  I can also warm up to the idea of
+having all inodes that are broken in some way in lost+found..
 
-diff --git a/fs/xfs/xfs_ondisk.h b/fs/xfs/xfs_ondisk.h
-index 2f24bd42ac1dd7..3a5581ecb36d4c 100644
---- a/fs/xfs/xfs_ondisk.h
-+++ b/fs/xfs/xfs_ondisk.h
-@@ -7,16 +7,16 @@
- #define __XFS_ONDISK_H
- 
- #define XFS_CHECK_STRUCT_SIZE(structname, size) \
--	BUILD_BUG_ON_MSG(sizeof(structname) != (size), "XFS: sizeof(" \
--		#structname ") is wrong, expected " #size)
-+	static_assert(sizeof(structname) == (size), \
-+		"XFS: sizeof(" #structname ") is wrong, expected " #size)
- 
- #define XFS_CHECK_OFFSET(structname, member, off) \
--	BUILD_BUG_ON_MSG(offsetof(structname, member) != (off), \
-+	static_assert(offsetof(structname, member) == (off), \
- 		"XFS: offsetof(" #structname ", " #member ") is wrong, " \
- 		"expected " #off)
- 
- #define XFS_CHECK_VALUE(value, expected) \
--	BUILD_BUG_ON_MSG((value) != (expected), \
-+	static_assert((value) == (expected), \
- 		"XFS: value of " #value " is wrong, expected " #expected)
- 
- static inline void __init
