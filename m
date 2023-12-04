@@ -1,34 +1,33 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C705226AC9
-	for <linux-xfs@vger.kernel.org>; Mon,  4 Dec 2023 20:44:22 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3CEA22FC3C
+	for <linux-xfs@vger.kernel.org>; Mon,  4 Dec 2023 20:52:14 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="mHURJAp2"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 59C00C433C7;
-	Mon,  4 Dec 2023 20:44:22 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="AP6cw23+"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id B3F40C433C7;
+	Mon,  4 Dec 2023 20:52:14 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1701722662;
-	bh=+b88aAQFsFeh0VWUciSInJQ4k8+K38eK8G5KcRM4/Vg=;
+	s=k20201202; t=1701723134;
+	bh=a5TTpGwT+FdxpujXJdH/44X3S2Nkq4QqeWcEmEVViUA=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=mHURJAp2LdfaidNjmWWWV6CcugdArS2qXgMrSRTthZ3rnNZTwvFFJFADYkXqOzjpp
-	 2kwND6419TL5aUM1rP0mBCynwYxfOoiCW4u2INbtQsM3/7Qb7zaBncbuNazsSB7lYF
-	 n5p+5RcLK8ZgE80Rk76g/Uj/Dmp13LsdMIWywSsQV53msa0UaLrPjD2sXXOE4JoINO
-	 k45Le7E29pTSC78LsjzRLTviqMJXGuNJmYdLZ3kdHUOOmXyr76/HzPeKp3xq53ggbZ
-	 7lYSVaa5Y7lXTUkz1ctdgNytheCyGZcAOBf0NumJmF+nlUsD5Cvg/2R+gaI0wg2+We
-	 y2XXgxhp02rvw==
-Date: Mon, 4 Dec 2023 12:44:21 -0800
+	b=AP6cw23+Q2kwj6p6YmowTdqhULOHWH19bYdwzVrAkH5Oj9w2AyjVlHxqKQUhn0oeU
+	 UM8FvgYn1ssyb0niAiCP14GbZzNVyqr8SOi3WO34MgnVV6RS2+9+3R+0efbqhmFZ5F
+	 E3XkDNAuwWNiyaUS2j1K0PFPo2MSWAkLxiziQsXQfvVVGf5xc4SHlsVENslNVIVADU
+	 /vNohybihP8Iy67GMz08uTn10kzLR2LGcC7IWYIBBwozCUSQeK2+4uF0mFphLkYahg
+	 2BtCPcPRhdT4KOVrOzHUxmHlvy6eoEG1TXxR1MoYGkLNbW9JrCy0+MRc4y5/B888OL
+	 l67JDBRpQGieg==
+Date: Mon, 4 Dec 2023 12:52:14 -0800
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: Christoph Hellwig <hch@infradead.org>
 Cc: linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 5/7] xfs: abort directory parent scrub scans if we
- encounter a zapped directory
-Message-ID: <20231204204421.GH361584@frogsfrogsfrogs>
-References: <170086927425.2771142.14267390365805527105.stgit@frogsfrogsfrogs>
- <170086927520.2771142.16263878151202910889.stgit@frogsfrogsfrogs>
- <ZWgT5u9GwGC+R7Rm@infradead.org>
- <20231130213709.GP361584@frogsfrogsfrogs>
- <ZW1YZanmEFilB5cv@infradead.org>
+Subject: Re: [PATCH 5/5] xfs: repair quotas
+Message-ID: <20231204205214.GI361584@frogsfrogsfrogs>
+References: <170086928781.2771741.1842650188784688715.stgit@frogsfrogsfrogs>
+ <170086928871.2771741.2277452744114090363.stgit@frogsfrogsfrogs>
+ <ZWgetfZA0JLz94Ld@infradead.org>
+ <20231130221015.GR361584@frogsfrogsfrogs>
+ <ZW1aFIC1OxfApK5z@infradead.org>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -37,34 +36,45 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <ZW1YZanmEFilB5cv@infradead.org>
+In-Reply-To: <ZW1aFIC1OxfApK5z@infradead.org>
 
-On Sun, Dec 03, 2023 at 08:41:09PM -0800, Christoph Hellwig wrote:
-> On Thu, Nov 30, 2023 at 01:37:09PM -0800, Darrick J. Wong wrote:
-> > Hmm.  A single "zapped" bit would be a good way to signal to
-> > xchk_dir_looks_zapped and xchk_bmap_want_check_rmaps that a file is
-> > probably broken.  Clearing that bit would be harder though -- userspace
-> > would have to call back into the kernel after checking all the metadata.
-> 
-> Doesn't sound too horrible to have a special scrub call just for that.
-> 
-> > A simpler way might be to persist the entire per-inode sick state (both
-> > forks and the contents within, for three bits).  That would be more to
-> > track, but each scrubber could clear its corresponding sick-state bit.
-> > A bit further on in this series is a big patchset to set the sick state
-> > every time the hot paths encounter an EFSCORRUPTED.
-> 
-> That does sound even better.
-> 
-> > IO operations could check the sick state bit and fail out to userspace,
-> > which would solve the problem of keeping programs away from a partially
-> > fixed file.
+On Sun, Dec 03, 2023 at 08:48:20PM -0800, Christoph Hellwig wrote:
+> On Thu, Nov 30, 2023 at 02:10:15PM -0800, Darrick J. Wong wrote:
+> > On Wed, Nov 29, 2023 at 09:33:41PM -0800, Christoph Hellwig wrote:
+> > > > @@ -328,7 +328,6 @@ xchk_quota(
+> > > >  		if (error)
+> > > >  			break;
+> > > >  	}
+> > > > -	xchk_ilock(sc, XFS_ILOCK_EXCL);
+> > > >  	if (error == -ECANCELED)
+> > > >  		error = 0;
+> > > >  	if (!xchk_fblock_process_error(sc, XFS_DATA_FORK,
+> > > 
+> > > What is the replacement for this lock?  The call in xrep_quota_item?
 > > 
-> > The ondisk state tracking like an entire project on its own.  Thoughts?
+> > The replacement is the conditional re-lock at the start of xrep_quota.
 > 
-> Incore for now sounds fine to me.
+> Hmm.  but not all scrub calls do even end up in the repair callbacks,
+> do they?  Ok, I guess the xchk_iunlock call in xchk_teardown would have
+> just released it a bit later and we skip the cycle.  Would have been
+> a lot easier to understand if this was in a well-explained
+> self-contained patch..
 
-Excellent!  I'll go work on that for v28.2 or v29 or whatever the next
-version number is.
+How about I not remove the xchk_ilock call, then?  Repair is already
+smart enough to take the lock if it doesn't have it, so it's not
+strictly necessary for correct operation.
+
+> > Not sure what you meant about "we used just lock the exclusive lock
+> > directly without tracking it" -- both files call xchk_{ilock,iunlock}.
+> > The telemetry data I've collected shows that quota file checking is
+> > sorta slow, so perhaps it would be justified to create a special
+> > no-alloc dqget function where the caller is allowed to pre-acquire the
+> > ILOCK.
+> 
+> My confusions was more about checking/using sc->ilock_flags in the
+> callers, while it is maintained by the locking helpers.  Probably not
+> *THAT* unusual, but I might have simply been too tired to understand it.
+
+Ah, got it.  I'll ponder a no-alloc dqget in the meantime.
 
 --D
