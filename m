@@ -1,31 +1,32 @@
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="Cz80g4++"
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="pJprTJkK"
 Received: from bombadil.infradead.org (bombadil.infradead.org [IPv6:2607:7c80:54:3::133])
-	by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0F26B92
-	for <linux-xfs@vger.kernel.org>; Sun,  3 Dec 2023 20:42:21 -0800 (PST)
+	by lindbergh.monkeyblade.net (Postfix) with ESMTPS id F07B792
+	for <linux-xfs@vger.kernel.org>; Sun,  3 Dec 2023 20:42:52 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
 	d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Type:MIME-Version
 	:References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
 	Content-Transfer-Encoding:Content-ID:Content-Description;
-	bh=GiWnLQFPzT3hiV8izSsdpwcv3PoEi99+u0ZcdIhDmzY=; b=Cz80g4++ndJ6sY/V93lQ/pBdU/
-	Q05vAKRNtplHWjN7kEYH6YKG5HxSyHDbNl+dRBbWCGl+NwfH5lb3yKhGbju12RyqMPTx7BcDX5Fxf
-	WqLV/XkP0z4GbUCCQmNsrYjSbYnoVX15zT58NVXj+EC7pOXq8Gc5/9IJNO0AQQvsg5F4yD3hew9mv
-	IC5HxjVxR23VLF237HGHwBix4PC1GcPTMy+7nn4E2SwexUURMf2qi5A2G2Z2z1kJRTIx/VvJQfRXQ
-	JLMGrYO+motGgISc2CoDJgfJb3yLvGxLRuXO7bsprrpRcVW/FPt8vauYR9ql88l+WoRaP88ipN3xz
-	c3Uq/+4w==;
+	bh=5ykWLlh8jhHjFZfhiIZWkEVtLCSD4gKdWhrMeCeRGtw=; b=pJprTJkKHWsCyL4lGiTXjyMHzy
+	M01AkaahrgfmrDzChCbSm5qapGOgCvWsr9NI9mZeGJeS3nxV3mUqKEL3qZjbrYiFv2gYViBDYcBCm
+	nmU2XnmtdCz+usBKgEdFi63zN9Lyr1lGhagiNJwweIqzFaMHt4qvslnWxXSIWdZ/5kpkJvLl65zwl
+	odm2nmsN2lj6gDRbQ10J/1N3TlBenCE2meOz/8v1p3x6qCZQfq1XtYaj3NNr1+mb6t36nlZVDlwbu
+	FdsJHjOPPWnIu3xYqPywNAOo1IEumZpX19to3I4D4TqgPwgSnwg8pjWCb3Af6IdBHqJrYXOnI/x9A
+	oaxwZyKQ==;
 Received: from hch by bombadil.infradead.org with local (Exim 4.96 #2 (Red Hat Linux))
-	id 1rA0mi-002zvb-2W;
-	Mon, 04 Dec 2023 04:42:20 +0000
-Date: Sun, 3 Dec 2023 20:42:20 -0800
+	id 1rA0nE-002zx7-24;
+	Mon, 04 Dec 2023 04:42:52 +0000
+Date: Sun, 3 Dec 2023 20:42:52 -0800
 From: Christoph Hellwig <hch@infradead.org>
 To: "Darrick J. Wong" <djwong@kernel.org>
 Cc: Christoph Hellwig <hch@infradead.org>, linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 7/7] xfs: repair obviously broken inode modes
-Message-ID: <ZW1YrEe7ULkUq9fr@infradead.org>
-References: <170086927425.2771142.14267390365805527105.stgit@frogsfrogsfrogs>
- <170086927551.2771142.12581005882564921107.stgit@frogsfrogsfrogs>
- <ZWgUYG+Hv/rO3upQ@infradead.org>
- <20231130211856.GO361584@frogsfrogsfrogs>
+Subject: Re: [PATCH 1/5] xfs: reintroduce reaping of file metadata blocks to
+ xrep_reap_extents
+Message-ID: <ZW1YzFZcQCtDub73@infradead.org>
+References: <170086927899.2771366.12096620230080096884.stgit@frogsfrogsfrogs>
+ <170086927926.2771366.6168941084200917015.stgit@frogsfrogsfrogs>
+ <ZWgVPxNT80LFzvx+@infradead.org>
+ <20231130214824.GQ361584@frogsfrogsfrogs>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -34,21 +35,26 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20231130211856.GO361584@frogsfrogsfrogs>
+In-Reply-To: <20231130214824.GQ361584@frogsfrogsfrogs>
 X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 
-On Thu, Nov 30, 2023 at 01:18:56PM -0800, Darrick J. Wong wrote:
-> > Maybe I'm missing something important, but I don't see why a normal
-> > user couldn't construct a file that looks like an XFS directory, and
-> > that's a perfectly fine thing to do?
+On Thu, Nov 30, 2023 at 01:48:24PM -0800, Darrick J. Wong wrote:
+> > Can you expand a bit on why it was buggy, in what commit is was dropped
+> > and what we're doing better this time around?
 > 
-> They could very well do that, and it might confuse the scanner.
-> However, I'd like to draw your attention to xrep_dinode_mode, which will
-> set the user/group to root with 0000 access mode.  That at least will
-> keep unprivileged users from seeing the potentially weird file until the
-> higher level repair functions can deal with it (or the sysadmin deletes
-> it).
+> Oh!  We merged that one!  Let me change the commit message:
+> 
+> "Back in commit a55e07308831b ("xfs: only allow reaping of per-AG
+> blocks in xrep_reap_extents"), we removed from the reaping code the
+> ability to handle bmbt blocks.  At the time, the reaping code only
+> walked single blocks, didn't correctly detect crosslinked blocks, and
+> the special casing made the function hard to understand.  It was easier
+> to remove unneeded functionality prior to fixing all the bugs.
+> 
+> "Now that we've fixed the problems, we want again the ability to reap
+> file metadata blocks.  Reintroduce the per-file reaping functionality
+> atop the current implementation.  We require that sc->sa is
+> uninitialized, so that we can use it to hold all the per-AG context for
+> a given extent."
 
-Having a perfectly valid (but weird) file cause repair action just seems
-like a really bad idea.
-
+That looks much better, thanks!
