@@ -1,126 +1,338 @@
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="i87Ts5v0"
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
-	by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E1351183
-	for <linux-xfs@vger.kernel.org>; Tue,  5 Dec 2023 05:59:29 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1701784769;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 in-reply-to:in-reply-to:references:references;
-	bh=79PD3d2kumFOy7A9eRn22aWg7Y9KfDQNCF0FEIsFKv8=;
-	b=i87Ts5v0n585Lx8w+bu/oRlhSS8PgIMDqoN+NFKoRakjsJRgd2QZEdV+LZstimDzahbhNk
-	XIEXhHWeITd5ZGD/P6ZPyHaSbp8xdSGX26UHcRNJdEw0AYeP6/PwFvJgtvz0E0nHFPp1Pc
-	o5aIvwzLt6RYs/bb9zLO9O0UNNtrCOk=
-Received: from mimecast-mx02.redhat.com (mimecast-mx02.redhat.com
- [66.187.233.88]) by relay.mimecast.com with ESMTP with STARTTLS
- (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
- us-mta-80-uCsCU4nHN_ezAkIn8k7hWw-1; Tue, 05 Dec 2023 08:59:24 -0500
-X-MC-Unique: uCsCU4nHN_ezAkIn8k7hWw-1
-Received: from smtp.corp.redhat.com (int-mx09.intmail.prod.int.rdu2.redhat.com [10.11.54.9])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by mimecast-mx02.redhat.com (Postfix) with ESMTPS id E090885A58C;
-	Tue,  5 Dec 2023 13:59:22 +0000 (UTC)
-Received: from fedora (unknown [10.72.120.3])
-	by smtp.corp.redhat.com (Postfix) with ESMTPS id 1A5A8492BC7;
-	Tue,  5 Dec 2023 13:59:12 +0000 (UTC)
-Date: Tue, 5 Dec 2023 21:59:08 +0800
-From: Ming Lei <ming.lei@redhat.com>
-To: John Garry <john.g.garry@oracle.com>
-Cc: Christoph Hellwig <hch@lst.de>, axboe@kernel.dk, kbusch@kernel.org,
-	sagi@grimberg.me, jejb@linux.ibm.com, martin.petersen@oracle.com,
-	djwong@kernel.org, viro@zeniv.linux.org.uk, brauner@kernel.org,
-	chandan.babu@oracle.com, dchinner@redhat.com,
-	linux-block@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-nvme@lists.infradead.org, linux-xfs@vger.kernel.org,
-	linux-fsdevel@vger.kernel.org, tytso@mit.edu, jbongio@google.com,
-	linux-api@vger.kernel.org
-Subject: Re: [PATCH 17/21] fs: xfs: iomap atomic write support
-Message-ID: <ZW8srC5hTWOGF5ts@fedora>
-References: <20230929102726.2985188-1-john.g.garry@oracle.com>
- <20230929102726.2985188-18-john.g.garry@oracle.com>
- <20231109152615.GB1521@lst.de>
- <a50a16ca-d4b9-a4d8-4230-833d82752bd2@oracle.com>
- <c78bcca7-8f09-41c7-adf0-03b42cde70d6@oracle.com>
- <20231128135619.GA12202@lst.de>
- <e4fb6875-e552-45aa-b193-58f15d9a786c@oracle.com>
- <20231204134509.GA25834@lst.de>
- <a87d48a7-f2a8-40ae-8d9b-e4534ccc29b1@oracle.com>
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 48FE565EB9
+	for <linux-xfs@vger.kernel.org>; Tue,  5 Dec 2023 14:26:12 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="uusvJnjS"
+Received: by smtp.kernel.org (Postfix) with ESMTPS id CA888C433CB
+	for <linux-xfs@vger.kernel.org>; Tue,  5 Dec 2023 14:26:12 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1701786372;
+	bh=/H9Vg1yxg/LxN9ziS4mBCfvFfneEJrfDZHWoybqbpl8=;
+	h=From:To:Subject:Date:In-Reply-To:References:From;
+	b=uusvJnjSi1dRo7k2X+SO0ega5af41v+Og096bPk39uSNy5+gRfLcvYCnBJ1/cTmSE
+	 pnk/nxBTc2z+l8pP9MnCeiAzgzS0wQH79HW+NWrcsy+7J30/iToUbMX8Spbi4OWDdo
+	 4G/FrGdzyIAkWuFZTAwo9JJWdy9tlAW/aRvsO2NOJcdmva8/UvXTFeqQ+kjjd78T3b
+	 MqiUycwvhxXuvZ0+69xAjKuwsMXSheuRUt5HJJlKvu+1MUlAjIAr1o4wlKH8IenYTY
+	 hzEbPXBcpPeOP3sWTtBE+wHuKXQKM5Hyre4pfCHrTZPUer3KDapeFL/+XVYVYqemM2
+	 LoHz9IBAfj33w==
+Received: by aws-us-west-2-korg-bugzilla-1.web.codeaurora.org (Postfix, from userid 48)
+	id B8B8CC53BD2; Tue,  5 Dec 2023 14:26:12 +0000 (UTC)
+From: bugzilla-daemon@kernel.org
+To: linux-xfs@vger.kernel.org
+Subject: [Bug 218229] xfstests xfs/438 hung
+Date: Tue, 05 Dec 2023 14:26:12 +0000
+X-Bugzilla-Reason: None
+X-Bugzilla-Type: changed
+X-Bugzilla-Watch-Reason: AssignedTo filesystem_xfs@kernel-bugs.kernel.org
+X-Bugzilla-Product: File System
+X-Bugzilla-Component: XFS
+X-Bugzilla-Version: 2.5
+X-Bugzilla-Keywords: 
+X-Bugzilla-Severity: normal
+X-Bugzilla-Who: chandanbabu@kernel.org
+X-Bugzilla-Status: NEW
+X-Bugzilla-Resolution: 
+X-Bugzilla-Priority: P3
+X-Bugzilla-Assigned-To: filesystem_xfs@kernel-bugs.kernel.org
+X-Bugzilla-Flags: 
+X-Bugzilla-Changed-Fields: 
+Message-ID: <bug-218229-201763-QCrsZY5Pld@https.bugzilla.kernel.org/>
+In-Reply-To: <bug-218229-201763@https.bugzilla.kernel.org/>
+References: <bug-218229-201763@https.bugzilla.kernel.org/>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
+X-Bugzilla-URL: https://bugzilla.kernel.org/
+Auto-Submitted: auto-generated
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <a87d48a7-f2a8-40ae-8d9b-e4534ccc29b1@oracle.com>
-X-Scanned-By: MIMEDefang 3.4.1 on 10.11.54.9
 
-On Mon, Dec 04, 2023 at 03:19:15PM +0000, John Garry wrote:
-> On 04/12/2023 13:45, Christoph Hellwig wrote:
-> > On Tue, Nov 28, 2023 at 05:42:10PM +0000, John Garry wrote:
-> > > ok, fine, it would not be required for XFS with CoW. Some concerns still:
-> > > a. device atomic write boundary, if any
-> > > b. other FSes which do not have CoW support. ext4 is already being used for
-> > > "atomic writes" in the field - see dubious amazon torn-write prevention.
-> > 
-> > What is the 'dubious amazon torn-write prevention'?
-> 
-> https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/storage-twp.html
-> 
-> AFAICS, this is without any kernel changes, so no guarantee of unwanted
-> splitting or merging of bios.
-> 
-> Anyway, there will still be !CoW FSes which people want to support.
-> 
-> > 
-> > > About b., we could add the pow-of-2 and file offset alignment requirement
-> > > for other FSes, but then need to add some method to advertise that
-> > > restriction.
-> > 
-> > We really need a better way to communicate I/O limitations anyway.
-> > Something like XFS_IOC_DIOINFO on steroids.
-> > 
-> > > Sure, but to me it is a concern that we have 2x paths to make robust a.
-> > > offload via hw, which may involve CoW b. no HW support, i.e. CoW always
-> > 
-> > Relying just on the hardware seems very limited, especially as there is
-> > plenty of hardware that won't guarantee anything larger than 4k, and
-> > plenty of NVMe hardware without has some other small limit like 32k
-> > because it doesn't support multiple atomicy mode.
-> 
-> So what would you propose as the next step? Would it to be first achieve
-> atomic write support for XFS with HW support + CoW to ensure contiguous
-> extents (and without XFS forcealign)?
-> 
-> > 
-> > > And for no HW support, if we don't follow the O_ATOMIC model of committing
-> > > nothing until a SYNC is issued, would we allocate, write, and later free a
-> > > new extent for each write, right?
-> > 
-> > Yes. Then again if you do data journalling you do that anyway, and as
-> > one little project I'm doing right now shows that data journling is
-> > often the fastest thing we can do for very small writes.
-> 
-> Ignoring FSes, then how is this supposed to work for block devices? We just
-> always need HW support, right?
+https://bugzilla.kernel.org/show_bug.cgi?id=3D218229
 
-Looks the HW support could be minimized, just like what Google and Amazon did,
-16KB physical block size with proper queue limit setting.
+--- Comment #1 from chandanbabu@kernel.org ---
+On Tue, Dec 05, 2023 at 12:26:54 PM +0000, bugzilla-daemon@kernel.org wrote:
+> https://bugzilla.kernel.org/show_bug.cgi?id=3D218229
+>
+>             Bug ID: 218229
+>            Summary: xfstests xfs/438 hung
+>            Product: File System
+>            Version: 2.5
+>           Hardware: Intel
+>                 OS: Linux
+>             Status: NEW
+>           Severity: normal
+>           Priority: P3
+>          Component: XFS
+>           Assignee: filesystem_xfs@kernel-bugs.kernel.org
+>           Reporter: dagmcr@gmail.com
+>         Regression: No
+>
+> While doing fstests baseline testing on v6.6-rc5 with kdevops [0] we foun=
+d a
+> failure rate of ~1/2 for xfs/438 test.=20
+>
+> [0] https://github.com/linux-kdevops
+>
+> This fails on the following test sections as defined by kdevops [1]:
+>
+>   * xfs_crc_logdev
+>   * xfs_reflink_logdev
+>
+> [0] https://github.com/linux-kdevops
+> [1]
+>
+> https://github.com/linux-kdevops/kdevops/blob/master/playbooks/roles/fste=
+sts/templates/xfs/xfs.config
+>
+> Below is just one full trace.
+>
+> Oct 17 19:10:05 line-xfs-crc-logdev unknown: run fstests xfs/438 at
+> 2023-10-17
+> 19:10:05
+> Oct 17 19:10:06 line-xfs-crc-logdev kernel: XFS (dm-0): Mounting V5
+> Filesystem
+> 3e1fc16c-f101-4acb-bacb-39ae396320fe
+> Oct 17 19:10:07 line-xfs-crc-logdev kernel: XFS (dm-0): Ending clean mount
+> Oct 17 19:10:07 line-xfs-crc-logdev kernel: XFS (dm-0): Quotacheck needed:
+> Please wait.
+> Oct 17 19:10:07 line-xfs-crc-logdev kernel: XFS (dm-0): Quotacheck: Done.
+> Oct 17 19:10:07 line-xfs-crc-logdev kernel: XFS (dm-0): Filesystem has be=
+en
+> shut down due to log error (0x2).
+> Oct 17 19:10:07 line-xfs-crc-logdev kernel: XFS (dm-0): Please unmount the
+> filesystem and rectify the problem(s).
+> Oct 17 19:10:09 line-xfs-crc-logdev kernel: XFS (dm-0): Unmounting Filesy=
+stem
+> 3e1fc16c-f101-4acb-bacb-39ae396320fe
+> Oct 17 19:14:04 line-xfs-crc-logdev kernel: INFO: task umount:17146 block=
+ed
+> for
+> more than 120 seconds.
+> Oct 17 19:14:04 line-xfs-crc-logdev kernel:       Not tainted 6.6.0-rc5 #2
+> Oct 17 19:14:04 line-xfs-crc-logdev kernel: "echo 0 >
+> /proc/sys/kernel/hung_task_timeout_secs" disables this message.
+> Oct 17 19:14:04 line-xfs-crc-logdev kernel: task:umount          state:D
+> stack:0     pid:17146 ppid:16828  flags:0x00004002
+> Oct 17 19:14:04 line-xfs-crc-logdev kernel: Call Trace:
+> Oct 17 19:14:04 line-xfs-crc-logdev kernel:  <TASK>
+> Oct 17 19:14:04 line-xfs-crc-logdev kernel:  __schedule+0x3ab/0xab0
+> Oct 17 19:14:04 line-xfs-crc-logdev kernel:  schedule+0x5d/0xe0
+> Oct 17 19:14:04 line-xfs-crc-logdev kernel:  schedule_timeout+0x143/0x150
+> Oct 17 19:14:04 line-xfs-crc-logdev kernel:  ? __flush_workqueue+0x184/0x=
+400
+> Oct 17 19:14:04 line-xfs-crc-logdev kernel:  __down_common+0xf6/0x200
+> Oct 17 19:14:04 line-xfs-crc-logdev kernel:  ?
+> __pfx_preempt_count_add+0x10/0x10
+> Oct 17 19:14:04 line-xfs-crc-logdev kernel:  ? preempt_count_add+0x6a/0xa0
+> Oct 17 19:14:04 line-xfs-crc-logdev kernel:  down+0x43/0x60
+> Oct 17 19:14:04 line-xfs-crc-logdev kernel:  xfs_log_unmount+0x4a/0xc0 [x=
+fs]
+> Oct 17 19:14:04 line-xfs-crc-logdev kernel:  xfs_unmountfs+0x9a/0x1b0 [xf=
+s]
+> Oct 17 19:14:04 line-xfs-crc-logdev kernel:  xfs_fs_put_super+0x37/0x80 [=
+xfs]
+> Oct 17 19:14:04 line-xfs-crc-logdev kernel:=20
+> generic_shutdown_super+0x7c/0x110
+> Oct 17 19:14:04 line-xfs-crc-logdev kernel:  kill_block_super+0x16/0x40
+> Oct 17 19:14:04 line-xfs-crc-logdev kernel:  xfs_kill_sb+0xe/0x20 [xfs]
+> Oct 17 19:14:04 line-xfs-crc-logdev kernel:=20
+> deactivate_locked_super+0x2f/0xb0
+> Oct 17 19:14:04 line-xfs-crc-logdev kernel:  cleanup_mnt+0xbd/0x150
+> Oct 17 19:14:04 line-xfs-crc-logdev kernel:  task_work_run+0x59/0x90
+> Oct 17 19:14:04 line-xfs-crc-logdev kernel:=20
+> exit_to_user_mode_prepare+0x15c/0x160
+> Oct 17 19:14:04 line-xfs-crc-logdev kernel:=20
+> syscall_exit_to_user_mode+0x22/0x50
+> Oct 17 19:14:04 line-xfs-crc-logdev kernel:  do_syscall_64+0x46/0x90
+> Oct 17 19:14:04 line-xfs-crc-logdev kernel:=20
+> entry_SYSCALL_64_after_hwframe+0x6e/0xd8
+> Oct 17 19:14:04 line-xfs-crc-logdev kernel: RIP: 0033:0x7fb9538db737
+> Oct 17 19:14:04 line-xfs-crc-logdev kernel: RSP: 002b:00007fffaf33f768
+> EFLAGS:
+> 00000246 ORIG_RAX: 00000000000000a6
+> Oct 17 19:14:04 line-xfs-crc-logdev kernel: RAX: 0000000000000000 RBX:
+> 000055b4718dcb60 RCX: 00007fb9538db737
+> Oct 17 19:14:04 line-xfs-crc-logdev kernel: RDX: 0000000000000000 RSI:
+> 0000000000000000 RDI: 000055b4718e0820
+> Oct 17 19:14:04 line-xfs-crc-logdev kernel: RBP: 0000000000000000 R08:
+> 0000000000000007 R09: 000055b4718e0cc0
+> Oct 17 19:14:04 line-xfs-crc-logdev kernel: R10: 0000000000000000 R11:
+> 0000000000000246 R12: 00007fb953a2623c
+> Oct 17 19:14:04 line-xfs-crc-logdev kernel: R13: 000055b4718e0820 R14:
+> 000055b4718dce70 R15: 000055b4718dca60
+> Oct 17 19:14:04 line-xfs-crc-logdev kernel:  </TASK>
+> Oct 17 19:16:05 line-xfs-crc-logdev kernel: INFO: task umount:17146 block=
+ed
+> for
+> more than 241 seconds.
+> Oct 17 19:16:05 line-xfs-crc-logdev kernel:       Not tainted 6.6.0-rc5 #2
+> Oct 17 19:16:05 line-xfs-crc-logdev kernel: "echo 0 >
+> /proc/sys/kernel/hung_task_timeout_secs" disables this message.
+> Oct 17 19:16:05 line-xfs-crc-logdev kernel: task:umount          state:D
+> stack:0     pid:17146 ppid:16828  flags:0x00004002
+> Oct 17 19:16:05 line-xfs-crc-logdev kernel: Call Trace:
+> Oct 17 19:16:05 line-xfs-crc-logdev kernel:  <TASK>
+> Oct 17 19:16:05 line-xfs-crc-logdev kernel:  __schedule+0x3ab/0xab0
+> Oct 17 19:16:05 line-xfs-crc-logdev kernel:  schedule+0x5d/0xe0
+> Oct 17 19:16:05 line-xfs-crc-logdev kernel:  schedule_timeout+0x143/0x150
+> Oct 17 19:16:05 line-xfs-crc-logdev kernel:  ? __flush_workqueue+0x184/0x=
+400
+> Oct 17 19:16:05 line-xfs-crc-logdev kernel:  __down_common+0xf6/0x200
+> Oct 17 19:16:05 line-xfs-crc-logdev kernel:  ?
+> __pfx_preempt_count_add+0x10/0x10
+> Oct 17 19:16:05 line-xfs-crc-logdev kernel:  ? preempt_count_add+0x6a/0xa0
+> Oct 17 19:16:05 line-xfs-crc-logdev kernel:  down+0x43/0x60
+> Oct 17 19:16:05 line-xfs-crc-logdev kernel:  xfs_log_unmount+0x4a/0xc0 [x=
+fs]
+> Oct 17 19:16:05 line-xfs-crc-logdev kernel:  xfs_unmountfs+0x9a/0x1b0 [xf=
+s]
+> Oct 17 19:16:05 line-xfs-crc-logdev kernel:  xfs_fs_put_super+0x37/0x80 [=
+xfs]
+> Oct 17 19:16:05 line-xfs-crc-logdev kernel:=20
+> generic_shutdown_super+0x7c/0x110
+> Oct 17 19:16:05 line-xfs-crc-logdev kernel:  kill_block_super+0x16/0x40
+> Oct 17 19:16:05 line-xfs-crc-logdev kernel:  xfs_kill_sb+0xe/0x20 [xfs]
+> Oct 17 19:16:05 line-xfs-crc-logdev kernel:=20
+> deactivate_locked_super+0x2f/0xb0
+> Oct 17 19:16:05 line-xfs-crc-logdev kernel:  cleanup_mnt+0xbd/0x150
+> Oct 17 19:16:05 line-xfs-crc-logdev kernel:  task_work_run+0x59/0x90
+> Oct 17 19:16:05 line-xfs-crc-logdev kernel:=20
+> exit_to_user_mode_prepare+0x15c/0x160
+> Oct 17 19:16:05 line-xfs-crc-logdev kernel:=20
+> syscall_exit_to_user_mode+0x22/0x50
+> Oct 17 19:16:05 line-xfs-crc-logdev kernel:  do_syscall_64+0x46/0x90
+> Oct 17 19:16:05 line-xfs-crc-logdev kernel:=20
+> entry_SYSCALL_64_after_hwframe+0x6e/0xd8
+> Oct 17 19:16:05 line-xfs-crc-logdev kernel: RIP: 0033:0x7fb9538db737
+> Oct 17 19:16:05 line-xfs-crc-logdev kernel: RSP: 002b:00007fffaf33f768
+> EFLAGS:
+> 00000246 ORIG_RAX: 00000000000000a6
+> Oct 17 19:16:05 line-xfs-crc-logdev kernel: RAX: 0000000000000000 RBX:
+> 000055b4718dcb60 RCX: 00007fb9538db737
+> Oct 17 19:16:05 line-xfs-crc-logdev kernel: RDX: 0000000000000000 RSI:
+> 0000000000000000 RDI: 000055b4718e0820
+> Oct 17 19:16:05 line-xfs-crc-logdev kernel: RBP: 0000000000000000 R08:
+> 0000000000000007 R09: 000055b4718e0cc0
+> Oct 17 19:16:05 line-xfs-crc-logdev kernel: R10: 0000000000000000 R11:
+> 0000000000000246 R12: 00007fb953a2623c
+> Oct 17 19:16:05 line-xfs-crc-logdev kernel: R13: 000055b4718e0820 R14:
+> 000055b4718dce70 R15: 000055b4718dca60
+> Oct 17 19:16:05 line-xfs-crc-logdev kernel:  </TASK>
+> Oct 17 19:18:05 line-xfs-crc-logdev kernel: INFO: task umount:17146 block=
+ed
+> for
+> more than 362 seconds.
+> Oct 17 19:18:05 line-xfs-crc-logdev kernel:       Not tainted 6.6.0-rc5 #2
+> Oct 17 19:18:05 line-xfs-crc-logdev kernel: "echo 0 >
+> /proc/sys/kernel/hung_task_timeout_secs" disables this message.
+> Oct 17 19:18:05 line-xfs-crc-logdev kernel: task:umount          state:D
+> stack:0     pid:17146 ppid:16828  flags:0x00004002
+> Oct 17 19:18:05 line-xfs-crc-logdev kernel: Call Trace:
+> Oct 17 19:18:05 line-xfs-crc-logdev kernel:  <TASK>
+> Oct 17 19:18:05 line-xfs-crc-logdev kernel:  __schedule+0x3ab/0xab0
+> Oct 17 19:18:05 line-xfs-crc-logdev kernel:  schedule+0x5d/0xe0
+> Oct 17 19:18:05 line-xfs-crc-logdev kernel:  schedule_timeout+0x143/0x150
+> Oct 17 19:18:05 line-xfs-crc-logdev kernel:  ? __flush_workqueue+0x184/0x=
+400
+> Oct 17 19:18:05 line-xfs-crc-logdev kernel:  __down_common+0xf6/0x200
+> Oct 17 19:18:05 line-xfs-crc-logdev kernel:  ?
+> __pfx_preempt_count_add+0x10/0x10
+> Oct 17 19:18:05 line-xfs-crc-logdev kernel:  ? preempt_count_add+0x6a/0xa0
+> Oct 17 19:18:05 line-xfs-crc-logdev kernel:  down+0x43/0x60
+> Oct 17 19:18:05 line-xfs-crc-logdev kernel:  xfs_log_unmount+0x4a/0xc0 [x=
+fs]
+> Oct 17 19:18:05 line-xfs-crc-logdev kernel:  xfs_unmountfs+0x9a/0x1b0 [xf=
+s]
+> Oct 17 19:18:06 line-xfs-crc-logdev kernel:  xfs_fs_put_super+0x37/0x80 [=
+xfs]
+> Oct 17 19:18:06 line-xfs-crc-logdev kernel:=20
+> generic_shutdown_super+0x7c/0x110
+> Oct 17 19:18:06 line-xfs-crc-logdev kernel:  kill_block_super+0x16/0x40
+> Oct 17 19:18:06 line-xfs-crc-logdev kernel:  xfs_kill_sb+0xe/0x20 [xfs]
+> Oct 17 19:18:06 line-xfs-crc-logdev kernel:=20
+> deactivate_locked_super+0x2f/0xb0
+> Oct 17 19:18:06 line-xfs-crc-logdev kernel:  cleanup_mnt+0xbd/0x150
+> Oct 17 19:18:06 line-xfs-crc-logdev kernel:  task_work_run+0x59/0x90
+> Oct 17 19:18:06 line-xfs-crc-logdev kernel:=20
+> exit_to_user_mode_prepare+0x15c/0x160
+> Oct 17 19:18:06 line-xfs-crc-logdev kernel:=20
+> syscall_exit_to_user_mode+0x22/0x50
+> Oct 17 19:18:06 line-xfs-crc-logdev kernel:  do_syscall_64+0x46/0x90
+> Oct 17 19:18:06 line-xfs-crc-logdev kernel:=20
+> entry_SYSCALL_64_after_hwframe+0x6e/0xd8
+> Oct 17 19:18:06 line-xfs-crc-logdev kernel: RIP: 0033:0x7fb9538db737
+> Oct 17 19:18:06 line-xfs-crc-logdev kernel: RSP: 002b:00007fffaf33f768
+> EFLAGS:
+> 00000246 ORIG_RAX: 00000000000000a6
+> Oct 17 19:18:06 line-xfs-crc-logdev kernel: RAX: 0000000000000000 RBX:
+> 000055b4718dcb60 RCX: 00007fb9538db737
+> Oct 17 19:18:06 line-xfs-crc-logdev kernel: RDX: 0000000000000000 RSI:
+> 0000000000000000 RDI: 000055b4718e0820
+> Oct 17 19:18:06 line-xfs-crc-logdev kernel: RBP: 0000000000000000 R08:
+> 0000000000000007 R09: 000055b4718e0cc0
+> Oct 17 19:18:06 line-xfs-crc-logdev kernel: R10: 0000000000000000 R11:
+> 0000000000000246 R12: 00007fb953a2623c
+> Oct 17 19:18:06 line-xfs-crc-logdev kernel: R13: 000055b4718e0820 R14:
+> 000055b4718dce70 R15: 000055b4718dca60
+> Oct 17 19:18:06 line-xfs-crc-logdev kernel:  </TASK>
+> Oct 17 19:20:06 line-xfs-crc-logdev kernel: INFO: task umount:17146 block=
+ed
+> for
+> more than 483 seconds.
+> Oct 17 19:20:06 line-xfs-crc-logdev kernel:       Not tainted 6.6.0-rc5 #2
+> Oct 17 19:20:06 line-xfs-crc-logdev kernel: "echo 0 >
+> /proc/sys/kernel/hung_task_timeout_secs" disables this message.
+> Oct 17 19:20:06 line-xfs-crc-logdev kernel: task:umount          state:D
+> stack:0     pid:17146 ppid:16828  flags:0x00004002
+> Oct 17 19:20:06 line-xfs-crc-logdev kernel: Call Trace:
+> Oct 17 19:20:06 line-xfs-crc-logdev kernel:  <TASK>
+> Oct 17 19:20:06 line-xfs-crc-logdev kernel:  __schedule+0x3ab/0xab0
+> Oct 17 19:20:06 line-xfs-crc-logdev kernel:  schedule+0x5d/0xe0
+> Oct 17 19:20:06 line-xfs-crc-logdev kernel:  schedule_timeout+0x143/0x150
+> Oct 17 19:20:06 line-xfs-crc-logdev kernel:  ? __flush_workqueue+0x184/0x=
+400
+> Oct 17 19:20:06 line-xfs-crc-logdev kernel:  __down_common+0xf6/0x200
+> Oct 17 19:20:06 line-xfs-crc-logdev kernel:  ?
+> __pfx_preempt_count_add+0x10/0x10
+> Oct 17 19:20:06 line-xfs-crc-logdev kernel:  ? preempt_count_add+0x6a/0xa0
+> Oct 17 19:20:06 line-xfs-crc-logdev kernel:  down+0x43/0x60
+> Oct 17 19:20:06 line-xfs-crc-logdev kernel:  xfs_log_unmount+0x4a/0xc0 [x=
+fs]
+> Oct 17 19:20:06 line-xfs-crc-logdev kernel:  xfs_unmountfs+0x9a/0x1b0 [xf=
+s]
+> Oct 17 19:20:06 line-xfs-crc-logdev kernel:  xfs_fs_put_super+0x37/0x80 [=
+xfs]
+> Oct 17 19:20:06 line-xfs-crc-logdev kernel:=20
+> generic_shutdown_super+0x7c/0x110
+> Oct 17 19:20:06 line-xfs-crc-logdev kernel:  kill_block_super+0x16/0x40
+> Oct 17 19:20:06 line-xfs-crc-logdev kernel:  xfs_kill_sb+0xe/0x20 [xfs]
+> Oct 17 19:20:06 line-xfs-crc-logdev kernel:=20
+> deactivate_locked_super+0x2f/0xb0
+> Oct 17 19:20:06 line-xfs-crc-logdev kernel:  cleanup_mnt+0xbd/0x150
+> Oct 17 19:20:06 line-xfs-crc-logdev kernel:  task_work_run+0x59/0x90
+> Oct 17 19:20:06 line-xfs-crc-logdev kernel:=20
+> exit_to_user_mode_prepare+0x15c/0x160
+> Oct 17 19:20:06 line-xfs-crc-logdev kernel:=20
+> syscall_exit_to_user_mode+0x22/0x50
+> Oct 17 19:20:06 line-xfs-crc-logdev kernel:  do_syscall_64+0x46/0x90
+> Oct 17 19:20:06 line-xfs-crc-logdev kernel:=20
+> entry_SYSCALL_64_after_hwframe+0x6e/0xd8
+> Oct 17 19:20:06 line-xfs-crc-logdev kernel: RIP: 0033:0x7fb9538db737
+> Oct 17 19:20:06 line-xfs-crc-logdev kernel: RSP: 002b:00007fffaf33f768
+> EFLAGS:
+> 00000246 ORIG_RAX: 00000000000000a6
 
-Now seems it is easy to make such device with ublk-loop by:
+This bug was fixed by
+https://lore.kernel.org/linux-xfs/20231030203349.663275-1-leah.rumancik@gma=
+il.com/
 
-- use one backing disk with 16KB/32KB/.. physical block size
-- expose proper physical bs & chunk_sectors & max sectors queue limit
+--=20
+You may reply to this email to add a comment.
 
-Then any 16KB aligned direct WRITE with N*16KB length(N in [1, 8] with 256
-chunk_sectors) can be atomic-write.
-
-
-
-Thanks,
-Ming
-
+You are receiving this mail because:
+You are watching the assignee of the bug.=
