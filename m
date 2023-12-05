@@ -1,58 +1,31 @@
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+	(No client certificate requested)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 92320D26E
+	for <linux-xfs@vger.kernel.org>; Tue,  5 Dec 2023 05:50:29 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="qOb9FyCp"
-Received: from bombadil.infradead.org (bombadil.infradead.org [IPv6:2607:7c80:54:3::133])
-	by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 640B910F;
-	Mon,  4 Dec 2023 21:45:23 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-	d=infradead.org; s=bombadil.20210309; h=Sender:In-Reply-To:Content-Type:
-	MIME-Version:References:Message-ID:Subject:Cc:To:From:Date:Reply-To:
-	Content-Transfer-Encoding:Content-ID:Content-Description;
-	bh=Q4Xwwf+R6mg0IVTeK/i6oqCoh3sFn0GWCi0J13JBtfc=; b=qOb9FyCpYK/4KobvP2uwty+RVC
-	aKcs8RCIM1GaB+jEVQmkuGJdy+OoBGLcX1doQi0if7JBzag9665/MK5OtORAivTDbIIcdyUq2OKzV
-	Xx9UbaJnUzGeeh5RsPVPgY4YqT0DJlxUw1VN1F2mTNvBjhpShrX42o5RXnUV/cXjSQUrRLToGUZSE
-	FmCu84mXqdwf31dZ+O2oxaY3dpe0YxR2cKwZT0rDW7WEmsffmHSRy5nKQqPyOJ72usqptScFFNBh6
-	rYGN3D8F7qyjExbcouVqdX/XtjSmjlnWSxIY2bpgheRYBytg9CEj+V1w3MZOcvh3sPXc3Hqk7855F
-	MMIPMB3g==;
-Received: from mcgrof by bombadil.infradead.org with local (Exim 4.96 #2 (Red Hat Linux))
-	id 1rAOEM-006KRP-0r;
-	Tue, 05 Dec 2023 05:44:26 +0000
-Date: Mon, 4 Dec 2023 21:44:26 -0800
-From: Luis Chamberlain <mcgrof@kernel.org>
-To: Christian Brauner <brauner@kernel.org>
-Cc: j.granados@samsung.com, willy@infradead.org, josh@joshtriplett.org,
-	Kees Cook <keescook@chromium.org>,
-	David Howells <dhowells@redhat.com>,
-	Alexander Viro <viro@zeniv.linux.org.uk>,
-	Benjamin LaHaise <bcrl@kvack.org>,
-	Eric Biederman <ebiederm@xmission.com>,
-	Trond Myklebust <trond.myklebust@hammerspace.com>,
-	Anna Schumaker <anna@kernel.org>,
-	Chuck Lever <chuck.lever@oracle.com>,
-	Jeff Layton <jlayton@kernel.org>, Neil Brown <neilb@suse.de>,
-	Olga Kornievskaia <kolga@netapp.com>, Dai Ngo <Dai.Ngo@oracle.com>,
-	Tom Talpey <tom@talpey.com>, Jan Kara <jack@suse.cz>,
-	Amir Goldstein <amir73il@gmail.com>,
-	Matthew Bobrowski <repnop@google.com>,
-	Anton Altaparmakov <anton@tuxera.com>,
-	Namjae Jeon <linkinjeon@kernel.org>, Mark Fasheh <mark@fasheh.com>,
-	Joel Becker <jlbec@evilplan.org>,
-	Joseph Qi <joseph.qi@linux.alibaba.com>,
-	Iurii Zaikin <yzaikin@google.com>,
-	Eric Biggers <ebiggers@kernel.org>,
-	"Theodore Y. Ts'o" <tytso@mit.edu>,
-	Chandan Babu R <chandan.babu@oracle.com>,
-	"Darrick J. Wong" <djwong@kernel.org>,
-	Jan Harkes <jaharkes@cs.cmu.edu>, coda@cs.cmu.edu,
-	linux-cachefs@redhat.com, linux-kernel@vger.kernel.org,
-	linux-fsdevel@vger.kernel.org, linux-aio@kvack.org,
-	linux-mm@kvack.org, linux-nfs@vger.kernel.org,
-	linux-ntfs-dev@lists.sourceforge.net, ocfs2-devel@lists.linux.dev,
-	fsverity@lists.linux.dev, linux-xfs@vger.kernel.org,
-	codalist@coda.cs.cmu.edu
-Subject: Re: [PATCH v2 0/4] sysctl: Remove sentinel elements from fs dir
-Message-ID: <ZW64um8/nJaxBw5i@bombadil.infradead.org>
-References: <20231121-jag-sysctl_remove_empty_elem_fs-v2-0-39eab723a034@samsung.com>
- <20231122-undifferenziert-weitschuss-a5d8cc56fbd1@brauner>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="F91G6R5i"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 010C7C433C7;
+	Tue,  5 Dec 2023 05:50:28 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1701755429;
+	bh=yt51aXRshf6HbK5Wy+A4jwBl28QidvdfV5izSbsd7q0=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=F91G6R5iZhE1XXG17ri+Y8FsYT7TVpouBUlm/ZRZhF0znXdKHKDKFtxWmAZFgeAiC
+	 znmZQB8arnIopwvZckUE3AIgaOClaO6gVKwGnAsSe3+EQY6GhYv58y+dKv6jM4K6H7
+	 yG4xUWxCko+BnRLIx+2B7J78+Y/l/wK8EmZ+ncljHxF2fEJWniesGNgmmGR/NJAGoo
+	 jaMiszaPRyhITMzkV//vH6wTAIHY8WCTrKtFRkHbzo/qIBX97MePEAI0efim6mID5x
+	 5CNNUg0FcvGBh0vDs6glGXtJGdF/lZpEyUS23K3gVbXQpzmt5ZEtsJe8/oEIKKAm+D
+	 iMq/byoNNszhg==
+Date: Mon, 4 Dec 2023 21:50:28 -0800
+From: "Darrick J. Wong" <djwong@kernel.org>
+To: Christoph Hellwig <hch@lst.de>
+Cc: chandanbabu@kernel.org, linux-xfs@vger.kernel.org
+Subject: Re: [PATCH 1/2] xfs: document what LARP means
+Message-ID: <20231205055028.GL361584@frogsfrogsfrogs>
+References: <170175456196.3910588.9712198406317844529.stgit@frogsfrogsfrogs>
+ <170175456779.3910588.8343836136719400292.stgit@frogsfrogsfrogs>
+ <20231205053842.GA30199@lst.de>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -61,13 +34,32 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20231122-undifferenziert-weitschuss-a5d8cc56fbd1@brauner>
-Sender: Luis Chamberlain <mcgrof@infradead.org>
+In-Reply-To: <20231205053842.GA30199@lst.de>
 
-On Wed, Nov 22, 2023 at 03:00:29PM +0100, Christian Brauner wrote:
-> Looks fine,
-> Acked-by: Christian Brauner <brauner@kernel.org>
+On Tue, Dec 05, 2023 at 06:38:42AM +0100, Christoph Hellwig wrote:
+> On Mon, Dec 04, 2023 at 09:36:07PM -0800, Darrick J. Wong wrote:
+> > +/*
+> > + * The "LARP" (Logged extended Attribute Recovery Persistence) debugging knob
+> > + * sets the XFS_DA_OP_LOGGED flag on all xfs_attr_set operations performed on
+> > + * V5 filesystems.  As a result, the intermediate progress of all setxattr and
+> > + * removexattr operations are tracked via the log and can be restarted during
+> > + * recovery.
+> > + */
+> 
+> Can you also add a sentence on why we even have this code and why you'd
+> want to set the flag?
 
-Series applied, thanks!
+How about these last couple of sentences?
 
-  Luis
+/*
+ * The "LARP" (Logged extended Attribute Recovery Persistence) debugging knob
+ * sets the XFS_DA_OP_LOGGED flag on all xfs_attr_set operations performed on
+ * V5 filesystems.  As a result, the intermediate progress of all setxattr and
+ * removexattr operations are tracked via the log and can be restarted during
+ * recovery.  This is useful for testing xattr recovery prior to merging of the
+ * parent pointer feature which requires it to maintain consistency, and may be
+ * enabled for userspace xattrs in the future.
+ */
+
+--D
+
