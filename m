@@ -1,473 +1,107 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4BD9865EB1
-	for <linux-xfs@vger.kernel.org>; Tue,  5 Dec 2023 14:29:03 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="s2rt8yTH"
-Received: by smtp.kernel.org (Postfix) with ESMTPS id 18844C433D9
-	for <linux-xfs@vger.kernel.org>; Tue,  5 Dec 2023 14:29:03 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1701786543;
-	bh=YShnrjxW2RERFg1rtBcVbBIN2dXNbknVonSG3LXYMvs=;
-	h=From:To:Subject:Date:In-Reply-To:References:From;
-	b=s2rt8yTHxHIDlzLuGN/Yx97rtdReBPMlX3yBoPvQZJ9NTvachvsTuVLiO3NoWVoex
-	 H3yfG6xDNILDWYnFJqEzHXvs6Ys6gPJSqw200ltDaUCzdrGA0J5Pp09JJ2n2KxT4lf
-	 2Ct0AXiU9tZBQ3OUdCjjlNCJFtOwPC+5qySF2sVzdB27gPq+sUcnPM4dSkOj45t+iv
-	 rcVj9xXWbbNzj8JsnmASgv0a6G6oyuIxMzF4WxQtLL8386J8A+O52CET+J0gPnafFo
-	 SCxviF7wRqW2Jnb2pcZg520YAr6PWPqaXRaM71hC+1GjNq07SYgohcUG0rvjGsrIQq
-	 /LqS/6ZgsSNzA==
-Received: by aws-us-west-2-korg-bugzilla-1.web.codeaurora.org (Postfix, from userid 48)
-	id 09334C53BC6; Tue,  5 Dec 2023 14:29:03 +0000 (UTC)
-From: bugzilla-daemon@kernel.org
-To: linux-xfs@vger.kernel.org
-Subject: [Bug 218230] xfstests xfs/538 hung
-Date: Tue, 05 Dec 2023 14:29:02 +0000
-X-Bugzilla-Reason: None
-X-Bugzilla-Type: changed
-X-Bugzilla-Watch-Reason: AssignedTo filesystem_xfs@kernel-bugs.kernel.org
-X-Bugzilla-Product: File System
-X-Bugzilla-Component: XFS
-X-Bugzilla-Version: 2.5
-X-Bugzilla-Keywords: 
-X-Bugzilla-Severity: normal
-X-Bugzilla-Who: chandanbabu@kernel.org
-X-Bugzilla-Status: NEW
-X-Bugzilla-Resolution: 
-X-Bugzilla-Priority: P3
-X-Bugzilla-Assigned-To: filesystem_xfs@kernel-bugs.kernel.org
-X-Bugzilla-Flags: 
-X-Bugzilla-Changed-Fields: 
-Message-ID: <bug-218230-201763-FKGdPQu2af@https.bugzilla.kernel.org/>
-In-Reply-To: <bug-218230-201763@https.bugzilla.kernel.org/>
-References: <bug-218230-201763@https.bugzilla.kernel.org/>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
-X-Bugzilla-URL: https://bugzilla.kernel.org/
-Auto-Submitted: auto-generated
+	dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b="ZL8b3CPx"
+Received: from mail-pl1-x62d.google.com (mail-pl1-x62d.google.com [IPv6:2607:f8b0:4864:20::62d])
+	by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 71EC51B9
+	for <linux-xfs@vger.kernel.org>; Tue,  5 Dec 2023 13:28:04 -0800 (PST)
+Received: by mail-pl1-x62d.google.com with SMTP id d9443c01a7336-1cf7a8ab047so26739495ad.1
+        for <linux-xfs@vger.kernel.org>; Tue, 05 Dec 2023 13:28:04 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=fromorbit-com.20230601.gappssmtp.com; s=20230601; t=1701811684; x=1702416484; darn=vger.kernel.org;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
+        bh=0Of9j2vHhaRBkiVjW9IW/XiQ74OYXhzoZNMT/8wOc5M=;
+        b=ZL8b3CPxo1FXgCHHLdKnFK9kwLXJsbR5wt/jbXlaXpexRF82UVOXleB0aKxXdICtYi
+         boUoinem+FiBovflRPBkFk2OQwfZljFpRvcjl5wQrGnd9L+dzzouxVrE1IJjPxzuUSMx
+         8rZL7gcmczdncTw5Pc7i+DlkS81QiAmHJmTpG623U7vn3sFUV6Xf3edE9Xtj8GWXOUOS
+         ApVGXsjs9mxgSiftFJQPdejB5ewhh7MEuSOAPevYN96qhUsrlXFy/liB6bcjzYW0vbFs
+         B0/1D2wWSjlAOcvwDdw/n1f3TQ0svUApVA9zLdNuNCPcKmmni2vbzrZO6kaJuFxwbxrr
+         2qOQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1701811684; x=1702416484;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=0Of9j2vHhaRBkiVjW9IW/XiQ74OYXhzoZNMT/8wOc5M=;
+        b=ZoIK5HaLyLtywwpKCy7La7d46cKctL9lo4Apd5ITaYMo7/Dh2xRC4JPqDQxJf3J+IJ
+         o4yKCW/kGyx57ZvrVga3ik7V0sEWSrpoC6P5nrgckNg76zFl4BOUTJFSF7Ox/IVbiJRd
+         +68hAerWklKOX/ltqs4tS5cGarQ2dJJdKTHEvF4oo8ZB44v66qijkEr7eyvrjvvwys14
+         xB53X/716jE3EWOPP2Lp6AaNJu1cx0B5rT141R+lcAH7QFTVf5NFYBeU1+w/sncmuTve
+         r2QMQAg4fwemd32rMi79YMITkvC9pslsW+znmti3l0bbovEbHtzrvbZf8uXi0u+gLfOf
+         0fgw==
+X-Gm-Message-State: AOJu0YymYjzaAaLHEazWk4jHHempFIb8yciVUu38I3ngrSMnpEjoH6Q5
+	BRV/5fTXB7Bq1q6VmzoZmdFXsg==
+X-Google-Smtp-Source: AGHT+IFGMNTxjq7pnruc79tXJxf5k+28baxIZrJiXleFZaKpuVTHLto4ZD7NHsNbazo6YbXsm6enXQ==
+X-Received: by 2002:a17:903:32d1:b0:1d0:bcd5:90c with SMTP id i17-20020a17090332d100b001d0bcd5090cmr2486252plr.107.1701811683848;
+        Tue, 05 Dec 2023 13:28:03 -0800 (PST)
+Received: from dread.disaster.area (pa49-180-125-5.pa.nsw.optusnet.com.au. [49.180.125.5])
+        by smtp.gmail.com with ESMTPSA id v21-20020a170902e8d500b001d0acd4e707sm3780674plg.176.2023.12.05.13.28.03
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Tue, 05 Dec 2023 13:28:03 -0800 (PST)
+Received: from dave by dread.disaster.area with local (Exim 4.96)
+	(envelope-from <david@fromorbit.com>)
+	id 1rAcxU-004LVg-2e;
+	Wed, 06 Dec 2023 08:28:00 +1100
+Date: Wed, 6 Dec 2023 08:28:00 +1100
+From: Dave Chinner <david@fromorbit.com>
+To: Christoph Hellwig <hch@infradead.org>
+Cc: Long Li <leo.lilong@huawei.com>, djwong@kernel.org,
+	chandanbabu@kernel.org, linux-xfs@vger.kernel.org,
+	yi.zhang@huawei.com, houtao1@huawei.com, yangerkun@huawei.com
+Subject: Re: [PATCH 1/2] xfs: add lock protection when remove perag from
+ radix tree
+Message-ID: <ZW+V4N5KcBiQa6//@dread.disaster.area>
+References: <20231204043911.1273667-1-leo.lilong@huawei.com>
+ <ZW6ofJp3zRn/X3Mc@infradead.org>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <ZW6ofJp3zRn/X3Mc@infradead.org>
 
-https://bugzilla.kernel.org/show_bug.cgi?id=3D218230
+On Mon, Dec 04, 2023 at 08:35:08PM -0800, Christoph Hellwig wrote:
+> On Mon, Dec 04, 2023 at 12:39:10PM +0800, Long Li wrote:
+> > Look at the perag insertion into the radix tree, protected by
+> > mp->m_perag_lock. When the file system is unmounted, the perag is
+> > removed from the radix tree, also protected by mp->m_perag_lock.
+> > Therefore, mp->m_perag_lock is also added when removing a perag
+> > from the radix tree in error path in xfs_initialize_perag().
+> 
+> There really can't be anything we are racing with at this point.
 
---- Comment #1 from chandanbabu@kernel.org ---
-On Tue, Dec 05, 2023 at 12:31:34 PM +0000, bugzilla-daemon@kernel.org wrote:
-> https://bugzilla.kernel.org/show_bug.cgi?id=3D218230
->
->             Bug ID: 218230
->            Summary: xfstests xfs/538 hung
->            Product: File System
->            Version: 2.5
->           Hardware: All
->                 OS: Linux
->             Status: NEW
->           Severity: normal
->           Priority: P3
->          Component: XFS
->           Assignee: filesystem_xfs@kernel-bugs.kernel.org
->           Reporter: dagmcr@gmail.com
->         Regression: No
->
-> While doing fstests baseline testing on v6.6-rc5 with kdevops [0] we foun=
-d a
-> failure for xfs/538 test.=20
->
-> [0] https://github.com/linux-kdevops
->
-> This fails on the following test sections as defined by kdevops [1]:
->
->   * xfs_crc_logdev_rtdev: failure rate ~1/17
->   * xfs_crc_rtdev_extsize_64k: failure rate ~1/3
->
-> [0] https://github.com/linux-kdevops
-> [1]
->
-> https://github.com/linux-kdevops/kdevops/blob/master/playbooks/roles/fste=
-sts/templates/xfs/xfs.config
->
-> Below is just one full trace.
->
-> Nov 02 20:23:13 line-xfs-crc-logdev-rtdev unknown: run fstests xfs/538 at
-> 2023-11-02 20:23:13
-> Nov 02 20:23:14 line-xfs-crc-logdev-rtdev kernel: XFS (loop5): Mounting V5
-> Filesystem 8e731ab8-42fb-48c5-8877-b4fb526e9609
-> Nov 02 20:23:14 line-xfs-crc-logdev-rtdev kernel: XFS (loop5): Ending cle=
-an
-> mount
-> Nov 02 20:23:23 line-xfs-crc-logdev-rtdev kernel: XFS (loop5): Injecting
-> error
-> (false) at file fs/xfs/libxfs/xfs_bmap.c, line 4123, on filesystem "loop5"
-> Nov 02 20:23:23 line-xfs-crc-logdev-rtdev kernel: XFS (loop5): Injecting
-> error
-> (false) at file fs/xfs/libxfs/xfs_bmap.c, line 4082, on filesystem "loop5"
-> Nov 02 20:23:23 line-xfs-crc-logdev-rtdev kernel: XFS (loop5): Injecting
-> error
-> (false) at file fs/xfs/libxfs/xfs_bmap.c, line 4082, on filesystem "loop5"
-> Nov 02 20:23:23 line-xfs-crc-logdev-rtdev kernel: XFS (loop5): Injecting
-> error
-> (false) at file fs/xfs/libxfs/xfs_bmap.c, line 4082, on filesystem "loop5"
-> Nov 02 20:23:23 line-xfs-crc-logdev-rtdev kernel: XFS (loop5): Injecting
-> error
-> (false) at file fs/xfs/libxfs/xfs_bmap.c, line 4082, on filesystem "loop5"
-> Nov 02 20:23:23 line-xfs-crc-logdev-rtdev kernel: XFS (loop5): Injecting
-> error
-> (false) at file fs/xfs/libxfs/xfs_bmap.c, line 4082, on filesystem "loop5"
-> Nov 02 20:23:23 line-xfs-crc-logdev-rtdev kernel: XFS (loop5): Injecting
-> error
-> (false) at file fs/xfs/libxfs/xfs_bmap.c, line 4082, on filesystem "loop5"
-> Nov 02 20:23:23 line-xfs-crc-logdev-rtdev kernel: XFS (loop5): Injecting
-> error
-> (false) at file fs/xfs/libxfs/xfs_bmap.c, line 4082, on filesystem "loop5"
-> Nov 02 20:23:23 line-xfs-crc-logdev-rtdev kernel: XFS (loop5): Injecting
-> error
-> (false) at file fs/xfs/libxfs/xfs_bmap.c, line 4082, on filesystem "loop5"
-> Nov 02 20:23:23 line-xfs-crc-logdev-rtdev kernel: XFS (loop5): Injecting
-> error
-> (false) at file fs/xfs/libxfs/xfs_bmap.c, line 4082, on filesystem "loop5"
-> Nov 02 20:23:28 line-xfs-crc-logdev-rtdev kernel: xfs_errortag_test: 43825
-> callbacks suppressed
-> Nov 02 20:23:28 line-xfs-crc-logdev-rtdev kernel: XFS (loop5): Injecting
-> error
-> (false) at file fs/xfs/libxfs/xfs_bmap.c, line 4082, on filesystem "loop5"
-> Nov 02 20:23:28 line-xfs-crc-logdev-rtdev kernel: XFS (loop5): Injecting
-> error
-> (false) at file fs/xfs/libxfs/xfs_bmap.c, line 4082, on filesystem "loop5"
-> Nov 02 20:23:28 line-xfs-crc-logdev-rtdev kernel: XFS (loop5): Injecting
-> error
-> (false) at file fs/xfs/libxfs/xfs_bmap.c, line 4082, on filesystem "loop5"
-> Nov 02 20:23:28 line-xfs-crc-logdev-rtdev kernel: XFS (loop5): Injecting
-> error
-> (false) at file fs/xfs/libxfs/xfs_bmap.c, line 4082, on filesystem "loop5"
-> Nov 02 20:23:28 line-xfs-crc-logdev-rtdev kernel: XFS (loop5): Injecting
-> error
-> (false) at file fs/xfs/libxfs/xfs_bmap.c, line 4082, on filesystem "loop5"
-> Nov 02 20:23:28 line-xfs-crc-logdev-rtdev kernel: XFS (loop5): Injecting
-> error
-> (false) at file fs/xfs/libxfs/xfs_bmap.c, line 4082, on filesystem "loop5"
-> Nov 02 20:23:28 line-xfs-crc-logdev-rtdev kernel: XFS (loop5): Injecting
-> error
-> (false) at file fs/xfs/libxfs/xfs_bmap.c, line 4082, on filesystem "loop5"
-> Nov 02 20:23:28 line-xfs-crc-logdev-rtdev kernel: XFS (loop5): Injecting
-> error
-> (false) at file fs/xfs/libxfs/xfs_bmap.c, line 4082, on filesystem "loop5"
-> Nov 02 20:23:28 line-xfs-crc-logdev-rtdev kernel: XFS (loop5): Injecting
-> error
-> (false) at file fs/xfs/libxfs/xfs_bmap.c, line 4082, on filesystem "loop5"
-> Nov 02 20:23:28 line-xfs-crc-logdev-rtdev kernel: XFS (loop5): Injecting
-> error
-> (false) at file fs/xfs/libxfs/xfs_bmap.c, line 4082, on filesystem "loop5"
-> Nov 02 20:23:33 line-xfs-crc-logdev-rtdev kernel: xfs_errortag_test: 37630
-> callbacks suppressed
-> Nov 02 20:23:38 line-xfs-crc-logdev-rtdev kernel: XFS (loop5): Injecting
-> error
-> (false) at file fs/xfs/libxfs/xfs_bmap.c, line 4082, on filesystem "loop5"
-> Nov 02 20:23:38 line-xfs-crc-logdev-rtdev kernel: XFS (loop5): Injecting
-> error
-> (false) at file fs/xfs/libxfs/xfs_bmap.c, line 4082, on filesystem "loop5"
-> Nov 02 20:27:11 line-xfs-crc-logdev-rtdev kernel: INFO: task kcompactd0:71
-> blocked for more than 120 seconds.
-> Nov 02 20:27:11 line-xfs-crc-logdev-rtdev kernel:       Not tainted 6.6.0=
--rc5
-> #2
-> Nov 02 20:27:11 line-xfs-crc-logdev-rtdev kernel: "echo 0 >
-> /proc/sys/kernel/hung_task_timeout_secs" disables this message.
-> Nov 02 20:27:11 line-xfs-crc-logdev-rtdev kernel: task:kcompactd0=20=20=
-=20=20=20
-> state:D
-> stack:0     pid:71    ppid:2      flags:0x00004000
-> Nov 02 20:27:11 line-xfs-crc-logdev-rtdev kernel: Call Trace:
-> Nov 02 20:27:11 line-xfs-crc-logdev-rtdev kernel:  <TASK>
-> Nov 02 20:27:11 line-xfs-crc-logdev-rtdev kernel:  __schedule+0x3ab/0xab0
-> Nov 02 20:27:11 line-xfs-crc-logdev-rtdev kernel:  schedule+0x5d/0xe0
-> Nov 02 20:27:11 line-xfs-crc-logdev-rtdev kernel:  io_schedule+0x42/0x70
-> Nov 02 20:27:11 line-xfs-crc-logdev-rtdev kernel:=20
-> folio_wait_bit_common+0x12e/0x380
-> Nov 02 20:27:11 line-xfs-crc-logdev-rtdev kernel:  ?
-> __pfx_wake_page_function+0x10/0x10
-> Nov 02 20:27:11 line-xfs-crc-logdev-rtdev kernel:=20
-> migrate_pages_batch+0x632/0xdb0
-> Nov 02 20:27:11 line-xfs-crc-logdev-rtdev kernel:  ?
-> __pfx_compaction_free+0x10/0x10
-> Nov 02 20:27:11 line-xfs-crc-logdev-rtdev kernel:  ?
-> __pfx_compaction_alloc+0x10/0x10
-> Nov 02 20:27:11 line-xfs-crc-logdev-rtdev kernel:  ?
-> __pfx_remove_migration_pte+0x10/0x10
-> Nov 02 20:27:11 line-xfs-crc-logdev-rtdev kernel:  migrate_pages+0xc22/0x=
-da0
-> Nov 02 20:27:11 line-xfs-crc-logdev-rtdev kernel:  ?
-> __pfx_compaction_alloc+0x10/0x10
-> Nov 02 20:27:11 line-xfs-crc-logdev-rtdev kernel:  ?
-> __pfx_compaction_free+0x10/0x10
-> Nov 02 20:27:11 line-xfs-crc-logdev-rtdev kernel:  compact_zone+0x927/0xf=
-e0
-> Nov 02 20:27:11 line-xfs-crc-logdev-rtdev kernel:  ?
-> _raw_spin_unlock+0x15/0x30
-> Nov 02 20:27:11 line-xfs-crc-logdev-rtdev kernel:  ?
-> finish_task_switch.isra.0+0x91/0x2a0
-> Nov 02 20:27:11 line-xfs-crc-logdev-rtdev kernel:  ? __switch_to+0x106/0x=
-3a0
-> Nov 02 20:27:11 line-xfs-crc-logdev-rtdev kernel:=20
-> proactive_compact_node+0x87/0xe0
-> Nov 02 20:27:11 line-xfs-crc-logdev-rtdev kernel:  ? finish_wait+0x41/0x90
-> Nov 02 20:27:11 line-xfs-crc-logdev-rtdev kernel:  kcompactd+0x30d/0x3f0
-> Nov 02 20:27:11 line-xfs-crc-logdev-rtdev kernel:  ?
-> __pfx_autoremove_wake_function+0x10/0x10
-> Nov 02 20:27:11 line-xfs-crc-logdev-rtdev kernel:  ?
-> __pfx_kcompactd+0x10/0x10
-> Nov 02 20:27:11 line-xfs-crc-logdev-rtdev kernel:  kthread+0xf3/0x120
-> Nov 02 20:27:11 line-xfs-crc-logdev-rtdev kernel:  ? __pfx_kthread+0x10/0=
-x10
-> Nov 02 20:27:11 line-xfs-crc-logdev-rtdev kernel:  ret_from_fork+0x30/0x50
-> Nov 02 20:27:11 line-xfs-crc-logdev-rtdev kernel:  ? __pfx_kthread+0x10/0=
-x10
-> Nov 02 20:27:11 line-xfs-crc-logdev-rtdev kernel:=20
-> ret_from_fork_asm+0x1b/0x30
-> Nov 02 20:27:11 line-xfs-crc-logdev-rtdev kernel:  </TASK>
-> Nov 02 20:27:11 line-xfs-crc-logdev-rtdev kernel: INFO: task
-> kworker/5:0:2369803 blocked for more than 120 seconds.
-> Nov 02 20:27:11 line-xfs-crc-logdev-rtdev kernel:       Not tainted 6.6.0=
--rc5
-> #2
-> Nov 02 20:27:11 line-xfs-crc-logdev-rtdev kernel: "echo 0 >
-> /proc/sys/kernel/hung_task_timeout_secs" disables this message.
-> Nov 02 20:27:11 line-xfs-crc-logdev-rtdev kernel: task:kworker/5:0=20=20=
-=20=20
-> state:D
-> stack:0     pid:2369803 ppid:2      flags:0x00004000
-> Nov 02 20:27:11 line-xfs-crc-logdev-rtdev kernel: Workqueue:
-> xfs-inodegc/loop5
-> xfs_inodegc_worker [xfs]
-> Nov 02 20:27:11 line-xfs-crc-logdev-rtdev kernel: Call Trace:
-> Nov 02 20:27:11 line-xfs-crc-logdev-rtdev kernel:  <TASK>
-> Nov 02 20:27:11 line-xfs-crc-logdev-rtdev kernel:  __schedule+0x3ab/0xab0
-> Nov 02 20:27:11 line-xfs-crc-logdev-rtdev kernel:  ?
-> finish_task_switch.isra.0+0x91/0x2a0
-> Nov 02 20:27:11 line-xfs-crc-logdev-rtdev kernel:  schedule+0x5d/0xe0
-> Nov 02 20:27:11 line-xfs-crc-logdev-rtdev kernel:=20
-> schedule_timeout+0x143/0x150
-> Nov 02 20:27:11 line-xfs-crc-logdev-rtdev kernel:  ?
-> preempt_count_add+0x6a/0xa0
-> Nov 02 20:27:11 line-xfs-crc-logdev-rtdev kernel:  __down_common+0xf6/0x2=
-00
-> Nov 02 20:27:11 line-xfs-crc-logdev-rtdev kernel:  down+0x43/0x60
-> Nov 02 20:27:11 line-xfs-crc-logdev-rtdev kernel:  xfs_buf_lock+0x2d/0xe0
-> [xfs]
-> Nov 02 20:27:11 line-xfs-crc-logdev-rtdev kernel:=20
-> xfs_buf_find_lock+0x60/0x140
-> [xfs]
-> Nov 02 20:27:11 line-xfs-crc-logdev-rtdev kernel:=20
-> xfs_buf_get_map+0x1bd/0xaf0
-> [xfs]
-> Nov 02 20:27:11 line-xfs-crc-logdev-rtdev kernel:  ?
-> __module_address+0x2f/0xb0
-> Nov 02 20:27:11 line-xfs-crc-logdev-rtdev kernel:  ?
-> __module_address+0x2f/0xb0
-> Nov 02 20:27:11 line-xfs-crc-logdev-rtdev kernel:  ?
-> preempt_count_add+0x47/0xa0
-> Nov 02 20:27:11 line-xfs-crc-logdev-rtdev kernel:=20
-> xfs_buf_read_map+0x54/0x250
-> [xfs]
-> Nov 02 20:27:11 line-xfs-crc-logdev-rtdev kernel:  ? xfs_read_agf+0x90/0x=
-130
-> [xfs]
-> Nov 02 20:27:11 line-xfs-crc-logdev-rtdev kernel:=20
-> xfs_trans_read_buf_map+0x1c2/0x4d0 [xfs]
-> Nov 02 20:27:11 line-xfs-crc-logdev-rtdev kernel:  ? xfs_read_agf+0x90/0x=
-130
-> [xfs]
-> Nov 02 20:27:11 line-xfs-crc-logdev-rtdev kernel:  xfs_read_agf+0x90/0x130
-> [xfs]
-> Nov 02 20:27:11 line-xfs-crc-logdev-rtdev kernel:=20
-> xfs_alloc_read_agf+0x5e/0x390 [xfs]
-> Nov 02 20:27:11 line-xfs-crc-logdev-rtdev kernel:  ?
-> __xfs_trans_commit+0xc8/0x390 [xfs]
-> Nov 02 20:27:11 line-xfs-crc-logdev-rtdev kernel:=20
-> xfs_alloc_fix_freelist+0x3cb/0x750 [xfs]
-> Nov 02 20:27:11 line-xfs-crc-logdev-rtdev kernel:  ?
-> unwind_next_frame+0x120/0x890
-> Nov 02 20:27:11 line-xfs-crc-logdev-rtdev kernel:  ?
-> arch_stack_walk+0x88/0xf0
-> Nov 02 20:27:11 line-xfs-crc-logdev-rtdev kernel:  ?
-> ret_from_fork_asm+0x1b/0x30
-> Nov 02 20:27:11 line-xfs-crc-logdev-rtdev kernel:  ?
-> __stack_depot_save+0x35/0x480
-> Nov 02 20:27:11 line-xfs-crc-logdev-rtdev kernel:=20
-> xfs_free_extent_fix_freelist+0x61/0xa0 [xfs]
-> Nov 02 20:27:11 line-xfs-crc-logdev-rtdev kernel:=20
-> __xfs_free_extent+0x8c/0x1f0
-> [xfs]
-> Nov 02 20:27:11 line-xfs-crc-logdev-rtdev kernel:=20
-> xfs_trans_free_extent+0x97/0x270 [xfs]
-> Nov 02 20:27:11 line-xfs-crc-logdev-rtdev kernel:=20
-> xfs_extent_free_finish_item+0xf/0x40 [xfs]
-> Nov 02 20:27:11 line-xfs-crc-logdev-rtdev kernel:=20
-> xfs_defer_finish_noroll+0x19f/0x760 [xfs]
-> Nov 02 20:27:11 line-xfs-crc-logdev-rtdev kernel:  xfs_defer_finish+0x11/=
-0xa0
-> [xfs]
-> Nov 02 20:27:11 line-xfs-crc-logdev-rtdev kernel:=20
-> xfs_itruncate_extents_flags+0x14f/0x4c0 [xfs]
-> Nov 02 20:27:11 line-xfs-crc-logdev-rtdev kernel:=20
-> xfs_inactive_truncate+0xbf/0x140 [xfs]
-> Nov 02 20:27:11 line-xfs-crc-logdev-rtdev kernel:  xfs_inactive+0x22d/0x2=
-90
-> [xfs]
-> Nov 02 20:27:11 line-xfs-crc-logdev-rtdev kernel:=20
-> xfs_inodegc_worker+0xb4/0x1a0 [xfs]
-> Nov 02 20:27:11 line-xfs-crc-logdev-rtdev kernel:=20
-> process_one_work+0x174/0x340
-> Nov 02 20:27:11 line-xfs-crc-logdev-rtdev kernel:  worker_thread+0x277/0x=
-390
-> Nov 02 20:27:11 line-xfs-crc-logdev-rtdev kernel:  ?
-> __pfx_worker_thread+0x10/0x10
-> Nov 02 20:27:11 line-xfs-crc-logdev-rtdev kernel:  kthread+0xf3/0x120
-> Nov 02 20:27:11 line-xfs-crc-logdev-rtdev kernel:  ? __pfx_kthread+0x10/0=
-x10
-> Nov 02 20:27:11 line-xfs-crc-logdev-rtdev kernel:  ret_from_fork+0x30/0x50
-> Nov 02 20:27:11 line-xfs-crc-logdev-rtdev kernel:  ? __pfx_kthread+0x10/0=
-x10
-> Nov 02 20:27:11 line-xfs-crc-logdev-rtdev kernel:=20
-> ret_from_fork_asm+0x1b/0x30
-> Nov 02 20:27:11 line-xfs-crc-logdev-rtdev kernel:  </TASK>
-> Nov 02 20:27:11 line-xfs-crc-logdev-rtdev kernel: INFO: task
-> kworker/u17:7:3188941 blocked for more than 120 seconds.
-> Nov 02 20:27:11 line-xfs-crc-logdev-rtdev kernel:       Not tainted 6.6.0=
--rc5
-> #2
-> Nov 02 20:27:11 line-xfs-crc-logdev-rtdev kernel: "echo 0 >
-> /proc/sys/kernel/hung_task_timeout_secs" disables this message.
-> Nov 02 20:27:11 line-xfs-crc-logdev-rtdev kernel: task:kworker/u17:7=20=20
-> state:D
-> stack:0     pid:3188941 ppid:2      flags:0x00004000
-> Nov 02 20:27:11 line-xfs-crc-logdev-rtdev kernel: Workqueue: writeback
-> wb_workfn (flush-7:5)
-> Nov 02 20:27:11 line-xfs-crc-logdev-rtdev kernel: Call Trace:
-> Nov 02 20:27:11 line-xfs-crc-logdev-rtdev kernel:  <TASK>
-> Nov 02 20:27:11 line-xfs-crc-logdev-rtdev kernel:  __schedule+0x3ab/0xab0
-> Nov 02 20:27:11 line-xfs-crc-logdev-rtdev kernel:  schedule+0x5d/0xe0
-> Nov 02 20:27:11 line-xfs-crc-logdev-rtdev kernel:=20
-> schedule_timeout+0x143/0x150
-> Nov 02 20:27:11 line-xfs-crc-logdev-rtdev kernel:  ?
-> _raw_spin_unlock_irqrestore+0x23/0x40
-> Nov 02 20:27:11 line-xfs-crc-logdev-rtdev kernel:  ?
-> preempt_count_add+0x6a/0xa0
-> Nov 02 20:27:11 line-xfs-crc-logdev-rtdev kernel:  ?
-> _raw_spin_lock_irqsave+0x23/0x50
-> Nov 02 20:27:11 line-xfs-crc-logdev-rtdev kernel:  __down_common+0xf6/0x2=
-00
-> Nov 02 20:27:11 line-xfs-crc-logdev-rtdev kernel:  down+0x43/0x60
-> Nov 02 20:27:11 line-xfs-crc-logdev-rtdev kernel:  xfs_buf_lock+0x2d/0xe0
-> [xfs]
-> Nov 02 20:27:11 line-xfs-crc-logdev-rtdev kernel:=20
-> xfs_buf_find_lock+0x60/0x140
-> [xfs]
-> Nov 02 20:27:11 line-xfs-crc-logdev-rtdev kernel:=20
-> xfs_buf_get_map+0x1bd/0xaf0
-> [xfs]
-> Nov 02 20:27:11 line-xfs-crc-logdev-rtdev kernel:  ?
-> _xfs_trans_bjoin+0x76/0x120 [xfs]
-> Nov 02 20:27:11 line-xfs-crc-logdev-rtdev kernel:=20
-> xfs_buf_read_map+0x54/0x250
-> [xfs]
-> Nov 02 20:27:11 line-xfs-crc-logdev-rtdev kernel:  ? xfs_read_agf+0x90/0x=
-130
-> [xfs]
-> Nov 02 20:27:11 line-xfs-crc-logdev-rtdev kernel:=20
-> xfs_trans_read_buf_map+0x1c2/0x4d0 [xfs]
-> Nov 02 20:27:11 line-xfs-crc-logdev-rtdev kernel:  ? xfs_read_agf+0x90/0x=
-130
-> [xfs]
-> Nov 02 20:27:11 line-xfs-crc-logdev-rtdev kernel:  xfs_read_agf+0x90/0x130
-> [xfs]
-> Nov 02 20:27:11 line-xfs-crc-logdev-rtdev kernel:=20
-> xfs_alloc_read_agf+0x5e/0x390 [xfs]
-> Nov 02 20:27:11 line-xfs-crc-logdev-rtdev kernel:=20
-> xfs_alloc_fix_freelist+0x3cb/0x750 [xfs]
-> Nov 02 20:27:11 line-xfs-crc-logdev-rtdev kernel:  ? wb_workfn+0x30f/0x4b0
-> Nov 02 20:27:11 line-xfs-crc-logdev-rtdev kernel:  ?
-> set_track_prepare+0x4a/0x70
-> Nov 02 20:27:11 line-xfs-crc-logdev-rtdev kernel:  ?
-> xlog_ticket_alloc+0x29/0xa0 [xfs]
-> Nov 02 20:27:11 line-xfs-crc-logdev-rtdev kernel:  ?
-> xfs_log_reserve+0x9c/0x220
-> [xfs]
-> Nov 02 20:27:11 line-xfs-crc-logdev-rtdev kernel:  ?
-> xfs_trans_reserve+0x199/0x270 [xfs]
-> Nov 02 20:27:11 line-xfs-crc-logdev-rtdev kernel:  ?
-> __pv_queued_spin_lock_slowpath+0x16c/0x380
-> Nov 02 20:27:11 line-xfs-crc-logdev-rtdev kernel:=20
-> xfs_alloc_vextent_prepare_ag+0x2d/0x120 [xfs]
-> Nov 02 20:27:11 line-xfs-crc-logdev-rtdev kernel:=20
-> xfs_alloc_vextent_iterate_ags.constprop.0+0x99/0x230 [xfs]
-> Nov 02 20:27:11 line-xfs-crc-logdev-rtdev kernel:=20
-> xfs_alloc_vextent_first_ag+0xf1/0x130 [xfs]
-> Nov 02 20:27:11 line-xfs-crc-logdev-rtdev kernel:=20
-> xfs_bmap_exact_minlen_extent_alloc+0x138/0x1b0 [xfs]
-> Nov 02 20:27:11 line-xfs-crc-logdev-rtdev kernel:=20
-> xfs_bmapi_allocate+0x282/0x450 [xfs]
-> Nov 02 20:27:11 line-xfs-crc-logdev-rtdev kernel:=20
-> xfs_bmapi_convert_delalloc+0x2ee/0x4e0 [xfs]
-> Nov 02 20:27:11 line-xfs-crc-logdev-rtdev kernel:  xfs_map_blocks+0x1f2/0=
-x590
-> [xfs]
-> Nov 02 20:27:11 line-xfs-crc-logdev-rtdev kernel:=20
-> iomap_do_writepage+0x28b/0x8d0
-> Nov 02 20:27:11 line-xfs-crc-logdev-rtdev kernel:=20
-> write_cache_pages+0x159/0x3c0
-> Nov 02 20:27:11 line-xfs-crc-logdev-rtdev kernel:  ?
-> __pfx_iomap_do_writepage+0x10/0x10
-> Nov 02 20:27:11 line-xfs-crc-logdev-rtdev kernel:  iomap_writepages+0x1c/=
-0x40
-> Nov 02 20:27:11 line-xfs-crc-logdev-rtdev kernel:=20
-> xfs_vm_writepages+0x79/0xb0
-> [xfs]
-> Nov 02 20:27:11 line-xfs-crc-logdev-rtdev kernel:  do_writepages+0xcb/0x1=
-a0
-> Nov 02 20:27:11 line-xfs-crc-logdev-rtdev kernel:  ? touch_atime+0x1c/0x1=
-60
-> Nov 02 20:27:11 line-xfs-crc-logdev-rtdev kernel:  ? filemap_read+0x32f/0=
-x340
-> Nov 02 20:27:11 line-xfs-crc-logdev-rtdev kernel:=20
-> __writeback_single_inode+0x3d/0x350
-> Nov 02 20:27:11 line-xfs-crc-logdev-rtdev kernel:  ? _raw_spin_lock+0x13/=
-0x40
-> Nov 02 20:27:11 line-xfs-crc-logdev-rtdev kernel:=20
-> writeback_sb_inodes+0x1f5/0x4c0
-> Nov 02 20:27:11 line-xfs-crc-logdev-rtdev kernel:=20
-> __writeback_inodes_wb+0x4c/0xe0
-> Nov 02 20:27:11 line-xfs-crc-logdev-rtdev kernel:  wb_writeback+0x26b/0x2=
-e0
-> Nov 02 20:27:11 line-xfs-crc-logdev-rtdev kernel:  wb_workfn+0x30f/0x4b0
-> Nov 02 20:27:11 line-xfs-crc-logdev-rtdev kernel:  ?
-> _raw_spin_unlock+0x15/0x30
-> Nov 02 20:27:11 line-xfs-crc-logdev-rtdev kernel:  ?
-> finish_task_switch.isra.0+0x91/0x2a0
-> Nov 02 20:27:11 line-xfs-crc-logdev-rtdev kernel:  ? __switch_to+0x106/0x=
-3a0
-> Nov 02 20:27:11 line-xfs-crc-logdev-rtdev kernel:=20
-> process_one_work+0x174/0x340
-> Nov 02 20:27:11 line-xfs-crc-logdev-rtdev kernel:  worker_thread+0x277/0x=
-390
-> Nov 02 20:27:11 line-xfs-crc-logdev-rtdev kernel:  ?
-> __pfx_worker_thread+0x10/0x10
-> Nov 02 20:27:11 line-xfs-crc-logdev-rtdev kernel:  kthread+0xf3/0x120
-> Nov 02 20:27:11 line-xfs-crc-logdev-rtdev kernel:  ? __pfx_kthread+0x10/0=
-x10
-> Nov 02 20:27:11 line-xfs-crc-logdev-rtdev kernel:  ret_from_fork+0x30/0x50
-> Nov 02 20:27:11 line-xfs-crc-logdev-rtdev kernel:  ? __pfx_kthread+0x10/0=
-x10
-> Nov 02 20:27:11 line-xfs-crc-logdev-rtdev kernel:=20
-> ret_from_fork_asm+0x1b/0x30
-> Nov 02 20:27:11 line-xfs-crc-logdev-rtdev kernel:  </TASK>
+I'm pretty sure that there can be racing operations. Lookups are
+fine - they are RCU protected so already deal with the tree changing
+shape underneath the lookup - but tagging operations require the
+tree to be stable while the tags are propagated back up to the root.
 
-I have root caused the bug and hope to post the patches soon.
+Right now there's nothing stopping radix tree tagging from
+operating while a growfs operation is progress and adding/removing
+new entries into the radix tree.
 
---=20
-You may reply to this email to add a comment.
+Hence we can have traversals that require a stable tree occurring at
+the same time we are removing unused entries from the radix tree
+which causes the shape of the tree to change...
 
-You are receiving this mail because:
-You are watching the assignee of the bug.=
+Likely this hasn't caused a problem in the past because we are only
+doing append addition and removal so the active AG part of the tree
+is not changing shape, but that doesn't mean it is safe...
+
+> That beeing said I think clearing locking rules are always a good
+> thing.  So maybe reword the above as:
+> 
+> "Take mp->m_perag_lock for deletions from the perag radix tree in
+>  xfs_initialize_perag to be consistent with additions to it even
+>  if there can't be concurrent modifications to it at this point"
+
+I don't think it needs even that - just making the radix tree
+modifications serialise against each other is obviously correct...
+
+-Dave.
+
+
+-- 
+Dave Chinner
+david@fromorbit.com
