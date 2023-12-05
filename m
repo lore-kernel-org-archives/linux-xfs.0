@@ -1,107 +1,127 @@
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+	(No client certificate requested)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8D14B3FE53
+	for <linux-xfs@vger.kernel.org>; Tue,  5 Dec 2023 23:08:44 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b="ZL8b3CPx"
-Received: from mail-pl1-x62d.google.com (mail-pl1-x62d.google.com [IPv6:2607:f8b0:4864:20::62d])
-	by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 71EC51B9
-	for <linux-xfs@vger.kernel.org>; Tue,  5 Dec 2023 13:28:04 -0800 (PST)
-Received: by mail-pl1-x62d.google.com with SMTP id d9443c01a7336-1cf7a8ab047so26739495ad.1
-        for <linux-xfs@vger.kernel.org>; Tue, 05 Dec 2023 13:28:04 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=fromorbit-com.20230601.gappssmtp.com; s=20230601; t=1701811684; x=1702416484; darn=vger.kernel.org;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
-        bh=0Of9j2vHhaRBkiVjW9IW/XiQ74OYXhzoZNMT/8wOc5M=;
-        b=ZL8b3CPxo1FXgCHHLdKnFK9kwLXJsbR5wt/jbXlaXpexRF82UVOXleB0aKxXdICtYi
-         boUoinem+FiBovflRPBkFk2OQwfZljFpRvcjl5wQrGnd9L+dzzouxVrE1IJjPxzuUSMx
-         8rZL7gcmczdncTw5Pc7i+DlkS81QiAmHJmTpG623U7vn3sFUV6Xf3edE9Xtj8GWXOUOS
-         ApVGXsjs9mxgSiftFJQPdejB5ewhh7MEuSOAPevYN96qhUsrlXFy/liB6bcjzYW0vbFs
-         B0/1D2wWSjlAOcvwDdw/n1f3TQ0svUApVA9zLdNuNCPcKmmni2vbzrZO6kaJuFxwbxrr
-         2qOQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1701811684; x=1702416484;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=0Of9j2vHhaRBkiVjW9IW/XiQ74OYXhzoZNMT/8wOc5M=;
-        b=ZoIK5HaLyLtywwpKCy7La7d46cKctL9lo4Apd5ITaYMo7/Dh2xRC4JPqDQxJf3J+IJ
-         o4yKCW/kGyx57ZvrVga3ik7V0sEWSrpoC6P5nrgckNg76zFl4BOUTJFSF7Ox/IVbiJRd
-         +68hAerWklKOX/ltqs4tS5cGarQ2dJJdKTHEvF4oo8ZB44v66qijkEr7eyvrjvvwys14
-         xB53X/716jE3EWOPP2Lp6AaNJu1cx0B5rT141R+lcAH7QFTVf5NFYBeU1+w/sncmuTve
-         r2QMQAg4fwemd32rMi79YMITkvC9pslsW+znmti3l0bbovEbHtzrvbZf8uXi0u+gLfOf
-         0fgw==
-X-Gm-Message-State: AOJu0YymYjzaAaLHEazWk4jHHempFIb8yciVUu38I3ngrSMnpEjoH6Q5
-	BRV/5fTXB7Bq1q6VmzoZmdFXsg==
-X-Google-Smtp-Source: AGHT+IFGMNTxjq7pnruc79tXJxf5k+28baxIZrJiXleFZaKpuVTHLto4ZD7NHsNbazo6YbXsm6enXQ==
-X-Received: by 2002:a17:903:32d1:b0:1d0:bcd5:90c with SMTP id i17-20020a17090332d100b001d0bcd5090cmr2486252plr.107.1701811683848;
-        Tue, 05 Dec 2023 13:28:03 -0800 (PST)
-Received: from dread.disaster.area (pa49-180-125-5.pa.nsw.optusnet.com.au. [49.180.125.5])
-        by smtp.gmail.com with ESMTPSA id v21-20020a170902e8d500b001d0acd4e707sm3780674plg.176.2023.12.05.13.28.03
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 05 Dec 2023 13:28:03 -0800 (PST)
-Received: from dave by dread.disaster.area with local (Exim 4.96)
-	(envelope-from <david@fromorbit.com>)
-	id 1rAcxU-004LVg-2e;
-	Wed, 06 Dec 2023 08:28:00 +1100
-Date: Wed, 6 Dec 2023 08:28:00 +1100
-From: Dave Chinner <david@fromorbit.com>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="RPRHxtqI"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 5733FC433C7;
+	Tue,  5 Dec 2023 23:08:44 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1701817724;
+	bh=ckAgEOakM0kvx/WBJKNiVn21lPZtFJN8Vs/9mGs/uOY=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=RPRHxtqIqcO2Z1SKq3rSRmN1kkv/GXsEiLIcR7L6y56Rbq65QaYePaOOapO0bt1R2
+	 ZAN/I8MKINMA21T4Z0oQSH5bBrPl6rpHaQV8U/aQ4RLXxddQnuKPZmEBleYUKOkpMM
+	 qwdPCVt7+NiO28a8tB8yaulhwjjluid11w1gb2Lu9++bvTQ0SC3bvqteefIBJSjOLs
+	 dGlrQGmAsShFvx8sudMCZW3RncY1zz4BRwR731x/M4aTqGjawkKO4vhKbmwAnPbjsP
+	 sZfPM5M/3FytElaRNff0Vf0YHvcQ19rU6VYSiuVsJ8dg01/3atkM9jSksnM55qVwyr
+	 mE47EqmULPKaA==
+Date: Tue, 5 Dec 2023 15:08:43 -0800
+From: "Darrick J. Wong" <djwong@kernel.org>
 To: Christoph Hellwig <hch@infradead.org>
-Cc: Long Li <leo.lilong@huawei.com>, djwong@kernel.org,
-	chandanbabu@kernel.org, linux-xfs@vger.kernel.org,
-	yi.zhang@huawei.com, houtao1@huawei.com, yangerkun@huawei.com
-Subject: Re: [PATCH 1/2] xfs: add lock protection when remove perag from
- radix tree
-Message-ID: <ZW+V4N5KcBiQa6//@dread.disaster.area>
-References: <20231204043911.1273667-1-leo.lilong@huawei.com>
- <ZW6ofJp3zRn/X3Mc@infradead.org>
+Cc: linux-xfs@vger.kernel.org
+Subject: Re: [PATCH 3/7] xfs: repair inode records
+Message-ID: <20231205230843.GO361584@frogsfrogsfrogs>
+References: <170086927425.2771142.14267390365805527105.stgit@frogsfrogsfrogs>
+ <170086927488.2771142.16279946215209833817.stgit@frogsfrogsfrogs>
+ <ZWYek3C/x7pLqRFj@infradead.org>
+ <20231128230848.GD4167244@frogsfrogsfrogs>
+ <ZWbUAizpezw5fuZW@infradead.org>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=utf-8
 Content-Disposition: inline
-In-Reply-To: <ZW6ofJp3zRn/X3Mc@infradead.org>
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <ZWbUAizpezw5fuZW@infradead.org>
 
-On Mon, Dec 04, 2023 at 08:35:08PM -0800, Christoph Hellwig wrote:
-> On Mon, Dec 04, 2023 at 12:39:10PM +0800, Long Li wrote:
-> > Look at the perag insertion into the radix tree, protected by
-> > mp->m_perag_lock. When the file system is unmounted, the perag is
-> > removed from the radix tree, also protected by mp->m_perag_lock.
-> > Therefore, mp->m_perag_lock is also added when removing a perag
-> > from the radix tree in error path in xfs_initialize_perag().
+On Tue, Nov 28, 2023 at 10:02:42PM -0800, Christoph Hellwig wrote:
+> On Tue, Nov 28, 2023 at 03:08:48PM -0800, Darrick J. Wong wrote:
+> > > 
+> > > We set the reflink flag by default, because a later stage will clear
+> > > it if there aren't any shared blocks, right?  Maybe add a comment to
+> > > avoid any future confusion.
+> > 
+> > 	/*
+> > 	 * For regular files on a reflink filesystem, set the REFLINK flag to
+> > 	 * protect shared extents.  A later stage will actually check those
+> > 	 * extents and clear the flag if possible.
+> > 	 */
 > 
-> There really can't be anything we are racing with at this point.
-
-I'm pretty sure that there can be racing operations. Lookups are
-fine - they are RCU protected so already deal with the tree changing
-shape underneath the lookup - but tagging operations require the
-tree to be stable while the tags are propagated back up to the root.
-
-Right now there's nothing stopping radix tree tagging from
-operating while a growfs operation is progress and adding/removing
-new entries into the radix tree.
-
-Hence we can have traversals that require a stable tree occurring at
-the same time we are removing unused entries from the radix tree
-which causes the shape of the tree to change...
-
-Likely this hasn't caused a problem in the past because we are only
-doing append addition and removal so the active AG part of the tree
-is not changing shape, but that doesn't mean it is safe...
-
-> That beeing said I think clearing locking rules are always a good
-> thing.  So maybe reword the above as:
+> Sounds good.
 > 
-> "Take mp->m_perag_lock for deletions from the perag radix tree in
->  xfs_initialize_perag to be consistent with additions to it even
->  if there can't be concurrent modifications to it at this point"
+> > > Hmm, changing a symlink to actually point somewhere seems very
+> > > surprising, but making it point to the current directory almost begs
+> > > for userspace code to run in loops.
+> > 
+> > How about '🤷'?  That's only four bytes.
+> > 
+> > Or maybe a question mark.
+> 
+> Heh.  I guess question marks seems a bit better, but the general idea
+> of having new names / different pointing locations show up in the
+> name space scare me a little.  I wonder if something like the classic
+> lost+found directory might be the right thing for anything we're not
+> sure about as people know about it.
 
-I don't think it needs even that - just making the radix tree
-modifications serialise against each other is obviously correct...
+Hmm.  I suppose a problem with "?" is that question-mark is a valid
+filename, which means that our zapped symlink could now suddenly point
+to a different file that a user created.  "/lost+found" isn't different
+in that respect, but societal convention might at least provide for
+raised eyebrows.  That said, mkfs.xfs doesn't create one for us like
+mke2fs does, so maybe a broken symlink to the orphanage is... well, now
+I'm bikeshedding my own creation.
 
--Dave.
+May I try to make a case for "🚽"? ;)
 
+> > > > +	if (xfs_has_reflink(sc->mp)) {
+> > > > +		; /* data fork blockcount can exceed physical storage */
+> > > 
+> > > ... because we would be reflinking the same blocks into the same inode
+> > > at different offsets over and over again ... ?
+> > 
+> > Yes.  That's not a terribly functional file, but users can do such
+> > things if they want to pay for the cpu/metadata.
+> 
+> Yeah.  But maybe expand the comment a bit - having spent a fair amout
+> of time with the reflink code this was obvious to me, but for someone
+> new the above might be a bit too cryptic.
 
--- 
-Dave Chinner
-david@fromorbit.com
+	/*
+	 * data fork blockcount can exceed physical storage if a
+	 * user reflinks the same block over and over again.
+	 */
+
+> > > > +
+> > > > +	if (i_uid_read(VFS_I(sc->ip)) == -1U) {
+> > > 
+> > > What is invalid about all-F uid/gid/projid?
+> > 
+> > I thought those were invalid, though apparently they're not now?
+> > uidgid.h says:
+> > 
+> > static inline bool uid_valid(kuid_t uid)
+> > {
+> > 	return __kuid_val(uid) != (uid_t) -1;
+> > }
+> > 
+> > Which is why I thought that it's not possible to have a uid of -1 on a
+> > file.  Trying to set that uid on a file causes the kernel to reject the
+> > value, but OTOH I can apparently create inodes with a -1 UID via
+> > idmapping shenanigans.
+> 
+> Heh.  Just wanted an explanation for the check.  So a commnt is fine,
+> or finding a way to use the uid_valid and co helpers to make it
+> self-explanatory.
+
+Yeah, I think this converts easily to:
+
+	if (!uid_valid(VFS_I(sc->ip)->i_uid)) {
+		/* zap it */
+	}
+
+--D
