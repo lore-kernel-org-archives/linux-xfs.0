@@ -1,71 +1,55 @@
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+	(No client certificate requested)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3F02211CAE
+	for <linux-xfs@vger.kernel.org>; Wed,  6 Dec 2023 08:49:25 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="Vp/4qeyO"
-Received: from bombadil.infradead.org (bombadil.infradead.org [IPv6:2607:7c80:54:3::133])
-	by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 630A3D44
-	for <linux-xfs@vger.kernel.org>; Tue,  5 Dec 2023 21:16:33 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-	d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Transfer-Encoding
-	:Content-Type:MIME-Version:References:Message-ID:Subject:Cc:To:From:Date:
-	Sender:Reply-To:Content-ID:Content-Description;
-	bh=/DAiLEUW9zD9C61sbK2eTB6T6/2D8KHBxHAtaEU5byA=; b=Vp/4qeyO5+sU+Kho9WTDUxq0Na
-	ZZwkP/bdRelUajFjXzLhCPBHhTvAlsDFrDRLRqUCV62n7a4ca4YinCypu9T6zmiQzJrDIznQrqUcL
-	/inOM5Qu9u8p7UU7zOzBQRb3DqB+ynJnsQ0FAw/mzcttmH3pahw+D0szkFvNLa+GZg+sNyr0+VjLY
-	Bm78BsKW3ehV3O1lo33al8VILLKR94OkfUtVw+6+ik4/iyrhbI6AGEhqa3SF0+mV8bOVBJJbFeeUk
-	u+XirEX59ODCi6RYr2adY0dycCp8AETnxrROfD2k59OAg/1H7Ljh8vd4MQNzgk4RwaTifa0u+rGDo
-	1X+VcuBg==;
-Received: from hch by bombadil.infradead.org with local (Exim 4.96 #2 (Red Hat Linux))
-	id 1rAkGv-0095Ax-0j;
-	Wed, 06 Dec 2023 05:16:33 +0000
-Date: Tue, 5 Dec 2023 21:16:33 -0800
-From: Christoph Hellwig <hch@infradead.org>
-To: "Darrick J. Wong" <djwong@kernel.org>
-Cc: Christoph Hellwig <hch@infradead.org>, linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 3/7] xfs: repair inode records
-Message-ID: <ZXADsQ7onmKd4u9k@infradead.org>
-References: <170086927425.2771142.14267390365805527105.stgit@frogsfrogsfrogs>
- <170086927488.2771142.16279946215209833817.stgit@frogsfrogsfrogs>
- <ZWYek3C/x7pLqRFj@infradead.org>
- <20231128230848.GD4167244@frogsfrogsfrogs>
- <ZWbUAizpezw5fuZW@infradead.org>
- <20231205230843.GO361584@frogsfrogsfrogs>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Z+dTHcTl"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 60599C433C7;
+	Wed,  6 Dec 2023 08:49:24 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1701852565;
+	bh=YsJtyPxNNals3Cz3EzXAbBeKTFLZthfqzmqoA3ZMKNw=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=Z+dTHcTls0kAmVWF3AacAqEkz7v9emajv/tF2FCpB3cqvystWtQKgrStlUD19gE/J
+	 xXCwURKzLZmDzDs0Ce4y1s8SAjgWz9FOEKXuc01kKFIbupl70PvcE4XSYkhttn6qWC
+	 hVw3HM2aneUY8C/hotFEDnWAtEs5P+AsFSuesMNvtnDfMBZoK+SsUY/HiJJLwlTHf0
+	 X4lMisZIhYEM1RsoMpoKIbDAtc/QOANj8UQsF1ThDPjs8XegMPyPltbDIElrDEFbIs
+	 pecdcSdtr6v28EZS+pKaSHDxWE8UOAz2y8CcYe31zTkjddEBxq8SkFM5leB0F0dHfv
+	 9Imi53FksWUDA==
+Date: Wed, 6 Dec 2023 09:49:21 +0100
+From: Carlos Maiolino <cem@kernel.org>
+To: Christoph Hellwig <hch@lst.de>
+Cc: Chandan Babu R <chandan.babu@oracle.com>, 
+	"Darrick J. Wong" <djwong@kernel.org>, linux-xfs@vger.kernel.org
+Subject: Re: share xfs_ondisk.h with userspace
+Message-ID: <gvoornqoklacg4r32zzviv6e6n5qrwtiyqskv4fq7x24b6aqi5@qvdsvlsxxkik>
+References: <P2n4rCzfWQ4WXEZsETZ3TkSW3tDwzcQuEbmsjhb_BAObmT_7sYjfvdqc1VIwUn0MnFNUjQp-d3EFYwlLoAtydA==@protonmail.internalid>
+ <20231204200719.15139-1-hch@lst.de>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <20231205230843.GO361584@frogsfrogsfrogs>
-X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
+In-Reply-To: <20231204200719.15139-1-hch@lst.de>
 
-On Tue, Dec 05, 2023 at 03:08:43PM -0800, Darrick J. Wong wrote:
-> Hmm.  I suppose a problem with "?" is that question-mark is a valid
-> filename, which means that our zapped symlink could now suddenly point
-> to a different file that a user created.  "/lost+found" isn't different
-> in that respect, but societal convention might at least provide for
-> raised eyebrows.  That said, mkfs.xfs doesn't create one for us like
-> mke2fs does, so maybe a broken symlink to the orphanage is... well, now
-> I'm bikeshedding my own creation.
+On Mon, Dec 04, 2023 at 09:07:17PM +0100, Christoph Hellwig wrote:
+> Hi all,
 > 
-> May I try to make a case for "🚽"? ;)
+> this series switches xfs_ondisk.h to use static_assert instead of the
+> kernel-specific BUILD_BUG_ON_MSG and then moves it to libxfs so that
+> userspace can share the same struct sanity checks.
 
-Haha..  I suspect not allowing to follow the link at all if is marked
-sick is the best idea, i.e. the concept we've talked about for regular
-files.  Make that consistent for all file times, and then we need to
-look into an expedited on-disk flag for that to make it persistent.
+Thanks Christoph!
+
+Reviewed-by: Carlos Maiolino <cmaiolino@redhat.com>
+
 
 > 
-> 	/*
-> 	 * data fork blockcount can exceed physical storage if a
-> 	 * user reflinks the same block over and over again.
-> 	 */
-
-Yup.
-
-> 	if (!uid_valid(VFS_I(sc->ip)->i_uid)) {
-> 		/* zap it */
-> 	}
-
-Perfect.
+> Diffstat:
+>  xfs_ondisk.h |    8 ++++----
+>  1 file changed, 4 insertions(+), 4 deletions(-)
+> 
