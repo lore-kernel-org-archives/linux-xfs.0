@@ -1,29 +1,29 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1A7AE1841
-	for <linux-xfs@vger.kernel.org>; Thu,  7 Dec 2023 02:39:22 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BB8951846
+	for <linux-xfs@vger.kernel.org>; Thu,  7 Dec 2023 02:39:37 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="rSGU0IKh"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id E2A49C433C7;
-	Thu,  7 Dec 2023 02:39:21 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="dFACAA5a"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 8F913C433C8;
+	Thu,  7 Dec 2023 02:39:37 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1701916761;
-	bh=ST9zn/LRoUIBDhtYAN18azgsUPnosicArEqnU++WRx0=;
+	s=k20201202; t=1701916777;
+	bh=31jAGze1ztVcIuvQ080O+SqtJXULaNRKH5QpKQvjEl0=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=rSGU0IKhhmdWWqzrriibkaZK1BuIfMY+c7UoWohf0u+5UNexwf0UyCiY7a5kK1K5G
-	 cm8JYlsPzD0oXCaN6c8DvrDJycnXzgpdBKjOD5wpZ+tPMsuVrzquR9TEDpk/QJma7H
-	 bB17mQ8k3DSIQOQXr/WctqGlbkyGHvUzZ2HKajZm7Cf4TSaCVCS/YsQeikKa07f3jL
-	 qDX83gdH3VoDrYYYnwO38FWGnotztQrHYuOJTWibM1mCILaClJjZr599nB3ryAsdvu
-	 a/l3lfdppMA51Tmi25A/e8wyYims4VLi/tX68gaTgocE8mT3ChlCkwh2tGE5jLcfeh
-	 A+griGsMNip3g==
-Date: Wed, 06 Dec 2023 18:39:21 -0800
-Subject: [PATCH 4/6] xfs: add debug knobs to control btree bulk load slack
- factors
+	b=dFACAA5ac+08NqiVMa9v3s5dleJNUmjw7JDR8rzrozg2+POyAj87uKktSO8iqVC38
+	 yUw70YFbC+QyONx3XmL2xewNkAVNpoK4v+zn3NwTUUlKCGgfGyAq/HZCGdzgv3LcIu
+	 tknu9L+0rpJUrZE0wbq6XAj1EY0lHOkmmNAtns4gLToV0WY4hrnsG7L/Ri9HrQ7lgz
+	 j2PJHn2pAUnW74+pH1E33nAtkQ0X0yn13iBf6SpNDxU/AP6V+jGBz+jqHlfkv4IW4M
+	 hhjfX2Qm3M+6aqfVFAM2tmz8U+YozO7WQu1QEIRLie3RdH1aB64U1EhFEvEh0fp9LI
+	 S2AoOEWG5lPLw==
+Date: Wed, 06 Dec 2023 18:39:37 -0800
+Subject: [PATCH 5/6] xfs: move btree bulkload record initialization to
+ ->get_record implementations
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: djwong@kernel.org
-Cc: linux-xfs@vger.kernel.org
-Message-ID: <170191665210.1180191.2699697469994477580.stgit@frogsfrogsfrogs>
+Cc: Christoph Hellwig <hch@lst.de>, linux-xfs@vger.kernel.org
+Message-ID: <170191665226.1180191.2150592821260551488.stgit@frogsfrogsfrogs>
 In-Reply-To: <170191665134.1180191.6683537290321625529.stgit@frogsfrogsfrogs>
 References: <170191665134.1180191.6683537290321625529.stgit@frogsfrogsfrogs>
 User-Agent: StGit/0.19
@@ -38,157 +38,94 @@ Content-Transfer-Encoding: 7bit
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-Add some debug knobs so that we can control the leaf and node block
-slack when rebuilding btrees.
-
-For developers, it might be useful to construct btrees of various
-heights by crafting a filesystem with a certain number of records and
-then using repair+knobs to rebuild the index with a certain shape.
-Practically speaking, you'd only ever do that for extreme stress
-testing of the runtime code or the btree generator.
+When we're performing a bulk load of a btree, move the code that
+actually stores the btree record in the new btree block out of the
+generic code and into the individual ->get_record implementations.
+This is preparation for being able to store multiple records with a
+single indirect call.
 
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
+Reviewed-by: Christoph Hellwig <hch@lst.de>
 ---
- fs/xfs/scrub/newbt.c |   11 +++++++---
- fs/xfs/xfs_globals.c |   12 +++++++++++
- fs/xfs/xfs_sysctl.h  |    2 ++
- fs/xfs/xfs_sysfs.c   |   54 ++++++++++++++++++++++++++++++++++++++++++++++++++
- 4 files changed, 76 insertions(+), 3 deletions(-)
+ fs/xfs/libxfs/xfs_btree_staging.c |   17 +++++++----------
+ fs/xfs/libxfs/xfs_btree_staging.h |   15 ++++++++++-----
+ 2 files changed, 17 insertions(+), 15 deletions(-)
 
 
-diff --git a/fs/xfs/scrub/newbt.c b/fs/xfs/scrub/newbt.c
-index 992cf34a13e70..46883606ad883 100644
---- a/fs/xfs/scrub/newbt.c
-+++ b/fs/xfs/scrub/newbt.c
-@@ -32,6 +32,7 @@
-  * btree bulk loading code calculates for us.  However, there are some
-  * exceptions to this rule:
-  *
-+ * (0) If someone turned one of the debug knobs.
-  * (1) If this is a per-AG btree and the AG has less than 10% space free.
-  * (2) If this is an inode btree and the FS has less than 10% space free.
+diff --git a/fs/xfs/libxfs/xfs_btree_staging.c b/fs/xfs/libxfs/xfs_btree_staging.c
+index ee0594a4c3d32..a14be6f120600 100644
+--- a/fs/xfs/libxfs/xfs_btree_staging.c
++++ b/fs/xfs/libxfs/xfs_btree_staging.c
+@@ -434,22 +434,19 @@ STATIC int
+ xfs_btree_bload_leaf(
+ 	struct xfs_btree_cur		*cur,
+ 	unsigned int			recs_this_block,
+-	xfs_btree_bload_get_record_fn	get_record,
++	xfs_btree_bload_get_records_fn	get_records,
+ 	struct xfs_btree_block		*block,
+ 	void				*priv)
+ {
+-	unsigned int			j;
++	unsigned int			j = 1;
+ 	int				ret;
  
-@@ -47,9 +48,13 @@ xrep_newbt_estimate_slack(
- 	uint64_t		free;
- 	uint64_t		sz;
+ 	/* Fill the leaf block with records. */
+-	for (j = 1; j <= recs_this_block; j++) {
+-		union xfs_btree_rec	*block_rec;
+-
+-		ret = get_record(cur, priv);
+-		if (ret)
++	while (j <= recs_this_block) {
++		ret = get_records(cur, j, block, recs_this_block - j + 1, priv);
++		if (ret < 0)
+ 			return ret;
+-		block_rec = xfs_btree_rec_addr(cur, j, block);
+-		cur->bc_ops->init_rec_from_cur(cur, block_rec);
++		j += ret;
+ 	}
  
--	/* Let the btree code compute the default slack values. */
--	bload->leaf_slack = -1;
--	bload->node_slack = -1;
-+	/*
-+	 * The xfs_globals values are set to -1 (i.e. take the bload defaults)
-+	 * unless someone has set them otherwise, so we just pull the values
-+	 * here.
-+	 */
-+	bload->leaf_slack = xfs_globals.bload_leaf_slack;
-+	bload->node_slack = xfs_globals.bload_node_slack;
+ 	return 0;
+@@ -792,7 +789,7 @@ xfs_btree_bload(
+ 		trace_xfs_btree_bload_block(cur, level, i, blocks, &ptr,
+ 				nr_this_block);
  
- 	if (sc->ops->type == ST_PERAG) {
- 		free = sc->sa.pag->pagf_freeblks;
-diff --git a/fs/xfs/xfs_globals.c b/fs/xfs/xfs_globals.c
-index 9edc1f2bc9399..f18fec0adf666 100644
---- a/fs/xfs/xfs_globals.c
-+++ b/fs/xfs/xfs_globals.c
-@@ -44,4 +44,16 @@ struct xfs_globals xfs_globals = {
- 	.pwork_threads		=	-1,	/* automatic thread detection */
- 	.larp			=	false,	/* log attribute replay */
- #endif
-+
-+	/*
-+	 * Leave this many record slots empty when bulk loading btrees.  By
-+	 * default we load new btree leaf blocks 75% full.
-+	 */
-+	.bload_leaf_slack	=	-1,
-+
-+	/*
-+	 * Leave this many key/ptr slots empty when bulk loading btrees.  By
-+	 * default we load new btree node blocks 75% full.
-+	 */
-+	.bload_node_slack	=	-1,
- };
-diff --git a/fs/xfs/xfs_sysctl.h b/fs/xfs/xfs_sysctl.h
-index f78ad6b10ea58..276696a07040c 100644
---- a/fs/xfs/xfs_sysctl.h
-+++ b/fs/xfs/xfs_sysctl.h
-@@ -85,6 +85,8 @@ struct xfs_globals {
- 	int	pwork_threads;		/* parallel workqueue threads */
- 	bool	larp;			/* log attribute replay */
- #endif
-+	int	bload_leaf_slack;	/* btree bulk load leaf slack */
-+	int	bload_node_slack;	/* btree bulk load node slack */
- 	int	log_recovery_delay;	/* log recovery delay (secs) */
- 	int	mount_delay;		/* mount setup delay (secs) */
- 	bool	bug_on_assert;		/* BUG() the kernel on assert failure */
-diff --git a/fs/xfs/xfs_sysfs.c b/fs/xfs/xfs_sysfs.c
-index 871f16a4a5d80..17485666b6723 100644
---- a/fs/xfs/xfs_sysfs.c
-+++ b/fs/xfs/xfs_sysfs.c
-@@ -262,6 +262,58 @@ larp_show(
- XFS_SYSFS_ATTR_RW(larp);
- #endif /* DEBUG */
+-		ret = xfs_btree_bload_leaf(cur, nr_this_block, bbl->get_record,
++		ret = xfs_btree_bload_leaf(cur, nr_this_block, bbl->get_records,
+ 				block, priv);
+ 		if (ret)
+ 			goto out;
+diff --git a/fs/xfs/libxfs/xfs_btree_staging.h b/fs/xfs/libxfs/xfs_btree_staging.h
+index 5f638f711246e..bd5b3f004823a 100644
+--- a/fs/xfs/libxfs/xfs_btree_staging.h
++++ b/fs/xfs/libxfs/xfs_btree_staging.h
+@@ -47,7 +47,9 @@ void xfs_btree_commit_ifakeroot(struct xfs_btree_cur *cur, struct xfs_trans *tp,
+ 		int whichfork, const struct xfs_btree_ops *ops);
  
-+STATIC ssize_t
-+bload_leaf_slack_store(
-+	struct kobject	*kobject,
-+	const char	*buf,
-+	size_t		count)
-+{
-+	int		ret;
-+	int		val;
-+
-+	ret = kstrtoint(buf, 0, &val);
-+	if (ret)
-+		return ret;
-+
-+	xfs_globals.bload_leaf_slack = val;
-+	return count;
-+}
-+
-+STATIC ssize_t
-+bload_leaf_slack_show(
-+	struct kobject	*kobject,
-+	char		*buf)
-+{
-+	return snprintf(buf, PAGE_SIZE, "%d\n", xfs_globals.bload_leaf_slack);
-+}
-+XFS_SYSFS_ATTR_RW(bload_leaf_slack);
-+
-+STATIC ssize_t
-+bload_node_slack_store(
-+	struct kobject	*kobject,
-+	const char	*buf,
-+	size_t		count)
-+{
-+	int		ret;
-+	int		val;
-+
-+	ret = kstrtoint(buf, 0, &val);
-+	if (ret)
-+		return ret;
-+
-+	xfs_globals.bload_node_slack = val;
-+	return count;
-+}
-+
-+STATIC ssize_t
-+bload_node_slack_show(
-+	struct kobject	*kobject,
-+	char		*buf)
-+{
-+	return snprintf(buf, PAGE_SIZE, "%d\n", xfs_globals.bload_node_slack);
-+}
-+XFS_SYSFS_ATTR_RW(bload_node_slack);
-+
- static struct attribute *xfs_dbg_attrs[] = {
- 	ATTR_LIST(bug_on_assert),
- 	ATTR_LIST(log_recovery_delay),
-@@ -271,6 +323,8 @@ static struct attribute *xfs_dbg_attrs[] = {
- 	ATTR_LIST(pwork_threads),
- 	ATTR_LIST(larp),
- #endif
-+	ATTR_LIST(bload_leaf_slack),
-+	ATTR_LIST(bload_node_slack),
- 	NULL,
- };
- ATTRIBUTE_GROUPS(xfs_dbg);
+ /* Bulk loading of staged btrees. */
+-typedef int (*xfs_btree_bload_get_record_fn)(struct xfs_btree_cur *cur, void *priv);
++typedef int (*xfs_btree_bload_get_records_fn)(struct xfs_btree_cur *cur,
++		unsigned int idx, struct xfs_btree_block *block,
++		unsigned int nr_wanted, void *priv);
+ typedef int (*xfs_btree_bload_claim_block_fn)(struct xfs_btree_cur *cur,
+ 		union xfs_btree_ptr *ptr, void *priv);
+ typedef size_t (*xfs_btree_bload_iroot_size_fn)(struct xfs_btree_cur *cur,
+@@ -55,11 +57,14 @@ typedef size_t (*xfs_btree_bload_iroot_size_fn)(struct xfs_btree_cur *cur,
+ 
+ struct xfs_btree_bload {
+ 	/*
+-	 * This function will be called nr_records times to load records into
+-	 * the btree.  The function does this by setting the cursor's bc_rec
+-	 * field in in-core format.  Records must be returned in sort order.
++	 * This function will be called to load @nr_wanted records into the
++	 * btree.  The implementation does this by setting the cursor's bc_rec
++	 * field in in-core format and using init_rec_from_cur to set the
++	 * records in the btree block.  Records must be returned in sort order.
++	 * The function must return the number of records loaded or the usual
++	 * negative errno.
+ 	 */
+-	xfs_btree_bload_get_record_fn	get_record;
++	xfs_btree_bload_get_records_fn	get_records;
+ 
+ 	/*
+ 	 * This function will be called nr_blocks times to obtain a pointer
 
