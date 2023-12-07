@@ -1,28 +1,28 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 17BC91C38
-	for <linux-xfs@vger.kernel.org>; Thu,  7 Dec 2023 02:29:52 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B8E741868
+	for <linux-xfs@vger.kernel.org>; Thu,  7 Dec 2023 02:30:07 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="ZY4teAzc"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id DE711C433C7;
-	Thu,  7 Dec 2023 02:29:51 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="q9G8Xqkm"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 88AEDC433C8;
+	Thu,  7 Dec 2023 02:30:07 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1701916191;
-	bh=vAONQr8IePh+Hxc/8ux5FtxQhOFVykbFZsw9oeXn9wQ=;
+	s=k20201202; t=1701916207;
+	bh=y27Cr0Ly2yIKplrzgv0jAuGumbfMgje3kLXeEfqnNgg=;
 	h=Date:Subject:From:To:Cc:From;
-	b=ZY4teAzc5ziKoy+TozfAbJADuPPitcNT+x3lvlEP17Wn7iCRoasjN9lInsnA/eaIC
-	 Ykc0NAUceuNAj3LOVV+L9feWZ6JS1YTJtpxbhJY3OBOVBnEaVYWp10raZtOsFYzXY2
-	 s74nUrrZd4EGPSOdCrBSuXAINMNYp/nUoURO4pwuVoS+0VzpajG8xCrxClDugYhxdL
-	 VnA4CrGXWbH/BHLzlBG7cVk/Nsk5VDPXBzYr/fO5RpBsYQfm9AeU1P6cExiivLrqaV
-	 9zIEZbiqsPCYqmzko/Js94s/T0I2w8OEaGM6nsMAiYH9/ZMFr8J7fkcYtNU31ltmOj
-	 DfHRezk+i1McQ==
-Date: Wed, 06 Dec 2023 18:29:51 -0800
-Subject: [GIT PULL 3/5] xfs: fix realtime geometry integer overflows
+	b=q9G8Xqkm9fK7UjazUqnCrnJ8Z1L8D8fzri28cYNawmbDm6NToO++qvjHOmF/LF085
+	 oJCnMnN1psVIikCv6/leYViB/G1Ol0hyizK0l0PKgIwP2b2eLmRrgROGknmg9T4W9S
+	 In2Gr71VaTLWCrZdWnVsny/x5jKoc8EPjwo0OsqE07Xznw+2fyLJuOfNRzYPQkzYmg
+	 Sie1HxUH7SZOMg83SY7eeHoxzd+XVfe6C8tIWofByCcvo7/RUuul4BXVvwbejRT/mP
+	 LqQOUpZEzMj0k4cRYARgG/w77MHFHSOHUP+7ycCTukYlPj0vWYeYIMmnDNC/uiBriE
+	 liyGMba7qiHoA==
+Date: Wed, 06 Dec 2023 18:30:07 -0800
+Subject: [GIT PULL 4/5] xfs: elide defer work ->create_done if no intent
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: chandanbabu@kernel.org, djwong@kernel.org, hch@lst.de
 Cc: linux-xfs@vger.kernel.org
-Message-ID: <170191573133.1135812.10618175896538243945.stg-ugh@frogsfrogsfrogs>
+Message-ID: <170191573238.1135812.13863112646073646742.stg-ugh@frogsfrogsfrogs>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -42,57 +42,39 @@ encounter any problems.
 
 --D
 
-The following changes since commit f0dba2bf31c65d93a6ae3a7e07e765b9e613aa2c:
-
-xfs: move ->iop_relog to struct xfs_defer_op_type (2023-12-06 18:17:24 -0800)
-
-are available in the Git repository at:
-
-https://git.kernel.org/pub/scm/linux/kernel/git/djwong/xfs-linux.git tags/fix-rtmount-overflows-6.8_2023-12-06
-
-for you to fetch changes up to 4d6bd042de601ce29732060101df64725c925836:
+The following changes since commit 4d6bd042de601ce29732060101df64725c925836:
 
 xfs: don't allow overly small or large realtime volumes (2023-12-06 18:17:25 -0800)
 
+are available in the Git repository at:
+
+https://git.kernel.org/pub/scm/linux/kernel/git/djwong/xfs-linux.git tags/defer-elide-create-done-6.8_2023-12-06
+
+for you to fetch changes up to d10115e529bba3a2b2b8194419a13d7dcff970dc:
+
+xfs: elide ->create_done calls for unlogged deferred work (2023-12-06 18:17:25 -0800)
+
 ----------------------------------------------------------------
-xfs: fix realtime geometry integer overflows [v2]
+xfs: elide defer work ->create_done if no intent [v2]
 
-While reading through the realtime geometry support code in xfsprogs, I
-noticed a discrepancy between the sb_rextslog computation used when
-writing out the superblock during mkfs and the validation code used in
-xfs_repair.  This discrepancy would lead to system failure for a runt rt
-volume having more than 1 rt block but zero rt extents in length.  Most
-people aren't going to configure a 1M extent size for their 360k rt
-floppy disk volume, but I did!
+Christoph pointed out that the defer ops machinery doesn't need to call
+->create_done if the deferred work item didn't generate a log intent
+item in the first place.  Let's clean that up and save an indirect call
+in the non-logged xattr update call path.
 
-In the process of studying that code, it occurred to me that there is a
-second bug in the computation -- the use of highbit32 for a 64-bit
-value means that the upper 32 bits are not considered in the search for
-a high bit.  This causes the creation of a realtime summary file that is
-the wrong length.  If rextents is a multiple of U32_MAX then this will
-appear to work fine because highbit32 returns -1 for an input of 0; but
-for all other cases the rt summary is undersized, leading to failures.
-
-Fix the first problem by standardizing the computation with a helper in
-libxfs; and the second problem by correcting the computation.  This will
-cause any existing rt volumes larger than 2^32 blocks to fail validation
-but they probably were already crashing anyway.
-
-v2: pick up review tags
+v2: pick up rvb tags
 
 This has been lightly tested with fstests.  Enjoy!
 
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 
 ----------------------------------------------------------------
-Darrick J. Wong (3):
-xfs: make rextslog computation consistent with mkfs
-xfs: fix 32-bit truncation in xfs_compute_rextslog
-xfs: don't allow overly small or large realtime volumes
+Darrick J. Wong (2):
+xfs: document what LARP means
+xfs: elide ->create_done calls for unlogged deferred work
 
-fs/xfs/libxfs/xfs_rtbitmap.c | 14 ++++++++++++++
-fs/xfs/libxfs/xfs_rtbitmap.h | 16 ++++++++++++++++
-fs/xfs/libxfs/xfs_sb.c       |  6 ++++--
-fs/xfs/xfs_rtalloc.c         |  6 ++++--
-4 files changed, 38 insertions(+), 4 deletions(-)
+fs/xfs/libxfs/xfs_defer.c | 4 ++++
+fs/xfs/xfs_attr_item.c    | 3 ---
+fs/xfs/xfs_sysfs.c        | 9 +++++++++
+3 files changed, 13 insertions(+), 3 deletions(-)
 
