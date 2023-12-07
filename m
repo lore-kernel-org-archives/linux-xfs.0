@@ -1,28 +1,28 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6B9F21845
-	for <linux-xfs@vger.kernel.org>; Thu,  7 Dec 2023 02:22:58 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5507E1845
+	for <linux-xfs@vger.kernel.org>; Thu,  7 Dec 2023 02:23:04 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="VH1rb5ey"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 3A01CC433C9;
-	Thu,  7 Dec 2023 02:22:58 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="YyHodSVP"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id D4CA7C433C7;
+	Thu,  7 Dec 2023 02:23:03 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1701915778;
-	bh=/yE4K2dGPpg7XJVWVKSrobddXAQ1S8XDCaf8B1lZC5w=;
+	s=k20201202; t=1701915783;
+	bh=VpHD8nWoGEMR65npXTL+nlCb/JNt1/P1/WcOiIEZ9iM=;
 	h=Date:Subject:From:To:Cc:From;
-	b=VH1rb5eyBJdWmy1a/yyrzGKbXKQEeogcUGm+utSqlgvuDIuB3fYahDuNiougJ3PK6
-	 R45wSTjIXiVVPllQunYPTNwTU6I7v/WlSP/MsOLhRoGqhxkmumlsgEPdQ4Lvc1H6yC
-	 G9/9djvjiahePBf8udg2+UdPilOz65ceWBtf9xqw9WxMCPdPvYdFc28Gs+3wFez9c2
-	 GkbIiyv7xZfgQ1910SoQbMxgHpwh+j+2zejN2g3jBnFl3hmb1IJ1y9l8LIf4sr6bfK
-	 ALoN18Z4w/Ssr3Jbm/m41G1Y7r+CE2azDHr+FpLoyxv5Cnvsrpfiy92MSgn82vz1mt
-	 0edcTX3a38/BQ==
-Date: Wed, 06 Dec 2023 18:22:56 -0800
-Subject: [PATCHSET v2 0/9] xfs: continue removing defer item boilerplate
+	b=YyHodSVPL9Thn0+AbVZAQvk2ffP9No3UHg0cnskwcjzmwofVrKtjX8M2RSJexpfie
+	 uFWnUF34GBy8btJp2GcmUEmOIjNTUZwzwvAS0OPDIhSRpZspPIhWhBye+uG4lOPVuY
+	 SAEeLxSjjPuWaTrtIhyoKi5zPpAoiN9DyP5fnkwGdS29YawA1R8nBixvy9o5qPV7wG
+	 gr90bcI9Fm+JshRuCpMFPySPBiJ4IIWDMsLhwkeVQ5bp/Fkcz1MK4nZgpxi7YyZ417
+	 VPpPKsCt3udFhct+KMjCNV8u0P+JFvx8mOzwbwCpyu+cWnOATj+ska9OaBVsys5WOF
+	 mk8uepGr6d3Zw==
+Date: Wed, 06 Dec 2023 18:23:03 -0800
+Subject: [PATCHSET v2 0/3] xfs: fix realtime geometry integer overflows
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: chandanbabu@kernel.org, hch@lst.de, djwong@kernel.org
 Cc: linux-xfs@vger.kernel.org
-Message-ID: <170191562370.1133395.5436656395520338293.stgit@frogsfrogsfrogs>
+Message-ID: <170191562871.1133665.6520990725805302209.stgit@frogsfrogsfrogs>
 User-Agent: StGit/0.19
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
@@ -35,16 +35,28 @@ Content-Transfer-Encoding: 7bit
 
 Hi all,
 
-Now that we've restructured log intent item recovery to reconstruct the
-incore deferred work state, apply further cleanups to that code to
-remove boilerplate that is duplicated across all the _item.c files.
-Having done that, collapse a bunch of trivial helpers to reduce the
-overall call chain.  That enables us to refactor the relog code so that
-the ->relog_item implementations only have to know how to format the
-implementation-specific data encoded in an intent item and don't
-themselves have to handle the log item juggling.
+While reading through the realtime geometry support code in xfsprogs, I
+noticed a discrepancy between the sb_rextslog computation used when
+writing out the superblock during mkfs and the validation code used in
+xfs_repair.  This discrepancy would lead to system failure for a runt rt
+volume having more than 1 rt block but zero rt extents in length.  Most
+people aren't going to configure a 1M extent size for their 360k rt
+floppy disk volume, but I did!
 
-v2: pick up rvb tags
+In the process of studying that code, it occurred to me that there is a
+second bug in the computation -- the use of highbit32 for a 64-bit
+value means that the upper 32 bits are not considered in the search for
+a high bit.  This causes the creation of a realtime summary file that is
+the wrong length.  If rextents is a multiple of U32_MAX then this will
+appear to work fine because highbit32 returns -1 for an input of 0; but
+for all other cases the rt summary is undersized, leading to failures.
+
+Fix the first problem by standardizing the computation with a helper in
+libxfs; and the second problem by correcting the computation.  This will
+cause any existing rt volumes larger than 2^32 blocks to fail validation
+but they probably were already crashing anyway.
+
+v2: pick up review tags
 
 If you're going to start using this code, I strongly recommend pulling
 from my git trees, which are linked below.
@@ -55,15 +67,11 @@ Comments and questions are, as always, welcome.
 --D
 
 kernel git tree:
-https://git.kernel.org/cgit/linux/kernel/git/djwong/xfs-linux.git/log/?h=reconstruct-defer-cleanups-6.8
+https://git.kernel.org/cgit/linux/kernel/git/djwong/xfs-linux.git/log/?h=fix-rtmount-overflows-6.8
 ---
- fs/xfs/libxfs/xfs_defer.c  |   55 ++++++++++
- fs/xfs/libxfs/xfs_defer.h  |    3 +
- fs/xfs/xfs_attr_item.c     |  137 +++++++------------------
- fs/xfs/xfs_bmap_item.c     |  115 ++++++---------------
- fs/xfs/xfs_extfree_item.c  |  242 ++++++++++++++++----------------------------
- fs/xfs/xfs_refcount_item.c |  113 ++++++---------------
- fs/xfs/xfs_rmap_item.c     |  113 ++++++---------------
- fs/xfs/xfs_trans.h         |   10 --
- 8 files changed, 284 insertions(+), 504 deletions(-)
+ fs/xfs/libxfs/xfs_rtbitmap.c |   14 ++++++++++++++
+ fs/xfs/libxfs/xfs_rtbitmap.h |   16 ++++++++++++++++
+ fs/xfs/libxfs/xfs_sb.c       |    6 ++++--
+ fs/xfs/xfs_rtalloc.c         |    6 ++++--
+ 4 files changed, 38 insertions(+), 4 deletions(-)
 
