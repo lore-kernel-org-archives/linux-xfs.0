@@ -1,16 +1,30 @@
-Received: from verein.lst.de (verein.lst.de [213.95.11.211])
-	by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2744410CE
-	for <linux-xfs@vger.kernel.org>; Wed,  6 Dec 2023 21:06:31 -0800 (PST)
-Received: by verein.lst.de (Postfix, from userid 2407)
-	id 1662B227A87; Thu,  7 Dec 2023 06:06:28 +0100 (CET)
-Date: Thu, 7 Dec 2023 06:06:27 +0100
-From: Christoph Hellwig <hch@lst.de>
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="bxeH8sLr"
+Received: from bombadil.infradead.org (bombadil.infradead.org [IPv6:2607:7c80:54:3::133])
+	by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 966C8D5E
+	for <linux-xfs@vger.kernel.org>; Wed,  6 Dec 2023 21:25:21 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+	d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Type:MIME-Version
+	:References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
+	Content-Transfer-Encoding:Content-ID:Content-Description;
+	bh=yLzv5SS1V3aarodncuW30mbRdofFaKWFDKz3pMewS+M=; b=bxeH8sLr4OBydKgMweirBIZcZm
+	HphYJE2ixsGM1zMrTUQR4i7z8MsGCxRfs83W/fVa7z8kyv18zeBdmYTg+DMqP07k1TBArmH/z/NLq
+	oihUCPYwRseYUcDuvcGKdomKlWbWQkkY9gZQ0exgoy/WGEJbcvCSP4pYLn9tGWILdEYtBa+YArAty
+	/5SO0qvyq3suYMftGDq2BYe2tlb0Ub90qhU5XoemUNjE1mP1FhYq//oTBAZ9MGVKxdyCsdf7rl11s
+	QyTXeGjoeDKPgCaziRpPmY1ltrDMZCjdWH0GHgaKI7ryYJQ1n+QtuQD21cqULDeILETE/u1QwrpIC
+	RP0+09ug==;
+Received: from hch by bombadil.infradead.org with local (Exim 4.96 #2 (Red Hat Linux))
+	id 1rB6sz-00BtSr-1b;
+	Thu, 07 Dec 2023 05:25:21 +0000
+Date: Wed, 6 Dec 2023 21:25:21 -0800
+From: Christoph Hellwig <hch@infradead.org>
 To: "Darrick J. Wong" <djwong@kernel.org>
-Cc: chandanbabu@kernel.org, hch@lst.de, linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 1/1] xfs: recompute growfsrtfree transaction
- reservation while growing rt volume
-Message-ID: <20231207050627.GA16149@lst.de>
-References: <170191563642.1133893.14966073508617867491.stgit@frogsfrogsfrogs> <170191563659.1133893.4605821704716263615.stgit@frogsfrogsfrogs>
+Cc: linux-xfs@vger.kernel.org
+Subject: Re: [PATCH 1/6] xfs: force all buffers to be written during btree
+ bulk load
+Message-ID: <ZXFXQebKwYci7Qtg@infradead.org>
+References: <170191665134.1180191.6683537290321625529.stgit@frogsfrogsfrogs>
+ <170191665162.1180191.12974934587540936095.stgit@frogsfrogsfrogs>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -19,9 +33,12 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <170191563659.1133893.4605821704716263615.stgit@frogsfrogsfrogs>
-User-Agent: Mutt/1.5.17 (2007-11-01)
+In-Reply-To: <170191665162.1180191.12974934587540936095.stgit@frogsfrogsfrogs>
+X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 
-Looks good:
+So as discussed last round I don't particularly like how it is done
+caller dependent, but it seems to be the only way forward without
+completely reworking the delwri list handling, so:
 
 Reviewed-by: Christoph Hellwig <hch@lst.de>
+
