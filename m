@@ -1,239 +1,76 @@
-Received: from szxga03-in.huawei.com (szxga03-in.huawei.com [45.249.212.189])
-	by lindbergh.monkeyblade.net (Postfix) with ESMTPS id BCE3E171C
-	for <linux-xfs@vger.kernel.org>; Fri,  8 Dec 2023 00:28:44 -0800 (PST)
-Received: from dggpeml500017.china.huawei.com (unknown [172.30.72.53])
-	by szxga03-in.huawei.com (SkyGuard) with ESMTP id 4Smkn42Vfdz14LqS;
-	Fri,  8 Dec 2023 16:28:40 +0800 (CST)
-Received: from [10.174.178.2] (10.174.178.2) by dggpeml500017.china.huawei.com
- (7.185.36.243) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2507.35; Fri, 8 Dec
- 2023 16:28:42 +0800
-Message-ID: <374531c8-e2e7-4d96-8fe9-19f7357b08dc@huawei.com>
-Date: Fri, 8 Dec 2023 16:28:41 +0800
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="JE8ud65k"
+Received: from mail-ed1-x52d.google.com (mail-ed1-x52d.google.com [IPv6:2a00:1450:4864:20::52d])
+	by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 64D62F1
+	for <linux-xfs@vger.kernel.org>; Fri,  8 Dec 2023 07:01:05 -0800 (PST)
+Received: by mail-ed1-x52d.google.com with SMTP id 4fb4d7f45d1cf-54c5d041c23so2992749a12.2
+        for <linux-xfs@vger.kernel.org>; Fri, 08 Dec 2023 07:01:05 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20230601; t=1702047663; x=1702652463; darn=vger.kernel.org;
+        h=to:subject:message-id:date:from:mime-version:from:to:cc:subject
+         :date:message-id:reply-to;
+        bh=lsDVneHrasqLaAGGoNzdS4KONMuXIYmvuxh8YJJZLTw=;
+        b=JE8ud65kv6+RkuutG1iHEWgmDpk+KyDebp38DIghLBCdZgGqwtjfZfjTQ/ON2//TUi
+         OYDzzipJFXhY7M5YMKGH0c/1Z6TWhdQilzxinZzICLI6pU3ZDjNt5omUHjrXzBahKjaZ
+         zRUGQ8AZb7PhOq3Q5WXIDHPf8+529pZ/duUIoatLT7H6E/8HiotJR1BcslbPCaVTN/at
+         xLHs5wkPUKr+OupFKVeAj6VYZ4sgL3ccpOY0IhN36U+WqNaiBBwRSrBNeH7hl4cPB4sf
+         DH4Wt6F8G2ess88nlwwHfw0P7pbgTbXxZbChizx+ZWLGBNeAluWq7BSLNwOoI/fyfZyH
+         H75A==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1702047663; x=1702652463;
+        h=to:subject:message-id:date:from:mime-version:x-gm-message-state
+         :from:to:cc:subject:date:message-id:reply-to;
+        bh=lsDVneHrasqLaAGGoNzdS4KONMuXIYmvuxh8YJJZLTw=;
+        b=qlv38P4pxZemu6VHTiAUpQX59FrTC/OODmKXCPgRo1zPLWZLYMaL+R6n5Tq7xpRquG
+         26WucyGwAFmjY+CcO0ldhnlKSMOa/BpFDD+FHwlGsXB9L1/E5bckWwEcTEu4btHofqw0
+         wXMpE23MzvkrPwBMxtZcbtwencGRi1DCMD12q25cHQn8+oswaUoc8ot76KVZrY+klnZl
+         Xfg9hMcHS1nv08FyHnai9XTpI5L/1O+n1blXqGpBGv17xXCULmJlMq+JD+a2teQhJ1BN
+         2L7e9RXSqCZbvev3Bj+G/fTHhxQ+XOMm2mSEIGFeECPqp1HS3lwFRhCKRERnsu3jMj99
+         CMhQ==
+X-Gm-Message-State: AOJu0YyHHdUF4siXZScJ3MR3EaHmAj8VYxVCdpDSITtHx1zqNPrNfva/
+	8l1OaALWyhJFlvNBnB7wMzRjb22k2DMlaLIfX/h4kKZWcis=
+X-Google-Smtp-Source: AGHT+IE61FOX6719nbqfYUDS5ScQRR9yCzgyPUnvklxKHLg2IVVUfsDTTN1T7bmmPCJAp2c/nOnH/RkXG027bwDHXUs=
+X-Received: by 2002:a50:8e0d:0:b0:54b:67a7:efe5 with SMTP id
+ 13-20020a508e0d000000b0054b67a7efe5mr76817edw.1.1702047662839; Fri, 08 Dec
+ 2023 07:01:02 -0800 (PST)
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH] xfs_grow: Remove xflag and iflag to reduce redundant
- temporary variables.
-From: "wuyifeng (C)" <wuyifeng10@huawei.com>
-To: <cem@kernel.org>, "Darrick J. Wong" <djwong@kernel.org>,
-	<linux-xfs@vger.kernel.org>
-CC: <louhongxiang@huawei.com>
-References: <619020bd-800a-431a-bb1d-937ad1cdc270@huawei.com>
-In-Reply-To: <619020bd-800a-431a-bb1d-937ad1cdc270@huawei.com>
-Content-Type: text/plain; charset="UTF-8"; format=flowed
-Content-Transfer-Encoding: 8bit
-X-ClientProxiedBy: dggems706-chm.china.huawei.com (10.3.19.183) To
- dggpeml500017.china.huawei.com (7.185.36.243)
-X-CFilter-Loop: Reflected
+From: Gandalf Corvotempesta <gandalf.corvotempesta@gmail.com>
+Date: Fri, 8 Dec 2023 16:00:51 +0100
+Message-ID: <CAJH6TXiDN2nUzCem5bcYf=kbbcQjhzxwAmP1JQZBD0TnQb9cfg@mail.gmail.com>
+Subject: Project quota, info and advices
+To: linux-xfs@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
 
-Both xflag and iflag are log flags. We can use the bits of lflag to
-indicate all log flags, which is a small code reconstruction.
+Hi all
+for two new mail server and web server (different machines) i'm
+planning to use XFS project
+quotas to limit how much space each user could use.
 
-Signed-off-by: Wu YiFeng <wuyifeng10@huawei.com>
----
-  growfs/xfs_growfs.c | 22 +++++++++++-----------
-  1 file changed, 11 insertions(+), 11 deletions(-)
+They are all virtual users so i can't rely on user quota and i was
+thinking to use project quota with directory-based settings.
 
-diff --git a/growfs/xfs_growfs.c b/growfs/xfs_growfs.c
-index 683961f6..5fb1a9d2 100644
---- a/growfs/xfs_growfs.c
-+++ b/growfs/xfs_growfs.c
-@@ -8,6 +8,10 @@
-  #include "libfrog/paths.h"
-  #include "libfrog/fsgeom.h"
+In example:
 
-+#define LOG_GROW	(1<<0)	/* -l flag: grow log section */
-+#define LOG_EXT2INT	(1<<1)	/* -i flag: convert log from external to 
-internal format */
-+#define LOG_INT2EXT	(1<<2)	/* -x flag: convert log from internal to 
-external format */
-+
-  static void
-  usage(void)
-  {
-@@ -45,7 +49,6 @@ main(int argc, char **argv)
-  	long			esize;	/* new rt extent size */
-  	int			ffd;	/* mount point file descriptor */
-  	struct xfs_fsop_geom	geo;	/* current fs geometry */
--	int			iflag;	/* -i flag */
-  	int			isint;	/* log is currently internal */
-  	int			lflag;	/* -l flag */
-  	long long		lsize;	/* new log size in fs blocks */
-@@ -55,7 +58,6 @@ main(int argc, char **argv)
-  	struct xfs_fsop_geom	ngeo;	/* new fs geometry */
-  	int			rflag;	/* -r flag */
-  	long long		rsize;	/* new rt size in fs blocks */
--	int			xflag;	/* -x flag */
-  	char			*fname;	/* mount point name */
-  	char			*datadev; /* data device name */
-  	char			*logdev;  /*  log device name */
-@@ -72,7 +74,7 @@ main(int argc, char **argv)
+/var/mail/domain1.tld 1GB
+/var/mail/domain2.tld 500MB
 
-  	maxpct = esize = 0;
-  	dsize = lsize = rsize = 0LL;
--	aflag = dflag = iflag = lflag = mflag = nflag = rflag = xflag = 0;
-+	aflag = dflag = lflag = mflag = nflag = rflag = 0;
+/var/mail is the XFS filesystem
 
-  	while ((c = getopt(argc, argv, "dD:e:ilL:m:np:rR:t:xV")) != EOF) {
-  		switch (c) {
-@@ -87,13 +89,13 @@ main(int argc, char **argv)
-  			rflag = 1;
-  			break;
-  		case 'i':
--			lflag = iflag = 1;
-+			lflag |= LOG_EXT2INT;
-  			break;
-  		case 'L':
-  			lsize = strtoll(optarg, NULL, 10);
-  			fallthrough;
-  		case 'l':
--			lflag = 1;
-+			lflag |= LOG_GROW;
-  			break;
-  		case 'm':
-  			mflag = 1;
-@@ -115,7 +117,7 @@ main(int argc, char **argv)
-  			mtab_file = optarg;
-  			break;
-  		case 'x':
--			lflag = xflag = 1;
-+			lflag |= LOG_INT2EXT;
-  			break;
-  		case 'V':
-  			printf(_("%s version %s\n"), progname, VERSION);
-@@ -124,9 +126,7 @@ main(int argc, char **argv)
-  			usage();
-  		}
-  	}
--	if (argc - optind != 1)
--		usage();
--	if (iflag && xflag)
-+	if (argc - optind != 1 || ((lflag & LOG_EXT2INT) && (lflag & 
-LOG_INT2EXT)))
-  		usage();
-  	if (dflag + lflag + rflag + mflag == 0)
-  		aflag = 1;
-@@ -323,9 +323,9 @@ _("[EXPERIMENTAL] try to shrink unused space %lld, 
-old size is %lld\n"),
+Some questions:
+1. are the usage of config files and numerical IDs mandatory ? Because
+i'm fetching config from a db and I prefere to not mess with ID.
+2. i've seen that if I remove the directory /var/mail/domain1.tld, the
+related project is still showing in the quota report, but if I
+recreate the directory, the quota is not honored anymore.
+3. how can I delete a single project if not needed anymore?
+4. can I use multiple quotas for the same path, in example
+/domain1.tld 1GB, /domain1.tld/mailbox1 500MB /domain1.tld/mailbox2
+500MB (allowing, in example, 2 different mailboxes, 500MB each and
+still 1GB from the parent direcory)
 
-  		if (!lsize)
-  			lsize = dlsize / (geo.blocksize / BBSIZE);
--		if (iflag)
-+		if (lflag & LOG_EXT2INT)
-  			in.isint = 1;
--		else if (xflag)
-+		else if (lflag & LOG_INT2EXT)
-  			in.isint = 0;
-  		else
-  			in.isint = xi.logBBsize == 0;
--- 
-2.33.0
-
-在 2023/12/7 16:39, wuyifeng (C) 写道:
-> I found that iflag and xflag can be combined with lflag to reduce the 
-> number of redundant local variables, which is a refactoring to improve 
-> code readability.Signed-off-by: Wu YiFeng <wuyifeng10@huawei.com>
-> 
-> Please help me review, thanks.
-> 
-> ---
->   growfs/xfs_growfs.c | 22 +++++++++++-----------
->   1 file changed, 11 insertions(+), 11 deletions(-)
-> 
-> diff --git a/growfs/xfs_growfs.c b/growfs/xfs_growfs.c
-> index 683961f6..5fb1a9d2 100644
-> --- a/growfs/xfs_growfs.c
-> +++ b/growfs/xfs_growfs.c
-> @@ -8,6 +8,10 @@
->   #include "libfrog/paths.h"
->   #include "libfrog/fsgeom.h"
-> 
-> +#define LOG_GROW    (1<<0)    /* -l flag: grow log section */
-> +#define LOG_EXT2INT    (1<<1)    /* -i flag: convert log from external 
-> to internal format */
-> +#define LOG_INT2EXT    (1<<2)    /* -x flag: convert log from internal 
-> to external format */
-> +
->   static void
->   usage(void)
->   {
-> @@ -45,7 +49,6 @@ main(int argc, char **argv)
->       long            esize;    /* new rt extent size */
->       int            ffd;    /* mount point file descriptor */
->       struct xfs_fsop_geom    geo;    /* current fs geometry */
-> -    int            iflag;    /* -i flag */
->       int            isint;    /* log is currently internal */
->       int            lflag;    /* -l flag */
->       long long        lsize;    /* new log size in fs blocks */
-> @@ -55,7 +58,6 @@ main(int argc, char **argv)
->       struct xfs_fsop_geom    ngeo;    /* new fs geometry */
->       int            rflag;    /* -r flag */
->       long long        rsize;    /* new rt size in fs blocks */
-> -    int            xflag;    /* -x flag */
->       char            *fname;    /* mount point name */
->       char            *datadev; /* data device name */
->       char            *logdev;  /*  log device name */
-> @@ -72,7 +74,7 @@ main(int argc, char **argv)
-> 
->       maxpct = esize = 0;
->       dsize = lsize = rsize = 0LL;
-> -    aflag = dflag = iflag = lflag = mflag = nflag = rflag = xflag = 0;
-> +    aflag = dflag = lflag = mflag = nflag = rflag = 0;
-> 
->       while ((c = getopt(argc, argv, "dD:e:ilL:m:np:rR:t:xV")) != EOF) {
->           switch (c) {
-> @@ -87,13 +89,13 @@ main(int argc, char **argv)
->               rflag = 1;
->               break;
->           case 'i':
-> -            lflag = iflag = 1;
-> +            lflag |= LOG_EXT2INT;
->               break;
->           case 'L':
->               lsize = strtoll(optarg, NULL, 10);
->               fallthrough;
->           case 'l':
-> -            lflag = 1;
-> +            lflag |= LOG_GROW;
->               break;
->           case 'm':
->               mflag = 1;
-> @@ -115,7 +117,7 @@ main(int argc, char **argv)
->               mtab_file = optarg;
->               break;
->           case 'x':
-> -            lflag = xflag = 1;
-> +            lflag |= LOG_INT2EXT;
->               break;
->           case 'V':
->               printf(_("%s version %s\n"), progname, VERSION);
-> @@ -124,9 +126,7 @@ main(int argc, char **argv)
->               usage();
->           }
->       }
-> -    if (argc - optind != 1)
-> -        usage();
-> -    if (iflag && xflag)
-> +    if (argc - optind != 1 || ((lflag & LOG_EXT2INT) && (lflag & 
-> LOG_INT2EXT)))
->           usage();
->       if (dflag + lflag + rflag + mflag == 0)
->           aflag = 1;
-> @@ -323,9 +323,9 @@ _("[EXPERIMENTAL] try to shrink unused space %lld, 
-> old size is %lld\n"),
-> 
->           if (!lsize)
->               lsize = dlsize / (geo.blocksize / BBSIZE);
-> -        if (iflag)
-> +        if (lflag & LOG_EXT2INT)
->               in.isint = 1;
-> -        else if (xflag)
-> +        else if (lflag & LOG_INT2EXT)
->               in.isint = 0;
->           else
->               in.isint = xi.logBBsize == 0;
+Any better suggestions ?
