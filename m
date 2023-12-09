@@ -1,101 +1,86 @@
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="Iy/OVlRw"
-Received: from mail-io1-xd2f.google.com (mail-io1-xd2f.google.com [IPv6:2607:f8b0:4864:20::d2f])
-	by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6142F137;
-	Sat,  9 Dec 2023 00:17:55 -0800 (PST)
-Received: by mail-io1-xd2f.google.com with SMTP id ca18e2360f4ac-7b459364167so101269239f.2;
-        Sat, 09 Dec 2023 00:17:55 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1702109874; x=1702714674; darn=vger.kernel.org;
-        h=content-transfer-encoding:in-reply-to:from:references:cc:to
-         :content-language:subject:user-agent:mime-version:date:message-id
-         :from:to:cc:subject:date:message-id:reply-to;
-        bh=Vw90yWCuaFmFuU5ynluaqiB/yx3h4VMDt+wN5n9OLZo=;
-        b=Iy/OVlRwshQzUTtWU/6YkQlBVQndchtPGKn5LPQOTU+UtzmRMl9BheydRFfJjxY0ki
-         NgjIGjpicQrVz/ThjyDFkgfQkxR6fS8IDBHEdEBCFUxSbwRXlGNSXZxUrsrgRPW3dGcc
-         OrPYADILpBWM7Opa68JLHD2f5F7pvu+X6Diquvn6KdgXyzEiCbCBovwtO+xuTys4V6nR
-         Nmp3bGcTuRZOIP+n8tascYPr3ZZBs72LYArpLYilNOkEUcq/Y0KMAny+L11nUcPSmqOl
-         +DoeWdQGuROUjS4noksrVt7oNB950jWvMIbFqtn2ifkqLROERuby+t+LWzOX+a5jqazh
-         3pPA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1702109874; x=1702714674;
-        h=content-transfer-encoding:in-reply-to:from:references:cc:to
-         :content-language:subject:user-agent:mime-version:date:message-id
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=Vw90yWCuaFmFuU5ynluaqiB/yx3h4VMDt+wN5n9OLZo=;
-        b=FiirOgqac7w/5p182w4onO4gLHGHIDOo7HLNW96NJkFOcnyI+30n4jm7+vPDjDXPiF
-         o37ePyG5XeGpK4yKMZn/gp8BudkFDrNsP/Z2MkT0DlQrg4w4NyjaimDMvUzlvmhFnUYW
-         /gg0IUGc10of5HNKZAytsHT3mZcC/Z6MtCBQrt9iGntOdKgaXA1p+7f1SiHbsng1rtnv
-         SH95B+JlKedCoTTuvSHndFYlsTKzXv37MupmH/Z83US48Sbg356eoUhx8hVMjWpvVgaV
-         JNYS4nL11zYgCjlDokvh0/Xw2Oaidc5a1FcndI3K9U4zcSKJjoN1BQ30RTqwipMOMzNG
-         gXzA==
-X-Gm-Message-State: AOJu0YzSs+bhVcKJo0ZUOcAjEjSbCtGI+jusaUd/XPHJFfY/mxgABjsV
-	ZTITDdvP40cBKcwPoyU/HFc=
-X-Google-Smtp-Source: AGHT+IH+cfKMv3xgzol2WOJ5lHJEvCMIaTKT9Wtn+aUdjQMts0DLGgqa340rZK08kW9nmq1E578iKQ==
-X-Received: by 2002:a05:6e02:16cb:b0:35d:9344:b033 with SMTP id 11-20020a056e0216cb00b0035d9344b033mr1454323ilx.12.1702109874647;
-        Sat, 09 Dec 2023 00:17:54 -0800 (PST)
-Received: from [192.168.0.106] ([103.131.18.64])
-        by smtp.gmail.com with ESMTPSA id k10-20020a170902694a00b001d1c96a0c63sm2863886plt.274.2023.12.09.00.17.38
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Sat, 09 Dec 2023 00:17:54 -0800 (PST)
-Message-ID: <9573bd00-7b9e-40d0-9229-f273bf4e6a16@gmail.com>
-Date: Sat, 9 Dec 2023 15:17:29 +0700
+Received: from szxga03-in.huawei.com (szxga03-in.huawei.com [45.249.212.189])
+	by lindbergh.monkeyblade.net (Postfix) with ESMTPS id CFD2710C4
+	for <linux-xfs@vger.kernel.org>; Sat,  9 Dec 2023 04:17:40 -0800 (PST)
+Received: from mail.maildlp.com (unknown [172.19.163.252])
+	by szxga03-in.huawei.com (SkyGuard) with ESMTP id 4SnRpl15Y7z14LCY;
+	Sat,  9 Dec 2023 20:17:35 +0800 (CST)
+Received: from kwepemi500009.china.huawei.com (unknown [7.221.188.199])
+	by mail.maildlp.com (Postfix) with ESMTPS id 5FF0C1800CE;
+	Sat,  9 Dec 2023 20:17:38 +0800 (CST)
+Received: from localhost.localdomain (10.175.127.227) by
+ kwepemi500009.china.huawei.com (7.221.188.199) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
+ 15.1.2507.35; Sat, 9 Dec 2023 20:17:37 +0800
+From: Long Li <leo.lilong@huawei.com>
+To: <djwong@kernel.org>, <chandanbabu@kernel.org>
+CC: <linux-xfs@vger.kernel.org>, <yi.zhang@huawei.com>, <houtao1@huawei.com>,
+	<leo.lilong@huawei.com>, <yangerkun@huawei.com>
+Subject: [PATCH v2 1/3] xfs: add lock protection when remove perag from radix tree
+Date: Sat, 9 Dec 2023 20:21:05 +0800
+Message-ID: <20231209122107.2422441-1-leo.lilong@huawei.com>
+X-Mailer: git-send-email 2.31.1
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v3] Documentation: xfs: consolidate XFS docs into its own
- subdirectory
-Content-Language: en-US
-To: Chandan Babu R <chandan.babu@oracle.com>
-Cc: Jonathan Corbet <corbet@lwn.net>, "Darrick J. Wong" <djwong@kernel.org>,
- Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
- Linux Documentation <linux-doc@vger.kernel.org>,
- Linux XFS <linux-xfs@vger.kernel.org>,
- Linux Kernel Workflows <workflows@vger.kernel.org>,
- Namjae Jeon <linkinjeon@kernel.org>, Dave Chinner <dchinner@redhat.com>,
- Steve French <stfrench@microsoft.com>,
- "Matthew Wilcox (Oracle)" <willy@infradead.org>,
- Allison Henderson <allison.henderson@oracle.com>,
- Bjorn Helgaas <bhelgaas@google.com>, Charles Han <hanchunchao@inspur.com>,
- Vegard Nossum <vegard.nossum@oracle.com>
-References: <20231129123947.4706-1-bagasdotme@gmail.com>
- <ZXP6kzbfUcLbBtCi@archie.me>
- <874jgryf8d.fsf@debian-BULLSEYE-live-builder-AMD64>
-From: Bagas Sanjaya <bagasdotme@gmail.com>
-In-Reply-To: <874jgryf8d.fsf@debian-BULLSEYE-live-builder-AMD64>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
+Content-Type: text/plain
+X-ClientProxiedBy: dggems705-chm.china.huawei.com (10.3.19.182) To
+ kwepemi500009.china.huawei.com (7.221.188.199)
 
-On 12/9/23 15:00, Chandan Babu R wrote:
-> On Sat, Dec 09, 2023 at 12:26:43 PM +0700, Bagas Sanjaya wrote:
->> [[PGP Signed Part:No public key for F6B9894955514EA3 created at 2023-12-09T10:56:39+0530 using EDDSA]]
->> On Wed, Nov 29, 2023 at 07:39:47PM +0700, Bagas Sanjaya wrote:
->>> XFS docs are currently in upper-level Documentation/filesystems.
->>> Although these are currently 4 docs, they are already outstanding as
->>> a group and can be moved to its own subdirectory.
->>>
->>> Consolidate them into Documentation/filesystems/xfs/.
->>>
->>> Signed-off-by: Bagas Sanjaya <bagasdotme@gmail.com>
->>
->> Hi Jon, Chandan, and Darrick,
->>
->> FYI, XFS tree [1] is not updated since 2 weeks ago (and this patch doesn't get
->> picked up). Would you like to route this patch through docs-next tree or
->> xfs/for-next?
->>
-> 
-> This patch is part of a collection of patches that I am planning to include in
-> the pull request for v6.8-rc1. I am currently running fstests to make sure
-> that there are no regressions.
-> 
+Take mp->m_perag_lock for deletions from the perag radix tree in
+xfs_initialize_perag to prevent racing with tagging operations.
+Lookups are fine - they are RCU protected so already deal with the
+tree changing shape underneath the lookup - but tagging operations
+require the tree to be stable while the tags are propagated back up
+to the root.
 
-OK, thanks!
+Right now there's nothing stopping radix tree tagging from operating
+while a growfs operation is progress and adding/removing new entries
+into the radix tree.
 
+Hence we can have traversals that require a stable tree occurring at
+the same time we are removing unused entries from the radix tree which
+causes the shape of the tree to change.
+
+Likely this hasn't caused a problem in the past because we are only
+doing append addition and removal so the active AG part of the tree
+is not changing shape, but that doesn't mean it is safe. Just making
+the radix tree modifications serialise against each other is obviously
+correct.
+
+Signed-off-by: Long Li <leo.lilong@huawei.com>
+Reviewed-by: Christoph Hellwig <hch@lst.de>
+---
+v2:
+- Refer to Dave's explanation and rewrite the commit message.
+ fs/xfs/libxfs/xfs_ag.c | 4 ++++
+ 1 file changed, 4 insertions(+)
+
+diff --git a/fs/xfs/libxfs/xfs_ag.c b/fs/xfs/libxfs/xfs_ag.c
+index f9f4d694640d..cc10a3ca052f 100644
+--- a/fs/xfs/libxfs/xfs_ag.c
++++ b/fs/xfs/libxfs/xfs_ag.c
+@@ -424,13 +424,17 @@ xfs_initialize_perag(
+ 
+ out_remove_pag:
+ 	xfs_defer_drain_free(&pag->pag_intents_drain);
++	spin_lock(&mp->m_perag_lock);
+ 	radix_tree_delete(&mp->m_perag_tree, index);
++	spin_unlock(&mp->m_perag_lock);
+ out_free_pag:
+ 	kmem_free(pag);
+ out_unwind_new_pags:
+ 	/* unwind any prior newly initialized pags */
+ 	for (index = first_initialised; index < agcount; index++) {
++		spin_lock(&mp->m_perag_lock);
+ 		pag = radix_tree_delete(&mp->m_perag_tree, index);
++		spin_unlock(&mp->m_perag_lock);
+ 		if (!pag)
+ 			break;
+ 		xfs_buf_hash_destroy(pag);
 -- 
-An old man doll... just what I always wanted! - Clara
+2.31.1
 
