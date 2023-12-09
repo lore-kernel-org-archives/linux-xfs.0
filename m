@@ -1,107 +1,113 @@
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b="NeQRDYF1"
-Received: from mail-il1-x12f.google.com (mail-il1-x12f.google.com [IPv6:2607:f8b0:4864:20::12f])
-	by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 30A4510E0
-	for <linux-xfs@vger.kernel.org>; Fri,  8 Dec 2023 20:53:59 -0800 (PST)
-Received: by mail-il1-x12f.google.com with SMTP id e9e14a558f8ab-35d77fb7d94so9815115ab.0
-        for <linux-xfs@vger.kernel.org>; Fri, 08 Dec 2023 20:53:59 -0800 (PST)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="F33VnNef"
+Received: from mail-pf1-x42d.google.com (mail-pf1-x42d.google.com [IPv6:2607:f8b0:4864:20::42d])
+	by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2847DBD;
+	Fri,  8 Dec 2023 21:26:48 -0800 (PST)
+Received: by mail-pf1-x42d.google.com with SMTP id d2e1a72fcca58-6ce7c1b07e1so2217603b3a.2;
+        Fri, 08 Dec 2023 21:26:48 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=fromorbit-com.20230601.gappssmtp.com; s=20230601; t=1702097638; x=1702702438; darn=vger.kernel.org;
+        d=gmail.com; s=20230601; t=1702099607; x=1702704407; darn=vger.kernel.org;
         h=in-reply-to:content-disposition:mime-version:references:message-id
          :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
-        bh=Q94zr7fXyaFSY0q/i8vffzz/BPsd7CsCP9j0O5HvOwM=;
-        b=NeQRDYF195AhrxJL5WsTlTtgPvwr8ogJf80pkRIjQ/JBcG4CEKieVPcJP8YKtssrAs
-         vPpiDlMOYSj7cCcQRuxz9KwKK8YJVgSck6m6e314GM2f7ayRYjJHxj+I94v4N9zGXfKx
-         7PiglYar8uBvPhO3INQ5hGlwFSjFf/kgZqNbS/Skj8HhV5Egsr1QZcmcvYnfJlT9WWRk
-         VvQZ7YzsFv+rtFhsszeUSFtJ8oAdTkQtyb3qK5lZTeOmMObMXwFklTcov5R1WN4ommcC
-         mrDtogsKEtDE91qKK7mc6/8Gyh3GzYqCGLlPYKcFrTdL7HaiCH0vW5Fm4yuOOYiH/IbM
-         Wtpw==
+        bh=EjHRg8iVC8GYPq9ZehmFNaJl2g2K4P4m59qHIzURNAo=;
+        b=F33VnNefwPLmnzbpkok7uGg/MUjdEvXEyam5yR8OPxEiuqnDmbF64N9Uotun2gL1/u
+         czjC2SjN7Tud9s2JMgTTKWwRZwxdTvjZHngfJwlK0XjxSXgedPexdmV3aMDntxfUJb/e
+         gg+99Hzg/Ivix7j5ZIR4b15/KQuH8Jz0hz1jq57Svrs2TixxmsXT+7Qfhmbz3MXnU+UZ
+         Yi1EifHK8oOLtV3easBKcMAjFbXCdpPZpZnBKDBWuejNCVReKO/+arXfcWa5orG3vLc3
+         bmyatfwgv54OqRFPgmOYEucf9IaBaDvIsL9OnJvXBX+G+PWS6SqSO72cQsG7QjKT6hD2
+         V9cw==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1702097638; x=1702702438;
+        d=1e100.net; s=20230601; t=1702099607; x=1702704407;
         h=in-reply-to:content-disposition:mime-version:references:message-id
          :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
          :message-id:reply-to;
-        bh=Q94zr7fXyaFSY0q/i8vffzz/BPsd7CsCP9j0O5HvOwM=;
-        b=Pg6Fx9pnidRP3PSsSUANtL+2YdCS1KwJUeEFoh/xlaPgJJ7iIkY9LvcgjsaknDrGha
-         QwNPyZGNma5hNOLAPmPHk+x/DP2vlEf6TJmlK4+gYhWqHVveweCeiqhGdujvdGRKw2zK
-         FrZ6LECuryfVHL1fWJDCiqtiTr3uf/mDA8VGID9o+I9F35heOXQv0dln0FxC2MWGu9KB
-         E2bpZ6tVxkaQuuNS4L9GO8IQNdganfXiMHGVA5S0mWQxCiCPWGUEJ7MAzzB//8t2/Vok
-         H63ZNasNJR6QGO/6Ir/k8/4oxL3+Jf4fUJhVbk/rYfCk4jtISIZdnMXcezXyzSvnm4Jr
-         hDwQ==
-X-Gm-Message-State: AOJu0YzDdsDKn1RA0/cdCODIbnTo9R2ptPqZ2CaqYeRITaZ2NYxmoQBN
-	enKQKx8qUxeG14fe8cDrdjYhZc9VkqPxArYC+bY=
-X-Google-Smtp-Source: AGHT+IHjlKWN++FniqDcZ6+gOzWsqUKFWZyGKGe7yDdh17gZNEzJGXsDiI4L8bI/oFVQrxwnnuY3mQ==
-X-Received: by 2002:a05:6e02:1cae:b0:35d:5af6:5eb4 with SMTP id x14-20020a056e021cae00b0035d5af65eb4mr1632535ill.12.1702097638548;
-        Fri, 08 Dec 2023 20:53:58 -0800 (PST)
-Received: from dread.disaster.area (pa49-180-125-5.pa.nsw.optusnet.com.au. [49.180.125.5])
-        by smtp.gmail.com with ESMTPSA id jg7-20020a17090326c700b001d0d312bc2asm2531341plb.193.2023.12.08.20.53.57
+        bh=EjHRg8iVC8GYPq9ZehmFNaJl2g2K4P4m59qHIzURNAo=;
+        b=Ks0XnRpfq1M3OBRUBAAozGE3WtqkXZ0bBfb0pqcGtxwKogFS2ibSgcolI9KsTvzSt7
+         St0mT98GL/Lu8aRzXgvAoWHOKblYo4Yqivxl4zRLGOtKrlGCVkjGPF2x8myP+AJ1ipfA
+         lD2d5w1tqR7FOxLYeqFaLubkZLjVGifOuAmTeW9TGOa3NmxmUIwwKK8UM+CDm3AD1OOa
+         MhLv9IowC/XNSW3OnocShDs7c9L4cQiJFXW/Aw73RpajU51oOJwE4ebmGV//3SxVjwD9
+         SdNz+PJJ9x9iLVADwPZh9jn/TmgINIBSdAhuekdnU5I6910eEjDbhh5MRF/Fl30OeeMG
+         mOtA==
+X-Gm-Message-State: AOJu0Yy/X+74OSXM+cN28dmhZrTcA9RYNjDvn7P/Kv0JiEwykUDV9ntP
+	CRlQ+NJzn090YY55QeaJlZU=
+X-Google-Smtp-Source: AGHT+IGSLq8m3aB5OKQ/vxjPdWklWjMOtZUHGTWwcI1WtBR/Vl7n6lx6j7I+TQM6XDZ0jJ0J91fwbw==
+X-Received: by 2002:a05:6a00:2e84:b0:6ce:2732:573 with SMTP id fd4-20020a056a002e8400b006ce27320573mr1371175pfb.36.1702099607545;
+        Fri, 08 Dec 2023 21:26:47 -0800 (PST)
+Received: from archie.me ([103.131.18.64])
+        by smtp.gmail.com with ESMTPSA id z9-20020a6552c9000000b005c662e103a1sm2110558pgp.41.2023.12.08.21.26.46
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 08 Dec 2023 20:53:57 -0800 (PST)
-Received: from dave by dread.disaster.area with local (Exim 4.96)
-	(envelope-from <david@fromorbit.com>)
-	id 1rBpLf-005ozR-10;
-	Sat, 09 Dec 2023 15:53:55 +1100
-Date: Sat, 9 Dec 2023 15:53:55 +1100
-From: Dave Chinner <david@fromorbit.com>
-To: Luis Chamberlain <mcgrof@kernel.org>
-Cc: Zorro Lang <zlang@redhat.com>, linux-xfs@vger.kernel.org,
-	linux-s390@vger.kernel.org, fstests@vger.kernel.org,
-	Pankaj Raghav <p.raghav@samsung.com>,
-	Daniel Gomez <da.gomez@samsung.com>
-Subject: Re: [Bug report] More xfs courruption issue found on s390x
-Message-ID: <ZXPy4+cXlIt0agNz@dread.disaster.area>
-References: <20231029043333.v6wkqsorxdk2dbch@dell-per750-06-vm-08.rhts.eng.pek2.redhat.com>
- <ZUiHBpJTUr3G4//q@dread.disaster.area>
- <ZXO7gd3Ft1di8Okm@bombadil.infradead.org>
+        Fri, 08 Dec 2023 21:26:47 -0800 (PST)
+Received: by archie.me (Postfix, from userid 1000)
+	id C7B52117A5553; Sat,  9 Dec 2023 12:26:43 +0700 (WIB)
+Date: Sat, 9 Dec 2023 12:26:43 +0700
+From: Bagas Sanjaya <bagasdotme@gmail.com>
+To: Jonathan Corbet <corbet@lwn.net>,
+	Chandan Babu R <chandan.babu@oracle.com>,
+	"Darrick J. Wong" <djwong@kernel.org>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	Linux Documentation <linux-doc@vger.kernel.org>,
+	Linux XFS <linux-xfs@vger.kernel.org>,
+	Linux Kernel Workflows <workflows@vger.kernel.org>
+Cc: Namjae Jeon <linkinjeon@kernel.org>, Dave Chinner <dchinner@redhat.com>,
+	Steve French <stfrench@microsoft.com>,
+	"Matthew Wilcox (Oracle)" <willy@infradead.org>,
+	Allison Henderson <allison.henderson@oracle.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Charles Han <hanchunchao@inspur.com>,
+	Vegard Nossum <vegard.nossum@oracle.com>
+Subject: Re: [PATCH v3] Documentation: xfs: consolidate XFS docs into its own
+ subdirectory
+Message-ID: <ZXP6kzbfUcLbBtCi@archie.me>
+References: <20231129123947.4706-1-bagasdotme@gmail.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: multipart/signed; micalg=pgp-sha512;
+	protocol="application/pgp-signature"; boundary="Kk62WifU3GBr5GRN"
 Content-Disposition: inline
-In-Reply-To: <ZXO7gd3Ft1di8Okm@bombadil.infradead.org>
+In-Reply-To: <20231129123947.4706-1-bagasdotme@gmail.com>
 
-On Fri, Dec 08, 2023 at 04:57:37PM -0800, Luis Chamberlain wrote:
-> On Mon, Nov 06, 2023 at 05:26:14PM +1100, Dave Chinner wrote:
-> > >   XFS: Assertion failed: ip->i_nblocks == 0, file: fs/xfs/xfs_inode.c, line: 2359
-> >
-> > IOWs, all four of these issues are the same problem - journal
-> > recovery is not resulting in a correct and consistent filesystem
-> > after the journal has been flushed at runtime, so please discuss and
-> > consolidate them all in the initial bug report thread....
-> 
-> As recently reported, fortunately we now have reproducers for x86_64 too:
-> 
-> https://bugzilla.kernel.org/show_bug.cgi?id=218224
-> 
-> This fails on the following test sections as defined by kdevops [1]:
-> 
->   * xfs_nocrc_2k
->   * xfs_reflink
->   * xfs_reflink_1024
->   * xfs_reflink_2k
->   * xfs_reflink_4k
->   * xfs_reflink_dir_bsize_8k
->   * xfs_reflink_logdev
->   * xfs_reflink_normapbt
->   * xfs_reflink_nrext64
-> 
-> [0] https://github.com/linux-kdevops/kdevops/blob/master/playbooks/roles/fstests/templates/xfs/xfs.config
-> 
-> Example failures:
-> 
->   * generic/475: https://gist.github.com/mcgrof/5d6f504f4695ba27cea7df5d63f35197
->   * generic/388: https://gist.github.com/mcgrof/c1c8b1dc76fdc1032a5f0aab6c2a14bf
->   * generic/648: https://gist.github.com/mcgrof/1e506ecbe898b45428d6e7febfc02db1
 
-If this is the same problem, have you tested whether the fix for the
-s390 issue makes all the problems you are seeing on x86-64 go away?
-i.e. commit 7930d9e10370 ("xfs: recovery should not clear di_flushiter
-unconditionally")
+--Kk62WifU3GBr5GRN
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
--Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+On Wed, Nov 29, 2023 at 07:39:47PM +0700, Bagas Sanjaya wrote:
+> XFS docs are currently in upper-level Documentation/filesystems.
+> Although these are currently 4 docs, they are already outstanding as
+> a group and can be moved to its own subdirectory.
+>=20
+> Consolidate them into Documentation/filesystems/xfs/.
+>=20
+> Signed-off-by: Bagas Sanjaya <bagasdotme@gmail.com>
+
+Hi Jon, Chandan, and Darrick,
+
+FYI, XFS tree [1] is not updated since 2 weeks ago (and this patch doesn't =
+get
+picked up). Would you like to route this patch through docs-next tree or
+xfs/for-next?
+
+Thanks.
+
+[1]: https://git.kernel.org/pub/scm/fs/xfs/xfs-linux.git/
+
+--=20
+An old man doll... just what I always wanted! - Clara
+
+--Kk62WifU3GBr5GRN
+Content-Type: application/pgp-signature; name="signature.asc"
+
+-----BEGIN PGP SIGNATURE-----
+
+iHUEABYKAB0WIQSSYQ6Cy7oyFNCHrUH2uYlJVVFOowUCZXP6jwAKCRD2uYlJVVFO
+oxU1AP4jHVfyJmXI++jLGPE2Zks2FVbRtyizSnuZWYyjV8xrNAD+JvPtIU+1K2Z4
+p5sDf0K0clWRHzntlLUAEDyZIChwiAA=
+=CXvn
+-----END PGP SIGNATURE-----
+
+--Kk62WifU3GBr5GRN--
