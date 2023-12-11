@@ -1,32 +1,32 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B364252F60
-	for <linux-xfs@vger.kernel.org>; Mon, 11 Dec 2023 19:19:52 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Zwc6J9Qe"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 3B72DC433C7;
-	Mon, 11 Dec 2023 19:19:52 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1702322392;
-	bh=9NFV/iV58Tk95MiwjsfQiwlI7855xoMfa33MFCd9lAM=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=Zwc6J9Qe6rzFRHELjj7WBump+6pqzRYWQyjUs2Fa0jgtl0kYGtjcLRnEzmWaqerRn
-	 waMLsavt1+fn7R34f/H2V112Q+LRsd0SchT66qPt+o4FFeDAp+5EUz1E1qf7pUxSgx
-	 hIR+ItNpSMWhpb42oUBMfNIPJHLmmCpPbI8daBHAzqiKhaPaci8z/QzOTeNBNlUm2f
-	 OFT1UOWJrLK8GVfMsL0l0hpFTu8q8r5MzNPIjN2pjZdjwO3yHEpTNgCZjH5ktKYWL1
-	 gSt6iU5cjDCjhl6W+G+D2NrohJAWBl+tkMclGk+a3hYu+vKsUSn6HCLxa4kvZdho5l
-	 dOLrYh6pXB4PA==
-Date: Mon, 11 Dec 2023 11:19:51 -0800
-From: "Darrick J. Wong" <djwong@kernel.org>
-To: Christoph Hellwig <hch@infradead.org>
-Cc: linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 7/9] xfs: abort directory parent scrub scans if we
- encounter a zapped directory
-Message-ID: <20231211191951.GT361584@frogsfrogsfrogs>
-References: <170191666087.1182270.4104947285831369542.stgit@frogsfrogsfrogs>
- <170191666222.1182270.11568535367691161509.stgit@frogsfrogsfrogs>
- <ZXFgOMVapbhQrSh2@infradead.org>
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="sVumfydf"
+Received: from bombadil.infradead.org (bombadil.infradead.org [IPv6:2607:7c80:54:3::133])
+	by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D82C0B3
+	for <linux-xfs@vger.kernel.org>; Mon, 11 Dec 2023 11:32:57 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+	d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Type:MIME-Version
+	:References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
+	Content-Transfer-Encoding:Content-ID:Content-Description;
+	bh=TxzoFViaBe1zhZYefE24X/1AFDniAR1M59tase46F4M=; b=sVumfydftTxnwfEfHSm2zpnxc2
+	e0SiS2DkSnojvJxYMaJ0OhPN8noo9kQDBLNp6sO/k2t4LH0IAileAH4t5q1m6RZLLGERmONaU+Pte
+	zQOdsDJMecQzaXeza2IE08SBlMeufePdBIOagh4EDBp5Lhdy4OCCCnFr1Qm03vSe8HgIXfqCaRkIa
+	6DYLhGM7uNfSqC1UqrZ4vtRA/kUTWCQYSsE1WZd9ssIDBu5yopF+AqmMcNaIk0rjPbTnHg3tNPjqY
+	ktZXT+sCy3EpVCNCV9/VcvfgVnNdKP77BVcwQnnxUGa9fx5g05NeBJiTcV/HIEjPssxC4gV27Jm5P
+	BaFLylbQ==;
+Received: from hch by bombadil.infradead.org with local (Exim 4.96 #2 (Red Hat Linux))
+	id 1rCm1P-007ZVJ-2l;
+	Mon, 11 Dec 2023 19:32:55 +0000
+Date: Mon, 11 Dec 2023 11:32:55 -0800
+From: Christoph Hellwig <hch@infradead.org>
+To: "Darrick J. Wong" <djwong@kernel.org>
+Cc: Christoph Hellwig <hch@infradead.org>,
+	Dave Chinner <dchinner@redhat.com>, linux-xfs@vger.kernel.org
+Subject: Re: [PATCH 5/7] xfs: repair free space btrees
+Message-ID: <ZXdj5xIxTCfdYzBs@infradead.org>
+References: <170191665599.1181880.961660208270950504.stgit@frogsfrogsfrogs>
+ <170191665696.1181880.11729945955309868067.stgit@frogsfrogsfrogs>
+ <ZXFYa7v7m1vkuwnY@infradead.org>
+ <20231211191530.GS361584@frogsfrogsfrogs>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -35,52 +35,24 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <ZXFgOMVapbhQrSh2@infradead.org>
+In-Reply-To: <20231211191530.GS361584@frogsfrogsfrogs>
+X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 
-On Wed, Dec 06, 2023 at 10:03:36PM -0800, Christoph Hellwig wrote:
-> > +/*
-> > + * Decide if this directory has been zapped to satisfy the inode and ifork
-> > + * verifiers.  Checking and repairing should be postponed until the directory
-> > + * is fixed.
-> > + */
-> > +bool
-> > +xchk_dir_looks_zapped(
-> > +	struct xfs_inode	*dp)
-> > +{
-> > +	/* Repair zapped this dir's data fork a short time ago */
-> > +	if (xfs_ifork_zapped(dp, XFS_DATA_FORK))
-> > +		return true;
-> > +
-> > +	/*
-> > +	 * If the dinode repair found a bad data fork, it will reset the fork
-> > +	 * to extents format with zero records and wait for the bmapbtd
-> > +	 * scrubber to reconstruct the block mappings.  Directories always
-> > +	 * contain some content, so this is a clear sign of a zapped directory.
-> > +	 */
-> > +	return dp->i_df.if_format == XFS_DINODE_FMT_EXTENTS &&
-> > +	       dp->i_df.if_nextents == 0;
+On Mon, Dec 11, 2023 at 11:15:30AM -0800, Darrick J. Wong wrote:
+> Er... assuming you are asking for a link to the file in the kernel tree
+> from which the HTML is generated so as /not/ to require internet access,
+> I'll add:
 > 
-> Correct me if I'm wrong:  in general the xfs_ifork_zapped should be
-> all that's needed here now, and the check below just finds another
-> obvious case if we crashed / unmounted and lost the zapped flag?
-> If so maybe update the comment a bit.
-
-Correct.  The comment now reads:
-
-	/*
-	 * If the dinode repair found a bad data fork, it will reset the fork
-	 * to extents format with zero records and wait for the bmapbtd
-	 * scrubber to reconstruct the block mappings.  Directories always
-	 * contain some content, so this is a clear sign of a zapped directory.
-	 * The state checked by xfs_ifork_zapped is not persisted, so this is
-	 * our backup strategy if repairs are interrupted by a crash or an
-	 * unmount.
-	 */
-
-> Otherwise:
+> "Link: Documentation/filesystems/xfs-online-fsck-design.rst"
 > 
-> Reviewed-by: Christoph Hellwig <hch@lst.de>
+> That said, I couldn't find any particular precedent in Documentation/
+> for having Link: tags in patches that point to paths underneath
+> Documentation/ so I guess I'll just make s*** up like always, then wait
+> and see how many auto-nag emails I get about how I've broken some random
+> rule somewhere. :P
 
-Thanks!
+I'd avoid the formal tag, e.g.
 
---D
+Rebuild the free space btrees from the gaps in the rmap btree.  Refer to
+Documentation/filesystems/xfs-online-fsck-design.rst for more details.
+
