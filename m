@@ -1,32 +1,32 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D192955C02
-	for <linux-xfs@vger.kernel.org>; Mon, 11 Dec 2023 22:48:04 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B55EF56465
+	for <linux-xfs@vger.kernel.org>; Mon, 11 Dec 2023 22:50:26 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="tTsAhVrH"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 70D56C433C9;
-	Mon, 11 Dec 2023 22:48:04 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="gAu3fWMd"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 7A99BC433C8;
+	Mon, 11 Dec 2023 22:50:26 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1702334884;
-	bh=0FUTC9slUV/K63R/NQgyKtcsskyMyabvfsm4JRLktK4=;
+	s=k20201202; t=1702335026;
+	bh=eb1QZRNCZbalbWknwFs2UgfGcV133eZLDO881GVwpnI=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=tTsAhVrH0ZrJ2M0rwa+Fw2ikPPHOKWDAJzuNNcIKHU6q9K/JfDjPyCcVR3JFK/KAa
-	 V1NlTPaAboG7trapHbgEwyH2v7c/282IG9lqN9HaK5lXyc6MGN7llg60NLkK3lDKb+
-	 J3XrXwWL6bJ48YP3B6DOgAlKqxcXlym9OA7ufgbLfCab2yjQtG8b6zL5oI4oDI22Iy
-	 EhNfQ8kjv85SS+fZZ5TGgcNWObATOWwGHMLN6C4FuwvyS46xRNOphEjH/jmxS0F9lR
-	 sAFMzTkILEvLRsUuD9D9WsSHngxHgNKoPlmIYRs6ZOpmGvRMN5K+1bFlzM5/dvghQi
-	 frrtvXEsWne7w==
-Date: Mon, 11 Dec 2023 14:48:03 -0800
+	b=gAu3fWMd7vVJzogGlc6ATyZ5Ia+mEqbm+oP34YAdjpAajzFLV5iLNjzRqwJPyKLCq
+	 9TFaZakYrUosPEL12GQOSV9la48pf7D7fPF5H7mVkcKQIWPhSafZ9WcCsPK+qNW+eZ
+	 5Kz7gGGbCT2NyjM5Eu2QWY2IrsWnvJgU48vhmo3uklLswZpHxfP6DQOu5tSDViHBw+
+	 nWumBpFCj6OGg9Rn/LO7fR2KcMw2CqAFZWDSSpx3m4LYM/emVg33Wl7d5bZ4XdgQ9b
+	 drakPFIvEOb63uCA1/qIjmd20gDVC1JrJ8DAceHIdIyNIkiUMS51P548769ZrUfDVQ
+	 Daof4L7tB6EaA==
+Date: Mon, 11 Dec 2023 14:50:26 -0800
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: Christoph Hellwig <hch@infradead.org>
 Cc: linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 6/9] xfs: set inode sick state flags when we zap either
- ondisk fork
-Message-ID: <20231211224803.GY361584@frogsfrogsfrogs>
+Subject: Re: [PATCH 8/9] xfs: skip the rmapbt search on an empty attr fork
+ unless we know it was zapped
+Message-ID: <20231211225026.GZ361584@frogsfrogsfrogs>
 References: <170191666087.1182270.4104947285831369542.stgit@frogsfrogsfrogs>
- <170191666205.1182270.10061610128319408467.stgit@frogsfrogsfrogs>
- <ZXFfIl3yFsACbjf0@infradead.org>
+ <170191666238.1182270.18118442139749127193.stgit@frogsfrogsfrogs>
+ <ZXFhCHxQD/9GuQiI@infradead.org>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -35,69 +35,25 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <ZXFfIl3yFsACbjf0@infradead.org>
+In-Reply-To: <ZXFhCHxQD/9GuQiI@infradead.org>
 
-On Wed, Dec 06, 2023 at 09:58:58PM -0800, Christoph Hellwig wrote:
-> On Wed, Dec 06, 2023 at 06:43:16PM -0800, Darrick J. Wong wrote:
-> > From: Darrick J. Wong <djwong@kernel.org>
-> > 
-> > Christoph asked for stronger protections against online repair zapping a
-> > fork to get the inode to load vs. other threads trying to access the
-> > partially repaired file.  Do this by adding a special "[DA]FORK_ZAPPED"
-> > inode health flag whenever repair zaps a fork, and sprinkling checks for
-> > that flag into the various file operations for things that don't like
-> > handling an unexpected zero-extents fork.
-> > 
-> > In practice xfs_scrub will scrub and fix the forks almost immediately
-> > after zapping them, so the window is very small.
+On Wed, Dec 06, 2023 at 10:07:04PM -0800, Christoph Hellwig wrote:
+> On Wed, Dec 06, 2023 at 06:43:47PM -0800, Darrick J. Wong wrote:
+> > +			if ((VFS_I(sc->ip)->i_mode & 0777) != 0)
+> > +				return false;
+> > +			if (!uid_eq(VFS_I(sc->ip)->i_uid, GLOBAL_ROOT_UID))
+> > +				return false;
+> > +			if (!gid_eq(VFS_I(sc->ip)->i_gid, GLOBAL_ROOT_GID))
+> > +				return false;
 > 
-> This probably should be before the previous two patches, and the
-> reordering seems easy enough.
+> Having this in a well-documented helper would be nice to have,
+> but otherwise this looks good:
 
-Done.
+Ok, I'll split the attr and data fork paths into separate helpers.
+That'll make them more coherent and cut down on the indenting here.
 
-> We should also have a blurb in the commit log and code that this flag
-> right now is in-memory only and thus the zapped forks can leak through
-> an unmount or crash.
-
-Fixed.  The last paragraph now reads:
-
-"In practice xfs_scrub will scrub and fix the forks almost immediately
-after zapping them, so the window is very small.  However, if a crash or
-unmount should occur, we can still detect these zapped inode forks by
-looking for a zero-extents fork when data was expected."
-
-> Otherwise looks good:
-> 
 > Reviewed-by: Christoph Hellwig <hch@lst.de>
 
-Actually, I found a couple more bugs -- the checks for
-XFS_SICK_INO_*FORK_ZAPPED in bmap.c that control setting the CORRUPT
-flag should not do that if we're revalidating after a repair.  I decided
-they should also be hoisted up to the xchk_bmap caller to avoid
-splitting the logic:
-
-/* Scrub an inode's data fork. */
-int
-xchk_bmap_data(
-	struct xfs_scrub	*sc)
-{
-	int			error;
-
-	/* Ignore old state if we're revalidating after a repair. */
-	if (!(sc->flags & XREP_ALREADY_FIXED) &&
-	    xfs_inode_has_sickness(sc->ip, XFS_SICK_INO_DFORK_ZAPPED)) {
-		xchk_ino_set_corrupt(sc, sc->ip->i_ino);
-		return 0;
-	}
-
-	error = xchk_bmap(sc, XFS_DATA_FORK);
-	if (error)
-		return error;
-
-	/* If the data fork is clean, it is clearly not zapped. */
-	xchk_mark_healthy_if_clean(sc, XFS_SICK_INO_DFORK_ZAPPED);
-	return 0;
-}
+Thanks!
 
 --D
