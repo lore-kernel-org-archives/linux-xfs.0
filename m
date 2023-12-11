@@ -1,28 +1,28 @@
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="zRviP7FD"
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="QjohJZUr"
 Received: from bombadil.infradead.org (bombadil.infradead.org [IPv6:2607:7c80:54:3::133])
-	by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D55A28E
-	for <linux-xfs@vger.kernel.org>; Mon, 11 Dec 2023 08:38:45 -0800 (PST)
+	by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 63CDD8E
+	for <linux-xfs@vger.kernel.org>; Mon, 11 Dec 2023 08:38:48 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
 	d=infradead.org; s=bombadil.20210309; h=Content-Transfer-Encoding:
 	MIME-Version:References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:Sender
 	:Reply-To:Content-Type:Content-ID:Content-Description;
-	bh=xNH5gDpy1OsXzX1OsQe1uFSC9CH6BfZVQdCD3xNioiQ=; b=zRviP7FDcp+ksZ/5JusqLw5eD+
-	6PBT13pSHGrmu+j/HoZei6Qhp+JM0lYU88sUvCpxgAxAxp1f8922tckKHVN0NFjODXxQcoFdeuoNW
-	hOa9ZVxOZAdgkPPKG8RehKKlzaIo50n/fiVhwowi70v7xbN8IHJ1fO8Ad8uBb+ycEaUiye4Pira8h
-	PzByRsSyNddQ1gIfZ9qSMh+ZlfkmNvtg2jjmlXY9iksEvoO2Q/K+lkX86/fBN6+k66xxdtDm297Rl
-	BpAz822+7B4EHyZ61/lDMwO8oat2aRGGA+k/PCRUteWjHWAnNBB9A1aHSo1sy6AJFyPyfODwdsebD
-	E4rYPwng==;
+	bh=b1/+QwHrxVG+nufyYIwOPNTS/emBQ64Rl6YGmW3orlc=; b=QjohJZUr9O5S1OoCskCsVl8NWU
+	8ejFyeDUtSN5YvegcZh7baOluQp0CD1naBhXTIsIGwx2HfL8xWwwBkj+n1yiFCeJYglfJYSQ7NWOB
+	OPvKY7X2P+Or+Lkj1MhqZzP/ctd5OffXZQFev/hHuSg4AIHs8+artY8MvcRCarexsgqWQqxAADkjW
+	r4EMNSLU7ZuTR/+PmMCdNkKr0hyo72lChclKU41P+iXiJUs2O8VQ/hbyHO7yokW7h3FBvUSn/H/6I
+	3KrvzGnDsT7N68RZmZED5ZFik4etx2cyRHa7A3Vz4s3xu30lPAlVOk/PFoI8Yp0qk4ZT9TwItUlGo
+	NOjE3pNQ==;
 Received: from [2001:4bb8:19a:a621:c70:4a89:bc61:3] (helo=localhost)
 	by bombadil.infradead.org with esmtpsa (Exim 4.96 #2 (Red Hat Linux))
-	id 1rCjIr-005tPi-19;
-	Mon, 11 Dec 2023 16:38:45 +0000
+	id 1rCjIt-005tRn-2r;
+	Mon, 11 Dec 2023 16:38:48 +0000
 From: Christoph Hellwig <hch@lst.de>
 To: Carlos Maiolino <cem@kernel.org>
 Cc: linux-xfs@vger.kernel.org
-Subject: [PATCH 21/23] xfs_repair: remove various libxfs_device_to_fd calls
-Date: Mon, 11 Dec 2023 17:37:40 +0100
-Message-Id: <20231211163742.837427-22-hch@lst.de>
+Subject: [PATCH 22/23] libxfs: stash away the device fd in struct xfs_buftarg
+Date: Mon, 11 Dec 2023 17:37:41 +0100
+Message-Id: <20231211163742.837427-23-hch@lst.de>
 X-Mailer: git-send-email 2.39.2
 In-Reply-To: <20231211163742.837427-1-hch@lst.de>
 References: <20231211163742.837427-1-hch@lst.de>
@@ -35,58 +35,304 @@ MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 
-A few places in xfs_repair call libxfs_device_to_fd to get the data
-device fd from the data device dev_t stored in the libxfs_init
-structure.  Just use the file descriptor stored right there directly.
+Cache the open file descriptor for each device in the buftarg
+structure and remove the now unused dev_map infrastructure.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 ---
- repair/xfs_repair.c | 13 +++++--------
- 1 file changed, 5 insertions(+), 8 deletions(-)
+ include/libxfs.h   |   1 -
+ libxfs/init.c      | 108 +++++++++++----------------------------------
+ libxfs/libxfs_io.h |   1 +
+ libxfs/rdwr.c      |  16 +++----
+ repair/prefetch.c  |   2 +-
+ 5 files changed, 34 insertions(+), 94 deletions(-)
 
-diff --git a/repair/xfs_repair.c b/repair/xfs_repair.c
-index 8a6cf31b4..cdbdbe855 100644
---- a/repair/xfs_repair.c
-+++ b/repair/xfs_repair.c
-@@ -724,13 +724,11 @@ static void
- check_fs_vs_host_sectsize(
- 	struct xfs_sb	*sb)
- {
--	int	fd, ret;
-+	int	ret;
- 	long	old_flags;
- 	struct xfs_fsop_geom	geom = { 0 };
+diff --git a/include/libxfs.h b/include/libxfs.h
+index 68efe9caa..058217c2a 100644
+--- a/include/libxfs.h
++++ b/include/libxfs.h
+@@ -147,7 +147,6 @@ extern xfs_lsn_t libxfs_max_lsn;
+ int		libxfs_init(struct libxfs_init *);
+ void		libxfs_destroy(struct libxfs_init *li);
  
--	fd = libxfs_device_to_fd(x.ddev);
+-extern int	libxfs_device_to_fd (dev_t);
+ extern int	libxfs_device_alignment (void);
+ extern void	libxfs_report(FILE *);
+ 
+diff --git a/libxfs/init.c b/libxfs/init.c
+index 866e5f425..320e4d63f 100644
+--- a/libxfs/init.c
++++ b/libxfs/init.c
+@@ -36,15 +36,7 @@ int libxfs_bhash_size;		/* #buckets in bcache */
+ 
+ int	use_xfs_buf_lock;	/* global flag: use xfs_buf locks for MT */
+ 
+-/*
+- * dev_map - map open devices to fd.
+- */
+-#define MAX_DEVS 10	/* arbitary maximum */
+ static int nextfakedev = -1;	/* device number to give to next fake device */
+-static struct dev_to_fd {
+-	dev_t	dev;
+-	int	fd;
+-} dev_map[MAX_DEVS]={{0}};
+ 
+ /*
+  * Checks whether a given device has a mounted, writable
+@@ -70,33 +62,13 @@ check_isactive(char *name, char *block, int fatal)
+ 	return 0;
+ }
+ 
+-/* libxfs_device_to_fd:
+- *     lookup a device number in the device map
+- *     return the associated fd
+- */
+-int
+-libxfs_device_to_fd(dev_t device)
+-{
+-	int	d;
 -
--	ret = -xfrog_geometry(fd, &geom);
-+	ret = -xfrog_geometry(x.dfd, &geom);
- 	if (ret) {
- 		do_log(_("Cannot get host filesystem geometry.\n"
- 	"Repair may fail if there is a sector size mismatch between\n"
-@@ -739,8 +737,8 @@ check_fs_vs_host_sectsize(
+-	for (d = 0; d < MAX_DEVS; d++)
+-		if (dev_map[d].dev == device)
+-			return dev_map[d].fd;
+-
+-	fprintf(stderr, _("%s: %s: device %lld is not open\n"),
+-		progname, __FUNCTION__, (long long)device);
+-	exit(1);
+-	/* NOTREACHED */
+-}
+-
+ /* libxfs_device_open:
+  *     open a device and return its device number
+  */
+ static dev_t
+ libxfs_device_open(char *path, int creat, int xflags, int setblksize, int *fdp)
+ {
+-	dev_t		dev;
+-	int		fd, d, flags;
++	int		fd, flags;
+ 	int		readonly, dio, excl;
+ 	struct stat	statb;
+ 
+@@ -134,61 +106,28 @@ retry:
  	}
  
- 	if (sb->sb_sectsize < geom.sectsize) {
--		old_flags = fcntl(fd, F_GETFL, 0);
--		if (fcntl(fd, F_SETFL, old_flags & ~O_DIRECT) < 0) {
-+		old_flags = fcntl(x.dfd, F_GETFL, 0);
-+		if (fcntl(x.dfd, F_SETFL, old_flags & ~O_DIRECT) < 0) {
- 			do_warn(_(
- 	"Sector size on host filesystem larger than image sector size.\n"
- 	"Cannot turn off direct IO, so exiting.\n"));
-@@ -986,10 +984,9 @@ main(int argc, char **argv)
+ 	/*
+-	 * Get the device number from the stat buf - unless
+-	 * we're not opening a real device, in which case
+-	 * choose a new fake device number.
++	 * Get the device number from the stat buf - unless we're not opening a
++	 * real device, in which case choose a new fake device number.
+ 	 */
+-	dev = (statb.st_rdev) ? (statb.st_rdev) : (nextfakedev--);
+-
+-	for (d = 0; d < MAX_DEVS; d++)
+-		if (dev_map[d].dev == dev) {
+-			fprintf(stderr, _("%s: device %lld is already open\n"),
+-			    progname, (long long)dev);
+-			exit(1);
+-		}
+-
+-	for (d = 0; d < MAX_DEVS; d++)
+-		if (!dev_map[d].dev) {
+-			dev_map[d].dev = dev;
+-			dev_map[d].fd = fd;
+-			*fdp = fd;
+-
+-			return dev;
+-		}
+-
+-	fprintf(stderr, _("%s: %s: too many open devices\n"),
+-		progname, __FUNCTION__);
+-	exit(1);
+-	/* NOTREACHED */
++	*fdp = fd;
++	if (statb.st_rdev)
++		return statb.st_rdev;
++	return nextfakedev--;
+ }
  
- 	/* -f forces this, but let's be nice and autodetect it, as well. */
- 	if (!isa_file) {
--		int		fd = libxfs_device_to_fd(x.ddev);
- 		struct stat	statbuf;
+ static void
+-libxfs_device_close(dev_t dev)
++libxfs_device_close(int fd, dev_t dev)
+ {
+-	int	d;
++	int	ret;
  
--		if (fstat(fd, &statbuf) < 0)
-+		if (fstat(x.dfd, &statbuf) < 0)
- 			do_warn(_("%s: couldn't stat \"%s\"\n"),
- 				progname, fs_name);
- 		else if (S_ISREG(statbuf.st_mode))
+-	for (d = 0; d < MAX_DEVS; d++)
+-		if (dev_map[d].dev == dev) {
+-			int	fd, ret;
+-
+-			fd = dev_map[d].fd;
+-			dev_map[d].dev = dev_map[d].fd = 0;
+-
+-			ret = platform_flush_device(fd, dev);
+-			if (ret) {
+-				ret = -errno;
+-				fprintf(stderr,
++	ret = platform_flush_device(fd, dev);
++	if (ret) {
++		ret = -errno;
++		fprintf(stderr,
+ 	_("%s: flush of device %lld failed, err=%d"),
+-						progname, (long long)dev, ret);
+-			}
+-			close(fd);
+-
+-			return;
+-		}
+-
+-	fprintf(stderr, _("%s: %s: device %lld is not open\n"),
+-			progname, __FUNCTION__, (long long)dev);
+-	exit(1);
++			progname, (long long)dev, ret);
++	}
++	close(fd);
+ }
+ 
+ static int
+@@ -271,11 +210,11 @@ libxfs_close_devices(
+ 	struct libxfs_init	*li)
+ {
+ 	if (li->ddev)
+-		libxfs_device_close(li->ddev);
++		libxfs_device_close(li->dfd, li->ddev);
+ 	if (li->logdev && li->logdev != li->ddev)
+-		libxfs_device_close(li->logdev);
++		libxfs_device_close(li->logfd, li->logdev);
+ 	if (li->rtdev)
+-		libxfs_device_close(li->rtdev);
++		libxfs_device_close(li->rtfd, li->rtdev);
+ 
+ 	li->ddev = li->logdev = li->rtdev = 0;
+ 	li->dfd = li->logfd = li->rtfd = -1;
+@@ -514,6 +453,7 @@ static struct xfs_buftarg *
+ libxfs_buftarg_alloc(
+ 	struct xfs_mount	*mp,
+ 	dev_t			dev,
++	int			fd,
+ 	unsigned long		write_fails)
+ {
+ 	struct xfs_buftarg	*btp;
+@@ -526,6 +466,7 @@ libxfs_buftarg_alloc(
+ 	}
+ 	btp->bt_mount = mp;
+ 	btp->bt_bdev = dev;
++	btp->bt_bdev_fd = fd;
+ 	btp->flags = 0;
+ 	if (write_fails) {
+ 		btp->writes_left = write_fails;
+@@ -629,13 +570,14 @@ libxfs_buftarg_init(
+ 		return;
+ 	}
+ 
+-	mp->m_ddev_targp = libxfs_buftarg_alloc(mp, xi->ddev, dfail);
++	mp->m_ddev_targp = libxfs_buftarg_alloc(mp, xi->ddev, xi->dfd, dfail);
+ 	if (!xi->logdev || xi->logdev == xi->ddev)
+ 		mp->m_logdev_targp = mp->m_ddev_targp;
+ 	else
+ 		mp->m_logdev_targp = libxfs_buftarg_alloc(mp, xi->logdev,
+-				lfail);
+-	mp->m_rtdev_targp = libxfs_buftarg_alloc(mp, xi->rtdev, rfail);
++				xi->logfd, lfail);
++	mp->m_rtdev_targp = libxfs_buftarg_alloc(mp, xi->rtdev, xi->rtfd,
++			rfail);
+ }
+ 
+ /* Compute maximum possible height for per-AG btree types for this fs. */
+diff --git a/libxfs/libxfs_io.h b/libxfs/libxfs_io.h
+index bf4d4ecd9..267ea9796 100644
+--- a/libxfs/libxfs_io.h
++++ b/libxfs/libxfs_io.h
+@@ -26,6 +26,7 @@ struct xfs_buftarg {
+ 	pthread_mutex_t		lock;
+ 	unsigned long		writes_left;
+ 	dev_t			bt_bdev;
++	int			bt_bdev_fd;
+ 	unsigned int		flags;
+ };
+ 
+diff --git a/libxfs/rdwr.c b/libxfs/rdwr.c
+index ccd1501ab..0e332110b 100644
+--- a/libxfs/rdwr.c
++++ b/libxfs/rdwr.c
+@@ -62,13 +62,13 @@ static void libxfs_brelse(struct cache_node *node);
+ int
+ libxfs_device_zero(struct xfs_buftarg *btp, xfs_daddr_t start, uint len)
+ {
++	int		fd = btp->bt_bdev_fd;
+ 	xfs_off_t	start_offset, end_offset, offset;
+ 	ssize_t		zsize, bytes;
+ 	size_t		len_bytes;
+ 	char		*z;
+-	int		error, fd;
++	int		error;
+ 
+-	fd = libxfs_device_to_fd(btp->bt_bdev);
+ 	start_offset = LIBXFS_BBTOOFF64(start);
+ 
+ 	/* try to use special zeroing methods, fall back to writes if needed */
+@@ -598,7 +598,7 @@ int
+ libxfs_readbufr(struct xfs_buftarg *btp, xfs_daddr_t blkno, struct xfs_buf *bp,
+ 		int len, int flags)
+ {
+-	int	fd = libxfs_device_to_fd(btp->bt_bdev);
++	int	fd = btp->bt_bdev_fd;
+ 	int	bytes = BBTOB(len);
+ 	int	error;
+ 
+@@ -631,12 +631,11 @@ libxfs_readbuf_verify(
+ int
+ libxfs_readbufr_map(struct xfs_buftarg *btp, struct xfs_buf *bp, int flags)
+ {
+-	int	fd;
++	int	fd = btp->bt_bdev_fd;
+ 	int	error = 0;
+ 	void	*buf;
+ 	int	i;
+ 
+-	fd = libxfs_device_to_fd(btp->bt_bdev);
+ 	buf = bp->b_addr;
+ 	for (i = 0; i < bp->b_nmaps; i++) {
+ 		off64_t	offset = LIBXFS_BBTOOFF64(bp->b_maps[i].bm_bn);
+@@ -820,7 +819,7 @@ int
+ libxfs_bwrite(
+ 	struct xfs_buf	*bp)
+ {
+-	int		fd = libxfs_device_to_fd(bp->b_target->bt_bdev);
++	int		fd = bp->b_target->bt_bdev_fd;
+ 
+ 	/*
+ 	 * we never write buffers that are marked stale. This indicates they
+@@ -1171,13 +1170,12 @@ int
+ libxfs_blkdev_issue_flush(
+ 	struct xfs_buftarg	*btp)
+ {
+-	int			fd, ret;
++	int			ret;
+ 
+ 	if (btp->bt_bdev == 0)
+ 		return 0;
+ 
+-	fd = libxfs_device_to_fd(btp->bt_bdev);
+-	ret = platform_flush_device(fd, btp->bt_bdev);
++	ret = platform_flush_device(btp->bt_bdev_fd, btp->bt_bdev);
+ 	return ret ? -errno : 0;
+ }
+ 
+diff --git a/repair/prefetch.c b/repair/prefetch.c
+index 017750e9a..78c1e3974 100644
+--- a/repair/prefetch.c
++++ b/repair/prefetch.c
+@@ -876,7 +876,7 @@ init_prefetch(
+ 	xfs_mount_t		*pmp)
+ {
+ 	mp = pmp;
+-	mp_fd = libxfs_device_to_fd(mp->m_ddev_targp->bt_bdev);
++	mp_fd = mp->m_ddev_targp->bt_bdev_fd;;
+ 	pf_max_bytes = sysconf(_SC_PAGE_SIZE) << 7;
+ 	pf_max_bbs = pf_max_bytes >> BBSHIFT;
+ 	pf_max_fsbs = pf_max_bytes >> mp->m_sb.sb_blocklog;
 -- 
 2.39.2
 
