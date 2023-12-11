@@ -1,264 +1,184 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4E42E219FD
-	for <linux-xfs@vger.kernel.org>; Mon, 11 Dec 2023 11:10:52 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C4DFC3B7BE;
+	Mon, 11 Dec 2023 12:32:51 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="gEZKfIoS"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id A86D5C433C7;
-	Mon, 11 Dec 2023 11:10:50 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="MfbcP42k"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id CA6F8C433C8;
+	Mon, 11 Dec 2023 12:32:50 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1702293051;
-	bh=i3i6/bK/IEDxwQw3ve0UhrqSPMR+yzTlKkPzuV1lAWI=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=gEZKfIoSAL1T4o4i8WXdqnZXf6O6a3BX+MRiREo0rYU31B3pBnbZLC5g7DWiFfvmT
-	 t6DLCj7Xxrrc6ljjeu5RgprXNm+psyroUEBTbwJptIiBYERtps4JaS+zbEarVPMg1a
-	 gX/m98GFxtXpkkQoZIfWIA+9JqarT3HnfkoOn1h5+iVuqlt/HQDlmuFCITSTykpINX
-	 RnFj3jbY/Pb1LYJYfu2Mg0oBR+0pCM6u2L7Vo+P8tHM0MGuMjXJcKKwSNN5ntVVJZ8
-	 WD4LOoT9IaV7Xdu9l+MoaDAv9Isg77XRlhKe0i1A5K7WSXW9+/RVcOlsiZmZv7Hmqf
-	 dIFiFQecKJUxg==
-Date: Mon, 11 Dec 2023 12:10:47 +0100
-From: Carlos Maiolino <cem@kernel.org>
-To: "wuyifeng (C)" <wuyifeng10@huawei.com>
-Cc: "Darrick J. Wong" <djwong@kernel.org>, linux-xfs@vger.kernel.org, 
-	louhongxiang@huawei.com
-Subject: Re: [PATCH] xfs_grow: Remove xflag and iflag to reduce redundant
- temporary variables.
-Message-ID: <gklh6fus77l3qwv4xh7gwrkqbnyvbati2edxsjjoaxwpfssaxe@dd4nld6j7zn3>
-References: <0e5P5B3pK_KjP_PgdGLjztYkfjNvEPuXovv9Fz2xm1gNnC0r5NfQf7wOK3OQNZ0GN0yqrL2qgeQpFuZfFv61og==@protonmail.internalid>
- <619020bd-800a-431a-bb1d-937ad1cdc270@huawei.com>
+	s=k20201202; t=1702297971;
+	bh=Mw1EUVNDAUwdkxNqkxuXxBZ6ow+p09cfpzEayt+0N+s=;
+	h=From:To:Cc:Subject:Date:From;
+	b=MfbcP42kqkZd7SS+WZE4EySv/GzZCf6I7vdWQyuyMMcCs8yEy0QPcKxm1ZKfKf+Nk
+	 heH3nnSrbn7uQ0lvw/RMO06d8VHOXnWAS8OWNmXaiBFiYBUw2fVTP8tIQwp6PMRh54
+	 yddlTWqJOMnuLHBdXd57+YsiLLdVyx97pbTQGCKHxHE87IgFqDudQWv3iVrBstlNhy
+	 VCJM6MDwApULobF0xmx2KkXc7SWL0GPsKcdqB7jrXbt+RT5hvnywEBJm+jwEx0JJ+X
+	 Hd3KumV2K0FlGaZ91EkQKfxauKAmIhdh75b8YHuNhpmPl1U757sfPcW5I+lxbbfIAV
+	 pNswqR0N7Jc+A==
+User-agent: mu4e 1.8.10; emacs 27.1
+From: Chandan Babu R <chandanbabu@kernel.org>
+To: chandanbabu@kernel.org
+Cc: bagasdotme@gmail.com,bodonnel@redhat.com,cmaiolino@redhat.com,dan.j.williams@intel.com,david@fromorbit.com,dchinner@redhat.com,djwong@kernel.org,hch@lst.de,linux-fsdevel@vger.kernel.org,linux-xfs@vger.kernel.org,ruansy.fnst@fujitsu.com,zhangjiachen.jaycee@bytedance.com,zhangtianci.1997@bytedance.com
+Subject: [ANNOUNCE] xfs-linux: for-next updated to 18793e050504
+Date: Mon, 11 Dec 2023 17:59:54 +0530
+Message-ID: <87fs08q5qp.fsf@debian-BULLSEYE-live-builder-AMD64>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <619020bd-800a-431a-bb1d-937ad1cdc270@huawei.com>
+Content-Type: text/plain
 
-On Thu, Dec 07, 2023 at 04:39:04PM +0800, wuyifeng (C) wrote:
-> I found that iflag and xflag can be combined with lflag to reduce the
-> number of redundant local variables, which is a refactoring to improve
-> code readability.Signed-off-by: Wu YiFeng <wuyifeng10@huawei.com>
-> 
-> Please help me review, thanks.
+Hi folks,
 
-Patches should be inlined not submitted as an attachment, please, submit it
-correctly, so people will actually look into it.
+The for-next branch of the xfs-linux repository at:
 
-Same kernel rules apply here:
-https://www.kernel.org/doc/html/latest/process/submitting-patches.html#no-mime-no-links-no-compression-no-attachments-just-plain-text
+	https://git.kernel.org/pub/scm/fs/xfs/xfs-linux.git
 
-Thanks
+has just been updated.
 
-Carlos
+Patches often get missed, so please check if your outstanding patches
+were in this update. If they have not been in this update, please
+resubmit them to linux-xfs@vger.kernel.org so they can be picked up in
+the next update.
 
-> 
-> ---
->   growfs/xfs_growfs.c | 22 +++++++++++-----------
->   1 file changed, 11 insertions(+), 11 deletions(-)
-> 
-> diff --git a/growfs/xfs_growfs.c b/growfs/xfs_growfs.c
-> index 683961f6..5fb1a9d2 100644
-> --- a/growfs/xfs_growfs.c
-> +++ b/growfs/xfs_growfs.c
-> @@ -8,6 +8,10 @@
->   #include "libfrog/paths.h"
->   #include "libfrog/fsgeom.h"
-> 
-> +#define LOG_GROW    (1<<0)    /* -l flag: grow log section */
-> +#define LOG_EXT2INT    (1<<1)    /* -i flag: convert log from external
-> to internal format */
-> +#define LOG_INT2EXT    (1<<2)    /* -x flag: convert log from internal
-> to external format */
-> +
->   static void
->   usage(void)
->   {
-> @@ -45,7 +49,6 @@ main(int argc, char **argv)
->       long            esize;    /* new rt extent size */
->       int            ffd;    /* mount point file descriptor */
->       struct xfs_fsop_geom    geo;    /* current fs geometry */
-> -    int            iflag;    /* -i flag */
->       int            isint;    /* log is currently internal */
->       int            lflag;    /* -l flag */
->       long long        lsize;    /* new log size in fs blocks */
-> @@ -55,7 +58,6 @@ main(int argc, char **argv)
->       struct xfs_fsop_geom    ngeo;    /* new fs geometry */
->       int            rflag;    /* -r flag */
->       long long        rsize;    /* new rt size in fs blocks */
-> -    int            xflag;    /* -x flag */
->       char            *fname;    /* mount point name */
->       char            *datadev; /* data device name */
->       char            *logdev;  /*  log device name */
-> @@ -72,7 +74,7 @@ main(int argc, char **argv)
-> 
->       maxpct = esize = 0;
->       dsize = lsize = rsize = 0LL;
-> -    aflag = dflag = iflag = lflag = mflag = nflag = rflag = xflag = 0;
-> +    aflag = dflag = lflag = mflag = nflag = rflag = 0;
-> 
->       while ((c = getopt(argc, argv, "dD:e:ilL:m:np:rR:t:xV")) != EOF) {
->           switch (c) {
-> @@ -87,13 +89,13 @@ main(int argc, char **argv)
->               rflag = 1;
->               break;
->           case 'i':
-> -            lflag = iflag = 1;
-> +            lflag |= LOG_EXT2INT;
->               break;
->           case 'L':
->               lsize = strtoll(optarg, NULL, 10);
->               fallthrough;
->           case 'l':
-> -            lflag = 1;
-> +            lflag |= LOG_GROW;
->               break;
->           case 'm':
->               mflag = 1;
-> @@ -115,7 +117,7 @@ main(int argc, char **argv)
->               mtab_file = optarg;
->               break;
->           case 'x':
-> -            lflag = xflag = 1;
-> +            lflag |= LOG_INT2EXT;
->               break;
->           case 'V':
->               printf(_("%s version %s\n"), progname, VERSION);
-> @@ -124,9 +126,7 @@ main(int argc, char **argv)
->               usage();
->           }
->       }
-> -    if (argc - optind != 1)
-> -        usage();
-> -    if (iflag && xflag)
-> +    if (argc - optind != 1 || ((lflag & LOG_EXT2INT) && (lflag &
-> LOG_INT2EXT)))
->           usage();
->       if (dflag + lflag + rflag + mflag == 0)
->           aflag = 1;
-> @@ -323,9 +323,9 @@ _("[EXPERIMENTAL] try to shrink unused space %lld,
-> old size is %lld\n"),
-> 
->           if (!lsize)
->               lsize = dlsize / (geo.blocksize / BBSIZE);
-> -        if (iflag)
-> +        if (lflag & LOG_EXT2INT)
->               in.isint = 1;
-> -        else if (xflag)
-> +        else if (lflag & LOG_INT2EXT)
->               in.isint = 0;
->           else
->               in.isint = xi.logBBsize == 0;
-> --
-> 2.33.0
-> 
+The new head of the for-next branch is commit:
 
-> From 74c9fe3337a302385999b57ceb819b3439cdbd9c Mon Sep 17 00:00:00 2001
-> From: Wu YiFeng <wuyifeng10@huawei.com>
-> Date: Thu, 7 Dec 2023 15:47:08 +0800
-> Subject: [PATCH] xfs_grow: Remove xflag and iflag to reduce redundant
->  temporary variables.
-> 
-> Both xflag and iflag are log flags. We can use the bits of lflag to
-> indicate all log flags, which is a small code reconstruction.
-> 
-> Signed-off-by: Wu YiFeng <wuyifeng10@huawei.com>
-> ---
->  growfs/xfs_growfs.c | 22 +++++++++++-----------
->  1 file changed, 11 insertions(+), 11 deletions(-)
-> 
-> diff --git a/growfs/xfs_growfs.c b/growfs/xfs_growfs.c
-> index 683961f6..5fb1a9d2 100644
-> --- a/growfs/xfs_growfs.c
-> +++ b/growfs/xfs_growfs.c
-> @@ -8,6 +8,10 @@
->  #include "libfrog/paths.h"
->  #include "libfrog/fsgeom.h"
->  
-> +#define LOG_GROW	(1<<0)	/* -l flag: grow log section */
-> +#define LOG_EXT2INT	(1<<1)	/* -i flag: convert log from external to internal format */
-> +#define LOG_INT2EXT	(1<<2)	/* -x flag: convert log from internal to external format */
-> +
->  static void
->  usage(void)
->  {
-> @@ -45,7 +49,6 @@ main(int argc, char **argv)
->  	long			esize;	/* new rt extent size */
->  	int			ffd;	/* mount point file descriptor */
->  	struct xfs_fsop_geom	geo;	/* current fs geometry */
-> -	int			iflag;	/* -i flag */
->  	int			isint;	/* log is currently internal */
->  	int			lflag;	/* -l flag */
->  	long long		lsize;	/* new log size in fs blocks */
-> @@ -55,7 +58,6 @@ main(int argc, char **argv)
->  	struct xfs_fsop_geom	ngeo;	/* new fs geometry */
->  	int			rflag;	/* -r flag */
->  	long long		rsize;	/* new rt size in fs blocks */
-> -	int			xflag;	/* -x flag */
->  	char			*fname;	/* mount point name */
->  	char			*datadev; /* data device name */
->  	char			*logdev;  /*  log device name */
-> @@ -72,7 +74,7 @@ main(int argc, char **argv)
->  
->  	maxpct = esize = 0;
->  	dsize = lsize = rsize = 0LL;
-> -	aflag = dflag = iflag = lflag = mflag = nflag = rflag = xflag = 0;
-> +	aflag = dflag = lflag = mflag = nflag = rflag = 0;
->  
->  	while ((c = getopt(argc, argv, "dD:e:ilL:m:np:rR:t:xV")) != EOF) {
->  		switch (c) {
-> @@ -87,13 +89,13 @@ main(int argc, char **argv)
->  			rflag = 1;
->  			break;
->  		case 'i':
-> -			lflag = iflag = 1;
-> +			lflag |= LOG_EXT2INT;
->  			break;
->  		case 'L':
->  			lsize = strtoll(optarg, NULL, 10);
->  			fallthrough;
->  		case 'l':
-> -			lflag = 1;
-> +			lflag |= LOG_GROW;
->  			break;
->  		case 'm':
->  			mflag = 1;
-> @@ -115,7 +117,7 @@ main(int argc, char **argv)
->  			mtab_file = optarg;
->  			break;
->  		case 'x':
-> -			lflag = xflag = 1;
-> +			lflag |= LOG_INT2EXT;
->  			break;
->  		case 'V':
->  			printf(_("%s version %s\n"), progname, VERSION);
-> @@ -124,9 +126,7 @@ main(int argc, char **argv)
->  			usage();
->  		}
->  	}
-> -	if (argc - optind != 1)
-> -		usage();
-> -	if (iflag && xflag)
-> +	if (argc - optind != 1 || ((lflag & LOG_EXT2INT) && (lflag & LOG_INT2EXT)))
->  		usage();
->  	if (dflag + lflag + rflag + mflag == 0)
->  		aflag = 1;
-> @@ -323,9 +323,9 @@ _("[EXPERIMENTAL] try to shrink unused space %lld, old size is %lld\n"),
->  
->  		if (!lsize)
->  			lsize = dlsize / (geo.blocksize / BBSIZE);
-> -		if (iflag)
-> +		if (lflag & LOG_EXT2INT)
->  			in.isint = 1;
-> -		else if (xflag)
-> +		else if (lflag & LOG_INT2EXT)
->  			in.isint = 0;
->  		else
->  			in.isint = xi.logBBsize == 0;
-> -- 
-> 2.33.0
-> 
+18793e050504 xfs: move xfs_ondisk.h to libxfs/
 
+48 new commits:
+
+Bagas Sanjaya (1):
+      [011f129fee4b] Documentation: xfs: consolidate XFS docs into its own subdirectory
+
+Chandan Babu R (6):
+      [6b4ffe97e913] Merge tag 'reconstruct-defer-work-6.8_2023-12-06' of https://git.kernel.org/pub/scm/linux/kernel/git/djwong/xfs-linux into xfs-6.8-mergeA
+      [34d386666819] Merge tag 'reconstruct-defer-cleanups-6.8_2023-12-06' of https://git.kernel.org/pub/scm/linux/kernel/git/djwong/xfs-linux into xfs-6.8-mergeA
+      [47c460efc467] Merge tag 'fix-rtmount-overflows-6.8_2023-12-06' of https://git.kernel.org/pub/scm/linux/kernel/git/djwong/xfs-linux into xfs-6.8-mergeA
+      [9f334526ee0a] Merge tag 'defer-elide-create-done-6.8_2023-12-06' of https://git.kernel.org/pub/scm/linux/kernel/git/djwong/xfs-linux into xfs-6.8-mergeA
+      [dec0224bae8b] Merge tag 'scrub-livelock-prevention-6.8_2023-12-06' of https://git.kernel.org/pub/scm/linux/kernel/git/djwong/xfs-linux into xfs-6.8-mergeA
+      [49391d1349da] Merge tag 'repair-auto-reap-space-reservations-6.8_2023-12-06' of https://git.kernel.org/pub/scm/linux/kernel/git/djwong/xfs-linux into xfs-6.8-mergeA
+
+Christoph Hellwig (6):
+      [64f08b152a3b] xfs: clean up the XFS_IOC_{GS}ET_RESBLKS handler
+      [c2c2620de757] xfs: clean up the XFS_IOC_FSCOUNTS handler
+      [646ddf0c4df5] xfs: clean up the xfs_reserve_blocks interface
+      [08e54ca42d6a] xfs: clean up xfs_fsops.h
+      [c12c50393c1f] xfs: use static_assert to check struct sizes and offsets
+      [18793e050504] xfs: move xfs_ondisk.h to libxfs/
+
+Darrick J. Wong (31):
+      [07bcbdf020c9] xfs: don't leak recovered attri intent items
+      [03f7767c9f61] xfs: use xfs_defer_pending objects to recover intent items
+      [a050acdfa800] xfs: pass the xfs_defer_pending object to iop_recover
+      [deb4cd8ba87f] xfs: transfer recovered intent item ownership in ->iop_recover
+      [e70fb328d527] xfs: recreate work items when recovering intent items
+      [a51489e140d3] xfs: dump the recovered xattri log item if corruption happens
+      [172538beba82] xfs: don't set XFS_TRANS_HAS_INTENT_DONE when there's no ATTRD log item
+      [e5f1a5146ec3] xfs: use xfs_defer_finish_one to finish recovered work items
+      [3dd75c8db1c1] xfs: hoist intent done flag setting to ->finish_item callsite
+      [db7ccc0bac2a] xfs: move ->iop_recover to xfs_defer_op_type
+      [e6e5299fcbf0] xfs: collapse the ->finish_item helpers
+      [f3fd7f6fce1c] xfs: hoist ->create_intent boilerplate to its callsite
+      [bd3a88f6b71c] xfs: use xfs_defer_create_done for the relogging operation
+      [3e0958be2156] xfs: clean out XFS_LI_DIRTY setting boilerplate from ->iop_relog
+      [b28852a5bd08] xfs: hoist xfs_trans_add_item calls to defer ops functions
+      [8a9aa763e17c] xfs: collapse the ->create_done functions
+      [a6a38f309afc] xfs: make rextslog computation consistent with mkfs
+      [cf8f0e6c1429] xfs: fix 32-bit truncation in xfs_compute_rextslog
+      [94da54d582e6] xfs: document what LARP means
+      [a49c708f9a44] xfs: move ->iop_relog to struct xfs_defer_op_type
+      [e14293803f4e] xfs: don't allow overly small or large realtime volumes
+      [9c07bca793b4] xfs: elide ->create_done calls for unlogged deferred work
+      [3f113c2739b1] xfs: make xchk_iget safer in the presence of corrupt inode btrees
+      [6b126139401a] xfs: don't append work items to logged xfs_defer_pending objects
+      [4dffb2cbb483] xfs: allow pausing of pending deferred work items
+      [4c88fef3af4a] xfs: remove __xfs_free_extent_later
+      [e3042be36c34] xfs: automatic freeing of freshly allocated unwritten space
+      [4c8ecd1cfdd0] xfs: remove unused fields from struct xbtree_ifakeroot
+      [be4084176304] xfs: implement block reservation accounting for btrees we're staging
+      [6bb9ea8ecd2c] xfs: log EFIs for all btree blocks being used to stage a btree
+      [3f3cec031099] xfs: force small EFIs for reaping btree extents
+
+Jiachen Zhang (1):
+      [e6af9c98cbf0] xfs: ensure logflagsp is initialized in xfs_bmap_del_extent_real
+
+Shiyang Ruan (1):
+      [fa422b353d21] mm, pmem, xfs: Introduce MF_MEM_PRE_REMOVE for unbind
+
+Zhang Tianci (2):
+      [5759aa4f9560] xfs: update dir3 leaf block metadata after swap
+      [fd45ddb9dd60] xfs: extract xfs_da_buf_copy() helper function
+
+Code Diffstat:
+
+ Documentation/filesystems/index.rst     |   5 +-
+ Documentation/filesystems/xfs/index.rst |  14 +
+ .../xfs-delayed-logging-design.rst      |   0
+ .../xfs-maintainer-entry-profile.rst    |   0
+ .../xfs-online-fsck-design.rst          |   2 +-
+ .../xfs-self-describing-metadata.rst    |   0
+ .../maintainer-entry-profile.rst        |   2 +-
+ MAINTAINERS                             |   4 +-
+ drivers/dax/super.c                     |   3 +-
+ fs/xfs/Makefile                         |   1 +
+ fs/xfs/libxfs/xfs_ag.c                  |   2 +-
+ fs/xfs/libxfs/xfs_alloc.c               | 104 ++-
+ fs/xfs/libxfs/xfs_alloc.h               |  22 +-
+ fs/xfs/libxfs/xfs_attr_leaf.c           |  12 +-
+ fs/xfs/libxfs/xfs_bmap.c                |  77 +-
+ fs/xfs/libxfs/xfs_bmap_btree.c          |   2 +-
+ fs/xfs/libxfs/xfs_btree_staging.h       |   6 -
+ fs/xfs/libxfs/xfs_da_btree.c            |  69 +-
+ fs/xfs/libxfs/xfs_da_btree.h            |   2 +
+ fs/xfs/libxfs/xfs_defer.c               | 445 +++++++++--
+ fs/xfs/libxfs/xfs_defer.h               |  42 +-
+ fs/xfs/libxfs/xfs_ialloc.c              |   5 +-
+ fs/xfs/libxfs/xfs_ialloc_btree.c        |   2 +-
+ fs/xfs/libxfs/xfs_log_recover.h         |   7 +
+ fs/xfs/{ => libxfs}/xfs_ondisk.h        |   8 +-
+ fs/xfs/libxfs/xfs_refcount.c            |   6 +-
+ fs/xfs/libxfs/xfs_refcount_btree.c      |   2 +-
+ fs/xfs/libxfs/xfs_rtbitmap.c            |  14 +
+ fs/xfs/libxfs/xfs_rtbitmap.h            |  16 +
+ fs/xfs/libxfs/xfs_sb.c                  |   6 +-
+ fs/xfs/scrub/common.c                   |   6 +-
+ fs/xfs/scrub/common.h                   |  25 +
+ fs/xfs/scrub/inode.c                    |   4 +-
+ fs/xfs/scrub/newbt.c                    | 513 +++++++++++++
+ fs/xfs/scrub/newbt.h                    |  65 ++
+ fs/xfs/scrub/reap.c                     |   7 +-
+ fs/xfs/scrub/trace.h                    |  37 +
+ fs/xfs/xfs_attr_item.c                  | 252 +++---
+ fs/xfs/xfs_bmap_item.c                  | 199 ++---
+ fs/xfs/xfs_extfree_item.c               | 330 +++-----
+ fs/xfs/xfs_fsops.c                      |  50 +-
+ fs/xfs/xfs_fsops.h                      |  14 +-
+ fs/xfs/xfs_ioctl.c                      | 115 +--
+ fs/xfs/xfs_log.c                        |   1 +
+ fs/xfs/xfs_log_priv.h                   |   1 +
+ fs/xfs/xfs_log_recover.c                | 131 ++--
+ fs/xfs/xfs_mount.c                      |   8 +-
+ fs/xfs/xfs_notify_failure.c             | 108 ++-
+ fs/xfs/xfs_refcount_item.c              | 233 ++----
+ fs/xfs/xfs_reflink.c                    |   2 +-
+ fs/xfs/xfs_rmap_item.c                  | 256 +++---
+ fs/xfs/xfs_rtalloc.c                    |   6 +-
+ fs/xfs/xfs_super.c                      |   6 +-
+ fs/xfs/xfs_sysfs.c                      |   9 +
+ fs/xfs/xfs_trace.h                      |  13 +-
+ fs/xfs/xfs_trans.h                      |  12 -
+ include/linux/mm.h                      |   1 +
+ mm/memory-failure.c                     |  21 +-
+ 58 files changed, 2092 insertions(+), 1213 deletions(-)
+ create mode 100644 Documentation/filesystems/xfs/index.rst
+ rename Documentation/filesystems/{ => xfs}/xfs-delayed-logging-design.rst (100%)
+ rename Documentation/filesystems/{ => xfs}/xfs-maintainer-entry-profile.rst (100%)
+ rename Documentation/filesystems/{ => xfs}/xfs-online-fsck-design.rst (99%)
+ rename Documentation/filesystems/{ => xfs}/xfs-self-describing-metadata.rst (100%)
+ rename fs/xfs/{ => libxfs}/xfs_ondisk.h (97%)
+ create mode 100644 fs/xfs/scrub/newbt.c
+ create mode 100644 fs/xfs/scrub/newbt.h
