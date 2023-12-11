@@ -1,178 +1,264 @@
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+	(No client certificate requested)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4E42E219FD
+	for <linux-xfs@vger.kernel.org>; Mon, 11 Dec 2023 11:10:52 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b="ojnCA0HE"
-Received: from mx0a-001b2d01.pphosted.com (mx0a-001b2d01.pphosted.com [148.163.156.1])
-	by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B36219F;
-	Mon, 11 Dec 2023 02:57:43 -0800 (PST)
-Received: from pps.filterd (m0353726.ppops.net [127.0.0.1])
-	by mx0a-001b2d01.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 3BBAcjic011590;
-	Mon, 11 Dec 2023 10:57:39 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ibm.com; h=date : from : to : cc :
- subject : message-id : references : mime-version : content-type :
- in-reply-to; s=pp1; bh=M1BWtUt0iko0Adg1ZOkNjmTGZ72097YAF9y4jIcKxGU=;
- b=ojnCA0HEGHQ9qrUscY1w6xO8r1ooEoc7j7AVYhWGo6ISun4rjqhl6uv3YU49EvYXryzS
- FlOIKr7WuGVwlXnQBVvMYnhtc8i28ZjbZaIDrseOd/NMRX/S75hjaFKjKMj+YggljZ3n
- QNeR15hIzHpiGAvrK+gu+QUKDQcAPl/Jwp8sKhWGnLSCXYO3r2E/Dv+bMHQ+bl3UzV9N
- uOqzK+47Sx4XeMq8oD+tzJpYe6jM/rI5/GokIvv7dOzk+Z4kwbdCmsDiohMOEdaK1XK1
- cmeSyS1+IMRLp1CUYUcAGv8pyGCiBiJmjXdM45fRChFnuB173q9vLvMhmFdne2nSfUpb Tw== 
-Received: from pps.reinject (localhost [127.0.0.1])
-	by mx0a-001b2d01.pphosted.com (PPS) with ESMTPS id 3ux0usre9u-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Mon, 11 Dec 2023 10:57:38 +0000
-Received: from m0353726.ppops.net (m0353726.ppops.net [127.0.0.1])
-	by pps.reinject (8.17.1.5/8.17.1.5) with ESMTP id 3BBAdt9m015254;
-	Mon, 11 Dec 2023 10:57:38 GMT
-Received: from ppma21.wdc07v.mail.ibm.com (5b.69.3da9.ip4.static.sl-reverse.com [169.61.105.91])
-	by mx0a-001b2d01.pphosted.com (PPS) with ESMTPS id 3ux0usre9h-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Mon, 11 Dec 2023 10:57:38 +0000
-Received: from pps.filterd (ppma21.wdc07v.mail.ibm.com [127.0.0.1])
-	by ppma21.wdc07v.mail.ibm.com (8.17.1.19/8.17.1.19) with ESMTP id 3BBAeHXD012585;
-	Mon, 11 Dec 2023 10:57:36 GMT
-Received: from smtprelay02.fra02v.mail.ibm.com ([9.218.2.226])
-	by ppma21.wdc07v.mail.ibm.com (PPS) with ESMTPS id 3uw3jngtn3-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Mon, 11 Dec 2023 10:57:36 +0000
-Received: from smtpav07.fra02v.mail.ibm.com (smtpav07.fra02v.mail.ibm.com [10.20.54.106])
-	by smtprelay02.fra02v.mail.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 3BBAvYrf5505562
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-	Mon, 11 Dec 2023 10:57:34 GMT
-Received: from smtpav07.fra02v.mail.ibm.com (unknown [127.0.0.1])
-	by IMSVA (Postfix) with ESMTP id CF3B620040;
-	Mon, 11 Dec 2023 10:57:34 +0000 (GMT)
-Received: from smtpav07.fra02v.mail.ibm.com (unknown [127.0.0.1])
-	by IMSVA (Postfix) with ESMTP id 1B92220043;
-	Mon, 11 Dec 2023 10:57:33 +0000 (GMT)
-Received: from li-bb2b2a4c-3307-11b2-a85c-8fa5c3a69313.ibm.com (unknown [9.124.31.44])
-	by smtpav07.fra02v.mail.ibm.com (Postfix) with ESMTPS;
-	Mon, 11 Dec 2023 10:57:32 +0000 (GMT)
-Date: Mon, 11 Dec 2023 16:27:30 +0530
-From: Ojaswin Mujoo <ojaswin@linux.ibm.com>
-To: John Garry <john.g.garry@oracle.com>
-Cc: linux-ext4@vger.kernel.org, "Theodore Ts'o" <tytso@mit.edu>,
-        Ritesh Harjani <ritesh.list@gmail.com>, linux-kernel@vger.kernel.org,
-        "Darrick J . Wong" <djwong@kernel.org>, linux-block@vger.kernel.org,
-        linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
-        dchinner@redhat.com
-Subject: Re: [RFC 5/7] block: export blkdev_atomic_write_valid() and refactor
- api
-Message-ID: <ZXbrGvkJRIJmRtex@li-bb2b2a4c-3307-11b2-a85c-8fa5c3a69313.ibm.com>
-References: <cover.1701339358.git.ojaswin@linux.ibm.com>
- <b53609d0d4b97eb9355987ac5ec03d4e89293b43.1701339358.git.ojaswin@linux.ibm.com>
- <cc43b1ba-e9ea-4ff1-b616-be3c11960eea@oracle.com>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="gEZKfIoS"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id A86D5C433C7;
+	Mon, 11 Dec 2023 11:10:50 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1702293051;
+	bh=i3i6/bK/IEDxwQw3ve0UhrqSPMR+yzTlKkPzuV1lAWI=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=gEZKfIoSAL1T4o4i8WXdqnZXf6O6a3BX+MRiREo0rYU31B3pBnbZLC5g7DWiFfvmT
+	 t6DLCj7Xxrrc6ljjeu5RgprXNm+psyroUEBTbwJptIiBYERtps4JaS+zbEarVPMg1a
+	 gX/m98GFxtXpkkQoZIfWIA+9JqarT3HnfkoOn1h5+iVuqlt/HQDlmuFCITSTykpINX
+	 RnFj3jbY/Pb1LYJYfu2Mg0oBR+0pCM6u2L7Vo+P8tHM0MGuMjXJcKKwSNN5ntVVJZ8
+	 WD4LOoT9IaV7Xdu9l+MoaDAv9Isg77XRlhKe0i1A5K7WSXW9+/RVcOlsiZmZv7Hmqf
+	 dIFiFQecKJUxg==
+Date: Mon, 11 Dec 2023 12:10:47 +0100
+From: Carlos Maiolino <cem@kernel.org>
+To: "wuyifeng (C)" <wuyifeng10@huawei.com>
+Cc: "Darrick J. Wong" <djwong@kernel.org>, linux-xfs@vger.kernel.org, 
+	louhongxiang@huawei.com
+Subject: Re: [PATCH] xfs_grow: Remove xflag and iflag to reduce redundant
+ temporary variables.
+Message-ID: <gklh6fus77l3qwv4xh7gwrkqbnyvbati2edxsjjoaxwpfssaxe@dd4nld6j7zn3>
+References: <0e5P5B3pK_KjP_PgdGLjztYkfjNvEPuXovv9Fz2xm1gNnC0r5NfQf7wOK3OQNZ0GN0yqrL2qgeQpFuZfFv61og==@protonmail.internalid>
+ <619020bd-800a-431a-bb1d-937ad1cdc270@huawei.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=iso-8859-1
 Content-Disposition: inline
-In-Reply-To: <cc43b1ba-e9ea-4ff1-b616-be3c11960eea@oracle.com>
-X-TM-AS-GCONF: 00
-X-Proofpoint-ORIG-GUID: 2qSPiO9EIfi0hMR8TWZ7coYjvt_2Rxt6
-X-Proofpoint-GUID: wdXyzKPFaRaC5ZtASZOrE_sXJCXo-opo
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.272,Aquarius:18.0.997,Hydra:6.0.619,FMLib:17.11.176.26
- definitions=2023-12-11_04,2023-12-07_01,2023-05-22_02
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 adultscore=0 mlxlogscore=856
- priorityscore=1501 suspectscore=0 phishscore=0 lowpriorityscore=0
- bulkscore=0 spamscore=0 clxscore=1015 malwarescore=0 impostorscore=0
- mlxscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2311290000 definitions=main-2312110087
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <619020bd-800a-431a-bb1d-937ad1cdc270@huawei.com>
 
-On Fri, Dec 01, 2023 at 10:47:59AM +0000, John Garry wrote:
-> On 30/11/2023 13:53, Ojaswin Mujoo wrote:
-> > Export the blkdev_atomic_write_valid() function so that other filesystems
-> > can call it as a part of validating the atomic write operation.
-> > 
-> > Further, refactor the api to accept a len argument instead of iov_iter to
-> > make it easier to call from other places.
-> > 
-> > Signed-off-by: Ojaswin Mujoo <ojaswin@linux.ibm.com>
+On Thu, Dec 07, 2023 at 04:39:04PM +0800, wuyifeng (C) wrote:
+> I found that iflag and xflag can be combined with lflag to reduce the
+> number of redundant local variables, which is a refactoring to improve
+> code readability.Signed-off-by: Wu YiFeng <wuyifeng10@huawei.com>
 > 
-> I was actually thinking of moving this functionality to vfs and maybe also
-> calling earlier in write path, as the code is really common to blkdev and
-> FSes.
+> Please help me review, thanks.
 
-This makes sense. The code to make sure the underlying device
-will be able to support this atomic write can be moved higher up in vfs.
-And then each fs can do extra fs-specific checks in their code.
+Patches should be inlined not submitted as an attachment, please, submit it
+correctly, so people will actually look into it.
+
+Same kernel rules apply here:
+https://www.kernel.org/doc/html/latest/process/submitting-patches.html#no-mime-no-links-no-compression-no-attachments-just-plain-text
+
+Thanks
+
+Carlos
 
 > 
-> However, Christoph Hellwig was not so happy about current interface with
-> power-of-2 requirement et al, so I was going to wait until that discussion
-> is concluded before deciding.
+> ---
+>   growfs/xfs_growfs.c | 22 +++++++++++-----------
+>   1 file changed, 11 insertions(+), 11 deletions(-)
+> 
+> diff --git a/growfs/xfs_growfs.c b/growfs/xfs_growfs.c
+> index 683961f6..5fb1a9d2 100644
+> --- a/growfs/xfs_growfs.c
+> +++ b/growfs/xfs_growfs.c
+> @@ -8,6 +8,10 @@
+>   #include "libfrog/paths.h"
+>   #include "libfrog/fsgeom.h"
+> 
+> +#define LOG_GROW    (1<<0)    /* -l flag: grow log section */
+> +#define LOG_EXT2INT    (1<<1)    /* -i flag: convert log from external
+> to internal format */
+> +#define LOG_INT2EXT    (1<<2)    /* -x flag: convert log from internal
+> to external format */
+> +
+>   static void
+>   usage(void)
+>   {
+> @@ -45,7 +49,6 @@ main(int argc, char **argv)
+>       long            esize;    /* new rt extent size */
+>       int            ffd;    /* mount point file descriptor */
+>       struct xfs_fsop_geom    geo;    /* current fs geometry */
+> -    int            iflag;    /* -i flag */
+>       int            isint;    /* log is currently internal */
+>       int            lflag;    /* -l flag */
+>       long long        lsize;    /* new log size in fs blocks */
+> @@ -55,7 +58,6 @@ main(int argc, char **argv)
+>       struct xfs_fsop_geom    ngeo;    /* new fs geometry */
+>       int            rflag;    /* -r flag */
+>       long long        rsize;    /* new rt size in fs blocks */
+> -    int            xflag;    /* -x flag */
+>       char            *fname;    /* mount point name */
+>       char            *datadev; /* data device name */
+>       char            *logdev;  /*  log device name */
+> @@ -72,7 +74,7 @@ main(int argc, char **argv)
+> 
+>       maxpct = esize = 0;
+>       dsize = lsize = rsize = 0LL;
+> -    aflag = dflag = iflag = lflag = mflag = nflag = rflag = xflag = 0;
+> +    aflag = dflag = lflag = mflag = nflag = rflag = 0;
+> 
+>       while ((c = getopt(argc, argv, "dD:e:ilL:m:np:rR:t:xV")) != EOF) {
+>           switch (c) {
+> @@ -87,13 +89,13 @@ main(int argc, char **argv)
+>               rflag = 1;
+>               break;
+>           case 'i':
+> -            lflag = iflag = 1;
+> +            lflag |= LOG_EXT2INT;
+>               break;
+>           case 'L':
+>               lsize = strtoll(optarg, NULL, 10);
+>               fallthrough;
+>           case 'l':
+> -            lflag = 1;
+> +            lflag |= LOG_GROW;
+>               break;
+>           case 'm':
+>               mflag = 1;
+> @@ -115,7 +117,7 @@ main(int argc, char **argv)
+>               mtab_file = optarg;
+>               break;
+>           case 'x':
+> -            lflag = xflag = 1;
+> +            lflag |= LOG_INT2EXT;
+>               break;
+>           case 'V':
+>               printf(_("%s version %s\n"), progname, VERSION);
+> @@ -124,9 +126,7 @@ main(int argc, char **argv)
+>               usage();
+>           }
+>       }
+> -    if (argc - optind != 1)
+> -        usage();
+> -    if (iflag && xflag)
+> +    if (argc - optind != 1 || ((lflag & LOG_EXT2INT) && (lflag &
+> LOG_INT2EXT)))
+>           usage();
+>       if (dflag + lflag + rflag + mflag == 0)
+>           aflag = 1;
+> @@ -323,9 +323,9 @@ _("[EXPERIMENTAL] try to shrink unused space %lld,
+> old size is %lld\n"),
+> 
+>           if (!lsize)
+>               lsize = dlsize / (geo.blocksize / BBSIZE);
+> -        if (iflag)
+> +        if (lflag & LOG_EXT2INT)
+>               in.isint = 1;
+> -        else if (xflag)
+> +        else if (lflag & LOG_INT2EXT)
+>               in.isint = 0;
+>           else
+>               in.isint = xi.logBBsize == 0;
+> --
+> 2.33.0
+> 
 
-Got it, I'll leave this bit to you then :) 
+> From 74c9fe3337a302385999b57ceb819b3439cdbd9c Mon Sep 17 00:00:00 2001
+> From: Wu YiFeng <wuyifeng10@huawei.com>
+> Date: Thu, 7 Dec 2023 15:47:08 +0800
+> Subject: [PATCH] xfs_grow: Remove xflag and iflag to reduce redundant
+>  temporary variables.
+> 
+> Both xflag and iflag are log flags. We can use the bits of lflag to
+> indicate all log flags, which is a small code reconstruction.
+> 
+> Signed-off-by: Wu YiFeng <wuyifeng10@huawei.com>
+> ---
+>  growfs/xfs_growfs.c | 22 +++++++++++-----------
+>  1 file changed, 11 insertions(+), 11 deletions(-)
+> 
+> diff --git a/growfs/xfs_growfs.c b/growfs/xfs_growfs.c
+> index 683961f6..5fb1a9d2 100644
+> --- a/growfs/xfs_growfs.c
+> +++ b/growfs/xfs_growfs.c
+> @@ -8,6 +8,10 @@
+>  #include "libfrog/paths.h"
+>  #include "libfrog/fsgeom.h"
+>  
+> +#define LOG_GROW	(1<<0)	/* -l flag: grow log section */
+> +#define LOG_EXT2INT	(1<<1)	/* -i flag: convert log from external to internal format */
+> +#define LOG_INT2EXT	(1<<2)	/* -x flag: convert log from internal to external format */
+> +
+>  static void
+>  usage(void)
+>  {
+> @@ -45,7 +49,6 @@ main(int argc, char **argv)
+>  	long			esize;	/* new rt extent size */
+>  	int			ffd;	/* mount point file descriptor */
+>  	struct xfs_fsop_geom	geo;	/* current fs geometry */
+> -	int			iflag;	/* -i flag */
+>  	int			isint;	/* log is currently internal */
+>  	int			lflag;	/* -l flag */
+>  	long long		lsize;	/* new log size in fs blocks */
+> @@ -55,7 +58,6 @@ main(int argc, char **argv)
+>  	struct xfs_fsop_geom	ngeo;	/* new fs geometry */
+>  	int			rflag;	/* -r flag */
+>  	long long		rsize;	/* new rt size in fs blocks */
+> -	int			xflag;	/* -x flag */
+>  	char			*fname;	/* mount point name */
+>  	char			*datadev; /* data device name */
+>  	char			*logdev;  /*  log device name */
+> @@ -72,7 +74,7 @@ main(int argc, char **argv)
+>  
+>  	maxpct = esize = 0;
+>  	dsize = lsize = rsize = 0LL;
+> -	aflag = dflag = iflag = lflag = mflag = nflag = rflag = xflag = 0;
+> +	aflag = dflag = lflag = mflag = nflag = rflag = 0;
+>  
+>  	while ((c = getopt(argc, argv, "dD:e:ilL:m:np:rR:t:xV")) != EOF) {
+>  		switch (c) {
+> @@ -87,13 +89,13 @@ main(int argc, char **argv)
+>  			rflag = 1;
+>  			break;
+>  		case 'i':
+> -			lflag = iflag = 1;
+> +			lflag |= LOG_EXT2INT;
+>  			break;
+>  		case 'L':
+>  			lsize = strtoll(optarg, NULL, 10);
+>  			fallthrough;
+>  		case 'l':
+> -			lflag = 1;
+> +			lflag |= LOG_GROW;
+>  			break;
+>  		case 'm':
+>  			mflag = 1;
+> @@ -115,7 +117,7 @@ main(int argc, char **argv)
+>  			mtab_file = optarg;
+>  			break;
+>  		case 'x':
+> -			lflag = xflag = 1;
+> +			lflag |= LOG_INT2EXT;
+>  			break;
+>  		case 'V':
+>  			printf(_("%s version %s\n"), progname, VERSION);
+> @@ -124,9 +126,7 @@ main(int argc, char **argv)
+>  			usage();
+>  		}
+>  	}
+> -	if (argc - optind != 1)
+> -		usage();
+> -	if (iflag && xflag)
+> +	if (argc - optind != 1 || ((lflag & LOG_EXT2INT) && (lflag & LOG_INT2EXT)))
+>  		usage();
+>  	if (dflag + lflag + rflag + mflag == 0)
+>  		aflag = 1;
+> @@ -323,9 +323,9 @@ _("[EXPERIMENTAL] try to shrink unused space %lld, old size is %lld\n"),
+>  
+>  		if (!lsize)
+>  			lsize = dlsize / (geo.blocksize / BBSIZE);
+> -		if (iflag)
+> +		if (lflag & LOG_EXT2INT)
+>  			in.isint = 1;
+> -		else if (xflag)
+> +		else if (lflag & LOG_INT2EXT)
+>  			in.isint = 0;
+>  		else
+>  			in.isint = xi.logBBsize == 0;
+> -- 
+> 2.33.0
+> 
 
-> 
-> Thanks,
-> John
-> 
-> > ---
-> >   block/fops.c           | 18 ++++++++++--------
-> >   include/linux/blkdev.h |  2 ++
-> >   2 files changed, 12 insertions(+), 8 deletions(-)
-> > 
-> > diff --git a/block/fops.c b/block/fops.c
-> > index 516669ad69e5..5dae95c49720 100644
-> > --- a/block/fops.c
-> > +++ b/block/fops.c
-> > @@ -41,8 +41,7 @@ static bool blkdev_dio_unaligned(struct block_device *bdev, loff_t pos,
-> >   		!bdev_iter_is_aligned(bdev, iter);
-> >   }
-> > -static bool blkdev_atomic_write_valid(struct block_device *bdev, loff_t pos,
-> > -			      struct iov_iter *iter)
-> > +bool blkdev_atomic_write_valid(struct block_device *bdev, loff_t pos, size_t len)
-> >   {
-> >   	unsigned int atomic_write_unit_min_bytes =
-> >   			queue_atomic_write_unit_min_bytes(bdev_get_queue(bdev));
-> > @@ -53,16 +52,17 @@ static bool blkdev_atomic_write_valid(struct block_device *bdev, loff_t pos,
-> >   		return false;
-> >   	if (pos % atomic_write_unit_min_bytes)
-> >   		return false;
-> > -	if (iov_iter_count(iter) % atomic_write_unit_min_bytes)
-> > +	if (len % atomic_write_unit_min_bytes)
-> >   		return false;
-> > -	if (!is_power_of_2(iov_iter_count(iter)))
-> > +	if (!is_power_of_2(len))
-> >   		return false;
-> > -	if (iov_iter_count(iter) > atomic_write_unit_max_bytes)
-> > +	if (len > atomic_write_unit_max_bytes)
-> >   		return false;
-> > -	if (pos % iov_iter_count(iter))
-> > +	if (pos % len)
-> >   		return false;
-> >   	return true;
-> >   }
-> > +EXPORT_SYMBOL_GPL(blkdev_atomic_write_valid);
-> >   #define DIO_INLINE_BIO_VECS 4
-> > @@ -81,7 +81,8 @@ static ssize_t __blkdev_direct_IO_simple(struct kiocb *iocb,
-> >   	if (blkdev_dio_unaligned(bdev, pos, iter))
-> >   		return -EINVAL;
-> > -	if (atomic_write && !blkdev_atomic_write_valid(bdev, pos, iter))
-> > +	if (atomic_write &&
-> > +	    !blkdev_atomic_write_valid(bdev, pos, iov_iter_count(iter)))
-> >   		return -EINVAL;
-> >   	if (nr_pages <= DIO_INLINE_BIO_VECS)
-> > @@ -348,7 +349,8 @@ static ssize_t __blkdev_direct_IO_async(struct kiocb *iocb,
-> >   	if (blkdev_dio_unaligned(bdev, pos, iter))
-> >   		return -EINVAL;
-> > -	if (atomic_write && !blkdev_atomic_write_valid(bdev, pos, iter))
-> > +	if (atomic_write &&
-> > +	    !blkdev_atomic_write_valid(bdev, pos, iov_iter_count(iter)))
-> >   		return -EINVAL;
-> >   	if (iocb->ki_flags & IOCB_ALLOC_CACHE)
-> > diff --git a/include/linux/blkdev.h b/include/linux/blkdev.h
-> > index f70988083734..5a3124fc191f 100644
-> > --- a/include/linux/blkdev.h
-> > +++ b/include/linux/blkdev.h
-> > @@ -1566,6 +1566,8 @@ static inline int early_lookup_bdev(const char *pathname, dev_t *dev)
-> >   int freeze_bdev(struct block_device *bdev);
-> >   int thaw_bdev(struct block_device *bdev);
-> > +bool blkdev_atomic_write_valid(struct block_device *bdev, loff_t pos, size_t len);
-> > +
-> >   struct io_comp_batch {
-> >   	struct request *req_list;
-> >   	bool need_ts;
-> 
