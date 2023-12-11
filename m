@@ -1,28 +1,28 @@
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="GqUFkB6k"
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="rScg+W/X"
 Received: from bombadil.infradead.org (bombadil.infradead.org [IPv6:2607:7c80:54:3::133])
-	by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E83FC95
-	for <linux-xfs@vger.kernel.org>; Mon, 11 Dec 2023 08:38:04 -0800 (PST)
+	by lindbergh.monkeyblade.net (Postfix) with ESMTPS id AE4E391
+	for <linux-xfs@vger.kernel.org>; Mon, 11 Dec 2023 08:38:07 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
 	d=infradead.org; s=bombadil.20210309; h=Content-Transfer-Encoding:
 	MIME-Version:References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:Sender
 	:Reply-To:Content-Type:Content-ID:Content-Description;
-	bh=BZ7hB4JDE8U95MW6mQ0Xj/9LuQAZT+9aat/HkrPyt0g=; b=GqUFkB6kVZsjvO95uwGitDjosy
-	KJ0QlAgD4lGoTMl6o43V3hN1csinWngr/dapgNxkggJ6cohq5AmYAnkR47p3tSzQvsjdl+4wqYBs1
-	xkhhNsMsOX1tcItTN6X0o8EsHGMR7ImimK3UGeTgHjFeqAiFSO8J8c1HHtNYi8t6DRYDT4g1xFW2e
-	nJIXSn825+zEOoiOfR0IaN08mg3j8LgV0pyPsITgNU39s4LrjA2mvnZwOnl2WzCyOck/epmUMYwkB
-	NCr2ySMQl6Pi5Vv8n8ChrgD8IWYEb3ekznW26uRvc66OiZ7hO/mRuoGYHeK7oze9U4G94hDnRzoyu
-	XuU8Q3fw==;
+	bh=FtVDf2BvTNsPIqBX1aCrgYsKN1KD/vMDX0iHsctNH6Q=; b=rScg+W/XfIiVy2ay6WbGqWV1kr
+	rRMOVU3rQBccOt4LNIypmIJz/WaEdb/i/9hEFH9EQoAXjjdahddCfrin40UJ72Pd78Dd7lavxXAJW
+	4MuCHdOWoFpK57H/DiphoVG8GYVv1uigP0QEwD4KQHLW6lROUTOPBulJ6Hq7ACa757E81GJW1hYLO
+	QxdyB/+qtvaDBkEH84dWibYgAhuqsydoB8TduYf/BuYb1UOe7WYXJepofsA7fSGwMmZ79DpTkANNP
+	ltW41YvXd/zEc51saoUCDigx6Tmk7MqONeV+wzNrwiunJ8mCoPvzAMGFmt9UKglXHGZ5YFuph5Y42
+	uZ0HMxUA==;
 Received: from [2001:4bb8:19a:a621:c70:4a89:bc61:3] (helo=localhost)
 	by bombadil.infradead.org with esmtpsa (Exim 4.96 #2 (Red Hat Linux))
-	id 1rCjIC-005syr-0c;
-	Mon, 11 Dec 2023 16:38:04 +0000
+	id 1rCjIE-005t0Y-3B;
+	Mon, 11 Dec 2023 16:38:07 +0000
 From: Christoph Hellwig <hch@lst.de>
 To: Carlos Maiolino <cem@kernel.org>
 Cc: linux-xfs@vger.kernel.org
-Subject: [PATCH 06/23] libxlog: remove the verbose argument to xlog_is_dirty
-Date: Mon, 11 Dec 2023 17:37:25 +0100
-Message-Id: <20231211163742.837427-7-hch@lst.de>
+Subject: [PATCH 07/23] libxlog: add a helper to initialize a xlog without clobbering the x structure
+Date: Mon, 11 Dec 2023 17:37:26 +0100
+Message-Id: <20231211163742.837427-8-hch@lst.de>
 X-Mailer: git-send-email 2.39.2
 In-Reply-To: <20231211163742.837427-1-hch@lst.de>
 References: <20231211163742.837427-1-hch@lst.de>
@@ -35,107 +35,168 @@ MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 
-No caller passes a non-zero verbose argument to xlog_is_dirty.
-Remove the argument the code keyed off by it.
+xfsprogs has three copies of a code sequence to initialize an xlog
+structure from a libxfs_init structure. Factor the code into a helper.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 ---
- copy/xfs_copy.c   | 2 +-
- db/metadump.c     | 4 ++--
- db/sb.c           | 2 +-
- include/libxlog.h | 3 +--
- libxlog/util.c    | 8 +-------
- 5 files changed, 6 insertions(+), 13 deletions(-)
+ include/libxlog.h   |  1 +
+ libxlog/util.c      | 25 +++++++++++++++++--------
+ logprint/logprint.c | 25 +++++++++----------------
+ repair/phase2.c     | 23 +----------------------
+ 4 files changed, 28 insertions(+), 46 deletions(-)
 
-diff --git a/copy/xfs_copy.c b/copy/xfs_copy.c
-index 66728f199..4bd473a04 100644
---- a/copy/xfs_copy.c
-+++ b/copy/xfs_copy.c
-@@ -784,7 +784,7 @@ main(int argc, char **argv)
- 	 */
- 	memset(&xlog, 0, sizeof(struct xlog));
- 	mp->m_log = &xlog;
--	c = xlog_is_dirty(mp, mp->m_log, &xargs, 0);
-+	c = xlog_is_dirty(mp, mp->m_log, &xargs);
- 	if (!duplicate) {
- 		if (c == 1) {
- 			do_log(_(
-diff --git a/db/metadump.c b/db/metadump.c
-index f9c82148e..e57b024cd 100644
---- a/db/metadump.c
-+++ b/db/metadump.c
-@@ -2615,7 +2615,7 @@ copy_log(void)
- 	if (!metadump.obfuscate && !metadump.zero_stale_data)
- 		goto done;
- 
--	dirty = xlog_is_dirty(mp, &log, &x, 0);
-+	dirty = xlog_is_dirty(mp, &log, &x);
- 
- 	switch (dirty) {
- 	case 0:
-@@ -2945,7 +2945,7 @@ metadump_f(
- 		if (iocur_top->data) {	/* best effort */
- 			struct xlog	log;
- 
--			if (xlog_is_dirty(mp, &log, &x, 0))
-+			if (xlog_is_dirty(mp, &log, &x))
- 				metadump.dirty_log = true;
- 		}
- 		pop_cur();
-diff --git a/db/sb.c b/db/sb.c
-index 2d508c26a..a3a4a758f 100644
---- a/db/sb.c
-+++ b/db/sb.c
-@@ -235,7 +235,7 @@ sb_logcheck(void)
- 
- 	libxfs_buftarg_init(mp, x.ddev, x.logdev, x.rtdev);
- 
--	dirty = xlog_is_dirty(mp, mp->m_log, &x, 0);
-+	dirty = xlog_is_dirty(mp, mp->m_log, &x);
- 	if (dirty == -1) {
- 		dbprintf(_("ERROR: cannot find log head/tail, run xfs_repair\n"));
- 		return 0;
 diff --git a/include/libxlog.h b/include/libxlog.h
-index 3ade7ffaf..a598a7b3c 100644
+index a598a7b3c..657acfe42 100644
 --- a/include/libxlog.h
 +++ b/include/libxlog.h
-@@ -71,9 +71,8 @@ extern int	print_record_header;
+@@ -71,6 +71,7 @@ extern int	print_record_header;
  /* libxfs parameters */
  extern libxfs_init_t	x;
  
-+int xlog_is_dirty(struct xfs_mount *mp, struct xlog *log, libxfs_init_t *x);
++void xlog_init(struct xfs_mount *mp, struct xlog *log, libxfs_init_t *x);
+ int xlog_is_dirty(struct xfs_mount *mp, struct xlog *log, libxfs_init_t *x);
  
--extern int xlog_is_dirty(struct xfs_mount *, struct xlog *, libxfs_init_t *,
--			 int);
  extern struct xfs_buf *xlog_get_bp(struct xlog *, int);
- extern int	xlog_bread(struct xlog *log, xfs_daddr_t blk_no, int nbblks,
- 				struct xfs_buf *bp, char **offset);
 diff --git a/libxlog/util.c b/libxlog/util.c
-index ad60036f8..1022e3378 100644
+index 1022e3378..bc4db478e 100644
 --- a/libxlog/util.c
 +++ b/libxlog/util.c
-@@ -19,8 +19,7 @@ int
- xlog_is_dirty(
+@@ -12,18 +12,12 @@ int print_skip_uuid;
+ int print_record_header;
+ libxfs_init_t x;
+ 
+-/*
+- * Return 1 for dirty, 0 for clean, -1 for errors
+- */
+-int
+-xlog_is_dirty(
++void
++xlog_init(
  	struct xfs_mount	*mp,
  	struct xlog		*log,
--	libxfs_init_t		*x,
--	int			verbose)
-+	libxfs_init_t		*x)
+ 	libxfs_init_t		*x)
  {
- 	int			error;
- 	xfs_daddr_t		head_blk, tail_blk;
-@@ -58,11 +57,6 @@ xlog_is_dirty(
- 		return -1;
- 	}
- 
--	if (verbose)
--		xlog_warn(
--	_("%s: head block %" PRId64 " tail block %" PRId64 "\n"),
--			__func__, head_blk, tail_blk);
+-	int			error;
+-	xfs_daddr_t		head_blk, tail_blk;
 -
- 	if (head_blk != tail_blk)
- 		return 1;
+ 	memset(log, 0, sizeof(*log));
  
+ 	/* We (re-)init members of libxfs_init_t here?  really? */
+@@ -48,6 +42,21 @@ xlog_is_dirty(
+ 		ASSERT(mp->m_sb.sb_logsectlog >= BBSHIFT);
+ 	}
+ 	log->l_sectbb_mask = (1 << log->l_sectbb_log) - 1;
++}
++
++/*
++ * Return 1 for dirty, 0 for clean, -1 for errors
++ */
++int
++xlog_is_dirty(
++	struct xfs_mount	*mp,
++	struct xlog		*log,
++	libxfs_init_t		*x)
++{
++	int			error;
++	xfs_daddr_t		head_blk, tail_blk;
++
++	xlog_init(mp, log, x);
+ 
+ 	error = xlog_find_tail(log, &head_blk, &tail_blk);
+ 	if (error) {
+diff --git a/logprint/logprint.c b/logprint/logprint.c
+index 7d51cdd91..c78aeb2f8 100644
+--- a/logprint/logprint.c
++++ b/logprint/logprint.c
+@@ -58,7 +58,6 @@ logstat(
+ {
+ 	int		fd;
+ 	char		buf[BBSIZE];
+-	xfs_sb_t	*sb;
+ 
+ 	/* On Linux we always read the superblock of the
+ 	 * filesystem. We need this to get the length of the
+@@ -77,19 +76,16 @@ logstat(
+ 	close (fd);
+ 
+ 	if (!x.disfile) {
++		struct xfs_sb	*sb = &mp->m_sb;
++
+ 		/*
+ 		 * Conjure up a mount structure
+ 		 */
+-		sb = &mp->m_sb;
+ 		libxfs_sb_from_disk(sb, (struct xfs_dsb *)buf);
+ 		mp->m_features |= libxfs_sb_version_to_features(&mp->m_sb);
+ 		mp->m_blkbb_log = sb->sb_blocklog - BBSHIFT;
+ 
+-		x.logBBsize = XFS_FSB_TO_BB(mp, sb->sb_logblocks);
+-		x.logBBstart = XFS_FSB_TO_DADDR(mp, sb->sb_logstart);
+-		x.lbsize = BBSIZE;
+-		if (xfs_has_sector(mp))
+-			x.lbsize <<= (sb->sb_logsectlog - BBSHIFT);
++		xlog_init(mp, log, &x);
+ 
+ 		if (!x.logname && sb->sb_logstart == 0) {
+ 			fprintf(stderr, _("    external log device not specified\n\n"));
+@@ -100,16 +96,13 @@ logstat(
+ 		struct stat	s;
+ 
+ 		stat(x.dname, &s);
+-		x.logBBsize = s.st_size >> 9;
+-		x.logBBstart = 0;
+-		x.lbsize = BBSIZE;
+-	}
+ 
+-	log->l_dev = mp->m_logdev_targp;
+-	log->l_logBBstart = x.logBBstart;
+-	log->l_logBBsize = x.logBBsize;
+-	log->l_sectBBsize = BTOBB(x.lbsize);
+-	log->l_mp = mp;
++		log->l_logBBsize = s.st_size >> 9;
++		log->l_logBBstart = 0;
++		log->l_sectBBsize = BTOBB(BBSIZE);
++		log->l_dev = mp->m_logdev_targp;
++		log->l_mp = mp;
++	}
+ 
+ 	if (x.logname && *x.logname) {    /* External log */
+ 		if ((fd = open(x.logname, O_RDONLY)) == -1) {
+diff --git a/repair/phase2.c b/repair/phase2.c
+index 2ada95aef..a9dd77be3 100644
+--- a/repair/phase2.c
++++ b/repair/phase2.c
+@@ -30,28 +30,7 @@ zero_log(
+ 	xfs_daddr_t		tail_blk;
+ 	struct xlog		*log = mp->m_log;
+ 
+-	memset(log, 0, sizeof(struct xlog));
+-	x.logBBsize = XFS_FSB_TO_BB(mp, mp->m_sb.sb_logblocks);
+-	x.logBBstart = XFS_FSB_TO_DADDR(mp, mp->m_sb.sb_logstart);
+-	x.lbsize = BBSIZE;
+-	if (xfs_has_sector(mp))
+-		x.lbsize <<= (mp->m_sb.sb_logsectlog - BBSHIFT);
+-
+-	log->l_dev = mp->m_logdev_targp;
+-	log->l_logBBsize = x.logBBsize;
+-	log->l_logBBstart = x.logBBstart;
+-	log->l_sectBBsize  = BTOBB(x.lbsize);
+-	log->l_mp = mp;
+-	if (xfs_has_sector(mp)) {
+-		log->l_sectbb_log = mp->m_sb.sb_logsectlog - BBSHIFT;
+-		ASSERT(log->l_sectbb_log <= mp->m_sectbb_log);
+-		/* for larger sector sizes, must have v2 or external log */
+-		ASSERT(log->l_sectbb_log == 0 ||
+-			log->l_logBBstart == 0 ||
+-			xfs_has_logv2(mp));
+-		ASSERT(mp->m_sb.sb_logsectlog >= BBSHIFT);
+-	}
+-	log->l_sectbb_mask = (1 << log->l_sectbb_log) - 1;
++	xlog_init(mp, mp->m_log, &x);
+ 
+ 	/*
+ 	 * Find the log head and tail and alert the user to the situation if the
 -- 
 2.39.2
 
