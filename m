@@ -1,29 +1,31 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B1EBDEDC
-	for <linux-xfs@vger.kernel.org>; Tue, 12 Dec 2023 01:52:48 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="MV0TFkjW"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 1A872C433C8;
-	Tue, 12 Dec 2023 01:52:48 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1702345968;
-	bh=yeamrQTLeDGE4VdaVxh3vxXDzJGkuNeReUg293G6C+s=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=MV0TFkjWNRjk7I4+kyS0z7qIIncoXdhuEJ8qci0EnnJoLVx96tjSiASdMbt28j31/
-	 zSH05s4NtIA9DhyyyIikuTJMM8/qxZp9nMKlrQdWBXmPZ+7ZzwUxMvCxVb8vL0UCcF
-	 8PN1bR86u52auuhY/EV+CCRLAlnlfR4e9S4N0xAG0TTRk3hWmQToLqxHxeiou99RXr
-	 hS7WF8GHVP8BoWZj/KVR70MqMX+g5+a9sm4o90hb/VzecfK6ui9MWWVZCfUNH3G8t8
-	 Vuzu8syn0R7b7WT/KFhRVBoFyemXd0/Ppr8Jo/uTHZE23XloYPZHbgjYmRiLfW1Pac
-	 O45P/cYcraayg==
-Date: Mon, 11 Dec 2023 17:52:47 -0800
-From: "Darrick J. Wong" <djwong@kernel.org>
-To: Christoph Hellwig <hch@lst.de>
-Cc: Carlos Maiolino <cem@kernel.org>, linux-xfs@vger.kernel.org
-Subject: Re: improve libxfs device handling
-Message-ID: <20231212015247.GA361584@frogsfrogsfrogs>
-References: <20231211163742.837427-1-hch@lst.de>
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="MrSOqFNS"
+Received: from bombadil.infradead.org (bombadil.infradead.org [IPv6:2607:7c80:54:3::133])
+	by lindbergh.monkeyblade.net (Postfix) with ESMTPS id AEEABCE
+	for <linux-xfs@vger.kernel.org>; Mon, 11 Dec 2023 21:35:37 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+	d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Type:MIME-Version
+	:References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
+	Content-Transfer-Encoding:Content-ID:Content-Description;
+	bh=wc+b/YDC+WvJLxXmmSxfNabUSskJ+ZezjKpszu+B9Bc=; b=MrSOqFNSBuURUyn2Yk49KSKGmX
+	+owP6xYbwVqhyoRyicgr72hKpS1SGKCkam10hAB0wI84KMLuIb9/MLPkUSv++B7P6t0oW20jdbQFC
+	qfNrdR3vtomI3typePXWOWxgZckpEDb3PNz+MT0dm4RoFeZ5rFzDb1DKHn/RLaNEy6Mgp/SqYFJra
+	kc3gNU166Mn/QkypEFCx1CalzBBMZ/K47/scMpZUALbZRvEoRKfV934ktelJePw1Y3xdPzedgy9Kp
+	jt0vBBZNap0lWfVfbezNEgzT2kAzSTWz5oPKA7XmXWa1izMboKxtzxOisxlDW8i1OP4rHM8ynGuw7
+	wzHjiQMg==;
+Received: from hch by bombadil.infradead.org with local (Exim 4.96 #2 (Red Hat Linux))
+	id 1rCvQf-00AniW-1a;
+	Tue, 12 Dec 2023 05:35:37 +0000
+Date: Mon, 11 Dec 2023 21:35:37 -0800
+From: Christoph Hellwig <hch@infradead.org>
+To: "Darrick J. Wong" <djwong@kernel.org>
+Cc: Christoph Hellwig <hch@infradead.org>, linux-xfs@vger.kernel.org
+Subject: Re: [PATCH 9/9] xfs: repair obviously broken inode modes
+Message-ID: <ZXfxKX+eg/EeMeY1@infradead.org>
+References: <170191666087.1182270.4104947285831369542.stgit@frogsfrogsfrogs>
+ <170191666254.1182270.6610873636846446907.stgit@frogsfrogsfrogs>
+ <ZXFhuNaLx1C8yYV+@infradead.org>
+ <20231211221926.GX361584@frogsfrogsfrogs>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -32,57 +34,24 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20231211163742.837427-1-hch@lst.de>
+In-Reply-To: <20231211221926.GX361584@frogsfrogsfrogs>
+X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 
-On Mon, Dec 11, 2023 at 05:37:19PM +0100, Christoph Hellwig wrote:
-> Hi all,
+On Mon, Dec 11, 2023 at 02:19:26PM -0800, Darrick J. Wong wrote:
+> block/char/special files... I guess those can just turn into zero length
+> regular files.
+
+Ys, and I don't think that is much of a problem.
+
+> Would this NAK remain even if there were external corroborating
+> evidence?
 > 
-> this series how libxfs deals with the data, log and rt devices.
-> A lot of it is just tidying up cruft old code, but it then introduces
-> a libxfs_dev structure that describes a single device to further
-> simplify the code.
+> For example, what if we read the dirents out of the first directory
+> block, seek out parent pointers in the alleged children, and confirm a
+> 1:1 match between the alleged dirents and pptrs?  Unprivileged userspace
+> can certain create a regular file N that looks like a dirent block, but
+> it cannot create dangling pptrs back to N to trick the verification
+> algorithm.
 
-Yay!  I'm glad the bizarre isreadonly == flags code is gone!
-
-And all that weird dev_t -> fd translation weirdness, and the last of
-the irix stuff that makes no sense now.
-
-Reviewed-by: Darrick J. Wong <djwong@kernel.org>
-
---D
-
-> 
-> Diffstat:
->  copy/xfs_copy.c     |   19 --
->  db/crc.c            |    2 
->  db/fuzz.c           |    2 
->  db/info.c           |    2 
->  db/init.c           |   29 +--
->  db/init.h           |    3 
->  db/metadump.c       |    4 
->  db/output.c         |    2 
->  db/sb.c             |   18 +-
->  db/write.c          |    2 
->  growfs/xfs_growfs.c |   24 +--
->  include/libxfs.h    |   87 +++++------
->  include/libxlog.h   |    7 
->  include/xfs_mount.h |    3 
->  libfrog/linux.c     |   39 +----
->  libfrog/platform.h  |    6 
->  libxfs/init.c       |  398 +++++++++++++++-------------------------------------
->  libxfs/libxfs_io.h  |    5 
->  libxfs/rdwr.c       |   16 --
->  libxfs/topology.c   |   23 +--
->  libxfs/topology.h   |    4 
->  libxlog/util.c      |   49 +++---
->  logprint/logprint.c |   79 ++++------
->  mkfs/xfs_mkfs.c     |  249 +++++++++++++-------------------
->  repair/globals.h    |    2 
->  repair/init.c       |   40 ++---
->  repair/phase2.c     |   27 ---
->  repair/prefetch.c   |    2 
->  repair/protos.h     |    2 
->  repair/sb.c         |   18 +-
->  repair/xfs_repair.c |   15 -
->  31 files changed, 453 insertions(+), 725 deletions(-)
-> 
+That does look like I a good enough evinde as you said userspace can't
+fake up the parent pointer.
