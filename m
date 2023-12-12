@@ -1,27 +1,26 @@
-Received: from szxga01-in.huawei.com (szxga01-in.huawei.com [45.249.212.187])
-	by lindbergh.monkeyblade.net (Postfix) with ESMTPS id BB7FBB7
-	for <linux-xfs@vger.kernel.org>; Tue, 12 Dec 2023 05:25:21 -0800 (PST)
-Received: from mail.maildlp.com (unknown [172.19.163.48])
-	by szxga01-in.huawei.com (SkyGuard) with ESMTP id 4SqK8d70KtzvS1x;
-	Tue, 12 Dec 2023 21:24:33 +0800 (CST)
+Received: from szxga03-in.huawei.com (szxga03-in.huawei.com [45.249.212.189])
+	by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 27B7783
+	for <linux-xfs@vger.kernel.org>; Tue, 12 Dec 2023 05:36:40 -0800 (PST)
+Received: from mail.maildlp.com (unknown [172.19.163.174])
+	by szxga03-in.huawei.com (SkyGuard) with ESMTP id 4SqKQR16FLz14M0y;
+	Tue, 12 Dec 2023 21:36:31 +0800 (CST)
 Received: from kwepemi500009.china.huawei.com (unknown [7.221.188.199])
-	by mail.maildlp.com (Postfix) with ESMTPS id D971F180032;
-	Tue, 12 Dec 2023 21:25:19 +0800 (CST)
+	by mail.maildlp.com (Postfix) with ESMTPS id ADC56140412;
+	Tue, 12 Dec 2023 21:36:37 +0800 (CST)
 Received: from localhost (10.175.127.227) by kwepemi500009.china.huawei.com
  (7.221.188.199) with Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2507.35; Tue, 12 Dec
- 2023 21:25:19 +0800
-Date: Tue, 12 Dec 2023 21:28:54 +0800
+ 2023 21:36:37 +0800
+Date: Tue, 12 Dec 2023 21:40:12 +0800
 From: Long Li <leo.lilong@huawei.com>
-To: Dave Chinner <david@fromorbit.com>
-CC: <djwong@kernel.org>, <chandanbabu@kernel.org>,
-	<linux-xfs@vger.kernel.org>, <yi.zhang@huawei.com>, <houtao1@huawei.com>,
-	<yangerkun@huawei.com>
-Subject: Re: [PATCH v2 2/3] xfs: don't assert perag when free perag
-Message-ID: <20231212132854.GA2694327@ceph-admin>
+To: "Darrick J. Wong" <djwong@kernel.org>
+CC: <chandanbabu@kernel.org>, <linux-xfs@vger.kernel.org>,
+	<yi.zhang@huawei.com>, <houtao1@huawei.com>, <yangerkun@huawei.com>
+Subject: Re: [PATCH v2 3/3] xfs: fix perag leak when growfs fails
+Message-ID: <20231212134012.GA2905659@ceph-admin>
 References: <20231209122107.2422441-1-leo.lilong@huawei.com>
- <20231209122107.2422441-2-leo.lilong@huawei.com>
- <ZXeGkisobA2nXX5D@dread.disaster.area>
+ <20231209122107.2422441-3-leo.lilong@huawei.com>
+ <20231211220305.GW361584@frogsfrogsfrogs>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -30,56 +29,97 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Disposition: inline
-In-Reply-To: <ZXeGkisobA2nXX5D@dread.disaster.area>
+In-Reply-To: <20231211220305.GW361584@frogsfrogsfrogs>
 X-ClientProxiedBy: dggems702-chm.china.huawei.com (10.3.19.179) To
  kwepemi500009.china.huawei.com (7.221.188.199)
 
-On Tue, Dec 12, 2023 at 09:00:50AM +1100, Dave Chinner wrote:
-> On Sat, Dec 09, 2023 at 08:21:06PM +0800, Long Li wrote:
-> > When releasing the perag in xfs_free_perag(), the assertion that the
-> > perag in readix tree is correct in most cases. However, there is one
-> > corner case where the assertion is not true. During log recovery, the
-> > AGs become visible(that is included in mp->m_sb.sb_agcount) first, and
-> > then the perag is initialized. If the initialization of the perag fails,
-> > the assertion will be triggered. Worse yet, null pointer dereferencing
-> > can occur.
+On Mon, Dec 11, 2023 at 02:03:05PM -0800, Darrick J. Wong wrote:
+> On Sat, Dec 09, 2023 at 08:21:07PM +0800, Long Li wrote:
+> > During growfs, if new ag in memory has been initialized, however
+> > sb_agcount has not been updated, if an error occurs at this time it
+> > will cause perag leaks as follows, these new AGs will not been freed
+> > during umount , because of these new AGs are not visible(that is
+> > included in mp->m_sb.sb_agcount).
+> > 
+> > unreferenced object 0xffff88810be40200 (size 512):
+> >   comm "xfs_growfs", pid 857, jiffies 4294909093
+> >   hex dump (first 32 bytes):
+> >     00 c0 c1 05 81 88 ff ff 04 00 00 00 00 00 00 00  ................
+> >     01 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  ................
+> >   backtrace (crc 381741e2):
+> >     [<ffffffff8191aef6>] __kmalloc+0x386/0x4f0
+> >     [<ffffffff82553e65>] kmem_alloc+0xb5/0x2f0
+> >     [<ffffffff8238dac5>] xfs_initialize_perag+0xc5/0x810
+> >     [<ffffffff824f679c>] xfs_growfs_data+0x9bc/0xbc0
+> >     [<ffffffff8250b90e>] xfs_file_ioctl+0x5fe/0x14d0
+> >     [<ffffffff81aa5194>] __x64_sys_ioctl+0x144/0x1c0
+> >     [<ffffffff83c3d81f>] do_syscall_64+0x3f/0xe0
+> >     [<ffffffff83e00087>] entry_SYSCALL_64_after_hwframe+0x62/0x6a
+> > unreferenced object 0xffff88810be40800 (size 512):
+> >   comm "xfs_growfs", pid 857, jiffies 4294909093
+> >   hex dump (first 32 bytes):
+> >     20 00 00 00 00 00 00 00 57 ef be dc 00 00 00 00   .......W.......
+> >     10 08 e4 0b 81 88 ff ff 10 08 e4 0b 81 88 ff ff  ................
+> >   backtrace (crc bde50e2d):
+> >     [<ffffffff8191b43a>] __kmalloc_node+0x3da/0x540
+> >     [<ffffffff81814489>] kvmalloc_node+0x99/0x160
+> >     [<ffffffff8286acff>] bucket_table_alloc.isra.0+0x5f/0x400
+> >     [<ffffffff8286bdc5>] rhashtable_init+0x405/0x760
+> >     [<ffffffff8238dda3>] xfs_initialize_perag+0x3a3/0x810
+> >     [<ffffffff824f679c>] xfs_growfs_data+0x9bc/0xbc0
+> >     [<ffffffff8250b90e>] xfs_file_ioctl+0x5fe/0x14d0
+> >     [<ffffffff81aa5194>] __x64_sys_ioctl+0x144/0x1c0
+> >     [<ffffffff83c3d81f>] do_syscall_64+0x3f/0xe0
+> >     [<ffffffff83e00087>] entry_SYSCALL_64_after_hwframe+0x62/0x6a
+> > 
+> > Now, the logic for freeing perag in xfs_free_perag() and
+> > xfs_initialize_perag() error handling is essentially the same. Factor
+> > out xfs_free_perag_range() from xfs_free_perag(), used for freeing
+> > unused perag within a specified range, inclued when growfs fails.
+> > 
+> > Signed-off-by: Long Li <leo.lilong@huawei.com>
+> > ---
+> >  fs/xfs/libxfs/xfs_ag.c | 35 ++++++++++++++++++++---------------
+> >  fs/xfs/libxfs/xfs_ag.h |  2 ++
+> >  fs/xfs/xfs_fsops.c     |  5 ++++-
+> >  3 files changed, 26 insertions(+), 16 deletions(-)
+> > 
+> > diff --git a/fs/xfs/libxfs/xfs_ag.c b/fs/xfs/libxfs/xfs_ag.c
+> > index 11ed048c350c..edec03ab09aa 100644
+> > --- a/fs/xfs/libxfs/xfs_ag.c
+> > +++ b/fs/xfs/libxfs/xfs_ag.c
+> > @@ -245,16 +245,20 @@ __xfs_free_perag(
+> >  }
+> >  
+> >  /*
+> > - * Free up the per-ag resources associated with the mount structure.
+> > + * Free per-ag within the specified range, if agno is not found in the
+> > + * radix tree, then it means that agno and subsequent AGs have not been
+> > + * initialized.
+> >   */
+> >  void
+> > -xfs_free_perag(
+> > -	struct xfs_mount	*mp)
+> > +xfs_free_perag_range(
+> > +		xfs_mount_t		*mp,
 > 
-> I'm going to assume that you are talking about xlog_do_recover()
-> because the commit message doesn't actually tell us how this
-> situation occurs.
+> Please stop reverting the codebase's use of typedefs for struct
+> pointers.
 > 
-> That code re-reads the superblock, then copies it to mp->m_sb,
-> then calls xfs_initialize_perag() with the values from mp->m_sb.
+> > +		xfs_agnumber_t		agstart,
+> > +		xfs_agnumber_t		agend)
 > 
-> If log recovery replayed a growfs transaction, the mp->m_sb has a
-> larger sb_agcount and so then xfs_initialize_perag() is called
-> and if that fails we end up back in xfs_mountfs and the error
-> stack calls xfs_free_perag().
+> This is also ^^ unnecessary indentation.
 > 
-> Is that correct?
+> >  {
+> > -	struct xfs_perag	*pag;
+> >  	xfs_agnumber_t		agno;
+> > +	struct xfs_perag	*pag;
+> 
+> ...and unnecessary rearranging of variables...
 
-Yes, you are right. When I tried to fix the perag leak issue in patch 3,
-I found this problem.
-
-> 
-> If so, then the fix is to change how xlog_do_recover() works. It
-> needs to initialise the new perags before it updates the in-memory
-> superblock. If xfs_initialize_perag() fails, it undoes all the
-> changes it has made, so if we haven't updated the in-memory
-> superblock when the init of the new perags fails then the error
-> unwinding code works exactly as it should right now.
-> 
-> i.e. the bug is that xlog_do_recover() is leaving the in-memory
-> state inconsistent on init failure, and we need to fix that rather
-> than remove the assert that is telling us that in-memory state is
-> inconsistent....
-> 
-
-Yes, agree with you, I used to think that removing the assertion
-would solve the problem, but now it seems a bit lazy, the problem
-should be solved at the source. Right now, I haven't figured out
-how to fix this problem comprehensively, so I'll fix perag leak
-issue first. 
+I ignored these minor issues, thanks for pointing them out, and it will be changed
+in the next version.
 
 Thanks,
 Long Li
