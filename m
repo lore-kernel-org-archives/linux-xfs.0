@@ -1,28 +1,28 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DE704BA49
-	for <linux-xfs@vger.kernel.org>; Wed, 13 Dec 2023 22:57:42 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 96095BA49
+	for <linux-xfs@vger.kernel.org>; Wed, 13 Dec 2023 22:57:58 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="CKyLzmfY"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id A3F62C433C7;
-	Wed, 13 Dec 2023 22:57:42 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="quWA7N30"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 58CC8C433C8;
+	Wed, 13 Dec 2023 22:57:58 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1702508262;
-	bh=59mMuz11Mvfm37NNlfw7cfImtLCZUiVQM1bLEurURWs=;
+	s=k20201202; t=1702508278;
+	bh=z1g0DJaofRuhW4ipAgaUXbSthQhgbjRq/jvRhfTC2eQ=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=CKyLzmfYmE/74T32A3EfnuEX6gsKZWD0iWeIUyDgfwoB8k8v5FZBCfwi+Xx4SfRL8
-	 e4TEVBXkSFAqq0j+JVpM1CNl2hyiPBLi/y4hOlPFt6esS9JOsxQf5xCk4LNAiXL1W2
-	 VCFXR4hSpD+ktaH0bJEroDo8gJJPG7HMISFePm+k9DZMPIz8MYlLwmEviMLdqUzSxJ
-	 HiT5ii2Aq9nr+oZ8haa4KoUyKfLS5QdwQXu/y4S2lxUfvi/cu+FARu1JzBphhM47AP
-	 B1y25zH84lE0UeW/uTvttAsXHhrJYf9S2kiAvSIEveJIJVH5VeACoHmhBHhMSTVnMe
-	 yTfkgnzyVVbHA==
-Date: Wed, 13 Dec 2023 14:57:42 -0800
-Subject: [PATCH 3/4] xfs: improve dquot iteration for scrub
+	b=quWA7N302NC6PnGZ7hpQu9ymJIK3tV86o/MKxek4idIDl9tup+39tUqa6WmAga1YV
+	 +N65zHWUg6koqKDyafUkvnbXJGt+KBg1lzG8EXN/P8qQx8prBlkOUt2sRD9ri7/Au+
+	 swRYydoQzNpiTHMMSwiK8DVUzHQAaOLQKuDIPAbcM+gJy0/cniDOoW/HguhxqYbzvQ
+	 FNpP68GO6OqdW38Vw0OTGzBXGveywgMqCBF3qAkx5Ru+tQtlnEzQsd+xqgqA3p1tE+
+	 4nGB5/D4vVNlSraZsiSWpFzzUZcB9WXKF/nlq3MQ3fYEKHxjiCiRmwmxQ9A1iyB5pG
+	 izBoA7rhjRrBg==
+Date: Wed, 13 Dec 2023 14:57:57 -0800
+Subject: [PATCH 4/4] xfs: repair quotas
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: djwong@kernel.org, hch@lst.de, chandanbabu@kernel.org
 Cc: linux-xfs@vger.kernel.org
-Message-ID: <170250784386.1399626.10050309418047002549.stgit@frogsfrogsfrogs>
+Message-ID: <170250784403.1399626.13611836698741302258.stgit@frogsfrogsfrogs>
 In-Reply-To: <170250784331.1399626.6539338084714476832.stgit@frogsfrogsfrogs>
 References: <170250784331.1399626.6539338084714476832.stgit@frogsfrogsfrogs>
 User-Agent: StGit/0.19
@@ -37,525 +37,797 @@ Content-Transfer-Encoding: 7bit
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-Upon a closer inspection of the quota record scrubber, I noticed that
-dqiterate wasn't actually walking all possible dquots for the mapped
-blocks in the quota file.  This is due to xfs_qm_dqget_next skipping all
-XFS_IS_DQUOT_UNINITIALIZED dquots.
-
-For a fsck program, we really want to look at all the dquots, even if
-all counters and limits in the dquot record are zero.  Rewrite the
-implementation to do this, as well as switching to an iterator paradigm
-to reduce the number of indirect calls.
-
-This enables removal of the old broken dqiterate code from xfs_dquot.c.
+Fix anything that causes the quota verifiers to fail.
 
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
-Reviewed-by: Christoph Hellwig <hch@lst.de>
 ---
- fs/xfs/Makefile            |    5 +
- fs/xfs/libxfs/xfs_format.h |    3 +
- fs/xfs/scrub/dqiterate.c   |  211 ++++++++++++++++++++++++++++++++++++++++++++
- fs/xfs/scrub/quota.c       |   25 +++--
- fs/xfs/scrub/quota.h       |   34 +++++++
- fs/xfs/scrub/trace.c       |    2 
- fs/xfs/scrub/trace.h       |   49 ++++++++++
- fs/xfs/xfs_dquot.c         |   31 ------
- fs/xfs/xfs_dquot.h         |    5 -
- 9 files changed, 319 insertions(+), 46 deletions(-)
- create mode 100644 fs/xfs/scrub/dqiterate.c
- create mode 100644 fs/xfs/scrub/quota.h
+ fs/xfs/Makefile             |    4 
+ fs/xfs/scrub/quota.c        |    3 
+ fs/xfs/scrub/quota.h        |    2 
+ fs/xfs/scrub/quota_repair.c |  575 +++++++++++++++++++++++++++++++++++++++++++
+ fs/xfs/scrub/repair.h       |    7 +
+ fs/xfs/scrub/scrub.c        |    6 
+ fs/xfs/scrub/trace.c        |    1 
+ fs/xfs/scrub/trace.h        |   29 ++
+ fs/xfs/xfs_dquot.c          |    6 
+ fs/xfs/xfs_dquot.h          |    3 
+ 10 files changed, 628 insertions(+), 8 deletions(-)
+ create mode 100644 fs/xfs/scrub/quota_repair.c
 
 
 diff --git a/fs/xfs/Makefile b/fs/xfs/Makefile
-index e7727451d1c8..cdf81eb180e2 100644
+index cdf81eb180e2..fbe3cdc79036 100644
 --- a/fs/xfs/Makefile
 +++ b/fs/xfs/Makefile
-@@ -176,7 +176,10 @@ xfs-$(CONFIG_XFS_RT)		+= $(addprefix scrub/, \
- 				   rtsummary.o \
+@@ -199,5 +199,9 @@ xfs-y				+= $(addprefix scrub/, \
+ xfs-$(CONFIG_XFS_RT)		+= $(addprefix scrub/, \
+ 				   rtbitmap_repair.o \
  				   )
- 
--xfs-$(CONFIG_XFS_QUOTA)		+= scrub/quota.o
++
 +xfs-$(CONFIG_XFS_QUOTA)		+= $(addprefix scrub/, \
-+				   dqiterate.o \
-+				   quota.o \
++				   quota_repair.o \
 +				   )
- 
- # online repair
- ifeq ($(CONFIG_XFS_ONLINE_REPAIR),y)
-diff --git a/fs/xfs/libxfs/xfs_format.h b/fs/xfs/libxfs/xfs_format.h
-index f16974126ff9..e6ca188e2271 100644
---- a/fs/xfs/libxfs/xfs_format.h
-+++ b/fs/xfs/libxfs/xfs_format.h
-@@ -1272,6 +1272,9 @@ static inline time64_t xfs_dq_bigtime_to_unix(uint32_t ondisk_seconds)
- #define XFS_DQ_GRACE_MIN		((int64_t)0)
- #define XFS_DQ_GRACE_MAX		((int64_t)U32_MAX)
- 
-+/* Maximum id value for a quota record */
-+#define XFS_DQ_ID_MAX			(U32_MAX)
-+
- /*
-  * This is the main portion of the on-disk representation of quota information
-  * for a user.  We pad this with some more expansion room to construct the on
-diff --git a/fs/xfs/scrub/dqiterate.c b/fs/xfs/scrub/dqiterate.c
-new file mode 100644
-index 000000000000..20c4daedd48d
---- /dev/null
-+++ b/fs/xfs/scrub/dqiterate.c
-@@ -0,0 +1,211 @@
-+// SPDX-License-Identifier: GPL-2.0-or-later
-+/*
-+ * Copyright (C) 2023 Oracle.  All Rights Reserved.
-+ * Author: Darrick J. Wong <djwong@kernel.org>
-+ */
-+#include "xfs.h"
-+#include "xfs_fs.h"
-+#include "xfs_shared.h"
-+#include "xfs_bit.h"
-+#include "xfs_format.h"
-+#include "xfs_trans_resv.h"
-+#include "xfs_mount.h"
-+#include "xfs_log_format.h"
-+#include "xfs_trans.h"
-+#include "xfs_inode.h"
-+#include "xfs_quota.h"
-+#include "xfs_qm.h"
-+#include "xfs_bmap.h"
-+#include "scrub/scrub.h"
-+#include "scrub/common.h"
-+#include "scrub/quota.h"
-+#include "scrub/trace.h"
-+
-+/* Initialize a dquot iteration cursor. */
-+void
-+xchk_dqiter_init(
-+	struct xchk_dqiter	*cursor,
-+	struct xfs_scrub	*sc,
-+	xfs_dqtype_t		dqtype)
-+{
-+	cursor->sc = sc;
-+	cursor->bmap.br_startoff = NULLFILEOFF;
-+	cursor->dqtype = dqtype & XFS_DQTYPE_REC_MASK;
-+	cursor->quota_ip = xfs_quota_inode(sc->mp, cursor->dqtype);
-+	cursor->id = 0;
-+}
-+
-+/*
-+ * Ensure that the cached data fork mapping for the dqiter cursor is fresh and
-+ * covers the dquot pointed to by the scan cursor.
-+ */
-+STATIC int
-+xchk_dquot_iter_revalidate_bmap(
-+	struct xchk_dqiter	*cursor)
-+{
-+	struct xfs_quotainfo	*qi = cursor->sc->mp->m_quotainfo;
-+	struct xfs_ifork	*ifp = xfs_ifork_ptr(cursor->quota_ip,
-+								XFS_DATA_FORK);
-+	xfs_fileoff_t		fileoff;
-+	xfs_dqid_t		this_id = cursor->id;
-+	int			nmaps = 1;
-+	int			error;
-+
-+	fileoff = this_id / qi->qi_dqperchunk;
-+
-+	/*
-+	 * If we have a mapping for cursor->id and it's still fresh, there's
-+	 * no need to reread the bmbt.
-+	 */
-+	if (cursor->bmap.br_startoff != NULLFILEOFF &&
-+	    cursor->if_seq == ifp->if_seq &&
-+	    cursor->bmap.br_startoff + cursor->bmap.br_blockcount > fileoff)
-+		return 0;
-+
-+	/* Look up the data fork mapping for the dquot id of interest. */
-+	error = xfs_bmapi_read(cursor->quota_ip, fileoff,
-+			XFS_MAX_FILEOFF - fileoff, &cursor->bmap, &nmaps, 0);
-+	if (error)
-+		return error;
-+	if (!nmaps) {
-+		ASSERT(nmaps > 0);
-+		return -EFSCORRUPTED;
-+	}
-+	if (cursor->bmap.br_startoff > fileoff) {
-+		ASSERT(cursor->bmap.br_startoff == fileoff);
-+		return -EFSCORRUPTED;
-+	}
-+
-+	cursor->if_seq = ifp->if_seq;
-+	trace_xchk_dquot_iter_revalidate_bmap(cursor, cursor->id);
-+	return 0;
-+}
-+
-+/* Advance the dqiter cursor to the next non-sparse region of the quota file. */
-+STATIC int
-+xchk_dquot_iter_advance_bmap(
-+	struct xchk_dqiter	*cursor,
-+	uint64_t		*next_ondisk_id)
-+{
-+	struct xfs_quotainfo	*qi = cursor->sc->mp->m_quotainfo;
-+	struct xfs_ifork	*ifp = xfs_ifork_ptr(cursor->quota_ip,
-+								XFS_DATA_FORK);
-+	xfs_fileoff_t		fileoff;
-+	uint64_t		next_id;
-+	int			nmaps = 1;
-+	int			error;
-+
-+	/* Find the dquot id for the next non-hole mapping. */
-+	do {
-+		fileoff = cursor->bmap.br_startoff + cursor->bmap.br_blockcount;
-+		if (fileoff > XFS_DQ_ID_MAX / qi->qi_dqperchunk) {
-+			/* The hole goes beyond the max dquot id, we're done */
-+			*next_ondisk_id = -1ULL;
-+			return 0;
-+		}
-+
-+		error = xfs_bmapi_read(cursor->quota_ip, fileoff,
-+				XFS_MAX_FILEOFF - fileoff, &cursor->bmap,
-+				&nmaps, 0);
-+		if (error)
-+			return error;
-+		if (!nmaps) {
-+			/* Must have reached the end of the mappings. */
-+			*next_ondisk_id = -1ULL;
-+			return 0;
-+		}
-+		if (cursor->bmap.br_startoff > fileoff) {
-+			ASSERT(cursor->bmap.br_startoff == fileoff);
-+			return -EFSCORRUPTED;
-+		}
-+	} while (!xfs_bmap_is_real_extent(&cursor->bmap));
-+
-+	next_id = cursor->bmap.br_startoff * qi->qi_dqperchunk;
-+	if (next_id > XFS_DQ_ID_MAX) {
-+		/* The hole goes beyond the max dquot id, we're done */
-+		*next_ondisk_id = -1ULL;
-+		return 0;
-+	}
-+
-+	/* Propose jumping forward to the dquot in the next allocated block. */
-+	*next_ondisk_id = next_id;
-+	cursor->if_seq = ifp->if_seq;
-+	trace_xchk_dquot_iter_advance_bmap(cursor, *next_ondisk_id);
-+	return 0;
-+}
-+
-+/*
-+ * Find the id of the next highest incore dquot.  Normally this will correspond
-+ * exactly with the quota file block mappings, but repair might have erased a
-+ * mapping because it was crosslinked; in that case, we need to re-allocate the
-+ * space so that we can reset q_blkno.
-+ */
-+STATIC void
-+xchk_dquot_iter_advance_incore(
-+	struct xchk_dqiter	*cursor,
-+	uint64_t		*next_incore_id)
-+{
-+	struct xfs_quotainfo	*qi = cursor->sc->mp->m_quotainfo;
-+	struct radix_tree_root	*tree = xfs_dquot_tree(qi, cursor->dqtype);
-+	struct xfs_dquot	*dq;
-+	unsigned int		nr_found;
-+
-+	*next_incore_id = -1ULL;
-+
-+	mutex_lock(&qi->qi_tree_lock);
-+	nr_found = radix_tree_gang_lookup(tree, (void **)&dq, cursor->id, 1);
-+	if (nr_found)
-+		*next_incore_id = dq->q_id;
-+	mutex_unlock(&qi->qi_tree_lock);
-+
-+	trace_xchk_dquot_iter_advance_incore(cursor, *next_incore_id);
-+}
-+
-+/*
-+ * Walk all incore dquots of this filesystem.  Caller must set *@cursorp to
-+ * zero before the first call, and must not hold the quota file ILOCK.
-+ * Returns 1 and a valid *@dqpp; 0 and *@dqpp == NULL when there are no more
-+ * dquots to iterate; or a negative errno.
-+ */
-+int
-+xchk_dquot_iter(
-+	struct xchk_dqiter	*cursor,
-+	struct xfs_dquot	**dqpp)
-+{
-+	struct xfs_mount	*mp = cursor->sc->mp;
-+	struct xfs_dquot	*dq = NULL;
-+	uint64_t		next_ondisk, next_incore = -1ULL;
-+	unsigned int		lock_mode;
-+	int			error = 0;
-+
-+	if (cursor->id > XFS_DQ_ID_MAX)
-+		return 0;
-+	next_ondisk = cursor->id;
-+
-+	/* Revalidate and/or advance the cursor. */
-+	lock_mode = xfs_ilock_data_map_shared(cursor->quota_ip);
-+	error = xchk_dquot_iter_revalidate_bmap(cursor);
-+	if (!error && !xfs_bmap_is_real_extent(&cursor->bmap))
-+		error = xchk_dquot_iter_advance_bmap(cursor, &next_ondisk);
-+	xfs_iunlock(cursor->quota_ip, lock_mode);
-+	if (error)
-+		return error;
-+
-+	if (next_ondisk > cursor->id)
-+		xchk_dquot_iter_advance_incore(cursor, &next_incore);
-+
-+	/* Pick the next dquot in the sequence and return it. */
-+	cursor->id = min(next_ondisk, next_incore);
-+	if (cursor->id > XFS_DQ_ID_MAX)
-+		return 0;
-+
-+	trace_xchk_dquot_iter(cursor, cursor->id);
-+
-+	error = xfs_qm_dqget(mp, cursor->id, cursor->dqtype, false, &dq);
-+	if (error)
-+		return error;
-+
-+	cursor->id = dq->q_id + 1;
-+	*dqpp = dq;
-+	return 1;
-+}
+ endif
+ endif
 diff --git a/fs/xfs/scrub/quota.c b/fs/xfs/scrub/quota.c
-index 49835d2840b4..1a65a7502527 100644
+index 1a65a7502527..183d531875ea 100644
 --- a/fs/xfs/scrub/quota.c
 +++ b/fs/xfs/scrub/quota.c
-@@ -18,6 +18,7 @@
- #include "xfs_bmap.h"
- #include "scrub/scrub.h"
- #include "scrub/common.h"
-+#include "scrub/quota.h"
+@@ -21,7 +21,7 @@
+ #include "scrub/quota.h"
  
  /* Convert a scrub type code to a DQ flag, or return 0 if error. */
- static inline xfs_dqtype_t
-@@ -137,11 +138,9 @@ xchk_quota_item_timer(
- /* Scrub the fields in an individual quota item. */
- STATIC int
- xchk_quota_item(
--	struct xfs_dquot	*dq,
--	xfs_dqtype_t		dqtype,
--	void			*priv)
-+	struct xchk_quota_info	*sqi,
-+	struct xfs_dquot	*dq)
- {
--	struct xchk_quota_info	*sqi = priv;
- 	struct xfs_scrub	*sc = sqi->sc;
- 	struct xfs_mount	*mp = sc->mp;
- 	struct xfs_quotainfo	*qi = mp->m_quotainfo;
-@@ -270,7 +269,7 @@ xchk_quota_data_fork(
- 		return error;
- 
- 	/* Check for data fork problems that apply only to quota files. */
--	max_dqid_off = ((xfs_dqid_t)-1) / qi->qi_dqperchunk;
-+	max_dqid_off = XFS_DQ_ID_MAX / qi->qi_dqperchunk;
- 	ifp = xfs_ifork_ptr(sc->ip, XFS_DATA_FORK);
- 	for_each_xfs_iext(ifp, &icur, &irec) {
- 		if (xchk_should_terminate(sc, &error))
-@@ -297,9 +296,11 @@ int
- xchk_quota(
+-static inline xfs_dqtype_t
++xfs_dqtype_t
+ xchk_quota_to_dqtype(
  	struct xfs_scrub	*sc)
  {
--	struct xchk_quota_info	sqi;
-+	struct xchk_dqiter	cursor = { };
-+	struct xchk_quota_info	sqi = { .sc = sc };
- 	struct xfs_mount	*mp = sc->mp;
- 	struct xfs_quotainfo	*qi = mp->m_quotainfo;
-+	struct xfs_dquot	*dq;
- 	xfs_dqtype_t		dqtype;
- 	int			error = 0;
- 
-@@ -318,9 +319,15 @@ xchk_quota(
- 	 * functions.
- 	 */
- 	xchk_iunlock(sc, sc->ilock_flags);
--	sqi.sc = sc;
--	sqi.last_id = 0;
--	error = xfs_qm_dqiterate(mp, dqtype, xchk_quota_item, &sqi);
-+
-+	/* Now look for things that the quota verifiers won't complain about. */
-+	xchk_dqiter_init(&cursor, sc, dqtype);
-+	while ((error = xchk_dquot_iter(&cursor, &dq)) == 1) {
-+		error = xchk_quota_item(&sqi, dq);
-+		xfs_qm_dqput(dq);
-+		if (error)
-+			break;
-+	}
- 	xchk_ilock(sc, XFS_ILOCK_EXCL);
+@@ -328,7 +328,6 @@ xchk_quota(
+ 		if (error)
+ 			break;
+ 	}
+-	xchk_ilock(sc, XFS_ILOCK_EXCL);
  	if (error == -ECANCELED)
  		error = 0;
+ 	if (!xchk_fblock_process_error(sc, XFS_DATA_FORK,
 diff --git a/fs/xfs/scrub/quota.h b/fs/xfs/scrub/quota.h
-new file mode 100644
-index 000000000000..5056b7766c4a
---- /dev/null
+index 5056b7766c4a..6c7134ce2385 100644
+--- a/fs/xfs/scrub/quota.h
 +++ b/fs/xfs/scrub/quota.h
-@@ -0,0 +1,34 @@
+@@ -6,6 +6,8 @@
+ #ifndef __XFS_SCRUB_QUOTA_H__
+ #define __XFS_SCRUB_QUOTA_H__
+ 
++xfs_dqtype_t xchk_quota_to_dqtype(struct xfs_scrub *sc);
++
+ /* dquot iteration code */
+ 
+ struct xchk_dqiter {
+diff --git a/fs/xfs/scrub/quota_repair.c b/fs/xfs/scrub/quota_repair.c
+new file mode 100644
+index 000000000000..0bab4c30cb85
+--- /dev/null
++++ b/fs/xfs/scrub/quota_repair.c
+@@ -0,0 +1,575 @@
 +// SPDX-License-Identifier: GPL-2.0-or-later
 +/*
 + * Copyright (C) 2018-2023 Oracle.  All Rights Reserved.
 + * Author: Darrick J. Wong <djwong@kernel.org>
 + */
-+#ifndef __XFS_SCRUB_QUOTA_H__
-+#define __XFS_SCRUB_QUOTA_H__
++#include "xfs.h"
++#include "xfs_fs.h"
++#include "xfs_shared.h"
++#include "xfs_format.h"
++#include "xfs_trans_resv.h"
++#include "xfs_mount.h"
++#include "xfs_defer.h"
++#include "xfs_btree.h"
++#include "xfs_bit.h"
++#include "xfs_format.h"
++#include "xfs_log_format.h"
++#include "xfs_trans.h"
++#include "xfs_sb.h"
++#include "xfs_inode.h"
++#include "xfs_inode_fork.h"
++#include "xfs_alloc.h"
++#include "xfs_bmap.h"
++#include "xfs_quota.h"
++#include "xfs_qm.h"
++#include "xfs_dquot.h"
++#include "xfs_dquot_item.h"
++#include "xfs_reflink.h"
++#include "xfs_bmap_btree.h"
++#include "xfs_trans_space.h"
++#include "scrub/xfs_scrub.h"
++#include "scrub/scrub.h"
++#include "scrub/common.h"
++#include "scrub/quota.h"
++#include "scrub/trace.h"
++#include "scrub/repair.h"
 +
-+/* dquot iteration code */
++/*
++ * Quota Repair
++ * ============
++ *
++ * Quota repairs are fairly simplistic; we fix everything that the dquot
++ * verifiers complain about, cap any counters or limits that make no sense,
++ * and schedule a quotacheck if we had to fix anything.  We also repair any
++ * data fork extent records that don't apply to metadata files.
++ */
 +
-+struct xchk_dqiter {
++struct xrep_quota_info {
 +	struct xfs_scrub	*sc;
-+
-+	/* Quota file that we're walking. */
-+	struct xfs_inode	*quota_ip;
-+
-+	/* Cached data fork mapping for the dquot. */
-+	struct xfs_bmbt_irec	bmap;
-+
-+	/* The next dquot to scan. */
-+	uint64_t		id;
-+
-+	/* Quota type (user/group/project). */
-+	xfs_dqtype_t		dqtype;
-+
-+	/* Data fork sequence number to detect stale mappings. */
-+	unsigned int		if_seq;
++	bool			need_quotacheck;
 +};
 +
-+void xchk_dqiter_init(struct xchk_dqiter *cursor, struct xfs_scrub *sc,
-+		xfs_dqtype_t dqtype);
-+int xchk_dquot_iter(struct xchk_dqiter *cursor, struct xfs_dquot **dqpp);
++/*
++ * Allocate a new block into a sparse hole in the quota file backing this
++ * dquot, initialize the block, and commit the whole mess.
++ */
++STATIC int
++xrep_quota_item_fill_bmap_hole(
++	struct xfs_scrub	*sc,
++	struct xfs_dquot	*dq,
++	struct xfs_bmbt_irec	*irec)
++{
++	struct xfs_buf		*bp;
++	struct xfs_mount	*mp = sc->mp;
++	int			nmaps = 1;
++	int			error;
 +
-+#endif /* __XFS_SCRUB_QUOTA_H__ */
++	xfs_trans_ijoin(sc->tp, sc->ip, 0);
++
++	/* Map a block into the file. */
++	error = xfs_trans_reserve_more(sc->tp, XFS_QM_DQALLOC_SPACE_RES(mp),
++			0);
++	if (error)
++		return error;
++
++	error = xfs_bmapi_write(sc->tp, sc->ip, dq->q_fileoffset,
++			XFS_DQUOT_CLUSTER_SIZE_FSB, XFS_BMAPI_METADATA, 0,
++			irec, &nmaps);
++	if (error)
++		return error;
++	if (nmaps != 1)
++		return -ENOSPC;
++
++	dq->q_blkno = XFS_FSB_TO_DADDR(mp, irec->br_startblock);
++
++	trace_xrep_dquot_item_fill_bmap_hole(sc->mp, dq->q_type, dq->q_id);
++
++	/* Initialize the new block. */
++	error = xfs_trans_get_buf(sc->tp, mp->m_ddev_targp, dq->q_blkno,
++			mp->m_quotainfo->qi_dqchunklen, 0, &bp);
++	if (error)
++		return error;
++	bp->b_ops = &xfs_dquot_buf_ops;
++
++	xfs_qm_init_dquot_blk(sc->tp, dq->q_id, dq->q_type, bp);
++	xfs_buf_set_ref(bp, XFS_DQUOT_REF);
++
++	/*
++	 * Finish the mapping transactions and roll one more time to
++	 * disconnect sc->ip from sc->tp.
++	 */
++	error = xrep_defer_finish(sc);
++	if (error)
++		return error;
++	return xfs_trans_roll(&sc->tp);
++}
++
++/* Make sure there's a written block backing this dquot */
++STATIC int
++xrep_quota_item_bmap(
++	struct xfs_scrub	*sc,
++	struct xfs_dquot	*dq,
++	bool			*dirty)
++{
++	struct xfs_bmbt_irec	irec;
++	struct xfs_mount	*mp = sc->mp;
++	struct xfs_quotainfo	*qi = mp->m_quotainfo;
++	xfs_fileoff_t		offset = dq->q_id / qi->qi_dqperchunk;
++	int			nmaps = 1;
++	int			error;
++
++	/* The computed file offset should always be valid. */
++	if (!xfs_verify_fileoff(mp, offset)) {
++		ASSERT(xfs_verify_fileoff(mp, offset));
++		return -EFSCORRUPTED;
++	}
++	dq->q_fileoffset = offset;
++
++	error = xfs_bmapi_read(sc->ip, offset, 1, &irec, &nmaps, 0);
++	if (error)
++		return error;
++
++	if (nmaps < 1 || !xfs_bmap_is_real_extent(&irec)) {
++		/* Hole/delalloc extent; allocate a real block. */
++		error = xrep_quota_item_fill_bmap_hole(sc, dq, &irec);
++		if (error)
++			return error;
++	} else if (irec.br_state != XFS_EXT_NORM) {
++		/* Unwritten extent, which we already took care of? */
++		ASSERT(irec.br_state == XFS_EXT_NORM);
++		return -EFSCORRUPTED;
++	} else if (dq->q_blkno != XFS_FSB_TO_DADDR(mp, irec.br_startblock)) {
++		/*
++		 * If the cached daddr is incorrect, repair probably punched a
++		 * hole out of the quota file and filled it back in with a new
++		 * block.  Update the block mapping in the dquot.
++		 */
++		dq->q_blkno = XFS_FSB_TO_DADDR(mp, irec.br_startblock);
++	}
++
++	*dirty = true;
++	return 0;
++}
++
++/* Reset quota timers if incorrectly set. */
++static inline void
++xrep_quota_item_timer(
++	struct xfs_scrub		*sc,
++	const struct xfs_dquot_res	*res,
++	bool				*dirty)
++{
++	if ((res->softlimit && res->count > res->softlimit) ||
++	    (res->hardlimit && res->count > res->hardlimit)) {
++		if (!res->timer)
++			*dirty = true;
++	} else {
++		if (res->timer)
++			*dirty = true;
++	}
++}
++
++/* Scrub the fields in an individual quota item. */
++STATIC int
++xrep_quota_item(
++	struct xrep_quota_info	*rqi,
++	struct xfs_dquot	*dq)
++{
++	struct xfs_scrub	*sc = rqi->sc;
++	struct xfs_mount	*mp = sc->mp;
++	xfs_ino_t		fs_icount;
++	bool			dirty = false;
++	int			error = 0;
++
++	/* Last chance to abort before we start committing fixes. */
++	if (xchk_should_terminate(sc, &error))
++		return error;
++
++	/*
++	 * We might need to fix holes in the bmap record for the storage
++	 * backing this dquot, so we need to lock the dquot and the quota file.
++	 * dqiterate gave us a locked dquot, so drop the dquot lock to get the
++	 * ILOCK_EXCL.
++	 */
++	xfs_dqunlock(dq);
++	xchk_ilock(sc, XFS_ILOCK_EXCL);
++	xfs_dqlock(dq);
++
++	error = xrep_quota_item_bmap(sc, dq, &dirty);
++	xchk_iunlock(sc, XFS_ILOCK_EXCL);
++	if (error)
++		return error;
++
++	/* Check the limits. */
++	if (dq->q_blk.softlimit > dq->q_blk.hardlimit) {
++		dq->q_blk.softlimit = dq->q_blk.hardlimit;
++		dirty = true;
++	}
++
++	if (dq->q_ino.softlimit > dq->q_ino.hardlimit) {
++		dq->q_ino.softlimit = dq->q_ino.hardlimit;
++		dirty = true;
++	}
++
++	if (dq->q_rtb.softlimit > dq->q_rtb.hardlimit) {
++		dq->q_rtb.softlimit = dq->q_rtb.hardlimit;
++		dirty = true;
++	}
++
++	/*
++	 * Check that usage doesn't exceed physical limits.  However, on
++	 * a reflink filesystem we're allowed to exceed physical space
++	 * if there are no quota limits.  We don't know what the real number
++	 * is, but we can make quotacheck find out for us.
++	 */
++	if (!xfs_has_reflink(mp) && dq->q_blk.count > mp->m_sb.sb_dblocks) {
++		dq->q_blk.reserved -= dq->q_blk.count;
++		dq->q_blk.reserved += mp->m_sb.sb_dblocks;
++		dq->q_blk.count = mp->m_sb.sb_dblocks;
++		rqi->need_quotacheck = true;
++		dirty = true;
++	}
++	fs_icount = percpu_counter_sum(&mp->m_icount);
++	if (dq->q_ino.count > fs_icount) {
++		dq->q_ino.reserved -= dq->q_ino.count;
++		dq->q_ino.reserved += fs_icount;
++		dq->q_ino.count = fs_icount;
++		rqi->need_quotacheck = true;
++		dirty = true;
++	}
++	if (dq->q_rtb.count > mp->m_sb.sb_rblocks) {
++		dq->q_rtb.reserved -= dq->q_rtb.count;
++		dq->q_rtb.reserved += mp->m_sb.sb_rblocks;
++		dq->q_rtb.count = mp->m_sb.sb_rblocks;
++		rqi->need_quotacheck = true;
++		dirty = true;
++	}
++
++	xrep_quota_item_timer(sc, &dq->q_blk, &dirty);
++	xrep_quota_item_timer(sc, &dq->q_ino, &dirty);
++	xrep_quota_item_timer(sc, &dq->q_rtb, &dirty);
++
++	if (!dirty)
++		return 0;
++
++	trace_xrep_dquot_item(sc->mp, dq->q_type, dq->q_id);
++
++	dq->q_flags |= XFS_DQFLAG_DIRTY;
++	xfs_trans_dqjoin(sc->tp, dq);
++	if (dq->q_id) {
++		xfs_qm_adjust_dqlimits(dq);
++		xfs_qm_adjust_dqtimers(dq);
++	}
++	xfs_trans_log_dquot(sc->tp, dq);
++	error = xfs_trans_roll(&sc->tp);
++	xfs_dqlock(dq);
++	return error;
++}
++
++/* Fix a quota timer so that we can pass the verifier. */
++STATIC void
++xrep_quota_fix_timer(
++	struct xfs_mount	*mp,
++	const struct xfs_disk_dquot *ddq,
++	__be64			softlimit,
++	__be64			countnow,
++	__be32			*timer,
++	time64_t		timelimit)
++{
++	uint64_t		soft = be64_to_cpu(softlimit);
++	uint64_t		count = be64_to_cpu(countnow);
++	time64_t		new_timer;
++	uint32_t		t;
++
++	if (!soft || count <= soft || *timer != 0)
++		return;
++
++	new_timer = xfs_dquot_set_timeout(mp,
++				ktime_get_real_seconds() + timelimit);
++	if (ddq->d_type & XFS_DQTYPE_BIGTIME)
++		t = xfs_dq_unix_to_bigtime(new_timer);
++	else
++		t = new_timer;
++
++	*timer = cpu_to_be32(t);
++}
++
++/* Fix anything the verifiers complain about. */
++STATIC int
++xrep_quota_block(
++	struct xfs_scrub	*sc,
++	xfs_daddr_t		daddr,
++	xfs_dqtype_t		dqtype,
++	xfs_dqid_t		id)
++{
++	struct xfs_dqblk	*dqblk;
++	struct xfs_disk_dquot	*ddq;
++	struct xfs_quotainfo	*qi = sc->mp->m_quotainfo;
++	struct xfs_def_quota	*defq = xfs_get_defquota(qi, dqtype);
++	struct xfs_buf		*bp = NULL;
++	enum xfs_blft		buftype = 0;
++	int			i;
++	int			error;
++
++	error = xfs_trans_read_buf(sc->mp, sc->tp, sc->mp->m_ddev_targp, daddr,
++			qi->qi_dqchunklen, 0, &bp, &xfs_dquot_buf_ops);
++	switch (error) {
++	case -EFSBADCRC:
++	case -EFSCORRUPTED:
++		/* Failed verifier, retry read with no ops. */
++		error = xfs_trans_read_buf(sc->mp, sc->tp,
++				sc->mp->m_ddev_targp, daddr, qi->qi_dqchunklen,
++				0, &bp, NULL);
++		if (error)
++			return error;
++		break;
++	case 0:
++		dqblk = bp->b_addr;
++		ddq = &dqblk[0].dd_diskdq;
++
++		/*
++		 * If there's nothing that would impede a dqiterate, we're
++		 * done.
++		 */
++		if ((ddq->d_type & XFS_DQTYPE_REC_MASK) != dqtype ||
++		    id == be32_to_cpu(ddq->d_id)) {
++			xfs_trans_brelse(sc->tp, bp);
++			return 0;
++		}
++		break;
++	default:
++		return error;
++	}
++
++	/* Something's wrong with the block, fix the whole thing. */
++	dqblk = bp->b_addr;
++	bp->b_ops = &xfs_dquot_buf_ops;
++	for (i = 0; i < qi->qi_dqperchunk; i++, dqblk++) {
++		ddq = &dqblk->dd_diskdq;
++
++		trace_xrep_disk_dquot(sc->mp, dqtype, id + i);
++
++		ddq->d_magic = cpu_to_be16(XFS_DQUOT_MAGIC);
++		ddq->d_version = XFS_DQUOT_VERSION;
++		ddq->d_type = dqtype;
++		ddq->d_id = cpu_to_be32(id + i);
++
++		if (xfs_has_bigtime(sc->mp) && ddq->d_id)
++			ddq->d_type |= XFS_DQTYPE_BIGTIME;
++
++		xrep_quota_fix_timer(sc->mp, ddq, ddq->d_blk_softlimit,
++				ddq->d_bcount, &ddq->d_btimer,
++				defq->blk.time);
++
++		xrep_quota_fix_timer(sc->mp, ddq, ddq->d_ino_softlimit,
++				ddq->d_icount, &ddq->d_itimer,
++				defq->ino.time);
++
++		xrep_quota_fix_timer(sc->mp, ddq, ddq->d_rtb_softlimit,
++				ddq->d_rtbcount, &ddq->d_rtbtimer,
++				defq->rtb.time);
++
++		/* We only support v5 filesystems so always set these. */
++		uuid_copy(&dqblk->dd_uuid, &sc->mp->m_sb.sb_meta_uuid);
++		xfs_update_cksum((char *)dqblk, sizeof(struct xfs_dqblk),
++				 XFS_DQUOT_CRC_OFF);
++		dqblk->dd_lsn = 0;
++	}
++	switch (dqtype) {
++	case XFS_DQTYPE_USER:
++		buftype = XFS_BLFT_UDQUOT_BUF;
++		break;
++	case XFS_DQTYPE_GROUP:
++		buftype = XFS_BLFT_GDQUOT_BUF;
++		break;
++	case XFS_DQTYPE_PROJ:
++		buftype = XFS_BLFT_PDQUOT_BUF;
++		break;
++	}
++	xfs_trans_buf_set_type(sc->tp, bp, buftype);
++	xfs_trans_log_buf(sc->tp, bp, 0, BBTOB(bp->b_length) - 1);
++	return xrep_roll_trans(sc);
++}
++
++/*
++ * Repair a quota file's data fork.  The function returns with the inode
++ * joined.
++ */
++STATIC int
++xrep_quota_data_fork(
++	struct xfs_scrub	*sc,
++	xfs_dqtype_t		dqtype)
++{
++	struct xfs_bmbt_irec	irec = { 0 };
++	struct xfs_iext_cursor	icur;
++	struct xfs_quotainfo	*qi = sc->mp->m_quotainfo;
++	struct xfs_ifork	*ifp;
++	xfs_fileoff_t		max_dqid_off;
++	xfs_fileoff_t		off;
++	xfs_fsblock_t		fsbno;
++	bool			truncate = false;
++	bool			joined = false;
++	int			error = 0;
++
++	error = xrep_metadata_inode_forks(sc);
++	if (error)
++		goto out;
++
++	/* Check for data fork problems that apply only to quota files. */
++	max_dqid_off = XFS_DQ_ID_MAX / qi->qi_dqperchunk;
++	ifp = xfs_ifork_ptr(sc->ip, XFS_DATA_FORK);
++	for_each_xfs_iext(ifp, &icur, &irec) {
++		if (isnullstartblock(irec.br_startblock)) {
++			error = -EFSCORRUPTED;
++			goto out;
++		}
++
++		if (irec.br_startoff > max_dqid_off ||
++		    irec.br_startoff + irec.br_blockcount - 1 > max_dqid_off) {
++			truncate = true;
++			break;
++		}
++
++		/* Convert unwritten extents to real ones. */
++		if (irec.br_state == XFS_EXT_UNWRITTEN) {
++			struct xfs_bmbt_irec	nrec;
++			int			nmap = 1;
++
++			if (!joined) {
++				xfs_trans_ijoin(sc->tp, sc->ip, 0);
++				joined = true;
++			}
++
++			error = xfs_bmapi_write(sc->tp, sc->ip,
++					irec.br_startoff, irec.br_blockcount,
++					XFS_BMAPI_CONVERT, 0, &nrec, &nmap);
++			if (error)
++				goto out;
++			if (nmap != 1) {
++				error = -ENOSPC;
++				goto out;
++			}
++			ASSERT(nrec.br_startoff == irec.br_startoff);
++			ASSERT(nrec.br_blockcount == irec.br_blockcount);
++
++			error = xfs_defer_finish(&sc->tp);
++			if (error)
++				goto out;
++		}
++	}
++
++	if (!joined) {
++		xfs_trans_ijoin(sc->tp, sc->ip, 0);
++		joined = true;
++	}
++
++	if (truncate) {
++		/* Erase everything after the block containing the max dquot */
++		error = xfs_bunmapi_range(&sc->tp, sc->ip, 0,
++				max_dqid_off * sc->mp->m_sb.sb_blocksize,
++				XFS_MAX_FILEOFF);
++		if (error)
++			goto out;
++
++		/* Remove all CoW reservations. */
++		error = xfs_reflink_cancel_cow_blocks(sc->ip, &sc->tp, 0,
++				XFS_MAX_FILEOFF, true);
++		if (error)
++			goto out;
++		sc->ip->i_diflags2 &= ~XFS_DIFLAG2_REFLINK;
++
++		/*
++		 * Always re-log the inode so that our permanent transaction
++		 * can keep on rolling it forward in the log.
++		 */
++		xfs_trans_log_inode(sc->tp, sc->ip, XFS_ILOG_CORE);
++	}
++
++	/* Now go fix anything that fails the verifiers. */
++	for_each_xfs_iext(ifp, &icur, &irec) {
++		for (fsbno = irec.br_startblock, off = irec.br_startoff;
++		     fsbno < irec.br_startblock + irec.br_blockcount;
++		     fsbno += XFS_DQUOT_CLUSTER_SIZE_FSB,
++				off += XFS_DQUOT_CLUSTER_SIZE_FSB) {
++			error = xrep_quota_block(sc,
++					XFS_FSB_TO_DADDR(sc->mp, fsbno),
++					dqtype, off * qi->qi_dqperchunk);
++			if (error)
++				goto out;
++		}
++	}
++
++out:
++	return error;
++}
++
++/*
++ * Go fix anything in the quota items that we could have been mad about.  Now
++ * that we've checked the quota inode data fork we have to drop ILOCK_EXCL to
++ * use the regular dquot functions.
++ */
++STATIC int
++xrep_quota_problems(
++	struct xfs_scrub	*sc,
++	xfs_dqtype_t		dqtype)
++{
++	struct xchk_dqiter	cursor = { };
++	struct xrep_quota_info	rqi = { .sc = sc };
++	struct xfs_dquot	*dq;
++	int			error;
++
++	xchk_dqiter_init(&cursor, sc, dqtype);
++	while ((error = xchk_dquot_iter(&cursor, &dq)) == 1) {
++		error = xrep_quota_item(&rqi, dq);
++		xfs_qm_dqput(dq);
++		if (error)
++			break;
++	}
++	if (error)
++		return error;
++
++	/* Make a quotacheck happen. */
++	if (rqi.need_quotacheck)
++		xrep_force_quotacheck(sc, dqtype);
++	return 0;
++}
++
++/* Repair all of a quota type's items. */
++int
++xrep_quota(
++	struct xfs_scrub	*sc)
++{
++	xfs_dqtype_t		dqtype;
++	int			error;
++
++	dqtype = xchk_quota_to_dqtype(sc);
++
++	/*
++	 * Re-take the ILOCK so that we can fix any problems that we found
++	 * with the data fork mappings, or with the dquot bufs themselves.
++	 */
++	if (!(sc->ilock_flags & XFS_ILOCK_EXCL))
++		xchk_ilock(sc, XFS_ILOCK_EXCL);
++	error = xrep_quota_data_fork(sc, dqtype);
++	if (error)
++		return error;
++
++	/*
++	 * Finish deferred items and roll the transaction to unjoin the quota
++	 * inode from transaction so that we can unlock the quota inode; we
++	 * play only with dquots from now on.
++	 */
++	error = xrep_defer_finish(sc);
++	if (error)
++		return error;
++	error = xfs_trans_roll(&sc->tp);
++	if (error)
++		return error;
++	xchk_iunlock(sc, sc->ilock_flags);
++
++	/* Fix anything the dquot verifiers don't complain about. */
++	error = xrep_quota_problems(sc, dqtype);
++	if (error)
++		return error;
++
++	return xrep_trans_commit(sc);
++}
+diff --git a/fs/xfs/scrub/repair.h b/fs/xfs/scrub/repair.h
+index 86cf86037fe0..17114327e6fa 100644
+--- a/fs/xfs/scrub/repair.h
++++ b/fs/xfs/scrub/repair.h
+@@ -121,6 +121,12 @@ int xrep_rtbitmap(struct xfs_scrub *sc);
+ # define xrep_rtbitmap			xrep_notsupported
+ #endif /* CONFIG_XFS_RT */
+ 
++#ifdef CONFIG_XFS_QUOTA
++int xrep_quota(struct xfs_scrub *sc);
++#else
++# define xrep_quota			xrep_notsupported
++#endif /* CONFIG_XFS_QUOTA */
++
+ int xrep_reinit_pagf(struct xfs_scrub *sc);
+ int xrep_reinit_pagi(struct xfs_scrub *sc);
+ 
+@@ -184,6 +190,7 @@ xrep_setup_nothing(
+ #define xrep_bmap_attr			xrep_notsupported
+ #define xrep_bmap_cow			xrep_notsupported
+ #define xrep_rtbitmap			xrep_notsupported
++#define xrep_quota			xrep_notsupported
+ 
+ #endif /* CONFIG_XFS_ONLINE_REPAIR */
+ 
+diff --git a/fs/xfs/scrub/scrub.c b/fs/xfs/scrub/scrub.c
+index c33480894229..caf324c2b991 100644
+--- a/fs/xfs/scrub/scrub.c
++++ b/fs/xfs/scrub/scrub.c
+@@ -340,19 +340,19 @@ static const struct xchk_meta_ops meta_scrub_ops[] = {
+ 		.type	= ST_FS,
+ 		.setup	= xchk_setup_quota,
+ 		.scrub	= xchk_quota,
+-		.repair	= xrep_notsupported,
++		.repair	= xrep_quota,
+ 	},
+ 	[XFS_SCRUB_TYPE_GQUOTA] = {	/* group quota */
+ 		.type	= ST_FS,
+ 		.setup	= xchk_setup_quota,
+ 		.scrub	= xchk_quota,
+-		.repair	= xrep_notsupported,
++		.repair	= xrep_quota,
+ 	},
+ 	[XFS_SCRUB_TYPE_PQUOTA] = {	/* project quota */
+ 		.type	= ST_FS,
+ 		.setup	= xchk_setup_quota,
+ 		.scrub	= xchk_quota,
+-		.repair	= xrep_notsupported,
++		.repair	= xrep_quota,
+ 	},
+ 	[XFS_SCRUB_TYPE_FSCOUNTERS] = {	/* fs summary counters */
+ 		.type	= ST_FS,
 diff --git a/fs/xfs/scrub/trace.c b/fs/xfs/scrub/trace.c
-index 29afa4851235..4641522fd907 100644
+index 4641522fd907..d0e24ffaf754 100644
 --- a/fs/xfs/scrub/trace.c
 +++ b/fs/xfs/scrub/trace.c
-@@ -14,9 +14,11 @@
- #include "xfs_btree.h"
+@@ -15,6 +15,7 @@
  #include "xfs_ag.h"
  #include "xfs_rtbitmap.h"
-+#include "xfs_quota.h"
+ #include "xfs_quota.h"
++#include "xfs_quota_defs.h"
  #include "scrub/scrub.h"
  #include "scrub/xfile.h"
  #include "scrub/xfarray.h"
-+#include "scrub/quota.h"
- 
- /* Figure out which block the btree cursor was pointing to. */
- static inline xfs_fsblock_t
 diff --git a/fs/xfs/scrub/trace.h b/fs/xfs/scrub/trace.h
-index 3d5c8e748955..83827f3e165b 100644
+index 83827f3e165b..6bbb4e8639dc 100644
 --- a/fs/xfs/scrub/trace.h
 +++ b/fs/xfs/scrub/trace.h
-@@ -19,6 +19,7 @@
- struct xfile;
- struct xfarray;
- struct xfarray_sortinfo;
-+struct xchk_dqiter;
- 
- /*
-  * ftrace's __print_symbolic requires that all enum values be wrapped in the
-@@ -348,6 +349,54 @@ DEFINE_EVENT(xchk_fblock_error_class, name, \
- DEFINE_SCRUB_FBLOCK_ERROR_EVENT(xchk_fblock_error);
- DEFINE_SCRUB_FBLOCK_ERROR_EVENT(xchk_fblock_warning);
+@@ -1729,6 +1729,35 @@ TRACE_EVENT(xrep_cow_free_staging,
+ 		  __entry->blockcount)
+ );
  
 +#ifdef CONFIG_XFS_QUOTA
-+DECLARE_EVENT_CLASS(xchk_dqiter_class,
-+	TP_PROTO(struct xchk_dqiter *cursor, uint64_t id),
-+	TP_ARGS(cursor, id),
++DECLARE_EVENT_CLASS(xrep_dquot_class,
++	TP_PROTO(struct xfs_mount *mp, uint8_t type, uint32_t id),
++	TP_ARGS(mp, type, id),
 +	TP_STRUCT__entry(
 +		__field(dev_t, dev)
-+		__field(xfs_dqtype_t, dqtype)
-+		__field(xfs_ino_t, ino)
-+		__field(unsigned long long, cur_id)
-+		__field(unsigned long long, id)
-+		__field(xfs_fileoff_t, startoff)
-+		__field(xfs_fsblock_t, startblock)
-+		__field(xfs_filblks_t, blockcount)
-+		__field(xfs_exntst_t, state)
++		__field(uint8_t, type)
++		__field(uint32_t, id)
 +	),
 +	TP_fast_assign(
-+		__entry->dev = cursor->sc->ip->i_mount->m_super->s_dev;
-+		__entry->dqtype = cursor->dqtype;
-+		__entry->ino = cursor->quota_ip->i_ino;
-+		__entry->cur_id = cursor->id;
-+		__entry->startoff = cursor->bmap.br_startoff;
-+		__entry->startblock = cursor->bmap.br_startblock;
-+		__entry->blockcount = cursor->bmap.br_blockcount;
-+		__entry->state = cursor->bmap.br_state;
++		__entry->dev = mp->m_super->s_dev;
 +		__entry->id = id;
++		__entry->type = type;
 +	),
-+	TP_printk("dev %d:%d dquot type %s ino 0x%llx cursor_id 0x%llx startoff 0x%llx startblock 0x%llx blockcount 0x%llx state %u id 0x%llx",
++	TP_printk("dev %d:%d type %s id 0x%x",
 +		  MAJOR(__entry->dev), MINOR(__entry->dev),
-+		  __print_symbolic(__entry->dqtype, XFS_DQTYPE_STRINGS),
-+		  __entry->ino,
-+		  __entry->cur_id,
-+		  __entry->startoff,
-+		  __entry->startblock,
-+		  __entry->blockcount,
-+		  __entry->state,
++		  __print_flags(__entry->type, "|", XFS_DQTYPE_STRINGS),
 +		  __entry->id)
 +);
 +
-+#define DEFINE_SCRUB_DQITER_EVENT(name) \
-+DEFINE_EVENT(xchk_dqiter_class, name, \
-+	TP_PROTO(struct xchk_dqiter *cursor, uint64_t id), \
-+	TP_ARGS(cursor, id))
-+DEFINE_SCRUB_DQITER_EVENT(xchk_dquot_iter_revalidate_bmap);
-+DEFINE_SCRUB_DQITER_EVENT(xchk_dquot_iter_advance_bmap);
-+DEFINE_SCRUB_DQITER_EVENT(xchk_dquot_iter_advance_incore);
-+DEFINE_SCRUB_DQITER_EVENT(xchk_dquot_iter);
++#define DEFINE_XREP_DQUOT_EVENT(name) \
++DEFINE_EVENT(xrep_dquot_class, name, \
++	TP_PROTO(struct xfs_mount *mp, uint8_t type, uint32_t id), \
++	TP_ARGS(mp, type, id))
++DEFINE_XREP_DQUOT_EVENT(xrep_dquot_item);
++DEFINE_XREP_DQUOT_EVENT(xrep_disk_dquot);
++DEFINE_XREP_DQUOT_EVENT(xrep_dquot_item_fill_bmap_hole);
 +#endif /* CONFIG_XFS_QUOTA */
 +
- TRACE_EVENT(xchk_incomplete,
- 	TP_PROTO(struct xfs_scrub *sc, void *ret_ip),
- 	TP_ARGS(sc, ret_ip),
+ #endif /* IS_ENABLED(CONFIG_XFS_ONLINE_REPAIR) */
+ 
+ #endif /* _TRACE_XFS_SCRUB_TRACE_H */
 diff --git a/fs/xfs/xfs_dquot.c b/fs/xfs/xfs_dquot.c
-index a013b87ab8d5..60ec401e26ff 100644
+index 60ec401e26ff..a93ad76f23c5 100644
 --- a/fs/xfs/xfs_dquot.c
 +++ b/fs/xfs/xfs_dquot.c
-@@ -1362,34 +1362,3 @@ xfs_qm_exit(void)
- 	kmem_cache_destroy(xfs_dqtrx_cache);
- 	kmem_cache_destroy(xfs_dquot_cache);
- }
--
--/*
-- * Iterate every dquot of a particular type.  The caller must ensure that the
-- * particular quota type is active.  iter_fn can return negative error codes,
-- * or -ECANCELED to indicate that it wants to stop iterating.
-- */
--int
--xfs_qm_dqiterate(
+@@ -172,14 +172,14 @@ xfs_qm_adjust_dqtimers(
+ /*
+  * initialize a buffer full of dquots and log the whole thing
+  */
+-STATIC void
++void
+ xfs_qm_init_dquot_blk(
+ 	struct xfs_trans	*tp,
 -	struct xfs_mount	*mp,
--	xfs_dqtype_t		type,
--	xfs_qm_dqiterate_fn	iter_fn,
--	void			*priv)
--{
--	struct xfs_dquot	*dq;
--	xfs_dqid_t		id = 0;
--	int			error;
--
--	do {
--		error = xfs_qm_dqget_next(mp, id, type, &dq);
--		if (error == -ENOENT)
--			return 0;
--		if (error)
--			return error;
--
--		error = iter_fn(dq, type, priv);
--		id = dq->q_id + 1;
--		xfs_qm_dqput(dq);
--	} while (error == 0 && id != 0);
--
--	return error;
--}
+ 	xfs_dqid_t		id,
+ 	xfs_dqtype_t		type,
+ 	struct xfs_buf		*bp)
+ {
++	struct xfs_mount	*mp = tp->t_mountp;
+ 	struct xfs_quotainfo	*q = mp->m_quotainfo;
+ 	struct xfs_dqblk	*d;
+ 	xfs_dqid_t		curid;
+@@ -353,7 +353,7 @@ xfs_dquot_disk_alloc(
+ 	 * Make a chunk of dquots out of this buffer and log
+ 	 * the entire thing.
+ 	 */
+-	xfs_qm_init_dquot_blk(tp, mp, dqp->q_id, qtype, bp);
++	xfs_qm_init_dquot_blk(tp, dqp->q_id, qtype, bp);
+ 	xfs_buf_set_ref(bp, XFS_DQUOT_REF);
+ 
+ 	/*
 diff --git a/fs/xfs/xfs_dquot.h b/fs/xfs/xfs_dquot.h
-index 80c8f851a2f3..8d9d4b0d979d 100644
+index 8d9d4b0d979d..956272d9b302 100644
 --- a/fs/xfs/xfs_dquot.h
 +++ b/fs/xfs/xfs_dquot.h
-@@ -234,11 +234,6 @@ static inline struct xfs_dquot *xfs_qm_dqhold(struct xfs_dquot *dqp)
- 	return dqp;
- }
- 
--typedef int (*xfs_qm_dqiterate_fn)(struct xfs_dquot *dq,
--		xfs_dqtype_t type, void *priv);
--int xfs_qm_dqiterate(struct xfs_mount *mp, xfs_dqtype_t type,
--		xfs_qm_dqiterate_fn iter_fn, void *priv);
--
+@@ -237,4 +237,7 @@ static inline struct xfs_dquot *xfs_qm_dqhold(struct xfs_dquot *dqp)
  time64_t xfs_dquot_set_timeout(struct xfs_mount *mp, time64_t timeout);
  time64_t xfs_dquot_set_grace_period(time64_t grace);
  
++void xfs_qm_init_dquot_blk(struct xfs_trans *tp, xfs_dqid_t id, xfs_dqtype_t
++		type, struct xfs_buf *bp);
++
+ #endif /* __XFS_DQUOT_H__ */
 
