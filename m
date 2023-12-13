@@ -1,31 +1,31 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 61BB88183A
-	for <linux-xfs@vger.kernel.org>; Wed, 13 Dec 2023 22:55:37 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6B0F08185F
+	for <linux-xfs@vger.kernel.org>; Wed, 13 Dec 2023 22:55:53 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="kNDGNdc2"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 2DD3CC433C7;
-	Wed, 13 Dec 2023 22:55:37 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="OK3jor4h"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id D52EAC433C7;
+	Wed, 13 Dec 2023 22:55:52 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1702508137;
-	bh=RfSj6Z7thumCAGiqVMwk7Ofkl8FLbF1vXPZM5B/qZtQ=;
+	s=k20201202; t=1702508152;
+	bh=PoED5LagyWtSKyKkb1QZKbRw409cq3ie7U3IIkJjhkY=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=kNDGNdc259WQp86Gh88PDwclsROZkmeFJV8QFYU9fh4B3g0u3IDERed12xjp52VP6
-	 spJTsCof5I/eoPmK8v5azR5452ZQLxSL8UcSHSE7OqRn0OgmrsTFgnbfdIc8Sma1gX
-	 r91+W9lE6RoIyiSkUz6b0V5tu1wVg5E2bOIeVglOYudl+6spfckxHOn/u/Yh6ysZrA
-	 m+/T54gXa+oIMBqUyJ6Oq2cstCn9jBfCIL8kyUh5nXzI18E2tscSi5iQSg2m7J8CBJ
-	 ye+7Iq/RwcDpvrj1f6dPlUv9TDQVHbZV9Rrp2yytZwmMxk9L9RUV8z5ZQptj9IzUpl
-	 4qlNKdF+zz0Bw==
-Date: Wed, 13 Dec 2023 14:55:36 -0800
-Subject: [PATCH 9/9] xfs: skip the rmapbt search on an empty attr fork unless
- we know it was zapped
+	b=OK3jor4hoiGU3LRVjUdW0tdIEW+TRcmowhzklKw0VmR4ueSQvlLb0sgvRHov1+7QF
+	 5umlCTknSchN9voIiVq6hmXz96wRmLBRA+t8FFVePN8RjE39UsBjW6/yX9N502h9Ak
+	 INs5hp9/fyYAV3heIfmDyhuQfTOEE7UYrGY6exS0Gs4Pu5gcaJgIuBu4Pl/fTP9eRc
+	 rvfkI2Oi/nBIH/7IxkCRVDmXBWFlVcYCXw7gsU3+V4tMeXT7fe6mb++xhsiXTJcohN
+	 13p3tO3lSdchzY6NhoL7qzufJdcKenXA05BJ1CJc0iYq9+dQDWWGVlKn7fNkjN8HUS
+	 qCc5Qw6TFTiNw==
+Date: Wed, 13 Dec 2023 14:55:52 -0800
+Subject: [PATCH 1/5] xfs: reintroduce reaping of file metadata blocks to
+ xrep_reap_extents
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: djwong@kernel.org, hch@lst.de, chandanbabu@kernel.org
 Cc: linux-xfs@vger.kernel.org
-Message-ID: <170250783612.1399182.15991983383343750542.stgit@frogsfrogsfrogs>
-In-Reply-To: <170250783447.1399182.12936206088783796234.stgit@frogsfrogsfrogs>
-References: <170250783447.1399182.12936206088783796234.stgit@frogsfrogsfrogs>
+Message-ID: <170250783956.1399452.12449607495766249768.stgit@frogsfrogsfrogs>
+In-Reply-To: <170250783929.1399452.16224631770180304352.stgit@frogsfrogsfrogs>
+References: <170250783929.1399452.16224631770180304352.stgit@frogsfrogsfrogs>
 User-Agent: StGit/0.19
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
@@ -38,162 +38,243 @@ Content-Transfer-Encoding: 7bit
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-The attribute fork scrubber can optionally scan the reverse mapping
-records of the filesystem to determine if the fork is missing mappings
-that it should have.  However, this is a very expensive operation, so we
-only want to do this if we suspect that the fork is missing records.
-For attribute forks the criteria for suspicion is that the attr fork is
-in EXTENTS format and has zero extents.
+Back in commit a55e07308831b ("xfs: only allow reaping of per-AG
+blocks in xrep_reap_extents"), we removed from the reaping code the
+ability to handle bmbt blocks.  At the time, the reaping code only
+walked single blocks, didn't correctly detect crosslinked blocks, and
+the special casing made the function hard to understand.  It was easier
+to remove unneeded functionality prior to fixing all the bugs.
 
-However, there are several ways that a file can end up in this state
-through regular filesystem usage.  For example, an LSM can set a
-s_security hook but then decide not to set an ACL; or an attr set can
-create the attr fork but then the actual set operation fails with
-ENOSPC; or we can delete all the attrs on a file whose data fork is in
-btree format, in which case we do not delete the attr fork.  We don't
-want to run the expensive check for any case that can be arrived at
-through regular operations.
-
-However.
-
-When online inode repair decides to zap an attribute fork, it cannot
-determine if it is zapping ACL information.  As a precaution it removes
-all the discretionary access control permissions and sets the user and
-group ids to zero.  Check these three additional conditions to decide if
-we want to scan the rmap records.
+Now that we've fixed the problems, we want again the ability to reap
+file metadata blocks.  Reintroduce the per-file reaping functionality
+atop the current implementation.  We require that sc->sa is
+uninitialized, so that we can use it to hold all the per-AG context for
+a given extent.
 
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 Reviewed-by: Christoph Hellwig <hch@lst.de>
 ---
- fs/xfs/scrub/bmap.c |  101 ++++++++++++++++++++++++++++++++++++++++-----------
- 1 file changed, 79 insertions(+), 22 deletions(-)
+ fs/xfs/scrub/fsb_bitmap.h |   37 ++++++++++++++
+ fs/xfs/scrub/reap.c       |  121 ++++++++++++++++++++++++++++++++++++++++++++-
+ fs/xfs/scrub/reap.h       |    5 ++
+ fs/xfs/scrub/repair.h     |    1 
+ 4 files changed, 160 insertions(+), 4 deletions(-)
+ create mode 100644 fs/xfs/scrub/fsb_bitmap.h
 
 
-diff --git a/fs/xfs/scrub/bmap.c b/fs/xfs/scrub/bmap.c
-index 1487aaf3d95f..8175e8c17c14 100644
---- a/fs/xfs/scrub/bmap.c
-+++ b/fs/xfs/scrub/bmap.c
-@@ -638,6 +638,82 @@ xchk_bmap_check_ag_rmaps(
- 	return error;
- }
+diff --git a/fs/xfs/scrub/fsb_bitmap.h b/fs/xfs/scrub/fsb_bitmap.h
+new file mode 100644
+index 000000000000..40b462c1dd0d
+--- /dev/null
++++ b/fs/xfs/scrub/fsb_bitmap.h
+@@ -0,0 +1,37 @@
++// SPDX-License-Identifier: GPL-2.0-or-later
++/*
++ * Copyright (C) 2018-2023 Oracle.  All Rights Reserved.
++ * Author: Darrick J. Wong <djwong@kernel.org>
++ */
++#ifndef __XFS_SCRUB_FSB_BITMAP_H__
++#define __XFS_SCRUB_FSB_BITMAP_H__
++
++/* Bitmaps, but for type-checked for xfs_fsblock_t */
++
++struct xfsb_bitmap {
++	struct xbitmap64	fsbitmap;
++};
++
++static inline void xfsb_bitmap_init(struct xfsb_bitmap *bitmap)
++{
++	xbitmap64_init(&bitmap->fsbitmap);
++}
++
++static inline void xfsb_bitmap_destroy(struct xfsb_bitmap *bitmap)
++{
++	xbitmap64_destroy(&bitmap->fsbitmap);
++}
++
++static inline int xfsb_bitmap_set(struct xfsb_bitmap *bitmap,
++		xfs_fsblock_t start, xfs_filblks_t len)
++{
++	return xbitmap64_set(&bitmap->fsbitmap, start, len);
++}
++
++static inline int xfsb_bitmap_walk(struct xfsb_bitmap *bitmap,
++		xbitmap64_walk_fn fn, void *priv)
++{
++	return xbitmap64_walk(&bitmap->fsbitmap, fn, priv);
++}
++
++#endif	/* __XFS_SCRUB_FSB_BITMAP_H__ */
+diff --git a/fs/xfs/scrub/reap.c b/fs/xfs/scrub/reap.c
+index 80032065d700..b9069c6e57a0 100644
+--- a/fs/xfs/scrub/reap.c
++++ b/fs/xfs/scrub/reap.c
+@@ -38,6 +38,7 @@
+ #include "scrub/repair.h"
+ #include "scrub/bitmap.h"
+ #include "scrub/agb_bitmap.h"
++#include "scrub/fsb_bitmap.h"
+ #include "scrub/reap.h"
  
-+/*
-+ * Decide if we want to scan the reverse mappings to determine if the attr
-+ * fork /really/ has zero space mappings.
-+ */
-+STATIC bool
-+xchk_bmap_check_empty_attrfork(
-+	struct xfs_inode	*ip)
-+{
-+	struct xfs_ifork	*ifp = &ip->i_af;
-+
-+	/*
-+	 * If the dinode repair found a bad attr fork, it will reset the fork
-+	 * to extents format with zero records and wait for the this scrubber
-+	 * to reconstruct the block mappings.  If the fork is not in this
-+	 * state, then the fork cannot have been zapped.
-+	 */
-+	if (ifp->if_format != XFS_DINODE_FMT_EXTENTS || ifp->if_nextents != 0)
-+		return false;
-+
-+	/*
-+	 * Files can have an attr fork in EXTENTS format with zero records for
-+	 * several reasons:
-+	 *
-+	 * a) an attr set created a fork but ran out of space
-+	 * b) attr replace deleted an old attr but failed during the set step
-+	 * c) the data fork was in btree format when all attrs were deleted, so
-+	 *    the fork was left in place
-+	 * d) the inode repair code zapped the fork
-+	 *
-+	 * Only in case (d) do we want to scan the rmapbt to see if we need to
-+	 * rebuild the attr fork.  The fork zap code clears all DAC permission
-+	 * bits and zeroes the uid and gid, so avoid the scan if any of those
-+	 * three conditions are not met.
-+	 */
-+	if ((VFS_I(ip)->i_mode & 0777) != 0)
-+		return false;
-+	if (!uid_eq(VFS_I(ip)->i_uid, GLOBAL_ROOT_UID))
-+		return false;
-+	if (!gid_eq(VFS_I(ip)->i_gid, GLOBAL_ROOT_GID))
-+		return false;
-+
-+	return true;
-+}
-+
-+/*
-+ * Decide if we want to scan the reverse mappings to determine if the data
-+ * fork /really/ has zero space mappings.
-+ */
-+STATIC bool
-+xchk_bmap_check_empty_datafork(
-+	struct xfs_inode	*ip)
-+{
-+	struct xfs_ifork	*ifp = &ip->i_df;
-+
-+	/* Don't support realtime rmap checks yet. */
-+	if (XFS_IS_REALTIME_INODE(ip))
-+		return false;
-+
-+	/*
-+	 * If the dinode repair found a bad data fork, it will reset the fork
-+	 * to extents format with zero records and wait for the this scrubber
-+	 * to reconstruct the block mappings.  If the fork is not in this
-+	 * state, then the fork cannot have been zapped.
-+	 */
-+	if (ifp->if_format != XFS_DINODE_FMT_EXTENTS || ifp->if_nextents != 0)
-+		return false;
-+
-+	/*
-+	 * If we encounter an empty data fork along with evidence that the fork
-+	 * might not really be empty, we need to scan the reverse mappings to
-+	 * decide if we're going to rebuild the fork.  Data forks with nonzero
-+	 * file size are scanned.
-+	 */
-+	return i_size_read(VFS_I(ip)) != 0;
-+}
-+
  /*
-  * Decide if we want to walk every rmap btree in the fs to make sure that each
-  * rmap for this file fork has corresponding bmbt entries.
-@@ -647,7 +723,6 @@ xchk_bmap_want_check_rmaps(
- 	struct xchk_bmap_info	*info)
- {
- 	struct xfs_scrub	*sc = info->sc;
--	struct xfs_ifork	*ifp;
+@@ -75,10 +76,10 @@
+  * with only the same rmap owner but the block is not owned by something with
+  * the same rmap owner, the block will be freed.
+  *
+- * The caller is responsible for locking the AG headers for the entire rebuild
+- * operation so that nothing else can sneak in and change the AG state while
+- * we're not looking.  We must also invalidate any buffers associated with
+- * @bitmap.
++ * The caller is responsible for locking the AG headers/inode for the entire
++ * rebuild operation so that nothing else can sneak in and change the incore
++ * state while we're not looking.  We must also invalidate any buffers
++ * associated with @bitmap.
+  */
  
- 	if (!xfs_has_rmapbt(sc->mp))
- 		return false;
-@@ -656,28 +731,10 @@ xchk_bmap_want_check_rmaps(
- 	if (sc->sm->sm_flags & XFS_SCRUB_OFLAG_CORRUPT)
- 		return false;
+ /* Information about reaping extents after a repair. */
+@@ -501,3 +502,115 @@ xrep_reap_agblocks(
  
--	/* Don't support realtime rmap checks yet. */
--	if (info->is_rt)
--		return false;
-+	if (info->whichfork == XFS_ATTR_FORK)
-+		return xchk_bmap_check_empty_attrfork(sc->ip);
- 
--	/*
--	 * The inode repair code zaps broken inode forks by resetting them back
--	 * to EXTENTS format and zero extent records.  If we encounter a fork
--	 * in this state along with evidence that the fork isn't supposed to be
--	 * empty, we need to scan the reverse mappings to decide if we're going
--	 * to rebuild the fork.  Data forks with nonzero file size are scanned.
--	 * xattr forks are never empty of content, so they are always scanned.
--	 */
--	ifp = xfs_ifork_ptr(sc->ip, info->whichfork);
--	if (ifp->if_format == XFS_DINODE_FMT_EXTENTS && ifp->if_nextents == 0) {
--		if (info->whichfork == XFS_DATA_FORK &&
--		    i_size_read(VFS_I(sc->ip)) == 0)
--			return false;
--
--		return true;
--	}
--
--	return false;
-+	return xchk_bmap_check_empty_datafork(sc->ip);
+ 	return 0;
  }
++
++/*
++ * Break a file metadata extent into sub-extents by fate (crosslinked, not
++ * crosslinked), and dispose of each sub-extent separately.  The extent must
++ * not cross an AG boundary.
++ */
++STATIC int
++xreap_fsmeta_extent(
++	uint64_t		fsbno,
++	uint64_t		len,
++	void			*priv)
++{
++	struct xreap_state	*rs = priv;
++	struct xfs_scrub	*sc = rs->sc;
++	xfs_agnumber_t		agno = XFS_FSB_TO_AGNO(sc->mp, fsbno);
++	xfs_agblock_t		agbno = XFS_FSB_TO_AGBNO(sc->mp, fsbno);
++	xfs_agblock_t		agbno_next = agbno + len;
++	int			error = 0;
++
++	ASSERT(len <= XFS_MAX_BMBT_EXTLEN);
++	ASSERT(sc->ip != NULL);
++	ASSERT(!sc->sa.pag);
++
++	/*
++	 * We're reaping blocks after repairing file metadata, which means that
++	 * we have to init the xchk_ag structure ourselves.
++	 */
++	sc->sa.pag = xfs_perag_get(sc->mp, agno);
++	if (!sc->sa.pag)
++		return -EFSCORRUPTED;
++
++	error = xfs_alloc_read_agf(sc->sa.pag, sc->tp, 0, &sc->sa.agf_bp);
++	if (error)
++		goto out_pag;
++
++	while (agbno < agbno_next) {
++		xfs_extlen_t	aglen;
++		bool		crosslinked;
++
++		error = xreap_agextent_select(rs, agbno, agbno_next,
++				&crosslinked, &aglen);
++		if (error)
++			goto out_agf;
++
++		error = xreap_agextent_iter(rs, agbno, &aglen, crosslinked);
++		if (error)
++			goto out_agf;
++
++		if (xreap_want_defer_finish(rs)) {
++			/*
++			 * Holds the AGF buffer across the deferred chain
++			 * processing.
++			 */
++			error = xrep_defer_finish(sc);
++			if (error)
++				goto out_agf;
++			xreap_defer_finish_reset(rs);
++		} else if (xreap_want_roll(rs)) {
++			/*
++			 * Hold the AGF buffer across the transaction roll so
++			 * that we don't have to reattach it to the scrub
++			 * context.
++			 */
++			xfs_trans_bhold(sc->tp, sc->sa.agf_bp);
++			error = xfs_trans_roll_inode(&sc->tp, sc->ip);
++			xfs_trans_bjoin(sc->tp, sc->sa.agf_bp);
++			if (error)
++				goto out_agf;
++			xreap_reset(rs);
++		}
++
++		agbno += aglen;
++	}
++
++out_agf:
++	xfs_trans_brelse(sc->tp, sc->sa.agf_bp);
++	sc->sa.agf_bp = NULL;
++out_pag:
++	xfs_perag_put(sc->sa.pag);
++	sc->sa.pag = NULL;
++	return error;
++}
++
++/*
++ * Dispose of every block of every fs metadata extent in the bitmap.
++ * Do not use this to dispose of the mappings in an ondisk inode fork.
++ */
++int
++xrep_reap_fsblocks(
++	struct xfs_scrub		*sc,
++	struct xfsb_bitmap		*bitmap,
++	const struct xfs_owner_info	*oinfo)
++{
++	struct xreap_state		rs = {
++		.sc			= sc,
++		.oinfo			= oinfo,
++		.resv			= XFS_AG_RESV_NONE,
++	};
++	int				error;
++
++	ASSERT(xfs_has_rmapbt(sc->mp));
++	ASSERT(sc->ip != NULL);
++
++	error = xfsb_bitmap_walk(bitmap, xreap_fsmeta_extent, &rs);
++	if (error)
++		return error;
++
++	if (xreap_dirty(&rs))
++		return xrep_defer_finish(sc);
++
++	return 0;
++}
+diff --git a/fs/xfs/scrub/reap.h b/fs/xfs/scrub/reap.h
+index fe24626af164..0b69f16dd98f 100644
+--- a/fs/xfs/scrub/reap.h
++++ b/fs/xfs/scrub/reap.h
+@@ -6,7 +6,12 @@
+ #ifndef __XFS_SCRUB_REAP_H__
+ #define __XFS_SCRUB_REAP_H__
  
- /* Make sure each rmap has a corresponding bmbt entry. */
++struct xagb_bitmap;
++struct xfsb_bitmap;
++
+ int xrep_reap_agblocks(struct xfs_scrub *sc, struct xagb_bitmap *bitmap,
+ 		const struct xfs_owner_info *oinfo, enum xfs_ag_resv_type type);
++int xrep_reap_fsblocks(struct xfs_scrub *sc, struct xfsb_bitmap *bitmap,
++		const struct xfs_owner_info *oinfo);
+ 
+ #endif /* __XFS_SCRUB_REAP_H__ */
+diff --git a/fs/xfs/scrub/repair.h b/fs/xfs/scrub/repair.h
+index a513b84f5330..d4ef740c878f 100644
+--- a/fs/xfs/scrub/repair.h
++++ b/fs/xfs/scrub/repair.h
+@@ -48,6 +48,7 @@ xrep_trans_commit(
+ 
+ struct xbitmap;
+ struct xagb_bitmap;
++struct xfsb_bitmap;
+ 
+ int xrep_fix_freelist(struct xfs_scrub *sc, bool can_shrink);
+ 
 
