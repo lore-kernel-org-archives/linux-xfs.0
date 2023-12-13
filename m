@@ -1,31 +1,31 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 618FF8537E
-	for <linux-xfs@vger.kernel.org>; Wed, 13 Dec 2023 18:10:09 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4AEB956B7A
+	for <linux-xfs@vger.kernel.org>; Wed, 13 Dec 2023 18:10:43 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="qYqVbl3e"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 9E821C433C8;
-	Wed, 13 Dec 2023 18:10:09 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="dAcrc2Cp"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 0FD22C433C7;
+	Wed, 13 Dec 2023 18:10:43 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1702491009;
-	bh=LaYwgSBVqrt9bLnxq6qm4Wbfb6XYbH6BtFdz/LAuebc=;
+	s=k20201202; t=1702491043;
+	bh=8nhwjRh0+/rgSwqEfd6zBv7d45HjRUsij3xqSvNYFXk=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=qYqVbl3ea0NqrAjqYHemjBOjdHkdEwrxRvt7Fknz5wKmhC1mpAqtNiGId2HrXA2iv
-	 x5XcC/1umAXU/yra1IbNqVC/Htp8VjtqxVn4ggUoxKoDms7WT8xp0n7MwZOV/69sRS
-	 AXzHOhXuGiYiiju3thq0dtOX8xHHEeR3oMi927/grAgjsUvN4aVEsHYkMp5xYvjJ5L
-	 JQoomzL4qw3QfBwvxNkfw2xeATnMCXscKPJDx1XmxmnAGOc1ITUuKjlOVGmkaN6C6/
-	 WgmDYClOfUshpQ16N9mSKHxyztY7/7x/09amol+QVEdg0GFdea52tHv35BQ9VPQbJo
-	 NHbWrrsm6xMZQ==
-Date: Wed, 13 Dec 2023 10:10:09 -0800
+	b=dAcrc2CponRu5S3+8eyr1fS/GKzJ3UhpBC89X8Lr6qxyDDl/7apUbVhnSoFGApAOx
+	 R2jts4l7oPVr99CmpjHkXe17bRIK7H43R/Yoo0KmhhHDE/RU6Wbjuy8/+C6dmOfVWS
+	 liYrOX/wXgO/oOx7f3CSuUWmywFZxSRhhDbDG1tOdI4xE0ymylK83HYzDlgRNnhGf0
+	 qm+WLNMIkuW7Zx6Nb/JExJNFR33ZTWkSqqLN9ODc0cpnMZxVLOD7RXk+WIVvb3W8lj
+	 xWP/GA48OWwITc1t8lsujSj9MX+i+z2lIqb+celQHK9+p8kYm1y3Q5nw2oau0oJon4
+	 zbneGjl9qdIcQ==
+Date: Wed, 13 Dec 2023 10:10:42 -0800
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: Christoph Hellwig <hch@lst.de>
 Cc: Chandan Babu R <chandan.babu@oracle.com>,
 	"open list:XFS FILESYSTEM" <linux-xfs@vger.kernel.org>
-Subject: Re: [PATCH 1/5] xfs: consolidate the xfs_attr_defer_* helpers
-Message-ID: <20231213181009.GD361584@frogsfrogsfrogs>
+Subject: Re: [PATCH 2/5] xfs: move xfs_attr_defer_type up in xfs_attr_item.c
+Message-ID: <20231213181042.GE361584@frogsfrogsfrogs>
 References: <20231213090633.231707-1-hch@lst.de>
- <20231213090633.231707-2-hch@lst.de>
+ <20231213090633.231707-3-hch@lst.de>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -34,175 +34,106 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20231213090633.231707-2-hch@lst.de>
+In-Reply-To: <20231213090633.231707-3-hch@lst.de>
 
-On Wed, Dec 13, 2023 at 10:06:29AM +0100, Christoph Hellwig wrote:
-> Consolidate the xfs_attr_defer_* helpers into a single xfs_attr_defer_add
-> one that picks the right dela_state based on the passed in operation.
-> Also move to a single trace point as the actual operation is visible
-> through the flags in the delta_state passed to the trace point.
+On Wed, Dec 13, 2023 at 10:06:30AM +0100, Christoph Hellwig wrote:
+> We'll reference it directly in xlog_recover_attri_commit_pass2, so move
+> it up a bit.
 > 
 > Signed-off-by: Christoph Hellwig <hch@lst.de>
 
-Heh, I had been thinking about the same consolidation...
 Reviewed-by: Darrick J. Wong <djwong@kernel.org>
 
 --D
 
 > ---
->  fs/xfs/libxfs/xfs_attr.c | 90 ++++++++++------------------------------
->  fs/xfs/xfs_trace.h       |  2 -
->  2 files changed, 21 insertions(+), 71 deletions(-)
+>  fs/xfs/xfs_attr_item.c | 66 +++++++++++++++++++++---------------------
+>  1 file changed, 33 insertions(+), 33 deletions(-)
 > 
-> diff --git a/fs/xfs/libxfs/xfs_attr.c b/fs/xfs/libxfs/xfs_attr.c
-> index e28d93d232de49..4fed0c87a968ab 100644
-> --- a/fs/xfs/libxfs/xfs_attr.c
-> +++ b/fs/xfs/libxfs/xfs_attr.c
-> @@ -880,11 +880,10 @@ xfs_attr_lookup(
->  	return error;
+> diff --git a/fs/xfs/xfs_attr_item.c b/fs/xfs/xfs_attr_item.c
+> index 39f2c5a46179f7..4e0eaa2640e0d2 100644
+> --- a/fs/xfs/xfs_attr_item.c
+> +++ b/fs/xfs/xfs_attr_item.c
+> @@ -654,6 +654,39 @@ xfs_attr_relog_intent(
+>  	return &new_attrip->attri_item;
 >  }
 >  
-> -static int
-> -xfs_attr_intent_init(
-> +static void
-> +xfs_attr_defer_add(
->  	struct xfs_da_args	*args,
-> -	unsigned int		op_flags,	/* op flag (set or remove) */
-> -	struct xfs_attr_intent	**attr)		/* new xfs_attr_intent */
-> +	unsigned int		op_flags)
->  {
->  
->  	struct xfs_attr_intent	*new;
-> @@ -893,66 +892,22 @@ xfs_attr_intent_init(
->  	new->xattri_op_flags = op_flags;
->  	new->xattri_da_args = args;
->  
-> -	*attr = new;
-> -	return 0;
-> -}
-> -
-> -/* Sets an attribute for an inode as a deferred operation */
-> -static int
-> -xfs_attr_defer_add(
-> -	struct xfs_da_args	*args)
-> -{
-> -	struct xfs_attr_intent	*new;
-> -	int			error = 0;
-> -
-> -	error = xfs_attr_intent_init(args, XFS_ATTRI_OP_FLAGS_SET, &new);
-> -	if (error)
-> -		return error;
-> +	switch (op_flags) {
-> +	case XFS_ATTRI_OP_FLAGS_SET:
-> +		new->xattri_dela_state = xfs_attr_init_add_state(args);
-> +		break;
-> +	case XFS_ATTRI_OP_FLAGS_REPLACE:
-> +		new->xattri_dela_state = xfs_attr_init_replace_state(args);
-> +		break;
-> +	case XFS_ATTRI_OP_FLAGS_REMOVE:
-> +		new->xattri_dela_state = xfs_attr_init_remove_state(args);
-> +		break;
-> +	default:
-> +		ASSERT(0);
-> +	}
->  
-> -	new->xattri_dela_state = xfs_attr_init_add_state(args);
->  	xfs_defer_add(args->trans, XFS_DEFER_OPS_TYPE_ATTR, &new->xattri_list);
->  	trace_xfs_attr_defer_add(new->xattri_dela_state, args->dp);
-> -
-> -	return 0;
-> -}
-> -
-> -/* Sets an attribute for an inode as a deferred operation */
-> -static int
-> -xfs_attr_defer_replace(
-> -	struct xfs_da_args	*args)
-> -{
-> -	struct xfs_attr_intent	*new;
-> -	int			error = 0;
-> -
-> -	error = xfs_attr_intent_init(args, XFS_ATTRI_OP_FLAGS_REPLACE, &new);
-> -	if (error)
-> -		return error;
-> -
-> -	new->xattri_dela_state = xfs_attr_init_replace_state(args);
-> -	xfs_defer_add(args->trans, XFS_DEFER_OPS_TYPE_ATTR, &new->xattri_list);
-> -	trace_xfs_attr_defer_replace(new->xattri_dela_state, args->dp);
-> -
-> -	return 0;
-> -}
-> -
-> -/* Removes an attribute for an inode as a deferred operation */
-> -static int
-> -xfs_attr_defer_remove(
-> -	struct xfs_da_args	*args)
-> -{
-> -
-> -	struct xfs_attr_intent	*new;
-> -	int			error;
-> -
-> -	error  = xfs_attr_intent_init(args, XFS_ATTRI_OP_FLAGS_REMOVE, &new);
-> -	if (error)
-> -		return error;
-> -
-> -	new->xattri_dela_state = xfs_attr_init_remove_state(args);
-> -	xfs_defer_add(args->trans, XFS_DEFER_OPS_TYPE_ATTR, &new->xattri_list);
-> -	trace_xfs_attr_defer_remove(new->xattri_dela_state, args->dp);
-> -
-> -	return 0;
->  }
->  
->  /*
-> @@ -1038,16 +993,16 @@ xfs_attr_set(
->  	error = xfs_attr_lookup(args);
->  	switch (error) {
->  	case -EEXIST:
-> -		/* if no value, we are performing a remove operation */
->  		if (!args->value) {
-> -			error = xfs_attr_defer_remove(args);
-> +			/* if no value, we are performing a remove operation */
-> +			xfs_attr_defer_add(args, XFS_ATTRI_OP_FLAGS_REMOVE);
->  			break;
->  		}
+> +/* Get an ATTRD so we can process all the attrs. */
+> +static struct xfs_log_item *
+> +xfs_attr_create_done(
+> +	struct xfs_trans		*tp,
+> +	struct xfs_log_item		*intent,
+> +	unsigned int			count)
+> +{
+> +	struct xfs_attri_log_item	*attrip;
+> +	struct xfs_attrd_log_item	*attrdp;
 > +
->  		/* Pure create fails if the attr already exists */
->  		if (args->attr_flags & XATTR_CREATE)
->  			goto out_trans_cancel;
+> +	attrip = ATTRI_ITEM(intent);
+> +
+> +	attrdp = kmem_cache_zalloc(xfs_attrd_cache, GFP_NOFS | __GFP_NOFAIL);
+> +
+> +	xfs_log_item_init(tp->t_mountp, &attrdp->attrd_item, XFS_LI_ATTRD,
+> +			  &xfs_attrd_item_ops);
+> +	attrdp->attrd_attrip = attrip;
+> +	attrdp->attrd_format.alfd_alf_id = attrip->attri_format.alfi_id;
+> +
+> +	return &attrdp->attrd_item;
+> +}
+> +
+> +const struct xfs_defer_op_type xfs_attr_defer_type = {
+> +	.max_items	= 1,
+> +	.create_intent	= xfs_attr_create_intent,
+> +	.abort_intent	= xfs_attr_abort_intent,
+> +	.create_done	= xfs_attr_create_done,
+> +	.finish_item	= xfs_attr_finish_item,
+> +	.cancel_item	= xfs_attr_cancel_item,
+> +	.recover_work	= xfs_attr_recover_work,
+> +	.relog_intent	= xfs_attr_relog_intent,
+> +};
+> +
+>  STATIC int
+>  xlog_recover_attri_commit_pass2(
+>  	struct xlog                     *log,
+> @@ -730,39 +763,6 @@ xlog_recover_attri_commit_pass2(
+>  	return 0;
+>  }
+>  
+> -/* Get an ATTRD so we can process all the attrs. */
+> -static struct xfs_log_item *
+> -xfs_attr_create_done(
+> -	struct xfs_trans		*tp,
+> -	struct xfs_log_item		*intent,
+> -	unsigned int			count)
+> -{
+> -	struct xfs_attri_log_item	*attrip;
+> -	struct xfs_attrd_log_item	*attrdp;
 > -
-> -		error = xfs_attr_defer_replace(args);
-> +		xfs_attr_defer_add(args, XFS_ATTRI_OP_FLAGS_REPLACE);
->  		break;
->  	case -ENOATTR:
->  		/* Can't remove what isn't there. */
-> @@ -1057,14 +1012,11 @@ xfs_attr_set(
->  		/* Pure replace fails if no existing attr to replace. */
->  		if (args->attr_flags & XATTR_REPLACE)
->  			goto out_trans_cancel;
+> -	attrip = ATTRI_ITEM(intent);
 > -
-> -		error = xfs_attr_defer_add(args);
-> +		xfs_attr_defer_add(args, XFS_ATTRI_OP_FLAGS_SET);
->  		break;
->  	default:
->  		goto out_trans_cancel;
->  	}
-> -	if (error)
-> -		goto out_trans_cancel;
->  
->  	/*
->  	 * If this is a synchronous mount, make sure that the
-> diff --git a/fs/xfs/xfs_trace.h b/fs/xfs/xfs_trace.h
-> index 514095b6ba2bdb..516529c151ae1c 100644
-> --- a/fs/xfs/xfs_trace.h
-> +++ b/fs/xfs/xfs_trace.h
-> @@ -4408,8 +4408,6 @@ DEFINE_DAS_STATE_EVENT(xfs_attr_remove_iter_return);
->  DEFINE_DAS_STATE_EVENT(xfs_attr_rmtval_alloc);
->  DEFINE_DAS_STATE_EVENT(xfs_attr_rmtval_remove_return);
->  DEFINE_DAS_STATE_EVENT(xfs_attr_defer_add);
-> -DEFINE_DAS_STATE_EVENT(xfs_attr_defer_replace);
-> -DEFINE_DAS_STATE_EVENT(xfs_attr_defer_remove);
->  
->  
->  TRACE_EVENT(xfs_force_shutdown,
+> -	attrdp = kmem_cache_zalloc(xfs_attrd_cache, GFP_NOFS | __GFP_NOFAIL);
+> -
+> -	xfs_log_item_init(tp->t_mountp, &attrdp->attrd_item, XFS_LI_ATTRD,
+> -			  &xfs_attrd_item_ops);
+> -	attrdp->attrd_attrip = attrip;
+> -	attrdp->attrd_format.alfd_alf_id = attrip->attri_format.alfi_id;
+> -
+> -	return &attrdp->attrd_item;
+> -}
+> -
+> -const struct xfs_defer_op_type xfs_attr_defer_type = {
+> -	.max_items	= 1,
+> -	.create_intent	= xfs_attr_create_intent,
+> -	.abort_intent	= xfs_attr_abort_intent,
+> -	.create_done	= xfs_attr_create_done,
+> -	.finish_item	= xfs_attr_finish_item,
+> -	.cancel_item	= xfs_attr_cancel_item,
+> -	.recover_work	= xfs_attr_recover_work,
+> -	.relog_intent	= xfs_attr_relog_intent,
+> -};
+> -
+>  /*
+>   * This routine is called when an ATTRD format structure is found in a committed
+>   * transaction in the log. Its purpose is to cancel the corresponding ATTRI if
 > -- 
 > 2.39.2
 > 
