@@ -1,29 +1,29 @@
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="CAMcPFEi"
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="GZeK4QLf"
 Received: from bombadil.infradead.org (bombadil.infradead.org [IPv6:2607:7c80:54:3::133])
-	by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3DEFCE8
-	for <linux-xfs@vger.kernel.org>; Wed, 13 Dec 2023 01:06:51 -0800 (PST)
+	by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8360EAB
+	for <linux-xfs@vger.kernel.org>; Wed, 13 Dec 2023 01:06:54 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
 	d=infradead.org; s=bombadil.20210309; h=Content-Transfer-Encoding:
 	MIME-Version:References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:Sender
 	:Reply-To:Content-Type:Content-ID:Content-Description;
-	bh=Qz1tFzchrdh44yVMpX8pRKwJH1fFXYoAUjnbFDTkPwM=; b=CAMcPFEisL/1oNdoWzYDv9hLq0
-	JpWF91TVtMi9rTGAakv/YxSi2SIS3qMKesgDRIDOVurRlSCX28hjNd7EE9TqwO65DVIXb7syBbsYE
-	Hat69BvjSp9V1Ql6GmK9qk9ATWrFa8WPW5vxltqb2L0HFUhrd8hNV+P2Oh5gx5dtaWiEVWJoPm6IT
-	VnjcE7g68nChto+BtNNnLmYAWTKk28Pg4XXDJjxvR66mLaWBu1rsZMUtfbT7q78gBXBMMcVJ+5Nrz
-	TgU4+N291UAyU2TP+FjRk6ztet+NhSDf8xY/GDg/tyMUCYv2TodW3g0nxZ8JTdkj3YN7XqmMVJgRB
-	JglQNMsg==;
+	bh=fv/fONEgrreQq/fT8JHYyN+mU0sMeBNSyFIIlFpZVoU=; b=GZeK4QLfUi0sVI96He5Zcot4ON
+	t4AI+xBh0qf1eoG0ebjom6FJsmyLhLaQELy7258U2ZfZFVD/908/kJbJa0DJn/bHGneEztNxjH4Ev
+	7xOzoCTKNlRk5wUqNkEpZyKIb3G+FNpGCtJu/YEbAM6m4220nqqCdVhhRAbwHoM+dT282+GpGsE+Z
+	of18RfseG2W1VWpUK+7zJwtR/1kBYd9cgIMz2f/wTPOPu7Hfrmp5eeXE6dJbwMS4SQa6aEJ56O/gO
+	XjHWFmGtE/zVOmiMZRnDvGtRHx7VY/SGx0ZeHfd6A9j9qIB+nxc/I6pWSk7bf8iPHURr8Uljt+9Qy
+	maI3+tNg==;
 Received: from [2001:4bb8:19a:a621:c70:4a89:bc61:3] (helo=localhost)
 	by bombadil.infradead.org with esmtpsa (Exim 4.96 #2 (Red Hat Linux))
-	id 1rDLCb-00E6eN-11;
-	Wed, 13 Dec 2023 09:06:49 +0000
+	id 1rDLCe-00E6ek-0u;
+	Wed, 13 Dec 2023 09:06:52 +0000
 From: Christoph Hellwig <hch@lst.de>
 To: Chandan Babu R <chandan.babu@oracle.com>
 Cc: "Darrick J. Wong" <djwong@kernel.org>,
 	linux-xfs@vger.kernel.org (open list:XFS FILESYSTEM)
-Subject: [PATCH 4/5] xfs: pass the defer ops instead of type to xfs_defer_start_recovery
-Date: Wed, 13 Dec 2023 10:06:32 +0100
-Message-Id: <20231213090633.231707-5-hch@lst.de>
+Subject: [PATCH 5/5] xfs: pass the defer ops directly to xfs_defer_add
+Date: Wed, 13 Dec 2023 10:06:33 +0100
+Message-Id: <20231213090633.231707-6-hch@lst.de>
 X-Mailer: git-send-email 2.39.2
 In-Reply-To: <20231213090633.231707-1-hch@lst.de>
 References: <20231213090633.231707-1-hch@lst.de>
@@ -36,163 +36,169 @@ MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 
-xfs_defer_start_recovery is only called from xlog_recover_intent_item,
-and the callers of that all have the actual xfs_defer_ops_type operation
-vector at hand.  Pass that directly instead of looking it up from the
-defer_op_types table.
+Pass a pointer to the xfs_defer_op_type structure to xfs_defer_add and
+remove the indirection through the xfs_defer_ops_type enum and a global
+table of all possible operations.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 ---
- fs/xfs/libxfs/xfs_defer.c       | 6 +++---
- fs/xfs/libxfs/xfs_defer.h       | 2 +-
- fs/xfs/libxfs/xfs_log_recover.h | 3 ++-
- fs/xfs/xfs_attr_item.c          | 2 +-
- fs/xfs/xfs_bmap_item.c          | 2 +-
- fs/xfs/xfs_extfree_item.c       | 2 +-
- fs/xfs/xfs_log_recover.c        | 4 ++--
- fs/xfs/xfs_refcount_item.c      | 2 +-
- fs/xfs/xfs_rmap_item.c          | 2 +-
- 9 files changed, 13 insertions(+), 12 deletions(-)
+ fs/xfs/libxfs/xfs_alloc.c    |  4 ++--
+ fs/xfs/libxfs/xfs_attr.c     |  2 +-
+ fs/xfs/libxfs/xfs_bmap.c     |  2 +-
+ fs/xfs/libxfs/xfs_defer.c    | 16 ++--------------
+ fs/xfs/libxfs/xfs_defer.h    | 18 ++----------------
+ fs/xfs/libxfs/xfs_refcount.c |  2 +-
+ fs/xfs/libxfs/xfs_rmap.c     |  2 +-
+ 7 files changed, 10 insertions(+), 36 deletions(-)
 
+diff --git a/fs/xfs/libxfs/xfs_alloc.c b/fs/xfs/libxfs/xfs_alloc.c
+index 4940f9377f21a1..60c2c18e8e54f9 100644
+--- a/fs/xfs/libxfs/xfs_alloc.c
++++ b/fs/xfs/libxfs/xfs_alloc.c
+@@ -2514,7 +2514,7 @@ xfs_defer_agfl_block(
+ 	trace_xfs_agfl_free_defer(mp, agno, 0, agbno, 1);
+ 
+ 	xfs_extent_free_get_group(mp, xefi);
+-	xfs_defer_add(tp, XFS_DEFER_OPS_TYPE_AGFL_FREE, &xefi->xefi_list);
++	xfs_defer_add(tp, &xefi->xefi_list, &xfs_agfl_free_defer_type);
+ 	return 0;
+ }
+ 
+@@ -2578,7 +2578,7 @@ xfs_defer_extent_free(
+ 			XFS_FSB_TO_AGBNO(tp->t_mountp, bno), len);
+ 
+ 	xfs_extent_free_get_group(mp, xefi);
+-	*dfpp = xfs_defer_add(tp, XFS_DEFER_OPS_TYPE_FREE, &xefi->xefi_list);
++	*dfpp = xfs_defer_add(tp, &xefi->xefi_list, &xfs_extent_free_defer_type);
+ 	return 0;
+ }
+ 
+diff --git a/fs/xfs/libxfs/xfs_attr.c b/fs/xfs/libxfs/xfs_attr.c
+index 4fed0c87a968ab..fa49c795f40745 100644
+--- a/fs/xfs/libxfs/xfs_attr.c
++++ b/fs/xfs/libxfs/xfs_attr.c
+@@ -906,7 +906,7 @@ xfs_attr_defer_add(
+ 		ASSERT(0);
+ 	}
+ 
+-	xfs_defer_add(args->trans, XFS_DEFER_OPS_TYPE_ATTR, &new->xattri_list);
++	xfs_defer_add(args->trans, &new->xattri_list, &xfs_attr_defer_type);
+ 	trace_xfs_attr_defer_add(new->xattri_dela_state, args->dp);
+ }
+ 
+diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
+index ca6614f4eac50a..e308d2f44a3c31 100644
+--- a/fs/xfs/libxfs/xfs_bmap.c
++++ b/fs/xfs/libxfs/xfs_bmap.c
+@@ -6091,7 +6091,7 @@ __xfs_bmap_add(
+ 	bi->bi_bmap = *bmap;
+ 
+ 	xfs_bmap_update_get_group(tp->t_mountp, bi);
+-	xfs_defer_add(tp, XFS_DEFER_OPS_TYPE_BMAP, &bi->bi_list);
++	xfs_defer_add(tp, &bi->bi_list, &xfs_bmap_update_defer_type);
+ 	return 0;
+ }
+ 
 diff --git a/fs/xfs/libxfs/xfs_defer.c b/fs/xfs/libxfs/xfs_defer.c
-index e70881ae5cc597..6a6444ffe5544b 100644
+index 6a6444ffe5544b..10987877f19378 100644
 --- a/fs/xfs/libxfs/xfs_defer.c
 +++ b/fs/xfs/libxfs/xfs_defer.c
-@@ -894,14 +894,14 @@ xfs_defer_add_barrier(
- void
- xfs_defer_start_recovery(
- 	struct xfs_log_item		*lip,
--	enum xfs_defer_ops_type		dfp_type,
--	struct list_head		*r_dfops)
-+	struct list_head		*r_dfops,
-+	const struct xfs_defer_op_type *ops)
- {
- 	struct xfs_defer_pending	*dfp;
+@@ -235,16 +235,6 @@ static const struct xfs_defer_op_type xfs_barrier_defer_type = {
+ 	.cancel_item	= xfs_defer_barrier_cancel_item,
+ };
  
- 	dfp = kmem_cache_zalloc(xfs_defer_pending_cache,
- 			GFP_NOFS | __GFP_NOFAIL);
--	dfp->dfp_ops = defer_op_types[dfp_type];
-+	dfp->dfp_ops = ops;
- 	dfp->dfp_intent = lip;
- 	INIT_LIST_HEAD(&dfp->dfp_work);
- 	list_add_tail(&dfp->dfp_list, r_dfops);
-diff --git a/fs/xfs/libxfs/xfs_defer.h b/fs/xfs/libxfs/xfs_defer.h
-index 957a06278e880d..60de91b6639225 100644
---- a/fs/xfs/libxfs/xfs_defer.h
-+++ b/fs/xfs/libxfs/xfs_defer.h
-@@ -147,7 +147,7 @@ void xfs_defer_ops_capture_abort(struct xfs_mount *mp,
- void xfs_defer_resources_rele(struct xfs_defer_resources *dres);
- 
- void xfs_defer_start_recovery(struct xfs_log_item *lip,
--		enum xfs_defer_ops_type dfp_type, struct list_head *r_dfops);
-+		struct list_head *r_dfops, const struct xfs_defer_op_type *ops);
- void xfs_defer_cancel_recovery(struct xfs_mount *mp,
- 		struct xfs_defer_pending *dfp);
- int xfs_defer_finish_recovery(struct xfs_mount *mp,
-diff --git a/fs/xfs/libxfs/xfs_log_recover.h b/fs/xfs/libxfs/xfs_log_recover.h
-index c8e5d912895bcd..9fe7a9564bca96 100644
---- a/fs/xfs/libxfs/xfs_log_recover.h
-+++ b/fs/xfs/libxfs/xfs_log_recover.h
-@@ -11,6 +11,7 @@
-  * define how recovery should work for that type of log item.
-  */
- struct xlog_recover_item;
-+struct xfs_defer_op_type;
- 
- /* Sorting hat for log items as they're read in. */
- enum xlog_recover_reorder {
-@@ -156,7 +157,7 @@ xlog_recover_resv(const struct xfs_trans_res *r)
- struct xfs_defer_pending;
- 
- void xlog_recover_intent_item(struct xlog *log, struct xfs_log_item *lip,
--		xfs_lsn_t lsn, unsigned int dfp_type);
-+		xfs_lsn_t lsn, const struct xfs_defer_op_type *ops);
- int xlog_recover_finish_intent(struct xfs_trans *tp,
- 		struct xfs_defer_pending *dfp);
- 
-diff --git a/fs/xfs/xfs_attr_item.c b/fs/xfs/xfs_attr_item.c
-index beae2de824507b..9e02111bd89010 100644
---- a/fs/xfs/xfs_attr_item.c
-+++ b/fs/xfs/xfs_attr_item.c
-@@ -759,7 +759,7 @@ xlog_recover_attri_commit_pass2(
- 	memcpy(&attrip->attri_format, attri_formatp, len);
- 
- 	xlog_recover_intent_item(log, &attrip->attri_item, lsn,
--			XFS_DEFER_OPS_TYPE_ATTR);
-+			&xfs_attr_defer_type);
- 	xfs_attri_log_nameval_put(nv);
- 	return 0;
- }
-diff --git a/fs/xfs/xfs_bmap_item.c b/fs/xfs/xfs_bmap_item.c
-index f43abf0b648641..52fb8a148b7dcb 100644
---- a/fs/xfs/xfs_bmap_item.c
-+++ b/fs/xfs/xfs_bmap_item.c
-@@ -650,7 +650,7 @@ xlog_recover_bui_commit_pass2(
- 	atomic_set(&buip->bui_next_extent, bui_formatp->bui_nextents);
- 
- 	xlog_recover_intent_item(log, &buip->bui_item, lsn,
--			XFS_DEFER_OPS_TYPE_BMAP);
-+			&xfs_bmap_update_defer_type);
- 	return 0;
- }
- 
-diff --git a/fs/xfs/xfs_extfree_item.c b/fs/xfs/xfs_extfree_item.c
-index e67907a379c8e8..1d1185fca6a58e 100644
---- a/fs/xfs/xfs_extfree_item.c
-+++ b/fs/xfs/xfs_extfree_item.c
-@@ -747,7 +747,7 @@ xlog_recover_efi_commit_pass2(
- 	atomic_set(&efip->efi_next_extent, efi_formatp->efi_nextents);
- 
- 	xlog_recover_intent_item(log, &efip->efi_item, lsn,
--			XFS_DEFER_OPS_TYPE_FREE);
-+			&xfs_extent_free_defer_type);
- 	return 0;
- }
- 
-diff --git a/fs/xfs/xfs_log_recover.c b/fs/xfs/xfs_log_recover.c
-index c18692af2c651c..1251c81e55f982 100644
---- a/fs/xfs/xfs_log_recover.c
-+++ b/fs/xfs/xfs_log_recover.c
-@@ -1942,11 +1942,11 @@ xlog_recover_intent_item(
- 	struct xlog			*log,
- 	struct xfs_log_item		*lip,
- 	xfs_lsn_t			lsn,
--	unsigned int			dfp_type)
+-static const struct xfs_defer_op_type *defer_op_types[] = {
+-	[XFS_DEFER_OPS_TYPE_BMAP]	= &xfs_bmap_update_defer_type,
+-	[XFS_DEFER_OPS_TYPE_REFCOUNT]	= &xfs_refcount_update_defer_type,
+-	[XFS_DEFER_OPS_TYPE_RMAP]	= &xfs_rmap_update_defer_type,
+-	[XFS_DEFER_OPS_TYPE_FREE]	= &xfs_extent_free_defer_type,
+-	[XFS_DEFER_OPS_TYPE_AGFL_FREE]	= &xfs_agfl_free_defer_type,
+-	[XFS_DEFER_OPS_TYPE_ATTR]	= &xfs_attr_defer_type,
+-	[XFS_DEFER_OPS_TYPE_BARRIER]	= &xfs_barrier_defer_type,
+-};
+-
+ /* Create a log intent done item for a log intent item. */
+ static inline void
+ xfs_defer_create_done(
+@@ -847,14 +837,12 @@ xfs_defer_alloc(
+ struct xfs_defer_pending *
+ xfs_defer_add(
+ 	struct xfs_trans		*tp,
+-	enum xfs_defer_ops_type		type,
+-	struct list_head		*li)
++	struct list_head		*li,
 +	const struct xfs_defer_op_type	*ops)
  {
- 	ASSERT(xlog_item_is_intent(lip));
+ 	struct xfs_defer_pending	*dfp = NULL;
+-	const struct xfs_defer_op_type	*ops = defer_op_types[type];
  
--	xfs_defer_start_recovery(lip, dfp_type, &log->r_dfops);
-+	xfs_defer_start_recovery(lip, &log->r_dfops, ops);
+ 	ASSERT(tp->t_flags & XFS_TRANS_PERM_LOG_RES);
+-	BUILD_BUG_ON(ARRAY_SIZE(defer_op_types) != XFS_DEFER_OPS_TYPE_MAX);
  
- 	/*
- 	 * Insert the intent into the AIL directly and drop one reference so
-diff --git a/fs/xfs/xfs_refcount_item.c b/fs/xfs/xfs_refcount_item.c
-index b08839550f34a3..20ad8086da60be 100644
---- a/fs/xfs/xfs_refcount_item.c
-+++ b/fs/xfs/xfs_refcount_item.c
-@@ -605,7 +605,7 @@ xlog_recover_cui_commit_pass2(
- 	atomic_set(&cuip->cui_next_extent, cui_formatp->cui_nextents);
+ 	dfp = xfs_defer_find_last(tp, ops);
+ 	if (!dfp || !xfs_defer_can_append(dfp, ops))
+diff --git a/fs/xfs/libxfs/xfs_defer.h b/fs/xfs/libxfs/xfs_defer.h
+index 60de91b6639225..18a9fb92dde8e6 100644
+--- a/fs/xfs/libxfs/xfs_defer.h
++++ b/fs/xfs/libxfs/xfs_defer.h
+@@ -10,20 +10,6 @@ struct xfs_btree_cur;
+ struct xfs_defer_op_type;
+ struct xfs_defer_capture;
  
- 	xlog_recover_intent_item(log, &cuip->cui_item, lsn,
--			XFS_DEFER_OPS_TYPE_REFCOUNT);
-+			&xfs_refcount_update_defer_type);
- 	return 0;
+-/*
+- * Header for deferred operation list.
+- */
+-enum xfs_defer_ops_type {
+-	XFS_DEFER_OPS_TYPE_BMAP,
+-	XFS_DEFER_OPS_TYPE_REFCOUNT,
+-	XFS_DEFER_OPS_TYPE_RMAP,
+-	XFS_DEFER_OPS_TYPE_FREE,
+-	XFS_DEFER_OPS_TYPE_AGFL_FREE,
+-	XFS_DEFER_OPS_TYPE_ATTR,
+-	XFS_DEFER_OPS_TYPE_BARRIER,
+-	XFS_DEFER_OPS_TYPE_MAX,
+-};
+-
+ /*
+  * Save a log intent item and a list of extents, so that we can replay
+  * whatever action had to happen to the extent list and file the log done
+@@ -51,8 +37,8 @@ struct xfs_defer_pending {
+ void xfs_defer_item_pause(struct xfs_trans *tp, struct xfs_defer_pending *dfp);
+ void xfs_defer_item_unpause(struct xfs_trans *tp, struct xfs_defer_pending *dfp);
+ 
+-struct xfs_defer_pending *xfs_defer_add(struct xfs_trans *tp,
+-		enum xfs_defer_ops_type type, struct list_head *h);
++struct xfs_defer_pending *xfs_defer_add(struct xfs_trans *tp, struct list_head *h,
++		const struct xfs_defer_op_type *ops);
+ int xfs_defer_finish_noroll(struct xfs_trans **tp);
+ int xfs_defer_finish(struct xfs_trans **tp);
+ int xfs_defer_finish_one(struct xfs_trans *tp, struct xfs_defer_pending *dfp);
+diff --git a/fs/xfs/libxfs/xfs_refcount.c b/fs/xfs/libxfs/xfs_refcount.c
+index 3702b4a071100d..5b039cd022e073 100644
+--- a/fs/xfs/libxfs/xfs_refcount.c
++++ b/fs/xfs/libxfs/xfs_refcount.c
+@@ -1458,7 +1458,7 @@ __xfs_refcount_add(
+ 	ri->ri_blockcount = blockcount;
+ 
+ 	xfs_refcount_update_get_group(tp->t_mountp, ri);
+-	xfs_defer_add(tp, XFS_DEFER_OPS_TYPE_REFCOUNT, &ri->ri_list);
++	xfs_defer_add(tp, &ri->ri_list, &xfs_refcount_update_defer_type);
  }
  
-diff --git a/fs/xfs/xfs_rmap_item.c b/fs/xfs/xfs_rmap_item.c
-index 65b432eb5d025d..79ad0087aecaf5 100644
---- a/fs/xfs/xfs_rmap_item.c
-+++ b/fs/xfs/xfs_rmap_item.c
-@@ -658,7 +658,7 @@ xlog_recover_rui_commit_pass2(
- 	atomic_set(&ruip->rui_next_extent, rui_formatp->rui_nextents);
+ /*
+diff --git a/fs/xfs/libxfs/xfs_rmap.c b/fs/xfs/libxfs/xfs_rmap.c
+index fbb0b263746352..76bf7f48cb5acf 100644
+--- a/fs/xfs/libxfs/xfs_rmap.c
++++ b/fs/xfs/libxfs/xfs_rmap.c
+@@ -2567,7 +2567,7 @@ __xfs_rmap_add(
+ 	ri->ri_bmap = *bmap;
  
- 	xlog_recover_intent_item(log, &ruip->rui_item, lsn,
--			XFS_DEFER_OPS_TYPE_RMAP);
-+			&xfs_rmap_update_defer_type);
- 	return 0;
+ 	xfs_rmap_update_get_group(tp->t_mountp, ri);
+-	xfs_defer_add(tp, XFS_DEFER_OPS_TYPE_RMAP, &ri->ri_list);
++	xfs_defer_add(tp, &ri->ri_list, &xfs_rmap_update_defer_type);
  }
  
+ /* Map an extent into a file. */
 -- 
 2.39.2
 
