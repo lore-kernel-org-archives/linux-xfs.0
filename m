@@ -1,22 +1,33 @@
-Received: from verein.lst.de (verein.lst.de [213.95.11.211])
-	by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 723FBA8;
-	Tue, 12 Dec 2023 08:32:54 -0800 (PST)
-Received: by verein.lst.de (Postfix, from userid 2407)
-	id C6ACA68C4E; Tue, 12 Dec 2023 17:32:46 +0100 (CET)
-Date: Tue, 12 Dec 2023 17:32:46 +0100
-From: Christoph Hellwig <hch@lst.de>
-To: John Garry <john.g.garry@oracle.com>
-Cc: axboe@kernel.dk, kbusch@kernel.org, hch@lst.de, sagi@grimberg.me,
-	jejb@linux.ibm.com, martin.petersen@oracle.com, djwong@kernel.org,
-	viro@zeniv.linux.org.uk, brauner@kernel.org, dchinner@redhat.com,
-	jack@suse.cz, linux-block@vger.kernel.org,
-	linux-kernel@vger.kernel.org, linux-nvme@lists.infradead.org,
-	linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
-	tytso@mit.edu, jbongio@google.com, linux-scsi@vger.kernel.org,
-	ming.lei@redhat.com, jaswin@linux.ibm.com, bvanassche@acm.org
-Subject: Re: [PATCH v2 00/16] block atomic writes
-Message-ID: <20231212163246.GA24594@lst.de>
-References: <20231212110844.19698-1-john.g.garry@oracle.com>
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+	(No client certificate requested)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C9802EB8
+	for <linux-xfs@vger.kernel.org>; Wed, 13 Dec 2023 01:04:31 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="LOq4WJWw"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 39B9AC433C7;
+	Wed, 13 Dec 2023 01:04:31 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1702429471;
+	bh=fEafDOjp+B/6TBxxkT2bPxOlvLbjn699AdJGZ/hK7WE=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=LOq4WJWw8+aJvLa/7dL3RZd+ruCOBs8RpxyjU9yY4eZX4fiKxWtSE7UPqkc9A/60c
+	 NYGUCLJnsgao9yqFyVuuanxIoBzjrqKB5Xc8Uu5E1mdnlvusbVKl/Gx3L7P5H7cmx5
+	 L4onlmf7eCXz9o983UmZuv/X5nAMzZljmeFpbrUAk7I/Ta9hom7geICA7wvvPWIKqc
+	 Z94wcLQLAc0TJ5odsYZuqT5GJj7yiHN3l4T3bSqiIlep+EG261o/xoIfYdDekBe/b9
+	 ztcIlgtbmoRmbSk3kP+kNOIovlvK/USFJmCOIMVYX/acFyEcEBmdHdCu3/D1WyDQDn
+	 ft27Oi2MPEYcg==
+Date: Tue, 12 Dec 2023 17:04:30 -0800
+From: "Darrick J. Wong" <djwong@kernel.org>
+To: Christoph Hellwig <hch@infradead.org>
+Cc: linux-xfs@vger.kernel.org
+Subject: Re: [PATCH 9/9] xfs: repair obviously broken inode modes
+Message-ID: <20231213010430.GB361584@frogsfrogsfrogs>
+References: <170191666087.1182270.4104947285831369542.stgit@frogsfrogsfrogs>
+ <170191666254.1182270.6610873636846446907.stgit@frogsfrogsfrogs>
+ <ZXFhuNaLx1C8yYV+@infradead.org>
+ <20231211221926.GX361584@frogsfrogsfrogs>
+ <ZXfxKX+eg/EeMeY1@infradead.org>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -25,67 +36,30 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20231212110844.19698-1-john.g.garry@oracle.com>
-User-Agent: Mutt/1.5.17 (2007-11-01)
+In-Reply-To: <ZXfxKX+eg/EeMeY1@infradead.org>
 
-On Tue, Dec 12, 2023 at 11:08:28AM +0000, John Garry wrote:
-> Two new fields are added to struct statx - atomic_write_unit_min and
-> atomic_write_unit_max. For each atomic individual write, the total length
-> of a write must be a between atomic_write_unit_min and
-> atomic_write_unit_max, inclusive, and a power-of-2. The write must also be
-> at a natural offset in the file wrt the write length.
+On Mon, Dec 11, 2023 at 09:35:37PM -0800, Christoph Hellwig wrote:
+> On Mon, Dec 11, 2023 at 02:19:26PM -0800, Darrick J. Wong wrote:
+> > block/char/special files... I guess those can just turn into zero length
+> > regular files.
 > 
-> SCSI sd.c and scsi_debug and NVMe kernel support is added.
+> Ys, and I don't think that is much of a problem.
 > 
-> Some open questions:
-> - How to make API extensible for when we have no HW support? In that case,
->   we would prob not have to follow rule of power-of-2 length et al.
->   As a possible solution, maybe we can say that atomic writes are
->   supported for the file via statx, but not set unit_min and max values,
->   and this means that writes need to be just FS block aligned there.
+> > Would this NAK remain even if there were external corroborating
+> > evidence?
+> > 
+> > For example, what if we read the dirents out of the first directory
+> > block, seek out parent pointers in the alleged children, and confirm a
+> > 1:1 match between the alleged dirents and pptrs?  Unprivileged userspace
+> > can certain create a regular file N that looks like a dirent block, but
+> > it cannot create dangling pptrs back to N to trick the verification
+> > algorithm.
+> 
+> That does look like I a good enough evinde as you said userspace can't
+> fake up the parent pointer.
 
-I don't think the power of two length is much of a problem to be
-honest, and if we every want to lift it we can still do that easily
-by adding a new flag or limit.
+Yeah, and for non-dirs, we /could/ just scan all the directory entries
+to see if we come up with any hits for the inode whose mode we do not
+know; the ftype will help us set that back.
 
-What I'm a lot more worried about is how to tell the file system that
-allocations are done right for these requirement.  There is no way
-a user can know that allocations in an existing file are properly
-aligned, so atomic writes will just fail on existing files.
-
-I suspect we need an on-disk flag that forces allocations to be
-aligned to the atomic write limit, in some ways similar how the
-XFS rt flag works.  You'd need to set it on an empty file, and all
-allocations after that are guaranteed to be properly aligned.
-
-> - For block layer, should atomic_write_unit_max be limited by
->   max_sectors_kb? Currently it is not.
-
-Well.  It must be limited to max_hw_sectors to actually work.
-max_sectors is a software limit below that, which with modern hardware
-is actually pretty silly and a real performance issue with todays
-workloads when people don't tweak it..
-
-> - How to improve requirement that iovecs are PAGE-aligned.
->   There are 2x issues:
->   a. We impose this rule to not split BIOs due to virt boundary for
->      NVMe, but there virt boundary is 4K (and not PAGE size, so broken for
->      16K/64K pages). Easy solution is to impose requirement that iovecs
->      are 4K-aligned.
->   b. We don't enforce this rule for virt boundary == 0, i.e. SCSI
-
-.. we require any device that wants to support atomic writes to not
-have that silly limit.  For NVMe that would require SGL support
-(and some driver changes I've been wanting to make for long where
-we always use SGLs for transfers larger than a single PRP if supported)
-
-
-> - Since debugging torn-writes due to unwanted kernel BIO splitting/merging
->   would be horrible, should we add some kernel storage stack software
->   integrity checks?
-
-Yes, I think we'll need asserts in the drivers.  At least for NVMe I
-will insist on them.  For SCSI I think the device actually checks
-because the atomic writes are a different command anyway, or am I
-misunderstanding how SCSI works here?
-
+--D
