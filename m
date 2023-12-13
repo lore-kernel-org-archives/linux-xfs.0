@@ -1,63 +1,33 @@
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=suse.cz header.i=@suse.cz header.b="PXiYiycN";
-	dkim=permerror (0-bit key) header.d=suse.cz header.i=@suse.cz header.b="zVCLyiGw";
-	dkim=pass (1024-bit key) header.d=suse.cz header.i=@suse.cz header.b="PXiYiycN";
-	dkim=permerror (0-bit key) header.d=suse.cz header.i=@suse.cz header.b="zVCLyiGw"
-Received: from smtp-out1.suse.de (smtp-out1.suse.de [195.135.223.130])
-	by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B1E70B0;
-	Wed, 13 Dec 2023 03:20:29 -0800 (PST)
-Received: from imap2.dmz-prg2.suse.org (imap2.dmz-prg2.suse.org [IPv6:2a07:de40:b281:104:10:150:64:98])
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="ATa2EoG7"
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
+	by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 39C80D5
+	for <linux-xfs@vger.kernel.org>; Wed, 13 Dec 2023 04:28:58 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+	s=mimecast20190719; t=1702470537;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+	 in-reply-to:in-reply-to:references:references;
+	bh=pQFnI7fDR+1BAkKjvQWdPrG/WDERRoUrQCJ/FGh+Rlo=;
+	b=ATa2EoG7yeXPQF7oUhItymzIaC8q9Yxx8SY5HOdQM9Brfzz+WKQhTN2dNI/Hs0u9PbzN7z
+	G5ci4Fk4uhGNh0HRU+DeMc30jisY791sWu1U9H4zpjezu9raYqX3giPuxY6T55D86C4RvC
+	wGGZyd0fIWKH1tTNNOfSuzvQ45FSV2c=
+Received: from mimecast-mx02.redhat.com (mimecast-mx02.redhat.com
+ [66.187.233.88]) by relay.mimecast.com with ESMTP with STARTTLS
+ (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
+ us-mta-445-5O6-tQb-PP2YT148se2a5g-1; Wed, 13 Dec 2023 07:28:53 -0500
+X-MC-Unique: 5O6-tQb-PP2YT148se2a5g-1
+Received: from smtp.corp.redhat.com (int-mx03.intmail.prod.int.rdu2.redhat.com [10.11.54.3])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
+	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
 	(No client certificate requested)
-	by smtp-out1.suse.de (Postfix) with ESMTPS id 9DFE5222C4;
-	Wed, 13 Dec 2023 11:20:27 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.cz; s=susede2_rsa;
-	t=1702466427; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 in-reply-to:in-reply-to:references:references;
-	bh=s+wcnESLYU9HhNaOkniwhzmqLjKQKrV+1x/FjwBd1I4=;
-	b=PXiYiycNHBs4OBe/8nDEB8SJNvw8dJxOHmyPDJ+dgrJDqQe3apXh6PoK2dhEzhZ9P/CzO7
-	NQqnGoQr72zNGTU8D4188xC1POrWSjibqFraYWBm24yAEmEmhMHigi2hHm2oEJcVaq0uIK
-	LEhT6UgyMgWKTbdIUTAifUZufNDcpsw=
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.cz;
-	s=susede2_ed25519; t=1702466427;
-	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 in-reply-to:in-reply-to:references:references;
-	bh=s+wcnESLYU9HhNaOkniwhzmqLjKQKrV+1x/FjwBd1I4=;
-	b=zVCLyiGwwrEGhLMywzjUCP20OIfFB6vB5teuBSMV930b801bP9H4YV8IQ5GLGKwhu137+y
-	uj8AibVXWRujGBDg==
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.cz; s=susede2_rsa;
-	t=1702466427; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 in-reply-to:in-reply-to:references:references;
-	bh=s+wcnESLYU9HhNaOkniwhzmqLjKQKrV+1x/FjwBd1I4=;
-	b=PXiYiycNHBs4OBe/8nDEB8SJNvw8dJxOHmyPDJ+dgrJDqQe3apXh6PoK2dhEzhZ9P/CzO7
-	NQqnGoQr72zNGTU8D4188xC1POrWSjibqFraYWBm24yAEmEmhMHigi2hHm2oEJcVaq0uIK
-	LEhT6UgyMgWKTbdIUTAifUZufNDcpsw=
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.cz;
-	s=susede2_ed25519; t=1702466427;
-	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 in-reply-to:in-reply-to:references:references;
-	bh=s+wcnESLYU9HhNaOkniwhzmqLjKQKrV+1x/FjwBd1I4=;
-	b=zVCLyiGwwrEGhLMywzjUCP20OIfFB6vB5teuBSMV930b801bP9H4YV8IQ5GLGKwhu137+y
-	uj8AibVXWRujGBDg==
-Received: from imap2.dmz-prg2.suse.org (localhost [127.0.0.1])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
-	(No client certificate requested)
-	by imap2.dmz-prg2.suse.org (Postfix) with ESMTPS id 82EE713240;
-	Wed, 13 Dec 2023 11:20:27 +0000 (UTC)
-Received: from dovecot-director2.suse.de ([10.150.64.162])
-	by imap2.dmz-prg2.suse.org with ESMTPSA
-	id j4LwH3uTeWXHBQAAn2gu4w
-	(envelope-from <jack@suse.cz>); Wed, 13 Dec 2023 11:20:27 +0000
-Received: by quack3.suse.cz (Postfix, from userid 1000)
-	id EDAAFA07E0; Wed, 13 Dec 2023 12:20:26 +0100 (CET)
-Date: Wed, 13 Dec 2023 12:20:26 +0100
-From: Jan Kara <jack@suse.cz>
+	by mimecast-mx02.redhat.com (Postfix) with ESMTPS id 1A11585A58A;
+	Wed, 13 Dec 2023 12:28:52 +0000 (UTC)
+Received: from fedora (unknown [10.72.116.126])
+	by smtp.corp.redhat.com (Postfix) with ESMTPS id 80AAA1121312;
+	Wed, 13 Dec 2023 12:28:42 +0000 (UTC)
+Date: Wed, 13 Dec 2023 20:28:38 +0800
+From: Ming Lei <ming.lei@redhat.com>
 To: John Garry <john.g.garry@oracle.com>
 Cc: axboe@kernel.dk, kbusch@kernel.org, hch@lst.de, sagi@grimberg.me,
 	jejb@linux.ibm.com, martin.petersen@oracle.com, djwong@kernel.org,
@@ -66,11 +36,15 @@ Cc: axboe@kernel.dk, kbusch@kernel.org, hch@lst.de, sagi@grimberg.me,
 	linux-kernel@vger.kernel.org, linux-nvme@lists.infradead.org,
 	linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
 	tytso@mit.edu, jbongio@google.com, linux-scsi@vger.kernel.org,
-	ming.lei@redhat.com, jaswin@linux.ibm.com, bvanassche@acm.org
-Subject: Re: [PATCH v2 04/16] fs: Increase fmode_t size
-Message-ID: <20231213112026.kkfcwtg64kiadhn5@quack3>
+	jaswin@linux.ibm.com, bvanassche@acm.org,
+	Himanshu Madhani <himanshu.madhani@oracle.com>
+Subject: Re: [PATCH v2 01/16] block: Add atomic write operations to
+ request_queue limits
+Message-ID: <ZXmjdnIqGHILTfQN@fedora>
 References: <20231212110844.19698-1-john.g.garry@oracle.com>
- <20231212110844.19698-5-john.g.garry@oracle.com>
+ <20231212110844.19698-2-john.g.garry@oracle.com>
+ <ZXkIEnQld577uHqu@fedora>
+ <36ee54b4-b8d5-4b3c-81a0-cc824b6ef68e@oracle.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -79,97 +53,167 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20231212110844.19698-5-john.g.garry@oracle.com>
-X-Spam-Score: 8.24
-X-Spamd-Bar: +++++
-X-Rspamd-Queue-Id: 9DFE5222C4
-Authentication-Results: smtp-out1.suse.de;
-	dkim=pass header.d=suse.cz header.s=susede2_rsa header.b=PXiYiycN;
-	dkim=pass header.d=suse.cz header.s=susede2_ed25519 header.b=zVCLyiGw;
-	dmarc=none;
-	spf=softfail (smtp-out1.suse.de: 2a07:de40:b281:104:10:150:64:98 is neither permitted nor denied by domain of jack@suse.cz) smtp.mailfrom=jack@suse.cz
-X-Spam-Score: 5.99
-X-Spamd-Result: default: False [5.99 / 50.00];
-	 RCVD_VIA_SMTP_AUTH(0.00)[];
-	 ARC_NA(0.00)[];
-	 R_DKIM_ALLOW(-0.20)[suse.cz:s=susede2_rsa,suse.cz:s=susede2_ed25519];
-	 SPAMHAUS_XBL(0.00)[2a07:de40:b281:104:10:150:64:98:from];
-	 FROM_HAS_DN(0.00)[];
-	 TO_DN_SOME(0.00)[];
-	 TO_MATCH_ENVRCPT_ALL(0.00)[];
-	 MIME_GOOD(-0.10)[text/plain];
-	 DMARC_NA(1.20)[suse.cz];
-	 R_SPF_SOFTFAIL(4.60)[~all];
-	 RCVD_COUNT_THREE(0.00)[3];
-	 DKIM_SIGNED(0.00)[suse.cz:s=susede2_rsa,suse.cz:s=susede2_ed25519];
-	 DKIM_TRACE(0.00)[suse.cz:+];
-	 MX_GOOD(-0.01)[];
-	 RCPT_COUNT_TWELVE(0.00)[23];
-	 DBL_BLOCKED_OPENRESOLVER(0.00)[suse.cz:dkim,suse.com:email];
-	 FUZZY_BLOCKED(0.00)[rspamd.com];
-	 FROM_EQ_ENVFROM(0.00)[];
-	 MIME_TRACE(0.00)[0:+];
-	 MID_RHS_NOT_FQDN(0.50)[];
-	 RCVD_TLS_ALL(0.00)[];
-	 RBL_SPAMHAUS_BLOCKED_OPENRESOLVER(0.00)[2a07:de40:b281:104:10:150:64:98:from]
-X-Spam-Flag: NO
-X-Rspamd-Server: rspamd1
+In-Reply-To: <36ee54b4-b8d5-4b3c-81a0-cc824b6ef68e@oracle.com>
+X-Scanned-By: MIMEDefang 3.4.1 on 10.11.54.3
 
-On Tue 12-12-23 11:08:32, John Garry wrote:
-> Currently all bits are being used in fmode_t.
+On Wed, Dec 13, 2023 at 09:13:48AM +0000, John Garry wrote:
+> > > +
+> > >   What:		/sys/block/<disk>/diskseq
+> > >   Date:		February 2021
+> > > diff --git a/block/blk-settings.c b/block/blk-settings.c
+> > > index 0046b447268f..d151be394c98 100644
+> > > --- a/block/blk-settings.c
+> > > +++ b/block/blk-settings.c
+> > > @@ -59,6 +59,10 @@ void blk_set_default_limits(struct queue_limits *lim)
+> > >   	lim->zoned = BLK_ZONED_NONE;
+> > >   	lim->zone_write_granularity = 0;
+> > >   	lim->dma_alignment = 511;
+> > > +	lim->atomic_write_unit_min_sectors = 0;
+> > > +	lim->atomic_write_unit_max_sectors = 0;
+> > > +	lim->atomic_write_max_sectors = 0;
+> > > +	lim->atomic_write_boundary_sectors = 0;
+> > 
+> > Can we move the four into single structure
 > 
-> To allow for further expansion, increase from unsigned int to unsigned
-> long.
-> 
-> Since the dma-buf driver prints the file->f_mode member, change the print
-> as necessary to deal with the larger size.
-> 
-> Signed-off-by: John Garry <john.g.garry@oracle.com>
+> There is no precedent for a similar structure in struct queue_limits. So
+> would only passing a structure to the blk-settings.c API be ok?
 
-Uh, Al has more experience with fmode_t changes so I'd defer final decision
-to him but to me this seems dangerous. Firstly, this breaks packing of
-struct file on 64-bit architectures and struct file is highly optimized for
-cache efficiency (see the comment before the struct definition). Secondly
-this will probably generate warnings on 32-bit architectures as there
-sizeof(unsigned long) == sizeof(unsigned int) and so your new flags won't
-fit anyway?
+Yes, this structure is part of the new API.
 
-								Honza
+> 
+> > and setup them in single
+> > API? Then cross-validation can be done in this API.
+> 
+> I suppose so, if you think that it is better.
+> 
+> We rely on the driver to provide sound values. I suppose that we can
+> sanitize them also (in a single API).
 
-> ---
->  drivers/dma-buf/dma-buf.c | 2 +-
->  include/linux/types.h     | 2 +-
->  2 files changed, 2 insertions(+), 2 deletions(-)
+Please make the interface correct from beginning, and one good API is
+helpful for both sides, such as isolating problems, easy to locate
+bug, abstracting common logic, ...
+
+And relying on API users is absolutely not good design.
+
 > 
-> diff --git a/drivers/dma-buf/dma-buf.c b/drivers/dma-buf/dma-buf.c
-> index 21916bba77d5..a5227ae3d637 100644
-> --- a/drivers/dma-buf/dma-buf.c
-> +++ b/drivers/dma-buf/dma-buf.c
-> @@ -1628,7 +1628,7 @@ static int dma_buf_debug_show(struct seq_file *s, void *unused)
->  
->  
->  		spin_lock(&buf_obj->name_lock);
-> -		seq_printf(s, "%08zu\t%08x\t%08x\t%08ld\t%s\t%08lu\t%s\n",
-> +		seq_printf(s, "%08zu\t%08x\t%08lx\t%08ld\t%s\t%08lu\t%s\n",
->  				buf_obj->size,
->  				buf_obj->file->f_flags, buf_obj->file->f_mode,
->  				file_count(buf_obj->file),
-> diff --git a/include/linux/types.h b/include/linux/types.h
-> index 253168bb3fe1..49c754fde1d6 100644
-> --- a/include/linux/types.h
-> +++ b/include/linux/types.h
-> @@ -153,7 +153,7 @@ typedef u32 dma_addr_t;
->  
->  typedef unsigned int __bitwise gfp_t;
->  typedef unsigned int __bitwise slab_flags_t;
-> -typedef unsigned int __bitwise fmode_t;
-> +typedef unsigned long __bitwise fmode_t;
->  
->  #ifdef CONFIG_PHYS_ADDR_T_64BIT
->  typedef u64 phys_addr_t;
-> -- 
-> 2.35.3
+> > 
+> > >   }
+> > >   /**
+> > > @@ -183,6 +187,62 @@ void blk_queue_max_discard_sectors(struct request_queue *q,
+> > >   }
+> > >   EXPORT_SYMBOL(blk_queue_max_discard_sectors);
+> > > +/**
+> > > + * blk_queue_atomic_write_max_bytes - set max bytes supported by
+> > > + * the device for atomic write operations.
+> > > + * @q:  the request queue for the device
+> > > + * @size: maximum bytes supported
+> > > + */
+> > > +void blk_queue_atomic_write_max_bytes(struct request_queue *q,
+> > > +				      unsigned int bytes)
+> > > +{
+> > > +	q->limits.atomic_write_max_sectors = bytes >> SECTOR_SHIFT;
+> > > +}
+> > > +EXPORT_SYMBOL(blk_queue_atomic_write_max_bytes);
+> > 
+> > What if driver doesn't call it but driver supports atomic write?
 > 
--- 
-Jan Kara <jack@suse.com>
-SUSE Labs, CR
+> We rely on the driver to do this. Any basic level of testing will show an
+> issue if they don't.
+
+Software quality depends on good requirement analysis, design and
+implementation, instead of test.
+
+Simply you can not cover all possibilities in test.
+
+> 
+> > 
+> > I guess the default max sectors should be atomic_write_unit_max_sectors
+> > if the feature is enabled.
+> 
+> Sure. If we have a single API to set all values, then we don't need to worry
+> about this (assuming the values are filled in properly).
+> 
+> > 
+> > > +
+> > > +/**
+> > > + * blk_queue_atomic_write_boundary_bytes - Device's logical block address space
+> > > + * which an atomic write should not cross.
+> > > + * @q:  the request queue for the device
+> > > + * @bytes: must be a power-of-two.
+> > > + */
+> > > +void blk_queue_atomic_write_boundary_bytes(struct request_queue *q,
+> > > +					   unsigned int bytes)
+> > > +{
+> > > +	q->limits.atomic_write_boundary_sectors = bytes >> SECTOR_SHIFT;
+> > > +}
+> > > +EXPORT_SYMBOL(blk_queue_atomic_write_boundary_bytes);
+> > 
+> > Default atomic_write_boundary_sectors should be
+> > atomic_write_unit_max_sectors in case of atomic write?
+> 
+> Having atomic_write_boundary_sectors default to
+> atomic_write_unit_max_sectors is effectively same as a default of 0.
+> 
+> > 
+> > > +
+> > > +/**
+> > > + * blk_queue_atomic_write_unit_min_sectors - smallest unit that can be written
+> > > + * atomically to the device.
+> > > + * @q:  the request queue for the device
+> > > + * @sectors: must be a power-of-two.
+> > > + */
+> > > +void blk_queue_atomic_write_unit_min_sectors(struct request_queue *q,
+> > > +					     unsigned int sectors)
+> > > +{
+> > > +	struct queue_limits *limits = &q->limits;
+> > > +
+> > > +	limits->atomic_write_unit_min_sectors = sectors;
+> > > +}
+> > > +EXPORT_SYMBOL(blk_queue_atomic_write_unit_min_sectors);
+> > 
+> > atomic_write_unit_min_sectors should be >= (physical block size >> 9)
+> > given the minimized atomic write unit is physical sector for all disk.
+> 
+> For SCSI, we have a granularity VPD value, and when set we pay attention to
+> that. If not, we use the phys block size.
+> 
+> For NVMe, we use the logical block size. For physical block size, that can
+> be greater than the logical block size for npwg set, and I don't think it's
+> suitable use that as minimum atomic write unit.
+
+I highly suspect it is wrong to use logical block size as minimum
+support atomic write unit, given physical block size is supposed to
+be the minimum atomic write unit.
+
+> 
+> Anyway, I am not too keen on sanitizing this value in this way.
+> 
+> > 
+> > > +
+> > > +/*
+> > > + * blk_queue_atomic_write_unit_max_sectors - largest unit that can be written
+> > > + * atomically to the device.
+> > > + * @q: the request queue for the device
+> > > + * @sectors: must be a power-of-two.
+> > > + */
+> > > +void blk_queue_atomic_write_unit_max_sectors(struct request_queue *q,
+> > > +					     unsigned int sectors)
+> > > +{
+> > > +	struct queue_limits *limits = &q->limits;
+> > > +
+> > > +	limits->atomic_write_unit_max_sectors = sectors;
+> > > +}
+> > > +EXPORT_SYMBOL(blk_queue_atomic_write_unit_max_sectors);
+> > 
+> > atomic_write_unit_max_sectors should be >= atomic_write_unit_min_sectors.
+> > 
+> 
+> Again, we rely on the driver to provide sound values. However, as mentioned,
+> we can sanitize.
+
+Relying on driver to provide sound value is absolutely bad design from API
+viewpoint.
+
+Thanks,
+Ming
+
