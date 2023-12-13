@@ -1,225 +1,197 @@
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="BrRY10Rn";
-	dkim=pass (1024-bit key) header.d=oracle.onmicrosoft.com header.i=@oracle.onmicrosoft.com header.b="nWXNh3JC"
-Received: from mx0b-00069f02.pphosted.com (mx0b-00069f02.pphosted.com [205.220.177.32])
-	by lindbergh.monkeyblade.net (Postfix) with ESMTPS id AD290C9;
-	Wed, 13 Dec 2023 11:02:21 -0800 (PST)
-Received: from pps.filterd (m0246632.ppops.net [127.0.0.1])
-	by mx0b-00069f02.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 3BDEQx5N020988;
-	Wed, 13 Dec 2023 19:01:30 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=message-id : date :
- subject : to : cc : references : from : in-reply-to : content-type :
- content-transfer-encoding : mime-version; s=corp-2023-11-20;
- bh=FLriMew6PSfP/imqwlsDrPOFKr9LQdFHU6VT+lK38HE=;
- b=BrRY10RnviCTJucNRTAtU59AXsWavwGWV8aHYUvjhuUQAyQe6gmRLtyIWdW5TqH/JPX8
- B6aIhDH47lFYe9PmE07VobGaprNCH2lV7gDQfL7xtSeLKEaFDc8Lxf3d/vZ4bevW4T35
- 0dFYVY4Nnbsa654tSefIa4CiEmK2qaZziXgw35wNUF2UPF+JkPAng3awn8F4BUOzfP0U
- +nfePk6jm9yGQ+Zf+tRTDESqaXUl70A1Dq0mklHYhPP2kQ0tUqHC+KqDkA0QyyD/JQN3
- bjK+vjxdzaN4eUYNXoqdf5PuOsPq//bIP61+1eINRFhRTJg/CQEmOhED5h5bFhInrqnW ew== 
-Received: from iadpaimrmta01.imrmtpd1.prodappiadaev1.oraclevcn.com (iadpaimrmta01.appoci.oracle.com [130.35.100.223])
-	by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 3uvfuu915p-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-	Wed, 13 Dec 2023 19:01:30 +0000
-Received: from pps.filterd (iadpaimrmta01.imrmtpd1.prodappiadaev1.oraclevcn.com [127.0.0.1])
-	by iadpaimrmta01.imrmtpd1.prodappiadaev1.oraclevcn.com (8.17.1.19/8.17.1.19) with ESMTP id 3BDI5xTj009848;
-	Wed, 13 Dec 2023 19:01:29 GMT
-Received: from nam10-dm6-obe.outbound.protection.outlook.com (mail-dm6nam10lp2101.outbound.protection.outlook.com [104.47.58.101])
-	by iadpaimrmta01.imrmtpd1.prodappiadaev1.oraclevcn.com (PPS) with ESMTPS id 3uvep8t38h-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-	Wed, 13 Dec 2023 19:01:29 +0000
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=WoNaf1SoELwV7YaoNxhQnsqr12rOjUANN9GZJ9xQ6Css7WZSqP4QXKDrDgYXaetiQcb/jIA5UZKWF10AXmcumtIjfp/FjLx0bGZ5gD2swBFZd+IokODXHdisLhTgpKR6/Y0K4VRVgKZkB6xjmHY5x/rSyinURIuKmcaaiMb432xxoS7UQ/mnK0OkJ/yV20joiAhYnD14VBIwq3Fyjv/hF+hz2bNrJcg2/2VCZyndIItWGPzQ2RqAQwmC2PT2K+TKD+DM+j4wYKd6dhpBoxddZO7UE/E7+i1o0mGVqpkdHTDgkBNPyoVUs+ADnVGkIBN/bRoDY1iQ+bDcF4eUNg4N+w==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector9901;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=FLriMew6PSfP/imqwlsDrPOFKr9LQdFHU6VT+lK38HE=;
- b=fvSb9IjJT8XQ9sSjRDEfuP98lGKDnw+J8LJOlIYqFU7DrQ0XItZWGWTWuxfS4FT0JbD5XKg/UYelJfPClRRh33tXMW94i/MHQEn9egxH4kiyWt4kIWkjFt9XLUy8oaYkCMoU+YXEoiCoQ87vPc1ygprP5A0gZQ5j1JwNsU0A5Hfkvkni7VtQC09QvK1MfafPXVB+vvCb/icEQv2dOi58ya499RaJr5tIDRrhBGXOOl2XfE/ilvRSBZ4KFw34Xrha3VvI72u589/7vQUcBnf3CHeNe3zjIBOsiICcvtqIexE5l8Pxp5cKyvTQuKJJbRy5+d4Eo4B6oKsiYsI/nKhpIQ==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=oracle.com; dmarc=pass action=none header.from=oracle.com;
- dkim=pass header.d=oracle.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
- d=oracle.onmicrosoft.com; s=selector2-oracle-onmicrosoft-com;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=FLriMew6PSfP/imqwlsDrPOFKr9LQdFHU6VT+lK38HE=;
- b=nWXNh3JCigo78LnITC1pySny0GD3EHV+KZyk0DmJBZsmsHO2YUNlOHHCNhOdeOYRHXBkzYp+7w9wLGB/lHhW9FXP4iXnuTucBuArkeQ2A0g2q135UYpZh78puhvdCvekd78YDPua/Laila0Rt93G5RZW/gBcyYuIoWUIpOAKy7k=
-Received: from DM6PR10MB4313.namprd10.prod.outlook.com (2603:10b6:5:212::20)
- by PH7PR10MB6250.namprd10.prod.outlook.com (2603:10b6:510:212::8) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.7068.33; Wed, 13 Dec
- 2023 19:01:26 +0000
-Received: from DM6PR10MB4313.namprd10.prod.outlook.com
- ([fe80::102a:f31:30c6:3187]) by DM6PR10MB4313.namprd10.prod.outlook.com
- ([fe80::102a:f31:30c6:3187%4]) with mapi id 15.20.7091.022; Wed, 13 Dec 2023
- 19:01:26 +0000
-Message-ID: <15255c5a-82ec-4ce1-8caa-da250fcb7187@oracle.com>
-Date: Wed, 13 Dec 2023 19:01:22 +0000
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v2 01/16] block: Add atomic write operations to
- request_queue limits
-To: Ming Lei <ming.lei@redhat.com>
-Cc: axboe@kernel.dk, kbusch@kernel.org, hch@lst.de, sagi@grimberg.me,
-        jejb@linux.ibm.com, martin.petersen@oracle.com, djwong@kernel.org,
-        viro@zeniv.linux.org.uk, brauner@kernel.org, dchinner@redhat.com,
-        jack@suse.cz, linux-block@vger.kernel.org,
-        linux-kernel@vger.kernel.org, linux-nvme@lists.infradead.org,
-        linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
-        tytso@mit.edu, jbongio@google.com, linux-scsi@vger.kernel.org,
-        jaswin@linux.ibm.com, bvanassche@acm.org,
-        Himanshu Madhani <himanshu.madhani@oracle.com>
-References: <20231212110844.19698-1-john.g.garry@oracle.com>
- <20231212110844.19698-2-john.g.garry@oracle.com> <ZXkIEnQld577uHqu@fedora>
- <36ee54b4-b8d5-4b3c-81a0-cc824b6ef68e@oracle.com> <ZXmjdnIqGHILTfQN@fedora>
-Content-Language: en-US
-From: John Garry <john.g.garry@oracle.com>
-Organization: Oracle Corporation
-In-Reply-To: <ZXmjdnIqGHILTfQN@fedora>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
-X-ClientProxiedBy: AS4P195CA0025.EURP195.PROD.OUTLOOK.COM
- (2603:10a6:20b:5d6::20) To DM6PR10MB4313.namprd10.prod.outlook.com
- (2603:10b6:5:212::20)
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="HN4xjtEn"
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
+	by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 79761B7
+	for <linux-xfs@vger.kernel.org>; Wed, 13 Dec 2023 13:16:20 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+	s=mimecast20190719; t=1702502179;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+	 in-reply-to:in-reply-to:references:references;
+	bh=t3w6Xj8LYqILm8EKMqzQWJRNazs3Z4fz1iwltgUE9Bo=;
+	b=HN4xjtEnz8joCi1kDriyXclt6RhqLbeu7y1kD7Sj+yS0SnnPJRyBCShLyhqN+Q26UqJw8J
+	zrTHShaGCou9fECth0bNGvxZC9NyZf3oe7eBMQKn31R3DBaQ2aFHyEh+1Su8vPDngvzJZy
+	wA2dF+LrVbWBQNSrGA0iLJOV+kvZesM=
+Received: from mimecast-mx02.redhat.com (mx-ext.redhat.com [66.187.233.73])
+ by relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.3,
+ cipher=TLS_AES_256_GCM_SHA384) id us-mta-693-5sm7vwytNvOm-9xQQOi97g-1; Wed,
+ 13 Dec 2023 16:16:15 -0500
+X-MC-Unique: 5sm7vwytNvOm-9xQQOi97g-1
+Received: from smtp.corp.redhat.com (int-mx09.intmail.prod.int.rdu2.redhat.com [10.11.54.9])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	(No client certificate requested)
+	by mimecast-mx02.redhat.com (Postfix) with ESMTPS id C04001C0BB51;
+	Wed, 13 Dec 2023 21:16:13 +0000 (UTC)
+Received: from rh (unknown [10.64.138.3])
+	by smtp.corp.redhat.com (Postfix) with ESMTPS id 2144F492BC6;
+	Wed, 13 Dec 2023 21:16:13 +0000 (UTC)
+Received: from localhost ([::1] helo=rh)
+	by rh with esmtps  (TLS1.3) tls TLS_AES_256_GCM_SHA384
+	(Exim 4.96)
+	(envelope-from <dchinner@redhat.com>)
+	id 1rDWaQ-003rLL-1U;
+	Thu, 14 Dec 2023 08:16:10 +1100
+Date: Thu, 14 Dec 2023 08:16:07 +1100
+From: Dave Chinner <dchinner@redhat.com>
+To: Alexander Potapenko <glider@google.com>
+Cc: syzbot+a6d6b8fffa294705dbd8@syzkaller.appspotmail.com, hch@lst.de,
+	davem@davemloft.net, herbert@gondor.apana.org.au,
+	linux-crypto@vger.kernel.org, linux-kernel@vger.kernel.org,
+	syzkaller-bugs@googlegroups.com, linux-xfs@vger.kernel.org
+Subject: Re: [syzbot] [crypto?] KMSAN: uninit-value in __crc32c_le_base (3)
+Message-ID: <ZXofF2lXuIUvKi/c@rh>
+References: <000000000000f66a3005fa578223@google.com>
+ <20231213104950.1587730-1-glider@google.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: DM6PR10MB4313:EE_|PH7PR10MB6250:EE_
-X-MS-Office365-Filtering-Correlation-Id: 7f8eaf05-35e4-46e4-1616-08dbfc0de81d
-X-MS-Exchange-SenderADCheck: 1
-X-MS-Exchange-AntiSpam-Relay: 0
-X-Microsoft-Antispam: BCL:0;
-X-Microsoft-Antispam-Message-Info: 
-	nJo/S4DuXkTeNOEzKT0ZmGUGFgUPxfv484iM2gzaz5c/3wvE659fbwI05XnGsDNB9ouVin9YLmbW1ijkE6q+rZNG4cIqgFAzRQ+0E3A5Ki4a5TOLW8Ge2yYDzBmj+0uUheXe8sgt/FNLSunnx43cSQipjaH54RDlG5v87PBdVOFBOyrLA/oD/2isDuyXi3uoHKr/G1ylkaRgWvyvIy4WPQo1vPZpD3Ih9WuK/jQ0ea7ev3X5x22WQW7SD3iOtndQhcnsXbS8CbIK4D8oinTijCI4KNpcjH/MomAF1zjXlldXDD6rBBC4UJZ1LJ2hqcKNOgR8blOxSmtiOkJy9aXA3XSJwTqFndexYS7tpnV6fWwLVTdAh8ic1Bh6hV/7XZt9stMwDe6O9LY1MF/wKYDni+rHZaEtU4PNjeSvuBHtGs12cMZv4FQAIbVd3n9v2FucYbhKPPPJBVVPTVKmCSMLGkd3hZIUwk7RnxUd6JAULTvm4ojPpsA8BxwcwuQoxD8xMOMyWXJjGRhfhBlnNohIqd6MpSQ8r2qJ1M64bkzg2Ye59A/3nnq3MiUtOa4GdcA/92YqNFK0dF2O2aTCDV/uKroUalfMw7G5fZuJlEJ+5PHUmr8PvbQyWegyhPkPs/Q5MZQZFOgyEEmGsA9zXwGRFw==
-X-Forefront-Antispam-Report: 
-	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:DM6PR10MB4313.namprd10.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230031)(346002)(136003)(376002)(39860400002)(396003)(366004)(230922051799003)(186009)(1800799012)(451199024)(64100799003)(31686004)(478600001)(107886003)(6486002)(6666004)(2616005)(6512007)(26005)(36916002)(53546011)(6506007)(41300700001)(38100700002)(31696002)(86362001)(36756003)(5660300002)(6916009)(66476007)(66556008)(2906002)(83380400001)(7416002)(66946007)(8936002)(316002)(4326008)(8676002)(45980500001)(43740500002);DIR:OUT;SFP:1101;
-X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0: 
-	=?utf-8?B?cHBiV29jdnVSWkxFQW1QYWwwQWxqcjhoZ1N5bXRkMW5YZ3BtQjF2YldEbll0?=
- =?utf-8?B?elA5eitjMXhvWDFDblZ4WGhkQWZkSW85dHg4SjExeVNHemdpMGRYUjNDbzNs?=
- =?utf-8?B?RFhreTRaWWh4UFJsWGw2c2RndU9sWmZRTEFxdEVDRitFSTNnZG1UTUh4eTNL?=
- =?utf-8?B?TjduQmEzZmVNemExWlhIU05MUmd5SXBjZVNDWThSVzBDRWlBc0oyWHNyT2xM?=
- =?utf-8?B?VC8rMGFpOVQ2T2h3VG9Pcml0azB0Ui96bTJjS1pEcEFTT3ZWdXI3b0U1eEhX?=
- =?utf-8?B?QTlIcjZvQ2FwQjhIcU5Ga0JYNHNmYnZkd0w2RkxRaVJkbjBxUFNaaWUxSENa?=
- =?utf-8?B?TVpSNWRiV1M2T3d0NWNxSUErWXdhcnl3RTJqcEF3UE5CSG5YRGRYUUJ3RDFl?=
- =?utf-8?B?emo3WXBDN3N3QkZpNkp3OVVsSUdVRmN2V0lnc3p6RWFLWTlyOFlJNEdMVkFO?=
- =?utf-8?B?K01OaFVXdTEwdStick9zYjdGMmVWeVFEanFBaGErQjAwSXNHSmhpT3NMcGo5?=
- =?utf-8?B?bWFWNkYyMHFmRHZUNTB4Tkp1OGxyQ2FORU5hMk4wZUVuK2ZSOUVxWGlsc3VK?=
- =?utf-8?B?amNaWW5mRFhNamtnbXAvVDVubndnYVFiLytjU0FCVkp1YjU5UnpoU2V4OEhj?=
- =?utf-8?B?dnFwSno5azk1ZjVRZ3pEMm1BREg1Vm4xMkhwa2dvQlFuY3ZkcHcxa1g1ZVVS?=
- =?utf-8?B?N0w4OUcxWFFOVzg2Q0VFd1lZWnJMYnhTMHdzRFgrTlVwRHJGQ1J3cjZXQk5C?=
- =?utf-8?B?dkNDVFZUM25xWVlFb3dxRDQvSU0rRkdXK3pncWZKRVRIclpRQ0pKS1JMUGFV?=
- =?utf-8?B?K2VUUXJCYUNRYzFXYldPNDJLQ0RXYTNLY0ZZTDBYdVg1cjBkMHVoUlNrK0pX?=
- =?utf-8?B?TlArZG8wQWIwb2gxaVVHR2U2SGNmTjMySU44TlJLZDdqRjl5Y3QzUXJFZVpr?=
- =?utf-8?B?YUtEUUQ4QUNvRFpMOXJMRWxYekgxSytkNzBsSWFUREMrZ2E5Zk9MMXgzZUNu?=
- =?utf-8?B?RHQva1VVOXBldytCYXpwNXVHMzVqWUhuYjdDb1FwbFBNdkVlUnVHTjVrYS85?=
- =?utf-8?B?SU1LM3RxTlVHMGgxaFprNXJLeGlzTUx3YVRwSFlqWGRFeU5vamhrQWdMNm1k?=
- =?utf-8?B?d0NVbVZtODRob3ZHOEwxaE9tczFBMXh0UmFuUGk4eEppUG9JZXdnS1VHN3Z3?=
- =?utf-8?B?RGc5S3ZJQ2NMRjV0bXF3SnhxUHdjazh5LytReUgzRmk3ZjBha1YyQ2c0clVX?=
- =?utf-8?B?S0RJTWk1T2NDeVlFeDFWTjNMK1RGdGNsUlJqbjcrNGVTNzByejNlOHpyWThs?=
- =?utf-8?B?OXBVVm9wZ2NxV2RDUkJYUGF5M3JEUnJaNlBBSHdIZDFkRFo0Zk9yVjlzZnJ6?=
- =?utf-8?B?TlBzcVV3cDBYM2R1a1VVQjNjVENhZnlXbWZvL2ZlRGYxcEpvNHo1bzJkb2NH?=
- =?utf-8?B?WU5CcTdnK2pwbG1sYzVVL1BnZDQ1TnNNdE5tN1F1RXV2dHBYVTVXSW9PMFV2?=
- =?utf-8?B?aTFqY3R1bHdzeHNJQUZWVkhNbmJiUHpYQzdIWWdZNzlrZm5HUmkyVHU3TlhF?=
- =?utf-8?B?cTBKUGZET1lTTVZQUTZPQ1A5MWExdUZIMGdvSzBQa1dCYm1iYi85dWdCTGZm?=
- =?utf-8?B?OUg3VWVhdlgwTTJqVVllcHo0bjdQTGx2b0RqaDhmQ1NQcnM4UVVrVnBLNXZq?=
- =?utf-8?B?UTlUb2dXd1lwMGhIc1JDL093T1dLS0NzWEN0T2hNcjRXM3o3Uk5QZEFQUWVQ?=
- =?utf-8?B?MXVuN3pNOFZkeE9UWllqNSt4RkxMS1lkMWx0dFczOS8xODVJcy9iRURYdGFI?=
- =?utf-8?B?Q0poNDYzT0liWVZ1bHdKczVGcklsbmxCeEs0dEVRZlY3WGZGUGFUc0JEVmx0?=
- =?utf-8?B?aUxCK3p4ZFQvb2Ezdlh0WEJZR2JUSzcvWUZSZzA5SWZNZW9FT1ZxdjU1MUJT?=
- =?utf-8?B?UUhTSmgzd0tseEdGTXhqeXBOYnJ4QWZOOEwzamdpSS85UGFKbnYxNjd2NWF5?=
- =?utf-8?B?eHMwTmlucDRxM09vRFF5MVllTUZOR1VEaCtuejM2SWluZzF2SFg3bGtsRkJt?=
- =?utf-8?B?RFlTeGJ1S3c5L2lpdHliWjBxMk1oSHJsdUhRZmN0aVYrWHByM0EvSDcwZmxr?=
- =?utf-8?Q?Kx3ofANZnBL71cgG3CkTIow+Z?=
-X-MS-Exchange-AntiSpam-ExternalHop-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-ExternalHop-MessageData-0: 
-	=?utf-8?B?Rm5YMFBYb1o2SGxEMGlJV1hYUC8ydGt0QThBejZmaHhPUEp0SlJZYU4zZ0o4?=
- =?utf-8?B?YjFURXIwZGhRTG43WndqNFJnd2ovQ3hVcjZJOHhWajhManFZUXFuYUhjY3Ey?=
- =?utf-8?B?aHc4SXR6TzZ6anZFaEtPdkx1N3hueHhzWThVYWhkMmxpT2JEVnp2SzhscWp1?=
- =?utf-8?B?eWtNVVZULzREUXJKVEFOdTBuWHoyNTFZblMrYWRlbEMxQXQ3eGN2bTZVT0ZM?=
- =?utf-8?B?WjhtTkVhSFNuaDJNOHF5M29EU09ZNnlBUThtcmYzU1RKSklnQnMxNGllQkNI?=
- =?utf-8?B?Wm5KMU5LdG9RNFNiWWg3WnRSWS9KRnVzYnJNRTRnN3JTZkNkZVYwZ0FVQ1dV?=
- =?utf-8?B?OWduYjVtOVkybE82Qks4eVBDT1dOMngzQlVmUUh0WWdwc2FBRWh4QU41MXVO?=
- =?utf-8?B?M1lxRmYza1luR2dhVlhtLy9lZjA1MTJLUTZJazIzOW1qUjF5SlA1U2Z3WGhx?=
- =?utf-8?B?WjJLVWtoQVNUZ25NWWl6SlBGdjBMaFRMUXFXM1ozREtZVTF1ME1UOGg2U0FY?=
- =?utf-8?B?eVhsWkdDcU9xUzRTdFNGdStydzR0V2l6QjFOZVJpREx4enJVUjBzZVFrcmRZ?=
- =?utf-8?B?UjB5MUtXSGNxU1ZHZ2F2M2hrY05FbXJ0OEt5QWtIdnlVbUlIUU1jSDBxSEo2?=
- =?utf-8?B?bzcrM2dxYW80a2lRajRaRjJoa1hSZzhFMk5DQ3JoOWd3WVBwMnAwSDR6Z1NY?=
- =?utf-8?B?RkIwK0YrdjV0T1ZXam11dTRkQ2IvVXZtUm43VHNXdVgyc0p3eGpmQzErNDk3?=
- =?utf-8?B?a21iVkhVVUNCRmdxT1EvZFplOVh4R1pVQ0RlaUNkNGFqWHRYL3hORW50anVi?=
- =?utf-8?B?QVZqckNES2NLNlptSnB4RTgyTUpIenVlS1JHdithTk1lWTJDbFVqUTgzelBI?=
- =?utf-8?B?NmtQeDBJT3FiMEpVZ0swN2ZoMzlNMkRYMHlqMzQzZWdSbm1ZWlZXZHVrV2s5?=
- =?utf-8?B?M2cxVEVYcGN6TkcyMnlHOXBvQTNwdjBTa2NnZVN6NlhTczFwcXE1bGxobkdP?=
- =?utf-8?B?U08zUGpiaTBIeDkweStzdUZCa3dEYWYxNVBTN1EwdkwvRC8rU0I4Tm5xWWZ1?=
- =?utf-8?B?bDdEVFZSUTdNaVhZelRhdDJmRDgwYzJlcnlsTWQzanU5UFBaVU1zWVI1WnJu?=
- =?utf-8?B?b01EVkZ1Y00xZVJrVHQ1MzhEVVQ0VFBNTHY5ZlRkak9ZSi9lUWg2UTRldGpu?=
- =?utf-8?B?NGVnNGFyTTZWOTZGMVFpc0tudk1zdWhyLzRWb0l1QTRnVHMxc3htTjFZYjRj?=
- =?utf-8?B?MldqVkU5aXlkZzF3aExvZ2VuUUw2aGhMYTVkamt2MHlySHk4VE1Obm1yNHZV?=
- =?utf-8?B?UWRjWnUrbkk3N3M0R3JKQjBPdnNoclJqWjQ2bnFQYkszR0FXc0JOVEVzWDVh?=
- =?utf-8?B?QmZ2MlltbjZUdTRzWHoxQTNoa0pPejY5OGhQdGd0RFpZbzFmRktYY01vNFg3?=
- =?utf-8?B?UDN6UTBZVC9KY25CK1paeWlZVDBmQkRBQzJYTjMvZFZITXQ2b1dDZmI4ODlF?=
- =?utf-8?Q?yXoOfL9l88eg4eVdGWMUpZfE1WP?=
-X-OriginatorOrg: oracle.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 7f8eaf05-35e4-46e4-1616-08dbfc0de81d
-X-MS-Exchange-CrossTenant-AuthSource: DM6PR10MB4313.namprd10.prod.outlook.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 13 Dec 2023 19:01:26.4463
- (UTC)
-X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
-X-MS-Exchange-CrossTenant-Id: 4e2c6054-71cb-48f1-bd6c-3a9705aca71b
-X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: +R6nkktdHEi+ZXUYHGcmykUMBCzYowgBFZzTxRRp+OHcQBUSV9uC6QSFgUQgX/WvMdtIG8GPJniztbh3BpK2dA==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: PH7PR10MB6250
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.272,Aquarius:18.0.997,Hydra:6.0.619,FMLib:17.11.176.26
- definitions=2023-12-13_12,2023-12-13_01,2023-05-22_02
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 adultscore=0 suspectscore=0
- phishscore=0 malwarescore=0 spamscore=0 mlxlogscore=999 bulkscore=0
- mlxscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2311290000 definitions=main-2312130136
-X-Proofpoint-GUID: ZUuNZwbOs2fDkzcsXqOzPntt-P3QAoqD
-X-Proofpoint-ORIG-GUID: ZUuNZwbOs2fDkzcsXqOzPntt-P3QAoqD
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20231213104950.1587730-1-glider@google.com>
+X-Scanned-By: MIMEDefang 3.4.1 on 10.11.54.9
 
-On 13/12/2023 12:28, Ming Lei wrote:
->> For NVMe, we use the logical block size. For physical block size, that can
->> be greater than the logical block size for npwg set, and I don't think it's
->> suitable use that as minimum atomic write unit.
-> I highly suspect it is wrong to use logical block size as minimum
-> support atomic write unit, given physical block size is supposed to
-> be the minimum atomic write unit.
+[cc linux-xfs@vger.kernel.org because that's where all questions
+about XFS stuff should be directed, not to random individual
+developers. ]
 
-I would tend to agree, but I am still a bit curious on how npwg is used 
-to calculate atomic_bs/phys_bs as it seems to be a recommended 
-performance-related value. It would hint to me that it is the phys_bs, 
-but is that same as atomic min granularity?
-
+On Wed, Dec 13, 2023 at 11:49:50AM +0100, Alexander Potapenko wrote:
+> Hi Christoph, Dave,
 > 
->> Anyway, I am not too keen on sanitizing this value in this way.
->>
->>>> +
->>>> +/*
->>>> + * blk_queue_atomic_write_unit_max_sectors - largest unit that can be written
->>>> + * atomically to the device.
->>>> + * @q: the request queue for the device
->>>> + * @sectors: must be a power-of-two.
->>>> + */
->>>> +void blk_queue_atomic_write_unit_max_sectors(struct request_queue *q,
->>>> +					     unsigned int sectors)
->>>> +{
->>>> +	struct queue_limits *limits = &q->limits;
->>>> +
->>>> +	limits->atomic_write_unit_max_sectors = sectors;
->>>> +}
->>>> +EXPORT_SYMBOL(blk_queue_atomic_write_unit_max_sectors);
->>> atomic_write_unit_max_sectors should be >= atomic_write_unit_min_sectors.
->>>
->> Again, we rely on the driver to provide sound values. However, as mentioned,
->> we can sanitize.
-> Relying on driver to provide sound value is absolutely bad design from API
-> viewpoint.
+> The repro provided by Xingwei indeed works.
+> 
+> I tried adding kmsan_check_memory(data, write_len) to xlog_write_iovec(), and
+> it reported an uninitialized hole inside the `data` buffer:
+> 
+> kmalloc-ed xlog buffer of size 512 : ffff88802fc26200
+> kmalloc-ed xlog buffer of size 368 : ffff88802fc24a00
+> kmalloc-ed xlog buffer of size 648 : ffff88802b631000
+> kmalloc-ed xlog buffer of size 648 : ffff88802b632800
+> kmalloc-ed xlog buffer of size 648 : ffff88802b631c00
 
-OK, fine, I'll look to revise the API to make it more robust.
+Off the top of my head:
 
-Thanks,
-John
+> xlog_write_iovec: copying 12 bytes from ffff888017ddbbd8 to ffff88802c300400
+
+Log start record in an ophdr.
+
+> xlog_write_iovec: copying 28 bytes from ffff888017ddbbe4 to ffff88802c30040c
+
+ophdr + checkpoint start header
+
+> xlog_write_iovec: copying 68 bytes from ffff88802fc26274 to ffff88802c300428
+
+ophdr + inode log format header
+
+> xlog_write_iovec: copying 188 bytes from ffff88802fc262bc to ffff88802c30046c
+
+ophdr + inode core in struct xfs_log_dinode format.
+
+> =====================================================
+> BUG: KMSAN: uninit-value in xlog_write_iovec fs/xfs/xfs_log.c:2227
+> BUG: KMSAN: uninit-value in xlog_write_full fs/xfs/xfs_log.c:2263
+> BUG: KMSAN: uninit-value in xlog_write+0x1fac/0x2600 fs/xfs/xfs_log.c:2532
+>  xlog_write_iovec fs/xfs/xfs_log.c:2227
+>  xlog_write_full fs/xfs/xfs_log.c:2263
+>  xlog_write+0x1fac/0x2600 fs/xfs/xfs_log.c:2532
+>  xlog_cil_write_chain fs/xfs/xfs_log_cil.c:918
+>  xlog_cil_push_work+0x30f2/0x44e0 fs/xfs/xfs_log_cil.c:1263
+>  process_one_work kernel/workqueue.c:2630
+>  process_scheduled_works+0x1188/0x1e30 kernel/workqueue.c:2703
+>  worker_thread+0xee5/0x14f0 kernel/workqueue.c:2784
+>  kthread+0x391/0x500 kernel/kthread.c:388
+>  ret_from_fork+0x66/0x80 arch/x86/kernel/process.c:147
+>  ret_from_fork_asm+0x11/0x20 arch/x86/entry/entry_64.S:242
+> 
+> Uninit was created at:
+>  slab_post_alloc_hook+0x101/0xac0 mm/slab.h:768
+>  slab_alloc_node mm/slub.c:3482
+>  __kmem_cache_alloc_node+0x612/0xae0 mm/slub.c:3521
+>  __do_kmalloc_node mm/slab_common.c:1006
+>  __kmalloc+0x11a/0x410 mm/slab_common.c:1020
+>  kmalloc ./include/linux/slab.h:604
+>  xlog_kvmalloc fs/xfs/xfs_log_priv.h:704
+>  xlog_cil_alloc_shadow_bufs fs/xfs/xfs_log_cil.c:343
+>  xlog_cil_commit+0x487/0x4dc0 fs/xfs/xfs_log_cil.c:1574
+>  __xfs_trans_commit+0x8df/0x1930 fs/xfs/xfs_trans.c:1017
+>  xfs_trans_commit+0x30/0x40 fs/xfs/xfs_trans.c:1061
+>  xfs_create+0x15af/0x2150 fs/xfs/xfs_inode.c:1076
+>  xfs_generic_create+0x4cd/0x1550 fs/xfs/xfs_iops.c:199
+>  xfs_vn_create+0x4a/0x60 fs/xfs/xfs_iops.c:275
+>  lookup_open fs/namei.c:3477
+>  open_last_lookups fs/namei.c:3546
+>  path_openat+0x29ac/0x6180 fs/namei.c:3776
+>  do_filp_open+0x24d/0x680 fs/namei.c:3809
+>  do_sys_openat2+0x1bc/0x330 fs/open.c:1440
+>  do_sys_open fs/open.c:1455
+>  __do_sys_openat fs/open.c:1471
+>  __se_sys_openat fs/open.c:1466
+>  __x64_sys_openat+0x253/0x330 fs/open.c:1466
+>  do_syscall_x64 arch/x86/entry/common.c:51
+>  do_syscall_64+0x4f/0x140 arch/x86/entry/common.c:82
+>  entry_SYSCALL_64_after_hwframe+0x63/0x6b arch/x86/entry/entry_64.S:120
+> 
+> Bytes 112-115 of 188 are uninitialized
+> Memory access of size 188 starts at ffff88802fc262bc
+
+so bytes 100-103 of the xfs_log_dinode, which is the di_crc field
+of the structure.
+
+<looks at code>
+
+Indeed, we *never* initialise that field, and we've never noticed
+because it doesn't get used in replay (it is recalculated after
+replay) so it's value is never checked and nothing has ever issued
+warnings about it in our testing.
+
+We actually did all uninitialised structure leak testing back in
+2017 on the xfs_log_dinode and that, amongst other things, flagged
+the 4 bytes *before* the di_crc field as being uninitialised
+(di_next_unlinked). We fixed those issues and the uninit/leak
+warnings went away via this commit:
+
+commit 20413e37d71befd02b5846acdaf5e2564dd1c38e
+Author: Dave Chinner <dchinner@redhat.com>
+Date:   Mon Oct 9 11:37:22 2017 -0700
+
+    xfs: Don't log uninitialised fields in inode structures
+    
+    Prevent kmemcheck from throwing warnings about reading uninitialised
+    memory when formatting inodes into the incore log buffer. There are
+    several issues here - we don't always log all the fields in the
+    inode log format item, and we never log the inode the
+    di_next_unlinked field.
+    
+    In the case of the inode log format item, this is exacerbated
+    by the old xfs_inode_log_format structure padding issue. Hence make
+    the padded, 64 bit aligned version of the structure the one we always
+    use for formatting the log and get rid of the 64 bit variant. This
+    means we'll always log the 64-bit version and so recovery only needs
+    to convert from the unpadded 32 bit version from older 32 bit
+    kernels.
+    
+    Signed-Off-By: Dave Chinner <dchinner@redhat.com>
+    Tested-by: Tetsuo Handa <penguin-kernel@I-love.SAKURA.ne.jp>
+    Reviewed-by: Brian Foster <bfoster@redhat.com>
+    Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
+    Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+
+The same tool that found those problems didn't report the 4 byte
+region of the di_crc as being uninitialised, and it's taken another
+6 years for some random, weird corner case for KMSAN to realise that
+every inode we log fails to initialise the di_crc field?
+
+It's trivial to fix now that the kmsan tool has identified the
+issue, but I'm perplexed at how this has gone undetected for several
+years despite the fact that "mount <fs>; touch foo; unmount <fs>"
+should trigger an uninitialised memory read warning, without fail,
+every time it is run.
+
+-Dave.
+-- 
+Dave Chinner
+dchinner@redhat.com
+
