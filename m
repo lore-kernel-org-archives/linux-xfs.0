@@ -1,38 +1,22 @@
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=linux.org.uk header.i=@linux.org.uk header.b="YTgQ262h"
-Received: from zeniv.linux.org.uk (zeniv.linux.org.uk [IPv6:2a03:a000:7:0:5054:ff:fe1c:15ff])
-	by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E817CAB;
-	Wed, 13 Dec 2023 05:31:37 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-	d=linux.org.uk; s=zeniv-20220401; h=Sender:In-Reply-To:Content-Type:
-	MIME-Version:References:Message-ID:Subject:Cc:To:From:Date:Reply-To:
-	Content-Transfer-Encoding:Content-ID:Content-Description;
-	bh=SXfH8Llt0jxmPv2myg0rD8VmQvDP6rhPvEfTH/AwkCE=; b=YTgQ262hq3ggMN7vyDDIz8Eqtu
-	ikkWyXyLiN2Uhbg+PRQ+hN11PbOPCm+x3g4mCaGBn7A9NVYOXrAzzL8jZ4agYKKkqMzp9dae1YolE
-	TBFLyY7o2DtammUpBSJY+o9yAx6QKcNZ3SaImPXjDOEEAu6dDTiiP10Y5J129WNNV39iJq7eb8zmT
-	6Kx7l1fE5YiVAwxiL+Yp09DvTvuXIlMwdrwgMhc9dNtGyi+54Hj6n4n+PSHn6JEnW1XRMofwxMeRO
-	BKywIExN6rudbNMrUmDUucuOF/XIXS4LKB08O4YFByoC/fIzP3LSrGPtQ/VaJkS5CWV5VD0CrVboW
-	2Cgyl4Xg==;
-Received: from viro by zeniv.linux.org.uk with local (Exim 4.96 #2 (Red Hat Linux))
-	id 1rDPKQ-00BmIC-0J;
-	Wed, 13 Dec 2023 13:31:10 +0000
-Date: Wed, 13 Dec 2023 13:31:10 +0000
-From: Al Viro <viro@zeniv.linux.org.uk>
+Received: from verein.lst.de (verein.lst.de [213.95.11.211])
+	by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6B27A26AE;
+	Wed, 13 Dec 2023 07:44:16 -0800 (PST)
+Received: by verein.lst.de (Postfix, from userid 2407)
+	id 3036768B05; Wed, 13 Dec 2023 16:44:09 +0100 (CET)
+Date: Wed, 13 Dec 2023 16:44:09 +0100
+From: Christoph Hellwig <hch@lst.de>
 To: John Garry <john.g.garry@oracle.com>
-Cc: axboe@kernel.dk, kbusch@kernel.org, hch@lst.de, sagi@grimberg.me,
-	jejb@linux.ibm.com, martin.petersen@oracle.com, djwong@kernel.org,
-	brauner@kernel.org, dchinner@redhat.com, jack@suse.cz,
-	linux-block@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-nvme@lists.infradead.org, linux-xfs@vger.kernel.org,
-	linux-fsdevel@vger.kernel.org, tytso@mit.edu, jbongio@google.com,
-	linux-scsi@vger.kernel.org, ming.lei@redhat.com,
-	jaswin@linux.ibm.com, bvanassche@acm.org,
-	Prasad Singamsetty <prasad.singamsetty@oracle.com>
-Subject: Re: [PATCH v2 05/16] fs: Add RWF_ATOMIC and IOCB_ATOMIC flags for
- atomic write support
-Message-ID: <20231213133110.GL1674809@ZenIV>
-References: <20231212110844.19698-1-john.g.garry@oracle.com>
- <20231212110844.19698-6-john.g.garry@oracle.com>
+Cc: Christoph Hellwig <hch@lst.de>, axboe@kernel.dk, kbusch@kernel.org,
+	sagi@grimberg.me, jejb@linux.ibm.com, martin.petersen@oracle.com,
+	djwong@kernel.org, viro@zeniv.linux.org.uk, brauner@kernel.org,
+	dchinner@redhat.com, jack@suse.cz, linux-block@vger.kernel.org,
+	linux-kernel@vger.kernel.org, linux-nvme@lists.infradead.org,
+	linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
+	tytso@mit.edu, jbongio@google.com, linux-scsi@vger.kernel.org,
+	ming.lei@redhat.com, jaswin@linux.ibm.com, bvanassche@acm.org
+Subject: Re: [PATCH v2 00/16] block atomic writes
+Message-ID: <20231213154409.GA7724@lst.de>
+References: <20231212110844.19698-1-john.g.garry@oracle.com> <20231212163246.GA24594@lst.de> <b8b0a9d7-88d2-45a9-877a-ecc5e0f1e645@oracle.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -41,30 +25,73 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20231212110844.19698-6-john.g.garry@oracle.com>
-Sender: Al Viro <viro@ftp.linux.org.uk>
+In-Reply-To: <b8b0a9d7-88d2-45a9-877a-ecc5e0f1e645@oracle.com>
+User-Agent: Mutt/1.5.17 (2007-11-01)
 
-On Tue, Dec 12, 2023 at 11:08:33AM +0000, John Garry wrote:
+On Wed, Dec 13, 2023 at 09:32:06AM +0000, John Garry wrote:
+>>> - How to make API extensible for when we have no HW support? In that case,
+>>>    we would prob not have to follow rule of power-of-2 length et al.
+>>>    As a possible solution, maybe we can say that atomic writes are
+>>>    supported for the file via statx, but not set unit_min and max values,
+>>>    and this means that writes need to be just FS block aligned there.
+>> I don't think the power of two length is much of a problem to be
+>> honest, and if we every want to lift it we can still do that easily
+>> by adding a new flag or limit.
+>
+> ok, but it would be nice to have some idea on what that flag or limit 
+> change would be.
 
-> Add file mode flag FMODE_CAN_ATOMIC_WRITE, so files which do not have the
-> flag set will have RWF_ATOMIC rejected and not just ignored.
-> 
-> Signed-off-by: Prasad Singamsetty <prasad.singamsetty@oracle.com>
-> Signed-off-by: John Garry <john.g.garry@oracle.com>
-> ---
->  include/linux/fs.h      | 8 ++++++++
->  include/uapi/linux/fs.h | 5 ++++-
->  2 files changed, 12 insertions(+), 1 deletion(-)
-> 
-> diff --git a/include/linux/fs.h b/include/linux/fs.h
-> index 70329c81be31..d725c194243c 100644
-> --- a/include/linux/fs.h
-> +++ b/include/linux/fs.h
-> @@ -185,6 +185,9 @@ typedef int (dio_iodone_t)(struct kiocb *iocb, loff_t offset,
->  /* File supports async nowait buffered writes */
->  #define FMODE_BUF_WASYNC	((__force fmode_t)0x80000000)
->  
-> +/* File supports atomic writes */
-> +#define FMODE_CAN_ATOMIC_WRITE	((__force fmode_t)0x100000000)
+That would require a concrete use case.  The simples thing for a file
+system that can or does log I/O it would simply be a flag waving all
+the alignment and size requirements.
 
-Have you even tried to compile that on e.g. arm?
+>> I suspect we need an on-disk flag that forces allocations to be
+>> aligned to the atomic write limit, in some ways similar how the
+>> XFS rt flag works.  You'd need to set it on an empty file, and all
+>> allocations after that are guaranteed to be properly aligned.
+>
+> Hmmm... so how is this different to the XFS forcealign feature?
+
+Maybe not much.  But that's not what it is about - we need a common
+API for this and not some XFS internal flag.  So if this is something
+we could support in ext4 as well that would be a good step.  And for
+btrfs you'd probably want to support something like it in nocow mode
+if people care enough, or always support atomics and write out of
+place.
+
+> For XFS, I thought that your idea was to always CoW new extents for 
+> misaligned extents or writes which spanned multiple extents.
+
+Well, that is useful for two things:
+
+ - atomic writes on hardware that does not support it
+ - atomic writes for bufferd I/O
+ - supporting other sizes / alignments than the strict power of
+   two above.
+
+> Right, so we should limit atomic write queue limits to max_hw_sectors. But 
+> people can still tweak max_sectors, and I am inclined to say that 
+> atomic_write_unit_max et al should be (dynamically) limited to max_sectors 
+> also.
+
+Allowing people to tweak it seems to be asking for trouble.
+
+>> have that silly limit.  For NVMe that would require SGL support
+>> (and some driver changes I've been wanting to make for long where
+>> we always use SGLs for transfers larger than a single PRP if supported)
+>
+> If we could avoid dealing with a virt boundary, then that would be nice.
+>
+> Are there any patches yet for the change to always use SGLs for transfers 
+> larger than a single PRP?
+
+No.
+
+> On a related topic, I am not sure about how - or if we even should - 
+> enforce iovec PAGE-alignment or length; rather, the user could just be 
+> advised that iovecs must be PAGE-aligned and min PAGE length to achieve 
+> atomic_write_unit_max.
+
+Anything that just advices the user an it not clear cut and results in
+an error is data loss waiting to happen.  Even more so if it differs
+from device to device.
