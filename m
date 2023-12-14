@@ -1,57 +1,29 @@
-Received: from mail-pg1-f169.google.com (mail-pg1-f169.google.com [209.85.215.169])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B18226A34D
-	for <linux-xfs@vger.kernel.org>; Thu, 14 Dec 2023 21:41:43 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=fromorbit.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D99832C68F
+	for <linux-xfs@vger.kernel.org>; Thu, 14 Dec 2023 21:47:19 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b="NxpDuLR4"
-Received: by mail-pg1-f169.google.com with SMTP id 41be03b00d2f7-5c68da9d639so44835a12.3
-        for <linux-xfs@vger.kernel.org>; Thu, 14 Dec 2023 13:41:43 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=fromorbit-com.20230601.gappssmtp.com; s=20230601; t=1702590103; x=1703194903; darn=vger.kernel.org;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
-        bh=mXKmpukpLkiJFuAifFrfa8WF8QvPINlxlskeOtQPtqg=;
-        b=NxpDuLR4d29shXzXVF8v1soboumSMdWn87sci5i9RFA2pVrsAgbghDz66p3Hl3H76l
-         gCNdzWC5XxomMhQrFfQTGxGZYzCYw4ABecTOfzXW3mPRJUWQrNqyUnlu9MiPIyUSZdp9
-         kXSlwp1EwBuWdEzIe87n0orHVBqU0ilCKnFCHLXQLR1GJ7lIGZjH0yIBJmj61N2u+a+y
-         ZrwSP30uQTgOdkZC245nneeQfnLKbF51ZZpcG7e/sXYC1UNGZnYmZu2wxuYDXPdwb4oU
-         eL3453POY0LONKq0/nX2W+1/tFhurWJwVlWCm7nZBL9+drEXx5C2Fvh4WFnVTe+9q8A/
-         vKxg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1702590103; x=1703194903;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=mXKmpukpLkiJFuAifFrfa8WF8QvPINlxlskeOtQPtqg=;
-        b=a8yDtG40IdROIvYXG6s5n0Ga7Exe88GSuyI/47cnu4vxmgwxQ0SjB4UICCYY2cNACQ
-         3759eNjirvit+xFw4Ig9+ai+eo9sx/pa4XLHNa+FPDh4+K7U1zn9QxCwV+iE048jtY3b
-         1Fn/YmFL7qoFMj0sKhWIWlHp0Jr+ME4e8G/zdP0REvSunuLhe+ValiLshhkCcwYOwzVI
-         n/uGzGikrEq6ybCc/zjjka5VJ5pXq+6t+B2kBYlVvZnyAIP0OrAxgurrEDWQ498g/LNz
-         bfC1+unGZG22WML8fwsbIjSYpG9BjhVImuDJF0E4kEI+ea+S5K6IkIrU3hEktbXD6Eyt
-         /xgw==
-X-Gm-Message-State: AOJu0YwYnRu8EPp8qx2T4sqXKtmDCkbIRkkGAKVnRzrOlOg1dNy17JoG
-	TxTGo2fTnYUo1YFZvPtaMj4xCQ==
-X-Google-Smtp-Source: AGHT+IFsO7JU1bfxleA6CAtL3i1M3Us6vdjq7z/Gj2nxNRvVA/E9rgJ6QAs6wSAj2FnCjabtkDbIhQ==
-X-Received: by 2002:a17:903:230d:b0:1d0:6ffd:cea4 with SMTP id d13-20020a170903230d00b001d06ffdcea4mr6429610plh.93.1702590102939;
-        Thu, 14 Dec 2023 13:41:42 -0800 (PST)
-Received: from dread.disaster.area (pa49-180-125-5.pa.nsw.optusnet.com.au. [49.180.125.5])
-        by smtp.gmail.com with ESMTPSA id y12-20020a170902700c00b001bbb8d5166bsm12771224plk.123.2023.12.14.13.41.42
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 14 Dec 2023 13:41:42 -0800 (PST)
-Received: from dave by dread.disaster.area with local (Exim 4.96)
-	(envelope-from <david@fromorbit.com>)
-	id 1rDtSd-008MwP-1x;
-	Fri, 15 Dec 2023 08:41:39 +1100
-Date: Fri, 15 Dec 2023 08:41:39 +1100
-From: Dave Chinner <david@fromorbit.com>
-To: "Darrick J. Wong" <djwong@kernel.org>
-Cc: hch@lst.de, chandanbabu@kernel.org, linux-xfs@vger.kernel.org
-Subject: Re: [PATCH] xfs: fix an off-by-one error in xreap_agextent_binval
-Message-ID: <ZXt2k//lCpW8koWj@dread.disaster.area>
-References: <20231214213845.GK361584@frogsfrogsfrogs>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="TrxMfLch"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 00475C433C7;
+	Thu, 14 Dec 2023 21:47:18 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1702590439;
+	bh=OFZq9V5evQrLoAyJmnP2ICoXthLfQ/O3qWQla0An58E=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=TrxMfLchui/C25bIAE15tOA0zBwDUJbIXpiH4GMLbkd0HMpYaqtdJnN5bnwhRxL6y
+	 mdw1vKX1fLBmZ28OF8izMrwqpnjp2dGR4q5zYZivAXgNL8kh8W7+fHjFXpnraSbe3D
+	 4885nwJlBfBFcGXBZv1KaQZZf05tWGj/afW0LE+gTPhVxFSauJc91r0ljLCT6teIRc
+	 ucnmRA/P3a+Ry5+8+xTolGD0empw8NG5iN1wxQokWdACh2TaDAA/Rty82jAT23Jbnu
+	 ZnuEbcLTZUE7cAk9krX1UVaI3FjbfFPK78ID/IRBAeNFhSnLGN3u9IBOs8oHzv2zI8
+	 jl7fccz6NbJfg==
+Date: Thu, 14 Dec 2023 13:47:18 -0800
+From: "Darrick J. Wong" <djwong@kernel.org>
+To: Dave Chinner <david@fromorbit.com>
+Cc: linux-xfs@vger.kernel.org
+Subject: Re: [PATCH] xfs: initialise di_crc in xfs_log_dinode
+Message-ID: <20231214214718.GL361584@frogsfrogsfrogs>
+References: <20231214214035.3795665-1-david@fromorbit.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -60,77 +32,117 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20231214213845.GK361584@frogsfrogsfrogs>
+In-Reply-To: <20231214214035.3795665-1-david@fromorbit.com>
 
-On Thu, Dec 14, 2023 at 01:38:45PM -0800, Darrick J. Wong wrote:
-> From: Darrick J. Wong <djwong@kernel.org>
+On Fri, Dec 15, 2023 at 08:40:35AM +1100, Dave Chinner wrote:
+> From: Dave Chinner <dchinner@redhat.com>
 > 
-> Overall, this function tries to find and invalidate all buffers for a
-> given extent of space on the data device.  The inner for loop in this
-> function tries to find all xfs_bufs for a given daddr.  The lengths of
-> all possible cached buffers range from 1 fsblock to the largest needed
-> to contain a 64k xattr value (~17fsb).  The scan is capped to avoid
-> looking at anything buffer going past the given extent.
+> Alexander Potapenko report that KMSAN was issuing these warnings:
 > 
-> Unfortunately, the loop continuation test is wrong -- max_fsbs is the
-> largest size we want to scan, not one past that.  Put another way, this
-> loop is actually 1-indexed, not 0-indexed.  Therefore, the continuation
-> test should use <=, not <.
+> kmalloc-ed xlog buffer of size 512 : ffff88802fc26200
+> kmalloc-ed xlog buffer of size 368 : ffff88802fc24a00
+> kmalloc-ed xlog buffer of size 648 : ffff88802b631000
+> kmalloc-ed xlog buffer of size 648 : ffff88802b632800
+> kmalloc-ed xlog buffer of size 648 : ffff88802b631c00
+> xlog_write_iovec: copying 12 bytes from ffff888017ddbbd8 to ffff88802c300400
+> xlog_write_iovec: copying 28 bytes from ffff888017ddbbe4 to ffff88802c30040c
+> xlog_write_iovec: copying 68 bytes from ffff88802fc26274 to ffff88802c300428
+> xlog_write_iovec: copying 188 bytes from ffff88802fc262bc to ffff88802c30046c
+> =====================================================
+> BUG: KMSAN: uninit-value in xlog_write_iovec fs/xfs/xfs_log.c:2227
+> BUG: KMSAN: uninit-value in xlog_write_full fs/xfs/xfs_log.c:2263
+> BUG: KMSAN: uninit-value in xlog_write+0x1fac/0x2600 fs/xfs/xfs_log.c:2532
+>  xlog_write_iovec fs/xfs/xfs_log.c:2227
+>  xlog_write_full fs/xfs/xfs_log.c:2263
+>  xlog_write+0x1fac/0x2600 fs/xfs/xfs_log.c:2532
+>  xlog_cil_write_chain fs/xfs/xfs_log_cil.c:918
+>  xlog_cil_push_work+0x30f2/0x44e0 fs/xfs/xfs_log_cil.c:1263
+>  process_one_work kernel/workqueue.c:2630
+>  process_scheduled_works+0x1188/0x1e30 kernel/workqueue.c:2703
+>  worker_thread+0xee5/0x14f0 kernel/workqueue.c:2784
+>  kthread+0x391/0x500 kernel/kthread.c:388
+>  ret_from_fork+0x66/0x80 arch/x86/kernel/process.c:147
+>  ret_from_fork_asm+0x11/0x20 arch/x86/entry/entry_64.S:242
 > 
-> As a result, online repairs of btree blocks fails to stale any buffers
-> for btrees that are being torn down, which causes later assertions in
-> the buffer cache when another thread creates a different-sized buffer.
-> This happens in xfs/709 when allocating an inode cluster buffer:
+> Uninit was created at:
+>  slab_post_alloc_hook+0x101/0xac0 mm/slab.h:768
+>  slab_alloc_node mm/slub.c:3482
+>  __kmem_cache_alloc_node+0x612/0xae0 mm/slub.c:3521
+>  __do_kmalloc_node mm/slab_common.c:1006
+>  __kmalloc+0x11a/0x410 mm/slab_common.c:1020
+>  kmalloc ./include/linux/slab.h:604
+>  xlog_kvmalloc fs/xfs/xfs_log_priv.h:704
+>  xlog_cil_alloc_shadow_bufs fs/xfs/xfs_log_cil.c:343
+>  xlog_cil_commit+0x487/0x4dc0 fs/xfs/xfs_log_cil.c:1574
+>  __xfs_trans_commit+0x8df/0x1930 fs/xfs/xfs_trans.c:1017
+>  xfs_trans_commit+0x30/0x40 fs/xfs/xfs_trans.c:1061
+>  xfs_create+0x15af/0x2150 fs/xfs/xfs_inode.c:1076
+>  xfs_generic_create+0x4cd/0x1550 fs/xfs/xfs_iops.c:199
+>  xfs_vn_create+0x4a/0x60 fs/xfs/xfs_iops.c:275
+>  lookup_open fs/namei.c:3477
+>  open_last_lookups fs/namei.c:3546
+>  path_openat+0x29ac/0x6180 fs/namei.c:3776
+>  do_filp_open+0x24d/0x680 fs/namei.c:3809
+>  do_sys_openat2+0x1bc/0x330 fs/open.c:1440
+>  do_sys_open fs/open.c:1455
+>  __do_sys_openat fs/open.c:1471
+>  __se_sys_openat fs/open.c:1466
+>  __x64_sys_openat+0x253/0x330 fs/open.c:1466
+>  do_syscall_x64 arch/x86/entry/common.c:51
+>  do_syscall_64+0x4f/0x140 arch/x86/entry/common.c:82
+>  entry_SYSCALL_64_after_hwframe+0x63/0x6b arch/x86/entry/entry_64.S:120
 > 
->  ------------[ cut here ]------------
->  WARNING: CPU: 0 PID: 3346128 at fs/xfs/xfs_message.c:104 assfail+0x3a/0x40 [xfs]
->  CPU: 0 PID: 3346128 Comm: fsstress Not tainted 6.7.0-rc4-djwx #rc4
->  RIP: 0010:assfail+0x3a/0x40 [xfs]
->  Call Trace:
->   <TASK>
->   _xfs_buf_obj_cmp+0x4a/0x50
->   xfs_buf_get_map+0x191/0xba0
->   xfs_trans_get_buf_map+0x136/0x280
->   xfs_ialloc_inode_init+0x186/0x340
->   xfs_ialloc_ag_alloc+0x254/0x720
->   xfs_dialloc+0x21f/0x870
->   xfs_create_tmpfile+0x1a9/0x2f0
->   xfs_rename+0x369/0xfd0
->   xfs_vn_rename+0xfa/0x170
->   vfs_rename+0x5fb/0xc30
->   do_renameat2+0x52d/0x6e0
->   __x64_sys_renameat2+0x4b/0x60
->   do_syscall_64+0x3b/0xe0
->   entry_SYSCALL_64_after_hwframe+0x46/0x4e
+> Bytes 112-115 of 188 are uninitialized
+> Memory access of size 188 starts at ffff88802fc262bc
 > 
-> A later refactoring patch in the online repair series fixed this by
-> accident, which is why I didn't notice this until I started testing only
-> the patches that are likely to end up in 6.8.
+> This is caused by the struct xfs_log_dinode not having the di_crc
+> field initialised. Log recovery never uses this field (it is only
+> present these days for on-disk format compatibility reasons) and so
+> it's value is never checked so nothing in XFS has caught this.
 > 
-> Fixes: 1c7ce115e521 ("xfs: reap large AG metadata extents when possible")
-> Signed-off-by: Darrick J. Wong <djwong@kernel.org>
+> Further, none of the uninitialised memory access warning tools have
+> caught this (despite catching other uninit memory accesses in the
+> struct xfs_log_dinode back in 2017!) until recently. Alexander
+> annotated the XFS code to get the dump of the actual bytes that were
+> detected as uninitialised, and from that report it took me about 30s
+> to realise what the issue was.
+> 
+> The issue was introduced back in 2016 and every inode that is logged
+> fails to initialise this field. This is no actual bad behaviour
+> caused by this issue - I find it hard to even classify it as a
+> bug...
+> 
+> Reported-and-tested-by: Alexander Potapenko <glider@google.com>
+> Fixes: f8d55aa0523a ("xfs: introduce inode log format object")
+> Signed-off-by: Dave Chinner <dchinner@redhat.com>
 > ---
->  fs/xfs/scrub/reap.c |    2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
+>  fs/xfs/xfs_inode_item.c | 3 +++
+>  1 file changed, 3 insertions(+)
 > 
-> diff --git a/fs/xfs/scrub/reap.c b/fs/xfs/scrub/reap.c
-> index 9b6c919db522..f99eca799809 100644
-> --- a/fs/xfs/scrub/reap.c
-> +++ b/fs/xfs/scrub/reap.c
-> @@ -251,7 +251,7 @@ xreap_agextent_binval(
->  		max_fsbs = min_t(xfs_agblock_t, agbno_next - bno,
->  				xfs_attr3_rmt_blocks(mp, XFS_XATTR_SIZE_MAX));
->  
-> -		for (fsbcount = 1; fsbcount < max_fsbs; fsbcount++) {
-> +		for (fsbcount = 1; fsbcount <= max_fsbs; fsbcount++) {
->  			struct xfs_buf	*bp = NULL;
->  			xfs_daddr_t	daddr;
->  			int		error;
+> diff --git a/fs/xfs/xfs_inode_item.c b/fs/xfs/xfs_inode_item.c
+> index 157ae90d3d52..0287918c03dc 100644
+> --- a/fs/xfs/xfs_inode_item.c
+> +++ b/fs/xfs/xfs_inode_item.c
+> @@ -557,6 +557,9 @@ xfs_inode_to_log_dinode(
+>  		memset(to->di_pad2, 0, sizeof(to->di_pad2));
+>  		uuid_copy(&to->di_uuid, &ip->i_mount->m_sb.sb_meta_uuid);
+>  		to->di_v3_pad = 0;
+> +
+> +		/* dummy value for initialisation */
+> +		to->di_crc = 0;
 
-Looks good.
+I wonder if the log should be using kzalloc instead of kmalloc for
+buffers that will end up on disk?  Kind of a nasty performance hit
+just for the sake of paranoia, though.
 
-Reviewed-by: Dave Chinner <dchinner@redhat.com>
+Reviewed-by: Darrick J. Wong <djwong@kernel.org>
 
--- 
-Dave Chinner
-david@fromorbit.com
+--D
+
+>  	} else {
+>  		to->di_version = 2;
+>  		to->di_flushiter = ip->i_flushiter;
+> -- 
+> 2.42.0
+> 
+> 
