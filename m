@@ -1,127 +1,158 @@
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="N8ubPiEJ"
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
-	by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 85C4A12D
-	for <linux-xfs@vger.kernel.org>; Thu, 14 Dec 2023 05:46:25 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1702561584;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=QMlqSzMLtoLhUA6/pSOLSiY6ne++uxerHVPAdydtEYo=;
-	b=N8ubPiEJzQV/ckmuxCSbDN+JYdEXaAne69we0MGQVJN1aV8RmF2JFnyApELDayvulJwcmr
-	TbQUbAor3ZilgNht4OlFYZXTFzx0PY0ZejCH7+2w+RTaVqKiKRQyDb4acpmAFOpu5s4pU+
-	+Bj2Pqr0yd4y57LzMDdAZIV2i2graV8=
-Received: from mimecast-mx02.redhat.com (mx-ext.redhat.com [66.187.233.73])
- by relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.3,
- cipher=TLS_AES_256_GCM_SHA384) id us-mta-457-Yr6iln9QPreJK0NkIMKRvw-1; Thu,
- 14 Dec 2023 08:46:21 -0500
-X-MC-Unique: Yr6iln9QPreJK0NkIMKRvw-1
-Received: from smtp.corp.redhat.com (int-mx08.intmail.prod.int.rdu2.redhat.com [10.11.54.8])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-	(No client certificate requested)
-	by mimecast-mx02.redhat.com (Postfix) with ESMTPS id 514D328040B2;
-	Thu, 14 Dec 2023 13:46:19 +0000 (UTC)
-Received: from fedora (unknown [10.72.116.126])
-	by smtp.corp.redhat.com (Postfix) with ESMTPS id 006DAC15968;
-	Thu, 14 Dec 2023 13:46:08 +0000 (UTC)
-Date: Thu, 14 Dec 2023 21:46:04 +0800
-From: Ming Lei <ming.lei@redhat.com>
-To: "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: John Garry <john.g.garry@oracle.com>, axboe@kernel.dk,
-	kbusch@kernel.org, hch@lst.de, sagi@grimberg.me, jejb@linux.ibm.com,
+Received: from verein.lst.de (verein.lst.de [213.95.11.211])
+	by lindbergh.monkeyblade.net (Postfix) with ESMTPS id ECC0DE8;
+	Thu, 14 Dec 2023 06:37:13 -0800 (PST)
+Received: by verein.lst.de (Postfix, from userid 2407)
+	id 4CA3968AFE; Thu, 14 Dec 2023 15:37:09 +0100 (CET)
+Date: Thu, 14 Dec 2023 15:37:09 +0100
+From: Christoph Hellwig <hch@lst.de>
+To: John Garry <john.g.garry@oracle.com>
+Cc: Christoph Hellwig <hch@lst.de>, axboe@kernel.dk, kbusch@kernel.org,
+	sagi@grimberg.me, jejb@linux.ibm.com, martin.petersen@oracle.com,
 	djwong@kernel.org, viro@zeniv.linux.org.uk, brauner@kernel.org,
 	dchinner@redhat.com, jack@suse.cz, linux-block@vger.kernel.org,
 	linux-kernel@vger.kernel.org, linux-nvme@lists.infradead.org,
 	linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
 	tytso@mit.edu, jbongio@google.com, linux-scsi@vger.kernel.org,
-	jaswin@linux.ibm.com, bvanassche@acm.org,
-	Himanshu Madhani <himanshu.madhani@oracle.com>, ming.lei@redhat.com
-Subject: Re: [PATCH v2 01/16] block: Add atomic write operations to
- request_queue limits
-Message-ID: <ZXsHHA/GeO8PUeaA@fedora>
-References: <20231212110844.19698-1-john.g.garry@oracle.com>
- <20231212110844.19698-2-john.g.garry@oracle.com>
- <ZXkIEnQld577uHqu@fedora>
- <36ee54b4-b8d5-4b3c-81a0-cc824b6ef68e@oracle.com>
- <ZXmjdnIqGHILTfQN@fedora>
- <yq1cyv9flkw.fsf@ca-mkp.ca.oracle.com>
+	ming.lei@redhat.com, jaswin@linux.ibm.com, bvanassche@acm.org
+Subject: Re: [PATCH v2 00/16] block atomic writes
+Message-ID: <20231214143708.GA5331@lst.de>
+References: <20231212110844.19698-1-john.g.garry@oracle.com> <20231212163246.GA24594@lst.de> <b8b0a9d7-88d2-45a9-877a-ecc5e0f1e645@oracle.com> <20231213154409.GA7724@lst.de> <c729b03c-b1d1-4458-9983-113f8cd752cd@oracle.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <yq1cyv9flkw.fsf@ca-mkp.ca.oracle.com>
-X-Scanned-By: MIMEDefang 3.4.1 on 10.11.54.8
+In-Reply-To: <c729b03c-b1d1-4458-9983-113f8cd752cd@oracle.com>
+User-Agent: Mutt/1.5.17 (2007-11-01)
 
-Hi Martin,
+On Wed, Dec 13, 2023 at 04:27:35PM +0000, John Garry wrote:
+>>> Are there any patches yet for the change to always use SGLs for transfers
+>>> larger than a single PRP?
+>> No.
 
-On Wed, Dec 13, 2023 at 11:38:10PM -0500, Martin K. Petersen wrote:
-> 
-> Ming,
+Here is the WIP version.  With that you'd need to make atomic writes
+conditional on !ctrl->need_virt_boundary.
 
-On Thu, Dec 14, 2023 at 12:35 PM Martin K. Petersen <martin.petersen@oracle.com> wrote:
->
->
-> Hi Ming!
->
-> >> +    lim->atomic_write_unit_min_sectors = 0;
-> >> +    lim->atomic_write_unit_max_sectors = 0;
-> >> +    lim->atomic_write_max_sectors = 0;
-> >> +    lim->atomic_write_boundary_sectors = 0;
-> >
-> > Can we move the four into single structure and setup them in single
-> > API? Then cross-validation can be done in this API.
->
-> Why would we put them in a separate struct? We don't do that for any of
-> the other queue_limits.
-
-All the four limits are for same purpose of supporting atomic-write, and
-there can many benefits to define single API to setup atomic parameters:
-
-1) common logic can be put into single place, such as running
-cross-validation among them and setting up default value, and it is impossible
-to do that by the way in this patch
-
-2) all limits are supposed to setup once by driver in same place, so
-doing them in single API actually simplifies driver and block layer, and
-API itself becomes less fragile
-
-3) it is easier for trace or troubleshoot
-
-> 
-> > Relying on driver to provide sound value is absolutely bad design from
-> > API viewpoint.
-> 
-> All the other queue_limits are validated by the LLDs. It's challenging
-> to lift that validation to the block layer since the values reported are
-> heavily protocol-dependent and
-
-After atomic limits are put into block layer, it becomes not driver
-specific any more, scsi and nvme are going to support it first, sooner
-or later, other drivers(dm & md, loop or ublk, ...) may try to support it.
-
-Also in theory, they are not protocol-dependent, usually physical block size is
-the minimized atomic-write unit, now John's patches are trying to support
-bigger atomic-write unit as scsi/nvme's protocol supports it, and the concept
-is actually common in disk. Similar in implementation level too, such as,
-for NAND flash based storage, I guess atomic-write should be supported by atomic
-update of FTL's LBA/PBA mapping.
-
-> thus information is lost if we do it somewhere else.
-
-Block layer is only focusing on common logic, such as the four limits
-added in request queue, which are consumed by block layer and related with
-other generic limits(physical block size, max IO size), and it won't be
-same with driver's internal validation.
-
-
-Thanks,
-Ming
-
+diff --git a/drivers/nvme/host/core.c b/drivers/nvme/host/core.c
+index 8ebdfd623e0f78..e04faffd6551fe 100644
+--- a/drivers/nvme/host/core.c
++++ b/drivers/nvme/host/core.c
+@@ -1889,7 +1889,8 @@ static void nvme_set_queue_limits(struct nvme_ctrl *ctrl,
+ 		blk_queue_max_hw_sectors(q, ctrl->max_hw_sectors);
+ 		blk_queue_max_segments(q, min_t(u32, max_segments, USHRT_MAX));
+ 	}
+-	blk_queue_virt_boundary(q, NVME_CTRL_PAGE_SIZE - 1);
++	if (q == ctrl->admin_q || ctrl->need_virt_boundary)
++		blk_queue_virt_boundary(q, NVME_CTRL_PAGE_SIZE - 1);
+ 	blk_queue_dma_alignment(q, 3);
+ 	blk_queue_write_cache(q, vwc, vwc);
+ }
+diff --git a/drivers/nvme/host/nvme.h b/drivers/nvme/host/nvme.h
+index e7411dac00f725..aa98794a3ec53d 100644
+--- a/drivers/nvme/host/nvme.h
++++ b/drivers/nvme/host/nvme.h
+@@ -262,6 +262,7 @@ enum nvme_ctrl_flags {
+ struct nvme_ctrl {
+ 	bool comp_seen;
+ 	bool identified;
++	bool need_virt_boundary;
+ 	enum nvme_ctrl_state state;
+ 	spinlock_t lock;
+ 	struct mutex scan_lock;
+diff --git a/drivers/nvme/host/pci.c b/drivers/nvme/host/pci.c
+index 61af7ff1a9d6ba..a8d273b475cb40 100644
+--- a/drivers/nvme/host/pci.c
++++ b/drivers/nvme/host/pci.c
+@@ -60,8 +60,7 @@ MODULE_PARM_DESC(max_host_mem_size_mb,
+ static unsigned int sgl_threshold = SZ_32K;
+ module_param(sgl_threshold, uint, 0644);
+ MODULE_PARM_DESC(sgl_threshold,
+-		"Use SGLs when average request segment size is larger or equal to "
+-		"this size. Use 0 to disable SGLs.");
++		"Use SGLs when > 0. Use 0 to disable SGLs.");
+ 
+ #define NVME_PCI_MIN_QUEUE_SIZE 2
+ #define NVME_PCI_MAX_QUEUE_SIZE 4095
+@@ -504,23 +503,6 @@ static void nvme_commit_rqs(struct blk_mq_hw_ctx *hctx)
+ 	spin_unlock(&nvmeq->sq_lock);
+ }
+ 
+-static inline bool nvme_pci_use_sgls(struct nvme_dev *dev, struct request *req,
+-				     int nseg)
+-{
+-	struct nvme_queue *nvmeq = req->mq_hctx->driver_data;
+-	unsigned int avg_seg_size;
+-
+-	avg_seg_size = DIV_ROUND_UP(blk_rq_payload_bytes(req), nseg);
+-
+-	if (!nvme_ctrl_sgl_supported(&dev->ctrl))
+-		return false;
+-	if (!nvmeq->qid)
+-		return false;
+-	if (!sgl_threshold || avg_seg_size < sgl_threshold)
+-		return false;
+-	return true;
+-}
+-
+ static void nvme_free_prps(struct nvme_dev *dev, struct request *req)
+ {
+ 	const int last_prp = NVME_CTRL_PAGE_SIZE / sizeof(__le64) - 1;
+@@ -769,12 +751,14 @@ static blk_status_t nvme_setup_sgl_simple(struct nvme_dev *dev,
+ static blk_status_t nvme_map_data(struct nvme_dev *dev, struct request *req,
+ 		struct nvme_command *cmnd)
+ {
++	struct nvme_queue *nvmeq = req->mq_hctx->driver_data;
+ 	struct nvme_iod *iod = blk_mq_rq_to_pdu(req);
++	bool sgl_supported = nvme_ctrl_sgl_supported(&dev->ctrl) &&
++			nvmeq->qid && sgl_threshold;
+ 	blk_status_t ret = BLK_STS_RESOURCE;
+ 	int rc;
+ 
+ 	if (blk_rq_nr_phys_segments(req) == 1) {
+-		struct nvme_queue *nvmeq = req->mq_hctx->driver_data;
+ 		struct bio_vec bv = req_bvec(req);
+ 
+ 		if (!is_pci_p2pdma_page(bv.bv_page)) {
+@@ -782,8 +766,7 @@ static blk_status_t nvme_map_data(struct nvme_dev *dev, struct request *req,
+ 				return nvme_setup_prp_simple(dev, req,
+ 							     &cmnd->rw, &bv);
+ 
+-			if (nvmeq->qid && sgl_threshold &&
+-			    nvme_ctrl_sgl_supported(&dev->ctrl))
++			if (sgl_supported)
+ 				return nvme_setup_sgl_simple(dev, req,
+ 							     &cmnd->rw, &bv);
+ 		}
+@@ -806,7 +789,7 @@ static blk_status_t nvme_map_data(struct nvme_dev *dev, struct request *req,
+ 		goto out_free_sg;
+ 	}
+ 
+-	if (nvme_pci_use_sgls(dev, req, iod->sgt.nents))
++	if (sgl_supported)
+ 		ret = nvme_pci_setup_sgls(dev, req, &cmnd->rw);
+ 	else
+ 		ret = nvme_pci_setup_prps(dev, req, &cmnd->rw);
+@@ -3036,6 +3019,8 @@ static int nvme_probe(struct pci_dev *pdev, const struct pci_device_id *id)
+ 	result = nvme_init_ctrl_finish(&dev->ctrl, false);
+ 	if (result)
+ 		goto out_disable;
++	if (!nvme_ctrl_sgl_supported(&dev->ctrl))
++		dev->ctrl.need_virt_boundary = true;
+ 
+ 	nvme_dbbuf_dma_alloc(dev);
+ 
+diff --git a/drivers/nvme/host/rdma.c b/drivers/nvme/host/rdma.c
+index 81e2621169e5d3..416a9fbcccfc74 100644
+--- a/drivers/nvme/host/rdma.c
++++ b/drivers/nvme/host/rdma.c
+@@ -838,6 +838,7 @@ static int nvme_rdma_configure_admin_queue(struct nvme_rdma_ctrl *ctrl,
+ 	error = nvme_init_ctrl_finish(&ctrl->ctrl, false);
+ 	if (error)
+ 		goto out_quiesce_queue;
++	ctrl->ctrl.need_virt_boundary = true;
+ 
+ 	return 0;
+ 
