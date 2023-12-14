@@ -1,102 +1,127 @@
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="QYAoeY4/"
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
-	by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C228D125
-	for <linux-xfs@vger.kernel.org>; Thu, 14 Dec 2023 04:17:21 -0800 (PST)
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="N8ubPiEJ"
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
+	by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 85C4A12D
+	for <linux-xfs@vger.kernel.org>; Thu, 14 Dec 2023 05:46:25 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1702556240;
+	s=mimecast20190719; t=1702561584;
 	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:
-	 content-transfer-encoding:content-transfer-encoding;
-	bh=o53sFaU+W8MO5j3FAVWZbzIH4BHwmrc/QJDioeffIHc=;
-	b=QYAoeY4/kWr8StLqZJQzBkALHaRAodz2zainsOR0NrD6PBZHK3pUs3BduX6tbC6fX1BaX8
-	YStH8aRezTuTCxJPrB/fSFdtXn/uSxefRAcQ4OsGG4GTMTxjgFuqpF2Y45NKjkY+7wzbzh
-	StJ1gmB/CI5eVHccMcDIeuVSYhvWW+8=
-Received: from mail-ej1-f71.google.com (mail-ej1-f71.google.com
- [209.85.218.71]) by relay.mimecast.com with ESMTP with STARTTLS
- (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
- us-mta-554-fc9KL78AOlOQqBpeB5ssyA-1; Thu, 14 Dec 2023 07:17:19 -0500
-X-MC-Unique: fc9KL78AOlOQqBpeB5ssyA-1
-Received: by mail-ej1-f71.google.com with SMTP id a640c23a62f3a-a1fa0ed2058so271450066b.2
-        for <linux-xfs@vger.kernel.org>; Thu, 14 Dec 2023 04:17:19 -0800 (PST)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1702556237; x=1703161037;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:x-gm-message-state:from:to:cc:subject:date:message-id
-         :reply-to;
-        bh=o53sFaU+W8MO5j3FAVWZbzIH4BHwmrc/QJDioeffIHc=;
-        b=mDKcJIPuyqM3vyyyrCGepZk81/ToT9uuHPDbiZ820LcqzlxIL44wq22SOFvYn+1nf0
-         wJn0GPt2sxjlWlXIHYOBYFhYCI4E2/p4kIA85F1GdLgO/ByjDdirQ/wJ9cEgX3uGQWEF
-         +dpJHOBcs9h/sfnrVtmCvhDjGgbeWSzOkcPRYlWRlF9qP760g/8/dyPLBQf2936K3Fa+
-         o0RuKvomHJgxjzZo+PKpb7sMicHjqPoDBMSmblAfJrcjNhbfUqUUx+eYlbN2+QRfFy70
-         /+T2w2Lm148g6ZpRPbXPCNb6k+Ucy4QRN1kAPO+oFzdwZDuY72YuUgllRVXrAgjZ5QWM
-         6h3Q==
-X-Gm-Message-State: AOJu0YwQMr7ZrH8LcyhjXMJzjZU+o3viLuLMti62oAzvjR7xXWcvmpDx
-	vTe7GxBwEzrnz76KWtiIShScCfouxeOaaUWsPaRgqvHa4RyemNsmsUC8dxKsDumbK9yAPFq4Rcn
-	M55jttDX9xl9uUdbyqPXPs3KVOA2L3ScKTNzBD7LRC5LqBLvFoLK4ZCNrSeD9bscb4xMHwSjOQ2
-	qKItc=
-X-Received: by 2002:a17:906:5349:b0:a23:f82:985f with SMTP id j9-20020a170906534900b00a230f82985fmr276455ejo.142.1702556237350;
-        Thu, 14 Dec 2023 04:17:17 -0800 (PST)
-X-Google-Smtp-Source: AGHT+IFxO6LE6nnI4EkOmY5fEpQK3XVxlx05SZlGx5DOnmIP6uhaGucOJq3wPt6sU4mHQz773tkK5A==
-X-Received: by 2002:a17:906:5349:b0:a23:f82:985f with SMTP id j9-20020a170906534900b00a230f82985fmr276449ejo.142.1702556237056;
-        Thu, 14 Dec 2023 04:17:17 -0800 (PST)
-Received: from fedora.redhat.com (gw19-pha-stl-mmo-2.avonet.cz. [131.117.213.218])
-        by smtp.gmail.com with ESMTPSA id ts7-20020a170907c5c700b00a1dd58874b8sm9291282ejc.119.2023.12.14.04.17.16
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 14 Dec 2023 04:17:16 -0800 (PST)
-From: Pavel Reichl <preichl@redhat.com>
-To: linux-xfs@vger.kernel.org
-Cc: cem@kernel.org
-Subject: [PATCH] xfsdump: Fix memory leak
-Date: Thu, 14 Dec 2023 13:17:15 +0100
-Message-ID: <20231214121715.562273-1-preichl@redhat.com>
-X-Mailer: git-send-email 2.43.0
+	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=QMlqSzMLtoLhUA6/pSOLSiY6ne++uxerHVPAdydtEYo=;
+	b=N8ubPiEJzQV/ckmuxCSbDN+JYdEXaAne69we0MGQVJN1aV8RmF2JFnyApELDayvulJwcmr
+	TbQUbAor3ZilgNht4OlFYZXTFzx0PY0ZejCH7+2w+RTaVqKiKRQyDb4acpmAFOpu5s4pU+
+	+Bj2Pqr0yd4y57LzMDdAZIV2i2graV8=
+Received: from mimecast-mx02.redhat.com (mx-ext.redhat.com [66.187.233.73])
+ by relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.3,
+ cipher=TLS_AES_256_GCM_SHA384) id us-mta-457-Yr6iln9QPreJK0NkIMKRvw-1; Thu,
+ 14 Dec 2023 08:46:21 -0500
+X-MC-Unique: Yr6iln9QPreJK0NkIMKRvw-1
+Received: from smtp.corp.redhat.com (int-mx08.intmail.prod.int.rdu2.redhat.com [10.11.54.8])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	(No client certificate requested)
+	by mimecast-mx02.redhat.com (Postfix) with ESMTPS id 514D328040B2;
+	Thu, 14 Dec 2023 13:46:19 +0000 (UTC)
+Received: from fedora (unknown [10.72.116.126])
+	by smtp.corp.redhat.com (Postfix) with ESMTPS id 006DAC15968;
+	Thu, 14 Dec 2023 13:46:08 +0000 (UTC)
+Date: Thu, 14 Dec 2023 21:46:04 +0800
+From: Ming Lei <ming.lei@redhat.com>
+To: "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: John Garry <john.g.garry@oracle.com>, axboe@kernel.dk,
+	kbusch@kernel.org, hch@lst.de, sagi@grimberg.me, jejb@linux.ibm.com,
+	djwong@kernel.org, viro@zeniv.linux.org.uk, brauner@kernel.org,
+	dchinner@redhat.com, jack@suse.cz, linux-block@vger.kernel.org,
+	linux-kernel@vger.kernel.org, linux-nvme@lists.infradead.org,
+	linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
+	tytso@mit.edu, jbongio@google.com, linux-scsi@vger.kernel.org,
+	jaswin@linux.ibm.com, bvanassche@acm.org,
+	Himanshu Madhani <himanshu.madhani@oracle.com>, ming.lei@redhat.com
+Subject: Re: [PATCH v2 01/16] block: Add atomic write operations to
+ request_queue limits
+Message-ID: <ZXsHHA/GeO8PUeaA@fedora>
+References: <20231212110844.19698-1-john.g.garry@oracle.com>
+ <20231212110844.19698-2-john.g.garry@oracle.com>
+ <ZXkIEnQld577uHqu@fedora>
+ <36ee54b4-b8d5-4b3c-81a0-cc824b6ef68e@oracle.com>
+ <ZXmjdnIqGHILTfQN@fedora>
+ <yq1cyv9flkw.fsf@ca-mkp.ca.oracle.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
 Content-Transfer-Encoding: 8bit
+In-Reply-To: <yq1cyv9flkw.fsf@ca-mkp.ca.oracle.com>
+X-Scanned-By: MIMEDefang 3.4.1 on 10.11.54.8
 
-Fix memory leak found by coverity.
+Hi Martin,
 
->>>     CID 1554295:  Resource leaks  (RESOURCE_LEAK)
->>>     Failing to save or free storage allocated by strdup(path) leaks it.
+On Wed, Dec 13, 2023 at 11:38:10PM -0500, Martin K. Petersen wrote:
+> 
+> Ming,
 
-Signed-off-by: Pavel Reichl <preichl@redhat.com>
----
- restore/tree.c | 15 ++++++++++++++-
- 1 file changed, 14 insertions(+), 1 deletion(-)
+On Thu, Dec 14, 2023 at 12:35 PM Martin K. Petersen <martin.petersen@oracle.com> wrote:
+>
+>
+> Hi Ming!
+>
+> >> +    lim->atomic_write_unit_min_sectors = 0;
+> >> +    lim->atomic_write_unit_max_sectors = 0;
+> >> +    lim->atomic_write_max_sectors = 0;
+> >> +    lim->atomic_write_boundary_sectors = 0;
+> >
+> > Can we move the four into single structure and setup them in single
+> > API? Then cross-validation can be done in this API.
+>
+> Why would we put them in a separate struct? We don't do that for any of
+> the other queue_limits.
 
-diff --git a/restore/tree.c b/restore/tree.c
-index 6f3180f..66dd9df 100644
---- a/restore/tree.c
-+++ b/restore/tree.c
-@@ -4977,9 +4977,22 @@ static int
- mkdir_r(char *path)
- {
- 	struct stat sbuf;
-+	char *path_copy;
-+	int ret;
- 
- 	if (stat(path, &sbuf) < 0) {
--		if (mkdir_r(dirname(strdup(path))) < 0)
-+		path_copy = strdup(path);
-+		if (!path_copy) {
-+			mlog(MLOG_TRACE | MLOG_ERROR | MLOG_TREE, _(
-+				"unable to allocate memory for a path\n"));
-+			mlog_exit(EXIT_ERROR, RV_ERROR);
-+			exit(1);
-+		}
-+
-+		ret = mkdir_r(dirname(path_copy));
-+		free(path_copy);
-+
-+		if (ret < 0)
- 			return -1;
- 		return mkdir(path, 0755);
- 	}
--- 
-2.43.0
+All the four limits are for same purpose of supporting atomic-write, and
+there can many benefits to define single API to setup atomic parameters:
+
+1) common logic can be put into single place, such as running
+cross-validation among them and setting up default value, and it is impossible
+to do that by the way in this patch
+
+2) all limits are supposed to setup once by driver in same place, so
+doing them in single API actually simplifies driver and block layer, and
+API itself becomes less fragile
+
+3) it is easier for trace or troubleshoot
+
+> 
+> > Relying on driver to provide sound value is absolutely bad design from
+> > API viewpoint.
+> 
+> All the other queue_limits are validated by the LLDs. It's challenging
+> to lift that validation to the block layer since the values reported are
+> heavily protocol-dependent and
+
+After atomic limits are put into block layer, it becomes not driver
+specific any more, scsi and nvme are going to support it first, sooner
+or later, other drivers(dm & md, loop or ublk, ...) may try to support it.
+
+Also in theory, they are not protocol-dependent, usually physical block size is
+the minimized atomic-write unit, now John's patches are trying to support
+bigger atomic-write unit as scsi/nvme's protocol supports it, and the concept
+is actually common in disk. Similar in implementation level too, such as,
+for NAND flash based storage, I guess atomic-write should be supported by atomic
+update of FTL's LBA/PBA mapping.
+
+> thus information is lost if we do it somewhere else.
+
+Block layer is only focusing on common logic, such as the four limits
+added in request queue, which are consumed by block layer and related with
+other generic limits(physical block size, max IO size), and it won't be
+same with driver's internal validation.
+
+
+Thanks,
+Ming
 
