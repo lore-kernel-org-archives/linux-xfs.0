@@ -1,87 +1,103 @@
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="zg93vykZ"
-Received: from mail-qv1-xf2e.google.com (mail-qv1-xf2e.google.com [IPv6:2607:f8b0:4864:20::f2e])
-	by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E8836BD
-	for <linux-xfs@vger.kernel.org>; Thu, 14 Dec 2023 06:55:41 -0800 (PST)
-Received: by mail-qv1-xf2e.google.com with SMTP id 6a1803df08f44-67ee17ab697so22464356d6.0
-        for <linux-xfs@vger.kernel.org>; Thu, 14 Dec 2023 06:55:41 -0800 (PST)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="f/I9yPQ8"
+Received: from mail-pl1-x630.google.com (mail-pl1-x630.google.com [IPv6:2607:f8b0:4864:20::630])
+	by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 393D311B
+	for <linux-xfs@vger.kernel.org>; Thu, 14 Dec 2023 07:07:49 -0800 (PST)
+Received: by mail-pl1-x630.google.com with SMTP id d9443c01a7336-1d346f4a043so6482895ad.0
+        for <linux-xfs@vger.kernel.org>; Thu, 14 Dec 2023 07:07:49 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20230601; t=1702565741; x=1703170541; darn=vger.kernel.org;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=bgs8beqFiekckw3WR8YiKzI+yNleMXeH4aOT2b+WN64=;
-        b=zg93vykZglFFbm2Z1nl173j4Lx+z4LgOTPy7DPNDDN/n3N7iLfexrr5ymdAmy29gIG
-         IdoPqtJuFNlFwZvOrofmuoYuh+yt/2V0U+IV8hc+9dFewlfFLd/XA/azu99ZdzJmGThU
-         +eCwbHDH8s2gfB+8rkXnKL1KPumXwy1nWtRFbeVhYU4GaHgXPZeA0/cUkxW24LQddiv8
-         snBpkuouOR1lZJNMQ96/QyPrwlrCeljqkDGEZhcJTfkQiiKHdeCDv/JG9yQopnnmnk7K
-         OfYVqmhuRcRwyX8LCBfKQhjbraNeaOIsMX7eX1C1cCnlAUmto1bqHgqcUKVkPQRFqGP3
-         tgeA==
+        d=gmail.com; s=20230601; t=1702566468; x=1703171268; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to;
+        bh=3yKPmLzQlR5DZCmXV5MMctKnKAoTBjayjh0kheIIFvk=;
+        b=f/I9yPQ8c3dTIN2mIXSPzfu+ROssl0xNTGwhCeUdv99mEcx4iFzv5Iiulna2F/2Qv8
+         VDfwxPDRf/Y1H6/8QqWttDLq8Z/znWauxQXSz0WZ1tYSdYNz65xtWcHklEBD6EsDEQ3F
+         g+6VXwMWs8sX3Y/3VyVXfyJNQs1aGbnlHCWbA0f75Q2jiXfEb1y3SjcOQW6ERcz268gx
+         uNO/nebUeGUrfD7zhDCTHnnypD3pDybeqEZ8/6+GY3sC6JBWbYYfGLvmZUqGaSn3SyO5
+         ODWjVlECSup6wv5gdSGhCZrZSwjMky+KN0gpUoLadtVBncYpyXYDhOPQxzXZyCeECYfU
+         alAQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1702565741; x=1703170541;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=bgs8beqFiekckw3WR8YiKzI+yNleMXeH4aOT2b+WN64=;
-        b=VNlsSOQ787wqA3Vj+QVOWcTPRZ+q8PBxbzyaXMBvIM7wpvi1cxY+R0+/BIpdtGa9j5
-         9Hm1N8ZnK4TrbYDx0ePAYyTPWMmoSSYBff5Lzn+YnsdqGXRo5MH/m4t3HKRttpmPUdGU
-         6cD2mOpkUp4MhXw8y31TPr/zKqCxu2AD2sxH5guA4aJllr0zOaG8yeEj3+osKynumlac
-         jypdJ8JM0t6yVxY+nHfpP3kN6oYFkaYBNSjK38l/5K3tnbkq8Iyxv1Fn8IZAhK+U9gKl
-         AB2hm7Coqqa3yZoHPHsoZC6J71zryqfw/wCDNR1vj7ggngUBCDkckv0qCrzgIQwo/6t6
-         8NAw==
-X-Gm-Message-State: AOJu0YydYdkgQRnPdOItjQRnRvsForSx+KFjaOh+mSnFNFItU+Oo51jv
-	UDQwr1cMw2WKT1G8/ZNnGBA7odUTWDgn22ERf9Zz7Q==
-X-Google-Smtp-Source: AGHT+IEsLmHEUusvZQFiGgThJYCfYEu5uL9Ur9BmC1h3zHzuSXlUlQi5+C6Xa76eUg2ZzWa4mUxgAR4OBzeNO/8uOFA=
-X-Received: by 2002:a05:6214:16cc:b0:67e:ef8f:7978 with SMTP id
- d12-20020a05621416cc00b0067eef8f7978mr4056082qvz.30.1702565740942; Thu, 14
- Dec 2023 06:55:40 -0800 (PST)
+        d=1e100.net; s=20230601; t=1702566468; x=1703171268;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-message-state:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=3yKPmLzQlR5DZCmXV5MMctKnKAoTBjayjh0kheIIFvk=;
+        b=my7Ld4LZPLIGuZ+Tqxova7spJums+xdfm7youo8wIgGOt/3v5lhspUMPoEGSdAFaQu
+         kgG0f+Njs6+yZjIoW3/029rh4vdlaUeH4vSNPXg47SMfTowfbnPLvGv24bvPEXFxjy68
+         DrVV65JP+zmzQnAxiJTCMJadrNDpKUoEMVIYxU8H/g0m2RtK17j9Ho7dd0+s/m6VNEXB
+         f2SSCfhqIYTmdP64r7zCiZAFPwB+UozVEmCaaaNxsb88FLDrkhXBi7Ovu98ekzQmZiFE
+         /7r52AMRiswQUerAcXUmViQn+fUIrU8ACXvYSOCovAGW+LzidOGjVQb0mqbAd74vK1Y6
+         QxpQ==
+X-Gm-Message-State: AOJu0YyLEF/36mlu0JQb3qkbYeMY58T1y1fT5WrYMoWp5M36MJYkOsGy
+	kdhs/H3I/0WlJvCVQerpslefEYirR0s=
+X-Google-Smtp-Source: AGHT+IEWckN/R3yvzjuQgqPk+ufznpqJ7vSNKs+4pt8m3X2+ih6Vod6fa57poU/3Bh1b36a0AsHxcg==
+X-Received: by 2002:a17:902:ea03:b0:1d0:56b9:3730 with SMTP id s3-20020a170902ea0300b001d056b93730mr19524655plg.5.1702566468149;
+        Thu, 14 Dec 2023 07:07:48 -0800 (PST)
+Received: from wj-xps.. ([43.224.245.229])
+        by smtp.gmail.com with ESMTPSA id d21-20020a170902729500b001d3797d6899sm317923pll.263.2023.12.14.07.07.45
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Thu, 14 Dec 2023 07:07:47 -0800 (PST)
+From: Jian Wen <wenjianhn@gmail.com>
+To: linux-xfs@vger.kernel.org
+Cc: Jian Wen <wenjianhn@gmail.com>,
+	djwong@kernel.org,
+	Jian Wen <wenjian1@xiaomi.com>
+Subject: [PATCH] xfs: improve handling of prjquot ENOSPC
+Date: Thu, 14 Dec 2023 23:07:08 +0800
+Message-Id: <20231214150708.77586-1-wenjianhn@gmail.com>
+X-Mailer: git-send-email 2.34.1
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <000000000000f66a3005fa578223@google.com> <20231213104950.1587730-1-glider@google.com>
- <ZXofF2lXuIUvKi/c@rh> <ZXopGGh/YqNIdtMJ@dread.disaster.area>
-In-Reply-To: <ZXopGGh/YqNIdtMJ@dread.disaster.area>
-From: Alexander Potapenko <glider@google.com>
-Date: Thu, 14 Dec 2023 15:55:00 +0100
-Message-ID: <CAG_fn=UukAf5sPrwqQtmL7-_dyUs3neBpa75JAaeACUzXsHwOA@mail.gmail.com>
-Subject: Re: [syzbot] [crypto?] KMSAN: uninit-value in __crc32c_le_base (3)
-To: Dave Chinner <david@fromorbit.com>
-Cc: Dave Chinner <dchinner@redhat.com>, 
-	syzbot+a6d6b8fffa294705dbd8@syzkaller.appspotmail.com, hch@lst.de, 
-	davem@davemloft.net, herbert@gondor.apana.org.au, 
-	linux-crypto@vger.kernel.org, linux-kernel@vger.kernel.org, 
-	syzkaller-bugs@googlegroups.com, linux-xfs@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Content-Transfer-Encoding: 8bit
 
-On Wed, Dec 13, 2023 at 10:58=E2=80=AFPM 'Dave Chinner' via syzkaller-bugs
-<syzkaller-bugs@googlegroups.com> wrote:
->
-> On Thu, Dec 14, 2023 at 08:16:07AM +1100, Dave Chinner wrote:
-> > [cc linux-xfs@vger.kernel.org because that's where all questions
-> > about XFS stuff should be directed, not to random individual
-> > developers. ]
-> >
-> > On Wed, Dec 13, 2023 at 11:49:50AM +0100, Alexander Potapenko wrote:
-> > > Hi Christoph, Dave,
-> > >
-> > > The repro provided by Xingwei indeed works.
->
-> Can you please test the patch below?
+Don't clear space of the whole fs when the project quota limit is
+reached, since it affects the writing performance of files of
+the directories that are under quota.
 
-It fixed the problem for me, feel free to add:
+Only run cow/eofblocks scans on the quota attached to the inode.
 
-Tested-by: Alexander Potapenko <glider@google.com>
+Signed-off-by: Jian Wen <wenjian1@xiaomi.com>
+---
+ fs/xfs/xfs_file.c | 13 +++++++++++++
+ 1 file changed, 13 insertions(+)
 
-As for the time needed to detect the bug, note that kmemcheck was
-never used together with syzkaller, so it couldn't have the chance to
-find it.
+diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
+index e33e5e13b95f..4fbe262d33cc 100644
+--- a/fs/xfs/xfs_file.c
++++ b/fs/xfs/xfs_file.c
+@@ -24,6 +24,9 @@
+ #include "xfs_pnfs.h"
+ #include "xfs_iomap.h"
+ #include "xfs_reflink.h"
++#include "xfs_quota.h"
++#include "xfs_dquot_item.h"
++#include "xfs_dquot.h"
+ 
+ #include <linux/dax.h>
+ #include <linux/falloc.h>
+@@ -803,8 +806,18 @@ xfs_file_buffered_write(
+ 		goto write_retry;
+ 	} else if (ret == -ENOSPC && !cleared_space) {
+ 		struct xfs_icwalk	icw = {0};
++		struct xfs_dquot	*pdqp = ip->i_pdquot;
+ 
+ 		cleared_space = true;
++		if (XFS_IS_PQUOTA_ENFORCED(ip->i_mount) &&
++			pdqp && xfs_dquot_lowsp(pdqp)) {
++			xfs_iunlock(ip, iolock);
++			icw.icw_prid = pdqp->q_id;
++			icw.icw_flags |= XFS_ICWALK_FLAG_PRID;
++			xfs_blockgc_free_space(ip->i_mount, &icw);
++			goto write_retry;
++		}
++
+ 		xfs_flush_inodes(ip->i_mount);
+ 
+ 		xfs_iunlock(ip, iolock);
+-- 
+2.34.1
 
-KMSAN found this bug in April
-(https://syzkaller.appspot.com/bug?extid=3Da6d6b8fffa294705dbd8), only
-half a year after we started mounting XFS images on syzbot.
-Right now it is among the top crashers, so fixing it might uncover
-more interesting bugs in xfs.
