@@ -1,182 +1,165 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 363C2282E7
-	for <linux-xfs@vger.kernel.org>; Thu, 14 Dec 2023 21:32:21 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 886D42DF66
+	for <linux-xfs@vger.kernel.org>; Thu, 14 Dec 2023 21:35:03 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="M0Rm+9kR"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id A72B2C433C7;
-	Thu, 14 Dec 2023 21:32:21 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="HLTdT5LG"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 49E07C433C8;
+	Thu, 14 Dec 2023 21:35:03 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1702589541;
-	bh=/Z6kA/SGzwGSU0QNVKCchF6SRlyJe1IID6hDIOSJyik=;
+	s=k20201202; t=1702589703;
+	bh=S0YXUgpuSSdDMFvT2ctmkz2xg1TDW3WE0wqI0svYLX4=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=M0Rm+9kRwJAY0/5Chak2ZV/CLZAs1KtibMiJMI9U30l0a8A7ycLFOhuErgyFD0fnn
-	 SFYtY17LDl3QFhwaCVtwxRCfnSAPTAZXSZK5mHeKrDv/TnmJrbEVn2+tSuRoYWPFYs
-	 Gonz0aDrVMYo+Wd0T/WC0/4jghFpLTDdiqgIJ7YS4pBYA7CHb2U9XK/Hz7dNkOeLcz
-	 kXS7a0cruMJxRc9ZYKQciBb9DOtgFFwIVisr3+8ajp/slcLwoP0tPHTFTtPie6GwbS
-	 gURAKoL+8tVUNPOJwR64kfnAToRUHIkH4C/1ITe/U1UBolta0w+ffnduz7l0zDa7eE
-	 jDYaGrcC59XPQ==
-Date: Thu, 14 Dec 2023 13:32:21 -0800
+	b=HLTdT5LGNq9OpGgvGoyXi+uQuWAjwTHQHBvf3nZghBXDVLIhWrgMK2MdPvirWQfcz
+	 at5spTZhcF3XuJjhfXx9zkNtWTwod6Azr+LcsI8SqdWora+iECVtxzpF+MxGP/F88G
+	 Q4DU8pGPRehZW3H8ysYM0yvG887e6/MUFKVAQYV04arW5zcTbzMkvXbTFkD5eS09IO
+	 CsUoTOxfBKXP8WE0Lwsj0HvAfEaMEUhbEnUChocS1+QZipSJNoMW6qiqry7LT9JgWh
+	 kfTzlrV0al/at9hxBaeuZOJSJl7aiVtVgoZQPaomiJZCGT2pUNbHsDaiEPS99iiiqz
+	 p7RvmULrPCh2A==
+Date: Thu, 14 Dec 2023 13:35:02 -0800
 From: "Darrick J. Wong" <djwong@kernel.org>
-To: Christoph Hellwig <hch@lst.de>
-Cc: Chandan Babu R <chandan.babu@oracle.com>, linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 18/19] xfs: simplify and optimize the RT allocation
- fallback cascade
-Message-ID: <20231214213221.GH361584@frogsfrogsfrogs>
-References: <20231214063438.290538-1-hch@lst.de>
- <20231214063438.290538-19-hch@lst.de>
+To: Wengang Wang <wen.gang.wang@oracle.com>
+Cc: linux-xfs@vger.kernel.org
+Subject: Re: [PATCH 0/9] xfs file non-exclusive online defragment
+Message-ID: <20231214213502.GI361584@frogsfrogsfrogs>
+References: <20231214170530.8664-1-wen.gang.wang@oracle.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=utf-8
 Content-Disposition: inline
-In-Reply-To: <20231214063438.290538-19-hch@lst.de>
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <20231214170530.8664-1-wen.gang.wang@oracle.com>
 
-On Thu, Dec 14, 2023 at 07:34:37AM +0100, Christoph Hellwig wrote:
-> There are currently multiple levels of fall back if an RT allocation
-> can not be satisfied:
+On Thu, Dec 14, 2023 at 09:05:21AM -0800, Wengang Wang wrote:
+> Background:
+> We have the existing xfs_fsr tool which do defragment for files. It has the
+> following features:
+> 1. Defragment is implemented by file copying.
+> 2. The copy (to a temporary file) is exclusive. The source file is locked
+>    during the copy (to a temporary file) and all IO requests are blocked
+>    before the copy is done.
+> 3. The copy could take long time for huge files with IO blocked.
+> 4. The copy requires as many free blocks as the source file has.
+>    If the source is huge, say it’s 1TiB,  it’s hard to require the file
+>    system to have another 1TiB free.
 > 
->  1) xfs_rtallocate_extent extents the minlen and reduces the maxlen due
-
-                            ^^^^^^^ extends?
-
->     to the extent size hint.  If that can't be done, it return -ENOSPC
->     and let's xfs_bmap_rtalloc retry, which then not only drops the
->     extent size hint based alignment, but also the minlen adjustment
->  2) if xfs_rtallocate_extent gets -ENOSPC from the underlying functions,
->     it only drops the extent size hint based alignment and retries
->  3) if that still does not succeed, xfs_rtallocate_extent drops the
->     extent size hint (which is a complex no-op at this point) and the
->     minlen using the same code as (1) above
->  4) if that still doesn't success and the caller wanted an allocation
->     near a blkno, drop that blkno hint.
+> The use case in concern is that the XFS files are used as images files for
+> Virtual Machines.
+> 1. The image files are huge, they can reach hundreds of GiB and even to TiB.
+> 2. Backups are made via reflink copies, and CoW makes the files badly fragmented.
+> 3. fragmentation make reflink copies super slow.
+> 4. during the reflink copy, all IO requests to the file are blocked for super
+>    long time. That makes timeout in VM and the timeout lead to disaster.
 > 
-> The handling in 1 is rather inefficient as we could just drop the
-> alignment and continue, and 2/3 interact in really weird ways due to
-> the duplicate policy.
+> This feature aims to:
+> 1. reduce the file fragmentation making future reflink (much) faster and
+> 2. at the same time,  defragmentation works in non-exclusive manner, it doesn’t
+>    block file IOs long.
 > 
-> Move aligning the min and maxlen out of xfs_rtallocate_extent and into
-> a helper called directly by xfs_bmap_rtalloc.  This allows just
-> continuing with the allocation if we have to drop the alignment instead
-> of going through the retry loop and also dropping the perfectly the
-> minlen adjustment that didn't cause the problem, and then just use
+> Non-exclusive defragment
+> Here we are introducing the non-exclusive manner to defragment a file,
+> especially for huge files, without blocking IO to it long. Non-exclusive
+> defragmentation divides the whole file into small pieces. For each piece,
+> we lock the file, defragment the piece and unlock the file. Defragmenting
+> the small piece doesn’t take long. File IO requests can get served between
+> pieces before blocked long.  Also we put (user adjustable) idle time between
+> defragmenting two consecutive pieces to balance the defragmentation and file IOs.
+> So though the defragmentation could take longer than xfs_fsr,  it balances
+> defragmentation and file IOs.
 
-"...dropping the perfectly *usable* minlen adjustment..." ?
-
-> a single retry that drops both the minlen and alignment requirement
-> when we really are out of space, thus consolidating cases (2) and (3)
-> above.
-
-How can we drop the minlen requirement, won't that result in undersize
-mapping allocations?  Or is the subtlety here that for realtime files,
-that's ok because we never have forced multi-rtx allocations like we do
-for the data device?
+I'm kinda surprised you don't just turn on alwayscow mode, use an
+iomap_funshare-like function to read in and dirty pagecache (which will
+hopefully create a new large cow fork mapping) and then flush it all
+back out with writeback.  Then you don't need all this state tracking,
+kthreads management, and copying file data through the buffer cache.
+Wouldn't that be a lot simpler?
 
 --D
 
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
-> ---
->  fs/xfs/xfs_rtalloc.c | 58 ++++++++++++++++++++++++++------------------
->  1 file changed, 35 insertions(+), 23 deletions(-)
+> Operation target
+> The operation targets are files in XFS filesystem
 > 
-> diff --git a/fs/xfs/xfs_rtalloc.c b/fs/xfs/xfs_rtalloc.c
-> index 595740d18dc4c3..16255617629ef5 100644
-> --- a/fs/xfs/xfs_rtalloc.c
-> +++ b/fs/xfs/xfs_rtalloc.c
-> @@ -1088,21 +1088,6 @@ xfs_rtallocate_extent(
->  	ASSERT(xfs_isilocked(args.mp->m_rbmip, XFS_ILOCK_EXCL));
->  	ASSERT(minlen > 0 && minlen <= maxlen);
->  
-> -	/*
-> -	 * If prod is set then figure out what to do to minlen and maxlen.
-> -	 */
-> -	if (prod > 1) {
-> -		xfs_rtxlen_t	i;
-> -
-> -		if ((i = maxlen % prod))
-> -			maxlen -= i;
-> -		if ((i = minlen % prod))
-> -			minlen += prod - i;
-> -		if (maxlen < minlen)
-> -			return -ENOSPC;
-> -	}
-> -
-> -retry:
->  	if (start == 0) {
->  		error = xfs_rtallocate_extent_size(&args, minlen,
->  				maxlen, len, prod, rtx);
-> @@ -1111,13 +1096,8 @@ xfs_rtallocate_extent(
->  				maxlen, len, prod, rtx);
->  	}
->  	xfs_rtbuf_cache_relse(&args);
-> -	if (error) {
-> -		if (error == -ENOSPC && prod > 1) {
-> -			prod = 1;
-> -			goto retry;
-> -		}
-> +	if (error)
->  		return error;
-> -	}
->  
->  	/*
->  	 * If it worked, update the superblock.
-> @@ -1348,6 +1328,35 @@ xfs_rtpick_extent(
->  	return 0;
->  }
->  
-> +static void
-> +xfs_rtalloc_align_minmax(
-> +	xfs_rtxlen_t		*raminlen,
-> +	xfs_rtxlen_t		*ramaxlen,
-> +	xfs_rtxlen_t		*prod)
-> +{
-> +	xfs_rtxlen_t		newmaxlen = *ramaxlen;
-> +	xfs_rtxlen_t		newminlen = *raminlen;
-> +	xfs_rtxlen_t		slack;
-> +
-> +	slack = newmaxlen % *prod;
-> +	if (slack)
-> +		newmaxlen -= slack;
-> +	slack = newminlen % *prod;
-> +	if (slack)
-> +		newminlen += *prod - slack;
-> +
-> +	/*
-> +	 * If adjusting for extent size hint alignment produces an invalid
-> +	 * min/max len combination, go ahead without it.
-> +	 */
-> +	if (newmaxlen < newminlen) {
-> +		*prod = 1;
-> +		return;
-> +	}
-> +	*ramaxlen = newmaxlen;
-> +	*raminlen = newminlen;
-> +}
-> +
->  int
->  xfs_bmap_rtalloc(
->  	struct xfs_bmalloca	*ap)
-> @@ -1430,10 +1439,13 @@ xfs_bmap_rtalloc(
->  	 * perfectly aligned, otherwise it will just get us in trouble.
->  	 */
->  	div_u64_rem(ap->offset, align, &mod);
-> -	if (mod || ap->length % align)
-> +	if (mod || ap->length % align) {
->  		prod = 1;
-> -	else
-> +	} else {
->  		prod = xfs_extlen_to_rtxlen(mp, align);
-> +		if (prod > 1)
-> +			xfs_rtalloc_align_minmax(&raminlen, &ralen, &prod);
-> +	}
->  
->  	error = xfs_rtallocate_extent(ap->tp, start, raminlen, ralen, &ralen,
->  			ap->wasdel, prod, &rtx);
+> User interface
+> A fresh new command xfs_defrag is provided. User can
+> start/stop/suspend/resume/get-status the defragmentation against a file.
+> With xfs_defrag command user can specify:
+> 1. target extent size, extents under which are defragment target extents.
+> 2. piece size, the whole file are divided into piece according to the piece size.
+> 3. idle time, the idle time between defragmenting two adjacent pieces.
+> 
+> Piece
+> Piece is the smallest unit that we do defragmentation. A piece contains a range
+> of contiguous file blocks, it may contain one or more extents.
+> 
+> Target Extent Size
+> This is a configuration value in blocks indicating which extents are
+> defragmentation targets. Extents which are larger than this value are the Target
+> Extents. When a piece contains two or more Target Extents, the piece is a Target
+> Piece. Defragmenting a piece requires at least 2 x TES free file system contiguous
+> blocks. In case TES is set too big, the defragmentation could fail to allocate
+> that many contiguous file system blocks. By default it’s 64 blocks.
+> 
+> Piece Size
+> This is a configuration value indicating the size of the piece in blocks, a piece
+> is no larger than this size. Defragmenting a piece requires up to PS free
+> filesystem contiguous blocks. In case PS is set too big, the defragmentation could
+> fail to allocate that many contiguous file system blocks. 4096 blocks by default,
+> and 4096 blocks as maximum.
+> 
+> Error reporting
+> When the defragmentation fails (usually due to file system block allocation
+> failure), the error will return to user application when the application fetches
+> the defragmentation status.
+> 
+> Idle Time
+> Idle time is a configuration value, it is the time defragmentation would idle
+> between defragmenting two adjacent pieces. We have no limitation on IT.
+> 
+> Some test result:
+> 50GiB file with 2013990 extents, average 6.5 blocks per extent.
+> Relink copy used 40s (then reflink copy removed before following tests)
+> Use above as block device in VM, creating XFS v5 on that VM block device.
+> Mount and build kernel from VM (buffered writes + fsync to backed image file) without defrag:   13m39.497s
+> Kernel build from VM (buffered writes + sync) with defrag (target extent = 256,
+> piece size = 4096, idle time = 1000 ms):   15m1.183s
+> Defrag used: 123m27.354s
+> 
+> Wengang Wang (9):
+>   xfs: defrag: introduce strucutures and numbers.
+>   xfs: defrag: initialization and cleanup
+>   xfs: defrag implement stop/suspend/resume/status
+>   xfs: defrag: allocate/cleanup defragmentation
+>   xfs: defrag: process some cases in xfs_defrag_process
+>   xfs: defrag: piece picking up
+>   xfs: defrag: guarantee contigurous blocks in cow fork
+>   xfs: defrag: copy data from old blocks to new blocks
+>   xfs: defrag: map new blocks
+> 
+>  fs/xfs/Makefile        |    1 +
+>  fs/xfs/libxfs/xfs_fs.h |    1 +
+>  fs/xfs/xfs_bmap_util.c |    2 +-
+>  fs/xfs/xfs_defrag.c    | 1074 ++++++++++++++++++++++++++++++++++++++++
+>  fs/xfs/xfs_defrag.h    |   11 +
+>  fs/xfs/xfs_inode.c     |    4 +
+>  fs/xfs/xfs_inode.h     |    1 +
+>  fs/xfs/xfs_ioctl.c     |   17 +
+>  fs/xfs/xfs_iomap.c     |    2 +-
+>  fs/xfs/xfs_mount.c     |    3 +
+>  fs/xfs/xfs_mount.h     |   37 ++
+>  fs/xfs/xfs_reflink.c   |    7 +-
+>  fs/xfs/xfs_reflink.h   |    3 +-
+>  fs/xfs/xfs_super.c     |    3 +
+>  include/linux/fs.h     |    5 +
+>  15 files changed, 1165 insertions(+), 6 deletions(-)
+>  create mode 100644 fs/xfs/xfs_defrag.c
+>  create mode 100644 fs/xfs/xfs_defrag.h
+> 
 > -- 
-> 2.39.2
+> 2.39.3 (Apple Git-145)
 > 
 > 
