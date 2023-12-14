@@ -1,58 +1,30 @@
-Received: from mail-pg1-f171.google.com (mail-pg1-f171.google.com [209.85.215.171])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EB087273FD
-	for <linux-xfs@vger.kernel.org>; Thu, 14 Dec 2023 21:13:46 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=fromorbit.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6A8C939FE6
+	for <linux-xfs@vger.kernel.org>; Thu, 14 Dec 2023 21:16:21 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b="PprvJy5s"
-Received: by mail-pg1-f171.google.com with SMTP id 41be03b00d2f7-53fa455cd94so16781a12.2
-        for <linux-xfs@vger.kernel.org>; Thu, 14 Dec 2023 13:13:46 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=fromorbit-com.20230601.gappssmtp.com; s=20230601; t=1702588426; x=1703193226; darn=vger.kernel.org;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
-        bh=czEMI1Lb1Sq4sZaV1f9tpzIFBmJgBmquel5qYNZs5j4=;
-        b=PprvJy5sNPTxb+LHO34dP3fRFD9xbZXVsxTD29/sPy0ev8gdAcxrrFbQHI7rd+/ROc
-         OyncGIhcq2lCWq6c9/r1G3p7tZcjzq/AmvTjf504TWpMdqbFt1LjPhWmlQPyc2NJGyuH
-         j/KFoMFjo6DuuspjNWBAa55LTGeVYHQ1mDCK2+Kn2X1kY7e7PfXLzhgcTcdpBrS8DzXz
-         LG16SrxxqqJwjo6LXIaePbx9xKsO5My9tpAWO4u/nll8X16ndxXj+juQXBBQJLAt8E/Y
-         6Dv/atUDLM+kcOSZ+gBeRPg8J+ksfM2pz4rdVkwzWwvsoE72/fn+L/1zxVLIorUbqhu/
-         uywQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1702588426; x=1703193226;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=czEMI1Lb1Sq4sZaV1f9tpzIFBmJgBmquel5qYNZs5j4=;
-        b=pBP+0Dt+OWRZx8X0bR28iP6k8BCY0yUi0DtHZVCxWpcFsTTfSvDtMuKxSI9wrpc/E8
-         tQf/hehcEBJrg1XA4fvgsiESR4TP/LdJtSHrSBWcND3qkejtsIjFvMmPCXH5fxHOmeZL
-         xTWq/AnqRkX1yESQdmvAONmNLmMS5d/e0Fc+SFuYdJC9BZTZukoS3i+rTPSJtI32MwGV
-         oJzxs17vuMacsC1ndDVXMVvG/XmJsTGa3kot55pTTh7S7vs7WCRI0F1ovGudVXccC0zk
-         Nh8LYY84GtaJ+b7yArpPWGywRyIY9tNm+Rjc6LnMlMV7XIVVBKx71cfGl87G/U8JckA0
-         2CeA==
-X-Gm-Message-State: AOJu0Ywv+UrRWtQr+ZGn3kZXr7VZjkmGBVsxyDfjQGsc+iFZH4XROEVP
-	Q+pq8xYid1P9Zuoffmsj+e04YA==
-X-Google-Smtp-Source: AGHT+IHSQjHa27Z0+ndJsc8oShzjZ3QkBkKRbR7YVZ9BplTxyjs41eOiQhFRQaEFnsT6hkCFpBbfRQ==
-X-Received: by 2002:a17:902:778d:b0:1cf:cc23:eff with SMTP id o13-20020a170902778d00b001cfcc230effmr5814518pll.52.1702588426110;
-        Thu, 14 Dec 2023 13:13:46 -0800 (PST)
-Received: from dread.disaster.area (pa49-180-125-5.pa.nsw.optusnet.com.au. [49.180.125.5])
-        by smtp.gmail.com with ESMTPSA id h9-20020a170902748900b001d33e6521c1sm5344845pll.102.2023.12.14.13.13.45
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 14 Dec 2023 13:13:45 -0800 (PST)
-Received: from dave by dread.disaster.area with local (Exim 4.96)
-	(envelope-from <david@fromorbit.com>)
-	id 1rDt1a-008MNL-2K;
-	Fri, 15 Dec 2023 08:13:42 +1100
-Date: Fri, 15 Dec 2023 08:13:42 +1100
-From: Dave Chinner <david@fromorbit.com>
-To: Jian Wen <wenjianhn@gmail.com>
-Cc: linux-xfs@vger.kernel.org, djwong@kernel.org,
-	Jian Wen <wenjian1@xiaomi.com>
-Subject: Re: [PATCH] xfs: improve handling of prjquot ENOSPC
-Message-ID: <ZXtwBg3GUJLDydlW@dread.disaster.area>
-References: <20231214150708.77586-1-wenjianhn@gmail.com>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Ej4tEiHG"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id E282DC433C8;
+	Thu, 14 Dec 2023 21:16:20 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1702588580;
+	bh=QUYGZXdhqS5RM9jd7k/CJvF3v2+DXUOuL6X+8O1k5L8=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=Ej4tEiHGCURaNlPp4tLay7SLQSQpJ8DrwoDvJP8JXwHRmTekhgLb6b4diQCilZo1O
+	 cF5fys+DjMb1pSlOZRINiVl9aN6ED3Gy3q5lkcQfA54JxkmZZq3oCAR7HemTpJ5php
+	 3RtA3valy7Qu+hbrK9CcXgzYgucTYCHGsCeIex/T1WAocmkXhirdRTtq5T4Rsfv7hG
+	 lzUkSiKiJeBmAiCJK76bTws2WEakrJjfV9inKUAeidF4qqxRwhtIeylfQGcbR/sN5o
+	 L9E7F08FwtHahJ/WrUed/FJM0gsQ/dNonKN+7NC1wxbk2/LOJLRLutjCuPvdtB9MAU
+	 1JEYDnhNdxnDA==
+Date: Thu, 14 Dec 2023 13:16:20 -0800
+From: "Darrick J. Wong" <djwong@kernel.org>
+To: Christoph Hellwig <hch@lst.de>
+Cc: Chandan Babu R <chandan.babu@oracle.com>, linux-xfs@vger.kernel.org
+Subject: Re: [PATCH 12/19] xfs: tidy up xfs_rtallocate_extent_block
+Message-ID: <20231214211620.GC361584@frogsfrogsfrogs>
+References: <20231214063438.290538-1-hch@lst.de>
+ <20231214063438.290538-13-hch@lst.de>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -61,61 +33,125 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20231214150708.77586-1-wenjianhn@gmail.com>
+In-Reply-To: <20231214063438.290538-13-hch@lst.de>
 
-On Thu, Dec 14, 2023 at 11:07:08PM +0800, Jian Wen wrote:
-> Don't clear space of the whole fs when the project quota limit is
-> reached, since it affects the writing performance of files of
-> the directories that are under quota.
+On Thu, Dec 14, 2023 at 07:34:31AM +0100, Christoph Hellwig wrote:
+> Share the xfs_rtallocate_range logic by breaking out of the loop
+> instead of duplicating it, invert a check so that the early
+> return case comes first instead of in an else, and handle the
+> successful case in the straight line instead a branch in the tail
+> of the function.
 > 
-> Only run cow/eofblocks scans on the quota attached to the inode.
-> 
-> Signed-off-by: Jian Wen <wenjian1@xiaomi.com>
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
 > ---
->  fs/xfs/xfs_file.c | 13 +++++++++++++
->  1 file changed, 13 insertions(+)
+>  fs/xfs/xfs_rtalloc.c | 63 +++++++++++++++++++++-----------------------
+>  1 file changed, 30 insertions(+), 33 deletions(-)
 > 
-> diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
-> index e33e5e13b95f..4fbe262d33cc 100644
-> --- a/fs/xfs/xfs_file.c
-> +++ b/fs/xfs/xfs_file.c
-> @@ -24,6 +24,9 @@
->  #include "xfs_pnfs.h"
->  #include "xfs_iomap.h"
->  #include "xfs_reflink.h"
-> +#include "xfs_quota.h"
-> +#include "xfs_dquot_item.h"
-> +#include "xfs_dquot.h"
+> diff --git a/fs/xfs/xfs_rtalloc.c b/fs/xfs/xfs_rtalloc.c
+> index fbc60658ef24bf..5f42422a976a3e 100644
+> --- a/fs/xfs/xfs_rtalloc.c
+> +++ b/fs/xfs/xfs_rtalloc.c
+> @@ -257,13 +257,9 @@ xfs_rtallocate_extent_block(
+>  			/*
+>  			 * i for maxlen is all free, allocate and return that.
+>  			 */
+> -			error = xfs_rtallocate_range(args, i, maxlen);
+> -			if (error)
+> -				return error;
+> -
+> -			*len = maxlen;
+> -			*rtx = i;
+> -			return 0;
+> +			bestlen = maxlen;
+> +			besti = i;
+> +			break;
+
+This return->break change gave me pause for a while...
+
+>  		}
+>  		/*
+>  		 * In the case where we have a variable-sized allocation
+> @@ -283,43 +279,44 @@ xfs_rtallocate_extent_block(
+>  		/*
+>  		 * If not done yet, find the start of the next free space.
+>  		 */
+> -		if (next < end) {
+> -			error = xfs_rtfind_forw(args, next, end, &i);
+> -			if (error)
+> -				return error;
+> -		} else
+> +		if (next >= end)
+>  			break;
+> +		error = xfs_rtfind_forw(args, next, end, &i);
+> +		if (error)
+> +			return error;
+>  	}
+> +
+>  	/*
+>  	 * Searched the whole thing & didn't find a maxlen free extent.
+>  	 */
+> -	if (minlen <= maxlen && besti != -1) {
+> -		xfs_rtxlen_t	p;	/* amount to trim length by */
+> -
+> +	if (maxlen < minlen || besti == -1) {
+
+...because I was worried about accidentally ending up in this clause
+if maxlen < minlen.  I /think/ it's the case that this function never
+gets called with that true, right?
+
+(Would this be a good place to add a ebugging assertion?)
+
+--D
+
+>  		/*
+> -		 * If size should be a multiple of prod, make that so.
+> +		 * Allocation failed.  Set *nextp to the next block to try.
+>  		 */
+> -		if (prod > 1) {
+> -			div_u64_rem(bestlen, prod, &p);
+> -			if (p)
+> -				bestlen -= p;
+> -		}
+> +		*nextp = next;
+> +		return -ENOSPC;
+> +	}
 >  
->  #include <linux/dax.h>
->  #include <linux/falloc.h>
-> @@ -803,8 +806,18 @@ xfs_file_buffered_write(
->  		goto write_retry;
->  	} else if (ret == -ENOSPC && !cleared_space) {
->  		struct xfs_icwalk	icw = {0};
-> +		struct xfs_dquot	*pdqp = ip->i_pdquot;
+> -		/*
+> -		 * Allocate besti for bestlen & return that.
+> -		 */
+> -		error = xfs_rtallocate_range(args, besti, bestlen);
+> -		if (error)
+> -			return error;
+> -		*len = bestlen;
+> -		*rtx = besti;
+> -		return 0;
+> +	/*
+> +	 * If size should be a multiple of prod, make that so.
+> +	 */
+> +	if (prod > 1) {
+> +		xfs_rtxlen_t	p;	/* amount to trim length by */
+> +
+> +		div_u64_rem(bestlen, prod, &p);
+> +		if (p)
+> +			bestlen -= p;
+>  	}
+> +
+>  	/*
+> -	 * Allocation failed.  Set *nextp to the next block to try.
+> +	 * Allocate besti for bestlen & return that.
+>  	 */
+> -	*nextp = next;
+> -	return -ENOSPC;
+> +	error = xfs_rtallocate_range(args, besti, bestlen);
+> +	if (error)
+> +		return error;
+> +	*len = bestlen;
+> +	*rtx = besti;
+> +	return 0;
+>  }
 >  
->  		cleared_space = true;
-> +		if (XFS_IS_PQUOTA_ENFORCED(ip->i_mount) &&
-> +			pdqp && xfs_dquot_lowsp(pdqp)) {
-> +			xfs_iunlock(ip, iolock);
-> +			icw.icw_prid = pdqp->q_id;
-> +			icw.icw_flags |= XFS_ICWALK_FLAG_PRID;
-> +			xfs_blockgc_free_space(ip->i_mount, &icw);
-> +			goto write_retry;
-> +		}
-
-This is just duplicating the EDQUOT error handling path for the
-specific case that project quota exhaustion returns ENOSPC instead
-of EDQUOT.  i.e. the root cause of the problem is that project
-quotas are returning ENOSPC rather than EDQUOT, right?
-
-Perhaps we should look at having project quotas return EDQUOT like
-the other quotas so we get the project quota block scan done in the
-correct places, then convert the error to ENOSPC if we get a second
-EDQUOT from the project quota on retry?
-
--Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+>  /*
+> -- 
+> 2.39.2
+> 
+> 
