@@ -1,43 +1,43 @@
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="Vfdznz0m"
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="kCbCPhuM"
 Received: from mx0b-00069f02.pphosted.com (mx0b-00069f02.pphosted.com [205.220.177.32])
-	by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2CB63114
+	by lindbergh.monkeyblade.net (Postfix) with ESMTPS id F391B118
 	for <linux-xfs@vger.kernel.org>; Thu, 14 Dec 2023 09:05:36 -0800 (PST)
-Received: from pps.filterd (m0246631.ppops.net [127.0.0.1])
-	by mx0b-00069f02.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 3BE9wtfr021847
+Received: from pps.filterd (m0246630.ppops.net [127.0.0.1])
+	by mx0b-00069f02.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 3BE9wrrs009144
 	for <linux-xfs@vger.kernel.org>; Thu, 14 Dec 2023 17:05:35 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=from : to : cc :
  subject : date : message-id : in-reply-to : references : mime-version :
  content-transfer-encoding; s=corp-2023-11-20;
- bh=rwSyiA5IoYWxhi84dU5zVjoXWfZ1EZP74jPSc/4PVTU=;
- b=Vfdznz0mfA8SNW2CijBVV8t7n008u43siOicwABM8v4JJtR72xrTFpz2Bm32VPisPqay
- YYSuVk+9Mu3Ng+5wiaXjLVZf4gwnOQwueRHEihGO3Zj7+IpPT9jVfHOvXAZgwABdSgEk
- uiycu0MsI0jkl3qQ2bv2uwaRwoS8HPjivC+ph06uzFWaQTzubduk66MkC/B37m5rO9cx
- zO2ouZgASmW7KNvqhf2osw5p/r3Ek+rQN0pVr1nW+qxiUw+4mfOjNL/RXySmZlY+vap1
- iFUEVkGsXf9VMGAlvjErbjOhTO8EoSXcss4mNkCqBUp7vFuwZ1TYrE6aLRA/2iRDwX8K jw== 
+ bh=xwWp/MPqnOEHD0iRkaamWsYZjf5ITDsySX36CO2BFfc=;
+ b=kCbCPhuMhkvKszsqg7gp7xP4BSGqQwAjd4XgNPpRmbnB1QddR1kNCPX0UKZH1uVgPRl3
+ X1mAyTHY4b81Jj9zgYP7BUAjDrHd9RM5ZSyThxmoYr2Ve3L+JtQI+RHlIzIM157MU8p+
+ 9naf+06ADSjoBlHZ8vCg4MxGmr0HDQqKpWHKVSa1lVh9j4sWEt1NTlwxGbfuSX680qBA
+ /k59NZt8kUfQx3/bQMTZYvbETrFCvonL/9TYtugmJm29x7au39/IfryTlUq1M3VA80cB
+ v4EHVCbKgYktI+vJXMHg0zN8MGKSSsosHyqVoLwrNDebWyxTg9IF2GHmgQCdX/cabes2 gg== 
 Received: from phxpaimrmta03.imrmtpd1.prodappphxaev1.oraclevcn.com (phxpaimrmta03.appoci.oracle.com [138.1.37.129])
-	by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 3uwfrrsqu2-1
+	by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 3uwgn3sh4w-1
 	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
 	for <linux-xfs@vger.kernel.org>; Thu, 14 Dec 2023 17:05:35 +0000
 Received: from pps.filterd (phxpaimrmta03.imrmtpd1.prodappphxaev1.oraclevcn.com [127.0.0.1])
-	by phxpaimrmta03.imrmtpd1.prodappphxaev1.oraclevcn.com (8.17.1.19/8.17.1.19) with ESMTP id 3BEGYQKP012869
+	by phxpaimrmta03.imrmtpd1.prodappphxaev1.oraclevcn.com (8.17.1.19/8.17.1.19) with ESMTP id 3BEGDPZm012793
 	for <linux-xfs@vger.kernel.org>; Thu, 14 Dec 2023 17:05:34 GMT
 Received: from pps.reinject (localhost [127.0.0.1])
-	by phxpaimrmta03.imrmtpd1.prodappphxaev1.oraclevcn.com (PPS) with ESMTPS id 3uvepahcvv-1
+	by phxpaimrmta03.imrmtpd1.prodappphxaev1.oraclevcn.com (PPS) with ESMTPS id 3uvepahcw7-1
 	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
 	for <linux-xfs@vger.kernel.org>; Thu, 14 Dec 2023 17:05:34 +0000
 Received: from phxpaimrmta03.imrmtpd1.prodappphxaev1.oraclevcn.com (phxpaimrmta03.imrmtpd1.prodappphxaev1.oraclevcn.com [127.0.0.1])
-	by pps.reinject (8.17.1.5/8.17.1.5) with ESMTP id 3BEH0mnl036808
-	for <linux-xfs@vger.kernel.org>; Thu, 14 Dec 2023 17:05:33 GMT
+	by pps.reinject (8.17.1.5/8.17.1.5) with ESMTP id 3BEH0mnn036808
+	for <linux-xfs@vger.kernel.org>; Thu, 14 Dec 2023 17:05:34 GMT
 Received: from wwg-mac.us.oracle.com (dhcp-10-65-131-193.vpn.oracle.com [10.65.131.193])
-	by phxpaimrmta03.imrmtpd1.prodappphxaev1.oraclevcn.com (PPS) with ESMTP id 3uvepahcsv-5;
-	Thu, 14 Dec 2023 17:05:33 +0000
+	by phxpaimrmta03.imrmtpd1.prodappphxaev1.oraclevcn.com (PPS) with ESMTP id 3uvepahcsv-6;
+	Thu, 14 Dec 2023 17:05:34 +0000
 From: Wengang Wang <wen.gang.wang@oracle.com>
 To: linux-xfs@vger.kernel.org
 Cc: wen.gang.wang@oracle.com
-Subject: [PATCH 4/9] xfs: defrag: allocate/cleanup defragmentation
-Date: Thu, 14 Dec 2023 09:05:25 -0800
-Message-Id: <20231214170530.8664-5-wen.gang.wang@oracle.com>
+Subject: [PATCH 5/9] xfs: defrag: process some cases in xfs_defrag_process
+Date: Thu, 14 Dec 2023 09:05:26 -0800
+Message-Id: <20231214170530.8664-6-wen.gang.wang@oracle.com>
 X-Mailer: git-send-email 2.39.3 (Apple Git-145)
 In-Reply-To: <20231214170530.8664-1-wen.gang.wang@oracle.com>
 References: <20231214170530.8664-1-wen.gang.wang@oracle.com>
@@ -55,162 +55,194 @@ X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 mlxlogscore=999 b
  mlxscore=0 adultscore=0 phishscore=0 malwarescore=0 suspectscore=0
  classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2311290000
  definitions=main-2312140121
-X-Proofpoint-GUID: lgCMLncs9TNe5_-H4ud6l1aVQoTCJZOu
-X-Proofpoint-ORIG-GUID: lgCMLncs9TNe5_-H4ud6l1aVQoTCJZOu
+X-Proofpoint-ORIG-GUID: QZYDfOeQDKrTvaWE3hcxXXjEPmlLl00E
+X-Proofpoint-GUID: QZYDfOeQDKrTvaWE3hcxXXjEPmlLl00E
 
-1. allocate new defragmentation
-2. clean up defragentations
+In the main process xfs_defrag_process(), deal with following cases:
+
+1. sleep until next defragmentation time come
+2. sleep if no defragmetation job exist
+3. defragmentation job is stopped by user
+4. defragmentation job failed (stay a while for user to pick up error)
+5. defragmentation job is suspended
+6. defragmentation job is done successfully
 
 Signed-off-by: Wengang Wang <wen.gang.wang@oracle.com>
 ---
- fs/xfs/xfs_defrag.c | 123 +++++++++++++++++++++++++++++++++++++++++++-
- 1 file changed, 121 insertions(+), 2 deletions(-)
+ fs/xfs/xfs_defrag.c | 146 +++++++++++++++++++++++++++++++++++++++++++-
+ 1 file changed, 144 insertions(+), 2 deletions(-)
 
 diff --git a/fs/xfs/xfs_defrag.c b/fs/xfs/xfs_defrag.c
-index 4a10528912ca..fec617ac5945 100644
+index fec617ac5945..aee4cfd3f86e 100644
 --- a/fs/xfs/xfs_defrag.c
 +++ b/fs/xfs/xfs_defrag.c
-@@ -154,9 +154,74 @@ struct xfs_defrag_info *__xfs_find_defrag(unsigned long ino,
- 	return NULL;
+@@ -190,6 +190,14 @@ static void __xfs_drop_defrag(struct xfs_defrag_info *di, struct xfs_mount *mp)
+ 	kfree(di);
  }
  
-+static void xfs_change_defrag_param(struct xfs_defrag *to, struct xfs_defrag *from)
++/* cleanup when a defragmentation is done, failed, or cancelled. */
++static void xfs_drop_defrag(struct xfs_defrag_info *di, struct xfs_mount *mp)
 +{
-+	to->df_piece_size = from->df_piece_size;
-+	to->df_tgt_extsize = from->df_tgt_extsize;
-+	to->df_idle_time = from->df_idle_time;
-+	to->df_ino = from->df_ino;
-+}
-+
-+/* caller holds m_defrag_lock */
-+static struct xfs_defrag_info *__alloc_new_defrag_info(struct xfs_mount *mp)
-+{
-+	struct xfs_defrag_info *di;
-+
-+	di = kmem_alloc(sizeof(struct xfs_defrag_info), KM_ZERO);
-+	mp->m_nr_defrag++;
-+	return di;
-+}
-+
-+/* sleep some jiffies */
-+static inline void xfs_defrag_idle(unsigned int idle_jiffies)
-+{
-+	if (idle_jiffies > 0) {
-+		set_current_state(TASK_INTERRUPTIBLE);
-+		schedule_timeout(idle_jiffies);
-+	}
-+}
-+
-+/* caller holds mp->m_defrag_lock */
-+static void __xfs_drop_defrag(struct xfs_defrag_info *di, struct xfs_mount *mp)
-+{
-+	list_del(&di->di_list);
-+	mp->m_nr_defrag--;
-+	iput(VFS_I(di->di_ip));
-+	kfree(di);
-+}
-+
-+/* clean up all defragmentation jobs in this XFS */
-+void clean_up_defrags(struct xfs_mount *mp)
-+{
-+	struct xfs_defrag_info *di, *tmp;
-+
 +	down(&mp->m_defrag_lock);
-+	list_for_each_entry_safe(di, tmp, &mp->m_defrag_list, di_list) {
-+		__xfs_drop_defrag(di, mp);
-+	}
-+	ASSERT(mp->m_nr_defrag == 0);
++	__xfs_drop_defrag(di, mp);
 +	up(&mp->m_defrag_lock);
 +}
 +
-+/* run as a separated process.
-+ * defragment files in mp->m_defrag_list
+ /* clean up all defragmentation jobs in this XFS */
+ void clean_up_defrags(struct xfs_mount *mp)
+ {
+@@ -203,15 +211,149 @@ void clean_up_defrags(struct xfs_mount *mp)
+ 	up(&mp->m_defrag_lock);
+ }
+ 
++/*
++ * if mp->m_defrag_list is not empty, return the first one in the list.
++ * returns NULL otherwise.
 + */
-+int xfs_defrag_process(void *data)
++static struct xfs_defrag_info *get_first_defrag(struct xfs_mount *mp)
 +{
-+	struct xfs_mount	*mp = data;
-+
-+	while (!kthread_should_stop())
-+		xfs_defrag_idle(1000);
-+
-+	clean_up_defrags(mp);
-+	return 0;
-+}
-+
- /* start a new defragmetation or change the parameters on the existing one */
- static int xfs_file_defrag_start(struct inode *inode, struct xfs_defrag *defrag)
- {
-+	struct xfs_mount	*mp = XFS_I(inode)->i_mount;
-+	struct xfs_defrag_info	*di = NULL;
- 	int			ret = 0;
- 
- 	if ((inode->i_mode & S_IFMT) != S_IFREG) {
-@@ -174,9 +239,63 @@ static int xfs_file_defrag_start(struct inode *inode, struct xfs_defrag *defrag)
- 		goto out;
- 	}
- 
-+	/* racing with unmount and freeze */
-+	if (down_read_trylock(&inode->i_sb->s_umount) == 0) {
-+		ret = -EAGAIN;
-+		goto out;
-+	}
++	struct xfs_defrag_info *first;
 +
 +	down(&mp->m_defrag_lock);
-+	if (!__xfs_new_defrag_allowed(mp)) {
-+		ret = -EAGAIN;
-+		goto up_return;
-+	}
-+
-+	di = __xfs_find_defrag(inode->i_ino, mp);
-+	if (di) {
-+		/*
-+		 * the file is already under defragmentation,
-+		 * a subsequential "start" is used to adjust parameters
-+		 * on the existing defragmentation
-+		 */
-+		xfs_change_defrag_param(&di->di_defrag, defrag);
-+		ret = 0;
-+		goto up_return;
-+	}
-+
-+	inode = igrab(inode);
-+	if (!inode) {
-+		ret = -EAGAIN;
-+		goto up_return;
-+	}
-+
-+	/* a new defragmentation */
-+	di = __alloc_new_defrag_info(mp);
-+	xfs_change_defrag_param(&di->di_defrag, defrag);
-+	di->di_ip = XFS_I(inode);
-+	list_add_tail(&di->di_list, &mp->m_defrag_list);
-+
-+	/*
-+	 * defrag process per FS is creatd on demand and keep alive until
-+	 * FS is unmounted.
-+	 */
-+	if (mp->m_defrag_task == NULL) {
-+		mp->m_defrag_task = kthread_run(xfs_defrag_process, mp,
-+					"xdf_%s", mp->m_super->s_id);
-+		if (IS_ERR(mp->m_defrag_task)) {
-+			ret = PTR_ERR(mp->m_defrag_task);
-+			mp->m_defrag_task = NULL;
-+		}
-+	} else {
-+		wake_up_process(mp->m_defrag_task);
-+	}
-+
-+up_return:
++	if (list_empty(&mp->m_defrag_list))
++		first = NULL;
++	else
++		first = container_of(mp->m_defrag_list.next,
++				struct xfs_defrag_info, di_list);
 +	up(&mp->m_defrag_lock);
-+	up_read(&inode->i_sb->s_umount);
- out:
--	return -EOPNOTSUPP;
-- }
-+	return ret;
++	return first;
 +}
- 
- static void xfs_file_defrag_status(struct inode *inode, struct xfs_defrag *defrag)
++
++/*
++ * if mp->m_defrag_list is not empty, return the last one in the list.
++ * returns NULL otherwise.
++ */
++static struct xfs_defrag_info *get_last_defrag(struct xfs_mount *mp)
++{
++	struct xfs_defrag_info *last;
++
++	down(&mp->m_defrag_lock);
++	if (list_empty(&mp->m_defrag_list))
++		last = NULL;
++	else
++		last = container_of(mp->m_defrag_list.prev,
++				struct xfs_defrag_info, di_list);
++	up(&mp->m_defrag_lock);
++	return last;
++}
++
++static inline bool xfs_defrag_failed(struct xfs_defrag_info *di)
++{
++	return di->di_defrag.df_status != 0;
++}
++
++/* so far do nothing */
++static bool xfs_defrag_file(struct xfs_defrag_info *di)
++{
++	return true;
++}
++
++static inline bool xfs_defrag_suspended(struct xfs_defrag_info *di)
++{
++	return di->di_defrag.df_suspended;
++}
++
+ /* run as a separated process.
+  * defragment files in mp->m_defrag_list
+  */
+ int xfs_defrag_process(void *data)
  {
++	unsigned long		smallest_wait = ULONG_MAX;
+ 	struct xfs_mount	*mp = data;
++	struct xfs_defrag_info	*di, *last;
++
++	while (!kthread_should_stop()) {
++		bool	defrag_any = false;
+ 
+-	while (!kthread_should_stop())
+-		xfs_defrag_idle(1000);
++		if (smallest_wait != ULONG_MAX) {
++			smallest_wait = max_t(unsigned long, smallest_wait, 10);
++			xfs_defrag_idle(smallest_wait);
++			smallest_wait = ULONG_MAX;
++		}
++
++		last = get_last_defrag(mp);
++		if (!last) {
++			set_current_state(TASK_INTERRUPTIBLE);
++			schedule();
++			continue; /* while loop */
++		}
++
++		do {
++			unsigned long	next_defrag_time;
++			unsigned long	save_jiffies;
++
++			if (kthread_should_stop())
++				break; /* do */
++
++			di = get_first_defrag(mp);
++			/* done this round */
++			if (!di)
++				break; /* do */
++
++			/* stopped by user, clean up right now */
++			if (di->di_user_stopped) {
++				xfs_drop_defrag(di, mp);
++				continue; /* do */
++			}
++
++			/*
++			 * Defrag failed on this file, give some grace time, say 30s
++			 * for user space to capture the error
++			 */
++			if (xfs_defrag_failed(di)) {
++				unsigned long drop_time = di->di_last_process
++					+ msecs_to_jiffies(XFS_DERFAG_GRACE_PERIOD);
++				save_jiffies = jiffies;
++				/* not the time to drop this failed file yet */
++				if (time_before(save_jiffies, drop_time)) {
++					/* wait a while before dropping this file */
++					if (smallest_wait > drop_time - save_jiffies)
++						smallest_wait = drop_time - save_jiffies;
++				} else {
++					xfs_drop_defrag(di, mp);
++				}
++				continue; /* do */
++			}
++
++			if (xfs_defrag_suspended(di))
++				continue; /* do */
++
++			next_defrag_time = di->di_last_process
++					+ msecs_to_jiffies(di->di_defrag.df_idle_time);
++
++			save_jiffies = jiffies;
++			if (time_before(save_jiffies, next_defrag_time)) {
++				if (smallest_wait > next_defrag_time - save_jiffies)
++					smallest_wait = next_defrag_time - save_jiffies;
++				continue; /* do */
++			}
++
++			defrag_any = true;
++			/* whole file defrag done successfully */
++			if (xfs_defrag_file(di))
++				xfs_drop_defrag(di, mp);
++
++			/* avoid tight CPU usage */
++			xfs_defrag_idle(2);
++		} while (di != last);
++
++		/* all the left defragmentations are suspended */
++		if (defrag_any == false && smallest_wait == ULONG_MAX) {
++			set_current_state(TASK_INTERRUPTIBLE);
++			schedule();
++		}
++
++	}
+ 
+ 	clean_up_defrags(mp);
+ 	return 0;
 -- 
 2.39.3 (Apple Git-145)
 
