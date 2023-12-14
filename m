@@ -1,107 +1,73 @@
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7B0CB208BD
-	for <linux-xfs@vger.kernel.org>; Thu, 14 Dec 2023 20:25:55 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 479D16A346
+	for <linux-xfs@vger.kernel.org>; Thu, 14 Dec 2023 20:44:25 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="d0x3P29d"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1702585554;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:
-	 content-transfer-encoding:content-transfer-encoding;
-	bh=1Q+Gblh5Z9QB0AwKQwxjCIDjhxJpch+W60X9OSu57RA=;
-	b=d0x3P29d6+EDybNwbupcbvaTILrw4oHy7hzcBFomwXiLmcEI1mYVmZi5jLVU/KMB4HsqZC
-	xjuIIYISkPOSVngpZl3zVspgBOzejSsXnpMun1teuXBSQmEKMsHd1GjYmfCgXylCKef/+N
-	OHi1TXLhltQnUB9WbsAF22iqlsmjM30=
-Received: from mail-ej1-f69.google.com (mail-ej1-f69.google.com
- [209.85.218.69]) by relay.mimecast.com with ESMTP with STARTTLS
- (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
- us-mta-673-QNki4ViDO0uyUvx1X280YA-1; Thu, 14 Dec 2023 15:25:52 -0500
-X-MC-Unique: QNki4ViDO0uyUvx1X280YA-1
-Received: by mail-ej1-f69.google.com with SMTP id a640c23a62f3a-a00dd93a5f9so509458266b.1
-        for <linux-xfs@vger.kernel.org>; Thu, 14 Dec 2023 12:25:52 -0800 (PST)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1702585551; x=1703190351;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:x-gm-message-state:from:to:cc:subject:date:message-id
-         :reply-to;
-        bh=1Q+Gblh5Z9QB0AwKQwxjCIDjhxJpch+W60X9OSu57RA=;
-        b=I3Lg3pKXM8R/iMKbxWTxU072WZlFQtuchOkCAT9ytZ0XCSua0tVJAdOtgd9AzR65uO
-         FdWGoBL1FmzFTSXGs68QfFrYJXfvmbTYsHsgK/bpg2kl6hujPhSKb7P3Op2SJPeCFZ1e
-         GXD4sB6G3pV3mRGZUGSb2MLp1JwvhRmA9dLx1m//Ru6dacHnE6CUbUlJUWYAF6C62kYl
-         iFL27jWraoSte7VWPXxoVpgLDVkCtBck0h0ibKNDEsXNOquEk1l0fmLrj3tLtD3QTsmT
-         deNGaZy3ZgHAx37uYw5J5di8+6lrdtn0kvkaf9C0g7J0MFcMT1z7RkoCbBHQxL6eFMlI
-         DOnQ==
-X-Gm-Message-State: AOJu0YxZUeX29M3QwEZEBzNGXHpplNaAAPTvKmhVUS74oCIkOps1BL7F
-	JzvlLrVvqouitjhJII5ThDAe3JHYL8+o6Zz8MPp11D++ClOv3OCtUW3jYxFzKOJm2geUBU1Mw9Z
-	IiptshQ70N2VYvuScFIpVDDGoaSRO1k2l6U8d9fhA/tUj4970J0qDROFVWTZcfqKS0v5O7mcduw
-	v+0kk=
-X-Received: by 2002:a17:906:dfe2:b0:a1d:8f9:8eac with SMTP id lc2-20020a170906dfe200b00a1d08f98eacmr2930802ejc.249.1702585550919;
-        Thu, 14 Dec 2023 12:25:50 -0800 (PST)
-X-Google-Smtp-Source: AGHT+IF7d0+LpFsD4BcnELLbpp/fToHAkqMHINrZ3CizpHf1yQT+qCfsB+o/7XIipXh11BZoeXmcoA==
-X-Received: by 2002:a17:906:dfe2:b0:a1d:8f9:8eac with SMTP id lc2-20020a170906dfe200b00a1d08f98eacmr2930798ejc.249.1702585550614;
-        Thu, 14 Dec 2023 12:25:50 -0800 (PST)
-Received: from fedora.redhat.com (gw19-pha-stl-mmo-2.avonet.cz. [131.117.213.218])
-        by smtp.gmail.com with ESMTPSA id tq24-20020a170907c51800b00a1f9543a540sm7177131ejc.160.2023.12.14.12.25.50
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 14 Dec 2023 12:25:50 -0800 (PST)
-From: Pavel Reichl <preichl@redhat.com>
-To: linux-xfs@vger.kernel.org
-Cc: cem@kernel.org
-Subject: [PATCH v2] xfsdump: Fix memory leak
-Date: Thu, 14 Dec 2023 21:25:49 +0100
-Message-ID: <20231214202549.580231-1-preichl@redhat.com>
-X-Mailer: git-send-email 2.43.0
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="AYBSPe4s"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id AA6E0C433C7;
+	Thu, 14 Dec 2023 20:44:25 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1702586665;
+	bh=buoEnCktuqvI4/f71sLdk/DU0VI/5aGQKefD34ixTpg=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=AYBSPe4sgfbr7g1t5Po39TIWboX30b/Ib39vsRjkkrKcuNcjRAH0FlT5GrRjtC1qA
+	 qVKmErkAJb+XyLKVQ8QH6A/NDG76eZj6zL5YAGuFD4kMmLTdHzmKr9y39mcTUOY9X4
+	 9Dn9yQwLpOnb7rasYPCpWP4zVrm3kkSWRKy4svQa/Y91JIcDfNwBwQJa8usREY4GGC
+	 aoKoo8TmtkznnBHhyG355XFww9pbwbu4sbUaUshi6edDlD+oBsgUe2eWQhSoik54K8
+	 +SAms2O+9Qm8P2k33xMqNC4jJHgpO9A1uHp/3yhxqEVVlzwbVxnEd2c8+0zJqDnFT0
+	 tMOO5af9NvSaA==
+Date: Thu, 14 Dec 2023 12:44:25 -0800
+From: "Darrick J. Wong" <djwong@kernel.org>
+To: Christoph Hellwig <hch@lst.de>
+Cc: Chandan Babu R <chandan.babu@oracle.com>, linux-xfs@vger.kernel.org
+Subject: Re: [PATCH 02/19] xfs: turn the xfs_trans_mod_dquot_byino stub into
+ an inline function
+Message-ID: <20231214204425.GQ361584@frogsfrogsfrogs>
+References: <20231214063438.290538-1-hch@lst.de>
+ <20231214063438.290538-3-hch@lst.de>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20231214063438.290538-3-hch@lst.de>
 
-Fix memory leak found by coverity.
+On Thu, Dec 14, 2023 at 07:34:21AM +0100, Christoph Hellwig wrote:
+> Without this upcoming change can cause an unused variable warning,
+> when adding a local variable for the fields field passed to it.
+> 
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
 
->>>     CID 1554295:  Resource leaks  (RESOURCE_LEAK)
->>>     Failing to save or free storage allocated by strdup(path) leaks it.
-
+Stupid warnings...
 Reviewed-by: Darrick J. Wong <djwong@kernel.org>
-Signed-off-by: Pavel Reichl <preichl@redhat.com>
----
- restore/tree.c | 15 ++++++++++++++-
- 1 file changed, 14 insertions(+), 1 deletion(-)
 
-diff --git a/restore/tree.c b/restore/tree.c
-index 6f3180f..4707fdc 100644
---- a/restore/tree.c
-+++ b/restore/tree.c
-@@ -4977,9 +4977,22 @@ static int
- mkdir_r(char *path)
- {
- 	struct stat sbuf;
-+	char *path_copy;
-+	int ret;
- 
- 	if (stat(path, &sbuf) < 0) {
--		if (mkdir_r(dirname(strdup(path))) < 0)
-+		path_copy = strdup(path);
-+		if (!path_copy) {
-+			mlog(MLOG_TRACE | MLOG_ERROR | MLOG_TREE,
-+				_("unable to allocate memory for a path\n"));
-+			mlog_exit(EXIT_ERROR, RV_ERROR);
-+			exit(1);
-+		}
-+
-+		ret = mkdir_r(dirname(path_copy));
-+		free(path_copy);
-+
-+		if (ret < 0)
- 			return -1;
- 		return mkdir(path, 0755);
- 	}
--- 
-2.43.0
+--D
 
+> ---
+>  fs/xfs/xfs_quota.h | 5 ++++-
+>  1 file changed, 4 insertions(+), 1 deletion(-)
+> 
+> diff --git a/fs/xfs/xfs_quota.h b/fs/xfs/xfs_quota.h
+> index dcc785fdd34532..e0d56489f3b287 100644
+> --- a/fs/xfs/xfs_quota.h
+> +++ b/fs/xfs/xfs_quota.h
+> @@ -127,7 +127,10 @@ xfs_qm_vop_dqalloc(struct xfs_inode *ip, kuid_t kuid, kgid_t kgid,
+>  }
+>  #define xfs_trans_dup_dqinfo(tp, tp2)
+>  #define xfs_trans_free_dqinfo(tp)
+> -#define xfs_trans_mod_dquot_byino(tp, ip, fields, delta) do { } while (0)
+> +static inline void xfs_trans_mod_dquot_byino(struct xfs_trans *tp,
+> +		struct xfs_inode *ip, uint field, int64_t delta)
+> +{
+> +}
+>  #define xfs_trans_apply_dquot_deltas(tp)
+>  #define xfs_trans_unreserve_and_mod_dquots(tp)
+>  static inline int xfs_trans_reserve_quota_nblks(struct xfs_trans *tp,
+> -- 
+> 2.39.2
+> 
+> 
