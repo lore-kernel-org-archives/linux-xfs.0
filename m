@@ -1,29 +1,58 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-ot1-f42.google.com (mail-ot1-f42.google.com [209.85.210.42])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D99832C68F
-	for <linux-xfs@vger.kernel.org>; Thu, 14 Dec 2023 21:47:19 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5F689944C
+	for <linux-xfs@vger.kernel.org>; Thu, 14 Dec 2023 22:31:37 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=fromorbit.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="TrxMfLch"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 00475C433C7;
-	Thu, 14 Dec 2023 21:47:18 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1702590439;
-	bh=OFZq9V5evQrLoAyJmnP2ICoXthLfQ/O3qWQla0An58E=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=TrxMfLchui/C25bIAE15tOA0zBwDUJbIXpiH4GMLbkd0HMpYaqtdJnN5bnwhRxL6y
-	 mdw1vKX1fLBmZ28OF8izMrwqpnjp2dGR4q5zYZivAXgNL8kh8W7+fHjFXpnraSbe3D
-	 4885nwJlBfBFcGXBZv1KaQZZf05tWGj/afW0LE+gTPhVxFSauJc91r0ljLCT6teIRc
-	 ucnmRA/P3a+Ry5+8+xTolGD0empw8NG5iN1wxQokWdACh2TaDAA/Rty82jAT23Jbnu
-	 ZnuEbcLTZUE7cAk9krX1UVaI3FjbfFPK78ID/IRBAeNFhSnLGN3u9IBOs8oHzv2zI8
-	 jl7fccz6NbJfg==
-Date: Thu, 14 Dec 2023 13:47:18 -0800
-From: "Darrick J. Wong" <djwong@kernel.org>
-To: Dave Chinner <david@fromorbit.com>
+	dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b="cftnfI8J"
+Received: by mail-ot1-f42.google.com with SMTP id 46e09a7af769-6d9e756cf32so69538a34.2
+        for <linux-xfs@vger.kernel.org>; Thu, 14 Dec 2023 14:31:37 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=fromorbit-com.20230601.gappssmtp.com; s=20230601; t=1702593096; x=1703197896; darn=vger.kernel.org;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
+        bh=X+uKpvIFE8it5UldH4hBWXo0RxItJFS4saHsjjG96J4=;
+        b=cftnfI8JQraErmsR2kd6IUVw6a1l08bnAUVvG/R4LUsmiUj2NsGlam0/43NYWROhK1
+         s936HLGdvflC54aMMgT5yjRpHzc6aDwWNfqzCOXf3gSJXNNz0tL7rIoCwZjt5EvZk1Nn
+         JoWcjr/P+GD1vBN7U+7JKwz5TcjDZ5dhhDWbHFx3eoCQ+asf03HHBjpwvCUloblNTgKQ
+         MDnqPardzqkycR0NZ7J9C5sRNlAR6F1M0MGEc57YfKQtQ/Tj9q9GVD2iVXIo9Scv1Yea
+         mB6YqyMGgshsBmB92QyCTjWZrNpoI0a2GIzdFgZWEQQHQapm8XhRjlyDaBifipNjP9pj
+         +ESQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1702593096; x=1703197896;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=X+uKpvIFE8it5UldH4hBWXo0RxItJFS4saHsjjG96J4=;
+        b=EncxoCsG4Jkqto8yUulbGejtfcIjVL4NmDyKlCmg4vL8ZlntLwdbk8boSg+kil7/bp
+         igXod0GtzYZoZPNAAAYOR4ZlB9C6XHE8ntE4tXh3SCvXoN2PDKzpouhIgsFd/qL5gRzn
+         E2cjbOGR/N/jnsGesh/8xZz0zibQMOeJ+4HBCkbBYLFf1F40z3zlHAcfzJhkYKGOPSx3
+         8fNVrx3KpwgpdJTGjf5+plMJ3LzaqqYgBWIZcNOIJUhq7l/F8uDjeL0zY49FfgCVHZ16
+         EaLZNb3u6qClVSqvD3tqdZVzjtj5WdsgO209OUCenDoheCOAZsjnOq33hj4cQ20NdLB0
+         VhxQ==
+X-Gm-Message-State: AOJu0Yztwo5nxApA/4HzhMPXNGSBDMZ+s+77eibtnOW+CHbVmjroyi/5
+	j8f9+Byvozj+lZSRpEml9lLC0A5XxGY5Xrh59Wc=
+X-Google-Smtp-Source: AGHT+IFWedNRQ2JUNO1tTNkU35loGYMyo6prRMNjSiC9H1aPpikLELUNcYTF9ugjHgrgEg5YV0p0cw==
+X-Received: by 2002:a05:6870:c186:b0:1fa:fec3:8c43 with SMTP id h6-20020a056870c18600b001fafec38c43mr12199574oad.53.1702593096404;
+        Thu, 14 Dec 2023 14:31:36 -0800 (PST)
+Received: from dread.disaster.area (pa49-180-125-5.pa.nsw.optusnet.com.au. [49.180.125.5])
+        by smtp.gmail.com with ESMTPSA id z9-20020a6552c9000000b005c662e103a1sm10503587pgp.41.2023.12.14.14.31.35
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Thu, 14 Dec 2023 14:31:35 -0800 (PST)
+Received: from dave by dread.disaster.area with local (Exim 4.96)
+	(envelope-from <david@fromorbit.com>)
+	id 1rDuEu-008NyB-33;
+	Fri, 15 Dec 2023 09:31:32 +1100
+Date: Fri, 15 Dec 2023 09:31:32 +1100
+From: Dave Chinner <david@fromorbit.com>
+To: "Darrick J. Wong" <djwong@kernel.org>
 Cc: linux-xfs@vger.kernel.org
 Subject: Re: [PATCH] xfs: initialise di_crc in xfs_log_dinode
-Message-ID: <20231214214718.GL361584@frogsfrogsfrogs>
+Message-ID: <ZXuCRNtth6VY6svP@dread.disaster.area>
 References: <20231214214035.3795665-1-david@fromorbit.com>
+ <20231214214718.GL361584@frogsfrogsfrogs>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -32,117 +61,40 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20231214214035.3795665-1-david@fromorbit.com>
+In-Reply-To: <20231214214718.GL361584@frogsfrogsfrogs>
 
-On Fri, Dec 15, 2023 at 08:40:35AM +1100, Dave Chinner wrote:
-> From: Dave Chinner <dchinner@redhat.com>
+On Thu, Dec 14, 2023 at 01:47:18PM -0800, Darrick J. Wong wrote:
+> On Fri, Dec 15, 2023 at 08:40:35AM +1100, Dave Chinner wrote:
+> > diff --git a/fs/xfs/xfs_inode_item.c b/fs/xfs/xfs_inode_item.c
+> > index 157ae90d3d52..0287918c03dc 100644
+> > --- a/fs/xfs/xfs_inode_item.c
+> > +++ b/fs/xfs/xfs_inode_item.c
+> > @@ -557,6 +557,9 @@ xfs_inode_to_log_dinode(
+> >  		memset(to->di_pad2, 0, sizeof(to->di_pad2));
+> >  		uuid_copy(&to->di_uuid, &ip->i_mount->m_sb.sb_meta_uuid);
+> >  		to->di_v3_pad = 0;
+> > +
+> > +		/* dummy value for initialisation */
+> > +		to->di_crc = 0;
 > 
-> Alexander Potapenko report that KMSAN was issuing these warnings:
-> 
-> kmalloc-ed xlog buffer of size 512 : ffff88802fc26200
-> kmalloc-ed xlog buffer of size 368 : ffff88802fc24a00
-> kmalloc-ed xlog buffer of size 648 : ffff88802b631000
-> kmalloc-ed xlog buffer of size 648 : ffff88802b632800
-> kmalloc-ed xlog buffer of size 648 : ffff88802b631c00
-> xlog_write_iovec: copying 12 bytes from ffff888017ddbbd8 to ffff88802c300400
-> xlog_write_iovec: copying 28 bytes from ffff888017ddbbe4 to ffff88802c30040c
-> xlog_write_iovec: copying 68 bytes from ffff88802fc26274 to ffff88802c300428
-> xlog_write_iovec: copying 188 bytes from ffff88802fc262bc to ffff88802c30046c
-> =====================================================
-> BUG: KMSAN: uninit-value in xlog_write_iovec fs/xfs/xfs_log.c:2227
-> BUG: KMSAN: uninit-value in xlog_write_full fs/xfs/xfs_log.c:2263
-> BUG: KMSAN: uninit-value in xlog_write+0x1fac/0x2600 fs/xfs/xfs_log.c:2532
->  xlog_write_iovec fs/xfs/xfs_log.c:2227
->  xlog_write_full fs/xfs/xfs_log.c:2263
->  xlog_write+0x1fac/0x2600 fs/xfs/xfs_log.c:2532
->  xlog_cil_write_chain fs/xfs/xfs_log_cil.c:918
->  xlog_cil_push_work+0x30f2/0x44e0 fs/xfs/xfs_log_cil.c:1263
->  process_one_work kernel/workqueue.c:2630
->  process_scheduled_works+0x1188/0x1e30 kernel/workqueue.c:2703
->  worker_thread+0xee5/0x14f0 kernel/workqueue.c:2784
->  kthread+0x391/0x500 kernel/kthread.c:388
->  ret_from_fork+0x66/0x80 arch/x86/kernel/process.c:147
->  ret_from_fork_asm+0x11/0x20 arch/x86/entry/entry_64.S:242
-> 
-> Uninit was created at:
->  slab_post_alloc_hook+0x101/0xac0 mm/slab.h:768
->  slab_alloc_node mm/slub.c:3482
->  __kmem_cache_alloc_node+0x612/0xae0 mm/slub.c:3521
->  __do_kmalloc_node mm/slab_common.c:1006
->  __kmalloc+0x11a/0x410 mm/slab_common.c:1020
->  kmalloc ./include/linux/slab.h:604
->  xlog_kvmalloc fs/xfs/xfs_log_priv.h:704
->  xlog_cil_alloc_shadow_bufs fs/xfs/xfs_log_cil.c:343
->  xlog_cil_commit+0x487/0x4dc0 fs/xfs/xfs_log_cil.c:1574
->  __xfs_trans_commit+0x8df/0x1930 fs/xfs/xfs_trans.c:1017
->  xfs_trans_commit+0x30/0x40 fs/xfs/xfs_trans.c:1061
->  xfs_create+0x15af/0x2150 fs/xfs/xfs_inode.c:1076
->  xfs_generic_create+0x4cd/0x1550 fs/xfs/xfs_iops.c:199
->  xfs_vn_create+0x4a/0x60 fs/xfs/xfs_iops.c:275
->  lookup_open fs/namei.c:3477
->  open_last_lookups fs/namei.c:3546
->  path_openat+0x29ac/0x6180 fs/namei.c:3776
->  do_filp_open+0x24d/0x680 fs/namei.c:3809
->  do_sys_openat2+0x1bc/0x330 fs/open.c:1440
->  do_sys_open fs/open.c:1455
->  __do_sys_openat fs/open.c:1471
->  __se_sys_openat fs/open.c:1466
->  __x64_sys_openat+0x253/0x330 fs/open.c:1466
->  do_syscall_x64 arch/x86/entry/common.c:51
->  do_syscall_64+0x4f/0x140 arch/x86/entry/common.c:82
->  entry_SYSCALL_64_after_hwframe+0x63/0x6b arch/x86/entry/entry_64.S:120
-> 
-> Bytes 112-115 of 188 are uninitialized
-> Memory access of size 188 starts at ffff88802fc262bc
-> 
-> This is caused by the struct xfs_log_dinode not having the di_crc
-> field initialised. Log recovery never uses this field (it is only
-> present these days for on-disk format compatibility reasons) and so
-> it's value is never checked so nothing in XFS has caught this.
-> 
-> Further, none of the uninitialised memory access warning tools have
-> caught this (despite catching other uninit memory accesses in the
-> struct xfs_log_dinode back in 2017!) until recently. Alexander
-> annotated the XFS code to get the dump of the actual bytes that were
-> detected as uninitialised, and from that report it took me about 30s
-> to realise what the issue was.
-> 
-> The issue was introduced back in 2016 and every inode that is logged
-> fails to initialise this field. This is no actual bad behaviour
-> caused by this issue - I find it hard to even classify it as a
-> bug...
-> 
-> Reported-and-tested-by: Alexander Potapenko <glider@google.com>
-> Fixes: f8d55aa0523a ("xfs: introduce inode log format object")
-> Signed-off-by: Dave Chinner <dchinner@redhat.com>
-> ---
->  fs/xfs/xfs_inode_item.c | 3 +++
->  1 file changed, 3 insertions(+)
-> 
-> diff --git a/fs/xfs/xfs_inode_item.c b/fs/xfs/xfs_inode_item.c
-> index 157ae90d3d52..0287918c03dc 100644
-> --- a/fs/xfs/xfs_inode_item.c
-> +++ b/fs/xfs/xfs_inode_item.c
-> @@ -557,6 +557,9 @@ xfs_inode_to_log_dinode(
->  		memset(to->di_pad2, 0, sizeof(to->di_pad2));
->  		uuid_copy(&to->di_uuid, &ip->i_mount->m_sb.sb_meta_uuid);
->  		to->di_v3_pad = 0;
-> +
-> +		/* dummy value for initialisation */
-> +		to->di_crc = 0;
+> I wonder if the log should be using kzalloc instead of kmalloc for
+> buffers that will end up on disk?  Kind of a nasty performance hit
+> just for the sake of paranoia, though.
 
-I wonder if the log should be using kzalloc instead of kmalloc for
-buffers that will end up on disk?  Kind of a nasty performance hit
-just for the sake of paranoia, though.
+That's really only an issue for the xfs_log_dinode - it's really the
+only structure copy we do in log formating. For the rest of the
+structures we are simply doing memcpy of large ranges of data into
+the allocated space and there's really no point in zeroing memory
+ranges that we are just about to entirely copy over.
 
-Reviewed-by: Darrick J. Wong <djwong@kernel.org>
+Especially considering item formatting is the hottest part of the
+transaction commit path....
 
---D
+> Reviewed-by: Darrick J. Wong <djwong@kernel.org>
 
->  	} else {
->  		to->di_version = 2;
->  		to->di_flushiter = ip->i_flushiter;
-> -- 
-> 2.42.0
-> 
-> 
+Thanks!
+
+-Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
