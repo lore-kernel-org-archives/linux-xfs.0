@@ -1,97 +1,118 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-pl1-f181.google.com (mail-pl1-f181.google.com [209.85.214.181])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DF1CA6ABB3
-	for <linux-xfs@vger.kernel.org>; Thu, 14 Dec 2023 21:38:46 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0B9B254279
+	for <linux-xfs@vger.kernel.org>; Thu, 14 Dec 2023 21:39:21 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=fromorbit.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="a2MkPGy1"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 460F7C433C8;
-	Thu, 14 Dec 2023 21:38:46 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1702589926;
-	bh=uO06c7Pyd4MYEy0kKIM3A37kN7ybUrfFWGHP9wB+sbQ=;
-	h=Date:From:To:Cc:Subject:From;
-	b=a2MkPGy12+nXuwo/nXX7sJwOBt59C9pfPkCzlrrFfQ+WWWuImVKjsJehW+AyMYZM1
-	 SvoFKtNcZaRu/4i1YwQkdDY9wOF/jPNKpgGF9k7UVmmVCPkLmzXTqylVw9eetGm2sb
-	 lYU2omNY2ly9Np5wghfO1tnMymgOQhd3thY0Y969tA8g5kNySiSXCxfIi4IzmT/Llh
-	 4Ugv5lqdb/P2kdiESetUY5zNIRdnSlGraIaC+e8KL6b0c4LLTzTsAJC4V7+P2Diloe
-	 gzEKAWSg0ciFvyVauusPx4372DpEmclNMcWmkFk1G3UTvEIkAm6ZchD15weGUNw+YE
-	 IOXxCMAbgFOsg==
-Date: Thu, 14 Dec 2023 13:38:45 -0800
-From: "Darrick J. Wong" <djwong@kernel.org>
-To: hch@lst.de, chandanbabu@kernel.org
-Cc: linux-xfs@vger.kernel.org
-Subject: [PATCH] xfs: fix an off-by-one error in xreap_agextent_binval
-Message-ID: <20231214213845.GK361584@frogsfrogsfrogs>
+	dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b="C8nM4FWM"
+Received: by mail-pl1-f181.google.com with SMTP id d9443c01a7336-1d35dc7e1bbso19165245ad.1
+        for <linux-xfs@vger.kernel.org>; Thu, 14 Dec 2023 13:39:21 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=fromorbit-com.20230601.gappssmtp.com; s=20230601; t=1702589961; x=1703194761; darn=vger.kernel.org;
+        h=in-reply-to:content-transfer-encoding:content-disposition
+         :mime-version:references:message-id:subject:cc:to:from:date:from:to
+         :cc:subject:date:message-id:reply-to;
+        bh=8bHZ5SA9qHU5iW2IiMJTN98KqOEtCR8q0Lin8U7ofHo=;
+        b=C8nM4FWM7p4u9gjNcpxgQJjV14rJCrikNFCOKgXbcpFv1Mo9W5BRqUSb9E0yOS7u0i
+         jMmTDciav+bYcZ+YD5Sydi8MKGCwCYJZHuv/WLjLYLxQJiSdhQtE1sPj+Z+6scr/cb4J
+         WjbXghZd4oXAb9+Q7qpQziK+Kd6gFtug3h3WLC3upOr+gdDZiMl3yTIvrO49GQu4nwEN
+         eA1rIByLIgVKPPaXGQPcAswk61nc8BzuztIAMnOf4SFQ/8dEucSDWcic0pOOO9T7x4Qa
+         is6JAzwB7hprArE8dPntyprJwLPqOhk+w8INcLGatcamuyfbE8DnuRAOZKwkgw+yuQPt
+         PC0g==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1702589961; x=1703194761;
+        h=in-reply-to:content-transfer-encoding:content-disposition
+         :mime-version:references:message-id:subject:cc:to:from:date
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=8bHZ5SA9qHU5iW2IiMJTN98KqOEtCR8q0Lin8U7ofHo=;
+        b=iyC6AekSKpxt65w3k8xt0WcDrNL2F8e2+HuYF446Gv5Fz5OG8A7OOg23KIFWtM3oxt
+         Stxhek85pImmY0yTq4vfja7oFa+612necA1VgT57s0FdcdCrvmxK/aXpWAbiAGCAWr90
+         P1aBQQ8Ht0CapDQQhrFAApV9lLKEIopA7FnExw+CNgvD4bBwtpWVdNJL78/atYQH4+t4
+         z11XvEjt41jMXqJZfja5dYnNASoKlLXtEAW4W4tIu0C7i8hdK8q5rLsltaQtxv8Z2u/F
+         fyOBRBbV3pTZmW/gw3NNlCoywY9wknVE7B3n2FUIOTAhLxQvOPoGUoqswUv4pR+6Qx05
+         vfuA==
+X-Gm-Message-State: AOJu0YxAhwiaGVICFbRq9VXns/hnJGKqGuXbxN3XrXi3NShGbqZ70/8q
+	D51lZTmSQQ+AxmX6/GtrOgvAfw==
+X-Google-Smtp-Source: AGHT+IHDEMJ7nt1ExkPfj/pCDlsOnYTgc7QbKoGSYrQjqoZ/kKiNusLS3mdgocUbZzt4jcCErbnAzA==
+X-Received: by 2002:a17:902:bd88:b0:1d0:4706:60fc with SMTP id q8-20020a170902bd8800b001d0470660fcmr9513414pls.17.1702589961391;
+        Thu, 14 Dec 2023 13:39:21 -0800 (PST)
+Received: from dread.disaster.area (pa49-180-125-5.pa.nsw.optusnet.com.au. [49.180.125.5])
+        by smtp.gmail.com with ESMTPSA id g16-20020a1709029f9000b001d3561680aasm3191684plq.82.2023.12.14.13.39.20
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Thu, 14 Dec 2023 13:39:20 -0800 (PST)
+Received: from dave by dread.disaster.area with local (Exim 4.96)
+	(envelope-from <david@fromorbit.com>)
+	id 1rDtQM-008Mua-16;
+	Fri, 15 Dec 2023 08:39:18 +1100
+Date: Fri, 15 Dec 2023 08:39:18 +1100
+From: Dave Chinner <david@fromorbit.com>
+To: Alexander Potapenko <glider@google.com>
+Cc: Dave Chinner <dchinner@redhat.com>,
+	syzbot+a6d6b8fffa294705dbd8@syzkaller.appspotmail.com, hch@lst.de,
+	davem@davemloft.net, herbert@gondor.apana.org.au,
+	linux-crypto@vger.kernel.org, linux-kernel@vger.kernel.org,
+	syzkaller-bugs@googlegroups.com, linux-xfs@vger.kernel.org
+Subject: Re: [syzbot] [crypto?] KMSAN: uninit-value in __crc32c_le_base (3)
+Message-ID: <ZXt2BklghFSmDbhg@dread.disaster.area>
+References: <000000000000f66a3005fa578223@google.com>
+ <20231213104950.1587730-1-glider@google.com>
+ <ZXofF2lXuIUvKi/c@rh>
+ <ZXopGGh/YqNIdtMJ@dread.disaster.area>
+ <CAG_fn=UukAf5sPrwqQtmL7-_dyUs3neBpa75JAaeACUzXsHwOA@mail.gmail.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=utf-8
 Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <CAG_fn=UukAf5sPrwqQtmL7-_dyUs3neBpa75JAaeACUzXsHwOA@mail.gmail.com>
 
-From: Darrick J. Wong <djwong@kernel.org>
+On Thu, Dec 14, 2023 at 03:55:00PM +0100, Alexander Potapenko wrote:
+> On Wed, Dec 13, 2023 at 10:58 PM 'Dave Chinner' via syzkaller-bugs
+> <syzkaller-bugs@googlegroups.com> wrote:
+> >
+> > On Thu, Dec 14, 2023 at 08:16:07AM +1100, Dave Chinner wrote:
+> > > [cc linux-xfs@vger.kernel.org because that's where all questions
+> > > about XFS stuff should be directed, not to random individual
+> > > developers. ]
+> > >
+> > > On Wed, Dec 13, 2023 at 11:49:50AM +0100, Alexander Potapenko wrote:
+> > > > Hi Christoph, Dave,
+> > > >
+> > > > The repro provided by Xingwei indeed works.
+> >
+> > Can you please test the patch below?
+> 
+> It fixed the problem for me, feel free to add:
+> 
+> Tested-by: Alexander Potapenko <glider@google.com>
 
-Overall, this function tries to find and invalidate all buffers for a
-given extent of space on the data device.  The inner for loop in this
-function tries to find all xfs_bufs for a given daddr.  The lengths of
-all possible cached buffers range from 1 fsblock to the largest needed
-to contain a 64k xattr value (~17fsb).  The scan is capped to avoid
-looking at anything buffer going past the given extent.
+Thanks.
 
-Unfortunately, the loop continuation test is wrong -- max_fsbs is the
-largest size we want to scan, not one past that.  Put another way, this
-loop is actually 1-indexed, not 0-indexed.  Therefore, the continuation
-test should use <=, not <.
+> As for the time needed to detect the bug, note that kmemcheck was
+> never used together with syzkaller, so it couldn't have the chance to
+> find it.
+>
+> KMSAN found this bug in April
+> (https://syzkaller.appspot.com/bug?extid=a6d6b8fffa294705dbd8),
 
-As a result, online repairs of btree blocks fails to stale any buffers
-for btrees that are being torn down, which causes later assertions in
-the buffer cache when another thread creates a different-sized buffer.
-This happens in xfs/709 when allocating an inode cluster buffer:
+KMSAN has been used for quite a long time with syzbot, however,
+and it's supposed to find these problems, too. Yet it's only been
+finding this for 6 months?
 
- ------------[ cut here ]------------
- WARNING: CPU: 0 PID: 3346128 at fs/xfs/xfs_message.c:104 assfail+0x3a/0x40 [xfs]
- CPU: 0 PID: 3346128 Comm: fsstress Not tainted 6.7.0-rc4-djwx #rc4
- RIP: 0010:assfail+0x3a/0x40 [xfs]
- Call Trace:
-  <TASK>
-  _xfs_buf_obj_cmp+0x4a/0x50
-  xfs_buf_get_map+0x191/0xba0
-  xfs_trans_get_buf_map+0x136/0x280
-  xfs_ialloc_inode_init+0x186/0x340
-  xfs_ialloc_ag_alloc+0x254/0x720
-  xfs_dialloc+0x21f/0x870
-  xfs_create_tmpfile+0x1a9/0x2f0
-  xfs_rename+0x369/0xfd0
-  xfs_vn_rename+0xfa/0x170
-  vfs_rename+0x5fb/0xc30
-  do_renameat2+0x52d/0x6e0
-  __x64_sys_renameat2+0x4b/0x60
-  do_syscall_64+0x3b/0xe0
-  entry_SYSCALL_64_after_hwframe+0x46/0x4e
+> only
+> half a year after we started mounting XFS images on syzbot.
 
-A later refactoring patch in the online repair series fixed this by
-accident, which is why I didn't notice this until I started testing only
-the patches that are likely to end up in 6.8.
+Really? Where did you get that from?  syzbot has been exercising XFS
+filesystems since 2017 - the bug reports to the XFS list go back at
+least that far.
 
-Fixes: 1c7ce115e521 ("xfs: reap large AG metadata extents when possible")
-Signed-off-by: Darrick J. Wong <djwong@kernel.org>
----
- fs/xfs/scrub/reap.c |    2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
-
-diff --git a/fs/xfs/scrub/reap.c b/fs/xfs/scrub/reap.c
-index 9b6c919db522..f99eca799809 100644
---- a/fs/xfs/scrub/reap.c
-+++ b/fs/xfs/scrub/reap.c
-@@ -251,7 +251,7 @@ xreap_agextent_binval(
- 		max_fsbs = min_t(xfs_agblock_t, agbno_next - bno,
- 				xfs_attr3_rmt_blocks(mp, XFS_XATTR_SIZE_MAX));
- 
--		for (fsbcount = 1; fsbcount < max_fsbs; fsbcount++) {
-+		for (fsbcount = 1; fsbcount <= max_fsbs; fsbcount++) {
- 			struct xfs_buf	*bp = NULL;
- 			xfs_daddr_t	daddr;
- 			int		error;
+-Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
