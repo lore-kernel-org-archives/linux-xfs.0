@@ -1,80 +1,107 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3D8216A346
-	for <linux-xfs@vger.kernel.org>; Thu, 14 Dec 2023 20:14:56 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7B0CB208BD
+	for <linux-xfs@vger.kernel.org>; Thu, 14 Dec 2023 20:25:55 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="JrC4hKSc"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 7D72EC433C8;
-	Thu, 14 Dec 2023 20:14:56 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1702584896;
-	bh=Mc+SdiU5nAOdaGxQZhKcg/VaBJVp1eJjA2y2CgiCcoI=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=JrC4hKScHDEqFGjJ4e9m7kgLcyIt1QfmOcI7NV+iy0VTwEKxGs2P3T0fka4fIz3wa
-	 JpNk7i/v7Sx9JSn6XjFVxfLksPfvAAaWitW3Hh5FiL2QE269mRvnS89K/ocK9j6WTX
-	 WwwMxDLgaKgaQDjoqlspbnCNRRE7JDIwL5ONpKDUdBX3HqqfXXe4dvRindOO687dvl
-	 dadln2QTAQqpvF00yUMDuCtFCqjOdIkqbLEvi7pMmxQHTd4fswi+ka/685eXChrp6I
-	 rvbMUsX4Gb56jVt5hLfTXjlw7wt528Y9qsao/BBWHhKelT07O+v2wgPnHC8Gkz0uHV
-	 HOPVeOuYwcmCw==
-Date: Thu, 14 Dec 2023 12:14:55 -0800
-From: "Darrick J. Wong" <djwong@kernel.org>
-To: Eric Sandeen <sandeen@redhat.com>
-Cc: "linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>
-Subject: Re: [PATCH] xfs: short circuit xfs_growfs_data_private() if delta is
- zero
-Message-ID: <20231214201455.GP361584@frogsfrogsfrogs>
-References: <a6a7bfa4-a7bb-4103-9887-63c69356d187@redhat.com>
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="d0x3P29d"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+	s=mimecast20190719; t=1702585554;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:
+	 content-transfer-encoding:content-transfer-encoding;
+	bh=1Q+Gblh5Z9QB0AwKQwxjCIDjhxJpch+W60X9OSu57RA=;
+	b=d0x3P29d6+EDybNwbupcbvaTILrw4oHy7hzcBFomwXiLmcEI1mYVmZi5jLVU/KMB4HsqZC
+	xjuIIYISkPOSVngpZl3zVspgBOzejSsXnpMun1teuXBSQmEKMsHd1GjYmfCgXylCKef/+N
+	OHi1TXLhltQnUB9WbsAF22iqlsmjM30=
+Received: from mail-ej1-f69.google.com (mail-ej1-f69.google.com
+ [209.85.218.69]) by relay.mimecast.com with ESMTP with STARTTLS
+ (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
+ us-mta-673-QNki4ViDO0uyUvx1X280YA-1; Thu, 14 Dec 2023 15:25:52 -0500
+X-MC-Unique: QNki4ViDO0uyUvx1X280YA-1
+Received: by mail-ej1-f69.google.com with SMTP id a640c23a62f3a-a00dd93a5f9so509458266b.1
+        for <linux-xfs@vger.kernel.org>; Thu, 14 Dec 2023 12:25:52 -0800 (PST)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1702585551; x=1703190351;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-message-state:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=1Q+Gblh5Z9QB0AwKQwxjCIDjhxJpch+W60X9OSu57RA=;
+        b=I3Lg3pKXM8R/iMKbxWTxU072WZlFQtuchOkCAT9ytZ0XCSua0tVJAdOtgd9AzR65uO
+         FdWGoBL1FmzFTSXGs68QfFrYJXfvmbTYsHsgK/bpg2kl6hujPhSKb7P3Op2SJPeCFZ1e
+         GXD4sB6G3pV3mRGZUGSb2MLp1JwvhRmA9dLx1m//Ru6dacHnE6CUbUlJUWYAF6C62kYl
+         iFL27jWraoSte7VWPXxoVpgLDVkCtBck0h0ibKNDEsXNOquEk1l0fmLrj3tLtD3QTsmT
+         deNGaZy3ZgHAx37uYw5J5di8+6lrdtn0kvkaf9C0g7J0MFcMT1z7RkoCbBHQxL6eFMlI
+         DOnQ==
+X-Gm-Message-State: AOJu0YxZUeX29M3QwEZEBzNGXHpplNaAAPTvKmhVUS74oCIkOps1BL7F
+	JzvlLrVvqouitjhJII5ThDAe3JHYL8+o6Zz8MPp11D++ClOv3OCtUW3jYxFzKOJm2geUBU1Mw9Z
+	IiptshQ70N2VYvuScFIpVDDGoaSRO1k2l6U8d9fhA/tUj4970J0qDROFVWTZcfqKS0v5O7mcduw
+	v+0kk=
+X-Received: by 2002:a17:906:dfe2:b0:a1d:8f9:8eac with SMTP id lc2-20020a170906dfe200b00a1d08f98eacmr2930802ejc.249.1702585550919;
+        Thu, 14 Dec 2023 12:25:50 -0800 (PST)
+X-Google-Smtp-Source: AGHT+IF7d0+LpFsD4BcnELLbpp/fToHAkqMHINrZ3CizpHf1yQT+qCfsB+o/7XIipXh11BZoeXmcoA==
+X-Received: by 2002:a17:906:dfe2:b0:a1d:8f9:8eac with SMTP id lc2-20020a170906dfe200b00a1d08f98eacmr2930798ejc.249.1702585550614;
+        Thu, 14 Dec 2023 12:25:50 -0800 (PST)
+Received: from fedora.redhat.com (gw19-pha-stl-mmo-2.avonet.cz. [131.117.213.218])
+        by smtp.gmail.com with ESMTPSA id tq24-20020a170907c51800b00a1f9543a540sm7177131ejc.160.2023.12.14.12.25.50
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Thu, 14 Dec 2023 12:25:50 -0800 (PST)
+From: Pavel Reichl <preichl@redhat.com>
+To: linux-xfs@vger.kernel.org
+Cc: cem@kernel.org
+Subject: [PATCH v2] xfsdump: Fix memory leak
+Date: Thu, 14 Dec 2023 21:25:49 +0100
+Message-ID: <20231214202549.580231-1-preichl@redhat.com>
+X-Mailer: git-send-email 2.43.0
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <a6a7bfa4-a7bb-4103-9887-63c69356d187@redhat.com>
+Content-Transfer-Encoding: 8bit
 
-On Thu, Dec 14, 2023 at 01:28:08PM -0600, Eric Sandeen wrote:
-> Although xfs_growfs_data() doesn't call xfs_growfs_data_private()
-> if in->newblocks == mp->m_sb.sb_dblocks, xfs_growfs_data_private()
-> further massages the new block count so that we don't i.e. try
-> to create a too-small new AG.
-> 
-> This may lead to a delta of "0" in xfs_growfs_data_private(), so
-> we end up in the shrink case and emit the EXPERIMENTAL warning
-> even if we're not changing anything at all.
-> 
-> Fix this by returning straightaway if the block delta is zero.
-> 
-> (nb: in older kernels, the result of entering the shrink case
-> with delta == 0 may actually let an -ENOSPC escape to userspace,
-> which is confusing for users.)
-> 
-> Fixes: fb2fc1720185 ("xfs: support shrinking unused space in the last AG")
-> Signed-off-by: Eric Sandeen <sandeen@redhat.com>
+Fix memory leak found by coverity.
 
-Seems like a reasonable addition...
+>>>     CID 1554295:  Resource leaks  (RESOURCE_LEAK)
+>>>     Failing to save or free storage allocated by strdup(path) leaks it.
+
 Reviewed-by: Darrick J. Wong <djwong@kernel.org>
+Signed-off-by: Pavel Reichl <preichl@redhat.com>
+---
+ restore/tree.c | 15 ++++++++++++++-
+ 1 file changed, 14 insertions(+), 1 deletion(-)
 
---D
+diff --git a/restore/tree.c b/restore/tree.c
+index 6f3180f..4707fdc 100644
+--- a/restore/tree.c
++++ b/restore/tree.c
+@@ -4977,9 +4977,22 @@ static int
+ mkdir_r(char *path)
+ {
+ 	struct stat sbuf;
++	char *path_copy;
++	int ret;
+ 
+ 	if (stat(path, &sbuf) < 0) {
+-		if (mkdir_r(dirname(strdup(path))) < 0)
++		path_copy = strdup(path);
++		if (!path_copy) {
++			mlog(MLOG_TRACE | MLOG_ERROR | MLOG_TREE,
++				_("unable to allocate memory for a path\n"));
++			mlog_exit(EXIT_ERROR, RV_ERROR);
++			exit(1);
++		}
++
++		ret = mkdir_r(dirname(path_copy));
++		free(path_copy);
++
++		if (ret < 0)
+ 			return -1;
+ 		return mkdir(path, 0755);
+ 	}
+-- 
+2.43.0
 
-> ---
-> 
-> diff --git a/fs/xfs/xfs_fsops.c b/fs/xfs/xfs_fsops.c
-> index 7cb75cb6b8e9..80811d16dde0 100644
-> --- a/fs/xfs/xfs_fsops.c
-> +++ b/fs/xfs/xfs_fsops.c
-> @@ -134,6 +134,10 @@ xfs_growfs_data_private(
->  	if (delta < 0 && nagcount < 2)
->  		return -EINVAL;
-> 
-> +	/* No work to do */
-> +	if (delta == 0)
-> +		return 0;
-> +
->  	oagcount = mp->m_sb.sb_agcount;
->  	/* allocate the new per-ag structures */
->  	if (nagcount > oagcount) {
-> 
-> 
