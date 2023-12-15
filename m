@@ -1,115 +1,100 @@
-Received: from mail-oo1-f49.google.com (mail-oo1-f49.google.com [209.85.161.49])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DDC3345BE7
-	for <linux-xfs@vger.kernel.org>; Fri, 15 Dec 2023 20:20:07 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=fromorbit.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3BB8456778
+	for <linux-xfs@vger.kernel.org>; Fri, 15 Dec 2023 21:55:12 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b="EYBeaSRg"
-Received: by mail-oo1-f49.google.com with SMTP id 006d021491bc7-590bb31ccf5so725462eaf.3
-        for <linux-xfs@vger.kernel.org>; Fri, 15 Dec 2023 12:20:07 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=fromorbit-com.20230601.gappssmtp.com; s=20230601; t=1702671607; x=1703276407; darn=vger.kernel.org;
-        h=in-reply-to:content-transfer-encoding:content-disposition
-         :mime-version:references:message-id:subject:cc:to:from:date:from:to
-         :cc:subject:date:message-id:reply-to;
-        bh=9rGPFuIXDoUFunSlYILbcrRj518XphfPDbM4a6b6YIA=;
-        b=EYBeaSRgOoVNMzPc5aq/QV311hWLhaU05UoiWd+IlIB0m6iMPOSAOa2Ajlxs6EDyzw
-         y947xitUReEVm8ccKRLUFzRush11nBHnqNO+IEfyKLpBHJezfg/meZYgq/bKfhtlF0xv
-         n5VMw09rIf1rFk7+NiXr+j816de8VAMpODVbQox/2JAEHBxqGbUsYB4ShpA4Bz1xazGc
-         pyGF1ncUgiq72JAL+h1zKYACNtJZ+y6wnLNmFPYTNEmEv5icnkgQ8VTvr95mPW0ce2S/
-         IAoU7p1B6QRW3I4urbVxZ5Knlwhpp1SEh2RVNZ0P95SATTS0LO/EWeAwdWZh9n/a+s0w
-         GnNw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1702671607; x=1703276407;
-        h=in-reply-to:content-transfer-encoding:content-disposition
-         :mime-version:references:message-id:subject:cc:to:from:date
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=9rGPFuIXDoUFunSlYILbcrRj518XphfPDbM4a6b6YIA=;
-        b=u2IIMysjiq9N5bJmZPSDxiLm+nH9qY5HdSJ4mAFrI+yNkfP4lw+ojrpWLT7N7DBvy0
-         zYA1nbxPz/+SJD8ksW2Y30mE36aMaX7Zq3wBUhO6UYkaXj9aWa499nWoy4PvLV/tjKxR
-         CLPfjk6UQDCSzuvzfzDtDZOHHVoym9NZ/2YkEHJcf6NB4L7HkJew8gBH2mAMorMRzpUT
-         oI4xiCFdh2tNo7IsKTqbJnJEi4/AUdHwEEmKdkMBqAA7hsn7k1clp63NEj4VwChIRngy
-         /wknPpSsmXvnBjHyxe6OVoCwPDlrrA3Zfxq93yRXvrl+oLHyUFsWWnGTsgmoUW4Dh9Xb
-         UNtA==
-X-Gm-Message-State: AOJu0YzELG7N7+LlIk+hMI/6KE6njiqBJpegsGAP4BStG+rokr/veHUa
-	1khUgoWe7ErEyH8cGt3s+fkq2A==
-X-Google-Smtp-Source: AGHT+IGx230ebDzTaPe5+wA9jT2q8gjcSaNK5k9KLEwcTzmsQyVGJ9QGsE1BfY+4/r/FPBrcrk15iQ==
-X-Received: by 2002:a05:6358:3106:b0:16e:43a1:687f with SMTP id c6-20020a056358310600b0016e43a1687fmr15327755rwe.4.1702671606930;
-        Fri, 15 Dec 2023 12:20:06 -0800 (PST)
-Received: from dread.disaster.area (pa49-180-125-5.pa.nsw.optusnet.com.au. [49.180.125.5])
-        by smtp.gmail.com with ESMTPSA id n19-20020aa78a53000000b006ce61c9495bsm14420743pfa.10.2023.12.15.12.20.06
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 15 Dec 2023 12:20:06 -0800 (PST)
-Received: from dave by dread.disaster.area with local (Exim 4.96)
-	(envelope-from <david@fromorbit.com>)
-	id 1rEEfD-008mzz-1u;
-	Sat, 16 Dec 2023 07:20:03 +1100
-Date: Sat, 16 Dec 2023 07:20:03 +1100
-From: Dave Chinner <david@fromorbit.com>
-To: Wengang Wang <wen.gang.wang@oracle.com>
-Cc: "Darrick J. Wong" <djwong@kernel.org>,
-	"linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>
-Subject: Re: [PATCH 0/9] xfs file non-exclusive online defragment
-Message-ID: <ZXy08z140/XsCijh@dread.disaster.area>
-References: <20231214170530.8664-1-wen.gang.wang@oracle.com>
- <20231214213502.GI361584@frogsfrogsfrogs>
- <ZXvEtvRm1rkT03Sb@dread.disaster.area>
- <97269730-511F-438B-9840-59CAF7997FC2@oracle.com>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="MRRwH2OA"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 96310C433C7;
+	Fri, 15 Dec 2023 21:55:12 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1702677312;
+	bh=yQiZLv7CHrS0se9lS/YvEFTHBctWx+Rk6WfYWvbwpic=;
+	h=Date:Subject:From:To:Cc:From;
+	b=MRRwH2OAzNdMhS94iO3SlCR0SP0hB34y4c7puag85enJNDtuWwqcKq7KKw0NTDQg2
+	 ijH/lY1SgoOYccZXg/0FYoWLppJgw9s3Xiwofm4EqKEgWWQEI2SRZn3q/IJT4bAZwF
+	 0RjUHSxmHXd5ab8JIRR52QUxj5L6ZxpFIvoUJ0goBvdUHU+Ka4Lp6S/TTP5DDxIhuH
+	 RZ4RkrATftkX0FcmxGBRj9p0yOqLNIHGvb3NEzwVGM0uGovOX1PUAKSHaUjCDoy82D
+	 QRWKYWk8hjhKaDjDLkVeUn4/gTiHSj7Cs2QHCnd0av2msedtql3ToqcH+ASXnKK7O4
+	 brS5zZNfIjlzA==
+Date: Fri, 15 Dec 2023 13:55:11 -0800
+Subject: [GIT PULL 1/6] xfs: prepare repair for bulk loading
+From: "Darrick J. Wong" <djwong@kernel.org>
+To: chandanbabu@kernel.org, djwong@kernel.org, hch@lst.de
+Cc: linux-xfs@vger.kernel.org
+Message-ID: <170267713236.2577253.8439413037561169584.stg-ugh@frogsfrogsfrogs>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <97269730-511F-438B-9840-59CAF7997FC2@oracle.com>
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
 
-On Fri, Dec 15, 2023 at 05:07:36PM +0000, Wengang Wang wrote:
-> > On Dec 14, 2023, at 7:15 PM, Dave Chinner <david@fromorbit.com> wrote:
-> > If we were to implement this as, say, and xfs_spaceman operation
-> > then all the user controlled policy bits (like inter chunk delays,
-> > chunk sizes, etc) then just becomes command line parameters for the
-> > defrag command...
-> 
-> 
-> Ha, the idea from user space is very interesting!
-> So far I have the following thoughts:
-> 1). If the FICLONERANGE/FALLOC_FL_UNSHARE_RANGE/FALLOC_FL_PUNCH works on a FS without reflink
->      enabled.
+Hi Chandan,
 
-Personally, I don't care if reflink is not enabled. It's the default
-for new filesystems, and it's cost free for anyone who is not
-using reflink so there is no reason for anyone to turn it off.
+Please pull this branch with changes for xfs for 6.8-rc1.
 
-What I'm saying is "don't compromise the design of the functionality
-required just because someone might choose to disable that
-functionality".
+As usual, I did a test-merge with the main upstream branch as of a few
+minutes ago, and didn't see any conflicts.  Please let me know if you
+encounter any problems.
 
-> 2). What if there is a big hole in the file to be defragmented? Will it cause block allocation and writing blocks with
->     zeroes.
+--D
 
-Unshare skips holes.
+The following changes since commit 0573676fdde7ce3829ee6a42a8e5a56355234712:
 
-> 3). In case a big range of the file is good (not much fragmented), the ‘defrag’ on that range is not necessary.
+xfs: initialise di_crc in xfs_log_dinode (2023-12-15 09:33:29 +0530)
 
-xfs_fsr already deals with this - it uses XFS_IOC_GETBMAPX to scan
-the extent list to determine what to defrag, to replicate unwritten
-regions and to skip holes. Having to scan the extent list is kinda
-expected for a defrag utility
+are available in the Git repository at:
 
-> 4). The use space defrag can’t use a try-lock mode to make IO requests have priorities. I am not sure if this is very important.
+https://git.kernel.org/pub/scm/linux/kernel/git/djwong/xfs-linux.git tags/repair-prep-for-bulk-loading-6.8_2023-12-15
 
-As long as the individual operations aren't holding locks for a long
-time, I doubt it matters. And you can use ionice to make sure the IO
-being issued has background priority in the block scheduler...
+for you to fetch changes up to e069d549705e49841247acf9b3176744e27d5425:
 
-Cheers,
+xfs: constrain dirty buffers while formatting a staged btree (2023-12-15 10:03:29 -0800)
 
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+----------------------------------------------------------------
+xfs: prepare repair for bulk loading [v28.3]
+
+Before we start merging the online repair functions, let's improve the
+bulk loading code a bit.  First, we need to fix a misinteraction between
+the AIL and the btree bulkloader wherein the delwri at the end of the
+bulk load fails to queue a buffer for writeback if it happens to be on
+the AIL list.
+
+Second, we introduce a defer ops barrier object so that the process of
+reaping blocks after a repair cannot queue more than two extents per EFI
+log item.  This increases our exposure to leaking blocks if the system
+goes down during a reap, but also should prevent transaction overflows,
+which result in the system going down.
+
+Third, we change the bulkloader itself to copy multiple records into a
+block if possible, and add some debugging knobs so that developers can
+control the slack factors, just like they can do for xfs_repair.
+
+This has been running on the djcloud for months with no problems.  Enjoy!
+
+Signed-off-by: Darrick J. Wong <djwong@kernel.org>
+
+----------------------------------------------------------------
+Darrick J. Wong (6):
+xfs: force all buffers to be written during btree bulk load
+xfs: set XBF_DONE on newly formatted btree block that are ready for writing
+xfs: read leaf blocks when computing keys for bulkloading into node blocks
+xfs: add debug knobs to control btree bulk load slack factors
+xfs: move btree bulkload record initialization to ->get_record implementations
+xfs: constrain dirty buffers while formatting a staged btree
+
+fs/xfs/libxfs/xfs_btree.c         |  2 +-
+fs/xfs/libxfs/xfs_btree.h         |  3 ++
+fs/xfs/libxfs/xfs_btree_staging.c | 78 ++++++++++++++++++++++++++++-----------
+fs/xfs/libxfs/xfs_btree_staging.h | 25 ++++++++++---
+fs/xfs/scrub/newbt.c              | 12 ++++--
+fs/xfs/xfs_buf.c                  | 44 ++++++++++++++++++++--
+fs/xfs/xfs_buf.h                  |  1 +
+fs/xfs/xfs_globals.c              | 12 ++++++
+fs/xfs/xfs_sysctl.h               |  2 +
+fs/xfs/xfs_sysfs.c                | 54 +++++++++++++++++++++++++++
+10 files changed, 198 insertions(+), 35 deletions(-)
+
