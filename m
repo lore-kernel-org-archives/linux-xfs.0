@@ -1,17 +1,16 @@
 Received: from smtp.gentoo.org (woodpecker.gentoo.org [140.211.166.183])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 44622468C
-	for <linux-xfs@vger.kernel.org>; Fri, 15 Dec 2023 01:37:03 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2D13A468E
+	for <linux-xfs@vger.kernel.org>; Fri, 15 Dec 2023 01:37:04 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gentoo.org
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gentoo.org
 From: Sam James <sam@gentoo.org>
 To: linux-xfs@vger.kernel.org
-Cc: Sam James <sam@gentoo.org>,
-	Felix Janda <felix.janda@posteo.de>
-Subject: [PATCH v3 2/4] io: Assert we have a sensible off_t
-Date: Fri, 15 Dec 2023 01:36:41 +0000
-Message-ID: <20231215013657.1995699-2-sam@gentoo.org>
+Cc: Sam James <sam@gentoo.org>
+Subject: [PATCH v3 3/4] build: Request 64-bit time_t where possible
+Date: Fri, 15 Dec 2023 01:36:42 +0000
+Message-ID: <20231215013657.1995699-3-sam@gentoo.org>
 X-Mailer: git-send-email 2.43.0
 In-Reply-To: <20231215013657.1995699-1-sam@gentoo.org>
 References: <20231215013657.1995699-1-sam@gentoo.org>
@@ -23,37 +22,31 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-Suggested by Darrick during review of the first LFSization patch. Assert
-we have an off_t capable of handling >=4GiB as a failsafe against the macros
-not doing the right thing.
+Suggested by Darrick during LFS review. We take the same approach as in
+5c0599b721d1d232d2e400f357abdf2736f24a97 ('Fix building xfsprogs on 32-bit platforms')
+to avoid autoconf hell - just take the tried & tested approach which is working
+fine for us with LFS already.
 
-This is not the first time we've been on this adventure in XFS:
-* 5c0599b721d1d232d2e400f357abdf2736f24a97 ('Fix building xfsprogs on 32-bit platforms')
-* 65b4f302b7a1ddc14684ffbf8690227a67362586 ('platform: remove use of off64_t')
-* 7fda99a0c2970f7da2661118b438e64dec1751b4 ('xfs.h: require transparent LFS for all users')
-* ebe750ed747cbc59a5675193cdcbc3459ebda107 ('configure: error out when LFS does not work')
-* 69268aaec5fb39ad71674336c0f6f75ca9f57999 ('configure: use AC_SYS_LARGEFILE')
-
-Cc: Felix Janda <felix.janda@posteo.de>
 Signed-off-by: Sam James <sam@gentoo.org>
 ---
- io/init.c | 3 +++
- 1 file changed, 3 insertions(+)
+ include/builddefs.in | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-diff --git a/io/init.c b/io/init.c
-index 104cd2c1..2fb598ac 100644
---- a/io/init.c
-+++ b/io/init.c
-@@ -44,6 +44,9 @@ init_cvtnum(
- static void
- init_commands(void)
- {
-+	/* We're only interested in supporting an off_t which can handle >=4GiB. */
-+	BUILD_BUG_ON(sizeof(off_t) < 8);
-+
- 	attr_init();
- 	bmap_init();
- 	bulkstat_init();
+diff --git a/include/builddefs.in b/include/builddefs.in
+index 147c9b98..969254f3 100644
+--- a/include/builddefs.in
++++ b/include/builddefs.in
+@@ -13,8 +13,8 @@ OPTIMIZER = @opt_build@
+ MALLOCLIB = @malloc_lib@
+ LOADERFLAGS = @LDFLAGS@
+ LTLDFLAGS = @LDFLAGS@
+-CFLAGS = @CFLAGS@ -D_FILE_OFFSET_BITS=64 -Wno-address-of-packed-member
+-BUILD_CFLAGS = @BUILD_CFLAGS@ -D_FILE_OFFSET_BITS=64
++CFLAGS = @CFLAGS@ -D_FILE_OFFSET_BITS=64 -D_TIME_BITS=64 -Wno-address-of-packed-member
++BUILD_CFLAGS = @BUILD_CFLAGS@ -D_FILE_OFFSET_BITS=64 -D_TIME_BITS=64
+ 
+ # make sure we don't pick up whacky LDFLAGS from the make environment and
+ # only use what we calculate from the configured options above.
 -- 
 2.43.0
 
