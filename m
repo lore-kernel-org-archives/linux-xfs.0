@@ -1,121 +1,124 @@
-Received: from mgamail.intel.com (mgamail.intel.com [192.55.52.151])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-qv1-f45.google.com (mail-qv1-f45.google.com [209.85.219.45])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 139622DB9A
-	for <linux-xfs@vger.kernel.org>; Fri, 15 Dec 2023 14:09:41 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A904839FFD
+	for <linux-xfs@vger.kernel.org>; Fri, 15 Dec 2023 14:42:31 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=google.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="eaa+bIch"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1702649382; x=1734185382;
-  h=date:from:to:cc:subject:message-id:references:
-   mime-version:in-reply-to;
-  bh=/Bs7Y+0AkZ8oK3yIhG+x0kEWjEfR6+6/23kRL1Rp62c=;
-  b=eaa+bIchC3UtdD2VsXs/95v9hdib+SLii81RjBPxenfcJ4VWCK9bPZeV
-   homkCRDE7Ewl0aGZFxuuKXSRvPCNs4ytLIRJ+2RRFBlHbHjrc24oOZHJ2
-   4dMrsx9YAYi64TketGQVXES2PHl8L7rAyQ7TgcSxWV9O5mybtauNnYx29
-   /9EwKyGRgTrFK9vSe4VmzF3tL2ouD2o10cSHCz9LqIwuuZNudlEp3ZPRm
-   0lGn5sLsmp8ud8vUasXpxncNU4cHYehP0SduPRLJ7RiB5yoOM+hW+0Qll
-   qic/ZS0/YYRRSPVZbeKODtozMAQmSIDU7dCpJ2QhnlrrQVjt0UKvYvlvX
-   A==;
-X-IronPort-AV: E=McAfee;i="6600,9927,10924"; a="375425867"
-X-IronPort-AV: E=Sophos;i="6.04,278,1695711600"; 
-   d="scan'208";a="375425867"
-Received: from fmsmga008.fm.intel.com ([10.253.24.58])
-  by fmsmga107.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 15 Dec 2023 06:09:41 -0800
-X-ExtLoop1: 1
-X-IronPort-AV: E=McAfee;i="6600,9927,10924"; a="840673687"
-X-IronPort-AV: E=Sophos;i="6.04,278,1695711600"; 
-   d="scan'208";a="840673687"
-Received: from lkp-server02.sh.intel.com (HELO b07ab15da5fe) ([10.239.97.151])
-  by fmsmga008.fm.intel.com with ESMTP; 15 Dec 2023 06:09:40 -0800
-Received: from kbuild by b07ab15da5fe with local (Exim 4.96)
-	(envelope-from <lkp@intel.com>)
-	id 1rE8sj-0000If-2z;
-	Fri, 15 Dec 2023 14:09:37 +0000
-Date: Fri, 15 Dec 2023 22:09:27 +0800
-From: kernel test robot <lkp@intel.com>
-To: Wengang Wang <wen.gang.wang@oracle.com>, linux-xfs@vger.kernel.org
-Cc: oe-kbuild-all@lists.linux.dev, wen.gang.wang@oracle.com
-Subject: Re: [PATCH 2/9] xfs: defrag: initialization and cleanup
-Message-ID: <202312152127.vB6dhbqO-lkp@intel.com>
-References: <20231214170530.8664-3-wen.gang.wang@oracle.com>
+	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="s3kuor0o"
+Received: by mail-qv1-f45.google.com with SMTP id 6a1803df08f44-67ee17ab697so5540366d6.0
+        for <linux-xfs@vger.kernel.org>; Fri, 15 Dec 2023 06:42:31 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=google.com; s=20230601; t=1702651350; x=1703256150; darn=vger.kernel.org;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=aGMYxeknzC7gjgFIn010QvpivnBYXCaeK7U8Zp8Dqns=;
+        b=s3kuor0ortf4gI9VX9IlGJh5gT8HeElsb18TwHJRc2oQQ4mHRepVR2n+ODPkBAY+Nx
+         H8JFyVglnsbqlNlkZsHPn+T3gSB2oA10HGvQkkq7UPmA4udR75x5zVoblvovqUtE5S/2
+         pwxdn92vpW0faVF2dBJrCr6e7hPn3r3Q913YKforl0UlctOLHPb6zHKPqQOyHkNfp5/N
+         OWOKTiRpBIrYJzmGN4LZMi5OOZuBmoYWR7W8FN5kfU/PGYoeiA/Ha2o6IhgcuSE7RlWx
+         4XPdVQQfa7mMG9Cwr/syXEJMsYD40Ttp35nXtMrBJ0qZSIRZAgobTeARkd0JtFwPCPOJ
+         aMGQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1702651350; x=1703256150;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=aGMYxeknzC7gjgFIn010QvpivnBYXCaeK7U8Zp8Dqns=;
+        b=aM3FCJ2eLfHVhBqk+CArSSR/gi5SJE3NuKq75gw3SNs5CCqR5C0KBL+cEues0hsezw
+         9UgSqo8rz4MgtrEoMnYl3DF70Wvh8Pkd5wGgV5jHk2ugNqUlRybtrwQCbEjvFy0L7S6J
+         kP0UPfTBU9f3dh93wx0f+NmtRX1s3ob84ZCZ1fkcJgAePAFJUodUrgOt2lUCshB2bx9W
+         WD5yKEoi+cpjwPPRsYf8bR3Efs3lrT7Myov85/vUowYSBQ6alnbGRp5Vnyh8Csx0q9co
+         z3OuCIa2a7cC1V6ktqpq5r1DJ2HJ6ZMtGF16QPKbSaO+1IqdKZa+YRLzIS9iaZYmUDFh
+         C7Ow==
+X-Gm-Message-State: AOJu0YxvBUV92wK/xvyG5925Doy01+xNUe9B5F/rngKuF8E/okBL+CAO
+	goYaWDWj1Iu/vN/fQTyRK2wBNF9uNKAGmiwu7FXfwQ==
+X-Google-Smtp-Source: AGHT+IFEP4GTH7PwOKt2GmIEi320wj42DmjXITQoebReQVa4qOl1P4PdTy3zrAT0HyjDjZcIXiRIU+gdyZRM37a8Siw=
+X-Received: by 2002:a05:6214:226d:b0:67f:f0d:1bda with SMTP id
+ gs13-20020a056214226d00b0067f0f0d1bdamr2911619qvb.110.1702651350277; Fri, 15
+ Dec 2023 06:42:30 -0800 (PST)
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20231214170530.8664-3-wen.gang.wang@oracle.com>
+References: <000000000000f66a3005fa578223@google.com> <20231213104950.1587730-1-glider@google.com>
+ <ZXofF2lXuIUvKi/c@rh> <ZXopGGh/YqNIdtMJ@dread.disaster.area>
+ <CAG_fn=UukAf5sPrwqQtmL7-_dyUs3neBpa75JAaeACUzXsHwOA@mail.gmail.com> <ZXt2BklghFSmDbhg@dread.disaster.area>
+In-Reply-To: <ZXt2BklghFSmDbhg@dread.disaster.area>
+From: Alexander Potapenko <glider@google.com>
+Date: Fri, 15 Dec 2023 15:41:49 +0100
+Message-ID: <CAG_fn=VqSEyt+vwZ7viviiJtipPPYyzEhkuDjdnmRcW-UXZkYg@mail.gmail.com>
+Subject: Re: [syzbot] [crypto?] KMSAN: uninit-value in __crc32c_le_base (3)
+To: Dave Chinner <david@fromorbit.com>
+Cc: Dave Chinner <dchinner@redhat.com>, 
+	syzbot+a6d6b8fffa294705dbd8@syzkaller.appspotmail.com, hch@lst.de, 
+	davem@davemloft.net, herbert@gondor.apana.org.au, 
+	linux-crypto@vger.kernel.org, linux-kernel@vger.kernel.org, 
+	syzkaller-bugs@googlegroups.com, linux-xfs@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-Hi Wengang,
+On Thu, Dec 14, 2023 at 10:39=E2=80=AFPM 'Dave Chinner' via syzkaller-bugs
+<syzkaller-bugs@googlegroups.com> wrote:
+>
+> On Thu, Dec 14, 2023 at 03:55:00PM +0100, Alexander Potapenko wrote:
+> > On Wed, Dec 13, 2023 at 10:58=E2=80=AFPM 'Dave Chinner' via syzkaller-b=
+ugs
+> > <syzkaller-bugs@googlegroups.com> wrote:
+> > >
+> > > On Thu, Dec 14, 2023 at 08:16:07AM +1100, Dave Chinner wrote:
+> > > > [cc linux-xfs@vger.kernel.org because that's where all questions
+> > > > about XFS stuff should be directed, not to random individual
+> > > > developers. ]
+> > > >
+> > > > On Wed, Dec 13, 2023 at 11:49:50AM +0100, Alexander Potapenko wrote=
+:
+> > > > > Hi Christoph, Dave,
+> > > > >
+> > > > > The repro provided by Xingwei indeed works.
+> > >
+> > > Can you please test the patch below?
+> >
+> > It fixed the problem for me, feel free to add:
+> >
+> > Tested-by: Alexander Potapenko <glider@google.com>
+>
+> Thanks.
+>
+> > As for the time needed to detect the bug, note that kmemcheck was
+> > never used together with syzkaller, so it couldn't have the chance to
+> > find it.
+> >
+> > KMSAN found this bug in April
+> > (https://syzkaller.appspot.com/bug?extid=3Da6d6b8fffa294705dbd8),
+>
+> KMSAN has been used for quite a long time with syzbot, however,
+> and it's supposed to find these problems, too. Yet it's only been
+> finding this for 6 months?
+>
+> > only
+> > half a year after we started mounting XFS images on syzbot.
+>
+> Really? Where did you get that from?  syzbot has been exercising XFS
+> filesystems since 2017 - the bug reports to the XFS list go back at
+> least that far.
 
-kernel test robot noticed the following build warnings:
+You are right, syzbot used to mount XFS way before 2022.
+On the other hand, last fall there were some major changes to the way
+syz_mount_image() works, so I am attributing the newly detected bugs
+to those changes.
+Unfortunately we don't have much insight into reasons behind syzkaller
+being able to trigger one bug or another: once a bug is found for the
+first time, the likelihood to trigger it again increases, but finding
+it initially might be tricky.
 
-[auto build test WARNING on linus/master]
-[also build test WARNING on v6.7-rc5 next-20231215]
-[cannot apply to xfs-linux/for-next]
-[If your patch is applied to the wrong git tree, kindly drop us a note.
-And when submitting patch, we suggest to use '--base' as documented in
-https://git-scm.com/docs/git-format-patch#_base_tree_information]
-
-url:    https://github.com/intel-lab-lkp/linux/commits/Wengang-Wang/xfs-defrag-introduce-strucutures-and-numbers/20231215-011549
-base:   linus/master
-patch link:    https://lore.kernel.org/r/20231214170530.8664-3-wen.gang.wang%40oracle.com
-patch subject: [PATCH 2/9] xfs: defrag: initialization and cleanup
-config: loongarch-defconfig (https://download.01.org/0day-ci/archive/20231215/202312152127.vB6dhbqO-lkp@intel.com/config)
-compiler: loongarch64-linux-gcc (GCC) 13.2.0
-reproduce (this is a W=1 build): (https://download.01.org/0day-ci/archive/20231215/202312152127.vB6dhbqO-lkp@intel.com/reproduce)
-
-If you fix the issue in a separate patch/commit (i.e. not just a new version of
-the same patch/commit), kindly add following tags
-| Reported-by: kernel test robot <lkp@intel.com>
-| Closes: https://lore.kernel.org/oe-kbuild-all/202312152127.vB6dhbqO-lkp@intel.com/
-
-All warnings (new ones prefixed by >>):
-
->> fs/xfs/xfs_defrag.c:58:6: warning: no previous prototype for 'xfs_initialize_defrag' [-Wmissing-prototypes]
-      58 | void xfs_initialize_defrag(struct xfs_mount *mp)
-         |      ^~~~~~~~~~~~~~~~~~~~~
->> fs/xfs/xfs_defrag.c:67:6: warning: no previous prototype for 'xfs_stop_wait_defrags' [-Wmissing-prototypes]
-      67 | void xfs_stop_wait_defrags(struct xfs_mount *mp)
-         |      ^~~~~~~~~~~~~~~~~~~~~
-   fs/xfs/xfs_defrag.c:80:5: warning: no previous prototype for 'xfs_file_defrag' [-Wmissing-prototypes]
-      80 | int xfs_file_defrag(struct file *filp, struct xfs_defrag *defrag)
-         |     ^~~~~~~~~~~~~~~
-
-
-vim +/xfs_initialize_defrag +58 fs/xfs/xfs_defrag.c
-
-    56	
-    57	/* initialization called for new mount */
-  > 58	void xfs_initialize_defrag(struct xfs_mount *mp)
-    59	{
-    60		sema_init(&mp->m_defrag_lock, 1);
-    61		mp->m_nr_defrag = 0;
-    62		mp->m_defrag_task = NULL;
-    63		INIT_LIST_HEAD(&mp->m_defrag_list);
-    64	}
-    65	
-    66	/* stop all the defragmentations on this mount and wait until they really stopped */
-  > 67	void xfs_stop_wait_defrags(struct xfs_mount *mp)
-    68	{
-    69		down(&mp->m_defrag_lock);
-    70		if (list_empty(&mp->m_defrag_list)) {
-    71			up(&mp->m_defrag_lock);
-    72			return;
-    73		}
-    74		ASSERT(mp->m_defrag_task);
-    75		up(&mp->m_defrag_lock);
-    76		kthread_stop(mp->m_defrag_task);
-    77		mp->m_defrag_task = NULL;
-    78	}
-    79	
-
--- 
-0-DAY CI Kernel Test Service
-https://github.com/intel/lkp-tests/wiki
+I don't understand much how trivial is the repro at
+https://gist.github.com/xrivendell7/c7bb6ddde87a892818ed1ce206a429c4,
+but overall we are not drilling deep enough into XFS.
+https://storage.googleapis.com/syzbot-assets/8547e3dd1cca/ci-upstream-kmsan=
+-gce-c7402612.html
+(ouch, 230Mb!) shows very limited coverage.
