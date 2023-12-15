@@ -1,122 +1,166 @@
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-pf1-f170.google.com (mail-pf1-f170.google.com [209.85.210.170])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 78D70808
-	for <linux-xfs@vger.kernel.org>; Fri, 15 Dec 2023 02:28:20 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6640A111E
+	for <linux-xfs@vger.kernel.org>; Fri, 15 Dec 2023 03:15:07 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=fromorbit.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="V/sN+wwe"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1702607299;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 in-reply-to:in-reply-to:references:references;
-	bh=IgS/vwRdBBmypWL18nvZwV/FWJEphVJ/VHhyXn/HPOs=;
-	b=V/sN+wweSiScI6kqCVUd97N5EqvFjFgJOyg4yora1r2gDmQtEXIlzpQcPLwfjXmctxUizR
-	qLOCym46f9NnZU+Kg5gpNH7bHFU4oNEWj9zGbQ7hfLtSj0CC67UHnL1KPS4YQR7ZNOMLxg
-	7R+J1Bh1s5gdyNrYAQnBptoK8tmPxG8=
-Received: from mimecast-mx02.redhat.com (mimecast-mx02.redhat.com
- [66.187.233.88]) by relay.mimecast.com with ESMTP with STARTTLS
- (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
- us-mta-82-mSb3xmusMoa9ZEZVR7neRw-1; Thu, 14 Dec 2023 21:28:16 -0500
-X-MC-Unique: mSb3xmusMoa9ZEZVR7neRw-1
-Received: from smtp.corp.redhat.com (int-mx09.intmail.prod.int.rdu2.redhat.com [10.11.54.9])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-	(No client certificate requested)
-	by mimecast-mx02.redhat.com (Postfix) with ESMTPS id 00C1880BEC3;
-	Fri, 15 Dec 2023 02:28:15 +0000 (UTC)
-Received: from fedora (unknown [10.72.116.126])
-	by smtp.corp.redhat.com (Postfix) with ESMTPS id E7A71492BC6;
-	Fri, 15 Dec 2023 02:28:04 +0000 (UTC)
-Date: Fri, 15 Dec 2023 10:27:59 +0800
-From: Ming Lei <ming.lei@redhat.com>
-To: John Garry <john.g.garry@oracle.com>
-Cc: axboe@kernel.dk, kbusch@kernel.org, hch@lst.de, sagi@grimberg.me,
-	jejb@linux.ibm.com, martin.petersen@oracle.com, djwong@kernel.org,
-	viro@zeniv.linux.org.uk, brauner@kernel.org, dchinner@redhat.com,
-	jack@suse.cz, linux-block@vger.kernel.org,
-	linux-kernel@vger.kernel.org, linux-nvme@lists.infradead.org,
-	linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
-	tytso@mit.edu, jbongio@google.com, linux-scsi@vger.kernel.org,
-	jaswin@linux.ibm.com, bvanassche@acm.org, ming.lei@redhat.com
-Subject: Re: [PATCH v2 08/16] block: Limit atomic write IO size according to
- atomic_write_max_sectors
-Message-ID: <ZXu5rykouOcNOSa1@fedora>
-References: <20231212110844.19698-1-john.g.garry@oracle.com>
- <20231212110844.19698-9-john.g.garry@oracle.com>
+	dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b="KwTgf6ra"
+Received: by mail-pf1-f170.google.com with SMTP id d2e1a72fcca58-6cebcf8a48aso171073b3a.3
+        for <linux-xfs@vger.kernel.org>; Thu, 14 Dec 2023 19:15:07 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=fromorbit-com.20230601.gappssmtp.com; s=20230601; t=1702610106; x=1703214906; darn=vger.kernel.org;
+        h=in-reply-to:content-transfer-encoding:content-disposition
+         :mime-version:references:message-id:subject:cc:to:from:date:from:to
+         :cc:subject:date:message-id:reply-to;
+        bh=3XSr0DsbceYdFnNAdf0a1lLPpDFEtWjXHycTkIhOzfk=;
+        b=KwTgf6raZCX33zuAXiRfuds2trjtjJ3ZEX3lZXwh6907RL/N8PoeZJON5SNg+6N9Ef
+         UoVYZkarv+8WMfO+A769OpyfjEdwsQfsvCdVSRUJsiSLr4swyJb3RE+kcjxXlFMKe+yT
+         vHKqnDc52nPXsM0ZlLvTGsnwcF9RExc/SyjY+qYXpsk844TCEfFein4RLgkkWbJjKrCM
+         Bw2jH3wTyBRWQlm6n+Cpk81o86Gdf5ilva3g94r125rvDng86MA+j61d9LUk2VxkfBhU
+         m0etCqFEImcIC5DIFw5dUw+gOblnZ5fbVJI3GVOlE3EgqfA+XqiewhvXwJcxyV7EvomA
+         bFow==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1702610106; x=1703214906;
+        h=in-reply-to:content-transfer-encoding:content-disposition
+         :mime-version:references:message-id:subject:cc:to:from:date
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=3XSr0DsbceYdFnNAdf0a1lLPpDFEtWjXHycTkIhOzfk=;
+        b=im30OqwoavsL8WfnHCUEcBiHqeiIS5qk6ePn/YdUw5iNJaB4bv8X/Xq8Z9z/OLWOh4
+         QV6+YjOIOHIpPJ31eFW70aiY20iDG8sOWjnFeWjJBHriTedDp7VjwoWbb7pLzlGbm2K5
+         Z3mVdbcBCU3dFwZJlN0CtOAqBoDRlcG2POj/p0CZ0M08JMMbqziWZgB7IDziLz7ZG3Oo
+         Xmf3/AZ03vn5h0Gjz1Jhryd4sRJEPZs/Bgbsg+E2wxBBb32Duj8enJD7xzDAWslIw32k
+         LZHdwj9RKodzYXBUDX4AdXZRqA4Vflx4MAAkAi137Bkn2C1KZbGtBx7Xh84jE6UUq1uT
+         gwhw==
+X-Gm-Message-State: AOJu0Yy6T/XExA/k0Lp3AiVFiPaovM7jF2GUi7yKk/I4zBxYwDRky3Va
+	ZXSHbFa/+XOMX9V76JLL74v4sDqYEoBRYQSMz6g=
+X-Google-Smtp-Source: AGHT+IEShA0lKUvgJrBGYnvAE5gb3wrTkJhllQzpYeonmkAU/tb3M38rIYVk52f3QOrkGH2WWReU7g==
+X-Received: by 2002:a05:6a00:194d:b0:6ce:4927:2811 with SMTP id s13-20020a056a00194d00b006ce49272811mr12866594pfk.22.1702610106230;
+        Thu, 14 Dec 2023 19:15:06 -0800 (PST)
+Received: from dread.disaster.area (pa49-180-125-5.pa.nsw.optusnet.com.au. [49.180.125.5])
+        by smtp.gmail.com with ESMTPSA id z17-20020aa78891000000b006cdcfe985f2sm12818461pfe.145.2023.12.14.19.15.05
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Thu, 14 Dec 2023 19:15:05 -0800 (PST)
+Received: from dave by dread.disaster.area with local (Exim 4.96)
+	(envelope-from <david@fromorbit.com>)
+	id 1rDyfG-008TH3-1y;
+	Fri, 15 Dec 2023 14:15:02 +1100
+Date: Fri, 15 Dec 2023 14:15:02 +1100
+From: Dave Chinner <david@fromorbit.com>
+To: "Darrick J. Wong" <djwong@kernel.org>
+Cc: Wengang Wang <wen.gang.wang@oracle.com>, linux-xfs@vger.kernel.org
+Subject: Re: [PATCH 0/9] xfs file non-exclusive online defragment
+Message-ID: <ZXvEtvRm1rkT03Sb@dread.disaster.area>
+References: <20231214170530.8664-1-wen.gang.wang@oracle.com>
+ <20231214213502.GI361584@frogsfrogsfrogs>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=utf-8
 Content-Disposition: inline
-In-Reply-To: <20231212110844.19698-9-john.g.garry@oracle.com>
-X-Scanned-By: MIMEDefang 3.4.1 on 10.11.54.9
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <20231214213502.GI361584@frogsfrogsfrogs>
 
-On Tue, Dec 12, 2023 at 11:08:36AM +0000, John Garry wrote:
-> Currently an IO size is limited to the request_queue limits max_sectors.
-> Limit the size for an atomic write to queue limit atomic_write_max_sectors
-> value.
+On Thu, Dec 14, 2023 at 01:35:02PM -0800, Darrick J. Wong wrote:
+> On Thu, Dec 14, 2023 at 09:05:21AM -0800, Wengang Wang wrote:
+> > Background:
+> > We have the existing xfs_fsr tool which do defragment for files. It has the
+> > following features:
+> > 1. Defragment is implemented by file copying.
+> > 2. The copy (to a temporary file) is exclusive. The source file is locked
+> >    during the copy (to a temporary file) and all IO requests are blocked
+> >    before the copy is done.
+> > 3. The copy could take long time for huge files with IO blocked.
+> > 4. The copy requires as many free blocks as the source file has.
+> >    If the source is huge, say it’s 1TiB,  it’s hard to require the file
+> >    system to have another 1TiB free.
+> > 
+> > The use case in concern is that the XFS files are used as images files for
+> > Virtual Machines.
+> > 1. The image files are huge, they can reach hundreds of GiB and even to TiB.
+> > 2. Backups are made via reflink copies, and CoW makes the files badly fragmented.
+> > 3. fragmentation make reflink copies super slow.
+> > 4. during the reflink copy, all IO requests to the file are blocked for super
+> >    long time. That makes timeout in VM and the timeout lead to disaster.
+> > 
+> > This feature aims to:
+> > 1. reduce the file fragmentation making future reflink (much) faster and
+> > 2. at the same time,  defragmentation works in non-exclusive manner, it doesn’t
+> >    block file IOs long.
+> > 
+> > Non-exclusive defragment
+> > Here we are introducing the non-exclusive manner to defragment a file,
+> > especially for huge files, without blocking IO to it long. Non-exclusive
+> > defragmentation divides the whole file into small pieces. For each piece,
+> > we lock the file, defragment the piece and unlock the file. Defragmenting
+> > the small piece doesn’t take long. File IO requests can get served between
+> > pieces before blocked long.  Also we put (user adjustable) idle time between
+> > defragmenting two consecutive pieces to balance the defragmentation and file IOs.
+> > So though the defragmentation could take longer than xfs_fsr,  it balances
+> > defragmentation and file IOs.
 > 
-> Signed-off-by: John Garry <john.g.garry@oracle.com>
-> ---
->  block/blk-merge.c | 12 +++++++++++-
->  block/blk.h       |  3 +++
->  2 files changed, 14 insertions(+), 1 deletion(-)
-> 
-> diff --git a/block/blk-merge.c b/block/blk-merge.c
-> index 0ccc251e22ff..8d4de9253fe9 100644
-> --- a/block/blk-merge.c
-> +++ b/block/blk-merge.c
-> @@ -171,7 +171,17 @@ static inline unsigned get_max_io_size(struct bio *bio,
->  {
->  	unsigned pbs = lim->physical_block_size >> SECTOR_SHIFT;
->  	unsigned lbs = lim->logical_block_size >> SECTOR_SHIFT;
-> -	unsigned max_sectors = lim->max_sectors, start, end;
-> +	unsigned max_sectors, start, end;
-> +
-> +	/*
-> +	 * We ignore lim->max_sectors for atomic writes simply because
-> +	 * it may less than bio->write_atomic_unit, which we cannot
-> +	 * tolerate.
-> +	 */
-> +	if (bio->bi_opf & REQ_ATOMIC)
-> +		max_sectors = lim->atomic_write_max_sectors;
-> +	else
-> +		max_sectors = lim->max_sectors;
+> I'm kinda surprised you don't just turn on alwayscow mode, use an
+> iomap_funshare-like function to read in and dirty pagecache (which will
+> hopefully create a new large cow fork mapping) and then flush it all
+> back out with writeback.  Then you don't need all this state tracking,
+> kthreads management, and copying file data through the buffer cache.
+> Wouldn't that be a lot simpler?
 
-I can understand the trouble for write atomic from bio split, which
-may simply split in the max_sectors boundary, however this change is
-still too fragile:
+Hmmm. I don't think it needs any kernel code to be written at all.
+I think we can do atomic section-by-section, crash-safe active file
+defrag from userspace like this:
 
-1) ->max_sectors may be set from userspace
-- so this change simply override userspace setting
+	scratch_fd = open(O_TMPFILE);
+	defrag_fd = open("file-to-be-dfragged");
 
-2) otherwise ->max_sectors is same with ->max_hw_sectors:
+	while (offset < target_size) {
 
-- then something must be wrong in device side or driver side because
-->write_atomic_unit conflicts with ->max_hw_sectors, which is supposed
-to be figured out before device is setup
+		/*
+		 * share a range of the file to be defragged into
+		 * the scratch file.
+		 */
+		args.src_fd = defrag_fd;
+		args.src_offset = offset;
+		args.src_len = length;
+		args.dst_offset = offset;
+		ioctl(scratch_fd, FICLONERANGE, args);
 
-3) too big max_sectors may break driver or device, such as nvme-pci
-aligns max_hw_sectors with DMA optimized mapping size
+		/*
+		 * For the shared range to be unshared via a
+		 * copy-on-write operation in the file to be
+		 * defragged. This causes the file needing to be
+		 * defragged to have new extents allocated and the
+		 * data to be copied over and written out.
+		 */
+		fallocate(defrag_fd, FALLOC_FL_UNSHARE_RANGE, offset, length);
+		fdatasync(defrag_fd);
 
-And there might be more(better) choices:
+		/*
+		 * Punch out the original extents we shared to the
+		 * scratch file so they are returned to free space.
+		 */
+		fallocate(scratch_fd, FALLOC_FL_PUNCH, offset, length);
 
-1) make sure atomic write limit is respected when userspace updates
-->max_sectors
+		/* move onto next region */
+		offset += length;
+	};
 
-2) when driver finds that atomic write limits conflict with other
-existed hardware limits, fail or solve(such as reduce write atomic unit) the
-conflict before queue is started; With single write atomic limits update API,
-the conflict can be figured out earlier by block layer too.
+As long as the length is large enough for the unshare to create a
+large contiguous delalloc region for the COW, I think this would
+likely acheive the desired "non-exclusive" defrag requirement.
 
+If we were to implement this as, say, and xfs_spaceman operation
+then all the user controlled policy bits (like inter chunk delays,
+chunk sizes, etc) then just becomes command line parameters for the
+defrag command...
 
+Cheers,
 
-thanks, 
-Ming
-
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
