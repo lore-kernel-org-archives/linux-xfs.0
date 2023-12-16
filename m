@@ -1,28 +1,60 @@
-Received: from szxga04-in.huawei.com (szxga04-in.huawei.com [45.249.212.190])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-pj1-f41.google.com (mail-pj1-f41.google.com [209.85.216.41])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9403515E80
-	for <linux-xfs@vger.kernel.org>; Sat, 16 Dec 2023 11:52:42 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huawei.com
-Received: from mail.maildlp.com (unknown [172.19.162.112])
-	by szxga04-in.huawei.com (SkyGuard) with ESMTP id 4SskwX2Vzrz1wnKH;
-	Sat, 16 Dec 2023 19:52:28 +0800 (CST)
-Received: from kwepemi500009.china.huawei.com (unknown [7.221.188.199])
-	by mail.maildlp.com (Postfix) with ESMTPS id B1270140120;
-	Sat, 16 Dec 2023 19:52:38 +0800 (CST)
-Received: from localhost.localdomain (10.175.127.227) by
- kwepemi500009.china.huawei.com (7.221.188.199) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2507.35; Sat, 16 Dec 2023 19:52:37 +0800
-From: Long Li <leo.lilong@huawei.com>
-To: <brauner@kernel.org>, <djwong@kernel.org>
-CC: <linux-xfs@vger.kernel.org>, <yi.zhang@huawei.com>, <houtao1@huawei.com>,
-	<leo.lilong@huawei.com>, <yangerkun@huawei.com>
-Subject: [PATCH] iomap: fix warning in iomap_write_delalloc_release()
-Date: Sat, 16 Dec 2023 19:55:59 +0800
-Message-ID: <20231216115559.3823359-1-leo.lilong@huawei.com>
-X-Mailer: git-send-email 2.31.1
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 996041E497
+	for <linux-xfs@vger.kernel.org>; Sat, 16 Dec 2023 15:36:40 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="GJqgGNkm"
+Received: by mail-pj1-f41.google.com with SMTP id 98e67ed59e1d1-28b556fc260so16382a91.1
+        for <linux-xfs@vger.kernel.org>; Sat, 16 Dec 2023 07:36:40 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20230601; t=1702741000; x=1703345800; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:references:in-reply-to
+         :message-id:date:subject:cc:to:from:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=/K4uj2bQGDwLUuCYVG3fVENL7moLYldudfeWUbn5F8Y=;
+        b=GJqgGNkmsetbzFlYktuqel80V0Q1Io4nUxIv0vovDFLGPT8fAtELgdqpHVX49kzXPo
+         /JFyrZWNVRcn1omkmcJf83nULcMp6ZGKXferxh0W0At6tEusdXogZxpDZrk0jeU1wfoK
+         Y9x8KPWNb8gHsfKG9lDf7qNUiJacMSvRKDR3zbz3JtqDTfZTfagZzqtN5/E5Ic6POTZf
+         96LKjtRkjgTq3EnyCmzXJX5Rprodzilh5y3+q4XQt8hMpA7unHaIZ2TXSdsTf20qlFjQ
+         NFLJjkrtNoxFzktWkxOK9nq6WxLmsVdNz91LuH3zsVDVRnMjbNvQxrBByPHoflMlUf6b
+         9yMw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1702741000; x=1703345800;
+        h=content-transfer-encoding:mime-version:references:in-reply-to
+         :message-id:date:subject:cc:to:from:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=/K4uj2bQGDwLUuCYVG3fVENL7moLYldudfeWUbn5F8Y=;
+        b=Np/gOllmBhfUdYpx+EuMMBm68HdKu6QGvSujB0X0byRRpwdOKq++kGfYXXZV2Pi24l
+         8vOeaRHZpTHiDxhGV8y7amQV/kGsbULDnyHYDwNM7tiKi4vqcB9kEHVzebFIg49pFndM
+         kFbhfobCTefK6MF2y/zyOEmfzv7PR3F5CtqriZ2aqpNwL6fOLAX12WXPsITmJly8Ya7V
+         I0uGMkI8UGeVM3vMndizpKI57xWCOxtNwMLO8+ocwWLsVs8TEsgZMmEZiWsJjzqYslpi
+         vKrfFys45tYeNca7Y8U5ddxTr1hWdO+/Mouptx2QHLD5YmZ+T9j/LGQclfubwKv0iB/T
+         ljnQ==
+X-Gm-Message-State: AOJu0Yzf1RytbhkapZzk6K1W8UxTZzp+tO/qfNYzVnNlaSA6W5Q1iO68
+	C0jLzbkFib/PIm+XyqVa71VwmpPvwStyrg==
+X-Google-Smtp-Source: AGHT+IFkX9aeBirBUBKFDMbaWqD7g1ghWaksdQMP0Yx6jlZIg+MsOJt1VQZeCpyokQpVjc0UFYU2ew==
+X-Received: by 2002:a05:6a20:3942:b0:18c:198a:469b with SMTP id r2-20020a056a20394200b0018c198a469bmr31294592pzg.6.1702740999726;
+        Sat, 16 Dec 2023 07:36:39 -0800 (PST)
+Received: from wj-xps.. ([43.224.245.230])
+        by smtp.gmail.com with ESMTPSA id k21-20020aa788d5000000b006ce75e0ef88sm15249830pff.78.2023.12.16.07.36.37
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Sat, 16 Dec 2023 07:36:39 -0800 (PST)
+From: Jian Wen <wenjianhn@gmail.com>
+To: linux-xfs@vger.kernel.org
+Cc: Jian Wen <wenjianhn@gmail.com>,
+	djwong@kernel.org,
+	hch@lst.de,
+	dchinner@redhat.com,
+	Jian Wen <wenjian1@xiaomi.com>
+Subject: [PATCH v2] xfs: improve handling of prjquot ENOSPC
+Date: Sat, 16 Dec 2023 23:35:22 +0800
+Message-Id: <20231216153522.52767-1-wenjianhn@gmail.com>
+X-Mailer: git-send-email 2.34.1
+In-Reply-To: <20231214150708.77586-1-wenjianhn@gmail.com>
+References: <20231214150708.77586-1-wenjianhn@gmail.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -30,126 +62,63 @@ List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-Content-Type: text/plain
-X-ClientProxiedBy: dggems705-chm.china.huawei.com (10.3.19.182) To
- kwepemi500009.china.huawei.com (7.221.188.199)
 
-While fsstress + drop cache test, we get following warning:
+Don't clear space of the whole fs when the project quota limit is
+reached, since it affects the writing performance of files of
+the directories that are under quota.
 
- ------------[ cut here ]------------
- WARNING: CPU: 2 PID: 1003 at fs/iomap/buffered-io.c:1182 iomap_file_buffered_write_punch_delalloc+0x691/0x730
- Modules linked in:
- CPU: 2 PID: 1003 Comm: fsstress Not tainted 6.7.0-rc5-06945-g3ba9b31d6bf3-dirty #256
- Hardware name: QEMU Standard PC (i440FX + PIIX, 1996), BIOS ?-20190727_073836-buildvm-ppc64le-16.ppc.fedoraproject.org-3.fc31 04/01/2014
- RIP: 0010:iomap_file_buffered_write_punch_delalloc+0x691/0x730
- Code: d1 0b 01 0f 0b 48 83 05 14 a2 d1 0b 01 48 89 05 35 a1 d1 0b 49 39 ec 0f 8c 09 fb ff ff e9 b6 fd ff ff 48 83 05 df a1 d1 0b 01 <0f> 0b 48 83 05 dd a1 d1 0b 01 48 39 6c 24 10 7c c0 48 89 05 07 a1
- RSP: 0018:ffffc900005b7b08 EFLAGS: 00010202
- RAX: 0000000000000001 RBX: ffff888102363d40 RCX: 0000000000000001
- RDX: 0000000000000000 RSI: 0000000000000000 RDI: ffff888108080000
- RBP: 0000000000050000 R08: ffff888108084eb8 R09: ffff888108084eb8
- R10: 000000000000005c R11: 0000000000000059 R12: 0000000000050000
- R13: ffffffff8c978ef0 R14: 0000000000050000 R15: 000000000005a000
- FS:  00007efc04c63b40(0000) GS:ffff88813bd00000(0000) knlGS:0000000000000000
- CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
- CR2: 00007efc0375c000 CR3: 0000000105a4d000 CR4: 00000000000006f0
- DR0: 0000000000000000 DR1: 0000000000000000 DR2: 0000000000000000
- DR3: 0000000000000000 DR6: 00000000fffe0ff0 DR7: 0000000000000400
- Call Trace:
-  <TASK>
-  xfs_buffered_write_iomap_end+0x40/0xb0
-  iomap_iter+0x8e/0x5f0
-  iomap_file_buffered_write+0xa4/0x460
-  xfs_file_buffered_write+0x156/0x3d0
-  xfs_file_write_iter+0xb2/0x1c0
-  do_iter_readv_writev+0x19b/0x1f0
-  vfs_writev+0x114/0x4f0
-  do_writev+0x7f/0x1c0
-  __x64_sys_writev+0x24/0x30
-  do_syscall_64+0x3f/0xe0
-  entry_SYSCALL_64_after_hwframe+0x62/0x6a
- RIP: 0033:0x7efc03b06610
- Code: 73 01 c3 48 8b 0d 78 88 2c 00 f7 d8 64 89 01 48 83 c8 ff c3 66 0f 1f 44 00 00 83 3d d9 e0 2c 00 00 75 10 b8 14 00 00 00 0f 05 <48> 3d 01 f0 ff ff 73 31 c3 48 83 ec 08 e8 5e 8e 01 00 48 89 04 24
- RSP: 002b:00007ffdf8f426d8 EFLAGS: 00000246 ORIG_RAX: 0000000000000014
- RAX: ffffffffffffffda RBX: 000000000000007a RCX: 00007efc03b06610
- RDX: 00000000000002c4 RSI: 00000000012f5580 RDI: 0000000000000003
- RBP: 0000000000000003 R08: 00000000012f53a0 R09: 0000000000000077
- R10: 000000000000007c R11: 0000000000000246 R12: 00000000000002c4
- R13: 00000000012dba50 R14: 00000000012f5580 R15: 0000000000000094
+Changes since v1:
+- use the want_blockgc_free_quota helper that written by Darrick
 
-The warning occurred in the following code of iomap_write_delalloc_release().
-After analyzing vmcore, I found that the reason for the warning is that
-data_end was equal to start_byte.
-
-        WARN_ON_ONCE(data_end <= start_byte);
-
-If some delay is added between seeking for data and seeking for hole
-in iomap_write_delalloc_release(), the problem can be reproduced quickly.
-The root cause of the problem is that clean data page was dropped between
-two seeking in the page cache. As a result, data_end may be equal to
-start_byte.
-
-buffered write                        drop cache
----------------------------           ---------------------------
-xfs_buffered_write_iomap_end
-  iomap_file_buffered_write_punch_delalloc
-    iomap_write_delalloc_release
-      start_byte = mapping_seek_hole_data(SEEK_DATA)
-
-                                      drop_pagecache_sb
-                                        invalidate_mapping_pages
-                                          mapping_try_invalidate
-                                            mapping_evict_folio
-                                              remove_mapping
-
-      data_end = mapping_seek_hole_data(SEEK_HOLE)
-      WARN_ON_ONCE(data_end <= start_byte)
-
-In my investigation, I found that clean data pages was alloced and added
-to page cache when reading the file's hole. After that, while buffered
-write and goes into delalloc release, we seek for data, it will find
-the start offset of the clean data pages. If the clean data pages was
-dropped, when we seek for hole, it will find the same offset as the
-previous seek.
-
-During delalloc release, we punch out all the delalloc blocks in the range
-given except for those that have dirty data still pending in the page cache.
-If the start_byte is equal to data_end after seeking data and hole, it will
-be returned directly in the delalloc scan, and we can continue to find the
-next data, and perform delalloc scan. It does not affect the range of
-delalloc block that need to be punched out.
-
-Therefore, if start_byte equal to data_end, just let it seek for data
-again in the loop.
-
-Fixes: f43dc4dc3eff ("iomap: buffered write failure should not truncate the page cache")
-Signed-off-by: Long Li <leo.lilong@huawei.com>
+Signed-off-by: Jian Wen <wenjian1@xiaomi.com>
 ---
- fs/iomap/buffered-io.c | 12 +++++++++++-
- 1 file changed, 11 insertions(+), 1 deletion(-)
+ fs/xfs/xfs_file.c | 19 ++++++++++++++++++-
+ 1 file changed, 18 insertions(+), 1 deletion(-)
 
-diff --git a/fs/iomap/buffered-io.c b/fs/iomap/buffered-io.c
-index 093c4515b22a..45b54f3e6f47 100644
---- a/fs/iomap/buffered-io.c
-+++ b/fs/iomap/buffered-io.c
-@@ -1179,7 +1179,17 @@ static int iomap_write_delalloc_release(struct inode *inode,
- 			error = data_end;
- 			goto out_unlock;
- 		}
--		WARN_ON_ONCE(data_end <= start_byte);
-+
-+		/*
-+		 * Seek for data/hole in the page cache can race with drop
-+		 * cache, if data page was dropped between seek for data and
-+		 * hole, data_end may be equal to start_byte, just let it keep
-+		 * seeking.
-+		 */
-+		if (data_end == start_byte)
-+			continue;
-+
-+		WARN_ON_ONCE(data_end < start_byte);
- 		WARN_ON_ONCE(data_end > scan_end_byte);
+diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
+index e33e5e13b95f..7764697e7822 100644
+--- a/fs/xfs/xfs_file.c
++++ b/fs/xfs/xfs_file.c
+@@ -24,6 +24,9 @@
+ #include "xfs_pnfs.h"
+ #include "xfs_iomap.h"
+ #include "xfs_reflink.h"
++#include "xfs_quota.h"
++#include "xfs_dquot_item.h"
++#include "xfs_dquot.h"
  
- 		error = iomap_write_delalloc_scan(inode, &punch_start_byte,
+ #include <linux/dax.h>
+ #include <linux/falloc.h>
+@@ -761,6 +764,20 @@ xfs_file_dax_write(
+ 	return ret;
+ }
+ 
++static inline bool want_blockgc_free_quota(struct xfs_inode *ip, int ret)
++{
++	if (ret == -EDQUOT)
++		return true;
++	if (ret != -ENOSPC)
++		return false;
++
++	if (XFS_IS_PQUOTA_ENFORCED(ip->i_mount) &&
++	    ip->i_pdquot && xfs_dquot_lowsp(ip->i_pdquot))
++		return true;
++
++	return false;
++}
++
+ STATIC ssize_t
+ xfs_file_buffered_write(
+ 	struct kiocb		*iocb,
+@@ -796,7 +813,7 @@ xfs_file_buffered_write(
+ 	 * running at the same time.  Use a synchronous scan to increase the
+ 	 * effectiveness of the scan.
+ 	 */
+-	if (ret == -EDQUOT && !cleared_space) {
++	if (want_blockgc_free_quota(ip, ret) && !cleared_space) {
+ 		xfs_iunlock(ip, iolock);
+ 		xfs_blockgc_free_quota(ip, XFS_ICWALK_FLAG_SYNC);
+ 		cleared_space = true;
 -- 
-2.31.1
+2.34.1
 
