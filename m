@@ -1,112 +1,122 @@
-Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-io1-f43.google.com (mail-io1-f43.google.com [209.85.166.43])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7195E45BF2
-	for <linux-xfs@vger.kernel.org>; Sun, 17 Dec 2023 17:04:17 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DAB4946B86
+	for <linux-xfs@vger.kernel.org>; Sun, 17 Dec 2023 21:12:17 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=fromorbit.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="Wa0XmuUW"
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-	d=infradead.org; s=bombadil.20210309; h=Content-Transfer-Encoding:
-	MIME-Version:References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:Sender
-	:Reply-To:Content-Type:Content-ID:Content-Description;
-	bh=/PKTFjLAO4s0BreW/xg/xYX0Dm2saVh9g9jMjZZNh2M=; b=Wa0XmuUWs3XM1QBh8aGW9asnmC
-	MoimO7wF6vda+xmDWAYNdtvnFFdn+rto7uKUIvBzV8eIPb73I9gW2KKRCvM6u6r4i5qqd8QR4DQJg
-	Uxo5O4OvrVyMl/nHtKYQt0i42VNPaVj5dm0P+JPvdvKxRVpitpxw4AfYiWmfHfMZG26OEEJAjCodL
-	0z+jhXyd9/IIn6t2JoYR4nAE/J/Ty9MX3Cy6pNmIlOnCGJn7/VexP2SLwWlj7rLjOaGuTFpLL1ssE
-	/TLglt4Jut4vYXtZyPyaYHvY9sB5m3E9xLk4Ncmmzresd7OY7+HxNqkTEjiITrOOuqytL5pCJg6U1
-	hQd/OJpw==;
-Received: from [88.128.92.84] (helo=localhost)
-	by bombadil.infradead.org with esmtpsa (Exim 4.96 #2 (Red Hat Linux))
-	id 1rEuYp-008AJq-1u;
-	Sun, 17 Dec 2023 17:04:16 +0000
-From: Christoph Hellwig <hch@lst.de>
-To: Chandan Babu R <chandan.babu@oracle.com>
-Cc: "Darrick J. Wong" <djwong@kernel.org>,
-	linux-xfs@vger.kernel.org
-Subject: [PATCH 8/8] xfs: remove xfs_attr_sf_hdr_t
-Date: Sun, 17 Dec 2023 18:03:50 +0100
-Message-Id: <20231217170350.605812-9-hch@lst.de>
-X-Mailer: git-send-email 2.39.2
-In-Reply-To: <20231217170350.605812-1-hch@lst.de>
+	dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b="0szPBMdo"
+Received: by mail-io1-f43.google.com with SMTP id ca18e2360f4ac-7b6fe5d67d4so112627839f.3
+        for <linux-xfs@vger.kernel.org>; Sun, 17 Dec 2023 13:12:17 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=fromorbit-com.20230601.gappssmtp.com; s=20230601; t=1702847537; x=1703452337; darn=vger.kernel.org;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
+        bh=dBoU/aqv5Q7r6RvTt+B4s9YAPzT49dENQ7Rnf/QSJ9s=;
+        b=0szPBMdo6oY4mmY7OsAupfFq0Q3Q+ld/a66Ci27ojrwuxOsrbryWNtcAwcF37htivu
+         4jdmq8CYNQiuLQwzA4YSVJuEY63/r2pvnmVgEzeKAZuTC2jHLbq2A7Rx7aZdAZgyTqVC
+         M00mP/G5i/BsZZch2/dqTJp1AtZuLWaXXCSUKvg0VzpzWLg8lQuAPRX7vGAG9YrE9iAq
+         QtBSrLMdnu3dYh6rUkZrNMVFzkdH16k9wBhFb8R7HVKLrb2GBn4lzRej0UfESwj7SKBo
+         NVJzpico266X2nKjWvK7lQTNeqJ1cBFbLOKBzq6oeZqaUwu7UR2/mOmWQEFyLH+nS13N
+         r6cw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1702847537; x=1703452337;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=dBoU/aqv5Q7r6RvTt+B4s9YAPzT49dENQ7Rnf/QSJ9s=;
+        b=j5Utm0K+TPOvtBeFKOJUlztVwzXCkTRJD2SZRO+akPgQJtKbokHIXFAJ/hcUJu0qti
+         Hn4HCUkvFG4HTo2UKOutgnoWUKv27oshXJ7QxMhNdarUvznXse37v2dKv8wG420RYobD
+         Yd/kn3nMZQSGN1sheerQORBITIFgT+ei5QH2OKKr5u+uDdla4eBBQXg1AOr20YTRxdHJ
+         KC8eQLxdklHE9PmQ4HUV90ZXfbUxwTDdDs95s3HOqFPe41PETlJy/n9W8XkgPdRWVGna
+         ECx4v7j/o112yGsfplUyZbDB8F3D+6dugWKtvWfI+MyIL0sb8T+R0iNEM9yKJk0EjgEJ
+         yiFA==
+X-Gm-Message-State: AOJu0Yz/YsZSC7LLK/MF5h7vDJX6iZwIkgAvIxbHCHvlK6/jahOORZeo
+	J/JsBd+wwIeNkUcsBen2RwWTuA==
+X-Google-Smtp-Source: AGHT+IHBxJXb1rqGHg72tFZCFiqFuuDilEyQFgLjY5r752uXTzHmJwAoAMVMC3kaNkoyzjRA5AwfNg==
+X-Received: by 2002:a05:6e02:170f:b0:35d:7058:5ef0 with SMTP id u15-20020a056e02170f00b0035d70585ef0mr19949750ill.51.1702847537035;
+        Sun, 17 Dec 2023 13:12:17 -0800 (PST)
+Received: from dread.disaster.area (pa49-180-125-5.pa.nsw.optusnet.com.au. [49.180.125.5])
+        by smtp.gmail.com with ESMTPSA id ja13-20020a170902efcd00b001d3a9676973sm1558361plb.111.2023.12.17.13.12.16
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Sun, 17 Dec 2023 13:12:16 -0800 (PST)
+Received: from dave by dread.disaster.area with local (Exim 4.96)
+	(envelope-from <david@fromorbit.com>)
+	id 1rEyQm-009hFy-1n;
+	Mon, 18 Dec 2023 08:12:12 +1100
+Date: Mon, 18 Dec 2023 08:12:12 +1100
+From: Dave Chinner <david@fromorbit.com>
+To: Christoph Hellwig <hch@lst.de>
+Cc: Chandan Babu R <chandan.babu@oracle.com>,
+	"Darrick J. Wong" <djwong@kernel.org>, linux-xfs@vger.kernel.org
+Subject: Re: [PATCH 7/8] xfs: remove struct xfs_attr_shortform
+Message-ID: <ZX9kLBb6vYGsQMhy@dread.disaster.area>
 References: <20231217170350.605812-1-hch@lst.de>
+ <20231217170350.605812-8-hch@lst.de>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20231217170350.605812-8-hch@lst.de>
 
-Remove the last two users of the typedef and move the comment next to
-its declaration to a more useful place.
+On Sun, Dec 17, 2023 at 06:03:49PM +0100, Christoph Hellwig wrote:
+> sparse complains about struct xfs_attr_shortform because it embedds a
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
----
- fs/xfs/libxfs/xfs_attr_leaf.c | 4 ++--
- fs/xfs/libxfs/xfs_attr_sf.h   | 8 --------
- fs/xfs/libxfs/xfs_da_format.h | 5 ++++-
- 3 files changed, 6 insertions(+), 11 deletions(-)
+embeds
 
-diff --git a/fs/xfs/libxfs/xfs_attr_leaf.c b/fs/xfs/libxfs/xfs_attr_leaf.c
-index e1281ab413c832..6374bf10724207 100644
---- a/fs/xfs/libxfs/xfs_attr_leaf.c
-+++ b/fs/xfs/libxfs/xfs_attr_leaf.c
-@@ -816,7 +816,7 @@ xfs_attr_sf_removename(
- 	/*
- 	 * Fix up the start offset of the attribute fork
- 	 */
--	if (totsize == sizeof(xfs_attr_sf_hdr_t) && xfs_has_attr2(mp) &&
-+	if (totsize == sizeof(struct xfs_attr_sf_hdr) && xfs_has_attr2(mp) &&
- 	    (dp->i_df.if_format != XFS_DINODE_FMT_BTREE) &&
- 	    !(args->op_flags & (XFS_DA_OP_ADDNAME | XFS_DA_OP_REPLACE))) {
- 		xfs_attr_fork_remove(dp, args->trans);
-@@ -824,7 +824,7 @@ xfs_attr_sf_removename(
- 		xfs_idata_realloc(dp, -size, XFS_ATTR_FORK);
- 		dp->i_forkoff = xfs_attr_shortform_bytesfit(dp, totsize);
- 		ASSERT(dp->i_forkoff);
--		ASSERT(totsize > sizeof(xfs_attr_sf_hdr_t) ||
-+		ASSERT(totsize > sizeof(struct xfs_attr_sf_hdr) ||
- 				(args->op_flags & XFS_DA_OP_ADDNAME) ||
- 				!xfs_has_attr2(mp) ||
- 				dp->i_df.if_format == XFS_DINODE_FMT_BTREE);
-diff --git a/fs/xfs/libxfs/xfs_attr_sf.h b/fs/xfs/libxfs/xfs_attr_sf.h
-index a1d5ef88ca2673..0600b4e408fa36 100644
---- a/fs/xfs/libxfs/xfs_attr_sf.h
-+++ b/fs/xfs/libxfs/xfs_attr_sf.h
-@@ -6,14 +6,6 @@
- #ifndef __XFS_ATTR_SF_H__
- #define	__XFS_ATTR_SF_H__
- 
--/*
-- * Attribute storage when stored inside the inode.
-- *
-- * Small attribute lists are packed as tightly as possible so as
-- * to fit into the literal area of the inode.
-- */
--typedef struct xfs_attr_sf_hdr xfs_attr_sf_hdr_t;
--
- /*
-  * We generate this then sort it, attr_list() must return things in hash-order.
-  */
-diff --git a/fs/xfs/libxfs/xfs_da_format.h b/fs/xfs/libxfs/xfs_da_format.h
-index 650fedce40449e..dcfe2fe9edc385 100644
---- a/fs/xfs/libxfs/xfs_da_format.h
-+++ b/fs/xfs/libxfs/xfs_da_format.h
-@@ -578,7 +578,10 @@ xfs_dir2_block_leaf_p(struct xfs_dir2_block_tail *btp)
- #define XFS_ATTR_LEAF_MAPSIZE	3	/* how many freespace slots */
- 
- /*
-- * Entries are packed toward the top as tight as possible.
-+ * Attribute storage when stored inside the inode.
-+ *
-+ * Small attribute lists are packed as tightly as possible so as
-+ * to fit into the literal area of the inode.
-  */
- struct xfs_attr_sf_hdr {	/* constant-structure header block */
- 	__be16	totsize;	/* total bytes in shortform list */
+> structure with a variable sized array in a variable sized array.
+> 
+> Given that xfs_attr_shortform is not a very useful struture, and the dir2
+> equivalent has been removed a long time ago, remove it as well and
+> instead provide a xfs_attr_sf_firstentry helper that returns the first
+> xfs_attr_sf_entry behind a xfs_attr_sf_hdr.
+> 
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
+
+....
+
+> diff --git a/fs/xfs/libxfs/xfs_da_format.h b/fs/xfs/libxfs/xfs_da_format.h
+> index f9015f88eca706..650fedce40449e 100644
+> --- a/fs/xfs/libxfs/xfs_da_format.h
+> +++ b/fs/xfs/libxfs/xfs_da_format.h
+> @@ -580,18 +580,17 @@ xfs_dir2_block_leaf_p(struct xfs_dir2_block_tail *btp)
+>  /*
+>   * Entries are packed toward the top as tight as possible.
+>   */
+> -struct xfs_attr_shortform {
+> -	struct xfs_attr_sf_hdr {	/* constant-structure header block */
+> -		__be16	totsize;	/* total bytes in shortform list */
+> -		__u8	count;	/* count of active entries */
+> -		__u8	padding;
+> -	} hdr;
+> -	struct xfs_attr_sf_entry {
+> -		uint8_t namelen;	/* actual length of name (no NULL) */
+> -		uint8_t valuelen;	/* actual length of value (no NULL) */
+> -		uint8_t flags;	/* flags bits (see xfs_attr_leaf.h) */
+> -		uint8_t nameval[];	/* name & value bytes concatenated */
+> -	} list[];			/* variable sized array */
+> +struct xfs_attr_sf_hdr {	/* constant-structure header block */
+> +	__be16	totsize;	/* total bytes in shortform list */
+> +	__u8	count;	/* count of active entries */
+> +	__u8	padding;
+> +};
+> +
+> +struct xfs_attr_sf_entry {
+> +	__u8	namelen;	/* actual length of name (no NULL) */
+> +	__u8	valuelen;	/* actual length of value (no NULL) */
+> +	__u8	flags;		/* flags bits (see xfs_attr_leaf.h) */
+
+May as well correct the comment while you are touching this
+structure; xfs_attr_leaf.h has not existed for a long time. Perhaps
+just "/* XFS_ATTR_* flags */" as they are defined a little further
+down this same file...
+
+-Dave.
 -- 
-2.39.2
-
+Dave Chinner
+david@fromorbit.com
