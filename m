@@ -1,31 +1,31 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F192D74E32
-	for <linux-xfs@vger.kernel.org>; Mon, 18 Dec 2023 22:17:33 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BDC4471470
+	for <linux-xfs@vger.kernel.org>; Mon, 18 Dec 2023 22:24:31 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="covAWDLY"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 6FF64C433C9;
-	Mon, 18 Dec 2023 22:17:33 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="mT4kUW2s"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 35833C433C8;
+	Mon, 18 Dec 2023 22:24:31 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1702937853;
-	bh=H4R2DziQz+z5LOTKC6rA4UKux23wLzup2ALVOOCNTdI=;
+	s=k20201202; t=1702938271;
+	bh=MCYLdypgWT4UcCqG78B6YykDSRIr7I8RhdmKUJ0Sqwk=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=covAWDLYp9ry2lkNjKvfv+MGCuYMswvEZVR13MKxOJQDy9IXOVp9FUGPa5X3EThmj
-	 GyHKPqBv+tuNnOJDArx2NcixYTn3kHt8Vdo6KW6hFoRXwuuuHc6nHvXI3HZYbfRS37
-	 bnbUji0OslKZb+XLE+Q1eQepkcIUtEDXM8UnwzuGMT8dwKm8jW8QJeMsCvXAwHzuNX
-	 91com1lln8YK6SygQ35hWsEu1Fw091KIAuuxoqTJWAmMI7bZ18Sl+48AG60KKBPoDU
-	 IUh9vw/pBZQYHHoCfwUjpL3pp0dPU6w5BGEGVwxOvgW/7XlB46vrWrsNScY+JMWw5j
-	 fyKyn/bOK/Hbw==
-Date: Mon, 18 Dec 2023 14:17:32 -0800
+	b=mT4kUW2sIG+3OCdobdNWhHlE4IHYJfBLeX50fbVwbu2rrkWbuoigIRBq/xdz1+H3j
+	 YixtIo0467xWKPa3n3QqaH6N3vuvmQLNAldnmuq1/GQ7wTVYHgtG/XQW8CwBx9QjiR
+	 huJz5+swhUmCUBkNM4AheCJMXMlWkOHB/whGgQ6M49Cxett/jxNrbtPgmjHjPJqZOg
+	 VzKsDvRYD+Lict8M6AVUG1BhNtXtESs/wxk7PHgCY2OuPmuLoOjls8OBwXySKCg7P6
+	 PL3D5oO/DOpkWQZrKfSz6crS9TYkkk0wQm4sW4IukPv72u9gyLf0Tl2UNlfrgeARA6
+	 mDQVZbS0vVLbw==
+Date: Mon, 18 Dec 2023 14:24:30 -0800
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: Christoph Hellwig <hch@lst.de>
 Cc: Chandan Babu R <chandan.babu@oracle.com>, linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 20/22] xfs: simplify and optimize the RT allocation
- fallback cascade
-Message-ID: <20231218221732.GV361584@frogsfrogsfrogs>
+Subject: Re: [PATCH 22/22] xfs: rename xfs_bmap_rtalloc to
+ xfs_rtallocate_extent
+Message-ID: <20231218222430.GW361584@frogsfrogsfrogs>
 References: <20231218045738.711465-1-hch@lst.de>
- <20231218045738.711465-21-hch@lst.de>
+ <20231218045738.711465-23-hch@lst.de>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -34,141 +34,85 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20231218045738.711465-21-hch@lst.de>
+In-Reply-To: <20231218045738.711465-23-hch@lst.de>
 
-On Mon, Dec 18, 2023 at 05:57:36AM +0100, Christoph Hellwig wrote:
-> There are currently multiple levels of fall back if an RT allocation
-> can not be satisfied:
+On Mon, Dec 18, 2023 at 05:57:38AM +0100, Christoph Hellwig wrote:
+> Now that the xfs_rtallocate_extent name has been freed, use it for what
+> so far is xfs_bmap_rtalloc as the name is a lot better fitting.
 > 
->  1) xfs_rtallocate_extent extends the minlen and reduces the maxlen due
->     to the extent size hint.  If that can't be done, it return -ENOSPC
->     and let's xfs_bmap_rtalloc retry, which then not only drops the
->     extent size hint based alignment, but also the minlen adjustment
->  2) if xfs_rtallocate_extent gets -ENOSPC from the underlying functions,
->     it only drops the extent size hint based alignment and retries
->  3) if that still does not succeed, xfs_rtallocate_extent drops the
->     extent size hint (which is a complex no-op at this point) and the
->     minlen using the same code as (1) above
->  4) if that still doesn't success and the caller wanted an allocation
->     near a blkno, drop that blkno hint.
-> 
-> The handling in 1 is rather inefficient as we could just drop the
-> alignment and continue, and 2/3 interact in really weird ways due to
-> the duplicate policy.
-> 
-> Move aligning the min and maxlen out of xfs_rtallocate_extent and into
-> a helper called directly by xfs_bmap_rtalloc.  This allows just
-> continuing with the allocation if we have to drop the alignment instead
-> of going through the retry loop and also dropping the perfectly usable
-> minlen adjustment that didn't cause the problem, and then just use
-> a single retry that drops both the minlen and alignment requirement
-> when we really are out of space, thus consolidating cases (2) and (3)
-> above.
+> Also drop the !CONFIG_XFS_RT stub as the compiler will eliminate the
+> call for that case given that XFS_IS_REALTIME_INODE is hard wire to
+> return 0 in the !CONFIG_XFS_RT case.
 > 
 > Signed-off-by: Christoph Hellwig <hch@lst.de>
+> ---
+>  fs/xfs/libxfs/xfs_bmap.c |  2 +-
+>  fs/xfs/xfs_bmap_util.h   | 15 +--------------
+>  fs/xfs/xfs_rtalloc.c     |  2 +-
+>  3 files changed, 3 insertions(+), 16 deletions(-)
+> 
+> diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
+> index 46a9b22a3733e3..245f7045da15c4 100644
+> --- a/fs/xfs/libxfs/xfs_bmap.c
+> +++ b/fs/xfs/libxfs/xfs_bmap.c
+> @@ -4091,7 +4091,7 @@ xfs_bmap_alloc_userdata(
+>  		}
+>  
+>  		if (XFS_IS_REALTIME_INODE(bma->ip))
+> -			return xfs_bmap_rtalloc(bma);
+> +			return xfs_rtallocate_extent(bma);
+>  	}
+>  
+>  	if (unlikely(XFS_TEST_ERROR(false, mp,
+> diff --git a/fs/xfs/xfs_bmap_util.h b/fs/xfs/xfs_bmap_util.h
+> index 77ecbb753ef207..233bbbd2a4676d 100644
+> --- a/fs/xfs/xfs_bmap_util.h
+> +++ b/fs/xfs/xfs_bmap_util.h
+> @@ -16,20 +16,7 @@ struct xfs_mount;
+>  struct xfs_trans;
+>  struct xfs_bmalloca;
+>  
+> -#ifdef CONFIG_XFS_RT
+> -int	xfs_bmap_rtalloc(struct xfs_bmalloca *ap);
+> -#else /* !CONFIG_XFS_RT */
+> -/*
+> - * Attempts to allocate RT extents when RT is disable indicates corruption and
+> - * should trigger a shutdown.
+> - */
+> -static inline int
+> -xfs_bmap_rtalloc(struct xfs_bmalloca *ap)
+> -{
+> -	return -EFSCORRUPTED;
+> -}
+> -#endif /* CONFIG_XFS_RT */
+> -
+> +int	xfs_rtallocate_extent(struct xfs_bmalloca *ap);
+>  int	xfs_bmap_punch_delalloc_range(struct xfs_inode *ip,
+>  		xfs_off_t start_byte, xfs_off_t end_byte);
+>  
+> diff --git a/fs/xfs/xfs_rtalloc.c b/fs/xfs/xfs_rtalloc.c
+> index 4b2de22bdd70cc..6344e499af8e27 100644
+> --- a/fs/xfs/xfs_rtalloc.c
+> +++ b/fs/xfs/xfs_rtalloc.c
+> @@ -1312,7 +1312,7 @@ xfs_rtalloc_align_minmax(
+>  }
+>  
+>  int
+> -xfs_bmap_rtalloc(
+> +xfs_rtallocate_extent(
+>  	struct xfs_bmalloca	*ap)
 
-Looks good now,
-Reviewed-by: Darrick J. Wong <djwong@kernel.org>
+Hmm.  I'm still not sure I like the name here -- we're doing an rt
+allocation for a bmap allocation args structure.
+
+xfs_rtalloc_bmap?
+
+(Or just drop this one, I've lost my will to fight over naming.)
 
 --D
 
-> ---
->  fs/xfs/xfs_rtalloc.c | 58 ++++++++++++++++++++++++++------------------
->  1 file changed, 35 insertions(+), 23 deletions(-)
-> 
-> diff --git a/fs/xfs/xfs_rtalloc.c b/fs/xfs/xfs_rtalloc.c
-> index bac8eacd628c29..8a09e42b2dcdcc 100644
-> --- a/fs/xfs/xfs_rtalloc.c
-> +++ b/fs/xfs/xfs_rtalloc.c
-> @@ -1089,21 +1089,6 @@ xfs_rtallocate_extent(
->  	ASSERT(xfs_isilocked(args.mp->m_rbmip, XFS_ILOCK_EXCL));
->  	ASSERT(minlen > 0 && minlen <= maxlen);
->  
-> -	/*
-> -	 * If prod is set then figure out what to do to minlen and maxlen.
-> -	 */
-> -	if (prod > 1) {
-> -		xfs_rtxlen_t	i;
-> -
-> -		if ((i = maxlen % prod))
-> -			maxlen -= i;
-> -		if ((i = minlen % prod))
-> -			minlen += prod - i;
-> -		if (maxlen < minlen)
-> -			return -ENOSPC;
-> -	}
-> -
-> -retry:
->  	if (start == 0) {
->  		error = xfs_rtallocate_extent_size(&args, minlen,
->  				maxlen, len, prod, rtx);
-> @@ -1112,13 +1097,8 @@ xfs_rtallocate_extent(
->  				maxlen, len, prod, rtx);
->  	}
->  	xfs_rtbuf_cache_relse(&args);
-> -	if (error) {
-> -		if (error == -ENOSPC && prod > 1) {
-> -			prod = 1;
-> -			goto retry;
-> -		}
-> +	if (error)
->  		return error;
-> -	}
->  
->  	/*
->  	 * If it worked, update the superblock.
-> @@ -1349,6 +1329,35 @@ xfs_rtpick_extent(
->  	return 0;
->  }
->  
-> +static void
-> +xfs_rtalloc_align_minmax(
-> +	xfs_rtxlen_t		*raminlen,
-> +	xfs_rtxlen_t		*ramaxlen,
-> +	xfs_rtxlen_t		*prod)
-> +{
-> +	xfs_rtxlen_t		newmaxlen = *ramaxlen;
-> +	xfs_rtxlen_t		newminlen = *raminlen;
-> +	xfs_rtxlen_t		slack;
-> +
-> +	slack = newmaxlen % *prod;
-> +	if (slack)
-> +		newmaxlen -= slack;
-> +	slack = newminlen % *prod;
-> +	if (slack)
-> +		newminlen += *prod - slack;
-> +
-> +	/*
-> +	 * If adjusting for extent size hint alignment produces an invalid
-> +	 * min/max len combination, go ahead without it.
-> +	 */
-> +	if (newmaxlen < newminlen) {
-> +		*prod = 1;
-> +		return;
-> +	}
-> +	*ramaxlen = newmaxlen;
-> +	*raminlen = newminlen;
-> +}
-> +
->  int
->  xfs_bmap_rtalloc(
->  	struct xfs_bmalloca	*ap)
-> @@ -1431,10 +1440,13 @@ xfs_bmap_rtalloc(
->  	 * perfectly aligned, otherwise it will just get us in trouble.
->  	 */
->  	div_u64_rem(ap->offset, align, &mod);
-> -	if (mod || ap->length % align)
-> +	if (mod || ap->length % align) {
->  		prod = 1;
-> -	else
-> +	} else {
->  		prod = xfs_extlen_to_rtxlen(mp, align);
-> +		if (prod > 1)
-> +			xfs_rtalloc_align_minmax(&raminlen, &ralen, &prod);
-> +	}
->  
->  	error = xfs_rtallocate_extent(ap->tp, start, raminlen, ralen, &ralen,
->  			ap->wasdel, prod, &rtx);
+>  {
+>  	struct xfs_mount	*mp = ap->ip->i_mount;
 > -- 
 > 2.39.2
 > 
