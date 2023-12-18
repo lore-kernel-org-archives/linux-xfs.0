@@ -1,30 +1,31 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id ECFE172048
-	for <linux-xfs@vger.kernel.org>; Mon, 18 Dec 2023 17:50:11 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B915D71446
+	for <linux-xfs@vger.kernel.org>; Mon, 18 Dec 2023 17:51:05 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="WCfJ2J44"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 4F09FC433C7;
-	Mon, 18 Dec 2023 17:50:11 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="McBDbjMZ"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 2B9B4C433C7;
+	Mon, 18 Dec 2023 17:51:05 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1702921811;
-	bh=ur4GTCPi9ltcU01LwW2KcbVJFY+DBsYG6qqjl2B33io=;
+	s=k20201202; t=1702921865;
+	bh=6gOxYY3TgkBWw7DgcWkuq6H1iTVQSYdlHvnlXxnY+Jc=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=WCfJ2J44ulPnEx0a+rYQR/ffQAtAEiUMSrgm48EXEGSeogWhfbOx5/ZNWh3EhlpN9
-	 LUuR6a6ZfHGaQoN5IhHA9T159tiywnaAEazg8JjVq644GSdxoDhzOYh8p50SbXkZLz
-	 A61x51hWA7kLjKUsVZ/TiXHUPAqp2Cjc61CNgb3aUzBZoDrv4JDOy2szmm0T87XZ4F
-	 8osutLkF9keYir/Rw9sAw5UHYEVVne05/O3o4Cz5Hm/DA5FuEXCQzZnQBiCToTPzMo
-	 etn9sZpLdW6IFYniRqm2w+K912iOVI20PXjHOaq8p4dc2ytG8hkWElJu8ifk+ap1yx
-	 RjdOfJCBhERgw==
-Date: Mon, 18 Dec 2023 09:50:10 -0800
+	b=McBDbjMZi1MZ4iTp4BwQmcVLDihM8cCBSXDytX5Tc9/uj/gC5MFfe9G+maKyX4WRz
+	 9j15R3I8bp6qNDBb2eP/DOilp8TwgsONnHDhvE36L1G/JhILefjYdcibxiLwnAQOWI
+	 zEyTMjXmcGFPTvEleR/24GnjeP2Puo4fWoInMAAad5VgcjsFACVhBtuEIdA67HX221
+	 ltSopunUnRTWVgNNyuDvB6kSeKpPnR6J39wvVRbvYOEM0AmnWSxWorgLXRoiZECwyM
+	 echDplsWVmGtCA8lpb/OLz+tr3pRb+zYlVvlZvt1YJ33tpnUuRCNnMsoc8QCATct/z
+	 L+ViEiBWIJkiA==
+Date: Mon, 18 Dec 2023 09:51:04 -0800
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: Christoph Hellwig <hch@lst.de>
 Cc: Chandan Babu R <chandan.babu@oracle.com>, linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 12/22] xfs: invert a check in xfs_rtallocate_extent_block
-Message-ID: <20231218175010.GR361584@frogsfrogsfrogs>
+Subject: Re: [PATCH 13/22] xfs: reflow the tail end of
+ xfs_rtallocate_extent_block
+Message-ID: <20231218175104.GS361584@frogsfrogsfrogs>
 References: <20231218045738.711465-1-hch@lst.de>
- <20231218045738.711465-13-hch@lst.de>
+ <20231218045738.711465-14-hch@lst.de>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -33,11 +34,12 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20231218045738.711465-13-hch@lst.de>
+In-Reply-To: <20231218045738.711465-14-hch@lst.de>
 
-On Mon, Dec 18, 2023 at 05:57:28AM +0100, Christoph Hellwig wrote:
-> Doing a break in the else side of a conditional is rather silly.  Invert
-> the check, break ASAP and unindent the other leg.
+On Mon, Dec 18, 2023 at 05:57:29AM +0100, Christoph Hellwig wrote:
+> Change polarity of a check so that the successful case of being able to
+> allocate an extent is in the main path of the function and error handling
+> is on a branch.
 > 
 > Signed-off-by: Christoph Hellwig <hch@lst.de>
 
@@ -46,30 +48,73 @@ Reviewed-by: Darrick J. Wong <djwong@kernel.org>
 --D
 
 > ---
->  fs/xfs/xfs_rtalloc.c | 9 ++++-----
->  1 file changed, 4 insertions(+), 5 deletions(-)
+>  fs/xfs/xfs_rtalloc.c | 44 +++++++++++++++++++++++---------------------
+>  1 file changed, 23 insertions(+), 21 deletions(-)
 > 
 > diff --git a/fs/xfs/xfs_rtalloc.c b/fs/xfs/xfs_rtalloc.c
-> index fbc60658ef24bf..924665b66210ed 100644
+> index 924665b66210ed..6fcc847b116273 100644
 > --- a/fs/xfs/xfs_rtalloc.c
 > +++ b/fs/xfs/xfs_rtalloc.c
-> @@ -283,12 +283,11 @@ xfs_rtallocate_extent_block(
->  		/*
->  		 * If not done yet, find the start of the next free space.
->  		 */
-> -		if (next < end) {
-> -			error = xfs_rtfind_forw(args, next, end, &i);
-> -			if (error)
-> -				return error;
-> -		} else
-> +		if (next >= end)
->  			break;
-> +		error = xfs_rtfind_forw(args, next, end, &i);
-> +		if (error)
-> +			return error;
+> @@ -289,36 +289,38 @@ xfs_rtallocate_extent_block(
+>  		if (error)
+>  			return error;
 >  	}
+> +
 >  	/*
 >  	 * Searched the whole thing & didn't find a maxlen free extent.
+>  	 */
+> -	if (minlen <= maxlen && besti != -1) {
+> -		xfs_rtxlen_t	p;	/* amount to trim length by */
+> -
+> +	if (minlen > maxlen || besti == -1) {
+>  		/*
+> -		 * If size should be a multiple of prod, make that so.
+> +		 * Allocation failed.  Set *nextp to the next block to try.
+>  		 */
+> -		if (prod > 1) {
+> -			div_u64_rem(bestlen, prod, &p);
+> -			if (p)
+> -				bestlen -= p;
+> -		}
+> +		*nextp = next;
+> +		return -ENOSPC;
+> +	}
+>  
+> -		/*
+> -		 * Allocate besti for bestlen & return that.
+> -		 */
+> -		error = xfs_rtallocate_range(args, besti, bestlen);
+> -		if (error)
+> -			return error;
+> -		*len = bestlen;
+> -		*rtx = besti;
+> -		return 0;
+> +	/*
+> +	 * If size should be a multiple of prod, make that so.
+> +	 */
+> +	if (prod > 1) {
+> +		xfs_rtxlen_t	p;	/* amount to trim length by */
+> +
+> +		div_u64_rem(bestlen, prod, &p);
+> +		if (p)
+> +			bestlen -= p;
+>  	}
+> +
+>  	/*
+> -	 * Allocation failed.  Set *nextp to the next block to try.
+> +	 * Allocate besti for bestlen & return that.
+>  	 */
+> -	*nextp = next;
+> -	return -ENOSPC;
+> +	error = xfs_rtallocate_range(args, besti, bestlen);
+> +	if (error)
+> +		return error;
+> +	*len = bestlen;
+> +	*rtx = besti;
+> +	return 0;
+>  }
+>  
+>  /*
 > -- 
 > 2.39.2
 > 
