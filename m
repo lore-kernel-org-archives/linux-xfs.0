@@ -1,33 +1,33 @@
 Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0651363C0
-	for <linux-xfs@vger.kernel.org>; Mon, 18 Dec 2023 04:58:23 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C6DFF63A3
+	for <linux-xfs@vger.kernel.org>; Mon, 18 Dec 2023 04:58:26 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de
 Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="E1Ffdsk5"
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="gvHbgsLk"
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
 	d=infradead.org; s=bombadil.20210309; h=Content-Transfer-Encoding:
 	MIME-Version:References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:Sender
 	:Reply-To:Content-Type:Content-ID:Content-Description;
-	bh=lHr91OELhRdGBoelwJmvj152xb9W4qas3DJFvrCpkdk=; b=E1Ffdsk5agYTbrb0HHm72hoIpg
-	2RlC2iBDdZOaDc6msr9jUZfSEtCeh2TgahTv0JalsWjooMWPYNsaa4X0jVNEEyEVbxrZOECGVKBnl
-	gd517oyFBxomNIwDLswbtHnCxFqmAWctYAdPYwe1/DnRSbNVZ9gj1CG3LZQndNa49pjRblQrXJDyJ
-	960NJj+8o0nhgAlOYbjG6YIq9JZDFd4oJH7zr7ggjIqbkGqJuJLxh8Y8AEQW7S+uyKS8is3BPkkWF
-	JS+fmhDGLt4AmmFqNKe8HMA9AAWxQE7dHCh+5S53YC6Nt2zaZ6PzzEqoKP44NnzNgAW8SRUhOq8QZ
-	V9mYRZbw==;
+	bh=jXylWAa9f+9Kxm+HUGbVvHnCyR4dgtrxQq2groWnc3s=; b=gvHbgsLkkGWTugU6Lio8aJqRHj
+	zdxH9en3d7AAZikiKbjKOCfCH0TaM7ZPTK8PrHeMubo6JLVLDOfH7OiE/kuwVeKOxiZ9G6A1P8zz8
+	h0eC8lG8GBKjbJZBXFG3MU1WUQ9ddyCTWPBSxG7Zl1VTfIKzWRpvPuTkOWqUokRJf90001dCMrDmB
+	QLg7xH+avodcsIRd5Nfl4yOIeDMs1tcZxvlmAsj+fNhexLh2uX549YZvBqkINRzK+7HfOeaxQtW/J
+	Xnf99nbwIiCrn+TM5IRfay2iRhA+UznKAFEI+qU1deQmalRAMPa2YZ1dvXfXs3IJ21reJMYLS3CZn
+	h6U2R9jg==;
 Received: from 2a02-8389-2341-5b80-39d3-4735-9a3c-88d8.cable.dynamic.v6.surfer.at ([2a02:8389:2341:5b80:39d3:4735:9a3c:88d8] helo=localhost)
 	by bombadil.infradead.org with esmtpsa (Exim 4.96 #2 (Red Hat Linux))
-	id 1rF5ht-0095FM-2U;
-	Mon, 18 Dec 2023 04:58:22 +0000
+	id 1rF5hw-0095G6-1c;
+	Mon, 18 Dec 2023 04:58:24 +0000
 From: Christoph Hellwig <hch@lst.de>
 To: Chandan Babu R <chandan.babu@oracle.com>
 Cc: "Darrick J. Wong" <djwong@kernel.org>,
 	linux-xfs@vger.kernel.org
-Subject: [PATCH 16/22] xfs: factor out a xfs_rtalloc_sumlevel helper
-Date: Mon, 18 Dec 2023 05:57:32 +0100
-Message-Id: <20231218045738.711465-17-hch@lst.de>
+Subject: [PATCH 17/22] xfs: remove rt-wrappers from xfs_format.h
+Date: Mon, 18 Dec 2023 05:57:33 +0100
+Message-Id: <20231218045738.711465-18-hch@lst.de>
 X-Mailer: git-send-email 2.39.2
 In-Reply-To: <20231218045738.711465-1-hch@lst.de>
 References: <20231218045738.711465-1-hch@lst.de>
@@ -40,208 +40,200 @@ MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 
-xfs_rtallocate_extent_size has two loops with nearly identical logic
-in them.  Split that logic into a separate xfs_rtalloc_sumlevel helper.
+xfs_format.h has a bunch odd wrappers for helper functions and mount
+structure access using RT* prefixes.  Replace them with their open coded
+versions (for those that weren't entirely unused) and remove the wrappers.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 Reviewed-by: Darrick J. Wong <djwong@kernel.org>
 ---
- fs/xfs/xfs_rtalloc.c | 153 ++++++++++++++++++++-----------------------
- 1 file changed, 70 insertions(+), 83 deletions(-)
+ fs/xfs/libxfs/xfs_format.h   |  8 --------
+ fs/xfs/libxfs/xfs_rtbitmap.c | 24 ++++++++++++------------
+ fs/xfs/scrub/rtsummary.c     |  2 +-
+ fs/xfs/xfs_rtalloc.c         |  6 +++---
+ 4 files changed, 16 insertions(+), 24 deletions(-)
 
+diff --git a/fs/xfs/libxfs/xfs_format.h b/fs/xfs/libxfs/xfs_format.h
+index 9a88aba1589f87..82a4ab2d89e9f0 100644
+--- a/fs/xfs/libxfs/xfs_format.h
++++ b/fs/xfs/libxfs/xfs_format.h
+@@ -1156,20 +1156,12 @@ static inline bool xfs_dinode_has_large_extent_counts(
+ #define	XFS_DFL_RTEXTSIZE	(64 * 1024)	        /* 64kB */
+ #define	XFS_MIN_RTEXTSIZE	(4 * 1024)		/* 4kB */
+ 
+-#define	XFS_BLOCKSIZE(mp)	((mp)->m_sb.sb_blocksize)
+-#define	XFS_BLOCKMASK(mp)	((mp)->m_blockmask)
+-
+ /*
+  * RT bit manipulation macros.
+  */
+ #define	XFS_RTMIN(a,b)	((a) < (b) ? (a) : (b))
+ #define	XFS_RTMAX(a,b)	((a) > (b) ? (a) : (b))
+ 
+-#define	XFS_RTLOBIT(w)	xfs_lowbit32(w)
+-#define	XFS_RTHIBIT(w)	xfs_highbit32(w)
+-
+-#define	XFS_RTBLOCKLOG(b)	xfs_highbit64(b)
+-
+ /*
+  * Dquot and dquot block format definitions
+  */
+diff --git a/fs/xfs/libxfs/xfs_rtbitmap.c b/fs/xfs/libxfs/xfs_rtbitmap.c
+index 5773e4ea36c624..4185ccf83bab68 100644
+--- a/fs/xfs/libxfs/xfs_rtbitmap.c
++++ b/fs/xfs/libxfs/xfs_rtbitmap.c
+@@ -195,7 +195,7 @@ xfs_rtfind_back(
+ 			/*
+ 			 * Different.  Mark where we are and return.
+ 			 */
+-			i = bit - XFS_RTHIBIT(wdiff);
++			i = bit - xfs_highbit32(wdiff);
+ 			*rtx = start - i + 1;
+ 			return 0;
+ 		}
+@@ -233,7 +233,7 @@ xfs_rtfind_back(
+ 			/*
+ 			 * Different, mark where we are and return.
+ 			 */
+-			i += XFS_NBWORD - 1 - XFS_RTHIBIT(wdiff);
++			i += XFS_NBWORD - 1 - xfs_highbit32(wdiff);
+ 			*rtx = start - i + 1;
+ 			return 0;
+ 		}
+@@ -272,7 +272,7 @@ xfs_rtfind_back(
+ 			/*
+ 			 * Different, mark where we are and return.
+ 			 */
+-			i += XFS_NBWORD - 1 - XFS_RTHIBIT(wdiff);
++			i += XFS_NBWORD - 1 - xfs_highbit32(wdiff);
+ 			*rtx = start - i + 1;
+ 			return 0;
+ 		} else
+@@ -348,7 +348,7 @@ xfs_rtfind_forw(
+ 			/*
+ 			 * Different.  Mark where we are and return.
+ 			 */
+-			i = XFS_RTLOBIT(wdiff) - bit;
++			i = xfs_lowbit32(wdiff) - bit;
+ 			*rtx = start + i - 1;
+ 			return 0;
+ 		}
+@@ -386,7 +386,7 @@ xfs_rtfind_forw(
+ 			/*
+ 			 * Different, mark where we are and return.
+ 			 */
+-			i += XFS_RTLOBIT(wdiff);
++			i += xfs_lowbit32(wdiff);
+ 			*rtx = start + i - 1;
+ 			return 0;
+ 		}
+@@ -423,7 +423,7 @@ xfs_rtfind_forw(
+ 			/*
+ 			 * Different, mark where we are and return.
+ 			 */
+-			i += XFS_RTLOBIT(wdiff);
++			i += xfs_lowbit32(wdiff);
+ 			*rtx = start + i - 1;
+ 			return 0;
+ 		} else
+@@ -708,7 +708,7 @@ xfs_rtfree_range(
+ 	 */
+ 	if (preblock < start) {
+ 		error = xfs_rtmodify_summary(args,
+-				XFS_RTBLOCKLOG(start - preblock),
++				xfs_highbit64(start - preblock),
+ 				xfs_rtx_to_rbmblock(mp, preblock), -1);
+ 		if (error) {
+ 			return error;
+@@ -720,7 +720,7 @@ xfs_rtfree_range(
+ 	 */
+ 	if (postblock > end) {
+ 		error = xfs_rtmodify_summary(args,
+-				XFS_RTBLOCKLOG(postblock - end),
++				xfs_highbit64(postblock - end),
+ 				xfs_rtx_to_rbmblock(mp, end + 1), -1);
+ 		if (error) {
+ 			return error;
+@@ -731,7 +731,7 @@ xfs_rtfree_range(
+ 	 * (new) free extent.
+ 	 */
+ 	return xfs_rtmodify_summary(args,
+-			XFS_RTBLOCKLOG(postblock + 1 - preblock),
++			xfs_highbit64(postblock + 1 - preblock),
+ 			xfs_rtx_to_rbmblock(mp, preblock), 1);
+ }
+ 
+@@ -800,7 +800,7 @@ xfs_rtcheck_range(
+ 			/*
+ 			 * Different, compute first wrong bit and return.
+ 			 */
+-			i = XFS_RTLOBIT(wdiff) - bit;
++			i = xfs_lowbit32(wdiff) - bit;
+ 			*new = start + i;
+ 			*stat = 0;
+ 			return 0;
+@@ -839,7 +839,7 @@ xfs_rtcheck_range(
+ 			/*
+ 			 * Different, compute first wrong bit and return.
+ 			 */
+-			i += XFS_RTLOBIT(wdiff);
++			i += xfs_lowbit32(wdiff);
+ 			*new = start + i;
+ 			*stat = 0;
+ 			return 0;
+@@ -877,7 +877,7 @@ xfs_rtcheck_range(
+ 			/*
+ 			 * Different, compute first wrong bit and return.
+ 			 */
+-			i += XFS_RTLOBIT(wdiff);
++			i += xfs_lowbit32(wdiff);
+ 			*new = start + i;
+ 			*stat = 0;
+ 			return 0;
+diff --git a/fs/xfs/scrub/rtsummary.c b/fs/xfs/scrub/rtsummary.c
+index 8b15c47408d031..0689025aa4849d 100644
+--- a/fs/xfs/scrub/rtsummary.c
++++ b/fs/xfs/scrub/rtsummary.c
+@@ -143,7 +143,7 @@ xchk_rtsum_record_free(
+ 
+ 	/* Compute the relevant location in the rtsum file. */
+ 	rbmoff = xfs_rtx_to_rbmblock(mp, rec->ar_startext);
+-	lenlog = XFS_RTBLOCKLOG(rec->ar_extcount);
++	lenlog = xfs_highbit64(rec->ar_extcount);
+ 	offs = xfs_rtsumoffs(mp, lenlog, rbmoff);
+ 
+ 	rtbno = xfs_rtx_to_rtb(mp, rec->ar_startext);
 diff --git a/fs/xfs/xfs_rtalloc.c b/fs/xfs/xfs_rtalloc.c
-index 85d683550048a0..6b8b657e40dc0b 100644
+index 6b8b657e40dc0b..dac6f17e4f0305 100644
 --- a/fs/xfs/xfs_rtalloc.c
 +++ b/fs/xfs/xfs_rtalloc.c
-@@ -538,6 +538,52 @@ xfs_rtallocate_extent_near(
- 	return -ENOSPC;
- }
- 
-+static int
-+xfs_rtalloc_sumlevel(
-+	struct xfs_rtalloc_args	*args,
-+	int			l,	/* level number */
-+	xfs_rtxlen_t		minlen,	/* minimum length to allocate */
-+	xfs_rtxlen_t		maxlen,	/* maximum length to allocate */
-+	xfs_rtxlen_t		prod,	/* extent product factor */
-+	xfs_rtxlen_t		*len,	/* out: actual length allocated */
-+	xfs_rtxnum_t		*rtx)	/* out: start rtext allocated */
-+{
-+	xfs_fileoff_t		i;	/* bitmap block number */
-+
-+	for (i = 0; i < args->mp->m_sb.sb_rbmblocks; i++) {
-+		xfs_suminfo_t	sum;	/* summary information for extents */
-+		xfs_rtxnum_t	n;	/* next rtext to be tried */
-+		int		error;
-+
-+		error = xfs_rtget_summary(args, l, i, &sum);
-+		if (error)
-+			return error;
-+
-+		/*
-+		 * Nothing there, on to the next block.
-+		 */
-+		if (!sum)
-+			continue;
-+
-+		/*
-+		 * Try allocating the extent.
-+		 */
-+		error = xfs_rtallocate_extent_block(args, i, minlen, maxlen,
-+				len, &n, prod, rtx);
-+		if (error != -ENOSPC)
-+			return error;
-+
-+		/*
-+		 * If the "next block to try" returned from the allocator is
-+		 * beyond the next bitmap block, skip to that bitmap block.
-+		 */
-+		if (xfs_rtx_to_rbmblock(args->mp, n) > i + 1)
-+			i = xfs_rtx_to_rbmblock(args->mp, n) - 1;
-+	}
-+
-+	return -ENOSPC;
-+}
-+
- /*
-  * Allocate an extent of length minlen<=len<=maxlen, with no position
-  * specified.  If we don't get maxlen then use prod to trim
-@@ -552,12 +598,8 @@ xfs_rtallocate_extent_size(
- 	xfs_rtxlen_t		prod,	/* extent product factor */
- 	xfs_rtxnum_t		*rtx)	/* out: start rtext allocated */
- {
--	struct xfs_mount	*mp = args->mp;
- 	int			error;
--	xfs_fileoff_t		i;	/* bitmap block number */
- 	int			l;	/* level number (loop control) */
--	xfs_rtxnum_t		n;	/* next rtext to be tried */
--	xfs_suminfo_t		sum;	/* summary information for extents */
- 
- 	ASSERT(minlen % prod == 0);
- 	ASSERT(maxlen % prod == 0);
-@@ -565,46 +607,23 @@ xfs_rtallocate_extent_size(
- 
- 	/*
- 	 * Loop over all the levels starting with maxlen.
--	 * At each level, look at all the bitmap blocks, to see if there
--	 * are extents starting there that are long enough (>= maxlen).
--	 * Note, only on the initial level can the allocation fail if
--	 * the summary says there's an extent.
-+	 *
-+	 * At each level, look at all the bitmap blocks, to see if there are
-+	 * extents starting there that are long enough (>= maxlen).
-+	 *
-+	 * Note, only on the initial level can the allocation fail if the
-+	 * summary says there's an extent.
+@@ -156,7 +156,7 @@ xfs_rtallocate_range(
+ 	 * (old) free extent.
  	 */
--	for (l = xfs_highbit32(maxlen); l < mp->m_rsumlevels; l++) {
--		/*
--		 * Loop over all the bitmap blocks.
--		 */
--		for (i = 0; i < mp->m_sb.sb_rbmblocks; i++) {
--			/*
--			 * Get the summary for this level/block.
--			 */
--			error = xfs_rtget_summary(args, l, i, &sum);
--			if (error)
--				return error;
--			/*
--			 * Nothing there, on to the next block.
--			 */
--			if (!sum)
--				continue;
--			/*
--			 * Try allocating the extent.
--			 */
--			error = xfs_rtallocate_extent_block(args, i, maxlen,
--					maxlen, len, &n, prod, rtx);
--			if (error != -ENOSPC)
--				return error;
--			/*
--			 * If the "next block to try" returned from the
--			 * allocator is beyond the next bitmap block,
--			 * skip to that bitmap block.
--			 */
--			if (xfs_rtx_to_rbmblock(mp, n) > i + 1)
--				i = xfs_rtx_to_rbmblock(mp, n) - 1;
--		}
-+	for (l = xfs_highbit32(maxlen); l < args->mp->m_rsumlevels; l++) {
-+		error = xfs_rtalloc_sumlevel(args, l, minlen, maxlen, prod, len,
-+				rtx);
-+		if (error != -ENOSPC)
-+			return error;
- 	}
-+
- 	/*
--	 * Didn't find any maxlen blocks.  Try smaller ones, unless
--	 * we're asking for a fixed size extent.
-+	 * Didn't find any maxlen blocks.  Try smaller ones, unless we are
-+	 * looking for a fixed size extent.
+ 	error = xfs_rtmodify_summary(args,
+-			XFS_RTBLOCKLOG(postblock + 1 - preblock),
++			xfs_highbit64(postblock + 1 - preblock),
+ 			xfs_rtx_to_rbmblock(mp, preblock), -1);
+ 	if (error)
+ 		return error;
+@@ -167,7 +167,7 @@ xfs_rtallocate_range(
  	 */
- 	if (minlen > --maxlen)
- 		return -ENOSPC;
-@@ -613,51 +632,19 @@ xfs_rtallocate_extent_size(
- 
- 	/*
- 	 * Loop over sizes, from maxlen down to minlen.
--	 * This time, when we do the allocations, allow smaller ones
--	 * to succeed.
-+	 *
-+	 * This time, when we do the allocations, allow smaller ones to succeed,
-+	 * but make sure the specified minlen/maxlen are in the possible range
-+	 * for this summary level.
+ 	if (preblock < start) {
+ 		error = xfs_rtmodify_summary(args,
+-				XFS_RTBLOCKLOG(start - preblock),
++				xfs_highbit64(start - preblock),
+ 				xfs_rtx_to_rbmblock(mp, preblock), 1);
+ 		if (error)
+ 			return error;
+@@ -179,7 +179,7 @@ xfs_rtallocate_range(
  	 */
- 	for (l = xfs_highbit32(maxlen); l >= xfs_highbit32(minlen); l--) {
--		/*
--		 * Loop over all the bitmap blocks, try an allocation
--		 * starting in that block.
--		 */
--		for (i = 0; i < mp->m_sb.sb_rbmblocks; i++) {
--			/*
--			 * Get the summary information for this level/block.
--			 */
--			error =	xfs_rtget_summary(args, l, i, &sum);
--			if (error)
--				return error;
--
--			/*
--			 * If nothing there, go on to next.
--			 */
--			if (!sum)
--				continue;
--			/*
--			 * Try the allocation.  Make sure the specified
--			 * minlen/maxlen are in the possible range for
--			 * this summary level.
--			 */
--			error = xfs_rtallocate_extent_block(args, i,
--					XFS_RTMAX(minlen, 1 << l),
--					XFS_RTMIN(maxlen, (1 << (l + 1)) - 1),
--					len, &n, prod, rtx);
--			if (error != -ENOSPC)
--				return error;
--
--			/*
--			 * If the "next block to try" returned from the
--			 * allocator is beyond the next bitmap block,
--			 * skip to that bitmap block.
--			 */
--			if (xfs_rtx_to_rbmblock(mp, n) > i + 1)
--				i = xfs_rtx_to_rbmblock(mp, n) - 1;
--		}
-+		error = xfs_rtalloc_sumlevel(args, l, XFS_RTMAX(minlen, 1 << l),
-+				XFS_RTMIN(maxlen, (1 << (l + 1)) - 1), prod,
-+				len, rtx);
-+		if (error != -ENOSPC)
-+			return error;
- 	}
--	/*
--	 * Got nothing, return failure.
--	 */
-+
- 	return -ENOSPC;
- }
- 
+ 	if (postblock > end) {
+ 		error = xfs_rtmodify_summary(args,
+-				XFS_RTBLOCKLOG(postblock - end),
++				xfs_highbit64(postblock - end),
+ 				xfs_rtx_to_rbmblock(mp, end + 1), 1);
+ 		if (error)
+ 			return error;
 -- 
 2.39.2
 
