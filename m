@@ -1,27 +1,30 @@
-Received: from verein.lst.de (verein.lst.de [213.95.11.211])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B50138472;
-	Tue, 19 Dec 2023 05:21:26 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=lst.de
-Received: by verein.lst.de (Postfix, from userid 2407)
-	id 9A84268AFE; Tue, 19 Dec 2023 06:21:21 +0100 (CET)
-Date: Tue, 19 Dec 2023 06:21:21 +0100
-From: Christoph Hellwig <hch@lst.de>
-To: "Darrick J. Wong" <djwong@kernel.org>
-Cc: John Garry <john.g.garry@oracle.com>, Christoph Hellwig <hch@lst.de>,
-	axboe@kernel.dk, kbusch@kernel.org, sagi@grimberg.me,
-	jejb@linux.ibm.com, martin.petersen@oracle.com,
-	viro@zeniv.linux.org.uk, brauner@kernel.org, dchinner@redhat.com,
-	jack@suse.cz, linux-block@vger.kernel.org,
-	linux-kernel@vger.kernel.org, linux-nvme@lists.infradead.org,
-	linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
-	tytso@mit.edu, jbongio@google.com, linux-scsi@vger.kernel.org,
-	ming.lei@redhat.com, jaswin@linux.ibm.com, bvanassche@acm.org
-Subject: Re: [PATCH v2 00/16] block atomic writes
-Message-ID: <20231219052121.GA338@lst.de>
-References: <20231212110844.19698-1-john.g.garry@oracle.com> <20231212163246.GA24594@lst.de> <b8b0a9d7-88d2-45a9-877a-ecc5e0f1e645@oracle.com> <20231213154409.GA7724@lst.de> <c729b03c-b1d1-4458-9983-113f8cd752cd@oracle.com> <20231219051456.GB3964019@frogsfrogsfrogs>
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D89C55C97
+	for <linux-xfs@vger.kernel.org>; Tue, 19 Dec 2023 05:27:03 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="qucd1cWI"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 3DBB4C433C7;
+	Tue, 19 Dec 2023 05:27:03 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1702963623;
+	bh=0Dln6JHcRdhBQaiA0TtncEyOlbFKKl9ErZFzTx/k0bA=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=qucd1cWIhrBhSHNm3PeT1hxpPk6CszUZMpQpH+QtnvHoVuiDJjIvowiBVN0gtdfml
+	 xfhAG6PJcJYDpLTocj0Fa+nHEmiwU6UWSg62GWpFLL/NyzA04W75W/SlGRbhnjggS4
+	 PUXLG7rrq/40Nlg2YgsPvCkm2hXjrTlm5MHOD7EDzoEm30Ad3778Ikp2kK5tqskt/M
+	 KPvEN1NSkw+sez7gtUBuofJa4AwJIkzvnTvedsAcTmDqshb6q7vjgHxGCXksgXJ9TA
+	 Ltc2AxIyp7rpuCOBushuJMjm8mb0FzPU81kK1/j5fZzC2AsQ3hh7IrAquMBy4rzNgl
+	 RQxtupNLnqPaQ==
+Date: Mon, 18 Dec 2023 21:27:02 -0800
+From: "Darrick J. Wong" <djwong@kernel.org>
+To: Sam James <sam@gentoo.org>
+Cc: linux-xfs@vger.kernel.org
+Subject: Re: [PATCH v3 4/4] io: Adapt to >= 64-bit time_t
+Message-ID: <20231219052702.GJ361584@frogsfrogsfrogs>
+References: <20231215013657.1995699-1-sam@gentoo.org>
+ <20231215013657.1995699-4-sam@gentoo.org>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -30,37 +33,64 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20231219051456.GB3964019@frogsfrogsfrogs>
-User-Agent: Mutt/1.5.17 (2007-11-01)
+In-Reply-To: <20231215013657.1995699-4-sam@gentoo.org>
 
-On Mon, Dec 18, 2023 at 09:14:56PM -0800, Darrick J. Wong wrote:
-> /me stumbles back in with plenty of covidbrain to go around.
+On Fri, Dec 15, 2023 at 01:36:43AM +0000, Sam James wrote:
+> We now require (at least) 64-bit time_t, so we need to adjust some printf
+> specifiers accordingly.
 > 
-> So ... Christoph, you're asking for a common API for
-> sysadmins/applications to signal to the filesystem that they want all
-> data allocations aligned to a given value, right?
+> Unfortunately, we've stumbled upon a ridiculous C mmoment whereby there's
+
+Plenty of those to go around...
+
+> no neat format specifier (not even one of the inttypes ones) for time_t, so
+> we cast to intmax_t and use %jd.
 > 
-> e.g. if a nvme device advertises a capability for untorn writes between
-> $lbasize and 64k, then we need a way to set up each untorn-file with
-> some alignment between $lbasize and 64k?
+> Signed-off-by: Sam James <sam@gentoo.org>
+> ---
+> v3: uintmax_t -> intmax_t as time_t is signed
 > 
-> or if cxl storage becomes not ung-dly expensive, then we'd want a way to
-> set up files with an alignment of 2M (x86) or 512M (arm64lol) to take
-> advantage of PMD mmap mappings?
+>  io/stat.c | 6 +++---
+>  1 file changed, 3 insertions(+), 3 deletions(-)
+> 
+> diff --git a/io/stat.c b/io/stat.c
+> index e8f68dc3..743a7586 100644
+> --- a/io/stat.c
+> +++ b/io/stat.c
+> @@ -66,11 +66,11 @@ dump_raw_stat(struct stat *st)
+>  	printf("stat.ino = %llu\n", (unsigned long long)st->st_ino);
+>  	printf("stat.size = %lld\n", (long long)st->st_size);
+>  	printf("stat.blocks = %lld\n", (long long)st->st_blocks);
+> -	printf("stat.atime.tv_sec = %ld\n", st->st_atim.tv_sec);
+> +	printf("stat.atime.tv_sec = %jd\n", (intmax_t)st->st_atim.tv_sec);
 
-The most important point is to not mix these up.
+I almost wonder if we want a similar
+BUILD_BUG_ON(sizeof(time_t) < 8);
+here or something?
 
-If we want to use a file for atomic writes I should tell the fs about
-it, and preferably in a way that does not require me to know about weird
-internal implementation details of every file system.  I really just
-want to use atomic writes.  Preferably I'd just start using them after
-asking for the limits.  But that's obviously not going to work for
-file systems that use the hardware offload and don't otherwise align
-to the limit (which would suck for very small files anyway :))
+Also I totally didn't realize that "intmax_t" is actually s64 on x86_64.
+I saw "int" and assumed "still 32-bit".
 
-So as a compromise I tell the file system before writing or otherwise
-adding any data [1] to file that I want to use atomic writes so that
-the fs can take the right decisions.
+But, I guess C99 says "...capable of representing any value of any basic
+signed integer type supported by the implementation."
 
-[1] reflinking data into a such marked file will be ... interesting.
+So it apparently works even for 32-bit compilers, at least according to
+godbolt.org...
+Reviewed-by: Darrick J. Wong <djwong@kernel.org>
 
+--D
+
+
+>  	printf("stat.atime.tv_nsec = %ld\n", st->st_atim.tv_nsec);
+> -	printf("stat.ctime.tv_sec = %ld\n", st->st_ctim.tv_sec);
+> +	printf("stat.ctime.tv_sec = %jd\n", (intmax_t)st->st_ctim.tv_sec);
+>  	printf("stat.ctime.tv_nsec = %ld\n", st->st_ctim.tv_nsec);
+> -	printf("stat.mtime.tv_sec = %ld\n", st->st_mtim.tv_sec);
+> +	printf("stat.mtime.tv_sec = %jd\n", (intmax_t)st->st_mtim.tv_sec);
+>  	printf("stat.mtime.tv_nsec = %ld\n", st->st_mtim.tv_nsec);
+>  	printf("stat.rdev_major = %u\n", major(st->st_rdev));
+>  	printf("stat.rdev_minor = %u\n", minor(st->st_rdev));
+> -- 
+> 2.43.0
+> 
+> 
