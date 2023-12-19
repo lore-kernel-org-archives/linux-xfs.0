@@ -1,30 +1,27 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from verein.lst.de (verein.lst.de [213.95.11.211])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 51F818474
-	for <linux-xfs@vger.kernel.org>; Tue, 19 Dec 2023 05:19:34 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="ggs2Y2Qc"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id B451CC433C7;
-	Tue, 19 Dec 2023 05:19:34 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1702963174;
-	bh=jm27aHRtsP8OPQgOSig7JhCVl70jXBiQBOaXh5GNEoI=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=ggs2Y2QcEYs84WKFVGjK7Y/+n3KqrPXCK49sRC2b7nFDqEh3omDUeH6AEWEDy4HgG
-	 2b4k9HTZpXmtMcB6k+a4WPtizXSxL/XZClqdWhKUwYvyNXSoSEV7LmR9K5LHHQi1rP
-	 sk7hJF1S1XC/pRNNPVfKD0u+abHmKKQ89d12tLwkVfUvZ4+nvA0Qhv5AtD74PMI5tl
-	 21GIreIRYU6xWNIIxtsi2Je8MVFF5c0mZhdcsh5U3IJ782fyzpkstHlCnXjHzjwdjP
-	 c5sBNJoM32iisRcTWmMHF1xbsAr389pAM/KMuf/eAzvQYUT8JDdcUMkVqB78ONFFRw
-	 qe6RJOp9Gc8ag==
-Date: Mon, 18 Dec 2023 21:19:34 -0800
-From: "Darrick J. Wong" <djwong@kernel.org>
-To: Sam James <sam@gentoo.org>
-Cc: linux-xfs@vger.kernel.org, Felix Janda <felix.janda@posteo.de>
-Subject: Re: [PATCH v3 2/4] io: Assert we have a sensible off_t
-Message-ID: <20231219051934.GI361584@frogsfrogsfrogs>
-References: <20231215013657.1995699-1-sam@gentoo.org>
- <20231215013657.1995699-2-sam@gentoo.org>
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B50138472;
+	Tue, 19 Dec 2023 05:21:26 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=lst.de
+Received: by verein.lst.de (Postfix, from userid 2407)
+	id 9A84268AFE; Tue, 19 Dec 2023 06:21:21 +0100 (CET)
+Date: Tue, 19 Dec 2023 06:21:21 +0100
+From: Christoph Hellwig <hch@lst.de>
+To: "Darrick J. Wong" <djwong@kernel.org>
+Cc: John Garry <john.g.garry@oracle.com>, Christoph Hellwig <hch@lst.de>,
+	axboe@kernel.dk, kbusch@kernel.org, sagi@grimberg.me,
+	jejb@linux.ibm.com, martin.petersen@oracle.com,
+	viro@zeniv.linux.org.uk, brauner@kernel.org, dchinner@redhat.com,
+	jack@suse.cz, linux-block@vger.kernel.org,
+	linux-kernel@vger.kernel.org, linux-nvme@lists.infradead.org,
+	linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
+	tytso@mit.edu, jbongio@google.com, linux-scsi@vger.kernel.org,
+	ming.lei@redhat.com, jaswin@linux.ibm.com, bvanassche@acm.org
+Subject: Re: [PATCH v2 00/16] block atomic writes
+Message-ID: <20231219052121.GA338@lst.de>
+References: <20231212110844.19698-1-john.g.garry@oracle.com> <20231212163246.GA24594@lst.de> <b8b0a9d7-88d2-45a9-877a-ecc5e0f1e645@oracle.com> <20231213154409.GA7724@lst.de> <c729b03c-b1d1-4458-9983-113f8cd752cd@oracle.com> <20231219051456.GB3964019@frogsfrogsfrogs>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -33,47 +30,37 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20231215013657.1995699-2-sam@gentoo.org>
+In-Reply-To: <20231219051456.GB3964019@frogsfrogsfrogs>
+User-Agent: Mutt/1.5.17 (2007-11-01)
 
-On Fri, Dec 15, 2023 at 01:36:41AM +0000, Sam James wrote:
-> Suggested by Darrick during review of the first LFSization patch. Assert
-> we have an off_t capable of handling >=4GiB as a failsafe against the macros
-> not doing the right thing.
+On Mon, Dec 18, 2023 at 09:14:56PM -0800, Darrick J. Wong wrote:
+> /me stumbles back in with plenty of covidbrain to go around.
 > 
-> This is not the first time we've been on this adventure in XFS:
-> * 5c0599b721d1d232d2e400f357abdf2736f24a97 ('Fix building xfsprogs on 32-bit platforms')
-> * 65b4f302b7a1ddc14684ffbf8690227a67362586 ('platform: remove use of off64_t')
-> * 7fda99a0c2970f7da2661118b438e64dec1751b4 ('xfs.h: require transparent LFS for all users')
-> * ebe750ed747cbc59a5675193cdcbc3459ebda107 ('configure: error out when LFS does not work')
-> * 69268aaec5fb39ad71674336c0f6f75ca9f57999 ('configure: use AC_SYS_LARGEFILE')
+> So ... Christoph, you're asking for a common API for
+> sysadmins/applications to signal to the filesystem that they want all
+> data allocations aligned to a given value, right?
 > 
-> Cc: Felix Janda <felix.janda@posteo.de>
-> Signed-off-by: Sam James <sam@gentoo.org>
+> e.g. if a nvme device advertises a capability for untorn writes between
+> $lbasize and 64k, then we need a way to set up each untorn-file with
+> some alignment between $lbasize and 64k?
+> 
+> or if cxl storage becomes not ung-dly expensive, then we'd want a way to
+> set up files with an alignment of 2M (x86) or 512M (arm64lol) to take
+> advantage of PMD mmap mappings?
 
-Looks ok,
-Reviewed-by: Darrick J. Wong <djwong@kernel.org>
+The most important point is to not mix these up.
 
---D
+If we want to use a file for atomic writes I should tell the fs about
+it, and preferably in a way that does not require me to know about weird
+internal implementation details of every file system.  I really just
+want to use atomic writes.  Preferably I'd just start using them after
+asking for the limits.  But that's obviously not going to work for
+file systems that use the hardware offload and don't otherwise align
+to the limit (which would suck for very small files anyway :))
 
-> ---
->  io/init.c | 3 +++
->  1 file changed, 3 insertions(+)
-> 
-> diff --git a/io/init.c b/io/init.c
-> index 104cd2c1..2fb598ac 100644
-> --- a/io/init.c
-> +++ b/io/init.c
-> @@ -44,6 +44,9 @@ init_cvtnum(
->  static void
->  init_commands(void)
->  {
-> +	/* We're only interested in supporting an off_t which can handle >=4GiB. */
-> +	BUILD_BUG_ON(sizeof(off_t) < 8);
-> +
->  	attr_init();
->  	bmap_init();
->  	bulkstat_init();
-> -- 
-> 2.43.0
-> 
-> 
+So as a compromise I tell the file system before writing or otherwise
+adding any data [1] to file that I want to use atomic writes so that
+the fs can take the right decisions.
+
+[1] reflinking data into a such marked file will be ... interesting.
+
