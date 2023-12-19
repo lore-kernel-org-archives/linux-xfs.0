@@ -1,174 +1,340 @@
-Received: from mx0a-00069f02.pphosted.com (mx0a-00069f02.pphosted.com [205.220.165.32])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-ot1-f50.google.com (mail-ot1-f50.google.com [209.85.210.50])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A80DA3D0A7
-	for <linux-xfs@vger.kernel.org>; Tue, 19 Dec 2023 22:23:51 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=oracle.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oracle.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 143E940BF3
+	for <linux-xfs@vger.kernel.org>; Tue, 19 Dec 2023 23:34:03 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=fromorbit.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="SKmNmkKO";
-	dkim=pass (1024-bit key) header.d=oracle.onmicrosoft.com header.i=@oracle.onmicrosoft.com header.b="Jcut/uYe"
-Received: from pps.filterd (m0246627.ppops.net [127.0.0.1])
-	by mx0b-00069f02.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 3BJLdD3V005709;
-	Tue, 19 Dec 2023 22:23:46 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=from : to : cc :
- subject : date : message-id : references : in-reply-to : content-type :
- content-id : content-transfer-encoding : mime-version; s=corp-2023-11-20;
- bh=ZCBvdGxOKSH5X9csgrrw9C2jXa2nu5uKOW5Rf/o626g=;
- b=SKmNmkKONLjvxYNBjb7ss0psAXwFs0GkZcdiyW0dqf0TXQERTopXHfRgs6ezoEX6foeS
- RthwCrxQvrETUDAQkcDegPOEukrhWDrWkls9MwbSVclncW5iyLz8h96g8mHYePHzwIX2
- FiPaEaHd4/mO7hnIA36T4Aq/GAYzNOCEf5Txi7fV5WyNh63JI8JGm6wJ7PlA3trg9Ola
- eFeJIBUUDekcimx5NopyHq7WR4V8KI7/kATxfiO2pSjT+GfX428ArEYU/1C1EMOEtEO0
- CI7BM2bJp6/ig/OLo21lWXUAcn7sEnPSzP+zR2SmOBkQWWYkU4BrWqmslPQusiEf1ZCA fg== 
-Received: from iadpaimrmta03.imrmtpd1.prodappiadaev1.oraclevcn.com (iadpaimrmta03.appoci.oracle.com [130.35.103.27])
-	by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 3v12g2f42d-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-	Tue, 19 Dec 2023 22:23:46 +0000
-Received: from pps.filterd (iadpaimrmta03.imrmtpd1.prodappiadaev1.oraclevcn.com [127.0.0.1])
-	by iadpaimrmta03.imrmtpd1.prodappiadaev1.oraclevcn.com (8.17.1.19/8.17.1.19) with ESMTP id 3BJKkQsR027530;
-	Tue, 19 Dec 2023 22:23:44 GMT
-Received: from nam04-bn8-obe.outbound.protection.outlook.com (mail-bn8nam04lp2041.outbound.protection.outlook.com [104.47.74.41])
-	by iadpaimrmta03.imrmtpd1.prodappiadaev1.oraclevcn.com (PPS) with ESMTPS id 3v12bdm79e-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-	Tue, 19 Dec 2023 22:23:44 +0000
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=CkTGvsXwHhD2Ou0t0wRoHpj1qoc3/R2zWiQ5vsHGDJ8i2NPm+ashlMj5Wn7GNS9FGz987LVzpBXsr/VoVvZun9kHuqWPSNvQYcur+kFFQjrDtqkfeT9f1TAkzc007xxxClO9/OL4x+BNH8OXfxaoiwmQberWAsHlZpeY+pUCgCQvoT/JLlZw0oVVwfL0rr7Uj9DZc4+MY2bTIBSV6Ae4Tu5xcbf05eVoCmFTAiZxeZEan6IauUgKWNl05BHuzctizB0IzBhz93A0hUKEatjur0LIzkuaqoPp0MzInLhc/wn8pxW3TVxkldzgKbaag5nhNQMzQYFgeRJOQGu8QnOd5Q==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector9901;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=ZCBvdGxOKSH5X9csgrrw9C2jXa2nu5uKOW5Rf/o626g=;
- b=OxsT+FR+J0okUz0GlcluA+usIaPI20HCFY9mFlZA5JnkXZV13vb/EdqgaMiXJvuNsFm2dAZm09Vnd+vMDdrR50oO3YJXyDsGQ8FmIBEKZYlBhu3Sxj0sXvbFv09A47STNMDykkcxc3Z7KrI1mwilLX6Kf8VNebpWqUTwcvca9sNWQUZAnoG+y0KHrk1NaPxwu98DdzlbmWJZdrW8ljfFcv79U3T0F7f0lJxtbPO96OUk/kEssBQhQ/t6uRkh7+/pSU6l9ir7EQ8A7yKgW/R2F5GADoPTvatTI1BcHq9XGAu8Axp0/Kv7BsDgWWlJRPTxK/Pcedfpu3dgfUoNlfZOvQ==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=oracle.com; dmarc=pass action=none header.from=oracle.com;
- dkim=pass header.d=oracle.com; arc=none
+	dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b="MtreWpKm"
+Received: by mail-ot1-f50.google.com with SMTP id 46e09a7af769-6d9f4eed60eso3967379a34.1
+        for <linux-xfs@vger.kernel.org>; Tue, 19 Dec 2023 15:34:03 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
- d=oracle.onmicrosoft.com; s=selector2-oracle-onmicrosoft-com;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=ZCBvdGxOKSH5X9csgrrw9C2jXa2nu5uKOW5Rf/o626g=;
- b=Jcut/uYeXbbep7sbRKQL127ykaUjNh6/AgJ+xqtssM285tfZ5OiqOmsn7W4+6gSAqEBZPfQiq1tT8nZGvU/e54D9g6JEQhNxG9aL+vRPVbnj7pnGtdSbV8x1SN5ypLHg9vwW65L8xPgRub3NsiPS9fJs1/R4LiP7nc6br7F/u34=
-Received: from SN6PR10MB2701.namprd10.prod.outlook.com (2603:10b6:805:45::20)
- by PH0PR10MB7100.namprd10.prod.outlook.com (2603:10b6:510:28b::11) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.7091.38; Tue, 19 Dec
- 2023 22:23:04 +0000
-Received: from SN6PR10MB2701.namprd10.prod.outlook.com
- ([fe80::ad52:5366:bcf1:933d]) by SN6PR10MB2701.namprd10.prod.outlook.com
- ([fe80::ad52:5366:bcf1:933d%3]) with mapi id 15.20.7091.034; Tue, 19 Dec 2023
- 22:23:04 +0000
-From: Wengang Wang <wen.gang.wang@oracle.com>
-To: Dave Chinner <david@fromorbit.com>
-CC: "Darrick J. Wong" <djwong@kernel.org>,
-        "linux-xfs@vger.kernel.org"
-	<linux-xfs@vger.kernel.org>
-Subject: Re: [PATCH 0/9] xfs file non-exclusive online defragment
-Thread-Topic: [PATCH 0/9] xfs file non-exclusive online defragment
-Thread-Index: 
- AQHaLq/DBPQjWKfW/0yGGD6NwG60UrCpTWoAgABe/wCAAOiSAIAANdGAgAR17ICAAeNngIAAA1IAgAAPAIA=
-Date: Tue, 19 Dec 2023 22:23:04 +0000
-Message-ID: <54663D29-4900-47CC-8756-CFFA43DE6C7A@oracle.com>
-References: <20231214170530.8664-1-wen.gang.wang@oracle.com>
- <20231214213502.GI361584@frogsfrogsfrogs>
- <ZXvEtvRm1rkT03Sb@dread.disaster.area>
- <97269730-511F-438B-9840-59CAF7997FC2@oracle.com>
- <ZXy08z140/XsCijh@dread.disaster.area>
- <D074B518-2C9E-4312-AC31-866AABE1A668@oracle.com>
- <6480D0D9-7105-41CB-8B6D-1760DE26DDE4@oracle.com>
- <ZYILKEu7c/R5zY1S@dread.disaster.area>
-In-Reply-To: <ZYILKEu7c/R5zY1S@dread.disaster.area>
-Accept-Language: en-US
-Content-Language: en-US
-X-MS-Has-Attach: 
-X-MS-TNEF-Correlator: 
-x-mailer: Apple Mail (2.3774.200.91.1.1)
-x-ms-publictraffictype: Email
-x-ms-traffictypediagnostic: SN6PR10MB2701:EE_|PH0PR10MB7100:EE_
-x-ms-office365-filtering-correlation-id: 9d9837a7-3d49-4d52-05e8-08dc00e11180
-x-ms-exchange-senderadcheck: 1
-x-ms-exchange-antispam-relay: 0
-x-microsoft-antispam: BCL:0;
-x-microsoft-antispam-message-info: 
- hCztaCZV5/DKye+D7wXjC6c8ibqVLako9SSKkzC/I3GSb3+Rj5iy+zRq0pnSWhBEW0RiRwd1mMRNgS3fIPAtymVx+c//VX6DoaUguNXsBnVd09bAHn88pqu1KGoXJXxBoW/pY50FR6kotwLgIhhIRRcEdm5uB3cC1CVntLhazyWDoAY0Gt9BU5AmZFYEc8NQbqDCv/5fooQRVe6x3LwYa6bX1nueDcJoDkes1Y/C5fGB7IQtVgt+pis7aS4wvoJfrMNh2XTSMlAKzjm9Okhy1nkeMzzLKPPWMUiwGbNEx5bfBFDsPjJBvmNWxLhqRFkrDP8IhcFpzgYrzHalHFpOMZ4aYr/d/BRLqCzRnOd2TnD3qXvzAuL7n1Q4rPlG4F9XxkdNIIOfgQD7DacGuuet2zO9HGROkGATAyZcNuU45RIMfxo2Hq/U/ttSb9v9TfH1IANRrTfWd7JcDRu5BX4agdt+K5B47sPZYsnvorHmO7v2I/2Q6XQ61WbGBI/0yV0EyYMXXL68Nlu58bCOfTuvEqUZk5WX/rdATRZYw4byYJLXa77hWhtfEE51yDk7ga7PUI1ptW5FnSH7r+FDV1wZukeL7LQgbI9dux9xkC3fJMe1Cbemno/MUw9y79c/b45G0J3Vhy+4sXcjrEDUNHXb3w==
-x-forefront-antispam-report: 
- CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:SN6PR10MB2701.namprd10.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230031)(346002)(136003)(39860400002)(366004)(396003)(376002)(230922051799003)(1800799012)(451199024)(64100799003)(186009)(36756003)(38070700009)(66946007)(66556008)(6916009)(316002)(66476007)(91956017)(66446008)(4744005)(54906003)(76116006)(64756008)(122000001)(8676002)(4326008)(8936002)(38100700002)(5660300002)(71200400001)(6512007)(2906002)(53546011)(6506007)(6486002)(478600001)(86362001)(2616005)(26005)(41300700001)(33656002)(45980500001);DIR:OUT;SFP:1101;
-x-ms-exchange-antispam-messagedata-chunkcount: 1
-x-ms-exchange-antispam-messagedata-0: 
- =?utf-8?B?aHRhdkwwcldBU0daTURuYkhmNzdjUHgyVyt5Zm9nTjl2VEkvOXJoZ0ZFOVdm?=
- =?utf-8?B?TldySHRaQ1QzcmZGMExYT1RoanZIc3JXSFovMS9ZSjZscDBzWmlIQ2hVT3hR?=
- =?utf-8?B?S0N0MjlDUzcrU2FCUWVqQlJhNUdaL3NGa0RScERjREZBalFDQWpDV3YwME91?=
- =?utf-8?B?N2lXT1VId1lhZkVvbDFQL2VzSXVGVUhMRGFRZjhDNXlQeEc0L1kzaTR3ZS95?=
- =?utf-8?B?Ym9NbHBTUDh0UG9qYzErR0VoNVlqUFJ2YXgvTGNGanlNWHhBOWZZSWVieUQz?=
- =?utf-8?B?cUJsWjJRS2h5dGc0NU1qY3VHREljck9PYVZhV2srZFhhckhEbTVWai9hZWx3?=
- =?utf-8?B?d0NUVFBEOC9JRVF6TUFtQ2dxaGw3WFRJM29namJuRUxuU09wTUZ4R3g5a1Q3?=
- =?utf-8?B?OVBhSU9GOXZIQWxxN3dFUVV1VkFlWGJlZi8zWnBJT211L1o5SjArcFVGUm1a?=
- =?utf-8?B?RXFlRWEzcFFBN2kvK3dLSEVXTDg2Q1FkbGZqUmVFblQ1aVFuSmNaNjlWdTZR?=
- =?utf-8?B?c0ZBOTJ5U1IvM0N2NldmdDBDd25jTlEyQ3lFVWJRbitXV0NDV29oMFBMQW5o?=
- =?utf-8?B?YmpoZm9YNnFHbkpXL2NaTHd5VTc1WWhmRDc1ME9pc3oyb2lXYnZ0Z0dWTWE1?=
- =?utf-8?B?UHVzVDdGZ3Q0SW1BcmZqalJQUEZvVUVwNUtnb2tYSmZ4a255QlBLNjRLQy9U?=
- =?utf-8?B?U0kraWkxNjEvMWJCTnRpcWYrL290VmZoSDQyMzkxWGxWR0ZJUndSeVZkR0kv?=
- =?utf-8?B?bEI5ZU9Ub3U5ZFA0KzFWT3BjTXN6cURqSW94WTh6QUhoclRFNzQzdm1VenQx?=
- =?utf-8?B?YU9YM3JsdUIwVlNhUUJJN2toRndCVHJweWZVQmpETEYvS0h1OGFONnJ2Tm9s?=
- =?utf-8?B?MWtZSWhCaHdsalBINUtlbWc4bGNwTWFYblJuWDJveklORE5oVVNzcDM2ZnlH?=
- =?utf-8?B?OUpSTFhITHZndmtOZTVudU1Ta0JKOEYxT09NYWFnb3lsTmJRV3YwendQalpa?=
- =?utf-8?B?WXlOd0hVOU8xQ2dzTUk2QjJIbnFhcEo0bGxJQkxjMmhMbG1wSU0rMW40aFI4?=
- =?utf-8?B?UjU3UkFJaGJTRGJ3N3J0VEtkVVB1QURvaUF2QkJiZm5SOFNzbXVabCtDaVpa?=
- =?utf-8?B?OGUybjhSd011TUQ2SHVOU2dSS1hSQWpFeWN1VlEwUkkwa3QwaVRuZWlVN05w?=
- =?utf-8?B?NWZ4Mi94b0w1YzY1cTNpd3pxOEFOcEpVczZjbjJMMFVOSmthZXV2SlNIYTJF?=
- =?utf-8?B?RUxzUnBNY2pzVUxKcW45Zk82WFNld0hLazh5MmhCV1c4TThCSDdFNEloYmtP?=
- =?utf-8?B?K1NJdDNWd1F1aTFFNEJ0a0ZQblo5TTEwdVlUZTI0dndVeWNRWXhhR0VmR2FU?=
- =?utf-8?B?ek9LRlJtN2x2N3k1UGdkT0VHTUdqejVneEtIaUhVTVBIY3U1RXdSNVlPd21z?=
- =?utf-8?B?M2RwcEhJcEd2OVFxOEdzRzQ1Wk5XS1l5aFNXRzdyK0tvamRoWjdhdVVUMmQ3?=
- =?utf-8?B?TG0xNDNDMzRaZ2twdXZLSlV0ejRZZWthSHZZcUJISk82RzFLSDFFZHc2bEEr?=
- =?utf-8?B?b2lsV3F2VjFaU1NRRHBDMmZSelc5ZTRRMDVOYmM4amc0YWh0TURWYkpmYWpB?=
- =?utf-8?B?SnBBZXk0VlJNa0Q1eElaZGRnam9KdnV4T3B6N3FVSWEzQUpiV2pTbG1wdFhR?=
- =?utf-8?B?YVBmYUxQQ29pTFhhZVNSZXlIbXBwcTBEcUVHaDR2YUt6bzkrcXZCeUdkL09y?=
- =?utf-8?B?RGV6QTZmZzBEMXZXVUtEcUxYdGFEeCtSaVVWM3NJVnhsU3VlQUxsQlgyWVhT?=
- =?utf-8?B?cEFERzg3cUVjdmJKYmFYd09aZktOejU3WEgvZHhsenl5UEIwK0VrV2xKbDgv?=
- =?utf-8?B?ZFpqL3dRL1NVajRjNFNDYzRSUVllS1NWZ2dzTm91S3dQSHdhMjYvbTVwQVk2?=
- =?utf-8?B?c2JsMk0yUVNFYmhPZmw3U3UzdHlXemxVT3lYS0R5QXNnQWVrUUhIbXp3aTA2?=
- =?utf-8?B?NzA2RFVJQUNZMjhsQjF4WkFQZENMY3hwclFzM0RnU1RLZVRqZE93R0hlZk5C?=
- =?utf-8?B?OVBHWlZiWFYyc2p2NEdleGFrN0pZMlZaK1YxU01CQktHdklzZjZ1dGZ1c29M?=
- =?utf-8?B?T1R6VTFsaVpqblNMdHBnUERxNFNRb1pNTTMwNkVzMU9wYkV6S3B2dWdDdkZY?=
- =?utf-8?B?OVE9PQ==?=
-Content-Type: text/plain; charset="utf-8"
-Content-ID: <5BDC9D5F775BD446BAC773195F73E26D@namprd10.prod.outlook.com>
-Content-Transfer-Encoding: base64
+        d=fromorbit-com.20230601.gappssmtp.com; s=20230601; t=1703028843; x=1703633643; darn=vger.kernel.org;
+        h=in-reply-to:content-transfer-encoding:content-disposition
+         :mime-version:references:message-id:subject:cc:to:from:date:from:to
+         :cc:subject:date:message-id:reply-to;
+        bh=QJQt7cbCUi1tOuMx0ASymYCoclSLcgR/2qgTejmDPTU=;
+        b=MtreWpKmZ8jrOi+oP08vul+QoiiZiplTZ30lav2bTTchrxD7P0Cq6iSv5zLU15lywH
+         hwm+Qk9suMl1/23d45yuh2jbn/jNWz5sgv8JTv8q3puTqQvzOs3FMAt+yZXfVSp4Heyy
+         vviSKwPHyH5dAUgTFc16OcRQBW4wNqUDkkvdnZQSAS2t4nse/sZOiynRbd67rrM59Pgc
+         7dxiJaXT2HRwKz8+CFIZRFGMoNCS8kcLELwi4M+Oic+5l4Mh8F/3dXkxw7ai9BghxY6h
+         4JVE2NotcGQL97FK8D4bQkgBoPnGeSfWrUqR/7MZvTxj2NZNCXeFiCZe2oyAx38u0K6E
+         aqDA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1703028843; x=1703633643;
+        h=in-reply-to:content-transfer-encoding:content-disposition
+         :mime-version:references:message-id:subject:cc:to:from:date
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=QJQt7cbCUi1tOuMx0ASymYCoclSLcgR/2qgTejmDPTU=;
+        b=g+4nHARnIhN0kfoIkqfyTG0AfRxe0xS33qjXEVf1lqdUx5uDL2rzkCLOV+uG3CX0OL
+         0bIMk21GBHjHU0W2BEqoGwv2ZsU8GGKSL569DBPOkDz5dTkl/l8+cI4LMXvRqF6ndoO8
+         VxWzSSR3IFQ3k248p+2fDs4ppWJ9naR14PRI97RFc7y+Ewp0m6lIfhjm+xOBNPVGebTu
+         8QFgO+zOchmgIK+xGRsMDbcfmRSxQDeZVkggDTgljGE9HyLmejJtIN6wk+qveKV6zWpl
+         PgBu37pUFAxNPCmnFtsy5nuLv2I4g7QR6NBLr+U3X0iYfUewOofznUbvQggpgDlBh9Sr
+         Mt2w==
+X-Gm-Message-State: AOJu0YzkLbyjAXAAEXQEzM9yH0p3HROx2GQ8zuYWcmygHrqxYrq5Rtuc
+	Ox4iNzfqxbX1L+b1otkqWxi+bA==
+X-Google-Smtp-Source: AGHT+IGUSBbzpL6dCwMmMDy4BA/oZq0bz76xCWnpQDCC4RjQFFWKr1IXur8/+3hkhIwIpSmVt3cMug==
+X-Received: by 2002:a05:6830:1084:b0:6d8:5323:2516 with SMTP id y4-20020a056830108400b006d853232516mr17340495oto.19.1703028842847;
+        Tue, 19 Dec 2023 15:34:02 -0800 (PST)
+Received: from dread.disaster.area (pa49-180-125-5.pa.nsw.optusnet.com.au. [49.180.125.5])
+        by smtp.gmail.com with ESMTPSA id q64-20020a634343000000b005cdb499acd0sm1929873pga.42.2023.12.19.15.34.00
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Tue, 19 Dec 2023 15:34:01 -0800 (PST)
+Received: from dave by dread.disaster.area with local (Exim 4.96)
+	(envelope-from <david@fromorbit.com>)
+	id 1rFjb4-00AdXV-0a;
+	Wed, 20 Dec 2023 10:33:58 +1100
+Date: Wed, 20 Dec 2023 10:33:58 +1100
+From: Dave Chinner <david@fromorbit.com>
+To: Alexander Potapenko <glider@google.com>
+Cc: Aleksandr Nogikh <nogikh@google.com>,
+	Dave Chinner <dchinner@redhat.com>,
+	syzbot+a6d6b8fffa294705dbd8@syzkaller.appspotmail.com, hch@lst.de,
+	davem@davemloft.net, herbert@gondor.apana.org.au,
+	linux-crypto@vger.kernel.org, linux-kernel@vger.kernel.org,
+	syzkaller-bugs@googlegroups.com, linux-xfs@vger.kernel.org
+Subject: Re: [syzbot] [crypto?] KMSAN: uninit-value in __crc32c_le_base (3)
+Message-ID: <ZYIoZuGKsVaOt2QI@dread.disaster.area>
+References: <20231213104950.1587730-1-glider@google.com>
+ <ZXofF2lXuIUvKi/c@rh>
+ <ZXopGGh/YqNIdtMJ@dread.disaster.area>
+ <CAG_fn=UukAf5sPrwqQtmL7-_dyUs3neBpa75JAaeACUzXsHwOA@mail.gmail.com>
+ <ZXt2BklghFSmDbhg@dread.disaster.area>
+ <CAG_fn=VqSEyt+vwZ7viviiJtipPPYyzEhkuDjdnmRcW-UXZkYg@mail.gmail.com>
+ <ZXzMU9DQ7JqeYwvb@dread.disaster.area>
+ <CANp29Y5XPoH3tdZ_ZEJK3oUZnFf5awQn1w3E95YJFJ-wPxQQ4g@mail.gmail.com>
+ <ZYGPZUerlEaCVRq8@dread.disaster.area>
+ <CAG_fn=XaT0pt0j-=BoOKFU9nh+R7NY3qgwtk5sTS3afDunnmwA@mail.gmail.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-MS-Exchange-AntiSpam-ExternalHop-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-ExternalHop-MessageData-0: 
-	tmcWhXEK/uR/58V/DGA3O25pI1W2MjdRkSzwQytzcNJczH33Fj3g9oY5kKnfAv2hIJTWdtoeenbK+pAEqDw5/NXGjjIRrdks4Er+FVyl58B5tCCWpFyNZjU0yn64HoJwBgkf6+BrUZ0uaU8eVecSX0SrnXQHcvwxJZCftruW4AZ+Mdf9DbEzzVpK+EDrUec4kI2oMDrchyuHeogUY2g6vLWMHT8Ad01NN1QenIqlkywH70Elg1sWBxEC1K6BsPJjUwqARgOCxZnFvoFM5H/FS8nJ7CtlvpiyyOirRzIbbplfxxBXh5Aqz1LE8ihEMkRM1a0cAg8S+NP/lFcjGO7275288wb4IHd3bFzJMHOfREDZRj0yrQw/ezC3ENjtn38rTDYARFKZ+c+Z3PQif5GwgUwBQSSeD/tfnNWcCYhvfO4nosP2qeH/YJL8UKxTpAC4CoWL3bYYx5/3ejqv2O+2UEr6VPCKQuCVCZfOJ6bjQfOq02xU9EQsbXc1EryQa+bGMEb64RAtf6ek6k+sO2xpEuAnjPfQmvhhWpD5eAlFT548LIntKBYVkQ2Ovq39myK+aDVXnaebC1LNZG8+L7/a1YNCU1aEWFLnbHuYoSMoITU=
-X-OriginatorOrg: oracle.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-AuthSource: SN6PR10MB2701.namprd10.prod.outlook.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 9d9837a7-3d49-4d52-05e8-08dc00e11180
-X-MS-Exchange-CrossTenant-originalarrivaltime: 19 Dec 2023 22:23:04.0647
- (UTC)
-X-MS-Exchange-CrossTenant-fromentityheader: Hosted
-X-MS-Exchange-CrossTenant-id: 4e2c6054-71cb-48f1-bd6c-3a9705aca71b
-X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
-X-MS-Exchange-CrossTenant-userprincipalname: 3zFESI6izk2cZEpeDknQLRxsce8m0AIzYvnm092oR/4YRN1fD6sRvUrSO8L/l3Nd/OKd3btdTwwEU2k2yIbPCfn7jqQzPtsL5MObQuPctrk=
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: PH0PR10MB7100
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.272,Aquarius:18.0.997,Hydra:6.0.619,FMLib:17.11.176.26
- definitions=2023-12-19_13,2023-12-14_01,2023-05-22_02
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=0 mlxscore=0 spamscore=0
- adultscore=0 phishscore=0 bulkscore=0 mlxlogscore=934 malwarescore=0
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2311290000
- definitions=main-2312190166
-X-Proofpoint-GUID: Iw5v61YEqleEK4zjjsfsW_pF7lAnQVfH
-X-Proofpoint-ORIG-GUID: Iw5v61YEqleEK4zjjsfsW_pF7lAnQVfH
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <CAG_fn=XaT0pt0j-=BoOKFU9nh+R7NY3qgwtk5sTS3afDunnmwA@mail.gmail.com>
 
-DQoNCj4gT24gRGVjIDE5LCAyMDIzLCBhdCAxOjI54oCvUE0sIERhdmUgQ2hpbm5lciA8ZGF2aWRA
-ZnJvbW9yYml0LmNvbT4gd3JvdGU6DQo+IA0KPiBPbiBUdWUsIERlYyAxOSwgMjAyMyBhdCAwOTox
-NzozMVBNICswMDAwLCBXZW5nYW5nIFdhbmcgd3JvdGU6DQo+PiBIaSBEYXZlLA0KPj4gWWVzLCB0
-aGUgdXNlciBzcGFjZSBkZWZyYWcgd29ya3MgYW5kIHNhdGlzZmllcyBteSByZXF1aXJlbWVudCAo
-YWxtb3N0IG5vIGNoYW5nZSBmcm9tIHlvdXIgZXhhbXBsZSBjb2RlKS4NCj4gDQo+IFRoYXQncyBn
-b29kIHRvIGtub3cgOikNCj4gDQo+PiBMZXQgbWUga25vdyBpZiB5b3Ugd2FudCBpdCBpbiB4ZnNw
-cm9nLg0KPiANCj4gWWVzLCBpIHRoaW5rIGFkZGluZyBpdCBhcyBhbiB4ZnNfc3BhY2VtYW4gY29t
-bWFuZCB3b3VsZCBiZSBhIGdvb2QNCj4gd2F5IGZvciB0aGlzIGRlZnJhZyBmZWF0dXJlIHRvIGJl
-IG1haW50YWluZWQgZm9yIGFueW9uZSB3aG8gaGFzIG5lZWQNCj4gZm9yIGl0Lg0KPiANCg0KR290
-IGl0LiBXaWxsIHRyeSBpdC4NCg0KVGhhbmtzLA0KV2VuZ2FuZw0KDQo=
+On Tue, Dec 19, 2023 at 02:56:04PM +0100, Alexander Potapenko wrote:
+> On Tue, Dec 19, 2023 at 1:41 PM Dave Chinner <david@fromorbit.com> wrote:
+> >
+> > On Mon, Dec 18, 2023 at 11:22:40AM +0100, Aleksandr Nogikh wrote:
+> > > Hi Dave,
+> > >
+> > > > KMSAN has been used for quite a long time with syzbot, however,
+> > > > and it's supposed to find these problems, too. Yet it's only been
+> > > > finding this for 6 months?
+> > >
+> > > As Alex already mentioned, there were big fs fuzzing improvements in
+> > > 2022, and that's exactly when we started seeing "KMSAN: uninit-value
+> > > in __crc32c_le_base" (I've just checked crash history). Before that
+> > > moment the code was likely just not exercised on syzbot.
+> >
+> > Can you tell us what these "big fuzzing improvements" were? I mean,
+> > you're trying to fuzz our code and we've been working on rejecting
+> > fuzzing for the last 15 years, so if you're doing something novel it
+> > would help us work out how to defeat it quickly and effciently.
+> >
+> > > On Fri, Dec 15, 2023 at 10:59 PM 'Dave Chinner' via syzkaller-bugs
+> > > <syzkaller-bugs@googlegroups.com> wrote:
+> > > >
+> > > > On Fri, Dec 15, 2023 at 03:41:49PM +0100, Alexander Potapenko wrote:
+> > > > >
+> > > > > You are right, syzbot used to mount XFS way before 2022.
+> > > > > On the other hand, last fall there were some major changes to the way
+> > > > > syz_mount_image() works, so I am attributing the newly detected bugs
+> > > > > to those changes.
+> > > >
+> > > > Oh, so that's when syzbot first turned on XFS V5 format testing?
+> > > >
+> > > > Or was that done in April, when this issue was first reported?
+> > > >
+> > > > > Unfortunately we don't have much insight into reasons behind syzkaller
+> > > > > being able to trigger one bug or another: once a bug is found for the
+> > > > > first time, the likelihood to trigger it again increases, but finding
+> > > > > it initially might be tricky.
+> > > > >
+> > > > > I don't understand much how trivial is the repro at
+> > > > > https://gist.github.com/xrivendell7/c7bb6ddde87a892818ed1ce206a429c4,
+> > > >
+> > > > I just looked at it - all it does is create a new file. It's
+> > > > effectively "mount; touch", which is exactly what I said earlier
+> > > > in the thread should reproduce this issue every single time.
+> > > >
+> > > > > but overall we are not drilling deep enough into XFS.
+> > > > > https://storage.googleapis.com/syzbot-assets/8547e3dd1cca/ci-upstream-kmsan-gce-c7402612.html
+> > > > > (ouch, 230Mb!) shows very limited coverage.
+> > > >
+> > > > *sigh*
+> > > >
+> > > > Did you think to look at the coverage results to check why the
+> > > > numbers for XFS, ext4 and btrfs are all at 1%?
+> > >
+> > > Hmmm, thanks for pointing it out!
+> > >
+> > > Our ci-upstream-kmsan-gce instance is configured in such a way that
+> > > the fuzzer program is quite restricted in what it can do. Apparently,
+> > > it also lacks capabilities to do mounts, so we get almost no coverage
+> > > in fs/*/**. I'll check whether the lack of permissions to mount() was
+> > > intended.
+> > >
+> > > On the other hand, the ci-upstream-kmsan-gce-386 instance does not
+> > > have such restrictions at all and we do see fs/ coverage there:
+> > > https://storage.googleapis.com/syzbot-assets/609dc759f08b/ci-upstream-kmsan-gce-386-0e389834.html
+> > >
+> > > It's still quite low for fs/xfs, which is explainable -- we almost
+> > > immediately hit "KMSAN: uninit-value in __crc32c_le_base". For the
+> > > same reason, it's also somewhat lower than could be elsewhere as well
+> > > -- we spend too much time restarting VMs after crashes. Once the fix
+> > > patch reaches the fuzzed kernel tree, ci-upstream-kmsan-gce-386 should
+> > > be back to normal.
+> > >
+> > > If we want to see how deep syzbot can go into the fs/ code in general,
+> > > it's better to look at the KASAN instance coverage:
+> > > https://storage.googleapis.com/syzbot-assets/12b7d6ca74e6/ci-upstream-kasan-gce-root-0e389834.html
+> > >  (*)
+> > >
+> > > Here e.g. fs/ext4 is already 63% and fs/xfs is 16%.
+> >
+> > Actually, that XFS number is an excellent result. I don't think we
+> > can do much better than that.
+> >
+> > I know, that's not the response you expected.
+> >
+> > Everyone knows that higher coverage numbers are better because it
+> > means we've tested more code, right?
+> >
+> > Wrong.
+> >
+> > When it comes to fuzzing based attacks, the earlier the bad data is
+> > detected and rejected the better the result. We should see lower
+> > coverage of the code the better the detection and rejection
+> > algorithms get.  i.e. The detection code should be extensively
+> > covered, but the rest of the code should have very little coverage
+> > because of how quickly the filesystem reacts to fatal object
+> > corruption.
+> >
+> > And the evidence for this in the XFS coverage results?
+> >
+> > Take a look at fs/xfs/libxfs/xfs_inode_buf.c. Every single line of
+> > the disk inode format verifiers has been covered (i.e. every
+> > possible corruption case we can detect has been exercised).
+> >
+> > That's good.
+> >
+> > However, there is zero coverage of core formatting functions like
+> > xfs_inode_to_disk() that indicate no inodes have been successfully
+> > modified and written back to disk.
+> >
+> > That's *even better*.
+> >
+> > Think about that for a minute.
+> >
+> > The coverage data is telling us that we've read lots of corrupt
+> > inodes and rejected them, but the testing has made almost no
+> > successful inode modifications that have been written back to stable
+> > storage. That's because of widespread corruption in the images
+> > resulting in a fatal corruption being detected before modofications
+> > are being made or are being aborted before they are pushed back to
+> > the corrupt image.
+> >
+> > The same pattern appears for most other major on-disk subsystems.
+> > They either have not been exercised at all (e.g. extent btree code) or
+> > the only code in the subsystem that has significant coverage is the
+> > object lookup code and the format verifiers the lookup code runs.
+> >
+> > This is an excellent result because it proves that XFS is detecting
+> > the majority of corrupt structures in it's initial object
+> > search iteration paths. Corruption is not getting past the
+> > first read from disk and so no code other than the search/lookup
+> > code and the verifiers is getting run.
+> >
+> > Put simply: we are not letting corrupt structures get into code
+> > paths where they can be mis-interpretted and do damage.
+> >
+> > From my perspective as an experienced filesystem developer, this is
+> > exactly the sort of coverage pattern I would like to see from -all
+> > filesystems- when they are fed nothing but extensively corrupted
+> > filesystems the way syzbot does.
+> >
+> > The basic truth is that if filesystems are good at corruption
+> > detection and rejection, they should have very low code coverage
+> > numbers from syzbot testing.
+> >
+> > -Dave.
+> 
+> It is quite insightful that if we throw random garbage at a
+> well-written API then low coverage indicates that the checks are doing
+> their job.
+> 
+> But this is not how syzkaller works.
+
+In general, that statement is true. But we're talking about the
+filesystem fuzzing that syzkaller does, and that's a completely
+different beast.
+
+> Our goal is to produce as many well-formed inputs as possible to
+> exercise most of the code under test.
+> Then, a small step sideways from every well-formed input might trigger
+> a bug here or there.
+> It might as well be rejected early by the elaborate input checks (in
+> which case we won't be finding any new bugs), but anyway we should be
+> covering bigger parts of the code by just running valid inputs.
+
+Yes, you're talking about the syscall exercising interface. That
+works just fine for finding issues when the input comes from only
+one direction - the syscall interface.
+
+The issue is that filesystem testing has a second set of inputs that
+are being perturbed: the filesystem image being operated on by the
+syscalls.
+
+It's a simple fact that filesystem operations cannot be fully
+exercised if the filesystem image is corrupt. Corruption will be
+detected and the syscall operation will be aborted without having
+performed the desired operation.
+
+So while the goal might be to gain extensive subsystem code coverage
+from the syscall interface, this is being defeated by the additional
+peturbation of low level data objects (the corrupt filesystem)
+causing premature termination of the syscall explorations.
+
+> For certain subsystems with very limited APIs it is fairly easy to
+> generate all the possible valid inputs by simply combining syscalls.
+> In most cases we are still limited by the combinatorial explosion of
+> the search space though.
+> But if there are implicit dependencies that the fuzzer cannot deduce
+> from the descriptions, it will blindly flip bits in known inputs in
+> the hope to produce a new valid input - mostly in vain.
+> So seeing little coverage for a subsystem usually means that for some
+> reason we are just barely scratching the API surface.
+
+Yes, random bit perturbation fuzzing is a really basic "million
+monkeys bashing on typewriters" discovery technique. But when I read
+the coverage results, there are very few syscall entry points into
+the filesystem, and they all end up in the metadata read verifiers
+that point to extensive corruption detection occuring.
+
+> Compare this with fuzzing a C compiler.
+> Doing something like `head /dev/random > 1.c && gcc -c 1.c` in a loop
+> may eventually trigger interesting bugs in the compiler backend, but
+> most of the time the programs will be rejected by the lexer which is
+> smart enough to not accept garbage.
+> Is the lexer written correctly? Yes, as long as it does not crash on
+> these random inputs.
+> Does low coverage indicate that the whole compiler is written
+> correctly? Not necessarily. Tools like csmith will easily get past the
+> lexer checks by generating structurally valid programs that might be
+> broken from the semantic point of view.
+
+This is exactly equivalent of syzkaller feeding corrupt filesystem
+images to the filesystems.
+
+IOWs, syzkaller needs to stop using corrupt filesystem images if it
+wants to actually extensively cover filesystem internal
+functionality for filesystems with high rates of corruption
+rejection.
+
+> For some parts of the kernel syzkaller acts like csmith, because its
+> knowledge of the data layout is just enough to generate valid inputs.
+> For file systems, however, we might be lagging behind.
+
+I suspect the right word is "obsolete", not "lagging behind". That's
+what I'm trying to find out....
+
+> The last year changes in the fuzzer that we mentioned earlier improved
+> the initial seeding of file system images and added some basic
+> mutations, but there is still a lot to do.
+
+This really doesn't t tell us anything we didn't already know.
+
+What syzkaller -appears- to be doing with filesystems doesn't look
+much different to state of the art from 2005 where syscall
+operations were exercised against simulated disk failures and media
+corruptions instead of corrupted images. That quickly moved on to
+using image-based corruptions rather than simulated runtime failure
+because it was a lot simpler to implement and had much faster test
+cycles.
+
+e.g. Go look for "IRON File Systems" related papers from the
+University of Wisconsin where these techniques were first
+demonstrated. These were some of the foundational papers
+on filesystem error detection and handling that influenced the
+current XFS v5 format design and verifiation architecture.
+
+IOws, I'm trying to understand whether syzbot is actually doing
+something novel I've never seen before with it's filesystem images
+that might cause such coverage patterns. AFAICT syzkaller is not
+doing anything novel, but I can't be certain if the responses I get
+to requests for specific details are generalities devoid of any
+detail....
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
