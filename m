@@ -1,30 +1,30 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D89C55C97
-	for <linux-xfs@vger.kernel.org>; Tue, 19 Dec 2023 05:27:03 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DF4336D24
+	for <linux-xfs@vger.kernel.org>; Tue, 19 Dec 2023 05:27:31 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="qucd1cWI"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 3DBB4C433C7;
-	Tue, 19 Dec 2023 05:27:03 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="TiY9Xuet"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 5ACDAC433C7;
+	Tue, 19 Dec 2023 05:27:31 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1702963623;
-	bh=0Dln6JHcRdhBQaiA0TtncEyOlbFKKl9ErZFzTx/k0bA=;
+	s=k20201202; t=1702963651;
+	bh=LqbY3oJHMIVB4+uu++4ZVbzkoBNeBV/MeRkWtJv6o6Q=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=qucd1cWIhrBhSHNm3PeT1hxpPk6CszUZMpQpH+QtnvHoVuiDJjIvowiBVN0gtdfml
-	 xfhAG6PJcJYDpLTocj0Fa+nHEmiwU6UWSg62GWpFLL/NyzA04W75W/SlGRbhnjggS4
-	 PUXLG7rrq/40Nlg2YgsPvCkm2hXjrTlm5MHOD7EDzoEm30Ad3778Ikp2kK5tqskt/M
-	 KPvEN1NSkw+sez7gtUBuofJa4AwJIkzvnTvedsAcTmDqshb6q7vjgHxGCXksgXJ9TA
-	 Ltc2AxIyp7rpuCOBushuJMjm8mb0FzPU81kK1/j5fZzC2AsQ3hh7IrAquMBy4rzNgl
-	 RQxtupNLnqPaQ==
-Date: Mon, 18 Dec 2023 21:27:02 -0800
+	b=TiY9Xuett6QZZV3IPaDSXuVPNdlClqC71cbCDjWdfR7mMtr/5Br2xnyDcOi5G4v6A
+	 9UUiTzrGR/cLwQU3h5l/3XHci5m3fNa6RjeebS04jICj/ntpqSojjIw9FngsGanaDE
+	 7WnnxvdKDVzh1xtNTXdhTPXb2EyaEHU71B0K3E742K0tDFXFqYZT9c63DmyrDaUt2T
+	 BbxfXUJgLIOcJo5SWlp8fMqW6r4ESM51FJG32v0I+JUnqfviOc35Q1gGeNtVCcTBos
+	 SkgwRKejNOFRLWikedRQ7C1E6Y9pEy9Z4M433Mf1Gv6S9UYx3WcdMqkQ6ifpzdo9bD
+	 8IvzC2DomaEYQ==
+Date: Mon, 18 Dec 2023 21:27:30 -0800
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: Sam James <sam@gentoo.org>
 Cc: linux-xfs@vger.kernel.org
-Subject: Re: [PATCH v3 4/4] io: Adapt to >= 64-bit time_t
-Message-ID: <20231219052702.GJ361584@frogsfrogsfrogs>
+Subject: Re: [PATCH v3 3/4] build: Request 64-bit time_t where possible
+Message-ID: <20231219052730.GK361584@frogsfrogsfrogs>
 References: <20231215013657.1995699-1-sam@gentoo.org>
- <20231215013657.1995699-4-sam@gentoo.org>
+ <20231215013657.1995699-3-sam@gentoo.org>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
@@ -33,63 +33,40 @@ List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20231215013657.1995699-4-sam@gentoo.org>
+In-Reply-To: <20231215013657.1995699-3-sam@gentoo.org>
 
-On Fri, Dec 15, 2023 at 01:36:43AM +0000, Sam James wrote:
-> We now require (at least) 64-bit time_t, so we need to adjust some printf
-> specifiers accordingly.
-> 
-> Unfortunately, we've stumbled upon a ridiculous C mmoment whereby there's
-
-Plenty of those to go around...
-
-> no neat format specifier (not even one of the inttypes ones) for time_t, so
-> we cast to intmax_t and use %jd.
+On Fri, Dec 15, 2023 at 01:36:42AM +0000, Sam James wrote:
+> Suggested by Darrick during LFS review. We take the same approach as in
+> 5c0599b721d1d232d2e400f357abdf2736f24a97 ('Fix building xfsprogs on 32-bit platforms')
+> to avoid autoconf hell - just take the tried & tested approach which is working
+> fine for us with LFS already.
 > 
 > Signed-off-by: Sam James <sam@gentoo.org>
-> ---
-> v3: uintmax_t -> intmax_t as time_t is signed
-> 
->  io/stat.c | 6 +++---
->  1 file changed, 3 insertions(+), 3 deletions(-)
-> 
-> diff --git a/io/stat.c b/io/stat.c
-> index e8f68dc3..743a7586 100644
-> --- a/io/stat.c
-> +++ b/io/stat.c
-> @@ -66,11 +66,11 @@ dump_raw_stat(struct stat *st)
->  	printf("stat.ino = %llu\n", (unsigned long long)st->st_ino);
->  	printf("stat.size = %lld\n", (long long)st->st_size);
->  	printf("stat.blocks = %lld\n", (long long)st->st_blocks);
-> -	printf("stat.atime.tv_sec = %ld\n", st->st_atim.tv_sec);
-> +	printf("stat.atime.tv_sec = %jd\n", (intmax_t)st->st_atim.tv_sec);
 
-I almost wonder if we want a similar
-BUILD_BUG_ON(sizeof(time_t) < 8);
-here or something?
-
-Also I totally didn't realize that "intmax_t" is actually s64 on x86_64.
-I saw "int" and assumed "still 32-bit".
-
-But, I guess C99 says "...capable of representing any value of any basic
-signed integer type supported by the implementation."
-
-So it apparently works even for 32-bit compilers, at least according to
-godbolt.org...
+Looks good to me,
 Reviewed-by: Darrick J. Wong <djwong@kernel.org>
 
 --D
 
-
->  	printf("stat.atime.tv_nsec = %ld\n", st->st_atim.tv_nsec);
-> -	printf("stat.ctime.tv_sec = %ld\n", st->st_ctim.tv_sec);
-> +	printf("stat.ctime.tv_sec = %jd\n", (intmax_t)st->st_ctim.tv_sec);
->  	printf("stat.ctime.tv_nsec = %ld\n", st->st_ctim.tv_nsec);
-> -	printf("stat.mtime.tv_sec = %ld\n", st->st_mtim.tv_sec);
-> +	printf("stat.mtime.tv_sec = %jd\n", (intmax_t)st->st_mtim.tv_sec);
->  	printf("stat.mtime.tv_nsec = %ld\n", st->st_mtim.tv_nsec);
->  	printf("stat.rdev_major = %u\n", major(st->st_rdev));
->  	printf("stat.rdev_minor = %u\n", minor(st->st_rdev));
+> ---
+>  include/builddefs.in | 4 ++--
+>  1 file changed, 2 insertions(+), 2 deletions(-)
+> 
+> diff --git a/include/builddefs.in b/include/builddefs.in
+> index 147c9b98..969254f3 100644
+> --- a/include/builddefs.in
+> +++ b/include/builddefs.in
+> @@ -13,8 +13,8 @@ OPTIMIZER = @opt_build@
+>  MALLOCLIB = @malloc_lib@
+>  LOADERFLAGS = @LDFLAGS@
+>  LTLDFLAGS = @LDFLAGS@
+> -CFLAGS = @CFLAGS@ -D_FILE_OFFSET_BITS=64 -Wno-address-of-packed-member
+> -BUILD_CFLAGS = @BUILD_CFLAGS@ -D_FILE_OFFSET_BITS=64
+> +CFLAGS = @CFLAGS@ -D_FILE_OFFSET_BITS=64 -D_TIME_BITS=64 -Wno-address-of-packed-member
+> +BUILD_CFLAGS = @BUILD_CFLAGS@ -D_FILE_OFFSET_BITS=64 -D_TIME_BITS=64
+>  
+>  # make sure we don't pick up whacky LDFLAGS from the make environment and
+>  # only use what we calculate from the configured options above.
 > -- 
 > 2.43.0
 > 
