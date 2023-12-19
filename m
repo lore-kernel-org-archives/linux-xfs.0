@@ -1,268 +1,81 @@
-Received: from mail-qv1-f50.google.com (mail-qv1-f50.google.com [209.85.219.50])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from verein.lst.de (verein.lst.de [213.95.11.211])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E8FA81A592
-	for <linux-xfs@vger.kernel.org>; Tue, 19 Dec 2023 13:56:46 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=google.com
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="cwTcTN3D"
-Received: by mail-qv1-f50.google.com with SMTP id 6a1803df08f44-679dd3055faso26837466d6.0
-        for <linux-xfs@vger.kernel.org>; Tue, 19 Dec 2023 05:56:46 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20230601; t=1702994206; x=1703599006; darn=vger.kernel.org;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=Xf7vDZZkz6GwHHPc1HLYA9mBh21UgE7DpY4iGTWyAz0=;
-        b=cwTcTN3D6Y+IEM2OqV/TxVdImZpQMDK1Sn3yMYSwKY3+YQfSmYvqsc/3i7Je3Xlxpq
-         v7nS4TK03+jYJ7n3bD/1Q1v4eW3oNsJ1ESZTxtYmlp9TMyXnewTb/PlCAUYrL/47l0Jd
-         PL8CSqmGY22lg/Uf/A0x0ImRuh2MYU4vs+j0eu6YVNo27XFyNEyJ5RIW+YyN5wp61Jh4
-         nI9auUgV2IyAtJ+a6/TjWzYOIA2JuqB4amaeGFsppN4+KDnSQ3gl0UHcgzPAF1z7qcaW
-         veLp/JP7Y7osL4ukzpBJaD9STAwdLLXfHlhDUYM9bZNNcE2NbVKR/zEWsVXBlOy0hDSu
-         369w==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1702994206; x=1703599006;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=Xf7vDZZkz6GwHHPc1HLYA9mBh21UgE7DpY4iGTWyAz0=;
-        b=oQQt+Io4OYj8+nkEIza0ya9Kk3wQVz20cQmv+N4tvVuDJS6Q8hgS2B37r+rUwg8aI1
-         ECwMVt1SpdBkNi0uphIhkyvvQOzFc5ukmvLZmyZ5Q0AV41On3i6ap/Sfp+OPnUio2ro5
-         9PLnR7x4PDLqyooNneFFW6RBWwIQOb8byoEfArCp4XbNFZB33z/Er8GBuML7PakhaRgI
-         9Zmr6eUIDhK+P5kMP+PLAoHOWfF89+/zQuJ7awgoKncwdiNcuGXzEi4VNOGw8/nJC0sx
-         R972T1kA2JGRUuRG2XxhXrzu06Ll3wOv4AHL2cyfpB0HwFuYnjR52Z9oc2gyK5mEj8IB
-         CJvg==
-X-Gm-Message-State: AOJu0YzDJyi4k/ZM1a8HCR0uqWHHUPonGPIauS4tT0tCunVBuooj9s+n
-	n650TwNceE5TKltnrZxK70CmRvjIU4twIrjjR0HV6A==
-X-Google-Smtp-Source: AGHT+IFw6K+fSd7zNP5OAxlt5t49hDrYdU0WXtNNHDZXZBZ8B6avCWXoXQDOZ5AXqAPY1WKVaGYcD4jL72/J/7w57No=
-X-Received: by 2002:a05:6214:242e:b0:67f:28b7:a685 with SMTP id
- gy14-20020a056214242e00b0067f28b7a685mr7666971qvb.7.1702994205632; Tue, 19
- Dec 2023 05:56:45 -0800 (PST)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E4C811BDD8
+	for <linux-xfs@vger.kernel.org>; Tue, 19 Dec 2023 14:46:31 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=lst.de
+Received: by verein.lst.de (Postfix, from userid 2407)
+	id 2FB2768BFE; Tue, 19 Dec 2023 15:46:28 +0100 (CET)
+Date: Tue, 19 Dec 2023 15:46:27 +0100
+From: Christoph Hellwig <hch@lst.de>
+To: Chandan Babu R <chandan.babu@oracle.com>
+Cc: "Darrick J. Wong" <djwong@kernel.org>, linux-xfs@vger.kernel.org
+Subject: Re: [PATCH 5/8] xfs: remove xfs_attr_shortform_lookup
+Message-ID: <20231219144627.GA1477@lst.de>
+References: <20231219120817.923421-1-hch@lst.de> <20231219120817.923421-6-hch@lst.de>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <000000000000f66a3005fa578223@google.com> <20231213104950.1587730-1-glider@google.com>
- <ZXofF2lXuIUvKi/c@rh> <ZXopGGh/YqNIdtMJ@dread.disaster.area>
- <CAG_fn=UukAf5sPrwqQtmL7-_dyUs3neBpa75JAaeACUzXsHwOA@mail.gmail.com>
- <ZXt2BklghFSmDbhg@dread.disaster.area> <CAG_fn=VqSEyt+vwZ7viviiJtipPPYyzEhkuDjdnmRcW-UXZkYg@mail.gmail.com>
- <ZXzMU9DQ7JqeYwvb@dread.disaster.area> <CANp29Y5XPoH3tdZ_ZEJK3oUZnFf5awQn1w3E95YJFJ-wPxQQ4g@mail.gmail.com>
- <ZYGPZUerlEaCVRq8@dread.disaster.area>
-In-Reply-To: <ZYGPZUerlEaCVRq8@dread.disaster.area>
-From: Alexander Potapenko <glider@google.com>
-Date: Tue, 19 Dec 2023 14:56:04 +0100
-Message-ID: <CAG_fn=XaT0pt0j-=BoOKFU9nh+R7NY3qgwtk5sTS3afDunnmwA@mail.gmail.com>
-Subject: Re: [syzbot] [crypto?] KMSAN: uninit-value in __crc32c_le_base (3)
-To: Dave Chinner <david@fromorbit.com>
-Cc: Aleksandr Nogikh <nogikh@google.com>, Dave Chinner <dchinner@redhat.com>, 
-	syzbot+a6d6b8fffa294705dbd8@syzkaller.appspotmail.com, hch@lst.de, 
-	davem@davemloft.net, herbert@gondor.apana.org.au, 
-	linux-crypto@vger.kernel.org, linux-kernel@vger.kernel.org, 
-	syzkaller-bugs@googlegroups.com, linux-xfs@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20231219120817.923421-6-hch@lst.de>
+User-Agent: Mutt/1.5.17 (2007-11-01)
 
-On Tue, Dec 19, 2023 at 1:41=E2=80=AFPM Dave Chinner <david@fromorbit.com> =
-wrote:
->
-> On Mon, Dec 18, 2023 at 11:22:40AM +0100, Aleksandr Nogikh wrote:
-> > Hi Dave,
-> >
-> > > KMSAN has been used for quite a long time with syzbot, however,
-> > > and it's supposed to find these problems, too. Yet it's only been
-> > > finding this for 6 months?
-> >
-> > As Alex already mentioned, there were big fs fuzzing improvements in
-> > 2022, and that's exactly when we started seeing "KMSAN: uninit-value
-> > in __crc32c_le_base" (I've just checked crash history). Before that
-> > moment the code was likely just not exercised on syzbot.
->
-> Can you tell us what these "big fuzzing improvements" were? I mean,
-> you're trying to fuzz our code and we've been working on rejecting
-> fuzzing for the last 15 years, so if you're doing something novel it
-> would help us work out how to defeat it quickly and effciently.
->
-> > On Fri, Dec 15, 2023 at 10:59=E2=80=AFPM 'Dave Chinner' via syzkaller-b=
-ugs
-> > <syzkaller-bugs@googlegroups.com> wrote:
-> > >
-> > > On Fri, Dec 15, 2023 at 03:41:49PM +0100, Alexander Potapenko wrote:
-> > > >
-> > > > You are right, syzbot used to mount XFS way before 2022.
-> > > > On the other hand, last fall there were some major changes to the w=
-ay
-> > > > syz_mount_image() works, so I am attributing the newly detected bug=
-s
-> > > > to those changes.
-> > >
-> > > Oh, so that's when syzbot first turned on XFS V5 format testing?
-> > >
-> > > Or was that done in April, when this issue was first reported?
-> > >
-> > > > Unfortunately we don't have much insight into reasons behind syzkal=
-ler
-> > > > being able to trigger one bug or another: once a bug is found for t=
-he
-> > > > first time, the likelihood to trigger it again increases, but findi=
-ng
-> > > > it initially might be tricky.
-> > > >
-> > > > I don't understand much how trivial is the repro at
-> > > > https://gist.github.com/xrivendell7/c7bb6ddde87a892818ed1ce206a429c=
-4,
-> > >
-> > > I just looked at it - all it does is create a new file. It's
-> > > effectively "mount; touch", which is exactly what I said earlier
-> > > in the thread should reproduce this issue every single time.
-> > >
-> > > > but overall we are not drilling deep enough into XFS.
-> > > > https://storage.googleapis.com/syzbot-assets/8547e3dd1cca/ci-upstre=
-am-kmsan-gce-c7402612.html
-> > > > (ouch, 230Mb!) shows very limited coverage.
-> > >
-> > > *sigh*
-> > >
-> > > Did you think to look at the coverage results to check why the
-> > > numbers for XFS, ext4 and btrfs are all at 1%?
-> >
-> > Hmmm, thanks for pointing it out!
-> >
-> > Our ci-upstream-kmsan-gce instance is configured in such a way that
-> > the fuzzer program is quite restricted in what it can do. Apparently,
-> > it also lacks capabilities to do mounts, so we get almost no coverage
-> > in fs/*/**. I'll check whether the lack of permissions to mount() was
-> > intended.
-> >
-> > On the other hand, the ci-upstream-kmsan-gce-386 instance does not
-> > have such restrictions at all and we do see fs/ coverage there:
-> > https://storage.googleapis.com/syzbot-assets/609dc759f08b/ci-upstream-k=
-msan-gce-386-0e389834.html
-> >
-> > It's still quite low for fs/xfs, which is explainable -- we almost
-> > immediately hit "KMSAN: uninit-value in __crc32c_le_base". For the
-> > same reason, it's also somewhat lower than could be elsewhere as well
-> > -- we spend too much time restarting VMs after crashes. Once the fix
-> > patch reaches the fuzzed kernel tree, ci-upstream-kmsan-gce-386 should
-> > be back to normal.
-> >
-> > If we want to see how deep syzbot can go into the fs/ code in general,
-> > it's better to look at the KASAN instance coverage:
-> > https://storage.googleapis.com/syzbot-assets/12b7d6ca74e6/ci-upstream-k=
-asan-gce-root-0e389834.html
-> >  (*)
-> >
-> > Here e.g. fs/ext4 is already 63% and fs/xfs is 16%.
->
-> Actually, that XFS number is an excellent result. I don't think we
-> can do much better than that.
->
-> I know, that's not the response you expected.
->
-> Everyone knows that higher coverage numbers are better because it
-> means we've tested more code, right?
->
-> Wrong.
->
-> When it comes to fuzzing based attacks, the earlier the bad data is
-> detected and rejected the better the result. We should see lower
-> coverage of the code the better the detection and rejection
-> algorithms get.  i.e. The detection code should be extensively
-> covered, but the rest of the code should have very little coverage
-> because of how quickly the filesystem reacts to fatal object
-> corruption.
->
-> And the evidence for this in the XFS coverage results?
->
-> Take a look at fs/xfs/libxfs/xfs_inode_buf.c. Every single line of
-> the disk inode format verifiers has been covered (i.e. every
-> possible corruption case we can detect has been exercised).
->
-> That's good.
->
-> However, there is zero coverage of core formatting functions like
-> xfs_inode_to_disk() that indicate no inodes have been successfully
-> modified and written back to disk.
->
-> That's *even better*.
->
-> Think about that for a minute.
->
-> The coverage data is telling us that we've read lots of corrupt
-> inodes and rejected them, but the testing has made almost no
-> successful inode modifications that have been written back to stable
-> storage. That's because of widespread corruption in the images
-> resulting in a fatal corruption being detected before modofications
-> are being made or are being aborted before they are pushed back to
-> the corrupt image.
->
-> The same pattern appears for most other major on-disk subsystems.
-> They either have not been exercised at all (e.g. extent btree code) or
-> the only code in the subsystem that has significant coverage is the
-> object lookup code and the format verifiers the lookup code runs.
->
-> This is an excellent result because it proves that XFS is detecting
-> the majority of corrupt structures in it's initial object
-> search iteration paths. Corruption is not getting past the
-> first read from disk and so no code other than the search/lookup
-> code and the verifiers is getting run.
->
-> Put simply: we are not letting corrupt structures get into code
-> paths where they can be mis-interpretted and do damage.
->
-> From my perspective as an experienced filesystem developer, this is
-> exactly the sort of coverage pattern I would like to see from -all
-> filesystems- when they are fed nothing but extensively corrupted
-> filesystems the way syzbot does.
->
-> The basic truth is that if filesystems are good at corruption
-> detection and rejection, they should have very low code coverage
-> numbers from syzbot testing.
->
-> -Dave.
+So, the buildbot rightly complained that this can return an
+uninitialized error variable in xfs_attr_shortform_addname now
+(why are we disabling the goddam use of uninitialized variable
+warnings in Linux again, sigh..).
 
-It is quite insightful that if we throw random garbage at a
-well-written API then low coverage indicates that the checks are doing
-their job.
+I then not only created the trivial fix, but also wrote a simple wrapper
+for the setxattr syscall as the existing setfattr and attr tools don't
+allow to control the flag, which I assumed means xfstests didn't really
+test this as much as it should.  But that little test showed we're still
+getting the right errno values even with the unininitialized variable
+returns, which seemed odd.
 
-But this is not how syzkaller works.
-Our goal is to produce as many well-formed inputs as possible to
-exercise most of the code under test.
-Then, a small step sideways from every well-formed input might trigger
-a bug here or there.
-It might as well be rejected early by the elaborate input checks (in
-which case we won't be finding any new bugs), but anyway we should be
-covering bigger parts of the code by just running valid inputs.
+It turns out we're not even exercising this code any more, as
+xfs_attr_set already does a xfs_attr_lookup lookup first and has a
+copy of this logic executed much earlier (and I should have really though
+about that because I got very close to that code for the defer ops
+cleanup).
 
-For certain subsystems with very limited APIs it is fairly easy to
-generate all the possible valid inputs by simply combining syscalls.
-In most cases we are still limited by the combinatorial explosion of
-the search space though.
-But if there are implicit dependencies that the fuzzer cannot deduce
-from the descriptions, it will blindly flip bits in known inputs in
-the hope to produce a new valid input - mostly in vain.
-So seeing little coverage for a subsystem usually means that for some
-reason we are just barely scratching the API surface.
+So..  I'm tempted to just turn these checks into asserts with something
+like the below on top of this patch, I'll just need to see if it survives
+testing:
 
-Compare this with fuzzing a C compiler.
-Doing something like `head /dev/random > 1.c && gcc -c 1.c` in a loop
-may eventually trigger interesting bugs in the compiler backend, but
-most of the time the programs will be rejected by the lexer which is
-smart enough to not accept garbage.
-Is the lexer written correctly? Yes, as long as it does not crash on
-these random inputs.
-Does low coverage indicate that the whole compiler is written
-correctly? Not necessarily. Tools like csmith will easily get past the
-lexer checks by generating structurally valid programs that might be
-broken from the semantic point of view.
+diff --git a/fs/xfs/libxfs/xfs_attr.c b/fs/xfs/libxfs/xfs_attr.c
+index d6173888ed0d56..abdc58f286154a 100644
+--- a/fs/xfs/libxfs/xfs_attr.c
++++ b/fs/xfs/libxfs/xfs_attr.c
+@@ -1066,13 +1066,13 @@ xfs_attr_shortform_addname(
+ 	struct xfs_da_args	*args)
+ {
+ 	int			newsize, forkoff;
+-	int			error;
+ 
+ 	trace_xfs_attr_sf_addname(args);
+ 
+ 	if (xfs_attr_sf_findname(args)) {
+-		if (!(args->op_flags & XFS_DA_OP_REPLACE))
+-			return error;
++		int		error;
++
++		ASSERT(args->op_flags & XFS_DA_OP_REPLACE);
+ 
+ 		error = xfs_attr_sf_removename(args);
+ 		if (error)
+@@ -1086,8 +1086,7 @@ xfs_attr_shortform_addname(
+ 		 */
+ 		args->op_flags &= ~XFS_DA_OP_REPLACE;
+ 	} else {
+-		if (args->op_flags & XFS_DA_OP_REPLACE)
+-			return error;
++		ASSERT(!(args->op_flags & XFS_DA_OP_REPLACE));
+ 	}
+ 
+ 	if (args->namelen >= XFS_ATTR_SF_ENTSIZE_MAX ||
 
-For some parts of the kernel syzkaller acts like csmith, because its
-knowledge of the data layout is just enough to generate valid inputs.
-For file systems, however, we might be lagging behind.
-The last year changes in the fuzzer that we mentioned earlier improved
-the initial seeding of file system images and added some basic
-mutations, but there is still a lot to do.
-
-Hope this helps.
