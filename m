@@ -1,95 +1,227 @@
-Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-pg1-f175.google.com (mail-pg1-f175.google.com [209.85.215.175])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E1238171B2
-	for <linux-xfs@vger.kernel.org>; Tue, 19 Dec 2023 12:08:39 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DABAF18036
+	for <linux-xfs@vger.kernel.org>; Tue, 19 Dec 2023 12:41:13 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=fromorbit.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="unVcpjnl"
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-	d=infradead.org; s=bombadil.20210309; h=Content-Transfer-Encoding:
-	MIME-Version:References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:Sender
-	:Reply-To:Content-Type:Content-ID:Content-Description;
-	bh=4lobJdkgttRnfcjay0e76jDLIW9dCfTHLhTgwHPV2RU=; b=unVcpjnlqUilEswv+3NSOQaHIj
-	vDi/E4lXewkUlItHUfsnRAzulErsrPu+tjQHrEIqQJYNRDuN16ZxvSCNewdcE+D+Ih7L2p10sQ1XO
-	PUsPyGaJ2ZTXwKYuh0h88JgInLzVd5WlcPnvcbdgrai6sspj0wnYvnGWZ4750g4sDD/pfW74vCzk+
-	qEs8LykE66rcGaUNEl8btkFL+w9o+DaTylS78JgIS1rVRyX/R6gvyePOX6c5NHv7fNnpwkEjjaJ81
-	16xl1NiNBMi0CUmALZgKpAydODnDFQuJlwZGqZvKsFaiaSIUvWDUDKRsQYBrj8INSO6yROImIU3Cm
-	ps4JxspA==;
-Received: from 2a02-8389-2341-5b80-39d3-4735-9a3c-88d8.cable.dynamic.v6.surfer.at ([2a02:8389:2341:5b80:39d3:4735:9a3c:88d8] helo=localhost)
-	by bombadil.infradead.org with esmtpsa (Exim 4.96 #2 (Red Hat Linux))
-	id 1rFYtp-00DyGM-3C;
-	Tue, 19 Dec 2023 12:08:38 +0000
-From: Christoph Hellwig <hch@lst.de>
-To: Chandan Babu R <chandan.babu@oracle.com>
-Cc: "Darrick J. Wong" <djwong@kernel.org>,
-	linux-xfs@vger.kernel.org
-Subject: [PATCH 8/8] xfs: remove xfs_attr_sf_hdr_t
-Date: Tue, 19 Dec 2023 13:08:17 +0100
-Message-Id: <20231219120817.923421-9-hch@lst.de>
-X-Mailer: git-send-email 2.39.2
-In-Reply-To: <20231219120817.923421-1-hch@lst.de>
-References: <20231219120817.923421-1-hch@lst.de>
+	dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b="bKVXCS4L"
+Received: by mail-pg1-f175.google.com with SMTP id 41be03b00d2f7-5bdbe2de25fso3378515a12.3
+        for <linux-xfs@vger.kernel.org>; Tue, 19 Dec 2023 04:41:13 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=fromorbit-com.20230601.gappssmtp.com; s=20230601; t=1702989673; x=1703594473; darn=vger.kernel.org;
+        h=in-reply-to:content-transfer-encoding:content-disposition
+         :mime-version:references:message-id:subject:cc:to:from:date:from:to
+         :cc:subject:date:message-id:reply-to;
+        bh=jse3lCK79aXXY7rKkifQLf73K6m1hAauen4iGzJYwOo=;
+        b=bKVXCS4L0JWJesw9aXkA5G5G9azAxvKL11GFLNL0sVmvaWNiAK0bZMvykVrd1x0sMJ
+         cfmb1gSLbsyoHlOmStSZuHWWUf4BeBORrV0kwjbmeAiiDkhzG41AYd9mIcTX7KhU7AJ8
+         rXmtgKkR6ZkHtGIg4rjwY1sKYBEa1kJX6XZnESAxaSBLwRXw75qtQmqbDv4wMN3pILLK
+         Xewz2yMxt60EPuZgdI/G1tYJXnseM6SbYWEbpu2uKp3GncCLIlUYrtZTMM1ggqcfGv62
+         ElwGJm3S+sdpdXVWt6p1yE7/EiuNmnKul1onmfnGwsQLtNY9erUKj6AHZKG2bA35saa5
+         W4Gg==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1702989673; x=1703594473;
+        h=in-reply-to:content-transfer-encoding:content-disposition
+         :mime-version:references:message-id:subject:cc:to:from:date
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=jse3lCK79aXXY7rKkifQLf73K6m1hAauen4iGzJYwOo=;
+        b=Zdk+9h92vCOYxoQX/6zGV89H4KzDTYj+wbK9W1TX6uJMD0ppVe6cyq3sH9oApcX/vL
+         3h92zcianVRgeM6sy022WygxW7nyTUK3Br6NuZrI83ISoqlyREUboQzeMHjqULMRsTb3
+         xulpHJdHQQzQuP9AGbpWRLXM35k9egLa7NQRyPkyT3+lpw36FRFVdl5MYSswEj/dOUt2
+         RnXhJ1BlN0EqtxeqXP3MKKh+n+V4QlXPzmTwpXNEGw+G0ZC8tLYt3cWh0QQz/hzjhHwo
+         7ZUbo81NxcSjkMHxZ8Z4ImdGQ9STPKP+yu9q4CBKoXfrJiWj0fhfu4C3VakEjxDPy9gs
+         LbdQ==
+X-Gm-Message-State: AOJu0Yzzb1nA8e4Nhw9MXOOzYpb/uztQQd0hx1eooRPjnlXuM9vzWwpc
+	CWYwEjxnNhkp93fYf0RG8gmXmg==
+X-Google-Smtp-Source: AGHT+IEPLCO86rZfqisZYKNGDry6iN+zDRCMVlxtQWLkdJrxo7qFtm5U61BClIDbvuTHod8s8r5Skw==
+X-Received: by 2002:a05:6a21:19c:b0:194:b60b:aa70 with SMTP id le28-20020a056a21019c00b00194b60baa70mr441841pzb.56.1702989673219;
+        Tue, 19 Dec 2023 04:41:13 -0800 (PST)
+Received: from dread.disaster.area (pa49-180-125-5.pa.nsw.optusnet.com.au. [49.180.125.5])
+        by smtp.gmail.com with ESMTPSA id b2-20020a17090a6e0200b0028ad2c3bd08sm1429356pjk.33.2023.12.19.04.41.12
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Tue, 19 Dec 2023 04:41:12 -0800 (PST)
+Received: from dave by dread.disaster.area with local (Exim 4.96)
+	(envelope-from <david@fromorbit.com>)
+	id 1rFZPJ-00AQml-1i;
+	Tue, 19 Dec 2023 23:41:09 +1100
+Date: Tue, 19 Dec 2023 23:41:09 +1100
+From: Dave Chinner <david@fromorbit.com>
+To: Aleksandr Nogikh <nogikh@google.com>
+Cc: Alexander Potapenko <glider@google.com>,
+	Dave Chinner <dchinner@redhat.com>,
+	syzbot+a6d6b8fffa294705dbd8@syzkaller.appspotmail.com, hch@lst.de,
+	davem@davemloft.net, herbert@gondor.apana.org.au,
+	linux-crypto@vger.kernel.org, linux-kernel@vger.kernel.org,
+	syzkaller-bugs@googlegroups.com, linux-xfs@vger.kernel.org
+Subject: Re: [syzbot] [crypto?] KMSAN: uninit-value in __crc32c_le_base (3)
+Message-ID: <ZYGPZUerlEaCVRq8@dread.disaster.area>
+References: <000000000000f66a3005fa578223@google.com>
+ <20231213104950.1587730-1-glider@google.com>
+ <ZXofF2lXuIUvKi/c@rh>
+ <ZXopGGh/YqNIdtMJ@dread.disaster.area>
+ <CAG_fn=UukAf5sPrwqQtmL7-_dyUs3neBpa75JAaeACUzXsHwOA@mail.gmail.com>
+ <ZXt2BklghFSmDbhg@dread.disaster.area>
+ <CAG_fn=VqSEyt+vwZ7viviiJtipPPYyzEhkuDjdnmRcW-UXZkYg@mail.gmail.com>
+ <ZXzMU9DQ7JqeYwvb@dread.disaster.area>
+ <CANp29Y5XPoH3tdZ_ZEJK3oUZnFf5awQn1w3E95YJFJ-wPxQQ4g@mail.gmail.com>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
 Content-Transfer-Encoding: 8bit
-X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
+In-Reply-To: <CANp29Y5XPoH3tdZ_ZEJK3oUZnFf5awQn1w3E95YJFJ-wPxQQ4g@mail.gmail.com>
 
-Remove the last two users of the typedef.
+On Mon, Dec 18, 2023 at 11:22:40AM +0100, Aleksandr Nogikh wrote:
+> Hi Dave,
+> 
+> > KMSAN has been used for quite a long time with syzbot, however,
+> > and it's supposed to find these problems, too. Yet it's only been
+> > finding this for 6 months?
+> 
+> As Alex already mentioned, there were big fs fuzzing improvements in
+> 2022, and that's exactly when we started seeing "KMSAN: uninit-value
+> in __crc32c_le_base" (I've just checked crash history). Before that
+> moment the code was likely just not exercised on syzbot.
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
-Reviewed-by: Darrick J. Wong <djwong@kernel.org>
----
- fs/xfs/libxfs/xfs_attr_leaf.c | 4 ++--
- fs/xfs/libxfs/xfs_attr_sf.h   | 8 --------
- 2 files changed, 2 insertions(+), 10 deletions(-)
+Can you tell us what these "big fuzzing improvements" were? I mean,
+you're trying to fuzz our code and we've been working on rejecting
+fuzzing for the last 15 years, so if you're doing something novel it
+would help us work out how to defeat it quickly and effciently.
 
-diff --git a/fs/xfs/libxfs/xfs_attr_leaf.c b/fs/xfs/libxfs/xfs_attr_leaf.c
-index e1281ab413c832..6374bf10724207 100644
---- a/fs/xfs/libxfs/xfs_attr_leaf.c
-+++ b/fs/xfs/libxfs/xfs_attr_leaf.c
-@@ -816,7 +816,7 @@ xfs_attr_sf_removename(
- 	/*
- 	 * Fix up the start offset of the attribute fork
- 	 */
--	if (totsize == sizeof(xfs_attr_sf_hdr_t) && xfs_has_attr2(mp) &&
-+	if (totsize == sizeof(struct xfs_attr_sf_hdr) && xfs_has_attr2(mp) &&
- 	    (dp->i_df.if_format != XFS_DINODE_FMT_BTREE) &&
- 	    !(args->op_flags & (XFS_DA_OP_ADDNAME | XFS_DA_OP_REPLACE))) {
- 		xfs_attr_fork_remove(dp, args->trans);
-@@ -824,7 +824,7 @@ xfs_attr_sf_removename(
- 		xfs_idata_realloc(dp, -size, XFS_ATTR_FORK);
- 		dp->i_forkoff = xfs_attr_shortform_bytesfit(dp, totsize);
- 		ASSERT(dp->i_forkoff);
--		ASSERT(totsize > sizeof(xfs_attr_sf_hdr_t) ||
-+		ASSERT(totsize > sizeof(struct xfs_attr_sf_hdr) ||
- 				(args->op_flags & XFS_DA_OP_ADDNAME) ||
- 				!xfs_has_attr2(mp) ||
- 				dp->i_df.if_format == XFS_DINODE_FMT_BTREE);
-diff --git a/fs/xfs/libxfs/xfs_attr_sf.h b/fs/xfs/libxfs/xfs_attr_sf.h
-index 9abf7de95465f5..bc442222302486 100644
---- a/fs/xfs/libxfs/xfs_attr_sf.h
-+++ b/fs/xfs/libxfs/xfs_attr_sf.h
-@@ -6,14 +6,6 @@
- #ifndef __XFS_ATTR_SF_H__
- #define	__XFS_ATTR_SF_H__
- 
--/*
-- * Attribute storage when stored inside the inode.
-- *
-- * Small attribute lists are packed as tightly as possible so as
-- * to fit into the literal area of the inode.
-- */
--typedef struct xfs_attr_sf_hdr xfs_attr_sf_hdr_t;
--
- /*
-  * We generate this then sort it, attr_list() must return things in hash-order.
-  */
+> On Fri, Dec 15, 2023 at 10:59 PM 'Dave Chinner' via syzkaller-bugs
+> <syzkaller-bugs@googlegroups.com> wrote:
+> >
+> > On Fri, Dec 15, 2023 at 03:41:49PM +0100, Alexander Potapenko wrote:
+> > >
+> > > You are right, syzbot used to mount XFS way before 2022.
+> > > On the other hand, last fall there were some major changes to the way
+> > > syz_mount_image() works, so I am attributing the newly detected bugs
+> > > to those changes.
+> >
+> > Oh, so that's when syzbot first turned on XFS V5 format testing?
+> >
+> > Or was that done in April, when this issue was first reported?
+> >
+> > > Unfortunately we don't have much insight into reasons behind syzkaller
+> > > being able to trigger one bug or another: once a bug is found for the
+> > > first time, the likelihood to trigger it again increases, but finding
+> > > it initially might be tricky.
+> > >
+> > > I don't understand much how trivial is the repro at
+> > > https://gist.github.com/xrivendell7/c7bb6ddde87a892818ed1ce206a429c4,
+> >
+> > I just looked at it - all it does is create a new file. It's
+> > effectively "mount; touch", which is exactly what I said earlier
+> > in the thread should reproduce this issue every single time.
+> >
+> > > but overall we are not drilling deep enough into XFS.
+> > > https://storage.googleapis.com/syzbot-assets/8547e3dd1cca/ci-upstream-kmsan-gce-c7402612.html
+> > > (ouch, 230Mb!) shows very limited coverage.
+> >
+> > *sigh*
+> >
+> > Did you think to look at the coverage results to check why the
+> > numbers for XFS, ext4 and btrfs are all at 1%?
+> 
+> Hmmm, thanks for pointing it out!
+> 
+> Our ci-upstream-kmsan-gce instance is configured in such a way that
+> the fuzzer program is quite restricted in what it can do. Apparently,
+> it also lacks capabilities to do mounts, so we get almost no coverage
+> in fs/*/**. I'll check whether the lack of permissions to mount() was
+> intended.
+> 
+> On the other hand, the ci-upstream-kmsan-gce-386 instance does not
+> have such restrictions at all and we do see fs/ coverage there:
+> https://storage.googleapis.com/syzbot-assets/609dc759f08b/ci-upstream-kmsan-gce-386-0e389834.html
+> 
+> It's still quite low for fs/xfs, which is explainable -- we almost
+> immediately hit "KMSAN: uninit-value in __crc32c_le_base". For the
+> same reason, it's also somewhat lower than could be elsewhere as well
+> -- we spend too much time restarting VMs after crashes. Once the fix
+> patch reaches the fuzzed kernel tree, ci-upstream-kmsan-gce-386 should
+> be back to normal.
+> 
+> If we want to see how deep syzbot can go into the fs/ code in general,
+> it's better to look at the KASAN instance coverage:
+> https://storage.googleapis.com/syzbot-assets/12b7d6ca74e6/ci-upstream-kasan-gce-root-0e389834.html
+>  (*)
+> 
+> Here e.g. fs/ext4 is already 63% and fs/xfs is 16%.
+
+Actually, that XFS number is an excellent result. I don't think we
+can do much better than that.
+
+I know, that's not the response you expected.
+
+Everyone knows that higher coverage numbers are better because it
+means we've tested more code, right?
+
+Wrong.
+
+When it comes to fuzzing based attacks, the earlier the bad data is
+detected and rejected the better the result. We should see lower
+coverage of the code the better the detection and rejection
+algorithms get.  i.e. The detection code should be extensively
+covered, but the rest of the code should have very little coverage
+because of how quickly the filesystem reacts to fatal object
+corruption.
+
+And the evidence for this in the XFS coverage results?
+
+Take a look at fs/xfs/libxfs/xfs_inode_buf.c. Every single line of
+the disk inode format verifiers has been covered (i.e. every
+possible corruption case we can detect has been exercised).
+
+That's good.
+
+However, there is zero coverage of core formatting functions like
+xfs_inode_to_disk() that indicate no inodes have been successfully
+modified and written back to disk.
+
+That's *even better*.
+
+Think about that for a minute.
+
+The coverage data is telling us that we've read lots of corrupt
+inodes and rejected them, but the testing has made almost no
+successful inode modifications that have been written back to stable
+storage. That's because of widespread corruption in the images
+resulting in a fatal corruption being detected before modofications
+are being made or are being aborted before they are pushed back to
+the corrupt image.
+
+The same pattern appears for most other major on-disk subsystems.
+They either have not been exercised at all (e.g. extent btree code) or
+the only code in the subsystem that has significant coverage is the
+object lookup code and the format verifiers the lookup code runs.
+
+This is an excellent result because it proves that XFS is detecting
+the majority of corrupt structures in it's initial object
+search iteration paths. Corruption is not getting past the
+first read from disk and so no code other than the search/lookup
+code and the verifiers is getting run.
+
+Put simply: we are not letting corrupt structures get into code
+paths where they can be mis-interpretted and do damage.
+
+From my perspective as an experienced filesystem developer, this is
+exactly the sort of coverage pattern I would like to see from -all
+filesystems- when they are fed nothing but extensively corrupted
+filesystems the way syzbot does.
+
+The basic truth is that if filesystems are good at corruption
+detection and rejection, they should have very low code coverage
+numbers from syzbot testing.
+
+-Dave.
+
 -- 
-2.39.2
-
+Dave Chinner
+david@fromorbit.com
