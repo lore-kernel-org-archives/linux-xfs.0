@@ -1,30 +1,29 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 21C3147A41
-	for <linux-xfs@vger.kernel.org>; Wed, 20 Dec 2023 17:13:47 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 24FD247A45
+	for <linux-xfs@vger.kernel.org>; Wed, 20 Dec 2023 17:14:02 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="H79RxZpk"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id E318AC433C7;
-	Wed, 20 Dec 2023 17:13:46 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="pAWCvTzL"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 8E930C433C7;
+	Wed, 20 Dec 2023 17:14:02 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1703092427;
-	bh=bbfmD4lsEuWttsrc8ia9A7yE9qsLV1ihrny98hEu2fk=;
+	s=k20201202; t=1703092442;
+	bh=RmLNErv4jcB6L6bZqUF3NZIt+8DWdERjOrgk5Kn2mCQ=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=H79RxZpkvzpmOaWak0DzRWWz5dZvebKHhBhOC3Ci22CFRVhRkbXV8rN3sNuqVkMO/
-	 GVjELIJuwl0DbcVLQiZyV+ZIkVlSv6Jm9UhqtcF6Xxuo+P9TVwb7Z66LgP81IWOXFd
-	 f6dYCitu8a7/KFLfRsNOVcglz1dvIIz40g0Tqifx1t4xu06KmUfF6Uu6L7dGElNNDL
-	 fJFYtZIXrEAokbputZ5c8E6uwsxeSzhAECt1zgOdHTrgeG6ijuAl2VbwOMHDauV6si
-	 gGFALXAAxErMGP7HXZ6WoAlgvcik/8FeRr9NyX+ZaARYtWz0+nGm0m9HhCsl65qWmX
-	 Q/YFCBjsgY5Tg==
-Date: Wed, 20 Dec 2023 09:13:46 -0800
-Subject: [PATCH 4/6] xfs_mdrestore: EXTERNALLOG is a compat value,
- not incompat
+	b=pAWCvTzL5oCGKB4YsbS1CL+h3zWdCC0KPAzG4u1j+nSdoAdBgHL3vMlBzFKTVdOTg
+	 i3wIVWR5tYIOJCMuAhdJHQlGAhfErMEQmqFbUEtP6vRkXOz3RunQoPROc9qo0MZjjo
+	 adlZpzuH6blRl9IQf2qeV4y2j+R49KFLGA8k25Ek0FOKixbNmEXtPFT6d2DfSwK41/
+	 b6TqotmyjNIR8GLOyJYdOQQujArk8iLKFKMSN6XuByWCawlEFJ8/RxLbDGoP+0qJHU
+	 +zHIVgglPDGuEvyfdd18YNlrqMJKyuUGcsq1+o9Wm+HaiIExoF+mwtMzmBVvs1XeW4
+	 ZhT/hsmUTPIRg==
+Date: Wed, 20 Dec 2023 09:14:02 -0800
+Subject: [PATCH 5/6] xfs_mdrestore: fix missed progress reporting
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: djwong@kernel.org, cem@kernel.org
 Cc: Christoph Hellwig <hch@lst.de>, Chandan Babu R <chandanbabu@kernel.org>,
  linux-xfs@vger.kernel.org
-Message-ID: <170309218769.1607943.10932241213672207915.stgit@frogsfrogsfrogs>
+Message-ID: <170309218782.1607943.11655026394109868162.stgit@frogsfrogsfrogs>
 In-Reply-To: <170309218716.1607943.7868749567386210342.stgit@frogsfrogsfrogs>
 References: <170309218716.1607943.7868749567386210342.stgit@frogsfrogsfrogs>
 User-Agent: StGit/0.19
@@ -39,40 +38,100 @@ Content-Transfer-Encoding: 7bit
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-Fix this check to look at the correct header field.
+Currently, the progress reporting only triggers when the number of bytes
+read is exactly a multiple of a megabyte.  This isn't always guaranteed,
+since AG headers can be 512 bytes in size.  Fix the algorithm by
+recording the number of megabytes we've reported as being read, and emit
+a new report any time the bytes_read count, once converted to megabytes,
+doesn't match.
+
+Fix the v2 code to emit one final status message in case the last
+extent restored is more than a megabyte.
 
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
 Reviewed-by: Christoph Hellwig <hch@lst.de>
 Reviewed-by: Chandan Babu R <chandanbabu@kernel.org>
 ---
- mdrestore/xfs_mdrestore.c |    7 +++----
- 1 file changed, 3 insertions(+), 4 deletions(-)
+ mdrestore/xfs_mdrestore.c |   25 +++++++++++++++++++------
+ 1 file changed, 19 insertions(+), 6 deletions(-)
 
 
 diff --git a/mdrestore/xfs_mdrestore.c b/mdrestore/xfs_mdrestore.c
-index 3190e07e..1d65765d 100644
+index 1d65765d..685ca4c1 100644
 --- a/mdrestore/xfs_mdrestore.c
 +++ b/mdrestore/xfs_mdrestore.c
-@@ -268,7 +268,7 @@ read_header_v2(
- 	union mdrestore_headers		*h,
- 	FILE				*md_fp)
- {
--	bool				want_external_log;
-+	unsigned int			compat;
+@@ -7,6 +7,7 @@
+ #include "libxfs.h"
+ #include "xfs_metadump.h"
+ #include <libfrog/platform.h>
++#include "libfrog/div64.h"
  
- 	if (fread((uint8_t *)&(h->v2) + sizeof(h->v2.xmh_magic),
- 			sizeof(h->v2) - sizeof(h->v2.xmh_magic), 1, md_fp) != 1)
-@@ -280,10 +280,9 @@ read_header_v2(
- 	if (h->v2.xmh_reserved != 0)
- 		fatal("Metadump header's reserved field has a non-zero value\n");
+ union mdrestore_headers {
+ 	__be32				magic;
+@@ -160,6 +161,7 @@ restore_v1(
+ 	int			mb_count;
+ 	xfs_sb_t		sb;
+ 	int64_t			bytes_read;
++	int64_t			mb_read = 0;
  
--	want_external_log = !!(be32_to_cpu(h->v2.xmh_incompat_flags) &
--			XFS_MD2_COMPAT_EXTERNALLOG);
-+	compat = be32_to_cpu(h->v2.xmh_compat_flags);
+ 	block_size = 1 << h->v1.mb_blocklog;
+ 	max_indices = (block_size - sizeof(xfs_metablock_t)) / sizeof(__be64);
+@@ -208,9 +210,14 @@ restore_v1(
+ 	bytes_read = 0;
  
--	if (want_external_log && !mdrestore.external_log)
-+	if (!mdrestore.external_log && (compat & XFS_MD2_COMPAT_EXTERNALLOG))
- 		fatal("External Log device is required\n");
- }
+ 	for (;;) {
+-		if (mdrestore.show_progress &&
+-		    (bytes_read & ((1 << 20) - 1)) == 0)
+-			print_progress("%lld MB read", bytes_read >> 20);
++		if (mdrestore.show_progress) {
++			int64_t		mb_now = bytes_read >> 20;
++
++			if (mb_now != mb_read) {
++				print_progress("%lld MB read", mb_now);
++				mb_read = mb_now;
++			}
++		}
+ 
+ 		for (cur_index = 0; cur_index < mb_count; cur_index++) {
+ 			if (pwrite(ddev_fd, &block_buffer[cur_index <<
+@@ -240,6 +247,9 @@ restore_v1(
+ 		bytes_read += block_size + (mb_count << h->v1.mb_blocklog);
+ 	}
+ 
++	if (mdrestore.show_progress && bytes_read > (mb_read << 20))
++		print_progress("%lld MB read", howmany_64(bytes_read, 1U << 20));
++
+ 	if (mdrestore.progress_since_warning)
+ 		putchar('\n');
+ 
+@@ -343,6 +353,7 @@ restore_v2(
+ 	struct xfs_sb		sb;
+ 	struct xfs_meta_extent	xme;
+ 	char			*block_buffer;
++	int64_t			mb_read = 0;
+ 	int64_t			bytes_read;
+ 	uint64_t		offset;
+ 	int			len;
+@@ -419,16 +430,18 @@ restore_v2(
+ 		bytes_read += len;
+ 
+ 		if (mdrestore.show_progress) {
+-			static int64_t mb_read;
+-			int64_t mb_now = bytes_read >> 20;
++			int64_t	mb_now = bytes_read >> 20;
+ 
+ 			if (mb_now != mb_read) {
+-				print_progress("%lld MB read", mb_now);
++				print_progress("%lld mb read", mb_now);
+ 				mb_read = mb_now;
+ 			}
+ 		}
+ 	} while (1);
+ 
++	if (mdrestore.show_progress && bytes_read > (mb_read << 20))
++		print_progress("%lld mb read", howmany_64(bytes_read, 1U << 20));
++
+ 	if (mdrestore.progress_since_warning)
+ 		putchar('\n');
  
 
