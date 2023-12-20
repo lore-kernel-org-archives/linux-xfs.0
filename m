@@ -1,29 +1,29 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C860847A66
-	for <linux-xfs@vger.kernel.org>; Wed, 20 Dec 2023 17:11:57 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BA1D647A46
+	for <linux-xfs@vger.kernel.org>; Wed, 20 Dec 2023 17:12:13 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="HqDWRMeC"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 8D57AC433CA;
-	Wed, 20 Dec 2023 17:11:57 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="hYF+rUy1"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 2EBF2C433C7;
+	Wed, 20 Dec 2023 17:12:13 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1703092317;
-	bh=7G/UL274rtKbAKQhCnbv3dwuC+UcYc752BQy7RrS6mM=;
+	s=k20201202; t=1703092333;
+	bh=3QRagIHFiY0eMAPMWTGafvaL+kh6tRwu+n2N9TL9E7o=;
 	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=HqDWRMeCrKmjCB1WN3RMfVo9vtXYAO5OPjPyDfiOxB74vTjEWkXDfk/MmLkxfS3Zy
-	 yzkbkqfH1kNh6n5lkbsWx9WRwtLyQRJEhkahIP2vteyWsGk9nzfzrNV0bnV9YQ643u
-	 GasbvHAoGGiQ76QYpSJTr5G3qJ1OvSmSeBENZScCFJ4lQcFknCkAdJ+I6Mdnk2e6Eu
-	 LXetpbRt5GP23RQYJeLli5Z+dOkhQ8WB0r+gfvEEVMGKt629zQozb800GZi331n7Sw
-	 rnsVbQQ78i1s1exbbPBReBm68ZXkSztqXdygWasNrdJiLw1Wp/iY3d0o4ajq01DZmU
-	 oK4965RLypN3g==
-Date: Wed, 20 Dec 2023 09:11:57 -0800
-Subject: [PATCH 2/5] libxfs: don't UAF a requeued EFI
+	b=hYF+rUy1/CBwos2qbw1VFpcwIaMC8oIwG5snhWdRiz1h+EE+QT4ukno98iDT5SeWV
+	 860Huuoy5EOjPn8k/ogxBplKBZ+QtOuo5X6ro/NxafQwlCrqV/WyZ2vvrnuR/uK+U+
+	 WB/5Er7pd18KSx3WVdR5MCokMN8BYAPpbt2C9BYqYuLggF7xQAyYtrwmOSTReADETn
+	 vqH8r1Pg0wpPjic69QB7kAYEDd8DHLL90vbf6phTOhmp+YZpqR/I8eu+UhAjhyvIZ+
+	 o6BTfytjm+52n+fPWuP72BHNNsGZy6+N2VDewpzYyTSQ/MPuSv8D6hPBrFJP2a5VI5
+	 T6BqPYQMocypQ==
+Date: Wed, 20 Dec 2023 09:12:12 -0800
+Subject: [PATCH 3/5] xfs_copy: distinguish short writes to EOD from runtime
+ errors
 From: "Darrick J. Wong" <djwong@kernel.org>
 To: djwong@kernel.org, cem@kernel.org
-Cc: Christoph Hellwig <hch@lst.de>, Chandan Babu R <chandanbabu@kernel.org>,
- linux-xfs@vger.kernel.org
-Message-ID: <170309218390.1607770.7016009394079896736.stgit@frogsfrogsfrogs>
+Cc: linux-xfs@vger.kernel.org
+Message-ID: <170309218403.1607770.4299633539281504295.stgit@frogsfrogsfrogs>
 In-Reply-To: <170309218362.1607770.1848898546436984000.stgit@frogsfrogsfrogs>
 References: <170309218362.1607770.1848898546436984000.stgit@frogsfrogsfrogs>
 User-Agent: StGit/0.19
@@ -38,46 +38,47 @@ Content-Transfer-Encoding: 7bit
 
 From: Darrick J. Wong <djwong@kernel.org>
 
-In the kernel, commit 8ebbf262d4684 ("xfs: don't block in busy flushing
-when freeing extents") changed the allocator behavior such that AGFL
-fixing can return -EAGAIN in response to detection of a deadlock with
-the transaction busy extent list.  If this happens, we're supposed to
-requeue the EFI so that we can roll the transaction and try the item
-again.
-
-If a requeue happens, we should not free the xefi pointer in
-xfs_extent_free_finish_item or else the retry will walk off a dangling
-pointer.  There is no extent busy list in userspace so this should
-never happen, but let's fix the logic bomb anyway.
-
-We should have ported kernel commit 0853b5de42b47 ("xfs: allow extent
-free intents to be retried") to userspace, but neither Carlos nor I
-noticed this fine detail. :(
+Detect short writes to the end of the destination device and report
+them.
 
 Signed-off-by: Darrick J. Wong <djwong@kernel.org>
-Reviewed-by: Christoph Hellwig <hch@lst.de>
-Reviewed-by: Chandan Babu R <chandanbabu@kernel.org>
 ---
- libxfs/defer_item.c |    7 +++++++
- 1 file changed, 7 insertions(+)
+ copy/xfs_copy.c |   12 +++++++++++-
+ 1 file changed, 11 insertions(+), 1 deletion(-)
 
 
-diff --git a/libxfs/defer_item.c b/libxfs/defer_item.c
-index 3f519252..8731d183 100644
---- a/libxfs/defer_item.c
-+++ b/libxfs/defer_item.c
-@@ -115,6 +115,13 @@ xfs_extent_free_finish_item(
- 	error = xfs_free_extent(tp, xefi->xefi_pag, agbno,
- 			xefi->xefi_blockcount, &oinfo, XFS_AG_RESV_NONE);
+diff --git a/copy/xfs_copy.c b/copy/xfs_copy.c
+index 79f65946..d9a14a95 100644
+--- a/copy/xfs_copy.c
++++ b/copy/xfs_copy.c
+@@ -889,18 +889,28 @@ main(int argc, char **argv)
+ 		} else  {
+ 			char	*lb[XFS_MAX_SECTORSIZE] = { NULL };
+ 			off64_t	off;
++			ssize_t	len;
  
-+	/*
-+	 * Don't free the XEFI if we need a new transaction to complete
-+	 * processing of it.
-+	 */
-+	if (error == -EAGAIN)
-+		return error;
-+
- 	xfs_extent_free_put_group(xefi);
- 	kmem_cache_free(xfs_extfree_item_cache, xefi);
- 	return error;
+ 			/* ensure device files are sufficiently large */
+ 
+ 			off = mp->m_sb.sb_dblocks * source_blocksize;
+ 			off -= sizeof(lb);
+-			if (pwrite(target[i].fd, lb, sizeof(lb), off) < 0)  {
++			len = pwrite(target[i].fd, lb, XFS_MAX_SECTORSIZE, off);
++			if (len < 0) {
+ 				do_log(_("%s:  failed to write last block\n"),
+ 					progname);
+ 				do_log(_("\tIs target \"%s\" too small?\n"),
+ 					target[i].name);
+ 				die_perror();
+ 			}
++			if (len != XFS_MAX_SECTORSIZE) {
++				do_log(
++ _("%s:  short write to last block: %zd bytes, %zu expected\n"),
++					progname, len, XFS_MAX_SECTORSIZE);
++				do_log(_("\tIs target \"%s\" too small?\n"),
++					target[i].name);
++				exit(1);
++			}
+ 		}
+ 	}
+ 
 
