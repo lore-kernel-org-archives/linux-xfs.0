@@ -1,288 +1,82 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-oi1-f182.google.com (mail-oi1-f182.google.com [209.85.167.182])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A2BEA4777A
-	for <linux-xfs@vger.kernel.org>; Wed, 20 Dec 2023 17:16:07 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 70C901DFEC
+	for <linux-xfs@vger.kernel.org>; Wed, 20 Dec 2023 21:02:50 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fromorbit.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=fromorbit.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="R85uf1ud"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 741E4C433C7;
-	Wed, 20 Dec 2023 17:16:07 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1703092567;
-	bh=9EqgKBxA8Q8ZYwKtRw2WZeq0KS8Ssof5JV3v5CUTJ/4=;
-	h=Date:Subject:From:To:Cc:In-Reply-To:References:From;
-	b=R85uf1udjcJ26l0lg6L5VFptoCOoHq+w1kb9D5Vga3m7WyHynPfkofLt9lfvDzh1Y
-	 AD/bpU6+Nkd0NFPGtW71vomjiM1PqRd6h1zRhMVEEQHXuNTiOTJov5H6wGa5eUx8qf
-	 Rx++mUpn51lAlzZ8NTAs+Pos2zdDMhIozQmKX/xKyIAeDsm7VaOpWjMLpSby4Tza7t
-	 ImzYB8Zt0EHqFigJy6x9HykD22Dgc3WWVaPIBkquXYu+OO+esa9fg+xQWIKRRFYcPI
-	 7Jo84Oj38ruzXxvbjnAfcGRC5g5pftLLXilYs2mkl2pblokUsz8QkH18tZ/JWaQAv6
-	 B9YHRcybdJdVA==
-Date: Wed, 20 Dec 2023 09:16:07 -0800
-Subject: [PATCH 3/3] xfs_scrub: try to use XFS_SCRUB_IFLAG_FORCE_REBUILD
-From: "Darrick J. Wong" <djwong@kernel.org>
-To: djwong@kernel.org, cem@kernel.org
-Cc: Carlos Maiolino <cmaiolino@redhat.com>, Christoph Hellwig <hch@lst.de>,
- linux-xfs@vger.kernel.org
-Message-ID: <170309219482.1608293.12323269575979011860.stgit@frogsfrogsfrogs>
-In-Reply-To: <170309219443.1608293.8210327879201043663.stgit@frogsfrogsfrogs>
-References: <170309219443.1608293.8210327879201043663.stgit@frogsfrogsfrogs>
-User-Agent: StGit/0.19
+	dkim=pass (2048-bit key) header.d=fromorbit-com.20230601.gappssmtp.com header.i=@fromorbit-com.20230601.gappssmtp.com header.b="ek2NRXiq"
+Received: by mail-oi1-f182.google.com with SMTP id 5614622812f47-3ba52d0f9feso35788b6e.0
+        for <linux-xfs@vger.kernel.org>; Wed, 20 Dec 2023 13:02:50 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=fromorbit-com.20230601.gappssmtp.com; s=20230601; t=1703106169; x=1703710969; darn=vger.kernel.org;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
+        bh=B9WdUJ8DHVL5p/mAN9B6mtU5aFHmW+LUmwUgowVPr90=;
+        b=ek2NRXiq39AoiBhr1PZ5dqUf6XOCZ9HgwNGhxlGnRC6TAqYXgxi3lZDjf4U12n6fEc
+         9a/jJgqhymIaUUcNypvGkAWUBFgBB1PoBVIXNMpp0onFBBwzKKHiMsiiBwM4sLfhTxcN
+         JCaHEVeGqvAtFUMpz6UAcTdd42vYx5ic4Ln0X/Sd8DS9o+odt8nsKFQfkjKBpftDePie
+         XYVtHcBca5VRD7DuQnUiJ1hi47cm/jMCCId8UASrO1jj2jj9dO6FZRdAenIYisXzCHXi
+         wu3cHMnUTxlccB3ulb/ePzx68Jc7s3s5z/5qimjgD6jDrbYZmxWgz7Jhfid4NhgiuWY0
+         sr8g==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1703106169; x=1703710969;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=B9WdUJ8DHVL5p/mAN9B6mtU5aFHmW+LUmwUgowVPr90=;
+        b=eSRukKVaUlQs4IUo/QjRSkOcgXcYsbwG1IVelZyvS3iSdVawwBUNIi1y4suVn4S1uw
+         j+dCNoiafitbpDvbs3jm2FSPVtJN0wuUZ+ce9OjLJ4vBM0j7XeJ40+MV0gqJ3r5dJtDL
+         2dm+koizRi1OoTO6ZCII3Jy4O9vgYUhfZFktcOcUDcgrXlCOHnuf4vlSaqe+t4egLrCZ
+         KW5hAVKKpQuM0bxSzis+HrD53z0TXsU4r1xJJtSGYoiyj0GObeikECYY6v2XgITDwN7C
+         uzO4ZcTfkKE8o4NM9AKmkkBCI8POL4I1QHHFD3OzsndkCUzuDCoeDD+SI67cg2T4jiTi
+         Qcug==
+X-Gm-Message-State: AOJu0Yxh62Jxfb3u841R2Isrvj7KL9qKOY90KnAZtJO5JAyznIXgrVsW
+	90jpr+NQvfG/0Va6tppYuKzTjg==
+X-Google-Smtp-Source: AGHT+IGTgc1Ck/2wwSSzHyViPkLjLJ9TWaCkKWbw8jlh+IwiR54sUXlxU3nCmq2XxjW1Z0gqQTnYYw==
+X-Received: by 2002:a05:6358:7247:b0:173:219:bf90 with SMTP id i7-20020a056358724700b001730219bf90mr336867rwa.47.1703106169404;
+        Wed, 20 Dec 2023 13:02:49 -0800 (PST)
+Received: from dread.disaster.area (pa49-180-111-17.pa.nsw.optusnet.com.au. [49.180.111.17])
+        by smtp.gmail.com with ESMTPSA id 2-20020a630d42000000b005cd64ff9a42sm209521pgn.64.2023.12.20.13.02.48
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Wed, 20 Dec 2023 13:02:48 -0800 (PST)
+Received: from dave by dread.disaster.area with local (Exim 4.96)
+	(envelope-from <david@fromorbit.com>)
+	id 1rG3iG-000MNm-28;
+	Thu, 21 Dec 2023 08:02:44 +1100
+Date: Thu, 21 Dec 2023 08:02:44 +1100
+From: Dave Chinner <david@fromorbit.com>
+To: Christoph Hellwig <hch@lst.de>
+Cc: Chandan Babu R <chandan.babu@oracle.com>,
+	"Darrick J. Wong" <djwong@kernel.org>, linux-xfs@vger.kernel.org
+Subject: Re: attr cleanups v3
+Message-ID: <ZYNWdPTrK8dkvf4g@dread.disaster.area>
+References: <20231220063503.1005804-1-hch@lst.de>
 Precedence: bulk
 X-Mailing-List: linux-xfs@vger.kernel.org
 List-Id: <linux-xfs.vger.kernel.org>
 List-Subscribe: <mailto:linux-xfs+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-xfs+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20231220063503.1005804-1-hch@lst.de>
 
-From: Darrick J. Wong <djwong@kernel.org>
+On Wed, Dec 20, 2023 at 07:34:54AM +0100, Christoph Hellwig wrote:
+> Hi all,
+> 
+> this series started by trying to remove xfs_attr_shortform as sparse
+> complains about it due using a variable sized array in struct using in a
+> variable sized array.  I ended up cleaning a lot more code around it
+> once I started looking into it, including some basic cleanups for the
+> inode fork inline data memory management (I'll have another series for
+> more work there at a later time).
 
-Now that we have a FORCE_REBUILD flag to the scrub ioctl, try to use
-that over the (much noisier) error injection knob, which may or may not
-even be enabled in the kernel config.
+Series looks good now.
 
-Signed-off-by: Darrick J. Wong <djwong@kernel.org>
-Reviewed-by: Carlos Maiolino <cmaiolino@redhat.com>
-Reviewed-by: Christoph Hellwig <hch@lst.de>
----
- scrub/phase1.c    |   28 ++++++++++++++++++++++++++++
- scrub/scrub.c     |   45 +++++++++++++++++++++++----------------------
- scrub/scrub.h     |    1 +
- scrub/xfs_scrub.c |    3 +++
- scrub/xfs_scrub.h |    1 +
- 5 files changed, 56 insertions(+), 22 deletions(-)
+Reviewed-by: Dave Chinner <dchinner@redhat.com>
 
-
-diff --git a/scrub/phase1.c b/scrub/phase1.c
-index fd1050c9..2daf5c7b 100644
---- a/scrub/phase1.c
-+++ b/scrub/phase1.c
-@@ -27,6 +27,7 @@
- #include "scrub.h"
- #include "repair.h"
- #include "libfrog/fsgeom.h"
-+#include "xfs_errortag.h"
- 
- /* Phase 1: Find filesystem geometry (and clean up after) */
- 
-@@ -68,6 +69,27 @@ scrub_cleanup(
- 	return error;
- }
- 
-+/* Decide if we're using FORCE_REBUILD or injecting FORCE_REPAIR. */
-+static int
-+enable_force_repair(
-+	struct scrub_ctx		*ctx)
-+{
-+	struct xfs_error_injection	inject = {
-+		.fd			= ctx->mnt.fd,
-+		.errtag			= XFS_ERRTAG_FORCE_SCRUB_REPAIR,
-+	};
-+	int				error;
-+
-+	use_force_rebuild = can_force_rebuild(ctx);
-+	if (use_force_rebuild)
-+		return 0;
-+
-+	error = ioctl(ctx->mnt.fd, XFS_IOC_ERROR_INJECTION, &inject);
-+	if (error)
-+		str_errno(ctx, _("force_repair"));
-+	return error;
-+}
-+
- /*
-  * Bind to the mountpoint, read the XFS geometry, bind to the block devices.
-  * Anything we've already built will be cleaned up by scrub_cleanup.
-@@ -156,6 +178,12 @@ _("Kernel metadata repair facility is not available.  Use -n to scrub."));
- 		return ECANCELED;
- 	}
- 
-+	if (debug_tweak_on("XFS_SCRUB_FORCE_REPAIR")) {
-+		error = enable_force_repair(ctx);
-+		if (error)
-+			return error;
-+	}
-+
- 	/* Did we find the log and rt devices, if they're present? */
- 	if (ctx->mnt.fsgeom.logstart == 0 && ctx->fsinfo.fs_log == NULL) {
- 		str_error(ctx, ctx->mntpoint,
-diff --git a/scrub/scrub.c b/scrub/scrub.c
-index 1a450687..1469058b 100644
---- a/scrub/scrub.c
-+++ b/scrub/scrub.c
-@@ -18,7 +18,6 @@
- #include "common.h"
- #include "progress.h"
- #include "scrub.h"
--#include "xfs_errortag.h"
- #include "repair.h"
- #include "descr.h"
- 
-@@ -500,26 +499,16 @@ static bool
- __scrub_test(
- 	struct scrub_ctx		*ctx,
- 	unsigned int			type,
--	bool				repair)
-+	unsigned int			flags)
- {
- 	struct xfs_scrub_metadata	meta = {0};
--	struct xfs_error_injection	inject;
--	static bool			injected;
- 	int				error;
- 
- 	if (debug_tweak_on("XFS_SCRUB_NO_KERNEL"))
- 		return false;
--	if (debug_tweak_on("XFS_SCRUB_FORCE_REPAIR") && !injected) {
--		inject.fd = ctx->mnt.fd;
--		inject.errtag = XFS_ERRTAG_FORCE_SCRUB_REPAIR;
--		error = ioctl(ctx->mnt.fd, XFS_IOC_ERROR_INJECTION, &inject);
--		if (error == 0)
--			injected = true;
--	}
- 
- 	meta.sm_type = type;
--	if (repair)
--		meta.sm_flags |= XFS_SCRUB_IFLAG_REPAIR;
-+	meta.sm_flags = flags;
- 	error = -xfrog_scrub_metadata(&ctx->mnt, &meta);
- 	switch (error) {
- 	case 0:
-@@ -532,13 +521,15 @@ _("Filesystem is mounted read-only; cannot proceed."));
- 		str_info(ctx, ctx->mntpoint,
- _("Filesystem is mounted norecovery; cannot proceed."));
- 		return false;
-+	case EINVAL:
- 	case EOPNOTSUPP:
- 	case ENOTTY:
- 		if (debug || verbose)
- 			str_info(ctx, ctx->mntpoint,
- _("Kernel %s %s facility not detected."),
- 					_(xfrog_scrubbers[type].descr),
--					repair ? _("repair") : _("scrub"));
-+					(flags & XFS_SCRUB_IFLAG_REPAIR) ?
-+						_("repair") : _("scrub"));
- 		return false;
- 	case ENOENT:
- 		/* Scrubber says not present on this fs; that's fine. */
-@@ -553,56 +544,64 @@ bool
- can_scrub_fs_metadata(
- 	struct scrub_ctx	*ctx)
- {
--	return __scrub_test(ctx, XFS_SCRUB_TYPE_PROBE, false);
-+	return __scrub_test(ctx, XFS_SCRUB_TYPE_PROBE, 0);
- }
- 
- bool
- can_scrub_inode(
- 	struct scrub_ctx	*ctx)
- {
--	return __scrub_test(ctx, XFS_SCRUB_TYPE_INODE, false);
-+	return __scrub_test(ctx, XFS_SCRUB_TYPE_INODE, 0);
- }
- 
- bool
- can_scrub_bmap(
- 	struct scrub_ctx	*ctx)
- {
--	return __scrub_test(ctx, XFS_SCRUB_TYPE_BMBTD, false);
-+	return __scrub_test(ctx, XFS_SCRUB_TYPE_BMBTD, 0);
- }
- 
- bool
- can_scrub_dir(
- 	struct scrub_ctx	*ctx)
- {
--	return __scrub_test(ctx, XFS_SCRUB_TYPE_DIR, false);
-+	return __scrub_test(ctx, XFS_SCRUB_TYPE_DIR, 0);
- }
- 
- bool
- can_scrub_attr(
- 	struct scrub_ctx	*ctx)
- {
--	return __scrub_test(ctx, XFS_SCRUB_TYPE_XATTR, false);
-+	return __scrub_test(ctx, XFS_SCRUB_TYPE_XATTR, 0);
- }
- 
- bool
- can_scrub_symlink(
- 	struct scrub_ctx	*ctx)
- {
--	return __scrub_test(ctx, XFS_SCRUB_TYPE_SYMLINK, false);
-+	return __scrub_test(ctx, XFS_SCRUB_TYPE_SYMLINK, 0);
- }
- 
- bool
- can_scrub_parent(
- 	struct scrub_ctx	*ctx)
- {
--	return __scrub_test(ctx, XFS_SCRUB_TYPE_PARENT, false);
-+	return __scrub_test(ctx, XFS_SCRUB_TYPE_PARENT, 0);
- }
- 
- bool
- xfs_can_repair(
- 	struct scrub_ctx	*ctx)
- {
--	return __scrub_test(ctx, XFS_SCRUB_TYPE_PROBE, true);
-+	return __scrub_test(ctx, XFS_SCRUB_TYPE_PROBE, XFS_SCRUB_IFLAG_REPAIR);
-+}
-+
-+bool
-+can_force_rebuild(
-+	struct scrub_ctx	*ctx)
-+{
-+	return __scrub_test(ctx, XFS_SCRUB_TYPE_PROBE,
-+			XFS_SCRUB_IFLAG_REPAIR | XFS_SCRUB_IFLAG_FORCE_REBUILD);
- }
- 
- /* General repair routines. */
-@@ -624,6 +623,8 @@ xfs_repair_metadata(
- 	assert(!debug_tweak_on("XFS_SCRUB_NO_KERNEL"));
- 	meta.sm_type = aitem->type;
- 	meta.sm_flags = aitem->flags | XFS_SCRUB_IFLAG_REPAIR;
-+	if (use_force_rebuild)
-+		meta.sm_flags |= XFS_SCRUB_IFLAG_FORCE_REBUILD;
- 	switch (xfrog_scrubbers[aitem->type].type) {
- 	case XFROG_SCRUB_TYPE_AGHEADER:
- 	case XFROG_SCRUB_TYPE_PERAG:
-diff --git a/scrub/scrub.h b/scrub/scrub.h
-index fccd82f2..023069ee 100644
---- a/scrub/scrub.h
-+++ b/scrub/scrub.h
-@@ -33,6 +33,7 @@ bool can_scrub_attr(struct scrub_ctx *ctx);
- bool can_scrub_symlink(struct scrub_ctx *ctx);
- bool can_scrub_parent(struct scrub_ctx *ctx);
- bool xfs_can_repair(struct scrub_ctx *ctx);
-+bool can_force_rebuild(struct scrub_ctx *ctx);
- 
- int scrub_file(struct scrub_ctx *ctx, int fd, const struct xfs_bulkstat *bstat,
- 		unsigned int type, struct action_list *alist);
-diff --git a/scrub/xfs_scrub.c b/scrub/xfs_scrub.c
-index 7a0411b0..597be59f 100644
---- a/scrub/xfs_scrub.c
-+++ b/scrub/xfs_scrub.c
-@@ -157,6 +157,9 @@ bool				stdout_isatty;
-  */
- bool				is_service;
- 
-+/* Set to true if the kernel supports XFS_SCRUB_IFLAG_FORCE_REBUILD */
-+bool				use_force_rebuild;
-+
- #define SCRUB_RET_SUCCESS	(0)	/* no problems left behind */
- #define SCRUB_RET_CORRUPT	(1)	/* corruption remains on fs */
- #define SCRUB_RET_UNOPTIMIZED	(2)	/* fs could be optimized */
-diff --git a/scrub/xfs_scrub.h b/scrub/xfs_scrub.h
-index f6712d36..0d6b9dad 100644
---- a/scrub/xfs_scrub.h
-+++ b/scrub/xfs_scrub.h
-@@ -21,6 +21,7 @@ extern bool			want_fstrim;
- extern bool			stderr_isatty;
- extern bool			stdout_isatty;
- extern bool			is_service;
-+extern bool			use_force_rebuild;
- 
- enum scrub_mode {
- 	SCRUB_MODE_DRY_RUN,
-
+-- 
+Dave Chinner
+david@fromorbit.com
